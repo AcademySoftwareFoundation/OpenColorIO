@@ -1,0 +1,59 @@
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright Contributors to the OpenColorIO Project.
+#
+# AWS CodeBuild build specification
+# https://docs.aws.amazon.com/codebuild/latest/userguide/build-spec-ref.html
+
+version: 0.2
+
+# ---------------------------------------------------------------------------
+# CodeBuild project container
+# ---------------------------------------------------------------------------
+# DockerHub: https://hub.docker.com/u/aswf
+#    Source: https://github.com/AcademySoftwareFoundation/aswf-docker
+#     Image: aswf/ci-ocio:2020
+#        OS: Linux CentOS 7
+#   VFX Ref: CY2020
+#  Compiler: GCC 6.3.1
+
+env:
+  variables:
+    CXX: g++
+    CC: gcc
+  exported-variables:
+    - CXX
+    - CC
+
+phases:
+  pre_build:
+    commands:
+      # Checkout
+      - git clone https://github.com/$GITHUB_REPOSITORY OpenColorIO
+      - cd OpenColorIO
+      - git checkout $GITHUB_SHA
+      # Create build directories
+      - mkdir _install _build
+      - cd _build
+  build:
+    commands:
+      # Configure
+      - |
+        cmake ../. \
+              -DCMAKE_INSTALL_PREFIX=../_install \
+              -DOCIO_USE_HEADLESS=ON \
+              -DOCIO_BUILD_APPS=ON \
+              -DOCIO_BUILD_DOCS=OFF \
+              -DOCIO_BUILD_TESTS=ON \
+              -DOCIO_BUILD_GPU_TESTS=ON \
+              -DOCIO_BUILD_PYTHON=OFF \
+              -DOCIO_INSTALL_EXT_PACKAGES=ALL \
+              -DOCIO_WARNING_AS_ERROR=ON
+      # Build
+      - |
+        cmake --build . \
+              --target install \
+              -- -j$(nproc)
+  post_build:
+    commands:
+      # Test
+      - ctest -V

@@ -231,7 +231,7 @@ jobs:
           cmake --build . \
                 --target install \
                 --config ${{ matrix.build-type }} \
-                -- -j2
+                -- -j$(nproc)
         working-directory: _build
       - name: Test
         run: ctest -V
@@ -337,7 +337,7 @@ jobs:
           cmake --build . \
                 --target install \
                 --config ${{ matrix.build-type }} \
-                -- -j2
+                -- -j$(sysctl -n hw.ncpu)
         working-directory: _build
       - name: Test
         run: ctest -V
