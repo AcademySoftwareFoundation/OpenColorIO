@@ -664,7 +664,7 @@ variable to point at the root of that configuration.
 
          Create a configuration using a stream.
 
-      .. cpp:function:: ConstProcessorRcPtr GetProcessor(const ConstConfigRcPtr &srcConfig, const char *srcColorSpaceName, const ConstConfigRcPtr &dstConfig, const char *dstColorSpaceName)
+      .. cpp:function:: ConstProcessorRcPtr GetProcessorFromConfigs(const ConstConfigRcPtr &srcConfig, const char *srcColorSpaceName, const ConstConfigRcPtr &dstConfig, const char *dstColorSpaceName)
 
          Get a processor to convert between color spaces in two
          separate configs.
@@ -674,15 +674,15 @@ variable to point at the root of that configuration.
          cie_xyz_d65_interchange (when srcName is display-referred)
          defined. An exception is thrown if that is not the case.
 
-      .. cpp:function:: ConstProcessorRcPtr GetProcessor(const ConstContextRcPtr &srcContext, const ConstConfigRcPtr &srcConfig, const char *srcColorSpaceName, const ConstContextRcPtr &dstContext, const ConstConfigRcPtr &dstConfig, const char *dstColorSpaceName)
+      .. cpp:function:: ConstProcessorRcPtr GetProcessorFromConfigs(const ConstContextRcPtr &srcContext, const ConstConfigRcPtr &srcConfig, const char *srcColorSpaceName, const ConstContextRcPtr &dstContext, const ConstConfigRcPtr &dstConfig, const char *dstColorSpaceName)
 
-      .. cpp:function:: ConstProcessorRcPtr GetProcessor(const ConstConfigRcPtr &srcConfig, const char *srcColorSpaceName, const char *srcInterchangeName, const ConstConfigRcPtr &dstConfig, const char *dstColorSpaceName, const char *dstInterchangeName)
+      .. cpp:function:: ConstProcessorRcPtr GetProcessorFromConfigs(const ConstConfigRcPtr &srcConfig, const char *srcColorSpaceName, const char *srcInterchangeName, const ConstConfigRcPtr &dstConfig, const char *dstColorSpaceName, const char *dstInterchangeName)
 
          The srcInterchangeName and dstInterchangeName must refer to a
          pair of color spaces in the two configs that are the same. A
          role name may also be used.
 
-      .. cpp:function:: ConstProcessorRcPtr GetProcessor(const ConstContextRcPtr &srcContext, const ConstConfigRcPtr &srcConfig, const char *srcColorSpaceName, const char *srcInterchangeName, const ConstContextRcPtr &dstContext, const ConstConfigRcPtr &dstConfig, const char *dstColorSpaceName, const char *dstInterchangeName)
+      .. cpp:function:: ConstProcessorRcPtr GetProcessorFromConfigs(const ConstContextRcPtr &srcContext, const ConstConfigRcPtr &srcConfig, const char *srcColorSpaceName, const char *srcInterchangeName, const ConstContextRcPtr &dstContext, const ConstConfigRcPtr &dstConfig, const char *dstColorSpaceName, const char *dstInterchangeName)
 
 
    .. group-tab:: Python
@@ -709,17 +709,17 @@ variable to point at the root of that configuration.
 
       .. py:class:: EnvironmentVarNameIterator
 
-      .. py:function:: GetProcessor(*args,**kwargs)
+      .. py:function:: GetProcessorFromConfigs(*args,**kwargs)
 
       Overloaded function.
 
-         1. .. py:function:: GetProcessor(srcConfig: PyOpenColorIO.Config, srcColorSpaceName: str, dstConfig: PyOpenColorIO.Config, dstColorSpaceName: str) -> OpenColorIO_v2_0dev::Processor
+         1. .. py:function:: GetProcessorFromConfigs(srcConfig: PyOpenColorIO.Config, srcColorSpaceName: str, dstConfig: PyOpenColorIO.Config, dstColorSpaceName: str) -> OpenColorIO_v2_0dev::Processor
 
-         2. .. py:function:: GetProcessor(srcContext: OpenColorIO_v2_0dev::Context, srcConfig: PyOpenColorIO.Config, srcColorSpaceName: str, dstContext: OpenColorIO_v2_0dev::Context, dstConfig: PyOpenColorIO.Config, dstColorSpaceName: str) -> OpenColorIO_v2_0dev::Processor
+         2. .. py:function:: GetProcessorFromConfigs(srcContext: OpenColorIO_v2_0dev::Context, srcConfig: PyOpenColorIO.Config, srcColorSpaceName: str, dstContext: OpenColorIO_v2_0dev::Context, dstConfig: PyOpenColorIO.Config, dstColorSpaceName: str) -> OpenColorIO_v2_0dev::Processor
 
-         3. .. py:function:: GetProcessor(srcConfig: PyOpenColorIO.Config, srcColorSpaceName: str, srcInterchangeName: str, dstConfig: PyOpenColorIO.Config, dstColorSpaceName: str, dstInterchangeName: str) -> OpenColorIO_v2_0dev::Processor
+         3. .. py:function:: GetProcessorFromConfigs(srcConfig: PyOpenColorIO.Config, srcColorSpaceName: str, srcInterchangeName: str, dstConfig: PyOpenColorIO.Config, dstColorSpaceName: str, dstInterchangeName: str) -> OpenColorIO_v2_0dev::Processor
 
-         4. .. py:function:: GetProcessor(srcContext: OpenColorIO_v2_0dev::Context, srcConfig: PyOpenColorIO.Config, srcColorSpaceName: str, srcInterchangeName: str, dstContext: OpenColorIO_v2_0dev::Context, dstConfig: PyOpenColorIO.Config, dstColorSpaceName: str, dstInterchangeName: str) -> OpenColorIO_v2_0dev::Processor
+         4. .. py:function:: GetProcessorFromConfigs(srcContext: OpenColorIO_v2_0dev::Context, srcConfig: PyOpenColorIO.Config, srcColorSpaceName: str, srcInterchangeName: str, dstContext: OpenColorIO_v2_0dev::Context, dstConfig: PyOpenColorIO.Config, dstColorSpaceName: str, dstInterchangeName: str) -> OpenColorIO_v2_0dev::Processor
 
       .. py:class:: LookIterator
 
