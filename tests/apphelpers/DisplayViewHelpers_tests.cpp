@@ -591,6 +591,9 @@ OCIO_ADD_TEST(DisplayViewHelpers, remove_display_view)
     constexpr char CONFIG[] = 
         "ocio_profile_version: 2\n"
         "\n"
+        "environment:\n"
+        "  {}\n"
+        "\n"
         "search_path: luts\n"
         "strictparsing: true\n"
         "luma: [0.2126, 0.7152, 0.0722]\n"

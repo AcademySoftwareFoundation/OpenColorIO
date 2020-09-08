@@ -23,6 +23,8 @@ PYBIND11_MODULE(PyOpenColorIO, m)
     m.def("LogMessage", &LogMessage, "level"_a, "message"_a);
     m.def("GetEnvVariable", &GetEnvVariable, "name"_a);
     m.def("SetEnvVariable", &SetEnvVariable, "name"_a, "value"_a);
+    m.def("UnsetEnvVariable", &UnsetEnvVariable, "name"_a);
+    m.def("IsEnvVariablePresent", &IsEnvVariablePresent, "name"_a);
 
     bindPyTypes(m);
     bindPyTransform(m);

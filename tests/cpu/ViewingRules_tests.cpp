@@ -287,6 +287,8 @@ OCIO_ADD_TEST(ViewingRules, filtered_views)
 {
     constexpr char SIMPLE_CONFIG[]{ R"(ocio_profile_version: 2
 
+environment:
+  {}
 search_path: ""
 strictparsing: true
 luma: [0.2126, 0.7152, 0.0722]

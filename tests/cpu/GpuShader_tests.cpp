@@ -54,7 +54,6 @@ OCIO_ADD_TEST(GpuShader, generic_shader)
         OCIO_CHECK_EQUAL(shaderDesc->getNumTextures(), 0U);
         OCIO_CHECK_NO_THROW(shaderDesc->addTexture("lut1",
                                                    "lut1Sampler",
-                                                   "1234",
                                                    width, height,
                                                    OCIO::GpuShaderDesc::TEXTURE_RGB_CHANNEL,
                                                    OCIO::INTERP_TETRAHEDRAL,
@@ -64,23 +63,21 @@ OCIO_ADD_TEST(GpuShader, generic_shader)
 
         const char * textureName = nullptr;
         const char * samplerName = nullptr;
-        const char * uid         = nullptr;
         unsigned w = 0;
         unsigned h = 0;
         OCIO::GpuShaderDesc::TextureType t = OCIO::GpuShaderDesc::TEXTURE_RED_CHANNEL;
         OCIO::Interpolation i = OCIO::INTERP_UNKNOWN;
 
-        OCIO_CHECK_NO_THROW(shaderDesc->getTexture(0, textureName, samplerName, uid, w, h, t, i));
+        OCIO_CHECK_NO_THROW(shaderDesc->getTexture(0, textureName, samplerName, w, h, t, i));
 
         OCIO_CHECK_EQUAL(std::string(textureName), "lut1");
         OCIO_CHECK_EQUAL(std::string(samplerName), "lut1Sampler");
-        OCIO_CHECK_EQUAL(std::string(uid), "1234");
         OCIO_CHECK_EQUAL(width, w);
         OCIO_CHECK_EQUAL(height, h);
         OCIO_CHECK_EQUAL(OCIO::GpuShaderDesc::TEXTURE_RGB_CHANNEL, t);
         OCIO_CHECK_EQUAL(OCIO::INTERP_TETRAHEDRAL, i);
 
-        OCIO_CHECK_THROW_WHAT(shaderDesc->getTexture(1, textureName, samplerName, uid, w, h, t, i),
+        OCIO_CHECK_THROW_WHAT(shaderDesc->getTexture(1, textureName, samplerName, w, h, t, i),
                               OCIO::Exception,
                               "1D LUT access error");
 
@@ -98,7 +95,7 @@ OCIO_ADD_TEST(GpuShader, generic_shader)
 
         // Support several 1D LUTs
 
-        OCIO_CHECK_NO_THROW(shaderDesc->addTexture("lut2", "lut2Sampler", "1234", width, height,
+        OCIO_CHECK_NO_THROW(shaderDesc->addTexture("lut2", "lut2Sampler", width, height,
                                                    OCIO::GpuShaderDesc::TEXTURE_RGB_CHANNEL,
                                                    OCIO::INTERP_TETRAHEDRAL,
                                                    &values[0]));
@@ -120,7 +117,7 @@ OCIO_ADD_TEST(GpuShader, generic_shader)
                 0.1f, 0.2f, 0.3f,  0.4f, 0.5f, 0.6f,  0.7f, 0.8f, 0.9f,  0.7f, 0.8f, 0.9f, };
 
         OCIO_CHECK_EQUAL(shaderDesc->getNum3DTextures(), 0U);
-        OCIO_CHECK_NO_THROW(shaderDesc->add3DTexture("lut1", "lut1Sampler", "1234", edgelen,
+        OCIO_CHECK_NO_THROW(shaderDesc->add3DTexture("lut1", "lut1Sampler", edgelen,
                                                      OCIO::INTERP_TETRAHEDRAL,
                                                      &values[0]));
 
@@ -128,19 +125,17 @@ OCIO_ADD_TEST(GpuShader, generic_shader)
 
         const char * textureName = nullptr;
         const char * samplerName = nullptr;
-        const char * uid         = nullptr;
         unsigned e = 0;
         OCIO::Interpolation i = OCIO::INTERP_UNKNOWN;
 
-        OCIO_CHECK_NO_THROW(shaderDesc->get3DTexture(0, textureName, samplerName, uid, e, i));
+        OCIO_CHECK_NO_THROW(shaderDesc->get3DTexture(0, textureName, samplerName, e, i));
 
         OCIO_CHECK_EQUAL(std::string(textureName), "lut1");
         OCIO_CHECK_EQUAL(std::string(samplerName), "lut1Sampler");
-        OCIO_CHECK_EQUAL(std::string(uid), "1234");
         OCIO_CHECK_EQUAL(edgelen, e);
         OCIO_CHECK_EQUAL(OCIO::INTERP_TETRAHEDRAL, i);
 
-        OCIO_CHECK_THROW_WHAT(shaderDesc->get3DTexture(1, textureName, samplerName, uid, e, i),
+        OCIO_CHECK_THROW_WHAT(shaderDesc->get3DTexture(1, textureName, samplerName, e, i),
                               OCIO::Exception,
                               "3D LUT access error");
 
@@ -158,7 +153,7 @@ OCIO_ADD_TEST(GpuShader, generic_shader)
 
         // Supports several 3D LUTs
 
-        OCIO_CHECK_NO_THROW(shaderDesc->add3DTexture("lut1", "lut1Sampler", "1234", edgelen,
+        OCIO_CHECK_NO_THROW(shaderDesc->add3DTexture("lut1", "lut1Sampler", edgelen,
                                                      OCIO::INTERP_TETRAHEDRAL,
                                                      &values[0]));
 
@@ -166,7 +161,7 @@ OCIO_ADD_TEST(GpuShader, generic_shader)
 
         // Check the 3D LUT limit
 
-        OCIO_CHECK_THROW(shaderDesc->add3DTexture("lut1", "lut1Sampler", "1234", 130,
+        OCIO_CHECK_THROW(shaderDesc->add3DTexture("lut1", "lut1Sampler", 130,
                                                   OCIO::INTERP_TETRAHEDRAL,
                                                   &values[0]),
                          OCIO::Exception);
@@ -211,7 +206,7 @@ OCIO_ADD_TEST(GpuShader, legacy_shader)
         float values[size];
 
         OCIO_CHECK_EQUAL(shaderDesc->getNumTextures(), 0U);
-        OCIO_CHECK_THROW_WHAT(shaderDesc->addTexture("lut1", "lut1Sampler", "1234", width, height,
+        OCIO_CHECK_THROW_WHAT(shaderDesc->addTexture("lut1", "lut1Sampler", width, height,
                                                      OCIO::GpuShaderDesc::TEXTURE_RGB_CHANNEL,
                                                      OCIO::INTERP_TETRAHEDRAL,
                                                      &values[0]),
@@ -220,13 +215,12 @@ OCIO_ADD_TEST(GpuShader, legacy_shader)
 
         const char * textureName = nullptr;
         const char * samplerName = nullptr;
-        const char * uid         = nullptr;
         unsigned w = 0;
         unsigned h = 0;
         OCIO::GpuShaderDesc::TextureType t = OCIO::GpuShaderDesc::TEXTURE_RED_CHANNEL;
         OCIO::Interpolation i = OCIO::INTERP_UNKNOWN;
 
-        OCIO_CHECK_THROW_WHAT(shaderDesc->getTexture(0, textureName, samplerName, uid, w, h, t, i),
+        OCIO_CHECK_THROW_WHAT(shaderDesc->getTexture(0, textureName, samplerName, w, h, t, i),
                               OCIO::Exception,
                               "1D LUTs are not supported");
     }
@@ -238,7 +232,7 @@ OCIO_ADD_TEST(GpuShader, legacy_shader)
                 0.1f, 0.2f, 0.3f,  0.4f, 0.5f, 0.6f,  0.7f, 0.8f, 0.9f,  0.7f, 0.8f, 0.9f, };
 
         OCIO_CHECK_EQUAL(shaderDesc->getNum3DTextures(), 0U);
-        OCIO_CHECK_NO_THROW(shaderDesc->add3DTexture("lut1", "lut1Sampler", "1234", edgelen,
+        OCIO_CHECK_NO_THROW(shaderDesc->add3DTexture("lut1", "lut1Sampler", edgelen,
                                                      OCIO::INTERP_TETRAHEDRAL,
                                                      &values[0]));
 
@@ -246,19 +240,17 @@ OCIO_ADD_TEST(GpuShader, legacy_shader)
 
         const char * textureName = nullptr;
         const char * samplerName = nullptr;
-        const char * uid         = nullptr;
         unsigned e = 0;
         OCIO::Interpolation i = OCIO::INTERP_UNKNOWN;
 
-        OCIO_CHECK_NO_THROW(shaderDesc->get3DTexture(0, textureName, samplerName, uid, e, i));
+        OCIO_CHECK_NO_THROW(shaderDesc->get3DTexture(0, textureName, samplerName, e, i));
 
         OCIO_CHECK_EQUAL(std::string(textureName), "lut1");
         OCIO_CHECK_EQUAL(std::string(samplerName), "lut1Sampler");
-        OCIO_CHECK_EQUAL(std::string(uid),         "1234");
         OCIO_CHECK_EQUAL(edgelen, e);
         OCIO_CHECK_EQUAL(OCIO::INTERP_TETRAHEDRAL, i);
 
-        OCIO_CHECK_THROW_WHAT(shaderDesc->get3DTexture(1, textureName, samplerName, uid, e, i),
+        OCIO_CHECK_THROW_WHAT(shaderDesc->get3DTexture(1, textureName, samplerName, e, i),
                               OCIO::Exception,
                               "3D LUT access error");
 
@@ -276,7 +268,7 @@ OCIO_ADD_TEST(GpuShader, legacy_shader)
 
         // Only one 3D LUT
 
-        OCIO_CHECK_THROW_WHAT(shaderDesc->add3DTexture("lut1", "lut1Sampler", "1234", edgelen,
+        OCIO_CHECK_THROW_WHAT(shaderDesc->add3DTexture("lut1", "lut1Sampler", edgelen,
                                                        OCIO::INTERP_TETRAHEDRAL,
                                                        &values[0]),
                               OCIO::Exception,

@@ -247,8 +247,7 @@ public:
     virtual bool isDynamic() const;
     virtual bool hasDynamicProperty(DynamicPropertyType type) const;
     virtual DynamicPropertyRcPtr getDynamicProperty(DynamicPropertyType type) const;
-    virtual void replaceDynamicProperty(DynamicPropertyType type,
-                                        DynamicPropertyImplRcPtr prop);
+    virtual void replaceDynamicProperty(DynamicPropertyType type, DynamicPropertyImplRcPtr prop);
     // Make dynamic properties non-dynamic.
     virtual void removeDynamicProperties() {}
 
@@ -348,6 +347,7 @@ public:
     bool isNoOp() const noexcept;
     bool hasChannelCrosstalk() const noexcept;
 
+    bool isDynamic() const noexcept;
     bool hasDynamicProperty(DynamicPropertyType type) const noexcept;
     DynamicPropertyRcPtr getDynamicProperty(DynamicPropertyType type) const;
     void unifyDynamicProperties();

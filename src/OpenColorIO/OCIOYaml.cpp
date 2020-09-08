@@ -3634,7 +3634,7 @@ inline void load(const YAML::Node& node, ConfigRcPtr & config, const char* filen
     config->setEnvironmentMode(mode);
     config->loadEnvironment();
 
-    if(mode == ENV_ENVIRONMENT_LOAD_ALL)
+    if (mode == ENV_ENVIRONMENT_LOAD_ALL)
     {
         std::ostringstream os;
         os << "This .ocio config ";
@@ -3644,11 +3644,11 @@ inline void load(const YAML::Node& node, ConfigRcPtr & config, const char* filen
         }
         os << "has no environment section defined. The default behaviour is to ";
         os << "load all environment variables (" << config->getNumEnvironmentVars() << ")";
-        os << ", which reduces the efficiency of OCIO's caching. Considering ";
+        os << ", which reduces the efficiency of OCIO's caching. Consider ";
         os << "predefining the environment variables used.";
+
         LogDebug(os.str());
     }
-
 }
 
 inline void save(YAML::Emitter & out, const Config & config)
@@ -3667,8 +3667,9 @@ inline void save(YAML::Emitter & out, const Config & config)
     out << YAML::Newline;
     out << YAML::Newline;
 
-    if(config.getNumEnvironmentVars() > 0)
+    if (configMajorVersion >= 2)
     {
+        // Print the environment even if empty.
         out << YAML::Key << "environment";
         out << YAML::Value << YAML::BeginMap;
         for(int i = 0; i < config.getNumEnvironmentVars(); ++i)
@@ -3923,7 +3924,7 @@ inline void save(YAML::Emitter & out, const Config & config)
         out << YAML::Newline;
         out << YAML::Key << "display_colorspaces";
         out << YAML::Value << YAML::BeginSeq;
-        for (auto cs : displayCS)
+        for (const auto & cs : displayCS)
         {
             save(out, cs);
         }
@@ -3935,7 +3936,7 @@ inline void save(YAML::Emitter & out, const Config & config)
         out << YAML::Newline;
         out << YAML::Key << "colorspaces";
         out << YAML::Value << YAML::BeginSeq;
-        for (auto cs : sceneCS)
+        for (const auto & cs : sceneCS)
         {
             save(out, cs);
         }

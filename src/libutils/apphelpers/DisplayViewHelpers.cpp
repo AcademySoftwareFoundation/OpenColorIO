@@ -31,6 +31,23 @@ ConstProcessorRcPtr GetProcessor(const ConstConfigRcPtr & config,
                                  const ConstMatrixTransformRcPtr & channelView,
                                  TransformDirection direction)
 {
+    return GetProcessor(config,
+                        config->getCurrentContext(),
+                        workingName,
+                        displayName,
+                        viewName,
+                        channelView,
+                        direction);
+}
+
+ConstProcessorRcPtr GetProcessor(const ConstConfigRcPtr & config,
+                                 const ConstContextRcPtr & context,
+                                 const char * workingName,
+                                 const char * displayName,
+                                 const char * viewName,
+                                 const ConstMatrixTransformRcPtr & channelView,
+                                 TransformDirection direction)
+{
     ColorSpaceMenuHelperRcPtr menuHelper = ColorSpaceMenuHelper::Create(config, nullptr, nullptr);
 
     DisplayViewTransformRcPtr displayTransform = DisplayViewTransform::Create();
@@ -39,29 +56,33 @@ ConstProcessorRcPtr GetProcessor(const ConstConfigRcPtr & config,
     displayTransform->setDisplay(displayName);
     displayTransform->setView(viewName);
 
-    ConstProcessorRcPtr processor = config->getProcessor(displayTransform);
+    ConstProcessorRcPtr processor
+        = config->getProcessor(context, displayTransform, TRANSFORM_DIR_FORWARD);
 
     bool needExposure = true;
     bool needGamma    = true;
 
-    GroupTransformRcPtr grpTransform = processor->createGroupTransform();
-
-    const int maxTransform = grpTransform->getNumTransforms();
-    for (int idx=0; idx<maxTransform; ++idx)
+    if (processor->isDynamic())
     {
-        ConstTransformRcPtr tr = grpTransform->getTransform(idx);
-        ConstExposureContrastTransformRcPtr ex = DynamicPtrCast<const ExposureContrastTransform>(tr);
+        GroupTransformRcPtr grpTransform = processor->createGroupTransform();
 
-        if (ex)
+        const int maxTransform = grpTransform->getNumTransforms();
+        for (int idx=0; idx<maxTransform; ++idx)
         {
-            if (ex->isExposureDynamic())
-            {
-                needExposure = false;
-            }
+            ConstTransformRcPtr tr = grpTransform->getTransform(idx);
+            ConstExposureContrastTransformRcPtr ex = DynamicPtrCast<const ExposureContrastTransform>(tr);
 
-            if (ex->isGammaDynamic())
+            if (ex)
             {
-                needGamma = false;
+                if (ex->isExposureDynamic())
+                {
+                    needExposure = false;
+                }
+
+                if (ex->isGammaDynamic())
+                {
+                    needGamma = false;
+                }
             }
         }
     }
@@ -104,7 +125,6 @@ ConstProcessorRcPtr GetProcessor(const ConstConfigRcPtr & config,
         pipeline.setChannelView(channelView);
     }
 
-    ConstContextRcPtr context = config->getCurrentContext();
     return pipeline.getProcessor(config, context);
 }
 

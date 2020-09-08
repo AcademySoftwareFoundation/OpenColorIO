@@ -1018,3 +1018,144 @@ colorspaces:
                                                  OCIO::OPTIMIZATION_DEFAULT);
     OCIO_CHECK_ASSERT(groupProc->isNoOp());
 }
+
+OCIO_ADD_TEST(DisplayViewTransform, context_variables)
+{
+    constexpr const char * OCIO_CONFIG{ R"(
+ocio_profile_version: 2
+
+environment: { FILE: cdl_test1.cc }
+
+roles:
+  default: cs1
+
+file_rules:
+  - !<Rule> {name: Default, colorspace: default}
+
+displays:
+  Disp1:
+    - !<View> {name: View1, colorspace: cs1}
+    - !<View> {name: View2, colorspace: cs4}
+    - !<View> {name: View3, view_transform: vt1, display_colorspace: dcs1}
+    - !<View> {name: View4, view_transform: vt1, display_colorspace: dcs2}
+    - !<View> {name: View5, view_transform: vt2, display_colorspace: dcs1}
+    - !<View> {name: View6, view_transform: vt2, display_colorspace: dcs2}
+    - !<View> {name: View10, colorspace: cs1, looks: look1}
+    - !<View> {name: View11, colorspace: cs1, looks: look2}
+    - !<View> {name: View12, colorspace: cs1, looks: look3}
+    - !<View> {name: View13, view_transform: vt1, display_colorspace: dcs2, looks: +look1}
+    - !<View> {name: View14, view_transform: vt1, display_colorspace: dcs2, looks: +look2}
+    - !<View> {name: View15, view_transform: vt1, display_colorspace: dcs2, looks: +look3}
+    - !<View> {name: View16, view_transform: vt2, display_colorspace: dcs2, looks: +look1}
+    - !<View> {name: View17, view_transform: vt2, display_colorspace: dcs2, looks: +look2}
+    - !<View> {name: View18, view_transform: vt2, display_colorspace: dcs2, looks: +look3}
+
+looks:
+  - !<Look>
+    name: look1
+    process_space: default
+    transform: !<FileTransform> {src: $FILE}
+  - !<Look>
+    name: look2
+    process_space: default
+    transform: !<LookTransform> {src: default, dst: cs2, looks: +look1}
+  - !<Look>
+    name: look3
+    process_space: default
+    transform: !<CDLTransform> {offset: [0.1, 0.1, 0.1]}
+
+view_transforms:
+  - !<ViewTransform>
+    name: vt1
+    to_reference: !<FileTransform> {src: $FILE}
+  - !<ViewTransform>
+    name: vt2
+    to_reference: !<MatrixTransform> {offset: [0.2, 0.2, 0.4, 0]}
+
+display_colorspaces:
+  - !<ColorSpace>
+    name: dcs1
+    to_display_reference: !<FileTransform> {src: $FILE}
+  - !<ColorSpace>
+    name: dcs2
+    to_display_reference: !<MatrixTransform> {offset: [0.25, 0.15, 0.35, 0]}
+
+colorspaces:
+  - !<ColorSpace>
+    name: cs1
+    allocation: uniform
+  - !<ColorSpace>
+    name: cs2
+    allocation: uniform
+    from_reference: !<MatrixTransform> {offset: [0.11, 0.12, 0.13, 0]}
+  - !<ColorSpace>
+    name: cs3
+    allocation: uniform
+    from_reference: !<MatrixTransform> {offset: [0.1, 0.2, 0.3, 0]}
+  - !<ColorSpace>
+    name: cs4
+    allocation: uniform
+    from_reference: !<FileTransform> {src: $FILE}
+)" };
+
+    std::istringstream is;
+    is.str(OCIO_CONFIG);
+
+    OCIO::ContextRcPtr usedContextVars = OCIO::Context::Create();
+
+    OCIO::ConfigRcPtr cfg;
+    OCIO_CHECK_NO_THROW(cfg = OCIO::Config::CreateFromStream(is)->createEditableCopy());
+    cfg->setSearchPath(OCIO::GetTestFilesDir().c_str());
+    OCIO_CHECK_NO_THROW(cfg->validate());
+
+    auto dt = OCIO::DisplayViewTransform::Create();
+    dt->setSrc("cs1");
+    dt->setDisplay("Disp1");
+
+    dt->setView("View1");
+    OCIO_CHECK_ASSERT(!CollectContextVariables(*cfg, *cfg->getCurrentContext(), *dt, usedContextVars));
+
+    dt->setView("View2");
+    OCIO_CHECK_ASSERT(CollectContextVariables(*cfg, *cfg->getCurrentContext(), *dt, usedContextVars));
+
+    dt->setView("View3");
+    OCIO_CHECK_ASSERT(CollectContextVariables(*cfg, *cfg->getCurrentContext(), *dt, usedContextVars));
+
+    dt->setView("View4");
+    OCIO_CHECK_ASSERT(CollectContextVariables(*cfg, *cfg->getCurrentContext(), *dt, usedContextVars));
+
+    dt->setView("View5");
+    OCIO_CHECK_ASSERT(CollectContextVariables(*cfg, *cfg->getCurrentContext(), *dt, usedContextVars));
+
+    dt->setView("View6");
+    OCIO_CHECK_ASSERT(!CollectContextVariables(*cfg, *cfg->getCurrentContext(), *dt, usedContextVars));
+
+    // Validations including looks.
+
+    dt->setView("View10");
+    OCIO_CHECK_ASSERT(CollectContextVariables(*cfg, *cfg->getCurrentContext(), *dt, usedContextVars));
+
+    dt->setView("View11");
+    OCIO_CHECK_ASSERT(CollectContextVariables(*cfg, *cfg->getCurrentContext(), *dt, usedContextVars));
+
+    dt->setView("View12");
+    OCIO_CHECK_ASSERT(!CollectContextVariables(*cfg, *cfg->getCurrentContext(), *dt, usedContextVars));
+
+    dt->setView("View13");
+    OCIO_CHECK_ASSERT(CollectContextVariables(*cfg, *cfg->getCurrentContext(), *dt, usedContextVars));
+
+    dt->setView("View14");
+    OCIO_CHECK_ASSERT(CollectContextVariables(*cfg, *cfg->getCurrentContext(), *dt, usedContextVars));
+
+    dt->setView("View15");
+    OCIO_CHECK_ASSERT(CollectContextVariables(*cfg, *cfg->getCurrentContext(), *dt, usedContextVars));
+
+    dt->setView("View16");
+    OCIO_CHECK_ASSERT(CollectContextVariables(*cfg, *cfg->getCurrentContext(), *dt, usedContextVars));
+
+    dt->setView("View17");
+    OCIO_CHECK_ASSERT(CollectContextVariables(*cfg, *cfg->getCurrentContext(), *dt, usedContextVars));
+
+    dt->setView("View18");
+    OCIO_CHECK_ASSERT(!CollectContextVariables(*cfg, *cfg->getCurrentContext(), *dt, usedContextVars));
+}

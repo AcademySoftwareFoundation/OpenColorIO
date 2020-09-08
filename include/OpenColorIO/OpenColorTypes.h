@@ -504,6 +504,25 @@ enum OptimizationFlags : unsigned long
     OPTIMIZATION_DEFAULT    = OPTIMIZATION_VERY_GOOD
 };
 
+//!cpp:type:: Enum to control the behavior of the internal caches e.g. the processor cache in
+// :cpp:class:`Config` and :cpp:class:`Processor` instances. When debugging problems, it be useful
+// to disable all the internal caches for example.
+//
+// The PROCESSOR_CACHE_SHARE_DYN_PROPERTIES flag allows the reuse of existing processor instances
+// even if it contains some dynamic properties i.e. it speeds up the processor retrieval. That's the
+// default behavior to avoid the processor creation hit. However, the caller app must then always
+// set the dynamic property values prior to any color processing call (in CPU and GPU modes) as the
+// same processor instance can now be used between several viewports for example. 
+enum ProcessorCacheFlags : unsigned int
+{
+    PROCESSOR_CACHE_OFF                  = 0x00,
+    PROCESSOR_CACHE_ENABLED              = 0x01, // Enable the cache.
+    PROCESSOR_CACHE_SHARE_DYN_PROPERTIES = 0x02, // i.e. When the cache is enabled processor instances
+                                                 // are shared even if they contain some dynamic
+                                                 // properties.
+
+    PROCESSOR_CACHE_DEFAULT = (PROCESSOR_CACHE_ENABLED | PROCESSOR_CACHE_SHARE_DYN_PROPERTIES)
+};
 
 // Conversion
 
@@ -708,6 +727,34 @@ extern OCIOEXPORT const char * METADATA_NAME;
  * (i.e. MatrixTransform, etc.) to get/set the id of the corresponding process node.
  */
 extern OCIOEXPORT const char * METADATA_ID;
+
+/*!rst::
+Caches
+******
+
+*/
+
+//!rst::
+// .. c:var:: const char * OCIO_DISABLE_ALL_CACHES
+//
+// Disable all caches, including for FileTransforms and Optimized/CPU/GPU Processors. (Provided only
+// to facilitate developer investigations.)
+extern OCIOEXPORT const char * OCIO_DISABLE_ALL_CACHES;
+
+//!rst::
+// .. c:var:: const char * OCIO_DISABLE_PROCESSOR_CACHES
+//
+// Disable only the Optimized, CPU, and GPU Processor caches. (Provided only to facilitate developer
+// investigations.)
+extern OCIOEXPORT const char * OCIO_DISABLE_PROCESSOR_CACHES;
+
+//!rst::
+// .. c:var:: const char * OCIO_DISABLE_CACHE_FALLBACK
+//
+// By default the processor caches check for identical color transformations when cache keys do
+// not match. That fallback introduces a major performance hit in some cases so there is an env.
+// variable to disable the fallback.
+extern OCIOEXPORT const char * OCIO_DISABLE_CACHE_FALLBACK;
 
 } // namespace OCIO_NAMESPACE
 

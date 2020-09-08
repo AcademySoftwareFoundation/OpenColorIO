@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <iterator>
 
+#include "ContextVariableUtils.h"
 #include "LookParse.h"
 #include "ops/noop/NoOps.h"
 #include "OpBuilders.h"
@@ -302,10 +303,7 @@ void BuildLookOps(OpRcPtrVec & ops,
                   const LookTransform & lookTransform,
                   TransformDirection dir)
 {
-    ConstColorSpaceRcPtr src, dst;
-    src = config.getColorSpace( lookTransform.getSrc() );
-    dst = config.getColorSpace( lookTransform.getDst() );
-
+    ConstColorSpaceRcPtr src = config.getColorSpace(lookTransform.getSrc());
     if(!src)
     {
         std::ostringstream os;
@@ -315,6 +313,7 @@ void BuildLookOps(OpRcPtrVec & ops,
         throw Exception(os.str().c_str());
     }
 
+    ConstColorSpaceRcPtr dst = config.getColorSpace(lookTransform.getDst());
     if(!dst)
     {
         std::ostringstream os;
@@ -385,7 +384,7 @@ void BuildLookOps(OpRcPtrVec & ops,
     {
         // If we have multiple look options, try each one in order,
         // and if we can create the ops without a missing file exception,
-        // push back it's results and return
+        // push back it's results and return.
 
         bool success = false;
         std::ostringstream os;
@@ -430,4 +429,70 @@ void BuildLookOps(OpRcPtrVec & ops,
         }
     }
 }
+
+bool CollectContextVariables(const Config & config, 
+                             const Context & context,
+                             const LookTransform & look,
+                             ContextRcPtr & usedContextVars)
+{
+    bool foundContextVars = false;
+
+    ConstColorSpaceRcPtr src = config.getColorSpace(look.getSrc());
+    if (src)
+    {
+        ConstTransformRcPtr to = src->getTransform(COLORSPACE_DIR_TO_REFERENCE);
+        if (to && CollectContextVariables(config, context, to, usedContextVars))
+        {
+            foundContextVars = true;
+        }
+
+        ConstTransformRcPtr from = src->getTransform(COLORSPACE_DIR_FROM_REFERENCE);
+        if (from && CollectContextVariables(config, context, from, usedContextVars))
+        {
+            foundContextVars = true;
+        }
+    }
+
+    ConstColorSpaceRcPtr dst = config.getColorSpace(look.getDst());
+    if (dst)
+    {
+        ConstTransformRcPtr to = dst->getTransform(COLORSPACE_DIR_TO_REFERENCE);
+        if (to && CollectContextVariables(config, context, to, usedContextVars))
+        {
+            foundContextVars = true;
+        }
+
+        ConstTransformRcPtr from = dst->getTransform(COLORSPACE_DIR_FROM_REFERENCE);
+        if (from && CollectContextVariables(config, context, from, usedContextVars))
+        {
+            foundContextVars = true;
+        }
+    }
+
+    const char * looks = look.getLooks();
+    if (looks && *looks)
+    {
+        LookParseResult lookList;
+        lookList.parse(looks);
+
+        // Note: For now, simply concatenating vars used by all of the options rather than trying to
+        // figure out which option would be used.
+
+        const LookParseResult::Options & options = lookList.getOptions();
+        for (const auto & tokens : options)
+        {
+            for (const auto & token : tokens)
+            {
+                ConstLookRcPtr look = config.getLook(token.name.c_str());
+                if (look && CollectContextVariables(config, context, token.dir, *look, usedContextVars))
+                {
+                    foundContextVars = true;
+                }
+            }
+        }
+    }
+
+    return foundContextVars;
+}
+
 } // namespace OCIO_NAMESPACE

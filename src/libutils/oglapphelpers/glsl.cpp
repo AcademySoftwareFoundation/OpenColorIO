@@ -282,14 +282,12 @@ void OpenGLBuilder::allocateAllTextures(unsigned startIndex)
 
         const char * textureName = nullptr;
         const char * samplerName = nullptr;
-        const char * uid         = nullptr;
         unsigned edgelen = 0;
         Interpolation interpolation = INTERP_LINEAR;
-        m_shaderDesc->get3DTexture(idx, textureName, samplerName, uid, edgelen, interpolation);
+        m_shaderDesc->get3DTexture(idx, textureName, samplerName, edgelen, interpolation);
 
         if(!textureName || !*textureName
             || !samplerName || !*samplerName
-            || !uid || !*uid
             || edgelen==0)
         {
             throw Exception("The texture data is corrupted");
@@ -323,16 +321,14 @@ void OpenGLBuilder::allocateAllTextures(unsigned startIndex)
 
         const char * textureName = nullptr;
         const char * samplerName = nullptr;
-        const char * uid         = nullptr;
         unsigned width = 0;
         unsigned height = 0;
         GpuShaderDesc::TextureType channel = GpuShaderDesc::TEXTURE_RGB_CHANNEL;
         Interpolation interpolation = INTERP_LINEAR;
-        m_shaderDesc->getTexture(idx, textureName, samplerName, uid, width, height, channel, interpolation);
+        m_shaderDesc->getTexture(idx, textureName, samplerName, width, height, channel, interpolation);
 
         if (!textureName || !*textureName
             || !samplerName || !*samplerName
-            || !uid || !*uid
             || width==0)
         {
             throw Exception("The texture data is corrupted");

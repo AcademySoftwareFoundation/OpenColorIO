@@ -19,6 +19,14 @@ namespace DisplayViewHelpers
 // or (display, view) pair to working (inverse). The working color space name could be 
 // a role name, a color space name or a UI color space name.
 ConstProcessorRcPtr GetProcessor(const ConstConfigRcPtr & config,
+                                 const ConstContextRcPtr & context,
+                                 const char * workingName,
+                                 const char * displayName,
+                                 const char * viewName,
+                                 const ConstMatrixTransformRcPtr & channelView, // Can be null.
+                                 TransformDirection direction);
+
+ConstProcessorRcPtr GetProcessor(const ConstConfigRcPtr & config,
                                  const char * workingName,
                                  const char * displayName,
                                  const char * viewName,

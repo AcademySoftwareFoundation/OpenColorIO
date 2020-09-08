@@ -6,8 +6,10 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "ContextVariableUtils.h"
 #include "Display.h"
 #include "OpBuilders.h"
+
 
 namespace OCIO_NAMESPACE
 {
@@ -311,7 +313,7 @@ void BuildDisplayOps(OpRcPtrVec & ops,
         }
         else
         {
-            os <<  " Cannot find display color space,  '" << displayColorSpaceName << "'.";
+            os <<  " Cannot find display color space, '" << displayColorSpaceName << "'.";
         }
         throw Exception(os.str().c_str());
     }
@@ -408,4 +410,95 @@ void BuildDisplayOps(OpRcPtrVec & ops,
         }
     }
 }
+
+bool CollectContextVariables(const Config & config,
+                             const Context & context,
+                             const DisplayViewTransform & tr,
+                             ContextRcPtr & usedContextVars)
+{
+    bool foundContextVars = false;
+
+    // NB: The search could return false positive but should not miss anything i.e. it looks
+    // in both directions even if only one will be used, and it only roughly mimics the op creation.
+
+    ConstColorSpaceRcPtr src = config.getColorSpace(tr.getSrc());
+    if (src)
+    {
+        ConstTransformRcPtr to = src->getTransform(COLORSPACE_DIR_TO_REFERENCE);
+        if (to && CollectContextVariables(config, context, to, usedContextVars))
+        {
+            foundContextVars = true;
+        }
+
+        ConstTransformRcPtr from = src->getTransform(COLORSPACE_DIR_FROM_REFERENCE);
+        if (from && CollectContextVariables(config, context, from, usedContextVars))
+        {
+            foundContextVars = true;
+        }
+    }
+
+    const char * csName = config.getDisplayViewColorSpaceName(tr.getDisplay(), tr.getView());
+    if (csName && *csName)
+    {
+        src = config.getColorSpace(csName);
+        if (src)
+        {
+            ConstTransformRcPtr to = src->getTransform(COLORSPACE_DIR_TO_REFERENCE);
+            if (to && CollectContextVariables(config, context, to, usedContextVars))
+            {
+                foundContextVars = true;
+            }
+
+            ConstTransformRcPtr from = src->getTransform(COLORSPACE_DIR_FROM_REFERENCE);
+            if (from && CollectContextVariables(config, context, from, usedContextVars))
+            {
+                foundContextVars = true;
+            }
+        }
+    }
+
+    const char * vtName = config.getDisplayViewTransformName(tr.getDisplay(), tr.getView());
+    if (vtName && *vtName)
+    {
+        ConstViewTransformRcPtr vt = config.getViewTransform(vtName);
+        if (vt)
+        {
+            ConstTransformRcPtr to = vt->getTransform(VIEWTRANSFORM_DIR_TO_REFERENCE);
+            if (to && CollectContextVariables(config, context, to, usedContextVars))
+            {
+                foundContextVars = true;
+            }
+
+            ConstTransformRcPtr from = vt->getTransform(VIEWTRANSFORM_DIR_FROM_REFERENCE);
+            if (from && CollectContextVariables(config, context, from, usedContextVars))
+            {
+                foundContextVars = true;
+            }
+        }
+    }
+
+    // TODO: The LooksBypass must be a DynamicProperty to allow live on/off.
+    if (!tr.getLooksBypass())
+    {
+        const std::string looksStr = config.getDisplayViewLooks(tr.getDisplay(), tr.getView());
+        LookParseResult looks;
+        looks.parse(looksStr);
+
+        const LookParseResult::Options & options = looks.getOptions();
+        for (const auto & tokens : options)
+        {
+            for (const auto & token : tokens)
+            {
+                ConstLookRcPtr look = config.getLook(token.name.c_str());
+                if (look && CollectContextVariables(config, context, token.dir, *look, usedContextVars))
+                {
+                    foundContextVars = true;
+                }
+            }
+        }
+    }
+
+    return foundContextVars;
+}
+
 } // namespace OCIO_NAMESPACE

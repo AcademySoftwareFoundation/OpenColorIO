@@ -96,6 +96,8 @@ OCIO_ADD_TEST(Builtins, read_write)
     static constexpr char CONFIG_BUILTIN_TRANSFORMS[] {
 R"(ocio_profile_version: 2
 
+environment:
+  {}
 search_path: ""
 strictparsing: true
 luma: [0.2126, 0.7152, 0.0722]

@@ -30,7 +30,6 @@ elif sys.platform == 'darwin':
 sys.path.insert(0, pyopencolorio_dir)
 import PyOpenColorIO as OCIO
 
-import ColorSpaceTest
 import BuiltinTransformRegistryTest
 import BuiltinTransformTest
 import CDLTransformTest
@@ -39,6 +38,7 @@ import ColorSpaceTransformTest
 import ConfigTest
 import DisplayViewTransformTest
 import LookTest
+import OpenColorIOTest
 import ViewingRulesTest
 #from MainTest import *
 #from ConstantsTest import *
@@ -68,6 +68,7 @@ def suite():
     suite.addTest(loader.loadTestsFromModule(ConfigTest))
     suite.addTest(loader.loadTestsFromModule(DisplayViewTransformTest))
     suite.addTest(loader.loadTestsFromModule(LookTest))
+    suite.addTest(loader.loadTestsFromModule(OpenColorIOTest))
     suite.addTest(loader.loadTestsFromModule(ViewingRulesTest))
     #suite.addTest(MainTest("test_interface"))
     #suite.addTest(ConstantsTest("test_interface"))

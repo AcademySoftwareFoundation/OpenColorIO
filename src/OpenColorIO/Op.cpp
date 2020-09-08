@@ -272,25 +272,23 @@ bool OpRcPtrVec::isNoOp() const noexcept
 
 bool OpRcPtrVec::hasChannelCrosstalk() const noexcept
 {
-    for (const auto & op : m_ops)
-    {
-        if(op->hasChannelCrosstalk()) return true;
-    }
+    return m_ops.end() != std::find_if(m_ops.begin(),
+                                       m_ops.end(),
+                                       [](const OpRcPtr & op) { return op->hasChannelCrosstalk(); } );
+}
 
-    return false;
+bool OpRcPtrVec::isDynamic() const noexcept
+{
+    return m_ops.end() != std::find_if(m_ops.begin(),
+                                       m_ops.end(),
+                                       [](const OpRcPtr & op) { return op->isDynamic(); } );
 }
 
 bool OpRcPtrVec::hasDynamicProperty(DynamicPropertyType type) const noexcept
 {
-    for (const auto & op : m_ops)
-    {
-        if (op->hasDynamicProperty(type))
-        {
-            return true;
-        }
-    }
-
-    return false;
+    return m_ops.end() != std::find_if(m_ops.begin(),
+                                       m_ops.end(),
+                                       [type](const OpRcPtr & op) { return op->hasDynamicProperty(type); } );
 }
 
 DynamicPropertyRcPtr OpRcPtrVec::getDynamicProperty(DynamicPropertyType type) const
@@ -427,17 +425,31 @@ std::ostream& operator<< (std::ostream & os, const AllocationData & allocation)
 
 std::string SerializeOpVec(const OpRcPtrVec & ops, int indent)
 {
-    std::ostringstream os;
+    std::ostringstream oss;
 
-    for(OpRcPtrVec::size_type i = 0, size = ops.size(); i < size; ++i)
+    for (OpRcPtrVec::size_type idx = 0, size = ops.size(); idx < size; ++idx)
     {
-        os << pystring::mul(" ", indent);
-        os << "Op " << i << ": " << *ops[i] << " ";
-        os << ops[i]->getCacheID() << " supports_gpu:" << ops[i]->supportedByLegacyShader();
-        os << "\n";
+        const OpRcPtr & op = ops[idx];
+
+        oss << pystring::mul(" ", indent);
+        oss << "Op " << idx << ": " << *op << " ";
+
+        // When serializing not optimized ops, some no-op ops (such as FileNopOp, etc)
+        // could still be present. 
+        if (op->isNoOpType())
+        {
+            oss << op->getInfo();
+        }
+        else
+        {
+            oss << op->getCacheID();
+        }
+
+        oss << " supports_gpu:" << op->supportedByLegacyShader();
+        oss << "\n";
     }
 
-    return os.str();
+    return oss.str();
 }
 
 void CreateOpVecFromOpData(OpRcPtrVec & ops,

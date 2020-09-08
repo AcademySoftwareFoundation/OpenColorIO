@@ -1,11 +1,14 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
+
 #include <sstream>
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "ContextVariableUtils.h"
 #include "OpBuilders.h"
+
 
 namespace OCIO_NAMESPACE
 {
@@ -106,9 +109,9 @@ void GroupTransform::validate() const
 {
     Transform::validate();
 
-    for (int i = 0; i<getNumTransforms(); ++i)
+    for(const auto & val : getImpl()->m_vec)
     {
-        getTransform(i)->validate();
+        val->validate();
     }
 }
 
@@ -208,6 +211,25 @@ void BuildGroupOps(OpRcPtrVec & ops,
             BuildOps(ops, config, context, childTransform, TRANSFORM_DIR_INVERSE);
         }
     }
+}
+
+bool CollectContextVariables(const Config & config,
+                             const Context & context,
+                             const GroupTransform & tr,
+                             ContextRcPtr & usedContextVars)
+{
+    bool foundContextVars = false;
+
+    for (int idx = 0; idx < tr.getNumTransforms(); ++idx)
+    {
+        ConstTransformRcPtr child = tr.getTransform(idx);
+        if (CollectContextVariables(config, context, child, usedContextVars))
+        {
+            foundContextVars = true;
+        }
+    }
+
+    return foundContextVars;
 }
 
 } // namespace OCIO_NAMESPACE

@@ -3,6 +3,8 @@
 
 
 #include <cstring>
+#include <map>
+#include <mutex>
 #include <sstream>
 #include <vector>
 
@@ -269,9 +271,39 @@ ColorSpaceMenuHelperRcPtr ColorSpaceMenuHelper::Create(const ConstConfigRcPtr & 
                                                        const char * role,
                                                        const char * categories)
 {
-    return std::shared_ptr<ColorSpaceMenuHelper>(
-        new MenuHelperImpl(config, role, categories),
-        &MenuHelperImpl::Deleter);
+    // Note: Add a cache to not recreate a new menu helper for the same config.   
+
+    using Entries = std::map<std::size_t, ColorSpaceMenuHelperRcPtr>;
+
+    static std::mutex g_mutex;
+    static Entries g_entries;
+
+    static const bool isCacheEnabled = !IsEnvVariablePresent("OCIO_DISABLE_ALL_CACHES");
+    if (isCacheEnabled)
+    {
+        std::lock_guard<std::mutex> lock(g_mutex);
+
+        std::ostringstream oss;
+        oss << std::string(config->getCacheID())
+            << std::string(role ? role : "")
+            << std::string(categories ? categories : "");
+
+        const std::size_t key = std::hash<std::string>{}(oss.str());
+
+        ColorSpaceMenuHelperRcPtr & entry = g_entries[key];
+        if (!entry)
+        {
+            entry = std::shared_ptr<ColorSpaceMenuHelper>(new MenuHelperImpl(config, role, categories),
+                                                          &MenuHelperImpl::Deleter);
+        }
+
+        return entry;
+    }
+    else
+    {
+        return std::shared_ptr<ColorSpaceMenuHelper>(new MenuHelperImpl(config, role, categories),
+                                                     &MenuHelperImpl::Deleter);
+    }
 }
 
 void MenuHelperImpl::Deleter(ColorSpaceMenuHelper * incs)

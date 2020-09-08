@@ -5,24 +5,17 @@
 #include "PathUtils.cpp"
 
 #include "testutils/UnitTest.h"
+#include "UnitTestUtils.h"
 
 namespace OCIO = OCIO_NAMESPACE;
 
 
-OCIO_ADD_TEST(PathUtils, env_expand)
+OCIO_ADD_TEST(PathUtils, compute_hash)
 {
-    // build env by hand for unit test
-    OCIO::EnvMap env_map; // = OCIO::GetEnvMap();
+    const std::string file1 = OCIO::GetTestFilesDir() + "/lut1d_4.spi1d";
+    const std::string file2 = OCIO::GetTestFilesDir() + "/lut1d_5.spi1d";
 
-    // add some fake env vars so the test runs
-    env_map.insert(OCIO::EnvMap::value_type("TEST1", "foo.bar"));
-    env_map.insert(OCIO::EnvMap::value_type("TEST1NG", "bar.foo"));
-    env_map.insert(OCIO::EnvMap::value_type("FOO_foo.bar", "cheese"));
+    OCIO_CHECK_EQUAL(OCIO::ComputeHash(file1), OCIO::ComputeHash(file1));
 
-    //
-    std::string foo = "/a/b/${TEST1}/${TEST1NG}/$TEST1/$TEST1NG/${FOO_${TEST1}}/";
-    std::string foo_result = "/a/b/foo.bar/bar.foo/foo.bar/bar.foo/cheese/";
-    std::string testresult = OCIO::EnvExpand(foo, env_map);
-    OCIO_CHECK_ASSERT( testresult == foo_result );
+    OCIO_CHECK_NE(OCIO::ComputeHash(file1), OCIO::ComputeHash(file2));
 }
-

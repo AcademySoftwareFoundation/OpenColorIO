@@ -63,7 +63,6 @@ endfunction(add_ocio_test)
 # but for now, we will maintain the status quo and copy all from the
 # OpenColorIO target
 set(SOURCES
-	Caching.cpp
 	fileformats/cdl/CDLParser.cpp
 	fileformats/cdl/CDLReaderHelper.cpp
 	fileformats/ctf/CTFReaderHelper.cpp
@@ -110,10 +109,12 @@ endif()
 set(TESTS
 	Baker_tests.cpp
 	BitDepthUtils_tests.cpp
+	Caching_tests.cpp
 	ColorSpace_tests.cpp
 	ColorSpaceSet_tests.cpp
 	Config_tests.cpp
 	Context_tests.cpp
+	ContextVariableUtils_tests.cpp
 	CPUProcessor_tests.cpp
 	Display_tests.cpp
 	DynamicProperty_tests.cpp

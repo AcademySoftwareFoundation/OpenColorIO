@@ -272,3 +272,223 @@ OCIO_ADD_TEST(Processor, optimization_env_override_basic)
     OCIO_CHECK_EQUAL(OCIO::OPTIMIZATION_GOOD, OCIO::EnvironmentOverride(testFlag));
 }
 
+OCIO_ADD_TEST(Processor, cache_optimized_processors)
+{
+    // Test the cache for the optimized processors.
+
+    OCIO::ConfigRcPtr config = OCIO::Config::Create();
+    config->setMajorVersion(2);
+
+    auto matrix = OCIO::MatrixTransform::Create();
+
+    const double offset[16] { 0.1, 0.2, 0.3, 0. };
+    matrix->setOffset(offset);
+
+    auto group = OCIO::GroupTransform::Create();
+    group->appendTransform(matrix);
+    group->appendTransform(matrix);
+
+    auto proc1 = config->getProcessor(group);
+
+    OCIO::ConstProcessorRcPtr optProc1;
+    OCIO_CHECK_NO_THROW(optProc1 = proc1->getOptimizedProcessor(OCIO::BIT_DEPTH_F32,
+                                                                OCIO::BIT_DEPTH_F32,
+                                                                OCIO::OPTIMIZATION_DEFAULT));
+
+    OCIO::ConstProcessorRcPtr optProc2;
+    OCIO_CHECK_NO_THROW(optProc2 = proc1->getOptimizedProcessor(OCIO::BIT_DEPTH_F32,
+                                                                OCIO::BIT_DEPTH_F32,
+                                                                OCIO::OPTIMIZATION_DEFAULT));
+    OCIO_CHECK_EQUAL(optProc1.get(), optProc2.get());
+
+
+    OCIO_CHECK_NO_THROW(optProc2 = proc1->getOptimizedProcessor(OCIO::OPTIMIZATION_DEFAULT));
+    OCIO_CHECK_EQUAL(optProc1.get(), optProc2.get());
+
+    // The input bit-depth is different. (The processor is actually the same in this case, but a 
+    // new copy is made.)
+    OCIO_CHECK_NO_THROW(optProc2 = proc1->getOptimizedProcessor(OCIO::BIT_DEPTH_F16,
+                                                                OCIO::BIT_DEPTH_F32,
+                                                                OCIO::OPTIMIZATION_DEFAULT));
+    OCIO_CHECK_NE(optProc1.get(), optProc2.get());
+
+    // The optimization flag is different.
+    OCIO_CHECK_NO_THROW(optProc2 = proc1->getOptimizedProcessor(OCIO::BIT_DEPTH_F32,
+                                                                OCIO::BIT_DEPTH_F32,
+                                                                OCIO::OPTIMIZATION_NONE));
+    OCIO_CHECK_NE(optProc1.get(), optProc2.get());
+
+    OCIO_CHECK_NO_THROW(optProc1 = proc1->getOptimizedProcessor(OCIO::BIT_DEPTH_F32,
+                                                                OCIO::BIT_DEPTH_F32,
+                                                                OCIO::OPTIMIZATION_NONE));
+    OCIO_CHECK_EQUAL(optProc1.get(), optProc2.get());
+
+    // Even with a 'dynamic' transform (i.e. contains dynamic properties) the cache is still used.
+
+    auto ec = OCIO::ExposureContrastTransform::Create();
+    ec->setExposure(0.65);
+
+    proc1 = config->getProcessor(ec);
+
+    // The dynamic properties are not dynamic so the cache is still used.
+    OCIO_CHECK_EQUAL(proc1->getOptimizedProcessor(OCIO::OPTIMIZATION_DEFAULT).get(),
+                     proc1->getOptimizedProcessor(OCIO::OPTIMIZATION_DEFAULT).get());
+
+    // Make Exposure dynamic.
+    ec->makeExposureDynamic();
+
+    proc1 = config->getProcessor(ec);
+
+    // A dynamic property is now dynamic but the cache is still used.
+    OCIO_CHECK_EQUAL(proc1->getOptimizedProcessor(OCIO::OPTIMIZATION_DEFAULT).get(),
+                     proc1->getOptimizedProcessor(OCIO::OPTIMIZATION_DEFAULT).get());
+}
+
+OCIO_ADD_TEST(Processor, cache_cpu_processors)
+{
+    // Test the cache for the CPU processors.
+
+    OCIO::ConfigRcPtr config = OCIO::Config::Create();
+    config->setMajorVersion(2);
+
+    auto matrix = OCIO::MatrixTransform::Create();
+
+    const double offset[16] { 0.1, 0.2, 0.3, 0. };
+
+    matrix->setOffset(offset);
+
+
+    // Step 1 - Test with default cache flags i.e. cache enabled and share processor instances
+    // containing dynamic properties.
+
+    auto proc1 = config->getProcessor(matrix);
+
+    OCIO::ConstCPUProcessorRcPtr cpuProc1;
+    OCIO_CHECK_NO_THROW(cpuProc1 = proc1->getOptimizedCPUProcessor(OCIO::BIT_DEPTH_F32,
+                                                                   OCIO::BIT_DEPTH_F32,
+                                                                   OCIO::OPTIMIZATION_DEFAULT));
+
+    OCIO::ConstCPUProcessorRcPtr cpuProc2;
+    OCIO_CHECK_NO_THROW(cpuProc2 = proc1->getOptimizedCPUProcessor(OCIO::BIT_DEPTH_F32,
+                                                                   OCIO::BIT_DEPTH_F32,
+                                                                   OCIO::OPTIMIZATION_DEFAULT));
+    OCIO_CHECK_EQUAL(cpuProc1.get(), cpuProc2.get());
+
+    OCIO_CHECK_NO_THROW(cpuProc2 = proc1->getOptimizedCPUProcessor(OCIO::OPTIMIZATION_DEFAULT));
+    OCIO_CHECK_EQUAL(cpuProc1.get(), cpuProc2.get());
+
+    OCIO_CHECK_NO_THROW(cpuProc2 = proc1->getDefaultCPUProcessor());
+    OCIO_CHECK_EQUAL(cpuProc1.get(), cpuProc2.get());
+
+
+    // The input bit-depth is different.
+    OCIO_CHECK_NO_THROW(cpuProc2 = proc1->getOptimizedCPUProcessor(OCIO::BIT_DEPTH_F16,
+                                                                   OCIO::BIT_DEPTH_F32,
+                                                                   OCIO::OPTIMIZATION_DEFAULT));
+    OCIO_CHECK_NE(cpuProc1.get(), cpuProc2.get());
+
+    // The optimization flag is different.
+    OCIO_CHECK_NO_THROW(cpuProc2 = proc1->getOptimizedCPUProcessor(OCIO::BIT_DEPTH_F32,
+                                                                   OCIO::BIT_DEPTH_F32,
+                                                                   OCIO::OPTIMIZATION_LOSSLESS));
+    OCIO_CHECK_NE(cpuProc1.get(), cpuProc2.get());
+
+    OCIO_CHECK_NO_THROW(cpuProc1 = proc1->getOptimizedCPUProcessor(OCIO::OPTIMIZATION_LOSSLESS));
+    OCIO_CHECK_EQUAL(cpuProc1.get(), cpuProc2.get());
+
+    // If that's a 'dynamic' transform (i.e. contains dynamic properties) then the cache is used
+    // or not depdending of the cache setting.
+
+    auto ec = OCIO::ExposureContrastTransform::Create();
+    ec->setExposure(0.65);
+    
+    auto proc2 = config->getProcessor(ec);
+
+    // The dynamic properties are not dynamic so the cache is still used.
+    OCIO_CHECK_EQUAL(proc2->getOptimizedCPUProcessor(OCIO::OPTIMIZATION_DEFAULT).get(), 
+                     proc2->getOptimizedCPUProcessor(OCIO::OPTIMIZATION_DEFAULT).get());
+
+    // Make Exposure dynamic.
+    ec->makeExposureDynamic();
+
+    proc2 = config->getProcessor(ec);
+
+    // By default, the processor cache share processor instances containing dynamic properties.
+    OCIO_CHECK_EQUAL(proc2->getOptimizedCPUProcessor(OCIO::OPTIMIZATION_DEFAULT).get(), 
+                     proc2->getOptimizedCPUProcessor(OCIO::OPTIMIZATION_DEFAULT).get());
+
+
+    // Step 2 - Change the default cache flags to disable the dyn. property share.
+
+    OCIO::ConfigRcPtr cfg = config->createEditableCopy();
+    cfg->setProcessorCacheFlags(OCIO::PROCESSOR_CACHE_ENABLED); // Enabled but no dyn. property share
+
+    OCIO_CHECK_EQUAL(cfg->getProcessor(matrix).get(), cfg->getProcessor(matrix).get());
+
+    proc1 = cfg->getProcessor(ec);
+
+    // Now the processor cache does not share processor instances containing dynamic properties.
+    OCIO_CHECK_NE(proc1->getOptimizedCPUProcessor(OCIO::OPTIMIZATION_DEFAULT).get(), 
+                  proc1->getOptimizedCPUProcessor(OCIO::OPTIMIZATION_DEFAULT).get());
+
+    // Disable the caches.
+
+    cfg->setProcessorCacheFlags(OCIO::PROCESSOR_CACHE_OFF); // Cache disabled
+
+    OCIO_CHECK_NE(cfg->getProcessor(matrix).get(), cfg->getProcessor(matrix).get());
+
+    proc1 = cfg->getProcessor(ec);
+
+    OCIO_CHECK_NE(proc1->getOptimizedCPUProcessor(OCIO::OPTIMIZATION_DEFAULT).get(), 
+                  proc1->getOptimizedCPUProcessor(OCIO::OPTIMIZATION_DEFAULT).get());
+}
+
+OCIO_ADD_TEST(Processor, cache_gpu_processors)
+{
+    // Test the cache for the GPU processors.
+
+    OCIO::ConfigRcPtr config = OCIO::Config::Create();
+    config->setMajorVersion(2);
+
+    auto matrix = OCIO::MatrixTransform::Create();
+
+    const double offset[16] { 0.1, 0.2, 0.3, 0. };
+
+    matrix->setOffset(offset);
+
+    auto proc1 = config->getProcessor(matrix);
+
+    OCIO::ConstGPUProcessorRcPtr gpuProc1;
+    OCIO_CHECK_NO_THROW(gpuProc1 = proc1->getOptimizedGPUProcessor(OCIO::OPTIMIZATION_DEFAULT));
+
+    OCIO::ConstGPUProcessorRcPtr gpuProc2;
+    OCIO_CHECK_NO_THROW(gpuProc2 = proc1->getOptimizedGPUProcessor(OCIO::OPTIMIZATION_DEFAULT));
+    OCIO_CHECK_EQUAL(gpuProc1.get(), gpuProc2.get());
+
+    // The optimization flag is different.
+    OCIO_CHECK_NO_THROW(gpuProc2 = proc1->getOptimizedGPUProcessor(OCIO::OPTIMIZATION_LOSSLESS));
+    OCIO_CHECK_NE(gpuProc1.get(), gpuProc2.get());
+
+    OCIO_CHECK_NO_THROW(gpuProc1 = proc1->getOptimizedGPUProcessor(OCIO::OPTIMIZATION_LOSSLESS));
+    OCIO_CHECK_EQUAL(gpuProc1.get(), gpuProc2.get());
+
+    // Even with a 'dynamic' transform (i.e. contains dynamic properties) the cache is still used.
+
+    auto ec = OCIO::ExposureContrastTransform::Create();
+    ec->setExposure(0.65);
+    
+    proc1 = config->getProcessor(ec);
+
+    // The dynamic properties are not dynamic so the cache is still used.
+    OCIO_CHECK_EQUAL(proc1->getOptimizedGPUProcessor(OCIO::OPTIMIZATION_DEFAULT).get(),
+                     proc1->getOptimizedGPUProcessor(OCIO::OPTIMIZATION_DEFAULT).get());
+
+    // Make Exposure dynamic.
+    ec->makeExposureDynamic();
+
+    proc1 = config->getProcessor(ec);
+
+    // A dynamic property is now dynamic but the cache is still used.
+    OCIO_CHECK_EQUAL(proc1->getOptimizedGPUProcessor(OCIO::OPTIMIZATION_DEFAULT).get(),
+                     proc1->getOptimizedGPUProcessor(OCIO::OPTIMIZATION_DEFAULT).get());
+}

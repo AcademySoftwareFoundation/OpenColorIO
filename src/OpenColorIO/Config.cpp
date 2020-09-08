@@ -12,6 +12,7 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "ContextVariableUtils.h"
 #include "Display.h"
 #include "FileRules.h"
 #include "HashUtils.h"
@@ -152,6 +153,9 @@ void GetFileReferences(std::set<std::string> & files, const ConstTransformRcPtr 
     }
 }
 
+// Return the list of all color spaces referenced by the transform (including all sub-transforms in
+// a group). All legal context variables are expanded, so if any are remaining, the caller may want
+// to throw.
 void GetColorSpaceReferences(std::set<std::string> & colorSpaceNames,
                              const ConstTransformRcPtr & transform,
                              const ConstContextRcPtr & context)
@@ -180,8 +184,8 @@ void GetColorSpaceReferences(std::set<std::string> & colorSpaceNames,
     else if(ConstLookTransformRcPtr lookTransform = \
         DynamicPtrCast<const LookTransform>(transform))
     {
-        colorSpaceNames.insert(context->resolveStringVar(lookTransform->getSrc()));
-        colorSpaceNames.insert(context->resolveStringVar(lookTransform->getDst()));
+        colorSpaceNames.insert(lookTransform->getSrc());
+        colorSpaceNames.insert(lookTransform->getDst());
     }
 }
 
@@ -306,6 +310,9 @@ public:
     mutable std::string m_cacheidnocontext;
     FileRulesRcPtr m_fileRules;
 
+    ProcessorCacheFlags m_cacheFlags { PROCESSOR_CACHE_DEFAULT };
+    mutable ProcessorCache<std::size_t, ProcessorRcPtr> m_processorCache;
+
     Impl() :
         m_majorVersion(FirstSupportedMajorVersion),
         m_minorVersion(0),
@@ -339,6 +346,8 @@ public:
 
         Platform::Getenv(OCIO_INACTIVE_COLORSPACES_ENVVAR, m_inactiveColorSpaceNamesEnv);
         m_inactiveColorSpaceNamesEnv = StringUtils::Trim(m_inactiveColorSpaceNamesEnv);
+
+        m_processorCache.enable((m_cacheFlags & PROCESSOR_CACHE_ENABLED) == PROCESSOR_CACHE_ENABLED);
     }
 
     ~Impl() = default;
@@ -401,6 +410,11 @@ public:
             m_cacheidnocontext = rhs.m_cacheidnocontext;
 
             m_fileRules = rhs.m_fileRules->createEditableCopy();
+            
+            m_cacheFlags = rhs.m_cacheFlags;
+
+            m_processorCache.clear();
+            m_processorCache.enable((m_cacheFlags & PROCESSOR_CACHE_ENABLED) == PROCESSOR_CACHE_ENABLED);
         }
         return *this;
     }
@@ -579,7 +593,7 @@ public:
         if (!view.useDisplayNameForColorspace() && !hasColorSpace(view.m_colorspace.c_str()))
         {
             std::ostringstream os{ GetDisplayViewPrefixErrorMsg(display, view) };
-            os << "refers to a color space, '" << view.m_colorspace << "', ";
+            os << "that refers to a color space, '" << view.m_colorspace << "', ";
             os << "which is not defined.";
             m_validationtext = os.str();
             throw Exception(m_validationtext.c_str());
@@ -592,7 +606,7 @@ public:
             if (!getViewTransform(view.m_viewTransform.c_str()))
             {
                 std::ostringstream os{ GetDisplayViewPrefixErrorMsg(display, view) };
-                os << "refers to a view transform, '" << view.m_viewTransform << "', ";
+                os << "that refers to a view transform, '" << view.m_viewTransform << "', ";
                 os << "which is not defined.";
                 m_validationtext = os.str();
                 throw Exception(m_validationtext.c_str());
@@ -714,7 +728,7 @@ public:
             = StringUtils::Trim(std::string(inactiveColorSpaces ? inactiveColorSpaces : ""));
 
         // An API request must always supersede the two other lists. Filling the
-        // inactiveColorSpaceNamesAPI_ list highlights the API request precedence.
+        // m_inactiveColorSpaceNamesAPI list highlights the API request precedence.
         m_inactiveColorSpaceNamesAPI = m_inactiveColorSpaceNamesConf;
 
         AutoMutex lock(m_cacheidMutex);
@@ -864,7 +878,20 @@ public:
         }
 
     }
+
+    void setProcessorCacheFlags(ProcessorCacheFlags flags) noexcept
+    {
+        m_cacheFlags = flags;
+        m_processorCache.enable((m_cacheFlags & PROCESSOR_CACHE_ENABLED) == PROCESSOR_CACHE_ENABLED);
+    }
+
 };
+
+
+
+// Instantiate the cache with the right types.
+template class ProcessorCache<std::size_t, ProcessorRcPtr>;
+
 
 ///////////////////////////////////////////////////////////////////////////
 
@@ -1001,6 +1028,29 @@ void Config::validate() const
     getImpl()->m_validation = Impl::VALIDATION_FAILED;
     getImpl()->m_validationtext = "";
 
+    ///// PREDEFINED CONTEXT VARIABLES
+
+    // Only the 'predefined' mode imposes to have all the context variables explicitely defined
+    // in the config file. The 'all' mode exclusively relies on the environment variables.
+    if (getImpl()->m_context->getEnvironmentMode() == ENV_ENVIRONMENT_LOAD_PREDEFINED)
+    {
+        for (const auto & env : getImpl()->m_env)
+        {
+            const std::string ctxVariable = std::string("$") + env.first;
+            const std::string ctxValue
+                = getImpl()->m_context->resolveStringVar(ctxVariable.c_str());
+
+            if (ContainsContextVariables(ctxValue))
+            {
+                std::ostringstream oss;
+                oss << "Unresolved context variable '"
+                    << env.first << " = "
+                    << env.second << "'.";
+                throw Exception(oss.str().c_str());
+            }
+        }
+    }
+
     ///// COLORSPACES
 
     StringSet existingColorSpaces;
@@ -1028,6 +1078,17 @@ void Config::validate() const
             os << "The color space at index " << i << " is not named.";
             getImpl()->m_validationtext = os.str();
             throw Exception(getImpl()->m_validationtext.c_str());
+        }
+
+        if (getMajorVersion() >= 2 && ContainsContextVariableToken(name))
+        {
+            std::ostringstream oss;
+            oss << "Config failed sanitycheck. "
+                << "A color space name '"
+                << name
+                << "' cannot contain a context variable reserved token i.e. % or $.";
+
+            throw Exception(oss.str().c_str());
         }
 
         const std::string namelower = StringUtils::Lower(name);
@@ -1066,6 +1127,17 @@ void Config::validate() const
         for(StringMap::const_iterator iter = getImpl()->m_roles.begin(),
             end = getImpl()->m_roles.end(); iter!=end; ++iter)
         {
+            if (getMajorVersion() >= 2 && ContainsContextVariableToken(iter->first))
+            {
+                std::ostringstream oss;
+                oss << "Config failed sanitycheck. "
+                    << "A role name '"
+                    << iter->first
+                    << "' cannot contain a context variable reserved token i.e. % or $.";
+
+                throw Exception(oss.str().c_str());
+            }
+
             if(!getImpl()->hasColorSpace(iter->second.c_str()))
             {
                 std::ostringstream os;
@@ -1077,7 +1149,7 @@ void Config::validate() const
                 throw Exception(getImpl()->m_validationtext.c_str());
             }
 
-            // Confirm no name conflicts between colorspaces and roles
+            // Confirm no name conflicts between colorspaces and roles.
             if(getImpl()->hasColorSpace(iter->first.c_str()))
             {
                 std::ostringstream os;
@@ -1253,25 +1325,40 @@ void Config::validate() const
     ///// TRANSFORMS
 
 
-    // Confirm for all Transforms that reference internal colorspaces,
-    // the named space exists and that all Transforms are valid.
+    // Confirm for all transforms that reference internal color spaces,
+    // the named color space exists and that all transforms are valid.
     {
         ConstTransformVec allTransforms;
         getImpl()->getAllInternalTransforms(allTransforms);
 
-        std::set<std::string> colorSpaceNames;
-        for (unsigned int i = 0; i < allTransforms.size(); ++i)
-        {
-            allTransforms[i]->validate();
+        ConstContextRcPtr context = getCurrentContext();
 
-            ConstContextRcPtr context = getCurrentContext();
-            GetColorSpaceReferences(colorSpaceNames, allTransforms[i], context);
+        std::set<std::string> colorSpaceNames;
+        for (const auto & transform : allTransforms)
+        {
+            transform->validate();
+            GetColorSpaceReferences(colorSpaceNames, transform, context);
         }
 
         for (const auto & name : colorSpaceNames)
         {
+            // Check to see if the name is a color space.
             if (!getImpl()->hasColorSpace(name.c_str()))
             {
+                // As a role name forbids the use of context variable keywords and
+                // GetColorSpaceReferences() should expand context variables, throw if a context
+                // variable keyword is still present.
+                if (ContainsContextVariables(name.c_str()))
+                {
+                    std::ostringstream oss;
+                    oss << "Config failed sanitycheck. "
+                        << "This config references a color space '"
+                        << name << "' using an unknown context variable.";
+
+                    getImpl()->m_validationtext = oss.str();
+                    throw Exception(getImpl()->m_validationtext.c_str());
+                }
+
                 // Check to see if the name is a role.
                 const char * csname = LookupRole(getImpl()->m_roles, name);
 
@@ -1395,7 +1482,100 @@ void Config::validate() const
         }
     }
 
+    ///// Resolve all file Transforms using context variables.
+
+    {
+        ConstTransformVec allTransforms;
+        getImpl()->getAllInternalTransforms(allTransforms);
+
+        std::set<std::string> files;
+        for (const auto & transform : allTransforms)
+        {
+            GetFileReferences(files, transform);
+        }
+
+        // Check that at least one of the search paths can be resolved into a valid path.
+        // Note that a search path without context variable(s) always correctly resolves.
+
+        if (!files.empty())
+        {
+            bool foundOne = false;
+            std::string errMsg("Config failed sanitycheck.");
+
+            for (int idx = 0; idx < getImpl()->m_context->getNumSearchPaths(); ++idx)
+            {
+                const char * path = getImpl()->m_context->getSearchPath(idx);
+                if (!path || !*path)
+                {
+                    errMsg += "  The search_path is empty.";
+                    break;                      
+                }
+
+                const std::string resolvedSearchPath = getImpl()->m_context->resolveStringVar(path);
+                if (ContainsContextVariables(resolvedSearchPath))
+                {
+                    std::ostringstream oss;
+
+                    oss << "  The search_path '" << path << "' cannot be resolved";
+
+                    if (path != resolvedSearchPath)
+                    {
+                        // Adjust the error message when the search_path is defined with
+                        // some context variable(s).
+                        oss << " by '" << resolvedSearchPath << "'";
+                    }
+
+                    oss << ".";
+
+                    errMsg += oss.str();
+                    break;
+                }
+
+                foundOne = true;
+            }
+
+            if (!foundOne)
+            {
+                // No valid paths were found.
+                getImpl()->m_validationtext = errMsg;
+                throw Exception(errMsg.c_str());
+            }
+        }
+
+        // Expand all file transform paths.
+
+        for (const auto & file : files)
+        {
+            // Resolve the file name without testing if it exists (which could add an unnecessary
+            // performance hit).
+            const std::string resolvedFile = getImpl()->m_context->resolveStringVar(file.c_str());
+            if (resolvedFile.empty() || ContainsContextVariables(resolvedFile))
+            {
+                std::ostringstream oss;
+                oss << "Config failed sanitycheck. ";
+                oss << "The file Transform source cannot be resolved: '";
+                
+                if (file != resolvedFile)
+                {
+                    oss << file << "' vs. '" << resolvedFile << "'.";
+                }
+                else
+                {
+                    oss << file << "'.";
+                }
+
+                getImpl()->m_validationtext = oss.str();
+
+                throw Exception(oss.str().c_str());
+            }
+        }
+    }
+
+
+    ///// Check new features are not used with older config versions.
+
     getImpl()->checkVersionConsistency();
+
 
     // Everything is groovy.
     getImpl()->m_validation = Impl::VALIDATION_PASSED;
@@ -1450,16 +1630,23 @@ ConstContextRcPtr Config::getCurrentContext() const
 
 void Config::addEnvironmentVar(const char * name, const char * defaultValue)
 {
-    if (!name || !*name) return;
-    if(defaultValue)
+    if (!name || !*name)
+    {
+        return;
+    }
+
+    // Note: Only a null default value removes the entry.
+
+    if (defaultValue)
     {
         getImpl()->m_env[std::string(name)] = std::string(defaultValue);
         getImpl()->m_context->setStringVar(name, defaultValue);
     }
     else
     {
-        StringMap::iterator iter = getImpl()->m_env.find(std::string(name));
+        StringMap::const_iterator iter = getImpl()->m_env.find(std::string(name));
         if(iter != getImpl()->m_env.end()) getImpl()->m_env.erase(iter);
+        getImpl()->m_context->setStringVar(name, nullptr);
     }
 
     AutoMutex lock(getImpl()->m_cacheidMutex);
@@ -1494,7 +1681,7 @@ void Config::clearEnvironmentVars()
     getImpl()->resetCacheIDs();
 }
 
-void Config::setEnvironmentMode(EnvironmentMode mode)
+void Config::setEnvironmentMode(EnvironmentMode mode) noexcept
 {
     getImpl()->m_context->setEnvironmentMode(mode);
 
@@ -1502,12 +1689,12 @@ void Config::setEnvironmentMode(EnvironmentMode mode)
     getImpl()->resetCacheIDs();
 }
 
-EnvironmentMode Config::getEnvironmentMode() const
+EnvironmentMode Config::getEnvironmentMode() const noexcept
 {
     return getImpl()->m_context->getEnvironmentMode();
 }
 
-void Config::loadEnvironment()
+void Config::loadEnvironment() noexcept
 {
     getImpl()->m_context->loadEnvironment();
 
@@ -2014,14 +2201,17 @@ void Config::setStrictParsingEnabled(bool enabled)
 // Roles
 void Config::setRole(const char * role, const char * colorSpaceName)
 {
-    if (!role || !*role) return;
+    if (!role || !*role)
+    {
+        throw Exception("The role name is null.");
+    }
 
-    // Set the role
-    if(colorSpaceName)
+    // Set the role.
+    if (colorSpaceName)
     {
         getImpl()->m_roles[StringUtils::Lower(role)] = std::string(colorSpaceName);
     }
-    // Unset the role
+    // Unset the role.
     else
     {
         StringMap::iterator iter = getImpl()->m_roles.find(StringUtils::Lower(role));
@@ -2518,6 +2708,7 @@ int Config::getNumViews(ViewType type, const char * display) const
     {
         return static_cast<int>(getImpl()->m_sharedViews.size());
     }
+
     DisplayMap::const_iterator iter = FindDisplay(getImpl()->m_displays, display);
     if (iter == getImpl()->m_displays.end()) return 0;
 
@@ -2525,11 +2716,10 @@ int Config::getNumViews(ViewType type, const char * display) const
     {
     case VIEW_SHARED:
         return static_cast<int>(iter->second.m_sharedViews.size());
-        break;
     case VIEW_DISPLAY_DEFINED:
         return static_cast<int>(iter->second.m_views.size());
-        break;
     }
+
     return 0;
 }
 
@@ -2774,21 +2964,102 @@ ConstProcessorRcPtr Config::getProcessor(const ConstContextRcPtr & context,
 {
     if (!src)
     {
-        throw Exception("Can't get processor: source color space is null.");
+        throw Exception("Config::GetProcessor failed. Source color space is null.");
     }
+
     if (!dst)
     {
-        throw Exception("Can't get processor: destination color space is null.");
+        throw Exception("Config::GetProcessor failed. Destination color space is null.");
     }
 
-    ProcessorRcPtr processor = Processor::Create();
-    processor->getImpl()->setColorSpaceConversion(*this, context, src, dst);
-    processor->getImpl()->computeMetadata();
-    return processor;
+    if (!context)
+    {
+        throw Exception("Config::GetProcessor failed. Context is null.");
+    }
+
+    // The goal of the usedContext is to only contain the context vars that are actually used for
+    // this transform.  This allows the cache to be more efficient. However, there are still some
+    // various TODOs since the usedContext will sometimes contain more vars than are needed.
+    ContextRcPtr usedContext = Context::Create();
+    usedContext->setSearchPath(context->getSearchPath());
+    usedContext->setWorkingDir(context->getWorkingDir());
+
+    ColorSpaceTransformRcPtr transform = ColorSpaceTransform::Create();
+    transform->setSrc(src->getName());
+    transform->setDst(dst->getName());
+
+    const bool needContextVariables
+        = CollectContextVariables(*this, *context, *transform, usedContext);
+
+    // Create helper method.
+    auto CreateProcessor = [](const Config & config, 
+                              const ConstContextRcPtr & context,
+                              const ConstColorSpaceRcPtr & src,
+                              const ConstColorSpaceRcPtr & dst) -> ProcessorRcPtr
+    {
+        ProcessorRcPtr processor = Processor::Create();
+        processor->getImpl()->setProcessorCacheFlags(config.getImpl()->m_cacheFlags);
+        processor->getImpl()->setColorSpaceConversion(config, context, src, dst);
+        processor->getImpl()->computeMetadata();
+        return processor;
+    };
+
+    if (getImpl()->m_processorCache.isEnabled())
+    {
+        AutoMutex guard(getImpl()->m_processorCache.lock());
+
+        std::ostringstream oss;
+        oss << (needContextVariables ? std::string(usedContext->getCacheID()) : "")
+            << std::string(src->getName())
+            << std::string(dst->getName());
+
+        const std::size_t key = std::hash<std::string>{}(oss.str());
+
+        // As the entry is a shared pointer instance, having an empty one means that the entry does
+        // not exist in the cache. So, it provides a fast existence check & access in one call.
+        ProcessorRcPtr & processor = getImpl()->m_processorCache[key];
+        if (!processor)
+        {
+            ProcessorRcPtr proc = CreateProcessor(*this, context, src, dst);
+
+            const bool doFallback = !Platform::isEnvPresent(OCIO_DISABLE_CACHE_FALLBACK);
+            if (doFallback)
+            {
+                // If an entry with the same cache ID already exists in the cache then reuse it instead
+                // of the newly created one. Even with different context, the same processor could be
+                // created (e.g. the processor creation does not rely on some context variables).
+
+                // The benefit to using the existing one is that it may already have an optimized
+                // Processor, CPUProcessor, or GPUProcessor inside it.
+
+                // TODO: With the original context part of the cache data, the code could first compare
+                // the two contexts before doing the lengthy Processor::getCacheID() computation.
+
+                for (auto & entry : getImpl()->m_processorCache)
+                {
+                    if (entry.second && 0 == strcmp(entry.second->getCacheID(), proc->getCacheID()))
+                    {
+                        processor = entry.second;
+                        break;
+                    }
+                } 
+            }
+
+            if (!processor)
+            {
+                processor = proc;
+            }
+        }
+
+        return processor;
+    }
+    else
+    {
+        return CreateProcessor(*this, context, src, dst);
+    }
 }
 
-ConstProcessorRcPtr Config::getProcessor(const char * srcName,
-                                            const char * dstName) const
+ConstProcessorRcPtr Config::getProcessor(const char * srcName, const char * dstName) const
 {
     ConstContextRcPtr context = getCurrentContext();
     return getProcessor(context, srcName, dstName);
@@ -2796,8 +3067,8 @@ ConstProcessorRcPtr Config::getProcessor(const char * srcName,
 
 // Names can be color space name or role name
 ConstProcessorRcPtr Config::getProcessor(const ConstContextRcPtr & context,
-                                            const char * srcName,
-                                            const char * dstName) const
+                                         const char * srcName,
+                                         const char * dstName) const
 {
     ConstColorSpaceRcPtr src = getColorSpace(srcName);
     if(!src)
@@ -2820,44 +3091,127 @@ ConstProcessorRcPtr Config::getProcessor(const ConstContextRcPtr & context,
 
 
 ConstProcessorRcPtr Config::getProcessor(const char * srcColorSpaceName,
-                                         const char * display, const char * view) const
+                                         const char * display,
+                                         const char * view,
+                                         TransformDirection direction) const
 {
     ConstContextRcPtr context = getCurrentContext();
-    return getProcessor(context, srcColorSpaceName, display, view);
+    return getProcessor(context, srcColorSpaceName, display, view, direction);
 }
 
 ConstProcessorRcPtr Config::getProcessor(const ConstContextRcPtr & context,
                                          const char * srcColorSpaceName,
-                                         const char * display, const char * view) const
+                                         const char * display,
+                                         const char * view,
+                                         TransformDirection direction) const
 {
     auto dt = DisplayViewTransform::Create();
     dt->setSrc(srcColorSpaceName);
     dt->setDisplay(display);
     dt->setView(view);
     dt->validate();
-    return getProcessor(context, dt, TRANSFORM_DIR_FORWARD);
+    return getProcessor(context, dt, direction);
 }
 
-ConstProcessorRcPtr Config::getProcessor(const ConstTransformRcPtr& transform) const
+ConstProcessorRcPtr Config::getProcessor(const ConstTransformRcPtr & transform) const
 {
     return getProcessor(transform, TRANSFORM_DIR_FORWARD);
 }
 
-ConstProcessorRcPtr Config::getProcessor(const ConstTransformRcPtr& transform,
-                                            TransformDirection direction) const
+ConstProcessorRcPtr Config::getProcessor(const ConstTransformRcPtr & transform,
+                                         TransformDirection direction) const
 {
     ConstContextRcPtr context = getCurrentContext();
     return getProcessor(context, transform, direction);
 }
 
 ConstProcessorRcPtr Config::getProcessor(const ConstContextRcPtr & context,
-                                            const ConstTransformRcPtr& transform,
-                                            TransformDirection direction) const
+                                         const ConstTransformRcPtr & transform,
+                                         TransformDirection direction) const
 {
-    ProcessorRcPtr processor = Processor::Create();
-    processor->getImpl()->setTransform(*this, context, transform, direction);
-    processor->getImpl()->computeMetadata();
-    return processor;
+    if (!context)
+    {
+        throw Exception("Config::GetProcessor failed. Context is null.");
+    }
+
+    if (!transform)
+    {
+        throw Exception("Config::GetProcessor failed. Transform is null.");
+    }
+
+    if (direction == TRANSFORM_DIR_UNKNOWN)
+    {
+        throw Exception("Config::GetProcessor failed. Direction is unspecified.");
+    }
+
+    ContextRcPtr usedContext = Context::Create();
+    usedContext->setSearchPath(context->getSearchPath());
+    usedContext->setWorkingDir(context->getWorkingDir());
+
+    const bool needContextVariables = CollectContextVariables(*this, *context, transform, usedContext);
+
+    // Create helper method.
+    auto CreateProcessor = [](const Config & config, 
+                              const ConstContextRcPtr & context,
+                              const ConstTransformRcPtr & transform,
+                              TransformDirection direction) -> ProcessorRcPtr
+    {
+        ProcessorRcPtr processor = Processor::Create();
+        processor->getImpl()->setProcessorCacheFlags(config.getImpl()->m_cacheFlags);
+        processor->getImpl()->setTransform(config, context, transform, direction);
+        processor->getImpl()->computeMetadata();
+        return processor;
+    };
+
+    if (getImpl()->m_processorCache.isEnabled())
+    {
+        AutoMutex guard(getImpl()->m_processorCache.lock());
+
+        // Note that the key includes a string description of the transform which does not include
+        // all the LUT entries (just the arguments of the FileTransforms for LUTs).
+        std::ostringstream oss;
+        oss << (needContextVariables ? std::string(usedContext->getCacheID()) : "")
+            << *transform
+            << direction;
+
+        const std::size_t key = std::hash<std::string>{}(oss.str());
+
+        // As the entry is a shared pointer instance, having an empty one means that the entry does
+        // not exist in the cache. So, it provides a fast existence check & access in one call.
+        ProcessorRcPtr & processor = getImpl()->m_processorCache[key];
+        if (!processor)
+        {
+            ProcessorRcPtr proc = CreateProcessor(*this, context, transform, direction);
+
+            const bool doFallback = !Platform::isEnvPresent(OCIO_DISABLE_CACHE_FALLBACK);
+            if (doFallback)
+            {
+                // If an entry with the same cache ID already exists in the cache then reuse it instead
+                // of the newly created one. Even with different context, the same processor could be
+                // created (e.g. the processor creation does not rely on some context variables).
+
+                for (auto & entry : getImpl()->m_processorCache)
+                {
+                    if (entry.second && 0 == strcmp(entry.second->getCacheID(), proc->getCacheID()))
+                    {
+                        processor = entry.second;
+                        break;
+                    }
+                }
+            }
+
+            if (!processor)
+            {
+                processor = proc;
+            }
+        }
+
+        return processor;
+    }
+    else
+    {
+        return CreateProcessor(*this, context, transform, direction);
+    }
 }
 
 ConstProcessorRcPtr Config::GetProcessorFromConfigs(const ConstConfigRcPtr & srcConfig,
@@ -2991,6 +3345,7 @@ ConstProcessorRcPtr Config::GetProcessorFromConfigs(const ConstContextRcPtr & sr
     }
 
     ProcessorRcPtr processor = Processor::Create();
+    processor->getImpl()->setProcessorCacheFlags(srcConfig->getImpl()->m_cacheFlags);
     processor->getImpl()->concatenate(p1, p2);
     return processor;
 }
@@ -3033,7 +3388,7 @@ const char * Config::getCacheID(const ConstContextRcPtr & context) const
     }
 
     // Also include all file references, using the context (if specified)
-    std::string fileReferencesFashHash;
+    std::string fileReferencesFastHash;
     if(context)
     {
         std::ostringstream filehash;
@@ -3042,20 +3397,20 @@ const char * Config::getCacheID(const ConstContextRcPtr & context) const
         getImpl()->getAllInternalTransforms(allTransforms);
 
         std::set<std::string> files;
-        for(unsigned int i=0; i<allTransforms.size(); ++i)
+        for(const auto & transform : allTransforms)
         {
-            GetFileReferences(files, allTransforms[i]);
+            GetFileReferences(files, transform);
         }
 
-        for(std::set<std::string>::iterator iter = files.begin();
-            iter != files.end(); ++iter)
+        for(const auto & iter : files)
         {
-            if(iter->empty()) continue;
-            filehash << *iter << "=";
+            if(iter.empty()) continue;
+
+            filehash << iter << "=";
 
             try
             {
-                const std::string resolvedLocation = context->resolveFileLocation(iter->c_str());
+                const std::string resolvedLocation = context->resolveFileLocation(iter.c_str());
                 filehash << GetFastFileHash(resolvedLocation) << " ";
             }
             catch(...)
@@ -3066,10 +3421,10 @@ const char * Config::getCacheID(const ConstContextRcPtr & context) const
         }
 
         const std::string fullstr = filehash.str();
-        fileReferencesFashHash = CacheIDHash(fullstr.c_str(), (int)fullstr.size());
+        fileReferencesFastHash = CacheIDHash(fullstr.c_str(), (int)fullstr.size());
     }
 
-    getImpl()->m_cacheids[contextcacheid] = getImpl()->m_cacheidnocontext + ":" + fileReferencesFashHash;
+    getImpl()->m_cacheids[contextcacheid] = getImpl()->m_cacheidnocontext + ":" + fileReferencesFastHash;
     return getImpl()->m_cacheids[contextcacheid].c_str();
 }
 
@@ -3090,6 +3445,11 @@ void Config::serialize(std::ostream& os) const
         error << "Error building YAML: " << e.what();
         throw Exception(error.str().c_str());
     }
+}
+
+void Config::setProcessorCacheFlags(ProcessorCacheFlags flags) noexcept
+{
+    getImpl()->setProcessorCacheFlags(flags);
 }
 
 
@@ -3158,6 +3518,10 @@ void Config::Impl::resetCacheIDs()
     m_cacheidnocontext = "";
     m_validation = VALIDATION_UNKNOWN;
     m_validationtext = "";
+
+    // As any changes could impact the cache keys, it's better to always flush the cache
+    // of processors to not keep in memory useless instances.
+    m_processorCache.clear();
 }
 
 void Config::Impl::getAllInternalTransforms(ConstTransformVec & transformVec) const
@@ -3364,7 +3728,6 @@ void Config::Impl::checkVersionConsistency() const
     {
         throw Exception("Only version 2 (or higher) can have ViewTransforms.");
     }
-
 }
 
 } // namespace OCIO_NAMESPACE

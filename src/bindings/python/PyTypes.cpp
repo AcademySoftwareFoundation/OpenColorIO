@@ -184,6 +184,13 @@ void bindPyTypes(py::module & m)
         .value("OPTIMIZATION_DEFAULT", OPTIMIZATION_DEFAULT)
         .export_values();
 
+    py::enum_<ProcessorCacheFlags>(m, "ProcessorCacheFlags")
+        .value("PROCESSOR_CACHE_OFF", PROCESSOR_CACHE_OFF)
+        .value("PROCESSOR_CACHE_ENABLED", PROCESSOR_CACHE_ENABLED)
+        .value("PROCESSOR_CACHE_SHARE_DYN_PROPERTIES", PROCESSOR_CACHE_SHARE_DYN_PROPERTIES)
+        .value("PROCESSOR_CACHE_DEFAULT", PROCESSOR_CACHE_DEFAULT)
+        .export_values();
+
     // Conversion
     m.def("BoolToString", &BoolToString, "value"_a);
     m.def("BoolFromString", &BoolFromString, "str"_a);
