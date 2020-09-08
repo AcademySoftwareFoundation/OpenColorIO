@@ -5,6 +5,7 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "DynamicProperty.h"
 #include "GpuShader.h"
 #include "HashUtils.h"
 #include "Logging.h"
@@ -36,6 +37,8 @@ public:
 
     std::string m_shaderCode;
     std::string m_shaderCodeID;
+
+    std::vector<DynamicPropertyRcPtr> m_dynamicProperties;
 
     Impl()
         :   m_functionName("OCIOMain")
@@ -153,6 +156,62 @@ unsigned GpuShaderCreator::getNextResourceIndex() noexcept
     return getImpl()->m_numResources++;
 }
 
+bool GpuShaderCreator::hasDynamicProperty(DynamicPropertyType type) const
+{
+    for (auto dp : getImpl()->m_dynamicProperties)
+    {
+        if (dp->getType() == type)
+        {
+            // Dynamic property is already there.
+            return true;
+        }
+    }
+    return false;
+}
+
+void GpuShaderCreator::addDynamicProperty(DynamicPropertyRcPtr & prop)
+{
+    for (auto dp : getImpl()->m_dynamicProperties)
+    {
+        if (dp->getType() == prop->getType())
+        {
+            // Dynamic property is already there.
+            throw Exception("Dynamic property already here.");
+        }
+    }
+
+    getImpl()->m_dynamicProperties.push_back(prop);
+}
+
+unsigned GpuShaderCreator::getNumDynamicProperties() const noexcept
+{
+    return (unsigned)getImpl()->m_dynamicProperties.size();
+}
+
+DynamicPropertyRcPtr GpuShaderCreator::getDynamicProperty(unsigned index) const
+{
+    if (index >= (unsigned)getImpl()->m_dynamicProperties.size())
+    {
+        std::ostringstream oss;
+        oss << "Dynamic properties access error: index = " << index
+            << " where size = " << getImpl()->m_dynamicProperties.size();
+        throw Exception(oss.str().c_str());
+    }
+    return getImpl()->m_dynamicProperties[index];
+}
+
+DynamicPropertyRcPtr GpuShaderCreator::getDynamicProperty(DynamicPropertyType type) const
+{
+    for (auto dp : getImpl()->m_dynamicProperties)
+    {
+        if (dp->getType() == type)
+        {
+            return dp;
+        }
+    }
+    throw Exception("Dynamic property not found.");
+}
+
 void GpuShaderCreator::begin(const char *)
 {
 }
@@ -245,8 +304,13 @@ void GpuShaderCreator::finalize()
 
     if(IsDebugLoggingEnabled())
     {
-        LogDebug("GPU Shader");
-        LogDebug(getImpl()->m_shaderCode);
+        std::ostringstream oss;
+        oss << std::endl
+            << "**" << std::endl
+            << "GPU Fragment Shader program" << std::endl
+            << getImpl()->m_shaderCode << std::endl;
+
+        LogDebug(oss.str());
     }
 }
 

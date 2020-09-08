@@ -265,7 +265,7 @@ Interpolation InterpolationFromString(const char * s)
 const char * GpuLanguageToString(GpuLanguage language)
 {
     if(language == GPU_LANGUAGE_CG) return "cg";
-    else if(language == GPU_LANGUAGE_GLSL_1_0)  return "glsl_1.0";
+    else if(language == GPU_LANGUAGE_GLSL_1_2)  return "glsl_1.2";
     else if(language == GPU_LANGUAGE_GLSL_1_3)  return "glsl_1.3";
     else if(language == GPU_LANGUAGE_GLSL_4_0)  return "glsl_4.0";
     else if(language == GPU_LANGUAGE_HLSL_DX11) return "hlsl_dx11";
@@ -276,7 +276,7 @@ GpuLanguage GpuLanguageFromString(const char * s)
 {
     const std::string str = StringUtils::Lower(s);
     if(str == "cg") return GPU_LANGUAGE_CG;
-    else if(str == "glsl_1.0") return GPU_LANGUAGE_GLSL_1_0;
+    else if(str == "glsl_1.2") return GPU_LANGUAGE_GLSL_1_2;
     else if(str == "glsl_1.3") return GPU_LANGUAGE_GLSL_1_3;
     else if(str == "glsl_4.0") return GPU_LANGUAGE_GLSL_4_0;
     else if(str == "hlsl_dx11") return GPU_LANGUAGE_HLSL_DX11;
@@ -379,7 +379,42 @@ FixedFunctionStyle FixedFunctionStyleFromString(const char * style)
 
     // Default style is meaningless.
     std::stringstream ss;
-    ss << "Unknown Fixed FunctionOp style: " << style;
+    ss << "Unknown Fixed FunctionOp style: '" << style << "'.";
+
+    throw Exception(ss.str().c_str());
+}
+
+namespace
+{
+static constexpr char GRADING_STYLE_LINEAR[]      = "linear";
+static constexpr char GRADING_STYLE_LOGARITHMIC[] = "log";
+static constexpr char GRADING_STYLE_VIDEO[]       = "video";
+}
+
+const char * GradingStyleToString(GradingStyle style)
+{
+    switch (style)
+    {
+    case GRADING_LIN:    return GRADING_STYLE_LINEAR;
+    case GRADING_LOG:    return GRADING_STYLE_LOGARITHMIC;
+    case GRADING_VIDEO:  return GRADING_STYLE_VIDEO;
+    }
+
+    // Default style is meaningless.
+    throw Exception("Unknown grading style");
+}
+
+GradingStyle GradingStyleFromString(const char * style)
+{
+    const std::string str = StringUtils::Lower(style);
+
+    if      (str == GRADING_STYLE_LINEAR)      return GRADING_LIN;
+    else if (str == GRADING_STYLE_LOGARITHMIC) return GRADING_LOG;
+    else if (str == GRADING_STYLE_VIDEO)       return GRADING_VIDEO;
+
+    // Default style is meaningless.
+    std::stringstream ss;
+    ss << "Unknown grading style: '" << style << "'.";
 
     throw Exception(ss.str().c_str());
 }
@@ -414,10 +449,11 @@ ExposureContrastStyle ExposureContrastStyleFromString(const char * style)
 
     // Default style is meaningless.
     std::stringstream ss;
-    ss << "Unknown exposure contrast style: " << style;
+    ss << "Unknown exposure contrast style: '" << style << "'.";
 
     throw Exception(ss.str().c_str());
 }
+
 
 namespace
 {
@@ -450,7 +486,7 @@ NegativeStyle NegativeStyleFromString(const char * style)
     else if (str == NEGATIVE_STYLE_LINEAR)    return NEGATIVE_LINEAR;
 
     std::stringstream ss;
-    ss << "Unknown exponent style: " << style;
+    ss << "Unknown exponent style: '" << style << "'.";
 
     throw Exception(ss.str().c_str());
 }

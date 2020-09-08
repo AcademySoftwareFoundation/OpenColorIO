@@ -45,15 +45,15 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
         # Search for yaml-cpp.pc
         find_package(PkgConfig QUIET)
         pkg_check_modules(PC_yaml-cpp QUIET "yaml-cpp>=${yaml-cpp_FIND_VERSION}")
-
+        
         # Find include directory
-        find_path(yaml-cpp_INCLUDE_DIR
+        find_path(yaml-cpp_INCLUDE_DIR 
             NAMES
                 yaml-cpp/yaml.h
             HINTS
                 ${yaml-cpp_ROOT}
                 ${PC_yaml-cpp_INCLUDE_DIRS}
-            PATH_SUFFIXES
+            PATH_SUFFIXES 
                 include
                 yaml-cpp/include
         )

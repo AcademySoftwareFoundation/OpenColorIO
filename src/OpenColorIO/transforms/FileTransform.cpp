@@ -448,9 +448,10 @@ void LoadFileUncached(FileFormat * & returnFormat,
     returnFormat = NULL;
 
     {
-        std::ostringstream os;
-        os << "Opening " << filepath;
-        LogDebug(os.str());
+        std::ostringstream oss;
+        oss << "**" << std::endl
+            << "Opening " << filepath;
+        LogDebug(oss.str());
     }
 
     // Try the initial format.
@@ -497,7 +498,7 @@ void LoadFileUncached(FileFormat * & returnFormat,
             {
                 std::ostringstream os;
                 os << "    Loaded primary format ";
-                os << tryFormat->getName();
+                os << tryFormat->getName() << std::endl;
                 LogDebug(os.str());
             }
 

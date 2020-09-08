@@ -52,12 +52,26 @@ inline std::string Lower(std::string str)
     return str;
 }
 
+inline std::string Lower(const char * str)
+{
+    if (!str) return "";
+    const std::string s{ str };
+    return Lower(s);
+}
+
 // Return the upper case string.
 inline std::string Upper(std::string str)
 {
     std::transform(str.begin(), str.end(), str.begin(),
                    [](unsigned char c) { return Upper(c); });
     return str;
+}
+
+inline std::string Upper(const char * str)
+{
+    if (!str) return "";
+    const std::string s{ str };
+    return Upper(s);
 }
 
 // Case insensitive comparison of strings.
