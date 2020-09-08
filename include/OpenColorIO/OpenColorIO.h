@@ -876,36 +876,36 @@ public:
      * is scene-referred) or the role cie_xyz_d65_interchange (when srcName is
      * display-referred) defined.  An exception is thrown if that is not the case.
      */
-    static ConstProcessorRcPtr GetProcessor(const ConstConfigRcPtr & srcConfig,
-                                            const char * srcColorSpaceName,
-                                            const ConstConfigRcPtr & dstConfig,
-                                            const char * dstColorSpaceName);
-    static ConstProcessorRcPtr GetProcessor(const ConstContextRcPtr & srcContext, 
-                                            const ConstConfigRcPtr & srcConfig,
-                                            const char * srcColorSpaceName,
-                                            const ConstContextRcPtr & dstContext,
-                                            const ConstConfigRcPtr & dstConfig,
-                                            const char * dstColorSpaceName);
+    static ConstProcessorRcPtr GetProcessorFromConfigs(const ConstConfigRcPtr & srcConfig,
+                                                       const char * srcColorSpaceName,
+                                                       const ConstConfigRcPtr & dstConfig,
+                                                       const char * dstColorSpaceName);
+    static ConstProcessorRcPtr GetProcessorFromConfigs(const ConstContextRcPtr & srcContext, 
+                                                       const ConstConfigRcPtr & srcConfig,
+                                                       const char * srcColorSpaceName,
+                                                       const ConstContextRcPtr & dstContext,
+                                                       const ConstConfigRcPtr & dstConfig,
+                                                       const char * dstColorSpaceName);
 
     /**
      * The srcInterchangeName and dstInterchangeName must refer to a pair of
      * color spaces in the two configs that are the same.  A role name may also be used.
      */
-    static ConstProcessorRcPtr GetProcessor(const ConstConfigRcPtr & srcConfig,
-                                            const char * srcColorSpaceName,
-                                            const char * srcInterchangeName,
-                                            const ConstConfigRcPtr & dstConfig,
-                                            const char * dstColorSpaceName,
-                                            const char * dstInterchangeName);
+    static ConstProcessorRcPtr GetProcessorFromConfigs(const ConstConfigRcPtr & srcConfig,
+                                                       const char * srcColorSpaceName,
+                                                       const char * srcInterchangeName,
+                                                       const ConstConfigRcPtr & dstConfig,
+                                                       const char * dstColorSpaceName,
+                                                       const char * dstInterchangeName);
 
-    static ConstProcessorRcPtr GetProcessor(const ConstContextRcPtr & srcContext,
-                                            const ConstConfigRcPtr & srcConfig,
-                                            const char * srcColorSpaceName,
-                                            const char * srcInterchangeName,
-                                            const ConstContextRcPtr & dstContext,
-                                            const ConstConfigRcPtr & dstConfig,
-                                            const char * dstColorSpaceName,
-                                            const char * dstInterchangeName);
+    static ConstProcessorRcPtr GetProcessorFromConfigs(const ConstContextRcPtr & srcContext,
+                                                       const ConstConfigRcPtr & srcConfig,
+                                                       const char * srcColorSpaceName,
+                                                       const char * srcInterchangeName,
+                                                       const ConstContextRcPtr & dstContext,
+                                                       const ConstConfigRcPtr & dstConfig,
+                                                       const char * dstColorSpaceName,
+                                                       const char * dstInterchangeName);
 
     Config(const Config &) = delete;
     Config& operator= (const Config &) = delete;

@@ -321,50 +321,50 @@ void bindPyConfig(py::module & m)
              &Config::getProcessor, 
              "context"_a, "transform"_a, "direction"_a)
 
-        .def_static("GetProcessor", [](const ConstConfigRcPtr & srcConfig,
-                                       const char * srcColorSpaceName,
-                                       const ConstConfigRcPtr & dstConfig,
-                                       const char * dstColorSpaceName)
+        .def_static("GetProcessorFromConfigs", [](const ConstConfigRcPtr & srcConfig,
+                                                  const char * srcColorSpaceName,
+                                                  const ConstConfigRcPtr & dstConfig,
+                                                  const char * dstColorSpaceName)
             {
-                return Config::GetProcessor(srcConfig, srcColorSpaceName,
-                                            dstConfig, dstColorSpaceName);
+                return Config::GetProcessorFromConfigs(srcConfig, srcColorSpaceName,
+                                                       dstConfig, dstColorSpaceName);
             },
                     "srcConfig"_a, "srcColorSpaceName"_a, "dstConfig"_a, "dstColorSpaceName"_a)
-        .def_static("GetProcessor", [](const ConstContextRcPtr & srcContext,
-                                       const ConstConfigRcPtr & srcConfig,
-                                       const char * srcColorSpaceName,
-                                       const ConstContextRcPtr & dstContext,
-                                       const ConstConfigRcPtr & dstConfig,
-                                       const char * dstColorSpaceName)
+        .def_static("GetProcessorFromConfigs", [](const ConstContextRcPtr & srcContext,
+                                                  const ConstConfigRcPtr & srcConfig,
+                                                  const char * srcColorSpaceName,
+                                                  const ConstContextRcPtr & dstContext,
+                                                  const ConstConfigRcPtr & dstConfig,
+                                                  const char * dstColorSpaceName)
             {
-                return Config::GetProcessor(srcContext, srcConfig, srcColorSpaceName,
-                                            dstContext, dstConfig, dstColorSpaceName);
+                return Config::GetProcessorFromConfigs(srcContext, srcConfig, srcColorSpaceName,
+                                                       dstContext, dstConfig, dstColorSpaceName);
             },
                     "srcContext"_a, "srcConfig"_a, "srcColorSpaceName"_a, 
                     "dstContext"_a, "dstConfig"_a, "dstColorSpaceName"_a)
-        .def_static("GetProcessor", [](const ConstConfigRcPtr & srcConfig,
-                                       const char * srcColorSpaceName,
-                                       const char * srcInterchangeName,
-                                       const ConstConfigRcPtr & dstConfig,
-                                       const char * dstColorSpaceName,
-                                       const char * dstInterchangeName)
+        .def_static("GetProcessorFromConfigs", [](const ConstConfigRcPtr & srcConfig,
+                                                  const char * srcColorSpaceName,
+                                                  const char * srcInterchangeName,
+                                                  const ConstConfigRcPtr & dstConfig,
+                                                  const char * dstColorSpaceName,
+                                                  const char * dstInterchangeName)
             {
-                return Config::GetProcessor(srcConfig, srcColorSpaceName, srcInterchangeName,
-                                            dstConfig, dstColorSpaceName, dstInterchangeName);
+                return Config::GetProcessorFromConfigs(srcConfig, srcColorSpaceName, srcInterchangeName,
+                                                       dstConfig, dstColorSpaceName, dstInterchangeName);
             }, 
                     "srcConfig"_a, "srcColorSpaceName"_a, "srcInterchangeName"_a, 
                     "dstConfig"_a, "dstColorSpaceName"_a, "dstInterchangeName"_a)
-        .def_static("GetProcessor", [](const ConstContextRcPtr & srcContext,
-                                       const ConstConfigRcPtr & srcConfig,
-                                       const char * srcColorSpaceName,
-                                       const char * srcInterchangeName,
-                                       const ConstContextRcPtr & dstContext,
-                                       const ConstConfigRcPtr & dstConfig,
-                                       const char * dstColorSpaceName,
-                                       const char * dstInterchangeName)
+        .def_static("GetProcessorFromConfigs", [](const ConstContextRcPtr & srcContext,
+                                                  const ConstConfigRcPtr & srcConfig,
+                                                  const char * srcColorSpaceName,
+                                                  const char * srcInterchangeName,
+                                                  const ConstContextRcPtr & dstContext,
+                                                  const ConstConfigRcPtr & dstConfig,
+                                                  const char * dstColorSpaceName,
+                                                  const char * dstInterchangeName)
             {
-                return Config::GetProcessor(srcContext, srcConfig, srcColorSpaceName, srcInterchangeName,
-                                            dstContext, dstConfig, dstColorSpaceName, dstInterchangeName);
+                return Config::GetProcessorFromConfigs(srcContext, srcConfig, srcColorSpaceName, srcInterchangeName,
+                                                       dstContext, dstConfig, dstColorSpaceName, dstInterchangeName);
             }, 
                     "srcContext"_a, "srcConfig"_a, "srcColorSpaceName"_a, "srcInterchangeName"_a, 
                     "dstContext"_a, "dstConfig"_a, "dstColorSpaceName"_a, "dstInterchangeName"_a);

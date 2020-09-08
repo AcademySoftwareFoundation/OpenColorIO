@@ -568,8 +568,6 @@ int main(int, char **)
                     {
                         // Call the retest callback.
                         test->retestSetup(idx - 1);
-                        // Update uniforms with dynamic properties.
-                        app->updateUniforms();
                     }
 
                     // Process the image texture into the rendering buffer.
