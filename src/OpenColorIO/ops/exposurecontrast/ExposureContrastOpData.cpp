@@ -162,18 +162,18 @@ ExposureContrastStyle ExposureContrastOpData::ConvertStyle(ExposureContrastOpDat
 
 ExposureContrastOpData::ExposureContrastOpData()
     : OpData()
-    , m_exposure(std::make_shared<DynamicPropertyImpl>(DYNAMIC_PROPERTY_EXPOSURE, 0., false))
-    , m_contrast(std::make_shared<DynamicPropertyImpl>(DYNAMIC_PROPERTY_CONTRAST, 1., false))
-    , m_gamma(std::make_shared<DynamicPropertyImpl>(DYNAMIC_PROPERTY_GAMMA, 1., false))
+    , m_exposure(std::make_shared<DynamicPropertyDoubleImpl>(DYNAMIC_PROPERTY_EXPOSURE, 0., false))
+    , m_contrast(std::make_shared<DynamicPropertyDoubleImpl>(DYNAMIC_PROPERTY_CONTRAST, 1., false))
+    , m_gamma(std::make_shared<DynamicPropertyDoubleImpl>(DYNAMIC_PROPERTY_GAMMA, 1., false))
 {
 }
 
 ExposureContrastOpData::ExposureContrastOpData(Style style)
     : OpData()
     , m_style(style)
-    , m_exposure(std::make_shared<DynamicPropertyImpl>(DYNAMIC_PROPERTY_EXPOSURE, 0., false))
-    , m_contrast(std::make_shared<DynamicPropertyImpl>(DYNAMIC_PROPERTY_CONTRAST, 1., false))
-    , m_gamma(std::make_shared<DynamicPropertyImpl>(DYNAMIC_PROPERTY_GAMMA, 1., false))
+    , m_exposure(std::make_shared<DynamicPropertyDoubleImpl>(DYNAMIC_PROPERTY_EXPOSURE, 0., false))
+    , m_contrast(std::make_shared<DynamicPropertyDoubleImpl>(DYNAMIC_PROPERTY_CONTRAST, 1., false))
+    , m_gamma(std::make_shared<DynamicPropertyDoubleImpl>(DYNAMIC_PROPERTY_GAMMA, 1., false))
 {
 }
 
@@ -201,9 +201,9 @@ bool ExposureContrastOpData::isNoOp() const
 bool ExposureContrastOpData::isIdentity() const
 {
     return !isDynamic() &&
-           (m_exposure->getDoubleValue() == 0.) &&
-           (m_contrast->getDoubleValue() == 1.) &&
-           (m_gamma->getDoubleValue() == 1.);
+           (m_exposure->getValue() == 0.) &&
+           (m_contrast->getValue() == 1.) &&
+           (m_gamma->getValue() == 1.);
 }
 
 bool ExposureContrastOpData::isDynamic() const
@@ -265,15 +265,15 @@ std::string ExposureContrastOpData::getCacheID() const
 
     if (!m_exposure->isDynamic())
     {
-        cacheIDStream << "E: " << m_exposure->getDoubleValue() << " ";
+        cacheIDStream << "E: " << m_exposure->getValue() << " ";
     }
     if (!m_contrast->isDynamic())
     {
-        cacheIDStream << "C: " << m_contrast->getDoubleValue() << " ";
+        cacheIDStream << "C: " << m_contrast->getValue() << " ";
     }
     if (!m_gamma->isDynamic())
     {
-        cacheIDStream << "G: " << m_gamma->getDoubleValue() << " ";
+        cacheIDStream << "G: " << m_gamma->getValue() << " ";
     }
     cacheIDStream << "P: " << m_pivot << " ";
     cacheIDStream << "LES: " << m_logExposureStep << " ";
@@ -313,6 +313,9 @@ bool ExposureContrastOpData::hasDynamicProperty(DynamicPropertyType type) const
     case DYNAMIC_PROPERTY_GAMMA:
         res = m_gamma->isDynamic();
         break;
+    case DYNAMIC_PROPERTY_GRADING_PRIMARY:
+    case DYNAMIC_PROPERTY_GRADING_RGBCURVE:
+    case DYNAMIC_PROPERTY_GRADING_TONE:
     default:
         break;
     }
@@ -343,6 +346,9 @@ ExposureContrastOpData::getDynamicProperty(DynamicPropertyType type) const
             return m_gamma;
         }
         break;
+    case DYNAMIC_PROPERTY_GRADING_PRIMARY:
+    case DYNAMIC_PROPERTY_GRADING_RGBCURVE:
+    case DYNAMIC_PROPERTY_GRADING_TONE:
     default:
         throw Exception("Dynamic property type not supported by ExposureContrast.");
     }
@@ -350,35 +356,44 @@ ExposureContrastOpData::getDynamicProperty(DynamicPropertyType type) const
 }
 
 void ExposureContrastOpData::replaceDynamicProperty(DynamicPropertyType type,
-                                                    DynamicPropertyImplRcPtr prop)
+                                                    DynamicPropertyDoubleImplRcPtr & prop)
 {
-    switch (type)
+    auto propDouble = OCIO_DYNAMIC_POINTER_CAST<DynamicPropertyDoubleImpl>(prop);
+    if (propDouble)
     {
-    case DYNAMIC_PROPERTY_EXPOSURE:
-        if (m_exposure->isDynamic())
+
+        switch (type)
         {
-            m_exposure = prop;
-            return;
+        case DYNAMIC_PROPERTY_EXPOSURE:
+            if (m_exposure->isDynamic())
+            {
+                m_exposure = propDouble;
+                return;
+            }
+            break;
+        case DYNAMIC_PROPERTY_CONTRAST:
+            if (m_contrast->isDynamic())
+            {
+                m_contrast = propDouble;
+                return;
+            }
+            break;
+        case DYNAMIC_PROPERTY_GAMMA:
+            if (m_gamma->isDynamic())
+            {
+                m_gamma = propDouble;
+                return;
+            }
+            break;
+        case DYNAMIC_PROPERTY_GRADING_PRIMARY:
+        case DYNAMIC_PROPERTY_GRADING_RGBCURVE:
+        case DYNAMIC_PROPERTY_GRADING_TONE:
+        default:
+            throw Exception("Dynamic property type not supported by ExposureContrast.");
         }
-        break;
-    case DYNAMIC_PROPERTY_CONTRAST:
-        if (m_contrast->isDynamic())
-        {
-            m_contrast = prop;
-            return;
-        }
-        break;
-    case DYNAMIC_PROPERTY_GAMMA:
-        if (m_gamma->isDynamic())
-        {
-            m_gamma = prop;
-            return;
-        }
-        break;
-    default:
-        throw Exception("Dynamic property type not supported by ExposureContrast.");
+        throw Exception("ExposureContrast property is not dynamic.");
     }
-    throw Exception("ExposureContrast property is not dynamic.");
+    throw Exception("Dynamic property type not supported by ExposureContrast.");
 }
 
 void ExposureContrastOpData::removeDynamicProperties()
@@ -396,9 +411,9 @@ ExposureContrastOpData & ExposureContrastOpData::operator=(const ExposureContras
 
     m_style = rhs.m_style;
     // Copy dynamic properties. Sharing happens when needed, with CPUop for instance.
-    m_exposure->setValue(rhs.m_exposure->getDoubleValue());
-    m_contrast->setValue(rhs.m_contrast->getDoubleValue());
-    m_gamma->setValue(rhs.m_gamma->getDoubleValue());
+    m_exposure->setValue(rhs.m_exposure->getValue());
+    m_contrast->setValue(rhs.m_contrast->getValue());
+    m_gamma->setValue(rhs.m_gamma->getValue());
     if (rhs.m_exposure->isDynamic())
     {
         m_exposure->makeDynamic();

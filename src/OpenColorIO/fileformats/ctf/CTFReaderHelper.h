@@ -13,6 +13,9 @@
 #include "ops/exposurecontrast/ExposureContrastOpData.h"
 #include "ops/fixedfunction/FixedFunctionOpData.h"
 #include "ops/gamma/GammaOpData.h"
+#include "ops/gradingprimary/GradingPrimaryOpData.h"
+#include "ops/gradingrgbcurve/GradingRGBCurveOpData.h"
+#include "ops/gradingtone/GradingToneOpData.h"
 #include "ops/log/LogOpData.h"
 #include "ops/log/LogUtils.h"
 #include "ops/lut1d/Lut1DOpData.h"
@@ -318,6 +321,9 @@ public:
         FixedFunctionType,
         FunctionType,
         GammaType,
+        GradingPrimaryType,
+        GradingRGBCurveType,
+        GradingToneType,
         InvLut1DType,
         InvLut3DType,
         LogType,
@@ -604,6 +610,169 @@ public:
 
 protected:
     int getChannelNumber(const char * name) const override;
+};
+
+class CTFReaderGradingPrimaryElt : public CTFReaderOpElt
+{
+public:
+    CTFReaderGradingPrimaryElt();
+    ~CTFReaderGradingPrimaryElt() = default;
+
+    void start(const char ** atts) override;
+    void end() override;
+
+    const OpDataRcPtr getOp() const override;
+
+    const GradingPrimaryOpDataRcPtr & getGradingPrimary() const
+    {
+        return m_gradingPrimary;
+    }
+
+protected:
+    bool isOpParameterValid(const char * att) const noexcept override;
+
+private:
+    GradingPrimaryOpDataRcPtr m_gradingPrimary;
+};
+
+class CTFReaderGradingPrimaryParamElt : public XmlReaderPlainElt
+{
+public:
+    CTFReaderGradingPrimaryParamElt(const std::string & name,
+                                    ContainerEltRcPtr pParent,
+                                    unsigned int xmlLocation,
+                                    const std::string & xmlFile);
+    ~CTFReaderGradingPrimaryParamElt();
+
+    void start(const char ** atts);
+    void end();
+
+    void setRawData(const char* str, size_t len, unsigned int xmlLine);
+
+private:
+    void parseRGBMAttrValues(const char ** atts, GradingRGBM & rgbm) const;
+
+    void parsePivotAttrValues(const char ** atts,
+                              double & contrast,
+                              double & black,
+                              double & white) const;
+
+    void parseBWAttrValues(const char ** atts,
+                           double & black,
+                           double & white) const;
+
+    void parseScalarAttrValue(const char ** atts,
+                              const char * tag,
+                              double & value) const;
+};
+
+class CTFReaderGradingRGBCurveElt : public CTFReaderOpElt
+{
+public:
+    CTFReaderGradingRGBCurveElt();
+    ~CTFReaderGradingRGBCurveElt() = default;
+
+    void start(const char ** atts) override;
+    void end() override;
+
+    const OpDataRcPtr getOp() const override;
+
+    const GradingRGBCurveOpDataRcPtr & getGradingRGBCurve() const
+    {
+        return m_gradingRGBCurve;
+    }
+
+    // For sub-elements.
+    GradingRGBCurveRcPtr & getLoadingRGBCurve() { return m_loadingRGBCurve; }
+
+protected:
+    bool isOpParameterValid(const char * att) const noexcept override;
+
+private:
+    // Editable RGBCurve that will be set to the OpData when parsing of the element is done.
+    GradingRGBCurveRcPtr m_loadingRGBCurve;
+    GradingRGBCurveOpDataRcPtr m_gradingRGBCurve;
+};
+
+class CTFReaderGradingCurveElt : public XmlReaderComplexElt
+{
+public:
+    CTFReaderGradingCurveElt(const std::string & name,
+                             ContainerEltRcPtr pParent,
+                             unsigned int xmlLocation,
+                             const std::string & xmlFile);
+    ~CTFReaderGradingCurveElt();
+
+    void start(const char ** atts);
+    void end();
+
+    GradingBSplineCurveRcPtr getCurve() { return m_curve; }
+private:
+    GradingBSplineCurveRcPtr m_curve;
+};
+
+class CTFReaderGradingCurveParamElt : public XmlReaderPlainElt
+{
+public:
+    CTFReaderGradingCurveParamElt(const std::string & name,
+                                  ContainerEltRcPtr pParent,
+                                  unsigned int xmlLocation,
+                                  const std::string & xmlFile);
+    ~CTFReaderGradingCurveParamElt();
+
+    void start(const char ** atts);
+    void end();
+
+    void setRawData(const char* str, size_t len, unsigned int xmlLine);
+
+private:
+    std::vector<float> m_data;
+};
+
+class CTFReaderGradingToneElt : public CTFReaderOpElt
+{
+public:
+    CTFReaderGradingToneElt();
+    ~CTFReaderGradingToneElt() = default;
+
+    void start(const char ** atts) override;
+    void end() override;
+
+    const OpDataRcPtr getOp() const override;
+
+    const GradingToneOpDataRcPtr & getGradingTone() const
+    {
+        return m_gradingTone;
+    }
+
+protected:
+    bool isOpParameterValid(const char * att) const noexcept override;
+
+private:
+    GradingToneOpDataRcPtr m_gradingTone;
+};
+
+class CTFReaderGradingToneParamElt : public XmlReaderPlainElt
+{
+public:
+    CTFReaderGradingToneParamElt(const std::string & name,
+                                 ContainerEltRcPtr pParent,
+                                 unsigned int xmlLocation,
+                                 const std::string & xmlFile);
+    ~CTFReaderGradingToneParamElt();
+
+    void start(const char ** atts);
+    void end();
+
+    void setRawData(const char* str, size_t len, unsigned int xmlLine);
+
+private:
+    void parseRGBMSWAttrValues(const char ** atts, GradingRGBMSW & rgbm,
+                               bool center, bool pivot) const;
+
+    void parseScalarAttrValue(const char ** atts,
+                              const char * tag,
+                              double & value) const;
 };
 
 class CTFReaderInvLut1DElt : public CTFReaderOpElt, public CTFArrayMgt

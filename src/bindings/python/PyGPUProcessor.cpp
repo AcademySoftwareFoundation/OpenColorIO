@@ -12,7 +12,6 @@ void bindPyGPUProcessor(py::module & m)
         .def("isNoOp", &GPUProcessor::isNoOp)
         .def("hasChannelCrosstalk", &GPUProcessor::hasChannelCrosstalk)
         .def("getCacheID", &GPUProcessor::getCacheID)
-        .def("getDynamicProperty", &GPUProcessor::getDynamicProperty, "type"_a)
         .def("extractGpuShaderInfo", 
              (void (GPUProcessor::*)(GpuShaderDescRcPtr &) const) 
              &GPUProcessor::extractGpuShaderInfo,

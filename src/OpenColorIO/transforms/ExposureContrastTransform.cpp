@@ -93,6 +93,11 @@ void ExposureContrastTransformImpl::makeExposureDynamic()
     data().getExposureProperty()->makeDynamic();
 }
 
+void ExposureContrastTransformImpl::makeExposureNonDynamic()
+{
+    data().getExposureProperty()->makeNonDynamic();
+}
+
 bool ExposureContrastTransformImpl::isExposureDynamic() const
 {
     return data().getExposureProperty()->isDynamic();
@@ -113,6 +118,11 @@ void ExposureContrastTransformImpl::makeContrastDynamic()
     data().getContrastProperty()->makeDynamic();
 }
 
+void ExposureContrastTransformImpl::makeContrastNonDynamic()
+{
+    data().getContrastProperty()->makeNonDynamic();
+}
+
 bool ExposureContrastTransformImpl::isContrastDynamic() const
 {
     return data().getContrastProperty()->isDynamic();
@@ -131,6 +141,11 @@ void ExposureContrastTransformImpl::setGamma(double gamma)
 void ExposureContrastTransformImpl::makeGammaDynamic()
 {
     data().getGammaProperty()->makeDynamic();
+}
+
+void ExposureContrastTransformImpl::makeGammaNonDynamic()
+{
+    data().getGammaProperty()->makeNonDynamic();
 }
 
 bool ExposureContrastTransformImpl::isGammaDynamic() const

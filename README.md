@@ -5,7 +5,8 @@ OpenColorIO
 ===========
 
 [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
-[![Build Status](https://github.com/AcademySoftwareFoundation/OpenColorIO/workflows/CI/badge.svg)](https://github.com/AcademySoftwareFoundation/OpenColorIO/actions?query=workflow%3ACI)
+[![CI Status](https://github.com/AcademySoftwareFoundation/OpenColorIO/workflows/CI/badge.svg)](https://github.com/AcademySoftwareFoundation/OpenColorIO/actions?query=workflow%3ACI)
+[![GPU CI Status](https://github.com/AcademySoftwareFoundation/OpenColorIO/workflows/GPU/badge.svg)](https://github.com/AcademySoftwareFoundation/OpenColorIO/actions?query=workflow%3AGPU)
 [![Analysis Status](https://github.com/AcademySoftwareFoundation/OpenColorIO/workflows/Analysis/badge.svg)](https://github.com/AcademySoftwareFoundation/OpenColorIO/actions?query=workflow%3AAnalysis)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=AcademySoftwareFoundation_OpenColorIO&metric=alert_status)](https://sonarcloud.io/dashboard?id=AcademySoftwareFoundation_OpenColorIO)
 [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/2612/badge)](https://bestpractices.coreinfrastructure.org/projects/2612)

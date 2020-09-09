@@ -1650,7 +1650,7 @@ private:
  * \param rcss 
  */
 extern OCIOEXPORT ConstColorSpaceSetRcPtr operator||(const ConstColorSpaceSetRcPtr & lcss,
-                                                        const ConstColorSpaceSetRcPtr & rcss);
+                                                     const ConstColorSpaceSetRcPtr & rcss);
  /**
   * \brief Perform the intersection of two sets.
   * 
@@ -1662,7 +1662,7 @@ extern OCIOEXPORT ConstColorSpaceSetRcPtr operator||(const ConstColorSpaceSetRcP
   * \param rcss 
  */
 extern OCIOEXPORT ConstColorSpaceSetRcPtr operator&&(const ConstColorSpaceSetRcPtr & lcss,
-                                                        const ConstColorSpaceSetRcPtr & rcss);
+                                                     const ConstColorSpaceSetRcPtr & rcss);
 /**
  * \brief Perform the difference of two sets. 
  * 
@@ -1884,21 +1884,24 @@ public:
     static const char * getFormatNameByIndex(int index);
     static const char * getFormatExtensionByIndex(int index);
 
-    // TODO: Revisit the dynamic property access.
-    // Access to dynamic properties.
-    
-    // TODO: Move to .rst
-    // \note The dynamic properties are a convenient way to change on-the-fly values without 
-    // generating again and again a CPU or GPU processor instance. Any color transformation can
-    // contain dynamic properties from a :cpp:class:`ExposureContrastTransform` for example. So, 
-    // :cpp:class:`Processor`, :cpp:class:`CPUProcessor` and :cpp:class:`GPUProcessor` all have
-    // ways to manage dynamic properties. However, the transform dynamic properties are decoupled
-    // between the types of processor instances so that the same :cpp:class:`Processor` can
-    // generate several independent CPU and/or GPU processor instances i.e. changing the value
-    // of the exposure dynamic property from a CPU processor instance does not affect the
-    // corresponding GPU processor instance.
-
+    /**
+     * The returned pointer may be used to set the default value of any dynamic
+     * properties of the requested type.  Throws if the requested property is not found.  Note
+     * that if the processor contains several ops that support the requested property, only ones
+     * for which dynamic has been enabled will be controlled.
+     *
+     * \note The dynamic properties are a convenient way to change on-the-fly values without 
+     * generating again and again a CPU or GPU processor instance. Color transformations can
+     * contain dynamic properties from a :cpp:class:`ExposureContrastTransform` for example.
+     * So, :cpp:class:`Processor`, :cpp:class:`CPUProcessor` and :cpp:class:`GpuShaderCreator`
+     * all have ways to manage dynamic properties. However, the transform dynamic properties
+     * are decoupled between the types of processor instances so that the same
+     * :cpp:class:`Processor` can generate several independent CPU and/or GPU processor
+     * instances i.e. changing the value of the exposure dynamic property from a CPU processor
+     * instance does not affect the corresponding GPU processor instance.
+     */
     DynamicPropertyRcPtr getDynamicProperty(DynamicPropertyType type) const;
+    /// Can be used before calling getDynamicProperty.
     bool hasDynamicProperty(DynamicPropertyType type) const;
 
     /**
@@ -2008,7 +2011,15 @@ public:
     /// Bit-depth of the output pixel buffer.
     BitDepth getOutputBitDepth() const;
 
-    /// Refer to \ref GPUProcessor::getDynamicProperty
+    /* The returned pointer may be used to set the value of any dynamic properties
+     * of the requested type.  Throws if the requested property is not found.  Note that if the
+     * processor contains several ops that support the requested property, only ones for which
+     * dynamic has been enabled will be controlled.
+     *
+     * \note The dynamic properties in this object are decoupled from the ones in the
+     * \ref Processor it was generated from. For each dynamic property in the Processor,
+     * there is one ine the CPU processor.
+     */
     DynamicPropertyRcPtr getDynamicProperty(DynamicPropertyType type) const;
 
     /**
@@ -2060,18 +2071,6 @@ public:
     bool hasChannelCrosstalk() const;
 
     const char * getCacheID() const;
-
-    /**
-     * The returned pointer may be used to set the value of any dynamic properties
-     * of the requested type.  Throws if the requested property is not found.  Note that if the
-     * processor contains several ops that support the requested property, only ones for which
-     * dynamic has been enabled will be controlled.
-     *
-     * \note
-     *    The dynamic properties in this object are decoupled from the ones
-     *    in the :cpp:class:`Processor` it was generated from.
-     */
-    DynamicPropertyRcPtr getDynamicProperty(DynamicPropertyType type) const;
 
     /// Extract & Store the shader information to implement the color processing.
     void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const;
@@ -2484,12 +2483,17 @@ private:
 
 ///////////////////////////////////////////////////////////////////////////
 // GpuShaderCreator
-
 /**
  * Inherit from the class to fully customize the implementation of a GPU shader program
  * from a color transformation.
  *
  * When no customizations are needed then the :cpp:class:`GpuShaderDesc` is a better choice.
+ *
+ * To better decouple the DynamicProperties from their GPU implementation, the code provides
+ * several addUniform() methods i.e. one per access function types. For example, an
+ * ExposureContrastTransform instance owns three DynamicProperties and they are all
+ * implemented by a double. When creating the GPU fragment shader program, the addUniform() with
+ * GpuShaderCreator::DoubleGetter is called when property is dynamic, up to three times.
  */
 class OCIOEXPORT GpuShaderCreator
 {
@@ -2540,8 +2544,44 @@ public:
      */
     unsigned getNextResourceIndex() noexcept;
 
+    /// Function returning a double, used by uniforms. GPU converts double to float.
+    typedef std::function<double()> DoubleGetter;
+    /// Function returning a bool, used by uniforms.
+    typedef std::function<bool()> BoolGetter;
+    /// Function returning an int, used by uniforms.
+    typedef std::function<int()> SizeGetter;
+    /// Function returning a float *, used by uniforms.
+    typedef std::function<const float *()> FloatArrayGetter;
+    /// Function returning an int *, used by uniforms.
+    typedef std::function<const int *()> IntArrayGetter;
+
     virtual bool addUniform(const char * name,
-                            const DynamicPropertyRcPtr & value) = 0;
+                            const DoubleGetter & getDouble) = 0;
+
+    virtual bool addUniform(const char * name,
+                            const BoolGetter & getBool) = 0;
+
+    virtual bool addUniform(const char * name,
+                            const SizeGetter & getSize,
+                            const FloatArrayGetter & getFloatArray) = 0;
+
+    virtual bool addUniform(const char * name,
+                            const SizeGetter & getSize,
+                            const IntArrayGetter & getInt2Array) = 0;
+
+    /// Adds the property (used internally).
+    void addDynamicProperty(DynamicPropertyRcPtr & prop);
+
+    /// Dynamic Property related methods.
+    unsigned getNumDynamicProperties() const noexcept;
+    DynamicPropertyRcPtr getDynamicProperty(unsigned index) const;
+
+    bool hasDynamicProperty(DynamicPropertyType type) const;
+    /**
+     * Dynamic properties allow changes once the fragment shader program has been created. The
+     * steps are to get the appropriate DynamicProperty instance, and then change its value.
+     */
+    DynamicPropertyRcPtr getDynamicProperty(DynamicPropertyType type) const;
 
     enum TextureType
     {
@@ -2801,6 +2841,9 @@ protected:
 //    glUniform1i(glGetUniformLocation(g_programId, "tex1"), 1);  // image texture
 //    oglBuilder->useAllTextures(g_programId);                    // LUT textures
 //
+//    // Step 7: Update uniforms from dynamic property instances.
+//    m_oglBuilder->useAllUniforms();
+//
 
 class OCIOEXPORT GpuShaderDesc : public GpuShaderCreator
 {
@@ -2814,23 +2857,33 @@ public:
 
     GpuShaderCreatorRcPtr clone() const override;
 
-    // TODO: Move to .rst
-    // Dynamic Property related methods.
-    //
-    // \note The dynamic properties are a convenient way to change on-the-fly values without 
-    // generating again and again the fragment shader program (i.e. dynamic properties map to
-    // uniforms in GLSL). So, the same color transformation could be used several times for DCCs
-    // supporting multiple viewports for example. It allows customizations
-    // (using :cpp:class:`GpuShaderDesc`) of the generated fragment shader program mainly to avoid
-    // resource conflicts. It also decouples dynamic properties to avoid having a change on one 
-    // viewport affect the others.
-    // Hence, a dynamic property value change must use the corresponding :cpp:class:`GpuShaderDesc`
-    // instance to do it -- the :cpp:class:`GPUProcessor` dynamic property values only represent
-    // the original values.
-
+    /**
+     * Used to retrieve uniform information. UniformDataType m_type indicates the type of uniform
+     * and what member of the structure should be used:
+     * * UNIFORM_DOUBLE: m_getDouble.
+     * * UNIFORM_BOOL: m_getBool.
+     * * UNIFORM_ARRAY_FLOAT: m_arrayFloat.
+     * * UNIFORM_ARRAY_INT2: m_arrayInt2.
+     */
+    struct UniformData
+    {
+        const char * m_name{ nullptr };
+        UniformDataType m_type{ UNIFORM_UNKNOWN };
+        DoubleGetter m_getDouble{};
+        BoolGetter m_getBool{};
+        struct ArrayFloat
+        {
+            SizeGetter m_getSize{};
+            FloatArrayGetter m_getArray{};
+        } m_arrayFloat{};
+        struct ArrayInt2
+        {
+            SizeGetter m_getSize{};
+            IntArrayGetter m_getArray{};
+        } m_arrayInt2{};
+    };
     virtual unsigned getNumUniforms() const noexcept = 0;
-    virtual void getUniform(unsigned index, const char *& name,
-                            DynamicPropertyRcPtr & value) const = 0;
+    virtual void getUniform(unsigned index, UniformData & data) const = 0;
 
     // 1D lut related methods
     virtual unsigned getNumTextures() const noexcept = 0;

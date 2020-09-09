@@ -109,6 +109,23 @@ Gaffer is a node based application for use in CG and VFX production, with a part
 Website: `<http://www.gafferhq.org/>`__
 
 
+Guerilla Render
+***************
+
+Composed of Guerilla Station and Guerilla Render, Guerilla is a Production-Proven Look Development, Assembly, Lighting and Rendering Solution designed for the Animation and VFX industries.
+
+Website: `<http://guerillarender.com/>`__
+
+Supported version: >= 2.2
+
+Documentation:
+
+
+- `OpenColorIO Support <http://guerillarender.com/doc/2.2/TD%20Guide_Technical%20Notes_OpenColorIO.html>`__
+
+- `OCIO Management <http://guerillarender.com/?p=424>`__
+
+
 Hiero (Foundry)
 ***************
 
