@@ -8,41 +8,6 @@
 
 namespace OCIO = OCIO_NAMESPACE;
 
-OCIO_ADD_TEST(GradingPrimary, basic)
-{
-    const OCIO::GradingRGBM rgbm0;
-    OCIO_CHECK_EQUAL(rgbm0.m_red, 0);
-    OCIO_CHECK_EQUAL(rgbm0.m_green, 0);
-    OCIO_CHECK_EQUAL(rgbm0.m_blue, 0);
-    OCIO_CHECK_EQUAL(rgbm0.m_master, 0);
-
-    const OCIO::GradingRGBM rgbm1{ 1., 2., 3., 4. };
-    OCIO_CHECK_EQUAL(rgbm1.m_red, 1.);
-    OCIO_CHECK_EQUAL(rgbm1.m_green, 2.);
-    OCIO_CHECK_EQUAL(rgbm1.m_blue, 3.);
-    OCIO_CHECK_EQUAL(rgbm1.m_master, 4.);
-
-    OCIO::GradingRGBM rgbm2{ rgbm1 };
-    OCIO_CHECK_EQUAL(rgbm2.m_red, 1.);
-    OCIO_CHECK_EQUAL(rgbm2.m_green, 2.);
-    OCIO_CHECK_EQUAL(rgbm2.m_blue, 3.);
-    OCIO_CHECK_EQUAL(rgbm2.m_master, 4.);
-
-    // Check operator==().
-    OCIO_CHECK_EQUAL(rgbm1, rgbm2);
-    rgbm2.m_red += 0.1111;
-    OCIO_CHECK_NE(rgbm1, rgbm2);
-
-    const OCIO::GradingPrimary gpLog{ OCIO::GRADING_LOG };
-    const OCIO::GradingPrimary gpLin{ OCIO::GRADING_LIN };
-    const OCIO::GradingPrimary gpVid{ OCIO::GRADING_VIDEO };
-
-    // Check operator==(). (The default values for linear and video are the same.  The style is
-    // not part of the GradingPrimary struct.)
-    OCIO_CHECK_EQUAL(gpLin, gpVid);
-    OCIO_CHECK_NE(gpLog, gpLin);
-}
-
 OCIO_ADD_TEST(GradingPrimaryOpData, accessors)
 {
     // Create GradingPrimaryOpData and check values. More tests are done using
@@ -155,7 +120,7 @@ OCIO_ADD_TEST(GradingPrimaryOpData, validate)
     // Test invalid gamma.
     v.m_gamma.m_red = 0.0001;
     OCIO_CHECK_THROW_WHAT(gp.setValue(v), OCIO::Exception,
-                          "GradingTone gamma '<r=0.0001, g=1, b=1, m=1>' "
+                          "GradingPrimary gamma '<r=0.0001, g=1, b=1, m=1>' "
                           "are below lower bound (0.01)");
 
     v.m_gamma.m_red = 1.;

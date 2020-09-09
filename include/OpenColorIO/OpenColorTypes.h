@@ -11,6 +11,7 @@
 #error This header cannot be used directly. Use <OpenColorIO/OpenColorIO.h> instead.
 #endif
 
+#include <array>
 #include <limits>
 #include <string>
 #include <functional>
@@ -218,6 +219,8 @@ typedef OCIO_SHARED_PTR<MatrixTransform> MatrixTransformRcPtr;
 class OCIOEXPORT RangeTransform;
 typedef OCIO_SHARED_PTR<const RangeTransform> ConstRangeTransformRcPtr;
 typedef OCIO_SHARED_PTR<RangeTransform> RangeTransformRcPtr;
+
+typedef std::array<float, 3> Float3;
 
 template <class T, class U>
 inline OCIO_SHARED_PTR<T> DynamicPtrCast(OCIO_SHARED_PTR<U> const & ptr)
@@ -480,8 +483,9 @@ enum UniformDataType
 {
     UNIFORM_DOUBLE = 0,
     UNIFORM_BOOL,
-    UNIFORM_ARRAY_FLOAT,  ///< Array of floats.
-    UNIFORM_ARRAY_INT2,   ///< Array of int pairs.
+    UNIFORM_FLOAT3,        ///< Array of 3 floats.
+    UNIFORM_VECTOR_FLOAT,  ///< Vector of floats (size is set by uniform).
+    UNIFORM_VECTOR_INT,    ///< Vector of int pairs (size is set by uniform).
     UNIFORM_UNKNOWN
 };
 

@@ -166,6 +166,7 @@ set(TESTS
 	ops/gamma/GammaOpCPU_tests.cpp
 	ops/gamma/GammaOpData_tests.cpp
 	ops/gamma/GammaOpUtils_tests.cpp
+	ops/gradingprimary/GradingPrimary_tests.cpp
 	ops/gradingprimary/GradingPrimaryOpCPU_tests.cpp
 	ops/gradingprimary/GradingPrimaryOpData_tests.cpp
 	ops/gradingprimary/GradingPrimaryOp_tests.cpp

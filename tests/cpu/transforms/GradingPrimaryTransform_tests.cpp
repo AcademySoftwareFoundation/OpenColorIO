@@ -80,10 +80,12 @@ OCIO_ADD_TEST(GradingPrimaryTransform, basic)
     gpt->setValue(v);
     OCIO_CHECK_EQUAL(gpt->getValue().m_pivot, 0.24);
 
+    gpt->setStyle(OCIO::GRADING_LOG);
+    gpt->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
     const OCIO::GradingRGBM gammaInvalid{ 0.00001, 1.0, 1.0, 1.0 };
     v.m_gamma = gammaInvalid;
     OCIO_CHECK_THROW_WHAT(gpt->setValue(v), OCIO::Exception,
-                          "GradingTone gamma '<r=1e-05, g=1, b=1, m=1>' "
+                          "GradingPrimary gamma '<r=1e-05, g=1, b=1, m=1>' "
                           "are below lower bound (0.01)");
 }
 

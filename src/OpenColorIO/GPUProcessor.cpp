@@ -34,11 +34,11 @@ void WriteShaderHeader(GpuShaderCreatorRcPtr & shaderCreator)
     ss.newLine() << "// Declaration of the OCIO shader function";
     ss.newLine();
 
-    ss.newLine() << ss.vec4fKeyword() << " " << fcnName
-                 << "(in "  << ss.vec4fKeyword() << " inPixel)";
+    ss.newLine() << ss.float4Keyword() << " " << fcnName
+                 << "(in "  << ss.float4Keyword() << " inPixel)";
     ss.newLine() << "{";
     ss.indent();
-    ss.newLine() << ss.vec4fKeyword() << " "
+    ss.newLine() << ss.float4Keyword() << " "
                  << shaderCreator->getPixelName() << " = inPixel;";
 
     shaderCreator->addToFunctionHeaderShaderCode(ss.string().c_str());

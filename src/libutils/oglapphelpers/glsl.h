@@ -45,12 +45,7 @@ class OpenGLBuilder
     class Uniform
     {
     public:
-        Uniform(const std::string & name, const GpuShaderCreator::DoubleGetter & getDouble);
-        Uniform(const std::string & name, const GpuShaderCreator::BoolGetter & getBool);
-        Uniform(const std::string & name, const GpuShaderCreator::SizeGetter & getSize,
-                const GpuShaderCreator::FloatArrayGetter & getFloatArray);
-        Uniform(const std::string & name, const GpuShaderCreator::SizeGetter & getSize,
-                const GpuShaderCreator::IntArrayGetter & getInt2Array);
+        Uniform(const std::string & name, const GpuShaderDesc::UniformData & data);
 
         void setUp(unsigned program);
 
@@ -59,11 +54,7 @@ class OpenGLBuilder
     private:
         Uniform() = delete;
         std::string m_name;
-        GpuShaderCreator::DoubleGetter m_getDouble;
-        GpuShaderCreator::DoubleGetter m_getBool;
-        GpuShaderCreator::SizeGetter m_getSize;
-        GpuShaderCreator::FloatArrayGetter m_getFloatArray;
-        GpuShaderCreator::IntArrayGetter m_getInt2Array;
+        GpuShaderDesc::UniformData m_data;
 
         unsigned m_handle;
     };

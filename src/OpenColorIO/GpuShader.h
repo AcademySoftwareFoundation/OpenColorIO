@@ -52,17 +52,16 @@ protected:
     // Uniforms are not used by the legacy shader builder
     //
     unsigned getNumUniforms() const noexcept override;
-    void getUniform(unsigned index, GpuShaderDesc::UniformData & data) const override;
-    bool addUniform(const char * name,
-                    const DoubleGetter & getter) override;
-    bool addUniform(const char * name,
-                    const BoolGetter & getter) override;
-    bool addUniform(const char * name,
-                    const SizeGetter & getSize,
-                    const FloatArrayGetter & getArray) override;
+    const char * getUniform(unsigned index, GpuShaderDesc::UniformData & data) const override;
+    bool addUniform(const char * name, const DoubleGetter & getter) override;
+    bool addUniform(const char * name, const BoolGetter & getter) override;
+    bool addUniform(const char * name, const Float3Getter & getter) override;
     bool addUniform(const char * name,
                     const SizeGetter & getSize,
-                    const IntArrayGetter & getArray) override;
+                    const VectorFloatGetter & getVector) override;
+    bool addUniform(const char * name,
+                    const SizeGetter & getSize,
+                    const VectorIntGetter & getVector) override;
 
     // 1D & 2D textures are not used by the legacy shader builder
     //
@@ -123,17 +122,16 @@ public:
     // Accessors to the uniforms
     //
     unsigned getNumUniforms() const noexcept override;
-    void getUniform(unsigned index, GpuShaderDesc::UniformData & data) const override;
-    bool addUniform(const char * name,
-                    const DoubleGetter & getDouble) override;
-    bool addUniform(const char * name,
-                    const BoolGetter & getBool) override;
-    bool addUniform(const char * name,
-                    const SizeGetter & getSize,
-                    const FloatArrayGetter & getFloatArray) override;
+    const char * getUniform(unsigned index, GpuShaderDesc::UniformData & data) const override;
+    bool addUniform(const char * name, const DoubleGetter & getDouble) override;
+    bool addUniform(const char * name, const BoolGetter & getBool) override;
+    bool addUniform(const char * name, const Float3Getter & getter) override;
     bool addUniform(const char * name,
                     const SizeGetter & getSize,
-                    const IntArrayGetter & getInt2Array) override;
+                    const VectorFloatGetter & getVectorFloat) override;
+    bool addUniform(const char * name,
+                    const SizeGetter & getSize,
+                    const VectorIntGetter & getVectorInt) override;
 
     // Accessors to the 1D & 2D textures built from 1D LUT
     //
