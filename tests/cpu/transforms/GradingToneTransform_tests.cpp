@@ -49,3 +49,45 @@ OCIO_ADD_TEST(GradingToneTransform, basic)
     const OCIO::GradingTone toneDefaultsVid(OCIO::GRADING_VIDEO);
     OCIO_CHECK_EQUAL(gttVid->getValue(), toneDefaultsVid);
 }
+
+OCIO_ADD_TEST(GradingToneTransform, serialization)
+{
+    // Test the serialization of the transform.
+
+    OCIO::GradingTone data(OCIO::GRADING_LIN);
+    data.m_scontrast      += 0.123;
+    data.m_blacks.m_red   += 0.321;
+    data.m_blacks.m_start += 0.1;
+
+    auto tone = OCIO::GradingToneTransform::Create(OCIO::GRADING_LIN);
+    tone->setValue(data);
+
+    static constexpr char TONE_STR[]
+        = "<GradingToneTransform direction=forward, style=linear, values=<"\
+          "blacks=<red=1.321 green=1 blue=1 master=1 start=0.1 width=4> "\
+          "shadows=<red=1 green=1 blue=1 master=1 start=2 width=-7> "\
+          "midtones=<red=1 green=1 blue=1 master=1 start=0 width=8> "\
+          "highlights=<red=1 green=1 blue=1 master=1 start=-2 width=9> "\
+          "whites=<red=1 green=1 blue=1 master=1 start=0 width=8> s_contrast=1.123>>";
+
+    {
+        std::ostringstream oss;
+        oss << *tone;
+
+        OCIO_CHECK_EQUAL(oss.str(), TONE_STR);
+    }
+
+    OCIO::GroupTransformRcPtr grp = OCIO::GroupTransform::Create();
+    grp->appendTransform(OCIO::DynamicPtrCast<OCIO::Transform>(tone));
+
+    {
+        std::ostringstream oss;
+        oss << *grp;
+
+        std::string GROUP_STR("<GroupTransform direction=forward, transforms=\n\t");
+        GROUP_STR += TONE_STR;
+        GROUP_STR += ">";
+
+        OCIO_CHECK_EQUAL(oss.str(), GROUP_STR);
+    }
+}
