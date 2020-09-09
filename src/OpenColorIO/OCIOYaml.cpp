@@ -11,6 +11,10 @@
 #include "Logging.h"
 #include "MathUtils.h"
 #include "OCIOYaml.h"
+#include "ops/exposurecontrast/ExposureContrastOpData.h"
+#include "ops/gradingprimary/GradingPrimaryOpData.h"
+#include "ops/gradingrgbcurve/GradingRGBCurve.h"
+#include "ops/gradingtone/GradingToneOpData.h"
 #include "ops/log/LogUtils.h"
 #include "ParseUtils.h"
 #include "PathUtils.h"
@@ -268,6 +272,20 @@ inline void throwValueError(const std::string & nodeName,
     os << "At line " << (key.Mark().line + 1)
         << ", the value parsing of the key '" << keyName 
         << "' from '" << nodeName << "' failed: " << msg;
+
+    throw Exception(os.str().c_str());
+}
+
+inline void throwValueError(const YAML::Node & key,
+                            const std::string & msg)
+{
+    std::string keyName;
+    load(key, keyName);
+
+    std::ostringstream os;
+    os << "At line " << (key.Mark().line + 1)
+        << ", the value parsing of the key '" << keyName 
+        << "' failed: " << msg;
 
     throw Exception(os.str().c_str());
 }
@@ -1223,6 +1241,18 @@ inline void load(const YAML::Node& node, ExposureContrastTransformRcPtr& t)
             load(second, param);
             t->setPivot(param);
         }
+        else if (key == "log_exposure_step")
+        {
+            double param;
+            load(second, param);
+            t->setLogExposureStep(param);
+        }
+        else if (key == "log_midway_gray")
+        {
+            double param;
+            load(second, param);
+            t->setLogMidGray(param);
+        }
         else if (key == "style")
         {
             std::string style;
@@ -1292,6 +1322,20 @@ inline void save(YAML::Emitter& out, ConstExposureContrastTransformRcPtr t)
 
     out << YAML::Key << "pivot";
     out << YAML::Value << YAML::Flow << t->getPivot();
+
+    const auto les = t->getLogExposureStep();
+    if (les != ExposureContrastOpData::LOGEXPOSURESTEP_DEFAULT)
+    {
+        out << YAML::Key << "log_exposure_step";
+        out << YAML::Value << YAML::Flow << les;
+    }
+
+    const auto lmg = t->getLogMidGray();
+    if (lmg != ExposureContrastOpData::LOGMIDGRAY_DEFAULT)
+    {
+        out << YAML::Key << "log_midway_gray";
+        out << YAML::Value << YAML::Flow << lmg;
+    }
 
     EmitBaseTransformKeyValues(out, t);
     out << YAML::EndMap;
@@ -1448,6 +1492,819 @@ inline void save(YAML::Emitter& out, ConstFixedFunctionTransformRcPtr t)
     out << YAML::EndMap;
 }
 
+// GradingPrimaryTransform
+
+inline void load(const YAML::Node & parent, const YAML::Node & node, GradingRGBM & rgbm)
+{
+    if (node.Type() == YAML::NodeType::Map)
+    {
+        bool rgbOK{ false };
+        bool masterOK{ false };
+        for (const auto & it : node)
+        {
+            std::string k;
+            const YAML::Node& first = it.first;
+            load(first, k);
+            if (k == "rgb")
+            {
+                std::vector<double> vals;
+                load(it.second, vals);
+                if (vals.size() != 3)
+                {
+                    throwError(first, "The RGB value needs to be a 3 doubles.");
+                }
+                rgbm.m_red = vals[0];
+                rgbm.m_green = vals[1];
+                rgbm.m_blue = vals[2];
+                rgbOK = true;
+            }
+            else if (k == "master")
+            {
+                load(it.second, rgbm.m_master);
+                masterOK = true;
+            }
+            else
+            {
+                LogUnknownKeyWarning(parent, first);
+            }
+        }
+        if (!rgbOK || !masterOK)
+        {
+            throwValueError(parent, "Both rgb and master values are required.");
+        }
+    }
+    else
+    {
+        throwValueError(parent, "The value needs to be a map.");
+    }
+}
+
+inline void loadPivot(const YAML::Node & parent, const YAML::Node & node,
+                      double & val, bool & valLoaded,
+                      double & blackVal, bool & blackValLoaded,
+                      double & whiteVal, bool & whiteValLoaded)
+{
+    if (node.Type() == YAML::NodeType::Map)
+    {
+        for (const auto & it : node)
+        {
+            std::string k;
+            const YAML::Node& first = it.first;
+            load(first, k);
+            if (k == "contrast")
+            {
+                load(it.second, val);
+                valLoaded = true;
+            }
+            else if (k == "black")
+            {
+                load(it.second, blackVal);
+                blackValLoaded = true;
+            }
+            else if (k == "white")
+            {
+                load(it.second, whiteVal);
+                whiteValLoaded = true;
+            }
+            else
+            {
+                LogUnknownKeyWarning(node, first);
+            }
+        }
+        if (!valLoaded && !blackValLoaded && !whiteValLoaded)
+        {
+            throwValueError(parent, "At least one of the pivot values must be provided.");
+        }
+    }
+    else
+    {
+        throwValueError(parent, "The value needs to be a map.");
+    }
+}
+
+inline void loadClamp(const YAML::Node & parent, const YAML::Node & node,
+                      double & blackVal, bool & blackValLoaded,
+                      double & whiteVal, bool & whiteValLoaded)
+{
+    if (node.Type() == YAML::NodeType::Map)
+    {
+        for (const auto & it : node)
+        {
+            std::string k;
+            const YAML::Node& first = it.first;
+            load(first, k);
+            if (k == "black")
+            {
+                load(it.second, blackVal);
+                blackValLoaded = true;
+            }
+            else if (k == "white")
+            {
+                load(it.second, whiteVal);
+                whiteValLoaded = true;
+            }
+            else
+            {
+                LogUnknownKeyWarning(node, first);
+            }
+        }
+        if (!blackValLoaded && !whiteValLoaded)
+        {
+            throwValueError(parent, "At least one of the clamp values must be provided.");
+        }
+    }
+    else
+    {
+        throwValueError(parent, "The value needs to be a map.");
+    }
+}
+
+inline void load(const YAML::Node & node, GradingPrimaryTransformRcPtr & t)
+{
+    CheckDuplicates(node);
+
+    t = GradingPrimaryTransform::Create(GRADING_LOG);
+    GradingPrimary values{ GRADING_LOG };
+    bool brightnessLoaded{ false };
+    bool contrastLoaded{ false };
+    bool gammaLoaded{ false };
+    bool offsetLoaded{ false };
+    bool exposureLoaded{ false };
+    bool liftLoaded{ false };
+    bool gainLoaded{ false };
+    bool saturationLoaded{ false };
+    bool pivotLoaded{ false };
+    bool pivotBlackLoaded{ false };
+    bool pivotWhiteLoaded{ false };
+    bool clampBlackLoaded{ false };
+    bool clampWhiteLoaded{ false };
+
+    std::string key;
+
+    for (const auto & iter : node)
+    {
+        const YAML::Node& first = iter.first;
+        const YAML::Node& second = iter.second;
+
+        load(first, key);
+
+        if (second.IsNull() || !second.IsDefined()) continue;
+
+        if (key == "style")
+        {
+            std::string style;
+            load(second, style);
+            t->setStyle(GradingStyleFromString(style.c_str()));
+        }
+        else if (key == "direction")
+        {
+            TransformDirection val;
+            load(second, val);
+            t->setDirection(val);
+        }
+        else if (key == "brightness")
+        {
+            brightnessLoaded = true;
+            load(first, second, values.m_brightness);
+        }
+        else if (key == "contrast")
+        {
+            contrastLoaded = true;
+            load(first, second, values.m_contrast);
+        }
+        else if (key == "gamma")
+        {
+            gammaLoaded = true;
+            load(first, second, values.m_gamma);
+        }
+        else if (key == "offset")
+        {
+            offsetLoaded = true;
+            load(first, second, values.m_offset);
+        }
+        else if (key == "exposure")
+        {
+            exposureLoaded = true;
+            load(first, second, values.m_exposure);
+        }
+        else if (key == "lift")
+        {
+            liftLoaded = true;
+            load(first, second, values.m_lift);
+        }
+        else if (key == "gain")
+        {
+            gainLoaded = true;
+            load(first, second, values.m_gain);
+        }
+        else if (key == "pivot")
+        {
+            loadPivot(first, second, values.m_pivot, pivotLoaded,
+                      values.m_pivotBlack, pivotBlackLoaded, values.m_pivotWhite, pivotWhiteLoaded);
+        }
+        else if (key == "saturation")
+        {
+            saturationLoaded = true;
+            load(second, values.m_saturation);
+        }
+        else if (key == "clamp")
+        {
+            loadClamp(first, second, values.m_clampBlack, clampBlackLoaded,
+                      values.m_clampWhite, clampWhiteLoaded);
+        }
+        else if (key == "dynamic")
+        {
+            bool dyn = true;
+            load(second, dyn);
+            if (dyn)
+            {
+                t->makeDynamic();
+            }
+        }
+        else
+        {
+            LogUnknownKeyWarning(node.Tag(), first);
+        }
+    }
+
+    GradingPrimary valuesSet{ t->getStyle() };
+    if (brightnessLoaded)
+    {
+        valuesSet.m_brightness = values.m_brightness;
+    }
+    if (contrastLoaded)
+    {
+        valuesSet.m_contrast = values.m_contrast;
+    }
+    if (gammaLoaded)
+    {
+        valuesSet.m_gamma = values.m_gamma;
+    }
+    if (offsetLoaded)
+    {
+        valuesSet.m_offset = values.m_offset;
+    }
+    if (exposureLoaded)
+    {
+        valuesSet.m_exposure = values.m_exposure;
+    }
+    if (liftLoaded)
+    {
+        valuesSet.m_lift = values.m_lift;
+    }
+    if (gainLoaded)
+    {
+        valuesSet.m_gain = values.m_gain;
+    }
+    if (saturationLoaded)
+    {
+        valuesSet.m_saturation = values.m_saturation;
+    }
+    if (pivotLoaded)
+    {
+        valuesSet.m_pivot = values.m_pivot;
+    }
+    if (pivotBlackLoaded)
+    {
+        valuesSet.m_pivotBlack = values.m_pivotBlack;
+    }
+    if (pivotWhiteLoaded)
+    {
+        valuesSet.m_pivotWhite = values.m_pivotWhite;
+    }
+    if (clampBlackLoaded)
+    {
+        valuesSet.m_clampBlack = values.m_clampBlack;
+    }
+    if (clampWhiteLoaded)
+    {
+        valuesSet.m_clampWhite = values.m_clampWhite;
+    }
+
+    t->setValue(valuesSet);
+}
+
+inline void save(YAML::Emitter & out, const char * paramName, const GradingRGBM & rgbm,
+                 const GradingRGBM & defaultRgbm)
+{
+    if (rgbm != defaultRgbm)
+    {
+        std::vector<double> vals(3);
+        vals[0] = rgbm.m_red;
+        vals[1] = rgbm.m_green;
+        vals[2] = rgbm.m_blue;
+        out << YAML::Key << paramName;
+        out << YAML::Value << YAML::Flow << YAML::BeginMap;
+        out << YAML::Key << "rgb" << YAML::Value << YAML::Flow << vals;
+        out << YAML::Key << "master";
+        out << YAML::Value << YAML::Flow << rgbm.m_master;
+        out << YAML::EndMap;
+    }
+}
+
+inline void save(YAML::Emitter & out, const char * paramName, double val, double defaultVal)
+{
+    if (val != defaultVal)
+    {
+        out << YAML::Key << paramName << YAML::Value << YAML::Flow << val;
+    }
+}
+
+inline void savePivot(YAML::Emitter & out, double val, bool saveContrast,
+                      double blackVal, double defaultBlackVal,
+                      double whiteVal, double defaultWhiteVal)
+{
+    if (saveContrast || blackVal != defaultBlackVal || whiteVal != defaultWhiteVal)
+    {
+        out << YAML::Key << "pivot";
+        out << YAML::Value << YAML::Flow << YAML::BeginMap;
+        if (saveContrast)
+        {
+            out << YAML::Key << "contrast" << YAML::Value << YAML::Flow << val;
+        }
+        save(out, "black", blackVal, defaultBlackVal);
+        save(out, "white", whiteVal, defaultWhiteVal);
+        out << YAML::EndMap;
+    }
+}
+
+inline void saveClamp(YAML::Emitter & out,
+                      double blackVal, double defaultBlackVal,
+                      double whiteVal, double defaultWhiteVal)
+{
+    if (blackVal != defaultBlackVal || whiteVal != defaultWhiteVal)
+    {
+        out << YAML::Key << "clamp";
+        out << YAML::Value << YAML::Flow << YAML::BeginMap;
+        save(out, "black", blackVal, defaultBlackVal);
+        save(out, "white", whiteVal, defaultWhiteVal);
+        out << YAML::EndMap;
+    }
+}
+
+inline void save(YAML::Emitter & out, ConstGradingPrimaryTransformRcPtr t)
+{
+    out << YAML::VerbatimTag("GradingPrimaryTransform");
+
+    const auto style = t->getStyle();
+    const auto & vals = t->getValue();
+    const GradingPrimary defaultVals{ style };
+
+    if (vals == defaultVals) out << YAML::Flow;
+    out << YAML::BeginMap;
+
+    out << YAML::Key << "style";
+    out << YAML::Value << YAML::Flow << GradingStyleToString(style);
+    switch (style)
+    {
+    case GRADING_LOG:
+    {
+        save(out, "brightness", vals.m_brightness, defaultVals.m_brightness);
+        save(out, "contrast", vals.m_contrast, defaultVals.m_contrast);
+        save(out, "gamma", vals.m_gamma, defaultVals.m_gamma);
+        save(out, "saturation", vals.m_saturation, defaultVals.m_saturation);
+        const bool forcePivot = (vals.m_contrast != defaultVals.m_contrast) ||
+                                (vals.m_pivot != defaultVals.m_pivot);
+        savePivot(out, vals.m_pivot, forcePivot,
+                  vals.m_pivotBlack, defaultVals.m_pivotBlack,
+                  vals.m_pivotWhite, defaultVals.m_pivotWhite);
+        break;
+    }
+    case GRADING_LIN:
+    {
+        save(out, "offset", vals.m_offset, defaultVals.m_offset);
+        save(out, "exposure", vals.m_exposure, defaultVals.m_exposure);
+        save(out, "contrast", vals.m_contrast, defaultVals.m_contrast);
+        save(out, "saturation", vals.m_saturation, defaultVals.m_saturation);
+        const bool forcePivot = (vals.m_contrast != defaultVals.m_contrast) ||
+                                (vals.m_pivot != defaultVals.m_pivot);
+        savePivot(out, vals.m_pivot, forcePivot, 0., 0., 0., 0.);
+        break;
+    }
+    case GRADING_VIDEO:
+    {
+        save(out, "lift", vals.m_lift, defaultVals.m_lift);
+        save(out, "gamma", vals.m_gamma, defaultVals.m_gamma);
+        save(out, "gain", vals.m_gain, defaultVals.m_gain);
+        save(out, "offset", vals.m_offset, defaultVals.m_offset);
+        save(out, "saturation", vals.m_saturation, defaultVals.m_saturation);
+        savePivot(out, 0., false, vals.m_pivotBlack, defaultVals.m_pivotBlack,
+                  vals.m_pivotWhite, defaultVals.m_pivotWhite);
+        break;
+    }
+    }
+    saveClamp(out, vals.m_clampBlack, defaultVals.m_clampBlack,
+              vals.m_clampWhite, defaultVals.m_clampWhite);
+
+    if (t->isDynamic())
+    {
+        out << YAML::Key << "dynamic" << YAML::Value << true;
+    }
+
+    EmitBaseTransformKeyValues(out, t);
+    out << YAML::EndMap;
+}
+
+// GradingRGBCurveTransform
+
+inline void load(const YAML::Node & parent, const YAML::Node & node, GradingBSplineCurveRcPtr & sc)
+{
+    if (node.Type() == YAML::NodeType::Map)
+    {
+        bool cpOK{ false };
+        for (const auto & it : node)
+        {
+            std::string k;
+            const YAML::Node& first = it.first;
+            load(first, k);
+            if (k == "control_points")
+            {
+                std::vector<float> val;
+                load(it.second, val);
+                const size_t numVals = val.size();
+                if (numVals % 2 != 0)
+                {
+                    throwValueError(node.Tag(), first, "An even number of float values is "
+                        "required.");
+                }
+                const size_t numCtPt = numVals / 2;
+                sc->setNumControlPoints(numCtPt);
+                for (size_t c = 0; c < numCtPt; ++c)
+                {
+                    auto & pt = sc->getControlPoint(c);
+                    pt.m_x = val[2 * c];
+                    pt.m_y = val[2 * c + 1];
+                }
+                cpOK = true;
+            }
+            else
+            {
+                LogUnknownKeyWarning(parent, first);
+            }
+        }
+        if (!cpOK)
+        {
+            throwValueError(parent, "control_points is required.");
+        }
+    }
+    else
+    {
+        throwValueError(parent, "The value needs to be a map.");
+    }
+}
+
+inline void load(const YAML::Node & node, GradingRGBCurveTransformRcPtr & t)
+{
+    CheckDuplicates(node);
+
+    t = GradingRGBCurveTransform::Create(GRADING_LOG);
+
+    GradingBSplineCurveRcPtr red;
+    GradingBSplineCurveRcPtr green;
+    GradingBSplineCurveRcPtr blue;
+    GradingBSplineCurveRcPtr master;
+    std::string key;
+
+    for (const auto & iter : node)
+    {
+        const YAML::Node& first = iter.first;
+        const YAML::Node& second = iter.second;
+
+        load(first, key);
+
+        if (second.IsNull() || !second.IsDefined()) continue;
+
+        if (key == "style")
+        {
+            std::string style;
+            load(second, style);
+            t->setStyle(GradingStyleFromString(style.c_str()));
+        }
+        else if (key == "direction")
+        {
+            TransformDirection val;
+            load(second, val);
+            t->setDirection(val);
+        }
+        else if (key == "lintolog_bypass")
+        {
+            bool bypass = true;
+            load(second, bypass);
+            t->setBypassLinToLog(bypass);
+        }
+        else if (key == "red")
+        {
+            red = GradingBSplineCurve::Create(0);
+            load(first, second, red);
+        }
+        else if (key == "green")
+        {
+            green = GradingBSplineCurve::Create(0);
+            load(first, second, green);
+        }
+        else if (key == "blue")
+        {
+            blue = GradingBSplineCurve::Create(0);
+            load(first, second, blue);
+        }
+        else if (key == "master")
+        {
+            master = GradingBSplineCurve::Create(0);
+            load(first, second, master);
+        }
+        else if (key == "dynamic")
+        {
+            bool dyn = true;
+            load(second, dyn);
+            if (dyn)
+            {
+                t->makeDynamic();
+            }
+        }
+        else
+        {
+            LogUnknownKeyWarning(node.Tag(), first);
+        }
+    }
+
+    auto & defCurve = t->getStyle() == GRADING_LIN ? GradingRGBCurveImpl::DefaultLin :
+                                                     GradingRGBCurveImpl::Default;
+
+    if (!red) red = defCurve.createEditableCopy();
+    if (!green) green = defCurve.createEditableCopy();
+    if (!blue) blue = defCurve.createEditableCopy();
+    if (!master) master = defCurve.createEditableCopy();
+    auto curves = GradingRGBCurve::Create(red, green, blue, master);
+
+    t->setValue(curves);
+}
+
+inline void save(YAML::Emitter & out, const char * paramName, const ConstGradingBSplineCurveRcPtr & curve)
+{
+    std::vector<float> ctPt;
+    const size_t numCtPt = curve->getNumControlPoints();
+    for (size_t c = 0; c < numCtPt; ++c)
+    {
+        const auto & pt = curve->getControlPoint(c);
+        ctPt.push_back(pt.m_x);
+        ctPt.push_back(pt.m_y);
+    }
+    out << YAML::Key << paramName;
+    out << YAML::Flow << YAML::BeginMap;
+    out << YAML::Key << "control_points" << YAML::Value << ctPt;
+    out << YAML::EndMap;
+}
+
+inline void save(YAML::Emitter & out, ConstGradingRGBCurveTransformRcPtr t)
+{
+    const auto & vals = t->getValue();
+    auto & defCurve = t->getStyle() == GRADING_LIN ? GradingRGBCurveImpl::DefaultLin :
+                                                     GradingRGBCurveImpl::Default;
+    bool saveCurve = false;
+    for (int c = 0; c < RGB_NUM_CURVES; ++c)
+    {
+        const auto & curve = vals->getCurve(static_cast<RGBCurveType>(c));
+        if (*curve != defCurve)
+        {
+            saveCurve = true;
+            break;
+        }
+    }
+
+    out << YAML::VerbatimTag("GradingRGBCurveTransform");
+    if (!saveCurve) out << YAML::Flow;
+    out << YAML::BeginMap;
+
+    const auto style = t->getStyle();
+    out << YAML::Key << "style";
+    out << YAML::Value << YAML::Flow << GradingStyleToString(style);
+
+    if (t->getBypassLinToLog())
+    {
+        out << YAML::Key << "lintolog_bypass";
+        out << YAML::Value << YAML::Flow << true;
+    }
+
+    static const std::vector<const char *> curveNames = { "red", "green", "blue", "master" };
+    for (int c = 0; c < RGB_NUM_CURVES; ++c)
+    {
+        const auto & curve = vals->getCurve(static_cast<RGBCurveType>(c));
+        if (*curve != defCurve)
+        {
+            save(out, curveNames[c], curve);
+        }
+    }
+
+    if (t->isDynamic())
+    {
+        out << YAML::Key << "dynamic" << YAML::Value << true;
+    }
+
+    EmitBaseTransformKeyValues(out, t);
+    out << YAML::EndMap;
+}
+
+// GradingToneTransform
+
+inline void load(const YAML::Node & parent, const YAML::Node & node, GradingRGBMSW & rgbm,
+                 bool center, bool pivot)
+{
+    if (node.Type() == YAML::NodeType::Map)
+    {
+        bool rgbOK{ false };
+        bool masterOK{ false };
+        bool startOK{ false };
+        bool widthOK{ false };
+        for (const auto & it : node)
+        {
+            std::string k;
+            const YAML::Node& first = it.first;
+            load(first, k);
+            if (k == "rgb")
+            {
+                std::vector<double> vals;
+                load(it.second, vals);
+                if (vals.size() != 3)
+                {
+                    throwError(first, "The RGB value needs to be a 3 doubles.");
+                }
+                rgbm.m_red = vals[0];
+                rgbm.m_green = vals[1];
+                rgbm.m_blue = vals[2];
+                rgbOK = true;
+            }
+            else if (k == "master")
+            {
+                load(it.second, rgbm.m_master);
+                masterOK = true;
+            }
+            else if (k == (center ? "center" : "start"))
+            {
+                load(it.second, rgbm.m_start);
+                startOK = true;
+            }
+            else if (k == (pivot ? "pivot" : "width"))
+            {
+                load(it.second, rgbm.m_width);
+                widthOK = true;
+            }
+            else
+            {
+                LogUnknownKeyWarning(parent, first);
+            }
+        }
+        if (!rgbOK || !masterOK || !startOK || !widthOK)
+        {
+            std::ostringstream oss;
+            oss << "Rgb, master, " << (center ? "center" : "start") << ", and "
+                << (pivot ? "pivot" : "width") << " values are required.";
+            throwValueError(parent, oss.str());
+        }
+    }
+    else
+    {
+        throwValueError(parent, "The value needs to be a map.");
+    }
+}
+
+inline void load(const YAML::Node & node, GradingToneTransformRcPtr & t)
+{
+    CheckDuplicates(node);
+
+    t = GradingToneTransform::Create(GRADING_LOG);
+
+    bool blacksLoaded = false;
+    bool shadowsLoaded = false;
+    bool midtonesLoaded = false;
+    bool highlightsLoaded = false;
+    bool whitesLoaded = false;
+    GradingRGBMSW blacks, shadows, midtones, highlights, whites;
+    double scontrast = 1.0;
+    std::string key;
+
+    for (const auto & iter : node)
+    {
+        const YAML::Node& first = iter.first;
+        const YAML::Node& second = iter.second;
+
+        load(first, key);
+
+        if (second.IsNull() || !second.IsDefined()) continue;
+
+        if (key == "style")
+        {
+            std::string style;
+            load(second, style);
+            t->setStyle(GradingStyleFromString(style.c_str()));
+        }
+        else if (key == "direction")
+        {
+            TransformDirection val;
+            load(second, val);
+            t->setDirection(val);
+        }
+        else if (key == "blacks")
+        {
+            blacksLoaded = true;
+            load(first, second, blacks, false, false);
+        }
+        else if (key == "shadows")
+        {
+            shadowsLoaded = true;
+            load(first, second, shadows, false, true);
+        }
+        else if (key == "midtones")
+        {
+            midtonesLoaded = true;
+            load(first, second, midtones, true, false);
+        }
+        else if (key == "highlights")
+        {
+            highlightsLoaded = true;
+            load(first, second, highlights, false, true);
+        }
+        else if (key == "whites")
+        {
+            whitesLoaded = true;
+            load(first, second, whites, false, false);
+        }
+        else if (key == "s_contrast")
+        {
+            load(second, scontrast);
+        }
+        else if (key == "dynamic")
+        {
+            bool dyn = true;
+            load(second, dyn);
+            if (dyn)
+            {
+                t->makeDynamic();
+            }
+        }
+        else
+        {
+            LogUnknownKeyWarning(node.Tag(), first);
+        }
+    }
+
+    GradingTone values{ t->getStyle() };
+    values.m_scontrast = scontrast;
+    if (blacksLoaded) values.m_blacks = blacks;
+    if (shadowsLoaded) values.m_shadows = shadows;
+    if (midtonesLoaded) values.m_midtones = midtones;
+    if (highlightsLoaded) values.m_highlights = highlights;
+    if (whitesLoaded) values.m_whites = whites;
+
+    t->setValue(values);
+}
+
+inline void save(YAML::Emitter & out, const char * paramName, const GradingRGBMSW & rgbm,
+                 const GradingRGBMSW & defaultRgbm, bool center, bool pivot)
+{
+    if (rgbm != defaultRgbm)
+    {
+        std::vector<double> vals{ rgbm.m_red, rgbm.m_green, rgbm.m_blue };
+        out << YAML::Key << paramName;
+        out << YAML::Value << YAML::Flow << YAML::BeginMap;
+        out << YAML::Key << "rgb" << YAML::Value << YAML::Flow << vals;
+        out << YAML::Key << "master" << YAML::Value << YAML::Flow << rgbm.m_master;
+        out << YAML::Key << (center ? "center" : "start") << YAML::Value << YAML::Flow 
+            << rgbm.m_start;
+        out << YAML::Key << (pivot ? "pivot" : "width") << YAML::Value << YAML::Flow
+            << rgbm.m_width;
+        out << YAML::EndMap;
+    }
+}
+
+inline void save(YAML::Emitter & out, ConstGradingToneTransformRcPtr t)
+{
+    out << YAML::VerbatimTag("GradingToneTransform");
+
+    const auto style = t->getStyle();
+    const auto & vals = t->getValue();
+    const GradingTone defaultVals(style);
+
+    if (vals == defaultVals) out << YAML::Flow;
+    out << YAML::BeginMap;
+
+    out << YAML::Key << "style";
+    out << YAML::Value << YAML::Flow << GradingStyleToString(style);
+    save(out, "blacks", vals.m_blacks, defaultVals.m_blacks, false, false);
+    save(out, "shadows", vals.m_shadows, defaultVals.m_shadows, false, true);
+    save(out, "midtones", vals.m_midtones, defaultVals.m_midtones, true, false);
+    save(out, "highlights", vals.m_highlights, defaultVals.m_highlights, false, true);
+    save(out, "whites", vals.m_whites, defaultVals.m_whites, false, false);
+    save(out, "s_contrast", vals.m_scontrast, defaultVals.m_scontrast);
+
+    if (t->isDynamic())
+    {
+        out << YAML::Key << "dynamic" << YAML::Value << true;
+    }
+
+    EmitBaseTransformKeyValues(out, t);
+    out << YAML::EndMap;
+}
+
 // GroupTransform
 
 void load(const YAML::Node& node, TransformRcPtr& t);
@@ -1597,19 +2454,19 @@ inline void load(const YAML::Node& node, LogAffineTransformRcPtr& t)
                 throw Exception(os.str().c_str());
             }
         }
-        else if (key == "linSideOffset")
+        else if (key == "lin_side_offset")
         {
             loadLogParam(second, linOffset, key);
         }
-        else if (key == "linSideSlope")
+        else if (key == "lin_side_slope")
         {
             loadLogParam(second, linSlope, key);
         }
-        else if (key == "logSideOffset")
+        else if (key == "log_side_offset")
         {
             loadLogParam(second, logOffset, key);
         }
-        else if (key == "logSideSlope")
+        else if (key == "log_side_slope")
         {
             loadLogParam(second, logSlope, key);
         }
@@ -1679,10 +2536,10 @@ inline void save(YAML::Emitter& out, ConstLogAffineTransformRcPtr t)
     {
         out << YAML::Key << "base" << YAML::Value << baseVal;
     }
-    saveLogParam(out, logSlope, 1.0, "logSideSlope");
-    saveLogParam(out, logOffset, 0.0, "logSideOffset");
-    saveLogParam(out, linSlope, 1.0, "linSideSlope");
-    saveLogParam(out, linOffset, 0.0, "linSideOffset");
+    saveLogParam(out, logSlope, 1.0, "log_side_slope");
+    saveLogParam(out, logOffset, 0.0, "log_side_offset");
+    saveLogParam(out, linSlope, 1.0, "lin_side_slope");
+    saveLogParam(out, linOffset, 0.0, "lin_side_offset");
 
     EmitBaseTransformKeyValues(out, t);
     out << YAML::EndMap;
@@ -1731,28 +2588,28 @@ inline void load(const YAML::Node & node, LogCameraTransformRcPtr & t)
                 throw Exception(os.str().c_str());
             }
         }
-        else if (key == "linSideOffset")
+        else if (key == "lin_side_offset")
         {
             loadLogParam(second, linOffset, key);
         }
-        else if (key == "linSideSlope")
+        else if (key == "lin_side_slope")
         {
             loadLogParam(second, linSlope, key);
         }
-        else if (key == "logSideOffset")
+        else if (key == "log_side_offset")
         {
             loadLogParam(second, logOffset, key);
         }
-        else if (key == "logSideSlope")
+        else if (key == "log_side_slope")
         {
             loadLogParam(second, logSlope, key);
         }
-        else if (key == "linSideBreak")
+        else if (key == "lin_side_break")
         {
             linBreakFound = true;
             loadLogParam(second, linBreak, key);
         }
-        else if (key == "linearSlope")
+        else if (key == "linear_slope")
         {
             linearSlopeFound = true;
             loadLogParam(second, linearSlope, key);
@@ -1776,7 +2633,7 @@ inline void load(const YAML::Node & node, LogCameraTransformRcPtr & t)
     }
     if (!linBreakFound)
     {
-        throw Exception("LogCameraTransform parse error: linSideBreak values are missing.");
+        throw Exception("LogCameraTransform parse error: lin_side_break values are missing.");
     }
     t->setBase(base);
     t->setLogSideSlopeValue(logSlope);
@@ -1815,14 +2672,14 @@ inline void save(YAML::Emitter& out, ConstLogCameraTransformRcPtr t)
     {
         out << YAML::Key << "base" << YAML::Value << baseVal;
     }
-    saveLogParam(out, logSlope, 1.0, "logSideSlope");
-    saveLogParam(out, logOffset, 0.0, "logSideOffset");
-    saveLogParam(out, linSlope, 1.0, "linSideSlope");
-    saveLogParam(out, linOffset, 0.0, "linSideOffset");
-    saveLogParam(out, linBreak, std::numeric_limits<double>::quiet_NaN(), "linSideBreak");
+    saveLogParam(out, logSlope, 1.0, "log_side_slope");
+    saveLogParam(out, logOffset, 0.0, "log_side_offset");
+    saveLogParam(out, linSlope, 1.0, "lin_side_slope");
+    saveLogParam(out, linOffset, 0.0, "lin_side_offset");
+    saveLogParam(out, linBreak, std::numeric_limits<double>::quiet_NaN(), "lin_side_break");
     if (hasLinearSlope)
     {
-        saveLogParam(out, linearSlope, std::numeric_limits<double>::quiet_NaN(), "linearSlope");
+        saveLogParam(out, linearSlope, std::numeric_limits<double>::quiet_NaN(), "linear_slope");
     }
 
     EmitBaseTransformKeyValues(out, t);
@@ -2073,22 +2930,22 @@ inline void load(const YAML::Node& node, RangeTransformRcPtr& t)
         // TODO: parsing could be more strict (same applies for other transforms)
         // Could enforce that second is 1 float only and that keys
         // are only there once.
-        if(key == "minInValue")
+        if(key == "min_in_value")
         {
             load(second, val);
             t->setMinInValue(val);
         }
-        else if(key == "maxInValue")
+        else if(key == "max_in_value")
         {
             load(second, val);
             t->setMaxInValue(val);
         }
-        else if(key == "minOutValue")
+        else if(key == "min_out_value")
         {
             load(second, val);
             t->setMinOutValue(val);
         }
-        else if(key == "maxOutValue")
+        else if(key == "max_out_value")
         {
             load(second, val);
             t->setMaxOutValue(val);
@@ -2127,25 +2984,25 @@ inline void save(YAML::Emitter& out, ConstRangeTransformRcPtr t)
 
     if(t->hasMinInValue())
     {
-        out << YAML::Key << "minInValue";
+        out << YAML::Key << "min_in_value";
         out << YAML::Value << YAML::Flow << t->getMinInValue();
     }
 
     if(t->hasMaxInValue())
     {
-        out << YAML::Key << "maxInValue";
+        out << YAML::Key << "max_in_value";
         out << YAML::Value << YAML::Flow << t->getMaxInValue();
     }
 
     if(t->hasMinOutValue())
     {
-        out << YAML::Key << "minOutValue";
+        out << YAML::Key << "min_out_value";
         out << YAML::Value << YAML::Flow << t->getMinOutValue();
     }
 
     if(t->hasMaxOutValue())
     {
-        out << YAML::Key << "maxOutValue";
+        out << YAML::Key << "max_out_value";
         out << YAML::Value << YAML::Flow << t->getMaxOutValue();
     }
 
@@ -2234,7 +3091,25 @@ void load(const YAML::Node& node, TransformRcPtr& t)
         load(node, temp);
         t = temp;
     }
-    else if(type == "GroupTransform")
+    else if (type == "GradingPrimaryTransform")
+    {
+        GradingPrimaryTransformRcPtr temp;
+        load(node, temp);
+        t = temp;
+    }
+    else if (type == "GradingRGBCurveTransform")
+    {
+        GradingRGBCurveTransformRcPtr temp;
+        load(node, temp);
+        t = temp;
+    }
+    else if (type == "GradingToneTransform")
+    {
+        GradingToneTransformRcPtr temp;
+        load(node, temp);
+        t = temp;
+    }
+    else if (type == "GroupTransform")
     {
         GroupTransformRcPtr temp;
         load(node, temp);
@@ -2327,6 +3202,15 @@ void save(YAML::Emitter& out, ConstTransformRcPtr t)
     else if(ConstFixedFunctionTransformRcPtr Func_tran = \
         DynamicPtrCast<const FixedFunctionTransform>(t))
         save(out, Func_tran);
+    else if (ConstGradingPrimaryTransformRcPtr GP_tran = \
+        DynamicPtrCast<const GradingPrimaryTransform>(t))
+        save(out, GP_tran);
+    else if (ConstGradingRGBCurveTransformRcPtr GC_tran = \
+        DynamicPtrCast<const GradingRGBCurveTransform>(t))
+        save(out, GC_tran);
+    else if (ConstGradingToneTransformRcPtr GT_tran = \
+        DynamicPtrCast<const GradingToneTransform>(t))
+        save(out, GT_tran);
     else if(ConstGroupTransformRcPtr Group_tran = \
         DynamicPtrCast<const GroupTransform>(t))
         save(out, Group_tran);
@@ -3971,6 +4855,7 @@ void OCIOYaml::Write(std::ostream & ostream, const Config & config)
 {
     YAML::Emitter out;
     out.SetDoublePrecision(std::numeric_limits<double>::digits10);
+    out.SetFloatPrecision(7);
     save(out, config);
     ostream << out.c_str();
 }

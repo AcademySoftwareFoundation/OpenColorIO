@@ -12,6 +12,9 @@
 #include "ops/exposurecontrast/ExposureContrastOp.h"
 #include "ops/fixedfunction/FixedFunctionOp.h"
 #include "ops/gamma/GammaOp.h"
+#include "ops/gradingprimary/GradingPrimaryOp.h"
+#include "ops/gradingrgbcurve/GradingRGBCurveOp.h"
+#include "ops/gradingtone/GradingToneOp.h"
 #include "ops/log/LogOp.h"
 #include "ops/lut1d/Lut1DOp.h"
 #include "ops/lut3d/Lut3DOp.h"
@@ -89,7 +92,6 @@ void OpData::setName(const std::string & name)
 
 const char * GetTypeName(OpData::Type type)
 {
-    static_assert(OpData::NoOpType == 11, "Need to handle new type here");
     switch (type)
     {
     case OpData::CDLType:
@@ -102,6 +104,12 @@ const char * GetTypeName(OpData::Type type)
         return "FixedFunction";
     case OpData::GammaType:
         return "Gamma";
+    case OpData::GradingPrimaryType:
+        return "GradingPrimary";
+    case OpData::GradingRGBCurveType:
+        return "GradingRGBCurve";
+    case OpData::GradingToneType:
+        return "GradingTone";
     case OpData::LogType:
         return "Log";
     case OpData::Lut1DType:
@@ -154,11 +162,6 @@ bool Op::hasDynamicProperty(DynamicPropertyType type) const
 }
 
 DynamicPropertyRcPtr Op::getDynamicProperty(DynamicPropertyType type) const
-{
-    throw Exception("Op does not implement dynamic property.");
-}
-
-void Op::replaceDynamicProperty(DynamicPropertyType type, DynamicPropertyImplRcPtr prop)
 {
     throw Exception("Op does not implement dynamic property.");
 }
@@ -350,10 +353,8 @@ void OpRcPtrVec::validate() const
 
 namespace
 {
-
-void UnifyDynamicProperty(OpRcPtr op,
-                          DynamicPropertyImplRcPtr & prop,
-                          DynamicPropertyType type)
+template<typename T>
+void UnifyDynamicProperty(OpRcPtr op, std::shared_ptr<T> & prop, DynamicPropertyType type)
 {
     if (op->hasDynamicProperty(type))
     {
@@ -361,7 +362,7 @@ void UnifyDynamicProperty(OpRcPtr op,
         {
             // Initialize property.
             DynamicPropertyRcPtr dp = op->getDynamicProperty(type);
-            prop = OCIO_DYNAMIC_POINTER_CAST<DynamicPropertyImpl>(dp);
+            prop = OCIO_DYNAMIC_POINTER_CAST<T>(dp);
         }
         else
         {
@@ -370,27 +371,31 @@ void UnifyDynamicProperty(OpRcPtr op,
         }
     }
 }
-
 }
 
-// This ensures that when a dynamic property on a processor is
-// modified, all ops that respond to that property (and which
-// are enabled) are synchronized.
+// This ensures that when a dynamic property on a processor is modified, all ops that respond to
+// that property (and which are enabled) are synchronized.
 void OpRcPtrVec::unifyDynamicProperties()
 {
-    DynamicPropertyImplRcPtr dpExposure;
-    DynamicPropertyImplRcPtr dpContrast;
-    DynamicPropertyImplRcPtr dpGamma;
+    // Empty shared pointers.
+    DynamicPropertyDoubleImplRcPtr dpExposure;
+    DynamicPropertyDoubleImplRcPtr dpContrast;
+    DynamicPropertyDoubleImplRcPtr dpGamma;
+    DynamicPropertyGradingPrimaryImplRcPtr dpGradingPrimary;
+    DynamicPropertyGradingRGBCurveImplRcPtr dpGradingRGBCurve;
+    DynamicPropertyGradingToneImplRcPtr dpGradingTone;
 
     for (auto op : m_ops)
     {
+        // Initialize or share property.
         UnifyDynamicProperty(op, dpExposure, DYNAMIC_PROPERTY_EXPOSURE);
         UnifyDynamicProperty(op, dpContrast, DYNAMIC_PROPERTY_CONTRAST);
         UnifyDynamicProperty(op, dpGamma, DYNAMIC_PROPERTY_GAMMA);
+        UnifyDynamicProperty(op, dpGradingPrimary, DYNAMIC_PROPERTY_GRADING_PRIMARY);
+        UnifyDynamicProperty(op, dpGradingRGBCurve, DYNAMIC_PROPERTY_GRADING_RGBCURVE);
+        UnifyDynamicProperty(op, dpGradingTone, DYNAMIC_PROPERTY_GRADING_TONE);
     }
 }
-
-
 
 std::ostream& operator<< (std::ostream & os, const Op & op)
 {
@@ -445,7 +450,6 @@ std::string SerializeOpVec(const OpRcPtrVec & ops, int indent)
             oss << op->getCacheID();
         }
 
-        oss << " supports_gpu:" << op->supportedByLegacyShader();
         oss << "\n";
     }
 
@@ -500,6 +504,30 @@ void CreateOpVecFromOpData(OpRcPtrVec & ops,
         auto gammaSrc = std::dynamic_pointer_cast<const GammaOpData>(opData);
         auto gamma = std::make_shared<GammaOpData>(*gammaSrc);
         CreateGammaOp(ops, gamma, dir);
+        break;
+    }
+
+    case OpData::GradingPrimaryType:
+    {
+        auto primarySrc = std::dynamic_pointer_cast<const GradingPrimaryOpData>(opData);
+        auto primary = std::make_shared<GradingPrimaryOpData>(*primarySrc);
+        CreateGradingPrimaryOp(ops, primary, dir);
+        break;
+    }
+
+    case OpData::GradingRGBCurveType:
+    {
+        auto rgbSrc = std::dynamic_pointer_cast<const GradingRGBCurveOpData>(opData);
+        auto rgb = std::make_shared<GradingRGBCurveOpData>(*rgbSrc);
+        CreateGradingRGBCurveOp(ops, rgb, dir);
+        break;
+    }
+
+    case OpData::GradingToneType:
+    {
+        auto toneSrc = std::dynamic_pointer_cast<const GradingToneOpData>(opData);
+        auto tone = std::make_shared<GradingToneOpData>(*toneSrc);
+        CreateGradingToneOp(ops, tone, dir);
         break;
     }
 

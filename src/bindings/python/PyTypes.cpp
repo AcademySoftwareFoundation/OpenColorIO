@@ -96,7 +96,7 @@ void bindPyTypes(py::module & m)
     py::enum_<GpuLanguage>(m, "GpuLanguage")
         .value("GPU_LANGUAGE_UNKNOWN", GPU_LANGUAGE_UNKNOWN)
         .value("GPU_LANGUAGE_CG", GPU_LANGUAGE_CG)
-        .value("GPU_LANGUAGE_GLSL_1_0", GPU_LANGUAGE_GLSL_1_0)
+        .value("GPU_LANGUAGE_GLSL_1_2", GPU_LANGUAGE_GLSL_1_2)
         .value("GPU_LANGUAGE_GLSL_1_3", GPU_LANGUAGE_GLSL_1_3)
         .value("GPU_LANGUAGE_GLSL_4_0", GPU_LANGUAGE_GLSL_4_0)
         .value("GPU_LANGUAGE_HLSL_DX11", GPU_LANGUAGE_HLSL_DX11)
@@ -145,15 +145,19 @@ void bindPyTypes(py::module & m)
         .value("NEGATIVE_LINEAR", NEGATIVE_LINEAR)
         .export_values();
 
+    py::enum_<GradingStyle>(m, "GradingStyle")
+        .value("GRADING_LOG", GRADING_LOG)
+        .value("GRADING_LIN", GRADING_LIN)
+        .value("GRADING_VIDEO", GRADING_VIDEO)
+        .export_values();
+
     py::enum_<DynamicPropertyType>(m, "DynamicPropertyType")
         .value("DYNAMIC_PROPERTY_EXPOSURE", DYNAMIC_PROPERTY_EXPOSURE)
         .value("DYNAMIC_PROPERTY_CONTRAST", DYNAMIC_PROPERTY_CONTRAST)
         .value("DYNAMIC_PROPERTY_GAMMA", DYNAMIC_PROPERTY_GAMMA)
-        .export_values();
-
-    py::enum_<DynamicPropertyValueType>(m, "DynamicPropertyValueType")
-        .value("DYNAMIC_PROPERTY_DOUBLE", DYNAMIC_PROPERTY_DOUBLE)
-        .value("DYNAMIC_PROPERTY_BOOL", DYNAMIC_PROPERTY_BOOL)
+        .value("DYNAMIC_PROPERTY_GRADING_PRIMARY", DYNAMIC_PROPERTY_GRADING_PRIMARY)
+        .value("DYNAMIC_PROPERTY_GRADING_RGBCURVE", DYNAMIC_PROPERTY_GRADING_RGBCURVE)
+        .value("DYNAMIC_PROPERTY_GRADING_TONE", DYNAMIC_PROPERTY_GRADING_TONE)
         .export_values();
 
     py::enum_<OptimizationFlags>(m, "OptimizationFlags", py::arithmetic())

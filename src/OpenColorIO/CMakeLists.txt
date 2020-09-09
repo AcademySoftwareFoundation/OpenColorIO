@@ -78,6 +78,21 @@ set(SOURCES
 	ops/gamma/GammaOpGPU.cpp
 	ops/gamma/GammaOpUtils.cpp
 	ops/gamma/GammaOp.cpp
+	ops/gradingprimary/GradingPrimaryOpCPU.cpp
+	ops/gradingprimary/GradingPrimaryOpData.cpp
+	ops/gradingprimary/GradingPrimaryOpGPU.cpp
+	ops/gradingprimary/GradingPrimaryOp.cpp
+	ops/gradingrgbcurve/GradingBSplineCurve.cpp
+	ops/gradingrgbcurve/GradingRGBCurveOpCPU.cpp
+	ops/gradingrgbcurve/GradingRGBCurveOpData.cpp
+	ops/gradingrgbcurve/GradingRGBCurveOpGPU.cpp
+	ops/gradingrgbcurve/GradingRGBCurveOp.cpp
+	ops/gradingrgbcurve/GradingRGBCurve.cpp
+	ops/gradingtone/GradingTone.cpp
+	ops/gradingtone/GradingToneOpCPU.cpp
+	ops/gradingtone/GradingToneOpData.cpp
+	ops/gradingtone/GradingToneOpGPU.cpp
+	ops/gradingtone/GradingToneOp.cpp
 	ops/log/LogOpCPU.cpp
 	ops/log/LogOpData.cpp
 	ops/log/LogOpGPU.cpp
@@ -122,6 +137,9 @@ set(SOURCES
 	transforms/ExposureContrastTransform.cpp
 	transforms/FileTransform.cpp
 	transforms/FixedFunctionTransform.cpp
+	transforms/GradingPrimaryTransform.cpp
+	transforms/GradingRGBCurveTransform.cpp
+	transforms/GradingToneTransform.cpp
 	transforms/GroupTransform.cpp
 	transforms/LogAffineTransform.cpp
 	transforms/LogCameraTransform.cpp

@@ -73,14 +73,14 @@ OCIO_ADD_TEST(ExposureContrastOp, inverse)
     // With dynamic property.
     data = data->clone();
     data->getExposureProperty()->makeDynamic();
-    OCIO::DynamicPropertyRcPtr dp3 = data->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_EXPOSURE);
+    auto dp3 = data->getExposureProperty();
     OCIO_CHECK_NO_THROW(OCIO::CreateExposureContrastOp(ops, data, direction));
     OCIO_REQUIRE_EQUAL(ops.size(), 4);
     OCIO_REQUIRE_ASSERT(ops[3]);
     OCIO::ConstOpRcPtr op3 = ops[3];
 
     data = data->clone();
-    OCIO::DynamicPropertyRcPtr dp4 = data->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_EXPOSURE);
+    auto dp4 = data->getExposureProperty();
 
     direction = OCIO::TRANSFORM_DIR_FORWARD;
     OCIO_CHECK_NO_THROW(OCIO::CreateExposureContrastOp(ops, data, direction));
@@ -94,7 +94,7 @@ OCIO_ADD_TEST(ExposureContrastOp, inverse)
 
     // Value is not taken into account when dynamic property is enabled.
     dp4->setValue(-1.);
-    OCIO_CHECK_ASSERT(dp3->getDoubleValue() != dp4->getDoubleValue());
+    OCIO_CHECK_ASSERT(dp3->getValue() != dp4->getValue());
     OCIO_CHECK_ASSERT(ops[4]->isInverse(op3));
 }
 

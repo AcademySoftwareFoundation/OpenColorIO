@@ -14,6 +14,9 @@ set(SOURCES
 	GammaOp_test.cpp
 	GPUHelpers.cpp
 	GPUUnitTest.cpp
+	GradingPrimaryOp_test.cpp
+	GradingRGBCurveOp_test.cpp
+	GradingToneOp_test.cpp
 	LogOp_test.cpp
 	Lut1DOp_test.cpp
 	Lut3DOp_test.cpp

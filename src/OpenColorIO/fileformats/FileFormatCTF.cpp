@@ -379,6 +379,33 @@ private:
         return false;
     }
 
+    static bool SupportedElement(const char * name,
+                                 ElementRcPtr & parent,
+                                 const char * tag,
+                                 const std::vector<const char *> & parentNames,
+                                 bool & recognizedName)
+    {
+        if (name && *name && tag && *tag && parent)
+        {
+            if (0 == Platform::Strcasecmp(name, tag))
+            {
+                recognizedName |= true;
+                
+                const size_t numParents(parentNames.size());
+                size_t i = 0;
+                for (; i<numParents; ++i)
+                {
+                    if (0 == Platform::Strcasecmp(parent->getName().c_str(), parentNames[i]))
+                    {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+
     // Start the parsing of one element.
     static void StartElementHandler(void * userData,
                                     const XML_Char * name,
@@ -395,6 +422,35 @@ private:
             TAG_SLOPE,
             TAG_OFFSET,
             TAG_POWER
+        };
+
+        static const std::vector<const char *> gradingPrimarySubElements = {
+            TAG_PRIMARY_BRIGHTNESS,
+            TAG_PRIMARY_CLAMP,
+            TAG_PRIMARY_CONTRAST,
+            TAG_PRIMARY_EXPOSURE,
+            TAG_PRIMARY_GAIN,
+            TAG_PRIMARY_GAMMA,
+            TAG_PRIMARY_LIFT,
+            TAG_PRIMARY_OFFSET,
+            TAG_PRIMARY_PIVOT,
+            TAG_PRIMARY_SATURATION
+        };
+
+        static const std::vector<const char *> gradingToneSubElements = {
+            TAG_TONE_BLACKS,
+            TAG_TONE_SHADOWS,
+            TAG_TONE_MIDTONES,
+            TAG_TONE_HIGHLIGHTS,
+            TAG_TONE_WHITES,
+            TAG_TONE_SCONTRAST
+        };
+
+        static const std::vector<const char *> gradingRGBCurveSubElements = {
+            TAG_RGB_CURVE_BLUE,
+            TAG_RGB_CURVE_GREEN,
+            TAG_RGB_CURVE_MASTER,
+            TAG_RGB_CURVE_RED
         };
 
         XMLParserHelper * pImpl = (XMLParserHelper*)userData;
@@ -471,7 +527,7 @@ private:
             }
 
             // Safety check to try and ensure that all new elements will get handled here.
-            static_assert(CTFReaderOpElt::NoType == 14, "Need to handle new type here");
+            static_assert(CTFReaderOpElt::NoType == 17, "Need to handle new type here");
 
             // Will allow to give better error feedback to the user if the
             // element name is not handled. If any case recognizes the name,
@@ -508,6 +564,19 @@ private:
                      SupportedElement(name, pElt, TAG_EXPONENT, TAG_PROCESS_LIST, recognizedName))
             {
                 pImpl->AddOpReader(CTFReaderOpElt::GammaType, name);
+            }
+            else if (SupportedElement(name, pElt, TAG_PRIMARY, TAG_PROCESS_LIST, recognizedName))
+            {
+                pImpl->AddOpReader(CTFReaderOpElt::GradingPrimaryType, name);
+            }
+            else if (SupportedElement(name, pElt, TAG_RGB_CURVE,
+                                      TAG_PROCESS_LIST, recognizedName))
+            {
+                pImpl->AddOpReader(CTFReaderOpElt::GradingRGBCurveType, name);
+            }
+            else if (SupportedElement(name, pElt, TAG_TONE, TAG_PROCESS_LIST, recognizedName))
+            {
+                pImpl->AddOpReader(CTFReaderOpElt::GradingToneType, name);
             }
             else if (SupportedElement(name, pElt, TAG_INVLUT1D, TAG_PROCESS_LIST, recognizedName))
             {
@@ -738,7 +807,7 @@ private:
                     }
                 }
                 else if (SupportedElement(name, pElt, METADATA_OUTPUT_DESCRIPTOR,
-                    TAG_PROCESS_LIST, recognizedName))
+                                          TAG_PROCESS_LIST, recognizedName))
                 {
                     pImpl->m_elms.push_back(
                         std::make_shared<CTFReaderOutputDescriptorElt>(
@@ -800,6 +869,46 @@ private:
                 {
                     pImpl->m_elms.push_back(
                         std::make_shared<XmlReaderSOPValueElt>(
+                            name,
+                            pContainer,
+                            pImpl->getXmLineNumber(),
+                            pImpl->getXmlFilename()));
+                }
+                else if (SupportedElement(name, pElt, gradingPrimarySubElements,
+                                          TAG_PRIMARY, recognizedName))
+                {
+                    pImpl->m_elms.push_back(
+                        std::make_shared<CTFReaderGradingPrimaryParamElt>(
+                            name,
+                            pContainer,
+                            pImpl->getXmLineNumber(),
+                            pImpl->getXmlFilename()));
+                }
+                else if (SupportedElement(name, pElt, gradingRGBCurveSubElements,
+                                          TAG_RGB_CURVE, recognizedName))
+                {
+                    pImpl->m_elms.push_back(
+                        std::make_shared<CTFReaderGradingCurveElt>(
+                            name,
+                            pContainer,
+                            pImpl->getXmLineNumber(),
+                            pImpl->getXmlFilename()));
+                }
+                else if (SupportedElement(name, pElt, TAG_CURVE_CTRL_PNTS,
+                                          gradingRGBCurveSubElements, recognizedName))
+                {
+                    pImpl->m_elms.push_back(
+                        std::make_shared<CTFReaderGradingCurveParamElt>(
+                            name,
+                            pContainer,
+                            pImpl->getXmLineNumber(),
+                            pImpl->getXmlFilename()));
+                }
+                else if (SupportedElement(name, pElt, gradingToneSubElements,
+                                          TAG_TONE, recognizedName))
+                {
+                    pImpl->m_elms.push_back(
+                        std::make_shared<CTFReaderGradingToneParamElt>(
                             name,
                             pContainer,
                             pImpl->getXmLineNumber(),

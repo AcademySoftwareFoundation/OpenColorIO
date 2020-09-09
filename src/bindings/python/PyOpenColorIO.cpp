@@ -43,6 +43,10 @@ PYBIND11_MODULE(PyOpenColorIO, m)
     bindPyGpuShaderCreator(m);
     bindPyContext(m);
     bindPyViewingRules(m);
+    bindPyGradingData(m);
+    bindPyGradingPrimaryTransform(m);
+    bindPyGradingRGBCurveTransform(m);
+    bindPyGradingToneTransform(m);
 }
 
 } // namespace OCIO_NAMESPACE

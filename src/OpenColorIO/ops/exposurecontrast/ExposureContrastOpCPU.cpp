@@ -27,13 +27,14 @@ public:
 
     bool hasDynamicProperty(DynamicPropertyType type) const override;
     DynamicPropertyRcPtr getDynamicProperty(DynamicPropertyType type) const override;
+    void unifyDynamicProperty(DynamicPropertyType type, DynamicPropertyDoubleImplRcPtr & prop) const override;
 
 protected:
     virtual void updateData(ConstExposureContrastOpDataRcPtr & ec) = 0;
 
-    DynamicPropertyImplRcPtr m_exposure;
-    DynamicPropertyImplRcPtr m_contrast;
-    DynamicPropertyImplRcPtr m_gamma;
+    mutable DynamicPropertyDoubleImplRcPtr m_exposure;
+    mutable DynamicPropertyDoubleImplRcPtr m_contrast;
+    mutable DynamicPropertyDoubleImplRcPtr m_gamma;
 
     float m_pivot = 0.0f;
     float m_logExposureStep = 0.088f;
@@ -42,11 +43,46 @@ protected:
 ECRendererBase::ECRendererBase(ConstExposureContrastOpDataRcPtr & ec)
     : OpCPU()
 {
-    // Copy DynamicPropertyImpl sharedPtr so that if content changes in ec
-    // change will be reflected here.
+    // Initialized with the instances from the processor instance but will later be replaced using
+    // unifyDynamicProperty().
     m_exposure = ec->getExposureProperty();
     m_contrast = ec->getContrastProperty();
     m_gamma = ec->getGammaProperty();
+}
+
+namespace
+{
+void DecoupleAndUnify(DynamicPropertyDoubleImplRcPtr & prop, DynamicPropertyDoubleImplRcPtr & propSet)
+{
+    if (!propSet)
+    {
+        propSet = prop->createEditableCopy();
+    }
+    prop = propSet;
+}
+}
+
+void ECRendererBase::unifyDynamicProperty(DynamicPropertyType type,
+                                          DynamicPropertyDoubleImplRcPtr & prop) const
+{
+    switch (type)
+    {
+    case DYNAMIC_PROPERTY_EXPOSURE:
+        DecoupleAndUnify(m_exposure, prop);
+        break;
+    case DYNAMIC_PROPERTY_CONTRAST:
+        DecoupleAndUnify(m_contrast, prop);
+        break;
+    case DYNAMIC_PROPERTY_GAMMA:
+        DecoupleAndUnify(m_gamma, prop);
+        break;
+    case DYNAMIC_PROPERTY_GRADING_PRIMARY:
+    case DYNAMIC_PROPERTY_GRADING_RGBCURVE:
+    case DYNAMIC_PROPERTY_GRADING_TONE:
+    default:
+        OpCPU::unifyDynamicProperty(type, prop);
+        break;
+    }
 }
 
 ECRendererBase::~ECRendererBase()
@@ -67,6 +103,9 @@ bool ECRendererBase::hasDynamicProperty(DynamicPropertyType type) const
         case DYNAMIC_PROPERTY_GAMMA:
             res = m_gamma->isDynamic();
             break;
+        case DYNAMIC_PROPERTY_GRADING_PRIMARY:
+        case DYNAMIC_PROPERTY_GRADING_RGBCURVE:
+        case DYNAMIC_PROPERTY_GRADING_TONE:
         default:
             break;
     }
@@ -96,6 +135,9 @@ DynamicPropertyRcPtr ECRendererBase::getDynamicProperty(DynamicPropertyType type
                 return m_gamma;
             }
             break;
+        case DYNAMIC_PROPERTY_GRADING_PRIMARY:
+        case DYNAMIC_PROPERTY_GRADING_RGBCURVE:
+        case DYNAMIC_PROPERTY_GRADING_TONE:
         default:
             throw Exception("Dynamic property type not supported by ExposureContrast.");
             break;
@@ -132,9 +174,9 @@ void ECLinearRenderer::apply(const void * inImg, void * outImg, long numPixels) 
     // TODO: allow negative contrast?
     // TODO: is it worth adding a code path without dynamic parameters?
     const float contrastVal = (float)std::max(EC::MIN_CONTRAST,
-                                              m_contrast->getDoubleValue() *
-                                              m_gamma->getDoubleValue());
-    const float exposureVal = powf(2.f, (float)m_exposure->getDoubleValue());
+                                              m_contrast->getValue() *
+                                              m_gamma->getValue());
+    const float exposureVal = powf(2.f, (float)m_exposure->getValue());
 
     const float * in = (float *)inImg;
     float * out = (float *)outImg;
@@ -235,9 +277,9 @@ void ECLinearRevRenderer::apply(const void * inImg, void * outImg, long numPixel
 {
     // TODO: allow negative contrast?
     const float contrastVal = (float)std::max(EC::MIN_CONTRAST,
-                                              (m_contrast->getDoubleValue() * m_gamma->getDoubleValue()));
+                                              (m_contrast->getValue() * m_gamma->getValue()));
     const float invContrastVal = 1.f / contrastVal;
-    const float invExposureVal = 1.f / powf(2.f, (float)m_exposure->getDoubleValue());
+    const float invExposureVal = 1.f / powf(2.f, (float)m_exposure->getValue());
 
     const float * in = (float *)inImg;
     float * out = (float *)outImg;
@@ -342,8 +384,8 @@ void ECVideoRenderer::apply(const void * inImg, void * outImg, long numPixels) c
 {
     // TODO: allow negative contrast?
     const float contrastVal = (float)std::max(EC::MIN_CONTRAST,
-                                              (m_contrast->getDoubleValue() * m_gamma->getDoubleValue()));
-    const float exposureVal = powf(powf(2.f, (float)m_exposure->getDoubleValue()),
+                                              (m_contrast->getValue() * m_gamma->getValue()));
+    const float exposureVal = powf(powf(2.f, (float)m_exposure->getValue()),
                                    (float)EC::VIDEO_OETF_POWER);
 
     const float * in = (float *)inImg;
@@ -444,9 +486,9 @@ void ECVideoRevRenderer::apply(const void * inImg, void * outImg, long numPixels
 {
     // TODO: allow negative contrast?
     const float contrastVal = (float)std::max(EC::MIN_CONTRAST,
-                                              (m_contrast->getDoubleValue() * m_gamma->getDoubleValue()));
+                                              (m_contrast->getValue() * m_gamma->getValue()));
     const float invContrastVal = 1.f / contrastVal;
-    const float invExposureVal = 1.f / powf(powf(2.f, (float)m_exposure->getDoubleValue()),
+    const float invExposureVal = 1.f / powf(powf(2.f, (float)m_exposure->getValue()),
                                             (float)EC::VIDEO_OETF_POWER);
     const float pivotOverExposureVal = m_pivot * invExposureVal;
     const float invPivotVal = 1.f / m_pivot;
@@ -551,11 +593,11 @@ void ECLogarithmicRenderer::updateData(ConstExposureContrastOpDataRcPtr & ec)
 
 void ECLogarithmicRenderer::apply(const void * inImg, void * outImg, long numPixels) const
 {
-    const float exposureVal = (float)m_exposure->getDoubleValue() *
+    const float exposureVal = (float)m_exposure->getValue() *
                               m_logExposureStep;
     const float contrastVal
         = (float)std::max(EC::MIN_CONTRAST,
-                          (m_contrast->getDoubleValue() * m_gamma->getDoubleValue()));
+                          (m_contrast->getValue() * m_gamma->getValue()));
     const float offsetVal = (exposureVal - m_pivot) * contrastVal + m_pivot;
 
     const float * in = (float *)inImg;
@@ -633,11 +675,11 @@ void ECLogarithmicRevRenderer::updateData(ConstExposureContrastOpDataRcPtr & ec)
 
 void ECLogarithmicRevRenderer::apply(const void * inImg, void * outImg, long numPixels) const
 {
-    const float exposureVal = (float)m_exposure->getDoubleValue() *
+    const float exposureVal = (float)m_exposure->getValue() *
                               m_logExposureStep;
     const float inv_contrastVal
         = (float)std::max(EC::MIN_CONTRAST,
-                          1. / (m_contrast->getDoubleValue() * m_gamma->getDoubleValue()));
+                          1. / (m_contrast->getValue() * m_gamma->getValue()));
     const float negOffsetVal = m_pivot - m_pivot * inv_contrastVal -
                                exposureVal;
 

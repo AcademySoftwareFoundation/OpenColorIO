@@ -816,7 +816,7 @@ OCIO_ADD_TEST(CPUProcessor, with_several_ops)
 
             const std::string cacheID{ cpuProcessor->getCacheID() };
 
-            const std::string expectedID("CPU Processor: from 16ui to 32f oFlags 122879 ops"
+            const std::string expectedID("CPU Processor: from 16ui to 32f oFlags 62668739 ops"
                 ": <Lut1D $a57d7444e629d796d2234c18a0539c74 forward default standard domain none>");
 
             // Test integer optimization. The ops should be optimized into a single LUT

@@ -3088,10 +3088,10 @@ OCIO_ADD_TEST(Config, log_serialization)
         const std::string strEnd =
             "    from_reference: !<LogAffineTransform> {"
             "base: 10, "
-            "logSideSlope: [1.3, 1.4, 1.5], "
-            "logSideOffset: [0, 0, 0.1], "
-            "linSideSlope: [1, 1, 1.1], "
-            "linSideOffset: [0.1234567890123, 0.5, 0.1]}\n";
+            "log_side_slope: [1.3, 1.4, 1.5], "
+            "log_side_offset: [0, 0, 0.1], "
+            "lin_side_slope: [1, 1, 1.1], "
+            "lin_side_offset: [0.1234567890123, 0.5, 0.1]}\n";
         const std::string str = PROFILE_V2_START + strEnd;
 
         std::istringstream is;
@@ -3110,10 +3110,10 @@ OCIO_ADD_TEST(Config, log_serialization)
         // LogAffine with default value for base.
         const std::string strEnd =
             "    from_reference: !<LogAffineTransform> {"
-            "logSideSlope: [1, 1, 1.1], "
-            "logSideOffset: [0.1234567890123, 0.5, 0.1], "
-            "linSideSlope: [1.3, 1.4, 1.5], "
-            "linSideOffset: [0, 0, 0.1]}\n";
+            "log_side_slope: [1, 1, 1.1], "
+            "log_side_offset: [0.1234567890123, 0.5, 0.1], "
+            "lin_side_slope: [1.3, 1.4, 1.5], "
+            "lin_side_offset: [0, 0, 0.1]}\n";
 
         const std::string str = PROFILE_V2_START + strEnd;
 
@@ -3130,14 +3130,14 @@ OCIO_ADD_TEST(Config, log_serialization)
     }
 
     {
-        // LogAffine with single value for linSideOffset.
+        // LogAffine with single value for lin_side_offset.
         const std::string strEnd =
             "    from_reference: !<LogAffineTransform> {"
             "base: 10, "
-            "logSideSlope: [1, 1, 1.1], "
-            "logSideOffset: [0.1234567890123, 0.5, 0.1], "
-            "linSideSlope: [1.3, 1.4, 1.5], "
-            "linSideOffset: 0.5}\n";
+            "log_side_slope: [1, 1, 1.1], "
+            "log_side_offset: [0.1234567890123, 0.5, 0.1], "
+            "lin_side_slope: [1.3, 1.4, 1.5], "
+            "lin_side_offset: 0.5}\n";
         const std::string str = PROFILE_V2_START + strEnd;
 
         std::istringstream is;
@@ -3153,12 +3153,12 @@ OCIO_ADD_TEST(Config, log_serialization)
     }
 
     {
-        // LogAffine with single value for linSideSlope.
+        // LogAffine with single value for lin_side_slope.
         const std::string strEnd =
             "    from_reference: !<LogAffineTransform> {"
-            "logSideSlope: [1, 1, 1.1], "
-            "linSideSlope: 1.3, "
-            "linSideOffset: [0, 0, 0.1]}\n";
+            "log_side_slope: [1, 1, 1.1], "
+            "lin_side_slope: 1.3, "
+            "lin_side_offset: [0, 0, 0.1]}\n";
         const std::string str = PROFILE_V2_START + strEnd;
 
         std::istringstream is;
@@ -3174,13 +3174,13 @@ OCIO_ADD_TEST(Config, log_serialization)
     }
 
     {
-        // LogAffine with single value for logSideOffset.
+        // LogAffine with single value for log_side_offset.
         const std::string strEnd =
             "    from_reference: !<LogAffineTransform> {"
-            "logSideSlope: [1, 1, 1.1], "
-            "logSideOffset: 0.5, "
-            "linSideSlope: [1.3, 1, 1], "
-            "linSideOffset: [0, 0, 0.1]}\n";
+            "log_side_slope: [1, 1, 1.1], "
+            "log_side_offset: 0.5, "
+            "lin_side_slope: [1.3, 1, 1], "
+            "lin_side_offset: [0, 0, 0.1]}\n";
         const std::string str = PROFILE_V2_START + strEnd;
 
         std::istringstream is;
@@ -3196,13 +3196,13 @@ OCIO_ADD_TEST(Config, log_serialization)
     }
 
     {
-        // LogAffine with single value for logSideSlope.
+        // LogAffine with single value for log_side_slope.
         const std::string strEnd =
             "    from_reference: !<LogAffineTransform> {"
-            "logSideSlope: 1.1, "
-            "logSideOffset: [0.5, 0, 0], "
-            "linSideSlope: [1.3, 1, 1], "
-            "linSideOffset: [0, 0, 0.1]}\n";
+            "log_side_slope: 1.1, "
+            "log_side_offset: [0.5, 0, 0], "
+            "lin_side_slope: [1.3, 1, 1], "
+            "lin_side_offset: [0, 0, 0.1]}\n";
         const std::string str = PROFILE_V2_START + strEnd;
 
         std::istringstream is;
@@ -3218,12 +3218,12 @@ OCIO_ADD_TEST(Config, log_serialization)
     }
 
     {
-        // LogAffine with default value for logSideSlope.
+        // LogAffine with default value for log_side_slope.
         const std::string strEnd =
             "    from_reference: !<LogAffineTransform> {"
-            "logSideOffset: [0.1234567890123, 0.5, 0.1], "
-            "linSideSlope: [1.3, 1.4, 1.5], "
-            "linSideOffset: [0.1, 0, 0]}\n";
+            "log_side_offset: [0.1234567890123, 0.5, 0.1], "
+            "lin_side_slope: [1.3, 1.4, 1.5], "
+            "lin_side_offset: [0.1, 0, 0]}\n";
         const std::string str = PROFILE_V2_START + strEnd;
 
         std::istringstream is;
@@ -3257,11 +3257,11 @@ OCIO_ADD_TEST(Config, log_serialization)
     }
 
     {
-        // LogAffine with wrong size for logSideSlope.
+        // LogAffine with wrong size for log_side_slope.
         const std::string strEnd =
             "    from_reference: !<LogAffineTransform> {"
-            "logSideSlope: [1, 1], "
-            "logSideOffset: [0.1234567890123, 0.5, 0.1]}\n";
+            "log_side_slope: [1, 1], "
+            "log_side_offset: [0.1234567890123, 0.5, 0.1]}\n";
         const std::string str = PROFILE_V2_START + strEnd;
 
         std::istringstream is;
@@ -3270,7 +3270,7 @@ OCIO_ADD_TEST(Config, log_serialization)
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_THROW_WHAT(config = OCIO::Config::CreateFromStream(is),
                               OCIO::Exception,
-                              "logSideSlope value field must have 3 components");
+                              "log_side_slope value field must have 3 components");
     }
 
     {
@@ -3278,7 +3278,7 @@ OCIO_ADD_TEST(Config, log_serialization)
         const std::string strEnd =
             "    from_reference: !<LogAffineTransform> {"
             "base: [2, 2, 2], "
-                "logSideOffset: [0.1234567890123, 0.5, 0.1]}\n";
+            "log_side_offset: [0.1234567890123, 0.5, 0.1]}\n";
         const std::string str = PROFILE_V2_START + strEnd;
 
         std::istringstream is;
@@ -3293,11 +3293,11 @@ OCIO_ADD_TEST(Config, log_serialization)
         // LogCamera with default value for base.
         const std::string strEnd =
             "    from_reference: !<LogCameraTransform> {"
-            "logSideSlope: [1, 1, 1.1], "
-            "logSideOffset: [0.1234567890123, 0.5, 0.1], "
-            "linSideSlope: [1.3, 1.4, 1.5], "
-            "linSideOffset: [0, 0, 0.1], "
-            "linSideBreak: [0.1, 0.2, 0.3]}\n";
+            "log_side_slope: [1, 1, 1.1], "
+            "log_side_offset: [0.1234567890123, 0.5, 0.1], "
+            "lin_side_slope: [1.3, 1.4, 1.5], "
+            "lin_side_offset: [0, 0, 0.1], "
+            "lin_side_break: [0.1, 0.2, 0.3]}\n";
 
         const std::string str = PROFILE_V2_START + strEnd;
 
@@ -3314,10 +3314,10 @@ OCIO_ADD_TEST(Config, log_serialization)
     }
 
     {
-        // LogCamera with default values and identical linSideBreak.
+        // LogCamera with default values and identical lin_side_break.
         const std::string strEnd =
             "    from_reference: !<LogCameraTransform> {"
-            "linSideBreak: 0.2}\n";
+            "lin_side_break: 0.2}\n";
 
         const std::string str = PROFILE_V2_START + strEnd;
 
@@ -3337,8 +3337,8 @@ OCIO_ADD_TEST(Config, log_serialization)
         // LogCamera with linear slope.
         const std::string strEnd =
             "    from_reference: !<LogCameraTransform> {"
-            "linSideBreak: 0.2, "
-            "linearSlope: [1.1, 0.9, 1.2]}\n";
+            "lin_side_break: 0.2, "
+            "linear_slope: [1.1, 0.9, 1.2]}\n";
 
         const std::string str = PROFILE_V2_START + strEnd;
 
@@ -3366,7 +3366,7 @@ OCIO_ADD_TEST(Config, log_serialization)
         is.str(str);
 
         OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is), OCIO::Exception,
-                              "linSideBreak values are missing");
+                              "lin_side_break values are missing");
     }
 }
 
@@ -3416,6 +3416,599 @@ OCIO_ADD_TEST(Config, unknown_key_error)
     OCIO_CHECK_NO_THROW(OCIO::Config::CreateFromStream(is));
     OCIO_CHECK_ASSERT(StringUtils::StartsWith(g.output(), 
                      "[OpenColorIO Warning]: At line 47, unknown key 'dummyKey' in 'ColorSpace'."));
+}
+
+OCIO_ADD_TEST(Config, grading_primary_serialization)
+{
+    {
+        const std::string strEnd =
+            "    from_reference: !<GroupTransform>\n"
+            "      children:\n"
+            "        - !<GradingPrimaryTransform> {style: log, dynamic: true}\n"
+            "        - !<GradingPrimaryTransform> {style: log, contrast: {rgb: [1.1, 1, 1], master: 1.1}, dynamic: true}\n"
+            "        - !<GradingPrimaryTransform> {style: log, dynamic: true, direction: inverse}\n"
+            "        - !<GradingPrimaryTransform> {style: linear, saturation: 0.9}\n"
+            "        - !<GradingPrimaryTransform> {style: linear, saturation: 1.1, direction: inverse}\n"
+            "        - !<GradingPrimaryTransform> {style: video, dynamic: true}\n"
+            "        - !<GradingPrimaryTransform> {style: video, dynamic: true, direction: inverse}\n";
+
+        const std::string str = PROFILE_V2_START + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+
+        OCIO::ConstConfigRcPtr config;
+        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OCIO_CHECK_NO_THROW(config->validate());
+
+        // Write the config.
+
+        std::stringstream ss;
+        OCIO_CHECK_NO_THROW(ss << *config.get());
+
+        // Pivot contrast is always saved even if it is the default value (log & linear) when
+        // contrast is not default. When controls are not default, transform is saved on separate
+        // lines.
+        const std::string strEndBack =
+            "    from_reference: !<GroupTransform>\n"
+            "      children:\n"
+            "        - !<GradingPrimaryTransform> {style: log, dynamic: true}\n"
+            "        - !<GradingPrimaryTransform>\n"
+            "          style: log\n"
+            "          contrast: {rgb: [1.1, 1, 1], master: 1.1}\n"
+            "          pivot: {contrast: -0.2}\n"
+            "          dynamic: true\n"
+            "        - !<GradingPrimaryTransform> {style: log, dynamic: true, direction: inverse}\n"
+            "        - !<GradingPrimaryTransform>\n"
+            "          style: linear\n"
+            "          saturation: 0.9\n"
+            "        - !<GradingPrimaryTransform>\n"
+            "          style: linear\n"
+            "          saturation: 1.1\n"
+            "          direction: inverse\n"
+            "        - !<GradingPrimaryTransform> {style: video, dynamic: true}\n"
+            "        - !<GradingPrimaryTransform> {style: video, dynamic: true, direction: inverse}\n";
+
+        const std::string strBack = PROFILE_V2_START + strEndBack;
+        OCIO_CHECK_EQUAL(ss.str(), strBack);
+    }
+
+    {
+        // Pivot contrast value is included for log and linear even if it is the default value. 
+        const std::string strEnd =
+            "    from_reference: !<GroupTransform>\n"
+            "      children:\n"
+            "        - !<GradingPrimaryTransform>\n"
+            "          style: log\n"
+            "          brightness: {rgb: [0.1, 0.12345678, 0], master: 0.1}\n"
+            "        - !<GradingPrimaryTransform>\n"
+            "          style: log\n"
+            "          contrast: {rgb: [1.1, 1, 1], master: 1.1}\n"
+            "          pivot: {contrast: -0.2}\n"
+            "        - !<GradingPrimaryTransform>\n"
+            "          style: log\n"
+            "          gamma: {rgb: [1.1, 1.1, 1], master: 1.1}\n"
+            "        - !<GradingPrimaryTransform>\n"
+            "          style: log\n"
+            "          saturation: 0.9\n"
+            "        - !<GradingPrimaryTransform>\n"
+            "          style: log\n"
+            "          pivot: {contrast: -0.1, black: 0.1, white: 1.1}\n"
+            "        - !<GradingPrimaryTransform>\n"
+            "          style: log\n"
+            "          pivot: {black: 0.1, white: 1.1}\n"
+            "        - !<GradingPrimaryTransform>\n"
+            "          style: log\n"
+            "          pivot: {black: 0.1}\n"
+            "        - !<GradingPrimaryTransform>\n"
+            "          style: log\n"
+            "          clamp: {black: 0.1, white: 1.1}\n"
+            "        - !<GradingPrimaryTransform>\n"
+            "          style: log\n"
+            "          clamp: {black: 0.1}\n"
+            "        - !<GradingPrimaryTransform>\n"
+            "          style: linear\n"
+            "          offset: {rgb: [0.1, 0.12345678, 0], master: 0.1}\n"
+            "        - !<GradingPrimaryTransform>\n"
+            "          style: linear\n"
+            "          contrast: {rgb: [1.1, 1, 1], master: 1.1}\n"
+            "          pivot: {contrast: 0.18}\n"
+            "        - !<GradingPrimaryTransform>\n"
+            "          style: linear\n"
+            "          exposure: {rgb: [-1.1, 0.9, -0.01], master: 1.1}\n"
+            "        - !<GradingPrimaryTransform>\n"
+            "          style: linear\n"
+            "          saturation: 0.9\n"
+            "        - !<GradingPrimaryTransform>\n"
+            "          style: linear\n"
+            "          pivot: {contrast: -0.1}\n"
+            "        - !<GradingPrimaryTransform>\n"
+            "          style: linear\n"
+            "          clamp: {black: 0.1, white: 1.1}\n"
+            "        - !<GradingPrimaryTransform>\n"
+            "          style: linear\n"
+            "          clamp: {white: 1.1}\n"
+            "        - !<GradingPrimaryTransform>\n"
+            "          style: video\n"
+            "          offset: {rgb: [0.1, 0.12345678, 0], master: 0.1}\n"
+            "        - !<GradingPrimaryTransform>\n"
+            "          style: video\n"
+            "          gain: {rgb: [1.1, 1, 1], master: 1.1}\n"
+            "        - !<GradingPrimaryTransform>\n"
+            "          style: video\n"
+            "          gamma: {rgb: [1.1, 1, 1], master: 1.1}\n"
+            "        - !<GradingPrimaryTransform>\n"
+            "          style: video\n"
+            "          lift: {rgb: [0.1, 0.12345678, 0], master: 0.1}\n"
+            "        - !<GradingPrimaryTransform>\n"
+            "          style: video\n"
+            "          pivot: {black: 0.1, white: 1.1}\n"
+            "        - !<GradingPrimaryTransform>\n"
+            "          style: video\n"
+            "          pivot: {white: 1.1}\n"
+            "        - !<GradingPrimaryTransform>\n"
+            "          style: video\n"
+            "          clamp: {black: 0.1, white: 1.1}\n"
+            "        - !<GradingPrimaryTransform>\n"
+            "          style: video\n"
+            "          clamp: {black: 0.1}\n";
+        const std::string str = PROFILE_V2_START + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+
+        OCIO::ConstConfigRcPtr config;
+        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OCIO_CHECK_NO_THROW(config->validate());
+
+        // Write the config.
+
+        std::stringstream ss;
+        OCIO_CHECK_NO_THROW(ss << *config.get());
+        OCIO_CHECK_EQUAL(ss.str(), str);
+    }
+
+    {
+        // Primary can be on one line or multiple lines (but is written on multiple lines).
+        const std::string strEnd =
+            "    from_reference: !<GroupTransform>\n"
+            "      children:\n"
+            "        - !<GradingPrimaryTransform> {style: log, brightness: {rgb: [0.1, 0.12345678, 0], master: 0.1}, pivot: {contrast: -0.2}}\n"
+            "        - !<GradingPrimaryTransform>\n"
+            "          style: linear\n"
+            "          offset:\n"
+            "            rgb: [0.1, 0.12345678, 0]\n"
+            "            master: 0.1\n"
+            "          pivot: {contrast: 0.18}\n";
+
+        const std::string strEndBack =
+            "    from_reference: !<GroupTransform>\n"
+            "      children:\n"
+            "        - !<GradingPrimaryTransform>\n"
+            "          style: log\n"
+            "          brightness: {rgb: [0.1, 0.12345678, 0], master: 0.1}\n"
+            "        - !<GradingPrimaryTransform>\n"
+            "          style: linear\n"
+            "          offset: {rgb: [0.1, 0.12345678, 0], master: 0.1}\n";
+        const std::string str = PROFILE_V2_START + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+
+        OCIO::ConstConfigRcPtr config;
+        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OCIO_CHECK_NO_THROW(config->validate());
+
+        // Write the config.
+
+        std::stringstream ss;
+        OCIO_CHECK_NO_THROW(ss << *config.get());
+
+        const std::string strBack = PROFILE_V2_START + strEndBack;
+
+        OCIO_CHECK_EQUAL(ss.str(), strBack);
+    }
+
+    {
+        // Rgb not enough values.
+        const std::string strEnd =
+            "    from_reference: !<GradingPrimaryTransform> {style: log, brightness: {rgb: [0.1, 0], master: 0.1}}\n";
+
+        const std::string str = PROFILE_V2_START + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+
+        OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is), OCIO::Exception,
+                              "The RGB value needs to be a 3 doubles");
+    }
+
+    {
+        // Rgb too many values.
+        const std::string strEnd =
+            "    from_reference: !<GradingPrimaryTransform> {style: log, brightness: {rgb: [0.1, 0.12345678, 0, 0], master: 0.1}}\n";
+
+        const std::string str = PROFILE_V2_START + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+
+        OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is), OCIO::Exception,
+                              "The RGB value needs to be a 3 doubles");
+    }
+
+    {
+        // Rgbm has to be a map.
+        const std::string strEnd =
+            "    from_reference: !<GradingPrimaryTransform> "
+            "{style: log, brightness: [0.1, 0.12345678, 0, 0]}\n";
+
+        const std::string str = PROFILE_V2_START + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+
+        OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is), OCIO::Exception,
+                              "'brightness' failed: The value needs to be a map");
+    }
+
+    {
+        // Rgbm missing master.
+        const std::string strEnd =
+            "    from_reference: !<GradingPrimaryTransform> "
+            "{style: log, brightness: {rgb: [0.1, 0.12345678, 0]}}\n";
+
+        const std::string str = PROFILE_V2_START + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+
+        OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is), OCIO::Exception,
+                              "'brightness' failed: Both rgb and master values are required");
+    }
+
+    {
+        // Rgbm master has too many values.
+        const std::string strEnd =
+            "    from_reference: !<GradingPrimaryTransform> "
+            "{style: log, brightness: {rgb: [0.1, 0.12345678, 0], master: [0.1, 0.2, 0.3]}}\n";
+
+        const std::string str = PROFILE_V2_START + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+
+        OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is), OCIO::Exception,
+                              "parsing double failed");
+    }
+
+    {
+        // Rgbm missing rgb.
+        const std::string strEnd =
+            "    from_reference: !<GradingPrimaryTransform> {style: log, brightness: {master: 0.1}}\n";
+
+        const std::string str = PROFILE_V2_START + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+
+        OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is), OCIO::Exception,
+                              "'brightness' failed: Both rgb and master values are required");
+    }
+
+    {
+        // Pivot has to be a map.
+        const std::string strEnd =
+            "    from_reference: !<GradingPrimaryTransform> {style: log, pivot: 0.1}\n";
+
+        const std::string str = PROFILE_V2_START + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+
+        OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is), OCIO::Exception,
+                              "'pivot' failed: The value needs to be a map");
+    }
+
+    {
+        // Pivot has to define some values.
+        const std::string strEnd =
+            "    from_reference: !<GradingPrimaryTransform> {style: log, pivot: {}}\n";
+
+        const std::string str = PROFILE_V2_START + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+
+        OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is), OCIO::Exception,
+                              "'pivot' failed: At least one of the pivot values must be provided");
+    }
+
+    {
+        // Clamp has to be a map.
+        const std::string strEnd =
+            "    from_reference: !<GradingPrimaryTransform> {style: log, clamp: 0.1}\n";
+
+        const std::string str = PROFILE_V2_START + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+
+        OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is), OCIO::Exception,
+                              "'clamp' failed: The value needs to be a map");
+    }
+
+    {
+        // Clamp has to define some values.
+        const std::string strEnd =
+            "    from_reference: !<GradingPrimaryTransform> {style: log, clamp: {}}\n";
+
+        const std::string str = PROFILE_V2_START + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+
+        OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is), OCIO::Exception,
+                              "'clamp' failed: At least one of the clamp values must be provided");
+    }
+}
+
+OCIO_ADD_TEST(Config, grading_rgbcurve_serialization)
+{
+    {
+        const std::string strEnd =
+            "    from_reference: !<GroupTransform>\n"
+            "      children:\n"
+            "        - !<GradingRGBCurveTransform> {style: log, dynamic: true}\n"
+            "        - !<GradingRGBCurveTransform> {style: log, dynamic: true, direction: inverse}\n"
+            "        - !<GradingRGBCurveTransform> {style: linear, lintolog_bypass: true, dynamic: true}\n"
+            "        - !<GradingRGBCurveTransform> {style: linear, dynamic: true, direction: inverse}\n"
+            "        - !<GradingRGBCurveTransform> {style: video, dynamic: true}\n"
+            "        - !<GradingRGBCurveTransform> {style: video, dynamic: true, direction: inverse}\n";
+
+        const std::string str = PROFILE_V2_START + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+
+        OCIO::ConstConfigRcPtr config;
+        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OCIO_CHECK_NO_THROW(config->validate());
+
+        // Write the config.
+
+        std::stringstream ss;
+        OCIO_CHECK_NO_THROW(ss << *config.get());
+        OCIO_CHECK_EQUAL(ss.str(), str);
+    }
+
+    {
+        const std::string strEnd =
+            "    from_reference: !<GroupTransform>\n"
+            "      children:\n"
+            "        - !<GradingRGBCurveTransform>\n"
+            "          style: log\n"
+            "          red: {control_points: [0, 0, 0.5, 0.5, 1, 1.123456]}\n"
+            "        - !<GradingRGBCurveTransform>\n"
+            "          style: log\n"
+            "          red: {control_points: [0, 0, 0.5, 0.5, 1, 1.5]}\n"
+            "          green: {control_points: [-1, -1, 0, 0.1, 0.5, 0.6, 1, 1.1]}\n"
+            "          direction: inverse\n"
+            "        - !<GradingRGBCurveTransform>\n"
+            "          style: linear\n"
+            "          lintolog_bypass: true\n"
+            "          red: {control_points: [0, 0, 0.1, 0.2, 0.5, 0.5, 0.7, 0.6, 1, 1.5]}\n"
+            "          master: {control_points: [-1, -1, 0, 0.1, 0.5, 0.6, 1, 1.1]}\n"
+            "          dynamic: true\n"
+            "        - !<GradingRGBCurveTransform>\n"
+            "          style: video\n"
+            "          red: {control_points: [-0.2, 0, 0.5, 0.5, 1.2, 1.5]}\n"
+            "          green: {control_points: [0, 0, 0.2, 0.5, 1, 1.5]}\n"
+            "          blue: {control_points: [0, 0, 0.1, 0.5, 1, 1.5]}\n"
+            "          master: {control_points: [-1, -1, 0, 0.1, 0.5, 0.6, 1, 1.1]}\n"
+            "          dynamic: true\n"
+            "          direction: inverse\n";
+
+        const std::string str = PROFILE_V2_START + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+
+        OCIO::ConstConfigRcPtr config;
+        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OCIO_CHECK_NO_THROW(config->validate());
+
+        // Write the config.
+
+        std::stringstream ss;
+        OCIO_CHECK_NO_THROW(ss << *config.get());
+        OCIO_CHECK_EQUAL(ss.str(), str);
+    }
+}
+
+OCIO_ADD_TEST(Config, grading_tone_serialization)
+{
+    {
+        const std::string strEnd =
+            "    from_reference: !<GroupTransform>\n"
+            "      children:\n"
+            "        - !<GradingToneTransform> {style: log, dynamic: true}\n"
+            "        - !<GradingToneTransform> {style: log, s_contrast: 1.1, dynamic: true}\n"
+            "        - !<GradingToneTransform> {style: log, dynamic: true, direction: inverse}\n"
+            "        - !<GradingToneTransform> {style: linear}\n"
+            "        - !<GradingToneTransform> {style: linear, direction: inverse}\n"
+            "        - !<GradingToneTransform> {style: video, dynamic: true}\n"
+            "        - !<GradingToneTransform> {style: video, dynamic: true, direction: inverse}\n";
+
+        const std::string str = PROFILE_V2_START + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+
+        OCIO::ConstConfigRcPtr config;
+        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OCIO_CHECK_NO_THROW(config->validate());
+
+        // Write the config.
+
+        std::stringstream ss;
+        OCIO_CHECK_NO_THROW(ss << *config.get());
+
+        //  When controls are not default, transform is saved on separate lines.
+        const std::string strEndBack =
+            "    from_reference: !<GroupTransform>\n"
+            "      children:\n"
+            "        - !<GradingToneTransform> {style: log, dynamic: true}\n"
+            "        - !<GradingToneTransform>\n"
+            "          style: log\n"
+            "          s_contrast: 1.1\n"
+            "          dynamic: true\n"
+            "        - !<GradingToneTransform> {style: log, dynamic: true, direction: inverse}\n"
+            "        - !<GradingToneTransform> {style: linear}\n"
+            "        - !<GradingToneTransform> {style: linear, direction: inverse}\n"
+            "        - !<GradingToneTransform> {style: video, dynamic: true}\n"
+            "        - !<GradingToneTransform> {style: video, dynamic: true, direction: inverse}\n";
+
+        const std::string strBack = PROFILE_V2_START + strEndBack;
+        OCIO_CHECK_EQUAL(ss.str(), strBack);
+    }
+
+    {
+        const std::string strEnd =
+            "    from_reference: !<GroupTransform>\n"
+            "      children:\n"
+            "        - !<GradingToneTransform>\n"
+            "          style: log\n"
+            "          blacks: {rgb: [0.1, 0.12345678, 0.9], master: 1, start: 0.1, width: 0.9}\n"
+            "          shadows: {rgb: [1, 1.1, 1.1111], master: 1.1, start: 0.9, pivot: 0.1}\n"
+            "          midtones: {rgb: [0.85, 0.98, 1], master: 1.11, center: 0.1, width: 0.9}\n"
+            "          highlights: {rgb: [1.1, 1.1111, 1], master: 1.2, start: 0.15, pivot: 1.1}\n"
+            "          whites: {rgb: [0.95, 0.96, 0.95], master: 1.1, start: 0.1, width: 0.9}\n"
+            "          s_contrast: 1.1\n"
+            "          dynamic: true\n"
+            "        - !<GradingToneTransform>\n"
+            "          style: log\n"
+            "          midtones: {rgb: [0.85, 0.98, 1], master: 1.11, center: 0.1, width: 0.9}\n"
+            "          highlights: {rgb: [1.1, 1.1111, 1], master: 1.2, start: 0.15, pivot: 1.1}\n"
+            "          whites: {rgb: [0.95, 0.96, 0.95], master: 1.1, start: 0.1, width: 0.9}\n"
+            "          s_contrast: 1.1\n"
+            "        - !<GradingToneTransform>\n"
+            "          style: linear\n"
+            "          blacks: {rgb: [0.1, 0.12345678, 0.9], master: 1, start: 0.1, width: 0.9}\n"
+            "          shadows: {rgb: [1, 1.1, 1.1111], master: 1.1, start: 0.9, pivot: 0.1}\n"
+            "          whites: {rgb: [0.95, 0.96, 0.95], master: 1.1, start: 0.1, width: 0.9}\n"
+            "          s_contrast: 1.1\n"
+            "        - !<GradingToneTransform>\n"
+            "          style: video\n"
+            "          shadows: {rgb: [1, 1.1, 1.1111], master: 1.1, start: 0.9, pivot: 0.1}\n"
+            "          midtones: {rgb: [0.85, 0.98, 1], master: 1.11, center: 0.1, width: 0.9}\n"
+            "          highlights: {rgb: [1.1, 1.1111, 1], master: 1.2, start: 0.15, pivot: 1.1}\n"
+            "          direction: inverse\n";
+
+        const std::string str = PROFILE_V2_START + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+
+        OCIO::ConstConfigRcPtr config;
+        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OCIO_CHECK_NO_THROW(config->validate());
+
+        // Write the config.
+
+        std::stringstream ss;
+        OCIO_CHECK_NO_THROW(ss << *config.get());
+        OCIO_CHECK_EQUAL(ss.str(), str);
+    }
+
+    {
+        // Rgb not enough values.
+        const std::string strEnd =
+            "    from_reference: !<GradingToneTransform> {style: log, whites: {rgb: [0.1, 1], master: 1, start: 1, width: 1}}\n";
+
+        const std::string str = PROFILE_V2_START + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+
+        OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is), OCIO::Exception,
+                              "The RGB value needs to be a 3 doubles");
+    }
+
+    {
+        // Rgb too many values.
+        const std::string strEnd =
+            "    from_reference: !<GradingToneTransform> {style: log, whites: {rgb: [0.1, 0.12345678, 1, 1], master: 0.1, start: 1, width: 1}}\n";
+
+        const std::string str = PROFILE_V2_START + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+
+        OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is), OCIO::Exception,
+                              "The RGB value needs to be a 3 doubles");
+    }
+
+    {
+        // Rgbm has to be a map.
+        const std::string strEnd =
+            "    from_reference: !<GradingToneTransform> "
+            "{style: log, whites: [0.1, 0.12345678, 0, 0]}\n";
+
+        const std::string str = PROFILE_V2_START + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+
+        OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is), OCIO::Exception,
+                             "'whites' failed: The value needs to be a map");
+    }
+
+    {
+        // Rgbmsw missing start.
+        const std::string strEnd =
+            "    from_reference: !<GradingToneTransform> "
+            "{style: log, whites: {rgb: [0.1, 1, 1], master: 0.1, width: 1}}\n";
+
+        const std::string str = PROFILE_V2_START + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+
+        OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is), OCIO::Exception,
+                              "'whites' failed: Rgb, master, start, and width values are required");
+    }
+
+    {
+        // Rgbmsw missing center.
+        const std::string strEnd =
+            "    from_reference: !<GradingToneTransform> "
+            "{style: log, midtones: {rgb: [0.1, 1, 1], master: 0.1, width: 1}}\n";
+
+        const std::string str = PROFILE_V2_START + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+
+        OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is), OCIO::Exception,
+                              "'midtones' failed: Rgb, master, center, and width values are "
+                              "required");
+    }
+
+    {
+        // Rgbmsw start has too many values.
+        const std::string strEnd =
+            "    from_reference: !<GradingToneTransform> "
+            "{style: log, whites: {rgb: [0.1, 1, 1], master: 0.1, start: [1, 1.1], width: 1}}\n";
+
+        const std::string str = PROFILE_V2_START + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+
+        OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is), OCIO::Exception,
+                              "parsing double failed");
+    }
 }
 
 OCIO_ADD_TEST(Config, fixed_function_serialization)
@@ -4458,7 +5051,7 @@ colorspaces:
   - !<ColorSpace>
     name: aces2
     allocation: uniform
-    to_reference: !<RangeTransform> {minInValue: -0.0109, maxInValue: 1.0505, minOutValue: 0.0009, maxOutValue: 2.5001}
+    to_reference: !<RangeTransform> {min_in_value: -0.0109, max_in_value: 1.0505, min_out_value: 0.0009, max_out_value: 2.5001}
 
 display_colorspaces:
   - !<ColorSpace>
@@ -5307,7 +5900,7 @@ colorspaces:
     allocation: uniform
     from_reference: !<GroupTransform>
        children:
-         - !<RangeTransform> {minInValue: 0, minOutValue: 0}
+         - !<RangeTransform> {min_in_value: 0, min_out_value: 0}
 )" };
 
     std::istringstream is;

@@ -2,6 +2,68 @@ import os
 import sys
 from random import randint
 
+def assertEqualRGBM(testCase, first, second):
+    testCase.assertEqual(first.red, second.red)
+    testCase.assertEqual(first.green, second.green)
+    testCase.assertEqual(first.blue, second.blue)
+    testCase.assertEqual(first.master, second.master)
+
+def assertEqualPrimary(testCase, first, second):
+    assertEqualRGBM(testCase, first.brightness, second.brightness)
+    assertEqualRGBM(testCase, first.contrast, second.contrast)
+    assertEqualRGBM(testCase, first.gamma, second.gamma)
+    assertEqualRGBM(testCase, first.offset, second.offset)
+    assertEqualRGBM(testCase, first.exposure, second.exposure)
+    assertEqualRGBM(testCase, first.lift, second.lift)
+    assertEqualRGBM(testCase, first.gain, second.gain)
+    testCase.assertEqual(first.pivot, second.pivot)
+    testCase.assertEqual(first.saturation, second.saturation)
+    testCase.assertEqual(first.clampWhite, second.clampWhite)
+    testCase.assertEqual(first.clampBlack, second.clampBlack)
+    testCase.assertEqual(first.pivotWhite, second.pivotWhite)
+    testCase.assertEqual(first.pivotBlack, second.pivotBlack)
+
+def assertEqualRGBMSW(testCase, first, second):
+    testCase.assertEqual(first.red, second.red)
+    testCase.assertEqual(first.green, second.green)
+    testCase.assertEqual(first.blue, second.blue)
+    testCase.assertEqual(first.master, second.master)
+    testCase.assertEqual(first.start, second.start)
+    testCase.assertEqual(first.width, second.width)
+
+def assertEqualTone(testCase, first, second):
+    assertEqualRGBMSW(testCase, first.blacks, second.blacks)
+    assertEqualRGBMSW(testCase, first.whites, second.whites)
+    assertEqualRGBMSW(testCase, first.shadows, second.shadows)
+    assertEqualRGBMSW(testCase, first.highlights, second.highlights)
+    assertEqualRGBMSW(testCase, first.midtones, second.midtones)
+    testCase.assertEqual(first.scontrast, second.scontrast)
+
+def assertEqualControlPoint(testCase, first, second):
+    testCase.assertEqual(first.x, second.x)
+    testCase.assertEqual(first.y, second.y)
+
+def assertEqualBSpline(testCase, first, second):
+    pts1 = first.getControlPoints()
+    pts2 = second.getControlPoints()
+    for pt1 in pts1:
+        try:
+            pt2 = next(pts2)
+            assertEqualControlPoint(testCase,pt1, pt2)
+        except StopIteration:
+            raise AssertionError("Different number of control points")
+    try:
+        pt2 = next(pts2)
+    except StopIteration:
+        pass
+    else:
+        raise AssertionError("Different number of control points")
+
+def assertEqualRGBCurve(testCase, first, second):
+    assertEqualBSpline(testCase, first.red, second.red)
+    assertEqualBSpline(testCase, first.green, second.green)
+    assertEqualBSpline(testCase, first.blue, second.blue)
+    assertEqualBSpline(testCase, first.master, second.master)
 
 # -----------------------------------------------------------------------------
 # Python 2/3 compatibility

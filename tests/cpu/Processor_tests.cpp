@@ -59,17 +59,17 @@ OCIO_ADD_TEST(Processor, shared_dynamic_properties)
     auto data0 = OCIO_DYNAMIC_POINTER_CAST<const OCIO::ExposureContrastOpData>(op0->data());
     auto data1 = OCIO_DYNAMIC_POINTER_CAST<const OCIO::ExposureContrastOpData>(op1->data());
 
-    OCIO::DynamicPropertyImplRcPtr dp0 = data0->getExposureProperty();
-    OCIO::DynamicPropertyImplRcPtr dp1 = data1->getExposureProperty();
+    OCIO::DynamicPropertyDoubleImplRcPtr dp0 = data0->getExposureProperty();
+    OCIO::DynamicPropertyDoubleImplRcPtr dp1 = data1->getExposureProperty();
 
-    OCIO_CHECK_NE(dp0->getDoubleValue(), dp1->getDoubleValue());
+    OCIO_CHECK_NE(dp0->getValue(), dp1->getValue());
 
     OCIO_CHECK_NO_THROW(ops.unifyDynamicProperties());
 
-    OCIO::DynamicPropertyImplRcPtr dp0_post = data0->getExposureProperty();
-    OCIO::DynamicPropertyImplRcPtr dp1_post = data1->getExposureProperty();
+    OCIO::DynamicPropertyDoubleImplRcPtr dp0_post = data0->getExposureProperty();
+    OCIO::DynamicPropertyDoubleImplRcPtr dp1_post = data1->getExposureProperty();
 
-    OCIO_CHECK_EQUAL(dp0_post->getDoubleValue(), dp1_post->getDoubleValue());
+    OCIO_CHECK_EQUAL(dp0_post->getValue(), dp1_post->getValue());
 
     // Both share the same pointer.
     OCIO_CHECK_EQUAL(dp0_post.get(), dp1_post.get());
@@ -265,10 +265,10 @@ OCIO_ADD_TEST(Processor, optimization_env_override_basic)
     OCIO::SetEnvVariable(OCIO::OCIO_OPTIMIZATION_FLAGS_ENVVAR, "0xFFFFFFFF");
     OCIO_CHECK_EQUAL(OCIO::OPTIMIZATION_ALL, OCIO::EnvironmentOverride(testFlag));
 
-    OCIO::SetEnvVariable(OCIO::OCIO_OPTIMIZATION_FLAGS_ENVVAR, "20479");
+    OCIO::SetEnvVariable(OCIO::OCIO_OPTIMIZATION_FLAGS_ENVVAR, "10239939");
     OCIO_CHECK_EQUAL(OCIO::OPTIMIZATION_LOSSLESS, OCIO::EnvironmentOverride(testFlag));
 
-    OCIO::SetEnvVariable(OCIO::OCIO_OPTIMIZATION_FLAGS_ENVVAR, "0x1FFFF");
+    OCIO::SetEnvVariable(OCIO::OCIO_OPTIMIZATION_FLAGS_ENVVAR, "0x3FC3FC3");
     OCIO_CHECK_EQUAL(OCIO::OPTIMIZATION_GOOD, OCIO::EnvironmentOverride(testFlag));
 }
 

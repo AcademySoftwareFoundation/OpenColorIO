@@ -11,12 +11,10 @@ namespace
 
 enum GpuShaderDescIterator
 {
-    IT_UNIFORM = 0,
-    IT_TEXTURE,
+    IT_TEXTURE = 0,
     IT_TEXTURE_3D
 };
 
-using UniformIterator   = PyIterator<GpuShaderDescRcPtr, IT_UNIFORM>;
 using TextureIterator   = PyIterator<GpuShaderDescRcPtr, IT_TEXTURE>;
 using Texture3DIterator = PyIterator<GpuShaderDescRcPtr, IT_TEXTURE_3D>;
 
@@ -87,13 +85,6 @@ void bindPyGpuShaderDesc(py::module & m)
                     "pixelName"_a = DEFAULT->getPixelName(),
                     "resourcePrefix"_a = DEFAULT->getResourcePrefix(),
                     "uid"_a = DEFAULT->getUniqueID())  
-
-        // Dynamic Property related methods
-        .def("addUniform", &GpuShaderDesc::addUniform, "name"_a, "value"_a)
-        .def("getUniforms", [](GpuShaderDescRcPtr & self) 
-            {
-                return UniformIterator(self);
-            })
 
         // 1D lut related methods
         .def("getNumTextures", &GpuShaderDesc::getNumTextures)
@@ -223,29 +214,6 @@ void bindPyGpuShaderDesc(py::module & m)
                                  values);
             },
              "index"_a);
-
-    py::class_<UniformIterator>(cls, "UniformIterator")
-        .def("__len__", [](UniformIterator & it) { return it.m_obj->getNumUniforms(); })
-        .def("__getitem__", [](UniformIterator & it, int i) 
-            { 
-                // GpuShaderDesc provides index check with exception
-                const char * name = nullptr;
-                DynamicPropertyRcPtr value;
-                it.m_obj->getUniform(i, name, value);
-
-                return py::make_tuple(name, value);
-            })
-        .def("__iter__", [](UniformIterator & it) -> UniformIterator & { return it; })
-        .def("__next__", [](UniformIterator & it)
-            {
-                int i = it.nextIndex(it.m_obj->getNumUniforms());
-
-                const char * name = nullptr;
-                DynamicPropertyRcPtr value;
-                it.m_obj->getUniform(i, name, value);
-
-                return py::make_tuple(name, value);
-            });
 
     py::class_<Texture>(cls, "Texture")
         .def_readonly("textureName", &Texture::textureName)

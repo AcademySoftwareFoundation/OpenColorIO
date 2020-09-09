@@ -100,6 +100,24 @@ void BuildFixedFunctionOp(OpRcPtrVec & ops,
                           const FixedFunctionTransform & transform,
                           TransformDirection dir);
 
+void BuildGradingPrimaryOp(OpRcPtrVec & ops,
+                           const Config & config,
+                           const ConstContextRcPtr & context,
+                           const GradingPrimaryTransform & transform,
+                           TransformDirection dir);
+
+void BuildGradingRGBCurveOp(OpRcPtrVec & ops,
+                            const Config & config,
+                            const ConstContextRcPtr & context,
+                            const GradingRGBCurveTransform & transform,
+                            TransformDirection dir);
+
+void BuildGradingToneOp(OpRcPtrVec & ops,
+                        const Config & config,
+                        const ConstContextRcPtr & context,
+                        const GradingToneTransform & transform,
+                        TransformDirection dir);
+
 void BuildGroupOps(OpRcPtrVec & ops,
                    const Config & config,
                    const ConstContextRcPtr & context,

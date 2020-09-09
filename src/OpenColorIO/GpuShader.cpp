@@ -101,32 +101,51 @@ public:
 
     struct Uniform
     {
-        Uniform(const char * name, const DynamicPropertyRcPtr & value)
-            :   m_name(name)
+        Uniform(const char * name, const GpuShaderCreator::DoubleGetter & getDouble)
+            : Uniform(name)
+        {
+            m_data.m_type = UNIFORM_DOUBLE;
+            m_data.m_getDouble = getDouble;
+        }
+
+        Uniform(const char * name, const GpuShaderCreator::BoolGetter & getBool)
+            : Uniform(name)
+        {
+            m_data.m_type = UNIFORM_BOOL;
+            m_data.m_getBool = getBool;
+        }
+
+        Uniform(const char * name, const GpuShaderCreator::SizeGetter & getSize,
+                const GpuShaderCreator::FloatArrayGetter & getFloatArray)
+            : Uniform(name)
+        {
+            m_data.m_type = UNIFORM_ARRAY_FLOAT;
+            m_data.m_arrayFloat.m_getSize = getSize;
+            m_data.m_arrayFloat.m_getArray = getFloatArray;
+        }
+
+        Uniform(const char * name, const GpuShaderCreator::SizeGetter & getSize,
+                const GpuShaderCreator::IntArrayGetter & getInt2Array)
+            : Uniform(name)
+        {
+            m_data.m_type = UNIFORM_ARRAY_INT2;
+            m_data.m_arrayInt2.m_getSize = getSize;
+            m_data.m_arrayInt2.m_getArray = getInt2Array;
+        }
+
+        const std::string m_name;
+        GpuShaderDesc::UniformData m_data;
+
+        Uniform() = delete;
+    private:
+        Uniform(const char * name)
+            : m_name(name)
         {
             if (m_name.empty())
             {
                 throw Exception("The dynamic property name is invalid.");
             }
-
-            if (!value->isDynamic())
-            {
-                // When a dynamic property is not dynamic, the GLSL fragment
-                // shader program should use a constant variable
-                // (i.e. not a uniform variable).
-                throw Exception("The dynamic property is not dynamic.");
-            }
-
-            m_value
-                = std::make_shared<DynamicPropertyImpl>(
-                    *dynamic_cast<DynamicPropertyImpl*>(value.get()) );
-
         }
-
-        std::string m_name;
-        DynamicPropertyRcPtr m_value;
-
-        Uniform() = delete;
     };
 
     typedef std::vector<Uniform> Uniforms;
@@ -260,7 +279,7 @@ public:
         return (unsigned)m_uniforms.size();
     }
 
-    void getUniform(unsigned index, const char *& name, DynamicPropertyRcPtr & value) const
+    void getUniform(unsigned index, GpuShaderDesc::UniformData & data) const
     {
         if (index >= (unsigned)m_uniforms.size())
         {
@@ -269,37 +288,73 @@ public:
                << " where size = " << m_uniforms.size();
             throw Exception(ss.str().c_str());
         }
-        const Uniform & u = m_uniforms[index];
-        name = u.m_name.c_str();
-        value = u.m_value;
+        data        = m_uniforms[index].m_data;
+        data.m_name = m_uniforms[index].m_name.c_str();
     }
 
-    bool addUniform(const char * name, const DynamicPropertyRcPtr & value)
+    bool addUniform(const char * name, const GpuShaderCreator::DoubleGetter & getter)
     {
-        for (auto u : m_uniforms)
+        if (uniformNameUsed(name))
         {
-            if (*u.m_value == *value)
-            {
-                if(std::string(name)!=u.m_name)
-                {
-                    std::string err("Same dynamic properties must have the same name: ");
-                    err += u.m_name + " vs. " + name;
-                    throw Exception(err.c_str());
-                }
-
-                // Uniform is already there.
-                return false;
-            }
+            // Uniform is already there.
+            return false;
         }
-        m_uniforms.emplace_back(name, value);
+        m_uniforms.emplace_back(name, getter);
         return true;
     }
 
+    bool addUniform(const char * name, const GpuShaderCreator::BoolGetter & getter)
+    {
+        if (uniformNameUsed(name))
+        {
+            // Uniform is already there.
+            return false;
+        }
+        m_uniforms.emplace_back(name, getter);
+        return true;
+    }
+
+    bool addUniform(const char * name,
+                    const GpuShaderCreator::SizeGetter & getSize,
+                    const GpuShaderCreator::FloatArrayGetter & getArray)
+    {
+        if (uniformNameUsed(name))
+        {
+            // Uniform is already there.
+            return false;
+        }
+        m_uniforms.emplace_back(name, getSize, getArray);
+        return true;
+    }
+
+    bool addUniform(const char * name,
+                    const GpuShaderCreator::SizeGetter & getSize,
+                    const GpuShaderCreator::IntArrayGetter & getInt2Array)
+    {
+        if (uniformNameUsed(name)) 
+        {
+            // Uniform is already there.
+            return false;
+        }
+        m_uniforms.emplace_back(name, getSize, getInt2Array);
+        return true;
+    }
     Textures m_textures;
     Textures m_textures3D;
     Uniforms m_uniforms;
 
 private:
+    bool uniformNameUsed(const char * name) const
+    {
+        for (auto u : m_uniforms)
+        {
+            if (std::string(name) == u.m_name)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
     unsigned m_max1DLUTWidth;
 };
 
@@ -353,12 +408,29 @@ unsigned LegacyGpuShaderDesc::getNumUniforms() const noexcept
     return 0;
 }
 
-void LegacyGpuShaderDesc::getUniform(unsigned, const char *&, DynamicPropertyRcPtr &) const
+void LegacyGpuShaderDesc::getUniform(unsigned, GpuShaderDesc::UniformData &) const
 {
     throw Exception("Uniforms are not supported");
 }
 
-bool LegacyGpuShaderDesc::addUniform(const char *, const DynamicPropertyRcPtr &)
+bool LegacyGpuShaderDesc::addUniform(const char *, const DoubleGetter &)
+{
+    throw Exception("Uniforms are not supported");
+}
+
+bool LegacyGpuShaderDesc::addUniform(const char *, const BoolGetter &)
+{
+    throw Exception("Uniforms are not supported");
+}
+
+bool LegacyGpuShaderDesc::addUniform(const char *, const SizeGetter &,
+                                     const FloatArrayGetter &)
+{
+    throw Exception("Uniforms are not supported");
+}
+
+bool LegacyGpuShaderDesc::addUniform(const char *, const SizeGetter &,
+                                     const IntArrayGetter &)
 {
     throw Exception("Uniforms are not supported");
 }
@@ -474,16 +546,35 @@ unsigned GenericGpuShaderDesc::getNumUniforms() const noexcept
     return getImpl()->getNumUniforms();
 }
 
-void GenericGpuShaderDesc::getUniform(unsigned index, const char *& name,
-                                      DynamicPropertyRcPtr & value) const
+void GenericGpuShaderDesc::getUniform(unsigned index, GpuShaderDesc::UniformData & data) const
 {
-    return getImpl()->getUniform(index, name, value);
+    return getImpl()->getUniform(index, data);
 }
 
-bool GenericGpuShaderDesc::addUniform(const char * name, const DynamicPropertyRcPtr & value)
+bool GenericGpuShaderDesc::addUniform(const char * name, const DoubleGetter & getter)
 {
-    return getImpl()->addUniform(name, value);
+    return getImpl()->addUniform(name, getter);
 }
+
+bool GenericGpuShaderDesc::addUniform(const char * name, const BoolGetter & getter)
+{
+    return getImpl()->addUniform(name, getter);
+}
+
+bool GenericGpuShaderDesc::addUniform(const char * name,
+                                      const SizeGetter & getSize,
+                                      const FloatArrayGetter & getFloatArray)
+{
+    return getImpl()->addUniform(name, getSize, getFloatArray);
+}
+
+bool GenericGpuShaderDesc::addUniform(const char * name,
+                                      const SizeGetter & getSize,
+                                      const IntArrayGetter & getInt2Array)
+{
+    return getImpl()->addUniform(name, getSize, getInt2Array);
+}
+
 
 unsigned GenericGpuShaderDesc::getTextureMaxWidth() const noexcept
 {

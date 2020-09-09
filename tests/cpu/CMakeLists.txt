@@ -82,6 +82,9 @@ set(SOURCES
 	ops/exposurecontrast/ExposureContrastOpGPU.cpp
 	ops/fixedfunction/FixedFunctionOpGPU.cpp
 	ops/gamma/GammaOpGPU.cpp
+	ops/gradingprimary/GradingPrimaryOpGPU.cpp
+	ops/gradingrgbcurve/GradingRGBCurveOpGPU.cpp
+	ops/gradingtone/GradingToneOpGPU.cpp
 	ops/log/LogOpGPU.cpp
 	ops/lut3d/Lut3DOpGPU.cpp
 	ops/matrix/MatrixOpGPU.cpp
@@ -164,6 +167,18 @@ set(TESTS
 	ops/gamma/GammaOpCPU_tests.cpp
 	ops/gamma/GammaOpData_tests.cpp
 	ops/gamma/GammaOpUtils_tests.cpp
+	ops/gradingprimary/GradingPrimaryOpCPU_tests.cpp
+	ops/gradingprimary/GradingPrimaryOpData_tests.cpp
+	ops/gradingprimary/GradingPrimaryOp_tests.cpp
+	ops/gradingrgbcurve/GradingBSplineCurve_tests.cpp
+	ops/gradingrgbcurve/GradingRGBCurve_tests.cpp
+	ops/gradingrgbcurve/GradingRGBCurveOpCPU_tests.cpp
+	ops/gradingrgbcurve/GradingRGBCurveOpData_tests.cpp
+	ops/gradingrgbcurve/GradingRGBCurveOp_tests.cpp
+	ops/gradingtone/GradingTone_tests.cpp
+	ops/gradingtone/GradingToneOpCPU_tests.cpp
+	ops/gradingtone/GradingToneOpData_tests.cpp
+	ops/gradingtone/GradingToneOp_tests.cpp
 	ops/log/LogOpCPU_tests.cpp
 	ops/log/LogOpData_tests.cpp
 	ops/log/LogOp_tests.cpp
@@ -188,19 +203,20 @@ set(TESTS
 	Platform_tests.cpp
 	Processor_tests.cpp
 	SSE_tests.cpp
+	transforms/AllocationTransform_tests.cpp
 	transforms/builtins/BuiltinTransformRegistry_tests.cpp
 	transforms/BuiltinTransform_tests.cpp
-	transforms/FileTransform_tests.cpp
-	transforms/FixedFunctionTransform_tests.cpp
-	transforms/RangeTransform_tests.cpp
-	transforms/AllocationTransform_tests.cpp
 	transforms/CDLTransform_tests.cpp
 	transforms/ColorSpaceTransform_tests.cpp
 	transforms/DisplayViewTransform_tests.cpp
 	transforms/ExponentTransform_tests.cpp
 	transforms/ExponentWithLinearTransform_tests.cpp
 	transforms/ExposureContrastTransform_tests.cpp
+	transforms/FileTransform_tests.cpp
 	transforms/FixedFunctionTransform_tests.cpp
+	transforms/GradingPrimaryTransform_tests.cpp
+	transforms/GradingRGBCurveTransform_tests.cpp
+	transforms/GradingToneTransform_tests.cpp
 	transforms/GroupTransform_tests.cpp
 	transforms/LogAffineTransform_tests.cpp
 	transforms/LogCameraTransform_tests.cpp
@@ -209,6 +225,7 @@ set(TESTS
 	transforms/Lut1DTransform_tests.cpp
 	transforms/Lut3DTransform_tests.cpp
 	transforms/MatrixTransform_tests.cpp
+	transforms/RangeTransform_tests.cpp
 	UnitTestLogUtils.cpp
 	UnitTestMain.cpp
 	UnitTestOptimFlags.cpp

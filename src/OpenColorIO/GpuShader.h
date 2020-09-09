@@ -50,10 +50,17 @@ protected:
     // Uniforms are not used by the legacy shader builder
     //
     unsigned getNumUniforms() const noexcept override;
-    void getUniform(unsigned index, const char *& name,
-                    DynamicPropertyRcPtr & value) const override;
+    void getUniform(unsigned index, GpuShaderDesc::UniformData & data) const override;
     bool addUniform(const char * name,
-                    const DynamicPropertyRcPtr & value) override;
+                    const DoubleGetter & getter) override;
+    bool addUniform(const char * name,
+                    const BoolGetter & getter) override;
+    bool addUniform(const char * name,
+                    const SizeGetter & getSize,
+                    const FloatArrayGetter & getArray) override;
+    bool addUniform(const char * name,
+                    const SizeGetter & getSize,
+                    const IntArrayGetter & getArray) override;
 
     // 1D & 2D textures are not used by the legacy shader builder
     //
@@ -112,10 +119,17 @@ public:
     // Accessors to the uniforms
     //
     unsigned getNumUniforms() const noexcept override;
-    void getUniform(unsigned index, const char *& name,
-                    DynamicPropertyRcPtr & value) const override;
+    void getUniform(unsigned index, GpuShaderDesc::UniformData & data) const override;
     bool addUniform(const char * name,
-                    const DynamicPropertyRcPtr & value) override;
+                    const DoubleGetter & getDouble) override;
+    bool addUniform(const char * name,
+                    const BoolGetter & getBool) override;
+    bool addUniform(const char * name,
+                    const SizeGetter & getSize,
+                    const FloatArrayGetter & getFloatArray) override;
+    bool addUniform(const char * name,
+                    const SizeGetter & getSize,
+                    const IntArrayGetter & getInt2Array) override;
 
     // Accessors to the 1D & 2D textures built from 1D LUT
     //
