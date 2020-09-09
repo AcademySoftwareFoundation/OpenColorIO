@@ -136,6 +136,7 @@ OCIOGPUTest::~OCIOGPUTest()
 void OCIOGPUTest::setProcessor(OCIO::TransformRcPtr transform)
 {
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
+    config->setProcessorCacheFlags(OCIO::PROCESSOR_CACHE_OFF);
     setProcessor(config, transform);
 }
 

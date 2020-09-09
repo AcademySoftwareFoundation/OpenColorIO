@@ -1628,7 +1628,7 @@ OCIO_ADD_TEST(Config, range_serialization)
 {
     {
         const std::string strEnd =
-            "    from_reference: !<RangeTransform> {minInValue: 0, minOutValue: 0}\n";
+            "    from_reference: !<RangeTransform> {min_in_value: 0, min_out_value: 0}\n";
         const std::string str = PROFILE_V2_START + strEnd;
 
         std::istringstream is;
@@ -1645,7 +1645,7 @@ OCIO_ADD_TEST(Config, range_serialization)
 
     {
         const std::string strEnd =
-            "    from_reference: !<RangeTransform> {minInValue: 0, minOutValue: 0, "
+            "    from_reference: !<RangeTransform> {min_in_value: 0, min_out_value: 0, "
             "direction: inverse}\n";
         const std::string str = PROFILE_V2_START + strEnd;
 
@@ -1663,7 +1663,7 @@ OCIO_ADD_TEST(Config, range_serialization)
 
     {
         const std::string strEnd =
-            "    from_reference: !<RangeTransform> {minInValue: 0, minOutValue: 0, "
+            "    from_reference: !<RangeTransform> {min_in_value: 0, min_out_value: 0, "
             "style: noClamp}\n";
         const std::string str = PROFILE_V2_START + strEnd;
 
@@ -1678,8 +1678,8 @@ OCIO_ADD_TEST(Config, range_serialization)
 
     {
         const std::string strEnd =
-            "    from_reference: !<RangeTransform> {minInValue: 0, maxInValue: 1, "
-            "minOutValue: 0, maxOutValue: 1, style: noClamp, direction: inverse}\n";
+            "    from_reference: !<RangeTransform> {min_in_value: 0, max_in_value: 1, "
+            "min_out_value: 0, max_out_value: 1, style: noClamp, direction: inverse}\n";
         const std::string str = PROFILE_V2_START + strEnd;
 
         std::istringstream is;
@@ -1697,8 +1697,8 @@ OCIO_ADD_TEST(Config, range_serialization)
     {
         // Test Range with clamp style (i.e. default one)
         const std::string strEnd =
-            "    from_reference: !<RangeTransform> {minInValue: -0.0109, "
-            "maxInValue: 1.0505, minOutValue: 0.0009, maxOutValue: 2.5001, "
+            "    from_reference: !<RangeTransform> {min_in_value: -0.0109, "
+            "max_in_value: 1.0505, min_out_value: 0.0009, max_out_value: 2.5001, "
             "direction: inverse}\n";
         const std::string str = PROFILE_V2_START + strEnd;
 
@@ -1717,8 +1717,8 @@ OCIO_ADD_TEST(Config, range_serialization)
     {
         // Test Range with clamp style
         const std::string in_strEnd =
-            "    from_reference: !<RangeTransform> {minInValue: -0.0109, "
-            "maxInValue: 1.0505, minOutValue: 0.0009, maxOutValue: 2.5001, "
+            "    from_reference: !<RangeTransform> {min_in_value: -0.0109, "
+            "max_in_value: 1.0505, min_out_value: 0.0009, max_out_value: 2.5001, "
             "style: Clamp, direction: inverse}\n";
         const std::string in_str = PROFILE_V2_START + in_strEnd;
 
@@ -1731,8 +1731,8 @@ OCIO_ADD_TEST(Config, range_serialization)
 
         // Clamp style is not saved
         const std::string out_strEnd =
-            "    from_reference: !<RangeTransform> {minInValue: -0.0109, "
-            "maxInValue: 1.0505, minOutValue: 0.0009, maxOutValue: 2.5001, "
+            "    from_reference: !<RangeTransform> {min_in_value: -0.0109, "
+            "max_in_value: 1.0505, min_out_value: 0.0009, max_out_value: 2.5001, "
             "direction: inverse}\n";
         const std::string out_str = PROFILE_V2_START + out_strEnd;
 
@@ -1744,7 +1744,7 @@ OCIO_ADD_TEST(Config, range_serialization)
     {
         const std::string strEnd =
             "    from_reference: !<RangeTransform> "
-            "{minInValue: 0, maxOutValue: 1}\n";
+            "{min_in_value: 0, max_out_value: 1}\n";
         const std::string str = PROFILE_V2_START + strEnd;
 
         std::istringstream is;
@@ -1761,13 +1761,13 @@ OCIO_ADD_TEST(Config, range_serialization)
     }
 
     {
-        // maxInValue has an illegal second number.
+        // max_in_value has an illegal second number.
         const std::string strEndFail =
-            "    from_reference: !<RangeTransform> {minInValue: -0.01, "
-            "maxInValue: 1.05  10, minOutValue: 0.0009, maxOutValue: 2.5}\n";
+            "    from_reference: !<RangeTransform> {min_in_value: -0.01, "
+            "max_in_value: 1.05  10, min_out_value: 0.0009, max_out_value: 2.5}\n";
         const std::string strEnd =
-            "    from_reference: !<RangeTransform> {minInValue: -0.01, "
-            "maxInValue: 1.05, minOutValue: 0.0009, maxOutValue: 2.5}\n";
+            "    from_reference: !<RangeTransform> {min_in_value: -0.01, "
+            "max_in_value: 1.05, min_out_value: 0.0009, max_out_value: 2.5}\n";
 
         const std::string str = PROFILE_V2 + SIMPLE_PROFILE_A + SIMPLE_PROFILE_B + strEndFail;
         const std::string strSaved = PROFILE_V2_START + strEnd;
@@ -1789,13 +1789,13 @@ OCIO_ADD_TEST(Config, range_serialization)
     }
 
     {
-        // maxInValue & maxOutValue have no value, they will not be defined.
+        // max_in_value & max_out_value have no value, they will not be defined.
         const std::string strEnd =
-            "    from_reference: !<RangeTransform> {minInValue: -0.01, "
-            "maxInValue: , minOutValue: -0.01, maxOutValue: }\n";
+            "    from_reference: !<RangeTransform> {min_in_value: -0.01, "
+            "max_in_value: , min_out_value: -0.01, max_out_value: }\n";
         const std::string strEndSaved =
-            "    from_reference: !<RangeTransform> {minInValue: -0.01, "
-            "minOutValue: -0.01}\n";
+            "    from_reference: !<RangeTransform> {min_in_value: -0.01, "
+            "min_out_value: -0.01}\n";
         const std::string str = PROFILE_V2 + SIMPLE_PROFILE_A + SIMPLE_PROFILE_B + strEnd;
         const std::string strSaved = PROFILE_V2_START + strEndSaved;
 
@@ -1814,7 +1814,7 @@ OCIO_ADD_TEST(Config, range_serialization)
     {
         const std::string strEnd =
             "    from_reference: !<RangeTransform> "
-            "{minInValue: 0.12345678901234, maxOutValue: 1.23456789012345}\n";
+            "{min_in_value: 0.12345678901234, max_out_value: 1.23456789012345}\n";
         const std::string str = PROFILE_V2_START + strEnd;
 
         std::istringstream is;
@@ -1832,8 +1832,8 @@ OCIO_ADD_TEST(Config, range_serialization)
 
     {
         const std::string strEnd =
-            "    from_reference: !<RangeTransform> {minInValue: -0.01, "
-            "maxInValue: 1.05, minOutValue: 0.0009, maxOutValue: 2.5}\n";
+            "    from_reference: !<RangeTransform> {min_in_value: -0.01, "
+            "max_in_value: 1.05, min_out_value: 0.0009, max_out_value: 2.5}\n";
         const std::string str = PROFILE_V2_START + strEnd;
 
         std::istringstream is;
@@ -1850,8 +1850,8 @@ OCIO_ADD_TEST(Config, range_serialization)
 
     {
         const std::string strEnd =
-            "    from_reference: !<RangeTransform> {minOutValue: 0.0009, "
-            "maxOutValue: 2.5}\n";
+            "    from_reference: !<RangeTransform> {min_out_value: 0.0009, "
+            "max_out_value: 2.5}\n";
         const std::string str = PROFILE_V2_START + strEnd;
 
         std::istringstream is;
@@ -1871,10 +1871,10 @@ OCIO_ADD_TEST(Config, range_serialization)
         const std::string strEnd =
             "    from_reference: !<GroupTransform>\n"
             "      children:\n"
-            "        - !<RangeTransform> {minInValue: -0.01, maxInValue: 1.05, "
-            "minOutValue: 0.0009, maxOutValue: 2.5}\n"
-            "        - !<RangeTransform> {minOutValue: 0.0009, maxOutValue: 2.1}\n"
-            "        - !<RangeTransform> {minOutValue: 0.1, maxOutValue: 0.9}\n";
+            "        - !<RangeTransform> {min_in_value: -0.01, max_in_value: 1.05, "
+            "min_out_value: 0.0009, max_out_value: 2.5}\n"
+            "        - !<RangeTransform> {min_out_value: 0.0009, max_out_value: 2.1}\n"
+            "        - !<RangeTransform> {min_out_value: 0.1, max_out_value: 0.9}\n";
         const std::string str = PROFILE_V2_START + strEnd;
 
         std::istringstream is;
@@ -1898,8 +1898,8 @@ OCIO_ADD_TEST(Config, range_serialization)
             "    from_reference: !<GroupTransform>\n"
             "      children:\n"
             // missing { (and mInValue is wrong -> that's a warning)
-            "        - !<RangeTransform> mInValue: -0.01, maxInValue: 1.05, "
-            "minOutValue: 0.0009, maxOutValue: 2.5}\n";
+            "        - !<RangeTransform> mInValue: -0.01, max_in_value: 1.05, "
+            "min_out_value: 0.0009, max_out_value: 2.5}\n";
         const std::string str = PROFILE_V2_START + strEnd;
 
         std::istringstream is;
@@ -1911,9 +1911,9 @@ OCIO_ADD_TEST(Config, range_serialization)
 
     {
         const std::string strEnd =
-            // The comma is missing after the minInValue value.
-            "    from_reference: !<RangeTransform> {minInValue: -0.01 "
-            "maxInValue: 1.05, minOutValue: 0.0009, maxOutValue: 2.5}\n";
+            // The comma is missing after the min_in_value value.
+            "    from_reference: !<RangeTransform> {min_in_value: -0.01 "
+            "max_in_value: 1.05, min_out_value: 0.0009, max_out_value: 2.5}\n";
         const std::string str = PROFILE_V2_START + strEnd;
 
         std::istringstream is;
@@ -1925,10 +1925,10 @@ OCIO_ADD_TEST(Config, range_serialization)
 
     {
         const std::string strEnd =
-            "    from_reference: !<RangeTransform> {minInValue: -0.01, "
-            // The comma is missing between the minOutValue value and
-            // the maxOutValue tag.
-            "maxInValue: 1.05, minOutValue: 0.0009maxOutValue: 2.5}\n";
+            "    from_reference: !<RangeTransform> {min_in_value: -0.01, "
+            // The comma is missing between the min_out_value value and
+            // the max_out_value tag.
+            "max_in_value: 1.05, min_out_value: 0.0009maxOutValue: 2.5}\n";
         const std::string str = PROFILE_V2_START + strEnd;
 
         std::istringstream is;
