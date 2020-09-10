@@ -29,13 +29,13 @@ void bindPyColorSpaceTransform(py::module & m)
             }), 
              "src"_a        = DEFAULT->getSrc(), 
              "dst"_a        = DEFAULT->getDst(),
-             "dir"_a        = DEFAULT->getDirection(),
+             "direction"_a  = DEFAULT->getDirection(),
              "dataBypass"_a = DEFAULT->getDataBypass())
 
         .def("getSrc",        &ColorSpaceTransform::getSrc)
-        .def("setSrc",        &ColorSpaceTransform::setSrc,        "src"_a)
+        .def("setSrc",        &ColorSpaceTransform::setSrc,        "src"_a.none(false))
         .def("getDst",        &ColorSpaceTransform::getDst)
-        .def("setDst",        &ColorSpaceTransform::setDst,        "dst"_a)
+        .def("setDst",        &ColorSpaceTransform::setDst,        "dst"_a.none(false))
         .def("getDataBypass", &ColorSpaceTransform::getDataBypass)
         .def("setDataBypass", &ColorSpaceTransform::setDataBypass, "dataBypass"_a);
 
