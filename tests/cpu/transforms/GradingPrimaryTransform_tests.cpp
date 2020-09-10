@@ -361,3 +361,42 @@ OCIO_ADD_TEST(GradingPrimaryTransform, several_transforms_switch)
         OCIO_CHECK_ASSERT(!OCIO::VecsEqualWithRelError(temp, 3, pixel, 3, error));
     }
 }
+
+OCIO_ADD_TEST(GradingPrimaryTransform, serialization)
+{
+    // Test the serialization of the transform.
+
+    OCIO::GradingPrimary data(OCIO::GRADING_LOG);
+    data.m_gamma = OCIO::GradingRGBM(1.1, 1.2, 1.3, 1.0);
+
+    auto primary = OCIO::GradingPrimaryTransform::Create(OCIO::GRADING_LOG);
+    primary->setValue(data);
+
+    static constexpr char PRIMARY_STR[]
+        = "<GradingPrimaryTransform direction=forward, style=log, "\
+          "values=<brightness=<r=0, g=0, b=0, m=0>, contrast=<r=1, g=1, b=1, m=1>, "\
+          "gamma=<r=1.1, g=1.2, b=1.3, m=1>, offset=<r=0, g=0, b=0, m=0>, "\
+          "exposure=<r=0, g=0, b=0, m=0>, lift=<r=0, g=0, b=0, m=0>, "\
+          "gain=<r=1, g=1, b=1, m=1>, saturation=1, pivot=<contrast=-0.2, black=0, white=1>>>";
+
+    {
+        std::ostringstream oss;
+        oss << *primary;
+
+        OCIO_CHECK_EQUAL(oss.str(), PRIMARY_STR);
+    }
+
+    OCIO::GroupTransformRcPtr grp = OCIO::GroupTransform::Create();
+    grp->appendTransform(OCIO::DynamicPtrCast<OCIO::Transform>(primary));
+
+    {
+        std::ostringstream oss;
+        oss << *grp;
+
+        std::string GROUP_STR("<GroupTransform direction=forward, transforms=\n\t");
+        GROUP_STR += PRIMARY_STR;
+        GROUP_STR += ">";
+
+        OCIO_CHECK_EQUAL(oss.str(), GROUP_STR);
+    }
+}

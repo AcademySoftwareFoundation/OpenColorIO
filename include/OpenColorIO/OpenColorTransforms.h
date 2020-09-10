@@ -1146,7 +1146,7 @@ protected:
     GradingRGBCurveTransform() = default;
 };
 
-extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const GradingPrimaryTransform &) noexcept;
+extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const GradingRGBCurveTransform &) noexcept;
 
 
 /**
