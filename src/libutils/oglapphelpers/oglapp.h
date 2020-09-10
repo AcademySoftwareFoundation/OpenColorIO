@@ -103,9 +103,6 @@ public:
     // application it should be called by the glutReshapeFunc callback using the windows size.
     void reshape(int width, int height);
 
-    // To be called after changing dynamic properties and before calling redisplay.
-    void updateUniforms();
-
     // Process the image.
     void virtual redisplay();
 

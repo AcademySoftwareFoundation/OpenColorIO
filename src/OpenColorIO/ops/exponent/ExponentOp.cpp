@@ -256,6 +256,10 @@ void ExponentOp::extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) con
     GpuShaderText ss(shaderCreator->getLanguage());
     ss.indent();
 
+    ss.newLine() << "";
+    ss.newLine() << "// Add an Exponent processing";
+    ss.newLine() << "";
+
     // outColor = pow(max(outColor, 0.), exp);
 
     ss.newLine()

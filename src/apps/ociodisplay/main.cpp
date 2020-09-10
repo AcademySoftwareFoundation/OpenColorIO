@@ -423,7 +423,7 @@ void UpdateOCIOGLState()
     {
         shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
     }
-    shaderDesc->setLanguage(OCIO::GPU_LANGUAGE_GLSL_1_3);
+    shaderDesc->setLanguage(OCIO::GPU_LANGUAGE_GLSL_1_2);
     shaderDesc->setFunctionName("OCIODisplay");
     shaderDesc->setResourcePrefix("ocio_");
     processor->getOptimizedGPUProcessor(g_optimization)->extractGpuShaderInfo(shaderDesc);

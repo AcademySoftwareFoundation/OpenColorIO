@@ -1,0 +1,19 @@
+############################# About ###################################
+start:
+  enable : true
+  title : OpenColorIO
+  about_item :
+  - icon : ti-user # themify icon pack : https://themify.me/themify-icons
+    title : For Artists
+    content : OCIO is integrated and ready to use in many major software packages - check out Supported Applications for more information.
+    link: "https://opencolorio.readthedocs.io/en/latest/quick_start/for_artists.html"
+
+  - icon : ti-video-clapper # themify icon pack : https://themify.me/themify-icons
+    title : For Studios
+    content : OCIO's Python API is quick, modular and flexible. Whether you need to integrate a whole pipeline or just modify a line in a config, we've got you covered.
+    link: "https://opencolorio.readthedocs.io/en/latest/quick_start/for_config_authors.html"
+
+  - icon : ti-image # themify icon pack : https://themify.me/themify-icons
+    title : For Developers
+    content : Brand new to color management frameworks? Upgrading to OCIO v2? Our Software Developer Guide has all the details.
+    link : "https://opencolorio.readthedocs.io/en/latest/quick_start/for_devs.html"

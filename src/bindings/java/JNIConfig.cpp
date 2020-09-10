@@ -68,11 +68,11 @@ Java_org_OpenColorIO_Config_createEditableCopy(JNIEnv * env, jobject self)
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_Config_sanityCheck(JNIEnv * env, jobject self)
+Java_org_OpenColorIO_Config_validate(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstConfigRcPtr cfg = GetConstJOCIO<ConstConfigRcPtr, ConfigJNI>(env, self);
-    cfg->sanityCheck();
+    cfg->validate();
     OCIO_JNITRY_EXIT()
 }
 

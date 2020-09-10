@@ -77,6 +77,21 @@ set(SOURCES
 	ops/gamma/GammaOpGPU.cpp
 	ops/gamma/GammaOpUtils.cpp
 	ops/gamma/GammaOp.cpp
+	ops/gradingprimary/GradingPrimaryOpCPU.cpp
+	ops/gradingprimary/GradingPrimaryOpData.cpp
+	ops/gradingprimary/GradingPrimaryOpGPU.cpp
+	ops/gradingprimary/GradingPrimaryOp.cpp
+	ops/gradingrgbcurve/GradingBSplineCurve.cpp
+	ops/gradingrgbcurve/GradingRGBCurveOpCPU.cpp
+	ops/gradingrgbcurve/GradingRGBCurveOpData.cpp
+	ops/gradingrgbcurve/GradingRGBCurveOpGPU.cpp
+	ops/gradingrgbcurve/GradingRGBCurveOp.cpp
+	ops/gradingrgbcurve/GradingRGBCurve.cpp
+	ops/gradingtone/GradingTone.cpp
+	ops/gradingtone/GradingToneOpCPU.cpp
+	ops/gradingtone/GradingToneOpData.cpp
+	ops/gradingtone/GradingToneOpGPU.cpp
+	ops/gradingtone/GradingToneOp.cpp
 	ops/log/LogOpCPU.cpp
 	ops/log/LogOpData.cpp
 	ops/log/LogOpGPU.cpp
@@ -121,6 +136,9 @@ set(SOURCES
 	transforms/ExposureContrastTransform.cpp
 	transforms/FileTransform.cpp
 	transforms/FixedFunctionTransform.cpp
+	transforms/GradingPrimaryTransform.cpp
+	transforms/GradingRGBCurveTransform.cpp
+	transforms/GradingToneTransform.cpp
 	transforms/GroupTransform.cpp
 	transforms/LogAffineTransform.cpp
 	transforms/LogCameraTransform.cpp
@@ -147,6 +165,22 @@ if(OCIO_ADD_EXTRA_BUILTINS)
 else()
 	message(WARNING "Disabling supplemental built-in transforms removes all built-in camera transforms, limiting OCIO configuration compatibility.")
 endif()
+
+if(NOT WIN32)
+
+    # Install the pkg-config file.
+
+    include(GNUInstallDirs)
+
+    set(prefix ${CMAKE_INSTALL_PREFIX})
+    set(exec_prefix "\${prefix}")
+    set(libdir "\${exec_prefix}/${CMAKE_INSTALL_LIBDIR}")
+    set(includedir "\${exec_prefix}/${CMAKE_INSTALL_INCLUDEDIR}")
+    configure_file(res/OpenColorIO.pc.in ${CMAKE_CURRENT_BINARY_DIR}/OpenColorIO.pc @ONLY)
+    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/OpenColorIO.pc DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
+endif()
+
+# TODO: Install the OpenColorIO-config.cmake.
 
 if(WIN32 AND BUILD_SHARED_LIBS)
 
@@ -175,11 +209,11 @@ target_link_libraries(OpenColorIO
 		public_api
 	PRIVATE
 		expat::expat
-		ilmbase::ilmbase
+		IlmBase::Half
 		pystring::pystring
 		sampleicc::sampleicc
 		utils::strings
-		yamlcpp::yamlcpp
+		yaml-cpp
 )
 
 if(NOT BUILD_SHARED_LIBS)

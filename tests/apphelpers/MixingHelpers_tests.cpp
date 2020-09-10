@@ -24,7 +24,7 @@ OCIO_ADD_TEST(MixingColorSpaceManager, basic)
 
     OCIO::ConstConfigRcPtr config;
     OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-    OCIO_CHECK_NO_THROW(config->sanityCheck());
+    OCIO_CHECK_NO_THROW(config->validate());
 
     OCIO::MixingColorSpaceMenuRcPtr mixingHelper;
     OCIO_CHECK_NO_THROW(mixingHelper = OCIO::MixingColorSpaceManager::Create(config));
@@ -146,7 +146,7 @@ OCIO_ADD_TEST(MixingColorSpaceManager, color_picker_role)
 
     OCIO::ConstConfigRcPtr config;
     OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-    OCIO_CHECK_NO_THROW(config->sanityCheck());
+    OCIO_CHECK_NO_THROW(config->validate());
 
     OCIO::MixingColorSpaceMenuRcPtr mixingHelper;
     OCIO_CHECK_NO_THROW(mixingHelper = OCIO::MixingColorSpaceManager::Create(config));
@@ -239,7 +239,7 @@ OCIO_ADD_TEST(MixingSlider, basic)
 
     OCIO::ConstConfigRcPtr config;
     OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-    OCIO_CHECK_NO_THROW(config->sanityCheck());
+    OCIO_CHECK_NO_THROW(config->validate());
 
     OCIO::MixingColorSpaceMenuRcPtr mixingHelper;
     OCIO_CHECK_NO_THROW(mixingHelper = OCIO::MixingColorSpaceManager::Create(config));
@@ -379,7 +379,7 @@ OCIO_ADD_TEST(MixingSlider, color_picker_role)
 
     OCIO::ConstConfigRcPtr config;
     OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-    OCIO_CHECK_NO_THROW(config->sanityCheck());
+    OCIO_CHECK_NO_THROW(config->validate());
 
     OCIO::MixingColorSpaceMenuRcPtr mixingHelper;
     OCIO_CHECK_NO_THROW(mixingHelper = OCIO::MixingColorSpaceManager::Create(config));

@@ -16,12 +16,11 @@ else
     git checkout tags/v${PYSTRING_VERSION} -b v${PYSTRING_VERSION}
 fi
 
-cp ../share/cmake/projects/BuildPystring.cmake CMakeLists.txt
+cp ../share/cmake/projects/Buildpystring.cmake CMakeLists.txt
 
 mkdir build
 cd build
-cmake -DCMAKE_INSTALL_PREFIX=/usr/local \
-      -DBUILD_SHARED_LIBS:BOOL=ON \
+cmake -DBUILD_SHARED_LIBS=ON \
       -DCMAKE_CXX_FLAGS="-fPIC" \
       ../.
 make -j4

@@ -67,8 +67,10 @@ void OglApp::initImage(int imgWidth, int imgHeight, Components comp, const float
 
 void OglApp::updateImage(const float * image)
 {
-    const GLenum format = m_components == COMPONENTS_RGB ? GL_RGB : GL_RGBA;
+    glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, m_imageTexID);
+
+    const GLenum format = m_components == COMPONENTS_RGB ? GL_RGB : GL_RGBA;
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F_ARB, m_imageWidth, m_imageHeight, 0,
                  format, GL_FLOAT, &image[0]);
 }
@@ -109,6 +111,12 @@ void OglApp::redisplay()
     if (m_yMirror)
     {
         std::swap(pts[1], pts[3]);
+    }
+
+    // Update the uniform values in case one changed.
+    if (m_oglBuilder)
+    {
+        m_oglBuilder->useAllUniforms();
     }
 
     glEnable(GL_TEXTURE_2D);
@@ -193,13 +201,13 @@ void OglApp::setShader(GpuShaderDescRcPtr & shaderDesc)
 
     std::ostringstream main;
     main << std::endl
-        << "uniform sampler2D img;" << std::endl
-        << std::endl
-        << "void main()" << std::endl
-        << "{" << std::endl
-        << "    vec4 col = texture2D(img, gl_TexCoord[0].st);" << std::endl
-        << "    gl_FragColor = " << shaderDesc->getFunctionName() << "(col);" << std::endl
-        << "}" << std::endl;
+         << "uniform sampler2D img;" << std::endl
+         << std::endl
+         << "void main()" << std::endl
+         << "{" << std::endl
+         << "    vec4 col = texture2D(img, gl_TexCoord[0].st);" << std::endl
+         << "    gl_FragColor = " << shaderDesc->getFunctionName() << "(col);" << std::endl
+         << "}" << std::endl;
 
     // Build the fragment shader program.
     m_oglBuilder->buildProgram(main.str().c_str());
@@ -212,14 +220,6 @@ void OglApp::setShader(GpuShaderDescRcPtr & shaderDesc)
     m_oglBuilder->useAllTextures();
     // Enable uniforms for dynamic properties.
     m_oglBuilder->useAllUniforms();
-}
-
-void OglApp::updateUniforms()
-{
-    if (m_oglBuilder)
-    {
-        m_oglBuilder->useAllUniforms();
-    }
 }
 
 void OglApp::printGLInfo() const noexcept

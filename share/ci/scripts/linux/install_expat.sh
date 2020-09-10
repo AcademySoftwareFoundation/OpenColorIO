@@ -24,12 +24,12 @@ fi
 mkdir build
 cd build
 
-cmake -DCMAKE_INSTALL_PREFIX=/usr/local \
-      -DCMAKE_BUILD_TYPE=Release \
+cmake -DCMAKE_BUILD_TYPE=Release \
       -DEXPAT_BUILD_TOOLS=OFF \
       -DEXPAT_BUILD_EXAMPLES=OFF \
       -DEXPAT_BUILD_TESTS=OFF \
       -DEXPAT_SHARED_LIBS=ON \
+      -DEXPAT_BUILD_DOCS=OFF \
       -DCMAKE_C_FLAGS="-fPIC" \
       -DCMAKE_CXX_FLAGS="-fPIC" \
       ../expat/.

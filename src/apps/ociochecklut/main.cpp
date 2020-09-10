@@ -185,6 +185,7 @@ int main (int argc, const char* argv[])
     bool verbose       = false;
     bool help          = false;
     bool test          = false;
+    bool invlut        = false;
     bool usegpu        = false;
     bool usegpuLegacy  = false;
     bool outputgpuInfo = false;
@@ -197,8 +198,8 @@ int main (int argc, const char* argv[])
                "-t", &test, "Test a set a predefined RGB values",
                "-v", &verbose, "Verbose",
                "--help", &help, "Print help message",
-               "-t", &test, "Test a set a predefined RGB values\n",
-               "--gpu", &usegpu, "Use GPU instead of CPU\n",
+               "--inv", &invlut, "Apply LUT in inverse direction",
+               "--gpu", &usegpu, "Use GPU instead of CPU",
                "--gpulegacy", &usegpuLegacy, "Use the legacy (i.e. baked) GPU color processing "
                                              "instead of the CPU one (--gpu is ignored)",
                "--gpuinfo", &outputgpuInfo, "Output the OCIO shader program",
@@ -257,6 +258,7 @@ int main (int argc, const char* argv[])
         OCIO::FileTransformRcPtr t = OCIO::FileTransform::Create();
         t->setSrc(inputfile.c_str());
         t->setInterpolation(OCIO::INTERP_BEST);
+        t->setDirection(invlut ? OCIO::TRANSFORM_DIR_INVERSE : OCIO::TRANSFORM_DIR_FORWARD);
 
         ProcessorWrapper proc(outputgpuInfo);
         try

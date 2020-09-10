@@ -72,7 +72,9 @@ OCIO_ADD_TEST(ExposureContrastTransform, processor)
 
     OCIO::DynamicPropertyRcPtr dpExposure;
     OCIO_CHECK_NO_THROW(dpExposure = cpuProcessor->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_EXPOSURE));
-    dpExposure->setValue(2.1);
+    auto dpVal = OCIO_DYNAMIC_POINTER_CAST<OCIO::DynamicPropertyDouble>(dpExposure);
+    OCIO_REQUIRE_ASSERT(dpVal);
+    dpVal->setValue(2.1);
 
     // Gamma is a property of ExposureContrast but here it is not defined as dynamic.
     OCIO_CHECK_THROW(cpuProcessor->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_GAMMA), OCIO::Exception);
@@ -87,7 +89,7 @@ OCIO_ADD_TEST(ExposureContrastTransform, processor)
     OCIO_CHECK_CLOSE(pixel[2], 0.72258f, error);
 
     // dpExposure can be used to change the processor.
-    dpExposure->setValue(0.8);
+    dpVal->setValue(0.8);
     pixel[0] = 0.2f;
     pixel[1] = 0.3f;
     pixel[2] = 0.4f;
@@ -181,9 +183,11 @@ OCIO_ADD_TEST(ExposureContrastTransform, processor_several_ec)
         OCIO::ConstProcessorRcPtr processor = config->getProcessor(grp1);
         OCIO::ConstCPUProcessorRcPtr cpuProcessor = processor->getDefaultCPUProcessor();
 
-        // Make second exposure dynamic. Value is still a.
+        // Second exposure is dynamic. Value is still a.
         OCIO::DynamicPropertyRcPtr dpExposure;
         OCIO_CHECK_NO_THROW(dpExposure = cpuProcessor->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_EXPOSURE));
+        auto dpVal = OCIO_DYNAMIC_POINTER_CAST<OCIO::DynamicPropertyDouble>(dpExposure);
+        OCIO_REQUIRE_ASSERT(dpVal);
 
         float pixel[3] = { srcPixel[0], srcPixel[1], srcPixel[2] };
 
@@ -195,7 +199,7 @@ OCIO_ADD_TEST(ExposureContrastTransform, processor_several_ec)
         OCIO_CHECK_CLOSE(pixel[2], pixel_aa[2], error);
 
         // Change the 2nd exposure.
-        dpExposure->setValue(b);
+        dpVal->setValue(b);
         pixel[0] = srcPixel[0];
         pixel[1] = srcPixel[1];
         pixel[2] = srcPixel[2];
@@ -228,11 +232,13 @@ OCIO_ADD_TEST(ExposureContrastTransform, processor_several_ec)
         // The dynamic property is common to both ops.
         OCIO::DynamicPropertyRcPtr dpExposure;
         OCIO_CHECK_NO_THROW(dpExposure = cpuProcessor->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_EXPOSURE));
+        auto dpVal = OCIO_DYNAMIC_POINTER_CAST<OCIO::DynamicPropertyDouble>(dpExposure);
+        OCIO_REQUIRE_ASSERT(dpVal);
 
         float pixel[3] = { srcPixel[0], srcPixel[1], srcPixel[2] };
 
         // Change both exposures to a.
-        dpExposure->setValue(a);
+        dpVal->setValue(a);
 
         // Apply a twice.
         cpuProcessor->applyRGB(pixel);
@@ -242,7 +248,7 @@ OCIO_ADD_TEST(ExposureContrastTransform, processor_several_ec)
         OCIO_CHECK_CLOSE(pixel[2], pixel_aa[2], error);
 
         // Changing the dynamic property is changing both exposures to b.
-        dpExposure->setValue(b);
+        dpVal->setValue(b);
         pixel[0] = srcPixel[0];
         pixel[1] = srcPixel[1];
         pixel[2] = srcPixel[2];

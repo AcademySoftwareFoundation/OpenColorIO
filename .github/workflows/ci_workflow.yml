@@ -119,7 +119,8 @@ jobs:
           - build: 5
             build-type: Release
             build-shared: 'ON'
-            build-docs: 'ON'
+            # Doc build requires Python 3
+            build-docs: 'OFF'
             build-gpu: 'OFF'
             use-headless: 'OFF'
             use-sse: 'ON'
@@ -190,7 +191,8 @@ jobs:
           - build: 10
             build-type: Release
             build-shared: 'ON'
-            build-docs: 'ON'
+            # Doc build requires Python 3
+            build-docs: 'OFF'
             build-gpu: 'OFF'
             use-headless: 'OFF'
             use-sse: 'ON'
@@ -203,11 +205,6 @@ jobs:
       CXX: ${{ matrix.cxx-compiler }}
       CC: ${{ matrix.cc-compiler }}
     steps:
-      # TODO: Remove this workaround following resolution of:
-      #       https://github.com/AcademySoftwareFoundation/aswf-docker/issues/43
-      - name: Setup container
-        run: sudo rm -rf /usr/local/lib64/cmake/glew
-        if: matrix.vfx-cy == 2020
       - name: Checkout
         uses: actions/checkout@v2
       - name: Create build directories
@@ -227,14 +224,14 @@ jobs:
                 -DOCIO_USE_SSE=${{ matrix.use-sse }} \
                 -DOCIO_INSTALL_EXT_PACKAGES=ALL \
                 -DOCIO_WARNING_AS_ERROR=ON \
-                -DPYTHON_EXECUTABLE=$(which python)
+                -DPython_EXECUTABLE=$(which python)
         working-directory: _build
       - name: Build
         run: |
           cmake --build . \
                 --target install \
                 --config ${{ matrix.build-type }} \
-                -- -j2
+                -- -j$(nproc)
         working-directory: _build
       - name: Test
         run: ctest -V
@@ -302,7 +299,8 @@ jobs:
           - build: 5
             build-type: Release
             build-shared: 'ON'
-            build-docs: 'ON'
+            # Doc build requires Python 3
+            build-docs: 'OFF'
             build-gpu: 'OFF'
             use-headless: 'OFF'
             use-sse: 'ON'
@@ -332,14 +330,14 @@ jobs:
                 -DOCIO_USE_SSE=${{ matrix.use-sse }} \
                 -DOCIO_INSTALL_EXT_PACKAGES=ALL \
                 -DOCIO_WARNING_AS_ERROR=ON \
-                -DPYTHON_EXECUTABLE=$(which python)
+                -DPython_EXECUTABLE=$(which python)
         working-directory: _build
       - name: Build
         run: |
           cmake --build . \
                 --target install \
                 --config ${{ matrix.build-type }} \
-                -- -j2
+                -- -j$(sysctl -n hw.ncpu)
         working-directory: _build
       - name: Test
         run: ctest -V
@@ -409,7 +407,8 @@ jobs:
           - build: 5
             build-type: Release
             build-shared: 'ON'
-            build-docs: 'ON'
+            # Doc build requires Python 3
+            build-docs: 'OFF'
             build-gpu: 'OFF'
             use-headless: 'OFF'
             use-sse: 'ON'
@@ -441,7 +440,7 @@ jobs:
                 -DOCIO_USE_SSE=${{ matrix.use-sse }} \
                 -DOCIO_INSTALL_EXT_PACKAGES=ALL \
                 -DOCIO_WARNING_AS_ERROR=ON \
-                -DPYTHON_EXECUTABLE=$(which python)
+                -DPython_EXECUTABLE=$(which python)
         shell: bash
         working-directory: _build
       - name: Build

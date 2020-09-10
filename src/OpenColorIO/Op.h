@@ -58,7 +58,26 @@ public:
 
     virtual bool hasDynamicProperty(DynamicPropertyType type) const;
     virtual DynamicPropertyRcPtr getDynamicProperty(DynamicPropertyType type) const;
-
+    virtual void unifyDynamicProperty(DynamicPropertyType type,
+                                      DynamicPropertyDoubleImplRcPtr & prop) const
+    {
+        throw Exception("Op does not implement double dynamic property.");
+    }
+    virtual void unifyDynamicProperty(DynamicPropertyType type,
+                                      DynamicPropertyGradingPrimaryImplRcPtr & prop) const
+    {
+        throw Exception("Op does not implement grading primary dynamic property.");
+    }
+    virtual void unifyDynamicProperty(DynamicPropertyType type,
+                                      DynamicPropertyGradingRGBCurveImplRcPtr & prop) const
+    {
+        throw Exception("Op does not implement grading rgb curve dynamic property.");
+    }
+    virtual void unifyDynamicProperty(DynamicPropertyType type,
+                                      DynamicPropertyGradingToneImplRcPtr & prop) const
+    {
+        throw Exception("Op does not implement grading tone dynamic property.");
+    }
 };
 
 class OpData;
@@ -103,17 +122,20 @@ public:
     // Enumeration of all possible operator types.
     enum Type
     {
-        CDLType,           // A Color Decision List (aka CDL)
-        ExponentType,      // An exponent
+        CDLType,              // A Color Decision List (aka CDL)
+        ExponentType,         // An exponent
         ExposureContrastType, // An op for making interactive viewport adjustments
-        FixedFunctionType, // A fixed function (i.e. where the style defines the behavior)
-        GammaType,         // A gamma (i.e. enhancement of the Exponent)
-        LogType,           // A log
-        Lut1DType,         // A 1D LUT
-        Lut3DType,         // A 3D LUT
-        MatrixType,        // A matrix
-        RangeType,         // A range
-        ReferenceType,     // A reference to an external file
+        FixedFunctionType,    // A fixed function (i.e. where the style defines the behavior)
+        GammaType,            // A gamma (i.e. enhancement of the Exponent)
+        GradingPrimaryType,   // A set of primary grading controls
+        GradingRGBCurveType,  // A rgb curve
+        GradingToneType,      // A set of grading controls for tonal ranges
+        LogType,              // A log
+        Lut1DType,            // A 1D LUT
+        Lut3DType,            // A 3D LUT
+        MatrixType,           // A matrix
+        RangeType,            // A range
+        ReferenceType,        // A reference to an external file
 
         // Note: Keep at end of list.
         NoOpType
@@ -248,7 +270,26 @@ public:
     virtual bool hasDynamicProperty(DynamicPropertyType type) const;
     virtual DynamicPropertyRcPtr getDynamicProperty(DynamicPropertyType type) const;
     virtual void replaceDynamicProperty(DynamicPropertyType type,
-                                        DynamicPropertyImplRcPtr prop);
+                                        DynamicPropertyDoubleImplRcPtr & prop)
+    {
+        throw Exception("Op does not implement double dynamic property.");
+    }
+    virtual void replaceDynamicProperty(DynamicPropertyType type,
+                                        DynamicPropertyGradingPrimaryImplRcPtr & prop)
+    {
+        throw Exception("Op does not implement grading primary dynamic property.");
+    }
+    virtual void replaceDynamicProperty(DynamicPropertyType type,
+                                        DynamicPropertyGradingRGBCurveImplRcPtr & prop)
+    {
+        throw Exception("Op does not implement grading rgb curve dynamic property.");
+    }
+    virtual void replaceDynamicProperty(DynamicPropertyType type,
+                                        DynamicPropertyGradingToneImplRcPtr & prop)
+    {
+        throw Exception("Op does not implement grading tone dynamic property.");
+    }
+
     // Make dynamic properties non-dynamic.
     virtual void removeDynamicProperties() {}
 

@@ -44,6 +44,11 @@ import FixedFunctionTransformTest
 import GroupTransformTest
 import LogTransformTest
 import LookTest
+import ViewingRulesTest
+import GradingDataTest
+import GradingPrimaryTransformTest
+import GradingRGBCurveTransformTest
+import GradingToneTransformTest
 #from MainTest import *
 #from ConstantsTest import *
 #from ConfigTest import *
@@ -78,6 +83,11 @@ def suite():
     suite.addTest(loader.loadTestsFromModule(GroupTransformTest))
     suite.addTest(loader.loadTestsFromModule(LogTransformTest))
     suite.addTest(loader.loadTestsFromModule(LookTest))
+    suite.addTest(loader.loadTestsFromModule(ViewingRulesTest))
+    suite.addTest(loader.loadTestsFromModule(GradingDataTest))
+    suite.addTest(loader.loadTestsFromModule(GradingPrimaryTransformTest))
+    suite.addTest(loader.loadTestsFromModule(GradingRGBCurveTransformTest))
+    suite.addTest(loader.loadTestsFromModule(GradingToneTransformTest))
     #suite.addTest(MainTest("test_interface"))
     #suite.addTest(ConstantsTest("test_interface"))
     #suite.addTest(ConfigTest("test_interface"))

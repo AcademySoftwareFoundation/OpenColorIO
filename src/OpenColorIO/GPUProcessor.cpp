@@ -94,12 +94,6 @@ OpRcPtrVec Create3DLut(const OpRcPtrVec & ops, unsigned edgelen)
 
 }
 
-
-DynamicPropertyRcPtr GPUProcessor::Impl::getDynamicProperty(DynamicPropertyType type) const
-{
-    return m_ops.getDynamicProperty(type);
-}
-
 void GPUProcessor::Impl::finalize(const OpRcPtrVec & rawOps,
                                   OptimizationFlags oFlags)
 {
@@ -224,11 +218,6 @@ bool GPUProcessor::hasChannelCrosstalk() const
 const char * GPUProcessor::getCacheID() const
 {
     return getImpl()->getCacheID();
-}
-
-DynamicPropertyRcPtr GPUProcessor::getDynamicProperty(DynamicPropertyType type) const
-{
-    return getImpl()->getDynamicProperty(type);
 }
 
 void GPUProcessor::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const

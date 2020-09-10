@@ -1,0 +1,27 @@
+############################# feature ###################################
+news:
+  enable : true
+  image : images/SpiderVerse_pmm014.1014_lm_v1_opt.jpg
+  title : OCIO v2 is here!
+  content : "Check out our [guide](https://opencolorio.readthedocs.io/en/latest/upgrading_v2/_index.html#migrating-to-v2) for upgrading. Here are just a few highlights of new features:"
+  caption: "OpenColorIO in use on Spider-Man™: Into the Spider-Verse"
+  feature_item : 
+      # feature item loop
+    - title : New GPU Renderer
+      icon : ti-world # themify icon pack : https://themify.me/themify-icons
+      content : The GPU renderer now matches the CPU and may be used to render final frames!
+      
+      # feature item loop
+    - title : Better User Experience
+      icon : ti-brush # themify icon pack : https://themify.me/themify-icons
+      content : Config authors have new tools to organize color spaces by category, hide color spaces, and define hierarchical menus.  New File and Viewing Rules allow more powerful default behaviors.
+
+      # feature item loop
+    - title : Improved ACES Support
+      icon : ti-stats-up # themify icon pack : https://themify.me/themify-icons
+      content : ACES Output Transforms no longer use 3d-LUTs and are accurate even for extreme exposure values.  There is also full read and write support for the Academy/ASC Common LUT Format (CLF).
+      
+      # feature item loop
+    - title : Analysis Tools
+      icon : ti-panel # themify icon pack : https://themify.me/themify-icons
+      content : There are new command line tools for evaluating LUTs, converting to CLF, serializing OCIO Processors, and more!

@@ -1,11 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright Contributors to the OpenColorIO Project.
 
-find_package(OpenGL REQUIRED)
-if(NOT APPLE)
-    find_package(GLEW REQUIRED)
-endif()
-
 set(SOURCES
     oiiohelpers.cpp
 )
@@ -31,11 +26,11 @@ target_include_directories(oiiohelpers
 
 target_link_libraries(oiiohelpers
     PUBLIC
-        OpenImageIO
+        OpenImageIO::OpenImageIO
 
     PRIVATE
         OpenColorIO
-        ilmbase::ilmbase
+        IlmBase::Half
         utils::strings
 )
 

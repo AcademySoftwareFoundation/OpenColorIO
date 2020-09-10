@@ -85,7 +85,7 @@ OCIO_ADD_TEST(ColorSpaceTransform, build_colorspace_ops)
 
     config->addDisplayView("display", "view", dst.c_str(), "");
 
-    OCIO_CHECK_NO_THROW(config->sanityCheck());
+    OCIO_CHECK_NO_THROW(config->validate());
 
     {
         // Test from source to destination.
@@ -329,7 +329,7 @@ OCIO_ADD_TEST(ColorSpaceTransform, build_colorspace_ops)
 
     // 3 color spaces including "raw".
     OCIO_CHECK_EQUAL(config->getNumColorSpaces(), 3);
-    OCIO_CHECK_NO_THROW(config->sanityCheck());
+    OCIO_CHECK_NO_THROW(config->validate());
 
     // cst is now from csDisplayToRef to csDisplayFromRef.
     {
@@ -397,7 +397,7 @@ OCIO_ADD_TEST(ColorSpaceTransform, build_reference_conversion_ops)
 
     config->addDisplayView("display", "view", scn.c_str(), "");
 
-    OCIO_CHECK_NO_THROW(config->sanityCheck());
+    OCIO_CHECK_NO_THROW(config->validate());
 
     //
     // No view transform.
@@ -445,7 +445,7 @@ OCIO_ADD_TEST(ColorSpaceTransform, build_reference_conversion_ops)
     vt->setTransform(mat, OCIO::VIEWTRANSFORM_DIR_FROM_REFERENCE);
     OCIO_CHECK_NO_THROW(config->addViewTransform(vt));
 
-    OCIO_CHECK_NO_THROW(config->sanityCheck());
+    OCIO_CHECK_NO_THROW(config->validate());
 
     {
         OCIO::OpRcPtrVec ops;
@@ -514,7 +514,7 @@ OCIO_ADD_TEST(ColorSpaceTransform, build_colorspace_ops_with_reference_conversio
     vt->setTransform(mat, OCIO::VIEWTRANSFORM_DIR_FROM_REFERENCE);
     OCIO_CHECK_NO_THROW(config->addViewTransform(vt));
 
-    OCIO_CHECK_NO_THROW(config->sanityCheck());
+    OCIO_CHECK_NO_THROW(config->validate());
 
     //
     // Add display-referred color space.
@@ -526,7 +526,7 @@ OCIO_ADD_TEST(ColorSpaceTransform, build_colorspace_ops_with_reference_conversio
     auto log = OCIO::LogTransform::Create();
     cs->setTransform(log, OCIO::COLORSPACE_DIR_FROM_REFERENCE);
     config->addColorSpace(cs);
-    OCIO_CHECK_NO_THROW(config->sanityCheck());
+    OCIO_CHECK_NO_THROW(config->validate());
 
     OCIO::ColorSpaceTransformRcPtr cst = OCIO::ColorSpaceTransform::Create();
     cst->setSrc(scn.c_str());

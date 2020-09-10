@@ -18,9 +18,8 @@ fi
 
 mkdir build
 cd build
-cmake -DCMAKE_INSTALL_PREFIX=/usr/local \
-      -DPYBIND11_INSTALL:BOOL=ON \
-      -DPYBIND11_TEST:BOOL=OFF \
+cmake -DPYBIND11_INSTALL=ON \
+      -DPYBIND11_TEST=OFF \
       ../.
 make -j4
 sudo make install

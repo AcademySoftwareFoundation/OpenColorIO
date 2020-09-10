@@ -109,9 +109,9 @@ accepts the DCO:
 `Signed-off-by: John Doe <john.doe@example.com>`
 
 If John Doe has signed an individual CLA, or his corporation's CLA Manager
-has included his GitHub account in a corporate CLA whitelist, his pull request
+has included his GitHub account in a corporate CLA approved list, his pull request
 can be merged. Otherwise the EasyCLA system will provide instructions on
-signing a CLA, or request inclusion in an existing corporate CLA whitelist.
+signing a CLA, or request inclusion in an existing corporate CLA approved list.
 
 See the
 [ASWF TAC CONTRIBUTING.md](https://github.com/AcademySoftwareFoundation/tac/blob/master/process/contributing.md#contribution-sign-off)
@@ -194,8 +194,8 @@ with a separate pull request.
 
 4. Create a Github pull request from your topic branch.
 
-5. All pull requests trigger CI builds on [Travis CI](https://travis-ci.org/)
-for Linux and Mac OS and [AppVeyor](https://www.appveyor.com/) for Windows.
+5. All pull requests trigger CI builds on 
+[GitHub Actions](https://github.com/AcademySoftwareFoundation/OpenColorIO/actions).
 These builds verify that code compiles and all unit tests succeed. CI build
 status is displayed on the GitHub PR page, and changes will only be considered
 for merging after all builds have succeeded.

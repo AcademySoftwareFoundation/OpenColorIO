@@ -21,7 +21,7 @@ HINSTANCE hDllInstance = NULL;
 #endif
 
 
-// some of the lame-ass supporting code needs this
+// some of the supporting code needs this
 SPBasicSuite * sSPBasic = NULL;
 FilterRecord * gFilterRecord = NULL;
 
