@@ -95,10 +95,11 @@ class ExponentWithLinearTransformTest(unittest.TestCase):
         # Default initialized negative style is clamp.
         self.assertEqual(self.exp_tr.getNegativeStyle(), OCIO.NEGATIVE_LINEAR)
 
+        # These negative extrapolations are not valid for 
+        # MonCurve exponent style.
+        exception_negatives = [OCIO.NEGATIVE_CLAMP, OCIO.NEGATIVE_PASS_THRU]
+
         for negative_style in OCIO.NegativeStyle.__members__.values():
-            # These negative extrapolations are not valid for
-            # MonCurve exponent style.
-            exception_negatives = [OCIO.NEGATIVE_CLAMP, OCIO.NEGATIVE_PASS_THRU]
             if negative_style not in exception_negatives:
                 self.exp_tr.setNegativeStyle(negative_style)
                 self.assertEqual(

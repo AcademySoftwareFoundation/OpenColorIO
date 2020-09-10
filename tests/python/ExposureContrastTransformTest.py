@@ -17,6 +17,7 @@ class ExposureContrastTransformTest(unittest.TestCase):
     TEST_LOGEXPOSURESTEP = 0.1
     TEST_LOGMIDGRAY = 0.6
     TEST_DIRECTION = OCIO.TRANSFORM_DIR_INVERSE
+    TEST_INVALIDS = (None, 'hello', [1, 2, 3])
 
     def setUp(self):
         self.exp_tr = OCIO.ExposureContrastTransform()
@@ -49,7 +50,7 @@ class ExposureContrastTransformTest(unittest.TestCase):
             self.assertEqual(self.exp_tr.getExposure(), exposure)
 
         # Wrong type tests.
-        for invalid in (None, 'hello', [1, 2, 3]):
+        for invalid in self.TEST_INVALIDS:
             with self.assertRaises(TypeError):
                 self.exp_tr.setExposure(invalid)
 
@@ -77,7 +78,7 @@ class ExposureContrastTransformTest(unittest.TestCase):
             self.assertEqual(self.exp_tr.getContrast(), contrast)
 
         # Wrong type tests.
-        for invalid in (None, 'hello', [1, 2, 3]):
+        for invalid in self.TEST_INVALIDS:
             with self.assertRaises(TypeError):
                 self.exp_tr.setContrast(invalid)
 
@@ -105,7 +106,7 @@ class ExposureContrastTransformTest(unittest.TestCase):
             self.assertEqual(self.exp_tr.getGamma(), gamma)
 
         # Wrong type tests.
-        for invalid in (None, 'hello', [1, 2, 3]):
+        for invalid in self.TEST_INVALIDS:
             with self.assertRaises(TypeError):
                 self.exp_tr.setGamma(invalid)
 
@@ -133,7 +134,7 @@ class ExposureContrastTransformTest(unittest.TestCase):
             self.assertEqual(self.exp_tr.getPivot(), pivot)
 
         # Wrong type tests.
-        for invalid in (None, 'hello', [1, 2, 3]):
+        for invalid in self.TEST_INVALIDS:
             with self.assertRaises(TypeError):
                 self.exp_tr.setPivot(invalid)
 
@@ -150,7 +151,7 @@ class ExposureContrastTransformTest(unittest.TestCase):
             self.assertEqual(self.exp_tr.getLogExposureStep(), exp_step)
 
         # Wrong type tests.
-        for invalid in (None, 'hello', [1, 2, 3]):
+        for invalid in self.TEST_INVALIDS:
             with self.assertRaises(TypeError):
                 self.exp_tr.setLogExposureStep(invalid)
 
@@ -167,7 +168,7 @@ class ExposureContrastTransformTest(unittest.TestCase):
             self.assertEqual(self.exp_tr.getLogMidGray(), mid_gray)
 
         # Wrong type tests.
-        for invalid in (None, 'hello', [1, 2, 3]):
+        for invalid in self.TEST_INVALIDS:
             with self.assertRaises(TypeError):
                 self.exp_tr.setLogMidGray(invalid)
 
