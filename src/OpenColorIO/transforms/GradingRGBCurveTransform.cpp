@@ -124,7 +124,7 @@ std::ostream& operator<< (std::ostream & os, const GradingRGBCurveTransform & t)
     os << "<GradingRGBCurveTransform ";
     os << "direction=" << TransformDirectionToString(t.getDirection());
     os << ", style=" << GradingStyleToString(t.getStyle());
-    os << ", values=" << t.getValue();
+    os << ", values=" << *t.getValue();
     if (t.isDynamic())
     {
         os << ", dynamic";
