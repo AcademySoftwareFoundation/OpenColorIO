@@ -757,17 +757,17 @@ void BuildFileTransformOps(OpRcPtrVec & ops,
     std::string filepath = context->resolveFileLocation(src.c_str());
 
     // Verify the recursion is valid, FileNoOp is added for each file.
-    for (ConstOpRcPtr&& op : ops)
+    for (const OpRcPtr & op : ops)
     {
-        ConstOpDataRcPtr data = op->data();
+        ConstOpRcPtr const_op(op);
+        ConstOpDataRcPtr data = const_op->data();
         auto fileData = DynamicPtrCast<const FileNoOpData>(data);
         if (fileData)
         {
             // Error if file is still being loaded and is the same as the
             // one about to be loaded.
             if (!fileData->getComplete() &&
-                Platform::Strcasecmp(fileData->getPath().c_str(),
-                                        filepath.c_str()) == 0)
+                Platform::Strcasecmp(fileData->getPath().c_str(), filepath.c_str()) == 0)
             {
                 std::ostringstream os;
                 os << "Reference to: " << filepath;
