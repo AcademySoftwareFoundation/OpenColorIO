@@ -19,7 +19,7 @@ if(MSVC)
     set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} /wd4996")
 endif()
 
-# NOTE: Depending of the compiler version lcm2 2.2 does not compile on C++17 so revert to c++11
+# NOTE: Depending of the compiler version lcm2 2.2 does not compile with C++17 so revert to c++11
 
 set(APP_CXX_STANDARD ${CMAKE_CXX_STANDARD})
 if(${CMAKE_CXX_STANDARD} GREATER_EQUAL 17)

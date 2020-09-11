@@ -150,8 +150,8 @@ if(NOT pybind11_FOUND)
         # Hack to let imported target be built from ExternalProject_Add
         file(MAKE_DIRECTORY ${pybind11_INCLUDE_DIR})
 
-        # NOTE: Depending of the compiler version pybind11 2.4.3 does not compile on C++17 so revert
-        # to c++11 because the library is only used by Python bindings.
+        # NOTE: Depending of the compiler version pybind11 2.4.3 does not compile with C++17 so revert
+        # to C++11 because the library is only used by the Python bindings.
 
         set(PYBIND11_CXX_STANDARD ${CMAKE_CXX_STANDARD})
         if(${CMAKE_CXX_STANDARD} GREATER_EQUAL 17)

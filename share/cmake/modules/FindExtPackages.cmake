@@ -42,7 +42,7 @@ find_package(pystring 1.1.3 REQUIRED)
 
 if(OCIO_BUILD_APPS)
 
-    # NOTE: Depending of the compiler version lcms2 2.2 does not compile on C++17 so, if
+    # NOTE: Depending of the compiler version lcms2 2.2 does not compile with C++17 so, if
     # you change the lcms2 version update the code to compile lcms2 and dependencies
     # with C++17 or higher i.e. remove the cap of C++ version in Findlcms2.cmake and
     # src/apps/ociobakelut/CMakeLists.txt.
@@ -54,7 +54,7 @@ endif()
 
 if(OCIO_BUILD_PYTHON)
 
-    # NOTE: Depending of the compiler version pybind11 2.4.3 does not compile on C++17 so, if
+    # NOTE: Depending of the compiler version pybind11 2.4.3 does not compile with C++17 so, if
     # you change the pybind11 version update the code to compile pybind11 and dependencies
     # with C++17 or higher i.e. remove the cap of C++ version in FindPybind11.cmake and
     # src/bindings/python/CMakeLists.txt.

@@ -118,8 +118,8 @@ if(NOT lcms2_FOUND)
 
         string(STRIP "${lcms2_C_FLAGS}" lcms2_C_FLAGS)
 
-        # NOTE: Depending of the compiler version lcm2 2.2 does not compile on C++17 so revert 
-        # to c++11 because the library is only used by a cmd line tools.
+        # NOTE: Depending of the compiler version lcm2 2.2 does not compile with C++17 so revert 
+        # to C++11 because the library is only used by a cmd line tool.
 
         set(lcms2_CXX_STANDARD ${CMAKE_CXX_STANDARD})
         if(${CMAKE_CXX_STANDARD} GREATER_EQUAL 17)
