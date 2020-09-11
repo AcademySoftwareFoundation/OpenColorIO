@@ -55,8 +55,7 @@ jobs:
       image: aswf/ci-ocio:${{ matrix.vfx-cy }}
     strategy:
       matrix:
-        # Builds 11 & 12 - pybind11 2.4.3 with clang 9 & C++17 fails but succeeds with clang 10.
-        build: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+        build: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
         include:
           # -------------------------------------------------------------------
           # VFX CY2021

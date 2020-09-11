@@ -11,7 +11,7 @@ add_executable(ociobakelut ${SOURCES})
 if(NOT BUILD_SHARED_LIBS)
     target_compile_definitions(ociobakelut
         PRIVATE
-        OpenColorIO_SKIP_IMPORTS
+            OpenColorIO_SKIP_IMPORTS
     )
 endif()
 
@@ -19,8 +19,14 @@ if(MSVC)
     set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} /wd4996")
 endif()
 
-set_target_properties(ociobakelut PROPERTIES 
-    COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS}")
+# TODO: lcm2 2.2 does not compile on C++17 so revert to c++11
+
+set_target_properties(ociobakelut
+    PROPERTIES 
+        COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS}"
+        C_STANDARD 11
+        CXX_STANDARD 11
+)
 
 target_link_libraries(ociobakelut 
     PRIVATE 
