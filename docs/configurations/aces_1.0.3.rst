@@ -20,15 +20,15 @@ Information about ACES
 
 The **ACES** project home page is here: 
 
-- http://www.oscars.org/aces
+- https://acescentral.com/
 
 The latest documentation on the ACES transforms and specifications can be found here:
 
-- http://www.oscars.org/science-technology/aces/aces-documentation
+- https://acescentral.com/aces-documentation/
 
 The ACES discussion forum is here:
 
-- https://acescentral.com/
+- https://community.acescentral.com/
 
 
 Colorspaces
@@ -238,8 +238,8 @@ The standard *OCIO* roles are defined. They role assignments are:
 
 Additionally, a number of colorspaces that are gaining wider adoption have been added to the config. Their names and assignment are:
 
-- **compositing_linear**:: ACEScg
-- **rendering**:: ACEScg
+- **compositing_linear**: ACEScg
+- **rendering**: ACEScg
 
 
 Displays and Views
