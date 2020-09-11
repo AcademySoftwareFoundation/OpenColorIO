@@ -15,6 +15,13 @@ if(USE_MSVC)
     # /we4062 Enables warning in switch when an enumeration value is not explicitly handled.
     set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} /EHsc /wd4275 /DWIN32 /we4062")
 
+    if(${CMAKE_CXX_STANDARD} EQUAL 17)
+        # Inheriting from std::iterator is deprecated starting with C++17 and Yaml 0.6.3 does that.
+        set(PLATFORM_COMPILE_FLAGS 
+            "${PLATFORM_COMPILE_FLAGS} /D_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING"
+        )
+    endif()
+
     if(OCIO_WARNING_AS_ERROR)
         set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} /WX")
     endif()
