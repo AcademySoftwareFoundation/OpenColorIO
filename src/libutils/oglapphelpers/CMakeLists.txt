@@ -27,7 +27,8 @@ if(NOT BUILD_SHARED_LIBS)
 endif()
 
 set_target_properties(oglapphelpers PROPERTIES 
-    COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS}")
+    COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS}"
+)
 
 target_include_directories(oglapphelpers
     PUBLIC
