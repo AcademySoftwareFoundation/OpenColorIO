@@ -30,14 +30,19 @@ elif sys.platform == 'darwin':
 sys.path.insert(0, pyopencolorio_dir)
 import PyOpenColorIO as OCIO
 
-import ColorSpaceTest
+import AllocationTransformTest
 import BuiltinTransformRegistryTest
 import BuiltinTransformTest
 import CDLTransformTest
 import ColorSpaceTest
 import ColorSpaceTransformTest
-import ConfigTest
-import DisplayViewTransformTest
+import ExponentTransformTest
+import ExponentWithLinearTransformTest
+import ExposureContrastTransformTest
+import FileTransformTest
+import FixedFunctionTransformTest
+import GroupTransformTest
+import LogTransformTest
 import LookTest
 import ViewingRulesTest
 import GradingDataTest
@@ -64,13 +69,19 @@ def suite():
     suite = unittest.TestSuite()
     loader = unittest.TestLoader()
 
+    suite.addTest(loader.loadTestsFromModule(AllocationTransformTest))
     suite.addTest(loader.loadTestsFromModule(BuiltinTransformRegistryTest))
     suite.addTest(loader.loadTestsFromModule(BuiltinTransformTest))
     suite.addTest(loader.loadTestsFromModule(CDLTransformTest))
     suite.addTest(loader.loadTestsFromModule(ColorSpaceTest))
     suite.addTest(loader.loadTestsFromModule(ColorSpaceTransformTest))
-    suite.addTest(loader.loadTestsFromModule(ConfigTest))
-    suite.addTest(loader.loadTestsFromModule(DisplayViewTransformTest))
+    suite.addTest(loader.loadTestsFromModule(ExponentTransformTest))
+    suite.addTest(loader.loadTestsFromModule(ExponentWithLinearTransformTest))
+    suite.addTest(loader.loadTestsFromModule(ExposureContrastTransformTest))
+    suite.addTest(loader.loadTestsFromModule(FileTransformTest))
+    suite.addTest(loader.loadTestsFromModule(FixedFunctionTransformTest))
+    suite.addTest(loader.loadTestsFromModule(GroupTransformTest))
+    suite.addTest(loader.loadTestsFromModule(LogTransformTest))
     suite.addTest(loader.loadTestsFromModule(LookTest))
     suite.addTest(loader.loadTestsFromModule(ViewingRulesTest))
     suite.addTest(loader.loadTestsFromModule(GradingDataTest))
