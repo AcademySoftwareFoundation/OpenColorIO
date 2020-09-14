@@ -23,20 +23,21 @@ Commitee) and the wider OCIO community and stakeholders.
 library changes since they have cascading effects across the project.
 
 1. All core changes begin with community discussion, which can involve informal 
-   conversation in Slack or on 
+   conversation in [Slack](http://slack.opencolorio.org/) or on 
    [ocio-dev](https://lists.aswf.io/g/ocio-dev), but are ultimately brought to a 
    TSC meeting where concensus can be reached around the proposal's relevance 
    and approach. TSC meetings are public and meeting notes are posted to the 
    [OCIO repo](https://github.com/AcademySoftwareFoundation/OpenColorIO/tree/master/ASWF/meetings/tsc) 
    within days of a meeting for a permanent record of decisions.
-2. Following TSC resolution, an issue is created in GitHub to present a design 
-   proposal. A period of further community discussion is encouraged around the
-   proposed changes, captured in issue comments. Ongoing concerns may continue 
-   to be brought to the TSC prior to and during development.
-3. Feature proposal issues are then be added to the 
+2. Following acceptance of the proposal by the TSC, an issue is created in 
+   GitHub to present a design proposal. A period of further community 
+   discussion is encouraged around the proposed changes, captured in issue 
+   comments. Ongoing concerns may continue to be raised in this issue, and 
+   brought to the TSC prior to and during development.
+3. Feature proposal issues are added to the 
    [Roadmap](https://github.com/AcademySoftwareFoundation/OpenColorIO/projects/3) 
-   project in GitHub for tracking development progress of all accepted 
-   proposals.
+   project in GitHub by a committer for tracking the status of all accepted 
+   proposals in one place.
 4. During development, work in progress may optionally be shared for feedback 
    and early review via a 
    [draft pull request](https://docs.github.com/en/github/collaborating-with-issues-and-pull-requests/about-pull-requests#draft-pull-requests).
@@ -56,6 +57,14 @@ library changes since they have cascading effects across the project.
    feature, a committer that is affiliated with the author may approve it. See 
    [Required Approvals](#Required-Approvals) for a detailed breakdown of OCIO 
    pull request approval policy.
+
+**NOTE**: Software design is often an iterative process with development. While 
+a design proposal is required, it is understood that development of the 
+proposed feature may begin prior to opening a design proposal issue in GitHub. It 
+is however highly encouraged to propose the design early in the interest of 
+respecting the contributor's time and effort. This avoids getting too far into 
+development without community involvement, which may lead to redesign and 
+extensive rework before changes can be approved.
 
 ## Required Approvals
 
