@@ -33,16 +33,23 @@ library changes since they have cascading effects across the project.
    proposal. A period of further community discussion is encouraged around the
    proposed changes, captured in issue comments. Ongoing concerns may continue 
    to be brought to the TSC prior to and during development.
-3. During development, work in progress may optionally be shared for feedback 
+3. Feature proposal issues are then be added to the 
+   [Roadmap](https://github.com/AcademySoftwareFoundation/OpenColorIO/projects/3) 
+   project in GitHub for tracking development progress of all accepted 
+   proposals.
+4. During development, work in progress may optionally be shared for feedback 
    and early review via a 
    [draft pull request](https://docs.github.com/en/github/collaborating-with-issues-and-pull-requests/about-pull-requests#draft-pull-requests).
-4. Upon completion of feature development, a pull request is created for review 
+5. Upon completion of feature development, a pull request is created for review 
    and 
    [linked to the associated issue]((https://docs.github.com/en/github/managing-your-work-on-github/linking-a-pull-request-to-an-issue) for review.
    Linking the issue and PR will result in the issue being closed automatically 
-   upon the PR being merged. See [CONTRIBUTING.md](CONTRIBUTING.md) for an overview
-   of commit signing requirements and a guide on submitting a pull request.
-5. The pull request is merged only after obtaining 2 approvals from committers 
+   upon the PR being merged, and facilitate tracking of the proposed feature in
+   the 
+   [Roadmap](https://github.com/AcademySoftwareFoundation/OpenColorIO/projects/3). 
+   See [CONTRIBUTING.md](CONTRIBUTING.md) for an overview of commit signing 
+   requirements and a guide on submitting a pull request.
+6. The pull request is merged only after obtaining 2 approvals from committers 
    listed in [COMMITTERS.md](COMMITTERS.md) that are not affiliated with the 
    author or their company. If approval does not happen within two weeks and 
    there are no raised objections or unresolved discussions happening about the 
