@@ -167,7 +167,6 @@ NegativeStyle GammaOpData::ConvertStyle(Style style)
     case BASIC_PASS_THRU_FWD:
     case BASIC_PASS_THRU_REV:
         return NEGATIVE_PASS_THRU;
-        break;
     }
 
     std::stringstream ss("Unknown Gamma style: ");

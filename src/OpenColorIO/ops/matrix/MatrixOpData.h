@@ -91,10 +91,11 @@ public:
     {
     public:
         MatrixArray();
-        virtual ~MatrixArray();
+        MatrixArray(const MatrixArray &) = default;
+        MatrixArray & operator=(const MatrixArray & m) = default;
+        virtual ~MatrixArray() = default;
 
         MatrixArray & operator=(const ArrayDouble & a);
-        MatrixArray & operator=(const MatrixArray & m);
 
         bool isUnityDiagonal() const;
 
