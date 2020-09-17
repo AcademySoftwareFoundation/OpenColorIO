@@ -14,6 +14,7 @@
 
 #include "ContextVariableUtils.h"
 #include "Display.h"
+#include "fileformats/FileFormatICC.h"
 #include "FileRules.h"
 #include "HashUtils.h"
 #include "Logging.h"
@@ -29,6 +30,7 @@
 #include "Processor.h"
 #include "utils/StringUtils.h"
 #include "ViewingRules.h"
+#include "SystemMonitor.h"
 
 
 namespace OCIO_NAMESPACE
@@ -53,7 +55,7 @@ constexpr double DEFAULT_LUMA_COEFF_G = 0.7152;
 constexpr double DEFAULT_LUMA_COEFF_B = 0.0722;
 
 
-constexpr char INTERNAL_RAW_PROFILE[] = 
+constexpr char INTERNAL_RAW_PROFILE[] =
     "ocio_profile_version: 2\n"
     "strictparsing: false\n"
     "roles:\n"
@@ -277,9 +279,9 @@ public:
     ColorSpaceSetRcPtr m_allColorSpaces; // All the color spaces (i.e. no filtering).
     StringUtils::StringVec m_activeColorSpaceNames; // A built list of active color space names.
 
-    std::string m_inactiveColorSpaceNamesAPI;  // Inactive color space filter from API request. 
+    std::string m_inactiveColorSpaceNamesAPI;  // Inactive color space filter from API request.
     std::string m_inactiveColorSpaceNamesEnv;  // Inactive color space filter from env. variable.
-    std::string m_inactiveColorSpaceNamesConf; // Inactive color space filter from config. file. 
+    std::string m_inactiveColorSpaceNamesConf; // Inactive color space filter from config. file.
 
     StringMap m_roles;
     LookVec m_looksList;
@@ -291,6 +293,9 @@ public:
     StringUtils::StringVec m_activeViewsEnvOverride;
     ViewVec m_sharedViews;
     ViewingRulesRcPtr m_viewingRules;
+
+    // List of views attached to the virtual display.
+    Display m_virtualDisplay;
 
     std::vector<ViewTransformRcPtr> m_viewTransforms;
 
@@ -348,6 +353,10 @@ public:
         m_inactiveColorSpaceNamesEnv = StringUtils::Trim(m_inactiveColorSpaceNamesEnv);
 
         m_processorCache.enable((m_cacheFlags & PROCESSOR_CACHE_ENABLED) == PROCESSOR_CACHE_ENABLED);
+
+        // This is used to allow the YAML writer to not save any virtual displays that were
+        // instantiated.
+        m_virtualDisplay.m_temporary = true;
     }
 
     ~Impl() = default;
@@ -365,7 +374,8 @@ public:
             m_familySeparator = rhs.m_familySeparator;
             m_description = rhs.m_description;
 
-            m_allColorSpaces = rhs.m_allColorSpaces; // Deep copy the colorspaces
+            // Deep copy the colorspaces.
+            m_allColorSpaces = rhs.m_allColorSpaces->createEditableCopy();
             m_activeColorSpaceNames       = rhs.m_activeColorSpaceNames;
             m_inactiveColorSpaceNamesConf = rhs.m_inactiveColorSpaceNamesConf;
             m_inactiveColorSpaceNamesEnv  = rhs.m_inactiveColorSpaceNamesEnv;
@@ -391,6 +401,8 @@ public:
             m_displayCache = rhs.m_displayCache;
             m_viewingRules = rhs.m_viewingRules->createEditableCopy();
             m_sharedViews = rhs.m_sharedViews;
+
+            m_virtualDisplay = rhs.m_virtualDisplay;
 
             // Deep copy view transforms.
             m_viewTransforms.clear();
@@ -560,7 +572,7 @@ public:
     }
 
     // Validate view object that can be a config defined shared view or a display-defined view.
-    void validateView(const std::string & display, const View & view) const
+    void validateView(const std::string & display, const View & view, bool checkUseDisplayName) const
     {
         if (view.m_name.empty())
         {
@@ -579,14 +591,18 @@ public:
             m_validationtext = os.str();
             throw Exception(m_validationtext.c_str());
         }
-        // USE_DISPLAY_NAME can only be used by shared views.
-        if (!sharedViewWithViewTransform && view.useDisplayNameForColorspace())
+
+        if (checkUseDisplayName)
         {
-            std::ostringstream os{ GetDisplayViewPrefixErrorMsg(display, view) };
-            os << "can not use '" << OCIO_VIEW_USE_DISPLAY_NAME;
-            os << "' keyword for the color space name.";
-            m_validationtext = os.str();
-            throw Exception(m_validationtext.c_str());
+            // USE_DISPLAY_NAME can only be used by shared views.
+            if (!sharedViewWithViewTransform && view.useDisplayNameForColorspace())
+            {
+                std::ostringstream os{ GetDisplayViewPrefixErrorMsg(display, view) };
+                os << "can not use '" << OCIO_VIEW_USE_DISPLAY_NAME;
+                os << "' keyword for the color space name.";
+                m_validationtext = os.str();
+                throw Exception(m_validationtext.c_str());
+            }
         }
 
         // If USE_DISPLAY_NAME is not present, a valid color space must be specified.
@@ -662,8 +678,10 @@ public:
     }
 
     // Check a shared view used in a display. View itself has already been checked.
-    void validateSharedView(const std::string & display, const ViewVec & viewsOfDisplay,
-                               const std::string & sharedView) const
+    void validateSharedView(const std::string & display, 
+                            const ViewVec & viewsOfDisplay,
+                            const std::string & sharedView,
+                            bool checkUseDisplayName) const
     {
         // Is the name already used for a display-defined view?
         // This should never happen because this is checked when adding a view.
@@ -678,6 +696,7 @@ public:
             m_validationtext = os.str();
             throw Exception(m_validationtext.c_str());
         }
+
         // Is the shared view defined?
         const auto sharedViewIt = FindView(m_sharedViews, sharedView);
         if (sharedViewIt == m_sharedViews.end())
@@ -690,10 +709,10 @@ public:
             m_validationtext = os.str();
             throw Exception(m_validationtext.c_str());
         }
-        else
+        else if (checkUseDisplayName)
         {
-            if (!((*sharedViewIt).m_viewTransform.empty()) &&
-                ((*sharedViewIt).useDisplayNameForColorspace()))
+            const auto view = *sharedViewIt;
+            if (!view.m_viewTransform.empty() && view.useDisplayNameForColorspace())
             {
                 // Shared views using a view transform can omit the colorspace, in that case
                 // the color space to use should be named from the display.
@@ -789,7 +808,7 @@ public:
                 activeViews = orderedViews;
             }
         }
-        
+
         if (activeViews.empty())
         {
             activeViews = views;
@@ -883,6 +902,162 @@ public:
     {
         m_cacheFlags = flags;
         m_processorCache.enable((m_cacheFlags & PROCESSOR_CACHE_ENABLED) == PROCESSOR_CACHE_ENABLED);
+    }
+ 
+    int instantiateDisplay(const std::string & monitorName,
+                           const std::string & monitorDescription,
+                           const std::string & ICCProfileFilepath)
+    {
+        if (ICCProfileFilepath.empty())
+        {
+            throw Exception("The ICC Profile filepath cannot be null.");
+        }
+
+        if (monitorDescription.empty())
+        {
+            throw Exception("The monitor description cannot be null.");
+        }
+
+        std::string envContent;
+        if (Platform::Getenv(OCIO_ACTIVE_DISPLAYS_ENVVAR, envContent))
+        {
+            std::ostringstream oss;
+            oss << "Cannot instantiate a virtual display because the list of active displays is "
+                << "defined by "
+                << OCIO_ACTIVE_DISPLAYS_ENVVAR
+                << " = "
+                << envContent
+                << ".";
+            throw Exception(oss.str().c_str());
+        }
+
+        std::string colorSpaceName = monitorDescription;
+        // The monitor name is null if the display is instantiated from an ICC filepath.
+        if (!monitorName.empty())
+        {
+            colorSpaceName += " [" + monitorName + "]";
+        }
+
+        // The $ is forbidden for color space names i.e. reserved for context variables.
+        StringUtils::ReplaceInPlace(colorSpaceName, "$", "_");
+        // The % is forbidden for color space names i.e. reserved for context variables.
+        StringUtils::ReplaceInPlace(colorSpaceName, "%", "_");
+
+        // Check if the virtual display definition is present.
+
+        if (m_virtualDisplay.m_views.size() == 0
+            && m_virtualDisplay.m_sharedViews.size() == 0)
+        {
+            throw Exception("The virtual display information to instantiate a display is missing.");
+        }
+
+        int absoluteDisplayIndex = -1;
+
+        try
+        {
+            // Create the (display, view) pairs with the display color space implemented using
+            // a FileTransform pointing to the ICC Profile.
+
+            DisplayMap::iterator iter = FindDisplay(m_displays, colorSpaceName.c_str());
+            if (iter == m_displays.end())
+            {
+                const size_t curSize = m_displays.size();
+                m_displays.resize(curSize + 1);
+                m_displays[curSize].first  = colorSpaceName;
+                m_displays[curSize].second = m_virtualDisplay;
+
+                absoluteDisplayIndex = static_cast<int>(curSize);
+            }
+            else
+            {
+                iter->second = m_virtualDisplay;
+
+                absoluteDisplayIndex = static_cast<int>(iter - m_displays.begin());
+            }
+
+            // Add the corresponding display color space.
+
+            ColorSpaceRcPtr cs = ColorSpace::Create(REFERENCE_SPACE_DISPLAY);
+            cs->setName(colorSpaceName.c_str());
+            FileTransformRcPtr file = FileTransform::Create();
+            file->setSrc(ICCProfileFilepath.c_str());
+            std::ostringstream oss;
+            oss << "Profile description: " << monitorDescription;
+            cs->setDescription(oss.str().c_str());
+            cs->setTransform(file, COLORSPACE_DIR_FROM_REFERENCE);
+
+            // Note that it adds it or updates the existing one.
+            m_allColorSpaces->addColorSpace(cs);
+        }
+        catch(const Exception & ex)
+        {
+            DisplayMap::iterator iter = FindDisplay(m_displays, colorSpaceName);
+            if (iter!=m_displays.end())
+            {
+                m_displays.erase(iter);
+            }
+
+            m_allColorSpaces->removeColorSpace(colorSpaceName.c_str());
+
+            throw ex;
+        }
+
+        // The display must be active.
+
+        if (!m_activeDisplays.empty()
+            && !m_activeDisplays[0].empty() 
+            && !StringUtils::Contain(m_activeDisplays, colorSpaceName))
+        {
+            m_activeDisplays.push_back(colorSpaceName);
+        }
+
+        // The views must be active.
+
+        if (!m_activeViews.empty() && !m_activeViews[0].empty())
+        {
+            for (const auto & view : m_displays[absoluteDisplayIndex].second.m_views)
+            {
+                if (!StringUtils::Contain(m_activeViews, view.m_name))
+                {
+                    m_activeViews.push_back(view.m_name);
+                }
+            }
+
+            for (const auto & viewName : m_displays[absoluteDisplayIndex].second.m_sharedViews)
+            {
+                if (!StringUtils::Contain(m_activeViews, viewName))
+                {
+                    m_activeViews.push_back(viewName);
+                }
+            }
+        }
+
+        // Force to refresh of all caches.
+
+        m_displayCache.clear();
+
+        ComputeDisplays(m_displayCache,
+                        m_displays,
+                        m_activeDisplays,
+                        m_activeDisplaysEnvOverride);
+
+        AutoMutex lock(m_cacheidMutex);
+        resetCacheIDs();
+
+        refreshActiveColorSpaces();
+
+        // Find the relative display index i.e. the index in the active display list.
+
+        for (size_t idx = 0; idx < m_displayCache.size(); ++idx)
+        {
+            if (0==strcmp(m_displayCache[idx].c_str(), colorSpaceName.c_str()))
+            {
+                return static_cast<int>(idx);
+            }
+        }
+
+        // That should never happen.
+        return -1;
     }
 
 };
@@ -1200,7 +1375,7 @@ void Config::validate() const
     // Shared views.
     for (const auto & view : getImpl()->m_sharedViews)
     {
-        getImpl()->validateView("", view);
+        getImpl()->validateView("", view, true);
     }
 
     int numdisplays = 0;
@@ -1227,13 +1402,13 @@ void Config::validate() const
         // Confirm shared view exist and do not conflict with views.
         for (const auto & sharedView : sharedViews)
         {
-            getImpl()->validateSharedView(display, views, sharedView);
+            getImpl()->validateSharedView(display, views, sharedView, true);
         }
 
         // Confirm view references exist.
         for(const auto & view : views)
         {
-            getImpl()->validateView(display, view);
+            getImpl()->validateView(display, view, true);
         }
     }
 
@@ -1245,6 +1420,29 @@ void Config::validate() const
         os << "No displays are specified.";
         getImpl()->m_validationtext = os.str();
         throw Exception(getImpl()->m_validationtext.c_str());
+    }
+
+
+    ///// VIRTUAL DISPLAY.
+
+    if (getMajorVersion() >= 2)
+    {
+        // Confirm shared view exist and do not conflict with views.
+        for (const auto & sharedView : getImpl()->m_virtualDisplay.m_sharedViews)
+        {
+            // Bypass the <USE_DISPLAY_NAME> validation.
+            getImpl()->validateSharedView("virtual_display",
+                                          getImpl()->m_virtualDisplay.m_views,
+                                          sharedView,
+                                          false);
+        }
+
+        // Confirm view references exist.
+        for(const auto & view : getImpl()->m_virtualDisplay.m_views)
+        {
+            // Bypass the <USE_DISPLAY_NAME> validation.
+            getImpl()->validateView("virtual_display", view, false);
+        }
     }
 
 
@@ -1601,7 +1799,7 @@ void Config::setFamilySeparator(char separator)
     }
 
     getImpl()->m_familySeparator = separator;
-    
+
     AutoMutex lock(getImpl()->m_cacheidMutex);
     getImpl()->resetCacheIDs();
 }
@@ -1999,7 +2197,7 @@ int Config::getIndexForColorSpace(const char * name) const
         }
     }
 
-    // Requests for an inactive color space or a role mapping 
+    // Requests for an inactive color space or a role mapping
     // to an inactive color space will both fail.
     return -1;
 }
@@ -2017,7 +2215,7 @@ const char * Config::getInactiveColorSpaces() const
 void Config::addColorSpace(const ConstColorSpaceRcPtr & original)
 {
     getImpl()->m_allColorSpaces->addColorSpace(original);
-    
+
     AutoMutex lock(getImpl()->m_cacheidMutex);
     getImpl()->resetCacheIDs();
     getImpl()->refreshActiveColorSpaces();
@@ -2026,7 +2224,7 @@ void Config::addColorSpace(const ConstColorSpaceRcPtr & original)
 void Config::removeColorSpace(const char * name)
 {
     getImpl()->m_allColorSpaces->removeColorSpace(name);
-    
+
     AutoMutex lock(getImpl()->m_cacheidMutex);
     getImpl()->resetCacheIDs();
     getImpl()->refreshActiveColorSpaces();
@@ -2149,7 +2347,7 @@ bool Config::isColorSpaceUsed(const char * name) const noexcept
 void Config::clearColorSpaces()
 {
     getImpl()->m_allColorSpaces->clearColorSpaces();
-    
+
     AutoMutex lock(getImpl()->m_cacheidMutex);
     getImpl()->resetCacheIDs();
     getImpl()->refreshActiveColorSpaces();
@@ -2653,6 +2851,241 @@ void Config::clearDisplays()
     getImpl()->resetCacheIDs();
 }
 
+void Config::addVirtualDisplayView(const char * view,
+                                   const char * viewTransform,
+                                   const char * colorSpace,
+                                   const char * looks,
+                                   const char * rule,
+                                   const char * description)
+{
+    if (!view || !*view)
+    {
+        throw Exception("View could not be added to virtual_display in config: a non-empty view "
+                        "name is needed.");
+    }
+
+    if (!colorSpace || !*colorSpace)
+    {
+        throw Exception("View could not be added to virtual_display in config: a non-empty color "
+                        "space name is needed.");
+    }
+
+    ViewVec::const_iterator iter = FindView(getImpl()->m_virtualDisplay.m_views, view);
+    if (iter != getImpl()->m_virtualDisplay.m_views.end())
+    {
+        std::ostringstream oss;
+        oss << "View could not be added to virtual_display in config: View '"
+            << view
+            << "' already exists.";
+        throw Exception(oss.str().c_str());
+    }
+
+    getImpl()->m_virtualDisplay.m_views.push_back(
+        View(view, viewTransform, colorSpace, looks, rule, description));
+
+    AutoMutex lock(getImpl()->m_cacheidMutex);
+    getImpl()->resetCacheIDs();
+}
+
+void Config::addVirtualDisplaySharedView(const char * sharedView)
+{
+    if (!sharedView || !*sharedView)
+    {
+        throw Exception("Shared view could not be added to virtual_display: "
+                        "non-empty view name is needed.");
+    }
+
+    StringUtils::StringVec & views = getImpl()->m_virtualDisplay.m_sharedViews;
+    if (StringUtils::Contain(views, sharedView))
+    {
+        std::ostringstream oss;
+        oss << "Shared view could not be added to virtual_display: "
+            << "There is already a shared view named '"
+            << sharedView << "'.";
+        throw Exception(oss.str().c_str());
+    }
+
+    views.push_back(sharedView);
+
+    AutoMutex lock(getImpl()->m_cacheidMutex);
+    getImpl()->resetCacheIDs();
+}
+
+int Config::getVirtualDisplayNumViews(ViewType type) const noexcept
+{
+    switch(type)
+    {
+        case VIEW_DISPLAY_DEFINED:
+            return static_cast<int>(getImpl()->m_virtualDisplay.m_views.size());
+        case VIEW_SHARED:
+            return static_cast<int>(getImpl()->m_virtualDisplay.m_sharedViews.size());
+    }
+
+    return 0;
+}
+
+const char * Config::getVirtualDisplayView(ViewType type, int index) const noexcept
+{
+    switch(type)
+    {
+        case VIEW_DISPLAY_DEFINED:
+        {
+            const ViewVec & views = getImpl()->m_virtualDisplay.m_views;
+            if (index >= 0 && index < static_cast<int>(views.size()))
+            {
+                return views[index].m_name.c_str();
+            }
+            break;
+        }
+        case VIEW_SHARED:
+        {
+            const StringUtils::StringVec & views = getImpl()->m_virtualDisplay.m_sharedViews;
+            if (index >= 0 && index < static_cast<int>(views.size()))
+            {
+                return views[index].c_str();
+            }
+            break;
+        }
+    }
+
+    return "";
+}
+
+const char * Config::getVirtualDisplayViewTransformName(const char * view) const noexcept
+{
+    if (!view) return "";
+
+    ViewVec::const_iterator iter = FindView(getImpl()->m_virtualDisplay.m_views, view);
+    if (iter != getImpl()->m_virtualDisplay.m_views.end())
+    {
+        return iter->m_viewTransform.c_str();
+    }
+
+    return "";
+}
+
+const char * Config::getVirtualDisplayViewColorSpaceName(const char * view) const noexcept
+{
+    if (!view) return "";
+
+    ViewVec::const_iterator iter = FindView(getImpl()->m_virtualDisplay.m_views, view);
+    if (iter != getImpl()->m_virtualDisplay.m_views.end())
+    {
+        return iter->m_colorspace.c_str();
+    }
+
+    return "";
+}
+
+const char * Config::getVirtualDisplayViewLooks(const char * view) const noexcept
+{
+    if (!view) return "";
+
+    ViewVec::const_iterator iter = FindView(getImpl()->m_virtualDisplay.m_views, view);
+    if (iter != getImpl()->m_virtualDisplay.m_views.end())
+    {
+        return iter->m_looks.c_str();
+    }
+
+    return "";
+}
+
+const char * Config::getVirtualDisplayViewRule(const char * view) const noexcept
+{
+    if (!view) return "";
+
+    ViewVec::const_iterator iter = FindView(getImpl()->m_virtualDisplay.m_views, view);
+    if (iter != getImpl()->m_virtualDisplay.m_views.end())
+    {
+        return iter->m_rule.c_str();
+    }
+
+    return "";
+}
+
+const char * Config::getVirtualDisplayViewDescription(const char * view) const noexcept
+{
+    if (!view) return "";
+
+    ViewVec::const_iterator iter = FindView(getImpl()->m_virtualDisplay.m_views, view);
+    if (iter != getImpl()->m_virtualDisplay.m_views.end())
+    {
+        return iter->m_description.c_str();
+    }
+
+    return "";
+}
+
+void Config::removeVirtualDisplayView(const char * view) noexcept
+{
+    if (!view) return;
+
+    ViewVec::const_iterator iter = FindView(getImpl()->m_virtualDisplay.m_views, view);
+    if (iter != getImpl()->m_virtualDisplay.m_views.end())
+    {
+        ViewVec & views = getImpl()->m_virtualDisplay.m_views;
+
+        const auto it = std::find_if(views.begin(), views.end(), 
+                                     [view](const View & v) 
+                                     { 
+                                        return StringUtils::Compare(v.m_name.c_str(), view); 
+                                     });
+        if (it!=views.end())
+        {
+            views.erase(it);
+
+            AutoMutex lock(getImpl()->m_cacheidMutex);
+            getImpl()->resetCacheIDs();
+            return;
+        }
+    }
+
+    if (StringUtils::Remove(getImpl()->m_virtualDisplay.m_sharedViews, view))
+    {
+        AutoMutex lock(getImpl()->m_cacheidMutex);
+        getImpl()->resetCacheIDs();
+        return;
+    }
+}
+
+void Config::clearVirtualDisplay() noexcept
+{
+    getImpl()->m_virtualDisplay.m_views.clear();
+    getImpl()->m_virtualDisplay.m_sharedViews.clear();
+
+    AutoMutex lock(getImpl()->m_cacheidMutex);
+    getImpl()->resetCacheIDs();
+}
+
+int Config::instantiateDisplayFromMonitorName(const char * monitorName)
+{
+    if (!monitorName || !*monitorName)
+    {
+        throw Exception("The system monitor name cannot be null.");
+    }
+
+    const std::string ICCProfileFilepath
+        = SystemMonitorsImpl::GetICCProfileFromMonitorName(monitorName);
+    
+    const std::string monitorDescription
+        = GetProfileDescriptionFromICCProfile(ICCProfileFilepath.c_str());
+
+    return getImpl()->instantiateDisplay(monitorName, monitorDescription, ICCProfileFilepath);
+}
+
+int Config::instantiateDisplayFromICCProfile(const char * ICCProfileFilepath)
+{
+    if (!ICCProfileFilepath || !*ICCProfileFilepath)
+    {
+        throw Exception("The ICC profile filepath cannot be null.");
+    }
+
+    const std::string monitorDescription
+        = GetProfileDescriptionFromICCProfile(ICCProfileFilepath);
+
+    return getImpl()->instantiateDisplay("", monitorDescription, ICCProfileFilepath);
+}
+
 void Config::setActiveDisplays(const char * displays)
 {
     getImpl()->m_activeDisplays.clear();
@@ -2687,12 +3120,12 @@ const char * Config::getActiveViews() const
     return getImpl()->m_activeViewsStr.c_str();
 }
 
-int Config::getNumDisplaysAll() const
+int Config::getNumDisplaysAll() const noexcept
 {
     return static_cast<int>(getImpl()->m_displays.size());
 }
 
-const char * Config::getDisplayAll(int index) const
+const char * Config::getDisplayAll(int index) const noexcept
 {
     if (index >= 0 || index < static_cast<int>(getImpl()->m_displays.size()))
     {
@@ -2700,6 +3133,34 @@ const char * Config::getDisplayAll(int index) const
     }
 
     return "";
+}
+
+int Config::getDisplayAllByName(const char * name) const noexcept
+{
+    if (!name || !*name)
+    {
+        return -1;
+    }
+
+    for (size_t idx = 0; idx < getImpl()->m_displays.size(); ++idx)
+    {
+        if (0==strcmp(name, getImpl()->m_displays[idx].first.c_str()))
+        {
+            return static_cast<int>(idx);
+        }
+    }
+    
+    return -1;
+}
+
+bool Config::isDisplayTemporary(int index) const noexcept
+{
+    if (index >= 0 || index < static_cast<int>(getImpl()->m_displays.size()))
+    {
+        return getImpl()->m_displays[index].second.m_temporary;
+    }
+
+    return false;
 }
 
 int Config::getNumViews(ViewType type, const char * display) const
@@ -3704,6 +4165,16 @@ void Config::Impl::checkVersionConsistency() const
                 os << "uses shared views and config version is less than 2.";
                 throw Exception(os.str().c_str());
             }
+        }
+    }
+
+    // Check for virtual display.
+
+    if (m_majorVersion < 2)
+    {
+        if (m_virtualDisplay.m_views.size() != 0 || m_virtualDisplay.m_sharedViews.size() != 0)
+        {
+            throw Exception("Only version 2 (or higher) can have a virtual display.");
         }
     }
 

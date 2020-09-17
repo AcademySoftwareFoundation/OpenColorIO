@@ -6696,3 +6696,531 @@ OCIO_ADD_TEST(Config, context_variables_typical_use_cases)
         }
     }
 }
+
+OCIO_ADD_TEST(Config, virtual_display)
+{
+    // Test the virtual display instantiation.
+
+    static constexpr char CONFIG[]{ R"(ocio_profile_version: 2
+
+search_path: ""
+strictparsing: true
+luma: [0.2126, 0.7152, 0.0722]
+
+roles:
+  default: raw
+
+file_rules:
+  - !<Rule> {name: Default, colorspace: default}
+
+shared_views:
+  - !<View> {name: sview1, colorspace: raw}
+  - !<View> {name: sview2, colorspace: raw}
+
+displays:
+  sRGB:
+    - !<View> {name: Raw, colorspace: raw}
+    - !<View> {name: view, view_transform: display_vt, display_colorspace: display_cs}
+    - !<Views> [sview1]
+
+virtual_display:
+  - !<View> {name: Raw, colorspace: raw}
+  - !<View> {name: Film, view_transform: display_vt, display_colorspace: <USE_DISPLAY_NAME>}
+  - !<Views> [sview2]
+
+active_displays: []
+active_views: []
+
+view_transforms:
+  - !<ViewTransform>
+    name: default_vt
+    to_reference: !<CDLTransform> {sat: 1.5}
+
+  - !<ViewTransform>
+    name: display_vt
+    to_display_reference: !<CDLTransform> {sat: 1.5}
+
+display_colorspaces:
+  - !<ColorSpace>
+    name: display_cs
+    family: ""
+    equalitygroup: ""
+    bitdepth: unknown
+    isdata: false
+    allocation: uniform
+    to_display_reference: !<CDLTransform> {sat: 1.5}
+
+colorspaces:
+  - !<ColorSpace>
+    name: raw
+    family: ""
+    equalitygroup: ""
+    bitdepth: unknown
+    isdata: true
+    allocation: uniform
+)" };
+
+    std::istringstream iss;
+    iss.str(CONFIG);
+
+    // Step 1 - Validate a config containing a virtual display.
+
+    OCIO::ConstConfigRcPtr config;
+    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(iss));
+    OCIO_CHECK_NO_THROW(config->validate());
+
+
+    // Step 2 - The virtual display is correctly loaded & saved.
+
+    std::ostringstream oss;
+    OCIO_CHECK_NO_THROW(oss << *config.get());
+    OCIO_CHECK_EQUAL(oss.str(), CONFIG);
+
+    // Some basic checks.
+    OCIO_CHECK_EQUAL(3, config->getNumViews("sRGB"));
+    OCIO_CHECK_EQUAL(2, config->getNumViews(OCIO::VIEW_DISPLAY_DEFINED, "sRGB"));
+    OCIO_CHECK_EQUAL(1, config->getNumViews(OCIO::VIEW_SHARED, "sRGB"));
+
+    // Step 3 - Validate the virtual display information.
+
+    {
+        OCIO::ConfigRcPtr cfg = config->createEditableCopy();
+
+        OCIO_REQUIRE_EQUAL(2, cfg->getVirtualDisplayNumViews(OCIO::VIEW_DISPLAY_DEFINED));
+
+        const char * viewName = cfg->getVirtualDisplayView(OCIO::VIEW_DISPLAY_DEFINED, 0);
+
+        OCIO_CHECK_EQUAL(std::string("Raw"), viewName);
+        OCIO_CHECK_EQUAL(std::string(""), cfg->getVirtualDisplayViewTransformName(viewName));
+        OCIO_CHECK_EQUAL(std::string("raw"), cfg->getVirtualDisplayViewColorSpaceName(viewName));
+        OCIO_CHECK_EQUAL(std::string(""), cfg->getVirtualDisplayViewLooks(viewName));
+        OCIO_CHECK_EQUAL(std::string(""), cfg->getVirtualDisplayViewRule(viewName));
+        OCIO_CHECK_EQUAL(std::string(""), cfg->getVirtualDisplayViewDescription(viewName));
+
+        viewName = cfg->getVirtualDisplayView(OCIO::VIEW_DISPLAY_DEFINED, 1);
+
+        OCIO_CHECK_EQUAL(std::string("Film"), cfg->getVirtualDisplayView(OCIO::VIEW_DISPLAY_DEFINED, 1));
+        OCIO_CHECK_EQUAL(std::string("display_vt"), cfg->getVirtualDisplayViewTransformName(viewName));
+        OCIO_CHECK_EQUAL(std::string("<USE_DISPLAY_NAME>"), cfg->getVirtualDisplayViewColorSpaceName(viewName));
+        OCIO_CHECK_EQUAL(std::string(""), cfg->getVirtualDisplayViewLooks(viewName));
+        OCIO_CHECK_EQUAL(std::string(""), cfg->getVirtualDisplayViewRule(viewName));
+        OCIO_CHECK_EQUAL(std::string(""), cfg->getVirtualDisplayViewDescription(viewName));
+
+        OCIO_REQUIRE_EQUAL(1, cfg->getVirtualDisplayNumViews(OCIO::VIEW_SHARED));
+        OCIO_CHECK_EQUAL(std::string("sview2"), cfg->getVirtualDisplayView(OCIO::VIEW_SHARED, 0));
+
+        // Remove a view from the Virtual Display.
+
+        cfg->removeVirtualDisplayView("Raw");
+
+        OCIO_REQUIRE_EQUAL(1, cfg->getVirtualDisplayNumViews(OCIO::VIEW_DISPLAY_DEFINED));
+        OCIO_CHECK_EQUAL(std::string("Film"), cfg->getVirtualDisplayView(OCIO::VIEW_DISPLAY_DEFINED, 0));
+
+        OCIO_REQUIRE_EQUAL(1, cfg->getVirtualDisplayNumViews(OCIO::VIEW_SHARED));
+        OCIO_CHECK_EQUAL(std::string("sview2"), cfg->getVirtualDisplayView(OCIO::VIEW_SHARED, 0));
+
+        // Remove a shared view from the Virtual Display.
+
+        cfg->removeVirtualDisplayView("sview2");
+        OCIO_REQUIRE_EQUAL(1, cfg->getVirtualDisplayNumViews(OCIO::VIEW_DISPLAY_DEFINED));
+        OCIO_REQUIRE_EQUAL(0, cfg->getVirtualDisplayNumViews(OCIO::VIEW_SHARED));
+
+        {
+            // Extra serialize & deserialize validation.
+
+            std::ostringstream oss2;
+            OCIO_CHECK_NO_THROW(oss2 << *cfg.get());
+
+            std::istringstream iss2;
+            iss2.str(oss2.str());
+
+            OCIO::ConstConfigRcPtr config2;
+            OCIO_CHECK_NO_THROW(config2 = OCIO::Config::CreateFromStream(iss2));
+
+            OCIO_REQUIRE_EQUAL(1, config2->getVirtualDisplayNumViews(OCIO::VIEW_DISPLAY_DEFINED));
+            OCIO_REQUIRE_EQUAL(0, config2->getVirtualDisplayNumViews(OCIO::VIEW_SHARED));
+        }
+
+        cfg->addVirtualDisplaySharedView("sview2");
+        OCIO_REQUIRE_EQUAL(1, cfg->getVirtualDisplayNumViews(OCIO::VIEW_DISPLAY_DEFINED));
+        OCIO_REQUIRE_EQUAL(1, cfg->getVirtualDisplayNumViews(OCIO::VIEW_SHARED));
+
+        // Remove the Virtual Display.
+
+        cfg->clearVirtualDisplay();
+        OCIO_REQUIRE_EQUAL(0, cfg->getVirtualDisplayNumViews(OCIO::VIEW_DISPLAY_DEFINED));
+        OCIO_REQUIRE_EQUAL(0, cfg->getVirtualDisplayNumViews(OCIO::VIEW_SHARED));
+
+        {
+            // Extra serialize & deserialize validation.
+
+            std::ostringstream oss2;
+            OCIO_CHECK_NO_THROW(oss2 << *cfg.get());
+
+            std::istringstream iss2;
+            iss2.str(oss2.str());
+
+            OCIO::ConstConfigRcPtr config2;
+            OCIO_CHECK_NO_THROW(config2 = OCIO::Config::CreateFromStream(iss2));
+
+            OCIO_REQUIRE_EQUAL(0, config2->getVirtualDisplayNumViews(OCIO::VIEW_DISPLAY_DEFINED));
+            OCIO_REQUIRE_EQUAL(0, config2->getVirtualDisplayNumViews(OCIO::VIEW_SHARED));
+        }
+    }
+
+
+    // Step 4 - When present the virtual display instantiation works for MacOS and Windows but
+    // throws for headless machines and Linux.
+
+    static const std::string ICCProfileFilepath
+        = std::string(OCIO::getTestFilesDir()) + "/icc-test-1.icc";
+
+
+#if !defined(OCIO_HEADLESS_ENABLED) && ( defined(__APPLE__) || defined(_WIN32) )
+
+    OCIO_CHECK_ASSERT(OCIO::SystemMonitors::Get()->isSupported());
+
+    const std::string monitorName = OCIO::SystemMonitors::Get()->getMonitorName(0);
+
+    // Step 4 - 1 - Check the virtual display instantiation.
+
+    OCIO::ConfigRcPtr cfg = config->createEditableCopy();
+    OCIO_CHECK_NO_THROW(cfg->instantiateDisplayFromMonitorName(monitorName.c_str()));
+
+    OCIO_CHECK_ASSERT((1 + config->getNumDisplays()) == cfg->getNumDisplays());
+
+    // One more display exists in the changed config instance.
+    const int numColorSpaces
+        = config->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_DISPLAY, OCIO::COLORSPACE_ACTIVE);
+    OCIO_CHECK_ASSERT((1 + numColorSpaces)
+                        == cfg->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_DISPLAY, OCIO::COLORSPACE_ACTIVE));
+
+    // Some basic checks of the new display.
+
+    // New display is the last one.
+    const std::string displayName = cfg->getDisplay(config->getNumDisplays());
+    OCIO_CHECK_EQUAL(3, cfg->getNumViews(displayName.c_str()));
+    OCIO_CHECK_EQUAL(2, cfg->getNumViews(OCIO::VIEW_DISPLAY_DEFINED, displayName.c_str()));
+    OCIO_CHECK_EQUAL(1, cfg->getNumViews(OCIO::VIEW_SHARED, displayName.c_str()));
+
+    // Check the created display color space.
+
+    OCIO::ConstColorSpaceRcPtr cs = cfg->getColorSpace(displayName.c_str());
+    OCIO_CHECK_ASSERT(cs);
+    
+    OCIO::ConstTransformRcPtr tr = cs->getTransform(OCIO::COLORSPACE_DIR_TO_REFERENCE);
+    OCIO_CHECK_ASSERT(!tr);
+
+    tr = cs->getTransform(OCIO::COLORSPACE_DIR_FROM_REFERENCE);
+    OCIO_CHECK_ASSERT(tr);
+
+    OCIO::ConstFileTransformRcPtr file = OCIO::DynamicPtrCast<const OCIO::FileTransform>(tr);
+    OCIO_CHECK_ASSERT(file);
+
+    int displayPos = -1;
+
+    // If the display already exists it only udpates existing (display, view) pair and the
+    // corresponding display color space.
+    OCIO_CHECK_NO_THROW(displayPos = cfg->instantiateDisplayFromMonitorName(monitorName.c_str()));
+    OCIO_CHECK_EQUAL(displayPos, config->getNumDisplays()); // Added at the last position.
+
+    OCIO_CHECK_EQUAL((1 + config->getNumDisplays()), cfg->getNumDisplays());
+
+    OCIO_CHECK_EQUAL((1 + numColorSpaces),
+                     cfg->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_DISPLAY, OCIO::COLORSPACE_ACTIVE));
+
+    // Check that the (display, view) pairs instantiated from a virtual display are not saved
+    // which includes to not save the associated display color spaces.
+
+    {
+        std::ostringstream oss2;
+        OCIO_CHECK_NO_THROW(oss2 << *cfg.get()); // With an instantiated virtual display.
+
+        std::istringstream iss2;
+        iss2.str(oss2.str());
+
+        OCIO::ConstConfigRcPtr config2;
+        OCIO_CHECK_NO_THROW(config2 = OCIO::Config::CreateFromStream(iss2));
+
+        // Check that (display, view) pair created by the virtual display instantiation is gone.
+ 
+        OCIO_CHECK_EQUAL(config->getNumDisplays(),  config2->getNumDisplays());
+        OCIO_CHECK_EQUAL(cfg->getNumDisplays() - 1, config2->getNumDisplays());
+
+        // And the display color space is also gone.
+
+        OCIO_CHECK_EQUAL(config->getNumColorSpaces(),  config2->getNumColorSpaces());
+        OCIO_CHECK_EQUAL(cfg->getNumColorSpaces() - 1, config2->getNumColorSpaces());
+    }
+
+    // Step 4 - 2 - Create a (display, view) using a custom ICC profile.
+
+    cfg = config->createEditableCopy(); // Reset the instance to the original content.
+    OCIO_CHECK_NO_THROW(displayPos = cfg->instantiateDisplayFromICCProfile(ICCProfileFilepath.c_str()));
+    OCIO_CHECK_EQUAL(displayPos, config->getNumDisplays()); // Added at the last position.
+
+    OCIO_CHECK_EQUAL((1 + config->getNumDisplays()), cfg->getNumDisplays());
+    OCIO_CHECK_EQUAL((1 + numColorSpaces),
+                     cfg->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_DISPLAY, OCIO::COLORSPACE_ACTIVE));
+
+    // Some basic checks of the new display.
+
+    // New display is the last one.
+    const std::string customDisplayName = cfg->getDisplay(config->getNumDisplays());
+    OCIO_CHECK_EQUAL(3, cfg->getNumViews(customDisplayName.c_str()));
+    OCIO_CHECK_EQUAL(2, cfg->getNumViews(OCIO::VIEW_DISPLAY_DEFINED, customDisplayName.c_str()));
+    OCIO_CHECK_EQUAL(1, cfg->getNumViews(OCIO::VIEW_SHARED, customDisplayName.c_str()));
+
+#elif !defined(OCIO_HEADLESS_ENABLED) && defined (__linux__)
+
+    OCIO_CHECK_ASSERT(!OCIO::SystemMonitors::Get()->isSupported());
+
+    // There is no uniform way to retrieve the monitor information.
+    OCIO_CHECK_THROW_WHAT(OCIO::SystemMonitors::Get()->getMonitorName(0),
+                          OCIO::Exception,
+                          "Invalid index for the monitor name 0 where the number of monitors is 0.");
+
+    // Step 4 - 2 - Create a (display, view) using a custom ICC profile.
+
+    OCIO::ConfigRcPtr cfg = config->createEditableCopy();
+    OCIO_CHECK_NO_THROW(cfg->instantiateDisplayFromICCProfile(ICCProfileFilepath.c_str()));
+
+    OCIO_CHECK_EQUAL((1 + config->getNumDisplays()), cfg->getNumDisplays());
+
+    const int numColorSpaces
+        = config->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_DISPLAY, OCIO::COLORSPACE_ACTIVE);
+    OCIO_CHECK_EQUAL((1 + numColorSpaces),
+                     cfg->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_DISPLAY, OCIO::COLORSPACE_ACTIVE));
+
+    // Some basic checks of the new display.
+
+    // New display is the last one.
+    const std::string customDisplayName = cfg->getDisplay(config->getNumDisplays());
+    OCIO_CHECK_EQUAL(3, cfg->getNumViews(customDisplayName.c_str()));
+    OCIO_CHECK_EQUAL(2, cfg->getNumViews(OCIO::VIEW_DISPLAY_DEFINED, customDisplayName.c_str()));
+    OCIO_CHECK_EQUAL(1, cfg->getNumViews(OCIO::VIEW_SHARED, customDisplayName.c_str()));
+
+#else
+
+    OCIO_CHECK_ASSERT(!OCIO::SystemMonitors::Get()->isSupported());
+
+#endif
+
+}
+
+OCIO_ADD_TEST(Config, virtual_display_with_active_displays)
+{
+    // Test the virtual display instantiation when active displays & views are defined.
+
+    static constexpr char CONFIG[]{ R"(ocio_profile_version: 2
+
+roles:
+  default: raw
+
+file_rules:
+  - !<Rule> {name: Default, colorspace: default}
+
+shared_views:
+  - !<View> {name: sview1, colorspace: raw}
+
+displays:
+  Raw:
+    - !<View> {name: Raw, colorspace: raw}
+  sRGB:
+    - !<View> {name: Raw, colorspace: raw}
+    - !<View> {name: view, view_transform: display_vt, display_colorspace: display_cs}
+
+virtual_display:
+  - !<View> {name: Raw, colorspace: raw}
+  - !<Views> [sview1]
+
+active_displays: [sRGB]
+active_views: [view]
+
+view_transforms:
+  - !<ViewTransform>
+    name: default_vt
+    to_reference: !<CDLTransform> {sat: 1.5}
+
+  - !<ViewTransform>
+    name: display_vt
+    to_display_reference: !<CDLTransform> {sat: 1.5}
+
+display_colorspaces:
+  - !<ColorSpace>
+    name: display_cs
+    to_display_reference: !<CDLTransform> {sat: 1.5}
+
+colorspaces:
+  - !<ColorSpace>
+    name: raw
+)" };
+
+    std::istringstream iss;
+    iss.str(CONFIG);
+
+    // Validate a config containing a virtual display.
+
+    OCIO::ConstConfigRcPtr config;
+    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(iss));
+    OCIO_CHECK_NO_THROW(config->validate());
+
+    // Only the 'sRGB' display is active.
+    OCIO_CHECK_EQUAL(1, config->getNumDisplays());
+    // Only the 'view' view is active.
+    OCIO_CHECK_EQUAL(1, config->getNumViews("sRGB"));
+
+#if !defined(OCIO_HEADLESS_ENABLED) && ( defined(__APPLE__) || defined(_WIN32) )
+
+    OCIO_CHECK_ASSERT(OCIO::SystemMonitors::Get()->isSupported());
+
+    const std::string monitorName = OCIO::SystemMonitors::Get()->getMonitorName(0);
+
+    // Instantiate a Virtual Display.
+
+    OCIO::ConfigRcPtr cfg = config->createEditableCopy();
+
+    int displayIndex = -1;
+    OCIO_CHECK_NO_THROW(displayIndex = cfg->instantiateDisplayFromMonitorName(monitorName.c_str()));
+
+    OCIO_CHECK_EQUAL(2, cfg->getNumDisplays());
+
+    // Now, the views 'Raw' & 'view' are active (Since 'Raw' is used by both the new display and sRGB.)
+    OCIO_CHECK_EQUAL(2, cfg->getNumViews("sRGB"));
+    // All the views from the new display are active.
+    OCIO_CHECK_EQUAL(2, cfg->getNumViews(cfg->getDisplay(displayIndex)));
+
+#endif
+
+}
+
+OCIO_ADD_TEST(Config, virtual_display_v2_only)
+{
+    // Test that the virtual display is only supported by v2 or higher.
+
+    static constexpr char CONFIG[]{ R"(ocio_profile_version: 1
+
+roles:
+  default: raw
+
+displays:
+  sRGB:
+    - !<View> {name: Raw, colorspace: raw}
+
+virtual_display:
+  - !<View> {name: Raw, colorspace: raw}
+
+colorspaces:
+  - !<ColorSpace>
+    name: raw
+)" };
+
+    std::istringstream iss;
+    iss.str(CONFIG);
+
+    OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(iss),
+                          OCIO::Exception,
+                          "Only version 2 (or higher) can have a virtual display.");
+
+    OCIO::ConfigRcPtr cfg = OCIO::Config::CreateRaw()->createEditableCopy();
+    cfg->addVirtualDisplaySharedView("sview");
+    cfg->setMajorVersion(1);
+    cfg->setFileRules(OCIO::FileRules::Create());
+
+    OCIO_CHECK_THROW_WHAT(cfg->validate(),
+                          OCIO::Exception,
+                          "Only version 2 (or higher) can have a virtual display.");
+
+    std::ostringstream oss;
+    OCIO_CHECK_THROW_WHAT(oss << *cfg.get(),
+                          OCIO::Exception,
+                          "Only version 2 (or higher) can have a virtual display.");
+}
+
+OCIO_ADD_TEST(Config, virtual_display_exceptions)
+{
+    // Test the validations around the virtual display definition.
+
+    static constexpr char CONFIG[]{ R"(ocio_profile_version: 2
+
+roles:
+  default: raw
+
+file_rules:
+  - !<Rule> {name: Default, colorspace: default}
+
+shared_views:
+  - !<View> {name: sview1, colorspace: raw}
+
+displays:
+  Raw:
+    - !<View> {name: Raw, colorspace: raw}
+
+virtual_display:
+  - !<View> {name: Raw, colorspace: raw}
+  - !<Views> [sview1]
+
+view_transforms:
+  - !<ViewTransform>
+    name: default_vt
+    to_reference: !<CDLTransform> {sat: 1.5}
+
+  - !<ViewTransform>
+    name: display_vt
+    to_display_reference: !<CDLTransform> {sat: 1.5}
+
+display_colorspaces:
+  - !<ColorSpace>
+    name: display_cs
+    to_display_reference: !<CDLTransform> {sat: 1.5}
+
+colorspaces:
+  - !<ColorSpace>
+    name: raw
+)" };
+
+    std::istringstream iss;
+    iss.str(CONFIG);
+
+    OCIO::ConfigRcPtr cfg;
+    OCIO_CHECK_NO_THROW(cfg = OCIO::Config::CreateFromStream(iss)->createEditableCopy());
+    OCIO_CHECK_NO_THROW(cfg->validate());
+
+    // Test failures for shared views.
+
+    OCIO_CHECK_THROW_WHAT(cfg->addVirtualDisplaySharedView("sview1"),
+                          OCIO::Exception,
+                          "Shared view could not be added to virtual_display: There is already a"
+                          " shared view named 'sview1'.");
+
+    OCIO_CHECK_NO_THROW(cfg->addVirtualDisplaySharedView("sview2"));
+    OCIO_CHECK_THROW_WHAT(cfg->validate(),
+                          OCIO::Exception,
+                          "The display 'virtual_display' contains a shared view 'sview2' that is"
+                          " not defined.");
+
+    cfg->removeVirtualDisplayView("sview2");
+    OCIO_CHECK_NO_THROW(cfg->validate());
+
+    // Test failures for views.
+
+    OCIO_CHECK_THROW_WHAT(cfg->addVirtualDisplayView("Raw", nullptr, "raw", nullptr, nullptr, nullptr),
+                          OCIO::Exception,
+                          "View could not be added to virtual_display in config: View 'Raw' already"
+                          " exists.");
+
+    OCIO_CHECK_NO_THROW(cfg->addVirtualDisplayView("Raw1", nullptr, "raw1", nullptr, nullptr, nullptr));
+    OCIO_CHECK_THROW_WHAT(cfg->validate(),
+                          OCIO::Exception,
+                          "Display 'virtual_display' has a view 'Raw1' refers to a color space,"
+                          " 'raw1', which is not defined.");
+
+    cfg->removeVirtualDisplayView("Raw1");
+    OCIO_CHECK_NO_THROW(cfg->validate());
+
+    OCIO_CHECK_NO_THROW(cfg->addVirtualDisplayView("Raw1", nullptr, "raw", "look", nullptr, nullptr));
+    OCIO_CHECK_THROW_WHAT(cfg->validate(),
+                          OCIO::Exception,
+                          "Display 'virtual_display' has a view 'Raw1' refers to a look, 'look',"
+                          " which is not defined.");
+}
