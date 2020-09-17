@@ -98,6 +98,10 @@ class OCIOEXPORT BuiltinTransformRegistry;
 typedef OCIO_SHARED_PTR<BuiltinTransformRegistry> BuiltinTransformRegistryRcPtr;
 typedef OCIO_SHARED_PTR<const BuiltinTransformRegistry> ConstBuiltinTransformRegistryRcPtr;
 
+class OCIOEXPORT SystemMonitors;
+typedef OCIO_SHARED_PTR<SystemMonitors> SystemMonitorsRcPtr;
+typedef OCIO_SHARED_PTR<const SystemMonitors> ConstSystemMonitorsRcPtr;
+
 class OCIOEXPORT GradingBSplineCurve;
 typedef OCIO_SHARED_PTR<const GradingBSplineCurve> ConstGradingBSplineCurveRcPtr;
 typedef OCIO_SHARED_PTR<GradingBSplineCurve> GradingBSplineCurveRcPtr;
@@ -105,6 +109,7 @@ typedef OCIO_SHARED_PTR<GradingBSplineCurve> GradingBSplineCurveRcPtr;
 class OCIOEXPORT GradingRGBCurve;
 typedef OCIO_SHARED_PTR<const GradingRGBCurve> ConstGradingRGBCurveRcPtr;
 typedef OCIO_SHARED_PTR<GradingRGBCurve> GradingRGBCurveRcPtr;
+
 
 // Transforms
 

@@ -68,6 +68,9 @@ void AddView(ViewVec & views, const char * name, const char * viewTransform,
 // Display can be part of the list of displays (DisplayMap) of a config.
 struct Display
 {
+    // Used to not save displays that originate by instantiating a virtual display.
+    bool m_temporary = false;
+
     // List of views defined by the display.
     ViewVec m_views;
     // List of references to shared views defined be a config.
