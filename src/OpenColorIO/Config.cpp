@@ -1361,9 +1361,9 @@ void Config::validate() const
         {
             // Bypass the <USE_DISPLAY_NAME> validation.
             getImpl()->validateSharedView("virtual_display",
-                                             getImpl()->m_virtualDisplay.m_views,
-                                             sharedView,
-                                             false);
+                                          getImpl()->m_virtualDisplay.m_views,
+                                          sharedView,
+                                          false);
         }
 
         // Confirm view references exist.
