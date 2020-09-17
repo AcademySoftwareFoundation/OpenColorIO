@@ -201,7 +201,7 @@ ColorSpaceSet::~ColorSpaceSet()
 ColorSpaceSetRcPtr ColorSpaceSet::createEditableCopy() const
 {
     ColorSpaceSetRcPtr css = ColorSpaceSet::Create();
-    *css->m_impl = *m_impl;
+    *css->m_impl = *m_impl; // Deep Copy.
     return css;
 }
 
