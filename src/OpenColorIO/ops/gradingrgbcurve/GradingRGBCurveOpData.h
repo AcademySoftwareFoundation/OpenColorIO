@@ -30,7 +30,8 @@ public:
                           ConstGradingBSplineCurveRcPtr blue,
                           ConstGradingBSplineCurveRcPtr master);
     GradingRGBCurveOpData() = delete;
-    GradingRGBCurveOpData(const GradingRGBCurveOpData &) = default;
+    GradingRGBCurveOpData(const GradingRGBCurveOpData & rhs);
+    GradingRGBCurveOpData & operator=(const GradingRGBCurveOpData & rhs);
     virtual ~GradingRGBCurveOpData();
 
     GradingRGBCurveOpDataRcPtr clone() const;
@@ -70,8 +71,6 @@ public:
     {
         return m_value;
     }
-
-    GradingRGBCurveOpData & operator=(const GradingRGBCurveOpData & rhs);
 
     bool operator==(const OpData & other) const override;
 

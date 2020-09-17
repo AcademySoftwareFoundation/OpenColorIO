@@ -40,16 +40,42 @@ GradingRGBCurveOpData::GradingRGBCurveOpData(GradingStyle style,
     m_value = std::make_shared<DynamicPropertyGradingRGBCurveImpl>(rgbCurve, false);
 }
 
+GradingRGBCurveOpData::GradingRGBCurveOpData(const GradingRGBCurveOpData & rhs)
+    : m_style(rhs.m_style)
+{
+    ConstGradingRGBCurveRcPtr rgbCurve = GradingRGBCurve::Create(rhs.m_style);
+    m_value = std::make_shared<DynamicPropertyGradingRGBCurveImpl>(rgbCurve, false);
+
+    *this = rhs;
+}
+
+GradingRGBCurveOpData & GradingRGBCurveOpData::operator=(const GradingRGBCurveOpData & rhs)
+{
+    if (this == &rhs) return *this;
+
+    OpData::operator=(rhs);
+
+    m_style          = rhs.m_style;
+    m_direction      = rhs.m_direction;
+    m_bypassLinToLog = rhs.m_bypassLinToLog;
+
+    // Copy dynamic properties. Sharing happens when needed, with CPUOp for instance.
+    m_value->setValue(rhs.m_value->getValue());
+    if (rhs.m_value->isDynamic())
+    {
+        m_value->makeDynamic();
+    }
+
+    return *this;
+}
+
 GradingRGBCurveOpData::~GradingRGBCurveOpData()
 {
 }
 
 GradingRGBCurveOpDataRcPtr GradingRGBCurveOpData::clone() const
 {
-    GradingRGBCurveOpDataRcPtr res = std::make_shared<GradingRGBCurveOpData>(getStyle());
-    *res = *this;
-
-    return res;
+    return std::make_shared<GradingRGBCurveOpData>(*this);
 }
 
 void GradingRGBCurveOpData::validate() const
@@ -157,24 +183,6 @@ void GradingRGBCurveOpData::replaceDynamicProperty(DynamicPropertyGradingRGBCurv
 void GradingRGBCurveOpData::removeDynamicProperty() noexcept
 {
     m_value->makeNonDynamic();
-}
-
-GradingRGBCurveOpData & GradingRGBCurveOpData::operator=(const GradingRGBCurveOpData & rhs)
-{
-    if (this == &rhs) return *this;
-
-    OpData::operator=(rhs);
-
-    m_style          = rhs.m_style;
-    m_direction      = rhs.m_direction;
-    m_bypassLinToLog = rhs.m_bypassLinToLog;
-    // Copy dynamic properties. Sharing happens when needed, with CPUOp for instance.
-    m_value->setValue(rhs.m_value->getValue());
-    if (rhs.m_value->isDynamic())
-    {
-        m_value->makeDynamic();
-    }
-    return *this;
 }
 
 bool GradingRGBCurveOpData::operator==(const OpData & other) const

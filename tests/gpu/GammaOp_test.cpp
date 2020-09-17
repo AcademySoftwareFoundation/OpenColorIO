@@ -182,12 +182,12 @@ OCIO_ADD_GPU_TEST(ExponentOp, inverse_pass_thru)
     test.setTestInfinity(false);
 }
 
-const double gamma[4]  = { 2.1,  1.0,  2.3,  1.5  };
-const double offset[4] = {  .01, 0.,    .03,  .05 };
+static constexpr double gammaVals[4]  = { 2.1,  1.0,  2.3,  1.5  };
+static constexpr double offsetVals[4] = {  .01, 0.,    .03,  .05 };
 
 OCIO_ADD_GPU_TEST(ExponentWithLinearOp, forward)
 {
-    AddExponentWithLinear(test, OCIO::TRANSFORM_DIR_FORWARD, gamma, offset,
+    AddExponentWithLinear(test, OCIO::TRANSFORM_DIR_FORWARD, gammaVals, offsetVals,
         OCIO::NEGATIVE_LINEAR,
 #ifdef USE_SSE
         1e-4f // Note: Related to the ssePower optimization !
@@ -200,7 +200,7 @@ OCIO_ADD_GPU_TEST(ExponentWithLinearOp, forward)
 
 OCIO_ADD_GPU_TEST(ExponentWithLinearOp, mirror_forward)
 {
-    AddExponentWithLinear(test, OCIO::TRANSFORM_DIR_FORWARD, gamma, offset,
+    AddExponentWithLinear(test, OCIO::TRANSFORM_DIR_FORWARD, gammaVals, offsetVals,
         OCIO::NEGATIVE_MIRROR,
 #ifdef USE_SSE
         1e-4f // Note: Related to the ssePower optimization !
@@ -213,7 +213,7 @@ OCIO_ADD_GPU_TEST(ExponentWithLinearOp, mirror_forward)
 
 OCIO_ADD_GPU_TEST(ExponentWithLinearOp, inverse)
 {
-    AddExponentWithLinear(test, OCIO::TRANSFORM_DIR_INVERSE, gamma, offset,
+    AddExponentWithLinear(test, OCIO::TRANSFORM_DIR_INVERSE, gammaVals, offsetVals,
         OCIO::NEGATIVE_LINEAR,
 #ifdef USE_SSE
         5e-5f // Note: Related to the ssePower optimization !
@@ -226,7 +226,7 @@ OCIO_ADD_GPU_TEST(ExponentWithLinearOp, inverse)
 
 OCIO_ADD_GPU_TEST(ExponentWithLinearOp, mirror_inverse)
 {
-    AddExponentWithLinear(test, OCIO::TRANSFORM_DIR_INVERSE, gamma, offset,
+    AddExponentWithLinear(test, OCIO::TRANSFORM_DIR_INVERSE, gammaVals, offsetVals,
         OCIO::NEGATIVE_MIRROR,
 #ifdef USE_SSE
         5e-5f // Note: Related to the ssePower optimization !

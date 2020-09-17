@@ -23,12 +23,14 @@ class ProcessorWrapper
 {
 public:
     ProcessorWrapper() = delete;
+    ProcessorWrapper(const ProcessorWrapper &) = delete;
+    ProcessorWrapper & operator=(const ProcessorWrapper &) = delete;
+
     explicit ProcessorWrapper(bool verbose)
         : m_verbose(verbose)
     {
     }
-    ProcessorWrapper(const ProcessorWrapper &) = delete;
-    ProcessorWrapper & operator=(const ProcessorWrapper &) = delete;
+
     ~ProcessorWrapper()
     {
 #ifdef OCIO_GPU_ENABLED
