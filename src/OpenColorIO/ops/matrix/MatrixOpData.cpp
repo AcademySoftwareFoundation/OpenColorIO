@@ -95,10 +95,6 @@ MatrixOpData::MatrixArray::MatrixArray()
     fill();
 }
 
-MatrixOpData::MatrixArray::~MatrixArray()
-{
-}
-
 MatrixOpData::MatrixArray & MatrixOpData::MatrixArray::operator=(const ArrayDouble & a)
 {
     if (this == &a) return *this;
@@ -107,13 +103,6 @@ MatrixOpData::MatrixArray & MatrixOpData::MatrixArray::operator=(const ArrayDoub
 
     validate();
 
-    return *this;
-}
-
-MatrixOpData::MatrixArray & MatrixOpData::MatrixArray::operator=(const MatrixArray & m)
-{
-    // Note: it works because MatrixArray does not (and must not) have any member variables.
-    *this = *dynamic_cast<const ArrayDouble*>(&m);
     return *this;
 }
 

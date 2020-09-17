@@ -2987,10 +2987,8 @@ int Config::getNumViews(ViewType type, const char * display) const
     {
     case VIEW_SHARED:
         return static_cast<int>(iter->second.m_sharedViews.size());
-        break;
     case VIEW_DISPLAY_DEFINED:
         return static_cast<int>(iter->second.m_views.size());
-        break;
     }
     return 0;
 }
