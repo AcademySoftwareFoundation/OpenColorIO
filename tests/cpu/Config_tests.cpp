@@ -6703,6 +6703,8 @@ OCIO_ADD_TEST(Config, virtual_display)
 
     static constexpr char CONFIG[]{ R"(ocio_profile_version: 2
 
+environment:
+  {}
 search_path: ""
 strictparsing: true
 luma: [0.2126, 0.7152, 0.0722]
@@ -6873,7 +6875,7 @@ colorspaces:
     // throws for headless machines and Linux.
 
     static const std::string ICCProfileFilepath
-        = std::string(OCIO::getTestFilesDir()) + "/icc-test-1.icc";
+        = std::string(OCIO::GetTestFilesDir()) + "/icc-test-1.icc";
 
 
 #if !defined(OCIO_HEADLESS_ENABLED) && ( defined(__APPLE__) || defined(_WIN32) )
@@ -7212,7 +7214,7 @@ colorspaces:
     OCIO_CHECK_NO_THROW(cfg->addVirtualDisplayView("Raw1", nullptr, "raw1", nullptr, nullptr, nullptr));
     OCIO_CHECK_THROW_WHAT(cfg->validate(),
                           OCIO::Exception,
-                          "Display 'virtual_display' has a view 'Raw1' refers to a color space,"
+                          "Display 'virtual_display' has a view 'Raw1' that refers to a color space,"
                           " 'raw1', which is not defined.");
 
     cfg->removeVirtualDisplayView("Raw1");

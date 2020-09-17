@@ -26,10 +26,9 @@ bool ContainsContextVariables(const std::string & str);
 // expansion will deal with similar prefixed keys as expected.
 // ie. '$TEST_$TESTING_$TE' will expand in this order '2 1 3'
 template <class T>
-struct EnvMapKey : std::binary_function <T, T, bool>
+struct EnvMapKey
 {
-    bool
-    operator() (const T &x, const T &y) const
+    bool operator() (const T & x, const T & y) const
     {
         // If the lengths are unequal, sort by length.
         if(x.length() != y.length())
