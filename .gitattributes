@@ -16,3 +16,6 @@ tests/data/files/image_png.clf binary
 # Exclude binary formats.
 tests/data/files/*.icc binary
 tests/data/files/*.icm binary
+
+# Avoid Windows line breaks in shell scripts (bound to fail)
+*.sh text eol=lf

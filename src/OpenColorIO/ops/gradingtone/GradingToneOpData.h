@@ -30,7 +30,8 @@ public:
 
     explicit GradingToneOpData(GradingStyle style);
     GradingToneOpData() = delete;
-    GradingToneOpData(const GradingToneOpData &) = default;
+    GradingToneOpData(const GradingToneOpData & rhs);
+    GradingToneOpData & operator=(const GradingToneOpData & rhs);
     virtual ~GradingToneOpData();
 
     GradingToneOpDataRcPtr clone() const;
@@ -67,8 +68,6 @@ public:
     {
         return m_value;
     }
-
-    GradingToneOpData & operator=(const GradingToneOpData & rhs);
 
     bool operator==(const OpData & other) const override;
 

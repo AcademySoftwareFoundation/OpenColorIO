@@ -757,9 +757,10 @@ void BuildFileTransformOps(OpRcPtrVec & ops,
     std::string filepath = context->resolveFileLocation(src.c_str());
 
     // Verify the recursion is valid, FileNoOp is added for each file.
-    for (ConstOpRcPtr&& op : ops)
+    for (const OpRcPtr & op : ops)
     {
-        ConstOpDataRcPtr data = op->data();
+        ConstOpRcPtr const_op(op);
+        ConstOpDataRcPtr data = const_op->data();
         auto fileData = DynamicPtrCast<const FileNoOpData>(data);
         if (fileData)
         {
