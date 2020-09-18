@@ -80,9 +80,10 @@ const char * CurveType(int c)
         return "blue";
     case RGB_MASTER:
         return "master";
+
     case RGB_NUM_CURVES:
     default:
-        return "invalid";
+        break;
     }
     return "invalid";
 }

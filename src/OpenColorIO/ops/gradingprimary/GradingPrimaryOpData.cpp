@@ -23,16 +23,39 @@ GradingPrimaryOpData::GradingPrimaryOpData(GradingStyle style)
 {
 }
 
+GradingPrimaryOpData::GradingPrimaryOpData(const GradingPrimaryOpData & rhs)
+    : m_style(rhs.m_style)
+    , m_value(std::make_shared<DynamicPropertyGradingPrimaryImpl>(GradingPrimary(rhs.m_style), false))
+{
+    *this = rhs;
+}
+
+GradingPrimaryOpData & GradingPrimaryOpData::operator=(const GradingPrimaryOpData & rhs)
+{
+    if (this == &rhs) return *this;
+
+    OpData::operator=(rhs);
+
+    m_style     = rhs.m_style;
+    m_direction = rhs.m_direction;
+
+    // Copy dynamic properties. Sharing happens when needed, with CPUop for instance.
+    m_value->setValue(rhs.m_value->getValue());
+    if (rhs.m_value->isDynamic())
+    {
+        m_value->makeDynamic();
+    }
+
+    return *this;
+}
+
 GradingPrimaryOpData::~GradingPrimaryOpData()
 {
 }
 
 GradingPrimaryOpDataRcPtr GradingPrimaryOpData::clone() const
 {
-    GradingPrimaryOpDataRcPtr res = std::make_shared<GradingPrimaryOpData>(getStyle());
-    *res = *this;
-
-    return res;
+    return std::make_shared<GradingPrimaryOpData>(*this);
 }
 
 void GradingPrimaryOpData::validate() const
@@ -210,23 +233,6 @@ void GradingPrimaryOpData::replaceDynamicProperty(DynamicPropertyGradingPrimaryI
 void GradingPrimaryOpData::removeDynamicProperty() noexcept
 {
     m_value->makeNonDynamic();
-}
-
-GradingPrimaryOpData & GradingPrimaryOpData::operator=(const GradingPrimaryOpData & rhs)
-{
-    if (this == &rhs) return *this;
-
-    OpData::operator=(rhs);
-
-    m_style     = rhs.m_style;
-    m_direction = rhs.m_direction;
-    // Copy dynamic properties. Sharing happens when needed, with CPUop for instance.
-    m_value->setValue(rhs.m_value->getValue());
-    if (rhs.m_value->isDynamic())
-    {
-        m_value->makeDynamic();
-    }
-    return *this;
 }
 
 bool GradingPrimaryOpData::operator==(const OpData & other) const

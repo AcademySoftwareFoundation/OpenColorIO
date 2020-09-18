@@ -197,11 +197,11 @@ namespace SampleICC
         return i;
     }
 
-    class IccTag
+    class IccTypeReader
     {
     public:
-        IccTag() {}
-        virtual ~IccTag() {}
+        IccTypeReader() {}
+        virtual ~IccTypeReader() {}
 
         virtual bool Read(std::istream & /* istream */, icUInt32Number /* size */)
         {
@@ -210,13 +210,241 @@ namespace SampleICC
 
         virtual bool IsParametricCurve() const { return false; }
 
-        static IccTag * Create(icTagTypeSignature sigType);
+        static IccTypeReader * Create(icTagTypeSignature sigType);
     };
 
-    class IccTagXYZ : public IccTag
+
+    // Note, the textDescriptionType is from the v2 spec (ICC.1:2001-04, pg 60). It is not included
+    // in the v4 spec (ICC.1:2010) but it is still found in many v4 profiles.
+    class IccTextDescriptionTypeReader : public IccTypeReader
     {
     public:
-        IccTagXYZ() {}
+        IccTextDescriptionTypeReader() = default;
+        virtual ~IccTextDescriptionTypeReader() = default;
+
+        virtual bool Read(std::istream & istream, icUInt32Number size)
+        {
+            mText.clear();
+
+            // Note that tag size include sig that has already been read.
+
+            if (sizeof(icSigProfileDescriptionTag) +
+                sizeof(icUInt32Number) + // reserved
+                sizeof(icUInt32Number) > size)
+            {
+                return false;
+            }
+
+            if (!istream.good())
+            {
+                return false;
+            }
+
+            icUInt32Number reserved; // reserved
+            if (!Read32(istream, &reserved, 1))
+            {
+                return false;
+            }
+
+            // Read the size of the string.
+
+            icUInt32Number textSize = 0;
+            if (!Read32(istream, &textSize, 1))
+            {
+                return false;
+            }
+
+            // Read the string itself.            
+
+            if (textSize)
+            {
+                mText.resize(textSize + 1);
+
+                // Completed with '\0' if the string is smaller than the expected size.
+                const icUInt32Number readTextSize = Read8(istream, (void*)mText.c_str(), textSize);
+                if (readTextSize != textSize) 
+                {
+                    mText.clear();
+                    return false;
+                }
+                else
+                {
+                    // Removes extra '\0' if any.
+                    const std::string::size_type pos = mText.find('\0');
+                    if (pos != std::string::npos)
+                    {
+                        mText.resize(pos);
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        inline const std::string & GetText() const { return mText; }
+
+    private:
+        std::string mText;
+    };
+
+    // Custom multi localized unicode reader to only find the one string following
+    // the heuristic described below i.e. flavor the USA / English string.
+    class IccMultiLocalizedUnicodeTypeReader : public IccTypeReader
+    {
+    public:
+        IccMultiLocalizedUnicodeTypeReader() = default;
+        virtual ~IccMultiLocalizedUnicodeTypeReader() = default;
+
+        virtual bool Read(std::istream & istream, icUInt32Number size)
+        {
+            mText.clear();
+
+            // Note that tag size include sig that has already been read.
+
+            if (sizeof(icTagTypeSignature) + 
+                (sizeof(icUInt32Number) * 3) > size)
+            {
+                return false;
+            }
+
+            if (!istream.good())
+            {
+                return false;
+            }
+
+            icUInt32Number reserved, nNumRec, nRecSize;
+  
+            if (!Read32(istream, &reserved, 1)
+                || !Read32(istream, &nNumRec, 1)
+                || !Read32(istream, &nRecSize, 1))
+            {
+                return false;
+            }
+
+            // Recognized version name records are 12 bytes each.
+            if (nRecSize != 12)
+            {
+                return false;
+            }
+
+            icLanguageCode nLanguageCode;
+            icCountryCode nRegionCode;
+            icUInt32Number nLength, nOffset;
+
+            // The heuristic for selecting the one string is:
+            // 1) US region
+            // 2) UK region
+            // 3) First EN language
+            // 4) First string of any kind
+            //
+            std::string foundCountryUSA;
+            std::string foundContryUK;
+            std::string foundLanguageEN;
+            std::string foundFirstEntry;
+
+            for (icUInt32Number i = 0; i < nNumRec; ++i)
+            {
+                if ( (4 * sizeof(icUInt32Number) + (i+1) * 12) > size)
+                {
+                    return false;
+                }
+
+                if (!Read16(istream, &nLanguageCode, 1)
+                    || !Read16(istream, &nRegionCode, 1)
+                    || !Read32(istream, &nLength, 1)
+                    || !Read32(istream, &nOffset, 1))
+                {
+                    return false;
+                }
+
+                if ((nOffset + nLength) > size)
+                {
+                    return false;
+                }
+
+                const icUInt32Number nNumChar = nLength / sizeof(icUInt16Number);
+                std::vector<icUInt16Number> unicodeStr(nNumChar, 0);
+
+                // Completed with '\0' if the string is smaller than the expected size.
+                const icUInt32Number readTextSize = Read16(istream, (void*)&unicodeStr[0], nNumChar);
+                if (readTextSize != nNumChar)
+                {
+                    return false;
+                }
+                else
+                {
+                    std::string str(nNumChar + 1, '\0');
+                    for (std::vector<icUInt16Number>::size_type idx = 0; idx < unicodeStr.size(); ++idx)
+                    {
+                        // As only the English language is supported the Basic Latin character set
+                        // is enough for all the English characters.
+                        str[idx] = static_cast<icUInt8Number>(unicodeStr[idx]);
+                    }
+
+                    // Removes extra '\0' if any.
+                    const std::string::size_type pos = str.find('\0');
+                    if (pos != std::string::npos)
+                    {
+                        str.resize(pos);
+                    }
+
+                    // As the order of the (country, language) is unknown, read all the strings
+                    // before selecting the right one.
+
+                    if (nRegionCode == icCountryCodeUSA)
+                    {
+                        // As soon as the US is found stop.
+                        foundCountryUSA = str;
+                        break;
+                    }
+                    if (nRegionCode == icCountryCodeUnitedKingdom && foundContryUK.empty())
+                    {
+                        foundContryUK = str;
+                    }
+                    if (nLanguageCode == icLanguageCodeEnglish && foundLanguageEN.empty())
+                    {
+                        foundLanguageEN = str;
+                    }
+                    if (i == 0)
+                    {
+                        foundFirstEntry = str;
+                    }
+                }
+            }
+
+            if (mText.empty())
+            {
+                if (!foundCountryUSA.empty())
+                {
+                    mText = foundCountryUSA;
+                }
+                else if (!foundContryUK.empty())
+                {
+                    mText = foundContryUK;
+                }
+                else if (!foundLanguageEN.empty())
+                {
+                    mText = foundLanguageEN;
+                }
+                else
+                {
+                    mText = foundFirstEntry;
+                }
+            }
+
+            return true;
+        }
+
+        inline const std::string & GetText() const { return mText; }
+
+    private:
+        std::string mText;
+    };
+
+    class IccXYZArrayTypeReader : public IccTypeReader
+    {
+    public:
+        IccXYZArrayTypeReader() {}
 
         virtual bool Read(std::istream & istream, icUInt32Number size)
         {
@@ -255,11 +483,11 @@ namespace SampleICC
 
     };
 
-    class IccTagParametricCurve : public IccTag
+    class IccParametricCurveTypeReader : public IccTypeReader
     {
     public:
-        IccTagParametricCurve() : mnNumParam(0), mParam(NULL) {}
-        ~IccTagParametricCurve()
+        IccParametricCurveTypeReader() : mnNumParam(0), mParam(NULL) {}
+        ~IccParametricCurveTypeReader()
         {
             if (mParam)
                 delete[] mParam;
@@ -331,10 +559,10 @@ namespace SampleICC
 
     };
 
-    class IccTagCurve : public IccTag
+    class IccCurveTypeReader : public IccTypeReader
     {
     public:
-        IccTagCurve() {}
+        IccCurveTypeReader() {}
 
         virtual bool Read(std::istream & istream, icUInt32Number size)
         {
@@ -377,23 +605,28 @@ namespace SampleICC
 
     };
 
-    IccTag * IccTag::Create(icTagTypeSignature sigType)
+    IccTypeReader * IccTypeReader::Create(icTagTypeSignature sigType)
     {
         if (icSigXYZArrayType == sigType)
-            return new IccTagXYZ;
+            return new IccXYZArrayTypeReader();
         else if (icSigParametricCurveType == sigType)
-            return new IccTagParametricCurve;
+            return new IccParametricCurveTypeReader();
         else if (icSigCurveType == sigType)
-            return new IccTagCurve;
+            return new IccCurveTypeReader();
+        else if (icSigTextDescriptionType == sigType)
+            return new IccTextDescriptionTypeReader();
+        else if (icSigMultiLocalizedUnicodeType == sigType)
+            return new IccMultiLocalizedUnicodeTypeReader();
 
-        return NULL;
+        return nullptr;
     }
 
     struct IccTagElement
     {
-        IccTagElement() : mTag(NULL) {}
+        IccTagElement() = default;
+
         icTag mTagInfo;
-        IccTag * mTag;
+        IccTypeReader * mTagReader = nullptr;
     };
     typedef std::vector<IccTagElement> TagVector;
 
@@ -428,10 +661,10 @@ namespace SampleICC
             TagVector::iterator itEnd = mTags.end();
             while (it != itEnd)
             {
-                if ((*it).mTag)
+                if ((*it).mTagReader)
                 {
-                    delete (*it).mTag;
-                    (*it).mTag = NULL;
+                    delete (*it).mTagReader;
+                    (*it).mTagReader = NULL;
                 }
                 ++it;
             }
@@ -452,12 +685,12 @@ namespace SampleICC
             return FindTag(sig) != mTags.end();
         }
 
-        IccTag * LoadTag(std::istream & istream, const icTagSignature & sig)
+        IccTypeReader * LoadTag(std::istream & istream, const icTagSignature & sig)
         {
             TagVector::iterator itTag = FindTag(sig);
             if (itTag == mTags.end())
                 return NULL;
-            if ((*itTag).mTag == NULL)
+            if ((*itTag).mTagReader == NULL)
             {
                 istream.seekg((*itTag).mTagInfo.offset);
                 if (istream.good())
@@ -465,25 +698,25 @@ namespace SampleICC
                     icTagTypeSignature sigType;
                     if (Read32(istream, &sigType, 1))
                     {
-                        IccTag * tag = IccTag::Create(sigType);
-                        if (tag)
+                        IccTypeReader * reader = IccTypeReader::Create(sigType);
+                        if (reader)
                         {
                             // Read
-                            if (tag->Read(istream, (*itTag).mTagInfo.size))
+                            if (reader->Read(istream, (*itTag).mTagInfo.size))
                             {
                                 // remember tag if read ok
-                                (*itTag).mTag = tag;
+                                (*itTag).mTagReader = reader;
                             }
                             else
                             {
-                                delete tag;
+                                delete reader;
                             }
                         }
                     }
                 }
 
             }
-            return (*itTag).mTag;
+            return (*itTag).mTagReader;
         }
 
         bool Validate(std::string & error) const
