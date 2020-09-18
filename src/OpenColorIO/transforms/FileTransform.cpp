@@ -448,9 +448,10 @@ void LoadFileUncached(FileFormat * & returnFormat,
     returnFormat = NULL;
 
     {
-        std::ostringstream os;
-        os << "Opening " << filepath;
-        LogDebug(os.str());
+        std::ostringstream oss;
+        oss << "**" << std::endl
+            << "Opening " << filepath;
+        LogDebug(oss.str());
     }
 
     // Try the initial format.
@@ -497,7 +498,7 @@ void LoadFileUncached(FileFormat * & returnFormat,
             {
                 std::ostringstream os;
                 os << "    Loaded primary format ";
-                os << tryFormat->getName();
+                os << tryFormat->getName() << std::endl;
                 LogDebug(os.str());
             }
 
@@ -756,9 +757,10 @@ void BuildFileTransformOps(OpRcPtrVec & ops,
     std::string filepath = context->resolveFileLocation(src.c_str());
 
     // Verify the recursion is valid, FileNoOp is added for each file.
-    for (ConstOpRcPtr&& op : ops)
+    for (const OpRcPtr & op : ops)
     {
-        ConstOpDataRcPtr data = op->data();
+        ConstOpRcPtr const_op(op);
+        ConstOpDataRcPtr data = const_op->data();
         auto fileData = DynamicPtrCast<const FileNoOpData>(data);
         if (fileData)
         {

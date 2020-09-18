@@ -44,6 +44,11 @@ bool IsPairInverseEnabled(OpData::Type type, OptimizationFlags flags)
     case OpData::LogType:
         return HasFlag(flags, OPTIMIZATION_PAIR_IDENTITY_LOG);
 
+    case OpData::GradingPrimaryType:
+    case OpData::GradingRGBCurveType:
+    case OpData::GradingToneType:
+        return HasFlag(flags, OPTIMIZATION_PAIR_IDENTITY_GRADING);
+
     case OpData::ExponentType:
     case OpData::MatrixType:
     case OpData::RangeType:
@@ -70,8 +75,10 @@ bool IsCombineEnabled(OpData::Type type, OptimizationFlags flags)
 
 constexpr int MAX_OPTIMIZATION_PASSES = 8;
 
-void RemoveNoOpTypes(OpRcPtrVec & opVec)
+int RemoveNoOpTypes(OpRcPtrVec & opVec)
 {
+    int count = 0;
+
     OpRcPtrVec::const_iterator iter = opVec.begin();
     while (iter != opVec.end())
     {
@@ -79,12 +86,15 @@ void RemoveNoOpTypes(OpRcPtrVec & opVec)
         if (o->data()->getType() == OpData::NoOpType)
         {
             iter = opVec.erase(iter);
+            ++count;
         }
         else
         {
             ++iter;
         }
     }
+
+    return count;
 }
 
 // Ops are preserved, dynamic properties are made non-dynamic.
@@ -141,7 +151,7 @@ int ReplaceIdentityOps(OpRcPtrVec & opVec, OptimizationFlags oFlags)
             const auto type = op->data()->getType();
             if (type != OpData::RangeType && // Do not replace a range identity.
                 ((type == OpData::GammaType && optIdGamma) ||
-                    (type != OpData::GammaType && optIdentity)) &&
+                 (type != OpData::GammaType && optIdentity)) &&
                 op->isIdentity())
             {
                 // Optimization flag is tested before.
@@ -514,12 +524,19 @@ void OpRcPtrVec::finalize(OptimizationFlags oFlags)
 
     if (IsDebugLoggingEnabled())
     {
-        LogDebug("Optimizing Op Vec...");
-        LogDebug(SerializeOpVec(*this, 4));
+        std::ostringstream oss;
+        oss << std::endl
+            << "**" << std::endl
+            << "Optimizing Op Vec..." << std::endl
+            << SerializeOpVec(*this, 4) << std::endl;
+
+        LogDebug(oss.str());
     }
 
+    const auto originalSize = size();
+
     // NoOpType can be removed (facilitates conversion to a CPU/GPUProcessor).
-    RemoveNoOpTypes(*this);
+    const int total_nooptype = RemoveNoOpTypes(*this);
 
     validate();
 
@@ -528,6 +545,19 @@ void OpRcPtrVec::finalize(OptimizationFlags oFlags)
 
     if (oFlags == OPTIMIZATION_NONE)
     {
+        if (IsDebugLoggingEnabled())
+        {
+            OpRcPtrVec::size_type finalSize = size();
+
+            std::ostringstream os;
+            os << "**" << std::endl;
+            os << "Optimized ";
+            os << originalSize << "->" << finalSize << ", 1 pass, ";
+            os << total_nooptype << " noop types removed\n";
+            os << SerializeOpVec(*this, 4);
+            LogDebug(os.str());
+        }
+
         return;
     }
 
@@ -543,11 +573,11 @@ void OpRcPtrVec::finalize(OptimizationFlags oFlags)
     // request and they may be altered by the following optimizations,
     // preserve their values.
 
-    const auto originalSize = size();
     int total_noops         = 0;
     int total_identityops   = 0;
     int total_inverseops    = 0;
     int total_combines      = 0;
+    int total_inverses      = 0;
     int passes              = 0;
 
     const bool optimizeIdentity = HasFlag(oFlags, OPTIMIZATION_IDENTITY);
@@ -568,10 +598,13 @@ void OpRcPtrVec::finalize(OptimizationFlags oFlags)
             // optimization is possible.
             if (fastLut)
             {
-                if (ReplaceInverseLuts(*this) == 0)
+                const int inverses = ReplaceInverseLuts(*this);
+                if (inverses == 0)
                 {
                     break;
                 }
+
+                total_inverses += inverses;
             }
             else
             {
@@ -603,13 +636,16 @@ void OpRcPtrVec::finalize(OptimizationFlags oFlags)
         OpRcPtrVec::size_type finalSize = size();
 
         std::ostringstream os;
+        os << "**" << std::endl;
         os << "Optimized ";
         os << originalSize << "->" << finalSize << ", ";
         os << passes << " passes, ";
+        os << total_nooptype << " noop types removed, ";
         os << total_noops << " noops removed, ";
         os << total_identityops << " identity ops replaced, ";
-        os << total_inverseops << " inverse ops removed\n";
-        os << total_combines << " ops combines\n";
+        os << total_inverseops << " inverse ops removed, ";
+        os << total_combines << " ops combines, ";
+        os << total_inverses << " ops inverted\n";
         os << SerializeOpVec(*this, 4);
         LogDebug(os.str());
     }

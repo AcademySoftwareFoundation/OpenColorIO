@@ -52,9 +52,28 @@ public:
         PYBIND11_OVERLOAD_PURE(unsigned, GpuShaderCreator, getTextureMaxWidth);
     }
 
-    bool addUniform(const char * name, const DynamicPropertyRcPtr & value) override
+    bool addUniform(const char * name, const GpuShaderCreator::DoubleGetter & getter) override
     {
-        PYBIND11_OVERLOAD_PURE(bool, GpuShaderCreator, addUniform, name, value);
+        PYBIND11_OVERLOAD_PURE(bool, GpuShaderCreator, addUniform, name, getter);
+    }
+
+    bool addUniform(const char * name, const GpuShaderCreator::BoolGetter & getBool) override
+    {
+        PYBIND11_OVERLOAD_PURE(bool, GpuShaderCreator, addUniform, name, getBool);
+    }
+
+    bool addUniform(const char * name,
+                    const GpuShaderCreator::SizeGetter & getSize,
+                    const GpuShaderCreator::FloatArrayGetter & getFloatArray) override
+    {
+        PYBIND11_OVERLOAD_PURE(bool, GpuShaderCreator, addUniform, name, getSize, getFloatArray);
+    }
+
+    bool addUniform(const char * name,
+                    const GpuShaderCreator::SizeGetter & getSize,
+                    const GpuShaderCreator::IntArrayGetter & getInt2Array) override
+    {
+        PYBIND11_OVERLOAD_PURE(bool, GpuShaderCreator, addUniform, name, getSize, getInt2Array);
     }
 
     void addTexture(const char * textureName,
@@ -137,6 +156,13 @@ public:
     }
 };
 
+enum GpuShaderCreatorIterator
+{
+    IT_DYNAMIC_PROPERTY = 0,
+};
+
+using DynamicPropertyIterator = PyIterator<GpuShaderCreatorRcPtr, IT_DYNAMIC_PROPERTY>;
+
 } // namespace
 
 void bindPyGpuShaderCreator(py::module & m)
@@ -163,12 +189,22 @@ void bindPyGpuShaderCreator(py::module & m)
         .def("getTextureMaxWidth", &GpuShaderCreator::getTextureMaxWidth)
         .def("setTextureMaxWidth", &GpuShaderCreator::setTextureMaxWidth, "maxWidth"_a)
         .def("getNextResourceIndex", &GpuShaderCreator::getNextResourceIndex)
-        .def("addUniform", &GpuShaderCreator::addUniform, "name"_a, "value"_a)
         .def("addTexture", &GpuShaderCreator::addTexture, 
              "textureName"_a, "samplerName"_a, "uid"_a, "width"_a, "height"_a, "channel"_a, 
              "interpolation"_a, "values"_a)
         .def("add3DTexture", &GpuShaderCreator::add3DTexture,
              "textureName"_a, "samplerName"_a, "uid"_a, "edgeLen"_a, "interpolation"_a, "values"_a)
+
+        // Dynamic properties.
+        .def("hasDynamicProperty", &GpuShaderCreator::hasDynamicProperty, "type"_a)
+        .def("getDynamicProperty", [](GpuShaderCreatorRcPtr & self, DynamicPropertyType type)
+            {
+                return self->getDynamicProperty(type);
+            }, "type"_a)
+        .def("getDynamicProperties", [](GpuShaderCreatorRcPtr & self)
+            {
+                return DynamicPropertyIterator(self);
+            })
 
         // Methods to specialize parts of a OCIO shader program
         .def("addToDeclareShaderCode", &GpuShaderCreator::addToDeclareShaderCode, "shaderCode"_a)
@@ -190,6 +226,18 @@ void bindPyGpuShaderCreator(py::module & m)
         .value("TEXTURE_RGB_CHANNEL", GpuShaderCreator::TEXTURE_RGB_CHANNEL)
         .export_values();
 
+    py::class_<DynamicPropertyIterator>(cls, "DynamicPropertyIterator")
+    .def("__len__", [](DynamicPropertyIterator & it) { return it.m_obj->getNumDynamicProperties(); })
+    .def("__getitem__", [](DynamicPropertyIterator & it, int i)
+        {
+            return it.m_obj->getDynamicProperty(i);
+        })
+    .def("__iter__", [](DynamicPropertyIterator & it) -> DynamicPropertyIterator & { return it; })
+    .def("__next__", [](DynamicPropertyIterator & it)
+        {
+            int i = it.nextIndex(it.m_obj->getNumDynamicProperties());
+            return it.m_obj->getDynamicProperty(i);
+        });
     // Subclasses
     bindPyGpuShaderDesc(m);
 }

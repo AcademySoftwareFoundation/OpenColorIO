@@ -5,6 +5,9 @@
 #ifndef INCLUDED_OCIO_OPENCOLORTRANSFORMS_H
 #define INCLUDED_OCIO_OPENCOLORTRANSFORMS_H
 
+#include <initializer_list>
+#include <limits>
+
 #include "OpenColorTypes.h"
 
 #ifndef OCIO_NAMESPACE
@@ -370,39 +373,382 @@ private:
 
 extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const DisplayViewTransform &);
 
+/**
+ * Used by the grading transforms to hold the red, green, blue, and master components
+ * of a single parameter.  The master component affects all three channels (RGB).
+ */
+struct OCIOEXPORT GradingRGBM
+{
+    GradingRGBM() = default;
+    GradingRGBM(const GradingRGBM &) = default;
+    GradingRGBM(double red, double green, double blue, double master)
+        : m_red(red)
+        , m_green(green)
+        , m_blue(blue)
+        , m_master(master)
+    {
+    }
+    GradingRGBM(const double(&rgbm)[4])
+        : m_red(rgbm[0])
+        , m_green(rgbm[1])
+        , m_blue(rgbm[2])
+        , m_master(rgbm[3])
+    {
+    }
+    double m_red{ 0. };
+    double m_green{ 0. };
+    double m_blue{ 0. };
+    double m_master{ 0. };
+};
+
+extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const GradingRGBM &);
+
+/// Grading primary values.
+struct OCIOEXPORT GradingPrimary
+{
+    GradingPrimary() = delete;
+    GradingPrimary(const GradingPrimary &) = default;
+    explicit GradingPrimary(GradingStyle style)
+        : m_pivot(style == GRADING_LOG ? -0.2 : 0.18)
+        , m_clampBlack(NoClampBlack())
+        , m_clampWhite(NoClampWhite())
+    {
+    }
+
+    GradingRGBM m_brightness{ 0.0, 0.0, 0.0, 0.0 };
+    GradingRGBM m_contrast  { 1.0, 1.0, 1.0, 1.0 };
+    GradingRGBM m_gamma     { 1.0, 1.0, 1.0, 1.0 };
+    GradingRGBM m_offset    { 0.0, 0.0, 0.0, 0.0 };
+    GradingRGBM m_exposure  { 0.0, 0.0, 0.0, 0.0 };
+    GradingRGBM m_lift      { 0.0, 0.0, 0.0, 0.0 };
+    GradingRGBM m_gain      { 1.0, 1.0, 1.0, 1.0 };
+
+    double m_saturation{ 1.0 };
+    double m_pivot; // For LOG default is -0.2. LIN default is 0.18.
+    double m_pivotBlack{ 0.0 };
+    double m_pivotWhite{ 1.0 };
+    double m_clampBlack;
+    double m_clampWhite;
+
+    /// The valid range for each parameter varies.
+    void validate() const;
+
+    static double NoClampBlack();
+    static double NoClampWhite();
+};
+
+extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const GradingPrimary &);
+
+/// 2D control point used by \ref GradingBSplineCurve.
+struct GradingControlPoint
+{
+    GradingControlPoint() = default;
+    GradingControlPoint(const GradingControlPoint &) = default;
+    GradingControlPoint(float x, float y) : m_x(x), m_y(y) {}
+    float m_x{ 0.f };
+    float m_y{ 0.f };
+};
+
+extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const GradingControlPoint &);
+
+/// A BSpline curve defined with \ref GradingControlPoint.
+class OCIOEXPORT GradingBSplineCurve
+{
+public:
+    /// Create a BSpline curve with a specified number of control points.
+    static GradingBSplineCurveRcPtr Create(size_t size);
+    /// Create a BSpline curve with a list of control points.
+    static GradingBSplineCurveRcPtr Create(std::initializer_list<GradingControlPoint> values);
+
+    virtual GradingBSplineCurveRcPtr createEditableCopy() const = 0;
+    virtual size_t getNumControlPoints() const noexcept = 0;
+    virtual void setNumControlPoints(size_t size) = 0;
+    virtual const GradingControlPoint & getControlPoint(size_t index) const = 0;
+    virtual GradingControlPoint & getControlPoint(size_t index) = 0;
+    virtual void validate() const = 0;
+
+    GradingBSplineCurve(const GradingBSplineCurve &) = delete;
+    GradingBSplineCurve & operator= (const GradingBSplineCurve &) = delete;
+
+    // Do not use (needed only for pybind11).
+    virtual ~GradingBSplineCurve() = default;
+
+protected:
+    GradingBSplineCurve() = default;
+};
+
+extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const GradingBSplineCurve &);
 
 /**
- * Allows transform parameter values to be set on-the-fly
- * (after finalization).  For example, to modify the exposure in a viewport.
+ * A set of red, green, blue and master curves. It is used by RGBCurveTransform and can be used as
+ * a dynamic property (see \ref DynamicPropertyGradingRGBCurve).
+ */
+class OCIOEXPORT GradingRGBCurve
+{
+public:
+    static GradingRGBCurveRcPtr Create(GradingStyle style);
+    static GradingRGBCurveRcPtr Create(const ConstGradingRGBCurveRcPtr & rhs);
+    static GradingRGBCurveRcPtr Create(const ConstGradingBSplineCurveRcPtr & red,
+                                       const ConstGradingBSplineCurveRcPtr & green,
+                                       const ConstGradingBSplineCurveRcPtr & blue,
+                                       const ConstGradingBSplineCurveRcPtr & master);
+
+    virtual GradingRGBCurveRcPtr createEditableCopy() const = 0;
+    virtual void validate() const = 0;
+    virtual bool isIdentity() const = 0;
+    virtual ConstGradingBSplineCurveRcPtr getCurve(RGBCurveType c) const = 0;
+    virtual GradingBSplineCurveRcPtr getCurve(RGBCurveType c) = 0;
+
+    // Do not use (needed only for pybind11).
+    virtual ~GradingRGBCurve() = default;
+
+protected:
+    GradingRGBCurve() = default;
+};
+
+extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const GradingRGBCurve &);
+
+/**
+ * Used by the grading tone transforms to hold the red, green, blue, master, start,
+ * and width components of a single parameter.  The master component affects all three channels
+ * (RGB).  The start and width components control the range of tones affected. Although this
+ * struct simply uses "start" and "width" for all the range values, the actual user-facing name
+ * changes based on the parameter.
+ */
+struct OCIOEXPORT GradingRGBMSW
+{
+    GradingRGBMSW() = default;
+    GradingRGBMSW(const GradingRGBMSW &) = default;
+    GradingRGBMSW(double red, double green, double blue, double master, double start, double width)
+        : m_red   (red)
+        , m_green (green)
+        , m_blue  (blue)
+        , m_master(master)
+        , m_start (start)
+        , m_width (width)
+    {
+    }
+    GradingRGBMSW(const double(&rgbmsw)[6])
+        : m_red   (rgbmsw[0])
+        , m_green (rgbmsw[1])
+        , m_blue  (rgbmsw[2])
+        , m_master(rgbmsw[3])
+        , m_start (rgbmsw[4])
+        , m_width (rgbmsw[5])
+    {
+    }
+    GradingRGBMSW(double start, double width)
+        : m_start(start)
+        , m_width(width)
+    {
+    }
+    double m_red   { 1. };
+    double m_green { 1. };
+    double m_blue  { 1. };
+    double m_master{ 1. };
+    double m_start { 0. }; // Or center for midtones.
+    double m_width { 1. }; // Or pivot for shadows and highlights.
+};
+
+extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const GradingRGBMSW &);
+
+/// Grading tone values.
+struct OCIOEXPORT GradingTone
+{
+    GradingTone() = delete;
+    GradingTone(const GradingTone &) = default;
+    explicit GradingTone(GradingStyle style)
+        : m_blacks(style == GRADING_LIN ? GradingRGBMSW(0., 4.) :
+                  (style == GRADING_LOG ? GradingRGBMSW(0.4, 0.4) :
+                                          GradingRGBMSW(0.4, 0.4)))
+        , m_shadows(style == GRADING_LIN ? GradingRGBMSW(2., -7.) :
+                   (style == GRADING_LOG ? GradingRGBMSW(0.5, 0.) :
+                                           GradingRGBMSW(0.6, 0.)))
+        , m_midtones(style == GRADING_LIN ? GradingRGBMSW(0., 8.) :
+                    (style == GRADING_LOG ? GradingRGBMSW(0.4, 0.6) :
+                                            GradingRGBMSW(0.4, 0.7)))
+        , m_highlights(style == GRADING_LIN ? GradingRGBMSW(-2., 9.) :
+                      (style == GRADING_LOG ? GradingRGBMSW(0.3, 1.) :
+                                              GradingRGBMSW(0.2, 1.)))
+        , m_whites(style == GRADING_LIN ? GradingRGBMSW(0., 8.) :
+                  (style == GRADING_LOG ? GradingRGBMSW(0.4, 0.5) :
+                                          GradingRGBMSW(0.5, 0.5)))
+    {
+    }
+
+    /**
+     * The valid range for each parameter varies. The client is expected to enforce
+     * these bounds in the UI.
+     */
+    void validate() const;
+
+    GradingRGBMSW m_blacks;
+    GradingRGBMSW m_shadows;
+    GradingRGBMSW m_midtones;
+    GradingRGBMSW m_highlights;
+    GradingRGBMSW m_whites;
+    double m_scontrast{ 1.0 };
+};
+
+extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const GradingTone &);
+
+/**
+ * Allows transform parameter values to be set on-the-fly (after finalization).  For
+ * example, to modify the exposure in a viewport.  Dynamic properties can be accessed from the
+ * :cpp:class:`CPUProcessor` or :cpp:class:`GpuShaderCreator` to change values between processing.
+ *
+ * .. code-block:: cpp
+ *
+ *    OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
+ *    OCIO::ConstProcessorRcPtr processor = config->getProcessor(colorSpace1, colorSpace2);
+ *    OCIO::ConstCPUProcessorRcPtr cpuProcessor = processor->getDefaultCPUProcessor();
+ *
+ *    if (cpuProcessor->hasDynamicProperty(OCIO::DYNAMIC_PROPERTY_EXPOSURE))
+ *    {
+ *        // Get the in-memory implementation of the dynamic property.
+ *        OCIO::DynamicPropertyRcPtr dynProp =
+ *            cpuProcessor->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_EXPOSURE);
+ *        // Get the interface used to change the double value.
+ *        OCIO::DynamicPropertyDoubleRcPtr exposure =
+ *            OCIO::DynamicPropertyValue::AsDouble(dynProp);
+ *        // Update of the dynamic property instance with the new value.
+ *        exposure->setValue(1.1f);
+ *    }
+ *    if (cpuProcessor->hasDynamicProperty(OCIO::DYNAMIC_PROPERTY_GRADING_PRIMARY))
+ *    {
+ *        OCIO::DynamicPropertyRcPtr dynProp =
+ *            cpuProcessor->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_GRADING_PRIMARY);
+ *        OCIO::DynamicPropertyGradingPrimaryRcPtr primaryProp =
+ *            OCIO::DynamicPropertyValue::AsGradingPrimary(dynProp);
+ *        OCIO::GradingPrimary primary = primaryProp->getValue();
+ *        primary.m_saturation += 0.1f;
+ *        rgbCurveProp->setValue(primary);
+ *    }
+ *    if (cpuProcessor->hasDynamicProperty(OCIO::DYNAMIC_PROPERTY_GRADING_RGBCURVE))
+ *    {
+ *        OCIO::DynamicPropertyRcPtr dynProp =
+ *            cpuProcessor->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_GRADING_RGBCURVE);
+ *        OCIO::DynamicPropertyGradingRGBCurveRcPtr rgbCurveProp =
+ *            OCIO::DynamicPropertyValue::AsGradingRGBCurve(dynProp);
+ *        OCIO::ConstGradingRGBCurveRcPtr rgbCurve = rgbCurveProp->getValue()->createEditableCopy();
+ *        OCIO::GradingBSplineCurveRcPtr rCurve = rgbCurve->getCurve(OCIO::RGB_RED);
+ *        rCurve->getControlPoint(1).m_y += 0.1f;
+ *        rgbCurveProp->setValue(rgbCurve);
+ *    }
  */
 class OCIOEXPORT DynamicProperty
 {
 public:
-    virtual DynamicPropertyType getType() const = 0;
-
-    virtual DynamicPropertyValueType getValueType() const = 0;
-
-    virtual double getDoubleValue() const = 0;
-    virtual void setValue(double value) = 0;
-
-    virtual bool isDynamic() const = 0;
+    virtual DynamicPropertyType getType() const noexcept = 0;
 
     DynamicProperty & operator=(const DynamicProperty &) = delete;
-    virtual ~DynamicProperty();
+    DynamicProperty(const DynamicProperty &) = delete;
+
+    // Do not use (needed only for pybind11).
+    virtual ~DynamicProperty() = default;
 
 protected:
-    DynamicProperty();
-    DynamicProperty(const DynamicProperty &);
+    DynamicProperty() = default;
+};
+
+namespace DynamicPropertyValue
+{
+/**
+ * Get the property as DynamicPropertyDoubleRcPtr to access the double value. Will throw if
+ * property type is not a type that holds a double such as DYNAMIC_PROPERTY_EXPOSURE.
+ */
+extern OCIOEXPORT DynamicPropertyDoubleRcPtr AsDouble(DynamicPropertyRcPtr & prop);
+/**
+ * Get the property as DynamicPropertyGradingPrimaryRcPtr to access the GradingPrimary value. Will
+ * throw if property type is not DYNAMIC_PROPERTY_GRADING_PRIMARY.
+ */
+extern OCIOEXPORT DynamicPropertyGradingPrimaryRcPtr AsGradingPrimary(DynamicPropertyRcPtr & prop);
+/**
+ * Get the property as DynamicPropertyGradingRGBCurveRcPtr to access the GradingRGBCurveRcPtr
+ * value. Will throw if property type is not DYNAMIC_PROPERTY_GRADING_RGBCURVE.
+ */
+extern OCIOEXPORT DynamicPropertyGradingRGBCurveRcPtr AsGradingRGBCurve(DynamicPropertyRcPtr & prop);
+/**
+ * Get the property as DynamicPropertyGradingToneRcPtr to access the GradingTone value. Will throw
+ * if property type is not DYNAMIC_PROPERTY_GRADING_TONE.
+ */
+extern OCIOEXPORT DynamicPropertyGradingToneRcPtr AsGradingTone(DynamicPropertyRcPtr & prop);
+}
+
+/// Interface used to access dynamic property double value.
+class OCIOEXPORT DynamicPropertyDouble
+{
+public:
+    virtual double getValue() const = 0;
+    virtual void setValue(double value) = 0;
+
+    DynamicPropertyDouble(const DynamicPropertyDouble &) = delete;
+    DynamicPropertyDouble & operator=(const DynamicPropertyDouble &) = delete;
+    // Do not use (needed only for pybind11).
+    virtual ~DynamicPropertyDouble() = default;
+
+protected:
+    DynamicPropertyDouble() = default;
+};
+
+/// Interface used to access dynamic property GradingPrimary value.
+class OCIOEXPORT DynamicPropertyGradingPrimary
+{
+public:
+    virtual const GradingPrimary & getValue() const = 0;
+    /// Will throw if value is not valid.
+    virtual void setValue(const GradingPrimary & value) = 0;
+
+    DynamicPropertyGradingPrimary(const DynamicPropertyGradingPrimary &) = delete;
+    DynamicPropertyGradingPrimary & operator=(const DynamicPropertyGradingPrimary &) = delete;
+    // Do not use (needed only for pybind11).
+    virtual ~DynamicPropertyGradingPrimary() = default;
+
+protected:
+    DynamicPropertyGradingPrimary() = default;
+};
+
+/// Interface used to access dynamic property ConstGradingRGBCurveRcPtr value.
+class OCIOEXPORT DynamicPropertyGradingRGBCurve
+{
+public:
+    virtual const ConstGradingRGBCurveRcPtr & getValue() const = 0;
+    /// Will throw if value is not valid.
+    virtual void setValue(const ConstGradingRGBCurveRcPtr & value) = 0;
+
+    DynamicPropertyGradingRGBCurve(const DynamicPropertyGradingRGBCurve &) = delete;
+    DynamicPropertyGradingRGBCurve & operator=(const DynamicPropertyGradingRGBCurve &) = delete;
+    // Do not use (needed only for pybind11).
+    virtual ~DynamicPropertyGradingRGBCurve() = default;
+
+protected:
+    DynamicPropertyGradingRGBCurve() = default;
+};
+
+/// Interface used to access dynamic property GradingTone value.
+class OCIOEXPORT DynamicPropertyGradingTone
+{
+public:
+    virtual const GradingTone & getValue() const = 0;
+    /// Will throw if value is not valid.
+    virtual void setValue(const GradingTone & value) = 0;
+
+    DynamicPropertyGradingTone(const DynamicPropertyGradingTone &) = delete;
+    DynamicPropertyGradingTone & operator=(const DynamicPropertyGradingTone &) = delete;
+    // Do not use (needed only for pybind11).
+    virtual ~DynamicPropertyGradingTone() = default;
+
+protected:
+    DynamicPropertyGradingTone() = default;
 };
 
 
 /**
  * \brief Represents exponent transform: pow( clamp(color), value ).
  *
- * ​.. note::
- *    For configs with version == 1: Negative style is ignored and if the exponent is 1.0,
- *    this will not clamp. Otherwise, the input color will be clamped between [0.0, inf].
- *    For configs with version > 1: Negative value handling may be specified via setNegativeStyle.
+ * \note For configs with version == 1: Negative style is ignored and if the exponent is 1.0,
+ * this will not clamp. Otherwise, the input color will be clamped between [0.0, inf].
+ * For configs with version > 1: Negative value handling may be specified via setNegativeStyle.
  */
 class OCIOEXPORT ExponentTransform : public Transform
 {
@@ -533,6 +879,7 @@ public:
     virtual void setExposure(double exposure) = 0;
     virtual bool isExposureDynamic() const = 0;
     virtual void makeExposureDynamic() = 0;
+    virtual void makeExposureNonDynamic() = 0;
 
     virtual double getContrast() const = 0;
     /**
@@ -546,10 +893,13 @@ public:
     virtual void setContrast(double contrast) = 0;
     virtual bool isContrastDynamic() const = 0;
     virtual void makeContrastDynamic() = 0;
+    virtual void makeContrastNonDynamic() = 0;
+
     virtual double getGamma() const = 0;
     virtual void setGamma(double gamma) = 0;
     virtual bool isGammaDynamic() const = 0;
     virtual void makeGammaDynamic() = 0;
+    virtual void makeGammaNonDynamic() = 0;
 
     virtual double getPivot() const = 0;
     /**
@@ -686,6 +1036,175 @@ protected:
 };
 
 extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const FixedFunctionTransform &);
+
+
+/**
+ * Primary color correction controls.
+ *
+ * This transform is for making basic color correction adjustments to an image such as brightness,
+ * contrast, or saturation.
+ *
+ * The controls are customized for linear, logarithmic, and video color encodings.
+ * * Linear controls: Exposure, Contrast, Pivot, Offset, Saturation, Black Clip, White Clip.
+ * * Log controls: Brightness, Contrast, Pivot, Log Gamma, Saturation, Black Clip, White Clip,
+ *                 Black Pivot White Pivot.
+ * * Video controls : Lift, Gamma, Gain, Offset, Saturation, Black Clip, White Clip,
+ *                    Black Pivot White Pivot.
+ *
+ * The controls are dynamic, so they may be adjusted even after the Transform has been included
+ * in a Processor.
+ */
+class OCIOEXPORT GradingPrimaryTransform : public Transform
+{
+public:
+    /// Creates an instance of GradingPrimaryTransform.
+    static GradingPrimaryTransformRcPtr Create(GradingStyle style);
+
+    virtual const FormatMetadata & getFormatMetadata() const noexcept = 0;
+    virtual FormatMetadata & getFormatMetadata() noexcept = 0;
+
+    /// Checks if this equals other.
+    virtual bool equals(const GradingPrimaryTransform & other) const noexcept = 0;
+
+    /// Adjusts the behavior of the transform for log, linear, or video color space encodings.
+    virtual GradingStyle getStyle() const noexcept = 0;
+    /// Will reset value to style's defaults if style is not the current style.
+    virtual void setStyle(GradingStyle style) noexcept = 0;
+
+    virtual const GradingPrimary & getValue() const = 0;
+    /// Throws if value is not valid.
+    virtual void setValue(const GradingPrimary & values) = 0;
+
+    virtual bool isDynamic() const noexcept = 0;
+    virtual void makeDynamic() noexcept = 0;
+    virtual void makeNonDynamic() noexcept = 0;
+
+    GradingPrimaryTransform(const GradingPrimaryTransform &) = delete;
+    GradingPrimaryTransform & operator= (const GradingPrimaryTransform &) = delete;
+    // Do not use (needed only for pybind11).
+    virtual ~GradingPrimaryTransform() = default;
+
+protected:
+    GradingPrimaryTransform() = default;
+};
+
+extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const GradingPrimaryTransform &) noexcept;
+
+
+/**
+ * RGB curve color correction controls.
+ *
+ * This transform allows for modifying tone reproduction via B-spline curves.
+ *
+ * There is an R, G, and B curve along with a Master curve (that applies to R, G, and B).  Each
+ * curve is specified via the x and y coordinates of its control points.  A monotonic spline is
+ * fit to the control points.  The x coordinates must be non-decreasing. When the grading style
+ * is linear, the units for the control points are photographic stops relative to 0.18.
+ *
+ * The control points are dynamic, so they may be adjusted even after the Transform is included
+ * in a Processor.
+ */
+class OCIOEXPORT GradingRGBCurveTransform : public Transform
+{
+public:
+    /// Creates an instance of GradingPrimaryTransform.
+    static GradingRGBCurveTransformRcPtr Create(GradingStyle style);
+
+    virtual const FormatMetadata & getFormatMetadata() const noexcept = 0;
+    virtual FormatMetadata & getFormatMetadata() noexcept = 0;
+
+    /// Checks if this equals other.
+    virtual bool equals(const GradingRGBCurveTransform & other) const noexcept = 0;
+
+    /// Adjusts the behavior of the transform for log, linear, or video color space encodings.
+    virtual GradingStyle getStyle() const noexcept = 0;
+    /// Will reset value to style's defaults if style is not the current style.
+    virtual void setStyle(GradingStyle style) noexcept = 0;
+
+    virtual const ConstGradingRGBCurveRcPtr getValue() const = 0;
+    /// Throws if value is not valid.
+    virtual void setValue(const ConstGradingRGBCurveRcPtr & values) = 0;
+
+    /**
+     * The scene-linear grading style applies a lin-to-log transform to the pixel
+     * values before going through the curve.  However, in some cases (e.g. drawing curves in a UI)
+     * it may be useful to bypass the lin-to-log. Default value is false.
+     */
+    virtual bool getBypassLinToLog() const = 0;
+    virtual void setBypassLinToLog(bool bypass) = 0;
+
+    virtual bool isDynamic() const noexcept = 0;
+    virtual void makeDynamic() noexcept = 0;
+    virtual void makeNonDynamic() noexcept = 0;
+
+    GradingRGBCurveTransform(const GradingRGBCurveTransform &) = delete;
+    GradingRGBCurveTransform & operator= (const GradingRGBCurveTransform &) = delete;
+    // Do not use (needed only for pybind11).
+    virtual ~GradingRGBCurveTransform() = default;
+
+protected:
+    GradingRGBCurveTransform() = default;
+};
+
+extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const GradingRGBCurveTransform &) noexcept;
+
+
+/**
+ * Tonal color correction controls.
+ *
+ * This transform is for making fine adjustments to tone reproduction in specific tonal ranges.
+ *
+ * There are five tonal controls and each one has two parameters to control its range:
+ * * Blacks (start, width)
+ * * Shadows(start, pivot)
+ * * Midtones(center, width)
+ * * Highlights(start, pivot)
+ * * Whites(start, width)
+ *
+ * The transform has three styles that adjust the response and default ranges for linear,
+ * logarithimic, and video color encodings. The defaults vary based on the style.  When the
+ * style is linear, the units for start/width/etc. are photographic stops relative to 0.18.
+ *
+ * Each control allows R, G, B adjustments and a Master adjustment.
+ *
+ * There is also an S-contrast control for imparting an S-shape curve.
+ * 
+ * The controls are dynamic, so they may be adjusted even after the Transform has been included
+ * in a Processor.
+ */
+class OCIOEXPORT GradingToneTransform : public Transform
+{
+public:
+    /// Creates an instance of GradingToneTransform.
+    static GradingToneTransformRcPtr Create(GradingStyle style);
+
+    virtual const FormatMetadata & getFormatMetadata() const noexcept = 0;
+    virtual FormatMetadata & getFormatMetadata() noexcept = 0;
+
+    virtual bool equals(const GradingToneTransform & other) const noexcept = 0;
+
+    /// Adjusts the behavior of the transform for log, linear, or video color space encodings.
+    virtual GradingStyle getStyle() const noexcept = 0;
+    /// Will reset value to style's defaults if style is not the current style.
+    virtual void setStyle(GradingStyle style) noexcept = 0;
+
+    virtual const GradingTone & getValue() const = 0;
+    virtual void setValue(const GradingTone & values) = 0;
+
+    virtual bool isDynamic() const noexcept = 0;
+    virtual void makeDynamic() noexcept = 0;
+    virtual void makeNonDynamic() noexcept = 0;
+
+    GradingToneTransform(const GradingToneTransform &) = delete;
+    GradingToneTransform & operator= (const GradingToneTransform &) = delete;
+    // Do not use (needed only for pybind11).
+    virtual ~GradingToneTransform() = default;
+
+protected:
+    GradingToneTransform() = default;
+};
+
+extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const GradingToneTransform &) noexcept;
 
 
 class OCIOEXPORT GroupTransform : public Transform

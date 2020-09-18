@@ -5,9 +5,9 @@
 #ifndef INCLUDED_OCIO_GPUSHADERUTILS_H
 #define INCLUDED_OCIO_GPUSHADERUTILS_H
 
-#include <OpenColorIO/OpenColorIO.h>
-
 #include <sstream>
+
+#include <OpenColorIO/OpenColorIO.h>
 
 
 namespace OCIO_NAMESPACE
@@ -30,6 +30,7 @@ public:
         GpuShaderLine& operator<<(float value);
         GpuShaderLine& operator<<(double value);
         GpuShaderLine& operator<<(unsigned value);
+        GpuShaderLine& operator<<(int value);
         GpuShaderLine& operator<<(const std::string & str);
         GpuShaderLine& operator=(const GpuShaderLine & rhs);
 
@@ -63,13 +64,20 @@ public:
     void dedent();
 
     //
-    // Scalar helper functions
+    // Scalar & arrays helper functions.
     //
 
-    // Declare a float variable
-    void declareVar(const std::string& name, float v);
-    // Declare a float variable
-    void declareVar(const std::string& name, const std::string& v);
+    // Declare a float variable.
+    void declareVar(const std::string & name, float v);
+
+    // Declare a bool variable.
+    void declareVar(const std::string & name, bool v);
+
+    // Declare a float array variable.
+    void declareFloatArrayConst(const std::string & name, int size, const float * v);
+
+    // Declare a int2 array variable.
+    void declareInt2ArrayConst(const std::string & name, int size, const int * v);
 
     //
     // Vec2f helper functions
@@ -154,7 +162,14 @@ public:
     // Get the texture lookup call for a 3D texture.
     std::string sampleTex3D(const std::string& textureName, const std::string& coords) const;
 
+    //
+    // Uniform helpers
+    //
+
     void declareUniformFloat(const std::string & uniformName);
+    void declareUniformBool(const std::string & uniformName);
+    void declareUniformArrayFloat(const std::string & uniformName, unsigned int size);
+    void declareUniformArrayInt2(const std::string & uniformName, unsigned int size);
 
     //
     // Matrix multiplication helpers
@@ -170,7 +185,7 @@ public:
 
     // Get the string for linearly interpolating two quantities
     std::string lerp(const std::string& x, const std::string& y, 
-                        const std::string& a) const;
+                     const std::string& a) const;
 
     // Get the string for creating a three or four-elements 'greater than' comparison
     //    Each element i in the resulting vector is 1 if a>b, or 0 otherwise.
@@ -190,6 +205,9 @@ private:
     //    resets the current line.
     void flushLine();
 
+    std::string floatKeyword() const;
+    std::string int2Keyword() const;
+
 private:
     // Shader language to use in the various shader text builder methods.
     GpuLanguage m_lang; 
@@ -208,6 +226,19 @@ private:
     // Indentation level to use for the next line.
     unsigned m_indent;
 };
+
+// Create a resource name prepending the prefix of the shaderCreator to base.
+std::string BuildResourceName(GpuShaderCreatorRcPtr & shaderCreator, const std::string & prefix,
+                              const std::string & base);
+
+//
+// Math functions used by multiple GPU renderers.
+//
+
+// Convert scene-linear values to "grading log".
+void AddLinToLogShader(GpuShaderText & st);
+// Convert "grading log" values to scene-linear.
+void AddLogToLinShader(GpuShaderText & st);
 
 } // namespace OCIO_NAMESPACE
 

@@ -99,11 +99,6 @@ jobs:
       CXX: ${{ matrix.cxx-compiler }}
       CC: ${{ matrix.cc-compiler }}
     steps:
-      # TODO: Remove this workaround following resolution of:
-      #       https://github.com/AcademySoftwareFoundation/aswf-docker/issues/43
-      - name: Setup container
-        run: sudo rm -rf /usr/local/lib64/cmake/glew
-        if: matrix.vfx-cy == 2020
       - name: Checkout
         uses: actions/checkout@v2
       - name: Install latest ext package versions
@@ -144,7 +139,7 @@ jobs:
           cmake --build . \
                 --target install \
                 --config Release \
-                -- -j2
+                -- -j$(nproc)
         working-directory: _build
       - name: Test
         run: ctest -V
@@ -168,10 +163,6 @@ jobs:
       CXX: g++
       CC: gcc
     steps:
-      # TODO: Remove this workaround following resolution of:
-      #       https://github.com/AcademySoftwareFoundation/aswf-docker/issues/43
-      - name: Setup container
-        run: sudo rm -rf /usr/local/lib64/cmake/glew
       - name: Checkout
         uses: actions/checkout@v2
         with:

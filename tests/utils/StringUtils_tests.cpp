@@ -19,6 +19,17 @@ OCIO_ADD_TEST(StringUtils, cases)
         const std::string str = StringUtils::Upper(ref);
         OCIO_CHECK_EQUAL(str, "LOWER 1*& CTFG");
     }
+
+    {
+        const std::string str = StringUtils::Lower(nullptr);
+        OCIO_CHECK_EQUAL(str, "");
+    }
+
+    {
+        const std::string str = StringUtils::Upper(nullptr);
+        OCIO_CHECK_EQUAL(str, "");
+    }
+
 }
 
 OCIO_ADD_TEST(StringUtils, trim)

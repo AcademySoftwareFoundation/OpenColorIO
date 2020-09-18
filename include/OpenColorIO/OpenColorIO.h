@@ -535,9 +535,10 @@ public:
      */
     const char * getRoleColorSpace(int index) const;
 
-    //
-    // Display/View Registration
-    //
+    /**
+     * \defgroup Methods related to displays and views.
+     * @{
+     */
 
     // TODO: Move to .rst 
     // The following methods only manipulate active displays and views. Active
@@ -649,8 +650,94 @@ public:
      * Will throw if the view does not exist.
      */
     void removeDisplayView(const char * display, const char * view);
-
+    /// Clear all the displays.
     void clearDisplays();
+
+    /** @} */
+
+    /**
+     * \defgroup Methods related to the Virtual Display.
+     * @{
+     *
+     *  ...  (See descriptions for the non-virtual methods above.)
+     *
+     * The virtual display is the way to incorporate the ICC monitor profile for a user's display
+     * into OCIO. The views that are defined for the virtual display are the views that are used to
+     * create a new display for an ICC profile. They serve as a kind of template that lets OCIO
+     * know how to build the new display.
+     *
+     * Typically the views will define a View Transform and set the colorSpaceName to 
+     * "<USE_DISPLAY_NAME>" so that it will use the display color space with the same name as the
+     * display, in this case corresponding to the ICC profile.
+     *
+     */
+
+    void addVirtualDisplayView(const char * view,
+                               const char * viewTransformName,
+                               const char * colorSpaceName,
+                               const char * looks,
+                               const char * ruleName,
+                               const char * description);
+
+    void addVirtualDisplaySharedView(const char * sharedView);
+
+    /// Get the number of views associated to the virtual display.
+    int getVirtualDisplayNumViews(ViewType type) const noexcept;
+    /// Get the view name at a specific index.
+    const char * getVirtualDisplayView(ViewType type, int index) const noexcept;
+
+    const char * getVirtualDisplayViewTransformName(const char * view) const noexcept;
+    const char * getVirtualDisplayViewColorSpaceName(const char * view) const noexcept;
+    const char * getVirtualDisplayViewLooks(const char * view) const noexcept;
+    const char * getVirtualDisplayViewRule(const char * view) const noexcept;
+    const char * getVirtualDisplayViewDescription(const char * view) const noexcept;
+
+    /// Remove the view from the virtual display.
+    void removeVirtualDisplayView(const char * view) noexcept;
+
+    /// Clear the virtual display.
+    void clearVirtualDisplay() noexcept;
+
+    /**
+     * \brief Instantiate a new display from a virtual display, using the monitor name.
+     * 
+     * This method uses the virtual display to create an actual display for the given monitorName.
+     * The new display will receive the views from the virtual display.
+     *
+     * After the ICC profile is read, a display name will be created by combining the description
+     * text from the profile with the monitorName obtained from the OS. Use the SystemMonitors class
+     * to obtain the list of monitorName strings for the displays connected to the computer.
+     *
+     * A new display color space will also be created using the display name. It will have a
+     * from_display_reference transform that is a FileTransform pointing to the ICC profile.
+     *
+     * Any instantiated display color spaces for a virtual display are intended to be temporary
+     * (i.e. last as long as the current session). By default, they are not saved when writing a
+     * config file. If there is a need to make it a permanent color space, it may be desirable to
+     * copy the ICC profile somewhere under the config search_path.
+     *
+     * Will throw if the config does not have a virtual display or if the monitorName does not exist.
+     *
+     * If there is already a display or a display color space with the name monitorName, it will be
+     * replaced/updated.
+     *
+     * Returns the index of the display.
+     */
+    int instantiateDisplayFromMonitorName(const char * monitorName);
+
+    /**
+     * \brief Instantiate a new display from a virtual display, using an ICC profile.
+     * 
+     * On platforms such as Linux, where the SystemMonitors class is not able to obtain a list of
+     * ICC profiles from the OS, this method may be used to manually specify a path to an ICC profile.
+     * 
+     * Will throw if the virtual display definition is missing from the config.
+     *
+     * Returns the index of the display.
+     */
+    int instantiateDisplayFromICCProfile(const char * ICCProfileFilepath);
+
+    /** @} */
 
     /**
      * \brief
@@ -688,8 +775,14 @@ public:
     const char * getActiveViews() const;
 
     /// Get all displays in the config, ignoring the active_displays list.
-    int getNumDisplaysAll() const;
-    const char * getDisplayAll(int index) const;
+    int getNumDisplaysAll() const noexcept;
+    const char * getDisplayAll(int index) const noexcept;
+    int getDisplayAllByName(const char *) const noexcept;
+    /**
+     * Will be true for a display that was instantiated from a virtual display. These displays are
+     * intended to be temporary (i.e. for the current session) and are not saved to a config file.
+     */
+    bool isDisplayTemporary(int index) const noexcept;
 
     /**
      * Get either the shared or display-defined views for a display. The
@@ -1406,8 +1499,7 @@ public:
      * Specify the transform for the appropriate direction.
      * Setting the transform to null will clear it.
      */
-    void setTransform(const ConstTransformRcPtr & transform,
-                        ColorSpaceDirection dir);
+    void setTransform(const ConstTransformRcPtr & transform, ColorSpaceDirection dir);
 
     ColorSpace(const ColorSpace &) = delete;
     ColorSpace& operator= (const ColorSpace &) = delete;
@@ -1558,7 +1650,7 @@ private:
  * \param rcss 
  */
 extern OCIOEXPORT ConstColorSpaceSetRcPtr operator||(const ConstColorSpaceSetRcPtr & lcss,
-                                                        const ConstColorSpaceSetRcPtr & rcss);
+                                                     const ConstColorSpaceSetRcPtr & rcss);
  /**
   * \brief Perform the intersection of two sets.
   * 
@@ -1570,7 +1662,7 @@ extern OCIOEXPORT ConstColorSpaceSetRcPtr operator||(const ConstColorSpaceSetRcP
   * \param rcss 
  */
 extern OCIOEXPORT ConstColorSpaceSetRcPtr operator&&(const ConstColorSpaceSetRcPtr & lcss,
-                                                        const ConstColorSpaceSetRcPtr & rcss);
+                                                     const ConstColorSpaceSetRcPtr & rcss);
 /**
  * \brief Perform the difference of two sets. 
  * 
@@ -1792,21 +1884,24 @@ public:
     static const char * getFormatNameByIndex(int index);
     static const char * getFormatExtensionByIndex(int index);
 
-    // TODO: Revisit the dynamic property access.
-    // Access to dynamic properties.
-    
-    // TODO: Move to .rst
-    // \note The dynamic properties are a convenient way to change on-the-fly values without 
-    // generating again and again a CPU or GPU processor instance. Any color transformation can
-    // contain dynamic properties from a :cpp:class:`ExposureContrastTransform` for example. So, 
-    // :cpp:class:`Processor`, :cpp:class:`CPUProcessor` and :cpp:class:`GPUProcessor` all have
-    // ways to manage dynamic properties. However, the transform dynamic properties are decoupled
-    // between the types of processor instances so that the same :cpp:class:`Processor` can
-    // generate several independent CPU and/or GPU processor instances i.e. changing the value
-    // of the exposure dynamic property from a CPU processor instance does not affect the
-    // corresponding GPU processor instance.
-
+    /**
+     * The returned pointer may be used to set the default value of any dynamic
+     * properties of the requested type.  Throws if the requested property is not found.  Note
+     * that if the processor contains several ops that support the requested property, only ones
+     * for which dynamic has been enabled will be controlled.
+     *
+     * \note The dynamic properties are a convenient way to change on-the-fly values without 
+     * generating again and again a CPU or GPU processor instance. Color transformations can
+     * contain dynamic properties from a :cpp:class:`ExposureContrastTransform` for example.
+     * So, :cpp:class:`Processor`, :cpp:class:`CPUProcessor` and :cpp:class:`GpuShaderCreator`
+     * all have ways to manage dynamic properties. However, the transform dynamic properties
+     * are decoupled between the types of processor instances so that the same
+     * :cpp:class:`Processor` can generate several independent CPU and/or GPU processor
+     * instances i.e. changing the value of the exposure dynamic property from a CPU processor
+     * instance does not affect the corresponding GPU processor instance.
+     */
     DynamicPropertyRcPtr getDynamicProperty(DynamicPropertyType type) const;
+    /// Can be used before calling getDynamicProperty.
     bool hasDynamicProperty(DynamicPropertyType type) const;
 
     /**
@@ -1916,7 +2011,15 @@ public:
     /// Bit-depth of the output pixel buffer.
     BitDepth getOutputBitDepth() const;
 
-    /// Refer to \ref GPUProcessor::getDynamicProperty
+    /* The returned pointer may be used to set the value of any dynamic properties
+     * of the requested type.  Throws if the requested property is not found.  Note that if the
+     * processor contains several ops that support the requested property, only ones for which
+     * dynamic has been enabled will be controlled.
+     *
+     * \note The dynamic properties in this object are decoupled from the ones in the
+     * \ref Processor it was generated from. For each dynamic property in the Processor,
+     * there is one ine the CPU processor.
+     */
     DynamicPropertyRcPtr getDynamicProperty(DynamicPropertyType type) const;
 
     /**
@@ -1968,18 +2071,6 @@ public:
     bool hasChannelCrosstalk() const;
 
     const char * getCacheID() const;
-
-    /**
-     * The returned pointer may be used to set the value of any dynamic properties
-     * of the requested type.  Throws if the requested property is not found.  Note that if the
-     * processor contains several ops that support the requested property, only ones for which
-     * dynamic has been enabled will be controlled.
-     *
-     * \note
-     *    The dynamic properties in this object are decoupled from the ones
-     *    in the :cpp:class:`Processor` it was generated from.
-     */
-    DynamicPropertyRcPtr getDynamicProperty(DynamicPropertyType type) const;
 
     /// Extract & Store the shader information to implement the color processing.
     void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const;
@@ -2392,12 +2483,17 @@ private:
 
 ///////////////////////////////////////////////////////////////////////////
 // GpuShaderCreator
-
 /**
  * Inherit from the class to fully customize the implementation of a GPU shader program
  * from a color transformation.
  *
  * When no customizations are needed then the :cpp:class:`GpuShaderDesc` is a better choice.
+ *
+ * To better decouple the DynamicProperties from their GPU implementation, the code provides
+ * several addUniform() methods i.e. one per access function types. For example, an
+ * ExposureContrastTransform instance owns three DynamicProperties and they are all
+ * implemented by a double. When creating the GPU fragment shader program, the addUniform() with
+ * GpuShaderCreator::DoubleGetter is called when property is dynamic, up to three times.
  */
 class OCIOEXPORT GpuShaderCreator
 {
@@ -2448,8 +2544,44 @@ public:
      */
     unsigned getNextResourceIndex() noexcept;
 
+    /// Function returning a double, used by uniforms. GPU converts double to float.
+    typedef std::function<double()> DoubleGetter;
+    /// Function returning a bool, used by uniforms.
+    typedef std::function<bool()> BoolGetter;
+    /// Function returning an int, used by uniforms.
+    typedef std::function<int()> SizeGetter;
+    /// Function returning a float *, used by uniforms.
+    typedef std::function<const float *()> FloatArrayGetter;
+    /// Function returning an int *, used by uniforms.
+    typedef std::function<const int *()> IntArrayGetter;
+
     virtual bool addUniform(const char * name,
-                            const DynamicPropertyRcPtr & value) = 0;
+                            const DoubleGetter & getDouble) = 0;
+
+    virtual bool addUniform(const char * name,
+                            const BoolGetter & getBool) = 0;
+
+    virtual bool addUniform(const char * name,
+                            const SizeGetter & getSize,
+                            const FloatArrayGetter & getFloatArray) = 0;
+
+    virtual bool addUniform(const char * name,
+                            const SizeGetter & getSize,
+                            const IntArrayGetter & getInt2Array) = 0;
+
+    /// Adds the property (used internally).
+    void addDynamicProperty(DynamicPropertyRcPtr & prop);
+
+    /// Dynamic Property related methods.
+    unsigned getNumDynamicProperties() const noexcept;
+    DynamicPropertyRcPtr getDynamicProperty(unsigned index) const;
+
+    bool hasDynamicProperty(DynamicPropertyType type) const;
+    /**
+     * Dynamic properties allow changes once the fragment shader program has been created. The
+     * steps are to get the appropriate DynamicProperty instance, and then change its value.
+     */
+    DynamicPropertyRcPtr getDynamicProperty(DynamicPropertyType type) const;
 
     enum TextureType
     {
@@ -2709,6 +2841,9 @@ protected:
 //    glUniform1i(glGetUniformLocation(g_programId, "tex1"), 1);  // image texture
 //    oglBuilder->useAllTextures(g_programId);                    // LUT textures
 //
+//    // Step 7: Update uniforms from dynamic property instances.
+//    m_oglBuilder->useAllUniforms();
+//
 
 class OCIOEXPORT GpuShaderDesc : public GpuShaderCreator
 {
@@ -2722,23 +2857,33 @@ public:
 
     GpuShaderCreatorRcPtr clone() const override;
 
-    // TODO: Move to .rst
-    // Dynamic Property related methods.
-    //
-    // \note The dynamic properties are a convenient way to change on-the-fly values without 
-    // generating again and again the fragment shader program (i.e. dynamic properties map to
-    // uniforms in GLSL). So, the same color transformation could be used several times for DCCs
-    // supporting multiple viewports for example. It allows customizations
-    // (using :cpp:class:`GpuShaderDesc`) of the generated fragment shader program mainly to avoid
-    // resource conflicts. It also decouples dynamic properties to avoid having a change on one 
-    // viewport affect the others.
-    // Hence, a dynamic property value change must use the corresponding :cpp:class:`GpuShaderDesc`
-    // instance to do it -- the :cpp:class:`GPUProcessor` dynamic property values only represent
-    // the original values.
-
+    /**
+     * Used to retrieve uniform information. UniformDataType m_type indicates the type of uniform
+     * and what member of the structure should be used:
+     * * UNIFORM_DOUBLE: m_getDouble.
+     * * UNIFORM_BOOL: m_getBool.
+     * * UNIFORM_ARRAY_FLOAT: m_arrayFloat.
+     * * UNIFORM_ARRAY_INT2: m_arrayInt2.
+     */
+    struct UniformData
+    {
+        const char * m_name{ nullptr };
+        UniformDataType m_type{ UNIFORM_UNKNOWN };
+        DoubleGetter m_getDouble{};
+        BoolGetter m_getBool{};
+        struct ArrayFloat
+        {
+            SizeGetter m_getSize{};
+            FloatArrayGetter m_getArray{};
+        } m_arrayFloat{};
+        struct ArrayInt2
+        {
+            SizeGetter m_getSize{};
+            IntArrayGetter m_getArray{};
+        } m_arrayInt2{};
+    };
     virtual unsigned getNumUniforms() const noexcept = 0;
-    virtual void getUniform(unsigned index, const char *& name,
-                            DynamicPropertyRcPtr & value) const = 0;
+    virtual void getUniform(unsigned index, UniformData & data) const = 0;
 
     // 1D lut related methods
     virtual unsigned getNumTextures() const noexcept = 0;
@@ -2858,6 +3003,9 @@ extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const Context&);
 class OCIOEXPORT BuiltinTransformRegistry
 {
 public:
+    BuiltinTransformRegistry(const BuiltinTransformRegistry &) = delete;
+    BuiltinTransformRegistry & operator= (const BuiltinTransformRegistry &) = delete;
+
     /// Get the current built-in transform registry.
     static ConstBuiltinTransformRegistryRcPtr Get() noexcept;
 
@@ -2874,12 +3022,55 @@ public:
 protected:
     BuiltinTransformRegistry() = default;
     virtual ~BuiltinTransformRegistry() = default;
-
-private:
-    BuiltinTransformRegistry(const BuiltinTransformRegistry &) = delete;
-    BuiltinTransformRegistry & operator= (const BuiltinTransformRegistry &) = delete;
 };
 
+
+///////////////////////////////////////////////////////////////////////////
+// SystemMonitors
+
+/**
+ * Provides access to the ICC monitor profile provided by the operating system for each active display.
+ */
+class OCIOEXPORT SystemMonitors
+{
+public:
+    SystemMonitors(const SystemMonitors &) = delete;
+    SystemMonitors & operator= (const SystemMonitors &) = delete;
+
+    /// Get the existing instance. 
+    static ConstSystemMonitorsRcPtr Get() noexcept;
+
+    /** 
+     * True if the OS is able to provide ICC profiles for the attached monitors (macOS, Windows)
+     * and false otherwise.
+     */
+    virtual bool isSupported() const noexcept = 0;
+
+    /**
+     * \defgroup Methods to access some information of the attached and active monitors.
+     * @{
+     */
+
+    /// Get the number of active monitors reported by the operating system.
+    virtual size_t getNumMonitors() const noexcept = 0;
+
+    /** 
+     * \brief  Get the monitor profile name.
+     *
+     * Get the string describing the monitor. It is used as an argument to instantiateDisplay. It
+     * may also be used in a UI to ask a user which of several monitors they want to instantiate a
+     * display for.
+     */
+    virtual const char * getMonitorName(size_t idx) const = 0;
+    /// Get the ICC profile path associated to the monitor.
+    virtual const char * getProfileFilepath(size_t idx) const = 0;
+
+    /** @} */
+
+protected:
+    SystemMonitors() = default;
+    virtual ~SystemMonitors() = default;
+};
 
 } // namespace OCIO_NAMESPACE
 

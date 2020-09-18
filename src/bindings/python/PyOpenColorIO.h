@@ -36,6 +36,11 @@ void bindPyImageDesc(py::module & m);
 void bindPyGpuShaderCreator(py::module & m);
 void bindPyContext(py::module & m);
 void bindPyViewingRules(py::module & m);
+void bindPySystemMonitors(py::module & m);
+void bindPyGradingData(py::module & m);
+void bindPyGradingPrimaryTransform(py::module & m);
+void bindPyGradingRGBCurveTransform(py::module & m);
+void bindPyGradingToneTransform(py::module & m);
 
 } // namespace OCIO_NAMESPACE
 
@@ -89,6 +94,14 @@ struct polymorphic_type_hook<OCIO::Transform> {
             else if(dynamic_cast<const OCIO::FixedFunctionTransform*>(src))
             {
                 type = &typeid(OCIO::FixedFunctionTransform);
+            }
+            else if (dynamic_cast<const OCIO::GradingPrimaryTransform*>(src))
+            {
+                type = &typeid(OCIO::GradingPrimaryTransform);
+            }
+            else if (dynamic_cast<const OCIO::GradingRGBCurveTransform*>(src))
+            {
+                type = &typeid(OCIO::GradingRGBCurveTransform);
             }
             else if(dynamic_cast<const OCIO::GroupTransform*>(src))
             {

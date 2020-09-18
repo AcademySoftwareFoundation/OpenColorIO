@@ -3,11 +3,11 @@
 
 #include <algorithm>
 #include <cmath>
-#include <MathUtils.h>
 
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "BitDepthUtils.h"
+#include "MathUtils.h"
 #include "ops/fixedfunction/FixedFunctionOpCPU.h"
 
 

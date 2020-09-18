@@ -45,24 +45,26 @@ class OpenGLBuilder
     class Uniform
     {
     public:
-        Uniform(const std::string & name,
-                DynamicPropertyRcPtr v)
-            : m_name(name)
-            , m_value(v)
-            , m_handle(0)
-        {
-        }
+        Uniform(const std::string & name, const GpuShaderCreator::DoubleGetter & getDouble);
+        Uniform(const std::string & name, const GpuShaderCreator::BoolGetter & getBool);
+        Uniform(const std::string & name, const GpuShaderCreator::SizeGetter & getSize,
+                const GpuShaderCreator::FloatArrayGetter & getFloatArray);
+        Uniform(const std::string & name, const GpuShaderCreator::SizeGetter & getSize,
+                const GpuShaderCreator::IntArrayGetter & getInt2Array);
 
         void setUp(unsigned program);
 
         void use();
 
-        DynamicPropertyRcPtr & getValue();
-
     private:
         Uniform() = delete;
         std::string m_name;
-        DynamicPropertyRcPtr m_value;
+        GpuShaderCreator::DoubleGetter m_getDouble;
+        GpuShaderCreator::DoubleGetter m_getBool;
+        GpuShaderCreator::SizeGetter m_getSize;
+        GpuShaderCreator::FloatArrayGetter m_getFloatArray;
+        GpuShaderCreator::IntArrayGetter m_getInt2Array;
+
         unsigned m_handle;
     };
     typedef std::vector<Uniform> Uniforms;
@@ -102,6 +104,10 @@ protected:
 
     void deleteAllTextures();
     void deleteAllUniforms();
+
+    // To add the version to the fragment shader program (so that GLSL does not use the default
+    // of 1.10 when the minimum version for OCIO is 1.20).
+    std::string getGLSLVersionString();
 
 private:
     OpenGLBuilder();
