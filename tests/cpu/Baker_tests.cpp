@@ -5,6 +5,9 @@
 #include "Baker.cpp"
 
 #include "testutils/UnitTest.h"
+#include "ParseUtils.h"
+#include "UnitTestUtils.h"
+#include "utils/StringUtils.h"
 
 namespace OCIO = OCIO_NAMESPACE;
 
@@ -30,6 +33,27 @@ OCIO_ADD_TEST(Baker_Unit_Tests, test_listlutwriters)
 
 }
 */
+
+namespace
+{
+void CompareFloats(const std::string& floats1, const std::string& floats2)
+{
+    // Number comparison.
+    const StringUtils::StringVec strings1 = StringUtils::SplitByWhiteSpaces(StringUtils::Trim(floats1));
+    std::vector<float> numbers1;
+    OCIO::StringVecToFloatVec(numbers1, strings1);
+
+    const StringUtils::StringVec strings2 = StringUtils::SplitByWhiteSpaces(StringUtils::Trim(floats2));
+    std::vector<float> numbers2;
+    OCIO::StringVecToFloatVec(numbers2, strings2);
+
+    OCIO_CHECK_EQUAL(numbers1.size(), numbers2.size());
+    for (unsigned int j = 0; j<numbers1.size(); ++j)
+    {
+        OCIO_CHECK_CLOSE(numbers1[j], numbers2[j], 1e-5f);
+    }
+}
+}
 
 OCIO_ADD_TEST(Baker, bake)
 {
@@ -112,7 +136,23 @@ OCIO_ADD_TEST(Baker, bake)
     OCIO_CHECK_EQUAL(2, bake->getCubeSize());
     std::ostringstream os;
     OCIO_CHECK_NO_THROW(bake->bake(os));
-    OCIO_CHECK_EQUAL(expectedLut, os.str());
+    const StringUtils::StringVec osvec = StringUtils::SplitByLines(expectedLut);
+    const StringUtils::StringVec resvec = StringUtils::SplitByLines(os.str());
+    OCIO_CHECK_EQUAL(osvec.size(), resvec.size());
+    for (unsigned int i = 0; i < resvec.size(); ++i)
+    {
+        if (i>6)
+        {
+            // Number comparison.
+            CompareFloats(osvec[i], resvec[i]);
+        }
+        else
+        {
+            // text comparison
+            OCIO_CHECK_EQUAL(osvec[i], resvec[i]);
+        }
+    }
+
     OCIO_CHECK_EQUAL(10, bake->getNumFormats());
     OCIO_CHECK_EQUAL("cinespace", std::string(bake->getFormatNameByIndex(4)));
     OCIO_CHECK_EQUAL("3dl", std::string(bake->getFormatExtensionByIndex(1)));
