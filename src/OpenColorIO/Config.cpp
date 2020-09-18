@@ -312,8 +312,8 @@ public:
     FileRulesRcPtr m_fileRules;
 
     Impl() :
-        m_majorVersion(FirstSupportedMajorVersion),
-        m_minorVersion(0),
+        m_majorVersion(LastSupportedMajorVersion),
+        m_minorVersion(LastSupportedMinorVersion),
         m_context(Context::Create()),
         m_allColorSpaces(ColorSpaceSet::Create()),
         m_viewingRules(ViewingRules::Create()),

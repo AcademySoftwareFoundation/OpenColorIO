@@ -86,6 +86,11 @@ typedef OCIO_SHARED_PTR<const OpData> ConstOpDataRcPtr;
 typedef std::vector<OpDataRcPtr> OpDataVec;
 typedef std::vector<ConstOpDataRcPtr> ConstOpDataVec;
 
+class Op;
+typedef OCIO_SHARED_PTR<Op> OpRcPtr;
+typedef OCIO_SHARED_PTR<const Op> ConstOpRcPtr;
+class OpRcPtrVec;
+
 // The OpData class is a helper class to hold the data part of an Op 
 // with some basic behaviors (i.e. isNoop(), isIdentity() …). The Op class 
 // holds an OpData and offers high-level behaviors such as op's combinations, 
@@ -166,6 +171,9 @@ public:
 
     virtual OpDataRcPtr getIdentityReplacement() const;
 
+    // At optimization step, ops might get replaced by simpler ops depending on the op parameters.
+    virtual void getSimplerReplacement(OpDataVec & ops) const;
+
     // Determine whether the output of the op mixes R, G, B channels.
     // For example, Rout = 5*Rin is channel independent, but Rout = Rin + Gin
     // is not.  Note that the property may depend on the op parameters,
@@ -192,11 +200,6 @@ private:
 
 const char * GetTypeName(OpData::Type type);
 
-class Op;
-typedef OCIO_SHARED_PTR<Op> OpRcPtr;
-typedef OCIO_SHARED_PTR<const Op> ConstOpRcPtr;
-class OpRcPtrVec;
-
 class Op
 {
 public:
@@ -219,6 +222,7 @@ public:
     virtual bool isIdentity() const { return m_data->isIdentity(); }
 
     OpRcPtr getIdentityReplacement() const;
+    void getSimplerReplacement(OpRcPtrVec & ops) const;
 
     virtual bool isSameType(ConstOpRcPtr & op) const = 0;
 
@@ -249,15 +253,17 @@ public:
 
     // Render the specified pixels.
     //
-    // This must be safe to call in a multi-threaded context.
-    // Ops that have mutable data internally, or rely on external
-    // caching, must thus be appropriately mutexed.
+    // This must be safe to call in a multi-threaded context. Ops that have mutable data
+    // internally, or rely on external caching, must thus be appropriately mutexed.
+    //
+    // Note: These apply calls are intended for unit test usage rather than general purpose
+    // use and so it is ok to hard-code the fastLogExpPow to false.
 
     virtual void apply(void * img, long numPixels) const
-    { getCPUOp()->apply(img, img, numPixels); }
+    { getCPUOp(false)->apply(img, img, numPixels); }
 
     virtual void apply(const void * inImg, void * outImg, long numPixels) const
-    { getCPUOp()->apply(inImg, outImg, numPixels); }
+    { getCPUOp(false)->apply(inImg, outImg, numPixels); }
 
 
     // Is this op supported by the legacy shader text generator?
@@ -294,7 +300,7 @@ public:
     virtual void removeDynamicProperties() {}
 
     // On-demand creation of the OpCPU instance. Op has to be finalized.
-    virtual ConstOpCPURcPtr getCPUOp() const = 0;
+    virtual ConstOpCPURcPtr getCPUOp(bool fastLogExpPow) const = 0;
 
     ConstOpDataRcPtr data() const { return std::const_pointer_cast<const OpData>(m_data); }
 
@@ -420,7 +426,10 @@ void CreateOpVecFromOpData(OpRcPtrVec & ops,
                             const ConstOpDataRcPtr & opData,
                             TransformDirection dir);
 
-
+inline bool HasFlag(OptimizationFlags flags, OptimizationFlags queryFlag)
+{
+    return (flags & queryFlag) == queryFlag;
+}
 
 } // namespace OCIO_NAMESPACE
 

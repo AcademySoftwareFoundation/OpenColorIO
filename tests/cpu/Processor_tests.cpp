@@ -14,7 +14,6 @@ namespace OCIO = OCIO_NAMESPACE;
 OCIO_ADD_TEST(Processor, basic)
 {
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
     OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
 
     auto processorEmptyGroup = config->getProcessor(group);
@@ -114,7 +113,6 @@ OCIO_ADD_TEST(Processor, write_formats)
 OCIO_ADD_TEST(Processor, optimized_processor)
 {
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
     OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
 
     auto mat = OCIO::MatrixTransform::Create();
@@ -153,10 +151,7 @@ OCIO_ADD_TEST(Processor, is_noop)
     // Basic validation of the isNoOp() behavior.
 
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
-
     auto matrix = OCIO::MatrixTransform::Create();
-
     auto processor = config->getProcessor(matrix);
 
     OCIO_CHECK_ASSERT(processor->isNoOp());
@@ -204,8 +199,6 @@ OCIO_ADD_TEST(Processor, channel_crosstalk)
     // Basic validation of the hasChannelCrosstalk() behavior.
 
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
-
     auto matrix = OCIO::MatrixTransform::Create();
 
     double mat[16]{ 1., 0., 0., 0.,
@@ -265,10 +258,10 @@ OCIO_ADD_TEST(Processor, optimization_env_override_basic)
     OCIO::SetEnvVariable(OCIO::OCIO_OPTIMIZATION_FLAGS_ENVVAR, "0xFFFFFFFF");
     OCIO_CHECK_EQUAL(OCIO::OPTIMIZATION_ALL, OCIO::EnvironmentOverride(testFlag));
 
-    OCIO::SetEnvVariable(OCIO::OCIO_OPTIMIZATION_FLAGS_ENVVAR, "10239939");
+    OCIO::SetEnvVariable(OCIO::OCIO_OPTIMIZATION_FLAGS_ENVVAR, "144457667");
     OCIO_CHECK_EQUAL(OCIO::OPTIMIZATION_LOSSLESS, OCIO::EnvironmentOverride(testFlag));
 
-    OCIO::SetEnvVariable(OCIO::OCIO_OPTIMIZATION_FLAGS_ENVVAR, "0x3FC3FC3");
+    OCIO::SetEnvVariable(OCIO::OCIO_OPTIMIZATION_FLAGS_ENVVAR, "0xFFC3FC3");
     OCIO_CHECK_EQUAL(OCIO::OPTIMIZATION_GOOD, OCIO::EnvironmentOverride(testFlag));
 }
 

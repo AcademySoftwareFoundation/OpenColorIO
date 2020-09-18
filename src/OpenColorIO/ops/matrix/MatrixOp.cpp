@@ -60,7 +60,7 @@ public:
     void finalize() override;
     std::string getCacheID() const override;
 
-    ConstOpCPURcPtr getCPUOp() const override;
+    ConstOpCPURcPtr getCPUOp(bool fastLogExpPow) const override;
 
     void extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const override;
 
@@ -181,7 +181,7 @@ std::string MatrixOffsetOp::getCacheID() const
     return cacheIDStream.str();
 }
 
-ConstOpCPURcPtr MatrixOffsetOp::getCPUOp() const
+ConstOpCPURcPtr MatrixOffsetOp::getCPUOp(bool /*fastLogExpPow*/) const
 {
     ConstMatrixOpDataRcPtr data = matrixData();
     return GetMatrixRenderer(data);

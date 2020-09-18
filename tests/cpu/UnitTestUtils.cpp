@@ -55,8 +55,6 @@ void BuildOpsTest(OpRcPtrVec & fileOps,
 
     // Create empty Config to use
     ConfigRcPtr config = Config::Create();
-    config->setMajorVersion(2);
-
     BuildFileTransformOps(fileOps, *(config.get()), context,
                           *(fileTransform.get()), dir);
 }
@@ -68,8 +66,6 @@ ConstProcessorRcPtr GetFileTransformProcessor(const std::string & fileName)
 
     // Create empty Config to use.
     ConfigRcPtr config = Config::Create();
-    config->setMajorVersion(2);
-
     // Get the processor corresponding to the transform.
     return config->getProcessor(fileTransform);
 }

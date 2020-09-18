@@ -15,7 +15,7 @@ namespace OCIO_NAMESPACE
 {
 
 // Get the Gamma dedicated renderer.
-ConstOpCPURcPtr GetGammaRenderer(ConstGammaOpDataRcPtr & gamma);
+ConstOpCPURcPtr GetGammaRenderer(ConstGammaOpDataRcPtr & gamma, bool fastPower);
 
 } // namespace OCIO_NAMESPACE
 

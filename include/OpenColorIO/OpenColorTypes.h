@@ -533,11 +533,18 @@ enum OptimizationFlags : unsigned long
      */
     OPTIMIZATION_LUT_INV_FAST                    = 0x02000000,
 
+    // For CPU processor, in SSE mode, use a faster approximation for log, exp, and pow.
+    OPTIMIZATION_FAST_LOG_EXP_POW                = 0x04000000,
+
+    // Break down certain ops into simpler components where possible.  For example, convert a CDL
+    // to a matrix when possible.
+    OPTIMIZATION_SIMPLIFY_OPS                    = 0x08000000,
+
     /**
      * Turn off dynamic control of any ops that offer adjustment of parameter values after
      * finalization (e.g. ExposureContrast).
      */
-    OPTIMIZATION_NO_DYNAMIC_PROPERTIES           = 0x80000000,
+    OPTIMIZATION_NO_DYNAMIC_PROPERTIES           = 0x10000000,
 
     /// Apply all possible optimizations.
     OPTIMIZATION_ALL                             = 0xFFFFFFFF,
@@ -558,11 +565,13 @@ enum OptimizationFlags : unsigned long
                              OPTIMIZATION_COMP_EXPONENT |
                              OPTIMIZATION_COMP_GAMMA |
                              OPTIMIZATION_COMP_MATRIX |
-                             OPTIMIZATION_COMP_RANGE),
+                             OPTIMIZATION_COMP_RANGE |
+                             OPTIMIZATION_SIMPLIFY_OPS),
 
     OPTIMIZATION_VERY_GOOD = (OPTIMIZATION_LOSSLESS |
                               OPTIMIZATION_COMP_LUT1D |
                               OPTIMIZATION_LUT_INV_FAST |
+                              OPTIMIZATION_FAST_LOG_EXP_POW |
                               OPTIMIZATION_COMP_SEPARABLE_PREFIX),
 
     OPTIMIZATION_GOOD      = OPTIMIZATION_VERY_GOOD | OPTIMIZATION_COMP_LUT3D,

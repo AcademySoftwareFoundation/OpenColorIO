@@ -62,6 +62,10 @@ OpDataRcPtr OpData::getIdentityReplacement() const
     return std::make_shared<MatrixOpData>();
 }
 
+void OpData::getSimplerReplacement(OpDataVec & ops) const
+{
+}
+
 bool OpData::operator==(const OpData & other) const
 {
     if (this == &other) return true;
@@ -192,6 +196,15 @@ OpRcPtr Op::getIdentityReplacement() const
     return ops[0];
 }
 
+void Op::getSimplerReplacement(OpRcPtrVec & ops) const
+{
+    OpDataVec opDataVec;
+    m_data->getSimplerReplacement(opDataVec);
+    for (const auto & opData : opDataVec)
+    {
+        CreateOpVecFromOpData(ops, opData, TRANSFORM_DIR_FORWARD);
+    }
+}
 
 OpRcPtrVec::OpRcPtrVec()
     : m_metadata()

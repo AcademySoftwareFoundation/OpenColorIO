@@ -43,7 +43,7 @@ public:
 
     std::string getCacheID() const override;
 
-    ConstOpCPURcPtr getCPUOp() const override;
+    ConstOpCPURcPtr getCPUOp(bool fastLogExpPow) const override;
 
     void extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const override;
 
@@ -119,7 +119,7 @@ std::string FixedFunctionOp::getCacheID() const
     return cacheIDStream.str();
 }
 
-ConstOpCPURcPtr FixedFunctionOp::getCPUOp() const
+ConstOpCPURcPtr FixedFunctionOp::getCPUOp(bool /*fastLogExpPow*/) const
 {
     ConstFixedFunctionOpDataRcPtr data = fnData();
     return GetFixedFunctionCPURenderer(data);
