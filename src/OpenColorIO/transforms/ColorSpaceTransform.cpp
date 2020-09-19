@@ -371,6 +371,31 @@ void BuildReferenceConversionOps(OpRcPtrVec & ops,
 
 bool CollectContextVariables(const Config & config, 
                              const Context & context,
+                             ConstColorSpaceRcPtr & cs,
+                             ContextRcPtr & usedContextVars)
+{
+    bool foundContextVars = false;
+
+    if (cs)
+    {
+        ConstTransformRcPtr to = cs->getTransform(COLORSPACE_DIR_TO_REFERENCE);
+        if (to && CollectContextVariables(config, context, to, usedContextVars))
+        {
+            foundContextVars = true;
+        }
+
+        ConstTransformRcPtr from = cs->getTransform(COLORSPACE_DIR_FROM_REFERENCE);
+        if (from && CollectContextVariables(config, context, from, usedContextVars))
+        {
+            foundContextVars = true;
+        }
+    }
+
+    return foundContextVars;
+}
+
+bool CollectContextVariables(const Config & config, 
+                             const Context & context,
                              const ColorSpaceTransform & tr,
                              ContextRcPtr & usedContextVars)
 {
@@ -392,35 +417,15 @@ bool CollectContextVariables(const Config & config,
     }
 
     ConstColorSpaceRcPtr src = config.getColorSpace(srcName.c_str());
-    if (src)
+    if (CollectContextVariables(config, context, src, usedContextVars))
     {
-        ConstTransformRcPtr to = src->getTransform(COLORSPACE_DIR_TO_REFERENCE);
-        if (to && CollectContextVariables(config, context, to, usedContextVars))
-        {
-            foundContextVars = true;
-        }
-
-        ConstTransformRcPtr from = src->getTransform(COLORSPACE_DIR_FROM_REFERENCE);
-        if (from && CollectContextVariables(config, context, from, usedContextVars))
-        {
-            foundContextVars = true;
-        }
+        foundContextVars = true;
     }
 
     ConstColorSpaceRcPtr dst = config.getColorSpace(dstName.c_str());
-    if (dst)
+    if (CollectContextVariables(config, context, dst, usedContextVars))
     {
-        ConstTransformRcPtr to = dst->getTransform(COLORSPACE_DIR_TO_REFERENCE);
-        if (to && CollectContextVariables(config, context, to, usedContextVars))
-        {
-            foundContextVars = true;
-        }
-
-        ConstTransformRcPtr from = dst->getTransform(COLORSPACE_DIR_FROM_REFERENCE);
-        if (from && CollectContextVariables(config, context, from, usedContextVars))
-        {
-            foundContextVars = true;
-        }
+        foundContextVars = true;
     }
 
     return foundContextVars;

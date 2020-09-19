@@ -87,11 +87,17 @@ bool CollectContextVariables(const Config & config,
                              ContextRcPtr & usedContextVars);
 
 
-// Helper method to search for context variables.
+// Helper methods to search for context variables.
+
 bool CollectContextVariables(const Config & config,
                              const Context & context,
                              TransformDirection direction,
                              const Look & look,
+                             ContextRcPtr & usedContextVars);
+
+bool CollectContextVariables(const Config & config, 
+                             const Context & context,
+                             ConstColorSpaceRcPtr & tr,
                              ContextRcPtr & usedContextVars);
 
 } // namespace OCIO_NAMESPACE

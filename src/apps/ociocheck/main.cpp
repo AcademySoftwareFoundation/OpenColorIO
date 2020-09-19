@@ -83,6 +83,30 @@ int main(int argc, const char **argv)
 
         std::cout << std::endl;
         std::cout << "** General **" << std::endl;
+
+        if (config->getNumEnvironmentVars() > 0)
+        {
+            std::cout << "Environment:" << std::endl;
+            for (int idx = 0; idx < config->getNumEnvironmentVars(); ++idx)
+            {
+                const char * name = config->getEnvironmentVarNameByIndex(idx);
+                std::cout << "  " << name
+                          << ": " << config->getEnvironmentVarDefault(name)
+                          << std::endl;
+            }
+        }
+        else
+        {
+            if (config->getEnvironmentMode() == OCIO::ENV_ENVIRONMENT_LOAD_PREDEFINED)
+            {
+                std::cout << "Environment: {}" << std::endl;
+            }
+            else
+            {
+                std::cout << "Environment: <missing>" << std::endl;
+            }
+        }
+
         std::cout << "Search Path: " << config->getSearchPath() << std::endl;
         std::cout << "Working Dir: " << config->getWorkingDir() << std::endl;
 

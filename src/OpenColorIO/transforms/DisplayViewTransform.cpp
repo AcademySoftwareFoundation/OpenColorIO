@@ -422,38 +422,18 @@ bool CollectContextVariables(const Config & config,
     // in both directions even if only one will be used, and it only roughly mimics the op creation.
 
     ConstColorSpaceRcPtr src = config.getColorSpace(tr.getSrc());
-    if (src)
+    if (CollectContextVariables(config, context, src, usedContextVars))
     {
-        ConstTransformRcPtr to = src->getTransform(COLORSPACE_DIR_TO_REFERENCE);
-        if (to && CollectContextVariables(config, context, to, usedContextVars))
-        {
-            foundContextVars = true;
-        }
-
-        ConstTransformRcPtr from = src->getTransform(COLORSPACE_DIR_FROM_REFERENCE);
-        if (from && CollectContextVariables(config, context, from, usedContextVars))
-        {
-            foundContextVars = true;
-        }
+        foundContextVars = true;
     }
 
     const char * csName = config.getDisplayViewColorSpaceName(tr.getDisplay(), tr.getView());
     if (csName && *csName)
     {
         src = config.getColorSpace(csName);
-        if (src)
+        if (CollectContextVariables(config, context, src, usedContextVars))
         {
-            ConstTransformRcPtr to = src->getTransform(COLORSPACE_DIR_TO_REFERENCE);
-            if (to && CollectContextVariables(config, context, to, usedContextVars))
-            {
-                foundContextVars = true;
-            }
-
-            ConstTransformRcPtr from = src->getTransform(COLORSPACE_DIR_FROM_REFERENCE);
-            if (from && CollectContextVariables(config, context, from, usedContextVars))
-            {
-                foundContextVars = true;
-            }
+            foundContextVars = true;
         }
     }
 

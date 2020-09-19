@@ -375,13 +375,6 @@ int main(int argc, const char **argv)
             transform->setSrc(transformFile.c_str());
 
             {
-
-//// TO BE REMOVED BEFORE DOING THE PULL REQUEST
-
-                OCIO::ContextRcPtr context = config->getCurrentContext()->createEditableCopy();
-
-////////////////
-
                 CustomMeasure m("Create the processor:\t\t\t", iterations);
                 for (unsigned iter = 0; iter < iterations; ++iter)
                 {
@@ -390,17 +383,8 @@ int main(int argc, const char **argv)
                         OCIO::ClearAllCaches();
                     }
 
-//// TO BE REMOVED BEFORE DOING THE PULL REQUEST
-
-                    std::ostringstream oss;
-                    oss << iter;
-                    const std::string val = oss.str();
-                    context->setStringVar("DUMMY", val.c_str());
-
-////////////////
-
                     m.resume();
-                    processor = config->getProcessor(context, transform, OCIO::TRANSFORM_DIR_FORWARD);
+                    processor = config->getProcessor(transform, OCIO::TRANSFORM_DIR_FORWARD);
                     m.pause();
                 }
             }
@@ -461,13 +445,6 @@ int main(int argc, const char **argv)
             }
 
             {
-
-//// TO BE REMOVED BEFORE DOING THE PULL REQUEST
-
-                OCIO::ContextRcPtr context = config->getCurrentContext()->createEditableCopy();
-
-////////////////
-
                 std::string msg;
                 if (!outputColorSpace.empty())
                 {
@@ -495,19 +472,10 @@ int main(int argc, const char **argv)
                         OCIO::ClearAllCaches();
                     }
 
-//// TO BE REMOVED BEFORE DOING THE PULL REQUEST
-
-                    std::ostringstream oss;
-                    oss << iter;
-                    const std::string val = oss.str();
-                    context->setStringVar("DUMMY", val.c_str());
-
-////////////////
-
                     if (!outputColorSpace.empty())
                     {
                         m.resume();
-                        processor = config->getProcessor(context, inputColorSpace.c_str(), outputColorSpace.c_str());
+                        processor = config->getProcessor(inputColorSpace.c_str(), outputColorSpace.c_str());
                         m.pause();
                     }
                     else
@@ -516,7 +484,6 @@ int main(int argc, const char **argv)
 
                         m.resume();
                         processor = OCIO::DisplayViewHelpers::GetProcessor(config,
-                                                                           context,
                                                                            inputColorSpace.c_str(),
                                                                            display.c_str(),
                                                                            view.c_str(),

@@ -438,35 +438,15 @@ bool CollectContextVariables(const Config & config,
     bool foundContextVars = false;
 
     ConstColorSpaceRcPtr src = config.getColorSpace(look.getSrc());
-    if (src)
+    if (CollectContextVariables(config, context, src, usedContextVars))
     {
-        ConstTransformRcPtr to = src->getTransform(COLORSPACE_DIR_TO_REFERENCE);
-        if (to && CollectContextVariables(config, context, to, usedContextVars))
-        {
-            foundContextVars = true;
-        }
-
-        ConstTransformRcPtr from = src->getTransform(COLORSPACE_DIR_FROM_REFERENCE);
-        if (from && CollectContextVariables(config, context, from, usedContextVars))
-        {
-            foundContextVars = true;
-        }
+        foundContextVars = true;
     }
 
     ConstColorSpaceRcPtr dst = config.getColorSpace(look.getDst());
-    if (dst)
+    if (CollectContextVariables(config, context, dst, usedContextVars))
     {
-        ConstTransformRcPtr to = dst->getTransform(COLORSPACE_DIR_TO_REFERENCE);
-        if (to && CollectContextVariables(config, context, to, usedContextVars))
-        {
-            foundContextVars = true;
-        }
-
-        ConstTransformRcPtr from = dst->getTransform(COLORSPACE_DIR_FROM_REFERENCE);
-        if (from && CollectContextVariables(config, context, from, usedContextVars))
-        {
-            foundContextVars = true;
-        }
+        foundContextVars = true;
     }
 
     const char * looks = look.getLooks();
