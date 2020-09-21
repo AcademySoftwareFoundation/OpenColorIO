@@ -20,8 +20,12 @@ if os.name == 'nt':
         opencolorio_dir = os.path.join(opencolorio_dir, sys.argv[3])
         pyopencolorio_dir = os.path.join(pyopencolorio_dir, sys.argv[3])
 
-    os.environ['PATH'] = '{0};{1}'.format(
-        opencolorio_dir, os.getenv('PATH', ''))
+    # Python 3.8+ does no longer look for DLLs in PATH environment variable
+    if hasattr(os, 'add_dll_directory'):
+        os.add_dll_directory(opencolorio_dir)
+    else:
+        os.environ['PATH'] = '{0};{1}'.format(
+            opencolorio_dir, os.getenv('PATH', ''))
 elif sys.platform == 'darwin':
     # On OSX we must add the main library location to DYLD_LIBRARY_PATH
     os.environ['DYLD_LIBRARY_PATH'] = '{0}:{1}'.format(
