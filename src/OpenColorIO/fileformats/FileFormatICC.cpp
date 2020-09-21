@@ -3,6 +3,7 @@
 
 
 #include <sstream>
+#include <fstream>
 
 #include <OpenColorIO/OpenColorIO.h>
 
@@ -10,6 +11,7 @@
 #include "ops/gamma/GammaOp.h"
 #include "ops/lut1d/Lut1DOp.h"
 #include "ops/matrix/MatrixOp.h"
+#include "pystring/pystring.h"
 #include "transforms/FileTransform.h"
 
 
@@ -33,12 +35,16 @@ public:
     LocalCachedFile() = default;
     ~LocalCachedFile() = default;
 
+    // The profile description.
+    std::string mProfileDescription;
+
     // Matrix part
     double mMatrix44[16]{ 0.0 };
 
     // Gamma
     float mGammaRGB[4]{ 1.0f };
 
+    // 1D LUT
     Lut1DOpDataRcPtr lut;
 };
 
@@ -52,9 +58,12 @@ public:
 
     void getFormatInfo(FormatInfoVec & formatInfoVec) const override;
 
-    CachedFileRcPtr read(
-        std::istream & istream,
-        const std::string & fileName) const override;
+    // Only reads the information data of the file.
+    static LocalCachedFileRcPtr ReadInfo(std::istream & istream, 
+                                         const std::string & fileName,
+                                         SampleICC::IccContent & icc);
+
+    CachedFileRcPtr read(std::istream & istream, const std::string & fileName) const override;
 
     void buildFileOps(OpRcPtrVec & ops,
                         const Config & config,
@@ -69,8 +78,7 @@ public:
     }
 
 private:
-    static void ThrowErrorMessage(const std::string & error,
-        const std::string & fileName);
+    static void ThrowErrorMessage(const std::string & error, const std::string & fileName);
 };
 
 void LocalFileFormat::getFormatInfo(FormatInfoVec & formatInfoVec) const
@@ -81,17 +89,19 @@ void LocalFileFormat::getFormatInfo(FormatInfoVec & formatInfoVec) const
     info.capabilities = FORMAT_CAPABILITY_READ;
     formatInfoVec.push_back(info);
 
-    // .icm and .pf are also fine
+    // .icm and .pf file extensions are also fine.
+
     info.name = "Image Color Matching profile";
     info.extension = "icm";
     formatInfoVec.push_back(info);
+
     info.name = "ICC profile";
     info.extension = "pf";
     formatInfoVec.push_back(info);
 }
 
 void LocalFileFormat::ThrowErrorMessage(const std::string & error,
-    const std::string & fileName)
+                                        const std::string & fileName)
 {
     std::ostringstream os;
     os << "Error parsing .icc file (";
@@ -102,13 +112,10 @@ void LocalFileFormat::ThrowErrorMessage(const std::string & error,
     throw Exception(os.str().c_str());
 }
 
-// Try and load the format
-// Raise an exception if it can't be loaded.
-CachedFileRcPtr LocalFileFormat::read(
-    std::istream & istream,
-    const std::string & fileName) const
+LocalCachedFileRcPtr LocalFileFormat::ReadInfo(std::istream & istream, 
+                                               const std::string & fileName,
+                                               SampleICC::IccContent & icc)
 {
-    SampleICC::IccContent icc;
     istream.seekg(0);
     if (!istream.good()
         || !SampleICC::Read32(istream, &icc.mHeader.size, 1)
@@ -147,9 +154,6 @@ CachedFileRcPtr LocalFileFormat::read(
         ThrowErrorMessage("Error loading header.", fileName);
     }
 
-    // TODO: Capture device name and creation date metadata
-    // in order to help users select the correct profile.
-
     if (icc.mHeader.magic != icMagicNumber)
     {
         ThrowErrorMessage("Wrong magic number.", fileName);
@@ -165,14 +169,13 @@ CachedFileRcPtr LocalFileFormat::read(
     icc.mTags.resize(count);
 
     // Read Tag offset table. 
-    for (i = 0; i<count; i++) {
+    for (i = 0; i<count; i++)
+    {
         if (!SampleICC::Read32(istream, &icc.mTags[i].mTagInfo.sig, 1)
             || !SampleICC::Read32(istream, &icc.mTags[i].mTagInfo.offset, 1)
             || !SampleICC::Read32(istream, &icc.mTags[i].mTagInfo.size, 1))
         {
-            ThrowErrorMessage(
-                "Error loading tag offset table from header.",
-                fileName);
+            ThrowErrorMessage("Error loading tag offset table from header.", fileName);
         }
     }
 
@@ -183,19 +186,69 @@ CachedFileRcPtr LocalFileFormat::read(
         ThrowErrorMessage(error, fileName);
     }
 
-    LocalCachedFileRcPtr cachedFile
-        = LocalCachedFileRcPtr(new LocalCachedFile());
+    LocalCachedFileRcPtr cachedFile = LocalCachedFileRcPtr(new LocalCachedFile());
+
+    // Get the profile description.
+    {
+        // First try the Apple private 'dscm' tag, which tends to have more accurate descriptions in
+        // Apple profiles. Fall back to the standard 'desc' tag if 'dscm' is not present.
+
+        SampleICC::IccTypeReader * reader = icc.LoadTag(istream, icSigProfileDescriptionMLTag);
+        if (!reader)
+        {
+            reader = icc.LoadTag(istream, icSigProfileDescriptionTag);
+        }
+
+        if (!reader)
+        {
+            // The tags are missing.
+            cachedFile->mProfileDescription = "";
+            return cachedFile;
+        }
+
+        const SampleICC::IccTextDescriptionTypeReader * desc =
+            dynamic_cast<const SampleICC::IccTextDescriptionTypeReader *>(reader);
+        if (desc)
+        {
+            cachedFile->mProfileDescription = desc->GetText();
+        }
+        else
+        {
+            // The profile description implementation is a list of localized unicode strings. But
+            // the OCIO implementation only returns the english string.
+            const SampleICC::IccMultiLocalizedUnicodeTypeReader * desc = 
+                dynamic_cast<const SampleICC::IccMultiLocalizedUnicodeTypeReader *>(reader);
+            if (desc)
+            {
+                cachedFile->mProfileDescription = desc->GetText();
+            }
+            else
+            {
+                ThrowErrorMessage("The 'desc' (or 'dcsm') reader is missing.", fileName);
+            }
+        }
+    }
+
+    return cachedFile;
+}
+
+// Try and load the format
+// Raise an exception if it can't be loaded.
+CachedFileRcPtr LocalFileFormat::read(std::istream & istream, const std::string & fileName) const
+{
+    SampleICC::IccContent icc;
+    LocalCachedFileRcPtr cachedFile = ReadInfo(istream, fileName, icc);
 
     // Matrix part of the Matrix/TRC Model
     {
-        const SampleICC::IccTagXYZ * red =
-            dynamic_cast<SampleICC::IccTagXYZ*>(
+        const SampleICC::IccXYZArrayTypeReader * red =
+            dynamic_cast<SampleICC::IccXYZArrayTypeReader*>(
                 icc.LoadTag(istream, icSigRedColorantTag));
-        const SampleICC::IccTagXYZ * green =
-            dynamic_cast<SampleICC::IccTagXYZ*>(
+        const SampleICC::IccXYZArrayTypeReader * green =
+            dynamic_cast<SampleICC::IccXYZArrayTypeReader*>(
                 icc.LoadTag(istream, icSigGreenColorantTag));
-        const SampleICC::IccTagXYZ * blue =
-            dynamic_cast<SampleICC::IccTagXYZ*>(
+        const SampleICC::IccXYZArrayTypeReader * blue =
+            dynamic_cast<SampleICC::IccXYZArrayTypeReader*>(
                 icc.LoadTag(istream, icSigBlueColorantTag));
 
         if (!red || !green || !blue)
@@ -226,12 +279,9 @@ CachedFileRcPtr LocalFileFormat::read(
     }
 
     // Extract the "B" Curve part of the Matrix/TRC Model
-    const SampleICC::IccTag * redTRC =
-        icc.LoadTag(istream, icSigRedTRCTag);
-    const SampleICC::IccTag * greenTRC =
-        icc.LoadTag(istream, icSigGreenTRCTag);
-    const SampleICC::IccTag * blueTRC =
-        icc.LoadTag(istream, icSigBlueTRCTag);
+    const SampleICC::IccTypeReader * redTRC   = icc.LoadTag(istream, icSigRedTRCTag);
+    const SampleICC::IccTypeReader * greenTRC = icc.LoadTag(istream, icSigGreenTRCTag);
+    const SampleICC::IccTypeReader * blueTRC  = icc.LoadTag(istream, icSigBlueTRCTag);
     if (!redTRC || !greenTRC || !blueTRC)
     {
         ThrowErrorMessage("Illegal curve tag in ICC profile.", fileName);
@@ -246,12 +296,12 @@ CachedFileRcPtr LocalFileFormat::read(
             ThrowErrorMessage(strSameType, fileName);
         }
 
-        const SampleICC::IccTagParametricCurve * red =
-            dynamic_cast<const SampleICC::IccTagParametricCurve*>(redTRC);
-        const SampleICC::IccTagParametricCurve * green =
-            dynamic_cast<const SampleICC::IccTagParametricCurve*>(greenTRC);
-        const SampleICC::IccTagParametricCurve * blue =
-            dynamic_cast<const SampleICC::IccTagParametricCurve*>(blueTRC);
+        const SampleICC::IccParametricCurveTypeReader * red =
+            dynamic_cast<const SampleICC::IccParametricCurveTypeReader*>(redTRC);
+        const SampleICC::IccParametricCurveTypeReader * green =
+            dynamic_cast<const SampleICC::IccParametricCurveTypeReader*>(greenTRC);
+        const SampleICC::IccParametricCurveTypeReader * blue =
+            dynamic_cast<const SampleICC::IccParametricCurveTypeReader*>(blueTRC);
 
         if (!red || !green || !blue)
         {
@@ -278,12 +328,12 @@ CachedFileRcPtr LocalFileFormat::read(
         {
             ThrowErrorMessage(strSameType, fileName);
         }
-        const SampleICC::IccTagCurve * red =
-            dynamic_cast<const SampleICC::IccTagCurve*>(redTRC);
-        const SampleICC::IccTagCurve * green =
-            dynamic_cast<const SampleICC::IccTagCurve*>(greenTRC);
-        const SampleICC::IccTagCurve * blue =
-            dynamic_cast<const SampleICC::IccTagCurve*>(blueTRC);
+        const SampleICC::IccCurveTypeReader * red =
+            dynamic_cast<const SampleICC::IccCurveTypeReader*>(redTRC);
+        const SampleICC::IccCurveTypeReader * green =
+            dynamic_cast<const SampleICC::IccCurveTypeReader*>(greenTRC);
+        const SampleICC::IccCurveTypeReader * blue =
+            dynamic_cast<const SampleICC::IccCurveTypeReader*>(blueTRC);
 
         if (!red || !green || !blue)
         {
@@ -398,7 +448,7 @@ LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
     // recovers what would be the actual matrix for a D65 native monitor.
     static const double D50_to_D65_m44[] = {
             0.955509474537, -0.023074829492, 0.063312392987, 0.0,
-        -0.028327238868,  1.00994465504,  0.021055592145, 0.0,
+           -0.028327238868,  1.00994465504,  0.021055592145, 0.0,
             0.012329273379, -0.020536209966, 1.33072998567,  0.0,
             0.0,             0.0,            0.0,            1.0
     };
@@ -471,6 +521,33 @@ LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
 FileFormat * CreateFileFormatICC()
 {
     return new LocalFileFormat();
+}
+
+std::string GetProfileDescriptionFromICCProfile(const char * ICCProfileFilepath)
+{
+    std::ifstream filestream(ICCProfileFilepath, std::ios_base::binary);
+    if (!filestream.good())
+    {
+        std::ostringstream os;
+        os << "The specified file '";
+        os << ICCProfileFilepath << "' could not be opened. ";
+        os << "Please confirm the file exists with appropriate read permissions.";
+        throw Exception(os.str().c_str());
+    }
+
+    SampleICC::IccContent icc;
+    LocalCachedFileRcPtr file = LocalFileFormat::ReadInfo(filestream, ICCProfileFilepath, icc);
+
+    std::string desc = file->mProfileDescription;
+    if (desc.empty())
+    {
+        // Fallback to the filename if the description is missing or empty.
+        std::string path, filename;
+        pystring::os::path::split(path, filename, ICCProfileFilepath);
+        desc = filename;
+    }
+
+    return desc;
 }
 
 } // namespace OCIO_NAMESPACE

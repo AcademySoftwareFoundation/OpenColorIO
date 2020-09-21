@@ -150,6 +150,7 @@ set(SOURCES
 	transforms/RangeTransform.cpp
 	ViewingRules.cpp
 	ViewTransform.cpp
+	SystemMonitor.cpp
 )
 
 if(OCIO_ADD_EXTRA_BUILTINS)
@@ -215,6 +216,14 @@ target_link_libraries(OpenColorIO
 		utils::strings
 		yaml-cpp
 )
+
+if(APPLE)
+	target_link_libraries(OpenColorIO
+		PRIVATE
+			"-framework Carbon"
+			"-framework IOKit"
+	)
+endif()
 
 if(NOT BUILD_SHARED_LIBS)
 	target_compile_definitions(OpenColorIO
