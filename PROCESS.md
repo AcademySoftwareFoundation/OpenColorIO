@@ -14,18 +14,19 @@ submitting changes.
 ## Core Library Changes
 
 This procedure outlines the OpenColorIO project's process for design, 
-development, and review of changes to the core library. The intent is for 
-discussion and decisions around such changes to be made in public and have 
-transparent outcomes, seeking the guidance of both the TSC (Technical Steering 
-Commitee) and the wider OCIO community and stakeholders.
+development, and review of changes to the core library, large new features, or 
+anything that might be perceived as changing the overall direction of the 
+project. The intent is for discussion and decisions around such changes to be 
+made in public and have transparent outcomes, seeking the guidance of both the 
+TSC (Technical Steering Commitee) and the wider OCIO community and stakeholders.
 
-**NOTE:** Changes to OpenColorIO process or governance are considered core 
-library changes since they have cascading effects across the project.
+**NOTE:** Changes to OpenColorIO process or governance have cascading effects 
+across the project so are treated as core changes.
 
 1. All core changes begin with community discussion, which can involve informal 
    conversation in [Slack](http://slack.opencolorio.org/) or on 
    [ocio-dev](https://lists.aswf.io/g/ocio-dev), but are ultimately brought to a 
-   TSC meeting where concensus can be reached around the proposal's relevance 
+   TSC meeting where consensus can be reached around the proposal's relevance 
    and approach. TSC meetings are public and meeting notes are posted to the 
    [OCIO repo](https://github.com/AcademySoftwareFoundation/OpenColorIO/tree/master/ASWF/meetings/tsc) 
    within days of a meeting for a permanent record of decisions.
@@ -35,7 +36,7 @@ library changes since they have cascading effects across the project.
    comments. Ongoing concerns may continue to be raised in this issue, and 
    brought to the TSC prior to and during development.
 3. Feature proposal issues are added to the 
-   [Roadmap](https://github.com/AcademySoftwareFoundation/OpenColorIO/projects/3) 
+   [Feature Development](https://github.com/AcademySoftwareFoundation/OpenColorIO/projects/3) 
    project in GitHub by a committer for tracking the status of all accepted 
    proposals in one place.
 4. During development, work in progress may optionally be shared for feedback 
@@ -46,17 +47,11 @@ library changes since they have cascading effects across the project.
    [linked to the associated issue]((https://docs.github.com/en/github/managing-your-work-on-github/linking-a-pull-request-to-an-issue) for review.
    Linking the issue and PR will result in the issue being closed automatically 
    upon the PR being merged, and facilitate tracking of the proposed feature in
-   the 
-   [Roadmap](https://github.com/AcademySoftwareFoundation/OpenColorIO/projects/3). 
+   [Feature Development](https://github.com/AcademySoftwareFoundation/OpenColorIO/projects/3). 
    See [CONTRIBUTING.md](CONTRIBUTING.md) for an overview of commit signing 
    requirements and a guide on submitting a pull request.
-6. The pull request is merged only after obtaining 2 approvals from committers 
-   listed in [COMMITTERS.md](COMMITTERS.md) that are not affiliated with the 
-   author or their company. If approval does not happen within two weeks and 
-   there are no raised objections or unresolved discussions happening about the 
-   feature, a committer that is affiliated with the author may approve it. See 
-   [Required Approvals](#Required-Approvals) for a detailed breakdown of OCIO 
-   pull request approval policy.
+6. The pull request is merged after being approved as documented in the 
+   [Required Approvals](#Required-Approvals) section below.
 
 **NOTE**: Software design is often an iterative process with development. While 
 a design proposal is required, it is understood that development of the 
@@ -78,41 +73,36 @@ the complexity and risk of the proposed changes, factoring in the length of
 time the PR has been open to discussion. The following guidelines outline the
 project's established approval rules for merging:
 
-* Core design decisions, large new features, or anything that might be perceived
-as changing the overall direction of the project should be discussed at length
-in the mail list before any PR is submitted, in order to: solicit feedback, try
-to get as much consensus as possible, and alert all the stakeholders to be on
-the lookout for the eventual PR when it appears.
+* All changes must receive a minimum of two approvals from Committers 
+  listed in [COMMITTERS.md](COMMITTERS.md) that are not affiliated with the 
+  author or their company prior to being merged. GitHub branch protections 
+  are enabled to enforce minimum committer count and Committer status. A 
+  Committer approval is denoted in a PR with a green check mark. A gray check 
+  mark beside an approval means the approver does not count toward the minimum
+  approval count, but such approvals are welcome and encouraged from the 
+  community.
 
-* Small changes (bug fixes, docs, tests, cleanups) can be approved and merged by
-a single Committer.
+* Ideally one of two approvers of a pull request should be the "owner" for that 
+  section of the codebase (if a specific owner has been designated). If the 
+  person submitting the PR is him/herself the "owner" of that section of the 
+  codebase, then only one additional Committer approval is required in addition 
+  to the submitter. But in either case, a 48 hour minimum is required to give 
+  everybody a chance to see it, unless it's a critical emergency fix.
 
-* Big changes that can alter behavior, add major features, or present a high
-degree of risk should be signed off by TWO Committers, ideally one of whom
-should be the "owner" for that section of the codebase (if a specific owner
-has been designated). If the person submitting the PR is him/herself the "owner"
-of that section of the codebase, then only one additional Committer approval is
-sufficient. But in either case, a 48 hour minimum is helpful to give everybody a
-chance to see it, unless it's a critical emergency fix (which would probably put
-it in the previous "small fix" category, rather than a "big feature").
+* If approval does not happen within two weeks of opening a pull request and 
+  there are no raised objections or unresolved discussions happening about the 
+  feature, a Committer that is affiliated with the author may approve it. At 
+  some point, we have to assume that the people who know and care are 
+  monitoring the PRs and that an extended period without objections is really 
+  assent.
 
-* Escape valve: big changes can nonetheless be merged by a single Committer if
-the PR has been open for over two weeks without any unaddressed objections from
-other Committers. At some point, we have to assume that the people who know and
-care are monitoring the PRs and that an extended period without objections is
-really assent.
+* Discussions and/or additional changes should result in no Committers 
+  objecting to the change. Previously-objecting Committers do not necessarily 
+  have to sign-off on the change, but they should not be opposed to it.
 
-Approval must be from Committers who are not authors of the change. If one or
-more Committers oppose a proposed change, then the change cannot be accepted
-unless:
-
-* Discussions and/or additional changes result in no Committers objecting to the
-change. Previously-objecting Committers do not necessarily have to sign-off on
-the change, but they should not be opposed to it.
-
-* The change is escalated to the TSC and the TSC votes to approve the change.
-This should only happen if disagreements between Committers cannot be resolved
-through discussion.
+* Changes may be escalated to the TSC for a vote to approve a PR. This should 
+  only happen if disagreements between Committers cannot be resolved through 
+  discussion.
 
 Committers may opt to elevate significant or controversial modifications to the
 TSC by assigning the `tsc-review` label to a pull request or issue. The TSC
