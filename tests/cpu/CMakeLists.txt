@@ -78,6 +78,7 @@ set(SOURCES
 	fileformats/cdl/CDLReaderHelper.cpp
 	fileformats/ctf/CTFReaderHelper.cpp
 	fileformats/ctf/CTFReaderUtils.cpp
+	fileformats/FileFormatUtils.cpp
 	fileformats/xmlutils/XMLReaderHelper.cpp
 	fileformats/xmlutils/XMLWriterUtils.cpp
 	GPUProcessor.cpp

@@ -34,7 +34,7 @@ class FileTransform::Impl
 {
 public:
     TransformDirection m_dir{ TRANSFORM_DIR_FORWARD };
-    Interpolation m_interp{ INTERP_UNKNOWN };
+    Interpolation m_interp{ INTERP_DEFAULT };
     std::string m_src;
 
     std::string m_cccid;
@@ -99,6 +99,14 @@ void FileTransform::validate() const
     if (getImpl()->m_src.empty())
     {
         throw Exception("FileTransform: empty file path");
+    }
+
+    if (getInterpolation() == INTERP_UNKNOWN)
+    {
+        std::ostringstream oss;
+        oss << "FileTransform can't use unknown interpolation. ";
+        oss << "File: '" << std::string(getImpl()->m_src) << "'.";
+        throw Exception(oss.str().c_str());
     }
 }
 

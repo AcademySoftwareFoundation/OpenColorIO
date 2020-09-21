@@ -6,6 +6,7 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "fileformats/FileFormatUtils.h"
 #include "ops/lut1d/Lut1DOp.h"
 #include "ops/matrix/MatrixOp.h"
 #include "ParseUtils.h"
@@ -267,9 +268,12 @@ void LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
         throw Exception(os.str().c_str());
     }
 
-    TransformDirection newDir = fileTransform.getDirection();
-    newDir = CombineTransformDirections(dir, newDir);
+    if (!cachedFile->lut)
+    {
+        return;
+    }
 
+    const auto newDir = CombineDirections(dir, fileTransform);
 
     const double min[3] = { cachedFile->from_min,
                             cachedFile->from_min,
@@ -279,17 +283,32 @@ void LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
                             cachedFile->from_max,
                             cachedFile->from_max };
 
-    cachedFile->lut->setInterpolation(fileTransform.getInterpolation());
+    const auto fileInterp = fileTransform.getInterpolation();
+
+    const Interpolation cachedInterp = cachedFile->m_fileTransformInterpolation;
+
+    bool fileInterpUsed = false;
+    Lut1DOpDataRcPtr lut = HandleLUT1D(cachedFile->lut, fileInterp, cachedInterp, fileInterpUsed);
+
+    if (!fileInterpUsed)
+    {
+        LogWarningInterpolationNotUsed(fileInterp, fileTransform);
+    }
 
     if (newDir == TRANSFORM_DIR_FORWARD)
     {
         CreateMinMaxOp(ops, min, max, TRANSFORM_DIR_FORWARD);
-        CreateLut1DOp(ops, cachedFile->lut, TRANSFORM_DIR_FORWARD);
+        CreateLut1DOp(ops, lut, TRANSFORM_DIR_FORWARD);
     }
     else
     {
-        CreateLut1DOp(ops, cachedFile->lut, TRANSFORM_DIR_INVERSE);
+        CreateLut1DOp(ops, lut, TRANSFORM_DIR_INVERSE);
         CreateMinMaxOp(ops, min, max, TRANSFORM_DIR_INVERSE);
+    }
+
+    if (cachedInterp == INTERP_UNKNOWN)
+    {
+        cachedFile->m_fileTransformInterpolation = fileInterp;
     }
 }
 

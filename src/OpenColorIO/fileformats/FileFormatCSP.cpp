@@ -13,6 +13,7 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "fileformats/FileFormatUtils.h"
 #include "MathUtils.h"
 #include "ops/lut1d/Lut1DOp.h"
 #include "ops/lut3d/Lut3DOp.h"
@@ -909,54 +910,70 @@ LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
         throw Exception(os.str().c_str());
     }
 
-    TransformDirection newDir = fileTransform.getDirection();
-    newDir = CombineTransformDirections(dir, newDir);
+    if (!cachedFile->prelut && !cachedFile->lut1D && !cachedFile->lut3D)
+    {
+        return;
+    }
+
+    const auto newDir = CombineDirections(dir, fileTransform);
+
+    const auto fileInterp = fileTransform.getInterpolation();
+
+    const Interpolation cachedInterp = cachedFile->m_fileTransformInterpolation;
+
+    bool fileInterpUsed = false;
+    auto prelut = HandleLUT1D(cachedFile->prelut, fileInterp, cachedInterp, fileInterpUsed);
+    auto lut1D = HandleLUT1D(cachedFile->lut1D, fileInterp, cachedInterp, fileInterpUsed);
+    auto lut3D = HandleLUT3D(cachedFile->lut3D, fileInterp, cachedInterp, fileInterpUsed);
+
+    if (!fileInterpUsed)
+    {
+        LogWarningInterpolationNotUsed(fileInterp, fileTransform);
+    }
 
     if(newDir == TRANSFORM_DIR_FORWARD)
     {
-        if(cachedFile->prelut)
+        if(prelut)
         {
             CreateMinMaxOp(ops,
-                            cachedFile->prelut_from_min,
-                            cachedFile->prelut_from_max,
-                            newDir);
-            CreateLut1DOp(ops, cachedFile->prelut, newDir);
+                           cachedFile->prelut_from_min,
+                           cachedFile->prelut_from_max,
+                           newDir);
+            CreateLut1DOp(ops, prelut, newDir);
         }
-        if (cachedFile->lut1D)
+        if (lut1D)
         {
-            cachedFile->lut1D->setInterpolation(fileTransform.getInterpolation());
-            CreateLut1DOp(ops, cachedFile->lut1D, newDir);
+            CreateLut1DOp(ops, lut1D, newDir);
         }
-        else if (cachedFile->lut3D)
+        else if (lut3D)
         {
-            cachedFile->lut3D->setInterpolation(fileTransform.getInterpolation());
-            CreateLut3DOp(ops, cachedFile->lut3D, newDir);
+            CreateLut3DOp(ops, lut3D, newDir);
         }
     }
     else if(newDir == TRANSFORM_DIR_INVERSE)
     {
-        if (cachedFile->lut1D)
+        if (lut1D)
         {
-            cachedFile->lut1D->setInterpolation(fileTransform.getInterpolation());
-            CreateLut1DOp(ops, cachedFile->lut1D, newDir);
+            CreateLut1DOp(ops, lut1D, newDir);
         }
-        else if (cachedFile->lut3D)
+        else if (lut3D)
         {
-            cachedFile->lut3D->setInterpolation(fileTransform.getInterpolation());
-            CreateLut3DOp(ops, cachedFile->lut3D, newDir);
+            CreateLut3DOp(ops, lut3D, newDir);
         }
-        if(cachedFile->prelut)
+        if(prelut)
         {
-            CreateLut1DOp(ops, cachedFile->prelut, newDir);
+            CreateLut1DOp(ops, prelut, newDir);
             CreateMinMaxOp(ops,
-                            cachedFile->prelut_from_min,
-                            cachedFile->prelut_from_max,
-                            newDir);
+                           cachedFile->prelut_from_min,
+                           cachedFile->prelut_from_max,
+                           newDir);
         }
     }
 
-    return;
-
+    if (cachedInterp == INTERP_UNKNOWN)
+    {
+        cachedFile->m_fileTransformInterpolation = fileInterp;
+    }
 }
 }
 

@@ -1408,7 +1408,7 @@ inline void save(YAML::Emitter& out, ConstFileTransformRcPtr t)
     {
         out << YAML::Key << "cdl_style" << YAML::Value << CDLStyleToString(t->getCDLStyle());
     }
-    if (t->getInterpolation() != INTERP_UNKNOWN)
+    if (t->getInterpolation() != INTERP_UNKNOWN && t->getInterpolation() != INTERP_DEFAULT)
     {
         out << YAML::Key << "interpolation";
         out << YAML::Value;

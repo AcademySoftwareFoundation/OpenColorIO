@@ -31,6 +31,12 @@ class BuiltinTransformTest(unittest.TestCase):
     def cleanUp(self):
         self.builtin_tr = None
 
+    def test_transform_type(self):
+        """
+        Test the getTransformType() method.
+        """
+        self.assertEqual(self.builtin_tr.getTransformType(), OCIO.TRANSFORM_TYPE_BUILTIN)
+
     def test_style(self):
         # Default style is identity
         self.assertEqual(self.builtin_tr.getStyle(), self.DEFAULT_STYLE)

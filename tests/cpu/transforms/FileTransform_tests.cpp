@@ -33,7 +33,7 @@ OCIO_ADD_TEST(FileTransform, basic)
     ft->setCDLStyle(OCIO::CDL_ASC);
     OCIO_CHECK_EQUAL(ft->getCDLStyle(), OCIO::CDL_ASC);
 
-    OCIO_CHECK_EQUAL(ft->getInterpolation(), OCIO::INTERP_UNKNOWN);
+    OCIO_CHECK_EQUAL(ft->getInterpolation(), OCIO::INTERP_DEFAULT);
     ft->setInterpolation(OCIO::INTERP_LINEAR);
     OCIO_CHECK_EQUAL(ft->getInterpolation(), OCIO::INTERP_LINEAR);
 }
@@ -295,6 +295,14 @@ OCIO_ADD_TEST(FileTransform, validate)
     tr->setSrc("lut3d_17x17x17_32f_12i.clf");
     OCIO_CHECK_NO_THROW(tr->validate());
 
+    tr->setInterpolation(OCIO::INTERP_UNKNOWN);
+    OCIO_CHECK_THROW_WHAT(tr->validate(), OCIO::Exception,
+                          "FileTransform can't use unknown interpolation");
+
+    tr->setInterpolation(OCIO::INTERP_BEST);
+    OCIO_CHECK_NO_THROW(tr->validate());
+
     tr->setSrc("");
-    OCIO_CHECK_THROW(tr->validate(), OCIO::Exception);
+    OCIO_CHECK_THROW_WHAT(tr->validate(), OCIO::Exception,
+                          "FileTransform: empty file path");
 }

@@ -4898,8 +4898,8 @@ OCIO_ADD_TEST(CTFTransform, save_lut_1d_1component)
     proc->write(OCIO::FILEFORMAT_CTF, outputTransform);
 
     const std::string result = outputTransform.str();
-    const std::string expected = "<Array dim = \"4 1\">";
-    OCIO_CHECK_ASSERT(result.find(expected));
+    const std::string expected = "<Array dim=\"4 1\">";
+    OCIO_CHECK_ASSERT(result.find(expected) != std::string::npos);
 }
 
 OCIO_ADD_TEST(CTFTransform, save_lut_1d_3components)
@@ -4911,8 +4911,8 @@ OCIO_ADD_TEST(CTFTransform, save_lut_1d_3components)
     proc->write(OCIO::FILEFORMAT_CTF, outputTransform);
 
     const std::string result = outputTransform.str();
-    const std::string expected = "<Array dim = \"32 3\">";
-    OCIO_CHECK_ASSERT(result.find(expected));
+    const std::string expected = "<Array dim=\"32 3\">";
+    OCIO_CHECK_ASSERT(result.find(expected) != std::string::npos);
 }
 
 OCIO_ADD_TEST(CTFTransform, save_invlut_1d_3components)
@@ -4925,10 +4925,10 @@ OCIO_ADD_TEST(CTFTransform, save_invlut_1d_3components)
 
     const std::string result = outputTransform.str();
     const std::string expected1 = "</InverseLUT1D>";
-    OCIO_CHECK_ASSERT(result.find(expected1));
+    OCIO_CHECK_ASSERT(result.find(expected1) != std::string::npos);
     // Components are equal, so only 1 get saved.
-    const std::string expected2 = "<Array dim = \"17 1\">";
-    OCIO_CHECK_ASSERT(result.find(expected2));
+    const std::string expected2 = "<Array dim=\"17 1\">";
+    OCIO_CHECK_ASSERT(result.find(expected2) != std::string::npos);
 }
 
 OCIO_ADD_TEST(CTFTransform, save_lut1d_halfdomain)
@@ -5059,6 +5059,61 @@ OCIO_ADD_TEST(CTFTransform, save_lut1d_f32)
     OCIO_CHECK_EQUAL(lut->getArray()[21], values[7]);
 }
 
+OCIO_ADD_TEST(CTFTransform, save_lut1d_interpolation)
+{
+    OCIO::ConfigRcPtr config = OCIO::Config::Create();
+    config->setMajorVersion(2);
+
+    OCIO::Lut1DTransformRcPtr lut = OCIO::Lut1DTransform::Create();
+    lut->setInterpolation(OCIO::INTERP_DEFAULT);
+
+    OCIO::ConstProcessorRcPtr processor = config->getProcessor(lut);
+    std::ostringstream outputTransform;
+    OCIO_CHECK_NO_THROW(processor->write(OCIO::FILEFORMAT_CTF, outputTransform));
+
+    {
+        const std::string result = outputTransform.str();
+        const std::string expected = R"(<LUT1D inBitDepth="32f" outBitDepth="32f">)";
+        OCIO_CHECK_ASSERT(result.find(expected) != std::string::npos);
+    }
+
+    outputTransform.str("");
+    outputTransform.clear();
+
+    lut->setInterpolation(OCIO::INTERP_BEST);
+
+    processor = config->getProcessor(lut);
+    OCIO_CHECK_NO_THROW(processor->write(OCIO::FILEFORMAT_CTF, outputTransform));
+
+    {
+        const std::string result = outputTransform.str();
+        const std::string expected = R"(<LUT1D inBitDepth="32f" outBitDepth="32f" interpolation="linear">)";
+        OCIO_CHECK_ASSERT(result.find(expected) != std::string::npos);
+    }
+
+    outputTransform.str("");
+    outputTransform.clear();
+
+    lut->setInterpolation(OCIO::INTERP_LINEAR);
+
+    processor = config->getProcessor(lut);
+    OCIO_CHECK_NO_THROW(processor->write(OCIO::FILEFORMAT_CTF, outputTransform));
+
+    {
+        const std::string result = outputTransform.str();
+        const std::string expected = R"(<LUT1D inBitDepth="32f" outBitDepth="32f" interpolation="linear">)";
+        OCIO_CHECK_ASSERT(result.find(expected) != std::string::npos);
+    }
+
+    outputTransform.str("");
+    outputTransform.clear();
+
+    lut->setInterpolation(OCIO::INTERP_CUBIC);
+
+    OCIO_CHECK_THROW_WHAT(processor = config->getProcessor(lut), OCIO::Exception,
+                          "1D LUT does not support interpolation algorithm: cubic");
+}
+
 OCIO_ADD_TEST(CTFTransform, save_invalid_lut_1d)
 {
     OCIO::Lut1DTransformRcPtr lutT = OCIO::Lut1DTransform::Create();
@@ -5081,7 +5136,7 @@ OCIO_ADD_TEST(CTFTransform, save_lut_3d)
 
     const std::string result = outputTransform.str();
     const std::string expected = "<Array dim=\"2 2 2 3\">";
-    OCIO_CHECK_ASSERT(result.find(expected));
+    OCIO_CHECK_ASSERT(result.find(expected) != std::string::npos);
 }
 
 OCIO_ADD_TEST(CTFTransform, save_range)
@@ -7718,6 +7773,70 @@ OCIO_ADD_TEST(CTFTransform, lut3d_inverse_ctf)
     OCIO_CHECK_EQUAL(expected, outputTransform.str());
 }
 
+OCIO_ADD_TEST(CTFTransform, save_lut3d_interpolation)
+{
+    OCIO::ConfigRcPtr config = OCIO::Config::Create();
+    config->setMajorVersion(2);
+
+    OCIO::Lut3DTransformRcPtr lut = OCIO::Lut3DTransform::Create();
+    lut->setInterpolation(OCIO::INTERP_DEFAULT);
+
+    OCIO::ConstProcessorRcPtr processor = config->getProcessor(lut);
+    std::ostringstream outputTransform;
+    OCIO_CHECK_NO_THROW(processor->write(OCIO::FILEFORMAT_CTF, outputTransform));
+
+    {
+        const std::string result = outputTransform.str();
+        const std::string expected = R"(<LUT3D inBitDepth="32f" outBitDepth="32f">)";
+        OCIO_CHECK_ASSERT(result.find(expected) != std::string::npos);
+    }
+
+    outputTransform.str("");
+    outputTransform.clear();
+
+    // INTERP_BEST is not a valid CTF/CLF method, so write its concrete value, which is
+    // tetrahedral.
+    lut->setInterpolation(OCIO::INTERP_BEST);
+    processor = config->getProcessor(lut);
+    OCIO_CHECK_NO_THROW(processor->write(OCIO::FILEFORMAT_CTF, outputTransform));
+
+    {
+        const std::string result = outputTransform.str();
+        const std::string expected = R"(<LUT3D inBitDepth="32f" outBitDepth="32f" interpolation="tetrahedral">)";
+        OCIO_CHECK_ASSERT(result.find(expected) != std::string::npos);
+    }
+
+    outputTransform.str("");
+    outputTransform.clear();
+
+    lut->setInterpolation(OCIO::INTERP_LINEAR);
+    processor = config->getProcessor(lut);
+    OCIO_CHECK_NO_THROW(processor->write(OCIO::FILEFORMAT_CTF, outputTransform));
+
+    {
+        const std::string result = outputTransform.str();
+        const std::string expected = R"(<LUT3D inBitDepth="32f" outBitDepth="32f" interpolation="trilinear">)";
+        OCIO_CHECK_ASSERT(result.find(expected) != std::string::npos);
+    }
+
+    lut->setInterpolation(OCIO::INTERP_TETRAHEDRAL);
+    processor = config->getProcessor(lut);
+    OCIO_CHECK_NO_THROW(processor->write(OCIO::FILEFORMAT_CTF, outputTransform));
+
+    {
+        const std::string result = outputTransform.str();
+        const std::string expected = R"(<LUT3D inBitDepth="32f" outBitDepth="32f" interpolation="tetrahedral">)";
+        OCIO_CHECK_ASSERT(result.find(expected) != std::string::npos);
+    }
+
+    outputTransform.str("");
+    outputTransform.clear();
+    lut->setInterpolation(OCIO::INTERP_CUBIC);
+
+    OCIO_CHECK_THROW_WHAT(processor = config->getProcessor(lut), OCIO::Exception,
+                          "Lut3D does not support interpolation algorithm: cubic");
+}
+
 OCIO_ADD_TEST(CTFTransform, bitdepth_ctf)
 {
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
@@ -8128,3 +8247,77 @@ R"(<?xml version="1.0" encoding="UTF-8"?>
     OCIO_CHECK_EQUAL(expectedCLF, output1.str());
 }
 #endif
+
+OCIO_ADD_TEST(FileFormatCTF, lut_interpolation_option)
+{
+    // Create empty Config to use.
+    OCIO::ConfigRcPtr config = OCIO::Config::Create();
+    config->setMajorVersion(2);
+
+    // CLF file containing a LUT3D that does not specifiy an interpolation.
+    const std::string filePath{ std::string(OCIO::getTestFilesDir()) +
+                                "/clf/lut3d_17x17x17_10i_12i.clf" };
+
+    OCIO::FileTransformRcPtr fileTransform = OCIO::FileTransform::Create();
+    fileTransform->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
+    fileTransform->setSrc(filePath.c_str());
+
+    // Get the processor corresponding to the transform with default interpolation.
+    // LUT3D is using default interpolation.
+    OCIO::ConstProcessorRcPtr proc;
+    OCIO_CHECK_NO_THROW(proc = config->getProcessor(fileTransform));
+    auto group = proc->createGroupTransform();
+    OCIO_REQUIRE_EQUAL(group->getNumTransforms(), 1);
+    auto transform = group->getTransform(0);
+    auto lut3D = OCIO_DYNAMIC_POINTER_CAST<OCIO::Lut3DTransform>(transform);
+    OCIO_REQUIRE_ASSERT(lut3D);
+    OCIO_CHECK_EQUAL(lut3D->getInterpolation(), OCIO::INTERP_DEFAULT);
+
+    // For LUTs that do not specify an interpolation, if the FileTransform interpolation may be
+    // used, it is.
+    fileTransform->setInterpolation(OCIO::INTERP_BEST);
+    OCIO_CHECK_NO_THROW(proc = config->getProcessor(fileTransform));
+    group = proc->createGroupTransform();
+    OCIO_REQUIRE_EQUAL(group->getNumTransforms(), 1);
+    transform = group->getTransform(0);
+    lut3D = OCIO_DYNAMIC_POINTER_CAST<OCIO::Lut3DTransform>(transform);
+    OCIO_REQUIRE_ASSERT(lut3D);
+    OCIO_CHECK_EQUAL(lut3D->getInterpolation(), OCIO::INTERP_BEST);
+
+    // If the FileTranform interpolation is not supported by the LUT, it is ignored and default
+    // interpolation is used.
+    fileTransform->setInterpolation(OCIO::INTERP_CUBIC);
+    OCIO_CHECK_NO_THROW(proc = config->getProcessor(fileTransform));
+    group = proc->createGroupTransform();
+    OCIO_REQUIRE_EQUAL(group->getNumTransforms(), 1);
+    transform = group->getTransform(0);
+    lut3D = OCIO_DYNAMIC_POINTER_CAST<OCIO::Lut3DTransform>(transform);
+    OCIO_REQUIRE_ASSERT(lut3D);
+    OCIO_CHECK_EQUAL(lut3D->getInterpolation(), OCIO::INTERP_DEFAULT);
+
+    // CTF file containing a LUT3D that specifies tetrahedral interpolation.
+    const std::string filePath2{ std::string(OCIO::getTestFilesDir()) +
+                                 "/lut3d_example_Inv.ctf" };
+
+    fileTransform->setSrc(filePath2.c_str());
+
+    // Whatever the file transform interpolation, LUT will keep its interpolation.
+    fileTransform->setInterpolation(OCIO::INTERP_DEFAULT);
+    OCIO_CHECK_NO_THROW(proc = config->getProcessor(fileTransform));
+    group = proc->createGroupTransform();
+    OCIO_REQUIRE_EQUAL(group->getNumTransforms(), 1);
+    transform = group->getTransform(0);
+    lut3D = OCIO_DYNAMIC_POINTER_CAST<OCIO::Lut3DTransform>(transform);
+    OCIO_REQUIRE_ASSERT(lut3D);
+    OCIO_CHECK_EQUAL(lut3D->getInterpolation(), OCIO::INTERP_TETRAHEDRAL);
+
+    // (INTERP_LINEAR is trilinear for LUT3D.)
+    fileTransform->setInterpolation(OCIO::INTERP_LINEAR);
+    OCIO_CHECK_NO_THROW(proc = config->getProcessor(fileTransform));
+    group = proc->createGroupTransform();
+    OCIO_REQUIRE_EQUAL(group->getNumTransforms(), 1);
+    transform = group->getTransform(0);
+    lut3D = OCIO_DYNAMIC_POINTER_CAST<OCIO::Lut3DTransform>(transform);
+    OCIO_REQUIRE_ASSERT(lut3D);
+    OCIO_CHECK_EQUAL(lut3D->getInterpolation(), OCIO::INTERP_TETRAHEDRAL);
+}

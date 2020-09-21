@@ -7,6 +7,13 @@ import PyOpenColorIO as OCIO
 
 class RangeTransformTest(unittest.TestCase):
 
+    def test_transform_type(self):
+        """
+        Test the getTransformType() method.
+        """
+        rt = OCIO.RangeTransform()
+        self.assertEqual(rt.getTransformType(), OCIO.TRANSFORM_TYPE_RANGE)
+
     def test_interface(self):
 
         rt = OCIO.RangeTransform()

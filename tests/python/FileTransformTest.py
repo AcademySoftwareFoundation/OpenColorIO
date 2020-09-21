@@ -4,8 +4,7 @@
 import unittest
 
 import PyOpenColorIO as OCIO
-from UnitTestUtils import TEST_NAMES
-
+from UnitTestUtils import TEST_DATAFILES_DIR, TEST_NAMES
 
 class FileTransformTest(unittest.TestCase):
     TEST_DIRECTION = OCIO.TRANSFORM_DIR_FORWARD
@@ -43,6 +42,12 @@ class FileTransformTest(unittest.TestCase):
 
     def tearDown(self):
         self.file_tr = None
+
+    def test_transform_type(self):
+        """
+        Test the getTransformType() method.
+        """
+        self.assertEqual(self.file_tr.getTransformType(), OCIO.TRANSFORM_TYPE_FILE)
 
     def test_cccid(self):
         """
@@ -119,8 +124,8 @@ class FileTransformTest(unittest.TestCase):
         Test the setInterpolation() and getInterpolation() methods.
         """
 
-        # Default initialized interpolation is unknown.
-        self.assertEqual(self.file_tr.getInterpolation(), OCIO.INTERP_UNKNOWN)
+        # Default initialized interpolation is default.
+        self.assertEqual(self.file_tr.getInterpolation(), OCIO.INTERP_DEFAULT)
 
         for interpolation in OCIO.Interpolation.__members__.values():
             self.file_tr.setInterpolation(interpolation)
@@ -202,6 +207,19 @@ class FileTransformTest(unittest.TestCase):
         for invalid in (None, 1):
             with self.assertRaises(TypeError):
                 file_tr = OCIO.ExponentTransform(invalid)
+
+    def test_get_processor(self):
+        """
+        Test FileTransform default interpolation is valid unknown is invalid.
+        """
+        config = OCIO.Config.CreateRaw()
+        test_file = '%s/lut1d_1.spi1d' % TEST_DATAFILES_DIR
+        file_tr = OCIO.FileTransform(src=test_file)
+        processor = config.getProcessor(file_tr)
+        # INTERP_UNKNOWN is not a valid interpolation.
+        file_tr.setInterpolation(OCIO.INTERP_UNKNOWN)
+        with self.assertRaises(OCIO.Exception):
+            processor = config.getProcessor(file_tr)
 
 # TODO:
 # No CDLStyle parameter in constructor?

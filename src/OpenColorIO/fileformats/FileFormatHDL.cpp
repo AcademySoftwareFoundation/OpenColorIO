@@ -29,6 +29,7 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "fileformats/FileFormatUtils.h"
 #include "MathUtils.h"
 #include "ops/lut1d/Lut1DOp.h"
 #include "ops/lut3d/Lut3DOp.h"
@@ -902,16 +903,24 @@ LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
         throw Exception(os.str().c_str());
     }
 
-    TransformDirection newDir = CombineTransformDirections(dir,
-        fileTransform.getDirection());
-
-    if (cachedFile->lut3D)
+    if (!cachedFile->lut1D && !cachedFile->lut3D)
     {
-        cachedFile->lut3D->setInterpolation(fileTransform.getInterpolation());
+        return;
     }
-    else if (cachedFile->lut1D)
+
+    const auto newDir = CombineDirections(dir, fileTransform);
+
+    const auto fileInterp = fileTransform.getInterpolation();
+
+    const Interpolation cachedInterp = cachedFile->m_fileTransformInterpolation;
+
+    bool fileInterpUsed = false;
+    auto lut1D = HandleLUT1D(cachedFile->lut1D, fileInterp, cachedInterp, fileInterpUsed);
+    auto lut3D = HandleLUT3D(cachedFile->lut3D, fileInterp, cachedInterp, fileInterpUsed);
+
+    if (!fileInterpUsed)
     {
-        cachedFile->lut1D->setInterpolation(fileTransform.getInterpolation());
+        LogWarningInterpolationNotUsed(fileInterp, fileTransform);
     }
 
     if(newDir == TRANSFORM_DIR_FORWARD)
@@ -919,17 +928,17 @@ LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
         if(cachedFile->hdltype == "c")
         {
             CreateMinMaxOp(ops, cachedFile->from_min, cachedFile->from_max, newDir);
-            CreateLut1DOp(ops, cachedFile->lut1D, newDir);
+            CreateLut1DOp(ops, lut1D, newDir);
         }
         else if(cachedFile->hdltype == "3d")
         {
-            CreateLut3DOp(ops, cachedFile->lut3D, newDir);
+            CreateLut3DOp(ops, lut3D, newDir);
         }
         else if(cachedFile->hdltype == "3d+1d")
         {
             CreateMinMaxOp(ops, cachedFile->from_min, cachedFile->from_max, newDir);
-            CreateLut1DOp(ops, cachedFile->lut1D, newDir);
-            CreateLut3DOp(ops, cachedFile->lut3D, newDir);
+            CreateLut1DOp(ops, lut1D, newDir);
+            CreateLut3DOp(ops, lut3D, newDir);
         }
         else
         {
@@ -940,17 +949,17 @@ LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
     {
         if(cachedFile->hdltype == "c")
         {
-            CreateLut1DOp(ops, cachedFile->lut1D, newDir);
+            CreateLut1DOp(ops, lut1D, newDir);
             CreateMinMaxOp(ops, cachedFile->from_min, cachedFile->from_max, newDir);
         }
         else if(cachedFile->hdltype == "3d")
         {
-            CreateLut3DOp(ops, cachedFile->lut3D, newDir);
+            CreateLut3DOp(ops, lut3D, newDir);
         }
         else if(cachedFile->hdltype == "3d+1d")
         {
-            CreateLut3DOp(ops, cachedFile->lut3D, newDir);
-            CreateLut1DOp(ops, cachedFile->lut1D, newDir);
+            CreateLut3DOp(ops, lut3D, newDir);
+            CreateLut1DOp(ops, lut1D, newDir);
             CreateMinMaxOp(ops, cachedFile->from_min, cachedFile->from_max, newDir);
         }
         else
@@ -958,7 +967,10 @@ LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
             throw Exception("Unhandled hdltype while creating reverse ops");
         }
     }
-    return;
+    if (cachedInterp == INTERP_UNKNOWN)
+    {
+        cachedFile->m_fileTransformInterpolation = fileInterp;
+    }
 }
 }
 

@@ -40,11 +40,8 @@ namespace
 OCIO::ConstProcessorRcPtr GetTransformFileProcessor(const std::string & fileName)
 {
     // (Path will be normalized, so this works even on Windows.)
-    const std::string filePath(std::string(OCIO::getTestFilesDir()) + "/"
-                               + fileName);
-    OCIO::FileTransformRcPtr pFileTransform
-        = OCIO::FileTransform::Create();
-    pFileTransform->setInterpolation(OCIO::INTERP_LINEAR);
+    const std::string filePath(std::string(OCIO::getTestFilesDir()) + "/" + fileName);
+    OCIO::FileTransformRcPtr pFileTransform = OCIO::FileTransform::Create();
     pFileTransform->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
     pFileTransform->setSrc(filePath.c_str());
 

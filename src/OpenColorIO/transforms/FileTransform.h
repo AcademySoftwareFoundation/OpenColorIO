@@ -26,6 +26,10 @@ class CachedFile
 public:
     CachedFile() {};
     virtual ~CachedFile() {};
+
+    // All uses of a FileTransform pointing to the same LUT file must have the same interpolation.
+    // The variable keeps the first interpolation to compare with the other uses.
+    Interpolation m_fileTransformInterpolation{ INTERP_UNKNOWN };
 };
 
 typedef OCIO_SHARED_PTR<CachedFile> CachedFileRcPtr;

@@ -7,6 +7,7 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "fileformats/FileFormatUtils.h"
 #include "ops/lut3d/Lut3DOp.h"
 #include "Platform.h"
 #include "transforms/FileTransform.h"
@@ -226,13 +227,30 @@ void LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
         throw Exception(os.str().c_str());
     }
 
-    TransformDirection newDir = fileTransform.getDirection();
-    newDir = CombineTransformDirections(dir, newDir);
+    if (!cachedFile->lut)
+    {
+        return;
+    }
 
-    cachedFile->lut->setInterpolation(fileTransform.getInterpolation());
-    CreateLut3DOp(ops,
-                    cachedFile->lut,
-                    newDir);
+    const auto newDir = CombineDirections(dir, fileTransform);
+
+    const auto fileInterp = fileTransform.getInterpolation();
+
+    const Interpolation cachedInterp = cachedFile->m_fileTransformInterpolation;
+    bool fileInterpUsed = false;
+    auto lut = HandleLUT3D(cachedFile->lut, fileInterp, cachedInterp, fileInterpUsed);
+
+    if (!fileInterpUsed)
+    {
+        LogWarningInterpolationNotUsed(fileInterp, fileTransform);
+    }
+
+    CreateLut3DOp(ops, lut, newDir);
+
+    if (cachedInterp == INTERP_UNKNOWN)
+    {
+        cachedFile->m_fileTransformInterpolation = fileInterp;
+    }
 }
 }
 

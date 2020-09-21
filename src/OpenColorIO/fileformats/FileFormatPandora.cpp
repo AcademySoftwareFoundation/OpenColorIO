@@ -8,6 +8,7 @@
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "BitDepthUtils.h"
+#include "fileformats/FileFormatUtils.h"
 #include "ops/lut1d/Lut1DOp.h"
 #include "ops/lut3d/Lut3DOp.h"
 #include "ParseUtils.h"
@@ -284,20 +285,28 @@ LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
         throw Exception(os.str().c_str());
     }
 
-    TransformDirection newDir = CombineTransformDirections(dir,
-        fileTransform.getDirection());
-    if(newDir == TRANSFORM_DIR_UNKNOWN)
-    {
-        std::ostringstream os;
-        os << "Cannot build file format transform,";
-        os << " unspecified transform direction.";
-        throw Exception(os.str().c_str());
-    }
+    const auto newDir = CombineDirections(dir, fileTransform);
 
     if (cachedFile->lut3D)
     {
-        cachedFile->lut3D->setInterpolation(fileTransform.getInterpolation());
-        CreateLut3DOp(ops, cachedFile->lut3D, newDir);
+        const auto fileInterp = fileTransform.getInterpolation();
+
+        const Interpolation cachedInterp = cachedFile->m_fileTransformInterpolation;
+
+        bool fileInterpUsed = false;
+        auto lut3D = HandleLUT3D(cachedFile->lut3D, fileInterp, cachedInterp, fileInterpUsed);
+
+        if (!fileInterpUsed)
+        {
+            LogWarningInterpolationNotUsed(fileInterp, fileTransform);
+        }
+
+        CreateLut3DOp(ops, lut3D, newDir);
+
+        if (cachedInterp == INTERP_UNKNOWN)
+        {
+            cachedFile->m_fileTransformInterpolation = fileInterp;
+        }
     }
 }
 }

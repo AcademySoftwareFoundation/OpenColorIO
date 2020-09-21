@@ -8,6 +8,7 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "fileformats/FileFormatUtils.h"
 #include "ops/lut3d/Lut3DOp.h"
 #include "ops/matrix/MatrixOp.h"
 #include "ParseUtils.h"
@@ -262,38 +263,52 @@ LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
         throw Exception(os.str().c_str());
     }
 
-    TransformDirection newDir = CombineTransformDirections(dir,
-        fileTransform.getDirection());
-    if(newDir == TRANSFORM_DIR_UNKNOWN)
-    {
-        std::ostringstream os;
-        os << "Cannot build file format transform,";
-        os << " unspecified transform direction.";
-        throw Exception(os.str().c_str());
-    }
+    const auto newDir = CombineDirections(dir, fileTransform);
+
+    const Interpolation cachedInterp = cachedFile->m_fileTransformInterpolation;
+
+    const auto fileInterp = fileTransform.getInterpolation();
+
+    Lut3DOpDataRcPtr lut3D;
 
     if (cachedFile->lut3D)
     {
-        cachedFile->lut3D->setInterpolation(fileTransform.getInterpolation());
+        bool fileInterpUsed = false;
+        lut3D = HandleLUT3D(cachedFile->lut3D, fileInterp, cachedInterp, fileInterpUsed);
+
+        if (!fileInterpUsed)
+        {
+            LogWarningInterpolationNotUsed(fileInterp, fileTransform);
+        }
     }
 
-    if(newDir == TRANSFORM_DIR_FORWARD)
+    if (newDir == TRANSFORM_DIR_FORWARD)
     {
-        if(cachedFile->useMatrix)
+        if (cachedFile->useMatrix)
         {
             CreateMatrixOp(ops, cachedFile->m44, newDir);
         }
 
-        CreateLut3DOp(ops, cachedFile->lut3D, newDir);
+        if (lut3D)
+        {
+            CreateLut3DOp(ops, lut3D, newDir);
+        }
     }
-    else if(newDir == TRANSFORM_DIR_INVERSE)
+    else if (newDir == TRANSFORM_DIR_INVERSE)
     {
-        CreateLut3DOp(ops, cachedFile->lut3D, newDir);
+        if (lut3D)
+        {
+            CreateLut3DOp(ops, lut3D, newDir);
+        }
 
-        if(cachedFile->useMatrix)
+        if (cachedFile->useMatrix)
         {
             CreateMatrixOp(ops, cachedFile->m44, newDir);
         }
+    }
+    if (lut3D && cachedInterp == INTERP_UNKNOWN)
+    {
+        cachedFile->m_fileTransformInterpolation = fileInterp;
     }
 }
 }

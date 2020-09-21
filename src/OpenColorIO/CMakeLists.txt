@@ -37,6 +37,7 @@ set(SOURCES
 	fileformats/FileFormatSpi3D.cpp
 	fileformats/FileFormatSpiMtx.cpp
 	fileformats/FileFormatTruelight.cpp
+	fileformats/FileFormatUtils.cpp
 	fileformats/FileFormatVF.cpp
 	fileformats/FormatMetadata.cpp
 	fileformats/xmlutils/XMLReaderHelper.cpp

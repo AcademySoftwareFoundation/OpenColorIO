@@ -93,6 +93,8 @@ public:
      */
     virtual void setDirection(TransformDirection dir) noexcept = 0;
 
+    virtual TransformType getTransformType() const noexcept = 0;
+
     /// Will throw if data is not valid.
     virtual void validate() const;
 
@@ -121,6 +123,8 @@ public:
 
     TransformDirection getDirection() const noexcept override;
     void setDirection(TransformDirection dir) noexcept override;
+
+    TransformType getTransformType() const noexcept override { return TRANSFORM_TYPE_ALLOCATION; }
 
     /// Will throw if data is not valid.
     void validate() const override;
@@ -159,6 +163,8 @@ class OCIOEXPORT BuiltinTransform : public Transform
 {
 public:
     static BuiltinTransformRcPtr Create();
+
+    TransformType getTransformType() const noexcept override { return TRANSFORM_TYPE_BUILTIN; }
 
     virtual const char * getStyle() const noexcept = 0;
     /**
@@ -205,6 +211,8 @@ public:
      * or envvar resolution is performed.
      */
     static CDLTransformRcPtr CreateFromFile(const char * src, const char * cccid);
+
+    TransformType getTransformType() const noexcept override { return TRANSFORM_TYPE_CDL; }
 
     virtual FormatMetadata & getFormatMetadata() noexcept = 0;
     virtual const FormatMetadata & getFormatMetadata() const noexcept = 0;
@@ -291,6 +299,8 @@ public:
     TransformDirection getDirection() const noexcept override;
     void setDirection(TransformDirection dir) noexcept override;
 
+    TransformType getTransformType() const noexcept override { return TRANSFORM_TYPE_COLORSPACE; }
+
     void validate() const override;
 
     const char * getSrc() const;
@@ -331,6 +341,8 @@ public:
 
     TransformDirection getDirection() const noexcept override;
     void setDirection(TransformDirection dir) noexcept override;
+
+    TransformType getTransformType() const noexcept override { return TRANSFORM_TYPE_DISPLAY_VIEW; }
 
     /// Will throw if data is not valid.
     void validate() const override;
@@ -755,6 +767,8 @@ class OCIOEXPORT ExponentTransform : public Transform
 public:
     static ExponentTransformRcPtr Create();
 
+    TransformType getTransformType() const noexcept override { return TRANSFORM_TYPE_EXPONENT; }
+
     virtual const FormatMetadata & getFormatMetadata() const noexcept = 0;
     virtual FormatMetadata & getFormatMetadata() noexcept = 0;
 
@@ -801,6 +815,8 @@ class OCIOEXPORT ExponentWithLinearTransform : public Transform
 {
 public:
     static ExponentWithLinearTransformRcPtr Create();
+
+    TransformType getTransformType() const noexcept override { return TRANSFORM_TYPE_EXPONENT_WITH_LINEAR; }
 
     virtual const FormatMetadata & getFormatMetadata() const noexcept = 0;
     virtual FormatMetadata & getFormatMetadata() noexcept = 0;
@@ -856,6 +872,8 @@ class OCIOEXPORT ExposureContrastTransform : public Transform
 {
 public:
     static ExposureContrastTransformRcPtr Create();
+
+    TransformType getTransformType() const noexcept override { return TRANSFORM_TYPE_EXPOSURE_CONTRAST; }
 
     virtual const FormatMetadata & getFormatMetadata() const noexcept = 0;
     virtual FormatMetadata & getFormatMetadata() noexcept = 0;
@@ -952,6 +970,8 @@ public:
     TransformDirection getDirection() const noexcept override;
     void setDirection(TransformDirection dir) noexcept override;
 
+    TransformType getTransformType() const noexcept override { return TRANSFORM_TYPE_FILE; }
+
     /// Will throw if data is not valid.
     void validate() const override;
 
@@ -1012,6 +1032,8 @@ class OCIOEXPORT FixedFunctionTransform : public Transform
 public:
     static FixedFunctionTransformRcPtr Create();
 
+    TransformType getTransformType() const noexcept override { return TRANSFORM_TYPE_FIXED_FUNCTION; }
+
     virtual const FormatMetadata & getFormatMetadata() const noexcept = 0;
     virtual FormatMetadata & getFormatMetadata() noexcept = 0;
 
@@ -1059,6 +1081,8 @@ class OCIOEXPORT GradingPrimaryTransform : public Transform
 public:
     /// Creates an instance of GradingPrimaryTransform.
     static GradingPrimaryTransformRcPtr Create(GradingStyle style);
+
+    TransformType getTransformType() const noexcept override { return TRANSFORM_TYPE_GRADING_PRIMARY; }
 
     virtual const FormatMetadata & getFormatMetadata() const noexcept = 0;
     virtual FormatMetadata & getFormatMetadata() noexcept = 0;
@@ -1109,6 +1133,8 @@ class OCIOEXPORT GradingRGBCurveTransform : public Transform
 public:
     /// Creates an instance of GradingPrimaryTransform.
     static GradingRGBCurveTransformRcPtr Create(GradingStyle style);
+
+    TransformType getTransformType() const noexcept override { return TRANSFORM_TYPE_GRADING_RGB_CURVE; }
 
     virtual const FormatMetadata & getFormatMetadata() const noexcept = 0;
     virtual FormatMetadata & getFormatMetadata() noexcept = 0;
@@ -1178,6 +1204,8 @@ public:
     /// Creates an instance of GradingToneTransform.
     static GradingToneTransformRcPtr Create(GradingStyle style);
 
+    TransformType getTransformType() const noexcept override { return TRANSFORM_TYPE_GRADING_TONE; }
+
     virtual const FormatMetadata & getFormatMetadata() const noexcept = 0;
     virtual FormatMetadata & getFormatMetadata() noexcept = 0;
 
@@ -1216,6 +1244,8 @@ public:
 
     TransformDirection getDirection() const noexcept override;
     void setDirection(TransformDirection dir) noexcept override;
+
+    TransformType getTransformType() const noexcept override { return TRANSFORM_TYPE_GROUP; }
 
     /// Will throw if data is not valid.
     void validate() const override;
@@ -1266,6 +1296,8 @@ class OCIOEXPORT LogAffineTransform : public Transform
 public:
     static LogAffineTransformRcPtr Create();
 
+    TransformType getTransformType() const noexcept override { return TRANSFORM_TYPE_LOG_AFFINE; }
+
     virtual const FormatMetadata & getFormatMetadata() const noexcept = 0;
     virtual FormatMetadata & getFormatMetadata() noexcept = 0;
 
@@ -1310,6 +1342,8 @@ class OCIOEXPORT LogCameraTransform : public Transform
 {
 public:
     static LogCameraTransformRcPtr Create();
+
+    TransformType getTransformType() const noexcept override { return TRANSFORM_TYPE_LOG_CAMERA; }
 
     virtual const FormatMetadata & getFormatMetadata() const noexcept = 0;
     virtual FormatMetadata & getFormatMetadata() noexcept = 0;
@@ -1370,6 +1404,8 @@ class OCIOEXPORT LogTransform : public Transform
 public:
     static LogTransformRcPtr Create();
 
+    TransformType getTransformType() const noexcept override { return TRANSFORM_TYPE_LOG; }
+
     virtual const FormatMetadata & getFormatMetadata() const noexcept = 0;
     virtual FormatMetadata & getFormatMetadata() noexcept = 0;
 
@@ -1399,6 +1435,8 @@ public:
 
     TransformDirection getDirection() const noexcept override;
     void setDirection(TransformDirection dir) noexcept override;
+
+    TransformType getTransformType() const noexcept override { return TRANSFORM_TYPE_LOOK; }
 
     /// Will throw if data is not valid.
     void validate() const override;
@@ -1463,6 +1501,8 @@ public:
      */
     static Lut1DTransformRcPtr Create(unsigned long length,
                                       bool isHalfDomain);
+
+    TransformType getTransformType() const noexcept override { return TRANSFORM_TYPE_LUT1D; }
 
     virtual BitDepth getFileOutputBitDepth() const noexcept = 0;
     /**
@@ -1564,6 +1604,8 @@ public:
      */
     static Lut3DTransformRcPtr Create(unsigned long gridSize);
 
+    TransformType getTransformType() const noexcept override { return TRANSFORM_TYPE_LUT3D; }
+
     virtual BitDepth getFileOutputBitDepth() const noexcept = 0;
     /**
      * Get the bit-depth associated with the LUT values read
@@ -1631,6 +1673,8 @@ class OCIOEXPORT MatrixTransform : public Transform
 {
 public:
     static MatrixTransformRcPtr Create();
+
+    TransformType getTransformType() const noexcept override { return TRANSFORM_TYPE_MATRIX; }
 
     virtual const FormatMetadata & getFormatMetadata() const noexcept = 0;
     virtual FormatMetadata & getFormatMetadata() noexcept = 0;
@@ -1741,6 +1785,8 @@ class OCIOEXPORT RangeTransform : public Transform
 public:
     /// Creates an instance of RangeTransform.
     static RangeTransformRcPtr Create();
+
+    TransformType getTransformType() const noexcept override { return TRANSFORM_TYPE_RANGE; }
 
     virtual RangeStyle getStyle() const noexcept = 0;
     /// Set the Range style to clamp or not input values.

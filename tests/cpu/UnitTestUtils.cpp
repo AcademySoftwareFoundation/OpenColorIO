@@ -30,17 +30,10 @@ const char * getTestFilesDir()
 // Create a FileTransform.
 FileTransformRcPtr CreateFileTransform(const std::string & fileName)
 {
-    const std::string filePath(std::string(getTestFilesDir()) + "/"
-        + fileName);
+    const std::string filePath(std::string(getTestFilesDir()) + "/" + fileName);
 
     // Create a FileTransform
     FileTransformRcPtr pFileTransform = FileTransform::Create();
-    // To avoid an exception when creating the ops, we need to manually set an
-    // interpolation and direction.  This is usually done in the config but in
-    // this case we are loading directly from a file (and most file formats
-    // don't specify this).
-    pFileTransform->setInterpolation(INTERP_LINEAR);
-    pFileTransform->setDirection(TRANSFORM_DIR_FORWARD);
     pFileTransform->setSrc(filePath.c_str());
 
     return pFileTransform;
