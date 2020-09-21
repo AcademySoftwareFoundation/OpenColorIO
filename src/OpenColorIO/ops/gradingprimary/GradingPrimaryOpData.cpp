@@ -28,7 +28,10 @@ GradingPrimaryOpData::GradingPrimaryOpData(GradingStyle style)
 
 GradingPrimaryOpData::GradingPrimaryOpData(const GradingPrimaryOpData & rhs)
     : m_style(rhs.m_style)
-    , m_value(std::make_shared<DynamicPropertyGradingPrimaryImpl>(GradingPrimary(rhs.m_style), false))
+    , m_value(std::make_shared<DynamicPropertyGradingPrimaryImpl>(rhs.m_style,
+                                                                  TRANSFORM_DIR_FORWARD,
+                                                                  GradingPrimary(rhs.m_style),
+                                                                  false))
 {
     *this = rhs;
 }
