@@ -24,17 +24,38 @@ GradingToneOpData::GradingToneOpData(GradingStyle style)
 {
 }
 
+GradingToneOpData::GradingToneOpData(const GradingToneOpData & other)
+    : m_style(other.m_style)
+    , m_value(std::make_shared<DynamicPropertyGradingToneImpl>(GradingTone(other.m_style), other.m_style, false))
+{
+    *this = other;
+}
+
+GradingToneOpData & GradingToneOpData::operator=(const GradingToneOpData & rhs)
+{
+    if (this == &rhs) return *this;
+
+    OpData::operator=(rhs);
+
+    m_style     = rhs.m_style;
+    m_direction = rhs.m_direction;
+
+    // Copy dynamic properties. Sharing happens when needed, with CPUop for instance.
+    m_value->setValue(rhs.m_value->getValue());
+    if (rhs.m_value->isDynamic())
+    {
+        m_value->makeDynamic();
+    }
+
+    return *this;
+}
+
 GradingToneOpData::~GradingToneOpData()
 {
 }
 
 GradingToneOpDataRcPtr GradingToneOpData::clone() const
 {
-    GradingToneOpDataRcPtr res = std::make_shared<GradingToneOpData>(getStyle());
-    *res = *this;
-
-    return res;
-
     return std::make_shared<GradingToneOpData>(*this);
 }
 
@@ -139,23 +160,6 @@ void GradingToneOpData::replaceDynamicProperty(DynamicPropertyGradingToneImplRcP
 void GradingToneOpData::removeDynamicProperty() noexcept
 {
     m_value->makeNonDynamic();
-}
-
-GradingToneOpData & GradingToneOpData::operator=(const GradingToneOpData & rhs)
-{
-    if (this == &rhs) return *this;
-
-    OpData::operator=(rhs);
-
-    m_style     = rhs.m_style;
-    m_direction = rhs.m_direction;
-    // Copy dynamic properties. Sharing happens when needed, with CPUop for instance.
-    m_value->setValue(rhs.m_value->getValue());
-    if (rhs.m_value->isDynamic())
-    {
-        m_value->makeDynamic();
-    }
-    return *this;
 }
 
 bool GradingToneOpData::operator==(const OpData & other) const

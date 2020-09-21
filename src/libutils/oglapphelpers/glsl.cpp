@@ -448,8 +448,6 @@ void OpenGLBuilder::useAllUniforms()
 
 std::string OpenGLBuilder::getGLSLVersionString()
 {
-    std::string str;
-
     if (m_shaderDesc->getLanguage() == GPU_LANGUAGE_GLSL_1_3)
     {
         return "#version 130";
@@ -458,13 +456,9 @@ std::string OpenGLBuilder::getGLSLVersionString()
     {
         return "#version 400 core";
     }
-    else
-    {
-        // That's the minimal version supported.
-        return "#version 120";
-    }
 
-    return str;
+    // That's the minimal version supported.
+    return "#version 120";
 }
 
 unsigned OpenGLBuilder::buildProgram(const std::string & clientShaderProgram)

@@ -20,6 +20,8 @@ namespace OCIO_NAMESPACE
 void SystemMonitorsImpl::getAllMonitors()
 {
     // A headless machine does not have any monitors.
+}
+
 
 } // namespace OCIO_NAMESPACE
 

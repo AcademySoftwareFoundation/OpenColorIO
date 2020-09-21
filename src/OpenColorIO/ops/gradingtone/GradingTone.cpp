@@ -652,7 +652,7 @@ void GradingTonePreRender::whiteBlack_precompute(const GradingTone & v)
                     y1 = x1;   // for isBlack
                     y0 = y1 - (m0 + m1) * (x1 - x0) * 0.5f;
                 }
-                gain = (!isBlack) ? (m0 + m1) * 0.5f : (m0 + m1) * 0.5f;
+                gain = (m0 + m1) * 0.5f;
             }
         }
     }

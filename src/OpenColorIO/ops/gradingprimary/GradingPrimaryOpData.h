@@ -25,7 +25,8 @@ public:
 
     explicit GradingPrimaryOpData(GradingStyle style);
     GradingPrimaryOpData() = delete;
-    GradingPrimaryOpData(const GradingPrimaryOpData &) = default;
+    GradingPrimaryOpData(const GradingPrimaryOpData & rhs);
+    GradingPrimaryOpData & operator=(const GradingPrimaryOpData & rhs);
     virtual ~GradingPrimaryOpData();
 
     GradingPrimaryOpDataRcPtr clone() const;
@@ -63,8 +64,6 @@ public:
     {
         return m_value;
     }
-
-    GradingPrimaryOpData & operator=(const GradingPrimaryOpData & rhs);
 
     bool operator==(const OpData & other) const override;
 

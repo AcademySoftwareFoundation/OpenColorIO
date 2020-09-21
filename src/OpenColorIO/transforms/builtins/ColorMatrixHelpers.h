@@ -17,6 +17,7 @@ namespace OCIO_NAMESPACE
 struct Chromaticities
 {
     Chromaticities() = delete;
+    ~Chromaticities() = default;
 
     Chromaticities(double x, double y)
     {
@@ -46,6 +47,7 @@ struct Chromaticities
 struct Primaries
 {
     Primaries() = delete;
+    ~Primaries() = default;
 
     Primaries(const Chromaticities & red, const Chromaticities & grn, const Chromaticities & blu,
               const Chromaticities & wht)
