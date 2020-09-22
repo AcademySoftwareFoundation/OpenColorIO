@@ -129,8 +129,26 @@ void bindPyContext(py::module & m)
         .def("getEnvironmentMode", &Context::getEnvironmentMode)
         .def("setEnvironmentMode", &Context::setEnvironmentMode, "mode"_a)
         .def("loadEnvironment", &Context::loadEnvironment)
-        .def("resolveStringVar", &Context::resolveStringVar, "value"_a)
-        .def("resolveFileLocation", &Context::resolveFileLocation, "fileName"_a);
+        .def("resolveStringVar", [](ContextRcPtr & self, const char * string)
+            {
+                return self->resolveStringVar(string);
+            },
+            "string"_a)
+        .def("resolveStringVar", [](ContextRcPtr & self, const char * string, ContextRcPtr & usedContextVars)
+            {
+                return self->resolveStringVar(string, usedContextVars);
+            },
+            "string"_a, "usedContextVars"_a)
+        .def("resolveFileLocation", [](ContextRcPtr & self, const char * filename)
+            {
+                return self->resolveFileLocation(filename);
+            },
+            "filename"_a)
+        .def("resolveFileLocation", [](ContextRcPtr & self, const char * filename, ContextRcPtr & usedContextVars)
+            {
+                return self->resolveFileLocation(filename, usedContextVars);
+            },
+            "filename"_a, "usedContextVars"_a);
 
     defStr(cls);
 

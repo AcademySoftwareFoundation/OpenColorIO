@@ -39,8 +39,16 @@ OCIO_ADD_TEST(Platform, getenv)
     OCIO_CHECK_ASSERT(OCIO::Platform::Getenv("PATH", env));
     OCIO_CHECK_ASSERT(!env.empty());
 
+    // Test a not existing env. variable.
+
+    OCIO_CHECK_ASSERT(!OCIO::Platform::isEnvPresent("NotExistingEnvVariable"));
+
     OCIO_CHECK_ASSERT(!OCIO::Platform::Getenv("NotExistingEnvVariable", env));
     OCIO_CHECK_ASSERT(env.empty());
+
+    // Test an existing env. variable.
+
+    OCIO_CHECK_ASSERT(OCIO::Platform::isEnvPresent("PATH"));
 
     OCIO_CHECK_ASSERT(OCIO::Platform::Getenv("PATH", env));
     OCIO_CHECK_ASSERT(!env.empty());

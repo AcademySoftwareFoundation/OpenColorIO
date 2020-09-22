@@ -19,7 +19,7 @@ namespace OCIO = OCIO_NAMESPACE;
 int main(int argc, const char **argv)
 {
     bool verbose = false;
-    std::string inputColorSpace, outputColorSpace;
+    std::string inputColorSpace, outputColorSpace, display, view;
     std::string filepath;
 
     bool help = false;
@@ -44,6 +44,8 @@ int main(int argc, const char **argv)
                "--v", &verbose, "Display some general information",
                "--colorspaces %s %s", &inputColorSpace, &outputColorSpace, 
                                       "Provide the input and output color spaces",
+               "--displayview %s %s %s", &inputColorSpace, &display, &view,
+                                      "Provide the input and (display, view) pair",
                "--file %s", &filepath, pathDesc.c_str(),
                NULL);
 
@@ -127,7 +129,7 @@ int main(int argc, const char **argv)
         // Load the current config.
 
         OCIO::ConstProcessorRcPtr processor;
-        if (!inputColorSpace.empty() && !outputColorSpace.empty())
+        if (!inputColorSpace.empty())
         {
             const char * env = OCIO::GetEnvVariable("OCIO");
             if(env && *env)
@@ -161,8 +163,30 @@ int main(int argc, const char **argv)
                 std::cout << std::endl;
             }
 
-            // Get the processor.
-            processor = config->getProcessor(inputColorSpace.c_str(), outputColorSpace.c_str());
+            if (!outputColorSpace.empty())
+            {
+                if (!display.empty() || !view.empty())
+                {
+                    std::cerr << std::endl;
+                    std::cerr << "Both --colorspaces and --displayview may not be used at the same time.";
+                    exit(1);
+                }
+
+                processor = config->getProcessor(inputColorSpace.c_str(), outputColorSpace.c_str());
+            }
+            else if (!display.empty() && !view.empty())
+            {
+                processor = config->getProcessor(inputColorSpace.c_str(), 
+                                                 display.c_str(),
+                                                 view.c_str(),
+                                                 OCIO::TRANSFORM_DIR_FORWARD);
+            }
+            else
+            {
+                std::cerr << std::endl;
+                std::cerr << "Missing color spaces for --displayview." << std::endl;
+                exit(1);
+            }
 
             std::ofstream outfs(filepath.c_str(), std::ios::out | std::ios::trunc);
             if (outfs)

@@ -25,11 +25,8 @@ public:
     StringSet files;
     StringUtils::StringVec looks;
 
-    Impl()
-    { }
-
-    ~Impl()
-    { }
+    Impl()  = default;
+    ~Impl() = default;
 };
 
 ProcessorMetadataRcPtr ProcessorMetadata::Create()
@@ -175,7 +172,12 @@ const char * Processor::getFormatExtensionByIndex(int index)
     return FormatRegistry::GetInstance().getFormatExtensionByIndex(FORMAT_CAPABILITY_WRITE, index);
 }
 
-bool Processor::hasDynamicProperty(DynamicPropertyType type) const
+bool Processor::isDynamic() const noexcept
+{
+    return getImpl()->isDynamic();
+}
+
+bool Processor::hasDynamicProperty(DynamicPropertyType type) const noexcept
 {
     return getImpl()->hasDynamicProperty(type);
 }
@@ -228,6 +230,13 @@ ConstCPUProcessorRcPtr Processor::getOptimizedCPUProcessor(BitDepth inBitDepth,
     return getImpl()->getOptimizedCPUProcessor(inBitDepth, outBitDepth, oFlags);
 }
 
+
+// Instantiate the cache with the right types.
+template class ProcessorCache<std::size_t, ProcessorRcPtr>;
+template class ProcessorCache<std::size_t, GPUProcessorRcPtr>;
+template class ProcessorCache<std::size_t, CPUProcessorRcPtr>;
+
+
 Processor::Impl::Impl():
     m_metadata(ProcessorMetadata::Create())
 {
@@ -241,8 +250,26 @@ Processor::Impl & Processor::Impl::operator=(const Impl & rhs)
 {
     if (this != &rhs)
     {
+        AutoMutex lock(m_resultsCacheMutex);
+
         m_metadata = rhs.m_metadata;
-        m_ops = rhs.m_ops;
+        m_ops      = rhs.m_ops;
+
+        m_cacheID.clear();
+
+        m_cacheFlags = rhs.m_cacheFlags;
+
+        const bool enableCaches
+            = (m_cacheFlags & PROCESSOR_CACHE_ENABLED) == PROCESSOR_CACHE_ENABLED;
+
+        m_optProcessorCache.clear();
+        m_optProcessorCache.enable(enableCaches);
+
+        m_gpuProcessorCache.clear();
+        m_gpuProcessorCache.enable(enableCaches);
+
+        m_cpuProcessorCache.clear();
+        m_cpuProcessorCache.enable(enableCaches);
     }
     return *this;
 }
@@ -261,7 +288,6 @@ ConstProcessorMetadataRcPtr Processor::Impl::getProcessorMetadata() const
 {
     return m_metadata;
 }
-
 
 const FormatMetadata & Processor::Impl::getFormatMetadata() const
 {
@@ -321,7 +347,12 @@ void Processor::Impl::write(const char * formatName, std::ostream & os) const
     }
 }
 
-bool Processor::Impl::hasDynamicProperty(DynamicPropertyType type) const
+bool Processor::Impl::isDynamic() const noexcept
+{
+    return m_ops.isDynamic();
+}
+
+bool Processor::Impl::hasDynamicProperty(DynamicPropertyType type) const noexcept
 {
     return m_ops.hasDynamicProperty(type);
 }
@@ -348,8 +379,8 @@ const char * Processor::Impl::getCacheID() const
         {
             cacheidStream << op->getCacheID() << " ";
         }
-        std::string fullstr = cacheidStream.str();
 
+        const std::string fullstr = cacheidStream.str();
         m_cacheID = CacheIDHash(fullstr.c_str(), (int)fullstr.size());
     }
 
@@ -362,7 +393,7 @@ namespace
 {
 OptimizationFlags EnvironmentOverride(OptimizationFlags oFlags)
 {
-    std::string envFlag = GetEnvVariable(OCIO_OPTIMIZATION_FLAGS_ENVVAR);
+    const std::string envFlag = GetEnvVariable(OCIO_OPTIMIZATION_FLAGS_ENVVAR);
     if (!envFlag.empty())
     {
         // Use 0 to allow base to be determined by the format.
@@ -374,25 +405,59 @@ OptimizationFlags EnvironmentOverride(OptimizationFlags oFlags)
 
 ConstProcessorRcPtr Processor::Impl::getOptimizedProcessor(OptimizationFlags oFlags) const
 {
-    oFlags = EnvironmentOverride(oFlags);
-    auto proc = Create();
-    *proc->getImpl() = *this;
-    proc->getImpl()->m_ops.finalize(oFlags);
-    proc->getImpl()->m_ops.unifyDynamicProperties();
-
-    return proc;
+    return getOptimizedProcessor(BIT_DEPTH_F32, BIT_DEPTH_F32, oFlags);
 }
 
-ConstProcessorRcPtr Processor::Impl::getOptimizedProcessor(BitDepth inBD, BitDepth outBD,
-    OptimizationFlags oFlags) const
+ConstProcessorRcPtr Processor::Impl::getOptimizedProcessor(BitDepth inBitDepth, 
+                                                           BitDepth outBitDepth,
+                                                           OptimizationFlags oFlags) const
 {
+    // Helper method.
+    auto CreateProcessor = [](const Processor::Impl & procImpl,
+                              BitDepth inBitDepth,
+                              BitDepth outBitDepth,
+                              OptimizationFlags oFlags) -> ProcessorRcPtr
+    {
+        ProcessorRcPtr proc = Create();
+        *proc->getImpl() = procImpl;
+
+        proc->getImpl()->m_ops.finalize(oFlags);
+        proc->getImpl()->m_ops.optimizeForBitdepth(inBitDepth, outBitDepth, oFlags);
+        proc->getImpl()->m_ops.unifyDynamicProperties();
+
+        return proc;
+    };
+
+
     oFlags = EnvironmentOverride(oFlags);
-    auto proc = Create();
-    *proc->getImpl() = *this;
-    proc->getImpl()->m_ops.finalize(oFlags);
-    proc->getImpl()->m_ops.optimizeForBitdepth(inBD, outBD, oFlags);
-    proc->getImpl()->m_ops.unifyDynamicProperties();
-    return proc;
+
+    if (m_optProcessorCache.isEnabled())
+    {
+        AutoMutex guard(m_optProcessorCache.lock());
+
+        std::ostringstream oss;
+        oss << inBitDepth << outBitDepth << oFlags;
+
+        const std::size_t key = std::hash<std::string>{}(oss.str());
+
+        // As the entry is a shared pointer instance, having an empty one means that the entry does
+        // not exist in the cache. So, it provides a fast existence check & access in one call.
+        ProcessorRcPtr & processor = m_optProcessorCache[key];
+        if (!processor)
+        {
+            // Note: Some combinations of bit-depth and opt flags will produce identical Processors.
+            // Duplicates could be identified by computing the Processor cacheID, but that is too
+            // slow to attempt here.
+
+            processor = CreateProcessor(*this, inBitDepth, outBitDepth, oFlags);
+        }
+
+        return processor;
+    }
+    else
+    {
+        return CreateProcessor(*this, inBitDepth, outBitDepth, oFlags);
+    }
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -404,12 +469,35 @@ ConstGPUProcessorRcPtr Processor::Impl::getDefaultGPUProcessor() const
 
 ConstGPUProcessorRcPtr Processor::Impl::getOptimizedGPUProcessor(OptimizationFlags oFlags) const
 {
-    GPUProcessorRcPtr gpu = GPUProcessorRcPtr(new GPUProcessor(), &GPUProcessor::deleter);
+    // Helper method.
+    auto CreateProcessor = [](const OpRcPtrVec & ops,
+                              OptimizationFlags oFlags) -> GPUProcessorRcPtr
+    {
+        GPUProcessorRcPtr gpu = GPUProcessorRcPtr(new GPUProcessor(), &GPUProcessor::deleter);
+        gpu->getImpl()->finalize(ops, oFlags);
+        return gpu;
+    };
 
     oFlags = EnvironmentOverride(oFlags);
-    gpu->getImpl()->finalize(m_ops, oFlags);
 
-    return gpu;
+    if (m_gpuProcessorCache.isEnabled())
+    {
+        AutoMutex guard(m_gpuProcessorCache.lock());
+
+        // As the entry is a shared pointer instance, having an empty one means that the entry does
+        // not exist in the cache. So, it provides a fast existence check & access in one call.
+        GPUProcessorRcPtr & processor = m_gpuProcessorCache[oFlags];
+        if (!processor)
+        {
+            processor = CreateProcessor(m_ops, oFlags);
+        }
+        
+        return processor;
+    }
+    else
+    {
+        return CreateProcessor(m_ops, oFlags);
+    }
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -428,14 +516,59 @@ ConstCPUProcessorRcPtr Processor::Impl::getOptimizedCPUProcessor(BitDepth inBitD
                                                                  BitDepth outBitDepth,
                                                                  OptimizationFlags oFlags) const
 {
-    CPUProcessorRcPtr cpu = CPUProcessorRcPtr(new CPUProcessor(), &CPUProcessor::deleter);
+    // Helper method.
+    auto CreateProcessor = [](const OpRcPtrVec & ops,
+                              BitDepth inBitDepth,
+                              BitDepth outBitDepth,
+                              OptimizationFlags oFlags) -> CPUProcessorRcPtr
+    {
+        CPUProcessorRcPtr cpu = CPUProcessorRcPtr(new CPUProcessor(), &CPUProcessor::deleter);
+        cpu->getImpl()->finalize(ops, inBitDepth, outBitDepth, oFlags);
+        return cpu;
+    };
 
     oFlags = EnvironmentOverride(oFlags);
-    cpu->getImpl()->finalize(m_ops, inBitDepth, outBitDepth, oFlags);
 
-    return cpu;
+    const bool shareDynamicProperties 
+        = (m_cacheFlags & PROCESSOR_CACHE_SHARE_DYN_PROPERTIES) == PROCESSOR_CACHE_SHARE_DYN_PROPERTIES;
+
+    const bool useCache = m_ops.isDynamic() ? shareDynamicProperties : true;
+
+    if (m_cpuProcessorCache.isEnabled() && useCache)
+    {
+        AutoMutex guard(m_cpuProcessorCache.lock());
+
+        std::ostringstream oss;
+        oss << inBitDepth << outBitDepth << oFlags;
+
+        const std::size_t key = std::hash<std::string>{}(oss.str());
+
+        // As the entry is a shared pointer instance, having an empty one means that the entry does
+        // not exist in the cache. So, it provides a fast existence check & access in one call.
+        CPUProcessorRcPtr & processor = m_cpuProcessorCache[key];
+        if (!processor)
+        {
+            processor = CreateProcessor(m_ops, inBitDepth, outBitDepth, oFlags);
+        }
+        
+        return processor;
+    }
+    else
+    {
+        return CreateProcessor(m_ops, inBitDepth, outBitDepth, oFlags);
+    }
 }
 
+void Processor::Impl::setProcessorCacheFlags(ProcessorCacheFlags flags) noexcept
+{
+    m_cacheFlags = flags;
+
+    const bool cacheEnabled = (m_cacheFlags & PROCESSOR_CACHE_ENABLED) == PROCESSOR_CACHE_ENABLED;
+
+    m_optProcessorCache.enable(cacheEnabled);
+    m_gpuProcessorCache.enable(cacheEnabled);
+    m_cpuProcessorCache.enable(cacheEnabled);
+}
 
 ///////////////////////////////////////////////////////////////////////////
 
