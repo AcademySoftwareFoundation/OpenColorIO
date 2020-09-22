@@ -9,6 +9,7 @@ set(SOURCES
 	ColorSpaceSet.cpp
 	Config.cpp
 	Context.cpp
+	ContextVariableUtils.cpp
 	CPUProcessor.cpp
 	Display.cpp
 	DynamicProperty.cpp

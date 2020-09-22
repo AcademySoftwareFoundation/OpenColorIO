@@ -268,8 +268,7 @@ Lut3DOpData::Lut3DOpData(long gridSize, TransformDirection dir)
 {
 }
 
-Lut3DOpData::Lut3DOpData(Interpolation interpolation,
-                         unsigned long gridSize)
+Lut3DOpData::Lut3DOpData(Interpolation interpolation, unsigned long gridSize)
     : OpData()
     , m_interpolation(interpolation)
     , m_array(gridSize)
@@ -464,14 +463,7 @@ std::string Lut3DOpData::getCacheID() const
 {
     AutoMutex lock(m_mutex);
 
-    md5_state_t state;
-    md5_byte_t digest[16];
-
-    md5_init(&state);
-    md5_append(&state,
-               (const md5_byte_t *)&(getArray().getValues()[0]),
-               (int)(getArray().getValues().size() * sizeof(float)));
-    md5_finish(&state, digest);
+    const Lut3DArray::Values & values = getArray().getValues();
 
     std::ostringstream cacheIDStream;
     if (!getID().empty())
@@ -479,7 +471,10 @@ std::string Lut3DOpData::getCacheID() const
         cacheIDStream << getID() << " ";
     }
 
-    cacheIDStream << GetPrintableHash(digest)                << " ";
+    cacheIDStream << CacheIDHash(reinterpret_cast<const char*>(&values[0]),
+                                 int(values.size() * sizeof(values[0])))
+                  << " ";
+
     cacheIDStream << InterpolationToString(m_interpolation)  << " ";
     cacheIDStream << TransformDirectionToString(m_direction) << " ";
 

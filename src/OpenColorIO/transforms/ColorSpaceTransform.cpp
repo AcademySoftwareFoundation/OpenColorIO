@@ -1,8 +1,12 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
+
+#include <string.h>
+
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "ContextVariableUtils.h"
 #include "OpBuilders.h"
 #include "ops/noop/NoOps.h"
 
@@ -152,7 +156,7 @@ constexpr char DST_CS[] = "destination";
 }
 
 void BuildColorSpaceOps(OpRcPtrVec & ops,
-                        const Config& config,
+                        const Config & config,
                         const ConstContextRcPtr & context,
                         const ColorSpaceTransform & colorSpaceTransform,
                         TransformDirection dir)
@@ -188,8 +192,7 @@ void BuildColorSpaceOps(OpRcPtrVec & ops,
         }
     }
 
-    BuildColorSpaceOps(ops, config, context, src, dst,
-                       colorSpaceTransform.getDataBypass());
+    BuildColorSpaceOps(ops, config, context, src, dst, colorSpaceTransform.getDataBypass());
 }
 
 namespace
@@ -364,6 +367,68 @@ void BuildReferenceConversionOps(OpRcPtrVec & ops,
             }
         }
     }
+}
+
+bool CollectContextVariables(const Config & config, 
+                             const Context & context,
+                             ConstColorSpaceRcPtr & cs,
+                             ContextRcPtr & usedContextVars)
+{
+    bool foundContextVars = false;
+
+    if (cs)
+    {
+        ConstTransformRcPtr to = cs->getTransform(COLORSPACE_DIR_TO_REFERENCE);
+        if (to && CollectContextVariables(config, context, to, usedContextVars))
+        {
+            foundContextVars = true;
+        }
+
+        ConstTransformRcPtr from = cs->getTransform(COLORSPACE_DIR_FROM_REFERENCE);
+        if (from && CollectContextVariables(config, context, from, usedContextVars))
+        {
+            foundContextVars = true;
+        }
+    }
+
+    return foundContextVars;
+}
+
+bool CollectContextVariables(const Config & config, 
+                             const Context & context,
+                             const ColorSpaceTransform & tr,
+                             ContextRcPtr & usedContextVars)
+{
+    bool foundContextVars = false;
+    
+    // NB: The search could return false positive but should not miss anything i.e. it looks
+    // for context variables in both directions even if only one will be used.
+
+    const std::string srcName(context.resolveStringVar(tr.getSrc(), usedContextVars));
+    if (0 != strcmp(srcName.c_str(), tr.getSrc()))
+    {
+        foundContextVars = true;
+    }
+
+    const std::string dstName(context.resolveStringVar(tr.getDst(), usedContextVars));
+    if (0 != strcmp(dstName.c_str(), tr.getDst()))
+    {
+        foundContextVars = true;
+    }
+
+    ConstColorSpaceRcPtr src = config.getColorSpace(srcName.c_str());
+    if (CollectContextVariables(config, context, src, usedContextVars))
+    {
+        foundContextVars = true;
+    }
+
+    ConstColorSpaceRcPtr dst = config.getColorSpace(dstName.c_str());
+    if (CollectContextVariables(config, context, dst, usedContextVars))
+    {
+        foundContextVars = true;
+    }
+
+    return foundContextVars;
 }
 
 } // namespace OCIO_NAMESPACE

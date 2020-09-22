@@ -5,6 +5,9 @@
 constexpr const char * category_test_config {
 R"(ocio_profile_version: 2
 
+environment:
+  {}
+
 search_path: luts
 strictparsing: true
 family_separator: /

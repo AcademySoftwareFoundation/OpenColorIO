@@ -71,8 +71,8 @@ namespace
 {
 OCIO::ConstProcessorRcPtr LoadTransformFile(const std::string & fileName)
 {
-    const std::string filePath(std::string(OCIO::getTestFilesDir()) + "/"
-        + fileName);
+    const std::string filePath(OCIO::GetTestFilesDir() + "/" + fileName);
+
     // Create a FileTransform.
     OCIO::FileTransformRcPtr pFileTransform
         = OCIO::FileTransform::Create();

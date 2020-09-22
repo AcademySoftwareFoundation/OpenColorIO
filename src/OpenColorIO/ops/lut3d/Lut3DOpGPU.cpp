@@ -30,8 +30,9 @@ void GetLut3DGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator, ConstLut3DO
     // (Using CacheID here to potentially allow reuse of existing textures.)
     shaderCreator->add3DTexture(name.c_str(),
                                 GpuShaderText::getSamplerName(name).c_str(),
-                                lutData->getCacheID().c_str(), lutData->getGridSize(),
-                                lutData->getConcreteInterpolation(), &lutData->getArray()[0]);
+                                lutData->getGridSize(),
+                                lutData->getConcreteInterpolation(),
+                                &lutData->getArray()[0]);
 
     {
         GpuShaderText ss(shaderCreator->getLanguage());
