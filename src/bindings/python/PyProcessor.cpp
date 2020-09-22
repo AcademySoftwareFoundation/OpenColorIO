@@ -58,7 +58,13 @@ void bindPyProcessor(py::module & m)
             }, 
              "formatName"_a)
         .def("getDynamicProperty", &Processor::getDynamicProperty, "type"_a)
-        .def("hasDynamicProperty", &Processor::hasDynamicProperty, "type"_a)
+        .def("hasDynamicProperty",
+             (bool (Processor::*)(DynamicPropertyType) const noexcept)
+             &Processor::hasDynamicProperty,
+             "type"_a)
+        .def("hasDynamicProperty",
+             (bool (Processor::*)() const noexcept)
+             &Processor::hasDynamicProperty)
         .def("getOptimizedProcessor",
              (ConstProcessorRcPtr(Processor::*)(OptimizationFlags) const)
              &Processor::getOptimizedProcessor, "oFlags"_a)
