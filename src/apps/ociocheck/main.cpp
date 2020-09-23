@@ -61,16 +61,19 @@ int main(int argc, const char **argv)
 
         if(!inputconfig.empty())
         {
+            std::cout << std::endl;
             std::cout << "Loading " << inputconfig << std::endl;
             config = OCIO::Config::CreateFromFile(inputconfig.c_str());
         }
         else if(OCIO::GetEnvVariable("OCIO"))
         {
+            std::cout << std::endl;
             std::cout << "Loading $OCIO " << OCIO::GetEnvVariable("OCIO") << std::endl;
             config = OCIO::Config::CreateFromEnv();
         }
         else
         {
+            std::cout << std::endl;
             std::cout << "ERROR: You must specify an input OCIO configuration ";
             std::cout << "(either with --iconfig or $OCIO).\n";
             ap.usage ();
@@ -80,19 +83,78 @@ int main(int argc, const char **argv)
 
         std::cout << std::endl;
         std::cout << "** General **" << std::endl;
+
+        if (config->getNumEnvironmentVars() > 0)
+        {
+            std::cout << "Environment:" << std::endl;
+            for (int idx = 0; idx < config->getNumEnvironmentVars(); ++idx)
+            {
+                const char * name = config->getEnvironmentVarNameByIndex(idx);
+                std::cout << "  " << name
+                          << ": " << config->getEnvironmentVarDefault(name)
+                          << std::endl;
+            }
+        }
+        else
+        {
+            if (config->getEnvironmentMode() == OCIO::ENV_ENVIRONMENT_LOAD_PREDEFINED)
+            {
+                std::cout << "Environment: {}" << std::endl;
+            }
+            else
+            {
+                std::cout << "Environment: <missing>" << std::endl;
+            }
+        }
+
         std::cout << "Search Path: " << config->getSearchPath() << std::endl;
         std::cout << "Working Dir: " << config->getWorkingDir() << std::endl;
-        std::cout << std::endl;
 
         if (config->getNumDisplays() == 0)
         {
+            std::cout << std::endl;
             std::cout << "Error: At least one (display, view) pair must be defined." << std::endl;
             errorcount += 1;
         }
         else
         {
+            std::cout << std::endl;
             std::cout << "Default Display: " << config->getDefaultDisplay() << std::endl;
             std::cout << "Default View: " << config->getDefaultView(config->getDefaultDisplay()) << std::endl;
+
+            if (config->getNumColorSpaces() > 0)
+            {
+                std::cout << std::endl;
+                std::cout << "** (Display, View) pairs **" << std::endl;
+
+                const char * inputColorSpace = config->getColorSpaceNameByIndex(0);
+
+                for (int idxDisp = 0; idxDisp < config->getNumDisplays(); ++idxDisp)
+                {
+                    const char * displayName = config->getDisplay(idxDisp);
+                    for (int idxView = 0; idxView < config->getNumViews(displayName); ++idxView)
+                    {
+                        const char * viewName = config->getView(displayName, idxView);
+
+                        try
+                        {
+                            OCIO::ConstProcessorRcPtr process 
+                                = config->getProcessor(inputColorSpace, 
+                                                       displayName,
+                                                       viewName,
+                                                       OCIO::TRANSFORM_DIR_FORWARD);
+
+                            std::cout << "(" << displayName << ", " << viewName << ")"
+                                      << std::endl;
+                        }
+                        catch(OCIO::Exception & exception)
+                        {
+                            std::cerr << "ERROR: " << exception.what() << std::endl;
+                            errorcount += 1;
+                        }
+                    }
+                }
+            }
         }
 
         {

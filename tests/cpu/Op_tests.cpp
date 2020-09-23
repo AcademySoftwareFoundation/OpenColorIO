@@ -493,3 +493,15 @@ OCIO_ADD_TEST(OpRcPtrVec, clone_invert)
     OCIO_CHECK_EQUAL(ops[1]->getInfo(), inverted[1]->getInfo());
     OCIO_CHECK_EQUAL(ops[2]->getInfo(), inverted[0]->getInfo());
 }
+
+OCIO_ADD_TEST(OpRcPtrVec, serialize)
+{
+    // The test validates that SerializeOpVec() does not throw.
+
+    OCIO::OpRcPtrVec ops;
+    OCIO_CHECK_NO_THROW(OCIO::CreateFileNoOp(ops, "NoOp"));
+    OCIO_CHECK_NO_THROW(OCIO::CreateIdentityMatrixOp(ops));
+
+    // Serialize not optimized OpVec i.e. contains some NoOps.
+    OCIO_CHECK_NO_THROW(OCIO::SerializeOpVec(ops));
+}

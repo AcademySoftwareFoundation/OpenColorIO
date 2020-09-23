@@ -389,6 +389,7 @@ public:
     bool isNoOp() const noexcept;
     bool hasChannelCrosstalk() const noexcept;
 
+    bool isDynamic() const noexcept;
     bool hasDynamicProperty(DynamicPropertyType type) const noexcept;
     DynamicPropertyRcPtr getDynamicProperty(DynamicPropertyType type) const;
     void unifyDynamicProperties();
