@@ -294,7 +294,7 @@ void GradingPrimaryLogFwdOpCPU::apply(const void * inImg, void * outImg, long nu
 #ifdef USE_SSE
     const __m128 brightness = _mm_set_ps(0.f, comp.getBrightness()[2],
                                               comp.getBrightness()[1],
-                                comp.getBrightness()[0]);
+                                              comp.getBrightness()[0]);
     const __m128 contrast = _mm_set_ps(1.f, comp.getContrast()[2],
                                             comp.getContrast()[1],
                                             comp.getContrast()[0]);
@@ -992,10 +992,10 @@ void GradingPrimaryVidFwdOpCPU::apply(const void * inImg, void * outImg, long nu
                                           comp.getOffset()[0]);
     const __m128 slope = _mm_set_ps(1.f, comp.getSlope()[2],
                                          comp.getSlope()[1],
-                                    comp.getSlope()[0]);
+                                         comp.getSlope()[0]);
     const __m128 gamma = _mm_set_ps(1.f, comp.getGamma()[2],
                                          comp.getGamma()[1],
-                                comp.getGamma()[0]);
+                                         comp.getGamma()[0]);
 
     const __m128 saturation = _mm_set1_ps(static_cast<float>(v.m_saturation));
     const __m128 pivotBlack = _mm_set1_ps(static_cast<float>(v.m_pivotBlack));
