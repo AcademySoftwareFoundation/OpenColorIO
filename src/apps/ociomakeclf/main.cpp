@@ -57,7 +57,7 @@ void CreateOutputLutFile(const std::string & outLutFilepath, OCIO::ConstGroupTra
         {
             optProcessor->write("Academy/ASC Common LUT Format", outfs);
         }
-        catch (OCIO::Exception &)
+        catch (const OCIO::Exception &)
         {
             outfs.close();
             remove(outLutFilepath.c_str());
