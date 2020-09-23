@@ -579,7 +579,7 @@ inline void load(const YAML::Node& node, CDLTransformRcPtr& t)
 
     CheckDuplicates(node);
 
-    std::string key;
+    std::string key, stringval;
     std::vector<double> floatvecval;
 
     for (Iterator iter = node.begin();
@@ -637,9 +637,8 @@ inline void load(const YAML::Node& node, CDLTransformRcPtr& t)
         }
         else if (key == "style")
         {
-            std::string style;
-            load(second, style);
-            t->setStyle(CDLStyleFromString(style.c_str()));
+            load(second, stringval);
+            t->setStyle(CDLStyleFromString(stringval.c_str()));
         }
         else if (key == "direction")
         {
@@ -647,11 +646,15 @@ inline void load(const YAML::Node& node, CDLTransformRcPtr& t)
             load(second, val);
             t->setDirection(val);
         }
-        else if (key == "name")
+        else if (key == "id")
         {
-            std::string name;
-            load(second, name);
-            t->getFormatMetadata().addAttribute(METADATA_NAME, name.c_str());
+            load(second, stringval);
+            t->setID(stringval.c_str());
+        }
+        else if (key == "description")
+        {
+            load(second, stringval);
+            t->setDescription(stringval.c_str());
         }
         else
         {
@@ -699,6 +702,18 @@ inline void save(YAML::Emitter& out, ConstCDLTransformRcPtr t)
     if (t->getStyle() != CDL_TRANSFORM_DEFAULT)
     {
         out << YAML::Key << "style" << YAML::Value << CDLStyleToString(t->getStyle());
+    }
+
+    if(t->getID() != NULL && strlen(t->getID()) > 0)
+    {
+        out << YAML::Key << "id";
+        out << YAML::Value << YAML::Literal << t->getID();
+    }
+
+    if(t->getDescription() != NULL && strlen(t->getDescription()) > 0)
+    {
+        out << YAML::Key << "description";
+        out << YAML::Value << YAML::Literal << t->getDescription();
     }
 
     EmitBaseTransformKeyValues(out, t);

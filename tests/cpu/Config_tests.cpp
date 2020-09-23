@@ -4223,7 +4223,8 @@ OCIO_ADD_TEST(Config, cdl_serialization)
             "        - !<CDLTransform> {offset: [0.1, 0.2, 0.1]}\n"
             "        - !<CDLTransform> {power: [1.1, 1.2, 1.1]}\n"
             "        - !<CDLTransform> {sat: 0.1, direction: inverse}\n"
-            "        - !<CDLTransform> {slope: [2, 2, 3], offset: [0.2, 0.3, 0.1], power: [1.2, 1.1, 1], sat: 0.2, style: asc}\n";
+            "        - !<CDLTransform> {slope: [2, 2, 3], offset: [0.2, 0.3, 0.1], power: [1.2, 1.1, 1], sat: 0.2, style: asc}\n"
+            "        - !<CDLTransform> {id: \"foo\", description: \"this is a description\"}\n";
 
         const std::string str = PROFILE_V2_START + strEnd;
 
@@ -4247,7 +4248,8 @@ OCIO_ADD_TEST(Config, cdl_serialization)
             "        - !<CDLTransform> {slope: [1, 2, 1]}\n"
             "        - !<CDLTransform> {offset: [0.1, 0.2, 0.1]}\n"
             "        - !<CDLTransform> {power: [1.1, 1.2, 1.1]}\n"
-            "        - !<CDLTransform> {sat: 0.1}\n";
+            "        - !<CDLTransform> {sat: 0.1}\n"
+            "        - !<CDLTransform> {id: \"foo\", description: \"this is a description\"}\n";
 
         const std::string str = PROFILE_V1 + SIMPLE_PROFILE_A + SIMPLE_PROFILE_B + strEnd;
 
