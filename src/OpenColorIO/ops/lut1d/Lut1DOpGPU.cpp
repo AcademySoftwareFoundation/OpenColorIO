@@ -187,8 +187,8 @@ void GetLut1DGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
     // (Using CacheID here to potentially allow reuse of existing textures.)
     shaderCreator->addTexture(name.c_str(),
                               GpuShaderText::getSamplerName(name).c_str(),
-                              lutData->getCacheID().c_str(),
-                              width, height,
+                              width,
+                              height,
                               singleChannel ? GpuShaderCreator::TEXTURE_RED_CHANNEL
                                             : GpuShaderCreator::TEXTURE_RGB_CHANNEL,
                               lutData->getConcreteInterpolation(),

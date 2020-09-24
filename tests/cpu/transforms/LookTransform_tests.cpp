@@ -272,6 +272,8 @@ OCIO_ADD_TEST(LookTransform, build_look_options_ops)
     constexpr const char * OCIO_CONFIG{ R"(
 ocio_profile_version: 2
 
+search_path: luts
+
 roles:
   default: raw
 
@@ -443,3 +445,117 @@ colorspaces:
                           "The specified file reference 'missingfile' could not be located");
 
 }
+
+OCIO_ADD_TEST(LookTransform, context_variables)
+{
+    constexpr const char * OCIO_CONFIG{ R"(
+ocio_profile_version: 2
+
+environment: { FILE1: cdl_test1.cc, FILE2: cdl_test1.cc }
+
+roles:
+  default: cs1
+
+file_rules:
+  - !<Rule> {name: Default, colorspace: default}
+
+displays:
+  Disp1:
+  - !<View> {name: View1, colorspace: cs1}
+
+looks:
+  - !<Look>
+    name: look1
+    process_space: default
+    transform: !<FileTransform> {src: $FILE1}
+  - !<Look>
+    name: look2
+    process_space: default
+    inverse_transform: !<LookTransform> {src: default, dst: cs2, looks: +look1}
+  - !<Look>
+    name: look3
+    process_space: default
+    transform: !<CDLTransform> {offset: [0.1, 0.1, 0.1]}
+  - !<Look>
+    name: look4
+    process_space: cs4
+    transform: !<CDLTransform> {offset: [0.1, 0.1, 0.1]}
+
+colorspaces:
+  - !<ColorSpace>
+    name: cs1
+  - !<ColorSpace>
+    name: cs2
+    from_reference: !<MatrixTransform> {offset: [0.11, 0.12, 0.13, 0]}
+  - !<ColorSpace>
+    name: cs3
+    from_reference: !<MatrixTransform> {offset: [0.1, 0.2, 0.3, 0]}
+  - !<ColorSpace>
+    name: cs4
+    from_reference: !<FileTransform> {src: $FILE2}
+)" };
+
+    std::istringstream is;
+    is.str(OCIO_CONFIG);
+
+    OCIO::ContextRcPtr usedContextVars = OCIO::Context::Create();
+
+    OCIO::ConfigRcPtr cfg;
+    OCIO_CHECK_NO_THROW(cfg = OCIO::Config::CreateFromStream(is)->createEditableCopy());
+    cfg->setSearchPath(OCIO::GetTestFilesDir().c_str());
+    OCIO_CHECK_NO_THROW(cfg->validate());
+
+    OCIO::LookTransformRcPtr look = OCIO::LookTransform::Create();
+    look->setSrc("cs1");
+    look->setDst("cs3");
+    usedContextVars = OCIO::Context::Create(); // New & empty instance.
+    OCIO_CHECK_ASSERT(!OCIO::CollectContextVariables(*cfg.get(), *cfg->getCurrentContext(), *look, usedContextVars));
+    OCIO_CHECK_EQUAL(0, usedContextVars->getNumStringVars());
+
+    // Step 1 - Test each basic cases.
+
+    look->setLooks("+look1");
+    usedContextVars = OCIO::Context::Create(); // New & empty instance.
+    OCIO_CHECK_ASSERT(OCIO::CollectContextVariables(*cfg.get(), *cfg->getCurrentContext(), *look, usedContextVars));
+    OCIO_CHECK_EQUAL(1, usedContextVars->getNumStringVars());
+    OCIO_CHECK_EQUAL(std::string("FILE1"), usedContextVars->getStringVarNameByIndex(0));
+    OCIO_CHECK_EQUAL(std::string("cdl_test1.cc"), usedContextVars->getStringVarByIndex(0));
+
+    look->setLooks("-look2");
+    usedContextVars = OCIO::Context::Create(); // New & empty instance.
+    OCIO_CHECK_ASSERT(OCIO::CollectContextVariables(*cfg.get(), *cfg->getCurrentContext(), *look, usedContextVars));
+    OCIO_CHECK_EQUAL(1, usedContextVars->getNumStringVars());
+    OCIO_CHECK_EQUAL(std::string("FILE1"), usedContextVars->getStringVarNameByIndex(0));
+    OCIO_CHECK_EQUAL(std::string("cdl_test1.cc"), usedContextVars->getStringVarByIndex(0));
+
+    look->setLooks("look3");
+    usedContextVars = OCIO::Context::Create(); // New & empty instance.
+    OCIO_CHECK_ASSERT(!OCIO::CollectContextVariables(*cfg.get(), *cfg->getCurrentContext(), *look, usedContextVars));
+    OCIO_CHECK_EQUAL(0, usedContextVars->getNumStringVars());
+
+    look->setLooks("+look4");
+    usedContextVars = OCIO::Context::Create(); // New & empty instance.
+    OCIO_CHECK_ASSERT(OCIO::CollectContextVariables(*cfg.get(), *cfg->getCurrentContext(), *look, usedContextVars));
+    OCIO_CHECK_EQUAL(1, usedContextVars->getNumStringVars());
+    OCIO_CHECK_EQUAL(std::string("FILE2"), usedContextVars->getStringVarNameByIndex(0));
+    OCIO_CHECK_EQUAL(std::string("cdl_test1.cc"), usedContextVars->getStringVarByIndex(0));
+
+
+    // Step 2 - Test with several looks.
+
+    look->setLooks("look3, -look1");
+    usedContextVars = OCIO::Context::Create(); // New & empty instance.
+    OCIO_CHECK_ASSERT(OCIO::CollectContextVariables(*cfg.get(), *cfg->getCurrentContext(), *look, usedContextVars));
+    OCIO_CHECK_EQUAL(1, usedContextVars->getNumStringVars());
+    OCIO_CHECK_EQUAL(std::string("FILE1"), usedContextVars->getStringVarNameByIndex(0));
+    OCIO_CHECK_EQUAL(std::string("cdl_test1.cc"), usedContextVars->getStringVarByIndex(0));
+
+    look->setLooks("look3, -look2, +look4");
+    usedContextVars = OCIO::Context::Create(); // New & empty instance.
+    OCIO_CHECK_ASSERT(OCIO::CollectContextVariables(*cfg.get(), *cfg->getCurrentContext(), *look, usedContextVars));
+    OCIO_CHECK_EQUAL(2, usedContextVars->getNumStringVars());
+    OCIO_CHECK_EQUAL(std::string("FILE1"), usedContextVars->getStringVarNameByIndex(0));
+    OCIO_CHECK_EQUAL(std::string("cdl_test1.cc"), usedContextVars->getStringVarByIndex(0));
+    OCIO_CHECK_EQUAL(std::string("FILE2"), usedContextVars->getStringVarNameByIndex(1));
+    OCIO_CHECK_EQUAL(std::string("cdl_test1.cc"), usedContextVars->getStringVarByIndex(1));}
+

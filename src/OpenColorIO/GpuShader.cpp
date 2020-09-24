@@ -47,14 +47,12 @@ public:
     {
         Texture(const char * textureName,
                 const char * samplerName,
-                const char * uid,
                 unsigned w, unsigned h, unsigned d,
                 GpuShaderDesc::TextureType channel,
                 Interpolation interpolation,
                 const float * v)
             :   m_textureName(textureName)
             ,   m_samplerName(samplerName)
-            ,   m_uid(uid)
             ,   m_width(w)
             ,   m_height(h)
             ,   m_depth(d)
@@ -88,7 +86,6 @@ public:
 
         std::string m_textureName;
         std::string m_samplerName;
-        std::string m_uid;
         unsigned m_width;
         unsigned m_height;
         unsigned m_depth;
@@ -174,7 +171,6 @@ public:
 
     void addTexture(const char * textureName,
                     const char * samplerName,
-                    const char * uid,
                     unsigned width, unsigned height,
                     GpuShaderDesc::TextureType channel,
                     Interpolation interpolation,
@@ -188,14 +184,13 @@ public:
             throw Exception(ss.str().c_str());
         }
 
-        Texture t(textureName, samplerName, uid, width, height, 1, channel, interpolation, values);
+        Texture t(textureName, samplerName, width, height, 1, channel, interpolation, values);
         m_textures.push_back(t);
     }
 
     void getTexture(unsigned index,
                     const char *& textureName,
                     const char *& samplerName,
-                    const char *& uid,
                     unsigned & width, unsigned & height,
                     GpuShaderDesc::TextureType & channel,
                     Interpolation & interpolation) const
@@ -211,7 +206,6 @@ public:
         const Texture & t = m_textures[index];
         textureName   = t.m_textureName.c_str();
         samplerName   = t.m_samplerName.c_str();
-        uid           = t.m_uid.c_str();
         width         = t.m_width;
         height        = t.m_height;
         channel       = t.m_type;
@@ -234,7 +228,6 @@ public:
 
     void add3DTexture(const char * textureName,
                       const char * samplerName,
-                      const char * uid,
                       unsigned dimension,
                       Interpolation interpolation,
                       const float * values)
@@ -247,7 +240,7 @@ public:
             throw Exception(ss.str().c_str());
         }
 
-        Texture t(textureName, samplerName, uid, dimension, dimension, dimension,
+        Texture t(textureName, samplerName, dimension, dimension, dimension,
                   GpuShaderDesc::TEXTURE_RGB_CHANNEL,
                   interpolation, values);
         m_textures3D.push_back(t);
@@ -256,7 +249,6 @@ public:
     void get3DTexture(unsigned index,
                       const char *& textureName,
                       const char *& samplerName,
-                      const char *& uid,
                       unsigned & edgelen,
                       Interpolation & interpolation) const
     {
@@ -271,7 +263,6 @@ public:
         const Texture & t = m_textures3D[index];
         textureName   = t.m_textureName.c_str();
         samplerName   = t.m_samplerName.c_str();
-        uid           = t.m_uid.c_str();
         edgelen       = t.m_width;
         interpolation = t.m_interp;
     }
@@ -483,14 +474,14 @@ unsigned LegacyGpuShaderDesc::getNumTextures() const noexcept
 }
 
 void LegacyGpuShaderDesc::addTexture(
-    const char *, const char *, const char *, unsigned, unsigned,
+    const char *, const char *, unsigned, unsigned,
     TextureType, Interpolation, const float *)
 {
     throw Exception("1D LUTs are not supported");
 }
 
 void LegacyGpuShaderDesc::getTexture(
-    unsigned, const char *&, const char *&, const char *&,
+    unsigned, const char *&, const char *&,
     unsigned &, unsigned &, TextureType &, Interpolation &) const
 {
     throw Exception("1D LUTs are not supported");
@@ -508,7 +499,7 @@ unsigned LegacyGpuShaderDesc::getNum3DTextures() const noexcept
 
 void LegacyGpuShaderDesc::add3DTexture(const char * textureName,
                                        const char * samplerName,
-                                       const char * uid, unsigned dimension,
+                                       unsigned dimension,
                                        Interpolation interpolation,
                                        const float * values)
 {
@@ -526,17 +517,16 @@ void LegacyGpuShaderDesc::add3DTexture(const char * textureName,
         throw Exception(ss.c_str());
     }
 
-    getImpl()->add3DTexture(textureName, samplerName, uid, dimension, interpolation, values);
+    getImpl()->add3DTexture(textureName, samplerName, dimension, interpolation, values);
 }
 
 void LegacyGpuShaderDesc::get3DTexture(unsigned index,
                                        const char *& textureName,
                                        const char *& samplerName,
-                                       const char *& uid,
                                        unsigned & edgelen,
                                        Interpolation & interpolation) const
 {
-    getImpl()->get3DTexture(index, textureName, samplerName, uid, edgelen, interpolation);
+    getImpl()->get3DTexture(index, textureName, samplerName, edgelen, interpolation);
 }
 
 void LegacyGpuShaderDesc::get3DTextureValues(unsigned index, const float *& values) const
@@ -631,24 +621,22 @@ unsigned GenericGpuShaderDesc::getNumTextures() const noexcept
 
 void GenericGpuShaderDesc::addTexture(const char * textureName,
                                       const char * samplerName,
-                                      const char * uid,
                                       unsigned width, unsigned height,
                                       TextureType channel,
                                       Interpolation interpolation,
                                       const float * values)
 {
-    getImpl()->addTexture(textureName, samplerName, uid, width, height, channel, interpolation, values);
+    getImpl()->addTexture(textureName, samplerName, width, height, channel, interpolation, values);
 }
 
 void GenericGpuShaderDesc::getTexture(unsigned index,
                                       const char *& textureName,
                                       const char *& samplerName,
-                                      const char *& uid,
                                       unsigned & width, unsigned & height,
                                       TextureType & channel,
                                       Interpolation & interpolation) const
 {
-    getImpl()->getTexture(index, textureName, samplerName, uid, width, height, channel, interpolation);
+    getImpl()->getTexture(index, textureName, samplerName, width, height, channel, interpolation);
 }
 
 void GenericGpuShaderDesc::getTextureValues(unsigned index, const float *& values) const
@@ -663,22 +651,20 @@ unsigned GenericGpuShaderDesc::getNum3DTextures() const noexcept
 
 void GenericGpuShaderDesc::add3DTexture(const char * textureName,
                                         const char * samplerName,
-                                        const char * uid,
                                         unsigned edgelen,
                                         Interpolation interpolation,
                                         const float * values)
 {
-    getImpl()->add3DTexture(textureName, samplerName, uid, edgelen, interpolation, values);
+    getImpl()->add3DTexture(textureName, samplerName, edgelen, interpolation, values);
 }
 
 void GenericGpuShaderDesc::get3DTexture(unsigned index,
                                         const char *& textureName,
                                         const char *& samplerName,
-                                        const char *& uid,
                                         unsigned & edgelen,
                                         Interpolation & interpolation) const
 {
-    getImpl()->get3DTexture(index, textureName, samplerName, uid, edgelen, interpolation);
+    getImpl()->get3DTexture(index, textureName, samplerName, edgelen, interpolation);
 }
 
 void GenericGpuShaderDesc::get3DTextureValues(unsigned index, const float *& values) const

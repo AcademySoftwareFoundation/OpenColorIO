@@ -118,13 +118,21 @@ if(NOT lcms2_FOUND)
 
         string(STRIP "${lcms2_C_FLAGS}" lcms2_C_FLAGS)
 
+        # NOTE: Depending of the compiler version lcm2 2.2 does not compile with C++17 so revert 
+        # to C++11 because the library is only used by a cmd line tool.
+
+        set(lcms2_CXX_STANDARD ${CMAKE_CXX_STANDARD})
+        if(${CMAKE_CXX_STANDARD} GREATER_EQUAL 17)
+            set(lcms2_CXX_STANDARD 11)
+        endif()
+
         set(lcms2_CMAKE_ARGS
             ${lcms2_CMAKE_ARGS}
             -DCMAKE_INSTALL_PREFIX=${_EXT_DIST_ROOT}
             -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
             -DBUILD_SHARED_LIBS=OFF
             -DCMAKE_C_FLAGS=${lcms2_C_FLAGS}
-            -DCMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD}
+            -DCMAKE_CXX_STANDARD=${lcms2_CXX_STANDARD}
         )
         if(CMAKE_TOOLCHAIN_FILE)
             set(lcms2_CMAKE_ARGS

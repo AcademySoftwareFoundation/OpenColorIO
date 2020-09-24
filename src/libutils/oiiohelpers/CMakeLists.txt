@@ -17,7 +17,8 @@ if(NOT BUILD_SHARED_LIBS)
 endif()
 
 set_target_properties(oiiohelpers PROPERTIES
-    COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS}")
+    COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS}"
+)
 
 target_include_directories(oiiohelpers
     PUBLIC

@@ -83,7 +83,6 @@ public:
 
     void addTexture(const char * textureName,
                     const char * samplerName,
-                    const char * uid,
                     unsigned width, unsigned height,
                     TextureType channel,
                     Interpolation interpolation,
@@ -93,13 +92,12 @@ public:
             void,
             GpuShaderCreator,
             addTexture,
-            textureName, samplerName, uid, width, height, channel, interpolation, values
+            textureName, samplerName, width, height, channel, interpolation, values
         );
     }
 
     void add3DTexture(const char * textureName,
                       const char * samplerName,
-                      const char * uid,
                       unsigned edgelen,
                       Interpolation interpolation,
                       const float * values) override
@@ -108,7 +106,7 @@ public:
             void,
             GpuShaderCreator,
             addTexture,
-            textureName, samplerName, uid, edgelen, interpolation, values
+            textureName, samplerName, edgelen, interpolation, values
         );
     }
 
@@ -180,8 +178,8 @@ void bindPyGpuShaderCreator(py::module & m)
         .def("clone", &GpuShaderCreator::clone)
         .def("getUniqueID", &GpuShaderCreator::getUniqueID)
         .def("setUniqueID", &GpuShaderCreator::setUniqueID, "uid"_a)
-        .def("getLanguage", &GpuShaderCreator::getUniqueID)
-        .def("setLanguage", &GpuShaderCreator::setUniqueID, "language"_a)
+        .def("getLanguage", &GpuShaderCreator::getLanguage)
+        .def("setLanguage", &GpuShaderCreator::setLanguage, "language"_a)
         .def("getFunctionName", &GpuShaderCreator::getFunctionName)
         .def("setFunctionName", &GpuShaderCreator::setFunctionName, "name"_a)
         .def("getPixelName", &GpuShaderCreator::getPixelName)
@@ -195,10 +193,10 @@ void bindPyGpuShaderCreator(py::module & m)
         .def("setTextureMaxWidth", &GpuShaderCreator::setTextureMaxWidth, "maxWidth"_a)
         .def("getNextResourceIndex", &GpuShaderCreator::getNextResourceIndex)
         .def("addTexture", &GpuShaderCreator::addTexture, 
-             "textureName"_a, "samplerName"_a, "uid"_a, "width"_a, "height"_a, "channel"_a, 
+             "textureName"_a, "samplerName"_a, "width"_a, "height"_a, "channel"_a, 
              "interpolation"_a, "values"_a)
         .def("add3DTexture", &GpuShaderCreator::add3DTexture,
-             "textureName"_a, "samplerName"_a, "uid"_a, "edgeLen"_a, "interpolation"_a, "values"_a)
+             "textureName"_a, "samplerName"_a, "edgeLen"_a, "interpolation"_a, "values"_a)
 
         // Dynamic properties.
         .def("hasDynamicProperty", &GpuShaderCreator::hasDynamicProperty, "type"_a)

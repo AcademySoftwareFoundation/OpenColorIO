@@ -32,14 +32,12 @@ public:
     unsigned getNum3DTextures() const noexcept override;
     void add3DTexture(const char * textureName,
                       const char * samplerName,
-                      const char * uid,
                       unsigned edgelen,
                       Interpolation interpolation,
                       const float * values) override;
     void get3DTexture(unsigned index,
                       const char *& textureName,
                       const char *& samplerName,
-                      const char *& uid,
                       unsigned & edgelen,
                       Interpolation & interpolation) const override;
     void get3DTextureValues(unsigned index, const float *& value) const override;
@@ -68,7 +66,6 @@ protected:
     unsigned getNumTextures() const noexcept override;
     void addTexture(const char * textureName,
                     const char * samplerName,
-                    const char * uid,
                     unsigned width, unsigned height,
                     TextureType channel, Interpolation interpolation,
                     const float * values) override;
@@ -76,7 +73,6 @@ protected:
     void getTexture(unsigned index,
                     const char *& textureName,
                     const char *& samplerName,
-                    const char *& uid,
                     unsigned & width, unsigned & height,
                     TextureType & channel,
                     Interpolation & interpolation) const override;
@@ -138,7 +134,6 @@ public:
     unsigned getNumTextures() const noexcept override;
     void addTexture(const char * textureName,
                     const char * samplerNName,
-                    const char * uid,
                     unsigned width, unsigned height,
                     TextureType channel,
                     Interpolation interpolation,
@@ -146,7 +141,6 @@ public:
     void getTexture(unsigned index,
                     const char *& textureName,
                     const char *& samplerName,
-                    const char *& uid,
                     unsigned & width, unsigned & height,
                     TextureType & channel,
                     Interpolation & interpolation) const override;
@@ -157,14 +151,12 @@ public:
     unsigned getNum3DTextures() const noexcept override;
     void add3DTexture(const char * textureName,
                       const char * samplerName,
-                      const char * uid,
                       unsigned edgelen,
                       Interpolation interpolation,
                       const float * values) override;
     void get3DTexture(unsigned index,
                       const char *& textureName,
                       const char *& samplerName,
-                      const char *& uid,
                       unsigned & edgelen,
                       Interpolation & interpolation) const override;
     void get3DTextureValues(unsigned index, const float *& value) const override;

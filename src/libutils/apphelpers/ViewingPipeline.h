@@ -84,6 +84,8 @@ public:
     ConstProcessorRcPtr getProcessor(const ConstConfigRcPtr & config,
                                      const ConstContextRcPtr & context) const;
 
+    ConstProcessorRcPtr getProcessor(const ConstConfigRcPtr & config) const;
+
 protected:
     void validate() const;
 

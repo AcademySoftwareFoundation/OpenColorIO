@@ -150,7 +150,10 @@ OCIO_ADD_TEST(StringUtils, replace)
     ref = StringUtils::Replace(ref, "ZY", "TO");
     OCIO_CHECK_EQUAL(ref, "lO12ABC& ctfG");
 
-    StringUtils::ReplaceInPlace(ref, "ct", "TO");
+    OCIO_CHECK_ASSERT(StringUtils::ReplaceInPlace(ref, "ct", "TO"));
+    OCIO_CHECK_EQUAL(ref, "lO12ABC& TOfG");
+
+    OCIO_CHECK_ASSERT(!StringUtils::ReplaceInPlace(ref, "12345", "TO"));
     OCIO_CHECK_EQUAL(ref, "lO12ABC& TOfG");
 }
 

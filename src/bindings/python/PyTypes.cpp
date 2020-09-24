@@ -188,6 +188,13 @@ void bindPyTypes(py::module & m)
         .value("OPTIMIZATION_DEFAULT", OPTIMIZATION_DEFAULT)
         .export_values();
 
+    py::enum_<ProcessorCacheFlags>(m, "ProcessorCacheFlags")
+        .value("PROCESSOR_CACHE_OFF", PROCESSOR_CACHE_OFF)
+        .value("PROCESSOR_CACHE_ENABLED", PROCESSOR_CACHE_ENABLED)
+        .value("PROCESSOR_CACHE_SHARE_DYN_PROPERTIES", PROCESSOR_CACHE_SHARE_DYN_PROPERTIES)
+        .value("PROCESSOR_CACHE_DEFAULT", PROCESSOR_CACHE_DEFAULT)
+        .export_values();
+
     // Conversion
     m.def("BoolToString", &BoolToString, "value"_a);
     m.def("BoolFromString", &BoolFromString, "str"_a);
@@ -236,11 +243,14 @@ void bindPyTypes(py::module & m)
     m.def("NegativeStyleToString", &NegativeStyleToString, "style"_a);
     m.def("NegativeStyleFromString", &NegativeStyleFromString, "str"_a);
 
-    // Envar
+    // Env. variables
     m.attr("OCIO_CONFIG_ENVVAR") = OCIO_CONFIG_ENVVAR;
     m.attr("OCIO_ACTIVE_DISPLAYS_ENVVAR") = OCIO_ACTIVE_DISPLAYS_ENVVAR;
     m.attr("OCIO_ACTIVE_VIEWS_ENVVAR") = OCIO_ACTIVE_VIEWS_ENVVAR;
     m.attr("OCIO_INACTIVE_COLORSPACES_ENVVAR") = OCIO_INACTIVE_COLORSPACES_ENVVAR;
+    m.attr("OCIO_DISABLE_ALL_CACHES") = OCIO_DISABLE_ALL_CACHES;
+    m.attr("OCIO_DISABLE_PROCESSOR_CACHES") = OCIO_DISABLE_PROCESSOR_CACHES;
+    m.attr("OCIO_DISABLE_CACHE_FALLBACK") = OCIO_DISABLE_CACHE_FALLBACK;
 
     // Roles
     m.attr("ROLE_DEFAULT") = ROLE_DEFAULT;
