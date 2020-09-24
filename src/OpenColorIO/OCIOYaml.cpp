@@ -431,7 +431,7 @@ inline void save(YAML::Emitter& out, const View & view)
 // Common Transform
 
 inline void EmitBaseTransformKeyValues(YAML::Emitter & out,
-                                        const ConstTransformRcPtr & t)
+                                       const ConstTransformRcPtr & t)
 {
     if(t->getDirection() != TRANSFORM_DIR_FORWARD)
     {
@@ -655,6 +655,11 @@ inline void load(const YAML::Node& node, CDLTransformRcPtr& t)
         {
             load(second, stringval);
             t->setDescription(stringval.c_str());
+        }
+        else if (key == "name")
+        {
+            load(second, stringval);
+            t->getFormatMetadata().addAttribute(METADATA_NAME, stringval.c_str());
         }
         else
         {

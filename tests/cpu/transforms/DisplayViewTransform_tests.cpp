@@ -393,11 +393,11 @@ OCIO_ADD_TEST(DisplayViewTransform, build_ops)
 
 namespace
 {
-void ValidateTransform(OCIO::ConstOpRcPtr & op, const std::string id,
+void ValidateTransform(OCIO::ConstOpRcPtr & op, const std::string name,
                        OCIO::TransformDirection dir, unsigned line)
 {
     OCIO_REQUIRE_EQUAL_FROM(op->data()->getFormatMetadata().getNumAttributes(), 1, line);
-    OCIO_CHECK_EQUAL_FROM(id, op->data()->getFormatMetadata().getAttributeValue(0), line);
+    OCIO_CHECK_EQUAL_FROM(name, op->data()->getFormatMetadata().getAttributeValue(0), line);
 
     auto cdl = OCIO_DYNAMIC_POINTER_CAST<const OCIO::CDLOpData>(op->data());
     OCIO_REQUIRE_ASSERT_FROM(cdl, line);
@@ -429,8 +429,8 @@ looks:
   - !<Look>
     name: look
     process_space: displayCSProcess
-    transform: !<CDLTransform> {id: "look forward", sat: 1.5}
-    inverse_transform: !<CDLTransform> {id: "look inverse", sat: 1.5}
+    transform: !<CDLTransform> {name: look forward, sat: 1.5}
+    inverse_transform: !<CDLTransform> {name: look inverse, sat: 1.5}
 
 view_transforms:
   - !<ViewTransform>
@@ -439,24 +439,24 @@ view_transforms:
 
   - !<ViewTransform>
     name: display_vt
-    to_display_reference: !<CDLTransform> {id: "display vt to ref", sat: 1.5}
-    from_display_reference: !<CDLTransform> {id: "display vt from ref", sat: 1.5}
+    to_display_reference: !<CDLTransform> {name: display vt to ref, sat: 1.5}
+    from_display_reference: !<CDLTransform> {name: display vt from ref, sat: 1.5}
 
 display_colorspaces:
   - !<ColorSpace>
     name: displayCSIn
-    to_display_reference: !<CDLTransform> {id: "in cs to ref", sat: 1.5}
-    from_display_reference: !<CDLTransform> {id: "in cs from ref", sat: 1.5}
+    to_display_reference: !<CDLTransform> {name: in cs to ref, sat: 1.5}
+    from_display_reference: !<CDLTransform> {name: in cs from ref, sat: 1.5}
 
   - !<ColorSpace>
     name: displayCSOut
-    to_display_reference: !<CDLTransform> {id: "out cs to ref", sat: 1.5}
-    from_display_reference: !<CDLTransform> {id: "out cs from ref", sat: 1.5}
+    to_display_reference: !<CDLTransform> {name: out cs to ref, sat: 1.5}
+    from_display_reference: !<CDLTransform> {name: out cs from ref, sat: 1.5}
 
   - !<ColorSpace>
     name: displayCSProcess
-    to_display_reference: !<CDLTransform> {id: "process cs to ref", sat: 1.5}
-    from_display_reference: !<CDLTransform> {id: "process cs from ref", sat: 1.5}
+    to_display_reference: !<CDLTransform> {name: process cs to ref, sat: 1.5}
+    from_display_reference: !<CDLTransform> {name: process cs from ref, sat: 1.5}
 
 colorspaces:
   - !<ColorSpace>
