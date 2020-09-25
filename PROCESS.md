@@ -5,7 +5,7 @@
 
 This document outlines important development and administrative processes and 
 procedures adhered to by the OpenColorIO project. It should be reviewed in 
-conjuntion with [CONTRIBUTING.md](CONTRIBUTING.md) prior to proposing or 
+conjunction with [CONTRIBUTING.md](CONTRIBUTING.md) prior to proposing or 
 submitting changes.
 
 * [Core Library Changes](#Core-Library-Changes)
@@ -73,36 +73,44 @@ the complexity and risk of the proposed changes, factoring in the length of
 time the PR has been open to discussion. The following guidelines outline the
 project's established approval rules for merging:
 
-* All changes must receive a minimum of two approvals from Committers 
-  listed in [COMMITTERS.md](COMMITTERS.md) that are not affiliated with the 
-  author or their company prior to being merged. GitHub branch protections 
-  are enabled to enforce minimum committer count and Committer status. A 
-  Committer approval is denoted in a PR with a green check mark. A gray check 
-  mark beside an approval means the approver does not count toward the minimum
-  approval count, but such approvals are welcome and encouraged from the 
-  community.
+* All changes must receive a minimum of two approvals from Committers listed in 
+  [COMMITTERS.md](COMMITTERS.md) prior to being merged. GitHub branch 
+  protections are enabled to enforce minimum committer count and Committer 
+  status. A Committer approval is denoted in a PR with a green check mark. A 
+  gray check mark beside an approval means the approver does not count toward 
+  the minimum approval count, but such approvals are welcome and encouraged 
+  from the community.
 
-* Ideally one of two approvers of a pull request should be the "owner" for that 
-  section of the codebase (if a specific owner has been designated). If the 
-  person submitting the PR is him/herself the "owner" of that section of the 
-  codebase, then only one additional Committer approval is required in addition 
-  to the submitter. But in either case, a 48 hour minimum is required to give 
-  everybody a chance to see it, unless it's a critical emergency fix.
+* Small changes (bug fixes, docs, tests, cleanups) may be approved by any two 
+  Committers (other than the author).
+
+* Large or significant changes must receive both approvals from Committers that 
+  are not affiliated with the author or their company.
+
+* All pull requests, except critical emergency fixes, must be posted for a 48 
+  hour minimum prior to merging, even with the required approvals. This gives 
+  everybody a chance to see it across time zones and schedules.
 
 * If approval does not happen within two weeks of opening a pull request and 
   there are no raised objections or unresolved discussions happening about the 
   feature, a Committer that is affiliated with the author may approve it. At 
   some point, we have to assume that the people who know and care are 
   monitoring the PRs and that an extended period without objections is really 
-  assent.
+  assent. Notice must be given in the pull request 48 hours before merging 
+  (as early as the 12th day of an open PR) with the intent to merge. This 
+  gives a windows for reviewers to comment or request additional time for 
+  review.
 
-* Discussions and/or additional changes should result in no Committers 
-  objecting to the change. Previously-objecting Committers do not necessarily 
-  have to sign-off on the change, but they should not be opposed to it.
+If one or more Committers oppose a proposed change, then the change cannot be 
+accepted unless:
 
-* Changes may be escalated to the TSC for a vote to approve a PR. This should 
-  only happen if disagreements between Committers cannot be resolved through 
-  discussion.
+* Discussions and/or additional changes result in no Committers objecting to 
+  the change. Previously-objecting Committers do not necessarily have to 
+  sign-off on the change, but they should not be opposed to it.
+
+* The change is escalated to the TSC and the TSC votes to approve the change. 
+  This should only happen if disagreements between Committers cannot be 
+  resolved through discussion.
 
 Committers may opt to elevate significant or controversial modifications to the
 TSC by assigning the `tsc-review` label to a pull request or issue. The TSC
