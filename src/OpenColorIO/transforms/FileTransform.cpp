@@ -829,8 +829,7 @@ void BuildFileTransformOps(OpRcPtrVec & ops,
             // Error if file is still being loaded and is the same as the
             // one about to be loaded.
             if (!fileData->getComplete() &&
-                Platform::Strcasecmp(fileData->getPath().c_str(),
-                                        filepath.c_str()) == 0)
+                Platform::Strcasecmp(fileData->getPath().c_str(), filepath.c_str()) == 0)
             {
                 std::ostringstream os;
                 os << "Reference to: " << filepath;
