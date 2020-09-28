@@ -96,10 +96,9 @@ project's established approval rules for merging:
   feature, a Committer that is affiliated with the author may approve it. At 
   some point, we have to assume that the people who know and care are 
   monitoring the PRs and that an extended period without objections is really 
-  assent. Notice must be given in the pull request 48 hours before merging 
-  (as early as the 12th day of an open PR) with the intent to merge. This 
-  gives a windows for reviewers to comment or request additional time for 
-  review.
+  assent. Notice must be given in the pull request between 2 and 4 days in 
+  advance of the intended merge date. This gives a windows for reviewers to 
+  comment or request additional time for review.
 
 If one or more Committers oppose a proposed change, then the change cannot be 
 accepted unless:
