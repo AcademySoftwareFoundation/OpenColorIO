@@ -221,7 +221,6 @@ OCIO_ADD_TEST(FileFormatCCC, test_ccc)
 
     // Create a FileTransform
     OCIO::FileTransformRcPtr fileTransform = OCIO::FileTransform::Create();
-    fileTransform->setInterpolation(OCIO::INTERP_LINEAR);
     fileTransform->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
     fileTransform->setSrc(filePath.c_str());
     fileTransform->setCCCId("cc0002");

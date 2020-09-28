@@ -13,6 +13,7 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "fileformats/FileFormatUtils.h"
 #include "MathUtils.h"
 #include "ops/lut1d/Lut1DOp.h"
 #include "ops/lut3d/Lut3DOp.h"
@@ -319,9 +320,9 @@ public:
 
     void getFormatInfo(FormatInfoVec & formatInfoVec) const override;
 
-    CachedFileRcPtr read(
-        std::istream & istream,
-        const std::string & fileName) const override;
+    CachedFileRcPtr read(std::istream & istream,
+                         const std::string & fileName,
+                         Interpolation interp) const override;
 
     void bake(const Baker & baker,
                 const std::string & formatName,
@@ -355,9 +356,9 @@ void LocalFileFormat::getFormatInfo(FormatInfoVec & formatInfoVec) const
     formatInfoVec.push_back(info);
 }
 
-CachedFileRcPtr LocalFileFormat::read(
-    std::istream & istream,
-    const std::string & fileName) const
+CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
+                                      const std::string & fileName,
+                                      Interpolation interp) const
 {
     Lut1DOpDataRcPtr lut1d_ptr;
     Lut3DOpDataRcPtr lut3d_ptr;
@@ -496,6 +497,10 @@ CachedFileRcPtr LocalFileFormat::read(
         }
 
         lut1d_ptr = std::make_shared<Lut1DOpData>(points1D);
+        if (Lut1DOpData::IsValidInterpolation(interp))
+        {
+            lut1d_ptr->setInterpolation(interp);
+        }
         lut1d_ptr->setFileOutputBitDepth(BIT_DEPTH_F32);
         Array & lutArray = lut1d_ptr->getArray();
 
@@ -565,6 +570,10 @@ CachedFileRcPtr LocalFileFormat::read(
         }
 
         lut3d_ptr = std::make_shared<Lut3DOpData>(lutSize);
+        if (Lut3DOpData::IsValidInterpolation(interp))
+        {
+            lut3d_ptr->setInterpolation(interp);
+        }
         lut3d_ptr->setFileOutputBitDepth(BIT_DEPTH_F32);
 
         Array & lutArray = lut3d_ptr->getArray();
@@ -902,61 +911,65 @@ LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
     CachedFileCSPRcPtr cachedFile = DynamicPtrCast<CachedFileCSP>(untypedCachedFile);
 
     // This should never happen.
-    if(!cachedFile)
+    if(!cachedFile || (!cachedFile->prelut && !cachedFile->lut1D && !cachedFile->lut3D))
     {
         std::ostringstream os;
         os << "Cannot build CSP Op. Invalid cache type.";
         throw Exception(os.str().c_str());
     }
 
-    TransformDirection newDir = fileTransform.getDirection();
-    newDir = CombineTransformDirections(dir, newDir);
+    const auto newDir = CombineTransformDirections(dir, fileTransform.getDirection());
+
+    const auto fileInterp = fileTransform.getInterpolation();
+
+    bool fileInterpUsed = false;
+    auto prelut = HandleLUT1D(cachedFile->prelut, fileInterp, fileInterpUsed);
+    auto lut1D = HandleLUT1D(cachedFile->lut1D, fileInterp, fileInterpUsed);
+    auto lut3D = HandleLUT3D(cachedFile->lut3D, fileInterp, fileInterpUsed);
+
+    if (!fileInterpUsed)
+    {
+        LogWarningInterpolationNotUsed(fileInterp, fileTransform);
+    }
 
     if(newDir == TRANSFORM_DIR_FORWARD)
     {
-        if(cachedFile->prelut)
+        if(prelut)
         {
             CreateMinMaxOp(ops,
-                            cachedFile->prelut_from_min,
-                            cachedFile->prelut_from_max,
-                            newDir);
-            CreateLut1DOp(ops, cachedFile->prelut, newDir);
+                           cachedFile->prelut_from_min,
+                           cachedFile->prelut_from_max,
+                           newDir);
+            CreateLut1DOp(ops, prelut, newDir);
         }
-        if (cachedFile->lut1D)
+        if (lut1D)
         {
-            cachedFile->lut1D->setInterpolation(fileTransform.getInterpolation());
-            CreateLut1DOp(ops, cachedFile->lut1D, newDir);
+            CreateLut1DOp(ops, lut1D, newDir);
         }
-        else if (cachedFile->lut3D)
+        else if (lut3D)
         {
-            cachedFile->lut3D->setInterpolation(fileTransform.getInterpolation());
-            CreateLut3DOp(ops, cachedFile->lut3D, newDir);
+            CreateLut3DOp(ops, lut3D, newDir);
         }
     }
     else if(newDir == TRANSFORM_DIR_INVERSE)
     {
-        if (cachedFile->lut1D)
+        if (lut1D)
         {
-            cachedFile->lut1D->setInterpolation(fileTransform.getInterpolation());
-            CreateLut1DOp(ops, cachedFile->lut1D, newDir);
+            CreateLut1DOp(ops, lut1D, newDir);
         }
-        else if (cachedFile->lut3D)
+        else if (lut3D)
         {
-            cachedFile->lut3D->setInterpolation(fileTransform.getInterpolation());
-            CreateLut3DOp(ops, cachedFile->lut3D, newDir);
+            CreateLut3DOp(ops, lut3D, newDir);
         }
-        if(cachedFile->prelut)
+        if(prelut)
         {
-            CreateLut1DOp(ops, cachedFile->prelut, newDir);
+            CreateLut1DOp(ops, prelut, newDir);
             CreateMinMaxOp(ops,
-                            cachedFile->prelut_from_min,
-                            cachedFile->prelut_from_max,
-                            newDir);
+                           cachedFile->prelut_from_min,
+                           cachedFile->prelut_from_max,
+                           newDir);
         }
     }
-
-    return;
-
 }
 }
 

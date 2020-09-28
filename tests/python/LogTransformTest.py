@@ -17,6 +17,12 @@ class LogTransformTest(unittest.TestCase):
     def tearDown(self):
         self.log_tr = None
 
+    def test_transform_type(self):
+        """
+        Test the getTransformType() method.
+        """
+        self.assertEqual(self.log_tr.getTransformType(), OCIO.TRANSFORM_TYPE_LOG)
+
     def test_base(self):
         """
         Test the setBase() and getBase() methods.

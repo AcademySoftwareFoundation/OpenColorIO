@@ -70,7 +70,7 @@ OCIO_ADD_TEST(FileFormatD1DL, test_lut1d_8i_8i)
     OCIO_CHECK_EQUAL(lutFile->lut1D->getID(), "");
     OCIO_CHECK_EQUAL(lutFile->lut1D->getName(), "");
 
-    OCIO_CHECK_EQUAL(lutFile->lut1D->getInterpolation(), OCIO::INTERP_LINEAR);
+    OCIO_CHECK_EQUAL(lutFile->lut1D->getInterpolation(), OCIO::INTERP_DEFAULT);
     OCIO_CHECK_EQUAL(lutFile->lut1D->getFileOutputBitDepth(), OCIO::BIT_DEPTH_UINT8);
 
     OCIO_CHECK_ASSERT(!lutFile->lut1D->isInputHalfDomain());
@@ -108,7 +108,7 @@ OCIO_ADD_TEST(FileFormatD1DL, test_lut1d_12i_16f)
     OCIO_CHECK_EQUAL(lutFile->lut1D->getID(), "");
     OCIO_CHECK_EQUAL(lutFile->lut1D->getName(), "");
 
-    OCIO_CHECK_EQUAL(lutFile->lut1D->getInterpolation(), OCIO::INTERP_LINEAR);
+    OCIO_CHECK_EQUAL(lutFile->lut1D->getInterpolation(), OCIO::INTERP_DEFAULT);
     OCIO_CHECK_EQUAL(lutFile->lut1D->getFileOutputBitDepth(), OCIO::BIT_DEPTH_F16);
 
     OCIO_CHECK_ASSERT(!lutFile->lut1D->isInputHalfDomain());
@@ -143,7 +143,7 @@ OCIO_ADD_TEST(FileFormatD1DL, test_lut1d_16f_16f)
     const std::string discreetLut16fp16fp("photo_default_16fpto16fp.lut");
     OCIO_CHECK_NO_THROW(lutFile = LoadLutFile(discreetLut16fp16fp));
 
-    OCIO_CHECK_EQUAL(lutFile->lut1D->getInterpolation(), OCIO::INTERP_LINEAR);
+    OCIO_CHECK_EQUAL(lutFile->lut1D->getInterpolation(), OCIO::INTERP_DEFAULT);
     OCIO_CHECK_EQUAL(lutFile->lut1D->getFileOutputBitDepth(), OCIO::BIT_DEPTH_F16);
 
     OCIO_CHECK_ASSERT(lutFile->lut1D->isInputHalfDomain());
@@ -178,7 +178,7 @@ OCIO_ADD_TEST(FileFormatD1DL, test_lut1d_16f_12i)
     const std::string discreetLut16fp12("Test_16fpto12.lut");
     OCIO_CHECK_NO_THROW(lutFile = LoadLutFile(discreetLut16fp12));
 
-    OCIO_CHECK_EQUAL(lutFile->lut1D->getInterpolation(), OCIO::INTERP_LINEAR);
+    OCIO_CHECK_EQUAL(lutFile->lut1D->getInterpolation(), OCIO::INTERP_DEFAULT);
     OCIO_CHECK_EQUAL(lutFile->lut1D->getFileOutputBitDepth(), OCIO::BIT_DEPTH_UINT12);
 
     OCIO_CHECK_ASSERT(lutFile->lut1D->isInputHalfDomain());

@@ -21,6 +21,12 @@ class DisplayViewTransformTest(unittest.TestCase):
     def tearDown(self):
         self.dv_tr = None
 
+    def test_transform_type(self):
+        """
+        Test the getTransformType() method.
+        """
+        self.assertEqual(self.dv_tr.getTransformType(), OCIO.TRANSFORM_TYPE_DISPLAY_VIEW)
+
     def test_src(self):
         """
         Test the setSrc() and getSrc() methods.
