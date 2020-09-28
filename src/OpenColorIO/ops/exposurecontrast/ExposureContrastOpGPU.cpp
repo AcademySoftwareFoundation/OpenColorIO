@@ -104,12 +104,12 @@ void AddECLinearShader(GpuShaderText & st,
         st.newLine() << "outColor.rgb = "
                      <<   "pow( "
                      <<     "max( "
-                     <<       st.vec3fConst(0.0f) << ", "
-                     <<       "outColor.rgb / " << st.vec3fConst(pivot)
+                     <<       st.float3Const(0.0f) << ", "
+                     <<       "outColor.rgb / " << st.float3Const(pivot)
                      <<     " ), "
-                     <<     st.vec3fConst("contrast")
+                     <<     st.float3Const("contrast")
                      <<   " ) * "
-                     <<   st.vec3fConst(pivot) << ";";
+                     <<   st.float3Const(pivot) << ";";
         st.dedent();
     }
     st.newLine() << "}";
@@ -135,12 +135,12 @@ void AddECLinearRevShader(GpuShaderText & st,
       st.newLine() << "outColor.rgb = "
                    <<   "pow( "
                    <<      "max( "
-                   <<         st.vec3fConst(0.0f) << ", "
-                   <<         "outColor.rgb / " << st.vec3fConst(pivot)
+                   <<         st.float3Const(0.0f) << ", "
+                   <<         "outColor.rgb / " << st.float3Const(pivot)
                    <<      " ), "
-                   <<      st.vec3fConst("contrast")
+                   <<      st.float3Const("contrast")
                    <<    " ) * "
-                   <<    st.vec3fConst(pivot) << ";";
+                   <<    st.float3Const(pivot) << ";";
       st.dedent();
     }
     st.newLine() << "}";
@@ -169,12 +169,12 @@ void AddECVideoShader(GpuShaderText & st,
         st.newLine() << "outColor.rgb = "
                      <<   "pow( "
                      <<     "max( "
-                     <<       st.vec3fConst(0.0f) << ", "
-                     <<       "outColor.rgb / " << st.vec3fConst(pivot)
+                     <<       st.float3Const(0.0f) << ", "
+                     <<       "outColor.rgb / " << st.float3Const(pivot)
                      <<     " ), "
-                     <<     st.vec3fConst("contrast")
+                     <<     st.float3Const("contrast")
                      <<   " ) * "
-                     <<   st.vec3fConst(pivot) << ";";
+                     <<   st.float3Const(pivot) << ";";
         st.dedent();
     }
     st.newLine() << "}";
@@ -201,12 +201,12 @@ void AddECVideoRevShader(GpuShaderText & st,
         st.newLine() << "outColor.rgb = "
                      <<   "pow( "
                      <<     "max( "
-                     <<       st.vec3fConst(0.0f) << ", "
-                     <<       "outColor.rgb / " << st.vec3fConst(pivot)
+                     <<       st.float3Const(0.0f) << ", "
+                     <<       "outColor.rgb / " << st.float3Const(pivot)
                      <<     " ), "
-                     <<     st.vec3fConst("contrast")
+                     <<     st.float3Const("contrast")
                      <<   " ) * "
-                     <<   st.vec3fConst(pivot) << ";";
+                     <<   st.float3Const(pivot) << ";";
         st.dedent();
     }
     st.newLine() << "}";

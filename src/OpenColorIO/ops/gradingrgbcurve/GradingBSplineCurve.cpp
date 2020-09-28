@@ -345,10 +345,10 @@ void GradingBSplineCurveImpl::AddShaderEval(GpuShaderText & st,
                                             const std::string & coefsOffsets,
                                             const std::string & knots, const std::string & coefs)
 {
-    st.newLine() << "int knotsOffs = " << knotsOffsets << "[curveIdx].x;";
-    st.newLine() << "int knotsCnt = " << knotsOffsets << "[curveIdx].y;";
-    st.newLine() << "int coefsOffs = " << coefsOffsets << "[curveIdx].x;";
-    st.newLine() << "int coefsCnt = " << coefsOffsets << "[curveIdx].y;";
+    st.newLine() << "int knotsOffs = " << knotsOffsets << "[curveIdx * 2];";
+    st.newLine() << "int knotsCnt = " << knotsOffsets << "[curveIdx * 2 + 1];";
+    st.newLine() << "int coefsOffs = " << coefsOffsets << "[curveIdx * 2];";
+    st.newLine() << "int coefsCnt = " << coefsOffsets << "[curveIdx * 2 + 1];";
     st.newLine() << "int coefsSets = coefsCnt / 3;";
     // If the curve has the default/identity values the coef data is empty, so return the input.
     st.newLine() << "if (coefsSets == 0)";
