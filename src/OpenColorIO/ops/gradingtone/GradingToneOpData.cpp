@@ -128,7 +128,7 @@ void GradingToneOpData::setStyle(GradingStyle style) noexcept
     {
         m_style = style;
         // Reset value to default when style is changing.
-        m_value->useStyle(style);
+        m_value->setStyle(style);
     }
 }
 

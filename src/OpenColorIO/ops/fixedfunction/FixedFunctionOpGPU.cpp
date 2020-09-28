@@ -37,12 +37,12 @@ void Add_hue_weight_shader(GpuShaderText & ss, float width)
     ss.newLine() << "float knot_coord = clamp(2. + hue * float(" << inv_width << "), 0., 4.);";
     ss.newLine() << "int j = int(min(knot_coord, 3.));";
     ss.newLine() << "float t = knot_coord - float(j);";
-    ss.newLine() << ss.vec4fDecl("monomials") << " = " << ss.vec4fConst("t*t*t", "t*t", "t", "1.") << ";";
-    ss.newLine() << ss.vec4fDecl("m0") << " = " << ss.vec4fConst(0.25,  0.00,  0.00,  0.00) << ";";
-    ss.newLine() << ss.vec4fDecl("m1") << " = " << ss.vec4fConst(-0.75,  0.75,  0.75,  0.25) << ";";
-    ss.newLine() << ss.vec4fDecl("m2") << " = " << ss.vec4fConst(0.75, -1.50,  0.00,  1.00) << ";";
-    ss.newLine() << ss.vec4fDecl("m3") << " = " << ss.vec4fConst(-0.25,  0.75, -0.75,  0.25) << ";";
-    ss.newLine() << ss.vec4fDecl("coefs") << " = " << ss.lerp( "m0", "m1", "float(j == 1)") << ";";
+    ss.newLine() << ss.float4Decl("monomials") << " = " << ss.float4Const("t*t*t", "t*t", "t", "1.") << ";";
+    ss.newLine() << ss.float4Decl("m0") << " = " << ss.float4Const(0.25,  0.00,  0.00,  0.00) << ";";
+    ss.newLine() << ss.float4Decl("m1") << " = " << ss.float4Const(-0.75,  0.75,  0.75,  0.25) << ";";
+    ss.newLine() << ss.float4Decl("m2") << " = " << ss.float4Const(0.75, -1.50,  0.00,  1.00) << ";";
+    ss.newLine() << ss.float4Decl("m3") << " = " << ss.float4Const(-0.25,  0.75, -0.75,  0.25) << ";";
+    ss.newLine() << ss.float4Decl("coefs") << " = " << ss.lerp( "m0", "m1", "float(j == 1)") << ";";
     ss.newLine() << "coefs = " << ss.lerp("coefs", "m2", "float(j == 2)") << ";";
     ss.newLine() << "coefs = " << ss.lerp("coefs", "m3", "float(j == 3)") << ";";
     ss.newLine() << "float f_H = dot(coefs, monomials);";
@@ -55,17 +55,17 @@ void Add_RedMod_03_Fwd_Shader(GpuShaderText & ss)
 
     Add_hue_weight_shader(ss, 120.f);
 
-    ss.newLine() << ss.vec3fDecl("maxval") << " = max( outColor.rgb, max( outColor.gbr, outColor.brg));";
-    ss.newLine() << ss.vec3fDecl("minval") << " = min( outColor.rgb, min( outColor.gbr, outColor.brg));";
+    ss.newLine() << ss.float3Decl("maxval") << " = max( outColor.rgb, max( outColor.gbr, outColor.brg));";
+    ss.newLine() << ss.float3Decl("minval") << " = min( outColor.rgb, min( outColor.gbr, outColor.brg));";
     ss.newLine() << "float oldChroma = max(1e-10, maxval.r - minval.r);";
-    ss.newLine() << ss.vec3fDecl("delta") << " = outColor.rgb - minval;";
+    ss.newLine() << ss.float3Decl("delta") << " = outColor.rgb - minval;";
 
     ss.newLine() << "float f_S = ( max(1e-10, maxval.r) - max(1e-10, minval.r) ) / max(1e-2, maxval.r);";
 
     ss.newLine() << "outColor.r = outColor.r + f_H * f_S * (" << _pivot
                  << " - outColor.r) * " << _1minusScale << ";";
 
-    ss.newLine() << ss.vec3fDecl("maxval2") << " = max( outColor.rgb, max( outColor.gbr, outColor.brg));";
+    ss.newLine() << ss.float3Decl("maxval2") << " = max( outColor.rgb, max( outColor.gbr, outColor.brg));";
     ss.newLine() << "float newChroma = maxval2.r - minval.r;";
     ss.newLine() << "outColor.rgb = minval.r + delta * newChroma / oldChroma;";
 }
@@ -81,10 +81,10 @@ void Add_RedMod_03_Inv_Shader(GpuShaderText & ss)
     ss.newLine() << "{";
     ss.indent();
 
-    ss.newLine() << ss.vec3fDecl("maxval") << " = max( outColor.rgb, max( outColor.gbr, outColor.brg));";
-    ss.newLine() << ss.vec3fDecl("minval") << " = min( outColor.rgb, min( outColor.gbr, outColor.brg));";
+    ss.newLine() << ss.float3Decl("maxval") << " = max( outColor.rgb, max( outColor.gbr, outColor.brg));";
+    ss.newLine() << ss.float3Decl("minval") << " = min( outColor.rgb, min( outColor.gbr, outColor.brg));";
     ss.newLine() << "float oldChroma = max(1e-10, maxval.r - minval.r);";
-    ss.newLine() << ss.vec3fDecl("delta") << " = outColor.rgb - minval;";
+    ss.newLine() << ss.float3Decl("delta") << " = outColor.rgb - minval;";
 
     // Note: If f_H == 0, the following generally doesn't change the red value,
     //       but it does for R < 0, hence the need for the if-statement above.
@@ -94,7 +94,7 @@ void Add_RedMod_03_Inv_Shader(GpuShaderText & ss)
     ss.newLine() << "float kc = f_H * " << _pivot << " * minval.r * " << _1minusScale << ";";
     ss.newLine() << "outColor.r = ( -kb - sqrt( kb * kb - 4. * ka * kc)) / ( 2. * ka);";
 
-    ss.newLine() << ss.vec3fDecl("maxval2") << " = max( outColor.rgb, max( outColor.gbr, outColor.brg));";
+    ss.newLine() << ss.float3Decl("maxval2") << " = max( outColor.rgb, max( outColor.gbr, outColor.brg));";
     ss.newLine() << "float newChroma = maxval2.r - minval.r;";
     ss.newLine() << "outColor.rgb = minval.r + delta * newChroma / oldChroma;";
 
@@ -109,8 +109,8 @@ void Add_RedMod_10_Fwd_Shader(GpuShaderText & ss)
 
     Add_hue_weight_shader(ss, 135.f);
 
-    ss.newLine() << ss.vec3fDecl("maxval") << " = max( outColor.rgb, max( outColor.gbr, outColor.brg));";
-    ss.newLine() << ss.vec3fDecl("minval") << " = min( outColor.rgb, min( outColor.gbr, outColor.brg));";
+    ss.newLine() << ss.float3Decl("maxval") << " = max( outColor.rgb, max( outColor.gbr, outColor.brg));";
+    ss.newLine() << ss.float3Decl("minval") << " = min( outColor.rgb, min( outColor.gbr, outColor.brg));";
     ss.newLine() << "float f_S = ( max(1e-10, maxval.r) - max(1e-10, minval.r) ) / max(1e-2, maxval.r);";
 
     ss.newLine() << "outColor.r = outColor.r + f_H * f_S * (" << _pivot
@@ -128,7 +128,7 @@ void Add_RedMod_10_Inv_Shader(GpuShaderText & ss)
     ss.newLine() << "{";
     ss.indent();
 
-    ss.newLine() << ss.vec3fDecl("minval") << " = min( outColor.gbr, outColor.brg);";
+    ss.newLine() << ss.float3Decl("minval") << " = min( outColor.gbr, outColor.brg);";
 
     // Note: If f_H == 0, the following generally doesn't change the red value
     //       but it does for R < 0, hence the if.
@@ -148,8 +148,8 @@ void Add_Glow_03_Fwd_Shader(GpuShaderText & ss, float glowGain, float glowMid)
                  << " + outColor.g * (outColor.g - outColor.r)"
                  << " + outColor.r * (outColor.r - outColor.b) );";
     ss.newLine() << "float YC = (outColor.b + outColor.g + outColor.r + 1.75 * chroma) / 3.;";
-    ss.newLine() << ss.vec3fDecl("maxval") << " = max( outColor.rgb, max( outColor.gbr, outColor.brg));";
-    ss.newLine() << ss.vec3fDecl("minval") << " = min( outColor.rgb, min( outColor.gbr, outColor.brg));";
+    ss.newLine() << ss.float3Decl("maxval") << " = max( outColor.rgb, max( outColor.gbr, outColor.brg));";
+    ss.newLine() << ss.float3Decl("minval") << " = min( outColor.rgb, min( outColor.gbr, outColor.brg));";
 
     ss.newLine() << "float sat = ( max(1e-10, maxval.r) - max(1e-10, minval.r) ) / max(1e-2, maxval.r);";
 
@@ -172,8 +172,8 @@ void Add_Glow_03_Inv_Shader(GpuShaderText & ss, float glowGain, float glowMid)
                  << " + outColor.g * (outColor.g - outColor.r)"
                  << " + outColor.r * (outColor.r - outColor.b) );";
     ss.newLine() << "float YC = (outColor.b + outColor.g + outColor.r + 1.75 * chroma) / 3.;";
-    ss.newLine() << ss.vec3fDecl("maxval") << " = max( outColor.rgb, max( outColor.gbr, outColor.brg));";
-    ss.newLine() << ss.vec3fDecl("minval") << " = min( outColor.rgb, min( outColor.gbr, outColor.brg));";
+    ss.newLine() << ss.float3Decl("maxval") << " = max( outColor.rgb, max( outColor.gbr, outColor.brg));";
+    ss.newLine() << ss.float3Decl("minval") << " = min( outColor.rgb, min( outColor.gbr, outColor.brg));";
 
     ss.newLine() << "float sat = ( max(1e-10, maxval.r) - max(1e-10, minval.r) ) / max(1e-2, maxval.r);";
 
@@ -252,7 +252,7 @@ void Add_HSV_TO_RGB(GpuShaderText & ss)
     ss.newLine() << "float R = abs(Hue - 3.0) - 1.0;";
     ss.newLine() << "float G = 2.0 - abs(Hue - 2.0);";
     ss.newLine() << "float B = 2.0 - abs(Hue - 4.0);";
-    ss.newLine() << ss.vec3fDecl("RGB") << " = " << ss.vec3fConst("R", "G", "B") << ";";
+    ss.newLine() << ss.float3Decl("RGB") << " = " << ss.float3Const("R", "G", "B") << ";";
     ss.newLine() << "RGB = clamp( RGB, 0., 1. );";
 
     ss.newLine() << "float rgbMax = Val;";

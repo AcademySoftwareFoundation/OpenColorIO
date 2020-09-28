@@ -54,8 +54,8 @@ namespace OCIO_NAMESPACE
 //
 // {
 //   const int curveIdx = 1;
-//   const int startPos = KnotsOffsetsArray[curveIdx].x;
-//   const int numKnots = KnotsOffsetsArray[curveIdx].y;
+//   const int startPos = KnotsOffsetsArray[curveIdx*2];
+//   const int numKnots = KnotsOffsetsArray[curveIdx*2+1];
 //
 //   const float firstKnot = KnotsArray[startPos].x;
 //   const float lastKnot = KnotsArray[startPos+numKnots-1].x;
@@ -80,12 +80,12 @@ struct GCProperties
 
 void AddUniform(GpuShaderCreatorRcPtr & shaderCreator,
                 const GpuShaderCreator::SizeGetter & getSize,
-                const GpuShaderCreator::FloatArrayGetter & getArray,
+                const GpuShaderCreator::VectorFloatGetter & getVector,
                 unsigned int maxSize,
                 const std::string & name)
 {
     // Add the uniform if it does not already exist.
-    if (shaderCreator->addUniform(name.c_str(), getSize, getArray))
+    if (shaderCreator->addUniform(name.c_str(), getSize, getVector))
     {
         // Declare uniform.
         GpuShaderText stDecl(shaderCreator->getLanguage());
@@ -96,15 +96,16 @@ void AddUniform(GpuShaderCreatorRcPtr & shaderCreator,
 
 void AddUniform(GpuShaderCreatorRcPtr & shaderCreator,
                 const GpuShaderCreator::SizeGetter & getSize,
-                const GpuShaderCreator::IntArrayGetter & getArray,
+                const GpuShaderCreator::VectorIntGetter & getVector,
                 const std::string & name)
 {
     // Add the uniform if it does not already exist.
-    if (shaderCreator->addUniform(name.c_str(), getSize, getArray))
+    if (shaderCreator->addUniform(name.c_str(), getSize, getVector))
     {
         // Declare uniform.
         GpuShaderText stDecl(shaderCreator->getLanguage());
-        stDecl.declareUniformArrayInt2(name, 4);
+        // Need 2 ints for each RGBM curve.
+        stDecl.declareUniformArrayInt(name, 8);
         shaderCreator->addToDeclareShaderCode(stDecl.string().c_str());
     }
 }
@@ -191,12 +192,12 @@ void AddGCPropertiesUniforms(GpuShaderCreatorRcPtr & shaderCreator,
     auto getC = std::bind(&DynamicPropertyGradingRGBCurveImpl::getCoefsArray, curveProp);
     auto getLB = std::bind(&DynamicPropertyGradingRGBCurveImpl::getLocalBypass, curveProp);
     // Uniforms are added if they are not already there (added by another op).
-    AddUniform(shaderCreator, DynamicPropertyGradingRGBCurveImpl::GetNumCurves,
+    AddUniform(shaderCreator, DynamicPropertyGradingRGBCurveImpl::GetNumOffsetValues,
                getKO, propNames.m_knotsOffsets);
     AddUniform(shaderCreator, getNK, getK,
                DynamicPropertyGradingRGBCurveImpl::GetMaxKnots(),
                propNames.m_knots);
-    AddUniform(shaderCreator, DynamicPropertyGradingRGBCurveImpl::GetNumCurves,
+    AddUniform(shaderCreator, DynamicPropertyGradingRGBCurveImpl::GetNumOffsetValues,
                getCO, propNames.m_coefsOffsets);
     AddUniform(shaderCreator, getNC, getC,
                DynamicPropertyGradingRGBCurveImpl::GetMaxCoefs(),
@@ -216,9 +217,10 @@ void AddCurveEvalMethodTextToShaderProgram(GpuShaderCreatorRcPtr & shaderCreator
     {
         auto propGC = gcData->getDynamicPropertyInternal();
 
-        st.declareInt2ArrayConst(props.m_knotsOffsets, 4, propGC->getKnotsOffsetsArray());
+        // 2 ints for each curve.
+        st.declareIntArrayConst(props.m_knotsOffsets, 4 * 2, propGC->getKnotsOffsetsArray());
         st.declareFloatArrayConst(props.m_knots, propGC->getNumKnots(), propGC->getKnotsArray());
-        st.declareInt2ArrayConst(props.m_coefsOffsets, 4, propGC->getCoefsOffsetsArray());
+        st.declareIntArrayConst(props.m_coefsOffsets, 4 * 2, propGC->getCoefsOffsetsArray());
         st.declareFloatArrayConst(props.m_coefs, propGC->getNumCoefs(), propGC->getCoefsArray());
         st.newLine() << "";
     }
