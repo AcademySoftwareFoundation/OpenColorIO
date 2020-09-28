@@ -9,6 +9,7 @@ set(SOURCES
 	ColorSpaceSet.cpp
 	Config.cpp
 	Context.cpp
+	ContextVariableUtils.cpp
 	CPUProcessor.cpp
 	Display.cpp
 	DynamicProperty.cpp
@@ -77,6 +78,7 @@ set(SOURCES
 	ops/gamma/GammaOpGPU.cpp
 	ops/gamma/GammaOpUtils.cpp
 	ops/gamma/GammaOp.cpp
+	ops/gradingprimary/GradingPrimary.cpp
 	ops/gradingprimary/GradingPrimaryOpCPU.cpp
 	ops/gradingprimary/GradingPrimaryOpData.cpp
 	ops/gradingprimary/GradingPrimaryOpGPU.cpp
@@ -150,6 +152,7 @@ set(SOURCES
 	transforms/RangeTransform.cpp
 	ViewingRules.cpp
 	ViewTransform.cpp
+	SystemMonitor.cpp
 )
 
 if(OCIO_ADD_EXTRA_BUILTINS)
@@ -215,6 +218,14 @@ target_link_libraries(OpenColorIO
 		utils::strings
 		yaml-cpp
 )
+
+if(APPLE)
+	target_link_libraries(OpenColorIO
+		PRIVATE
+			"-framework Carbon"
+			"-framework IOKit"
+	)
+endif()
 
 if(NOT BUILD_SHARED_LIBS)
 	target_compile_definitions(OpenColorIO

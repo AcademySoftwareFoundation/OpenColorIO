@@ -528,21 +528,18 @@ std::string Lut1DOpData::getCacheID() const
 {
     AutoMutex lock(m_mutex);
 
-    md5_state_t state;
-    md5_byte_t digest[16];
-
-    md5_init(&state);
-    md5_append(&state,
-        (const md5_byte_t *)&(getArray().getValues()[0]),
-        (int)(getArray().getValues().size() * sizeof(float)));
-    md5_finish(&state, digest);
+    const Lut3by1DArray::Values & values = getArray().getValues();
 
     std::ostringstream cacheIDStream;
     if (!getID().empty())
     {
         cacheIDStream << getID() << " ";
     }
-    cacheIDStream << GetPrintableHash(digest)                                  << " ";
+
+    cacheIDStream << CacheIDHash(reinterpret_cast<const char*>(&values[0]), 
+                                 int(values.size() * sizeof(values[0])))
+                  << " ";
+
     cacheIDStream << TransformDirectionToString(m_direction)                   << " ";
     cacheIDStream << InterpolationToString(m_interpolation)                    << " ";
     cacheIDStream << (isInputHalfDomain() ? "half domain" : "standard domain") << " ";

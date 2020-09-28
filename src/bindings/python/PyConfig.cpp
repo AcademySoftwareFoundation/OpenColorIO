@@ -295,16 +295,20 @@ void bindPyConfig(py::module & m)
              &Config::getProcessor, 
              "context"_a, "srcColorSpaceName"_a, "dstColorSpaceName"_a)
         .def("getProcessor", 
-             (ConstProcessorRcPtr (Config::*)(const char *, const char *, const char *) const) 
+             (ConstProcessorRcPtr (Config::*)(const char *,
+                                              const char *,
+                                              const char *,
+                                              TransformDirection) const) 
              &Config::getProcessor, 
-             "srcColorSpaceName"_a, "display"_a, "view"_a)
+             "srcColorSpaceName"_a, "display"_a, "view"_a, "direction"_a)
         .def("getProcessor", 
              (ConstProcessorRcPtr (Config::*)(const ConstContextRcPtr &, 
                                               const char *, 
                                               const char *, 
-                                              const char *) const) 
+                                              const char *,
+                                              TransformDirection) const) 
              &Config::getProcessor, 
-             "context"_a, "srcColorSpaceName"_a, "display"_a, "view"_a)
+             "context"_a, "srcColorSpaceName"_a, "display"_a, "view"_a, "direction"_a)
         .def("getProcessor", 
              (ConstProcessorRcPtr (Config::*)(const ConstTransformRcPtr &) const) 
              &Config::getProcessor, 
@@ -367,7 +371,9 @@ void bindPyConfig(py::module & m)
                                                        dstContext, dstConfig, dstColorSpaceName, dstInterchangeName);
             }, 
                     "srcContext"_a, "srcConfig"_a, "srcColorSpaceName"_a, "srcInterchangeName"_a, 
-                    "dstContext"_a, "dstConfig"_a, "dstColorSpaceName"_a, "dstInterchangeName"_a);
+                    "dstContext"_a, "dstConfig"_a, "dstColorSpaceName"_a, "dstInterchangeName"_a)
+
+        .def("setProcessorCacheFlags", &Config::setProcessorCacheFlags, "flags"_a);
 
     defStr(cls);
 

@@ -306,17 +306,11 @@ void GradingTonePreRender::FromStyle(GradingStyle style, float & top, float & to
 
 void GradingTonePreRender::setStyle(GradingStyle style)
 {
+    if (m_style != style)
+    {
     m_style = style;
     FromStyle(style, m_top, m_topSC, m_bottom, m_pivot);
 }
-
-void GradingTonePreRender::updateForStyle(GradingStyle style, const GradingTone & values)
-{
-    if (m_style != style)
-    {
-        setStyle(style);
-    }
-    computeValues(values);
 }
 
 namespace
@@ -407,7 +401,7 @@ double ShadowFwdEval(double t, double start, double pivot, double val)
     }
 }
 }
-void GradingTonePreRender::computeValues(const GradingTone & v)
+void GradingTonePreRender::update(const GradingTone & v)
 {
     m_localBypass = IsIdentity(v);
     if (m_localBypass) return;
@@ -658,7 +652,7 @@ void GradingTonePreRender::whiteBlack_precompute(const GradingTone & v)
                     y1 = x1;   // for isBlack
                     y0 = y1 - (m0 + m1) * (x1 - x0) * 0.5f;
                 }
-                gain = (!isBlack) ? (m0 + m1) * 0.5f : (m0 + m1) * 0.5f;
+                gain = (m0 + m1) * 0.5f;
             }
         }
     }

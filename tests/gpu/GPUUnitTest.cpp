@@ -136,6 +136,7 @@ OCIOGPUTest::~OCIOGPUTest()
 void OCIOGPUTest::setProcessor(OCIO::TransformRcPtr transform)
 {
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
+    config->setProcessorCacheFlags(OCIO::PROCESSOR_CACHE_OFF);
     setProcessor(config, transform);
 }
 
@@ -456,7 +457,7 @@ namespace
                 err << std::setprecision(10)
                     << "\nLarge number error: " << diff << " at pixel: " << pixelIdx
                     << " on component " << componentIdx
-                    << ".\nscr = {"
+                    << ".\nsrc = {"
                     << image[4 * pixelIdx + 0] << ", " << image[4 * pixelIdx + 1] << ", "
                     << image[4 * pixelIdx + 2] << ", " << image[4 * pixelIdx + 3] << "}"
                     << "\ncpu = {"
@@ -473,7 +474,7 @@ namespace
                 err << std::setprecision(10)
                     << "\nNAN error: " << diff << " at pixel: " << pixelIdx
                     << " on component " << componentIdx
-                    << ".\nscr = {"
+                    << ".\nsrc = {"
                     << image[4 * pixelIdx + 0] << ", " << image[4 * pixelIdx + 1] << ", "
                     << image[4 * pixelIdx + 2] << ", " << image[4 * pixelIdx + 3] << "}"
                     << "\ncpu = {"

@@ -47,14 +47,12 @@ public:
     {
         Texture(const char * textureName,
                 const char * samplerName,
-                const char * uid,
                 unsigned w, unsigned h, unsigned d,
                 GpuShaderDesc::TextureType channel,
                 Interpolation interpolation,
                 const float * v)
             :   m_textureName(textureName)
             ,   m_samplerName(samplerName)
-            ,   m_uid(uid)
             ,   m_width(w)
             ,   m_height(h)
             ,   m_depth(d)
@@ -88,7 +86,6 @@ public:
 
         std::string m_textureName;
         std::string m_samplerName;
-        std::string m_uid;
         unsigned m_width;
         unsigned m_height;
         unsigned m_depth;
@@ -118,22 +115,29 @@ public:
             m_data.m_getBool = getBool;
         }
 
-        Uniform(const char * name, const GpuShaderCreator::SizeGetter & getSize,
-                const GpuShaderCreator::FloatArrayGetter & getFloatArray)
+        Uniform(const char * name, const GpuShaderCreator::Float3Getter & getFloat3)
             : Uniform(name)
         {
-            m_data.m_type = UNIFORM_ARRAY_FLOAT;
-            m_data.m_arrayFloat.m_getSize = getSize;
-            m_data.m_arrayFloat.m_getArray = getFloatArray;
+            m_data.m_type = UNIFORM_FLOAT3;
+            m_data.m_getFloat3 = getFloat3;
         }
 
         Uniform(const char * name, const GpuShaderCreator::SizeGetter & getSize,
-                const GpuShaderCreator::IntArrayGetter & getInt2Array)
+                const GpuShaderCreator::VectorFloatGetter & getVectorFloat)
             : Uniform(name)
         {
-            m_data.m_type = UNIFORM_ARRAY_INT2;
-            m_data.m_arrayInt2.m_getSize = getSize;
-            m_data.m_arrayInt2.m_getArray = getInt2Array;
+            m_data.m_type = UNIFORM_VECTOR_FLOAT;
+            m_data.m_vectorFloat.m_getSize = getSize;
+            m_data.m_vectorFloat.m_getVector = getVectorFloat;
+        }
+
+        Uniform(const char * name, const GpuShaderCreator::SizeGetter & getSize,
+                const GpuShaderCreator::VectorIntGetter & getVectorInt)
+            : Uniform(name)
+        {
+            m_data.m_type = UNIFORM_VECTOR_INT;
+            m_data.m_vectorInt.m_getSize = getSize;
+            m_data.m_vectorInt.m_getVector = getVectorInt;
         }
 
         const std::string m_name;
@@ -167,7 +171,6 @@ public:
 
     void addTexture(const char * textureName,
                     const char * samplerName,
-                    const char * uid,
                     unsigned width, unsigned height,
                     GpuShaderDesc::TextureType channel,
                     Interpolation interpolation,
@@ -181,14 +184,13 @@ public:
             throw Exception(ss.str().c_str());
         }
 
-        Texture t(textureName, samplerName, uid, width, height, 1, channel, interpolation, values);
+        Texture t(textureName, samplerName, width, height, 1, channel, interpolation, values);
         m_textures.push_back(t);
     }
 
     void getTexture(unsigned index,
                     const char *& textureName,
                     const char *& samplerName,
-                    const char *& uid,
                     unsigned & width, unsigned & height,
                     GpuShaderDesc::TextureType & channel,
                     Interpolation & interpolation) const
@@ -204,7 +206,6 @@ public:
         const Texture & t = m_textures[index];
         textureName   = t.m_textureName.c_str();
         samplerName   = t.m_samplerName.c_str();
-        uid           = t.m_uid.c_str();
         width         = t.m_width;
         height        = t.m_height;
         channel       = t.m_type;
@@ -227,7 +228,6 @@ public:
 
     void add3DTexture(const char * textureName,
                       const char * samplerName,
-                      const char * uid,
                       unsigned dimension,
                       Interpolation interpolation,
                       const float * values)
@@ -240,7 +240,7 @@ public:
             throw Exception(ss.str().c_str());
         }
 
-        Texture t(textureName, samplerName, uid, dimension, dimension, dimension,
+        Texture t(textureName, samplerName, dimension, dimension, dimension,
                   GpuShaderDesc::TEXTURE_RGB_CHANNEL,
                   interpolation, values);
         m_textures3D.push_back(t);
@@ -249,7 +249,6 @@ public:
     void get3DTexture(unsigned index,
                       const char *& textureName,
                       const char *& samplerName,
-                      const char *& uid,
                       unsigned & edgelen,
                       Interpolation & interpolation) const
     {
@@ -264,7 +263,6 @@ public:
         const Texture & t = m_textures3D[index];
         textureName   = t.m_textureName.c_str();
         samplerName   = t.m_samplerName.c_str();
-        uid           = t.m_uid.c_str();
         edgelen       = t.m_width;
         interpolation = t.m_interp;
     }
@@ -288,7 +286,7 @@ public:
         return (unsigned)m_uniforms.size();
     }
 
-    void getUniform(unsigned index, GpuShaderDesc::UniformData & data) const
+    const char * getUniform(unsigned index, GpuShaderDesc::UniformData & data) const
     {
         if (index >= (unsigned)m_uniforms.size())
         {
@@ -298,7 +296,7 @@ public:
             throw Exception(ss.str().c_str());
         }
         data        = m_uniforms[index].m_data;
-        data.m_name = m_uniforms[index].m_name.c_str();
+        return m_uniforms[index].m_name.c_str();
     }
 
     bool addUniform(const char * name, const GpuShaderCreator::DoubleGetter & getter)
@@ -323,29 +321,40 @@ public:
         return true;
     }
 
-    bool addUniform(const char * name,
-                    const GpuShaderCreator::SizeGetter & getSize,
-                    const GpuShaderCreator::FloatArrayGetter & getArray)
+    bool addUniform(const char * name, const GpuShaderCreator::Float3Getter & getter)
     {
         if (uniformNameUsed(name))
         {
             // Uniform is already there.
             return false;
         }
-        m_uniforms.emplace_back(name, getSize, getArray);
+        m_uniforms.emplace_back(name, getter);
         return true;
     }
 
     bool addUniform(const char * name,
                     const GpuShaderCreator::SizeGetter & getSize,
-                    const GpuShaderCreator::IntArrayGetter & getInt2Array)
+                    const GpuShaderCreator::VectorFloatGetter & getVector)
+    {
+        if (uniformNameUsed(name))
+        {
+            // Uniform is already there.
+            return false;
+        }
+        m_uniforms.emplace_back(name, getSize, getVector);
+        return true;
+    }
+
+    bool addUniform(const char * name,
+                    const GpuShaderCreator::SizeGetter & getSize,
+                    const GpuShaderCreator::VectorIntGetter & getVectorInt)
     {
         if (uniformNameUsed(name)) 
         {
             // Uniform is already there.
             return false;
         }
-        m_uniforms.emplace_back(name, getSize, getInt2Array);
+        m_uniforms.emplace_back(name, getSize, getVectorInt);
         return true;
     }
     Textures m_textures;
@@ -417,7 +426,7 @@ unsigned LegacyGpuShaderDesc::getNumUniforms() const noexcept
     return 0;
 }
 
-void LegacyGpuShaderDesc::getUniform(unsigned, GpuShaderDesc::UniformData &) const
+const char * LegacyGpuShaderDesc::getUniform(unsigned, GpuShaderDesc::UniformData &) const
 {
     throw Exception("Uniforms are not supported");
 }
@@ -432,14 +441,19 @@ bool LegacyGpuShaderDesc::addUniform(const char *, const BoolGetter &)
     throw Exception("Uniforms are not supported");
 }
 
-bool LegacyGpuShaderDesc::addUniform(const char *, const SizeGetter &,
-                                     const FloatArrayGetter &)
+bool LegacyGpuShaderDesc::addUniform(const char *, const Float3Getter &)
 {
     throw Exception("Uniforms are not supported");
 }
 
 bool LegacyGpuShaderDesc::addUniform(const char *, const SizeGetter &,
-                                     const IntArrayGetter &)
+                                     const VectorFloatGetter &)
+{
+    throw Exception("Uniforms are not supported");
+}
+
+bool LegacyGpuShaderDesc::addUniform(const char *, const SizeGetter &,
+                                     const VectorIntGetter &)
 {
     throw Exception("Uniforms are not supported");
 }
@@ -460,14 +474,14 @@ unsigned LegacyGpuShaderDesc::getNumTextures() const noexcept
 }
 
 void LegacyGpuShaderDesc::addTexture(
-    const char *, const char *, const char *, unsigned, unsigned,
+    const char *, const char *, unsigned, unsigned,
     TextureType, Interpolation, const float *)
 {
     throw Exception("1D LUTs are not supported");
 }
 
 void LegacyGpuShaderDesc::getTexture(
-    unsigned, const char *&, const char *&, const char *&,
+    unsigned, const char *&, const char *&,
     unsigned &, unsigned &, TextureType &, Interpolation &) const
 {
     throw Exception("1D LUTs are not supported");
@@ -485,7 +499,7 @@ unsigned LegacyGpuShaderDesc::getNum3DTextures() const noexcept
 
 void LegacyGpuShaderDesc::add3DTexture(const char * textureName,
                                        const char * samplerName,
-                                       const char * uid, unsigned dimension,
+                                       unsigned dimension,
                                        Interpolation interpolation,
                                        const float * values)
 {
@@ -503,17 +517,16 @@ void LegacyGpuShaderDesc::add3DTexture(const char * textureName,
         throw Exception(ss.c_str());
     }
 
-    getImpl()->add3DTexture(textureName, samplerName, uid, dimension, interpolation, values);
+    getImpl()->add3DTexture(textureName, samplerName, dimension, interpolation, values);
 }
 
 void LegacyGpuShaderDesc::get3DTexture(unsigned index,
                                        const char *& textureName,
                                        const char *& samplerName,
-                                       const char *& uid,
                                        unsigned & edgelen,
                                        Interpolation & interpolation) const
 {
-    getImpl()->get3DTexture(index, textureName, samplerName, uid, edgelen, interpolation);
+    getImpl()->get3DTexture(index, textureName, samplerName, edgelen, interpolation);
 }
 
 void LegacyGpuShaderDesc::get3DTextureValues(unsigned index, const float *& values) const
@@ -556,7 +569,7 @@ unsigned GenericGpuShaderDesc::getNumUniforms() const noexcept
     return getImpl()->getNumUniforms();
 }
 
-void GenericGpuShaderDesc::getUniform(unsigned index, GpuShaderDesc::UniformData & data) const
+const char * GenericGpuShaderDesc::getUniform(unsigned index, GpuShaderDesc::UniformData & data) const
 {
     return getImpl()->getUniform(index, data);
 }
@@ -571,18 +584,23 @@ bool GenericGpuShaderDesc::addUniform(const char * name, const BoolGetter & gett
     return getImpl()->addUniform(name, getter);
 }
 
+bool GenericGpuShaderDesc::addUniform(const char * name, const Float3Getter & getter)
+{
+    return getImpl()->addUniform(name, getter);
+}
+
 bool GenericGpuShaderDesc::addUniform(const char * name,
                                       const SizeGetter & getSize,
-                                      const FloatArrayGetter & getFloatArray)
+                                      const VectorFloatGetter & getFloatArray)
 {
     return getImpl()->addUniform(name, getSize, getFloatArray);
 }
 
 bool GenericGpuShaderDesc::addUniform(const char * name,
                                       const SizeGetter & getSize,
-                                      const IntArrayGetter & getInt2Array)
+                                      const VectorIntGetter & getVectorInt)
 {
-    return getImpl()->addUniform(name, getSize, getInt2Array);
+    return getImpl()->addUniform(name, getSize, getVectorInt);
 }
 
 
@@ -603,24 +621,22 @@ unsigned GenericGpuShaderDesc::getNumTextures() const noexcept
 
 void GenericGpuShaderDesc::addTexture(const char * textureName,
                                       const char * samplerName,
-                                      const char * uid,
                                       unsigned width, unsigned height,
                                       TextureType channel,
                                       Interpolation interpolation,
                                       const float * values)
 {
-    getImpl()->addTexture(textureName, samplerName, uid, width, height, channel, interpolation, values);
+    getImpl()->addTexture(textureName, samplerName, width, height, channel, interpolation, values);
 }
 
 void GenericGpuShaderDesc::getTexture(unsigned index,
                                       const char *& textureName,
                                       const char *& samplerName,
-                                      const char *& uid,
                                       unsigned & width, unsigned & height,
                                       TextureType & channel,
                                       Interpolation & interpolation) const
 {
-    getImpl()->getTexture(index, textureName, samplerName, uid, width, height, channel, interpolation);
+    getImpl()->getTexture(index, textureName, samplerName, width, height, channel, interpolation);
 }
 
 void GenericGpuShaderDesc::getTextureValues(unsigned index, const float *& values) const
@@ -635,22 +651,20 @@ unsigned GenericGpuShaderDesc::getNum3DTextures() const noexcept
 
 void GenericGpuShaderDesc::add3DTexture(const char * textureName,
                                         const char * samplerName,
-                                        const char * uid,
                                         unsigned edgelen,
                                         Interpolation interpolation,
                                         const float * values)
 {
-    getImpl()->add3DTexture(textureName, samplerName, uid, edgelen, interpolation, values);
+    getImpl()->add3DTexture(textureName, samplerName, edgelen, interpolation, values);
 }
 
 void GenericGpuShaderDesc::get3DTexture(unsigned index,
                                         const char *& textureName,
                                         const char *& samplerName,
-                                        const char *& uid,
                                         unsigned & edgelen,
                                         Interpolation & interpolation) const
 {
-    getImpl()->get3DTexture(index, textureName, samplerName, uid, edgelen, interpolation);
+    getImpl()->get3DTexture(index, textureName, samplerName, edgelen, interpolation);
 }
 
 void GenericGpuShaderDesc::get3DTextureValues(unsigned index, const float *& values) const

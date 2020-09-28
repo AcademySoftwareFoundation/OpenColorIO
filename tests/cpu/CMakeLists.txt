@@ -26,6 +26,16 @@ function(add_ocio_test NAME SOURCES PRIVATE_INCLUDES)
 			yaml-cpp
 			testutils
 	)
+
+	if(APPLE)
+		# Frameworks needed to access the ICC monitor profile. 
+		target_link_libraries(${TEST_BINARY}
+			PRIVATE
+				"-framework Carbon"
+				"-framework IOKit"
+		)
+	endif(APPLE)
+
 	if(PRIVATE_INCLUDES)
 		target_include_directories(${TEST_BINARY}
 			PRIVATE
@@ -63,7 +73,6 @@ endfunction(add_ocio_test)
 # but for now, we will maintain the status quo and copy all from the
 # OpenColorIO target
 set(SOURCES
-	Caching.cpp
 	fileformats/cdl/CDLParser.cpp
 	fileformats/cdl/CDLReaderHelper.cpp
 	fileformats/ctf/CTFReaderHelper.cpp
@@ -96,6 +105,7 @@ set(SOURCES
 	transforms/builtins/ACES.cpp
 	transforms/builtins/ColorMatrixHelpers.cpp
 	transforms/builtins/OpHelpers.cpp
+	SystemMonitor.cpp
 )
 
 if(OCIO_ADD_EXTRA_BUILTINS)
@@ -113,10 +123,12 @@ endif()
 set(TESTS
 	Baker_tests.cpp
 	BitDepthUtils_tests.cpp
+	Caching_tests.cpp
 	ColorSpace_tests.cpp
 	ColorSpaceSet_tests.cpp
 	Config_tests.cpp
 	Context_tests.cpp
+	ContextVariableUtils_tests.cpp
 	CPUProcessor_tests.cpp
 	Display_tests.cpp
 	DynamicProperty_tests.cpp
@@ -166,6 +178,7 @@ set(TESTS
 	ops/gamma/GammaOpCPU_tests.cpp
 	ops/gamma/GammaOpData_tests.cpp
 	ops/gamma/GammaOpUtils_tests.cpp
+	ops/gradingprimary/GradingPrimary_tests.cpp
 	ops/gradingprimary/GradingPrimaryOpCPU_tests.cpp
 	ops/gradingprimary/GradingPrimaryOpData_tests.cpp
 	ops/gradingprimary/GradingPrimaryOp_tests.cpp

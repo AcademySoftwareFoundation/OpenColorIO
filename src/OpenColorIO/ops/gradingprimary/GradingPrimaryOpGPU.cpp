@@ -14,40 +14,12 @@ namespace
 
 struct GPProperties
 {
-    std::string brightnessR{ "brightnessR" };
-    std::string brightnessG{ "brightnessG" };
-    std::string brightnessB{ "brightnessB" };
-    std::string brightnessM{ "brightnessM" };
-
-    std::string contrastR{ "contrastR" };
-    std::string contrastG{ "contrastG" };
-    std::string contrastB{ "contrastB" };
-    std::string contrastM{ "contrastM" };
-
-    std::string gammaR{ "gammaR" };
-    std::string gammaG{ "gammaG" };
-    std::string gammaB{ "gammaB" };
-    std::string gammaM{ "gammaM" };
-
-    std::string exposureR{ "exposureR" };
-    std::string exposureG{ "exposureG" };
-    std::string exposureB{ "exposureB" };
-    std::string exposureM{ "exposureM" };
-
-    std::string offsetR{ "offsetR" };
-    std::string offsetG{ "offsetG" };
-    std::string offsetB{ "offsetB" };
-    std::string offsetM{ "offsetM" };
-
-    std::string liftR{ "liftR" };
-    std::string liftG{ "liftG" };
-    std::string liftB{ "liftB" };
-    std::string liftM{ "liftM" };
-
-    std::string gainR{ "gainR" };
-    std::string gainG{ "gainG" };
-    std::string gainB{ "gainB" };
-    std::string gainM{ "gainM" };
+    std::string brightness{ "brightness" };
+    std::string contrast{ "contrast" };
+    std::string gamma{ "gamma" };
+    std::string exposure{ "exposure" };
+    std::string offset{ "offset" };
+    std::string slope{ "slope" };
 
     std::string pivot{ "pivot" };
     std::string pivotBlack{ "pivotBlack" };
@@ -75,7 +47,7 @@ void AddUniform(GpuShaderCreatorRcPtr & shaderCreator,
 
 void AddBoolUniform(GpuShaderCreatorRcPtr & shaderCreator,
                     const GpuShaderCreator::BoolGetter & getBool,
-                    const std::string & name)
+                const std::string & name)
 {
     // Add the uniform if it does not already exist.
     if (shaderCreator->addUniform(name.c_str(), getBool))
@@ -83,6 +55,20 @@ void AddBoolUniform(GpuShaderCreatorRcPtr & shaderCreator,
         // Declare uniform.
         GpuShaderText stDecl(shaderCreator->getLanguage());
         stDecl.declareUniformBool(name);
+        shaderCreator->addToDeclareShaderCode(stDecl.string().c_str());
+    }
+}
+
+void AddUniform(GpuShaderCreatorRcPtr & shaderCreator,
+                const GpuShaderCreator::Float3Getter & getter,
+                    const std::string & name)
+{
+    // Add the uniform if it does not already exist.
+    if (shaderCreator->addUniform(name.c_str(), getter))
+    {
+        // Declare uniform.
+        GpuShaderText stDecl(shaderCreator->getLanguage());
+        stDecl.declareUniformFloat3(name);
         shaderCreator->addToDeclareShaderCode(stDecl.string().c_str());
     }
 }
@@ -121,20 +107,9 @@ void AddGPLogProperties(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & s
         // Build names. No need to add an index to the name to avoid collisions as the dynamic
         // properties are shared i.e. only one instance.
 
-        propNames.brightnessR = BuildResourceName(shaderCreator, opPrefix, propNames.brightnessR);
-        propNames.brightnessG = BuildResourceName(shaderCreator, opPrefix, propNames.brightnessG);
-        propNames.brightnessB = BuildResourceName(shaderCreator, opPrefix, propNames.brightnessB);
-        propNames.brightnessM = BuildResourceName(shaderCreator, opPrefix, propNames.brightnessM);
-
-        propNames.contrastR = BuildResourceName(shaderCreator, opPrefix, propNames.contrastR);
-        propNames.contrastG = BuildResourceName(shaderCreator, opPrefix, propNames.contrastG);
-        propNames.contrastB = BuildResourceName(shaderCreator, opPrefix, propNames.contrastB);
-        propNames.contrastM = BuildResourceName(shaderCreator, opPrefix, propNames.contrastM);
-
-        propNames.gammaR = BuildResourceName(shaderCreator, opPrefix, propNames.gammaR);
-        propNames.gammaG = BuildResourceName(shaderCreator, opPrefix, propNames.gammaG);
-        propNames.gammaB = BuildResourceName(shaderCreator, opPrefix, propNames.gammaB);
-        propNames.gammaM = BuildResourceName(shaderCreator, opPrefix, propNames.gammaM);
+        propNames.brightness = BuildResourceName(shaderCreator, opPrefix, propNames.brightness);
+        propNames.contrast = BuildResourceName(shaderCreator, opPrefix, propNames.contrast);
+        propNames.gamma = BuildResourceName(shaderCreator, opPrefix, propNames.gamma);
 
         propNames.pivot = BuildResourceName(shaderCreator, opPrefix, propNames.pivot);
         propNames.pivotBlack = BuildResourceName(shaderCreator, opPrefix, propNames.pivotBlack);
@@ -149,73 +124,46 @@ void AddGPLogProperties(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & s
         // already been added by another op). Different style do use different members of the
         // value and thus will require different uniforms.
         DynamicPropertyGradingPrimaryImplRcPtr shaderProp = GetOrAddShaderProp(shaderCreator, prop);
+        DynamicPropertyGradingPrimaryImpl * primaryProp = shaderProp.get();
 
         // Use the shader dynamic property to bind the uniforms.
         const auto & value = shaderProp->getValue();
 
         // Add uniforms if they are not already there.
-        auto getBR = std::bind(&GradingRGBM::m_red,    &value.m_brightness);
-        auto getBG = std::bind(&GradingRGBM::m_green,  &value.m_brightness);
-        auto getBB = std::bind(&GradingRGBM::m_blue,   &value.m_brightness);
-        auto getBM = std::bind(&GradingRGBM::m_master, &value.m_brightness);
-        AddUniform(shaderCreator, getBR, propNames.brightnessR);
-        AddUniform(shaderCreator, getBG, propNames.brightnessG);
-        AddUniform(shaderCreator, getBB, propNames.brightnessB);
-        AddUniform(shaderCreator, getBM, propNames.brightnessM);
+        const auto getB = std::bind(&DynamicPropertyGradingPrimaryImpl::getBrightness, primaryProp);
+        AddUniform(shaderCreator, getB, propNames.brightness);
 
-        auto getCR = std::bind(&GradingRGBM::m_red, &value.m_contrast);
-        auto getCG = std::bind(&GradingRGBM::m_green, &value.m_contrast);
-        auto getCB = std::bind(&GradingRGBM::m_blue, &value.m_contrast);
-        auto getCM = std::bind(&GradingRGBM::m_master, &value.m_contrast);
-        AddUniform(shaderCreator, getCR, propNames.contrastR);
-        AddUniform(shaderCreator, getCG, propNames.contrastG);
-        AddUniform(shaderCreator, getCB, propNames.contrastB);
-        AddUniform(shaderCreator, getCM, propNames.contrastM);
+        const auto getC = std::bind(&DynamicPropertyGradingPrimaryImpl::getContrast, primaryProp);
+        AddUniform(shaderCreator, getC, propNames.contrast);
 
-        auto getGR = std::bind(&GradingRGBM::m_red, &value.m_gamma);
-        auto getGG = std::bind(&GradingRGBM::m_green, &value.m_gamma);
-        auto getGB = std::bind(&GradingRGBM::m_blue, &value.m_gamma);
-        auto getGM = std::bind(&GradingRGBM::m_master, &value.m_gamma);
-        AddUniform(shaderCreator, getGR, propNames.gammaR);
-        AddUniform(shaderCreator, getGG, propNames.gammaG);
-        AddUniform(shaderCreator, getGB, propNames.gammaB);
-        AddUniform(shaderCreator, getGM, propNames.gammaM);
+        const auto getG = std::bind(&DynamicPropertyGradingPrimaryImpl::getGamma, primaryProp);
+        AddUniform(shaderCreator, getG, propNames.gamma);
 
-        auto getPVal = std::bind(&GradingPrimary::m_pivot, &value);
+        const auto getPVal = std::bind(&DynamicPropertyGradingPrimaryImpl::getPivot, primaryProp);
         AddUniform(shaderCreator, getPVal, propNames.pivot);
-        auto getPBVal = std::bind(&GradingPrimary::m_pivotBlack, &value);
+        const auto getPBVal = std::bind(&GradingPrimary::m_pivotBlack, &value);
         AddUniform(shaderCreator, getPBVal, propNames.pivotBlack);
-        auto getPWVal = std::bind(&GradingPrimary::m_pivotWhite, &value);
+        const auto getPWVal = std::bind(&GradingPrimary::m_pivotWhite, &value);
         AddUniform(shaderCreator, getPWVal, propNames.pivotWhite);
-        auto getCBVal = std::bind(&GradingPrimary::m_clampBlack, &value);
+        const auto getCBVal = std::bind(&GradingPrimary::m_clampBlack, &value);
         AddUniform(shaderCreator, getCBVal, propNames.clampBlack);
-        auto getCWVal = std::bind(&GradingPrimary::m_clampWhite, &value);
+        const auto getCWVal = std::bind(&GradingPrimary::m_clampWhite, &value);
         AddUniform(shaderCreator, getCWVal, propNames.clampWhite);
-        auto getSVal = std::bind(&GradingPrimary::m_saturation, &value);
+        const auto getSVal = std::bind(&GradingPrimary::m_saturation, &value);
         AddUniform(shaderCreator, getSVal, propNames.saturation);
-        auto getLBP = std::bind(&DynamicPropertyGradingPrimaryImpl::getLocalBypass, shaderProp.get());
+        const auto getLBP = std::bind(&DynamicPropertyGradingPrimaryImpl::getLocalBypass, shaderProp.get());
         AddBoolUniform(shaderCreator, getLBP, propNames.localBypass);
     }
     else
     {
         const auto & value = prop->getValue();
+        const auto & comp = prop->getComputedValue();
 
-        st.declareVar(propNames.brightnessR, static_cast<float>(value.m_brightness.m_red));
-        st.declareVar(propNames.brightnessG, static_cast<float>(value.m_brightness.m_green));
-        st.declareVar(propNames.brightnessB, static_cast<float>(value.m_brightness.m_blue));
-        st.declareVar(propNames.brightnessM, static_cast<float>(value.m_brightness.m_master));
+        st.declareFloat3(propNames.brightness, comp.getBrightness());
+        st.declareFloat3(propNames.contrast, comp.getContrast());
+        st.declareFloat3(propNames.gamma, comp.getGamma());
 
-        st.declareVar(propNames.contrastR, static_cast<float>(value.m_contrast.m_red));
-        st.declareVar(propNames.contrastG, static_cast<float>(value.m_contrast.m_green));
-        st.declareVar(propNames.contrastB, static_cast<float>(value.m_contrast.m_blue));
-        st.declareVar(propNames.contrastM, static_cast<float>(value.m_contrast.m_master));
-
-        st.declareVar(propNames.gammaR, static_cast<float>(value.m_gamma.m_red));
-        st.declareVar(propNames.gammaG, static_cast<float>(value.m_gamma.m_green));
-        st.declareVar(propNames.gammaB, static_cast<float>(value.m_gamma.m_blue));
-        st.declareVar(propNames.gammaM, static_cast<float>(value.m_gamma.m_master));
-
-        st.declareVar(propNames.pivot, static_cast<float>(value.m_pivot));
+        st.declareVar(propNames.pivot, static_cast<float>(comp.getPivot()));
         st.declareVar(propNames.pivotBlack, static_cast<float>(value.m_pivotBlack));
         st.declareVar(propNames.pivotWhite, static_cast<float>(value.m_pivotWhite));
         st.declareVar(propNames.clampBlack, static_cast<float>(value.m_clampBlack));
@@ -226,33 +174,28 @@ void AddGPLogProperties(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & s
 
 void AddGPLogForwardShader(GpuShaderText & st, const GPProperties & props)
 {
-    st.newLine() << st.vec3fDecl("brightness") << " = " << props.brightnessM << " + "
-                 << st.vec3fConst(props.brightnessR, props.brightnessG, props.brightnessB) << ";";
-    st.newLine() << "outColor.rgb += brightness * 6.25 / 1023.;";
+    st.newLine() << "outColor.rgb += " << props.brightness << ";";
 
-    st.newLine() << st.vec3fDecl("contrast") << " = " << props.contrastM << " * "
-                 << st.vec3fConst(props.contrastR, props.contrastG, props.contrastB) << ";";
-    st.newLine() << st.vec3fDecl("gamma") << " = 1.0 / ( " << props.gammaM << " * "
-                 << st.vec3fConst(props.gammaR, props.gammaG, props.gammaB) << " );";
-    st.newLine() << "float actualPivot = 0.5 + " << props.pivot << " * 0.5;";
-
-    st.newLine() << "outColor.rgb = ( outColor.rgb - actualPivot ) * contrast + actualPivot;";
+    st.newLine() << "outColor.rgb = ( outColor.rgb - " << props.pivot << " ) * " << props.contrast
+                 << " + " << props.pivot << ";";
 
     // Not sure if the if helps performance, but it does allow out == in at the default values.
-    st.newLine() << "if ( gamma.r != 1. || gamma.g != 1. || gamma.b != 1. )";
+    st.newLine() << "if ( " << props.gamma << " != " << st.float3Const(1.f) << " )";
     st.newLine() << "{";
-    st.newLine() << "  " << st.vec3fDecl("normalizedOut")
+    st.indent();
+    st.newLine() << st.float3Decl("normalizedOut")
                          << " = abs(outColor.rgb - " << props.pivotBlack << ") / "
                          << "(" << props.pivotWhite << " - " << props.pivotBlack << ");";
     // NB: The sign(outColor.rgb) is a vec3, preserving the sign of each channel.
-    st.newLine() << "  " << st.vec3fDecl("scale")
+    st.newLine() << st.float3Decl("scale")
                          << " = sign(outColor.rgb - " << props.pivotBlack << ") * "
                          << "(" << props.pivotWhite << " - " << props.pivotBlack << ");";
-    st.newLine() << "  " << "outColor.rgb = pow( normalizedOut, gamma ) * scale + "
+    st.newLine() << "outColor.rgb = pow( normalizedOut, " << props.gamma << " ) * scale + "
                          << props.pivotBlack << ";";
+    st.dedent();
     st.newLine() << "}";
 
-    st.declareVec3f("lumaWgts", 0.2126f, 0.7152f, 0.0722f);
+    st.declareFloat3("lumaWgts", 0.2126f, 0.7152f, 0.0722f);
     st.newLine() << "float luma = dot( outColor.rgb, lumaWgts );";
     st.newLine() << "outColor.rgb = luma + " << props.saturation << " * (outColor.rgb - luma);";
 
@@ -264,36 +207,35 @@ void AddGPLogInverseShader(GpuShaderText & st, const GPProperties & props)
 {
     st.newLine() << "outColor.rgb = clamp( outColor.rgb, " << props.clampBlack << ", "
                                         << props.clampWhite << " );";
-    st.declareVec3f("lumaWgts", 0.2126f, 0.7152f, 0.0722f);
+    st.newLine() << "if (" << props.saturation << " != 0. && " << props.saturation << " != 1.)";
+    st.newLine() << "{";
+    st.indent();
+    st.declareFloat3("lumaWgts", 0.2126f, 0.7152f, 0.0722f);
     st.newLine() << "float luma = dot( outColor.rgb, lumaWgts );";
     st.newLine() << "outColor.rgb = luma + (outColor.rgb - luma) / " << props.saturation << ";";
-
-    st.newLine() << st.vec3fDecl("gamma") << " = 1.0 / ( " << props.gammaM << " * "
-                 << st.vec3fConst(props.gammaR, props.gammaG, props.gammaB) << " );";
+    st.dedent();
+    st.newLine() << "}";
 
     // Not sure if the if helps performance, but it does allow out == in at the default values.
-    st.newLine() << "if ( gamma.r != 1. || gamma.g != 1. || gamma.b != 1. )";
+    st.newLine() << "if ( " << props.gamma << " != " << st.float3Const(1.f) << " )";
     st.newLine() << "{";
-    st.newLine() << "  " << st.vec3fDecl("normalizedOut")
+    st.indent();
+    st.newLine() << st.float3Decl("normalizedOut")
                          << " = abs(outColor.rgb - " << props.pivotBlack << ") / "
                          << "(" << props.pivotWhite << " - " << props.pivotBlack << ");";
     // NB: The sign(outColor.rgb) is a vec3, preserving the sign of each channel.
-    st.newLine() << "  " << st.vec3fDecl("scale")
+    st.newLine() << st.float3Decl("scale")
                          << " = sign(outColor.rgb - " << props.pivotBlack << ") * "
                          << "(" << props.pivotWhite << " - " << props.pivotBlack << ");";
-    st.newLine() << "  " << "outColor.rgb = pow( normalizedOut, 1. / gamma ) * scale + "
+    st.newLine() << "outColor.rgb = pow( normalizedOut, " << props.gamma << " ) * scale + "
                          << props.pivotBlack << ";";
+    st.dedent();
     st.newLine() << "}";
 
-    st.newLine() << st.vec3fDecl("contrast") << " = " << props.contrastM << " * "
-                 << st.vec3fConst(props.contrastR, props.contrastG, props.contrastB) << ";";
-    st.newLine() << "float actualPivot = 0.5 + " << props.pivot << " * 0.5;";
-    st.newLine() << "outColor.rgb = ( outColor.rgb - actualPivot ) / contrast + actualPivot;";
+    st.newLine() << "outColor.rgb = ( outColor.rgb - " << props.pivot << " ) * " << props.contrast
+                 << " + " << props.pivot << ";";
 
-    st.newLine() << st.vec3fDecl("brightness") << " = " << props.brightnessM << " + "
-                 << st.vec3fConst(props.brightnessR, props.brightnessG, props.brightnessB) << ";";
-
-    st.newLine() << "outColor.rgb -= brightness * 6.25 / 1023.;";
+    st.newLine() << "outColor.rgb += " << props.brightness << ";";
 }
 
 void AddGPLinProperties(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & st,
@@ -306,20 +248,9 @@ void AddGPLinProperties(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & s
         // Build names. No need to add an index to the name to avoid collisions as the dynamic
         // properties are shared i.e. only one instance.
 
-        propNames.offsetR = BuildResourceName(shaderCreator, opPrefix, propNames.offsetR);
-        propNames.offsetG = BuildResourceName(shaderCreator, opPrefix, propNames.offsetG);
-        propNames.offsetB = BuildResourceName(shaderCreator, opPrefix, propNames.offsetB);
-        propNames.offsetM = BuildResourceName(shaderCreator, opPrefix, propNames.offsetM);
-
-        propNames.exposureR = BuildResourceName(shaderCreator, opPrefix, propNames.exposureR);
-        propNames.exposureG = BuildResourceName(shaderCreator, opPrefix, propNames.exposureG);
-        propNames.exposureB = BuildResourceName(shaderCreator, opPrefix, propNames.exposureB);
-        propNames.exposureM = BuildResourceName(shaderCreator, opPrefix, propNames.exposureM);
-
-        propNames.contrastR = BuildResourceName(shaderCreator, opPrefix, propNames.contrastR);
-        propNames.contrastG = BuildResourceName(shaderCreator, opPrefix, propNames.contrastG);
-        propNames.contrastB = BuildResourceName(shaderCreator, opPrefix, propNames.contrastB);
-        propNames.contrastM = BuildResourceName(shaderCreator, opPrefix, propNames.contrastM);
+        propNames.offset = BuildResourceName(shaderCreator, opPrefix, propNames.offset);
+        propNames.exposure = BuildResourceName(shaderCreator, opPrefix, propNames.exposure);
+        propNames.contrast = BuildResourceName(shaderCreator, opPrefix, propNames.contrast);
 
         propNames.pivot = BuildResourceName(shaderCreator, opPrefix, propNames.pivot);
         propNames.clampBlack = BuildResourceName(shaderCreator, opPrefix, propNames.clampBlack);
@@ -331,67 +262,41 @@ void AddGPLinProperties(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & s
         // Dynamic property is decoupled and added to the shader (or only retrieved if it has
         // already been added by another op).
         DynamicPropertyGradingPrimaryImplRcPtr shaderProp = GetOrAddShaderProp(shaderCreator, prop);
+        DynamicPropertyGradingPrimaryImpl * primaryProp = shaderProp.get();
 
         // Use the shader dynamic property to bind the uniforms.
         const auto & value = shaderProp->getValue();
 
-        auto getOR = std::bind(&GradingRGBM::m_red, &value.m_offset);
-        auto getOG = std::bind(&GradingRGBM::m_green, &value.m_offset);
-        auto getOB = std::bind(&GradingRGBM::m_blue, &value.m_offset);
-        auto getOM = std::bind(&GradingRGBM::m_master, &value.m_offset);
-        AddUniform(shaderCreator, getOR, propNames.offsetR);
-        AddUniform(shaderCreator, getOG, propNames.offsetG);
-        AddUniform(shaderCreator, getOB, propNames.offsetB);
-        AddUniform(shaderCreator, getOM, propNames.offsetM);
+        const auto getO = std::bind(&DynamicPropertyGradingPrimaryImpl::getOffset, primaryProp);
+        AddUniform(shaderCreator, getO, propNames.offset);
 
-        auto getER = std::bind(&GradingRGBM::m_red, &value.m_exposure);
-        auto getEG = std::bind(&GradingRGBM::m_green, &value.m_exposure);
-        auto getEB = std::bind(&GradingRGBM::m_blue, &value.m_exposure);
-        auto getEM = std::bind(&GradingRGBM::m_master, &value.m_exposure);
-        AddUniform(shaderCreator, getER, propNames.exposureR);
-        AddUniform(shaderCreator, getEG, propNames.exposureG);
-        AddUniform(shaderCreator, getEB, propNames.exposureB);
-        AddUniform(shaderCreator, getEM, propNames.exposureM);
+        const auto getE = std::bind(&DynamicPropertyGradingPrimaryImpl::getExposure, primaryProp);
+        AddUniform(shaderCreator, getE, propNames.exposure);
 
-        auto getCR = std::bind(&GradingRGBM::m_red, &value.m_contrast);
-        auto getCG = std::bind(&GradingRGBM::m_green, &value.m_contrast);
-        auto getCB = std::bind(&GradingRGBM::m_blue, &value.m_contrast);
-        auto getCM = std::bind(&GradingRGBM::m_master, &value.m_contrast);
-        AddUniform(shaderCreator, getCR, propNames.contrastR);
-        AddUniform(shaderCreator, getCG, propNames.contrastG);
-        AddUniform(shaderCreator, getCB, propNames.contrastB);
-        AddUniform(shaderCreator, getCM, propNames.contrastM);
+        const auto getC = std::bind(&DynamicPropertyGradingPrimaryImpl::getContrast, primaryProp);
+        AddUniform(shaderCreator, getC, propNames.contrast);
 
-        auto getPVal = std::bind(&GradingPrimary::m_pivot, &value);
+        const auto getPVal = std::bind(&DynamicPropertyGradingPrimaryImpl::getPivot, primaryProp);
         AddUniform(shaderCreator, getPVal, propNames.pivot);
-        auto getCBVal = std::bind(&GradingPrimary::m_clampBlack, &value);
+        const auto getCBVal = std::bind(&GradingPrimary::m_clampBlack, &value);
         AddUniform(shaderCreator, getCBVal, propNames.clampBlack);
-        auto getCWVal = std::bind(&GradingPrimary::m_clampWhite, &value);
+        const auto getCWVal = std::bind(&GradingPrimary::m_clampWhite, &value);
         AddUniform(shaderCreator, getCWVal, propNames.clampWhite);
-        auto getSVal = std::bind(&GradingPrimary::m_saturation, &value);
+        const auto getSVal = std::bind(&GradingPrimary::m_saturation, &value);
         AddUniform(shaderCreator, getSVal, propNames.saturation);
-        auto getLBP = std::bind(&DynamicPropertyGradingPrimaryImpl::getLocalBypass, shaderProp.get());
+        const auto getLBP = std::bind(&DynamicPropertyGradingPrimaryImpl::getLocalBypass, shaderProp.get());
         AddBoolUniform(shaderCreator, getLBP, propNames.localBypass);
     }
     else
     {
         const auto & value = prop->getValue();
-        st.declareVar(propNames.offsetR, static_cast<float>(value.m_offset.m_red));
-        st.declareVar(propNames.offsetG, static_cast<float>(value.m_offset.m_green));
-        st.declareVar(propNames.offsetB, static_cast<float>(value.m_offset.m_blue));
-        st.declareVar(propNames.offsetM, static_cast<float>(value.m_offset.m_master));
+        const auto & comp = prop->getComputedValue();
 
-        st.declareVar(propNames.exposureR, static_cast<float>(value.m_exposure.m_red));
-        st.declareVar(propNames.exposureG, static_cast<float>(value.m_exposure.m_green));
-        st.declareVar(propNames.exposureB, static_cast<float>(value.m_exposure.m_blue));
-        st.declareVar(propNames.exposureM, static_cast<float>(value.m_exposure.m_master));
+        st.declareFloat3(propNames.offset, comp.getOffset());
+        st.declareFloat3(propNames.exposure, comp.getExposure());
+        st.declareFloat3(propNames.contrast, comp.getContrast());
 
-        st.declareVar(propNames.contrastR, static_cast<float>(value.m_contrast.m_red));
-        st.declareVar(propNames.contrastG, static_cast<float>(value.m_contrast.m_green));
-        st.declareVar(propNames.contrastB, static_cast<float>(value.m_contrast.m_blue));
-        st.declareVar(propNames.contrastM, static_cast<float>(value.m_contrast.m_master));
-
-        st.declareVar(propNames.pivot, static_cast<float>(value.m_pivot));
+        st.declareVar(propNames.pivot, static_cast<float>(comp.getPivot()));
         st.declareVar(propNames.clampBlack, static_cast<float>(value.m_clampBlack));
         st.declareVar(propNames.clampWhite, static_cast<float>(value.m_clampWhite));
         st.declareVar(propNames.saturation, static_cast<float>(value.m_saturation));
@@ -400,29 +305,23 @@ void AddGPLinProperties(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & s
 
 void AddGPLinForwardShader(GpuShaderText & st, const GPProperties & props)
 {
-    st.newLine() << "outColor.rgb += " << props.offsetM << " + "
-                 << st.vec3fConst(props.offsetR, props.offsetG, props.offsetB) << ";";
+    st.newLine() << "outColor.rgb += " << props.offset << ";";
 
-    st.newLine() << st.vec3fDecl("exposure") << " = " << props.exposureM << " + "
-                 << st.vec3fConst(props.exposureR, props.exposureG, props.exposureB) << ";";
-    st.newLine() << "outColor.rgb *= pow( " << st.vec3fConst(2.f) << ", exposure );";
-
-    st.newLine() << st.vec3fDecl("contrast") << " = " << props.contrastM << " * "
-                 << st.vec3fConst(props.contrastR, props.contrastG, props.contrastB) << ";";
+    st.newLine() << "outColor.rgb *= " << props.exposure << ";";
 
     // Not sure if the if helps performance, but it does allow out == in at the default values.
     // Although note that the log-to-lin in Tone Op also prevents out == in.
-    st.newLine() << "if ( contrast.r != 1. || contrast.g != 1. || contrast.b != 1. )";
+    st.newLine() << "if ( " << props.contrast << " != " << st.float3Const(1.f) << " )";
     st.newLine() << "{";
-    // TODO: move pow() out of shader.
-    st.newLine() << "  float actualPivot = 0.18 * pow( 2., " << props.pivot << " );";
+    st.indent();
 
     // NB: The sign(outColor.rgb) is a vec3, preserving the sign of each channel.
-    st.newLine() << "  outColor.rgb = pow( abs(outColor.rgb / actualPivot), contrast ) * "
-                                  << "sign(outColor.rgb) * actualPivot;";
+    st.newLine() << "outColor.rgb = pow( abs(outColor.rgb / " << props.pivot << "), " << props.contrast << " ) * "
+                                << "sign(outColor.rgb) * " << props.pivot << ";";
+    st.dedent();
     st.newLine() << "}";
 
-    st.declareVec3f("lumaWgts", 0.2126f, 0.7152f, 0.0722f);
+    st.declareFloat3("lumaWgts", 0.2126f, 0.7152f, 0.0722f);
     st.newLine() << "float luma = dot( outColor.rgb, lumaWgts );";
     st.newLine() << "outColor.rgb = luma + " << props.saturation << " * (outColor.rgb - luma);";
 
@@ -435,31 +334,30 @@ void AddGPLinInverseShader(GpuShaderText & st, const GPProperties & props)
     st.newLine() << "outColor.rgb = clamp( outColor.rgb, " << props.clampBlack << ", "
                                         << props.clampWhite << " );";
 
-    st.declareVec3f("lumaWgts", 0.2126f, 0.7152f, 0.0722f);
+    st.newLine() << "if (" << props.saturation << " != 0. && " << props.saturation << " != 1.)";
+    st.newLine() << "{";
+    st.indent();
+    st.declareFloat3("lumaWgts", 0.2126f, 0.7152f, 0.0722f);
     st.newLine() << "float luma = dot( outColor.rgb, lumaWgts );";
     st.newLine() << "outColor.rgb = luma + (outColor.rgb - luma) / " << props.saturation << ";";
-
-    st.newLine() << st.vec3fDecl("contrast") << " = " << props.contrastM << " * "
-                 << st.vec3fConst(props.contrastR, props.contrastG, props.contrastB) << ";";
+    st.dedent();
+    st.newLine() << "}";
 
     // Not sure if the if helps performance, but it does allow out == in at the default values.
     // Although note that the log-to-lin in Tone Op also prevents out == in.
-    st.newLine() << "if ( contrast.r != 1. || contrast.g != 1. || contrast.b != 1. )";
+    st.newLine() << "if ( " << props.contrast << " != " << st.float3Const(1.f) << " )";
     st.newLine() << "{";
-    // TODO: move pow() out of shader.
-    st.newLine() << "  float actualPivot = 0.18 * pow( 2., " << props.pivot << " );";
-
+    st.indent();
     // NB: The sign(outColor.rgb) is a vec3, preserving the sign of each channel.
-    st.newLine() << "  outColor.rgb = pow( abs(outColor.rgb / actualPivot), 1. / contrast ) * "
-                                  << "sign(outColor.rgb) * actualPivot;";
+    st.newLine() << "outColor.rgb = pow( abs(outColor.rgb / " << props.pivot << "), "
+                                      << props.contrast << " ) * "
+                                << "sign(outColor.rgb) * " << props.pivot << ";";
+    st.dedent();
     st.newLine() << "}";
 
-    st.newLine() << st.vec3fDecl("exposure") << " = " << props.exposureM << " + "
-                 << st.vec3fConst(props.exposureR, props.exposureG, props.exposureB) << ";";
-    st.newLine() << "outColor.rgb /= pow( " << st.vec3fConst(2.f) << ", exposure );";
+    st.newLine() << "outColor.rgb *= " << props.exposure << ";";
 
-    st.newLine() << "outColor.rgb -= ( " << props.offsetM << " + "
-                 << st.vec3fConst(props.offsetR, props.offsetG, props.offsetB) << " );";
+    st.newLine() << "outColor.rgb += " << props.offset << ";";
 }
 
 void AddGPVideoProperties(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & st,
@@ -471,25 +369,9 @@ void AddGPVideoProperties(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText &
     {
         // Build names. No need to add an index to the name to avoid collisions as the dynamic
         // properties are shared i.e. only one instance.
-        propNames.liftR = BuildResourceName(shaderCreator, opPrefix, propNames.liftR);
-        propNames.liftG = BuildResourceName(shaderCreator, opPrefix, propNames.liftG);
-        propNames.liftB = BuildResourceName(shaderCreator, opPrefix, propNames.liftB);
-        propNames.liftM = BuildResourceName(shaderCreator, opPrefix, propNames.liftM);
-
-        propNames.gammaR = BuildResourceName(shaderCreator, opPrefix, propNames.gammaR);
-        propNames.gammaG = BuildResourceName(shaderCreator, opPrefix, propNames.gammaG);
-        propNames.gammaB = BuildResourceName(shaderCreator, opPrefix, propNames.gammaB);
-        propNames.gammaM = BuildResourceName(shaderCreator, opPrefix, propNames.gammaM);
-
-        propNames.gainR = BuildResourceName(shaderCreator, opPrefix, propNames.gainR);
-        propNames.gainG = BuildResourceName(shaderCreator, opPrefix, propNames.gainG);
-        propNames.gainB = BuildResourceName(shaderCreator, opPrefix, propNames.gainB);
-        propNames.gainM = BuildResourceName(shaderCreator, opPrefix, propNames.gainM);
-
-        propNames.offsetR = BuildResourceName(shaderCreator, opPrefix, propNames.offsetR);
-        propNames.offsetG = BuildResourceName(shaderCreator, opPrefix, propNames.offsetG);
-        propNames.offsetB = BuildResourceName(shaderCreator, opPrefix, propNames.offsetB);
-        propNames.offsetM = BuildResourceName(shaderCreator, opPrefix, propNames.offsetM);
+        propNames.gamma = BuildResourceName(shaderCreator, opPrefix, propNames.gamma);
+        propNames.offset = BuildResourceName(shaderCreator, opPrefix, propNames.offset);
+        propNames.slope = BuildResourceName(shaderCreator, opPrefix, propNames.slope);
 
         propNames.pivotBlack = BuildResourceName(shaderCreator, opPrefix, propNames.pivotBlack);
         propNames.pivotWhite = BuildResourceName(shaderCreator, opPrefix, propNames.pivotWhite);
@@ -502,6 +384,7 @@ void AddGPVideoProperties(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText &
         // Dynamic property is decoupled and added to the shader (or only retrieved if it has
         // already been added by another op).
         DynamicPropertyGradingPrimaryImplRcPtr shaderProp = GetOrAddShaderProp(shaderCreator, prop);
+        DynamicPropertyGradingPrimaryImpl * primaryProp = shaderProp.get();
 
         // Use the shader dynamic property to bind the uniforms.
         const auto & value = shaderProp->getValue();
@@ -509,78 +392,36 @@ void AddGPVideoProperties(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText &
         // NB: No need to add an index to the name to avoid collisions
         //     as the dynamic properties are shared i.e. only one instance.
 
-        auto getLR = std::bind(&GradingRGBM::m_red, &value.m_lift);
-        auto getLG = std::bind(&GradingRGBM::m_green, &value.m_lift);
-        auto getLB = std::bind(&GradingRGBM::m_blue, &value.m_lift);
-        auto getLM = std::bind(&GradingRGBM::m_master, &value.m_lift);
-        AddUniform(shaderCreator, getLR, propNames.liftR);
-        AddUniform(shaderCreator, getLG, propNames.liftG);
-        AddUniform(shaderCreator, getLB, propNames.liftB);
-        AddUniform(shaderCreator, getLM, propNames.liftM);
+        const auto getG = std::bind(&DynamicPropertyGradingPrimaryImpl::getGamma, primaryProp);
+        AddUniform(shaderCreator, getG, propNames.gamma);
 
-        auto getGR = std::bind(&GradingRGBM::m_red, &value.m_gamma);
-        auto getGG = std::bind(&GradingRGBM::m_green, &value.m_gamma);
-        auto getGB = std::bind(&GradingRGBM::m_blue, &value.m_gamma);
-        auto getGM = std::bind(&GradingRGBM::m_master, &value.m_gamma);
-        AddUniform(shaderCreator, getGR, propNames.gammaR);
-        AddUniform(shaderCreator, getGG, propNames.gammaG);
-        AddUniform(shaderCreator, getGB, propNames.gammaB);
-        AddUniform(shaderCreator, getGM, propNames.gammaM);
+        const auto getO = std::bind(&DynamicPropertyGradingPrimaryImpl::getOffset, primaryProp);
+        AddUniform(shaderCreator, getO, propNames.offset);
 
-        auto getGAR = std::bind(&GradingRGBM::m_red, &value.m_gain);
-        auto getGAG = std::bind(&GradingRGBM::m_green, &value.m_gain);
-        auto getGAB = std::bind(&GradingRGBM::m_blue, &value.m_gain);
-        auto getGAM = std::bind(&GradingRGBM::m_master, &value.m_gain);
-        AddUniform(shaderCreator, getGAR, propNames.gainR);
-        AddUniform(shaderCreator, getGAG, propNames.gainG);
-        AddUniform(shaderCreator, getGAB, propNames.gainB);
-        AddUniform(shaderCreator, getGAM, propNames.gainM);
+        const auto getS = std::bind(&DynamicPropertyGradingPrimaryImpl::getSlope, primaryProp);
+        AddUniform(shaderCreator, getS, propNames.slope);
 
-        auto getOR = std::bind(&GradingRGBM::m_red, &value.m_offset);
-        auto getOG = std::bind(&GradingRGBM::m_green, &value.m_offset);
-        auto getOB = std::bind(&GradingRGBM::m_blue, &value.m_offset);
-        auto getOM = std::bind(&GradingRGBM::m_master, &value.m_offset);
-        AddUniform(shaderCreator, getOR, propNames.offsetR);
-        AddUniform(shaderCreator, getOG, propNames.offsetG);
-        AddUniform(shaderCreator, getOB, propNames.offsetB);
-        AddUniform(shaderCreator, getOM, propNames.offsetM);
-
-        auto getPBVal = std::bind(&GradingPrimary::m_pivotBlack, &value);
+        const auto getPBVal = std::bind(&GradingPrimary::m_pivotBlack, &value);
         AddUniform(shaderCreator, getPBVal, propNames.pivotBlack);
-        auto getPWVal = std::bind(&GradingPrimary::m_pivotWhite, &value);
+        const auto getPWVal = std::bind(&GradingPrimary::m_pivotWhite, &value);
         AddUniform(shaderCreator, getPWVal, propNames.pivotWhite);
-        auto getCBVal = std::bind(&GradingPrimary::m_clampBlack, &value);
+        const auto getCBVal = std::bind(&GradingPrimary::m_clampBlack, &value);
         AddUniform(shaderCreator, getCBVal, propNames.clampBlack);
-        auto getCWVal = std::bind(&GradingPrimary::m_clampWhite, &value);
+        const auto getCWVal = std::bind(&GradingPrimary::m_clampWhite, &value);
         AddUniform(shaderCreator, getCWVal, propNames.clampWhite);
-        auto getSVal = std::bind(&GradingPrimary::m_saturation, &value);
+        const auto getSVal = std::bind(&GradingPrimary::m_saturation, &value);
         AddUniform(shaderCreator, getSVal, propNames.saturation);
-        auto getLBP = std::bind(&DynamicPropertyGradingPrimaryImpl::getLocalBypass, shaderProp.get());
+        const auto getLBP = std::bind(&DynamicPropertyGradingPrimaryImpl::getLocalBypass, shaderProp.get());
         AddBoolUniform(shaderCreator, getLBP, propNames.localBypass);
     }
     else
     {
         const auto & value = prop->getValue();
+        const auto & comp = prop->getComputedValue();
 
-        st.declareVar(propNames.liftR, static_cast<float>(value.m_lift.m_red));
-        st.declareVar(propNames.liftG, static_cast<float>(value.m_lift.m_green));
-        st.declareVar(propNames.liftB, static_cast<float>(value.m_lift.m_blue));
-        st.declareVar(propNames.liftM, static_cast<float>(value.m_lift.m_master));
-
-        st.declareVar(propNames.gammaR, static_cast<float>(value.m_gamma.m_red));
-        st.declareVar(propNames.gammaG, static_cast<float>(value.m_gamma.m_green));
-        st.declareVar(propNames.gammaB, static_cast<float>(value.m_gamma.m_blue));
-        st.declareVar(propNames.gammaM, static_cast<float>(value.m_gamma.m_master));
-
-        st.declareVar(propNames.gainR, static_cast<float>(value.m_gain.m_red));
-        st.declareVar(propNames.gainG, static_cast<float>(value.m_gain.m_green));
-        st.declareVar(propNames.gainB, static_cast<float>(value.m_gain.m_blue));
-        st.declareVar(propNames.gainM, static_cast<float>(value.m_gain.m_master));
-
-        st.declareVar(propNames.offsetR, static_cast<float>(value.m_offset.m_red));
-        st.declareVar(propNames.offsetG, static_cast<float>(value.m_offset.m_green));
-        st.declareVar(propNames.offsetB, static_cast<float>(value.m_offset.m_blue));
-        st.declareVar(propNames.offsetM, static_cast<float>(value.m_offset.m_master));
+        st.declareFloat3(propNames.gamma, comp.getGamma());
+        st.declareFloat3(propNames.offset, comp.getOffset());
+        st.declareFloat3(propNames.slope, comp.getSlope());
 
         st.declareVar(propNames.pivotBlack, static_cast<float>(value.m_pivotBlack));
         st.declareVar(propNames.pivotWhite, static_cast<float>(value.m_pivotWhite));
@@ -592,34 +433,25 @@ void AddGPVideoProperties(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText &
 
 void AddGPVideoForwardShader(GpuShaderText & st, const GPProperties & props)
 {
-    st.newLine() << st.vec3fDecl("lift") << " = " << props.liftM << " + "
-                 << st.vec3fConst(props.liftR, props.liftG, props.liftB) << ";";
-    st.newLine() << st.vec3fDecl("offset") << " = " << props.offsetM << " + "
-                 << st.vec3fConst(props.offsetR, props.offsetG, props.offsetB) << ";";
-    st.newLine() << st.vec3fDecl("gain") << " = " << props.gainM << " * "
-                 << st.vec3fConst(props.gainR, props.gainG, props.gainB) << ";";
-    st.newLine() << st.vec3fDecl("gamma") << " = 1.0 / ( " << props.gammaM << " * "
-                 << st.vec3fConst(props.gammaR, props.gammaG, props.gammaB) << " );";
-
-    st.newLine() << st.vec3fDecl("slope") << " = (" << props.pivotWhite << " - " << props.pivotBlack << ")"
-                 << " / ( " << props.pivotWhite << " / gain + (lift - " << props.pivotBlack << ") );";
-
-    st.newLine() << "outColor.rgb += ( lift + offset );";
-    st.newLine() << "outColor.rgb = ( outColor.rgb - " << props.pivotBlack << " ) * slope + " << props.pivotBlack << ";";
+    st.newLine() << "outColor.rgb += " << props.offset << ";";
+    st.newLine() << "outColor.rgb = ( outColor.rgb - " << props.pivotBlack << " ) * " << props.slope
+                               << " + " << props.pivotBlack << ";";
 
     // Not sure if the if helps performance, but it does allow out == in at the default values.
-    st.newLine() << "if ( gamma.r != 1. || gamma.g != 1. || gamma.b != 1. )";
+    st.newLine() << "if ( " << props.gamma << " != " << st.float3Const(1.f) << " )";
     st.newLine() << "{";
-    st.newLine() << "  " << st.vec3fDecl("normalizedOut")
+    st.indent();
+    st.newLine() << st.float3Decl("normalizedOut")
                          << " = abs(outColor.rgb - " << props.pivotBlack << ") / "
                          << "(" << props.pivotWhite << " - " << props.pivotBlack << ");";
-    st.newLine() << "  " << st.vec3fDecl("scale")
+    st.newLine() << st.float3Decl("scale")
                          << " = sign(outColor.rgb - " << props.pivotBlack << ") * "
                          << "(" << props.pivotWhite << " - " << props.pivotBlack << ");";
-    st.newLine() << "  outColor.rgb = pow( normalizedOut, gamma ) * scale + " << props.pivotBlack << ";";
+    st.newLine() << "  outColor.rgb = pow( normalizedOut, " << props.gamma << " ) * scale + " << props.pivotBlack << ";";
+    st.dedent();
     st.newLine() << "}";
 
-    st.declareVec3f("lumaWgts", 0.2126f, 0.7152f, 0.0722f);
+    st.declareFloat3("lumaWgts", 0.2126f, 0.7152f, 0.0722f);
     st.newLine() << "float luma = dot( outColor.rgb, lumaWgts );";
     st.newLine() << "outColor.rgb = luma + " << props.saturation << " * (outColor.rgb - luma);";
 
@@ -629,39 +461,35 @@ void AddGPVideoForwardShader(GpuShaderText & st, const GPProperties & props)
 
 void AddGPVideoInverseShader(GpuShaderText & st, const GPProperties & props)
 {
-    st.newLine() << st.vec3fDecl("lift") << " = " << props.liftM << " + "
-                 << st.vec3fConst(props.liftR, props.liftG, props.liftB) << ";";
-    st.newLine() << st.vec3fDecl("offset") << " = " << props.offsetM << " + "
-                 << st.vec3fConst(props.offsetR, props.offsetG, props.offsetB) << ";";
-    st.newLine() << st.vec3fDecl("gain") << " = " << props.gainM << " * "
-                 << st.vec3fConst(props.gainR, props.gainG, props.gainB) << ";";
-    st.newLine() << st.vec3fDecl("gamma") << " = " << props.gammaM << " * "
-                 << st.vec3fConst(props.gammaR, props.gammaG, props.gammaB) << ";";
-
-    st.newLine() << st.vec3fDecl("slope") << " = ( " << props.pivotWhite << " / gain + (lift - " << props.pivotBlack << ") )"
-                 << " / (" << props.pivotWhite << " - " << props.pivotBlack << ");";
-
     st.newLine() << "outColor.rgb = clamp( outColor.rgb, " << props.clampBlack << ", "
                                         << props.clampWhite << " );";
 
-    st.declareVec3f("lumaWgts", 0.2126f, 0.7152f, 0.0722f);
+    st.newLine() << "if (" << props.saturation << " != 0. && " << props.saturation << " != 1.)";
+    st.newLine() << "{";
+    st.indent();
+    st.declareFloat3("lumaWgts", 0.2126f, 0.7152f, 0.0722f);
     st.newLine() << "float luma = dot( outColor.rgb, lumaWgts );";
     st.newLine() << "outColor.rgb = luma + (outColor.rgb - luma) / " << props.saturation << ";";
-
-    // Not sure if the if helps performance, but it does allow out == in at the default values.
-    st.newLine() << "if ( gamma.r != 1. || gamma.g != 1. || gamma.b != 1. )";
-    st.newLine() << "{";
-    st.newLine() << "  " << st.vec3fDecl("normalizedOut")
-                         << " = abs(outColor.rgb - " << props.pivotBlack << ") / "
-                         << "(" << props.pivotWhite << " - " << props.pivotBlack << ");";
-    st.newLine() << "  " << st.vec3fDecl("scale")
-                         << " = sign(outColor.rgb - " << props.pivotBlack << ") * "
-                         << "(" << props.pivotWhite << " - " << props.pivotBlack << ");";
-    st.newLine() << "  outColor.rgb = pow( normalizedOut, gamma ) * scale + " << props.pivotBlack << ";";
+    st.dedent();
     st.newLine() << "}";
 
-    st.newLine() << "outColor.rgb = ( outColor.rgb - " << props.pivotBlack << " ) * slope + " << props.pivotBlack << ";";
-    st.newLine() << "outColor.rgb -= ( lift + offset );";
+    // Not sure if the if helps performance, but it does allow out == in at the default values.
+    st.newLine() << "if ( " << props.gamma << " != " << st.float3Const(1.f) << " )";
+    st.newLine() << "{";
+    st.indent();
+    st.newLine() << st.float3Decl("normalizedOut")
+                         << " = abs(outColor.rgb - " << props.pivotBlack << ") / "
+                         << "(" << props.pivotWhite << " - " << props.pivotBlack << ");";
+    st.newLine() << st.float3Decl("scale")
+                         << " = sign(outColor.rgb - " << props.pivotBlack << ") * "
+                         << "(" << props.pivotWhite << " - " << props.pivotBlack << ");";
+    st.newLine() << "outColor.rgb = pow( normalizedOut, " << props.gamma << " ) * scale + " << props.pivotBlack << ";";
+    st.dedent();
+    st.newLine() << "}";
+
+    st.newLine() << "outColor.rgb = ( outColor.rgb - " << props.pivotBlack << " ) * "<< props.slope
+                                <<" + " << props.pivotBlack << ";";
+    st.newLine() << "outColor.rgb += " << props.offset << " );";
 }
 }
 

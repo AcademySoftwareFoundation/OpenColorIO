@@ -146,3 +146,30 @@ OCIO_ADD_TEST(Context, use_searchpaths_workingdir)
                              SanitizePath(res2.c_str()).c_str()) == 0);
 }
 
+OCIO_ADD_TEST(Context, string_vars)
+{
+    // Test Context::addStringVars().
+
+    OCIO::ContextRcPtr ctx1 = OCIO::Context::Create();
+    ctx1->setStringVar("var1", "val1");
+    ctx1->setStringVar("var2", "val2");
+
+    OCIO::ContextRcPtr ctx2 = OCIO::Context::Create();
+    ctx2->setStringVar("var1", "val11");
+    ctx2->setStringVar("var3", "val3");
+
+    OCIO::ConstContextRcPtr const_ctx2 = ctx2;
+    ctx1->addStringVars(const_ctx2);
+    OCIO_REQUIRE_EQUAL(3, ctx1->getNumStringVars());
+
+    OCIO_CHECK_EQUAL(std::string("var1"), ctx1->getStringVarNameByIndex(0));
+    OCIO_CHECK_EQUAL(std::string("val11"), ctx1->getStringVarByIndex(0));
+
+    OCIO_CHECK_EQUAL(std::string("var2"), ctx1->getStringVarNameByIndex(1));
+    OCIO_CHECK_EQUAL(std::string("val2"), ctx1->getStringVarByIndex(1));
+
+    OCIO_CHECK_EQUAL(std::string("var3"), ctx1->getStringVarNameByIndex(2));
+    OCIO_CHECK_EQUAL(std::string("val3"), ctx1->getStringVarByIndex(2));
+}
+
+

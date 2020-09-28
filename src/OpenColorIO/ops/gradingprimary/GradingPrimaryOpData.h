@@ -25,7 +25,8 @@ public:
 
     explicit GradingPrimaryOpData(GradingStyle style);
     GradingPrimaryOpData() = delete;
-    GradingPrimaryOpData(const GradingPrimaryOpData &) = default;
+    GradingPrimaryOpData(const GradingPrimaryOpData & rhs);
+    GradingPrimaryOpData & operator=(const GradingPrimaryOpData & rhs);
     virtual ~GradingPrimaryOpData();
 
     GradingPrimaryOpDataRcPtr clone() const;
@@ -64,8 +65,6 @@ public:
         return m_value;
     }
 
-    GradingPrimaryOpData & operator=(const GradingPrimaryOpData & rhs);
-
     bool operator==(const OpData & other) const override;
 
 private:
@@ -73,12 +72,6 @@ private:
     DynamicPropertyGradingPrimaryImplRcPtr m_value;
     TransformDirection                     m_direction{ TRANSFORM_DIR_FORWARD };
 };
-
-
-bool operator==(const GradingRGBM & lhs, const GradingRGBM & rhs);
-bool operator!=(const GradingRGBM & lhs, const GradingRGBM & rhs);
-bool operator==(const GradingPrimary & lhs, const GradingPrimary & rhs);
-bool operator!=(const GradingPrimary & lhs, const GradingPrimary & rhs);
 
 } // namespace OCIO_NAMESPACE
 
