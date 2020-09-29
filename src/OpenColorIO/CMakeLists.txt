@@ -9,6 +9,7 @@ set(SOURCES
 	ColorSpaceSet.cpp
 	Config.cpp
 	Context.cpp
+	ContextVariableUtils.cpp
 	CPUProcessor.cpp
 	Display.cpp
 	DynamicProperty.cpp
@@ -77,6 +78,7 @@ set(SOURCES
 	ops/gamma/GammaOpGPU.cpp
 	ops/gamma/GammaOpUtils.cpp
 	ops/gamma/GammaOp.cpp
+	ops/gradingprimary/GradingPrimary.cpp
 	ops/gradingprimary/GradingPrimaryOpCPU.cpp
 	ops/gradingprimary/GradingPrimaryOpData.cpp
 	ops/gradingprimary/GradingPrimaryOpGPU.cpp

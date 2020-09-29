@@ -675,3 +675,81 @@ OCIO_ADD_TEST(ColorSpaceTransform, build_colorspace_ops_with_reference_conversio
         OCIO_CHECK_EQUAL(data->getType(), OCIO::OpData::NoOpType);
     }
 }
+
+OCIO_ADD_TEST(ColorSpaceTransform, context_variables)
+{
+    OCIO::ContextRcPtr usedContextVars = OCIO::Context::Create();
+
+    OCIO::ConfigRcPtr cfg = OCIO::Config::CreateRaw()->createEditableCopy();
+    cfg->setSearchPath(OCIO::GetTestFilesDir().c_str());
+    OCIO::ContextRcPtr ctx = cfg->getCurrentContext()->createEditableCopy();
+
+    OCIO::MatrixTransformRcPtr matrix = OCIO::MatrixTransform::Create();
+    static constexpr double offset4[4] { 0.1, 0.2, 0.3, 0. };
+    matrix->setOffset(offset4);
+
+    OCIO::ColorSpaceRcPtr cs1 = OCIO::ColorSpace::Create();
+    cs1->setName("cs1");
+    cs1->setTransform(matrix, OCIO::COLORSPACE_DIR_TO_REFERENCE);
+    cfg->addColorSpace(cs1);
+
+    OCIO::ColorSpaceRcPtr cs2 = OCIO::ColorSpace::Create();
+    cs2->setName("cs2");
+    cs2->setTransform(matrix, OCIO::COLORSPACE_DIR_TO_REFERENCE);
+    cfg->addColorSpace(cs2);
+
+    OCIO::ColorSpaceTransformRcPtr cst = OCIO::ColorSpaceTransform::Create();
+    cst->setSrc("cs1");
+    cst->setDst("cs2");
+
+    OCIO::ColorSpaceRcPtr cs3 = OCIO::ColorSpace::Create();
+    cs3->setName("cs3");
+    cs3->setTransform(cst, OCIO::COLORSPACE_DIR_TO_REFERENCE);
+    cfg->addColorSpace(cs3);
+
+    OCIO_CHECK_NO_THROW(cfg->validate());
+
+
+    // Case 1 - No context variables.
+
+    OCIO_CHECK_ASSERT(!OCIO::CollectContextVariables(*cfg.get(), *ctx, *cst, usedContextVars));
+    OCIO_CHECK_EQUAL(0, usedContextVars->getNumStringVars());
+
+
+    // Case 2 - The source color space name is now a context variable.
+
+    OCIO_CHECK_NO_THROW(ctx->setStringVar("ENV1", "cs1"));
+    cst->setSrc("$ENV1");
+    usedContextVars = OCIO::Context::Create(); // New & empty instance.
+    OCIO_CHECK_ASSERT(OCIO::CollectContextVariables(*cfg, *ctx, *cst, usedContextVars));
+    OCIO_CHECK_EQUAL(1, usedContextVars->getNumStringVars());
+    OCIO_CHECK_EQUAL(std::string("ENV1"), usedContextVars->getStringVarNameByIndex(0));
+    OCIO_CHECK_EQUAL(std::string("cs1"), usedContextVars->getStringVarByIndex(0));
+
+
+    // Case 3 - A context variable exists but is not used.
+
+    cst->setSrc("cs1");
+    usedContextVars = OCIO::Context::Create(); // New & empty instance.
+    OCIO_CHECK_ASSERT(!OCIO::CollectContextVariables(*cfg, *ctx, *cst, usedContextVars));
+    OCIO_CHECK_EQUAL(0, usedContextVars->getNumStringVars());
+
+
+    // Case 4 - Context variable indirectly used.
+
+    OCIO_CHECK_NO_THROW(ctx->setStringVar("ENV1", "exposure_contrast_linear.ctf"));
+    OCIO::FileTransformRcPtr file = OCIO::FileTransform::Create();
+    file->setSrc("$ENV1");
+    OCIO::ColorSpaceRcPtr cs4 = OCIO::ColorSpace::Create();
+    cs4->setName("cs4");
+    cs4->setTransform(file, OCIO::COLORSPACE_DIR_TO_REFERENCE);
+    cfg->addColorSpace(cs4);
+
+    // 'cst' now uses 'cs4' which is a FileTransform where the file name is a context variable. 
+    cst->setSrc("cs4");
+    usedContextVars = OCIO::Context::Create(); // New & empty instance.
+    OCIO_CHECK_ASSERT(OCIO::CollectContextVariables(*cfg, *ctx, *cst, usedContextVars));
+    OCIO_CHECK_EQUAL(1, usedContextVars->getNumStringVars());
+    OCIO_CHECK_EQUAL(std::string("ENV1"), usedContextVars->getStringVarNameByIndex(0));
+    OCIO_CHECK_EQUAL(std::string("exposure_contrast_linear.ctf"), usedContextVars->getStringVarByIndex(0));
+}

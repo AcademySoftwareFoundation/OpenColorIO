@@ -217,7 +217,7 @@ OCIO_ADD_TEST(FileFormatCCC, test_ccc)
         OCIO_CHECK_EQUAL(0.0, cccFile->transformVec[4]->getSat());
     }
 
-    const std::string filePath(std::string(OCIO::getTestFilesDir()) + "/cdl_test1.ccc");
+    const std::string filePath(OCIO::GetTestFilesDir() + "/cdl_test1.ccc");
 
     // Create a FileTransform
     OCIO::FileTransformRcPtr fileTransform = OCIO::FileTransform::Create();

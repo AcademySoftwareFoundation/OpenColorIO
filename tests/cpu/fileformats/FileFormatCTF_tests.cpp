@@ -4134,7 +4134,7 @@ OCIO_ADD_TEST(FileFormatCTF, load_grading_primary_video)
     const auto vals3 = gradingPrimary3->getValue();
     OCIO_CHECK_EQUAL(OCIO::GradingRGBM(0.25, -0.015625, 0.03125, 0.), vals3.m_lift);
     OCIO_CHECK_EQUAL(OCIO::GradingRGBM(0.75, 0.625, 1.25, 0.9e+1), vals3.m_gamma);
-    OCIO_CHECK_EQUAL(OCIO::GradingRGBM(-0.25, 00.500, 7.62939453125e-06, 1.), vals3.m_gain);
+    OCIO_CHECK_EQUAL(OCIO::GradingRGBM(-0.25, 0.500, 7.62939453125e-06, 1.), vals3.m_gain);
     OCIO_CHECK_EQUAL(OCIO::GradingRGBM(02.5, +0.5, -.125, 1.), vals3.m_offset);
     OCIO_CHECK_EQUAL(1., vals3.m_saturation);
     OCIO_CHECK_EQUAL(-0.25, vals3.m_pivotBlack);
@@ -4196,7 +4196,7 @@ OCIO_ADD_TEST(FileFormatCTF, load_grading_primary_errors)
       <DynamicParameter param="PRIMARY" />
    </GradingPrimary>
 </ProcessList>
-)"), OCIO::Exception, "GradingTone gamma '<r=0, g=0, b=0, m=1>' are below lower bound (0.01)");
+)"), OCIO::Exception, "GradingPrimary gamma '<r=0, g=0, b=0, m=1>' are below lower bound (0.01)");
 
     // Brightness does not have a master value.
     OCIO_CHECK_THROW_WHAT(ParseString(R"(<?xml version="1.0" encoding="UTF-8"?>

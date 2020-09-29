@@ -476,10 +476,10 @@ OCIO_ADD_TEST(Config, serialize_searchpath)
         osvec = StringUtils::SplitByLines(os.str());
 
         const std::string expected2[] = { "search_path:", "  - a", "  - b", "  - c" };
-        OCIO_CHECK_EQUAL(osvec[2], expected2[0]);
-        OCIO_CHECK_EQUAL(osvec[3], expected2[1]);
-        OCIO_CHECK_EQUAL(osvec[4], expected2[2]);
-        OCIO_CHECK_EQUAL(osvec[5], expected2[3]);
+        OCIO_CHECK_EQUAL(osvec[4], expected2[0]);
+        OCIO_CHECK_EQUAL(osvec[5], expected2[1]);
+        OCIO_CHECK_EQUAL(osvec[6], expected2[2]);
+        OCIO_CHECK_EQUAL(osvec[7], expected2[3]);
 
         std::istringstream is;
         is.str(os.str());
@@ -512,11 +512,11 @@ OCIO_ADD_TEST(Config, serialize_searchpath)
                                           "  - /absolute/linux/path",
                                           "  - C:\\absolute\\windows\\path",
                                           "  - \"!<path> using /yaml/symbols\"" };
-        OCIO_CHECK_EQUAL(osvec[2], expected3[0]);
-        OCIO_CHECK_EQUAL(osvec[3], expected3[1]);
-        OCIO_CHECK_EQUAL(osvec[4], expected3[2]);
-        OCIO_CHECK_EQUAL(osvec[5], expected3[3]);
-        OCIO_CHECK_EQUAL(osvec[6], expected3[4]);
+        OCIO_CHECK_EQUAL(osvec[4], expected3[0]);
+        OCIO_CHECK_EQUAL(osvec[5], expected3[1]);
+        OCIO_CHECK_EQUAL(osvec[6], expected3[2]);
+        OCIO_CHECK_EQUAL(osvec[7], expected3[3]);
+        OCIO_CHECK_EQUAL(osvec[8], expected3[4]);
 
         is.clear();
         is.str(os.str());
@@ -578,7 +578,7 @@ OCIO_ADD_TEST(Config, validation)
 }
 
 
-OCIO_ADD_TEST(Config, env_check)
+OCIO_ADD_TEST(Config, context_variable_v1)
 {
     std::string SIMPLE_PROFILE =
     "ocio_profile_version: 1\n"
@@ -630,49 +630,730 @@ OCIO_ADD_TEST(Config, env_check)
     is.str(SIMPLE_PROFILE);
     OCIO::ConstConfigRcPtr config;
     OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+    OCIO_CHECK_NO_THROW(config->validate());
     OCIO_CHECK_EQUAL(config->getNumEnvironmentVars(), 5);
-    OCIO_CHECK_ASSERT(strcmp(config->getCurrentContext()->resolveStringVar("test${test}"),
-        "testbarchedder") == 0);
-    OCIO_CHECK_ASSERT(strcmp(config->getCurrentContext()->resolveStringVar("${SHOW}"),
-        "bar") == 0);
+
+    OCIO::ContextRcPtr usedContextVars = OCIO::Context::Create();
+
+    // Test context variable resolution.
+
+    OCIO_CHECK_EQUAL(0, strcmp(config->getCurrentContext()->resolveStringVar("test${test}", 
+                                                                             usedContextVars),
+                               "testbarchedder"));
+    OCIO_CHECK_EQUAL(2, usedContextVars->getNumStringVars());
+    OCIO_CHECK_EQUAL(0, strcmp(usedContextVars->getStringVarNameByIndex(0), "cheese"));
+    OCIO_CHECK_EQUAL(0, strcmp(usedContextVars->getStringVarByIndex(0), "chedder"));
+    OCIO_CHECK_EQUAL(0, strcmp(usedContextVars->getStringVarNameByIndex(1), "test"));
+    OCIO_CHECK_EQUAL(0, strcmp(usedContextVars->getStringVarByIndex(1), "bar${cheese}"));
+
+    usedContextVars->clearStringVars();
+    OCIO_CHECK_EQUAL(0, strcmp(config->getCurrentContext()->resolveStringVar("${SHOW}", 
+                                                                             usedContextVars),
+                               "bar"));
+    OCIO_CHECK_EQUAL(1, usedContextVars->getNumStringVars());
+    OCIO_CHECK_EQUAL(0, strcmp(usedContextVars->getStringVarNameByIndex(0), "SHOW"));
+    OCIO_CHECK_EQUAL(0, strcmp(usedContextVars->getStringVarByIndex(0), "bar"));
+    // Even if an environment variable overrides $SHOW, its default value is still "super".
     OCIO_CHECK_ASSERT(strcmp(config->getEnvironmentVarDefault("SHOW"), "super") == 0);
 
+    // Test default context variables.
+
     OCIO::ConfigRcPtr edit = config->createEditableCopy();
+    OCIO_CHECK_EQUAL(edit->getNumEnvironmentVars(), 5);
     edit->clearEnvironmentVars();
     OCIO_CHECK_EQUAL(edit->getNumEnvironmentVars(), 0);
 
     edit->addEnvironmentVar("testing", "dupvar");
-    edit->addEnvironmentVar("testing", "dupvar");
+    OCIO_CHECK_EQUAL(edit->getNumEnvironmentVars(), 1);
+    edit->addEnvironmentVar("testing", "dupvar"); // No duplications.
+    OCIO_CHECK_EQUAL(edit->getNumEnvironmentVars(), 1);
     edit->addEnvironmentVar("foobar", "testing");
+    OCIO_CHECK_EQUAL(edit->getNumEnvironmentVars(), 2);
     edit->addEnvironmentVar("blank", "");
-    edit->addEnvironmentVar("dontadd", NULL);
     OCIO_CHECK_EQUAL(edit->getNumEnvironmentVars(), 3);
-    edit->addEnvironmentVar("foobar", NULL); // remove
+    edit->addEnvironmentVar("dontadd", nullptr);
+    OCIO_CHECK_EQUAL(edit->getNumEnvironmentVars(), 3);
+    edit->addEnvironmentVar("foobar", nullptr); // Remove an entry.
     OCIO_CHECK_EQUAL(edit->getNumEnvironmentVars(), 2);
     edit->clearEnvironmentVars();
+    OCIO_CHECK_EQUAL(edit->getNumEnvironmentVars(), 0);
 
-    edit->addEnvironmentVar("SHOW", "super");
-    edit->addEnvironmentVar("SHOT", "test");
-    edit->addEnvironmentVar("SEQ", "foo");
-    edit->addEnvironmentVar("test", "bar${cheese}");
-    edit->addEnvironmentVar("cheese", "chedder");
+    OCIO_CHECK_EQUAL(edit->getEnvironmentMode(), OCIO::ENV_ENVIRONMENT_LOAD_PREDEFINED);
+    OCIO_CHECK_NO_THROW(edit->setEnvironmentMode(OCIO::ENV_ENVIRONMENT_LOAD_ALL));
+    OCIO_CHECK_EQUAL(edit->getEnvironmentMode(), OCIO::ENV_ENVIRONMENT_LOAD_ALL);
 
-    // As a warning message is expected, please mute it.
-    OCIO::MuteLogging mute;
+    // Test the second config i.e. not in predefined mode.
 
-    // Test
-    OCIO::LoggingLevel loglevel = OCIO::GetLoggingLevel();
-    OCIO::SetLoggingLevel(OCIO::LOGGING_LEVEL_DEBUG);
+    // As a debug message is expected, trap & check its content.
+    OCIO::LogGuard log;
+
     is.str(SIMPLE_PROFILE2);
     OCIO::ConstConfigRcPtr noenv;
     OCIO_CHECK_NO_THROW(noenv = OCIO::Config::CreateFromStream(is));
+    OCIO_CHECK_NO_THROW(noenv->validate());
+    OCIO_CHECK_EQUAL(noenv->getEnvironmentMode(), OCIO::ENV_ENVIRONMENT_LOAD_ALL);
+    // In all mode, use all system env. variables as potential context variables.
     OCIO_CHECK_ASSERT(strcmp(noenv->getCurrentContext()->resolveStringVar("${TASK}"),
         "lighting") == 0);
-    OCIO::SetLoggingLevel(loglevel);
 
-    OCIO_CHECK_EQUAL(edit->getEnvironmentMode(), OCIO::ENV_ENVIRONMENT_LOAD_PREDEFINED);
-    edit->setEnvironmentMode(OCIO::ENV_ENVIRONMENT_LOAD_ALL);
-    OCIO_CHECK_EQUAL(edit->getEnvironmentMode(), OCIO::ENV_ENVIRONMENT_LOAD_ALL);
+    OCIO_CHECK_EQUAL(log.output(), 
+                     "[OpenColorIO Debug]: This .ocio config has no environment section defined."
+                     " The default behaviour is to load all environment variables (0), which reduces"
+                     " the efficiency of OCIO's caching. Consider predefining the environment"
+                     " variables used.\n");
+}
+
+OCIO_ADD_TEST(Config, context_variable_faulty_cases)
+{
+    // Check that all transforms using color space names correctly support the context variable
+    // validation.
+
+    static constexpr char CONFIG[] = 
+        "ocio_profile_version: 2\n"
+        "\n"
+        "search_path: luts\n"
+        "\n"
+        "environment:\n"
+        "  DST1: cs2\n"
+        "  DST2: cs2\n"
+        "  DST3: cs2\n"
+        "\n"
+        "roles:\n"
+        "  default: cs1\n"
+        "\n"
+        "view_transforms:\n"
+        "  - !<ViewTransform>\n"
+        "    name: vt1\n"
+        "    from_reference: !<ColorSpaceTransform> {src: cs1, dst: $DST3}\n"
+        "\n"
+        "displays:\n"
+        "  disp1:\n"
+        "    - !<View> {name: view1, view_transform: vt1, display_colorspace: dcs1}\n"
+        "    - !<View> {name: view2, colorspace: cs3, looks: look1}\n"
+        "\n"
+        "looks:\n"
+        "  - !<Look>\n"
+        "    name: look1\n"
+        "    process_space: cs2\n"
+        "    transform: !<ColorSpaceTransform> {src: cs1, dst: $DST1}\n"
+        "\n"
+        "colorspaces:\n"
+        "  - !<ColorSpace>\n"
+        "    name: cs1\n"
+        "\n"
+        "  - !<ColorSpace>\n"
+        "    name: cs2\n"
+        "    from_reference: !<MatrixTransform> {offset: [0.11, 0.12, 0.13, 0]}\n"
+        "\n"
+        "  - !<ColorSpace>\n"
+        "    name: cs3\n"
+        "    from_reference: !<ColorSpaceTransform> {src: cs1, dst: $DST2}\n"
+        "\n"
+        "display_colorspaces:\n"
+        "  - !<ColorSpace>\n"
+        "    name: dcs1\n"
+        "    allocation: uniform\n"
+        "    from_display_reference: !<CDLTransform> {slope: [1, 2, 1]}\n";
+
+
+    std::istringstream iss;
+    iss.str(CONFIG);
+
+    OCIO::ConfigRcPtr cfg;
+    OCIO_CHECK_NO_THROW(cfg = OCIO::Config::CreateFromStream(iss)->createEditableCopy());
+    OCIO_CHECK_NO_THROW(cfg->validate());
+    OCIO_CHECK_NO_THROW(cfg->getProcessor("cs1", "disp1", "view1", OCIO::TRANSFORM_DIR_FORWARD));
+
+    {
+        // Remove environment variable DST3.
+
+        OCIO_CHECK_NO_THROW(cfg->addEnvironmentVar("DST3", nullptr)); 
+        OCIO_CHECK_EQUAL(cfg->getNumEnvironmentVars(), 2);
+
+        OCIO_CHECK_THROW_WHAT(cfg->validate(),
+                              OCIO::Exception,
+                              "references a color space '$DST3' using an unknown context variable");
+
+        OCIO_CHECK_THROW_WHAT(cfg->getProcessor("cs1", "disp1", "view1", OCIO::TRANSFORM_DIR_FORWARD),
+                              OCIO::Exception,
+                              "destination color space '$DST3' could not be found");
+    }
+
+    {
+        OCIO_CHECK_NO_THROW(cfg->addEnvironmentVar("DST2", nullptr)); 
+        OCIO_CHECK_EQUAL(cfg->getNumEnvironmentVars(), 1);
+
+        OCIO_CHECK_THROW_WHAT(cfg->validate(),
+                              OCIO::Exception,
+                              "references a color space '$DST2' using an unknown context variable");
+
+        OCIO_CHECK_THROW_WHAT(cfg->getProcessor("cs1", "disp1", "view2", OCIO::TRANSFORM_DIR_FORWARD),
+                              OCIO::Exception,
+                              "destination color space '$DST2' could not be found");
+    }
+
+    {
+        OCIO_CHECK_NO_THROW(cfg->addEnvironmentVar("DST2", "cs1")); 
+        OCIO_CHECK_NO_THROW(cfg->addEnvironmentVar("DST1", nullptr)); 
+        OCIO_CHECK_EQUAL(cfg->getNumEnvironmentVars(), 1);
+
+        OCIO_CHECK_THROW_WHAT(cfg->validate(),
+                              OCIO::Exception,
+                              "references a color space '$DST1' using an unknown context variable");
+
+        OCIO_CHECK_THROW_WHAT(cfg->getProcessor("cs1", "disp1", "view2", OCIO::TRANSFORM_DIR_FORWARD),
+                              OCIO::Exception,
+                              "destination color space '$DST1' could not be found");
+    }
+}
+
+OCIO_ADD_TEST(Config, context_variable)
+{
+    // Test the context "predefined" mode (this is where the config contains the "environment"
+    // section).
+
+    static constexpr char CONFIG[] = 
+        "ocio_profile_version: 2\n"
+        "\n"
+        "environment:\n"
+        "  VAR1: $VAR1\n"     // No default value so the env. variable must exist.
+        "  VAR2: var2\n"      // Default value if env. variable does not exist.
+        "  VAR3: env3\n"      // Same as above.
+        "  VAR4: env4$VAR1\n" // Same as above and built from another envvar.
+        "  VAR5: env5$VAR2\n" // Same as above and built from another envvar.
+        "  VAR6: env6$VAR3\n" // Same as above and built from another envvar.
+        "search_path: luts\n"
+        "strictparsing: true\n"
+        "luma: [0.2126, 0.7152, 0.0722]\n"
+        "\n"
+        "roles:\n"
+        "  default: cs1\n"
+        "\n"
+        "file_rules:\n"
+        "  - !<Rule> {name: Default, colorspace: default}\n"
+        "\n"
+        "displays:\n"
+        "  disp1:\n"
+        "    - !<View> {name: view1, colorspace: cs1}\n"
+        "\n"
+        "active_displays: []\n"
+        "active_views: []\n"
+        "\n"
+        "colorspaces:\n"
+        "  - !<ColorSpace>\n"
+        "    name: cs1\n"
+        "    family: \"\"\n"
+        "    equalitygroup: \"\"\n"
+        "    bitdepth: unknown\n"
+        "    isdata: false\n"
+        "    allocation: uniform\n";
+
+    std::istringstream iss;
+    iss.str(CONFIG);
+    
+    struct Guard
+    {
+        Guard()
+        {
+            OCIO::Platform::Setenv("VAR1", "env1");
+            OCIO::Platform::Setenv("VAR2", "env2");
+        }
+        ~Guard()
+        {
+            OCIO::Platform::Unsetenv("VAR1");
+            OCIO::Platform::Unsetenv("VAR2");
+        }
+    } guard;
+
+    OCIO::ConstConfigRcPtr config;
+    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(iss));
+    OCIO_CHECK_NO_THROW(config->validate());
+    OCIO_CHECK_EQUAL(config->getEnvironmentMode(), OCIO::ENV_ENVIRONMENT_LOAD_PREDEFINED);
+ 
+    OCIO_CHECK_EQUAL(std::string("env1"), config->getCurrentContext()->resolveStringVar("$VAR1"));
+    OCIO_CHECK_EQUAL(std::string("env2"), config->getCurrentContext()->resolveStringVar("$VAR2"));
+    OCIO_CHECK_EQUAL(std::string("env3"), config->getCurrentContext()->resolveStringVar("$VAR3"));
+
+    OCIO_CHECK_EQUAL(std::string("env4env1"), config->getCurrentContext()->resolveStringVar("$VAR4"));
+    OCIO_CHECK_EQUAL(std::string("env5env2"), config->getCurrentContext()->resolveStringVar("$VAR5"));
+    OCIO_CHECK_EQUAL(std::string("env6env3"), config->getCurrentContext()->resolveStringVar("$VAR6"));
+
+    std::ostringstream oss;
+    OCIO_CHECK_NO_THROW(oss << *config.get());
+    OCIO_CHECK_EQUAL(oss.str(), iss.str());
+
+    // VAR2 reverts to its default value.
+
+    OCIO::Platform::Unsetenv("VAR2");
+    iss.str(CONFIG);
+    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(iss));
+    OCIO_CHECK_NO_THROW(config->validate());
+
+    // Test a faulty case i.e. the env. variable VAR1 is now missing.
+
+    OCIO::Platform::Unsetenv("VAR1");
+    iss.str(CONFIG);
+    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(iss));
+    OCIO_CHECK_THROW_WHAT(config->validate(),
+                          OCIO::Exception,
+                          "Unresolved context variable 'VAR1 = $VAR1'.");
+}
+
+OCIO_ADD_TEST(Config, context_variable_with_sanity_check)
+{
+    // Add some extra tests for the environment section. If declared, the context is then
+    // in the predefined mode so it must be self-contained i.e. contains all needed context
+    // variables. It also means that sanity check must throw if at least one context variable
+    // used in the config, is missing.
+
+    static constexpr char CONFIG[] = 
+        "ocio_profile_version: 2\n"
+        "\n"
+        "search_path: luts\n"
+        "\n"
+        "environment: {CS2: lut1d_green.ctf}\n"
+        "\n"
+        "roles:\n"
+        "  default: cs1\n"
+        "\n"
+        "displays:\n"
+        "  disp1:\n"
+        "    - !<View> {name: view1, colorspace: cs2}\n"
+        "\n"
+        "\n"
+        "colorspaces:\n"
+        "  - !<ColorSpace>\n"
+        "    name: cs1\n"
+        "\n"
+        "  - !<ColorSpace>\n"
+        "    name: cs2\n"
+        "    from_reference: !<FileTransform> {src: $CS2}\n";
+
+    std::istringstream iss;
+    iss.str(CONFIG);
+
+    OCIO::ConstConfigRcPtr config;
+    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(iss));
+    OCIO_CHECK_NO_THROW(config->validate());
+
+    // Set the right search_path. Note that the ctf files used below already exist on that path.
+    OCIO::ConfigRcPtr cfg = config->createEditableCopy();
+    OCIO_CHECK_NO_THROW(cfg->clearSearchPaths());
+    OCIO_CHECK_NO_THROW(cfg->addSearchPath(OCIO::GetTestFilesDir().c_str()));
+
+    OCIO_CHECK_NO_THROW(cfg->getProcessor("cs1", "disp1", "view1", OCIO::TRANSFORM_DIR_FORWARD));
+
+    // Having an 'environment' section in a config means to only keep the listed context
+    // variables. The context is then in the predefined mode i.e. ENV_ENVIRONMENT_LOAD_PREDEFINED.
+
+    OCIO_CHECK_EQUAL(cfg->getNumEnvironmentVars(), 1);
+    OCIO_CHECK_EQUAL(cfg->getCurrentContext()->getNumStringVars(), 1);
+    OCIO_CHECK_EQUAL(cfg->getCurrentContext()->getEnvironmentMode(),
+                     OCIO::ENV_ENVIRONMENT_LOAD_PREDEFINED);
+
+    {
+        OCIO_CHECK_NO_THROW(cfg->addEnvironmentVar("CS2", "lut1d_green.ctf")); 
+        OCIO_CHECK_EQUAL(cfg->getNumEnvironmentVars(), 1);
+        OCIO_CHECK_NO_THROW(cfg->validate());
+    }
+
+    {
+        OCIO_CHECK_NO_THROW(cfg->addEnvironmentVar("CS2", "exposure_contrast_log.ctf")); 
+        OCIO_CHECK_EQUAL(cfg->getNumEnvironmentVars(), 1);
+        OCIO_CHECK_NO_THROW(cfg->validate());
+    }
+
+    {
+        // $TOTO is added but not used.
+        // Even if that's useless it does not break anything.
+
+        OCIO_CHECK_NO_THROW(cfg->addEnvironmentVar("TOTO", "exposure_contrast_log.ctf")); 
+        OCIO_CHECK_EQUAL(cfg->getNumEnvironmentVars(), 2);
+        OCIO_CHECK_NO_THROW(cfg->validate());
+    }
+
+    {
+        // Update $CS2 to use $TOTO. That's still a self-contained context because
+        // $TOTO exists. 
+        OCIO_CHECK_NO_THROW(cfg->addEnvironmentVar("CS2", "$TOTO")); 
+        OCIO_CHECK_EQUAL(cfg->getNumEnvironmentVars(), 2);
+        OCIO_CHECK_NO_THROW(cfg->validate());
+
+        // Note that the default value of the context variable is unresolved.
+        OCIO_CHECK_EQUAL(std::string(cfg->getEnvironmentVarDefault("CS2")), std::string("$TOTO"));
+    }
+
+    {
+        // Remove $TOTO from the context. That's a faulty case because $CS2 is still used
+        // but resolved using $TOTO so, the environment is not self-contained. Sanity check
+        // must throw in that case.
+        OCIO_CHECK_NO_THROW(cfg->addEnvironmentVar("TOTO", nullptr)); 
+        OCIO_CHECK_EQUAL(cfg->getNumEnvironmentVars(), 1);
+
+        OCIO_CHECK_THROW_WHAT(cfg->validate(),
+                              OCIO::Exception,
+                              "Unresolved context variable 'CS2 = $TOTO'.");
+        OCIO_CHECK_THROW_WHAT(cfg->getProcessor("cs1", "disp1", "view1", OCIO::TRANSFORM_DIR_FORWARD),
+                              OCIO::Exception,
+                              "The specified file reference '$CS2' could not be located");
+    }
+
+    {
+        // Remove $CS2 from the context. That's a faulty case because $CS2 is used so,
+        // the environment is not self-contained.
+        OCIO_CHECK_NO_THROW(cfg->addEnvironmentVar("CS2", nullptr)); 
+        OCIO_CHECK_EQUAL(cfg->getNumEnvironmentVars(), 0);
+
+        OCIO_CHECK_THROW_WHAT(cfg->validate(),
+                              OCIO::Exception,
+                              "The file Transform source cannot be resolved: '$CS2'.");
+        OCIO_CHECK_THROW_WHAT(cfg->getProcessor("cs1", "disp1", "view1", OCIO::TRANSFORM_DIR_FORWARD),
+                              OCIO::Exception,
+                              "The specified file reference '$CS2' could not be located");
+    }
+    
+    {
+        OCIO_CHECK_NO_THROW(cfg->addEnvironmentVar("CS2", "lut1d_green.ctf")); 
+
+        // Several faulty cases for the 'search_path'.
+
+        OCIO_CHECK_NO_THROW(cfg->clearSearchPaths());
+        OCIO_CHECK_NO_THROW(cfg->setSearchPath(nullptr));
+        OCIO_CHECK_THROW_WHAT(cfg->validate(),
+                              OCIO::Exception,
+                              "The search_path is empty");
+
+        OCIO_CHECK_NO_THROW(cfg->clearSearchPaths());
+        OCIO_CHECK_NO_THROW(cfg->setSearchPath(""));
+        OCIO_CHECK_THROW_WHAT(cfg->validate(),
+                              OCIO::Exception,
+                              "The search_path is empty");
+
+        OCIO_CHECK_NO_THROW(cfg->clearSearchPaths());
+        OCIO_CHECK_NO_THROW(cfg->setSearchPath("$MYPATH"));
+        OCIO_CHECK_THROW_WHAT(cfg->validate(),
+                              OCIO::Exception,
+                              "The search_path '$MYPATH' cannot be resolved.");
+
+        // Note that search_path is mandatory only when at least one file transform is present
+        // in the config.
+
+        OCIO_CHECK_NO_THROW(cfg->clearSearchPaths());
+        OCIO_CHECK_NO_THROW(cfg->setSearchPath(nullptr));
+        OCIO_CHECK_NO_THROW(cfg->addDisplayView("disp1", "view1", "cs1", "")); 
+        OCIO_CHECK_NO_THROW(cfg->removeColorSpace("cs2")); 
+        OCIO_CHECK_NO_THROW(cfg->validate());
+    }
+}
+
+OCIO_ADD_TEST(Config, colorspacename_with_reserved_token)
+{
+    // Using context variable tokens (i.e. $ and %) in color space names is forbidden.
+
+    static constexpr char CONFIG[] = 
+        "ocio_profile_version: 2\n"
+        "\n"
+        "search_path: luts\n"
+        "\n"
+        "roles:\n"
+        "  default: cs1\n"
+        "\n"
+        "displays:\n"
+        "  disp1:\n"
+        "    - !<View> {name: view1, colorspace: cs1}\n"
+        "\n"
+        "colorspaces:\n"
+        "  - !<ColorSpace>\n"
+        "    name: cs1\n"
+        "\n"
+        "  - !<ColorSpace>\n"
+        "    name: cs1$VAR\n";
+
+    std::istringstream iss;
+    iss.str(CONFIG);
+
+    OCIO::ConstConfigRcPtr config;
+    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(iss));
+    OCIO_CHECK_THROW_WHAT(config->validate(),
+                          OCIO::Exception,
+                          "A color space name 'cs1$VAR' cannot contain a context variable"
+                          " reserved token i.e. % or $.");
+}
+
+OCIO_ADD_TEST(Config, context_variable_with_colorspacename)
+{
+    // Test some faulty context variable use cases.
+
+    // Note: In predefined mode, the environment section must be self-contain and complete.
+    // It means that all context variables must be present in the config i.e. in the environment
+    // section.
+
+    static constexpr char CONFIG[] = 
+        "ocio_profile_version: 2\n"
+        "\n"
+        "environment: {ENV1: file.clf}\n"
+        "\n"
+        "search_path: luts\n"
+        "\n"
+        "roles:\n"
+        "  default: cs1\n"
+        "  reference: cs1\n"
+        "\n"
+        "displays:\n"
+        "  disp1:\n"
+        "    - !<View> {name: view1, colorspace: cs2}\n"
+        "\n"
+        "colorspaces:\n"
+        "  - !<ColorSpace>\n"
+        "    name: cs1\n"
+        "\n"
+        "  - !<ColorSpace>\n"
+        "    name: cs2\n";
+
+    {
+        // Add a new context variable not defined in the environment section.  The context does not
+        // contain a value for this variable.
+
+        std::string configStr 
+            = std::string(CONFIG)
+            + "    from_reference: !<FileTransform> {src: $VAR3}\n";
+
+        std::istringstream iss;
+        iss.str(configStr);
+
+        OCIO::ConfigRcPtr cfg;
+        OCIO_CHECK_NO_THROW(cfg = OCIO::Config::CreateFromStream(iss)->createEditableCopy());
+        OCIO_CHECK_THROW_WHAT(cfg->validate(),
+                              OCIO::Exception,
+                              "The file Transform source cannot be resolved: '$VAR3'.");
+
+        // Set $VAR3 and check again.
+
+        OCIO_CHECK_NO_THROW(cfg->addEnvironmentVar("VAR3", "cs1"));
+        OCIO_CHECK_NO_THROW(cfg->validate());
+    }
+
+    {
+        std::string configStr 
+            = std::string(CONFIG)
+            + "    from_reference: !<ColorSpaceTransform> {src: $VAR3, dst: cs1}\n";
+
+        std::istringstream iss;
+        iss.str(configStr);
+
+        OCIO::ConfigRcPtr cfg;
+        OCIO_CHECK_NO_THROW(cfg = OCIO::Config::CreateFromStream(iss)->createEditableCopy());
+        OCIO_CHECK_THROW_WHAT(cfg->validate(),
+                              OCIO::Exception,
+                              "This config references a color space '$VAR3' using"
+                              " an unknown context variable.");
+
+        // Set $VAR3 and check again.
+
+        // Set a valid color space name.
+        OCIO_CHECK_NO_THROW(cfg->addEnvironmentVar("VAR3", "cs1"));
+        OCIO_CHECK_NO_THROW(cfg->validate());
+
+        // Set a valid role name.
+        OCIO_CHECK_NO_THROW(cfg->addEnvironmentVar("VAR3", "reference"));
+        OCIO_CHECK_NO_THROW(cfg->validate());
+
+        // Set an invalid color space name.
+        OCIO_CHECK_NO_THROW(cfg->addEnvironmentVar("VAR3", "cs1234"));
+        OCIO_CHECK_THROW_WHAT(cfg->validate(),
+                              OCIO::Exception,
+                              "This config references a color space, 'cs1234', "
+                              "which is not defined.");
+
+        // Set an invalid color space name.
+        OCIO_CHECK_NO_THROW(cfg->addEnvironmentVar("VAR3", "reference1234"));
+        OCIO_CHECK_THROW_WHAT(cfg->validate(),
+                              OCIO::Exception,
+                              "This config references a color space, 'reference1234', "
+                              "which is not defined.");
+
+        // Remove the context variable.
+        OCIO_CHECK_NO_THROW(cfg->addEnvironmentVar("VAR3", nullptr));
+        OCIO_CHECK_THROW_WHAT(cfg->validate(),
+                              OCIO::Exception,
+                              "This config references a color space '$VAR3' using"
+                              " an unknown context variable.");
+    }
+
+    // Repeat the test using Config::getProcessor() with a non-default context.
+
+    {
+        std::string configStr 
+            = std::string(CONFIG)
+            + "    from_reference: !<ColorSpaceTransform> {src: $VAR3, dst: cs1}\n";
+
+        std::istringstream iss;
+        iss.str(configStr);
+
+        OCIO::ConfigRcPtr cfg;
+        OCIO_CHECK_NO_THROW(cfg = OCIO::Config::CreateFromStream(iss)->createEditableCopy());
+
+        OCIO_CHECK_THROW_WHAT(cfg->getProcessor("cs1", "cs2"),
+                              OCIO::Exception,
+                              "source color space '$VAR3' could not be found.");
+
+        OCIO::ContextRcPtr ctx;
+        OCIO_CHECK_NO_THROW(ctx = cfg->getCurrentContext()->createEditableCopy());
+        OCIO_CHECK_THROW_WHAT(cfg->getProcessor(ctx, "cs1", "cs2"),
+                              OCIO::Exception,
+                              "source color space '$VAR3' could not be found.");
+
+        OCIO_CHECK_NO_THROW(ctx->setStringVar("VAR3", "cs1"));
+        OCIO_CHECK_NO_THROW(cfg->getProcessor(ctx, "cs1", "cs2"));
+
+        OCIO_CHECK_NO_THROW(ctx->setStringVar("VAR3", "reference"));
+        OCIO_CHECK_NO_THROW(cfg->getProcessor(ctx, "cs1", "cs2"));
+
+        OCIO_CHECK_NO_THROW(ctx->setStringVar("VAR3", ""));
+        OCIO_CHECK_THROW_WHAT(cfg->getProcessor(ctx, "cs1", "cs2"),
+                              OCIO::Exception,
+                              "source color space '$VAR3' could not be found.");
+    }
+}
+
+OCIO_ADD_TEST(Config, context_variable_with_role)
+{
+    // Test that a role cannot point to a context variable.
+
+    static constexpr char CONFIG[] = 
+        "ocio_profile_version: 2\n"
+        "\n"
+        "environment: {ENV1: cs1}\n"
+        "\n"
+        "search_path: luts\n"
+        "\n"
+        "roles:\n"
+        "  default: cs1\n"
+        "  reference: $ENV1\n"
+        "\n"
+        "displays:\n"
+        "  disp1:\n"
+        "    - !<View> {name: view1, colorspace: cs2}\n"
+        "\n"
+        "colorspaces:\n"
+        "  - !<ColorSpace>\n"
+        "    name: cs1\n"
+        "\n"
+        "  - !<ColorSpace>\n"
+        "    name: cs2\n"
+        "    from_reference: !<CDLTransform> {offset: [0.1, 0.1, 0.1]}\n"
+        "\n"
+        "  - !<ColorSpace>\n"
+        "    name: cs3\n"
+        "    from_reference: !<ColorSpaceTransform> {src: reference, dst: cs2}\n";
+            
+    {
+        std::istringstream iss;
+        iss.str(CONFIG);
+
+        OCIO::ConfigRcPtr cfg;
+        OCIO_CHECK_NO_THROW(cfg = OCIO::Config::CreateFromStream(iss)->createEditableCopy());
+
+        // The internal cache serializes the config throwing an exception because the role
+        // color space does not exist so disable the internal cache.
+        cfg->setProcessorCacheFlags(OCIO::PROCESSOR_CACHE_OFF);
+
+        OCIO_CHECK_THROW_WHAT(cfg->validate(), OCIO::Exception,
+                              "The role 'reference' refers to a color space, '$ENV1', which is not defined.");
+
+        OCIO_CHECK_THROW_WHAT(cfg->getProcessor("cs1", "cs3"), OCIO::Exception,
+                              "source color space 'reference' could not be found.");
+    }
+}
+
+OCIO_ADD_TEST(Config, context_variable_with_display_view)
+{
+    // Test that a (display, view) pair cannot point to a context variable.
+
+    static constexpr char CONFIG[] = 
+        "ocio_profile_version: 2\n"
+        "\n"
+        "environment: {ENV1: cs2}\n"
+        "\n"
+        "search_path: luts\n"
+        "\n"
+        "roles:\n"
+        "  default: cs1\n"
+        "  reference: cs1\n"
+        "\n"
+        "displays:\n"
+        "  disp1:\n"
+        "    - !<View> {name: view1, colorspace: $ENV1}\n"
+        "\n"
+        "colorspaces:\n"
+        "  - !<ColorSpace>\n"
+        "    name: cs1\n"
+        "\n"
+        "  - !<ColorSpace>\n"
+        "    name: cs2\n"
+        "    from_reference: !<CDLTransform> {offset: [0.1, 0.1, 0.1]}\n";
+
+    {
+        std::istringstream iss;
+        iss.str(CONFIG);
+
+        OCIO::ConstConfigRcPtr config;
+        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(iss));
+
+        OCIO_CHECK_THROW_WHAT(config->validate(),
+                              OCIO::Exception,
+                              "Display 'disp1' has a view 'view1' that refers to a color space, '$ENV1',"
+                              " which is not defined.");
+
+        OCIO_CHECK_THROW_WHAT(config->getProcessor("cs1", "disp1", "view1", OCIO::TRANSFORM_DIR_FORWARD),
+                              OCIO::Exception,
+                              "DisplayViewTransform error. Cannot find display color space, '$ENV1'.");
+    }
+}
+
+OCIO_ADD_TEST(Config, context_variable_with_search_path)
+{
+    // Test a search_path pointing to a context variable.
+
+    static const std::string CONFIG = 
+        "ocio_profile_version: 2\n"
+        "\n"
+        "environment: {ENV1: " + OCIO::GetTestFilesDir() + "}\n"
+        "\n"
+        "search_path: $ENV1\n"
+        "\n"
+        "roles:\n"
+        "  default: cs1\n"
+        "  reference: cs1\n"
+        "\n"
+        "displays:\n"
+        "  disp1:\n"
+        "    - !<View> {name: view1, colorspace: cs2}\n"
+        "\n"
+        "colorspaces:\n"
+        "  - !<ColorSpace>\n"
+        "    name: cs1\n"
+        "\n"
+        "  - !<ColorSpace>\n"
+        "    name: cs2\n"
+        "    from_reference: !<FileTransform> {src: lut1d_green.ctf}\n";
+
+    std::istringstream iss;
+    iss.str(CONFIG);
+
+    OCIO::ConfigRcPtr cfg;
+    OCIO_CHECK_NO_THROW(cfg = OCIO::Config::CreateFromStream(iss)->createEditableCopy());
+    OCIO_CHECK_NO_THROW(cfg->validate());
+    OCIO_CHECK_NO_THROW(cfg->getProcessor("cs1", "cs2"));
+
+    /// Remove the context variable.
+    OCIO_CHECK_NO_THROW(cfg->addEnvironmentVar("ENV1", nullptr));
+
+    OCIO_CHECK_THROW_WHAT(cfg->validate(), OCIO::Exception,
+                          "The search_path '$ENV1' cannot be resolved.");
+
+    OCIO_CHECK_THROW_WHAT(cfg->getProcessor("cs1", "cs2"), OCIO::Exception,
+                          "The specified file reference 'lut1d_green.ctf' could not be located. ");
 }
 
 OCIO_ADD_TEST(Config, role_without_colorspace)
@@ -756,8 +1437,8 @@ OCIO_ADD_TEST(Config, env_colorspace_name)
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
         OCIO_CHECK_THROW_WHAT(config->validate(), OCIO::Exception,
-                              "This config references a color space, '$MISSING_ENV', "
-                              "which is not defined");
+                              "This config references a color space '$MISSING_ENV' "
+                              "using an unknown context variable");
         OCIO_CHECK_THROW_WHAT(config->getProcessor("raw", "lgh"), OCIO::Exception,
                               "BuildColorSpaceOps failed: destination color space '$MISSING_ENV' "
                               "could not be found");
@@ -825,6 +1506,8 @@ OCIO_ADD_TEST(Config, version)
 {
     const std::string SIMPLE_PROFILE =
         "ocio_profile_version: 2\n"
+        "environment:\n"
+        "  {}\n"
         "colorspaces:\n"
         "  - !<ColorSpace>\n"
         "      name: raw\n"
@@ -898,12 +1581,17 @@ OCIO_ADD_TEST(Config, version_faulty_1)
 namespace
 {
 
-const std::string PROFILE_V1 = "ocio_profile_version: 1\n";
+const std::string PROFILE_V1 = 
+    "ocio_profile_version: 1\n"
+    "\n";
 
-const std::string PROFILE_V2 = "ocio_profile_version: 2\n";
+const std::string PROFILE_V2 =
+    "ocio_profile_version: 2\n"
+    "\n"
+    "environment:\n"
+    "  {}\n";
 
 const std::string SIMPLE_PROFILE_A =
-    "\n"
     "search_path: luts\n"
     "strictparsing: true\n"
     "luma: [0.2126, 0.7152, 0.0722]\n"
@@ -1667,6 +2355,8 @@ OCIO_ADD_TEST(Config, categories)
     static const std::string MY_OCIO_CONFIG =
         "ocio_profile_version: 2\n"
         "\n"
+        "environment:\n"
+        "  {}\n"
         "search_path: luts\n"
         "strictparsing: true\n"
         "luma: [0.2126, 0.7152, 0.0722]\n"
@@ -1769,6 +2459,8 @@ OCIO_ADD_TEST(Config, display)
     static const std::string SIMPLE_PROFILE_HEADER =
         "ocio_profile_version: 2\n"
         "\n"
+        "environment:\n"
+        "  {}\n"
         "search_path: luts\n"
         "strictparsing: true\n"
         "luma: [0.2126, 0.7152, 0.0722]\n"
@@ -2015,7 +2707,7 @@ OCIO_ADD_TEST(Config, display)
     {
         // Test an unknown display name in the config active displays.
 
-        OCIO::Platform::Setenv(OCIO::OCIO_ACTIVE_DISPLAYS_ENVVAR, ""); // Unset the env. variable.
+        OCIO::Platform::Unsetenv(OCIO::OCIO_ACTIVE_DISPLAYS_ENVVAR); // Remove the env. variable.
 
         const std::string myProfile = 
             SIMPLE_PROFILE_HEADER
@@ -2035,7 +2727,7 @@ OCIO_ADD_TEST(Config, display)
     {
         // Test an unknown display name in the config active displays.
 
-        OCIO::Platform::Setenv(OCIO::OCIO_ACTIVE_DISPLAYS_ENVVAR, ""); // Unset the env. variable.
+        OCIO::Platform::Unsetenv(OCIO::OCIO_ACTIVE_DISPLAYS_ENVVAR); // Remove the env. variable.
 
         const std::string myProfile = 
             SIMPLE_PROFILE_HEADER
@@ -2283,6 +2975,9 @@ OCIO_ADD_TEST(Config, display_view_order)
 {
     constexpr char SIMPLE_CONFIG[] { R"(
         ocio_profile_version: 2
+
+        environment:
+          {}
 
         displays:
           sRGB_B:
@@ -2743,7 +3438,7 @@ OCIO_ADD_TEST(Config, unknown_key_error)
     OCIO::LogGuard g;
     OCIO_CHECK_NO_THROW(OCIO::Config::CreateFromStream(is));
     OCIO_CHECK_ASSERT(StringUtils::StartsWith(g.output(), 
-                     "[OpenColorIO Warning]: At line 45, unknown key 'dummyKey' in 'ColorSpace'."));
+                     "[OpenColorIO Warning]: At line 47, unknown key 'dummyKey' in 'ColorSpace'."));
 }
 
 OCIO_ADD_TEST(Config, grading_primary_serialization)
@@ -3742,6 +4437,8 @@ namespace
 constexpr char InactiveCSConfigStart[] =
     "ocio_profile_version: 2\n"
     "\n"
+    "environment:\n"
+    "  {}\n"
     "search_path: luts\n"
     "strictparsing: true\n"
     "luma: [0.2126, 0.7152, 0.0722]\n"
@@ -3795,6 +4492,7 @@ constexpr char InactiveCSConfigEnd[] =
     "    isdata: false\n"
     "    categories: [cat1]\n"
     "    allocation: uniform\n"
+    "    from_reference: !<CDLTransform> {offset: [0.1, 0.1, 0.1]}\n"
     "\n"
     "  - !<ColorSpace>\n"
     "    name: cs2\n"
@@ -3804,6 +4502,7 @@ constexpr char InactiveCSConfigEnd[] =
     "    isdata: false\n"
     "    categories: [cat2]\n"
     "    allocation: uniform\n"
+    "    from_reference: !<CDLTransform> {offset: [0.2, 0.2, 0.2]}\n"
     "\n"
     "  - !<ColorSpace>\n"
     "    name: cs3\n"
@@ -3812,7 +4511,8 @@ constexpr char InactiveCSConfigEnd[] =
     "    bitdepth: unknown\n"
     "    isdata: false\n"
     "    categories: [cat3]\n"
-    "    allocation: uniform\n";
+    "    allocation: uniform\n"
+    "    from_reference: !<CDLTransform> {offset: [0.3, 0.3, 0.3]}\n";
 
 class InactiveCSGuard
 {
@@ -4313,6 +5013,9 @@ OCIO_ADD_TEST(Config, two_configs)
     constexpr const char * SIMPLE_CONFIG1{ R"(
 ocio_profile_version: 2
 
+environment:
+  {}
+
 roles:
   default: raw1
   aces_interchange: aces1
@@ -4348,6 +5051,9 @@ display_colorspaces:
 
     constexpr const char * SIMPLE_CONFIG2{ R"(
 ocio_profile_version: 2
+
+environment:
+  {}
 
 roles:
   default: raw2
@@ -4455,6 +5161,9 @@ display_colorspaces:
 
     constexpr const char * SIMPLE_CONFIG3{ R"(
 ocio_profile_version: 2
+
+environment:
+  {}
 
 roles:
   default: raw
@@ -4753,6 +5462,8 @@ OCIO_ADD_TEST(Config, display_view)
     os << *config.get();
     constexpr char expected[]{ R"(ocio_profile_version: 2
 
+environment:
+  {}
 search_path: ""
 strictparsing: true
 luma: [0.2126, 0.7152, 0.0722]
@@ -4987,6 +5698,9 @@ OCIO_ADD_TEST(Config, look_transform)
     constexpr const char * OCIO_CONFIG{ R"(
 ocio_profile_version: 2
 
+environment:
+  {}
+
 roles:
   default: raw
 
@@ -5068,6 +5782,9 @@ OCIO_ADD_TEST(Config, is_colorspace_used)
 
     constexpr char CONFIG[] = 
         "ocio_profile_version: 2\n"
+        "\n"
+        "environment:\n"
+        "  {}\n"
         "\n"
         "search_path: luts\n"
         "strictparsing: true\n"
@@ -5225,6 +5942,8 @@ OCIO_ADD_TEST(Config, builtin_transforms)
     constexpr const char * CONFIG_BUILTIN_TRANSFORMS{
 R"(ocio_profile_version: 2
 
+environment:
+  {}
 search_path: ""
 strictparsing: true
 luma: [0.2126, 0.7152, 0.0722]
@@ -5289,12 +6008,727 @@ colorspaces:
     }
 }
 
+OCIO_ADD_TEST(Config, config_context_cacheids)
+{
+    // Validate the cacheID computation from Config & Context classes when OCIO Context
+    // variables are present. In the config below, there is one in a color space i.e. $CS3 
+    // and one undeclared in a look i.e. $LOOK1.
+
+    static constexpr char CONFIG[] = 
+        "ocio_profile_version: 2\n"
+        "\n"
+        "search_path: luts\n"
+        "\n"
+        "environment: {CS3: lut1d_green.ctf}\n"
+        "\n"
+        "roles:\n"
+        "  default: cs1\n"
+        "\n"
+        "displays:\n"
+        "  disp1:\n"
+        "    - !<View> {name: view1, colorspace: cs3}\n"
+        "    - !<View> {name: view2, colorspace: cs3, looks: look1}\n"
+        "\n"
+        "looks:\n"
+        "  - !<Look>\n"
+        "    name: look1\n"
+        "    process_space: cs2\n"
+        "    transform: !<FileTransform> {src: $LOOK1}\n"
+        "\n"
+        "\n"
+        "colorspaces:\n"
+        "  - !<ColorSpace>\n"
+        "    name: cs1\n"
+        "\n"
+        "  - !<ColorSpace>\n"
+        "    name: cs2\n"
+        "    from_reference: !<MatrixTransform> {offset: [0.11, 0.12, 0.13, 0]}\n"
+        "\n"
+        "  - !<ColorSpace>\n"
+        "    name: cs3\n"
+        "    from_reference: !<FileTransform> {src: $CS3}\n";
+
+    std::istringstream iss;
+    iss.str(CONFIG);
+
+    OCIO::ConstConfigRcPtr config;
+    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(iss));
+
+    // Set the right search_path.
+    OCIO::ConfigRcPtr cfg = config->createEditableCopy();
+    OCIO_CHECK_NO_THROW(cfg->clearSearchPaths());
+    OCIO_CHECK_NO_THROW(cfg->addSearchPath(OCIO::GetTestFilesDir().c_str()));
+
+    // Lets say there is a need for several processors built from the same config 
+    // with same or different contexts.
+
+    const std::string contextCacheID = cfg->getCurrentContext()->getCacheID();
+    const std::string configCacheID  = cfg->getCacheID();
+
+    // Using the default context variables.
+    {
+        OCIO_CHECK_NO_THROW(cfg->getProcessor("cs2", "disp1", "view1", OCIO::TRANSFORM_DIR_FORWARD));
+    }
+
+    // Set the context variable to its default value on a new context instance.
+    {
+        OCIO::ContextRcPtr ctx = cfg->getCurrentContext()->createEditableCopy();
+        ctx->setStringVar("CS3", "lut1d_green.ctf");
+ 
+        OCIO_CHECK_NO_THROW(cfg->getProcessor(ctx, "cs2", "disp1", "view1", OCIO::TRANSFORM_DIR_FORWARD));
+
+        OCIO_CHECK_EQUAL(contextCacheID, ctx->getCacheID());
+        OCIO_CHECK_EQUAL(configCacheID,  cfg->getCacheID(ctx));
+    }
+
+    // Set the context variable to its default value.
+    {
+        OCIO_CHECK_NO_THROW(cfg->addEnvironmentVar("CS3", "lut1d_green.ctf")); 
+        OCIO_CHECK_NO_THROW(cfg->getProcessor("cs2", "disp1", "view1", OCIO::TRANSFORM_DIR_FORWARD));
+
+        OCIO_CHECK_EQUAL(contextCacheID, cfg->getCurrentContext()->getCacheID());
+        OCIO_CHECK_EQUAL(configCacheID,  cfg->getCacheID());
+    }
+
+    // Set the context variable to a different file using the context.
+    {
+        OCIO::ContextRcPtr ctx = cfg->getCurrentContext()->createEditableCopy();
+        ctx->setStringVar("CS3", "exposure_contrast_log.ctf");
+ 
+        OCIO_CHECK_NO_THROW(cfg->getProcessor(ctx, "cs2", "disp1", "view1", OCIO::TRANSFORM_DIR_FORWARD));
+
+        OCIO_CHECK_NE(contextCacheID, ctx->getCacheID());
+        OCIO_CHECK_NE(configCacheID,  cfg->getCacheID(ctx));
+
+        // As expected the 'current' context is unchanged.
+        OCIO_CHECK_EQUAL(configCacheID, cfg->getCacheID());
+    }
+
+    // Set the context variable to a different file using the config i.e. add a new value.
+    {
+        OCIO_CHECK_NO_THROW(cfg->addEnvironmentVar("CS3", "exposure_contrast_log.ctf"));
+        OCIO_CHECK_NO_THROW(cfg->getProcessor("cs2", "disp1", "view1", OCIO::TRANSFORM_DIR_FORWARD));
+
+        OCIO_CHECK_NE(contextCacheID, cfg->getCurrentContext()->getCacheID());
+        OCIO_CHECK_NE(configCacheID,  cfg->getCacheID());
+    }
+
+    // $LOOK1 was missing so set to something.
+    {
+        OCIO_CHECK_NO_THROW(cfg->addEnvironmentVar("LOOK1", "lut1d_green.ctf"));
+        OCIO_CHECK_NO_THROW(cfg->getProcessor("cs2", "disp1", "view2", OCIO::TRANSFORM_DIR_FORWARD));
+
+        OCIO_CHECK_NE(contextCacheID, cfg->getCurrentContext()->getCacheID());
+        OCIO_CHECK_NE(configCacheID,  cfg->getCacheID());
+    }
+
+    // Set $CS3 to its default value.
+    {
+        OCIO_CHECK_NO_THROW(cfg->addEnvironmentVar("CS3", "lut1d_green.ctf"));
+        OCIO_CHECK_NO_THROW(cfg->getProcessor("cs2", "disp1", "view2", OCIO::TRANSFORM_DIR_FORWARD));
+
+        OCIO_CHECK_NE(contextCacheID, cfg->getCurrentContext()->getCacheID());
+        OCIO_CHECK_NE(configCacheID,  cfg->getCacheID());
+    }
+
+    // Remove $LOOK1 from context.
+    {
+        OCIO_CHECK_NO_THROW(cfg->addEnvironmentVar("CS3", "lut1d_green.ctf")); 
+        OCIO_CHECK_NO_THROW(cfg->addEnvironmentVar("LOOK1", nullptr));
+
+        OCIO_CHECK_EQUAL(contextCacheID, cfg->getCurrentContext()->getCacheID());
+        OCIO_CHECK_EQUAL(configCacheID,  cfg->getCacheID());
+    }
+}
+
+OCIO_ADD_TEST(Config, processor_cache_with_context_variables)
+{
+    // Validation of the processor cache of the Config class with context variables.
+
+    constexpr const char * CONFIG_CUSTOM {
+R"(ocio_profile_version: 2
+
+environment: { VAR: cs1 }
+
+search_path: ""
+strictparsing: true
+luma: [0.2126, 0.7152, 0.0722]
+
+roles:
+  default: ref
+
+file_rules:
+  - !<Rule> {name: Default, colorspace: default}
+
+displays:
+  Disp1:
+    - !<View> {name: View1, colorspace: cs1}
+
+colorspaces:
+  - !<ColorSpace>
+    name: ref
+
+  - !<ColorSpace>
+    name: cs1
+    from_reference: !<BuiltinTransform> {style: ACEScct_to_ACES2065-1}
+
+  - !<ColorSpace>
+    name: cs2
+    from_reference: !<ColorSpaceTransform> {src: ref, dst: cs1}
+
+  - !<ColorSpace>
+    name: cs3
+    from_reference: !<ColorSpaceTransform> {src: ref, dst: $VAR}
+)"};
+
+    std::istringstream iss;
+    iss.str(CONFIG_CUSTOM);
+
+    OCIO::ConstConfigRcPtr config;
+    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(iss));
+
+    {
+        // Some basic validations before testing anything else.
+
+        OCIO_CHECK_NO_THROW(config->validate());
+        OCIO_CHECK_NO_THROW(config->getProcessor("ref", "cs1"));
+    }
+
+    {
+        // Test that the cache detects identical processors (e.g. when $VAR == cs1)
+        // even if the cache keys are different.
+
+        // Keys are identical i.e. normal case.
+        OCIO_CHECK_EQUAL(config->getProcessor("ref", "cs1").get(),
+                         config->getProcessor("ref", "cs1").get());
+
+        // Keys are different but processors are identical so it returns the same instance.
+        OCIO_CHECK_EQUAL(config->getProcessor("ref", "cs1").get(),
+                         config->getProcessor("ref", "cs2").get());
+
+        // Keys are different but processors are identical.
+        OCIO_CHECK_EQUAL(config->getProcessor("ref", "cs2").get(),
+                         config->getProcessor("ref", "cs3").get());
+
+        // Making a copy also flushes the internal processor cache.
+        OCIO::ConfigRcPtr cfg = config->createEditableCopy();
+
+        // Check that caches are different between Config instances.
+        OCIO_CHECK_NE(config->getProcessor("ref", "cs1").get(),
+                      cfg->getProcessor("ref", "cs1").get());
+
+        OCIO_CHECK_NO_THROW(cfg->addEnvironmentVar("VAR", "ref"));
+
+        // Keys are different but processors are identical.
+        OCIO_CHECK_EQUAL(cfg->getProcessor("ref", "cs1").get(),
+                         cfg->getProcessor("ref", "cs2").get());
+
+        // Keys are different but processors are now different because $VAR != cs1.
+        OCIO_CHECK_NE(cfg->getProcessor("ref", "cs2").get(),
+                      cfg->getProcessor("ref", "cs3").get());
+    }
+}
+
+OCIO_ADD_TEST(Config, context_variables_typical_use_cases)
+{
+    // Case 1 - No context variables used in the config.
+
+    {
+        static const std::string CONFIG = 
+            "ocio_profile_version: 2\n"
+            "\n"
+            "search_path: " + OCIO::GetTestFilesDir() + "\n"
+            "\n"
+            "roles:\n"
+            "  default: cs1\n"
+            "\n"
+            "displays:\n"
+            "  disp1:\n"
+            "    - !<View> {name: view1, colorspace: cs2}\n"
+            "    - !<View> {name: view2, colorspace: cs3}\n"
+            "\n"
+            "colorspaces:\n"
+            "  - !<ColorSpace>\n"
+            "    name: cs1\n"
+            "\n"
+            "  - !<ColorSpace>\n"
+            "    name: cs2\n"
+            "    from_reference: !<FileTransform> {src: exposure_contrast_linear.ctf}\n"
+            "\n"
+            "  - !<ColorSpace>\n"
+            "    name: cs3\n"
+            "    from_reference: !<MatrixTransform> {offset: [0.11, 0.12, 0.13, 0]}\n";
+
+        std::istringstream iss;
+        iss.str(CONFIG);
+
+        OCIO::ConfigRcPtr cfg;
+        OCIO_CHECK_NO_THROW(cfg = OCIO::Config::CreateFromStream(iss)->createEditableCopy());
+        OCIO_CHECK_NO_THROW(cfg->validate());
+
+        // If consecutive calls to getProcessor return the same pointer, it means that the cache
+        // is working.
+
+        OCIO_CHECK_EQUAL(cfg->getProcessor("cs1", "cs2").get(),
+                         cfg->getProcessor("cs1", "cs2").get());
+
+        OCIO_CHECK_EQUAL(cfg->getProcessor("cs1", "cs3").get(),
+                         cfg->getProcessor("cs1", "cs3").get());
+
+
+        OCIO_CHECK_EQUAL(cfg->getProcessor("cs1", "disp1", "view1", OCIO::TRANSFORM_DIR_FORWARD).get(),
+                         cfg->getProcessor("cs1", "disp1", "view1", OCIO::TRANSFORM_DIR_FORWARD).get());
+
+        OCIO_CHECK_EQUAL(cfg->getProcessor("cs1", "disp1", "view2", OCIO::TRANSFORM_DIR_FORWARD).get(),
+                         cfg->getProcessor("cs1", "disp1", "view2", OCIO::TRANSFORM_DIR_FORWARD).get());
+
+        // Create a different context instance but still identical to the current one.
+        OCIO::ContextRcPtr ctx = cfg->getCurrentContext()->createEditableCopy();
+
+        OCIO_CHECK_EQUAL(cfg->getProcessor(ctx, "cs1", "cs2").get(),
+                         cfg->getProcessor(ctx, "cs1", "cs2").get());
+
+        OCIO_CHECK_EQUAL(cfg->getProcessor(ctx, "cs1", "cs3").get(),
+                         cfg->getProcessor(ctx, "cs1", "cs3").get());
+
+        OCIO_CHECK_EQUAL(cfg->getProcessor(ctx, "cs1", "cs2").get(),
+                         cfg->getProcessor("cs1", "cs2").get());
+
+
+        OCIO_CHECK_EQUAL(cfg->getProcessor(ctx, "cs1", "disp1", "view1", OCIO::TRANSFORM_DIR_FORWARD).get(),
+                         cfg->getProcessor(ctx, "cs1", "disp1", "view1", OCIO::TRANSFORM_DIR_FORWARD).get());
+
+        OCIO_CHECK_EQUAL(cfg->getProcessor(ctx, "cs1", "disp1", "view2", OCIO::TRANSFORM_DIR_FORWARD).get(),
+                         cfg->getProcessor(ctx, "cs1", "disp1", "view2", OCIO::TRANSFORM_DIR_FORWARD).get());
+
+        OCIO_CHECK_EQUAL(cfg->getProcessor(ctx, "cs1", "disp1", "view1", OCIO::TRANSFORM_DIR_FORWARD).get(),
+                         cfg->getProcessor("cs1", "disp1", "view1", OCIO::TRANSFORM_DIR_FORWARD).get());
+
+        // Add an unused context variable in the context. The cache is still used.
+        ctx->setStringVar("ENV", "xxx");
+
+        OCIO_CHECK_EQUAL(cfg->getProcessor(ctx, "cs1", "cs2").get(),
+                         cfg->getProcessor(ctx, "cs1", "cs2").get());
+
+        OCIO_CHECK_EQUAL(cfg->getProcessor(ctx, "cs1", "cs3").get(),
+                         cfg->getProcessor(ctx, "cs1", "cs3").get());
+
+        OCIO_CHECK_EQUAL(cfg->getProcessor(ctx, "cs1", "cs2").get(),
+                         cfg->getProcessor("cs1", "cs2").get());
+
+
+        OCIO_CHECK_EQUAL(cfg->getProcessor(ctx, "cs1", "disp1", "view1", OCIO::TRANSFORM_DIR_FORWARD).get(),
+                         cfg->getProcessor(ctx, "cs1", "disp1", "view1", OCIO::TRANSFORM_DIR_FORWARD).get());
+
+        OCIO_CHECK_EQUAL(cfg->getProcessor(ctx, "cs1", "disp1", "view2", OCIO::TRANSFORM_DIR_FORWARD).get(),
+                         cfg->getProcessor(ctx, "cs1", "disp1", "view2", OCIO::TRANSFORM_DIR_FORWARD).get());
+
+        OCIO_CHECK_EQUAL(cfg->getProcessor(ctx, "cs1", "disp1", "view1", OCIO::TRANSFORM_DIR_FORWARD).get(),
+                         cfg->getProcessor("cs1", "disp1", "view1", OCIO::TRANSFORM_DIR_FORWARD).get());
+    }
+
+    // Case 2 - Context variables used anywhere but in the search_path.
+
+    {
+        static const std::string CONFIG = 
+            "ocio_profile_version: 2\n"
+            "\n"
+            "environment: {FILE: exposure_contrast_linear.ctf }\n"
+            "\n"
+            "search_path: " + OCIO::GetTestFilesDir() + "\n"
+            "\n"
+            "roles:\n"
+            "  default: cs1\n"
+            "\n"
+            "displays:\n"
+            "  disp1:\n"
+            "    - !<View> {name: view1, colorspace: cs2}\n"
+            "\n"
+            "colorspaces:\n"
+            "  - !<ColorSpace>\n"
+            "    name: cs1\n"
+            "\n"
+            "  - !<ColorSpace>\n"
+            "    name: cs2\n"
+            "    from_reference: !<FileTransform> {src: $FILE}\n";
+
+        std::istringstream iss;
+        iss.str(CONFIG);
+
+        OCIO::ConfigRcPtr cfg;
+        OCIO_CHECK_NO_THROW(cfg = OCIO::Config::CreateFromStream(iss)->createEditableCopy());
+        OCIO_CHECK_NO_THROW(cfg->validate());
+
+        OCIO_CHECK_EQUAL(cfg->getProcessor("cs1", "cs2").get(),
+                         cfg->getProcessor("cs1", "cs2").get());
+
+        OCIO_CHECK_EQUAL(cfg->getProcessor("cs1", "disp1", "view1", OCIO::TRANSFORM_DIR_FORWARD).get(),
+                         cfg->getProcessor("cs1", "disp1", "view1", OCIO::TRANSFORM_DIR_FORWARD).get());
+
+        // Add an unused context variable in the context. The cache is still used.
+        OCIO::ContextRcPtr ctx = cfg->getCurrentContext()->createEditableCopy();
+        ctx->setStringVar("ENV", "xxx");
+
+        OCIO_CHECK_EQUAL(cfg->getProcessor(ctx, "cs1", "cs2").get(),
+                         cfg->getProcessor(ctx, "cs1", "cs2").get());
+
+        OCIO_CHECK_EQUAL(cfg->getProcessor(ctx, "cs1", "cs2").get(),
+                         cfg->getProcessor("cs1", "cs2").get());
+
+
+        OCIO_CHECK_EQUAL(cfg->getProcessor(ctx, "cs1", "disp1", "view1", OCIO::TRANSFORM_DIR_FORWARD).get(),
+                         cfg->getProcessor(ctx, "cs1", "disp1", "view1", OCIO::TRANSFORM_DIR_FORWARD).get());
+
+        OCIO_CHECK_EQUAL(cfg->getProcessor(ctx, "cs1", "disp1", "view1", OCIO::TRANSFORM_DIR_FORWARD).get(),
+                         cfg->getProcessor("cs1", "disp1", "view1", OCIO::TRANSFORM_DIR_FORWARD).get());
+
+        // Change the value of the used context variable. The original cached value is *not* used.
+        ctx->setStringVar("FILE", "exposure_contrast_log.ctf");
+
+        OCIO_CHECK_EQUAL(cfg->getProcessor(ctx, "cs1", "cs2").get(),
+                         cfg->getProcessor(ctx, "cs1", "cs2").get());
+
+        OCIO_CHECK_EQUAL(cfg->getProcessor("cs1", "cs2").get(),
+                         cfg->getProcessor("cs1", "cs2").get());
+
+        OCIO_CHECK_NE(cfg->getProcessor(ctx, "cs1", "cs2").get(),
+                      cfg->getProcessor("cs1", "cs2").get());
+
+
+        OCIO_CHECK_EQUAL(cfg->getProcessor(ctx, "cs1", "disp1", "view1", OCIO::TRANSFORM_DIR_FORWARD).get(),
+                         cfg->getProcessor(ctx, "cs1", "disp1", "view1", OCIO::TRANSFORM_DIR_FORWARD).get());
+
+        OCIO_CHECK_EQUAL(cfg->getProcessor("cs1", "disp1", "view1", OCIO::TRANSFORM_DIR_FORWARD).get(),
+                         cfg->getProcessor("cs1", "disp1", "view1", OCIO::TRANSFORM_DIR_FORWARD).get());
+
+        OCIO_CHECK_NE(cfg->getProcessor(ctx, "cs1", "disp1", "view1", OCIO::TRANSFORM_DIR_FORWARD).get(),
+                      cfg->getProcessor("cs1", "disp1", "view1", OCIO::TRANSFORM_DIR_FORWARD).get());
+    }
+
+    // Helper to disable the fallback mechanism.
+    struct DisableFallback
+    {
+        DisableFallback()  { OCIO::SetEnvVariable(OCIO::OCIO_DISABLE_CACHE_FALLBACK ,"1"); }
+        ~DisableFallback() { OCIO::UnsetEnvVariable(OCIO::OCIO_DISABLE_CACHE_FALLBACK);   }
+    };
+
+    // Case 3 - Context variables used on the search_path, but that variable is unchanged.
+
+    {
+        static const std::string CONFIG = 
+            "ocio_profile_version: 2\n"
+            "\n"
+            "environment:\n"
+            "  SHOW: " + OCIO::GetTestFilesDir() + "\n"
+            "  SHOT: exposure_contrast_linear.ctf\n"
+            "\n"
+            "search_path: $SHOW\n"
+            "\n"
+            "roles:\n"
+            "  default: cs1\n"
+            "\n"
+            "displays:\n"
+            "  disp1:\n"
+            "    - !<View> {name: view1, colorspace: cs2}\n"
+            "\n"
+            "colorspaces:\n"
+            "  - !<ColorSpace>\n"
+            "    name: cs1\n"
+            "\n"
+            "  - !<ColorSpace>\n"
+            "    name: cs2\n"
+            "    from_reference: !<FileTransform> {src: exposure_contrast_linear.ctf}\n"
+            "\n"
+            "  - !<ColorSpace>\n"
+            "    name: cs3\n"
+            "    from_reference: !<FileTransform> {src: $SHOT}\n";
+
+        {
+            std::istringstream iss;
+            iss.str(CONFIG);
+
+            OCIO::ConfigRcPtr cfg;
+            OCIO_CHECK_NO_THROW(cfg = OCIO::Config::CreateFromStream(iss)->createEditableCopy());
+            OCIO_CHECK_NO_THROW(cfg->validate());
+
+            // Change $SHOT to lut1d_green.ctf but $SHOT is not used.
+            OCIO::ContextRcPtr ctx = cfg->getCurrentContext()->createEditableCopy();
+            ctx->setStringVar("SHOT", "lut1d_green.ctf");
+
+            // Here is the important validation: same processor because $SHOT is not used.
+            OCIO_CHECK_EQUAL(cfg->getProcessor("cs1", "cs2").get(),
+                             cfg->getProcessor(ctx, "cs1", "cs2").get());
+
+
+            // The cache mechanism is also looking for identical processors (i.e. diff. contexts
+            // or color spaces but producing the same color transformation). The following check is
+            // validating the behavior.
+
+            // Note that using this fall-back mechanism in the cache is much slower than if the
+            // cache is able to find a hit based on the arguments alone since it much calculate a
+            // cacheID of the two processors.  The ocioperf tool may be used to measure cache speed
+            // in various situations.
+
+            // Same processor because $SHOT is equal to 'exposure_contrast_linear.ctf'.
+            OCIO_CHECK_EQUAL(cfg->getProcessor("cs1", "cs2").get(),
+                             cfg->getProcessor("cs1", "cs3").get());
+        }
+
+        {
+            // If the fallback is disabled (using the env. variable OCIO_DISABLE_CACHE_FALLBACK)
+            // then the processor cache returns different instances as the cache keys are different.
+
+            DisableFallback guard;
+
+            std::istringstream iss;
+            iss.str(CONFIG);
+
+            OCIO::ConfigRcPtr cfg;
+            OCIO_CHECK_NO_THROW(cfg = OCIO::Config::CreateFromStream(iss)->createEditableCopy());
+            OCIO_CHECK_NO_THROW(cfg->validate());
+
+            // Fail to find the identical processor because the fallback is now disabled i.e. but
+            // it succeeds when fallback is enabled as demonstrated above.
+            OCIO_CHECK_NE(cfg->getProcessor("cs1", "cs2").get(), 
+                          cfg->getProcessor("cs1", "cs3").get());
+
+            // Change $SHOT to lut1d_green.ctf but $SHOT is not used.
+            OCIO::ContextRcPtr ctx = cfg->getCurrentContext()->createEditableCopy();
+            ctx->setStringVar("SHOT", "lut1d_green.ctf");
+
+            // Here is the important validation: As the fallback is not used for the computation
+            // of the cs1 to cs2 color transformation the same processor is still found.
+            OCIO_CHECK_EQUAL(cfg->getProcessor("cs1", "cs2").get(),
+                             cfg->getProcessor(ctx, "cs1", "cs2").get());
+        }
+    }
+
+    // Case 4 - Context vars used in the search_path and they are changing per shot, but no
+    // FileTransforms are used.
+
+    {
+        static const std::string CONFIG = 
+            "ocio_profile_version: 2\n"
+            "\n"
+            "environment:\n"
+            "  SHOW: " + OCIO::GetTestFilesDir() + "\n"
+            "\n"
+            "search_path: $SHOW\n"
+            "\n"
+            "roles:\n"
+            "  default: cs1\n"
+            "\n"
+            "displays:\n"
+            "  disp1:\n"
+            "    - !<View> {name: view1, colorspace: cs2}\n"
+            "\n"
+            "colorspaces:\n"
+            "  - !<ColorSpace>\n"
+            "    name: cs1\n"
+            "\n"
+            "  - !<ColorSpace>\n"
+            "    name: cs2\n"
+            "    from_reference: !<MatrixTransform> {offset: [0.11, 0.12, 0.13, 0]}\n";
+
+        {
+            std::istringstream iss;
+            iss.str(CONFIG);
+
+            OCIO::ConfigRcPtr cfg;
+            OCIO_CHECK_NO_THROW(cfg = OCIO::Config::CreateFromStream(iss)->createEditableCopy());
+            OCIO_CHECK_NO_THROW(cfg->validate());
+
+            OCIO::ContextRcPtr ctx = cfg->getCurrentContext()->createEditableCopy();
+            ctx->setStringVar("SHOW", "/some/arbitrary/path");
+
+            // As the context does not impact the color transformation computation use two different
+            // context instances i.e. context keys are then different.
+            OCIO_CHECK_NE(cfg->getCurrentContext()->getCacheID(), ctx->getCacheID());
+
+            // Here is the important validation: same processor because $SHOW is not used.
+            OCIO_CHECK_EQUAL(cfg->getProcessor("cs1", "cs2").get(),
+                             cfg->getProcessor(ctx, "cs1", "cs2").get());
+        }
+
+        {
+            // Demonstrate that the fallback is not used here i.e. context variables are not
+            // impacting the cache.
+
+            DisableFallback guard;
+
+            std::istringstream iss;
+            iss.str(CONFIG);
+
+            OCIO::ConfigRcPtr cfg;
+            OCIO_CHECK_NO_THROW(cfg = OCIO::Config::CreateFromStream(iss)->createEditableCopy());
+            OCIO_CHECK_NO_THROW(cfg->validate());
+
+            OCIO::ContextRcPtr ctx = cfg->getCurrentContext()->createEditableCopy();
+            ctx->setStringVar("SHOW", "/some/arbitrary/path");
+
+            // Here is the demonstration that the fallback is not used i.e. disabled but the right
+            // processor is still found.
+            OCIO_CHECK_EQUAL(cfg->getProcessor("cs1", "cs2").get(),
+                             cfg->getProcessor(ctx, "cs1", "cs2").get());
+        }
+    }
+
+    // Case 5 - Context vars in the search_path and they are changing but the changed vars are not
+    // used to resolve the file transform.
+
+    // TODO: The collect of context variables currently lacks the heuristic to find which search_path
+    // is effectively used so, as soon as one path (from the search_paths) is used all the paths are
+    // then collected changing the cache key computation (even if the extra search_paths are useless).
+    // To mitigate that limitation the fallback is then used to find if an existing identical
+    // processor instance already exists.  
+
+    {
+        static const std::string CONFIG = 
+            "ocio_profile_version: 2\n"
+            "\n"
+            "environment:\n"
+            "  TRANSFORM_DIR: " + OCIO::GetTestFilesDir() + "\n"
+            "\n"
+            "search_path:\n"
+            "  - /bogus/unknown/path\n"
+            "  - $TRANSFORM_DIR\n"
+            "  - $SHOT\n"
+            "\n"
+            "roles:\n"
+            "  default: cs1\n"
+            "\n"
+            "displays:\n"
+            "  disp1:\n"
+            "    - !<View> {name: view1, colorspace: cs2}\n"
+            "\n"
+            "colorspaces:\n"
+            "  - !<ColorSpace>\n"
+            "    name: cs1\n"
+            "\n"
+            "  - !<ColorSpace>\n"
+            "    name: cs2\n"
+            "    from_reference: !<FileTransform> {src: exposure_contrast_linear.ctf}\n";
+
+        std::istringstream iss;
+        iss.str(CONFIG);
+
+        OCIO::ConfigRcPtr cfg;
+        OCIO_CHECK_NO_THROW(cfg = OCIO::Config::CreateFromStream(iss)->createEditableCopy());
+        OCIO_CHECK_NO_THROW(cfg->validate());
+
+        OCIO::ContextRcPtr ctx1 = cfg->getCurrentContext()->createEditableCopy();
+        ctx1->setStringVar("SHOT", "/unknow/path/for_path_1");
+
+        OCIO::ContextRcPtr ctx2 = cfg->getCurrentContext()->createEditableCopy();
+        ctx2->setStringVar("SHOT", "/unknow/path/for_path_2");
+
+        // Even if the two context instances are different the changed context variable is useless
+        // so the same processor instance is returned. 
+        OCIO_CHECK_EQUAL(cfg->getProcessor(ctx1, "cs1", "cs2").get(),
+                         cfg->getProcessor(ctx2, "cs1", "cs2").get());
+
+        {
+            // If the fallback is disabled (using the env. variable OCIO_DISABLE_CACHE_FALLBACK)
+            // then the processor cache returns different instances because of the search_path
+            // heuristic limitation. It demonstrates the fallback is needed to mitigate the heuristic
+            // limitation. As soon as the heuristic is enhanced, the following test must return
+            // the same processor instance.
+
+            DisableFallback guard;
+
+            std::istringstream iss;
+            iss.str(CONFIG);
+
+            OCIO::ConfigRcPtr cfg;
+            OCIO_CHECK_NO_THROW(cfg = OCIO::Config::CreateFromStream(iss)->createEditableCopy());
+            OCIO_CHECK_NO_THROW(cfg->validate());
+
+            OCIO_CHECK_NE(cfg->getProcessor(ctx1, "cs1", "cs2").get(), 
+                          cfg->getProcessor(ctx2, "cs1", "cs2").get());
+        }
+    }
+
+    // Case 6 - Context vars in the search_path, the vars on the path to the file do change, but the
+    // resulting file is the same.
+
+    {
+        static const std::string CONFIG = 
+            "ocio_profile_version: 2\n"
+            "\n"
+            "environment:\n"
+            "  PATH_1: " + OCIO::GetTestFilesDir() + "\n"
+            "  PATH_2: " + OCIO::GetTestFilesDir() + "\n"
+            "\n"
+            "search_path:\n"
+            "  - $PATH_1\n"
+            "  - $PATH_2\n"
+            "\n"
+            "roles:\n"
+            "  default: cs1\n"
+            "\n"
+            "displays:\n"
+            "  disp1:\n"
+            "    - !<View> {name: view1, colorspace: cs2}\n"
+            "\n"
+            "colorspaces:\n"
+            "  - !<ColorSpace>\n"
+            "    name: cs1\n"
+            "\n"
+            "  - !<ColorSpace>\n"
+            "    name: cs2\n"
+            "    from_reference: !<FileTransform> {src: exposure_contrast_linear.ctf}\n";
+
+        std::istringstream iss;
+        iss.str(CONFIG);
+
+        OCIO::ConfigRcPtr cfg;
+        OCIO_CHECK_NO_THROW(cfg = OCIO::Config::CreateFromStream(iss)->createEditableCopy());
+        OCIO_CHECK_NO_THROW(cfg->validate());
+
+        OCIO::ContextRcPtr ctx1 = cfg->getCurrentContext()->createEditableCopy();
+        ctx1->setStringVar("PATH_1", "/unknow/path/for_path_1");
+
+        OCIO::ContextRcPtr ctx2 = cfg->getCurrentContext()->createEditableCopy();
+        ctx2->setStringVar("PATH_2", "/unknow/path/for_path_2");
+
+        // It demonstrates that the cache keys will be different.
+        OCIO_CHECK_NE(std::string(ctx1->getCacheID()), std::string(ctx2->getCacheID()));
+
+        // Even if a different context variable is used the color transform remains identical so 
+        // the processor cache returns the same processor instance because of the fallback. 
+        OCIO_CHECK_EQUAL(cfg->getProcessor(ctx1, "cs1", "cs2").get(), // FileTransform uses PATH_2
+                         cfg->getProcessor(ctx2, "cs1", "cs2").get());// FileTransform uses PATH_1
+
+        {
+            // If the fallback is disabled (using the env. variable OCIO_DISABLE_CACHE_FALLBACK)
+            // then the processor cache returns different instances as the cache keys are different
+            // i.e. cs1 needs PATH_2 while cs2 needs PATH_1. It demonstrates that only the fallback
+            // can find the processor instance.
+
+            DisableFallback guard;
+
+            std::istringstream iss;
+            iss.str(CONFIG);
+
+            OCIO::ConfigRcPtr cfg;
+            OCIO_CHECK_NO_THROW(cfg = OCIO::Config::CreateFromStream(iss)->createEditableCopy());
+            OCIO_CHECK_NO_THROW(cfg->validate());
+
+            // The processor cache without the fallback fails to find the identical processor.
+            OCIO_CHECK_NE(cfg->getProcessor(ctx1, "cs1", "cs2").get(), 
+                          cfg->getProcessor(ctx2, "cs1", "cs2").get());
+        }
+    }
+}
+
 OCIO_ADD_TEST(Config, virtual_display)
 {
     // Test the virtual display instantiation.
 
     static constexpr char CONFIG[]{ R"(ocio_profile_version: 2
 
+environment:
+  {}
 search_path: ""
 strictparsing: true
 luma: [0.2126, 0.7152, 0.0722]
@@ -5465,7 +6899,7 @@ colorspaces:
     // throws for headless machines and Linux.
 
     static const std::string ICCProfileFilepath
-        = std::string(OCIO::getTestFilesDir()) + "/icc-test-1.icc";
+        = std::string(OCIO::GetTestFilesDir()) + "/icc-test-1.icc";
 
 
 #if !defined(OCIO_HEADLESS_ENABLED) && ( defined(__APPLE__) || defined(_WIN32) )
@@ -5804,7 +7238,7 @@ colorspaces:
     OCIO_CHECK_NO_THROW(cfg->addVirtualDisplayView("Raw1", nullptr, "raw1", nullptr, nullptr, nullptr));
     OCIO_CHECK_THROW_WHAT(cfg->validate(),
                           OCIO::Exception,
-                          "Display 'virtual_display' has a view 'Raw1' refers to a color space,"
+                          "Display 'virtual_display' has a view 'Raw1' that refers to a color space,"
                           " 'raw1', which is not defined.");
 
     cfg->removeVirtualDisplayView("Raw1");

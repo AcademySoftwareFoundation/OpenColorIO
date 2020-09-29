@@ -20,8 +20,12 @@ if os.name == 'nt':
         opencolorio_dir = os.path.join(opencolorio_dir, sys.argv[3])
         pyopencolorio_dir = os.path.join(pyopencolorio_dir, sys.argv[3])
 
-    os.environ['PATH'] = '{0};{1}'.format(
-        opencolorio_dir, os.getenv('PATH', ''))
+    # Python 3.8+ does no longer look for DLLs in PATH environment variable
+    if hasattr(os, 'add_dll_directory'):
+        os.add_dll_directory(opencolorio_dir)
+    else:
+        os.environ['PATH'] = '{0};{1}'.format(
+            opencolorio_dir, os.getenv('PATH', ''))
 elif sys.platform == 'darwin':
     # On OSX we must add the main library location to DYLD_LIBRARY_PATH
     os.environ['DYLD_LIBRARY_PATH'] = '{0}:{1}'.format(
@@ -44,6 +48,7 @@ import FixedFunctionTransformTest
 import GroupTransformTest
 import LogTransformTest
 import LookTest
+import OpenColorIOTest
 import ViewingRulesTest
 import GradingDataTest
 import GradingPrimaryTransformTest
@@ -83,6 +88,7 @@ def suite():
     suite.addTest(loader.loadTestsFromModule(GroupTransformTest))
     suite.addTest(loader.loadTestsFromModule(LogTransformTest))
     suite.addTest(loader.loadTestsFromModule(LookTest))
+    suite.addTest(loader.loadTestsFromModule(OpenColorIOTest))
     suite.addTest(loader.loadTestsFromModule(ViewingRulesTest))
     suite.addTest(loader.loadTestsFromModule(GradingDataTest))
     suite.addTest(loader.loadTestsFromModule(GradingPrimaryTransformTest))

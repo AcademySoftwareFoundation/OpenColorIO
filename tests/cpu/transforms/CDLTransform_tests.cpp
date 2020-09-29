@@ -39,7 +39,7 @@ OCIO_ADD_TEST(CDLTransform, equality)
 
 OCIO_ADD_TEST(CDLTransform, create_from_cc_file)
 {
-    const std::string filePath(std::string(OCIO::getTestFilesDir()) + "/cdl_test1.cc");
+    const std::string filePath(OCIO::GetTestFilesDir() + "/cdl_test1.cc");
     OCIO::CDLTransformRcPtr transform = OCIO::CDLTransform::CreateFromFile(filePath.c_str(), nullptr);
 
     {
@@ -110,7 +110,7 @@ OCIO_ADD_TEST(CDLTransform, create_from_cc_file)
 
 OCIO_ADD_TEST(CDLTransform, create_from_ccc_file)
 {
-    const std::string filePath(std::string(OCIO::getTestFilesDir()) + "/cdl_test1.ccc");
+    const std::string filePath(OCIO::GetTestFilesDir() + "/cdl_test1.ccc");
     {
         // Using ID.
         auto transform = OCIO::CDLTransform::CreateFromFile(filePath.c_str(), "cc0003");
@@ -175,7 +175,7 @@ OCIO_ADD_TEST(CDLTransform, create_from_cdl_file)
     // this CDL file (i.e. containing a ColorDecisionList) correctly loads
     // using a CDLTransform.
 
-    const std::string filePath(std::string(OCIO::getTestFilesDir()) + "/cdl_test1.cdl");
+    const std::string filePath(OCIO::GetTestFilesDir() + "/cdl_test1.cdl");
 
     OCIO::CDLTransformRcPtr transform;
 
@@ -186,7 +186,7 @@ OCIO_ADD_TEST(CDLTransform, create_from_cdl_file)
 
 OCIO_ADD_TEST(CDLTransform, create_from_ccc_file_failure)
 {
-    const std::string filePath(std::string(OCIO::getTestFilesDir()) + "/cdl_test1.ccc");
+    const std::string filePath(OCIO::GetTestFilesDir() + "/cdl_test1.ccc");
     {
         // Using ID.
         OCIO_CHECK_THROW_WHAT(

@@ -103,14 +103,20 @@ public:
 
 ///////////////////////////////////////////////////////////////////////////
 // Global
+// ******
 
 /**
- * OpenColorIO, during normal usage, tends to cache certain information
- * (such as the contents of LUTs on disk, intermediate results, etc.).
- * Calling this function will flush all such information.
+ * During normal usage, OpenColorIO tends to cache certain global information (such
+ * as the contents of LUTs on disk, intermediate results, etc.). Calling this function will flush
+ * all such information. The global information are related to LUT file identifications, loaded LUT
+ * file content and CDL transforms from loaded CDL files.
+ *
  * Under normal usage, this is not necessary, but it can be helpful in particular instances,
- * such as designing OCIO profiles, and wanting to re-read luts without
- * restarting.
+ * such as designing OCIO profiles, and wanting to re-read luts without restarting.
+ *
+ * \note The method does not apply to instance specific caches such as the processor cache in a
+ * config instance or the GPU and CPU processor caches in a processor instance. Here deleting the
+ * instance flushes the cache.
  */
 extern OCIOEXPORT void ClearAllCaches();
 
@@ -155,18 +161,21 @@ extern OCIOEXPORT void ResetToDefaultLoggingFunction();
 /// Log a message using the library logging function.
 extern OCIOEXPORT void LogMessage(LoggingLevel level, const char * message);
 
-/**
- * \brief Call modifies the string obtained from a previous call
- * as the method always uses the same memory buffer.
- * 
- * \warning
- *     This method is not thread safe.
+//
+// Note that the following environment variable access methods are not thread safe.
+//
+
+/** 
+ * Another call modifies the string obtained from a previous call as the method always uses the
+ * same memory buffer.
  */
 extern OCIOEXPORT const char * GetEnvVariable(const char * name);
 /// \warning This method is not thread safe.
 extern OCIOEXPORT void SetEnvVariable(const char * name, const char * value);
 /// \warning This method is not thread safe.
 extern OCIOEXPORT void UnsetEnvVariable(const char * name);
+//!cpp:function::
+extern OCIOEXPORT bool IsEnvVariablePresent(const char * name);
 
 ///////////////////////////////////////////////////////////////////////////
 // Config
@@ -315,14 +324,17 @@ public:
 
     ConstContextRcPtr getCurrentContext() const;
 
+    /// Add (or update) an environment variable with a default value.
+    /// But it removes it if the default value is null.
     void addEnvironmentVar(const char * name, const char * defaultValue);
     int getNumEnvironmentVars() const;
     const char * getEnvironmentVarNameByIndex(int index) const;
     const char * getEnvironmentVarDefault(const char * name) const;
     void clearEnvironmentVars();
-    void setEnvironmentMode(EnvironmentMode mode);
-    EnvironmentMode getEnvironmentMode() const;
-    void loadEnvironment();
+
+    void setEnvironmentMode(EnvironmentMode mode) noexcept;
+    EnvironmentMode getEnvironmentMode() const noexcept;
+    void loadEnvironment() noexcept;
 
     const char * getSearchPath() const;
     /**
@@ -546,7 +558,7 @@ public:
 
     // TODO: Move to .rst 
     // The following methods only manipulate active displays and views. Active
-    // displays and views are defined from an envvar or from the config file.
+    // displays and views are defined from an env. variable or from the config file.
     //
     // Looks is a potentially comma (or colon) delimited list of lookNames,
     // Where +/- prefixes are optionally allowed to denote forward/inverse
@@ -947,10 +959,15 @@ public:
     // Display/View Registration section above for more info on the display and view arguments.
 
     ConstProcessorRcPtr getProcessor(const char * srcColorSpaceName,
-                                     const char * display, const char * view) const;
+                                     const char * display,
+                                     const char * view,
+                                     TransformDirection direction) const;
+    //!cpp:function::
     ConstProcessorRcPtr getProcessor(const ConstContextRcPtr & context,
                                      const char * srcColorSpaceName,
-                                     const char * display, const char * view) const;
+                                     const char * display,
+                                     const char * view,
+                                     TransformDirection direction) const;
 
     /**
      * \brief Get the processor for the specified transform.
@@ -1009,6 +1026,11 @@ public:
 
     // Do not use (needed only for pybind11).
     ~Config();
+
+    //!cpp:function:: Control the caching of processors in the config instance.  By default, caching
+    // is on.  The flags allow turning caching off entirely or only turning it off if dynamic
+    // properties are being used by the processor.
+    void setProcessorCacheFlags(ProcessorCacheFlags flags) noexcept;
 
 private:
     Config();
@@ -1626,6 +1648,7 @@ public:
     /// Clear all color spaces.
     void clearColorSpaces();
 
+    //!cpp:function:: Do not use (needed only for pybind11).
     ~ColorSpaceSet();
 
 private:
@@ -1717,13 +1740,15 @@ public:
     const char * getDescription() const;
     void setDescription(const char * description);
 
+    //!cpp:function::
+    Look(const Look &) = delete;
+    //!cpp:function::
+    Look& operator= (const Look &) = delete;
+    //!cpp:function:: Do not use (needed only for pybind11).
     ~Look();
 
 private:
     Look();
-
-    Look(const Look &);
-    Look& operator= (const Look &);
 
     static void deleter(Look* c);
 
@@ -1801,8 +1826,10 @@ public:
 
     ViewTransform(const ViewTransform &) = delete;
     ViewTransform & operator= (const ViewTransform &) = delete;
+
+    /// Do not use (needed only for pybind11).
     ~ViewTransform();
-    
+
 private:
     ViewTransform();
     explicit ViewTransform(ReferenceSpaceType referenceSpace);
@@ -1905,8 +1932,10 @@ public:
      * instance does not affect the corresponding GPU processor instance.
      */
     DynamicPropertyRcPtr getDynamicProperty(DynamicPropertyType type) const;
-    /// Can be used before calling getDynamicProperty.
-    bool hasDynamicProperty(DynamicPropertyType type) const;
+    /// True if at least one dynamic property of that type exists.
+    bool hasDynamicProperty(DynamicPropertyType type) const noexcept;
+    /// True if at least one dynamic property of any type exists and is dynamic.
+    bool isDynamic() const noexcept;
 
     /**
      * Run the optimizer on a Processor to create a new :cpp:class:`Processor`.
@@ -1970,13 +1999,15 @@ public:
                                                     BitDepth outBitDepth,
                                                     OptimizationFlags oFlags) const;
 
+    //!cpp:function::
+    Processor(const Processor &) = delete;
+    //!cpp:function::
+    Processor & operator= (const Processor &) = delete;
+    //!cpp:function:: Do not use (needed only for pybind11).
     ~Processor();
 
 private:
     Processor();
-
-    Processor(const Processor &);
-    Processor& operator= (const Processor &);
 
     static ProcessorRcPtr Create();
 
@@ -2045,13 +2076,15 @@ public:
     void applyRGB(float * pixel) const;
     void applyRGBA(float * pixel) const;
 
+    //!cpp:function::
+    CPUProcessor(const CPUProcessor &) = delete;
+    //!cpp:function::
+    CPUProcessor& operator= (const CPUProcessor &) = delete;
+    //!cpp:function:: Do not use (needed only for pybind11).
     ~CPUProcessor();
 
 private:
     CPUProcessor();
-
-    CPUProcessor(const CPUProcessor &);
-    CPUProcessor& operator= (const CPUProcessor &);
 
     static void deleter(CPUProcessor * c);
 
@@ -2082,13 +2115,15 @@ public:
     /// Extract the shader information using a custom \ref GpuShaderCreator class.
     void extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const;
     
+    //!cpp:function::
+    GPUProcessor(const GPUProcessor &) = delete;
+    //!cpp:function::
+    GPUProcessor& operator= (const GPUProcessor &) = delete;
+    //!cpp:function:: Do not use (needed only for pybind11).
     ~GPUProcessor();
 
 private:
     GPUProcessor();
-
-    GPUProcessor(const GPUProcessor &);
-    GPUProcessor& operator= (const GPUProcessor &);
 
     static void deleter(GPUProcessor * c);
 
@@ -2122,12 +2157,15 @@ public:
     void addFile(const char * fname);
     void addLook(const char * look);
 
+    //!cpp:function::
+    ProcessorMetadata(const ProcessorMetadata &) = delete;
+    //!cpp:function::
+    ProcessorMetadata& operator= (const ProcessorMetadata &) = delete;
+    //!cpp:function:: Do not use (needed only for pybind11).
     ~ProcessorMetadata();
 
 private:
     ProcessorMetadata();
-    ProcessorMetadata(const ProcessorMetadata &);
-    ProcessorMetadata& operator= (const ProcessorMetadata &);
 
     static void deleter(ProcessorMetadata* c);
 
@@ -2250,13 +2288,15 @@ public:
      */
     static const char * getFormatExtensionByIndex(int index);
 
+    //!cpp:function::
+    Baker(const Baker &) = delete;
+    //!cpp:function::
+    Baker& operator= (const Baker &) = delete;
+    //!cpp:function:: Do not use (needed only for pybind11).
     ~Baker();
 
 private:
     Baker();
-
-    Baker(const Baker &);
-    Baker& operator= (const Baker &);
 
     static void deleter(Baker* o);
 
@@ -2552,12 +2592,14 @@ public:
     typedef std::function<double()> DoubleGetter;
     /// Function returning a bool, used by uniforms.
     typedef std::function<bool()> BoolGetter;
+    /// Functions returning a Float3, used by uniforms.
+    typedef std::function<const Float3 &()> Float3Getter;
     /// Function returning an int, used by uniforms.
     typedef std::function<int()> SizeGetter;
     /// Function returning a float *, used by uniforms.
-    typedef std::function<const float *()> FloatArrayGetter;
+    typedef std::function<const float *()> VectorFloatGetter;
     /// Function returning an int *, used by uniforms.
-    typedef std::function<const int *()> IntArrayGetter;
+    typedef std::function<const int *()> VectorIntGetter;
 
     virtual bool addUniform(const char * name,
                             const DoubleGetter & getDouble) = 0;
@@ -2566,12 +2608,15 @@ public:
                             const BoolGetter & getBool) = 0;
 
     virtual bool addUniform(const char * name,
-                            const SizeGetter & getSize,
-                            const FloatArrayGetter & getFloatArray) = 0;
+                            const Float3Getter & getFloat3) = 0;
 
     virtual bool addUniform(const char * name,
                             const SizeGetter & getSize,
-                            const IntArrayGetter & getInt2Array) = 0;
+                            const VectorFloatGetter & getVectorFloat) = 0;
+
+    virtual bool addUniform(const char * name,
+                            const SizeGetter & getSize,
+                            const VectorIntGetter & getVectorInt) = 0;
 
     /// Adds the property (used internally).
     void addDynamicProperty(DynamicPropertyRcPtr & prop);
@@ -2595,7 +2640,6 @@ public:
 
     virtual void addTexture(const char * textureName,
                             const char * samplerName,
-                            const char * uid,
                             unsigned width, unsigned height,
                             TextureType channel,
                             Interpolation interpolation,
@@ -2603,7 +2647,6 @@ public:
 
     virtual void add3DTexture(const char * textureName,
                               const char * samplerName,
-                              const char * uid,
                               unsigned edgelen,
                               Interpolation interpolation,
                               const float * values) = 0;
@@ -2676,12 +2719,14 @@ public:
 
     virtual void finalize();
     
+    GpuShaderCreator(const GpuShaderCreator &) = delete;
+    GpuShaderCreator & operator= (const GpuShaderCreator &) = delete;
+
+    /// Do not use (needed only for pybind11).
     virtual ~GpuShaderCreator();
 
 protected:
     GpuShaderCreator();
-    GpuShaderCreator(const GpuShaderCreator &) = delete;
-    GpuShaderCreator & operator= (const GpuShaderCreator &) = delete;
 
     class Impl;
     Impl * m_impl;
@@ -2862,39 +2907,42 @@ public:
     GpuShaderCreatorRcPtr clone() const override;
 
     /**
-     * Used to retrieve uniform information. UniformDataType m_type indicates the type of uniform
+     * Used to retrieve uniform information. UniformData m_type indicates the type of uniform
      * and what member of the structure should be used:
      * * UNIFORM_DOUBLE: m_getDouble.
      * * UNIFORM_BOOL: m_getBool.
-     * * UNIFORM_ARRAY_FLOAT: m_arrayFloat.
-     * * UNIFORM_ARRAY_INT2: m_arrayInt2.
+     * * UNIFORM_FLOAT3: m_getFloat3.
+     * * UNIFORM_VECTOR_FLOAT: m_vectorFloat.
+     * * UNIFORM_VECTOR_INT: m_vectorInt.
      */
     struct UniformData
     {
-        const char * m_name{ nullptr };
+        UniformData() = default;
+        UniformData(const UniformData & data) = default;
         UniformDataType m_type{ UNIFORM_UNKNOWN };
         DoubleGetter m_getDouble{};
         BoolGetter m_getBool{};
-        struct ArrayFloat
+        Float3Getter m_getFloat3{};
+        struct VectorFloat
         {
             SizeGetter m_getSize{};
-            FloatArrayGetter m_getArray{};
-        } m_arrayFloat{};
-        struct ArrayInt2
+            VectorFloatGetter m_getVector{};
+        } m_vectorFloat{};
+        struct VectorInt
         {
             SizeGetter m_getSize{};
-            IntArrayGetter m_getArray{};
-        } m_arrayInt2{};
+            VectorIntGetter m_getVector{};
+        } m_vectorInt{};
     };
     virtual unsigned getNumUniforms() const noexcept = 0;
-    virtual void getUniform(unsigned index, UniformData & data) const = 0;
+    /// Returns name of uniform and data as parameter.
+    virtual const char * getUniform(unsigned index, UniformData & data) const = 0;
 
     // 1D lut related methods
     virtual unsigned getNumTextures() const noexcept = 0;
     virtual void getTexture(unsigned index,
                             const char *& textureName,
                             const char *& samplerName,
-                            const char *& uid,
                             unsigned & width,
                             unsigned & height,
                             TextureType & channel,
@@ -2906,7 +2954,6 @@ public:
     virtual void get3DTexture(unsigned index,
                               const char *& textureName,
                               const char *& samplerName,
-                              const char *& uid,
                               unsigned & edgelen,
                               Interpolation & interpolation) const = 0;
     virtual void get3DTextureValues(unsigned index, const float *& values) const = 0;
@@ -2914,17 +2961,26 @@ public:
     /// Get the complete OCIO shader program.
     const char * getShaderText() const noexcept;
 
+    GpuShaderDesc(const GpuShaderDesc &) = delete;
+    GpuShaderDesc& operator= (const GpuShaderDesc &) = delete;
+
+    /// Do not use (needed only for pybind11).
     virtual ~GpuShaderDesc();
 
 protected:
     GpuShaderDesc();
-    GpuShaderDesc(const GpuShaderDesc &) = delete;
-    GpuShaderDesc& operator= (const GpuShaderDesc &) = delete;
 };
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Context
+// *******
+// A context defines some overrides to a :cpp:class:`Config`. For example, it can override the
+// search path or change the value of a context variable.
+//
+// \note Only some :cpp:func:`Config::getProcessor` methods accept a custom context; otherwise,
+// the default context instance is used (see :cpp:func:`Config::getCurrentContext`).
+//
 
 class OCIOEXPORT Context
 {
@@ -2945,46 +3001,93 @@ public:
     void setWorkingDir(const char * dirname);
     const char * getWorkingDir() const;
 
-    void setStringVar(const char * name, const char * value);
-    const char * getStringVar(const char * name) const;
+    ///////////////////////////////////////////////////////////////////////////
+    //!rst:: .. _ctxvariable_section:
+    // 
+    // Context Variables
+    // ^^^^^^^^^^^^^^^^^
+    // The context variables allow changes at runtime using environment variables. For example,
+    // a color space name (such as src & dst for the :cpp:class:`ColorSpaceTransform`) or a file
+    // name (such as LUT file name for the :cpp:class:`FileTransform`) could be defined by context
+    // variables. The color transformation is then customized based on some environment variables.
+    //
+    // In a config the context variables support three syntaxes (i.e. ${VAR}, $VAR and %VAR%) and
+    // the parsing starts from longest to shortest. So, the resolve works like '$TEST_$TESTING_$TE'
+    // expands in this order '2 1 3'.
+    //
+    // Config authors are recommended to include the "environment" section in their configs. This
+    // improves performance as well as making the config more readable. When present, this section
+    // must declare all context variables used in the config. It may also provide a default value,
+    // in case the variable is not present in the user's environment.
+    //
+    // A context variable may only be used in the following places:
+    // * the :cpp:class:`ColorSpaceTransform` to define the source and the destination color space names,
+    // * the :cpp:class:`FileTransform` to define the source file name (e.g. a LUT file name),
+    // * the search_path,
+    // * the cccid of the :cpp:class:`FileTransform` to only extract one specific transform from
+    //   the CDL & CCC files.
+    //
+    // Some specific restrictions are worth calling out:
+    // * they cannot be used as either the name or value of a role,
+    // * the context variable characters $ and % are prohibited in a color space name.
+
+    //!cpp:function:: Add (or update) a context variable. But it removes it if the value argument
+    // is null.
+    void setStringVar(const char * name, const char * value) noexcept;
+    /// Get the context variable value. It returns an empty string if the context 
+    /// variable is null or does not exist.
+    const char * getStringVar(const char * name) const noexcept;
 
     int getNumStringVars() const;
     const char * getStringVarNameByIndex(int index) const;
+    //!cpp:function::
+    const char * getStringVarByIndex(int index) const;
 
     void clearStringVars();
 
-    void setEnvironmentMode(EnvironmentMode mode);
+    /// Add to the instance all the context variables from ctx.
+    void addStringVars(const ConstContextRcPtr & ctx) noexcept;
 
-    EnvironmentMode getEnvironmentMode() const;
+    //!cpp:function::
+    void setEnvironmentMode(EnvironmentMode mode) noexcept;
+
+    //!cpp:function::
+    EnvironmentMode getEnvironmentMode() const noexcept;
 
     /// Seed all string vars with the current environment.
-    void loadEnvironment();
+    void loadEnvironment() noexcept;
+
+    //!cpp:function:: Resolve all the context variables from the string. It could be color space
+    // names or file names. Note that it recursively applies the context variable resolution.
+    // Returns the string unchanged if it does not contain any context variable.  
+    const char * resolveStringVar(const char * string) const noexcept;
+    //!cpp:function:: Resolve all the context variables from the string and return all the context
+    // variables used to resolve the string (empty if no context variables were used).
+    const char * resolveStringVar(const char * string, ContextRcPtr & usedContextVars) const noexcept;
 
     /**
-     * Do a string lookup.
-     * Do a file lookup.
+     * Build the resolved and expanded filepath using the search_path when needed,
+     * and check if the filepath exists. If it cannot be resolved or found, an exception will be
+     * thrown. The method argument is directly from the config file so it can be an absolute or
+     * relative file path or a file name.
      *
-     * Evaluate the specified variable (as needed). Will not throw exceptions.
-     */
-    const char * resolveStringVar(const char * val) const;
-
-    /**
-     * Do a file lookup.
-     * Do a file lookup.
+     * \note The filepath existence check could add a performance hit.
      *
-     * Evaluate all variables (as needed).
-     * Also, walk the full search path until the file is found.
-     * If the filename cannot be found, an exception will be thrown.
+     * \note The context variable resolution is performed using :cpp:func:`resolveStringVar`.
      */
     const char * resolveFileLocation(const char * filename) const;
+    /// Build the resolved and expanded filepath and return all the context variables
+    /// used to resolve the filename (empty if no context variables were used).
+    const char * resolveFileLocation(const char * filename, ContextRcPtr & usedContextVars) const;
 
+    Context(const Context &) = delete;
+    Context& operator= (const Context &) = delete;
+
+    /// Do not use (needed only for pybind11).
     ~Context();
-    
+
 private:
     Context();
-
-    Context(const Context &);
-    Context& operator= (const Context &);
 
     static void deleter(Context* c);
 

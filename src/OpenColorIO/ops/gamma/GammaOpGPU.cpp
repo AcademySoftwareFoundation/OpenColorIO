@@ -21,10 +21,10 @@ void AddBasicFwdShader(ConstGammaOpDataRcPtr gamma, GpuShaderText & ss)
     const double bluGamma   = gamma->getBlueParams()[0];
     const double alphaGamma = gamma->getAlphaParams()[0];
 
-    ss.declareVec4f( "gamma", redGamma, grnGamma, bluGamma, alphaGamma);
+    ss.declareFloat4( "gamma", redGamma, grnGamma, bluGamma, alphaGamma);
 
     ss.newLine() << "outColor = pow( max( "
-                 << ss.vec4fConst(0.0f)
+                 << ss.float4Const(0.0f)
                  << ", outColor ), gamma );";
 }
 
@@ -35,10 +35,10 @@ void AddBasicRevShader(ConstGammaOpDataRcPtr gamma, GpuShaderText & ss)
     const double bluGamma   = 1. / gamma->getBlueParams()[0];
     const double alphaGamma = 1. / gamma->getAlphaParams()[0];
 
-    ss.declareVec4f( "gamma", redGamma, grnGamma, bluGamma, alphaGamma);
+    ss.declareFloat4( "gamma", redGamma, grnGamma, bluGamma, alphaGamma);
 
     ss.newLine() << "outColor = pow( max( " 
-                 << ss.vec4fConst(0.0f) 
+                 << ss.float4Const(0.0f)
                  << ", outColor ), gamma );";
 }
 
@@ -50,9 +50,9 @@ void AddBasicMirrorFwdShader(ConstGammaOpDataRcPtr gamma, GpuShaderText & ss)
     const double bluGamma = gamma->getBlueParams()[0];
     const double alphaGamma = gamma->getAlphaParams()[0];
 
-    ss.declareVec4f("gamma", redGamma, grnGamma, bluGamma, alphaGamma);
+    ss.declareFloat4("gamma", redGamma, grnGamma, bluGamma, alphaGamma);
 
-    ss.newLine() << ss.vec4fDecl("signcol") << " = sign(outColor);";
+    ss.newLine() << ss.float4Decl("signcol") << " = sign(outColor);";
     ss.newLine() << "outColor = signcol * pow( abs( outColor ), gamma );";
 }
 
@@ -63,9 +63,9 @@ void AddBasicMirrorRevShader(ConstGammaOpDataRcPtr gamma, GpuShaderText & ss)
     const double bluGamma = 1. / gamma->getBlueParams()[0];
     const double alphaGamma = 1. / gamma->getAlphaParams()[0];
 
-    ss.declareVec4f("gamma", redGamma, grnGamma, bluGamma, alphaGamma);
+    ss.declareFloat4("gamma", redGamma, grnGamma, bluGamma, alphaGamma);
 
-    ss.newLine() << ss.vec4fDecl("signcol") << " = sign(outColor);";
+    ss.newLine() << ss.float4Decl("signcol") << " = sign(outColor);";
     ss.newLine() << "outColor = signcol * pow( abs( outColor ), gamma );";
 }
 
@@ -77,18 +77,18 @@ void AddBasicPassThruFwdShader(ConstGammaOpDataRcPtr gamma, GpuShaderText & ss)
     const double bluGamma = gamma->getBlueParams()[0];
     const double alphaGamma = gamma->getAlphaParams()[0];
 
-    ss.declareVec4f("gamma", redGamma, grnGamma, bluGamma, alphaGamma);
-    ss.declareVec4f("breakPnt", 0.f, 0.f, 0.f, 0.f);
+    ss.declareFloat4("gamma", redGamma, grnGamma, bluGamma, alphaGamma);
+    ss.declareFloat4("breakPnt", 0.f, 0.f, 0.f, 0.f);
 
-    ss.newLine() << ss.vec4fDecl("isAboveBreak") << " = "
-                 << ss.vec4fGreaterThan("outColor", "breakPnt") << ";";
+    ss.newLine() << ss.float4Decl("isAboveBreak") << " = "
+                 << ss.float4GreaterThan("outColor", "breakPnt") << ";";
 
-    ss.newLine() << ss.vec4fDecl("powSeg") << " = pow(max( " 
-                                           << ss.vec4fConst(0.0f)
-                                           << ", outColor ), gamma);";
+    ss.newLine() << ss.float4Decl("powSeg") << " = pow(max( "
+                                            << ss.float4Const(0.0f)
+                                            << ", outColor ), gamma);";
 
     ss.newLine() << "outColor = isAboveBreak * powSeg + ( "
-                 << ss.vec4fConst(1.0f) << " - isAboveBreak ) * outColor;";
+                 << ss.float4Const(1.0f) << " - isAboveBreak ) * outColor;";
 }
 
 void AddBasicPassThruRevShader(ConstGammaOpDataRcPtr gamma, GpuShaderText & ss)
@@ -98,18 +98,18 @@ void AddBasicPassThruRevShader(ConstGammaOpDataRcPtr gamma, GpuShaderText & ss)
     const double bluGamma = 1. / gamma->getBlueParams()[0];
     const double alphaGamma = 1. / gamma->getAlphaParams()[0];
 
-    ss.declareVec4f("gamma", redGamma, grnGamma, bluGamma, alphaGamma);
-    ss.declareVec4f("breakPnt", 0.f, 0.f, 0.f, 0.f);
+    ss.declareFloat4("gamma", redGamma, grnGamma, bluGamma, alphaGamma);
+    ss.declareFloat4("breakPnt", 0.f, 0.f, 0.f, 0.f);
 
-    ss.newLine() << ss.vec4fDecl("isAboveBreak") << " = "
-                 << ss.vec4fGreaterThan("outColor", "breakPnt") << ";";
+    ss.newLine() << ss.float4Decl("isAboveBreak") << " = "
+                 << ss.float4GreaterThan("outColor", "breakPnt") << ";";
 
-    ss.newLine() << ss.vec4fDecl("powSeg") << " = pow(max( " 
-                                           << ss.vec4fConst(0.0f)
-                                           << ", outColor ), gamma);";
+    ss.newLine() << ss.float4Decl("powSeg") << " = pow(max( "
+                                            << ss.float4Const(0.0f)
+                                            << ", outColor ), gamma);";
 
     ss.newLine() << "outColor = isAboveBreak * powSeg + ( "
-                 << ss.vec4fConst(1.0f) << " - isAboveBreak ) * outColor;";
+                 << ss.float4Const(1.0f) << " - isAboveBreak ) * outColor;";
 }
 
 // Create shader for moncurveFwd style
@@ -125,22 +125,22 @@ void AddMoncurveFwdShader(ConstGammaOpDataRcPtr gamma, GpuShaderText & ss)
     // Even if all components are the same, on OS X, a vec4 needs to be
     // declared.  This code will work in both cases.
 
-    ss.declareVec4f( "breakPnt", red.breakPnt, green.breakPnt, blue.breakPnt, alpha.breakPnt);
-    ss.declareVec4f( "slope" , red.slope, green.slope, blue.slope, alpha.slope);
-    ss.declareVec4f( "scale" , red.scale, green.scale, blue.scale, alpha.scale);
-    ss.declareVec4f( "offset", red.offset, green.offset, blue.offset, alpha.offset);
-    ss.declareVec4f( "gamma" , red.gamma, green.gamma, blue.gamma, alpha.gamma);
+    ss.declareFloat4( "breakPnt", red.breakPnt, green.breakPnt, blue.breakPnt, alpha.breakPnt);
+    ss.declareFloat4( "slope" , red.slope, green.slope, blue.slope, alpha.slope);
+    ss.declareFloat4( "scale" , red.scale, green.scale, blue.scale, alpha.scale);
+    ss.declareFloat4( "offset", red.offset, green.offset, blue.offset, alpha.offset);
+    ss.declareFloat4( "gamma" , red.gamma, green.gamma, blue.gamma, alpha.gamma);
 
-    ss.newLine() << ss.vec4fDecl("isAboveBreak") << " = "
-                 << ss.vec4fGreaterThan("outColor", "breakPnt") << ";";
+    ss.newLine() << ss.float4Decl("isAboveBreak") << " = "
+                 << ss.float4GreaterThan("outColor", "breakPnt") << ";";
 
-    ss.newLine() << ss.vec4fDecl("linSeg") << " = outColor * slope;";
+    ss.newLine() << ss.float4Decl("linSeg") << " = outColor * slope;";
 
-    ss.newLine() << ss.vec4fDecl("powSeg") << " = pow( max( "
-                 << ss.vec4fConst(0.0f) << ", scale * outColor + offset), gamma);";
+    ss.newLine() << ss.float4Decl("powSeg") << " = pow( max( "
+                 << ss.float4Const(0.0f) << ", scale * outColor + offset), gamma);";
 
     ss.newLine() << "outColor = isAboveBreak * powSeg + ( "
-                 << ss.vec4fConst(1.0f) << " - isAboveBreak ) * linSeg;";
+                 << ss.float4Const(1.0f) << " - isAboveBreak ) * linSeg;";
 }
 
 // Create shader for moncurveRev style
@@ -156,21 +156,21 @@ void AddMoncurveRevShader(ConstGammaOpDataRcPtr gamma, GpuShaderText & ss)
     // Even if all components are the same, on OS X, a vec4 needs to be
     // declared.  This code will work in both cases.
 
-    ss.declareVec4f( "breakPnt", red.breakPnt, green.breakPnt, blue.breakPnt, alpha.breakPnt);
-    ss.declareVec4f( "slope" , red.slope, green.slope, blue.slope, alpha.slope);
-    ss.declareVec4f( "scale" , red.scale, green.scale, blue.scale, alpha.scale);
-    ss.declareVec4f( "offset", red.offset, green.offset, blue.offset, alpha.offset);
-    ss.declareVec4f( "gamma" , red.gamma, green.gamma, blue.gamma, alpha.gamma);
+    ss.declareFloat4( "breakPnt", red.breakPnt, green.breakPnt, blue.breakPnt, alpha.breakPnt);
+    ss.declareFloat4( "slope" , red.slope, green.slope, blue.slope, alpha.slope);
+    ss.declareFloat4( "scale" , red.scale, green.scale, blue.scale, alpha.scale);
+    ss.declareFloat4( "offset", red.offset, green.offset, blue.offset, alpha.offset);
+    ss.declareFloat4( "gamma" , red.gamma, green.gamma, blue.gamma, alpha.gamma);
 
-    ss.newLine() << ss.vec4fDecl("isAboveBreak") << " = "
-                 << ss.vec4fGreaterThan("outColor", "breakPnt") << ";";
+    ss.newLine() << ss.float4Decl("isAboveBreak") << " = "
+                 << ss.float4GreaterThan("outColor", "breakPnt") << ";";
 
-    ss.newLine() << ss.vec4fDecl("linSeg") << " = outColor * slope;";
-    ss.newLine() << ss.vec4fDecl("powSeg") << " = pow( max( "
-                 << ss.vec4fConst(0.0f) << ", outColor ), gamma ) * scale - offset;";
+    ss.newLine() << ss.float4Decl("linSeg") << " = outColor * slope;";
+    ss.newLine() << ss.float4Decl("powSeg") << " = pow( max( "
+                 << ss.float4Const(0.0f) << ", outColor ), gamma ) * scale - offset;";
 
     ss.newLine() << "outColor = isAboveBreak * powSeg + ( "
-                 << ss.vec4fConst(1.0f) << " - isAboveBreak ) * linSeg;";
+                 << ss.float4Const(1.0f) << " - isAboveBreak ) * linSeg;";
 }
 
 // Create shader for moncurveMirrorFwd style
@@ -185,26 +185,26 @@ void AddMoncurveMirrorFwdShader(ConstGammaOpDataRcPtr gamma, GpuShaderText & ss)
 
     // Even if all components are the same, on OS X, a vec4 needs to be
     // declared.  This code will work in both cases.
-    ss.declareVec4f("breakPnt", red.breakPnt, green.breakPnt, blue.breakPnt, alpha.breakPnt);
-    ss.declareVec4f("slope", red.slope, green.slope, blue.slope, alpha.slope);
-    ss.declareVec4f("scale", red.scale, green.scale, blue.scale, alpha.scale);
-    ss.declareVec4f("offset", red.offset, green.offset, blue.offset, alpha.offset);
-    ss.declareVec4f("gamma", red.gamma, green.gamma, blue.gamma, alpha.gamma);
+    ss.declareFloat4("breakPnt", red.breakPnt, green.breakPnt, blue.breakPnt, alpha.breakPnt);
+    ss.declareFloat4("slope", red.slope, green.slope, blue.slope, alpha.slope);
+    ss.declareFloat4("scale", red.scale, green.scale, blue.scale, alpha.scale);
+    ss.declareFloat4("offset", red.offset, green.offset, blue.offset, alpha.offset);
+    ss.declareFloat4("gamma", red.gamma, green.gamma, blue.gamma, alpha.gamma);
 
-    ss.newLine() << ss.vec4fDecl("signcol") << " = sign( outColor );";
+    ss.newLine() << ss.float4Decl("signcol") << " = sign( outColor );";
 
     ss.newLine() << "outColor = abs( outColor );";
 
-    ss.newLine() << ss.vec4fDecl("isAboveBreak") << " = "
-                 << ss.vec4fGreaterThan("outColor", "breakPnt") << ";";
+    ss.newLine() << ss.float4Decl("isAboveBreak") << " = "
+                 << ss.float4GreaterThan("outColor", "breakPnt") << ";";
 
-    ss.newLine() << ss.vec4fDecl("linSeg") << " = outColor * slope;";
+    ss.newLine() << ss.float4Decl("linSeg") << " = outColor * slope;";
 
     // Max() not needed since offset cannot be negative.
-    ss.newLine() << ss.vec4fDecl("powSeg") << " = pow( scale * outColor + offset, gamma);";
+    ss.newLine() << ss.float4Decl("powSeg") << " = pow( scale * outColor + offset, gamma);";
 
     ss.newLine() << "outColor = isAboveBreak * powSeg + ( "
-                 << ss.vec4fConst(1.0f) << " - isAboveBreak ) * linSeg;";
+                 << ss.float4Const(1.0f) << " - isAboveBreak ) * linSeg;";
 
     ss.newLine() << "outColor = signcol * outColor;";
 }
@@ -221,24 +221,24 @@ void AddMoncurveMirrorRevShader(ConstGammaOpDataRcPtr gamma, GpuShaderText & ss)
 
     // Even if all components are the same, on OS X, a vec4 needs to be
     // declared.  This code will work in both cases.
-    ss.declareVec4f("breakPnt", red.breakPnt, green.breakPnt, blue.breakPnt, alpha.breakPnt);
-    ss.declareVec4f("slope", red.slope, green.slope, blue.slope, alpha.slope);
-    ss.declareVec4f("scale", red.scale, green.scale, blue.scale, alpha.scale);
-    ss.declareVec4f("offset", red.offset, green.offset, blue.offset, alpha.offset);
-    ss.declareVec4f("gamma", red.gamma, green.gamma, blue.gamma, alpha.gamma);
+    ss.declareFloat4("breakPnt", red.breakPnt, green.breakPnt, blue.breakPnt, alpha.breakPnt);
+    ss.declareFloat4("slope", red.slope, green.slope, blue.slope, alpha.slope);
+    ss.declareFloat4("scale", red.scale, green.scale, blue.scale, alpha.scale);
+    ss.declareFloat4("offset", red.offset, green.offset, blue.offset, alpha.offset);
+    ss.declareFloat4("gamma", red.gamma, green.gamma, blue.gamma, alpha.gamma);
 
-    ss.newLine() << ss.vec4fDecl("signcol") << " = sign( outColor );";
+    ss.newLine() << ss.float4Decl("signcol") << " = sign( outColor );";
 
     ss.newLine() << "outColor = abs( outColor );";
 
-    ss.newLine() << ss.vec4fDecl("isAboveBreak") << " = "
-                 << ss.vec4fGreaterThan("outColor", "breakPnt") << ";";
+    ss.newLine() << ss.float4Decl("isAboveBreak") << " = "
+                 << ss.float4GreaterThan("outColor", "breakPnt") << ";";
 
-    ss.newLine() << ss.vec4fDecl("linSeg") << " = outColor * slope;";
-    ss.newLine() << ss.vec4fDecl("powSeg") << " = pow( outColor, gamma ) * scale - offset;";
+    ss.newLine() << ss.float4Decl("linSeg") << " = outColor * slope;";
+    ss.newLine() << ss.float4Decl("powSeg") << " = pow( outColor, gamma ) * scale - offset;";
 
     ss.newLine() << "outColor = isAboveBreak * powSeg + ( "
-                 << ss.vec4fConst(1.0f) << " - isAboveBreak ) * linSeg;";
+                 << ss.float4Const(1.0f) << " - isAboveBreak ) * linSeg;";
 
     ss.newLine() << "outColor = signcol * outColor;";
 }
