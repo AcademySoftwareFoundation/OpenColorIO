@@ -27,10 +27,10 @@ void GetMatrixGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator, ConstMatri
         if (matrix->isDiagonal())
         {
             ss.newLine() << shaderCreator->getPixelName() << " = "
-                            << ss.vec4fConst((float)values[0],
-                                            (float)values[5],
-                                            (float)values[10],
-                                            (float)values[15])
+                            << ss.float4Const((float)values[0],
+                                              (float)values[5],
+                                              (float)values[10],
+                                              (float)values[15])
                             << " * " << shaderCreator->getPixelName() << ";";
         }
         else
@@ -44,7 +44,7 @@ void GetMatrixGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator, ConstMatri
     if (matrix->hasOffsets())
     {
         ss.newLine() << shaderCreator->getPixelName() << " = "
-                        << ss.vec4fConst((float)offs[0], (float)offs[1], (float)offs[2], (float)offs[3])
+                        << ss.float4Const((float)offs[0], (float)offs[1], (float)offs[2], (float)offs[3])
                         << " + " << shaderCreator->getPixelName() << ";";
     }
 

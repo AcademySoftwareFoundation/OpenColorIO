@@ -19,13 +19,19 @@ const std::streamsize FLOAT_DECIMALS = 7;
 
 GradingPrimaryOpData::GradingPrimaryOpData(GradingStyle style)
     : m_style(style)
-    , m_value(std::make_shared<DynamicPropertyGradingPrimaryImpl>(GradingPrimary(style), false))
+    , m_value(std::make_shared<DynamicPropertyGradingPrimaryImpl>(style,
+                                                                  TRANSFORM_DIR_FORWARD,
+                                                                  GradingPrimary(style),
+                                                                  false))
 {
 }
 
 GradingPrimaryOpData::GradingPrimaryOpData(const GradingPrimaryOpData & rhs)
     : m_style(rhs.m_style)
-    , m_value(std::make_shared<DynamicPropertyGradingPrimaryImpl>(GradingPrimary(rhs.m_style), false))
+    , m_value(std::make_shared<DynamicPropertyGradingPrimaryImpl>(rhs.m_style,
+                                                                  TRANSFORM_DIR_FORWARD,
+                                                                  GradingPrimary(rhs.m_style),
+                                                                  false))
 {
     *this = rhs;
 }
@@ -61,7 +67,7 @@ GradingPrimaryOpDataRcPtr GradingPrimaryOpData::clone() const
 void GradingPrimaryOpData::validate() const
 {
     // This should already be valid.
-    m_value->getValue().validate();
+    m_value->getValue().validate(m_style);
 }
 
 bool GradingPrimaryOpData::isNoOp() const
@@ -200,8 +206,7 @@ void GradingPrimaryOpData::setStyle(GradingStyle style) noexcept
     {
         m_style = style;
         // Reset value to default when style is changing.
-        GradingPrimary reset{ style };
-        m_value->setValue(reset);
+        m_value->setStyle(style);
     }
 }
 
@@ -212,7 +217,11 @@ TransformDirection GradingPrimaryOpData::getDirection() const noexcept
 
 void GradingPrimaryOpData::setDirection(TransformDirection dir) noexcept
 {
-    m_direction = dir;
+    if (dir != m_direction)
+    {
+        m_direction = dir;
+        m_value->setDirection(dir);
+    }
 }
 
 bool GradingPrimaryOpData::isDynamic() const noexcept
@@ -251,82 +260,5 @@ bool GradingPrimaryOpData::operator==(const OpData & other) const
     return true;
 }
 
-///////////////////////////////////////////////////////////////////////////////
-
-bool operator==(const GradingRGBM & lhs, const GradingRGBM & rhs)
-{
-    return lhs.m_red == rhs.m_red && lhs.m_green == rhs.m_green &&
-           lhs.m_blue == rhs.m_blue && lhs.m_master == rhs.m_master;
-}
-
-bool operator!=(const GradingRGBM & lhs, const GradingRGBM & rhs)
-{
-    return !(lhs == rhs);
-}
-
-bool operator==(const GradingPrimary & lhs, const GradingPrimary & rhs)
-{
-    return lhs.m_brightness  == rhs.m_brightness  &&
-           lhs.m_contrast    == rhs.m_contrast    &&
-           lhs.m_gamma       == rhs.m_gamma       &&
-           lhs.m_offset      == rhs.m_offset      &&
-           lhs.m_exposure    == rhs.m_exposure    &&
-           lhs.m_lift        == rhs.m_lift        &&
-           lhs.m_gain        == rhs.m_gain        &&
-           lhs.m_pivot       == rhs.m_pivot       &&
-           lhs.m_saturation  == rhs.m_saturation  &&
-           lhs.m_clampWhite == rhs.m_clampWhite &&
-           lhs.m_clampBlack == rhs.m_clampBlack &&
-           lhs.m_pivotWhite == rhs.m_pivotWhite &&
-           lhs.m_pivotBlack == rhs.m_pivotBlack;
-}
-
-bool operator!=(const GradingPrimary & lhs, const GradingPrimary & rhs)
-{
-    return !(lhs == rhs);
-}
-
-double GradingPrimary::NoClampBlack()
-{
-    // Note that this is not a magic number, renderers do rely on this value.
-    return -std::numeric_limits<double>::max();
-}
-
-double GradingPrimary::NoClampWhite()
-{
-    // Note that this is not a magic number, renderers do rely on this value.
-    return std::numeric_limits<double>::max();
-}
-
-void GradingPrimary::validate() const
-{
-    // Validating all values, even if some or not used for a given style.
-
-    static constexpr double GradingPrimaryGammaLowerBound = 0.01;
-    static constexpr double GradingPrimaryBoundError = 0.000001;
-    static constexpr double GradingPrimaryGammaMin = GradingPrimaryGammaLowerBound -
-                                                     GradingPrimaryBoundError;
-
-    if (m_gamma.m_red < GradingPrimaryGammaMin   ||
-        m_gamma.m_green < GradingPrimaryGammaMin ||
-        m_gamma.m_blue < GradingPrimaryGammaMin  ||
-        m_gamma.m_master < GradingPrimaryGammaMin)
-    {
-        std::ostringstream oss;
-        oss << "GradingTone gamma '" << m_gamma << "' are below lower bound ("
-            << GradingPrimaryGammaLowerBound << ").";
-        throw Exception(oss.str().c_str());
-    }
-
-    if (m_pivotBlack > m_pivotWhite)
-    {
-        throw Exception("GradingPrimary black pivot should be smaller than white pivot.");
-    }
-
-    if (m_clampBlack > m_clampWhite)
-    {
-        throw Exception("GradingPrimary black clamp should be smaller than white clamp.");
-    }
-}
 
 } // namespace OCIO_NAMESPACE

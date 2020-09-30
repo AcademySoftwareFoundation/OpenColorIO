@@ -443,7 +443,7 @@ struct OCIOEXPORT GradingPrimary
     double m_clampWhite;
 
     /// The valid range for each parameter varies.
-    void validate() const;
+    void validate(GradingStyle style) const;
 
     static double NoClampBlack();
     static double NoClampWhite();

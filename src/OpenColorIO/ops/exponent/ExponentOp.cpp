@@ -266,8 +266,8 @@ void ExponentOp::extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) con
         << shaderCreator->getPixelName()
         << " = pow( "
         << "max( " << shaderCreator->getPixelName()
-        << ", " << ss.vec4fConst(0.0f) << " )"
-        << ", " << ss.vec4fConst(expData()->m_exp4[0], expData()->m_exp4[1],
+        << ", " << ss.float4Const(0.0f) << " )"
+        << ", " << ss.float4Const(expData()->m_exp4[0], expData()->m_exp4[1],
                                     expData()->m_exp4[2], expData()->m_exp4[3]) << " );";
 
     shaderCreator->addToFunctionShaderCode(ss.string().c_str());

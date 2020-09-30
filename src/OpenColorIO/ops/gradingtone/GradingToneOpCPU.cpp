@@ -15,6 +15,8 @@
 namespace OCIO_NAMESPACE
 {
 
+namespace
+{
 class GradingToneOpCPU : public OpCPU
 {
 public:
@@ -553,8 +555,6 @@ void GradingToneFwdOpCPU::scontrast(const GradingTone & v, const GradingTonePreR
     }  // end if contrast != 1.
 }
 
-namespace
-{
 inline void ClampMaxRGB(float * out)
 {
     // TODO: The grading controls at high values are able to push values above the max half-float
@@ -564,7 +564,8 @@ inline void ClampMaxRGB(float * out)
     out[1] = std::min(out[1], 65504.f);
     out[2] = std::min(out[2], 65504.f);
 }
-}
+
+static constexpr auto PixelSize = 4 * sizeof(float);
 
 void GradingToneFwdOpCPU::apply(const void * inImg, void * outImg, long numPixels) const
 {
@@ -572,7 +573,7 @@ void GradingToneFwdOpCPU::apply(const void * inImg, void * outImg, long numPixel
     {
         if (inImg != outImg)
         {
-            memcpy(outImg, inImg, 4 * numPixels * sizeof(float));
+            memcpy(outImg, inImg, numPixels * PixelSize);
         }
         return;
     }
@@ -586,7 +587,7 @@ void GradingToneFwdOpCPU::apply(const void * inImg, void * outImg, long numPixel
     for (long idx = 0; idx < numPixels; ++idx)
     {
         // NB: 'in' and 'out' could be pointers to the same memory buffer.
-        memcpy(out, in, 4 * sizeof(float));
+        memcpy(out, in, PixelSize);
 
         mids(v, vpr, R, out);
         mids(v, vpr, G, out);
@@ -633,7 +634,7 @@ void GradingToneLinearFwdOpCPU::apply(const void * inImg, void * outImg, long nu
     {
         if (inImg != outImg)
         {
-            memcpy(outImg, inImg, 4 * numPixels * sizeof(float));
+            memcpy(outImg, inImg, numPixels * PixelSize);
         }
         return;
     }
@@ -781,6 +782,8 @@ void GradingToneLinearRevOpCPU::apply(const void * inImg, void * outImg, long nu
 
     // TODO: implement inverse.
 }
+
+} // Anonymous namspace
 
 ///////////////////////////////////////////////////////////////////////////////
 
