@@ -17,7 +17,7 @@ set(CMAKE_MODULE_PATH
 set(CMAKE_WARN_DEPRECATED ON)
 
 
-if(APPLE)
+if(APPLE AND NOT CMAKE_OSX_DEPLOYMENT_TARGET)
     # The value of this variable should be set prior to the first project() command invocation
     # because it may influence configuration of the toolchain and flags.
     set(CMAKE_OSX_DEPLOYMENT_TARGET "10.13" CACHE STRING "Minimum OS X deployment version")
@@ -45,6 +45,20 @@ enable_testing()
 if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
     message(FATAL_ERROR 
             "In-source build not allowed. Please make a new sub-directory and run cmake from there.")
+endif()
+
+
+###############################################################################
+# Global CMake options.
+
+# Do not output install messages.
+if(NOT CMAKE_INSTALL_MESSAGE)
+    set(CMAKE_INSTALL_MESSAGE "NEVER")
+endif()
+
+# Change the path max size to avoid problem on Windows.
+if(NOT CMAKE_OBJECT_PATH_MAX)
+    set(CMAKE_OBJECT_PATH_MAX 300)
 endif()
 
 
