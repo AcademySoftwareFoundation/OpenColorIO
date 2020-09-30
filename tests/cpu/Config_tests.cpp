@@ -350,6 +350,8 @@ OCIO_ADD_TEST(Config, serialize_group_transform)
     std::string PROFILE_OUT =
     "ocio_profile_version: 2\n"
     "\n"
+    "environment:\n"
+    "  {}\n"
     "search_path: \"\"\n"
     "strictparsing: true\n"
     "luma: [0.2126, 0.7152, 0.0722]\n"
@@ -417,6 +419,8 @@ OCIO_ADD_TEST(Config, serialize_searchpath)
         std::string PROFILE_OUT =
             "ocio_profile_version: 2\n"
             "\n"
+            "environment:\n"
+            "  {}\n"
             "search_path: \"\"\n"
             "strictparsing: true\n"
             "luma: [0.2126, 0.7152, 0.0722]\n"
