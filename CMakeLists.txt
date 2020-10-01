@@ -159,9 +159,13 @@ endif()
 # Namespace
 
 if(NOT OCIO_NAMESPACE)
-	set(OCIO_NAMESPACE OpenColorIO CACHE STRING 
+	set(OCIO_NAMESPACE "OpenColorIO_v${OpenColorIO_VERSION_MAJOR}_${OpenColorIO_VERSION_MINOR}${OpenColorIO_VERSION_RELEASE_TYPE}" CACHE STRING 
+        "Specify the master OCIO C++ namespace: Options include OpenColorIO OpenColorIO_<YOURFACILITY> etc.")
+else()
+    set(OCIO_NAMESPACE "OpenColorIO_${OCIO_NAMESPACE}_v${OpenColorIO_VERSION_MAJOR}_${OpenColorIO_VERSION_MINOR}${OpenColorIO_VERSION_RELEASE_TYPE}" CACHE STRING 
         "Specify the master OCIO C++ namespace: Options include OpenColorIO OpenColorIO_<YOURFACILITY> etc.")
 endif()
+
 
 ###############################################################################
 # Library name custom suffix

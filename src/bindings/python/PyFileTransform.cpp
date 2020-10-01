@@ -22,10 +22,18 @@ void bindPyFileTransform(py::module & m)
 {
     FileTransformRcPtr DEFAULT = FileTransform::Create();
 
-    auto cls = py::class_<FileTransform, 
-                          FileTransformRcPtr /* holder */, 
-                          Transform /* base */>(m, "FileTransform")
-        .def(py::init(&FileTransform::Create))
+    auto clsFileTransform = 
+        py::class_<FileTransform, FileTransformRcPtr /* holder */, Transform /* base */>(
+            m, "FileTransform", 
+            DOC(FileTransform));
+
+    auto clsFormatIterator = 
+        py::class_<FormatIterator>(
+            clsFileTransform, "FormatIterator");
+
+     clsFileTransform
+        .def(py::init(&FileTransform::Create), 
+             DOC(FileTransform, Create))
         .def(py::init([](const std::string & src, 
                          const std::string & id, 
                          Interpolation interp,
@@ -42,22 +50,34 @@ void bindPyFileTransform(py::module & m)
              "src"_a = DEFAULT->getSrc(), 
              "cccId"_a = DEFAULT->getCCCId(),
              "interpolation"_a = DEFAULT->getInterpolation(),
-             "direction"_a = DEFAULT->getDirection())
+             "direction"_a = DEFAULT->getDirection(), 
+             DOC(FileTransform, Create))
 
-        .def_static("getFormats", []() { return FormatIterator(nullptr); })
+        .def_static("getFormats", []() 
+            { 
+                return FormatIterator(nullptr); 
+            })
 
-        .def("getSrc", &FileTransform::getSrc)
-        .def("setSrc", &FileTransform::setSrc, "src"_a.none(false))
-        .def("getCCCId", &FileTransform::getCCCId)
-        .def("setCCCId", &FileTransform::setCCCId, "cccId"_a.none(false))
-        .def("getCDLStyle", &FileTransform::getCDLStyle)
-        .def("setCDLStyle", &FileTransform::setCDLStyle, "style"_a)
-        .def("getInterpolation", &FileTransform::getInterpolation)
-        .def("setInterpolation", &FileTransform::setInterpolation, "interpolation"_a);
+        .def("getSrc", &FileTransform::getSrc, 
+             DOC(FileTransform, getSrc))
+        .def("setSrc", &FileTransform::setSrc, "src"_a.none(false), 
+             DOC(FileTransform, setSrc))
+        .def("getCCCId", &FileTransform::getCCCId, 
+             DOC(FileTransform, getCCCId))
+        .def("setCCCId", &FileTransform::setCCCId, "cccId"_a.none(false), 
+             DOC(FileTransform, setCCCId))
+        .def("getCDLStyle", &FileTransform::getCDLStyle, 
+             DOC(FileTransform, getCDLStyle))
+        .def("setCDLStyle", &FileTransform::setCDLStyle, "style"_a, 
+             DOC(FileTransform, setCDLStyle))
+        .def("getInterpolation", &FileTransform::getInterpolation, 
+             DOC(FileTransform, getInterpolation))
+        .def("setInterpolation", &FileTransform::setInterpolation, "interpolation"_a, 
+             DOC(FileTransform, setInterpolation));
 
-    defStr(cls);
+    defStr(clsFileTransform);
 
-    py::class_<FormatIterator>(cls, "FormatIterator")
+    clsFormatIterator
         .def("__len__", [](FormatIterator & it) { return FileTransform::getNumFormats(); })
         .def("__getitem__", [](FormatIterator & it, int i) 
             { 

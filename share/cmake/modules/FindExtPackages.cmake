@@ -42,10 +42,10 @@ find_package(pystring 1.1.3 REQUIRED)
 
 if(OCIO_BUILD_APPS)
 
-    # NOTE: Depending of the compiler version lcms2 2.2 does not compile with C++17 so, if
-    # you change the lcms2 version update the code to compile lcms2 and dependencies
-    # with C++17 or higher i.e. remove the cap of C++ version in Findlcms2.cmake and
-    # src/apps/ociobakelut/CMakeLists.txt.
+    # NOTE: Depending of the compiler version lcms2 2.2 does not compile with 
+    # C++17 so, if you change the lcms2 version update the code to compile 
+    # lcms2 and dependencies with C++17 or higher i.e. remove the cap of C++ 
+    # version in Findlcms2.cmake and src/apps/ociobakelut/CMakeLists.txt.
 
     # lcms2
     # https://github.com/mm2/Little-CMS
@@ -54,9 +54,10 @@ endif()
 
 if(OCIO_BUILD_PYTHON)
 
-    # NOTE: Depending of the compiler version pybind11 2.4.3 does not compile with C++17 so, if
-    # you change the pybind11 version update the code to compile pybind11 and dependencies
-    # with C++17 or higher i.e. remove the cap of C++ version in FindPybind11.cmake and
+    # NOTE: Depending of the compiler version pybind11 2.4.3 does not compile 
+    # with C++17 so, if you change the pybind11 version update the code to 
+    # compile pybind11 and dependencies with C++17 or higher i.e. remove the 
+    # cap of C++ version in FindPybind11.cmake and 
     # src/bindings/python/CMakeLists.txt.
 
     # pybind11
@@ -64,38 +65,16 @@ if(OCIO_BUILD_PYTHON)
     find_package(pybind11 2.4.3 REQUIRED)
 endif()
 
-if(OCIO_BUILD_DOCS)
-    find_package(Python QUIET COMPONENTS Interpreter)
+if(OCIO_BUILD_PYTHON OR OCIO_BUILD_DOCS)
 
-    if(Python_Interpreter_FOUND)
-        if(Python_VERSION_MAJOR GREATER_EQUAL 3)
-            set(Sphinx_MIN_VERSION 2.0.0)
-        else()
-            # Last release with Python 2.7 support
-            set(Sphinx_MIN_VERSION 1.8.5)
-        endif()
+    # NOTE: We find Python once in the global scope so that it can be checked 
+    # and referenced throughout the project.
 
-        # Sphinx
-        # https://pypi.python.org/pypi/Sphinx
-        find_package(Sphinx ${Sphinx_MIN_VERSION} REQUIRED)
-
-        include(FindPythonPackage)
-
-        # testresources
-        # https://pypi.org/project/testresources/
-        find_python_package(testresources 2.0.1 REQUIRED)
-
-        # Sphinx Tabs
-        # https://pypi.org/project/sphinx-tabs/
-        find_python_package(sphinx-tabs 1.1.13 REQUIRED)
-
-        # Recommonmark
-        # https://pypi.org/project/recommonmark/
-        find_python_package(recommonmark 0.6.0 REQUIRED)
-
-        # Sphinx Press Theme
-        # https://pypi.org/project/sphinx-press-theme/
-        find_python_package(sphinx-press-theme 0.5.1 REQUIRES testresources REQUIRED)
-
+    set(_Python_COMPONENTS Interpreter)
+    if(OCIO_BUILD_PYTHON)
+        list(APPEND _Python_COMPONENTS Development)
     endif()
+
+    # Python
+    find_package(Python REQUIRED COMPONENTS ${_Python_COMPONENTS})
 endif()

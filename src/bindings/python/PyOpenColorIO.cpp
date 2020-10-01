@@ -8,25 +8,42 @@ namespace OCIO_NAMESPACE
 
 PYBIND11_MODULE(PyOpenColorIO, m)
 {
-    // Exceptions
-    py::register_exception<Exception>(m, "Exception");
-    py::register_exception<ExceptionMissingFile>(m, "ExceptionMissingFile");
-
-    // Global
-    m.def("ClearAllCaches", &ClearAllCaches);
-    m.def("GetVersion", &GetVersion);
-    m.def("GetVersionHex", &GetVersionHex);
-    m.def("GetLoggingLevel", &GetLoggingLevel);
-    m.def("SetLoggingLevel", &SetLoggingLevel, "level"_a);
-    m.def("SetLoggingFunction", &SetLoggingFunction, "logFunction"_a);
-    m.def("ResetToDefaultLoggingFunction", &ResetToDefaultLoggingFunction);
-    m.def("LogMessage", &LogMessage, "level"_a, "message"_a);
-    m.def("GetEnvVariable", &GetEnvVariable, "name"_a);
-    m.def("SetEnvVariable", &SetEnvVariable, "name"_a, "value"_a);
-    m.def("UnsetEnvVariable", &UnsetEnvVariable, "name"_a);
-    m.def("IsEnvVariablePresent", &IsEnvVariablePresent, "name"_a);
+    m.doc() = DOC(PyOpenColorIO);
 
     bindPyTypes(m);
+
+    // Exceptions
+    py::register_exception<Exception>(m, "Exception").doc() 
+      = DOC(Exception);
+    py::register_exception<ExceptionMissingFile>(m, "ExceptionMissingFile").doc() 
+      = DOC(ExceptionMissingFile);
+
+    // Global
+    m.def("ClearAllCaches", &ClearAllCaches,
+          DOC(PyOpenColorIO, ClearAllCaches));
+    m.def("GetVersion", &GetVersion,
+          DOC(PyOpenColorIO, GetVersion));
+    m.def("GetVersionHex", &GetVersionHex,
+          DOC(PyOpenColorIO, GetVersionHex));
+    m.def("GetLoggingLevel", &GetLoggingLevel,
+          DOC(PyOpenColorIO, GetLoggingLevel));
+    m.def("SetLoggingLevel", &SetLoggingLevel, "level"_a,
+          DOC(PyOpenColorIO, SetLoggingLevel));
+    m.def("SetLoggingFunction", &SetLoggingFunction, "logFunction"_a,
+          DOC(PyOpenColorIO, SetLoggingFunction));
+    m.def("ResetToDefaultLoggingFunction", &ResetToDefaultLoggingFunction,
+          DOC(PyOpenColorIO, ResetToDefaultLoggingFunction));
+    m.def("LogMessage", &LogMessage, "level"_a, "message"_a,
+          DOC(PyOpenColorIO, LogMessage));
+    m.def("GetEnvVariable", &GetEnvVariable, "name"_a,
+          DOC(PyOpenColorIO, GetEnvVariable));
+    m.def("SetEnvVariable", &SetEnvVariable, "name"_a, "value"_a,
+          DOC(PyOpenColorIO, SetEnvVariable));
+    m.def("UnsetEnvVariable", &UnsetEnvVariable, "name"_a,
+          DOC(PyOpenColorIO, UnsetEnvVariable));
+    m.def("IsEnvVariablePresent", &IsEnvVariablePresent, "name"_a,
+          DOC(PyOpenColorIO, IsEnvVariablePresent));
+
     bindPyTransform(m);
     bindPyConfig(m);
     bindPyFileRules(m);

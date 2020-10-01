@@ -10,10 +10,15 @@ void bindPyExposureContrastTransform(py::module & m)
 {
     ExposureContrastTransformRcPtr DEFAULT = ExposureContrastTransform::Create();
 
-    auto cls = py::class_<ExposureContrastTransform, 
-                          ExposureContrastTransformRcPtr /* holder */, 
-                          Transform /* base */>(m, "ExposureContrastTransform")
-        .def(py::init(&ExposureContrastTransform::Create))
+    auto clsExposureContrastTransform = 
+        py::class_<ExposureContrastTransform, 
+                   ExposureContrastTransformRcPtr /* holder */, 
+                   Transform /* base */>(
+            m, "ExposureContrastTransform", 
+            DOC(ExposureContrastTransform))
+
+        .def(py::init(&ExposureContrastTransform::Create), 
+             DOC(ExposureContrastTransform, Create))
         .def(py::init([](ExposureContrastStyle style,
                          double exposure,
                          double contrast,
@@ -51,43 +56,65 @@ void bindPyExposureContrastTransform(py::module & m)
              "dynamicExposure"_a = DEFAULT->isExposureDynamic(),
              "dynamicContrast"_a = DEFAULT->isContrastDynamic(),
              "dynamicGamma"_a = DEFAULT->isGammaDynamic(),
-             "direction"_a = DEFAULT->getDirection())
+             "direction"_a = DEFAULT->getDirection(), 
+             DOC(ExposureContrastTransform, Create))
 
         .def("getFormatMetadata", 
              (FormatMetadata & (ExposureContrastTransform::*)()) 
              &ExposureContrastTransform::getFormatMetadata,
-             py::return_value_policy::reference_internal)
-        .def("getFormatMetadata", 
-             (const FormatMetadata & (ExposureContrastTransform::*)() const) 
-             &ExposureContrastTransform::getFormatMetadata,
-             py::return_value_policy::reference_internal)
-        .def("equals", &ExposureContrastTransform::equals, "other"_a)
-        .def("getStyle", &ExposureContrastTransform::getStyle)
-        .def("setStyle", &ExposureContrastTransform::setStyle, "style"_a)
-        .def("getExposure", &ExposureContrastTransform::getExposure)
-        .def("setExposure", &ExposureContrastTransform::setExposure, "exposure"_a)
-        .def("isExposureDynamic", &ExposureContrastTransform::isExposureDynamic)
-        .def("makeExposureDynamic", &ExposureContrastTransform::makeExposureDynamic)
-        .def("makeExposureNonDynamic", &ExposureContrastTransform::makeExposureNonDynamic)
-        .def("getContrast", &ExposureContrastTransform::getContrast)
-        .def("setContrast", &ExposureContrastTransform::setContrast, "contrast"_a)
-        .def("isContrastDynamic", &ExposureContrastTransform::isContrastDynamic)
-        .def("makeContrastDynamic", &ExposureContrastTransform::makeContrastDynamic)
-        .def("makeContrastNonDynamic", &ExposureContrastTransform::makeContrastNonDynamic)
-        .def("getGamma", &ExposureContrastTransform::getGamma)
-        .def("setGamma", &ExposureContrastTransform::setGamma, "gamma"_a)
-        .def("isGammaDynamic", &ExposureContrastTransform::isGammaDynamic)
-        .def("makeGammaDynamic", &ExposureContrastTransform::makeGammaDynamic)
-        .def("makeGammaNonDynamic", &ExposureContrastTransform::makeGammaNonDynamic)
-        .def("getPivot", &ExposureContrastTransform::getPivot)
-        .def("setPivot", &ExposureContrastTransform::setPivot, "pivot"_a)
-        .def("getLogExposureStep", &ExposureContrastTransform::getLogExposureStep)
+             py::return_value_policy::reference_internal,
+             DOC(ExposureContrastTransform, getFormatMetadata))
+        .def("equals", &ExposureContrastTransform::equals, "other"_a, 
+             DOC(ExposureContrastTransform, equals))
+        .def("getStyle", &ExposureContrastTransform::getStyle, 
+             DOC(ExposureContrastTransform, getStyle))
+        .def("setStyle", &ExposureContrastTransform::setStyle, "style"_a, 
+             DOC(ExposureContrastTransform, setStyle))
+        .def("getExposure", &ExposureContrastTransform::getExposure, 
+             DOC(ExposureContrastTransform, getExposure))
+        .def("setExposure", &ExposureContrastTransform::setExposure, "exposure"_a, 
+             DOC(ExposureContrastTransform, setExposure))
+        .def("isExposureDynamic", &ExposureContrastTransform::isExposureDynamic, 
+             DOC(ExposureContrastTransform, isExposureDynamic))
+        .def("makeExposureDynamic", &ExposureContrastTransform::makeExposureDynamic, 
+             DOC(ExposureContrastTransform, makeExposureDynamic))
+        .def("makeExposureNonDynamic", &ExposureContrastTransform::makeExposureNonDynamic, 
+             DOC(ExposureContrastTransform, makeExposureNonDynamic))
+        .def("getContrast", &ExposureContrastTransform::getContrast, 
+             DOC(ExposureContrastTransform, getContrast))
+        .def("setContrast", &ExposureContrastTransform::setContrast, "contrast"_a, 
+             DOC(ExposureContrastTransform, setContrast))
+        .def("isContrastDynamic", &ExposureContrastTransform::isContrastDynamic, 
+             DOC(ExposureContrastTransform, isContrastDynamic))
+        .def("makeContrastDynamic", &ExposureContrastTransform::makeContrastDynamic, 
+             DOC(ExposureContrastTransform, makeContrastDynamic))
+        .def("makeContrastNonDynamic", &ExposureContrastTransform::makeContrastNonDynamic, 
+             DOC(ExposureContrastTransform, makeContrastNonDynamic))
+        .def("getGamma", &ExposureContrastTransform::getGamma, 
+             DOC(ExposureContrastTransform, getGamma))
+        .def("setGamma", &ExposureContrastTransform::setGamma, "gamma"_a, 
+             DOC(ExposureContrastTransform, setGamma))
+        .def("isGammaDynamic", &ExposureContrastTransform::isGammaDynamic, 
+             DOC(ExposureContrastTransform, isGammaDynamic))
+        .def("makeGammaDynamic", &ExposureContrastTransform::makeGammaDynamic, 
+             DOC(ExposureContrastTransform, makeGammaDynamic))
+        .def("makeGammaNonDynamic", &ExposureContrastTransform::makeGammaNonDynamic, 
+             DOC(ExposureContrastTransform, makeGammaNonDynamic))
+        .def("getPivot", &ExposureContrastTransform::getPivot, 
+             DOC(ExposureContrastTransform, getPivot))
+        .def("setPivot", &ExposureContrastTransform::setPivot, "pivot"_a, 
+             DOC(ExposureContrastTransform, setPivot))
+        .def("getLogExposureStep", &ExposureContrastTransform::getLogExposureStep, 
+             DOC(ExposureContrastTransform, getLogExposureStep))
         .def("setLogExposureStep", &ExposureContrastTransform::setLogExposureStep, 
-             "logExposureStep"_a)
-        .def("getLogMidGray", &ExposureContrastTransform::getLogMidGray)
-        .def("setLogMidGray", &ExposureContrastTransform::setLogMidGray, "logMidGray"_a);
+             "logExposureStep"_a, 
+             DOC(ExposureContrastTransform, setLogExposureStep))
+        .def("getLogMidGray", &ExposureContrastTransform::getLogMidGray, 
+             DOC(ExposureContrastTransform, getLogMidGray))
+        .def("setLogMidGray", &ExposureContrastTransform::setLogMidGray, "logMidGray"_a, 
+             DOC(ExposureContrastTransform, setLogMidGray));
 
-    defStr(cls);
+    defStr(clsExposureContrastTransform);
 }
 
 } // namespace OCIO_NAMESPACE

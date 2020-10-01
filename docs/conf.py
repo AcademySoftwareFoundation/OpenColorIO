@@ -11,9 +11,9 @@ import sys, os
 
 sys.path.insert(0, "@CMAKE_BINARY_DIR@/src/bindings/python")
 
-# -- Add installed ext packages to sys.path ------------------------------------
+# -- Add local Sphinx extensions -----------------------------------------------
 
-sys.path.insert(1, "@CMAKE_BINARY_DIR@/ext/dist/lib@LIB_SUFFIX@/site-packages")
+sys.path.insert(1, "@CMAKE_SOURCE_DIR@/share/docs")
 
 # -- General configuration -----------------------------------------------------
 
@@ -22,8 +22,10 @@ extensions = [
     'sphinx.ext.todo',
     'sphinx.ext.ifconfig',
     'sphinx.ext.napoleon',
-    'sphinx_tabs.tabs',
     'recommonmark',
+    'sphinx_tabs.tabs',
+    'breathe',
+    'prettymethods',
 ]
 templates_path = ['templates']
 source_suffix = {
@@ -50,19 +52,18 @@ rst_prolog = """
 
 # -- Extension Configuration ---------------------------------------------------
 
+# Breathe
+breathe_projects = {
+    'OpenColorIO': '_doxygen/xml',
+}
+breathe_default_project = 'OpenColorIO'
+
 # Pygments
 pygments_style = 'friendly'
-
-# # Breathe
-# breathe_projects = {
-#   u'OpenColorIO': "./_doxygen/xml"
-# }
-# breathe_default_project = u'OpenColorIO'
 
 # Napoleon
 napoleon_use_param = False
 napoleon_include_init_with_doc = True
-
 
 # -- Options for HTML output ---------------------------------------------------
 
