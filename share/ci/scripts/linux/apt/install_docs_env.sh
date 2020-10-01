@@ -4,9 +4,11 @@
 
 set -ex
 
-bash install_doxygen.sh latest
-bash ../install_sphinx.sh latest
-bash ../install_testresources.sh latest
-bash ../install_recommonmark.sh latest
-bash ../install_sphinx-press-theme.sh latest
-bash ../install_breathe.sh latest
+HERE=$(dirname $0)
+
+bash $HERE/install_doxygen.sh latest
+bash $HERE/../install_sphinx.sh latest
+bash $HERE/../install_testresources.sh latest
+bash $HERE/../install_recommonmark.sh latest
+bash $HERE/../install_sphinx-press-theme.sh latest
+bash $HERE/../install_breathe.sh latest

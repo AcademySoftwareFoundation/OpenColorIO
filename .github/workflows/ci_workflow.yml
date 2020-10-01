@@ -477,6 +477,7 @@ jobs:
         uses: actions/checkout@v2
       - name: Install docs env
         run: share/ci/scripts/windows/install_docs_env.sh
+        shell: bash
         if: matrix.build-docs == 'ON'
       - name: Create build directories
         run: |
