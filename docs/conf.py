@@ -50,18 +50,18 @@ rst_prolog = """
 
 # -- Extension Configuration ---------------------------------------------------
 
+# Breathe
+breathe_projects = {
+    'OpenColorIO': '_doxygen/xml',
+}
+breathe_default_project = 'OpenColorIO'
+
 # Pygments
 pygments_style = 'friendly'
 
 # Napoleon
 napoleon_use_param = False
 napoleon_include_init_with_doc = True
-
-# breathe
-breathe_projects = {
-    'OpenColorIO': '_doxygen/xml',
-}
-breathe_default_project = 'OpenColorIO'
 
 # -- Options for HTML output ---------------------------------------------------
 

@@ -1,4 +1,4 @@
 breathe
-sphinx-tabs
+testresources
 recommonmark
 sphinx-press-theme
