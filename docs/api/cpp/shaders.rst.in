@@ -1,0 +1,26 @@
+..
+  SPDX-License-Identifier: CC-BY-4.0
+  Copyright Contributors to the OpenColorIO Project.
+
+Shaders
+=======
+
+GpuShaderCreator
+****************
+
+.. doxygenclass:: @OCIO_NAMESPACE@::GpuShaderCreator
+   :members:
+   :undoc-members:
+
+.. doxygentypedef:: @OCIO_NAMESPACE@::ConstGpuShaderCreatorRcPtr
+.. doxygentypedef:: @OCIO_NAMESPACE@::GpuShaderCreatorRcPtr
+
+GpuShaderDesc
+*************
+
+.. doxygenclass:: @OCIO_NAMESPACE@::GpuShaderDesc
+   :members:
+   :undoc-members:
+
+.. doxygentypedef:: @OCIO_NAMESPACE@::ConstGpuShaderDescRcPtr
+.. doxygentypedef:: @OCIO_NAMESPACE@::GpuShaderDescRcPtr

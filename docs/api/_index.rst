@@ -6,26 +6,24 @@ API
 ===
 
 .. toctree::
-   :caption: API
+   :caption: C++ API
 
-   installation
-   c_baker
-   c_colorspace
-   c_colorspaceset
-   c_config
-   c_context
-   c_cpuprocessor
-   c_dynamicproperty
-   c_filerules
-   c_formatmetadata
-   c_gpuprocessor
-   c_gpushadercreator
-   c_gpushaderdesc
-   c_imagedesc
-   c_look
-   c_packedimagedesc
-   c_planarimagedesc
-   c_processor
-   c_viewingrules
-   transforms
-   types
+   cpp/baker
+   cpp/color_space
+   cpp/config
+   cpp/constants
+   cpp/context
+   cpp/dynamic_property
+   cpp/enums
+   cpp/exceptions
+   cpp/format_metadata
+   cpp/global
+   cpp/grading_transforms
+   cpp/image_desc
+   cpp/look
+   cpp/processors
+   cpp/rules
+   cpp/shaders
+   cpp/system_monitors
+   cpp/transforms
+   cpp/view_transform

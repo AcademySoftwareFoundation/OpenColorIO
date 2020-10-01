@@ -1,0 +1,14 @@
+..
+  SPDX-License-Identifier: CC-BY-4.0
+  Copyright Contributors to the OpenColorIO Project.
+
+Exceptions
+==========
+
+.. doxygenclass:: @OCIO_NAMESPACE@::Exception
+   :members:
+   :undoc-members:
+
+.. doxygenclass:: @OCIO_NAMESPACE@::ExceptionMissingFile
+   :members:
+   :undoc-members:

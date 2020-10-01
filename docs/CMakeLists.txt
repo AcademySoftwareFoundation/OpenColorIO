@@ -3,11 +3,40 @@
 
 ###############################################################################
 ### Python ###
-find_package(Python REQUIRED COMPONENTS Interpreter)
+
 if(${Python_VERSION_MAJOR} GREATER_EQUAL 3)
     if(NOT OCIO_BUILD_PYTHON)
         message(FATAL_ERROR "Doc generation requires that the python bindings be built")
     endif()
+
+    ###############################################################################
+    ### Required dependencies ###
+
+    # doxygen
+    # https://github.com/doxygen/doxygen
+    find_package(Doxygen REQUIRED)
+
+    # Sphinx
+    # https://pypi.python.org/pypi/Sphinx
+    find_package(Sphinx REQUIRED)
+
+    include(FindPythonPackage)
+
+    # testresources
+    # https://pypi.org/project/testresources/
+    find_python_package(testresources REQUIRED)
+
+    # Recommonmark
+    # https://pypi.org/project/recommonmark/
+    find_python_package(recommonmark REQUIRED)
+
+    # Sphinx Press Theme
+    # https://pypi.org/project/sphinx-press-theme/
+    find_python_package(sphinx-press-theme REQUIRED)
+
+    # breathe
+    # https://pypi.org/project/breathe/
+    find_python_package(breathe REQUIRED)
 
     ###############################################################################
     ### Setup PYTHONPATH ###
@@ -72,6 +101,17 @@ if(${Python_VERSION_MAJOR} GREATER_EQUAL 3)
     configure_file(${CMAKE_SOURCE_DIR}/docs/conf.py
         ${CMAKE_BINARY_DIR}/docs/conf.py @ONLY)
 
+    # Find and configure all *.in files in documentation
+    message(STATUS "Substitute documentation variables")
+    file(GLOB_RECURSE DOC_IN_FILES "${CMAKE_SOURCE_DIR}/docs/**.in")
+    foreach(in_file ${DOC_IN_FILES})
+        string(REPLACE "${CMAKE_SOURCE_DIR}/" "${CMAKE_BINARY_DIR}/" 
+            out_file ${in_file})
+        string(REPLACE ".in" "" 
+            out_file ${out_file})
+        configure_file(${in_file} ${out_file} @ONLY)
+    endforeach()
+
     file(GLOB_RECURSE DOC_SOURCES "${CMAKE_SOURCE_DIR}/docs/*")
     list(APPEND DOC_SOURCES
         ${CMAKE_SOURCE_DIR}/README.md
@@ -110,15 +150,14 @@ if(${Python_VERSION_MAJOR} GREATER_EQUAL 3)
     ###############################################################################
     ### Extract rst from c++ headers ###
 
-    set(EXTRACT_COMMAND "${CMAKE_SOURCE_DIR}/share/sphinx/ExtractRstFromSourceCPP.py")
-    set(OCIO_HEADER_DIR "${CMAKE_SOURCE_DIR}/include/OpenColorIO")
-    set(RST_DESTINATION "${CMAKE_BINARY_DIR}/docs/developers/api/")
-    add_custom_target(rst_extraction
-        COMMAND ${CMAKE_COMMAND} -E make_directory ${RST_DESTINATION}
-        COMMAND ${Python_EXECUTABLE} ${EXTRACT_COMMAND} ${OCIO_HEADER_DIR}/OpenColorIO.h ${RST_DESTINATION}/OpenColorIO.rst
-        COMMAND ${Python_EXECUTABLE} ${EXTRACT_COMMAND} ${OCIO_HEADER_DIR}/OpenColorTransforms.h ${RST_DESTINATION}/OpenColorTransforms.rst
-        COMMAND ${Python_EXECUTABLE} ${EXTRACT_COMMAND} ${OCIO_HEADER_DIR}/OpenColorTypes.h ${RST_DESTINATION}/OpenColorTypes.rst
-        COMMENT "Extracting .rst files from C++ headers"
+    get_target_property(DOXYGEN_EXECUTABLE Doxygen::doxygen IMPORTED_LOCATION)
+
+    add_custom_target(doxygen_extraction
+        COMMAND
+            "${DOXYGEN_EXECUTABLE}" "${CMAKE_BINARY_DIR}/docs/Doxyfile"
+        DEPENDS
+            ${CMAKE_BINARY_DIR}/docs/Doxyfile
+        COMMENT "Extracting .xml file from C++ headers"
     )
 
     ###############################################################################
@@ -135,12 +174,8 @@ if(${Python_VERSION_MAJOR} GREATER_EQUAL 3)
     add_dependencies(docs
         OpenColorIO
         PyOpenColorIO
-        rst_extraction
         doc_copy
-        Sphinx
-        sphinx-press-theme
-        recommonmark
-        sphinx-tabs
+        doxygen_extraction
     )
 
     ###############################################################################
@@ -154,44 +189,44 @@ if(${Python_VERSION_MAJOR} GREATER_EQUAL 3)
     ###############################################################################
     ### PDF target ###
 
-    find_package(LATEX)
-    package_root_message(LATEX)
+    # find_package(LATEX)
+    # package_root_message(LATEX)
 
-    if(PDFLATEX_COMPILER)
+    # if(PDFLATEX_COMPILER)
 
-        add_custom_target(latex
-            COMMAND
-                ${PYT_PRE_CMD} "${Sphinx_EXECUTABLE}" -b latex . "${CMAKE_CURRENT_BINARY_DIR}/build-latex"
-            DEPENDS
-                ${CMAKE_BINARY_DIR}/docs/conf.py
-            COMMENT "Building latex doc"
-        )
+    #     add_custom_target(latex
+    #         COMMAND
+    #             ${PYT_PRE_CMD} "${Sphinx_EXECUTABLE}" -b latex . "${CMAKE_CURRENT_BINARY_DIR}/build-latex"
+    #         DEPENDS
+    #             ${CMAKE_BINARY_DIR}/docs/conf.py
+    #         COMMENT "Building latex doc"
+    #     )
 
-        add_dependencies(latex
-            OpenColorIO
-            PyOpenColorIO
-            rst_extraction
-            doc_copy
-            Sphinx
-            sphinx-press-theme
-            recommonmark
-        )
+    #     add_dependencies(latex
+    #         OpenColorIO
+    #         PyOpenColorIO
+    #         rst_extraction
+    #         doc_copy
+    #         Sphinx
+    #         sphinx-press-theme
+    #         recommonmark
+    #     )
 
 
-        add_custom_target(pdf ALL
-            COMMAND ${PDFLATEX_COMPILER} OpenColorIO.tex
-            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/build-latex
-            COMMENT "Building pdf doc"
-        )
+    #     add_custom_target(pdf ALL
+    #         COMMAND ${PDFLATEX_COMPILER} OpenColorIO.tex
+    #         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/build-latex
+    #         COMMENT "Building pdf doc"
+    #     )
 
-        add_dependencies(pdf
-            latex
-        )
+    #     add_dependencies(pdf
+    #         latex
+    #     )
 
-        install(FILES ${CMAKE_CURRENT_BINARY_DIR}/build-latex/OpenColorIO.pdf
-                DESTINATION ${CMAKE_INSTALL_PREFIX}/share/doc/OpenColorIO/)
+    #     install(FILES ${CMAKE_CURRENT_BINARY_DIR}/build-latex/OpenColorIO.pdf
+    #             DESTINATION ${CMAKE_INSTALL_PREFIX}/share/doc/OpenColorIO/)
 
-    endif()
+    # endif()
 
 else()
     message(Warning "Skipping local documentation generation, requires Python >= 3.x")

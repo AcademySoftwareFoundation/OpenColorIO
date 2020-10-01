@@ -2,11 +2,6 @@
 # Copyright Contributors to the OpenColorIO Project.
 
 ###############################################################################
-# External dependencies
-
-find_package(Python REQUIRED COMPONENTS Interpreter Development)
-
-###############################################################################
 # PyDoc generation
 # file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/include")
 # set(PYDOC_OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/include/PyDoc.h")

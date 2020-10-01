@@ -1,0 +1,166 @@
+..
+  SPDX-License-Identifier: CC-BY-4.0
+  Copyright Contributors to the OpenColorIO Project.
+
+Enums
+=====
+
+LoggingLevel
+************
+
+.. doxygenenum:: @OCIO_NAMESPACE@::LoggingLevel
+
+Conversions: :ref:`conversion_logging_level`
+
+ReferenceSpaceType
+******************
+
+.. doxygenenum:: @OCIO_NAMESPACE@::ReferenceSpaceType
+
+SearchReferenceSpaceType
+************************
+
+.. doxygenenum:: @OCIO_NAMESPACE@::SearchReferenceSpaceType
+
+ColorSpaceVisibility
+********************
+
+.. doxygenenum:: @OCIO_NAMESPACE@::ColorSpaceVisibility
+
+ViewType
+********
+
+.. doxygenenum:: @OCIO_NAMESPACE@::ViewType
+
+ColorSpaceDirection
+*******************
+
+.. doxygenenum:: @OCIO_NAMESPACE@::ColorSpaceDirection
+
+Conversions: :ref:`conversion_color_space_direction`
+
+ViewTransformDirection
+**********************
+
+.. doxygenenum:: @OCIO_NAMESPACE@::ViewTransformDirection
+
+.. _enum_transform_direction:
+
+TransformDirection
+******************
+
+.. doxygenenum:: @OCIO_NAMESPACE@::TransformDirection
+
+Conversions: :ref:`conversion_transform_direction`
+
+Interpolation
+*************
+
+.. doxygenenum:: @OCIO_NAMESPACE@::Interpolation
+
+Conversions: :ref:`conversion_interpolation`
+
+BitDepth
+********
+
+.. doxygenenum:: @OCIO_NAMESPACE@::BitDepth
+
+Conversions: :ref:`conversion_bit_depth`
+
+Lut1DHueAdjust
+**************
+
+.. doxygenenum:: @OCIO_NAMESPACE@::Lut1DHueAdjust
+
+ChannelOrdering
+***************
+
+.. doxygenenum:: @OCIO_NAMESPACE@::ChannelOrdering
+
+Allocation
+**********
+
+.. doxygenenum:: @OCIO_NAMESPACE@::Allocation
+
+Conversions: :ref:`conversion_allocation`
+
+GpuLanguage
+***********
+
+.. doxygenenum:: @OCIO_NAMESPACE@::GpuLanguage
+
+Conversions: :ref:`conversion_gpu_language`
+
+EnvironmentMode
+***************
+
+.. doxygenenum:: @OCIO_NAMESPACE@::EnvironmentMode
+
+Conversions: :ref:`conversion_environment_mode`
+
+RangeStyle
+**********
+
+.. doxygenenum:: @OCIO_NAMESPACE@::RangeStyle
+
+Conversions: :ref:`conversion_range_style`
+
+FixedFunctionStyle
+******************
+
+.. doxygenenum:: @OCIO_NAMESPACE@::FixedFunctionStyle
+
+Conversions: :ref:`conversion_fixed_function_style`
+
+ExposureContrastStyle
+*********************
+
+.. doxygenenum:: @OCIO_NAMESPACE@::ExposureContrastStyle
+
+Conversions: :ref:`conversion_exposure_contrast_style`
+
+CDLStyle
+********
+
+.. doxygenenum:: @OCIO_NAMESPACE@::CDLStyle
+
+Conversions: :ref:`conversion_cdl_style`
+
+NegativeStyle
+*************
+
+.. doxygenenum:: @OCIO_NAMESPACE@::NegativeStyle
+
+Conversions: :ref:`conversion_negative_style`
+
+GradingStyle
+************
+
+.. doxygenenum:: @OCIO_NAMESPACE@::GradingStyle
+
+Conversions: :ref:`conversion_grading_style`
+
+DynamicPropertyType
+*******************
+
+.. doxygenenum:: @OCIO_NAMESPACE@::DynamicPropertyType
+
+RGBCurveType
+************
+
+.. doxygenenum:: @OCIO_NAMESPACE@::RGBCurveType
+
+UniformDataType
+***************
+
+.. doxygenenum:: @OCIO_NAMESPACE@::UniformDataType
+
+OptimizationFlags
+*****************
+
+.. doxygenenum:: @OCIO_NAMESPACE@::OptimizationFlags
+
+ProcessorCacheFlags
+*******************
+
+.. doxygenenum:: @OCIO_NAMESPACE@::ProcessorCacheFlags

@@ -1,0 +1,31 @@
+..
+  SPDX-License-Identifier: CC-BY-4.0
+  Copyright Contributors to the OpenColorIO Project.
+
+ImageDesc
+=========
+
+.. doxygenvariable:: @OCIO_NAMESPACE@::AutoStride
+
+.. doxygenclass:: @OCIO_NAMESPACE@::ImageDesc
+   :members:
+   :undoc-members:
+
+.. doxygenfunction:: @OCIO_NAMESPACE@::operator<<(std::ostream&, const ImageDesc&)
+
+.. doxygentypedef:: @OCIO_NAMESPACE@::ConstImageDescRcPtr
+.. doxygentypedef:: @OCIO_NAMESPACE@::ImageDescRcPtr
+
+PackedImageDesc
+***************
+
+.. doxygenclass:: @OCIO_NAMESPACE@::PackedImageDesc
+   :members:
+   :undoc-members:
+
+PlanarImageDesc
+***************
+
+.. doxygenclass:: @OCIO_NAMESPACE@::PlanarImageDesc
+   :members:
+   :undoc-members:

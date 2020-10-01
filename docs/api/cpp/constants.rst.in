@@ -1,0 +1,56 @@
+..
+  SPDX-License-Identifier: CC-BY-4.0
+  Copyright Contributors to the OpenColorIO Project.
+
+Constants
+=========
+
+.. _vars_envvar:
+
+Environment Variables
+*********************
+
+.. doxygengroup:: VarsEnvvar
+   :content-only:
+   :members:
+   :undoc-members:
+
+.. _vars_roles:
+
+Roles
+*****
+
+.. doxygengroup:: VarsRoles
+   :content-only:
+   :members:
+   :undoc-members:
+
+.. _vars_shared_view:
+
+Shared View
+***********
+
+.. doxygengroup:: VarsSharedView
+   :content-only:
+   :members:
+   :undoc-members:
+
+.. _vars_format_metadata:
+
+FormatMetadata
+**************
+
+.. doxygengroup:: VarsFormatMetadata
+   :content-only:
+   :members:
+   :undoc-members:
+
+.. _vars_caches:
+
+Caches
+******
+
+.. doxygengroup:: VarsCaches
+   :content-only:
+   :members:
+   :undoc-members:

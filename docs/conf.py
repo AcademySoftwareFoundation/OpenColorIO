@@ -22,8 +22,8 @@ extensions = [
     'sphinx.ext.todo',
     'sphinx.ext.ifconfig',
     'sphinx.ext.napoleon',
-    'sphinx_tabs.tabs',
     'recommonmark',
+    'breathe',
 ]
 templates_path = ['templates']
 source_suffix = {
@@ -53,16 +53,15 @@ rst_prolog = """
 # Pygments
 pygments_style = 'friendly'
 
-# # Breathe
-# breathe_projects = {
-#   u'OpenColorIO': "./_doxygen/xml"
-# }
-# breathe_default_project = u'OpenColorIO'
-
 # Napoleon
 napoleon_use_param = False
 napoleon_include_init_with_doc = True
 
+# breathe
+breathe_projects = {
+    'OpenColorIO': '_doxygen/xml',
+}
+breathe_default_project = 'OpenColorIO'
 
 # -- Options for HTML output ---------------------------------------------------
 

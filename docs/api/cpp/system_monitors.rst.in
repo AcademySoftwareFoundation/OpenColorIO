@@ -1,0 +1,13 @@
+..
+  SPDX-License-Identifier: CC-BY-4.0
+  Copyright Contributors to the OpenColorIO Project.
+
+SystemMonitors
+==============
+
+.. doxygenclass:: @OCIO_NAMESPACE@::SystemMonitors
+   :members:
+   :undoc-members:
+
+.. doxygentypedef:: @OCIO_NAMESPACE@::ConstSystemMonitorsRcPtr
+.. doxygentypedef:: @OCIO_NAMESPACE@::SystemMonitorsRcPtr

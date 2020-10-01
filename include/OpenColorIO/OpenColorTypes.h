@@ -646,6 +646,10 @@ extern OCIOEXPORT ExposureContrastStyle ExposureContrastStyleFromString(const ch
 extern OCIOEXPORT const char * NegativeStyleToString(NegativeStyle style);
 extern OCIOEXPORT NegativeStyle NegativeStyleFromString(const char * style);
 
+/** \defgroup VarsEnvvar
+ *  @{
+ */
+
 // TODO: Move to .rst
 /*
 Envvar
@@ -684,6 +688,12 @@ extern OCIOEXPORT const char * OCIO_INACTIVE_COLORSPACES_ENVVAR;
  * Ex: OCIO_OPTIMIZATION_FLAGS="20479" or "0x4FFF" for OPTIMIZATION_LOSSLESS.
  */
 extern OCIOEXPORT const char * OCIO_OPTIMIZATION_FLAGS_ENVVAR;
+
+/** @}*/
+
+/** \defgroup VarsRoles
+ *  @{
+ */
 
 // TODO: Move to .rst
 /*!rst::
@@ -735,6 +745,12 @@ extern OCIOEXPORT const char * ROLE_TEXTURE_PAINT;
  */
 extern OCIOEXPORT const char * ROLE_MATTE_PAINT;
 
+/** @}*/
+
+/** \defgroup VarsSharedView
+ *  @{
+ */
+
 /*!rst::
 Shared View
 ***********
@@ -746,6 +762,12 @@ Shared View
  * has the same name as the display the shared view is used by.
  */
 extern OCIOEXPORT const char * OCIO_VIEW_USE_DISPLAY_NAME;
+
+/** @}*/
+
+/** \defgroup VarsFormatMetadata
+ *  @{
+ */
 
 // TODO: Move to .rst
 /*!rst::
@@ -800,6 +822,12 @@ extern OCIOEXPORT const char * METADATA_NAME;
  */
 extern OCIOEXPORT const char * METADATA_ID;
 
+/** @}*/
+
+/** \defgroup VarsCaches
+ *  @{
+ */
+
 /*!rst::
 Caches
 ******
@@ -827,6 +855,8 @@ extern OCIOEXPORT const char * OCIO_DISABLE_PROCESSOR_CACHES;
 // not match. That fallback introduces a major performance hit in some cases so there is an env.
 // variable to disable the fallback.
 extern OCIOEXPORT const char * OCIO_DISABLE_CACHE_FALLBACK;
+
+/** @}*/
 
 } // namespace OCIO_NAMESPACE
 

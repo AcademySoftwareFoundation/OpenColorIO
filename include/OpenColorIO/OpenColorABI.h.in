@@ -5,7 +5,7 @@
 #define INCLUDED_OCIO_OPENCOLORABI_H
 
 // Makefile configuration options
-#define OCIO_NAMESPACE @OCIO_NAMESPACE@_v@OpenColorIO_VERSION_MAJOR@_@OpenColorIO_VERSION_MINOR@@OpenColorIO_VERSION_RELEASE_TYPE@
+#define OCIO_NAMESPACE @OCIO_NAMESPACE@
 #define OCIO_VERSION "@OpenColorIO_VERSION@@OpenColorIO_VERSION_RELEASE_TYPE@"
 
 /* Version as a single 4-byte hex number, e.g. 0x01050200 == 1.5.2

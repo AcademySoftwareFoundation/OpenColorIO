@@ -1,0 +1,13 @@
+..
+  SPDX-License-Identifier: CC-BY-4.0
+  Copyright Contributors to the OpenColorIO Project.
+
+Baker
+=====
+
+.. doxygenclass:: @OCIO_NAMESPACE@::Baker
+   :members:
+   :undoc-members:
+
+.. doxygentypedef:: @OCIO_NAMESPACE@::ConstBakerRcPtr
+.. doxygentypedef:: @OCIO_NAMESPACE@::BakerRcPtr

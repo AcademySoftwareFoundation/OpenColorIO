@@ -1,0 +1,58 @@
+..
+  SPDX-License-Identifier: CC-BY-4.0
+  Copyright Contributors to the OpenColorIO Project.
+
+DynamicProperty
+===============
+
+.. doxygenclass:: @OCIO_NAMESPACE@::DynamicProperty
+   :members:
+   :undoc-members:
+
+.. doxygentypedef:: @OCIO_NAMESPACE@::ConstDynamicPropertyRcPtr
+.. doxygentypedef:: @OCIO_NAMESPACE@::DynamicPropertyRcPtr
+
+DynamicPropertyValue
+********************
+
+.. doxygennamespace:: @OCIO_NAMESPACE@::DynamicPropertyValue
+
+DynamicPropertyDouble
+*********************
+
+.. doxygenclass:: @OCIO_NAMESPACE@::DynamicPropertyDouble
+   :members:
+   :undoc-members:
+
+.. doxygentypedef:: @OCIO_NAMESPACE@::ConstDynamicPropertyDoubleRcPtr
+.. doxygentypedef:: @OCIO_NAMESPACE@::DynamicPropertyDoubleRcPtr
+
+DynamicPropertyGradingPrimary
+*****************************
+
+.. doxygenclass:: @OCIO_NAMESPACE@::DynamicPropertyGradingPrimary
+   :members:
+   :undoc-members:
+
+.. doxygentypedef:: @OCIO_NAMESPACE@::ConstDynamicPropertyGradingPrimaryRcPtr
+.. doxygentypedef:: @OCIO_NAMESPACE@::DynamicPropertyGradingPrimaryRcPtr
+
+DynamicPropertyGradingRGBCurve
+******************************
+
+.. doxygenclass:: @OCIO_NAMESPACE@::DynamicPropertyGradingRGBCurve
+   :members:
+   :undoc-members:
+
+.. doxygentypedef:: @OCIO_NAMESPACE@::ConstDynamicPropertyGradingRGBCurveRcPtr
+.. doxygentypedef:: @OCIO_NAMESPACE@::DynamicPropertyGradingRGBCurveRcPtr
+
+DynamicPropertyGradingTone
+**************************
+
+.. doxygenclass:: @OCIO_NAMESPACE@::DynamicPropertyGradingTone
+   :members:
+   :undoc-members:
+
+.. doxygentypedef:: @OCIO_NAMESPACE@::ConstDynamicPropertyGradingToneRcPtr
+.. doxygentypedef:: @OCIO_NAMESPACE@::DynamicPropertyGradingToneRcPtr
