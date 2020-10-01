@@ -6,8 +6,8 @@ set -ex
 
 DOXYGEN_VERSION="$1"
 
-if [ "DOXYGEN_VERSION" == "latest" ]; then
-    sudo brew install doxygen
+if [ "$DOXYGEN_VERSION" == "latest" ]; then
+    brew install doxygen
 else
-    sudo brew install doxygen@${DOXYGEN_VERSION}
+    brew install doxygen@${DOXYGEN_VERSION}
 fi
