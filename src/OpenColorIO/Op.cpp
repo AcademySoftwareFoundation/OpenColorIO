@@ -62,6 +62,10 @@ OpDataRcPtr OpData::getIdentityReplacement() const
     return std::make_shared<MatrixOpData>();
 }
 
+void OpData::getSimplerReplacement(OpDataVec & ops) const
+{
+}
+
 bool OpData::operator==(const OpData & other) const
 {
     if (this == &other) return true;
@@ -192,6 +196,15 @@ OpRcPtr Op::getIdentityReplacement() const
     return ops[0];
 }
 
+void Op::getSimplerReplacement(OpRcPtrVec & ops) const
+{
+    OpDataVec opDataVec;
+    m_data->getSimplerReplacement(opDataVec);
+    for (const auto & opData : opDataVec)
+    {
+        CreateOpVecFromOpData(ops, opData, TRANSFORM_DIR_FORWARD);
+    }
+}
 
 OpRcPtrVec::OpRcPtrVec()
     : m_metadata()
@@ -275,25 +288,23 @@ bool OpRcPtrVec::isNoOp() const noexcept
 
 bool OpRcPtrVec::hasChannelCrosstalk() const noexcept
 {
-    for (const auto & op : m_ops)
-    {
-        if(op->hasChannelCrosstalk()) return true;
-    }
+    return m_ops.end() != std::find_if(m_ops.begin(),
+                                       m_ops.end(),
+                                       [](const OpRcPtr & op) { return op->hasChannelCrosstalk(); } );
+}
 
-    return false;
+bool OpRcPtrVec::isDynamic() const noexcept
+{
+    return m_ops.end() != std::find_if(m_ops.begin(),
+                                       m_ops.end(),
+                                       [](const OpRcPtr & op) { return op->isDynamic(); } );
 }
 
 bool OpRcPtrVec::hasDynamicProperty(DynamicPropertyType type) const noexcept
 {
-    for (const auto & op : m_ops)
-    {
-        if (op->hasDynamicProperty(type))
-        {
-            return true;
-        }
-    }
-
-    return false;
+    return m_ops.end() != std::find_if(m_ops.begin(),
+                                       m_ops.end(),
+                                       [type](const OpRcPtr & op) { return op->hasDynamicProperty(type); } );
 }
 
 DynamicPropertyRcPtr OpRcPtrVec::getDynamicProperty(DynamicPropertyType type) const
@@ -434,15 +445,15 @@ std::string SerializeOpVec(const OpRcPtrVec & ops, int indent)
 {
     std::ostringstream oss;
 
-    for(OpRcPtrVec::size_type i = 0, size = ops.size(); i < size; ++i)
+    for (OpRcPtrVec::size_type idx = 0, size = ops.size(); idx < size; ++idx)
     {
-        const OpRcPtr & op = ops[i];
+        const OpRcPtr & op = ops[idx];
 
         oss << pystring::mul(" ", indent);
-        oss << "Op " << i << ": " << *op << " ";
+        oss << "Op " << idx << ": " << *op << " ";
 
         // When serializing not optimized ops, some no-op ops (such as FileNopOp, etc)
-        // could still be present.
+        // could still be present. 
         if (op->isNoOpType())
         {
             oss << op->getInfo();

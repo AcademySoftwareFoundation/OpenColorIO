@@ -22,16 +22,15 @@ namespace OCIO_NAMESPACE
 
 static const std::string ocioTestFilesDir(STR(OCIO_UNIT_TEST_FILES_DIR));
 
-const char * getTestFilesDir()
+const std::string & GetTestFilesDir()
 {
-    return ocioTestFilesDir.c_str();
+    return ocioTestFilesDir;
 }
 
 // Create a FileTransform.
 FileTransformRcPtr CreateFileTransform(const std::string & fileName)
 {
-    const std::string filePath(std::string(getTestFilesDir()) + "/"
-        + fileName);
+    const std::string filePath(GetTestFilesDir() + "/" + fileName);
 
     // Create a FileTransform
     FileTransformRcPtr pFileTransform = FileTransform::Create();
@@ -55,8 +54,6 @@ void BuildOpsTest(OpRcPtrVec & fileOps,
 
     // Create empty Config to use
     ConfigRcPtr config = Config::Create();
-    config->setMajorVersion(2);
-
     BuildFileTransformOps(fileOps, *(config.get()), context,
                           *(fileTransform.get()), dir);
 }
@@ -68,8 +65,6 @@ ConstProcessorRcPtr GetFileTransformProcessor(const std::string & fileName)
 
     // Create empty Config to use.
     ConfigRcPtr config = Config::Create();
-    config->setMajorVersion(2);
-
     // Get the processor corresponding to the transform.
     return config->getProcessor(fileTransform);
 }

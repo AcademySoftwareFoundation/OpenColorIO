@@ -6,6 +6,7 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "ops/gradingprimary/GradingPrimary.h"
 #include "ops/gradingrgbcurve/GradingBSplineCurve.h"
 #include "ops/gradingtone/GradingTone.h"
 
@@ -19,6 +20,7 @@ typedef OCIO_SHARED_PTR<DynamicPropertyImpl> DynamicPropertyImplRcPtr;
 class DynamicPropertyImpl : public DynamicProperty
 {
 public:
+    DynamicPropertyImpl() = delete;
     DynamicPropertyImpl(DynamicPropertyType type, bool dynamic);
     virtual ~DynamicPropertyImpl() = default;
 
@@ -55,9 +57,7 @@ public:
 protected:
     DynamicPropertyImpl(DynamicPropertyType type);
 
-    DynamicPropertyImpl() = delete;
     DynamicPropertyImpl & operator=(DynamicPropertyImpl &) = delete;
-
     DynamicPropertyType m_type{ DYNAMIC_PROPERTY_EXPOSURE };
 
     bool m_isDynamic{ false };
@@ -72,6 +72,7 @@ typedef OCIO_SHARED_PTR<DynamicPropertyDoubleImpl> DynamicPropertyDoubleImplRcPt
 class DynamicPropertyDoubleImpl : public DynamicPropertyImpl, public DynamicPropertyDouble
 {
 public:
+    DynamicPropertyDoubleImpl() = delete;
     DynamicPropertyDoubleImpl(DynamicPropertyType type, double val, bool dynamic);
     ~DynamicPropertyDoubleImpl() = default;
     double getValue() const override { return m_value; }
@@ -86,34 +87,61 @@ private:
 class DynamicPropertyGradingPrimaryImpl;
 typedef OCIO_SHARED_PTR<DynamicPropertyGradingPrimaryImpl> DynamicPropertyGradingPrimaryImplRcPtr;
 
-class DynamicPropertyGradingPrimaryImpl : public DynamicPropertyImpl, public DynamicPropertyGradingPrimary
+class DynamicPropertyGradingPrimaryImpl : public DynamicPropertyImpl,
+                                          public DynamicPropertyGradingPrimary
 {
 public:
-    DynamicPropertyGradingPrimaryImpl(const GradingPrimary & val, bool dynamic);
+    DynamicPropertyGradingPrimaryImpl() = delete;
+    DynamicPropertyGradingPrimaryImpl(GradingStyle style,
+                                      TransformDirection dir,
+                                      const GradingPrimary & val,
+                                      bool dynamic);
+    // Only to create a copy.
+    DynamicPropertyGradingPrimaryImpl(GradingStyle style,
+                                      TransformDirection dir,
+                                      const GradingPrimary & value,
+                                      const GradingPrimaryPreRender & computed,
+                                      bool dynamic);
     ~DynamicPropertyGradingPrimaryImpl() = default;
 
     const GradingPrimary & getValue() const override { return m_value; }
     void setValue(const GradingPrimary & value) override;
 
-    bool getLocalBypass() const { return m_localBypass; }
+    void setStyle(GradingStyle style);
+    void setDirection(TransformDirection dir);
+    const GradingPrimaryPreRender & getComputedValue() const { return m_preRenderValues; }
+
+    const Float3 & getBrightness() const { return m_preRenderValues.getBrightness(); }
+    const Float3 & getContrast() const { return m_preRenderValues.getContrast(); }
+    const Float3 & getGamma() const { return m_preRenderValues.getGamma(); }
+    double getPivot() const { return m_preRenderValues.getPivot(); }
+
+    const Float3 & getExposure() const { return m_preRenderValues.getExposure(); }
+    const Float3 & getOffset() const { return m_preRenderValues.getOffset(); }
+
+    const Float3 & getSlope() const { return m_preRenderValues.getSlope(); }
+
+    // Do not apply the op if all params are identity.
+    bool getLocalBypass() const { return m_preRenderValues.m_localBypass; }
 
     DynamicPropertyGradingPrimaryImplRcPtr createEditableCopy() const;
 
 private:
-    void precompute();
-
+    GradingStyle m_style{ GRADING_LOG };
+    TransformDirection m_direction{ TRANSFORM_DIR_FORWARD };
     GradingPrimary m_value;
-    // Do not apply the op if all params are identity.
-    bool m_localBypass{ false };
+    GradingPrimaryPreRender m_preRenderValues;
 };
 
 
 class DynamicPropertyGradingRGBCurveImpl;
 typedef OCIO_SHARED_PTR<DynamicPropertyGradingRGBCurveImpl> DynamicPropertyGradingRGBCurveImplRcPtr;
 
-class DynamicPropertyGradingRGBCurveImpl : public DynamicPropertyImpl, public DynamicPropertyGradingRGBCurve
+class DynamicPropertyGradingRGBCurveImpl : public DynamicPropertyImpl,
+                                           public DynamicPropertyGradingRGBCurve
 {
 public:
+    DynamicPropertyGradingRGBCurveImpl() = delete;
     DynamicPropertyGradingRGBCurveImpl(const ConstGradingRGBCurveRcPtr & value, bool dynamic);
     ~DynamicPropertyGradingRGBCurveImpl() = default;
     const ConstGradingRGBCurveRcPtr & getValue() const override;
@@ -122,7 +150,7 @@ public:
     bool getLocalBypass() const;
     int getNumKnots() const;
     int getNumCoefs() const;
-    static int GetNumCurves() { return 4; }
+    static int GetNumOffsetValues() { return 8; }
     const int * getKnotsOffsetsArray() const;
     const int * getCoefsOffsetsArray() const;
     const float * getKnotsArray() const;
@@ -147,29 +175,32 @@ private:
 class DynamicPropertyGradingToneImpl;
 typedef OCIO_SHARED_PTR<DynamicPropertyGradingToneImpl> DynamicPropertyGradingToneImplRcPtr;
 
-class DynamicPropertyGradingToneImpl : public DynamicPropertyImpl, public DynamicPropertyGradingTone
+class DynamicPropertyGradingToneImpl : public DynamicPropertyImpl,
+                                       public DynamicPropertyGradingTone
 {
 public:
+    DynamicPropertyGradingToneImpl() = delete;
     DynamicPropertyGradingToneImpl(const GradingTone & value, GradingStyle style, bool dynamic);
+    // Only to create a copy.
+    DynamicPropertyGradingToneImpl(const GradingTone & value,
+                                   const GradingTonePreRender & computed,
+                                   bool dynamic);
     ~DynamicPropertyGradingToneImpl() = default;
 
     const GradingTone & getValue() const override { return m_value; }
     void setValue(const GradingTone & value) override;
 
-    void useStyle(GradingStyle style);
-    const GradingTonePreRender & getComputedValue() const { return m_computed; }
+    void setStyle(GradingStyle style);
+    const GradingTonePreRender & getComputedValue() const { return m_preRenderValues; }
 
-    bool getLocalBypass() const { return m_computed.m_localBypass; }
-
-    // Only used to create a copy.
-    DynamicPropertyGradingToneImpl(const GradingTone & value,
-                                   const GradingTonePreRender & computed, bool dynamic);
+    bool getLocalBypass() const { return m_preRenderValues.m_localBypass; }
 
     DynamicPropertyGradingToneImplRcPtr createEditableCopy() const;
 
 private:
+
     GradingTone m_value;
-    GradingTonePreRender m_computed;
+    GradingTonePreRender m_preRenderValues;
 };
 
 } // namespace OCIO_NAMESPACE

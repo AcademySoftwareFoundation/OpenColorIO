@@ -625,14 +625,18 @@ public:
 
     const GradingPrimaryOpDataRcPtr & getGradingPrimary() const
     {
-        return m_gradingPrimary;
+        return m_gradingPrimaryOpData;
     }
+
+    GradingPrimary & getValue() { return m_gradingPrimary; }
+    const GradingPrimary & getValue() const { return m_gradingPrimary; }
 
 protected:
     bool isOpParameterValid(const char * att) const noexcept override;
 
 private:
-    GradingPrimaryOpDataRcPtr m_gradingPrimary;
+    GradingPrimary m_gradingPrimary{ GRADING_LOG };
+    GradingPrimaryOpDataRcPtr m_gradingPrimaryOpData;
 };
 
 class CTFReaderGradingPrimaryParamElt : public XmlReaderPlainElt

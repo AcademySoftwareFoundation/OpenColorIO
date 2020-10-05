@@ -160,13 +160,18 @@ void ViewingPipeline::validate() const
     }
 }
 
+ConstProcessorRcPtr ViewingPipeline::getProcessor(const ConstConfigRcPtr & config) const
+{
+    return getProcessor(config, config->getCurrentContext());
+}
+
 ConstProcessorRcPtr ViewingPipeline::getProcessor(const ConstConfigRcPtr & configIn,
                                                   const ConstContextRcPtr & context) const
 {
     validate();
 
     // Get direction from display transform.
-    TransformDirection dir = m_displayViewTransform->getDirection();
+    const TransformDirection dir = m_displayViewTransform->getDirection();
 
     ConstConfigRcPtr config = configIn;
 

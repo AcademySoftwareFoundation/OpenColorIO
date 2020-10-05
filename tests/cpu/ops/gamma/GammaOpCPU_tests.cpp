@@ -20,7 +20,9 @@ void ApplyGamma(const OCIO::OpRcPtr & op,
                 long numPixels, unsigned line,
                 float errorThreshold)
 {
-    OCIO_CHECK_NO_THROW_FROM(op->apply(image, numPixels), line);
+    const auto cpu = op->getCPUOp(true);
+
+    OCIO_CHECK_NO_THROW_FROM(cpu->apply(image, image, numPixels), line);
 
     for(long idx=0; idx<(numPixels*4); ++idx)
     {

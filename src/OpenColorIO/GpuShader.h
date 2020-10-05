@@ -32,14 +32,12 @@ public:
     unsigned getNum3DTextures() const noexcept override;
     void add3DTexture(const char * textureName,
                       const char * samplerName,
-                      const char * uid,
                       unsigned edgelen,
                       Interpolation interpolation,
                       const float * values) override;
     void get3DTexture(unsigned index,
                       const char *& textureName,
                       const char *& samplerName,
-                      const char *& uid,
                       unsigned & edgelen,
                       Interpolation & interpolation) const override;
     void get3DTextureValues(unsigned index, const float *& value) const override;
@@ -52,24 +50,22 @@ protected:
     // Uniforms are not used by the legacy shader builder
     //
     unsigned getNumUniforms() const noexcept override;
-    void getUniform(unsigned index, GpuShaderDesc::UniformData & data) const override;
-    bool addUniform(const char * name,
-                    const DoubleGetter & getter) override;
-    bool addUniform(const char * name,
-                    const BoolGetter & getter) override;
-    bool addUniform(const char * name,
-                    const SizeGetter & getSize,
-                    const FloatArrayGetter & getArray) override;
+    const char * getUniform(unsigned index, GpuShaderDesc::UniformData & data) const override;
+    bool addUniform(const char * name, const DoubleGetter & getter) override;
+    bool addUniform(const char * name, const BoolGetter & getter) override;
+    bool addUniform(const char * name, const Float3Getter & getter) override;
     bool addUniform(const char * name,
                     const SizeGetter & getSize,
-                    const IntArrayGetter & getArray) override;
+                    const VectorFloatGetter & getVector) override;
+    bool addUniform(const char * name,
+                    const SizeGetter & getSize,
+                    const VectorIntGetter & getVector) override;
 
     // 1D & 2D textures are not used by the legacy shader builder
     //
     unsigned getNumTextures() const noexcept override;
     void addTexture(const char * textureName,
                     const char * samplerName,
-                    const char * uid,
                     unsigned width, unsigned height,
                     TextureType channel, Interpolation interpolation,
                     const float * values) override;
@@ -77,7 +73,6 @@ protected:
     void getTexture(unsigned index,
                     const char *& textureName,
                     const char *& samplerName,
-                    const char *& uid,
                     unsigned & width, unsigned & height,
                     TextureType & channel,
                     Interpolation & interpolation) const override;
@@ -123,24 +118,22 @@ public:
     // Accessors to the uniforms
     //
     unsigned getNumUniforms() const noexcept override;
-    void getUniform(unsigned index, GpuShaderDesc::UniformData & data) const override;
-    bool addUniform(const char * name,
-                    const DoubleGetter & getDouble) override;
-    bool addUniform(const char * name,
-                    const BoolGetter & getBool) override;
-    bool addUniform(const char * name,
-                    const SizeGetter & getSize,
-                    const FloatArrayGetter & getFloatArray) override;
+    const char * getUniform(unsigned index, GpuShaderDesc::UniformData & data) const override;
+    bool addUniform(const char * name, const DoubleGetter & getDouble) override;
+    bool addUniform(const char * name, const BoolGetter & getBool) override;
+    bool addUniform(const char * name, const Float3Getter & getter) override;
     bool addUniform(const char * name,
                     const SizeGetter & getSize,
-                    const IntArrayGetter & getInt2Array) override;
+                    const VectorFloatGetter & getVectorFloat) override;
+    bool addUniform(const char * name,
+                    const SizeGetter & getSize,
+                    const VectorIntGetter & getVectorInt) override;
 
     // Accessors to the 1D & 2D textures built from 1D LUT
     //
     unsigned getNumTextures() const noexcept override;
     void addTexture(const char * textureName,
                     const char * samplerNName,
-                    const char * uid,
                     unsigned width, unsigned height,
                     TextureType channel,
                     Interpolation interpolation,
@@ -148,7 +141,6 @@ public:
     void getTexture(unsigned index,
                     const char *& textureName,
                     const char *& samplerName,
-                    const char *& uid,
                     unsigned & width, unsigned & height,
                     TextureType & channel,
                     Interpolation & interpolation) const override;
@@ -159,14 +151,12 @@ public:
     unsigned getNum3DTextures() const noexcept override;
     void add3DTexture(const char * textureName,
                       const char * samplerName,
-                      const char * uid,
                       unsigned edgelen,
                       Interpolation interpolation,
                       const float * values) override;
     void get3DTexture(unsigned index,
                       const char *& textureName,
                       const char *& samplerName,
-                      const char *& uid,
                       unsigned & edgelen,
                       Interpolation & interpolation) const override;
     void get3DTextureValues(unsigned index, const float *& value) const override;

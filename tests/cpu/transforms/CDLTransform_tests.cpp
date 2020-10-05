@@ -39,7 +39,7 @@ OCIO_ADD_TEST(CDLTransform, equality)
 
 OCIO_ADD_TEST(CDLTransform, create_from_cc_file)
 {
-    const std::string filePath(std::string(OCIO::getTestFilesDir()) + "/cdl_test1.cc");
+    const std::string filePath(OCIO::GetTestFilesDir() + "/cdl_test1.cc");
     OCIO::CDLTransformRcPtr transform = OCIO::CDLTransform::CreateFromFile(filePath.c_str(), nullptr);
 
     {
@@ -110,7 +110,7 @@ OCIO_ADD_TEST(CDLTransform, create_from_cc_file)
 
 OCIO_ADD_TEST(CDLTransform, create_from_ccc_file)
 {
-    const std::string filePath(std::string(OCIO::getTestFilesDir()) + "/cdl_test1.ccc");
+    const std::string filePath(OCIO::GetTestFilesDir() + "/cdl_test1.ccc");
     {
         // Using ID.
         auto transform = OCIO::CDLTransform::CreateFromFile(filePath.c_str(), "cc0003");
@@ -175,7 +175,7 @@ OCIO_ADD_TEST(CDLTransform, create_from_cdl_file)
     // this CDL file (i.e. containing a ColorDecisionList) correctly loads
     // using a CDLTransform.
 
-    const std::string filePath(std::string(OCIO::getTestFilesDir()) + "/cdl_test1.cdl");
+    const std::string filePath(OCIO::GetTestFilesDir() + "/cdl_test1.cdl");
 
     OCIO::CDLTransformRcPtr transform;
 
@@ -186,7 +186,7 @@ OCIO_ADD_TEST(CDLTransform, create_from_cdl_file)
 
 OCIO_ADD_TEST(CDLTransform, create_from_ccc_file_failure)
 {
-    const std::string filePath(std::string(OCIO::getTestFilesDir()) + "/cdl_test1.ccc");
+    const std::string filePath(OCIO::GetTestFilesDir() + "/cdl_test1.ccc");
     {
         // Using ID.
         OCIO_CHECK_THROW_WHAT(
@@ -491,7 +491,6 @@ OCIO_ADD_TEST(CDLTransform, style)
     const std::string outXMLNoClamp(cdl->getXML());
 
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
     {
         OCIO::OpRcPtrVec ops;
         OCIO::BuildCDLOp(ops, *config, *cdl, OCIO::TRANSFORM_DIR_FORWARD);
@@ -540,4 +539,63 @@ OCIO_ADD_TEST(CDLTransform, style)
     cdl = OCIO::CDLTransform::Create();
     cdl->setXML(outXMLNoClamp.c_str());
     OCIO_CHECK_EQUAL(cdl->getStyle(), OCIO::CDL_NO_CLAMP);
+}
+
+OCIO_ADD_TEST(CDLTransform, apply_optimize_simplify)
+{
+    auto cdl = OCIO::CDLTransform::Create();
+    static constexpr double slope[]{ 0.8, 0.9, 1.1 };
+    cdl->setSlope(slope);
+    static constexpr double offset[]{ 0.1, 0.05, -0.2 };
+    cdl->setOffset(offset);
+    cdl->setSat(1.23);
+    OCIO::ConstConfigRcPtr config = OCIO::Config::CreateRaw();
+    OCIO::ConstProcessorRcPtr proc;
+    OCIO_CHECK_NO_THROW(proc = config->getProcessor(cdl));
+    OCIO_REQUIRE_ASSERT(proc);
+
+    // Verify that non-simplified and simplified cpu processors are equivalent.
+
+    OCIO::ConstCPUProcessorRcPtr cpu;
+    const auto noSimplify = (OCIO::OptimizationFlags)(OCIO::OPTIMIZATION_DEFAULT &
+                                                      ~OCIO::OPTIMIZATION_SIMPLIFY_OPS);
+    OCIO_CHECK_NO_THROW(cpu = proc->getOptimizedCPUProcessor(noSimplify));
+    OCIO_REQUIRE_ASSERT(cpu);
+    static constexpr float source[]{ -0.1f, 0.5f, 1.5f };
+    float pixNoSimplify[]{ source[0], source[1], source[2] };
+    cpu->applyRGB(pixNoSimplify);
+
+    OCIO_CHECK_NO_THROW(cpu = proc->getOptimizedCPUProcessor(OCIO::OPTIMIZATION_DEFAULT));
+    OCIO_REQUIRE_ASSERT(cpu);
+    float pixSimplify[]{ source[0], source[1], source[2] };
+    cpu->applyRGB(pixSimplify);
+
+    static constexpr float error = 2.e-5f;
+    OCIO_CHECK_CLOSE(pixNoSimplify[0], pixSimplify[0], error);
+    OCIO_CHECK_CLOSE(pixNoSimplify[1], pixSimplify[1], error);
+    OCIO_CHECK_CLOSE(pixNoSimplify[2], pixSimplify[2], error);
+
+    // Same in inverse direction.
+
+    cdl->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+
+    OCIO_CHECK_NO_THROW(proc = config->getProcessor(cdl));
+    OCIO_REQUIRE_ASSERT(proc);
+    OCIO_CHECK_NO_THROW(cpu = proc->getOptimizedCPUProcessor(noSimplify));
+    OCIO_REQUIRE_ASSERT(cpu);
+    pixNoSimplify[0] = source[0];
+    pixNoSimplify[1] = source[1];
+    pixNoSimplify[2] = source[2];
+    cpu->applyRGB(pixNoSimplify);
+
+    OCIO_CHECK_NO_THROW(cpu = proc->getOptimizedCPUProcessor(OCIO::OPTIMIZATION_DEFAULT));
+    OCIO_REQUIRE_ASSERT(cpu);
+    pixSimplify[0] = source[0];
+    pixSimplify[1] = source[1];
+    pixSimplify[2] = source[2];
+    cpu->applyRGB(pixSimplify);
+
+    OCIO_CHECK_CLOSE(pixNoSimplify[0], pixSimplify[0], error);
+    OCIO_CHECK_CLOSE(pixNoSimplify[1], pixSimplify[1], error);
+    OCIO_CHECK_CLOSE(pixNoSimplify[2], pixSimplify[2], error);
 }

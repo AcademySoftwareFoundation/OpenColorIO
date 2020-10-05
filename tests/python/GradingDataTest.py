@@ -62,6 +62,17 @@ class GradingDataTest(unittest.TestCase):
 
         with self.assertRaises(TypeError):
             OCIO.GradingRGBM(0, 0)
+            
+        # Constructor with named parameters.
+        rgbm3 = OCIO.GradingRGBM(blue=1, green=2, master=3, red=4)
+        self.assertEqual(4, rgbm3.red)
+        self.assertEqual(2, rgbm3.green)
+        self.assertEqual(1, rgbm3.blue)
+        self.assertEqual(3, rgbm3.master)
+
+        # Constructor with named parameters, some missing.
+        with self.assertRaises(TypeError):
+            OCIO.GradingRGBM(master=.3, red=.4)
 
     def test_primary(self):
         """
@@ -133,11 +144,13 @@ class GradingDataTest(unittest.TestCase):
         # Restore valid data.
         cpts[4] = OCIO.GradingControlPoint(1, 1)
 
+        # Create a similar bspline curve with alternate constructor.
         bs2 = OCIO.GradingBSplineCurve([0, 0, 0.1, 0.5, 0.4, 0.6, 0.6, 0.7, 1, 1])
         cpts2 = bs2.getControlPoints()
 
         assertEqualBSpline(self, bs, bs2)
 
+        # Curve with less control points.
         bs3 = OCIO.GradingBSplineCurve(4)
         cpts3 = bs3.getControlPoints()
         cpts3[1] = OCIO.GradingControlPoint(0.1, 0.5)
@@ -147,6 +160,7 @@ class GradingDataTest(unittest.TestCase):
         with self.assertRaises(AssertionError):
             assertEqualBSpline(self, bs, bs3)
 
+        # Curve with more control points.
         bs4 = OCIO.GradingBSplineCurve(6)
         cpts4 = bs4.getControlPoints()
         cpts4[1] = OCIO.GradingControlPoint(0.1, 0.5)
@@ -158,16 +172,21 @@ class GradingDataTest(unittest.TestCase):
         with self.assertRaises(AssertionError):
             assertEqualBSpline(self, bs, bs4)
 
+        # Curve with the same number of control points but point at index 2 differ.
         bs5 = OCIO.GradingBSplineCurve(5)
         cpts5 = bs5.getControlPoints()
         cpts5[1] = OCIO.GradingControlPoint(0.1, 0.5)
         # Different x value.
-        cpts5[2] = OCIO.GradingControlPoint(0.5, 0.6)
-        cpts5[3] = OCIO.GradingControlPoint(0.6, 0.7)
+        cpts5[2] = OCIO.GradingControlPoint(x=0.5, y=0.6)
+        cpts5[3] = OCIO.GradingControlPoint(x=0.6, y=0.7)
         cpts5[4] = OCIO.GradingControlPoint(1, 1)
 
         with self.assertRaises(AssertionError):
             assertEqualBSpline(self, bs, bs5)
+
+        # Fix point at index 2.
+        cpts5[2] = OCIO.GradingControlPoint(y=0.6, x=0.4)
+        assertEqualBSpline(self, bs, bs5)
 
     def test_rgbcurve(self):
         """
@@ -273,6 +292,28 @@ class GradingDataTest(unittest.TestCase):
 
         with self.assertRaises(TypeError):
             OCIO.GradingRGBMSW(0, 0, 0)
+
+        # Constructor with named parameters.
+        rgbm5 = OCIO.GradingRGBMSW(blue=1, master=2, green=3, start=4, width=5, red=6)
+        self.assertEqual(6, rgbm5.red)
+        self.assertEqual(3, rgbm5.green)
+        self.assertEqual(1, rgbm5.blue)
+        self.assertEqual(2, rgbm5.master)
+        self.assertEqual(4, rgbm5.start)
+        self.assertEqual(5, rgbm5.width)
+
+        # Constructor with named parameters.
+        rgbm5 = OCIO.GradingRGBMSW(width=3, start=4)
+        self.assertEqual(1, rgbm5.red)
+        self.assertEqual(1, rgbm5.green)
+        self.assertEqual(1, rgbm5.blue)
+        self.assertEqual(1, rgbm5.master)
+        self.assertEqual(4, rgbm5.start)
+        self.assertEqual(3, rgbm5.width)
+
+        # Constructor with named parameters, some missing.
+        with self.assertRaises(TypeError):
+            OCIO.GradingRGBMSW(green=3, start=4)
 
     def test_tone(self):
         """

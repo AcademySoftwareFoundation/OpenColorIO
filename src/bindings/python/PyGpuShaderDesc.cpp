@@ -22,7 +22,6 @@ struct Texture
 {
     std::string textureName;
     std::string samplerName;
-    std::string uid;
     unsigned width;
     unsigned height;
     GpuShaderDesc::TextureType channel;
@@ -33,7 +32,6 @@ struct Texture3D
 {
     std::string textureName;
     std::string samplerName;
-    std::string uid;
     unsigned edgelen;
     Interpolation interpolation;
 };
@@ -93,7 +91,6 @@ void bindPyGpuShaderDesc(py::module & m)
         .def("addTexture", [](GpuShaderDescRcPtr & self,
                               const std::string & textureName, 
                               const std::string & samplerName, 
-                              const std::string & uid,
                               unsigned width, unsigned height,
                               GpuShaderDesc::TextureType channel, 
                               Interpolation interpolation,
@@ -121,13 +118,12 @@ void bindPyGpuShaderDesc(py::module & m)
 
                 self->addTexture(textureName.c_str(),
                                  samplerName.c_str(), 
-                                 uid.c_str(),
                                  width, height,
                                  channel, 
                                  interpolation,
                                  static_cast<float *>(info.ptr));
             },
-             "textureName"_a, "samplerName"_a, "uid"_a, "width"_a, "height"_a, "channel"_a, 
+             "textureName"_a, "samplerName"_a, "width"_a, "height"_a, "channel"_a, 
              "interpolation"_a, "values"_a)
         .def("getTextures", [](GpuShaderDescRcPtr & self) 
             {
@@ -139,11 +135,10 @@ void bindPyGpuShaderDesc(py::module & m)
 
                 const char * textureName = nullptr;
                 const char * samplerName = nullptr;
-                const char * uid         = nullptr;
                 unsigned width, height;
                 GpuShaderDesc::TextureType channel;
                 Interpolation interpolation;
-                self->getTexture(index, textureName, samplerName, uid, width, height, channel, 
+                self->getTexture(index, textureName, samplerName, width, height, channel, 
                                  interpolation);
 
                 ssize_t numChannels;
@@ -177,7 +172,6 @@ void bindPyGpuShaderDesc(py::module & m)
         .def("add3DTexture", [](GpuShaderDescRcPtr & self,
                                 const std::string & textureName, 
                                 const std::string & samplerName, 
-                                const std::string & uid,
                                 unsigned edgelen,
                                 Interpolation interpolation,
                                 const py::buffer & values)
@@ -190,12 +184,11 @@ void bindPyGpuShaderDesc(py::module & m)
 
                 self->add3DTexture(textureName.c_str(), 
                                    samplerName.c_str(), 
-                                   uid.c_str(),
                                    edgelen,
                                    interpolation,
                                    static_cast<float *>(info.ptr));
             },
-             "textureName"_a, "samplerName"_a, "uid"_a, "edgeLen"_a, "interpolation"_a, "values"_a)
+             "textureName"_a, "samplerName"_a, "edgeLen"_a, "interpolation"_a, "values"_a)
         .def("get3DTextures", [](GpuShaderDescRcPtr & self) 
             {
                 return Texture3DIterator(self);
@@ -206,10 +199,9 @@ void bindPyGpuShaderDesc(py::module & m)
 
                 const char * textureName = nullptr;
                 const char * samplerName = nullptr;
-                const char * uid         = nullptr;
                 unsigned edgelen;
                 Interpolation interpolation;
-                self->get3DTexture(index, textureName, samplerName, uid, edgelen, interpolation);
+                self->get3DTexture(index, textureName, samplerName, edgelen, interpolation);
 
                 const float * values;
                 self->get3DTextureValues(index, values);
@@ -226,7 +218,6 @@ void bindPyGpuShaderDesc(py::module & m)
     py::class_<Texture>(cls, "Texture")
         .def_readonly("textureName", &Texture::textureName)
         .def_readonly("samplerName", &Texture::samplerName)
-        .def_readonly("uid", &Texture::uid)
         .def_readonly("width", &Texture::width)
         .def_readonly("height", &Texture::height)
         .def_readonly("channel", &Texture::channel)
@@ -239,14 +230,13 @@ void bindPyGpuShaderDesc(py::module & m)
                 // GpuShaderDesc provides index check with exception
                 const char * textureName = nullptr;
                 const char * samplerName = nullptr;
-                const char * uid         = nullptr;
                 unsigned width, height;
                 GpuShaderDesc::TextureType channel;
                 Interpolation interpolation;
-                it.m_obj->getTexture(i, textureName, samplerName, uid, width, height, channel, 
+                it.m_obj->getTexture(i, textureName, samplerName, width, height, channel, 
                                      interpolation);
 
-                return { textureName, samplerName, uid, width, height, channel, interpolation };
+                return { textureName, samplerName, width, height, channel, interpolation };
             })
         .def("__iter__", [](TextureIterator & it) -> TextureIterator & { return it; })
         .def("__next__", [](TextureIterator & it) -> Texture
@@ -255,20 +245,18 @@ void bindPyGpuShaderDesc(py::module & m)
 
                 const char * textureName = nullptr;
                 const char * samplerName = nullptr;
-                const char * uid         = nullptr;
                 unsigned width, height;
                 GpuShaderDesc::TextureType channel;
                 Interpolation interpolation;
-                it.m_obj->getTexture(i, textureName, samplerName, uid, width, height, channel, 
+                it.m_obj->getTexture(i, textureName, samplerName, width, height, channel, 
                                      interpolation);
 
-                return { textureName, samplerName, uid, width, height, channel, interpolation };
+                return { textureName, samplerName, width, height, channel, interpolation };
             });
 
     py::class_<Texture3D>(cls, "Texture3D")
         .def_readonly("textureName", &Texture3D::textureName)
         .def_readonly("samplerName", &Texture3D::samplerName)
-        .def_readonly("uid", &Texture3D::uid)
         .def_readonly("edgeLen", &Texture3D::edgelen)
         .def_readonly("interpolation", &Texture3D::interpolation);
 
@@ -279,12 +267,11 @@ void bindPyGpuShaderDesc(py::module & m)
                 // GpuShaderDesc provides index check with exception
                 const char * textureName = nullptr;
                 const char * samplerName = nullptr;
-                const char * uid         = nullptr;
                 unsigned edgelen;
                 Interpolation interpolation;
-                it.m_obj->get3DTexture(i, textureName, samplerName, uid, edgelen, interpolation);
+                it.m_obj->get3DTexture(i, textureName, samplerName, edgelen, interpolation);
 
-                return { textureName, samplerName, uid, edgelen, interpolation };
+                return { textureName, samplerName, edgelen, interpolation };
             })
         .def("__iter__", [](Texture3DIterator & it) -> Texture3DIterator & { return it; })
         .def("__next__", [](Texture3DIterator & it) -> Texture3D
@@ -293,12 +280,11 @@ void bindPyGpuShaderDesc(py::module & m)
 
                 const char * textureName = nullptr;
                 const char * samplerName = nullptr;
-                const char * uid         = nullptr;
                 unsigned edgelen;
                 Interpolation interpolation;
-                it.m_obj->get3DTexture(i, textureName, samplerName, uid, edgelen, interpolation);
+                it.m_obj->get3DTexture(i, textureName, samplerName, edgelen, interpolation);
 
-                return { textureName, samplerName, uid, edgelen, interpolation };
+                return { textureName, samplerName, edgelen, interpolation };
             });
 }
 

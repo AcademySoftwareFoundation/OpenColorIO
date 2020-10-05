@@ -3,13 +3,13 @@
 
 include(CheckCXXSourceCompiles)
 
-if (NOT CMAKE_SIZE_OF_VOID_P EQUAL 8)
-    if (MSVC)
+if(NOT CMAKE_SIZE_OF_VOID_P EQUAL 8)
+    if(USE_MSVC)
         set(CMAKE_REQUIRED_FLAGS "/arch:SSE2")
-    else ()
+    elseif(USE_GCC OR USE_CLANG)
         set(CMAKE_REQUIRED_FLAGS "-msse2")
-    endif ()
-endif (NOT CMAKE_SIZE_OF_VOID_P EQUAL 8)
+    endif()
+endif()
 
 check_cxx_source_compiles ("
     #include <emmintrin.h>
@@ -24,4 +24,4 @@ check_cxx_source_compiles ("
     }"
     HAVE_SSE2)
 
-MARK_AS_ADVANCED (HAVE_SSE2)
+mark_as_advanced(HAVE_SSE2)

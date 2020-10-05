@@ -11,6 +11,7 @@
 #error This header cannot be used directly. Use <OpenColorIO/OpenColorIO.h> instead.
 #endif
 
+#include <array>
 #include <limits>
 #include <string>
 #include <functional>
@@ -223,6 +224,8 @@ typedef OCIO_SHARED_PTR<MatrixTransform> MatrixTransformRcPtr;
 class OCIOEXPORT RangeTransform;
 typedef OCIO_SHARED_PTR<const RangeTransform> ConstRangeTransformRcPtr;
 typedef OCIO_SHARED_PTR<RangeTransform> RangeTransformRcPtr;
+
+typedef std::array<float, 3> Float3;
 
 template <class T, class U>
 inline OCIO_SHARED_PTR<T> DynamicPtrCast(OCIO_SHARED_PTR<U> const & ptr)
@@ -485,8 +488,9 @@ enum UniformDataType
 {
     UNIFORM_DOUBLE = 0,
     UNIFORM_BOOL,
-    UNIFORM_ARRAY_FLOAT,  ///< Array of floats.
-    UNIFORM_ARRAY_INT2,   ///< Array of int pairs.
+    UNIFORM_FLOAT3,        ///< Array of 3 floats.
+    UNIFORM_VECTOR_FLOAT,  ///< Vector of floats (size is set by uniform).
+    UNIFORM_VECTOR_INT,    ///< Vector of int pairs (size is set by uniform).
     UNIFORM_UNKNOWN
 };
 
@@ -533,11 +537,18 @@ enum OptimizationFlags : unsigned long
      */
     OPTIMIZATION_LUT_INV_FAST                    = 0x02000000,
 
+    // For CPU processor, in SSE mode, use a faster approximation for log, exp, and pow.
+    OPTIMIZATION_FAST_LOG_EXP_POW                = 0x04000000,
+
+    // Break down certain ops into simpler components where possible.  For example, convert a CDL
+    // to a matrix when possible.
+    OPTIMIZATION_SIMPLIFY_OPS                    = 0x08000000,
+
     /**
      * Turn off dynamic control of any ops that offer adjustment of parameter values after
      * finalization (e.g. ExposureContrast).
      */
-    OPTIMIZATION_NO_DYNAMIC_PROPERTIES           = 0x80000000,
+    OPTIMIZATION_NO_DYNAMIC_PROPERTIES           = 0x10000000,
 
     /// Apply all possible optimizations.
     OPTIMIZATION_ALL                             = 0xFFFFFFFF,
@@ -558,11 +569,13 @@ enum OptimizationFlags : unsigned long
                              OPTIMIZATION_COMP_EXPONENT |
                              OPTIMIZATION_COMP_GAMMA |
                              OPTIMIZATION_COMP_MATRIX |
-                             OPTIMIZATION_COMP_RANGE),
+                             OPTIMIZATION_COMP_RANGE |
+                             OPTIMIZATION_SIMPLIFY_OPS),
 
     OPTIMIZATION_VERY_GOOD = (OPTIMIZATION_LOSSLESS |
                               OPTIMIZATION_COMP_LUT1D |
                               OPTIMIZATION_LUT_INV_FAST |
+                              OPTIMIZATION_FAST_LOG_EXP_POW |
                               OPTIMIZATION_COMP_SEPARABLE_PREFIX),
 
     OPTIMIZATION_GOOD      = OPTIMIZATION_VERY_GOOD | OPTIMIZATION_COMP_LUT3D,
@@ -573,6 +586,25 @@ enum OptimizationFlags : unsigned long
     OPTIMIZATION_DEFAULT   = OPTIMIZATION_VERY_GOOD
 };
 
+//!cpp:type:: Enum to control the behavior of the internal caches e.g. the processor cache in
+// :cpp:class:`Config` and :cpp:class:`Processor` instances. When debugging problems, it be useful
+// to disable all the internal caches for example.
+//
+// The PROCESSOR_CACHE_SHARE_DYN_PROPERTIES flag allows the reuse of existing processor instances
+// even if it contains some dynamic properties i.e. it speeds up the processor retrieval. That's the
+// default behavior to avoid the processor creation hit. However, the caller app must then always
+// set the dynamic property values prior to any color processing call (in CPU and GPU modes) as the
+// same processor instance can now be used between several viewports for example. 
+enum ProcessorCacheFlags : unsigned int
+{
+    PROCESSOR_CACHE_OFF                  = 0x00,
+    PROCESSOR_CACHE_ENABLED              = 0x01, // Enable the cache.
+    PROCESSOR_CACHE_SHARE_DYN_PROPERTIES = 0x02, // i.e. When the cache is enabled processor instances
+                                                 // are shared even if they contain some dynamic
+                                                 // properties.
+
+    PROCESSOR_CACHE_DEFAULT = (PROCESSOR_CACHE_ENABLED | PROCESSOR_CACHE_SHARE_DYN_PROPERTIES)
+};
 
 // Conversion
 
@@ -780,6 +812,34 @@ extern OCIOEXPORT const char * METADATA_NAME;
  * (i.e. MatrixTransform, etc.) to get/set the id of the corresponding process node.
  */
 extern OCIOEXPORT const char * METADATA_ID;
+
+/*!rst::
+Caches
+******
+
+*/
+
+//!rst::
+// .. c:var:: const char * OCIO_DISABLE_ALL_CACHES
+//
+// Disable all caches, including for FileTransforms and Optimized/CPU/GPU Processors. (Provided only
+// to facilitate developer investigations.)
+extern OCIOEXPORT const char * OCIO_DISABLE_ALL_CACHES;
+
+//!rst::
+// .. c:var:: const char * OCIO_DISABLE_PROCESSOR_CACHES
+//
+// Disable only the Optimized, CPU, and GPU Processor caches. (Provided only to facilitate developer
+// investigations.)
+extern OCIOEXPORT const char * OCIO_DISABLE_PROCESSOR_CACHES;
+
+//!rst::
+// .. c:var:: const char * OCIO_DISABLE_CACHE_FALLBACK
+//
+// By default the processor caches check for identical color transformations when cache keys do
+// not match. That fallback introduces a major performance hit in some cases so there is an env.
+// variable to disable the fallback.
+extern OCIOEXPORT const char * OCIO_DISABLE_CACHE_FALLBACK;
 
 } // namespace OCIO_NAMESPACE
 

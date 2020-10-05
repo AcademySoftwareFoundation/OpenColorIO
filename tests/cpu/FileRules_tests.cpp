@@ -208,6 +208,8 @@ OCIO_ADD_TEST(FileRules, config_rule_customkeys)
 
     const std::string expected{ R"(ocio_profile_version: 2
 
+environment:
+  {}
 search_path: ""
 strictparsing: false
 luma: [0.2126, 0.7152, 0.0722]
@@ -307,6 +309,8 @@ namespace
 {
 
 constexpr char g_config[] = { R"(ocio_profile_version: 2
+environment:
+  {}
 strictparsing: true
 roles:
   default: raw
