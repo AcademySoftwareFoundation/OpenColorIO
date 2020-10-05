@@ -319,8 +319,8 @@ public:
     mutable ProcessorCache<std::size_t, ProcessorRcPtr> m_processorCache;
 
     Impl() :
-        m_majorVersion(FirstSupportedMajorVersion),
-        m_minorVersion(0),
+        m_majorVersion(LastSupportedMajorVersion),
+        m_minorVersion(LastSupportedMinorVersion),
         m_context(Context::Create()),
         m_allColorSpaces(ColorSpaceSet::Create()),
         m_viewingRules(ViewingRules::Create()),

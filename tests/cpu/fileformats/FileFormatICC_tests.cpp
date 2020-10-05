@@ -224,7 +224,7 @@ OCIO_ADD_TEST(FileFormatICC, test_apply)
         OCIO_CHECK_NO_THROW(BuildOpsTest(ops, iccFileName, context,
                                          OCIO::TRANSFORM_DIR_FORWARD));
 
-        OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_DEFAULT));
+        OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_LOSSLESS));
 
         // apply ops
         float srcImage[] = {
@@ -254,11 +254,12 @@ OCIO_ADD_TEST(FileFormatICC, test_apply)
         OCIO::OpRcPtrVec opsInv;
         OCIO_CHECK_NO_THROW(BuildOpsTest(opsInv, iccFileName, context,
                                          OCIO::TRANSFORM_DIR_INVERSE));
-        OCIO_CHECK_NO_THROW(opsInv.finalize(OCIO::OPTIMIZATION_DEFAULT));
+        OCIO_CHECK_NO_THROW(opsInv.finalize(OCIO::OPTIMIZATION_LOSSLESS));
 
         numOps = opsInv.size();
         for (OCIO::OpRcPtrVec::size_type i = 0; i < numOps; ++i)
         {
+            // Note: This apply call hard-codes the FastLogExpPow optimization setting to false.
             opsInv[i]->apply(srcImage, 3);
         }
 
@@ -281,7 +282,7 @@ OCIO_ADD_TEST(FileFormatICC, test_apply)
         OCIO::OpRcPtrVec ops;
         OCIO_CHECK_NO_THROW(BuildOpsTest(ops, iccFileName, context,
                                          OCIO::TRANSFORM_DIR_FORWARD));
-        OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_DEFAULT));
+        OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_LOSSLESS));
 
         // apply ops
         float srcImage[] = {
@@ -292,13 +293,7 @@ OCIO_ADD_TEST(FileFormatICC, test_apply)
         const float dstImage[] = {
             0.012437f, 0.004702f, 0.070333f, 0.0f,
             0.188392f, 0.206965f, 0.343595f, 0.5f,
-
-// Gamma SSE vs. not SEE implementations explain the differences.
-#ifdef USE_SSE
-            1.210458f, 1.058771f, 4.003655f, 1.0f };
-#else
             1.210462f, 1.058761f, 4.003706f, 1.0f };
-#endif
 
         OCIO::OpRcPtrVec::size_type numOps = ops.size();
         for (OCIO::OpRcPtrVec::size_type i = 0; i < numOps; ++i)
@@ -318,7 +313,7 @@ OCIO_ADD_TEST(FileFormatICC, test_apply)
         OCIO::OpRcPtrVec opsInv;
         OCIO_CHECK_NO_THROW(BuildOpsTest(opsInv, iccFileName, context,
                                          OCIO::TRANSFORM_DIR_INVERSE));
-        OCIO_CHECK_NO_THROW(opsInv.finalize(OCIO::OPTIMIZATION_DEFAULT));
+        OCIO_CHECK_NO_THROW(opsInv.finalize(OCIO::OPTIMIZATION_LOSSLESS));
 
         numOps = opsInv.size();
         for (OCIO::OpRcPtrVec::size_type i = 0; i < numOps; ++i)

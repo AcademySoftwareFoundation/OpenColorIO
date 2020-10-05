@@ -232,7 +232,11 @@ public:
     // Initialization
     //
 
-    /// Create a default empty configuration.
+    /**
+     * \brief Create an empty config.
+     *
+     * Latest version is used. An empty config might be missing elements to ve valid.
+     */
     static ConfigRcPtr Create();
     /**
      * \brief Create a fall-back config.

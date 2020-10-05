@@ -227,7 +227,6 @@ OCIO_ADD_TEST(FileFormatCCC, test_ccc)
 
     // Create empty Config to use.
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
 
     auto context = config->getCurrentContext();
     OCIO::LocalFileFormat tester;

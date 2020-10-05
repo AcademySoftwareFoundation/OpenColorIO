@@ -341,18 +341,19 @@ OCIO_ADD_TEST(Config, serialize_group_transform)
         groupTransform->appendTransform(transform5);
         OCIO_CHECK_NO_THROW(cs->setTransform(groupTransform, OCIO::COLORSPACE_DIR_FROM_REFERENCE));
         config->addColorSpace(cs);
-        config->setRole( OCIO::ROLE_COMPOSITING_LOG, cs->getName() );
+        config->setRole( OCIO::ROLE_DEFAULT, cs->getName() );
+        config->setRole(OCIO::ROLE_COMPOSITING_LOG, cs->getName());
     }
     {
         OCIO::ColorSpaceRcPtr cs = OCIO::ColorSpace::Create();
         cs->setName("testing2");
         cs->setFamily("test");
-        OCIO::ExponentTransformRcPtr transform1 = \
-            OCIO::ExponentTransform::Create();
+        OCIO::ExponentTransformRcPtr transform1 = OCIO::ExponentTransform::Create();
         OCIO::GroupTransformRcPtr groupTransform = OCIO::GroupTransform::Create();
         groupTransform->appendTransform(transform1);
         OCIO_CHECK_NO_THROW(cs->setTransform(groupTransform, OCIO::COLORSPACE_DIR_TO_REFERENCE));
         config->addColorSpace(cs);
+        // Replace the role.
         config->setRole( OCIO::ROLE_COMPOSITING_LOG, cs->getName() );
     }
 
@@ -360,14 +361,20 @@ OCIO_ADD_TEST(Config, serialize_group_transform)
     config->serialize(os);
 
     std::string PROFILE_OUT =
-    "ocio_profile_version: 1\n"
+    "ocio_profile_version: 2\n"
     "\n"
+    "environment:\n"
+    "  {}\n"
     "search_path: \"\"\n"
     "strictparsing: true\n"
     "luma: [0.2126, 0.7152, 0.0722]\n"
     "\n"
     "roles:\n"
     "  compositing_log: testing2\n"
+    "  default: testing\n"
+    "\n"
+    "file_rules:\n"
+    "  - !<Rule> {name: Default, colorspace: default}\n"
     "\n"
     "displays:\n"
     "  {}\n"
@@ -416,19 +423,30 @@ OCIO_ADD_TEST(Config, serialize_searchpath)
 {
     {
         OCIO::ConfigRcPtr config = OCIO::Config::Create();
+        {
+            OCIO::ColorSpaceRcPtr cs = OCIO::ColorSpace::Create();
+            cs->setName("default");
+            cs->setIsData(true);
+            config->addColorSpace(cs);
+        }
 
         std::ostringstream os;
         config->serialize(os);
 
         std::string PROFILE_OUT =
-            "ocio_profile_version: 1\n"
+            "ocio_profile_version: 2\n"
             "\n"
+            "environment:\n"
+            "  {}\n"
             "search_path: \"\"\n"
             "strictparsing: true\n"
             "luma: [0.2126, 0.7152, 0.0722]\n"
             "\n"
             "roles:\n"
             "  {}\n"
+            "\n"
+            "file_rules:\n"
+            "  - !<Rule> {name: Default, colorspace: default}\n"
             "\n"
             "displays:\n"
             "  {}\n"
@@ -437,7 +455,13 @@ OCIO_ADD_TEST(Config, serialize_searchpath)
             "active_views: []\n"
             "\n"
             "colorspaces:\n"
-            "  []";
+            "  - !<ColorSpace>\n"
+            "    name: default\n"
+            "    family: \"\"\n"
+            "    equalitygroup: \"\"\n"
+            "    bitdepth: unknown\n"
+            "    isdata: true\n"
+            "    allocation: uniform\n";
 
         const StringUtils::StringVec osvec          = StringUtils::SplitByLines(os.str());
         const StringUtils::StringVec PROFILE_OUTvec = StringUtils::SplitByLines(PROFILE_OUT);
@@ -449,6 +473,8 @@ OCIO_ADD_TEST(Config, serialize_searchpath)
 
     {
         OCIO::ConfigRcPtr config = OCIO::Config::Create();
+        config->setMajorVersion(OCIO::FirstSupportedMajorVersion);
+        config->setMinorVersion(0);
 
         std::string searchPath("a:b:c");
         config->setSearchPath(searchPath.c_str());
@@ -458,9 +484,11 @@ OCIO_ADD_TEST(Config, serialize_searchpath)
 
         StringUtils::StringVec osvec = StringUtils::SplitByLines(os.str());
 
+        // V1 saves search_path as a single string.
         const std::string expected1{ "search_path: a:b:c" };
         OCIO_CHECK_EQUAL(osvec[2], expected1);
 
+        // V2 saves search_path as separate strings.
         config->setMajorVersion(2);
         os.clear();
         os.str("");
@@ -5405,10 +5433,16 @@ OCIO_ADD_TEST(Config, view_transforms)
 OCIO_ADD_TEST(Config, display_view)
 {
     // Create a config with a display that has 2 kinds of views.
-
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->upgradeToLatestVersion();
+    {
+        // Add default color space.
+        OCIO::ColorSpaceRcPtr cs = OCIO::ColorSpace::Create();
+        cs->setName("default");
+        cs->setIsData(true);
+        config->addColorSpace(cs);
+    }
 
+    // Add a scene-referred and a display-referred color space.
     auto cs = OCIO::ColorSpace::Create(OCIO::REFERENCE_SPACE_SCENE);
     cs->setName("scs");
     config->addColorSpace(cs);
@@ -5416,18 +5450,19 @@ OCIO_ADD_TEST(Config, display_view)
     cs->setName("dcs");
     config->addColorSpace(cs);
 
+    // Add a scene-referred and a display-referred view transform.
     auto vt = OCIO::ViewTransform::Create(OCIO::REFERENCE_SPACE_DISPLAY);
     vt->setName("display");
     OCIO_CHECK_NO_THROW(vt->setTransform(OCIO::MatrixTransform::Create(),
                                          OCIO::VIEWTRANSFORM_DIR_FROM_REFERENCE));
     OCIO_CHECK_NO_THROW(config->addViewTransform(vt));
-
     vt = OCIO::ViewTransform::Create(OCIO::REFERENCE_SPACE_SCENE);
     vt->setName("view_transform");
     OCIO_CHECK_NO_THROW(vt->setTransform(OCIO::MatrixTransform::Create(),
                                          OCIO::VIEWTRANSFORM_DIR_FROM_REFERENCE));
     OCIO_CHECK_NO_THROW(config->addViewTransform(vt));
 
+    // Add a simple view.
     const std::string display{ "display" };
     OCIO_CHECK_NO_THROW(config->addDisplayView(display.c_str(), "view1", "scs", ""));
 
@@ -5458,7 +5493,7 @@ roles:
   {}
 
 file_rules:
-  - !<Rule> {name: Default, colorspace: added_default_rule_colorspace}
+  - !<Rule> {name: Default, colorspace: default}
 
 displays:
   display:
@@ -5467,7 +5502,6 @@ displays:
 
 active_displays: []
 active_views: []
-inactive_colorspaces: [added_default_rule_colorspace]
 
 view_transforms:
   - !<ViewTransform>
@@ -5489,7 +5523,7 @@ display_colorspaces:
 
 colorspaces:
   - !<ColorSpace>
-    name: added_default_rule_colorspace
+    name: default
     family: ""
     equalitygroup: ""
     bitdepth: unknown
@@ -5507,18 +5541,8 @@ colorspaces:
 
     OCIO_CHECK_EQUAL(os.str(), expected);
 
-    OCIO_CHECK_EQUAL(config->getNumDisplays(), 1);
-    OCIO_CHECK_EQUAL(config->getNumViews(display.c_str()), 2);
-
-    // Check that views are saved and loaded properly.
-    config->setMajorVersion(2);
-    std::ostringstream oss;
-    config->serialize(oss);
-
-    std::istringstream is;
-    is.str(oss.str());
     OCIO::ConstConfigRcPtr configRead;
-    OCIO_CHECK_NO_THROW(configRead = OCIO::Config::CreateFromStream(is));
+    OCIO_CHECK_NO_THROW(configRead = OCIO::Config::CreateFromStream(os));
     OCIO_CHECK_EQUAL(configRead->getNumViews("display"), 2);
     const std::string v1{ configRead->getView("display", 0) };
     OCIO_CHECK_EQUAL(v1, "view1");
@@ -5887,6 +5911,11 @@ OCIO_ADD_TEST(Config, transform_versions)
     // Saving a v1 config containing v2 transforms must fail.
 
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
+    OCIO_CHECK_EQUAL(config->getMajorVersion(), OCIO_VERSION_MAJOR);
+
+    config->setMajorVersion(OCIO::FirstSupportedMajorVersion);
+    config->setMinorVersion(0);
+
     OCIO_CHECK_EQUAL(config->getMajorVersion(), 1);
 
     OCIO::RangeTransformRcPtr range = OCIO::RangeTransform::Create();

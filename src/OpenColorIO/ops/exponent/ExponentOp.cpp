@@ -148,7 +148,7 @@ public:
 
     std::string getCacheID() const override;
 
-    ConstOpCPURcPtr getCPUOp() const override;
+    ConstOpCPURcPtr getCPUOp(bool fastLogExpPow) const override;
 
     void extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const override;
 
@@ -246,7 +246,7 @@ std::string ExponentOp::getCacheID() const
     return cacheIDStream.str();
 }
 
-ConstOpCPURcPtr ExponentOp::getCPUOp() const
+ConstOpCPURcPtr ExponentOp::getCPUOp(bool /*fastLogExpPow*/) const
 {
     return std::make_shared<ExponentOpCPU>(expData());
 }

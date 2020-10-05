@@ -321,7 +321,6 @@ OCIO_ADD_TEST(ColorSpaceTransform, build_colorspace_ops)
     config->addColorSpace(csDisplayFromRef);
 
     // Because there are display-referred color spaces, there need to be a view transform.
-    config->upgradeToLatestVersion(); // View transforms are a v2 feature.
     auto vt = OCIO::ViewTransform::Create(OCIO::REFERENCE_SPACE_SCENE);
     vt->setName("view_transform");
     vt->setTransform(mat, OCIO::VIEWTRANSFORM_DIR_FROM_REFERENCE);
@@ -436,7 +435,6 @@ OCIO_ADD_TEST(ColorSpaceTransform, build_reference_conversion_ops)
     // Add scene-referred view transform.
     //
 
-    config->upgradeToLatestVersion();
     auto vt = OCIO::ViewTransform::Create(OCIO::REFERENCE_SPACE_SCENE);
     vt->setName("view_transform");
     auto mat = OCIO::MatrixTransform::Create();
@@ -493,9 +491,7 @@ OCIO_ADD_TEST(ColorSpaceTransform, build_colorspace_ops_with_reference_conversio
 {
     const std::string scn{ "scene" };
 
-    OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->upgradeToLatestVersion();
-
+    OCIO::ConfigRcPtr config = OCIO::Config::CreateRaw()->createEditableCopy();
     auto cs = OCIO::ColorSpace::Create(OCIO::REFERENCE_SPACE_SCENE);
     cs->setName(scn.c_str());
     auto ff = OCIO::FixedFunctionTransform::Create();
@@ -660,12 +656,13 @@ OCIO_ADD_TEST(ColorSpaceTransform, build_colorspace_ops_with_reference_conversio
         OCIO_CHECK_EQUAL(logData->getBase(), 2.0);
         OCIO_CHECK_EQUAL(logData->getDirection(), OCIO::TRANSFORM_DIR_INVERSE);
 
-        // Display reference to scene reference.
+        // Display reference to scene reference. (ExponentTransform is implemented using a
+        // GammaOpData from v2.)
         op = OCIO_DYNAMIC_POINTER_CAST<const OCIO::Op>(ops[2]);
         data = op->data();
         OCIO_REQUIRE_EQUAL(data->getType(), OCIO::OpData::GammaType);
         auto gammaData = OCIO_DYNAMIC_POINTER_CAST<const OCIO::GammaOpData>(data);
-        OCIO_CHECK_EQUAL(gammaData->getRedParams()[0], 1.0);
+        OCIO_CHECK_ASSERT(gammaData->isIdentity());
 
         op = OCIO_DYNAMIC_POINTER_CAST<const OCIO::Op>(ops[3]);
         data = op->data();

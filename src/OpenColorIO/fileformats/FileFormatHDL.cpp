@@ -717,7 +717,7 @@ void LocalFileFormat::bake(const Baker & baker,
             // what the log value 1.0 is in linear).
             ConstCPUProcessorRcPtr shaperToInputProc = config->getProcessor(
                 shaperSpace.c_str(),
-                inputSpace.c_str())->getDefaultCPUProcessor();
+                inputSpace.c_str())->getOptimizedCPUProcessor(OPTIMIZATION_LOSSLESS);
 
             float minval[3] = {0.0f, 0.0f, 0.0f};
             float maxval[3] = {1.0f, 1.0f, 1.0f};
@@ -746,7 +746,7 @@ void LocalFileFormat::bake(const Baker & baker,
 
         PackedImageDesc prelutImg(&prelutData[0], shaperSize, 1, 3);
 
-        ConstCPUProcessorRcPtr cpu = inputToShaperProc->getDefaultCPUProcessor();
+        ConstCPUProcessorRcPtr cpu = inputToShaperProc->getOptimizedCPUProcessor(OPTIMIZATION_LOSSLESS);
         cpu->apply(prelutImg);
     }
 
@@ -786,7 +786,7 @@ void LocalFileFormat::bake(const Baker & baker,
             cubeProc = inputToTargetProc;
         }
 
-        ConstCPUProcessorRcPtr cpu = cubeProc->getDefaultCPUProcessor();
+        ConstCPUProcessorRcPtr cpu = cubeProc->getOptimizedCPUProcessor(OPTIMIZATION_LOSSLESS);
         cpu->apply(cubeImg);
     }
 
@@ -799,7 +799,7 @@ void LocalFileFormat::bake(const Baker & baker,
 
         GenerateIdentityLut1D(&onedData[0], onedSize, 3);
         PackedImageDesc onedImg(&onedData[0], onedSize, 1, 3);
-        ConstCPUProcessorRcPtr cpu = inputToTargetProc->getDefaultCPUProcessor();
+        ConstCPUProcessorRcPtr cpu = inputToTargetProc->getOptimizedCPUProcessor(OPTIMIZATION_LOSSLESS);
         cpu->apply(onedImg);
     }
 
