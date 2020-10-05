@@ -15,6 +15,8 @@
 namespace OCIO_NAMESPACE
 {
 
+namespace
+{
 class GradingRGBCurveOpCPU : public OpCPU
 {
 public:
@@ -112,13 +114,15 @@ GradingRGBCurveFwdOpCPU::GradingRGBCurveFwdOpCPU(ConstGradingRGBCurveOpDataRcPtr
 
 }
 
+static constexpr auto PixelSize = 4 * sizeof(float);
+
 void GradingRGBCurveFwdOpCPU::apply(const void * inImg, void * outImg, long numPixels) const
 {
     if (m_grgbcurve->getLocalBypass())
     {
         if (inImg != outImg)
         {
-            memcpy(outImg, inImg, 4 * numPixels * sizeof(float));
+            memcpy(outImg, inImg, numPixels * PixelSize);
         }
         return;
     }
@@ -159,7 +163,7 @@ void GradingRGBCurveLinearFwdOpCPU::apply(const void * inImg, void * outImg, lon
     {
         if (inImg != outImg)
         {
-            memcpy(outImg, inImg, 4 * numPixels * sizeof(float));
+            memcpy(outImg, inImg, numPixels * PixelSize);
         }
         return;
     }
@@ -297,6 +301,8 @@ void GradingRGBCurveLinearRevOpCPU::apply(const void * inImg, void * outImg, lon
 
     // TODO: implement inverse.
 }
+
+} // Anonymous namespace
 
 ///////////////////////////////////////////////////////////////////////////////
 
