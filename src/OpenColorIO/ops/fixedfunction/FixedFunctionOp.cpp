@@ -179,8 +179,6 @@ void CreateFixedFunctionTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op
 }
 
 void BuildFixedFunctionOp(OpRcPtrVec & ops,
-                          const Config & /*config*/,
-                          const ConstContextRcPtr & /*context*/,
                           const FixedFunctionTransform & transform,
                           TransformDirection dir)
 {

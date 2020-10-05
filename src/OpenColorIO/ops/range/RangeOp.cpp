@@ -260,7 +260,6 @@ void CreateRangeTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op)
 }
 
 void BuildRangeOp(OpRcPtrVec & ops,
-                  const Config & /*config*/,
                   const RangeTransform & transform,
                   TransformDirection dir)
 {

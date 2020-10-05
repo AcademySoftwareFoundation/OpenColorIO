@@ -195,7 +195,6 @@ void CreateGammaTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op)
 }
 
 void BuildExponentWithLinearOp(OpRcPtrVec & ops,
-                               const Config & /*config*/,
                                const ExponentWithLinearTransform & transform,
                                TransformDirection dir)
 {
