@@ -16,7 +16,7 @@ Lut1DOpDataRcPtr HandleLUT1D(const Lut1DOpDataRcPtr & fileLut1D,
                              Interpolation fileInterp,
                              bool & fileInterpUsed);
 
-Lut3DOpDataRcPtr HandleLUT3D(const Lut3DOpDataRcPtr & fileLut1D,
+Lut3DOpDataRcPtr HandleLUT3D(const Lut3DOpDataRcPtr & fileLut3D,
                              Interpolation fileInterp,
                              bool & fileInterpUsed);
 

@@ -7819,6 +7819,9 @@ OCIO_ADD_TEST(CTFTransform, save_lut3d_interpolation)
         OCIO_CHECK_ASSERT(result.find(expected) != std::string::npos);
     }
 
+    outputTransform.str("");
+    outputTransform.clear();
+
     lut->setInterpolation(OCIO::INTERP_TETRAHEDRAL);
     processor = config->getProcessor(lut);
     OCIO_CHECK_NO_THROW(processor->write(OCIO::FILEFORMAT_CTF, outputTransform));
@@ -7831,6 +7834,7 @@ OCIO_ADD_TEST(CTFTransform, save_lut3d_interpolation)
 
     outputTransform.str("");
     outputTransform.clear();
+
     lut->setInterpolation(OCIO::INTERP_CUBIC);
 
     OCIO_CHECK_THROW_WHAT(processor = config->getProcessor(lut), OCIO::Exception,
