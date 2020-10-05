@@ -40,6 +40,19 @@ protected:
     float m_alpGamma;
 };
 
+#ifdef USE_SSE
+class GammaBasicOpCPUSSE : public GammaBasicOpCPU
+{
+public:
+    explicit GammaBasicOpCPUSSE(ConstGammaOpDataRcPtr & gamma)
+        : GammaBasicOpCPU(gamma)
+    {
+    }
+
+    void apply(const void * inImg, void * outImg, long numPixels) const override;
+};
+#endif
+
 class GammaBasicMirrorOpCPU : public GammaBasicOpCPU
 {
 public:
@@ -50,6 +63,19 @@ public:
     void apply(const void * inImg, void * outImg, long numPixels) const override;
 };
 
+#ifdef USE_SSE
+class GammaBasicMirrorOpCPUSSE : public GammaBasicMirrorOpCPU
+{
+public:
+    explicit GammaBasicMirrorOpCPUSSE(ConstGammaOpDataRcPtr & gamma)
+        : GammaBasicMirrorOpCPU(gamma)
+    {
+    }
+
+    void apply(const void * inImg, void * outImg, long numPixels) const override;
+};
+#endif
+
 class GammaBasicPassThruOpCPU : public GammaBasicOpCPU
 {
 public:
@@ -59,6 +85,19 @@ public:
 
     void apply(const void * inImg, void * outImg, long numPixels) const override;
 };
+
+#ifdef USE_SSE
+class GammaBasicPassThruOpCPUSSE : public GammaBasicPassThruOpCPU
+{
+public:
+    explicit GammaBasicPassThruOpCPUSSE(ConstGammaOpDataRcPtr & gamma)
+        : GammaBasicPassThruOpCPU(gamma)
+    {
+    }
+
+    void apply(const void * inImg, void * outImg, long numPixels) const override;
+};
+#endif
 
 class GammaMoncurveOpCPU : public OpCPU
 {
@@ -83,6 +122,19 @@ protected:
     void update(ConstGammaOpDataRcPtr & gamma);
 };
 
+#ifdef USE_SSE
+class GammaMoncurveOpCPUFwdSSE : public GammaMoncurveOpCPUFwd
+{
+public:
+    explicit GammaMoncurveOpCPUFwdSSE(ConstGammaOpDataRcPtr & gamma)
+        : GammaMoncurveOpCPUFwd(gamma)
+    {
+    }
+
+    void apply(const void * inImg, void * outImg, long numPixels) const override;
+};
+#endif
+
 class GammaMoncurveOpCPURev : public GammaMoncurveOpCPU
 {
 public:
@@ -95,6 +147,19 @@ protected:
 
 };
 
+#ifdef USE_SSE
+class GammaMoncurveOpCPURevSSE : public GammaMoncurveOpCPURev
+{
+public:
+    explicit GammaMoncurveOpCPURevSSE(ConstGammaOpDataRcPtr & gamma)
+        : GammaMoncurveOpCPURev(gamma)
+    {
+    }
+
+    void apply(const void * inImg, void * outImg, long numPixels) const override;
+};
+#endif
+
 class GammaMoncurveMirrorOpCPUFwd : public GammaMoncurveOpCPU
 {
 public:
@@ -106,6 +171,19 @@ protected:
     void update(ConstGammaOpDataRcPtr & gamma);
 };
 
+#ifdef USE_SSE
+class GammaMoncurveMirrorOpCPUFwdSSE : public GammaMoncurveMirrorOpCPUFwd
+{
+public:
+    explicit GammaMoncurveMirrorOpCPUFwdSSE(ConstGammaOpDataRcPtr & gamma)
+        : GammaMoncurveMirrorOpCPUFwd(gamma)
+    {
+    }
+
+    void apply(const void * inImg, void * outImg, long numPixels) const override;
+};
+#endif
+
 class GammaMoncurveMirrorOpCPURev : public GammaMoncurveOpCPU
 {
 public:
@@ -115,61 +193,103 @@ public:
 
 protected:
     void update(ConstGammaOpDataRcPtr & gamma);
-
 };
 
-ConstOpCPURcPtr GetGammaRenderer(ConstGammaOpDataRcPtr & gamma)
+#ifdef USE_SSE
+class GammaMoncurveMirrorOpCPURevSSE : public GammaMoncurveMirrorOpCPURev
 {
+public:
+    explicit GammaMoncurveMirrorOpCPURevSSE(ConstGammaOpDataRcPtr & gamma)
+        : GammaMoncurveMirrorOpCPURev(gamma)
+    {
+    }
+
+    void apply(const void * inImg, void * outImg, long numPixels) const override;
+};
+#endif
+
+ConstOpCPURcPtr GetGammaRenderer(ConstGammaOpDataRcPtr & gamma, bool fastPower)
+{
+#ifndef USE_SSE
+    std::ignore = fastPower;
+#endif
+
     switch(gamma->getStyle())
     {
         case GammaOpData::MONCURVE_FWD:
         {
-            return std::make_shared<GammaMoncurveOpCPUFwd>(gamma);
+#ifdef USE_SSE
+            if (fastPower) return std::make_shared<GammaMoncurveOpCPUFwdSSE>(gamma);
+            else
+#endif
+                return std::make_shared<GammaMoncurveOpCPUFwd>(gamma);
             break;
         }
 
         case GammaOpData::MONCURVE_REV:
         {
-            return std::make_shared<GammaMoncurveOpCPURev>(gamma);
+#ifdef USE_SSE
+            if (fastPower) return std::make_shared<GammaMoncurveOpCPURevSSE>(gamma);
+            else
+#endif
+                return std::make_shared<GammaMoncurveOpCPURev>(gamma);
             break;
         }
 
         case GammaOpData::MONCURVE_MIRROR_FWD:
         {
-            return std::make_shared<GammaMoncurveMirrorOpCPUFwd>(gamma);
+#ifdef USE_SSE
+            if (fastPower) return std::make_shared<GammaMoncurveMirrorOpCPUFwdSSE>(gamma);
+            else
+#endif
+                return std::make_shared<GammaMoncurveMirrorOpCPUFwd>(gamma);
             break;
         }
 
         case GammaOpData::MONCURVE_MIRROR_REV:
         {
-            return std::make_shared<GammaMoncurveMirrorOpCPURev>(gamma);
+#ifdef USE_SSE
+            if (fastPower) return std::make_shared<GammaMoncurveMirrorOpCPURevSSE>(gamma);
+            else
+#endif
+                return std::make_shared<GammaMoncurveMirrorOpCPURev>(gamma);
             break;
         }
 
         case GammaOpData::BASIC_FWD:
         case GammaOpData::BASIC_REV:
         {
-            return std::make_shared<GammaBasicOpCPU>(gamma);
+#ifdef USE_SSE
+            if (fastPower) return std::make_shared<GammaBasicOpCPUSSE>(gamma);
+            else
+#endif
+                return std::make_shared<GammaBasicOpCPU>(gamma);
             break;
         }
         case GammaOpData::BASIC_MIRROR_FWD:
         case GammaOpData::BASIC_MIRROR_REV:
         {
-            return std::make_shared<GammaBasicMirrorOpCPU>(gamma);
+#ifdef USE_SSE
+            if (fastPower) return std::make_shared<GammaBasicMirrorOpCPUSSE>(gamma);
+            else
+#endif
+                return std::make_shared<GammaBasicMirrorOpCPU>(gamma);
             break;
         }
         case GammaOpData::BASIC_PASS_THRU_FWD:
         case GammaOpData::BASIC_PASS_THRU_REV:
         {
-            return std::make_shared<GammaBasicPassThruOpCPU>(gamma);
+#ifdef USE_SSE
+            if (fastPower) return std::make_shared<GammaBasicPassThruOpCPUSSE>(gamma);
+            else
+#endif
+                return std::make_shared<GammaBasicPassThruOpCPU>(gamma);
             break;
         }
     }
 
     throw Exception("Unsupported Gamma style");
 }
-
-
 
 
 GammaBasicOpCPU::GammaBasicOpCPU(ConstGammaOpDataRcPtr & gamma)
@@ -197,12 +317,12 @@ void GammaBasicOpCPU::update(ConstGammaOpDataRcPtr & gamma)
     m_alpGamma = (float)(forward ? gamma->getAlphaParams()[0] : 1. / gamma->getAlphaParams()[0]);
 }
 
-void GammaBasicOpCPU::apply(const void * inImg, void * outImg, long numPixels) const
+#ifdef USE_SSE
+void GammaBasicOpCPUSSE::apply(const void * inImg, void * outImg, long numPixels) const
 {
     const float * in = (const float *)inImg;
     float * out = (float *)outImg;
 
-#ifdef USE_SSE
     const __m128 gamma = _mm_set_ps(m_alpGamma, m_bluGamma, m_grnGamma, m_redGamma);
 
     for(long idx=0; idx<numPixels; ++idx)
@@ -216,7 +336,14 @@ void GammaBasicOpCPU::apply(const void * inImg, void * outImg, long numPixels) c
         in  += 4;
         out += 4;
     }
-#else
+}
+#endif // USE_SSE
+
+void GammaBasicOpCPU::apply(const void * inImg, void * outImg, long numPixels) const
+{
+    const float * in = (const float *)inImg;
+    float * out = (float *)outImg;
+    
     for(long idx=0; idx<numPixels; ++idx)
     {
         const float pixel[4] = { std::max(0.0f, in[0]), 
@@ -232,7 +359,6 @@ void GammaBasicOpCPU::apply(const void * inImg, void * outImg, long numPixels) c
         in  += 4;
         out += 4;
     }
-#endif
 }
 
 GammaBasicMirrorOpCPU::GammaBasicMirrorOpCPU(ConstGammaOpDataRcPtr & gamma)
@@ -240,12 +366,12 @@ GammaBasicMirrorOpCPU::GammaBasicMirrorOpCPU(ConstGammaOpDataRcPtr & gamma)
 {
 }
 
-void GammaBasicMirrorOpCPU::apply(const void * inImg, void * outImg, long numPixels) const
+#ifdef USE_SSE
+void GammaBasicMirrorOpCPUSSE::apply(const void * inImg, void * outImg, long numPixels) const
 {
     const float * in = (const float *)inImg;
     float * out = (float *)outImg;
 
-#ifdef USE_SSE
     const __m128 gamma = _mm_set_ps(m_alpGamma, m_bluGamma, m_grnGamma, m_redGamma);
 
     for (long idx = 0; idx<numPixels; ++idx)
@@ -262,7 +388,14 @@ void GammaBasicMirrorOpCPU::apply(const void * inImg, void * outImg, long numPix
         in += 4;
         out += 4;
     }
-#else
+}
+#endif
+
+void GammaBasicMirrorOpCPU::apply(const void * inImg, void * outImg, long numPixels) const
+{
+    const float * in = (const float *)inImg;
+    float * out = (float *)outImg;
+
     for (long idx = 0; idx<numPixels; ++idx)
     {
         const float sign[4] = { std::copysign(1.0f, in[0]), std::copysign(1.0f, in[1]),
@@ -278,7 +411,6 @@ void GammaBasicMirrorOpCPU::apply(const void * inImg, void * outImg, long numPix
         in += 4;
         out += 4;
     }
-#endif
 }
 
 GammaBasicPassThruOpCPU::GammaBasicPassThruOpCPU(ConstGammaOpDataRcPtr & gamma)
@@ -286,12 +418,12 @@ GammaBasicPassThruOpCPU::GammaBasicPassThruOpCPU(ConstGammaOpDataRcPtr & gamma)
 {
 }
 
-void GammaBasicPassThruOpCPU::apply(const void * inImg, void * outImg, long numPixels) const
+#ifdef USE_SSE
+void GammaBasicPassThruOpCPUSSE::apply(const void * inImg, void * outImg, long numPixels) const
 {
     const float * in = (const float *)inImg;
     float * out = (float *)outImg;
 
-#ifdef USE_SSE
     const __m128 gamma = _mm_set_ps(m_alpGamma, m_bluGamma, m_grnGamma, m_redGamma);
     const __m128 breakPnt = _mm_set_ps(0.0, 0.f, 0.f, 0.f);
 
@@ -312,7 +444,14 @@ void GammaBasicPassThruOpCPU::apply(const void * inImg, void * outImg, long numP
         in += 4;
         out += 4;
     }
-#else
+}
+#endif
+
+void GammaBasicPassThruOpCPU::apply(const void * inImg, void * outImg, long numPixels) const
+{
+    const float * in = (const float *)inImg;
+    float * out = (float *)outImg;
+
     for (long idx = 0; idx<numPixels; ++idx)
     {
         const float pixel[4] = { in[0], in[1], in[2], in[3] };
@@ -325,7 +464,6 @@ void GammaBasicPassThruOpCPU::apply(const void * inImg, void * outImg, long numP
         in += 4;
         out += 4;
     }
-#endif
 }
 
 GammaMoncurveOpCPUFwd::GammaMoncurveOpCPUFwd(ConstGammaOpDataRcPtr & gamma)
@@ -342,31 +480,26 @@ void GammaMoncurveOpCPUFwd::update(ConstGammaOpDataRcPtr & gamma)
     ComputeParamsFwd(gamma->getAlphaParams(), m_alpha);
 }
 
-void GammaMoncurveOpCPUFwd::apply(const void * inImg, void * outImg, long numPixels) const
+#ifdef USE_SSE
+void GammaMoncurveOpCPUFwdSSE::apply(const void * inImg, void * outImg, long numPixels) const
 {
     const float * in = (const float *)inImg;
     float * out = (float *)outImg;
 
-#ifdef USE_SSE
-    const __m128 scale
-      = _mm_set_ps(m_alpha.scale, m_blue.scale,
-                   m_green.scale, m_red.scale);
+    const __m128 scale = _mm_set_ps(m_alpha.scale, m_blue.scale,
+                                    m_green.scale, m_red.scale);
 
-    const __m128 offset
-      = _mm_set_ps(m_alpha.offset, m_blue.offset,
-                   m_green.offset, m_red.offset);
+    const __m128 offset = _mm_set_ps(m_alpha.offset, m_blue.offset,
+                                     m_green.offset, m_red.offset);
 
-    const __m128 gamma
-      = _mm_set_ps(m_alpha.gamma, m_blue.gamma,
-                   m_green.gamma, m_red.gamma);
+    const __m128 gamma = _mm_set_ps(m_alpha.gamma, m_blue.gamma,
+                                    m_green.gamma, m_red.gamma);
 
-    const __m128 breakPnt
-      = _mm_set_ps(m_alpha.breakPnt, m_blue.breakPnt,
-                   m_green.breakPnt, m_red.breakPnt);
+    const __m128 breakPnt = _mm_set_ps(m_alpha.breakPnt, m_blue.breakPnt,
+                                       m_green.breakPnt, m_red.breakPnt);
 
-    const __m128 slope
-      = _mm_set_ps(m_alpha.slope, m_blue.slope,
-                   m_green.slope, m_red.slope);
+    const __m128 slope = _mm_set_ps(m_alpha.slope, m_blue.slope,
+                                    m_green.slope, m_red.slope);
 
     for(long idx=0; idx<numPixels; ++idx)
     {
@@ -386,19 +519,22 @@ void GammaMoncurveOpCPUFwd::apply(const void * inImg, void * outImg, long numPix
         in  += 4;
         out += 4;
     }
-#else
-    const float red[5] 
-        = { m_red.scale,  m_red.offset,
-            m_red.gamma,  m_red.breakPnt, m_red.slope };
-    const float grn[5]
-        = { m_green.scale, m_green.offset, 
-            m_green.gamma, m_green.breakPnt, m_green.slope };
-    const float blu[5]
-        = { m_blue.scale,  m_blue.offset,
-            m_blue.gamma,  m_blue.breakPnt, m_blue.slope };
-    const float alp[5]
-        = { m_alpha.scale, m_alpha.offset, 
-            m_alpha.gamma, m_alpha.breakPnt, m_alpha.slope };
+}
+#endif // USE_SSE
+
+void GammaMoncurveOpCPUFwd::apply(const void * inImg, void * outImg, long numPixels) const
+{
+    const float * in = (const float *)inImg;
+    float * out = (float *)outImg;
+
+    const float red[5] = { m_red.scale,  m_red.offset,
+                           m_red.gamma,  m_red.breakPnt, m_red.slope };
+    const float grn[5] = { m_green.scale, m_green.offset, 
+                           m_green.gamma, m_green.breakPnt, m_green.slope };
+    const float blu[5] = { m_blue.scale,  m_blue.offset,
+                           m_blue.gamma,  m_blue.breakPnt, m_blue.slope };
+    const float alp[5] = { m_alpha.scale, m_alpha.offset, 
+                           m_alpha.gamma, m_alpha.breakPnt, m_alpha.slope };
 
     for(long idx=0; idx<numPixels; ++idx)
     {
@@ -417,7 +553,6 @@ void GammaMoncurveOpCPUFwd::apply(const void * inImg, void * outImg, long numPix
         in  += 4;
         out += 4;
     }
-#endif
 }
 
 GammaMoncurveOpCPURev::GammaMoncurveOpCPURev(ConstGammaOpDataRcPtr & gamma)
@@ -434,31 +569,26 @@ void GammaMoncurveOpCPURev::update(ConstGammaOpDataRcPtr & gamma)
     ComputeParamsRev(gamma->getAlphaParams(), m_alpha);
 }
 
-void GammaMoncurveOpCPURev::apply(const void * inImg, void * outImg, long numPixels) const
+#ifdef USE_SSE
+void GammaMoncurveOpCPURevSSE::apply(const void * inImg, void * outImg, long numPixels) const
 {
     const float * in = (const float *)inImg;
     float * out = (float *)outImg;
 
-#ifdef USE_SSE
-    const __m128 scale
-      = _mm_set_ps(m_alpha.scale, m_blue.scale,
-                   m_green.scale, m_red.scale);
+    const __m128 scale = _mm_set_ps(m_alpha.scale, m_blue.scale,
+                                    m_green.scale, m_red.scale);
 
-    const __m128 offset
-      = _mm_set_ps(m_alpha.offset, m_blue.offset,
-                   m_green.offset, m_red.offset);
+    const __m128 offset = _mm_set_ps(m_alpha.offset, m_blue.offset,
+                                     m_green.offset, m_red.offset);
 
-    const __m128 gamma
-      = _mm_set_ps(m_alpha.gamma, m_blue.gamma,
-                   m_green.gamma, m_red.gamma);
+    const __m128 gamma = _mm_set_ps(m_alpha.gamma, m_blue.gamma,
+                                    m_green.gamma, m_red.gamma);
 
-    const __m128 breakPnt
-      = _mm_set_ps(m_alpha.breakPnt, m_blue.breakPnt,
-                   m_green.breakPnt, m_red.breakPnt);
+    const __m128 breakPnt = _mm_set_ps(m_alpha.breakPnt, m_blue.breakPnt,
+                                       m_green.breakPnt, m_red.breakPnt);
 
-    const __m128 slope
-      = _mm_set_ps(m_alpha.slope, m_blue.slope,
-                   m_green.slope, m_red.slope);
+    const __m128 slope = _mm_set_ps(m_alpha.slope, m_blue.slope,
+                                    m_green.slope, m_red.slope);
 
     for(long idx=0; idx<numPixels; ++idx)
     {
@@ -478,19 +608,22 @@ void GammaMoncurveOpCPURev::apply(const void * inImg, void * outImg, long numPix
         in  += 4;
         out += 4;
     }
-#else
-    const float red[5] 
-        = { m_red.gamma,  m_red.scale,
-            m_red.offset, m_red.breakPnt, m_red.slope };
-    const float grn[5]
-        = { m_green.gamma, m_green.scale, 
-            m_green.offset,m_green.breakPnt, m_green.slope };
-    const float blu[5]
-        = { m_blue.gamma,  m_blue.scale,
-            m_blue.offset, m_blue.breakPnt, m_blue.slope  };
-    const float alp[5]
-        = { m_alpha.gamma,  m_alpha.scale, 
-            m_alpha.offset, m_alpha.breakPnt, m_alpha.slope };
+}
+#endif
+
+void GammaMoncurveOpCPURev::apply(const void * inImg, void * outImg, long numPixels) const
+{
+    const float * in = (const float *)inImg;
+    float * out = (float *)outImg;
+
+    const float red[5] = { m_red.gamma,  m_red.scale,
+                           m_red.offset, m_red.breakPnt, m_red.slope };
+    const float grn[5] = { m_green.gamma, m_green.scale, 
+                           m_green.offset,m_green.breakPnt, m_green.slope };
+    const float blu[5] = { m_blue.gamma,  m_blue.scale,
+                           m_blue.offset, m_blue.breakPnt, m_blue.slope  };
+    const float alp[5] = { m_alpha.gamma,  m_alpha.scale, 
+                           m_alpha.offset, m_alpha.breakPnt, m_alpha.slope };
 
     for(long idx=0; idx<numPixels; ++idx)
     {
@@ -509,7 +642,6 @@ void GammaMoncurveOpCPURev::apply(const void * inImg, void * outImg, long numPix
         in  += 4;
         out += 4;
     }
-#endif
 }
 
 GammaMoncurveMirrorOpCPUFwd::GammaMoncurveMirrorOpCPUFwd(ConstGammaOpDataRcPtr & gamma)
@@ -526,12 +658,12 @@ void GammaMoncurveMirrorOpCPUFwd::update(ConstGammaOpDataRcPtr & gamma)
     ComputeParamsFwd(gamma->getAlphaParams(), m_alpha);
 }
 
-void GammaMoncurveMirrorOpCPUFwd::apply(const void * inImg, void * outImg, long numPixels) const
+#ifdef USE_SSE
+void GammaMoncurveMirrorOpCPUFwdSSE::apply(const void * inImg, void * outImg, long numPixels) const
 {
     const float * in = (const float *)inImg;
     float * out = (float *)outImg;
 
-#ifdef USE_SSE
     const __m128 scale = _mm_set_ps(m_alpha.scale, m_blue.scale,
                                     m_green.scale, m_red.scale);
 
@@ -566,10 +698,16 @@ void GammaMoncurveMirrorOpCPUFwd::apply(const void * inImg, void * outImg, long 
 
         _mm_storeu_ps(out, data);
 
-        in += 4;
+        in  += 4;
         out += 4;
     }
-#else
+}
+#endif
+
+void GammaMoncurveMirrorOpCPUFwd::apply(const void * inImg, void * outImg, long numPixels) const
+{
+    const float * in = (const float *)inImg;
+    float * out = (float *)outImg;
     const float red[5] = { m_red.scale,  m_red.offset,
                            m_red.gamma,  m_red.breakPnt, m_red.slope };
     const float grn[5] = { m_green.scale, m_green.offset,
@@ -597,10 +735,9 @@ void GammaMoncurveMirrorOpCPUFwd::apply(const void * inImg, void * outImg, long 
         out[2] = sign[2] * (pixel[2] <= blu[3] ? pixel[2] * blu[4] : data[2]);
         out[3] = sign[3] * (pixel[3] <= alp[3] ? pixel[3] * alp[4] : data[3]);
 
-        in += 4;
+        in  += 4;
         out += 4;
     }
-#endif
 }
 
 GammaMoncurveMirrorOpCPURev::GammaMoncurveMirrorOpCPURev(ConstGammaOpDataRcPtr & gamma)
@@ -617,12 +754,12 @@ void GammaMoncurveMirrorOpCPURev::update(ConstGammaOpDataRcPtr & gamma)
     ComputeParamsRev(gamma->getAlphaParams(), m_alpha);
 }
 
-void GammaMoncurveMirrorOpCPURev::apply(const void * inImg, void * outImg, long numPixels) const
+#ifdef USE_SSE
+void GammaMoncurveMirrorOpCPURevSSE::apply(const void * inImg, void * outImg, long numPixels) const
 {
     const float * in = (const float *)inImg;
     float * out = (float *)outImg;
 
-#ifdef USE_SSE
     const __m128 scale = _mm_set_ps(m_alpha.scale, m_blue.scale,
                                     m_green.scale, m_red.scale);
 
@@ -660,7 +797,14 @@ void GammaMoncurveMirrorOpCPURev::apply(const void * inImg, void * outImg, long 
         in += 4;
         out += 4;
     }
-#else
+}
+#endif
+
+void GammaMoncurveMirrorOpCPURev::apply(const void * inImg, void * outImg, long numPixels) const
+{
+    const float * in = (const float *)inImg;
+    float * out = (float *)outImg;
+
     const float red[5] = { m_red.gamma,  m_red.scale,
                            m_red.offset, m_red.breakPnt, m_red.slope };
     const float grn[5] = { m_green.gamma, m_green.scale,
@@ -688,11 +832,9 @@ void GammaMoncurveMirrorOpCPURev::apply(const void * inImg, void * outImg, long 
         out[2] = sign[2] * (pixel[2] <= blu[3] ? pixel[2] * blu[4] : data[2]);
         out[3] = sign[3] * (pixel[3] <= alp[3] ? pixel[3] * alp[4] : data[3]);
 
-        in += 4;
+        in  += 4;
         out += 4;
     }
-#endif
-
 }
 
 } // namespace OCIO_NAMESPACE
