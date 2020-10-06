@@ -1342,3 +1342,101 @@ OCIO_ADD_TEST(OpOptimizers, opt_prefix_test1)
     OCIO_CHECK_EQUAL(lut0->getArray().getLength(), 65536u);
 }
 
+OCIO_ADD_TEST(OpOptimizers, replace_ops)
+{
+    auto cdlData = std::make_shared<OCIO::CDLOpData>();
+    OCIO::CDLOpData::ChannelParams newOffsetParams(0.09);
+    cdlData->setOffsetParams(newOffsetParams);
+    cdlData->setSaturation(1.23);
+    cdlData->setSlopeParams(OCIO::CDLOpData::ChannelParams(0.8, 0.9, 1.1));
+    cdlData->setStyle(OCIO::CDLOpData::CDL_NO_CLAMP_FWD);
+
+    OCIO::OpRcPtrVec originalOps;
+
+    OCIO_CHECK_NO_THROW(
+        OCIO::CreateCDLOp(originalOps, cdlData, OCIO::TRANSFORM_DIR_FORWARD));
+    OCIO_REQUIRE_EQUAL(originalOps.size(), 1);
+
+    OCIO::OpRcPtrVec optimizedOps = originalOps.clone();
+
+    // Verify that default optimization includes replacing ops.
+    OCIO_CHECK_ASSERT(OCIO::HasFlag(OCIO::OPTIMIZATION_DEFAULT,
+                                    OCIO::OPTIMIZATION_SIMPLIFY_OPS));
+
+    // Optimize it: CDL is replaced by a matrix.
+    OCIO_CHECK_NO_THROW(optimizedOps.finalize(OCIO::OPTIMIZATION_DEFAULT));
+    OCIO_REQUIRE_EQUAL(optimizedOps.size(), 1);
+
+    OCIO::ConstOpRcPtr o = optimizedOps[0];
+    auto oData = o->data();
+    OCIO_CHECK_EQUAL(oData->getType(), OCIO::OpData::MatrixType);
+
+    // No optimization: keep CDL.
+    optimizedOps = originalOps.clone();
+    OCIO_CHECK_NO_THROW(optimizedOps.finalize(OCIO::OPTIMIZATION_NONE));
+    OCIO_REQUIRE_EQUAL(optimizedOps.size(), 1);
+
+    o = optimizedOps[0];
+    oData = o->data();
+    OCIO_CHECK_EQUAL(oData->getType(), OCIO::OpData::CDLType);
+
+    // Only replace. CDL is replaced by 2 matrices, one for offset and slope, one for saturation.
+    // Default optimization would combine them.
+    optimizedOps = originalOps.clone();
+    OCIO_CHECK_NO_THROW(optimizedOps.finalize(OCIO::OPTIMIZATION_SIMPLIFY_OPS));
+    OCIO_REQUIRE_EQUAL(optimizedOps.size(), 2);
+
+    o = optimizedOps[0];
+    oData = o->data();
+    OCIO_CHECK_EQUAL(oData->getType(), OCIO::OpData::MatrixType);
+
+    o = optimizedOps[1];
+    oData = o->data();
+    OCIO_CHECK_EQUAL(oData->getType(), OCIO::OpData::MatrixType);
+
+    // Use clamping style.
+    cdlData->setStyle(OCIO::CDLOpData::CDL_V1_2_FWD);
+
+    optimizedOps.clear();
+
+    OCIO_CHECK_NO_THROW(
+        OCIO::CreateCDLOp(optimizedOps, cdlData, OCIO::TRANSFORM_DIR_FORWARD));
+    OCIO_REQUIRE_EQUAL(optimizedOps.size(), 1);
+
+    // Optimize it: CDL replaced by 2 matrices and 2 clamps.
+    OCIO_CHECK_NO_THROW(optimizedOps.finalize(OCIO::OPTIMIZATION_DEFAULT));
+    OCIO_REQUIRE_EQUAL(optimizedOps.size(), 4);
+
+    o = optimizedOps[0];
+    oData = o->data();
+    OCIO_CHECK_EQUAL(oData->getType(), OCIO::OpData::MatrixType);
+
+    o = optimizedOps[1];
+    oData = o->data();
+    OCIO_CHECK_EQUAL(oData->getType(), OCIO::OpData::RangeType);
+
+    o = optimizedOps[2];
+    oData = o->data();
+    OCIO_CHECK_EQUAL(oData->getType(), OCIO::OpData::MatrixType);
+
+    o = optimizedOps[3];
+    oData = o->data();
+    OCIO_CHECK_EQUAL(oData->getType(), OCIO::OpData::RangeType);
+
+    // With a non-identity power.
+    cdlData->setPowerParams(OCIO::CDLOpData::ChannelParams(1, 1, 1.0001));
+
+    optimizedOps.clear();
+
+    OCIO_CHECK_NO_THROW(
+        OCIO::CreateCDLOp(optimizedOps, cdlData, OCIO::TRANSFORM_DIR_FORWARD));
+    OCIO_REQUIRE_EQUAL(optimizedOps.size(), 1);
+
+    // Optimize it: CDL is not replaced.
+    OCIO_CHECK_NO_THROW(optimizedOps.finalize(OCIO::OPTIMIZATION_DEFAULT));
+    OCIO_REQUIRE_EQUAL(optimizedOps.size(), 1);
+
+    o = optimizedOps[0];
+    oData = o->data();
+    OCIO_CHECK_EQUAL(oData->getType(), OCIO::OpData::CDLType);
+}

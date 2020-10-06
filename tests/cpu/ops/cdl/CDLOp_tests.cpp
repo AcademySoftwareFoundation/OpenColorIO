@@ -17,14 +17,14 @@ namespace
 void ApplyCDL(float * in, const float * ref, unsigned numPixels,
               const double * slope, const double * offset,
               const double * power, double saturation,
-              OCIO::CDLOpData::Style style,
-              float errorThreshold)
+              OCIO::CDLOpData::Style style, float errorThreshold)
 {
     OCIO::CDLOp cdlOp(style, slope, offset, power, saturation);
 
     OCIO_CHECK_NO_THROW(cdlOp.validate());
 
-    cdlOp.apply(in, in, numPixels);
+    const auto cpu = cdlOp.getCPUOp(true);
+    cpu->apply(in, in, numPixels);
 
     for(unsigned idx=0; idx<(numPixels*4); ++idx)
     {
@@ -615,7 +615,6 @@ OCIO_ADD_TEST(CDLOp, create_transform)
                                             CDL_DATA_1::power[2]);
 
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
     {
         // Forward direction.
         auto cdlData = std::make_shared<OCIO::CDLOpData>(OCIO::CDLOpData::CDL_V1_2_FWD,

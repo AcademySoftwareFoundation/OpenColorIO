@@ -28,7 +28,7 @@ void TestLog(float logBase)
     OCIO::ConstLogOpDataRcPtr logOp = std::make_shared<OCIO::LogOpData>(
         logBase, OCIO::TRANSFORM_DIR_FORWARD);
 
-    OCIO::ConstOpCPURcPtr pRenderer = OCIO::GetLogRenderer(logOp);
+    OCIO::ConstOpCPURcPtr pRenderer = OCIO::GetLogRenderer(logOp, true);
     pRenderer->apply(rgbaImage, rgba, 8);
 
     const float minValue = std::numeric_limits<float>::min();
@@ -108,7 +108,7 @@ void TestAntiLog(float logBase)
     OCIO::ConstLogOpDataRcPtr logOp = std::make_shared<OCIO::LogOpData>(
         logBase, OCIO::TRANSFORM_DIR_INVERSE);
 
-    OCIO::ConstOpCPURcPtr pRenderer = OCIO::GetLogRenderer(logOp);
+    OCIO::ConstOpCPURcPtr pRenderer = OCIO::GetLogRenderer(logOp, true);
     pRenderer->apply(rgbaImage, rgba, 8);
 
     // Relative error tolerance for the log2 approximation.
@@ -232,7 +232,7 @@ OCIO_ADD_TEST(LogOpCPU, log2lin_test)
     OCIO::ConstLogOpDataRcPtr logOp
         = std::make_shared<OCIO::LogOpData>(base, paramsR, paramsG, paramsB, dir);
 
-    OCIO::ConstOpCPURcPtr pRenderer = OCIO::GetLogRenderer(logOp);
+    OCIO::ConstOpCPURcPtr pRenderer = OCIO::GetLogRenderer(logOp, true);
     pRenderer->apply(rgbaImage, rgba, 8);
 
     const OCIO::LogUtil::CTFParams::Params noParam;
@@ -370,7 +370,7 @@ OCIO_ADD_TEST(LogOpCPU, lin2log_test)
     OCIO::ConstLogOpDataRcPtr logOp 
         = std::make_shared<OCIO::LogOpData>(base, paramsR, paramsG, paramsB, dir);
 
-    OCIO::ConstOpCPURcPtr pRenderer = OCIO::GetLogRenderer(logOp);
+    OCIO::ConstOpCPURcPtr pRenderer = OCIO::GetLogRenderer(logOp, true);
     pRenderer->apply(rgbaImage, rgba, 8);
 
     const OCIO::LogUtil::CTFParams::Params noParam;
@@ -451,7 +451,7 @@ OCIO_ADD_TEST(LogOpCPU, cameralog2lin_test)
     OCIO::ConstLogOpDataRcPtr logOp
         = std::make_shared<OCIO::LogOpData>(base, params, params, params, dir);
 
-    OCIO::ConstOpCPURcPtr pRenderer = OCIO::GetLogRenderer(logOp);
+    OCIO::ConstOpCPURcPtr pRenderer = OCIO::GetLogRenderer(logOp, true);
     pRenderer->apply(rgbaImage, rgba, numPixels);
 
 #ifdef USE_SSE
@@ -489,7 +489,7 @@ OCIO_ADD_TEST(LogOpCPU, cameralog2lin_test)
     OCIO::ConstLogOpDataRcPtr lognols
         = std::make_shared<OCIO::LogOpData>(base, params, params, params, dir);
 
-    OCIO::ConstOpCPURcPtr pRendererNoLS = OCIO::GetLogRenderer(lognols);
+    OCIO::ConstOpCPURcPtr pRendererNoLS = OCIO::GetLogRenderer(lognols, true);
     pRendererNoLS->apply(rgbaImage, rgba_nols, numPixels);
 
     OCIO_CHECK_CLOSE(rgba_nols[0], -0.325512374199f, error);
@@ -519,7 +519,7 @@ OCIO_ADD_TEST(LogOpCPU, cameralog2lin_test)
     OCIO::ConstLogOpDataRcPtr lognobreak
         = std::make_shared<OCIO::LogOpData>(base, params, params, params, dir);
 
-    OCIO::ConstOpCPURcPtr pRendererNoBreak = OCIO::GetLogRenderer(lognobreak);
+    OCIO::ConstOpCPURcPtr pRendererNoBreak = OCIO::GetLogRenderer(lognobreak, true);
     pRendererNoBreak->apply(rgbaImage, rgba_nobreak, numPixels);
 
 #ifdef USE_SSE
@@ -563,7 +563,7 @@ OCIO_ADD_TEST(LogOpCPU, cameralin2log_test)
     OCIO::ConstLogOpDataRcPtr logOp
         = std::make_shared<OCIO::LogOpData>(base, params, params, params, dir);
 
-    OCIO::ConstOpCPURcPtr pRenderer = OCIO::GetLogRenderer(logOp);
+    OCIO::ConstOpCPURcPtr pRenderer = OCIO::GetLogRenderer(logOp, true);
     pRenderer->apply(rgbaImage, rgba, 3);
 
 #ifdef USE_SSE

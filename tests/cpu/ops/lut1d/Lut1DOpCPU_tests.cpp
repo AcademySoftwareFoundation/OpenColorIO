@@ -1192,7 +1192,6 @@ OCIO_ADD_TEST(Lut1DRenderer, lut_1d_special_values)
 {
     // Create empty Config to use.
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
 
     const std::string ctfLUT("lut1d_infinity.ctf");
     OCIO::FileTransformRcPtr fileTransform = OCIO::CreateFileTransform(ctfLUT);
@@ -1249,7 +1248,6 @@ OCIO_ADD_TEST(Lut1DRenderer, lut_1d_hue_adjust)
 {
     // Create empty Config to use.
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
 
     const std::string ctfLUT("lut1d_1024_hue_adjust_test.ctf");
     OCIO::FileTransformRcPtr fileTransform = OCIO::CreateFileTransform(ctfLUT);
@@ -1327,7 +1325,6 @@ OCIO_ADD_TEST(Lut1DRenderer, lut_1d_half_domain_hue_adjust)
 {
     // Create empty Config to use.
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
 
     const std::string ctfLUT("lut1d_hd_hue_adjust.ctf");
     OCIO::FileTransformRcPtr fileTransform = OCIO::CreateFileTransform(ctfLUT);
@@ -2403,7 +2400,6 @@ OCIO_ADD_TEST(Lut1DRenderer, lut_1d_inv_half_ctf)
 {
     // Create empty Config to use.
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
 
     // This ctf has increasing R & B channels and decreasing G channel.
     // It also has flat spots.
@@ -2464,7 +2460,6 @@ OCIO_ADD_TEST(Lut1DRenderer, lut_1d_inv_half_fclut)
 {
     // Create empty Config to use.
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
 
     // TODO: Review the test to add LUT & inverse LUT together when optimization is reworked.
 
@@ -2548,7 +2543,6 @@ OCIO_ADD_TEST(Lut1DRenderer, lut_1d_inv_half_domain_hue_adjust)
 {
     // Create empty Config to use.
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
 
     const std::string ctfLUT("lut1d_hd_hue_adjust.ctf");
     OCIO::FileTransformRcPtr fileTransform = OCIO::CreateFileTransform(ctfLUT);
