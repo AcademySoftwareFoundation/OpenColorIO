@@ -47,7 +47,7 @@ public:
     void replaceDynamicProperty(DynamicPropertyType type, DynamicPropertyDoubleImplRcPtr & prop) override;
     void removeDynamicProperties() override;
 
-    ConstOpCPURcPtr getCPUOp() const override;
+    ConstOpCPURcPtr getCPUOp(bool fastLogExpPow) const override;
 
     void extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const override;
 
@@ -129,7 +129,7 @@ std::string ExposureContrastOp::getCacheID() const
     return cacheIDStream.str();
 }
 
-ConstOpCPURcPtr ExposureContrastOp::getCPUOp() const
+ConstOpCPURcPtr ExposureContrastOp::getCPUOp(bool /*fastLogExpPow*/) const
 {
     ConstExposureContrastOpDataRcPtr ecOpData = ecData();
     return GetExposureContrastCPURenderer(ecOpData);

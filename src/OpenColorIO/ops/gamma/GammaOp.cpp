@@ -48,7 +48,7 @@ public:
 
     std::string getCacheID() const override;
 
-    ConstOpCPURcPtr getCPUOp() const override;
+    ConstOpCPURcPtr getCPUOp(bool fastLogExpPow) const override;
 
     void extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const override;
 
@@ -135,10 +135,10 @@ std::string GammaOp::getCacheID() const
     return cacheIDStream.str();
 }
 
-ConstOpCPURcPtr GammaOp::getCPUOp() const
+ConstOpCPURcPtr GammaOp::getCPUOp(bool fastLogExpPow) const
 {
     ConstGammaOpDataRcPtr data = gammaData();
-    return GetGammaRenderer(data);
+    return GetGammaRenderer(data, fastLogExpPow);
 }
 
 void GammaOp::extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const

@@ -176,7 +176,7 @@ public:
     bool hasChannelCrosstalk() const override;
     std::string getCacheID() const override;
 
-    ConstOpCPURcPtr getCPUOp() const override;
+    ConstOpCPURcPtr getCPUOp(bool fastLogExpPow) const override;
 
     bool supportedByLegacyShader() const override { return false; }
     void extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const override;
@@ -275,7 +275,7 @@ std::string Lut3DOp::getCacheID() const
     return cacheIDStream.str();
 }
 
-ConstOpCPURcPtr Lut3DOp::getCPUOp() const
+ConstOpCPURcPtr Lut3DOp::getCPUOp(bool /*fastLogExpPow*/) const
 {
     ConstLut3DOpDataRcPtr data = lut3DData();
     return GetLut3DRenderer(data);

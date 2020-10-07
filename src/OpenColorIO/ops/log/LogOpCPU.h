@@ -11,7 +11,7 @@
 
 namespace OCIO_NAMESPACE
 {
-ConstOpCPURcPtr GetLogRenderer(ConstLogOpDataRcPtr & log);
+ConstOpCPURcPtr GetLogRenderer(ConstLogOpDataRcPtr & log, bool fastExp);
 
 } // namespace OCIO_NAMESPACE
 

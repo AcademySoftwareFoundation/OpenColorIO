@@ -49,7 +49,7 @@ public:
     void finalize() override;
     std::string getCacheID() const override;
 
-    ConstOpCPURcPtr getCPUOp() const override;
+    ConstOpCPURcPtr getCPUOp(bool fastLogExpPow) const override;
 
     bool supportedByLegacyShader() const override { return false; }
     void extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const override;
@@ -148,7 +148,7 @@ std::string Lut1DOp::getCacheID() const
     return cacheIDStream.str();
 }
 
-ConstOpCPURcPtr Lut1DOp::getCPUOp() const
+ConstOpCPURcPtr Lut1DOp::getCPUOp(bool /*fastLogExpPow*/) const
 {
     ConstLut1DOpDataRcPtr data = lut1DData();
     return GetLut1DRenderer(data, BIT_DEPTH_F32, BIT_DEPTH_F32);

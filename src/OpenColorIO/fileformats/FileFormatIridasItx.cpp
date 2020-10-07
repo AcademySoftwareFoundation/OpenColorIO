@@ -265,7 +265,7 @@ void LocalFileFormat::bake(const Baker & baker,
         inputToTarget = config->getProcessor(baker.getInputSpace(),
             baker.getTargetSpace());
     }
-    ConstCPUProcessorRcPtr cpu = inputToTarget->getDefaultCPUProcessor();
+    ConstCPUProcessorRcPtr cpu = inputToTarget->getOptimizedCPUProcessor(OPTIMIZATION_LOSSLESS);
     cpu->apply(cubeImg);
 
     // Write out the file.

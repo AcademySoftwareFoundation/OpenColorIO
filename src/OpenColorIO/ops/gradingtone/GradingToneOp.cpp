@@ -50,7 +50,7 @@ public:
                                 DynamicPropertyGradingToneImplRcPtr & prop) override;
     void removeDynamicProperties() override;
 
-    ConstOpCPURcPtr getCPUOp() const override;
+    ConstOpCPURcPtr getCPUOp(bool fastLogExpPow) const override;
 
     void extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const override;
 
@@ -178,7 +178,7 @@ void GradingToneOp::removeDynamicProperties()
     toneData()->removeDynamicProperty();
 }
 
-ConstOpCPURcPtr GradingToneOp::getCPUOp() const
+ConstOpCPURcPtr GradingToneOp::getCPUOp(bool /*fastLogExpPow*/) const
 {
     ConstGradingToneOpDataRcPtr data = toneData();
     return GetGradingToneCPURenderer(data);
