@@ -50,7 +50,7 @@ public:
                                 DynamicPropertyGradingRGBCurveImplRcPtr & prop) override;
     void removeDynamicProperties() override;
 
-    ConstOpCPURcPtr getCPUOp() const override;
+    ConstOpCPURcPtr getCPUOp(bool fastLogExpPow) const override;
 
     void extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const override;
 
@@ -184,7 +184,7 @@ void GradingRGBCurveOp::removeDynamicProperties()
     rgbCurveData()->removeDynamicProperty();
 }
 
-ConstOpCPURcPtr GradingRGBCurveOp::getCPUOp() const
+ConstOpCPURcPtr GradingRGBCurveOp::getCPUOp(bool /*fastLogExpPow*/) const
 {
     ConstGradingRGBCurveOpDataRcPtr data = rgbCurveData();
     return GetGradingRGBCurveCPURenderer(data);

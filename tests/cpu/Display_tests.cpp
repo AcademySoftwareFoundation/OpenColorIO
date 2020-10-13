@@ -14,6 +14,7 @@ OCIO_ADD_TEST(SharedViews, basic)
 {
     // Shared views can not be used with v1 config.
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
+    config->setMajorVersion(1);
     OCIO_CHECK_NO_THROW(config->addSharedView("shared1", "", "colorspace", "", "", ""));
     std::ostringstream oss;
     OCIO_CHECK_THROW_WHAT(config->serialize(oss), OCIO::Exception,
