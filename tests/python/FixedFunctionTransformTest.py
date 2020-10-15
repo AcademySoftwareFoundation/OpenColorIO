@@ -17,6 +17,12 @@ class FixedFunctionTransformTest(unittest.TestCase):
     def tearDown(self):
         self.fixed_func_tr = None
 
+    def test_transform_type(self):
+        """
+        Test the getTransformType() method.
+        """
+        self.assertEqual(self.fixed_func_tr.getTransformType(), OCIO.TRANSFORM_TYPE_FIXED_FUNCTION)
+
     def test_direction(self):
         """
         Test the setDirection() and getDirection() methods.

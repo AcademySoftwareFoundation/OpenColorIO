@@ -58,13 +58,13 @@ public:
     // read an istream. originalFileName is used by parsers that make use
     // of aspects of the file name as part of the parsing.
     // It may be set to an empty string if not known.
-    virtual CachedFileRcPtr read(
-        std::istream & istream,
-        const std::string & originalFileName) const = 0;
+    virtual CachedFileRcPtr read(std::istream & istream,
+                                 const std::string & originalFileName,
+                                 Interpolation interp) const = 0;
 
     virtual void bake(const Baker & baker,
-                        const std::string & formatName,
-                        std::ostream & ostream) const;
+                      const std::string & formatName,
+                      std::ostream & ostream) const;
 
     virtual void write(const OpRcPtrVec & ops,
                         const FormatMetadataImpl & metadata,

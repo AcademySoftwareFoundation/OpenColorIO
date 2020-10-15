@@ -46,7 +46,8 @@ public:
     void getFormatInfo(FormatInfoVec & formatInfoVec) const override;
 
     CachedFileRcPtr read(std::istream & istream,
-                         const std::string & fileName) const override;
+                         const std::string & fileName,
+                         Interpolation interp) const override;
 
     void buildFileOps(OpRcPtrVec & ops,
                       const Config & config,
@@ -68,9 +69,9 @@ void LocalFileFormat::getFormatInfo(FormatInfoVec & formatInfoVec) const
 // Try and load the format
 // Raise an exception if it can't be loaded.
 
-CachedFileRcPtr LocalFileFormat::read(
-    std::istream & istream,
-    const std::string & fileName) const
+CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
+                                      const std::string & fileName,
+                                      Interpolation /*interp*/) const
 {
     CDLParser parser(fileName);
     parser.parse(istream);
@@ -101,14 +102,7 @@ void LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
         throw Exception(os.str().c_str());
     }
 
-    TransformDirection newDir = CombineTransformDirections(dir, fileTransform.getDirection());
-    if (newDir == TRANSFORM_DIR_UNKNOWN)
-    {
-        std::ostringstream os;
-        os << "Cannot build ASC FileTransform,";
-        os << " unspecified transform direction.";
-        throw Exception(os.str().c_str());
-    }
+    const auto newDir = CombineTransformDirections(dir, fileTransform.getDirection());
 
     // Below this point, we should throw ExceptionMissingFile on
     // errors rather than Exception

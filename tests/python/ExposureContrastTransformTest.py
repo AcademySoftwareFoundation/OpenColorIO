@@ -25,6 +25,12 @@ class ExposureContrastTransformTest(unittest.TestCase):
     def tearDown(self):
         self.exp_tr = None
 
+    def test_transform_type(self):
+        """
+        Test the getTransformType() method.
+        """
+        self.assertEqual(self.exp_tr.getTransformType(), OCIO.TRANSFORM_TYPE_EXPOSURE_CONTRAST)
+
     def test_style(self):
         """
         Test the setStyle() and getStyle() methods.

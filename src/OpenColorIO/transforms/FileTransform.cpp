@@ -37,7 +37,7 @@ class FileTransform::Impl
 {
 public:
     TransformDirection m_dir{ TRANSFORM_DIR_FORWARD };
-    Interpolation m_interp{ INTERP_UNKNOWN };
+    Interpolation m_interp{ INTERP_DEFAULT };
     std::string m_src;
 
     std::string m_cccid;
@@ -86,6 +86,14 @@ void FileTransform::validate() const
     if (getImpl()->m_src.empty())
     {
         throw Exception("FileTransform: empty file path");
+    }
+
+    if (getInterpolation() == INTERP_UNKNOWN)
+    {
+        std::ostringstream oss;
+        oss << "FileTransform can't use unknown interpolation. ";
+        oss << "File: '" << std::string(getImpl()->m_src) << "'.";
+        throw Exception(oss.str().c_str());
     }
 }
 
@@ -497,7 +505,8 @@ namespace
 
 void LoadFileUncached(FileFormat * & returnFormat,
                       CachedFileRcPtr & returnCachedFile,
-                      const std::string & filepath)
+                      const std::string & filepath,
+                      Interpolation interp)
 {
     returnFormat = NULL;
 
@@ -544,9 +553,7 @@ void LoadFileUncached(FileFormat * & returnFormat,
                 throw Exception(os.str().c_str());
             }
 
-            CachedFileRcPtr cachedFile = tryFormat->read(
-                filestream,
-                filepath);
+            CachedFileRcPtr cachedFile = tryFormat->read(filestream, filepath, interp);
 
             if(IsDebugLoggingEnabled())
             {
@@ -617,7 +624,7 @@ void LoadFileUncached(FileFormat * & returnFormat,
                 throw Exception(os.str().c_str());
             }
 
-            cachedFile = altFormat->read(filestream, filepath);
+            cachedFile = altFormat->read(filestream, filepath, interp);
 
             if(IsDebugLoggingEnabled())
             {
@@ -709,7 +716,8 @@ GenericCache<std::string, FileCacheResultPtr> g_fileCache;
 
 void GetCachedFileAndFormat(FileFormat * & format,
                             CachedFileRcPtr & cachedFile,
-                            const std::string & filepath)
+                            const std::string & filepath,
+                            Interpolation interp)
 {
     // Have a two-mutex approach to decouple the cache entry creation from
     // the data creation. It was originally done to improve the multi-threaded
@@ -749,9 +757,7 @@ void GetCachedFileAndFormat(FileFormat * & format,
 
         try
         {
-            LoadFileUncached(result->format,
-                result->cachedFile,
-                filepath);
+            LoadFileUncached(result->format, result->cachedFile, filepath, interp);
         }
         catch (std::exception & e)
         {
@@ -843,7 +849,7 @@ void BuildFileTransformOps(OpRcPtrVec & ops,
     FileFormat* format = NULL;
     CachedFileRcPtr cachedFile;
 
-    GetCachedFileAndFormat(format, cachedFile, filepath);
+    GetCachedFileAndFormat(format, cachedFile, filepath, fileTransform.getInterpolation());
 
     try
     {

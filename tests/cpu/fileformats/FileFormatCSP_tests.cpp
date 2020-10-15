@@ -68,7 +68,7 @@ OCIO_ADD_TEST(FileFormatCSP, simple_1d)
     // Read file.
     std::string emptyString;
     OCIO::LocalFileFormat tester;
-    OCIO::CachedFileRcPtr cachedFile = tester.read(simple1D, emptyString);
+    OCIO::CachedFileRcPtr cachedFile = tester.read(simple1D, emptyString, OCIO::INTERP_DEFAULT);
     OCIO::CachedFileCSPRcPtr csplut = OCIO::DynamicPtrCast<OCIO::CachedFileCSP>(cachedFile);
 
     // Check metadata.
@@ -200,7 +200,7 @@ OCIO_ADD_TEST(FileFormatCSP, simple_3d)
     // Load file.
     std::string emptyString;
     OCIO::LocalFileFormat tester;
-    OCIO::CachedFileRcPtr cachedFile = tester.read(simple3D, emptyString);
+    OCIO::CachedFileRcPtr cachedFile = tester.read(simple3D, emptyString, OCIO::INTERP_TETRAHEDRAL);
     OCIO::CachedFileCSPRcPtr csplut = OCIO::DynamicPtrCast<OCIO::CachedFileCSP>(cachedFile);
 
     // Check metadata.
@@ -212,6 +212,7 @@ OCIO_ADD_TEST(FileFormatCSP, simple_3d)
 
     // Check cube data.
     OCIO_REQUIRE_ASSERT(csplut->lut3D);
+    OCIO_CHECK_EQUAL(csplut->lut3D->getInterpolation(), OCIO::INTERP_TETRAHEDRAL);
     const OCIO::Array & lutArray = csplut->lut3D->getArray();
     const unsigned long lutlength = lutArray.getLength();
 
@@ -524,7 +525,7 @@ OCIO_ADD_TEST(FileFormatCSP, less_strict_parse)
     std::string emptyString;
     OCIO::LocalFileFormat tester;
     OCIO::CachedFileRcPtr cachedFile;
-    OCIO_CHECK_NO_THROW(cachedFile = tester.read(simple3D, emptyString));
+    OCIO_CHECK_NO_THROW(cachedFile = tester.read(simple3D, emptyString, OCIO::INTERP_DEFAULT));
     OCIO::CachedFileCSPRcPtr csplut = OCIO::DynamicPtrCast<OCIO::CachedFileCSP>(cachedFile);   
 
     // Check metadata.
@@ -544,7 +545,7 @@ OCIO_ADD_TEST(FileFormatCSP, failures_1d)
         // Read file.
         std::string fileName("file.name");
         OCIO::LocalFileFormat tester;
-        OCIO_CHECK_THROW_WHAT(tester.read(lutStream, fileName),
+        OCIO_CHECK_THROW_WHAT(tester.read(lutStream, fileName, OCIO::INTERP_DEFAULT),
                               OCIO::Exception, "file stream empty");
     }
     {
@@ -560,7 +561,7 @@ OCIO_ADD_TEST(FileFormatCSP, failures_1d)
         // Read file.
         std::string fileName("file.name");
         OCIO::LocalFileFormat tester;
-        OCIO_CHECK_THROW_WHAT(tester.read(lutStream, fileName),
+        OCIO_CHECK_THROW_WHAT(tester.read(lutStream, fileName, OCIO::INTERP_DEFAULT),
                               OCIO::Exception, "expected 'CSPLUTV100'");
     }
     {
@@ -578,7 +579,7 @@ OCIO_ADD_TEST(FileFormatCSP, failures_1d)
         // Read file.
         std::string fileName("file.name");
         OCIO::LocalFileFormat tester;
-        OCIO_CHECK_THROW_WHAT(tester.read(lutStream, fileName),
+        OCIO_CHECK_THROW_WHAT(tester.read(lutStream, fileName, OCIO::INTERP_DEFAULT),
                               OCIO::Exception, "Require 1D or 3D");
     }
     {
@@ -615,7 +616,7 @@ OCIO_ADD_TEST(FileFormatCSP, failures_1d)
         // Read file.
         std::string fileName("file.name");
         OCIO::LocalFileFormat tester;
-        OCIO_CHECK_THROW_WHAT(tester.read(lutStream, fileName),
+        OCIO_CHECK_THROW_WHAT(tester.read(lutStream, fileName, OCIO::INTERP_DEFAULT),
                               OCIO::Exception,
                               "Prelut does not specify valid dimension size");
     }
@@ -653,7 +654,7 @@ OCIO_ADD_TEST(FileFormatCSP, failures_1d)
         // Read file.
         std::string fileName("File.name");
         OCIO::LocalFileFormat tester;
-        OCIO_CHECK_THROW_WHAT(tester.read(lutStream, fileName),
+        OCIO_CHECK_THROW_WHAT(tester.read(lutStream, fileName, OCIO::INTERP_DEFAULT),
                               OCIO::Exception,
                               "expected number of data points");
     }
@@ -691,7 +692,7 @@ OCIO_ADD_TEST(FileFormatCSP, failures_1d)
         // Read file.
         std::string fileName("file.name");
         OCIO::LocalFileFormat tester;
-        OCIO_CHECK_THROW_WHAT(tester.read(lutStream, fileName),
+        OCIO_CHECK_THROW_WHAT(tester.read(lutStream, fileName, OCIO::INTERP_DEFAULT),
                               OCIO::Exception, "Prelut data is malformed");
     }
     {
@@ -728,7 +729,7 @@ OCIO_ADD_TEST(FileFormatCSP, failures_1d)
         // Read file.
         std::string fileName("file.name");
         OCIO::LocalFileFormat tester;
-        OCIO_CHECK_THROW_WHAT(tester.read(lutStream, fileName),
+        OCIO_CHECK_THROW_WHAT(tester.read(lutStream, fileName, OCIO::INTERP_DEFAULT),
                               OCIO::Exception,
                               "1D LUT with invalid number of entries");
     }
@@ -766,7 +767,7 @@ OCIO_ADD_TEST(FileFormatCSP, failures_1d)
         // Read file.
         std::string fileName("file.name");
         OCIO::LocalFileFormat tester;
-        OCIO_CHECK_THROW_WHAT(tester.read(lutStream, fileName),
+        OCIO_CHECK_THROW_WHAT(tester.read(lutStream, fileName, OCIO::INTERP_DEFAULT),
                               OCIO::Exception, "must contain three numbers");
     }
 }
@@ -828,7 +829,7 @@ OCIO_ADD_TEST(FileFormatCSP, failures_3d)
         // Read file.
         std::string fileName("file.name");
         OCIO::LocalFileFormat tester;
-        OCIO_CHECK_THROW_WHAT(tester.read(lutStream, fileName),
+        OCIO_CHECK_THROW_WHAT(tester.read(lutStream, fileName, OCIO::INTERP_DEFAULT),
                               OCIO::Exception, "couldn't read cube size");
     }
     {
@@ -886,7 +887,7 @@ OCIO_ADD_TEST(FileFormatCSP, failures_3d)
         // Read file.
         std::string fileName("file.name");
         OCIO::LocalFileFormat tester;
-        OCIO_CHECK_THROW_WHAT(tester.read(lutStream, fileName),
+        OCIO_CHECK_THROW_WHAT(tester.read(lutStream, fileName, OCIO::INTERP_DEFAULT),
                               OCIO::Exception, "nonuniform cube sizes");
     }
     {
@@ -944,7 +945,7 @@ OCIO_ADD_TEST(FileFormatCSP, failures_3d)
         // Read file.
         std::string fileName("file.name");
         OCIO::LocalFileFormat tester;
-        OCIO_CHECK_THROW_WHAT(tester.read(lutStream, fileName),
+        OCIO_CHECK_THROW_WHAT(tester.read(lutStream, fileName, OCIO::INTERP_DEFAULT),
                               OCIO::Exception, "invalid cube size");
     }
     {
@@ -1002,7 +1003,7 @@ OCIO_ADD_TEST(FileFormatCSP, failures_3d)
         // Read file.
         std::string fileName("file.name");
         OCIO::LocalFileFormat tester;
-        OCIO_CHECK_THROW_WHAT(tester.read(lutStream, fileName),
+        OCIO_CHECK_THROW_WHAT(tester.read(lutStream, fileName, OCIO::INTERP_DEFAULT),
                               OCIO::Exception, "couldn't read cube row");
     }
     {
@@ -1060,7 +1061,7 @@ OCIO_ADD_TEST(FileFormatCSP, failures_3d)
         // Read file.
         std::string fileName("file.name");
         OCIO::LocalFileFormat tester;
-        OCIO_CHECK_THROW_WHAT(tester.read(lutStream, fileName),
+        OCIO_CHECK_THROW_WHAT(tester.read(lutStream, fileName, OCIO::INTERP_DEFAULT),
                               OCIO::Exception, "couldn't read cube row");
     }
     {
@@ -1118,7 +1119,7 @@ OCIO_ADD_TEST(FileFormatCSP, failures_3d)
         // Read file.
         std::string fileName("file.name");
         OCIO::LocalFileFormat tester;
-        OCIO_CHECK_THROW_WHAT(tester.read(lutStream, fileName),
+        OCIO_CHECK_THROW_WHAT(tester.read(lutStream, fileName, OCIO::INTERP_DEFAULT),
                               OCIO::Exception, "couldn't read cube row");
     }
 }
