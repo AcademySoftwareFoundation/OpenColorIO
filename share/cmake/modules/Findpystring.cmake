@@ -77,6 +77,10 @@ endif()
 if(NOT pystring_FOUND)
     include(ExternalProject)
 
+    if(APPLE)
+        set(CMAKE_OSX_DEPLOYMENT_TARGET ${CMAKE_OSX_DEPLOYMENT_TARGET})
+    endif()
+
     set(_EXT_DIST_ROOT "${CMAKE_BINARY_DIR}/ext/dist")
     set(_EXT_BUILD_ROOT "${CMAKE_BINARY_DIR}/ext/build")
 
@@ -103,10 +107,12 @@ if(NOT pystring_FOUND)
 
         set(pystring_CMAKE_ARGS
             ${pystring_CMAKE_ARGS}
-            -DCMAKE_INSTALL_PREFIX=${_EXT_DIST_ROOT}
             -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
             -DCMAKE_CXX_FLAGS=${pystring_CXX_FLAGS}
             -DCMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD}
+            -DCMAKE_INSTALL_MESSAGE=${CMAKE_INSTALL_MESSAGE}
+            -DCMAKE_INSTALL_PREFIX=${_EXT_DIST_ROOT}
+            -DCMAKE_OBJECT_PATH_MAX=${CMAKE_OBJECT_PATH_MAX}
         )
         if(CMAKE_TOOLCHAIN_FILE)
             set(pystring_CMAKE_ARGS
