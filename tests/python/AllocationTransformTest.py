@@ -17,6 +17,12 @@ class AllocationTransformTest(unittest.TestCase):
     def tearDown(self):
         self.allo_tr = None
 
+    def test_transform_type(self):
+        """
+        Test the getTransformType() method.
+        """
+        self.assertEqual(self.allo_tr.getTransformType(), OCIO.TRANSFORM_TYPE_ALLOCATION)
+
     def test_allocation(self):
         """
         Test the setAllocation() and getAllocation() methods.

@@ -45,8 +45,10 @@ public:
     // Get the interpolation algorithm that has to be used.
     // INTERP_BEST and INTERP_DEFAULT are translated to what should be used.
     Interpolation getConcreteInterpolation() const;
+    static Interpolation GetConcreteInterpolation(Interpolation interp);
 
-    void setInterpolation(Interpolation algo);
+    void setInterpolation(Interpolation interpolation);
+    static bool IsValidInterpolation(Interpolation interpolation);
 
     TransformDirection getDirection() const { return m_direction; }
     void setDirection(TransformDirection dir) { m_direction = dir; }

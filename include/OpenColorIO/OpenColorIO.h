@@ -301,6 +301,7 @@ public:
      * \brief Returns the string representation of the Config in YAML text form.
      * 
      * This is typically stored on disk in a file with the extension .ocio.
+     * NB: This does not validate the config.  Applications should validate before serializing.
      */
     void serialize(std::ostream & os) const;
 

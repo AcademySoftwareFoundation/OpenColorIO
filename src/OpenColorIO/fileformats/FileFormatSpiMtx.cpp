@@ -42,9 +42,9 @@ public:
 
     void getFormatInfo(FormatInfoVec & formatInfoVec) const override;
 
-    CachedFileRcPtr read(
-        std::istream & istream,
-        const std::string & fileName) const override;
+    CachedFileRcPtr read(std::istream & istream,
+                         const std::string & fileName,
+                         Interpolation interp) const override;
 
     void buildFileOps(OpRcPtrVec & ops,
                         const Config& config,
@@ -63,9 +63,9 @@ void LocalFileFormat::getFormatInfo(FormatInfoVec & formatInfoVec) const
     formatInfoVec.push_back(info);
 }
 
-CachedFileRcPtr LocalFileFormat::read(
-    std::istream & istream,
-    const std::string & fileName) const
+CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
+                                      const std::string & fileName,
+                                      Interpolation /*interp*/) const
 {
 
     // Read the entire file.
@@ -155,13 +155,9 @@ void LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
         throw Exception(os.str().c_str());
     }
 
-    TransformDirection newDir = CombineTransformDirections(dir,
-        fileTransform.getDirection());
+    const auto newDir = CombineTransformDirections(dir, fileTransform.getDirection());
 
-    CreateMatrixOffsetOp(ops,
-                            cachedFile->m44,
-                            cachedFile->offset4,
-                            newDir);
+    CreateMatrixOffsetOp(ops, cachedFile->m44, cachedFile->offset4, newDir);
 }
 }
 

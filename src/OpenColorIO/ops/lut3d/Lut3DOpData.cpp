@@ -280,14 +280,19 @@ Lut3DOpData::~Lut3DOpData()
 {
 }
 
-void Lut3DOpData::setInterpolation(Interpolation algo)
+void Lut3DOpData::setInterpolation(Interpolation interpolation)
 {
-    m_interpolation = algo;
+    m_interpolation = interpolation;
 }
 
 Interpolation Lut3DOpData::getConcreteInterpolation() const
 {
-    switch (m_interpolation)
+    return GetConcreteInterpolation(m_interpolation);
+}
+
+Interpolation Lut3DOpData::GetConcreteInterpolation(Interpolation interp)
+{
+    switch (interp)
     {
     case INTERP_BEST:
     case INTERP_TETRAHEDRAL:
@@ -313,7 +318,10 @@ void Lut3DOpData::setArrayFromRedFastestOrder(const std::vector<float> & lut)
 
     if (lutSize * lutSize * lutSize * 3 != lut.size())
     {
-        throw Exception("Lut3DOpData length does not match the vector size.");
+        std::ostringstream oss;
+        oss << "Lut3D length '" << lutSize << " * " << lutSize << " * " << lutSize << " * 3";
+        oss << "' does not match the vector size '"<< lut.size()  <<"'.";
+        throw Exception(oss.str().c_str());
     }
 
     for (unsigned long b = 0; b < lutSize; ++b)
@@ -336,9 +344,7 @@ void Lut3DOpData::setArrayFromRedFastestOrder(const std::vector<float> & lut)
     }
 }
 
-namespace
-{
-bool IsValid(const Interpolation & interpolation)
+bool Lut3DOpData::IsValidInterpolation(Interpolation interpolation)
 {
     switch (interpolation)
     {
@@ -354,13 +360,16 @@ bool IsValid(const Interpolation & interpolation)
         return false;
     }
 }
-}
 
 void Lut3DOpData::validate() const
 {
-    if (!IsValid(m_interpolation))
+    if (!IsValidInterpolation(m_interpolation))
     {
-        throw Exception("Lut3D has an invalid interpolation type.");
+        std::ostringstream oss;
+        oss << "Lut3D does not support interpolation algorithm: ";
+        oss << InterpolationToString(getInterpolation());
+        oss << ".";
+        throw Exception(oss.str().c_str());
     }
 
     try
