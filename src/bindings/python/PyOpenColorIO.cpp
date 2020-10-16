@@ -27,6 +27,8 @@ PYBIND11_MODULE(PyOpenColorIO, m)
     m.def("IsEnvVariablePresent", &IsEnvVariablePresent, "name"_a);
 
     // Global variables
+    m.attr("__author__")    = "OpenColorIO Contributors";
+    m.attr("__email__")     = "ocio-dev@lists.aswf.io";
     m.attr("__license__")   = "SPDX-License-Identifier: BSD-3-Clause";
     m.attr("__copyright__") = "Copyright Contributors to the OpenColorIO Project";
     m.attr("__version__")   = OCIO_VERSION_FULL_STR;
