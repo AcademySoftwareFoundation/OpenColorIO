@@ -251,6 +251,8 @@ Documentation:
 Natron
 ******
 
+Natron is an open source 2D compositor that ships with native support for OCIO. Standard configs are included however users can point to a custom config in the color management section of the user preferences.
+
 Website : `<https://natrongithub.github.io/>`__
 
 Documentation :
