@@ -46,7 +46,7 @@ OCIO_ADD_TEST(FixedFunctionOp, glow03_cpu_engine)
     OCIO::FixedFunctionOp func(funcData);
     OCIO_CHECK_NO_THROW(func.validate());
 
-    OCIO::ConstOpCPURcPtr cpuOp = func.getCPUOp();
+    OCIO::ConstOpCPURcPtr cpuOp = func.getCPUOp(false);
     const OCIO::OpCPU & c = *cpuOp;
     const std::string typeName(typeid(c).name());
     OCIO_CHECK_NE(std::string::npos, StringUtils::Find(typeName, "Renderer_ACES_Glow03_Fwd"));
@@ -65,7 +65,7 @@ OCIO_ADD_TEST(FixedFunctionOp, darktodim10_cpu_engine)
     OCIO::FixedFunctionOp func(funcData);
     OCIO_CHECK_NO_THROW(func.validate());
 
-    OCIO::ConstOpCPURcPtr cpuOp = func.getCPUOp();
+    OCIO::ConstOpCPURcPtr cpuOp = func.getCPUOp(false);
     const OCIO::OpCPU & c = *cpuOp;
     const std::string typeName(typeid(c).name());
     OCIO_CHECK_NE(std::string::npos, StringUtils::Find(typeName, "Renderer_ACES_DarkToDim10_Fwd"));
@@ -263,7 +263,7 @@ OCIO_ADD_TEST(FixedFunctionOps, RGB_TO_HSV)
     OCIO_CHECK_ASSERT(op0->isInverse(op1));
     OCIO_CHECK_ASSERT(op1->isInverse(op0));
 
-    OCIO::ConstOpCPURcPtr cpuOp = op0->getCPUOp();
+    OCIO::ConstOpCPURcPtr cpuOp = op0->getCPUOp(false);
     const OCIO::OpCPU & c = *cpuOp;
     const std::string typeName(typeid(c).name());
     OCIO_CHECK_NE(std::string::npos, StringUtils::Find(typeName, "Renderer_RGB_TO_HSV"));
@@ -290,7 +290,7 @@ OCIO_ADD_TEST(FixedFunctionOps, XYZ_TO_xyY)
     OCIO_CHECK_ASSERT(op0->isInverse(op1));
     OCIO_CHECK_ASSERT(op1->isInverse(op0));
 
-    OCIO::ConstOpCPURcPtr cpuOp = op0->getCPUOp();
+    OCIO::ConstOpCPURcPtr cpuOp = op0->getCPUOp(false);
     const OCIO::OpCPU & c = *cpuOp;
     const std::string typeName(typeid(c).name());
     OCIO_CHECK_NE(std::string::npos, StringUtils::Find(typeName, "Renderer_XYZ_TO_xyY"));
@@ -317,7 +317,7 @@ OCIO_ADD_TEST(FixedFunctionOps, XYZ_TO_uvY)
     OCIO_CHECK_ASSERT(op0->isInverse(op1));
     OCIO_CHECK_ASSERT(op1->isInverse(op0));
 
-    OCIO::ConstOpCPURcPtr cpuOp = op0->getCPUOp();
+    OCIO::ConstOpCPURcPtr cpuOp = op0->getCPUOp(false);
     const OCIO::OpCPU & c = *cpuOp;
     const std::string typeName(typeid(c).name());
     OCIO_CHECK_NE(std::string::npos, StringUtils::Find(typeName, "Renderer_XYZ_TO_uvY"));
@@ -344,7 +344,7 @@ OCIO_ADD_TEST(FixedFunctionOps, XYZ_TO_LUV)
     OCIO_CHECK_ASSERT(op0->isInverse(op1));
     OCIO_CHECK_ASSERT(op1->isInverse(op0));
 
-    OCIO::ConstOpCPURcPtr cpuOp = op0->getCPUOp();
+    OCIO::ConstOpCPURcPtr cpuOp = op0->getCPUOp(false);
     const OCIO::OpCPU & c = *cpuOp;
     const std::string typeName(typeid(c).name());
     OCIO_CHECK_NE(std::string::npos, StringUtils::Find(typeName, "Renderer_XYZ_TO_LUV"));

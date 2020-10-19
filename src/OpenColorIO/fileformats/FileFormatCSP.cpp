@@ -726,7 +726,7 @@ void LocalFileFormat::bake(const Baker & baker,
 
         ConstCPUProcessorRcPtr shaperToInput 
             = config->getProcessor(baker.getShaperSpace(), 
-                                    baker.getInputSpace())->getDefaultCPUProcessor();
+                                    baker.getInputSpace())->getOptimizedCPUProcessor(OPTIMIZATION_LOSSLESS);
         if(shaperToInput->hasChannelCrosstalk())
         {
             // TODO: Automatically turn shaper into non-crosstalked version?
@@ -748,13 +748,13 @@ void LocalFileFormat::bake(const Baker & baker,
             transform->setDst(baker.getTargetSpace());
             shaperToTarget
                 = config->getProcessor(transform, 
-                                        TRANSFORM_DIR_FORWARD)->getDefaultCPUProcessor();
+                                        TRANSFORM_DIR_FORWARD)->getOptimizedCPUProcessor(OPTIMIZATION_LOSSLESS);
         }
         else
         {
             shaperToTarget
                 = config->getProcessor(baker.getShaperSpace(), 
-                                        baker.getTargetSpace())->getDefaultCPUProcessor();
+                                        baker.getTargetSpace())->getOptimizedCPUProcessor(OPTIMIZATION_LOSSLESS);
         }
         shaperToTarget->apply(cubeImg);
     }
@@ -806,7 +806,7 @@ void LocalFileFormat::bake(const Baker & baker,
 
         // Apply the forward to the allocation to the output shaper y axis, and the cube
         ConstCPUProcessorRcPtr shaperToInput
-            = config->getProcessor(allocationTransform, TRANSFORM_DIR_INVERSE)->getDefaultCPUProcessor();
+            = config->getProcessor(allocationTransform, TRANSFORM_DIR_INVERSE)->getOptimizedCPUProcessor(OPTIMIZATION_LOSSLESS);
 
         PackedImageDesc shaperInImg(&shaperInData[0], shaperSize, 1, 3);
         shaperToInput->apply(shaperInImg);
@@ -827,7 +827,7 @@ void LocalFileFormat::bake(const Baker & baker,
         {
             inputToTarget = config->getProcessor(baker.getInputSpace(), baker.getTargetSpace());
         }
-        ConstCPUProcessorRcPtr cpu = inputToTarget->getDefaultCPUProcessor();
+        ConstCPUProcessorRcPtr cpu = inputToTarget->getOptimizedCPUProcessor(OPTIMIZATION_LOSSLESS);
         cpu->apply(cubeImg);
     }
 

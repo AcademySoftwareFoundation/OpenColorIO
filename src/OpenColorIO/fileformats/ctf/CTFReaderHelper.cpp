@@ -2204,7 +2204,7 @@ int CTFReaderGammaParamsElt_1_5::getChannelNumber(const char * name) const
 //////////////////////////////////////////////////////////
 
 CTFReaderGradingPrimaryElt::CTFReaderGradingPrimaryElt()
-    : m_gradingPrimary(std::make_shared<GradingPrimaryOpData>(GRADING_LOG))
+    : m_gradingPrimaryOpData(std::make_shared<GradingPrimaryOpData>(GRADING_LOG))
 {
 }
 
@@ -2230,11 +2230,11 @@ void CTFReaderGradingPrimaryElt::start(const char ** atts)
                 GradingStyle style;
                 TransformDirection dir;
                 ConvertStringToGradingStyleAndDir(atts[i + 1], style, dir);
-                m_gradingPrimary->setStyle(style);
-                m_gradingPrimary->setDirection(dir);
+                m_gradingPrimaryOpData->setStyle(style);
+                m_gradingPrimaryOpData->setDirection(dir);
                 // Initialize default values from the style.
                 const GradingPrimary values(style);
-                m_gradingPrimary->setValue(values);
+                m_gradingPrimary = values;
             }
             catch (Exception &)
             {
@@ -2256,13 +2256,13 @@ void CTFReaderGradingPrimaryElt::end()
 {
     CTFReaderOpElt::end();
 
-    // Validate the end result
-    m_gradingPrimary->validate();
+    m_gradingPrimaryOpData->setValue(m_gradingPrimary);
+    m_gradingPrimaryOpData->validate();
 }
 
 const OpDataRcPtr CTFReaderGradingPrimaryElt::getOp() const
 {
-    return m_gradingPrimary;
+    return m_gradingPrimaryOpData;
 }
 
 //////////////////////////////////////////////////////////
@@ -2524,7 +2524,7 @@ void CTFReaderGradingPrimaryParamElt::start(const char ** atts)
 {
     auto gp = dynamic_cast<CTFReaderGradingPrimaryElt *>(getParent().get());
 
-    auto gpValues = gp->getGradingPrimary()->getValue();
+    GradingPrimary & gpValues = gp->getValue();
 
     // Read all primary controls even those that are not used by the current style.
     if (0 == Platform::Strcasecmp(TAG_PRIMARY_BRIGHTNESS, getName().c_str()))
@@ -2567,8 +2567,6 @@ void CTFReaderGradingPrimaryParamElt::start(const char ** atts)
     {
         parseBWAttrValues(atts, gpValues.m_clampBlack, gpValues.m_clampWhite);
     }
-
-    gp->getGradingPrimary()->setValue(gpValues);
 }
 
 void CTFReaderGradingPrimaryParamElt::end()

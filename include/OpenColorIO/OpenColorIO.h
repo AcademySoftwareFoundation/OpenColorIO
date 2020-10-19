@@ -232,7 +232,11 @@ public:
     // Initialization
     //
 
-    /// Create a default empty configuration.
+    /**
+     * \brief Create an empty config.
+     *
+     * Latest version is used. An empty config might be missing elements to ve valid.
+     */
     static ConfigRcPtr Create();
     /**
      * \brief Create a fall-back config.
@@ -2588,12 +2592,14 @@ public:
     typedef std::function<double()> DoubleGetter;
     /// Function returning a bool, used by uniforms.
     typedef std::function<bool()> BoolGetter;
+    /// Functions returning a Float3, used by uniforms.
+    typedef std::function<const Float3 &()> Float3Getter;
     /// Function returning an int, used by uniforms.
     typedef std::function<int()> SizeGetter;
     /// Function returning a float *, used by uniforms.
-    typedef std::function<const float *()> FloatArrayGetter;
+    typedef std::function<const float *()> VectorFloatGetter;
     /// Function returning an int *, used by uniforms.
-    typedef std::function<const int *()> IntArrayGetter;
+    typedef std::function<const int *()> VectorIntGetter;
 
     virtual bool addUniform(const char * name,
                             const DoubleGetter & getDouble) = 0;
@@ -2602,12 +2608,15 @@ public:
                             const BoolGetter & getBool) = 0;
 
     virtual bool addUniform(const char * name,
-                            const SizeGetter & getSize,
-                            const FloatArrayGetter & getFloatArray) = 0;
+                            const Float3Getter & getFloat3) = 0;
 
     virtual bool addUniform(const char * name,
                             const SizeGetter & getSize,
-                            const IntArrayGetter & getInt2Array) = 0;
+                            const VectorFloatGetter & getVectorFloat) = 0;
+
+    virtual bool addUniform(const char * name,
+                            const SizeGetter & getSize,
+                            const VectorIntGetter & getVectorInt) = 0;
 
     /// Adds the property (used internally).
     void addDynamicProperty(DynamicPropertyRcPtr & prop);
@@ -2898,32 +2907,36 @@ public:
     GpuShaderCreatorRcPtr clone() const override;
 
     /**
-     * Used to retrieve uniform information. UniformDataType m_type indicates the type of uniform
+     * Used to retrieve uniform information. UniformData m_type indicates the type of uniform
      * and what member of the structure should be used:
      * * UNIFORM_DOUBLE: m_getDouble.
      * * UNIFORM_BOOL: m_getBool.
-     * * UNIFORM_ARRAY_FLOAT: m_arrayFloat.
-     * * UNIFORM_ARRAY_INT2: m_arrayInt2.
+     * * UNIFORM_FLOAT3: m_getFloat3.
+     * * UNIFORM_VECTOR_FLOAT: m_vectorFloat.
+     * * UNIFORM_VECTOR_INT: m_vectorInt.
      */
     struct UniformData
     {
-        const char * m_name{ nullptr };
+        UniformData() = default;
+        UniformData(const UniformData & data) = default;
         UniformDataType m_type{ UNIFORM_UNKNOWN };
         DoubleGetter m_getDouble{};
         BoolGetter m_getBool{};
-        struct ArrayFloat
+        Float3Getter m_getFloat3{};
+        struct VectorFloat
         {
             SizeGetter m_getSize{};
-            FloatArrayGetter m_getArray{};
-        } m_arrayFloat{};
-        struct ArrayInt2
+            VectorFloatGetter m_getVector{};
+        } m_vectorFloat{};
+        struct VectorInt
         {
             SizeGetter m_getSize{};
-            IntArrayGetter m_getArray{};
-        } m_arrayInt2{};
+            VectorIntGetter m_getVector{};
+        } m_vectorInt{};
     };
     virtual unsigned getNumUniforms() const noexcept = 0;
-    virtual void getUniform(unsigned index, UniformData & data) const = 0;
+    /// Returns name of uniform and data as parameter.
+    virtual const char * getUniform(unsigned index, UniformData & data) const = 0;
 
     // 1D lut related methods
     virtual unsigned getNumTextures() const noexcept = 0;

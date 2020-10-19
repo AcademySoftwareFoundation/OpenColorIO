@@ -286,7 +286,7 @@ LocalFileFormat::bake(const Baker & baker,
     ConstCPUProcessorRcPtr inputToTarget;
     inputToTarget
         = config->getProcessor(baker.getInputSpace(), 
-                                baker.getTargetSpace())->getDefaultCPUProcessor();
+                                baker.getTargetSpace())->getOptimizedCPUProcessor(OPTIMIZATION_LOSSLESS);
     inputToTarget->apply(cubeImg);
 
     int shaperSize = baker.getShaperSize();

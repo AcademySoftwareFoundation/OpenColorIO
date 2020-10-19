@@ -50,7 +50,7 @@ public:
                                 DynamicPropertyGradingPrimaryImplRcPtr & prop) override;
     void removeDynamicProperties() override;
 
-    ConstOpCPURcPtr getCPUOp() const override;
+    ConstOpCPURcPtr getCPUOp(bool fastLogExpPow) const override;
 
     void extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const override;
 
@@ -184,7 +184,7 @@ void GradingPrimaryOp::removeDynamicProperties()
     primaryData()->removeDynamicProperty();
 }
 
-ConstOpCPURcPtr GradingPrimaryOp::getCPUOp() const
+ConstOpCPURcPtr GradingPrimaryOp::getCPUOp(bool /*fastLogExpPow*/) const
 {
     ConstGradingPrimaryOpDataRcPtr data = primaryData();
     return GetGradingPrimaryCPURenderer(data);

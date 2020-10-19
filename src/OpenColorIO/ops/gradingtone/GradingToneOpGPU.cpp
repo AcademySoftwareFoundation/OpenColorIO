@@ -405,19 +405,19 @@ void Add_MidsFwd_Shader(unsigned channel, GpuShaderText & st,
     }
     else
     {
-        st.newLine() << st.vec3fDecl("t") << " = outColor.rgb;";
-        st.newLine() << st.vec3fDecl("res") << ";";
-        st.newLine() << st.vec3fDecl("tL") << " = (t - x0) / (x1 - x0);";
-        st.newLine() << st.vec3fDecl("tM") << " = (t - x1) / (x2 - x1);";
-        st.newLine() << st.vec3fDecl("tR") << " = (t - x2) / (x3 - x2);";
-        st.newLine() << st.vec3fDecl("tR2") << " = (t - x3) / (x4 - x3);";
-        st.newLine() << st.vec3fDecl("tR3") << " = (t - x4) / (x5 - x4);";
+        st.newLine() << st.float3Decl("t") << " = outColor.rgb;";
+        st.newLine() << st.float3Decl("res") << ";";
+        st.newLine() << st.float3Decl("tL") << " = (t - x0) / (x1 - x0);";
+        st.newLine() << st.float3Decl("tM") << " = (t - x1) / (x2 - x1);";
+        st.newLine() << st.float3Decl("tR") << " = (t - x2) / (x3 - x2);";
+        st.newLine() << st.float3Decl("tR2") << " = (t - x3) / (x4 - x3);";
+        st.newLine() << st.float3Decl("tR3") << " = (t - x4) / (x5 - x4);";
 
-        st.newLine() << st.vec3fDecl("fL") << " = tL * (x1 - x0) * ( tL * 0.5 * (m1 - m0) + m0 ) + y0;";
-        st.newLine() << st.vec3fDecl("fM") << " = tM * (x2 - x1) * ( tM * 0.5 * (m2 - m1) + m1 ) + y1;";
-        st.newLine() << st.vec3fDecl("fR") << " = tR * (x3 - x2) * ( tR * 0.5 * (m3 - m2) + m2 ) + y2;";
-        st.newLine() << st.vec3fDecl("fR2") << " = tR2 * (x4 - x3) * ( tR2 * 0.5 * (m4 - m3) + m3 ) + y3;";
-        st.newLine() << st.vec3fDecl("fR3") << " = tR3 * (x5 - x4) * ( tR3 * 0.5 * (m5 - m4) + m4 ) + y4;";
+        st.newLine() << st.float3Decl("fL") << " = tL * (x1 - x0) * ( tL * 0.5 * (m1 - m0) + m0 ) + y0;";
+        st.newLine() << st.float3Decl("fM") << " = tM * (x2 - x1) * ( tM * 0.5 * (m2 - m1) + m1 ) + y1;";
+        st.newLine() << st.float3Decl("fR") << " = tR * (x3 - x2) * ( tR * 0.5 * (m3 - m2) + m2 ) + y2;";
+        st.newLine() << st.float3Decl("fR2") << " = tR2 * (x4 - x3) * ( tR2 * 0.5 * (m4 - m3) + m3 ) + y3;";
+        st.newLine() << st.float3Decl("fR3") << " = tR3 * (x5 - x4) * ( tR3 * 0.5 * (m5 - m4) + m4 ) + y4;";
 
         st.newLine() << "res.r = (t.r < x1) ? fL.r : fM.r;";
         st.newLine() << "res.g = (t.g < x1) ? fL.g : fM.g;";
@@ -506,18 +506,18 @@ void Add_HighlightShadowFwd_Shader(unsigned channel, bool isShadow, GpuShaderTex
     }
     else
     {
-        st.newLine() << st.vec3fDecl("t") << " = outColor." << channelSuffix << ";";
-        st.newLine() << st.vec3fDecl("res") << ";";
-        st.newLine() << st.vec3fDecl("tL") << ";";
-        st.newLine() << st.vec3fDecl("tR") << ";";
-        st.newLine() << st.vec3fDecl("fL") << ";";
-        st.newLine() << st.vec3fDecl("fR") << ";";
-        st.newLine() << st.vec3fDecl("cL") << ";";
-        st.newLine() << st.vec3fDecl("cR") << ";";
-        st.newLine() << st.vec3fDecl("discrimL") << ";";
-        st.newLine() << st.vec3fDecl("discrimR") << ";";
-        st.newLine() << st.vec3fDecl("outL") << ";";
-        st.newLine() << st.vec3fDecl("outR") << ";";
+        st.newLine() << st.float3Decl("t") << " = outColor." << channelSuffix << ";";
+        st.newLine() << st.float3Decl("res") << ";";
+        st.newLine() << st.float3Decl("tL") << ";";
+        st.newLine() << st.float3Decl("tR") << ";";
+        st.newLine() << st.float3Decl("fL") << ";";
+        st.newLine() << st.float3Decl("fR") << ";";
+        st.newLine() << st.float3Decl("cL") << ";";
+        st.newLine() << st.float3Decl("cR") << ";";
+        st.newLine() << st.float3Decl("discrimL") << ";";
+        st.newLine() << st.float3Decl("discrimR") << ";";
+        st.newLine() << st.float3Decl("outL") << ";";
+        st.newLine() << st.float3Decl("outR") << ";";
     }
 
     st.newLine() << "if (val < 1.)";
@@ -657,7 +657,7 @@ void Add_WhiteBlackFwd_Shader(unsigned channel, bool isBlack, GpuShaderText & st
     }
     else
     {
-        st.newLine() << st.vec3fDecl("t") << " = outColor.rgb;";
+        st.newLine() << st.float3Decl("t") << " = outColor.rgb;";
     }
 
     // Slope is decreasing case.
@@ -686,8 +686,8 @@ void Add_WhiteBlackFwd_Shader(unsigned channel, bool isBlack, GpuShaderText & st
     }
     else
     {
-        st.newLine() << "  " << st.vec3fDecl("tlocal") << " = (t - x0) / (x1 - x0);";
-        st.newLine() << "  " << st.vec3fDecl("res") << " = tlocal * (x1 - x0) * ( tlocal * 0.5 * (m1 - m0) + m0 ) + y0;";
+        st.newLine() << "  " << st.float3Decl("tlocal") << " = (t - x0) / (x1 - x0);";
+        st.newLine() << "  " << st.float3Decl("res") << " = tlocal * (x1 - x0) * ( tlocal * 0.5 * (m1 - m0) + m0 ) + y0;";
         st.newLine() << "  res.r = (t.r < x0) ? y0 + (t.r - x0) * m0 : res.r;";
         st.newLine() << "  res.g = (t.g < x0) ? y0 + (t.g - x0) * m0 : res.g;";
         st.newLine() << "  res.b = (t.b < x0) ? y0 + (t.b - x0) * m0 : res.b;";
@@ -736,10 +736,10 @@ void Add_WhiteBlackFwd_Shader(unsigned channel, bool isBlack, GpuShaderText & st
     }
     else
     {
-        st.newLine() << "  " << st.vec3fDecl("c") << " = y0 - t;";
-        st.newLine() << "  " << st.vec3fDecl("discrim") << " = sqrt( b * b - 4. * a * c );";
-        st.newLine() << "  " << st.vec3fDecl("tmp") << " = ( 2. * c ) / ( -discrim - b );";
-        st.newLine() << "  " << st.vec3fDecl("res") << " = tmp * (x1 - x0) + x0;";
+        st.newLine() << "  " << st.float3Decl("c") << " = y0 - t;";
+        st.newLine() << "  " << st.float3Decl("discrim") << " = sqrt( b * b - 4. * a * c );";
+        st.newLine() << "  " << st.float3Decl("tmp") << " = ( 2. * c ) / ( -discrim - b );";
+        st.newLine() << "  " << st.float3Decl("res") << " = tmp * (x1 - x0) + x0;";
         st.newLine() << "  res.r = (t.r < y0) ? x0 + (t.r - y0) / m0 : res.r;";
         st.newLine() << "  res.g = (t.g < y0) ? x0 + (t.g - y0) / m0 : res.g;";
         st.newLine() << "  res.b = (t.b < y0) ? x0 + (t.b - y0) / m0 : res.b;";
@@ -814,7 +814,7 @@ void Add_SContrastFwd_Shader(GpuShaderText & st, const GTProperties & props, Gra
                     "1. / (1.8125 - 0.8125 * min( contrast, 1.99 )) : "
                     "0.28125 + 0.71875 * max( contrast, 0.01 );";
 
-    st.newLine() << st.vec3fDecl("t") << " = outColor.rgb;";
+    st.newLine() << st.float3Decl("t") << " = outColor.rgb;";
 
     st.newLine() << "outColor.rgb = (t - pivot) * contrast + pivot;";
 
@@ -846,8 +846,8 @@ void Add_SContrastFwd_Shader(GpuShaderText & st, const GTProperties & props, Gra
     st.newLine() << "float y1 = y0;";
 
     // TODO: the above should not be in the GLSL (is not per-pixel)
-    st.newLine() << st.vec3fDecl("tR") << " = (t - x1) / (x2 - x1);";
-    st.newLine() << st.vec3fDecl("res") << " = tR * (x2 - x1) * ( tR * 0.5 * (m3 - m0) + m0 ) + y1;";
+    st.newLine() << st.float3Decl("tR") << " = (t - x1) / (x2 - x1);";
+    st.newLine() << st.float3Decl("res") << " = tR * (x2 - x1) * ( tR * 0.5 * (m3 - m0) + m0 ) + y1;";
     st.newLine() << "float y2 = y1 + (m0 + m3) * (x2 - x1) * 0.5;";
     st.newLine() << "outColor.r = (t.r > x1) ? res.r : outColor.r;";
     st.newLine() << "outColor.g = (t.g > x1) ? res.g : outColor.g;";
@@ -886,8 +886,8 @@ void Add_SContrastFwd_Shader(GpuShaderText & st, const GTProperties & props, Gra
     st.newLine() << "float y1 = y2 - (m0 + m3) * (x2 - x1) * 0.5;";
 
     // TODO: the above should not be in the GLSL (is not per-pixel)
-    st.newLine() << st.vec3fDecl("tR") << " = (t - x1) / (x2 - x1);";
-    st.newLine() << st.vec3fDecl("res") << " = tR * (x2 - x1) * ( tR * 0.5 * (m3 - m0) + m0 ) + y1;";
+    st.newLine() << st.float3Decl("tR") << " = (t - x1) / (x2 - x1);";
+    st.newLine() << st.float3Decl("res") << " = tR * (x2 - x1) * ( tR * 0.5 * (m3 - m0) + m0 ) + y1;";
     st.newLine() << "outColor.r = (t.r < x2) ? res.r : outColor.r;";
     st.newLine() << "outColor.g = (t.g < x2) ? res.g : outColor.g;";
     st.newLine() << "outColor.b = (t.b < x2) ? res.b : outColor.b;";
