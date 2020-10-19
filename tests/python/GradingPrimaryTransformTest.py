@@ -13,6 +13,13 @@ class GradingPrimaryTransformTest(unittest.TestCase):
     valsDefault = OCIO.GradingPrimary(OCIO.GRADING_LIN)
     valsDefaultLog = OCIO.GradingPrimary(OCIO.GRADING_LOG)
 
+    def test_transform_type(self):
+        """
+        Test the getTransformType() method.
+        """
+        gpt = OCIO.GradingPrimaryTransform()
+        self.assertEqual(gpt.getTransformType(), OCIO.TRANSFORM_TYPE_GRADING_PRIMARY)
+
     def test_contructor(self):
         """
         Test GradingPrimaryTransform constructor without and with keywords.

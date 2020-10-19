@@ -13,6 +13,13 @@ class GradingRGBCurveTransformTest(unittest.TestCase):
     valDefaultLin = OCIO.GradingRGBCurve(OCIO.GRADING_LIN)
     valDefaultLog = OCIO.GradingRGBCurve(OCIO.GRADING_LOG)
 
+    def test_transform_type(self):
+        """
+        Test the getTransformType() method.
+        """
+        gct = OCIO.GradingRGBCurveTransform()
+        self.assertEqual(gct.getTransformType(), OCIO.TRANSFORM_TYPE_GRADING_RGB_CURVE)
+
     def test_contructor(self):
         """
         Test GradingRGBCurveTransform constructor without and with keywords.

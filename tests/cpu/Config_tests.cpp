@@ -162,7 +162,7 @@ OCIO_ADD_TEST(Config, simple_config)
         "        children:\n"
         "          - !<FileTransform>\n"
         "            src: diffusemult.spimtx\n"
-        "            interpolation: unknown\n"
+        "            interpolation: best\n"
         "          - !<ColorSpaceTransform>\n"
         "            src: raw\n"
         "            dst: lnh\n"
@@ -323,9 +323,22 @@ OCIO_ADD_TEST(Config, serialize_group_transform)
         OCIO::ColorSpaceRcPtr cs = OCIO::ColorSpace::Create();
         cs->setName("testing");
         cs->setFamily("test");
-        OCIO::FileTransformRcPtr transform1 = OCIO::FileTransform::Create();
         OCIO::GroupTransformRcPtr groupTransform = OCIO::GroupTransform::Create();
+        // Default and unknown interpolation are not saved.
+        OCIO::FileTransformRcPtr transform1 = OCIO::FileTransform::Create();
         groupTransform->appendTransform(transform1);
+        OCIO::FileTransformRcPtr transform2 = OCIO::FileTransform::Create();
+        transform2->setInterpolation(OCIO::INTERP_UNKNOWN);
+        groupTransform->appendTransform(transform2);
+        OCIO::FileTransformRcPtr transform3 = OCIO::FileTransform::Create();
+        transform3->setInterpolation(OCIO::INTERP_BEST);
+        groupTransform->appendTransform(transform3);
+        OCIO::FileTransformRcPtr transform4 = OCIO::FileTransform::Create();
+        transform4->setInterpolation(OCIO::INTERP_NEAREST);
+        groupTransform->appendTransform(transform4);
+        OCIO::FileTransformRcPtr transform5 = OCIO::FileTransform::Create();
+        transform5->setInterpolation(OCIO::INTERP_CUBIC);
+        groupTransform->appendTransform(transform5);
         OCIO_CHECK_NO_THROW(cs->setTransform(groupTransform, OCIO::COLORSPACE_DIR_FROM_REFERENCE));
         config->addColorSpace(cs);
         config->setRole( OCIO::ROLE_DEFAULT, cs->getName() );
@@ -380,6 +393,10 @@ OCIO_ADD_TEST(Config, serialize_group_transform)
     "    from_reference: !<GroupTransform>\n"
     "      children:\n"
     "        - !<FileTransform> {src: \"\"}\n"
+    "        - !<FileTransform> {src: \"\"}\n"
+    "        - !<FileTransform> {src: \"\", interpolation: best}\n"
+    "        - !<FileTransform> {src: \"\", interpolation: nearest}\n"
+    "        - !<FileTransform> {src: \"\", interpolation: cubic}\n"
     "\n"
     "  - !<ColorSpace>\n"
     "    name: testing2\n"

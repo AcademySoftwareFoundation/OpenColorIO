@@ -247,18 +247,15 @@ static const std::string ocioTestFilesDir(STR(OCIO_UNIT_TEST_FILES_DIR));
 
 namespace
 {
-    OCIO::FileTransformRcPtr GetFileTransform(const std::string & filename)
-    {
-        const std::string
-            filepath(ocioTestFilesDir + std::string("/") + filename);
+OCIO::FileTransformRcPtr GetFileTransform(const std::string & filename)
+{
+    const std::string filepath(ocioTestFilesDir + std::string("/") + filename);
 
-        OCIO::FileTransformRcPtr file = OCIO::FileTransform::Create();
-        file->setSrc(filepath.c_str());
-        file->setInterpolation(OCIO::INTERP_LINEAR);
-        file->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
+    OCIO::FileTransformRcPtr file = OCIO::FileTransform::Create();
+    file->setSrc(filepath.c_str());
 
-        return file;
-    }
+    return file;
+}
 }
 
 

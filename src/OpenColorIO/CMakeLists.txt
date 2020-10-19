@@ -38,6 +38,7 @@ set(SOURCES
 	fileformats/FileFormatSpi3D.cpp
 	fileformats/FileFormatSpiMtx.cpp
 	fileformats/FileFormatTruelight.cpp
+	fileformats/FileFormatUtils.cpp
 	fileformats/FileFormatVF.cpp
 	fileformats/FormatMetadata.cpp
 	fileformats/xmlutils/XMLReaderHelper.cpp
@@ -185,23 +186,18 @@ endif()
 
 # TODO: Install the OpenColorIO-config.cmake.
 
-if(WIN32 AND BUILD_SHARED_LIBS)
+add_library(OpenColorIO ${SOURCES})
 
-    # Impose a versioned name on Windows to avoid binary name clashes
-    # between different versions of the same library.
-
-    # Note: Do not append the PATCH to allow Apps to use the
-    #       latest binary compatible library.
-    set(LIBNAME_SUFFIX
-        _${OpenColorIO_VERSION_MAJOR}_${OpenColorIO_VERSION_MINOR}
+if(BUILD_SHARED_LIBS AND WIN32)
+	# Impose a versioned name on Windows to avoid binary name clashes.
+    set(OCIO_LIBNAME_SUFFIX
+    	${OCIO_LIBNAME_SUFFIX}_${OpenColorIO_VERSION_MAJOR}_${OpenColorIO_VERSION_MINOR}
     )
 
     # Create the version.rc file for the Windows DLL.
     configure_file(res/version.rc.in ${CMAKE_CURRENT_BINARY_DIR}/version.rc @ONLY)
     set(SOURCES ${SOURCES} ${CMAKE_CURRENT_BINARY_DIR}/version.rc)
 endif()
-
-add_library(OpenColorIO ${SOURCES})
 
 target_include_directories(OpenColorIO
 	PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
@@ -265,7 +261,7 @@ endif()
 
 if(MSVC AND BUILD_TYPE_DEBUG AND BUILD_SHARED_LIBS)
     set_target_properties(OpenColorIO PROPERTIES
-        PDB_NAME ${PROJECT_NAME}_${LIBNAME_SUFFIX}
+        PDB_NAME ${PROJECT_NAME}${OCIO_LIBNAME_SUFFIX}
     )
 endif()
 
@@ -279,10 +275,11 @@ if(WIN32)
 endif()
 
 set_target_properties(OpenColorIO PROPERTIES
-    OUTPUT_NAME   OpenColorIO${OCIO_LIBNAME_SUFFIX}${LIBNAME_SUFFIX}
+    OUTPUT_NAME   ${PROJECT_NAME}${OCIO_LIBNAME_SUFFIX}
     COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS}"
     VERSION       ${OpenColorIO_VERSION}
-    SOVERSION     ${SOVERSION})
+    SOVERSION     ${SOVERSION}
+)
 
 if(MSVC AND BUILD_SHARED_LIBS)
 	# Install the pdb file if any.

@@ -5,6 +5,7 @@
 #include "fileformats/FileFormatSpi3D.cpp"
 
 #include "testutils/UnitTest.h"
+#include "UnitTestLogUtils.h"
 #include "UnitTestUtils.h"
 
 namespace OCIO = OCIO_NAMESPACE;
@@ -62,7 +63,7 @@ void ReadSpi3d(const std::string & fileContent)
     // Read file
     OCIO::LocalFileFormat tester;
     const std::string SAMPLE_NAME("Memory File");
-    OCIO::CachedFileRcPtr cachedFile = tester.read(is, SAMPLE_NAME);
+    OCIO::CachedFileRcPtr cachedFile = tester.read(is, SAMPLE_NAME, OCIO::INTERP_DEFAULT);
 }
 
 OCIO_ADD_TEST(FileFormatSpi3D, read_failure)
@@ -181,3 +182,69 @@ OCIO_ADD_TEST(FileFormatSpi3D, read_failure)
     }
 }
 
+OCIO_ADD_TEST(FileFormatSpi3D, lut_interpolation_option)
+{
+    // Create empty Config to use.
+    OCIO::ConfigRcPtr config = OCIO::Config::Create();
+    config->setMajorVersion(2);
+
+    const std::string filePath{ std::string(OCIO::GetTestFilesDir()) + "/spi_ocio_srgb_test.spi3d" };
+
+    OCIO::FileTransformRcPtr fileTransform = OCIO::FileTransform::Create();
+    fileTransform->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
+    fileTransform->setSrc(filePath.c_str());
+
+    // Check that the specified value (INTERP_BEST) may be set.
+
+    fileTransform->setInterpolation(OCIO::INTERP_BEST);
+    OCIO::ConstProcessorRcPtr proc;
+    OCIO_CHECK_NO_THROW(proc = config->getProcessor(fileTransform));
+    auto group = proc->createGroupTransform();
+    OCIO_REQUIRE_EQUAL(group->getNumTransforms(), 1);
+    auto transform = group->getTransform(0);
+    OCIO_REQUIRE_EQUAL(transform->getTransformType(), OCIO::TRANSFORM_TYPE_LUT3D);
+    auto lut3D = OCIO_DYNAMIC_POINTER_CAST<OCIO::Lut3DTransform>(transform);
+    OCIO_REQUIRE_ASSERT(lut3D);
+    OCIO_CHECK_EQUAL(lut3D->getInterpolation(), OCIO::INTERP_BEST);
+
+    // Check that the specified value (INTERP_DEFAULT) may be set.
+
+    fileTransform->setInterpolation(OCIO::INTERP_DEFAULT);
+    OCIO_CHECK_NO_THROW(proc = config->getProcessor(fileTransform));
+    group = proc->createGroupTransform();
+    OCIO_REQUIRE_EQUAL(group->getNumTransforms(), 1);
+    transform = group->getTransform(0);
+    lut3D = OCIO_DYNAMIC_POINTER_CAST<OCIO::Lut3DTransform>(transform);
+    OCIO_REQUIRE_ASSERT(lut3D);
+    OCIO_CHECK_EQUAL(lut3D->getInterpolation(), OCIO::INTERP_DEFAULT);
+
+    // Additional FileTransforms that do not specify interpolation use "default" and not "best",
+    // so the order they enter the cache does not matter.
+    fileTransform = OCIO::FileTransform::Create();
+    fileTransform->setSrc(filePath.c_str());
+    OCIO_CHECK_NO_THROW(proc = config->getProcessor(fileTransform));
+    group = proc->createGroupTransform();
+    OCIO_REQUIRE_EQUAL(group->getNumTransforms(), 1);
+    transform = group->getTransform(0);
+    lut3D = OCIO_DYNAMIC_POINTER_CAST<OCIO::Lut3DTransform>(transform);
+    OCIO_REQUIRE_ASSERT(lut3D);
+    OCIO_CHECK_EQUAL(lut3D->getInterpolation(), OCIO::INTERP_DEFAULT);
+
+    // File transform specify an interpolation that is not supported by LUT3D, log warning and
+    // use the default interpolation.
+
+    fileTransform->setInterpolation(OCIO::INTERP_CUBIC);
+    {
+        OCIO::LogGuard g;
+        OCIO_CHECK_NO_THROW(proc = config->getProcessor(fileTransform));
+        OCIO_CHECK_NE(StringUtils::Find(g.output(),
+                                        "'cubic' is not allowed with the given file"),
+                      std::string::npos);
+    }
+    group = proc->createGroupTransform();
+    OCIO_REQUIRE_EQUAL(group->getNumTransforms(), 1);
+    transform = group->getTransform(0);
+    lut3D = OCIO_DYNAMIC_POINTER_CAST<OCIO::Lut3DTransform>(transform);
+    OCIO_REQUIRE_ASSERT(lut3D);
+    OCIO_CHECK_EQUAL(lut3D->getInterpolation(), OCIO::INTERP_DEFAULT);
+}

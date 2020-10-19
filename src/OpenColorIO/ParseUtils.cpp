@@ -248,7 +248,9 @@ const char * InterpolationToString(Interpolation interp)
     else if(interp == INTERP_LINEAR) return "linear";
     else if(interp == INTERP_TETRAHEDRAL) return "tetrahedral";
     else if(interp == INTERP_BEST) return "best";
-    else if (interp == INTERP_DEFAULT) return "default";
+    else if(interp == INTERP_DEFAULT) return "default";
+    // INTERP_CUBIC is not implemented yet, but the string may be useful for error messages.
+    else if(interp == INTERP_CUBIC) return "cubic";
     return "unknown";
 }
 
@@ -259,6 +261,7 @@ Interpolation InterpolationFromString(const char * s)
     else if(str == "linear") return INTERP_LINEAR;
     else if(str == "tetrahedral") return INTERP_TETRAHEDRAL;
     else if(str == "best") return INTERP_BEST;
+    else if(str == "cubic") return INTERP_CUBIC;
     return INTERP_UNKNOWN;
 }
 
