@@ -176,13 +176,13 @@ information on to the available OpenImageIO options.
 ociodisplay
 ***********
 
-A toy image viewer demonstrating the OCIO C++ API. 
+An example image viewer demonstrating the OCIO C++ API. 
 
 Uses OpenImageIO to load images, and displays them using OCIO and 
 typical viewer controls (scene-linear exposure control and a
-post-display gamma control).
+post-display gamma control). 
 
-May be useful to users to quickly check colorspace configuration.
+May be useful to users to quickly check a color space configuration.
 
 .. TODO: Link to discussion of OpenImageIO source?
 
@@ -249,7 +249,7 @@ description of the options.
 
 The metric used for assessing performance is the time taken to apply a 
 transform to an image with respect to each pixel, to each line, or to the 
-entire image plane (or all three). By default, each test is taken ten times. 
+entire image plane (or all three). By default, each test is run ten times. 
 
 Transforms are either provided as an external file or specified in the active 
 config (i.e., the config pointed to by the OCIO environment variable).
