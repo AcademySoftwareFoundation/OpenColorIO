@@ -446,7 +446,7 @@ LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
     // a D50 XYZ to a D65 XYZ.
     // In most cases, combining this with the matrix in the ICC profile
     // recovers what would be the actual matrix for a D65 native monitor.
-    static const double D50_to_D65_m44[] = {
+    static constexpr double D50_to_D65_m44[] = {
             0.955509474537, -0.023074829492, 0.063312392987, 0.0,
            -0.028327238868,  1.00994465504,  0.021055592145, 0.0,
             0.012329273379, -0.020536209966, 1.33072998567,  0.0,
@@ -458,11 +458,13 @@ LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
         cachedFile->lut->setInterpolation(fileTransform.getInterpolation());
     }
 
-    // The matrix/TRC transform in the ICC profile converts
-    // display device code values to the CIE XYZ based version 
-    // of the ICC profile connection space (PCS).
-    // So we will adopt this convention as the "forward" direction.
-    if (newDir == TRANSFORM_DIR_FORWARD)
+    // The matrix/TRC transform in the ICC profile converts display device code values to the
+    // CIE XYZ based version of the ICC profile connection space (PCS).
+    // However, in OCIO the most common use of an ICC monitor profile is as a display color space,
+    // and in that usage it is more natural for the XYZ to display code value transform to be called
+    // the forward direction.
+
+    if (newDir == TRANSFORM_DIR_INVERSE) // monitor code value to CIE XYZ
     {
         if (cachedFile->lut)
         {
@@ -486,7 +488,7 @@ LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
 
         CreateMatrixOp(ops, D50_to_D65_m44, TRANSFORM_DIR_FORWARD);
     }
-    else if (newDir == TRANSFORM_DIR_INVERSE)
+    else if (newDir == TRANSFORM_DIR_FORWARD) // CIE XYZ to monitor code value
     {
         CreateMatrixOp(ops, D50_to_D65_m44, TRANSFORM_DIR_INVERSE);
 
