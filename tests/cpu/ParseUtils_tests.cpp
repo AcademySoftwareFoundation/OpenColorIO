@@ -92,7 +92,7 @@ OCIO_ADD_TEST(ParseUtils, transform_direction)
     resStr = OCIO::TransformDirectionToString(OCIO::TRANSFORM_DIR_INVERSE);
     OCIO_CHECK_EQUAL("inverse", resStr);
 
-    OCIO::TransformDirection resDir;
+    OCIO::TransformDirection resDir = OCIO::TRANSFORM_DIR_INVERSE;
     OCIO_CHECK_NO_THROW(resDir = OCIO::TransformDirectionFromString("forward"));
     OCIO_CHECK_EQUAL(OCIO::TRANSFORM_DIR_FORWARD, resDir);
     OCIO_CHECK_NO_THROW(resDir = OCIO::TransformDirectionFromString("inverse"));
@@ -141,7 +141,7 @@ OCIO_ADD_TEST(ParseUtils, color_space)
     resStr = OCIO::ColorSpaceDirectionToString(OCIO::COLORSPACE_DIR_FROM_REFERENCE);
     OCIO_CHECK_EQUAL("from_reference", resStr);
 
-    OCIO::ColorSpaceDirection resCSD;
+    OCIO::ColorSpaceDirection resCSD = OCIO::COLORSPACE_DIR_FROM_REFERENCE;
     OCIO_CHECK_NO_THROW(resCSD = OCIO::ColorSpaceDirectionFromString("to_reference"));
     OCIO_CHECK_EQUAL(OCIO::COLORSPACE_DIR_TO_REFERENCE, resCSD);
     OCIO_CHECK_NO_THROW(resCSD = OCIO::ColorSpaceDirectionFromString("from_reference"));
