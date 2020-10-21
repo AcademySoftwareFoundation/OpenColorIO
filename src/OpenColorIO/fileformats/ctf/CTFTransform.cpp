@@ -290,30 +290,31 @@ CTFVersion GetOpMinimumVersion(const ConstOpDataRcPtr & op)
     case OpData::Lut1DType:
     {
         auto lut = OCIO_DYNAMIC_POINTER_CAST<const Lut1DOpData>(op);
-        if (lut->getDirection() == TRANSFORM_DIR_FORWARD)
+        switch (lut->getDirection())
         {
-            minVersion = (lut->getHueAdjust() != HUE_NONE) ?
-                CTF_PROCESS_LIST_VERSION_1_4 :
-                CTF_PROCESS_LIST_VERSION_1_3;
-        }
-        else
-        {
+        case TRANSFORM_DIR_FORWARD:
+            minVersion = (lut->getHueAdjust() != HUE_NONE) ? CTF_PROCESS_LIST_VERSION_1_4 :
+                                                             CTF_PROCESS_LIST_VERSION_1_3;
+            break;
+        case TRANSFORM_DIR_INVERSE:
             minVersion = (lut->getHueAdjust() != HUE_NONE || lut->isInputHalfDomain()) ?
-                CTF_PROCESS_LIST_VERSION_1_6 :
-                CTF_PROCESS_LIST_VERSION_1_3;
+                         CTF_PROCESS_LIST_VERSION_1_6 :
+                         CTF_PROCESS_LIST_VERSION_1_3;
+            break;
         }
         break;
     }
     case OpData::Lut3DType:
     {
         auto lut = OCIO_DYNAMIC_POINTER_CAST<const Lut3DOpData>(op);
-        if (lut->getDirection() == TRANSFORM_DIR_FORWARD)
+        switch (lut->getDirection())
         {
+        case TRANSFORM_DIR_FORWARD:
             minVersion = CTF_PROCESS_LIST_VERSION_1_3;
-        }
-        else
-        {
+            break;
+        case TRANSFORM_DIR_INVERSE:
             minVersion = CTF_PROCESS_LIST_VERSION_1_6;
+            break;
         }
         break;
     }

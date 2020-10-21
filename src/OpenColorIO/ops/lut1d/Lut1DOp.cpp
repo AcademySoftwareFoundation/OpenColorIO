@@ -183,11 +183,7 @@ void CreateLut1DOp(OpRcPtrVec & ops,
     // If so, return a mtx instead.
 
     Lut1DOpDataRcPtr lutData = lut;
-    if (direction == TRANSFORM_DIR_UNKNOWN)
-    {
-        throw Exception("Cannot apply Lut1DOp op, unspecified transform direction.");
-    }
-    else if (direction == TRANSFORM_DIR_INVERSE)
+    if (direction == TRANSFORM_DIR_INVERSE)
     {
         lutData = lut->inverse();
     }

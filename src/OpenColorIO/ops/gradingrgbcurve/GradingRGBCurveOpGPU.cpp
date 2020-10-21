@@ -346,13 +346,14 @@ void GetGradingRGBCurveGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
     }
 
     const bool doLinToLog = (style == GRADING_LIN) && !gcData->getBypassLinToLog();
-    if (dir == TRANSFORM_DIR_FORWARD)
+    switch (dir)
     {
+    case TRANSFORM_DIR_FORWARD:
         AddGCForwardShader(st, properties, dyn, doLinToLog);
-    }
-    else
-    {
+        break;
+    case TRANSFORM_DIR_INVERSE:
         AddGCInverseShader(st, properties, dyn, doLinToLog);
+        break;
     }
 
     st.dedent();

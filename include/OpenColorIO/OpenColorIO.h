@@ -233,9 +233,9 @@ public:
     //
 
     /**
-     * \brief Create an empty config.
+     * \brief Create an empty config of the current version.
      *
-     * Latest version is used. An empty config might be missing elements to ve valid.
+     * Note that an empty config will not pass validation since required elements will be missing.
      */
     static ConfigRcPtr Create();
     /**
@@ -1521,7 +1521,7 @@ public:
      * If a transform in the specified direction has been specified,
      * return it. Otherwise return a null ConstTransformRcPtr
      */
-    ConstTransformRcPtr getTransform(ColorSpaceDirection dir) const;
+    ConstTransformRcPtr getTransform(ColorSpaceDirection dir) const noexcept;
     /**
      * Specify the transform for the appropriate direction.
      * Setting the transform to null will clear it.
@@ -1817,7 +1817,7 @@ public:
      * If a transform in the specified direction has been specified, return it.
      * Otherwise return a null ConstTransformRcPtr
      */
-    ConstTransformRcPtr getTransform(ViewTransformDirection dir) const;
+    ConstTransformRcPtr getTransform(ViewTransformDirection dir) const noexcept;
 
     /**
      * Specify the transform for the appropriate direction. Setting the transform

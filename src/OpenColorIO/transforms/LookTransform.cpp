@@ -84,7 +84,16 @@ void LookTransform::setDirection(TransformDirection dir) noexcept
 
 void LookTransform::validate() const
 {
-    Transform::validate();
+    try
+    {
+        Transform::validate();
+    }
+    catch (Exception & ex)
+    {
+        std::string errMsg("LookTransform validation failed: ");
+        errMsg += ex.what();
+        throw Exception(errMsg.c_str());
+    }
 
     if (getImpl()->m_src.empty())
     {
@@ -230,37 +239,34 @@ void RunLookTokens(OpRcPtrVec & ops,
         // If it is a no-op, dont bother doing the colorspace conversion.
         OpRcPtrVec tmpOps;
 
-        if(lookTokens[i].dir == TRANSFORM_DIR_FORWARD)
+        switch (lookTokens[i].dir)
+        {
+        case TRANSFORM_DIR_FORWARD:
         {
             CreateLookNoOp(tmpOps, lookName);
-            if(look->getTransform())
+            if (look->getTransform())
             {
                 BuildOps(tmpOps, config, context, look->getTransform(), TRANSFORM_DIR_FORWARD);
             }
-            else if(look->getInverseTransform())
+            else if (look->getInverseTransform())
             {
                 BuildOps(tmpOps, config, context, look->getInverseTransform(), TRANSFORM_DIR_INVERSE);
             }
+            break;
         }
-        else if(lookTokens[i].dir == TRANSFORM_DIR_INVERSE)
+        case TRANSFORM_DIR_INVERSE:
         {
             CreateLookNoOp(tmpOps, std::string("-") + lookName);
-            if(look->getInverseTransform())
+            if (look->getInverseTransform())
             {
                 BuildOps(tmpOps, config, context, look->getInverseTransform(), TRANSFORM_DIR_FORWARD);
             }
-            else if(look->getTransform())
+            else if (look->getTransform())
             {
                 BuildOps(tmpOps, config, context, look->getTransform(), TRANSFORM_DIR_INVERSE);
             }
+            break;
         }
-        else
-        {
-            std::ostringstream os;
-            os << "BuildLookOps error. ";
-            os << "The specified look, '" << lookTokens[i].name;
-            os << "' has an ill-defined transform direction.";
-            throw Exception(os.str().c_str());
         }
 
         if (!tmpOps.isNoOp())
@@ -331,12 +337,6 @@ void BuildLookOps(OpRcPtrVec & ops,
     {
         std::swap(src, dst);
         looks.reverse();
-    }
-    else if(dir == TRANSFORM_DIR_UNKNOWN)
-    {
-        std::ostringstream os;
-        os << "BuildLookOps error. A valid transform direction must be specified.";
-        throw Exception(os.str().c_str());
     }
 
     const bool skipColorSpaceConversion = lookTransform.getSkipColorSpaceConversion();

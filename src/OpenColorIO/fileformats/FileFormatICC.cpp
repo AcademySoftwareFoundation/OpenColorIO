@@ -469,7 +469,9 @@ LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
     // display device code values to the CIE XYZ based version 
     // of the ICC profile connection space (PCS).
     // So we will adopt this convention as the "forward" direction.
-    if (newDir == TRANSFORM_DIR_FORWARD)
+    switch (newDir)
+    {
+    case TRANSFORM_DIR_FORWARD:
     {
         if (lut)
         {
@@ -482,18 +484,19 @@ LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
             const GammaOpData::Params blueParams  = { cachedFile->mGammaRGB[2] };
             const GammaOpData::Params alphaParams = { cachedFile->mGammaRGB[3] };
             auto gamma = std::make_shared<GammaOpData>(GammaOpData::BASIC_FWD, 
-                                                        redParams,
-                                                        greenParams,
-                                                        blueParams,
-                                                        alphaParams);
+                                                       redParams,
+                                                       greenParams,
+                                                       blueParams,
+                                                       alphaParams);
             CreateGammaOp(ops, gamma, TRANSFORM_DIR_FORWARD);
         }
 
         CreateMatrixOp(ops, cachedFile->mMatrix44, TRANSFORM_DIR_FORWARD);
 
         CreateMatrixOp(ops, D50_to_D65_m44, TRANSFORM_DIR_FORWARD);
+        break;
     }
-    else if (newDir == TRANSFORM_DIR_INVERSE)
+    case TRANSFORM_DIR_INVERSE:
     {
         CreateMatrixOp(ops, D50_to_D65_m44, TRANSFORM_DIR_INVERSE);
 
@@ -514,13 +517,15 @@ LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
             const GammaOpData::Params blueParams  = { cachedFile->mGammaRGB[2] };
             const GammaOpData::Params alphaParams = { cachedFile->mGammaRGB[3] };
             auto gamma = std::make_shared<GammaOpData>(GammaOpData::BASIC_REV,
-                                                        redParams,
-                                                        greenParams,
-                                                        blueParams,
-                                                        alphaParams);
+                                                       redParams,
+                                                       greenParams,
+                                                       blueParams,
+                                                       alphaParams);
 
             CreateGammaOp(ops, gamma, TRANSFORM_DIR_FORWARD);
         }
+        break;
+    }
     }
 }
 

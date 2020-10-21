@@ -829,8 +829,7 @@ void LocalFileFormat::bake(const Baker & baker,
             transform->setLooks(looks.c_str());
             transform->setSrc(baker.getInputSpace());
             transform->setDst(baker.getTargetSpace());
-            inputToTarget = config->getProcessor(transform, 
-                                                    TRANSFORM_DIR_FORWARD);
+            inputToTarget = config->getProcessor(transform, TRANSFORM_DIR_FORWARD);
         }
         else
         {
@@ -932,9 +931,11 @@ LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
         LogWarningInterpolationNotUsed(fileInterp, fileTransform);
     }
 
-    if(newDir == TRANSFORM_DIR_FORWARD)
+    switch (newDir)
     {
-        if(prelut)
+    case TRANSFORM_DIR_FORWARD:
+    {
+        if (prelut)
         {
             CreateMinMaxOp(ops,
                            cachedFile->prelut_from_min,
@@ -950,8 +951,9 @@ LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
         {
             CreateLut3DOp(ops, lut3D, newDir);
         }
+        break;
     }
-    else if(newDir == TRANSFORM_DIR_INVERSE)
+    case TRANSFORM_DIR_INVERSE:
     {
         if (lut1D)
         {
@@ -961,7 +963,7 @@ LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
         {
             CreateLut3DOp(ops, lut3D, newDir);
         }
-        if(prelut)
+        if (prelut)
         {
             CreateLut1DOp(ops, prelut, newDir);
             CreateMinMaxOp(ops,
@@ -969,6 +971,8 @@ LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
                            cachedFile->prelut_from_max,
                            newDir);
         }
+        break;
+    }
     }
 }
 }
