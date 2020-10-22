@@ -79,7 +79,6 @@ void BuiltinTransformImpl::setStyle(const char * style)
 
 
 void BuildBuiltinOps(OpRcPtrVec & ops,
-                     const Config & /*config*/,
                      const BuiltinTransform & transform,
                      TransformDirection dir)
 {
