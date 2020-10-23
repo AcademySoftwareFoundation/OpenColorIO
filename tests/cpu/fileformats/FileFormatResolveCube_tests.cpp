@@ -20,7 +20,7 @@ OCIO::LocalCachedFileRcPtr ReadResolveCube(const std::string & fileContent)
     // Read file
     OCIO::LocalFileFormat tester;
     const std::string SAMPLE_NAME("Memory File");
-    OCIO::CachedFileRcPtr cachedFile = tester.read(is, SAMPLE_NAME);
+    OCIO::CachedFileRcPtr cachedFile = tester.read(is, SAMPLE_NAME, OCIO::INTERP_DEFAULT);
 
     return OCIO::DynamicPtrCast<OCIO::LocalCachedFile>(cachedFile);
 }

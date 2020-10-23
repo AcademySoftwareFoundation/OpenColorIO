@@ -10,6 +10,7 @@ void bindPyTransform(py::module & m)
 { 
     auto cls = py::class_<Transform, TransformRcPtr /* holder */>(m, "Transform")
         .def("validate", &Transform::validate)
+        .def("getTransformType", &Transform::getTransformType)
         .def("getDirection", &Transform::getDirection)
         .def("setDirection", &Transform::setDirection, "direction"_a);
 

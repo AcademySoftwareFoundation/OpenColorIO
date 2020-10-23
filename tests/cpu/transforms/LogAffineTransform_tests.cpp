@@ -41,10 +41,9 @@ OCIO_ADD_TEST(LogAffineTransform, basic)
     OCIO_CHECK_EQUAL(log->getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
 
     OCIO::OpRcPtrVec ops;
-    OCIO::ConfigRcPtr config = OCIO::Config::Create();
 
     // Convert to op.
-    OCIO::BuildLogOp(ops, *config, *log, OCIO::TRANSFORM_DIR_FORWARD);
+    OCIO::BuildLogOp(ops, *log, OCIO::TRANSFORM_DIR_FORWARD);
     OCIO_REQUIRE_EQUAL(ops.size(), 1);
     OCIO_CHECK_EQUAL(ops[0]->getInfo(), "<LogOp>");
 
@@ -92,7 +91,7 @@ OCIO_ADD_TEST(LogAffineTransform, basic)
     OCIO_CHECK_EQUAL(values[2], 1.6);
 
     // Convert to op and back to transform.
-    OCIO::BuildLogOp(ops, *config, *log, OCIO::TRANSFORM_DIR_FORWARD);
+    OCIO::BuildLogOp(ops, *log, OCIO::TRANSFORM_DIR_FORWARD);
     OCIO_REQUIRE_EQUAL(ops.size(), 2);
     OCIO_CHECK_EQUAL(ops[1]->getInfo(), "<LogOp>");
 

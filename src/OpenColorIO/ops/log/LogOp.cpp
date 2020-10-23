@@ -192,7 +192,6 @@ void CreateLogTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op)
 }
 
 void BuildLogOp(OpRcPtrVec & ops,
-                const Config & /*config*/,
                 const LogAffineTransform & transform,
                 TransformDirection dir)
 {
@@ -204,7 +203,6 @@ void BuildLogOp(OpRcPtrVec & ops,
 }
 
 void BuildLogOp(OpRcPtrVec & ops,
-                const Config & /*config*/,
                 const LogCameraTransform & transform,
                 TransformDirection dir)
 {
@@ -216,7 +214,6 @@ void BuildLogOp(OpRcPtrVec & ops,
 }
 
 void BuildLogOp(OpRcPtrVec & ops,
-                const Config & /*config*/,
                 const LogTransform & transform,
                 TransformDirection dir)
 {

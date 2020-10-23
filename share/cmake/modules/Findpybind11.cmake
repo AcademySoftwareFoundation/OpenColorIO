@@ -138,6 +138,10 @@ if(NOT pybind11_FOUND)
     include(ExternalProject)
     include(GNUInstallDirs)
 
+    if(APPLE)
+        set(CMAKE_OSX_DEPLOYMENT_TARGET ${CMAKE_OSX_DEPLOYMENT_TARGET})
+    endif()
+
     set(_EXT_DIST_ROOT "${CMAKE_BINARY_DIR}/ext/dist")
     set(_EXT_BUILD_ROOT "${CMAKE_BINARY_DIR}/ext/build")
 
@@ -161,8 +165,10 @@ if(NOT pybind11_FOUND)
         set(pybind11_CMAKE_ARGS
             ${pybind11_CMAKE_ARGS}
             -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-            -DCMAKE_INSTALL_PREFIX=${_EXT_DIST_ROOT}
             -DCMAKE_CXX_STANDARD=${PYBIND11_CXX_STANDARD}
+            -DCMAKE_INSTALL_MESSAGE=${CMAKE_INSTALL_MESSAGE}
+            -DCMAKE_INSTALL_PREFIX=${_EXT_DIST_ROOT}
+            -DCMAKE_OBJECT_PATH_MAX=${CMAKE_OBJECT_PATH_MAX}
             -DPYBIND11_INSTALL=ON
             -DPYBIND11_TEST=OFF
         )

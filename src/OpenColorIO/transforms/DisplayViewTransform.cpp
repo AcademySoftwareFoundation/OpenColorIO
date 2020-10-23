@@ -259,13 +259,7 @@ void BuildDisplayOps(OpRcPtrVec & ops,
                      const DisplayViewTransform & displayViewTransform,
                      TransformDirection dir)
 {
-    auto combinedDir = CombineTransformDirections(dir, displayViewTransform.getDirection());
-    if (combinedDir == TRANSFORM_DIR_UNKNOWN)
-    {
-        std::ostringstream os;
-        os << "Cannot build display transform: unspecified transform direction.";
-        throw Exception(os.str().c_str());
-    }
+    const auto combinedDir = CombineTransformDirections(dir, displayViewTransform.getDirection());
 
     // Validate src color space.
     const std::string srcColorSpaceName = displayViewTransform.getSrc();

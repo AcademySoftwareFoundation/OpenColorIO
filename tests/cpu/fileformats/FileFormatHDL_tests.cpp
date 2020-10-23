@@ -48,7 +48,7 @@ OCIO_ADD_TEST(FileFormatHDL, read_1d)
     // Load file
     std::string emptyString;
     OCIO::LocalFileFormat tester;
-    OCIO::CachedFileRcPtr cachedFile = tester.read(simple3D1D, emptyString);
+    OCIO::CachedFileRcPtr cachedFile = tester.read(simple3D1D, emptyString, OCIO::INTERP_DEFAULT);
     OCIO::CachedFileHDLRcPtr lut = OCIO::DynamicPtrCast<OCIO::CachedFileHDL>(cachedFile);
     OCIO_REQUIRE_ASSERT(lut);
     OCIO_REQUIRE_ASSERT(lut->lut1D);
@@ -202,7 +202,7 @@ OCIO_ADD_TEST(FileFormatHDL, read_3d)
     // Load file
     std::string emptyString;
     OCIO::LocalFileFormat tester;
-    OCIO::CachedFileRcPtr cachedFile = tester.read(simple3D1D, emptyString);
+    OCIO::CachedFileRcPtr cachedFile = tester.read(simple3D1D, emptyString, OCIO::INTERP_DEFAULT);
     OCIO::CachedFileHDLRcPtr lut = OCIO::DynamicPtrCast<OCIO::CachedFileHDL>(cachedFile);
     OCIO_REQUIRE_ASSERT(lut);
     OCIO_REQUIRE_ASSERT(lut->lut3D);
@@ -390,7 +390,7 @@ OCIO_ADD_TEST(FileFormatHDL, read_3d_1d)
     // Load file
     std::string emptyString;
     OCIO::LocalFileFormat tester;
-    OCIO::CachedFileRcPtr cachedFile = tester.read(simple3D1D, emptyString);
+    OCIO::CachedFileRcPtr cachedFile = tester.read(simple3D1D, emptyString, OCIO::INTERP_DEFAULT);
     OCIO::CachedFileHDLRcPtr lut = OCIO::DynamicPtrCast<OCIO::CachedFileHDL>(cachedFile);
     OCIO_REQUIRE_ASSERT(lut);
     OCIO_REQUIRE_ASSERT(lut->lut1D);

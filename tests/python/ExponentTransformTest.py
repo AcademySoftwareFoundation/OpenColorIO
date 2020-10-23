@@ -18,6 +18,12 @@ class ExponentTransformTest(unittest.TestCase):
     def tearDown(self):
         self.exp_tr = None
 
+    def test_transform_type(self):
+        """
+        Test the getTransformType() method.
+        """
+        self.assertEqual(self.exp_tr.getTransformType(), OCIO.TRANSFORM_TYPE_EXPONENT)
+
     def test_direction(self):
         """
         Test the setDirection() and getDirection() methods.
