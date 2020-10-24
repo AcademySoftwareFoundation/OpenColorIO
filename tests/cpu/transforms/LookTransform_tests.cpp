@@ -705,8 +705,8 @@ colorspaces:
     op = ops[10];
     OCIO_CHECK_ASSERT(op->isNoOpType());
 
-    // Compare to vd_graded_2 that should be identical (only diference is that
-    // it's defined using to_reference instead of from_reference)
+    // Compare to vd_graded_2 that should be identical (only difference being that
+    // it's defined using to_reference + inverse direction instead of from_reference)
     OCIO::ConstColorSpaceRcPtr dstColorSpace2;
     OCIO_CHECK_NO_THROW(dstColorSpace2 = config->getColorSpace("vd_graded_2"));
 
