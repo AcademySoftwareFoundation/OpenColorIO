@@ -129,6 +129,10 @@ if(NOT yaml-cpp_FOUND)
 
     include(ExternalProject)
 
+    if(APPLE)
+        set(CMAKE_OSX_DEPLOYMENT_TARGET ${CMAKE_OSX_DEPLOYMENT_TARGET})
+    endif()
+
     # TODO: yaml-cpp master is using GNUInstallDirs to define include and lib 
     #       dir names. Once that change is released and OCIO updates the 
     #       minimum yaml-cpp version, toggle the three disabled lines below.
@@ -171,15 +175,17 @@ if(NOT yaml-cpp_FOUND)
 
         set(yaml-cpp_CMAKE_ARGS
             ${yaml-cpp_CMAKE_ARGS}
-            -DCMAKE_INSTALL_PREFIX=${_EXT_DIST_ROOT}
             -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+            -DCMAKE_CXX_FLAGS=${yaml-cpp_CXX_FLAGS}
+            -DCMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD}
+            -DCMAKE_INSTALL_MESSAGE=${CMAKE_INSTALL_MESSAGE}
+            -DCMAKE_INSTALL_PREFIX=${_EXT_DIST_ROOT}
+            -DCMAKE_OBJECT_PATH_MAX=${CMAKE_OBJECT_PATH_MAX}
             -DBUILD_SHARED_LIBS=OFF
             -DYAML_BUILD_SHARED_LIBS=OFF
             -DYAML_CPP_BUILD_TESTS=OFF
             -DYAML_CPP_BUILD_TOOLS=OFF
             -DYAML_CPP_BUILD_CONTRIB=OFF
-            -DCMAKE_CXX_FLAGS=${yaml-cpp_CXX_FLAGS}
-            -DCMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD}
         )
         if(CMAKE_TOOLCHAIN_FILE)
             set(yaml-cpp_CMAKE_ARGS

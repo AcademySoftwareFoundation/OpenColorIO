@@ -48,7 +48,7 @@ public:
     void finalize() override;
     std::string getCacheID() const override;
 
-    ConstOpCPURcPtr getCPUOp() const override;
+    ConstOpCPURcPtr getCPUOp(bool fastLogExpPow) const override;
 
     void extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const override;
 
@@ -192,7 +192,7 @@ std::string RangeOp::getCacheID() const
     return cacheIDStream.str();
 }
 
-ConstOpCPURcPtr RangeOp::getCPUOp() const
+ConstOpCPURcPtr RangeOp::getCPUOp(bool /*fastLogExpPow*/) const
 {
     ConstRangeOpDataRcPtr data = rangeData();
     return GetRangeRenderer(data);
@@ -260,7 +260,6 @@ void CreateRangeTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op)
 }
 
 void BuildRangeOp(OpRcPtrVec & ops,
-                  const Config & /*config*/,
                   const RangeTransform & transform,
                   TransformDirection dir)
 {

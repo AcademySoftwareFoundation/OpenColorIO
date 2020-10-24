@@ -162,7 +162,6 @@ OCIO_ADD_TEST(RangeOp, create_transform)
 
 OCIO_ADD_TEST(RangeTransform, no_clamp_converts_to_matrix)
 {
-    OCIO::ConfigRcPtr config = OCIO::Config::Create();
     OCIO::OpRcPtrVec ops;
 
     OCIO::RangeTransformRcPtr range = OCIO::RangeTransform::Create();
@@ -175,8 +174,7 @@ OCIO_ADD_TEST(RangeTransform, no_clamp_converts_to_matrix)
     OCIO_CHECK_ASSERT(!range->hasMinOutValue());
     OCIO_CHECK_ASSERT(range->hasMaxOutValue());
 
-    OCIO_CHECK_NO_THROW(
-        OCIO::BuildRangeOp(ops, *config, *range, OCIO::TRANSFORM_DIR_FORWARD));
+    OCIO_CHECK_NO_THROW(OCIO::BuildRangeOp(ops, *range, OCIO::TRANSFORM_DIR_FORWARD));
     OCIO_REQUIRE_EQUAL(ops.size(), 1);
     OCIO::ConstOpRcPtr op0 = ops[0];
     OCIO_REQUIRE_EQUAL(op0->data()->getType(), OCIO::OpData::RangeType);
@@ -190,8 +188,7 @@ OCIO_ADD_TEST(RangeTransform, no_clamp_converts_to_matrix)
 
     // Test the resulting Range Op
 
-    OCIO_CHECK_NO_THROW(
-        OCIO::BuildRangeOp(ops, *config, *range, OCIO::TRANSFORM_DIR_FORWARD));
+    OCIO_CHECK_NO_THROW(OCIO::BuildRangeOp(ops, *range, OCIO::TRANSFORM_DIR_FORWARD));
 
     OCIO_REQUIRE_EQUAL(ops.size(), 1);
     op0 = ops[0];
@@ -209,8 +206,7 @@ OCIO_ADD_TEST(RangeTransform, no_clamp_converts_to_matrix)
 
     range->setStyle(OCIO::RANGE_NO_CLAMP);
 
-    OCIO_CHECK_NO_THROW(
-        OCIO::BuildRangeOp(ops, *config, *range, OCIO::TRANSFORM_DIR_FORWARD));
+    OCIO_CHECK_NO_THROW(OCIO::BuildRangeOp(ops, *range, OCIO::TRANSFORM_DIR_FORWARD));
 
     OCIO_REQUIRE_EQUAL(ops.size(), 2);
     OCIO::ConstOpRcPtr op1 = ops[1];
@@ -237,8 +233,7 @@ OCIO_ADD_TEST(RangeTransform, no_clamp_converts_to_matrix)
     OCIO_CHECK_EQUAL(matrixData->getArray()[15], 1.0);
 
     // Range is forward, build an inverse.
-    OCIO_CHECK_NO_THROW(
-        OCIO::BuildRangeOp(ops, *config, *range, OCIO::TRANSFORM_DIR_INVERSE));
+    OCIO_CHECK_NO_THROW(OCIO::BuildRangeOp(ops, *range, OCIO::TRANSFORM_DIR_INVERSE));
 
     OCIO_REQUIRE_EQUAL(ops.size(), 3);
     OCIO::ConstOpRcPtr op2 = ops[2];
@@ -261,8 +256,7 @@ OCIO_ADD_TEST(RangeTransform, no_clamp_converts_to_matrix)
 
     // Range is inverse, build a forward.
     range->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
-    OCIO_CHECK_NO_THROW(
-        OCIO::BuildRangeOp(ops, *config, *range, OCIO::TRANSFORM_DIR_FORWARD));
+    OCIO_CHECK_NO_THROW(OCIO::BuildRangeOp(ops, *range, OCIO::TRANSFORM_DIR_FORWARD));
 
     OCIO_REQUIRE_EQUAL(ops.size(), 4);
     OCIO::ConstOpRcPtr op3 = ops[3];

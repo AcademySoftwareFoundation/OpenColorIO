@@ -111,7 +111,8 @@ bool DynamicPropertyImpl::equals(const DynamicPropertyImpl & rhs) const
     return false;
 }
 
-DynamicPropertyDoubleImpl::DynamicPropertyDoubleImpl(DynamicPropertyType type, double value,
+DynamicPropertyDoubleImpl::DynamicPropertyDoubleImpl(DynamicPropertyType type,
+                                                     double value,
                                                      bool dynamic)
     : DynamicPropertyImpl(type, dynamic)
     , m_value(value)
@@ -123,41 +124,59 @@ DynamicPropertyDoubleImplRcPtr DynamicPropertyDoubleImpl::createEditableCopy() c
     return std::make_shared<DynamicPropertyDoubleImpl>(getType(), getValue(), isDynamic());
 }
 
-DynamicPropertyGradingPrimaryImpl::DynamicPropertyGradingPrimaryImpl(const GradingPrimary & value,
+DynamicPropertyGradingPrimaryImpl::DynamicPropertyGradingPrimaryImpl(GradingStyle style,
+                                                                     TransformDirection dir,
+                                                                     const GradingPrimary & value,
                                                                      bool dynamic)
     : DynamicPropertyImpl(DYNAMIC_PROPERTY_GRADING_PRIMARY, dynamic)
+    , m_style(style)
+    , m_direction(dir)
     , m_value(value)
 {
-    precompute();
+    m_preRenderValues.update(m_style, m_direction, m_value);
+}
+
+DynamicPropertyGradingPrimaryImpl::DynamicPropertyGradingPrimaryImpl(GradingStyle style,
+                                                                     TransformDirection dir,
+                                                                     const GradingPrimary & value,
+    const GradingPrimaryPreRender & comp,
+    bool dynamic)
+    : DynamicPropertyImpl(DYNAMIC_PROPERTY_GRADING_PRIMARY, dynamic)
+    , m_style(style)
+    , m_direction(dir)
+    , m_value(value)
+    , m_preRenderValues(comp)
+{
 }
 
 DynamicPropertyGradingPrimaryImplRcPtr DynamicPropertyGradingPrimaryImpl::createEditableCopy() const
 {
-    return std::make_shared<DynamicPropertyGradingPrimaryImpl>(getValue(), isDynamic());
+    return std::make_shared<DynamicPropertyGradingPrimaryImpl>(m_style,
+                                                               m_direction,
+                                                               m_value,
+                                                               m_preRenderValues,
+                                                               isDynamic());
 }
 
 void DynamicPropertyGradingPrimaryImpl::setValue(const GradingPrimary & value)
 {
-    value.validate();
+    value.validate(m_style);
     m_value = value;
-    precompute();
+    m_preRenderValues.update(m_style, m_direction, m_value);
 }
 
-void DynamicPropertyGradingPrimaryImpl::precompute()
+void DynamicPropertyGradingPrimaryImpl::setStyle(GradingStyle style)
 {
-    // Identity does not depend of the style (style only affects pivot).
-    static const GradingPrimary identity{ GRADING_LOG };
-    // Ignore pivots. Could ignore some values based on style, but style is not know here.
-    m_localBypass = m_value.m_brightness == identity.m_brightness &&
-                    m_value.m_clampBlack == identity.m_clampBlack &&
-                    m_value.m_clampWhite == identity.m_clampWhite &&
-                    m_value.m_contrast == identity.m_contrast &&
-                    m_value.m_exposure == identity.m_exposure &&
-                    m_value.m_gain == identity.m_gain &&
-                    m_value.m_gamma == identity.m_gamma &&
-                    m_value.m_lift == identity.m_lift &&
-                    m_value.m_offset == identity.m_offset;
+    m_style = style;
+    // Reset values to style defaults.
+    m_value = GradingPrimary(m_style);
+    m_preRenderValues.update(m_style, m_direction, m_value);
+}
 
+void DynamicPropertyGradingPrimaryImpl::setDirection(TransformDirection dir)
+{
+    m_direction = dir;
+    m_preRenderValues.update(m_style, m_direction, m_value);
 }
 
 DynamicPropertyGradingRGBCurveImpl::DynamicPropertyGradingRGBCurveImpl(
@@ -258,9 +277,9 @@ DynamicPropertyGradingToneImpl::DynamicPropertyGradingToneImpl(const GradingTone
                                                                bool dynamic)
     : DynamicPropertyImpl(DYNAMIC_PROPERTY_GRADING_TONE, dynamic)
     , m_value(value)
-    , m_computed(style)
+    , m_preRenderValues(style)
 {
-    m_computed.computeValues(m_value);
+    m_preRenderValues.update(m_value);
 }
 
 DynamicPropertyGradingToneImpl::DynamicPropertyGradingToneImpl(const GradingTone & value,
@@ -268,13 +287,13 @@ DynamicPropertyGradingToneImpl::DynamicPropertyGradingToneImpl(const GradingTone
                                                                bool dynamic)
     : DynamicPropertyImpl(DYNAMIC_PROPERTY_GRADING_TONE, dynamic)
     , m_value(value)
-    , m_computed(comp)
+    , m_preRenderValues(comp)
 {
 }
 
 DynamicPropertyGradingToneImplRcPtr DynamicPropertyGradingToneImpl::createEditableCopy() const
 {
-    return std::make_shared<DynamicPropertyGradingToneImpl>(m_value, m_computed, isDynamic());
+    return std::make_shared<DynamicPropertyGradingToneImpl>(m_value, m_preRenderValues, isDynamic());
 }
 
 void DynamicPropertyGradingToneImpl::setValue(const GradingTone & value)
@@ -282,14 +301,15 @@ void DynamicPropertyGradingToneImpl::setValue(const GradingTone & value)
     value.validate();
 
     m_value = value;
-    m_computed.computeValues(m_value);
+    m_preRenderValues.update(m_value);
 }
 
-void DynamicPropertyGradingToneImpl::useStyle(GradingStyle style)
+void DynamicPropertyGradingToneImpl::setStyle(GradingStyle style)
 {
     // Reset values to style defaults.
     m_value = GradingTone(style);
-    m_computed.updateForStyle(style, m_value);
+    m_preRenderValues.setStyle(style);
+    m_preRenderValues.update(m_value);
 }
 
 } // namespace OCIO_NAMESPACE

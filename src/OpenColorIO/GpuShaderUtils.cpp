@@ -281,9 +281,9 @@ std::string GpuShaderText::floatKeyword() const
     return (m_lang == GPU_LANGUAGE_CG ? "half" : "float");
 }
 
-std::string GpuShaderText::int2Keyword() const
+std::string GpuShaderText::intKeyword() const
 {
-    return (m_lang == GPU_LANGUAGE_HLSL_DX11 ? "int2" : "ivec2");
+    return "int";
 }
 
 void GpuShaderText::declareVar(const std::string & name, float v)
@@ -346,7 +346,7 @@ void GpuShaderText::declareFloatArrayConst(const std::string & name, int size, c
     }
 }
 
-void GpuShaderText::declareInt2ArrayConst(const std::string & name, int size, const int * v)
+void GpuShaderText::declareIntArrayConst(const std::string & name, int size, const int * v)
 {
     if (size == 0)
     {
@@ -360,10 +360,10 @@ void GpuShaderText::declareInt2ArrayConst(const std::string & name, int size, co
     auto nl = newLine();
     if (m_lang != GPU_LANGUAGE_HLSL_DX11)
     {
-        nl << "const " << int2Keyword() << " " << name << "[" << size << "]" << " = " << int2Keyword() << "[" << size << "](";
+        nl << "const " << intKeyword() << " " << name << "[" << size << "]" << " = " << intKeyword() << "[" << size << "](";
         for (int i = 0; i < size; ++i)
         {
-            nl << int2Keyword() << "(" << v[2 * i] << ", " << v[2 * i + 1] << ")";
+            nl << v[i];
             if (i + 1 != size)
             {
                 nl << ", ";
@@ -373,10 +373,10 @@ void GpuShaderText::declareInt2ArrayConst(const std::string & name, int size, co
     }
     else
     {
-        nl << "vector<int2, " << size << "> " << name << " = {";
+        nl << "vector<" << intKeyword() << ", " << size << "> " << name << " = {";
         for (int i = 0; i < size; ++i)
         {
-            nl << "{" << v[2 * i] << ", " << v[2 * i + 1] << "}";
+            nl << v[i];
             if (i + 1 != size)
             {
                 nl << ", ";
@@ -386,126 +386,131 @@ void GpuShaderText::declareInt2ArrayConst(const std::string & name, int size, co
     }
 }
 
-std::string GpuShaderText::vec2fKeyword() const
+std::string GpuShaderText::float2Keyword() const
 {
     return getVecKeyword<2>(m_lang);
 }
 
-std::string GpuShaderText::vec2fDecl(const std::string & name) const
+std::string GpuShaderText::float2Decl(const std::string & name) const
 {
     if (name.empty())
     {
         throw Exception("GPU variable name is empty.");
     }
 
-    return vec2fKeyword() + " " + name;
+    return float2Keyword() + " " + name;
 }
 
-std::string GpuShaderText::vec3fKeyword() const
+std::string GpuShaderText::float3Keyword() const
 {
     return getVecKeyword<3>(m_lang);
 }
 
-std::string GpuShaderText::vec3fConst(float x, float y, float z) const
+std::string GpuShaderText::float3Const(float x, float y, float z) const
 {
-    return vec3fConst(getFloatString(x, m_lang), 
+    return float3Const(getFloatString(x, m_lang),
                       getFloatString(y, m_lang), 
                       getFloatString(z, m_lang));
 }
 
-std::string GpuShaderText::vec3fConst(double x, double y, double z) const
+std::string GpuShaderText::float3Const(double x, double y, double z) const
 {
-    return vec3fConst(getFloatString(x, m_lang), 
+    return float3Const(getFloatString(x, m_lang),
                       getFloatString(y, m_lang), 
                       getFloatString(z, m_lang));
 }
 
-std::string GpuShaderText::vec3fConst(const std::string& x, 
+std::string GpuShaderText::float3Const(const std::string& x,
                                       const std::string& y,
                                       const std::string& z) const
 {
     std::ostringstream kw;
-    kw << vec3fKeyword() << "(" << x << ", " << y << ", " << z << ")";
+    kw << float3Keyword() << "(" << x << ", " << y << ", " << z << ")";
     return kw.str();
 }
 
-std::string GpuShaderText::vec3fConst(const float v) const
+std::string GpuShaderText::float3Const(const float v) const
 {
-    return vec3fConst(getFloatString(v, m_lang));
+    return float3Const(getFloatString(v, m_lang));
 }
 
-std::string GpuShaderText::vec3fConst(const double v) const
+std::string GpuShaderText::float3Const(const double v) const
 {
-    return vec3fConst(getFloatString(v, m_lang));
+    return float3Const(getFloatString(v, m_lang));
 }
 
-std::string GpuShaderText::vec3fConst(const std::string & v) const
+std::string GpuShaderText::float3Const(const std::string & v) const
 {
-    return vec3fConst(v, v, v);
+    return float3Const(v, v, v);
 }
 
-std::string GpuShaderText::vec3fDecl(const std::string &  name) const
+std::string GpuShaderText::float3Decl(const std::string &  name) const
 {
     if (name.empty())
     {
         throw Exception("GPU variable name is empty.");
     }
 
-    return vec3fKeyword() + " " + name;
+    return float3Keyword() + " " + name;
 }
 
-void GpuShaderText::declareVec3f(const std::string & name, 
+void GpuShaderText::declareFloat3(const std::string & name,
                                  float x, float y, float z)
 {
-    declareVec3f(name, getFloatString(x, m_lang), 
+    declareFloat3(name, getFloatString(x, m_lang), 
                        getFloatString(y, m_lang), 
                        getFloatString(z, m_lang));
 }
 
-void GpuShaderText::declareVec3f(const std::string & name, 
+void GpuShaderText::declareFloat3(const std::string& name, const Float3 & vec3)
+{
+    declareFloat3(name, vec3[0], vec3[1], vec3[2]);
+}
+
+void GpuShaderText::declareFloat3(const std::string & name, 
                                  double x, double y, double z)
 {
-    declareVec3f(name, getFloatString(x, m_lang), 
+    declareFloat3(name, getFloatString(x, m_lang), 
                        getFloatString(y, m_lang), 
                        getFloatString(z, m_lang));
 }
 
-void GpuShaderText::declareVec3f(const std::string & name, 
+void GpuShaderText::declareFloat3(const std::string & name, 
                                  const std::string & x,
                                  const std::string & y,
                                  const std::string & z)
 {
-    newLine() << vec3fDecl(name) << " = " << vec3fConst(x, y, z) << ";";
+    newLine() << float3Decl(name) << " = " << float3Const(x, y, z) << ";";
 }
 
-std::string GpuShaderText::vec4fKeyword() const
+std::string GpuShaderText::float4Keyword() const
 {
     return getVecKeyword<4>(m_lang);
 }
 
-std::string GpuShaderText::vec4fConst(const float x, const float y, const float z, const float w) const
+std::string GpuShaderText::float4Const(const float x, const float y, const float z, const float w) const
 {
-    return vec4fConst(getFloatString(x, m_lang), 
+    return float4Const(getFloatString(x, m_lang),
                       getFloatString(y, m_lang), 
                       getFloatString(z, m_lang),
                       getFloatString(w, m_lang));
 }
 
-std::string GpuShaderText::vec4fConst(const double x, const double y, const double z, const double w) const
+std::string GpuShaderText::float4Const(const double x, const double y, const double z, const double w) const
 {
-    return vec4fConst(getFloatString(x, m_lang), 
+    return float4Const(getFloatString(x, m_lang),
                       getFloatString(y, m_lang), 
                       getFloatString(z, m_lang),
                       getFloatString(w, m_lang));
 }
 
-std::string GpuShaderText::vec4fConst(const std::string& x, 
+std::string GpuShaderText::float4Const(const std::string& x,
                                       const std::string& y,
                                       const std::string& z,
                                       const std::string& w) const
 {
     std::ostringstream kw;
-    kw << vec4fKeyword() << "(" 
+    kw << float4Keyword() << "("
        << x << ", "
        << y << ", "
        << z << ", "
@@ -514,57 +519,57 @@ std::string GpuShaderText::vec4fConst(const std::string& x,
     return kw.str();
 }
 
-std::string GpuShaderText::vec4fConst(const float v) const
+std::string GpuShaderText::float4Const(const float v) const
 {
-    return vec4fConst(getFloatString(v, m_lang));
+    return float4Const(getFloatString(v, m_lang));
 }
 
-std::string GpuShaderText::vec4fConst(const std::string & v) const
+std::string GpuShaderText::float4Const(const std::string & v) const
 {
-    return vec4fConst(v, v, v, v);
+    return float4Const(v, v, v, v);
 }
 
-std::string GpuShaderText::vec4fDecl(const std::string & name) const
+std::string GpuShaderText::float4Decl(const std::string & name) const
 {
     if (name.empty())
     {
         throw Exception("GPU variable name is empty.");
     }
 
-    return vec4fKeyword() + " " + name;
+    return float4Keyword() + " " + name;
 }
 
-void GpuShaderText::declareVec4f(const std::string & name,
-                                 const float x,
-                                 const float y, 
-                                 const float z,
-                                 const float w)
+void GpuShaderText::declareFloat4(const std::string & name,
+                                  const float x,
+                                  const float y, 
+                                  const float z,
+                                  const float w)
 {
-    declareVec4f(name, getFloatString(x, m_lang), 
-                       getFloatString(y, m_lang), 
-                       getFloatString(z, m_lang),
-                       getFloatString(w, m_lang));
+    declareFloat4(name, getFloatString(x, m_lang), 
+                        getFloatString(y, m_lang), 
+                        getFloatString(z, m_lang),
+                        getFloatString(w, m_lang));
 }
 
-void GpuShaderText::declareVec4f(const std::string & name,
-                                 const double x,
-                                 const double y, 
-                                 const double z,
-                                 const double w)
+void GpuShaderText::declareFloat4(const std::string & name,
+                                  const double x,
+                                  const double y, 
+                                  const double z,
+                                  const double w)
 {
-    declareVec4f(name, getFloatString(x, m_lang), 
-                       getFloatString(y, m_lang), 
-                       getFloatString(z, m_lang),
-                       getFloatString(w, m_lang));
+    declareFloat4(name, getFloatString(x, m_lang), 
+                        getFloatString(y, m_lang), 
+                        getFloatString(z, m_lang),
+                        getFloatString(w, m_lang));
 }
 
-void GpuShaderText::declareVec4f(const std::string & name,
-                                 const std::string & x, 
-                                 const std::string & y,
-                                 const std::string & z,
-                                 const std::string & w)
+void GpuShaderText::declareFloat4(const std::string & name,
+                                  const std::string & x, 
+                                  const std::string & y,
+                                  const std::string & z,
+                                  const std::string & w)
 {
-    newLine() << vec4fDecl(name) << " = " << vec4fConst(x, y, z, w) << ";";
+    newLine() << float4Decl(name) << " = " << float4Const(x, y, z, w) << ";";
 }
 
 std::string GpuShaderText::getSamplerName(const std::string& textureName)
@@ -649,14 +654,19 @@ void GpuShaderText::declareUniformBool(const std::string & uniformName)
     newLine() << "uniform bool " << uniformName << ";";
 }
 
+void GpuShaderText::declareUniformFloat3(const std::string & uniformName)
+{
+    newLine() << "uniform " << float3Keyword() << " " << uniformName << ";";
+}
+
 void GpuShaderText::declareUniformArrayFloat(const std::string & uniformName, unsigned int size)
 {
     newLine() << "uniform " << floatKeyword() << " " << uniformName << "[" << size << "];";
 }
 
-void GpuShaderText::declareUniformArrayInt2(const std::string & uniformName, unsigned int size)
+void GpuShaderText::declareUniformArrayInt(const std::string & uniformName, unsigned int size)
 {
-    newLine() << "uniform " << int2Keyword() << " " << uniformName << "[" << size << "];";
+    newLine() << "uniform " << intKeyword() << " " << uniformName << "[" << size << "];";
 }
 
 // Keep the method private as only float & double types are expected
@@ -744,8 +754,8 @@ std::string GpuShaderText::lerp(const std::string & x,
     return kw.str();
 }
 
-std::string GpuShaderText::vec3fGreaterThan(const std::string & a,
-                                            const std::string & b) const
+std::string GpuShaderText::float3GreaterThan(const std::string & a,
+                                             const std::string & b) const
 {
     std::ostringstream kw;
     switch (m_lang)
@@ -755,13 +765,13 @@ std::string GpuShaderText::vec3fGreaterThan(const std::string & a,
     case GPU_LANGUAGE_GLSL_4_0:
     case GPU_LANGUAGE_CG:
     {
-        kw << vec3fKeyword() << "(greaterThan( " << a << ", " << b << "))";
+        kw << float3Keyword() << "(greaterThan( " << a << ", " << b << "))";
         break;
     }
     case GPU_LANGUAGE_HLSL_DX11:
     {
-        kw << vec3fKeyword() << "((" << a << " > " << b << ") ? "
-            << vec3fConst(1.0f) << " : " << vec3fConst(0.0f) << ")";
+        kw << float3Keyword() << "((" << a << " > " << b << ") ? "
+            << float3Const(1.0f) << " : " << float3Const(0.0f) << ")";
         break;
     }
 
@@ -774,8 +784,8 @@ std::string GpuShaderText::vec3fGreaterThan(const std::string & a,
     return kw.str();
 }
 
-std::string GpuShaderText::vec4fGreaterThan(const std::string & a, 
-                                            const std::string & b) const
+std::string GpuShaderText::float4GreaterThan(const std::string & a,
+                                             const std::string & b) const
 {
     std::ostringstream kw;
     switch (m_lang)
@@ -785,13 +795,13 @@ std::string GpuShaderText::vec4fGreaterThan(const std::string & a,
         case GPU_LANGUAGE_GLSL_4_0:
         case GPU_LANGUAGE_CG:
         {
-            kw << vec4fKeyword() << "(greaterThan( " << a << ", " << b << "))";
+            kw << float4Keyword() << "(greaterThan( " << a << ", " << b << "))";
             break;
         }
         case GPU_LANGUAGE_HLSL_DX11:
         {
-            kw << vec4fKeyword() << "((" << a << " > " << b << ") ? " 
-                << vec4fConst(1.0f) << " : " << vec4fConst(0.0f) << ")";
+            kw << float4Keyword() << "((" << a << " > " << b << ") ? "
+                << float4Const(1.0f) << " : " << float4Const(0.0f) << ")";
             break;
         }
 
@@ -864,8 +874,8 @@ void AddLinToLogShader(GpuShaderText & st)
     st.newLine() << "const float base2 = 1.4426950408889634;";  // 1/log(2)
     st.newLine() << "const float gain = 363.034608563;";
     st.newLine() << "const float offs = -7.;";
-    st.newLine() << st.vec3fDecl("ylin") << " = outColor.rgb * gain + offs;";
-    st.newLine() << st.vec3fDecl("ylog") << " = base2 * log( ( outColor.rgb + shift ) * m );";
+    st.newLine() << st.float3Decl("ylin") << " = outColor.rgb * gain + offs;";
+    st.newLine() << st.float3Decl("ylog") << " = base2 * log( ( outColor.rgb + shift ) * m );";
     st.newLine() << "outColor.r = (outColor.r < xbrk) ? ylin.r : ylog.r;";
     st.newLine() << "outColor.g = (outColor.g < xbrk) ? ylin.g : ylog.g;";
     st.newLine() << "outColor.b = (outColor.b < xbrk) ? ylin.b : ylog.b;";
@@ -881,9 +891,9 @@ void AddLogToLinShader(GpuShaderText & st)
     st.newLine() << "const float shift = -0.000157849851665374;";
     st.newLine() << "const float gain = 363.034608563;";
     st.newLine() << "const float offs = -7.;";
-    st.newLine() << st.vec3fDecl("xlin") << " = (outColor.rgb - offs) / gain;";
-    st.newLine() << st.vec3fDecl("xlog") << " = pow( " << st.vec3fConst(2.0f)
-                                         <<        ", outColor.rgb ) * (0.18 + shift) - shift;";
+    st.newLine() << st.float3Decl("xlin") << " = (outColor.rgb - offs) / gain;";
+    st.newLine() << st.float3Decl("xlog") << " = pow( " << st.float3Const(2.0f)
+                                          <<        ", outColor.rgb ) * (0.18 + shift) - shift;";
     st.newLine() << "outColor.r = (outColor.r < ybrk) ? xlin.r : xlog.r;";
     st.newLine() << "outColor.g = (outColor.g < ybrk) ? xlin.g : xlog.g;";
     st.newLine() << "outColor.b = (outColor.b < ybrk) ? xlin.b : xlog.b;";

@@ -32,7 +32,8 @@ void bindPyGradingData(py::module & m)
 {
     py::class_<GradingRGBM>(m, "GradingRGBM")
         .def(py::init<>())
-        .def(py::init<double, double, double, double>())
+        .def(py::init<double, double, double, double>(),
+            "red"_a, "green"_a, "blue"_a, "master"_a)
         .def_readwrite("red", &GradingRGBM::m_red)
         .def_readwrite("green", &GradingRGBM::m_green)
         .def_readwrite("blue", &GradingRGBM::m_blue)
@@ -79,8 +80,10 @@ void bindPyGradingData(py::module & m)
 
     py::class_<GradingRGBMSW>(m, "GradingRGBMSW")
         .def(py::init<>())
-        .def(py::init<double, double, double, double, double, double>())
-        .def(py::init<double, double>())
+        .def(py::init<double, double, double, double, double, double>(),
+            "red"_a, "green"_a, "blue"_a, "master"_a, "start"_a, "width"_a)
+        .def(py::init<double, double>(),
+            "start"_a, "width"_a)
         .def_readwrite("red", &GradingRGBMSW::m_red)
         .def_readwrite("green", &GradingRGBMSW::m_green)
         .def_readwrite("blue", &GradingRGBMSW::m_blue)
@@ -114,7 +117,7 @@ void bindPyGradingData(py::module & m)
 
     auto clsGCP = py::class_<GradingControlPoint>(m, "GradingControlPoint")
         .def(py::init<>())
-        .def(py::init<float, float>())
+        .def(py::init<float, float>(), "x"_a = 0., "y"_a = 0.)
         .def_readwrite("x", &GradingControlPoint::m_x)
         .def_readwrite("y", &GradingControlPoint::m_y)
         .def("__repr__", [](const GradingControlPoint & cp)
@@ -129,7 +132,7 @@ void bindPyGradingData(py::module & m)
             {
                 GradingBSplineCurveRcPtr c = GradingBSplineCurve::Create(size);
                 return c;
-            }))
+            }), "size"_a)
         .def(py::init([](const std::vector<float> & values)
             {
                 const auto size = values.size();
@@ -195,7 +198,7 @@ void bindPyGradingData(py::module & m)
             {
                 GradingRGBCurveRcPtr rgbcurve = GradingRGBCurve::Create(style);
                 return rgbcurve;
-            }))
+            }), "style"_a)
         .def(py::init([](const GradingBSplineCurveRcPtr & red,
                          const GradingBSplineCurveRcPtr & green,
                          const GradingBSplineCurveRcPtr & blue, 

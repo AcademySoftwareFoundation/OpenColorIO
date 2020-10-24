@@ -7,6 +7,7 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "fileformats/FileFormatUtils.h"
 #include "iccProfileReader.h"
 #include "ops/gamma/GammaOp.h"
 #include "ops/lut1d/Lut1DOp.h"
@@ -63,7 +64,9 @@ public:
                                          const std::string & fileName,
                                          SampleICC::IccContent & icc);
 
-    CachedFileRcPtr read(std::istream & istream, const std::string & fileName) const override;
+    CachedFileRcPtr read(std::istream & istream,
+                         const std::string & fileName,
+                         Interpolation interp) const override;
 
     void buildFileOps(OpRcPtrVec & ops,
                         const Config & config,
@@ -234,7 +237,9 @@ LocalCachedFileRcPtr LocalFileFormat::ReadInfo(std::istream & istream,
 
 // Try and load the format
 // Raise an exception if it can't be loaded.
-CachedFileRcPtr LocalFileFormat::read(std::istream & istream, const std::string & fileName) const
+CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
+                                      const std::string & fileName,
+                                      Interpolation /*interp*/) const
 {
     SampleICC::IccContent icc;
     LocalCachedFileRcPtr cachedFile = ReadInfo(istream, fileName, icc);
@@ -423,15 +428,7 @@ LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
         throw Exception(os.str().c_str());
     }
 
-    TransformDirection newDir = CombineTransformDirections(dir,
-        fileTransform.getDirection());
-    if (newDir == TRANSFORM_DIR_UNKNOWN)
-    {
-        std::ostringstream os;
-        os << "Cannot build file format transform,";
-        os << " unspecified transform direction.";
-        throw Exception(os.str().c_str());
-    }
+    const auto newDir = CombineTransformDirections(dir, fileTransform.getDirection());
 
     // The matrix in the ICC profile converts monitor RGB to the CIE XYZ
     // based version of the ICC profile connection space (PCS).
@@ -453,9 +450,19 @@ LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
             0.0,             0.0,            0.0,            1.0
     };
 
+    const auto fileInterp = fileTransform.getInterpolation();
+
+    Lut1DOpDataRcPtr lut;
+
     if (cachedFile->lut)
     {
-        cachedFile->lut->setInterpolation(fileTransform.getInterpolation());
+        bool fileInterpUsed = false;
+        lut = HandleLUT1D(cachedFile->lut, fileInterp, fileInterpUsed);
+
+        if (!fileInterpUsed)
+        {
+            LogWarningInterpolationNotUsed(fileInterp, fileTransform);
+        }
     }
 
     // The matrix/TRC transform in the ICC profile converts
@@ -464,9 +471,9 @@ LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
     // So we will adopt this convention as the "forward" direction.
     if (newDir == TRANSFORM_DIR_FORWARD)
     {
-        if (cachedFile->lut)
+        if (lut)
         {
-            CreateLut1DOp(ops, cachedFile->lut, TRANSFORM_DIR_FORWARD);
+            CreateLut1DOp(ops, lut, TRANSFORM_DIR_FORWARD);
         }
         else
         {
@@ -496,9 +503,9 @@ LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
 
         // The LUT / gamma stored in the ICC profile works in
         // the gamma->linear direction.
-        if (cachedFile->lut)
+        if (lut)
         {
-            CreateLut1DOp(ops, cachedFile->lut, TRANSFORM_DIR_INVERSE);
+            CreateLut1DOp(ops, lut, TRANSFORM_DIR_INVERSE);
         }
         else
         {
@@ -515,7 +522,6 @@ LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
             CreateGammaOp(ops, gamma, TRANSFORM_DIR_FORWARD);
         }
     }
-
 }
 
 FileFormat * CreateFileFormatICC()

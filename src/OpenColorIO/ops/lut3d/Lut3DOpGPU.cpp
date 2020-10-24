@@ -66,26 +66,26 @@ void GetLut3DGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator, ConstLut3DO
             ss.newLine() << "{";
             ss.indent();
 
-            ss.newLine() << ss.vec3fDecl("coords") << " = "
+            ss.newLine() << ss.float3Decl("coords") << " = "
                          << shaderCreator->getPixelName() << ".rgb * "
-                         << ss.vec3fConst(dim - 1) << "; ";
+                         << ss.float3Const(dim - 1) << "; ";
 
             // baseInd is on [0,dim-1]
-            ss.newLine() << ss.vec3fDecl("baseInd") << " = floor(coords);";
+            ss.newLine() << ss.float3Decl("baseInd") << " = floor(coords);";
 
             // frac is on [0,1]
-            ss.newLine() << ss.vec3fDecl("frac") << " = coords - baseInd;";
+            ss.newLine() << ss.float3Decl("frac") << " = coords - baseInd;";
 
             // scale/offset baseInd onto [0,1] as usual for doing texture lookups
             // we use zyx to flip the order since blue varies most rapidly
             // in the grid array ordering
-            ss.newLine() << ss.vec3fDecl("f1, f4") << ";";
+            ss.newLine() << ss.float3Decl("f1, f4") << ";";
 
-            ss.newLine() << "baseInd = ( baseInd.zyx + " << ss.vec3fConst(0.5f) << " ) / " << ss.vec3fConst(dim) << ";";
-            ss.newLine() << ss.vec3fDecl("v1") << " = " << ss.sampleTex3D(name, "baseInd") << ".rgb;";
+            ss.newLine() << "baseInd = ( baseInd.zyx + " << ss.float3Const(0.5f) << " ) / " << ss.float3Const(dim) << ";";
+            ss.newLine() << ss.float3Decl("v1") << " = " << ss.sampleTex3D(name, "baseInd") << ".rgb;";
 
-            ss.newLine() << ss.vec3fDecl("nextInd") << " = baseInd + " << ss.vec3fConst(incr) << ";";
-            ss.newLine() << ss.vec3fDecl("v4") << " = " << ss.sampleTex3D(name, "nextInd") << ".rgb;";
+            ss.newLine() << ss.float3Decl("nextInd") << " = baseInd + " << ss.float3Const(incr) << ";";
+            ss.newLine() << ss.float3Decl("v4") << " = " << ss.sampleTex3D(name, "nextInd") << ".rgb;";
 
             ss.newLine() << "if (frac.r >= frac.g)";
             ss.newLine() << "{";
@@ -96,16 +96,16 @@ void GetLut3DGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator, ConstLut3DO
             // Note that compared to the CPU version of the algorithm,
             // we increment in inverted order since baseInd & nextInd
             // are essentially BGR rather than RGB.
-            ss.newLine() << "nextInd = baseInd + " << ss.vec3fConst(0.0f, 0.0f, incr) << ";";
-            ss.newLine() << ss.vec3fDecl("v2") << " = " << ss.sampleTex3D(name, "nextInd") << ".rgb;";
+            ss.newLine() << "nextInd = baseInd + " << ss.float3Const(0.0f, 0.0f, incr) << ";";
+            ss.newLine() << ss.float3Decl("v2") << " = " << ss.sampleTex3D(name, "nextInd") << ".rgb;";
 
-            ss.newLine() << "nextInd = baseInd + " << ss.vec3fConst(0.0f, incr, incr) << ";";
-            ss.newLine() << ss.vec3fDecl("v3") << " = " << ss.sampleTex3D(name, "nextInd") << ".rgb;";
+            ss.newLine() << "nextInd = baseInd + " << ss.float3Const(0.0f, incr, incr) << ";";
+            ss.newLine() << ss.float3Decl("v3") << " = " << ss.sampleTex3D(name, "nextInd") << ".rgb;";
 
-            ss.newLine() << "f1 = " << ss.vec3fConst("1. - frac.r") << ";";
-            ss.newLine() << "f4 = " << ss.vec3fConst("frac.b") << ";";
-            ss.newLine() << ss.vec3fDecl("f2") << " = " << ss.vec3fConst("frac.r - frac.g") << ";";
-            ss.newLine() << ss.vec3fDecl("f3") << " = " << ss.vec3fConst("frac.g - frac.b") << ";";
+            ss.newLine() << "f1 = " << ss.float3Const("1. - frac.r") << ";";
+            ss.newLine() << "f4 = " << ss.float3Const("frac.b") << ";";
+            ss.newLine() << ss.float3Decl("f2") << " = " << ss.float3Const("frac.r - frac.g") << ";";
+            ss.newLine() << ss.float3Decl("f3") << " = " << ss.float3Const("frac.g - frac.b") << ";";
 
             ss.newLine() << shaderCreator->getPixelName() << ".rgb = (f2 * v2) + (f3 * v3);";
             ss.dedent();
@@ -113,16 +113,16 @@ void GetLut3DGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator, ConstLut3DO
             ss.newLine() << "else if (frac.r >= frac.b)";  // R > B > G
             ss.newLine() << "{";
             ss.indent();
-            ss.newLine() << "nextInd = baseInd + " << ss.vec3fConst(0.0f, 0.0f, incr) << ";";
-            ss.newLine() << ss.vec3fDecl("v2") << " = " << ss.sampleTex3D(name, "nextInd") << ".rgb;";
+            ss.newLine() << "nextInd = baseInd + " << ss.float3Const(0.0f, 0.0f, incr) << ";";
+            ss.newLine() << ss.float3Decl("v2") << " = " << ss.sampleTex3D(name, "nextInd") << ".rgb;";
 
-            ss.newLine() << "nextInd = baseInd + " << ss.vec3fConst(incr, 0.0f, incr) << ";";
-            ss.newLine() << ss.vec3fDecl("v3") << " = " << ss.sampleTex3D(name, "nextInd") << ".rgb;";
+            ss.newLine() << "nextInd = baseInd + " << ss.float3Const(incr, 0.0f, incr) << ";";
+            ss.newLine() << ss.float3Decl("v3") << " = " << ss.sampleTex3D(name, "nextInd") << ".rgb;";
 
-            ss.newLine() << "f1 = " << ss.vec3fConst("1. - frac.r") << ";";
-            ss.newLine() << "f4 = " << ss.vec3fConst("frac.g") << ";";
-            ss.newLine() << ss.vec3fDecl("f2") << " = " << ss.vec3fConst("frac.r - frac.b") << ";";
-            ss.newLine() << ss.vec3fDecl("f3") << " = " << ss.vec3fConst("frac.b - frac.g") << ";";
+            ss.newLine() << "f1 = " << ss.float3Const("1. - frac.r") << ";";
+            ss.newLine() << "f4 = " << ss.float3Const("frac.g") << ";";
+            ss.newLine() << ss.float3Decl("f2") << " = " << ss.float3Const("frac.r - frac.b") << ";";
+            ss.newLine() << ss.float3Decl("f3") << " = " << ss.float3Const("frac.b - frac.g") << ";";
 
             ss.newLine() << shaderCreator->getPixelName() << ".rgb = (f2 * v2) + (f3 * v3);";
             ss.dedent();
@@ -130,16 +130,16 @@ void GetLut3DGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator, ConstLut3DO
             ss.newLine() << "else";  // B > R > G
             ss.newLine() << "{";
             ss.indent();
-            ss.newLine() << "nextInd = baseInd + " << ss.vec3fConst(incr, 0.0f, 0.0f) << ";";
-            ss.newLine() << ss.vec3fDecl("v2") << " = " << ss.sampleTex3D(name, "nextInd") << ".rgb;";
+            ss.newLine() << "nextInd = baseInd + " << ss.float3Const(incr, 0.0f, 0.0f) << ";";
+            ss.newLine() << ss.float3Decl("v2") << " = " << ss.sampleTex3D(name, "nextInd") << ".rgb;";
 
-            ss.newLine() << "nextInd = baseInd + " << ss.vec3fConst(incr, 0.0f, incr) << ";";
-            ss.newLine() << ss.vec3fDecl("v3") << " = " << ss.sampleTex3D(name, "nextInd") << ".rgb;";
+            ss.newLine() << "nextInd = baseInd + " << ss.float3Const(incr, 0.0f, incr) << ";";
+            ss.newLine() << ss.float3Decl("v3") << " = " << ss.sampleTex3D(name, "nextInd") << ".rgb;";
 
-            ss.newLine() << "f1 = " << ss.vec3fConst("1. - frac.b") << ";";
-            ss.newLine() << "f4 = " << ss.vec3fConst("frac.g") << ";";
-            ss.newLine() << ss.vec3fDecl("f2") << " = " << ss.vec3fConst("frac.b - frac.r") << ";";
-            ss.newLine() << ss.vec3fDecl("f3") << " = " << ss.vec3fConst("frac.r - frac.g") << ";";
+            ss.newLine() << "f1 = " << ss.float3Const("1. - frac.b") << ";";
+            ss.newLine() << "f4 = " << ss.float3Const("frac.g") << ";";
+            ss.newLine() << ss.float3Decl("f2") << " = " << ss.float3Const("frac.b - frac.r") << ";";
+            ss.newLine() << ss.float3Decl("f3") << " = " << ss.float3Const("frac.r - frac.g") << ";";
 
             ss.newLine() << shaderCreator->getPixelName() << ".rgb = (f2 * v2) + (f3 * v3);";
             ss.dedent();
@@ -152,16 +152,16 @@ void GetLut3DGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator, ConstLut3DO
             ss.newLine() << "if (frac.g <= frac.b)";  // B > G > R
             ss.newLine() << "{";
             ss.indent();
-            ss.newLine() << "nextInd = baseInd + " << ss.vec3fConst(incr, 0.0f, 0.0f) << ";";
-            ss.newLine() << ss.vec3fDecl("v2") << " = " << ss.sampleTex3D(name, "nextInd") << ".rgb;";
+            ss.newLine() << "nextInd = baseInd + " << ss.float3Const(incr, 0.0f, 0.0f) << ";";
+            ss.newLine() << ss.float3Decl("v2") << " = " << ss.sampleTex3D(name, "nextInd") << ".rgb;";
 
-            ss.newLine() << "nextInd = baseInd + " << ss.vec3fConst(incr, incr, 0.0f) << ";";
-            ss.newLine() << ss.vec3fDecl("v3") << " = " << ss.sampleTex3D(name, "nextInd") << ".rgb;";
+            ss.newLine() << "nextInd = baseInd + " << ss.float3Const(incr, incr, 0.0f) << ";";
+            ss.newLine() << ss.float3Decl("v3") << " = " << ss.sampleTex3D(name, "nextInd") << ".rgb;";
 
-            ss.newLine() << "f1 = " << ss.vec3fConst("1. - frac.b") << ";";
-            ss.newLine() << "f4 = " << ss.vec3fConst("frac.r") << ";";
-            ss.newLine() << ss.vec3fDecl("f2") << " = " << ss.vec3fConst("frac.b - frac.g") << ";";
-            ss.newLine() << ss.vec3fDecl("f3") << " = " << ss.vec3fConst("frac.g - frac.r") << ";";
+            ss.newLine() << "f1 = " << ss.float3Const("1. - frac.b") << ";";
+            ss.newLine() << "f4 = " << ss.float3Const("frac.r") << ";";
+            ss.newLine() << ss.float3Decl("f2") << " = " << ss.float3Const("frac.b - frac.g") << ";";
+            ss.newLine() << ss.float3Decl("f3") << " = " << ss.float3Const("frac.g - frac.r") << ";";
 
             ss.newLine() << shaderCreator->getPixelName() << ".rgb = (f2 * v2) + (f3 * v3);";
             ss.dedent();
@@ -169,16 +169,16 @@ void GetLut3DGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator, ConstLut3DO
             ss.newLine() << "else if (frac.r >= frac.b)";  // G > R > B
             ss.newLine() << "{";
             ss.indent();
-            ss.newLine() << "nextInd = baseInd + " << ss.vec3fConst(0.0f, incr, 0.0f) << ";";
-            ss.newLine() << ss.vec3fDecl("v2") << " = " << ss.sampleTex3D(name, "nextInd") << ".rgb;";
+            ss.newLine() << "nextInd = baseInd + " << ss.float3Const(0.0f, incr, 0.0f) << ";";
+            ss.newLine() << ss.float3Decl("v2") << " = " << ss.sampleTex3D(name, "nextInd") << ".rgb;";
 
-            ss.newLine() << "nextInd = baseInd + " << ss.vec3fConst(0.0f, incr, incr) << ";";
-            ss.newLine() << ss.vec3fDecl("v3") << " = " << ss.sampleTex3D(name, "nextInd") << ".rgb;";
+            ss.newLine() << "nextInd = baseInd + " << ss.float3Const(0.0f, incr, incr) << ";";
+            ss.newLine() << ss.float3Decl("v3") << " = " << ss.sampleTex3D(name, "nextInd") << ".rgb;";
 
-            ss.newLine() << "f1 = " << ss.vec3fConst("1. - frac.g") << ";";
-            ss.newLine() << "f4 = " << ss.vec3fConst("frac.b") << ";";
-            ss.newLine() << ss.vec3fDecl("f2") << " = " << ss.vec3fConst("frac.g - frac.r") << ";";
-            ss.newLine() << ss.vec3fDecl("f3") << " = " << ss.vec3fConst("frac.r - frac.b") << ";";
+            ss.newLine() << "f1 = " << ss.float3Const("1. - frac.g") << ";";
+            ss.newLine() << "f4 = " << ss.float3Const("frac.b") << ";";
+            ss.newLine() << ss.float3Decl("f2") << " = " << ss.float3Const("frac.g - frac.r") << ";";
+            ss.newLine() << ss.float3Decl("f3") << " = " << ss.float3Const("frac.r - frac.b") << ";";
 
             ss.newLine() << shaderCreator->getPixelName() << ".rgb = (f2 * v2) + (f3 * v3);";
             ss.dedent();
@@ -186,16 +186,16 @@ void GetLut3DGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator, ConstLut3DO
             ss.newLine() << "else";  // G > B > R
             ss.newLine() << "{";
             ss.indent();
-            ss.newLine() << "nextInd = baseInd + " << ss.vec3fConst(0.0f, incr, 0.0f) << ";";
-            ss.newLine() << ss.vec3fDecl("v2") << " = " << ss.sampleTex3D(name, "nextInd") << ".rgb;";
+            ss.newLine() << "nextInd = baseInd + " << ss.float3Const(0.0f, incr, 0.0f) << ";";
+            ss.newLine() << ss.float3Decl("v2") << " = " << ss.sampleTex3D(name, "nextInd") << ".rgb;";
 
-            ss.newLine() << "nextInd = baseInd + " << ss.vec3fConst(incr, incr, 0.0f) << ";";
-            ss.newLine() << ss.vec3fDecl("v3") << " = " << ss.sampleTex3D(name, "nextInd") << ".rgb;";
+            ss.newLine() << "nextInd = baseInd + " << ss.float3Const(incr, incr, 0.0f) << ";";
+            ss.newLine() << ss.float3Decl("v3") << " = " << ss.sampleTex3D(name, "nextInd") << ".rgb;";
 
-            ss.newLine() << "f1 = " << ss.vec3fConst("1. - frac.g") << ";";
-            ss.newLine() << "f4 = " << ss.vec3fConst("frac.r") << ";";
-            ss.newLine() << ss.vec3fDecl("f2") << " = " << ss.vec3fConst("frac.g - frac.b") << ";";
-            ss.newLine() << ss.vec3fDecl("f3") << " = " << ss.vec3fConst("frac.b - frac.r") << ";";
+            ss.newLine() << "f1 = " << ss.float3Const("1. - frac.g") << ";";
+            ss.newLine() << "f4 = " << ss.float3Const("frac.r") << ";";
+            ss.newLine() << ss.float3Decl("f2") << " = " << ss.float3Const("frac.g - frac.b") << ";";
+            ss.newLine() << ss.float3Decl("f3") << " = " << ss.float3Const("frac.b - frac.r") << ";";
 
             ss.newLine() << shaderCreator->getPixelName() << ".rgb = (f2 * v2) + (f3 * v3);";
             ss.dedent();
@@ -218,11 +218,11 @@ void GetLut3DGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator, ConstLut3DO
             // Note that the fractional components are quantized to 8-bits on some
             // hardware, which introduces significant error with small grid sizes.
 
-            ss.newLine() << ss.vec3fDecl(name + "_coords")
+            ss.newLine() << ss.float3Decl(name + "_coords")
                          << " = (" << shaderCreator->getPixelName() << ".zyx * "
-                         << ss.vec3fConst(dim - 1) << " + "
-                         << ss.vec3fConst(0.5f) + ") / "
-                         << ss.vec3fConst(dim) << ";";
+                         << ss.float3Const(dim - 1) << " + "
+                         << ss.float3Const(0.5f) + ") / "
+                         << ss.float3Const(dim) << ";";
 
             ss.newLine() << shaderCreator->getPixelName() << ".rgb = "
                          << ss.sampleTex3D(name, name + "_coords") << ".rgb;";

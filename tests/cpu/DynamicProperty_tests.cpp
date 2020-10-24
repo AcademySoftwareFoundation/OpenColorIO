@@ -76,9 +76,6 @@ OCIO::ConstProcessorRcPtr LoadTransformFile(const std::string & fileName)
     // Create a FileTransform.
     OCIO::FileTransformRcPtr pFileTransform
         = OCIO::FileTransform::Create();
-    // A transform file does not define any interpolation (contrary to config
-    // file), this is to avoid exception when creating the operation.
-    pFileTransform->setInterpolation(OCIO::INTERP_LINEAR);
     pFileTransform->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
     pFileTransform->setSrc(filePath.c_str());
 
@@ -167,12 +164,16 @@ OCIO_ADD_TEST(DynamicPropertyImpl, equal_grading_primary)
     gplog.m_clampWhite = 1.5;
 
     OCIO::DynamicPropertyGradingPrimaryImplRcPtr dpImpl0 =
-        std::make_shared<OCIO::DynamicPropertyGradingPrimaryImpl>(gplog, false);
+        std::make_shared<OCIO::DynamicPropertyGradingPrimaryImpl>(OCIO::GRADING_LOG,
+                                                                  OCIO::TRANSFORM_DIR_FORWARD,
+                                                                  gplog, false);
 
     OCIO::DynamicPropertyRcPtr dp0 = dpImpl0;
 
     OCIO::DynamicPropertyGradingPrimaryImplRcPtr dpImpl1 =
-        std::make_shared<OCIO::DynamicPropertyGradingPrimaryImpl>(gplog, false);
+        std::make_shared<OCIO::DynamicPropertyGradingPrimaryImpl>(OCIO::GRADING_LOG,
+                                                                  OCIO::TRANSFORM_DIR_FORWARD,
+                                                                  gplog, false);
     OCIO::DynamicPropertyRcPtr dp1 = dpImpl1;
 
     // Both not dynamic, same value.
@@ -403,7 +404,9 @@ OCIO_ADD_TEST(DynamicPropertyImpl, get_as)
     gplog.m_saturation = 1.21;
 
     OCIO::DynamicPropertyGradingPrimaryImplRcPtr dpImpl0 =
-        std::make_shared<OCIO::DynamicPropertyGradingPrimaryImpl>(gplog, false);
+        std::make_shared<OCIO::DynamicPropertyGradingPrimaryImpl>(OCIO::GRADING_LOG,
+                                                                  OCIO::TRANSFORM_DIR_FORWARD,
+                                                                  gplog, false);
 
     OCIO::DynamicPropertyRcPtr dp0 = dpImpl0;
     OCIO_CHECK_THROW_WHAT(OCIO::DynamicPropertyValue::AsDouble(dp0), OCIO::Exception,

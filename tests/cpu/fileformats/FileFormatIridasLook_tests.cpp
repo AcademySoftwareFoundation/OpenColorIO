@@ -333,7 +333,7 @@ OCIO_ADD_TEST(FileFormatIridasLook, simple3d)
     // Read file
     std::string emptyString;
     OCIO::LocalFileFormat tester;
-    OCIO::CachedFileRcPtr cachedFile = tester.read(simple1D, emptyString);
+    OCIO::CachedFileRcPtr cachedFile = tester.read(simple1D, emptyString, OCIO::INTERP_DEFAULT);
     OCIO::LocalCachedFileRcPtr looklut = OCIO::DynamicPtrCast<OCIO::LocalCachedFile>(cachedFile);
 
     // Check LUT size is correct
@@ -961,7 +961,7 @@ OCIO_ADD_TEST(FileFormatIridasLook, fail_on_mask)
     std::string emptyString;
 
     OCIO_CHECK_THROW_WHAT(
-        tester.read(infile, emptyString),
+        tester.read(infile, emptyString, OCIO::INTERP_DEFAULT),
         OCIO::Exception, "Cannot load .look LUT containing mask");
 
 }

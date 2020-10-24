@@ -40,7 +40,7 @@ public:
 
     std::string getCacheID() const override;
 
-    ConstOpCPURcPtr getCPUOp() const override { return nullptr; }
+    ConstOpCPURcPtr getCPUOp(bool /*fastLogExpPow*/) const override { return nullptr; }
 
     void apply(void * img, long numPixels) const override
     { apply(img, img, numPixels); }
@@ -326,7 +326,7 @@ public:
 
     std::string getCacheID() const override;
 
-    ConstOpCPURcPtr getCPUOp() const override { return nullptr; }
+    ConstOpCPURcPtr getCPUOp(bool /*fastLogExpPow*/) const override { return nullptr; }
 
     void apply(void * img, long numPixels) const override
     { apply(img, img, numPixels); }
@@ -414,7 +414,7 @@ public:
 
     std::string getCacheID() const override;
 
-    ConstOpCPURcPtr getCPUOp() const override { return nullptr; }
+    ConstOpCPURcPtr getCPUOp(bool /*fastLogExpPow*/) const override { return nullptr; }
 
     void apply(void * img, long numPixels) const override
     { apply(img, img, numPixels); }

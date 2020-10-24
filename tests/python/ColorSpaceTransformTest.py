@@ -18,6 +18,12 @@ class ColorSpaceTransformTest(unittest.TestCase):
     def tearDown(self):
         self.cs_tr = None
 
+    def test_transform_type(self):
+        """
+        Test the getTransformType() method.
+        """
+        self.assertEqual(self.cs_tr.getTransformType(), OCIO.TRANSFORM_TYPE_COLORSPACE)
+
     def test_src(self):
         """
         Test the setSrc() and getSrc() methods.

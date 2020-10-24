@@ -42,7 +42,7 @@ public:
     bool isInverse(ConstOpRcPtr & op) const override;
     std::string getCacheID() const override;
 
-    ConstOpCPURcPtr getCPUOp() const override;
+    ConstOpCPURcPtr getCPUOp(bool fastLogExpPow) const override;
 
     void extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const override;
 
@@ -104,10 +104,10 @@ std::string LogOp::getCacheID() const
     return cacheIDStream.str();
 }
 
-ConstOpCPURcPtr LogOp::getCPUOp() const
+ConstOpCPURcPtr LogOp::getCPUOp(bool fastLogExpPow) const
 {
     ConstLogOpDataRcPtr data = logData();
-    return GetLogRenderer(data);
+    return GetLogRenderer(data, fastLogExpPow);
 }
 
 void LogOp::extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const
@@ -192,7 +192,6 @@ void CreateLogTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op)
 }
 
 void BuildLogOp(OpRcPtrVec & ops,
-                const Config & /*config*/,
                 const LogAffineTransform & transform,
                 TransformDirection dir)
 {
@@ -204,7 +203,6 @@ void BuildLogOp(OpRcPtrVec & ops,
 }
 
 void BuildLogOp(OpRcPtrVec & ops,
-                const Config & /*config*/,
                 const LogCameraTransform & transform,
                 TransformDirection dir)
 {
@@ -216,7 +214,6 @@ void BuildLogOp(OpRcPtrVec & ops,
 }
 
 void BuildLogOp(OpRcPtrVec & ops,
-                const Config & /*config*/,
                 const LogTransform & transform,
                 TransformDirection dir)
 {

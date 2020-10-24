@@ -12,18 +12,12 @@
 #include "Op.h"
 #include "ops/lut1d/Lut1DOp.h"
 #include "ops/lut3d/Lut3DOp.h"
-#include "ops/range/RangeOpData.h"
 
 namespace OCIO_NAMESPACE
 {
 
 namespace
 {
-
-bool HasFlag(OptimizationFlags flags, OptimizationFlags queryFlag)
-{
-    return (flags & queryFlag) == queryFlag;
-}
 
 bool IsPairInverseEnabled(OpData::Type type, OptimizationFlags flags)
 {
@@ -133,6 +127,49 @@ int RemoveNoOps(OpRcPtrVec & opVec)
     return count;
 }
 
+void FinalizeOps(OpRcPtrVec & opVec)
+{
+    for (auto op : opVec)
+    {
+        // Prepare LUT 1D for inversion and ensure Matrix & Range are forward.
+        op->finalize();
+    }
+}
+
+// Some rather complex ops can get replaced based on their data by simpler ops.
+// For instance CDL that does not use power will get replaced.
+int ReplaceOps(OpRcPtrVec & opVec)
+{
+    int count = 0;
+    int firstindex = 0; // this must be a signed int
+
+    OpRcPtrVec tmpops;
+
+    while (firstindex < static_cast<int>(opVec.size()))
+    {
+        tmpops.clear();
+        ConstOpRcPtr op = opVec[firstindex];
+        op->getSimplerReplacement(tmpops);
+
+        if (!tmpops.empty())
+        {
+            FinalizeOps(tmpops);
+
+            // Erase the initial op we've replaced.
+            opVec.erase(opVec.begin() + firstindex, opVec.begin() + firstindex + 1);
+
+            // Insert the new ops at this location.
+            opVec.insert(opVec.begin() + firstindex, tmpops.begin(), tmpops.end());
+
+            // We've done something so increment the count!
+            ++count;
+        }
+        ++firstindex;
+    }
+
+    return count;
+}
+
 int ReplaceIdentityOps(OpRcPtrVec & opVec, OptimizationFlags oFlags)
 {
     int count = 0;
@@ -156,6 +193,7 @@ int ReplaceIdentityOps(OpRcPtrVec & opVec, OptimizationFlags oFlags)
             {
                 // Optimization flag is tested before.
                 auto replacedBy = op->getIdentityReplacement();
+                replacedBy->finalize();
                 opVec[i] = replacedBy;
                 ++count;
             }
@@ -204,6 +242,7 @@ int RemoveInverseOps(OpRcPtrVec & opVec, OptimizationFlags oFlags)
             // same result as the original.  For certain ops such as Lut1D or Log this may
             // mean inserting a Range to emulate the clamping done by the original ops.
             auto replacedBy = op1->getIdentityReplacement();
+            replacedBy->finalize();
             if (replacedBy->isNoOp())
             {
                 opVec.erase(opVec.begin() + firstindex, opVec.begin() + firstindex + 2);
@@ -244,6 +283,7 @@ int CombineOps(OpRcPtrVec & opVec, OptimizationFlags oFlags)
         {
             tmpops.clear();
             op1->combineWith(tmpops, op2);
+            FinalizeOps(tmpops);
 
             // tmpops may have any number of ops in it. (0, 1, 2, ...)
             // (size 0 would occur only if the combination results in a no-op).
@@ -274,15 +314,6 @@ int CombineOps(OpRcPtrVec & opVec, OptimizationFlags oFlags)
     return count;
 }
 
-void FinalizeOps(OpRcPtrVec & opVec)
-{
-    for (auto op : opVec)
-    {
-        // Prepare LUT 1D for inversion and ensure Matrix & Range are forward.
-        op->finalize();
-    }
-}
-
 // Replace any Lut1D or Lut3D that specify inverse evaluation with a faster forward approximation.
 // There are two inversion modes: EXACT and FAST. The EXACT method is slower, and only available
 // on the CPU, but it calculates an exact inverse. The exact inverse is based on the use of LINEAR
@@ -309,6 +340,7 @@ int ReplaceInverseLuts(OpRcPtrVec & opVec)
                 auto invLutData = MakeFastLut1DFromInverse(lutData);
                 OpRcPtrVec tmpops;
                 CreateLut1DOp(tmpops, invLutData, TRANSFORM_DIR_FORWARD);
+                FinalizeOps(tmpops);
                 opVec[i] = tmpops[0];
                 ++count;
             }
@@ -321,6 +353,7 @@ int ReplaceInverseLuts(OpRcPtrVec & opVec)
                 auto invLutData = MakeFastLut3DFromInverse(lutData);
                 OpRcPtrVec tmpops;
                 CreateLut3DOp(tmpops, invLutData, TRANSFORM_DIR_FORWARD);
+                FinalizeOps(tmpops);
                 opVec[i] = tmpops[0];
                 ++count;
             }
@@ -512,6 +545,7 @@ void OptimizeSeparablePrefix(OpRcPtrVec & ops, BitDepth in)
     // Insert the new LUT to replace the prefix ops.
     OpRcPtrVec lutOps;
     CreateLut1DOp(lutOps, newDomain, TRANSFORM_DIR_FORWARD);
+    FinalizeOps(lutOps);
 
     ops.insert(ops.begin(), lutOps.begin(), lutOps.end());
 }
@@ -574,6 +608,7 @@ void OpRcPtrVec::finalize(OptimizationFlags oFlags)
     // preserve their values.
 
     int total_noops         = 0;
+    int total_replacedops   = 0;
     int total_identityops   = 0;
     int total_inverseops    = 0;
     int total_combines      = 0;
@@ -581,12 +616,15 @@ void OpRcPtrVec::finalize(OptimizationFlags oFlags)
     int passes              = 0;
 
     const bool optimizeIdentity = HasFlag(oFlags, OPTIMIZATION_IDENTITY);
+    const bool replaceOps = HasFlag(oFlags, OPTIMIZATION_SIMPLIFY_OPS);
 
     const bool fastLut = HasFlag(oFlags, OPTIMIZATION_LUT_INV_FAST);
 
     while (passes <= MAX_OPTIMIZATION_PASSES)
     {
-        int noops       = optimizeIdentity ? RemoveNoOps(*this) : 0;
+        int noops = optimizeIdentity ? RemoveNoOps(*this) : 0;
+        // Note this might increase the number of ops.
+        int replacedOps = replaceOps ? ReplaceOps(*this) : 0;
         int identityops = ReplaceIdentityOps(*this, oFlags);
         int inverseops  = RemoveInverseOps(*this, oFlags);
         int combines    = CombineOps(*this, oFlags);
@@ -613,6 +651,7 @@ void OpRcPtrVec::finalize(OptimizationFlags oFlags)
         }
 
         total_noops += noops;
+        total_replacedops += replacedOps;
         total_identityops += identityops;
         total_inverseops += inverseops;
         total_combines += combines;
@@ -642,6 +681,7 @@ void OpRcPtrVec::finalize(OptimizationFlags oFlags)
         os << passes << " passes, ";
         os << total_nooptype << " noop types removed, ";
         os << total_noops << " noops removed, ";
+        os << total_replacedops << " ops replaced, ";
         os << total_identityops << " identity ops replaced, ";
         os << total_inverseops << " inverse ops removed, ";
         os << total_combines << " ops combines, ";

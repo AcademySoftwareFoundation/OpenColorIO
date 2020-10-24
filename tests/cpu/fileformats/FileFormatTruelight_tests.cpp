@@ -72,7 +72,7 @@ OCIO_ADD_TEST(FileFormatTruelight, shaper_and_lut_3d)
     std::string emptyString;
     OCIO::LocalFileFormat tester;
     OCIO::CachedFileRcPtr cachedFile;
-    OCIO_CHECK_NO_THROW(cachedFile = tester.read(lutIStream, emptyString));
+    OCIO_CHECK_NO_THROW(cachedFile = tester.read(lutIStream, emptyString, OCIO::INTERP_DEFAULT));
     OCIO::LocalCachedFileRcPtr lut = OCIO::DynamicPtrCast<OCIO::LocalCachedFile>(cachedFile);
 
     OCIO_REQUIRE_ASSERT(lut);
@@ -142,7 +142,7 @@ OCIO_ADD_TEST(FileFormatTruelight, shaper)
     std::string emptyString;
     OCIO::LocalFileFormat tester;
     OCIO::CachedFileRcPtr cachedFile;
-    OCIO_CHECK_NO_THROW(cachedFile = tester.read(lutIStream, emptyString));
+    OCIO_CHECK_NO_THROW(cachedFile = tester.read(lutIStream, emptyString, OCIO::INTERP_DEFAULT));
 
     OCIO::LocalCachedFileRcPtr lut = OCIO::DynamicPtrCast<OCIO::LocalCachedFile>(cachedFile);
 
@@ -227,7 +227,7 @@ OCIO_ADD_TEST(FileFormatTruelight, lut_3d)
     std::string emptyString;
     OCIO::LocalFileFormat tester;
     OCIO::CachedFileRcPtr cachedFile;
-    OCIO_CHECK_NO_THROW(cachedFile = tester.read(lutIStream, emptyString));
+    OCIO_CHECK_NO_THROW(cachedFile = tester.read(lutIStream, emptyString, OCIO::INTERP_DEFAULT));
     OCIO::LocalCachedFileRcPtr lut = OCIO::DynamicPtrCast<OCIO::LocalCachedFile>(cachedFile);
 
     OCIO_CHECK_ASSERT(!lut->lut1D);
