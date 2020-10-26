@@ -34,12 +34,6 @@ FileTransformRcPtr CreateFileTransform(const std::string & fileName)
 
     // Create a FileTransform
     FileTransformRcPtr pFileTransform = FileTransform::Create();
-    // To avoid an exception when creating the ops, we need to manually set an
-    // interpolation and direction.  This is usually done in the config but in
-    // this case we are loading directly from a file (and most file formats
-    // don't specify this).
-    pFileTransform->setInterpolation(INTERP_LINEAR);
-    pFileTransform->setDirection(TRANSFORM_DIR_FORWARD);
     pFileTransform->setSrc(filePath.c_str());
 
     return pFileTransform;
@@ -54,8 +48,6 @@ void BuildOpsTest(OpRcPtrVec & fileOps,
 
     // Create empty Config to use
     ConfigRcPtr config = Config::Create();
-    config->setMajorVersion(2);
-
     BuildFileTransformOps(fileOps, *(config.get()), context,
                           *(fileTransform.get()), dir);
 }
@@ -67,8 +59,6 @@ ConstProcessorRcPtr GetFileTransformProcessor(const std::string & fileName)
 
     // Create empty Config to use.
     ConfigRcPtr config = Config::Create();
-    config->setMajorVersion(2);
-
     // Get the processor corresponding to the transform.
     return config->getProcessor(fileTransform);
 }

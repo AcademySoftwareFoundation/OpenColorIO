@@ -43,8 +43,6 @@ OCIO::ConstProcessorRcPtr GetTransformFileProcessor(const std::string & fileName
     const std::string filePath(OCIO::GetTestFilesDir() + "/" + fileName);
 
     OCIO::FileTransformRcPtr pFileTransform = OCIO::FileTransform::Create();
-    pFileTransform->setInterpolation(OCIO::INTERP_LINEAR);
-    pFileTransform->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
     pFileTransform->setSrc(filePath.c_str());
 
     OCIO::ConfigRcPtr pConfig = OCIO::Config::Create();

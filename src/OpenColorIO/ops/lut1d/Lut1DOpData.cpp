@@ -210,6 +210,11 @@ Lut1DOpData::~Lut1DOpData()
 
 Interpolation Lut1DOpData::getConcreteInterpolation() const
 {
+    return GetConcreteInterpolation(m_interpolation);
+}
+
+Interpolation Lut1DOpData::GetConcreteInterpolation(Interpolation /*interp*/)
+{
     // TODO: currently INTERP_NEAREST is not implemented in Lut1DOpCPU.
     // This is a regression from OCIO v1.
     // NB: To have the same interpolation support (i.e. same color processing)
@@ -220,9 +225,9 @@ Interpolation Lut1DOpData::getConcreteInterpolation() const
     return INTERP_LINEAR;
 }
 
-void Lut1DOpData::setInterpolation(Interpolation algo)
+void Lut1DOpData::setInterpolation(Interpolation interpolation)
 {
-    m_interpolation = algo;
+    m_interpolation = interpolation;
 }
 
 bool Lut1DOpData::isIdentity() const
@@ -283,9 +288,7 @@ void Lut1DOpData::setOutputRawHalfs(bool isRawHalfs) noexcept
         ((HalfFlags)(m_halfFlags & ~LUT_OUTPUT_HALF_CODE));
 }
 
-namespace
-{
-bool IsValid(const Interpolation & interpolation)
+bool Lut1DOpData::IsValidInterpolation(Interpolation interpolation)
 {
     switch (interpolation)
     {
@@ -301,11 +304,10 @@ bool IsValid(const Interpolation & interpolation)
         return false;
     }
 }
-}
 
 void Lut1DOpData::validate() const
 {
-    if (!IsValid(m_interpolation))
+    if (!IsValidInterpolation(m_interpolation))
     {
         std::ostringstream oss;
         oss << "1D LUT does not support interpolation algorithm: ";

@@ -530,7 +530,7 @@ void CheckIdentity(std::istringstream & ctfStream, unsigned line)
     std::string emptyString;
     OCIO::LocalFileFormat tester;
     OCIO::CachedFileRcPtr file;
-    OCIO_CHECK_NO_THROW_FROM(file = tester.read(ctfStream, emptyString), line);
+    OCIO_CHECK_NO_THROW_FROM(file = tester.read(ctfStream, emptyString, OCIO::INTERP_DEFAULT), line);
     OCIO::LocalCachedFileRcPtr cachedFile = OCIO_DYNAMIC_POINTER_CAST<OCIO::LocalCachedFile>(file);
     const auto & fileOps = cachedFile->m_transform->getOps();
 
@@ -940,7 +940,7 @@ OCIO::LocalCachedFileRcPtr ParseString(const std::string & str)
     // Parse stream.
     std::string emptyString;
     OCIO::LocalFileFormat tester;
-    OCIO::CachedFileRcPtr file = tester.read(ctf, emptyString);
+    OCIO::CachedFileRcPtr file = tester.read(ctf, emptyString, OCIO::INTERP_DEFAULT);
 
     return OCIO_DYNAMIC_POINTER_CAST<OCIO::LocalCachedFile>(file);
 }
@@ -3564,8 +3564,8 @@ OCIO_ADD_TEST(FileFormatCTF, attribute_float_parse_extra_values)
     // Load file
     std::string emptyString;
     OCIO::LocalFileFormat tester;
-    OCIO_CHECK_THROW_WHAT(tester.read(ctf, emptyString), OCIO::Exception,
-        "Expecting 1 value, found 2 values");
+    OCIO_CHECK_THROW_WHAT(tester.read(ctf, emptyString, OCIO::INTERP_DEFAULT), OCIO::Exception,
+                          "Expecting 1 value, found 2 values");
 }
 
 OCIO_ADD_TEST(FileFormatCTF, attribute_float_parse_leading_spaces)
@@ -3585,7 +3585,7 @@ OCIO_ADD_TEST(FileFormatCTF, attribute_float_parse_leading_spaces)
     std::string emptyString;
     OCIO::LocalFileFormat tester;
     OCIO::CachedFileRcPtr file;
-    OCIO_CHECK_NO_THROW(file = tester.read(ctf, emptyString));
+    OCIO_CHECK_NO_THROW(file = tester.read(ctf, emptyString, OCIO::INTERP_DEFAULT));
     OCIO::LocalCachedFileRcPtr cachedFile = OCIO_DYNAMIC_POINTER_CAST<OCIO::LocalCachedFile>(file);
     const auto & fileOps = cachedFile->m_transform->getOps();
 
@@ -3712,7 +3712,6 @@ void ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::Style style, i
     OCIO_REQUIRE_EQUAL_FROM(group->getNumTransforms(), 1, lineNo);
 
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
     OCIO::ConstProcessorRcPtr processorGroup;
     OCIO_CHECK_NO_THROW(processorGroup = config->getProcessor(group));
 
@@ -3874,7 +3873,7 @@ OCIO_ADD_TEST(FileFormatCTF, load_grading_primary_log)
     std::string emptyString;
     OCIO::LocalFileFormat tester;
     OCIO::CachedFileRcPtr file;
-    OCIO_CHECK_NO_THROW(file = tester.read(ctfLog, emptyString));
+    OCIO_CHECK_NO_THROW(file = tester.read(ctfLog, emptyString, OCIO::INTERP_DEFAULT));
     OCIO::LocalCachedFileRcPtr cachedFile = OCIO_DYNAMIC_POINTER_CAST<OCIO::LocalCachedFile>(file);
     OCIO_REQUIRE_ASSERT(cachedFile);
     const auto & fileOps = cachedFile->m_transform->getOps();
@@ -3978,7 +3977,7 @@ OCIO_ADD_TEST(FileFormatCTF, load_grading_primary_lin)
     std::string emptyString;
     OCIO::LocalFileFormat tester;
     OCIO::CachedFileRcPtr file;
-    OCIO_CHECK_NO_THROW(file = tester.read(ctfLin, emptyString));
+    OCIO_CHECK_NO_THROW(file = tester.read(ctfLin, emptyString, OCIO::INTERP_DEFAULT));
     OCIO::LocalCachedFileRcPtr cachedFile = OCIO_DYNAMIC_POINTER_CAST<OCIO::LocalCachedFile>(file);
     OCIO_REQUIRE_ASSERT(cachedFile);
     const auto & fileOps = cachedFile->m_transform->getOps();
@@ -4079,7 +4078,7 @@ OCIO_ADD_TEST(FileFormatCTF, load_grading_primary_video)
     std::string emptyString;
     OCIO::LocalFileFormat tester;
     OCIO::CachedFileRcPtr file;
-    OCIO_CHECK_NO_THROW(file = tester.read(ctfVideo, emptyString));
+    OCIO_CHECK_NO_THROW(file = tester.read(ctfVideo, emptyString, OCIO::INTERP_DEFAULT));
     OCIO::LocalCachedFileRcPtr cachedFile = OCIO_DYNAMIC_POINTER_CAST<OCIO::LocalCachedFile>(file);
     OCIO_REQUIRE_ASSERT(cachedFile);
     const auto & fileOps = cachedFile->m_transform->getOps();
@@ -4277,7 +4276,7 @@ OCIO_ADD_TEST(FileFormatCTF, load_grading_curves_lin)
     std::string emptyString;
     OCIO::LocalFileFormat tester;
     OCIO::CachedFileRcPtr file;
-    OCIO_CHECK_NO_THROW(file = tester.read(ctfLin, emptyString));
+    OCIO_CHECK_NO_THROW(file = tester.read(ctfLin, emptyString, OCIO::INTERP_DEFAULT));
     OCIO::LocalCachedFileRcPtr cachedFile = OCIO_DYNAMIC_POINTER_CAST<OCIO::LocalCachedFile>(file);
     OCIO_REQUIRE_ASSERT(cachedFile);
     const auto & fileOps = cachedFile->m_transform->getOps();
@@ -4360,7 +4359,7 @@ OCIO_ADD_TEST(FileFormatCTF, load_grading_curves_log)
     std::string emptyString;
     OCIO::LocalFileFormat tester;
     OCIO::CachedFileRcPtr file;
-    OCIO_CHECK_NO_THROW(file = tester.read(ctfLog, emptyString));
+    OCIO_CHECK_NO_THROW(file = tester.read(ctfLog, emptyString, OCIO::INTERP_DEFAULT));
     OCIO::LocalCachedFileRcPtr cachedFile = OCIO_DYNAMIC_POINTER_CAST<OCIO::LocalCachedFile>(file);
     OCIO_REQUIRE_ASSERT(cachedFile);
     const auto & fileOps = cachedFile->m_transform->getOps();
@@ -4524,7 +4523,7 @@ OCIO_ADD_TEST(CTFTransform, load_grading_tone)
     std::string emptyString;
     OCIO::LocalFileFormat tester;
     OCIO::CachedFileRcPtr file;
-    OCIO_CHECK_NO_THROW(file = tester.read(ctfLog, emptyString));
+    OCIO_CHECK_NO_THROW(file = tester.read(ctfLog, emptyString, OCIO::INTERP_DEFAULT));
     OCIO::LocalCachedFileRcPtr cachedFile = OCIO_DYNAMIC_POINTER_CAST<OCIO::LocalCachedFile>(file);
     OCIO_REQUIRE_ASSERT(cachedFile);
     const auto & fileOps = cachedFile->m_transform->getOps();
@@ -4651,7 +4650,6 @@ OCIO_ADD_TEST(CTFTransform, load_edit_save_matrix)
 
     // Create empty Config to use.
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
 
     // Get the processor corresponding to the transform.
     OCIO::ConstProcessorRcPtr processorGroup = config->getProcessor(group);
@@ -4692,7 +4690,7 @@ OCIO_ADD_TEST(CTFTransform, load_edit_save_matrix)
 
     std::string emptyString;
     OCIO::LocalFileFormat tester;
-    OCIO::CachedFileRcPtr file = tester.read(inputTransform, emptyString);
+    OCIO::CachedFileRcPtr file = tester.read(inputTransform, emptyString, OCIO::INTERP_DEFAULT);
     OCIO::LocalCachedFileRcPtr cachedFile = OCIO::DynamicPtrCast<OCIO::LocalCachedFile>(file);
 
     const OCIO::ConstOpDataVec & fileOps = cachedFile->m_transform->getOps();
@@ -4723,7 +4721,6 @@ OCIO::LocalCachedFileRcPtr WriteRead(OCIO::TransformRcPtr transform)
 {
     // Create empty Config to use.
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
 
     // Get the processor corresponding to the transform.
     OCIO::ConstProcessorRcPtr processor = config->getProcessor(transform);
@@ -4736,7 +4733,7 @@ OCIO::LocalCachedFileRcPtr WriteRead(OCIO::TransformRcPtr transform)
 
     std::string emptyString;
     OCIO::LocalFileFormat tester;
-    OCIO::CachedFileRcPtr file = tester.read(inputTransform, emptyString);
+    OCIO::CachedFileRcPtr file = tester.read(inputTransform, emptyString, OCIO::INTERP_DEFAULT);
     return OCIO::DynamicPtrCast<OCIO::LocalCachedFile>(file);
 }
 }
@@ -4898,8 +4895,8 @@ OCIO_ADD_TEST(CTFTransform, save_lut_1d_1component)
     proc->write(OCIO::FILEFORMAT_CTF, outputTransform);
 
     const std::string result = outputTransform.str();
-    const std::string expected = "<Array dim = \"4 1\">";
-    OCIO_CHECK_ASSERT(result.find(expected));
+    const std::string expected = "<Array dim=\"4 1\">";
+    OCIO_CHECK_ASSERT(result.find(expected) != std::string::npos);
 }
 
 OCIO_ADD_TEST(CTFTransform, save_lut_1d_3components)
@@ -4911,8 +4908,8 @@ OCIO_ADD_TEST(CTFTransform, save_lut_1d_3components)
     proc->write(OCIO::FILEFORMAT_CTF, outputTransform);
 
     const std::string result = outputTransform.str();
-    const std::string expected = "<Array dim = \"32 3\">";
-    OCIO_CHECK_ASSERT(result.find(expected));
+    const std::string expected = "<Array dim=\"32 3\">";
+    OCIO_CHECK_ASSERT(result.find(expected) != std::string::npos);
 }
 
 OCIO_ADD_TEST(CTFTransform, save_invlut_1d_3components)
@@ -4925,10 +4922,10 @@ OCIO_ADD_TEST(CTFTransform, save_invlut_1d_3components)
 
     const std::string result = outputTransform.str();
     const std::string expected1 = "</InverseLUT1D>";
-    OCIO_CHECK_ASSERT(result.find(expected1));
+    OCIO_CHECK_ASSERT(result.find(expected1) != std::string::npos);
     // Components are equal, so only 1 get saved.
-    const std::string expected2 = "<Array dim = \"17 1\">";
-    OCIO_CHECK_ASSERT(result.find(expected2));
+    const std::string expected2 = "<Array dim=\"17 1\">";
+    OCIO_CHECK_ASSERT(result.find(expected2) != std::string::npos);
 }
 
 OCIO_ADD_TEST(CTFTransform, save_lut1d_halfdomain)
@@ -5059,6 +5056,61 @@ OCIO_ADD_TEST(CTFTransform, save_lut1d_f32)
     OCIO_CHECK_EQUAL(lut->getArray()[21], values[7]);
 }
 
+OCIO_ADD_TEST(CTFTransform, save_lut1d_interpolation)
+{
+    OCIO::ConfigRcPtr config = OCIO::Config::Create();
+    config->setMajorVersion(2);
+
+    OCIO::Lut1DTransformRcPtr lut = OCIO::Lut1DTransform::Create();
+    lut->setInterpolation(OCIO::INTERP_DEFAULT);
+
+    OCIO::ConstProcessorRcPtr processor = config->getProcessor(lut);
+    std::ostringstream outputTransform;
+    OCIO_CHECK_NO_THROW(processor->write(OCIO::FILEFORMAT_CTF, outputTransform));
+
+    {
+        const std::string result = outputTransform.str();
+        const std::string expected = R"(<LUT1D inBitDepth="32f" outBitDepth="32f">)";
+        OCIO_CHECK_ASSERT(result.find(expected) != std::string::npos);
+    }
+
+    outputTransform.str("");
+    outputTransform.clear();
+
+    lut->setInterpolation(OCIO::INTERP_BEST);
+
+    processor = config->getProcessor(lut);
+    OCIO_CHECK_NO_THROW(processor->write(OCIO::FILEFORMAT_CTF, outputTransform));
+
+    {
+        const std::string result = outputTransform.str();
+        const std::string expected = R"(<LUT1D inBitDepth="32f" outBitDepth="32f" interpolation="linear">)";
+        OCIO_CHECK_ASSERT(result.find(expected) != std::string::npos);
+    }
+
+    outputTransform.str("");
+    outputTransform.clear();
+
+    lut->setInterpolation(OCIO::INTERP_LINEAR);
+
+    processor = config->getProcessor(lut);
+    OCIO_CHECK_NO_THROW(processor->write(OCIO::FILEFORMAT_CTF, outputTransform));
+
+    {
+        const std::string result = outputTransform.str();
+        const std::string expected = R"(<LUT1D inBitDepth="32f" outBitDepth="32f" interpolation="linear">)";
+        OCIO_CHECK_ASSERT(result.find(expected) != std::string::npos);
+    }
+
+    outputTransform.str("");
+    outputTransform.clear();
+
+    lut->setInterpolation(OCIO::INTERP_CUBIC);
+
+    OCIO_CHECK_THROW_WHAT(processor = config->getProcessor(lut), OCIO::Exception,
+                          "1D LUT does not support interpolation algorithm: cubic");
+}
+
 OCIO_ADD_TEST(CTFTransform, save_invalid_lut_1d)
 {
     OCIO::Lut1DTransformRcPtr lutT = OCIO::Lut1DTransform::Create();
@@ -5081,7 +5133,7 @@ OCIO_ADD_TEST(CTFTransform, save_lut_3d)
 
     const std::string result = outputTransform.str();
     const std::string expected = "<Array dim=\"2 2 2 3\">";
-    OCIO_CHECK_ASSERT(result.find(expected));
+    OCIO_CHECK_ASSERT(result.find(expected) != std::string::npos);
 }
 
 OCIO_ADD_TEST(CTFTransform, save_range)
@@ -5173,7 +5225,6 @@ OCIO_ADD_TEST(CTFTransform, load_save_matrix)
 OCIO_ADD_TEST(CTFTransform, save_matrix_444)
 {
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
 
     OCIO::MatrixTransformRcPtr mat = OCIO::MatrixTransform::Create();
     double m[16]{  1.,  0., 0., 0.,
@@ -5215,7 +5266,6 @@ OCIO_ADD_TEST(CTFTransform, load_edit_save_matrix_clf)
 
     // Create empty Config to use.
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
 
     // Get the processor corresponding to the transform.
     OCIO::ConstProcessorRcPtr processorGroup = config->getProcessor(group);
@@ -5280,7 +5330,6 @@ R"(<?xml version="1.0" encoding="UTF-8"?>
 OCIO_ADD_TEST(CTFTransform, matrix3x3_clf)
 {
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
 
     OCIO::MatrixTransformRcPtr mat = OCIO::MatrixTransform::Create();
     mat->setFileInputBitDepth(OCIO::BIT_DEPTH_UINT10);
@@ -5320,7 +5369,6 @@ OCIO_ADD_TEST(CTFTransform, matrix3x3_clf)
 OCIO_ADD_TEST(CTFTransform, matrix_offset_alpha_ctf)
 {
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
 
     OCIO::MatrixTransformRcPtr mat = OCIO::MatrixTransform::Create();
     mat->setFileInputBitDepth(OCIO::BIT_DEPTH_UINT10);
@@ -5366,7 +5414,6 @@ OCIO_ADD_TEST(CTFTransform, matrix_offset_alpha_ctf)
 OCIO_ADD_TEST(CTFTransform, matrix_offset_alpha_bitdepth_ctf)
 {
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
 
     OCIO::MatrixTransformRcPtr mat = OCIO::MatrixTransform::Create();
     mat->setFileInputBitDepth(OCIO::BIT_DEPTH_UINT8);
@@ -5410,7 +5457,6 @@ OCIO_ADD_TEST(CTFTransform, matrix_offset_alpha_bitdepth_ctf)
 OCIO_ADD_TEST(CTFTransform, matrix_offset_alpha_inverse_ctf)
 {
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
 
     OCIO::MatrixTransformRcPtr mat = OCIO::MatrixTransform::Create();
     mat->setFileInputBitDepth(OCIO::BIT_DEPTH_F16);
@@ -5512,7 +5558,6 @@ OCIO_ADD_TEST(CTFTransform, legacy_cdl)
 OCIO_ADD_TEST(CTFTransform, cdl_clf)
 {
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
 
     OCIO::CDLTransformRcPtr cdl = OCIO::CDLTransform::Create();
     const double sop[] = { 1.0, 1.1, 1.2,
@@ -5605,7 +5650,6 @@ OCIO_ADD_TEST(CTFTransform, cdl_clf)
 OCIO_ADD_TEST(CTFTransform, cdl_ctf)
 {
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
 
     OCIO::CDLTransformRcPtr cdl = OCIO::CDLTransform::Create();
     cdl->setStyle(OCIO::CDL_ASC);
@@ -5651,7 +5695,6 @@ OCIO_ADD_TEST(CTFTransform, cdl_ctf)
 OCIO_ADD_TEST(CTFTransform, range_ctf)
 {
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
 
     // Non-clamping range are converted to matrix.
     OCIO::RangeTransformRcPtr range = OCIO::RangeTransform::Create();
@@ -5701,7 +5744,6 @@ OCIO_ADD_TEST(CTFTransform, range1_clf)
 {
     // Forward clamping range with all 4 values set and with metadata.
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
 
     OCIO::RangeTransformRcPtr range = OCIO::RangeTransform::Create();
     range->setFileInputBitDepth(OCIO::BIT_DEPTH_UINT8);
@@ -5746,7 +5788,6 @@ OCIO_ADD_TEST(CTFTransform, range2_clf)
 {
     // Forward clamping range with just minValues set.
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
 
     OCIO::RangeTransformRcPtr range = OCIO::RangeTransform::Create();
     range->setFileInputBitDepth(OCIO::BIT_DEPTH_UINT10);
@@ -5780,7 +5821,6 @@ OCIO_ADD_TEST(CTFTransform, range3_clf)
 {
     // Forward clamping range with just minValues set.
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
 
     // This will only do bit-depth conversion (with a clamp at 0).
     OCIO::RangeTransformRcPtr range = OCIO::RangeTransform::Create();
@@ -5815,7 +5855,6 @@ OCIO_ADD_TEST(CTFTransform, range4_clf)
 {
     // Inverse clamping range with all 4 values set.
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
 
     OCIO::RangeTransformRcPtr range = OCIO::RangeTransform::Create();
     range->setFileInputBitDepth(OCIO::BIT_DEPTH_F16);
@@ -5855,7 +5894,6 @@ OCIO_ADD_TEST(CTFTransform, range4_clf)
 OCIO_ADD_TEST(CTFTransform, exponent_ctf)
 {
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
 
     OCIO::ExponentWithLinearTransformRcPtr exp = OCIO::ExponentWithLinearTransform::Create();
     const double gamma[] = { 1.1, 1.2, 1.3, 1.0 };
@@ -5888,7 +5926,6 @@ OCIO_ADD_TEST(CTFTransform, exponent_ctf)
 OCIO_ADD_TEST(CTFTransform, gamma1_ctf)
 {
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
 
     OCIO::ExponentTransformRcPtr exp = OCIO::ExponentTransform::Create();
     exp->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
@@ -5934,7 +5971,6 @@ OCIO_ADD_TEST(CTFTransform, gamma1_ctf)
 OCIO_ADD_TEST(CTFTransform, gamma1_mirror_ctf)
 {
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
 
     OCIO::ExponentTransformRcPtr exp = OCIO::ExponentTransform::Create();
     exp->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
@@ -5981,7 +6017,6 @@ OCIO_ADD_TEST(CTFTransform, gamma1_mirror_ctf)
 OCIO_ADD_TEST(CTFTransform, gamma1_pass_thru_ctf)
 {
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
 
     OCIO::ExponentTransformRcPtr exp = OCIO::ExponentTransform::Create();
     exp->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
@@ -6028,7 +6063,6 @@ OCIO_ADD_TEST(CTFTransform, gamma1_pass_thru_ctf)
 OCIO_ADD_TEST(CTFTransform, gamma2_ctf)
 {
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
 
     OCIO::ExponentWithLinearTransformRcPtr exp = OCIO::ExponentWithLinearTransform::Create();
     exp->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
@@ -6072,7 +6106,6 @@ OCIO_ADD_TEST(CTFTransform, gamma2_ctf)
 OCIO_ADD_TEST(CTFTransform, gamma3_ctf)
 {
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
 
     OCIO::ExponentWithLinearTransformRcPtr exp = OCIO::ExponentWithLinearTransform::Create();
 
@@ -6121,7 +6154,6 @@ OCIO_ADD_TEST(CTFTransform, gamma3_ctf)
 OCIO_ADD_TEST(CTFTransform, gamma4_ctf)
 {
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
 
     OCIO::ExponentTransformRcPtr exp = OCIO::ExponentTransform::Create();
 
@@ -6156,7 +6188,6 @@ OCIO_ADD_TEST(CTFTransform, gamma4_ctf)
 OCIO_ADD_TEST(CTFTransform, gamma5_ctf)
 {
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
 
     OCIO::ExponentWithLinearTransformRcPtr exp = OCIO::ExponentWithLinearTransform::Create();
 
@@ -6193,7 +6224,6 @@ OCIO_ADD_TEST(CTFTransform, gamma5_ctf)
 OCIO_ADD_TEST(CTFTransform, gamma6_ctf)
 {
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
 
     OCIO::ExponentTransformRcPtr exp = OCIO::ExponentTransform::Create();
 
@@ -6227,7 +6257,6 @@ OCIO_ADD_TEST(CTFTransform, gamma6_ctf)
 OCIO_ADD_TEST(CTFTransform, fixed_function_rec2100_ctf)
 {
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
 
     OCIO::FixedFunctionTransformRcPtr ff = OCIO::FixedFunctionTransform::Create();
     ff->setStyle(OCIO::FIXED_FUNCTION_REC2100_SURROUND);
@@ -6256,7 +6285,6 @@ OCIO_ADD_TEST(CTFTransform, fixed_function_rec2100_ctf)
 OCIO_ADD_TEST(CTFTransform, fixed_function_rec2100_inverse_ctf)
 {
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
 
     OCIO::FixedFunctionTransformRcPtr ff = OCIO::FixedFunctionTransform::Create();
     ff->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
@@ -6286,7 +6314,6 @@ OCIO_ADD_TEST(CTFTransform, fixed_function_rec2100_inverse_ctf)
 OCIO_ADD_TEST(CTFTransform, exposure_contrast_video_ctf)
 {
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
 
     OCIO::ExposureContrastTransformRcPtr ec = OCIO::ExposureContrastTransform::Create();
 
@@ -6320,7 +6347,6 @@ OCIO_ADD_TEST(CTFTransform, exposure_contrast_video_ctf)
 OCIO_ADD_TEST(CTFTransform, exposure_contrast_log_ctf)
 {
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
 
     OCIO::ExposureContrastTransformRcPtr ec = OCIO::ExposureContrastTransform::Create();
 
@@ -6358,7 +6384,6 @@ OCIO_ADD_TEST(CTFTransform, exposure_contrast_log_ctf)
 OCIO_ADD_TEST(CTFTransform, exposure_contrast_linear_ctf)
 {
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
 
     OCIO::ExposureContrastTransformRcPtr ec = OCIO::ExposureContrastTransform::Create();
 
@@ -6397,7 +6422,6 @@ OCIO_ADD_TEST(CTFTransform, exposure_contrast_linear_ctf)
 OCIO_ADD_TEST(CTFTransform, exposure_contrast_not_dynamic_ctf)
 {
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
 
     OCIO::ExposureContrastTransformRcPtr ec = OCIO::ExposureContrastTransform::Create();
 
@@ -6426,7 +6450,6 @@ OCIO_ADD_TEST(CTFTransform, exposure_contrast_not_dynamic_ctf)
 OCIO_ADD_TEST(CTFTransform, exposure_contrast_log_params_ctf)
 {
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
 
     OCIO::ExposureContrastTransformRcPtr ec = OCIO::ExposureContrastTransform::Create();
 
@@ -6465,7 +6488,6 @@ OCIO_ADD_TEST(CTFTransform, exposure_contrast_log_params_ctf)
 OCIO_ADD_TEST(CTFTransform, grading_primary_log_ctf)
 {
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
 
     auto gradingPrimary = OCIO::GradingPrimaryTransform::Create(OCIO::GRADING_LOG);
 
@@ -6539,7 +6561,6 @@ OCIO_ADD_TEST(CTFTransform, grading_primary_log_ctf)
 OCIO_ADD_TEST(CTFTransform, grading_primary_lin_ctf)
 {
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
 
     auto gradingPrimary = OCIO::GradingPrimaryTransform::Create(OCIO::GRADING_LIN);
 
@@ -6613,7 +6634,6 @@ OCIO_ADD_TEST(CTFTransform, grading_primary_lin_ctf)
 OCIO_ADD_TEST(CTFTransform, grading_primary_video_ctf)
 {
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
 
     auto gradingPrimary = OCIO::GradingPrimaryTransform::Create(OCIO::GRADING_VIDEO);
 
@@ -6688,7 +6708,6 @@ OCIO_ADD_TEST(CTFTransform, grading_primary_video_ctf)
 OCIO_ADD_TEST(CTFTransform, grading_rgbcurve_log_ctf)
 {
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
     auto gradingCurves = OCIO::GradingRGBCurveTransform::Create(OCIO::GRADING_LOG);
 
     // Two of the curves are the default curves, they are not saved.
@@ -6764,7 +6783,6 @@ OCIO_ADD_TEST(CTFTransform, grading_rgbcurve_log_ctf)
 OCIO_ADD_TEST(CTFTransform, grading_rgbcurve_video_ctf)
 {
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
     auto gradingCurves = OCIO::GradingRGBCurveTransform::Create(OCIO::GRADING_VIDEO);
 
     // All curves are default curves, no curve is saved.
@@ -6795,7 +6813,6 @@ OCIO_ADD_TEST(CTFTransform, grading_rgbcurve_video_ctf)
 OCIO_ADD_TEST(CTFTransform, grading_rgbcurve_lin_ctf)
 {
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
     auto gradingCurves = OCIO::GradingRGBCurveTransform::Create(OCIO::GRADING_LIN);
 
     // Two of the curves are the default curves, they are not saved.
@@ -6871,8 +6888,6 @@ OCIO_ADD_TEST(CTFTransform, grading_rgbcurve_lin_ctf)
 OCIO_ADD_TEST(CTFTransform, grading_tone_log_ctf)
 {
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
-
     auto gradingTone = OCIO::GradingToneTransform::Create(OCIO::GRADING_LOG);
 
     // Leave midtones and scontrast as default and verify they aren't saved.
@@ -6973,7 +6988,6 @@ OCIO_ADD_TEST(CTFTransform, grading_tone_log_ctf)
 OCIO_ADD_TEST(CTFTransform, grading_tone_lin_ctf)
 {
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
 
     // Only test the style, sub elements tested with GRADING_LOG.
     auto gradingTone = OCIO::GradingToneTransform::Create(OCIO::GRADING_LIN);
@@ -7029,7 +7043,6 @@ OCIO_ADD_TEST(CTFTransform, grading_tone_lin_ctf)
 OCIO_ADD_TEST(CTFTransform, grading_tone_video_ctf)
 {
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
 
     // Only test the style, sub elements tested with GRADING_LOG.
     auto gradingTone = OCIO::GradingToneTransform::Create(OCIO::GRADING_VIDEO);
@@ -7084,7 +7097,6 @@ OCIO_ADD_TEST(CTFTransform, grading_tone_video_ctf)
 OCIO_ADD_TEST(CTFTransform, log_lin_to_log_ctf)
 {
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
 
     OCIO::LogAffineTransformRcPtr logT = OCIO::LogAffineTransform::Create();
     
@@ -7124,7 +7136,6 @@ OCIO_ADD_TEST(CTFTransform, log_lin_to_log_ctf)
 OCIO_ADD_TEST(CTFTransform, log_log_to_lin_ctf)
 {
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
 
     OCIO::LogAffineTransformRcPtr logT = OCIO::LogAffineTransform::Create();
     logT->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
@@ -7157,7 +7168,6 @@ OCIO_ADD_TEST(CTFTransform, log_log_to_lin_ctf)
 OCIO_ADD_TEST(CTFTransform, log_antilog2_ctf)
 {
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
 
     OCIO::LogAffineTransformRcPtr logT = OCIO::LogAffineTransform::Create();
     logT->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
@@ -7187,7 +7197,6 @@ OCIO_ADD_TEST(CTFTransform, log_antilog2_ctf)
 OCIO_ADD_TEST(CTFTransform, lut1d_clf)
 {
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
 
     OCIO::Lut1DTransformRcPtr lut = OCIO::Lut1DTransform::Create();
     lut->setInterpolation(OCIO::INTERP_LINEAR);
@@ -7218,7 +7227,6 @@ OCIO_ADD_TEST(CTFTransform, lut1d_clf)
 OCIO_ADD_TEST(CTFTransform, lut1d_inverse_clf)
 {
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
 
     OCIO::Lut1DTransformRcPtr lut = OCIO::Lut1DTransform::Create();
     lut->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
@@ -7237,7 +7245,6 @@ OCIO_ADD_TEST(CTFTransform, lut1d_inverse_clf)
 OCIO_ADD_TEST(CTFTransform, lut1d_ctf)
 {
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
 
     OCIO::Lut1DTransformRcPtr lut = OCIO::Lut1DTransform::Create();
     lut->setInterpolation(OCIO::INTERP_DEFAULT);
@@ -7268,7 +7275,6 @@ OCIO_ADD_TEST(CTFTransform, lut1d_ctf)
 OCIO_ADD_TEST(CTFTransform, lut1d_attributes_ctf)
 {
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
 
     OCIO::Lut1DTransformRcPtr lut = OCIO::Lut1DTransform::Create();
     lut->getFormatMetadata().addAttribute(OCIO::METADATA_NAME, "test-lut");
@@ -7324,7 +7330,6 @@ OCIO_ADD_TEST(CTFTransform, lut1d_attributes_ctf)
 OCIO_ADD_TEST(CTFTransform, lut1d_array_16x1_ctf)
 {
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
 
     OCIO::Lut1DTransformRcPtr lut = OCIO::Lut1DTransform::Create();
     lut->setInterpolation(OCIO::INTERP_DEFAULT);
@@ -7380,7 +7385,6 @@ OCIO_ADD_TEST(CTFTransform, lut1d_array_16x1_ctf)
 OCIO_ADD_TEST(CTFTransform, lut1d_array_16x3_ctf)
 {
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
 
     OCIO::Lut1DTransformRcPtr lut = OCIO::Lut1DTransform::Create();
     lut->setInterpolation(OCIO::INTERP_DEFAULT);
@@ -7435,7 +7439,6 @@ OCIO_ADD_TEST(CTFTransform, lut1d_array_16x3_ctf)
 OCIO_ADD_TEST(CTFTransform, lut1d_10i_ctf)
 {
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
 
     OCIO::Lut1DTransformRcPtr lut = OCIO::Lut1DTransform::Create();
     lut->setInterpolation(OCIO::INTERP_DEFAULT);
@@ -7472,7 +7475,6 @@ OCIO_ADD_TEST(CTFTransform, lut1d_10i_ctf)
 OCIO_ADD_TEST(CTFTransform, lut1d_inverse_ctf)
 {
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
 
     OCIO::Lut1DTransformRcPtr lut = OCIO::Lut1DTransform::Create();
     lut->setInterpolation(OCIO::INTERP_DEFAULT);
@@ -7530,7 +7532,6 @@ OCIO_ADD_TEST(CTFTransform, lut1d_inverse_ctf)
 OCIO_ADD_TEST(CTFTransform, lut3d_array_ctf)
 {
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
 
     OCIO::Lut3DTransformRcPtr lut = OCIO::Lut3DTransform::Create();
     lut->getFormatMetadata().addAttribute(OCIO::METADATA_NAME, "test-lut3d");
@@ -7605,7 +7606,6 @@ OCIO_ADD_TEST(CTFTransform, lut3d_array_ctf)
 OCIO_ADD_TEST(CTFTransform, lut3d_inverse_clf)
 {
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
 
     OCIO::Lut3DTransformRcPtr lut = OCIO::Lut3DTransform::Create();
     lut->getFormatMetadata().addAttribute(OCIO::METADATA_NAME, "test-lut3d");
@@ -7644,7 +7644,6 @@ OCIO_ADD_TEST(CTFTransform, lut3d_inverse_clf)
 OCIO_ADD_TEST(CTFTransform, lut3d_inverse_ctf)
 {
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
 
     OCIO::Lut3DTransformRcPtr lut = OCIO::Lut3DTransform::Create();
     lut->getFormatMetadata().addAttribute(OCIO::METADATA_NAME, "test-lut3d");
@@ -7718,10 +7717,77 @@ OCIO_ADD_TEST(CTFTransform, lut3d_inverse_ctf)
     OCIO_CHECK_EQUAL(expected, outputTransform.str());
 }
 
-OCIO_ADD_TEST(CTFTransform, bitdepth_ctf)
+OCIO_ADD_TEST(CTFTransform, save_lut3d_interpolation)
 {
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
     config->setMajorVersion(2);
+
+    OCIO::Lut3DTransformRcPtr lut = OCIO::Lut3DTransform::Create();
+    lut->setInterpolation(OCIO::INTERP_DEFAULT);
+
+    OCIO::ConstProcessorRcPtr processor = config->getProcessor(lut);
+    std::ostringstream outputTransform;
+    OCIO_CHECK_NO_THROW(processor->write(OCIO::FILEFORMAT_CTF, outputTransform));
+
+    {
+        const std::string result = outputTransform.str();
+        const std::string expected = R"(<LUT3D inBitDepth="32f" outBitDepth="32f">)";
+        OCIO_CHECK_ASSERT(result.find(expected) != std::string::npos);
+    }
+
+    outputTransform.str("");
+    outputTransform.clear();
+
+    // INTERP_BEST is not a valid CTF/CLF method, so write its concrete value, which is
+    // tetrahedral.
+    lut->setInterpolation(OCIO::INTERP_BEST);
+    processor = config->getProcessor(lut);
+    OCIO_CHECK_NO_THROW(processor->write(OCIO::FILEFORMAT_CTF, outputTransform));
+
+    {
+        const std::string result = outputTransform.str();
+        const std::string expected = R"(<LUT3D inBitDepth="32f" outBitDepth="32f" interpolation="tetrahedral">)";
+        OCIO_CHECK_ASSERT(result.find(expected) != std::string::npos);
+    }
+
+    outputTransform.str("");
+    outputTransform.clear();
+
+    lut->setInterpolation(OCIO::INTERP_LINEAR);
+    processor = config->getProcessor(lut);
+    OCIO_CHECK_NO_THROW(processor->write(OCIO::FILEFORMAT_CTF, outputTransform));
+
+    {
+        const std::string result = outputTransform.str();
+        const std::string expected = R"(<LUT3D inBitDepth="32f" outBitDepth="32f" interpolation="trilinear">)";
+        OCIO_CHECK_ASSERT(result.find(expected) != std::string::npos);
+    }
+
+    outputTransform.str("");
+    outputTransform.clear();
+
+    lut->setInterpolation(OCIO::INTERP_TETRAHEDRAL);
+    processor = config->getProcessor(lut);
+    OCIO_CHECK_NO_THROW(processor->write(OCIO::FILEFORMAT_CTF, outputTransform));
+
+    {
+        const std::string result = outputTransform.str();
+        const std::string expected = R"(<LUT3D inBitDepth="32f" outBitDepth="32f" interpolation="tetrahedral">)";
+        OCIO_CHECK_ASSERT(result.find(expected) != std::string::npos);
+    }
+
+    outputTransform.str("");
+    outputTransform.clear();
+
+    lut->setInterpolation(OCIO::INTERP_CUBIC);
+
+    OCIO_CHECK_THROW_WHAT(processor = config->getProcessor(lut), OCIO::Exception,
+                          "Lut3D does not support interpolation algorithm: cubic");
+}
+
+OCIO_ADD_TEST(CTFTransform, bitdepth_ctf)
+{
+    OCIO::ConfigRcPtr config = OCIO::Config::Create();
 
     auto mat = OCIO::MatrixTransform::Create();
     mat->setFileInputBitDepth(OCIO::BIT_DEPTH_UINT8);
@@ -7815,7 +7881,6 @@ OCIO_ADD_TEST(CTFTransform, bitdepth_ctf)
 OCIO_ADD_TEST(CTFTransform, no_ops_ctf)
 {
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
 
     OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
     group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UIDEC42");
@@ -7907,6 +7972,7 @@ R"(<?xml version="1.0" encoding="UTF-8"?>
 OCIO_ADD_TEST(FileFormatCTF, bake_3d)
 {
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
+
     {
         OCIO::ColorSpaceRcPtr cs = OCIO::ColorSpace::Create();
         cs->setName("input");
@@ -7981,12 +8047,9 @@ R"(<?xml version="1.0" encoding="UTF-8"?>
     OCIO_CHECK_EQUAL(expectedCLF, output.str());
 }
 
-#ifdef USE_SSE
-// Using ops that do produce slightly different results in SSE and non-SSE mode.
 OCIO_ADD_TEST(FileFormatCTF, bake_1d_3d)
 {
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
     {
         OCIO::ColorSpaceRcPtr cs = OCIO::ColorSpace::Create();
         cs->setName("input");
@@ -8036,7 +8099,7 @@ OCIO_ADD_TEST(FileFormatCTF, bake_1d_3d)
 
     std::string emptyString;
     OCIO::LocalFileFormat tester;
-    OCIO::CachedFileRcPtr file = tester.read(output, emptyString);
+    OCIO::CachedFileRcPtr file = tester.read(output, emptyString, OCIO::INTERP_DEFAULT);
     auto cachedFile = OCIO::DynamicPtrCast<OCIO::LocalCachedFile>(file);
 
     const OCIO::ConstOpDataVec & opList = cachedFile->m_transform->getOps();
@@ -8065,20 +8128,20 @@ OCIO_ADD_TEST(FileFormatCTF, bake_1d_3d)
     OCIO_CHECK_CLOSE(lut->getArray()[4], 0.0361f, 1.e-5f);
     OCIO_CHECK_CLOSE(lut->getArray()[5], 0.5361f, 1.e-5f);
     OCIO_CHECK_CLOSE(lut->getArray()[6], 0.3576f, 1.e-5f);
-    OCIO_CHECK_CLOSE(lut->getArray()[7], 0.85761f, 1.e-5f);
+    OCIO_CHECK_CLOSE(lut->getArray()[7], 0.8576f, 1.e-5f);
     OCIO_CHECK_CLOSE(lut->getArray()[8], 0.3576f, 1.e-5f);
     OCIO_CHECK_CLOSE(lut->getArray()[9], 0.3937f, 1.e-5f);
-    OCIO_CHECK_CLOSE(lut->getArray()[10], 0.89371f, 1.e-5f);
-    OCIO_CHECK_CLOSE(lut->getArray()[11], 0.89371f, 1.e-5f);
+    OCIO_CHECK_CLOSE(lut->getArray()[10], 0.8937f, 1.e-5f);
+    OCIO_CHECK_CLOSE(lut->getArray()[11], 0.8937f, 1.e-5f);
     OCIO_CHECK_CLOSE(lut->getArray()[12], 0.6063f, 1.e-5f);
     OCIO_CHECK_CLOSE(lut->getArray()[13], 0.1063f, 1.e-5f);
     OCIO_CHECK_CLOSE(lut->getArray()[14], 0.1063f, 1.e-5f);
     OCIO_CHECK_CLOSE(lut->getArray()[15], 0.6424f, 1.e-5f);
     OCIO_CHECK_CLOSE(lut->getArray()[16], 0.1424f, 1.e-5f);
     OCIO_CHECK_CLOSE(lut->getArray()[17], 0.6424f, 1.e-5f);
-    OCIO_CHECK_CLOSE(lut->getArray()[18], 0.96391f, 1.e-5f);
-    OCIO_CHECK_CLOSE(lut->getArray()[19], 0.96391f, 1.e-5f);
-    OCIO_CHECK_CLOSE(lut->getArray()[20], 0.463905f, 1.e-5f);
+    OCIO_CHECK_CLOSE(lut->getArray()[18], 0.9639f, 1.e-5f);
+    OCIO_CHECK_CLOSE(lut->getArray()[19], 0.9639f, 1.e-5f);
+    OCIO_CHECK_CLOSE(lut->getArray()[20], 0.4639f, 1.e-5f);
     OCIO_CHECK_EQUAL(lut->getArray()[21], 1.0f);
     OCIO_CHECK_EQUAL(lut->getArray()[22], 1.0f);
     OCIO_CHECK_EQUAL(lut->getArray()[23], 1.0f);
@@ -8113,12 +8176,12 @@ R"(<?xml version="1.0" encoding="UTF-8"?>
     <LUT3D inBitDepth="32f" outBitDepth="32f">
         <Array dim="2 2 2 3">
           0           0           0
-0.036100417 0.036100417  0.53610623
- 0.35760415  0.85760993  0.35760415
- 0.39370456  0.89371037  0.89371037
- 0.60630703  0.10630123  0.10630123
- 0.64240742  0.14240164  0.64240742
- 0.96391118  0.96391118  0.46390536
+     0.0361      0.0361  0.53609997
+     0.3576  0.85759997      0.3576
+     0.3937      0.8937      0.8937
+     0.6063      0.1063      0.1063
+ 0.64240003      0.1424  0.64239997
+ 0.96389997  0.96389997      0.4639
           1           1           1
         </Array>
     </LUT3D>
@@ -8127,4 +8190,77 @@ R"(<?xml version="1.0" encoding="UTF-8"?>
     OCIO_CHECK_EQUAL(expectedCLF.size(), output1.str().size());
     OCIO_CHECK_EQUAL(expectedCLF, output1.str());
 }
-#endif
+
+OCIO_ADD_TEST(FileFormatCTF, lut_interpolation_option)
+{
+    // Create empty Config to use.
+    OCIO::ConfigRcPtr config = OCIO::Config::Create();
+    config->setMajorVersion(2);
+
+    // CLF file containing a LUT3D that does not specifiy an interpolation.
+    const std::string filePath{ std::string(OCIO::GetTestFilesDir()) +
+                                "/clf/lut3d_17x17x17_10i_12i.clf" };
+
+    OCIO::FileTransformRcPtr fileTransform = OCIO::FileTransform::Create();
+    fileTransform->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
+    fileTransform->setSrc(filePath.c_str());
+
+    // Get the processor corresponding to the transform with default interpolation.
+    // LUT3D is using default interpolation.
+    OCIO::ConstProcessorRcPtr proc;
+    OCIO_CHECK_NO_THROW(proc = config->getProcessor(fileTransform));
+    auto group = proc->createGroupTransform();
+    OCIO_REQUIRE_EQUAL(group->getNumTransforms(), 1);
+    auto transform = group->getTransform(0);
+    auto lut3D = OCIO_DYNAMIC_POINTER_CAST<OCIO::Lut3DTransform>(transform);
+    OCIO_REQUIRE_ASSERT(lut3D);
+    OCIO_CHECK_EQUAL(lut3D->getInterpolation(), OCIO::INTERP_DEFAULT);
+
+    // For LUTs that do not specify an interpolation, if the FileTransform interpolation may be
+    // used, it is.
+    fileTransform->setInterpolation(OCIO::INTERP_BEST);
+    OCIO_CHECK_NO_THROW(proc = config->getProcessor(fileTransform));
+    group = proc->createGroupTransform();
+    OCIO_REQUIRE_EQUAL(group->getNumTransforms(), 1);
+    transform = group->getTransform(0);
+    lut3D = OCIO_DYNAMIC_POINTER_CAST<OCIO::Lut3DTransform>(transform);
+    OCIO_REQUIRE_ASSERT(lut3D);
+    OCIO_CHECK_EQUAL(lut3D->getInterpolation(), OCIO::INTERP_BEST);
+
+    // If the FileTranform interpolation is not supported by the LUT, it is ignored and default
+    // interpolation is used.
+    fileTransform->setInterpolation(OCIO::INTERP_CUBIC);
+    OCIO_CHECK_NO_THROW(proc = config->getProcessor(fileTransform));
+    group = proc->createGroupTransform();
+    OCIO_REQUIRE_EQUAL(group->getNumTransforms(), 1);
+    transform = group->getTransform(0);
+    lut3D = OCIO_DYNAMIC_POINTER_CAST<OCIO::Lut3DTransform>(transform);
+    OCIO_REQUIRE_ASSERT(lut3D);
+    OCIO_CHECK_EQUAL(lut3D->getInterpolation(), OCIO::INTERP_DEFAULT);
+
+    // CTF file containing a LUT3D that specifies tetrahedral interpolation.
+    const std::string filePath2{ std::string(OCIO::GetTestFilesDir()) +
+                                 "/lut3d_example_Inv.ctf" };
+
+    fileTransform->setSrc(filePath2.c_str());
+
+    // Whatever the file transform interpolation, LUT will keep its interpolation.
+    fileTransform->setInterpolation(OCIO::INTERP_DEFAULT);
+    OCIO_CHECK_NO_THROW(proc = config->getProcessor(fileTransform));
+    group = proc->createGroupTransform();
+    OCIO_REQUIRE_EQUAL(group->getNumTransforms(), 1);
+    transform = group->getTransform(0);
+    lut3D = OCIO_DYNAMIC_POINTER_CAST<OCIO::Lut3DTransform>(transform);
+    OCIO_REQUIRE_ASSERT(lut3D);
+    OCIO_CHECK_EQUAL(lut3D->getInterpolation(), OCIO::INTERP_TETRAHEDRAL);
+
+    // (INTERP_LINEAR is trilinear for LUT3D.)
+    fileTransform->setInterpolation(OCIO::INTERP_LINEAR);
+    OCIO_CHECK_NO_THROW(proc = config->getProcessor(fileTransform));
+    group = proc->createGroupTransform();
+    OCIO_REQUIRE_EQUAL(group->getNumTransforms(), 1);
+    transform = group->getTransform(0);
+    lut3D = OCIO_DYNAMIC_POINTER_CAST<OCIO::Lut3DTransform>(transform);
+    OCIO_REQUIRE_ASSERT(lut3D);
+    OCIO_CHECK_EQUAL(lut3D->getInterpolation(), OCIO::INTERP_TETRAHEDRAL);
+}

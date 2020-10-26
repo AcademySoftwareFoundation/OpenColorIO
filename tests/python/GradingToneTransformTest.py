@@ -13,6 +13,13 @@ class GradingToneTransformTest(unittest.TestCase):
     valsDefaultLog = OCIO.GradingTone(OCIO.GRADING_LOG)
     valsDefaultLin = OCIO.GradingTone(OCIO.GRADING_LIN)
 
+    def test_transform_type(self):
+        """
+        Test the getTransformType() method.
+        """
+        gtt = OCIO.GradingToneTransform()
+        self.assertEqual(gtt.getTransformType(), OCIO.TRANSFORM_TYPE_GRADING_TONE)
+
     def test_contructor(self):
         """
         Test GradingToneTransform constructor without and with keywords.

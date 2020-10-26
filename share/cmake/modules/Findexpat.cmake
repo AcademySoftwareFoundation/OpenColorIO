@@ -133,6 +133,10 @@ if(NOT expat_FOUND)
     include(ExternalProject)
     include(GNUInstallDirs)
 
+    if(APPLE)
+        set(CMAKE_OSX_DEPLOYMENT_TARGET ${CMAKE_OSX_DEPLOYMENT_TARGET})
+    endif()
+
     set(_EXT_DIST_ROOT "${CMAKE_BINARY_DIR}/ext/dist")
     set(_EXT_BUILD_ROOT "${CMAKE_BINARY_DIR}/ext/build")
 
@@ -169,16 +173,18 @@ if(NOT expat_FOUND)
 
         set(EXPAT_CMAKE_ARGS
             ${EXPAT_CMAKE_ARGS}
-            -DCMAKE_INSTALL_PREFIX=${_EXT_DIST_ROOT}
             -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-            -DEXPAT_BUILD_TOOLS=OFF
-            -DEXPAT_BUILD_EXAMPLES=OFF
-            -DEXPAT_BUILD_TESTS=OFF
-            -DEXPAT_SHARED_LIBS=OFF
-            -DEXPAT_BUILD_DOCS=OFF
             -DCMAKE_C_FLAGS=${EXPAT_C_FLAGS}
             -DCMAKE_CXX_FLAGS=${EXPAT_CXX_FLAGS}
             -DCMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD}
+            -DCMAKE_INSTALL_MESSAGE=${CMAKE_INSTALL_MESSAGE}
+            -DCMAKE_INSTALL_PREFIX=${_EXT_DIST_ROOT}
+            -DCMAKE_OBJECT_PATH_MAX=${CMAKE_OBJECT_PATH_MAX}
+            -DEXPAT_BUILD_DOCS=OFF
+            -DEXPAT_BUILD_EXAMPLES=OFF
+            -DEXPAT_BUILD_TESTS=OFF
+            -DEXPAT_BUILD_TOOLS=OFF
+            -DEXPAT_SHARED_LIBS=OFF
         )
         if(CMAKE_TOOLCHAIN_FILE)
             set(EXPAT_CMAKE_ARGS

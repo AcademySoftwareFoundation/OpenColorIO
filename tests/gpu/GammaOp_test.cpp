@@ -52,7 +52,6 @@ void AddExponentWithLinear(OCIOGPUTest & test,
     exp->setNegativeStyle(style);
 
     OCIO_NAMESPACE::ConfigRcPtr config = OCIO_NAMESPACE::Config::Create();
-    config->setMajorVersion(2);
 
     test.setErrorThreshold(epsilon);
     test.setProcessor(config, exp);

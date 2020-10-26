@@ -14,6 +14,8 @@
 namespace OCIO_NAMESPACE
 {
 
+ConstOpCPURcPtr GetCDLCPURenderer(ConstCDLOpDataRcPtr & func, bool fastPower);
+
 // Structure that holds parameters computed for CPU renderers
 struct RenderParams
 {
@@ -31,11 +33,11 @@ struct RenderParams
 
     bool isNoClamp() const { return m_isNoClamp; }
 
-    void setSlope(float r, float g, float b, float a);
+    void setSlope(float r, float g, float b);
 
-    void setOffset(float r, float g, float b, float a);
+    void setOffset(float r, float g, float b);
 
-    void setPower(float r, float g, float b, float a);
+    void setPower(float r, float g, float b);
 
     void setSaturation(float sat);
 
@@ -47,71 +49,8 @@ private:
     float m_offset[4];
     float m_power[4];
     float m_saturation;
-    bool m_isReverse;
-    bool m_isNoClamp;
-};
-
-class CDLOpCPU;
-typedef OCIO_SHARED_PTR<CDLOpCPU> CDLOpCPURcPtr;
-
-// Base class for the CDL operation renderers
-class CDLOpCPU : public OpCPU
-{
-public:
-
-    // Get the dedicated renderer
-    static ConstOpCPURcPtr GetRenderer(ConstCDLOpDataRcPtr & cdl);
-
-    CDLOpCPU(ConstCDLOpDataRcPtr & cdl);
-
-protected:
-    const RenderParams & getRenderParams() const { return m_renderParams; }
-
-protected:
-    RenderParams m_renderParams;
-
-private:
-    CDLOpCPU();
-};
-
-class CDLRendererV1_2Fwd : public CDLOpCPU
-{
-public:
-    CDLRendererV1_2Fwd(ConstCDLOpDataRcPtr & cdl);
-
-    virtual void apply(const void * inImg, void * outImg, long numPixels) const;
-
-protected:
-    template<bool CLAMP>
-    void _apply(const float * inImg, float * outImg, long numPixels) const;
-};
-
-class CDLRendererNoClampFwd : public CDLRendererV1_2Fwd
-{
-public:
-    CDLRendererNoClampFwd(ConstCDLOpDataRcPtr & cdl);
-
-    virtual void apply(const void * inImg, void * outImg, long numPixels) const;
-};
-
-class CDLRendererV1_2Rev : public CDLOpCPU
-{
-public:
-    CDLRendererV1_2Rev(ConstCDLOpDataRcPtr & cdl);
-
-    virtual void apply(const void * inImg, void * outImg, long numPixels) const;
-
-protected:
-    template<bool CLAMP>
-    void _apply(const float * inImg, float * outImg, long numPixels) const;
-};
-
-class CDLRendererNoClampRev : public CDLRendererV1_2Rev
-{
-public:
-    CDLRendererNoClampRev(ConstCDLOpDataRcPtr & cdl);
-
-    virtual void apply(const void * inImg, void * outImg, long numPixels) const;
+    bool m_isReverse{ false };
+    bool m_isNoClamp{ false };
 };
 
 } // namespace OCIO_NAMESPACE

@@ -12,6 +12,7 @@
 #include "fileformats/ctf/CTFTransform.h"
 #include "fileformats/ctf/CTFReaderHelper.h"
 #include "fileformats/ctf/CTFReaderUtils.h"
+#include "fileformats/FileFormatUtils.h"
 #include "fileformats/xmlutils/XMLReaderHelper.h"
 #include "fileformats/xmlutils/XMLReaderUtils.h"
 #include "fileformats/xmlutils/XMLWriterUtils.h"
@@ -119,7 +120,8 @@ public:
     void getFormatInfo(FormatInfoVec & formatInfoVec) const override;
 
     CachedFileRcPtr read(std::istream & istream,
-                         const std::string & fileName) const override;
+                         const std::string & fileName,
+                         Interpolation interp) const override;
 
     void buildFileOps(OpRcPtrVec & ops,
                       const Config & config,
@@ -1148,9 +1150,9 @@ bool isLoadableCTF(std::istream & istream)
 
 // Try and load the format.
 // Raise an exception if it can't be loaded.
-CachedFileRcPtr LocalFileFormat::read(
-    std::istream & istream,
-    const std::string & filePath) const
+CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
+                                      const std::string & filePath,
+                                      Interpolation /*interp*/) const
 {
     if (!isLoadableCTF(istream))
     {
@@ -1162,8 +1164,7 @@ CachedFileRcPtr LocalFileFormat::read(
     XMLParserHelper parser(filePath);
     parser.Parse(istream);
 
-    LocalCachedFileRcPtr cachedFile =
-        LocalCachedFileRcPtr(new LocalCachedFile());
+    LocalCachedFileRcPtr cachedFile = LocalCachedFileRcPtr(new LocalCachedFile());
 
     // Keep transform.
     cachedFile->m_transform = parser.getTransform();
@@ -1187,7 +1188,7 @@ void BuildOp(OpRcPtrVec & ops,
         {
             dir = CombineTransformDirections(dir, ref->getDirection());
             FileTransformRcPtr fileTransform = FileTransform::Create();
-            fileTransform->setInterpolation(INTERP_LINEAR);
+            fileTransform->setInterpolation(INTERP_DEFAULT);
             fileTransform->setDirection(TRANSFORM_DIR_FORWARD);
             fileTransform->setSrc(ref->getPath().c_str());
             FileTransform * pFileTranform = fileTransform.get();
@@ -1205,16 +1206,51 @@ void BuildOp(OpRcPtrVec & ops,
 
 }
 
-void
-LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
-                              const Config& config,
-                              const ConstContextRcPtr & context,
-                              CachedFileRcPtr untypedCachedFile,
-                              const FileTransform& fileTransform,
-                              TransformDirection dir) const
+// CLF/CTF is different from other formats because the syntax allows specifying an interpolation
+// method in the file itself. If a LUT does specify an interpolation, use it. If it does not
+// (cached LUT interpolation is DEFAULT), then use the FileTransform interpolation if it is valid.
+template <class Lut>
+void HandleLUTInterpolation(ConstOpDataRcPtr & opData,
+                            Interpolation fileInterp)
 {
-    LocalCachedFileRcPtr cachedFile = 
-        DynamicPtrCast<LocalCachedFile>(untypedCachedFile);
+    auto lut = OCIO_DYNAMIC_POINTER_CAST<const Lut>(opData);
+    if (Lut::IsValidInterpolation(fileInterp))
+    {
+        const auto lutInterpolation = lut->getInterpolation();
+        if (lutInterpolation == INTERP_DEFAULT &&
+            Lut::GetConcreteInterpolation(lutInterpolation) !=
+            Lut::GetConcreteInterpolation(fileInterp))
+        {
+            // The FileTransform interpolation does not match the cached file LUT interpolation,
+            // so clone the LUT.
+            auto newLut = lut->clone();
+            newLut->setInterpolation(fileInterp);
+            opData = newLut;
+        }
+        // Else, use the cached LUT.
+    }
+}
+
+void HandleLUT(ConstOpDataRcPtr & opData, Interpolation fileInterp)
+{
+    if (opData->getType() == OpData::Lut1DType)
+    {
+        HandleLUTInterpolation<Lut1DOpData>(opData, fileInterp);
+    }
+    else if (opData->getType() == OpData::Lut3DType)
+    {
+        HandleLUTInterpolation<Lut3DOpData>(opData, fileInterp);
+    }
+}
+
+void LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
+                                   const Config& config,
+                                   const ConstContextRcPtr & context,
+                                   CachedFileRcPtr untypedCachedFile,
+                                   const FileTransform& fileTransform,
+                                   TransformDirection dir) const
+{
+    LocalCachedFileRcPtr cachedFile = DynamicPtrCast<LocalCachedFile>(untypedCachedFile);
 
     // This should never happen.
     if(!cachedFile)
@@ -1222,16 +1258,7 @@ LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
         throw Exception("Cannot build clf ops. Invalid cache type.");
     }
 
-    const TransformDirection newDir 
-        = CombineTransformDirections(dir, fileTransform.getDirection());
-
-    if(newDir == TRANSFORM_DIR_UNKNOWN)
-    {
-        std::ostringstream os;
-        os << "Cannot build file format transform,";
-        os << " unspecified transform direction.";
-        throw Exception(os.str().c_str());
-    }
+    const auto newDir = CombineTransformDirections(dir, fileTransform.getDirection());
 
     FormatMetadataImpl & processorData = ops.getFormatMetadata();
 
@@ -1240,10 +1267,18 @@ LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
 
     // Resolve reference path using context and load referenced files.
     const ConstOpDataVec & opDataVec = cachedFile->m_transform->getOps();
+
+    // Try to use the FileTransform interpolation for any Lut1D or Lut3D that does not specify
+    // an interpolation in the CTF itself.  If the interpolation can not be used, ignore it.
+
+    const auto fileInterpolation = fileTransform.getInterpolation();
+
     if (newDir == TRANSFORM_DIR_FORWARD)
     {
-        for (auto & opData : opDataVec)
+        for (auto opData : opDataVec)
         {
+            // Note: HandleLUT does nothing if opData is not a LUT.
+            HandleLUT(opData, fileInterpolation);
             BuildOp(ops, config, context, opData, newDir);
         }
     }
@@ -1251,7 +1286,9 @@ LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
     {
         for (int idx = (int)opDataVec.size() - 1; idx >= 0; --idx)
         {
-            BuildOp(ops, config, context, opDataVec[idx], newDir);
+            auto opData = opDataVec[idx];
+            HandleLUT(opData, fileInterpolation);
+            BuildOp(ops, config, context, opData, newDir);
         }
     }
 }
@@ -1401,7 +1438,7 @@ void LocalFileFormat::bake(const Baker & baker,
             // log value 1.0 is in linear).
             ConstProcessorRcPtr proc = config->getProcessor(shaperSpace.c_str(),
                                                             inputSpace.c_str());
-            ConstCPUProcessorRcPtr shaperToInputProc = proc->getDefaultCPUProcessor();
+            ConstCPUProcessorRcPtr shaperToInputProc = proc->getOptimizedCPUProcessor(OPTIMIZATION_LOSSLESS);
 
             float minval[3] = { 0.0f, 0.0f, 0.0f };
             float maxval[3] = { 1.0f, 1.0f, 1.0f };
@@ -1430,7 +1467,7 @@ void LocalFileFormat::bake(const Baker & baker,
         const auto shaperSize = shaperLut->getArray().getLength();
         PackedImageDesc shaperImg(shaperLut->getArray().getValues().data(),
                                   shaperSize, 1, 3);
-        ConstCPUProcessorRcPtr cpu = inputToShaperProc->getDefaultCPUProcessor();
+        ConstCPUProcessorRcPtr cpu = inputToShaperProc->getOptimizedCPUProcessor(OPTIMIZATION_LOSSLESS);
         cpu->apply(shaperImg);
     }
 
@@ -1469,7 +1506,7 @@ void LocalFileFormat::bake(const Baker & baker,
             cubeProc = inputToTargetProc;
         }
 
-        ConstCPUProcessorRcPtr cpu = cubeProc->getDefaultCPUProcessor();
+        ConstCPUProcessorRcPtr cpu = cubeProc->getOptimizedCPUProcessor(OPTIMIZATION_LOSSLESS);
         cpu->apply(cubeImg);
     }
 
@@ -1484,7 +1521,7 @@ void LocalFileFormat::bake(const Baker & baker,
         GenerateIdentityLut1D(&onedData[0], onedSize, 3);
         PackedImageDesc onedImg(&onedData[0], onedSize, 1, 3);
 
-        ConstCPUProcessorRcPtr cpu = inputToTargetProc->getDefaultCPUProcessor();
+        ConstCPUProcessorRcPtr cpu = inputToTargetProc->getOptimizedCPUProcessor(OPTIMIZATION_LOSSLESS);
         cpu->apply(onedImg);
     }
 
