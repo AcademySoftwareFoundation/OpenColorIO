@@ -565,7 +565,7 @@ colorspaces:
 
 OCIO_ADD_TEST(LookTransform, inverse_look_transform)
 {
-    // Test inversion of the transform
+    // Test inversion of the transform containing a look.
 
     constexpr const char * OCIO_CONFIG{ R"(
 ocio_profile_version: 2
