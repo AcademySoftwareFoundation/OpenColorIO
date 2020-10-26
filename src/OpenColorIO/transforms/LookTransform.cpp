@@ -326,8 +326,8 @@ void BuildLookOps(OpRcPtrVec & ops,
     LookParseResult looks;
     looks.parse(lookTransform.getLooks());
 
-    // We must handle the inverse src/dst colorspace transformation explicitly.
-    auto combinedDir = CombineTransformDirections(dir, lookTransform.getDirection());
+    // The code must handle the inverse src/dst colorspace transformation explicitly.
+    const auto combinedDir = CombineTransformDirections(dir, lookTransform.getDirection());
     if(combinedDir == TRANSFORM_DIR_INVERSE)
     {
         std::swap(src, dst);

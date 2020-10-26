@@ -563,8 +563,10 @@ colorspaces:
     OCIO_CHECK_EQUAL(std::string("cdl_test1.cc"), usedContextVars->getStringVarByIndex(1));}
 
 
-OCIO_ADD_TEST(LookTransform, inline_look_transform)
+OCIO_ADD_TEST(LookTransform, inverse_look_transform)
 {
+    // Test inversion of the transform
+
     constexpr const char * OCIO_CONFIG{ R"(
 ocio_profile_version: 2
 
@@ -600,15 +602,11 @@ colorspaces:
 
   - !<ColorSpace>
     name: vd_graded
-    from_reference: !<GroupTransform>
-      children:
-        - !<LookTransform> {src: raw, dst: vd, looks: look1}
+    from_reference: !<LookTransform> {src: raw, dst: vd, looks: look1}
 
   - !<ColorSpace>
-    name: vd_graded_2
-    to_reference: !<GroupTransform>
-      children:
-        - !<LookTransform> {src: raw, dst: vd, looks: look1, direction: inverse}
+    name: vd_graded_inverse
+    to_reference: !<LookTransform> {src: raw, dst: vd, looks: look1, direction: inverse}
 
 )" };
 
@@ -707,46 +705,18 @@ colorspaces:
 
     // Compare to vd_graded_2 that should be identical (only difference being that
     // it's defined using to_reference + inverse direction instead of from_reference)
-    OCIO::ConstColorSpaceRcPtr dstColorSpace2;
-    OCIO_CHECK_NO_THROW(dstColorSpace2 = config->getColorSpace("vd_graded_2"));
+    OCIO::ConstColorSpaceRcPtr dstColorSpaceInv;
+    OCIO_CHECK_NO_THROW(dstColorSpaceInv = config->getColorSpace("vd_graded_inverse"));
 
     OCIO::OpRcPtrVec ops2;
     OCIO_CHECK_NO_THROW(BuildColorSpaceOps(ops2, *config, config->getCurrentContext(),
-                                           dstColorSpace2, srcColorSpace, false));
-    OCIO_REQUIRE_EQUAL(ops2.size(), 11);
+                                           dstColorSpaceInv, srcColorSpace, false));
+    OCIO_REQUIRE_EQUAL(ops2.size(), ops.size());
     OCIO_CHECK_NO_THROW(ops2.validate());
-    op = ops2[0];
-    OCIO_CHECK_ASSERT(op->isNoOpType());
-    op = ops2[1];
-    OCIO_CHECK_ASSERT(op->isNoOpType());
-    op = ops2[2]; // vd to raw
-    OCIO_REQUIRE_EQUAL(op->data()->getType(), OCIO::OpData::GammaType);
-    gm = OCIO_DYNAMIC_POINTER_CAST<const OCIO::GammaOpData>(op->data());
-    OCIO_CHECK_ASSERT(gm);
-    OCIO_CHECK_EQUAL(gm->getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
-    op = ops2[3]; // raw to log
-    OCIO_REQUIRE_EQUAL(op->data()->getType(), OCIO::OpData::LogType);
-    lg = OCIO_DYNAMIC_POINTER_CAST<const OCIO::LogOpData>(op->data());
-    OCIO_CHECK_ASSERT(lg);
-    OCIO_CHECK_EQUAL(lg->getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
-    op = ops2[4];
-    OCIO_CHECK_ASSERT(op->isNoOpType());
-    op = ops2[5];
-    OCIO_CHECK_ASSERT(op->isNoOpType());
-    op = ops2[6]; // look
-    OCIO_REQUIRE_EQUAL(op->data()->getType(), OCIO::OpData::CDLType);
-    cdl = OCIO_DYNAMIC_POINTER_CAST<const OCIO::CDLOpData>(op->data());
-    OCIO_CHECK_ASSERT(cdl);
-    OCIO_CHECK_EQUAL(cdl->getDirection(), OCIO::TRANSFORM_DIR_INVERSE);
-    op = ops2[7];
-    OCIO_CHECK_ASSERT(op->isNoOpType());
-    op = ops2[8]; // log to raw
-    OCIO_REQUIRE_EQUAL(op->data()->getType(), OCIO::OpData::LogType);
-    lg = OCIO_DYNAMIC_POINTER_CAST<const OCIO::LogOpData>(op->data());
-    OCIO_CHECK_ASSERT(lg);
-    OCIO_CHECK_EQUAL(lg->getDirection(), OCIO::TRANSFORM_DIR_INVERSE);
-    op = ops2[9];
-    OCIO_CHECK_ASSERT(op->isNoOpType());
-    op = ops2[10];
-    OCIO_CHECK_ASSERT(op->isNoOpType());
+    for (int i = 0; i < ops2.size(); ++i)
+    {
+      OCIO::ConstOpRcPtr op = ops[i];
+      OCIO::ConstOpRcPtr op2 = ops2[i];
+      OCIO_REQUIRE_ASSERT(*op->data() == *op2->data());
+    }
 }
