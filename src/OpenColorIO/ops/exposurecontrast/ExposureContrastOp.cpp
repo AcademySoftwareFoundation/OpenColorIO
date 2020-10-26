@@ -210,7 +210,6 @@ void CreateExposureContrastTransform(GroupTransformRcPtr & group, ConstOpRcPtr &
 }
 
 void BuildExposureContrastOp(OpRcPtrVec & ops,
-                             const Config & config,
                              const ExposureContrastTransform & transform,
                              TransformDirection dir)
 {
