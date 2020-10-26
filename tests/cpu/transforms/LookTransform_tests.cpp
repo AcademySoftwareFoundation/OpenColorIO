@@ -714,7 +714,7 @@ colorspaces:
                                            dstColorSpaceInv, srcColorSpace, false));
     OCIO_REQUIRE_EQUAL(ops2.size(), ops.size());
     OCIO_CHECK_NO_THROW(ops2.validate());
-    for (int i = 0; i < ops2.size(); ++i)
+    for (std::size_t i = 0; i < ops2.size(); ++i)
     {
       OCIO::ConstOpRcPtr op = ops[i];
       OCIO::ConstOpRcPtr op2 = ops2[i];
