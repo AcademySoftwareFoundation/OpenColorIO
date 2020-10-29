@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
+#include <sstream>
+
 #include "PyOpenColorIO.h"
 #include "PyUtils.h"
 
@@ -62,6 +64,12 @@ void bindPyFormatMetadata(py::module & m)
                 return false;
             },
              "name"_a)
+        .def("__repr__", [](const FormatMetadata & self)
+            {
+                std::ostringstream oss;
+                oss << self;
+                return oss.str();
+            })
 
         .def("getName", &FormatMetadata::getName)
         .def("setName", &FormatMetadata::setName, "name"_a)
@@ -73,7 +81,11 @@ void bindPyFormatMetadata(py::module & m)
                 return ConstChildElementIterator(self);
             })
         .def("getChildElements", [](FormatMetadata & self) { return ChildElementIterator(self); })
-        .def("addChildElement", &FormatMetadata::addChildElement, "name"_a, "value"_a)
+        .def("addChildElement",
+            [](FormatMetadata & self, const std::string & name, const std::string & value) -> void
+            {
+                self.addChildElement(name.c_str(), value.c_str());
+            }, "name"_a, "value"_a)
         .def("clear", &FormatMetadata::clear);
 
     py::class_<AttributeNameIterator>(cls, "AttributeNameIterator")

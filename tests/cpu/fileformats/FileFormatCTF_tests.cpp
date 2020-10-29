@@ -4626,7 +4626,9 @@ OCIO_ADD_TEST(CTFTransform, load_edit_save_matrix)
     group->getFormatMetadata().addAttribute(OCIO::ATTR_INVERSE_OF, "added inverseOf");
     group->getFormatMetadata().addAttribute("Unknown", "not saved");
     group->getFormatMetadata().addChildElement("Unknown", "not saved");
-    auto & info = group->getFormatMetadata().addChildElement(OCIO::METADATA_INFO, "Preserved");
+    group->getFormatMetadata().addChildElement(OCIO::METADATA_INFO, "Preserved");
+    const auto indexInfo = group->getFormatMetadata().getNumChildrenElements() - 1;
+    auto & info = group->getFormatMetadata().getChildElement(indexInfo);
     info.addAttribute("attrib", "value");
     info.addChildElement("Child", "Preserved");
 
@@ -4639,7 +4641,9 @@ OCIO_ADD_TEST(CTFTransform, load_edit_save_matrix)
     const std::string shortName{ R"(A ' short ' " name)" };
     const std::string description1{ R"(A " short " description with a ' inside)" };
     const std::string description2{ R"(<test"'&>)" };
-    auto & desc = matTrans->getFormatMetadata().addChildElement(OCIO::METADATA_DESCRIPTION, description1.c_str());
+    matTrans->getFormatMetadata().addChildElement(OCIO::METADATA_DESCRIPTION, description1.c_str());
+    const auto indexDesc = matTrans->getFormatMetadata().getNumChildrenElements() - 1;
+    auto & desc = matTrans->getFormatMetadata().getChildElement(indexDesc);
     desc.addAttribute("Unknown", "not saved");
     matTrans->getFormatMetadata().addChildElement(OCIO::METADATA_DESCRIPTION, description2.c_str());
 
@@ -5587,19 +5591,25 @@ OCIO_ADD_TEST(CTFTransform, cdl_clf)
 
     group->appendTransform(cdl);
 
-    auto & info = group->getFormatMetadata().addChildElement(OCIO::METADATA_INFO, "");
+    group->getFormatMetadata().addChildElement(OCIO::METADATA_INFO, "");
+    auto & info = group->getFormatMetadata().getChildElement(2);
     info.addChildElement("Release", "2019");
-    auto & sub = info.addChildElement("Directors", "");
-    auto & subSub0 = sub.addChildElement("Director", "");
+    info.addChildElement("Directors", "");
+    auto & sub = info.getChildElement(1);
+    sub.addChildElement("Director", "");
+    auto & subSub0 = sub.getChildElement(0);
     subSub0.addAttribute("FirstName", "David");
     subSub0.addAttribute("LastName", "Cronenberg");
-    auto & subSub1 = sub.addChildElement("Director", "");
+    sub.addChildElement("Director", "");
+    auto & subSub1 = sub.getChildElement(1);
     subSub1.addAttribute("FirstName", "David");
     subSub1.addAttribute("LastName", "Lynch");
-    auto & subSub2 = sub.addChildElement("Director", "");
+    sub.addChildElement("Director", "");
+    auto & subSub2 = sub.getChildElement(2);
     subSub2.addAttribute("FirstName", "David");
     subSub2.addAttribute("LastName", "Fincher");
-    auto & subSub3 = sub.addChildElement("Director", "");
+    sub.addChildElement("Director", "");
+    auto & subSub3 = sub.getChildElement(3);
     subSub3.addAttribute("FirstName", "David");
     subSub3.addAttribute("LastName", "Lean");
 
@@ -8005,7 +8015,8 @@ OCIO_ADD_TEST(FileFormatCTF, bake_3d)
     data.addChildElement(OCIO::METADATA_INPUT_DESCRIPTOR, "Input descriptor");
     data.addChildElement(OCIO::METADATA_INPUT_DESCRIPTOR, "Only first is saved");
     data.addChildElement(OCIO::METADATA_OUTPUT_DESCRIPTOR, "Output descriptor");
-    auto & info = data.addChildElement(OCIO::METADATA_INFO, "");
+    data.addChildElement(OCIO::METADATA_INFO, "");
+    auto & info = data.getChildElement(6);
     info.addAttribute("attrib1", "val1");
     info.addAttribute("attrib2", "val2");
     info.addChildElement("anything", "is saved");
