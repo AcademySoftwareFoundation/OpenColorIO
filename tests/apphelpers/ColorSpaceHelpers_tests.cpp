@@ -54,7 +54,7 @@ OCIO_ADD_TEST(ColorSpaceInfo, read_values)
     OCIO_CHECK_EQUAL(csInfo->getHierarchyLevels()->getString(2), std::string("Acme"));
     OCIO_CHECK_EQUAL(csInfo->getFamily(), std::string(cs->getFamily()));
 
-    OCIO_CHECK_EQUAL(cs->getDescription(), std::string("An input color space.\nFor the Acme camera.\n"));
+    OCIO_CHECK_EQUAL(cs->getDescription(), std::string("An input color space.\nFor the Acme camera."));
     OCIO_REQUIRE_EQUAL(csInfo->getDescriptions()->getNumString(), 2);
     OCIO_CHECK_EQUAL(csInfo->getDescriptions()->getString(0), std::string("An input color space."));
     OCIO_CHECK_EQUAL(csInfo->getDescriptions()->getString(1), std::string("For the Acme camera."));
@@ -155,8 +155,8 @@ OCIO_ADD_TEST(ColorSpaceInfo, change_values)
 
     // Change the description.
 
-    OCIO_CHECK_NO_THROW(cs->setDescription("desc 1\n\n\n desc 2\n"));
-    OCIO_CHECK_EQUAL(cs->getDescription(), std::string("desc 1\n\n\n desc 2\n"));
+    OCIO_CHECK_NO_THROW(cs->setDescription("desc 1\n\n\n desc 2"));
+    OCIO_CHECK_EQUAL(cs->getDescription(), std::string("desc 1\n\n\n desc 2"));
 
     OCIO_CHECK_NO_THROW(csInfo = OCIO::ColorSpaceInfo::Create(cfg, cs));
     OCIO_REQUIRE_EQUAL(csInfo->getDescriptions()->getNumString(), 4);

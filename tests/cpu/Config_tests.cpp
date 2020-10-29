@@ -4376,8 +4376,7 @@ OCIO_ADD_TEST(Config, add_color_space)
         + u8"    family: \"\"\n"
         + u8"    equalitygroup: \"\"\n"
         + u8"    bitdepth: unknown\n"
-        + u8"    description: |\n"
-        + u8"      é À Â Ç É È ç -- $ € 円 £ 元\n"
+        + u8"    description: é À Â Ç É È ç -- $ € 円 £ 元\n"
         + u8"    isdata: false\n"
         + u8"    allocation: uniform\n"
         + u8"    to_reference: !<FixedFunctionTransform> {style: ACES_RedMod03}\n";
@@ -7270,4 +7269,128 @@ colorspaces:
                           OCIO::Exception,
                           "Display 'virtual_display' has a view 'Raw1' refers to a look, 'look',"
                           " which is not defined.");
+}
+
+OCIO_ADD_TEST(Config, description)
+{
+    auto cfg = OCIO::Config::CreateRaw()->createEditableCopy();
+    std::ostringstream oss;
+    cfg->serialize(oss);
+    static constexpr char CONFIG_NO_DESC[]{ R"(ocio_profile_version: 2
+
+environment:
+  {}
+search_path: ""
+strictparsing: false
+luma: [0.2126, 0.7152, 0.0722]
+
+roles:
+  default: raw
+
+file_rules:
+  - !<Rule> {name: ColorSpaceNamePathSearch}
+  - !<Rule> {name: Default, colorspace: default}
+
+displays:
+  sRGB:
+    - !<View> {name: Raw, colorspace: raw}
+
+active_displays: []
+active_views: []
+
+colorspaces:
+  - !<ColorSpace>
+    name: raw
+    family: raw
+    equalitygroup: ""
+    bitdepth: 32f
+    description: A raw color space. Conversions to and from this space are no-ops.
+    isdata: true
+    allocation: uniform
+)" };
+    OCIO_CHECK_EQUAL(oss.str(), std::string(CONFIG_NO_DESC));
+
+    oss.clear();
+    oss.str("");
+
+    cfg->setDescription("single line description");
+    cfg->serialize(oss);
+    static constexpr char CONFIG_DESC_SINGLELINE[]{ R"(ocio_profile_version: 2
+
+environment:
+  {}
+search_path: ""
+strictparsing: false
+luma: [0.2126, 0.7152, 0.0722]
+description: single line description
+
+roles:
+  default: raw
+
+file_rules:
+  - !<Rule> {name: ColorSpaceNamePathSearch}
+  - !<Rule> {name: Default, colorspace: default}
+
+displays:
+  sRGB:
+    - !<View> {name: Raw, colorspace: raw}
+
+active_displays: []
+active_views: []
+
+colorspaces:
+  - !<ColorSpace>
+    name: raw
+    family: raw
+    equalitygroup: ""
+    bitdepth: 32f
+    description: A raw color space. Conversions to and from this space are no-ops.
+    isdata: true
+    allocation: uniform
+)" };
+    OCIO_CHECK_EQUAL(oss.str(), std::string(CONFIG_DESC_SINGLELINE));
+
+    oss.clear();
+    oss.str("");
+
+    cfg->setDescription("multi line description\n\nother line");
+    cfg->serialize(oss);
+
+    static constexpr char CONFIG_DESC_MULTILINES[]{ R"(ocio_profile_version: 2
+
+environment:
+  {}
+search_path: ""
+strictparsing: false
+luma: [0.2126, 0.7152, 0.0722]
+description: |
+  multi line description
+  
+  other line
+
+roles:
+  default: raw
+
+file_rules:
+  - !<Rule> {name: ColorSpaceNamePathSearch}
+  - !<Rule> {name: Default, colorspace: default}
+
+displays:
+  sRGB:
+    - !<View> {name: Raw, colorspace: raw}
+
+active_displays: []
+active_views: []
+
+colorspaces:
+  - !<ColorSpace>
+    name: raw
+    family: raw
+    equalitygroup: ""
+    bitdepth: 32f
+    description: A raw color space. Conversions to and from this space are no-ops.
+    isdata: true
+    allocation: uniform
+)" };
+    OCIO_CHECK_EQUAL(oss.str(), std::string(CONFIG_DESC_MULTILINES));
 }
