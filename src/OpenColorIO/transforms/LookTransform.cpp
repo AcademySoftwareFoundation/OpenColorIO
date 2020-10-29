@@ -326,13 +326,14 @@ void BuildLookOps(OpRcPtrVec & ops,
     LookParseResult looks;
     looks.parse(lookTransform.getLooks());
 
-    // We must handle the inverse src/dst colorspace transformation explicitly.
-    if(dir == TRANSFORM_DIR_INVERSE)
+    // The code must handle the inverse src/dst colorspace transformation explicitly.
+    const auto combinedDir = CombineTransformDirections(dir, lookTransform.getDirection());
+    if(combinedDir == TRANSFORM_DIR_INVERSE)
     {
         std::swap(src, dst);
         looks.reverse();
     }
-    else if(dir == TRANSFORM_DIR_UNKNOWN)
+    else if(combinedDir == TRANSFORM_DIR_UNKNOWN)
     {
         std::ostringstream os;
         os << "BuildLookOps error. A valid transform direction must be specified.";

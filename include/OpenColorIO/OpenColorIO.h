@@ -161,6 +161,14 @@ extern OCIOEXPORT void ResetToDefaultLoggingFunction();
 /// Log a message using the library logging function.
 extern OCIOEXPORT void LogMessage(LoggingLevel level, const char * message);
 
+/**
+ * \brief Set the Compute Hash Function to use; otherwise, use the default.
+ * 
+ * \param ComputeHashFunction
+ */
+extern OCIOEXPORT void SetComputeHashFunction(ComputeHashFunction hashFunction);
+extern OCIOEXPORT void ResetComputeHashFunction();
+
 //
 // Note that the following environment variable access methods are not thread safe.
 //
