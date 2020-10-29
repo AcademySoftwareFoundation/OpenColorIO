@@ -11,6 +11,7 @@
 
 namespace OCIO_NAMESPACE
 {
+
 // This is not currently included in pystring, but we need it
 // So let's define it locally for now
 
