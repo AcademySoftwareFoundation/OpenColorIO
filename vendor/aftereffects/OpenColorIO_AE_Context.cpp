@@ -615,9 +615,9 @@ void OpenColorIO_AE_Context::setupDisplay(const char *input, const char *device,
         xform = _config->getDefaultView(device);
     
 
-    OCIO::DisplayTransformRcPtr transform = OCIO::DisplayTransform::Create();
+    OCIO::DisplayViewTransformRcPtr transform = OCIO::DisplayViewTransform::Create();
     
-    transform->setInputColorSpaceName(input);
+    transform->setSrc(input);
     transform->setDisplay(device);
     transform->setView(xform);
     
@@ -656,8 +656,8 @@ void OpenColorIO_AE_Context::setupLUT(OCIO_Invert invert, OCIO_Interp interpolat
     
     if(invert == OCIO_INVERT_EXACT)
     {
-        _cpu_processor = _processor->getOptimizedCPUProcessor(OCIO::OPTIMIZATION_DEFAULT, OCIO::FINALIZATION_EXACT);
-        _gpu_processor = _processor->getOptimizedGPUProcessor(OCIO::OPTIMIZATION_DEFAULT, OCIO::FINALIZATION_EXACT);
+        _cpu_processor = _processor->getOptimizedCPUProcessor(OCIO::OPTIMIZATION_LOSSLESS);
+        _gpu_processor = _processor->getOptimizedGPUProcessor(OCIO::OPTIMIZATION_LOSSLESS);
     }
     else
     {
@@ -741,9 +741,9 @@ bool OpenColorIO_AE_Context::ExportLUT(const std::string &path, const std::strin
             std::string outputspace = "ProcessedOutput";
             outputColorSpace->setName(outputspace.c_str());
             
-            OCIO::DisplayTransformRcPtr transform = OCIO::DisplayTransform::Create();
+            OCIO::DisplayViewTransformRcPtr transform = OCIO::DisplayViewTransform::Create();
             
-            transform->setInputColorSpaceName(_input.c_str());
+            transform->setSrc(_input.c_str());
             transform->setView(_transform.c_str());
             transform->setDisplay(_device.c_str());
             
@@ -902,7 +902,7 @@ void OpenColorIO_AE_Context::UpdateOCIOGLState()
         
         // Step 1: Create a GPU Shader Description
         OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
-        shaderDesc->setLanguage(OCIO::GPU_LANGUAGE_GLSL_1_0);
+        shaderDesc->setLanguage(OCIO::GPU_LANGUAGE_GLSL_1_2);
         shaderDesc->setFunctionName("OCIODisplay");
         shaderDesc->setResourcePrefix("ocio_");
         

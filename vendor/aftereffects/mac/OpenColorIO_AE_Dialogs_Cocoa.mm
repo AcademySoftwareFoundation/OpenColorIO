@@ -99,33 +99,27 @@ bool GetMonitorProfile(char *path, int buf_len, const void *hwnd)
 {
     bool hit_ok = false;
     
-    Class ui_controller_class = [[NSBundle bundleWithIdentifier:@"org.OpenColorIO.AfterEffects"]
-                                    classNamed:@"OpenColorIO_AE_MonitorProfileChooser_Controller"];
+    OpenColorIO_AE_MonitorProfileChooser_Controller *ui_controller = [[OpenColorIO_AE_MonitorProfileChooser_Controller alloc] init];
     
-    if(ui_controller_class)
+    if(ui_controller)
     {
-        OpenColorIO_AE_MonitorProfileChooser_Controller *ui_controller = [[ui_controller_class alloc] init];
+        NSWindow *my_window = [ui_controller window];
         
-        if(ui_controller)
+        if(my_window)
         {
-            NSWindow *my_window = [ui_controller getWindow];
+            NSInteger result = [NSApp runModalForWindow:my_window];
             
-            if(my_window)
+            if(result == NSRunStoppedResponse)
             {
-                NSInteger result = [NSApp runModalForWindow:my_window];
+                [ui_controller getMonitorProfile:path bufferSize:buf_len];
                 
-                if(result == NSRunStoppedResponse)
-                {
-                    [ui_controller getMonitorProfile:path bufferSize:buf_len];
-                    
-                    hit_ok = true;
-                }
-                
-                [my_window release];
+                hit_ok = true;
             }
-            
-            [ui_controller release];
+        
+            [ui_controller close];
         }
+
+        [ui_controller release];
     }
     
     return hit_ok;

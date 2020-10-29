@@ -3,18 +3,15 @@
 
 #import <Cocoa/Cocoa.h>
 
-@interface OpenColorIO_AE_MonitorProfileChooser_Controller : NSObject {
-    IBOutlet NSPopUpButton *profileMenu;
-    IBOutlet NSWindow *window;
-    
-    NSMutableArray  *name_array;
-    NSMapTable      *profile_map;
+@interface OpenColorIO_AE_MonitorProfileChooser_Controller : NSWindowController
+{
+    NSMutableDictionary<NSString *, NSURL *>    *profile_dict;
 }
 
-- (IBAction)clickOK:(NSButton *)sender;
-- (IBAction)clickCancel:(NSButton *)sender;
+@property (assign) IBOutlet NSPopUpButton *profileMenu;
 
-- (NSWindow *)getWindow;
+- (IBAction)clickOK:(id)sender;
+- (IBAction)clickCancel:(id)sender;
 
 - (BOOL)getMonitorProfile:(char *)path bufferSize:(int)buf_len;
 
