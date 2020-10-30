@@ -7,15 +7,22 @@
 Tool overview
 =============
 
-The following command-line tools are provided with OpenColorIO.  Note that
-compilation of the tools requires additional components such as OpenImageIO
-and OpenGL.
+The following command-line tools are provided with OpenColorIO.
 
 The --help argument may be provided for info about the arguments and most
 tools use the -v argument for more verbose output.
 
 Many of the tools require you to first set the OCIO environment variable to
 point to the config file you want to use.
+
+Note that some tools depend on OpenImageIO and other libraries:
+ * ociolutimage: OpenImageIO
+ * ociodisplay: OpenImageIO, OpenGL, GLEW, GLUT
+ * ocioconvert: OpenImageIO
+
+.. TODO: link to build instructions
+.. TODO: check app lib dependencies
+.. TODO: make a pretty table in RST.
 
 .. _overview-ociocheck:
 
@@ -134,10 +141,11 @@ values outside 0.0-1.0 (being a Log space)::
     $ ociobakelut --inputspace lg10 --outputspace srgb8 --format flame flame__lg10_to_srgb.3dl
 
 See the :ref:`faq-supportedlut` section for a list of formats that
-support baking
+support baking, and see the :ref:`userguide-bakelut` for more information
+on baking LUTs.
 
 The ociobakelut command supports many arguments, use the --help argument for
-a summary. For more information on baking LUT's, see :ref:`userguide-bakelut`
+a summary. 
 
 
 .. _overview-ocioconvert:
@@ -148,10 +156,18 @@ ocioconvert
 
 Loads an image, applies a color transform, and saves it to a new file.
 
-OpenImageIO is used to open and save the file, so a wide range of formats are
-supported.
+The ocioconvert tool applies either an aribtrary LUT, or a complex OpenColorIO 
+transform. OCIO transforms can be from an input color space to either an
+output color space or a (display,view) pair. 
 
-.. TODO: Link to more elaborate description
+Both CPU (default) and GPU renderers are supported. The --gpuinfo argument 
+may be used to output the shader program used by the GPU renderer.
+
+OpenImageIO is used for opening and saving files and modifying metadata, so a 
+wide range of formats are supported. Use the --help argument for more 
+information on to the available OpenImageIO options.
+
+.. TODO: Examples
 
 
 .. _overview-ociodisplay:
@@ -160,14 +176,15 @@ supported.
 ociodisplay
 ***********
 
-A basic image viewer. Uses OpenImageIO to load images, and displays them using
-OCIO and typical viewer controls (scene-linear exposure control and a
-post-display gamma control)
+An example image viewer demonstrating the OCIO C++ API. 
 
-May be useful to users to quickly check colorspace configuration, but
-primarily a demonstration of the OCIO API
+Uses OpenImageIO to load images, and displays them using OCIO and 
+typical viewer controls (scene-linear exposure control and a
+post-display gamma control). 
 
-.. TODO: Link to more elaborate description
+May be useful to users to quickly check a color space configuration.
+
+.. TODO: Link to discussion of OpenImageIO source?
 
 
 .. _overview-ociolutimage:
@@ -175,9 +192,28 @@ primarily a demonstration of the OCIO API
 ociolutimage
 ************
 
-Convert a 3D LUT to or from an image.
+The ociolutimage tool converts a 3D LUT to or from an image.
 
-.. TODO: Link to more elaborate description
+Image containers are occasionally used for encoding and exchanging simple color 
+lookup data where standard LUT formats are less feasible. The ociolutimage tool
+offers an arguably "artist-friendly", WYSIWYG workflow for creating LUTs 
+representing arbitrary color transforms. 
+
+The workflow is a three step process::
+
+    1. Generate an identity lattice image with ociolutimage --generate
+    2. Apply color transforms to the generated image (e.g., in a DCC application)
+    3. Extract LUT data from the modified RGB lattice values with 
+       ociolutimage --extract
+
+.. TODO: Rephrase. (This feels a little awkward)
+.. TODO: Caveats -- permissible types of transforms
+.. TODO: Discussion -- preserving extended range
+.. TODO: Tutorial? -- shapers + 'pre-baked' inverse shapers
+
+.. seealso:: 
+    Nuke's `CMSTestPattern <https://learn.foundry.com/nuke/content/reference_guide/color_nodes/cmstestpattern.html>`_ and `GenerateLUT <https://learn.foundry.com/nuke/content/reference_guide/color_nodes/generatelut.html>`_ nodes are analogous to the
+    ociolutimage --generate and --extract options, respectively. Applications such as `Lattice <https://videovillage.co/lattice>`_ provide similar functionality.
 
 
 .. _overview-ociomakeclf:
@@ -211,7 +247,28 @@ The ocioperf tool allows you to benchmark the performance of a given color
 transformation on your hardware.  Please use the --help argument for a 
 description of the options.
 
-.. TODO: Link to more elaborate description
+The metric used for assessing performance is the time taken to apply a 
+transform to an image with respect to each pixel, to each line, or to the 
+entire image plane (or all three). By default, each test is run ten times. 
+
+Transforms are either provided as an external file or specified in the active 
+config (i.e., the config pointed to by the OCIO environment variable).
+
+Examples::
+
+    $ ocioperf —displayview ACEScg sRGB ‘Show LUT’ —iter 20 —image test.exr 
+    # Measures an ACEScg —> sRGB / ‘Show LUT’ DisplayViewTransform applied to each 
+    # pixel of ‘test.exr’ twenty times.
+
+    $ ocioperf —transform my_transform.ctf —out f32 —image meow.jpg
+    # Measures ‘my_transform.ctf’ applied to the whole ‘meow.jpg’ image and output 
+    # as 32-bit float data ten times.
+
+    $ ocioperf —colorspaces ‘LogC AWG’ ACEScg —test 1 —image marcie.dpx
+    # Measures a ‘LogC AWG’ —> ACEScg ColorSpaceTransform applied to each line of 
+    # ‘marcie.dpx’ ten times.
+
+.. TODO: examples formatting
 
 .. _overview-ociowrite:
 
