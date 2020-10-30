@@ -7,68 +7,64 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		2ACF9F2C1478251500991ED5 /* lcms2.h in Headers */ = {isa = PBXBuildFile; fileRef = 2ACF9E6D1478251500991ED5 /* lcms2.h */; };
-		2ACF9F2D1478251500991ED5 /* lcms2_plugin.h in Headers */ = {isa = PBXBuildFile; fileRef = 2ACF9E6E1478251500991ED5 /* lcms2_plugin.h */; };
-		2ACF9F311478251500991ED5 /* cmscam02.c in Sources */ = {isa = PBXBuildFile; fileRef = 2ACF9ECE1478251500991ED5 /* cmscam02.c */; };
-		2ACF9F321478251500991ED5 /* cmscgats.c in Sources */ = {isa = PBXBuildFile; fileRef = 2ACF9ECF1478251500991ED5 /* cmscgats.c */; };
-		2ACF9F331478251500991ED5 /* cmscnvrt.c in Sources */ = {isa = PBXBuildFile; fileRef = 2ACF9ED01478251500991ED5 /* cmscnvrt.c */; };
-		2ACF9F341478251500991ED5 /* cmserr.c in Sources */ = {isa = PBXBuildFile; fileRef = 2ACF9ED11478251500991ED5 /* cmserr.c */; };
-		2ACF9F351478251500991ED5 /* cmsgamma.c in Sources */ = {isa = PBXBuildFile; fileRef = 2ACF9ED21478251500991ED5 /* cmsgamma.c */; };
-		2ACF9F361478251500991ED5 /* cmsgmt.c in Sources */ = {isa = PBXBuildFile; fileRef = 2ACF9ED31478251500991ED5 /* cmsgmt.c */; };
-		2ACF9F371478251500991ED5 /* cmsintrp.c in Sources */ = {isa = PBXBuildFile; fileRef = 2ACF9ED41478251500991ED5 /* cmsintrp.c */; };
-		2ACF9F381478251500991ED5 /* cmsio0.c in Sources */ = {isa = PBXBuildFile; fileRef = 2ACF9ED51478251500991ED5 /* cmsio0.c */; };
-		2ACF9F391478251500991ED5 /* cmsio1.c in Sources */ = {isa = PBXBuildFile; fileRef = 2ACF9ED61478251500991ED5 /* cmsio1.c */; };
-		2ACF9F3A1478251500991ED5 /* cmslut.c in Sources */ = {isa = PBXBuildFile; fileRef = 2ACF9ED71478251500991ED5 /* cmslut.c */; };
-		2ACF9F3B1478251500991ED5 /* cmsmd5.c in Sources */ = {isa = PBXBuildFile; fileRef = 2ACF9ED81478251500991ED5 /* cmsmd5.c */; };
-		2ACF9F3C1478251500991ED5 /* cmsmtrx.c in Sources */ = {isa = PBXBuildFile; fileRef = 2ACF9ED91478251500991ED5 /* cmsmtrx.c */; };
-		2ACF9F3D1478251500991ED5 /* cmsnamed.c in Sources */ = {isa = PBXBuildFile; fileRef = 2ACF9EDA1478251500991ED5 /* cmsnamed.c */; };
-		2ACF9F3E1478251500991ED5 /* cmsopt.c in Sources */ = {isa = PBXBuildFile; fileRef = 2ACF9EDB1478251500991ED5 /* cmsopt.c */; };
-		2ACF9F3F1478251500991ED5 /* cmspack.c in Sources */ = {isa = PBXBuildFile; fileRef = 2ACF9EDC1478251500991ED5 /* cmspack.c */; };
-		2ACF9F401478251500991ED5 /* cmspcs.c in Sources */ = {isa = PBXBuildFile; fileRef = 2ACF9EDD1478251500991ED5 /* cmspcs.c */; };
-		2ACF9F411478251500991ED5 /* cmsplugin.c in Sources */ = {isa = PBXBuildFile; fileRef = 2ACF9EDE1478251500991ED5 /* cmsplugin.c */; };
-		2ACF9F421478251500991ED5 /* cmsps2.c in Sources */ = {isa = PBXBuildFile; fileRef = 2ACF9EDF1478251500991ED5 /* cmsps2.c */; };
-		2ACF9F431478251500991ED5 /* cmssamp.c in Sources */ = {isa = PBXBuildFile; fileRef = 2ACF9EE01478251500991ED5 /* cmssamp.c */; };
-		2ACF9F441478251500991ED5 /* cmssm.c in Sources */ = {isa = PBXBuildFile; fileRef = 2ACF9EE11478251500991ED5 /* cmssm.c */; };
-		2ACF9F451478251500991ED5 /* cmstypes.c in Sources */ = {isa = PBXBuildFile; fileRef = 2ACF9EE21478251500991ED5 /* cmstypes.c */; };
-		2ACF9F461478251500991ED5 /* cmsvirt.c in Sources */ = {isa = PBXBuildFile; fileRef = 2ACF9EE31478251500991ED5 /* cmsvirt.c */; };
-		2ACF9F471478251500991ED5 /* cmswtpnt.c in Sources */ = {isa = PBXBuildFile; fileRef = 2ACF9EE41478251500991ED5 /* cmswtpnt.c */; };
-		2ACF9F481478251500991ED5 /* cmsxform.c in Sources */ = {isa = PBXBuildFile; fileRef = 2ACF9EE51478251500991ED5 /* cmsxform.c */; };
-		2ACF9F491478251500991ED5 /* lcms2_internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 2ACF9EE71478251500991ED5 /* lcms2_internal.h */; };
-		2AEAB9A0233EDBD80053BCB6 /* cmsalpha.c in Sources */ = {isa = PBXBuildFile; fileRef = 2AEAB99E233EDBD70053BCB6 /* cmsalpha.c */; };
-		2AEAB9A1233EDBD80053BCB6 /* cmshalf.c in Sources */ = {isa = PBXBuildFile; fileRef = 2AEAB99F233EDBD70053BCB6 /* cmshalf.c */; };
+		2A41D859254B873200893EFF /* lcms2.h in Headers */ = {isa = PBXBuildFile; fileRef = 2A41D794254B873200893EFF /* lcms2.h */; };
+		2A41D85A254B873200893EFF /* lcms2_plugin.h in Headers */ = {isa = PBXBuildFile; fileRef = 2A41D795254B873200893EFF /* lcms2_plugin.h */; };
+		2A41D85E254B873200893EFF /* cmscam02.c in Sources */ = {isa = PBXBuildFile; fileRef = 2A41D7F5254B873200893EFF /* cmscam02.c */; };
+		2A41D85F254B873200893EFF /* cmscgats.c in Sources */ = {isa = PBXBuildFile; fileRef = 2A41D7F6254B873200893EFF /* cmscgats.c */; };
+		2A41D860254B873200893EFF /* cmscnvrt.c in Sources */ = {isa = PBXBuildFile; fileRef = 2A41D7F7254B873200893EFF /* cmscnvrt.c */; };
+		2A41D861254B873200893EFF /* cmserr.c in Sources */ = {isa = PBXBuildFile; fileRef = 2A41D7F8254B873200893EFF /* cmserr.c */; };
+		2A41D862254B873200893EFF /* cmsgamma.c in Sources */ = {isa = PBXBuildFile; fileRef = 2A41D7F9254B873200893EFF /* cmsgamma.c */; };
+		2A41D863254B873200893EFF /* cmsgmt.c in Sources */ = {isa = PBXBuildFile; fileRef = 2A41D7FA254B873200893EFF /* cmsgmt.c */; };
+		2A41D864254B873200893EFF /* cmsintrp.c in Sources */ = {isa = PBXBuildFile; fileRef = 2A41D7FB254B873200893EFF /* cmsintrp.c */; };
+		2A41D865254B873200893EFF /* cmsio0.c in Sources */ = {isa = PBXBuildFile; fileRef = 2A41D7FC254B873200893EFF /* cmsio0.c */; };
+		2A41D866254B873200893EFF /* cmsio1.c in Sources */ = {isa = PBXBuildFile; fileRef = 2A41D7FD254B873200893EFF /* cmsio1.c */; };
+		2A41D867254B873200893EFF /* cmslut.c in Sources */ = {isa = PBXBuildFile; fileRef = 2A41D7FE254B873200893EFF /* cmslut.c */; };
+		2A41D868254B873200893EFF /* cmsmd5.c in Sources */ = {isa = PBXBuildFile; fileRef = 2A41D7FF254B873200893EFF /* cmsmd5.c */; };
+		2A41D869254B873200893EFF /* cmsmtrx.c in Sources */ = {isa = PBXBuildFile; fileRef = 2A41D800254B873200893EFF /* cmsmtrx.c */; };
+		2A41D86A254B873200893EFF /* cmsnamed.c in Sources */ = {isa = PBXBuildFile; fileRef = 2A41D801254B873200893EFF /* cmsnamed.c */; };
+		2A41D86B254B873200893EFF /* cmsopt.c in Sources */ = {isa = PBXBuildFile; fileRef = 2A41D802254B873200893EFF /* cmsopt.c */; };
+		2A41D86C254B873200893EFF /* cmspack.c in Sources */ = {isa = PBXBuildFile; fileRef = 2A41D803254B873200893EFF /* cmspack.c */; };
+		2A41D86D254B873200893EFF /* cmspcs.c in Sources */ = {isa = PBXBuildFile; fileRef = 2A41D804254B873200893EFF /* cmspcs.c */; };
+		2A41D86E254B873200893EFF /* cmsplugin.c in Sources */ = {isa = PBXBuildFile; fileRef = 2A41D805254B873200893EFF /* cmsplugin.c */; };
+		2A41D86F254B873200893EFF /* cmsps2.c in Sources */ = {isa = PBXBuildFile; fileRef = 2A41D806254B873200893EFF /* cmsps2.c */; };
+		2A41D870254B873200893EFF /* cmssamp.c in Sources */ = {isa = PBXBuildFile; fileRef = 2A41D807254B873200893EFF /* cmssamp.c */; };
+		2A41D871254B873200893EFF /* cmssm.c in Sources */ = {isa = PBXBuildFile; fileRef = 2A41D808254B873200893EFF /* cmssm.c */; };
+		2A41D872254B873200893EFF /* cmstypes.c in Sources */ = {isa = PBXBuildFile; fileRef = 2A41D809254B873200893EFF /* cmstypes.c */; };
+		2A41D873254B873200893EFF /* cmsvirt.c in Sources */ = {isa = PBXBuildFile; fileRef = 2A41D80A254B873200893EFF /* cmsvirt.c */; };
+		2A41D874254B873200893EFF /* cmswtpnt.c in Sources */ = {isa = PBXBuildFile; fileRef = 2A41D80B254B873200893EFF /* cmswtpnt.c */; };
+		2A41D875254B873200893EFF /* cmsxform.c in Sources */ = {isa = PBXBuildFile; fileRef = 2A41D80C254B873200893EFF /* cmsxform.c */; };
+		2A41D876254B873200893EFF /* lcms2_internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 2A41D80E254B873200893EFF /* lcms2_internal.h */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		2A41D794254B873200893EFF /* lcms2.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = lcms2.h; sourceTree = "<group>"; };
+		2A41D795254B873200893EFF /* lcms2_plugin.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = lcms2_plugin.h; sourceTree = "<group>"; };
+		2A41D7F5254B873200893EFF /* cmscam02.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = cmscam02.c; sourceTree = "<group>"; };
+		2A41D7F6254B873200893EFF /* cmscgats.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = cmscgats.c; sourceTree = "<group>"; };
+		2A41D7F7254B873200893EFF /* cmscnvrt.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = cmscnvrt.c; sourceTree = "<group>"; };
+		2A41D7F8254B873200893EFF /* cmserr.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = cmserr.c; sourceTree = "<group>"; };
+		2A41D7F9254B873200893EFF /* cmsgamma.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = cmsgamma.c; sourceTree = "<group>"; };
+		2A41D7FA254B873200893EFF /* cmsgmt.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = cmsgmt.c; sourceTree = "<group>"; };
+		2A41D7FB254B873200893EFF /* cmsintrp.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = cmsintrp.c; sourceTree = "<group>"; };
+		2A41D7FC254B873200893EFF /* cmsio0.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = cmsio0.c; sourceTree = "<group>"; };
+		2A41D7FD254B873200893EFF /* cmsio1.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = cmsio1.c; sourceTree = "<group>"; };
+		2A41D7FE254B873200893EFF /* cmslut.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = cmslut.c; sourceTree = "<group>"; };
+		2A41D7FF254B873200893EFF /* cmsmd5.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = cmsmd5.c; sourceTree = "<group>"; };
+		2A41D800254B873200893EFF /* cmsmtrx.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = cmsmtrx.c; sourceTree = "<group>"; };
+		2A41D801254B873200893EFF /* cmsnamed.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = cmsnamed.c; sourceTree = "<group>"; };
+		2A41D802254B873200893EFF /* cmsopt.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = cmsopt.c; sourceTree = "<group>"; };
+		2A41D803254B873200893EFF /* cmspack.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = cmspack.c; sourceTree = "<group>"; };
+		2A41D804254B873200893EFF /* cmspcs.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = cmspcs.c; sourceTree = "<group>"; };
+		2A41D805254B873200893EFF /* cmsplugin.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = cmsplugin.c; sourceTree = "<group>"; };
+		2A41D806254B873200893EFF /* cmsps2.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = cmsps2.c; sourceTree = "<group>"; };
+		2A41D807254B873200893EFF /* cmssamp.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = cmssamp.c; sourceTree = "<group>"; };
+		2A41D808254B873200893EFF /* cmssm.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = cmssm.c; sourceTree = "<group>"; };
+		2A41D809254B873200893EFF /* cmstypes.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = cmstypes.c; sourceTree = "<group>"; };
+		2A41D80A254B873200893EFF /* cmsvirt.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = cmsvirt.c; sourceTree = "<group>"; };
+		2A41D80B254B873200893EFF /* cmswtpnt.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = cmswtpnt.c; sourceTree = "<group>"; };
+		2A41D80C254B873200893EFF /* cmsxform.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = cmsxform.c; sourceTree = "<group>"; };
+		2A41D80E254B873200893EFF /* lcms2_internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = lcms2_internal.h; sourceTree = "<group>"; };
 		2ACF9E56147824F500991ED5 /* liblcms.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = liblcms.a; sourceTree = BUILT_PRODUCTS_DIR; };
-		2ACF9E6D1478251500991ED5 /* lcms2.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = lcms2.h; sourceTree = "<group>"; };
-		2ACF9E6E1478251500991ED5 /* lcms2_plugin.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = lcms2_plugin.h; sourceTree = "<group>"; };
-		2ACF9ECE1478251500991ED5 /* cmscam02.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = cmscam02.c; sourceTree = "<group>"; };
-		2ACF9ECF1478251500991ED5 /* cmscgats.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = cmscgats.c; sourceTree = "<group>"; };
-		2ACF9ED01478251500991ED5 /* cmscnvrt.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = cmscnvrt.c; sourceTree = "<group>"; };
-		2ACF9ED11478251500991ED5 /* cmserr.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = cmserr.c; sourceTree = "<group>"; };
-		2ACF9ED21478251500991ED5 /* cmsgamma.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = cmsgamma.c; sourceTree = "<group>"; };
-		2ACF9ED31478251500991ED5 /* cmsgmt.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = cmsgmt.c; sourceTree = "<group>"; };
-		2ACF9ED41478251500991ED5 /* cmsintrp.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = cmsintrp.c; sourceTree = "<group>"; };
-		2ACF9ED51478251500991ED5 /* cmsio0.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = cmsio0.c; sourceTree = "<group>"; };
-		2ACF9ED61478251500991ED5 /* cmsio1.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = cmsio1.c; sourceTree = "<group>"; };
-		2ACF9ED71478251500991ED5 /* cmslut.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = cmslut.c; sourceTree = "<group>"; };
-		2ACF9ED81478251500991ED5 /* cmsmd5.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = cmsmd5.c; sourceTree = "<group>"; };
-		2ACF9ED91478251500991ED5 /* cmsmtrx.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = cmsmtrx.c; sourceTree = "<group>"; };
-		2ACF9EDA1478251500991ED5 /* cmsnamed.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = cmsnamed.c; sourceTree = "<group>"; };
-		2ACF9EDB1478251500991ED5 /* cmsopt.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = cmsopt.c; sourceTree = "<group>"; };
-		2ACF9EDC1478251500991ED5 /* cmspack.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = cmspack.c; sourceTree = "<group>"; };
-		2ACF9EDD1478251500991ED5 /* cmspcs.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = cmspcs.c; sourceTree = "<group>"; };
-		2ACF9EDE1478251500991ED5 /* cmsplugin.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = cmsplugin.c; sourceTree = "<group>"; };
-		2ACF9EDF1478251500991ED5 /* cmsps2.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = cmsps2.c; sourceTree = "<group>"; };
-		2ACF9EE01478251500991ED5 /* cmssamp.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = cmssamp.c; sourceTree = "<group>"; };
-		2ACF9EE11478251500991ED5 /* cmssm.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = cmssm.c; sourceTree = "<group>"; };
-		2ACF9EE21478251500991ED5 /* cmstypes.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = cmstypes.c; sourceTree = "<group>"; };
-		2ACF9EE31478251500991ED5 /* cmsvirt.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = cmsvirt.c; sourceTree = "<group>"; };
-		2ACF9EE41478251500991ED5 /* cmswtpnt.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = cmswtpnt.c; sourceTree = "<group>"; };
-		2ACF9EE51478251500991ED5 /* cmsxform.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = cmsxform.c; sourceTree = "<group>"; };
-		2ACF9EE71478251500991ED5 /* lcms2_internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = lcms2_internal.h; sourceTree = "<group>"; };
-		2AEAB99E233EDBD70053BCB6 /* cmsalpha.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = cmsalpha.c; sourceTree = "<group>"; };
-		2AEAB99F233EDBD70053BCB6 /* cmshalf.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = cmshalf.c; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -93,61 +89,59 @@
 		0867D691FE84028FC02AAC07 /* lcms */ = {
 			isa = PBXGroup;
 			children = (
-				2ACF9E5A1478251500991ED5 /* Little-CMS */,
+				2A41D781254B873200893EFF /* Little-CMS */,
 				034768DDFF38A45A11DB9C8B /* Products */,
 			);
 			name = lcms;
 			sourceTree = "<group>";
 		};
-		2ACF9E5A1478251500991ED5 /* Little-CMS */ = {
+		2A41D781254B873200893EFF /* Little-CMS */ = {
 			isa = PBXGroup;
 			children = (
-				2ACF9E6C1478251500991ED5 /* include */,
-				2ACF9ECD1478251500991ED5 /* src */,
+				2A41D793254B873200893EFF /* include */,
+				2A41D7F4254B873200893EFF /* src */,
 			);
 			name = "Little-CMS";
 			path = "../../../../../ext/Little-CMS";
-			sourceTree = SOURCE_ROOT;
+			sourceTree = "<group>";
 		};
-		2ACF9E6C1478251500991ED5 /* include */ = {
+		2A41D793254B873200893EFF /* include */ = {
 			isa = PBXGroup;
 			children = (
-				2ACF9E6D1478251500991ED5 /* lcms2.h */,
-				2ACF9E6E1478251500991ED5 /* lcms2_plugin.h */,
+				2A41D794254B873200893EFF /* lcms2.h */,
+				2A41D795254B873200893EFF /* lcms2_plugin.h */,
 			);
 			path = include;
 			sourceTree = "<group>";
 		};
-		2ACF9ECD1478251500991ED5 /* src */ = {
+		2A41D7F4254B873200893EFF /* src */ = {
 			isa = PBXGroup;
 			children = (
-				2AEAB99E233EDBD70053BCB6 /* cmsalpha.c */,
-				2AEAB99F233EDBD70053BCB6 /* cmshalf.c */,
-				2ACF9ECE1478251500991ED5 /* cmscam02.c */,
-				2ACF9ECF1478251500991ED5 /* cmscgats.c */,
-				2ACF9ED01478251500991ED5 /* cmscnvrt.c */,
-				2ACF9ED11478251500991ED5 /* cmserr.c */,
-				2ACF9ED21478251500991ED5 /* cmsgamma.c */,
-				2ACF9ED31478251500991ED5 /* cmsgmt.c */,
-				2ACF9ED41478251500991ED5 /* cmsintrp.c */,
-				2ACF9ED51478251500991ED5 /* cmsio0.c */,
-				2ACF9ED61478251500991ED5 /* cmsio1.c */,
-				2ACF9ED71478251500991ED5 /* cmslut.c */,
-				2ACF9ED81478251500991ED5 /* cmsmd5.c */,
-				2ACF9ED91478251500991ED5 /* cmsmtrx.c */,
-				2ACF9EDA1478251500991ED5 /* cmsnamed.c */,
-				2ACF9EDB1478251500991ED5 /* cmsopt.c */,
-				2ACF9EDC1478251500991ED5 /* cmspack.c */,
-				2ACF9EDD1478251500991ED5 /* cmspcs.c */,
-				2ACF9EDE1478251500991ED5 /* cmsplugin.c */,
-				2ACF9EDF1478251500991ED5 /* cmsps2.c */,
-				2ACF9EE01478251500991ED5 /* cmssamp.c */,
-				2ACF9EE11478251500991ED5 /* cmssm.c */,
-				2ACF9EE21478251500991ED5 /* cmstypes.c */,
-				2ACF9EE31478251500991ED5 /* cmsvirt.c */,
-				2ACF9EE41478251500991ED5 /* cmswtpnt.c */,
-				2ACF9EE51478251500991ED5 /* cmsxform.c */,
-				2ACF9EE71478251500991ED5 /* lcms2_internal.h */,
+				2A41D7F5254B873200893EFF /* cmscam02.c */,
+				2A41D7F6254B873200893EFF /* cmscgats.c */,
+				2A41D7F7254B873200893EFF /* cmscnvrt.c */,
+				2A41D7F8254B873200893EFF /* cmserr.c */,
+				2A41D7F9254B873200893EFF /* cmsgamma.c */,
+				2A41D7FA254B873200893EFF /* cmsgmt.c */,
+				2A41D7FB254B873200893EFF /* cmsintrp.c */,
+				2A41D7FC254B873200893EFF /* cmsio0.c */,
+				2A41D7FD254B873200893EFF /* cmsio1.c */,
+				2A41D7FE254B873200893EFF /* cmslut.c */,
+				2A41D7FF254B873200893EFF /* cmsmd5.c */,
+				2A41D800254B873200893EFF /* cmsmtrx.c */,
+				2A41D801254B873200893EFF /* cmsnamed.c */,
+				2A41D802254B873200893EFF /* cmsopt.c */,
+				2A41D803254B873200893EFF /* cmspack.c */,
+				2A41D804254B873200893EFF /* cmspcs.c */,
+				2A41D805254B873200893EFF /* cmsplugin.c */,
+				2A41D806254B873200893EFF /* cmsps2.c */,
+				2A41D807254B873200893EFF /* cmssamp.c */,
+				2A41D808254B873200893EFF /* cmssm.c */,
+				2A41D809254B873200893EFF /* cmstypes.c */,
+				2A41D80A254B873200893EFF /* cmsvirt.c */,
+				2A41D80B254B873200893EFF /* cmswtpnt.c */,
+				2A41D80C254B873200893EFF /* cmsxform.c */,
+				2A41D80E254B873200893EFF /* lcms2_internal.h */,
 			);
 			path = src;
 			sourceTree = "<group>";
@@ -159,9 +153,9 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				2ACF9F2C1478251500991ED5 /* lcms2.h in Headers */,
-				2ACF9F2D1478251500991ED5 /* lcms2_plugin.h in Headers */,
-				2ACF9F491478251500991ED5 /* lcms2_internal.h in Headers */,
+				2A41D876254B873200893EFF /* lcms2_internal.h in Headers */,
+				2A41D859254B873200893EFF /* lcms2.h in Headers */,
+				2A41D85A254B873200893EFF /* lcms2_plugin.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -227,7 +221,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "cd $SRCROOT/../../../../../ext\n\nif [ ! -d Little-CMS ]\nthen\n\tgit clone https://github.com/mm2/Little-CMS -b lcms2.9\nfi\n";
+			shellScript = "cd $SRCROOT/../../../../../ext\n\nif [ ! -d Little-CMS ]\nthen\n\tgit clone https://github.com/mm2/Little-CMS -b lcms2.2\nfi\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -236,32 +230,30 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				2ACF9F311478251500991ED5 /* cmscam02.c in Sources */,
-				2ACF9F321478251500991ED5 /* cmscgats.c in Sources */,
-				2ACF9F331478251500991ED5 /* cmscnvrt.c in Sources */,
-				2ACF9F341478251500991ED5 /* cmserr.c in Sources */,
-				2AEAB9A1233EDBD80053BCB6 /* cmshalf.c in Sources */,
-				2ACF9F351478251500991ED5 /* cmsgamma.c in Sources */,
-				2ACF9F361478251500991ED5 /* cmsgmt.c in Sources */,
-				2ACF9F371478251500991ED5 /* cmsintrp.c in Sources */,
-				2ACF9F381478251500991ED5 /* cmsio0.c in Sources */,
-				2ACF9F391478251500991ED5 /* cmsio1.c in Sources */,
-				2ACF9F3A1478251500991ED5 /* cmslut.c in Sources */,
-				2ACF9F3B1478251500991ED5 /* cmsmd5.c in Sources */,
-				2ACF9F3C1478251500991ED5 /* cmsmtrx.c in Sources */,
-				2AEAB9A0233EDBD80053BCB6 /* cmsalpha.c in Sources */,
-				2ACF9F3D1478251500991ED5 /* cmsnamed.c in Sources */,
-				2ACF9F3E1478251500991ED5 /* cmsopt.c in Sources */,
-				2ACF9F3F1478251500991ED5 /* cmspack.c in Sources */,
-				2ACF9F401478251500991ED5 /* cmspcs.c in Sources */,
-				2ACF9F411478251500991ED5 /* cmsplugin.c in Sources */,
-				2ACF9F421478251500991ED5 /* cmsps2.c in Sources */,
-				2ACF9F431478251500991ED5 /* cmssamp.c in Sources */,
-				2ACF9F441478251500991ED5 /* cmssm.c in Sources */,
-				2ACF9F451478251500991ED5 /* cmstypes.c in Sources */,
-				2ACF9F461478251500991ED5 /* cmsvirt.c in Sources */,
-				2ACF9F471478251500991ED5 /* cmswtpnt.c in Sources */,
-				2ACF9F481478251500991ED5 /* cmsxform.c in Sources */,
+				2A41D869254B873200893EFF /* cmsmtrx.c in Sources */,
+				2A41D85F254B873200893EFF /* cmscgats.c in Sources */,
+				2A41D875254B873200893EFF /* cmsxform.c in Sources */,
+				2A41D86D254B873200893EFF /* cmspcs.c in Sources */,
+				2A41D866254B873200893EFF /* cmsio1.c in Sources */,
+				2A41D872254B873200893EFF /* cmstypes.c in Sources */,
+				2A41D861254B873200893EFF /* cmserr.c in Sources */,
+				2A41D862254B873200893EFF /* cmsgamma.c in Sources */,
+				2A41D85E254B873200893EFF /* cmscam02.c in Sources */,
+				2A41D873254B873200893EFF /* cmsvirt.c in Sources */,
+				2A41D86F254B873200893EFF /* cmsps2.c in Sources */,
+				2A41D868254B873200893EFF /* cmsmd5.c in Sources */,
+				2A41D86A254B873200893EFF /* cmsnamed.c in Sources */,
+				2A41D870254B873200893EFF /* cmssamp.c in Sources */,
+				2A41D874254B873200893EFF /* cmswtpnt.c in Sources */,
+				2A41D867254B873200893EFF /* cmslut.c in Sources */,
+				2A41D86B254B873200893EFF /* cmsopt.c in Sources */,
+				2A41D865254B873200893EFF /* cmsio0.c in Sources */,
+				2A41D863254B873200893EFF /* cmsgmt.c in Sources */,
+				2A41D86E254B873200893EFF /* cmsplugin.c in Sources */,
+				2A41D86C254B873200893EFF /* cmspack.c in Sources */,
+				2A41D860254B873200893EFF /* cmscnvrt.c in Sources */,
+				2A41D864254B873200893EFF /* cmsintrp.c in Sources */,
+				2A41D871254B873200893EFF /* cmssm.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
