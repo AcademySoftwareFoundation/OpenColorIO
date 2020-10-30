@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		2A401DCE254B989200FBA551 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2A401DCB254B989200FBA551 /* IOKit.framework */; };
 		2A99122722808A090073B23C /* OpenColorIO_PS_Dialog_Cocoa.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2AD7E1522280746B00592291 /* OpenColorIO_PS_Dialog_Cocoa.mm */; };
 		2A99122822808A0C0073B23C /* OpenColorIO_PS_Dialog_Controller.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2AD7E1512280746B00592291 /* OpenColorIO_PS_Dialog_Controller.mm */; };
 		2A99122922808A100073B23C /* OpenColorIO_AE_MonitorProfileChooser_Controller.m in Sources */ = {isa = PBXBuildFile; fileRef = 2AD7E1962280785100592291 /* OpenColorIO_AE_MonitorProfileChooser_Controller.m */; };
@@ -138,6 +139,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		2A401DCB254B989200FBA551 /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = System/Library/Frameworks/IOKit.framework; sourceTree = SDKROOT; };
 		2A99122A22808A360073B23C /* OpenColorIO_AE_Dialogs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = OpenColorIO_AE_Dialogs.h; path = ../../../aftereffects/OpenColorIO_AE_Dialogs.h; sourceTree = "<group>"; };
 		2A99122B22808A820073B23C /* ocioicc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ocioicc.cpp; path = ../../../../src/apps/ociobakelut/ocioicc.cpp; sourceTree = "<group>"; };
 		2A99122C22808A820073B23C /* ocioicc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ocioicc.h; path = ../../../../src/apps/ociobakelut/ocioicc.h; sourceTree = "<group>"; };
@@ -259,6 +261,7 @@
 				2AD7E1A722807A0600592291 /* liblcms.a in Frameworks */,
 				2AD7E1A922807A0600592291 /* libyaml.a in Frameworks */,
 				2AD7E1A822807A0600592291 /* libOpenColorIO.a in Frameworks */,
+				2A401DCE254B989200FBA551 /* IOKit.framework in Frameworks */,
 				2AD7E145228073ED00592291 /* AppKit.framework in Frameworks */,
 				2AD7E143228073E600592291 /* Cocoa.framework in Frameworks */,
 				2AD7E141228073D500592291 /* Carbon.framework in Frameworks */,
@@ -317,6 +320,7 @@
 		2AD7E13F228073D500592291 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				2A401DCB254B989200FBA551 /* IOKit.framework */,
 				2AD7E144228073ED00592291 /* AppKit.framework */,
 				2AD7E142228073E600592291 /* Cocoa.framework */,
 				2AD7E140228073D500592291 /* Carbon.framework */,
