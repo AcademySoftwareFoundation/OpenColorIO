@@ -125,9 +125,9 @@ OpenColorIO_PS_Context::getDisplayProcessor(const std::string &inputSpace, const
 {
     assert( !isLUT() );
 
-    OCIO::DisplayTransformRcPtr ocio_transform = OCIO::DisplayTransform::Create();
+    OCIO::DisplayViewTransformRcPtr ocio_transform = OCIO::DisplayViewTransform::Create();
 
-    ocio_transform->setInputColorSpaceName( inputSpace.c_str() );
+    ocio_transform->setSrc( inputSpace.c_str() );
     ocio_transform->setDisplay( device.c_str() );
     ocio_transform->setView( transform.c_str() );
 
@@ -152,7 +152,7 @@ OpenColorIO_PS_Context::getLUTProcessor(OCIO::Interpolation interpolation, OCIO:
     
     OCIO::ConstProcessorRcPtr processor = _config->getProcessor(transform);
     
-    OCIO::ConstCPUProcessorRcPtr cpu_processor = processor->getOptimizedCPUProcessor(OCIO::OPTIMIZATION_DEFAULT, OCIO::FINALIZATION_EXACT);
+    OCIO::ConstCPUProcessorRcPtr cpu_processor = processor->getOptimizedCPUProcessor(OCIO::OPTIMIZATION_LOSSLESS);
     
     return cpu_processor;
 }
@@ -190,9 +190,9 @@ OpenColorIO_PS_Context::getDisplayBaker(const std::string &inputSpace, const std
     const std::string output_space = "ProcessedOutput";
     outputColorSpace->setName( output_space.c_str() );
     
-    OCIO::DisplayTransformRcPtr transformPtr = OCIO::DisplayTransform::Create();
+    OCIO::DisplayViewTransformRcPtr transformPtr = OCIO::DisplayViewTransform::Create();
     
-    transformPtr->setInputColorSpaceName( inputSpace.c_str() );
+    transformPtr->setSrc( inputSpace.c_str() );
     transformPtr->setDisplay( device.c_str() );
     transformPtr->setView( transform.c_str() );
     

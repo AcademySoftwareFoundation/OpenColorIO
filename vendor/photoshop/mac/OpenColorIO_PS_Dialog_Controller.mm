@@ -276,7 +276,7 @@ static NSString *standardPath = @"/Library/Application Support/OpenColorIO";
             OpenColorIO_AE_MonitorProfileChooser_Controller *profileController = [[OpenColorIO_AE_MonitorProfileChooser_Controller alloc] init];
             
             // the sheet is still active, so can't run another one...will settle for modal
-            const NSInteger modal_result = [NSApp runModalForWindow:[profileController getWindow]];
+            const NSInteger modal_result = [NSApp runModalForWindow:[profileController window]];
             
                                     
             if(modal_result == NSRunStoppedResponse)
@@ -349,7 +349,7 @@ static NSString *standardPath = @"/Library/Application Support/OpenColorIO";
                 }
             }
             
-            [[profileController getWindow] close];
+            [profileController close];
             
             [profileController release];
         }
