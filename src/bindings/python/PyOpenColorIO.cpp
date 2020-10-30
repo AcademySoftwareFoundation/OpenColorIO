@@ -12,7 +12,7 @@ PYBIND11_MODULE(PyOpenColorIO, m)
     py::register_exception<Exception>(m, "Exception");
     py::register_exception<ExceptionMissingFile>(m, "ExceptionMissingFile");
 
-    // Global
+    // Global functions
     m.def("ClearAllCaches", &ClearAllCaches);
     m.def("GetVersion", &GetVersion);
     m.def("GetVersionHex", &GetVersionHex);
@@ -26,6 +26,16 @@ PYBIND11_MODULE(PyOpenColorIO, m)
     m.def("UnsetEnvVariable", &UnsetEnvVariable, "name"_a);
     m.def("IsEnvVariablePresent", &IsEnvVariablePresent, "name"_a);
 
+    // Global variables
+    m.attr("__author__")    = "OpenColorIO Contributors";
+    m.attr("__email__")     = "ocio-dev@lists.aswf.io";
+    m.attr("__license__")   = "SPDX-License-Identifier: BSD-3-Clause";
+    m.attr("__copyright__") = "Copyright Contributors to the OpenColorIO Project";
+    m.attr("__version__")   = OCIO_VERSION_FULL_STR;
+    m.attr("__status__")    = std::string(OCIO_VERSION_STATUS_STR).empty() ? "Production" : OCIO_VERSION_STATUS_STR;
+    m.attr("__doc__")       = "OpenColorIO (OCIO) is a complete color management solution geared towards motion picture production";
+
+    // Classes
     bindPyTypes(m);
     bindPyTransform(m);
     bindPyConfig(m);
