@@ -369,7 +369,7 @@ OCIO_ADD_TEST(ColorSpaceTransform, build_colorspace_ops)
         OCIO_CHECK_THROW_WHAT(OCIO::BuildColorSpaceOps(ops, *config,
                                                        config->getCurrentContext(), *cst,
                                                        OCIO::TRANSFORM_DIR_FORWARD), OCIO::Exception,
-                              "source color space 'source_missing' could not be found");
+                              "Color space 'source_missing' could not be found");
     
         cst = OCIO::ColorSpaceTransform::Create();
         cst->setSrc(src.c_str());
@@ -378,7 +378,7 @@ OCIO_ADD_TEST(ColorSpaceTransform, build_colorspace_ops)
         OCIO_CHECK_THROW_WHAT(OCIO::BuildColorSpaceOps(ops, *config,
                                                        config->getCurrentContext(), *cst,
                                                        OCIO::TRANSFORM_DIR_FORWARD), OCIO::Exception,
-                              "destination color space 'destination_missing' could not be found");
+                              "Color space 'destination_missing' could not be found");
     }
 }
 
@@ -751,5 +751,9 @@ OCIO_ADD_TEST(ColorSpaceTransform, context_variables)
     OCIO_CHECK_ASSERT(OCIO::CollectContextVariables(*cfg, *ctx, *cst, usedContextVars));
     OCIO_CHECK_EQUAL(1, usedContextVars->getNumStringVars());
     OCIO_CHECK_EQUAL(std::string("ENV1"), usedContextVars->getStringVarNameByIndex(0));
-    OCIO_CHECK_EQUAL(std::string("exposure_contrast_linear.ctf"), usedContextVars->getStringVarByIndex(0));
+    OCIO_CHECK_EQUAL(std::string("exposure_contrast_linear.ctf"),
+                     usedContextVars->getStringVarByIndex(0));
 }
+
+// Please see (Config, named_transform_processor) in NamedTransform_tests.cpp for coverage of
+// ColorSpaceTransform where the arguments are NamedTransforms.

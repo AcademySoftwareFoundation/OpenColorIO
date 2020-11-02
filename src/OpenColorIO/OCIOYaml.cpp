@@ -3381,10 +3381,11 @@ inline void save(YAML::Emitter& out, ConstColorSpaceRcPtr cs)
     out << YAML::Key << "equalitygroup" << YAML::Value << cs->getEqualityGroup();
     out << YAML::Key << "bitdepth" << YAML::Value;
     save(out, cs->getBitDepth());
-    if(cs->getDescription() != NULL && strlen(cs->getDescription()) > 0)
+    const char * desc = cs->getDescription();
+    if (desc && *desc)
     {
         out << YAML::Key << "description";
-        out << YAML::Value << YAML::Literal << cs->getDescription();
+        out << YAML::Value << YAML::Literal << desc;
     }
     out << YAML::Key << "isdata" << YAML::Value << cs->isData();
 
@@ -3495,13 +3496,12 @@ inline void save(YAML::Emitter& out, ConstLookRcPtr look)
     out << YAML::BeginMap;
     out << YAML::Key << "name" << YAML::Value << look->getName();
     out << YAML::Key << "process_space" << YAML::Value << look->getProcessSpace();
-    if (look->getDescription() != NULL &&
-        strlen(look->getDescription()) > 0)
+    const char * desc = look->getDescription();
+    if (desc && *desc)
     {
         out << YAML::Key << "description";
-        out << YAML::Value << YAML::Literal << look->getDescription();
+        out << YAML::Value << YAML::Literal << desc;
     }
-
 
     if(look->getTransform())
     {
@@ -3662,14 +3662,16 @@ inline void save(YAML::Emitter & out, ConstViewTransformRcPtr & vt)
     out << YAML::BeginMap;
 
     out << YAML::Key << "name" << YAML::Value << vt->getName();
-    if (vt->getFamily() != NULL && strlen(vt->getFamily()) > 0)
+    const char * family = vt->getFamily();
+    if (family && *family)
     {
-        out << YAML::Key << "family" << YAML::Value << vt->getFamily();
+        out << YAML::Key << "family" << YAML::Value << family;
     }
-    if (vt->getDescription() != NULL && strlen(vt->getDescription()) > 0)
+    const char * desc = vt->getDescription();
+    if (desc && *desc)
     {
         out << YAML::Key << "description";
-        out << YAML::Value << YAML::Literal << vt->getDescription();
+        out << YAML::Value << YAML::Literal << desc;
     }
 
     if (vt->getNumCategories() > 0)
@@ -3696,6 +3698,127 @@ inline void save(YAML::Emitter & out, ConstViewTransformRcPtr & vt)
     {
         out << YAML::Key << (isDisplay ? "from_display_reference" : "from_reference") << YAML::Value;
         save(out, fromref);
+    }
+
+    out << YAML::EndMap;
+    out << YAML::Newline;
+}
+
+// NamedTransform
+
+inline void load(const YAML::Node & node, NamedTransformRcPtr & nt)
+{
+    if (node.Tag() != "NamedTransform")
+    {
+        return; // not a !<NamedTransform> tag
+    }
+
+    if (node.Type() != YAML::NodeType::Map)
+    {
+        std::ostringstream os;
+        os << "The '!<NamedTransform>' content needs to be a map.";
+        throwError(node, os.str());
+    }
+
+    CheckDuplicates(node);
+
+    std::string key, stringval;
+
+    for (const auto & iter : node)
+    {
+        const YAML::Node& first = iter.first;
+        const YAML::Node& second = iter.second;
+
+        load(first, key);
+
+        if (second.IsNull() || !second.IsDefined()) continue;
+
+        if (key == "name")
+        {
+            load(second, stringval);
+            nt->setName(stringval.c_str());
+        }
+        else if (key == "description")
+        {
+            load(second, stringval);
+            nt->setDescription(stringval.c_str());
+        }
+        else if (key == "family")
+        {
+            load(second, stringval);
+            nt->setFamily(stringval.c_str());
+        }
+        else if (key == "categories")
+        {
+            StringUtils::StringVec categories;
+            load(second, categories);
+            for (auto name : categories)
+            {
+                nt->addCategory(name.c_str());
+            }
+        }
+        else if (key == "transform")
+        {
+            TransformRcPtr val;
+            load(second, val);
+            nt->setTransform(val, TRANSFORM_DIR_FORWARD);
+        }
+        else if (key == "inverse_transform")
+        {
+            TransformRcPtr val;
+            load(second, val);
+            nt->setTransform(val, TRANSFORM_DIR_INVERSE);
+        }
+        else
+        {
+            LogUnknownKeyWarning(node, first);
+        }
+    }
+}
+
+inline void save(YAML::Emitter & out, ConstNamedTransformRcPtr & nt)
+{
+    out << YAML::VerbatimTag("NamedTransform");
+    out << YAML::BeginMap;
+
+    out << YAML::Key << "name" << YAML::Value << nt->getName();
+
+    const char * desc = nt->getDescription();
+    if (desc && *desc)
+    {
+        out << YAML::Key << "description";
+        out << YAML::Value << YAML::Literal << desc;
+    }
+
+    const char * family = nt->getFamily();
+    if (family && *family)
+    {
+        out << YAML::Key << "family" << YAML::Value << family;
+    }
+
+    if (nt->getNumCategories() > 0)
+    {
+        StringUtils::StringVec categories;
+        for (int idx = 0; idx < nt->getNumCategories(); ++idx)
+        {
+            categories.push_back(nt->getCategory(idx));
+        }
+        out << YAML::Key << "categories";
+        out << YAML::Flow << YAML::Value << categories;
+    }
+
+    ConstTransformRcPtr transform = nt->getTransform(TRANSFORM_DIR_FORWARD);
+    if (transform)
+    {
+        out << YAML::Key << "transform" << YAML::Value;
+        save(out, transform);
+    }
+
+    transform = nt->getTransform(TRANSFORM_DIR_INVERSE);
+    if (transform)
+    {
+        out << YAML::Key << "inverse_transform" << YAML::Value;
+        save(out, transform);
     }
 
     out << YAML::EndMap;
@@ -4507,7 +4630,44 @@ inline void load(const YAML::Node& node, ConfigRcPtr & config, const char* filen
                     LogWarning(os.str());
                 }
             }
+        }
+        else if (key == "named_transforms")
+        {
+            if (second.Type() != YAML::NodeType::Sequence)
+            {
+                throwError(second, "'named_transforms' field needs to be a (- !<NamedTransform>) "
+                                   "list.");
+            }
 
+            for (const auto & val : second)
+            {
+                if (val.Tag() == "NamedTransform")
+                {
+                    auto nt = NamedTransform::Create();
+                    load(val, nt);
+                    if (nt->getName())
+                    {
+                        // Test that the name transform definitions are unique.
+                        if (config->getNamedTransform(nt->getName()))
+                        {
+                            std::ostringstream oss;
+                            oss << "NamedTransform: There is already one NamedTransform named: '";
+                            oss << std::string(nt->getName()) << "'.";
+                            throw Exception(oss.str().c_str());
+                        }
+                    }
+                    // Will throw if name is empty.
+                    config->addNamedTransform(nt);
+                }
+                else
+                {
+                    std::ostringstream os;
+                    os << "Unknown element found in named_transforms:";
+                    os << val.Tag() << ". Only NamedTransform(s)";
+                    os << " currently handled.";
+                    LogWarning(os.str());
+                }
+            }
         }
         else
         {
@@ -4643,11 +4803,12 @@ inline void save(YAML::Emitter & out, const Config & config)
     config.getDefaultLumaCoefs(&luma[0]);
     out << YAML::Key << "luma" << YAML::Value << YAML::Flow << luma;
 
-    if(config.getDescription() != NULL && strlen(config.getDescription()) > 0)
+    const char * desc = config.getDescription();
+    if (desc && *desc)
     {
         out << YAML::Newline;
         out << YAML::Key << "description";
-        out << YAML::Value << config.getDescription();
+        out << YAML::Value << desc;
         out << YAML::Newline;
     }
 
@@ -4913,6 +5074,22 @@ inline void save(YAML::Emitter & out, const Config & config)
         for (const auto & cs : sceneCS)
         {
             save(out, cs);
+        }
+        out << YAML::EndSeq;
+    }
+
+    // Named transforms.
+    const size_t numNT = config.getNumNamedTransforms();
+    if (numNT > 0)
+    {
+        out << YAML::Newline;
+        out << YAML::Key << "named_transforms";
+        out << YAML::Value << YAML::BeginSeq;
+        for (size_t i = 0; i < numNT; ++i)
+        {
+            auto name = config.getNamedTransformNameByIndex(i);
+            auto nt = config.getNamedTransform(name);
+            save(out, nt);
         }
         out << YAML::EndSeq;
     }

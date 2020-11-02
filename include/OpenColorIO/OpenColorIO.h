@@ -899,6 +899,33 @@ public:
 
     void clearViewTransforms();
 
+    /**
+    * \defgroup Methods related to named transforms.
+    * @{
+    */
+
+    /// Get the named transform from all the named transforms.
+    ConstNamedTransformRcPtr getNamedTransform(const char * name) const noexcept;
+
+    /// Number of named transforms.
+    size_t getNumNamedTransforms() const noexcept;
+
+    /// Name of named transform.
+    const char * getNamedTransformNameByIndex(size_t index) const noexcept;
+
+    /**
+    * \brief Add or replace named transform.
+    *
+    * \note
+    *    Throws if namedTransform is null, name is missing, or no transform is set.
+    */
+    void addNamedTransform(const ConstNamedTransformRcPtr & namedTransform);
+
+    /// Clear all named transforms.
+    void clearNamedTransforms();
+
+    /** @} */
+
     // 
     // File Rules
     //
@@ -1768,6 +1795,60 @@ private:
 };
 
 extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const Look&);
+
+
+/**
+ * \brief NamedTransform.
+ *
+ * A NamedTransform provides a way for config authors to include a set of color
+ * transforms that are independent of the color space being processed.  For example a "utility
+ * curve" transform where there is no need to convert to or from a reference space.
+ */
+
+class OCIOEXPORT NamedTransform
+{
+public:
+    static NamedTransformRcPtr Create();
+
+    virtual NamedTransformRcPtr createEditableCopy() const = 0;
+
+    virtual const char * getName() const noexcept = 0;
+    virtual void setName(const char * name) noexcept = 0;
+
+    /// \see ColorSpace::getFamily
+    virtual const char * getFamily() const noexcept = 0;
+    /// \see ColorSpace::setFamily
+    virtual void setFamily(const char * family) noexcept = 0;
+
+    virtual const char * getDescription() const noexcept = 0;
+    virtual void setDescription(const char * description) noexcept = 0;
+
+    /// \see ColorSpace::hasCategory
+    virtual bool hasCategory(const char * category) const noexcept = 0;
+    /// \see ColorSpace::addCategory
+    virtual void addCategory(const char * category) noexcept = 0;
+    /// \see ColorSpace::removeCategory
+    virtual void removeCategory(const char * category) noexcept = 0;
+    /// \see ColorSpace::getNumCategories
+    virtual int getNumCategories() const noexcept = 0;
+    /// \see ColorSpace::getCategory
+    virtual const char * getCategory(int index) const noexcept = 0;
+    /// \see ColorSpace::clearCategories
+    virtual void clearCategories() noexcept = 0;
+
+    virtual ConstTransformRcPtr getTransform(TransformDirection dir) const = 0;
+    virtual void setTransform(const ConstTransformRcPtr & transform, TransformDirection dir) = 0;
+
+    NamedTransform(const NamedTransform &) = delete;
+    NamedTransform & operator= (const NamedTransform &) = delete;
+    // Do not use (needed only for pybind11).
+    virtual ~NamedTransform() = default;
+
+protected:
+    NamedTransform() = default;
+};
+
+extern OCIOEXPORT std::ostream & operator<< (std::ostream &, const NamedTransform &);
 
 
 //

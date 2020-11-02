@@ -575,3 +575,64 @@ colorspaces:
         # SView_e has no rule.
         self.assertEqual('SView_e', next(views))
 
+    def test_named_transform(self):
+        # Test these Config functions: addNamedTransform, getNamedTransforms,
+        # getNamedTransformNames, clearNamedTransforms.
+
+        cfg = OCIO.Config().CreateRaw()
+        nt_names = cfg.getNamedTransformNames()
+        self.assertEqual(0, len(nt_names))
+        nts = cfg.getNamedTransforms()
+        self.assertEqual(0, len(nts))
+
+        # Add named transform.
+
+        # Missing name.
+        nt = OCIO.NamedTransform(forwardTransform = OCIO.RangeTransform())
+        with self.assertRaises(OCIO.Exception):
+            cfg.addNamedTransform(nt)
+
+        # Missing forward or inverse transform.
+        nt = OCIO.NamedTransform(name = "namedTransform")
+        with self.assertRaises(OCIO.Exception):
+            cfg.addNamedTransform(nt)
+
+        # Legal named transform can be added.
+        nt = OCIO.NamedTransform(
+            name = "namedTransform",
+            forwardTransform = OCIO.RangeTransform())
+        cfg.addNamedTransform(nt)
+
+        nt = OCIO.NamedTransform(
+            name = "other",
+            inverseTransform = OCIO.RangeTransform())
+        cfg.addNamedTransform(nt)
+
+        nt_names = cfg.getNamedTransformNames()
+        self.assertEqual(2, len(nt_names))
+        self.assertEqual('namedTransform', next(nt_names))
+        self.assertEqual('other', next(nt_names))
+
+        nts = cfg.getNamedTransforms()
+        self.assertEqual(2, len(nts))
+        nt = next(nts)
+        self.assertEqual('namedTransform', nt.getName())
+        cur_tr = nt.getTransform(OCIO.TRANSFORM_DIR_FORWARD)
+        self.assertIsInstance(cur_tr, OCIO.RangeTransform)
+        cur_tr = nt.getTransform(OCIO.TRANSFORM_DIR_INVERSE)
+        self.assertEqual(cur_tr, None)
+
+        nt = next(nts)
+        self.assertEqual('other', nt.getName())
+        cur_tr = nt.getTransform(OCIO.TRANSFORM_DIR_FORWARD)
+        self.assertEqual(cur_tr, None)
+        cur_tr = nt.getTransform(OCIO.TRANSFORM_DIR_INVERSE)
+        self.assertIsInstance(cur_tr, OCIO.RangeTransform)
+
+        nts = cfg.getNamedTransforms()
+        self.assertEqual(2, len(nts))
+
+        cfg.clearNamedTransforms()
+        nts = cfg.getNamedTransforms()
+        self.assertEqual(0, len(nts))
+

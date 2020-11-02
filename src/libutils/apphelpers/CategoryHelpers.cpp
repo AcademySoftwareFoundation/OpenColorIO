@@ -61,18 +61,30 @@ Categories ExtractCategories(const char * categories)
     return all;
 }
 
-ColorSpaceNames FindColorSpaceNames(ConstConfigRcPtr config, const Categories & categories)
+ColorSpaceNames FindColorSpaceNames(ConstConfigRcPtr config,
+                                    const Categories & categories)
 {
     ConstColorSpaceSetRcPtr allCS = GetColorSpaces(config, categories);
     return GetNames(allCS);
 }
 
-ColorSpaceNames FindAllColorSpaceNames(ConstConfigRcPtr config)
+ColorSpaceNames FindAllColorSpaceNames(ConstConfigRcPtr config, bool includeNamedTransforms)
 {
-    return GetNames(config);
+    auto res = GetNames(config);
+    if (includeNamedTransforms)
+    {
+        for (size_t idx = 0; idx < config->getNumNamedTransforms(); ++idx)
+        {
+            const char * ntName = config->getNamedTransformNameByIndex(idx);
+            res.push_back(ntName);
+        }
+    }
+    return res;
 }
 
-Infos FindColorSpaceInfos(ConstConfigRcPtr config, const Categories & categories)
+Infos FindColorSpaceInfos(ConstConfigRcPtr config,
+                          const Categories & categories,
+                          bool includeNamedTransforms)
 {
     ConstColorSpaceSetRcPtr allCSS = GetColorSpaces(config, categories);
 
@@ -84,10 +96,26 @@ Infos FindColorSpaceInfos(ConstConfigRcPtr config, const Categories & categories
         allInfos.push_back(ColorSpaceInfo::Create(config, cs));
     }
 
+    if (includeNamedTransforms)
+    {
+        for (const auto & cat : categories)
+        {
+            for (size_t idx = 0; idx < config->getNumNamedTransforms(); ++idx)
+            {
+                const char * ntName = config->getNamedTransformNameByIndex(idx);
+                ConstNamedTransformRcPtr nt = config->getNamedTransform(ntName);
+                if (nt->hasCategory(cat.c_str()))
+                {
+                    allInfos.push_back(ColorSpaceInfo::Create(config, nt));
+                }
+            }
+        }
+    }
+
     return allInfos;
 }
 
-Infos FindAllColorSpaceInfos(ConstConfigRcPtr config)
+Infos FindAllColorSpaceInfos(ConstConfigRcPtr config, bool includeNamedTransforms)
 {
     Infos allInfos;
 
@@ -96,6 +124,16 @@ Infos FindAllColorSpaceInfos(ConstConfigRcPtr config)
         const char * csName = config->getColorSpaceNameByIndex(idx);
         ConstColorSpaceRcPtr cs = config->getColorSpace(csName);
         allInfos.push_back(ColorSpaceInfo::Create(config, cs));
+    }
+
+    if (includeNamedTransforms)
+    {
+        for (size_t idx = 0; idx < config->getNumNamedTransforms(); ++idx)
+        {
+            const char * ntName = config->getNamedTransformNameByIndex(idx);
+            ConstNamedTransformRcPtr nt = config->getNamedTransform(ntName);
+            allInfos.push_back(ColorSpaceInfo::Create(config, nt));
+        }
     }
 
     return allInfos;
@@ -121,9 +159,10 @@ ConstColorSpaceInfoRcPtr GetRoleInfo(ConstConfigRcPtr config, const char * roleN
 
 Infos getColorSpaceInfosFromCategories(ConstConfigRcPtr config,
                                        const char * role,
-                                       const char * categories)
+                                       const char * categories,
+                                       bool includeNamedTransforms)
 {
-    // Step 1 - If the role exists, use only that space.
+    // Step 1 - If the role exists, use only the color space associated with the role.
 
     if (role && *role)
     {
@@ -144,14 +183,14 @@ Infos getColorSpaceInfosFromCategories(ConstConfigRcPtr config,
 
     if (allCategories.empty())
     {
-        Infos tmp = FindAllColorSpaceInfos(config);
+        Infos tmp = FindAllColorSpaceInfos(config, includeNamedTransforms);
         colorSpaceNames.insert(colorSpaceNames.end(), tmp.begin(), tmp.end());
         return colorSpaceNames;
     }
 
     // Step 3 - Find all active color spaces having at least one category.
 
-    Infos tmp = FindColorSpaceInfos(config, allCategories);
+    Infos tmp = FindColorSpaceInfos(config, allCategories, includeNamedTransforms);
     if (!tmp.empty())
     {
         colorSpaceNames.insert(colorSpaceNames.end(), tmp.begin(), tmp.end());
@@ -159,7 +198,7 @@ Infos getColorSpaceInfosFromCategories(ConstConfigRcPtr config,
     else
     {
         // Note: No color spaces match the categories so use them all.
-        Infos tmp = FindAllColorSpaceInfos(config);
+        Infos tmp = FindAllColorSpaceInfos(config, includeNamedTransforms);
         colorSpaceNames.insert(colorSpaceNames.end(), tmp.begin(), tmp.end());
 
         std::stringstream ss;

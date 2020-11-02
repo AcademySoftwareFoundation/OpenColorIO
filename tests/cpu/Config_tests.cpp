@@ -106,9 +106,9 @@ OCIO_ADD_TEST(Config, create_raw_config)
     OCIO_CHECK_NO_THROW(proc->getDefaultCPUProcessor());
 
     OCIO_CHECK_THROW_WHAT(config->getProcessor("not_found", "raw"), OCIO::Exception,
-                          "Could not find source color space");
+                          "Color space 'not_found' could not be found");
     OCIO_CHECK_THROW_WHAT(config->getProcessor("raw", "not_found"), OCIO::Exception,
-                          "Could not find destination color space");
+                          "Color space 'not_found' could not be found");
 }
 
 OCIO_ADD_TEST(Config, simple_config)
@@ -797,7 +797,7 @@ OCIO_ADD_TEST(Config, context_variable_faulty_cases)
 
         OCIO_CHECK_THROW_WHAT(cfg->getProcessor("cs1", "disp1", "view1", OCIO::TRANSFORM_DIR_FORWARD),
                               OCIO::Exception,
-                              "destination color space '$DST3' could not be found");
+                              "Color space '$DST3' could not be found");
     }
 
     {
@@ -810,7 +810,7 @@ OCIO_ADD_TEST(Config, context_variable_faulty_cases)
 
         OCIO_CHECK_THROW_WHAT(cfg->getProcessor("cs1", "disp1", "view2", OCIO::TRANSFORM_DIR_FORWARD),
                               OCIO::Exception,
-                              "destination color space '$DST2' could not be found");
+                              "Color space '$DST2' could not be found");
     }
 
     {
@@ -824,7 +824,7 @@ OCIO_ADD_TEST(Config, context_variable_faulty_cases)
 
         OCIO_CHECK_THROW_WHAT(cfg->getProcessor("cs1", "disp1", "view2", OCIO::TRANSFORM_DIR_FORWARD),
                               OCIO::Exception,
-                              "destination color space '$DST1' could not be found");
+                              "Color space '$DST1' could not be found");
     }
 }
 
@@ -1216,13 +1216,13 @@ OCIO_ADD_TEST(Config, context_variable_with_colorspacename)
 
         OCIO_CHECK_THROW_WHAT(cfg->getProcessor("cs1", "cs2"),
                               OCIO::Exception,
-                              "source color space '$VAR3' could not be found.");
+                              "Color space '$VAR3' could not be found.");
 
         OCIO::ContextRcPtr ctx;
         OCIO_CHECK_NO_THROW(ctx = cfg->getCurrentContext()->createEditableCopy());
         OCIO_CHECK_THROW_WHAT(cfg->getProcessor(ctx, "cs1", "cs2"),
                               OCIO::Exception,
-                              "source color space '$VAR3' could not be found.");
+                              "Color space '$VAR3' could not be found.");
 
         OCIO_CHECK_NO_THROW(ctx->setStringVar("VAR3", "cs1"));
         OCIO_CHECK_NO_THROW(cfg->getProcessor(ctx, "cs1", "cs2"));
@@ -1233,7 +1233,7 @@ OCIO_ADD_TEST(Config, context_variable_with_colorspacename)
         OCIO_CHECK_NO_THROW(ctx->setStringVar("VAR3", ""));
         OCIO_CHECK_THROW_WHAT(cfg->getProcessor(ctx, "cs1", "cs2"),
                               OCIO::Exception,
-                              "source color space '$VAR3' could not be found.");
+                              "Color space '$VAR3' could not be found.");
     }
 }
 
@@ -1283,7 +1283,7 @@ OCIO_ADD_TEST(Config, context_variable_with_role)
                               "The role 'reference' refers to a color space, '$ENV1', which is not defined.");
 
         OCIO_CHECK_THROW_WHAT(cfg->getProcessor("cs1", "cs3"), OCIO::Exception,
-                              "source color space 'reference' could not be found.");
+                              "Color space 'reference' could not be found.");
     }
 }
 
@@ -1323,12 +1323,13 @@ OCIO_ADD_TEST(Config, context_variable_with_display_view)
 
         OCIO_CHECK_THROW_WHAT(config->validate(),
                               OCIO::Exception,
-                              "Display 'disp1' has a view 'view1' that refers to a color space, '$ENV1',"
-                              " which is not defined.");
+                              "Display 'disp1' has a view 'view1' that refers to a color space or "
+                              "a named transform, '$ENV1', which is not defined.");
 
         OCIO_CHECK_THROW_WHAT(config->getProcessor("cs1", "disp1", "view1", OCIO::TRANSFORM_DIR_FORWARD),
                               OCIO::Exception,
-                              "DisplayViewTransform error. Cannot find display color space, '$ENV1'.");
+                              "DisplayViewTransform error. Cannot find color space or "
+                              "named transform, named '$ENV1'.");
     }
 }
 
@@ -1461,8 +1462,7 @@ OCIO_ADD_TEST(Config, env_colorspace_name)
                               "This config references a color space '$MISSING_ENV' "
                               "using an unknown context variable");
         OCIO_CHECK_THROW_WHAT(config->getProcessor("raw", "lgh"), OCIO::Exception,
-                              "BuildColorSpaceOps failed: destination color space '$MISSING_ENV' "
-                              "could not be found");
+                              "Color space '$MISSING_ENV' could not be found");
     }
 
     {
@@ -1481,8 +1481,7 @@ OCIO_ADD_TEST(Config, env_colorspace_name)
         OCIO_CHECK_THROW_WHAT(config->validate(), OCIO::Exception,
                               "color space, 'FaultyColorSpaceName', which is not defined");
         OCIO_CHECK_THROW_WHAT(config->getProcessor("raw", "lgh"), OCIO::Exception,
-                              "BuildColorSpaceOps failed: destination color space '$OCIO_TEST' "
-                              "could not be found");
+                              "Color space '$OCIO_TEST' could not be found");
     }
 
     {
@@ -7259,8 +7258,8 @@ colorspaces:
     OCIO_CHECK_NO_THROW(cfg->addVirtualDisplayView("Raw1", nullptr, "raw1", nullptr, nullptr, nullptr));
     OCIO_CHECK_THROW_WHAT(cfg->validate(),
                           OCIO::Exception,
-                          "Display 'virtual_display' has a view 'Raw1' that refers to a color space,"
-                          " 'raw1', which is not defined.");
+                          "Display 'virtual_display' has a view 'Raw1' that refers to a color space"
+                          " or a named transform, 'raw1', which is not defined.");
 
     cfg->removeVirtualDisplayView("Raw1");
     OCIO_CHECK_NO_THROW(cfg->validate());

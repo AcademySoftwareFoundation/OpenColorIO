@@ -116,7 +116,6 @@ private:
     StringsRcPtr m_descriptionLineByLine;
 };
 
-
 ConstColorSpaceInfoRcPtr ColorSpaceInfo::Create(ConstConfigRcPtr config, ConstColorSpaceRcPtr cs)
 {
     return ConstColorSpaceInfoRcPtr(
@@ -125,6 +124,14 @@ ConstColorSpaceInfoRcPtr ColorSpaceInfo::Create(ConstConfigRcPtr config, ConstCo
         &ColorSpaceInfoImpl::Deleter);
 }
 
+ConstColorSpaceInfoRcPtr ColorSpaceInfo::Create(ConstConfigRcPtr config,
+                                                ConstNamedTransformRcPtr nt)
+{
+    return ConstColorSpaceInfoRcPtr(
+        new ColorSpaceInfoImpl(config, nt->getName(), nullptr,
+                               nt->getFamily(), nt->getDescription()),
+        &ColorSpaceInfoImpl::Deleter);
+}
 ConstColorSpaceInfoRcPtr ColorSpaceInfo::Create(ConstConfigRcPtr config,
                                                 const char * name,
                                                 const char * family,
@@ -235,8 +242,9 @@ public:
     MenuHelperImpl & operator=(const MenuHelperImpl &) = delete;
 
     MenuHelperImpl(const ConstConfigRcPtr & config,
-                   const char * role,          // Role name to override categories.
-                   const char * categories);   // Comma-separated list of categories.
+                   const char * role,             // Role name to override categories.
+                   const char * categories,       // Comma-separated list of categories.
+                   bool includeNamedTransforms);  // Include named transforms in the menu.
 
     MenuHelperImpl(const MenuHelperImpl &) = delete;
     ~MenuHelperImpl() override = default;
@@ -260,6 +268,7 @@ private:
     ConstConfigRcPtr m_config;
     const std::string m_roleName;
     const std::string m_categories;
+    const bool m_includeNamedTransforms;
 
     Infos m_entries; // Contains all the color space names.
 
@@ -269,7 +278,8 @@ private:
 
 ColorSpaceMenuHelperRcPtr ColorSpaceMenuHelper::Create(const ConstConfigRcPtr & config,
                                                        const char * role,
-                                                       const char * categories)
+                                                       const char * categories,
+                                                       bool includeNamedTransforms)
 {
     // Note: Add a cache to not recreate a new menu helper for the same config.   
 
@@ -286,23 +296,26 @@ ColorSpaceMenuHelperRcPtr ColorSpaceMenuHelper::Create(const ConstConfigRcPtr & 
         std::ostringstream oss;
         oss << std::string(config->getCacheID())
             << std::string(role ? role : "")
-            << std::string(categories ? categories : "");
+            << std::string(categories ? categories : "")
+            << std::string(includeNamedTransforms ? "1" : "");
 
         const std::size_t key = std::hash<std::string>{}(oss.str());
 
         ColorSpaceMenuHelperRcPtr & entry = g_entries[key];
         if (!entry)
         {
-            entry = std::shared_ptr<ColorSpaceMenuHelper>(new MenuHelperImpl(config, role, categories),
-                                                          &MenuHelperImpl::Deleter);
+            entry = std::shared_ptr<ColorSpaceMenuHelper>(
+                new MenuHelperImpl(config, role, categories, includeNamedTransforms),
+                &MenuHelperImpl::Deleter);
         }
 
         return entry;
     }
     else
     {
-        return std::shared_ptr<ColorSpaceMenuHelper>(new MenuHelperImpl(config, role, categories),
-                                                     &MenuHelperImpl::Deleter);
+        return std::shared_ptr<ColorSpaceMenuHelper>(
+            new MenuHelperImpl(config, role, categories, includeNamedTransforms),
+            &MenuHelperImpl::Deleter);
     }
 }
 
@@ -313,11 +326,13 @@ void MenuHelperImpl::Deleter(ColorSpaceMenuHelper * incs)
 
 MenuHelperImpl::MenuHelperImpl(const ConstConfigRcPtr & config,
                                const char * role,
-                               const char * categories)
+                               const char * categories,
+                               bool includeNamedTransforms)
     :   ColorSpaceMenuHelper()
     ,   m_config(config)
     ,   m_roleName(StringUtils::Lower(role))
     ,   m_categories(StringUtils::Lower(categories))
+    ,   m_includeNamedTransforms(includeNamedTransforms)
 {
     refreshEntries();
 }
@@ -332,8 +347,10 @@ void MenuHelperImpl::refreshEntries()
 {
     // Find all color spaces.
 
-    m_colorSpaces 
-        = getColorSpaceInfosFromCategories(m_config, m_roleName.c_str(), m_categories.c_str());
+    m_colorSpaces = getColorSpaceInfosFromCategories(m_config,
+                                                     m_roleName.c_str(),
+                                                     m_categories.c_str(),
+                                                     m_includeNamedTransforms);
     if (m_colorSpaces.empty())
     {
         std::stringstream oss;
@@ -458,7 +475,7 @@ ConstProcessorRcPtr GetProcessor(const ConstConfigRcPtr & config,
                                  const char * outputColorSpaceName)
 {
     ColorSpaceMenuHelperRcPtr menuHelper
-        = ColorSpaceMenuHelper::Create(config, nullptr, nullptr);
+        = ColorSpaceMenuHelper::Create(config, nullptr, nullptr, true);
 
     return config->getProcessor(menuHelper->getNameFromUIName(inputColorSpaceName), 
                                 menuHelper->getNameFromUIName(outputColorSpaceName));
@@ -545,7 +562,7 @@ void AddColorSpace(ConfigRcPtr & config,
     {
         const Categories cats = ExtractCategories(categories);
 
-        // Only add the categories if already used.
+        // Only add the color space categories if already used.
         ColorSpaceNames names = FindColorSpaceNames(config, cats);
         if (!names.empty())
         {

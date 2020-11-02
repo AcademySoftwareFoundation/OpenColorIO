@@ -7,6 +7,7 @@
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "ContextVariableUtils.h"
+#include "NamedTransform.h"
 #include "OpBuilders.h"
 #include "ops/noop/NoOps.h"
 
@@ -101,7 +102,7 @@ const char * ColorSpaceTransform::getSrc() const
 
 void ColorSpaceTransform::setSrc(const char * src)
 {
-    getImpl()->m_src = src;
+    getImpl()->m_src = src ? src : "";
 }
 
 const char * ColorSpaceTransform::getDst() const
@@ -111,7 +112,7 @@ const char * ColorSpaceTransform::getDst() const
 
 void ColorSpaceTransform::setDst(const char * dst)
 {
-    getImpl()->m_dst = dst;
+    getImpl()->m_dst = dst ? dst : "";
 }
 
 bool ColorSpaceTransform::getDataBypass() const noexcept
@@ -143,16 +144,12 @@ std::ostream& operator<< (std::ostream& os, const ColorSpaceTransform& t)
 
 namespace
 {
-void ThrowMissingCS(const char * srcdst, const char * cs)
+void ThrowMissingCS(const char * cs)
 {
     std::ostringstream os;
-    os << "BuildColorSpaceOps failed: " << srcdst << " color space '" << cs;
-    os << "' could not be found.";
+    os << "Color space '" << cs << "' could not be found.";
     throw Exception(os.str().c_str());
 }
-
-constexpr char SRC_CS[] = "source";
-constexpr char DST_CS[] = "destination";
 }
 
 void BuildColorSpaceOps(OpRcPtrVec & ops,
@@ -161,35 +158,49 @@ void BuildColorSpaceOps(OpRcPtrVec & ops,
                         const ColorSpaceTransform & colorSpaceTransform,
                         TransformDirection dir)
 {
-    auto combinedDir = CombineTransformDirections(dir, colorSpaceTransform.getDirection());
+    const auto combinedDir = CombineTransformDirections(dir, colorSpaceTransform.getDirection());
+    const bool forward = (combinedDir == TRANSFORM_DIR_FORWARD);
 
-    ConstColorSpaceRcPtr src, dst;
+    const std::string transSrcName{ colorSpaceTransform.getSrc() };
+    const std::string transDstName{ colorSpaceTransform.getDst() };
+    const std::string srcName = forward ? transSrcName : transDstName;
+    const std::string dstName = forward ? transDstName : transSrcName;
 
-    if(combinedDir == TRANSFORM_DIR_FORWARD)
+    ConstColorSpaceRcPtr src = config.getColorSpace( context->resolveStringVar(srcName.c_str()) );
+    ConstColorSpaceRcPtr dst = config.getColorSpace( context->resolveStringVar(dstName.c_str()) );
+
+    ConstNamedTransformRcPtr srcNamedTransform;
+    ConstNamedTransformRcPtr dstNamedTransform;
+
+    if (!src)
     {
-        src = config.getColorSpace( context->resolveStringVar( colorSpaceTransform.getSrc() ) );
-        if (!src)
+        srcNamedTransform = config.getNamedTransform(srcName.c_str());
+        if (!srcNamedTransform)
         {
-            ThrowMissingCS(SRC_CS, colorSpaceTransform.getSrc());
-        }
-        dst = config.getColorSpace( context->resolveStringVar( colorSpaceTransform.getDst() ) );
-        if (!dst)
-        {
-            ThrowMissingCS(DST_CS, colorSpaceTransform.getDst());
+            ThrowMissingCS(srcName.c_str());
         }
     }
-    else if(combinedDir == TRANSFORM_DIR_INVERSE)
+    if (!dst)
     {
-        dst = config.getColorSpace( context->resolveStringVar( colorSpaceTransform.getSrc() ) );
-        if (!dst)
+        dstNamedTransform = config.getNamedTransform(dstName.c_str());
+        if (!dstNamedTransform)
         {
-            ThrowMissingCS(SRC_CS, colorSpaceTransform.getSrc());
+            ThrowMissingCS(dstName.c_str());
         }
-        src = config.getColorSpace( context->resolveStringVar( colorSpaceTransform.getDst() ) );
-        if (!src)
-        {
-            ThrowMissingCS(DST_CS, colorSpaceTransform.getDst());
-        }
+    }
+
+    // There are 4 cases:
+    // * (srcNamedTransform, dstNamedTransform): srcNamedTransform->forward +
+    //                                           dstNamedTransform->inverse.
+    // * (srcNamedTransform, dst): srcNamedTransform->forward (dst ignored).
+    // * (src, dstNamedTransform): dstNamedTransform->inverse (src ignored).
+    // * (src, dst): full color space transform.
+
+    if (srcNamedTransform || dstNamedTransform)
+    {
+        ConstTransformRcPtr tr = GetTransform(srcNamedTransform, dstNamedTransform);
+        BuildOps(ops, config, context, tr, TRANSFORM_DIR_FORWARD);
+        return;
     }
 
     BuildColorSpaceOps(ops, config, context, src, dst, colorSpaceTransform.getDataBypass());

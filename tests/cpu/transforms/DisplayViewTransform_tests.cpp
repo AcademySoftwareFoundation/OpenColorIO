@@ -424,6 +424,9 @@ displays:
   display:
     - !<View> {name: view, view_transform: display_vt, display_colorspace: displayCSOut, looks: look}
     - !<View> {name: viewNoVT, colorspace: displayCSOut, looks: look}
+    - !<View> {name: viewVTNT, view_transform: nt_forward, display_colorspace: displayCSOut}
+    - !<View> {name: viewCSNT, colorspace: nt_inverse, looks: look}
+    - !<View> {name: viewCSNTNoLook, colorspace: nt_inverse}
 
 looks:
   - !<Look>
@@ -464,6 +467,15 @@ colorspaces:
     family: raw
     description: A raw color space.
     isdata: true
+
+named_transforms:
+  - !<NamedTransform>
+    name: nt_forward
+    transform: !<CDLTransform> {name: forward transform for nt_forward, sat: 1.5}
+
+  - !<NamedTransform>
+    name: nt_inverse
+    inverse_transform: !<CDLTransform> {name: inverse transform for nt_inverse, sat: 1.5}
 )" };
 
     std::istringstream is;
@@ -789,6 +801,191 @@ colorspaces:
     data = op->data();
     OCIO_REQUIRE_EQUAL(data->getType(), OCIO::OpData::NoOpType);
 
+    //
+    // Using named transforms.
+    //
+
+    //
+    // Src can't be a named transform.
+    //
+    ops.clear();
+    dt->setSrc("nt_forward");
+    dt->setView("view");
+
+    OCIO_CHECK_THROW_WHAT(OCIO::BuildDisplayOps(ops, *config,
+                                                config->getCurrentContext(), *dt,
+                                                OCIO::TRANSFORM_DIR_FORWARD),
+                          OCIO::Exception,
+                          "Cannot find source color space named 'nt_forward'");
+
+    //
+    // View color space is a named transform: looks are applied on src then the named transform is
+    // applied.
+    //
+    ops.clear();
+    dt->setSrc("displayCSIn");
+    dt->setView("viewCSNT");
+
+    OCIO_CHECK_NO_THROW(OCIO::BuildDisplayOps(ops, *config,
+                                              config->getCurrentContext(), *dt,
+                                              OCIO::TRANSFORM_DIR_FORWARD));
+    OCIO_REQUIRE_EQUAL(ops.size(), 7);
+    OCIO_CHECK_NO_THROW(ops.validate());
+
+    // 0. GPU Allocation No-op.
+    op = OCIO_DYNAMIC_POINTER_CAST<const OCIO::Op>(ops[0]);
+    data = op->data();
+    OCIO_REQUIRE_EQUAL(data->getType(), OCIO::OpData::NoOpType);
+
+    // 1. In to reference.
+    op = OCIO_DYNAMIC_POINTER_CAST<const OCIO::Op>(ops[1]);
+    ValidateTransform(op, "in cs to ref", OCIO::TRANSFORM_DIR_FORWARD, __LINE__);
+
+    // 2. Look process space from reference.
+    op = OCIO_DYNAMIC_POINTER_CAST<const OCIO::Op>(ops[2]);
+    data = op->data();
+    ValidateTransform(op, "process cs from ref", OCIO::TRANSFORM_DIR_FORWARD, __LINE__);
+
+    // 3. GPU Allocation No-op.
+    op = OCIO_DYNAMIC_POINTER_CAST<const OCIO::Op>(ops[3]);
+    data = op->data();
+    OCIO_CHECK_EQUAL(data->getType(), OCIO::OpData::NoOpType);
+
+    // 4. Look No-op.
+    op = OCIO_DYNAMIC_POINTER_CAST<const OCIO::Op>(ops[4]);
+    data = op->data();
+    OCIO_CHECK_EQUAL(data->getType(), OCIO::OpData::NoOpType);
+
+    // 5. Look transform.
+    op = OCIO_DYNAMIC_POINTER_CAST<const OCIO::Op>(ops[5]);
+    data = op->data();
+    ValidateTransform(op, "look forward", OCIO::TRANSFORM_DIR_FORWARD, __LINE__);
+
+    // 6. Named transform.
+    op = OCIO_DYNAMIC_POINTER_CAST<const OCIO::Op>(ops[6]);
+    ValidateTransform(op, "inverse transform for nt_inverse", OCIO::TRANSFORM_DIR_INVERSE, __LINE__);
+
+    //
+    // Same in inverse direction.
+    //
+    ops.clear();
+
+    OCIO_CHECK_NO_THROW(OCIO::BuildDisplayOps(ops, *config,
+                                              config->getCurrentContext(), *dt,
+                                              OCIO::TRANSFORM_DIR_INVERSE));
+    OCIO_REQUIRE_EQUAL(ops.size(), 7);
+    OCIO_CHECK_NO_THROW(ops.validate());
+    // 0. Named transform.
+    op = OCIO_DYNAMIC_POINTER_CAST<const OCIO::Op>(ops[0]);
+    ValidateTransform(op, "inverse transform for nt_inverse", OCIO::TRANSFORM_DIR_FORWARD, __LINE__);
+
+    // 1. Look No-op.
+    op = OCIO_DYNAMIC_POINTER_CAST<const OCIO::Op>(ops[1]);
+    data = op->data();
+    OCIO_CHECK_EQUAL(data->getType(), OCIO::OpData::NoOpType);
+
+    // 2. Look transform (inverse).
+    op = OCIO_DYNAMIC_POINTER_CAST<const OCIO::Op>(ops[2]);
+    data = op->data();
+    ValidateTransform(op, "look inverse", OCIO::TRANSFORM_DIR_FORWARD, __LINE__);
+
+    // 3. GPU Allocation No-op.
+    op = OCIO_DYNAMIC_POINTER_CAST<const OCIO::Op>(ops[3]);
+    data = op->data();
+    OCIO_CHECK_EQUAL(data->getType(), OCIO::OpData::NoOpType);
+
+    // 4. Look process space to reference.
+    op = OCIO_DYNAMIC_POINTER_CAST<const OCIO::Op>(ops[4]);
+    data = op->data();
+    ValidateTransform(op, "process cs to ref", OCIO::TRANSFORM_DIR_FORWARD, __LINE__);
+
+    // 5. In from reference.
+    op = OCIO_DYNAMIC_POINTER_CAST<const OCIO::Op>(ops[5]);
+    data = op->data();
+    ValidateTransform(op, "in cs from ref", OCIO::TRANSFORM_DIR_FORWARD, __LINE__);
+
+    // 6. GPU Allocation No-op.
+    op = OCIO_DYNAMIC_POINTER_CAST<const OCIO::Op>(ops[6]);
+    data = op->data();
+    OCIO_REQUIRE_EQUAL(data->getType(), OCIO::OpData::NoOpType);
+
+    //
+    // View color space is a named transform and no look.
+    //
+    ops.clear();
+    dt->setView("viewCSNTNoLook");
+
+    OCIO_CHECK_NO_THROW(OCIO::BuildDisplayOps(ops, *config,
+                                              config->getCurrentContext(), *dt,
+                                              OCIO::TRANSFORM_DIR_FORWARD));
+    OCIO_REQUIRE_EQUAL(ops.size(), 1);
+    OCIO_CHECK_NO_THROW(ops.validate());
+    op = OCIO_DYNAMIC_POINTER_CAST<const OCIO::Op>(ops[0]);
+    ValidateTransform(op, "inverse transform for nt_inverse", OCIO::TRANSFORM_DIR_INVERSE, __LINE__);
+
+    //
+    // Same in inverse direction.
+    //
+    ops.clear();
+
+    OCIO_CHECK_NO_THROW(OCIO::BuildDisplayOps(ops, *config,
+                                              config->getCurrentContext(), *dt,
+                                              OCIO::TRANSFORM_DIR_INVERSE));
+    OCIO_REQUIRE_EQUAL(ops.size(), 1);
+    OCIO_CHECK_NO_THROW(ops.validate());
+    op = OCIO_DYNAMIC_POINTER_CAST<const OCIO::Op>(ops[0]);
+    ValidateTransform(op, "inverse transform for nt_inverse", OCIO::TRANSFORM_DIR_FORWARD, __LINE__);
+
+    //
+    // View transforn is a named transform: named transform and dst conversion are applied.
+    //
+    ops.clear();
+    dt->setSrc("displayCSIn");
+    dt->setView("viewVTNT");
+
+    OCIO_CHECK_NO_THROW(OCIO::BuildDisplayOps(ops, *config,
+                                              config->getCurrentContext(), *dt,
+                                              OCIO::TRANSFORM_DIR_FORWARD));
+    OCIO_REQUIRE_EQUAL(ops.size(), 3);
+    OCIO_CHECK_NO_THROW(ops.validate());
+    // Named transform.
+    op = OCIO_DYNAMIC_POINTER_CAST<const OCIO::Op>(ops[0]);
+    ValidateTransform(op, "forward transform for nt_forward", OCIO::TRANSFORM_DIR_FORWARD, __LINE__);
+
+    // DisplayCSOutput from display reference.
+    op = OCIO_DYNAMIC_POINTER_CAST<const OCIO::Op>(ops[1]);
+    data = op->data();
+    ValidateTransform(op, "out cs from ref", OCIO::TRANSFORM_DIR_FORWARD, __LINE__);
+
+    // GPU Allocation No-op.
+    op = OCIO_DYNAMIC_POINTER_CAST<const OCIO::Op>(ops[2]);
+    data = op->data();
+    OCIO_CHECK_EQUAL(data->getType(), OCIO::OpData::NoOpType);
+
+    //
+    // Same in inverse direction: dst conversion and named transform are applied.
+    //
+    ops.clear();
+
+    OCIO_CHECK_NO_THROW(OCIO::BuildDisplayOps(ops, *config,
+                                              config->getCurrentContext(), *dt,
+                                              OCIO::TRANSFORM_DIR_INVERSE));
+    OCIO_REQUIRE_EQUAL(ops.size(), 3);
+    OCIO_CHECK_NO_THROW(ops.validate());
+
+    // GPU Allocation No-op.
+    op = OCIO_DYNAMIC_POINTER_CAST<const OCIO::Op>(ops[0]);
+    data = op->data();
+    OCIO_CHECK_EQUAL(data->getType(), OCIO::OpData::NoOpType);
+
+    // DisplayCSOutput to display reference.
+    op = OCIO_DYNAMIC_POINTER_CAST<const OCIO::Op>(ops[1]);
+    ValidateTransform(op, "out cs to ref", OCIO::TRANSFORM_DIR_FORWARD, __LINE__);
+
+    // Named transform.
+    op = OCIO_DYNAMIC_POINTER_CAST<const OCIO::Op>(ops[2]);
+    data = op->data();
+    ValidateTransform(op, "forward transform for nt_forward", OCIO::TRANSFORM_DIR_INVERSE, __LINE__);
 }
 
 OCIO_ADD_TEST(DisplayViewTransform, config_load)

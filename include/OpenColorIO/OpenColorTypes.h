@@ -52,6 +52,10 @@ class OCIOEXPORT Look;
 typedef OCIO_SHARED_PTR<const Look> ConstLookRcPtr;
 typedef OCIO_SHARED_PTR<Look> LookRcPtr;
 
+class OCIOEXPORT NamedTransform;
+typedef OCIO_SHARED_PTR<const NamedTransform> ConstNamedTransformRcPtr;
+typedef OCIO_SHARED_PTR<NamedTransform> NamedTransformRcPtr;
+
 class OCIOEXPORT ViewTransform;
 typedef OCIO_SHARED_PTR<const ViewTransform> ConstViewTransformRcPtr;
 typedef OCIO_SHARED_PTR<ViewTransform> ViewTransformRcPtr;
