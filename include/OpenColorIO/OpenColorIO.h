@@ -124,7 +124,7 @@ extern OCIOEXPORT void ClearAllCaches();
  * \brief Get the version number for the library, as a dot-delimited string 
  *     (e.g., "1.0.0").
  * 
- * This is also available at compile time as OCIO_VERSION.
+ * This is also available at compile time as OCIO_VERSION_FULL_STR.
  */
 extern OCIOEXPORT const char * GetVersion();
 
@@ -160,6 +160,14 @@ extern OCIOEXPORT void SetLoggingFunction(LoggingFunction logFunction);
 extern OCIOEXPORT void ResetToDefaultLoggingFunction();
 /// Log a message using the library logging function.
 extern OCIOEXPORT void LogMessage(LoggingLevel level, const char * message);
+
+/**
+ * \brief Set the Compute Hash Function to use; otherwise, use the default.
+ * 
+ * \param ComputeHashFunction
+ */
+extern OCIOEXPORT void SetComputeHashFunction(ComputeHashFunction hashFunction);
+extern OCIOEXPORT void ResetComputeHashFunction();
 
 //
 // Note that the following environment variable access methods are not thread safe.
@@ -1164,13 +1172,14 @@ public:
     /**
      * \brief Insert a rule at a given ruleIndex.
      * 
-     * Rule currently at ruleIndex
-     * will be pushed to index: ruleIndex + 1.
+     * Rule currently at ruleIndex will be pushed to index: ruleIndex + 1.
      * Name must be unique.
      * - "Default" is a reserved name for the default rule. The default rule is automatically
      * added and can't be removed. (see \ref FileRules::setDefaultRuleColorSpace ).
      * - "ColorSpaceNamePathSearch" is also a reserved name
      * (see \ref FileRules::insertPathSearchRule ).
+     *
+     * Will throw if pattern, extension or regex is a null or empty string.
      *
      * Will throw if ruleIndex is not less than \ref FileRules::getNumEntries .
      */

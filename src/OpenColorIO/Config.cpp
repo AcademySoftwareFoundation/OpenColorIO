@@ -83,7 +83,7 @@ constexpr char INTERNAL_RAW_PROFILE[] =
 
 const char * GetVersion()
 {
-    return OCIO_VERSION;
+    return OCIO_VERSION_FULL_STR;
 }
 
 int GetVersionHex()
