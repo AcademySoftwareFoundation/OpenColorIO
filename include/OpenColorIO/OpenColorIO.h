@@ -124,7 +124,7 @@ extern OCIOEXPORT void ClearAllCaches();
  * \brief Get the version number for the library, as a dot-delimited string 
  *     (e.g., "1.0.0").
  * 
- * This is also available at compile time as OCIO_VERSION.
+ * This is also available at compile time as OCIO_VERSION_FULL_STR.
  */
 extern OCIOEXPORT const char * GetVersion();
 
@@ -160,6 +160,14 @@ extern OCIOEXPORT void SetLoggingFunction(LoggingFunction logFunction);
 extern OCIOEXPORT void ResetToDefaultLoggingFunction();
 /// Log a message using the library logging function.
 extern OCIOEXPORT void LogMessage(LoggingLevel level, const char * message);
+
+/**
+ * \brief Set the Compute Hash Function to use; otherwise, use the default.
+ * 
+ * \param ComputeHashFunction
+ */
+extern OCIOEXPORT void SetComputeHashFunction(ComputeHashFunction hashFunction);
+extern OCIOEXPORT void ResetComputeHashFunction();
 
 //
 // Note that the following environment variable access methods are not thread safe.

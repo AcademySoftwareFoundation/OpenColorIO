@@ -249,6 +249,9 @@ enum LoggingLevel
     LOGGING_LEVEL_DEFAULT = LOGGING_LEVEL_INFO
 };
 
+/// Define Compute Hash function signature.
+using ComputeHashFunction = std::function<std::string(const std::string &)>;
+
 /**
  * OCIO does not mandate the image state of the main reference space and it is not
  * required to be scene-referred.  This enum is used in connection with the display color space

@@ -26,8 +26,6 @@ namespace OCIO_NAMESPACE
 {
 namespace
 {
-
-
 // Here is the explanation of the stat() method:
 // https://pubs.opengroup.org/onlinepubs/009695299/basedefs/sys/stat.h.html
 // "The st_ino and st_dev fields taken together uniquely identify the file within the system."
@@ -36,7 +34,8 @@ namespace
 // https://docs.microsoft.com/en-us/cpp/c-runtime-library/reference/stat-functions?redirectedfrom=MSDN&view=vs-2019
 // "The inode, and therefore st_ino, has no meaning in the FAT, HPFS, or NTFS file systems."
 
-std::string ComputeHash(const std::string & filename)
+// That's the default hash method implementation to compute a hash key based on a file content.
+std::string DefaultComputeHash(const std::string &filename)
 {
     struct stat fileInfo;
     if (stat(filename.c_str(), &fileInfo) == 0)
@@ -57,6 +56,10 @@ std::string ComputeHash(const std::string & filename)
     return "";
 }
 
+// The global variable holds the hash function to use.
+// It could be changed using SetComputeHashFunction() to customize the implementation.
+ComputeHashFunction g_hashFunction = DefaultComputeHash;
+
 // We mutex both the main map and each item individually, so that
 // the potentially slow stat calls dont block other lookups to already
 // existing items. (The stat calls will block other lookups on the
@@ -74,6 +77,16 @@ typedef std::map<std::string, FileHashResultPtr> FileCacheMap;
 
 FileCacheMap g_fastFileHashCache;
 Mutex g_fastFileHashCache_mutex;
+}
+
+void SetComputeHashFunction(ComputeHashFunction hashFunction)
+{
+    g_hashFunction = hashFunction;
+}
+
+void ResetComputeHashFunction()
+{
+    g_hashFunction = DefaultComputeHash;
 }
 
 std::string GetFastFileHash(const std::string & filename)
@@ -101,7 +114,7 @@ std::string GetFastFileHash(const std::string & filename)
             // NB: OCIO does not attempt to detect if files have changed and caused the cache to
             // become stale.
             fileHashResultPtr->ready = true;
-            fileHashResultPtr->hash = ComputeHash(filename);
+            fileHashResultPtr->hash = g_hashFunction(filename);
         }
 
         hash = fileHashResultPtr->hash;
