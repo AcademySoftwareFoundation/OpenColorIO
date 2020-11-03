@@ -7,7 +7,6 @@
 // Makefile configuration options
 #define OCIO_NAMESPACE OpenColorIO
 #define OCIO_VERSION "2.0.0"
-#define OCIO_VERSION_NS v200
 
 /* Version as a single 4-byte hex number, e.g. 0x01050200 == 1.5.2
    Use this for numeric comparisons, e.g. #if OCIO_VERSION_HEX >= ... 
@@ -18,16 +17,15 @@
                           (0 << 16) | \
                           (0 <<  8))
 
+#define OCIO_VERSION_MAJOR 2
+#define OCIO_VERSION_MINOR 0
 
-// Namespace / version mojo
-#define OCIO_NAMESPACE_ENTER namespace OCIO_NAMESPACE { namespace OCIO_VERSION_NS
-#define OCIO_NAMESPACE_EXIT using namespace OCIO_VERSION_NS; }
-#define OCIO_NAMESPACE_USING using namespace OCIO_NAMESPACE;
 
 // shared_ptr / dynamic_pointer_cast
 #include <memory>
 #define OCIO_SHARED_PTR std::shared_ptr
 #define OCIO_DYNAMIC_POINTER_CAST std::dynamic_pointer_cast
+
 
 // If supported, define OCIOEXPORT, OCIOHIDDEN
 // (used to choose which symbols to export from OpenColorIO)
@@ -42,19 +40,19 @@
 #elif defined(_WIN32) || defined(_WIN64) || defined(_WINDOWS) || defined(_MSC_VER)
     // Windows requires you to export from the main library and then import in any others
     // only when compiling a dynamic library (i.e. DLL)
-	#ifndef OpenColorIO_SKIP_IMPORTS
-		#if defined OpenColorIO_EXPORTS
-			#define OCIOEXPORT __declspec(dllexport)
-		#else
-			#define OCIOEXPORT __declspec(dllimport)
-		#endif
-	#else
-		#define OCIOEXPORT
-	#endif
+    #ifndef OpenColorIO_SKIP_IMPORTS
+        #if defined OpenColorIO_EXPORTS
+            #define OCIOEXPORT __declspec(dllexport)
+        #else
+            #define OCIOEXPORT __declspec(dllimport)
+        #endif
+    #else
+        #define OCIOEXPORT
+    #endif
     #define OCIOHIDDEN
 
-	#undef min
-	#undef max
+    #undef min
+    #undef max
 #else // Others platforms not supported atm
     #define OCIOEXPORT
     #define OCIOHIDDEN

@@ -75,7 +75,7 @@
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>..;..\..\..;..\..\..\..\..\include;..\..\..\..\..\src\utils\oglbuilder;..\..\..\..\..\src\apps\ociobakelut;..\..\..\..\..\ext\Adobe After Effects CS5 Win SDK\Examples\Headers;..\..\..\..\..\ext\Adobe After Effects CS5 Win SDK\Examples\Headers\SP;..\..\..\..\..\ext\Adobe After Effects CS5 Win SDK\Examples\Headers\Win;..\..\..\..\..\ext\Adobe After Effects CS5 Win SDK\Examples\Resources;..\..\..\..\..\ext\Adobe After Effects CS5 Win SDK\Examples\Util;..\..\..\..\..\ext\glew-2.2.0\include;..\..\..\..\..\ext\Little-CMS\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..;..\..\..;..\..\..\..\..\include;..\..\..\..\..\src\libutils\oglapphelpers;..\..\..\..\..\src\apps\ociobakelut;..\..\..\..\..\ext\Adobe After Effects CS5 Win SDK\Examples\Headers;..\..\..\..\..\ext\Adobe After Effects CS5 Win SDK\Examples\Headers\SP;..\..\..\..\..\ext\Adobe After Effects CS5 Win SDK\Examples\Headers\Win;..\..\..\..\..\ext\Adobe After Effects CS5 Win SDK\Examples\Resources;..\..\..\..\..\ext\Adobe After Effects CS5 Win SDK\Examples\Util;..\..\..\..\..\ext\glew-2.2.0\include;..\..\..\..\..\ext\Little-CMS\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>OpenColorIO_SKIP_IMPORTS;GLEW_STATIC;MSWindows;WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <StructMemberAlignment>4Bytes</StructMemberAlignment>
@@ -128,7 +128,7 @@
     </Midl>
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
-      <AdditionalIncludeDirectories>..;..\..\..;..\..\..\..\..\include;..\..\..\..\..\src\utils\oglbuilder;..\..\..\..\..\src\apps\ociobakelut;..\..\..\..\..\ext\Adobe After Effects CS5 Win SDK\Examples\Headers;..\..\..\..\..\ext\Adobe After Effects CS5 Win SDK\Examples\Headers\SP;..\..\..\..\..\ext\Adobe After Effects CS5 Win SDK\Examples\Headers\Win;..\..\..\..\..\ext\Adobe After Effects CS5 Win SDK\Examples\Resources;..\..\..\..\..\ext\Adobe After Effects CS5 Win SDK\Examples\Util;..\..\..\..\..\ext\glew-2.2.0\include;..\..\..\..\..\ext\Little-CMS\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..;..\..\..;..\..\..\..\..\include;..\..\..\..\..\src\libutils\oglapphelpers;..\..\..\..\..\src\apps\ociobakelut;..\..\..\..\..\ext\Adobe After Effects CS5 Win SDK\Examples\Headers;..\..\..\..\..\ext\Adobe After Effects CS5 Win SDK\Examples\Headers\SP;..\..\..\..\..\ext\Adobe After Effects CS5 Win SDK\Examples\Headers\Win;..\..\..\..\..\ext\Adobe After Effects CS5 Win SDK\Examples\Resources;..\..\..\..\..\ext\Adobe After Effects CS5 Win SDK\Examples\Util;..\..\..\..\..\ext\glew-2.2.0\include;..\..\..\..\..\ext\Little-CMS\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>OpenColorIO_SKIP_IMPORTS;GLEW_STATIC;MSWindows;WIN32;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <StructMemberAlignment>4Bytes</StructMemberAlignment>
@@ -197,7 +197,7 @@
     <ClInclude Include="..\..\..\..\..\ext\Adobe After Effects CS5 Win SDK\Examples\Headers\PrSDKAEUI.h" />
     <ClInclude Include="..\..\..\..\..\ext\Adobe After Effects CS5 Win SDK\Examples\Headers\PrSDKPixelFormat.h" />
     <ClInclude Include="..\..\..\..\..\src\apps\ociobakelut\ocioicc.h" />
-    <ClInclude Include="..\..\..\..\..\src\utils\oglbuilder\glsl.h" />
+    <ClInclude Include="..\..\..\..\..\src\libutils\oglapphelpers\glsl.h" />
     <ClInclude Include="..\..\..\DrawbotBot.h" />
     <ClInclude Include="..\..\..\OpenColorIO_AE.h" />
     <ClInclude Include="..\..\..\OpenColorIO_AE_Context.h" />
@@ -229,7 +229,7 @@ cl /D "MSWindows" /EP $(IntDir)%(Filename).rrc &gt;               "$(ProjectDir)
     <ClCompile Include="..\..\..\..\..\ext\Adobe After Effects CS5 Win SDK\Examples\Util\MissingSuiteError.cpp" />
     <ClCompile Include="..\..\..\..\..\ext\Adobe After Effects CS5 Win SDK\Examples\Util\Smart_Utils.cpp" />
     <ClCompile Include="..\..\..\..\..\src\apps\ociobakelut\ocioicc.cpp" />
-    <ClCompile Include="..\..\..\..\..\src\utils\oglbuilder\glsl.cpp" />
+    <ClCompile Include="..\..\..\..\..\src\libutils\oglapphelpers\glsl.cpp" />
     <ClCompile Include="..\..\..\DrawbotBot.cpp" />
     <ClCompile Include="..\..\..\OpenColorIO_AE.cpp" />
     <ClCompile Include="..\..\..\OpenColorIO_AE_ArbData.cpp" />
