@@ -372,7 +372,6 @@ void CreateMatrixTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op)
 }
 
 void BuildMatrixOp(OpRcPtrVec & ops,
-                   const Config & /*config*/,
                    const MatrixTransform & transform,
                    TransformDirection dir)
 {

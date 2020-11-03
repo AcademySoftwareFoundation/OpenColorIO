@@ -6,6 +6,6 @@ includedir=@CMAKE_INSTALL_FULL_INCLUDEDIR@
 
 Name: OpenColorIO
 Description: A color management framework for visual effects and animation
-Version: @OCIO_VERSION@
+Version: @OCIO_VERSION_FULL_STR@
 Cflags: -I${includedir}
 Libs: -L${libdir} -lOpenColorIO
