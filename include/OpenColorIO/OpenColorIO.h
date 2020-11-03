@@ -1166,13 +1166,14 @@ public:
     /**
      * \brief Insert a rule at a given ruleIndex.
      * 
-     * Rule currently at ruleIndex
-     * will be pushed to index: ruleIndex + 1.
+     * Rule currently at ruleIndex will be pushed to index: ruleIndex + 1.
      * Name must be unique.
      * - "Default" is a reserved name for the default rule. The default rule is automatically
      * added and can't be removed. (see \ref FileRules::setDefaultRuleColorSpace ).
      * - "ColorSpaceNamePathSearch" is also a reserved name
      * (see \ref FileRules::insertPathSearchRule ).
+     *
+     * Will throw if pattern, extension or regex is a null or empty string.
      *
      * Will throw if ruleIndex is not less than \ref FileRules::getNumEntries .
      */
