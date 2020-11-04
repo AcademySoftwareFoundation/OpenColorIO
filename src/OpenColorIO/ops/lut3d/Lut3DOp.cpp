@@ -330,7 +330,6 @@ void CreateLut3DTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op)
 }
 
 void BuildLut3DOp(OpRcPtrVec & ops,
-                  const Config & config,
                   const Lut3DTransform & transform,
                   TransformDirection dir)
 {

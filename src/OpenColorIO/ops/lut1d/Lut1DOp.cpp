@@ -224,7 +224,6 @@ void CreateLut1DTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op)
 }
 
 void BuildLut1DOp(OpRcPtrVec & ops,
-                  const Config & config,
                   const Lut1DTransform & transform,
                   TransformDirection dir)
 {

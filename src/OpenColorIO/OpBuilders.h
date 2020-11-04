@@ -22,12 +22,10 @@ void BuildOps(OpRcPtrVec & ops,
 ////////////////////////////////////////////////////////////////////////
 
 void BuildAllocationOp(OpRcPtrVec & ops,
-                       const Config & config,
                        const AllocationTransform & transform,
                        TransformDirection dir);
 
 void BuildBuiltinOps(OpRcPtrVec & ops,
-                     const Config & config,
                      const BuiltinTransform & transform,
                      TransformDirection dir);
 
@@ -79,12 +77,10 @@ void BuildExponentOp(OpRcPtrVec & ops,
                      TransformDirection dir);
 
 void BuildExponentWithLinearOp(OpRcPtrVec & ops,
-                               const Config & config,
                                const ExponentWithLinearTransform & transform,
                                TransformDirection dir);
 
 void BuildExposureContrastOp(OpRcPtrVec & ops,
-                             const Config & config,
                              const ExposureContrastTransform & transform,
                              TransformDirection dir);
 
@@ -95,8 +91,6 @@ void BuildFileTransformOps(OpRcPtrVec & ops,
                            TransformDirection dir);
 
 void BuildFixedFunctionOp(OpRcPtrVec & ops,
-                          const Config & config,
-                          const ConstContextRcPtr & context,
                           const FixedFunctionTransform & transform,
                           TransformDirection dir);
 
@@ -125,17 +119,14 @@ void BuildGroupOps(OpRcPtrVec & ops,
                    TransformDirection dir);
 
 void BuildLogOp(OpRcPtrVec & ops,
-                const Config & config,
                 const LogAffineTransform& transform,
                 TransformDirection dir);
 
 void BuildLogOp(OpRcPtrVec & ops,
-                const Config & config,
                 const LogCameraTransform& transform,
                 TransformDirection dir);
 
 void BuildLogOp(OpRcPtrVec & ops,
-                const Config & config,
                 const LogTransform& transform,
                 TransformDirection dir);
 
@@ -153,22 +144,18 @@ void BuildLookOps(OpRcPtrVec & ops,
                   const LookParseResult & looks);
 
 void BuildLut1DOp(OpRcPtrVec & ops,
-                  const Config & config,
                   const Lut1DTransform & transform,
                   TransformDirection dir);
 
 void BuildLut3DOp(OpRcPtrVec & ops,
-                  const Config & config,
                   const Lut3DTransform & transform,
                   TransformDirection dir);
 
 void BuildMatrixOp(OpRcPtrVec & ops,
-                   const Config & config,
                    const MatrixTransform & transform,
                    TransformDirection dir);
 
 void BuildRangeOp(OpRcPtrVec & ops,
-                  const Config & config,
                   const RangeTransform & transform,
                   TransformDirection dir);
 

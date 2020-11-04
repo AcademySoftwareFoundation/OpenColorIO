@@ -942,9 +942,8 @@ OCIO_ADD_TEST(MatrixOffsetOp, create_transform)
     OCIO_CHECK_EQUAL(mval[15], mat->getArray()[15]);
 
     OCIO::OpRcPtrVec opsBack;
-    OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    OCIO::BuildMatrixOp(opsBack, *config, *mTransform, OCIO::TRANSFORM_DIR_FORWARD);
-    OCIO::BuildMatrixOp(opsBack, *config, *mTransform, OCIO::TRANSFORM_DIR_INVERSE);
+    OCIO::BuildMatrixOp(opsBack, *mTransform, OCIO::TRANSFORM_DIR_FORWARD);
+    OCIO::BuildMatrixOp(opsBack, *mTransform, OCIO::TRANSFORM_DIR_INVERSE);
     OCIO_REQUIRE_EQUAL(opsBack.size(), 2);
 
     auto o0 = OCIO_DYNAMIC_POINTER_CAST<const OCIO::MatrixOffsetOp>(opsBack[0]);

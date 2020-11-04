@@ -183,7 +183,6 @@ std::ostream& operator<< (std::ostream& os, const AllocationTransform& t)
 
 
 void BuildAllocationOp(OpRcPtrVec & ops,
-                       const Config & /*config*/,
                        const AllocationTransform & allocationTransform,
                        TransformDirection dir)
 {
