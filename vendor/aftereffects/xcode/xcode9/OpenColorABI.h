@@ -6,7 +6,13 @@
 
 // Makefile configuration options
 #define OCIO_NAMESPACE OpenColorIO
-#define OCIO_VERSION "2.0.0"
+
+#define OCIO_VERSION_STR        "2.0.0"
+#define OCIO_VERSION_STATUS_STR ""
+#define OCIO_VERSION_FULL_STR   "2.0.0"
+
+// Deprecated synonym for downstream projects that expect the 1.x name
+#define OCIO_VERSION            "2.0.0"
 
 /* Version as a single 4-byte hex number, e.g. 0x01050200 == 1.5.2
    Use this for numeric comparisons, e.g. #if OCIO_VERSION_HEX >= ... 
@@ -20,24 +26,14 @@
 #define OCIO_VERSION_MAJOR 2
 #define OCIO_VERSION_MINOR 0
 
-
 // shared_ptr / dynamic_pointer_cast
 #include <memory>
 #define OCIO_SHARED_PTR std::shared_ptr
 #define OCIO_DYNAMIC_POINTER_CAST std::dynamic_pointer_cast
 
-
 // If supported, define OCIOEXPORT, OCIOHIDDEN
 // (used to choose which symbols to export from OpenColorIO)
-#if defined __GNUC__
-    #if __GNUC__ >= 4
-        #define OCIOEXPORT __attribute__ ((visibility("default")))
-        #define OCIOHIDDEN __attribute__ ((visibility("hidden")))
-    #else
-        #define OCIOEXPORT
-        #define OCIOHIDDEN
-    #endif
-#elif defined(_WIN32) || defined(_WIN64) || defined(_WINDOWS) || defined(_MSC_VER)
+#if defined(_WIN32)
     // Windows requires you to export from the main library and then import in any others
     // only when compiling a dynamic library (i.e. DLL)
     #ifndef OpenColorIO_SKIP_IMPORTS
@@ -50,6 +46,9 @@
         #define OCIOEXPORT
     #endif
     #define OCIOHIDDEN
+#elif defined __GNUC__
+    #define OCIOEXPORT __attribute__ ((visibility("default")))
+    #define OCIOHIDDEN __attribute__ ((visibility("hidden")))
 #else // Others platforms not supported atm
     #define OCIOEXPORT
     #define OCIOHIDDEN
