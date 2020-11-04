@@ -3600,11 +3600,6 @@ ConstProcessorRcPtr Config::getProcessor(const ConstContextRcPtr & context,
         throw Exception("Config::GetProcessor failed. Transform is null.");
     }
 
-    if (direction == TRANSFORM_DIR_UNKNOWN)
-    {
-        throw Exception("Config::GetProcessor failed. Direction is unspecified.");
-    }
-
     ContextRcPtr usedContext = Context::Create();
     usedContext->setSearchPath(context->getSearchPath());
     usedContext->setWorkingDir(context->getWorkingDir());

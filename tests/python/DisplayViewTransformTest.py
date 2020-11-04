@@ -104,10 +104,8 @@ class DisplayViewTransformTest(unittest.TestCase):
         self.assertEqual(OCIO.TRANSFORM_DIR_FORWARD, self.dv_tr.getDirection())
 
         for direction in OCIO.TransformDirection.__members__.values():
-            # Setting the unknown direction preserves the current direction.
-            if direction != OCIO.TRANSFORM_DIR_UNKNOWN:
-                self.dv_tr.setDirection(direction)
-                self.assertEqual(direction, self.dv_tr.getDirection())
+            self.dv_tr.setDirection(direction)
+            self.assertEqual(direction, self.dv_tr.getDirection())
 
     def test_validate_src(self):
         """
@@ -167,11 +165,7 @@ class DisplayViewTransformTest(unittest.TestCase):
 
         for direction in OCIO.TransformDirection.__members__.values():
             self.dv_tr.setDirection(direction)
-            if direction != OCIO.TRANSFORM_DIR_UNKNOWN:
-                self.assertIsNone(self.dv_tr.validate())
-            else:
-                with self.assertRaises(OCIO.Exception):
-                   self.dv_tr.validate()
+            self.assertIsNone(self.dv_tr.validate())
 
     def test_constructor_with_keyword(self):
         """

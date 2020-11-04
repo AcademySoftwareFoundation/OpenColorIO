@@ -176,19 +176,19 @@ void CreateExposureContrastOp(OpRcPtrVec & ops,
                               ExposureContrastOpDataRcPtr & data,
                               TransformDirection direction)
 {
-    if (direction == TRANSFORM_DIR_FORWARD)
+    switch (direction)
+    {
+    case TRANSFORM_DIR_FORWARD:
     {
         ops.push_back(std::make_shared<ExposureContrastOp>(data));
+        break;
     }
-    else if (direction == TRANSFORM_DIR_INVERSE)
+    case TRANSFORM_DIR_INVERSE:
     {
         ExposureContrastOpDataRcPtr dataInv = data->inverse();
         ops.push_back(std::make_shared<ExposureContrastOp>(dataInv));
+        break;
     }
-    else
-    {
-        throw Exception("Cannot apply ExposureContrast op, "
-                        "unspecified transform direction.");
     }
 }
 

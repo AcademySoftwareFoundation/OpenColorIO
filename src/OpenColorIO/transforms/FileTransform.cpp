@@ -81,7 +81,16 @@ void FileTransform::setDirection(TransformDirection dir) noexcept
 
 void FileTransform::validate() const
 {
-    Transform::validate();
+    try
+    {
+        Transform::validate();
+    }
+    catch (Exception & ex)
+    {
+        std::string errMsg("FileTransform validation failed: ");
+        errMsg += ex.what();
+        throw Exception(errMsg.c_str());
+    }
 
     if (getImpl()->m_src.empty())
     {
@@ -158,12 +167,19 @@ const char * FileTransform::getFormatExtensionByIndex(int index)
 std::ostream& operator<< (std::ostream& os, const FileTransform& t)
 {
     os << "<FileTransform ";
-    os << "direction=";
-    os << TransformDirectionToString(t.getDirection()) << ", ";
-    os << "interpolation=" << InterpolationToString(t.getInterpolation());
-    os << ", src=" << t.getSrc() << ", ";
-    os << "cccid=" << t.getCCCId();
-    os << "cdl_style=" << CDLStyleToString(t.getCDLStyle());
+    os << "direction=" << TransformDirectionToString(t.getDirection());
+    os << ", interpolation=" << InterpolationToString(t.getInterpolation());
+    os << ", src=" << t.getSrc();
+    const std::string cccid{ t.getCCCId() };
+    if (!cccid.empty())
+    {
+        os << ", cccid=" << cccid;
+    }
+    const auto style = t.getCDLStyle();
+    if (style != CDL_TRANSFORM_DEFAULT)
+    {
+        os << ", cdl_style=" << CDLStyleToString(style);
+    }
     os << ">";
 
     return os;
@@ -575,7 +591,7 @@ void LoadFileUncached(FileFormat * & returnFormat,
                 filestream.close();
             }
 
-            primaryErrorText += "\t'";
+            primaryErrorText += "    '";
             primaryErrorText += tryFormat->getName();
             primaryErrorText += "' failed with: ";
             primaryErrorText += e.what();

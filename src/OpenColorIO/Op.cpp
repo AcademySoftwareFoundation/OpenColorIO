@@ -473,11 +473,6 @@ void CreateOpVecFromOpData(OpRcPtrVec & ops,
                            const ConstOpDataRcPtr & opData,
                            TransformDirection dir)
 {
-    if (dir == TRANSFORM_DIR_UNKNOWN)
-    {
-        throw Exception("Cannot create Op with unspecified transform direction.");
-    }
-
     switch (opData->getType())
     {
     case OpData::CDLType:

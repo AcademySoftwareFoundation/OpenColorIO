@@ -220,7 +220,7 @@ void GradingPrimaryOpData::setDirection(TransformDirection dir) noexcept
     if (dir != m_direction)
     {
         m_direction = dir;
-        m_value->setDirection(dir);
+        m_value->setDirection(m_direction);
     }
 }
 

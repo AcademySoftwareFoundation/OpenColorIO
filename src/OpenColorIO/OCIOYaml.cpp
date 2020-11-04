@@ -433,11 +433,15 @@ inline void save(YAML::Emitter& out, const View & view)
 inline void EmitBaseTransformKeyValues(YAML::Emitter & out,
                                         const ConstTransformRcPtr & t)
 {
-    if(t->getDirection() != TRANSFORM_DIR_FORWARD)
+    switch (t->getDirection())
     {
+    case TRANSFORM_DIR_FORWARD:
+        break;
+    case TRANSFORM_DIR_INVERSE:
         out << YAML::Key << "direction";
         out << YAML::Value << YAML::Flow;
         save(out, t->getDirection());
+        break;
     }
 }
 
@@ -547,7 +551,7 @@ inline void load(const YAML::Node & node, BuiltinTransformRcPtr & t)
         }
         else if (key == "direction")
         {
-            TransformDirection dir = TRANSFORM_DIR_UNKNOWN;
+            TransformDirection dir = TRANSFORM_DIR_FORWARD;
             load(second, dir);
             t->setDirection(dir);
         }

@@ -794,13 +794,9 @@ bool MatrixOpData::operator==(const OpData & other) const
             m_array     == mop->m_array);
 }
 
-void MatrixOpData::setDirection(TransformDirection dir)
+void MatrixOpData::setDirection(TransformDirection dir) noexcept
 {
     m_direction = dir;
-    if (m_direction == TRANSFORM_DIR_UNKNOWN)
-    {
-        throw Exception("MatrixOpData: unspecified transform direction.");
-    }
 }
 
 MatrixOpDataRcPtr MatrixOpData::getAsForward() const

@@ -293,15 +293,16 @@ void LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
         LogWarningInterpolationNotUsed(fileInterp, fileTransform);
     }
 
-    if (newDir == TRANSFORM_DIR_FORWARD)
+    switch (newDir)
     {
+    case TRANSFORM_DIR_FORWARD:
         CreateMinMaxOp(ops, min, max, TRANSFORM_DIR_FORWARD);
         CreateLut1DOp(ops, lut, TRANSFORM_DIR_FORWARD);
-    }
-    else
-    {
+        break;
+    case TRANSFORM_DIR_INVERSE:
         CreateLut1DOp(ops, lut, TRANSFORM_DIR_INVERSE);
         CreateMinMaxOp(ops, min, max, TRANSFORM_DIR_INVERSE);
+        break;
     }
 }
 
