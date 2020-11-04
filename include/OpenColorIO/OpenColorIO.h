@@ -280,7 +280,7 @@ public:
     void setMinorVersion(unsigned int minor);
 
     /// Allows an older config to be serialized as the current version.
-    void upgradeToLatestVersion();
+    void upgradeToLatestVersion() noexcept;
 
     /**
      * \brief Performs a thorough validation for the most common user errors.
@@ -291,14 +291,20 @@ public:
      */
     void validate() const;
 
-    /// If not empty or null a single character to separate the family string in levels.
-    char getFamilySeparator() const;
     /**
-     * \brief
+     * \brief Get the family separator
      * 
-     * Succeeds if the characters is null or a valid character
-     * from the ASCII table i.e. from value 32 (i.e. space) to 126 (i.e. '~');
-     * otherwise, it throws an exception.
+     * A single character used to separate the family string into tokens for use in hierarchical
+     * menus.  Defaults to '/'.
+     */
+    char getFamilySeparator() const;
+    /// Reset the family separator to default i.e. '/' .
+    void resetFamilySeparatorToDefault() noexcept;
+    /**
+     * \brief Set the family separator
+     *
+     * Succeeds if the characters is null or a valid character from the ASCII table i.e. from
+     * value 32 (i.e. space) to 126 (i.e. '~'); otherwise, it throws an exception.
      */
     void setFamilySeparator(char separator);
 
