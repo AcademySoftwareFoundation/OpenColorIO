@@ -13,10 +13,19 @@ PYBIND11_MODULE(PyOpenColorIO, m)
     bindPyTypes(m);
 
     // Exceptions
-    py::register_exception<Exception>(m, "Exception").doc() 
-      = DOC(Exception);
-    py::register_exception<ExceptionMissingFile>(m, "ExceptionMissingFile").doc() 
-      = DOC(ExceptionMissingFile);
+    auto clsException = 
+        py::register_exception<Exception>(
+            m, "Exception");
+            
+    auto clsExceptionMissingFile = 
+        py::register_exception<ExceptionMissingFile>(
+            m, "ExceptionMissingFile");
+
+#if PY_VERSION_MAJOR >= 3
+    // __doc__ is not writable after class creation in Python 2
+    clsException.doc() = DOC(Exception);
+    clsExceptionMissingFile.doc() = DOC(ExceptionMissingFile);
+#endif
 
     // Global functions
     m.def("ClearAllCaches", &ClearAllCaches,

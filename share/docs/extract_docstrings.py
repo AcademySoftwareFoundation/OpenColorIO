@@ -56,13 +56,10 @@ logger = logging.getLogger(__name__)
 KINDS_COMPOUND = ("class", "namespace", "struct")
 KINDS_MEMBER = ("enum", "function", "variable")
 
-# TODO: Replace RST with doxygen directives in headers and remove this
-REMOVE_TOKENS = (
-    "rst:: ", 
-    "rst::", 
-    "cpp:function:: ",
-    "cpp:type:: ",
-)
+
+# -----------------------------------------------------------------------------
+# Adapted from pybind11_mkdoc
+# -----------------------------------------------------------------------------
 
 HEADER_TEMPLATE = """/*
   This file contains docstrings for use in the Python bindings.
@@ -128,6 +125,23 @@ def sanitize_name(name):
 # XML element handling and traversal
 # -----------------------------------------------------------------------------
 
+def cleanup_whitespace(text):
+    """
+    Cleanup excess docstring whitespace.
+    """
+    if text:
+        if "\n" in text:
+            lines = []
+            for line in text.splitlines():
+                line = line.rstrip()
+                if line:
+                    lines.append(line)
+            text = "\n".join(lines)
+
+        return text
+    return None
+
+
 class MetaElementRenderer(type):
     """
     Meta class that auto-registers ElementRender subclasses.
@@ -160,41 +174,22 @@ class ElementRenderer(object):
             cls.unregistered_tags.add(elem.tag)
             return super(ElementRenderer, cls).__new__(cls)
 
-    def __init__(self, elem, parent=None):
+    def __init__(self, elem, parent=None, unregistered=False):
         self.elem = elem
         self.parent = parent
+        self.unregistered = self.elem.tag in self.unregistered_tags
 
     def open(self, result):
         pass
 
     def body(self, result):
-        if self.elem.text:
-            lines = []
-            for line in self.elem.text.splitlines():
-                if line.strip():
-                    lines.append(line)
-            text = "\n".join(lines)
-
-            for t in REMOVE_TOKENS:
-                text = text.replace(t, "")
-
-            return text
+        return cleanup_whitespace(self.elem.text)
 
     def close(self, result):
         pass
 
     def tail(self, result):
-        if self.elem.tail:
-            lines = []
-            for line in self.elem.tail.splitlines():
-                if line.strip():
-                    lines.append(line)
-            tail = "\n".join(lines)
-
-            for t in REMOVE_TOKENS:
-                tail = tail.replace(t, "")
-
-            return tail
+        return cleanup_whitespace(self.elem.tail)
 
     def parent_types(self):
         types = []
@@ -213,27 +208,34 @@ class ElementRenderer(object):
         return None
 
     @classmethod
-    def render(cls, elem, parent=None):
+    def render(cls, elem, parent=None, unregistered_tags=None):
         result = ""
-        visitor = cls(elem, parent=parent)
+
+        renderer = cls(elem, parent=parent)
+        if isinstance(unregistered_tags, set) and renderer.unregistered:
+            unregistered_tags.add(renderer.elem.tag)
 
         # "<tag>text</tag>tail"
         #  -----
-        result += visitor.open(result) or ""
+        result += renderer.open(result) or ""
         # "<tag>text</tag>tail"
         #       ----
-        result += visitor.body(result) or ""
+        result += renderer.body(result) or ""
 
         for child in elem:
-            result += cls.render(child, parent=visitor)
+            result += cls.render(
+                child, 
+                parent=renderer, 
+                unregistered_tags=unregistered_tags
+            )
 
         # "<tag>text</tag>tail"
         #           ------
-        result += visitor.close(result) or ""
+        result += renderer.close(result) or ""
 
         # "<tag>text</tag>tail"
         #                 ----
-        result += visitor.tail(result) or ""
+        result += renderer.tail(result) or ""
 
         return result
 
@@ -268,7 +270,19 @@ class emphasis(ElementRenderer):
 
 class simplesect(ElementRenderer):
     def open(self, result):
-        return ".. {kind}::\n   ".format(kind=self.elem.attrib["kind"])
+        kind = self.elem.attrib["kind"]
+        if kind in ("return"):
+            return ":{kind}: ".format(kind=kind)
+        else:
+            return ".. {kind}::\n   ".format(kind=kind)
+
+
+class simplesectsep(ElementRenderer):
+    def open(self, result):
+        # Repeat parent simplesect
+        parent = self.get_first_parent(simplesect)
+        if parent:
+            return parent.open(result)
 
 
 class programlisting(ElementRenderer):
@@ -394,6 +408,11 @@ class sp(ElementRenderer):
         return " "
 
 
+class linebreak(ElementRenderer):
+    def body(self, result):
+        return "\n"
+
+
 # -----------------------------------------------------------------------------
 # Doxygen XML to header conversion
 # -----------------------------------------------------------------------------
@@ -402,14 +421,36 @@ def render_docstring(def_elem, name, names):
     """
     Render single docstring definition source.
     """
+    unregistered_tags = set()
+
     # Handle brief and/or detailed description elements
     value = "\n".join(filter(None, [
-        ElementRenderer.render(def_elem.find("briefdescription")),
-        ElementRenderer.render(def_elem.find("detaileddescription"))
+        ElementRenderer.render(
+            def_elem.find("briefdescription"),
+            unregistered_tags=unregistered_tags
+        ),
+        ElementRenderer.render(
+            def_elem.find("detaileddescription"),
+            unregistered_tags=unregistered_tags
+        )
     ])).lstrip("\n").rstrip()
 
     # Clean up excessive newlines
     value = re.sub(r"\n{3,}", "\n\n", value)
+
+    if unregistered_tags:
+        # Fail on unregistered tags with clear debug
+        raise RuntimeError(
+            "Unhandled Doxygen XML element(s) found: '{tags}'\n\n"
+            "XML:\n"
+            "{xml}\n\n"
+            "RST:\n"
+            "{rst}\n\n".format(
+                tags="', '".join(sorted(unregistered_tags)),
+                xml=ET.tostring(def_elem, encoding="utf-8", method="xml"),
+                rst=value
+            )
+        )
 
     # Increment duplicate names, accounting for overloaded functions
     var_name = orig_var_name = sanitize_name(name)
@@ -461,13 +502,6 @@ def extract_docstrings(args):
                     compound_name = "PyOpenColorIO"
                     
                 compound_full_name = compound_name.split("::")[-1]
-
-                logger.debug(
-                    "Converting compound definition: {name}".format(
-                        name=compound_name
-                    )
-                )
-
                 compound_doc = render_docstring(
                     compounddef_elem,
                     compound_full_name,
@@ -495,13 +529,6 @@ def extract_docstrings(args):
                         compound=compound_full_name, 
                         member=member_name
                     )
-
-                    logger.debug(
-                        "Converting member definition: {name}".format(
-                            name=member_name
-                        )
-                    )
-
                     member_doc = render_docstring(
                         memberdef_elem,
                         member_full_name,
@@ -517,13 +544,6 @@ def extract_docstrings(args):
                             member=member_full_name,
                             value=value_name
                         )
-
-                        logger.debug(
-                            "Converting enum value definition: {name}".format(
-                                name=value_name
-                            )
-                        )
-
                         enumvalue_doc = render_docstring(
                             enumvalue_elem,
                             value_full_name,
@@ -533,7 +553,7 @@ def extract_docstrings(args):
 
     # Write docstring header
     logger.info("Writing docstring header: {path}".format(path=args.header))
-    with open(args.header, "w") as header_file:
+    with open(args.header, "w", encoding="utf-8") as header_file:
         header_file.write(HEADER_TEMPLATE.format(docs="\n\n".join(docs)))
 
     logger.info(
@@ -544,17 +564,6 @@ def extract_docstrings(args):
             duration=time.time() - start
         )
     )
-
-    # Raise on any unhandled tags (to break CI build), forcing up-to-date 
-    # element handling.
-    if ElementRenderer.unregistered_tags:
-        raise RuntimeError(
-            "{count} element types unhandled while parsing Doxygen XML: "
-            "'{tags}'".format(
-                count=len(ElementRenderer.unregistered_tags),
-                tags="', '".join(sorted(ElementRenderer.unregistered_tags))
-            )
-        )
 
 
 # -----------------------------------------------------------------------------

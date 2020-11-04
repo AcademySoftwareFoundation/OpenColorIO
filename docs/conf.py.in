@@ -9,11 +9,13 @@ import sys, os
 
 # -- Add PyOpenColorIO to sys.path ---------------------------------------------
 
-sys.path.insert(0, "@CMAKE_BINARY_DIR@/src/bindings/python")
+sys.path.append('@CMAKE_BINARY_DIR@/src/bindings/python')
 
 # -- Add local Sphinx extensions -----------------------------------------------
 
-sys.path.insert(1, "@CMAKE_SOURCE_DIR@/share/docs")
+sys.path.append('@CMAKE_SOURCE_DIR@/share/docs')
+
+import prettymethods
 
 # -- General configuration -----------------------------------------------------
 

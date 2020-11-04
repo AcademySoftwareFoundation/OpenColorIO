@@ -39,17 +39,24 @@
 #
 # -----------------------------------------------------------------------------
 
-import pbr.version
 import sphinx.addnodes as SphinxNodes
 from docutils.nodes import Text, emphasis, inline
 from sphinx.transforms import SphinxTransform
 
-if False:
-    # For type annotations
-    from typing import Any, Dict  # noqa
-    from sphinx.application import Sphinx  # noqa
 
 __version__ = "0.1.0"
+
+
+def is_method(node):
+    return node and 'self' in node.astext()
+
+
+def get_children(parameters_node):
+    if is_method(parameters_node):
+        # Remove 'self' parameter
+        return parameters_node.children[1:]
+    else:
+        return parameters_node.children
 
 
 def patch_node(node, text=None, children=None, *, constructor=None):
@@ -60,7 +67,7 @@ def patch_node(node, text=None, children=None, *, constructor=None):
         text = node.text
 
     if children is None:
-        children = node.children[1:]  # Remove self arg
+        children = get_children(node)
 
     return constructor(
         node.source,
@@ -76,7 +83,7 @@ def function_transformer(new_name):
             patch_node(name_node, new_name, ()),
             patch_node(parameters_node, '', [
                 SphinxNodes.desc_parameter('', 'self'),
-                *parameters_node.children[1:],  # Remove self arg
+                *get_children(parameters_node),
             ])
         )
 
@@ -101,7 +108,7 @@ def binary_op_transformer(op):
             Text(' '),
             patch_node(name_node, op, ()),
             Text(' '),
-            emphasis('', parameters_node.children[1].astext())  # Skip self arg
+            emphasis('', get_children(parameters_node)[0].astext())
         )
 
     return xf
@@ -111,22 +118,22 @@ def brackets(parameters_node):
     return [
         emphasis('', 'self'),
         SphinxNodes.desc_name('', '', Text('[')),
-        emphasis('', parameters_node.children[1].astext()),  # Skip self arg
+        emphasis('', get_children(parameters_node)[0].astext()),
         SphinxNodes.desc_name('', '', Text(']')),
     ]
 
 
 SPECIAL_METHODS = {
-    # Swap with class-named constructor
+    # Use class-named constructor
     '__init__': lambda name_node, parameters_node, details: inline(
         '', '',
         SphinxNodes.desc_name(
             '', '', 
             Text(details.get('class_name', name_node.astext()))
         ),
-        # Remove self arg
-        patch_node(parameters_node, '', parameters_node.children[1:])
+        patch_node(parameters_node, '', get_children(parameters_node))
     ),
+
     '__getitem__': lambda name_node, parameters_node, details: inline(
         '', '', *brackets(parameters_node)
     ),
@@ -137,9 +144,8 @@ SPECIAL_METHODS = {
         SphinxNodes.desc_name('', '', Text('=')),
         Text(' '),
         emphasis('', (
-            # Skip self arg
-            (parameters_node.children[2].astext())
-            if len(parameters_node.children) > 2 else ''
+            (get_children(parameters_node)[1].astext())
+            if len(get_children(parameters_node)) > 1 else ''
         )),
     ),
     '__delitem__': lambda name_node, parameters_node, details: inline(
@@ -200,8 +206,7 @@ SPECIAL_METHODS = {
 
     '__call__': lambda name_node, parameters_node, details: (
         emphasis('', 'self'),
-        # Remove self arg
-        patch_node(parameters_node, '', parameters_node.children[1:])
+        patch_node(parameters_node, '', get_children(parameters_node))
     ),
     '__getattr__': function_transformer('getattr'),
     '__setattr__': function_transformer('setattr'),
@@ -238,7 +243,7 @@ class PrettifyMethods(SphinxTransform):
             if 'class' in sig
         )
 
-        # Extra data for replace function implementations
+        # Extra data for replace functions
         details = {}
 
         for ref in methods:
@@ -255,19 +260,19 @@ class PrettifyMethods(SphinxTransform):
 
             parameters_node = ref.next_node(SphinxNodes.desc_parameterlist)
 
+            # Transform special methods
             if name in SPECIAL_METHODS:
                 name_node.replace_self(
                     SPECIAL_METHODS[name](name_node, parameters_node, details)
                 )
                 parameters_node.replace_self(())
-                
-            elif parameters_node and 'self' in parameters_node.astext():
-                # Remove self parameter
+            
+            # Remove 'self' parameter from other methods
+            elif is_method(parameters_node):
                 parameters_node.replace_self(patch_node(parameters_node, ''))
 
 
 def setup(app):
-    # type: (Sphinx) -> Dict[str, Any]
     app.add_transform(PrettifyMethods)
     app.setup_extension('sphinx.ext.autodoc')
     return {'version': __version__, 'parallel_read_safe': True}

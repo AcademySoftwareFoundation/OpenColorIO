@@ -57,12 +57,6 @@ if(${Python_VERSION_MAJOR} GREATER_EQUAL 3)
     ###########################################################################
     ### Copy templates to build area ###
 
-    # NOTE: The *.in extension is omitted from conf.py since RTD uses this file 
-    #       without CMake configuration.
-    message(STATUS "Substitute sphinx conf.py variables")
-    configure_file(${CMAKE_SOURCE_DIR}/docs/conf.py
-        ${CMAKE_BINARY_DIR}/docs/conf.py @ONLY)
-
     # Find and configure all *.in files in documentation
     message(STATUS "Substitute documentation variables")
     file(GLOB_RECURSE DOC_IN_FILES "${CMAKE_SOURCE_DIR}/docs/**.in")
@@ -126,22 +120,28 @@ if(${Python_VERSION_MAJOR} GREATER_EQUAL 3)
         DEPENDS
             ${CMAKE_BINARY_DIR}/docs/Doxyfile
             ${DOXYGEN_SOURCES}
+        COMMENT "Extracting XML files from C++ headers"
     )
 
     add_custom_target(doxygen_extraction
         DEPENDS ${DOXYGEN_INDEX_XML}
-        COMMENT "Extracting XML files from C++ headers"
     )
 
     ###########################################################################
     ### HTML doc target ###
 
-    # Always run Sphinx, which handles its own caching
+    file(GLOB_RECURSE SPHINX_EXTENSIONS
+        "${CMAKE_SOURCE_DIR}/share/docs/*.py"
+    )
+
+    # Run Sphinx
     add_custom_target(docs ALL
         COMMAND
             ${Python_PRE_CMD} "${Sphinx_EXECUTABLE}" -b html . "${CMAKE_CURRENT_BINARY_DIR}/build-html"
         DEPENDS
             ${CMAKE_BINARY_DIR}/docs/conf.py
+            ${SPHINX_EXTENSIONS}
+            ${DOXYGEN_INDEX_XML}
         COMMENT "Building html docs"
     )
 
