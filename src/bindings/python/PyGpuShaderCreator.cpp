@@ -62,18 +62,23 @@ public:
         PYBIND11_OVERLOAD_PURE(bool, GpuShaderCreator, addUniform, name, getBool);
     }
 
-    bool addUniform(const char * name,
-                    const GpuShaderCreator::SizeGetter & getSize,
-                    const GpuShaderCreator::FloatArrayGetter & getFloatArray) override
+    bool addUniform(const char * name, const GpuShaderCreator::Float3Getter & getFloat3) override
     {
-        PYBIND11_OVERLOAD_PURE(bool, GpuShaderCreator, addUniform, name, getSize, getFloatArray);
+        PYBIND11_OVERLOAD_PURE(bool, GpuShaderCreator, addUniform, name, getFloat3);
     }
 
     bool addUniform(const char * name,
                     const GpuShaderCreator::SizeGetter & getSize,
-                    const GpuShaderCreator::IntArrayGetter & getInt2Array) override
+                    const GpuShaderCreator::VectorFloatGetter & getVectorFloat) override
     {
-        PYBIND11_OVERLOAD_PURE(bool, GpuShaderCreator, addUniform, name, getSize, getInt2Array);
+        PYBIND11_OVERLOAD_PURE(bool, GpuShaderCreator, addUniform, name, getSize, getVectorFloat);
+    }
+
+    bool addUniform(const char * name,
+                    const GpuShaderCreator::SizeGetter & getSize,
+                    const GpuShaderCreator::VectorIntGetter & getVectorInt) override
+    {
+        PYBIND11_OVERLOAD_PURE(bool, GpuShaderCreator, addUniform, name, getSize, getVectorInt);
     }
 
     void addTexture(const char * textureName,

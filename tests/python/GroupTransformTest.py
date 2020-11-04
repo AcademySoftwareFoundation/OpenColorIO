@@ -15,6 +15,12 @@ class GroupTransformTest(unittest.TestCase):
     def tearDown(self):
         self.group_tr = None
 
+    def test_transform_type(self):
+        """
+        Test the getTransformType() method.
+        """
+        self.assertEqual(self.group_tr.getTransformType(), OCIO.TRANSFORM_TYPE_GROUP)
+
     def test_append_transform(self):
         """
         Test the appendTransform() method.

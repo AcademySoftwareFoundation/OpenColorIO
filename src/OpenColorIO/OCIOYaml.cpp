@@ -1408,7 +1408,7 @@ inline void save(YAML::Emitter& out, ConstFileTransformRcPtr t)
     {
         out << YAML::Key << "cdl_style" << YAML::Value << CDLStyleToString(t->getCDLStyle());
     }
-    if (t->getInterpolation() != INTERP_UNKNOWN)
+    if (t->getInterpolation() != INTERP_UNKNOWN && t->getInterpolation() != INTERP_DEFAULT)
     {
         out << YAML::Key << "interpolation";
         out << YAML::Value;
@@ -4091,7 +4091,7 @@ inline void load(const YAML::Node& node, ConfigRcPtr & config, const char* filen
             << "." << profile_minor_version
             << ". ";
 
-        os << "This version of the OpenColorIO library (" << OCIO_VERSION ") ";
+        os << "This version of the OpenColorIO library (" << GetVersion() << ") ";
         os << "is not known to be able to load this profile. ";
         os << "An attempt will be made, but there are no guarantees that the ";
         os << "results will be accurate. Continue at your own risk.";

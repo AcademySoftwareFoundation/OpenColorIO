@@ -15,6 +15,8 @@ void bindPyTransform(py::module & m)
 
         .def("validate", &Transform::validate,
              DOC(Transform, validate))
+        .def("getTransformType", &Transform::getTransformType,
+             DOC(Transform, getTransformType))
         .def("getDirection", &Transform::getDirection,
              DOC(Transform, getDirection))
         .def("setDirection", &Transform::setDirection, "direction"_a,

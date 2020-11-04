@@ -165,6 +165,25 @@ TransformDirection
 
 Conversions: :ref:`conversion_transform_direction`
 
+TransformType
+*************
+
+.. tabs::
+
+   .. group-tab:: Python
+
+      .. autoclass:: PyOpenColorIO.TransformType
+         :members:
+         :undoc-members:
+         :exclude-members: name
+
+         .. py:method:: name() -> str
+            :property:
+
+   .. group-tab:: C++
+
+      .. doxygenenum:: @OCIO_NAMESPACE@::TransformType
+
 Interpolation
 *************
 

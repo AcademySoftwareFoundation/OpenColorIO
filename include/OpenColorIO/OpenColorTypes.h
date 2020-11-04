@@ -11,6 +11,7 @@
 #error This header cannot be used directly. Use <OpenColorIO/OpenColorIO.h> instead.
 #endif
 
+#include <array>
 #include <limits>
 #include <string>
 #include <functional>
@@ -224,6 +225,8 @@ class OCIOEXPORT RangeTransform;
 typedef OCIO_SHARED_PTR<const RangeTransform> ConstRangeTransformRcPtr;
 typedef OCIO_SHARED_PTR<RangeTransform> RangeTransformRcPtr;
 
+typedef std::array<float, 3> Float3;
+
 template <class T, class U>
 inline OCIO_SHARED_PTR<T> DynamicPtrCast(OCIO_SHARED_PTR<U> const & ptr)
 {
@@ -245,6 +248,9 @@ enum LoggingLevel
 
     LOGGING_LEVEL_DEFAULT = LOGGING_LEVEL_INFO
 };
+
+/// Define Compute Hash function signature.
+using ComputeHashFunction = std::function<std::string(const std::string &)>;
 
 /**
  * OCIO does not mandate the image state of the main reference space and it is not
@@ -299,6 +305,32 @@ enum TransformDirection
     TRANSFORM_DIR_UNKNOWN = 0,
     TRANSFORM_DIR_FORWARD,
     TRANSFORM_DIR_INVERSE
+};
+
+enum TransformType
+{
+    TRANSFORM_TYPE_ALLOCATION = 0,
+    TRANSFORM_TYPE_BUILTIN,
+    TRANSFORM_TYPE_CDL,
+    TRANSFORM_TYPE_COLORSPACE,
+    TRANSFORM_TYPE_DISPLAY_VIEW,
+    TRANSFORM_TYPE_EXPONENT,
+    TRANSFORM_TYPE_EXPONENT_WITH_LINEAR,
+    TRANSFORM_TYPE_EXPOSURE_CONTRAST,
+    TRANSFORM_TYPE_FILE,
+    TRANSFORM_TYPE_FIXED_FUNCTION,
+    TRANSFORM_TYPE_GRADING_PRIMARY,
+    TRANSFORM_TYPE_GRADING_RGB_CURVE,
+    TRANSFORM_TYPE_GRADING_TONE,
+    TRANSFORM_TYPE_GROUP,
+    TRANSFORM_TYPE_LOG_AFFINE,
+    TRANSFORM_TYPE_LOG_CAMERA,
+    TRANSFORM_TYPE_LOG,
+    TRANSFORM_TYPE_LOOK,
+    TRANSFORM_TYPE_LUT1D,
+    TRANSFORM_TYPE_LUT3D,
+    TRANSFORM_TYPE_MATRIX,
+    TRANSFORM_TYPE_RANGE
 };
 
 /**
@@ -485,8 +517,9 @@ enum UniformDataType
 {
     UNIFORM_DOUBLE = 0,
     UNIFORM_BOOL,
-    UNIFORM_ARRAY_FLOAT,  ///< Array of floats.
-    UNIFORM_ARRAY_INT2,   ///< Array of int pairs.
+    UNIFORM_FLOAT3,        ///< Array of 3 floats.
+    UNIFORM_VECTOR_FLOAT,  ///< Vector of floats (size is set by uniform).
+    UNIFORM_VECTOR_INT,    ///< Vector of int pairs (size is set by uniform).
     UNIFORM_UNKNOWN
 };
 
@@ -533,11 +566,18 @@ enum OptimizationFlags : unsigned long
      */
     OPTIMIZATION_LUT_INV_FAST                    = 0x02000000,
 
+    // For CPU processor, in SSE mode, use a faster approximation for log, exp, and pow.
+    OPTIMIZATION_FAST_LOG_EXP_POW                = 0x04000000,
+
+    // Break down certain ops into simpler components where possible.  For example, convert a CDL
+    // to a matrix when possible.
+    OPTIMIZATION_SIMPLIFY_OPS                    = 0x08000000,
+
     /**
      * Turn off dynamic control of any ops that offer adjustment of parameter values after
      * finalization (e.g. ExposureContrast).
      */
-    OPTIMIZATION_NO_DYNAMIC_PROPERTIES           = 0x80000000,
+    OPTIMIZATION_NO_DYNAMIC_PROPERTIES           = 0x10000000,
 
     /// Apply all possible optimizations.
     OPTIMIZATION_ALL                             = 0xFFFFFFFF,
@@ -558,11 +598,13 @@ enum OptimizationFlags : unsigned long
                              OPTIMIZATION_COMP_EXPONENT |
                              OPTIMIZATION_COMP_GAMMA |
                              OPTIMIZATION_COMP_MATRIX |
-                             OPTIMIZATION_COMP_RANGE),
+                             OPTIMIZATION_COMP_RANGE |
+                             OPTIMIZATION_SIMPLIFY_OPS),
 
     OPTIMIZATION_VERY_GOOD = (OPTIMIZATION_LOSSLESS |
                               OPTIMIZATION_COMP_LUT1D |
                               OPTIMIZATION_LUT_INV_FAST |
+                              OPTIMIZATION_FAST_LOG_EXP_POW |
                               OPTIMIZATION_COMP_SEPARABLE_PREFIX),
 
     OPTIMIZATION_GOOD      = OPTIMIZATION_VERY_GOOD | OPTIMIZATION_COMP_LUT3D,

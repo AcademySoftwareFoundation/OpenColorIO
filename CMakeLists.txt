@@ -17,7 +17,7 @@ set(CMAKE_MODULE_PATH
 set(CMAKE_WARN_DEPRECATED ON)
 
 
-if(APPLE)
+if(APPLE AND NOT DEFINED CMAKE_OSX_DEPLOYMENT_TARGET)
     # The value of this variable should be set prior to the first project() command invocation
     # because it may influence configuration of the toolchain and flags.
     set(CMAKE_OSX_DEPLOYMENT_TARGET "10.13" CACHE STRING "Minimum OS X deployment version")
@@ -49,18 +49,45 @@ endif()
 
 
 ###############################################################################
+# Global CMake options.
+
+# Do not output install messages.
+if(NOT DEFINED CMAKE_INSTALL_MESSAGE)
+    set(CMAKE_INSTALL_MESSAGE "NEVER")
+endif()
+
+# Change the path max size to avoid problem on Windows.
+if(NOT DEFINED CMAKE_OBJECT_PATH_MAX)
+    set(CMAKE_OBJECT_PATH_MAX 300)
+endif()
+
+
+###############################################################################
 # Define compilation mode i.e. debug or release
 
-if(NOT CMAKE_BUILD_TYPE)
+if(NOT DEFINED CMAKE_BUILD_TYPE OR CMAKE_BUILD_TYPE STREQUAL "")
     message(STATUS "Setting build type to 'Release' as none was specified.")
     set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the type of build." FORCE)
 endif()
 
-if(NOT CMAKE_CONFIGURATION_TYPES)
-    # Set the possible values of build type for cmake-gui or ccmake.
-    set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS
-                 "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
+# List all the valid build types.
+
+if(NOT DEFINED CMAKE_CONFIGURATION_TYPES)
+    set(CMAKE_CONFIGURATION_TYPES "Debug;Release;MinSizeRel;RelWithDebInfo" CACHE STRING "" FORCE)
+    mark_as_advanced(CMAKE_CONFIGURATION_TYPES)
 endif()
+
+set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
+
+# Is that a valid build type?
+
+if(NOT "${CMAKE_BUILD_TYPE}" IN_LIST CMAKE_CONFIGURATION_TYPES)
+    string(REPLACE ";" ", " _CMAKE_CONFIGURATION_TYPES_STR "${CMAKE_CONFIGURATION_TYPES}")
+    message(FATAL_ERROR 
+            "CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} is unsupported. Supported values are: ${_CMAKE_CONFIGURATION_TYPES_STR}.")
+endif()
+
+# Is that in debug mode?
 
 set(_BUILD_TYPE_DEBUG OFF)
 if(CMAKE_BUILD_TYPE MATCHES "[Dd][Ee][Bb][Uu][Gg]")
@@ -149,21 +176,27 @@ set_property(CACHE OCIO_INSTALL_EXT_PACKAGES PROPERTY STRINGS ${_EXT_OPTIONS})
 ###############################################################################
 # Versioning
 
-if(NOT SOVERSION)
-	set(SOVERSION "${OpenColorIO_VERSION_MAJOR}.${OpenColorIO_VERSION_MINOR}" CACHE STRING 
+if(NOT DEFINED SOVERSION)
+    set(SOVERSION "${OpenColorIO_VERSION_MAJOR}.${OpenColorIO_VERSION_MINOR}" CACHE STRING 
         "Set the SO version in the SO name of the output library")
+    message(STATUS "Setting SOVERSION to '${SOVERSION}' as none was specified.")
+elseif(SOVERSION STREQUAL "")
+    message(FATAL_ERROR "A SOVERSION cannot be empty.")
 endif()
 
 
 ###############################################################################
 # Namespace
 
-if(NOT OCIO_NAMESPACE)
+if(NOT DEFINED OCIO_NAMESPACE)
 	set(OCIO_NAMESPACE "OpenColorIO_v${OpenColorIO_VERSION_MAJOR}_${OpenColorIO_VERSION_MINOR}${OpenColorIO_VERSION_RELEASE_TYPE}" CACHE STRING 
         "Specify the master OCIO C++ namespace: Options include OpenColorIO OpenColorIO_<YOURFACILITY> etc.")
+elseif(OCIO_NAMESPACE STREQUAL "")
+    message(FATAL_ERROR "A namespace cannot be empty.")
 else()
     set(OCIO_NAMESPACE "OpenColorIO_${OCIO_NAMESPACE}_v${OpenColorIO_VERSION_MAJOR}_${OpenColorIO_VERSION_MINOR}${OpenColorIO_VERSION_RELEASE_TYPE}" CACHE STRING 
         "Specify the master OCIO C++ namespace: Options include OpenColorIO OpenColorIO_<YOURFACILITY> etc.")
+    message(STATUS "Setting namespace to '${OCIO_NAMESPACE}' as none was specified.")
 endif()
 
 

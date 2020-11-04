@@ -32,7 +32,8 @@ void CopyGradingBSpline(GradingBSplineCurveRcPtr to, const ConstGradingBSplineCu
 
 void bindPyGradingData(py::module & m)
 {
-    GradingRGBCurveRcPtr DEFAULT_RGBCURVE = GradingRGBCurve::Create(GRADING_LOG);
+    GradingRGBCurveRcPtr DEFAULT_RGB_CURVE = GradingRGBCurve::Create(GRADING_LOG);
+    GradingControlPoint DEFAULT_CONTROL_POINT = GradingControlPoint();
 
     auto clsGradingRGBM = 
         py::class_<GradingRGBM>(
@@ -77,6 +78,7 @@ void bindPyGradingData(py::module & m)
         .def(py::init<>(), 
              DOC(GradingRGBM, GradingRGBM))
         .def(py::init<double, double, double, double>(), 
+             "red"_a, "green"_a, "blue"_a, "master"_a,
              DOC(GradingRGBM, GradingRGBM, 2))
 
         .def_readwrite("red", &GradingRGBM::m_red, 
@@ -141,8 +143,10 @@ void bindPyGradingData(py::module & m)
         .def(py::init<>(), 
              DOC(GradingRGBMSW, GradingRGBMSW))
         .def(py::init<double, double, double, double, double, double>(), 
+             "red"_a, "green"_a, "blue"_a, "master"_a, "start"_a, "width"_a,
              DOC(GradingRGBMSW, GradingRGBMSW, 2))
         .def(py::init<double, double>(), 
+             "start"_a, "width"_a,
              DOC(GradingRGBMSW, GradingRGBMSW, 3))
 
         .def_readwrite("red", &GradingRGBMSW::m_red, 
@@ -186,6 +190,8 @@ void bindPyGradingData(py::module & m)
         .def(py::init<>(), 
              DOC(GradingControlPoint, GradingControlPoint))
         .def(py::init<float, float>(), 
+             "x"_a = DEFAULT_CONTROL_POINT.m_x, 
+             "y"_a = DEFAULT_CONTROL_POINT.m_y,
              DOC(GradingControlPoint, GradingControlPoint, 2))
 
         .def_readwrite("x", &GradingControlPoint::m_x, 
@@ -200,6 +206,7 @@ void bindPyGradingData(py::module & m)
             {
                 return GradingBSplineCurve::Create(size);
             }),
+             "size"_a,
              DOC(GradingBSplineCurve, Create))
         .def(py::init([](const std::vector<float> & values)
             {
@@ -266,6 +273,7 @@ void bindPyGradingData(py::module & m)
             {
                 return GradingRGBCurve::Create(style);
             }), 
+             "style"_a,
              DOC(GradingRGBCurve, GradingRGBCurve))
         .def(py::init([](const GradingBSplineCurveRcPtr & red,
                          const GradingBSplineCurveRcPtr & green,
@@ -274,10 +282,10 @@ void bindPyGradingData(py::module & m)
             {
                 return GradingRGBCurve::Create(red, green, blue, master);
             }),
-                         "red"_a = DEFAULT_RGBCURVE->getCurve(RGB_RED),
-                         "green"_a = DEFAULT_RGBCURVE->getCurve(RGB_GREEN),
-                         "blue"_a = DEFAULT_RGBCURVE->getCurve(RGB_BLUE),
-                         "master"_a = DEFAULT_RGBCURVE->getCurve(RGB_MASTER),
+                         "red"_a = DEFAULT_RGB_CURVE->getCurve(RGB_RED),
+                         "green"_a = DEFAULT_RGB_CURVE->getCurve(RGB_GREEN),
+                         "blue"_a = DEFAULT_RGB_CURVE->getCurve(RGB_BLUE),
+                         "master"_a = DEFAULT_RGB_CURVE->getCurve(RGB_MASTER),
                          DOC(GradingRGBCurve, GradingRGBCurve, 2))
 
        .def_property("red", 

@@ -76,70 +76,71 @@ public:
     // Declare a float array variable.
     void declareFloatArrayConst(const std::string & name, int size, const float * v);
 
-    // Declare a int2 array variable.
-    void declareInt2ArrayConst(const std::string & name, int size, const int * v);
+    // Declare a int array variable.
+    void declareIntArrayConst(const std::string & name, int size, const int * v);
 
     //
-    // Vec2f helper functions
+    // Float2 helper functions
     //
 
-    std::string vec2fKeyword() const;
-    std::string vec2fDecl(const std::string& name) const;
+    std::string float2Keyword() const;
+    std::string float2Decl(const std::string& name) const;
 
     //
-    // Vec3f helper functions
+    // Float3 helper functions
     //
 
     // Get the keyword for declaring/using vectors with three elements
-    std::string vec3fKeyword() const;
+    std::string float3Keyword() const;
     // Get the string for creating constant vector with three elements
-    std::string vec3fConst(float x, float y, float z) const;
-    std::string vec3fConst(double x, double y, double z) const;
+    std::string float3Const(float x, float y, float z) const;
+    std::string float3Const(double x, double y, double z) const;
     // Get the string for creating constant vector with three elements
-    std::string vec3fConst(const std::string& x, const std::string& y,
+    std::string float3Const(const std::string& x, const std::string& y,
                            const std::string& z) const;
     // Get the string for creating constant vector with three elements
-    std::string vec3fConst(float v) const;
-    std::string vec3fConst(double v) const;
+    std::string float3Const(float v) const;
+    std::string float3Const(double v) const;
     // Get the string for creating constant vector with three elements
-    std::string vec3fConst(const std::string& v) const;
+    std::string float3Const(const std::string& v) const;
     // Get the declaration for a vector with three elements
-    std::string vec3fDecl(const std::string& name) const;
+    std::string float3Decl(const std::string& name) const;
 
     // Declare and initialize a vector with three elements
-    void declareVec3f(const std::string& name,
+    void declareFloat3(const std::string& name,
                       float x, float y, float z);
-    void declareVec3f(const std::string& name,
+    void declareFloat3(const std::string& name, const Float3 & vec3);
+    void declareFloat3(const std::string& name,
                       double x, double y, double z);
     // Declare and initialize a vector with three elements
-    void declareVec3f(const std::string& name,
+    void declareFloat3(const std::string& name,
                       const std::string& x, const std::string& y, const std::string& z);
 
     //
-    // Vec4f helper functions
+    // Float4 helper functions
     //
 
     // Get the keyword for declaring/using vectors with four elements
-    std::string vec4fKeyword() const;
+    std::string float4Keyword() const;
     // Get the string for creating constant vector with four elements
-    std::string vec4fConst(float x, float y, float z, float w) const;
-    std::string vec4fConst(double x, double y, double z, double w) const;
+    std::string float4Const(float x, float y, float z, float w) const;
+    std::string float4Const(double x, double y, double z, double w) const;
     // Get the string for creating constant vector with four elements
-    std::string vec4fConst(const std::string& x, const std::string& y,
+    std::string float4Const(const std::string& x, const std::string& y,
                             const std::string& z, const std::string& w) const;
     // Get the string for creating constant vector with four elements
-    std::string vec4fConst(float v) const;
+    std::string float4Const(float v) const;
     // Get the string for creating constant vector with four elements
-    std::string vec4fConst(const std::string& v) const;
+    std::string float4Const(const std::string& v) const;
     // Get the declaration for a vector with four elements
-    std::string vec4fDecl(const std::string& name) const;
+    std::string float4Decl(const std::string& name) const;
 
     // Declare and initialize a vector with four elements
-    void declareVec4f(const std::string& name,
+    void declareFloat4(const std::string& name,
                         float x, float y, float z, float w);
-    void declareVec4f(const std::string& name,
+    void declareFloat4(const std::string& name,
                         double x, double y, double z, double w);
-    void declareVec4f(const std::string& name,
+    void declareFloat4(const std::string& name,
                         const std::string& x, const std::string& y,
                         const std::string& z, const std::string& w);
 
@@ -168,8 +169,9 @@ public:
 
     void declareUniformFloat(const std::string & uniformName);
     void declareUniformBool(const std::string & uniformName);
+    void declareUniformFloat3(const std::string & uniformName);
     void declareUniformArrayFloat(const std::string & uniformName, unsigned int size);
-    void declareUniformArrayInt2(const std::string & uniformName, unsigned int size);
+    void declareUniformArrayInt(const std::string & uniformName, unsigned int size);
 
     //
     // Matrix multiplication helpers
@@ -189,8 +191,8 @@ public:
 
     // Get the string for creating a three or four-elements 'greater than' comparison
     //    Each element i in the resulting vector is 1 if a>b, or 0 otherwise.
-    std::string vec3fGreaterThan(const std::string& a, const std::string& b) const;
-    std::string vec4fGreaterThan(const std::string& a, const std::string& b) const;
+    std::string float3GreaterThan(const std::string& a, const std::string& b) const;
+    std::string float4GreaterThan(const std::string& a, const std::string& b) const;
 
     // Get the string for taking the four-quadrant arctangent 
     // (similar to atan(y/x) but takes into account the signs of the arguments).
@@ -206,7 +208,7 @@ private:
     void flushLine();
 
     std::string floatKeyword() const;
-    std::string int2Keyword() const;
+    std::string intKeyword() const;
 
 private:
     // Shader language to use in the various shader text builder methods.

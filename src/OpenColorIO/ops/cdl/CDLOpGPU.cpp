@@ -32,14 +32,14 @@ void GetCDLGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator, ConstCDLOpDat
     ss.indent();
 
     // Since alpha is not affected, only need to use the RGB components
-    ss.declareVec3f("lumaWeights", 0.2126f,   0.7152f,   0.0722f  );
-    ss.declareVec3f("slope",       slope [0], slope [1], slope [2]);
-    ss.declareVec3f("offset",      offset[0], offset[1], offset[2]);
-    ss.declareVec3f("power",       power [0], power [1], power [2]);
+    ss.declareFloat3("lumaWeights", 0.2126f,   0.7152f,   0.0722f  );
+    ss.declareFloat3("slope",       slope [0], slope [1], slope [2]);
+    ss.declareFloat3("offset",      offset[0], offset[1], offset[2]);
+    ss.declareFloat3("power",       power [0], power [1], power [2]);
 
     ss.declareVar("saturation" , saturation);
 
-    ss.newLine() << ss.vec3fDecl("pix") << " = "
+    ss.newLine() << ss.float3Decl("pix") << " = "
                  << shaderCreator->getPixelName() << ".xyz;";
 
     if ( !params.isReverse() )
@@ -60,8 +60,8 @@ void GetCDLGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator, ConstCDLOpDat
         }
         else
         {
-            ss.newLine() << ss.vec3fDecl("posPix") << " = step(0.0, pix);";
-            ss.newLine() << ss.vec3fDecl("pixPower") << " = pow(abs(pix), power);";
+            ss.newLine() << ss.float3Decl("posPix") << " = step(0.0, pix);";
+            ss.newLine() << ss.float3Decl("pixPower") << " = pow(abs(pix), power);";
             ss.newLine() << "pix = " << ss.lerp("pix", "pixPower", "posPix") << ";";
         }
 
@@ -97,8 +97,8 @@ void GetCDLGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator, ConstCDLOpDat
         }
         else
         {
-            ss.newLine() << ss.vec3fDecl("posPix") << " = step(0.0, pix);";
-            ss.newLine() << ss.vec3fDecl("pixPower") << " = pow(abs(pix), power);";
+            ss.newLine() << ss.float3Decl("posPix") << " = step(0.0, pix);";
+            ss.newLine() << ss.float3Decl("pixPower") << " = pow(abs(pix), power);";
             ss.newLine() << "pix = " << ss.lerp("pix", "pixPower", "posPix") << ";";
         }
 

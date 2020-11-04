@@ -204,36 +204,9 @@ void LinkShaders(GLuint program, GLuint fragShader)
 
 //////////////////////////////////////////////////////////
 
-OpenGLBuilder::Uniform::Uniform(const std::string & name, const GpuShaderCreator::DoubleGetter & getDouble)
+OpenGLBuilder::Uniform::Uniform(const std::string & name, const GpuShaderDesc::UniformData & data)
     : m_name(name)
-    , m_getDouble(getDouble)
-    , m_handle(0)
-{
-}
-
-OpenGLBuilder::Uniform::Uniform(const std::string & name, const GpuShaderCreator::BoolGetter & getBool)
-    : m_name(name)
-    , m_getBool(getBool)
-    , m_handle(0)
-{
-}
-
-OpenGLBuilder::Uniform::Uniform(const std::string & name,
-                                const GpuShaderCreator::SizeGetter & getSize,
-                                const GpuShaderCreator::FloatArrayGetter & getFloatArray)
-    : m_name(name)
-    , m_getSize(getSize)
-    , m_getFloatArray(getFloatArray)
-    , m_handle(0)
-{
-}
-
-OpenGLBuilder::Uniform::Uniform(const std::string & name,
-                                const GpuShaderCreator::SizeGetter & getSize,
-                                const GpuShaderCreator::IntArrayGetter & getInt2Array)
-    : m_name(name)
-    , m_getSize(getSize)
-    , m_getInt2Array(getInt2Array)
+    , m_data(data)
     , m_handle(0)
 {
 }
@@ -255,21 +228,29 @@ void OpenGLBuilder::Uniform::setUp(unsigned program)
 void OpenGLBuilder::Uniform::use()
 {
     // Update value.
-    if (m_getDouble)
+    if (m_data.m_getDouble)
     {
-        glUniform1f(m_handle, (GLfloat)m_getDouble());
+        glUniform1f(m_handle, (GLfloat)m_data.m_getDouble());
     }
-    else if (m_getBool)
+    else if (m_data.m_getBool)
     {
-        glUniform1f(m_handle, (GLfloat)(m_getBool()?1.0f:0.0f));
+        glUniform1f(m_handle, (GLfloat)(m_data.m_getBool()?1.0f:0.0f));
     }
-    else if (m_getSize && m_getFloatArray)
+    else if (m_data.m_getFloat3)
     {
-        glUniform1fv(m_handle, (GLsizei)m_getSize(), (GLfloat*)m_getFloatArray());
+        glUniform3f(m_handle, (GLfloat)m_data.m_getFloat3()[0],
+                              (GLfloat)m_data.m_getFloat3()[1],
+                              (GLfloat)m_data.m_getFloat3()[2]);
     }
-    else if (m_getSize && m_getInt2Array)
+    else if (m_data.m_vectorFloat.m_getSize && m_data.m_vectorFloat.m_getVector)
     {
-        glUniform2iv(m_handle, (GLsizei)m_getSize(), (GLint*)m_getInt2Array());
+        glUniform1fv(m_handle, (GLsizei)m_data.m_vectorFloat.m_getSize(),
+                               (GLfloat*)m_data.m_vectorFloat.m_getVector());
+    }
+    else if (m_data.m_vectorInt.m_getSize && m_data.m_vectorInt.m_getVector)
+    {
+        glUniform1iv(m_handle, (GLsizei)m_data.m_vectorInt.m_getSize(),
+                               (GLint*)m_data.m_vectorInt.m_getVector());
     }
     else
     {
@@ -436,27 +417,13 @@ void OpenGLBuilder::linkAllUniforms()
     for (unsigned idx = 0; idx < maxUniforms; ++idx)
     {
         GpuShaderDesc::UniformData data;
-        m_shaderDesc->getUniform(idx, data);
-        // Transfer uniform.
-        switch (data.m_type)
+        const char * name = m_shaderDesc->getUniform(idx, data);
+        if (data.m_type == UNIFORM_UNKNOWN)
         {
-        case UNIFORM_DOUBLE:
-            m_uniforms.emplace_back(data.m_name, data.m_getDouble);
-            break;
-        case UNIFORM_BOOL:
-            m_uniforms.emplace_back(data.m_name, data.m_getBool);
-            break;
-        case UNIFORM_ARRAY_FLOAT:
-            m_uniforms.emplace_back(data.m_name, data.m_arrayFloat.m_getSize,
-                                                 data.m_arrayFloat.m_getArray);
-            break;
-        case UNIFORM_ARRAY_INT2:
-            m_uniforms.emplace_back(data.m_name, data.m_arrayInt2.m_getSize,
-                                                 data.m_arrayInt2.m_getArray);
-            break;
-        case UNIFORM_UNKNOWN:
             throw Exception("Unknown uniform type.");
         }
+        // Transfer uniform.
+        m_uniforms.emplace_back(name, data);
         // Connect uniform with program.
         m_uniforms.back().setUp(m_program);
     }

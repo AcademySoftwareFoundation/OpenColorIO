@@ -58,6 +58,12 @@ class CDLTransformTest(unittest.TestCase):
     def tearDown(self):
         self.cdl_tr = None
 
+    def test_transform_type(self):
+        """
+        Test the getTransformType() method.
+        """
+        self.assertEqual(self.cdl_tr.getTransformType(), OCIO.TRANSFORM_TYPE_CDL)
+
     def test_id(self):
         """
         Test the setID() and getID() methods.

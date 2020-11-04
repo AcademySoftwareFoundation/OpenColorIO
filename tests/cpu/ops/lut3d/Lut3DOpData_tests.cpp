@@ -97,7 +97,8 @@ OCIO_ADD_TEST(Lut3DOpData, interpolation)
     l.setInterpolation(OCIO::INTERP_CUBIC);
     OCIO_CHECK_EQUAL(l.getInterpolation(), OCIO::INTERP_CUBIC);
     OCIO_CHECK_EQUAL(l.getConcreteInterpolation(), OCIO::INTERP_LINEAR);
-    OCIO_CHECK_THROW_WHAT(l.validate(), OCIO::Exception, "invalid interpolation");
+    OCIO_CHECK_THROW_WHAT(l.validate(), OCIO::Exception,
+                          "does not support interpolation algorithm: cubic");
 
     l.setInterpolation(OCIO::INTERP_TETRAHEDRAL);
     OCIO_CHECK_EQUAL(l.getInterpolation(), OCIO::INTERP_TETRAHEDRAL);
@@ -125,7 +126,8 @@ OCIO_ADD_TEST(Lut3DOpData, interpolation)
     l.setInterpolation(OCIO::INTERP_UNKNOWN);
     OCIO_CHECK_EQUAL(l.getInterpolation(), OCIO::INTERP_UNKNOWN);
     OCIO_CHECK_EQUAL(l.getConcreteInterpolation(), OCIO::INTERP_LINEAR);
-    OCIO_CHECK_THROW_WHAT(l.validate(), OCIO::Exception, "invalid interpolation");
+    OCIO_CHECK_THROW_WHAT(l.validate(), OCIO::Exception,
+                          "does not support interpolation algorithm: unknown.");
 }
 
 OCIO_ADD_TEST(Lut3DOpData, is_inverse)

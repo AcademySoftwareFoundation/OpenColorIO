@@ -221,14 +221,12 @@ OCIO_ADD_TEST(FileFormatCCC, test_ccc)
 
     // Create a FileTransform
     OCIO::FileTransformRcPtr fileTransform = OCIO::FileTransform::Create();
-    fileTransform->setInterpolation(OCIO::INTERP_LINEAR);
     fileTransform->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
     fileTransform->setSrc(filePath.c_str());
     fileTransform->setCCCId("cc0002");
 
     // Create empty Config to use.
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
 
     auto context = config->getCurrentContext();
     OCIO::LocalFileFormat tester;

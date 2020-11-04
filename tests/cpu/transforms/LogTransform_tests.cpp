@@ -25,10 +25,9 @@ OCIO_ADD_TEST(LogTransform, basic)
     OCIO_CHECK_EQUAL(log->getBase(), 10.0f);
 
     OCIO::OpRcPtrVec ops;
-    OCIO::ConfigRcPtr config = OCIO::Config::Create();
 
     // Convert to op.
-    OCIO::BuildLogOp(ops, *config, *log, OCIO::TRANSFORM_DIR_FORWARD);
+    OCIO::BuildLogOp(ops, *log, OCIO::TRANSFORM_DIR_FORWARD);
     OCIO_REQUIRE_EQUAL(ops.size(), 1);
     OCIO_CHECK_EQUAL(ops[0]->getInfo(), "<LogOp>");
 

@@ -105,6 +105,56 @@ void bindPyTypes(py::module & m)
                DOC(PyOpenColorIO, TransformDirection, TRANSFORM_DIR_INVERSE))
         .export_values();
 
+    py::enum_<TransformType>(
+        m, "TransformType",
+        DOC(PyOpenColorIO, TransformType))
+
+        .value("TRANSFORM_TYPE_ALLOCATION", TRANSFORM_TYPE_ALLOCATION, 
+               DOC(PyOpenColorIO, TransformType, TRANSFORM_TYPE_ALLOCATION))
+        .value("TRANSFORM_TYPE_BUILTIN", TRANSFORM_TYPE_BUILTIN, 
+               DOC(PyOpenColorIO, TransformType, TRANSFORM_TYPE_BUILTIN))
+        .value("TRANSFORM_TYPE_CDL", TRANSFORM_TYPE_CDL, 
+               DOC(PyOpenColorIO, TransformType, TRANSFORM_TYPE_CDL))
+        .value("TRANSFORM_TYPE_COLORSPACE", TRANSFORM_TYPE_COLORSPACE, 
+               DOC(PyOpenColorIO, TransformType, TRANSFORM_TYPE_COLORSPACE))
+        .value("TRANSFORM_TYPE_DISPLAY_VIEW", TRANSFORM_TYPE_DISPLAY_VIEW, 
+               DOC(PyOpenColorIO, TransformType, TRANSFORM_TYPE_DISPLAY_VIEW))
+        .value("TRANSFORM_TYPE_EXPONENT", TRANSFORM_TYPE_EXPONENT, 
+               DOC(PyOpenColorIO, TransformType, TRANSFORM_TYPE_EXPONENT))
+        .value("TRANSFORM_TYPE_EXPONENT_WITH_LINEAR", TRANSFORM_TYPE_EXPONENT_WITH_LINEAR, 
+               DOC(PyOpenColorIO, TransformType, TRANSFORM_TYPE_EXPONENT_WITH_LINEAR))
+        .value("TRANSFORM_TYPE_EXPOSURE_CONTRAST", TRANSFORM_TYPE_EXPOSURE_CONTRAST, 
+               DOC(PyOpenColorIO, TransformType, TRANSFORM_TYPE_EXPOSURE_CONTRAST))
+        .value("TRANSFORM_TYPE_FILE", TRANSFORM_TYPE_FILE, 
+               DOC(PyOpenColorIO, TransformType, TRANSFORM_TYPE_FILE))
+        .value("TRANSFORM_TYPE_FIXED_FUNCTION", TRANSFORM_TYPE_FIXED_FUNCTION, 
+               DOC(PyOpenColorIO, TransformType, TRANSFORM_TYPE_FIXED_FUNCTION))
+        .value("TRANSFORM_TYPE_GRADING_PRIMARY", TRANSFORM_TYPE_GRADING_PRIMARY, 
+               DOC(PyOpenColorIO, TransformType, TRANSFORM_TYPE_GRADING_PRIMARY))
+        .value("TRANSFORM_TYPE_GRADING_RGB_CURVE", TRANSFORM_TYPE_GRADING_RGB_CURVE, 
+               DOC(PyOpenColorIO, TransformType, TRANSFORM_TYPE_GRADING_RGB_CURVE))
+        .value("TRANSFORM_TYPE_GRADING_TONE", TRANSFORM_TYPE_GRADING_TONE, 
+               DOC(PyOpenColorIO, TransformType, TRANSFORM_TYPE_GRADING_TONE))
+        .value("TRANSFORM_TYPE_GROUP", TRANSFORM_TYPE_GROUP, 
+               DOC(PyOpenColorIO, TransformType, TRANSFORM_TYPE_GROUP))
+        .value("TRANSFORM_TYPE_LOG_AFFINE", TRANSFORM_TYPE_LOG_AFFINE, 
+               DOC(PyOpenColorIO, TransformType, TRANSFORM_TYPE_LOG_AFFINE))
+        .value("TRANSFORM_TYPE_LOG_CAMERA", TRANSFORM_TYPE_LOG_CAMERA, 
+               DOC(PyOpenColorIO, TransformType, TRANSFORM_TYPE_LOG_CAMERA))
+        .value("TRANSFORM_TYPE_LOG", TRANSFORM_TYPE_LOG, 
+               DOC(PyOpenColorIO, TransformType, TRANSFORM_TYPE_LOG))
+        .value("TRANSFORM_TYPE_LOOK", TRANSFORM_TYPE_LOOK, 
+               DOC(PyOpenColorIO, TransformType, TRANSFORM_TYPE_LOOK))
+        .value("TRANSFORM_TYPE_LUT1D", TRANSFORM_TYPE_LUT1D, 
+               DOC(PyOpenColorIO, TransformType, TRANSFORM_TYPE_LUT1D))
+        .value("TRANSFORM_TYPE_LUT3D", TRANSFORM_TYPE_LUT3D, 
+               DOC(PyOpenColorIO, TransformType, TRANSFORM_TYPE_LUT3D))
+        .value("TRANSFORM_TYPE_MATRIX", TRANSFORM_TYPE_MATRIX, 
+               DOC(PyOpenColorIO, TransformType, TRANSFORM_TYPE_MATRIX))
+        .value("TRANSFORM_TYPE_RANGE", TRANSFORM_TYPE_RANGE, 
+               DOC(PyOpenColorIO, TransformType, TRANSFORM_TYPE_RANGE))
+        .export_values();
+
     py::enum_<Interpolation>(
         m, "Interpolation", 
         DOC(PyOpenColorIO, Interpolation))
@@ -345,10 +395,10 @@ void bindPyTypes(py::module & m)
                DOC(PyOpenColorIO, UniformDataType, UNIFORM_DOUBLE))
         .value("UNIFORM_BOOL", UNIFORM_BOOL, 
                DOC(PyOpenColorIO, UniformDataType, UNIFORM_BOOL))
-        .value("UNIFORM_ARRAY_FLOAT", UNIFORM_ARRAY_FLOAT, 
-               DOC(PyOpenColorIO, UniformDataType, UNIFORM_ARRAY_FLOAT))
-        .value("UNIFORM_ARRAY_INT2", UNIFORM_ARRAY_INT2, 
-               DOC(PyOpenColorIO, UniformDataType, UNIFORM_ARRAY_INT2))
+        .value("UNIFORM_VECTOR_FLOAT", UNIFORM_VECTOR_FLOAT, 
+               DOC(PyOpenColorIO, UniformDataType, UNIFORM_VECTOR_FLOAT))
+        .value("UNIFORM_VECTOR_INT", UNIFORM_VECTOR_INT, 
+               DOC(PyOpenColorIO, UniformDataType, UNIFORM_VECTOR_INT))
         .value("UNIFORM_UNKNOWN", UNIFORM_UNKNOWN, 
                DOC(PyOpenColorIO, UniformDataType, UNIFORM_UNKNOWN))
         .export_values();
@@ -379,6 +429,8 @@ void bindPyTypes(py::module & m)
                DOC(PyOpenColorIO, OptimizationFlags, OPTIMIZATION_PAIR_IDENTITY_LUT3D))
         .value("OPTIMIZATION_PAIR_IDENTITY_LOG", OPTIMIZATION_PAIR_IDENTITY_LOG, 
                DOC(PyOpenColorIO, OptimizationFlags, OPTIMIZATION_PAIR_IDENTITY_LOG))
+        .value("OPTIMIZATION_PAIR_IDENTITY_GRADING", OPTIMIZATION_PAIR_IDENTITY_GRADING, 
+               DOC(PyOpenColorIO, OptimizationFlags, OPTIMIZATION_PAIR_IDENTITY_GRADING))
         .value("OPTIMIZATION_COMP_EXPONENT", OPTIMIZATION_COMP_EXPONENT, 
                DOC(PyOpenColorIO, OptimizationFlags, OPTIMIZATION_COMP_EXPONENT))
         .value("OPTIMIZATION_COMP_GAMMA", OPTIMIZATION_COMP_GAMMA, 
@@ -395,6 +447,10 @@ void bindPyTypes(py::module & m)
                DOC(PyOpenColorIO, OptimizationFlags, OPTIMIZATION_COMP_SEPARABLE_PREFIX))
         .value("OPTIMIZATION_LUT_INV_FAST", OPTIMIZATION_LUT_INV_FAST, 
                DOC(PyOpenColorIO, OptimizationFlags, OPTIMIZATION_LUT_INV_FAST))
+        .value("OPTIMIZATION_FAST_LOG_EXP_POW", OPTIMIZATION_FAST_LOG_EXP_POW, 
+               DOC(PyOpenColorIO, OptimizationFlags, OPTIMIZATION_FAST_LOG_EXP_POW))
+        .value("OPTIMIZATION_SIMPLIFY_OPS", OPTIMIZATION_SIMPLIFY_OPS, 
+               DOC(PyOpenColorIO, OptimizationFlags, OPTIMIZATION_SIMPLIFY_OPS))
         .value("OPTIMIZATION_NO_DYNAMIC_PROPERTIES", OPTIMIZATION_NO_DYNAMIC_PROPERTIES, 
                DOC(PyOpenColorIO, OptimizationFlags, OPTIMIZATION_NO_DYNAMIC_PROPERTIES))
         .value("OPTIMIZATION_ALL", OPTIMIZATION_ALL, 

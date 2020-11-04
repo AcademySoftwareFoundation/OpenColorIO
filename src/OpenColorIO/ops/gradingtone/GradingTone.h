@@ -49,8 +49,8 @@ struct GradingTonePreRender
     double m_whitesStart{ 0. };      // Pre computed whites start
     double m_whitesWidth{ 0. };      // Pre computed whites width
 
-    void updateForStyle(GradingStyle style, const GradingTone & values);
-    void computeValues(const GradingTone & v);
+    void setStyle(GradingStyle style);
+    void update(const GradingTone & v);
 
     // Arrays are currently only used by CPU.
     float m_midX[4][6]{{0.f}};
@@ -84,7 +84,6 @@ struct GradingTonePreRender
 
 private:
     GradingStyle m_style{ GRADING_LOG };
-    void setStyle(GradingStyle style);
 
     void mids_precompute(const GradingTone & v, float top, float bottom);
     void highlightShadow_precompute(const GradingTone & v);

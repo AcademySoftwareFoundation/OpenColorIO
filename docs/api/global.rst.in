@@ -77,6 +77,25 @@ Logging Function
 
       .. doxygenfunction:: @OCIO_NAMESPACE@::LogMessage
 
+Compute Hash Function
+*********************
+
+.. tabs::
+
+   .. group-tab:: Python
+
+      .. autofunction:: PyOpenColorIO.SetComputeHashFunction
+
+      .. autofunction:: PyOpenColorIO.ResetComputeHashFunction
+
+   .. group-tab:: C++
+
+      .. doxygentypedef:: @OCIO_NAMESPACE@::ComputeHashFunction
+
+      .. doxygenfunction:: @OCIO_NAMESPACE@::SetComputeHashFunction
+
+      .. doxygenfunction:: @OCIO_NAMESPACE@::ResetComputeHashFunction
+
 Environment Variables
 *********************
 
