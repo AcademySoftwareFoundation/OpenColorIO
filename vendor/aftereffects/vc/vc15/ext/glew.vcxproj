@@ -196,6 +196,8 @@ if exist glew-2.2.0 goto dontbother
 
 echo "Download a glew snapshot from https://sourceforge.net/projects/glew/files/glew/snapshots/"
 
+exit 1
+
 :dontbother</Command>
     </PreBuildEvent>
     <PreBuildEvent>
@@ -224,6 +226,8 @@ if exist glew-2.2.0 goto dontbother
 
 echo "Download a glew snapshot from https://sourceforge.net/projects/glew/files/glew/snapshots/"
 
+exit 1
+
 :dontbother</Command>
     </PreBuildEvent>
     <PreBuildEvent>
@@ -251,6 +255,8 @@ if exist glew-2.2.0 goto dontbother
 
 echo "Download a glew snapshot from https://sourceforge.net/projects/glew/files/glew/snapshots/"
 
+exit 1
+
 :dontbother</Command>
     </PreBuildEvent>
     <PreBuildEvent>
@@ -277,6 +283,8 @@ echo "Download a glew snapshot from https://sourceforge.net/projects/glew/files/
 if exist glew-2.2.0 goto dontbother
 
 echo "Download a glew snapshot from https://sourceforge.net/projects/glew/files/glew/snapshots/"
+
+exit 1
 
 :dontbother</Command>
     </PreBuildEvent>
@@ -309,6 +317,8 @@ if exist glew-2.2.0 goto dontbother
 
 echo "Download a glew snapshot from https://sourceforge.net/projects/glew/files/glew/snapshots/"
 
+exit 1
+
 :dontbother</Command>
     </PreBuildEvent>
     <PreBuildEvent>
@@ -339,6 +349,8 @@ echo "Download a glew snapshot from https://sourceforge.net/projects/glew/files/
 if exist glew-2.2.0 goto dontbother
 
 echo "Download a glew snapshot from https://sourceforge.net/projects/glew/files/glew/snapshots/"
+
+exit 1
 
 :dontbother</Command>
     </PreBuildEvent>
@@ -371,6 +383,8 @@ if exist glew-2.2.0 goto dontbother
 
 echo "Download a glew snapshot from https://sourceforge.net/projects/glew/files/glew/snapshots/"
 
+exit 1
+
 :dontbother</Command>
     </PreBuildEvent>
     <PreBuildEvent>
@@ -402,6 +416,8 @@ echo "Download a glew snapshot from https://sourceforge.net/projects/glew/files/
 if exist glew-2.2.0 goto dontbother
 
 echo "Download a glew snapshot from https://sourceforge.net/projects/glew/files/glew/snapshots/"
+
+exit 1
 
 :dontbother</Command>
     </PreBuildEvent>
