@@ -73,6 +73,7 @@ public:
     virtual FormatMetadata & operator=(const FormatMetadata & rhs) = 0;
 
     FormatMetadata(const FormatMetadata & rhs) = delete;
+    /// Do not use (needed only for pybind11).
     virtual ~FormatMetadata();
 
 protected:
@@ -100,6 +101,7 @@ public:
 
     Transform(const Transform &) = delete;
     Transform & operator= (const Transform &) = delete;
+    /// Do not use (needed only for pybind11).
     virtual ~Transform() = default;
 
 protected:
@@ -137,6 +139,7 @@ public:
     void setVars(int numvars, const float * vars);
 
     AllocationTransform & operator= (const AllocationTransform &) = delete;
+    /// Do not use (needed only for pybind11).
     virtual ~AllocationTransform();
 
 private:
@@ -176,7 +179,7 @@ public:
 
     virtual const char * getDescription() const noexcept = 0;
 
-    // Do not use (needed only for pybind11).
+    /// Do not use (needed only for pybind11).
     virtual ~BuiltinTransform() = default;
 
 protected:
@@ -280,6 +283,7 @@ public:
 
     CDLTransform(const CDLTransform &) = delete;
     CDLTransform & operator= (const CDLTransform &) = delete;
+    /// Do not use (needed only for pybind11).
     virtual ~CDLTransform() = default;
 
 protected:
@@ -314,7 +318,7 @@ public:
     void setDataBypass(bool enabled) noexcept;
 
     ColorSpaceTransform & operator=(const ColorSpaceTransform &) = delete;
-    // Do not use (needed only for pybind11).
+    /// Do not use (needed only for pybind11).
     virtual ~ColorSpaceTransform();
 
 private:
@@ -367,7 +371,7 @@ public:
     /// Data color spaces do not get processed when true (which is the default).
     void setDataBypass(bool bypass) noexcept;
 
-    // Do not use (needed only for pybind11).
+    /// Do not use (needed only for pybind11).
     virtual ~DisplayViewTransform();
 
 private:
@@ -452,7 +456,7 @@ struct OCIOEXPORT GradingPrimary
 extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const GradingPrimary &);
 
 /// 2D control point used by \ref GradingBSplineCurve.
-struct GradingControlPoint
+struct OCIOEXPORT GradingControlPoint
 {
     GradingControlPoint() = default;
     GradingControlPoint(const GradingControlPoint &) = default;
@@ -482,7 +486,7 @@ public:
     GradingBSplineCurve(const GradingBSplineCurve &) = delete;
     GradingBSplineCurve & operator= (const GradingBSplineCurve &) = delete;
 
-    // Do not use (needed only for pybind11).
+    /// Do not use (needed only for pybind11).
     virtual ~GradingBSplineCurve() = default;
 
 protected:
@@ -511,7 +515,7 @@ public:
     virtual ConstGradingBSplineCurveRcPtr getCurve(RGBCurveType c) const = 0;
     virtual GradingBSplineCurveRcPtr getCurve(RGBCurveType c) = 0;
 
-    // Do not use (needed only for pybind11).
+    /// Do not use (needed only for pybind11).
     virtual ~GradingRGBCurve() = default;
 
 protected:
@@ -656,7 +660,7 @@ public:
     DynamicProperty & operator=(const DynamicProperty &) = delete;
     DynamicProperty(const DynamicProperty &) = delete;
 
-    // Do not use (needed only for pybind11).
+    /// Do not use (needed only for pybind11).
     virtual ~DynamicProperty() = default;
 
 protected:
@@ -696,7 +700,7 @@ public:
 
     DynamicPropertyDouble(const DynamicPropertyDouble &) = delete;
     DynamicPropertyDouble & operator=(const DynamicPropertyDouble &) = delete;
-    // Do not use (needed only for pybind11).
+    /// Do not use (needed only for pybind11).
     virtual ~DynamicPropertyDouble() = default;
 
 protected:
@@ -713,7 +717,7 @@ public:
 
     DynamicPropertyGradingPrimary(const DynamicPropertyGradingPrimary &) = delete;
     DynamicPropertyGradingPrimary & operator=(const DynamicPropertyGradingPrimary &) = delete;
-    // Do not use (needed only for pybind11).
+    /// Do not use (needed only for pybind11).
     virtual ~DynamicPropertyGradingPrimary() = default;
 
 protected:
@@ -730,7 +734,7 @@ public:
 
     DynamicPropertyGradingRGBCurve(const DynamicPropertyGradingRGBCurve &) = delete;
     DynamicPropertyGradingRGBCurve & operator=(const DynamicPropertyGradingRGBCurve &) = delete;
-    // Do not use (needed only for pybind11).
+    /// Do not use (needed only for pybind11).
     virtual ~DynamicPropertyGradingRGBCurve() = default;
 
 protected:
@@ -747,7 +751,7 @@ public:
 
     DynamicPropertyGradingTone(const DynamicPropertyGradingTone &) = delete;
     DynamicPropertyGradingTone & operator=(const DynamicPropertyGradingTone &) = delete;
-    // Do not use (needed only for pybind11).
+    /// Do not use (needed only for pybind11).
     virtual ~DynamicPropertyGradingTone() = default;
 
 protected:
@@ -791,6 +795,7 @@ public:
     
     ExponentTransform(const ExponentTransform &) = delete;
     ExponentTransform & operator= (const ExponentTransform &) = delete;
+    /// Do not use (needed only for pybind11).
     virtual ~ExponentTransform() = default;
 
 protected:
@@ -855,6 +860,7 @@ public:
     
     ExponentWithLinearTransform(const ExponentWithLinearTransform &) = delete;
     ExponentWithLinearTransform & operator= (const ExponentWithLinearTransform &) = delete;
+    /// Do not use (needed only for pybind11).
     virtual ~ExponentWithLinearTransform() = default;
 
 protected:
@@ -946,6 +952,7 @@ public:
      */
     virtual void setLogMidGray(double logMidGray) = 0;
 
+    /// Do not use (needed only for pybind11).
     virtual ~ExposureContrastTransform() = default;
 
 protected:
@@ -992,20 +999,14 @@ public:
     void setInterpolation(Interpolation interp);
 
     /// Get the number of LUT readers.
-    static int getNumFormats();
-    /**
-     * Get the LUT readers at index, return empty string if
-     * an invalid index is specified.
-     */
-    static const char * getFormatNameByIndex(int index);
-
-    /**
-     * Get the LUT reader extension at index, return empty string if
-     * an invalid index is specified.
-     */
-    static const char * getFormatExtensionByIndex(int index);
+    static int GetNumFormats();
+    /// Get the LUT readers at index, return empty string if an invalid index is specified.
+    static const char * GetFormatNameByIndex(int index);
+    /// Get the LUT reader extension at index, return empty string if an invalid index is specified.
+    static const char * GetFormatExtensionByIndex(int index);
 
     FileTransform & operator=(const FileTransform &) = delete;
+    /// Do not use (needed only for pybind11).
     virtual ~FileTransform();
 
 private:
@@ -1051,6 +1052,7 @@ public:
 
     FixedFunctionTransform(const FixedFunctionTransform &) = delete;
     FixedFunctionTransform & operator= (const FixedFunctionTransform &) = delete;
+    /// Do not use (needed only for pybind11).
     virtual ~FixedFunctionTransform() = default;
 
 protected:
@@ -1105,7 +1107,7 @@ public:
 
     GradingPrimaryTransform(const GradingPrimaryTransform &) = delete;
     GradingPrimaryTransform & operator= (const GradingPrimaryTransform &) = delete;
-    // Do not use (needed only for pybind11).
+    /// Do not use (needed only for pybind11).
     virtual ~GradingPrimaryTransform() = default;
 
 protected:
@@ -1165,7 +1167,7 @@ public:
 
     GradingRGBCurveTransform(const GradingRGBCurveTransform &) = delete;
     GradingRGBCurveTransform & operator= (const GradingRGBCurveTransform &) = delete;
-    // Do not use (needed only for pybind11).
+    /// Do not use (needed only for pybind11).
     virtual ~GradingRGBCurveTransform() = default;
 
 protected:
@@ -1225,7 +1227,7 @@ public:
 
     GradingToneTransform(const GradingToneTransform &) = delete;
     GradingToneTransform & operator= (const GradingToneTransform &) = delete;
-    // Do not use (needed only for pybind11).
+    /// Do not use (needed only for pybind11).
     virtual ~GradingToneTransform() = default;
 
 protected:
@@ -1264,6 +1266,7 @@ public:
     void prependTransform(TransformRcPtr transform);
 
     GroupTransform & operator=(const GroupTransform &) = delete;
+    /// Do not use (needed only for pybind11).
     virtual ~GroupTransform();
 
 private:
@@ -1320,6 +1323,7 @@ public:
 
     LogAffineTransform(const LogAffineTransform &) = delete;
     LogAffineTransform & operator= (const LogAffineTransform &) = delete;
+    /// Do not use (needed only for pybind11).
     virtual ~LogAffineTransform() = default;
 
 protected:
@@ -1383,6 +1387,7 @@ public:
     
     LogCameraTransform(const LogCameraTransform &) = delete;
     LogCameraTransform & operator= (const LogCameraTransform &) = delete;
+    /// Do not use (needed only for pybind11).
     virtual ~LogCameraTransform() = default;
 
 protected:
@@ -1417,6 +1422,7 @@ public:
 
     LogTransform(const LogTransform &) = delete;
     LogTransform & operator= (const LogTransform &) = delete;
+    /// Do not use (needed only for pybind11).
     virtual ~LogTransform() = default;
 
 protected:
@@ -1582,6 +1588,7 @@ public:
 
     Lut1DTransform(const Lut1DTransform &) = delete;
     Lut1DTransform & operator= (const Lut1DTransform &) = delete;
+    /// Do not use (needed only for pybind11).
     virtual ~Lut1DTransform() = default;
 
 protected:
@@ -1655,6 +1662,7 @@ public:
 
     Lut3DTransform(const Lut3DTransform &) = delete;
     Lut3DTransform & operator= (const Lut3DTransform &) = delete;
+    /// Do not use (needed only for pybind11).
     virtual ~Lut3DTransform() = default;
 
 protected:
@@ -1757,6 +1765,7 @@ public:
 
     MatrixTransform(const MatrixTransform &) = delete;
     MatrixTransform & operator= (const MatrixTransform &) = delete;
+    /// Do not use (needed only for pybind11).
     virtual ~MatrixTransform() = default;
 
 protected:
@@ -1867,6 +1876,7 @@ public:
 
     RangeTransform(const RangeTransform &) = delete;
     RangeTransform & operator= (const RangeTransform &) = delete;
+    /// Do not use (needed only for pybind11).
     virtual ~RangeTransform() = default;
 
 protected:

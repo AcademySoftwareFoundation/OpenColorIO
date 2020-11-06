@@ -146,22 +146,19 @@ void FileTransform::setInterpolation(Interpolation interp)
     getImpl()->m_interp = interp;
 }
 
-int FileTransform::getNumFormats()
+int FileTransform::GetNumFormats()
 {
-    return FormatRegistry::GetInstance().getNumFormats(
-        FORMAT_CAPABILITY_READ);
+    return FormatRegistry::GetInstance().getNumFormats(FORMAT_CAPABILITY_READ);
 }
 
-const char * FileTransform::getFormatNameByIndex(int index)
+const char * FileTransform::GetFormatNameByIndex(int index)
 {
-    return FormatRegistry::GetInstance().getFormatNameByIndex(
-        FORMAT_CAPABILITY_READ, index);
+    return FormatRegistry::GetInstance().getFormatNameByIndex(FORMAT_CAPABILITY_READ, index);
 }
 
-const char * FileTransform::getFormatExtensionByIndex(int index)
+const char * FileTransform::GetFormatExtensionByIndex(int index)
 {
-    return FormatRegistry::GetInstance().getFormatExtensionByIndex(
-        FORMAT_CAPABILITY_READ, index);
+    return FormatRegistry::GetInstance().getFormatExtensionByIndex(FORMAT_CAPABILITY_READ, index);
 }
 
 std::ostream& operator<< (std::ostream& os, const FileTransform& t)
