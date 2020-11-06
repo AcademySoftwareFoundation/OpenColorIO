@@ -266,7 +266,8 @@ public:
     unsigned int m_minorVersion;
     StringMap m_env;
     ContextRcPtr m_context;
-    char m_familySeparator = 0;
+    static constexpr char DefaultFamilySeparator = '/';
+    char m_familySeparator = DefaultFamilySeparator;
     std::string m_description;
 
     // The final list of inactive color spaces is built from several inputs.
@@ -522,7 +523,7 @@ public:
     static ConstConfigRcPtr Read(std::istream & istream, const char * filename);
 
     // Upgrade from v1 to v2.
-    void upgradeFromVersion1ToVersion2()
+    void upgradeFromVersion1ToVersion2() noexcept
     {
         // V2 adds file_rules and these require a default rule. We try to initialize the default
         // rule using the default role. If the default role doesn't exist, we look for a Raw
@@ -1169,7 +1170,7 @@ void Config::setMinorVersion(unsigned int version)
      m_impl->m_minorVersion = version;
 }
 
-void Config::upgradeToLatestVersion()
+void Config::upgradeToLatestVersion() noexcept
 {
     const auto wasVersion = m_impl->m_majorVersion;
     if (wasVersion != LastSupportedMajorVersion)
@@ -1786,6 +1787,11 @@ char Config::getFamilySeparator() const
     return getImpl()->m_familySeparator;
 }
 
+void Config::resetFamilySeparatorToDefault() noexcept
+{
+    getImpl()->m_familySeparator = Impl::DefaultFamilySeparator;
+}
+
 void Config::setFamilySeparator(char separator)
 {
     const int val = (int)separator;
@@ -1799,9 +1805,6 @@ void Config::setFamilySeparator(char separator)
     }
 
     getImpl()->m_familySeparator = separator;
-
-    AutoMutex lock(getImpl()->m_cacheidMutex);
-    getImpl()->resetCacheIDs();
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -1813,10 +1816,7 @@ const char * Config::getDescription() const
 
 void Config::setDescription(const char * description)
 {
-    getImpl()->m_description = description ? description : "";
-
-    AutoMutex lock(getImpl()->m_cacheidMutex);
-    getImpl()->resetCacheIDs();
+    getImpl()->m_description = (description ? description : "");
 }
 
 // RESOURCES //////////////////////////////////////////////////////////////
@@ -3600,11 +3600,6 @@ ConstProcessorRcPtr Config::getProcessor(const ConstContextRcPtr & context,
         throw Exception("Config::GetProcessor failed. Transform is null.");
     }
 
-    if (direction == TRANSFORM_DIR_UNKNOWN)
-    {
-        throw Exception("Config::GetProcessor failed. Direction is unspecified.");
-    }
-
     ContextRcPtr usedContext = Context::Create();
     usedContext->setSearchPath(context->getSearchPath());
     usedContext->setWorkingDir(context->getWorkingDir());
@@ -4133,11 +4128,25 @@ void Config::Impl::checkVersionConsistency() const
         checkVersionConsistency(transform);
     }
 
-    // Check for the FileRules.
+    // Check for the family separator.
+
+    if (m_majorVersion < 2 && m_familySeparator != '/')
+    {
+        throw Exception("Only version 2 (or higher) can have a family separator.");
+    }
+
+    // Check for the file rules.
 
     if (m_majorVersion < 2 && m_fileRules->getNumEntries() > 1)
     {
-        throw Exception("Only version 2 (or higher) can have FileRules.");
+        throw Exception("Only version 2 (or higher) can have file rules.");
+    }
+
+    // Check for inactive color spaces.
+
+    if (m_majorVersion < 2 && !m_inactiveColorSpaceNamesConf.empty())
+    {
+        throw Exception("Only version 2 (or higher) can have inactive color spaces.");
     }
 
     // Check for ViewingRules.

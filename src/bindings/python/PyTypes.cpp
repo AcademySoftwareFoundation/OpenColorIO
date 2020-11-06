@@ -73,8 +73,6 @@ void bindPyTypes(py::module & m)
         m, "ColorSpaceDirection", 
         DOC(PyOpenColorIO, ColorSpaceDirection))
 
-        .value("COLORSPACE_DIR_UNKNOWN", COLORSPACE_DIR_UNKNOWN, 
-               DOC(PyOpenColorIO, ColorSpaceDirection, COLORSPACE_DIR_UNKNOWN))
         .value("COLORSPACE_DIR_TO_REFERENCE", COLORSPACE_DIR_TO_REFERENCE, 
                DOC(PyOpenColorIO, ColorSpaceDirection, COLORSPACE_DIR_TO_REFERENCE))
         .value("COLORSPACE_DIR_FROM_REFERENCE", COLORSPACE_DIR_FROM_REFERENCE, 
@@ -85,8 +83,6 @@ void bindPyTypes(py::module & m)
         m, "ViewTransformDirection", 
         DOC(PyOpenColorIO, ViewTransformDirection))
 
-        .value("VIEWTRANSFORM_DIR_UNKNOWN", VIEWTRANSFORM_DIR_UNKNOWN, 
-               DOC(PyOpenColorIO, ViewTransformDirection, VIEWTRANSFORM_DIR_UNKNOWN))
         .value("VIEWTRANSFORM_DIR_TO_REFERENCE", VIEWTRANSFORM_DIR_TO_REFERENCE, 
                DOC(PyOpenColorIO, ViewTransformDirection, VIEWTRANSFORM_DIR_TO_REFERENCE))
         .value("VIEWTRANSFORM_DIR_FROM_REFERENCE", VIEWTRANSFORM_DIR_FROM_REFERENCE, 
@@ -97,8 +93,6 @@ void bindPyTypes(py::module & m)
         m, "TransformDirection", 
         DOC(PyOpenColorIO, TransformDirection))
 
-        .value("TRANSFORM_DIR_UNKNOWN", TRANSFORM_DIR_UNKNOWN, 
-               DOC(PyOpenColorIO, TransformDirection, TRANSFORM_DIR_UNKNOWN))
         .value("TRANSFORM_DIR_FORWARD", TRANSFORM_DIR_FORWARD, 
                DOC(PyOpenColorIO, TransformDirection, TRANSFORM_DIR_FORWARD))
         .value("TRANSFORM_DIR_INVERSE", TRANSFORM_DIR_INVERSE, 

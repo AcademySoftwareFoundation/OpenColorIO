@@ -471,8 +471,11 @@ LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
     // and in that usage it is more natural for the XYZ to display code value transform to be called
     // the forward direction.
 
-    if (newDir == TRANSFORM_DIR_INVERSE) // monitor code value to CIE XYZ
+    switch (newDir)
     {
+    case TRANSFORM_DIR_INVERSE:
+    {
+        // Monitor code value to CIE XYZ.
         if (lut)
         {
             CreateLut1DOp(ops, lut, TRANSFORM_DIR_FORWARD);
@@ -484,19 +487,22 @@ LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
             const GammaOpData::Params blueParams  = { cachedFile->mGammaRGB[2] };
             const GammaOpData::Params alphaParams = { cachedFile->mGammaRGB[3] };
             auto gamma = std::make_shared<GammaOpData>(GammaOpData::BASIC_FWD, 
-                                                        redParams,
-                                                        greenParams,
-                                                        blueParams,
-                                                        alphaParams);
+                                                       redParams,
+                                                       greenParams,
+                                                       blueParams,
+                                                       alphaParams);
             CreateGammaOp(ops, gamma, TRANSFORM_DIR_FORWARD);
         }
 
         CreateMatrixOp(ops, cachedFile->mMatrix44, TRANSFORM_DIR_FORWARD);
 
         CreateMatrixOp(ops, D50_to_D65_m44, TRANSFORM_DIR_FORWARD);
+        break;
     }
-    else if (newDir == TRANSFORM_DIR_FORWARD) // CIE XYZ to monitor code value
+    case TRANSFORM_DIR_FORWARD:
     {
+        // CIE XYZ to monitor code value.
+        
         CreateMatrixOp(ops, D50_to_D65_m44, TRANSFORM_DIR_INVERSE);
 
         // The ICC profile tags form a matrix that converts RGB to CIE XYZ.
@@ -516,13 +522,15 @@ LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
             const GammaOpData::Params blueParams  = { cachedFile->mGammaRGB[2] };
             const GammaOpData::Params alphaParams = { cachedFile->mGammaRGB[3] };
             auto gamma = std::make_shared<GammaOpData>(GammaOpData::BASIC_REV,
-                                                        redParams,
-                                                        greenParams,
-                                                        blueParams,
-                                                        alphaParams);
+                                                       redParams,
+                                                       greenParams,
+                                                       blueParams,
+                                                       alphaParams);
 
             CreateGammaOp(ops, gamma, TRANSFORM_DIR_FORWARD);
         }
+        break;
+    }
     }
 }
 

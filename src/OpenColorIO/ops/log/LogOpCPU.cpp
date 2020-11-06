@@ -230,83 +230,88 @@ ConstOpCPURcPtr GetLogRenderer(ConstLogOpDataRcPtr & log, bool fastExp)
     const TransformDirection dir = log->getDirection();
     if (log->isLog2())
     {
-        if (dir == TRANSFORM_DIR_FORWARD)
+        switch (dir)
         {
+        case TRANSFORM_DIR_FORWARD:
 #ifdef USE_SSE
             if (fastExp) return std::make_shared<LogRendererSSE>(log, 1.0f);
             else
 #endif
                 return std::make_shared<LogRenderer>(log, 1.0f);
-        }
-        else
-        {
+            break;
+        case TRANSFORM_DIR_INVERSE:
 #ifdef USE_SSE
             if (fastExp) return std::make_shared<AntiLogRendererSSE>(log, 1.0f);
             else
 #endif
                 return std::make_shared<AntiLogRenderer>(log, 1.0f);
+            break;
         }
     }
     else if (log->isLog10())
     {
-        if (dir == TRANSFORM_DIR_FORWARD)
+        switch (dir)
         {
+        case TRANSFORM_DIR_FORWARD:
 #ifdef USE_SSE
             if (fastExp) return std::make_shared<LogRendererSSE>(log, LOG10_2);
             else
 #endif
                 return std::make_shared<LogRenderer>(log, LOG10_2);
-        }
-        else
-        {
+            break;
+        case TRANSFORM_DIR_INVERSE:
 #ifdef USE_SSE
             if (fastExp) return std::make_shared<AntiLogRendererSSE>(log, LOG2_10);
             else
 #endif
                 return std::make_shared<AntiLogRenderer>(log, LOG2_10);
+            break;
         }
     }
     else
     {
         if (log->isCamera())
         {
-            if (dir == TRANSFORM_DIR_FORWARD)
+            switch (dir)
             {
+            case TRANSFORM_DIR_FORWARD:
 #ifdef USE_SSE
                 if (fastExp) return std::make_shared<CameraLin2LogRendererSSE>(log);
                 else
 #endif
                     return std::make_shared<CameraLin2LogRenderer>(log);
-            }
-            else
-            {
+                break;
+            case TRANSFORM_DIR_INVERSE:
 #ifdef USE_SSE
                 if (fastExp) return std::make_shared<CameraLog2LinRendererSSE>(log);
                 else
 #endif
                     return std::make_shared<CameraLog2LinRenderer>(log);
+                break;
             }
         }
         else
         {
-            if (dir == TRANSFORM_DIR_FORWARD)
+            switch (dir)
             {
+            case TRANSFORM_DIR_FORWARD:
 #ifdef USE_SSE
                 if (fastExp) return std::make_shared<Lin2LogRendererSSE>(log);
                 else
 #endif
                     return std::make_shared<Lin2LogRenderer>(log);
-            }
-            else
-            {
+                break;
+            case TRANSFORM_DIR_INVERSE:
 #ifdef USE_SSE
                 if (fastExp) return std::make_shared<Log2LinRendererSSE>(log);
                 else
 #endif
                     return std::make_shared<Log2LinRenderer>(log);
+                break;
             }
         }
     }
+    throw Exception("Illegal Log direction.");
 }
 
 LogOpCPU::LogOpCPU(ConstLogOpDataRcPtr & log)
