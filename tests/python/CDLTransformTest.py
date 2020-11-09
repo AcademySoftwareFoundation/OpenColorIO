@@ -160,10 +160,8 @@ class CDLTransformTest(unittest.TestCase):
         self.assertEqual(self.cdl_tr.getDirection(), OCIO.TRANSFORM_DIR_FORWARD)
 
         for direction in OCIO.TransformDirection.__members__.values():
-            # Setting the unknown direction preserves the current direction.
-            if direction != OCIO.TRANSFORM_DIR_UNKNOWN:
-                self.cdl_tr.setDirection(direction)
-                self.assertEqual(self.cdl_tr.getDirection(), direction)
+            self.cdl_tr.setDirection(direction)
+            self.assertEqual(self.cdl_tr.getDirection(), direction)
 
     def test_style(self):
         """
@@ -299,11 +297,6 @@ class CDLTransformTest(unittest.TestCase):
         """
 
         self.cdl_tr.setDirection(OCIO.TRANSFORM_DIR_FORWARD)
-        self.assertIsNone(self.cdl_tr.validate())
-
-        # As the CDL Transform does not support the unknown direction,
-        # it preserves the original direction.
-        self.cdl_tr.setDirection(OCIO.TRANSFORM_DIR_UNKNOWN)
         self.assertIsNone(self.cdl_tr.validate())
 
     def test_equality(self):

@@ -234,21 +234,6 @@ OCIO_ADD_TEST(LogOp, cache_id)
     OCIO_CHECK_NE(opCacheID0, opCacheID1);
 }
 
-OCIO_ADD_TEST(LogOp, throw_direction)
-{
-    const double base = 10.0;
-    const double logSlope[3] = { 0.18, 0.18, 0.18 };
-    const double linSlope[3] = { 2.0, 2.0, 2.0 };
-    const double linOffset[3] = { 0.1, 0.1, 0.1 };
-    const double logOffset[3] = { 1.0, 1.0, 1.0 };
-
-    OCIO::OpRcPtrVec ops;
-    OCIO_CHECK_THROW_WHAT(OCIO::CreateLogOp(ops, base, logSlope, logOffset,
-                                            linSlope, linOffset,
-                                            OCIO::TRANSFORM_DIR_UNKNOWN),
-                          OCIO::Exception, "unspecified transform direction");
-}
-
 OCIO_ADD_TEST(LogOp, create_transform)
 {
     OCIO::TransformDirection direction = OCIO::TRANSFORM_DIR_FORWARD;

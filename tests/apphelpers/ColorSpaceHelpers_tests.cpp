@@ -116,16 +116,16 @@ OCIO_ADD_TEST(ColorSpaceInfo, change_values)
     OCIO_CHECK_NO_THROW(cs->setFamily("Acme     /   Camera"));
     OCIO_CHECK_EQUAL(cs->getFamily(), std::string("Acme     /   Camera"));
 
+    OCIO::ConfigRcPtr cfg = config->createEditableCopy();
+
     // No family separator.
 
-    OCIO_CHECK_EQUAL(config->getFamilySeparator(), 0x0);
+    OCIO_CHECK_NO_THROW(cfg->setFamilySeparator(0)); // i.e. that's the null character
 
-    OCIO_CHECK_NO_THROW(csInfo = OCIO::ColorSpaceInfo::Create(config, cs));
+    OCIO_CHECK_NO_THROW(csInfo = OCIO::ColorSpaceInfo::Create(cfg, cs));
     OCIO_REQUIRE_EQUAL(csInfo->getHierarchyLevels()->getNumString(), 1);
     OCIO_CHECK_EQUAL(csInfo->getHierarchyLevels()->getString(0), std::string(cs->getFamily()));
 
-
-    OCIO::ConfigRcPtr cfg = config->createEditableCopy();
 
     // '/' is the new family separator.
 
@@ -145,13 +145,15 @@ OCIO_ADD_TEST(ColorSpaceInfo, change_values)
     OCIO_REQUIRE_EQUAL(csInfo->getHierarchyLevels()->getNumString(), 1);
     OCIO_CHECK_EQUAL(csInfo->getHierarchyLevels()->getString(0), std::string(cs->getFamily()));
 
-    // '' is the new family separator.
+    // Reset to the v2 default family separator i.e. default to '/'.
 
-    OCIO_CHECK_NO_THROW(cfg->setFamilySeparator(0x0));
+    OCIO_CHECK_NO_THROW(cfg->resetFamilySeparatorToDefault());
 
     OCIO_CHECK_NO_THROW(csInfo = OCIO::ColorSpaceInfo::Create(cfg, cs));
-    OCIO_REQUIRE_EQUAL(csInfo->getHierarchyLevels()->getNumString(), 1);
-    OCIO_CHECK_EQUAL(csInfo->getHierarchyLevels()->getString(0), std::string(cs->getFamily()));
+    OCIO_REQUIRE_EQUAL(csInfo->getHierarchyLevels()->getNumString(), 2);
+    OCIO_CHECK_EQUAL(csInfo->getHierarchyLevels()->getString(0), std::string("Acme"));
+    OCIO_CHECK_EQUAL(csInfo->getHierarchyLevels()->getString(1), std::string("Camera"));
+    OCIO_CHECK_EQUAL(csInfo->getFamily(), std::string(cs->getFamily()));
 
     // Change the description.
 

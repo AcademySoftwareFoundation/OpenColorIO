@@ -73,7 +73,16 @@ void DisplayViewTransform::setDirection(TransformDirection dir) noexcept
 
 void DisplayViewTransform::validate() const
 {
-    Transform::validate();
+    try
+    {
+        Transform::validate();
+    }
+    catch (Exception & ex)
+    {
+        std::string errMsg("DisplayViewTransform validation failed: ");
+        errMsg += ex.what();
+        throw Exception(errMsg.c_str());
+    }
 
     if (getImpl()->m_src.empty())
     {
@@ -330,7 +339,9 @@ void BuildDisplayOps(OpRcPtrVec & ops,
     // Now that all the inputs are found and validated, the following code builds the list of ops
     // for the forward or the inverse direction.
 
-    if (combinedDir == TRANSFORM_DIR_FORWARD)
+    switch (combinedDir)
+    {
+    case TRANSFORM_DIR_FORWARD:
     {
         // Start from src color space.
         ConstColorSpaceRcPtr currentCS = srcColorSpace;
@@ -359,8 +370,9 @@ void BuildDisplayOps(OpRcPtrVec & ops,
             BuildColorSpaceOps(ops, config, context, currentCS, displayColorSpace,
                                 dataBypass);
         }
+        break;
     }
-    else // TRANSFORM_DIR_INVERSE
+    case TRANSFORM_DIR_INVERSE:
     {
         // The source color space of the view transform might need to be computed. In forward,
         // looks (if present) are applied and will change the current color space that is used
@@ -402,6 +414,8 @@ void BuildDisplayOps(OpRcPtrVec & ops,
             BuildColorSpaceOps(ops, config, context,
                                vtSourceCS, srcColorSpace, dataBypass);
         }
+        break;
+    }
     }
 }
 

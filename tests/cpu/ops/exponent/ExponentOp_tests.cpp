@@ -224,9 +224,6 @@ OCIO_ADD_TEST(ExponentOp, throw_create)
     const double exp1[4] = { 0.0, 1.3, 1.4, 1.5 };
 
     OCIO::OpRcPtrVec ops;
-    OCIO_CHECK_THROW_WHAT(
-        OCIO::CreateExponentOp(ops, exp1, OCIO::TRANSFORM_DIR_UNKNOWN),
-        OCIO::Exception, "unspecified transform direction");
 
     OCIO_CHECK_THROW_WHAT(
         OCIO::CreateExponentOp(ops, exp1, OCIO::TRANSFORM_DIR_INVERSE),

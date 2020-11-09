@@ -61,7 +61,7 @@ OCIO_ADD_TEST(ColorSpace, basic)
 
     std::ostringstream oss;
     oss << *cs;
-    OCIO_CHECK_EQUAL(oss.str().size(), 168);
+    OCIO_CHECK_EQUAL(oss.str().size(), 193);
 }
 
 OCIO_ADD_TEST(ColorSpace, category)

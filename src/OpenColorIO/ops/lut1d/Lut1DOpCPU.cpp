@@ -1630,11 +1630,14 @@ OpCPURcPtr GetForwardLut1DRenderer(ConstLut1DOpDataRcPtr & lut)
 template<BitDepth inBD, BitDepth outBD>
 ConstOpCPURcPtr GetLut1DRenderer_OutBitDepth(ConstLut1DOpDataRcPtr & lut)
 {
-    if (lut->getDirection() == TRANSFORM_DIR_FORWARD)
+    switch (lut->getDirection())
+    {
+    case TRANSFORM_DIR_FORWARD:
     {
         return GetForwardLut1DRenderer<inBD, outBD>(lut);
+        break;
     }
-    else
+    case TRANSFORM_DIR_INVERSE:
     {
         if (lut->isInputHalfDomain())
         {
@@ -1658,7 +1661,10 @@ ConstOpCPURcPtr GetLut1DRenderer_OutBitDepth(ConstLut1DOpDataRcPtr & lut)
                 return std::make_shared< InvLut1DRendererHueAdjust<inBD, outBD> >(lut);
             }
         }
+        break;
     }
+    }
+    throw Exception("Illegal LUT1D direction.");
 }
 
 template<BitDepth inBD>

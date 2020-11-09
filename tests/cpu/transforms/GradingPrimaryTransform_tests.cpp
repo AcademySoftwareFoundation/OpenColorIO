@@ -393,7 +393,8 @@ OCIO_ADD_TEST(GradingPrimaryTransform, serialization)
         std::ostringstream oss;
         oss << *grp;
 
-        std::string GROUP_STR("<GroupTransform direction=forward, transforms=\n\t");
+        std::string GROUP_STR("<GroupTransform direction=forward, transforms=\n");
+        GROUP_STR += "        ";
         GROUP_STR += PRIMARY_STR;
         GROUP_STR += ">";
 

@@ -289,11 +289,14 @@ void CreateExponentOp(OpRcPtrVec & ops,
                       ExponentOpDataRcPtr & expData,
                       TransformDirection direction)
 {
-    if (direction == TRANSFORM_DIR_UNKNOWN)
+    switch (direction)
     {
-        throw Exception("Cannot create ExponentOp with unspecified transform direction.");
+    case TRANSFORM_DIR_FORWARD:
+    {
+        ops.push_back(std::make_shared<ExponentOp>(expData));
+        break;
     }
-    else if (direction == TRANSFORM_DIR_INVERSE)
+    case TRANSFORM_DIR_INVERSE:
     {
         double values[4];
         for (int i = 0; i<4; ++i)
@@ -309,10 +312,8 @@ void CreateExponentOp(OpRcPtrVec & ops,
         }
         ExponentOpDataRcPtr expInv = std::make_shared<ExponentOpData>(values);
         ops.push_back(std::make_shared<ExponentOp>(expInv));
+        break;
     }
-    else
-    {
-        ops.push_back(std::make_shared<ExponentOp>(expData));
     }
 }
 

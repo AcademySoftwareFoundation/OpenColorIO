@@ -41,8 +41,6 @@ class TransformsTest(unittest.TestCase):
 
         ### Base Transform method tests ###
         self.assertEqual(OCIO.TRANSFORM_DIR_FORWARD, at.getDirection())
-        at.setDirection(OCIO.TRANSFORM_DIR_UNKNOWN)
-        self.assertEqual(OCIO.TRANSFORM_DIR_UNKNOWN, at.getDirection())
 
         ### CDLTransform ###
         cdl = OCIO.CDLTransform()

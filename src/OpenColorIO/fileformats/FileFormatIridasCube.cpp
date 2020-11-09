@@ -460,7 +460,9 @@ LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
     const double dmin[]{ cachedFile->domain_min[0], cachedFile->domain_min[1], cachedFile->domain_min[2] };
     const double dmax[]{ cachedFile->domain_max[0], cachedFile->domain_max[1], cachedFile->domain_max[2] };
 
-    if(newDir == TRANSFORM_DIR_FORWARD)
+    switch (newDir)
+    {
+    case TRANSFORM_DIR_FORWARD:
     {
         CreateMinMaxOp(ops, dmin, dmax, newDir);
         if(lut1D)
@@ -471,8 +473,9 @@ LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
         {
             CreateLut3DOp(ops, lut3D, newDir);
         }
+        break;
     }
-    else if(newDir == TRANSFORM_DIR_INVERSE)
+    case TRANSFORM_DIR_INVERSE:
     {
         if(lut3D)
         {
@@ -483,6 +486,8 @@ LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
             CreateLut1DOp(ops, lut1D, newDir);
         }
         CreateMinMaxOp(ops, dmin, dmax, newDir);
+        break;
+    }
     }
 }
 }

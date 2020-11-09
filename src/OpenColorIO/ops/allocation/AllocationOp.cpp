@@ -70,27 +70,16 @@ void CreateAllocationOps(OpRcPtrVec & ops,
             }
         }
 
-        if(dir == TRANSFORM_DIR_FORWARD)
+        switch (dir)
         {
+        case TRANSFORM_DIR_FORWARD:
             CreateLogOp(ops, base, logSlope, logOffset, linSlope, linOffset, dir);
-
-            CreateFitOp(ops,
-                        oldmin, oldmax,
-                        newmin, newmax,
-                        dir);
-        }
-        else if(dir == TRANSFORM_DIR_INVERSE)
-        {
-            CreateFitOp(ops,
-                        oldmin, oldmax,
-                        newmin, newmax,
-                        dir);
-
+            CreateFitOp(ops, oldmin, oldmax, newmin, newmax, dir);
+            break;
+        case TRANSFORM_DIR_INVERSE:
+            CreateFitOp(ops, oldmin, oldmax, newmin, newmax, dir);
             CreateLogOp(ops, base, logSlope, logOffset, linSlope, linOffset, dir);
-        }
-        else
-        {
-            throw Exception("Cannot BuildAllocationOp, unspecified transform direction.");
+            break;
         }
     }
     else
