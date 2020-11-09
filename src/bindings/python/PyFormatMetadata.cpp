@@ -50,7 +50,7 @@ void bindPyFormatMetadata(py::module & m)
                 throw py::key_error(os.str());
             },
              "name"_a)
-        .def("__setitem__", &FormatMetadata::addAttribute, "name"_a, "value"_a)
+        .def("__setitem__", &FormatMetadata::addAttribute, "name"_a.none(false), "value"_a.none(false))
         .def("__contains__", [](const FormatMetadata & self, const std::string & name) -> bool
             {
                 for (int i = 0; i < self.getNumAttributes(); i++)
@@ -72,16 +72,16 @@ void bindPyFormatMetadata(py::module & m)
             })
 
         .def("getName", &FormatMetadata::getName)
-        .def("setName", &FormatMetadata::setName, "name"_a)
+        .def("setName", &FormatMetadata::setName, "name"_a.none(false))
         .def("getValue", &FormatMetadata::getValue)
-        .def("setValue", &FormatMetadata::setValue, "value"_a)
+        .def("setValue", &FormatMetadata::setValue, "value"_a.none(false))
         .def("getAttributes", [](const FormatMetadata & self) { return AttributeIterator(self); })
         .def("getChildElements", [](const FormatMetadata & self)
             {
                 return ConstChildElementIterator(self);
             })
         .def("getChildElements", [](FormatMetadata & self) { return ChildElementIterator(self); })
-        .def("addChildElement", &FormatMetadata::addChildElement, "name"_a, "value"_a)
+        .def("addChildElement", &FormatMetadata::addChildElement, "name"_a.none(false), "value"_a.none(false))
         .def("clear", &FormatMetadata::clear);
 
     py::class_<AttributeNameIterator>(cls, "AttributeNameIterator")

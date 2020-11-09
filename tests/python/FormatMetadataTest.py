@@ -122,6 +122,8 @@ class FormatMetadataTest(unittest.TestCase):
             child3.addChildElement('string', 42)
         with self.assertRaises(TypeError):
             child3.addChildElement(42, 'string')
+        with self.assertRaises(TypeError):
+            child3.addChildElement('name', None)
 
     def test_attributes(self):
         """
