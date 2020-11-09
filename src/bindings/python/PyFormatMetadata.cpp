@@ -81,11 +81,7 @@ void bindPyFormatMetadata(py::module & m)
                 return ConstChildElementIterator(self);
             })
         .def("getChildElements", [](FormatMetadata & self) { return ChildElementIterator(self); })
-        .def("addChildElement",
-            [](FormatMetadata & self, const std::string & name, const std::string & value) -> void
-            {
-                self.addChildElement(name.c_str(), value.c_str());
-            }, "name"_a, "value"_a)
+        .def("addChildElement", &FormatMetadata::addChildElement, "name"_a, "value"_a)
         .def("clear", &FormatMetadata::clear);
 
     py::class_<AttributeNameIterator>(cls, "AttributeNameIterator")
