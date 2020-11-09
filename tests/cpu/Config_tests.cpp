@@ -5810,8 +5810,7 @@ OCIO_ADD_TEST(Config, family_separator)
         "    family: raw\n"
         "    equalitygroup: \"\"\n"
         "    bitdepth: 32f\n"
-        "    description: |\n"
-        "      A raw color space. Conversions to and from this space are no-ops.\n"
+        "    description: A raw color space. Conversions to and from this space are no-ops.\n"
         "    isdata: true\n"
         "    allocation: uniform\n";
 
