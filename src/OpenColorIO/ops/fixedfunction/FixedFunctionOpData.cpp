@@ -393,7 +393,7 @@ bool FixedFunctionOpData::isInverse(ConstFixedFunctionOpDataRcPtr & r) const
     return *r == *inverse();
 }
 
-void FixedFunctionOpData::invert()
+void FixedFunctionOpData::invert() noexcept
 {
     // NB: The following assumes the op has already been validated.
 
@@ -518,7 +518,7 @@ FixedFunctionOpDataRcPtr FixedFunctionOpData::inverse() const
 }
 
 // Convert internal OpData style into Transform direction.
-TransformDirection FixedFunctionOpData::getDirection() const
+TransformDirection FixedFunctionOpData::getDirection() const noexcept
 {
     switch (m_style)
     {
@@ -549,15 +549,11 @@ TransformDirection FixedFunctionOpData::getDirection() const
     return TRANSFORM_DIR_FORWARD;
 }
 
-void FixedFunctionOpData::setDirection(TransformDirection dir)
+void FixedFunctionOpData::setDirection(TransformDirection dir) noexcept
 {
-    if (dir != TRANSFORM_DIR_UNKNOWN)
+    if (getDirection() != dir)
     {
-        const auto curDir = getDirection();
-        if (curDir != dir)
-        {
-            invert();
-        }
+        invert();
     }
 }
 

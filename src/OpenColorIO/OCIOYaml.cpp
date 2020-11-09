@@ -477,11 +477,15 @@ inline void save(YAML::Emitter& out, const View & view)
 inline void EmitBaseTransformKeyValues(YAML::Emitter & out,
                                         const ConstTransformRcPtr & t)
 {
-    if(t->getDirection() != TRANSFORM_DIR_FORWARD)
+    switch (t->getDirection())
     {
+    case TRANSFORM_DIR_FORWARD:
+        break;
+    case TRANSFORM_DIR_INVERSE:
         out << YAML::Key << "direction";
         out << YAML::Value << YAML::Flow;
         save(out, t->getDirection());
+        break;
     }
 }
 
@@ -591,7 +595,7 @@ inline void load(const YAML::Node & node, BuiltinTransformRcPtr & t)
         }
         else if (key == "direction")
         {
-            TransformDirection dir = TRANSFORM_DIR_UNKNOWN;
+            TransformDirection dir = TRANSFORM_DIR_FORWARD;
             load(second, dir);
             t->setDirection(dir);
         }
@@ -4191,18 +4195,22 @@ inline void load(const YAML::Node& node, ConfigRcPtr & config, const char* filen
         }
         else if (key=="family_separator")
         {
-            load(second, stringval);
-            if (!stringval.empty())
+            // Check that the key is not present in a v1 config (checkVersionConsistency is not
+            // able to detect this).
+            if (config->getMajorVersion() < 2)
             {
-                if(stringval.size()!=1)
-                {
-                    std::ostringstream os;
-                    os << "'family_separator' value must be a single character.";
-                    os << " Found '" << stringval << "'.";
-                    throwValueError(node.Tag(), first, os.str());
-                }
-                config->setFamilySeparator(stringval[0]);
+                throwError(first, "Config v1 can't have 'family_separator'.");
             }
+
+            load(second, stringval);
+            if(stringval.size()!=1)
+            {
+                std::ostringstream os;
+                os << "'family_separator' value must be a single character.";
+                os << " Found '" << stringval << "'.";
+                throwValueError(node.Tag(), first, os.str());
+            }
+            config->setFamilySeparator(stringval[0]);
         }
         else if(key == "description")
         {
@@ -4239,6 +4247,8 @@ inline void load(const YAML::Node& node, ConfigRcPtr & config, const char* filen
         }
         else if (key == "file_rules")
         {
+            // Check that the key is not present in a v1 config (checkVersionConsistency is not
+            // able to detect this).
             if (config->getMajorVersion() < 2)
             {
                 throwError(first, "Config v1 can't use 'file_rules'");
@@ -4277,11 +4287,6 @@ inline void load(const YAML::Node& node, ConfigRcPtr & config, const char* filen
         }
         else if (key == "viewing_rules")
         {
-            if (config->getMajorVersion() < 2)
-            {
-                throwError(first, "Config v1 can't use 'viewing_rules'.");
-            }
-
             if (second.Type() != YAML::NodeType::Sequence)
             {
                 throwError(second, "The 'viewing_rules' field needs to be a (- !<Rule>) list.");
@@ -4664,10 +4669,13 @@ inline void save(YAML::Emitter & out, const Config & config)
     }
     out << YAML::Key << "strictparsing" << YAML::Value << config.isStrictParsingEnabled();
 
-    const char familySeparator = config.getFamilySeparator();
-    if (familySeparator)
+    if (configMajorVersion >= 2)
     {
-        out << YAML::Key << "family_separator" << YAML::Value << familySeparator;
+        const char familySeparator = config.getFamilySeparator();
+        if (familySeparator != '/')
+        {
+            out << YAML::Key << "family_separator" << YAML::Value << familySeparator;
+        }
     }
 
     std::vector<double> luma(3, 0.f);

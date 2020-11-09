@@ -34,10 +34,8 @@ class ExponentTransformTest(unittest.TestCase):
                          OCIO.TRANSFORM_DIR_FORWARD)
 
         for direction in OCIO.TransformDirection.__members__.values():
-            # Setting the unknown direction preserves the current direction.
-            if direction != OCIO.TRANSFORM_DIR_UNKNOWN:
-                self.exp_tr.setDirection(direction)
-                self.assertEqual(self.exp_tr.getDirection(), direction)
+            self.exp_tr.setDirection(direction)
+            self.assertEqual(self.exp_tr.getDirection(), direction)
 
         # Wrong type tests.
         for invalid in (None, 1, 'test'):

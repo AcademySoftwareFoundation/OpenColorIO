@@ -644,8 +644,7 @@ void LocalFileFormat::bake(const Baker & baker,
         transform->setLooks(looks.c_str());
         transform->setSrc(inputSpace.c_str());
         transform->setDst(targetSpace.c_str());
-        inputToTargetProc = config->getProcessor(transform,
-            TRANSFORM_DIR_FORWARD);
+        inputToTargetProc = config->getProcessor(transform, TRANSFORM_DIR_FORWARD);
     }
     else
     {
@@ -771,13 +770,11 @@ void LocalFileFormat::bake(const Baker & baker,
                 transform->setLooks(looks.c_str());
                 transform->setSrc(shaperSpace.c_str());
                 transform->setDst(targetSpace.c_str());
-                cubeProc = config->getProcessor(transform,
-                    TRANSFORM_DIR_FORWARD);
+                cubeProc = config->getProcessor(transform, TRANSFORM_DIR_FORWARD);
             }
             else
             {
-                cubeProc = config->getProcessor(shaperSpace.c_str(),
-                                                targetSpace.c_str());
+                cubeProc = config->getProcessor(shaperSpace.c_str(), targetSpace.c_str());
             }
         }
         else
@@ -924,18 +921,20 @@ LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
         LogWarningInterpolationNotUsed(fileInterp, fileTransform);
     }
 
-    if(newDir == TRANSFORM_DIR_FORWARD)
+    switch (newDir)
     {
-        if(cachedFile->hdltype == "c")
+    case TRANSFORM_DIR_FORWARD:
+    {
+        if (cachedFile->hdltype == "c")
         {
             CreateMinMaxOp(ops, cachedFile->from_min, cachedFile->from_max, newDir);
             CreateLut1DOp(ops, lut1D, newDir);
         }
-        else if(cachedFile->hdltype == "3d")
+        else if (cachedFile->hdltype == "3d")
         {
             CreateLut3DOp(ops, lut3D, newDir);
         }
-        else if(cachedFile->hdltype == "3d+1d")
+        else if (cachedFile->hdltype == "3d+1d")
         {
             CreateMinMaxOp(ops, cachedFile->from_min, cachedFile->from_max, newDir);
             CreateLut1DOp(ops, lut1D, newDir);
@@ -945,19 +944,20 @@ LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
         {
             throw Exception("Unhandled hdltype while creating forward ops");
         }
+        break;
     }
-    else if(newDir == TRANSFORM_DIR_INVERSE)
+    case TRANSFORM_DIR_INVERSE:
     {
-        if(cachedFile->hdltype == "c")
+        if (cachedFile->hdltype == "c")
         {
             CreateLut1DOp(ops, lut1D, newDir);
             CreateMinMaxOp(ops, cachedFile->from_min, cachedFile->from_max, newDir);
         }
-        else if(cachedFile->hdltype == "3d")
+        else if (cachedFile->hdltype == "3d")
         {
             CreateLut3DOp(ops, lut3D, newDir);
         }
-        else if(cachedFile->hdltype == "3d+1d")
+        else if (cachedFile->hdltype == "3d+1d")
         {
             CreateLut3DOp(ops, lut3D, newDir);
             CreateLut1DOp(ops, lut1D, newDir);
@@ -967,6 +967,8 @@ LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
         {
             throw Exception("Unhandled hdltype while creating reverse ops");
         }
+        break;
+    }
     }
 }
 }

@@ -310,7 +310,9 @@ ConstOpCPURcPtr GetGradingRGBCurveCPURenderer(ConstGradingRGBCurveOpDataRcPtr & 
 {
     const bool linToLog = (prim->getStyle() == GRADING_LIN) && !prim->getBypassLinToLog();
 
-    if (prim->getDirection() == TRANSFORM_DIR_FORWARD)
+    switch (prim->getDirection())
+    {
+    case TRANSFORM_DIR_FORWARD:
     {
         if (linToLog)
         {
@@ -320,8 +322,9 @@ ConstOpCPURcPtr GetGradingRGBCurveCPURenderer(ConstGradingRGBCurveOpDataRcPtr & 
         {
             return std::make_shared<GradingRGBCurveFwdOpCPU>(prim);
         }
+        break;
     }
-    else if (prim->getDirection() == TRANSFORM_DIR_INVERSE)
+    case TRANSFORM_DIR_INVERSE:
     {
         if (linToLog)
         {
@@ -331,9 +334,11 @@ ConstOpCPURcPtr GetGradingRGBCurveCPURenderer(ConstGradingRGBCurveOpDataRcPtr & 
         {
             return std::make_shared<GradingRGBCurveRevOpCPU>(prim);
         }
+        break;
+    }
     }
 
-    throw Exception("Unsupported direction.");
+    throw Exception("Illegal GradingRGBCurve direction.");
 }
 
 } // namespace OCIO_NAMESPACE

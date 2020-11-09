@@ -173,7 +173,7 @@ void DynamicPropertyGradingPrimaryImpl::setStyle(GradingStyle style)
     m_preRenderValues.update(m_style, m_direction, m_value);
 }
 
-void DynamicPropertyGradingPrimaryImpl::setDirection(TransformDirection dir)
+void DynamicPropertyGradingPrimaryImpl::setDirection(TransformDirection dir) noexcept
 {
     m_direction = dir;
     m_preRenderValues.update(m_style, m_direction, m_value);

@@ -70,13 +70,12 @@ operates.
 Web Resources
 -------------
 
-* Web page: <http://opencolorio.org>
-* Mail lists:
+* Website: <http://opencolorio.org>
+* Mailing lists:
   * Developer: <ocio-dev@lists.aswf.io>
   * User: <ocio-user@lists.aswf.io>
-* Slack channel: <https://opencolorio.slack.com>
-  * Please request access on the ocio-dev list with the email address you
-    would like to be invited on.
+* Slack workspace: <https://opencolorio.slack.com>
+  * New users can join via <http://slack.opencolorio.org>
 
 Reference Configs
 -----------------
