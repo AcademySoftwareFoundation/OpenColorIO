@@ -23,10 +23,6 @@ OCIO_ADD_TEST(AllocationOps, create)
         OCIO::CreateAllocationOps(ops, allocData, OCIO::TRANSFORM_DIR_INVERSE),
                                   OCIO::Exception, "Unsupported Allocation Type");
     OCIO_CHECK_EQUAL(ops.size(), 0);
-    OCIO_CHECK_THROW_WHAT(
-        OCIO::CreateAllocationOps(ops, allocData, OCIO::TRANSFORM_DIR_UNKNOWN),
-                                  OCIO::Exception, "Unsupported Allocation Type");
-    OCIO_CHECK_EQUAL(ops.size(), 0);
 
     allocData.allocation = OCIO::ALLOCATION_UNIFORM;
     // No allocation data leads to identity, identity transform will be created.
@@ -42,10 +38,6 @@ OCIO_ADD_TEST(AllocationOps, create)
     allocData.vars.push_back(0.0f);
     allocData.vars.push_back(10.0f);
     ops.clear();
-    OCIO_CHECK_THROW_WHAT(
-        OCIO::CreateAllocationOps(ops, allocData, OCIO::TRANSFORM_DIR_UNKNOWN),
-                                  OCIO::Exception, "unspecified transform direction");
-    OCIO_CHECK_EQUAL(ops.size(), 0);
     OCIO_CHECK_NO_THROW(
         OCIO::CreateAllocationOps(ops, allocData, OCIO::TRANSFORM_DIR_FORWARD));
     OCIO_CHECK_EQUAL(ops.size(), 1);
@@ -120,10 +112,6 @@ OCIO_ADD_TEST(AllocationOps, create)
     OCIO_CHECK_EQUAL(defaultLogOp->isInverse(op1), true);
 
     ops.clear();
-    OCIO_CHECK_THROW_WHAT(
-        OCIO::CreateAllocationOps(ops, allocData, OCIO::TRANSFORM_DIR_UNKNOWN),
-                                  OCIO::Exception, "unspecified transform direction");
-    OCIO_CHECK_EQUAL(ops.size(), 0);
 
     // adding data to target identity, Log op and identity are created
     allocData.vars.push_back(0.0f);
@@ -147,10 +135,6 @@ OCIO_ADD_TEST(AllocationOps, create)
     op0 = ops[0];
     OCIO_CHECK_EQUAL(defaultLogOp->isSameType(op0), true);
     ops.clear();
-    OCIO_CHECK_THROW_WHAT(
-        OCIO::CreateAllocationOps(ops, allocData, OCIO::TRANSFORM_DIR_UNKNOWN),
-                                  OCIO::Exception, "unspecified transform direction");
-    OCIO_CHECK_EQUAL(ops.size(), 0);
 
     // change log intercept
     allocData.vars.push_back(10.0f);
@@ -173,5 +157,4 @@ OCIO_ADD_TEST(AllocationOps, create)
     {
         OCIO_CHECK_CLOSE(dstLogShift[idx], tmp[idx], error);
     }
-
 }

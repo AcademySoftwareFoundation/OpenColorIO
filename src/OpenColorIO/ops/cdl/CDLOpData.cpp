@@ -176,7 +176,7 @@ void CDLOpData::setStyle(CDLOpData::Style style)
     m_style = style;
 }
 
-TransformDirection CDLOpData::getDirection() const
+TransformDirection CDLOpData::getDirection() const noexcept
 {
     switch (m_style)
     {
@@ -190,17 +190,12 @@ TransformDirection CDLOpData::getDirection() const
     return TRANSFORM_DIR_FORWARD;
 }
 
-void CDLOpData::setDirection(TransformDirection dir)
+void CDLOpData::setDirection(TransformDirection dir) noexcept
 {
-    if (dir != TRANSFORM_DIR_UNKNOWN)
+    if (getDirection() != dir)
     {
-        const auto curDir = getDirection();
-        if (curDir != dir)
-        {
-            invert();
-        }
+        invert();
     }
-
 }
 
 void CDLOpData::setSlopeParams(const ChannelParams & slopeParams)
@@ -475,7 +470,7 @@ bool CDLOpData::isInverse(ConstCDLOpDataRcPtr & r) const
     return *r == *inverse();
 }
 
-void CDLOpData::invert()
+void CDLOpData::invert() noexcept
 {
     switch (m_style)
     {

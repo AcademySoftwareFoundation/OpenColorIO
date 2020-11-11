@@ -235,10 +235,8 @@ void PartitionGPUOps(OpRcPtrVec & gpuPreOps,
         // (For example in the case of getProcessor(FileTransform)
         if(GetGpuAllocation(allocation, ops[gpuLut3DOpStartIndex]))
         {
-            CreateAllocationOps(gpuPreOps, allocation,
-                TRANSFORM_DIR_FORWARD);
-            CreateAllocationOps(gpuLatticeOps, allocation,
-                TRANSFORM_DIR_INVERSE);
+            CreateAllocationOps(gpuPreOps, allocation, TRANSFORM_DIR_FORWARD);
+            CreateAllocationOps(gpuLatticeOps, allocation, TRANSFORM_DIR_INVERSE);
         }
 
         // Handle cpu lattice processing

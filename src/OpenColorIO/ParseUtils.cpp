@@ -131,8 +131,8 @@ LoggingLevel LoggingLevelFromString(const char * s)
 const char * TransformDirectionToString(TransformDirection dir)
 {
     if(dir == TRANSFORM_DIR_FORWARD) return "forward";
-    else if(dir == TRANSFORM_DIR_INVERSE) return "inverse";
-    return "unknown";
+    // TRANSFORM_DIR_INVERSE
+    return "inverse";
 }
 
 TransformDirection TransformDirectionFromString(const char * s)
@@ -140,16 +140,13 @@ TransformDirection TransformDirectionFromString(const char * s)
     const std::string str = StringUtils::Lower(s);
     if(str == "forward") return TRANSFORM_DIR_FORWARD;
     else if(str == "inverse") return TRANSFORM_DIR_INVERSE;
-    return TRANSFORM_DIR_UNKNOWN;
+    std::ostringstream oss;
+    oss << "Unrecognized transform direction '" << std::string(s ? s : "") << "'.";
+    throw Exception(oss.str().c_str());
 }
 
-TransformDirection CombineTransformDirections(TransformDirection d1,
-                                                TransformDirection d2)
+TransformDirection CombineTransformDirections(TransformDirection d1, TransformDirection d2)
 {
-    // Any unknowns always combine to be unknown.
-    if(d1 == TRANSFORM_DIR_UNKNOWN || d2 == TRANSFORM_DIR_UNKNOWN)
-        return TRANSFORM_DIR_UNKNOWN;
-
     if(d1 == TRANSFORM_DIR_FORWARD && d2 == TRANSFORM_DIR_FORWARD)
         return TRANSFORM_DIR_FORWARD;
 
@@ -162,15 +159,15 @@ TransformDirection CombineTransformDirections(TransformDirection d1,
 TransformDirection GetInverseTransformDirection(TransformDirection dir)
 {
     if(dir == TRANSFORM_DIR_FORWARD) return TRANSFORM_DIR_INVERSE;
-    else if(dir == TRANSFORM_DIR_INVERSE) return TRANSFORM_DIR_FORWARD;
-    return TRANSFORM_DIR_UNKNOWN;
+    // TRANSFORM_DIR_INVERSE
+    return TRANSFORM_DIR_FORWARD;
 }
 
 const char * ColorSpaceDirectionToString(ColorSpaceDirection dir)
 {
     if(dir == COLORSPACE_DIR_TO_REFERENCE) return "to_reference";
-    else if(dir == COLORSPACE_DIR_FROM_REFERENCE) return "from_reference";
-    return "unknown";
+    // COLORSPACE_DIR_FROM_REFERENCE
+    return "from_reference";
 }
 
 ColorSpaceDirection ColorSpaceDirectionFromString(const char * s)
@@ -178,7 +175,9 @@ ColorSpaceDirection ColorSpaceDirectionFromString(const char * s)
     const std::string str = StringUtils::Lower(s);
     if(str == "to_reference") return COLORSPACE_DIR_TO_REFERENCE;
     else if(str == "from_reference") return COLORSPACE_DIR_FROM_REFERENCE;
-    return COLORSPACE_DIR_UNKNOWN;
+    std::ostringstream oss;
+    oss << "Unrecognized color space direction '" << std::string(s ? s : "") << "'.";
+    throw Exception(oss.str().c_str());
 }
 
 const char * BitDepthToString(BitDepth bitDepth)

@@ -103,12 +103,6 @@ const char * ExposureContrastOpData::ConvertStyleToString(ExposureContrastOpData
 ExposureContrastOpData::Style ExposureContrastOpData::ConvertStyle(ExposureContrastStyle style,
                                                                    TransformDirection dir)
 {
-    if (dir == TRANSFORM_DIR_UNKNOWN)
-    {
-        throw Exception(
-            "Cannot create ExposureContrastOp with unspecified transform direction.");
-    }
-
     const bool isForward = dir == TRANSFORM_DIR_FORWARD;
 
     switch (style)
@@ -221,7 +215,7 @@ bool ExposureContrastOpData::isInverse(ConstExposureContrastOpDataRcPtr & r) con
     return *r == *inverse();
 }
 
-void ExposureContrastOpData::invert()
+void ExposureContrastOpData::invert() noexcept
 {
     Style invStyle = STYLE_LINEAR;
     switch (getStyle())
@@ -434,7 +428,7 @@ ExposureContrastOpData & ExposureContrastOpData::operator=(const ExposureContras
 }
 
 // Convert internal OpData style into Transform direction.
-TransformDirection ExposureContrastOpData::getDirection() const
+TransformDirection ExposureContrastOpData::getDirection() const noexcept
 {
     switch (m_style)
     {
@@ -451,15 +445,11 @@ TransformDirection ExposureContrastOpData::getDirection() const
     return TRANSFORM_DIR_FORWARD;
 }
 
-void ExposureContrastOpData::setDirection(TransformDirection dir)
+void ExposureContrastOpData::setDirection(TransformDirection dir) noexcept
 {
-    if (dir != TRANSFORM_DIR_UNKNOWN)
+    if (getDirection() != dir)
     {
-        const auto curDir = getDirection();
-        if (curDir != dir)
-        {
-            invert();
-        }
+        invert();
     }
 }
 

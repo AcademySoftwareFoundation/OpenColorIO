@@ -16,18 +16,14 @@ class ConstantsTest(unittest.TestCase):
         self.assertEqual(OCIO.LOGGING_LEVEL_UNKNOWN, "unknown")
 
         # TransformDirection
-        self.assertEqual(OCIO.TRANSFORM_DIR_UNKNOWN, "unknown")
         self.assertEqual(OCIO.TRANSFORM_DIR_FORWARD, "forward")
         self.assertEqual(OCIO.TRANSFORM_DIR_INVERSE, "inverse")
-        self.assertEqual(OCIO.GetInverseTransformDirection(OCIO.TRANSFORM_DIR_UNKNOWN),
-            OCIO.TRANSFORM_DIR_UNKNOWN)
         self.assertEqual(OCIO.GetInverseTransformDirection(OCIO.TRANSFORM_DIR_FORWARD),
             OCIO.TRANSFORM_DIR_INVERSE)
         self.assertEqual(OCIO.GetInverseTransformDirection(OCIO.TRANSFORM_DIR_INVERSE),
             OCIO.TRANSFORM_DIR_FORWARD)
 
         # ColorSpaceDirection
-        self.assertEqual(OCIO.COLORSPACE_DIR_UNKNOWN, "unknown")
         self.assertEqual(OCIO.COLORSPACE_DIR_TO_REFERENCE, "to_reference")
         self.assertEqual(OCIO.COLORSPACE_DIR_FROM_REFERENCE, "from_reference")
 

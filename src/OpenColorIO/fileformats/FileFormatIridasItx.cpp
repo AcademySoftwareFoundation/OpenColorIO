@@ -262,13 +262,11 @@ void LocalFileFormat::bake(const Baker & baker,
         transform->setLooks(looks.c_str());
         transform->setSrc(baker.getInputSpace());
         transform->setDst(baker.getTargetSpace());
-        inputToTarget = config->getProcessor(transform,
-            TRANSFORM_DIR_FORWARD);
+        inputToTarget = config->getProcessor(transform, TRANSFORM_DIR_FORWARD);
     }
     else
     {
-        inputToTarget = config->getProcessor(baker.getInputSpace(),
-            baker.getTargetSpace());
+        inputToTarget = config->getProcessor(baker.getInputSpace(), baker.getTargetSpace());
     }
     ConstCPUProcessorRcPtr cpu = inputToTarget->getOptimizedCPUProcessor(OPTIMIZATION_LOSSLESS);
     cpu->apply(cubeImg);

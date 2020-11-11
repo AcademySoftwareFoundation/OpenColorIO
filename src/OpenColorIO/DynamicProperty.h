@@ -108,7 +108,7 @@ public:
     void setValue(const GradingPrimary & value) override;
 
     void setStyle(GradingStyle style);
-    void setDirection(TransformDirection dir);
+    void setDirection(TransformDirection dir) noexcept;
     const GradingPrimaryPreRender & getComputedValue() const { return m_preRenderValues; }
 
     const Float3 & getBrightness() const { return m_preRenderValues.getBrightness(); }

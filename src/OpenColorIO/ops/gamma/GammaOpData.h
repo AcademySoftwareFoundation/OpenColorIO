@@ -90,7 +90,7 @@ public:
 
     GammaOpDataRcPtr clone() const;
 
-    inline Style getStyle() const { return m_style; }
+    inline Style getStyle() const noexcept { return m_style; }
 
     Type getType() const override { return GammaType; }
 
@@ -104,7 +104,7 @@ public:
     inline Params & getBlueParams()  { return m_blueParams;  }
     inline Params & getAlphaParams() { return m_alphaParams; }
 
-    void setStyle(const Style & style);
+    void setStyle(const Style & style) noexcept;
 
     void setRedParams  (const Params & parameter);
     void setGreenParams(const Params & parameter);
@@ -145,8 +145,8 @@ public:
 
     std::string getCacheID() const override;
 
-    TransformDirection getDirection() const;
-    void setDirection(TransformDirection dir);
+    TransformDirection getDirection() const noexcept;
+    void setDirection(TransformDirection dir) noexcept;
 
     static bool isIdentityParameters(const Params & parameters, Style style);
     static Params getIdentityParameters(Style style);
@@ -155,7 +155,7 @@ protected:
     bool isClamping() const;
 
 private:
-    void invert();
+    void invert() noexcept;
 
     Style m_style;
     Params m_redParams;

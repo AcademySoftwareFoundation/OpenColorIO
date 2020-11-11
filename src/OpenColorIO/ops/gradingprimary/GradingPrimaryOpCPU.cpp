@@ -1348,7 +1348,7 @@ ConstOpCPURcPtr GetGradingPrimaryCPURenderer(ConstGradingPrimaryOpDataRcPtr & pr
         }
     }
 
-    throw Exception("Unsupported GradingPrimary direction.");
+    throw Exception("Illegal GradingPrimary direction.");
 }
 
 } // namespace OCIO_NAMESPACE

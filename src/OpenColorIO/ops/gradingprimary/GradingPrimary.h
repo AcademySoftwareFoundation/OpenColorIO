@@ -21,7 +21,7 @@ struct GradingPrimaryPreRender
     GradingPrimaryPreRender() = default;
     ~GradingPrimaryPreRender() = default;
 
-    void update(GradingStyle style, TransformDirection dir, const GradingPrimary & v);
+    void update(GradingStyle style, TransformDirection dir, const GradingPrimary & v) noexcept;
 
     // Do not apply the op if all params are identity.
     bool m_localBypass{ false };

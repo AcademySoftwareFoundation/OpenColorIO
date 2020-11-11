@@ -996,13 +996,14 @@ void GetGradingToneGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
         st.indent();
     }
 
-    if (dir == TRANSFORM_DIR_FORWARD)
+    switch (dir)
     {
+    case TRANSFORM_DIR_FORWARD:
         AddGTForwardShader(st, properties, style);
-    }
-    else
-    {
+        break;
+    case TRANSFORM_DIR_INVERSE:
         AddGTInverseShader(st, properties, style);
+        break;
     }
 
     if (dyn)
