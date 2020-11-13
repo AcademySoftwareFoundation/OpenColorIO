@@ -123,12 +123,12 @@ OCIO_ADD_TEST(ExposureContrastRenderer, video)
     // The renderer has a copy of ec, get the dynamic property ptr in order to change the value
     // for the apply.
     OCIO::DynamicPropertyDoubleRcPtr dpc, dpe, dpg;
-    OCIO_CHECK_NO_THROW(dpc = OCIO::DynamicPropertyValue::AsDouble(
-        renderer->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_CONTRAST)));
-    OCIO_CHECK_NO_THROW(dpe = OCIO::DynamicPropertyValue::AsDouble(
-        renderer->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_EXPOSURE)));
-    OCIO_CHECK_NO_THROW(dpg = OCIO::DynamicPropertyValue::AsDouble(
-        renderer->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_GAMMA)));
+    OCIO::DynamicPropertyRcPtr dp = renderer->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_CONTRAST);
+    OCIO_CHECK_NO_THROW(dpc = OCIO::DynamicPropertyValue::AsDouble(dp));
+    dp = renderer->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_EXPOSURE);
+    OCIO_CHECK_NO_THROW(dpe = OCIO::DynamicPropertyValue::AsDouble(dp));
+    dp = renderer->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_GAMMA);
+    OCIO_CHECK_NO_THROW(dpg = OCIO::DynamicPropertyValue::AsDouble(dp));
     dpe->setValue(0.2);
     dpc->setValue(1.0);
     // TODO: When base < 1, ssePower(Inf, base) != Inf.  It returns various
