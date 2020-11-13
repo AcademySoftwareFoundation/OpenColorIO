@@ -430,18 +430,6 @@ public:
                                           ColorSpaceVisibility visibility, int index) const;
 
     /**
-     * \brief Get the color space from all the color spaces
-     *      (i.e. active and inactive) and return null if the name is not found.
-     *
-     * \note
-     *     The fcn accepts either a color space OR role name.
-     *     (Color space names take precedence over roles.)
-     */
-    ConstColorSpaceRcPtr getColorSpace(const char * name) const;
-
-    // The following three methods only work from the list of active color spaces.
-
-    /**
      * \brief Work on the active color spaces only.
      * 
      * \note
@@ -466,6 +454,16 @@ public:
      *    (Color space names take precedence over roles.)
      */
     int getIndexForColorSpace(const char * name) const;
+
+    /**
+     * \brief Get the color space from all the color spaces
+     *      (i.e. active and inactive) and return null if the name is not found.
+     *
+     * \note
+     *     The fcn accepts either a color space OR role name.
+     *     (Color space names take precedence over roles.)
+     */
+    ConstColorSpaceRcPtr getColorSpace(const char * name) const;
 
     /**
      * \brief Add a color space to the configuration.
@@ -519,10 +517,12 @@ public:
     void setStrictParsingEnabled(bool enabled);
 
     /**
-     * \brief Set/get a list of inactive color space names.
+     * \brief Set/get a list of inactive color space or named transform names.
      *
+     * Notes:
+     * * List can contain color space and/or named transform names.
      * * The inactive spaces are color spaces that should not appear in application menus.
-     * * These color spaces will still work in :cpp:func:`Config::getProcessor` calls.
+     * * These color spaces will still work in Config::getProcessor calls.
      * * The argument is a comma-delimited string.  A null or empty string empties the list.
      * * The environment variable OCIO_INACTIVE_COLORSPACES may also be used to set the
      *   inactive color space list.
@@ -906,25 +906,44 @@ public:
     void clearViewTransforms();
 
     /**
-    * \defgroup Methods related to named transforms.
-    * @{
-    */
-
-    /// Get the named transform from all the named transforms.
-    ConstNamedTransformRcPtr getNamedTransform(const char * name) const noexcept;
-
-    /// Number of named transforms.
-    size_t getNumNamedTransforms() const noexcept;
-
-    /// Name of named transform.
-    const char * getNamedTransformNameByIndex(size_t index) const noexcept;
+     * \defgroup Methods related to named transforms.
+     * @{
+     */
 
     /**
-    * \brief Add or replace named transform.
-    *
-    * \note
-    *    Throws if namedTransform is null, name is missing, or no transform is set.
-    */
+     * \brief Work on the named transforms selected by visibility.
+     */
+    int getNumNamedTransforms(NamedTransformVisibility visibility) const noexcept;
+
+    /**
+     * \brief Work on the named transforms selected by visibility (active or inactive).
+     *
+     * Return an empty string for invalid index.
+     */
+    const char * getNamedTransformNameByIndex(NamedTransformVisibility visibility,
+                                              int index) const noexcept;
+
+    /// Work on the active named transforms only.
+    int getNumNamedTransforms() const noexcept;
+
+    /// Work on the active named transforms only and return an empty string for invalid index.
+    const char * getNamedTransformNameByIndex(int index) const noexcept;
+
+    /// Get an index from the active named transforms only and return -1 if the name is not found.
+    int getIndexForNamedTransform(const char * name) const noexcept;
+
+    /**
+     * \brief Get the named transform from all the named transforms (i.e. active and inactive) and
+     *     return null if the name is not found.
+     */
+    ConstNamedTransformRcPtr getNamedTransform(const char * name) const noexcept;
+
+    /**
+     * \brief Add or replace named transform.
+     *
+     * \note
+     *    Throws if namedTransform is null, name is missing, or no transform is set.
+     */
     void addNamedTransform(const ConstNamedTransformRcPtr & namedTransform);
 
     /// Clear all named transforms.

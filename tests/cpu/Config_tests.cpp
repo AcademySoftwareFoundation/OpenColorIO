@@ -5014,7 +5014,8 @@ OCIO_ADD_TEST(Config, inactive_color_space_read_write)
             OCIO::LogGuard log;
             OCIO_CHECK_NO_THROW(config->validate());
             OCIO_CHECK_EQUAL(log.output(), 
-                             "[OpenColorIO Warning]: Inactive color space 'unknown' does not exist.\n");
+                             "[OpenColorIO Warning]: Inactive 'unknown' is neither a color "
+                             "space nor a named transform.\n");
         }
 
         OCIO_CHECK_EQUAL(config->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_ALL,

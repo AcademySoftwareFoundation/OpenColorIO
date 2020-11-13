@@ -5104,15 +5104,15 @@ inline void save(YAML::Emitter & out, const Config & config)
     }
 
     // Named transforms.
-    const size_t numNT = config.getNumNamedTransforms();
+    const int numNT = config.getNumNamedTransforms(NAMEDTRANSFORM_ALL);
     if (numNT > 0)
     {
         out << YAML::Newline;
         out << YAML::Key << "named_transforms";
         out << YAML::Value << YAML::BeginSeq;
-        for (size_t i = 0; i < numNT; ++i)
+        for (int i = 0; i < numNT; ++i)
         {
-            auto name = config.getNamedTransformNameByIndex(i);
+            auto name = config.getNamedTransformNameByIndex(NAMEDTRANSFORM_ALL, i);
             auto nt = config.getNamedTransform(name);
             save(out, nt);
         }

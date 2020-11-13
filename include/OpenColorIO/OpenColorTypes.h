@@ -284,6 +284,13 @@ enum ColorSpaceVisibility
     COLORSPACE_ALL
 };
 
+enum NamedTransformVisibility
+{
+    NAMEDTRANSFORM_ACTIVE = 0,
+    NAMEDTRANSFORM_INACTIVE,
+    NAMEDTRANSFORM_ALL
+};
+
 enum ViewType
 {
     VIEW_SHARED = 0,

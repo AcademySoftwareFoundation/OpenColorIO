@@ -4,6 +4,7 @@
 
 #include "NamedTransform.cpp"
 
+#include "Platform.h"
 #include "testutils/UnitTest.h"
 
 namespace OCIO = OCIO_NAMESPACE;
@@ -551,4 +552,268 @@ colorspaces:
         OCIO_CHECK_THROW_WHAT(config->validate(), OCIO::Exception,
                               "ColorSpaceTransform: empty destination color space name");
     }
+}
+
+
+namespace
+{
+
+constexpr char InactiveNTConfigStart[] =
+"ocio_profile_version: 2\n"
+"\n"
+"environment:\n"
+"  {}\n"
+"search_path: luts\n"
+"strictparsing: true\n"
+"luma: [0.2126, 0.7152, 0.0722]\n"
+"\n"
+"roles:\n"
+"  default: raw\n"
+"  scene_linear: lnh\n"
+"\n"
+"file_rules:\n"
+"  - !<Rule> {name: Default, colorspace: default}\n"
+"\n"
+"displays:\n"
+"  sRGB:\n"
+"    - !<View> {name: Raw, colorspace: raw}\n"
+"    - !<View> {name: Lnh, colorspace: lnh, looks: beauty}\n"
+"\n"
+"active_displays: []\n"
+"active_views: []\n";
+
+constexpr char InactiveNTConfigEnd[] =
+"\n"
+"looks:\n"
+"  - !<Look>\n"
+"    name: beauty\n"
+"    process_space: lnh\n"
+"    transform: !<CDLTransform> {slope: [1, 2, 1]}\n"
+"\n"
+"\n"
+"colorspaces:\n"
+"  - !<ColorSpace>\n"
+"    name: raw\n"
+"    family: \"\"\n"
+"    equalitygroup: \"\"\n"
+"    bitdepth: unknown\n"
+"    isdata: false\n"
+"    allocation: uniform\n"
+"\n"
+"  - !<ColorSpace>\n"
+"    name: lnh\n"
+"    family: \"\"\n"
+"    equalitygroup: \"\"\n"
+"    bitdepth: unknown\n"
+"    isdata: false\n"
+"    allocation: uniform\n"
+"\n"
+"named_transforms:\n"
+"  - !<NamedTransform>\n"
+"    name: nt1\n"
+"    categories: [cat1]\n"
+"    transform: !<CDLTransform> {offset: [0.1, 0.1, 0.1]}\n"
+"\n"
+"  - !<NamedTransform>\n"
+"    name: nt2\n"
+"    categories: [cat2]\n"
+"    transform: !<CDLTransform> {offset: [0.2, 0.2, 0.2]}\n"
+"\n"
+"  - !<NamedTransform>\n"
+"    name: nt3\n"
+"    categories: [cat3]\n"
+"    transform: !<CDLTransform> {offset: [0.3, 0.3, 0.3]}\n";
+
+class InactiveCSGuard
+{
+public:
+    InactiveCSGuard()
+    {
+        OCIO::Platform::Setenv(OCIO::OCIO_INACTIVE_COLORSPACES_ENVVAR, "nt3, nt1, lnh");
+    }
+    ~InactiveCSGuard()
+    {
+        OCIO::Platform::Unsetenv(OCIO::OCIO_INACTIVE_COLORSPACES_ENVVAR);
+    }
+};
+
+} // anon.
+
+OCIO_ADD_TEST(Config, inactive_named_transforms)
+{
+    // The unit test validates the inactive named transforms behavior.
+    // Tests (Config, inactive_color_space) and (Config, inactive_color_space_precedence) from
+    // Config_tests.cpp are testing inactive color spaces without any named transforms.
+
+    std::string configStr;
+    configStr += InactiveNTConfigStart;
+    configStr += InactiveNTConfigEnd;
+
+    std::istringstream is;
+    is.str(configStr);
+
+    OCIO::ConfigRcPtr config;
+    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is)->createEditableCopy());
+    OCIO_REQUIRE_ASSERT(config);
+    OCIO_CHECK_NO_THROW(config->validate());
+
+    // Step 1 - No inactive named transforms.
+
+    OCIO_REQUIRE_EQUAL(config->getNumNamedTransforms(OCIO::NAMEDTRANSFORM_INACTIVE), 0);
+    OCIO_REQUIRE_EQUAL(config->getNumNamedTransforms(OCIO::NAMEDTRANSFORM_ACTIVE), 3);
+    OCIO_REQUIRE_EQUAL(config->getNumNamedTransforms(OCIO::NAMEDTRANSFORM_ALL), 3);
+
+    OCIO_CHECK_EQUAL(std::string("nt1"),
+                     config->getNamedTransformNameByIndex(OCIO::NAMEDTRANSFORM_ALL, 0));
+    OCIO_CHECK_EQUAL(std::string("nt2"),
+                     config->getNamedTransformNameByIndex(OCIO::NAMEDTRANSFORM_ALL, 1));
+    OCIO_CHECK_EQUAL(std::string("nt3"),
+                     config->getNamedTransformNameByIndex(OCIO::NAMEDTRANSFORM_ALL, 2));
+    // Check a faulty call.
+    OCIO_CHECK_EQUAL(std::string(""),
+                     config->getNamedTransformNameByIndex(OCIO::NAMEDTRANSFORM_ALL, 3));
+
+    OCIO_REQUIRE_EQUAL(config->getNumNamedTransforms(), 3);
+    OCIO_CHECK_EQUAL(std::string("nt1"), config->getNamedTransformNameByIndex(0));
+    OCIO_CHECK_EQUAL(std::string("nt2"), config->getNamedTransformNameByIndex(1));
+    OCIO_CHECK_EQUAL(std::string("nt3"), config->getNamedTransformNameByIndex(2));
+    // Check a faulty call.
+    OCIO_CHECK_EQUAL(std::string(""), config->getNamedTransformNameByIndex(3));
+
+    // Step 2 - Some inactive color space and named transforms.
+
+    OCIO_CHECK_NO_THROW(config->setInactiveColorSpaces("lnh, nt1"));
+    OCIO_CHECK_EQUAL(config->getInactiveColorSpaces(), std::string("lnh, nt1"));
+
+    OCIO_REQUIRE_EQUAL(config->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_ALL,
+                                                 OCIO::COLORSPACE_INACTIVE), 1);
+    OCIO_REQUIRE_EQUAL(config->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_ALL,
+                                                 OCIO::COLORSPACE_ACTIVE), 1);
+    OCIO_REQUIRE_EQUAL(config->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_ALL,
+                                                 OCIO::COLORSPACE_ALL), 2);
+
+    OCIO_REQUIRE_EQUAL(config->getNumNamedTransforms(OCIO::NAMEDTRANSFORM_INACTIVE), 1);
+    OCIO_REQUIRE_EQUAL(config->getNumNamedTransforms(OCIO::NAMEDTRANSFORM_ACTIVE), 2);
+    OCIO_REQUIRE_EQUAL(config->getNumNamedTransforms(OCIO::NAMEDTRANSFORM_ALL), 3);
+
+    // Check methods working with activity flag.
+    OCIO_CHECK_EQUAL(std::string("nt1"),
+                     config->getNamedTransformNameByIndex(OCIO::NAMEDTRANSFORM_ALL, 0));
+    OCIO_CHECK_EQUAL(std::string("nt2"),
+                     config->getNamedTransformNameByIndex(OCIO::NAMEDTRANSFORM_ALL, 1));
+    OCIO_CHECK_EQUAL(std::string("nt3"),
+                     config->getNamedTransformNameByIndex(OCIO::NAMEDTRANSFORM_ALL, 2));
+    OCIO_CHECK_EQUAL(std::string("nt2"),
+                     config->getNamedTransformNameByIndex(OCIO::NAMEDTRANSFORM_ACTIVE, 0));
+    OCIO_CHECK_EQUAL(std::string("nt3"),
+                     config->getNamedTransformNameByIndex(OCIO::NAMEDTRANSFORM_ACTIVE, 1));
+    OCIO_CHECK_EQUAL(std::string("nt1"),
+                     config->getNamedTransformNameByIndex(OCIO::NAMEDTRANSFORM_INACTIVE, 0));
+
+    // Check methods working on only active named transforms.
+    OCIO_REQUIRE_EQUAL(config->getNumNamedTransforms(), 2);
+    OCIO_CHECK_EQUAL(std::string("nt2"), config->getNamedTransformNameByIndex(0));
+    OCIO_CHECK_EQUAL(std::string("nt3"), config->getNamedTransformNameByIndex(1));
+
+    // Request an active named transform.
+    OCIO::ConstNamedTransformRcPtr nt;
+    OCIO_CHECK_NO_THROW(nt = config->getNamedTransform("nt2"));
+    OCIO_CHECK_ASSERT(nt);
+    OCIO_CHECK_EQUAL(std::string("nt2"), nt->getName());
+
+    // Request an inactive named transform.
+    OCIO_CHECK_NO_THROW(nt = config->getNamedTransform("nt1"));
+    OCIO_CHECK_ASSERT(nt);
+    OCIO_CHECK_EQUAL(std::string("nt1"), nt->getName());
+    OCIO_CHECK_EQUAL(config->getIndexForNamedTransform(nt->getName()), -1);
+
+    // Create a processor with one or more inactive color spaces or named transforms.
+    OCIO_CHECK_NO_THROW(config->getProcessor("lnh", "nt1"));
+    OCIO_CHECK_NO_THROW(config->getProcessor("raw", "nt1"));
+    OCIO_CHECK_NO_THROW(config->getProcessor("lnh", "nt2"));
+    OCIO_CHECK_NO_THROW(config->getProcessor("nt2", "scene_linear"));
+
+    // Step 3 - No inactive color spaces or named transforms.
+
+    OCIO_CHECK_NO_THROW(config->setInactiveColorSpaces(""));
+    OCIO_CHECK_EQUAL(config->getInactiveColorSpaces(), std::string(""));
+
+    OCIO_CHECK_EQUAL(config->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_ALL,
+                                               OCIO::COLORSPACE_ALL), 2);
+    OCIO_CHECK_EQUAL(config->getNumColorSpaces(), 2);
+    OCIO_REQUIRE_EQUAL(config->getNumNamedTransforms(OCIO::NAMEDTRANSFORM_ALL), 3);
+    OCIO_REQUIRE_EQUAL(config->getNumNamedTransforms(), 3);
+
+    // Step 4 - No inactive color spaces or named transforms can also use nullptr.
+
+    OCIO_CHECK_NO_THROW(config->setInactiveColorSpaces("lnh, nt1"));
+    OCIO_CHECK_EQUAL(config->getInactiveColorSpaces(), std::string("lnh, nt1"));
+
+    OCIO_CHECK_NO_THROW(config->setInactiveColorSpaces(nullptr));
+    OCIO_CHECK_EQUAL(config->getInactiveColorSpaces(), std::string(""));
+
+    OCIO_CHECK_EQUAL(config->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_ALL,
+                                               OCIO::COLORSPACE_ALL), 2);
+    OCIO_CHECK_EQUAL(config->getNumColorSpaces(), 2);
+    OCIO_REQUIRE_EQUAL(config->getNumNamedTransforms(OCIO::NAMEDTRANSFORM_ALL), 3);
+    OCIO_REQUIRE_EQUAL(config->getNumNamedTransforms(), 3);
+}
+
+OCIO_ADD_TEST(Config, inactive_named_transform_precedence)
+{
+    // The test demonstrates that an API request supersedes the env. variable and the
+    // config file contents.
+
+    std::string configStr;
+    configStr += InactiveNTConfigStart;
+    configStr += "inactive_colorspaces: [nt2]\n";
+    configStr += InactiveNTConfigEnd;
+
+    std::istringstream is;
+    is.str(configStr);
+
+    OCIO::ConfigRcPtr config;
+    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is)->createEditableCopy());
+    OCIO_CHECK_NO_THROW(config->validate());
+
+    OCIO_REQUIRE_EQUAL(config->getNumNamedTransforms(OCIO::NAMEDTRANSFORM_INACTIVE), 1);
+    OCIO_REQUIRE_EQUAL(config->getNumNamedTransforms(OCIO::NAMEDTRANSFORM_ACTIVE), 2);
+    OCIO_REQUIRE_EQUAL(config->getNumNamedTransforms(OCIO::NAMEDTRANSFORM_ALL), 3);
+    OCIO_CHECK_EQUAL(config->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_ALL,
+                                               OCIO::COLORSPACE_ALL), 2);
+    OCIO_CHECK_EQUAL(config->getNumColorSpaces(), 2);
+
+    OCIO_CHECK_EQUAL(config->getNamedTransformNameByIndex(0), std::string("nt1"));
+    OCIO_CHECK_EQUAL(config->getNamedTransformNameByIndex(1), std::string("nt3"));
+
+    // Env. variable supersedes the config content.
+
+    InactiveCSGuard guard;
+
+    is.str(configStr);
+    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is)->createEditableCopy());
+    OCIO_CHECK_NO_THROW(config->validate());
+
+    OCIO_REQUIRE_EQUAL(config->getNumNamedTransforms(OCIO::NAMEDTRANSFORM_INACTIVE), 2);
+    OCIO_REQUIRE_EQUAL(config->getNumNamedTransforms(OCIO::NAMEDTRANSFORM_ACTIVE), 1);
+    OCIO_REQUIRE_EQUAL(config->getNumNamedTransforms(OCIO::NAMEDTRANSFORM_ALL), 3);
+    OCIO_CHECK_EQUAL(config->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_ALL,
+                                               OCIO::COLORSPACE_ALL), 2);
+    OCIO_CHECK_EQUAL(config->getNumColorSpaces(), 1);
+
+    OCIO_CHECK_EQUAL(config->getNamedTransformNameByIndex(0), std::string("nt2"));
+
+    // An API request supersedes the lists from the env. variable and the config file.
+
+    OCIO_CHECK_NO_THROW(config->setInactiveColorSpaces("nt1, lnh"));
+
+    OCIO_REQUIRE_EQUAL(config->getNumNamedTransforms(OCIO::NAMEDTRANSFORM_INACTIVE), 1);
+    OCIO_REQUIRE_EQUAL(config->getNumNamedTransforms(OCIO::NAMEDTRANSFORM_ACTIVE), 2);
+    OCIO_REQUIRE_EQUAL(config->getNumNamedTransforms(OCIO::NAMEDTRANSFORM_ALL), 3);
+    OCIO_CHECK_EQUAL(config->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_ALL,
+                                               OCIO::COLORSPACE_ALL), 2);
+    OCIO_CHECK_EQUAL(config->getNumColorSpaces(), 1);
+
+    OCIO_CHECK_EQUAL(config->getNamedTransformNameByIndex(0), std::string("nt2"));
+    OCIO_CHECK_EQUAL(config->getNamedTransformNameByIndex(1), std::string("nt3"));
 }

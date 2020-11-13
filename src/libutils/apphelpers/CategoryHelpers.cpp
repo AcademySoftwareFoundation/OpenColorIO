@@ -73,7 +73,7 @@ ColorSpaceNames FindAllColorSpaceNames(ConstConfigRcPtr config, bool includeName
     auto res = GetNames(config);
     if (includeNamedTransforms)
     {
-        for (size_t idx = 0; idx < config->getNumNamedTransforms(); ++idx)
+        for (int idx = 0; idx < config->getNumNamedTransforms(); ++idx)
         {
             const char * ntName = config->getNamedTransformNameByIndex(idx);
             res.push_back(ntName);
@@ -100,7 +100,7 @@ Infos FindColorSpaceInfos(ConstConfigRcPtr config,
     {
         for (const auto & cat : categories)
         {
-            for (size_t idx = 0; idx < config->getNumNamedTransforms(); ++idx)
+            for (int idx = 0; idx < config->getNumNamedTransforms(); ++idx)
             {
                 const char * ntName = config->getNamedTransformNameByIndex(idx);
                 ConstNamedTransformRcPtr nt = config->getNamedTransform(ntName);
@@ -128,7 +128,7 @@ Infos FindAllColorSpaceInfos(ConstConfigRcPtr config, bool includeNamedTransform
 
     if (includeNamedTransforms)
     {
-        for (size_t idx = 0; idx < config->getNumNamedTransforms(); ++idx)
+        for (int idx = 0; idx < config->getNumNamedTransforms(); ++idx)
         {
             const char * ntName = config->getNamedTransformNameByIndex(idx);
             ConstNamedTransformRcPtr nt = config->getNamedTransform(ntName);

@@ -34,6 +34,12 @@ void bindPyTypes(py::module & m)
         .value("COLORSPACE_ALL", COLORSPACE_ALL)
         .export_values();
 
+    py::enum_<NamedTransformVisibility>(m, "NamedTransformVisibility")
+        .value("NAMEDTRANSFORM_ACTIVE", NAMEDTRANSFORM_ACTIVE)
+        .value("NAMEDTRANSFORM_INACTIVE", NAMEDTRANSFORM_INACTIVE)
+        .value("NAMEDTRANSFORM_ALL", NAMEDTRANSFORM_ALL)
+        .export_values();
+
     py::enum_<ColorSpaceDirection>(m, "ColorSpaceDirection")
         .value("COLORSPACE_DIR_TO_REFERENCE", COLORSPACE_DIR_TO_REFERENCE)
         .value("COLORSPACE_DIR_FROM_REFERENCE", COLORSPACE_DIR_FROM_REFERENCE)
