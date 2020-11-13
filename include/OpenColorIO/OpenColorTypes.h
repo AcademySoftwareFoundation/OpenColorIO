@@ -292,22 +292,19 @@ enum ViewType
 
 enum ColorSpaceDirection
 {
-    COLORSPACE_DIR_UNKNOWN = 0,
-    COLORSPACE_DIR_TO_REFERENCE,
+    COLORSPACE_DIR_TO_REFERENCE = 0,
     COLORSPACE_DIR_FROM_REFERENCE
 };
 
 enum ViewTransformDirection
 {
-    VIEWTRANSFORM_DIR_UNKNOWN = 0,
-    VIEWTRANSFORM_DIR_TO_REFERENCE,
+    VIEWTRANSFORM_DIR_TO_REFERENCE = 0,
     VIEWTRANSFORM_DIR_FROM_REFERENCE
 };
 
 enum TransformDirection
 {
-    TRANSFORM_DIR_UNKNOWN = 0,
-    TRANSFORM_DIR_FORWARD,
+    TRANSFORM_DIR_FORWARD = 0,
     TRANSFORM_DIR_INVERSE
 };
 
@@ -648,6 +645,7 @@ extern OCIOEXPORT const char * LoggingLevelToString(LoggingLevel level);
 extern OCIOEXPORT LoggingLevel LoggingLevelFromString(const char * s);
 
 extern OCIOEXPORT const char * TransformDirectionToString(TransformDirection dir);
+/// Will throw if string is not recognized.
 extern OCIOEXPORT TransformDirection TransformDirectionFromString(const char * s);
 
 extern OCIOEXPORT TransformDirection GetInverseTransformDirection(TransformDirection dir);
@@ -655,6 +653,7 @@ extern OCIOEXPORT TransformDirection CombineTransformDirections(TransformDirecti
                                                                 TransformDirection d2);
 
 extern OCIOEXPORT const char * ColorSpaceDirectionToString(ColorSpaceDirection dir);
+/// Will throw if string is not recognized.
 extern OCIOEXPORT ColorSpaceDirection ColorSpaceDirectionFromString(const char * s);
 
 extern OCIOEXPORT const char * BitDepthToString(BitDepth bitDepth);

@@ -241,9 +241,9 @@ public:
     //
 
     /**
-     * \brief Create an empty config.
+     * \brief Create an empty config of the current version.
      *
-     * Latest version is used. An empty config might be missing elements to ve valid.
+     * Note that an empty config will not pass validation since required elements will be missing.
      */
     static ConfigRcPtr Create();
     /**
@@ -280,7 +280,7 @@ public:
     void setMinorVersion(unsigned int minor);
 
     /// Allows an older config to be serialized as the current version.
-    void upgradeToLatestVersion();
+    void upgradeToLatestVersion() noexcept;
 
     /**
      * \brief Performs a thorough validation for the most common user errors.
@@ -291,14 +291,20 @@ public:
      */
     void validate() const;
 
-    /// If not empty or null a single character to separate the family string in levels.
-    char getFamilySeparator() const;
     /**
-     * \brief
+     * \brief Get the family separator
      * 
-     * Succeeds if the characters is null or a valid character
-     * from the ASCII table i.e. from value 32 (i.e. space) to 126 (i.e. '~');
-     * otherwise, it throws an exception.
+     * A single character used to separate the family string into tokens for use in hierarchical
+     * menus.  Defaults to '/'.
+     */
+    char getFamilySeparator() const;
+    /// Reset the family separator to default i.e. '/' .
+    void resetFamilySeparatorToDefault() noexcept;
+    /**
+     * \brief Set the family separator
+     *
+     * Succeeds if the characters is null or a valid character from the ASCII table i.e. from
+     * value 32 (i.e. space) to 126 (i.e. '~'); otherwise, it throws an exception.
      */
     void setFamilySeparator(char separator);
 
@@ -1193,13 +1199,14 @@ public:
     /**
      * \brief Insert a rule at a given ruleIndex.
      * 
-     * Rule currently at ruleIndex
-     * will be pushed to index: ruleIndex + 1.
+     * Rule currently at ruleIndex will be pushed to index: ruleIndex + 1.
      * Name must be unique.
      * - "Default" is a reserved name for the default rule. The default rule is automatically
      * added and can't be removed. (see \ref FileRules::setDefaultRuleColorSpace ).
      * - "ColorSpaceNamePathSearch" is also a reserved name
      * (see \ref FileRules::insertPathSearchRule ).
+     *
+     * Will throw if pattern, extension or regex is a null or empty string.
      *
      * Will throw if ruleIndex is not less than \ref FileRules::getNumEntries .
      */
@@ -1556,7 +1563,7 @@ public:
      * If a transform in the specified direction has been specified,
      * return it. Otherwise return a null ConstTransformRcPtr
      */
-    ConstTransformRcPtr getTransform(ColorSpaceDirection dir) const;
+    ConstTransformRcPtr getTransform(ColorSpaceDirection dir) const noexcept;
     /**
      * Specify the transform for the appropriate direction.
      * Setting the transform to null will clear it.
@@ -1906,7 +1913,7 @@ public:
      * If a transform in the specified direction has been specified, return it.
      * Otherwise return a null ConstTransformRcPtr
      */
-    ConstTransformRcPtr getTransform(ViewTransformDirection dir) const;
+    ConstTransformRcPtr getTransform(ViewTransformDirection dir) const noexcept;
 
     /**
      * Specify the transform for the appropriate direction. Setting the transform

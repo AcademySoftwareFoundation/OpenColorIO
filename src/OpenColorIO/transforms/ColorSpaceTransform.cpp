@@ -82,7 +82,16 @@ void ColorSpaceTransform::setDirection(TransformDirection dir) noexcept
 
 void ColorSpaceTransform::validate() const
 {
-    Transform::validate();
+    try
+    {
+        Transform::validate();
+    }
+    catch (Exception & ex)
+    {
+        std::string errMsg("ColorSpaceTransform validation failed: ");
+        errMsg += ex.what();
+        throw Exception(errMsg.c_str());
+    }
 
     if (getImpl()->m_src.empty())
     {

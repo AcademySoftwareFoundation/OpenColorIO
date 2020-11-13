@@ -131,7 +131,7 @@ class ColorSpaceTest(unittest.TestCase):
         # Test ColorSpace class object getters from config
         cs = cfg.getColorSpace('vd8')
         self.assertEqual(cs.getName(), 'vd8')
-        self.assertEqual(cs.getDescription(), 'how many transforms can we use?\n')
+        self.assertEqual(cs.getDescription(), 'how many transforms can we use?')
         self.assertEqual(cs.getFamily(), 'vd8')
         self.assertEqual(cs.getAllocation(), OCIO.ALLOCATION_UNIFORM)
         self.assertEqual(cs.getAllocationVars(), [])
@@ -302,18 +302,7 @@ class ColorSpaceTest(unittest.TestCase):
 
         # Known constants tests
         for i, direction in enumerate(OCIO.ColorSpaceDirection.__members__.values()):
-            if direction == OCIO.COLORSPACE_DIR_UNKNOWN:
-                with self.assertRaises(OCIO.Exception):
-                    self.colorspace.setTransform(self.log_tr, direction)
-            else:
-                self.colorspace.setTransform(self.log_tr, direction)
-
-            if direction == OCIO.COLORSPACE_DIR_UNKNOWN:
-                with self.assertRaises(OCIO.Exception):
-                    log_transform = self.colorspace.getTransform(
-                        direction)
-            else:
-                log_transform = self.colorspace.getTransform(direction)
-                self.assertIsInstance(log_transform, OCIO.LogTransform)
-                self.assertEquals(self.log_tr.getBase(),
-                                  log_transform.getBase())
+            self.colorspace.setTransform(self.log_tr, direction)
+            log_transform = self.colorspace.getTransform(direction)
+            self.assertIsInstance(log_transform, OCIO.LogTransform)
+            self.assertEquals(self.log_tr.getBase(), log_transform.getBase())

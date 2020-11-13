@@ -50,9 +50,6 @@ OCIO_ADD_TEST(ColorSpaceTransform, basic)
     OCIO_CHECK_THROW_WHAT(cst->validate(), OCIO::Exception,
                           "ColorSpaceTransform: empty destination color space name");
     cst->setDst(dst.c_str());
-
-    cst->setDirection(OCIO::TRANSFORM_DIR_UNKNOWN);
-    OCIO_CHECK_THROW_WHAT(cst->validate(), OCIO::Exception, "invalid direction");
 }
 
 OCIO_ADD_TEST(ColorSpaceTransform, build_colorspace_ops)

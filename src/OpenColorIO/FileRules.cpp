@@ -239,18 +239,23 @@ std::string BuildRegularExpression(const char * filePathPattern, const char * fi
     return SanitizeRegularExpression(str);
 }
 
-void ValidateRegularExpression(const char * exp)
+void ValidateRegularExpression(const char * regex)
 {
+    if (!regex || !*regex)
+    {
+        throw Exception("File rules: regex is empty.");
+    }
+
     try
     {
         // Throws an exception if the expression is ill-formed.
-        const std::regex reg(exp);
+        const std::regex reg(regex);
     }
     catch (std::regex_error & ex)
     {
         std::ostringstream oss;
         oss << "File rules: invalid regular expression '" 
-            << exp
+            << regex
             << "': '"
             << ex.what() 
             << "'.";
@@ -336,6 +341,10 @@ public:
         }
         else
         {
+            if (!pattern || !*pattern)
+            {
+                throw Exception("File rules: The file name pattern is empty.");
+            }
             ValidateRegularExpression(pattern, m_extension.c_str());
             m_pattern = pattern;
             m_regex = "";
@@ -364,6 +373,10 @@ public:
         }
         else
         {
+            if (!extension || !*extension)
+            {
+                throw Exception("File rules: The file extension pattern is empty.");
+            }
             ValidateRegularExpression(m_pattern.c_str(), extension);
             m_extension = extension;
             m_regex = "";

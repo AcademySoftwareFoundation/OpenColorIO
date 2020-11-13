@@ -137,7 +137,9 @@ bool CollectContextVariables(const Config & config,
 {
     bool foundContextVars = false;
 
-    if(direction== TRANSFORM_DIR_FORWARD)
+    switch (direction)
+    {
+    case TRANSFORM_DIR_FORWARD:
     {
         ConstTransformRcPtr tr = look.getTransform();
         if (tr)
@@ -155,8 +157,9 @@ bool CollectContextVariables(const Config & config,
                 foundContextVars = true;
             }
         }
+        break;
     }
-    else
+    case TRANSFORM_DIR_INVERSE:
     {
         ConstTransformRcPtr tr = look.getInverseTransform();
         if (tr)
@@ -174,6 +177,8 @@ bool CollectContextVariables(const Config & config,
                 foundContextVars = true;
             }
         }
+        break;
+    }
     }
 
     const char * ps = look.getProcessSpace();
@@ -205,16 +210,22 @@ std::ostream& operator<< (std::ostream& os, const Look& look)
     os << " name=" << look.getName();
     os << ", processSpace=" << look.getProcessSpace();
 
+    std::string desc{ look.getDescription() };
+    if (!desc.empty())
+    {
+        os << ", description=" << desc;
+    }
+
     if(look.getTransform())
     {
         os << ",\n    transform=";
-        os << "\n\t" << *look.getTransform();
+        os << "\n        " << *look.getTransform();
     }
 
     if(look.getInverseTransform())
     {
         os << ",\n    inverseTransform=";
-        os << "\n\t" << *look.getInverseTransform();
+        os << "\n        " << *look.getInverseTransform();
     }
 
     os << ">";

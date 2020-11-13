@@ -4375,8 +4375,7 @@ OCIO_ADD_TEST(Config, add_color_space)
         + u8"    family: \"\"\n"
         + u8"    equalitygroup: \"\"\n"
         + u8"    bitdepth: unknown\n"
-        + u8"    description: |\n"
-        + u8"      é À Â Ç É È ç -- $ € 円 £ 元\n"
+        + u8"    description: é À Â Ç É È ç -- $ € 円 £ 元\n"
         + u8"    isdata: false\n"
         + u8"    allocation: uniform\n"
         + u8"    to_reference: !<FixedFunctionTransform> {style: ACES_RedMod03}\n";
@@ -5757,17 +5756,130 @@ colorspaces:
 
 OCIO_ADD_TEST(Config, family_separator)
 {
-    OCIO::ConfigRcPtr config;
-    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateRaw()->createEditableCopy());
-    OCIO_CHECK_NO_THROW(config->validate());
+    // Test the family separator.
 
-    OCIO_CHECK_EQUAL(config->getFamilySeparator(), 0x0); // Default value i.e. no separator.
+    OCIO::ConfigRcPtr cfg;
+    OCIO_CHECK_NO_THROW(cfg = OCIO::Config::CreateRaw()->createEditableCopy());
+    OCIO_CHECK_NO_THROW(cfg->validate());
 
-    OCIO_CHECK_NO_THROW(config->setFamilySeparator('/'));
-    OCIO_CHECK_EQUAL(config->getFamilySeparator(), '/');
+    OCIO_CHECK_EQUAL(cfg->getFamilySeparator(), '/');
 
-    OCIO_CHECK_THROW(config->setFamilySeparator((char)127), OCIO::Exception);
-    OCIO_CHECK_THROW(config->setFamilySeparator((char)31) , OCIO::Exception);
+    OCIO_CHECK_NO_THROW(cfg->setFamilySeparator(' '));
+    OCIO_CHECK_EQUAL(cfg->getFamilySeparator(), ' ');
+
+    OCIO_CHECK_NO_THROW(cfg->setFamilySeparator(0));
+    OCIO_CHECK_EQUAL(cfg->getFamilySeparator(), 0);
+
+    // Reset to its default value.
+    OCIO_CHECK_NO_THROW(cfg->resetFamilySeparatorToDefault());
+    OCIO_CHECK_EQUAL(cfg->getFamilySeparator(), '/');
+
+    OCIO_CHECK_THROW(cfg->setFamilySeparator((char)127), OCIO::Exception);
+    OCIO_CHECK_THROW(cfg->setFamilySeparator((char)31) , OCIO::Exception);
+
+    // Test read/write.
+
+    static const std::string CONFIG = 
+        "ocio_profile_version: 2\n"
+        "\n"
+        "environment:\n"
+        "  {}\n"
+        "search_path: \"\"\n"
+        "strictparsing: false\n"
+        "family_separator: \" \"\n"
+        "luma: [0.2126, 0.7152, 0.0722]\n"
+        "\n"
+        "roles:\n"
+        "  default: raw\n"
+        "\n"
+        "file_rules:\n"
+        "  - !<Rule> {name: ColorSpaceNamePathSearch}\n"
+        "  - !<Rule> {name: Default, colorspace: default}\n"
+        "\n"
+        "displays:\n"
+        "  sRGB:\n"
+        "    - !<View> {name: Raw, colorspace: raw}\n"
+        "\n"
+        "active_displays: []\n"
+        "active_views: []\n"
+        "\n"
+        "colorspaces:\n"
+        "  - !<ColorSpace>\n"
+        "    name: raw\n"
+        "    family: raw\n"
+        "    equalitygroup: \"\"\n"
+        "    bitdepth: 32f\n"
+        "    description: A raw color space. Conversions to and from this space are no-ops.\n"
+        "    isdata: true\n"
+        "    allocation: uniform\n";
+
+    OCIO_CHECK_NO_THROW(cfg->setFamilySeparator(' '));
+
+    std::ostringstream oss;
+    OCIO_CHECK_NO_THROW(oss << *cfg.get());
+
+    OCIO_CHECK_EQUAL(oss.str(), CONFIG);
+
+    // v1 does not support family separators different from the default value i.e. '/'.
+
+    static const std::string CONFIG_V1 = 
+        "ocio_profile_version: 1\n"
+        "\n"
+        "search_path: \"\"\n"
+        "\n"
+        "roles:\n"
+        "  reference: raw\n"
+        "\n"
+        "displays:\n"
+        "  sRGB:\n"
+        "    - !<View> {name: Raw, colorspace: raw}\n"
+        "\n"
+        "colorspaces:\n"
+        "  - !<ColorSpace>\n"
+        "    name: raw\n"
+        "    allocation: uniform\n";
+
+    std::istringstream iss;
+    iss.str(CONFIG_V1);
+
+    OCIO_CHECK_NO_THROW(cfg = OCIO::Config::CreateFromStream(iss)->createEditableCopy());
+    OCIO_REQUIRE_EQUAL(cfg->getFamilySeparator(), '/'); // v1 default family separator
+
+    OCIO_CHECK_NO_THROW(cfg->setFamilySeparator('&'));
+    OCIO_CHECK_THROW_WHAT(cfg->validate(),
+                          OCIO::Exception,
+                          "Only version 2 (or higher) can have a family separator.");
+
+    oss.str("");
+    OCIO_CHECK_THROW_WHAT((oss << *cfg),
+                          OCIO::Exception,
+                          "Only version 2 (or higher) can have a family separator.");
+
+    // Even with the default value, v1 config file must not contain the family_separator key.
+
+    static const std::string CONFIG_V1bis = 
+        "ocio_profile_version: 1\n"
+        "\n"
+        "search_path: \"\"\n"
+        "family_separator: \"/\"\n"
+        "\n"
+        "roles:\n"
+        "  reference: raw\n"
+        "\n"
+        "displays:\n"
+        "  sRGB:\n"
+        "    - !<View> {name: Raw, colorspace: raw}\n"
+        "\n"
+        "colorspaces:\n"
+        "  - !<ColorSpace>\n"
+        "    name: raw\n"
+        "    allocation: uniform\n";
+
+    iss.str(CONFIG_V1bis);
+
+    OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(iss),
+                          OCIO::Exception,
+                          "Config v1 can't have 'family_separator'.");
 }
 
 OCIO_ADD_TEST(Config, add_remove_display)
@@ -7269,4 +7381,128 @@ colorspaces:
                           OCIO::Exception,
                           "Display 'virtual_display' has a view 'Raw1' refers to a look, 'look',"
                           " which is not defined.");
+}
+
+OCIO_ADD_TEST(Config, description)
+{
+    auto cfg = OCIO::Config::CreateRaw()->createEditableCopy();
+    std::ostringstream oss;
+    cfg->serialize(oss);
+    static constexpr char CONFIG_NO_DESC[]{ R"(ocio_profile_version: 2
+
+environment:
+  {}
+search_path: ""
+strictparsing: false
+luma: [0.2126, 0.7152, 0.0722]
+
+roles:
+  default: raw
+
+file_rules:
+  - !<Rule> {name: ColorSpaceNamePathSearch}
+  - !<Rule> {name: Default, colorspace: default}
+
+displays:
+  sRGB:
+    - !<View> {name: Raw, colorspace: raw}
+
+active_displays: []
+active_views: []
+
+colorspaces:
+  - !<ColorSpace>
+    name: raw
+    family: raw
+    equalitygroup: ""
+    bitdepth: 32f
+    description: A raw color space. Conversions to and from this space are no-ops.
+    isdata: true
+    allocation: uniform
+)" };
+    OCIO_CHECK_EQUAL(oss.str(), std::string(CONFIG_NO_DESC));
+
+    oss.clear();
+    oss.str("");
+
+    cfg->setDescription("single line description");
+    cfg->serialize(oss);
+    static constexpr char CONFIG_DESC_SINGLELINE[]{ R"(ocio_profile_version: 2
+
+environment:
+  {}
+search_path: ""
+strictparsing: false
+luma: [0.2126, 0.7152, 0.0722]
+description: single line description
+
+roles:
+  default: raw
+
+file_rules:
+  - !<Rule> {name: ColorSpaceNamePathSearch}
+  - !<Rule> {name: Default, colorspace: default}
+
+displays:
+  sRGB:
+    - !<View> {name: Raw, colorspace: raw}
+
+active_displays: []
+active_views: []
+
+colorspaces:
+  - !<ColorSpace>
+    name: raw
+    family: raw
+    equalitygroup: ""
+    bitdepth: 32f
+    description: A raw color space. Conversions to and from this space are no-ops.
+    isdata: true
+    allocation: uniform
+)" };
+    OCIO_CHECK_EQUAL(oss.str(), std::string(CONFIG_DESC_SINGLELINE));
+
+    oss.clear();
+    oss.str("");
+
+    cfg->setDescription("multi line description\n\nother line");
+    cfg->serialize(oss);
+
+    static constexpr char CONFIG_DESC_MULTILINES[]{ R"(ocio_profile_version: 2
+
+environment:
+  {}
+search_path: ""
+strictparsing: false
+luma: [0.2126, 0.7152, 0.0722]
+description: |
+  multi line description
+  
+  other line
+
+roles:
+  default: raw
+
+file_rules:
+  - !<Rule> {name: ColorSpaceNamePathSearch}
+  - !<Rule> {name: Default, colorspace: default}
+
+displays:
+  sRGB:
+    - !<View> {name: Raw, colorspace: raw}
+
+active_displays: []
+active_views: []
+
+colorspaces:
+  - !<ColorSpace>
+    name: raw
+    family: raw
+    equalitygroup: ""
+    bitdepth: 32f
+    description: A raw color space. Conversions to and from this space are no-ops.
+    isdata: true
+    allocation: uniform
+)" };
+    OCIO_CHECK_EQUAL(oss.str(), std::string(CONFIG_DESC_MULTILINES));
 }

@@ -33,29 +33,27 @@ OCIO_ADD_TEST(FileFormatICC, test_file)
     OCIO::LocalCachedFileRcPtr iccFile;
     {
         // This example uses a profile with a 1024-entry LUT for the TRC.
-        const std::string iccFileName("icc-test-3.icm");
-        OCIO::OpRcPtrVec ops;
+
+        static const std::string iccFileName("icc-test-3.icm");
         OCIO::ContextRcPtr context = OCIO::Context::Create();
-        OCIO_CHECK_NO_THROW(BuildOpsTest(ops, iccFileName, context,
-                                         OCIO::TRANSFORM_DIR_INVERSE));
+
+        OCIO::OpRcPtrVec ops;
+        OCIO_CHECK_NO_THROW(BuildOpsTest(ops, iccFileName, context, OCIO::TRANSFORM_DIR_FORWARD));
         OCIO_CHECK_NO_THROW(ops.validate());
         OCIO_REQUIRE_EQUAL(4, ops.size());
-        OCIO_CHECK_EQUAL("<FileNoOp>", ops[0]->getInfo());
+        OCIO_CHECK_EQUAL("<FileNoOp>",       ops[0]->getInfo());
         OCIO_CHECK_EQUAL("<MatrixOffsetOp>", ops[1]->getInfo());
         OCIO_CHECK_EQUAL("<MatrixOffsetOp>", ops[2]->getInfo());
-        OCIO_CHECK_EQUAL("<Lut1DOp>", ops[3]->getInfo());
+        OCIO_CHECK_EQUAL("<Lut1DOp>",        ops[3]->getInfo());
+    
+        // No-ops are removed even without any optimizations.
         OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_NONE));
-        // No-ops are removed.
         OCIO_REQUIRE_EQUAL(3, ops.size());
 
-        std::vector<float> v0(4, 0.0f);
-        v0[0] = 1.0f;
-        std::vector<float> v1(4, 0.0f);
-        v1[1] = 1.0f;
-        std::vector<float> v2(4, 0.0f);
-        v2[2] = 1.0f;
-        std::vector<float> v3(4, 0.0f);
-        v3[3] = 1.0f;
+        std::vector<float> v0 = {1.0f, 0.0f, 0.0f, 0.0f};
+        std::vector<float> v1 = {0.0f, 1.0f, 0.0f, 0.0f};
+        std::vector<float> v2 = {0.0f, 0.0f, 1.0f, 0.0f};
+        std::vector<float> v3 = {0.0f, 0.0f, 0.0f, 1.0f};
 
         std::vector<float> tmp = v0;
         ops[0]->apply(&tmp[0], 1);
@@ -116,7 +114,7 @@ OCIO_ADD_TEST(FileFormatICC, test_file)
         // Knowing the LUT has 1024 elements
         // and is inverted, verify values for a given index
         // are converted to index * step
-        const float error = 1e-5f;
+        constexpr float error = 1e-5f;
 
         // value at index 200
         tmp[0] = 0.0317235067f;
@@ -147,26 +145,27 @@ OCIO_ADD_TEST(FileFormatICC, test_file)
     {
         // This test uses a profile where the TRC is a 1-entry curve,
         // to be interpreted as a gamma value.
-        const std::string iccFileName("icc-test-1.icc");
+
+        static const std::string iccFileName("icc-test-1.icc");
         OCIO_CHECK_NO_THROW(iccFile = LoadICCFile(iccFileName));
 
-        OCIO_CHECK_ASSERT((bool)iccFile);
-        OCIO_CHECK_ASSERT(!(bool)(iccFile->lut));
+        OCIO_CHECK_ASSERT(iccFile);
+        OCIO_CHECK_ASSERT(!iccFile->lut); // No 1D LUT.
 
         OCIO_CHECK_EQUAL(0.609741211f, iccFile->mMatrix44[0]);
         OCIO_CHECK_EQUAL(0.205276489f, iccFile->mMatrix44[1]);
         OCIO_CHECK_EQUAL(0.149185181f, iccFile->mMatrix44[2]);
-        OCIO_CHECK_EQUAL(0.0f, iccFile->mMatrix44[3]);
+        OCIO_CHECK_EQUAL(0.0f,         iccFile->mMatrix44[3]);
 
-        OCIO_CHECK_EQUAL(0.311111450f, iccFile->mMatrix44[4]);
-        OCIO_CHECK_EQUAL(0.625671387f, iccFile->mMatrix44[5]);
+        OCIO_CHECK_EQUAL(0.311111450f,  iccFile->mMatrix44[4]);
+        OCIO_CHECK_EQUAL(0.625671387f,  iccFile->mMatrix44[5]);
         OCIO_CHECK_EQUAL(0.0632171631f, iccFile->mMatrix44[6]);
-        OCIO_CHECK_EQUAL(0.0f, iccFile->mMatrix44[7]);
+        OCIO_CHECK_EQUAL(0.0f,          iccFile->mMatrix44[7]);
 
         OCIO_CHECK_EQUAL(0.0194702148f, iccFile->mMatrix44[8]);
         OCIO_CHECK_EQUAL(0.0608673096f, iccFile->mMatrix44[9]);
-        OCIO_CHECK_EQUAL(0.744567871f, iccFile->mMatrix44[10]);
-        OCIO_CHECK_EQUAL(0.0f, iccFile->mMatrix44[11]);
+        OCIO_CHECK_EQUAL(0.744567871f,  iccFile->mMatrix44[10]);
+        OCIO_CHECK_EQUAL(0.0f,          iccFile->mMatrix44[11]);
 
         OCIO_CHECK_EQUAL(0.0f, iccFile->mMatrix44[12]);
         OCIO_CHECK_EQUAL(0.0f, iccFile->mMatrix44[13]);
@@ -176,32 +175,33 @@ OCIO_ADD_TEST(FileFormatICC, test_file)
         OCIO_CHECK_EQUAL(2.19921875f, iccFile->mGammaRGB[0]);
         OCIO_CHECK_EQUAL(2.19921875f, iccFile->mGammaRGB[1]);
         OCIO_CHECK_EQUAL(2.19921875f, iccFile->mGammaRGB[2]);
-        OCIO_CHECK_EQUAL(1.0f, iccFile->mGammaRGB[3]);
+        OCIO_CHECK_EQUAL(1.0f,        iccFile->mGammaRGB[3]);
     }
 
     {
         // This test uses a profile where the TRC is 
         // a parametric curve of type 0 (a single gamma value).
-        const std::string iccFileName("icc-test-2.pf");
+
+        static const std::string iccFileName("icc-test-2.pf");
         OCIO_CHECK_NO_THROW(iccFile = LoadICCFile(iccFileName));
 
-        OCIO_CHECK_ASSERT((bool)iccFile);
-        OCIO_CHECK_ASSERT(!(bool)(iccFile->lut));
+        OCIO_CHECK_ASSERT(iccFile);
+        OCIO_CHECK_ASSERT(!iccFile->lut); // No 1D LUT.
 
         OCIO_CHECK_EQUAL(0.504470825f, iccFile->mMatrix44[0]);
         OCIO_CHECK_EQUAL(0.328125000f, iccFile->mMatrix44[1]);
         OCIO_CHECK_EQUAL(0.131607056f, iccFile->mMatrix44[2]);
-        OCIO_CHECK_EQUAL(0.0f, iccFile->mMatrix44[3]);
+        OCIO_CHECK_EQUAL(0.0f,         iccFile->mMatrix44[3]);
 
-        OCIO_CHECK_EQUAL(0.264923096f, iccFile->mMatrix44[4]);
-        OCIO_CHECK_EQUAL(0.682678223f, iccFile->mMatrix44[5]);
+        OCIO_CHECK_EQUAL(0.264923096f,  iccFile->mMatrix44[4]);
+        OCIO_CHECK_EQUAL(0.682678223f,  iccFile->mMatrix44[5]);
         OCIO_CHECK_EQUAL(0.0523834229f, iccFile->mMatrix44[6]);
-        OCIO_CHECK_EQUAL(0.0f, iccFile->mMatrix44[7]);
+        OCIO_CHECK_EQUAL(0.0f,          iccFile->mMatrix44[7]);
 
         OCIO_CHECK_EQUAL(0.0144805908f, iccFile->mMatrix44[8]);
         OCIO_CHECK_EQUAL(0.0871734619f, iccFile->mMatrix44[9]);
-        OCIO_CHECK_EQUAL(0.723556519f, iccFile->mMatrix44[10]);
-        OCIO_CHECK_EQUAL(0.0f, iccFile->mMatrix44[11]);
+        OCIO_CHECK_EQUAL(0.723556519f,  iccFile->mMatrix44[10]);
+        OCIO_CHECK_EQUAL(0.0f,          iccFile->mMatrix44[11]);
 
         OCIO_CHECK_EQUAL(0.0f, iccFile->mMatrix44[12]);
         OCIO_CHECK_EQUAL(0.0f, iccFile->mMatrix44[13]);
@@ -211,7 +211,7 @@ OCIO_ADD_TEST(FileFormatICC, test_file)
         OCIO_CHECK_EQUAL(2.17384338f, iccFile->mGammaRGB[0]);
         OCIO_CHECK_EQUAL(2.17384338f, iccFile->mGammaRGB[1]);
         OCIO_CHECK_EQUAL(2.17384338f, iccFile->mGammaRGB[2]);
-        OCIO_CHECK_EQUAL(1.0f, iccFile->mGammaRGB[3]);
+        OCIO_CHECK_EQUAL(1.0f,        iccFile->mGammaRGB[3]);
     }
 }
 
@@ -219,29 +219,27 @@ OCIO_ADD_TEST(FileFormatICC, test_apply)
 {
     OCIO::ContextRcPtr context = OCIO::Context::Create();
     {
-        const std::string iccFileName("icc-test-3.icm");
+        static const std::string iccFileName("icc-test-3.icm");
         OCIO::OpRcPtrVec ops;
-        OCIO_CHECK_NO_THROW(BuildOpsTest(ops, iccFileName, context,
-                                         OCIO::TRANSFORM_DIR_FORWARD));
-
+        OCIO_CHECK_NO_THROW(BuildOpsTest(ops, iccFileName, context, OCIO::TRANSFORM_DIR_INVERSE));
         OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_LOSSLESS));
 
         // apply ops
         float srcImage[] = {
             -0.1f, 0.0f, 0.3f, 0.0f,
-            0.4f, 0.5f, 0.6f, 0.5f,
-            0.7f, 1.0f, 1.9f, 1.0f };
+             0.4f, 0.5f, 0.6f, 0.5f,
+             0.7f, 1.0f, 1.9f, 1.0f };
 
-        const float dstImage[] = {
+        static constexpr float dstImage[] = {
             0.013221f, 0.005287f, 0.069636f, 0.0f,
             0.188847f, 0.204323f, 0.330955f, 0.5f,
             0.722887f, 0.882591f, 1.078655f, 1.0f };
-        const float error = 1e-5f;
 
-        OCIO::OpRcPtrVec::size_type numOps = ops.size();
-        for (OCIO::OpRcPtrVec::size_type i = 0; i < numOps; ++i)
+        static constexpr float error = 1e-5f;
+
+        for (const auto & op : ops)
         {
-            ops[i]->apply(srcImage, 3);
+            op->apply(srcImage, 3);
         }
 
         // compare results
@@ -250,20 +248,19 @@ OCIO_ADD_TEST(FileFormatICC, test_apply)
             OCIO_CHECK_CLOSE(srcImage[i], dstImage[i], error);
         }
 
-        // inverse
+        // Invert the processing.
+
         OCIO::OpRcPtrVec opsInv;
-        OCIO_CHECK_NO_THROW(BuildOpsTest(opsInv, iccFileName, context,
-                                         OCIO::TRANSFORM_DIR_INVERSE));
+        OCIO_CHECK_NO_THROW(BuildOpsTest(opsInv, iccFileName, context, OCIO::TRANSFORM_DIR_FORWARD));
         OCIO_CHECK_NO_THROW(opsInv.finalize(OCIO::OPTIMIZATION_LOSSLESS));
 
-        numOps = opsInv.size();
-        for (OCIO::OpRcPtrVec::size_type i = 0; i < numOps; ++i)
+        for (const auto & op : opsInv)
         {
             // Note: This apply call hard-codes the FastLogExpPow optimization setting to false.
-            opsInv[i]->apply(srcImage, 3);
+            op->apply(srcImage, 3);
         }
 
-        const float bckImage[] = {
+        static constexpr float bckImage[] = {
             // neg values are clamped by the LUT and won't round-trip
             0.0f, 0.0f, 0.3f, 0.0f,
             0.4f, 0.5f, 0.6f, 0.5f,
@@ -278,10 +275,9 @@ OCIO_ADD_TEST(FileFormatICC, test_apply)
     }
 
     {
-        const std::string iccFileName("icc-test-2.pf");
+        static const std::string iccFileName("icc-test-2.pf");
         OCIO::OpRcPtrVec ops;
-        OCIO_CHECK_NO_THROW(BuildOpsTest(ops, iccFileName, context,
-                                         OCIO::TRANSFORM_DIR_FORWARD));
+        OCIO_CHECK_NO_THROW(BuildOpsTest(ops, iccFileName, context, OCIO::TRANSFORM_DIR_INVERSE));
         OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_LOSSLESS));
 
         // apply ops
@@ -295,10 +291,9 @@ OCIO_ADD_TEST(FileFormatICC, test_apply)
             0.188392f, 0.206965f, 0.343595f, 0.5f,
             1.210462f, 1.058761f, 4.003706f, 1.0f };
 
-        OCIO::OpRcPtrVec::size_type numOps = ops.size();
-        for (OCIO::OpRcPtrVec::size_type i = 0; i < numOps; ++i)
+        for (const auto & op : ops)
         {
-            ops[i]->apply(srcImage, 3);
+            op->apply(srcImage, 3);
         }
 
         // Compare results
@@ -309,16 +304,15 @@ OCIO_ADD_TEST(FileFormatICC, test_apply)
             OCIO_CHECK_CLOSE(srcImage[i], dstImage[i], error);
         }
 
-        // inverse
+        // Invert the processing.
+
         OCIO::OpRcPtrVec opsInv;
-        OCIO_CHECK_NO_THROW(BuildOpsTest(opsInv, iccFileName, context,
-                                         OCIO::TRANSFORM_DIR_INVERSE));
+        OCIO_CHECK_NO_THROW(BuildOpsTest(opsInv, iccFileName, context, OCIO::TRANSFORM_DIR_FORWARD));
         OCIO_CHECK_NO_THROW(opsInv.finalize(OCIO::OPTIMIZATION_LOSSLESS));
 
-        numOps = opsInv.size();
-        for (OCIO::OpRcPtrVec::size_type i = 0; i < numOps; ++i)
+        for (const auto & op : opsInv)
         {
-            opsInv[i]->apply(srcImage, 3);
+            op->apply(srcImage, 3);
         }
 
         // Negative values are clamped by the LUT and won't round-trip.

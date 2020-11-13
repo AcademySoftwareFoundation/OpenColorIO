@@ -1273,7 +1273,9 @@ void LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
 
     const auto fileInterpolation = fileTransform.getInterpolation();
 
-    if (newDir == TRANSFORM_DIR_FORWARD)
+    switch (newDir)
+    {
+    case TRANSFORM_DIR_FORWARD:
     {
         for (auto opData : opDataVec)
         {
@@ -1281,8 +1283,9 @@ void LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
             HandleLUT(opData, fileInterpolation);
             BuildOp(ops, config, context, opData, newDir);
         }
+        break;
     }
-    else
+    case TRANSFORM_DIR_INVERSE:
     {
         for (int idx = (int)opDataVec.size() - 1; idx >= 0; --idx)
         {
@@ -1290,6 +1293,8 @@ void LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
             HandleLUT(opData, fileInterpolation);
             BuildOp(ops, config, context, opData, newDir);
         }
+        break;
+    }
     }
 }
 
@@ -1362,13 +1367,11 @@ void LocalFileFormat::bake(const Baker & baker,
         transform->setLooks(looks.c_str());
         transform->setSrc(inputSpace.c_str());
         transform->setDst(targetSpace.c_str());
-        inputToTargetProc = config->getProcessor(transform,
-                                                 TRANSFORM_DIR_FORWARD);
+        inputToTargetProc = config->getProcessor(transform, TRANSFORM_DIR_FORWARD);
     }
     else
     {
-        inputToTargetProc = config->getProcessor(inputSpace.c_str(),
-                                                 targetSpace.c_str());
+        inputToTargetProc = config->getProcessor(inputSpace.c_str(), targetSpace.c_str());
     }
 
     int required_lut = -1;
@@ -1491,13 +1494,11 @@ void LocalFileFormat::bake(const Baker & baker,
                 transform->setLooks(looks.c_str());
                 transform->setSrc(shaperSpace.c_str());
                 transform->setDst(targetSpace.c_str());
-                cubeProc = config->getProcessor(transform,
-                                                TRANSFORM_DIR_FORWARD);
+                cubeProc = config->getProcessor(transform, TRANSFORM_DIR_FORWARD);
             }
             else
             {
-                cubeProc = config->getProcessor(shaperSpace.c_str(),
-                    targetSpace.c_str());
+                cubeProc = config->getProcessor(shaperSpace.c_str(), targetSpace.c_str());
             }
         }
         else
