@@ -2543,7 +2543,7 @@ int Config::getNumNamedTransforms(NamedTransformVisibility visibility) const noe
         res = (int)getImpl()->m_activeNamedTransformNames.size();
         break;
     }
-    case COLORSPACE_INACTIVE:
+    case NAMEDTRANSFORM_INACTIVE:
     {
         res = (int)getImpl()->m_inactiveNamedTransformNames.size();
         break;
