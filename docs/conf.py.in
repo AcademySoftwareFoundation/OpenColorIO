@@ -5,7 +5,7 @@
 # See:
 # http://sphinx.pocoo.org/config.html
 
-import sys, os
+import os, shutil, sys
 
 # -- Add PyOpenColorIO to sys.path ---------------------------------------------
 
@@ -16,6 +16,7 @@ sys.path.append('@CMAKE_BINARY_DIR@/src/bindings/python')
 sys.path.append('@CMAKE_SOURCE_DIR@/share/docs')
 
 import prettymethods
+import frozendoc
 
 # -- General configuration -----------------------------------------------------
 
@@ -53,6 +54,9 @@ rst_prolog = """
 """
 
 # -- Extension Configuration ---------------------------------------------------
+
+# Autodoc
+frozendoc.patch()
 
 # Breathe
 breathe_projects = {

@@ -10,8 +10,6 @@ ImageDesc
    .. group-tab:: Python
 
       .. autodata:: PyOpenColorIO.AutoStride
-         :members:
-         :undoc-members:
 
       .. autoclass:: PyOpenColorIO.ImageDesc
          :members:
@@ -37,7 +35,6 @@ PackedImageDesc
 .. tabs::
 
    .. group-tab:: Python
-
 
       .. autoclass:: PyOpenColorIO.PackedImageDesc
          :members:
