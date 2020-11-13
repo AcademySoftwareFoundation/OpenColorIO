@@ -3468,13 +3468,13 @@ OCIO_ADD_TEST(Config, grading_primary_serialization)
         const std::string strEnd =
             "    from_reference: !<GroupTransform>\n"
             "      children:\n"
-            "        - !<GradingPrimaryTransform> {style: log, dynamic: true}\n"
-            "        - !<GradingPrimaryTransform> {style: log, contrast: {rgb: [1.1, 1, 1], master: 1.1}, dynamic: true}\n"
-            "        - !<GradingPrimaryTransform> {style: log, dynamic: true, direction: inverse}\n"
+            "        - !<GradingPrimaryTransform> {style: log}\n"
+            "        - !<GradingPrimaryTransform> {style: log, contrast: {rgb: [1.1, 1, 1], master: 1.1}}\n"
+            "        - !<GradingPrimaryTransform> {style: log, direction: inverse}\n"
             "        - !<GradingPrimaryTransform> {style: linear, saturation: 0.9}\n"
             "        - !<GradingPrimaryTransform> {style: linear, saturation: 1.1, direction: inverse}\n"
-            "        - !<GradingPrimaryTransform> {style: video, dynamic: true}\n"
-            "        - !<GradingPrimaryTransform> {style: video, dynamic: true, direction: inverse}\n";
+            "        - !<GradingPrimaryTransform> {style: video}\n"
+            "        - !<GradingPrimaryTransform> {style: video, direction: inverse}\n";
 
         const std::string str = PROFILE_V2_START + strEnd;
 
@@ -3496,13 +3496,12 @@ OCIO_ADD_TEST(Config, grading_primary_serialization)
         const std::string strEndBack =
             "    from_reference: !<GroupTransform>\n"
             "      children:\n"
-            "        - !<GradingPrimaryTransform> {style: log, dynamic: true}\n"
+            "        - !<GradingPrimaryTransform> {style: log}\n"
             "        - !<GradingPrimaryTransform>\n"
             "          style: log\n"
             "          contrast: {rgb: [1.1, 1, 1], master: 1.1}\n"
             "          pivot: {contrast: -0.2}\n"
-            "          dynamic: true\n"
-            "        - !<GradingPrimaryTransform> {style: log, dynamic: true, direction: inverse}\n"
+            "        - !<GradingPrimaryTransform> {style: log, direction: inverse}\n"
             "        - !<GradingPrimaryTransform>\n"
             "          style: linear\n"
             "          saturation: 0.9\n"
@@ -3510,8 +3509,8 @@ OCIO_ADD_TEST(Config, grading_primary_serialization)
             "          style: linear\n"
             "          saturation: 1.1\n"
             "          direction: inverse\n"
-            "        - !<GradingPrimaryTransform> {style: video, dynamic: true}\n"
-            "        - !<GradingPrimaryTransform> {style: video, dynamic: true, direction: inverse}\n";
+            "        - !<GradingPrimaryTransform> {style: video}\n"
+            "        - !<GradingPrimaryTransform> {style: video, direction: inverse}\n";
 
         const std::string strBack = PROFILE_V2_START + strEndBack;
         OCIO_CHECK_EQUAL(ss.str(), strBack);
@@ -3803,12 +3802,12 @@ OCIO_ADD_TEST(Config, grading_rgbcurve_serialization)
         const std::string strEnd =
             "    from_reference: !<GroupTransform>\n"
             "      children:\n"
-            "        - !<GradingRGBCurveTransform> {style: log, dynamic: true}\n"
-            "        - !<GradingRGBCurveTransform> {style: log, dynamic: true, direction: inverse}\n"
-            "        - !<GradingRGBCurveTransform> {style: linear, lintolog_bypass: true, dynamic: true}\n"
-            "        - !<GradingRGBCurveTransform> {style: linear, dynamic: true, direction: inverse}\n"
-            "        - !<GradingRGBCurveTransform> {style: video, dynamic: true}\n"
-            "        - !<GradingRGBCurveTransform> {style: video, dynamic: true, direction: inverse}\n";
+            "        - !<GradingRGBCurveTransform> {style: log}\n"
+            "        - !<GradingRGBCurveTransform> {style: log, direction: inverse}\n"
+            "        - !<GradingRGBCurveTransform> {style: linear, lintolog_bypass: true}\n"
+            "        - !<GradingRGBCurveTransform> {style: linear, direction: inverse}\n"
+            "        - !<GradingRGBCurveTransform> {style: video}\n"
+            "        - !<GradingRGBCurveTransform> {style: video, direction: inverse}\n";
 
         const std::string str = PROFILE_V2_START + strEnd;
 
@@ -3843,14 +3842,12 @@ OCIO_ADD_TEST(Config, grading_rgbcurve_serialization)
             "          lintolog_bypass: true\n"
             "          red: {control_points: [0, 0, 0.1, 0.2, 0.5, 0.5, 0.7, 0.6, 1, 1.5]}\n"
             "          master: {control_points: [-1, -1, 0, 0.1, 0.5, 0.6, 1, 1.1]}\n"
-            "          dynamic: true\n"
             "        - !<GradingRGBCurveTransform>\n"
             "          style: video\n"
             "          red: {control_points: [-0.2, 0, 0.5, 0.5, 1.2, 1.5]}\n"
             "          green: {control_points: [0, 0, 0.2, 0.5, 1, 1.5]}\n"
             "          blue: {control_points: [0, 0, 0.1, 0.5, 1, 1.5]}\n"
             "          master: {control_points: [-1, -1, 0, 0.1, 0.5, 0.6, 1, 1.1]}\n"
-            "          dynamic: true\n"
             "          direction: inverse\n";
 
         const std::string str = PROFILE_V2_START + strEnd;
@@ -3876,13 +3873,13 @@ OCIO_ADD_TEST(Config, grading_tone_serialization)
         const std::string strEnd =
             "    from_reference: !<GroupTransform>\n"
             "      children:\n"
-            "        - !<GradingToneTransform> {style: log, dynamic: true}\n"
-            "        - !<GradingToneTransform> {style: log, s_contrast: 1.1, dynamic: true}\n"
-            "        - !<GradingToneTransform> {style: log, dynamic: true, direction: inverse}\n"
+            "        - !<GradingToneTransform> {style: log}\n"
+            "        - !<GradingToneTransform> {style: log, s_contrast: 1.1}\n"
+            "        - !<GradingToneTransform> {style: log, direction: inverse}\n"
             "        - !<GradingToneTransform> {style: linear}\n"
             "        - !<GradingToneTransform> {style: linear, direction: inverse}\n"
-            "        - !<GradingToneTransform> {style: video, dynamic: true}\n"
-            "        - !<GradingToneTransform> {style: video, dynamic: true, direction: inverse}\n";
+            "        - !<GradingToneTransform> {style: video}\n"
+            "        - !<GradingToneTransform> {style: video, direction: inverse}\n";
 
         const std::string str = PROFILE_V2_START + strEnd;
 
@@ -3902,16 +3899,15 @@ OCIO_ADD_TEST(Config, grading_tone_serialization)
         const std::string strEndBack =
             "    from_reference: !<GroupTransform>\n"
             "      children:\n"
-            "        - !<GradingToneTransform> {style: log, dynamic: true}\n"
+            "        - !<GradingToneTransform> {style: log}\n"
             "        - !<GradingToneTransform>\n"
             "          style: log\n"
             "          s_contrast: 1.1\n"
-            "          dynamic: true\n"
-            "        - !<GradingToneTransform> {style: log, dynamic: true, direction: inverse}\n"
+            "        - !<GradingToneTransform> {style: log, direction: inverse}\n"
             "        - !<GradingToneTransform> {style: linear}\n"
             "        - !<GradingToneTransform> {style: linear, direction: inverse}\n"
-            "        - !<GradingToneTransform> {style: video, dynamic: true}\n"
-            "        - !<GradingToneTransform> {style: video, dynamic: true, direction: inverse}\n";
+            "        - !<GradingToneTransform> {style: video}\n"
+            "        - !<GradingToneTransform> {style: video, direction: inverse}\n";
 
         const std::string strBack = PROFILE_V2_START + strEndBack;
         OCIO_CHECK_EQUAL(ss.str(), strBack);
@@ -3929,7 +3925,6 @@ OCIO_ADD_TEST(Config, grading_tone_serialization)
             "          highlights: {rgb: [1.1, 1.1111, 1], master: 1.2, start: 0.15, pivot: 1.1}\n"
             "          whites: {rgb: [0.95, 0.96, 0.95], master: 1.1, start: 0.1, width: 0.9}\n"
             "          s_contrast: 1.1\n"
-            "          dynamic: true\n"
             "        - !<GradingToneTransform>\n"
             "          style: log\n"
             "          midtones: {rgb: [0.85, 0.98, 1], master: 1.11, center: 0.1, width: 0.9}\n"
@@ -4140,10 +4135,16 @@ OCIO_ADD_TEST(Config, exposure_contrast_serialization)
         const std::string strEnd =
             "    from_reference: !<GroupTransform>\n"
             "      children:\n"
+            "        - !<ExposureContrastTransform> {style: video,"
+                       " contrast: 0.5, gamma: 1.1, pivot: 0.18}\n"
+            "        - !<ExposureContrastTransform> {style: video, exposure: 1.5,"
+                       " gamma: 1.1, pivot: 0.18}\n"
+            "        - !<ExposureContrastTransform> {style: video, exposure: 1.5,"
+                       " contrast: 0.5, pivot: 0.18}\n"
             "        - !<ExposureContrastTransform> {style: video, exposure: 1.5,"
                        " contrast: 0.5, gamma: 1.1, pivot: 0.18}\n"
             "        - !<ExposureContrastTransform> {style: video,"
-                       " exposure: {value: 1.5, dynamic: true}, contrast: 0.5,"
+                       " exposure: 1.5, contrast: 0.5,"
                        " gamma: 1.1, pivot: 0.18}\n"
             "        - !<ExposureContrastTransform> {style: video, exposure: -1.4,"
                        " contrast: 0.6, gamma: 1.2, pivot: 0.2,"
@@ -4154,7 +4155,7 @@ OCIO_ADD_TEST(Config, exposure_contrast_serialization)
                        " contrast: 0.5, gamma: 1.1, pivot: 0.18,"
                        " direction: inverse}\n"
             "        - !<ExposureContrastTransform> {style: log, exposure: 1.5,"
-                       " contrast: {value: 0.6, dynamic: true}, gamma: 1.2,"
+                       " contrast: 0.6, gamma: 1.2,"
                        " pivot: 0.18}\n"
             "        - !<ExposureContrastTransform> {style: linear, exposure: 1.5,"
                        " contrast: 0.5, gamma: 1.1, pivot: 0.18}\n"
@@ -4162,7 +4163,7 @@ OCIO_ADD_TEST(Config, exposure_contrast_serialization)
                        " contrast: 0.5, gamma: 1.1, pivot: 0.18,"
                        " direction: inverse}\n"
             "        - !<ExposureContrastTransform> {style: linear, exposure: 1.5,"
-                       " contrast: 0.5, gamma: {value: 1.1, dynamic: true},"
+                       " contrast: 0.5, gamma: 1.1,"
                        " pivot: 0.18}\n";
 
         const std::string str = PROFILE_V2_START + strEnd;
@@ -4177,38 +4178,37 @@ OCIO_ADD_TEST(Config, exposure_contrast_serialization)
         std::stringstream ss;
         OCIO_CHECK_NO_THROW(ss << *config.get());
         OCIO_CHECK_EQUAL(ss.str(), str);
-    }
 
-    {
-        const std::string strEnd =
-            "    from_reference: !<GroupTransform>\n"
-            "      children:\n";
-
-        const std::string strEndEC =
-            "        - !<ExposureContrastTransform> {style: video,"
-                       " exposure: {value: 1.5},"
-                       " contrast: {value: 0.5, dynamic: false},"
-                       " gamma: {value: 1.1}, pivot: 0.18}\n";
-
-        const std::string strEndECExpected =
-            "        - !<ExposureContrastTransform> {style: video, exposure: 1.5,"
-                       " contrast: 0.5, gamma: 1.1, pivot: 0.18}\n";
-
-        const std::string str = PROFILE_V2_START + strEnd + strEndEC;
-
-        std::istringstream is;
-        is.str(str);
-
-        OCIO::ConstConfigRcPtr config;
-        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OCIO_CHECK_NO_THROW(config->validate());
-
-        const std::string strExpected = PROFILE_V2_START + strEnd + strEndECExpected;
-
-        std::stringstream ss;
-        OCIO_CHECK_NO_THROW(ss << *config.get());
-        OCIO_CHECK_EQUAL(ss.str(), strExpected);
-
+        // For exposure contrast transforms, no value for exposure, contrast or gamma means dynamic.
+        auto cs = config->getColorSpace("lnh");
+        OCIO_REQUIRE_ASSERT(cs);
+        auto cst = cs->getTransform(OCIO::COLORSPACE_DIR_FROM_REFERENCE);
+        OCIO_REQUIRE_ASSERT(cst);
+        auto grp = OCIO_DYNAMIC_POINTER_CAST<const OCIO::GroupTransform>(cst);
+        OCIO_REQUIRE_ASSERT(grp);
+        OCIO_REQUIRE_EQUAL(grp->getNumTransforms(), 12);
+        OCIO::ConstTransformRcPtr t;
+        OCIO_CHECK_NO_THROW(t = grp->getTransform(0));
+        OCIO_REQUIRE_ASSERT(t);
+        auto ec = OCIO_DYNAMIC_POINTER_CAST<const OCIO::ExposureContrastTransform>(t);
+        OCIO_REQUIRE_ASSERT(ec);
+        OCIO_CHECK_ASSERT(ec->isExposureDynamic());
+        OCIO_CHECK_ASSERT(!ec->isContrastDynamic());
+        OCIO_CHECK_ASSERT(!ec->isGammaDynamic());
+        OCIO_CHECK_NO_THROW(t = grp->getTransform(1));
+        OCIO_REQUIRE_ASSERT(t);
+        ec = OCIO_DYNAMIC_POINTER_CAST<const OCIO::ExposureContrastTransform>(t);
+        OCIO_REQUIRE_ASSERT(ec);
+        OCIO_CHECK_ASSERT(!ec->isExposureDynamic());
+        OCIO_CHECK_ASSERT(ec->isContrastDynamic());
+        OCIO_CHECK_ASSERT(!ec->isGammaDynamic());
+        OCIO_CHECK_NO_THROW(t = grp->getTransform(2));
+        OCIO_REQUIRE_ASSERT(t);
+        ec = OCIO_DYNAMIC_POINTER_CAST<const OCIO::ExposureContrastTransform>(t);
+        OCIO_REQUIRE_ASSERT(ec);
+        OCIO_CHECK_ASSERT(!ec->isExposureDynamic());
+        OCIO_CHECK_ASSERT(!ec->isContrastDynamic());
+        OCIO_CHECK_ASSERT(ec->isGammaDynamic());
     }
 
     {
@@ -6066,6 +6066,54 @@ colorspaces:
     OCIO_CHECK_THROW_WHAT(cfg = OCIO::Config::CreateFromStream(is),
                           OCIO::Exception,
                           "Only config version 2 (or higher) can have RangeTransform.");
+}
+
+OCIO_ADD_TEST(Config, dynamic_properties)
+{
+    OCIO::ConfigRcPtr config = OCIO::Config::CreateRaw()->createEditableCopy();
+
+    OCIO::ColorSpaceRcPtr cs = OCIO::ColorSpace::Create();
+    cs->setName("test");
+
+    OCIO::ExposureContrastTransformRcPtr ec = OCIO::ExposureContrastTransform::Create();
+    ec->makeExposureDynamic();
+    cs->setTransform(ec, OCIO::COLORSPACE_DIR_TO_REFERENCE);
+
+    OCIO_CHECK_NO_THROW(config->addColorSpace(cs));
+    OCIO_CHECK_NO_THROW(config->validate());
+
+    OCIO::GradingPrimaryTransformRcPtr gp = OCIO::GradingPrimaryTransform::Create(OCIO::GRADING_LOG);
+    gp->makeDynamic();
+    cs->setTransform(gp, OCIO::COLORSPACE_DIR_FROM_REFERENCE);
+
+    OCIO_CHECK_NO_THROW(config->addColorSpace(cs));
+    OCIO_CHECK_NO_THROW(config->validate());
+
+    // Save config and load it back.
+
+    std::ostringstream os;
+    config->serialize(os);
+    std::istringstream is;
+    is.str(os.str());
+
+    OCIO::ConstConfigRcPtr configBack;
+    OCIO_CHECK_NO_THROW(configBack = OCIO::Config::CreateFromStream(is));
+    OCIO_REQUIRE_ASSERT(configBack);
+    OCIO::ConstColorSpaceRcPtr csBack;
+    OCIO_CHECK_NO_THROW(csBack = configBack->getColorSpace("test"));
+    OCIO_REQUIRE_ASSERT(csBack);
+    auto toTr = csBack->getTransform(OCIO::COLORSPACE_DIR_TO_REFERENCE);
+    OCIO_REQUIRE_ASSERT(toTr);
+    auto ecBack = OCIO_DYNAMIC_POINTER_CAST<const OCIO::ExposureContrastTransform>(toTr);
+    OCIO_REQUIRE_ASSERT(ecBack);
+    // Exposure contrast is dynamic when loaded back.
+    OCIO_CHECK_ASSERT(ecBack->isExposureDynamic());
+    auto fromTr = csBack->getTransform(OCIO::COLORSPACE_DIR_FROM_REFERENCE);
+    OCIO_REQUIRE_ASSERT(fromTr);
+    auto gpBack = OCIO_DYNAMIC_POINTER_CAST<const OCIO::GradingPrimaryTransform>(fromTr);
+    OCIO_REQUIRE_ASSERT(gpBack);
+    // Grading primary is not dynamic when loaded back.
+    OCIO_CHECK_ASSERT(!gpBack->isDynamic());
 }
 
 OCIO_ADD_TEST(Config, builtin_transforms)

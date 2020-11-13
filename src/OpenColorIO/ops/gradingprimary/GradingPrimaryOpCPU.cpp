@@ -27,17 +27,19 @@ public:
 
     bool hasDynamicProperty(DynamicPropertyType type) const override;
     DynamicPropertyRcPtr getDynamicProperty(DynamicPropertyType type) const override;
-    void unifyDynamicProperty(DynamicPropertyType type,
-                              DynamicPropertyGradingPrimaryImplRcPtr & prop) const override;
 
 protected:
-    mutable DynamicPropertyGradingPrimaryImplRcPtr m_gp;
+    DynamicPropertyGradingPrimaryImplRcPtr m_gp;
 };
 
 GradingPrimaryOpCPU::GradingPrimaryOpCPU(ConstGradingPrimaryOpDataRcPtr & gp)
     : OpCPU()
 {
     m_gp = gp->getDynamicPropertyInternal();
+    if (m_gp->isDynamic())
+    {
+        m_gp = m_gp->createEditableCopy();
+    }
 }
 
 bool GradingPrimaryOpCPU::hasDynamicProperty(DynamicPropertyType type) const
@@ -65,24 +67,6 @@ DynamicPropertyRcPtr GradingPrimaryOpCPU::getDynamicProperty(DynamicPropertyType
     }
 
     throw Exception("GradingPrimary property is not dynamic.");
-}
-
-void GradingPrimaryOpCPU::unifyDynamicProperty(DynamicPropertyType type,
-                                               DynamicPropertyGradingPrimaryImplRcPtr & prop) const
-{
-    if (type == DYNAMIC_PROPERTY_GRADING_PRIMARY)
-    {
-        if (!prop)
-        {
-            // First occurence, decouple.
-            prop = m_gp->createEditableCopy();
-        }
-        m_gp = prop;
-    }
-    else
-    {
-        OpCPU::unifyDynamicProperty(type, prop);
-    }
 }
 
 class GradingPrimaryLogFwdOpCPU : public GradingPrimaryOpCPU
