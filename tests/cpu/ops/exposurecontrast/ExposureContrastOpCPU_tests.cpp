@@ -214,12 +214,12 @@ OCIO_ADD_TEST(ExposureContrastRenderer, log)
     //
 
     OCIO::DynamicPropertyDoubleRcPtr dpc, dpe, dpg;
-    OCIO_CHECK_NO_THROW(dpc = OCIO::DynamicPropertyValue::AsDouble(
-        renderer->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_CONTRAST)));
-    OCIO_CHECK_NO_THROW(dpe = OCIO::DynamicPropertyValue::AsDouble(
-        renderer->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_EXPOSURE)));
-    OCIO_CHECK_NO_THROW(dpg = OCIO::DynamicPropertyValue::AsDouble(
-        renderer->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_GAMMA)));
+    OCIO::DynamicPropertyRcPtr dp = renderer->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_CONTRAST);
+    OCIO_CHECK_NO_THROW(dpc = OCIO::DynamicPropertyValue::AsDouble(dp));
+    dp = renderer->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_EXPOSURE);
+    OCIO_CHECK_NO_THROW(dpe = OCIO::DynamicPropertyValue::AsDouble(dp));
+    dp = renderer->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_GAMMA);
+    OCIO_CHECK_NO_THROW(dpg = OCIO::DynamicPropertyValue::AsDouble(dp));
     dpe->setValue(0.2);
     dpc->setValue(0.5);
     dpg->setValue(1.6);
@@ -293,12 +293,12 @@ OCIO_ADD_TEST(ExposureContrastRenderer, linear)
     //
 
     OCIO::DynamicPropertyDoubleRcPtr dpc, dpe, dpg;
-    OCIO_CHECK_NO_THROW(dpc = OCIO::DynamicPropertyValue::AsDouble(
-        renderer->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_CONTRAST)));
-    OCIO_CHECK_NO_THROW(dpe = OCIO::DynamicPropertyValue::AsDouble(
-        renderer->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_EXPOSURE)));
-    OCIO_CHECK_NO_THROW(dpg = OCIO::DynamicPropertyValue::AsDouble(
-        renderer->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_GAMMA)));
+    OCIO::DynamicPropertyRcPtr dp = renderer->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_CONTRAST);
+    OCIO_CHECK_NO_THROW(dpc = OCIO::DynamicPropertyValue::AsDouble(dp));
+    dp = renderer->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_EXPOSURE);
+    OCIO_CHECK_NO_THROW(dpe = OCIO::DynamicPropertyValue::AsDouble(dp));
+    dp = renderer->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_GAMMA);
+    OCIO_CHECK_NO_THROW(dpg = OCIO::DynamicPropertyValue::AsDouble(dp));
     dpe->setValue(0.2);
     dpc->setValue(1.5);
     dpg->setValue(1.2);
