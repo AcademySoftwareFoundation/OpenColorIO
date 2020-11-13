@@ -88,7 +88,7 @@ public:
     int getNumChildrenElements() const override;
     FormatMetadata & getChildElement(int i) override;
     const FormatMetadata & getChildElement(int i) const override;
-    FormatMetadata & addChildElement(const char * name, const char * value) override;
+    void addChildElement(const char * name, const char * value) override;
 
     // Reset the contents of a metadata element. The value,
     // list of attributes and sub-elements are cleared.
