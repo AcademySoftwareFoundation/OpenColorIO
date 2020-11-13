@@ -199,8 +199,8 @@ OCIO_ADD_TEST(GradingPrimaryOpCPU, log)
     // The CPUOp has a copy of gd.  Get the dynamic property ptr in order to change the value for
     // the apply.
     OCIO::DynamicPropertyGradingPrimaryRcPtr dpgp;
-    OCIO_CHECK_NO_THROW(dpgp = OCIO::DynamicPropertyValue::AsGradingPrimary(
-        op->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_GRADING_PRIMARY)));
+    auto dp = op->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_GRADING_PRIMARY);
+    OCIO_CHECK_NO_THROW(dpgp = OCIO::DynamicPropertyValue::AsGradingPrimary(dp));
 
     gdp.m_clampBlack = TS1::clampBlack;
     gdp.m_clampWhite = TS1::clampWhite;
@@ -234,8 +234,8 @@ OCIO_ADD_TEST(GradingPrimaryOpCPU, log)
     OCIO_CHECK_NO_THROW(op->apply(TS1::expected_32f, res, TS1::num_samples));
     ValidateImage(TS1::input_32f, res, TS1::num_samples, __LINE__);
 
-    OCIO_CHECK_NO_THROW(dpgp = OCIO::DynamicPropertyValue::AsGradingPrimary(
-        op->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_GRADING_PRIMARY)));
+    dp = op->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_GRADING_PRIMARY);
+    OCIO_CHECK_NO_THROW(dpgp = OCIO::DynamicPropertyValue::AsGradingPrimary(dp));
 
     // Clamping prevents full inversion. Skip.
 
