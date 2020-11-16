@@ -22,12 +22,32 @@ const char * METADATA_OUTPUT_DESCRIPTOR = "OutputDescriptor";
 const char * METADATA_NAME = "name";
 const char * METADATA_ID = "id";
 
-FormatMetadata::FormatMetadata()
-{
-}
 
-FormatMetadata::~FormatMetadata()
+std::ostream & operator<< (std::ostream & os, const FormatMetadata & fd)
 {
+    const std::string name{ fd.getName() };
+    os << "<" << name;
+    const int numAtt = fd.getNumAttributes();
+    if (numAtt)
+    {
+        for (int i = 0; i < numAtt; ++i)
+        {
+            os << " " << fd.getAttributeName(i) << "=\"" << fd.getAttributeValue(i) << "\"";
+        }
+    }
+    os << ">";
+    const std::string val{ fd.getValue() };
+    if (!val.empty())
+    {
+        os << val;
+    }
+    const int numElt = fd.getNumChildrenElements();
+    for (int i = 0; i < numElt; ++i)
+    {
+        os << fd.getChildElement(i);
+    }
+    os << "</" << name << ">";
+    return os;
 }
 
 FormatMetadataImpl::FormatMetadataImpl()
@@ -72,12 +92,20 @@ void FormatMetadataImpl::setName(const std::string & name)
     {
         throw Exception("FormatMetadata has to have a non-empty name.");
     }
+    if (name == METADATA_ROOT)
+    {
+        throw Exception("FormatMetadata 'ROOT' can't be renamed.");
 
+    }
     m_name = name;
 }
 
 void FormatMetadataImpl::setValue(const std::string & value)
 {
+    if (m_name == METADATA_ROOT)
+    {
+        throw Exception("FormatMetadata 'ROOT' can't have a value.");
+    }
     m_value = value;
 }
 
@@ -314,10 +342,9 @@ const FormatMetadata & FormatMetadataImpl::getChildElement(int i) const
     throw Exception("Invalid index for metadata object.");
 }
 
-FormatMetadata & FormatMetadataImpl::addChildElement(const char * name, const char * value)
+void FormatMetadataImpl::addChildElement(const char * name, const char * value)
 {
     m_elements.emplace_back(name, value);
-    return m_elements.back();
 }
 
 void FormatMetadataImpl::clear()

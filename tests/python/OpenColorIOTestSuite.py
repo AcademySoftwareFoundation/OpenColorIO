@@ -47,6 +47,7 @@ import ExponentWithLinearTransformTest
 import ExposureContrastTransformTest
 import FileTransformTest
 import FixedFunctionTransformTest
+import FormatMetadataTest
 import GradingDataTest
 import GradingPrimaryTransformTest
 import GradingRGBCurveTransformTest
@@ -90,6 +91,7 @@ def suite():
     suite.addTest(loader.loadTestsFromModule(ExposureContrastTransformTest))
     suite.addTest(loader.loadTestsFromModule(FileTransformTest))
     suite.addTest(loader.loadTestsFromModule(FixedFunctionTransformTest))
+    suite.addTest(loader.loadTestsFromModule(FormatMetadataTest))
     suite.addTest(loader.loadTestsFromModule(GradingDataTest))
     suite.addTest(loader.loadTestsFromModule(GradingPrimaryTransformTest))
     suite.addTest(loader.loadTestsFromModule(GradingRGBCurveTransformTest))
