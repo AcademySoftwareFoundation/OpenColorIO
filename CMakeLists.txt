@@ -33,8 +33,8 @@ project(OpenColorIO
     HOMEPAGE_URL https://github.com/AcademySoftwareFoundation/OpenColorIO
     LANGUAGES CXX C)
 
-# "dev", "rc1", etc or "" for an official release.
-set(OpenColorIO_VERSION_RELEASE_TYPE "rc1")
+# "dev", "beta1", rc1", etc or "" for an official release.
+set(OpenColorIO_VERSION_RELEASE_TYPE "beta1")
 
 enable_testing()
 
