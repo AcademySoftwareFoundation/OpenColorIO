@@ -789,16 +789,15 @@ void GradingToneLinearRevOpCPU::apply(const void * inImg, void * outImg, long nu
 
 ConstOpCPURcPtr GetGradingToneCPURenderer(ConstGradingToneOpDataRcPtr & tone)
 {
-    if (tone->getDirection() == TRANSFORM_DIR_FORWARD)
+    switch (tone->getDirection())
     {
+    case TRANSFORM_DIR_FORWARD:
         if (tone->getStyle() == GRADING_LIN)
         {
             return std::make_shared<GradingToneLinearFwdOpCPU>(tone);
         }
         return std::make_shared<GradingToneFwdOpCPU>(tone);
-    }
-    else if (tone->getDirection() == TRANSFORM_DIR_INVERSE)
-    {
+    case TRANSFORM_DIR_INVERSE:
         if (tone->getStyle() == GRADING_LIN)
         {
             return std::make_shared<GradingToneLinearRevOpCPU>(tone);
@@ -806,7 +805,7 @@ ConstOpCPURcPtr GetGradingToneCPURenderer(ConstGradingToneOpDataRcPtr & tone)
         return std::make_shared<GradingToneRevOpCPU>(tone);
     }
 
-    throw Exception("Unsupported GradingTone direction.");
+    throw Exception("Illegal GradingTone direction.");
 }
 
 } // namespace OCIO_NAMESPACE

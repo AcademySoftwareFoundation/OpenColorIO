@@ -557,14 +557,11 @@ void LocalFileFormat::bake(const Baker & baker,
         transform->setLooks(looks.c_str());
         transform->setSrc(inputSpace.c_str());
         transform->setDst(targetSpace.c_str());
-        inputToTargetProc = config->getProcessor(transform,
-            TRANSFORM_DIR_FORWARD);
+        inputToTargetProc = config->getProcessor(transform, TRANSFORM_DIR_FORWARD);
     }
     else
     {
-        inputToTargetProc = config->getProcessor(
-            inputSpace.c_str(),
-            targetSpace.c_str());
+        inputToTargetProc = config->getProcessor(inputSpace.c_str(), targetSpace.c_str());
     }
 
     int required_lut = -1;
@@ -686,13 +683,11 @@ void LocalFileFormat::bake(const Baker & baker,
                 transform->setLooks(looks.c_str());
                 transform->setSrc(shaperSpace.c_str());
                 transform->setDst(targetSpace.c_str());
-                cubeProc = config->getProcessor(transform,
-                    TRANSFORM_DIR_FORWARD);
+                cubeProc = config->getProcessor(transform, TRANSFORM_DIR_FORWARD);
             }
             else
             {
-                cubeProc = config->getProcessor(shaperSpace.c_str(),
-                                                targetSpace.c_str());
+                cubeProc = config->getProcessor(shaperSpace.c_str(), targetSpace.c_str());
             }
         }
         else
@@ -825,43 +820,36 @@ LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
         LogWarningInterpolationNotUsed(fileInterp, fileTransform);
     }
 
-    if(newDir == TRANSFORM_DIR_FORWARD)
+    switch (newDir)
     {
-        if(lut1D)
+    case TRANSFORM_DIR_FORWARD:
+    {
+        if (lut1D)
         {
-            CreateMinMaxOp(ops,
-                            cachedFile->range1d_min,
-                            cachedFile->range1d_max,
-                            newDir);
+            CreateMinMaxOp(ops, cachedFile->range1d_min, cachedFile->range1d_max, newDir);
             CreateLut1DOp(ops, lut1D, newDir);
         }
-        if(lut3D)
+        if (lut3D)
         {
-            CreateMinMaxOp(ops,
-                            cachedFile->range3d_min,
-                            cachedFile->range3d_max,
-                            newDir);
+            CreateMinMaxOp(ops, cachedFile->range3d_min, cachedFile->range3d_max, newDir);
             CreateLut3DOp(ops, lut3D, newDir);
         }
+        break;
     }
-    else if(newDir == TRANSFORM_DIR_INVERSE)
+    case TRANSFORM_DIR_INVERSE:
     {
-        if(lut3D)
+        if (lut3D)
         {
             CreateLut3DOp(ops, lut3D, newDir);
-            CreateMinMaxOp(ops,
-                            cachedFile->range3d_min,
-                            cachedFile->range3d_max,
-                            newDir);
+            CreateMinMaxOp(ops, cachedFile->range3d_min, cachedFile->range3d_max, newDir);
         }
-        if(lut1D)
+        if (lut1D)
         {
             CreateLut1DOp(ops, lut1D, newDir);
-            CreateMinMaxOp(ops,
-                            cachedFile->range1d_min,
-                            cachedFile->range1d_max,
-                            newDir);
+            CreateMinMaxOp(ops, cachedFile->range1d_min, cachedFile->range1d_max, newDir);
         }
+        break;
+    }
     }
 }
 }

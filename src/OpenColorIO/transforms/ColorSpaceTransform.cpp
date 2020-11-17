@@ -81,7 +81,16 @@ void ColorSpaceTransform::setDirection(TransformDirection dir) noexcept
 
 void ColorSpaceTransform::validate() const
 {
-    Transform::validate();
+    try
+    {
+        Transform::validate();
+    }
+    catch (Exception & ex)
+    {
+        std::string errMsg("ColorSpaceTransform validation failed: ");
+        errMsg += ex.what();
+        throw Exception(errMsg.c_str());
+    }
 
     if (getImpl()->m_src.empty())
     {
@@ -165,31 +174,36 @@ void BuildColorSpaceOps(OpRcPtrVec & ops,
 
     ConstColorSpaceRcPtr src, dst;
 
-    if(combinedDir == TRANSFORM_DIR_FORWARD)
+    switch (combinedDir)
     {
-        src = config.getColorSpace( context->resolveStringVar( colorSpaceTransform.getSrc() ) );
+    case TRANSFORM_DIR_FORWARD:
+    {
+        src = config.getColorSpace(context->resolveStringVar(colorSpaceTransform.getSrc()));
         if (!src)
         {
             ThrowMissingCS(SRC_CS, colorSpaceTransform.getSrc());
         }
-        dst = config.getColorSpace( context->resolveStringVar( colorSpaceTransform.getDst() ) );
+        dst = config.getColorSpace(context->resolveStringVar(colorSpaceTransform.getDst()));
         if (!dst)
         {
             ThrowMissingCS(DST_CS, colorSpaceTransform.getDst());
         }
+        break;
     }
-    else if(combinedDir == TRANSFORM_DIR_INVERSE)
+    case TRANSFORM_DIR_INVERSE:
     {
-        dst = config.getColorSpace( context->resolveStringVar( colorSpaceTransform.getSrc() ) );
+        dst = config.getColorSpace(context->resolveStringVar(colorSpaceTransform.getSrc()));
         if (!dst)
         {
             ThrowMissingCS(SRC_CS, colorSpaceTransform.getSrc());
         }
-        src = config.getColorSpace( context->resolveStringVar( colorSpaceTransform.getDst() ) );
+        src = config.getColorSpace(context->resolveStringVar(colorSpaceTransform.getDst()));
         if (!src)
         {
             ThrowMissingCS(DST_CS, colorSpaceTransform.getDst());
         }
+        break;
+    }
     }
 
     BuildColorSpaceOps(ops, config, context, src, dst, colorSpaceTransform.getDataBypass());

@@ -171,11 +171,11 @@ public:
 
     ExposureContrastOpData & operator=(const ExposureContrastOpData & rhs);
 
-    Style getStyle() const { return m_style; }
-    void setStyle(Style style) { m_style = style; }
+    Style getStyle() const noexcept { return m_style; }
+    void setStyle(Style style) noexcept { m_style = style; }
 
-    TransformDirection getDirection() const;
-    void setDirection(TransformDirection dir);
+    TransformDirection getDirection() const noexcept;
+    void setDirection(TransformDirection dir) noexcept;
 
     double getExposure() const { return m_exposure->getValue(); }
     void setExposure(double exposure) { m_exposure->setValue(exposure); }
@@ -212,7 +212,7 @@ public:
     static constexpr double LOGMIDGRAY_DEFAULT = 0.435;
 
 private:
-    void invert();
+    void invert() noexcept;
 
     Style  m_style = STYLE_LINEAR;
     DynamicPropertyDoubleImplRcPtr m_exposure;

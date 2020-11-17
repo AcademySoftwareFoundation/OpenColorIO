@@ -530,7 +530,7 @@ std::ostream& operator<< (std::ostream& os, const Context& context)
     for(int i=0; i<context.getNumStringVars(); ++i)
     {
         const char * key = context.getStringVarNameByIndex(i);
-        os << "\n\t" << key << ": " << context.getStringVar(key);
+        os << "\n    " << key << ": " << context.getStringVar(key);
     }
     os << ">";
     return os;

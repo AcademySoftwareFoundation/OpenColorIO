@@ -107,7 +107,16 @@ void GroupTransform::setDirection(TransformDirection dir) noexcept
 
 void GroupTransform::validate() const
 {
-    Transform::validate();
+    try
+    {
+        Transform::validate();
+    }
+    catch (Exception & ex)
+    {
+        std::string errMsg("GroupTransform validation failed: ");
+        errMsg += ex.what();
+        throw Exception(errMsg.c_str());
+    }
 
     for(const auto & val : getImpl()->m_vec)
     {
@@ -172,7 +181,7 @@ std::ostream & operator<< (std::ostream & os, const GroupTransform & groupTransf
     for (int i = 0; i < groupTransform.getNumTransforms(); ++i)
     {
         ConstTransformRcPtr transform = groupTransform.getTransform(i);
-        os << "\n\t" << *transform;
+        os << "\n        " << *transform;
     }
     os << ">";
     return os;
@@ -195,21 +204,22 @@ void BuildGroupOps(OpRcPtrVec & ops,
 
     auto combinedDir = CombineTransformDirections(dir, groupTransform.getDirection());
 
-    if (combinedDir == TRANSFORM_DIR_FORWARD)
+    switch (combinedDir)
     {
+    case TRANSFORM_DIR_FORWARD:
         for (int i = 0; i < groupTransform.getNumTransforms(); ++i)
         {
             ConstTransformRcPtr childTransform = groupTransform.getTransform(i);
             BuildOps(ops, config, context, childTransform, TRANSFORM_DIR_FORWARD);
         }
-    }
-    else if (combinedDir == TRANSFORM_DIR_INVERSE)
-    {
+        break;
+    case TRANSFORM_DIR_INVERSE:
         for (int i = groupTransform.getNumTransforms() - 1; i >= 0; --i)
         {
             ConstTransformRcPtr childTransform = groupTransform.getTransform(i);
             BuildOps(ops, config, context, childTransform, TRANSFORM_DIR_INVERSE);
         }
+        break;
     }
 }
 
