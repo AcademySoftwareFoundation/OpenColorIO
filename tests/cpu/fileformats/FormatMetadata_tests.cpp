@@ -159,9 +159,10 @@ OCIO_ADD_TEST(FormatMetadataImpl, test_accessors)
     OCIO_CHECK_EQUAL(std::string(info1.getName()), "Release");
     OCIO_CHECK_EQUAL(std::string(info1.getValue()), "2015");
 
-    auto & icInfo = info.addChildElement("InputColorSpace", "" );
+    info.addChildElement("InputColorSpace", "" );
     OCIO_REQUIRE_EQUAL(info.getNumChildrenElements(), 3);
     // 2 elements can have the same name.
+    auto & icInfo = info.getChildElement(2);
     icInfo.addChildElement(OCIO::METADATA_DESCRIPTION, "Input color space description");
     icInfo.addChildElement(OCIO::METADATA_DESCRIPTION, "Other description");
     icInfo.addChildElement("Profile", "Input color space profile");
@@ -182,6 +183,18 @@ OCIO_ADD_TEST(FormatMetadataImpl, test_accessors)
                      "Profile");
     OCIO_CHECK_EQUAL(std::string(icInfo.getChildElement(2).getValue()),
                      "Input color space profile");
+
+    std::ostringstream oss;
+    oss << info;
+    const std::string expectedRes{ "<Info version=\"2.0\">"
+                                   "<Copyright>Copyright 2013 Autodesk</Copyright>"
+                                   "<Release>2015</Release>"
+                                   "<InputColorSpace>"
+                                   "<Description>Input color space description</Description>"
+                                   "<Description>Other description</Description>"
+                                   "<Profile>Input color space profile</Profile>"
+                                   "</InputColorSpace></Info>" };
+    OCIO_CHECK_EQUAL(expectedRes, oss.str());
 }
 
 OCIO_ADD_TEST(FormatMetadataImpl, combine)
@@ -193,7 +206,8 @@ OCIO_ADD_TEST(FormatMetadataImpl, combine)
     OCIO::FormatMetadataImpl root1;
     root1.addAttribute(OCIO::METADATA_NAME, "root1");
     root1.addAttribute(OCIO::METADATA_ID, "ID1");
-    auto & sub1 = root1.addChildElement("test1", "val1");
+    root1.addChildElement("test1", "val1");
+    auto & sub1 = root1.getChildElement(0);
     sub1.addChildElement("sub1-test", "subval");
 
     root0.addAttribute("att0", "attval0");

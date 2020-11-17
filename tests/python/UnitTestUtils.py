@@ -124,9 +124,7 @@ colorspaces:
     family: raw
     equalitygroup: ""
     bitdepth: 32f
-    description: |
-      A raw color space. Conversions to and from this space are no-ops.
-
+    description: A raw color space. Conversions to and from this space are no-ops.
     isdata: true
     allocation: uniform
 
@@ -140,7 +138,6 @@ colorspaces:
       representation of the scene with primaries that correspond to
       scanned film. 0.18 in this space corresponds to a properly
       exposed 18% grey card.
-
     isdata: false
     allocation: lg2
 
@@ -149,9 +146,7 @@ colorspaces:
     family: vd8
     equalitygroup: ""
     bitdepth: 8ui
-    description: |
-      how many transforms can we use?
-
+    description: how many transforms can we use?
     isdata: false
     allocation: uniform
     to_reference: !<GroupTransform>
