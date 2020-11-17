@@ -526,6 +526,7 @@ void GetGradingPrimaryGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
     switch (style)
     {
     case GRADING_LOG:
+    {
         AddGPLogProperties(shaderCreator, st, gpData, properties);
         if (dyn)
         {
@@ -534,13 +535,14 @@ void GetGradingPrimaryGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
             st.indent();
         }
 
-        if (dir == TRANSFORM_DIR_FORWARD)
+        switch (dir)
         {
+        case TRANSFORM_DIR_FORWARD:
             AddGPLogForwardShader(st, properties);
-        }
-        else
-        {
+            break;
+        case TRANSFORM_DIR_INVERSE:
             AddGPLogInverseShader(st, properties);
+            break;
         }
 
         if (dyn)
@@ -549,7 +551,9 @@ void GetGradingPrimaryGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
             st.newLine() << "}";
         }
         break;
+    }
     case GRADING_LIN:
+    {
         AddGPLinProperties(shaderCreator, st, gpData, properties);
         if (dyn)
         {
@@ -558,13 +562,14 @@ void GetGradingPrimaryGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
             st.indent();
         }
 
-        if (dir == TRANSFORM_DIR_FORWARD)
+        switch (dir)
         {
+        case TRANSFORM_DIR_FORWARD:
             AddGPLinForwardShader(st, properties);
-        }
-        else
-        {
+            break;
+        case TRANSFORM_DIR_INVERSE:
             AddGPLinInverseShader(st, properties);
+            break;
         }
 
         if (dyn)
@@ -573,7 +578,9 @@ void GetGradingPrimaryGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
             st.newLine() << "}";
         }
         break;
+    }
     case GRADING_VIDEO:
+    {
         AddGPVideoProperties(shaderCreator, st, gpData, properties);
         if (dyn)
         {
@@ -582,13 +589,14 @@ void GetGradingPrimaryGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
             st.indent();
         }
 
-        if (dir == TRANSFORM_DIR_FORWARD)
+        switch (dir)
         {
+        case TRANSFORM_DIR_FORWARD:
             AddGPVideoForwardShader(st, properties);
-        }
-        else
-        {
+            break;
+        case TRANSFORM_DIR_INVERSE:
             AddGPVideoInverseShader(st, properties);
+            break;
         }
 
         if (dyn)
@@ -597,6 +605,7 @@ void GetGradingPrimaryGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
             st.newLine() << "}";
         }
         break;
+    }
     }
     st.dedent();
     st.newLine() << "}";

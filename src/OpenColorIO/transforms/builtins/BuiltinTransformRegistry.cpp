@@ -136,25 +136,25 @@ void CreateBuiltinTransformOps(OpRcPtrVec & ops, size_t nameIndex, TransformDire
         throw Exception("Invalid built-in transform name.");
     }
 
-    if (direction == TRANSFORM_DIR_UNKNOWN)
-    {
-        throw Exception("Unsupported direction.");
-    }
-
     const BuiltinTransformRegistryImpl * registry
         = dynamic_cast<const BuiltinTransformRegistryImpl *>(BuiltinTransformRegistry::Get().get());
 
-    if (direction == TRANSFORM_DIR_FORWARD)
+    switch (direction)
+    {
+    case TRANSFORM_DIR_FORWARD:
     {
         registry->createOps(nameIndex, ops);
+        break;
     }
-    else
+    case TRANSFORM_DIR_INVERSE:
     {
         OpRcPtrVec tmp;
         registry->createOps(nameIndex, tmp);
 
         OpRcPtrVec t = tmp.invert();
         ops.insert(ops.end(), t.begin(), t.end());
+        break;
+    }
     }
 }
 

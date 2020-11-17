@@ -298,48 +298,52 @@ void GetLogGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator, ConstLogOpDat
     const TransformDirection dir = logData->getDirection();
     if (logData->isLog2())
     {
-        if (dir == TRANSFORM_DIR_FORWARD)
+        switch (dir)
         {
+        case TRANSFORM_DIR_FORWARD:
             AddLogShader(shaderCreator, logData, 2.0f);
-        }
-        else
-        {
+            break;
+        case TRANSFORM_DIR_INVERSE:
             AddAntiLogShader(shaderCreator, logData, 2.0f);
+            break;
         }
     }
     else if (logData->isLog10())
     {
-        if (dir == TRANSFORM_DIR_FORWARD)
+        switch (dir)
         {
+        case TRANSFORM_DIR_FORWARD:
             AddLogShader(shaderCreator, logData, 10.0f);
-        }
-        else
-        {
+            break;
+        case TRANSFORM_DIR_INVERSE:
             AddAntiLogShader(shaderCreator, logData, 10.0f);
+            break;
         }
     }
     else
     {
         if (logData->isCamera())
         {
-            if (dir == TRANSFORM_DIR_FORWARD)
+            switch (dir)
             {
+            case TRANSFORM_DIR_FORWARD:
                 AddCameraLinToLogShader(shaderCreator, logData);
-            }
-            else
-            {
+                break;
+            case TRANSFORM_DIR_INVERSE:
                 AddCameraLogToLinShader(shaderCreator, logData);
+                break;
             }
         }
         else
         {
-            if (dir == TRANSFORM_DIR_FORWARD)
+            switch (dir)
             {
+            case TRANSFORM_DIR_FORWARD:
                 AddLinToLogShader(shaderCreator, logData);
-            }
-            else
-            {
+                break;
+            case TRANSFORM_DIR_INVERSE:
                 AddLogToLinShader(shaderCreator, logData);
+                break;
             }
         }
     }

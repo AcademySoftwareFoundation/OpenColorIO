@@ -144,8 +144,8 @@ public:
 
     RangeOpDataRcPtr getAsForward() const;
 
-    TransformDirection getDirection() const { return m_direction; }
-    void setDirection(TransformDirection dir);
+    TransformDirection getDirection() const noexcept { return m_direction; }
+    void setDirection(TransformDirection dir) noexcept;
 
     BitDepth getFileInputBitDepth() const { return m_fileInBitDepth; }
     void setFileInputBitDepth(BitDepth in) { m_fileInBitDepth = in; }

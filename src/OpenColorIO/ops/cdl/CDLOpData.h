@@ -131,8 +131,8 @@ public:
     inline Style getStyle() const { return m_style; }
     void setStyle(Style cdlStyle);
 
-    TransformDirection getDirection() const;
-    void setDirection(TransformDirection dir);
+    TransformDirection getDirection() const noexcept;
+    void setDirection(TransformDirection dir) noexcept;
 
     const ChannelParams & getSlopeParams() const { return m_slopeParams; }
     void setSlopeParams(const ChannelParams& slopeParams);
@@ -174,7 +174,7 @@ protected:
     // Note: Return a boolean status based on the enum stored in the "style" variable.
     bool isClamping() const;
 
-    void invert();
+    void invert() noexcept;
 
 private:
     Style         m_style;         // CDL style

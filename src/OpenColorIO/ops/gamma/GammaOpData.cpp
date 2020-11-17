@@ -177,11 +177,6 @@ NegativeStyle GammaOpData::ConvertStyle(Style style)
 
 GammaOpData::Style GammaOpData::ConvertStyleBasic(NegativeStyle negStyle, TransformDirection dir)
 {
-    if (dir == TRANSFORM_DIR_UNKNOWN)
-    {
-        throw Exception("Cannot create GammaOp with unspecified transform direction.");
-    }
-
     const bool isForward = dir == TRANSFORM_DIR_FORWARD;
 
     switch (negStyle)
@@ -215,11 +210,6 @@ GammaOpData::Style GammaOpData::ConvertStyleBasic(NegativeStyle negStyle, Transf
 
 GammaOpData::Style GammaOpData::ConvertStyleMonCurve(NegativeStyle negStyle, TransformDirection dir)
 {
-    if (dir == TRANSFORM_DIR_UNKNOWN)
-    {
-        throw Exception("Cannot create GammaOp with unspecified transform direction.");
-    }
-
     const bool isForward = dir == TRANSFORM_DIR_FORWARD;
 
     switch (negStyle)
@@ -334,7 +324,7 @@ bool GammaOpData::isInverse(const GammaOpData & B) const
     return false;
 }
 
-void GammaOpData::setStyle(const Style & style)
+void GammaOpData::setStyle(const Style & style) noexcept
 {
     // NB: Must call validate after using this method.
     m_style = style;
@@ -820,7 +810,7 @@ std::string GammaOpData::getCacheID() const
     return cacheIDStream.str();
 }
 
-TransformDirection GammaOpData::getDirection() const
+TransformDirection GammaOpData::getDirection() const noexcept
 {
     switch (m_style)
     {
@@ -842,19 +832,15 @@ TransformDirection GammaOpData::getDirection() const
     return TRANSFORM_DIR_FORWARD;
 }
 
-void GammaOpData::setDirection(TransformDirection dir)
+void GammaOpData::setDirection(TransformDirection dir) noexcept
 {
-    if (dir != TRANSFORM_DIR_UNKNOWN)
+    if (getDirection() != dir)
     {
-        const auto curDir = getDirection();
-        if (curDir != dir)
-        {
-            invert();
-        }
+        invert();
     }
 }
 
-void GammaOpData::invert()
+void GammaOpData::invert() noexcept
 {
     Style invStyle = BASIC_FWD;
     switch (getStyle())

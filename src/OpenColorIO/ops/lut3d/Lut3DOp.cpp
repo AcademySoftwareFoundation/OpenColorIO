@@ -305,11 +305,7 @@ void CreateLut3DOp(OpRcPtrVec & ops, Lut3DOpDataRcPtr & lut, TransformDirection 
 {
     Lut3DOpDataRcPtr lutData = lut;
 
-    if (direction == TRANSFORM_DIR_UNKNOWN)
-    {
-        throw Exception("Cannot apply Lut3DOp op, unspecified transform direction.");
-    }
-    else if (direction == TRANSFORM_DIR_INVERSE)
+    if (direction == TRANSFORM_DIR_INVERSE)
     {
         lutData = lut->inverse();
     }

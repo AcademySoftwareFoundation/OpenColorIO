@@ -101,7 +101,9 @@ void GradingPrimary::validate(GradingStyle style) const
     }
 }
 
-void GradingPrimaryPreRender::update(GradingStyle style, TransformDirection dir, const GradingPrimary & v)
+void GradingPrimaryPreRender::update(GradingStyle style,
+                                     TransformDirection dir,
+                                     const GradingPrimary & v) noexcept
 {
     m_localBypass = v.m_clampBlack == GradingPrimary::NoClampBlack() &&
                     v.m_clampWhite == GradingPrimary::NoClampWhite();
@@ -113,7 +115,9 @@ void GradingPrimaryPreRender::update(GradingStyle style, TransformDirection dir,
         const GradingRGBM & b = v.m_brightness;
         const GradingRGBM & c = v.m_contrast;
         const GradingRGBM & g = v.m_gamma;
-        if (dir == TRANSFORM_DIR_FORWARD)
+        switch (dir)
+        {
+        case TRANSFORM_DIR_FORWARD:
         {
             m_brightness[0] = static_cast<float>((b.m_master + b.m_red)   * 6.25 / 1023.);
             m_brightness[1] = static_cast<float>((b.m_master + b.m_green) * 6.25 / 1023.);
@@ -124,8 +128,9 @@ void GradingPrimaryPreRender::update(GradingStyle style, TransformDirection dir,
             m_gamma[0] = static_cast<float>(1. / (g.m_master * g.m_red));
             m_gamma[1] = static_cast<float>(1. / (g.m_master * g.m_green));
             m_gamma[2] = static_cast<float>(1. / (g.m_master * g.m_blue));
+            break;
         }
-        else
+        case TRANSFORM_DIR_INVERSE:
         {
             m_brightness[0] = -static_cast<float>((b.m_master + b.m_red)   * 6.25 / 1023.);
             m_brightness[1] = -static_cast<float>((b.m_master + b.m_green) * 6.25 / 1023.);
@@ -139,6 +144,8 @@ void GradingPrimaryPreRender::update(GradingStyle style, TransformDirection dir,
             m_gamma[0] = static_cast<float>(g.m_master * g.m_red);
             m_gamma[1] = static_cast<float>(g.m_master * g.m_green);
             m_gamma[2] = static_cast<float>(g.m_master * g.m_blue);
+            break;
+        }
         }
         m_isPowerIdentity = m_gamma[0] == 1.0f && m_gamma[1] == 1.0f && m_gamma[2] == 1.0f;
         m_pivot = 0.5 + v.m_pivot * 0.5;
@@ -152,7 +159,9 @@ void GradingPrimaryPreRender::update(GradingStyle style, TransformDirection dir,
         const GradingRGBM & o = v.m_offset;
         const GradingRGBM & e = v.m_exposure;
         const GradingRGBM & c = v.m_contrast;
-        if (dir == TRANSFORM_DIR_FORWARD)
+        switch (dir)
+        {
+        case TRANSFORM_DIR_FORWARD:
         {
             m_offset[0] = static_cast<float>(o.m_master + o.m_red);
             m_offset[1] = static_cast<float>(o.m_master + o.m_green);
@@ -163,8 +172,9 @@ void GradingPrimaryPreRender::update(GradingStyle style, TransformDirection dir,
             m_contrast[0] = static_cast<float>(c.m_master * c.m_red);
             m_contrast[1] = static_cast<float>(c.m_master * c.m_green);
             m_contrast[2] = static_cast<float>(c.m_master * c.m_blue);
+            break;
         }
-        else
+        case TRANSFORM_DIR_INVERSE:
         {
             m_offset[0] = -static_cast<float>(o.m_master + o.m_red);
             m_offset[1] = -static_cast<float>(o.m_master + o.m_green);
@@ -176,6 +186,8 @@ void GradingPrimaryPreRender::update(GradingStyle style, TransformDirection dir,
             m_contrast[0] = static_cast<float>(1. / (c.m_master * c.m_red));
             m_contrast[1] = static_cast<float>(1. / (c.m_master * c.m_green));
             m_contrast[2] = static_cast<float>(1. / (c.m_master * c.m_blue));
+            break;
+        }
         }
         m_isPowerIdentity = m_contrast[0] == 1.0f || m_contrast[1] == 1.0f ||
                             m_contrast[2] == 1.0f;
@@ -196,14 +208,16 @@ void GradingPrimaryPreRender::update(GradingStyle style, TransformDirection dir,
         gain1 = gain1 == 0. ? 1. : gain1;
         gain2 = gain2 == 0. ? 1. : gain2;
         const GradingRGBM & g = v.m_gamma;
-        if (dir == TRANSFORM_DIR_FORWARD)
+        switch (dir)
         {
-            m_offset[0] = static_cast<float>(o.m_master + o.m_red   + l.m_master + l.m_red);
+        case TRANSFORM_DIR_FORWARD:
+        {
+            m_offset[0] = static_cast<float>(o.m_master + o.m_red + l.m_master + l.m_red);
             m_offset[1] = static_cast<float>(o.m_master + o.m_green + l.m_master + l.m_green);
-            m_offset[2] = static_cast<float>(o.m_master + o.m_blue  + l.m_master + l.m_blue);
-            const double slopeDen0 = v.m_pivotWhite / gain0 + l.m_master + l.m_red   - v.m_pivotBlack;
+            m_offset[2] = static_cast<float>(o.m_master + o.m_blue + l.m_master + l.m_blue);
+            const double slopeDen0 = v.m_pivotWhite / gain0 + l.m_master + l.m_red - v.m_pivotBlack;
             const double slopeDen1 = v.m_pivotWhite / gain1 + l.m_master + l.m_green - v.m_pivotBlack;
-            const double slopeDen2 = v.m_pivotWhite / gain2 + l.m_master + l.m_blue  - v.m_pivotBlack;
+            const double slopeDen2 = v.m_pivotWhite / gain2 + l.m_master + l.m_blue - v.m_pivotBlack;
             m_slope[0] = static_cast<float>((v.m_pivotWhite - v.m_pivotBlack) /
                                             (slopeDen0 == 0. ? 1. : slopeDen0));
             m_slope[1] = static_cast<float>((v.m_pivotWhite - v.m_pivotBlack) /
@@ -213,8 +227,9 @@ void GradingPrimaryPreRender::update(GradingStyle style, TransformDirection dir,
             m_gamma[0] = static_cast<float>(1. / (g.m_master * g.m_red));
             m_gamma[1] = static_cast<float>(1. / (g.m_master * g.m_green));
             m_gamma[2] = static_cast<float>(1. / (g.m_master * g.m_blue));
+            break;
         }
-        else
+        case TRANSFORM_DIR_INVERSE:
         {
             m_offset[0] = -static_cast<float>(o.m_master + o.m_red + l.m_master + l.m_red);
             m_offset[1] = -static_cast<float>(o.m_master + o.m_green + l.m_master + l.m_green);
@@ -231,8 +246,9 @@ void GradingPrimaryPreRender::update(GradingStyle style, TransformDirection dir,
             m_gamma[0] = static_cast<float>(g.m_master * g.m_red);
             m_gamma[1] = static_cast<float>(g.m_master * g.m_green);
             m_gamma[2] = static_cast<float>(g.m_master * g.m_blue);
+            break;
         }
-
+        }
         m_isPowerIdentity = m_gamma[0] == 1.0f || m_gamma[1] == 1.0f || m_gamma[2] == 1.0f;
         m_localBypass = m_localBypass && m_isPowerIdentity &&
                         m_slope[0] == 1.f && m_slope[2] == 1.f && m_slope[2] == 1.f &&
