@@ -131,7 +131,7 @@ class ColorSpaceTest(unittest.TestCase):
         # Test ColorSpace class object getters from config
         cs = cfg.getColorSpace('vd8')
         self.assertEqual(cs.getName(), 'vd8')
-        self.assertEqual(cs.getDescription(), 'how many transforms can we use?\n')
+        self.assertEqual(cs.getDescription(), 'how many transforms can we use?')
         self.assertEqual(cs.getFamily(), 'vd8')
         self.assertEqual(cs.getAllocation(), OCIO.ALLOCATION_UNIFORM)
         self.assertEqual(cs.getAllocationVars(), [])
