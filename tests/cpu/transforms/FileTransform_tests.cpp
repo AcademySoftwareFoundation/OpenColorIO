@@ -8,6 +8,7 @@
 
 #include "ContextVariableUtils.h"
 #include "testutils/UnitTest.h"
+#include "UnitTestLogUtils.h"
 #include "UnitTestUtils.h"
 
 namespace OCIO = OCIO_NAMESPACE;
@@ -296,16 +297,58 @@ OCIO_ADD_TEST(FileTransform, validate)
     tr->setSrc("lut3d_17x17x17_32f_12i.clf");
     OCIO_CHECK_NO_THROW(tr->validate());
 
-    tr->setInterpolation(OCIO::INTERP_UNKNOWN);
-    OCIO_CHECK_THROW_WHAT(tr->validate(), OCIO::Exception,
-                          "FileTransform can't use unknown interpolation");
-
-    tr->setInterpolation(OCIO::INTERP_BEST);
-    OCIO_CHECK_NO_THROW(tr->validate());
-
     tr->setSrc("");
     OCIO_CHECK_THROW_WHAT(tr->validate(), OCIO::Exception,
                           "FileTransform: empty file path");
+}
+
+OCIO_ADD_TEST(FileTransform, interpolation_validity)
+{
+    OCIO::ConfigRcPtr cfg;
+    OCIO_CHECK_NO_THROW(cfg = OCIO::Config::CreateRaw()->createEditableCopy());
+    cfg->setSearchPath(OCIO::GetTestFilesDir().c_str());
+    OCIO_CHECK_NO_THROW(cfg->validate());
+
+    OCIO::FileTransformRcPtr tr = OCIO::FileTransform::Create();
+    tr->setSrc("lut1d_1.spi1d");
+
+    OCIO_CHECK_NO_THROW(tr->validate());
+
+    // File transform with format requiring a valid interpolation using default interpolation.
+    OCIO_CHECK_NO_THROW(cfg->getProcessor(tr));
+
+    // UNKNOWN can't be used by a LUT file, so the interp on the LUT is set to DEFAULT and a
+    // warning is logged. 
+
+    tr->setInterpolation(OCIO::INTERP_UNKNOWN);
+    OCIO_CHECK_NO_THROW(tr->validate());
+    {
+        OCIO::LogGuard log;
+        OCIO::SetLoggingLevel(OCIO::LOGGING_LEVEL_WARNING);
+        OCIO_CHECK_NO_THROW(cfg->getProcessor(tr));
+        OCIO_CHECK_EQUAL(log.output(), "[OpenColorIO Warning]: Interpolation specified by "
+                                       "FileTransform 'unknown' is not allowed with the "
+                                       "given file: 'lut1d_1.spi1d'.\n");
+    }
+
+    // TETRAHEDRAL can't be used for Spi1d, default is used instead (and a warning is logged).
+
+    tr->setInterpolation(OCIO::INTERP_TETRAHEDRAL);
+    {
+        OCIO::LogGuard log;
+        OCIO::SetLoggingLevel(OCIO::LOGGING_LEVEL_WARNING);
+        OCIO_CHECK_NO_THROW(cfg->getProcessor(tr));
+        OCIO_CHECK_EQUAL(log.output(), "[OpenColorIO Warning]: Interpolation specified by "
+                                       "FileTransform 'tetrahedral' is not allowed with the "
+                                       "given file: 'lut1d_1.spi1d'.\n");
+    }
+
+    // Matrices ignore interpolation, so UNKNOWN is ignored and not even logged.  Note that the
+    // spi example configs use interpolation=unknown for matrix files.
+
+    tr->setInterpolation(OCIO::INTERP_UNKNOWN);
+    tr->setSrc("camera_to_aces.spimtx");
+    OCIO_CHECK_NO_THROW(cfg->getProcessor(tr));
 }
 
 OCIO_ADD_TEST(FileTransform, context_variables)

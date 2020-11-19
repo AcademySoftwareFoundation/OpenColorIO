@@ -97,13 +97,8 @@ void FileTransform::validate() const
         throw Exception("FileTransform: empty file path");
     }
 
-    if (getInterpolation() == INTERP_UNKNOWN)
-    {
-        std::ostringstream oss;
-        oss << "FileTransform can't use unknown interpolation. ";
-        oss << "File: '" << std::string(getImpl()->m_src) << "'.";
-        throw Exception(oss.str().c_str());
-    }
+    // NB: Not validating interpolation since v1 configs such as the spi examples use
+    // interpolation=unknown.  So that is a legal usage, even if it makes no sense.
 }
 
 const char * FileTransform::getSrc() const
