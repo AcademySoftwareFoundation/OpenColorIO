@@ -12,13 +12,7 @@ LoggingLevel
 
    .. group-tab:: Python
 
-      .. autoclass:: PyOpenColorIO.LoggingLevel
-         :members:
-         :undoc-members:
-         :exclude-members: name
-
-         .. py:method:: name() -> str
-            :property:
+      .. include:: python/${PYDIR}/pyopencolorio_logginglevel.rst
 
    .. group-tab:: C++
 
@@ -33,13 +27,7 @@ ReferenceSpaceType
 
    .. group-tab:: Python
 
-      .. autoclass:: PyOpenColorIO.ReferenceSpaceType
-         :members:
-         :undoc-members:
-         :exclude-members: name
-
-         .. py:method:: name() -> str
-            :property:
+      .. include:: python/${PYDIR}/pyopencolorio_referencespacetype.rst
 
    .. group-tab:: C++
 
@@ -52,13 +40,7 @@ SearchReferenceSpaceType
 
    .. group-tab:: Python
 
-      .. autoclass:: PyOpenColorIO.SearchReferenceSpaceType
-         :members:
-         :undoc-members:
-         :exclude-members: name
-
-         .. py:method:: name() -> str
-            :property:
+      .. include:: python/${PYDIR}/pyopencolorio_searchreferencespacetype.rst
 
    .. group-tab:: C++
 
@@ -71,13 +53,7 @@ ColorSpaceVisibility
 
    .. group-tab:: Python
 
-      .. autoclass:: PyOpenColorIO.ColorSpaceVisibility
-         :members:
-         :undoc-members:
-         :exclude-members: name
-
-         .. py:method:: name() -> str
-            :property:
+      .. include:: python/${PYDIR}/pyopencolorio_colorspacevisibility.rst
 
    .. group-tab:: C++
 
@@ -90,13 +66,7 @@ ViewType
 
    .. group-tab:: Python
 
-      .. autoclass:: PyOpenColorIO.ViewType
-         :members:
-         :undoc-members:
-         :exclude-members: name
-
-         .. py:method:: name() -> str
-            :property:
+      .. include:: python/${PYDIR}/pyopencolorio_viewtype.rst
 
    .. group-tab:: C++
 
@@ -109,13 +79,7 @@ ColorSpaceDirection
 
    .. group-tab:: Python
 
-      .. autoclass:: PyOpenColorIO.ColorSpaceDirection
-         :members:
-         :undoc-members:
-         :exclude-members: name
-
-         .. py:method:: name() -> str
-            :property:
+      .. include:: python/${PYDIR}/pyopencolorio_colorspacedirection.rst
 
    .. group-tab:: C++
 
@@ -130,13 +94,7 @@ ViewTransformDirection
 
    .. group-tab:: Python
 
-      .. autoclass:: PyOpenColorIO.ViewTransformDirection
-         :members:
-         :undoc-members:
-         :exclude-members: name
-
-         .. py:method:: name() -> str
-            :property:
+      .. include:: python/${PYDIR}/pyopencolorio_viewtransformdirection.rst
 
    .. group-tab:: C++
 
@@ -151,13 +109,7 @@ TransformDirection
 
    .. group-tab:: Python
 
-      .. autoclass:: PyOpenColorIO.TransformDirection
-         :members:
-         :undoc-members:
-         :exclude-members: name
-
-         .. py:method:: name() -> str
-            :property:
+      .. include:: python/${PYDIR}/pyopencolorio_transformdirection.rst
 
    .. group-tab:: C++
 
@@ -172,13 +124,7 @@ TransformType
 
    .. group-tab:: Python
 
-      .. autoclass:: PyOpenColorIO.TransformType
-         :members:
-         :undoc-members:
-         :exclude-members: name
-
-         .. py:method:: name() -> str
-            :property:
+      .. include:: python/${PYDIR}/pyopencolorio_transformtype.rst
 
    .. group-tab:: C++
 
@@ -191,13 +137,7 @@ Interpolation
 
    .. group-tab:: Python
 
-      .. autoclass:: PyOpenColorIO.Interpolation
-         :members:
-         :undoc-members:
-         :exclude-members: name
-
-         .. py:method:: name() -> str
-            :property:
+      .. include:: python/${PYDIR}/pyopencolorio_interpolation.rst
 
    .. group-tab:: C++
 
@@ -212,13 +152,7 @@ BitDepth
 
    .. group-tab:: Python
 
-      .. autoclass:: PyOpenColorIO.BitDepth
-         :members:
-         :undoc-members:
-         :exclude-members: name
-
-         .. py:method:: name() -> str
-            :property:
+      .. include:: python/${PYDIR}/pyopencolorio_bitdepth.rst
 
    .. group-tab:: C++
 
@@ -233,13 +167,7 @@ Lut1DHueAdjust
 
    .. group-tab:: Python
 
-      .. autoclass:: PyOpenColorIO.Lut1DHueAdjust
-         :members:
-         :undoc-members:
-         :exclude-members: name
-
-         .. py:method:: name() -> str
-            :property:
+      .. include:: python/${PYDIR}/pyopencolorio_lut1dhueadjust.rst
 
    .. group-tab:: C++
 
@@ -252,13 +180,7 @@ ChannelOrdering
 
    .. group-tab:: Python
 
-      .. autoclass:: PyOpenColorIO.ChannelOrdering
-         :members:
-         :undoc-members:
-         :exclude-members: name
-
-         .. py:method:: name() -> str
-            :property:
+      .. include:: python/${PYDIR}/pyopencolorio_channelordering.rst
 
    .. group-tab:: C++
 
@@ -271,13 +193,7 @@ Allocation
 
    .. group-tab:: Python
 
-      .. autoclass:: PyOpenColorIO.Allocation
-         :members:
-         :undoc-members:
-         :exclude-members: name
-
-         .. py:method:: name() -> str
-            :property:
+      .. include:: python/${PYDIR}/pyopencolorio_allocation.rst
 
    .. group-tab:: C++
 
@@ -292,13 +208,7 @@ GpuLanguage
 
    .. group-tab:: Python
 
-      .. autoclass:: PyOpenColorIO.GpuLanguage
-         :members:
-         :undoc-members:
-         :exclude-members: name
-
-         .. py:method:: name() -> str
-            :property:
+      .. include:: python/${PYDIR}/pyopencolorio_gpulanguage.rst
 
    .. group-tab:: C++
 
@@ -313,13 +223,7 @@ EnvironmentMode
 
    .. group-tab:: Python
 
-      .. autoclass:: PyOpenColorIO.EnvironmentMode
-         :members:
-         :undoc-members:
-         :exclude-members: name
-
-         .. py:method:: name() -> str
-            :property:
+      .. include:: python/${PYDIR}/pyopencolorio_environmentmode.rst
 
    .. group-tab:: C++
 
@@ -334,13 +238,7 @@ RangeStyle
 
    .. group-tab:: Python
 
-      .. autoclass:: PyOpenColorIO.RangeStyle
-         :members:
-         :undoc-members:
-         :exclude-members: name
-
-         .. py:method:: name() -> str
-            :property:
+      .. include:: python/${PYDIR}/pyopencolorio_rangestyle.rst
 
    .. group-tab:: C++
 
@@ -355,13 +253,7 @@ FixedFunctionStyle
 
    .. group-tab:: Python
 
-      .. autoclass:: PyOpenColorIO.FixedFunctionStyle
-         :members:
-         :undoc-members:
-         :exclude-members: name
-
-         .. py:method:: name() -> str
-            :property:
+      .. include:: python/${PYDIR}/pyopencolorio_fixedfunctionstyle.rst
 
    .. group-tab:: C++
 
@@ -376,13 +268,7 @@ ExposureContrastStyle
 
    .. group-tab:: Python
 
-      .. autoclass:: PyOpenColorIO.ExposureContrastStyle
-         :members:
-         :undoc-members:
-         :exclude-members: name
-
-         .. py:method:: name() -> str
-            :property:
+      .. include:: python/${PYDIR}/pyopencolorio_exposurecontraststyle.rst
 
    .. group-tab:: C++
 
@@ -397,13 +283,7 @@ CDLStyle
 
    .. group-tab:: Python
 
-      .. autoclass:: PyOpenColorIO.CDLStyle
-         :members:
-         :undoc-members:
-         :exclude-members: name
-
-         .. py:method:: name() -> str
-            :property:
+      .. include:: python/${PYDIR}/pyopencolorio_cdlstyle.rst
 
    .. group-tab:: C++
 
@@ -418,13 +298,7 @@ NegativeStyle
 
    .. group-tab:: Python
 
-      .. autoclass:: PyOpenColorIO.NegativeStyle
-         :members:
-         :undoc-members:
-         :exclude-members: name
-
-         .. py:method:: name() -> str
-            :property:
+      .. include:: python/${PYDIR}/pyopencolorio_negativestyle.rst
 
    .. group-tab:: C++
 
@@ -439,13 +313,7 @@ GradingStyle
 
    .. group-tab:: Python
 
-      .. autoclass:: PyOpenColorIO.GradingStyle
-         :members:
-         :undoc-members:
-         :exclude-members: name
-
-         .. py:method:: name() -> str
-            :property:
+      .. include:: python/${PYDIR}/pyopencolorio_gradingstyle.rst
 
    .. group-tab:: C++
 
@@ -460,13 +328,7 @@ DynamicPropertyType
 
    .. group-tab:: Python
 
-      .. autoclass:: PyOpenColorIO.DynamicPropertyType
-         :members:
-         :undoc-members:
-         :exclude-members: name
-
-         .. py:method:: name() -> str
-            :property:
+      .. include:: python/${PYDIR}/pyopencolorio_dynamicpropertytype.rst
 
    .. group-tab:: C++
 
@@ -479,13 +341,7 @@ RGBCurveType
 
    .. group-tab:: Python
 
-      .. autoclass:: PyOpenColorIO.RGBCurveType
-         :members:
-         :undoc-members:
-         :exclude-members: name
-
-         .. py:method:: name() -> str
-            :property:
+      .. include:: python/${PYDIR}/pyopencolorio_rgbcurvetype.rst
 
    .. group-tab:: C++
 
@@ -498,13 +354,7 @@ UniformDataType
 
    .. group-tab:: Python
 
-      .. autoclass:: PyOpenColorIO.UniformDataType
-         :members:
-         :undoc-members:
-         :exclude-members: name
-
-         .. py:method:: name() -> str
-            :property:
+      .. include:: python/${PYDIR}/pyopencolorio_uniformdatatype.rst
 
    .. group-tab:: C++
 
@@ -517,13 +367,7 @@ OptimizationFlags
 
    .. group-tab:: Python
 
-      .. autoclass:: PyOpenColorIO.OptimizationFlags
-         :members:
-         :undoc-members:
-         :exclude-members: name
-
-         .. py:method:: name() -> str
-            :property:
+      .. include:: python/${PYDIR}/pyopencolorio_optimizationflags.rst
 
    .. group-tab:: C++
 
@@ -536,13 +380,7 @@ ProcessorCacheFlags
 
    .. group-tab:: Python
 
-      .. autoclass:: PyOpenColorIO.ProcessorCacheFlags
-         :members:
-         :undoc-members:
-         :exclude-members: name
-
-         .. py:method:: name() -> str
-            :property:
+      .. include:: python/${PYDIR}/pyopencolorio_processorcacheflags.rst
 
    .. group-tab:: C++
 

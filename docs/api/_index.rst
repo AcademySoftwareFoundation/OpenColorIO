@@ -9,21 +9,21 @@ API
    :caption: API
 
    baker
-   color_space
+   colorspace
    config
    constants
    context
-   dynamic_property
+   dynamicproperty
    enums
    exceptions
-   format_metadata
+   formatmetadata
    global
    grading_transforms
-   image_desc
+   imagedesc
    look
    processors
    rules
    shaders
-   system_monitors
+   systemmonitors
    transforms
-   view_transform
+   viewtransform

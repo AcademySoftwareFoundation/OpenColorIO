@@ -9,10 +9,7 @@ Look
 
    .. group-tab:: Python
 
-      .. autoclass:: PyOpenColorIO.Look
-         :members:
-         :undoc-members:
-         :special-members: __init__, __str__
+      .. include:: python/${PYDIR}/pyopencolorio_look.rst
 
    .. group-tab:: C++
 

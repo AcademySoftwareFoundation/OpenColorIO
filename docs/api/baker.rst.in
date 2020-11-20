@@ -9,14 +9,7 @@ Baker
 
    .. group-tab:: Python
 
-      .. autoclass:: PyOpenColorIO.Baker
-         :members:
-         :undoc-members:
-         :special-members: __init__
-         :exclude-members: FormatIterator
-
-      .. autoclass:: PyOpenColorIO.Baker.FormatIterator
-         :special-members: __getitem__, __iter__, __len__, __next__
+      .. include:: python/${PYDIR}/pyopencolorio_baker.rst
 
    .. group-tab:: C++
 

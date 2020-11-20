@@ -9,9 +9,9 @@ Exceptions
 
    .. group-tab:: Python
 
-      .. autoexception:: PyOpenColorIO.Exception
+      .. include:: python/${PYDIR}/pyopencolorio_exception.rst
 
-      .. autoexception:: PyOpenColorIO.ExceptionMissingFile
+      .. include:: python/${PYDIR}/pyopencolorio_exceptionmissingfile.rst
 
    .. group-tab:: C++
 

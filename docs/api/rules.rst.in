@@ -12,10 +12,7 @@ FileRules
 
    .. group-tab:: Python
 
-      .. autoclass:: PyOpenColorIO.FileRules
-         :members:
-         :undoc-members:
-         :special-members: __init__
+      .. include:: python/${PYDIR}/pyopencolorio_filerules.rst
 
    .. group-tab:: C++
 
@@ -35,17 +32,7 @@ ViewingRules
 
    .. group-tab:: Python
 
-      .. autoclass:: PyOpenColorIO.ViewingRules
-         :members:
-         :undoc-members:
-         :special-members: __init__
-         :exclude-members: ViewingRuleColorSpaceIterator, ViewingRuleEncodingIterator
-
-      .. autoclass:: PyOpenColorIO.ViewingRules.ViewingRuleColorSpaceIterator
-         :special-members: __getitem__, __iter__, __len__, __next__
-
-      .. autoclass:: PyOpenColorIO.ViewingRules.ViewingRuleEncodingIterator
-         :special-members: __getitem__, __iter__, __len__, __next__
+      .. include:: python/${PYDIR}/pyopencolorio_viewingrules.rst
 
    .. group-tab:: C++
 
