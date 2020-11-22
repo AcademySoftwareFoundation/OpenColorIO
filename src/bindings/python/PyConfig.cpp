@@ -71,12 +71,12 @@ void bindPyConfig(py::module & m)
                 std::istringstream is(str);
                 return Config::CreateFromStream(is);
             }, 
-             "str"_a.none(false))
+             "str"_a)
                     
         .def("getMajorVersion", &Config::getMajorVersion)
-        .def("setMajorVersion", &Config::setMajorVersion, "major"_a.none(false))
+        .def("setMajorVersion", &Config::setMajorVersion, "major"_a)
         .def("getMinorVersion", &Config::getMinorVersion)
-        .def("setMinorVersion", &Config::setMinorVersion, "minor"_a.none(false))
+        .def("setMinorVersion", &Config::setMinorVersion, "minor"_a)
         .def("upgradeToLatestVersion", &Config::upgradeToLatestVersion)
         .def("validate", &Config::validate)
         .def("getFamilySeparator", &Config::getFamilySeparator)
@@ -89,7 +89,7 @@ void bindPyConfig(py::module & m)
                 self->serialize(f);
                 f.close();
             }, 
-             "fileName"_a.none(false))
+             "fileName"_a)
         .def("serialize", [](ConfigRcPtr & self) 
             {
                 std::ostringstream os;
@@ -99,7 +99,7 @@ void bindPyConfig(py::module & m)
         .def("getCacheID", (const char * (Config::*)() const) &Config::getCacheID)
         .def("getCacheID", 
              (const char * (Config::*)(const ConstContextRcPtr &) const) &Config::getCacheID, 
-             "context"_a.none(false))
+             "context"_a)
 
         // Resources
         .def("getCurrentContext", &Config::getCurrentContext)
@@ -110,7 +110,7 @@ void bindPyConfig(py::module & m)
             })
         .def("getEnvironmentVarDefault", &Config::getEnvironmentVarDefault, "name"_a.none(false))
         .def("clearEnvironmentVars", &Config::clearEnvironmentVars)
-        .def("setEnvironmentMode", &Config::setEnvironmentMode, "mode"_a.none(false))
+        .def("setEnvironmentMode", &Config::setEnvironmentMode, "mode"_a)
         .def("getEnvironmentMode", &Config::getEnvironmentMode)
         .def("loadEnvironment", &Config::loadEnvironment)
         .def("getSearchPath", (const char * (Config::*)() const) &Config::getSearchPath)
@@ -130,14 +130,14 @@ void bindPyConfig(py::module & m)
             {
                 return ColorSpaceNameIterator(self, searchReferenceType, visibility);
             },
-             "searchReferenceType"_a.none(false), "visibility"_a.none(false))
+             "searchReferenceType"_a, "visibility"_a)
         .def("getColorSpaces", [](ConfigRcPtr & self, 
                                   SearchReferenceSpaceType searchReferenceType, 
                                   ColorSpaceVisibility visibility) 
             {
                 return ColorSpaceIterator(self, searchReferenceType, visibility);
             },
-             "searchReferenceType"_a.none(false), "visibility"_a.none(false))
+             "searchReferenceType"_a, "visibility"_a)
         .def("getColorSpaceNames", [](ConfigRcPtr & self) 
             {
                 return ActiveColorSpaceNameIterator(self);
@@ -231,7 +231,7 @@ void bindPyConfig(py::module & m)
             {
                 self->setDefaultLumaCoefs(rgb.data());
             }, 
-             "rgb"_a.none(false))
+             "rgb"_a)
 
         // Look
         .def("getLook", &Config::getLook, "name"_a.none(false))
@@ -300,7 +300,7 @@ void bindPyConfig(py::module & m)
                                               const char *,
                                               TransformDirection) const) 
              &Config::getProcessor, 
-             "srcColorSpaceName"_a.none(false), "display"_a.none(false), "view"_a.none(false), "direction"_a.none(false))
+             "srcColorSpaceName"_a.none(false), "display"_a.none(false), "view"_a.none(false), "direction"_a)
         .def("getProcessor", 
              (ConstProcessorRcPtr (Config::*)(const ConstContextRcPtr &, 
                                               const char *, 
@@ -308,7 +308,7 @@ void bindPyConfig(py::module & m)
                                               const char *,
                                               TransformDirection) const) 
              &Config::getProcessor, 
-             "context"_a.none(false), "srcColorSpaceName"_a.none(false), "display"_a.none(false), "view"_a.none(false), "direction"_a.none(false))
+             "context"_a.none(false), "srcColorSpaceName"_a.none(false), "display"_a.none(false), "view"_a.none(false), "direction"_a)
         .def("getProcessor", 
              (ConstProcessorRcPtr (Config::*)(const ConstTransformRcPtr &) const) 
              &Config::getProcessor, 
@@ -317,13 +317,13 @@ void bindPyConfig(py::module & m)
              (ConstProcessorRcPtr (Config::*)(const ConstTransformRcPtr &, 
                                               TransformDirection) const) 
              &Config::getProcessor, 
-             "transform"_a.none(false), "direction"_a.none(false))
+             "transform"_a.none(false), "direction"_a)
         .def("getProcessor", 
              (ConstProcessorRcPtr (Config::*)(const ConstContextRcPtr &, 
                                               const ConstTransformRcPtr &, 
                                               TransformDirection) const) 
              &Config::getProcessor, 
-             "context"_a.none(false), "transform"_a.none(false), "direction"_a.none(false))
+             "context"_a.none(false), "transform"_a.none(false), "direction"_a)
 
         .def_static("GetProcessorFromConfigs", [](const ConstConfigRcPtr & srcConfig,
                                                   const char * srcColorSpaceName,
@@ -373,7 +373,7 @@ void bindPyConfig(py::module & m)
                     "srcContext"_a.none(false), "srcConfig"_a.none(false), "srcColorSpaceName"_a.none(false), "srcInterchangeName"_a.none(false), 
                     "dstContext"_a.none(false), "dstConfig"_a.none(false), "dstColorSpaceName"_a.none(false), "dstInterchangeName"_a.none(false))
 
-        .def("setProcessorCacheFlags", &Config::setProcessorCacheFlags, "flags"_a.none(false));
+        .def("setProcessorCacheFlags", &Config::setProcessorCacheFlags, "flags"_a);
 
     defStr(cls);
 
