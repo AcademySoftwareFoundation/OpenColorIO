@@ -16,7 +16,7 @@ LoggingLevel
 
    .. group-tab:: C++
 
-      .. doxygenenum:: @OCIO_NAMESPACE@::LoggingLevel
+      .. doxygenenum:: ${OCIO_NAMESPACE}::LoggingLevel
 
 Conversions: :ref:`conversion_logging_level`
 
@@ -31,7 +31,7 @@ ReferenceSpaceType
 
    .. group-tab:: C++
 
-      .. doxygenenum:: @OCIO_NAMESPACE@::ReferenceSpaceType
+      .. doxygenenum:: ${OCIO_NAMESPACE}::ReferenceSpaceType
 
 SearchReferenceSpaceType
 ************************
@@ -44,7 +44,7 @@ SearchReferenceSpaceType
 
    .. group-tab:: C++
 
-      .. doxygenenum:: @OCIO_NAMESPACE@::SearchReferenceSpaceType
+      .. doxygenenum:: ${OCIO_NAMESPACE}::SearchReferenceSpaceType
 
 ColorSpaceVisibility
 ********************
@@ -57,7 +57,7 @@ ColorSpaceVisibility
 
    .. group-tab:: C++
 
-      .. doxygenenum:: @OCIO_NAMESPACE@::ColorSpaceVisibility
+      .. doxygenenum:: ${OCIO_NAMESPACE}::ColorSpaceVisibility
 
 ViewType
 ********
@@ -70,7 +70,7 @@ ViewType
 
    .. group-tab:: C++
 
-      .. doxygenenum:: @OCIO_NAMESPACE@::ViewType
+      .. doxygenenum:: ${OCIO_NAMESPACE}::ViewType
 
 ColorSpaceDirection
 *******************
@@ -83,7 +83,7 @@ ColorSpaceDirection
 
    .. group-tab:: C++
 
-      .. doxygenenum:: @OCIO_NAMESPACE@::ColorSpaceDirection
+      .. doxygenenum:: ${OCIO_NAMESPACE}::ColorSpaceDirection
 
 Conversions: :ref:`conversion_color_space_direction`
 
@@ -98,7 +98,7 @@ ViewTransformDirection
 
    .. group-tab:: C++
 
-      .. doxygenenum:: @OCIO_NAMESPACE@::ViewTransformDirection
+      .. doxygenenum:: ${OCIO_NAMESPACE}::ViewTransformDirection
 
 .. _enum_transform_direction:
 
@@ -113,7 +113,7 @@ TransformDirection
 
    .. group-tab:: C++
 
-      .. doxygenenum:: @OCIO_NAMESPACE@::TransformDirection
+      .. doxygenenum:: ${OCIO_NAMESPACE}::TransformDirection
 
 Conversions: :ref:`conversion_transform_direction`
 
@@ -128,7 +128,7 @@ TransformType
 
    .. group-tab:: C++
 
-      .. doxygenenum:: @OCIO_NAMESPACE@::TransformType
+      .. doxygenenum:: ${OCIO_NAMESPACE}::TransformType
 
 Interpolation
 *************
@@ -141,7 +141,7 @@ Interpolation
 
    .. group-tab:: C++
 
-      .. doxygenenum:: @OCIO_NAMESPACE@::Interpolation
+      .. doxygenenum:: ${OCIO_NAMESPACE}::Interpolation
 
 Conversions: :ref:`conversion_interpolation`
 
@@ -156,7 +156,7 @@ BitDepth
 
    .. group-tab:: C++
 
-      .. doxygenenum:: @OCIO_NAMESPACE@::BitDepth
+      .. doxygenenum:: ${OCIO_NAMESPACE}::BitDepth
 
 Conversions: :ref:`conversion_bit_depth`
 
@@ -171,7 +171,7 @@ Lut1DHueAdjust
 
    .. group-tab:: C++
 
-      .. doxygenenum:: @OCIO_NAMESPACE@::Lut1DHueAdjust
+      .. doxygenenum:: ${OCIO_NAMESPACE}::Lut1DHueAdjust
 
 ChannelOrdering
 ***************
@@ -184,7 +184,7 @@ ChannelOrdering
 
    .. group-tab:: C++
 
-      .. doxygenenum:: @OCIO_NAMESPACE@::ChannelOrdering
+      .. doxygenenum:: ${OCIO_NAMESPACE}::ChannelOrdering
 
 Allocation
 **********
@@ -197,7 +197,7 @@ Allocation
 
    .. group-tab:: C++
 
-      .. doxygenenum:: @OCIO_NAMESPACE@::Allocation
+      .. doxygenenum:: ${OCIO_NAMESPACE}::Allocation
 
 Conversions: :ref:`conversion_allocation`
 
@@ -212,7 +212,7 @@ GpuLanguage
 
    .. group-tab:: C++
 
-      .. doxygenenum:: @OCIO_NAMESPACE@::GpuLanguage
+      .. doxygenenum:: ${OCIO_NAMESPACE}::GpuLanguage
 
 Conversions: :ref:`conversion_gpu_language`
 
@@ -227,7 +227,7 @@ EnvironmentMode
 
    .. group-tab:: C++
 
-      .. doxygenenum:: @OCIO_NAMESPACE@::EnvironmentMode
+      .. doxygenenum:: ${OCIO_NAMESPACE}::EnvironmentMode
 
 Conversions: :ref:`conversion_environment_mode`
 
@@ -242,7 +242,7 @@ RangeStyle
 
    .. group-tab:: C++
 
-      .. doxygenenum:: @OCIO_NAMESPACE@::RangeStyle
+      .. doxygenenum:: ${OCIO_NAMESPACE}::RangeStyle
 
 Conversions: :ref:`conversion_range_style`
 
@@ -257,7 +257,7 @@ FixedFunctionStyle
 
    .. group-tab:: C++
 
-      .. doxygenenum:: @OCIO_NAMESPACE@::FixedFunctionStyle
+      .. doxygenenum:: ${OCIO_NAMESPACE}::FixedFunctionStyle
 
 Conversions: :ref:`conversion_fixed_function_style`
 
@@ -272,7 +272,7 @@ ExposureContrastStyle
 
    .. group-tab:: C++
 
-      .. doxygenenum:: @OCIO_NAMESPACE@::ExposureContrastStyle
+      .. doxygenenum:: ${OCIO_NAMESPACE}::ExposureContrastStyle
 
 Conversions: :ref:`conversion_exposure_contrast_style`
 
@@ -287,7 +287,7 @@ CDLStyle
 
    .. group-tab:: C++
 
-      .. doxygenenum:: @OCIO_NAMESPACE@::CDLStyle
+      .. doxygenenum:: ${OCIO_NAMESPACE}::CDLStyle
 
 Conversions: :ref:`conversion_cdl_style`
 
@@ -302,7 +302,7 @@ NegativeStyle
 
    .. group-tab:: C++
 
-      .. doxygenenum:: @OCIO_NAMESPACE@::NegativeStyle
+      .. doxygenenum:: ${OCIO_NAMESPACE}::NegativeStyle
 
 Conversions: :ref:`conversion_negative_style`
 
@@ -317,7 +317,7 @@ GradingStyle
 
    .. group-tab:: C++
 
-      .. doxygenenum:: @OCIO_NAMESPACE@::GradingStyle
+      .. doxygenenum:: ${OCIO_NAMESPACE}::GradingStyle
 
 Conversions: :ref:`conversion_grading_style`
 
@@ -332,7 +332,7 @@ DynamicPropertyType
 
    .. group-tab:: C++
 
-      .. doxygenenum:: @OCIO_NAMESPACE@::DynamicPropertyType
+      .. doxygenenum:: ${OCIO_NAMESPACE}::DynamicPropertyType
 
 RGBCurveType
 ************
@@ -345,7 +345,7 @@ RGBCurveType
 
    .. group-tab:: C++
 
-      .. doxygenenum:: @OCIO_NAMESPACE@::RGBCurveType
+      .. doxygenenum:: ${OCIO_NAMESPACE}::RGBCurveType
 
 UniformDataType
 ***************
@@ -358,7 +358,7 @@ UniformDataType
 
    .. group-tab:: C++
 
-      .. doxygenenum:: @OCIO_NAMESPACE@::UniformDataType
+      .. doxygenenum:: ${OCIO_NAMESPACE}::UniformDataType
 
 OptimizationFlags
 *****************
@@ -371,7 +371,7 @@ OptimizationFlags
 
    .. group-tab:: C++
 
-      .. doxygenenum:: @OCIO_NAMESPACE@::OptimizationFlags
+      .. doxygenenum:: ${OCIO_NAMESPACE}::OptimizationFlags
 
 ProcessorCacheFlags
 *******************
@@ -384,4 +384,4 @@ ProcessorCacheFlags
 
    .. group-tab:: C++
 
-      .. doxygenenum:: @OCIO_NAMESPACE@::ProcessorCacheFlags
+      .. doxygenenum:: ${OCIO_NAMESPACE}::ProcessorCacheFlags

@@ -13,7 +13,7 @@ FormatMetadata
 
    .. group-tab:: C++
 
-      .. doxygenclass:: @OCIO_NAMESPACE@::FormatMetadata
+      .. doxygenclass:: ${OCIO_NAMESPACE}::FormatMetadata
          :members:
          :undoc-members:
 

@@ -13,9 +13,9 @@ Baker
 
    .. group-tab:: C++
 
-      .. doxygenclass:: @OCIO_NAMESPACE@::Baker
+      .. doxygenclass:: ${OCIO_NAMESPACE}::Baker
          :members:
          :undoc-members:
 
-      .. doxygentypedef:: @OCIO_NAMESPACE@::ConstBakerRcPtr
-      .. doxygentypedef:: @OCIO_NAMESPACE@::BakerRcPtr
+      .. doxygentypedef:: ${OCIO_NAMESPACE}::ConstBakerRcPtr
+      .. doxygentypedef:: ${OCIO_NAMESPACE}::BakerRcPtr

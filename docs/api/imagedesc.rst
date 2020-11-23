@@ -15,16 +15,16 @@ ImageDesc
 
    .. group-tab:: C++
 
-      .. doxygenvariable:: @OCIO_NAMESPACE@::AutoStride
+      .. doxygenvariable:: ${OCIO_NAMESPACE}::AutoStride
 
-      .. doxygenclass:: @OCIO_NAMESPACE@::ImageDesc
+      .. doxygenclass:: ${OCIO_NAMESPACE}::ImageDesc
          :members:
          :undoc-members:
 
-      .. doxygenfunction:: @OCIO_NAMESPACE@::operator<<(std::ostream&, const ImageDesc&)
+      .. doxygenfunction:: ${OCIO_NAMESPACE}::operator<<(std::ostream&, const ImageDesc&)
 
-      .. doxygentypedef:: @OCIO_NAMESPACE@::ConstImageDescRcPtr
-      .. doxygentypedef:: @OCIO_NAMESPACE@::ImageDescRcPtr
+      .. doxygentypedef:: ${OCIO_NAMESPACE}::ConstImageDescRcPtr
+      .. doxygentypedef:: ${OCIO_NAMESPACE}::ImageDescRcPtr
 
 PackedImageDesc
 ***************
@@ -37,7 +37,7 @@ PackedImageDesc
 
    .. group-tab:: C++
 
-      .. doxygenclass:: @OCIO_NAMESPACE@::PackedImageDesc
+      .. doxygenclass:: ${OCIO_NAMESPACE}::PackedImageDesc
          :members:
          :undoc-members:
 
@@ -52,6 +52,6 @@ PlanarImageDesc
 
    .. group-tab:: C++
 
-      .. doxygenclass:: @OCIO_NAMESPACE@::PlanarImageDesc
+      .. doxygenclass:: ${OCIO_NAMESPACE}::PlanarImageDesc
          :members:
          :undoc-members:

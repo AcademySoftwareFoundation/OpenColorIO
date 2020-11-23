@@ -16,12 +16,12 @@ GpuShaderCreator
 
    .. group-tab:: C++
 
-      .. doxygenclass:: @OCIO_NAMESPACE@::GpuShaderCreator
+      .. doxygenclass:: ${OCIO_NAMESPACE}::GpuShaderCreator
          :members:
          :undoc-members:
 
-      .. doxygentypedef:: @OCIO_NAMESPACE@::ConstGpuShaderCreatorRcPtr
-      .. doxygentypedef:: @OCIO_NAMESPACE@::GpuShaderCreatorRcPtr
+      .. doxygentypedef:: ${OCIO_NAMESPACE}::ConstGpuShaderCreatorRcPtr
+      .. doxygentypedef:: ${OCIO_NAMESPACE}::GpuShaderCreatorRcPtr
 
 GpuShaderDesc
 *************
@@ -34,9 +34,9 @@ GpuShaderDesc
 
    .. group-tab:: C++
 
-      .. doxygenclass:: @OCIO_NAMESPACE@::GpuShaderDesc
+      .. doxygenclass:: ${OCIO_NAMESPACE}::GpuShaderDesc
          :members:
          :undoc-members:
 
-      .. doxygentypedef:: @OCIO_NAMESPACE@::ConstGpuShaderDescRcPtr
-      .. doxygentypedef:: @OCIO_NAMESPACE@::GpuShaderDescRcPtr
+      .. doxygentypedef:: ${OCIO_NAMESPACE}::ConstGpuShaderDescRcPtr
+      .. doxygentypedef:: ${OCIO_NAMESPACE}::GpuShaderDescRcPtr

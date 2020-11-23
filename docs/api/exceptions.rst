@@ -15,10 +15,10 @@ Exceptions
 
    .. group-tab:: C++
 
-      .. doxygenclass:: @OCIO_NAMESPACE@::Exception
+      .. doxygenclass:: ${OCIO_NAMESPACE}::Exception
          :members:
          :undoc-members:
 
-      .. doxygenclass:: @OCIO_NAMESPACE@::ExceptionMissingFile
+      .. doxygenclass:: ${OCIO_NAMESPACE}::ExceptionMissingFile
          :members:
          :undoc-members:

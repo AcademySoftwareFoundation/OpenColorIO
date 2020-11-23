@@ -5,7 +5,11 @@
 # See:
 # http://sphinx.pocoo.org/config.html
 
-import os, shutil, sys
+import os
+import shutil 
+import sys
+import re
+
 
 # -- Build options ------------------------------------------------------------
 
@@ -31,10 +35,21 @@ if on_rtd:
 else:
     sys.path.append('@CMAKE_SOURCE_DIR@/share/docs')
 
+import expandvars
 import prettymethods
 
 if build_frozen:
     import frozendoc
+else:
+    frozendoc = None
+
+if on_rtd:
+    # No CMake configuration
+    from ocio_namespace import get_ocio_namespace
+else:
+    get_ocio_namespace = None
+
+# TODO: On RTD, run doxygen from here
 
 # -- General configuration -----------------------------------------------------
 
@@ -46,6 +61,7 @@ extensions = [
     'recommonmark',
     'sphinx_tabs.tabs',
     'breathe',
+    'expandvars',
     'prettymethods',
 ]
 templates_path = ['templates']
@@ -73,30 +89,30 @@ rst_prolog = """
 
 # -- Extension Configuration ---------------------------------------------------
 
-# Autodoc
+# autodoc
 if build_frozen:
     frozendoc.patch()
 
-# Breathe
+# breathe
 breathe_projects = {
     'OpenColorIO': '_doxygen/xml',
 }
 breathe_default_project = 'OpenColorIO'
 
-# Pygments
+# pygments
 pygments_style = 'friendly'
 
-# Napoleon
+# napoleon
 napoleon_use_param = False
 napoleon_include_init_with_doc = True
 
-
-# ifconfig
-
-# def setup(app):
-#     app.add_config_value('build_frozen', False, 'env')
-#     app.add_config_value('on_rtd', False, 'env')
-
+# expandvars
+expandvars_define = {
+    'PYDIR': 
+        'frozen' if on_rtd else 'src',
+    'OCIO_NAMESPACE': 
+        '@OCIO_NAMESPACE@' if not on_rtd else get_ocio_namespace(),
+}
 
 # -- Options for HTML output ---------------------------------------------------
 
@@ -144,24 +160,3 @@ epub_title = u'OpenColorIO'
 epub_author = u'Contributors to the OpenColorIO Project'
 epub_publisher = u'Contributors to the OpenColorIO Project'
 epub_copyright = u'Copyright Contributors to the OpenColorIO Project'
-
-
-
-
-# TODO: Use for C++ namespace, no need for .in?
-
-define_vars = {
-    'PYDIR': 'frozen' if on_rtd else 'src'
-}
-
-
-def expand_vars(app, docname, source):
-    result = source[0]
-    for key, value in app.config.define_vars.items():
-        result = result.replace('${{{}}}'.format(key), value)
-    source[0] = result
-
-
-def setup(app):
-   app.add_config_value('define_vars', {}, True)
-   app.connect('source-read', expand_vars)

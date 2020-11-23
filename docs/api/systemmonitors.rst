@@ -13,9 +13,9 @@ SystemMonitors
 
    .. group-tab:: C++
 
-      .. doxygenclass:: @OCIO_NAMESPACE@::SystemMonitors
+      .. doxygenclass:: ${OCIO_NAMESPACE}::SystemMonitors
          :members:
          :undoc-members:
 
-      .. doxygentypedef:: @OCIO_NAMESPACE@::ConstSystemMonitorsRcPtr
-      .. doxygentypedef:: @OCIO_NAMESPACE@::SystemMonitorsRcPtr
+      .. doxygentypedef:: ${OCIO_NAMESPACE}::ConstSystemMonitorsRcPtr
+      .. doxygentypedef:: ${OCIO_NAMESPACE}::SystemMonitorsRcPtr

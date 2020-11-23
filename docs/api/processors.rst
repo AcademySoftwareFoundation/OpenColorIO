@@ -16,12 +16,12 @@ Processor
 
    .. group-tab:: C++
 
-      .. doxygenclass:: @OCIO_NAMESPACE@::Processor
+      .. doxygenclass:: ${OCIO_NAMESPACE}::Processor
          :members:
          :undoc-members:
 
-      .. doxygentypedef:: @OCIO_NAMESPACE@::ConstProcessorRcPtr
-      .. doxygentypedef:: @OCIO_NAMESPACE@::ProcessorRcPtr
+      .. doxygentypedef:: ${OCIO_NAMESPACE}::ConstProcessorRcPtr
+      .. doxygentypedef:: ${OCIO_NAMESPACE}::ProcessorRcPtr
 
 CPUProcessor
 ************
@@ -34,12 +34,12 @@ CPUProcessor
 
    .. group-tab:: C++
 
-      .. doxygenclass:: @OCIO_NAMESPACE@::CPUProcessor
+      .. doxygenclass:: ${OCIO_NAMESPACE}::CPUProcessor
          :members:
          :undoc-members:
 
-      .. doxygentypedef:: @OCIO_NAMESPACE@::ConstCPUProcessorRcPtr
-      .. doxygentypedef:: @OCIO_NAMESPACE@::CPUProcessorRcPtr
+      .. doxygentypedef:: ${OCIO_NAMESPACE}::ConstCPUProcessorRcPtr
+      .. doxygentypedef:: ${OCIO_NAMESPACE}::CPUProcessorRcPtr
 
 GPUProcessor
 ************
@@ -52,12 +52,12 @@ GPUProcessor
 
    .. group-tab:: C++
 
-      .. doxygenclass:: @OCIO_NAMESPACE@::GPUProcessor
+      .. doxygenclass:: ${OCIO_NAMESPACE}::GPUProcessor
          :members:
          :undoc-members:
 
-      .. doxygentypedef:: @OCIO_NAMESPACE@::ConstGPUProcessorRcPtr
-      .. doxygentypedef:: @OCIO_NAMESPACE@::GPUProcessorRcPtr
+      .. doxygentypedef:: ${OCIO_NAMESPACE}::ConstGPUProcessorRcPtr
+      .. doxygentypedef:: ${OCIO_NAMESPACE}::GPUProcessorRcPtr
 
 ProcessorMetadata
 *****************
@@ -70,9 +70,9 @@ ProcessorMetadata
 
    .. group-tab:: C++
 
-      .. doxygenclass:: @OCIO_NAMESPACE@::ProcessorMetadata
+      .. doxygenclass:: ${OCIO_NAMESPACE}::ProcessorMetadata
          :members:
          :undoc-members:
 
-      .. doxygentypedef:: @OCIO_NAMESPACE@::ConstProcessorMetadataRcPtr
-      .. doxygentypedef:: @OCIO_NAMESPACE@::ProcessorMetadataRcPtr
+      .. doxygentypedef:: ${OCIO_NAMESPACE}::ConstProcessorMetadataRcPtr
+      .. doxygentypedef:: ${OCIO_NAMESPACE}::ProcessorMetadataRcPtr

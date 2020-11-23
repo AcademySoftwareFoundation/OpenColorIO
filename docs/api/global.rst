@@ -16,7 +16,7 @@ Caching
 
    .. group-tab:: C++
 
-      .. doxygenfunction:: @OCIO_NAMESPACE@::ClearAllCaches
+      .. doxygenfunction:: ${OCIO_NAMESPACE}::ClearAllCaches
 
 Constants: :ref:`vars_caches`
 
@@ -33,9 +33,9 @@ Version
 
    .. group-tab:: C++
 
-      .. doxygenfunction:: @OCIO_NAMESPACE@::GetVersion
+      .. doxygenfunction:: ${OCIO_NAMESPACE}::GetVersion
 
-      .. doxygenfunction:: @OCIO_NAMESPACE@::GetVersionHex
+      .. doxygenfunction:: ${OCIO_NAMESPACE}::GetVersionHex
 
 Logging
 *******
@@ -50,9 +50,9 @@ Logging
 
    .. group-tab:: C++
 
-      .. doxygenfunction:: @OCIO_NAMESPACE@::GetLoggingLevel
+      .. doxygenfunction:: ${OCIO_NAMESPACE}::GetLoggingLevel
 
-      .. doxygenfunction:: @OCIO_NAMESPACE@::SetLoggingLevel
+      .. doxygenfunction:: ${OCIO_NAMESPACE}::SetLoggingLevel
 
 Logging Function
 ^^^^^^^^^^^^^^^^
@@ -69,13 +69,13 @@ Logging Function
 
    .. group-tab:: C++
 
-      .. doxygentypedef:: @OCIO_NAMESPACE@::LoggingFunction
+      .. doxygentypedef:: ${OCIO_NAMESPACE}::LoggingFunction
 
-      .. doxygenfunction:: @OCIO_NAMESPACE@::SetLoggingFunction
+      .. doxygenfunction:: ${OCIO_NAMESPACE}::SetLoggingFunction
 
-      .. doxygenfunction:: @OCIO_NAMESPACE@::ResetToDefaultLoggingFunction
+      .. doxygenfunction:: ${OCIO_NAMESPACE}::ResetToDefaultLoggingFunction
 
-      .. doxygenfunction:: @OCIO_NAMESPACE@::LogMessage
+      .. doxygenfunction:: ${OCIO_NAMESPACE}::LogMessage
 
 Compute Hash Function
 *********************
@@ -90,11 +90,11 @@ Compute Hash Function
 
    .. group-tab:: C++
 
-      .. doxygentypedef:: @OCIO_NAMESPACE@::ComputeHashFunction
+      .. doxygentypedef:: ${OCIO_NAMESPACE}::ComputeHashFunction
 
-      .. doxygenfunction:: @OCIO_NAMESPACE@::SetComputeHashFunction
+      .. doxygenfunction:: ${OCIO_NAMESPACE}::SetComputeHashFunction
 
-      .. doxygenfunction:: @OCIO_NAMESPACE@::ResetComputeHashFunction
+      .. doxygenfunction:: ${OCIO_NAMESPACE}::ResetComputeHashFunction
 
 Environment Variables
 *********************
@@ -113,13 +113,13 @@ Environment Variables
 
    .. group-tab:: C++
 
-      .. doxygenfunction:: @OCIO_NAMESPACE@::GetEnvVariable
+      .. doxygenfunction:: ${OCIO_NAMESPACE}::GetEnvVariable
 
-      .. doxygenfunction:: @OCIO_NAMESPACE@::SetEnvVariable
+      .. doxygenfunction:: ${OCIO_NAMESPACE}::SetEnvVariable
 
-      .. doxygenfunction:: @OCIO_NAMESPACE@::UnsetEnvVariable
+      .. doxygenfunction:: ${OCIO_NAMESPACE}::UnsetEnvVariable
 
-      .. doxygenfunction:: @OCIO_NAMESPACE@::IsEnvVariablePresent
+      .. doxygenfunction:: ${OCIO_NAMESPACE}::IsEnvVariablePresent
 
 Constants: :ref:`vars_envvar`
 
@@ -130,7 +130,7 @@ Casting
 
    .. group-tab:: C++
 
-      .. doxygenfunction:: @OCIO_NAMESPACE@::DynamicPtrCast
+      .. doxygenfunction:: ${OCIO_NAMESPACE}::DynamicPtrCast
 
 Conversions
 ***********
@@ -148,9 +148,9 @@ Bool
 
    .. group-tab:: C++
 
-      .. doxygenfunction:: @OCIO_NAMESPACE@::BoolToString
+      .. doxygenfunction:: ${OCIO_NAMESPACE}::BoolToString
 
-      .. doxygenfunction:: @OCIO_NAMESPACE@::BoolFromString
+      .. doxygenfunction:: ${OCIO_NAMESPACE}::BoolFromString
 
 .. _conversion_logging_level:
 
@@ -167,9 +167,9 @@ LoggingLevel
 
    .. group-tab:: C++
 
-      .. doxygenfunction:: @OCIO_NAMESPACE@::LoggingLevelToString
+      .. doxygenfunction:: ${OCIO_NAMESPACE}::LoggingLevelToString
 
-      .. doxygenfunction:: @OCIO_NAMESPACE@::LoggingLevelFromString
+      .. doxygenfunction:: ${OCIO_NAMESPACE}::LoggingLevelFromString
 
 .. _conversion_transform_direction:
 
@@ -190,13 +190,13 @@ TransformDirection
 
    .. group-tab:: C++
 
-      .. doxygenfunction:: @OCIO_NAMESPACE@::TransformDirectionToString
+      .. doxygenfunction:: ${OCIO_NAMESPACE}::TransformDirectionToString
 
-      .. doxygenfunction:: @OCIO_NAMESPACE@::TransformDirectionFromString
+      .. doxygenfunction:: ${OCIO_NAMESPACE}::TransformDirectionFromString
 
-      .. doxygenfunction:: @OCIO_NAMESPACE@::GetInverseTransformDirection
+      .. doxygenfunction:: ${OCIO_NAMESPACE}::GetInverseTransformDirection
 
-      .. doxygenfunction:: @OCIO_NAMESPACE@::CombineTransformDirections
+      .. doxygenfunction:: ${OCIO_NAMESPACE}::CombineTransformDirections
 
 .. _conversion_color_space_direction:
 
@@ -213,9 +213,9 @@ ColorSpaceDirection
 
    .. group-tab:: C++
 
-      .. doxygenfunction:: @OCIO_NAMESPACE@::ColorSpaceDirectionToString
+      .. doxygenfunction:: ${OCIO_NAMESPACE}::ColorSpaceDirectionToString
 
-      .. doxygenfunction:: @OCIO_NAMESPACE@::ColorSpaceDirectionFromString
+      .. doxygenfunction:: ${OCIO_NAMESPACE}::ColorSpaceDirectionFromString
 
 .. _conversion_bit_depth:
 
@@ -236,13 +236,13 @@ BitDepth
 
    .. group-tab:: C++
 
-      .. doxygenfunction:: @OCIO_NAMESPACE@::BitDepthToString
+      .. doxygenfunction:: ${OCIO_NAMESPACE}::BitDepthToString
 
-      .. doxygenfunction:: @OCIO_NAMESPACE@::BitDepthFromString
+      .. doxygenfunction:: ${OCIO_NAMESPACE}::BitDepthFromString
 
-      .. doxygenfunction:: @OCIO_NAMESPACE@::BitDepthIsFloat
+      .. doxygenfunction:: ${OCIO_NAMESPACE}::BitDepthIsFloat
 
-      .. doxygenfunction:: @OCIO_NAMESPACE@::BitDepthToInt
+      .. doxygenfunction:: ${OCIO_NAMESPACE}::BitDepthToInt
 
 .. _conversion_allocation:
 
@@ -259,9 +259,9 @@ Allocation
 
    .. group-tab:: C++
 
-      .. doxygenfunction:: @OCIO_NAMESPACE@::AllocationToString
+      .. doxygenfunction:: ${OCIO_NAMESPACE}::AllocationToString
 
-      .. doxygenfunction:: @OCIO_NAMESPACE@::AllocationFromString
+      .. doxygenfunction:: ${OCIO_NAMESPACE}::AllocationFromString
 
 .. _conversion_interpolation:
 
@@ -278,9 +278,9 @@ Interpolation
 
    .. group-tab:: C++
 
-      .. doxygenfunction:: @OCIO_NAMESPACE@::InterpolationToString
+      .. doxygenfunction:: ${OCIO_NAMESPACE}::InterpolationToString
 
-      .. doxygenfunction:: @OCIO_NAMESPACE@::InterpolationFromString
+      .. doxygenfunction:: ${OCIO_NAMESPACE}::InterpolationFromString
 
 .. _conversion_gpu_language:
 
@@ -297,9 +297,9 @@ GpuLanguage
 
    .. group-tab:: C++
 
-      .. doxygenfunction:: @OCIO_NAMESPACE@::GpuLanguageToString
+      .. doxygenfunction:: ${OCIO_NAMESPACE}::GpuLanguageToString
 
-      .. doxygenfunction:: @OCIO_NAMESPACE@::GpuLanguageFromString
+      .. doxygenfunction:: ${OCIO_NAMESPACE}::GpuLanguageFromString
 
 .. _conversion_environment_mode:
 
@@ -316,9 +316,9 @@ EnvironmentMode
 
    .. group-tab:: C++
 
-      .. doxygenfunction:: @OCIO_NAMESPACE@::EnvironmentModeToString
+      .. doxygenfunction:: ${OCIO_NAMESPACE}::EnvironmentModeToString
 
-      .. doxygenfunction:: @OCIO_NAMESPACE@::EnvironmentModeFromString
+      .. doxygenfunction:: ${OCIO_NAMESPACE}::EnvironmentModeFromString
 
 .. _conversion_cdl_style:
 
@@ -335,9 +335,9 @@ CDLStyle
 
    .. group-tab:: C++
 
-      .. doxygenfunction:: @OCIO_NAMESPACE@::CDLStyleToString
+      .. doxygenfunction:: ${OCIO_NAMESPACE}::CDLStyleToString
 
-      .. doxygenfunction:: @OCIO_NAMESPACE@::CDLStyleFromString
+      .. doxygenfunction:: ${OCIO_NAMESPACE}::CDLStyleFromString
 
 .. _conversion_range_style:
 
@@ -354,9 +354,9 @@ RangeStyle
 
    .. group-tab:: C++
 
-      .. doxygenfunction:: @OCIO_NAMESPACE@::RangeStyleToString
+      .. doxygenfunction:: ${OCIO_NAMESPACE}::RangeStyleToString
 
-      .. doxygenfunction:: @OCIO_NAMESPACE@::RangeStyleFromString
+      .. doxygenfunction:: ${OCIO_NAMESPACE}::RangeStyleFromString
 
 .. _conversion_fixed_function_style:
 
@@ -373,9 +373,9 @@ FixedFunctionStyle
 
    .. group-tab:: C++
 
-      .. doxygenfunction:: @OCIO_NAMESPACE@::FixedFunctionStyleToString
+      .. doxygenfunction:: ${OCIO_NAMESPACE}::FixedFunctionStyleToString
 
-      .. doxygenfunction:: @OCIO_NAMESPACE@::FixedFunctionStyleFromString
+      .. doxygenfunction:: ${OCIO_NAMESPACE}::FixedFunctionStyleFromString
 
 .. _conversion_grading_style:
 
@@ -392,9 +392,9 @@ GradingStyle
 
    .. group-tab:: C++
 
-      .. doxygenfunction:: @OCIO_NAMESPACE@::GradingStyleToString
+      .. doxygenfunction:: ${OCIO_NAMESPACE}::GradingStyleToString
 
-      .. doxygenfunction:: @OCIO_NAMESPACE@::GradingStyleFromString
+      .. doxygenfunction:: ${OCIO_NAMESPACE}::GradingStyleFromString
 
 .. _conversion_exposure_contrast_style:
 
@@ -411,9 +411,9 @@ ExposureContrastStyle
 
    .. group-tab:: C++
 
-      .. doxygenfunction:: @OCIO_NAMESPACE@::ExposureContrastStyleToString
+      .. doxygenfunction:: ${OCIO_NAMESPACE}::ExposureContrastStyleToString
 
-      .. doxygenfunction:: @OCIO_NAMESPACE@::ExposureContrastStyleFromString
+      .. doxygenfunction:: ${OCIO_NAMESPACE}::ExposureContrastStyleFromString
 
 .. _conversion_negative_style:
 
@@ -430,6 +430,6 @@ NegativeStyle
 
    .. group-tab:: C++
 
-      .. doxygenfunction:: @OCIO_NAMESPACE@::NegativeStyleToString
+      .. doxygenfunction:: ${OCIO_NAMESPACE}::NegativeStyleToString
 
-      .. doxygenfunction:: @OCIO_NAMESPACE@::NegativeStyleFromString
+      .. doxygenfunction:: ${OCIO_NAMESPACE}::NegativeStyleFromString

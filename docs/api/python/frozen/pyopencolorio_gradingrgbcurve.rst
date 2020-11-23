@@ -16,7 +16,7 @@
 
       1. __init__(self: PyOpenColorIO.GradingRGBCurve, style: PyOpenColorIO.GradingStyle) -> None
 
-      2. __init__(self: PyOpenColorIO.GradingRGBCurve, red: PyOpenColorIO.GradingBSplineCurve = <PyOpenColorIO.GradingBSplineCurve object at 0x7f0df4e850b0>, green: PyOpenColorIO.GradingBSplineCurve = <PyOpenColorIO.GradingBSplineCurve object at 0x7f0df4e85070>, blue: PyOpenColorIO.GradingBSplineCurve = <PyOpenColorIO.GradingBSplineCurve object at 0x7f0df4e83f70>, master: PyOpenColorIO.GradingBSplineCurve = <PyOpenColorIO.GradingBSplineCurve object at 0x7f0df4e83fb0>) -> None
+      2. __init__(self: PyOpenColorIO.GradingRGBCurve, red: PyOpenColorIO.GradingBSplineCurve = <PyOpenColorIO.GradingBSplineCurve object at 0x7f9e4a976230>, green: PyOpenColorIO.GradingBSplineCurve = <PyOpenColorIO.GradingBSplineCurve object at 0x7f9e4a9761f0>, blue: PyOpenColorIO.GradingBSplineCurve = <PyOpenColorIO.GradingBSplineCurve object at 0x7f9e4a976170>, master: PyOpenColorIO.GradingBSplineCurve = <PyOpenColorIO.GradingBSplineCurve object at 0x7f9e4a973f70>) -> None
 
 
    .. py:method:: GradingRGBCurve.__str__(self: PyOpenColorIO.GradingRGBCurve) -> str
@@ -56,7 +56,7 @@
 
       1. __init__(self: PyOpenColorIO.GradingRGBCurve, style: PyOpenColorIO.GradingStyle) -> None
 
-      2. __init__(self: PyOpenColorIO.GradingRGBCurve, red: PyOpenColorIO.GradingBSplineCurve = <PyOpenColorIO.GradingBSplineCurve object at 0x7f0df4e850b0>, green: PyOpenColorIO.GradingBSplineCurve = <PyOpenColorIO.GradingBSplineCurve object at 0x7f0df4e85070>, blue: PyOpenColorIO.GradingBSplineCurve = <PyOpenColorIO.GradingBSplineCurve object at 0x7f0df4e83f70>, master: PyOpenColorIO.GradingBSplineCurve = <PyOpenColorIO.GradingBSplineCurve object at 0x7f0df4e83fb0>) -> None
+      2. __init__(self: PyOpenColorIO.GradingRGBCurve, red: PyOpenColorIO.GradingBSplineCurve = <PyOpenColorIO.GradingBSplineCurve object at 0x7f9e4a976230>, green: PyOpenColorIO.GradingBSplineCurve = <PyOpenColorIO.GradingBSplineCurve object at 0x7f9e4a9761f0>, blue: PyOpenColorIO.GradingBSplineCurve = <PyOpenColorIO.GradingBSplineCurve object at 0x7f9e4a976170>, master: PyOpenColorIO.GradingBSplineCurve = <PyOpenColorIO.GradingBSplineCurve object at 0x7f9e4a973f70>) -> None
 
 
    .. py:method:: GradingRGBCurve.__str__(self: PyOpenColorIO.GradingRGBCurve) -> str

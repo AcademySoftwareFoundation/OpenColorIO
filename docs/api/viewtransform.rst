@@ -13,11 +13,11 @@ ViewTransform
 
    .. group-tab:: C++
 
-      .. doxygenclass:: @OCIO_NAMESPACE@::ViewTransform
+      .. doxygenclass:: ${OCIO_NAMESPACE}::ViewTransform
          :members:
          :undoc-members:
 
-      .. doxygenfunction:: @OCIO_NAMESPACE@::operator<<(std::ostream&, const ViewTransform&)
+      .. doxygenfunction:: ${OCIO_NAMESPACE}::operator<<(std::ostream&, const ViewTransform&)
 
-      .. doxygentypedef:: @OCIO_NAMESPACE@::ConstViewTransformRcPtr
-      .. doxygentypedef:: @OCIO_NAMESPACE@::ViewTransformRcPtr
+      .. doxygentypedef:: ${OCIO_NAMESPACE}::ConstViewTransformRcPtr
+      .. doxygentypedef:: ${OCIO_NAMESPACE}::ViewTransformRcPtr

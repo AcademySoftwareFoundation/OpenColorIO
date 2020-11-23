@@ -13,11 +13,11 @@ Look
 
    .. group-tab:: C++
 
-      .. doxygenclass:: @OCIO_NAMESPACE@::Look
+      .. doxygenclass:: ${OCIO_NAMESPACE}::Look
          :members:
          :undoc-members:
 
-      .. doxygenfunction:: @OCIO_NAMESPACE@::operator<<(std::ostream&, const Look&)
+      .. doxygenfunction:: ${OCIO_NAMESPACE}::operator<<(std::ostream&, const Look&)
 
-      .. doxygentypedef:: @OCIO_NAMESPACE@::ConstLookRcPtr
-      .. doxygentypedef:: @OCIO_NAMESPACE@::LookRcPtr
+      .. doxygentypedef:: ${OCIO_NAMESPACE}::ConstLookRcPtr
+      .. doxygentypedef:: ${OCIO_NAMESPACE}::LookRcPtr
