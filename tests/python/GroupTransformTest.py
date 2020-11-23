@@ -81,10 +81,8 @@ class GroupTransformTest(unittest.TestCase):
                          OCIO.TRANSFORM_DIR_FORWARD)
 
         for direction in OCIO.TransformDirection.__members__.values():
-            # Setting the unknown direction preserves the current direction.
-            if direction != OCIO.TRANSFORM_DIR_UNKNOWN:
-                self.group_tr.setDirection(direction)
-                self.assertEqual(self.group_tr.getDirection(), direction)
+            self.group_tr.setDirection(direction)
+            self.assertEqual(self.group_tr.getDirection(), direction)
 
         # Wrong type tests.
         for invalid in (None, 1, 'test'):

@@ -147,12 +147,6 @@ OCIO_ADD_TEST(Lut3DOpData, create_op)
     // Inverse is fine.
     OCIO_CHECK_NO_THROW(ops.validate());
     OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_NONE));
-    ops.clear();
-
-    // Only valid direction.
-    OCIO_CHECK_THROW_WHAT(CreateLut3DOp(ops, lut, OCIO::TRANSFORM_DIR_UNKNOWN),
-                          OCIO::Exception,
-                          "unspecified transform direction");
 }
 
 OCIO_ADD_TEST(Lut3DOp, cache_id)

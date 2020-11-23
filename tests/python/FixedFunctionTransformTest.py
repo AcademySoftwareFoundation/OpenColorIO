@@ -33,10 +33,8 @@ class FixedFunctionTransformTest(unittest.TestCase):
                          OCIO.TRANSFORM_DIR_FORWARD)
 
         for direction in OCIO.TransformDirection.__members__.values():
-            # Setting the unknown direction preserves the current direction.
-            if direction != OCIO.TRANSFORM_DIR_UNKNOWN:
-                self.fixed_func_tr.setDirection(direction)
-                self.assertEqual(self.fixed_func_tr.getDirection(), direction)
+            self.fixed_func_tr.setDirection(direction)
+            self.assertEqual(self.fixed_func_tr.getDirection(), direction)
 
         # Wrong type tests.
         for invalid in (None, 1, 'test'):

@@ -197,11 +197,6 @@ class ExposureContrastTransformTest(unittest.TestCase):
         self.exp_tr.setDirection(OCIO.TRANSFORM_DIR_FORWARD)
         self.assertIsNone(self.exp_tr.validate())
 
-        # As the Exposure Contrast Transform does not support the unknown
-        # direction, it preserves the original direction.
-        self.exp_tr.setDirection(OCIO.TRANSFORM_DIR_UNKNOWN)
-        self.assertIsNone(self.exp_tr.validate())
-
     def test_constructor_with_keywords(self):
         """
         Test ExposureContrastTransform constructor with keywords and validate its values.

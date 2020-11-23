@@ -224,6 +224,53 @@ inline void save(YAML::Emitter& out, Interpolation interp)
     out << InterpolationToString(interp);
 }
 
+inline void loadDescription(const YAML::Node& node, std::string& x)
+{
+    load(node, x);
+    if (!x.empty())
+    {
+        // YAML is changing the trailing newlines when reading them:
+        // - Written as YAML::Literal (starts with a "|"), descriptions will be read back with a
+        //   single newline. One is  added if there was none, only one is kept if there were
+        //   several.
+        // - Written as YAML::Value string (does not start with "|"), all trailing newlines ('\n')
+        //   are preserved.
+        // Trailing newlines are inconsistently preserved, lets remove them in all cases.
+        auto last = x.back();
+        while (last == '\n' && x.length())
+        {
+            x.pop_back();
+            last = x.back();
+        }
+    }
+    // Also, note that a \n is only interpreted as a newline if it is used in a string that is
+    // within double quotes.  E.g., "A string \n with embedded \n newlines."  Indeed, without the
+    // double quotes the backslash is generally not interpreted as an escape character in YAML.
+}
+
+inline void saveDescription(YAML::Emitter & out, const char * desc)
+{
+    if (desc && *desc)
+    {
+        // Remove trailing newlines so that only one is saved because they won't be read back.
+        std::string descStr{ desc };
+        {
+            auto last = descStr.back();
+            while (last == '\n' && descStr.length())
+            {
+                descStr.pop_back();
+                last = descStr.back();
+            }
+        }
+
+        out << YAML::Key << "description" << YAML::Value;
+        if (descStr.find_first_of('\n') != std::string::npos)
+        {
+            out << YAML::Literal;
+        }
+        out << descStr;
+    }
+}
 //
 
 inline void LogUnknownKeyWarning(const YAML::Node & node,
@@ -421,10 +468,7 @@ inline void save(YAML::Emitter& out, const View & view)
     {
         out << YAML::Key << "rule" << YAML::Value << view.m_rule;
     }
-    if (!view.m_description.empty())
-    {
-        out << YAML::Key << "description" << YAML::Value << view.m_description;
-    }
+    saveDescription(out, view.m_description.c_str());
     out << YAML::EndMap;
 }
 
@@ -433,11 +477,15 @@ inline void save(YAML::Emitter& out, const View & view)
 inline void EmitBaseTransformKeyValues(YAML::Emitter & out,
                                         const ConstTransformRcPtr & t)
 {
-    if(t->getDirection() != TRANSFORM_DIR_FORWARD)
+    switch (t->getDirection())
     {
+    case TRANSFORM_DIR_FORWARD:
+        break;
+    case TRANSFORM_DIR_INVERSE:
         out << YAML::Key << "direction";
         out << YAML::Value << YAML::Flow;
         save(out, t->getDirection());
+        break;
     }
 }
 
@@ -547,7 +595,7 @@ inline void load(const YAML::Node & node, BuiltinTransformRcPtr & t)
         }
         else if (key == "direction")
         {
-            TransformDirection dir = TRANSFORM_DIR_UNKNOWN;
+            TransformDirection dir = TRANSFORM_DIR_FORWARD;
             load(second, dir);
             t->setDirection(dir);
         }
@@ -3271,7 +3319,7 @@ inline void load(const YAML::Node& node, ColorSpaceRcPtr& cs)
         }
         else if(key == "description")
         {
-            load(second, stringval);
+            loadDescription(second, stringval);
             cs->setDescription(stringval.c_str());
         }
         else if(key == "family")
@@ -3381,11 +3429,7 @@ inline void save(YAML::Emitter& out, ConstColorSpaceRcPtr cs)
     out << YAML::Key << "equalitygroup" << YAML::Value << cs->getEqualityGroup();
     out << YAML::Key << "bitdepth" << YAML::Value;
     save(out, cs->getBitDepth());
-    if(cs->getDescription() != NULL && strlen(cs->getDescription()) > 0)
-    {
-        out << YAML::Key << "description";
-        out << YAML::Value << YAML::Literal << cs->getDescription();
-    }
+    saveDescription(out, cs->getDescription());
     out << YAML::Key << "isdata" << YAML::Value << cs->isData();
 
     if(cs->getNumCategories() > 0)
@@ -3479,7 +3523,7 @@ inline void load(const YAML::Node& node, LookRcPtr& look)
         }
         else if(key == "description")
         {
-            load(second, stringval);
+            loadDescription(second, stringval);
             look->setDescription(stringval.c_str());
         }
         else
@@ -3495,13 +3539,7 @@ inline void save(YAML::Emitter& out, ConstLookRcPtr look)
     out << YAML::BeginMap;
     out << YAML::Key << "name" << YAML::Value << look->getName();
     out << YAML::Key << "process_space" << YAML::Value << look->getProcessSpace();
-    if (look->getDescription() != NULL &&
-        strlen(look->getDescription()) > 0)
-    {
-        out << YAML::Key << "description";
-        out << YAML::Value << YAML::Literal << look->getDescription();
-    }
-
+    saveDescription(out, look->getDescription());
 
     if(look->getTransform())
     {
@@ -3608,7 +3646,7 @@ inline void load(const YAML::Node & node, ViewTransformRcPtr & vt)
         }
         else if (key == "description")
         {
-            load(second, stringval);
+            loadDescription(second, stringval);
             vt->setDescription(stringval.c_str());
         }
         else if (key == "family")
@@ -3662,15 +3700,12 @@ inline void save(YAML::Emitter & out, ConstViewTransformRcPtr & vt)
     out << YAML::BeginMap;
 
     out << YAML::Key << "name" << YAML::Value << vt->getName();
-    if (vt->getFamily() != NULL && strlen(vt->getFamily()) > 0)
+    const char * family = vt->getFamily();
+    if (family && *family)
     {
-        out << YAML::Key << "family" << YAML::Value << vt->getFamily();
+        out << YAML::Key << "family" << YAML::Value << family;
     }
-    if (vt->getDescription() != NULL && strlen(vt->getDescription()) > 0)
-    {
-        out << YAML::Key << "description";
-        out << YAML::Value << YAML::Literal << vt->getDescription();
-    }
+    saveDescription(out, vt->getDescription());
 
     if (vt->getNumCategories() > 0)
     {
@@ -4160,22 +4195,26 @@ inline void load(const YAML::Node& node, ConfigRcPtr & config, const char* filen
         }
         else if (key=="family_separator")
         {
-            load(second, stringval);
-            if (!stringval.empty())
+            // Check that the key is not present in a v1 config (checkVersionConsistency is not
+            // able to detect this).
+            if (config->getMajorVersion() < 2)
             {
-                if(stringval.size()!=1)
-                {
-                    std::ostringstream os;
-                    os << "'family_separator' value must be a single character.";
-                    os << " Found '" << stringval << "'.";
-                    throwValueError(node.Tag(), first, os.str());
-                }
-                config->setFamilySeparator(stringval[0]);
+                throwError(first, "Config v1 can't have 'family_separator'.");
             }
+
+            load(second, stringval);
+            if(stringval.size()!=1)
+            {
+                std::ostringstream os;
+                os << "'family_separator' value must be a single character.";
+                os << " Found '" << stringval << "'.";
+                throwValueError(node.Tag(), first, os.str());
+            }
+            config->setFamilySeparator(stringval[0]);
         }
         else if(key == "description")
         {
-            load(second, stringval);
+            loadDescription(second, stringval);
             config->setDescription(stringval.c_str());
         }
         else if(key == "luma")
@@ -4208,6 +4247,8 @@ inline void load(const YAML::Node& node, ConfigRcPtr & config, const char* filen
         }
         else if (key == "file_rules")
         {
+            // Check that the key is not present in a v1 config (checkVersionConsistency is not
+            // able to detect this).
             if (config->getMajorVersion() < 2)
             {
                 throwError(first, "Config v1 can't use 'file_rules'");
@@ -4246,11 +4287,6 @@ inline void load(const YAML::Node& node, ConfigRcPtr & config, const char* filen
         }
         else if (key == "viewing_rules")
         {
-            if (config->getMajorVersion() < 2)
-            {
-                throwError(first, "Config v1 can't use 'viewing_rules'.");
-            }
-
             if (second.Type() != YAML::NodeType::Sequence)
             {
                 throwError(second, "The 'viewing_rules' field needs to be a (- !<Rule>) list.");
@@ -4633,23 +4669,20 @@ inline void save(YAML::Emitter & out, const Config & config)
     }
     out << YAML::Key << "strictparsing" << YAML::Value << config.isStrictParsingEnabled();
 
-    const char familySeparator = config.getFamilySeparator();
-    if (familySeparator)
+    if (configMajorVersion >= 2)
     {
-        out << YAML::Key << "family_separator" << YAML::Value << familySeparator;
+        const char familySeparator = config.getFamilySeparator();
+        if (familySeparator != '/')
+        {
+            out << YAML::Key << "family_separator" << YAML::Value << familySeparator;
+        }
     }
 
     std::vector<double> luma(3, 0.f);
     config.getDefaultLumaCoefs(&luma[0]);
     out << YAML::Key << "luma" << YAML::Value << YAML::Flow << luma;
 
-    if(config.getDescription() != NULL && strlen(config.getDescription()) > 0)
-    {
-        out << YAML::Newline;
-        out << YAML::Key << "description";
-        out << YAML::Value << config.getDescription();
-        out << YAML::Newline;
-    }
+    saveDescription(out, config.getDescription());
 
     // Roles
     out << YAML::Newline;

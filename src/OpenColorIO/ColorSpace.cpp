@@ -261,14 +261,16 @@ void ColorSpace::setAllocationVars(int numvars, const float * vars)
     }
 }
 
-ConstTransformRcPtr ColorSpace::getTransform(ColorSpaceDirection dir) const
+ConstTransformRcPtr ColorSpace::getTransform(ColorSpaceDirection dir) const noexcept
 {
-    if(dir == COLORSPACE_DIR_TO_REFERENCE)
+    switch (dir)
+    {
+    case COLORSPACE_DIR_TO_REFERENCE:
         return getImpl()->m_toRefTransform;
-    else if(dir == COLORSPACE_DIR_FROM_REFERENCE)
+    case COLORSPACE_DIR_FROM_REFERENCE:
         return getImpl()->m_fromRefTransform;
-
-    throw Exception("Unspecified ColorSpaceDirection");
+    }
+    return ConstTransformRcPtr();
 }
 
 void ColorSpace::setTransform(const ConstTransformRcPtr & transform,
@@ -277,12 +279,15 @@ void ColorSpace::setTransform(const ConstTransformRcPtr & transform,
     TransformRcPtr transformCopy;
     if(transform) transformCopy = transform->createEditableCopy();
 
-    if(dir == COLORSPACE_DIR_TO_REFERENCE)
+    switch (dir)
+    {
+    case COLORSPACE_DIR_TO_REFERENCE:
         getImpl()->m_toRefTransform = transformCopy;
-    else if(dir == COLORSPACE_DIR_FROM_REFERENCE)
+        break;
+    case COLORSPACE_DIR_FROM_REFERENCE:
         getImpl()->m_fromRefTransform = transformCopy;
-    else
-        throw Exception("Unspecified ColorSpaceDirection");
+        break;
+    }
 }
 
 std::ostream & operator<< (std::ostream & os, const ColorSpace & cs)
@@ -346,19 +351,22 @@ std::ostream & operator<< (std::ostream & os, const ColorSpace & cs)
     {
         os << ", encoding=" << str;
     }
-    os << ">";
-
+    str = cs.getDescription();
+    if (!str.empty())
+    {
+        os << ", description=" << str;
+    }
     if(cs.getTransform(COLORSPACE_DIR_TO_REFERENCE))
     {
-        os << "\n    " << cs.getName() << " --> Reference";
-        os << "\n\t" << *cs.getTransform(COLORSPACE_DIR_TO_REFERENCE);
+        os << ",\n    " << cs.getName() << " --> Reference";
+        os << "\n        " << *cs.getTransform(COLORSPACE_DIR_TO_REFERENCE);
     }
-
     if(cs.getTransform(COLORSPACE_DIR_FROM_REFERENCE))
     {
-        os << "\n    Reference --> " << cs.getName();
-        os << "\n\t" << *cs.getTransform(COLORSPACE_DIR_FROM_REFERENCE);
+        os << ",\n    Reference --> " << cs.getName();
+        os << "\n        " << *cs.getTransform(COLORSPACE_DIR_FROM_REFERENCE);
     }
+    os << ">";
     return os;
 }
 } // namespace OCIO_NAMESPACE

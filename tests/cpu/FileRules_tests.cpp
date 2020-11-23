@@ -235,8 +235,7 @@ colorspaces:
     family: raw
     equalitygroup: ""
     bitdepth: 32f
-    description: |
-      A raw color space. Conversions to and from this space are no-ops.
+    description: A raw color space. Conversions to and from this space are no-ops.
     isdata: true
     allocation: uniform
 )" };

@@ -37,17 +37,14 @@ void LookParseResult::Token::parse(const std::string & str)
 
 void LookParseResult::Token::serialize(std::ostream & os) const
 {
-    if(dir==TRANSFORM_DIR_FORWARD)
+    switch (dir)
     {
+    case TRANSFORM_DIR_FORWARD:
         os << name;
-    }
-    else if(dir==TRANSFORM_DIR_INVERSE)
-    {
+        break;
+    case TRANSFORM_DIR_INVERSE:
         os << "-" << name;
-    }
-    else
-    {
-        os << "?" << name;
+        break;
     }
 }
 

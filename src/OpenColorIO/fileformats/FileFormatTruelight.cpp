@@ -366,8 +366,9 @@ LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
         LogWarningInterpolationNotUsed(fileInterp, fileTransform);
     }
 
-    if (newDir == TRANSFORM_DIR_FORWARD)
+    switch (newDir)
     {
+    case TRANSFORM_DIR_FORWARD:
         if (lut1D)
         {
             CreateLut1DOp(ops, lut1D, newDir);
@@ -377,9 +378,8 @@ LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
         {
             CreateLut3DOp(ops, lut3D, newDir);
         }
-    }
-    else if (newDir == TRANSFORM_DIR_INVERSE)
-    {
+        break;
+    case TRANSFORM_DIR_INVERSE:
         if (lut3D)
         {
             CreateLut3DOp(ops, lut3D, newDir);
@@ -389,6 +389,7 @@ LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
         {
             CreateLut1DOp(ops, lut1D, newDir);
         }
+        break;
     }
 }
 }
