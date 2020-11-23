@@ -59,16 +59,9 @@ class BuiltinTransformTest(unittest.TestCase):
     def test_direction(self):
         # All transform directions are supported
         for direction in OCIO.TransformDirection.__members__.values():
-            self.builtin_tr.setDirection(direction)
+            # Does not raise
+            self.assertIsNone(self.builtin_tr.setDirection(direction))
             self.assertEqual(self.builtin_tr.getDirection(), direction)
-
-            if direction != OCIO.TRANSFORM_DIR_UNKNOWN:
-                # Does not raise
-                self.assertIsNone(self.builtin_tr.validate())
-            else:
-                # TRANSFORM_DIR_UNKNOWN raises OCIO Exception
-                with self.assertRaises(OCIO.Exception):
-                    self.builtin_tr.validate()
 
     def test_constructor_keyword(self):
         # Keyword args in order

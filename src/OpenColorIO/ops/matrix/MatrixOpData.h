@@ -216,8 +216,8 @@ public:
 
     bool operator==(const OpData & other) const override;
 
-    TransformDirection getDirection() const { return m_direction; }
-    void setDirection(TransformDirection dir);
+    TransformDirection getDirection() const noexcept { return m_direction; }
+    void setDirection(TransformDirection dir) noexcept;
 
     MatrixOpDataRcPtr getAsForward() const;
 

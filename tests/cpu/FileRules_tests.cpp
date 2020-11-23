@@ -125,9 +125,9 @@ OCIO_ADD_TEST(FileRules, config_insert_rule)
 
     // Pattern and extension can't be null.
     OCIO_CHECK_THROW_WHAT(fileRules->insertRule(0, "rule", "raw", nullptr, "a"),
-                          OCIO::Exception, "file pattern is empty");
+                          OCIO::Exception, "file name pattern is empty");
     OCIO_CHECK_THROW_WHAT(fileRules->insertRule(0, "rule", "raw", "*", nullptr),
-                          OCIO::Exception, "file extension is empty");
+                          OCIO::Exception, "file extension pattern is empty");
 
     // Invalid glob pattern.
     OCIO_CHECK_THROW_WHAT(fileRules->insertRule(0, "rule", "raw", "[", "a"),
@@ -235,8 +235,7 @@ colorspaces:
     family: raw
     equalitygroup: ""
     bitdepth: 32f
-    description: |
-      A raw color space. Conversions to and from this space are no-ops.
+    description: A raw color space. Conversions to and from this space are no-ops.
     isdata: true
     allocation: uniform
 )" };
@@ -369,8 +368,8 @@ OCIO_ADD_TEST(FileRules, pattern_error)
     OCIO_CHECK_NO_THROW(rules->insertRule(0, "new rule", "raw", "*", "a"));
     OCIO_REQUIRE_EQUAL(rules->getNumEntries(), 3);
 
-    OCIO_CHECK_THROW_WHAT(rules->setPattern(0, nullptr), OCIO::Exception, "file pattern is empty");
-    OCIO_CHECK_NO_THROW(rules->setPattern(0, ""));
+    OCIO_CHECK_THROW_WHAT(rules->setPattern(0, nullptr), OCIO::Exception, "file name pattern is empty");
+    OCIO_CHECK_THROW_WHAT(rules->setPattern(0, ""),      OCIO::Exception, "file name pattern is empty");
 
     OCIO_CHECK_THROW_WHAT(rules->setPattern(0, "[]"), OCIO::Exception,
                           "invalid regular expression");
@@ -386,6 +385,28 @@ OCIO_ADD_TEST(FileRules, pattern_error)
                           "invalid regular expression");
 }
 
+OCIO_ADD_TEST(FileRules, with_defaults)
+{
+    // Validate some default behaviours.
+
+    auto config = OCIO::Config::CreateRaw()->createEditableCopy();
+    auto rules = config->getFileRules()->createEditableCopy();
+    OCIO_REQUIRE_EQUAL(rules->getNumEntries(), 2);
+
+    // Null or empty pattern and/or extension throw.
+
+    OCIO_CHECK_THROW(rules->insertRule(0, "new rule2", "raw", nullptr, "a"), OCIO::Exception);
+    OCIO_CHECK_THROW(rules->insertRule(0, "new rule2", "raw", "", "a"), OCIO::Exception);
+
+    OCIO_CHECK_THROW(rules->insertRule(0, "new rule3", "raw", "a", nullptr), OCIO::Exception);
+    OCIO_CHECK_THROW(rules->insertRule(0, "new rule3", "raw", "a", ""), OCIO::Exception);
+
+    // Null or empty regex throws.
+
+    OCIO_CHECK_THROW(rules->insertRule(0, "new rule2", "raw", ""), OCIO::Exception);
+    OCIO_CHECK_THROW(rules->insertRule(0, "new rule2", "raw", nullptr), OCIO::Exception);
+}
+
 OCIO_ADD_TEST(FileRules, extension_error)
 {
     auto configRaw = OCIO::Config::CreateRaw();
@@ -396,8 +417,9 @@ OCIO_ADD_TEST(FileRules, extension_error)
     OCIO_REQUIRE_EQUAL(rules->getNumEntries(), 3);
 
     OCIO_CHECK_THROW_WHAT(rules->setExtension(0, nullptr), OCIO::Exception,
-                          "file extension is empty");
-    OCIO_CHECK_NO_THROW(rules->setExtension(0, ""));
+                          "file extension pattern is empty");
+    OCIO_CHECK_THROW_WHAT(rules->setExtension(0, ""), OCIO::Exception,
+                          "file extension pattern is empty");
 }
 
 OCIO_ADD_TEST(FileRules, multiple_rules)
@@ -838,7 +860,7 @@ OCIO_ADD_TEST(FileRules, rules_test)
     OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is)->createEditableCopy());
     auto rules = config->getFileRules()->createEditableCopy();
     rules->insertRule(0, OCIO::FileRuleUtils::ParseName, nullptr, nullptr);
-    rules->insertRule(1, "dpx file", "raw", "", "dpx");
+    rules->insertRule(1, "dpx file", "raw", "*", "dpx");
     config->setFileRules(rules);
 
     size_t rulePos = 0;

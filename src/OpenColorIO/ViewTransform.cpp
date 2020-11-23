@@ -149,18 +149,16 @@ ReferenceSpaceType ViewTransform::getReferenceSpaceType() const noexcept
     return getImpl()->m_referenceSpaceType;
 }
 
-ConstTransformRcPtr ViewTransform::getTransform(ViewTransformDirection dir) const
+ConstTransformRcPtr ViewTransform::getTransform(ViewTransformDirection dir) const noexcept
 {
-    if (dir == VIEWTRANSFORM_DIR_TO_REFERENCE)
+    switch (dir)
     {
+    case VIEWTRANSFORM_DIR_TO_REFERENCE:
         return getImpl()->m_toRefTransform;
-    }
-    else if (dir == VIEWTRANSFORM_DIR_FROM_REFERENCE)
-    {
+    case VIEWTRANSFORM_DIR_FROM_REFERENCE:
         return getImpl()->m_fromRefTransform;
     }
-
-    throw Exception("View transform: Unspecified ViewTransformDirection.");
+    return ConstTransformRcPtr();
 }
 
 void ViewTransform::setTransform(const ConstTransformRcPtr & transform, ViewTransformDirection dir)
@@ -171,17 +169,14 @@ void ViewTransform::setTransform(const ConstTransformRcPtr & transform, ViewTran
         transformCopy = transform->createEditableCopy();
     }
 
-    if (dir == VIEWTRANSFORM_DIR_TO_REFERENCE)
+    switch (dir)
     {
-        getImpl()->m_toRefTransform = transformCopy;
-    }
-    else if (dir == VIEWTRANSFORM_DIR_FROM_REFERENCE)
-    {
-        getImpl()->m_fromRefTransform = transformCopy;
-    }
-    else
-    {
-        throw Exception("View transform: Unspecified ViewTransformDirection.");
+    case VIEWTRANSFORM_DIR_TO_REFERENCE:
+        getImpl()->m_toRefTransform = transformCopy; 
+        break;
+    case VIEWTRANSFORM_DIR_FROM_REFERENCE:
+        getImpl()->m_fromRefTransform = transformCopy; 
+        break;
     }
 }
 
@@ -210,19 +205,22 @@ std::ostream & operator<< (std::ostream & os, const ViewTransform & vt)
     os << "name=" << vt.getName() << ", ";
     os << "family=" << vt.getFamily() << ", ";
     os << "referenceSpaceType=" << ReferenceSpaceTypeToString(vt.getReferenceSpaceType());
-    os << ">";
-
+    const std::string desc{ vt.getDescription() };
+    if (!desc.empty())
+    {
+        os << ", description=" << desc;
+    }
     if (vt.getTransform(VIEWTRANSFORM_DIR_TO_REFERENCE))
     {
-        os << "\n    " << vt.getName() << " --> Reference";
-        os << "\n\t" << *vt.getTransform(VIEWTRANSFORM_DIR_TO_REFERENCE);
+        os << ",\n    " << vt.getName() << " --> Reference";
+        os << "\n        " << *vt.getTransform(VIEWTRANSFORM_DIR_TO_REFERENCE);
     }
-
     if (vt.getTransform(VIEWTRANSFORM_DIR_FROM_REFERENCE))
     {
-        os << "\n    Reference --> " << vt.getName();
-        os << "\n\t" << *vt.getTransform(VIEWTRANSFORM_DIR_FROM_REFERENCE);
+        os << ",\n    Reference --> " << vt.getName();
+        os << "\n        " << *vt.getTransform(VIEWTRANSFORM_DIR_FROM_REFERENCE);
     }
+    os << ">";
     return os;
 }
 

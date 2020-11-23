@@ -1911,14 +1911,16 @@ ConstOpCPURcPtr GetForwardLut3DRenderer(ConstLut3DOpDataRcPtr & lut)
 
 ConstOpCPURcPtr GetLut3DRenderer(ConstLut3DOpDataRcPtr & lut)
 {
-    if (lut->getDirection() == TRANSFORM_DIR_FORWARD)
+    switch (lut->getDirection())
     {
+    case TRANSFORM_DIR_FORWARD:
         return GetForwardLut3DRenderer(lut);
-    }
-    else
-    {
+        break;
+    case TRANSFORM_DIR_INVERSE:
         return std::make_shared<InvLut3DRenderer>(lut);
+        break;
     }
+    throw Exception("Illegal LUT3D direction.");
 }
 
 } // namespace OCIO_NAMESPACE
