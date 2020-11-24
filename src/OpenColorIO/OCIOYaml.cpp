@@ -3818,7 +3818,7 @@ inline void load(const YAML::Node & node, NamedTransformRcPtr & nt)
     }
 }
 
-inline void save(YAML::Emitter & out, ConstNamedTransformRcPtr & nt)
+inline void save(YAML::Emitter & out, ConstNamedTransformRcPtr & nt, unsigned int majorVersion)
 {
     out << YAML::VerbatimTag("NamedTransform");
     out << YAML::BeginMap;
@@ -3848,14 +3848,14 @@ inline void save(YAML::Emitter & out, ConstNamedTransformRcPtr & nt)
     if (transform)
     {
         out << YAML::Key << "transform" << YAML::Value;
-        save(out, transform);
+        save(out, transform, majorVersion);
     }
 
     transform = nt->getTransform(TRANSFORM_DIR_INVERSE);
     if (transform)
     {
         out << YAML::Key << "inverse_transform" << YAML::Value;
-        save(out, transform);
+        save(out, transform, majorVersion);
     }
 
     out << YAML::EndMap;
@@ -5123,7 +5123,7 @@ inline void save(YAML::Emitter & out, const Config & config)
         {
             auto name = config.getNamedTransformNameByIndex(NAMEDTRANSFORM_ALL, i);
             auto nt = config.getNamedTransform(name);
-            save(out, nt);
+            save(out, nt, configMajorVersion);
         }
         out << YAML::EndSeq;
     }
