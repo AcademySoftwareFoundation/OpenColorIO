@@ -241,8 +241,14 @@ class CDLTransformTest(unittest.TestCase):
         # Try env var first to get test file path.
         test_file = '%s/cdl_test1.cdl' % TEST_DATAFILES_DIR
 
+        # Mute warnings being logged.
+        curLogLevel = OCIO.GetLoggingLevel()
+        OCIO.SetLoggingLevel(OCIO.LOGGING_LEVEL_NONE)
+
         # Test a specified id member of the cdl file.
         cdl = OCIO.CDLTransform.CreateFromFile(test_file, 'cc0003')
+        OCIO.SetLoggingLevel(curLogLevel)
+
         self.assertEqual(cdl.getID(), 'cc0003')
         self.assertEqual(cdl.getDescription(), 'golden')
         self.assertListEqual(cdl.getSlope(), [1.2, 1.1, 1.0])
