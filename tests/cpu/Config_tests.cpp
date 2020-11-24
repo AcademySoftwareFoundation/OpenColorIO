@@ -162,7 +162,7 @@ OCIO_ADD_TEST(Config, simple_config)
         "        children:\n"
         "          - !<FileTransform>\n"
         "            src: diffusemult.spimtx\n"
-        "            interpolation: best\n"
+        "            interpolation: unknown\n"
         "          - !<ColorSpaceTransform>\n"
         "            src: raw\n"
         "            dst: lnh\n"
@@ -393,7 +393,7 @@ OCIO_ADD_TEST(Config, serialize_group_transform)
     "    from_reference: !<GroupTransform>\n"
     "      children:\n"
     "        - !<FileTransform> {src: \"\"}\n"
-    "        - !<FileTransform> {src: \"\"}\n"
+    "        - !<FileTransform> {src: \"\", interpolation: unknown}\n"
     "        - !<FileTransform> {src: \"\", interpolation: best}\n"
     "        - !<FileTransform> {src: \"\", interpolation: nearest}\n"
     "        - !<FileTransform> {src: \"\", interpolation: cubic}\n"
@@ -4331,6 +4331,55 @@ OCIO_ADD_TEST(Config, file_transform_serialization)
     std::ostringstream oss;
     OCIO_CHECK_NO_THROW(oss << *config.get());
     OCIO_CHECK_EQUAL(oss.str(), str);
+}
+
+OCIO_ADD_TEST(Config, file_transform_serialization_v1)
+{
+    OCIO::ConfigRcPtr cfg;
+    OCIO_CHECK_NO_THROW(cfg = OCIO::Config::Create());
+    OCIO_REQUIRE_ASSERT(cfg);
+    cfg->setMajorVersion(1);
+    auto ft = OCIO::FileTransform::Create();
+    ft->setSrc("file");
+    auto cs = OCIO::ColorSpace::Create();
+    // Note that ft has no interpolation set.  In a v2 config, this is not a problem and is taken
+    // to mean default interpolation.  However, in this case the config version is 1 and if the
+    // config were read by a v1 library (rather than v2), this could cause a failure.  So the
+    // interp is set to linear during serialization to avoid problems.
+    cs->setTransform(ft, OCIO::COLORSPACE_DIR_TO_REFERENCE);
+    ft->setSrc("other");
+    ft->setInterpolation(OCIO::INTERP_TETRAHEDRAL);
+    cs->setTransform(ft, OCIO::COLORSPACE_DIR_FROM_REFERENCE);
+    cs->setName("cs");
+    cfg->addColorSpace(cs);
+    std::ostringstream os;
+    cfg->serialize(os);
+    OCIO_CHECK_EQUAL(os.str(), R"(ocio_profile_version: 1
+
+search_path: ""
+strictparsing: true
+luma: [0.2126, 0.7152, 0.0722]
+
+roles:
+  {}
+
+displays:
+  {}
+
+active_displays: []
+active_views: []
+
+colorspaces:
+  - !<ColorSpace>
+    name: cs
+    family: ""
+    equalitygroup: ""
+    bitdepth: unknown
+    isdata: false
+    allocation: uniform
+    to_reference: !<FileTransform> {src: file, interpolation: linear}
+    from_reference: !<FileTransform> {src: other, interpolation: tetrahedral}
+)" );
 }
 
 OCIO_ADD_TEST(Config, add_color_space)
