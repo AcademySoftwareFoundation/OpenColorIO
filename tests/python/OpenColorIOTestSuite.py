@@ -45,6 +45,7 @@ import ExponentWithLinearTransformTest
 import ExposureContrastTransformTest
 import FileTransformTest
 import FixedFunctionTransformTest
+import FormatMetadataTest
 import GroupTransformTest
 import LogTransformTest
 import LookTest
@@ -85,6 +86,7 @@ def suite():
     suite.addTest(loader.loadTestsFromModule(ExposureContrastTransformTest))
     suite.addTest(loader.loadTestsFromModule(FileTransformTest))
     suite.addTest(loader.loadTestsFromModule(FixedFunctionTransformTest))
+    suite.addTest(loader.loadTestsFromModule(FormatMetadataTest))
     suite.addTest(loader.loadTestsFromModule(GroupTransformTest))
     suite.addTest(loader.loadTestsFromModule(LogTransformTest))
     suite.addTest(loader.loadTestsFromModule(LookTest))
