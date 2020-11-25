@@ -999,6 +999,12 @@ public:
      */
     void setCDLStyle(CDLStyle);
 
+    /**
+     * The file parsers that care about interpolation (LUTs) will try to make use of the requested
+     * interpolation method when loading the file.  In these cases, if the requested method could
+     * not be used, a warning is logged.  If no method is provided, or a method cannot be used,
+     * INTERP_DEFAULT is used.
+     */
     Interpolation getInterpolation() const;
     void setInterpolation(Interpolation interp);
 
