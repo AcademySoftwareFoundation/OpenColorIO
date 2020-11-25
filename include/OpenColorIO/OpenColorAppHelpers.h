@@ -131,12 +131,6 @@ protected:
 
 namespace ColorSpaceHelpers
 {
-
-/// Get the processor using role names or color space names or UI color space names.
-extern OCIOEXPORT ConstProcessorRcPtr GetProcessor(const ConstConfigRcPtr & config,
-                                                   const char * inputColorSpaceName,
-                                                   const char * outputColorSpaceName);
-
 /**
  * Add a new color space to the config instance. The output of the userTransform must be in the
  * specified connectionColorSpace.
