@@ -5821,7 +5821,8 @@ OCIO_ADD_TEST(Config, family_separator)
     OCIO_CHECK_EQUAL(cfg->getFamilySeparator(), 0);
 
     // Reset to its default value.
-    OCIO_CHECK_NO_THROW(cfg->resetFamilySeparatorToDefault());
+    OCIO_CHECK_EQUAL(OCIO::Config::GetDefaultFamilySeparator(), '/');
+    OCIO_CHECK_NO_THROW(cfg->setFamilySeparator(OCIO::Config::GetDefaultFamilySeparator()));
     OCIO_CHECK_EQUAL(cfg->getFamilySeparator(), '/');
 
     OCIO_CHECK_THROW(cfg->setFamilySeparator((char)127), OCIO::Exception);

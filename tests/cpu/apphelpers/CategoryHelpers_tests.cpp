@@ -2,12 +2,7 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 
-#include <sstream>
-
-#include <OpenColorIO/OpenColorIO.h>
-
-#include "CategoryHelpers.h"
-#include "CategoryNames.h"
+#include "apphelpers/CategoryHelpers.cpp"
 #include "testutils/UnitTest.h"
 
 namespace OCIO = OCIO_NAMESPACE;
@@ -15,7 +10,6 @@ namespace OCIO = OCIO_NAMESPACE;
 
 // The configuration file used by the unit tests.
 #include "configs.data"
-
 
 OCIO_ADD_TEST(CategoryHelpers, categories)
 {
@@ -64,7 +58,7 @@ OCIO_ADD_TEST(CategoryHelpers, basic)
     OCIO::ColorSpaceNames names;
 
     {
-        OCIO::Categories categories { OCIO::ColorSpaceCategoryNames::Input };
+        OCIO::Categories categories { OCIO::Category::INPUT };
 
         OCIO_CHECK_NO_THROW(names = OCIO::FindColorSpaceNames(config, categories));
 
@@ -87,8 +81,8 @@ OCIO_ADD_TEST(CategoryHelpers, basic)
     }
 
     {
-        OCIO::Categories categories { OCIO::ColorSpaceCategoryNames::SceneLinearWorkingSpace, 
-                                      OCIO::ColorSpaceCategoryNames::LogWorkingSpace };
+        OCIO::Categories categories { OCIO::Category::SCENE_LINEAR_WORKING_SPACE,
+                                      OCIO::Category::LOG_WORKING_SPACE };
 
         OCIO_CHECK_NO_THROW(names = OCIO::FindColorSpaceNames(config, categories));
 
@@ -98,7 +92,7 @@ OCIO_ADD_TEST(CategoryHelpers, basic)
         OCIO_CHECK_EQUAL(names[2], std::string("log_1"));
         OCIO_CHECK_EQUAL(names[3], std::string("in_3"));
 
-        categories.push_back(OCIO::ColorSpaceCategoryNames::LutInputSpace);
+        categories.push_back(OCIO::Category::LUT_INPUT_SPACE);
 
         OCIO_CHECK_NO_THROW(names = OCIO::FindColorSpaceNames(config, categories));
 
@@ -113,8 +107,8 @@ OCIO_ADD_TEST(CategoryHelpers, basic)
     }
 
     {
-        OCIO::Categories categories { OCIO::ColorSpaceCategoryNames::SceneLinearWorkingSpace, 
-                                      OCIO::ColorSpaceCategoryNames::LogWorkingSpace };
+        OCIO::Categories categories { OCIO::Category::SCENE_LINEAR_WORKING_SPACE,
+                                      OCIO::Category::LOG_WORKING_SPACE };
 
         OCIO_CHECK_NO_THROW(names = OCIO::FindColorSpaceNames(config, categories));
         OCIO_REQUIRE_EQUAL(names.size(), 4);
@@ -137,12 +131,12 @@ OCIO_ADD_TEST(CategoryHelpers, basic)
 
     {
         OCIO::ConstColorSpaceInfoRcPtr info;
-        OCIO_CHECK_NO_THROW(info = OCIO::GetRoleInfo(config, "reference"));
+        OCIO_CHECK_NO_THROW(info = OCIO::ColorSpaceInfo::CreateFromRole(config, "reference", nullptr));
         OCIO_CHECK_ASSERT(info);
         OCIO_CHECK_EQUAL(std::string(info->getName()), std::string("reference"));
         OCIO_CHECK_EQUAL(std::string(info->getUIName()), std::string("reference (lin_1)"));
 
-        OCIO_CHECK_NO_THROW(info = OCIO::GetRoleInfo(config, "unknown_role"));
+        OCIO_CHECK_NO_THROW(info = OCIO::ColorSpaceInfo::CreateFromRole(config, "unknown_role", nullptr));
         OCIO_CHECK_ASSERT(!info);
     }
 }

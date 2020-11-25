@@ -1787,9 +1787,9 @@ char Config::getFamilySeparator() const
     return getImpl()->m_familySeparator;
 }
 
-void Config::resetFamilySeparatorToDefault() noexcept
+char Config::GetDefaultFamilySeparator() noexcept
 {
-    getImpl()->m_familySeparator = Impl::DefaultFamilySeparator;
+    return Impl::DefaultFamilySeparator;
 }
 
 void Config::setFamilySeparator(char separator)

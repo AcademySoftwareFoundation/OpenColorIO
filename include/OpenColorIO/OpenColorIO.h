@@ -14,6 +14,7 @@
 #include "OpenColorABI.h"
 #include "OpenColorTypes.h"
 #include "OpenColorTransforms.h"
+#include "OpenColorAppHelpers.h"
 
 
 /*
@@ -298,8 +299,8 @@ public:
      * menus.  Defaults to '/'.
      */
     char getFamilySeparator() const;
-    /// Reset the family separator to default i.e. '/' .
-    void resetFamilySeparatorToDefault() noexcept;
+    /// Get the default family separator i.e. '/' .
+    static char GetDefaultFamilySeparator() noexcept;
     /**
      * \brief Set the family separator
      *

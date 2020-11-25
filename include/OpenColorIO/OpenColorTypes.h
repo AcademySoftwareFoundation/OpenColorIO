@@ -110,6 +110,8 @@ class OCIOEXPORT GradingRGBCurve;
 typedef OCIO_SHARED_PTR<const GradingRGBCurve> ConstGradingRGBCurveRcPtr;
 typedef OCIO_SHARED_PTR<GradingRGBCurve> GradingRGBCurveRcPtr;
 
+typedef std::array<float, 3> Float3;
+
 
 // Transforms
 
@@ -225,7 +227,21 @@ class OCIOEXPORT RangeTransform;
 typedef OCIO_SHARED_PTR<const RangeTransform> ConstRangeTransformRcPtr;
 typedef OCIO_SHARED_PTR<RangeTransform> RangeTransformRcPtr;
 
-typedef std::array<float, 3> Float3;
+
+// Application Helpers
+
+class ColorSpaceMenuHelper;
+typedef OCIO_SHARED_PTR<ColorSpaceMenuHelper> ColorSpaceMenuHelperRcPtr;
+typedef OCIO_SHARED_PTR<const ColorSpaceMenuHelper> ConstColorSpaceMenuHelperRcPtr;
+
+class MixingColorSpaceManager;
+typedef OCIO_SHARED_PTR<MixingColorSpaceManager> MixingColorSpaceManagerRcPtr;
+typedef OCIO_SHARED_PTR<const MixingColorSpaceManager> ConstMixingColorSpaceManagerRcPtr;
+
+class LegacyViewingPipeline;
+typedef OCIO_SHARED_PTR<LegacyViewingPipeline> LegacyViewingPipelineRcPtr;
+typedef OCIO_SHARED_PTR<const LegacyViewingPipeline> ConstLegacyViewingPipelineRcPtr;
+
 
 template <class T, class U>
 inline OCIO_SHARED_PTR<T> DynamicPtrCast(OCIO_SHARED_PTR<U> const & ptr)
@@ -739,7 +755,7 @@ Internal::
     Extracting color space from file path - (ROLE_DEFAULT)
 
 App Helpers::
-    ViewingPipeline         - (ROLE_SCENE_LINEAR (LinearCC for exposure))
+    LegacyViewingPipeline   - (ROLE_SCENE_LINEAR (LinearCC for exposure))
                               (ROLE_COLOR_TIMING (ColorTimingCC))
     MixingColorSpaceManager - (ROLE_COLOR_PICKING)
 

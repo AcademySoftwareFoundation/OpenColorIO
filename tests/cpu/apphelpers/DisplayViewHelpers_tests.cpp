@@ -2,13 +2,7 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 
-#include <sstream>
-
-#include <OpenColorIO/OpenColorIO.h>
-
-#include "CategoryNames.h"
-#include "ColorSpaceHelpers.h"
-#include "DisplayViewHelpers.h"
+#include "apphelpers/DisplayViewHelpers.cpp"
 #include "testutils/UnitTest.h"
 #include "UnitTestLogUtils.h"
 
@@ -23,6 +17,7 @@ namespace OCIO = OCIO_NAMESPACE;
 #define STR(x) FIELD_STR(x)
 
 static const std::string ocioTestFilesDir(STR(OCIO_UNIT_TEST_FILES_DIR));
+
 
 
 // The configuration file used by the unit tests.
@@ -42,33 +37,31 @@ OCIO_ADD_TEST(DisplayViewHelpers, basic)
     //
 
     OCIO::ColorSpaceMenuHelperRcPtr workingMenuHelper;
-    OCIO_CHECK_NO_THROW(
-        workingMenuHelper
-            = OCIO::ColorSpaceMenuHelper::Create(cfg,
-                                                 nullptr,
-                                                 OCIO::ColorSpaceCategoryNames::SceneLinearWorkingSpace));
+    OCIO_CHECK_NO_THROW(workingMenuHelper =
+        OCIO::ColorSpaceMenuHelper::Create(cfg, nullptr,
+                                           OCIO::Category::SCENE_LINEAR_WORKING_SPACE,
+                                           OCIO::ColorSpaceMenuHelper::INCLUDE_NO_EXTRAS));
 
     OCIO_REQUIRE_EQUAL(workingMenuHelper->getNumColorSpaces(), 2);
 
-    OCIO_CHECK_EQUAL(workingMenuHelper->getColorSpaceName(0), std::string("lin_1"));
-    OCIO_CHECK_EQUAL(workingMenuHelper->getColorSpaceName(1), std::string("lin_2"));
+    OCIO_CHECK_EQUAL(workingMenuHelper->getName(0), std::string("lin_1"));
+    OCIO_CHECK_EQUAL(workingMenuHelper->getName(1), std::string("lin_2"));
 
     //
     // Step 2 - Validate the selected connection color spaces.
     //
 
     OCIO::ColorSpaceMenuHelperRcPtr connectionMenuHelper;
-    OCIO_CHECK_NO_THROW(
-        connectionMenuHelper
-            = OCIO::ColorSpaceMenuHelper::Create(cfg,
-                                                 nullptr,
-                                                 OCIO::ColorSpaceCategoryNames::LutInputSpace));
+    OCIO_CHECK_NO_THROW(connectionMenuHelper =
+        OCIO::ColorSpaceMenuHelper::Create(cfg, nullptr,
+                                           OCIO::Category::LUT_INPUT_SPACE,
+                                           OCIO::ColorSpaceMenuHelper::INCLUDE_NO_EXTRAS));
 
     OCIO_REQUIRE_EQUAL(connectionMenuHelper->getNumColorSpaces(), 3);
 
-    OCIO_CHECK_EQUAL(connectionMenuHelper->getColorSpaceName(0), std::string("lut_input_1"));
-    OCIO_CHECK_EQUAL(connectionMenuHelper->getColorSpaceName(1), std::string("lut_input_2"));
-    OCIO_CHECK_EQUAL(connectionMenuHelper->getColorSpaceName(2), std::string("lut_input_3"));
+    OCIO_CHECK_EQUAL(connectionMenuHelper->getName(0), std::string("lut_input_1"));
+    OCIO_CHECK_EQUAL(connectionMenuHelper->getName(1), std::string("lut_input_2"));
+    OCIO_CHECK_EQUAL(connectionMenuHelper->getName(2), std::string("lut_input_3"));
 
     //
     // Step 3 - Create a (display, view) pair.
@@ -76,20 +69,13 @@ OCIO_ADD_TEST(DisplayViewHelpers, basic)
 
     OCIO::ConfigRcPtr config = cfg->createEditableCopy();
 
-    OCIO::ConstColorSpaceInfoRcPtr csInfo
-        = OCIO::ColorSpaceInfo::Create(config, "view_5", nullptr, nullptr);
-
     const std::string filePath(ocioTestFilesDir + "/lut1d_green.ctf");
-
-    OCIO::FileTransformRcPtr userTransform;
-    OCIO_CHECK_NO_THROW(userTransform = OCIO::FileTransform::Create());
-    userTransform->setSrc(filePath.c_str());
 
     OCIO_CHECK_NO_THROW(
         OCIO::DisplayViewHelpers::AddDisplayView(config,
                                                  "DISP_1", "VIEW_5", "look_3",
-                                                 *csInfo, userTransform, 
-                                                 "cat1, cat2", "lut_input_1"));
+                                                 "view_5", nullptr, nullptr, "cat1, cat2",
+                                                 filePath.c_str(), "lut_input_1"));
     // Keep in sync. the configs.
     cfg = config;
 
@@ -112,7 +98,7 @@ OCIO_ADD_TEST(DisplayViewHelpers, basic)
     //
     {
         OCIO::ConstColorSpaceRcPtr cs;
-        OCIO_CHECK_NO_THROW(cs = config->getColorSpace(csInfo->getName()));
+        OCIO_CHECK_NO_THROW(cs = config->getColorSpace("view_5"));
         OCIO_REQUIRE_ASSERT(cs);
         // These categories were not already used in the config, so AddDisplayView ignores them.
         OCIO_CHECK_ASSERT(!cs->hasCategory("cat1"));
@@ -287,47 +273,38 @@ OCIO_ADD_TEST(DisplayViewHelpers, basic)
         // Color space already exists.
         OCIO_CHECK_THROW_WHAT(
             OCIO::DisplayViewHelpers::AddDisplayView(config, nullptr, "VIEW_4", "look_3",
-                                                     *csInfo, userTransform, 
-                                                     "cat1, cat2", "lut_input_1"),
+                                                     "view_5", nullptr, nullptr, "cat1, cat2",
+                                                     filePath.c_str(), "lut_input_1"),
             OCIO::Exception,
             "Color space name 'view_5' already exists.");
     }
 
     {
-        OCIO::ConstColorSpaceInfoRcPtr info
-            = OCIO::ColorSpaceInfo::Create(config, "view_51", nullptr, nullptr);
-
         // Display is null.
         OCIO_CHECK_THROW_WHAT(
             OCIO::DisplayViewHelpers::AddDisplayView(config, nullptr, "VIEW_4", "look_3",
-                                                     *info, userTransform, 
-                                                     "cat1, cat2", "lut_input_1"),
+                                                     "view_51", nullptr, nullptr, "cat1, cat2",
+                                                     filePath.c_str(), "lut_input_1"),
             OCIO::Exception,
             "Invalid display name.");
     }
 
     {
-        OCIO::ConstColorSpaceInfoRcPtr info
-            = OCIO::ColorSpaceInfo::Create(config, "view_51", nullptr, nullptr);
-
         // View is null.
         OCIO_CHECK_THROW_WHAT(
             OCIO::DisplayViewHelpers::AddDisplayView(config, "DISP_1", nullptr, "look_3",
-                                                     *info, userTransform, 
-                                                     "cat1, cat2", "lut_input_1"),
+                                                     "view_51", nullptr, nullptr, "cat1, cat2",
+                                                     filePath.c_str(), "lut_input_1"),
             OCIO::Exception,
             "Invalid view name.");
     }
 
     {
-        OCIO::ConstColorSpaceInfoRcPtr info
-            = OCIO::ColorSpaceInfo::Create(config, "view_51", nullptr, nullptr);
-
         // Connection CS does not exist.
         OCIO_CHECK_THROW_WHAT(
             OCIO::DisplayViewHelpers::AddDisplayView(config, "DISP_1", "VIEW_4", "look_3",
-                                                     *info, userTransform, 
-                                                     "cat1, cat2", "lut_unknown"),
+                                                     "view_51", nullptr, nullptr, "cat1, cat2",
+                                                     filePath.c_str(), "lut_unknown"),
             OCIO::Exception,
             "Connection color space name 'lut_unknown' does not exist.");
     }
@@ -474,9 +451,6 @@ OCIO_ADD_TEST(DisplayViewHelpers, active_display_view)
 
     // Step 3 - Create a (display, view) pair.
 
-    OCIO::ConstColorSpaceInfoRcPtr csInfo
-        = OCIO::ColorSpaceInfo::Create(cfg, "VIEW_5", nullptr, nullptr);
-
     const std::string filePath(ocioTestFilesDir + "/lut1d_green.ctf");
 
     OCIO::FileTransformRcPtr userTransform;
@@ -486,8 +460,8 @@ OCIO_ADD_TEST(DisplayViewHelpers, active_display_view)
     OCIO_CHECK_NO_THROW(
         OCIO::DisplayViewHelpers::AddDisplayView(cfg,
                                                  "DISP_1", "VIEW_5", nullptr,
-                                                 *csInfo, userTransform, 
-                                                 "cat1, cat2", "lut_input_1"));
+                                                 "VIEW_5", nullptr, nullptr, "cat1, cat2",
+                                                 filePath.c_str(), "lut_input_1"));
 
     // The active displays & views were correctly updated.
     OCIO_CHECK_EQUAL(cfg->getActiveDisplays(), std::string("DISP_1"));
@@ -549,8 +523,8 @@ OCIO_ADD_TEST(DisplayViewHelpers, active_display_view)
         OCIO_CHECK_THROW_WHAT(
             OCIO::DisplayViewHelpers::AddDisplayView(cfg,
                                                      "DISP_5", "VIEW_5", nullptr,
-                                                     *csInfo, userTransform, 
-                                                     "cat1, cat2", "lut_input_1"),
+                                                     "VIEW_5", nullptr, nullptr, "cat1, cat2",
+                                                     filePath.c_str(), "lut_input_1"),
             OCIO::Exception,
             "Forbidden to add an active display as 'OCIO_ACTIVE_DISPLAYS' controls the active list.");
     }
@@ -575,8 +549,8 @@ OCIO_ADD_TEST(DisplayViewHelpers, active_display_view)
         OCIO_CHECK_THROW_WHAT(
             OCIO::DisplayViewHelpers::AddDisplayView(cfg,
                                                      "DISP_1", "VIEW_5", nullptr,
-                                                     *csInfo, userTransform, 
-                                                     "cat1, cat2", "lut_input_1"),
+                                                     "VIEW_5", nullptr, nullptr, "cat1, cat2",
+                                                     filePath.c_str(), "lut_input_1"),
             OCIO::Exception,
             "Forbidden to add an active view as 'OCIO_ACTIVE_VIEWS' controls the active list.");
     }
@@ -647,4 +621,28 @@ OCIO_ADD_TEST(DisplayViewHelpers, remove_display_view)
     // 'cs2' is removed because it was not anymore used (i.e. 'cs3' is now removed).
     OCIO_CHECK_NO_THROW(cs = config->getColorSpace("cs2"));
     OCIO_CHECK_ASSERT(!cs);
+}
+
+OCIO_ADD_TEST(DisplayViewHelpers, identity_processor)
+{
+    auto config = OCIO::Config::Create();
+    OCIO::ConstProcessorRcPtr identity;
+    OCIO_CHECK_NO_THROW(identity = OCIO::DisplayViewHelpers::GetIdentityProcessor(config));
+    OCIO_REQUIRE_ASSERT(identity);
+    OCIO::GroupTransformRcPtr grp;
+    OCIO_CHECK_NO_THROW(grp = identity->createGroupTransform());
+    OCIO_REQUIRE_ASSERT(grp);
+    OCIO_REQUIRE_EQUAL(grp->getNumTransforms(), 2);
+    OCIO_REQUIRE_EQUAL(grp->getTransform(0)->getTransformType(),
+                       OCIO::TRANSFORM_TYPE_EXPOSURE_CONTRAST);
+    OCIO_REQUIRE_EQUAL(grp->getTransform(1)->getTransformType(),
+                       OCIO::TRANSFORM_TYPE_EXPOSURE_CONTRAST);
+    auto ec0 = OCIO_DYNAMIC_POINTER_CAST<const OCIO::ExposureContrastTransform>(grp->getTransform(0));
+    auto ec1 = OCIO_DYNAMIC_POINTER_CAST<const OCIO::ExposureContrastTransform>(grp->getTransform(1));
+    OCIO_CHECK_ASSERT(ec0->isContrastDynamic());
+    OCIO_CHECK_ASSERT(ec0->isExposureDynamic());
+    OCIO_CHECK_ASSERT(!ec0->isGammaDynamic());
+    OCIO_CHECK_ASSERT(!ec1->isContrastDynamic());
+    OCIO_CHECK_ASSERT(!ec1->isExposureDynamic());
+    OCIO_CHECK_ASSERT(ec1->isGammaDynamic());
 }

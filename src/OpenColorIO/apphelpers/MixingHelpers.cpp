@@ -9,14 +9,12 @@
 
 #include "CategoryHelpers.h"
 #include "ColorSpaceHelpers.h"
-#include "DisplayViewHelpers.h"
 #include "MixingHelpers.h"
 #include "utils/StringUtils.h"
 
 
 namespace OCIO_NAMESPACE
 {
-
 namespace
 {
 
@@ -50,32 +48,6 @@ float perceptualToLinear(float percept)
 
 } // anon.
 
-class MixingSliderImpl : public MixingSlider
-{
-public:
-    MixingSliderImpl() = delete;
-    MixingSliderImpl & operator=(const MixingSliderImpl &) = delete;
-    explicit MixingSliderImpl(MixingColorSpaceManager & mixing);
-    ~MixingSliderImpl() override = default;
-
-    float getSliderMinEdge() const noexcept override;
-    void setSliderMinEdge(float sliderMixingMinEdge) noexcept override;
-
-    float getSliderMaxEdge() const noexcept override;
-    void setSliderMaxEdge(float sliderMixingMaxEdge) noexcept override;
-
-    float sliderToMixing(float sliderUnits) const noexcept override;
-
-    float mixingToSlider(float mixingUnits) const noexcept override;
-
-    static void Deleter(MixingSlider * slider);
-
-private:
-    MixingColorSpaceManager & m_mixing;
-
-    float m_sliderMinEdge = 0.0f;
-    float m_sliderMaxEdge = 1.0f;
-};
 
 MixingSliderImpl::MixingSliderImpl(MixingColorSpaceManager & mixing)
     :   MixingSlider()
@@ -134,62 +106,8 @@ float MixingSliderImpl::mixingToSlider(float mixingUnits) const noexcept
 }
 
 
-class MixingColorSpaceManagerImpl : public MixingColorSpaceManager
-{
-public:
-    MixingColorSpaceManagerImpl() = delete;
-    MixingColorSpaceManagerImpl & operator=(const MixingColorSpaceManagerImpl &) = delete;
-    explicit MixingColorSpaceManagerImpl(ConstConfigRcPtr & config);
-    MixingColorSpaceManagerImpl(const MixingColorSpaceManagerImpl &) = delete;
-    ~MixingColorSpaceManagerImpl() override = default;
 
-    size_t getNumMixingSpaces() const noexcept override;
-    const char * getMixingSpaceUIName(size_t idx) const override;
-    size_t getSelectedMixingSpaceIdx() const noexcept override;
-    void setSelectedMixingSpaceIdx(size_t idx) override;
-    void setSelectedMixingSpace(const char * mixingSpace) override;
-
-    bool isPerceptuallyUniform() const noexcept override;
-
-    size_t getNumMixingEncodings() const noexcept override;
-    const char * getMixingEncodingName(size_t idx) const override;
-    size_t getSelectedMixingEncodingIdx() const noexcept override;
-    void setSelectedMixingEncodingIdx(size_t idx) override;
-    void setSelectedMixingEncoding(const char * mixingEncoding) override;
-
-    void refresh(ConstConfigRcPtr config) override;
-    void refreshEntries();
-
-    ConstProcessorRcPtr getProcessor(const char * workingName,
-                                     const char * displayName,
-                                     const char * viewName,
-                                     TransformDirection direction) const override;
-
-    MixingSlider & getSlider() noexcept override;
-    MixingSlider & getSlider(float sliderMixingMinEdge, float sliderMixingMaxEdge) noexcept override;
-
-    static void Deleter(MixingColorSpaceManager * incs);
-
-protected:
-    ConstProcessorRcPtr getProcessorWithoutEncoding(const char * workingName,
-                                                    const char * displayName,
-                                                    const char * viewName) const;
-
-private:
-    ConstConfigRcPtr m_config;
-
-    MixingSliderImpl m_slider;
-
-    ColorSpaceNames m_mixingSpaces;
-    const ColorSpaceNames m_mixingEncodings { "RGB", "HSV" };
-
-    size_t m_selectedMixingSpaceIdx    = 0;
-    size_t m_selectedMixingEncodingIdx = 0;
-
-    ConstColorSpaceInfoRcPtr m_colorPicker;
-};
-
-MixingColorSpaceMenuRcPtr MixingColorSpaceManager::Create(ConstConfigRcPtr & config)
+MixingColorSpaceManagerRcPtr MixingColorSpaceManager::Create(ConstConfigRcPtr & config)
 {
     return std::shared_ptr<MixingColorSpaceManager>(new MixingColorSpaceManagerImpl(config),
                                                     &MixingColorSpaceManagerImpl::Deleter);
@@ -205,16 +123,16 @@ MixingColorSpaceManagerImpl::MixingColorSpaceManagerImpl(ConstConfigRcPtr & conf
     ,   m_config(config)
     ,   m_slider(*this)
 {
-    refreshEntries();
+    refresh();
 }
 
 void MixingColorSpaceManagerImpl::refresh(ConstConfigRcPtr config)
 {
     m_config = config;
-    refreshEntries();
+    refresh();
 }
 
-void MixingColorSpaceManagerImpl::refreshEntries()
+void MixingColorSpaceManagerImpl::refresh()
 {
     // Add the mixing spaces.
 
@@ -225,7 +143,7 @@ void MixingColorSpaceManagerImpl::refreshEntries()
 
     if (m_config->hasRole(ROLE_COLOR_PICKING))
     {
-        m_colorPicker = GetRoleInfo(m_config, ROLE_COLOR_PICKING);
+        m_colorPicker = ColorSpaceInfo::CreateFromRole(m_config, ROLE_COLOR_PICKING, nullptr);
         m_mixingSpaces.push_back(m_colorPicker->getUIName());
     }
     else

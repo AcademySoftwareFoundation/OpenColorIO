@@ -19,7 +19,6 @@ set_target_properties(ocioperf PROPERTIES
 
 target_link_libraries(ocioperf
     PRIVATE
-        apphelpers
         apputils
         IlmBase::Half
         oiiohelpers

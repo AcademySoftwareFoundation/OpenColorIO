@@ -10,11 +10,13 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "ColorSpaceHelpers.h"
-
 
 namespace OCIO_NAMESPACE
 {
+
+class ColorSpaceInfo;
+typedef OCIO_SHARED_PTR<ColorSpaceInfo> ColorSpaceInfoRcPtr;
+typedef OCIO_SHARED_PTR<const ColorSpaceInfo> ConstColorSpaceInfoRcPtr;
 
 using Categories = std::vector<std::string>;
 // Returns the list of categories.
@@ -32,13 +34,10 @@ Infos FindColorSpaceInfos(ConstConfigRcPtr config, const Categories & categories
 // Return information on all the active color spaces.
 Infos FindAllColorSpaceInfos(ConstConfigRcPtr config);
 
-// Return information for a role which could be empty if not found.
-ConstColorSpaceInfoRcPtr GetRoleInfo(ConstConfigRcPtr config, const char * roleName);
-
-
 Infos getColorSpaceInfosFromCategories(ConstConfigRcPtr config,
-                                       const char * role,        // Could be null or empty.
-                                       const char * categories); // Could be null or empty.
+                                       const char * role,        // Could be null or empty
+                                       const char * categories,  // Could be null or empty
+                                       ColorSpaceMenuHelper::IncludeTypeFlag includeFlag);
 
 } // namespace OCIO_NAMESPACE
 

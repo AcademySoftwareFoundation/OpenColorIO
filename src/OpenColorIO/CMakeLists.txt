@@ -2,6 +2,11 @@
 # Copyright Contributors to the OpenColorIO Project.
 
 set(SOURCES
+	apphelpers/CategoryHelpers.cpp
+	apphelpers/ColorSpaceHelpers.cpp
+	apphelpers/DisplayViewHelpers.cpp
+	apphelpers/LegacyViewingPipeline.cpp
+	apphelpers/MixingHelpers.cpp
 	Baker.cpp
 	BitDepthUtils.cpp
 	Caching.cpp
