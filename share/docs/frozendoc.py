@@ -61,6 +61,7 @@ import os
 import shutil
 
 import sphinx.ext.autodoc
+from sphinx.errors import ExtensionError
 
 
 logging.basicConfig(level=logging.INFO)
@@ -190,7 +191,7 @@ def backup_frozen(app):
             shutil.rmtree(PYTHON_BACKUP_DIR)
         shutil.move(PYTHON_FROZEN_DIR, PYTHON_BACKUP_DIR)
     else:
-        raise RuntimeError(
+        raise ExtensionError(
             "No frozen RST found! Build OpenColorIO with CMake option "
             "'-DOCIO_BUILD_FROZEN_DOCS=ON' to generate required frozen "
             "documentation source files in: {dir}".format(dir=PYTHON_FROZEN_DIR)
@@ -215,10 +216,13 @@ def compare_frozen(app, exception):
         dst=PYTHON_BACKUP_DIR
     ))
 
+    frozen_files = set(os.listdir(PYTHON_FROZEN_DIR))
+    backup_files = set(os.listdir(PYTHON_BACKUP_DIR))
+
     match, mismatch, errors = filecmp.cmpfiles(
         PYTHON_FROZEN_DIR, 
         PYTHON_BACKUP_DIR,
-        os.listdir(PYTHON_FROZEN_DIR),
+        list(frozen_files | backup_files),
         shallow=False
     )
 
@@ -226,17 +230,17 @@ def compare_frozen(app, exception):
         shutil.rmtree(PYTHON_BACKUP_DIR)
 
     if mismatch or errors:
-        raise RuntimeError(
+        raise ExtensionError(
             "Frozen RST is out of date! Build OpenColorIO with CMake option "
             "'-DOCIO_BUILD_FROZEN_DOCS=ON' to update required frozen "
             "documentation source files in: {dir}\n\n"
-            "       Match: {match}\n\n"
-            "    Mismatch: {mismatch}\n\n"
-            "      Errors: {errors}\n\n".format(
+            "    Changed files: {changed}\n\n"
+            "      Added files: {added}\n\n"
+            "    Removed files: {removed}\n".format(
                 dir=PYTHON_FROZEN_DIR,
-                match=", ".join(match),
-                mismatch=", ".join(mismatch),
-                errors=", ".join(errors),
+                changed=", ".join(mismatch),
+                added=", ".join(f for f in errors if f in frozen_files),
+                removed=", ".join(f for f in errors if f in backup_files),
             )
         )
 
