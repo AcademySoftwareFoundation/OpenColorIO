@@ -164,44 +164,6 @@ if(${Python_VERSION_MAJOR} GREATER_EQUAL 3)
             PATTERN .* EXCLUDE
     )
 
-    ###########################################################################
-    ### PDF target ###
-
-    find_package(LATEX)
-    package_root_message(LATEX)
-
-    if(PDFLATEX_COMPILER)
-
-        add_custom_target(latex
-            COMMAND
-                ${PYT_PRE_CMD} "${Sphinx_EXECUTABLE}" -b latex . "${CMAKE_CURRENT_BINARY_DIR}/build-latex"
-            DEPENDS
-                ${CMAKE_BINARY_DIR}/docs/conf.py
-            COMMENT "Building latex doc"
-        )
-
-        add_dependencies(latex
-            OpenColorIO
-            PyOpenColorIO
-            doc_copy
-            doxygen_extraction
-        )
-
-        add_custom_target(pdf ALL
-            COMMAND ${PDFLATEX_COMPILER} OpenColorIO.tex
-            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/build-latex
-            COMMENT "Building pdf doc"
-        )
-
-        add_dependencies(pdf
-            latex
-        )
-
-        install(FILES ${CMAKE_CURRENT_BINARY_DIR}/build-latex/OpenColorIO.pdf
-                DESTINATION ${CMAKE_INSTALL_PREFIX}/share/doc/OpenColorIO/)
-
-    endif()
-
 else()
     message(Warning "Skipping local documentation generation, requires Python >= 3.x")
 endif()

@@ -7,8 +7,8 @@
 # where the dependent Python package is unavailable (e.g. Python bindings which 
 # must be compiled, but can"t due to a build environment like readthedocs.org).
 #
-# The solution is based on two Stack Overflow answers, which point out an entry
-# point in autodoc for capturing generated RST:
+# The solution was derived initially from two Stack Overflow answers, which 
+# point out an entry point in autodoc for capturing generated RST:
 #
 #  Answer: https://stackoverflow.com/a/2712413
 #  Author: Michal Čihař (https://stackoverflow.com/users/225718/michal-%c4%8ciha%c5%99)
@@ -55,18 +55,24 @@
 #
 # -----------------------------------------------------------------------------
 
+import filecmp
+import logging
 import os
 import shutil
 
 import sphinx.ext.autodoc
 
 
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 MODULE = os.path.realpath(__file__)
 HERE = os.path.dirname(MODULE)
 ROOT = os.path.abspath(os.path.join(HERE, os.pardir, os.pardir))
 MODULE_RELPATH = MODULE[len(ROOT)+1:]
 DOCS_DIR = os.path.join(ROOT, "docs")
-PYTHON_GEN_DIR = os.path.join(DOCS_DIR, "api", "python", "frozen")
+PYTHON_FROZEN_DIR = os.path.join(DOCS_DIR, "api", "python", "frozen")
+PYTHON_BACKUP_DIR = os.path.join(DOCS_DIR, "api", "python", "backup")
 
 
 class RSTRouter(object):
@@ -74,6 +80,7 @@ class RSTRouter(object):
     Manages state for multiple incrementally generated RST files.
     """
     _init_dest_dir = set()
+    _init_rst_file = set()
     _current_fullname = None
     _current_rst_file = None
 
@@ -107,15 +114,19 @@ class RSTRouter(object):
             name_tokens = fullname.split(".")
             after_index = name_tokens.index(after_token)
             basename = "_".join(name_tokens[:after_index+2]).lower()
-            rst_path = os.path.join(PYTHON_GEN_DIR, basename + ".rst")
-            rst_exists = os.path.exists(rst_path)
+            rst_path = os.path.join(PYTHON_FROZEN_DIR, basename + ".rst")
 
-            cls._current_rst_file = open(rst_path, "a" if rst_exists else "w")
+            mode = "w"
+            if rst_path in cls._init_rst_file:
+                mode = "a"
+
+            cls._current_rst_file = open(rst_path, mode)
             cls._current_fullname = fullname
 
             # Start each new RST file with the given header
-            if not rst_exists:
+            if mode == "w":
                 cls._current_rst_file.write(header)
+                cls._init_rst_file.add(rst_path)
 
         return cls._current_rst_file 
 
@@ -130,7 +141,7 @@ def add_line(self, line, source, *lineno):
     # -------------------------------------------------------------------------
 
     rst_file = RSTRouter.init_rst_file(
-        PYTHON_GEN_DIR, 
+        PYTHON_FROZEN_DIR, 
         self.fullname, 
         "PyOpenColorIO",
         "..\n"
@@ -154,3 +165,86 @@ def patch():
     Apply monkeypatch to autodoc.
     """
     sphinx.ext.autodoc.Documenter.add_line = add_line
+
+
+def backup_frozen(app):
+    """
+    Duplicate existing frozen Python RST files for comparison after 
+    re-freezing. This is intended to be run during CI to validate that
+    frozen RST is current, failing the job if it isn't.
+    """
+    if app.config.frozendoc_build or app.config.frozendoc_compare:
+        # Apply monkeypatch, enabling frozen RST generation
+        patch()
+
+    if not app.config.frozendoc_compare:
+        return
+
+    logger.info("Backing up frozen RST: {src} -> {dst}".format(
+        src=PYTHON_FROZEN_DIR, 
+        dst=PYTHON_BACKUP_DIR
+    ))
+
+    if os.path.exists(PYTHON_FROZEN_DIR) and os.listdir(PYTHON_FROZEN_DIR):
+        if os.path.exists(PYTHON_BACKUP_DIR):
+            shutil.rmtree(PYTHON_BACKUP_DIR)
+        shutil.move(PYTHON_FROZEN_DIR, PYTHON_BACKUP_DIR)
+    else:
+        raise RuntimeError(
+            "No frozen RST found! Build OpenColorIO with CMake option "
+            "'-DOCIO_BUILD_FROZEN_DOCS=ON' to generate required frozen "
+            "documentation source files in: {dir}".format(dir=PYTHON_FROZEN_DIR)
+        )
+
+    logger.info("Backup complete.")
+
+
+def compare_frozen(app, exception):
+    """
+    Compare previously backed up frozen RST with the newly frozen 
+    version. If they don't match, raise to fail the current CI job.
+    This implies that the OCIO API changed without building with 
+    OCIO_BUILD_FROZEN_DOCS=ON, needed to update frozen RST in the source 
+    tree.
+    """
+    if not app.config.frozendoc_compare:
+        return
+
+    logger.info("Comparing frozen RST: {src} <-> {dst}".format(
+        src=PYTHON_FROZEN_DIR, 
+        dst=PYTHON_BACKUP_DIR
+    ))
+
+    match, mismatch, errors = filecmp.cmpfiles(
+        PYTHON_FROZEN_DIR, 
+        PYTHON_BACKUP_DIR,
+        os.listdir(PYTHON_FROZEN_DIR),
+        shallow=False
+    )
+
+    if os.path.exists(PYTHON_BACKUP_DIR):
+        shutil.rmtree(PYTHON_BACKUP_DIR)
+
+    if mismatch or errors:
+        raise RuntimeError(
+            "Frozen RST is out of date! Build OpenColorIO with CMake option "
+            "'-DOCIO_BUILD_FROZEN_DOCS=ON' to update required frozen "
+            "documentation source files in: {dir}\n\n"
+            "       Match: {match}\n\n"
+            "    Mismatch: {mismatch}\n\n"
+            "      Errors: {errors}\n\n".format(
+                dir=PYTHON_FROZEN_DIR,
+                match=", ".join(match),
+                mismatch=", ".join(mismatch),
+                errors=", ".join(errors),
+            )
+        )
+
+    logger.info("Frozen RST matches!")
+
+
+def setup(app):
+    app.add_config_value("frozendoc_build", False, "env")
+    app.add_config_value("frozendoc_compare", False, "env")
+    app.connect("builder-inited", backup_frozen)
+    app.connect("build-finished", compare_frozen)
