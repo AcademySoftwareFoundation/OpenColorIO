@@ -224,15 +224,14 @@ def compare_frozen(app, exception):
         file_a = os.path.join(PYTHON_FROZEN_DIR, filename)
         file_b = os.path.join(PYTHON_BACKUP_DIR, filename)
         with open(file_a) as f:
-            data_a = f.read()
+            data_a = f.readlines()
         with open(file_b) as f:
-            data_b = f.read()
+            data_b = f.readlines()
         for line in difflib.unified_diff(
             data_a, 
             data_b, 
             fromfile=file_a, 
-            tofile=file_b, 
-            lineterm=""
+            tofile=file_b,
         ):
             print(line)
 
