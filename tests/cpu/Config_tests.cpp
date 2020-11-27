@@ -162,7 +162,7 @@ OCIO_ADD_TEST(Config, simple_config)
         "        children:\n"
         "          - !<FileTransform>\n"
         "            src: diffusemult.spimtx\n"
-        "            interpolation: best\n"
+        "            interpolation: unknown\n"
         "          - !<ColorSpaceTransform>\n"
         "            src: raw\n"
         "            dst: lnh\n"
@@ -393,7 +393,7 @@ OCIO_ADD_TEST(Config, serialize_group_transform)
     "    from_reference: !<GroupTransform>\n"
     "      children:\n"
     "        - !<FileTransform> {src: \"\"}\n"
-    "        - !<FileTransform> {src: \"\"}\n"
+    "        - !<FileTransform> {src: \"\", interpolation: unknown}\n"
     "        - !<FileTransform> {src: \"\", interpolation: best}\n"
     "        - !<FileTransform> {src: \"\", interpolation: nearest}\n"
     "        - !<FileTransform> {src: \"\", interpolation: cubic}\n"
@@ -4333,6 +4333,55 @@ OCIO_ADD_TEST(Config, file_transform_serialization)
     OCIO_CHECK_EQUAL(oss.str(), str);
 }
 
+OCIO_ADD_TEST(Config, file_transform_serialization_v1)
+{
+    OCIO::ConfigRcPtr cfg;
+    OCIO_CHECK_NO_THROW(cfg = OCIO::Config::Create());
+    OCIO_REQUIRE_ASSERT(cfg);
+    cfg->setMajorVersion(1);
+    auto ft = OCIO::FileTransform::Create();
+    ft->setSrc("file");
+    auto cs = OCIO::ColorSpace::Create();
+    // Note that ft has no interpolation set.  In a v2 config, this is not a problem and is taken
+    // to mean default interpolation.  However, in this case the config version is 1 and if the
+    // config were read by a v1 library (rather than v2), this could cause a failure.  So the
+    // interp is set to linear during serialization to avoid problems.
+    cs->setTransform(ft, OCIO::COLORSPACE_DIR_TO_REFERENCE);
+    ft->setSrc("other");
+    ft->setInterpolation(OCIO::INTERP_TETRAHEDRAL);
+    cs->setTransform(ft, OCIO::COLORSPACE_DIR_FROM_REFERENCE);
+    cs->setName("cs");
+    cfg->addColorSpace(cs);
+    std::ostringstream os;
+    cfg->serialize(os);
+    OCIO_CHECK_EQUAL(os.str(), R"(ocio_profile_version: 1
+
+search_path: ""
+strictparsing: true
+luma: [0.2126, 0.7152, 0.0722]
+
+roles:
+  {}
+
+displays:
+  {}
+
+active_displays: []
+active_views: []
+
+colorspaces:
+  - !<ColorSpace>
+    name: cs
+    family: ""
+    equalitygroup: ""
+    bitdepth: unknown
+    isdata: false
+    allocation: uniform
+    to_reference: !<FileTransform> {src: file, interpolation: linear}
+    from_reference: !<FileTransform> {src: other, interpolation: tetrahedral}
+)" );
+}
+
 OCIO_ADD_TEST(Config, add_color_space)
 {
     // The unit test validates that the color space is correctly added to the configuration.
@@ -4376,8 +4425,7 @@ OCIO_ADD_TEST(Config, add_color_space)
         + u8"    family: \"\"\n"
         + u8"    equalitygroup: \"\"\n"
         + u8"    bitdepth: unknown\n"
-        + u8"    description: |\n"
-        + u8"      é À Â Ç É È ç -- $ € 円 £ 元\n"
+        + u8"    description: é À Â Ç É È ç -- $ € 円 £ 元\n"
         + u8"    isdata: false\n"
         + u8"    allocation: uniform\n"
         + u8"    to_reference: !<FixedFunctionTransform> {style: ACES_RedMod03}\n";
@@ -5811,8 +5859,7 @@ OCIO_ADD_TEST(Config, family_separator)
         "    family: raw\n"
         "    equalitygroup: \"\"\n"
         "    bitdepth: 32f\n"
-        "    description: |\n"
-        "      A raw color space. Conversions to and from this space are no-ops.\n"
+        "    description: A raw color space. Conversions to and from this space are no-ops.\n"
         "    isdata: true\n"
         "    allocation: uniform\n";
 
@@ -7384,4 +7431,128 @@ colorspaces:
                           OCIO::Exception,
                           "Display 'virtual_display' has a view 'Raw1' refers to a look, 'look',"
                           " which is not defined.");
+}
+
+OCIO_ADD_TEST(Config, description)
+{
+    auto cfg = OCIO::Config::CreateRaw()->createEditableCopy();
+    std::ostringstream oss;
+    cfg->serialize(oss);
+    static constexpr char CONFIG_NO_DESC[]{ R"(ocio_profile_version: 2
+
+environment:
+  {}
+search_path: ""
+strictparsing: false
+luma: [0.2126, 0.7152, 0.0722]
+
+roles:
+  default: raw
+
+file_rules:
+  - !<Rule> {name: ColorSpaceNamePathSearch}
+  - !<Rule> {name: Default, colorspace: default}
+
+displays:
+  sRGB:
+    - !<View> {name: Raw, colorspace: raw}
+
+active_displays: []
+active_views: []
+
+colorspaces:
+  - !<ColorSpace>
+    name: raw
+    family: raw
+    equalitygroup: ""
+    bitdepth: 32f
+    description: A raw color space. Conversions to and from this space are no-ops.
+    isdata: true
+    allocation: uniform
+)" };
+    OCIO_CHECK_EQUAL(oss.str(), std::string(CONFIG_NO_DESC));
+
+    oss.clear();
+    oss.str("");
+
+    cfg->setDescription("single line description");
+    cfg->serialize(oss);
+    static constexpr char CONFIG_DESC_SINGLELINE[]{ R"(ocio_profile_version: 2
+
+environment:
+  {}
+search_path: ""
+strictparsing: false
+luma: [0.2126, 0.7152, 0.0722]
+description: single line description
+
+roles:
+  default: raw
+
+file_rules:
+  - !<Rule> {name: ColorSpaceNamePathSearch}
+  - !<Rule> {name: Default, colorspace: default}
+
+displays:
+  sRGB:
+    - !<View> {name: Raw, colorspace: raw}
+
+active_displays: []
+active_views: []
+
+colorspaces:
+  - !<ColorSpace>
+    name: raw
+    family: raw
+    equalitygroup: ""
+    bitdepth: 32f
+    description: A raw color space. Conversions to and from this space are no-ops.
+    isdata: true
+    allocation: uniform
+)" };
+    OCIO_CHECK_EQUAL(oss.str(), std::string(CONFIG_DESC_SINGLELINE));
+
+    oss.clear();
+    oss.str("");
+
+    cfg->setDescription("multi line description\n\nother line");
+    cfg->serialize(oss);
+
+    static constexpr char CONFIG_DESC_MULTILINES[]{ R"(ocio_profile_version: 2
+
+environment:
+  {}
+search_path: ""
+strictparsing: false
+luma: [0.2126, 0.7152, 0.0722]
+description: |
+  multi line description
+  
+  other line
+
+roles:
+  default: raw
+
+file_rules:
+  - !<Rule> {name: ColorSpaceNamePathSearch}
+  - !<Rule> {name: Default, colorspace: default}
+
+displays:
+  sRGB:
+    - !<View> {name: Raw, colorspace: raw}
+
+active_displays: []
+active_views: []
+
+colorspaces:
+  - !<ColorSpace>
+    name: raw
+    family: raw
+    equalitygroup: ""
+    bitdepth: 32f
+    description: A raw color space. Conversions to and from this space are no-ops.
+    isdata: true
+    allocation: uniform
+)" };
+    OCIO_CHECK_EQUAL(oss.str(), std::string(CONFIG_DESC_MULTILINES));
 }

@@ -76,19 +76,19 @@ Developers who wish to contribute code to be considered for inclusion
 in OpenColorIO (OCIO) must first complete a **Contributor License Agreement
 (CLA)**.
 
-OCIO uses [EasyCLA](https://corporate.lfcla.com/) for managing CLAs, which
+OCIO uses [EasyCLA](https://lfx.linuxfoundation.org/tools/easycla) for managing CLAs, which
 automatically checks to ensure CLAs are signed by a contributor before a commit
 can be merged.
 
 * If you are an individual writing the code on your own time and
   you're SURE you are the sole owner of any intellectual property you
   contribute, you can
-  [sign the CLA as an individual contributor](https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla/contributors/sign-a-cla-as-an-individual-contributor-to-github).
+  [sign the CLA as an individual contributor](https://docs.linuxfoundation.org/lfx/easycla/contributors/individual-contributor).
 
 * If you are writing the code as part of your job, or if there is any
   possibility that your employers might think they own any
   intellectual property you create, then you should use the 
-  [Corporate Contributor Licence Agreement](https://docs.linuxfoundation.org/docs/communitybridge/communitybridge-easycla/contributors/contribute-to-a-github-company-project).
+  [Corporate Contributor Licence Agreement](https://docs.linuxfoundation.org/lfx/easycla/contributors/corporate-contributor).
 
 The OCIO CLA's are the standard forms used by Linux Foundation projects and
 [recommended by the ASWF TAC](https://github.com/AcademySoftwareFoundation/tac/blob/master/process/contributing.md#contributor-license-agreement-cla).

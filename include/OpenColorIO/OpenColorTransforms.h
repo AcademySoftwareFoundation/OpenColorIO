@@ -59,25 +59,36 @@ public:
     virtual void addAttribute(const char * name, const char * value) = 0;
 
     virtual int getNumChildrenElements() const = 0;
+    /**
+     * Access a child element.
+     *
+     * \note
+     *    Adding siblings might cause a reallocation of the container and thus might make the
+     *    reference unusable.
+     *    Index i has to be positive and less than getNumChildrenElements() or the function will
+     *    throw.
+     */
     virtual const FormatMetadata & getChildElement(int i) const = 0;
     virtual FormatMetadata & getChildElement(int i) = 0;
 
     /**
-     * Add a child element with a given name and value. Name has to be
+     * Add a child element after the last child with a given name and value. Name has to be
      * non-empty. Value may be empty, particularly if this element will have children.
-     * Return a reference to the added element.
+     * Use getChildElement(getNumChildrenElements()-1) to access the added element.
      */
-    virtual FormatMetadata & addChildElement(const char * name, const char * value) = 0;
+    virtual void addChildElement(const char * name, const char * value) = 0;
 
     virtual void clear() = 0;
     virtual FormatMetadata & operator=(const FormatMetadata & rhs) = 0;
 
     FormatMetadata(const FormatMetadata & rhs) = delete;
-    virtual ~FormatMetadata();
+    virtual ~FormatMetadata() = default;
 
 protected:
-    FormatMetadata();
+    FormatMetadata() = default;
 };
+
+extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const FormatMetadata &);
 
 
 /// Base class for all the transform classes
@@ -988,6 +999,12 @@ public:
      */
     void setCDLStyle(CDLStyle);
 
+    /**
+     * The file parsers that care about interpolation (LUTs) will try to make use of the requested
+     * interpolation method when loading the file.  In these cases, if the requested method could
+     * not be used, a warning is logged.  If no method is provided, or a method cannot be used,
+     * INTERP_DEFAULT is used.
+     */
     Interpolation getInterpolation() const;
     void setInterpolation(Interpolation interp);
 

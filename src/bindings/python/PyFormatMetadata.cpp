@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
+#include <sstream>
+
 #include "PyOpenColorIO.h"
 #include "PyUtils.h"
 
@@ -74,7 +76,7 @@ void bindPyFormatMetadata(py::module & m)
             },
              "name"_a, 
              DOC(FormatMetadata, getAttributeValue))
-        .def("__setitem__", &FormatMetadata::addAttribute, "name"_a, "value"_a, 
+        .def("__setitem__", &FormatMetadata::addAttribute, "name"_a.none(false), "value"_a.none(false), 
              DOC(FormatMetadata, addAttribute))
         .def("__contains__", [](const FormatMetadata & self, const std::string & name) -> bool
             {
@@ -89,14 +91,20 @@ void bindPyFormatMetadata(py::module & m)
                 return false;
             },
              "name"_a)
+        .def("__repr__", [](const FormatMetadata & self)
+            {
+                std::ostringstream oss;
+                oss << self;
+                return oss.str();
+            })
 
         .def("getName", &FormatMetadata::getName, 
              DOC(FormatMetadata, getName))
-        .def("setName", &FormatMetadata::setName, "name"_a, 
+        .def("setName", &FormatMetadata::setName, "name"_a.none(false), 
              DOC(FormatMetadata, setName))
         .def("getValue", &FormatMetadata::getValue, 
              DOC(FormatMetadata, getValue))
-        .def("setValue", &FormatMetadata::setValue, "value"_a, 
+        .def("setValue", &FormatMetadata::setValue, "value"_a.none(false), 
              DOC(FormatMetadata, setValue))
         .def("getAttributes", [](const FormatMetadata & self) 
             { 
@@ -106,7 +114,8 @@ void bindPyFormatMetadata(py::module & m)
             { 
                 return ChildElementIterator(self); 
             })
-        .def("addChildElement", &FormatMetadata::addChildElement, "name"_a, "value"_a, 
+        .def("addChildElement", &FormatMetadata::addChildElement, 
+             "name"_a.none(false), "value"_a.none(false), 
              DOC(FormatMetadata, addChildElement))
         .def("clear", &FormatMetadata::clear, 
              DOC(FormatMetadata, clear));
