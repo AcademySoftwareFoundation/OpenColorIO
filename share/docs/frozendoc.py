@@ -197,10 +197,11 @@ def backup_frozen(app):
 def compare_frozen(app, exception):
     """
     Compare backed up frozen RST files from ``backup_frozen()`` with 
-    newly frozen RST. If they don't match, raise an exception to fail 
-    the current CI job. This implies that the OCIO API changed without 
-    building with CMake option ``-DOCIO_BUILD_FROZEN_DOCS=ON``; needed 
-    to update frozen RST in the source tree.
+    newly frozen RST. If they don't match within accepted tolerances, 
+    raise an exception to fail the current CI job. This implies that 
+    the OCIO API changed without building with CMake option 
+    ``-DOCIO_BUILD_FROZEN_DOCS=ON``; needed to update frozen RST in the 
+    source tree.
     """
     if not app.config.frozendoc_compare:
         return
@@ -213,6 +214,8 @@ def compare_frozen(app, exception):
     frozen_files = set(os.listdir(PYTHON_FROZEN_DIR))
     backup_files = set(os.listdir(PYTHON_BACKUP_DIR))
 
+    # Find any files which are different, or only present in one of the two 
+    # directories.
     match, mismatch, errors = filecmp.cmpfiles(
         PYTHON_FROZEN_DIR, 
         PYTHON_BACKUP_DIR,
@@ -220,20 +223,33 @@ def compare_frozen(app, exception):
         shallow=False
     )
 
-    for filename in mismatch:
-        file_a = os.path.join(PYTHON_FROZEN_DIR, filename)
-        file_b = os.path.join(PYTHON_BACKUP_DIR, filename)
-        with open(file_a) as f:
-            data_a = f.readlines()
-        with open(file_b) as f:
-            data_b = f.readlines()
-        for line in difflib.unified_diff(
-            data_a, 
-            data_b, 
-            fromfile=file_a, 
-            tofile=file_b,
-        ):
-            print(line)
+    # Different OSs or compilers may result in slightly different signatures
+    # or types. Test each mismatched file for the ratio of how different 
+    # their contents are. If they have a difference ratio at or above 0.6 (the 
+    # recommended ratio to determine close matches), assume the differences are
+    # ok. This is certainly not a water tight assumption, but deemed (at the 
+    # moment) preferrable to failing on every mior difference. Keep track of 
+    # these ignored differences and report them for transparency in CI logs.
+    ignored = []
+
+    for i in reversed(range(len(mismatch))):
+        filename = mismatch[i]
+
+        frozen_path = os.path.join(PYTHON_FROZEN_DIR, filename)
+        with open(frozen_path, "r") as frozen_file:
+            frozen_data = frozen_file.read()
+
+        backup_path = os.path.join(PYTHON_BACKUP_DIR, filename)
+        with open(backup_path, "r") as backup_file:
+            backup_data = backup_file.read()
+
+        # Based on difflib's caution of argument order playing a role in the 
+        # results of ratio(), check the ratio in both directions and use the
+        # better of the two as our heuristic.
+        match_ab = difflib.SequenceMatcher(None, frozen_data, backup_data)
+        match_ba = difflib.SequenceMatcher(None, backup_data, frozen_data)
+        if match_ab.ratio() >= 0.6 or match_ba.ratio() >= 0.6:
+            ignored.append(mismatch.pop(i))
 
     if os.path.exists(PYTHON_BACKUP_DIR):
         shutil.rmtree(PYTHON_BACKUP_DIR)
@@ -253,7 +269,18 @@ def compare_frozen(app, exception):
             )
         )
 
-    logger.info("Frozen RST matches!")
+    # Report ignored differences
+    if ignored:
+        logger.warning(
+            "Some differences were found and ignored when comparing frozen "
+            "RST to current documentation source in: {dir}\n\n"
+            "    Changed files: {changed}\n".format(
+                dir=PYTHON_FROZEN_DIR,
+                changed=", ".join(ignored),
+            )
+        )
+
+    logger.info("Frozen RST matches within accepted tolerances!")
 
 
 def setup(app):
