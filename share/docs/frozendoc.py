@@ -3,12 +3,12 @@
 #
 # -----------------------------------------------------------------------------
 #
-# This Sphinx monkeypatch emits autodoc generated RST for use in an environment 
+# This Sphinx extension emits autodoc generated RST for use in an environment 
 # where the dependent Python package is unavailable (e.g. Python bindings which 
 # must be compiled, but can"t due to a build environment like readthedocs.org).
 #
-# The solution was derived initially from two Stack Overflow answers, which 
-# point out an entry point in autodoc for capturing generated RST:
+# The solution is derived from two Stack Overflow answers, which point out an 
+# entry point in autodoc for capturing generated RST:
 #
 #  Answer: https://stackoverflow.com/a/2712413
 #  Author: Michal Čihař (https://stackoverflow.com/users/225718/michal-%c4%8ciha%c5%99)
@@ -133,13 +133,10 @@ class RSTRouter(object):
 
 
 def add_line(self, line, source, *lineno):
-    # This block should match the Sphinx source:
-    # -------------------------------------------------------------------------
     if line.strip():  # not a blank line
         line_out = self.indent + line
     else:
         line_out = ""
-    # -------------------------------------------------------------------------
 
     rst_file = RSTRouter.init_rst_file(
         PYTHON_FROZEN_DIR, 
@@ -155,10 +152,7 @@ def add_line(self, line, source, *lineno):
     # The last rst file won't be explicitly closed, so write to file now
     rst_file.flush()
 
-    # This block should match the Sphinx source:
-    # -------------------------------------------------------------------------
     self.directive.result.append(line_out, source, *lineno)
-    # -------------------------------------------------------------------------
 
 
 def patch():
@@ -170,9 +164,8 @@ def patch():
 
 def backup_frozen(app):
     """
-    Duplicate existing frozen Python RST files for comparison after 
-    re-freezing. This is intended to be run during CI to validate that
-    frozen RST is current, failing the job if it isn't.
+    Duplicate existing frozen RST files for comparison with newly 
+    frozen RST in ``compare_frozen()`` after docs are built.
     """
     if app.config.frozendoc_build or app.config.frozendoc_compare:
         # Apply monkeypatch, enabling frozen RST generation
@@ -202,11 +195,11 @@ def backup_frozen(app):
 
 def compare_frozen(app, exception):
     """
-    Compare previously backed up frozen RST with the newly frozen 
-    version. If they don't match, raise to fail the current CI job.
-    This implies that the OCIO API changed without building with 
-    OCIO_BUILD_FROZEN_DOCS=ON, needed to update frozen RST in the source 
-    tree.
+    Compare backed up frozen RST files from ``backup_frozen()`` with 
+    newly frozen RST. If they don't match, raise an exception to fail 
+    the current CI job. This implies that the OCIO API changed without 
+    building with CMake option ``-DOCIO_BUILD_FROZEN_DOCS=ON``; needed 
+    to update frozen RST in the source tree.
     """
     if not app.config.frozendoc_compare:
         return

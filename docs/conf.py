@@ -104,6 +104,11 @@ rst_prolog = """
 
 # frozendoc
 frozendoc_build = BUILD_FROZEN
+
+# When enabled, frozendoc_build is also enabled to build and compare new frozen
+# RST with frozen RST present in the source tree. This is only necessary in a 
+# CI job, where we want to confirm the contributor has built frozen RST along 
+# with any public API or documentation changes.
 frozendoc_compare = CI_BUILD
 
 # breathe
@@ -182,6 +187,10 @@ epub_publisher = author
 epub_copyright = copyright
 
 # -- Run Doxygen --------------------------------------------------------------
+
+# When building docs for Read the Docs, only sphinx-build is called, so we must
+# run doxygen first to build XML data for breathe. In all other cases doxygen 
+# is run when needed by CMake.
 
 if RTD_BUILD:
     # Configure needed *.in files
