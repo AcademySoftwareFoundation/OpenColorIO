@@ -47,20 +47,20 @@
 
       Overloaded function.
 
-      1. GetProcessorFromConfigs(srcConfig: PyOpenColorIO.Config, srcColorSpaceName: str, dstConfig: PyOpenColorIO.Config, dstColorSpaceName: str) -> OpenColorIO_v2_0dev::Processor
+      1. GetProcessorFromConfigs(srcConfig: PyOpenColorIO.Config, srcColorSpaceName: str, dstConfig: PyOpenColorIO.Config, dstColorSpaceName: str) -> OpenColorIO_v2_0beta1::Processor
 
       Get a processor to convert between color spaces in two separate configs.
 
 
       This relies on both configs having the aces_interchange role (when srcName is scene-referred) or the role cie_xyz_d65_interchange (when srcName is display-referred) defined. An exception is thrown if that is not the case.
 
-      2. GetProcessorFromConfigs(srcContext: OpenColorIO_v2_0dev::Context, srcConfig: PyOpenColorIO.Config, srcColorSpaceName: str, dstContext: OpenColorIO_v2_0dev::Context, dstConfig: PyOpenColorIO.Config, dstColorSpaceName: str) -> OpenColorIO_v2_0dev::Processor
+      2. GetProcessorFromConfigs(srcContext: OpenColorIO_v2_0beta1::Context, srcConfig: PyOpenColorIO.Config, srcColorSpaceName: str, dstContext: OpenColorIO_v2_0beta1::Context, dstConfig: PyOpenColorIO.Config, dstColorSpaceName: str) -> OpenColorIO_v2_0beta1::Processor
 
-      3. GetProcessorFromConfigs(srcConfig: PyOpenColorIO.Config, srcColorSpaceName: str, srcInterchangeName: str, dstConfig: PyOpenColorIO.Config, dstColorSpaceName: str, dstInterchangeName: str) -> OpenColorIO_v2_0dev::Processor
+      3. GetProcessorFromConfigs(srcConfig: PyOpenColorIO.Config, srcColorSpaceName: str, srcInterchangeName: str, dstConfig: PyOpenColorIO.Config, dstColorSpaceName: str, dstInterchangeName: str) -> OpenColorIO_v2_0beta1::Processor
 
       The srcInterchangeName and dstInterchangeName must refer to a pair of color spaces in the two configs that are the same. A role name may also be used.
 
-      4. GetProcessorFromConfigs(srcContext: OpenColorIO_v2_0dev::Context, srcConfig: PyOpenColorIO.Config, srcColorSpaceName: str, srcInterchangeName: str, dstContext: OpenColorIO_v2_0dev::Context, dstConfig: PyOpenColorIO.Config, dstColorSpaceName: str, dstInterchangeName: str) -> OpenColorIO_v2_0dev::Processor
+      4. GetProcessorFromConfigs(srcContext: OpenColorIO_v2_0beta1::Context, srcConfig: PyOpenColorIO.Config, srcColorSpaceName: str, srcInterchangeName: str, dstContext: OpenColorIO_v2_0beta1::Context, dstConfig: PyOpenColorIO.Config, dstColorSpaceName: str, dstInterchangeName: str) -> OpenColorIO_v2_0beta1::Processor
 
 
    .. py:method:: Config.__init__(self: PyOpenColorIO.Config) -> None
@@ -76,7 +76,7 @@
       :module: PyOpenColorIO
 
 
-   .. py:method:: Config.addColorSpace(self: PyOpenColorIO.Config, colorSpace: OpenColorIO_v2_0dev::ColorSpace) -> None
+   .. py:method:: Config.addColorSpace(self: PyOpenColorIO.Config, colorSpace: OpenColorIO_v2_0beta1::ColorSpace) -> None
       :module: PyOpenColorIO
 
       Add a color space to the configuration.
@@ -122,7 +122,7 @@
       Add (or update) an environment variable with a default value. But it removes it if the default value is null.
 
 
-   .. py:method:: Config.addLook(self: PyOpenColorIO.Config, look: OpenColorIO_v2_0dev::Look) -> None
+   .. py:method:: Config.addLook(self: PyOpenColorIO.Config, look: OpenColorIO_v2_0beta1::Look) -> None
       :module: PyOpenColorIO
 
 
@@ -141,7 +141,7 @@
       Will throw if view or colorSpaceName are null or empty.
 
 
-   .. py:method:: Config.addViewTransform(self: PyOpenColorIO.Config, viewTransform: OpenColorIO_v2_0dev::ViewTransform) -> None
+   .. py:method:: Config.addViewTransform(self: PyOpenColorIO.Config, viewTransform: OpenColorIO_v2_0beta1::ViewTransform) -> None
       :module: PyOpenColorIO
 
 
@@ -200,12 +200,12 @@
 
       This will produce a hash of the all colorspace definitions, etc. All external references, such as files used in FileTransforms, etc., will be incorporated into the cacheID. While the contents of the files are not read, the file system is queried for relevant information (mtime, inode) so that the config's cacheID will change when the underlying luts are updated. If a context is not provided, the current :ref:`Context` will be used. If a null context is provided, file references will not be taken into account (this is essentially a hash of :ref:`Config::serialize`).
 
-      2. getCacheID(self: PyOpenColorIO.Config, context: OpenColorIO_v2_0dev::Context) -> str
+      2. getCacheID(self: PyOpenColorIO.Config, context: OpenColorIO_v2_0beta1::Context) -> str
 
       This will produce a hash of the all colorspace definitions, etc. All external references, such as files used in FileTransforms, etc., will be incorporated into the cacheID. While the contents of the files are not read, the file system is queried for relevant information (mtime, inode) so that the config's cacheID will change when the underlying luts are updated. If a context is not provided, the current :ref:`Context` will be used. If a null context is provided, file references will not be taken into account (this is essentially a hash of :ref:`Config::serialize`).
 
 
-   .. py:method:: Config.getColorSpace(self: PyOpenColorIO.Config, name: str) -> OpenColorIO_v2_0dev::ColorSpace
+   .. py:method:: Config.getColorSpace(self: PyOpenColorIO.Config, name: str) -> OpenColorIO_v2_0beta1::ColorSpace
       :module: PyOpenColorIO
 
       Get the color space from all the color spaces (i.e. active and inactive) and return null if the name is not found.
@@ -244,7 +244,7 @@
 
       Overloaded function.
 
-      1. getColorSpaces(self: PyOpenColorIO.Config, category: str) -> OpenColorIO_v2_0dev::ColorSpaceSet
+      1. getColorSpaces(self: PyOpenColorIO.Config, category: str) -> OpenColorIO_v2_0beta1::ColorSpaceSet
 
       Get all active color spaces having a specific category in the order they appear in the config file.
 
@@ -260,7 +260,7 @@
       3. getColorSpaces(self: PyOpenColorIO.Config) -> PyOpenColorIO.Config.ActiveColorSpaceIterator
 
 
-   .. py:method:: Config.getCurrentContext(self: PyOpenColorIO.Config) -> OpenColorIO_v2_0dev::Context
+   .. py:method:: Config.getCurrentContext(self: PyOpenColorIO.Config) -> OpenColorIO_v2_0beta1::Context
       :module: PyOpenColorIO
 
 
@@ -278,7 +278,7 @@
          There is no "1 size fits all" set of luma coefficients. (The values are typically different for each colorspace, and the application of them may be nonsensical depending on the intensity coding anyways). Thus, the 'right' answer is to make these functions on the :cpp:class:`:ref:`Config`` class. However, it's often useful to have a config-wide default so here it is. We will add the colorspace specific luma call if/when another client is interesting in using it.
 
 
-   .. py:method:: Config.getDefaultSceneToDisplayViewTransform(self: PyOpenColorIO.Config) -> OpenColorIO_v2_0dev::ViewTransform
+   .. py:method:: Config.getDefaultSceneToDisplayViewTransform(self: PyOpenColorIO.Config) -> OpenColorIO_v2_0beta1::ViewTransform
       :module: PyOpenColorIO
 
       The default transform to use for scene-referred to display-referred reference space conversions is the first scene-referred view transform listed in that section of the config (the one with the lowest index). Returns a null ConstTransformRcPtr if there isn't one.
@@ -347,7 +347,7 @@
       A single character used to separate the family string into tokens for use in hierarchical menus. Defaults to '/'.
 
 
-   .. py:method:: Config.getFileRules(self: PyOpenColorIO.Config) -> OpenColorIO_v2_0dev::FileRules
+   .. py:method:: Config.getFileRules(self: PyOpenColorIO.Config) -> OpenColorIO_v2_0beta1::FileRules
       :module: PyOpenColorIO
 
       Get read-only version of the file rules.
@@ -357,7 +357,7 @@
       :module: PyOpenColorIO
 
 
-   .. py:method:: Config.getLook(self: PyOpenColorIO.Config, name: str) -> OpenColorIO_v2_0dev::Look
+   .. py:method:: Config.getLook(self: PyOpenColorIO.Config, name: str) -> OpenColorIO_v2_0beta1::Look
       :module: PyOpenColorIO
 
 
@@ -386,33 +386,33 @@
 
       Overloaded function.
 
-      1. getProcessor(self: PyOpenColorIO.Config, srcColorSpace: OpenColorIO_v2_0dev::ColorSpace, dstColorSpace: OpenColorIO_v2_0dev::ColorSpace) -> OpenColorIO_v2_0dev::Processor
+      1. getProcessor(self: PyOpenColorIO.Config, srcColorSpace: OpenColorIO_v2_0beta1::ColorSpace, dstColorSpace: OpenColorIO_v2_0beta1::ColorSpace) -> OpenColorIO_v2_0beta1::Processor
 
-      2. getProcessor(self: PyOpenColorIO.Config, context: OpenColorIO_v2_0dev::Context, srcColorSpace: OpenColorIO_v2_0dev::ColorSpace, dstColorSpace: OpenColorIO_v2_0dev::ColorSpace) -> OpenColorIO_v2_0dev::Processor
+      2. getProcessor(self: PyOpenColorIO.Config, context: OpenColorIO_v2_0beta1::Context, srcColorSpace: OpenColorIO_v2_0beta1::ColorSpace, dstColorSpace: OpenColorIO_v2_0beta1::ColorSpace) -> OpenColorIO_v2_0beta1::Processor
 
-      3. getProcessor(self: PyOpenColorIO.Config, srcColorSpaceName: str, dstColorSpaceName: str) -> OpenColorIO_v2_0dev::Processor
+      3. getProcessor(self: PyOpenColorIO.Config, srcColorSpaceName: str, dstColorSpaceName: str) -> OpenColorIO_v2_0beta1::Processor
 
       .. note::
          Names can be colorspace name, role name, or a combination of both.
 
-      4. getProcessor(self: PyOpenColorIO.Config, context: OpenColorIO_v2_0dev::Context, srcColorSpaceName: str, dstColorSpaceName: str) -> OpenColorIO_v2_0dev::Processor
+      4. getProcessor(self: PyOpenColorIO.Config, context: OpenColorIO_v2_0beta1::Context, srcColorSpaceName: str, dstColorSpaceName: str) -> OpenColorIO_v2_0beta1::Processor
 
-      5. getProcessor(self: PyOpenColorIO.Config, srcColorSpaceName: str, display: str, view: str, direction: PyOpenColorIO.TransformDirection) -> OpenColorIO_v2_0dev::Processor
+      5. getProcessor(self: PyOpenColorIO.Config, srcColorSpaceName: str, display: str, view: str, direction: PyOpenColorIO.TransformDirection) -> OpenColorIO_v2_0beta1::Processor
 
-      6. getProcessor(self: PyOpenColorIO.Config, context: OpenColorIO_v2_0dev::Context, srcColorSpaceName: str, display: str, view: str, direction: PyOpenColorIO.TransformDirection) -> OpenColorIO_v2_0dev::Processor
+      6. getProcessor(self: PyOpenColorIO.Config, context: OpenColorIO_v2_0beta1::Context, srcColorSpaceName: str, display: str, view: str, direction: PyOpenColorIO.TransformDirection) -> OpenColorIO_v2_0beta1::Processor
 
       cpp:function::
 
-      7. getProcessor(self: PyOpenColorIO.Config, transform: PyOpenColorIO.Transform) -> OpenColorIO_v2_0dev::Processor
+      7. getProcessor(self: PyOpenColorIO.Config, transform: PyOpenColorIO.Transform) -> OpenColorIO_v2_0beta1::Processor
 
       Get the processor for the specified transform.
 
 
       Not often needed, but will allow for the re-use of atomic OCIO functionality (such as to apply an individual LUT file).
 
-      8. getProcessor(self: PyOpenColorIO.Config, transform: PyOpenColorIO.Transform, direction: PyOpenColorIO.TransformDirection) -> OpenColorIO_v2_0dev::Processor
+      8. getProcessor(self: PyOpenColorIO.Config, transform: PyOpenColorIO.Transform, direction: PyOpenColorIO.TransformDirection) -> OpenColorIO_v2_0beta1::Processor
 
-      9. getProcessor(self: PyOpenColorIO.Config, context: OpenColorIO_v2_0dev::Context, transform: PyOpenColorIO.Transform, direction: PyOpenColorIO.TransformDirection) -> OpenColorIO_v2_0dev::Processor
+      9. getProcessor(self: PyOpenColorIO.Config, context: OpenColorIO_v2_0beta1::Context, transform: PyOpenColorIO.Transform, direction: PyOpenColorIO.TransformDirection) -> OpenColorIO_v2_0beta1::Processor
 
 
    .. py:method:: Config.getRoleNames(self: PyOpenColorIO.Config) -> PyOpenColorIO.Config.RoleNameIterator
@@ -435,7 +435,7 @@
       :module: PyOpenColorIO
 
 
-   .. py:method:: Config.getViewTransform(self: PyOpenColorIO.Config, name: str) -> OpenColorIO_v2_0dev::ViewTransform
+   .. py:method:: Config.getViewTransform(self: PyOpenColorIO.Config, name: str) -> OpenColorIO_v2_0beta1::ViewTransform
       :module: PyOpenColorIO
 
 
@@ -447,7 +447,7 @@
       :module: PyOpenColorIO
 
 
-   .. py:method:: Config.getViewingRules(self: PyOpenColorIO.Config) -> OpenColorIO_v2_0dev::ViewingRules
+   .. py:method:: Config.getViewingRules(self: PyOpenColorIO.Config) -> OpenColorIO_v2_0beta1::ViewingRules
       :module: PyOpenColorIO
 
       Get read-only version of the viewing rules.
@@ -591,7 +591,7 @@
       Succeeds if the characters is null or a valid character from the ASCII table i.e. from value 32 (i.e. space) to 126 (i.e. '~'); otherwise, it throws an exception.
 
 
-   .. py:method:: Config.setFileRules(self: PyOpenColorIO.Config, fileRules: OpenColorIO_v2_0dev::FileRules) -> None
+   .. py:method:: Config.setFileRules(self: PyOpenColorIO.Config, fileRules: OpenColorIO_v2_0beta1::FileRules) -> None
       :module: PyOpenColorIO
 
       Set file rules.
@@ -651,7 +651,7 @@
       See :ref:`addSearchPath` for a more robust and platform-agnostic method of setting the search paths.
 
 
-   .. py:method:: Config.setViewingRules(self: PyOpenColorIO.Config, ViewingRules: OpenColorIO_v2_0dev::ViewingRules) -> None
+   .. py:method:: Config.setViewingRules(self: PyOpenColorIO.Config, ViewingRules: OpenColorIO_v2_0beta1::ViewingRules) -> None
       :module: PyOpenColorIO
 
       Set viewing rules.
@@ -746,7 +746,7 @@
    :module: PyOpenColorIO.Config
 
 
-   .. py:method:: ColorSpaceIterator.__getitem__(self: PyOpenColorIO.Config.ColorSpaceIterator, arg0: int) -> OpenColorIO_v2_0dev::ColorSpace
+   .. py:method:: ColorSpaceIterator.__getitem__(self: PyOpenColorIO.Config.ColorSpaceIterator, arg0: int) -> OpenColorIO_v2_0beta1::ColorSpace
       :module: PyOpenColorIO.Config
 
 
@@ -758,7 +758,7 @@
       :module: PyOpenColorIO.Config
 
 
-   .. py:method:: ColorSpaceIterator.__next__(self: PyOpenColorIO.Config.ColorSpaceIterator) -> OpenColorIO_v2_0dev::ColorSpace
+   .. py:method:: ColorSpaceIterator.__next__(self: PyOpenColorIO.Config.ColorSpaceIterator) -> OpenColorIO_v2_0beta1::ColorSpace
       :module: PyOpenColorIO.Config
 
 
@@ -786,7 +786,7 @@
    :module: PyOpenColorIO.Config
 
 
-   .. py:method:: ActiveColorSpaceIterator.__getitem__(self: PyOpenColorIO.Config.ActiveColorSpaceIterator, arg0: int) -> OpenColorIO_v2_0dev::ColorSpace
+   .. py:method:: ActiveColorSpaceIterator.__getitem__(self: PyOpenColorIO.Config.ActiveColorSpaceIterator, arg0: int) -> OpenColorIO_v2_0beta1::ColorSpace
       :module: PyOpenColorIO.Config
 
 
@@ -798,7 +798,7 @@
       :module: PyOpenColorIO.Config
 
 
-   .. py:method:: ActiveColorSpaceIterator.__next__(self: PyOpenColorIO.Config.ActiveColorSpaceIterator) -> OpenColorIO_v2_0dev::ColorSpace
+   .. py:method:: ActiveColorSpaceIterator.__next__(self: PyOpenColorIO.Config.ActiveColorSpaceIterator) -> OpenColorIO_v2_0beta1::ColorSpace
       :module: PyOpenColorIO.Config
 
 
@@ -946,7 +946,7 @@
    :module: PyOpenColorIO.Config
 
 
-   .. py:method:: LookIterator.__getitem__(self: PyOpenColorIO.Config.LookIterator, arg0: int) -> OpenColorIO_v2_0dev::Look
+   .. py:method:: LookIterator.__getitem__(self: PyOpenColorIO.Config.LookIterator, arg0: int) -> OpenColorIO_v2_0beta1::Look
       :module: PyOpenColorIO.Config
 
 
@@ -958,7 +958,7 @@
       :module: PyOpenColorIO.Config
 
 
-   .. py:method:: LookIterator.__next__(self: PyOpenColorIO.Config.LookIterator) -> OpenColorIO_v2_0dev::Look
+   .. py:method:: LookIterator.__next__(self: PyOpenColorIO.Config.LookIterator) -> OpenColorIO_v2_0beta1::Look
       :module: PyOpenColorIO.Config
 
 
@@ -986,7 +986,7 @@
    :module: PyOpenColorIO.Config
 
 
-   .. py:method:: ViewTransformIterator.__getitem__(self: PyOpenColorIO.Config.ViewTransformIterator, arg0: int) -> OpenColorIO_v2_0dev::ViewTransform
+   .. py:method:: ViewTransformIterator.__getitem__(self: PyOpenColorIO.Config.ViewTransformIterator, arg0: int) -> OpenColorIO_v2_0beta1::ViewTransform
       :module: PyOpenColorIO.Config
 
 
@@ -998,7 +998,7 @@
       :module: PyOpenColorIO.Config
 
 
-   .. py:method:: ViewTransformIterator.__next__(self: PyOpenColorIO.Config.ViewTransformIterator) -> OpenColorIO_v2_0dev::ViewTransform
+   .. py:method:: ViewTransformIterator.__next__(self: PyOpenColorIO.Config.ViewTransformIterator) -> OpenColorIO_v2_0beta1::ViewTransform
       :module: PyOpenColorIO.Config
 
 
@@ -1046,20 +1046,20 @@
 
       Overloaded function.
 
-      1. GetProcessorFromConfigs(srcConfig: PyOpenColorIO.Config, srcColorSpaceName: str, dstConfig: PyOpenColorIO.Config, dstColorSpaceName: str) -> OpenColorIO_v2_0dev::Processor
+      1. GetProcessorFromConfigs(srcConfig: PyOpenColorIO.Config, srcColorSpaceName: str, dstConfig: PyOpenColorIO.Config, dstColorSpaceName: str) -> OpenColorIO_v2_0beta1::Processor
 
       Get a processor to convert between color spaces in two separate configs.
 
 
       This relies on both configs having the aces_interchange role (when srcName is scene-referred) or the role cie_xyz_d65_interchange (when srcName is display-referred) defined. An exception is thrown if that is not the case.
 
-      2. GetProcessorFromConfigs(srcContext: OpenColorIO_v2_0dev::Context, srcConfig: PyOpenColorIO.Config, srcColorSpaceName: str, dstContext: OpenColorIO_v2_0dev::Context, dstConfig: PyOpenColorIO.Config, dstColorSpaceName: str) -> OpenColorIO_v2_0dev::Processor
+      2. GetProcessorFromConfigs(srcContext: OpenColorIO_v2_0beta1::Context, srcConfig: PyOpenColorIO.Config, srcColorSpaceName: str, dstContext: OpenColorIO_v2_0beta1::Context, dstConfig: PyOpenColorIO.Config, dstColorSpaceName: str) -> OpenColorIO_v2_0beta1::Processor
 
-      3. GetProcessorFromConfigs(srcConfig: PyOpenColorIO.Config, srcColorSpaceName: str, srcInterchangeName: str, dstConfig: PyOpenColorIO.Config, dstColorSpaceName: str, dstInterchangeName: str) -> OpenColorIO_v2_0dev::Processor
+      3. GetProcessorFromConfigs(srcConfig: PyOpenColorIO.Config, srcColorSpaceName: str, srcInterchangeName: str, dstConfig: PyOpenColorIO.Config, dstColorSpaceName: str, dstInterchangeName: str) -> OpenColorIO_v2_0beta1::Processor
 
       The srcInterchangeName and dstInterchangeName must refer to a pair of color spaces in the two configs that are the same. A role name may also be used.
 
-      4. GetProcessorFromConfigs(srcContext: OpenColorIO_v2_0dev::Context, srcConfig: PyOpenColorIO.Config, srcColorSpaceName: str, srcInterchangeName: str, dstContext: OpenColorIO_v2_0dev::Context, dstConfig: PyOpenColorIO.Config, dstColorSpaceName: str, dstInterchangeName: str) -> OpenColorIO_v2_0dev::Processor
+      4. GetProcessorFromConfigs(srcContext: OpenColorIO_v2_0beta1::Context, srcConfig: PyOpenColorIO.Config, srcColorSpaceName: str, srcInterchangeName: str, dstContext: OpenColorIO_v2_0beta1::Context, dstConfig: PyOpenColorIO.Config, dstColorSpaceName: str, dstInterchangeName: str) -> OpenColorIO_v2_0beta1::Processor
 
 
    .. py:method:: Config.__init__(self: PyOpenColorIO.Config) -> None
@@ -1075,7 +1075,7 @@
       :module: PyOpenColorIO
 
 
-   .. py:method:: Config.addColorSpace(self: PyOpenColorIO.Config, colorSpace: OpenColorIO_v2_0dev::ColorSpace) -> None
+   .. py:method:: Config.addColorSpace(self: PyOpenColorIO.Config, colorSpace: OpenColorIO_v2_0beta1::ColorSpace) -> None
       :module: PyOpenColorIO
 
       Add a color space to the configuration.
@@ -1121,7 +1121,7 @@
       Add (or update) an environment variable with a default value. But it removes it if the default value is null.
 
 
-   .. py:method:: Config.addLook(self: PyOpenColorIO.Config, look: OpenColorIO_v2_0dev::Look) -> None
+   .. py:method:: Config.addLook(self: PyOpenColorIO.Config, look: OpenColorIO_v2_0beta1::Look) -> None
       :module: PyOpenColorIO
 
 
@@ -1140,7 +1140,7 @@
       Will throw if view or colorSpaceName are null or empty.
 
 
-   .. py:method:: Config.addViewTransform(self: PyOpenColorIO.Config, viewTransform: OpenColorIO_v2_0dev::ViewTransform) -> None
+   .. py:method:: Config.addViewTransform(self: PyOpenColorIO.Config, viewTransform: OpenColorIO_v2_0beta1::ViewTransform) -> None
       :module: PyOpenColorIO
 
 
@@ -1199,12 +1199,12 @@
 
       This will produce a hash of the all colorspace definitions, etc. All external references, such as files used in FileTransforms, etc., will be incorporated into the cacheID. While the contents of the files are not read, the file system is queried for relevant information (mtime, inode) so that the config's cacheID will change when the underlying luts are updated. If a context is not provided, the current :ref:`Context` will be used. If a null context is provided, file references will not be taken into account (this is essentially a hash of :ref:`Config::serialize`).
 
-      2. getCacheID(self: PyOpenColorIO.Config, context: OpenColorIO_v2_0dev::Context) -> str
+      2. getCacheID(self: PyOpenColorIO.Config, context: OpenColorIO_v2_0beta1::Context) -> str
 
       This will produce a hash of the all colorspace definitions, etc. All external references, such as files used in FileTransforms, etc., will be incorporated into the cacheID. While the contents of the files are not read, the file system is queried for relevant information (mtime, inode) so that the config's cacheID will change when the underlying luts are updated. If a context is not provided, the current :ref:`Context` will be used. If a null context is provided, file references will not be taken into account (this is essentially a hash of :ref:`Config::serialize`).
 
 
-   .. py:method:: Config.getColorSpace(self: PyOpenColorIO.Config, name: str) -> OpenColorIO_v2_0dev::ColorSpace
+   .. py:method:: Config.getColorSpace(self: PyOpenColorIO.Config, name: str) -> OpenColorIO_v2_0beta1::ColorSpace
       :module: PyOpenColorIO
 
       Get the color space from all the color spaces (i.e. active and inactive) and return null if the name is not found.
@@ -1243,7 +1243,7 @@
 
       Overloaded function.
 
-      1. getColorSpaces(self: PyOpenColorIO.Config, category: str) -> OpenColorIO_v2_0dev::ColorSpaceSet
+      1. getColorSpaces(self: PyOpenColorIO.Config, category: str) -> OpenColorIO_v2_0beta1::ColorSpaceSet
 
       Get all active color spaces having a specific category in the order they appear in the config file.
 
@@ -1259,7 +1259,7 @@
       3. getColorSpaces(self: PyOpenColorIO.Config) -> PyOpenColorIO.Config.ActiveColorSpaceIterator
 
 
-   .. py:method:: Config.getCurrentContext(self: PyOpenColorIO.Config) -> OpenColorIO_v2_0dev::Context
+   .. py:method:: Config.getCurrentContext(self: PyOpenColorIO.Config) -> OpenColorIO_v2_0beta1::Context
       :module: PyOpenColorIO
 
 
@@ -1277,7 +1277,7 @@
          There is no "1 size fits all" set of luma coefficients. (The values are typically different for each colorspace, and the application of them may be nonsensical depending on the intensity coding anyways). Thus, the 'right' answer is to make these functions on the :cpp:class:`:ref:`Config`` class. However, it's often useful to have a config-wide default so here it is. We will add the colorspace specific luma call if/when another client is interesting in using it.
 
 
-   .. py:method:: Config.getDefaultSceneToDisplayViewTransform(self: PyOpenColorIO.Config) -> OpenColorIO_v2_0dev::ViewTransform
+   .. py:method:: Config.getDefaultSceneToDisplayViewTransform(self: PyOpenColorIO.Config) -> OpenColorIO_v2_0beta1::ViewTransform
       :module: PyOpenColorIO
 
       The default transform to use for scene-referred to display-referred reference space conversions is the first scene-referred view transform listed in that section of the config (the one with the lowest index). Returns a null ConstTransformRcPtr if there isn't one.
@@ -1346,7 +1346,7 @@
       A single character used to separate the family string into tokens for use in hierarchical menus. Defaults to '/'.
 
 
-   .. py:method:: Config.getFileRules(self: PyOpenColorIO.Config) -> OpenColorIO_v2_0dev::FileRules
+   .. py:method:: Config.getFileRules(self: PyOpenColorIO.Config) -> OpenColorIO_v2_0beta1::FileRules
       :module: PyOpenColorIO
 
       Get read-only version of the file rules.
@@ -1356,7 +1356,7 @@
       :module: PyOpenColorIO
 
 
-   .. py:method:: Config.getLook(self: PyOpenColorIO.Config, name: str) -> OpenColorIO_v2_0dev::Look
+   .. py:method:: Config.getLook(self: PyOpenColorIO.Config, name: str) -> OpenColorIO_v2_0beta1::Look
       :module: PyOpenColorIO
 
 
@@ -1385,33 +1385,33 @@
 
       Overloaded function.
 
-      1. getProcessor(self: PyOpenColorIO.Config, srcColorSpace: OpenColorIO_v2_0dev::ColorSpace, dstColorSpace: OpenColorIO_v2_0dev::ColorSpace) -> OpenColorIO_v2_0dev::Processor
+      1. getProcessor(self: PyOpenColorIO.Config, srcColorSpace: OpenColorIO_v2_0beta1::ColorSpace, dstColorSpace: OpenColorIO_v2_0beta1::ColorSpace) -> OpenColorIO_v2_0beta1::Processor
 
-      2. getProcessor(self: PyOpenColorIO.Config, context: OpenColorIO_v2_0dev::Context, srcColorSpace: OpenColorIO_v2_0dev::ColorSpace, dstColorSpace: OpenColorIO_v2_0dev::ColorSpace) -> OpenColorIO_v2_0dev::Processor
+      2. getProcessor(self: PyOpenColorIO.Config, context: OpenColorIO_v2_0beta1::Context, srcColorSpace: OpenColorIO_v2_0beta1::ColorSpace, dstColorSpace: OpenColorIO_v2_0beta1::ColorSpace) -> OpenColorIO_v2_0beta1::Processor
 
-      3. getProcessor(self: PyOpenColorIO.Config, srcColorSpaceName: str, dstColorSpaceName: str) -> OpenColorIO_v2_0dev::Processor
+      3. getProcessor(self: PyOpenColorIO.Config, srcColorSpaceName: str, dstColorSpaceName: str) -> OpenColorIO_v2_0beta1::Processor
 
       .. note::
          Names can be colorspace name, role name, or a combination of both.
 
-      4. getProcessor(self: PyOpenColorIO.Config, context: OpenColorIO_v2_0dev::Context, srcColorSpaceName: str, dstColorSpaceName: str) -> OpenColorIO_v2_0dev::Processor
+      4. getProcessor(self: PyOpenColorIO.Config, context: OpenColorIO_v2_0beta1::Context, srcColorSpaceName: str, dstColorSpaceName: str) -> OpenColorIO_v2_0beta1::Processor
 
-      5. getProcessor(self: PyOpenColorIO.Config, srcColorSpaceName: str, display: str, view: str, direction: PyOpenColorIO.TransformDirection) -> OpenColorIO_v2_0dev::Processor
+      5. getProcessor(self: PyOpenColorIO.Config, srcColorSpaceName: str, display: str, view: str, direction: PyOpenColorIO.TransformDirection) -> OpenColorIO_v2_0beta1::Processor
 
-      6. getProcessor(self: PyOpenColorIO.Config, context: OpenColorIO_v2_0dev::Context, srcColorSpaceName: str, display: str, view: str, direction: PyOpenColorIO.TransformDirection) -> OpenColorIO_v2_0dev::Processor
+      6. getProcessor(self: PyOpenColorIO.Config, context: OpenColorIO_v2_0beta1::Context, srcColorSpaceName: str, display: str, view: str, direction: PyOpenColorIO.TransformDirection) -> OpenColorIO_v2_0beta1::Processor
 
       cpp:function::
 
-      7. getProcessor(self: PyOpenColorIO.Config, transform: PyOpenColorIO.Transform) -> OpenColorIO_v2_0dev::Processor
+      7. getProcessor(self: PyOpenColorIO.Config, transform: PyOpenColorIO.Transform) -> OpenColorIO_v2_0beta1::Processor
 
       Get the processor for the specified transform.
 
 
       Not often needed, but will allow for the re-use of atomic OCIO functionality (such as to apply an individual LUT file).
 
-      8. getProcessor(self: PyOpenColorIO.Config, transform: PyOpenColorIO.Transform, direction: PyOpenColorIO.TransformDirection) -> OpenColorIO_v2_0dev::Processor
+      8. getProcessor(self: PyOpenColorIO.Config, transform: PyOpenColorIO.Transform, direction: PyOpenColorIO.TransformDirection) -> OpenColorIO_v2_0beta1::Processor
 
-      9. getProcessor(self: PyOpenColorIO.Config, context: OpenColorIO_v2_0dev::Context, transform: PyOpenColorIO.Transform, direction: PyOpenColorIO.TransformDirection) -> OpenColorIO_v2_0dev::Processor
+      9. getProcessor(self: PyOpenColorIO.Config, context: OpenColorIO_v2_0beta1::Context, transform: PyOpenColorIO.Transform, direction: PyOpenColorIO.TransformDirection) -> OpenColorIO_v2_0beta1::Processor
 
 
    .. py:method:: Config.getRoleNames(self: PyOpenColorIO.Config) -> PyOpenColorIO.Config.RoleNameIterator
@@ -1434,7 +1434,7 @@
       :module: PyOpenColorIO
 
 
-   .. py:method:: Config.getViewTransform(self: PyOpenColorIO.Config, name: str) -> OpenColorIO_v2_0dev::ViewTransform
+   .. py:method:: Config.getViewTransform(self: PyOpenColorIO.Config, name: str) -> OpenColorIO_v2_0beta1::ViewTransform
       :module: PyOpenColorIO
 
 
@@ -1446,7 +1446,7 @@
       :module: PyOpenColorIO
 
 
-   .. py:method:: Config.getViewingRules(self: PyOpenColorIO.Config) -> OpenColorIO_v2_0dev::ViewingRules
+   .. py:method:: Config.getViewingRules(self: PyOpenColorIO.Config) -> OpenColorIO_v2_0beta1::ViewingRules
       :module: PyOpenColorIO
 
       Get read-only version of the viewing rules.
@@ -1590,7 +1590,7 @@
       Succeeds if the characters is null or a valid character from the ASCII table i.e. from value 32 (i.e. space) to 126 (i.e. '~'); otherwise, it throws an exception.
 
 
-   .. py:method:: Config.setFileRules(self: PyOpenColorIO.Config, fileRules: OpenColorIO_v2_0dev::FileRules) -> None
+   .. py:method:: Config.setFileRules(self: PyOpenColorIO.Config, fileRules: OpenColorIO_v2_0beta1::FileRules) -> None
       :module: PyOpenColorIO
 
       Set file rules.
@@ -1650,7 +1650,7 @@
       See :ref:`addSearchPath` for a more robust and platform-agnostic method of setting the search paths.
 
 
-   .. py:method:: Config.setViewingRules(self: PyOpenColorIO.Config, ViewingRules: OpenColorIO_v2_0dev::ViewingRules) -> None
+   .. py:method:: Config.setViewingRules(self: PyOpenColorIO.Config, ViewingRules: OpenColorIO_v2_0beta1::ViewingRules) -> None
       :module: PyOpenColorIO
 
       Set viewing rules.
@@ -1745,7 +1745,7 @@
    :module: PyOpenColorIO.Config
 
 
-   .. py:method:: ColorSpaceIterator.__getitem__(self: PyOpenColorIO.Config.ColorSpaceIterator, arg0: int) -> OpenColorIO_v2_0dev::ColorSpace
+   .. py:method:: ColorSpaceIterator.__getitem__(self: PyOpenColorIO.Config.ColorSpaceIterator, arg0: int) -> OpenColorIO_v2_0beta1::ColorSpace
       :module: PyOpenColorIO.Config
 
 
@@ -1757,7 +1757,7 @@
       :module: PyOpenColorIO.Config
 
 
-   .. py:method:: ColorSpaceIterator.__next__(self: PyOpenColorIO.Config.ColorSpaceIterator) -> OpenColorIO_v2_0dev::ColorSpace
+   .. py:method:: ColorSpaceIterator.__next__(self: PyOpenColorIO.Config.ColorSpaceIterator) -> OpenColorIO_v2_0beta1::ColorSpace
       :module: PyOpenColorIO.Config
 
 
@@ -1785,7 +1785,7 @@
    :module: PyOpenColorIO.Config
 
 
-   .. py:method:: ActiveColorSpaceIterator.__getitem__(self: PyOpenColorIO.Config.ActiveColorSpaceIterator, arg0: int) -> OpenColorIO_v2_0dev::ColorSpace
+   .. py:method:: ActiveColorSpaceIterator.__getitem__(self: PyOpenColorIO.Config.ActiveColorSpaceIterator, arg0: int) -> OpenColorIO_v2_0beta1::ColorSpace
       :module: PyOpenColorIO.Config
 
 
@@ -1797,7 +1797,7 @@
       :module: PyOpenColorIO.Config
 
 
-   .. py:method:: ActiveColorSpaceIterator.__next__(self: PyOpenColorIO.Config.ActiveColorSpaceIterator) -> OpenColorIO_v2_0dev::ColorSpace
+   .. py:method:: ActiveColorSpaceIterator.__next__(self: PyOpenColorIO.Config.ActiveColorSpaceIterator) -> OpenColorIO_v2_0beta1::ColorSpace
       :module: PyOpenColorIO.Config
 
 
@@ -1945,7 +1945,7 @@
    :module: PyOpenColorIO.Config
 
 
-   .. py:method:: LookIterator.__getitem__(self: PyOpenColorIO.Config.LookIterator, arg0: int) -> OpenColorIO_v2_0dev::Look
+   .. py:method:: LookIterator.__getitem__(self: PyOpenColorIO.Config.LookIterator, arg0: int) -> OpenColorIO_v2_0beta1::Look
       :module: PyOpenColorIO.Config
 
 
@@ -1957,7 +1957,7 @@
       :module: PyOpenColorIO.Config
 
 
-   .. py:method:: LookIterator.__next__(self: PyOpenColorIO.Config.LookIterator) -> OpenColorIO_v2_0dev::Look
+   .. py:method:: LookIterator.__next__(self: PyOpenColorIO.Config.LookIterator) -> OpenColorIO_v2_0beta1::Look
       :module: PyOpenColorIO.Config
 
 
@@ -1985,7 +1985,7 @@
    :module: PyOpenColorIO.Config
 
 
-   .. py:method:: ViewTransformIterator.__getitem__(self: PyOpenColorIO.Config.ViewTransformIterator, arg0: int) -> OpenColorIO_v2_0dev::ViewTransform
+   .. py:method:: ViewTransformIterator.__getitem__(self: PyOpenColorIO.Config.ViewTransformIterator, arg0: int) -> OpenColorIO_v2_0beta1::ViewTransform
       :module: PyOpenColorIO.Config
 
 
@@ -1997,6 +1997,6 @@
       :module: PyOpenColorIO.Config
 
 
-   .. py:method:: ViewTransformIterator.__next__(self: PyOpenColorIO.Config.ViewTransformIterator) -> OpenColorIO_v2_0dev::ViewTransform
+   .. py:method:: ViewTransformIterator.__next__(self: PyOpenColorIO.Config.ViewTransformIterator) -> OpenColorIO_v2_0beta1::ViewTransform
       :module: PyOpenColorIO.Config
 

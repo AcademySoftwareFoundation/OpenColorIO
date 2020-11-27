@@ -103,7 +103,7 @@
       :module: PyOpenColorIO
 
 
-   .. py:method:: GpuShaderDesc.getDynamicProperty(self: PyOpenColorIO.GpuShaderCreator, type: PyOpenColorIO.DynamicPropertyType) -> OpenColorIO_v2_0dev::DynamicProperty
+   .. py:method:: GpuShaderDesc.getDynamicProperty(self: PyOpenColorIO.GpuShaderCreator, type: PyOpenColorIO.DynamicPropertyType) -> OpenColorIO_v2_0beta1::DynamicProperty
       :module: PyOpenColorIO
 
 
@@ -316,7 +316,7 @@
    :module: PyOpenColorIO.GpuShaderDesc
 
 
-   .. py:method:: DynamicPropertyIterator.__getitem__(self: PyOpenColorIO.GpuShaderCreator.DynamicPropertyIterator, arg0: int) -> OpenColorIO_v2_0dev::DynamicProperty
+   .. py:method:: DynamicPropertyIterator.__getitem__(self: PyOpenColorIO.GpuShaderCreator.DynamicPropertyIterator, arg0: int) -> OpenColorIO_v2_0beta1::DynamicProperty
       :module: PyOpenColorIO.GpuShaderDesc
 
 
@@ -328,7 +328,7 @@
       :module: PyOpenColorIO.GpuShaderDesc
 
 
-   .. py:method:: DynamicPropertyIterator.__next__(self: PyOpenColorIO.GpuShaderCreator.DynamicPropertyIterator) -> OpenColorIO_v2_0dev::DynamicProperty
+   .. py:method:: DynamicPropertyIterator.__next__(self: PyOpenColorIO.GpuShaderCreator.DynamicPropertyIterator) -> OpenColorIO_v2_0beta1::DynamicProperty
       :module: PyOpenColorIO.GpuShaderDesc
 
 
@@ -432,7 +432,7 @@
       :module: PyOpenColorIO
 
 
-   .. py:method:: GpuShaderDesc.getDynamicProperty(self: PyOpenColorIO.GpuShaderCreator, type: PyOpenColorIO.DynamicPropertyType) -> OpenColorIO_v2_0dev::DynamicProperty
+   .. py:method:: GpuShaderDesc.getDynamicProperty(self: PyOpenColorIO.GpuShaderCreator, type: PyOpenColorIO.DynamicPropertyType) -> OpenColorIO_v2_0beta1::DynamicProperty
       :module: PyOpenColorIO
 
 
@@ -645,7 +645,7 @@
    :module: PyOpenColorIO.GpuShaderDesc
 
 
-   .. py:method:: DynamicPropertyIterator.__getitem__(self: PyOpenColorIO.GpuShaderCreator.DynamicPropertyIterator, arg0: int) -> OpenColorIO_v2_0dev::DynamicProperty
+   .. py:method:: DynamicPropertyIterator.__getitem__(self: PyOpenColorIO.GpuShaderCreator.DynamicPropertyIterator, arg0: int) -> OpenColorIO_v2_0beta1::DynamicProperty
       :module: PyOpenColorIO.GpuShaderDesc
 
 
@@ -657,6 +657,6 @@
       :module: PyOpenColorIO.GpuShaderDesc
 
 
-   .. py:method:: DynamicPropertyIterator.__next__(self: PyOpenColorIO.GpuShaderCreator.DynamicPropertyIterator) -> OpenColorIO_v2_0dev::DynamicProperty
+   .. py:method:: DynamicPropertyIterator.__next__(self: PyOpenColorIO.GpuShaderCreator.DynamicPropertyIterator) -> OpenColorIO_v2_0beta1::DynamicProperty
       :module: PyOpenColorIO.GpuShaderDesc
 

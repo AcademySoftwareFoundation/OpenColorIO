@@ -44,10 +44,10 @@
       Add an attribute with a given name and value. If an attribute with the same name already exists, the value is replaced.
 
 
-   .. py:method:: FormatMetadata.addChildElement(self: PyOpenColorIO.FormatMetadata, name: str, value: str) -> PyOpenColorIO.FormatMetadata
+   .. py:method:: FormatMetadata.addChildElement(self: PyOpenColorIO.FormatMetadata, name: str, value: str) -> None
       :module: PyOpenColorIO
 
-      Add a child element with a given name and value. Name has to be non-empty. Value may be empty, particularly if this element will have children. Return a reference to the added element.
+      Add a child element after the last child with a given name and value. Name has to be non-empty. Value may be empty, particularly if this element will have children. Use getChildElement(getNumChildrenElements()-1) to access the added element.
 
 
    .. py:method:: FormatMetadata.clear(self: PyOpenColorIO.FormatMetadata) -> None
@@ -199,10 +199,10 @@
       Add an attribute with a given name and value. If an attribute with the same name already exists, the value is replaced.
 
 
-   .. py:method:: FormatMetadata.addChildElement(self: PyOpenColorIO.FormatMetadata, name: str, value: str) -> PyOpenColorIO.FormatMetadata
+   .. py:method:: FormatMetadata.addChildElement(self: PyOpenColorIO.FormatMetadata, name: str, value: str) -> None
       :module: PyOpenColorIO
 
-      Add a child element with a given name and value. Name has to be non-empty. Value may be empty, particularly if this element will have children. Return a reference to the added element.
+      Add a child element after the last child with a given name and value. Name has to be non-empty. Value may be empty, particularly if this element will have children. Use getChildElement(getNumChildrenElements()-1) to access the added element.
 
 
    .. py:method:: FormatMetadata.clear(self: PyOpenColorIO.FormatMetadata) -> None

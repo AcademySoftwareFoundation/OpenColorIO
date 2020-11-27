@@ -25,7 +25,7 @@
       :module: PyOpenColorIO
 
 
-   .. py:method:: Processor.getDefaultCPUProcessor(self: PyOpenColorIO.Processor) -> OpenColorIO_v2_0dev::CPUProcessor
+   .. py:method:: Processor.getDefaultCPUProcessor(self: PyOpenColorIO.Processor) -> OpenColorIO_v2_0beta1::CPUProcessor
       :module: PyOpenColorIO
 
       Get an optimized :cpp:class:`:ref:`CPUProcessor`` instance.
@@ -50,13 +50,13 @@
           cpuProcessor->apply(img);
 
 
-   .. py:method:: Processor.getDefaultGPUProcessor(self: PyOpenColorIO.Processor) -> OpenColorIO_v2_0dev::GPUProcessor
+   .. py:method:: Processor.getDefaultGPUProcessor(self: PyOpenColorIO.Processor) -> OpenColorIO_v2_0beta1::GPUProcessor
       :module: PyOpenColorIO
 
       Get an optimized :ref:`GPUProcessor` instance.
 
 
-   .. py:method:: Processor.getDynamicProperty(self: PyOpenColorIO.Processor, type: PyOpenColorIO.DynamicPropertyType) -> OpenColorIO_v2_0dev::DynamicProperty
+   .. py:method:: Processor.getDynamicProperty(self: PyOpenColorIO.Processor, type: PyOpenColorIO.DynamicPropertyType) -> OpenColorIO_v2_0beta1::DynamicProperty
       :module: PyOpenColorIO
 
       The returned pointer may be used to set the default value of any dynamic properties of the requested type. Throws if the requested property is not found. Note that if the processor contains several ops that support the requested property, only ones for which dynamic has been enabled will be controlled.
@@ -76,12 +76,12 @@
 
       Overloaded function.
 
-      1. getOptimizedCPUProcessor(self: PyOpenColorIO.Processor, oFlags: PyOpenColorIO.OptimizationFlags) -> OpenColorIO_v2_0dev::CPUProcessor
+      1. getOptimizedCPUProcessor(self: PyOpenColorIO.Processor, oFlags: PyOpenColorIO.OptimizationFlags) -> OpenColorIO_v2_0beta1::CPUProcessor
 
-      2. getOptimizedCPUProcessor(self: PyOpenColorIO.Processor, inBitDepth: PyOpenColorIO.BitDepth, outBitDepth: PyOpenColorIO.BitDepth, oFlags: PyOpenColorIO.OptimizationFlags) -> OpenColorIO_v2_0dev::CPUProcessor
+      2. getOptimizedCPUProcessor(self: PyOpenColorIO.Processor, inBitDepth: PyOpenColorIO.BitDepth, outBitDepth: PyOpenColorIO.BitDepth, oFlags: PyOpenColorIO.OptimizationFlags) -> OpenColorIO_v2_0beta1::CPUProcessor
 
 
-   .. py:method:: Processor.getOptimizedGPUProcessor(self: PyOpenColorIO.Processor, oFlags: PyOpenColorIO.OptimizationFlags) -> OpenColorIO_v2_0dev::GPUProcessor
+   .. py:method:: Processor.getOptimizedGPUProcessor(self: PyOpenColorIO.Processor, oFlags: PyOpenColorIO.OptimizationFlags) -> OpenColorIO_v2_0beta1::GPUProcessor
       :module: PyOpenColorIO
 
 
@@ -99,7 +99,7 @@
       Run the optimizer on a :ref:`Processor` to create a new :cpp:class:`:ref:`Processor``. It is usually not necessary to call this since getting a :ref:`CPUProcessor` or :ref:`GPUProcessor` will also optimize. However if you need both, calling this method first makes getting a CPU and GPU :ref:`Processor` faster since the optimization is effectively only done once.
 
 
-   .. py:method:: Processor.getProcessorMetadata(self: PyOpenColorIO.Processor) -> OpenColorIO_v2_0dev::ProcessorMetadata
+   .. py:method:: Processor.getProcessorMetadata(self: PyOpenColorIO.Processor) -> OpenColorIO_v2_0beta1::ProcessorMetadata
       :module: PyOpenColorIO
 
       The :ref:`ProcessorMetadata` contains technical information such as the number of files and looks used in the processor.
@@ -212,7 +212,7 @@
       :module: PyOpenColorIO
 
 
-   .. py:method:: Processor.getDefaultCPUProcessor(self: PyOpenColorIO.Processor) -> OpenColorIO_v2_0dev::CPUProcessor
+   .. py:method:: Processor.getDefaultCPUProcessor(self: PyOpenColorIO.Processor) -> OpenColorIO_v2_0beta1::CPUProcessor
       :module: PyOpenColorIO
 
       Get an optimized :cpp:class:`:ref:`CPUProcessor`` instance.
@@ -237,13 +237,13 @@
           cpuProcessor->apply(img);
 
 
-   .. py:method:: Processor.getDefaultGPUProcessor(self: PyOpenColorIO.Processor) -> OpenColorIO_v2_0dev::GPUProcessor
+   .. py:method:: Processor.getDefaultGPUProcessor(self: PyOpenColorIO.Processor) -> OpenColorIO_v2_0beta1::GPUProcessor
       :module: PyOpenColorIO
 
       Get an optimized :ref:`GPUProcessor` instance.
 
 
-   .. py:method:: Processor.getDynamicProperty(self: PyOpenColorIO.Processor, type: PyOpenColorIO.DynamicPropertyType) -> OpenColorIO_v2_0dev::DynamicProperty
+   .. py:method:: Processor.getDynamicProperty(self: PyOpenColorIO.Processor, type: PyOpenColorIO.DynamicPropertyType) -> OpenColorIO_v2_0beta1::DynamicProperty
       :module: PyOpenColorIO
 
       The returned pointer may be used to set the default value of any dynamic properties of the requested type. Throws if the requested property is not found. Note that if the processor contains several ops that support the requested property, only ones for which dynamic has been enabled will be controlled.
@@ -263,12 +263,12 @@
 
       Overloaded function.
 
-      1. getOptimizedCPUProcessor(self: PyOpenColorIO.Processor, oFlags: PyOpenColorIO.OptimizationFlags) -> OpenColorIO_v2_0dev::CPUProcessor
+      1. getOptimizedCPUProcessor(self: PyOpenColorIO.Processor, oFlags: PyOpenColorIO.OptimizationFlags) -> OpenColorIO_v2_0beta1::CPUProcessor
 
-      2. getOptimizedCPUProcessor(self: PyOpenColorIO.Processor, inBitDepth: PyOpenColorIO.BitDepth, outBitDepth: PyOpenColorIO.BitDepth, oFlags: PyOpenColorIO.OptimizationFlags) -> OpenColorIO_v2_0dev::CPUProcessor
+      2. getOptimizedCPUProcessor(self: PyOpenColorIO.Processor, inBitDepth: PyOpenColorIO.BitDepth, outBitDepth: PyOpenColorIO.BitDepth, oFlags: PyOpenColorIO.OptimizationFlags) -> OpenColorIO_v2_0beta1::CPUProcessor
 
 
-   .. py:method:: Processor.getOptimizedGPUProcessor(self: PyOpenColorIO.Processor, oFlags: PyOpenColorIO.OptimizationFlags) -> OpenColorIO_v2_0dev::GPUProcessor
+   .. py:method:: Processor.getOptimizedGPUProcessor(self: PyOpenColorIO.Processor, oFlags: PyOpenColorIO.OptimizationFlags) -> OpenColorIO_v2_0beta1::GPUProcessor
       :module: PyOpenColorIO
 
 
@@ -286,7 +286,7 @@
       Run the optimizer on a :ref:`Processor` to create a new :cpp:class:`:ref:`Processor``. It is usually not necessary to call this since getting a :ref:`CPUProcessor` or :ref:`GPUProcessor` will also optimize. However if you need both, calling this method first makes getting a CPU and GPU :ref:`Processor` faster since the optimization is effectively only done once.
 
 
-   .. py:method:: Processor.getProcessorMetadata(self: PyOpenColorIO.Processor) -> OpenColorIO_v2_0dev::ProcessorMetadata
+   .. py:method:: Processor.getProcessorMetadata(self: PyOpenColorIO.Processor) -> OpenColorIO_v2_0beta1::ProcessorMetadata
       :module: PyOpenColorIO
 
       The :ref:`ProcessorMetadata` contains technical information such as the number of files and looks used in the processor.

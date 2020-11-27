@@ -18,11 +18,11 @@
 
       Overloaded function.
 
-      1. apply(self: PyOpenColorIO.CPUProcessor, imgDesc: OpenColorIO_v2_0dev::PyImageDesc) -> None
+      1. apply(self: PyOpenColorIO.CPUProcessor, imgDesc: OpenColorIO_v2_0beta1::PyImageDesc) -> None
 
       Apply to an image with any kind of channel ordering while respecting the input and output bit-depths.
 
-      2. apply(self: PyOpenColorIO.CPUProcessor, srcImgDesc: OpenColorIO_v2_0dev::PyImageDesc, dstImgDesc: OpenColorIO_v2_0dev::PyImageDesc) -> None
+      2. apply(self: PyOpenColorIO.CPUProcessor, srcImgDesc: OpenColorIO_v2_0beta1::PyImageDesc, dstImgDesc: OpenColorIO_v2_0beta1::PyImageDesc) -> None
 
 
    .. py:method:: CPUProcessor.applyRGB(*args, **kwargs)
@@ -106,11 +106,11 @@
 
       Overloaded function.
 
-      1. apply(self: PyOpenColorIO.CPUProcessor, imgDesc: OpenColorIO_v2_0dev::PyImageDesc) -> None
+      1. apply(self: PyOpenColorIO.CPUProcessor, imgDesc: OpenColorIO_v2_0beta1::PyImageDesc) -> None
 
       Apply to an image with any kind of channel ordering while respecting the input and output bit-depths.
 
-      2. apply(self: PyOpenColorIO.CPUProcessor, srcImgDesc: OpenColorIO_v2_0dev::PyImageDesc, dstImgDesc: OpenColorIO_v2_0dev::PyImageDesc) -> None
+      2. apply(self: PyOpenColorIO.CPUProcessor, srcImgDesc: OpenColorIO_v2_0beta1::PyImageDesc, dstImgDesc: OpenColorIO_v2_0beta1::PyImageDesc) -> None
 
 
    .. py:method:: CPUProcessor.applyRGB(*args, **kwargs)
