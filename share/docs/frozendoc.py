@@ -251,17 +251,13 @@ def compare_frozen(app, exception):
         with open(backup_path, "r") as backup_file:
             backup_data = backup_file.read()
 
-        print("")
-
         for line in difflib.unified_diff(
             frozen_data.splitlines(), 
             backup_data.splitlines(), 
             fromfile=frozen_path, 
             tofile=backup_path
         ):
-            print(line)
-            
-        print("")
+            logger.info(line)
 
         # Based on difflib's caution of argument order playing a role in the 
         # results of ratio(), check the ratio in both directions and use the

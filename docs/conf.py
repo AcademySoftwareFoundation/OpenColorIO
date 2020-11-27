@@ -34,8 +34,14 @@ if RTD_BUILD:
 
 else:
     # NOTE: PyOpenColorIO not available on RTD
-    sys.path.append(os.path.join("@CMAKE_BINARY_DIR@", "src", "bindings", "python"))
-    sys.path.append(os.path.join("@CMAKE_SOURCE_DIR@", "share", "docs"))
+    sys.path.append(os.path.join(
+        "@CMAKE_BINARY_DIR@".replace("\\", "/"), 
+        "src", "bindings", "python"
+    ))
+    sys.path.append(os.path.join(
+        "@CMAKE_SOURCE_DIR@".replace("\\", "/"), 
+        "share", "docs"
+    ))
 
     configure_file = None
 
