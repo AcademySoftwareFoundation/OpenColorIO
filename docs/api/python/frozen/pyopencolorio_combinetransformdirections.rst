@@ -6,7 +6,3 @@
 .. py:function:: CombineTransformDirections(direction1: PyOpenColorIO.TransformDirection, direction2: PyOpenColorIO.TransformDirection) -> PyOpenColorIO.TransformDirection
    :module: PyOpenColorIO
 
-
-.. py:function:: CombineTransformDirections(direction1: PyOpenColorIO.TransformDirection, direction2: PyOpenColorIO.TransformDirection) -> PyOpenColorIO.TransformDirection
-   :module: PyOpenColorIO
-

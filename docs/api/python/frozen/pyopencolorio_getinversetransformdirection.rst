@@ -6,7 +6,3 @@
 .. py:function:: GetInverseTransformDirection(direction: PyOpenColorIO.TransformDirection) -> PyOpenColorIO.TransformDirection
    :module: PyOpenColorIO
 
-
-.. py:function:: GetInverseTransformDirection(direction: PyOpenColorIO.TransformDirection) -> PyOpenColorIO.TransformDirection
-   :module: PyOpenColorIO
-

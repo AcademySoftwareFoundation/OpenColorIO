@@ -6,7 +6,3 @@
 .. py:function:: ResetToDefaultLoggingFunction() -> None
    :module: PyOpenColorIO
 
-
-.. py:function:: ResetToDefaultLoggingFunction() -> None
-   :module: PyOpenColorIO
-

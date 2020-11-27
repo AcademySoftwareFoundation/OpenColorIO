@@ -6,7 +6,3 @@
 .. py:function:: AllocationFromString(str: str) -> PyOpenColorIO.Allocation
    :module: PyOpenColorIO
 
-
-.. py:function:: AllocationFromString(str: str) -> PyOpenColorIO.Allocation
-   :module: PyOpenColorIO
-

@@ -33,34 +33,3 @@
       :module: PyOpenColorIO
       :value: ExposureContrastStyle.EXPOSURE_CONTRAST_VIDEO
 
-
-.. py:class:: ExposureContrastStyle
-   :module: PyOpenColorIO
-
-   Enumeration of the :cpp:class:`:ref:`ExposureContrastTransform`` transform algorithms.
-
-   Members:
-
-     EXPOSURE_CONTRAST_LINEAR : E/C to be applied to a linear space image.
-
-     EXPOSURE_CONTRAST_VIDEO : E/C to be applied to a video space image.
-
-     EXPOSURE_CONTRAST_LOGARITHMIC : E/C to be applied to a log space image.
-
-   .. py:method:: name() -> str
-      :property:
-
-   .. py:attribute:: ExposureContrastStyle.EXPOSURE_CONTRAST_LINEAR
-      :module: PyOpenColorIO
-      :value: ExposureContrastStyle.EXPOSURE_CONTRAST_LINEAR
-
-
-   .. py:attribute:: ExposureContrastStyle.EXPOSURE_CONTRAST_LOGARITHMIC
-      :module: PyOpenColorIO
-      :value: ExposureContrastStyle.EXPOSURE_CONTRAST_LOGARITHMIC
-
-
-   .. py:attribute:: ExposureContrastStyle.EXPOSURE_CONTRAST_VIDEO
-      :module: PyOpenColorIO
-      :value: ExposureContrastStyle.EXPOSURE_CONTRAST_VIDEO
-

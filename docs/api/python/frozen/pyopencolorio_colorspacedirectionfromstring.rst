@@ -8,9 +8,3 @@
 
    Will throw if string is not recognized.
 
-
-.. py:function:: ColorSpaceDirectionFromString(str: str) -> PyOpenColorIO.ColorSpaceDirection
-   :module: PyOpenColorIO
-
-   Will throw if string is not recognized.
-

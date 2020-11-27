@@ -31,32 +31,3 @@
       :module: PyOpenColorIO
       :value: Allocation.ALLOCATION_UNKNOWN
 
-
-.. py:class:: Allocation
-   :module: PyOpenColorIO
-
-   Members:
-
-     ALLOCATION_UNKNOWN :
-
-     ALLOCATION_UNIFORM :
-
-     ALLOCATION_LG2 :
-
-   .. py:method:: name() -> str
-      :property:
-
-   .. py:attribute:: Allocation.ALLOCATION_LG2
-      :module: PyOpenColorIO
-      :value: Allocation.ALLOCATION_LG2
-
-
-   .. py:attribute:: Allocation.ALLOCATION_UNIFORM
-      :module: PyOpenColorIO
-      :value: Allocation.ALLOCATION_UNIFORM
-
-
-   .. py:attribute:: Allocation.ALLOCATION_UNKNOWN
-      :module: PyOpenColorIO
-      :value: Allocation.ALLOCATION_UNKNOWN
-

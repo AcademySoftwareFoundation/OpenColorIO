@@ -6,7 +6,3 @@
 .. py:function:: RangeStyleFromString(str: str) -> PyOpenColorIO.RangeStyle
    :module: PyOpenColorIO
 
-
-.. py:function:: RangeStyleFromString(str: str) -> PyOpenColorIO.RangeStyle
-   :module: PyOpenColorIO
-

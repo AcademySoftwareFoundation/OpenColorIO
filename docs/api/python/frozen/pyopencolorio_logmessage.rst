@@ -8,9 +8,3 @@
 
    Log a message using the library logging function.
 
-
-.. py:function:: LogMessage(level: PyOpenColorIO.LoggingLevel, message: str) -> None
-   :module: PyOpenColorIO
-
-   Log a message using the library logging function.
-

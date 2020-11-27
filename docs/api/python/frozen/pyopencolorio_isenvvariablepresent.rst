@@ -8,9 +8,3 @@
 
    cpp:function::
 
-
-.. py:function:: IsEnvVariablePresent(name: str) -> bool
-   :module: PyOpenColorIO
-
-   cpp:function::
-

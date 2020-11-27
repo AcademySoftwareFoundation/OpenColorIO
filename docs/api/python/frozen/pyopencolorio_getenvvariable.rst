@@ -8,9 +8,3 @@
 
    Another call modifies the string obtained from a previous call as the method always uses the same memory buffer.
 
-
-.. py:function:: GetEnvVariable(name: str) -> str
-   :module: PyOpenColorIO
-
-   Another call modifies the string obtained from a previous call as the method always uses the same memory buffer.
-

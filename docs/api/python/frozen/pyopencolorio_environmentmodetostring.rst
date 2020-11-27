@@ -6,7 +6,3 @@
 .. py:function:: EnvironmentModeToString(mode: PyOpenColorIO.EnvironmentMode) -> str
    :module: PyOpenColorIO
 
-
-.. py:function:: EnvironmentModeToString(mode: PyOpenColorIO.EnvironmentMode) -> str
-   :module: PyOpenColorIO
-

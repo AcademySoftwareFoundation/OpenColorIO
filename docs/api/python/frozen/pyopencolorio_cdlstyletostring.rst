@@ -6,7 +6,3 @@
 .. py:function:: CDLStyleToString(style: PyOpenColorIO.CDLStyle) -> str
    :module: PyOpenColorIO
 
-
-.. py:function:: CDLStyleToString(style: PyOpenColorIO.CDLStyle) -> str
-   :module: PyOpenColorIO
-

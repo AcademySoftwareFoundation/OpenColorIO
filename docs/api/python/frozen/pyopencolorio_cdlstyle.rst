@@ -31,32 +31,3 @@
       :module: PyOpenColorIO
       :value: CDLStyle.CDL_NO_CLAMP
 
-
-.. py:class:: CDLStyle
-   :module: PyOpenColorIO
-
-   Members:
-
-     CDL_ASC : ASC CDL specification v1.2.
-
-     CDL_NO_CLAMP : CDL that does not clamp.
-
-     CDL_TRANSFORM_DEFAULT :
-
-   .. py:method:: name() -> str
-      :property:
-
-   .. py:attribute:: CDLStyle.CDL_ASC
-      :module: PyOpenColorIO
-      :value: CDLStyle.CDL_ASC
-
-
-   .. py:attribute:: CDLStyle.CDL_NO_CLAMP
-      :module: PyOpenColorIO
-      :value: CDLStyle.CDL_NO_CLAMP
-
-
-   .. py:attribute:: CDLStyle.CDL_TRANSFORM_DEFAULT
-      :module: PyOpenColorIO
-      :value: CDLStyle.CDL_NO_CLAMP
-

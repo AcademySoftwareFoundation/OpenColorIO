@@ -6,7 +6,3 @@
 .. py:function:: FixedFunctionStyleFromString(str: str) -> PyOpenColorIO.FixedFunctionStyle
    :module: PyOpenColorIO
 
-
-.. py:function:: FixedFunctionStyleFromString(str: str) -> PyOpenColorIO.FixedFunctionStyle
-   :module: PyOpenColorIO
-

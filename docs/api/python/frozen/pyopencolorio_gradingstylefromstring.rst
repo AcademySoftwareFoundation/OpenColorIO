@@ -6,7 +6,3 @@
 .. py:function:: GradingStyleFromString(str: str) -> PyOpenColorIO.GradingStyle
    :module: PyOpenColorIO
 
-
-.. py:function:: GradingStyleFromString(str: str) -> PyOpenColorIO.GradingStyle
-   :module: PyOpenColorIO
-

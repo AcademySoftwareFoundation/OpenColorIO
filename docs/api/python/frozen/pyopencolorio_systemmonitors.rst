@@ -36,37 +36,3 @@
    .. py:method:: MonitorIterator.__next__(self: PyOpenColorIO.SystemMonitors.MonitorIterator) -> tuple
       :module: PyOpenColorIO.SystemMonitors
 
-
-.. py:class:: SystemMonitors
-   :module: PyOpenColorIO
-
-   Provides access to the ICC monitor profile provided by the operating system for each active display.
-
-
-   .. py:method:: SystemMonitors.__init__(self: PyOpenColorIO.SystemMonitors) -> None
-      :module: PyOpenColorIO
-
-
-   .. py:method:: SystemMonitors.getMonitors(self: PyOpenColorIO.SystemMonitors) -> PyOpenColorIO.SystemMonitors.MonitorIterator
-      :module: PyOpenColorIO
-
-
-.. py:class:: MonitorIterator
-   :module: PyOpenColorIO.SystemMonitors
-
-
-   .. py:method:: MonitorIterator.__getitem__(self: PyOpenColorIO.SystemMonitors.MonitorIterator, arg0: int) -> tuple
-      :module: PyOpenColorIO.SystemMonitors
-
-
-   .. py:method:: MonitorIterator.__iter__(self: PyOpenColorIO.SystemMonitors.MonitorIterator) -> PyOpenColorIO.SystemMonitors.MonitorIterator
-      :module: PyOpenColorIO.SystemMonitors
-
-
-   .. py:method:: MonitorIterator.__len__(self: PyOpenColorIO.SystemMonitors.MonitorIterator) -> int
-      :module: PyOpenColorIO.SystemMonitors
-
-
-   .. py:method:: MonitorIterator.__next__(self: PyOpenColorIO.SystemMonitors.MonitorIterator) -> tuple
-      :module: PyOpenColorIO.SystemMonitors
-

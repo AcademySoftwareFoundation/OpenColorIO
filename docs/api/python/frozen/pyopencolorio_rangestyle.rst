@@ -26,27 +26,3 @@
       :module: PyOpenColorIO
       :value: RangeStyle.RANGE_NO_CLAMP
 
-
-.. py:class:: RangeStyle
-   :module: PyOpenColorIO
-
-   A :ref:`RangeTransform` may be set to clamp the values, or not.
-
-   Members:
-
-     RANGE_NO_CLAMP :
-
-     RANGE_CLAMP :
-
-   .. py:method:: name() -> str
-      :property:
-
-   .. py:attribute:: RangeStyle.RANGE_CLAMP
-      :module: PyOpenColorIO
-      :value: RangeStyle.RANGE_CLAMP
-
-
-   .. py:attribute:: RangeStyle.RANGE_NO_CLAMP
-      :module: PyOpenColorIO
-      :value: RangeStyle.RANGE_NO_CLAMP
-

@@ -6,7 +6,3 @@
 .. py:function:: BitDepthToInt(bitDepth: PyOpenColorIO.BitDepth) -> int
    :module: PyOpenColorIO
 
-
-.. py:function:: BitDepthToInt(bitDepth: PyOpenColorIO.BitDepth) -> int
-   :module: PyOpenColorIO
-

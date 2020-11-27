@@ -24,25 +24,3 @@
       :module: PyOpenColorIO
       :value: ViewTransformDirection.VIEWTRANSFORM_DIR_TO_REFERENCE
 
-
-.. py:class:: ViewTransformDirection
-   :module: PyOpenColorIO
-
-   Members:
-
-     VIEWTRANSFORM_DIR_TO_REFERENCE :
-
-     VIEWTRANSFORM_DIR_FROM_REFERENCE :
-
-   .. py:method:: name() -> str
-      :property:
-
-   .. py:attribute:: ViewTransformDirection.VIEWTRANSFORM_DIR_FROM_REFERENCE
-      :module: PyOpenColorIO
-      :value: ViewTransformDirection.VIEWTRANSFORM_DIR_FROM_REFERENCE
-
-
-   .. py:attribute:: ViewTransformDirection.VIEWTRANSFORM_DIR_TO_REFERENCE
-      :module: PyOpenColorIO
-      :value: ViewTransformDirection.VIEWTRANSFORM_DIR_TO_REFERENCE
-

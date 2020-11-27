@@ -8,9 +8,3 @@
 
    Set the global logging level.
 
-
-.. py:function:: SetLoggingLevel(level: PyOpenColorIO.LoggingLevel) -> None
-   :module: PyOpenColorIO
-
-   Set the global logging level.
-

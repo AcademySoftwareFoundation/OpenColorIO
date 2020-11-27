@@ -24,25 +24,3 @@
       :module: PyOpenColorIO
       :value: ViewType.VIEW_SHARED
 
-
-.. py:class:: ViewType
-   :module: PyOpenColorIO
-
-   Members:
-
-     VIEW_SHARED :
-
-     VIEW_DISPLAY_DEFINED :
-
-   .. py:method:: name() -> str
-      :property:
-
-   .. py:attribute:: ViewType.VIEW_DISPLAY_DEFINED
-      :module: PyOpenColorIO
-      :value: ViewType.VIEW_DISPLAY_DEFINED
-
-
-   .. py:attribute:: ViewType.VIEW_SHARED
-      :module: PyOpenColorIO
-      :value: ViewType.VIEW_SHARED
-

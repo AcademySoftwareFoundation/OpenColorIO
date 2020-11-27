@@ -8,9 +8,3 @@
 
    Will throw if string is not recognized.
 
-
-.. py:function:: TransformDirectionFromString(str: str) -> PyOpenColorIO.TransformDirection
-   :module: PyOpenColorIO
-
-   Will throw if string is not recognized.
-

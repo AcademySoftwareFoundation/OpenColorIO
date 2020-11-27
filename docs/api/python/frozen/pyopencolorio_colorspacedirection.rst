@@ -24,25 +24,3 @@
       :module: PyOpenColorIO
       :value: ColorSpaceDirection.COLORSPACE_DIR_TO_REFERENCE
 
-
-.. py:class:: ColorSpaceDirection
-   :module: PyOpenColorIO
-
-   Members:
-
-     COLORSPACE_DIR_TO_REFERENCE :
-
-     COLORSPACE_DIR_FROM_REFERENCE :
-
-   .. py:method:: name() -> str
-      :property:
-
-   .. py:attribute:: ColorSpaceDirection.COLORSPACE_DIR_FROM_REFERENCE
-      :module: PyOpenColorIO
-      :value: ColorSpaceDirection.COLORSPACE_DIR_FROM_REFERENCE
-
-
-   .. py:attribute:: ColorSpaceDirection.COLORSPACE_DIR_TO_REFERENCE
-      :module: PyOpenColorIO
-      :value: ColorSpaceDirection.COLORSPACE_DIR_TO_REFERENCE
-

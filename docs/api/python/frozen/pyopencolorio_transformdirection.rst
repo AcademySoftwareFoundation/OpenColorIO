@@ -24,25 +24,3 @@
       :module: PyOpenColorIO
       :value: TransformDirection.TRANSFORM_DIR_INVERSE
 
-
-.. py:class:: TransformDirection
-   :module: PyOpenColorIO
-
-   Members:
-
-     TRANSFORM_DIR_FORWARD :
-
-     TRANSFORM_DIR_INVERSE :
-
-   .. py:method:: name() -> str
-      :property:
-
-   .. py:attribute:: TransformDirection.TRANSFORM_DIR_FORWARD
-      :module: PyOpenColorIO
-      :value: TransformDirection.TRANSFORM_DIR_FORWARD
-
-
-   .. py:attribute:: TransformDirection.TRANSFORM_DIR_INVERSE
-      :module: PyOpenColorIO
-      :value: TransformDirection.TRANSFORM_DIR_INVERSE
-

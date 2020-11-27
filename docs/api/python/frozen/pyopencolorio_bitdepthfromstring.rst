@@ -6,7 +6,3 @@
 .. py:function:: BitDepthFromString(str: str) -> PyOpenColorIO.BitDepth
    :module: PyOpenColorIO
 
-
-.. py:function:: BitDepthFromString(str: str) -> PyOpenColorIO.BitDepth
-   :module: PyOpenColorIO
-

@@ -6,7 +6,3 @@
 .. py:function:: GpuLanguageToString(language: PyOpenColorIO.GpuLanguage) -> str
    :module: PyOpenColorIO
 
-
-.. py:function:: GpuLanguageToString(language: PyOpenColorIO.GpuLanguage) -> str
-   :module: PyOpenColorIO
-

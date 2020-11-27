@@ -26,27 +26,3 @@
       :module: PyOpenColorIO
       :value: Lut1DHueAdjust.HUE_NONE
 
-
-.. py:class:: Lut1DHueAdjust
-   :module: PyOpenColorIO
-
-   Used by :cpp:class`:ref:`Lut1DTransform`` to control optional hue restoration algorithm.
-
-   Members:
-
-     HUE_NONE :
-
-     HUE_DW3 :
-
-   .. py:method:: name() -> str
-      :property:
-
-   .. py:attribute:: Lut1DHueAdjust.HUE_DW3
-      :module: PyOpenColorIO
-      :value: Lut1DHueAdjust.HUE_DW3
-
-
-   .. py:attribute:: Lut1DHueAdjust.HUE_NONE
-      :module: PyOpenColorIO
-      :value: Lut1DHueAdjust.HUE_NONE
-

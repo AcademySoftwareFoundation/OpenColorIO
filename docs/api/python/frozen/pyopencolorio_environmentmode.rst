@@ -31,32 +31,3 @@
       :module: PyOpenColorIO
       :value: EnvironmentMode.ENV_ENVIRONMENT_UNKNOWN
 
-
-.. py:class:: EnvironmentMode
-   :module: PyOpenColorIO
-
-   Members:
-
-     ENV_ENVIRONMENT_UNKNOWN :
-
-     ENV_ENVIRONMENT_LOAD_PREDEFINED :
-
-     ENV_ENVIRONMENT_LOAD_ALL :
-
-   .. py:method:: name() -> str
-      :property:
-
-   .. py:attribute:: EnvironmentMode.ENV_ENVIRONMENT_LOAD_ALL
-      :module: PyOpenColorIO
-      :value: EnvironmentMode.ENV_ENVIRONMENT_LOAD_ALL
-
-
-   .. py:attribute:: EnvironmentMode.ENV_ENVIRONMENT_LOAD_PREDEFINED
-      :module: PyOpenColorIO
-      :value: EnvironmentMode.ENV_ENVIRONMENT_LOAD_PREDEFINED
-
-
-   .. py:attribute:: EnvironmentMode.ENV_ENVIRONMENT_UNKNOWN
-      :module: PyOpenColorIO
-      :value: EnvironmentMode.ENV_ENVIRONMENT_UNKNOWN
-

@@ -38,39 +38,3 @@
    .. py:method:: GPUProcessor.isNoOp(self: PyOpenColorIO.GPUProcessor) -> bool
       :module: PyOpenColorIO
 
-
-.. py:class:: GPUProcessor
-   :module: PyOpenColorIO
-
-
-   .. py:method:: GPUProcessor.__init__(*args, **kwargs)
-      :module: PyOpenColorIO
-
-      Initialize self.  See help(type(self)) for accurate signature.
-
-
-   .. py:method:: GPUProcessor.extractGpuShaderInfo(*args, **kwargs)
-      :module: PyOpenColorIO
-
-      Overloaded function.
-
-      1. extractGpuShaderInfo(self: PyOpenColorIO.GPUProcessor, shaderDesc: OpenColorIO_v2_0beta1::GpuShaderDesc) -> None
-
-      Extract & Store the shader information to implement the color processing.
-
-      2. extractGpuShaderInfo(self: PyOpenColorIO.GPUProcessor, shaderCreator: OpenColorIO_v2_0beta1::GpuShaderCreator) -> None
-
-      Extract the shader information using a custom :ref:`GpuShaderCreator` class.
-
-
-   .. py:method:: GPUProcessor.getCacheID(self: PyOpenColorIO.GPUProcessor) -> str
-      :module: PyOpenColorIO
-
-
-   .. py:method:: GPUProcessor.hasChannelCrosstalk(self: PyOpenColorIO.GPUProcessor) -> bool
-      :module: PyOpenColorIO
-
-
-   .. py:method:: GPUProcessor.isNoOp(self: PyOpenColorIO.GPUProcessor) -> bool
-      :module: PyOpenColorIO
-

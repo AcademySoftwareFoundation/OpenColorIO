@@ -31,32 +31,3 @@
       :module: PyOpenColorIO
       :value: ColorSpaceVisibility.COLORSPACE_INACTIVE
 
-
-.. py:class:: ColorSpaceVisibility
-   :module: PyOpenColorIO
-
-   Members:
-
-     COLORSPACE_ACTIVE :
-
-     COLORSPACE_INACTIVE :
-
-     COLORSPACE_ALL :
-
-   .. py:method:: name() -> str
-      :property:
-
-   .. py:attribute:: ColorSpaceVisibility.COLORSPACE_ACTIVE
-      :module: PyOpenColorIO
-      :value: ColorSpaceVisibility.COLORSPACE_ACTIVE
-
-
-   .. py:attribute:: ColorSpaceVisibility.COLORSPACE_ALL
-      :module: PyOpenColorIO
-      :value: ColorSpaceVisibility.COLORSPACE_ALL
-
-
-   .. py:attribute:: ColorSpaceVisibility.COLORSPACE_INACTIVE
-      :module: PyOpenColorIO
-      :value: ColorSpaceVisibility.COLORSPACE_INACTIVE
-

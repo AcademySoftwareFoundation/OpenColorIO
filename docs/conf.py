@@ -45,6 +45,7 @@ else:
 
     configure_file = None
 
+print(sys.path)
 import expandvars
 import prettymethods
 
@@ -95,7 +96,7 @@ source_suffix = {
 }
 
 master_doc = "index"
-exclude_patterns = ["build", "*-prefix"]
+exclude_patterns = ["build", "*-prefix", "api/python", "site"]
 
 rst_prolog = """
 .. |OCIO| replace:: *OCIO*

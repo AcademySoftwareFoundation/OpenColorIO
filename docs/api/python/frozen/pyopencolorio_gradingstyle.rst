@@ -33,34 +33,3 @@
       :module: PyOpenColorIO
       :value: GradingStyle.GRADING_VIDEO
 
-
-.. py:class:: GradingStyle
-   :module: PyOpenColorIO
-
-   Styles for grading transforms.
-
-   Members:
-
-     GRADING_LOG : Algorithms for Logarithmic color spaces.
-
-     GRADING_LIN : Algorithms for Scene Linear color spaces.
-
-     GRADING_VIDEO : Algorithms for Video color spaces.
-
-   .. py:method:: name() -> str
-      :property:
-
-   .. py:attribute:: GradingStyle.GRADING_LIN
-      :module: PyOpenColorIO
-      :value: GradingStyle.GRADING_LIN
-
-
-   .. py:attribute:: GradingStyle.GRADING_LOG
-      :module: PyOpenColorIO
-      :value: GradingStyle.GRADING_LOG
-
-
-   .. py:attribute:: GradingStyle.GRADING_VIDEO
-      :module: PyOpenColorIO
-      :value: GradingStyle.GRADING_VIDEO
-

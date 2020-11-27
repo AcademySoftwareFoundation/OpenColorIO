@@ -6,7 +6,3 @@
 .. py:function:: ResetComputeHashFunction() -> None
    :module: PyOpenColorIO
 
-
-.. py:function:: ResetComputeHashFunction() -> None
-   :module: PyOpenColorIO
-

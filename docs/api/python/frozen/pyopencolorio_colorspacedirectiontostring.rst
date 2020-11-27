@@ -6,7 +6,3 @@
 .. py:function:: ColorSpaceDirectionToString(direction: PyOpenColorIO.ColorSpaceDirection) -> str
    :module: PyOpenColorIO
 
-
-.. py:function:: ColorSpaceDirectionToString(direction: PyOpenColorIO.ColorSpaceDirection) -> str
-   :module: PyOpenColorIO
-

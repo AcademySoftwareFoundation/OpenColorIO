@@ -6,7 +6,3 @@
 .. py:function:: NegativeStyleToString(style: PyOpenColorIO.NegativeStyle) -> str
    :module: PyOpenColorIO
 
-
-.. py:function:: NegativeStyleToString(style: PyOpenColorIO.NegativeStyle) -> str
-   :module: PyOpenColorIO
-

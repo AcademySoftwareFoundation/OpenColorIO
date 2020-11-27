@@ -16,47 +16,7 @@
 
       1. __init__(self: PyOpenColorIO.GradingRGBCurve, style: PyOpenColorIO.GradingStyle) -> None
 
-      2. __init__(self: PyOpenColorIO.GradingRGBCurve, red: PyOpenColorIO.GradingBSplineCurve = <PyOpenColorIO.GradingBSplineCurve object at 0x7f98581ee530>, green: PyOpenColorIO.GradingBSplineCurve = <PyOpenColorIO.GradingBSplineCurve object at 0x7f98581ee4f0>, blue: PyOpenColorIO.GradingBSplineCurve = <PyOpenColorIO.GradingBSplineCurve object at 0x7f98581ee430>, master: PyOpenColorIO.GradingBSplineCurve = <PyOpenColorIO.GradingBSplineCurve object at 0x7f98581ee470>) -> None
-
-
-   .. py:method:: GradingRGBCurve.__str__(self: PyOpenColorIO.GradingRGBCurve) -> str
-      :module: PyOpenColorIO
-
-
-   .. py:method:: GradingRGBCurve.blue
-      :module: PyOpenColorIO
-      :property:
-
-
-   .. py:method:: GradingRGBCurve.green
-      :module: PyOpenColorIO
-      :property:
-
-
-   .. py:method:: GradingRGBCurve.master
-      :module: PyOpenColorIO
-      :property:
-
-
-   .. py:method:: GradingRGBCurve.red
-      :module: PyOpenColorIO
-      :property:
-
-
-.. py:class:: GradingRGBCurve
-   :module: PyOpenColorIO
-
-   A set of red, green, blue and master curves. It is used by RGBCurveTransform and can be used as a dynamic property (see :ref:`DynamicPropertyGradingRGBCurve`).
-
-
-   .. py:method:: GradingRGBCurve.__init__(*args, **kwargs)
-      :module: PyOpenColorIO
-
-      Overloaded function.
-
-      1. __init__(self: PyOpenColorIO.GradingRGBCurve, style: PyOpenColorIO.GradingStyle) -> None
-
-      2. __init__(self: PyOpenColorIO.GradingRGBCurve, red: PyOpenColorIO.GradingBSplineCurve = <PyOpenColorIO.GradingBSplineCurve object at 0x7f98581ee530>, green: PyOpenColorIO.GradingBSplineCurve = <PyOpenColorIO.GradingBSplineCurve object at 0x7f98581ee4f0>, blue: PyOpenColorIO.GradingBSplineCurve = <PyOpenColorIO.GradingBSplineCurve object at 0x7f98581ee430>, master: PyOpenColorIO.GradingBSplineCurve = <PyOpenColorIO.GradingBSplineCurve object at 0x7f98581ee470>) -> None
+      2. __init__(self: PyOpenColorIO.GradingRGBCurve, red: PyOpenColorIO.GradingBSplineCurve = <PyOpenColorIO.GradingBSplineCurve object at 0x7f5489d24c70>, green: PyOpenColorIO.GradingBSplineCurve = <PyOpenColorIO.GradingBSplineCurve object at 0x7f5489d24c30>, blue: PyOpenColorIO.GradingBSplineCurve = <PyOpenColorIO.GradingBSplineCurve object at 0x7f5489d24b70>, master: PyOpenColorIO.GradingBSplineCurve = <PyOpenColorIO.GradingBSplineCurve object at 0x7f5489d24bb0>) -> None
 
 
    .. py:method:: GradingRGBCurve.__str__(self: PyOpenColorIO.GradingRGBCurve) -> str

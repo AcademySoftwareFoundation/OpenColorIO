@@ -11,12 +11,3 @@
 
    This is also at compile time as OCIO_VERSION_HEX.
 
-
-.. py:function:: GetVersionHex() -> int
-   :module: PyOpenColorIO
-
-   Get the version number for the library, as a single 4-byte hex number (e.g., 0x01050200 for "1.5.2"), to be used for numeric comparisons.
-
-
-   This is also at compile time as OCIO_VERSION_HEX.
-

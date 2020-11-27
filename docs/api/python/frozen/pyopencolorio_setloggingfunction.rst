@@ -12,13 +12,3 @@
    .. note::
       The logging mechanism is thread-safe.
 
-
-.. py:function:: SetLoggingFunction(logFunction: std::function<void (char const*)>) -> None
-   :module: PyOpenColorIO
-
-   Set the logging function to use; otherwise, use the default (i.e. std::cerr).
-
-
-   .. note::
-      The logging mechanism is thread-safe.
-

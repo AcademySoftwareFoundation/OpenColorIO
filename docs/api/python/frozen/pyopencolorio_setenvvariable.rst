@@ -9,10 +9,3 @@
    .. warning::
       This method is not thread safe.
 
-
-.. py:function:: SetEnvVariable(name: str, value: str) -> None
-   :module: PyOpenColorIO
-
-   .. warning::
-      This method is not thread safe.
-

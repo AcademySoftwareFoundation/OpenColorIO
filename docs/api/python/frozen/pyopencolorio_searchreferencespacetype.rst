@@ -31,32 +31,3 @@
       :module: PyOpenColorIO
       :value: SearchReferenceSpaceType.SEARCH_REFERENCE_SPACE_SCENE
 
-
-.. py:class:: SearchReferenceSpaceType
-   :module: PyOpenColorIO
-
-   Members:
-
-     SEARCH_REFERENCE_SPACE_SCENE :
-
-     SEARCH_REFERENCE_SPACE_DISPLAY :
-
-     SEARCH_REFERENCE_SPACE_ALL :
-
-   .. py:method:: name() -> str
-      :property:
-
-   .. py:attribute:: SearchReferenceSpaceType.SEARCH_REFERENCE_SPACE_ALL
-      :module: PyOpenColorIO
-      :value: SearchReferenceSpaceType.SEARCH_REFERENCE_SPACE_ALL
-
-
-   .. py:attribute:: SearchReferenceSpaceType.SEARCH_REFERENCE_SPACE_DISPLAY
-      :module: PyOpenColorIO
-      :value: SearchReferenceSpaceType.SEARCH_REFERENCE_SPACE_DISPLAY
-
-
-   .. py:attribute:: SearchReferenceSpaceType.SEARCH_REFERENCE_SPACE_SCENE
-      :module: PyOpenColorIO
-      :value: SearchReferenceSpaceType.SEARCH_REFERENCE_SPACE_SCENE
-

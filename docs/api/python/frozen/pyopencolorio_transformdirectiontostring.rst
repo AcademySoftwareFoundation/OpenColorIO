@@ -6,7 +6,3 @@
 .. py:function:: TransformDirectionToString(direction: PyOpenColorIO.TransformDirection) -> str
    :module: PyOpenColorIO
 
-
-.. py:function:: TransformDirectionToString(direction: PyOpenColorIO.TransformDirection) -> str
-   :module: PyOpenColorIO
-

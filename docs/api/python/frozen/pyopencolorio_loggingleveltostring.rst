@@ -6,7 +6,3 @@
 .. py:function:: LoggingLevelToString(level: PyOpenColorIO.LoggingLevel) -> str
    :module: PyOpenColorIO
 
-
-.. py:function:: LoggingLevelToString(level: PyOpenColorIO.LoggingLevel) -> str
-   :module: PyOpenColorIO
-

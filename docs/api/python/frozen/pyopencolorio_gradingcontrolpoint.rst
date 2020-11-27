@@ -32,33 +32,3 @@
       :module: PyOpenColorIO
       :property:
 
-
-.. py:class:: GradingControlPoint
-   :module: PyOpenColorIO
-
-   2D control point used by :ref:`GradingBSplineCurve`.
-
-
-   .. py:method:: GradingControlPoint.__init__(*args, **kwargs)
-      :module: PyOpenColorIO
-
-      Overloaded function.
-
-      1. __init__(self: PyOpenColorIO.GradingControlPoint) -> None
-
-      2. __init__(self: PyOpenColorIO.GradingControlPoint, x: float = 0.0, y: float = 0.0) -> None
-
-
-   .. py:method:: GradingControlPoint.__str__(self: PyOpenColorIO.GradingControlPoint) -> str
-      :module: PyOpenColorIO
-
-
-   .. py:method:: GradingControlPoint.x
-      :module: PyOpenColorIO
-      :property:
-
-
-   .. py:method:: GradingControlPoint.y
-      :module: PyOpenColorIO
-      :property:
-

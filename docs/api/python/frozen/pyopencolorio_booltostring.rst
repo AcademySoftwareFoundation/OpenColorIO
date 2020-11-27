@@ -6,7 +6,3 @@
 .. py:function:: BoolToString(value: bool) -> str
    :module: PyOpenColorIO
 
-
-.. py:function:: BoolToString(value: bool) -> str
-   :module: PyOpenColorIO
-

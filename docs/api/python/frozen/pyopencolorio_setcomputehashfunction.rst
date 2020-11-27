@@ -12,13 +12,3 @@
 
    :param ComputeHashFunction:
 
-
-.. py:function:: SetComputeHashFunction(hashFunction: std::function<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > (std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)>) -> None
-   :module: PyOpenColorIO
-
-   Set the Compute Hash Function to use; otherwise, use the default.
-
-
-
-   :param ComputeHashFunction:
-

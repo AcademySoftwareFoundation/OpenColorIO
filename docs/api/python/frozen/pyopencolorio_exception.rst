@@ -12,13 +12,3 @@
    .. warning::
       All functions in the :ref:`Config` class can potentially throw this exception.
 
-
-.. py:exception:: Exception
-   :module: PyOpenColorIO
-
-   An exception class to throw for errors detected at runtime.
-
-
-   .. warning::
-      All functions in the :ref:`Config` class can potentially throw this exception.
-

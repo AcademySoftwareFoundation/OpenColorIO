@@ -6,7 +6,3 @@
 .. py:function:: BitDepthIsFloat(bitDepth: PyOpenColorIO.BitDepth) -> bool
    :module: PyOpenColorIO
 
-
-.. py:function:: BitDepthIsFloat(bitDepth: PyOpenColorIO.BitDepth) -> bool
-   :module: PyOpenColorIO
-
