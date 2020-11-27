@@ -55,6 +55,7 @@
 #
 # -----------------------------------------------------------------------------
 
+import difflib
 import filecmp
 import logging
 import os
@@ -218,6 +219,22 @@ def compare_frozen(app, exception):
         list(frozen_files | backup_files),
         shallow=False
     )
+
+    for filename in mismatch:
+        file_a = os.path.join(PYTHON_FROZEN_DIR, filename)
+        file_b = os.path.join(PYTHON_BACKUP_DIR, filename)
+        with open(file_a) as f:
+            data_a = f.read()
+        with open(file_b) as f:
+            data_b = f.read()
+        for line in difflib.unified_diff(
+            data_a, 
+            data_b, 
+            fromfile=file_a, 
+            tofile=file_b, 
+            lineterm=""
+        ):
+            print(line)
 
     if os.path.exists(PYTHON_BACKUP_DIR):
         shutil.rmtree(PYTHON_BACKUP_DIR)
