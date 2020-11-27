@@ -3473,7 +3473,7 @@ OCIO_ADD_TEST(Config, grading_primary_serialization)
             "        - !<GradingPrimaryTransform> {style: log, dynamic: true, direction: inverse}\n"
             "        - !<GradingPrimaryTransform> {style: linear, saturation: 0.9}\n"
             "        - !<GradingPrimaryTransform> {style: linear, saturation: 1.1, direction: inverse}\n"
-            "        - !<GradingPrimaryTransform> {style: video, dynamic: true}\n"
+            "        - !<GradingPrimaryTransform> {name: test, style: video, dynamic: true}\n"
             "        - !<GradingPrimaryTransform> {style: video, dynamic: true, direction: inverse}\n";
 
         const std::string str = PROFILE_V2_START + strEnd;
@@ -3510,7 +3510,7 @@ OCIO_ADD_TEST(Config, grading_primary_serialization)
             "          style: linear\n"
             "          saturation: 1.1\n"
             "          direction: inverse\n"
-            "        - !<GradingPrimaryTransform> {style: video, dynamic: true}\n"
+            "        - !<GradingPrimaryTransform> {name: test, style: video, dynamic: true}\n"
             "        - !<GradingPrimaryTransform> {style: video, dynamic: true, direction: inverse}\n";
 
         const std::string strBack = PROFILE_V2_START + strEndBack;
@@ -3807,7 +3807,7 @@ OCIO_ADD_TEST(Config, grading_rgbcurve_serialization)
             "        - !<GradingRGBCurveTransform> {style: log, dynamic: true, direction: inverse}\n"
             "        - !<GradingRGBCurveTransform> {style: linear, lintolog_bypass: true, dynamic: true}\n"
             "        - !<GradingRGBCurveTransform> {style: linear, dynamic: true, direction: inverse}\n"
-            "        - !<GradingRGBCurveTransform> {style: video, dynamic: true}\n"
+            "        - !<GradingRGBCurveTransform> {name: test, style: video, dynamic: true}\n"
             "        - !<GradingRGBCurveTransform> {style: video, dynamic: true, direction: inverse}\n";
 
         const std::string str = PROFILE_V2_START + strEnd;
@@ -3881,7 +3881,7 @@ OCIO_ADD_TEST(Config, grading_tone_serialization)
             "        - !<GradingToneTransform> {style: log, dynamic: true, direction: inverse}\n"
             "        - !<GradingToneTransform> {style: linear}\n"
             "        - !<GradingToneTransform> {style: linear, direction: inverse}\n"
-            "        - !<GradingToneTransform> {style: video, dynamic: true}\n"
+            "        - !<GradingToneTransform> {name: test, style: video, dynamic: true}\n"
             "        - !<GradingToneTransform> {style: video, dynamic: true, direction: inverse}\n";
 
         const std::string str = PROFILE_V2_START + strEnd;
@@ -3910,7 +3910,7 @@ OCIO_ADD_TEST(Config, grading_tone_serialization)
             "        - !<GradingToneTransform> {style: log, dynamic: true, direction: inverse}\n"
             "        - !<GradingToneTransform> {style: linear}\n"
             "        - !<GradingToneTransform> {style: linear, direction: inverse}\n"
-            "        - !<GradingToneTransform> {style: video, dynamic: true}\n"
+            "        - !<GradingToneTransform> {name: test, style: video, dynamic: true}\n"
             "        - !<GradingToneTransform> {style: video, dynamic: true, direction: inverse}\n";
 
         const std::string strBack = PROFILE_V2_START + strEndBack;

@@ -35,9 +35,8 @@ void CreateOutputLutFile(const std::string & outLutFilepath, OCIO::ConstGroupTra
 {
     // Get the processor.
 
-    // Create an empty config but with the latest version.
-    OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->upgradeToLatestVersion();
+    // Get a basic config to create a processor.
+    OCIO::ConstConfigRcPtr config = OCIO::Config::CreateRaw();
 
     OCIO::ConstProcessorRcPtr processor = config->getProcessor(transform);
 
@@ -55,7 +54,9 @@ void CreateOutputLutFile(const std::string & outLutFilepath, OCIO::ConstGroupTra
     {
         try
         {
-            optProcessor->write("Academy/ASC Common LUT Format", outfs);
+            const auto group = optProcessor->createGroupTransform();
+            group->write(config, config->getCurrentContext(),
+                         "Academy/ASC Common LUT Format", outfs);
         }
         catch (const OCIO::Exception &)
         {

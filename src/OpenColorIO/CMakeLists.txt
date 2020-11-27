@@ -16,6 +16,7 @@ set(SOURCES
 	Exception.cpp
 	fileformats/cdl/CDLParser.cpp
 	fileformats/cdl/CDLReaderHelper.cpp
+	fileformats/cdl/CDLWriter.cpp
 	fileformats/ctf/CTFReaderHelper.cpp
 	fileformats/ctf/CTFReaderUtils.cpp
 	fileformats/ctf/CTFTransform.cpp

@@ -492,8 +492,8 @@ inline void EmitBaseTransformKeyValues(YAML::Emitter & out,
 inline void EmitTransformName(YAML::Emitter & out,
                               const FormatMetadata & metadata)
 {
-    const FormatMetadataImpl data = dynamic_cast<const FormatMetadataImpl &>(metadata);
-    const std::string & name{ data.getAttributeValue(METADATA_NAME) };
+    const FormatMetadataImpl & data = dynamic_cast<const FormatMetadataImpl &>(metadata);
+    const std::string & name = data.getName();
     if (!name.empty())
     {
         out << YAML::Key << "name" << YAML::Value << name;
@@ -699,7 +699,7 @@ inline void load(const YAML::Node& node, CDLTransformRcPtr& t)
         {
             std::string name;
             load(second, name);
-            t->getFormatMetadata().addAttribute(METADATA_NAME, name.c_str());
+            t->getFormatMetadata().setName(name.c_str());
         }
         else
         {
@@ -959,7 +959,7 @@ inline void load(const YAML::Node& node, ExponentTransformRcPtr& t)
         {
             std::string name;
             load(second, name);
-            t->getFormatMetadata().addAttribute(METADATA_NAME, name.c_str());
+            t->getFormatMetadata().setName(name.c_str());
         }
         else
         {
@@ -1103,7 +1103,7 @@ inline void load(const YAML::Node& node, ExponentWithLinearTransformRcPtr& t)
         {
             std::string name;
             load(second, name);
-            t->getFormatMetadata().addAttribute(METADATA_NAME, name.c_str());
+            t->getFormatMetadata().setName(name.c_str());
         }
         else
         {
@@ -1317,7 +1317,7 @@ inline void load(const YAML::Node& node, ExposureContrastTransformRcPtr& t)
         {
             std::string name;
             load(second, name);
-            t->getFormatMetadata().addAttribute(METADATA_NAME, name.c_str());
+            t->getFormatMetadata().setName(name.c_str());
         }
         else
         {
@@ -1517,7 +1517,7 @@ inline void load(const YAML::Node& node, FixedFunctionTransformRcPtr& t)
         {
             std::string name;
             load(second, name);
-            t->getFormatMetadata().addAttribute(METADATA_NAME, name.c_str());
+            t->getFormatMetadata().setName(name.c_str());
         }
         else
         {
@@ -1778,6 +1778,12 @@ inline void load(const YAML::Node & node, GradingPrimaryTransformRcPtr & t)
                 t->makeDynamic();
             }
         }
+        else if (key == "name")
+        {
+            std::string name;
+            load(second, name);
+            t->getFormatMetadata().setName(name.c_str());
+        }
         else
         {
             LogUnknownKeyWarning(node.Tag(), first);
@@ -1909,6 +1915,8 @@ inline void save(YAML::Emitter & out, ConstGradingPrimaryTransformRcPtr t)
 
     if (vals == defaultVals) out << YAML::Flow;
     out << YAML::BeginMap;
+
+    EmitTransformName(out, t->getFormatMetadata());
 
     out << YAML::Key << "style";
     out << YAML::Value << YAML::Flow << GradingStyleToString(style);
@@ -2078,6 +2086,12 @@ inline void load(const YAML::Node & node, GradingRGBCurveTransformRcPtr & t)
                 t->makeDynamic();
             }
         }
+        else if (key == "name")
+        {
+            std::string name;
+            load(second, name);
+            t->getFormatMetadata().setName(name.c_str());
+        }
         else
         {
             LogUnknownKeyWarning(node.Tag(), first);
@@ -2131,6 +2145,8 @@ inline void save(YAML::Emitter & out, ConstGradingRGBCurveTransformRcPtr t)
     out << YAML::VerbatimTag("GradingRGBCurveTransform");
     if (!saveCurve) out << YAML::Flow;
     out << YAML::BeginMap;
+
+    EmitTransformName(out, t->getFormatMetadata());
 
     const auto style = t->getStyle();
     out << YAML::Key << "style";
@@ -2298,6 +2314,12 @@ inline void load(const YAML::Node & node, GradingToneTransformRcPtr & t)
                 t->makeDynamic();
             }
         }
+        else if (key == "name")
+        {
+            std::string name;
+            load(second, name);
+            t->getFormatMetadata().setName(name.c_str());
+        }
         else
         {
             LogUnknownKeyWarning(node.Tag(), first);
@@ -2343,6 +2365,8 @@ inline void save(YAML::Emitter & out, ConstGradingToneTransformRcPtr t)
 
     if (vals == defaultVals) out << YAML::Flow;
     out << YAML::BeginMap;
+
+    EmitTransformName(out, t->getFormatMetadata());
 
     out << YAML::Key << "style";
     out << YAML::Value << YAML::Flow << GradingStyleToString(style);
@@ -2412,7 +2436,7 @@ inline void load(const YAML::Node& node, GroupTransformRcPtr& t)
         {
             std::string name;
             load(second, name);
-            t->getFormatMetadata().addAttribute(METADATA_NAME, name.c_str());
+            t->getFormatMetadata().setName(name.c_str());
         }
         else
         {
@@ -2537,7 +2561,7 @@ inline void load(const YAML::Node& node, LogAffineTransformRcPtr& t)
         {
             std::string name;
             load(second, name);
-            t->getFormatMetadata().addAttribute(METADATA_NAME, name.c_str());
+            t->getFormatMetadata().setName(name.c_str());
         }
         else
         {
@@ -2681,7 +2705,7 @@ inline void load(const YAML::Node & node, LogCameraTransformRcPtr & t)
         {
             std::string name;
             load(second, name);
-            t->getFormatMetadata().addAttribute(METADATA_NAME, name.c_str());
+            t->getFormatMetadata().setName(name.c_str());
         }
         else
         {
@@ -2789,7 +2813,7 @@ inline void load(const YAML::Node& node, LogTransformRcPtr& t)
         {
             std::string name;
             load(second, name);
-            t->getFormatMetadata().addAttribute(METADATA_NAME, name.c_str());
+            t->getFormatMetadata().setName(name.c_str());
         }
         else
         {
@@ -2927,7 +2951,7 @@ inline void load(const YAML::Node& node, MatrixTransformRcPtr& t)
         {
             std::string name;
             load(second, name);
-            t->getFormatMetadata().addAttribute(METADATA_NAME, name.c_str());
+            t->getFormatMetadata().setName(name.c_str());
         }
         else
         {
@@ -3023,7 +3047,7 @@ inline void load(const YAML::Node& node, RangeTransformRcPtr& t)
         {
             std::string name;
             load(second, name);
-            t->getFormatMetadata().addAttribute(METADATA_NAME, name.c_str());
+            t->getFormatMetadata().setName(name.c_str());
         }
         else
         {

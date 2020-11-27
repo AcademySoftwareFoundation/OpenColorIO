@@ -75,6 +75,7 @@ endfunction(add_ocio_test)
 set(SOURCES
     fileformats/cdl/CDLParser.cpp
     fileformats/cdl/CDLReaderHelper.cpp
+    fileformats/cdl/CDLWriter.cpp
     fileformats/ctf/CTFReaderHelper.cpp
     fileformats/ctf/CTFReaderUtils.cpp
     fileformats/FileFormatUtils.cpp

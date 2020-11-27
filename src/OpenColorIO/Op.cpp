@@ -76,22 +76,22 @@ bool OpData::operator==(const OpData & other) const
 
 const std::string & OpData::getID() const
 {
-    return m_metadata.getAttributeValue(METADATA_ID);
+    return m_metadata.getAttributeValueString(METADATA_ID);
 }
 
 void OpData::setID(const std::string & id)
 {
-    return m_metadata.addAttribute(METADATA_ID, id.c_str());
+    return m_metadata.setID(id.c_str());
 }
 
 const std::string & OpData::getName() const
 {
-    return m_metadata.getAttributeValue(METADATA_NAME);
+    return m_metadata.getAttributeValueString(METADATA_NAME);
 }
 
 void OpData::setName(const std::string & name)
 {
-    return m_metadata.addAttribute(METADATA_NAME, name.c_str());
+    return m_metadata.setName(name.c_str());
 }
 
 const char * GetTypeName(OpData::Type type)

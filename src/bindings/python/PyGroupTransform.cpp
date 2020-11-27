@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
+#include <fstream>
+#include <sstream>
+
 #include "PyTransform.h"
 
 namespace OCIO_NAMESPACE
@@ -10,10 +13,12 @@ namespace
 
 enum GroupTransformIterator
 {
-    IT_TRANSFORM = 0
+    IT_TRANSFORM = 0,
+    IT_WRITE_FORMAT
 };
 
 using TransformIterator = PyIterator<GroupTransformRcPtr, IT_TRANSFORM>;
+using WriteFormatIterator = PyIterator<GroupTransformRcPtr, IT_WRITE_FORMAT>;
 
 } // namespace
 
@@ -24,6 +29,11 @@ void bindPyGroupTransform(py::module & m)
     auto cls = py::class_<GroupTransform, 
                           GroupTransformRcPtr /* holder */, 
                           Transform /* base */>(m, "GroupTransform")
+        .def_static("GetWriteFormats", []()
+            {
+                return WriteFormatIterator(nullptr);
+            })
+
         .def(py::init(&GroupTransform::Create))
         .def(py::init([](const std::vector<TransformRcPtr> transforms, 
                          TransformDirection dir)
@@ -57,7 +67,28 @@ void bindPyGroupTransform(py::module & m)
              &GroupTransform::getFormatMetadata,
              py::return_value_policy::reference_internal)
         .def("appendTransform", &GroupTransform::appendTransform, "transform"_a)
-        .def("prependTransform", &GroupTransform::prependTransform, "transform"_a);
+        .def("prependTransform", &GroupTransform::prependTransform, "transform"_a)
+        .def("write", [](GroupTransformRcPtr & self,
+                         const ConstConfigRcPtr & config,
+                         const ConstContextRcPtr & context,
+                         const std::string & formatName, 
+                         const std::string & fileName) 
+            {
+                std::ofstream f(fileName.c_str());
+                self->write(config, context, formatName.c_str(), f);
+                f.close();
+            }, 
+             "config"_a, "context"_a, "formatName"_a, "fileName"_a)
+        .def("write", [](GroupTransformRcPtr & self,
+                         const ConstConfigRcPtr & config,
+                         const ConstContextRcPtr & context,
+                         const std::string & formatName)
+            {
+                std::ostringstream os;
+                self->write(config, context, formatName.c_str(), os);
+                return os.str();
+            }, 
+            "config"_a, "context"_a, "formatName"_a);
 
     defStr(cls);
 
@@ -73,6 +104,28 @@ void bindPyGroupTransform(py::module & m)
             {
                 int i = it.nextIndex(it.m_obj->getNumTransforms());
                 return it.m_obj->getTransform(i);
+            });
+
+    py::class_<WriteFormatIterator>(cls, "WriteFormatIterator")
+        .def("__len__", [](WriteFormatIterator & it)
+            {
+                return GroupTransform::GetNumWriteFormats();
+            })
+        .def("__getitem__", [](WriteFormatIterator & it, int i)
+            {
+                it.checkIndex(i, GroupTransform::GetNumWriteFormats());
+                return py::make_tuple(GroupTransform::GetFormatNameByIndex(i),
+                                      GroupTransform::GetFormatExtensionByIndex(i));
+            })
+        .def("__iter__", [](WriteFormatIterator & it) -> WriteFormatIterator &
+            {
+                return it;
+            })
+        .def("__next__", [](WriteFormatIterator & it)
+            {
+                int i = it.nextIndex(GroupTransform::GetNumWriteFormats());
+                return py::make_tuple(GroupTransform::GetFormatNameByIndex(i),
+                                      GroupTransform::GetFormatExtensionByIndex(i));
             });
 }
 

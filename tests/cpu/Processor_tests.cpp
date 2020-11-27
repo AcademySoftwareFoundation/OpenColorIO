@@ -77,39 +77,6 @@ OCIO_ADD_TEST(Processor, shared_dynamic_properties)
     OCIO_CHECK_EQUAL(dp0.get(), dp0_post.get());
 }
 
-namespace
-{
-void GetFormatName(const std::string & extension, std::string & name)
-{
-    std::string requestedExt{ extension };
-    std::transform(requestedExt.begin(), requestedExt.end(), requestedExt.begin(), ::tolower);
-    for (int i = 0; i < OCIO::Processor::getNumWriteFormats(); ++i)
-    {
-        std::string formatExt(OCIO::Processor::getFormatExtensionByIndex(i));
-        if (requestedExt == formatExt)
-        {
-            name = OCIO::Processor::getFormatNameByIndex(i);
-            break;
-        }
-    }
-}
-}
-
-OCIO_ADD_TEST(Processor, write_formats)
-{
-    std::string clfFileFormat;
-    GetFormatName("CLF", clfFileFormat);
-    OCIO_CHECK_EQUAL(clfFileFormat, OCIO::FILEFORMAT_CLF);
-
-    std::string ctfFileFormat;
-    GetFormatName("CTF", ctfFileFormat);
-    OCIO_CHECK_EQUAL(ctfFileFormat, OCIO::FILEFORMAT_CTF);
-
-    std::string noFileFormat;
-    GetFormatName("XXX", noFileFormat);
-    OCIO_CHECK_ASSERT(noFileFormat.empty());
-}
-
 OCIO_ADD_TEST(Processor, optimized_processor)
 {
     OCIO::ConfigRcPtr config = OCIO::Config::Create();

@@ -48,7 +48,13 @@ class FixedFunctionTransformTest(unittest.TestCase):
 
         format_metadata = self.fixed_func_tr.getFormatMetadata()
         self.assertIsInstance(format_metadata, OCIO.FormatMetadata)
-        self.assertEqual(format_metadata.getName(), 'ROOT')
+        self.assertEqual(format_metadata.getElementName(), 'ROOT')
+        self.assertEqual(format_metadata.getName(), '')
+        self.assertEqual(format_metadata.getID(), '')
+        format_metadata.setName('name')
+        format_metadata.setID('id')
+        self.assertEqual(format_metadata.getName(), 'name')
+        self.assertEqual(format_metadata.getID(), 'id')
 
     def test_params(self):
         """
