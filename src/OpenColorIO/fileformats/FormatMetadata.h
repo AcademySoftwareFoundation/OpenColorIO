@@ -75,7 +75,7 @@ public:
     const char * getElementName() const noexcept override;
     void setElementName(const char *) override;
     const char * getElementValue() const noexcept override;
-    void setElementValue(const char *);
+    void setElementValue(const char *) override;
     int getNumAttributes() const noexcept override;
     const char * getAttributeName(int i) const noexcept override;
     const char * getAttributeValue(int i) const noexcept override;
