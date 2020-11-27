@@ -3,12 +3,16 @@
 #
 # -----------------------------------------------------------------------------
 #
-# This Sphinx extension emits autodoc generated RST for use in an environment 
-# where the dependent Python package is unavailable (e.g. Python bindings which 
-# must be compiled, but can"t due to a build environment like readthedocs.org).
+# This Sphinx extension emits "frozen" autodoc generated RST for use in an 
+# environment where the dependent Python package is unavailable (e.g. Python 
+# bindings which must be compiled, but can't due to a build environment like 
+# readthedocs.org). It also facilitates comparison between versions of generated 
+# RST to determine when re-freezing is needed to keep up with upstream changes
+# which affect autodoc output.
 #
-# The solution is derived from two Stack Overflow answers, which point out an 
-# entry point in autodoc for capturing generated RST:
+# The add_line monkeypatch contained in this module is derived from two Stack 
+# Overflow answers, which point out an entry point in autodoc for capturing 
+# generated RST:
 #
 #  Answer: https://stackoverflow.com/a/2712413
 #  Author: Michal Čihař (https://stackoverflow.com/users/225718/michal-%c4%8ciha%c5%99)
@@ -65,7 +69,10 @@ import sphinx.ext.autodoc
 from sphinx.errors import ExtensionError
 
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.INFO,
+    format="[%(levelname)s] %(name)s: %(message)s",
+)
 logger = logging.getLogger(__name__)
 
 MODULE = os.path.realpath(__file__)
@@ -234,6 +241,7 @@ def compare_frozen(app, exception):
 
     for i in reversed(range(len(mismatch))):
         filename = mismatch[i]
+        logger.info("Difference found in: {}".format(filename))
 
         frozen_path = os.path.join(PYTHON_FROZEN_DIR, filename)
         with open(frozen_path, "r") as frozen_file:
@@ -243,13 +251,30 @@ def compare_frozen(app, exception):
         with open(backup_path, "r") as backup_file:
             backup_data = backup_file.read()
 
+        print("")
+
+        for line in difflib.unified_diff(
+            frozen_data.splitlines(), 
+            backup_data.splitlines(), 
+            fromfile=frozen_path, 
+            tofile=backup_path
+        ):
+            print(line)
+            
+        print("")
+
         # Based on difflib's caution of argument order playing a role in the 
         # results of ratio(), check the ratio in both directions and use the
         # better of the two as our heuristic.
         match_ab = difflib.SequenceMatcher(None, frozen_data, backup_data)
         match_ba = difflib.SequenceMatcher(None, backup_data, frozen_data)
-        if match_ab.ratio() >= 0.6 or match_ba.ratio() >= 0.6:
+        max_ratio = max(match_ab.ratio(), match_ba.ratio())
+
+        if max_ratio >= 0.6:
             ignored.append(mismatch.pop(i))
+            logger.info("Difference ratio {} is within error tolerances".format(max_ratio))
+        else:
+            logger.error("Difference ratio {} exceeds error tolerances".format(max_ratio))
 
     if os.path.exists(PYTHON_BACKUP_DIR):
         shutil.rmtree(PYTHON_BACKUP_DIR)
@@ -261,7 +286,8 @@ def compare_frozen(app, exception):
             "documentation source files in: {dir}\n\n"
             "    Changed files: {changed}\n\n"
             "      Added files: {added}\n\n"
-            "    Removed files: {removed}\n".format(
+            "    Removed files: {removed}\n\n"
+            "See log for changed file differences.\n".format(
                 dir=PYTHON_FROZEN_DIR,
                 changed=", ".join(mismatch),
                 added=", ".join(f for f in errors if f in frozen_files),
@@ -274,13 +300,14 @@ def compare_frozen(app, exception):
         logger.warning(
             "Some differences were found and ignored when comparing frozen "
             "RST to current documentation source in: {dir}\n\n"
-            "    Changed files: {changed}\n".format(
+            "    Changed files: {changed}\n\n"
+            "See log for changed file differences.\n".format(
                 dir=PYTHON_FROZEN_DIR,
                 changed=", ".join(ignored),
             )
         )
 
-    logger.info("Frozen RST matches within accepted tolerances!")
+    logger.info("Frozen RST matches within error tolerances.")
 
 
 def setup(app):

@@ -14,7 +14,10 @@ import os
 import re
 
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.INFO,
+    format="[%(levelname)s] %(name)s: %(message)s",
+)
 logger = logging.getLogger(__name__)
 
 MODULE = os.path.realpath(__file__)
