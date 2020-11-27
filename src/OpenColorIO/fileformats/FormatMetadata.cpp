@@ -369,7 +369,6 @@ void FormatMetadataImpl::addChildElement(const char * name, const char * value)
     std::string nameStr(name ? name : "");
     ValidateElementName(nameStr);
     m_elements.emplace_back(nameStr, value ? value : "");
-    m_elements.back();
 }
 
 void FormatMetadataImpl::clear() noexcept
