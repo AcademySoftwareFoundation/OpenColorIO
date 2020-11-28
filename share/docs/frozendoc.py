@@ -111,6 +111,7 @@ class RSTRouter(object):
         """
         cls.init_dest_dir(dest_dir)
 
+        print(fullname)
         if fullname != cls._current_fullname:
             if cls._current_rst_file:
                 cls._current_rst_file.close()
@@ -124,6 +125,7 @@ class RSTRouter(object):
             after_index = name_tokens.index(after_token)
             basename = "_".join(name_tokens[:after_index+2]).lower()
             rst_path = os.path.join(PYTHON_FROZEN_DIR, basename + ".rst")
+            print((1, rst_path))
 
             mode = "w"
             if rst_path in cls._init_rst_file:
@@ -232,7 +234,7 @@ def compare_frozen(app, exception):
         list(frozen_files | backup_files),
         shallow=False
     )
-    print((match, mismatch, errors))
+    print((mismatch, errors))
 
     # Different OSs or compilers may result in slightly different signatures
     # or types. Test each mismatched file for the ratio of how different 
