@@ -72,6 +72,7 @@ if(${Python_VERSION_MAJOR} GREATER_EQUAL 3)
         configure_file(${in_file} ${out_file} @ONLY)
     endforeach()
 
+    # Copy documentation source to build location
     file(GLOB_RECURSE DOC_SOURCES "${CMAKE_SOURCE_DIR}/docs/*")
     list(APPEND DOC_SOURCES
         ${CMAKE_SOURCE_DIR}/README.md
@@ -82,6 +83,10 @@ if(${Python_VERSION_MAJOR} GREATER_EQUAL 3)
     if(OCIO_BUILD_NUKE)
         list(APPEND DOC_SOURCES ${CMAKE_SOURCE_DIR}/share/nuke/ocionuke/viewer.py)
     endif()
+
+    # Don't copy configured files. In particular this prevents overwriting conf.py,
+    # since it isn't renamed during configuration.
+    list(REMOVE_ITEM DOC_SOURCES ${DOC_IN_FILES})
 
     add_custom_target(doc_copy
         COMMENT "Copying doc files to staging area"
