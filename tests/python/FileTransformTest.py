@@ -208,16 +208,20 @@ class FileTransformTest(unittest.TestCase):
 
     def test_get_processor(self):
         """
-        Test FileTransform default interpolation is valid and unknown interpolation is not valid.
+        Test that interpolation values of default and unknown do not cause a problem for
+        getProcessor.
         """
+
         config = OCIO.Config.CreateRaw()
         test_file = '%s/lut1d_1.spi1d' % TEST_DATAFILES_DIR
         file_tr = OCIO.FileTransform(src=test_file)
         processor = config.getProcessor(file_tr)
-        # INTERP_UNKNOWN is not a valid interpolation.
+        # INTERP_UNKNOWN will be ignored by the LUT and a warning will be logged.
+        curLogLevel = OCIO.GetLoggingLevel()
+        OCIO.SetLoggingLevel(OCIO.LOGGING_LEVEL_NONE)
         file_tr.setInterpolation(OCIO.INTERP_UNKNOWN)
-        with self.assertRaises(OCIO.Exception):
-            processor = config.getProcessor(file_tr)
+        processor = config.getProcessor(file_tr)
+        OCIO.SetLoggingLevel(curLogLevel)
 
 # TODO:
 # No CDLStyle parameter in constructor?
