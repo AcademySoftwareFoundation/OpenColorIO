@@ -41,7 +41,7 @@ macro(get_python_pre_command)
         endif()
 
         # Build path list
-        set(_WIN_PATHS ${_PYD_PATH})
+        set(_WIN_PATHS ${_PYD_PATH} "${CMAKE_SOURCE_DIR}\\share\\docs")
         # Include optional paths from macro arguments
         foreach(_PATH ${ARGN})
             file(TO_NATIVE_PATH ${_PATH} _WIN_PATH)
@@ -61,7 +61,10 @@ macro(get_python_pre_command)
 
     else()
         # Build path list
-        set(_PATHS "${CMAKE_BINARY_DIR}/src/bindings/python")
+        set(_PATHS 
+            "${CMAKE_BINARY_DIR}/src/bindings/python" 
+            "${CMAKE_SOURCE_DIR}/share/docs"
+        )
         foreach(_PATH ${ARGN})
             list(APPEND _PATHS ${_PATH})
         endforeach()

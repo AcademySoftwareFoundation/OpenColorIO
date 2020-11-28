@@ -20,6 +20,7 @@ ROOT = os.path.abspath(os.path.join(HERE, os.pardir))
 # OCIO API has been modified. Update frozen API docs in source tree. 
 # Dependent on CMake build (so not RTD).
 BUILD_FROZEN = "@OCIO_BUILD_FROZEN_DOCS@" == "ON"
+print("@OCIO_BUILD_FROZEN_DOCS@")
 
 RTD_BUILD = os.environ.get("READTHEDOCS") == "True"  # Set by Read the Docs
 CI_BUILD = os.environ.get("CI") == "true"            # Set by GitHub Actions
@@ -28,15 +29,12 @@ CI_BUILD = os.environ.get("CI") == "true"            # Set by GitHub Actions
 
 if RTD_BUILD:
     # No CMake configuration
+    # NOTE: PyOpenColorIO not available on RTD
     sys.path.append(os.path.join(ROOT, "share", "docs"))
 
     import configure_file
 
 else:
-    # NOTE: PyOpenColorIO not available on RTD
-    sys.path.append("@CMAKE_BINARY_DIR@/src/bindings/python")
-    sys.path.append("@CMAKE_SOURCE_DIR@/share/docs")
-
     configure_file = None
 
 print(sys.path)
@@ -68,6 +66,8 @@ else:
     description = "@CMAKE_PROJECT_DESCRIPTION@"
     version = "@CMAKE_PROJECT_VERSION@"
     ocio_namespace = "@OCIO_NAMESPACE@"
+
+print((project, description, version, ocio_namespace))
 
 author = "Contributors to the {} Project".format(project)
 copyright = "Copyright {}.".format(author)
