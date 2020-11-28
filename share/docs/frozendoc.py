@@ -111,7 +111,6 @@ class RSTRouter(object):
         """
         cls.init_dest_dir(dest_dir)
 
-        print(fullname)
         if fullname != cls._current_fullname:
             if cls._current_rst_file:
                 cls._current_rst_file.close()
@@ -125,7 +124,6 @@ class RSTRouter(object):
             after_index = name_tokens.index(after_token)
             basename = "_".join(name_tokens[:after_index+2]).lower()
             rst_path = os.path.join(PYTHON_FROZEN_DIR, basename + ".rst")
-            print((1, rst_path))
 
             mode = "w"
             if rst_path in cls._init_rst_file:
@@ -148,6 +146,7 @@ def add_line(self, line, source, *lineno):
     else:
         line_out = ""
 
+    print(self.fullname)
     rst_file = RSTRouter.init_rst_file(
         PYTHON_FROZEN_DIR, 
         self.fullname, 
