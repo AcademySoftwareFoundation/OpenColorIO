@@ -78,7 +78,7 @@ logger = logging.getLogger(__name__)
 MODULE = os.path.realpath(__file__)
 HERE = os.path.dirname(MODULE)
 ROOT = os.path.abspath(os.path.join(HERE, os.pardir, os.pardir))
-MODULE_RELPATH = MODULE[len(ROOT)+1:]
+MODULE_RELPATH = MODULE[len(ROOT)+1:].replace("\\", "/")
 DOCS_DIR = os.path.join(ROOT, "docs")
 PYTHON_FROZEN_DIR = os.path.join(DOCS_DIR, "api", "python", "frozen")
 PYTHON_BACKUP_DIR = os.path.join(DOCS_DIR, "api", "python", "backup")
@@ -220,7 +220,9 @@ def compare_frozen(app, exception):
     ))
 
     frozen_files = set(os.listdir(PYTHON_FROZEN_DIR))
+    print(frozen_files)
     backup_files = set(os.listdir(PYTHON_BACKUP_DIR))
+    print(backup_files)
 
     # Find any files which are different, or only present in one of the two 
     # directories.
@@ -230,6 +232,7 @@ def compare_frozen(app, exception):
         list(frozen_files | backup_files),
         shallow=False
     )
+    print((match, mismatch, errors))
 
     # Different OSs or compilers may result in slightly different signatures
     # or types. Test each mismatched file for the ratio of how different 
@@ -280,6 +283,8 @@ def compare_frozen(app, exception):
                     max_ratio
                 )
             )
+
+    print(ignored)
 
     if os.path.exists(PYTHON_BACKUP_DIR):
         shutil.rmtree(PYTHON_BACKUP_DIR)
