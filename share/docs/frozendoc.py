@@ -214,7 +214,7 @@ def compare_frozen(app, exception):
     if not app.config.frozendoc_compare:
         return
 
-    logger.info("Comparing frozen RST: {src} <-> {dst}".format(
+    logger.info("Comparing frozen RST: {src} <-> {dst}\n".format(
         src=PYTHON_FROZEN_DIR, 
         dst=PYTHON_BACKUP_DIR
     ))
@@ -269,9 +269,17 @@ def compare_frozen(app, exception):
 
         if max_ratio >= 0.6:
             ignored.append(mismatch.pop(i))
-            logger.info("Difference ratio {} is within error tolerances".format(max_ratio))
+            logger.info(
+                "Difference ratio {} is within error tolerances\n".format(
+                    max_ratio
+                )
+            )
         else:
-            logger.error("Difference ratio {} exceeds error tolerances".format(max_ratio))
+            logger.error(
+                "Difference ratio {} exceeds error tolerances\n".format(
+                    max_ratio
+                )
+            )
 
     if os.path.exists(PYTHON_BACKUP_DIR):
         shutil.rmtree(PYTHON_BACKUP_DIR)

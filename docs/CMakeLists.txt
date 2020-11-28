@@ -69,6 +69,7 @@ if(${Python_VERSION_MAJOR} GREATER_EQUAL 3)
             out_file ${in_file})
         string(REPLACE ".in" "" 
             out_file ${out_file})
+        message(STATUS "Configuring file: ${in_file} -> ${out_file}")
         configure_file(${in_file} ${out_file} @ONLY)
     endforeach()
 
