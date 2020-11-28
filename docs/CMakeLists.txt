@@ -57,19 +57,18 @@ if(${Python_VERSION_MAJOR} GREATER_EQUAL 3)
     ###########################################################################
     ### Copy templates to build area ###
 
+    configure_file("${CMAKE_SOURCE_DIR}/docs/conf.py" 
+        "${CMAKE_BINARY_DIR}/docs/conf.py" @ONLY)
+
     # Find and configure all *.in files in documentation. conf.py needs 
     # configuration, but omits *.in to work in RTD builds.
     message(STATUS "Substitute documentation variables")
-    file(GLOB_RECURSE DOC_IN_FILES 
-        "${CMAKE_SOURCE_DIR}/docs/**.in"
-        "${CMAKE_SOURCE_DIR}/docs/conf.py"
-    )
+    file(GLOB_RECURSE DOC_IN_FILES "${CMAKE_SOURCE_DIR}/docs/**.in")
     foreach(in_file ${DOC_IN_FILES})
         string(REPLACE "${CMAKE_SOURCE_DIR}/" "${CMAKE_BINARY_DIR}/" 
             out_file ${in_file})
         string(REPLACE ".in" "" 
             out_file ${out_file})
-        message(STATUS "Configuring file: ${in_file} -> ${out_file}")
         configure_file(${in_file} ${out_file} @ONLY)
     endforeach()
 

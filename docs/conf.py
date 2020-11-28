@@ -20,7 +20,6 @@ ROOT = os.path.abspath(os.path.join(HERE, os.pardir))
 # OCIO API has been modified. Update frozen API docs in source tree. 
 # Dependent on CMake build (so not RTD).
 BUILD_FROZEN = "@OCIO_BUILD_FROZEN_DOCS@" == "ON"
-print((BUILD_FROZEN, "@OCIO_BUILD_FROZEN_DOCS@"))
 
 RTD_BUILD = os.environ.get("READTHEDOCS") == "True"  # Set by Read the Docs
 CI_BUILD = os.environ.get("CI") == "true"            # Set by GitHub Actions
@@ -41,10 +40,6 @@ else:
     configure_file = None
 
 print(sys.path)
-print("@CMAKE_BINARY_DIR@/src/bindings/python")
-print("@CMAKE_SOURCE_DIR@/share/docs")
-print(HERE)
-print(ROOT)
 import expandvars
 import prettymethods
 
@@ -73,7 +68,6 @@ else:
     description = "@CMAKE_PROJECT_DESCRIPTION@"
     version = "@CMAKE_PROJECT_VERSION@"
     ocio_namespace = "@OCIO_NAMESPACE@"
-    print((project, description, version, ocio_namespace))
 
 author = "Contributors to the {} Project".format(project)
 copyright = "Copyright {}.".format(author)
