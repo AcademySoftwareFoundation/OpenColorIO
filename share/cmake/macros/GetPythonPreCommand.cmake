@@ -41,7 +41,10 @@ macro(get_python_pre_command)
         endif()
 
         # Build path list
-        set(_WIN_PATHS ${_PYD_PATH} "${CMAKE_SOURCE_DIR}\\share\\docs")
+        set(_WIN_PATHS 
+            ${_PYD_PATH} 
+            "${CMAKE_SOURCE_DIR}\\share\\docs"
+        )
         # Include optional paths from macro arguments
         foreach(_PATH ${ARGN})
             file(TO_NATIVE_PATH ${_PATH} _WIN_PATH)

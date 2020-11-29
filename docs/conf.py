@@ -24,30 +24,24 @@ BUILD_FROZEN = "@OCIO_BUILD_FROZEN_DOCS@" == "ON"
 RTD_BUILD = os.environ.get("READTHEDOCS") == "True"  # Set by Read the Docs
 CI_BUILD = os.environ.get("CI") == "true"            # Set by GitHub Actions
 
-# -- Add PyOpenColorIO and local Sphinx extensions ----------------------------
+# -- Add local Sphinx extensions ----------------------------------------------
 
 if RTD_BUILD:
-    # No CMake configuration
-    # NOTE: PyOpenColorIO is not available on RTD
+    # Add helper modules and extensions to path when not handled by CMake
     sys.path.append(os.path.join(ROOT, "share", "docs"))
-
     import configure_file
-
 else:
     configure_file = None
 
 import expandvars
 import prettymethods
-
-if BUILD_FROZEN:
-    import frozendoc
-else:
-    frozendoc = None
+import frozendoc
 
 # -- General configuration ----------------------------------------------------
 
 if RTD_BUILD:
-    # Extract project info from root CMakeLists.txt
+    # Extract project info from root CMakeLists.txt since there's no CMake 
+    # configuration on RTD.
     project = configure_file.get_project_name()
     description = configure_file.get_project_description()
 

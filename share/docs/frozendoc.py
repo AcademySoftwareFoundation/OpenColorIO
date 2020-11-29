@@ -211,6 +211,7 @@ def compare_frozen(app, exception):
     ``-DOCIO_BUILD_FROZEN_DOCS=ON``; needed to update frozen RST in the 
     source tree.
     """
+    # Raise Sphinx exceptions for debugging
     if exception:
         raise ExtensionError(str(exception))
 
