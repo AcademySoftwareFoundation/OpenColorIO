@@ -212,6 +212,9 @@ def compare_frozen(app, exception):
     ``-DOCIO_BUILD_FROZEN_DOCS=ON``; needed to update frozen RST in the 
     source tree.
     """
+    if exception:
+        raise ExtensionError(str(exception))
+
     if not app.config.frozendoc_compare:
         return
 
