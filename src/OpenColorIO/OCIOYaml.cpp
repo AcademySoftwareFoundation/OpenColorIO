@@ -1442,7 +1442,7 @@ inline void load(const YAML::Node& node, FileTransformRcPtr& t)
     }
 }
 
-inline void save(YAML::Emitter& out, ConstFileTransformRcPtr t)
+inline void save(YAML::Emitter& out, ConstFileTransformRcPtr t, unsigned int majorVersion)
 {
     out << YAML::VerbatimTag("FileTransform");
     out << YAML::Flow << YAML::BeginMap;
@@ -1456,11 +1456,20 @@ inline void save(YAML::Emitter& out, ConstFileTransformRcPtr t)
     {
         out << YAML::Key << "cdl_style" << YAML::Value << CDLStyleToString(t->getCDLStyle());
     }
-    if (t->getInterpolation() != INTERP_UNKNOWN && t->getInterpolation() != INTERP_DEFAULT)
+    Interpolation interp = t->getInterpolation();
+    if (majorVersion == 1 && interp == INTERP_DEFAULT)
+    {
+        // The DEFAULT method is not available in a v1 library.  If the v1 config is read by a v1
+        // library and the file is a LUT, a missing interp would end up set to UNKNOWN and a
+        // throw would happen when the processor is built.  Setting to LINEAR to provide more
+        // robust compatibility.
+        interp = INTERP_LINEAR;
+    }
+    if (interp != INTERP_DEFAULT)
     {
         out << YAML::Key << "interpolation";
         out << YAML::Value;
-        save(out, t->getInterpolation());
+        save(out, interp);
     }
 
     EmitBaseTransformKeyValues(out, t);
@@ -2356,7 +2365,7 @@ inline void save(YAML::Emitter & out, ConstGradingToneTransformRcPtr t)
 // GroupTransform
 
 void load(const YAML::Node& node, TransformRcPtr& t);
-void save(YAML::Emitter& out, ConstTransformRcPtr t);
+void save(YAML::Emitter& out, ConstTransformRcPtr t, unsigned int majorVersion);
 
 inline void load(const YAML::Node& node, GroupTransformRcPtr& t)
 {
@@ -2412,7 +2421,7 @@ inline void load(const YAML::Node& node, GroupTransformRcPtr& t)
     }
 }
 
-inline void save(YAML::Emitter& out, ConstGroupTransformRcPtr t)
+inline void save(YAML::Emitter& out, ConstGroupTransformRcPtr t, unsigned int majorVersion)
 {
     out << YAML::VerbatimTag("GroupTransform");
     out << YAML::BeginMap;
@@ -2426,7 +2435,7 @@ inline void save(YAML::Emitter& out, ConstGroupTransformRcPtr t)
     out << YAML::BeginSeq;
     for(int i = 0; i < t->getNumTransforms(); ++i)
     {
-        save(out, t->getTransform(i));
+        save(out, t->getTransform(i), majorVersion);
     }
     out << YAML::EndSeq;
 
@@ -3217,7 +3226,7 @@ void load(const YAML::Node& node, TransformRcPtr& t)
     }
 }
 
-void save(YAML::Emitter& out, ConstTransformRcPtr t)
+void save(YAML::Emitter& out, ConstTransformRcPtr t, unsigned int majorVersion)
 {
     if(ConstAllocationTransformRcPtr Allocation_tran = \
         DynamicPtrCast<const AllocationTransform>(t))
@@ -3243,7 +3252,7 @@ void save(YAML::Emitter& out, ConstTransformRcPtr t)
     else if(ConstFileTransformRcPtr File_tran = \
         DynamicPtrCast<const FileTransform>(t))
         // TODO: if (File_tran->getCDLStyle() != CDL_TRANSFORM_DEFAULT) should throw with config v1.
-        save(out, File_tran);
+        save(out, File_tran, majorVersion);
     else if (ConstExposureContrastTransformRcPtr File_tran = \
         DynamicPtrCast<const ExposureContrastTransform>(t))
         save(out, File_tran);
@@ -3261,7 +3270,7 @@ void save(YAML::Emitter& out, ConstTransformRcPtr t)
         save(out, GT_tran);
     else if(ConstGroupTransformRcPtr Group_tran = \
         DynamicPtrCast<const GroupTransform>(t))
-        save(out, Group_tran);
+        save(out, Group_tran, majorVersion);
     else if(ConstLogAffineTransformRcPtr Log_tran = \
         DynamicPtrCast<const LogAffineTransform>(t))
         save(out, Log_tran);
@@ -3419,7 +3428,7 @@ inline void load(const YAML::Node& node, ColorSpaceRcPtr& cs)
     }
 }
 
-inline void save(YAML::Emitter& out, ConstColorSpaceRcPtr cs)
+inline void save(YAML::Emitter& out, ConstColorSpaceRcPtr cs, unsigned int majorVersion)
 {
     out << YAML::VerbatimTag("ColorSpace");
     out << YAML::BeginMap;
@@ -3465,14 +3474,14 @@ inline void save(YAML::Emitter& out, ConstColorSpaceRcPtr cs)
     if(toref)
     {
         out << YAML::Key << (isDisplay ? "to_display_reference" : "to_reference") << YAML::Value;
-        save(out, toref);
+        save(out, toref, majorVersion);
     }
 
     ConstTransformRcPtr fromref = cs->getTransform(COLORSPACE_DIR_FROM_REFERENCE);
     if(fromref)
     {
         out << YAML::Key << (isDisplay ? "from_display_reference" : "from_reference") << YAML::Value;
-        save(out, fromref);
+        save(out, fromref, majorVersion);
     }
 
     out << YAML::EndMap;
@@ -3533,7 +3542,7 @@ inline void load(const YAML::Node& node, LookRcPtr& look)
     }
 }
 
-inline void save(YAML::Emitter& out, ConstLookRcPtr look)
+inline void save(YAML::Emitter& out, ConstLookRcPtr look, unsigned int majorVersion)
 {
     out << YAML::VerbatimTag("Look");
     out << YAML::BeginMap;
@@ -3545,14 +3554,14 @@ inline void save(YAML::Emitter& out, ConstLookRcPtr look)
     {
         out << YAML::Key << "transform";
         out << YAML::Value;
-        save(out, look->getTransform());
+        save(out, look->getTransform(), majorVersion);
     }
 
     if(look->getInverseTransform())
     {
         out << YAML::Key << "inverse_transform";
         out << YAML::Value;
-        save(out, look->getInverseTransform());
+        save(out, look->getInverseTransform(), majorVersion);
     }
 
     out << YAML::EndMap;
@@ -3694,7 +3703,7 @@ inline void load(const YAML::Node & node, ViewTransformRcPtr & vt)
     }
 }
 
-inline void save(YAML::Emitter & out, ConstViewTransformRcPtr & vt)
+inline void save(YAML::Emitter & out, ConstViewTransformRcPtr & vt, unsigned int majorVersion)
 {
     out << YAML::VerbatimTag("ViewTransform");
     out << YAML::BeginMap;
@@ -3723,14 +3732,14 @@ inline void save(YAML::Emitter & out, ConstViewTransformRcPtr & vt)
     if (toref)
     {
         out << YAML::Key << (isDisplay ? "to_display_reference" : "to_reference") << YAML::Value;
-        save(out, toref);
+        save(out, toref, majorVersion);
     }
 
     ConstTransformRcPtr fromref = vt->getTransform(VIEWTRANSFORM_DIR_FROM_REFERENCE);
     if (fromref)
     {
         out << YAML::Key << (isDisplay ? "from_display_reference" : "from_reference") << YAML::Value;
-        save(out, fromref);
+        save(out, fromref, majorVersion);
     }
 
     out << YAML::EndMap;
@@ -4908,7 +4917,7 @@ inline void save(YAML::Emitter & out, const Config & config)
         for(int i = 0; i < config.getNumLooks(); ++i)
         {
             const char* name = config.getLookNameByIndex(i);
-            save(out, config.getLook(name));
+            save(out, config.getLook(name), configMajorVersion);
         }
         out << YAML::EndSeq;
         out << YAML::Newline;
@@ -4925,7 +4934,7 @@ inline void save(YAML::Emitter & out, const Config & config)
         {
             auto name = config.getViewTransformNameByIndex(i);
             auto vt = config.getViewTransform(name);
-            save(out, vt);
+            save(out, vt, configMajorVersion);
         }
         out << YAML::EndSeq;
     }
@@ -4963,7 +4972,7 @@ inline void save(YAML::Emitter & out, const Config & config)
         out << YAML::Value << YAML::BeginSeq;
         for (const auto & cs : displayCS)
         {
-            save(out, cs);
+            save(out, cs, configMajorVersion);
         }
         out << YAML::EndSeq;
     }
@@ -4975,7 +4984,7 @@ inline void save(YAML::Emitter & out, const Config & config)
         out << YAML::Value << YAML::BeginSeq;
         for (const auto & cs : sceneCS)
         {
-            save(out, cs);
+            save(out, cs, configMajorVersion);
         }
         out << YAML::EndSeq;
     }
