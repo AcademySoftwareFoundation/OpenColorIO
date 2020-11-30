@@ -105,7 +105,7 @@ bool BoolFromString(const char * s)
 {
     const std::string str = StringUtils::Lower(s ? s : "");
 
-    return (str == "true") || (str=="yes");
+    return (str == "true") || (str == "yes");
 }
 
 const char * LoggingLevelToString(LoggingLevel level)
@@ -348,8 +348,8 @@ RangeStyle RangeStyleFromString(const char * style)
     const char * p = (style ? style : "");
     const std::string str = StringUtils::Lower(p);
 
-    if(str == "noclamp") return RANGE_NO_CLAMP;
-    else if(str == "clamp") return RANGE_CLAMP;
+    if (str == "noclamp") return RANGE_NO_CLAMP;
+    else if (str == "clamp") return RANGE_CLAMP;
 
     std::ostringstream oss;
     oss << "Wrong Range style '" << p << "'.";
