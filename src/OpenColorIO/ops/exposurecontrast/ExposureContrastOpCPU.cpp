@@ -27,14 +27,13 @@ public:
 
     bool hasDynamicProperty(DynamicPropertyType type) const override;
     DynamicPropertyRcPtr getDynamicProperty(DynamicPropertyType type) const override;
-    void unifyDynamicProperty(DynamicPropertyType type, DynamicPropertyDoubleImplRcPtr & prop) const override;
 
 protected:
     virtual void updateData(ConstExposureContrastOpDataRcPtr & ec) = 0;
 
-    mutable DynamicPropertyDoubleImplRcPtr m_exposure;
-    mutable DynamicPropertyDoubleImplRcPtr m_contrast;
-    mutable DynamicPropertyDoubleImplRcPtr m_gamma;
+    DynamicPropertyDoubleImplRcPtr m_exposure;
+    DynamicPropertyDoubleImplRcPtr m_contrast;
+    DynamicPropertyDoubleImplRcPtr m_gamma;
 
     float m_pivot = 0.0f;
     float m_logExposureStep = 0.088f;
@@ -43,45 +42,21 @@ protected:
 ECRendererBase::ECRendererBase(ConstExposureContrastOpDataRcPtr & ec)
     : OpCPU()
 {
-    // Initialized with the instances from the processor instance but will later be replaced using
-    // unifyDynamicProperty().
+    // Initialized with the instances from the processor and decouple them.
     m_exposure = ec->getExposureProperty();
     m_contrast = ec->getContrastProperty();
     m_gamma = ec->getGammaProperty();
-}
-
-namespace
-{
-void DecoupleAndUnify(DynamicPropertyDoubleImplRcPtr & prop, DynamicPropertyDoubleImplRcPtr & propSet)
-{
-    if (!propSet)
+    if (m_exposure->isDynamic())
     {
-        propSet = prop->createEditableCopy();
+        m_exposure = m_exposure->createEditableCopy();
     }
-    prop = propSet;
-}
-}
-
-void ECRendererBase::unifyDynamicProperty(DynamicPropertyType type,
-                                          DynamicPropertyDoubleImplRcPtr & prop) const
-{
-    switch (type)
+    if (m_contrast->isDynamic())
     {
-    case DYNAMIC_PROPERTY_EXPOSURE:
-        DecoupleAndUnify(m_exposure, prop);
-        break;
-    case DYNAMIC_PROPERTY_CONTRAST:
-        DecoupleAndUnify(m_contrast, prop);
-        break;
-    case DYNAMIC_PROPERTY_GAMMA:
-        DecoupleAndUnify(m_gamma, prop);
-        break;
-    case DYNAMIC_PROPERTY_GRADING_PRIMARY:
-    case DYNAMIC_PROPERTY_GRADING_RGBCURVE:
-    case DYNAMIC_PROPERTY_GRADING_TONE:
-    default:
-        OpCPU::unifyDynamicProperty(type, prop);
-        break;
+        m_contrast = m_contrast->createEditableCopy();
+    }
+    if (m_gamma->isDynamic())
+    {
+        m_gamma = m_gamma->createEditableCopy();
     }
 }
 
