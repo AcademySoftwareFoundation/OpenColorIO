@@ -119,15 +119,31 @@ OCIO_ADD_TEST(ExposureContrastRenderer, video)
 
     // Re-test with different E/C values.
     //
-    ec->setExposure(0.2);
-    ec->setContrast(1.0);
+
+    // The renderer has a copy of ec, get the dynamic property ptr in order to change the value
+    // for the apply.
+    OCIO::DynamicPropertyDoubleRcPtr dpc, dpe, dpg;
+    OCIO::DynamicPropertyRcPtr dp = renderer->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_CONTRAST);
+    OCIO_CHECK_NO_THROW(dpc = OCIO::DynamicPropertyValue::AsDouble(dp));
+    dp = renderer->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_EXPOSURE);
+    OCIO_CHECK_NO_THROW(dpe = OCIO::DynamicPropertyValue::AsDouble(dp));
+    dp = renderer->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_GAMMA);
+    OCIO_CHECK_NO_THROW(dpg = OCIO::DynamicPropertyValue::AsDouble(dp));
+    dpe->setValue(0.2);
+    dpc->setValue(1.0);
     // TODO: When base < 1, ssePower(Inf, base) != Inf.  It returns various
     // large numbers, e.g., 3.6e11 for base=0.3 ranging up to 4.0e36 for base=0.95.
-    // ec->setContrast(0.5);
-    ec->setGamma(1.2);
+    // dpc->setContrast(0.5);
+    dpg->setValue(1.2);
 
     rgba = rgbaImage;
     renderer->apply(rgba.data(), rgba.data(), 4);
+
+    // The dynamic property ptr only updates the copy in the renderer.  Need to also update the
+    // original opData in this case since it is used to check the result of the apply.
+    ec->setExposure(0.2);
+    ec->setContrast(1.0);
+    ec->setGamma(1.2);
 
     // As the ssePower is an approximation, strict equality is not possible.
     const float error = 1e-5f;
@@ -194,14 +210,26 @@ OCIO_ADD_TEST(ExposureContrastRenderer, log)
     OCIO_CHECK_EQUAL(rgba[13], logECVal(rgbaImage[13], const_ec));
     OCIO_CHECK_EQUAL(rgba[14], logECVal(rgbaImage[14], const_ec));
 
-    // Re-test with differenc E/C values.
+    // Re-test with different E/C values.
     //
-    ec->setExposure(0.2);
-    ec->setContrast(0.5);
-    ec->setGamma(1.6);
+
+    OCIO::DynamicPropertyDoubleRcPtr dpc, dpe, dpg;
+    OCIO::DynamicPropertyRcPtr dp = renderer->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_CONTRAST);
+    OCIO_CHECK_NO_THROW(dpc = OCIO::DynamicPropertyValue::AsDouble(dp));
+    dp = renderer->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_EXPOSURE);
+    OCIO_CHECK_NO_THROW(dpe = OCIO::DynamicPropertyValue::AsDouble(dp));
+    dp = renderer->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_GAMMA);
+    OCIO_CHECK_NO_THROW(dpg = OCIO::DynamicPropertyValue::AsDouble(dp));
+    dpe->setValue(0.2);
+    dpc->setValue(0.5);
+    dpg->setValue(1.6);
 
     rgba = rgbaImage;
     renderer->apply(rgba.data(), rgba.data(), 4);
+
+    ec->setExposure(0.2);
+    ec->setContrast(0.5);
+    ec->setGamma(1.6);
 
     OCIO_CHECK_EQUAL(rgba[0], logECVal(rgbaImage[0], const_ec, inMax, outMax));
     OCIO_CHECK_EQUAL(rgba[1], logECVal(rgbaImage[1], const_ec, inMax, outMax));
@@ -263,12 +291,24 @@ OCIO_ADD_TEST(ExposureContrastRenderer, linear)
 
     // Re-test with different E/C values.
     //
-    ec->setExposure(0.2);
-    ec->setContrast(1.5);
-    ec->setGamma(1.2);
+
+    OCIO::DynamicPropertyDoubleRcPtr dpc, dpe, dpg;
+    OCIO::DynamicPropertyRcPtr dp = renderer->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_CONTRAST);
+    OCIO_CHECK_NO_THROW(dpc = OCIO::DynamicPropertyValue::AsDouble(dp));
+    dp = renderer->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_EXPOSURE);
+    OCIO_CHECK_NO_THROW(dpe = OCIO::DynamicPropertyValue::AsDouble(dp));
+    dp = renderer->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_GAMMA);
+    OCIO_CHECK_NO_THROW(dpg = OCIO::DynamicPropertyValue::AsDouble(dp));
+    dpe->setValue(0.2);
+    dpc->setValue(1.5);
+    dpg->setValue(1.2);
 
     rgba = rgbaImage;
     renderer->apply(rgba.data(), rgba.data(), 4);
+
+    ec->setExposure(0.2);
+    ec->setContrast(1.5);
+    ec->setGamma(1.2);
 
     // As the ssePower is an approximation, strict equality is not possible.
     const float error = 5e-5f;

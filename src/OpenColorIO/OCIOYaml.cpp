@@ -1183,57 +1183,15 @@ inline void save(YAML::Emitter& out, ConstExponentWithLinearTransformRcPtr t)
 
 // ExposureContrastTransform
 
-struct DynamicPropetyLoader
-{
-    bool m_dynamic = false;
-    bool m_dynamicRead = false;
-    double m_value = 0.;
-    bool m_valueRead = false;
-};
-
-inline void loadDynamicProperty(const YAML::Node& node, DynamicPropetyLoader & dp)
-{
-    if (node.Type() == YAML::NodeType::Map)
-    {
-        for (const auto & it : node)
-        {
-            std::string k;
-            const YAML::Node& first = it.first;
-            load(first, k);
-            if (k == "value")
-            {
-                load(it.second, dp.m_value);
-                dp.m_valueRead = true;
-            }
-            else if (k == "dynamic")
-            {
-                load(it.second, dp.m_dynamic);
-                dp.m_dynamicRead = true;
-            }
-            else
-            {
-                LogUnknownKeyWarning(node, first);
-            }
-        }
-    }
-    else if (node.size() == 0)
-    {
-        load(node, dp.m_value);
-        dp.m_valueRead = true;
-    }
-    else
-    {
-        throwError(node, "The value needs to be a map or a single value.");
-    }
-}
-
 inline void load(const YAML::Node& node, ExposureContrastTransformRcPtr& t)
 {
     t = ExposureContrastTransform::Create();
 
-    std::string key;
-
     CheckDuplicates(node);
+    std::string key;
+    bool dynExposure = true;
+    bool dynContrast = true;
+    bool dynGamma    = true;
 
     for (const auto & iter : node)
     {
@@ -1246,42 +1204,24 @@ inline void load(const YAML::Node& node, ExposureContrastTransformRcPtr& t)
 
         if (key == "exposure")
         {
-            DynamicPropetyLoader dp;
-            loadDynamicProperty(second, dp);
-            if (dp.m_dynamicRead && dp.m_dynamic)
-            {
-                t->makeExposureDynamic();
-            }
-            if (dp.m_valueRead)
-            {
-                t->setExposure(dp.m_value);
-            }
+            double param;
+            load(second, param);
+            t->setExposure(param);
+            dynExposure = false;
         }
         else if (key == "contrast")
         {
-            DynamicPropetyLoader dp;
-            loadDynamicProperty(second, dp);
-            if (dp.m_dynamicRead && dp.m_dynamic)
-            {
-                t->makeContrastDynamic();
-            }
-            if (dp.m_valueRead)
-            {
-                t->setContrast(dp.m_value);
-            }
+            double param;
+            load(second, param);
+            t->setContrast(param);
+            dynContrast = false;
         }
         else if (key == "gamma")
         {
-            DynamicPropetyLoader dp;
-            loadDynamicProperty(second, dp);
-            if (dp.m_dynamicRead && dp.m_dynamic)
-            {
-                t->makeGammaDynamic();
-            }
-            if (dp.m_valueRead)
-            {
-                t->setGamma(dp.m_value);
-            }
+            double param;
+            load(second, param);
+            t->setGamma(param);
+            dynGamma = false;
         }
         else if (key == "pivot")
         {
@@ -1324,22 +1264,19 @@ inline void load(const YAML::Node& node, ExposureContrastTransformRcPtr& t)
             LogUnknownKeyWarning(node, first);
         }
     }
-}
 
-inline void saveDynamicProperty(YAML::Emitter& out,
-                                bool dynamic, double value)
-{
-    if (dynamic)
+    // Missing values are dynamic.
+    if (dynExposure)
     {
-        out << YAML::Value << YAML::BeginMap;
-        out << YAML::Key << "value" << YAML::Value << value;
-        out << YAML::Key << "dynamic";
-        out << YAML::Value << YAML::Flow << true;
-        out << YAML::EndMap;
+        t->makeExposureDynamic();
     }
-    else
+    if (dynContrast)
     {
-        out << YAML::Value << YAML::Flow << value;
+        t->makeContrastDynamic();
+    }
+    if (dynGamma)
+    {
+        t->makeGammaDynamic();
     }
 }
 
@@ -1353,20 +1290,20 @@ inline void save(YAML::Emitter& out, ConstExposureContrastTransformRcPtr t)
     out << YAML::Key << "style";
     out << YAML::Value << YAML::Flow << ExposureContrastStyleToString(t->getStyle());
 
-    out << YAML::Key << "exposure";
-    saveDynamicProperty(out,
-                        t->isExposureDynamic(),
-                        t->getExposure());
+    // Do not save dynamic values.
 
-    out << YAML::Key << "contrast";
-    saveDynamicProperty(out,
-                        t->isContrastDynamic(),
-                        t->getContrast());
-
-    out << YAML::Key << "gamma";
-    saveDynamicProperty(out,
-                        t->isGammaDynamic(),
-                        t->getGamma());
+    if (!t->isExposureDynamic())
+    {
+        out << YAML::Key << "exposure" << YAML::Value << YAML::Flow << t->getExposure();
+    }
+    if (!t->isContrastDynamic())
+    {
+        out << YAML::Key << "contrast" << YAML::Value << YAML::Flow << t->getContrast();
+    }
+    if (!t->isGammaDynamic())
+    {
+        out << YAML::Key << "gamma" << YAML::Value << YAML::Flow << t->getGamma();
+    }
 
     out << YAML::Key << "pivot";
     out << YAML::Value << YAML::Flow << t->getPivot();
@@ -1769,15 +1706,6 @@ inline void load(const YAML::Node & node, GradingPrimaryTransformRcPtr & t)
             loadClamp(first, second, values.m_clampBlack, clampBlackLoaded,
                       values.m_clampWhite, clampWhiteLoaded);
         }
-        else if (key == "dynamic")
-        {
-            bool dyn = true;
-            load(second, dyn);
-            if (dyn)
-            {
-                t->makeDynamic();
-            }
-        }
         else
         {
             LogUnknownKeyWarning(node.Tag(), first);
@@ -1953,11 +1881,6 @@ inline void save(YAML::Emitter & out, ConstGradingPrimaryTransformRcPtr t)
     saveClamp(out, vals.m_clampBlack, defaultVals.m_clampBlack,
               vals.m_clampWhite, defaultVals.m_clampWhite);
 
-    if (t->isDynamic())
-    {
-        out << YAML::Key << "dynamic" << YAML::Value << true;
-    }
-
     EmitBaseTransformKeyValues(out, t);
     out << YAML::EndMap;
 }
@@ -2069,15 +1992,6 @@ inline void load(const YAML::Node & node, GradingRGBCurveTransformRcPtr & t)
             master = GradingBSplineCurve::Create(0);
             load(first, second, master);
         }
-        else if (key == "dynamic")
-        {
-            bool dyn = true;
-            load(second, dyn);
-            if (dyn)
-            {
-                t->makeDynamic();
-            }
-        }
         else
         {
             LogUnknownKeyWarning(node.Tag(), first);
@@ -2150,11 +2064,6 @@ inline void save(YAML::Emitter & out, ConstGradingRGBCurveTransformRcPtr t)
         {
             save(out, curveNames[c], curve);
         }
-    }
-
-    if (t->isDynamic())
-    {
-        out << YAML::Key << "dynamic" << YAML::Value << true;
     }
 
     EmitBaseTransformKeyValues(out, t);
@@ -2289,15 +2198,6 @@ inline void load(const YAML::Node & node, GradingToneTransformRcPtr & t)
         {
             load(second, scontrast);
         }
-        else if (key == "dynamic")
-        {
-            bool dyn = true;
-            load(second, dyn);
-            if (dyn)
-            {
-                t->makeDynamic();
-            }
-        }
         else
         {
             LogUnknownKeyWarning(node.Tag(), first);
@@ -2352,11 +2252,6 @@ inline void save(YAML::Emitter & out, ConstGradingToneTransformRcPtr t)
     save(out, "highlights", vals.m_highlights, defaultVals.m_highlights, false, true);
     save(out, "whites", vals.m_whites, defaultVals.m_whites, false, false);
     save(out, "s_contrast", vals.m_scontrast, defaultVals.m_scontrast);
-
-    if (t->isDynamic())
-    {
-        out << YAML::Key << "dynamic" << YAML::Value << true;
-    }
 
     EmitBaseTransformKeyValues(out, t);
     out << YAML::EndMap;
@@ -3251,7 +3146,6 @@ void save(YAML::Emitter& out, ConstTransformRcPtr t, unsigned int majorVersion)
         save(out, ExpLinear_tran);
     else if(ConstFileTransformRcPtr File_tran = \
         DynamicPtrCast<const FileTransform>(t))
-        // TODO: if (File_tran->getCDLStyle() != CDL_TRANSFORM_DEFAULT) should throw with config v1.
         save(out, File_tran, majorVersion);
     else if (ConstExposureContrastTransformRcPtr File_tran = \
         DynamicPtrCast<const ExposureContrastTransform>(t))
