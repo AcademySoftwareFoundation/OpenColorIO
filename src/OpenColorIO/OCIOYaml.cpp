@@ -1183,57 +1183,15 @@ inline void save(YAML::Emitter& out, ConstExponentWithLinearTransformRcPtr t)
 
 // ExposureContrastTransform
 
-struct DynamicPropetyLoader
-{
-    bool m_dynamic = false;
-    bool m_dynamicRead = false;
-    double m_value = 0.;
-    bool m_valueRead = false;
-};
-
-inline void loadDynamicProperty(const YAML::Node& node, DynamicPropetyLoader & dp)
-{
-    if (node.Type() == YAML::NodeType::Map)
-    {
-        for (const auto & it : node)
-        {
-            std::string k;
-            const YAML::Node& first = it.first;
-            load(first, k);
-            if (k == "value")
-            {
-                load(it.second, dp.m_value);
-                dp.m_valueRead = true;
-            }
-            else if (k == "dynamic")
-            {
-                load(it.second, dp.m_dynamic);
-                dp.m_dynamicRead = true;
-            }
-            else
-            {
-                LogUnknownKeyWarning(node, first);
-            }
-        }
-    }
-    else if (node.size() == 0)
-    {
-        load(node, dp.m_value);
-        dp.m_valueRead = true;
-    }
-    else
-    {
-        throwError(node, "The value needs to be a map or a single value.");
-    }
-}
-
 inline void load(const YAML::Node& node, ExposureContrastTransformRcPtr& t)
 {
     t = ExposureContrastTransform::Create();
 
-    std::string key;
-
     CheckDuplicates(node);
+    std::string key;
+    bool dynExposure = true;
+    bool dynContrast = true;
+    bool dynGamma    = true;
 
     for (const auto & iter : node)
     {
@@ -1246,42 +1204,24 @@ inline void load(const YAML::Node& node, ExposureContrastTransformRcPtr& t)
 
         if (key == "exposure")
         {
-            DynamicPropetyLoader dp;
-            loadDynamicProperty(second, dp);
-            if (dp.m_dynamicRead && dp.m_dynamic)
-            {
-                t->makeExposureDynamic();
-            }
-            if (dp.m_valueRead)
-            {
-                t->setExposure(dp.m_value);
-            }
+            double param;
+            load(second, param);
+            t->setExposure(param);
+            dynExposure = false;
         }
         else if (key == "contrast")
         {
-            DynamicPropetyLoader dp;
-            loadDynamicProperty(second, dp);
-            if (dp.m_dynamicRead && dp.m_dynamic)
-            {
-                t->makeContrastDynamic();
-            }
-            if (dp.m_valueRead)
-            {
-                t->setContrast(dp.m_value);
-            }
+            double param;
+            load(second, param);
+            t->setContrast(param);
+            dynContrast = false;
         }
         else if (key == "gamma")
         {
-            DynamicPropetyLoader dp;
-            loadDynamicProperty(second, dp);
-            if (dp.m_dynamicRead && dp.m_dynamic)
-            {
-                t->makeGammaDynamic();
-            }
-            if (dp.m_valueRead)
-            {
-                t->setGamma(dp.m_value);
-            }
+            double param;
+            load(second, param);
+            t->setGamma(param);
+            dynGamma = false;
         }
         else if (key == "pivot")
         {
@@ -1324,22 +1264,19 @@ inline void load(const YAML::Node& node, ExposureContrastTransformRcPtr& t)
             LogUnknownKeyWarning(node, first);
         }
     }
-}
 
-inline void saveDynamicProperty(YAML::Emitter& out,
-                                bool dynamic, double value)
-{
-    if (dynamic)
+    // Missing values are dynamic.
+    if (dynExposure)
     {
-        out << YAML::Value << YAML::BeginMap;
-        out << YAML::Key << "value" << YAML::Value << value;
-        out << YAML::Key << "dynamic";
-        out << YAML::Value << YAML::Flow << true;
-        out << YAML::EndMap;
+        t->makeExposureDynamic();
     }
-    else
+    if (dynContrast)
     {
-        out << YAML::Value << YAML::Flow << value;
+        t->makeContrastDynamic();
+    }
+    if (dynGamma)
+    {
+        t->makeGammaDynamic();
     }
 }
 
@@ -1353,20 +1290,20 @@ inline void save(YAML::Emitter& out, ConstExposureContrastTransformRcPtr t)
     out << YAML::Key << "style";
     out << YAML::Value << YAML::Flow << ExposureContrastStyleToString(t->getStyle());
 
-    out << YAML::Key << "exposure";
-    saveDynamicProperty(out,
-                        t->isExposureDynamic(),
-                        t->getExposure());
+    // Do not save dynamic values.
 
-    out << YAML::Key << "contrast";
-    saveDynamicProperty(out,
-                        t->isContrastDynamic(),
-                        t->getContrast());
-
-    out << YAML::Key << "gamma";
-    saveDynamicProperty(out,
-                        t->isGammaDynamic(),
-                        t->getGamma());
+    if (!t->isExposureDynamic())
+    {
+        out << YAML::Key << "exposure" << YAML::Value << YAML::Flow << t->getExposure();
+    }
+    if (!t->isContrastDynamic())
+    {
+        out << YAML::Key << "contrast" << YAML::Value << YAML::Flow << t->getContrast();
+    }
+    if (!t->isGammaDynamic())
+    {
+        out << YAML::Key << "gamma" << YAML::Value << YAML::Flow << t->getGamma();
+    }
 
     out << YAML::Key << "pivot";
     out << YAML::Value << YAML::Flow << t->getPivot();
@@ -1442,7 +1379,7 @@ inline void load(const YAML::Node& node, FileTransformRcPtr& t)
     }
 }
 
-inline void save(YAML::Emitter& out, ConstFileTransformRcPtr t)
+inline void save(YAML::Emitter& out, ConstFileTransformRcPtr t, unsigned int majorVersion)
 {
     out << YAML::VerbatimTag("FileTransform");
     out << YAML::Flow << YAML::BeginMap;
@@ -1456,11 +1393,20 @@ inline void save(YAML::Emitter& out, ConstFileTransformRcPtr t)
     {
         out << YAML::Key << "cdl_style" << YAML::Value << CDLStyleToString(t->getCDLStyle());
     }
-    if (t->getInterpolation() != INTERP_UNKNOWN && t->getInterpolation() != INTERP_DEFAULT)
+    Interpolation interp = t->getInterpolation();
+    if (majorVersion == 1 && interp == INTERP_DEFAULT)
+    {
+        // The DEFAULT method is not available in a v1 library.  If the v1 config is read by a v1
+        // library and the file is a LUT, a missing interp would end up set to UNKNOWN and a
+        // throw would happen when the processor is built.  Setting to LINEAR to provide more
+        // robust compatibility.
+        interp = INTERP_LINEAR;
+    }
+    if (interp != INTERP_DEFAULT)
     {
         out << YAML::Key << "interpolation";
         out << YAML::Value;
-        save(out, t->getInterpolation());
+        save(out, interp);
     }
 
     EmitBaseTransformKeyValues(out, t);
@@ -1760,15 +1706,6 @@ inline void load(const YAML::Node & node, GradingPrimaryTransformRcPtr & t)
             loadClamp(first, second, values.m_clampBlack, clampBlackLoaded,
                       values.m_clampWhite, clampWhiteLoaded);
         }
-        else if (key == "dynamic")
-        {
-            bool dyn = true;
-            load(second, dyn);
-            if (dyn)
-            {
-                t->makeDynamic();
-            }
-        }
         else
         {
             LogUnknownKeyWarning(node.Tag(), first);
@@ -1944,11 +1881,6 @@ inline void save(YAML::Emitter & out, ConstGradingPrimaryTransformRcPtr t)
     saveClamp(out, vals.m_clampBlack, defaultVals.m_clampBlack,
               vals.m_clampWhite, defaultVals.m_clampWhite);
 
-    if (t->isDynamic())
-    {
-        out << YAML::Key << "dynamic" << YAML::Value << true;
-    }
-
     EmitBaseTransformKeyValues(out, t);
     out << YAML::EndMap;
 }
@@ -2060,15 +1992,6 @@ inline void load(const YAML::Node & node, GradingRGBCurveTransformRcPtr & t)
             master = GradingBSplineCurve::Create(0);
             load(first, second, master);
         }
-        else if (key == "dynamic")
-        {
-            bool dyn = true;
-            load(second, dyn);
-            if (dyn)
-            {
-                t->makeDynamic();
-            }
-        }
         else
         {
             LogUnknownKeyWarning(node.Tag(), first);
@@ -2141,11 +2064,6 @@ inline void save(YAML::Emitter & out, ConstGradingRGBCurveTransformRcPtr t)
         {
             save(out, curveNames[c], curve);
         }
-    }
-
-    if (t->isDynamic())
-    {
-        out << YAML::Key << "dynamic" << YAML::Value << true;
     }
 
     EmitBaseTransformKeyValues(out, t);
@@ -2280,15 +2198,6 @@ inline void load(const YAML::Node & node, GradingToneTransformRcPtr & t)
         {
             load(second, scontrast);
         }
-        else if (key == "dynamic")
-        {
-            bool dyn = true;
-            load(second, dyn);
-            if (dyn)
-            {
-                t->makeDynamic();
-            }
-        }
         else
         {
             LogUnknownKeyWarning(node.Tag(), first);
@@ -2344,11 +2253,6 @@ inline void save(YAML::Emitter & out, ConstGradingToneTransformRcPtr t)
     save(out, "whites", vals.m_whites, defaultVals.m_whites, false, false);
     save(out, "s_contrast", vals.m_scontrast, defaultVals.m_scontrast);
 
-    if (t->isDynamic())
-    {
-        out << YAML::Key << "dynamic" << YAML::Value << true;
-    }
-
     EmitBaseTransformKeyValues(out, t);
     out << YAML::EndMap;
 }
@@ -2356,7 +2260,7 @@ inline void save(YAML::Emitter & out, ConstGradingToneTransformRcPtr t)
 // GroupTransform
 
 void load(const YAML::Node& node, TransformRcPtr& t);
-void save(YAML::Emitter& out, ConstTransformRcPtr t);
+void save(YAML::Emitter& out, ConstTransformRcPtr t, unsigned int majorVersion);
 
 inline void load(const YAML::Node& node, GroupTransformRcPtr& t)
 {
@@ -2412,7 +2316,7 @@ inline void load(const YAML::Node& node, GroupTransformRcPtr& t)
     }
 }
 
-inline void save(YAML::Emitter& out, ConstGroupTransformRcPtr t)
+inline void save(YAML::Emitter& out, ConstGroupTransformRcPtr t, unsigned int majorVersion)
 {
     out << YAML::VerbatimTag("GroupTransform");
     out << YAML::BeginMap;
@@ -2426,7 +2330,7 @@ inline void save(YAML::Emitter& out, ConstGroupTransformRcPtr t)
     out << YAML::BeginSeq;
     for(int i = 0; i < t->getNumTransforms(); ++i)
     {
-        save(out, t->getTransform(i));
+        save(out, t->getTransform(i), majorVersion);
     }
     out << YAML::EndSeq;
 
@@ -3217,7 +3121,7 @@ void load(const YAML::Node& node, TransformRcPtr& t)
     }
 }
 
-void save(YAML::Emitter& out, ConstTransformRcPtr t)
+void save(YAML::Emitter& out, ConstTransformRcPtr t, unsigned int majorVersion)
 {
     if(ConstAllocationTransformRcPtr Allocation_tran = \
         DynamicPtrCast<const AllocationTransform>(t))
@@ -3242,8 +3146,7 @@ void save(YAML::Emitter& out, ConstTransformRcPtr t)
         save(out, ExpLinear_tran);
     else if(ConstFileTransformRcPtr File_tran = \
         DynamicPtrCast<const FileTransform>(t))
-        // TODO: if (File_tran->getCDLStyle() != CDL_TRANSFORM_DEFAULT) should throw with config v1.
-        save(out, File_tran);
+        save(out, File_tran, majorVersion);
     else if (ConstExposureContrastTransformRcPtr File_tran = \
         DynamicPtrCast<const ExposureContrastTransform>(t))
         save(out, File_tran);
@@ -3261,7 +3164,7 @@ void save(YAML::Emitter& out, ConstTransformRcPtr t)
         save(out, GT_tran);
     else if(ConstGroupTransformRcPtr Group_tran = \
         DynamicPtrCast<const GroupTransform>(t))
-        save(out, Group_tran);
+        save(out, Group_tran, majorVersion);
     else if(ConstLogAffineTransformRcPtr Log_tran = \
         DynamicPtrCast<const LogAffineTransform>(t))
         save(out, Log_tran);
@@ -3419,7 +3322,7 @@ inline void load(const YAML::Node& node, ColorSpaceRcPtr& cs)
     }
 }
 
-inline void save(YAML::Emitter& out, ConstColorSpaceRcPtr cs)
+inline void save(YAML::Emitter& out, ConstColorSpaceRcPtr cs, unsigned int majorVersion)
 {
     out << YAML::VerbatimTag("ColorSpace");
     out << YAML::BeginMap;
@@ -3465,14 +3368,14 @@ inline void save(YAML::Emitter& out, ConstColorSpaceRcPtr cs)
     if(toref)
     {
         out << YAML::Key << (isDisplay ? "to_display_reference" : "to_reference") << YAML::Value;
-        save(out, toref);
+        save(out, toref, majorVersion);
     }
 
     ConstTransformRcPtr fromref = cs->getTransform(COLORSPACE_DIR_FROM_REFERENCE);
     if(fromref)
     {
         out << YAML::Key << (isDisplay ? "from_display_reference" : "from_reference") << YAML::Value;
-        save(out, fromref);
+        save(out, fromref, majorVersion);
     }
 
     out << YAML::EndMap;
@@ -3533,7 +3436,7 @@ inline void load(const YAML::Node& node, LookRcPtr& look)
     }
 }
 
-inline void save(YAML::Emitter& out, ConstLookRcPtr look)
+inline void save(YAML::Emitter& out, ConstLookRcPtr look, unsigned int majorVersion)
 {
     out << YAML::VerbatimTag("Look");
     out << YAML::BeginMap;
@@ -3545,14 +3448,14 @@ inline void save(YAML::Emitter& out, ConstLookRcPtr look)
     {
         out << YAML::Key << "transform";
         out << YAML::Value;
-        save(out, look->getTransform());
+        save(out, look->getTransform(), majorVersion);
     }
 
     if(look->getInverseTransform())
     {
         out << YAML::Key << "inverse_transform";
         out << YAML::Value;
-        save(out, look->getInverseTransform());
+        save(out, look->getInverseTransform(), majorVersion);
     }
 
     out << YAML::EndMap;
@@ -3694,7 +3597,7 @@ inline void load(const YAML::Node & node, ViewTransformRcPtr & vt)
     }
 }
 
-inline void save(YAML::Emitter & out, ConstViewTransformRcPtr & vt)
+inline void save(YAML::Emitter & out, ConstViewTransformRcPtr & vt, unsigned int majorVersion)
 {
     out << YAML::VerbatimTag("ViewTransform");
     out << YAML::BeginMap;
@@ -3723,14 +3626,14 @@ inline void save(YAML::Emitter & out, ConstViewTransformRcPtr & vt)
     if (toref)
     {
         out << YAML::Key << (isDisplay ? "to_display_reference" : "to_reference") << YAML::Value;
-        save(out, toref);
+        save(out, toref, majorVersion);
     }
 
     ConstTransformRcPtr fromref = vt->getTransform(VIEWTRANSFORM_DIR_FROM_REFERENCE);
     if (fromref)
     {
         out << YAML::Key << (isDisplay ? "from_display_reference" : "from_reference") << YAML::Value;
-        save(out, fromref);
+        save(out, fromref, majorVersion);
     }
 
     out << YAML::EndMap;
@@ -4878,7 +4781,7 @@ inline void save(YAML::Emitter & out, const Config & config)
         for(int i = 0; i < config.getNumLooks(); ++i)
         {
             const char* name = config.getLookNameByIndex(i);
-            save(out, config.getLook(name));
+            save(out, config.getLook(name), configMajorVersion);
         }
         out << YAML::EndSeq;
         out << YAML::Newline;
@@ -4895,7 +4798,7 @@ inline void save(YAML::Emitter & out, const Config & config)
         {
             auto name = config.getViewTransformNameByIndex(i);
             auto vt = config.getViewTransform(name);
-            save(out, vt);
+            save(out, vt, configMajorVersion);
         }
         out << YAML::EndSeq;
     }
@@ -4933,7 +4836,7 @@ inline void save(YAML::Emitter & out, const Config & config)
         out << YAML::Value << YAML::BeginSeq;
         for (const auto & cs : displayCS)
         {
-            save(out, cs);
+            save(out, cs, configMajorVersion);
         }
         out << YAML::EndSeq;
     }
@@ -4945,7 +4848,7 @@ inline void save(YAML::Emitter & out, const Config & config)
         out << YAML::Value << YAML::BeginSeq;
         for (const auto & cs : sceneCS)
         {
-            save(out, cs);
+            save(out, cs, configMajorVersion);
         }
         out << YAML::EndSeq;
     }

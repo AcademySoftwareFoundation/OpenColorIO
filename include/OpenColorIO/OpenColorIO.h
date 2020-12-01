@@ -1931,8 +1931,8 @@ public:
     /**
      * The returned pointer may be used to set the default value of any dynamic
      * properties of the requested type.  Throws if the requested property is not found.  Note
-     * that if the processor contains several ops that support the requested property, only ones
-     * for which dynamic has been enabled will be controlled.
+     * that if the processor contains several ops that support the requested property, only one
+     * can be dynamic and only this one will be controlled.
      *
      * \note The dynamic properties are a convenient way to change on-the-fly values without 
      * generating again and again a CPU or GPU processor instance. Color transformations can
@@ -1942,7 +1942,8 @@ public:
      * are decoupled between the types of processor instances so that the same
      * :cpp:class:`Processor` can generate several independent CPU and/or GPU processor
      * instances i.e. changing the value of the exposure dynamic property from a CPU processor
-     * instance does not affect the corresponding GPU processor instance.
+     * instance does not affect the corresponding GPU processor instance. Processor creation will
+     * throw if there are more than one property of a given type.
      */
     DynamicPropertyRcPtr getDynamicProperty(DynamicPropertyType type) const;
     /// True if at least one dynamic property of that type exists.
@@ -2059,12 +2060,11 @@ public:
 
     /* The returned pointer may be used to set the value of any dynamic properties
      * of the requested type.  Throws if the requested property is not found.  Note that if the
-     * processor contains several ops that support the requested property, only ones for which
-     * dynamic has been enabled will be controlled.
+     * processor contains several ops that support the requested property, only one can be dynamic.
      *
      * \note The dynamic properties in this object are decoupled from the ones in the
      * \ref Processor it was generated from. For each dynamic property in the Processor,
-     * there is one ine the CPU processor.
+     * there is one in the CPU processor.
      */
     DynamicPropertyRcPtr getDynamicProperty(DynamicPropertyType type) const;
 

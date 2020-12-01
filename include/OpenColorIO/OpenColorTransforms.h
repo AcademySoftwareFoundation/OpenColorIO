@@ -899,39 +899,45 @@ public:
     virtual bool equals(const ExposureContrastTransform & other) const noexcept = 0;
 
     virtual ExposureContrastStyle getStyle() const = 0;
-    /**
-     * Select the algorithm for linear, video
-     * or log color spaces.
-     */
+    /// Select the algorithm for linear, video or log color spaces.
     virtual void setStyle(ExposureContrastStyle style) = 0;
 
     virtual double getExposure() const = 0;
     /**
-     * Applies an exposure adjustment.  The value is in
-     * units of stops (regardless of style), for example, a value of -1
-     * would be equivalent to reducing the lighting by one half.
+     * Applies an exposure adjustment.  The value is in units of stops (regardless of style), for
+     * example, a value of -1  would be equivalent to reducing the lighting by one half.
      */
     virtual void setExposure(double exposure) = 0;
+    /**
+     * Exposure can be made dynamic so the value can be changed through the CPU or GPU processor,
+     * but if there are several ExposureContrastTransform only one can have a dynamic exposure.
+     */
     virtual bool isExposureDynamic() const = 0;
     virtual void makeExposureDynamic() = 0;
     virtual void makeExposureNonDynamic() = 0;
 
     virtual double getContrast() const = 0;
     /**
-     * Applies a contrast/gamma adjustment around a pivot
-     * point.  The contrast and gamma are mathematically the same, but two
-     * controls are provided to enable the use of separate dynamic
-     * parameters.  Contrast is usually a scene-referred adjustment that
-     * pivots around gray whereas gamma is usually a display-referred
-     * adjustment that pivots around white.
+     * Applies a contrast/gamma adjustment around a pivot point.  The contrast and gamma are
+     * mathematically the same, but two controls are provided to enable the use of separate
+     * dynamic parameters.  Contrast is usually a scene-referred adjustment that pivots around
+     * gray whereas gamma is usually a display-referred adjustment that pivots around white.
      */
     virtual void setContrast(double contrast) = 0;
+    /**
+     * Contrast can be made dynamic so the value can be changed through the CPU or GPU processor,
+     * but if there are several ExposureContrastTransform only one can have a dynamic contrast.
+     */
     virtual bool isContrastDynamic() const = 0;
     virtual void makeContrastDynamic() = 0;
     virtual void makeContrastNonDynamic() = 0;
 
     virtual double getGamma() const = 0;
     virtual void setGamma(double gamma) = 0;
+    /**
+     * Gamma can be made dynamic so the value can be changed through the CPU or GPU processor,
+     * but if there are several ExposureContrastTransform only one can have a dynamic gamma.
+     */
     virtual bool isGammaDynamic() const = 0;
     virtual void makeGammaDynamic() = 0;
     virtual void makeGammaNonDynamic() = 0;
@@ -1006,6 +1012,12 @@ public:
      */
     void setCDLStyle(CDLStyle);
 
+    /**
+     * The file parsers that care about interpolation (LUTs) will try to make use of the requested
+     * interpolation method when loading the file.  In these cases, if the requested method could
+     * not be used, a warning is logged.  If no method is provided, or a method cannot be used,
+     * INTERP_DEFAULT is used.
+     */
     Interpolation getInterpolation() const;
     void setInterpolation(Interpolation interp);
 
@@ -1112,6 +1124,10 @@ public:
     /// Throws if value is not valid.
     virtual void setValue(const GradingPrimary & values) = 0;
 
+    /**
+     * Parameters can be made dynamic so the values can be changed through the CPU or GPU processor,
+     * but if there are several GradingPrimaryTransform only one can have dynamic parameters.
+     */
     virtual bool isDynamic() const noexcept = 0;
     virtual void makeDynamic() noexcept = 0;
     virtual void makeNonDynamic() noexcept = 0;
@@ -1172,6 +1188,10 @@ public:
     virtual bool getBypassLinToLog() const = 0;
     virtual void setBypassLinToLog(bool bypass) = 0;
 
+    /**
+     * Parameters can be made dynamic so the values can be changed through the CPU or GPU processor,
+     * but if there are several GradingRGBCurveTransform only one can have dynamic parameters.
+     */
     virtual bool isDynamic() const noexcept = 0;
     virtual void makeDynamic() noexcept = 0;
     virtual void makeNonDynamic() noexcept = 0;
@@ -1232,6 +1252,10 @@ public:
     virtual const GradingTone & getValue() const = 0;
     virtual void setValue(const GradingTone & values) = 0;
 
+    /**
+     * Parameters can be made dynamic so the values can be changed through the CPU or GPU processor,
+     * but if there are several GradingToneTransform only one can have dynamic parameters.
+     */
     virtual bool isDynamic() const noexcept = 0;
     virtual void makeDynamic() noexcept = 0;
     virtual void makeNonDynamic() noexcept = 0;
