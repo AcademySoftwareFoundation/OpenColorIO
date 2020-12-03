@@ -39,6 +39,11 @@ Infos getColorSpaceInfosFromCategories(ConstConfigRcPtr config,
                                        const char * categories,  // Could be null or empty
                                        ColorSpaceMenuHelper::IncludeTypeFlag includeFlag);
 
+inline bool HasFlag(ColorSpaceMenuHelper::IncludeTypeFlag includeFlag,
+                    ColorSpaceMenuHelper::IncludeTypeFlag query)
+{
+    return ((includeFlag & query) == query);
+}
 } // namespace OCIO_NAMESPACE
 
 #endif // INCLUDED_OCIO_CATEGORY_HELPERS_H

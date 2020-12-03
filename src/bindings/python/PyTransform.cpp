@@ -31,6 +31,9 @@ void bindPyTransform(py::module & m)
     bindPyExposureContrastTransform(m);
     bindPyFileTransform(m);
     bindPyFixedFunctionTransform(m);
+    bindPyGradingPrimaryTransform(m);
+    bindPyGradingRGBCurveTransform(m);
+    bindPyGradingToneTransform(m);
     bindPyGroupTransform(m);
     bindPyLogAffineTransform(m);
     bindPyLogCameraTransform(m);

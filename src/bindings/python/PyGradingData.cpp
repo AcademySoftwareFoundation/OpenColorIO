@@ -159,13 +159,9 @@ void bindPyGradingData(py::module & m)
         .def("getControlPoints", [](GradingBSplineCurveRcPtr & self)
             {
                 return GradingControlPointIterator(self);
-            })
-        .def("__repr__", [](const GradingBSplineCurveRcPtr & bs)
-            {
-                std::ostringstream oss;
-                oss << *bs;
-                return oss.str();
             });
+
+    defStr(clsGBSC);
 
     py::class_<GradingControlPointIterator>(clsGBSC, "GradingControlPointIterator")
         .def("__len__", [](GradingControlPointIterator & it)
@@ -242,13 +238,9 @@ void bindPyGradingData(py::module & m)
             [](const GradingRGBCurveRcPtr & rgbCurve, const GradingBSplineCurveRcPtr & master)
             {
                 CopyGradingBSpline(rgbCurve->getCurve(RGB_MASTER), master);
-            })
-        .def("__repr__", [](const GradingRGBCurveRcPtr & rgbcurve)
-            {
-                std::ostringstream oss;
-                oss << *rgbcurve;
-                return oss.str();
             });
+
+    defStr(cls);
 
 }
 

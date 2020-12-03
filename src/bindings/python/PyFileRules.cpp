@@ -9,7 +9,7 @@ namespace OCIO_NAMESPACE
 
 void bindPyFileRules(py::module & m)
 {
-    py::class_<FileRules, FileRulesRcPtr /* holder */>(m, "FileRules")
+    auto cls = py::class_<FileRules, FileRulesRcPtr /* holder */>(m, "FileRules")
         .def(py::init(&FileRules::Create))
                     
         .def("getNumEntries", &FileRules::getNumEntries)
@@ -40,6 +40,8 @@ void bindPyFileRules(py::module & m)
         .def("removeRule", &FileRules::removeRule, "ruleIndex"_a)
         .def("increaseRulePriority", &FileRules::increaseRulePriority, "ruleIndex"_a)
         .def("decreaseRulePriority", &FileRules::decreaseRulePriority, "ruleIndex"_a);
+
+    defStr(cls);
 }
 
 } // namespace OCIO_NAMESPACE

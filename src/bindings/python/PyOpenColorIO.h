@@ -41,6 +41,10 @@ void bindPyGradingData(py::module & m);
 void bindPyGradingPrimaryTransform(py::module & m);
 void bindPyGradingRGBCurveTransform(py::module & m);
 void bindPyGradingToneTransform(py::module & m);
+void bindPyColorSpaceMenuHelpers(py::module & m);
+void bindPyDisplayViewHelpers(py::module & m);
+void bindPyLegacyViewingPipeline(py::module & m);
+void bindPyMixingHelpers(py::module & m);
 
 } // namespace OCIO_NAMESPACE
 

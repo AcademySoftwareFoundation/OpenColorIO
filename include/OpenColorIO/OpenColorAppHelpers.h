@@ -129,6 +129,8 @@ protected:
     ColorSpaceMenuHelper() = default;
 };
 
+extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const ColorSpaceMenuHelper &);
+
 namespace ColorSpaceHelpers
 {
 /**
@@ -231,9 +233,6 @@ class OCIOEXPORT LegacyViewingPipeline
 public:
     static LegacyViewingPipelineRcPtr Create();
 
-    LegacyViewingPipeline(const LegacyViewingPipeline &) = delete;
-    LegacyViewingPipeline & operator=(const LegacyViewingPipeline &) = delete;
-
     virtual ConstDisplayViewTransformRcPtr getDisplayViewTransform() const noexcept = 0;
     virtual void setDisplayViewTransform(const ConstDisplayViewTransformRcPtr & dt) noexcept = 0;
 
@@ -277,6 +276,9 @@ public:
 
     virtual ConstProcessorRcPtr getProcessor(const ConstConfigRcPtr & config) const = 0;
 
+    LegacyViewingPipeline(const LegacyViewingPipeline &) = delete;
+    LegacyViewingPipeline & operator=(const LegacyViewingPipeline &) = delete;
+
     /// Do not use (needed only for pybind11).
     virtual ~LegacyViewingPipeline() = default;
 
@@ -284,6 +286,7 @@ protected:
     LegacyViewingPipeline() = default;
 };
 
+extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const LegacyViewingPipeline &);
 
 /**
  * The MixingSlider and MixingColorSpaceManager classes are to help applications implement correct 
@@ -335,6 +338,7 @@ protected:
     MixingSlider() = default;
 };
 
+extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const MixingSlider &);
 
 class OCIOEXPORT MixingColorSpaceManager
 {
@@ -379,6 +383,8 @@ public:
 protected:
     MixingColorSpaceManager() = default;
 };
+
+extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const MixingColorSpaceManager &);
 
 } // namespace OCIO_NAMESPACE
 

@@ -10,9 +10,9 @@ void bindPyGradingToneTransform(py::module & m)
 {
     GradingToneTransformRcPtr DEFAULT = GradingToneTransform::Create(GRADING_LOG);
 
-    py::class_<GradingToneTransform,
-               GradingToneTransformRcPtr /* holder */,
-               Transform /* base */>(m, "GradingToneTransform")
+    auto cls = py::class_<GradingToneTransform,
+                          GradingToneTransformRcPtr /* holder */,
+                          Transform /* base */>(m, "GradingToneTransform")
         .def(py::init([](GradingStyle style,
                          const GradingTone & values,
                          bool dynamic, 
@@ -60,6 +60,9 @@ void bindPyGradingToneTransform(py::module & m)
         .def("isDynamic", &GradingToneTransform::isDynamic)
         .def("makeDynamic", &GradingToneTransform::makeDynamic)
         .def("makeNonDynamic", &GradingToneTransform::makeNonDynamic);
+
+    defStr(cls);
+
 }
 
 } // namespace OCIO_NAMESPACE

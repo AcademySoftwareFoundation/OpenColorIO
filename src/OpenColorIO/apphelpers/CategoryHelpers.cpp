@@ -156,7 +156,7 @@ Infos getColorSpaceInfosFromCategories(ConstConfigRcPtr config,
 
     // Step 3 - Include roles if needed.
 
-    if ((includeFlag & ColorSpaceMenuHelper::INCLUDE_ROLES) == ColorSpaceMenuHelper::INCLUDE_ROLES)
+    if (HasFlag(includeFlag, ColorSpaceMenuHelper::INCLUDE_ROLES))
     {
         for (int idx = 0; idx < config->getNumRoles(); ++idx)
         {

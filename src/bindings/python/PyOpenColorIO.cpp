@@ -55,9 +55,10 @@ PYBIND11_MODULE(PyOpenColorIO, m)
     bindPyViewingRules(m);
     bindPySystemMonitors(m);
     bindPyGradingData(m);
-    bindPyGradingPrimaryTransform(m);
-    bindPyGradingRGBCurveTransform(m);
-    bindPyGradingToneTransform(m);
+    bindPyColorSpaceMenuHelpers(m);
+    bindPyDisplayViewHelpers(m);
+    bindPyLegacyViewingPipeline(m);
+    bindPyMixingHelpers(m);
 }
 
 } // namespace OCIO_NAMESPACE

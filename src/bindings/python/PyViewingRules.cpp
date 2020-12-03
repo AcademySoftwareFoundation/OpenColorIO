@@ -49,6 +49,8 @@ void bindPyViewingRules(py::module & m)
              "ruleIndex"_a, "name"_a)
         .def("removeRule", &ViewingRules::removeRule, "ruleIndex"_a);
 
+    defStr(cls);
+
     py::class_<ViewingRuleColorSpaceIterator>(cls, "ViewingRuleColorSpaceIterator")
         .def("__len__", [](ViewingRuleColorSpaceIterator & it) { return it.m_obj->getNumColorSpaces(std::get<0>(it.m_args)); })
         .def("__getitem__", [](ViewingRuleColorSpaceIterator & it, size_t i)

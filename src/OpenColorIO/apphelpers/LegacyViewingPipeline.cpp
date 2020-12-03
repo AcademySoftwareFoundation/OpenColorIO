@@ -385,5 +385,71 @@ ConstProcessorRcPtr LegacyViewingPipelineImpl::getProcessor(const ConstConfigRcP
     return config->getProcessor(context, group, dir);
 }
 
+std::ostream & operator<<(std::ostream & os, const LegacyViewingPipeline & pipeline)
+{
+    bool first = true;
+    if (pipeline.getDisplayViewTransform())
+    {
+        os << "DisplayViewTransform: " << *(pipeline.getDisplayViewTransform());
+        first = false;
+    }
+    if (pipeline.getLinearCC())
+    {
+        if (!first)
+        {
+            os << ", ";
+        }
+        os << "LinearCC: " << *(pipeline.getLinearCC());
+        first = false;
+    }
+    if (pipeline.getColorTimingCC())
+    {
+        if (!first)
+        {
+            os << ", ";
+        }
+        os << "ColorTimingCC: " << *(pipeline.getColorTimingCC());
+        first = false;
+    }
+    if (pipeline.getChannelView())
+    {
+        if (!first)
+        {
+            os << ", ";
+        }
+        os << "ChannelView: " << *(pipeline.getChannelView());
+        first = false;
+    }
+    if (pipeline.getDisplayCC())
+    {
+        if (!first)
+        {
+            os << ", ";
+        }
+        os << "DisplayCC: " << *(pipeline.getDisplayCC());
+        first = false;
+    }
+    if (pipeline.getLooksOverrideEnabled())
+    {
+        if (!first)
+        {
+            os << ", ";
+        }
+        os << "LooksOveerideEnabled";
+        first = false;
+    }
+    const std::string lo{ pipeline.getLooksOverride() };
+    if (!lo.empty())
+    {
+        if (!first)
+        {
+            os << ", ";
+        }
+        os << "LooksOveeride: " << lo;
+        first = false;
+    }
+    return os;
+}
+
 } // namespace OCIO_NAMESPACE
 

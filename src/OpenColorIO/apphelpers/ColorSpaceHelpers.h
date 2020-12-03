@@ -108,6 +108,8 @@ public:
 
     static void Deleter(ColorSpaceMenuHelper * hlp);
 
+    std::ostream & serialize(std::ostream & os) const;
+
 protected:
     void refresh();
 

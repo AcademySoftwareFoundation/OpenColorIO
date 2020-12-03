@@ -10,9 +10,9 @@ void bindPyGradingPrimaryTransform(py::module & m)
 {
     GradingPrimaryTransformRcPtr DEFAULT = GradingPrimaryTransform::Create(GRADING_LOG);
 
-    py::class_<GradingPrimaryTransform,
-               GradingPrimaryTransformRcPtr /* holder */, 
-               Transform /* base */>(m, "GradingPrimaryTransform")
+    auto cls = py::class_<GradingPrimaryTransform,
+                          GradingPrimaryTransformRcPtr /* holder */, 
+                          Transform /* base */>(m, "GradingPrimaryTransform")
         .def(py::init([](GradingStyle style,
                          const GradingPrimary & values,
                          bool dynamic, 
@@ -60,6 +60,9 @@ void bindPyGradingPrimaryTransform(py::module & m)
         .def("isDynamic", &GradingPrimaryTransform::isDynamic)
         .def("makeDynamic", &GradingPrimaryTransform::makeDynamic)
         .def("makeNonDynamic", &GradingPrimaryTransform::makeNonDynamic);
+
+    defStr(cls);
+
 }
 
 } // namespace OCIO_NAMESPACE

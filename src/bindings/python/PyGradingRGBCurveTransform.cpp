@@ -10,9 +10,9 @@ void bindPyGradingRGBCurveTransform(py::module & m)
 {
     GradingRGBCurveTransformRcPtr DEFAULT = GradingRGBCurveTransform::Create(GRADING_LOG);
 
-    py::class_<GradingRGBCurveTransform,
-               GradingRGBCurveTransformRcPtr /* holder */, 
-               Transform /* base */>(m, "GradingRGBCurveTransform")
+    auto cls = py::class_<GradingRGBCurveTransform,
+                          GradingRGBCurveTransformRcPtr /* holder */, 
+                          Transform /* base */>(m, "GradingRGBCurveTransform")
         .def(py::init([](GradingStyle style,
                          const ConstGradingRGBCurveRcPtr & values,
                          bool dynamic, 
@@ -62,6 +62,9 @@ void bindPyGradingRGBCurveTransform(py::module & m)
         .def("isDynamic", &GradingRGBCurveTransform::isDynamic)
         .def("makeDynamic", &GradingRGBCurveTransform::makeDynamic)
         .def("makeNonDynamic", &GradingRGBCurveTransform::makeNonDynamic);
+
+   defStr(cls);
+
 }
 
 } // namespace OCIO_NAMESPACE

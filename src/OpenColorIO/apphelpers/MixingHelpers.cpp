@@ -106,6 +106,12 @@ float MixingSliderImpl::mixingToSlider(float mixingUnits) const noexcept
 }
 
 
+std::ostream & operator<<(std::ostream & os, const MixingSlider & ms)
+{
+    os << "minEdge: " << ms.getSliderMinEdge();
+    os << ", maxEdge: " << ms.getSliderMaxEdge();
+    return os;
+}
 
 MixingColorSpaceManagerRcPtr MixingColorSpaceManager::Create(ConstConfigRcPtr & config)
 {
@@ -342,6 +348,41 @@ MixingSlider & MixingColorSpaceManagerImpl::getSlider(float sliderMixingMinEdge,
     m_slider.setSliderMinEdge(sliderMixingMinEdge);
     m_slider.setSliderMaxEdge(sliderMixingMaxEdge);
     return m_slider;
+}
+
+std::ostream & MixingColorSpaceManagerImpl::serialize(std::ostream & os) const
+{
+    os << "config: " << m_config->getCacheID();
+    os << ", slider: [" << m_slider << "]";
+    if (!m_mixingSpaces.empty())
+    {
+        os << ", mixingSpaces: [";
+        bool first = true;
+        for (const auto & cs : m_mixingSpaces)
+        {
+            if (!first)
+            {
+                os << ", ";
+            }
+            os << cs;
+            first = false;
+        }
+        os << "]";
+    }
+    os << ", selectedMixingSpaceIdx: " << m_selectedMixingSpaceIdx;
+    os << ", selectedMixingEncodingIdx: " << m_selectedMixingEncodingIdx;
+    if (m_colorPicker)
+    {
+        os << ", colorPicking";
+    }
+    return os;
+}
+
+std::ostream & operator<<(std::ostream & os, const MixingColorSpaceManager & mcsm)
+{
+    const auto & impl = dynamic_cast<const MixingColorSpaceManagerImpl &>(mcsm);
+    impl.serialize(os);
+    return os;
 }
 
 } // namespace OCIO_NAMESPACE

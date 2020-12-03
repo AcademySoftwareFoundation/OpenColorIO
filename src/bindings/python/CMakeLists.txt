@@ -19,6 +19,10 @@ find_package(Python REQUIRED COMPONENTS Interpreter Development)
 # Python libs
 
 set(SOURCES
+	apphelpers/PyColorSpaceHelpers.cpp
+	apphelpers/PyDisplayViewHelpers.cpp
+	apphelpers/PyLegacyViewingPipeline.cpp
+	apphelpers/PyMixingHelpers.cpp
 	PyOpenColorIO.cpp
 	PyUtils.cpp
 	PyTypes.cpp

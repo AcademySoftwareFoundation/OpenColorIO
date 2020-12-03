@@ -296,6 +296,9 @@ OCIO_ADD_TEST(MixingSlider, basic)
         slider.setSliderMinEdge(-0.2f);
         slider.setSliderMaxEdge(5.f);
 
+        FLOAT_CHECK_EQUAL(     0, slider.mixingToSlider(slider.getSliderMinEdge()));
+        FLOAT_CHECK_EQUAL(100000, slider.mixingToSlider(slider.getSliderMaxEdge()));
+
         FLOAT_CHECK_EQUAL( 1923, slider.mixingToSlider(-0.1f));
         FLOAT_CHECK_EQUAL( 5769, slider.mixingToSlider( 0.1f));
         FLOAT_CHECK_EQUAL(13461, slider.mixingToSlider( 0.5f));

@@ -74,6 +74,8 @@ public:
 
     static void Deleter(MixingColorSpaceManager * incs);
 
+    std::ostream & serialize(std::ostream & os) const;
+
 protected:
     void refresh();
     ConstProcessorRcPtr getProcessorWithoutEncoding(const char * workingName,

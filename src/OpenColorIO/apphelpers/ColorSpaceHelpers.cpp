@@ -412,6 +412,42 @@ const char * ColorSpaceMenuHelperImpl::getUINameFromName(const char * name) cons
     return "";
 }
 
+std::ostream & ColorSpaceMenuHelperImpl::serialize(std::ostream & os) const
+{
+    os << "Config: " << m_config->getCacheID();
+    if (!m_roleName.empty()) os << ", role: " << m_roleName;
+    if (!m_categories.empty()) os << ", categories: " << m_categories;
+    os << ", includeFlag: [color spaces";
+    if (HasFlag(m_includeFlag, INCLUDE_ROLES))
+    {
+        os << ", roles";
+    }
+    if (HasFlag(m_includeFlag, INCLUDE_NAMEDTRANSFORMS))
+    {
+        os << ", named transforms";
+    }
+    os << "], ";
+    os << "color spaces = [";
+    bool first = true;
+    for (const auto & cs : m_entries)
+    {
+        if (!first)
+        {
+            os << ", ";
+        }
+        os << cs->getName();
+        first = false;
+    }
+    os << "]";
+    return os;
+}
+
+std::ostream & operator<<(std::ostream & os, const ColorSpaceMenuHelper & menu)
+{
+    const auto & impl = dynamic_cast<const ColorSpaceMenuHelperImpl &>(menu);
+    impl.serialize(os);
+    return os;
+}
 
 namespace ColorSpaceHelpers
 {
