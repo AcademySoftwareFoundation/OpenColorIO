@@ -47,7 +47,7 @@ void AddUniform(GpuShaderCreatorRcPtr & shaderCreator,
 
 void AddBoolUniform(GpuShaderCreatorRcPtr & shaderCreator,
                     const GpuShaderCreator::BoolGetter & getBool,
-                const std::string & name)
+                    const std::string & name)
 {
     // Add the uniform if it does not already exist.
     if (shaderCreator->addUniform(name.c_str(), getBool))
@@ -61,7 +61,7 @@ void AddBoolUniform(GpuShaderCreatorRcPtr & shaderCreator,
 
 void AddUniform(GpuShaderCreatorRcPtr & shaderCreator,
                 const GpuShaderCreator::Float3Getter & getter,
-                    const std::string & name)
+                const std::string & name)
 {
     // Add the uniform if it does not already exist.
     if (shaderCreator->addUniform(name.c_str(), getter))
@@ -71,28 +71,6 @@ void AddUniform(GpuShaderCreatorRcPtr & shaderCreator,
         stDecl.declareUniformFloat3(name);
         shaderCreator->addToDeclareShaderCode(stDecl.string().c_str());
     }
-}
-
-DynamicPropertyGradingPrimaryImplRcPtr GetOrAddShaderProp(GpuShaderCreatorRcPtr & shaderCreator,
-                                                          DynamicPropertyGradingPrimaryImplRcPtr & prop)
-{
-    // Dynamic property is decoupled and added to the shader (or only retrieved if it has
-    // already been added by another op).
-    DynamicPropertyGradingPrimaryImplRcPtr shaderProp;
-    if (shaderCreator->hasDynamicProperty(DYNAMIC_PROPERTY_GRADING_PRIMARY))
-    {
-        // Dynamic property might have been added for a different type of primary that
-        // requires different uniforms using the same dynmaic property.
-        auto dp = shaderCreator->getDynamicProperty(DYNAMIC_PROPERTY_GRADING_PRIMARY);
-        shaderProp = OCIO_DYNAMIC_POINTER_CAST<DynamicPropertyGradingPrimaryImpl>(dp);
-    }
-    else
-    {
-        shaderProp = prop->createEditableCopy();
-        DynamicPropertyRcPtr newProp = shaderProp;
-        shaderCreator->addDynamicProperty(newProp);
-    }
-    return shaderProp;
 }
 
 static constexpr char opPrefix[] = "grading_primary";
@@ -105,7 +83,7 @@ void AddGPLogProperties(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & s
     if (gpData->isDynamic())
     {
         // Build names. No need to add an index to the name to avoid collisions as the dynamic
-        // properties are shared i.e. only one instance.
+        // properties are unique.
 
         propNames.brightness = BuildResourceName(shaderCreator, opPrefix, propNames.brightness);
         propNames.contrast = BuildResourceName(shaderCreator, opPrefix, propNames.contrast);
@@ -120,10 +98,10 @@ void AddGPLogProperties(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & s
 
         propNames.localBypass = BuildResourceName(shaderCreator, opPrefix, propNames.localBypass);
 
-        // Dynamic property is decoupled and added to the shader (or only retrieved if it has
-        // already been added by another op). Different style do use different members of the
-        // value and thus will require different uniforms.
-        DynamicPropertyGradingPrimaryImplRcPtr shaderProp = GetOrAddShaderProp(shaderCreator, prop);
+        // Property is decoupled and added to shader creator.
+        DynamicPropertyGradingPrimaryImplRcPtr shaderProp = prop->createEditableCopy();
+        DynamicPropertyRcPtr newProp = shaderProp;
+        shaderCreator->addDynamicProperty(newProp);
         DynamicPropertyGradingPrimaryImpl * primaryProp = shaderProp.get();
 
         // Use the shader dynamic property to bind the uniforms.
@@ -246,7 +224,7 @@ void AddGPLinProperties(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & s
     if (gpData->isDynamic())
     {
         // Build names. No need to add an index to the name to avoid collisions as the dynamic
-        // properties are shared i.e. only one instance.
+        // properties are unique.
 
         propNames.offset = BuildResourceName(shaderCreator, opPrefix, propNames.offset);
         propNames.exposure = BuildResourceName(shaderCreator, opPrefix, propNames.exposure);
@@ -259,9 +237,10 @@ void AddGPLinProperties(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & s
 
         propNames.localBypass = BuildResourceName(shaderCreator, opPrefix, propNames.localBypass);
 
-        // Dynamic property is decoupled and added to the shader (or only retrieved if it has
-        // already been added by another op).
-        DynamicPropertyGradingPrimaryImplRcPtr shaderProp = GetOrAddShaderProp(shaderCreator, prop);
+        // Property is decoupled and added to shader creator.
+        DynamicPropertyGradingPrimaryImplRcPtr shaderProp = prop->createEditableCopy();
+        DynamicPropertyRcPtr newProp = shaderProp;
+        shaderCreator->addDynamicProperty(newProp);
         DynamicPropertyGradingPrimaryImpl * primaryProp = shaderProp.get();
 
         // Use the shader dynamic property to bind the uniforms.
@@ -368,7 +347,8 @@ void AddGPVideoProperties(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText &
     if (gpData->isDynamic())
     {
         // Build names. No need to add an index to the name to avoid collisions as the dynamic
-        // properties are shared i.e. only one instance.
+        // properties are unique.
+
         propNames.gamma = BuildResourceName(shaderCreator, opPrefix, propNames.gamma);
         propNames.offset = BuildResourceName(shaderCreator, opPrefix, propNames.offset);
         propNames.slope = BuildResourceName(shaderCreator, opPrefix, propNames.slope);
@@ -381,16 +361,17 @@ void AddGPVideoProperties(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText &
 
         propNames.localBypass = BuildResourceName(shaderCreator, opPrefix, propNames.localBypass);
 
-        // Dynamic property is decoupled and added to the shader (or only retrieved if it has
-        // already been added by another op).
-        DynamicPropertyGradingPrimaryImplRcPtr shaderProp = GetOrAddShaderProp(shaderCreator, prop);
+        // Property is decoupled and added to shader creator.
+        DynamicPropertyGradingPrimaryImplRcPtr shaderProp = prop->createEditableCopy();
+        DynamicPropertyRcPtr newProp = shaderProp;
+        shaderCreator->addDynamicProperty(newProp);
         DynamicPropertyGradingPrimaryImpl * primaryProp = shaderProp.get();
 
         // Use the shader dynamic property to bind the uniforms.
         const auto & value = shaderProp->getValue();
 
-        // NB: No need to add an index to the name to avoid collisions
-        //     as the dynamic properties are shared i.e. only one instance.
+        // NB: No need to add an index to the name to avoid collisions as the dynamic properties
+        // are unique.
 
         const auto getG = std::bind(&DynamicPropertyGradingPrimaryImpl::getGamma, primaryProp);
         AddUniform(shaderCreator, getG, propNames.gamma);

@@ -30,11 +30,10 @@ OCIO_ADD_TEST(Processor, basic)
     OCIO_CHECK_EQUAL(std::string(processorMat->getCacheID()), "$b8861d4acd905af0e84ddf10c860b220");
 }
 
-OCIO_ADD_TEST(Processor, shared_dynamic_properties)
+OCIO_ADD_TEST(Processor, unique_dynamic_properties)
 {
     OCIO::TransformDirection direction = OCIO::TRANSFORM_DIR_FORWARD;
-    OCIO::ExposureContrastOpDataRcPtr data =
-        std::make_shared<OCIO::ExposureContrastOpData>();
+    OCIO::ExposureContrastOpDataRcPtr data = std::make_shared<OCIO::ExposureContrastOpData>();
 
     data->setExposure(1.2);
     data->setPivot(0.5);
@@ -63,18 +62,8 @@ OCIO_ADD_TEST(Processor, shared_dynamic_properties)
 
     OCIO_CHECK_NE(dp0->getValue(), dp1->getValue());
 
-    OCIO_CHECK_NO_THROW(ops.unifyDynamicProperties());
-
-    OCIO::DynamicPropertyDoubleImplRcPtr dp0_post = data0->getExposureProperty();
-    OCIO::DynamicPropertyDoubleImplRcPtr dp1_post = data1->getExposureProperty();
-
-    OCIO_CHECK_EQUAL(dp0_post->getValue(), dp1_post->getValue());
-
-    // Both share the same pointer.
-    OCIO_CHECK_EQUAL(dp0_post.get(), dp1_post.get());
-
-    // The first pointer is the one that gets shared.
-    OCIO_CHECK_EQUAL(dp0.get(), dp0_post.get());
+    OCIO_CHECK_THROW_WHAT(ops.validateDynamicProperties(), OCIO::Exception,
+                          "Exposure dynamic property can only be there once");
 }
 
 namespace

@@ -27,8 +27,6 @@ public:
 
     bool hasDynamicProperty(DynamicPropertyType type) const override;
     DynamicPropertyRcPtr getDynamicProperty(DynamicPropertyType type) const override;
-    void unifyDynamicProperty(DynamicPropertyType type,
-                              DynamicPropertyGradingRGBCurveImplRcPtr & prop) const override;
 
 protected:
     void eval(const GradingBSplineCurveImpl::KnotsCoefs & knotsCoefs,
@@ -43,14 +41,17 @@ protected:
         out[2] = knotsCoefs.evalCurve(static_cast<int>(RGB_MASTER), in[2]);
     }
 
-    // Mutable for the unification process.
-    mutable DynamicPropertyGradingRGBCurveImplRcPtr m_grgbcurve;
+    DynamicPropertyGradingRGBCurveImplRcPtr m_grgbcurve;
 };
 
 GradingRGBCurveOpCPU::GradingRGBCurveOpCPU(ConstGradingRGBCurveOpDataRcPtr & grgbc)
     : OpCPU()
 {
-    m_grgbcurve = OCIO_DYNAMIC_POINTER_CAST<DynamicPropertyGradingRGBCurveImpl>(grgbc->getDynamicPropertyInternal());
+    m_grgbcurve = grgbc->getDynamicPropertyInternal();
+    if (m_grgbcurve->isDynamic())
+    {
+        m_grgbcurve = m_grgbcurve->createEditableCopy();
+    }
 }
 
 bool GradingRGBCurveOpCPU::hasDynamicProperty(DynamicPropertyType type) const
@@ -78,24 +79,6 @@ DynamicPropertyRcPtr GradingRGBCurveOpCPU::getDynamicProperty(DynamicPropertyTyp
     }
 
     throw Exception("GradingRGBCurve property is not dynamic.");
-}
-
-void GradingRGBCurveOpCPU::unifyDynamicProperty(DynamicPropertyType type,
-                                                DynamicPropertyGradingRGBCurveImplRcPtr & prop) const
-{
-    if (type == DYNAMIC_PROPERTY_GRADING_RGBCURVE)
-    {
-        if (!prop)
-        {
-            // First occurence, decouple.
-            prop = m_grgbcurve->createEditableCopy();
-        }
-        m_grgbcurve = prop;
-    }
-    else
-    {
-        OpCPU::unifyDynamicProperty(type, prop);
-    }
 }
 
 class GradingRGBCurveFwdOpCPU : public GradingRGBCurveOpCPU

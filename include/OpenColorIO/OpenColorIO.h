@@ -1085,7 +1085,7 @@ public:
     Config(const Config &) = delete;
     Config& operator= (const Config &) = delete;
 
-    // Do not use (needed only for pybind11).
+    /// Do not use (needed only for pybind11).
     ~Config();
 
     //!cpp:function:: Control the caching of processors in the config instance.  By default, caching
@@ -1166,7 +1166,7 @@ extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const Config&);
 // getter will return NULL and setter will throw.
 //
 
-class FileRules
+class OCIOEXPORT FileRules
 {
 public:
     /**
@@ -1261,7 +1261,7 @@ public:
     FileRules(const FileRules &) = delete;
     FileRules & operator= (const FileRules &) = delete;
 
-    // Do not use (needed only for pybind11).
+    /// Do not use (needed only for pybind11).
     virtual ~FileRules();
 
 private:
@@ -1305,7 +1305,7 @@ extern OCIOEXPORT std::ostream & operator<< (std::ostream &, const FileRules &);
 // Getters and setters are using the rule position, they will throw if the position is not
 // valid.
 
-class ViewingRules
+class OCIOEXPORT ViewingRules
 {
 public:
     /// Creates ViewingRules for a Config.
@@ -1384,7 +1384,7 @@ public:
 
     ViewingRules(const ViewingRules &) = delete;
     ViewingRules & operator= (const ViewingRules &) = delete;
-    // Do not use (needed only for pybind11).
+    /// Do not use (needed only for pybind11).
     virtual ~ViewingRules();
 
 private:
@@ -1591,7 +1591,7 @@ public:
 
     ColorSpace(const ColorSpace &) = delete;
     ColorSpace& operator= (const ColorSpace &) = delete;
-    // Do not use (needed only for pybind11).
+    /// Do not use (needed only for pybind11).
     ~ColorSpace();
 
 private:
@@ -1710,7 +1710,7 @@ public:
     /// Clear all color spaces.
     void clearColorSpaces();
 
-    //!cpp:function:: Do not use (needed only for pybind11).
+    /// Do not use (needed only for pybind11).
     ~ColorSpaceSet();
 
 private:
@@ -1802,11 +1802,9 @@ public:
     const char * getDescription() const;
     void setDescription(const char * description);
 
-    //!cpp:function::
     Look(const Look &) = delete;
-    //!cpp:function::
     Look& operator= (const Look &) = delete;
-    //!cpp:function:: Do not use (needed only for pybind11).
+    /// Do not use (needed only for pybind11).
     ~Look();
 
 private:
@@ -1942,7 +1940,6 @@ public:
 
     ViewTransform(const ViewTransform &) = delete;
     ViewTransform & operator= (const ViewTransform &) = delete;
-
     /// Do not use (needed only for pybind11).
     ~ViewTransform();
 
@@ -2034,8 +2031,8 @@ public:
     /**
      * The returned pointer may be used to set the default value of any dynamic
      * properties of the requested type.  Throws if the requested property is not found.  Note
-     * that if the processor contains several ops that support the requested property, only ones
-     * for which dynamic has been enabled will be controlled.
+     * that if the processor contains several ops that support the requested property, only one
+     * can be dynamic and only this one will be controlled.
      *
      * \note The dynamic properties are a convenient way to change on-the-fly values without 
      * generating again and again a CPU or GPU processor instance. Color transformations can
@@ -2045,7 +2042,8 @@ public:
      * are decoupled between the types of processor instances so that the same
      * :cpp:class:`Processor` can generate several independent CPU and/or GPU processor
      * instances i.e. changing the value of the exposure dynamic property from a CPU processor
-     * instance does not affect the corresponding GPU processor instance.
+     * instance does not affect the corresponding GPU processor instance. Processor creation will
+     * throw if there are more than one property of a given type.
      */
     DynamicPropertyRcPtr getDynamicProperty(DynamicPropertyType type) const;
     /// True if at least one dynamic property of that type exists.
@@ -2115,11 +2113,9 @@ public:
                                                     BitDepth outBitDepth,
                                                     OptimizationFlags oFlags) const;
 
-    //!cpp:function::
     Processor(const Processor &) = delete;
-    //!cpp:function::
     Processor & operator= (const Processor &) = delete;
-    //!cpp:function:: Do not use (needed only for pybind11).
+    /// Do not use (needed only for pybind11).
     ~Processor();
 
 private:
@@ -2164,12 +2160,11 @@ public:
 
     /* The returned pointer may be used to set the value of any dynamic properties
      * of the requested type.  Throws if the requested property is not found.  Note that if the
-     * processor contains several ops that support the requested property, only ones for which
-     * dynamic has been enabled will be controlled.
+     * processor contains several ops that support the requested property, only one can be dynamic.
      *
      * \note The dynamic properties in this object are decoupled from the ones in the
      * \ref Processor it was generated from. For each dynamic property in the Processor,
-     * there is one ine the CPU processor.
+     * there is one in the CPU processor.
      */
     DynamicPropertyRcPtr getDynamicProperty(DynamicPropertyType type) const;
 
@@ -2192,11 +2187,9 @@ public:
     void applyRGB(float * pixel) const;
     void applyRGBA(float * pixel) const;
 
-    //!cpp:function::
     CPUProcessor(const CPUProcessor &) = delete;
-    //!cpp:function::
     CPUProcessor& operator= (const CPUProcessor &) = delete;
-    //!cpp:function:: Do not use (needed only for pybind11).
+    /// Do not use (needed only for pybind11).
     ~CPUProcessor();
 
 private:
@@ -2231,11 +2224,9 @@ public:
     /// Extract the shader information using a custom \ref GpuShaderCreator class.
     void extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const;
     
-    //!cpp:function::
     GPUProcessor(const GPUProcessor &) = delete;
-    //!cpp:function::
     GPUProcessor& operator= (const GPUProcessor &) = delete;
-    //!cpp:function:: Do not use (needed only for pybind11).
+    /// Do not use (needed only for pybind11).
     ~GPUProcessor();
 
 private:
@@ -2273,11 +2264,9 @@ public:
     void addFile(const char * fname);
     void addLook(const char * look);
 
-    //!cpp:function::
     ProcessorMetadata(const ProcessorMetadata &) = delete;
-    //!cpp:function::
     ProcessorMetadata& operator= (const ProcessorMetadata &) = delete;
-    //!cpp:function:: Do not use (needed only for pybind11).
+    /// Do not use (needed only for pybind11).
     ~ProcessorMetadata();
 
 private:
@@ -2404,11 +2393,9 @@ public:
      */
     static const char * getFormatExtensionByIndex(int index);
 
-    //!cpp:function::
     Baker(const Baker &) = delete;
-    //!cpp:function::
     Baker& operator= (const Baker &) = delete;
-    //!cpp:function:: Do not use (needed only for pybind11).
+    /// Do not use (needed only for pybind11).
     ~Baker();
 
 private:
@@ -2837,7 +2824,6 @@ public:
     
     GpuShaderCreator(const GpuShaderCreator &) = delete;
     GpuShaderCreator & operator= (const GpuShaderCreator &) = delete;
-
     /// Do not use (needed only for pybind11).
     virtual ~GpuShaderCreator();
 
@@ -3079,7 +3065,6 @@ public:
 
     GpuShaderDesc(const GpuShaderDesc &) = delete;
     GpuShaderDesc& operator= (const GpuShaderDesc &) = delete;
-
     /// Do not use (needed only for pybind11).
     virtual ~GpuShaderDesc();
 
@@ -3198,7 +3183,6 @@ public:
 
     Context(const Context &) = delete;
     Context& operator= (const Context &) = delete;
-
     /// Do not use (needed only for pybind11).
     ~Context();
 
