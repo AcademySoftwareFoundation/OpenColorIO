@@ -1039,7 +1039,7 @@ public:
     Config(const Config &) = delete;
     Config& operator= (const Config &) = delete;
 
-    /// Do not use (needed only for pybind11).
+    // Do not use (needed only for pybind11).
     ~Config();
 
     //!cpp:function:: Control the caching of processors in the config instance.  By default, caching
@@ -1120,7 +1120,7 @@ extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const Config&);
 // getter will return NULL and setter will throw.
 //
 
-class OCIOEXPORT FileRules
+class FileRules
 {
 public:
     /**
@@ -1215,7 +1215,7 @@ public:
     FileRules(const FileRules &) = delete;
     FileRules & operator= (const FileRules &) = delete;
 
-    /// Do not use (needed only for pybind11).
+    // Do not use (needed only for pybind11).
     virtual ~FileRules();
 
 private:
@@ -1259,7 +1259,7 @@ extern OCIOEXPORT std::ostream & operator<< (std::ostream &, const FileRules &);
 // Getters and setters are using the rule position, they will throw if the position is not
 // valid.
 
-class OCIOEXPORT ViewingRules
+class ViewingRules
 {
 public:
     /// Creates ViewingRules for a Config.
@@ -1338,7 +1338,7 @@ public:
 
     ViewingRules(const ViewingRules &) = delete;
     ViewingRules & operator= (const ViewingRules &) = delete;
-    /// Do not use (needed only for pybind11).
+    // Do not use (needed only for pybind11).
     virtual ~ViewingRules();
 
 private:
@@ -1545,7 +1545,7 @@ public:
 
     ColorSpace(const ColorSpace &) = delete;
     ColorSpace& operator= (const ColorSpace &) = delete;
-    /// Do not use (needed only for pybind11).
+    // Do not use (needed only for pybind11).
     ~ColorSpace();
 
 private:
@@ -1664,7 +1664,7 @@ public:
     /// Clear all color spaces.
     void clearColorSpaces();
 
-    /// Do not use (needed only for pybind11).
+    //!cpp:function:: Do not use (needed only for pybind11).
     ~ColorSpaceSet();
 
 private:
@@ -1756,9 +1756,11 @@ public:
     const char * getDescription() const;
     void setDescription(const char * description);
 
+    //!cpp:function::
     Look(const Look &) = delete;
+    //!cpp:function::
     Look& operator= (const Look &) = delete;
-    /// Do not use (needed only for pybind11).
+    //!cpp:function:: Do not use (needed only for pybind11).
     ~Look();
 
 private:
@@ -1840,6 +1842,7 @@ public:
 
     ViewTransform(const ViewTransform &) = delete;
     ViewTransform & operator= (const ViewTransform &) = delete;
+
     /// Do not use (needed only for pybind11).
     ~ViewTransform();
 
@@ -2013,9 +2016,11 @@ public:
                                                     BitDepth outBitDepth,
                                                     OptimizationFlags oFlags) const;
 
+    //!cpp:function::
     Processor(const Processor &) = delete;
+    //!cpp:function::
     Processor & operator= (const Processor &) = delete;
-    /// Do not use (needed only for pybind11).
+    //!cpp:function:: Do not use (needed only for pybind11).
     ~Processor();
 
 private:
@@ -2087,9 +2092,11 @@ public:
     void applyRGB(float * pixel) const;
     void applyRGBA(float * pixel) const;
 
+    //!cpp:function::
     CPUProcessor(const CPUProcessor &) = delete;
+    //!cpp:function::
     CPUProcessor& operator= (const CPUProcessor &) = delete;
-    /// Do not use (needed only for pybind11).
+    //!cpp:function:: Do not use (needed only for pybind11).
     ~CPUProcessor();
 
 private:
@@ -2124,9 +2131,11 @@ public:
     /// Extract the shader information using a custom \ref GpuShaderCreator class.
     void extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const;
     
+    //!cpp:function::
     GPUProcessor(const GPUProcessor &) = delete;
+    //!cpp:function::
     GPUProcessor& operator= (const GPUProcessor &) = delete;
-    /// Do not use (needed only for pybind11).
+    //!cpp:function:: Do not use (needed only for pybind11).
     ~GPUProcessor();
 
 private:
@@ -2164,9 +2173,11 @@ public:
     void addFile(const char * fname);
     void addLook(const char * look);
 
+    //!cpp:function::
     ProcessorMetadata(const ProcessorMetadata &) = delete;
+    //!cpp:function::
     ProcessorMetadata& operator= (const ProcessorMetadata &) = delete;
-    /// Do not use (needed only for pybind11).
+    //!cpp:function:: Do not use (needed only for pybind11).
     ~ProcessorMetadata();
 
 private:
@@ -2293,9 +2304,11 @@ public:
      */
     static const char * getFormatExtensionByIndex(int index);
 
+    //!cpp:function::
     Baker(const Baker &) = delete;
+    //!cpp:function::
     Baker& operator= (const Baker &) = delete;
-    /// Do not use (needed only for pybind11).
+    //!cpp:function:: Do not use (needed only for pybind11).
     ~Baker();
 
 private:
@@ -2724,6 +2737,7 @@ public:
     
     GpuShaderCreator(const GpuShaderCreator &) = delete;
     GpuShaderCreator & operator= (const GpuShaderCreator &) = delete;
+
     /// Do not use (needed only for pybind11).
     virtual ~GpuShaderCreator();
 
@@ -2965,6 +2979,7 @@ public:
 
     GpuShaderDesc(const GpuShaderDesc &) = delete;
     GpuShaderDesc& operator= (const GpuShaderDesc &) = delete;
+
     /// Do not use (needed only for pybind11).
     virtual ~GpuShaderDesc();
 
@@ -3083,6 +3098,7 @@ public:
 
     Context(const Context &) = delete;
     Context& operator= (const Context &) = delete;
+
     /// Do not use (needed only for pybind11).
     ~Context();
 
