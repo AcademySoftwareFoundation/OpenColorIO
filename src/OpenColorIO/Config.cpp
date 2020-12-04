@@ -3396,17 +3396,21 @@ void Config::setFileRules(ConstFileRulesRcPtr fileRules)
 
 const char * Config::getColorSpaceFromFilepath(const char * filePath) const
 {
-    return getImpl()->m_fileRules->getImpl()->getColorSpaceFromFilepath(*this, filePath);
+    return getImpl()->m_fileRules->getImpl()->getColorSpaceFromFilepath(*this,
+                                                                        filePath ? filePath : "");
 }
 
 const char * Config::getColorSpaceFromFilepath(const char * filePath, size_t & ruleIndex) const
 {
-    return getImpl()->m_fileRules->getImpl()->getColorSpaceFromFilepath(*this, filePath, ruleIndex);
+    return getImpl()->m_fileRules->getImpl()->getColorSpaceFromFilepath(*this,
+                                                                        filePath ? filePath : "",
+                                                                        ruleIndex);
 }
 
 bool Config::filepathOnlyMatchesDefaultRule(const char * filePath) const
 {
-    return getImpl()->m_fileRules->getImpl()->filepathOnlyMatchesDefaultRule(*this, filePath);
+    return getImpl()->m_fileRules->getImpl()->filepathOnlyMatchesDefaultRule(*this,
+                                                                             filePath ? filePath : "");
 }
 
 

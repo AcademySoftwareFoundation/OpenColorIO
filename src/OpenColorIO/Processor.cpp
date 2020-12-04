@@ -583,7 +583,7 @@ void Processor::Impl::setColorSpaceConversion(const Config & config,
         throw Exception("Internal error: Processor should be empty");
     }
 
-    BuildColorSpaceOps(m_ops, config, context, srcColorSpace, dstColorSpace, false);
+    BuildColorSpaceOps(m_ops, config, context, srcColorSpace, dstColorSpace, true);
 
     std::ostringstream desc;
     desc << "Color space conversion from " << srcColorSpace->getName()

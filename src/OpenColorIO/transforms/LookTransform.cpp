@@ -290,7 +290,7 @@ void RunLookTokens(OpRcPtrVec & ops,
                 currentColorSpace.get() != processColorSpace.get())
             {
                 BuildColorSpaceOps(ops, config, context,
-                                   currentColorSpace, processColorSpace, false);
+                                   currentColorSpace, processColorSpace, true);
                 currentColorSpace = processColorSpace;
             }
 
@@ -352,8 +352,7 @@ void BuildLookOps(OpRcPtrVec & ops,
     // If current color space is already the dst space skip the conversion.
     if (!skipColorSpaceConversion && currentColorSpace.get() != dst.get())
     {
-        BuildColorSpaceOps(ops, config, context,
-                           currentColorSpace, dst, false);
+        BuildColorSpaceOps(ops, config, context, currentColorSpace, dst, true);
     }
 }
 

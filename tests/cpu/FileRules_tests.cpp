@@ -487,6 +487,10 @@ OCIO_ADD_TEST(FileRules, rules_filepattern)
     OCIO_CHECK_EQUAL(rulePosition, 1); // Default rule.
     config->getColorSpaceFromFilepath("/An/Arbitrary.exr/Path/MyFileexr", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 1); // Default rule.
+    config->getColorSpaceFromFilepath("", rulePosition);
+    OCIO_CHECK_EQUAL(rulePosition, 1); // Default rule.
+    config->getColorSpaceFromFilepath(nullptr, rulePosition);
+    OCIO_CHECK_EQUAL(rulePosition, 1); // Default rule.
 
     OCIO_CHECK_NO_THROW(rules->setPattern(0, "gamma"));
     config->setFileRules(rules);
@@ -984,6 +988,10 @@ file_rules:
     auto rules = config->getFileRules();
     OCIO_REQUIRE_ASSERT(rules);
     OCIO_REQUIRE_EQUAL(rules->getNumEntries(), 1);
+    OCIO_CHECK_EQUAL(std::string(rules->getName(0)), OCIO::FileRuleUtils::DefaultName);
+    OCIO_CHECK_EQUAL(std::string(rules->getColorSpace(0)), "cs1");
+    OCIO_CHECK_EQUAL(std::string(config->getColorSpaceFromFilepath("anything")), "cs1");
+
     // File defined default role is preserved.
     auto cs = config->getColorSpace(OCIO::ROLE_DEFAULT);
     OCIO_CHECK_EQUAL(std::string("raw"), cs->getName());
