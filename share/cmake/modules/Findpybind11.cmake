@@ -178,6 +178,8 @@ if(NOT pybind11_FOUND)
             GIT_TAG "v${pybind11_FIND_VERSION}"
             GIT_CONFIG advice.detachedHead=false
             GIT_SHALLOW TRUE
+            # Don't update git submodules (tools/clang)
+            GIT_SUBMODULES ""
             PREFIX "${_EXT_BUILD_ROOT}/pybind11"
             BUILD_BYPRODUCTS ${pybind11_INCLUDE_DIR}
             CMAKE_ARGS ${pybind11_CMAKE_ARGS}
