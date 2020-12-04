@@ -420,8 +420,7 @@ enum Allocation {
 /// Used when there is a choice of hardware shader language.
 enum GpuLanguage
 {
-    GPU_LANGUAGE_UNKNOWN = 0,
-    GPU_LANGUAGE_CG,                ///< Nvidia Cg shader
+    GPU_LANGUAGE_CG = 0,            ///< Nvidia Cg shader
     GPU_LANGUAGE_GLSL_1_2,          ///< OpenGL Shading Language
     GPU_LANGUAGE_GLSL_1_3,          ///< OpenGL Shading Language
     GPU_LANGUAGE_GLSL_4_0,          ///< OpenGL Shading Language
