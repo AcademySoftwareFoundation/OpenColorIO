@@ -116,7 +116,6 @@ void bindPyTypes(py::module & m)
         .export_values();
 
     py::enum_<GpuLanguage>(m, "GpuLanguage")
-        .value("GPU_LANGUAGE_UNKNOWN", GPU_LANGUAGE_UNKNOWN)
         .value("GPU_LANGUAGE_CG", GPU_LANGUAGE_CG)
         .value("GPU_LANGUAGE_GLSL_1_2", GPU_LANGUAGE_GLSL_1_2)
         .value("GPU_LANGUAGE_GLSL_1_3", GPU_LANGUAGE_GLSL_1_3)

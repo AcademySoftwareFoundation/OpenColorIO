@@ -61,7 +61,7 @@ if(OCIO_BUILD_PYTHON)
 
     # pybind11
     # https://github.com/pybind/pybind11
-    find_package(pybind11 2.4.3 REQUIRED)
+    find_package(pybind11 2.6.1 REQUIRED)
 endif()
 
 if(OCIO_BUILD_DOCS)
