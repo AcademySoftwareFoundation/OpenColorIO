@@ -992,7 +992,7 @@ file_rules:
     OCIO_CHECK_EQUAL(std::string(rules->getColorSpace(0)), "cs1");
     OCIO_CHECK_EQUAL(std::string(config->getColorSpaceFromFilepath("anything")), "cs1");
 
-    // File defined default role is preserved.
+    // The color space of the default role is preserved.
     auto cs = config->getColorSpace(OCIO::ROLE_DEFAULT);
     OCIO_CHECK_EQUAL(std::string("raw"), cs->getName());
 }
