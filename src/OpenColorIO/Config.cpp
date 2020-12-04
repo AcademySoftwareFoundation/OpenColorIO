@@ -4055,32 +4055,101 @@ void Config::Impl::checkVersionConsistency(ConstTransformRcPtr & transform) cons
 {
     if (transform)
     {
-        if (ConstExponentTransformRcPtr ex = DynamicPtrCast<const ExponentTransform>(transform))
+        if (ConstBuiltinTransformRcPtr ex = DynamicPtrCast<const BuiltinTransform>(transform))
+        {
+            if (m_majorVersion < 2)
+            {
+                throw Exception("Only config version 2 (or higher) can have BuiltinInTransform.");
+            }
+        }
+        else if (ConstCDLTransformRcPtr cdl = DynamicPtrCast<const CDLTransform>(transform))
+        {
+            if (m_majorVersion < 2 && cdl->getStyle() != CDL_TRANSFORM_DEFAULT)
+            {
+                throw Exception("Only config version 2 (or higher) can have style for "
+                               "CDLTransform.");
+            }
+        }
+        else if (DynamicPtrCast<const DisplayViewTransform>(transform))
+        {
+            if (m_majorVersion < 2)
+            {
+                throw Exception("Only config version 2 (or higher) can have DisplayViewTransform.");
+            }
+        }
+        else if (ConstExponentTransformRcPtr ex =
+                 DynamicPtrCast<const ExponentTransform>(transform))
         {
             if (m_majorVersion < 2 && ex->getNegativeStyle() != NEGATIVE_CLAMP)
             {
-                throw Exception("Config version 1 only supports ExponentTransform clamping negative values.");
+                throw Exception("Config version 1 only supports ExponentTransform clamping "
+                                "negative values.");
             }
         }
         else if (DynamicPtrCast<const ExponentWithLinearTransform>(transform))
         {
             if (m_majorVersion < 2)
             {
-                throw Exception("Only config version 2 (or higher) can have ExponentWithLinearTransform.");
+                throw Exception("Only config version 2 (or higher) can have "
+                                "ExponentWithLinearTransform.");
             }
         }
         else if (DynamicPtrCast<const ExposureContrastTransform>(transform))
         {
             if (m_majorVersion < 2)
             {
-                throw Exception("Only config version 2 (or higher) can have ExposureContrastTransform.");
+                throw Exception("Only config version 2 (or higher) can have "
+                                "ExposureContrastTransform.");
+            }
+        }
+        else if (ConstFileTransformRcPtr ft = DynamicPtrCast<const FileTransform>(transform))
+        {
+            if (m_majorVersion < 2)
+            {
+                if (ft->getInterpolation() == INTERP_CUBIC)
+                {
+                    throw Exception("Only config version 2 (or higher) can use 'cubic' "
+                                    "interpolation with FileTransform.");
+
+                }
+                if (ft->getCDLStyle() != CDL_TRANSFORM_DEFAULT)
+                {
+                    throw Exception("Only config version 2 (or higher) can use CDL style' "
+                                    "for FileTransform.");
+
+                }
             }
         }
         else if (DynamicPtrCast<const FixedFunctionTransform>(transform))
         {
             if (m_majorVersion < 2)
             {
-                throw Exception("Only config version 2 (or higher) can have FixedFunctionTransform.");
+                throw Exception("Only config version 2 (or higher) can have "
+                                "FixedFunctionTransform.");
+            }
+        }
+        else if (DynamicPtrCast<const GradingPrimaryTransform>(transform))
+        {
+            if (m_majorVersion < 2)
+            {
+                throw Exception("Only config version 2 (or higher) can have "
+                                "GradingPrimaryTransform.");
+            }
+        }
+        else if (DynamicPtrCast<const GradingRGBCurveTransform>(transform))
+        {
+            if (m_majorVersion < 2)
+            {
+                throw Exception("Only config version 2 (or higher) can have "
+                                "GradingRGBCurveTransform.");
+            }
+        }
+        else if (DynamicPtrCast<const GradingToneTransform>(transform))
+        {
+            if (m_majorVersion < 2)
+            {
+                throw Exception("Only config version 2 (or higher) can have "
+                                "GradingToneTransform.");
             }
         }
         else if (DynamicPtrCast<const LogAffineTransform>(transform))

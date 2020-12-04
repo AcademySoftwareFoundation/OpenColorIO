@@ -83,28 +83,6 @@ void AddBoolUniform(GpuShaderCreatorRcPtr & shaderCreator,
     }
 }
 
-DynamicPropertyGradingToneImplRcPtr GetOrAddShaderProp(GpuShaderCreatorRcPtr & shaderCreator,
-                                                       DynamicPropertyGradingToneImplRcPtr & prop)
-{
-    // Dynamic property is decoupled and added to the shader (or only retrieved if it has
-    // already been added by another op).
-    DynamicPropertyGradingToneImplRcPtr shaderProp;
-    if (shaderCreator->hasDynamicProperty(DYNAMIC_PROPERTY_GRADING_TONE))
-    {
-        // Dynamic property might have been added for a different type of primary that
-        // requires different uniforms using the same dynmaic property.
-        auto dp = shaderCreator->getDynamicProperty(DYNAMIC_PROPERTY_GRADING_TONE);
-        shaderProp = OCIO_DYNAMIC_POINTER_CAST<DynamicPropertyGradingToneImpl>(dp);
-    }
-    else
-    {
-        shaderProp = prop->createEditableCopy();
-        DynamicPropertyRcPtr newProp = shaderProp;
-        shaderCreator->addDynamicProperty(newProp);
-    }
-    return shaderProp;
-}
-
 void AddGTProperties(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & st,
                      ConstGradingToneOpDataRcPtr & gtData,
                      GTProperties & propNames)
@@ -113,7 +91,7 @@ void AddGTProperties(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & st,
     if (gtData->isDynamic())
     {
         // Build names. No need to add an index to the name to avoid collisions as the dynamic
-        // properties are shared i.e. only one instance.
+        // properties are unique.
         static const std::string opPrefix{ "grading_tone" };
 
         propNames.blacksR = BuildResourceName(shaderCreator, opPrefix, propNames.blacksR);
@@ -155,10 +133,10 @@ void AddGTProperties(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & st,
 
         propNames.localBypass = BuildResourceName(shaderCreator, opPrefix, propNames.localBypass);
 
-        // Dynamic property is decoupled and added to the shader (or only retrieved if it has
-        // already been added by another op). Different style do use different members of the
-        // value and thus will require different uniforms.
-        DynamicPropertyGradingToneImplRcPtr shaderProp = GetOrAddShaderProp(shaderCreator, prop);
+        // Property is decoupled and added to shader creator.
+        DynamicPropertyGradingToneImplRcPtr shaderProp = prop->createEditableCopy();
+        DynamicPropertyRcPtr newProp = shaderProp;
+        shaderCreator->addDynamicProperty(newProp);
 
         // Use the shader dynamic property to bind the uniforms.
         const auto & value = shaderProp->getValue();

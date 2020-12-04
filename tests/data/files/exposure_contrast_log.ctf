@@ -4,10 +4,9 @@
       <ECParams exposure="-1.5" contrast="0.5" gamma="1.2" pivot="0.18" />
       <DynamicParameter param="EXPOSURE" />
       <DynamicParameter param="CONTRAST" />
-      <DynamicParameter param="GAMMA" />
    </ExposureContrast>
    <ExposureContrast inBitDepth="32f" outBitDepth="32f" style="logRev">
       <ECParams exposure="-1.5" contrast="0.5" gamma="1.2" pivot="0.18" />
-      <DynamicParameter param="EXPOSURE" />
+      <DynamicParameter param="GAMMA" />
    </ExposureContrast>
 </ProcessList>
