@@ -33,7 +33,6 @@ DynamicPropertyRcPtr OpCPU::getDynamicProperty(DynamicPropertyType type) const
     throw Exception("Op does not implement dynamic property.");
 }
 
-
 OpData::OpData()
     :   m_metadata()
 { }
@@ -367,7 +366,7 @@ void OpRcPtrVec::validate() const
 namespace
 {
 template<typename T>
-void UnifyDynamicProperty(OpRcPtr op, std::shared_ptr<T> & prop, DynamicPropertyType type)
+void ValidateDynamicProperty(OpRcPtr op, std::shared_ptr<T> & prop, DynamicPropertyType type)
 {
     if (op->hasDynamicProperty(type))
     {
@@ -379,16 +378,40 @@ void UnifyDynamicProperty(OpRcPtr op, std::shared_ptr<T> & prop, DynamicProperty
         }
         else
         {
-            // Share the property.
-            op->replaceDynamicProperty(type, prop);
+            // If the property is already initialized, it means that it is already being used
+            // elsewhere in this OpVec.
+            std::ostringstream os;
+            switch (type)
+            {
+            case DYNAMIC_PROPERTY_EXPOSURE:
+                os << "Exposure";
+                break;
+            case DYNAMIC_PROPERTY_CONTRAST:
+                os << "Contrast";
+                break;
+            case DYNAMIC_PROPERTY_GAMMA:
+                os << "Gamma";
+                break;
+            case DYNAMIC_PROPERTY_GRADING_PRIMARY:
+                os << "Grading primary";
+                break;
+            case DYNAMIC_PROPERTY_GRADING_RGBCURVE:
+                os << "Grading RGB curve";
+                break;
+            case DYNAMIC_PROPERTY_GRADING_TONE:
+                os << "Grading tone";
+                break;
+            }
+            os << " dynamic property can only be there once.";
+            throw Exception(os.str().c_str());
         }
     }
 }
 }
 
-// This ensures that when a dynamic property on a processor is modified, all ops that respond to
-// that property (and which are enabled) are synchronized.
-void OpRcPtrVec::unifyDynamicProperties()
+// Throw if there is more than one property of a given type that is currently dynamic.  There may
+// be more than one property of a given type, but they both may not be dynamic at the same time.
+void OpRcPtrVec::validateDynamicProperties()
 {
     // Empty shared pointers.
     DynamicPropertyDoubleImplRcPtr dpExposure;
@@ -400,13 +423,13 @@ void OpRcPtrVec::unifyDynamicProperties()
 
     for (auto op : m_ops)
     {
-        // Initialize or share property.
-        UnifyDynamicProperty(op, dpExposure, DYNAMIC_PROPERTY_EXPOSURE);
-        UnifyDynamicProperty(op, dpContrast, DYNAMIC_PROPERTY_CONTRAST);
-        UnifyDynamicProperty(op, dpGamma, DYNAMIC_PROPERTY_GAMMA);
-        UnifyDynamicProperty(op, dpGradingPrimary, DYNAMIC_PROPERTY_GRADING_PRIMARY);
-        UnifyDynamicProperty(op, dpGradingRGBCurve, DYNAMIC_PROPERTY_GRADING_RGBCURVE);
-        UnifyDynamicProperty(op, dpGradingTone, DYNAMIC_PROPERTY_GRADING_TONE);
+        // Each property can only be there once.
+        ValidateDynamicProperty(op, dpExposure, DYNAMIC_PROPERTY_EXPOSURE);
+        ValidateDynamicProperty(op, dpContrast, DYNAMIC_PROPERTY_CONTRAST);
+        ValidateDynamicProperty(op, dpGamma, DYNAMIC_PROPERTY_GAMMA);
+        ValidateDynamicProperty(op, dpGradingPrimary, DYNAMIC_PROPERTY_GRADING_PRIMARY);
+        ValidateDynamicProperty(op, dpGradingRGBCurve, DYNAMIC_PROPERTY_GRADING_RGBCURVE);
+        ValidateDynamicProperty(op, dpGradingTone, DYNAMIC_PROPERTY_GRADING_TONE);
     }
 }
 

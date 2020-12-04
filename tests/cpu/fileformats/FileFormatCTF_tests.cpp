@@ -3462,7 +3462,7 @@ OCIO_ADD_TEST(FileFormatCTF, exposure_contrast_log)
     OCIO_CHECK_ASSERT(pEC->isDynamic());
     OCIO_CHECK_ASSERT(pEC->getExposureProperty()->isDynamic());
     OCIO_CHECK_ASSERT(pEC->getContrastProperty()->isDynamic());
-    OCIO_CHECK_ASSERT(pEC->getGammaProperty()->isDynamic());
+    OCIO_CHECK_ASSERT(!pEC->getGammaProperty()->isDynamic());
 
     OCIO_REQUIRE_ASSERT(opList[1]);
     auto pECRev = std::dynamic_pointer_cast<const OCIO::ExposureContrastOpData>(opList[1]);
@@ -3470,9 +3470,9 @@ OCIO_ADD_TEST(FileFormatCTF, exposure_contrast_log)
 
     OCIO_CHECK_EQUAL(pECRev->getStyle(), OCIO::ExposureContrastOpData::STYLE_LOGARITHMIC_REV);
     OCIO_CHECK_ASSERT(pECRev->isDynamic());
-    OCIO_CHECK_ASSERT(pECRev->getExposureProperty()->isDynamic());
+    OCIO_CHECK_ASSERT(!pECRev->getExposureProperty()->isDynamic());
     OCIO_CHECK_ASSERT(!pECRev->getContrastProperty()->isDynamic());
-    OCIO_CHECK_ASSERT(!pECRev->getGammaProperty()->isDynamic());
+    OCIO_CHECK_ASSERT(pECRev->getGammaProperty()->isDynamic());
 }
 
 OCIO_ADD_TEST(FileFormatCTF, exposure_contrast_linear)

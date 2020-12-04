@@ -188,6 +188,7 @@ OCIO_ADD_TEST(GradingPrimaryOpCPU, log)
 
     gd->setValue(gdp);
     gd->getDynamicPropertyInternal()->makeDynamic();
+
     OCIO::ConstGradingPrimaryOpDataRcPtr gdc = gd;
     OCIO::ConstOpCPURcPtr op;
     OCIO_CHECK_NO_THROW(op = OCIO::GetGradingPrimaryCPURenderer(gdc));
@@ -195,10 +196,16 @@ OCIO_ADD_TEST(GradingPrimaryOpCPU, log)
     OCIO_CHECK_NO_THROW(op->apply(TS1::input_32f, res, TS1::num_samples));
     ValidateImage(TS1::expected_32f, res, TS1::num_samples, __LINE__);
 
+    // The CPUOp has a copy of gd.  Get the dynamic property ptr in order to change the value for
+    // the apply.
+    OCIO::DynamicPropertyGradingPrimaryRcPtr dpgp;
+    auto dp = op->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_GRADING_PRIMARY);
+    OCIO_CHECK_NO_THROW(dpgp = OCIO::DynamicPropertyValue::AsGradingPrimary(dp));
+
     gdp.m_clampBlack = TS1::clampBlack;
     gdp.m_clampWhite = TS1::clampWhite;
 
-    gd->setValue(gdp);
+    dpgp->setValue(gdp);
     OCIO_CHECK_NO_THROW(op->apply(TS1::input_32f, res, TS1::num_samples));
     ValidateImage(TS1::expected_clamp_32f, res, TS1::num_samples, __LINE__);
 
@@ -207,7 +214,7 @@ OCIO_ADD_TEST(GradingPrimaryOpCPU, log)
     gdp.m_pivotBlack = TS1::pivotBlack;
     gdp.m_pivotWhite = TS1::pivotWhite;
 
-    gd->setValue(gdp);
+    dpgp->setValue(gdp);
     OCIO_CHECK_NO_THROW(op->apply(TS1::input_32f, res, TS1::num_samples));
     ValidateImage(TS1::expected_wbpivot_32f, res, TS1::num_samples, __LINE__);
 
@@ -227,12 +234,15 @@ OCIO_ADD_TEST(GradingPrimaryOpCPU, log)
     OCIO_CHECK_NO_THROW(op->apply(TS1::expected_32f, res, TS1::num_samples));
     ValidateImage(TS1::input_32f, res, TS1::num_samples, __LINE__);
 
+    dp = op->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_GRADING_PRIMARY);
+    OCIO_CHECK_NO_THROW(dpgp = OCIO::DynamicPropertyValue::AsGradingPrimary(dp));
+
     // Clamping prevents full inversion. Skip.
 
     gdp.m_pivotBlack = TS1::pivotBlack;
     gdp.m_pivotWhite = TS1::pivotWhite;
 
-    gd->setValue(gdp);
+    dpgp->setValue(gdp);
     OCIO_CHECK_NO_THROW(op->apply(TS1::expected_wbpivot_32f, res, TS1::num_samples));
     ValidateImage(TS1::input_32f, res, TS1::num_samples, __LINE__);
 }

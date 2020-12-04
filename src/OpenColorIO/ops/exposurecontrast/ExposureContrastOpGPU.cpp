@@ -45,21 +45,17 @@ std::string AddProperty(GpuShaderCreatorRcPtr & shaderCreator,
         // that uniform is declared only once, but multiple instances of the shader code can
         // reference that name.
         // Note: No need to add an index to the name to avoid collisions as the dynamic properties
-        // are shared i.e. only one instance.
+        // are unique.
         finalName = BuildResourceName(shaderCreator, "exposure_contrast", name);
 
-        // If property is already there, it means uniform was also declared, so name can be used.
-        if (!shaderCreator->hasDynamicProperty(prop->getType()))
-        {
-            // Property is decoupled and added to shader creator.
-            auto shaderProp = prop->createEditableCopy();
-            DynamicPropertyRcPtr newProp = shaderProp;
-            shaderCreator->addDynamicProperty(newProp);
-            auto newPropDouble = DynamicPropertyValue::AsDouble(newProp);
+        // Property is decoupled and added to shader creator.
+        auto shaderProp = prop->createEditableCopy();
+        DynamicPropertyRcPtr newProp = shaderProp;
+        shaderCreator->addDynamicProperty(newProp);
+        auto newPropDouble = DynamicPropertyValue::AsDouble(newProp);
 
-            // Uniform is added, connected to the shader creator instance of the dynamic property.
-            AddUniform(shaderCreator, newPropDouble, finalName);
-        }
+        // Uniform is added, connected to the shader creator instance of the dynamic property.
+        AddUniform(shaderCreator, newPropDouble, finalName);
     }
     else
     {
