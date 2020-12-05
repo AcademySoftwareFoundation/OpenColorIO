@@ -273,7 +273,7 @@ void Prepare2ECDynamic(OCIOGPUTest & test, bool firstDyn, bool secondDyn)
     ec2->setContrast(0.5);
     ec2->setGamma(1.5);
 
-    if (firstDyn) ec1->makeExposureDynamic();
+    if (firstDyn) ec1->makeContrastDynamic();
     if (secondDyn) ec2->makeExposureDynamic();
 
     OCIO::GroupTransformRcPtr grp = OCIO::GroupTransform::Create();
@@ -291,13 +291,29 @@ void Prepare2ECDynamic(OCIOGPUTest & test, bool firstDyn, bool secondDyn)
         {
             initializeGPUDynamicProperties();
 
-            m_exposureCPU->setValue(1.1);
-            m_exposureGPU->setValue(m_exposureCPU->getValue());
+            if (m_contrastCPU)
+            {
+                m_contrastCPU->setValue(0.5);
+                m_contrastGPU->setValue(m_contrastCPU->getValue());
+            }
+            if (m_exposureCPU)
+            {
+                m_exposureCPU->setValue(1.1);
+                m_exposureGPU->setValue(m_exposureCPU->getValue());
+            }
         }
         void retest2()
         {
-            m_exposureCPU->setValue(2.1);
-            m_exposureGPU->setValue(m_exposureCPU->getValue());
+            if (m_contrastCPU)
+            {
+                m_contrastCPU->setValue(0.7);
+                m_contrastGPU->setValue(m_contrastCPU->getValue());
+            }
+            if (m_exposureCPU)
+            {
+                m_exposureCPU->setValue(2.1);
+                m_exposureGPU->setValue(m_exposureCPU->getValue());
+            }
         }
     };
 

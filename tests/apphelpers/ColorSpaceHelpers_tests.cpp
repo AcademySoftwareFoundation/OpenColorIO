@@ -185,13 +185,17 @@ OCIO_ADD_TEST(ColorSpaceMenuHelper, categories)
         menuHelper
             = OCIO::ColorSpaceMenuHelper::Create(config,
                                                  nullptr,
-                                                 OCIO::ColorSpaceCategoryNames::Input));
+                                                 OCIO::ColorSpaceCategoryNames::Input,
+                                                 false));
 
     OCIO_REQUIRE_EQUAL(menuHelper->getNumColorSpaces(), 4);
 
     // Select 'rendering' and include roles.
 
-    OCIO_CHECK_NO_THROW(menuHelper = OCIO::ColorSpaceMenuHelper::Create(config, "rendering", nullptr));
+    OCIO_CHECK_NO_THROW(menuHelper = OCIO::ColorSpaceMenuHelper::Create(config,
+                                                                        "rendering",
+                                                                        nullptr,
+                                                                        false));
 
     // Selected role supersedes the role adds.
     OCIO_REQUIRE_EQUAL(menuHelper->getNumColorSpaces(), 1);
@@ -200,27 +204,56 @@ OCIO_ADD_TEST(ColorSpaceMenuHelper, categories)
 
     // Use custom categories.
 
-    OCIO_CHECK_NO_THROW(menuHelper = OCIO::ColorSpaceMenuHelper::Create(config, nullptr, "input"));
+    OCIO_CHECK_NO_THROW(menuHelper = OCIO::ColorSpaceMenuHelper::Create(config,
+                                                                        nullptr,
+                                                                        "input",
+                                                                        false));
 
     OCIO_REQUIRE_EQUAL(menuHelper->getNumColorSpaces(), 4);
 
+    // Use custom categories, including named transforms.
+
+    OCIO_CHECK_NO_THROW(menuHelper = OCIO::ColorSpaceMenuHelper::Create(config,
+                                                                        nullptr,
+                                                                        "input",
+                                                                        true));
+
+    OCIO_REQUIRE_EQUAL(menuHelper->getNumColorSpaces(), 6);
+
     // Use null categories & null role.
 
-    OCIO_CHECK_NO_THROW(menuHelper = OCIO::ColorSpaceMenuHelper::Create(config, nullptr, nullptr));
+    OCIO_CHECK_NO_THROW(menuHelper = OCIO::ColorSpaceMenuHelper::Create(config,
+                                                                        nullptr,
+                                                                        nullptr,
+                                                                        false));
 
     OCIO_REQUIRE_EQUAL(menuHelper->getNumColorSpaces(), 12);  // All color spaces.
 
+    // Use null categories & null role.
+
+    OCIO_CHECK_NO_THROW(menuHelper = OCIO::ColorSpaceMenuHelper::Create(config,
+                                                                        nullptr,
+                                                                        nullptr,
+                                                                        true));
+
+    OCIO_REQUIRE_EQUAL(menuHelper->getNumColorSpaces(), 15);  // All color spaces and named transforms.
+
     // Use null categories with a role.
 
-    OCIO_CHECK_NO_THROW(menuHelper = OCIO::ColorSpaceMenuHelper::Create(config, "rendering", nullptr));
+    OCIO_CHECK_NO_THROW(menuHelper = OCIO::ColorSpaceMenuHelper::Create(config,
+                                                                        "rendering",
+                                                                        nullptr,
+                                                                        false));
 
     OCIO_REQUIRE_EQUAL(menuHelper->getNumColorSpaces(), 1);
     OCIO_CHECK_EQUAL(menuHelper->getColorSpaceName(0), std::string("lin_1"));
 
     // Use an arbitrary (but existing) category i.e. user could use some custom categories.
 
-    OCIO_CHECK_NO_THROW(
-        menuHelper = OCIO::ColorSpaceMenuHelper::Create(config, nullptr, "lut_input_space"));
+    OCIO_CHECK_NO_THROW(menuHelper = OCIO::ColorSpaceMenuHelper::Create(config,
+                                                                        nullptr,
+                                                                        "lut_input_space",
+                                                                        false));
 
     OCIO_REQUIRE_EQUAL(menuHelper->getNumColorSpaces(), 3);
     OCIO_CHECK_EQUAL(menuHelper->getColorSpaceName(0), std::string("lut_input_1"));
@@ -229,8 +262,10 @@ OCIO_ADD_TEST(ColorSpaceMenuHelper, categories)
 
     // Use categories and a role.
 
-    OCIO_CHECK_NO_THROW(
-        menuHelper = OCIO::ColorSpaceMenuHelper::Create(config, "rendering", "lut_input_space"));
+    OCIO_CHECK_NO_THROW(menuHelper = OCIO::ColorSpaceMenuHelper::Create(config,
+                                                                        "rendering",
+                                                                        "lut_input_space",
+                                                                        false));
 
     OCIO_REQUIRE_EQUAL(menuHelper->getNumColorSpaces(),  1);
 
@@ -241,18 +276,38 @@ OCIO_ADD_TEST(ColorSpaceMenuHelper, categories)
         OCIO::MuteLogging guard;
 
         // Return all the color spaces.
-        OCIO_CHECK_NO_THROW(
-            menuHelper = OCIO::ColorSpaceMenuHelper::Create(config, nullptr, "unknown_category"));
+        OCIO_CHECK_NO_THROW(menuHelper = OCIO::ColorSpaceMenuHelper::Create(config,
+                                                                            nullptr,
+                                                                            "unknown_category",
+                                                                            false));
         OCIO_REQUIRE_EQUAL(menuHelper->getNumColorSpaces(), 12);
+
+        // Return all the color spaces and named transforms.
+        OCIO_CHECK_NO_THROW(menuHelper = OCIO::ColorSpaceMenuHelper::Create(config,
+                                                                            nullptr,
+                                                                            "unknown_category",
+                                                                            true));
+        OCIO_REQUIRE_EQUAL(menuHelper->getNumColorSpaces(), 15);
 
         // Return all the color spaces.
-        OCIO_CHECK_NO_THROW(
-            menuHelper = OCIO::ColorSpaceMenuHelper::Create(config, "unknown_role", nullptr));
+        OCIO_CHECK_NO_THROW(menuHelper = OCIO::ColorSpaceMenuHelper::Create(config,
+                                                                            "unknown_role",
+                                                                            nullptr,
+                                                                            false));
         OCIO_REQUIRE_EQUAL(menuHelper->getNumColorSpaces(), 12);
 
+        // Return all the color spaces and named transforms.
+        OCIO_CHECK_NO_THROW(menuHelper = OCIO::ColorSpaceMenuHelper::Create(config,
+                                                                            "unknown_role",
+                                                                            nullptr,
+                                                                            true));
+        OCIO_REQUIRE_EQUAL(menuHelper->getNumColorSpaces(), 15);
+
         // Only return the color space associated to the role.
-        OCIO_CHECK_NO_THROW(
-            menuHelper = OCIO::ColorSpaceMenuHelper::Create(config, "rendering", "unknown_category"));
+        OCIO_CHECK_NO_THROW(menuHelper = OCIO::ColorSpaceMenuHelper::Create(config,
+                                                                            "rendering",
+                                                                            "unknown_category",
+                                                                            false));
         OCIO_REQUIRE_EQUAL(menuHelper->getNumColorSpaces(), 1);
     }
 }
@@ -270,11 +325,11 @@ OCIO_ADD_TEST(ColorSpaceMenuHelper, input_color_transformation)
     //
 
     OCIO::ColorSpaceMenuHelperRcPtr inputMenuHelper;
-    OCIO_CHECK_NO_THROW(
-        inputMenuHelper
+    OCIO_CHECK_NO_THROW(inputMenuHelper 
             = OCIO::ColorSpaceMenuHelper::Create(config,
                                                  nullptr,
-                                                 OCIO::ColorSpaceCategoryNames::Input));
+                                                 OCIO::ColorSpaceCategoryNames::Input,
+                                                 false));
 
     OCIO_REQUIRE_EQUAL(inputMenuHelper->getNumColorSpaces(), 4);
 
@@ -317,7 +372,8 @@ OCIO_ADD_TEST(ColorSpaceMenuHelper, input_color_transformation)
         workingMenuHelper
             =   OCIO::ColorSpaceMenuHelper::Create(config,
                                                    nullptr,
-                                                   OCIO::ColorSpaceCategoryNames::SceneLinearWorkingSpace));
+                                                   OCIO::ColorSpaceCategoryNames::SceneLinearWorkingSpace,
+                                                   false));
 
     OCIO_REQUIRE_EQUAL(workingMenuHelper->getNumColorSpaces(), 2);
 
@@ -358,6 +414,23 @@ OCIO_ADD_TEST(ColorSpaceMenuHelper, input_color_transformation)
         OCIO_CHECK_EQUAL(values[3], 1.);
     }
 
+    // Repeat including named transforms.
+
+    OCIO_CHECK_NO_THROW(
+        workingMenuHelper
+            =   OCIO::ColorSpaceMenuHelper::Create(config,
+                                                   nullptr,
+                                                   OCIO::ColorSpaceCategoryNames::Input,
+                                                   true));
+
+    OCIO_REQUIRE_EQUAL(workingMenuHelper->getNumColorSpaces(), 6);
+
+    OCIO_CHECK_EQUAL(workingMenuHelper->getColorSpaceName(0), std::string("in_1"));
+    OCIO_CHECK_EQUAL(workingMenuHelper->getColorSpaceName(1), std::string("in_2"));
+    OCIO_CHECK_EQUAL(workingMenuHelper->getColorSpaceName(2), std::string("in_3"));
+    OCIO_CHECK_EQUAL(workingMenuHelper->getColorSpaceName(3), std::string("lut_input_3"));
+    OCIO_CHECK_EQUAL(workingMenuHelper->getColorSpaceName(4), std::string("named_transform1"));
+    OCIO_CHECK_EQUAL(workingMenuHelper->getColorSpaceName(5), std::string("named_transform3"));
 }
 
 OCIO_ADD_TEST(ColorSpaceMenuHelper, additional_color_space)
@@ -378,7 +451,8 @@ OCIO_ADD_TEST(ColorSpaceMenuHelper, additional_color_space)
         menuHelper
             = OCIO::ColorSpaceMenuHelper::Create(config,
                                                  nullptr,
-                                                 OCIO::ColorSpaceCategoryNames::Input));
+                                                 OCIO::ColorSpaceCategoryNames::Input,
+                                                 false));
 
     OCIO_REQUIRE_EQUAL(menuHelper->getNumColorSpaces(), 4);
 

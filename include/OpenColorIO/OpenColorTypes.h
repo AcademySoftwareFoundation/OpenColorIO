@@ -52,6 +52,10 @@ class OCIOEXPORT Look;
 typedef OCIO_SHARED_PTR<const Look> ConstLookRcPtr;
 typedef OCIO_SHARED_PTR<Look> LookRcPtr;
 
+class OCIOEXPORT NamedTransform;
+typedef OCIO_SHARED_PTR<const NamedTransform> ConstNamedTransformRcPtr;
+typedef OCIO_SHARED_PTR<NamedTransform> NamedTransformRcPtr;
+
 class OCIOEXPORT ViewTransform;
 typedef OCIO_SHARED_PTR<const ViewTransform> ConstViewTransformRcPtr;
 typedef OCIO_SHARED_PTR<ViewTransform> ViewTransformRcPtr;
@@ -280,6 +284,13 @@ enum ColorSpaceVisibility
     COLORSPACE_ALL
 };
 
+enum NamedTransformVisibility
+{
+    NAMEDTRANSFORM_ACTIVE = 0,
+    NAMEDTRANSFORM_INACTIVE,
+    NAMEDTRANSFORM_ALL
+};
+
 enum ViewType
 {
     VIEW_SHARED = 0,
@@ -409,8 +420,7 @@ enum Allocation {
 /// Used when there is a choice of hardware shader language.
 enum GpuLanguage
 {
-    GPU_LANGUAGE_UNKNOWN = 0,
-    GPU_LANGUAGE_CG,                ///< Nvidia Cg shader
+    GPU_LANGUAGE_CG = 0,            ///< Nvidia Cg shader
     GPU_LANGUAGE_GLSL_1_2,          ///< OpenGL Shading Language
     GPU_LANGUAGE_GLSL_1_3,          ///< OpenGL Shading Language
     GPU_LANGUAGE_GLSL_4_0,          ///< OpenGL Shading Language
