@@ -109,7 +109,7 @@ the result of :cpp:func:``Config::getProcessor``.
          **Note**
          This may provide higher fidelity than anticipated due to
          internal optimizations. For example, if the inputColorSpace
-         and the outputColorSpace are members of the same family, no
+         and the outputColorSpace are members of the same equalitygroup, no
          conversion will be applied, even though strictly speaking
          quantization should be added.
 
