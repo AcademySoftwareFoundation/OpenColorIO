@@ -513,6 +513,7 @@ colorspaces:
         self.assertEqual(1, len(displays))
 
         # Check shared views defined by config.
+
         views = cfg.getSharedViews()
         self.assertEqual(5, len(views))
         self.assertEqual('SView_a', next(views))
@@ -522,16 +523,19 @@ colorspaces:
         self.assertEqual('SView_e', next(views))
 
         # Check views for sRGB display.
+
         views = cfg.getViews('sRGB')
         self.assertEqual(12, len(views))
 
         # Active views are taken into account for getViews.
+
         cfg.setActiveViews('View_a, View_b, SView_a, SView_b')
         views = cfg.getViews('sRGB')
         self.assertEqual(4, len(views))
         cfg.setActiveViews('')
 
         # Views filtered by viewing rules.
+
         views = cfg.getViews('sRGB', 'c3')
         self.assertEqual(8, len(views))
         # View_b rule is Rule_2 that lists c3.
@@ -574,4 +578,148 @@ colorspaces:
         self.assertEqual('View_h', next(views))
         # SView_e has no rule.
         self.assertEqual('SView_e', next(views))
+
+    def test_named_transform(self):
+        # Test these Config functions: addNamedTransform, getNamedTransforms,
+        # getNamedTransformNames, clearNamedTransforms.
+
+        cfg = OCIO.Config().CreateRaw()
+        nt_names = cfg.getNamedTransformNames()
+        self.assertEqual(0, len(nt_names))
+        nts = cfg.getNamedTransforms()
+        self.assertEqual(0, len(nts))
+
+        # Add named transform.
+
+        # Missing name.
+        nt = OCIO.NamedTransform(forwardTransform = OCIO.RangeTransform())
+        with self.assertRaises(OCIO.Exception):
+            cfg.addNamedTransform(nt)
+
+        # Missing forward or inverse transform.
+        nt = OCIO.NamedTransform(name = "namedTransform")
+        with self.assertRaises(OCIO.Exception):
+            cfg.addNamedTransform(nt)
+
+        # Legal named transform can be added.
+        nt = OCIO.NamedTransform(
+            name = "namedTransform",
+            forwardTransform = OCIO.RangeTransform())
+        cfg.addNamedTransform(nt)
+
+        nt = OCIO.NamedTransform(
+            name = "other",
+            inverseTransform = OCIO.RangeTransform())
+        cfg.addNamedTransform(nt)
+
+        nt_names = cfg.getNamedTransformNames()
+        self.assertEqual(2, len(nt_names))
+        self.assertEqual('namedTransform', next(nt_names))
+        self.assertEqual('other', next(nt_names))
+
+        nts = cfg.getNamedTransforms()
+        self.assertEqual(2, len(nts))
+        nt = next(nts)
+        self.assertEqual('namedTransform', nt.getName())
+        cur_tr = nt.getTransform(OCIO.TRANSFORM_DIR_FORWARD)
+        self.assertIsInstance(cur_tr, OCIO.RangeTransform)
+        cur_tr = nt.getTransform(OCIO.TRANSFORM_DIR_INVERSE)
+        self.assertEqual(cur_tr, None)
+
+        nt = next(nts)
+        self.assertEqual('other', nt.getName())
+        cur_tr = nt.getTransform(OCIO.TRANSFORM_DIR_FORWARD)
+        self.assertEqual(cur_tr, None)
+        cur_tr = nt.getTransform(OCIO.TRANSFORM_DIR_INVERSE)
+        self.assertIsInstance(cur_tr, OCIO.RangeTransform)
+
+        nts = cfg.getNamedTransforms()
+        self.assertEqual(2, len(nts))
+
+        cfg.clearNamedTransforms()
+        nts = cfg.getNamedTransforms()
+        self.assertEqual(0, len(nts))
+
+    def test_inactive_named_transform(self):
+        # Test the active/inactive version of these Config functions and classes: getNamedTransforms,
+        # getNamedTransformNames, NamedTransformIterator, NamedTransformNameIterator.
+
+        cfg = OCIO.Config().CreateRaw()
+        nt_names = cfg.getNamedTransformNames()
+        self.assertEqual(0, len(nt_names))
+        nts = cfg.getNamedTransforms()
+        self.assertEqual(0, len(nts))
+
+        # Add named transforms.
+
+        nt = OCIO.NamedTransform(
+            name = "nt1",
+            forwardTransform = OCIO.RangeTransform())
+        cfg.addNamedTransform(nt)
+
+        nt = OCIO.NamedTransform(
+            name = "nt2",
+            inverseTransform = OCIO.RangeTransform())
+        cfg.addNamedTransform(nt)
+
+        nt = OCIO.NamedTransform(
+            name = "nt3",
+            forwardTransform = OCIO.RangeTransform())
+        cfg.addNamedTransform(nt)
+
+        cfg.setInactiveColorSpaces("nt2")
+
+        # Check the list of active/inactive named transforms.
+
+        nt_names = cfg.getNamedTransformNames()
+        self.assertEqual(2, len(nt_names))
+        self.assertEqual('nt1', next(nt_names))
+        self.assertEqual('nt3', next(nt_names))
+
+        nts = cfg.getNamedTransforms()
+        self.assertEqual(2, len(nts))
+        nt = next(nts)
+        self.assertEqual('nt1', nt.getName())
+        nt = next(nts)
+        self.assertEqual('nt3', nt.getName())
+
+        nt_names = cfg.getNamedTransformNames(OCIO.NAMEDTRANSFORM_ACTIVE)
+        self.assertEqual(2, len(nt_names))
+        self.assertEqual('nt1', next(nt_names))
+        self.assertEqual('nt3', next(nt_names))
+
+        nts = cfg.getNamedTransforms(OCIO.NAMEDTRANSFORM_ACTIVE)
+        self.assertEqual(2, len(nts))
+        nt = next(nts)
+        self.assertEqual('nt1', nt.getName())
+        nt = next(nts)
+        self.assertEqual('nt3', nt.getName())
+
+        nt_names = cfg.getNamedTransformNames(OCIO.NAMEDTRANSFORM_ALL)
+        self.assertEqual(3, len(nt_names))
+        self.assertEqual('nt1', next(nt_names))
+        self.assertEqual('nt2', next(nt_names))
+        self.assertEqual('nt3', next(nt_names))
+
+        nts = cfg.getNamedTransforms(OCIO.NAMEDTRANSFORM_ALL)
+        self.assertEqual(3, len(nts))
+        nt = next(nts)
+        self.assertEqual('nt1', nt.getName())
+        nt = next(nts)
+        self.assertEqual('nt2', nt.getName())
+        nt = next(nts)
+        self.assertEqual('nt3', nt.getName())
+
+        nt_names = cfg.getNamedTransformNames(OCIO.NAMEDTRANSFORM_INACTIVE)
+        self.assertEqual(1, len(nt_names))
+        self.assertEqual('nt2', next(nt_names))
+
+        nts = cfg.getNamedTransforms(OCIO.NAMEDTRANSFORM_INACTIVE)
+        self.assertEqual(1, len(nts))
+        nt = next(nts)
+        self.assertEqual('nt2', nt.getName())
+
+        cfg.clearNamedTransforms()
+        nts = cfg.getNamedTransforms(OCIO.NAMEDTRANSFORM_ALL)
+        self.assertEqual(0, len(nts))
 

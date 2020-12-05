@@ -57,6 +57,7 @@ set(SOURCES
 	LookParse.cpp
 	MathUtils.cpp
 	md5/md5.cpp
+	NamedTransform.cpp
 	OCIOYaml.cpp
 	Op.cpp
 	OpOptimizers.cpp

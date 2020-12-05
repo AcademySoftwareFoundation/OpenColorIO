@@ -52,6 +52,10 @@ class OCIOEXPORT Look;
 typedef OCIO_SHARED_PTR<const Look> ConstLookRcPtr;
 typedef OCIO_SHARED_PTR<Look> LookRcPtr;
 
+class OCIOEXPORT NamedTransform;
+typedef OCIO_SHARED_PTR<const NamedTransform> ConstNamedTransformRcPtr;
+typedef OCIO_SHARED_PTR<NamedTransform> NamedTransformRcPtr;
+
 class OCIOEXPORT ViewTransform;
 typedef OCIO_SHARED_PTR<const ViewTransform> ConstViewTransformRcPtr;
 typedef OCIO_SHARED_PTR<ViewTransform> ViewTransformRcPtr;
@@ -278,6 +282,13 @@ enum ColorSpaceVisibility
     COLORSPACE_ACTIVE = 0,
     COLORSPACE_INACTIVE,
     COLORSPACE_ALL
+};
+
+enum NamedTransformVisibility
+{
+    NAMEDTRANSFORM_ACTIVE = 0,
+    NAMEDTRANSFORM_INACTIVE,
+    NAMEDTRANSFORM_ALL
 };
 
 enum ViewType
