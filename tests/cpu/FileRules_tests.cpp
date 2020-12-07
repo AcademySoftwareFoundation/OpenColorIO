@@ -989,7 +989,7 @@ file_rules:
     auto rules = config->getFileRules();
     OCIO_REQUIRE_ASSERT(rules);
     OCIO_REQUIRE_EQUAL(rules->getNumEntries(), 1);
-    OCIO_CHECK_EQUAL(std::string(rules->getName(0)), OCIO::FileRuleUtils::DefaultName);
+    OCIO_CHECK_EQUAL(std::string(rules->getName(0)), OCIO::FileRules::DefaultRuleName);
     OCIO_CHECK_EQUAL(std::string(rules->getColorSpace(0)), "cs1");
     OCIO_CHECK_EQUAL(std::string(config->getColorSpaceFromFilepath("anything")), "cs1");
 
