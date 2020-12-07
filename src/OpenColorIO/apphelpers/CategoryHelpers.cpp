@@ -73,7 +73,9 @@ ColorSpaceNames FindAllColorSpaceNames(ConstConfigRcPtr config)
     return GetNames(config);
 }
 
-Infos FindColorSpaceInfos(ConstConfigRcPtr config, const Categories & categories)
+Infos FindColorSpaceInfos(ConstConfigRcPtr config,
+                          const Categories & categories,
+                          bool includeNamedTransforms)
 {
     ConstColorSpaceSetRcPtr allCSS = GetColorSpaces(config, categories);
 
@@ -85,10 +87,25 @@ Infos FindColorSpaceInfos(ConstConfigRcPtr config, const Categories & categories
         allInfos.push_back(ColorSpaceInfo::Create(config, cs));
     }
 
+    if (includeNamedTransforms)
+    {
+        for (const auto & cat : categories)
+        {
+            for (int idx = 0; idx < config->getNumNamedTransforms(); ++idx)
+            {
+                const char * ntName = config->getNamedTransformNameByIndex(idx);
+                ConstNamedTransformRcPtr nt = config->getNamedTransform(ntName);
+                if (nt->hasCategory(cat.c_str()))
+                {
+                    allInfos.push_back(ColorSpaceInfo::Create(config, nt));
+                }
+            }
+        }
+    }
     return allInfos;
 }
 
-Infos FindAllColorSpaceInfos(ConstConfigRcPtr config)
+Infos FindAllColorSpaceInfos(ConstConfigRcPtr config, bool includeNamedTransforms)
 {
     Infos allInfos;
 
@@ -99,6 +116,15 @@ Infos FindAllColorSpaceInfos(ConstConfigRcPtr config)
         allInfos.push_back(ColorSpaceInfo::Create(config, cs));
     }
 
+    if (includeNamedTransforms)
+    {
+        for (int idx = 0; idx < config->getNumNamedTransforms(); ++idx)
+        {
+            const char * ntName = config->getNamedTransformNameByIndex(idx);
+            ConstNamedTransformRcPtr nt = config->getNamedTransform(ntName);
+            allInfos.push_back(ColorSpaceInfo::Create(config, nt));
+        }
+    }
     return allInfos;
 }
 
@@ -124,18 +150,20 @@ Infos getColorSpaceInfosFromCategories(ConstConfigRcPtr config,
     const Categories allCategories = ExtractCategories(categories);
     Infos colorSpaceNames;
 
+    const bool includeNT = HasFlag(includeFlag, ColorSpaceMenuHelper::INCLUDE_NAMEDTRANSFORMS);
+
     if (allCategories.empty())
     {
         // Step 2a - Use the list of all active color spaces if allCategories is empty.
 
-        Infos tmp = FindAllColorSpaceInfos(config);
+        Infos tmp = FindAllColorSpaceInfos(config, includeNT);
         colorSpaceNames.insert(colorSpaceNames.end(), tmp.begin(), tmp.end());
     }
     else
     {
         // Step 2b - Find all active color spaces having at least one category.
 
-        Infos tmp = FindColorSpaceInfos(config, allCategories);
+        Infos tmp = FindColorSpaceInfos(config, allCategories, includeNT);
         if (!tmp.empty())
         {
             colorSpaceNames.insert(colorSpaceNames.end(), tmp.begin(), tmp.end());
@@ -143,7 +171,7 @@ Infos getColorSpaceInfosFromCategories(ConstConfigRcPtr config,
         else
         {
             // Note: No color spaces match the categories so use them all.
-            Infos tmp = FindAllColorSpaceInfos(config);
+            Infos tmp = FindAllColorSpaceInfos(config, includeNT);
             colorSpaceNames.insert(colorSpaceNames.end(), tmp.begin(), tmp.end());
 
             std::stringstream ss;

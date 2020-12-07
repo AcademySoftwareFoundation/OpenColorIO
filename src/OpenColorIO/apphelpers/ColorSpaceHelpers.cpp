@@ -34,6 +34,22 @@ ConstColorSpaceInfoRcPtr ColorSpaceInfo::Create(const ConstConfigRcPtr & config,
 }
 
 ConstColorSpaceInfoRcPtr ColorSpaceInfo::Create(const ConstConfigRcPtr & config,
+                                                const ConstNamedTransformRcPtr & nt)
+{
+    std::string family{ "Named transforms" };
+    const std::string srcFamily = nt->getFamily();
+    if (!srcFamily.empty())
+    {
+        family += config->getFamilySeparator();
+        family += srcFamily;
+    }
+    return ConstColorSpaceInfoRcPtr(new ColorSpaceInfo(config, nt->getName(), nullptr,
+                                                       family.c_str(),
+                                                       nt->getDescription()),
+                                    &ColorSpaceInfo::Deleter);
+}
+
+ConstColorSpaceInfoRcPtr ColorSpaceInfo::Create(const ConstConfigRcPtr & config,
                                                 const char * name,
                                                 const char * family,
                                                 const char * description)

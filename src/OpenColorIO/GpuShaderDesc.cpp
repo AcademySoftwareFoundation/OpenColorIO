@@ -20,7 +20,7 @@ class GpuShaderCreator::Impl
 {
 public:
     std::string m_uid; // Custom uid if needed.
-    GpuLanguage m_language = GPU_LANGUAGE_UNKNOWN;
+    GpuLanguage m_language = GPU_LANGUAGE_GLSL_1_2;
     std::string m_functionName;
     std::string m_resourcePrefix;
     std::string m_pixelName;
@@ -91,7 +91,7 @@ GpuShaderCreator::~GpuShaderCreator()
 void GpuShaderCreator::setUniqueID(const char * uid) noexcept
 {
     AutoMutex lock(getImpl()->m_cacheIDMutex);
-    getImpl()->m_uid = uid;
+    getImpl()->m_uid = uid ? uid : "";
     getImpl()->m_cacheID.clear();
 }
 

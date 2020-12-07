@@ -31,8 +31,6 @@ ColorSpaceNames FindAllColorSpaceNames(ConstConfigRcPtr config);
 using Infos = std::vector<ConstColorSpaceInfoRcPtr>;
 // Return information on all the active color spaces having at least one of the categories.
 Infos FindColorSpaceInfos(ConstConfigRcPtr config, const Categories & categories);
-// Return information on all the active color spaces.
-Infos FindAllColorSpaceInfos(ConstConfigRcPtr config);
 
 Infos getColorSpaceInfosFromCategories(ConstConfigRcPtr config,
                                        const char * role,        // Could be null or empty

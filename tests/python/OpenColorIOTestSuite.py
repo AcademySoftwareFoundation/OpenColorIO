@@ -41,7 +41,9 @@ import CDLTransformTest
 import ColorSpaceHelpersTest
 import ColorSpaceTest
 import ColorSpaceTransformTest
+import ConfigTest
 import DisplayViewHelpersTest
+import DisplayViewTransformTest
 import ExponentTransformTest
 import ExponentWithLinearTransformTest
 import ExposureContrastTransformTest
@@ -57,6 +59,7 @@ import LegacyViewingPipelineTest
 import LogTransformTest
 import LookTest
 import MixingHelpersTest
+import NamedTransformTest
 import OpenColorIOTest
 import ViewingRulesTest
 #from MainTest import *
@@ -86,7 +89,9 @@ def suite():
     suite.addTest(loader.loadTestsFromModule(ColorSpaceHelpersTest))
     suite.addTest(loader.loadTestsFromModule(ColorSpaceTest))
     suite.addTest(loader.loadTestsFromModule(ColorSpaceTransformTest))
+    suite.addTest(loader.loadTestsFromModule(ConfigTest))
     suite.addTest(loader.loadTestsFromModule(DisplayViewHelpersTest))
+    suite.addTest(loader.loadTestsFromModule(DisplayViewTransformTest))
     suite.addTest(loader.loadTestsFromModule(ExponentTransformTest))
     suite.addTest(loader.loadTestsFromModule(ExponentWithLinearTransformTest))
     suite.addTest(loader.loadTestsFromModule(ExposureContrastTransformTest))
@@ -102,6 +107,7 @@ def suite():
     suite.addTest(loader.loadTestsFromModule(LogTransformTest))
     suite.addTest(loader.loadTestsFromModule(LookTest))
     suite.addTest(loader.loadTestsFromModule(MixingHelpersTest))
+    suite.addTest(loader.loadTestsFromModule(NamedTransformTest))
     suite.addTest(loader.loadTestsFromModule(OpenColorIOTest))
     suite.addTest(loader.loadTestsFromModule(ViewingRulesTest))
     #suite.addTest(MainTest("test_interface"))

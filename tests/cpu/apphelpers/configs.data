@@ -103,4 +103,21 @@ colorspaces:
     name: lut_input_3
     categories: [ input, lut_input_space ]
     from_reference: !<ExponentTransform> {value: [2.4, 2.4, 2.4, 1], direction: inverse}
+
+named_transforms:
+  - !<NamedTransform>
+    name: named_transform1
+    categories: [ conditioning, input ]
+    transform: !<MatrixTransform> {offset: [0.1, 0.2, 0.3, 0.4]}
+
+  - !<NamedTransform>
+    name: named_transform2
+    inverse_transform: !<MatrixTransform> {offset: [-0.2, -0.1, -0.1, 0]}
+
+  - !<NamedTransform>
+    name: named_transform3
+    categories: [ input, basic ]
+    family: Video
+    transform: !<MatrixTransform> {offset: [0.1, 0.2, 0.3, 0]}
+    inverse_transform: !<MatrixTransform> {offset: [-0.1, -0.2, -0.3, 0]}
 )"};

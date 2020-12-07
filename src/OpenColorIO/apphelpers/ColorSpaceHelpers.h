@@ -35,6 +35,9 @@ public:
     static ConstColorSpaceInfoRcPtr Create(const ConstConfigRcPtr & config,
                                            const ConstColorSpaceRcPtr & cs);
 
+    static ConstColorSpaceInfoRcPtr Create(const ConstConfigRcPtr & config,
+                                           const ConstNamedTransformRcPtr & nt);
+
     static ConstColorSpaceInfoRcPtr CreateFromRole(const ConstConfigRcPtr & config,
                                                    const char * role,
                                                    const char * family);

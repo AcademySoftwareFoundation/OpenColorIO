@@ -55,6 +55,7 @@ PYBIND11_MODULE(PyOpenColorIO, m)
     bindPyViewingRules(m);
     bindPySystemMonitors(m);
     bindPyGradingData(m);
+    bindPyNamedTransform(m);
     bindPyColorSpaceMenuHelpers(m);
     bindPyDisplayViewHelpers(m);
     bindPyLegacyViewingPipeline(m);

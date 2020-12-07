@@ -178,6 +178,46 @@ OCIO_ADD_TEST(ColorSpaceMenuHelper, categories)
 
     OCIO_REQUIRE_EQUAL(menuHelper->getNumColorSpaces(), 4);
 
+    // Use the default categories, including named transforms.
+
+    OCIO_CHECK_NO_THROW(menuHelper =
+        OCIO::ColorSpaceMenuHelper::Create(config, nullptr,
+                                           OCIO::Category::INPUT,
+                                           OCIO::ColorSpaceMenuHelper::INCLUDE_NAMEDTRANSFORMS));
+
+    OCIO_REQUIRE_EQUAL(menuHelper->getNumColorSpaces(), 6);
+
+    OCIO_CHECK_EQUAL(menuHelper->getName(0), std::string("in_1"));
+    OCIO_CHECK_EQUAL(menuHelper->getName(1), std::string("in_2"));
+    OCIO_CHECK_EQUAL(menuHelper->getName(2), std::string("in_3"));
+    OCIO_CHECK_EQUAL(menuHelper->getName(3), std::string("lut_input_3"));
+    OCIO_CHECK_EQUAL(menuHelper->getName(4), std::string("named_transform1"));
+    OCIO_CHECK_EQUAL(menuHelper->getName(5), std::string("named_transform3"));
+    OCIO_CHECK_EQUAL(menuHelper->getName(6), std::string(""));
+
+    OCIO_CHECK_EQUAL(menuHelper->getUIName(0), std::string("in_1"));
+    OCIO_CHECK_EQUAL(menuHelper->getUIName(1), std::string("in_2"));
+    OCIO_CHECK_EQUAL(menuHelper->getUIName(2), std::string("in_3"));
+    OCIO_CHECK_EQUAL(menuHelper->getUIName(3), std::string("lut_input_3"));
+    OCIO_CHECK_EQUAL(menuHelper->getUIName(4), std::string("named_transform1"));
+    OCIO_CHECK_EQUAL(menuHelper->getUIName(5), std::string("named_transform3"));
+    OCIO_CHECK_EQUAL(menuHelper->getUIName(6), std::string(""));
+
+    OCIO_CHECK_EQUAL(menuHelper->getNumHierarchyLevels(0), 3);
+    OCIO_CHECK_EQUAL(menuHelper->getNumHierarchyLevels(1), 0);
+    OCIO_CHECK_EQUAL(menuHelper->getNumHierarchyLevels(2), 0);
+    OCIO_CHECK_EQUAL(menuHelper->getNumHierarchyLevels(3), 0);
+    OCIO_CHECK_EQUAL(menuHelper->getNumHierarchyLevels(4), 1);
+    OCIO_CHECK_EQUAL(menuHelper->getNumHierarchyLevels(5), 2);
+    OCIO_CHECK_EQUAL(menuHelper->getNumHierarchyLevels(6), 0);
+
+    OCIO_CHECK_EQUAL(menuHelper->getHierarchyLevel(0, 0), std::string("Input"));
+    OCIO_CHECK_EQUAL(menuHelper->getHierarchyLevel(0, 1), std::string("Camera"));
+    OCIO_CHECK_EQUAL(menuHelper->getHierarchyLevel(0, 2), std::string("Acme"));
+    OCIO_CHECK_EQUAL(menuHelper->getHierarchyLevel(4, 0), std::string("Named transforms"));
+    OCIO_CHECK_EQUAL(menuHelper->getHierarchyLevel(5, 0), std::string("Named transforms"));
+    OCIO_CHECK_EQUAL(menuHelper->getHierarchyLevel(5, 1), std::string("Video"));
+
     // Use null categories.
 
     OCIO_CHECK_NO_THROW(menuHelper =
@@ -185,6 +225,14 @@ OCIO_ADD_TEST(ColorSpaceMenuHelper, categories)
                                            OCIO::ColorSpaceMenuHelper::INCLUDE_NO_EXTRAS));
 
     OCIO_REQUIRE_EQUAL(menuHelper->getNumColorSpaces(), 12);  // All color spaces.
+
+    // Use null categories, including named transforms.
+
+    OCIO_CHECK_NO_THROW(menuHelper =
+        OCIO::ColorSpaceMenuHelper::Create(config, nullptr, nullptr,
+                                           OCIO::ColorSpaceMenuHelper::INCLUDE_NAMEDTRANSFORMS));
+
+    OCIO_REQUIRE_EQUAL(menuHelper->getNumColorSpaces(), 15);  // All color spaces.
 
     // Use an arbitrary (but existing) category i.e. user could use some custom categories.
 
@@ -197,7 +245,7 @@ OCIO_ADD_TEST(ColorSpaceMenuHelper, categories)
     OCIO_CHECK_EQUAL(menuHelper->getName(1), std::string("lut_input_2"));
     OCIO_CHECK_EQUAL(menuHelper->getName(2), std::string("lut_input_3"));
 
-    // Use an arbitrary category and include roles.
+    // Use an arbitrary category, include roles.
 
     OCIO_CHECK_NO_THROW(menuHelper =
         OCIO::ColorSpaceMenuHelper::Create(config, nullptr, "lut_input_space",
@@ -256,6 +304,25 @@ OCIO_ADD_TEST(ColorSpaceMenuHelper, categories)
     OCIO_CHECK_EQUAL(menuHelper->getHierarchyLevel(7, 1), std::string(""));
     OCIO_CHECK_EQUAL(menuHelper->getHierarchyLevel(6, 1), std::string(""));
 
+    // Use an arbitrary (but existing) category only used by a named transform.
+
+    {
+        OCIO::MuteLogging guard;
+
+        OCIO_CHECK_NO_THROW(menuHelper =
+            OCIO::ColorSpaceMenuHelper::Create(config, nullptr, "conditioning",
+                                               OCIO::ColorSpaceMenuHelper::INCLUDE_NAMEDTRANSFORMS));
+    
+        OCIO_REQUIRE_EQUAL(menuHelper->getNumColorSpaces(), 1);
+        OCIO_CHECK_EQUAL(menuHelper->getUIName(0), std::string("named_transform1"));
+    
+        OCIO_CHECK_NO_THROW(menuHelper =
+            OCIO::ColorSpaceMenuHelper::Create(config, nullptr, "conditioning",
+                                               OCIO::ColorSpaceMenuHelper::INCLUDE_NO_EXTRAS));
+    
+        OCIO_REQUIRE_EQUAL(menuHelper->getNumColorSpaces(), 12);
+    }
+
     // Use a role.
 
     OCIO_CHECK_NO_THROW(menuHelper =
@@ -291,7 +358,6 @@ OCIO_ADD_TEST(ColorSpaceMenuHelper, categories)
     OCIO_CHECK_EQUAL(menuHelper->getName(0), std::string("rendering"));
     OCIO_CHECK_EQUAL(menuHelper->getUIName(0), std::string("rendering (lin_1)"));
     OCIO_CHECK_EQUAL(menuHelper->getFamily(0), std::string(""));
-
 
     // Using an unknown category or role returns all the color spaces.
     {

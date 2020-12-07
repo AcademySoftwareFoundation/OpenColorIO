@@ -45,6 +45,7 @@ void bindPyColorSpaceMenuHelpers(py::module & m);
 void bindPyDisplayViewHelpers(py::module & m);
 void bindPyLegacyViewingPipeline(py::module & m);
 void bindPyMixingHelpers(py::module & m);
+void bindPyNamedTransform(py::module & m);
 
 } // namespace OCIO_NAMESPACE
 

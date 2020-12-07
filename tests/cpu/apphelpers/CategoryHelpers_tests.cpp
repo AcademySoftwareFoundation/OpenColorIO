@@ -62,13 +62,27 @@ OCIO_ADD_TEST(CategoryHelpers, basic)
 
         OCIO_CHECK_NO_THROW(names = OCIO::FindColorSpaceNames(config, categories));
 
-        OCIO_CHECK_EQUAL(names.size(), 4);
+        OCIO_REQUIRE_EQUAL(names.size(), 4);
         OCIO_CHECK_EQUAL(names[0], std::string("in_1"));
         OCIO_CHECK_EQUAL(names[1], std::string("in_2"));
         OCIO_CHECK_EQUAL(names[2], std::string("in_3"));
         OCIO_CHECK_EQUAL(names[3], std::string("lut_input_3"));
     }
+    {
+        OCIO::Categories categories{ OCIO::Category::INPUT };
 
+        // There are 4 color space and 2 named transforms using "input" category.
+        OCIO::Infos infos;
+        OCIO_CHECK_NO_THROW(infos = OCIO::FindColorSpaceInfos(config, categories, true));
+        OCIO_REQUIRE_EQUAL(infos.size(), 6);
+
+        OCIO_CHECK_EQUAL(std::string(infos[0]->getName()), std::string("in_1"));
+        OCIO_CHECK_EQUAL(std::string(infos[1]->getName()), std::string("in_2"));
+        OCIO_CHECK_EQUAL(std::string(infos[2]->getName()), std::string("in_3"));
+        OCIO_CHECK_EQUAL(std::string(infos[3]->getName()), std::string("lut_input_3"));
+        OCIO_CHECK_EQUAL(std::string(infos[4]->getName()), std::string("named_transform1"));
+        OCIO_CHECK_EQUAL(std::string(infos[5]->getName()), std::string("named_transform3"));
+    }
     {
         OCIO::Categories categories {};
 
@@ -76,8 +90,16 @@ OCIO_ADD_TEST(CategoryHelpers, basic)
         OCIO_CHECK_EQUAL(names.size(), 0);
 
         OCIO::Infos infos;
-        OCIO_CHECK_NO_THROW(infos = OCIO::FindColorSpaceInfos(config, categories));
-        OCIO_REQUIRE_EQUAL(infos.size(), 0);
+        OCIO_CHECK_NO_THROW(infos = OCIO::FindColorSpaceInfos(config, categories, false));
+        OCIO_CHECK_EQUAL(infos.size(), 0);
+    }
+
+    {
+        OCIO::Categories categories{};
+
+        OCIO::Infos infos;
+        OCIO_CHECK_NO_THROW(infos = OCIO::FindColorSpaceInfos(config, categories, true));
+        OCIO_CHECK_EQUAL(infos.size(), 0);
     }
 
     {
@@ -86,7 +108,7 @@ OCIO_ADD_TEST(CategoryHelpers, basic)
 
         OCIO_CHECK_NO_THROW(names = OCIO::FindColorSpaceNames(config, categories));
 
-        OCIO_CHECK_EQUAL(names.size(), 4);
+        OCIO_REQUIRE_EQUAL(names.size(), 4);
         OCIO_CHECK_EQUAL(names[0], std::string("lin_1"));
         OCIO_CHECK_EQUAL(names[1], std::string("lin_2"));
         OCIO_CHECK_EQUAL(names[2], std::string("log_1"));
@@ -96,7 +118,7 @@ OCIO_ADD_TEST(CategoryHelpers, basic)
 
         OCIO_CHECK_NO_THROW(names = OCIO::FindColorSpaceNames(config, categories));
 
-        OCIO_CHECK_EQUAL(names.size(), 7);
+        OCIO_REQUIRE_EQUAL(names.size(), 7);
         OCIO_CHECK_EQUAL(names[0], std::string("lin_1"));
         OCIO_CHECK_EQUAL(names[1], std::string("lin_2"));
         OCIO_CHECK_EQUAL(names[2], std::string("log_1"));
@@ -114,7 +136,22 @@ OCIO_ADD_TEST(CategoryHelpers, basic)
         OCIO_REQUIRE_EQUAL(names.size(), 4);
 
         OCIO::Infos infos;
-        OCIO_CHECK_NO_THROW(infos = OCIO::FindColorSpaceInfos(config, categories));
+        OCIO_CHECK_NO_THROW(infos = OCIO::FindColorSpaceInfos(config, categories, false));
+        OCIO_REQUIRE_EQUAL(infos.size(), 4);
+
+        for (size_t idx = 0; idx < names.size(); ++idx)
+        {
+            OCIO_CHECK_EQUAL(std::string(infos[idx]->getName()), names[idx]);
+        }
+    }
+
+    {
+        // These categories are not used by any named transform, so results are the same.
+        OCIO::Categories categories{ OCIO::Category::SCENE_LINEAR_WORKING_SPACE,
+                                     OCIO::Category::LOG_WORKING_SPACE };
+
+        OCIO::Infos infos;
+        OCIO_CHECK_NO_THROW(infos = OCIO::FindColorSpaceInfos(config, categories, true));
         OCIO_REQUIRE_EQUAL(infos.size(), 4);
 
         for (size_t idx = 0; idx < names.size(); ++idx)
@@ -125,8 +162,19 @@ OCIO_ADD_TEST(CategoryHelpers, basic)
 
     {
         OCIO::Infos infos;
-        OCIO_CHECK_NO_THROW(infos = OCIO::FindAllColorSpaceInfos(config));
+        OCIO_CHECK_NO_THROW(infos = OCIO::FindAllColorSpaceInfos(config, false));
+        OCIO_CHECK_EQUAL(infos.size(), 12);
+    }
+    {
+        OCIO::Infos infos;
+        OCIO_CHECK_NO_THROW(infos = OCIO::FindAllColorSpaceInfos(config, false));
         OCIO_REQUIRE_EQUAL(infos.size(), 12);
+    }
+
+    {
+        OCIO::Infos infos;
+        OCIO_CHECK_NO_THROW(infos = OCIO::FindAllColorSpaceInfos(config, true));
+        OCIO_CHECK_EQUAL(infos.size(), 15);
     }
 
     {
