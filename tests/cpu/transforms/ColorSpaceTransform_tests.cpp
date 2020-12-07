@@ -137,12 +137,27 @@ OCIO_ADD_TEST(ColorSpaceTransform, build_colorspace_ops)
                                                      *cst, OCIO::TRANSFORM_DIR_FORWARD));
         OCIO_CHECK_NO_THROW(ops.validate());
         OCIO_CHECK_EQUAL(ops.size(), 0);
+        ops.clear();
+
+        OCIO::ConstProcessorRcPtr proc;
+        config->setProcessorCacheFlags(OCIO::PROCESSOR_CACHE_OFF); // Cache disabled
+        OCIO_CHECK_NO_THROW(proc = config->getProcessor(cst));
+        OCIO_CHECK_EQUAL(proc->getNumTransforms(), 0);
 
         cst->setDataBypass(false);
         OCIO_CHECK_NO_THROW(OCIO::BuildColorSpaceOps(ops, *config, config->getCurrentContext(),
                                                      *cst, OCIO::TRANSFORM_DIR_FORWARD));
         OCIO_CHECK_NO_THROW(ops.validate());
         OCIO_CHECK_EQUAL(ops.size(), 4);
+        ops.clear();
+
+        // Some of the ops are no-ops, processor has 2 transforms.
+        OCIO_CHECK_NO_THROW(proc = config->getProcessor(cst));
+        OCIO_CHECK_EQUAL(proc->getNumTransforms(), 2);
+
+        // Similar test with color space, data by-pass can't be controlled.
+        OCIO_CHECK_NO_THROW(proc = config->getProcessor(src.c_str(), dst.c_str()));
+        OCIO_CHECK_EQUAL(proc->getNumTransforms(), 0);
 
         // Restore default data flags.
         csSceneToRef->setIsData(false);
@@ -153,17 +168,28 @@ OCIO_ADD_TEST(ColorSpaceTransform, build_colorspace_ops)
         csSceneFromRef->setIsData(true);
         config->addColorSpace(csSceneFromRef);
 
-        ops.clear();
         OCIO_CHECK_NO_THROW(OCIO::BuildColorSpaceOps(ops, *config, config->getCurrentContext(),
                                                      *cst, OCIO::TRANSFORM_DIR_FORWARD));
         OCIO_CHECK_NO_THROW(ops.validate());
         OCIO_CHECK_EQUAL(ops.size(), 0);
+        ops.clear();
+
+        OCIO_CHECK_NO_THROW(proc = config->getProcessor(cst));
+        OCIO_CHECK_EQUAL(proc->getNumTransforms(), 0);
 
         cst->setDataBypass(false);
         OCIO_CHECK_NO_THROW(OCIO::BuildColorSpaceOps(ops, *config, config->getCurrentContext(),
                                                      *cst, OCIO::TRANSFORM_DIR_FORWARD));
         OCIO_CHECK_NO_THROW(ops.validate());
         OCIO_CHECK_EQUAL(ops.size(), 4);
+        ops.clear();
+
+        OCIO_CHECK_NO_THROW(proc = config->getProcessor(cst));
+        OCIO_CHECK_EQUAL(proc->getNumTransforms(), 2);
+
+        // Similar test with color space, data bypass can't be controlled.
+        OCIO_CHECK_NO_THROW(proc = config->getProcessor(src.c_str(), dst.c_str()));
+        OCIO_CHECK_EQUAL(proc->getNumTransforms(), 0);
 
         // Restore default data flags.
         csSceneFromRef->setIsData(false);
@@ -366,7 +392,7 @@ OCIO_ADD_TEST(ColorSpaceTransform, build_colorspace_ops)
         OCIO_CHECK_THROW_WHAT(OCIO::BuildColorSpaceOps(ops, *config,
                                                        config->getCurrentContext(), *cst,
                                                        OCIO::TRANSFORM_DIR_FORWARD), OCIO::Exception,
-                              "source color space 'source_missing' could not be found");
+                              "Color space 'source_missing' could not be found");
     
         cst = OCIO::ColorSpaceTransform::Create();
         cst->setSrc(src.c_str());
@@ -375,7 +401,7 @@ OCIO_ADD_TEST(ColorSpaceTransform, build_colorspace_ops)
         OCIO_CHECK_THROW_WHAT(OCIO::BuildColorSpaceOps(ops, *config,
                                                        config->getCurrentContext(), *cst,
                                                        OCIO::TRANSFORM_DIR_FORWARD), OCIO::Exception,
-                              "destination color space 'destination_missing' could not be found");
+                              "Color space 'destination_missing' could not be found");
     }
 }
 
@@ -748,5 +774,9 @@ OCIO_ADD_TEST(ColorSpaceTransform, context_variables)
     OCIO_CHECK_ASSERT(OCIO::CollectContextVariables(*cfg, *ctx, *cst, usedContextVars));
     OCIO_CHECK_EQUAL(1, usedContextVars->getNumStringVars());
     OCIO_CHECK_EQUAL(std::string("ENV1"), usedContextVars->getStringVarNameByIndex(0));
-    OCIO_CHECK_EQUAL(std::string("exposure_contrast_linear.ctf"), usedContextVars->getStringVarByIndex(0));
+    OCIO_CHECK_EQUAL(std::string("exposure_contrast_linear.ctf"),
+                     usedContextVars->getStringVarByIndex(0));
 }
+
+// Please see (Config, named_transform_processor) in NamedTransform_tests.cpp for coverage of
+// ColorSpaceTransform where the arguments are NamedTransforms.

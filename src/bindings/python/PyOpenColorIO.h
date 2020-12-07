@@ -41,6 +41,7 @@ void bindPyGradingData(py::module & m);
 void bindPyGradingPrimaryTransform(py::module & m);
 void bindPyGradingRGBCurveTransform(py::module & m);
 void bindPyGradingToneTransform(py::module & m);
+void bindPyNamedTransform(py::module & m);
 
 } // namespace OCIO_NAMESPACE
 

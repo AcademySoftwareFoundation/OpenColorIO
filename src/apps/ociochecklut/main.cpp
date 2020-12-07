@@ -218,8 +218,8 @@ int main (int argc, const char* argv[])
         {
             // What are the allowed formats?
             std::cout << "Formats supported:" << std::endl;
-            const auto nbFromats = OCIO::FileTransform::GetNumFormats();
-            for (int i = 0; i < nbFromats; ++i)
+            const auto nbFormats = OCIO::FileTransform::GetNumFormats();
+            for (int i = 0; i < nbFormats; ++i)
             {
                 std::cout << OCIO::FileTransform::GetFormatNameByIndex(i);
                 std::cout << " (." << OCIO::FileTransform::GetFormatExtensionByIndex(i) << ")";

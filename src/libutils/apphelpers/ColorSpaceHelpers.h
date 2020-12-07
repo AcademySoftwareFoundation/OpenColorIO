@@ -62,6 +62,9 @@ public:
     static ConstColorSpaceInfoRcPtr Create(ConstConfigRcPtr config,
                                            ConstColorSpaceRcPtr cs);
 
+    static ConstColorSpaceInfoRcPtr Create(ConstConfigRcPtr config,
+                                           ConstNamedTransformRcPtr nt);
+
     virtual const char * getName() const noexcept = 0;
     virtual const char * getUIName() const noexcept = 0;
     virtual const char * getFamily() const noexcept = 0;
@@ -94,9 +97,11 @@ using ColorSpaceMenuHelperRcPtr = OCIO_SHARED_PTR<ColorSpaceMenuHelper>;
 class ColorSpaceMenuHelper
 {
 public:
+    // If role is part of the config, ignore categories and named transforms.
     static ColorSpaceMenuHelperRcPtr Create(const ConstConfigRcPtr & config,
                                             const char * role,
-                                            const char * categories);
+                                            const char * categories,
+                                            bool includeNamedTransforms);
 
     // Access to the color space names.
     virtual size_t getNumColorSpaces() const noexcept = 0;

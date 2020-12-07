@@ -624,7 +624,7 @@ colorspaces:
 
     OCIO::OpRcPtrVec ops;
     OCIO_CHECK_NO_THROW(BuildColorSpaceOps(ops, *config, config->getCurrentContext(),
-                                           srcColorSpace, dstColorSpace, false));
+                                           srcColorSpace, dstColorSpace, true));
     OCIO_CHECK_NO_THROW(ops.validate());
     OCIO_REQUIRE_EQUAL(ops.size(), 11);
     OCIO::ConstOpRcPtr op = ops[0];
@@ -665,7 +665,7 @@ colorspaces:
     // Test in inverse direction.
     ops.clear();
     OCIO_CHECK_NO_THROW(BuildColorSpaceOps(ops, *config, config->getCurrentContext(),
-                                           dstColorSpace, srcColorSpace, false));
+                                           dstColorSpace, srcColorSpace, true));
     OCIO_REQUIRE_EQUAL(ops.size(), 11);
     OCIO_CHECK_NO_THROW(ops.validate());
     op = ops[0];
@@ -711,7 +711,7 @@ colorspaces:
 
     OCIO::OpRcPtrVec ops2;
     OCIO_CHECK_NO_THROW(BuildColorSpaceOps(ops2, *config, config->getCurrentContext(),
-                                           dstColorSpaceInv, srcColorSpace, false));
+                                           dstColorSpaceInv, srcColorSpace, true));
     OCIO_REQUIRE_EQUAL(ops2.size(), ops.size());
     OCIO_CHECK_NO_THROW(ops2.validate());
     for (std::size_t i = 0; i < ops2.size(); ++i)
