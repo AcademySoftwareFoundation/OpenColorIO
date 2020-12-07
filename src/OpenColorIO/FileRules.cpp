@@ -483,18 +483,21 @@ public:
         return false;
     }
 
-    void validate(std::function<ConstColorSpaceRcPtr(const char *)> colorSpaceAccesssor) const
+    void validate(const Config & cfg) const
     {
         if (m_type != FILE_RULE_PARSE_FILEPATH)
         {
-            // Can be a color space or a role (all color spaces).
-            ConstColorSpaceRcPtr cs = colorSpaceAccesssor(m_colorSpace.c_str());
-            if (!cs)
+            // Can be a color space, a role (all color spaces) or a named transform.
+            if (!cfg.getColorSpace(m_colorSpace.c_str()))
             {
-                std::ostringstream oss;
-                oss << "File rules: rule named '" << m_name << "' is referencing color space '"
-                    << m_colorSpace << "' that does not exist.";
-                throw Exception(oss.str().c_str());
+                if (!cfg.getNamedTransform(m_colorSpace.c_str()))
+                {
+                    std::ostringstream oss;
+                    oss << "File rules: rule named '" << m_name << "' is referencing '"
+                        << m_colorSpace << "' that is neither a color space nor a named "
+                                           "transform.";
+                    throw Exception(oss.str().c_str());
+                }
             }
         }
     }
@@ -639,11 +642,11 @@ void FileRules::Impl::moveRule(size_t ruleIndex, int offset)
 }
 
 
-void FileRules::Impl::validate(std::function<ConstColorSpaceRcPtr(const char *)> colorSpaceAccesssor) const
+void FileRules::Impl::validate(const Config & cfg) const
 {
     for (auto & rule : m_rules)
     {
-        rule->validate(colorSpaceAccesssor);
+        rule->validate(cfg);
     }
 }
 

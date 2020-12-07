@@ -355,7 +355,9 @@ OCIO_ADD_TEST(FileRules, rule_invalid)
 
     OCIO_CHECK_NO_THROW(rules->setColorSpace(0, "invalid_color_space"));
     config->setFileRules(rules);
-    OCIO_CHECK_THROW_WHAT(config->validate(), OCIO::Exception, "does not exist");
+    OCIO_CHECK_THROW_WHAT(config->validate(), OCIO::Exception, "rule named 'rule1' is referencing "
+                          "'invalid_color_space' that is neither a color space nor a named "
+                          "transform");
 }
 
 OCIO_ADD_TEST(FileRules, pattern_error)
@@ -485,6 +487,10 @@ OCIO_ADD_TEST(FileRules, rules_filepattern)
     config->getColorSpaceFromFilepath("/An/Arbitrary/Path/MyFile.jpeg", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 1); // Default rule.
     config->getColorSpaceFromFilepath("/An/Arbitrary.exr/Path/MyFileexr", rulePosition);
+    OCIO_CHECK_EQUAL(rulePosition, 1); // Default rule.
+    config->getColorSpaceFromFilepath("", rulePosition);
+    OCIO_CHECK_EQUAL(rulePosition, 1); // Default rule.
+    config->getColorSpaceFromFilepath(nullptr, rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 1); // Default rule.
 
     OCIO_CHECK_NO_THROW(rules->setPattern(0, "gamma"));
@@ -983,7 +989,11 @@ file_rules:
     auto rules = config->getFileRules();
     OCIO_REQUIRE_ASSERT(rules);
     OCIO_REQUIRE_EQUAL(rules->getNumEntries(), 1);
-    // File defined default role is preserved.
+    OCIO_CHECK_EQUAL(std::string(rules->getName(0)), OCIO::FileRuleUtils::DefaultName);
+    OCIO_CHECK_EQUAL(std::string(rules->getColorSpace(0)), "cs1");
+    OCIO_CHECK_EQUAL(std::string(config->getColorSpaceFromFilepath("anything")), "cs1");
+
+    // The color space of the default role is preserved.
     auto cs = config->getColorSpace(OCIO::ROLE_DEFAULT);
     OCIO_CHECK_EQUAL(std::string("raw"), cs->getName());
 }
@@ -1169,7 +1179,9 @@ colorspaces:
         config->setMajorVersion(2);
 
         // Default rule is using 'Default' role that does not exist.
-        OCIO_CHECK_THROW_WHAT(config->validate(), OCIO::Exception, "does not exist");
+        OCIO_CHECK_THROW_WHAT(config->validate(), OCIO::Exception, "rule named 'Default' is "
+                              "referencing 'default' that is neither a color space nor a named "
+                              "transform");
 
         config = constConfig->createEditableCopy();
         OCIO_CHECK_EQUAL(config->getNumColorSpaces(), 3);
@@ -1220,7 +1232,8 @@ colorspaces:
 
         // Default rule is using 'Default' role that does not exist.
         OCIO_CHECK_THROW_WHAT(config->validate(), OCIO::Exception, "rule named 'Default' is "
-                              "referencing color space 'default' that does not exist");
+                              "referencing 'default' that is neither a color space nor a named "
+                              "transform");
 
         config = constConfig->createEditableCopy();
         OCIO_CHECK_EQUAL(config->getNumColorSpaces(), 3);
