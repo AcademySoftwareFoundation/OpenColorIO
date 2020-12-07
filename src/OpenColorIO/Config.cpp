@@ -21,6 +21,7 @@
 #include "LookParse.h"
 #include "MathUtils.h"
 #include "Mutex.h"
+#include "NamedTransform.h"
 #include "OCIOYaml.h"
 #include "OpBuilders.h"
 #include "ParseUtils.h"
@@ -278,11 +279,15 @@ public:
     // Refer to Config::Impl::refreshActiveColorSpaces() to have the implementation details.
 
     ColorSpaceSetRcPtr m_allColorSpaces; // All the color spaces (i.e. no filtering).
-    StringUtils::StringVec m_activeColorSpaceNames; // A built list of active color space names.
+    StringUtils::StringVec m_activeColorSpaceNames; // Active color space names.
+    StringUtils::StringVec m_inactiveColorSpaceNames; // inactive color space names.
 
-    std::string m_inactiveColorSpaceNamesAPI;  // Inactive color space filter from API request.
-    std::string m_inactiveColorSpaceNamesEnv;  // Inactive color space filter from env. variable.
-    std::string m_inactiveColorSpaceNamesConf; // Inactive color space filter from config. file.
+    // Inactive color space or named transform filter from API request.
+    std::string m_inactiveColorSpaceNamesAPI;
+    // Inactive color space or named transform filter from env. variable.
+    std::string m_inactiveColorSpaceNamesEnv;
+    // Inactive color space or named transform filter from config. file.
+    std::string m_inactiveColorSpaceNamesConf;
 
     StringMap m_roles;
     LookVec m_looksList;
@@ -303,6 +308,13 @@ public:
     mutable std::string m_activeDisplaysStr;
     mutable std::string m_activeViewsStr;
     mutable StringUtils::StringVec m_displayCache;
+
+    // All the named transforms(i.e. no filtering).
+    std::vector<ConstNamedTransformRcPtr> m_allNamedTransforms;
+    // Active named transform names.
+    StringUtils::StringVec m_activeNamedTransformNames;
+    // Inactive named transform names.
+    StringUtils::StringVec m_inactiveNamedTransformNames;
 
     // Misc
     std::vector<double> m_defaultLumaCoefs;
@@ -378,6 +390,7 @@ public:
             // Deep copy the colorspaces.
             m_allColorSpaces = rhs.m_allColorSpaces->createEditableCopy();
             m_activeColorSpaceNames       = rhs.m_activeColorSpaceNames;
+            m_inactiveColorSpaceNames     = rhs.m_inactiveColorSpaceNames;
             m_inactiveColorSpaceNamesConf = rhs.m_inactiveColorSpaceNamesConf;
             m_inactiveColorSpaceNamesEnv  = rhs.m_inactiveColorSpaceNamesEnv;
             m_inactiveColorSpaceNamesAPI  = rhs.m_inactiveColorSpaceNamesAPI;
@@ -385,13 +398,22 @@ public:
             // Deep copy the looks.
             m_looksList.clear();
             m_looksList.reserve(rhs.m_looksList.size());
-            for(unsigned int i=0; i<rhs.m_looksList.size(); ++i)
+            for (const auto & look : rhs.m_looksList)
             {
-                m_looksList.push_back(rhs.m_looksList[i]->createEditableCopy());
+                m_looksList.push_back(look->createEditableCopy());
             }
 
             // Assignment operator will suffice for these.
             m_roles = rhs.m_roles;
+
+            m_allNamedTransforms.clear();
+            m_allNamedTransforms.reserve(rhs.m_allNamedTransforms.size());
+            for (const auto & nt : rhs.m_allNamedTransforms)
+            {
+                m_allNamedTransforms.push_back(nt->createEditableCopy());
+            }
+            m_activeNamedTransformNames = rhs.m_activeNamedTransformNames;
+            m_inactiveNamedTransformNames = rhs.m_inactiveNamedTransformNames;
 
             m_displays = rhs.m_displays;
             m_activeDisplays = rhs.m_activeDisplays;
@@ -458,7 +480,29 @@ public:
         return m_allColorSpaces->hasColorSpace(csname);
     }
 
-    StringUtils::StringVec buildInactiveColorSpaceList() const;
+    ConstNamedTransformRcPtr getNamedTransform(const char * name) const noexcept
+    {
+        if (name && *name)
+        {
+            const std::string str = StringUtils::Lower(name);
+            for (const auto & nt : m_allNamedTransforms)
+            {
+                if (StringUtils::Lower(nt->getName()) == str)
+                {
+                    return nt;
+                }
+            }
+        }
+        return ConstNamedTransformRcPtr();
+    }
+
+    enum InactiveType
+    {
+        INACTIVE_COLORSPACE =0,
+        INACTIVE_NAMEDTRANSFORM,
+        INACTIVE_ALL
+    };
+    StringUtils::StringVec buildInactiveNamesList(InactiveType type) const;
     void refreshActiveColorSpaces();
 
     ConstViewTransformRcPtr getViewTransform(const char * name) const noexcept
@@ -607,39 +651,45 @@ public:
         }
 
         // If USE_DISPLAY_NAME is not present, a valid color space must be specified.
-        if (!view.useDisplayNameForColorspace() && !hasColorSpace(view.m_colorspace.c_str()))
+        if (!view.useDisplayNameForColorspace() &&
+            !hasColorSpace(view.m_colorspace.c_str()) &&
+            !getNamedTransform(view.m_colorspace.c_str()))
         {
             std::ostringstream os{ GetDisplayViewPrefixErrorMsg(display, view) };
-            os << "that refers to a color space, '" << view.m_colorspace << "', ";
-            os << "which is not defined.";
+            os << "that refers to a color space or a named transform, '" << view.m_colorspace;
+            os << "', which is not defined.";
             m_validationtext = os.str();
             throw Exception(m_validationtext.c_str());
         }
 
-        // If there is a view transform, it must exist and its color space must be a
-        // display-referred color space.
+        // If there is a view transform, it must exist (or be a named transform) and its color
+        // space must be a display-referred color space.
         if (!view.m_viewTransform.empty())
         {
-            if (!getViewTransform(view.m_viewTransform.c_str()))
+            if (!getNamedTransform(view.m_viewTransform.c_str()))
             {
-                std::ostringstream os{ GetDisplayViewPrefixErrorMsg(display, view) };
-                os << "that refers to a view transform, '" << view.m_viewTransform << "', ";
-                os << "which is not defined.";
-                m_validationtext = os.str();
-                throw Exception(m_validationtext.c_str());
-            }
-
-            if (!view.useDisplayNameForColorspace())
-            {
-                auto cs = m_allColorSpaces->getColorSpace(view.m_colorspace.c_str());
-                if (cs->getReferenceSpaceType() != REFERENCE_SPACE_DISPLAY)
+                if (!getViewTransform(view.m_viewTransform.c_str()))
                 {
                     std::ostringstream os{ GetDisplayViewPrefixErrorMsg(display, view) };
-                    os << "refers to a color space, '" << view.m_colorspace << "', ";
-                    os << "that is not a display-referred color space.";
+                    os << "that refers to a view transform, '" << view.m_viewTransform << "', ";
+                    os << "which is neither a view transform nor a named transform.";
                     m_validationtext = os.str();
                     throw Exception(m_validationtext.c_str());
                 }
+            }
+            const char * displayCS = view.m_colorspace.c_str();
+            if (view.useDisplayNameForColorspace())
+            {
+                displayCS = display.c_str();
+            }
+            auto cs = m_allColorSpaces->getColorSpace(displayCS);
+            if (cs && cs->getReferenceSpaceType() != REFERENCE_SPACE_DISPLAY)
+            {
+                std::ostringstream os{ GetDisplayViewPrefixErrorMsg(display, view) };
+                os << "refers to a color space, '" << std::string(displayCS) << "', ";
+                os << "that is not a display-referred color space.";
+                m_validationtext = os.str();
+                throw Exception(m_validationtext.c_str());
             }
         }
 
@@ -1279,18 +1329,6 @@ void Config::validate() const
             throw Exception(getImpl()->m_validationtext.c_str());
         }
 
-        ConstTransformRcPtr toTrans = cs->getTransform(COLORSPACE_DIR_TO_REFERENCE);
-        if (toTrans)
-        {
-            toTrans->validate();
-        }
-
-        ConstTransformRcPtr fromTrans = cs->getTransform(COLORSPACE_DIR_FROM_REFERENCE);
-        if (fromTrans)
-        {
-            fromTrans->validate();
-        }
-
         existingColorSpaces.insert(namelower);
         if (cs->getReferenceSpaceType() == REFERENCE_SPACE_DISPLAY)
         {
@@ -1338,21 +1376,22 @@ void Config::validate() const
         }
     }
 
-    // Confirm all inactive color spaces exist.
+    // Confirm all inactive color spaces or named transforms exist.
     const StringUtils::StringVec inactiveColorSpaceNames
-        = getImpl()->buildInactiveColorSpaceList();
+        = getImpl()->buildInactiveNamesList(Impl::INACTIVE_ALL);
 
     for (const auto & name : inactiveColorSpaceNames)
     {
-        ConstColorSpaceRcPtr cs = getImpl()->m_allColorSpaces->getColorSpace(name.c_str());
-        if (!cs)
+        if (!getImpl()->m_allColorSpaces->getColorSpace(name.c_str()))
         {
-            std::ostringstream os;
-            os << "Inactive color space '" << name << "' does not exist.";
-            LogWarning(os.str());
+            if (!getImpl()->getNamedTransform(name.c_str()))
+            {
+                std::ostringstream os;
+                os << "Inactive '" << name << "' is neither a color space nor a named transform.";
+                LogWarning(os.str());
+            }
         }
     }
-
 
     ///// DISPLAYS / VIEWS
 
@@ -1668,8 +1707,7 @@ void Config::validate() const
     {
         try
         {
-            auto colorSpaceAccessor = std::bind(&Config::getColorSpace, this, std::placeholders::_1);
-            getImpl()->m_fileRules->getImpl()->validate(colorSpaceAccessor);
+            getImpl()->m_fileRules->getImpl()->validate(*this);
         }
         catch (const Exception & e)
         {
@@ -1770,6 +1808,49 @@ void Config::validate() const
         }
     }
 
+    ///// NamedTransforms
+
+    // As Config::addNamedTransform() already validates some properties of the instance
+    // (i.e. name is not null, at least forward or inverse transform exits, etc.), the code below
+    // only has to validate name conflicts. The NamedTransform name can not use a role,
+    // a color space, a look, or a view transform name.  All transforms are validated above.
+    for (const auto & nt : getImpl()->m_allNamedTransforms)
+    {
+        const char * name = nt->getName();
+        if (hasRole(name))
+        {
+            std::ostringstream os;
+            os << "Config failed validation. NamedTransform can't be named '";
+            os << std::string(name) << "'. This name is already used for a role.";
+            getImpl()->m_validationtext = os.str();
+            throw Exception(getImpl()->m_validationtext.c_str());
+        }
+        if (getColorSpace(name))
+        {
+            std::ostringstream os;
+            os << "Config failed validation. NamedTransform can't be named '";
+            os << std::string(name) << "'. This name is already used for a color space.";
+            getImpl()->m_validationtext = os.str();
+            throw Exception(getImpl()->m_validationtext.c_str());
+        }
+        if (getLook(name))
+        {
+            std::ostringstream os;
+            os << "Config failed validation. NamedTransform can't be named '";
+            os << std::string(name) << "'. This name is already used for a look.";
+            getImpl()->m_validationtext = os.str();
+            throw Exception(getImpl()->m_validationtext.c_str());
+        }
+        if (getViewTransform(name))
+        {
+            std::ostringstream os;
+            os << "Config failed validation. NamedTransform can't be named '";
+            os << std::string(name);
+            os << "'. This name is already used for a view transform.";
+            getImpl()->m_validationtext = os.str();
+            throw Exception(getImpl()->m_validationtext.c_str());
+        }
+    }
 
     ///// Check new features are not used with older config versions.
 
@@ -2034,14 +2115,12 @@ int Config::getNumColorSpaces(SearchReferenceSpaceType searchReferenceType,
     }
     case COLORSPACE_INACTIVE:
     {
-        const StringUtils::StringVec inactiveColorSpaceNames
-            = getImpl()->buildInactiveColorSpaceList();
-        const auto ics = inactiveColorSpaceNames.size();
+        const auto ics = getImpl()->m_inactiveColorSpaceNames.size();
         if (searchReferenceType == SEARCH_REFERENCE_SPACE_ALL)
         {
             return (int)ics;
         }
-        for (auto csname : inactiveColorSpaceNames)
+        for (auto csname : getImpl()->m_inactiveColorSpaceNames)
         {
             auto cs = getColorSpace(csname.c_str());
             if (MatchReferenceType(searchReferenceType, cs->getReferenceSpaceType()))
@@ -2126,24 +2205,21 @@ const char * Config::getColorSpaceNameByIndex(SearchReferenceSpaceType searchRef
     }
     case COLORSPACE_INACTIVE:
     {
-        // TODO: Building the list at each call could be an issue when called in loops.
-        const StringUtils::StringVec inactiveColorSpaceNames =
-            getImpl()->buildInactiveColorSpaceList();
         if (searchReferenceType == SEARCH_REFERENCE_SPACE_ALL)
         {
-            if (index < (int)inactiveColorSpaceNames.size())
+            if (index < (int)getImpl()->m_inactiveColorSpaceNames.size())
             {
-                return inactiveColorSpaceNames[index].c_str();
+                return getImpl()->m_inactiveColorSpaceNames[index].c_str();
             }
             else
             {
                 return "";
             }
         }
-        const int nbCS = (int)inactiveColorSpaceNames.size();
+        const int nbCS = (int)getImpl()->m_inactiveColorSpaceNames.size();
         for (int i = 0; i < nbCS; ++i)
         {
-            auto csname = inactiveColorSpaceNames[i];
+            auto csname = getImpl()->m_inactiveColorSpaceNames[i];
             auto cs = getColorSpace(csname.c_str());
             if (MatchReferenceType(searchReferenceType, cs->getReferenceSpaceType()))
             {
@@ -2189,9 +2265,8 @@ int Config::getIndexForColorSpace(const char * name) const
     for (int idx = 0; idx < getNumColorSpaces(SEARCH_REFERENCE_SPACE_ALL,
                                               COLORSPACE_ACTIVE); ++idx)
     {
-        if (std::string(getColorSpaceNameByIndex(SEARCH_REFERENCE_SPACE_ALL,
-                                                 COLORSPACE_ACTIVE, idx))
-                == std::string(cs->getName()))
+        if (strcmp(getColorSpaceNameByIndex(SEARCH_REFERENCE_SPACE_ALL, COLORSPACE_ACTIVE, idx),
+                   cs->getName()) == 0)
         {
             return idx;
         }
@@ -2446,6 +2521,157 @@ const char * Config::getRoleName(int index) const
 const char * Config::getRoleColorSpace(int index) const
 {
     return LookupRole(getImpl()->m_roles, getRoleName(index));
+}
+
+///////////////////////////////////////////////////////////////////////////
+//
+// Named Transforms
+
+
+int Config::getNumNamedTransforms(NamedTransformVisibility visibility) const noexcept
+{
+    int res = 0;
+    switch (visibility)
+    {
+    case NAMEDTRANSFORM_ALL:
+    {
+        res = (int)getImpl()->m_allNamedTransforms.size();
+        break;
+    }
+    case NAMEDTRANSFORM_ACTIVE:
+    {
+        res = (int)getImpl()->m_activeNamedTransformNames.size();
+        break;
+    }
+    case NAMEDTRANSFORM_INACTIVE:
+    {
+        res = (int)getImpl()->m_inactiveNamedTransformNames.size();
+        break;
+    }
+    }
+
+    return res;
+
+}
+
+const char * Config::getNamedTransformNameByIndex(NamedTransformVisibility visibility,
+                                                  int index) const noexcept
+{
+    if (index < 0)
+    {
+        return "";
+    }
+
+    switch (visibility)
+    {
+    case NAMEDTRANSFORM_ALL:
+    {
+        if (index < (int)getImpl()->m_allNamedTransforms.size())
+        {
+            return getImpl()->m_allNamedTransforms[index]->getName();
+        }
+        return "";
+    }
+    case NAMEDTRANSFORM_ACTIVE:
+    {
+        if (index < (int)getImpl()->m_activeNamedTransformNames.size())
+        {
+            return getImpl()->m_activeNamedTransformNames[index].c_str();
+        }
+        return "";
+    }
+    case NAMEDTRANSFORM_INACTIVE:
+    {
+        if (index < (int)getImpl()->m_inactiveNamedTransformNames.size())
+        {
+            return getImpl()->m_inactiveNamedTransformNames[index].c_str();
+        }
+        return "";
+    }
+    }
+
+    return "";
+}
+
+ConstNamedTransformRcPtr Config::getNamedTransform(const char * name) const noexcept
+{
+    // Use all named transforms.
+    return getImpl()->getNamedTransform(name);
+}
+
+int Config::getNumNamedTransforms() const noexcept
+{
+    return getNumNamedTransforms(NAMEDTRANSFORM_ACTIVE);
+}
+
+const char * Config::getNamedTransformNameByIndex(int index) const noexcept
+{
+    return getNamedTransformNameByIndex(NAMEDTRANSFORM_ACTIVE, index);
+}
+
+int Config::getIndexForNamedTransform(const char * name) const noexcept
+{
+    ConstNamedTransformRcPtr nt = getNamedTransform(name);
+    if (!nt)
+    {
+        return -1;
+    }
+
+    // Check to see if the name is an active named transform.
+    const auto num = getNumNamedTransforms(NAMEDTRANSFORM_ACTIVE);
+    for (int idx = 0; idx < num; ++idx)
+    {
+        if (strcmp(getNamedTransformNameByIndex(NAMEDTRANSFORM_ACTIVE, idx), nt->getName()) == 0)
+        {
+            return idx;
+        }
+    }
+
+    // Requests for an inactive named transform or an inactive color space will both fail.
+    return -1;
+
+}
+
+void Config::addNamedTransform(const ConstNamedTransformRcPtr & nt)
+{
+    if (!nt)
+    {
+        throw Exception("Named transform is null.");
+    }
+    const std::string name(nt->getName());
+    if (name.empty())
+    {
+        throw Exception("Named transform must have a non-empty name.");
+    }
+    if (!nt->getTransform(TRANSFORM_DIR_FORWARD) &&
+        !nt->getTransform(TRANSFORM_DIR_INVERSE))
+    {
+        throw Exception("Named transform must define at least one transform.");
+    }
+
+    NamedTransformRcPtr copy = nt->createEditableCopy();
+    ConstNamedTransformRcPtr namedTransformCopy = copy;
+    ConstNamedTransformRcPtr existing = getNamedTransform(name.c_str());
+    if (existing)
+    {
+        // Replace existing named transform by swapping pointers. Copy will not be needed after.
+        namedTransformCopy.swap(existing);
+    }
+    else
+    {
+        getImpl()->m_allNamedTransforms.push_back(namedTransformCopy);
+    }
+
+    getImpl()->resetCacheIDs();
+    getImpl()->refreshActiveColorSpaces();
+}
+
+void Config::clearNamedTransforms()
+{
+    getImpl()->m_allNamedTransforms.clear();
+
+    getImpl()->resetCacheIDs();
+    getImpl()->refreshActiveColorSpaces();
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -3396,17 +3622,21 @@ void Config::setFileRules(ConstFileRulesRcPtr fileRules)
 
 const char * Config::getColorSpaceFromFilepath(const char * filePath) const
 {
-    return getImpl()->m_fileRules->getImpl()->getColorSpaceFromFilepath(*this, filePath);
+    return getImpl()->m_fileRules->getImpl()->getColorSpaceFromFilepath(*this,
+                                                                        filePath ? filePath : "");
 }
 
 const char * Config::getColorSpaceFromFilepath(const char * filePath, size_t & ruleIndex) const
 {
-    return getImpl()->m_fileRules->getImpl()->getColorSpaceFromFilepath(*this, filePath, ruleIndex);
+    return getImpl()->m_fileRules->getImpl()->getColorSpaceFromFilepath(*this,
+                                                                        filePath ? filePath : "",
+                                                                        ruleIndex);
 }
 
 bool Config::filepathOnlyMatchesDefaultRule(const char * filePath) const
 {
-    return getImpl()->m_fileRules->getImpl()->filepathOnlyMatchesDefaultRule(*this, filePath);
+    return getImpl()->m_fileRules->getImpl()->filepathOnlyMatchesDefaultRule(*this,
+                                                                             filePath ? filePath : "");
 }
 
 
@@ -3433,91 +3663,10 @@ ConstProcessorRcPtr Config::getProcessor(const ConstContextRcPtr & context,
         throw Exception("Config::GetProcessor failed. Destination color space is null.");
     }
 
-    if (!context)
-    {
-        throw Exception("Config::GetProcessor failed. Context is null.");
-    }
-
-    // The goal of the usedContext is to only contain the context vars that are actually used for
-    // this transform.  This allows the cache to be more efficient. However, there are still some
-    // various TODOs since the usedContext will sometimes contain more vars than are needed.
-    ContextRcPtr usedContext = Context::Create();
-    usedContext->setSearchPath(context->getSearchPath());
-    usedContext->setWorkingDir(context->getWorkingDir());
-
     ColorSpaceTransformRcPtr transform = ColorSpaceTransform::Create();
     transform->setSrc(src->getName());
     transform->setDst(dst->getName());
-
-    const bool needContextVariables
-        = CollectContextVariables(*this, *context, *transform, usedContext);
-
-    // Create helper method.
-    auto CreateProcessor = [](const Config & config, 
-                              const ConstContextRcPtr & context,
-                              const ConstColorSpaceRcPtr & src,
-                              const ConstColorSpaceRcPtr & dst) -> ProcessorRcPtr
-    {
-        ProcessorRcPtr processor = Processor::Create();
-        processor->getImpl()->setProcessorCacheFlags(config.getImpl()->m_cacheFlags);
-        processor->getImpl()->setColorSpaceConversion(config, context, src, dst);
-        processor->getImpl()->computeMetadata();
-        return processor;
-    };
-
-    if (getImpl()->m_processorCache.isEnabled())
-    {
-        AutoMutex guard(getImpl()->m_processorCache.lock());
-
-        std::ostringstream oss;
-        oss << (needContextVariables ? std::string(usedContext->getCacheID()) : "")
-            << std::string(src->getName())
-            << std::string(dst->getName());
-
-        const std::size_t key = std::hash<std::string>{}(oss.str());
-
-        // As the entry is a shared pointer instance, having an empty one means that the entry does
-        // not exist in the cache. So, it provides a fast existence check & access in one call.
-        ProcessorRcPtr & processor = getImpl()->m_processorCache[key];
-        if (!processor)
-        {
-            ProcessorRcPtr proc = CreateProcessor(*this, context, src, dst);
-
-            const bool doFallback = !Platform::isEnvPresent(OCIO_DISABLE_CACHE_FALLBACK);
-            if (doFallback)
-            {
-                // If an entry with the same cache ID already exists in the cache then reuse it instead
-                // of the newly created one. Even with different context, the same processor could be
-                // created (e.g. the processor creation does not rely on some context variables).
-
-                // The benefit to using the existing one is that it may already have an optimized
-                // Processor, CPUProcessor, or GPUProcessor inside it.
-
-                // TODO: With the original context part of the cache data, the code could first compare
-                // the two contexts before doing the lengthy Processor::getCacheID() computation.
-
-                for (auto & entry : getImpl()->m_processorCache)
-                {
-                    if (entry.second && 0 == strcmp(entry.second->getCacheID(), proc->getCacheID()))
-                    {
-                        processor = entry.second;
-                        break;
-                    }
-                } 
-            }
-
-            if (!processor)
-            {
-                processor = proc;
-            }
-        }
-
-        return processor;
-    }
-    else
-    {
-        return CreateProcessor(*this, context, src, dst);
-    }
+    return getProcessor(context, transform, TRANSFORM_DIR_FORWARD);
 }
 
 ConstProcessorRcPtr Config::getProcessor(const char * srcName, const char * dstName) const
@@ -3531,23 +3680,10 @@ ConstProcessorRcPtr Config::getProcessor(const ConstContextRcPtr & context,
                                          const char * srcName,
                                          const char * dstName) const
 {
-    ConstColorSpaceRcPtr src = getColorSpace(srcName);
-    if(!src)
-    {
-        std::ostringstream os;
-        os << "Could not find source color space '" << srcName << "'.";
-        throw Exception(os.str().c_str());
-    }
-
-    ConstColorSpaceRcPtr dst = getColorSpace(dstName);
-    if(!dst)
-    {
-        std::ostringstream os;
-        os << "Could not find destination color space '" << dstName << "'.";
-        throw Exception(os.str().c_str());
-    }
-
-    return getProcessor(context, src, dst);
+    auto csTransform = ColorSpaceTransform::Create();
+    csTransform->setSrc(srcName);
+    csTransform->setDst(dstName);
+    return getProcessor(context, csTransform, TRANSFORM_DIR_FORWARD);
 }
 
 
@@ -3600,6 +3736,11 @@ ConstProcessorRcPtr Config::getProcessor(const ConstContextRcPtr & context,
         throw Exception("Config::GetProcessor failed. Transform is null.");
     }
 
+
+    // The goal of the usedContext is to only contain the context vars that are actually used for
+    // this transform.  This allows the cache to be more efficient. However, there are still some
+    // various TODOs since the usedContext will sometimes contain more vars than are needed.
+
     ContextRcPtr usedContext = Context::Create();
     usedContext->setSearchPath(context->getSearchPath());
     usedContext->setWorkingDir(context->getWorkingDir());
@@ -3642,9 +3783,17 @@ ConstProcessorRcPtr Config::getProcessor(const ConstContextRcPtr & context,
             const bool doFallback = !Platform::isEnvPresent(OCIO_DISABLE_CACHE_FALLBACK);
             if (doFallback)
             {
-                // If an entry with the same cache ID already exists in the cache then reuse it instead
-                // of the newly created one. Even with different context, the same processor could be
-                // created (e.g. the processor creation does not rely on some context variables).
+                // If an entry with the same cache ID already exists in the cache then reuse it
+                // instead of the newly created one. Even with different context, the same
+                // processor could be created (e.g. the processor creation does not rely on some
+                // context variables).
+
+                // The benefit to using the existing one is that it may already have an optimized
+                // Processor, CPUProcessor, or GPUProcessor inside it.
+
+                // TODO: With the original context part of the cache data, the code could first
+                // compare the two contexts before doing the lengthy Processor::getCacheID()
+                // computation.
 
                 for (auto & entry : getImpl()->m_processorCache)
                 {
@@ -3912,38 +4061,64 @@ void Config::setProcessorCacheFlags(ProcessorCacheFlags flags) noexcept
 ///////////////////////////////////////////////////////////////////////////
 //  Config::Impl
 
-StringUtils::StringVec Config::Impl::buildInactiveColorSpaceList() const
+StringUtils::StringVec Config::Impl::buildInactiveNamesList(InactiveType type) const
 {
-    StringUtils::StringVec inactiveColorSpaces;
+    StringUtils::StringVec inactiveNames;
 
     // An API request always supersedes the other lists.
     if (!m_inactiveColorSpaceNamesAPI.empty())
     {
-        inactiveColorSpaces = StringUtils::Split(m_inactiveColorSpaceNamesAPI, ',');
+        inactiveNames = StringUtils::Split(m_inactiveColorSpaceNamesAPI, ',');
     }
     // The env. variable only supersedes the config list.
     else if (!m_inactiveColorSpaceNamesEnv.empty())
     {
-        inactiveColorSpaces = StringUtils::Split(m_inactiveColorSpaceNamesEnv, ',');
+        inactiveNames = StringUtils::Split(m_inactiveColorSpaceNamesEnv, ',');
     }
     else if (!m_inactiveColorSpaceNamesConf.empty())
     {
-        inactiveColorSpaces = StringUtils::Split(m_inactiveColorSpaceNamesConf, ',');
+        inactiveNames = StringUtils::Split(m_inactiveColorSpaceNamesConf, ',');
     }
 
-    for (auto & v : inactiveColorSpaces)
+    StringUtils::StringVec res;
+    for (auto & v : inactiveNames)
     {
         v = StringUtils::Trim(v);
+        switch (type)
+        {
+        case INACTIVE_COLORSPACE:
+        {
+            if (m_allColorSpaces->getColorSpace(v.c_str()))
+            {
+                res.push_back(v);
+            }
+            break;
+        }
+        case INACTIVE_NAMEDTRANSFORM:
+        {
+            if (getNamedTransform(v.c_str()))
+            {
+                res.push_back(v);
+            }
+            break;
+        }
+        case INACTIVE_ALL:
+        {
+            res.push_back(v);
+            break;
+        }
+        }
     }
 
-    return inactiveColorSpaces;
+    return res;
 }
 
 void Config::Impl::refreshActiveColorSpaces()
 {
     m_activeColorSpaceNames.clear();
+    m_activeNamedTransformNames.clear();
 
-    const StringUtils::StringVec inactiveColorSpaces = buildInactiveColorSpaceList();
+    m_inactiveColorSpaceNames = buildInactiveNamesList(Impl::INACTIVE_COLORSPACE);
 
     for (int i = 0; i < m_allColorSpaces->getNumColorSpaces(); ++i)
     {
@@ -3952,7 +4127,7 @@ void Config::Impl::refreshActiveColorSpaces()
 
         bool isActive = true;
 
-        for (const auto & csName : inactiveColorSpaces)
+        for (const auto & csName : m_inactiveColorSpaceNames)
         {
             if (csName==name)
             {
@@ -3964,6 +4139,29 @@ void Config::Impl::refreshActiveColorSpaces()
         if (isActive)
         {
             m_activeColorSpaceNames.push_back(cs->getName());
+        }
+    }
+
+    m_inactiveNamedTransformNames = buildInactiveNamesList(Impl::INACTIVE_NAMEDTRANSFORM);
+
+    for (const auto & nt : m_allNamedTransforms)
+    {
+        const std::string name(nt->getName());
+
+        bool isActive = true;
+
+        for (const auto & csName : m_inactiveNamedTransformNames)
+        {
+            if (csName == name)
+            {
+                isActive = false;
+                break;
+            }
+        }
+
+        if (isActive)
+        {
+            m_activeNamedTransformNames.push_back(nt->getName());
         }
     }
 }
@@ -3984,7 +4182,7 @@ void Config::Impl::getAllInternalTransforms(ConstTransformVec & transformVec) co
 {
     // Grab all transforms from the ColorSpaces.
 
-    for (int i=0; i<m_allColorSpaces->getNumColorSpaces(); ++i)
+    for (int i = 0; i < m_allColorSpaces->getNumColorSpaces(); ++i)
     {
         ConstTransformRcPtr tr
             = m_allColorSpaces->getColorSpaceByIndex(i)->getTransform(COLORSPACE_DIR_TO_REFERENCE);
@@ -4028,6 +4226,23 @@ void Config::Impl::getAllInternalTransforms(ConstTransformVec & transformVec) co
         }
 
         tr = vt->getTransform(VIEWTRANSFORM_DIR_FROM_REFERENCE);
+        if (tr)
+        {
+            transformVec.push_back(tr);
+        }
+    }
+
+    // Grab all transforms from the named transforms.
+
+    for (const auto & nt : m_allNamedTransforms)
+    {
+        ConstTransformRcPtr tr = nt->getTransform(TRANSFORM_DIR_FORWARD);
+        if (tr)
+        {
+            transformVec.push_back(tr);
+        }
+
+        tr = nt->getTransform(TRANSFORM_DIR_INVERSE);
         if (tr)
         {
             transformVec.push_back(tr);
@@ -4277,6 +4492,14 @@ void Config::Impl::checkVersionConsistency() const
     {
         throw Exception("Only version 2 (or higher) can have ViewTransforms.");
     }
+
+    // Check for the NamedTransforms.
+
+    if (m_majorVersion < 2 && m_allNamedTransforms.size() != 0)
+    {
+        throw Exception("Only version 2 (or higher) can have NamedTransforms.");
+    }
+
 }
 
 } // namespace OCIO_NAMESPACE

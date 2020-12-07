@@ -48,7 +48,8 @@ ConstProcessorRcPtr GetProcessor(const ConstConfigRcPtr & config,
                                  const ConstMatrixTransformRcPtr & channelView,
                                  TransformDirection direction)
 {
-    ColorSpaceMenuHelperRcPtr menuHelper = ColorSpaceMenuHelper::Create(config, nullptr, nullptr);
+    // Src of a display view can't be a named transform (don't include them).
+    auto menuHelper = ColorSpaceMenuHelper::Create(config, nullptr, nullptr, false);
 
     DisplayViewTransformRcPtr displayTransform = DisplayViewTransform::Create();
     displayTransform->setDirection(direction);
