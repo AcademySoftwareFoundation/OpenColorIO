@@ -1,7 +1,6 @@
 /**
  * OpenColorIO ColorSpace Iop.
 */
-
 #include <cstring>
 #include <new>
 #include <stdexcept>
@@ -36,6 +35,23 @@ public:
     OfxParamHandle m_ConfigFile;
 };
 
+// Exception thrown when images are missing
+class NoImageException{};
+
+// Exception thrown with a status to return
+class StatusException
+{
+public :
+    explicit StatusException(OfxStatus stat)
+        : status_(stat)
+    {}
+
+    OfxStatus status() const {return status_;}
+
+protected :
+    OfxStatus status_;
+};
+
 // Instanciating OCIO ColorSpace Transform API
 OCIO::ColorSpaceTransformRcPtr g_ColorSpaceTransform = OCIO::ColorSpaceTransform::Create();
 
@@ -66,8 +82,12 @@ OfxStatus OnLoad(void)
 }
 
 // Get ColorSpaceContainer from a property set handle
-ColorSpaceContainer* GetContainer(OfxPropertySetHandle effectProps)
+ColorSpaceContainer* GetContainer(OfxImageEffectHandle effect)
 {
+    OfxPropertySetHandle effectProps;
+    g_EffectHost->getPropertySet(effect, &effectProps);
+
+
     ColorSpaceContainer *Container = 0;
     g_PropHost->propGetPointer(effectProps, kOfxPropInstanceData, 0, (void**) &Container);
 
@@ -195,6 +215,164 @@ OfxStatus Describe(OfxImageEffectHandle effect)
     return kOfxStatOK;
 }
 
+// TODO: Move Utilities functions/exceptions to a separate file
+
+// Utility Functions to get Image
+inline int GetImageRowBytes(OfxPropertySetHandle handle)
+{
+    int r;
+    g_PropHost->propGetInt(handle, kOfxImagePropRowBytes, 0, &r);
+    return r;
+}
+
+// Utility Functions to get Image
+inline int GetImagePixelDepth(OfxPropertySetHandle handle, bool isUnMapped = false)
+{
+    char *bitString;
+    if(isUnMapped)
+        g_PropHost->propGetString(handle, kOfxImageClipPropUnmappedPixelDepth, 0, &bitString);
+    else
+        g_PropHost->propGetString(handle, kOfxImageEffectPropPixelDepth, 0, &bitString);
+
+    if(strcmp(bitString, kOfxBitDepthByte) == 0)
+        return 8;
+
+    else if(strcmp(bitString, kOfxBitDepthShort) == 0)
+        return 16;
+
+    else if(strcmp(bitString, kOfxBitDepthFloat) == 0)
+        return 32;
+
+    return 0;
+}
+
+// Utility Functions to get Image
+inline bool GetImagePixelsAreRGBA(OfxPropertySetHandle handle, bool unmapped = false)
+{
+    char *v;
+    if(unmapped)
+        g_PropHost->propGetString(handle, kOfxImageClipPropUnmappedComponents, 0, &v);
+    else
+        g_PropHost->propGetString(handle, kOfxImageEffectPropComponents, 0, &v);
+    return strcmp(v, kOfxImageComponentAlpha) != 0;
+}
+
+// Utility Functions to get Image
+inline OfxRectI GetImageBounds(OfxPropertySetHandle handle)
+{
+    OfxRectI r;
+    g_PropHost->propGetIntN(handle, kOfxImagePropBounds, 4, &r.x1);
+    return r;
+}
+
+// Utility Functions to get Image
+inline void* GetImageData(OfxPropertySetHandle handle)
+{
+    void *r;
+    g_PropHost->propGetPointer(handle, kOfxImagePropData, 0, &r);
+    return r;
+}
+
+// Utility Functions to get Image
+inline OfxPropertySetHandle GetImage(OfxImageClipHandle &clip, OfxTime time, int& rowBytes, int& bitDepth, bool& isAlpha, OfxRectI &rect, void* &data)
+{
+    OfxPropertySetHandle imageProps = NULL;
+    if (g_EffectHost->clipGetImage(clip, time, NULL, &imageProps) == kOfxStatOK)
+    {
+        rowBytes  = GetImageRowBytes(imageProps);
+        bitDepth  = GetImagePixelDepth(imageProps);
+        isAlpha   = !GetImagePixelsAreRGBA(imageProps);
+        rect      =  GetImageBounds(imageProps);
+        data      =  GetImageData(imageProps);
+        if(data == NULL) 
+        {
+            g_EffectHost->clipReleaseImage(imageProps);
+            imageProps = NULL;
+        }
+    }
+    else
+    {
+        rowBytes  = 0;
+        bitDepth  = 0;
+        isAlpha   = false;
+        rect.x1 = rect.x2 = rect.y1 = rect.y2 = 0;
+        data = NULL;
+    }
+    return imageProps;
+}
+
+// Renders image on demand
+OfxStatus Render(OfxImageEffectHandle effect, OfxPropertySetHandle inArgs, OfxPropertySetHandle outArgs)
+{
+    // Get the render window and the time from the inArgs
+    OfxTime time;
+    OfxRectI renderWindow;
+    OfxStatus status = kOfxStatOK;
+
+    g_PropHost->propGetDouble(inArgs, kOfxPropTime, 0, &time);
+    g_PropHost->propGetIntN(inArgs, kOfxImageEffectPropRenderWindow, 4, &renderWindow.x1);
+
+    ColorSpaceContainer *Container = GetContainer(effect);
+
+    OfxPropertySetHandle srcImg = nullptr, dstImg = nullptr;
+    int srcRowBytes, srcBitDepth, dstRowBytes, dstBitDepth;
+    bool srcIsAlpha, dstIsAplha;
+    OfxRectI dstRect, srcRect;
+    void *src, *dst;
+
+    try
+    {
+        srcImg = GetImage(Container->m_srcClip, time, srcRowBytes, srcBitDepth, srcIsAlpha, srcRect, src);
+        if(srcImg == NULL)
+            throw NoImageException();
+        dstImg = GetImage(Container->m_dstClip, time, dstRowBytes, dstBitDepth, dstIsAplha, dstRect, dst);
+        if(dstImg == NULL)
+            throw NoImageException();
+
+        if (srcBitDepth != dstBitDepth || srcIsAlpha != dstIsAplha)
+            throw StatusException(kOfxStatErrImageFormat);
+
+        char *srcCS;
+        char *dstCS;
+        g_ParamHost->paramGetValueAtTime(Container->m_srcColorSpace, time, &srcCS);
+        g_ParamHost->paramGetValueAtTime(Container->m_dstColorSpace, time, &dstCS);
+
+        g_ColorSpaceTransform->setSrc(srcCS);
+        g_ColorSpaceTransform->setDst(dstCS);
+        OCIO::ConstProcessorRcPtr processor = g_Config->getProcessor(g_ColorSpaceTransform);
+
+        OCIO::ConstCPUProcessorRcPtr cpu = processor->getDefaultCPUProcessor();
+
+        OCIO::PackedImageDesc img(reinterpret_cast<float *>(dst), dstRect.x2 - dstRect.x1, dstRect.y2 - dstRect.y1, 4);
+        cpu->apply(img);
+
+    }
+    catch(NoImageException &ex)
+    {
+        if(!g_EffectHost->abort(effect))
+            status = kOfxStatFailed;
+    }
+    catch(StatusException &ex)
+    {
+        status = ex.status();
+    }
+    catch(OCIO::Exception & exception)
+    {
+        std::cerr << "OpenColorIO Error: " << exception.what() << std::endl;
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << "Error: OpenColorIO ColorSpaceTransform Plugin    " << e.what() << '\n';
+    }
+
+    if(srcImg)
+        g_EffectHost->clipReleaseImage(srcImg);
+    if(dstImg)
+        g_EffectHost->clipReleaseImage(dstImg);
+
+    return status;
+}
+
 // -----------------------------------------------------------------------------------------------
 // ---------------------------------- Plugin's Main Entry point ----------------------------------
 // -----------------------------------------------------------------------------------------------
@@ -203,6 +381,14 @@ static OfxStatus EntryPoint(const char* action, const void* handle, OfxPropertyS
     try
     {
         OfxImageEffectHandle effect = (OfxImageEffectHandle) handle;
+        if(strcmp(action, kOfxActionLoad) == 0)
+        {
+            return OnLoad();
+        }
+        if(strcmp(action, kOfxActionCreateInstance) == 0)
+        {
+            return CreateInstance(effect);
+        }
         if(strcmp(action, kOfxActionDescribe)==0)
         {
             return Describe(effect);
@@ -211,13 +397,9 @@ static OfxStatus EntryPoint(const char* action, const void* handle, OfxPropertyS
         {
             return DescribeInContext(effect);
         }
-        if(strcmp(action, kOfxActionLoad) == 0)
+        if(strcmp(action, kOfxImageEffectActionRender) == 0)
         {
-            return OnLoad();
-        }
-        if(strcmp(action, kOfxActionCreateInstance) == 0)
-        {
-            return CreateInstance(effect);
+            return Render(effect, inArgs, outArgs);
         }
     }
     catch(std::bad_alloc)
