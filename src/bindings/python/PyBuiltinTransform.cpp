@@ -10,10 +10,13 @@ void bindPyBuiltinTransform(py::module & m)
 {
     BuiltinTransformRcPtr DEFAULT = BuiltinTransform::Create();
 
-    auto cls = py::class_<BuiltinTransform, 
-                          BuiltinTransformRcPtr /* holder */, 
-                          Transform /* base */>(m, "BuiltinTransform")
-        .def(py::init(&BuiltinTransform::Create))
+    auto clsBuiltinTransform = 
+        py::class_<BuiltinTransform, BuiltinTransformRcPtr /* holder */, Transform /* base */>(
+            m, "BuiltinTransform",
+            DOC(BuiltinTransform))
+
+        .def(py::init(&BuiltinTransform::Create), 
+             DOC(BuiltinTransform, Create))
         .def(py::init([](const std::string & style, TransformDirection dir) 
             {
                 BuiltinTransformRcPtr p = BuiltinTransform::Create();
@@ -23,13 +26,17 @@ void bindPyBuiltinTransform(py::module & m)
                 return p;
             }), 
              "style"_a = DEFAULT->getStyle(),
-             "direction"_a = DEFAULT->getDirection())
+             "direction"_a = DEFAULT->getDirection(), 
+             DOC(BuiltinTransform, Create))
 
-        .def("setStyle",       &BuiltinTransform::setStyle, "style"_a.none(false))
-        .def("getStyle",       &BuiltinTransform::getStyle)
-        .def("getDescription", &BuiltinTransform::getDescription);
+        .def("setStyle", &BuiltinTransform::setStyle, "style"_a.none(false), 
+             DOC(BuiltinTransform, setStyle))
+        .def("getStyle", &BuiltinTransform::getStyle, 
+             DOC(BuiltinTransform, getStyle))
+        .def("getDescription", &BuiltinTransform::getDescription, 
+             DOC(BuiltinTransform, getDescription));
 
-    defStr(cls);
+    defStr(clsBuiltinTransform);
 }
 
 } // namespace OCIO_NAMESPACE

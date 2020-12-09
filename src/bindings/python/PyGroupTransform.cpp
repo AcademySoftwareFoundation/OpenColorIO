@@ -21,10 +21,18 @@ void bindPyGroupTransform(py::module & m)
 {
     GroupTransformRcPtr DEFAULT = GroupTransform::Create();
 
-    auto cls = py::class_<GroupTransform, 
-                          GroupTransformRcPtr /* holder */, 
-                          Transform /* base */>(m, "GroupTransform")
-        .def(py::init(&GroupTransform::Create))
+    auto clsGroupTransform = 
+        py::class_<GroupTransform, GroupTransformRcPtr /* holder */, Transform /* base */>(
+            m, "GroupTransform", 
+            DOC(GroupTransform));
+
+    auto clsTransformIterator = 
+        py::class_<TransformIterator>(
+            clsGroupTransform, "TransformIterator");
+
+    clsGroupTransform
+        .def(py::init(&GroupTransform::Create),
+             DOC(GroupTransform, Create))
         .def(py::init([](const std::vector<TransformRcPtr> transforms, 
                          TransformDirection dir)
             {
@@ -38,30 +46,32 @@ void bindPyGroupTransform(py::module & m)
                 return p;
             }), 
              "transforms"_a = std::vector<ConstTransformRcPtr>{},
-             "direction"_a = DEFAULT->getDirection())
+             "direction"_a = DEFAULT->getDirection(),
+             DOC(GroupTransform, Create))
 
-        .def("__iter__", [](GroupTransformRcPtr & self) { return TransformIterator(self); })
-        .def("__len__", &GroupTransform::getNumTransforms)
-        .def("__getitem__", 
-             (ConstTransformRcPtr (GroupTransform::*)(int) const) &GroupTransform::getTransform, 
-             "index"_a)
+        .def("__iter__", [](GroupTransformRcPtr & self) 
+            { 
+                return TransformIterator(self); 
+            })
+        .def("__len__", &GroupTransform::getNumTransforms,
+             DOC(GroupTransform, getNumTransforms))
         .def("__getitem__", 
              (TransformRcPtr & (GroupTransform::*)(int)) &GroupTransform::getTransform, 
-             "index"_a)
+             "index"_a,
+             DOC(GroupTransform, getTransform))
              
         .def("getFormatMetadata", 
              (FormatMetadata & (GroupTransform::*)()) &GroupTransform::getFormatMetadata,
-             py::return_value_policy::reference_internal)
-        .def("getFormatMetadata", 
-             (const FormatMetadata & (GroupTransform::*)() const) 
-             &GroupTransform::getFormatMetadata,
-             py::return_value_policy::reference_internal)
-        .def("appendTransform", &GroupTransform::appendTransform, "transform"_a)
-        .def("prependTransform", &GroupTransform::prependTransform, "transform"_a);
+             py::return_value_policy::reference_internal,
+             DOC(GroupTransform, getFormatMetadata))
+        .def("appendTransform", &GroupTransform::appendTransform, "transform"_a,
+             DOC(GroupTransform, appendTransform))
+        .def("prependTransform", &GroupTransform::prependTransform, "transform"_a,
+             DOC(GroupTransform, prependTransform));
 
-    defStr(cls);
+    defStr(clsGroupTransform);
 
-    py::class_<TransformIterator>(cls, "TransformIterator")
+    clsTransformIterator
         .def("__len__", [](TransformIterator & it) { return it.m_obj->getNumTransforms(); })
         .def("__getitem__", [](TransformIterator & it, int i) 
             { 
