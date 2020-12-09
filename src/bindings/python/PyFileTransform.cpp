@@ -78,19 +78,25 @@ void bindPyFileTransform(py::module & m)
     defStr(clsFileTransform);
 
     clsFormatIterator
-        .def("__len__", [](FormatIterator & it) { return FileTransform::getNumFormats(); })
+        .def("__len__", [](FormatIterator & it) 
+            { 
+                return FileTransform::getNumFormats(); 
+            })
         .def("__getitem__", [](FormatIterator & it, int i) 
             { 
-                it.checkIndex(i, FileTransform::getNumFormats());
-                return py::make_tuple(FileTransform::getFormatNameByIndex(i), 
-                                      FileTransform::getFormatExtensionByIndex(i));
+                it.checkIndex(i, FileTransform::GetNumFormats());
+                return py::make_tuple(FileTransform::GetFormatNameByIndex(i), 
+                                      FileTransform::GetFormatExtensionByIndex(i));
             })
-        .def("__iter__", [](FormatIterator & it) -> FormatIterator & { return it; })
+        .def("__iter__", [](FormatIterator & it) -> FormatIterator & 
+            { 
+                return it; 
+            })
         .def("__next__", [](FormatIterator & it)
             {
-                int i = it.nextIndex(FileTransform::getNumFormats());
-                return py::make_tuple(FileTransform::getFormatNameByIndex(i), 
-                                      FileTransform::getFormatExtensionByIndex(i));
+                int i = it.nextIndex(FileTransform::GetNumFormats());
+                return py::make_tuple(FileTransform::GetFormatNameByIndex(i), 
+                                      FileTransform::GetFormatExtensionByIndex(i));
             });
 }
 

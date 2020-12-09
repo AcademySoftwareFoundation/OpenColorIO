@@ -40,21 +40,24 @@ import BuiltinTransformTest
 import CDLTransformTest
 import ColorSpaceTest
 import ColorSpaceTransformTest
+import ConfigTest
+import DisplayViewTransformTest
 import ExponentTransformTest
 import ExponentWithLinearTransformTest
 import ExposureContrastTransformTest
 import FileTransformTest
 import FixedFunctionTransformTest
 import FormatMetadataTest
-import GroupTransformTest
-import LogTransformTest
-import LookTest
-import OpenColorIOTest
-import ViewingRulesTest
 import GradingDataTest
 import GradingPrimaryTransformTest
 import GradingRGBCurveTransformTest
 import GradingToneTransformTest
+import GroupTransformTest
+import LogTransformTest
+import LookTest
+import NamedTransformTest
+import OpenColorIOTest
+import ViewingRulesTest
 #from MainTest import *
 #from ConstantsTest import *
 #from ConfigTest import *
@@ -81,21 +84,24 @@ def suite():
     suite.addTest(loader.loadTestsFromModule(CDLTransformTest))
     suite.addTest(loader.loadTestsFromModule(ColorSpaceTest))
     suite.addTest(loader.loadTestsFromModule(ColorSpaceTransformTest))
+    suite.addTest(loader.loadTestsFromModule(ConfigTest))
+    suite.addTest(loader.loadTestsFromModule(DisplayViewTransformTest))
     suite.addTest(loader.loadTestsFromModule(ExponentTransformTest))
     suite.addTest(loader.loadTestsFromModule(ExponentWithLinearTransformTest))
     suite.addTest(loader.loadTestsFromModule(ExposureContrastTransformTest))
     suite.addTest(loader.loadTestsFromModule(FileTransformTest))
     suite.addTest(loader.loadTestsFromModule(FixedFunctionTransformTest))
     suite.addTest(loader.loadTestsFromModule(FormatMetadataTest))
-    suite.addTest(loader.loadTestsFromModule(GroupTransformTest))
-    suite.addTest(loader.loadTestsFromModule(LogTransformTest))
-    suite.addTest(loader.loadTestsFromModule(LookTest))
-    suite.addTest(loader.loadTestsFromModule(OpenColorIOTest))
-    suite.addTest(loader.loadTestsFromModule(ViewingRulesTest))
     suite.addTest(loader.loadTestsFromModule(GradingDataTest))
     suite.addTest(loader.loadTestsFromModule(GradingPrimaryTransformTest))
     suite.addTest(loader.loadTestsFromModule(GradingRGBCurveTransformTest))
     suite.addTest(loader.loadTestsFromModule(GradingToneTransformTest))
+    suite.addTest(loader.loadTestsFromModule(GroupTransformTest))
+    suite.addTest(loader.loadTestsFromModule(LogTransformTest))
+    suite.addTest(loader.loadTestsFromModule(LookTest))
+    suite.addTest(loader.loadTestsFromModule(NamedTransformTest))
+    suite.addTest(loader.loadTestsFromModule(OpenColorIOTest))
+    suite.addTest(loader.loadTestsFromModule(ViewingRulesTest))
     #suite.addTest(MainTest("test_interface"))
     #suite.addTest(ConstantsTest("test_interface"))
     #suite.addTest(ConfigTest("test_interface"))

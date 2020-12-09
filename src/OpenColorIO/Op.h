@@ -58,26 +58,6 @@ public:
 
     virtual bool hasDynamicProperty(DynamicPropertyType type) const;
     virtual DynamicPropertyRcPtr getDynamicProperty(DynamicPropertyType type) const;
-    virtual void unifyDynamicProperty(DynamicPropertyType type,
-                                      DynamicPropertyDoubleImplRcPtr & prop) const
-    {
-        throw Exception("Op does not implement double dynamic property.");
-    }
-    virtual void unifyDynamicProperty(DynamicPropertyType type,
-                                      DynamicPropertyGradingPrimaryImplRcPtr & prop) const
-    {
-        throw Exception("Op does not implement grading primary dynamic property.");
-    }
-    virtual void unifyDynamicProperty(DynamicPropertyType type,
-                                      DynamicPropertyGradingRGBCurveImplRcPtr & prop) const
-    {
-        throw Exception("Op does not implement grading rgb curve dynamic property.");
-    }
-    virtual void unifyDynamicProperty(DynamicPropertyType type,
-                                      DynamicPropertyGradingToneImplRcPtr & prop) const
-    {
-        throw Exception("Op does not implement grading tone dynamic property.");
-    }
 };
 
 class OpData;
@@ -398,7 +378,7 @@ public:
     bool isDynamic() const noexcept;
     bool hasDynamicProperty(DynamicPropertyType type) const noexcept;
     DynamicPropertyRcPtr getDynamicProperty(DynamicPropertyType type) const;
-    void unifyDynamicProperties();
+    void validateDynamicProperties();
 
     OpRcPtrVec clone() const;
 

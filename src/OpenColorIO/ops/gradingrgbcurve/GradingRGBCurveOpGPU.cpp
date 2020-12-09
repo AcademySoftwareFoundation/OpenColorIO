@@ -180,7 +180,7 @@ void AddGCPropertiesUniforms(GpuShaderCreatorRcPtr & shaderCreator,
     auto curveProp = shaderProp.get();
 
     // Note: No need to add an index to the name to avoid collisions as the dynamic properties
-    // are shared i.e. only one instance.
+    // are unique.
 
     auto getNK = std::bind(&DynamicPropertyGradingRGBCurveImpl::getNumKnots, curveProp);
     auto getKO = std::bind(&DynamicPropertyGradingRGBCurveImpl::getKnotsOffsetsArray,
@@ -323,21 +323,17 @@ void GetGradingRGBCurveGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
 
     if (dyn)
     {
-        // If dynamic property is not already there, add uniforms and helper function.
-        if (!shaderCreator->hasDynamicProperty(DYNAMIC_PROPERTY_GRADING_RGBCURVE))
-        {
-            // Add the dynamic property to the shader creator.
-            auto prop = gcData->getDynamicPropertyInternal();
-            // Property is decoupled.
-            auto shaderProp = prop->createEditableCopy();
-            DynamicPropertyRcPtr newProp = shaderProp;
-            shaderCreator->addDynamicProperty(newProp);
+        // Add the dynamic property to the shader creator.
+        auto prop = gcData->getDynamicPropertyInternal();
+        // Property is decoupled.
+        auto shaderProp = prop->createEditableCopy();
+        DynamicPropertyRcPtr newProp = shaderProp;
+        shaderCreator->addDynamicProperty(newProp);
 
-            // Add uniforms.
-            AddGCPropertiesUniforms(shaderCreator, shaderProp, properties);
-            // Add helper function.
-            AddCurveEvalMethodTextToShaderProgram(shaderCreator, gcData, properties);
-        }
+        // Add uniforms.
+        AddGCPropertiesUniforms(shaderCreator, shaderProp, properties);
+        // Add helper function.
+        AddCurveEvalMethodTextToShaderProgram(shaderCreator, gcData, properties);
     }
     else
     {

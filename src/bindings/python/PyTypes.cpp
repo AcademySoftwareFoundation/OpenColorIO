@@ -47,6 +47,18 @@ void bindPyTypes(py::module & m)
                DOC(PyOpenColorIO, SearchReferenceSpaceType, SEARCH_REFERENCE_SPACE_ALL))
         .export_values();
 
+    py::enum_<NamedTransformVisibility>(
+        m, "NamedTransformVisibility"
+        DOC(PyOpenColorIO, NamedTransformVisibility))
+
+        .value("NAMEDTRANSFORM_ACTIVE", NAMEDTRANSFORM_ACTIVE, 
+               DOC(PyOpenColorIO, NamedTransformVisibility, NAMEDTRANSFORM_ACTIVE))
+        .value("NAMEDTRANSFORM_INACTIVE", NAMEDTRANSFORM_INACTIVE, 
+               DOC(PyOpenColorIO, NamedTransformVisibility, NAMEDTRANSFORM_INACTIVE))
+        .value("NAMEDTRANSFORM_ALL", NAMEDTRANSFORM_ALL, 
+               DOC(PyOpenColorIO, NamedTransformVisibility, NAMEDTRANSFORM_ALL))
+        .export_values();
+
     py::enum_<ColorSpaceVisibility>(
         m, "ColorSpaceVisibility", 
         DOC(PyOpenColorIO, ColorSpaceVisibility))
@@ -235,8 +247,6 @@ void bindPyTypes(py::module & m)
         m, "GpuLanguage", 
         DOC(PyOpenColorIO, GpuLanguage))
 
-        .value("GPU_LANGUAGE_UNKNOWN", GPU_LANGUAGE_UNKNOWN, 
-               DOC(PyOpenColorIO, GpuLanguage, GPU_LANGUAGE_UNKNOWN))
         .value("GPU_LANGUAGE_CG", GPU_LANGUAGE_CG, 
                DOC(PyOpenColorIO, GpuLanguage, GPU_LANGUAGE_CG))
         .value("GPU_LANGUAGE_GLSL_1_2", GPU_LANGUAGE_GLSL_1_2, 

@@ -104,7 +104,7 @@ void GPUProcessor::Impl::finalize(const OpRcPtrVec & rawOps,
     m_ops = rawOps;
 
     m_ops.finalize(oFlags);
-    m_ops.unifyDynamicProperties();
+    m_ops.validateDynamicProperties();
 
     // Is NoOp ?
     m_isNoOp  = m_ops.isNoOp();

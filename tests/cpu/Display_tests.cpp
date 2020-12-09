@@ -27,7 +27,7 @@ OCIO_ADD_TEST(SharedViews, basic)
     // Shared views need to refer to existing colorspaces.
     OCIO_CHECK_NO_THROW(config->addSharedView("shared1", "", "colorspace1", "", "", ""));
     OCIO_CHECK_THROW_WHAT(config->validate(), OCIO::Exception,
-                          "color space, 'colorspace1', which is not defined");
+                          "color space or a named transform, 'colorspace1', which is not defined");
 
     OCIO::ColorSpaceRcPtr cs = OCIO::ColorSpace::Create();
     cs->setName("colorspace1");
@@ -56,7 +56,8 @@ OCIO_ADD_TEST(SharedViews, basic)
     OCIO_CHECK_NO_THROW(config->addSharedView("shared3", "viewTransform1", "colorspace3", "", "",
                                               "shared view description"));
     OCIO_CHECK_THROW_WHAT(config->validate(), OCIO::Exception,
-                          "refers to a view transform, 'viewTransform1', which is not defined");
+                          "refers to a view transform, 'viewTransform1', which is neither a view "
+                          "transform nor a named transform");
 
     OCIO::ViewTransformRcPtr vt = OCIO::ViewTransform::Create(OCIO::REFERENCE_SPACE_SCENE);
     vt->setName("viewTransform1");

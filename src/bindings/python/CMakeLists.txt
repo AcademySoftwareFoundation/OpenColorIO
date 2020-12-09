@@ -52,55 +52,56 @@ endif()
 # Python libs
 
 set(SOURCES
-	PyOpenColorIO.cpp
-	PyUtils.cpp
-	PyTypes.cpp
-	PyFormatMetadata.cpp
-	PyDynamicProperty.cpp
-	PyTransform.cpp
 	PyAllocationTransform.cpp
+	PyBaker.cpp
 	PyBuiltinTransform.cpp
 	PyBuiltinTransformRegistry.cpp
 	PyCDLTransform.cpp
+	PyColorSpace.cpp
+	PyColorSpaceSet.cpp
 	PyColorSpaceTransform.cpp
+	PyConfig.cpp
+	PyContext.cpp
+	PyCPUProcessor.cpp
 	PyDisplayViewTransform.cpp
+	PyDynamicProperty.cpp
 	PyExponentTransform.cpp
 	PyExponentWithLinearTransform.cpp
 	PyExposureContrastTransform.cpp
+	PyFileRules.cpp
 	PyFileTransform.cpp
 	PyFixedFunctionTransform.cpp
+	PyFormatMetadata.cpp
+	PyGPUProcessor.cpp
+	PyGpuShaderCreator.cpp
+	PyGpuShaderDesc.cpp
 	PyGradingData.cpp
 	PyGradingPrimaryTransform.cpp
 	PyGradingRGBCurveTransform.cpp
 	PyGradingToneTransform.cpp
 	PyGroupTransform.cpp
+	PyImageDesc.cpp
 	PyLogAffineTransform.cpp
 	PyLogCameraTransform.cpp
 	PyLogTransform.cpp
+	PyLook.cpp
 	PyLookTransform.cpp
 	PyLut1DTransform.cpp
 	PyLut3DTransform.cpp
 	PyMatrixTransform.cpp
-	PyRangeTransform.cpp
-	PyConfig.cpp
-	PyFileRules.cpp
-	PyColorSpace.cpp
-	PyColorSpaceSet.cpp
-	PyLook.cpp
-	PyViewTransform.cpp
-	PyProcessor.cpp
-	PyCPUProcessor.cpp
-	PyGPUProcessor.cpp
-	PyProcessorMetadata.cpp
-	PyBaker.cpp
-	PyImageDesc.cpp
+	PyNamedTransform.cpp
+	PyOpenColorIO.cpp
 	PyPackedImageDesc.cpp
 	PyPlanarImageDesc.cpp
-	PyGpuShaderCreator.cpp
-	PyGpuShaderDesc.cpp
-	PyContext.cpp
+	PyProcessor.cpp
+	PyProcessorMetadata.cpp
+	PyRangeTransform.cpp
 	PySystemMonitors.cpp
+	PyTransform.cpp
+	PyTypes.cpp
+	PyUtils.cpp
 	PyViewingRules.cpp
+	PyViewTransform.cpp
 )
 
 add_library(PyOpenColorIO MODULE ${SOURCES})

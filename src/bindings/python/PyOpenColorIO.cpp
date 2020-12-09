@@ -88,6 +88,7 @@ PYBIND11_MODULE(PyOpenColorIO, m)
     bindPyGradingPrimaryTransform(m);
     bindPyGradingRGBCurveTransform(m);
     bindPyGradingToneTransform(m);
+    bindPyNamedTransform(m);
 }
 
 } // namespace OCIO_NAMESPACE

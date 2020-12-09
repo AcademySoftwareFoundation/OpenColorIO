@@ -29,32 +29,42 @@ enum ConfigIterator
     IT_LOOK_NAME,
     IT_LOOK,
     IT_VIEW_TRANSFORM_NAME,
-    IT_VIEW_TRANSFORM
+    IT_VIEW_TRANSFORM,
+    IT_NAMED_TRANSFORM_NAME,
+    IT_NAMED_TRANSFORM,
+    IT_ACTIVE_NAMED_TRANSFORM_NAME,
+    IT_ACTIVE_NAMED_TRANSFORM
 };
 
-using EnvironmentVarNameIterator   = PyIterator<ConfigRcPtr, IT_ENVIRONMENT_VAR_NAME>;
-using SearchPathIterator           = PyIterator<ConfigRcPtr, IT_SEARCH_PATH>;
-using ColorSpaceNameIterator       = PyIterator<ConfigRcPtr, 
-                                                IT_COLOR_SPACE_NAME, 
-                                                SearchReferenceSpaceType,
-                                                ColorSpaceVisibility>;
-using ColorSpaceIterator           = PyIterator<ConfigRcPtr, 
-                                                IT_COLOR_SPACE, 
-                                                SearchReferenceSpaceType,
-                                                ColorSpaceVisibility>;
-using ActiveColorSpaceNameIterator = PyIterator<ConfigRcPtr, IT_ACTIVE_COLOR_SPACE_NAME>;
-using ActiveColorSpaceIterator     = PyIterator<ConfigRcPtr, IT_ACTIVE_COLOR_SPACE>;
-using RoleNameIterator             = PyIterator<ConfigRcPtr, IT_ROLE_NAME>;
-using RoleColorSpaceIterator       = PyIterator<ConfigRcPtr, IT_ROLE_COLOR_SPACE>;
-using DisplayIterator              = PyIterator<ConfigRcPtr, IT_DISPLAY>;
-using SharedViewIterator           = PyIterator<ConfigRcPtr, IT_SHARED_VIEW>;
-using ViewIterator                 = PyIterator<ConfigRcPtr, IT_DISPLAY_VIEW, std::string>;
-using ViewForColorSpaceIterator    = PyIterator<ConfigRcPtr, IT_DISPLAY_VIEW_COLORSPACE,
-                                                std::string, std::string>;
-using LookNameIterator             = PyIterator<ConfigRcPtr, IT_LOOK_NAME>;
-using LookIterator                 = PyIterator<ConfigRcPtr, IT_LOOK>;
-using ViewTransformNameIterator    = PyIterator<ConfigRcPtr, IT_VIEW_TRANSFORM_NAME>;
-using ViewTransformIterator        = PyIterator<ConfigRcPtr, IT_VIEW_TRANSFORM>;
+using EnvironmentVarNameIterator       = PyIterator<ConfigRcPtr, IT_ENVIRONMENT_VAR_NAME>;
+using SearchPathIterator               = PyIterator<ConfigRcPtr, IT_SEARCH_PATH>;
+using ColorSpaceNameIterator           = PyIterator<ConfigRcPtr, 
+                                                    IT_COLOR_SPACE_NAME, 
+                                                    SearchReferenceSpaceType,
+                                                    ColorSpaceVisibility>;
+using ColorSpaceIterator               = PyIterator<ConfigRcPtr, 
+                                                    IT_COLOR_SPACE, 
+                                                    SearchReferenceSpaceType,
+                                                     ColorSpaceVisibility>;
+using ActiveColorSpaceNameIterator     = PyIterator<ConfigRcPtr, IT_ACTIVE_COLOR_SPACE_NAME>;
+using ActiveColorSpaceIterator         = PyIterator<ConfigRcPtr, IT_ACTIVE_COLOR_SPACE>;
+using RoleNameIterator                 = PyIterator<ConfigRcPtr, IT_ROLE_NAME>;
+using RoleColorSpaceIterator           = PyIterator<ConfigRcPtr, IT_ROLE_COLOR_SPACE>;
+using DisplayIterator                  = PyIterator<ConfigRcPtr, IT_DISPLAY>;
+using SharedViewIterator               = PyIterator<ConfigRcPtr, IT_SHARED_VIEW>;
+using ViewIterator                     = PyIterator<ConfigRcPtr, IT_DISPLAY_VIEW, std::string>;
+using ViewForColorSpaceIterator        = PyIterator<ConfigRcPtr, IT_DISPLAY_VIEW_COLORSPACE,
+                                                    std::string, std::string>;
+using LookNameIterator                 = PyIterator<ConfigRcPtr, IT_LOOK_NAME>;
+using LookIterator                     = PyIterator<ConfigRcPtr, IT_LOOK>;
+using ViewTransformNameIterator        = PyIterator<ConfigRcPtr, IT_VIEW_TRANSFORM_NAME>;
+using ViewTransformIterator            = PyIterator<ConfigRcPtr, IT_VIEW_TRANSFORM>;
+using NamedTransformNameIterator       = PyIterator<ConfigRcPtr, IT_NAMED_TRANSFORM_NAME,
+                                                    NamedTransformVisibility>;
+using NamedTransformIterator           = PyIterator<ConfigRcPtr, IT_NAMED_TRANSFORM,
+                                                    NamedTransformVisibility>;
+using ActiveNamedTransformNameIterator = PyIterator<ConfigRcPtr, IT_ACTIVE_NAMED_TRANSFORM_NAME>;
+using ActiveNamedTransformIterator     = PyIterator<ConfigRcPtr, IT_ACTIVE_NAMED_TRANSFORM>;
 
 } // namespace
 
@@ -128,6 +138,22 @@ void bindPyConfig(py::module & m)
     auto clsViewTransformIterator = 
         py::class_<ViewTransformIterator>(
             clsConfig, "ViewTransformIterator");
+
+    auto clsNamedTransformNameIterator =
+        py::class_<NamedTransformNameIterator>(
+            clsConfig, "NamedTransformNameIterator");
+
+    auto clsNamedTransformIterator =
+        py::class_<NamedTransformIterator>(
+            clsConfig, "NamedTransformIterator");
+
+    auto clsActiveNamedTransformNameIterator =
+        py::class_<ActiveNamedTransformNameIterator>(
+            clsConfig, "ActiveNamedTransformNameIterator");
+
+    auto clsActiveNamedTransformIterator =
+        py::class_<ActiveNamedTransformIterator>(
+            clsConfig, "ActiveNamedTransformIterator");
 
     clsConfig
         .def(py::init(&Config::Create), 
@@ -417,6 +443,31 @@ void bindPyConfig(py::module & m)
              DOC(Config, getDefaultSceneToDisplayViewTransform))
         .def("clearViewTransforms", &Config::clearViewTransforms, 
              DOC(Config, clearViewTransforms))
+
+        // Named Transforms.
+        .def("getNamedTransform", &Config::getNamedTransform, "name"_a)
+
+        .def("getNamedTransformNames", [](ConfigRcPtr & self,
+                                          NamedTransformVisibility visibility)
+            {
+                return NamedTransformNameIterator(self, visibility);
+            }, "visibility"_a)
+        .def("getNamedTransforms", [](ConfigRcPtr & self,
+                                      NamedTransformVisibility visibility)
+            {
+                return NamedTransformIterator(self, visibility);
+            }, "visibility"_a)
+
+        .def("getNamedTransformNames", [](ConfigRcPtr & self)
+        {
+                return ActiveNamedTransformNameIterator(self);
+        })
+        .def("getNamedTransforms", [](ConfigRcPtr & self)
+        {
+                return ActiveNamedTransformIterator(self);
+        })
+        .def("addNamedTransform", &Config::addNamedTransform, "namedTransform"_a)
+        .def("clearNamedTransforms", &Config::clearNamedTransforms)
 
         // Viewing Rules
         .def("getViewingRules", &Config::getViewingRules, 
@@ -859,12 +910,99 @@ void bindPyConfig(py::module & m)
                 const char * name = it.m_obj->getViewTransformNameByIndex(i);
                 return it.m_obj->getViewTransform(name);
             })
-        .def("__iter__", [](ViewTransformIterator & it) -> ViewTransformIterator & { return it; })
+        .def("__iter__", [](ViewTransformIterator & it) -> ViewTransformIterator & 
+            { 
+                return it; 
+            })
         .def("__next__", [](ViewTransformIterator & it)
             {
                 int i = it.nextIndex(it.m_obj->getNumViewTransforms());
                 const char * name = it.m_obj->getViewTransformNameByIndex(i);
                 return it.m_obj->getViewTransform(name);
+            });
+
+    clsNamedTransformNameIterator
+        .def("__len__", [](NamedTransformNameIterator & it)
+            {
+                return it.m_obj->getNumNamedTransforms(std::get<0>(it.m_args));
+            })
+        .def("__getitem__", [](NamedTransformNameIterator & it, int i)
+            {
+                it.checkIndex(i, it.m_obj->getNumNamedTransforms(std::get<0>(it.m_args)));
+                return it.m_obj->getNamedTransformNameByIndex(std::get<0>(it.m_args), i);
+            })
+        .def("__iter__", [](NamedTransformNameIterator & it) -> NamedTransformNameIterator &
+            {
+                return it;
+            })
+        .def("__next__", [](NamedTransformNameIterator & it)
+            {
+                int i = it.nextIndex(it.m_obj->getNumNamedTransforms(std::get<0>(it.m_args)));
+                return it.m_obj->getNamedTransformNameByIndex(std::get<0>(it.m_args), i);
+            });
+
+    clsNamedTransformIterator
+        .def("__len__", [](NamedTransformIterator & it)
+            {
+                return it.m_obj->getNumNamedTransforms(std::get<0>(it.m_args));
+            })
+        .def("__getitem__", [](NamedTransformIterator & it, int i)
+            {
+                it.checkIndex(i, it.m_obj->getNumNamedTransforms(std::get<0>(it.m_args)));
+                const char * name = it.m_obj->getNamedTransformNameByIndex(std::get<0>(it.m_args), i);
+                return it.m_obj->getNamedTransform(name);
+            })
+        .def("__iter__", [](NamedTransformIterator & it) -> NamedTransformIterator &
+            {
+                return it;
+            })
+        .def("__next__", [](NamedTransformIterator & it)
+            {
+                int i = it.nextIndex(it.m_obj->getNumNamedTransforms(std::get<0>(it.m_args)));
+                const char * name = it.m_obj->getNamedTransformNameByIndex(std::get<0>(it.m_args), i);
+                return it.m_obj->getNamedTransform(name);
+            });
+
+    clsActiveNamedTransformNameIterator
+        .def("__len__", [](ActiveNamedTransformNameIterator & it)
+            {
+                return it.m_obj->getNumNamedTransforms();
+            })
+        .def("__getitem__", [](ActiveNamedTransformNameIterator & it, int i)
+            {
+                it.checkIndex(i, (int)it.m_obj->getNumNamedTransforms());
+                return it.m_obj->getNamedTransformNameByIndex(i);
+            })
+        .def("__iter__", [](ActiveNamedTransformNameIterator & it) -> ActiveNamedTransformNameIterator &
+            {
+                return it;
+            })
+        .def("__next__", [](ActiveNamedTransformNameIterator & it)
+            {
+                int i = it.nextIndex((int)it.m_obj->getNumNamedTransforms());
+                return it.m_obj->getNamedTransformNameByIndex(i);
+            });
+
+    clsActiveNamedTransformIterator
+        .def("__len__", [](ActiveNamedTransformIterator & it)
+            {
+                return it.m_obj->getNumNamedTransforms();
+            })
+        .def("__getitem__", [](ActiveNamedTransformIterator & it, int i)
+            {
+                it.checkIndex(i, (int)it.m_obj->getNumNamedTransforms());
+                const char * name = it.m_obj->getNamedTransformNameByIndex(i);
+                return it.m_obj->getNamedTransform(name);
+            })
+        .def("__iter__", [](ActiveNamedTransformIterator & it) -> ActiveNamedTransformIterator &
+            {
+                return it;
+            })
+        .def("__next__", [](ActiveNamedTransformIterator & it)
+            {
+                int i = it.nextIndex((int)it.m_obj->getNumNamedTransforms());
+                const char * name = it.m_obj->getNamedTransformNameByIndex(i);
+                return it.m_obj->getNamedTransform(name);
             });
 
     m.def("GetCurrentConfig", &GetCurrentConfig, 

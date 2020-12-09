@@ -46,7 +46,8 @@ OCIO_ADD_TEST(DisplayViewHelpers, basic)
         workingMenuHelper
             = OCIO::ColorSpaceMenuHelper::Create(cfg,
                                                  nullptr,
-                                                 OCIO::ColorSpaceCategoryNames::SceneLinearWorkingSpace));
+                                                 OCIO::ColorSpaceCategoryNames::SceneLinearWorkingSpace,
+                                                 false));
 
     OCIO_REQUIRE_EQUAL(workingMenuHelper->getNumColorSpaces(), 2);
 
@@ -62,7 +63,8 @@ OCIO_ADD_TEST(DisplayViewHelpers, basic)
         connectionMenuHelper
             = OCIO::ColorSpaceMenuHelper::Create(cfg,
                                                  nullptr,
-                                                 OCIO::ColorSpaceCategoryNames::LutInputSpace));
+                                                 OCIO::ColorSpaceCategoryNames::LutInputSpace,
+                                                 false));
 
     OCIO_REQUIRE_EQUAL(connectionMenuHelper->getNumColorSpaces(), 3);
 

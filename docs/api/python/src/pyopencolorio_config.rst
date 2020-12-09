@@ -21,7 +21,11 @@
                      LookNameIterator, 
                      LookIterator, 
                      ViewTransformNameIterator, 
-                     ViewTransformIterator
+                     ViewTransformIterator,
+                     NamedTransformNameIterator,
+                     NamedTransformIterator,
+                     ActiveNamedTransformNameIterator,
+                     ActiveNamedTransformIterator
 
 .. autoclass:: PyOpenColorIO.Config.EnvironmentVarNameIterator
    :special-members: __getitem__, __iter__, __len__, __next__
@@ -69,4 +73,16 @@
    :special-members: __getitem__, __iter__, __len__, __next__
 
 .. autoclass:: PyOpenColorIO.Config.ViewTransformIterator
+   :special-members: __getitem__, __iter__, __len__, __next__
+
+.. autoclass:: PyOpenColorIO.Config.NamedTransformNameIterator
+   :special-members: __getitem__, __iter__, __len__, __next__
+
+.. autoclass:: PyOpenColorIO.Config.NamedTransformIterator
+   :special-members: __getitem__, __iter__, __len__, __next__
+
+.. autoclass:: PyOpenColorIO.Config.ActiveNamedTransformNameIterator
+   :special-members: __getitem__, __iter__, __len__, __next__
+
+.. autoclass:: PyOpenColorIO.Config.ActiveNamedTransformIterator
    :special-members: __getitem__, __iter__, __len__, __next__

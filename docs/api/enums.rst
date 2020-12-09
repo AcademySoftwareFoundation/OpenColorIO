@@ -46,6 +46,19 @@ SearchReferenceSpaceType
 
       .. doxygenenum:: ${OCIO_NAMESPACE}::SearchReferenceSpaceType
 
+NamedTransformVisibility
+************************
+
+.. tabs::
+
+   .. group-tab:: Python
+
+      .. include:: python/${PYDIR}/pyopencolorio_namedtransformvisibility.rst
+
+   .. group-tab:: C++
+
+      .. doxygenenum:: ${OCIO_NAMESPACE}::NamedTransformVisibility
+
 ColorSpaceVisibility
 ********************
 
