@@ -10,8 +10,6 @@
 
    Members:
 
-     GPU_LANGUAGE_UNKNOWN :
-
      GPU_LANGUAGE_CG : Nvidia Cg shader.
 
      GPU_LANGUAGE_GLSL_1_2 : OpenGL Shading Language.
@@ -27,30 +25,25 @@
 
    .. py:attribute:: GpuLanguage.GPU_LANGUAGE_CG
       :module: PyOpenColorIO
-      :value: GpuLanguage.GPU_LANGUAGE_CG
+      :value: <GpuLanguage.GPU_LANGUAGE_CG: 0>
 
 
    .. py:attribute:: GpuLanguage.GPU_LANGUAGE_GLSL_1_2
       :module: PyOpenColorIO
-      :value: GpuLanguage.GPU_LANGUAGE_GLSL_1_2
+      :value: <GpuLanguage.GPU_LANGUAGE_GLSL_1_2: 1>
 
 
    .. py:attribute:: GpuLanguage.GPU_LANGUAGE_GLSL_1_3
       :module: PyOpenColorIO
-      :value: GpuLanguage.GPU_LANGUAGE_GLSL_1_3
+      :value: <GpuLanguage.GPU_LANGUAGE_GLSL_1_3: 2>
 
 
    .. py:attribute:: GpuLanguage.GPU_LANGUAGE_GLSL_4_0
       :module: PyOpenColorIO
-      :value: GpuLanguage.GPU_LANGUAGE_GLSL_4_0
+      :value: <GpuLanguage.GPU_LANGUAGE_GLSL_4_0: 3>
 
 
    .. py:attribute:: GpuLanguage.GPU_LANGUAGE_HLSL_DX11
       :module: PyOpenColorIO
-      :value: GpuLanguage.GPU_LANGUAGE_HLSL_DX11
-
-
-   .. py:attribute:: GpuLanguage.GPU_LANGUAGE_UNKNOWN
-      :module: PyOpenColorIO
-      :value: GpuLanguage.GPU_LANGUAGE_UNKNOWN
+      :value: <GpuLanguage.GPU_LANGUAGE_HLSL_DX11: 4>
 

@@ -33,45 +33,45 @@
 
    .. py:attribute:: BitDepth.BIT_DEPTH_F16
       :module: PyOpenColorIO
-      :value: BitDepth.BIT_DEPTH_F16
+      :value: <BitDepth.BIT_DEPTH_F16: 7>
 
 
    .. py:attribute:: BitDepth.BIT_DEPTH_F32
       :module: PyOpenColorIO
-      :value: BitDepth.BIT_DEPTH_F32
+      :value: <BitDepth.BIT_DEPTH_F32: 8>
 
 
    .. py:attribute:: BitDepth.BIT_DEPTH_UINT10
       :module: PyOpenColorIO
-      :value: BitDepth.BIT_DEPTH_UINT10
+      :value: <BitDepth.BIT_DEPTH_UINT10: 2>
 
 
    .. py:attribute:: BitDepth.BIT_DEPTH_UINT12
       :module: PyOpenColorIO
-      :value: BitDepth.BIT_DEPTH_UINT12
+      :value: <BitDepth.BIT_DEPTH_UINT12: 3>
 
 
    .. py:attribute:: BitDepth.BIT_DEPTH_UINT14
       :module: PyOpenColorIO
-      :value: BitDepth.BIT_DEPTH_UINT14
+      :value: <BitDepth.BIT_DEPTH_UINT14: 4>
 
 
    .. py:attribute:: BitDepth.BIT_DEPTH_UINT16
       :module: PyOpenColorIO
-      :value: BitDepth.BIT_DEPTH_UINT16
+      :value: <BitDepth.BIT_DEPTH_UINT16: 5>
 
 
    .. py:attribute:: BitDepth.BIT_DEPTH_UINT32
       :module: PyOpenColorIO
-      :value: BitDepth.BIT_DEPTH_UINT32
+      :value: <BitDepth.BIT_DEPTH_UINT32: 6>
 
 
    .. py:attribute:: BitDepth.BIT_DEPTH_UINT8
       :module: PyOpenColorIO
-      :value: BitDepth.BIT_DEPTH_UINT8
+      :value: <BitDepth.BIT_DEPTH_UINT8: 1>
 
 
    .. py:attribute:: BitDepth.BIT_DEPTH_UNKNOWN
       :module: PyOpenColorIO
-      :value: BitDepth.BIT_DEPTH_UNKNOWN
+      :value: <BitDepth.BIT_DEPTH_UNKNOWN: 0>
 

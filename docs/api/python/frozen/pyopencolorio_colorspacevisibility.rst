@@ -19,15 +19,15 @@
 
    .. py:attribute:: ColorSpaceVisibility.COLORSPACE_ACTIVE
       :module: PyOpenColorIO
-      :value: ColorSpaceVisibility.COLORSPACE_ACTIVE
+      :value: <ColorSpaceVisibility.COLORSPACE_ACTIVE: 0>
 
 
    .. py:attribute:: ColorSpaceVisibility.COLORSPACE_ALL
       :module: PyOpenColorIO
-      :value: ColorSpaceVisibility.COLORSPACE_ALL
+      :value: <ColorSpaceVisibility.COLORSPACE_ALL: 2>
 
 
    .. py:attribute:: ColorSpaceVisibility.COLORSPACE_INACTIVE
       :module: PyOpenColorIO
-      :value: ColorSpaceVisibility.COLORSPACE_INACTIVE
+      :value: <ColorSpaceVisibility.COLORSPACE_INACTIVE: 1>
 

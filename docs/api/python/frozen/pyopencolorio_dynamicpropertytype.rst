@@ -27,30 +27,30 @@
 
    .. py:attribute:: DynamicPropertyType.DYNAMIC_PROPERTY_CONTRAST
       :module: PyOpenColorIO
-      :value: DynamicPropertyType.DYNAMIC_PROPERTY_CONTRAST
+      :value: <DynamicPropertyType.DYNAMIC_PROPERTY_CONTRAST: 1>
 
 
    .. py:attribute:: DynamicPropertyType.DYNAMIC_PROPERTY_EXPOSURE
       :module: PyOpenColorIO
-      :value: DynamicPropertyType.DYNAMIC_PROPERTY_EXPOSURE
+      :value: <DynamicPropertyType.DYNAMIC_PROPERTY_EXPOSURE: 0>
 
 
    .. py:attribute:: DynamicPropertyType.DYNAMIC_PROPERTY_GAMMA
       :module: PyOpenColorIO
-      :value: DynamicPropertyType.DYNAMIC_PROPERTY_GAMMA
+      :value: <DynamicPropertyType.DYNAMIC_PROPERTY_GAMMA: 2>
 
 
    .. py:attribute:: DynamicPropertyType.DYNAMIC_PROPERTY_GRADING_PRIMARY
       :module: PyOpenColorIO
-      :value: DynamicPropertyType.DYNAMIC_PROPERTY_GRADING_PRIMARY
+      :value: <DynamicPropertyType.DYNAMIC_PROPERTY_GRADING_PRIMARY: 3>
 
 
    .. py:attribute:: DynamicPropertyType.DYNAMIC_PROPERTY_GRADING_RGBCURVE
       :module: PyOpenColorIO
-      :value: DynamicPropertyType.DYNAMIC_PROPERTY_GRADING_RGBCURVE
+      :value: <DynamicPropertyType.DYNAMIC_PROPERTY_GRADING_RGBCURVE: 4>
 
 
    .. py:attribute:: DynamicPropertyType.DYNAMIC_PROPERTY_GRADING_TONE
       :module: PyOpenColorIO
-      :value: DynamicPropertyType.DYNAMIC_PROPERTY_GRADING_TONE
+      :value: <DynamicPropertyType.DYNAMIC_PROPERTY_GRADING_TONE: 5>
 

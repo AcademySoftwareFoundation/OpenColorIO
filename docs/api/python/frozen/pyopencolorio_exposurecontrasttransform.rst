@@ -16,7 +16,7 @@
 
       1. __init__(self: PyOpenColorIO.ExposureContrastTransform) -> None
 
-      2. __init__(self: PyOpenColorIO.ExposureContrastTransform, style: PyOpenColorIO.ExposureContrastStyle = ExposureContrastStyle.EXPOSURE_CONTRAST_LINEAR, exposure: float = 0.0, contrast: float = 1.0, gamma: float = 1.0, pivot: float = 0.18, logExposureStep: float = 0.088, logMidGray: float = 0.435, dynamicExposure: bool = False, dynamicContrast: bool = False, dynamicGamma: bool = False, direction: PyOpenColorIO.TransformDirection = TransformDirection.TRANSFORM_DIR_FORWARD) -> None
+      2. __init__(self: PyOpenColorIO.ExposureContrastTransform, style: PyOpenColorIO.ExposureContrastStyle = <ExposureContrastStyle.EXPOSURE_CONTRAST_LINEAR: 0>, exposure: float = 0.0, contrast: float = 1.0, gamma: float = 1.0, pivot: float = 0.18, logExposureStep: float = 0.088, logMidGray: float = 0.435, dynamicExposure: bool = False, dynamicContrast: bool = False, dynamicGamma: bool = False, direction: PyOpenColorIO.TransformDirection = <TransformDirection.TRANSFORM_DIR_FORWARD: 0>) -> None
 
 
    .. py:method:: ExposureContrastTransform.__str__(self: PyOpenColorIO.ExposureContrastTransform) -> str
@@ -72,13 +72,19 @@
    .. py:method:: ExposureContrastTransform.isContrastDynamic(self: PyOpenColorIO.ExposureContrastTransform) -> bool
       :module: PyOpenColorIO
 
+      Contrast can be made dynamic so the value can be changed through the CPU or GPU processor, but if there are several :ref:`ExposureContrastTransform` only one can have a dynamic contrast.
+
 
    .. py:method:: ExposureContrastTransform.isExposureDynamic(self: PyOpenColorIO.ExposureContrastTransform) -> bool
       :module: PyOpenColorIO
 
+      Exposure can be made dynamic so the value can be changed through the CPU or GPU processor, but if there are several :ref:`ExposureContrastTransform` only one can have a dynamic exposure.
+
 
    .. py:method:: ExposureContrastTransform.isGammaDynamic(self: PyOpenColorIO.ExposureContrastTransform) -> bool
       :module: PyOpenColorIO
+
+      Gamma can be made dynamic so the value can be changed through the CPU or GPU processor, but if there are several :ref:`ExposureContrastTransform` only one can have a dynamic gamma.
 
 
    .. py:method:: ExposureContrastTransform.makeContrastDynamic(self: PyOpenColorIO.ExposureContrastTransform) -> None

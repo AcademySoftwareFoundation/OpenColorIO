@@ -22,7 +22,7 @@
 
       1. __init__(self: PyOpenColorIO.ExponentWithLinearTransform) -> None
 
-      2. __init__(self: PyOpenColorIO.ExponentWithLinearTransform, gamma: List[float[4]] = [1.0, 1.0, 1.0, 1.0], offset: List[float[4]] = [0.0, 0.0, 0.0, 0.0], negativeStyle: PyOpenColorIO.NegativeStyle = NegativeStyle.NEGATIVE_LINEAR, direction: PyOpenColorIO.TransformDirection = TransformDirection.TRANSFORM_DIR_FORWARD) -> None
+      2. __init__(self: PyOpenColorIO.ExponentWithLinearTransform, gamma: List[float[4]] = [1.0, 1.0, 1.0, 1.0], offset: List[float[4]] = [0.0, 0.0, 0.0, 0.0], negativeStyle: PyOpenColorIO.NegativeStyle = <NegativeStyle.NEGATIVE_LINEAR: 3>, direction: PyOpenColorIO.TransformDirection = <TransformDirection.TRANSFORM_DIR_FORWARD: 0>) -> None
 
 
    .. py:method:: ExponentWithLinearTransform.__str__(self: PyOpenColorIO.ExponentWithLinearTransform) -> str

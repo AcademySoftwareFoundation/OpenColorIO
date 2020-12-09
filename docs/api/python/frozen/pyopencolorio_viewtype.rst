@@ -17,10 +17,10 @@
 
    .. py:attribute:: ViewType.VIEW_DISPLAY_DEFINED
       :module: PyOpenColorIO
-      :value: ViewType.VIEW_DISPLAY_DEFINED
+      :value: <ViewType.VIEW_DISPLAY_DEFINED: 1>
 
 
    .. py:attribute:: ViewType.VIEW_SHARED
       :module: PyOpenColorIO
-      :value: ViewType.VIEW_SHARED
+      :value: <ViewType.VIEW_SHARED: 0>
 

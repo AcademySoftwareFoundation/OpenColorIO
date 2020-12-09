@@ -22,7 +22,7 @@
 
       Create an identity 3D-LUT with specific grid size. Will throw for grid size larger than 129.
 
-      3. __init__(self: PyOpenColorIO.Lut3DTransform, gridSize: int = 2, fileOutputBitDepth: PyOpenColorIO.BitDepth = BitDepth.BIT_DEPTH_UNKNOWN, interpolation: PyOpenColorIO.Interpolation = Interpolation.INTERP_DEFAULT, direction: PyOpenColorIO.TransformDirection = TransformDirection.TRANSFORM_DIR_FORWARD) -> None
+      3. __init__(self: PyOpenColorIO.Lut3DTransform, gridSize: int = 2, fileOutputBitDepth: PyOpenColorIO.BitDepth = <BitDepth.BIT_DEPTH_UNKNOWN: 0>, interpolation: PyOpenColorIO.Interpolation = <Interpolation.INTERP_DEFAULT: 254>, direction: PyOpenColorIO.TransformDirection = <TransformDirection.TRANSFORM_DIR_FORWARD: 0>) -> None
 
       Create an identity 3D-LUT with specific grid size. Will throw for grid size larger than 129.
 
@@ -37,7 +37,7 @@
       Checks if this exactly equals other.
 
 
-   .. py:method:: Lut3DTransform.getData(self: PyOpenColorIO.Lut3DTransform) -> array
+   .. py:method:: Lut3DTransform.getData(self: PyOpenColorIO.Lut3DTransform) -> numpy.ndarray
       :module: PyOpenColorIO
 
 

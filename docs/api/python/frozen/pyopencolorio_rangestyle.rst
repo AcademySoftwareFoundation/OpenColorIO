@@ -19,10 +19,10 @@
 
    .. py:attribute:: RangeStyle.RANGE_CLAMP
       :module: PyOpenColorIO
-      :value: RangeStyle.RANGE_CLAMP
+      :value: <RangeStyle.RANGE_CLAMP: 1>
 
 
    .. py:attribute:: RangeStyle.RANGE_NO_CLAMP
       :module: PyOpenColorIO
-      :value: RangeStyle.RANGE_NO_CLAMP
+      :value: <RangeStyle.RANGE_NO_CLAMP: 0>
 

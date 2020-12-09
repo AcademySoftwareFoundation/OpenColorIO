@@ -19,15 +19,15 @@
 
    .. py:attribute:: CDLStyle.CDL_ASC
       :module: PyOpenColorIO
-      :value: CDLStyle.CDL_ASC
+      :value: <CDLStyle.CDL_ASC: 0>
 
 
    .. py:attribute:: CDLStyle.CDL_NO_CLAMP
       :module: PyOpenColorIO
-      :value: CDLStyle.CDL_NO_CLAMP
+      :value: <CDLStyle.CDL_NO_CLAMP: 1>
 
 
    .. py:attribute:: CDLStyle.CDL_TRANSFORM_DEFAULT
       :module: PyOpenColorIO
-      :value: CDLStyle.CDL_NO_CLAMP
+      :value: <CDLStyle.CDL_NO_CLAMP: 1>
 

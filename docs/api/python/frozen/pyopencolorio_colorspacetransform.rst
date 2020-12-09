@@ -14,7 +14,7 @@
 
       1. __init__(self: PyOpenColorIO.ColorSpaceTransform) -> None
 
-      2. __init__(self: PyOpenColorIO.ColorSpaceTransform, src: str = '', dst: str = '', direction: PyOpenColorIO.TransformDirection = TransformDirection.TRANSFORM_DIR_FORWARD, dataBypass: bool = True) -> None
+      2. __init__(self: PyOpenColorIO.ColorSpaceTransform, src: str = '', dst: str = '', direction: PyOpenColorIO.TransformDirection = <TransformDirection.TRANSFORM_DIR_FORWARD: 0>, dataBypass: bool = True) -> None
 
 
    .. py:method:: ColorSpaceTransform.__str__(self: PyOpenColorIO.ColorSpaceTransform) -> str

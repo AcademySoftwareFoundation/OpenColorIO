@@ -22,7 +22,7 @@
 
       Create an identity 1D-LUT with specific length and half-domain setting. Will throw for lengths longer than 1024x1024.
 
-      3. __init__(self: PyOpenColorIO.Lut1DTransform, length: int = 2, inputHalfDomain: bool = False, outputRawHalfs: bool = False, fileOutputBitDepth: PyOpenColorIO.BitDepth = BitDepth.BIT_DEPTH_UNKNOWN, hueAdjust: PyOpenColorIO.Lut1DHueAdjust = Lut1DHueAdjust.HUE_NONE, interpolation: PyOpenColorIO.Interpolation = Interpolation.INTERP_DEFAULT, direction: PyOpenColorIO.TransformDirection = TransformDirection.TRANSFORM_DIR_FORWARD) -> None
+      3. __init__(self: PyOpenColorIO.Lut1DTransform, length: int = 2, inputHalfDomain: bool = False, outputRawHalfs: bool = False, fileOutputBitDepth: PyOpenColorIO.BitDepth = <BitDepth.BIT_DEPTH_UNKNOWN: 0>, hueAdjust: PyOpenColorIO.Lut1DHueAdjust = <Lut1DHueAdjust.HUE_NONE: 0>, interpolation: PyOpenColorIO.Interpolation = <Interpolation.INTERP_DEFAULT: 254>, direction: PyOpenColorIO.TransformDirection = <TransformDirection.TRANSFORM_DIR_FORWARD: 0>) -> None
 
       Create an identity 1D-LUT with specific length and half-domain setting. Will throw for lengths longer than 1024x1024.
 
@@ -37,7 +37,7 @@
       Checks if this exactly equals other.
 
 
-   .. py:method:: Lut1DTransform.getData(self: PyOpenColorIO.Lut1DTransform) -> array
+   .. py:method:: Lut1DTransform.getData(self: PyOpenColorIO.Lut1DTransform) -> numpy.ndarray
       :module: PyOpenColorIO
 
 

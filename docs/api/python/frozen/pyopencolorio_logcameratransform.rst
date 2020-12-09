@@ -19,7 +19,7 @@
 
       1. __init__(self: PyOpenColorIO.LogCameraTransform) -> None
 
-      2. __init__(self: PyOpenColorIO.LogCameraTransform, linSideBreak: List[float[3]], logSideSlope: List[float[3]] = [1.0, 1.0, 1.0], logSideOffset: List[float[3]] = [0.0, 0.0, 0.0], linSideSlope: List[float[3]] = [1.0, 1.0, 1.0], linSideOffset: List[float[3]] = [0.0, 0.0, 0.0], direction: PyOpenColorIO.TransformDirection = TransformDirection.TRANSFORM_DIR_FORWARD) -> None
+      2. __init__(self: PyOpenColorIO.LogCameraTransform, linSideBreak: List[float[3]], logSideSlope: List[float[3]] = [1.0, 1.0, 1.0], logSideOffset: List[float[3]] = [0.0, 0.0, 0.0], linSideSlope: List[float[3]] = [1.0, 1.0, 1.0], linSideOffset: List[float[3]] = [0.0, 0.0, 0.0], direction: PyOpenColorIO.TransformDirection = <TransformDirection.TRANSFORM_DIR_FORWARD: 0>) -> None
 
 
    .. py:method:: LogCameraTransform.__str__(self: PyOpenColorIO.LogCameraTransform) -> str

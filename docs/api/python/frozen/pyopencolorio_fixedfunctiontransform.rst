@@ -16,7 +16,7 @@
 
       1. __init__(self: PyOpenColorIO.FixedFunctionTransform) -> None
 
-      2. __init__(self: PyOpenColorIO.FixedFunctionTransform, style: PyOpenColorIO.FixedFunctionStyle = FixedFunctionStyle.FIXED_FUNCTION_ACES_RED_MOD_03, params: List[float] = [], direction: PyOpenColorIO.TransformDirection = TransformDirection.TRANSFORM_DIR_FORWARD) -> None
+      2. __init__(self: PyOpenColorIO.FixedFunctionTransform, style: PyOpenColorIO.FixedFunctionStyle = <FixedFunctionStyle.FIXED_FUNCTION_ACES_RED_MOD_03: 0>, params: List[float] = [], direction: PyOpenColorIO.TransformDirection = <TransformDirection.TRANSFORM_DIR_FORWARD: 0>) -> None
 
 
    .. py:method:: FixedFunctionTransform.__str__(self: PyOpenColorIO.FixedFunctionTransform) -> str

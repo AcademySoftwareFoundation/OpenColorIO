@@ -25,25 +25,25 @@
 
    .. py:attribute:: RGBCurveType.RGB_BLUE
       :module: PyOpenColorIO
-      :value: RGBCurveType.RGB_BLUE
+      :value: <RGBCurveType.RGB_BLUE: 2>
 
 
    .. py:attribute:: RGBCurveType.RGB_GREEN
       :module: PyOpenColorIO
-      :value: RGBCurveType.RGB_GREEN
+      :value: <RGBCurveType.RGB_GREEN: 1>
 
 
    .. py:attribute:: RGBCurveType.RGB_MASTER
       :module: PyOpenColorIO
-      :value: RGBCurveType.RGB_MASTER
+      :value: <RGBCurveType.RGB_MASTER: 3>
 
 
    .. py:attribute:: RGBCurveType.RGB_NUM_CURVES
       :module: PyOpenColorIO
-      :value: RGBCurveType.RGB_NUM_CURVES
+      :value: <RGBCurveType.RGB_NUM_CURVES: 4>
 
 
    .. py:attribute:: RGBCurveType.RGB_RED
       :module: PyOpenColorIO
-      :value: RGBCurveType.RGB_RED
+      :value: <RGBCurveType.RGB_RED: 0>
 

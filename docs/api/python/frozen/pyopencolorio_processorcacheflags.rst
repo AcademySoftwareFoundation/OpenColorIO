@@ -23,20 +23,20 @@
 
    .. py:attribute:: ProcessorCacheFlags.PROCESSOR_CACHE_DEFAULT
       :module: PyOpenColorIO
-      :value: ProcessorCacheFlags.PROCESSOR_CACHE_DEFAULT
+      :value: <ProcessorCacheFlags.PROCESSOR_CACHE_DEFAULT: 3>
 
 
    .. py:attribute:: ProcessorCacheFlags.PROCESSOR_CACHE_ENABLED
       :module: PyOpenColorIO
-      :value: ProcessorCacheFlags.PROCESSOR_CACHE_ENABLED
+      :value: <ProcessorCacheFlags.PROCESSOR_CACHE_ENABLED: 1>
 
 
    .. py:attribute:: ProcessorCacheFlags.PROCESSOR_CACHE_OFF
       :module: PyOpenColorIO
-      :value: ProcessorCacheFlags.PROCESSOR_CACHE_OFF
+      :value: <ProcessorCacheFlags.PROCESSOR_CACHE_OFF: 0>
 
 
    .. py:attribute:: ProcessorCacheFlags.PROCESSOR_CACHE_SHARE_DYN_PROPERTIES
       :module: PyOpenColorIO
-      :value: ProcessorCacheFlags.PROCESSOR_CACHE_SHARE_DYN_PROPERTIES
+      :value: <ProcessorCacheFlags.PROCESSOR_CACHE_SHARE_DYN_PROPERTIES: 2>
 

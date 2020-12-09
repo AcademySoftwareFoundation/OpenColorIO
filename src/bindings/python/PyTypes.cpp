@@ -48,7 +48,7 @@ void bindPyTypes(py::module & m)
         .export_values();
 
     py::enum_<NamedTransformVisibility>(
-        m, "NamedTransformVisibility"
+        m, "NamedTransformVisibility",
         DOC(PyOpenColorIO, NamedTransformVisibility))
 
         .value("NAMEDTRANSFORM_ACTIVE", NAMEDTRANSFORM_ACTIVE, 

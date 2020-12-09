@@ -48,7 +48,7 @@
       Get the channel ordering of all the pixels.
 
 
-   .. py:method:: PackedImageDesc.getData(self: PyOpenColorIO.PackedImageDesc) -> array
+   .. py:method:: PackedImageDesc.getData(self: PyOpenColorIO.PackedImageDesc) -> numpy.ndarray
       :module: PyOpenColorIO
 
       Get a pointer to the first color channel of the first pixel.

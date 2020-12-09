@@ -35,50 +35,50 @@
 
    .. py:attribute:: FixedFunctionStyle.FIXED_FUNCTION_ACES_DARK_TO_DIM_10
       :module: PyOpenColorIO
-      :value: FixedFunctionStyle.FIXED_FUNCTION_ACES_DARK_TO_DIM_10
+      :value: <FixedFunctionStyle.FIXED_FUNCTION_ACES_DARK_TO_DIM_10: 4>
 
 
    .. py:attribute:: FixedFunctionStyle.FIXED_FUNCTION_ACES_GLOW_03
       :module: PyOpenColorIO
-      :value: FixedFunctionStyle.FIXED_FUNCTION_ACES_GLOW_03
+      :value: <FixedFunctionStyle.FIXED_FUNCTION_ACES_GLOW_03: 2>
 
 
    .. py:attribute:: FixedFunctionStyle.FIXED_FUNCTION_ACES_GLOW_10
       :module: PyOpenColorIO
-      :value: FixedFunctionStyle.FIXED_FUNCTION_ACES_GLOW_10
+      :value: <FixedFunctionStyle.FIXED_FUNCTION_ACES_GLOW_10: 3>
 
 
    .. py:attribute:: FixedFunctionStyle.FIXED_FUNCTION_ACES_RED_MOD_03
       :module: PyOpenColorIO
-      :value: FixedFunctionStyle.FIXED_FUNCTION_ACES_RED_MOD_03
+      :value: <FixedFunctionStyle.FIXED_FUNCTION_ACES_RED_MOD_03: 0>
 
 
    .. py:attribute:: FixedFunctionStyle.FIXED_FUNCTION_ACES_RED_MOD_10
       :module: PyOpenColorIO
-      :value: FixedFunctionStyle.FIXED_FUNCTION_ACES_RED_MOD_10
+      :value: <FixedFunctionStyle.FIXED_FUNCTION_ACES_RED_MOD_10: 1>
 
 
    .. py:attribute:: FixedFunctionStyle.FIXED_FUNCTION_REC2100_SURROUND
       :module: PyOpenColorIO
-      :value: FixedFunctionStyle.FIXED_FUNCTION_REC2100_SURROUND
+      :value: <FixedFunctionStyle.FIXED_FUNCTION_REC2100_SURROUND: 5>
 
 
    .. py:attribute:: FixedFunctionStyle.FIXED_FUNCTION_RGB_TO_HSV
       :module: PyOpenColorIO
-      :value: FixedFunctionStyle.FIXED_FUNCTION_RGB_TO_HSV
+      :value: <FixedFunctionStyle.FIXED_FUNCTION_RGB_TO_HSV: 6>
 
 
    .. py:attribute:: FixedFunctionStyle.FIXED_FUNCTION_XYZ_TO_LUV
       :module: PyOpenColorIO
-      :value: FixedFunctionStyle.FIXED_FUNCTION_XYZ_TO_LUV
+      :value: <FixedFunctionStyle.FIXED_FUNCTION_XYZ_TO_LUV: 9>
 
 
    .. py:attribute:: FixedFunctionStyle.FIXED_FUNCTION_XYZ_TO_uvY
       :module: PyOpenColorIO
-      :value: FixedFunctionStyle.FIXED_FUNCTION_XYZ_TO_uvY
+      :value: <FixedFunctionStyle.FIXED_FUNCTION_XYZ_TO_uvY: 8>
 
 
    .. py:attribute:: FixedFunctionStyle.FIXED_FUNCTION_XYZ_TO_xyY
       :module: PyOpenColorIO
-      :value: FixedFunctionStyle.FIXED_FUNCTION_XYZ_TO_xyY
+      :value: <FixedFunctionStyle.FIXED_FUNCTION_XYZ_TO_xyY: 7>
 

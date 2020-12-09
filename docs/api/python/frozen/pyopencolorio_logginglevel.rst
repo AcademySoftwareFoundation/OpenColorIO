@@ -23,25 +23,25 @@
 
    .. py:attribute:: LoggingLevel.LOGGING_LEVEL_DEBUG
       :module: PyOpenColorIO
-      :value: LoggingLevel.LOGGING_LEVEL_DEBUG
+      :value: <LoggingLevel.LOGGING_LEVEL_DEBUG: 3>
 
 
    .. py:attribute:: LoggingLevel.LOGGING_LEVEL_INFO
       :module: PyOpenColorIO
-      :value: LoggingLevel.LOGGING_LEVEL_INFO
+      :value: <LoggingLevel.LOGGING_LEVEL_INFO: 2>
 
 
    .. py:attribute:: LoggingLevel.LOGGING_LEVEL_NONE
       :module: PyOpenColorIO
-      :value: LoggingLevel.LOGGING_LEVEL_NONE
+      :value: <LoggingLevel.LOGGING_LEVEL_NONE: 0>
 
 
    .. py:attribute:: LoggingLevel.LOGGING_LEVEL_UNKNOWN
       :module: PyOpenColorIO
-      :value: LoggingLevel.LOGGING_LEVEL_UNKNOWN
+      :value: <LoggingLevel.LOGGING_LEVEL_UNKNOWN: 255>
 
 
    .. py:attribute:: LoggingLevel.LOGGING_LEVEL_WARNING
       :module: PyOpenColorIO
-      :value: LoggingLevel.LOGGING_LEVEL_WARNING
+      :value: <LoggingLevel.LOGGING_LEVEL_WARNING: 1>
 

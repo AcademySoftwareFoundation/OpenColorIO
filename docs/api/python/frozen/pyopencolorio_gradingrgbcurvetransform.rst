@@ -20,11 +20,11 @@
 
       Overloaded function.
 
-      1. __init__(self: PyOpenColorIO.GradingRGBCurveTransform, style: PyOpenColorIO.GradingStyle = GradingStyle.GRADING_LOG, values: PyOpenColorIO.GradingRGBCurve, dynamic: bool = False, dir: PyOpenColorIO.TransformDirection = TransformDirection.TRANSFORM_DIR_FORWARD) -> None
+      1. __init__(self: PyOpenColorIO.GradingRGBCurveTransform, style: PyOpenColorIO.GradingStyle = <GradingStyle.GRADING_LOG: 0>, values: PyOpenColorIO.GradingRGBCurve, dynamic: bool = False, dir: PyOpenColorIO.TransformDirection = <TransformDirection.TRANSFORM_DIR_FORWARD: 0>) -> None
 
       Creates an instance of :ref:`GradingPrimaryTransform`.
 
-      2. __init__(self: PyOpenColorIO.GradingRGBCurveTransform, style: PyOpenColorIO.GradingStyle = GradingStyle.GRADING_LOG, dynamic: bool = False, dir: PyOpenColorIO.TransformDirection = TransformDirection.TRANSFORM_DIR_FORWARD) -> None
+      2. __init__(self: PyOpenColorIO.GradingRGBCurveTransform, style: PyOpenColorIO.GradingStyle = <GradingStyle.GRADING_LOG: 0>, dynamic: bool = False, dir: PyOpenColorIO.TransformDirection = <TransformDirection.TRANSFORM_DIR_FORWARD: 0>) -> None
 
       Creates an instance of :ref:`GradingPrimaryTransform`.
 
@@ -63,6 +63,8 @@
 
    .. py:method:: GradingRGBCurveTransform.isDynamic(self: PyOpenColorIO.GradingRGBCurveTransform) -> bool
       :module: PyOpenColorIO
+
+      Parameters can be made dynamic so the values can be changed through the CPU or GPU processor, but if there are several :ref:`GradingRGBCurveTransform` only one can have dynamic parameters.
 
 
    .. py:method:: GradingRGBCurveTransform.makeDynamic(self: PyOpenColorIO.GradingRGBCurveTransform) -> None

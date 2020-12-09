@@ -23,20 +23,20 @@
 
    .. py:attribute:: NegativeStyle.NEGATIVE_CLAMP
       :module: PyOpenColorIO
-      :value: NegativeStyle.NEGATIVE_CLAMP
+      :value: <NegativeStyle.NEGATIVE_CLAMP: 0>
 
 
    .. py:attribute:: NegativeStyle.NEGATIVE_LINEAR
       :module: PyOpenColorIO
-      :value: NegativeStyle.NEGATIVE_LINEAR
+      :value: <NegativeStyle.NEGATIVE_LINEAR: 3>
 
 
    .. py:attribute:: NegativeStyle.NEGATIVE_MIRROR
       :module: PyOpenColorIO
-      :value: NegativeStyle.NEGATIVE_MIRROR
+      :value: <NegativeStyle.NEGATIVE_MIRROR: 1>
 
 
    .. py:attribute:: NegativeStyle.NEGATIVE_PASS_THRU
       :module: PyOpenColorIO
-      :value: NegativeStyle.NEGATIVE_PASS_THRU
+      :value: <NegativeStyle.NEGATIVE_PASS_THRU: 2>
 

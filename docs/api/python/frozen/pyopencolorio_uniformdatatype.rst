@@ -25,25 +25,25 @@
 
    .. py:attribute:: UniformDataType.UNIFORM_BOOL
       :module: PyOpenColorIO
-      :value: UniformDataType.UNIFORM_BOOL
+      :value: <UniformDataType.UNIFORM_BOOL: 1>
 
 
    .. py:attribute:: UniformDataType.UNIFORM_DOUBLE
       :module: PyOpenColorIO
-      :value: UniformDataType.UNIFORM_DOUBLE
+      :value: <UniformDataType.UNIFORM_DOUBLE: 0>
 
 
    .. py:attribute:: UniformDataType.UNIFORM_UNKNOWN
       :module: PyOpenColorIO
-      :value: UniformDataType.UNIFORM_UNKNOWN
+      :value: <UniformDataType.UNIFORM_UNKNOWN: 5>
 
 
    .. py:attribute:: UniformDataType.UNIFORM_VECTOR_FLOAT
       :module: PyOpenColorIO
-      :value: UniformDataType.UNIFORM_VECTOR_FLOAT
+      :value: <UniformDataType.UNIFORM_VECTOR_FLOAT: 3>
 
 
    .. py:attribute:: UniformDataType.UNIFORM_VECTOR_INT
       :module: PyOpenColorIO
-      :value: UniformDataType.UNIFORM_VECTOR_INT
+      :value: <UniformDataType.UNIFORM_VECTOR_INT: 4>
 

@@ -19,10 +19,10 @@
 
    .. py:attribute:: Lut1DHueAdjust.HUE_DW3
       :module: PyOpenColorIO
-      :value: Lut1DHueAdjust.HUE_DW3
+      :value: <Lut1DHueAdjust.HUE_DW3: 1>
 
 
    .. py:attribute:: Lut1DHueAdjust.HUE_NONE
       :module: PyOpenColorIO
-      :value: Lut1DHueAdjust.HUE_NONE
+      :value: <Lut1DHueAdjust.HUE_NONE: 0>
 

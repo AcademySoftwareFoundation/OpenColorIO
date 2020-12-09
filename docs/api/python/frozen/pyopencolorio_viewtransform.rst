@@ -14,7 +14,7 @@
 
       1. __init__(self: PyOpenColorIO.ViewTransform, referenceSpace: PyOpenColorIO.ReferenceSpaceType) -> None
 
-      2. __init__(self: PyOpenColorIO.ViewTransform, referenceSpace: PyOpenColorIO.ReferenceSpaceType = ReferenceSpaceType.REFERENCE_SPACE_SCENE, name: str = '', family: str = '', description: str = '', toReference: PyOpenColorIO.Transform = None, fromReference: PyOpenColorIO.Transform = None, categories: List[str] = []) -> None
+      2. __init__(self: PyOpenColorIO.ViewTransform, referenceSpace: PyOpenColorIO.ReferenceSpaceType = <ReferenceSpaceType.REFERENCE_SPACE_SCENE: 0>, name: str = '', family: str = '', description: str = '', toReference: PyOpenColorIO.Transform = None, fromReference: PyOpenColorIO.Transform = None, categories: List[str] = []) -> None
 
 
    .. py:method:: ViewTransform.__str__(self: PyOpenColorIO.ViewTransform) -> str

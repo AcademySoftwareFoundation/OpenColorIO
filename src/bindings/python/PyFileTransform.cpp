@@ -80,7 +80,7 @@ void bindPyFileTransform(py::module & m)
     clsFormatIterator
         .def("__len__", [](FormatIterator & it) 
             { 
-                return FileTransform::getNumFormats(); 
+                return FileTransform::GetNumFormats(); 
             })
         .def("__getitem__", [](FormatIterator & it, int i) 
             { 

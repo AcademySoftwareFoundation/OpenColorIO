@@ -71,140 +71,140 @@
 
    .. py:attribute:: OptimizationFlags.OPTIMIZATION_ALL
       :module: PyOpenColorIO
-      :value: OptimizationFlags.OPTIMIZATION_ALL
+      :value: <OptimizationFlags.OPTIMIZATION_ALL: 4294967295>
 
 
    .. py:attribute:: OptimizationFlags.OPTIMIZATION_COMP_EXPONENT
       :module: PyOpenColorIO
-      :value: OptimizationFlags.OPTIMIZATION_COMP_EXPONENT
+      :value: <OptimizationFlags.OPTIMIZATION_COMP_EXPONENT: 262144>
 
 
    .. py:attribute:: OptimizationFlags.OPTIMIZATION_COMP_GAMMA
       :module: PyOpenColorIO
-      :value: OptimizationFlags.OPTIMIZATION_COMP_GAMMA
+      :value: <OptimizationFlags.OPTIMIZATION_COMP_GAMMA: 524288>
 
 
    .. py:attribute:: OptimizationFlags.OPTIMIZATION_COMP_LUT1D
       :module: PyOpenColorIO
-      :value: OptimizationFlags.OPTIMIZATION_COMP_LUT1D
+      :value: <OptimizationFlags.OPTIMIZATION_COMP_LUT1D: 2097152>
 
 
    .. py:attribute:: OptimizationFlags.OPTIMIZATION_COMP_LUT3D
       :module: PyOpenColorIO
-      :value: OptimizationFlags.OPTIMIZATION_COMP_LUT3D
+      :value: <OptimizationFlags.OPTIMIZATION_COMP_LUT3D: 4194304>
 
 
    .. py:attribute:: OptimizationFlags.OPTIMIZATION_COMP_MATRIX
       :module: PyOpenColorIO
-      :value: OptimizationFlags.OPTIMIZATION_COMP_MATRIX
+      :value: <OptimizationFlags.OPTIMIZATION_COMP_MATRIX: 1048576>
 
 
    .. py:attribute:: OptimizationFlags.OPTIMIZATION_COMP_RANGE
       :module: PyOpenColorIO
-      :value: OptimizationFlags.OPTIMIZATION_COMP_RANGE
+      :value: <OptimizationFlags.OPTIMIZATION_COMP_RANGE: 8388608>
 
 
    .. py:attribute:: OptimizationFlags.OPTIMIZATION_COMP_SEPARABLE_PREFIX
       :module: PyOpenColorIO
-      :value: OptimizationFlags.OPTIMIZATION_COMP_SEPARABLE_PREFIX
+      :value: <OptimizationFlags.OPTIMIZATION_COMP_SEPARABLE_PREFIX: 16777216>
 
 
    .. py:attribute:: OptimizationFlags.OPTIMIZATION_DEFAULT
       :module: PyOpenColorIO
-      :value: OptimizationFlags.OPTIMIZATION_VERY_GOOD
+      :value: <OptimizationFlags.OPTIMIZATION_VERY_GOOD: 263995331>
 
 
    .. py:attribute:: OptimizationFlags.OPTIMIZATION_DRAFT
       :module: PyOpenColorIO
-      :value: OptimizationFlags.OPTIMIZATION_ALL
+      :value: <OptimizationFlags.OPTIMIZATION_ALL: 4294967295>
 
 
    .. py:attribute:: OptimizationFlags.OPTIMIZATION_FAST_LOG_EXP_POW
       :module: PyOpenColorIO
-      :value: OptimizationFlags.OPTIMIZATION_FAST_LOG_EXP_POW
+      :value: <OptimizationFlags.OPTIMIZATION_FAST_LOG_EXP_POW: 67108864>
 
 
    .. py:attribute:: OptimizationFlags.OPTIMIZATION_GOOD
       :module: PyOpenColorIO
-      :value: OptimizationFlags.OPTIMIZATION_GOOD
+      :value: <OptimizationFlags.OPTIMIZATION_GOOD: 268189635>
 
 
    .. py:attribute:: OptimizationFlags.OPTIMIZATION_IDENTITY
       :module: PyOpenColorIO
-      :value: OptimizationFlags.OPTIMIZATION_IDENTITY
+      :value: <OptimizationFlags.OPTIMIZATION_IDENTITY: 1>
 
 
    .. py:attribute:: OptimizationFlags.OPTIMIZATION_IDENTITY_GAMMA
       :module: PyOpenColorIO
-      :value: OptimizationFlags.OPTIMIZATION_IDENTITY_GAMMA
+      :value: <OptimizationFlags.OPTIMIZATION_IDENTITY_GAMMA: 2>
 
 
    .. py:attribute:: OptimizationFlags.OPTIMIZATION_LOSSLESS
       :module: PyOpenColorIO
-      :value: OptimizationFlags.OPTIMIZATION_LOSSLESS
+      :value: <OptimizationFlags.OPTIMIZATION_LOSSLESS: 144457667>
 
 
    .. py:attribute:: OptimizationFlags.OPTIMIZATION_LUT_INV_FAST
       :module: PyOpenColorIO
-      :value: OptimizationFlags.OPTIMIZATION_LUT_INV_FAST
+      :value: <OptimizationFlags.OPTIMIZATION_LUT_INV_FAST: 33554432>
 
 
    .. py:attribute:: OptimizationFlags.OPTIMIZATION_NONE
       :module: PyOpenColorIO
-      :value: OptimizationFlags.OPTIMIZATION_NONE
+      :value: <OptimizationFlags.OPTIMIZATION_NONE: 0>
 
 
    .. py:attribute:: OptimizationFlags.OPTIMIZATION_NO_DYNAMIC_PROPERTIES
       :module: PyOpenColorIO
-      :value: OptimizationFlags.OPTIMIZATION_NO_DYNAMIC_PROPERTIES
+      :value: <OptimizationFlags.OPTIMIZATION_NO_DYNAMIC_PROPERTIES: 268435456>
 
 
    .. py:attribute:: OptimizationFlags.OPTIMIZATION_PAIR_IDENTITY_CDL
       :module: PyOpenColorIO
-      :value: OptimizationFlags.OPTIMIZATION_PAIR_IDENTITY_CDL
+      :value: <OptimizationFlags.OPTIMIZATION_PAIR_IDENTITY_CDL: 64>
 
 
    .. py:attribute:: OptimizationFlags.OPTIMIZATION_PAIR_IDENTITY_EXPOSURE_CONTRAST
       :module: PyOpenColorIO
-      :value: OptimizationFlags.OPTIMIZATION_PAIR_IDENTITY_EXPOSURE_CONTRAST
+      :value: <OptimizationFlags.OPTIMIZATION_PAIR_IDENTITY_EXPOSURE_CONTRAST: 128>
 
 
    .. py:attribute:: OptimizationFlags.OPTIMIZATION_PAIR_IDENTITY_FIXED_FUNCTION
       :module: PyOpenColorIO
-      :value: OptimizationFlags.OPTIMIZATION_PAIR_IDENTITY_FIXED_FUNCTION
+      :value: <OptimizationFlags.OPTIMIZATION_PAIR_IDENTITY_FIXED_FUNCTION: 256>
 
 
    .. py:attribute:: OptimizationFlags.OPTIMIZATION_PAIR_IDENTITY_GAMMA
       :module: PyOpenColorIO
-      :value: OptimizationFlags.OPTIMIZATION_PAIR_IDENTITY_GAMMA
+      :value: <OptimizationFlags.OPTIMIZATION_PAIR_IDENTITY_GAMMA: 512>
 
 
    .. py:attribute:: OptimizationFlags.OPTIMIZATION_PAIR_IDENTITY_GRADING
       :module: PyOpenColorIO
-      :value: OptimizationFlags.OPTIMIZATION_PAIR_IDENTITY_GRADING
+      :value: <OptimizationFlags.OPTIMIZATION_PAIR_IDENTITY_GRADING: 8192>
 
 
    .. py:attribute:: OptimizationFlags.OPTIMIZATION_PAIR_IDENTITY_LOG
       :module: PyOpenColorIO
-      :value: OptimizationFlags.OPTIMIZATION_PAIR_IDENTITY_LOG
+      :value: <OptimizationFlags.OPTIMIZATION_PAIR_IDENTITY_LOG: 4096>
 
 
    .. py:attribute:: OptimizationFlags.OPTIMIZATION_PAIR_IDENTITY_LUT1D
       :module: PyOpenColorIO
-      :value: OptimizationFlags.OPTIMIZATION_PAIR_IDENTITY_LUT1D
+      :value: <OptimizationFlags.OPTIMIZATION_PAIR_IDENTITY_LUT1D: 1024>
 
 
    .. py:attribute:: OptimizationFlags.OPTIMIZATION_PAIR_IDENTITY_LUT3D
       :module: PyOpenColorIO
-      :value: OptimizationFlags.OPTIMIZATION_PAIR_IDENTITY_LUT3D
+      :value: <OptimizationFlags.OPTIMIZATION_PAIR_IDENTITY_LUT3D: 2048>
 
 
    .. py:attribute:: OptimizationFlags.OPTIMIZATION_SIMPLIFY_OPS
       :module: PyOpenColorIO
-      :value: OptimizationFlags.OPTIMIZATION_SIMPLIFY_OPS
+      :value: <OptimizationFlags.OPTIMIZATION_SIMPLIFY_OPS: 134217728>
 
 
    .. py:attribute:: OptimizationFlags.OPTIMIZATION_VERY_GOOD
       :module: PyOpenColorIO
-      :value: OptimizationFlags.OPTIMIZATION_VERY_GOOD
+      :value: <OptimizationFlags.OPTIMIZATION_VERY_GOOD: 263995331>
 

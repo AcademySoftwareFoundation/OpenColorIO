@@ -44,7 +44,7 @@
 
       1. __init__(self: PyOpenColorIO.MatrixTransform) -> None
 
-      2. __init__(self: PyOpenColorIO.MatrixTransform, matrix: List[float[16]] = [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0], offset: List[float[4]] = [0.0, 0.0, 0.0, 0.0], direction: PyOpenColorIO.TransformDirection = TransformDirection.TRANSFORM_DIR_FORWARD) -> None
+      2. __init__(self: PyOpenColorIO.MatrixTransform, matrix: List[float[16]] = [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0], offset: List[float[4]] = [0.0, 0.0, 0.0, 0.0], direction: PyOpenColorIO.TransformDirection = <TransformDirection.TRANSFORM_DIR_FORWARD: 0>) -> None
 
 
    .. py:method:: MatrixTransform.__str__(self: PyOpenColorIO.MatrixTransform) -> str

@@ -7,14 +7,14 @@
    :module: PyOpenColorIO
 
 
-   .. py:method:: GpuShaderDesc.CreateLegacyShaderDesc(edgeLen: int, language: PyOpenColorIO.GpuLanguage = GpuLanguage.GPU_LANGUAGE_UNKNOWN, functionName: str = 'OCIOMain', pixelName: str = 'outColor', resourcePrefix: str = 'ocio', uid: str = '') -> PyOpenColorIO.GpuShaderDesc
+   .. py:method:: GpuShaderDesc.CreateLegacyShaderDesc(edgeLen: int, language: PyOpenColorIO.GpuLanguage = <GpuLanguage.GPU_LANGUAGE_GLSL_1_2: 1>, functionName: str = 'OCIOMain', pixelName: str = 'outColor', resourcePrefix: str = 'ocio', uid: str = '') -> PyOpenColorIO.GpuShaderDesc
       :module: PyOpenColorIO
       :staticmethod:
 
       Create the legacy shader description.
 
 
-   .. py:method:: GpuShaderDesc.CreateShaderDesc(language: PyOpenColorIO.GpuLanguage = GpuLanguage.GPU_LANGUAGE_UNKNOWN, functionName: str = 'OCIOMain', pixelName: str = 'outColor', resourcePrefix: str = 'ocio', uid: str = '') -> PyOpenColorIO.GpuShaderDesc
+   .. py:method:: GpuShaderDesc.CreateShaderDesc(language: PyOpenColorIO.GpuLanguage = <GpuLanguage.GPU_LANGUAGE_GLSL_1_2: 1>, functionName: str = 'OCIOMain', pixelName: str = 'outColor', resourcePrefix: str = 'ocio', uid: str = '') -> PyOpenColorIO.GpuShaderDesc
       :module: PyOpenColorIO
       :staticmethod:
 
@@ -87,7 +87,7 @@
       :module: PyOpenColorIO
 
 
-   .. py:method:: GpuShaderDesc.get3DTextureValues(self: PyOpenColorIO.GpuShaderDesc, index: int) -> array
+   .. py:method:: GpuShaderDesc.get3DTextureValues(self: PyOpenColorIO.GpuShaderDesc, index: int) -> numpy.ndarray
       :module: PyOpenColorIO
 
 
@@ -103,7 +103,7 @@
       :module: PyOpenColorIO
 
 
-   .. py:method:: GpuShaderDesc.getDynamicProperty(self: PyOpenColorIO.GpuShaderCreator, type: PyOpenColorIO.DynamicPropertyType) -> OpenColorIO_v2_0beta1::DynamicProperty
+   .. py:method:: GpuShaderDesc.getDynamicProperty(self: PyOpenColorIO.GpuShaderCreator, type: PyOpenColorIO.DynamicPropertyType) -> OpenColorIO_v2_0beta2::DynamicProperty
       :module: PyOpenColorIO
 
 
@@ -144,7 +144,7 @@
       :module: PyOpenColorIO
 
 
-   .. py:method:: GpuShaderDesc.getTextureValues(self: PyOpenColorIO.GpuShaderDesc, index: int) -> array
+   .. py:method:: GpuShaderDesc.getTextureValues(self: PyOpenColorIO.GpuShaderDesc, index: int) -> numpy.ndarray
       :module: PyOpenColorIO
 
 
@@ -206,12 +206,12 @@
 
    .. py:attribute:: TextureType.TEXTURE_RED_CHANNEL
       :module: PyOpenColorIO.GpuShaderDesc
-      :value: TextureType.TEXTURE_RED_CHANNEL
+      :value: <TextureType.TEXTURE_RED_CHANNEL: 0>
 
 
    .. py:attribute:: TextureType.TEXTURE_RGB_CHANNEL
       :module: PyOpenColorIO.GpuShaderDesc
-      :value: TextureType.TEXTURE_RGB_CHANNEL
+      :value: <TextureType.TEXTURE_RGB_CHANNEL: 1>
 
 
 .. py:class:: Texture
@@ -316,7 +316,7 @@
    :module: PyOpenColorIO.GpuShaderDesc
 
 
-   .. py:method:: DynamicPropertyIterator.__getitem__(self: PyOpenColorIO.GpuShaderCreator.DynamicPropertyIterator, arg0: int) -> OpenColorIO_v2_0beta1::DynamicProperty
+   .. py:method:: DynamicPropertyIterator.__getitem__(self: PyOpenColorIO.GpuShaderCreator.DynamicPropertyIterator, arg0: int) -> OpenColorIO_v2_0beta2::DynamicProperty
       :module: PyOpenColorIO.GpuShaderDesc
 
 
@@ -328,6 +328,6 @@
       :module: PyOpenColorIO.GpuShaderDesc
 
 
-   .. py:method:: DynamicPropertyIterator.__next__(self: PyOpenColorIO.GpuShaderCreator.DynamicPropertyIterator) -> OpenColorIO_v2_0beta1::DynamicProperty
+   .. py:method:: DynamicPropertyIterator.__next__(self: PyOpenColorIO.GpuShaderCreator.DynamicPropertyIterator) -> OpenColorIO_v2_0beta2::DynamicProperty
       :module: PyOpenColorIO.GpuShaderDesc
 

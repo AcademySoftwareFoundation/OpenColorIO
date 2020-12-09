@@ -17,10 +17,10 @@
 
    .. py:attribute:: ViewTransformDirection.VIEWTRANSFORM_DIR_FROM_REFERENCE
       :module: PyOpenColorIO
-      :value: ViewTransformDirection.VIEWTRANSFORM_DIR_FROM_REFERENCE
+      :value: <ViewTransformDirection.VIEWTRANSFORM_DIR_FROM_REFERENCE: 1>
 
 
    .. py:attribute:: ViewTransformDirection.VIEWTRANSFORM_DIR_TO_REFERENCE
       :module: PyOpenColorIO
-      :value: ViewTransformDirection.VIEWTRANSFORM_DIR_TO_REFERENCE
+      :value: <ViewTransformDirection.VIEWTRANSFORM_DIR_TO_REFERENCE: 0>
 

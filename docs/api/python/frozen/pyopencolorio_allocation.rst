@@ -19,15 +19,15 @@
 
    .. py:attribute:: Allocation.ALLOCATION_LG2
       :module: PyOpenColorIO
-      :value: Allocation.ALLOCATION_LG2
+      :value: <Allocation.ALLOCATION_LG2: 2>
 
 
    .. py:attribute:: Allocation.ALLOCATION_UNIFORM
       :module: PyOpenColorIO
-      :value: Allocation.ALLOCATION_UNIFORM
+      :value: <Allocation.ALLOCATION_UNIFORM: 1>
 
 
    .. py:attribute:: Allocation.ALLOCATION_UNKNOWN
       :module: PyOpenColorIO
-      :value: Allocation.ALLOCATION_UNKNOWN
+      :value: <Allocation.ALLOCATION_UNKNOWN: 0>
 

@@ -19,10 +19,10 @@
 
    .. py:attribute:: ReferenceSpaceType.REFERENCE_SPACE_DISPLAY
       :module: PyOpenColorIO
-      :value: ReferenceSpaceType.REFERENCE_SPACE_DISPLAY
+      :value: <ReferenceSpaceType.REFERENCE_SPACE_DISPLAY: 1>
 
 
    .. py:attribute:: ReferenceSpaceType.REFERENCE_SPACE_SCENE
       :module: PyOpenColorIO
-      :value: ReferenceSpaceType.REFERENCE_SPACE_SCENE
+      :value: <ReferenceSpaceType.REFERENCE_SPACE_SCENE: 0>
 

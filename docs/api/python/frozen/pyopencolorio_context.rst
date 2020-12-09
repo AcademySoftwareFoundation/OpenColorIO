@@ -14,7 +14,7 @@
 
       1. __init__(self: PyOpenColorIO.Context) -> None
 
-      2. __init__(self: PyOpenColorIO.Context, workingDir: str = '', searchPaths: List[str] = [], stringVars: Dict[str, str] = {}, environmentMode: PyOpenColorIO.EnvironmentMode = EnvironmentMode.ENV_ENVIRONMENT_LOAD_PREDEFINED) -> None
+      2. __init__(self: PyOpenColorIO.Context, workingDir: str = '', searchPaths: List[str] = [], stringVars: Dict[str, str] = {}, environmentMode: PyOpenColorIO.EnvironmentMode = <EnvironmentMode.ENV_ENVIRONMENT_LOAD_PREDEFINED: 1>) -> None
 
 
    .. py:method:: Context.__str__(self: PyOpenColorIO.Context) -> str

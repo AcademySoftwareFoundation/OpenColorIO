@@ -85,7 +85,7 @@
       :module: PyOpenColorIO
 
 
-   .. py:method:: GpuShaderCreator.getDynamicProperty(self: PyOpenColorIO.GpuShaderCreator, type: PyOpenColorIO.DynamicPropertyType) -> OpenColorIO_v2_0beta1::DynamicProperty
+   .. py:method:: GpuShaderCreator.getDynamicProperty(self: PyOpenColorIO.GpuShaderCreator, type: PyOpenColorIO.DynamicPropertyType) -> OpenColorIO_v2_0beta2::DynamicProperty
       :module: PyOpenColorIO
 
 
@@ -172,19 +172,19 @@
 
    .. py:attribute:: TextureType.TEXTURE_RED_CHANNEL
       :module: PyOpenColorIO.GpuShaderCreator
-      :value: TextureType.TEXTURE_RED_CHANNEL
+      :value: <TextureType.TEXTURE_RED_CHANNEL: 0>
 
 
    .. py:attribute:: TextureType.TEXTURE_RGB_CHANNEL
       :module: PyOpenColorIO.GpuShaderCreator
-      :value: TextureType.TEXTURE_RGB_CHANNEL
+      :value: <TextureType.TEXTURE_RGB_CHANNEL: 1>
 
 
 .. py:class:: DynamicPropertyIterator
    :module: PyOpenColorIO.GpuShaderCreator
 
 
-   .. py:method:: DynamicPropertyIterator.__getitem__(self: PyOpenColorIO.GpuShaderCreator.DynamicPropertyIterator, arg0: int) -> OpenColorIO_v2_0beta1::DynamicProperty
+   .. py:method:: DynamicPropertyIterator.__getitem__(self: PyOpenColorIO.GpuShaderCreator.DynamicPropertyIterator, arg0: int) -> OpenColorIO_v2_0beta2::DynamicProperty
       :module: PyOpenColorIO.GpuShaderCreator
 
 
@@ -196,6 +196,6 @@
       :module: PyOpenColorIO.GpuShaderCreator
 
 
-   .. py:method:: DynamicPropertyIterator.__next__(self: PyOpenColorIO.GpuShaderCreator.DynamicPropertyIterator) -> OpenColorIO_v2_0beta1::DynamicProperty
+   .. py:method:: DynamicPropertyIterator.__next__(self: PyOpenColorIO.GpuShaderCreator.DynamicPropertyIterator) -> OpenColorIO_v2_0beta2::DynamicProperty
       :module: PyOpenColorIO.GpuShaderCreator
 

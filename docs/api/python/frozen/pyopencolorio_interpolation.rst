@@ -39,35 +39,35 @@
 
    .. py:attribute:: Interpolation.INTERP_BEST
       :module: PyOpenColorIO
-      :value: Interpolation.INTERP_BEST
+      :value: <Interpolation.INTERP_BEST: 255>
 
 
    .. py:attribute:: Interpolation.INTERP_CUBIC
       :module: PyOpenColorIO
-      :value: Interpolation.INTERP_CUBIC
+      :value: <Interpolation.INTERP_CUBIC: 4>
 
 
    .. py:attribute:: Interpolation.INTERP_DEFAULT
       :module: PyOpenColorIO
-      :value: Interpolation.INTERP_DEFAULT
+      :value: <Interpolation.INTERP_DEFAULT: 254>
 
 
    .. py:attribute:: Interpolation.INTERP_LINEAR
       :module: PyOpenColorIO
-      :value: Interpolation.INTERP_LINEAR
+      :value: <Interpolation.INTERP_LINEAR: 2>
 
 
    .. py:attribute:: Interpolation.INTERP_NEAREST
       :module: PyOpenColorIO
-      :value: Interpolation.INTERP_NEAREST
+      :value: <Interpolation.INTERP_NEAREST: 1>
 
 
    .. py:attribute:: Interpolation.INTERP_TETRAHEDRAL
       :module: PyOpenColorIO
-      :value: Interpolation.INTERP_TETRAHEDRAL
+      :value: <Interpolation.INTERP_TETRAHEDRAL: 3>
 
 
    .. py:attribute:: Interpolation.INTERP_UNKNOWN
       :module: PyOpenColorIO
-      :value: Interpolation.INTERP_UNKNOWN
+      :value: <Interpolation.INTERP_UNKNOWN: 0>
 

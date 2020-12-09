@@ -19,15 +19,15 @@
 
    .. py:attribute:: EnvironmentMode.ENV_ENVIRONMENT_LOAD_ALL
       :module: PyOpenColorIO
-      :value: EnvironmentMode.ENV_ENVIRONMENT_LOAD_ALL
+      :value: <EnvironmentMode.ENV_ENVIRONMENT_LOAD_ALL: 2>
 
 
    .. py:attribute:: EnvironmentMode.ENV_ENVIRONMENT_LOAD_PREDEFINED
       :module: PyOpenColorIO
-      :value: EnvironmentMode.ENV_ENVIRONMENT_LOAD_PREDEFINED
+      :value: <EnvironmentMode.ENV_ENVIRONMENT_LOAD_PREDEFINED: 1>
 
 
    .. py:attribute:: EnvironmentMode.ENV_ENVIRONMENT_UNKNOWN
       :module: PyOpenColorIO
-      :value: EnvironmentMode.ENV_ENVIRONMENT_UNKNOWN
+      :value: <EnvironmentMode.ENV_ENVIRONMENT_UNKNOWN: 0>
 

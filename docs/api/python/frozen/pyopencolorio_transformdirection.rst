@@ -17,10 +17,10 @@
 
    .. py:attribute:: TransformDirection.TRANSFORM_DIR_FORWARD
       :module: PyOpenColorIO
-      :value: TransformDirection.TRANSFORM_DIR_FORWARD
+      :value: <TransformDirection.TRANSFORM_DIR_FORWARD: 0>
 
 
    .. py:attribute:: TransformDirection.TRANSFORM_DIR_INVERSE
       :module: PyOpenColorIO
-      :value: TransformDirection.TRANSFORM_DIR_INVERSE
+      :value: <TransformDirection.TRANSFORM_DIR_INVERSE: 1>
 

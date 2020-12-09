@@ -19,15 +19,15 @@
 
    .. py:attribute:: SearchReferenceSpaceType.SEARCH_REFERENCE_SPACE_ALL
       :module: PyOpenColorIO
-      :value: SearchReferenceSpaceType.SEARCH_REFERENCE_SPACE_ALL
+      :value: <SearchReferenceSpaceType.SEARCH_REFERENCE_SPACE_ALL: 2>
 
 
    .. py:attribute:: SearchReferenceSpaceType.SEARCH_REFERENCE_SPACE_DISPLAY
       :module: PyOpenColorIO
-      :value: SearchReferenceSpaceType.SEARCH_REFERENCE_SPACE_DISPLAY
+      :value: <SearchReferenceSpaceType.SEARCH_REFERENCE_SPACE_DISPLAY: 1>
 
 
    .. py:attribute:: SearchReferenceSpaceType.SEARCH_REFERENCE_SPACE_SCENE
       :module: PyOpenColorIO
-      :value: SearchReferenceSpaceType.SEARCH_REFERENCE_SPACE_SCENE
+      :value: <SearchReferenceSpaceType.SEARCH_REFERENCE_SPACE_SCENE: 0>
 

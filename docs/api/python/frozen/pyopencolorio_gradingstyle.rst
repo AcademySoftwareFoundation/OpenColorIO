@@ -21,15 +21,15 @@
 
    .. py:attribute:: GradingStyle.GRADING_LIN
       :module: PyOpenColorIO
-      :value: GradingStyle.GRADING_LIN
+      :value: <GradingStyle.GRADING_LIN: 1>
 
 
    .. py:attribute:: GradingStyle.GRADING_LOG
       :module: PyOpenColorIO
-      :value: GradingStyle.GRADING_LOG
+      :value: <GradingStyle.GRADING_LOG: 0>
 
 
    .. py:attribute:: GradingStyle.GRADING_VIDEO
       :module: PyOpenColorIO
-      :value: GradingStyle.GRADING_VIDEO
+      :value: <GradingStyle.GRADING_VIDEO: 2>
 

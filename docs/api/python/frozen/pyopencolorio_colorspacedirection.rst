@@ -17,10 +17,10 @@
 
    .. py:attribute:: ColorSpaceDirection.COLORSPACE_DIR_FROM_REFERENCE
       :module: PyOpenColorIO
-      :value: ColorSpaceDirection.COLORSPACE_DIR_FROM_REFERENCE
+      :value: <ColorSpaceDirection.COLORSPACE_DIR_FROM_REFERENCE: 1>
 
 
    .. py:attribute:: ColorSpaceDirection.COLORSPACE_DIR_TO_REFERENCE
       :module: PyOpenColorIO
-      :value: ColorSpaceDirection.COLORSPACE_DIR_TO_REFERENCE
+      :value: <ColorSpaceDirection.COLORSPACE_DIR_TO_REFERENCE: 0>
 

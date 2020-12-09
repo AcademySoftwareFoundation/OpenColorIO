@@ -25,7 +25,7 @@
 
       Creates an instance of :ref:`RangeTransform`.
 
-      2. __init__(self: PyOpenColorIO.RangeTransform, minInValue: float = nan, maxInValue: float = nan, minOutValue: float = nan, maxOutValue: float = nan, direction: PyOpenColorIO.TransformDirection = TransformDirection.TRANSFORM_DIR_FORWARD) -> None
+      2. __init__(self: PyOpenColorIO.RangeTransform, minInValue: float = nan, maxInValue: float = nan, minOutValue: float = nan, maxOutValue: float = nan, direction: PyOpenColorIO.TransformDirection = <TransformDirection.TRANSFORM_DIR_FORWARD: 0>) -> None
 
       Creates an instance of :ref:`RangeTransform`.
 

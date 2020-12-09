@@ -28,13 +28,13 @@
       4. __init__(self: PyOpenColorIO.PlanarImageDesc, rData: buffer, gData: buffer, bData: buffer, aData: buffer, width: int, height: int, bitDepth: PyOpenColorIO.BitDepth, xStrideBytes: int, yStrideBytes: int) -> None
 
 
-   .. py:method:: PlanarImageDesc.getAData(self: PyOpenColorIO.PlanarImageDesc) -> array
+   .. py:method:: PlanarImageDesc.getAData(self: PyOpenColorIO.PlanarImageDesc) -> numpy.ndarray
       :module: PyOpenColorIO
 
       Get a pointer to the alpha channel of the first pixel or null as alpha channel is optional.
 
 
-   .. py:method:: PlanarImageDesc.getBData(self: PyOpenColorIO.PlanarImageDesc) -> array
+   .. py:method:: PlanarImageDesc.getBData(self: PyOpenColorIO.PlanarImageDesc) -> numpy.ndarray
       :module: PyOpenColorIO
 
       Get a pointer to the blue channel of the first pixel.
@@ -46,7 +46,7 @@
       Get the bit-depth.
 
 
-   .. py:method:: PlanarImageDesc.getGData(self: PyOpenColorIO.PlanarImageDesc) -> array
+   .. py:method:: PlanarImageDesc.getGData(self: PyOpenColorIO.PlanarImageDesc) -> numpy.ndarray
       :module: PyOpenColorIO
 
       Get a pointer to the green channel of the first pixel.
@@ -58,7 +58,7 @@
       Get the height to process (where y position starts at 0 and ends at height-1).
 
 
-   .. py:method:: PlanarImageDesc.getRData(self: PyOpenColorIO.PlanarImageDesc) -> array
+   .. py:method:: PlanarImageDesc.getRData(self: PyOpenColorIO.PlanarImageDesc) -> numpy.ndarray
       :module: PyOpenColorIO
 
       Get a pointer to the red channel of the first pixel.

@@ -21,15 +21,15 @@
 
    .. py:attribute:: ExposureContrastStyle.EXPOSURE_CONTRAST_LINEAR
       :module: PyOpenColorIO
-      :value: ExposureContrastStyle.EXPOSURE_CONTRAST_LINEAR
+      :value: <ExposureContrastStyle.EXPOSURE_CONTRAST_LINEAR: 0>
 
 
    .. py:attribute:: ExposureContrastStyle.EXPOSURE_CONTRAST_LOGARITHMIC
       :module: PyOpenColorIO
-      :value: ExposureContrastStyle.EXPOSURE_CONTRAST_LOGARITHMIC
+      :value: <ExposureContrastStyle.EXPOSURE_CONTRAST_LOGARITHMIC: 2>
 
 
    .. py:attribute:: ExposureContrastStyle.EXPOSURE_CONTRAST_VIDEO
       :module: PyOpenColorIO
-      :value: ExposureContrastStyle.EXPOSURE_CONTRAST_VIDEO
+      :value: <ExposureContrastStyle.EXPOSURE_CONTRAST_VIDEO: 1>
 

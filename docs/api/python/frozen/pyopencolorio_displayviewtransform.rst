@@ -14,7 +14,7 @@
 
       1. __init__(self: PyOpenColorIO.DisplayViewTransform) -> None
 
-      2. __init__(self: PyOpenColorIO.DisplayViewTransform, src: str = '', display: str = '', view: str = '', looksBypass: bool = False, dataBypass: bool = True, direction: PyOpenColorIO.TransformDirection = TransformDirection.TRANSFORM_DIR_FORWARD) -> None
+      2. __init__(self: PyOpenColorIO.DisplayViewTransform, src: str = '', display: str = '', view: str = '', looksBypass: bool = False, dataBypass: bool = True, direction: PyOpenColorIO.TransformDirection = <TransformDirection.TRANSFORM_DIR_FORWARD: 0>) -> None
 
 
    .. py:method:: DisplayViewTransform.__str__(self: PyOpenColorIO.DisplayViewTransform) -> str

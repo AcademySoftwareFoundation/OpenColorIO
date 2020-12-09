@@ -18,11 +18,11 @@
 
       Overloaded function.
 
-      1. extractGpuShaderInfo(self: PyOpenColorIO.GPUProcessor, shaderDesc: OpenColorIO_v2_0beta1::GpuShaderDesc) -> None
+      1. extractGpuShaderInfo(self: PyOpenColorIO.GPUProcessor, shaderDesc: OpenColorIO_v2_0beta2::GpuShaderDesc) -> None
 
       Extract & Store the shader information to implement the color processing.
 
-      2. extractGpuShaderInfo(self: PyOpenColorIO.GPUProcessor, shaderCreator: OpenColorIO_v2_0beta1::GpuShaderCreator) -> None
+      2. extractGpuShaderInfo(self: PyOpenColorIO.GPUProcessor, shaderCreator: OpenColorIO_v2_0beta2::GpuShaderCreator) -> None
 
       Extract the shader information using a custom :ref:`GpuShaderCreator` class.
 

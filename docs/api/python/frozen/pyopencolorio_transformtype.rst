@@ -57,110 +57,110 @@
 
    .. py:attribute:: TransformType.TRANSFORM_TYPE_ALLOCATION
       :module: PyOpenColorIO
-      :value: TransformType.TRANSFORM_TYPE_ALLOCATION
+      :value: <TransformType.TRANSFORM_TYPE_ALLOCATION: 0>
 
 
    .. py:attribute:: TransformType.TRANSFORM_TYPE_BUILTIN
       :module: PyOpenColorIO
-      :value: TransformType.TRANSFORM_TYPE_BUILTIN
+      :value: <TransformType.TRANSFORM_TYPE_BUILTIN: 1>
 
 
    .. py:attribute:: TransformType.TRANSFORM_TYPE_CDL
       :module: PyOpenColorIO
-      :value: TransformType.TRANSFORM_TYPE_CDL
+      :value: <TransformType.TRANSFORM_TYPE_CDL: 2>
 
 
    .. py:attribute:: TransformType.TRANSFORM_TYPE_COLORSPACE
       :module: PyOpenColorIO
-      :value: TransformType.TRANSFORM_TYPE_COLORSPACE
+      :value: <TransformType.TRANSFORM_TYPE_COLORSPACE: 3>
 
 
    .. py:attribute:: TransformType.TRANSFORM_TYPE_DISPLAY_VIEW
       :module: PyOpenColorIO
-      :value: TransformType.TRANSFORM_TYPE_DISPLAY_VIEW
+      :value: <TransformType.TRANSFORM_TYPE_DISPLAY_VIEW: 4>
 
 
    .. py:attribute:: TransformType.TRANSFORM_TYPE_EXPONENT
       :module: PyOpenColorIO
-      :value: TransformType.TRANSFORM_TYPE_EXPONENT
+      :value: <TransformType.TRANSFORM_TYPE_EXPONENT: 5>
 
 
    .. py:attribute:: TransformType.TRANSFORM_TYPE_EXPONENT_WITH_LINEAR
       :module: PyOpenColorIO
-      :value: TransformType.TRANSFORM_TYPE_EXPONENT_WITH_LINEAR
+      :value: <TransformType.TRANSFORM_TYPE_EXPONENT_WITH_LINEAR: 6>
 
 
    .. py:attribute:: TransformType.TRANSFORM_TYPE_EXPOSURE_CONTRAST
       :module: PyOpenColorIO
-      :value: TransformType.TRANSFORM_TYPE_EXPOSURE_CONTRAST
+      :value: <TransformType.TRANSFORM_TYPE_EXPOSURE_CONTRAST: 7>
 
 
    .. py:attribute:: TransformType.TRANSFORM_TYPE_FILE
       :module: PyOpenColorIO
-      :value: TransformType.TRANSFORM_TYPE_FILE
+      :value: <TransformType.TRANSFORM_TYPE_FILE: 8>
 
 
    .. py:attribute:: TransformType.TRANSFORM_TYPE_FIXED_FUNCTION
       :module: PyOpenColorIO
-      :value: TransformType.TRANSFORM_TYPE_FIXED_FUNCTION
+      :value: <TransformType.TRANSFORM_TYPE_FIXED_FUNCTION: 9>
 
 
    .. py:attribute:: TransformType.TRANSFORM_TYPE_GRADING_PRIMARY
       :module: PyOpenColorIO
-      :value: TransformType.TRANSFORM_TYPE_GRADING_PRIMARY
+      :value: <TransformType.TRANSFORM_TYPE_GRADING_PRIMARY: 10>
 
 
    .. py:attribute:: TransformType.TRANSFORM_TYPE_GRADING_RGB_CURVE
       :module: PyOpenColorIO
-      :value: TransformType.TRANSFORM_TYPE_GRADING_RGB_CURVE
+      :value: <TransformType.TRANSFORM_TYPE_GRADING_RGB_CURVE: 11>
 
 
    .. py:attribute:: TransformType.TRANSFORM_TYPE_GRADING_TONE
       :module: PyOpenColorIO
-      :value: TransformType.TRANSFORM_TYPE_GRADING_TONE
+      :value: <TransformType.TRANSFORM_TYPE_GRADING_TONE: 12>
 
 
    .. py:attribute:: TransformType.TRANSFORM_TYPE_GROUP
       :module: PyOpenColorIO
-      :value: TransformType.TRANSFORM_TYPE_GROUP
+      :value: <TransformType.TRANSFORM_TYPE_GROUP: 13>
 
 
    .. py:attribute:: TransformType.TRANSFORM_TYPE_LOG
       :module: PyOpenColorIO
-      :value: TransformType.TRANSFORM_TYPE_LOG
+      :value: <TransformType.TRANSFORM_TYPE_LOG: 16>
 
 
    .. py:attribute:: TransformType.TRANSFORM_TYPE_LOG_AFFINE
       :module: PyOpenColorIO
-      :value: TransformType.TRANSFORM_TYPE_LOG_AFFINE
+      :value: <TransformType.TRANSFORM_TYPE_LOG_AFFINE: 14>
 
 
    .. py:attribute:: TransformType.TRANSFORM_TYPE_LOG_CAMERA
       :module: PyOpenColorIO
-      :value: TransformType.TRANSFORM_TYPE_LOG_CAMERA
+      :value: <TransformType.TRANSFORM_TYPE_LOG_CAMERA: 15>
 
 
    .. py:attribute:: TransformType.TRANSFORM_TYPE_LOOK
       :module: PyOpenColorIO
-      :value: TransformType.TRANSFORM_TYPE_LOOK
+      :value: <TransformType.TRANSFORM_TYPE_LOOK: 17>
 
 
    .. py:attribute:: TransformType.TRANSFORM_TYPE_LUT1D
       :module: PyOpenColorIO
-      :value: TransformType.TRANSFORM_TYPE_LUT1D
+      :value: <TransformType.TRANSFORM_TYPE_LUT1D: 18>
 
 
    .. py:attribute:: TransformType.TRANSFORM_TYPE_LUT3D
       :module: PyOpenColorIO
-      :value: TransformType.TRANSFORM_TYPE_LUT3D
+      :value: <TransformType.TRANSFORM_TYPE_LUT3D: 19>
 
 
    .. py:attribute:: TransformType.TRANSFORM_TYPE_MATRIX
       :module: PyOpenColorIO
-      :value: TransformType.TRANSFORM_TYPE_MATRIX
+      :value: <TransformType.TRANSFORM_TYPE_MATRIX: 20>
 
 
    .. py:attribute:: TransformType.TRANSFORM_TYPE_RANGE
       :module: PyOpenColorIO
-      :value: TransformType.TRANSFORM_TYPE_RANGE
+      :value: <TransformType.TRANSFORM_TYPE_RANGE: 21>
 
