@@ -22,17 +22,27 @@
 
 namespace OCIO = OCIO_NAMESPACE;
 
-// This is  a custom class made for storing plugin specific data
-class ColorSpaceContainer
+// This is a custom class made for storing plugin specific data
+class FileContainer
 {
 public:
+    // The source clip
     OfxImageClipHandle m_srcClip;
+    // The destination clip
     OfxImageClipHandle m_dstClip;
 
-    OfxParamHandle m_ColorSpace;
-    OfxParamHandle m_srcColorSpace;
-    OfxParamHandle m_dstColorSpace;
-    OfxParamHandle m_ConfigFile;
+    // Parameter for toggling red component trigger
+    OfxParamHandle m_toggleR;
+    // Parameter for toggling green component trigger
+    OfxParamHandle m_toggleG;
+    // Parameter for toggling blue component trigger
+    OfxParamHandle m_toggleB;
+    // Parameter for recieving LUT file
+    OfxParamHandle m_file;
+    // Parameter for setting transformation direction
+    OfxParamHandle m_direction;
+    // Parameter to select interpolation options
+    OfxParamHandle m_interpolation;
 };
 
 // Exception thrown when images are missing
@@ -52,8 +62,8 @@ protected :
     OfxStatus status_;
 };
 
-// Instanciating OCIO ColorSpace Transform API
-OCIO::ColorSpaceTransformRcPtr g_ColorSpaceTransform = OCIO::ColorSpaceTransform::Create();
+// Instanciating OCIO FileTransform API
+OCIO::FileTransformRcPtr g_FileTransform = OCIO::FileTransform::Create();
 
 // Getting the current instance configuration
 OCIO::ConstConfigRcPtr g_Config = OCIO::GetCurrentConfig();
@@ -68,25 +78,25 @@ OfxMultiThreadSuiteV1 *g_ThreadHost   = 0;
 OfxMessageSuiteV1     *g_MessageSuite = 0;
 OfxInteractSuiteV1    *g_InteractHost = 0;
 
+// Function
 OfxStatus OnLoad(void)
 {
     return kOfxStatOK;
 }
 
-// Get ColorSpaceContainer from a property set handle
-static ColorSpaceContainer* GetContainer(OfxImageEffectHandle effect)
+// Get FileContainer from a property set handle
+static FileContainer* GetContainer(OfxImageEffectHandle effect)
 {
     OfxPropertySetHandle effectProps;
     g_EffectHost->getPropertySet(effect, &effectProps);
 
 
-    ColorSpaceContainer *Container = 0;
+    FileContainer *Container = 0;
     g_PropHost->propGetPointer(effectProps, kOfxPropInstanceData, 0, (void**) &Container);
 
     return Container;
 }
 
-// Utility function to fetch suites from the host
 static OfxStatus FetchSuites(OfxImageEffectHandle effect)
 {
     g_EffectHost   = reinterpret_cast<OfxImageEffectSuiteV1 *>(const_cast<void *>(g_Host->fetchSuite(g_Host->host, kOfxImageEffectSuite, 1)));
@@ -100,7 +110,6 @@ static OfxStatus FetchSuites(OfxImageEffectHandle effect)
     return kOfxStatOK;
 }
 
-// Function to create an instance of ColorSpaceContainer and set it up
 static OfxStatus CreateInstance(OfxImageEffectHandle effect)
 {
     // get a pointer to the effect properties
@@ -111,49 +120,25 @@ static OfxStatus CreateInstance(OfxImageEffectHandle effect)
     OfxParamSetHandle paramSet;
     g_EffectHost->getParamSet(effect, &paramSet);
 
-    // Instanciating ColorSpaceContainer
-    ColorSpaceContainer *Container = new ColorSpaceContainer;
+    // Instanciating FileContainer
+    FileContainer *Container = new FileContainer;
 
     // Cache away out clip handles
     g_EffectHost->clipGetHandle(effect, kOfxImageEffectSimpleSourceClipName, &Container->m_srcClip, 0);
     g_EffectHost->clipGetHandle(effect, kOfxImageEffectOutputClipName, &Container->m_dstClip, 0);
 
     // Caching all the parameters in Container
-    g_ParamHost->paramGetHandle(paramSet, "sourceColorspace", &(Container->m_srcColorSpace), 0);
-    g_ParamHost->paramGetHandle(paramSet, "destinationColorspace", &(Container->m_dstColorSpace), 0);
-    g_ParamHost->paramGetHandle(paramSet, "Config", &(Container->m_ConfigFile), 0);
+    g_ParamHost->paramGetHandle(paramSet, "file", &(Container->m_file), 0);
+    g_ParamHost->paramGetHandle(paramSet, "interpolation", &(Container->m_interpolation), 0);
+    g_ParamHost->paramGetHandle(paramSet, "direction", &(Container->m_direction), 0);
+    g_ParamHost->paramGetHandle(paramSet, "ToggleR", &(Container->m_toggleR), 0);
+    g_ParamHost->paramGetHandle(paramSet, "ToggleG", &(Container->m_toggleG), 0);
+    g_ParamHost->paramGetHandle(paramSet, "ToggleB", &(Container->m_toggleB), 0);
+    
 
     g_PropHost->propSetPointer(effectProps, kOfxPropInstanceData, 0, (void *) Container);
 
     return kOfxStatOK;
-}
-
-// Utility function for defining a ColorSpace choice param
-static void DefineColorSpaceParam(OfxParamSetHandle effectParams, const char *name, const char *label, const char *scriptName, const char *hint, const char *parent)
-{
-    OfxPropertySetHandle props;
-    OfxStatus status;
-
-    // Setting the param to a Choice type
-    status = g_ParamHost->paramDefine(effectParams, kOfxParamTypeChoice, name, &props);
-    if(status != kOfxStatOK)
-    {
-        throw status;
-        return;
-    }
-
-    // Filling the choices with ColorSpaces available in the current Config
-    for (int i = 0; i < g_Config->getNumColorSpaces(); i++)
-        g_PropHost->propSetString(props, kOfxParamPropChoiceOption, i, g_Config->getColorSpaceNameByIndex(i));
-
-    // Default value of the param is the colorspace with index 1
-    g_PropHost->propSetString(props, kOfxParamPropDefault, 0, g_Config->getColorSpaceNameByIndex(0));
-    g_PropHost->propSetString(props, kOfxParamPropHint, 0, hint);
-    g_PropHost->propSetString(props, kOfxParamPropScriptName, 0, scriptName);
-    g_PropHost->propSetString(props, kOfxPropLabel, 0, label);
-
-    if(parent)
-        g_PropHost->propSetString(props, kOfxParamPropParent, 0, parent);
 }
 
 // A function to describe context specific properties and parameters
@@ -169,7 +154,7 @@ static OfxStatus DescribeInContext(OfxImageEffectHandle effect)
     g_PropHost->propSetString(props, kOfxImageEffectPropSupportedComponents, 1, kOfxImageComponentAlpha);
 
     // Defining the source clip for the plugin
-    g_EffectHost->clipDefine(effect, kOfxImageEffectOutputClipName, &props);
+    g_EffectHost->clipDefine(effect, kOfxImageEffectSimpleSourceClipName, &props);
 
     // Set the component types we can handle on the input
     g_PropHost->propSetString(props, kOfxImageEffectPropSupportedComponents, 0, kOfxImageComponentRGBA);
@@ -186,9 +171,9 @@ static OfxStatus DescribeInContext(OfxImageEffectHandle effect)
     g_PropHost->propSetString(props, kOfxPropLabel, 0, "ColorSpaces");
 
     // Input ColorSpace
-    DefineColorSpaceParam(paramSet, "srcColorSpace", "Input ColorSpace", "Input ColorSpace", "Choose the input ColorSpace for the Transform", "ColorSpaces");
+    //DefineColorSpaceParam(paramSet, "srcColorSpace", "Input ColorSpace", "Input ColorSpace", "Choose the input ColorSpace for the Transform", "ColorSpaces");
     // Output ColorSpace
-    DefineColorSpaceParam(paramSet, "dstColorSpace", "Output ColorSpace", "Output ColorSpace", "Choose the output ColorSpace for the Transform", "ColorSpaces");
+    //DefineColorSpaceParam(paramSet, "dstColorSpace", "Output ColorSpace", "Output ColorSpace", "Choose the output ColorSpace for the Transform", "ColorSpaces");
 
     // Making a page of controls and add the parameters to it
     g_ParamHost->paramDefine(paramSet, kOfxParamTypePage, "Main", &props);
@@ -219,7 +204,7 @@ static OfxStatus Describe(OfxImageEffectHandle effect)
     g_PropHost->propSetString(effectProps, kOfxImageEffectPropSupportedPixelDepths, 2, kOfxBitDepthFloat);
 
     // Set some labels and the group it belongs to
-    g_PropHost->propSetString(effectProps, kOfxPropLabel, 0, "OpenColorIO ColorSpace Transform");
+    g_PropHost->propSetString(effectProps, kOfxPropLabel, 0, "OpenColorIO File Transform");
     g_PropHost->propSetString(effectProps, kOfxImageEffectPluginPropGrouping, 0, "OpenColorIO");
 
     // Define the contexts we can be used in
@@ -314,6 +299,21 @@ inline OfxPropertySetHandle GetImage(OfxImageClipHandle &clip, OfxTime time, int
     return imageProps;
 }
 
+// Utility function to get interpolation
+inline OCIO::Interpolation GetInterpolation(const char* itp)
+{
+    if(strcmp(itp, "Linear") == 0)
+            return OCIO::Interpolation::INTERP_LINEAR;
+    else if(strcmp(itp, "Nearest") == 0)
+        return OCIO::Interpolation::INTERP_NEAREST;
+    else if(strcmp(itp, "Best") == 0)
+        return OCIO::Interpolation::INTERP_BEST;
+    else if(strcmp(itp, "Tetrahedral") == 0)
+        return OCIO::Interpolation::INTERP_TETRAHEDRAL;
+    else
+        return OCIO::Interpolation::INTERP_UNKNOWN;
+}
+
 // Renders image on demand
 static OfxStatus Render(OfxImageEffectHandle effect, OfxPropertySetHandle inArgs, OfxPropertySetHandle outArgs)
 {
@@ -325,7 +325,7 @@ static OfxStatus Render(OfxImageEffectHandle effect, OfxPropertySetHandle inArgs
     g_PropHost->propGetDouble(inArgs, kOfxPropTime, 0, &time);
     g_PropHost->propGetIntN(inArgs, kOfxImageEffectPropRenderWindow, 4, &renderWindow.x1);
 
-    ColorSpaceContainer *Container = GetContainer(effect);
+    FileContainer *Container = GetContainer(effect);
 
     OfxPropertySetHandle srcImg = NULL, dstImg = NULL;
     int srcRowBytes, srcBitDepth, dstRowBytes, dstBitDepth;
@@ -346,21 +346,30 @@ static OfxStatus Render(OfxImageEffectHandle effect, OfxPropertySetHandle inArgs
             throw StatusException(kOfxStatErrImageFormat);
 
         // Gettin source and destination colorspaces from suite
-        char *srcCS;
-        char *dstCS;
-        g_ParamHost->paramGetValueAtTime(Container->m_srcColorSpace, time, &srcCS);
-        g_ParamHost->paramGetValueAtTime(Container->m_dstColorSpace, time, &dstCS);
+        char *itp;
+        char *dir;
+        char *srcFile;
+        g_ParamHost->paramGetValueAtTime(Container->m_interpolation, time, &itp);
+        g_ParamHost->paramGetValueAtTime(Container->m_direction, time, &dir);
+        g_ParamHost->paramGetValueAtTime(Container->m_file, time, &srcFile);
 
-        // Setting up OCIO::ColorSpacetransform API
-        g_ColorSpaceTransform->setSrc(srcCS);
-        g_ColorSpaceTransform->setDst(dstCS);
+        // Setting up OCIO::FileTransform API
+        OCIO::TransformDirection d;
+        if(dir == "Inverse")
+            d = OCIO::TransformDirection::TRANSFORM_DIR_INVERSE;
+        else
+            d = OCIO::TransformDirection::TRANSFORM_DIR_FORWARD;
+
+        OCIO::Interpolation ip = GetInterpolation(itp);
+        g_FileTransform->setDirection(d);
+        g_FileTransform->setInterpolation(ip);
 
         // Get Processor call
-        OCIO::ConstProcessorRcPtr processor = g_Config->getProcessor(g_ColorSpaceTransform);
+        OCIO::ConstProcessorRcPtr processor = g_Config->getProcessor(g_FileTransform);
 
         OCIO::ConstCPUProcessorRcPtr cpu = processor->getDefaultCPUProcessor();
 
-        OCIO::PackedImageDesc img(reinterpret_cast<float *>(dst), dstRect.x2 - dstRect.x1, dstRect.y2 - dstRect.y1, 4);
+        OCIO::PackedImageDesc img(reinterpret_cast<float *>(src), srcRect.x2 - srcRect.x1, srcRect.y2 - srcRect.y1, 4);
 
         // Applying the transfor to img
         cpu->apply(img);
@@ -381,7 +390,7 @@ static OfxStatus Render(OfxImageEffectHandle effect, OfxPropertySetHandle inArgs
     }
     catch(const std::exception& e)
     {
-        std::cerr << "Error: OpenColorIO ColorSpaceTransform Plugin    " << e.what() << '\n';
+        std::cerr << "Error: OpenColorIO FileTransform Plugin    " << e.what() << '\n';
     }
 
     if(srcImg)
@@ -394,7 +403,7 @@ static OfxStatus Render(OfxImageEffectHandle effect, OfxPropertySetHandle inArgs
 
 static OfxStatus DestroyInstance(OfxImageEffectHandle effect)
 {
-    ColorSpaceContainer *Container = GetContainer(effect);
+    FileContainer *Container = GetContainer(effect);
 
     if(Container)
         delete Container;
@@ -448,17 +457,17 @@ static OfxStatus EntryPoint(const char* action, const void* handle, OfxPropertyS
     catch(std::bad_alloc)
     {
         //catch memory
-        std::cerr << "Error: OpenColorIO ColorSpace Transform Plugin    bad_alloc" << std::endl;
+        std::cerr << "Error: OpenColorIO FileTransform Plugin    bad_alloc" << std::endl;
         return kOfxStatErrMemory;
     }
     catch(const std::exception& e)
     {
-        std::cerr << "Error: OpenColorIO ColorSpace Transform Plugin    " << e.what();
+        std::cerr << "Error: OpenColorIO FileTransform Plugin    " << e.what();
         return kOfxStatErrUnknown;
     }
     catch(...)
     {
-        std::cerr << "Unknown Error: OpenColorIO ColorSpaceTransform Plugin" << std::endl;
+        std::cerr << "Unknown Error: OpenColorIO FileTransform Plugin" << std::endl;
         return kOfxStatErrUnknown;
     }
     return kOfxStatReplyDefault;
@@ -475,11 +484,11 @@ static void SetHost(OfxHost* host)
 }
 
 // Creating the plugin struct
-static OfxPlugin ColorSpaceTransformPlugin = 
+static OfxPlugin FileTransformPlugin = 
 {
     kOfxImageEffectPluginApi,
     1,
-    "com.OpenColorIO.ColorSpaceTransformPlugin",
+    "com.OpenColorIO.FileTransformPlugin",
     1,
     0,
     SetHost,
@@ -490,7 +499,7 @@ static OfxPlugin ColorSpaceTransformPlugin =
 EXPORT OfxPlugin* OfxGetPlugin(int nth)
 {
     if(nth == 0)
-        return &ColorSpaceTransformPlugin;
+        return &FileTransformPlugin;
     return 0;
 }
 
