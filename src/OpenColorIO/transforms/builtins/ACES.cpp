@@ -127,8 +127,8 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
         {
             // The CIE XYZ space has its conventional normalization (i.e., to illuminant E).
             // A neutral value of [1.,1.,1] in AP0 maps to the XYZ value of D65 ([0.9504..., 1., 1.089...]).
-            const MatrixOpData::Offsets null(0., 0., 0., 0.);
-            const MatrixOpData::Offsets d65_wht_XYZ(0.95045592705167, 1., 1.08905775075988, 0.);
+            static const MatrixOpData::Offsets null(0., 0., 0., 0.);
+            static const MatrixOpData::Offsets d65_wht_XYZ(0.95045592705167, 1., 1.08905775075988, 0.);
             MatrixOpData::MatrixArrayPtr matrix
                 = build_conversion_matrix(ACES_AP0::primaries, CIE_XYZ_ILLUM_E::primaries, 
                                           null, d65_wht_XYZ, ADAPTATION_BRADFORD);
@@ -142,8 +142,8 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
     {
         auto ACES_AP1_to_CIE_XYZ_D65_BFD_Functor = [](OpRcPtrVec & ops)
         {
-            const MatrixOpData::Offsets null(0., 0., 0., 0.);
-            const MatrixOpData::Offsets d65_wht_XYZ(0.95045592705167, 1., 1.08905775075988, 0.);
+            static const MatrixOpData::Offsets null(0., 0., 0., 0.);
+            static const MatrixOpData::Offsets d65_wht_XYZ(0.95045592705167, 1., 1.08905775075988, 0.);
             MatrixOpData::MatrixArrayPtr matrix
                 = build_conversion_matrix(ACES_AP1::primaries, CIE_XYZ_ILLUM_E::primaries, 
                                           null, d65_wht_XYZ, ADAPTATION_BRADFORD);
@@ -199,8 +199,8 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
             {
                 // The functor input will be [0,1].  Remap this to a wider domain to better capture
                 // the full extent of ACEScc.
-                const double IN_MIN = -0.36;
-                const double IN_MAX =  1.50;
+                static constexpr double IN_MIN = -0.36;
+                static constexpr double IN_MAX =  1.50;
                 double in = input * (IN_MAX - IN_MIN) + IN_MIN;
 
                 double out = 0.0f;
@@ -209,7 +209,7 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
                 {
                     out = (std::pow( 2., in * 17.52 - 9.72) - std::pow( 2., -16.)) * 2.0;
                 }
-                else  // if (in < (log2(HALF_MAX) + 9.72) / 17.52)
+                else
                 {
                     out = std::pow( 2., in * 17.52 - 9.72);
                 }

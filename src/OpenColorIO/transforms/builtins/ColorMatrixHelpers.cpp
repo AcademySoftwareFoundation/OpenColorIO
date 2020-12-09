@@ -236,23 +236,23 @@ MatrixOpData::MatrixArrayPtr build_conversion_matrix(const Primaries & src_prims
     static const MatrixOpData::Offsets ones(1., 1., 1., 0.);
 
     // Calculate the primary conversion matrices.
-    MatrixOpData::MatrixArrayPtr rgb2xyz = rgb2xyz_from_xy(src_prims);
+    MatrixOpData::MatrixArrayPtr src_rgb2xyz = rgb2xyz_from_xy(src_prims);
     MatrixOpData::MatrixArrayPtr dst_rgb2xyz = rgb2xyz_from_xy(dst_prims);
-    MatrixOpData::MatrixArrayPtr xyz2rgb = dst_rgb2xyz->inverse();
+    MatrixOpData::MatrixArrayPtr dst_xyz2rgb = dst_rgb2xyz->inverse();
 
-    // Return the composed matrix if no adaptation is needed.
+    // Return the composed matrix if no white point adaptation is needed.
     if ( !src_wht_XYZ.isNotNull() && !dst_wht_XYZ.isNotNull() )
     {
         // If the white points are equal, don't need to adapt.
         if ( src_prims.m_wht.m_xy[0] == dst_prims.m_wht.m_xy[0] &&
              src_prims.m_wht.m_xy[1] == dst_prims.m_wht.m_xy[1] )
         {
-            return xyz2rgb->inner(rgb2xyz);
+            return dst_xyz2rgb->inner(src_rgb2xyz);
         }
     }
     else if ( method == ADAPTATION_NONE )
     {
-        return xyz2rgb->inner(rgb2xyz);
+        return dst_xyz2rgb->inner(src_rgb2xyz);
     }
 
     // Calculate src and dst white XYZ.
@@ -271,14 +271,14 @@ MatrixOpData::MatrixArrayPtr build_conversion_matrix(const Primaries & src_prims
     }
     else
     {
-        src_wht = rgb2xyz->inner(ones);
+        src_wht = src_rgb2xyz->inner(ones);
     }
 
     // Build the adaptation matrix (may be an identity).
     MatrixOpData::MatrixArrayPtr vkmat = build_vonkries_adapt(src_wht, dst_wht, method);
 
     // Compose the adaptation into the conversion matrix.
-    return xyz2rgb->inner(vkmat->inner(rgb2xyz));
+    return dst_xyz2rgb->inner(vkmat->inner(src_rgb2xyz));
 }
 
 MatrixOpData::MatrixArrayPtr build_conversion_matrix(const Primaries & src_prims,
