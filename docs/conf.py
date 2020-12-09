@@ -21,8 +21,11 @@ ROOT = os.path.abspath(os.path.join(HERE, os.pardir))
 # Dependent on CMake build (so not RTD).
 BUILD_FROZEN = "@OCIO_BUILD_FROZEN_DOCS@" == "ON"
 
-RTD_BUILD = os.environ.get("READTHEDOCS") == "True"  # Set by Read the Docs
-CI_BUILD = os.environ.get("CI") == "true"            # Set by GitHub Actions
+# 'READTHEDOCS' env var set by Read the Docs
+RTD_BUILD = os.environ.get("READTHEDOCS") == "True"
+# 'CI' env var set by GitHub Actions. Only test frozen docs on Linux, since 
+# that's what RTD will use.
+CI_BUILD = os.environ.get("CI") == "true" and sys.platform in ("linux", "linux2")
 
 # -- Add local Sphinx extensions ----------------------------------------------
 
