@@ -42,9 +42,28 @@ void bindPyGpuShaderDesc(py::module & m)
 {
     GpuShaderDescRcPtr DEFAULT = GpuShaderDesc::CreateShaderDesc();
 
-    auto cls = py::class_<GpuShaderDesc, 
-                          GpuShaderDescRcPtr /* holder */, 
-                          GpuShaderCreator /* base */>(m, "GpuShaderDesc")
+    auto clsGpuShaderDesc = 
+        py::class_<GpuShaderDesc, GpuShaderDescRcPtr /* holder */, GpuShaderCreator /* base */>(
+            m, "GpuShaderDesc", 
+            DOC(GpuShaderDesc));
+
+    auto clsTexture = 
+        py::class_<Texture>(
+            clsGpuShaderDesc, "Texture");
+
+    auto clsTextureIterator = 
+        py::class_<TextureIterator>(
+            clsGpuShaderDesc, "TextureIterator");
+
+    auto clsTexture3D = 
+        py::class_<Texture3D>(
+            clsGpuShaderDesc, "Texture3D");
+
+    auto clsTexture3DIterator = 
+        py::class_<Texture3DIterator>(
+            clsGpuShaderDesc, "Texture3DIterator");
+
+    clsGpuShaderDesc
         .def_static("CreateLegacyShaderDesc", [](unsigned edgelen,
                                                  GpuLanguage lang,
                                                  const std::string & functionName,
@@ -65,7 +84,8 @@ void bindPyGpuShaderDesc(py::module & m)
                     "functionName"_a = DEFAULT->getFunctionName(),
                     "pixelName"_a = DEFAULT->getPixelName(),
                     "resourcePrefix"_a = DEFAULT->getResourcePrefix(),
-                    "uid"_a = DEFAULT->getUniqueID()) 
+                    "uid"_a = DEFAULT->getUniqueID(),
+                    DOC(GpuShaderDesc, CreateLegacyShaderDesc)) 
         .def_static("CreateShaderDesc", [](GpuLanguage lang,
                                            const std::string & functionName,
                                            const std::string & pixelName,
@@ -84,10 +104,12 @@ void bindPyGpuShaderDesc(py::module & m)
                     "functionName"_a = DEFAULT->getFunctionName(),
                     "pixelName"_a = DEFAULT->getPixelName(),
                     "resourcePrefix"_a = DEFAULT->getResourcePrefix(),
-                    "uid"_a = DEFAULT->getUniqueID())  
+                    "uid"_a = DEFAULT->getUniqueID(),
+                    DOC(GpuShaderDesc, CreateShaderDesc))  
 
         // 1D lut related methods
-        .def("getNumTextures", &GpuShaderDesc::getNumTextures)
+        .def("getNumTextures", &GpuShaderDesc::getNumTextures, 
+             DOC(GpuShaderDesc, getNumTextures))
         .def("addTexture", [](GpuShaderDescRcPtr & self,
                               const std::string & textureName, 
                               const std::string & samplerName, 
@@ -124,7 +146,8 @@ void bindPyGpuShaderDesc(py::module & m)
                                  static_cast<float *>(info.ptr));
             },
              "textureName"_a, "samplerName"_a, "width"_a, "height"_a, "channel"_a, 
-             "interpolation"_a, "values"_a)
+             "interpolation"_a, "values"_a, 
+             DOC(GpuShaderCreator, addTexture))
         .def("getTextures", [](GpuShaderDescRcPtr & self) 
             {
                 return TextureIterator(self);
@@ -165,10 +188,12 @@ void bindPyGpuShaderDesc(py::module & m)
                                  { sizeof(float) },
                                  values);
             },
-             "index"_a)
+             "index"_a, 
+             DOC(GpuShaderDesc, getTextureValues))
 
         // 3D lut related methods
-        .def("getNum3DTextures", &GpuShaderDesc::getNum3DTextures)
+        .def("getNum3DTextures", &GpuShaderDesc::getNum3DTextures, 
+             DOC(GpuShaderDesc, getNum3DTextures))
         .def("add3DTexture", [](GpuShaderDescRcPtr & self,
                                 const std::string & textureName, 
                                 const std::string & samplerName, 
@@ -188,7 +213,8 @@ void bindPyGpuShaderDesc(py::module & m)
                                    interpolation,
                                    static_cast<float *>(info.ptr));
             },
-             "textureName"_a, "samplerName"_a, "edgeLen"_a, "interpolation"_a, "values"_a)
+             "textureName"_a, "samplerName"_a, "edgeLen"_a, "interpolation"_a, "values"_a, 
+             DOC(GpuShaderCreator, add3DTexture))
         .def("get3DTextures", [](GpuShaderDescRcPtr & self) 
             {
                 return Texture3DIterator(self);
@@ -213,9 +239,10 @@ void bindPyGpuShaderDesc(py::module & m)
                                  { sizeof(float) },
                                  values);
             },
-             "index"_a);
+             "index"_a, 
+             DOC(GpuShaderDesc, get3DTextureValues));
 
-    py::class_<Texture>(cls, "Texture")
+    clsTexture
         .def_readonly("textureName", &Texture::textureName)
         .def_readonly("samplerName", &Texture::samplerName)
         .def_readonly("width", &Texture::width)
@@ -223,7 +250,7 @@ void bindPyGpuShaderDesc(py::module & m)
         .def_readonly("channel", &Texture::channel)
         .def_readonly("interpolation", &Texture::interpolation);
 
-    py::class_<TextureIterator>(cls, "TextureIterator")
+    clsTextureIterator
         .def("__len__", [](TextureIterator & it) { return it.m_obj->getNumTextures(); })
         .def("__getitem__", [](TextureIterator & it, int i) -> Texture
             { 
@@ -254,13 +281,13 @@ void bindPyGpuShaderDesc(py::module & m)
                 return { textureName, samplerName, width, height, channel, interpolation };
             });
 
-    py::class_<Texture3D>(cls, "Texture3D")
+    clsTexture3D
         .def_readonly("textureName", &Texture3D::textureName)
         .def_readonly("samplerName", &Texture3D::samplerName)
         .def_readonly("edgeLen", &Texture3D::edgelen)
         .def_readonly("interpolation", &Texture3D::interpolation);
 
-    py::class_<Texture3DIterator>(cls, "Texture3DIterator")
+    clsTexture3DIterator
         .def("__len__", [](Texture3DIterator & it) { return it.m_obj->getNum3DTextures(); })
         .def("__getitem__", [](Texture3DIterator & it, int i) -> Texture3D
             { 

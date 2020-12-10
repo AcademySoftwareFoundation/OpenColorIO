@@ -11,8 +11,13 @@ void bindPyLook(py::module & m)
 {
     LookRcPtr DEFAULT = Look::Create();
 
-    auto cls = py::class_<Look, LookRcPtr /* holder */>(m, "Look")
-        .def(py::init(&Look::Create))
+    auto clsLook = 
+        py::class_<Look, LookRcPtr /* holder */>(
+            m, "Look", 
+            DOC(Look))
+
+        .def(py::init(&Look::Create), 
+             DOC(Look, Create))
         .def(py::init([](const std::string & name,
                          const std::string & processSpace,
                          const TransformRcPtr & transform,
@@ -31,20 +36,31 @@ void bindPyLook(py::module & m)
              "processSpace"_a = DEFAULT->getProcessSpace(),
              "transform"_a = DEFAULT->getTransform(),
              "inverseTransform"_a = DEFAULT->getInverseTransform(),
-             "description"_a = DEFAULT->getDescription())
+             "description"_a = DEFAULT->getDescription(), 
+             DOC(Look, Create))
 
-        .def("getName", &Look::getName)
-        .def("setName", &Look::setName, "name"_a.none(false))
-        .def("getProcessSpace", &Look::getProcessSpace)
-        .def("setProcessSpace", &Look::setProcessSpace, "processSpace"_a.none(false))
-        .def("getTransform", &Look::getTransform)
-        .def("setTransform", &Look::setTransform, "transform"_a)
-        .def("getInverseTransform", &Look::getInverseTransform)
-        .def("setInverseTransform", &Look::setInverseTransform, "transform"_a)
-        .def("getDescription", &Look::getDescription)
-        .def("setDescription", &Look::setDescription, "description"_a.none(false));
+        .def("getName", &Look::getName, 
+             DOC(Look, getName))
+        .def("setName", &Look::setName, "name"_a.none(false), 
+             DOC(Look, setName))
+        .def("getProcessSpace", &Look::getProcessSpace, 
+             DOC(Look, getProcessSpace))
+        .def("setProcessSpace", &Look::setProcessSpace, "processSpace"_a.none(false), 
+             DOC(Look, setProcessSpace))
+        .def("getTransform", &Look::getTransform, 
+             DOC(Look, getTransform))
+        .def("setTransform", &Look::setTransform, "transform"_a, 
+             DOC(Look, setTransform))
+        .def("getInverseTransform", &Look::getInverseTransform, 
+             DOC(Look, getInverseTransform))
+        .def("setInverseTransform", &Look::setInverseTransform, "transform"_a, 
+             DOC(Look, setInverseTransform))
+        .def("getDescription", &Look::getDescription, 
+             DOC(Look, getDescription))
+        .def("setDescription", &Look::setDescription, "description"_a.none(false), 
+             DOC(Look, setDescription));
 
-    defStr(cls);
+    defStr(clsLook);
 }
 
 } // namespace OCIO_NAMESPACE

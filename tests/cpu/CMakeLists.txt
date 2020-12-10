@@ -163,6 +163,7 @@ set(TESTS
     Logging_tests.cpp
     LookParse_tests.cpp
     MathUtils_tests.cpp
+    NamedTransform_tests.cpp
     Op_tests.cpp
     OpOptimizers_tests.cpp
     ops/allocation/AllocationOp_tests.cpp

@@ -423,7 +423,7 @@ ConstProcessorRcPtr Processor::Impl::getOptimizedProcessor(BitDepth inBitDepth,
 
         proc->getImpl()->m_ops.finalize(oFlags);
         proc->getImpl()->m_ops.optimizeForBitdepth(inBitDepth, outBitDepth, oFlags);
-        proc->getImpl()->m_ops.unifyDynamicProperties();
+        proc->getImpl()->m_ops.validateDynamicProperties();
 
         return proc;
     };
@@ -583,14 +583,16 @@ void Processor::Impl::setColorSpaceConversion(const Config & config,
         throw Exception("Internal error: Processor should be empty");
     }
 
-    BuildColorSpaceOps(m_ops, config, context, srcColorSpace, dstColorSpace, false);
+    // Default behavior is to bypass data color space. ColorSpaceTransform can be used to not bypass
+    // data color spaces.
+    BuildColorSpaceOps(m_ops, config, context, srcColorSpace, dstColorSpace, true);
 
     std::ostringstream desc;
     desc << "Color space conversion from " << srcColorSpace->getName()
          << " to " << dstColorSpace->getName();
     m_ops.getFormatMetadata().addAttribute(METADATA_DESCRIPTION, desc.str().c_str());
     m_ops.finalize(OPTIMIZATION_NONE);
-    m_ops.unifyDynamicProperties();
+    m_ops.validateDynamicProperties();
 }
 
 void Processor::Impl::setTransform(const Config & config,
@@ -608,7 +610,7 @@ void Processor::Impl::setTransform(const Config & config,
     BuildOps(m_ops, config, context, transform, direction);
 
     m_ops.finalize(OPTIMIZATION_NONE);
-    m_ops.unifyDynamicProperties();
+    m_ops.validateDynamicProperties();
 }
 
 void Processor::Impl::concatenate(ConstProcessorRcPtr & p1, ConstProcessorRcPtr & p2)
@@ -619,7 +621,7 @@ void Processor::Impl::concatenate(ConstProcessorRcPtr & p1, ConstProcessorRcPtr 
     computeMetadata();
 
     // Ops have been validated by p1 & p2.
-    m_ops.unifyDynamicProperties();
+    m_ops.validateDynamicProperties();
 }
 
 
