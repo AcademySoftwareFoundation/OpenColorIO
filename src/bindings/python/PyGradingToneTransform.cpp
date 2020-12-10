@@ -10,9 +10,13 @@ void bindPyGradingToneTransform(py::module & m)
 {
     GradingToneTransformRcPtr DEFAULT = GradingToneTransform::Create(GRADING_LOG);
 
-    py::class_<GradingToneTransform,
-               GradingToneTransformRcPtr /* holder */,
-               Transform /* base */>(m, "GradingToneTransform")
+    auto clsGradingToneTransform = 
+        py::class_<GradingToneTransform,
+                   GradingToneTransformRcPtr /* holder */,
+                   Transform /* base */>(
+            m, "GradingToneTransform", 
+            DOC(GradingToneTransform))
+
         .def(py::init([](GradingStyle style,
                          const GradingTone & values,
                          bool dynamic, 
@@ -29,7 +33,8 @@ void bindPyGradingToneTransform(py::module & m)
              "style"_a = DEFAULT->getStyle(),
              "values"_a,
              "dynamic"_a = DEFAULT->isDynamic(),
-             "dir"_a = DEFAULT->getDirection())
+             "dir"_a = DEFAULT->getDirection(),
+             DOC(GradingToneTransform, Create))
         .def(py::init([](GradingStyle style, bool dynamic, TransformDirection dir)
             {
                 GradingToneTransformRcPtr p = GradingToneTransform::Create(style);
@@ -42,24 +47,30 @@ void bindPyGradingToneTransform(py::module & m)
                 p->validate();
                 return p;
             }),
-            "style"_a = DEFAULT->getStyle(),
-            "dynamic"_a = DEFAULT->isDynamic(),
-            "dir"_a = DEFAULT->getDirection())
+             "style"_a = DEFAULT->getStyle(),
+             "dynamic"_a = DEFAULT->isDynamic(),
+             "dir"_a = DEFAULT->getDirection(),
+             DOC(GradingToneTransform, Create))
 
         .def("getFormatMetadata", 
-             (FormatMetadata & (GradingToneTransform::*)()) &GradingToneTransform::getFormatMetadata,
-             py::return_value_policy::reference_internal)
-        .def("getFormatMetadata", 
-             (const FormatMetadata & (GradingToneTransform::*)() const)
+             (FormatMetadata & (GradingToneTransform::*)()) 
              &GradingToneTransform::getFormatMetadata,
-             py::return_value_policy::reference_internal)
-        .def("getStyle", &GradingToneTransform::getStyle)
-        .def("setStyle", &GradingToneTransform::setStyle, "style"_a)
-        .def("getValue", &GradingToneTransform::getValue)
-        .def("setValue", &GradingToneTransform::setValue, "values"_a)
-        .def("isDynamic", &GradingToneTransform::isDynamic)
-        .def("makeDynamic", &GradingToneTransform::makeDynamic)
-        .def("makeNonDynamic", &GradingToneTransform::makeNonDynamic);
+             py::return_value_policy::reference_internal,
+             DOC(GradingToneTransform, getFormatMetadata))
+        .def("getStyle", &GradingToneTransform::getStyle, 
+             DOC(GradingToneTransform, getStyle))
+        .def("setStyle", &GradingToneTransform::setStyle, "style"_a, 
+             DOC(GradingToneTransform, setStyle))
+        .def("getValue", &GradingToneTransform::getValue, 
+             DOC(GradingToneTransform, getValue))
+        .def("setValue", &GradingToneTransform::setValue, "values"_a, 
+             DOC(GradingToneTransform, setValue))
+        .def("isDynamic", &GradingToneTransform::isDynamic, 
+             DOC(GradingToneTransform, isDynamic))
+        .def("makeDynamic", &GradingToneTransform::makeDynamic, 
+             DOC(GradingToneTransform, makeDynamic))
+        .def("makeNonDynamic", &GradingToneTransform::makeNonDynamic, 
+             DOC(GradingToneTransform, makeNonDynamic));
 }
 
 } // namespace OCIO_NAMESPACE

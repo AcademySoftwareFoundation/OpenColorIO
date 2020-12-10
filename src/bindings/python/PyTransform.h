@@ -35,6 +35,7 @@ void bindPyLookTransform(py::module & m);
 void bindPyLut1DTransform(py::module & m);
 void bindPyLut3DTransform(py::module & m);
 void bindPyMatrixTransform(py::module & m);
+void bindPyNamedTransform(py::module & m);
 void bindPyRangeTransform(py::module & m);
 
 } // namespace OCIO_NAMESPACE

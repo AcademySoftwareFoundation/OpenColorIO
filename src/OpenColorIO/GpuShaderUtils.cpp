@@ -53,14 +53,12 @@ std::string getVecKeyword(GpuLanguage lang)
             kw << "half" << N;
             break;
         }
-
         case GPU_LANGUAGE_HLSL_DX11:
         {
             kw << "float" << N;
             break;
         }
 
-        case GPU_LANGUAGE_UNKNOWN:
         default:
         {
             throw Exception("Unknown GPU shader language.");
@@ -102,7 +100,6 @@ void getTexDecl(GpuLanguage lang,
             break;
         }
 
-        case GPU_LANGUAGE_UNKNOWN:
         default:
         {
             throw Exception("Unknown GPU shader language.");
@@ -112,9 +109,9 @@ void getTexDecl(GpuLanguage lang,
 
 template<int N>
 std::string getTexSample(GpuLanguage lang,
-                            const std::string & textureName,
-                            const std::string & samplerName,
-                            const std::string & coords)
+                         const std::string & textureName,
+                         const std::string & samplerName,
+                         const std::string & coords)
 {
     std::ostringstream kw;
 
@@ -142,7 +139,6 @@ std::string getTexSample(GpuLanguage lang,
             break;
         }
 
-        case GPU_LANGUAGE_UNKNOWN:
         default:
         {
             throw Exception("Unknown GPU shader language.");
@@ -360,7 +356,8 @@ void GpuShaderText::declareIntArrayConst(const std::string & name, int size, con
     auto nl = newLine();
     if (m_lang != GPU_LANGUAGE_HLSL_DX11)
     {
-        nl << "const " << intKeyword() << " " << name << "[" << size << "]" << " = " << intKeyword() << "[" << size << "](";
+        nl << "const " << intKeyword() << " " << name << "[" << size << "]"
+           << " = " << intKeyword() << "[" << size << "](";
         for (int i = 0; i < size; ++i)
         {
             nl << v[i];
@@ -703,7 +700,6 @@ std::string matrix4Mul(const T * m4x4, const std::string & vecName, GpuLanguage 
             break;
         }
 
-        case GPU_LANGUAGE_UNKNOWN:
         default:
         {
             throw Exception("Unknown GPU shader language.");
@@ -745,7 +741,6 @@ std::string GpuShaderText::lerp(const std::string & x,
             break;
         }
 
-        case GPU_LANGUAGE_UNKNOWN:
         default:
         {
             throw Exception("Unknown GPU shader language.");
@@ -760,26 +755,25 @@ std::string GpuShaderText::float3GreaterThan(const std::string & a,
     std::ostringstream kw;
     switch (m_lang)
     {
-    case GPU_LANGUAGE_GLSL_1_2:
-    case GPU_LANGUAGE_GLSL_1_3:
-    case GPU_LANGUAGE_GLSL_4_0:
-    case GPU_LANGUAGE_CG:
-    {
-        kw << float3Keyword() << "(greaterThan( " << a << ", " << b << "))";
-        break;
-    }
-    case GPU_LANGUAGE_HLSL_DX11:
-    {
-        kw << float3Keyword() << "((" << a << " > " << b << ") ? "
-            << float3Const(1.0f) << " : " << float3Const(0.0f) << ")";
-        break;
-    }
+        case GPU_LANGUAGE_GLSL_1_2:
+        case GPU_LANGUAGE_GLSL_1_3:
+        case GPU_LANGUAGE_GLSL_4_0:
+        case GPU_LANGUAGE_CG:
+        {
+            kw << float3Keyword() << "(greaterThan( " << a << ", " << b << "))";
+            break;
+        }
+        case GPU_LANGUAGE_HLSL_DX11:
+        {
+            kw << float3Keyword() << "((" << a << " > " << b << ") ? "
+                << float3Const(1.0f) << " : " << float3Const(0.0f) << ")";
+            break;
+        }
 
-    case GPU_LANGUAGE_UNKNOWN:
-    default:
-    {
-        throw Exception("Unknown GPU shader language.");
-    }
+        default:
+        {
+            throw Exception("Unknown GPU shader language.");
+        }
     }
     return kw.str();
 }
@@ -805,7 +799,6 @@ std::string GpuShaderText::float4GreaterThan(const std::string & a,
             break;
         }
 
-        case GPU_LANGUAGE_UNKNOWN:
         default:
         {
             throw Exception("Unknown GPU shader language.");
@@ -836,7 +829,6 @@ std::string GpuShaderText::atan2(const std::string & y,
             break;
         }
 
-        case GPU_LANGUAGE_UNKNOWN:
         default:
         {
             throw Exception("Unknown GPU shader language.");

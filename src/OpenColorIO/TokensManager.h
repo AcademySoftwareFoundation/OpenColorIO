@@ -26,7 +26,7 @@ public:
 
     typedef StringUtils::StringVec Tokens;
 
-    Tokens::const_iterator findToken(const char * token) const
+    Tokens::const_iterator findToken(const char * token) const noexcept
     {
         if (!token || !*token) return m_tokens.end();
 
@@ -44,7 +44,7 @@ public:
         return m_tokens.end();
     }
 
-    bool hasToken(const char * token) const
+    bool hasToken(const char * token) const noexcept
     {
         return findToken(token) != m_tokens.end();
     }
@@ -57,7 +57,7 @@ public:
         }
     }
 
-    void removeToken(const char * token)
+    void removeToken(const char * token) noexcept
     {
         if (!token || !*token) return;
 
@@ -76,19 +76,19 @@ public:
         return;
     }
 
-    int getNumTokens() const
+    int getNumTokens() const noexcept
     {
         return static_cast<int>(m_tokens.size());
     }
 
-    const char * getToken(int index) const
+    const char * getToken(int index) const noexcept
     {
         if (index<0 || index >= (int)m_tokens.size()) return nullptr;
 
         return m_tokens[index].c_str();
     }
 
-    void clearTokens()
+    void clearTokens() noexcept
     {
         m_tokens.clear();
     }

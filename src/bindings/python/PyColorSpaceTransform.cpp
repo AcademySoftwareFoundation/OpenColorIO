@@ -10,10 +10,15 @@ void bindPyColorSpaceTransform(py::module & m)
 {
     ColorSpaceTransformRcPtr DEFAULT = ColorSpaceTransform::Create();
 
-    auto cls = py::class_<ColorSpaceTransform, 
-                          ColorSpaceTransformRcPtr /* holder */, 
-                          Transform /* base */>(m, "ColorSpaceTransform")
-        .def(py::init(&ColorSpaceTransform::Create))
+    auto clsColorSpaceTransform = 
+        py::class_<ColorSpaceTransform, 
+                   ColorSpaceTransformRcPtr /* holder */, 
+                   Transform /* base */>(
+            m, "ColorSpaceTransform",
+            DOC(ColorSpaceTransform))
+
+        .def(py::init(&ColorSpaceTransform::Create), 
+             DOC(ColorSpaceTransform, Create))
         .def(py::init([](const std::string & src,
                          const std::string & dst,
                          TransformDirection dir,
@@ -30,16 +35,23 @@ void bindPyColorSpaceTransform(py::module & m)
              "src"_a        = DEFAULT->getSrc(), 
              "dst"_a        = DEFAULT->getDst(),
              "direction"_a  = DEFAULT->getDirection(),
-             "dataBypass"_a = DEFAULT->getDataBypass())
+             "dataBypass"_a = DEFAULT->getDataBypass(), 
+             DOC(ColorSpaceTransform, Create))
 
-        .def("getSrc",        &ColorSpaceTransform::getSrc)
-        .def("setSrc",        &ColorSpaceTransform::setSrc,        "src"_a.none(false))
-        .def("getDst",        &ColorSpaceTransform::getDst)
-        .def("setDst",        &ColorSpaceTransform::setDst,        "dst"_a.none(false))
-        .def("getDataBypass", &ColorSpaceTransform::getDataBypass)
-        .def("setDataBypass", &ColorSpaceTransform::setDataBypass, "dataBypass"_a);
+        .def("getSrc", &ColorSpaceTransform::getSrc, 
+             DOC(ColorSpaceTransform, getSrc))
+        .def("setSrc", &ColorSpaceTransform::setSrc, "src"_a.none(false), 
+             DOC(ColorSpaceTransform, setSrc))
+        .def("getDst", &ColorSpaceTransform::getDst, 
+             DOC(ColorSpaceTransform, getDst))
+        .def("setDst", &ColorSpaceTransform::setDst, "dst"_a.none(false), 
+             DOC(ColorSpaceTransform, setDst))
+        .def("getDataBypass", &ColorSpaceTransform::getDataBypass, 
+             DOC(ColorSpaceTransform, getDataBypass))
+        .def("setDataBypass", &ColorSpaceTransform::setDataBypass, "dataBypass"_a, 
+             DOC(ColorSpaceTransform, setDataBypass));
 
-    defStr(cls);
+    defStr(clsColorSpaceTransform);
 }
 
 } // namespace OCIO_NAMESPACE

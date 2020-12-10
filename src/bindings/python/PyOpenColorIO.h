@@ -13,6 +13,9 @@
 
 #include "utils/StringUtils.h"
 
+// Generated at build time: '${CMAKE_BINARY_DIR}/docs/_doxygen/docstrings.h'
+#include "docstrings.h"
+
 namespace py = pybind11;
 using namespace pybind11::literals;
 
@@ -41,6 +44,7 @@ void bindPyGradingData(py::module & m);
 void bindPyGradingPrimaryTransform(py::module & m);
 void bindPyGradingRGBCurveTransform(py::module & m);
 void bindPyGradingToneTransform(py::module & m);
+void bindPyNamedTransform(py::module & m);
 
 } // namespace OCIO_NAMESPACE
 

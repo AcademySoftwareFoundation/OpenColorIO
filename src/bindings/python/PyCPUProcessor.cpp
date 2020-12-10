@@ -14,24 +14,36 @@ namespace OCIO_NAMESPACE
 
 void bindPyCPUProcessor(py::module & m)
 {
-    py::class_<CPUProcessor, CPUProcessorRcPtr /* holder */>(m, "CPUProcessor")
-        .def("isNoOp", &CPUProcessor::isNoOp)
-        .def("isIdentity", &CPUProcessor::isIdentity)
-        .def("hasChannelCrosstalk", &CPUProcessor::hasChannelCrosstalk)
-        .def("getCacheID", &CPUProcessor::getCacheID)
-        .def("getInputBitDepth", &CPUProcessor::getInputBitDepth)
-        .def("getOutputBitDepth", &CPUProcessor::getOutputBitDepth)
+    auto clsCPUProcessor = 
+        py::class_<CPUProcessor, CPUProcessorRcPtr /* holder */>(
+            m, "CPUProcessor", 
+            DOC(CPUProcessor))
+
+        .def("isNoOp", &CPUProcessor::isNoOp, 
+             DOC(CPUProcessor, isNoOp))
+        .def("isIdentity", &CPUProcessor::isIdentity, 
+             DOC(CPUProcessor, isIdentity))
+        .def("hasChannelCrosstalk", &CPUProcessor::hasChannelCrosstalk, 
+             DOC(CPUProcessor, hasChannelCrosstalk))
+        .def("getCacheID", &CPUProcessor::getCacheID, 
+             DOC(CPUProcessor, getCacheID))
+        .def("getInputBitDepth", &CPUProcessor::getInputBitDepth, 
+             DOC(CPUProcessor, getInputBitDepth))
+        .def("getOutputBitDepth", &CPUProcessor::getOutputBitDepth, 
+             DOC(CPUProcessor, getOutputBitDepth))
         .def("getDynamicProperty", [](CPUProcessorRcPtr & self, DynamicPropertyType type) 
             {
                 return PyDynamicProperty(self->getDynamicProperty(type));
-            }, "type"_a)
+            }, "type"_a, 
+             DOC(CPUProcessor, getDynamicProperty))
 
         .def("apply", [](CPUProcessorRcPtr & self, PyImageDesc & imgDesc) 
             {
                 self->apply((*imgDesc.m_img));
             },
              "imgDesc"_a,
-             py::call_guard<py::gil_scoped_release>())
+             py::call_guard<py::gil_scoped_release>(), 
+             DOC(CPUProcessor, apply))
         .def("apply", [](CPUProcessorRcPtr & self, 
                          PyImageDesc & srcImgDesc, 
                          PyImageDesc & dstImgDesc)
@@ -39,7 +51,8 @@ void bindPyCPUProcessor(py::module & m)
                 self->apply((*srcImgDesc.m_img), (*dstImgDesc.m_img));
             },
              "srcImgDesc"_a, "dstImgDesc"_a,
-             py::call_guard<py::gil_scoped_release>())
+             py::call_guard<py::gil_scoped_release>(),
+             DOC(CPUProcessor, apply, 2))
         .def("applyRGB", [](CPUProcessorRcPtr & self, py::buffer & pixel) 
             {
                 py::buffer_info info = pixel.request();
@@ -51,7 +64,8 @@ void bindPyCPUProcessor(py::module & m)
                 self->applyRGB(static_cast<float *>(info.ptr));
                 return pixel;
             },
-             "pixel"_a)
+             "pixel"_a, 
+             DOC(CPUProcessor, applyRGB))
         .def("applyRGB", [](CPUProcessorRcPtr & self, std::vector<float> & pixel) 
             {
                 checkVectorDivisible(pixel, 3);
@@ -59,7 +73,8 @@ void bindPyCPUProcessor(py::module & m)
                 return pixel;
             },
              "pixel"_a,
-             py::call_guard<py::gil_scoped_release>())
+             py::call_guard<py::gil_scoped_release>(), 
+             DOC(CPUProcessor, applyRGB))
         .def("applyRGBA", [](CPUProcessorRcPtr & self, py::buffer & pixel) 
             {
                 py::buffer_info info = pixel.request();
@@ -71,7 +86,8 @@ void bindPyCPUProcessor(py::module & m)
                 self->applyRGBA(static_cast<float *>(info.ptr));
                 return pixel;
             },
-             "pixel"_a)
+             "pixel"_a, 
+             DOC(CPUProcessor, applyRGBA))
         .def("applyRGBA", [](CPUProcessorRcPtr & self, std::vector<float> & pixel) 
             {
                 checkVectorDivisible(pixel, 4);
@@ -79,7 +95,8 @@ void bindPyCPUProcessor(py::module & m)
                 return pixel;
             },
              "pixel"_a,
-             py::call_guard<py::gil_scoped_release>());
+             py::call_guard<py::gil_scoped_release>(), 
+             DOC(CPUProcessor, applyRGBA));
 }
 
 } // namespace OCIO_NAMESPACE

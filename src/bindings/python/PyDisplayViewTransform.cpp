@@ -10,10 +10,15 @@ void bindPyDisplayViewTransform(py::module & m)
 {
     DisplayViewTransformRcPtr DEFAULT = DisplayViewTransform::Create();
 
-    auto cls = py::class_<DisplayViewTransform, 
-                          DisplayViewTransformRcPtr /* holder */, 
-                          Transform /* base */>(m, "DisplayViewTransform")
-        .def(py::init(&DisplayViewTransform::Create))
+    auto clsDisplayViewTransform = 
+        py::class_<DisplayViewTransform, 
+                   DisplayViewTransformRcPtr /* holder */, 
+                   Transform /* base */>(
+            m, "DisplayViewTransform", 
+            DOC(DisplayViewTransform))
+
+        .def(py::init(&DisplayViewTransform::Create), 
+             DOC(DisplayViewTransform, Create))
         .def(py::init([](const std::string & src,
                          const std::string & display,
                          const std::string & view,
@@ -36,20 +41,31 @@ void bindPyDisplayViewTransform(py::module & m)
              "view"_a = DEFAULT->getView(),
              "looksBypass"_a = DEFAULT->getLooksBypass(),
              "dataBypass"_a = DEFAULT->getDataBypass(),
-             "direction"_a = DEFAULT->getDirection())
+             "direction"_a = DEFAULT->getDirection(), 
+             DOC(DisplayViewTransform, Create))
 
-        .def("getSrc", &DisplayViewTransform::getSrc)
-        .def("setSrc", &DisplayViewTransform::setSrc, "src"_a)
-        .def("getDisplay", &DisplayViewTransform::getDisplay)
-        .def("setDisplay", &DisplayViewTransform::setDisplay, "display"_a)
-        .def("getView", &DisplayViewTransform::getView)
-        .def("setView", &DisplayViewTransform::setView, "view"_a)
-        .def("getLooksBypass", &DisplayViewTransform::getLooksBypass)
-        .def("setLooksBypass", &DisplayViewTransform::setLooksBypass, "looksBypass"_a)
-        .def("getDataBypass", &DisplayViewTransform::getDataBypass)
-        .def("setDataBypass", &DisplayViewTransform::setDataBypass, "dataBypass"_a);
+        .def("getSrc", &DisplayViewTransform::getSrc, 
+             DOC(DisplayViewTransform, getSrc))
+        .def("setSrc", &DisplayViewTransform::setSrc, "src"_a, 
+             DOC(DisplayViewTransform, setSrc))
+        .def("getDisplay", &DisplayViewTransform::getDisplay, 
+             DOC(DisplayViewTransform, getDisplay))
+        .def("setDisplay", &DisplayViewTransform::setDisplay, "display"_a, 
+             DOC(DisplayViewTransform, setDisplay))
+        .def("getView", &DisplayViewTransform::getView, 
+             DOC(DisplayViewTransform, getView))
+        .def("setView", &DisplayViewTransform::setView, "view"_a, 
+             DOC(DisplayViewTransform, setView))
+        .def("getLooksBypass", &DisplayViewTransform::getLooksBypass, 
+             DOC(DisplayViewTransform, getLooksBypass))
+        .def("setLooksBypass", &DisplayViewTransform::setLooksBypass, "looksBypass"_a, 
+             DOC(DisplayViewTransform, setLooksBypass))
+        .def("getDataBypass", &DisplayViewTransform::getDataBypass, 
+             DOC(DisplayViewTransform, getDataBypass))
+        .def("setDataBypass", &DisplayViewTransform::setDataBypass, "dataBypass"_a, 
+             DOC(DisplayViewTransform, setDataBypass));
 
-    defStr(cls);
+    defStr(clsDisplayViewTransform);
 }
 
 } // namespace OCIO_NAMESPACE

@@ -27,11 +27,9 @@ public:
 
     bool hasDynamicProperty(DynamicPropertyType type) const override;
     DynamicPropertyRcPtr getDynamicProperty(DynamicPropertyType type) const override;
-    void unifyDynamicProperty(DynamicPropertyType type,
-                              DynamicPropertyGradingToneImplRcPtr & prop) const override;
 
 protected:
-    mutable DynamicPropertyGradingToneImplRcPtr m_gt;
+    DynamicPropertyGradingToneImplRcPtr m_gt;
     GradingStyle m_style;
 };
 
@@ -40,6 +38,10 @@ GradingToneOpCPU::GradingToneOpCPU(ConstGradingToneOpDataRcPtr & gt)
 {
     m_gt = gt->getDynamicPropertyInternal();
     m_style = gt->getStyle();
+    if (m_gt->isDynamic())
+    {
+        m_gt = m_gt->createEditableCopy();
+    }
 }
 
 bool GradingToneOpCPU::hasDynamicProperty(DynamicPropertyType type) const
@@ -66,24 +68,6 @@ DynamicPropertyRcPtr GradingToneOpCPU::getDynamicProperty(DynamicPropertyType ty
         }
     }
     throw Exception("Dynamic property type not supported by GradingTone.");
-}
-
-void GradingToneOpCPU::unifyDynamicProperty(DynamicPropertyType type,
-                                            DynamicPropertyGradingToneImplRcPtr & prop) const
-{
-    if (type == DYNAMIC_PROPERTY_GRADING_TONE)
-    {
-        if (!prop)
-        {
-            // First occurence, decouple.
-            prop = m_gt->createEditableCopy();
-        }
-        m_gt = prop;
-    }
-    else
-    {
-        OpCPU::unifyDynamicProperty(type, prop);
-    }
 }
 
 class GradingToneFwdOpCPU : public GradingToneOpCPU
