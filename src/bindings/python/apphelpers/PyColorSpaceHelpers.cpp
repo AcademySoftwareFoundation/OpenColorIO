@@ -42,16 +42,11 @@ void bindPyColorSpaceMenuHelpers(py::module & m)
             m, "ColorSpaceMenuHelper", DOC(ColorSpaceMenuHelper));
 
     py::enum_<ColorSpaceMenuHelper::IncludeTypeFlag>(
-        clsColorSpaceMenuHelper, "IncludeTypeFlag", py::arithmetic(),
-        DOC(ColorSpaceMenuHelper, IncludeTypeFlag))
-        .value("INCLUDE_NO_EXTRAS", ColorSpaceMenuHelper::INCLUDE_NO_EXTRAS,
-            DOC(ColorSpaceMenuHelper, ColorSpaceMenuHelper, INCLUDE_NO_EXTRAS))
-        .value("INCLUDE_ROLES", ColorSpaceMenuHelper::INCLUDE_ROLES,
-            DOC(ColorSpaceMenuHelper, ColorSpaceMenuHelper, INCLUDE_ROLES))
-        .value("INCLUDE_NAMEDTRANSFORMS", ColorSpaceMenuHelper::INCLUDE_NAMEDTRANSFORMS,
-            DOC(ColorSpaceMenuHelper, ColorSpaceMenuHelper, INCLUDE_NAMEDTRANSFORMS))
-        .value("INCLUDE_ALL_EXTRAS", ColorSpaceMenuHelper::INCLUDE_ALL_EXTRAS,
-            DOC(ColorSpaceMenuHelper, ColorSpaceMenuHelper, INCLUDE_ALL_EXTRAS))
+        clsColorSpaceMenuHelper, "IncludeTypeFlag", py::arithmetic())
+        .value("INCLUDE_NO_EXTRAS", ColorSpaceMenuHelper::INCLUDE_NO_EXTRAS)
+        .value("INCLUDE_ROLES", ColorSpaceMenuHelper::INCLUDE_ROLES)
+        .value("INCLUDE_NAMEDTRANSFORMS", ColorSpaceMenuHelper::INCLUDE_NAMEDTRANSFORMS)
+        .value("INCLUDE_ALL_EXTRAS", ColorSpaceMenuHelper::INCLUDE_ALL_EXTRAS)
         .export_values();
 
     clsColorSpaceMenuHelper.def(py::init(&ColorSpaceMenuHelper::Create),
