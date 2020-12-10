@@ -23,62 +23,78 @@ using MixingEncodingIterator = PyIterator<MixingColorSpaceManagerRcPtr, IT_MIXIN
 
 void bindPyMixingHelpers(py::module & m)
 {
-    py::class_<MixingSlider>(m, "MixingSlider")
-        .def("__repr__", [](const MixingSlider & self)
-             {
-                 std::ostringstream oss;
-                 oss << self;
-                 return oss.str();
-             })
-        .def("setSliderMinEdge", &MixingSlider::setSliderMinEdge)
-        .def("getSliderMinEdge", &MixingSlider::getSliderMinEdge)
-        .def("setSliderMaxEdge", &MixingSlider::setSliderMaxEdge)
-        .def("getSliderMaxEdge", &MixingSlider::getSliderMaxEdge)
-        .def("sliderToMixing", &MixingSlider::sliderToMixing, "sliderUnits"_a)
-        .def("mixingToSlider", &MixingSlider::mixingToSlider, "mixingUnits"_a);
+    auto clsMixingSlider = py::class_<MixingSlider>(m, "MixingSlider", DOC(MixingSlider))
+        .def("setSliderMinEdge", &MixingSlider::setSliderMinEdge,
+             DOC(MixingSlider, setSliderMinEdge))
+        .def("getSliderMinEdge", &MixingSlider::getSliderMinEdge,
+             DOC(MixingSlider, getSliderMinEdge))
+        .def("setSliderMaxEdge", &MixingSlider::setSliderMaxEdge,
+             DOC(MixingSlider, setSliderMaxEdge))
+        .def("getSliderMaxEdge", &MixingSlider::getSliderMaxEdge,
+             DOC(MixingSlider, getSliderMaxEdge))
+        .def("sliderToMixing", &MixingSlider::sliderToMixing, "sliderUnits"_a,
+             DOC(MixingSlider, sliderToMixing))
+        .def("mixingToSlider", &MixingSlider::mixingToSlider, "mixingUnits"_a,
+             DOC(MixingSlider, mixingToSlider));
 
-    auto cls = py::class_<MixingColorSpaceManager,
-                          MixingColorSpaceManagerRcPtr /* holder */>(m, "MixingColorSpaceManager")
+    defStr(clsMixingSlider);
+
+    auto clsMixingColorSpaceManager =
+        py::class_<MixingColorSpaceManager, MixingColorSpaceManagerRcPtr /* holder */>(
+            m, "MixingColorSpaceManager", DOC(MixingColorSpaceManager))
+
         .def(py::init([](ConstConfigRcPtr & config)
              {
                  return MixingColorSpaceManager::Create(config);
-             }), "config"_a.none(false))
+             }), "config"_a.none(false),
+             DOC(MixingColorSpaceManager, Create))
         .def("getMixingSpaces", [](MixingColorSpaceManagerRcPtr & self)
              {
                  return MixingSpaceIterator(self);
              })
-        .def("setSelectedMixingSpaceIdx", &MixingColorSpaceManager::setSelectedMixingSpaceIdx)
+        .def("setSelectedMixingSpaceIdx", &MixingColorSpaceManager::setSelectedMixingSpaceIdx,
+             DOC(MixingColorSpaceManager, setSelectedMixingSpaceIdx))
         .def("setSelectedMixingSpace", &MixingColorSpaceManager::setSelectedMixingSpace,
-             "mixingSpace"_a.none(false))
-        .def("getSelectedMixingSpaceIdx", &MixingColorSpaceManager::getSelectedMixingSpaceIdx)
-        .def("isPerceptuallyUniform", &MixingColorSpaceManager::isPerceptuallyUniform)
+             "mixingSpace"_a.none(false),
+             DOC(MixingColorSpaceManager, setSelectedMixingSpace))
+        .def("getSelectedMixingSpaceIdx", &MixingColorSpaceManager::getSelectedMixingSpaceIdx,
+             DOC(MixingColorSpaceManager, getSelectedMixingSpaceIdx))
+        .def("isPerceptuallyUniform", &MixingColorSpaceManager::isPerceptuallyUniform,
+             DOC(MixingColorSpaceManager, isPerceptuallyUniform))
         .def("getMixingEncodings", [](MixingColorSpaceManagerRcPtr & self)
              {
                  return MixingEncodingIterator(self);
              })
-        .def("setSelectedMixingEncodingIdx", &MixingColorSpaceManager::setSelectedMixingEncodingIdx)
+        .def("setSelectedMixingEncodingIdx", &MixingColorSpaceManager::setSelectedMixingEncodingIdx,
+             DOC(MixingColorSpaceManager, setSelectedMixingEncodingIdx))
         .def("setSelectedMixingEncoding", &MixingColorSpaceManager::setSelectedMixingEncoding,
-             "mixingEncoding"_a.none(false))
-        .def("getSelectedMixingEncodingIdx", &MixingColorSpaceManager::getSelectedMixingEncodingIdx)
-        .def("refresh", &MixingColorSpaceManager::refresh, "config"_a.none(false))
+             "mixingEncoding"_a.none(false),
+             DOC(MixingColorSpaceManager, setSelectedMixingEncoding))
+        .def("getSelectedMixingEncodingIdx", &MixingColorSpaceManager::getSelectedMixingEncodingIdx,
+             DOC(MixingColorSpaceManager, getSelectedMixingEncodingIdx))
+        .def("refresh", &MixingColorSpaceManager::refresh, "config"_a.none(false),
+             DOC(MixingColorSpaceManager, refresh))
         .def("getProcessor", &MixingColorSpaceManager::getProcessor,
              "workingSpaceName"_a.none(false),
              "displayName"_a.none(false),
              "viewName"_a.none(false),
-             "direction"_a = TRANSFORM_DIR_FORWARD)
+             "direction"_a = TRANSFORM_DIR_FORWARD,
+             DOC(MixingColorSpaceManager, getProcessor))
         .def("getSlider",
              (MixingSlider & (MixingColorSpaceManager::*)()) &MixingColorSpaceManager::getSlider,
-             py::return_value_policy::reference_internal)
+             py::return_value_policy::reference_internal,
+             DOC(MixingColorSpaceManager, getSlider))
         .def("getSlider",
              (MixingSlider & (MixingColorSpaceManager::*)(float sliderMixingMinEdge,
                                                           float sliderMixingMaxEdge))
                 &MixingColorSpaceManager::getSlider,
              "sliderMixingMinEdge"_a.none(false), "sliderMixingMaxEdge"_a.none(false),
-             py::return_value_policy::reference_internal);
+             py::return_value_policy::reference_internal,
+             DOC(MixingColorSpaceManager, getSlider));
 
-    defStr(cls);
+    defStr(clsMixingColorSpaceManager);
 
-    py::class_<MixingSpaceIterator>(cls, "MixingSpaceIterator")
+    py::class_<MixingSpaceIterator>(clsMixingColorSpaceManager, "MixingSpaceIterator")
         .def("__len__", [](MixingSpaceIterator & it)
              {
                  return static_cast<int>(it.m_obj->getNumMixingSpaces());
@@ -98,7 +114,7 @@ void bindPyMixingHelpers(py::module & m)
                  return it.m_obj->getMixingSpaceUIName(i);
              });
 
-    py::class_<MixingEncodingIterator>(cls, "MixingEncodingIterator")
+    py::class_<MixingEncodingIterator>(clsMixingColorSpaceManager, "MixingEncodingIterator")
         .def("__len__", [](MixingEncodingIterator & it)
              {
                  return static_cast<int>(it.m_obj->getNumMixingEncodings());

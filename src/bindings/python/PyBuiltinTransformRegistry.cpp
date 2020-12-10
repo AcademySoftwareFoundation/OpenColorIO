@@ -46,14 +46,29 @@ using BuiltinIterator = PyIterator<PyBuiltinTransformRegistry, IT_BUILTIN>;
 
 void bindPyBuiltinTransformRegistry(py::module & m)
 {
-    auto cls = py::class_<PyBuiltinTransformRegistry>(m, "BuiltinTransformRegistry")
-        .def(py::init<>())
+    auto clsBuiltinTransformRegistry = 
+        py::class_<PyBuiltinTransformRegistry>(
+            m, "BuiltinTransformRegistry", 
+            DOC(BuiltinTransformRegistry));
+
+    auto clsBuiltinStyleIterator = 
+        py::class_<BuiltinStyleIterator>(
+            clsBuiltinTransformRegistry, "BuiltinStyleIterator");
+
+    auto clsBuiltinIterator = 
+        py::class_<BuiltinIterator>(
+            clsBuiltinTransformRegistry, "BuiltinIterator");
+
+    clsBuiltinTransformRegistry
+        .def(py::init<>(), DOC(BuiltinTransformRegistry, Get))
 
         .def("__iter__", [](PyBuiltinTransformRegistry & self)
             { 
                 return BuiltinStyleIterator(self); 
-            })
-        .def("__len__", [](PyBuiltinTransformRegistry & self) { return self.getNumBuiltins(); })
+            },
+             DOC(BuiltinTransformRegistry, getBuiltinStyle))
+        .def("__len__", [](PyBuiltinTransformRegistry & self) { return self.getNumBuiltins(); },
+             DOC(BuiltinTransformRegistry, getNumBuiltins))
         .def("__getitem__", [](PyBuiltinTransformRegistry & self, const std::string & style) 
             { 
                 for (size_t i = 0; i < self.getNumBuiltins(); i++)
@@ -68,7 +83,8 @@ void bindPyBuiltinTransformRegistry(py::module & m)
                 std::ostringstream os;
                 os << "'" << style << "'";
                 throw py::key_error(os.str().c_str());
-            })
+            },
+             DOC(BuiltinTransformRegistry, getBuiltinDescription))
         .def("__contains__", [](PyBuiltinTransformRegistry & self, const std::string & style) 
             { 
                 for (size_t i = 0; i < self.getNumBuiltins(); i++)
@@ -87,7 +103,7 @@ void bindPyBuiltinTransformRegistry(py::module & m)
                 return BuiltinIterator(self);
             });
 
-    py::class_<BuiltinStyleIterator>(cls, "BuiltinStyleIterator")
+    clsBuiltinStyleIterator
         .def("__len__", [](BuiltinStyleIterator & it) { return it.m_obj.getNumBuiltins(); })
         .def("__getitem__", [](BuiltinStyleIterator & it, int i) 
             { 
@@ -101,7 +117,7 @@ void bindPyBuiltinTransformRegistry(py::module & m)
                 return it.m_obj.getBuiltinStyle(i);
             });
 
-    py::class_<BuiltinIterator>(cls, "BuiltinIterator")
+    clsBuiltinIterator
         .def("__len__", [](BuiltinIterator & it) { return it.m_obj.getNumBuiltins(); })
         .def("__getitem__", [](BuiltinIterator & it, int i) 
             { 

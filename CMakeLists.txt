@@ -111,6 +111,7 @@ option(BUILD_SHARED_LIBS "Set to OFF to build static libraries" ON)
 option(OCIO_BUILD_APPS "Set to OFF to disable command-line apps" ON)
 option(OCIO_BUILD_NUKE "Specify whether to build nuke plugins" OFF)
 option(OCIO_BUILD_DOCS "Specify whether to build documentation" OFF)
+option(OCIO_BUILD_FROZEN_DOCS "Specify whether to build frozen documentation, necessary when modifying the OCIO public API" OFF)
 option(OCIO_BUILD_TESTS "Specify whether to build unittests" ON)
 option(OCIO_BUILD_GPU_TESTS "Specify whether to build gpu unittests" ON)
 option(OCIO_USE_HEADLESS "Specify whether the GPU rendering is headless" OFF)
@@ -189,11 +190,14 @@ endif()
 # Namespace
 
 if(NOT DEFINED OCIO_NAMESPACE)
-    set(OCIO_NAMESPACE OpenColorIO CACHE STRING 
+	set(OCIO_NAMESPACE "OpenColorIO_v${OpenColorIO_VERSION_MAJOR}_${OpenColorIO_VERSION_MINOR}${OpenColorIO_VERSION_RELEASE_TYPE}" CACHE STRING 
         "Specify the master OCIO C++ namespace: Options include OpenColorIO OpenColorIO_<YOURFACILITY> etc.")
-    message(STATUS "Setting namespace to '${OCIO_NAMESPACE}' as none was specified.")
 elseif(OCIO_NAMESPACE STREQUAL "")
     message(FATAL_ERROR "A namespace cannot be empty.")
+else()
+    set(OCIO_NAMESPACE "OpenColorIO_${OCIO_NAMESPACE}_v${OpenColorIO_VERSION_MAJOR}_${OpenColorIO_VERSION_MINOR}${OpenColorIO_VERSION_RELEASE_TYPE}" CACHE STRING 
+        "Specify the master OCIO C++ namespace: Options include OpenColorIO OpenColorIO_<YOURFACILITY> etc.")
+    message(STATUS "Setting namespace to '${OCIO_NAMESPACE}' as none was specified.")
 endif()
 
 

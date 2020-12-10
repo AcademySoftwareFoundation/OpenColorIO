@@ -1728,6 +1728,9 @@ private:
     const Impl * getImpl() const { return m_impl; }
 };
 
+/** \defgroup ColorSpaceSetOperators
+ *  @{
+ */
 
 /**
  * \brief Perform the union of two sets.
@@ -1766,7 +1769,7 @@ extern OCIOEXPORT ConstColorSpaceSetRcPtr operator&&(const ConstColorSpaceSetRcP
 extern OCIOEXPORT ConstColorSpaceSetRcPtr operator-(const ConstColorSpaceSetRcPtr & lcss,
                                                     const ConstColorSpaceSetRcPtr & rcss);
 
-
+/** @}*/
 
 
 //

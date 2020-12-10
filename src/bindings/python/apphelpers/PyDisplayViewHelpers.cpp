@@ -26,9 +26,10 @@ void bindPyDisplayViewHelpers(py::module & m)
         "displayName"_a.none(false),
         "viewName"_a.none(false),
         "channelView"_a = ConstMatrixTransformRcPtr(),
-        "direction"_a = TRANSFORM_DIR_FORWARD)
+        "direction"_a = TRANSFORM_DIR_FORWARD,
+        DOC(DisplayViewHelpers, GetProcessor))
       .def("GetIdentityProcessor", &DisplayViewHelpers::GetIdentityProcessor,
-           "config"_a.none(false))
+          "config"_a.none(false), DOC(DisplayViewHelpers, GetIdentityProcessor))
       .def("AddDisplayView", [](ConfigRcPtr & config,
                                 const std::string & displayName,
                                 const std::string & viewName,
@@ -57,9 +58,11 @@ void bindPyDisplayViewHelpers(py::module & m)
           "colorSpaceDescription"_a = std::string(""),
           "colorSpaceCategories"_a = std::string(""),
           "transformFilePath"_a,
-          "connectionColorSpaceName"_a)
+          "connectionColorSpaceName"_a,
+          DOC(DisplayViewHelpers, AddDisplayView))
     .def("RemoveDisplayView", &DisplayViewHelpers::RemoveDisplayView,
          "config"_a.none(false),
-         "displayName"_a.none(false), "viewName"_a.none(false));
+         "displayName"_a.none(false), "viewName"_a.none(false),
+         DOC(DisplayViewHelpers, RemoveDisplayView));
 }
 }

@@ -8,23 +8,40 @@ namespace OCIO_NAMESPACE
 {
 void bindPyLegacyViewingPipeline(py::module & m)
 {
-    auto cls = py::class_<LegacyViewingPipeline,
-                          LegacyViewingPipelineRcPtr /* holder */>(m, "LegacyViewingPipeline")
-        .def(py::init(&LegacyViewingPipeline::Create))
-        .def("getDisplayViewTransform", &LegacyViewingPipeline::getDisplayViewTransform)
-        .def("setDisplayViewTransform", &LegacyViewingPipeline::setDisplayViewTransform)
-        .def("getLinearCC", &LegacyViewingPipeline::getLinearCC)
-        .def("setLinearCC", &LegacyViewingPipeline::setLinearCC)
-        .def("getColorTimingCC", &LegacyViewingPipeline::getColorTimingCC)
-        .def("setColorTimingCC", &LegacyViewingPipeline::setColorTimingCC)
-        .def("getChannelView", &LegacyViewingPipeline::getChannelView)
-        .def("setChannelView", &LegacyViewingPipeline::setChannelView)
-        .def("getDisplayCC", &LegacyViewingPipeline::getDisplayCC)
-        .def("setDisplayCC", &LegacyViewingPipeline::setDisplayCC)
-        .def("setLooksOverrideEnabled", &LegacyViewingPipeline::setLooksOverrideEnabled)
-        .def("getLooksOverrideEnabled", &LegacyViewingPipeline::getLooksOverrideEnabled)
-        .def("setLooksOverride", &LegacyViewingPipeline::setLooksOverride, "looks"_a.none(false))
-        .def("getLooksOverride", &LegacyViewingPipeline::getLooksOverride)
+    auto cls =
+        py::class_<LegacyViewingPipeline, LegacyViewingPipelineRcPtr /* holder */>(
+            m, "LegacyViewingPipeline", DOC(LegacyViewingPipeline))
+
+        .def(py::init(&LegacyViewingPipeline::Create),
+             DOC(LegacyViewingPipeline, Create))
+        .def("getDisplayViewTransform", &LegacyViewingPipeline::getDisplayViewTransform,
+             DOC(LegacyViewingPipeline, getDisplayViewTransform))
+        .def("setDisplayViewTransform", &LegacyViewingPipeline::setDisplayViewTransform,
+             DOC(LegacyViewingPipeline, setDisplayViewTransform))
+        .def("getLinearCC", &LegacyViewingPipeline::getLinearCC,
+             DOC(LegacyViewingPipeline, getLinearCC))
+        .def("setLinearCC", &LegacyViewingPipeline::setLinearCC,
+             DOC(LegacyViewingPipeline, setLinearCC))
+        .def("getColorTimingCC", &LegacyViewingPipeline::getColorTimingCC,
+             DOC(LegacyViewingPipeline, getColorTimingCC))
+        .def("setColorTimingCC", &LegacyViewingPipeline::setColorTimingCC,
+             DOC(LegacyViewingPipeline, setColorTimingCC))
+        .def("getChannelView", &LegacyViewingPipeline::getChannelView,
+             DOC(LegacyViewingPipeline, getChannelView))
+        .def("setChannelView", &LegacyViewingPipeline::setChannelView,
+             DOC(LegacyViewingPipeline, setChannelView))
+        .def("getDisplayCC", &LegacyViewingPipeline::getDisplayCC,
+             DOC(LegacyViewingPipeline, getDisplayCC))
+        .def("setDisplayCC", &LegacyViewingPipeline::setDisplayCC,
+             DOC(LegacyViewingPipeline, setDisplayCC))
+        .def("setLooksOverrideEnabled", &LegacyViewingPipeline::setLooksOverrideEnabled,
+             DOC(LegacyViewingPipeline, setLooksOverrideEnabled))
+        .def("getLooksOverrideEnabled", &LegacyViewingPipeline::getLooksOverrideEnabled,
+             DOC(LegacyViewingPipeline, getLooksOverrideEnabled))
+        .def("setLooksOverride", &LegacyViewingPipeline::setLooksOverride, "looks"_a.none(false),
+             DOC(LegacyViewingPipeline, setLooksOverride))
+        .def("getLooksOverride", &LegacyViewingPipeline::getLooksOverride,
+             DOC(LegacyViewingPipeline, getLooksOverride))
         .def("getProcessor", [](LegacyViewingPipelineRcPtr & self,
                                 const ConstConfigRcPtr & config,
                                 const ConstContextRcPtr & context)
@@ -33,7 +50,8 @@ void bindPyLegacyViewingPipeline(py::module & m)
                  return self->getProcessor(config, usedContext);
              },
              "config"_a.none(false),
-             "context"_a = ConstContextRcPtr());
+             "context"_a = ConstContextRcPtr(),
+             DOC(LegacyViewingPipeline, getProcessor));
 
     defStr(cls);
 }
