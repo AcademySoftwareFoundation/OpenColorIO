@@ -17,10 +17,21 @@ namespace OCIO_NAMESPACE
 template<typename T, typename ... EXTRA>
 void defStr(py::class_<T, OCIO_SHARED_PTR<T>, EXTRA ...> & cls)
 {
-    cls.def("__str__", [](OCIO_SHARED_PTR<T> self)
+    cls.def("__str__", [](OCIO_SHARED_PTR<T> & self)
         { 
             std::ostringstream os;
             os << (*self);
+            return os.str();
+        });
+}
+
+template<typename T>
+void defStr(py::class_<T> & cls)
+{
+    cls.def("__str__", [](T & self)
+        { 
+            std::ostringstream os;
+            os << self;
             return os.str();
         });
 }

@@ -10,10 +10,13 @@ void bindPyRangeTransform(py::module & m)
 {
     RangeTransformRcPtr DEFAULT = RangeTransform::Create();
 
-    auto cls = py::class_<RangeTransform, 
-                          RangeTransformRcPtr /* holder */, 
-                          Transform /* base */>(m, "RangeTransform")
-        .def(py::init(&RangeTransform::Create))
+    auto clsRangeTransform = 
+        py::class_<RangeTransform, RangeTransformRcPtr /* holder */, Transform /* base */>(
+            m, "RangeTransform", 
+            DOC(RangeTransform))
+
+        .def(py::init(&RangeTransform::Create),
+             DOC(RangeTransform, Create))
         .def(py::init([](double minInValue,
                          double maxInValue,
                          double minOutValue,
@@ -33,40 +36,61 @@ void bindPyRangeTransform(py::module & m)
              "maxInValue"_a = DEFAULT->getMaxInValue(),
              "minOutValue"_a = DEFAULT->getMinOutValue(),
              "maxOutValue"_a = DEFAULT->getMaxOutValue(),
-             "direction"_a = DEFAULT->getDirection())
+             "direction"_a = DEFAULT->getDirection(),
+             DOC(RangeTransform, Create))
 
-        .def("getStyle", &RangeTransform::getStyle)
-        .def("setStyle", &RangeTransform::setStyle, "style"_a)
+        .def("getStyle", &RangeTransform::getStyle,
+             DOC(RangeTransform, getStyle))
+        .def("setStyle", &RangeTransform::setStyle, "style"_a,
+             DOC(RangeTransform, setStyle))
         .def("getFormatMetadata", 
              (FormatMetadata & (RangeTransform::*)()) &RangeTransform::getFormatMetadata,
-             py::return_value_policy::reference_internal)
-        .def("getFormatMetadata", 
-             (const FormatMetadata & (RangeTransform::*)() const) 
-             &RangeTransform::getFormatMetadata,
-             py::return_value_policy::reference_internal)
-        .def("equals", &RangeTransform::equals, "other"_a)
-        .def("getFileInputBitDepth", &RangeTransform::getFileInputBitDepth)
-        .def("setFileInputBitDepth", &RangeTransform::setFileInputBitDepth, "bitDepth"_a)
-        .def("getFileOutputBitDepth", &RangeTransform::getFileOutputBitDepth)
-        .def("setFileOutputBitDepth", &RangeTransform::setFileOutputBitDepth, "bitDepth"_a)
-        .def("getMinInValue", &RangeTransform::getMinInValue)
-        .def("setMinInValue", &RangeTransform::setMinInValue, "value"_a)
-        .def("hasMinInValue", &RangeTransform::hasMinInValue)
-        .def("unsetMinInValue", &RangeTransform::unsetMinInValue)
-        .def("getMaxInValue", &RangeTransform::getMaxInValue)
-        .def("setMaxInValue", &RangeTransform::setMaxInValue, "value"_a)
-        .def("hasMaxInValue", &RangeTransform::hasMaxInValue)
-        .def("unsetMaxOutValue", &RangeTransform::unsetMaxOutValue)
-        .def("getMinOutValue", &RangeTransform::getMinOutValue)
-        .def("setMinOutValue", &RangeTransform::setMinOutValue, "value"_a)
-        .def("hasMinOutValue", &RangeTransform::hasMinOutValue)
-        .def("unsetMinOutValue", &RangeTransform::unsetMinOutValue)
-        .def("getMaxOutValue", &RangeTransform::getMaxOutValue)
-        .def("setMaxOutValue", &RangeTransform::setMaxOutValue, "value"_a)
-        .def("hasMaxOutValue", &RangeTransform::hasMaxOutValue)
-        .def("unsetMaxOutValue", &RangeTransform::unsetMaxOutValue);
+             py::return_value_policy::reference_internal,
+             DOC(RangeTransform, getFormatMetadata))
+        .def("equals", &RangeTransform::equals, "other"_a,
+             DOC(RangeTransform, equals))
+        .def("getFileInputBitDepth", &RangeTransform::getFileInputBitDepth,
+             DOC(RangeTransform, getFileInputBitDepth))
+        .def("setFileInputBitDepth", &RangeTransform::setFileInputBitDepth, "bitDepth"_a,
+             DOC(RangeTransform, setFileInputBitDepth))
+        .def("getFileOutputBitDepth", &RangeTransform::getFileOutputBitDepth,
+             DOC(RangeTransform, getFileOutputBitDepth))
+        .def("setFileOutputBitDepth", &RangeTransform::setFileOutputBitDepth, "bitDepth"_a,
+             DOC(RangeTransform, setFileOutputBitDepth))
+        .def("getMinInValue", &RangeTransform::getMinInValue,
+             DOC(RangeTransform, getMinInValue))
+        .def("setMinInValue", &RangeTransform::setMinInValue, "value"_a,
+             DOC(RangeTransform, setMinInValue))
+        .def("hasMinInValue", &RangeTransform::hasMinInValue,
+             DOC(RangeTransform, hasMinInValue))
+        .def("unsetMinInValue", &RangeTransform::unsetMinInValue,
+             DOC(RangeTransform, unsetMinInValue))
+        .def("getMaxInValue", &RangeTransform::getMaxInValue,
+             DOC(RangeTransform, getMaxInValue))
+        .def("setMaxInValue", &RangeTransform::setMaxInValue, "value"_a,
+             DOC(RangeTransform, setMaxInValue))
+        .def("hasMaxInValue", &RangeTransform::hasMaxInValue,
+             DOC(RangeTransform, hasMaxInValue))
+        .def("unsetMaxOutValue", &RangeTransform::unsetMaxOutValue,
+             DOC(RangeTransform, unsetMaxOutValue))
+        .def("getMinOutValue", &RangeTransform::getMinOutValue,
+             DOC(RangeTransform, getMinOutValue))
+        .def("setMinOutValue", &RangeTransform::setMinOutValue, "value"_a,
+             DOC(RangeTransform, setMinOutValue))
+        .def("hasMinOutValue", &RangeTransform::hasMinOutValue,
+             DOC(RangeTransform, hasMinOutValue))
+        .def("unsetMinOutValue", &RangeTransform::unsetMinOutValue,
+             DOC(RangeTransform, unsetMinOutValue))
+        .def("getMaxOutValue", &RangeTransform::getMaxOutValue,
+             DOC(RangeTransform, getMaxOutValue))
+        .def("setMaxOutValue", &RangeTransform::setMaxOutValue, "value"_a,
+             DOC(RangeTransform, setMaxOutValue))
+        .def("hasMaxOutValue", &RangeTransform::hasMaxOutValue,
+             DOC(RangeTransform, hasMaxOutValue))
+        .def("unsetMaxOutValue", &RangeTransform::unsetMaxOutValue,
+             DOC(RangeTransform, unsetMaxOutValue));
 
-    defStr(cls);
+    defStr(clsRangeTransform);
 }
 
 } // namespace OCIO_NAMESPACE

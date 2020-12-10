@@ -8,23 +8,54 @@ namespace OCIO_NAMESPACE
 
 PYBIND11_MODULE(PyOpenColorIO, m)
 {
+    m.doc() = DOC(PyOpenColorIO);
+
+    bindPyTypes(m);
+
     // Exceptions
-    py::register_exception<Exception>(m, "Exception");
-    py::register_exception<ExceptionMissingFile>(m, "ExceptionMissingFile");
+    auto clsException = 
+        py::register_exception<Exception>(
+            m, "Exception");
+            
+    auto clsExceptionMissingFile = 
+        py::register_exception<ExceptionMissingFile>(
+            m, "ExceptionMissingFile");
+
+#if PY_VERSION_MAJOR >= 3
+    // __doc__ is not writable after class creation in Python 2
+    clsException.doc() = DOC(Exception);
+    clsExceptionMissingFile.doc() = DOC(ExceptionMissingFile);
+#endif
 
     // Global functions
-    m.def("ClearAllCaches", &ClearAllCaches);
-    m.def("GetVersion", &GetVersion);
-    m.def("GetVersionHex", &GetVersionHex);
-    m.def("GetLoggingLevel", &GetLoggingLevel);
-    m.def("SetLoggingLevel", &SetLoggingLevel, "level"_a);
-    m.def("SetLoggingFunction", &SetLoggingFunction, "logFunction"_a);
-    m.def("ResetToDefaultLoggingFunction", &ResetToDefaultLoggingFunction);
-    m.def("LogMessage", &LogMessage, "level"_a, "message"_a);
-    m.def("GetEnvVariable", &GetEnvVariable, "name"_a);
-    m.def("SetEnvVariable", &SetEnvVariable, "name"_a, "value"_a);
-    m.def("UnsetEnvVariable", &UnsetEnvVariable, "name"_a);
-    m.def("IsEnvVariablePresent", &IsEnvVariablePresent, "name"_a);
+    m.def("ClearAllCaches", &ClearAllCaches,
+          DOC(PyOpenColorIO, ClearAllCaches));
+    m.def("GetVersion", &GetVersion,
+          DOC(PyOpenColorIO, GetVersion));
+    m.def("GetVersionHex", &GetVersionHex,
+          DOC(PyOpenColorIO, GetVersionHex));
+    m.def("GetLoggingLevel", &GetLoggingLevel,
+          DOC(PyOpenColorIO, GetLoggingLevel));
+    m.def("SetLoggingLevel", &SetLoggingLevel, "level"_a,
+          DOC(PyOpenColorIO, SetLoggingLevel));
+    m.def("SetLoggingFunction", &SetLoggingFunction, "logFunction"_a,
+          DOC(PyOpenColorIO, SetLoggingFunction));
+    m.def("ResetToDefaultLoggingFunction", &ResetToDefaultLoggingFunction,
+          DOC(PyOpenColorIO, ResetToDefaultLoggingFunction));
+    m.def("LogMessage", &LogMessage, "level"_a, "message"_a,
+          DOC(PyOpenColorIO, LogMessage));
+    m.def("SetComputeHashFunction", &SetComputeHashFunction, "hashFunction"_a,
+          DOC(PyOpenColorIO, SetComputeHashFunction));
+    m.def("ResetComputeHashFunction", &ResetComputeHashFunction,
+          DOC(PyOpenColorIO, ResetComputeHashFunction));
+    m.def("GetEnvVariable", &GetEnvVariable, "name"_a,
+          DOC(PyOpenColorIO, GetEnvVariable));
+    m.def("SetEnvVariable", &SetEnvVariable, "name"_a, "value"_a,
+          DOC(PyOpenColorIO, SetEnvVariable));
+    m.def("UnsetEnvVariable", &UnsetEnvVariable, "name"_a,
+          DOC(PyOpenColorIO, UnsetEnvVariable));
+    m.def("IsEnvVariablePresent", &IsEnvVariablePresent, "name"_a,
+          DOC(PyOpenColorIO, IsEnvVariablePresent));
 
     // Global variables
     m.attr("__author__")    = "OpenColorIO Contributors";
@@ -36,7 +67,6 @@ PYBIND11_MODULE(PyOpenColorIO, m)
     m.attr("__doc__")       = "OpenColorIO (OCIO) is a complete color management solution geared towards motion picture production";
 
     // Classes
-    bindPyTypes(m);
     bindPyTransform(m);
     bindPyConfig(m);
     bindPyFileRules(m);

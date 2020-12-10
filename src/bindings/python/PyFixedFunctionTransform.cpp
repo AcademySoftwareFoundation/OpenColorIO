@@ -19,10 +19,15 @@ void bindPyFixedFunctionTransform(py::module & m)
 {
     FixedFunctionTransformRcPtr DEFAULT = FixedFunctionTransform::Create();
 
-    auto cls = py::class_<FixedFunctionTransform, 
-                          FixedFunctionTransformRcPtr /* holder */, 
-                          Transform /* base */>(m, "FixedFunctionTransform")
-        .def(py::init(&FixedFunctionTransform::Create))
+    auto clsFixedFunctionTransform = 
+        py::class_<FixedFunctionTransform, 
+                   FixedFunctionTransformRcPtr /* holder */, 
+                   Transform /* base */>(
+            m, "FixedFunctionTransform", 
+            DOC(FixedFunctionTransform))
+
+        .def(py::init(&FixedFunctionTransform::Create), 
+             DOC(FixedFunctionTransform, Create))
         .def(py::init([](FixedFunctionStyle style, 
                          const std::vector<double> & params,
                          TransformDirection dir) 
@@ -36,30 +41,33 @@ void bindPyFixedFunctionTransform(py::module & m)
             }), 
              "style"_a = DEFAULT->getStyle(), 
              "params"_a = getParamsStdVec(DEFAULT),
-             "direction"_a = DEFAULT->getDirection())
+             "direction"_a = DEFAULT->getDirection(), 
+             DOC(FixedFunctionTransform, Create))
 
         .def("getFormatMetadata", 
              (FormatMetadata & (FixedFunctionTransform::*)()) 
              &FixedFunctionTransform::getFormatMetadata,
-             py::return_value_policy::reference_internal)
-        .def("getFormatMetadata", 
-             (const FormatMetadata & (FixedFunctionTransform::*)() const) 
-             &FixedFunctionTransform::getFormatMetadata,
-             py::return_value_policy::reference_internal)
-        .def("equals", &FixedFunctionTransform::equals, "other"_a)
-        .def("getStyle", &FixedFunctionTransform::getStyle)
-        .def("setStyle", &FixedFunctionTransform::setStyle, "style"_a)
+             py::return_value_policy::reference_internal,
+             DOC(FixedFunctionTransform, getFormatMetadata))
+        .def("equals", &FixedFunctionTransform::equals, "other"_a, 
+             DOC(FixedFunctionTransform, equals))
+        .def("getStyle", &FixedFunctionTransform::getStyle, 
+             DOC(FixedFunctionTransform, getStyle))
+        .def("setStyle", &FixedFunctionTransform::setStyle, "style"_a, 
+             DOC(FixedFunctionTransform, setStyle))
         .def("getParams", [](FixedFunctionTransformRcPtr self)
             {
                 return getParamsStdVec(self);
-            })
+            }, 
+             DOC(FixedFunctionTransform, getParams))
         .def("setParams", [](FixedFunctionTransformRcPtr self, const std::vector<double> & params)
             { 
                 self->setParams(params.data(), params.size());
             }, 
-             "params"_a);
+             "params"_a, 
+             DOC(FixedFunctionTransform, setParams));
 
-    defStr(cls);
+    defStr(clsFixedFunctionTransform);
 }
 
 } // namespace OCIO_NAMESPACE
