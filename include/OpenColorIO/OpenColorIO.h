@@ -430,18 +430,6 @@ public:
                                           ColorSpaceVisibility visibility, int index) const;
 
     /**
-     * \brief Get the color space from all the color spaces
-     *      (i.e. active and inactive) and return null if the name is not found.
-     *
-     * \note
-     *     The fcn accepts either a color space OR role name.
-     *     (Color space names take precedence over roles.)
-     */
-    ConstColorSpaceRcPtr getColorSpace(const char * name) const;
-
-    // The following three methods only work from the list of active color spaces.
-
-    /**
      * \brief Work on the active color spaces only.
      * 
      * \note
@@ -466,6 +454,16 @@ public:
      *    (Color space names take precedence over roles.)
      */
     int getIndexForColorSpace(const char * name) const;
+
+    /**
+     * \brief Get the color space from all the color spaces
+     *      (i.e. active and inactive) and return null if the name is not found.
+     *
+     * \note
+     *     The fcn accepts either a color space OR role name.
+     *     (Color space names take precedence over roles.)
+     */
+    ConstColorSpaceRcPtr getColorSpace(const char * name) const;
 
     /**
      * \brief Add a color space to the configuration.
@@ -519,10 +517,12 @@ public:
     void setStrictParsingEnabled(bool enabled);
 
     /**
-     * \brief Set/get a list of inactive color space names.
+     * \brief Set/get a list of inactive color space or named transform names.
      *
+     * Notes:
+     * * List can contain color space and/or named transform names.
      * * The inactive spaces are color spaces that should not appear in application menus.
-     * * These color spaces will still work in :cpp:func:`Config::getProcessor` calls.
+     * * These color spaces will still work in Config::getProcessor calls.
      * * The argument is a comma-delimited string.  A null or empty string empties the list.
      * * The environment variable OCIO_INACTIVE_COLORSPACES may also be used to set the
      *   inactive color space list.
@@ -904,6 +904,52 @@ public:
     ConstViewTransformRcPtr getDefaultSceneToDisplayViewTransform() const;
 
     void clearViewTransforms();
+
+    /**
+     * \defgroup Methods related to named transforms.
+     * @{
+     */
+
+    /**
+     * \brief Work on the named transforms selected by visibility.
+     */
+    int getNumNamedTransforms(NamedTransformVisibility visibility) const noexcept;
+
+    /**
+     * \brief Work on the named transforms selected by visibility (active or inactive).
+     *
+     * Return an empty string for invalid index.
+     */
+    const char * getNamedTransformNameByIndex(NamedTransformVisibility visibility,
+                                              int index) const noexcept;
+
+    /// Work on the active named transforms only.
+    int getNumNamedTransforms() const noexcept;
+
+    /// Work on the active named transforms only and return an empty string for invalid index.
+    const char * getNamedTransformNameByIndex(int index) const noexcept;
+
+    /// Get an index from the active named transforms only and return -1 if the name is not found.
+    int getIndexForNamedTransform(const char * name) const noexcept;
+
+    /**
+     * \brief Get the named transform from all the named transforms (i.e. active and inactive) and
+     *     return null if the name is not found.
+     */
+    ConstNamedTransformRcPtr getNamedTransform(const char * name) const noexcept;
+
+    /**
+     * \brief Add or replace named transform.
+     *
+     * \note
+     *    Throws if namedTransform is null, name is missing, or no transform is set.
+     */
+    void addNamedTransform(const ConstNamedTransformRcPtr & namedTransform);
+
+    /// Clear all named transforms.
+    void clearNamedTransforms();
+
+    /** @} */
 
     // 
     // File Rules
@@ -1681,6 +1727,9 @@ private:
     const Impl * getImpl() const { return m_impl; }
 };
 
+/** \defgroup ColorSpaceSetOperators
+ *  @{
+ */
 
 /**
  * \brief Perform the union of two sets.
@@ -1719,7 +1768,7 @@ extern OCIOEXPORT ConstColorSpaceSetRcPtr operator&&(const ConstColorSpaceSetRcP
 extern OCIOEXPORT ConstColorSpaceSetRcPtr operator-(const ConstColorSpaceSetRcPtr & lcss,
                                                     const ConstColorSpaceSetRcPtr & rcss);
 
-
+/** @}*/
 
 
 //
@@ -1773,6 +1822,60 @@ private:
 };
 
 extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const Look&);
+
+
+/**
+ * \brief NamedTransform.
+ *
+ * A NamedTransform provides a way for config authors to include a set of color
+ * transforms that are independent of the color space being processed.  For example a "utility
+ * curve" transform where there is no need to convert to or from a reference space.
+ */
+
+class OCIOEXPORT NamedTransform
+{
+public:
+    static NamedTransformRcPtr Create();
+
+    virtual NamedTransformRcPtr createEditableCopy() const = 0;
+
+    virtual const char * getName() const noexcept = 0;
+    virtual void setName(const char * name) noexcept = 0;
+
+    /// \see ColorSpace::getFamily
+    virtual const char * getFamily() const noexcept = 0;
+    /// \see ColorSpace::setFamily
+    virtual void setFamily(const char * family) noexcept = 0;
+
+    virtual const char * getDescription() const noexcept = 0;
+    virtual void setDescription(const char * description) noexcept = 0;
+
+    /// \see ColorSpace::hasCategory
+    virtual bool hasCategory(const char * category) const noexcept = 0;
+    /// \see ColorSpace::addCategory
+    virtual void addCategory(const char * category) noexcept = 0;
+    /// \see ColorSpace::removeCategory
+    virtual void removeCategory(const char * category) noexcept = 0;
+    /// \see ColorSpace::getNumCategories
+    virtual int getNumCategories() const noexcept = 0;
+    /// \see ColorSpace::getCategory
+    virtual const char * getCategory(int index) const noexcept = 0;
+    /// \see ColorSpace::clearCategories
+    virtual void clearCategories() noexcept = 0;
+
+    virtual ConstTransformRcPtr getTransform(TransformDirection dir) const = 0;
+    virtual void setTransform(const ConstTransformRcPtr & transform, TransformDirection dir) = 0;
+
+    NamedTransform(const NamedTransform &) = delete;
+    NamedTransform & operator= (const NamedTransform &) = delete;
+    // Do not use (needed only for pybind11).
+    virtual ~NamedTransform() = default;
+
+protected:
+    NamedTransform() = default;
+};
+
+extern OCIOEXPORT std::ostream & operator<< (std::ostream &, const NamedTransform &);
 
 
 //

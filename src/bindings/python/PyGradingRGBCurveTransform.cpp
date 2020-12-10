@@ -10,9 +10,13 @@ void bindPyGradingRGBCurveTransform(py::module & m)
 {
     GradingRGBCurveTransformRcPtr DEFAULT = GradingRGBCurveTransform::Create(GRADING_LOG);
 
-    py::class_<GradingRGBCurveTransform,
-               GradingRGBCurveTransformRcPtr /* holder */, 
-               Transform /* base */>(m, "GradingRGBCurveTransform")
+    auto clsGradingRGBCurveTransform = 
+        py::class_<GradingRGBCurveTransform,
+                   GradingRGBCurveTransformRcPtr /* holder */, 
+                   Transform /* base */>(
+            m, "GradingRGBCurveTransform", 
+            DOC(GradingRGBCurveTransform))
+
         .def(py::init([](GradingStyle style,
                          const ConstGradingRGBCurveRcPtr & values,
                          bool dynamic, 
@@ -29,7 +33,8 @@ void bindPyGradingRGBCurveTransform(py::module & m)
              "style"_a = DEFAULT->getStyle(),
              "values"_a,
              "dynamic"_a = DEFAULT->isDynamic(),
-             "dir"_a = DEFAULT->getDirection())
+             "dir"_a = DEFAULT->getDirection(),
+             DOC(GradingRGBCurveTransform, Create))
         .def(py::init([](GradingStyle style, bool dynamic, TransformDirection dir)
             {
                 GradingRGBCurveTransformRcPtr p = GradingRGBCurveTransform::Create(style);
@@ -42,26 +47,34 @@ void bindPyGradingRGBCurveTransform(py::module & m)
                 p->validate();
                 return p;
             }),
-            "style"_a = DEFAULT->getStyle(),
-            "dynamic"_a = DEFAULT->isDynamic(),
-            "dir"_a = DEFAULT->getDirection())
+             "style"_a = DEFAULT->getStyle(),
+             "dynamic"_a = DEFAULT->isDynamic(),
+             "dir"_a = DEFAULT->getDirection(),
+             DOC(GradingRGBCurveTransform, Create))
 
         .def("getFormatMetadata", 
-             (FormatMetadata & (GradingRGBCurveTransform::*)()) &GradingRGBCurveTransform::getFormatMetadata,
-             py::return_value_policy::reference_internal)
-        .def("getFormatMetadata", 
-             (const FormatMetadata & (GradingRGBCurveTransform::*)() const)
+             (FormatMetadata & (GradingRGBCurveTransform::*)()) 
              &GradingRGBCurveTransform::getFormatMetadata,
-             py::return_value_policy::reference_internal)
-        .def("getStyle", &GradingRGBCurveTransform::getStyle)
-        .def("setStyle", &GradingRGBCurveTransform::setStyle, "style"_a)
-        .def("getValue", &GradingRGBCurveTransform::getValue)
-        .def("setValue", &GradingRGBCurveTransform::setValue, "values"_a)
-        .def("getBypassLinToLog", &GradingRGBCurveTransform::getBypassLinToLog)
-        .def("setBypassLinToLog", &GradingRGBCurveTransform::setBypassLinToLog, "bypass"_a)
-        .def("isDynamic", &GradingRGBCurveTransform::isDynamic)
-        .def("makeDynamic", &GradingRGBCurveTransform::makeDynamic)
-        .def("makeNonDynamic", &GradingRGBCurveTransform::makeNonDynamic);
+             py::return_value_policy::reference_internal,
+             DOC(GradingRGBCurveTransform, getFormatMetadata))
+        .def("getStyle", &GradingRGBCurveTransform::getStyle, 
+             DOC(GradingRGBCurveTransform, getStyle))
+        .def("setStyle", &GradingRGBCurveTransform::setStyle, "style"_a, 
+             DOC(GradingRGBCurveTransform, setStyle))
+        .def("getValue", &GradingRGBCurveTransform::getValue, 
+             DOC(GradingRGBCurveTransform, getValue))
+        .def("setValue", &GradingRGBCurveTransform::setValue, "values"_a, 
+             DOC(GradingRGBCurveTransform, setValue))
+        .def("getBypassLinToLog", &GradingRGBCurveTransform::getBypassLinToLog, 
+             DOC(GradingRGBCurveTransform, getBypassLinToLog))
+        .def("setBypassLinToLog", &GradingRGBCurveTransform::setBypassLinToLog, "bypass"_a, 
+             DOC(GradingRGBCurveTransform, setBypassLinToLog))
+        .def("isDynamic", &GradingRGBCurveTransform::isDynamic, 
+             DOC(GradingRGBCurveTransform, isDynamic))
+        .def("makeDynamic", &GradingRGBCurveTransform::makeDynamic, 
+             DOC(GradingRGBCurveTransform, makeDynamic))
+        .def("makeNonDynamic", &GradingRGBCurveTransform::makeNonDynamic, 
+             DOC(GradingRGBCurveTransform, makeNonDynamic));
 }
 
 } // namespace OCIO_NAMESPACE

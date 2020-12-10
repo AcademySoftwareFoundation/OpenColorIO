@@ -10,13 +10,13 @@
 namespace OCIO_NAMESPACE
 {
 
-
 struct OCIOHIDDEN PyDynamicProperty
 {
     PyDynamicProperty(DynamicPropertyRcPtr prop)
         : m_prop(prop)
     {
     }
+
     virtual ~PyDynamicProperty() = default;
 
     DynamicPropertyType getType() const

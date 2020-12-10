@@ -22,51 +22,75 @@ using TransformFormatMetadataIterator = PyIterator<ProcessorRcPtr, IT_TRANSFORM_
 
 void bindPyProcessor(py::module & m)
 {
-    auto cls = py::class_<Processor, ProcessorRcPtr /* holder */>(m, "Processor")
+    auto clsProcessor = 
+        py::class_<Processor, ProcessorRcPtr /* holder */>(
+            m, "Processor", 
+            DOC(Processor));
 
-        .def("isNoOp", &Processor::isNoOp)
-        .def("hasChannelCrosstalk", &Processor::hasChannelCrosstalk)
-        .def("getCacheID", &Processor::getCacheID)
-        .def("getProcessorMetadata", &Processor::getProcessorMetadata)
-        .def("getFormatMetadata", &Processor::getFormatMetadata, 
-             py::return_value_policy::reference_internal)
+    auto clsTransformFormatMetadataIterator = 
+        py::class_<TransformFormatMetadataIterator>(
+            clsProcessor, "TransformFormatMetadataIterator");
+
+    clsProcessor
+        .def("isNoOp", &Processor::isNoOp,
+             DOC(Processor, isNoOp))
+        .def("hasChannelCrosstalk", &Processor::hasChannelCrosstalk,
+             DOC(Processor, hasChannelCrosstalk))
+        .def("getCacheID", &Processor::getCacheID,
+             DOC(Processor, getCacheID))
+        .def("getProcessorMetadata", &Processor::getProcessorMetadata,
+             DOC(Processor, getProcessorMetadata))
+        .def("getFormatMetadata", &Processor::getFormatMetadata,
+             py::return_value_policy::reference_internal,
+             DOC(Processor, getFormatMetadata))
         .def("getTransformFormatMetadata", [](ProcessorRcPtr & self) 
             {
                 return TransformFormatMetadataIterator(self);
             })
-        .def("createGroupTransform", &Processor::createGroupTransform)
-        .def("getDynamicProperty", &Processor::getDynamicProperty, "type"_a)
+        .def("createGroupTransform", &Processor::createGroupTransform,
+             DOC(Processor, createGroupTransform))
+        .def("getDynamicProperty", &Processor::getDynamicProperty, "type"_a,
+             DOC(Processor, getDynamicProperty))
         .def("hasDynamicProperty",
              (bool (Processor::*)(DynamicPropertyType) const noexcept)
              &Processor::hasDynamicProperty,
-             "type"_a)
+             "type"_a,
+             DOC(Processor, hasDynamicProperty))
         .def("hasDynamicProperty",
              (bool (Processor::*)() const noexcept)
-             &Processor::hasDynamicProperty)
+             &Processor::hasDynamicProperty,
+             DOC(Processor, hasDynamicProperty))
         .def("getOptimizedProcessor",
              (ConstProcessorRcPtr(Processor::*)(OptimizationFlags) const)
-             &Processor::getOptimizedProcessor, "oFlags"_a)
+             &Processor::getOptimizedProcessor, "oFlags"_a,
+             DOC(Processor, getOptimizedProcessor))
         .def("getOptimizedProcessor",
              (ConstProcessorRcPtr(Processor::*)(BitDepth, BitDepth, OptimizationFlags) const)
              &Processor::getOptimizedProcessor,
-             "inBitDepth"_a, "outBitDepth"_a, "oFlags"_a)
+             "inBitDepth"_a, "outBitDepth"_a, "oFlags"_a,
+             DOC(Processor, getOptimizedProcessor))
 
         // GPU Renderer
-        .def("getDefaultGPUProcessor", &Processor::getDefaultGPUProcessor)
-        .def("getOptimizedGPUProcessor", &Processor::getOptimizedGPUProcessor, "oFlags"_a)
+        .def("getDefaultGPUProcessor", &Processor::getDefaultGPUProcessor,
+             DOC(Processor, getDefaultGPUProcessor))
+        .def("getOptimizedGPUProcessor", &Processor::getOptimizedGPUProcessor, "oFlags"_a,
+             DOC(Processor, getOptimizedGPUProcessor))
 
         // CPU Renderer
-        .def("getDefaultCPUProcessor", &Processor::getDefaultCPUProcessor)
+        .def("getDefaultCPUProcessor", &Processor::getDefaultCPUProcessor,
+             DOC(Processor, getDefaultCPUProcessor))
         .def("getOptimizedCPUProcessor", 
              (ConstCPUProcessorRcPtr (Processor::*)(OptimizationFlags) const) 
              &Processor::getOptimizedCPUProcessor, 
-             "oFlags"_a)
+             "oFlags"_a,
+             DOC(Processor, getOptimizedCPUProcessor))
         .def("getOptimizedCPUProcessor", 
              (ConstCPUProcessorRcPtr (Processor::*)(BitDepth, BitDepth, OptimizationFlags) const) 
              &Processor::getOptimizedCPUProcessor, 
-             "inBitDepth"_a, "outBitDepth"_a, "oFlags"_a);
+             "inBitDepth"_a, "outBitDepth"_a, "oFlags"_a,
+             DOC(Processor, getOptimizedCPUProcessor));
 
-    py::class_<TransformFormatMetadataIterator>(cls, "TransformFormatMetadataIterator")
+    clsTransformFormatMetadataIterator
         .def("__len__", [](TransformFormatMetadataIterator & it) 
             { 
                 return it.m_obj->getNumTransforms(); 
@@ -90,5 +114,4 @@ void bindPyProcessor(py::module & m)
             }, 
              py::return_value_policy::reference_internal);
 }
-
 } // namespace OCIO_NAMESPACE

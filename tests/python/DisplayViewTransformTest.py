@@ -220,3 +220,90 @@ class DisplayViewTransformTest(unittest.TestCase):
         self.assertEqual(True, dv_tr.getLooksBypass())
         self.assertEqual(False, dv_tr.getDataBypass())
         self.assertEqual(OCIO.TRANSFORM_DIR_INVERSE, dv_tr.getDirection())
+
+    def test_processor(self):
+        """
+        Test creating a processor from a display view and a named transform.
+        """
+        SIMPLE_PROFILE = """ocio_profile_version: 2
+
+roles:
+  default: raw
+
+displays:
+  sRGB:
+    - !<View> {name: Raw, colorspace: raw}
+  display:
+    - !<View> {name: view, view_transform: display_vt, display_colorspace: displayCSOut}
+    - !<View> {name: viewCSNT, colorspace: nt_inverse}
+    - !<View> {name: viewVTNT, view_transform: nt_forward, display_colorspace: displayCSOut}
+
+view_transforms:
+  - !<ViewTransform>
+    name: display_vt
+    to_display_reference: !<CDLTransform> {name: display vt to ref, sat: 1.5}
+    from_display_reference: !<CDLTransform> {name: display vt from ref, sat: 1.5}
+
+display_colorspaces:
+  - !<ColorSpace>
+    name: displayCSOut
+    to_display_reference: !<CDLTransform> {name: out cs to ref, sat: 1.5}
+    from_display_reference: !<CDLTransform> {name: out cs from ref, sat: 1.5}
+
+colorspaces:
+  - !<ColorSpace>
+    name: raw
+    isdata: true
+
+  - !<ColorSpace>
+    name: in
+    to_reference: !<MatrixTransform> {offset: [0.11, 0.12, 0.13, 0]}
+
+named_transforms:
+  - !<NamedTransform>
+    name: nt_forward
+    transform: !<CDLTransform> {name: forward, sat: 1.5}
+
+  - !<NamedTransform>
+    name: nt_inverse
+    inverse_transform: !<CDLTransform> {name: inverse, sat: 1.5}
+"""
+        # Create a config.
+        cfg = OCIO.Config().CreateFromStream(SIMPLE_PROFILE)
+
+        # Src can't be a named transform.
+        dv_tr = OCIO.DisplayViewTransform(src='nt_forward',
+                                          display='display',
+                                          view='view')
+        with self.assertRaises(OCIO.Exception):
+            proc = cfg.getProcessor(dv_tr)
+
+        # Dst is a named transform.
+        dv_tr.setSrc('in')
+        dv_tr.setView('viewCSNT');
+        proc = cfg.getProcessor(dv_tr)
+        group = proc.createGroupTransform()
+        groupTransformsList = list(group)
+        self.assertEqual(len(groupTransformsList), 1);
+        self.assertIsInstance(groupTransformsList[0], OCIO.CDLTransform)
+        metadata = groupTransformsList[0].getFormatMetadata()
+        atts = metadata.getAttributes()
+        self.assertEqual('inverse', next(atts)[1] )
+
+        # View transform is a named transform.
+        dv_tr.setSrc('in')
+        dv_tr.setView('viewVTNT');
+        proc = cfg.getProcessor(dv_tr)
+        group = proc.createGroupTransform()
+        groupTransformsList = list(group)
+        self.assertEqual(len(groupTransformsList), 2);
+        self.assertIsInstance(groupTransformsList[0], OCIO.CDLTransform)
+        metadata = groupTransformsList[0].getFormatMetadata()
+        atts = metadata.getAttributes()
+        self.assertEqual('forward', next(atts)[1] )
+        self.assertIsInstance(groupTransformsList[1], OCIO.CDLTransform)
+        metadata = groupTransformsList[1].getFormatMetadata()
+        atts = metadata.getAttributes()
+        self.assertEqual('out cs from ref', next(atts)[1] )
+
+
