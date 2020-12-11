@@ -10,10 +10,13 @@ void bindPyLookTransform(py::module & m)
 {
     LookTransformRcPtr DEFAULT = LookTransform::Create();
 
-    auto cls = py::class_<LookTransform, 
-                          LookTransformRcPtr /* holder */, 
-                          Transform /* base */>(m, "LookTransform")
-        .def(py::init(&LookTransform::Create))
+    auto clsLookTransform = 
+        py::class_<LookTransform, LookTransformRcPtr /* holder */, Transform /* base */>(
+            m, "LookTransform", 
+            DOC(LookTransform))
+
+        .def(py::init(&LookTransform::Create),
+             DOC(LookTransform, Create))
         .def(py::init([](const std::string & src,
                          const std::string & dst,
                          const std::string & looks,
@@ -33,19 +36,28 @@ void bindPyLookTransform(py::module & m)
              "dst"_a = DEFAULT->getDst(),
              "looks"_a = DEFAULT->getLooks(),
              "direction"_a = DEFAULT->getDirection(),
-             "skipColorSpaceConversion"_a = DEFAULT->getSkipColorSpaceConversion())
+             "skipColorSpaceConversion"_a = DEFAULT->getSkipColorSpaceConversion(),
+             DOC(LookTransform, Create))
 
-        .def("getSrc", &LookTransform::getSrc)
-        .def("setSrc", &LookTransform::setSrc, "src"_a)
-        .def("getDst", &LookTransform::getDst)
-        .def("setDst", &LookTransform::setDst, "dst"_a)
-        .def("getLooks", &LookTransform::getLooks)
-        .def("setLooks", &LookTransform::setLooks, "looks"_a)
-        .def("getSkipColorSpaceConversion", &LookTransform::getSkipColorSpaceConversion)
+        .def("getSrc", &LookTransform::getSrc,
+             DOC(LookTransform, getSrc))
+        .def("setSrc", &LookTransform::setSrc, "src"_a,
+             DOC(LookTransform, setSrc))
+        .def("getDst", &LookTransform::getDst,
+             DOC(LookTransform, getDst))
+        .def("setDst", &LookTransform::setDst, "dst"_a,
+             DOC(LookTransform, setDst))
+        .def("getLooks", &LookTransform::getLooks,
+             DOC(LookTransform, getLooks))
+        .def("setLooks", &LookTransform::setLooks, "looks"_a,
+             DOC(LookTransform, setLooks))
+        .def("getSkipColorSpaceConversion", &LookTransform::getSkipColorSpaceConversion,
+             DOC(LookTransform, getSkipColorSpaceConversion))
         .def("setSkipColorSpaceConversion", &LookTransform::setSkipColorSpaceConversion,
-             "skipColorSpaceConversion"_a);
+             "skipColorSpaceConversion"_a,
+             DOC(LookTransform, setSkipColorSpaceConversion));
 
-    defStr(cls);
+    defStr(clsLookTransform);
 }
 
 } // namespace OCIO_NAMESPACE

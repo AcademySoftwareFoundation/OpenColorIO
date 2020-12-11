@@ -24,27 +24,43 @@ void bindPyColorSpaceSet(py::module & m)
 {
     ColorSpaceSetRcPtr DEFAULT = ColorSpaceSet::Create();
 
-    auto cls = py::class_<ColorSpaceSet, ColorSpaceSetRcPtr /* holder */>(m, "ColorSpaceSet")
-        .def(py::init(&ColorSpaceSet::Create))
+    auto clsColorSpaceSet = py::class_<ColorSpaceSet, ColorSpaceSetRcPtr /* holder */>(
+        m, "ColorSpaceSet",
+        DOC(ColorSpaceSet));
 
-        .def("__eq__", &ColorSpaceSet::operator==, py::is_operator())
-        .def("__ne__", &ColorSpaceSet::operator!=, py::is_operator())
+    auto clsColorSpaceNameIterator = py::class_<ColorSpaceNameIterator>(
+        clsColorSpaceSet, "ColorSpaceNameIterator");
+
+    auto clsColorSpaceIterator = py::class_<ColorSpaceIterator>(
+        clsColorSpaceSet, "ColorSpaceIterator");
+
+    clsColorSpaceSet
+        .def(py::init(&ColorSpaceSet::Create), 
+             DOC(ColorSpaceSet, Create))
+
+        .def("__eq__", &ColorSpaceSet::operator==, py::is_operator(), 
+             DOC(ColorSpaceSet, operator, eq))
+        .def("__ne__", &ColorSpaceSet::operator!=, py::is_operator(), 
+             DOC(ColorSpaceSet, operator, ne))
 
         .def("__sub__", [](ConstColorSpaceSetRcPtr & self, ConstColorSpaceSetRcPtr & rcss)
             { 
                 return self - rcss; 
             }, 
-             py::is_operator())
+             py::is_operator(), 
+             DOC(PyOpenColorIO, ConstColorSpaceSetRcPtr, operator, sub))
         .def("__or__", [](ConstColorSpaceSetRcPtr & self, ConstColorSpaceSetRcPtr & rcss) 
             { 
                 return self || rcss; 
             }, 
-             py::is_operator())
+             py::is_operator(), 
+             DOC(PyOpenColorIO, ConstColorSpaceSetRcPtr, operator, lor))
         .def("__and__", [](ConstColorSpaceSetRcPtr & self, ConstColorSpaceSetRcPtr & rcss) 
             { 
                 return self && rcss; 
             }, 
-             py::is_operator())
+             py::is_operator(), 
+             DOC(PyOpenColorIO, ConstColorSpaceSetRcPtr, operator, land))
 
         .def("getColorSpaceNames", [](ColorSpaceSetRcPtr & self) 
             { 
@@ -54,14 +70,20 @@ void bindPyColorSpaceSet(py::module & m)
             { 
                 return ColorSpaceIterator(self); 
             })
-        .def("getColorSpace", &ColorSpaceSet::getColorSpace, "name"_a)
-        .def("addColorSpace", &ColorSpaceSet::addColorSpace, "colorSpace"_a)
-        .def("addColorSpaces", &ColorSpaceSet::addColorSpaces, "colorSpace"_a)
-        .def("removeColorSpace", &ColorSpaceSet::removeColorSpace, "colorSpace"_a)
-        .def("removeColorSpaces", &ColorSpaceSet::removeColorSpaces, "colorSpace"_a)
-        .def("clearColorSpaces", &ColorSpaceSet::clearColorSpaces);
+        .def("getColorSpace", &ColorSpaceSet::getColorSpace, "name"_a, 
+             DOC(ColorSpaceSet, getColorSpace))
+        .def("addColorSpace", &ColorSpaceSet::addColorSpace, "colorSpace"_a, 
+             DOC(ColorSpaceSet, addColorSpace))
+        .def("addColorSpaces", &ColorSpaceSet::addColorSpaces, "colorSpaces"_a, 
+             DOC(ColorSpaceSet, addColorSpaces))
+        .def("removeColorSpace", &ColorSpaceSet::removeColorSpace, "colorSpace"_a, 
+             DOC(ColorSpaceSet, removeColorSpace))
+        .def("removeColorSpaces", &ColorSpaceSet::removeColorSpaces, "colorSpaces"_a, 
+             DOC(ColorSpaceSet, removeColorSpaces))
+        .def("clearColorSpaces", &ColorSpaceSet::clearColorSpaces, 
+             DOC(ColorSpaceSet, clearColorSpaces));
 
-    py::class_<ColorSpaceNameIterator>(cls, "ColorSpaceNameIterator")
+    clsColorSpaceNameIterator
         .def("__len__", [](ColorSpaceNameIterator & it) 
             { 
                 return it.m_obj->getNumColorSpaces(); 
@@ -81,7 +103,7 @@ void bindPyColorSpaceSet(py::module & m)
                 return it.m_obj->getColorSpaceNameByIndex(i);
             });
 
-    py::class_<ColorSpaceIterator>(cls, "ColorSpaceIterator")
+    clsColorSpaceIterator
         .def("__len__", [](ColorSpaceIterator & it) { return it.m_obj->getNumColorSpaces(); })
         .def("__getitem__", [](ColorSpaceIterator & it, int i) 
             { 

@@ -72,9 +72,26 @@ Some optional components also depend on:
 
 - \*Little CMS >= 2.2 (for ociobakelut ICC profile baking)
 - \*pybind11 >= 2.4.3 (for the Python bindings)
-- Python >= 2.7 (for the Python bindings and docs)
-    - \*Sphinx >= 1.8.5
+- Python >= 2.7 (for the Python bindings)
+- Python >= 3.7 (for the docs, with the following PyPi packages)
+    - Sphinx
+    - six
+    - testresources
+    - recommonmark
+    - sphinx-press-theme
+    - sphinx-tabs
+    - breathe
+- Doxygen (for the docs)
 - OpenImageIO >= 2.1.9 (for apps including ocioconvert)
+
+Example bash scripts are provided in 
+`share/ci/scripts <https://github.com/AcademySoftwareFoundation/OpenColorIO/tree/master/share/ci/scripts>`_ 
+for installing some dependencies. These are used by OpenColorIO CI so are 
+regularly tested on their noted platforms. The ``install_docs_env.sh``
+script will install all dependencies for building OCIO documentation and is 
+available for all supported platforms. Use GitBash 
+(`provided with Git for Windows <https://gitforwindows.org/>`_) to execute
+this script on Windows.
 
 Automated Installation
 ^^^^^^^^^^^^^^^^^^^^^^

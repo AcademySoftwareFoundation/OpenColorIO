@@ -31,10 +31,15 @@ void bindPyAllocationTransform(py::module & m)
 {
     AllocationTransformRcPtr DEFAULT = AllocationTransform::Create();
 
-    auto cls = py::class_<AllocationTransform, 
-                          AllocationTransformRcPtr /* holder */, 
-                          Transform /* base */>(m, "AllocationTransform")
-        .def(py::init(&AllocationTransform::Create))
+    auto clsAllocationTransform = 
+        py::class_<AllocationTransform, 
+                   AllocationTransformRcPtr /* holder */, 
+                   Transform /* base */>(
+            m, "AllocationTransform",
+            DOC(AllocationTransform))
+
+        .def(py::init(&AllocationTransform::Create), 
+             DOC(AllocationTransform, Create))
         .def(py::init([](Allocation allocation, 
                          const std::vector<float> & vars, 
                          TransformDirection dir) 
@@ -48,21 +53,27 @@ void bindPyAllocationTransform(py::module & m)
             }), 
              "allocation"_a = DEFAULT->getAllocation(), 
              "vars"_a = getVarsStdVec(DEFAULT),
-             "direction"_a = DEFAULT->getDirection())
+             "direction"_a = DEFAULT->getDirection(),
+             DOC(AllocationTransform, Create))
 
-        .def("getAllocation", &AllocationTransform::getAllocation)
-        .def("setAllocation", &AllocationTransform::setAllocation, "allocation"_a)
+        .def("getAllocation", &AllocationTransform::getAllocation, 
+             DOC(AllocationTransform, getAllocation))
+        .def("setAllocation", &AllocationTransform::setAllocation,
+             "allocation"_a,
+             DOC(AllocationTransform, setAllocation))
         .def("getVars", [](AllocationTransformRcPtr self)
             {
                 return getVarsStdVec(self);
-            })
+            },
+             DOC(AllocationTransform, getVars))
         .def("setVars", [](AllocationTransformRcPtr self, const std::vector<float> & vars)
             { 
                 setVars(self, vars);
             }, 
-             "vars"_a);
+             "vars"_a,
+             DOC(AllocationTransform, setVars));
 
-    defStr(cls);
+    defStr(clsAllocationTransform);
 }
 
 } // namespace OCIO_NAMESPACE

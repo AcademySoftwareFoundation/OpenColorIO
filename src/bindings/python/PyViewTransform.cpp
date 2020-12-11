@@ -33,12 +33,22 @@ void bindPyViewTransform(py::module & m)
 {
     ViewTransformRcPtr DEFAULT = ViewTransform::Create(REFERENCE_SPACE_SCENE);
 
-    auto cls = py::class_<ViewTransform, ViewTransformRcPtr /* holder */>(m, "ViewTransform")
+    auto clsViewTransform = 
+        py::class_<ViewTransform, ViewTransformRcPtr /* holder */>(
+            m, "ViewTransform", 
+            DOC(ViewTransform));
+
+    auto clsViewTransformCategoryIterator = 
+        py::class_<ViewTransformCategoryIterator>(
+            clsViewTransform, "ViewTransformCategoryIterator");
+
+    clsViewTransform
         .def(py::init([](ReferenceSpaceType referenceSpace) 
             { 
                 return ViewTransform::Create(referenceSpace); 
             }), 
-             "referenceSpace"_a)
+             "referenceSpace"_a,
+             DOC(ViewTransform, Create))
         .def(py::init([](ReferenceSpaceType referenceSpace,
                          const std::string & name,
                          const std::string & family,
@@ -75,29 +85,43 @@ void bindPyViewTransform(py::module & m)
              "description"_a = DEFAULT->getDescription(),
              "toReference"_a = DEFAULT->getTransform(VIEWTRANSFORM_DIR_TO_REFERENCE),
              "fromReference"_a = DEFAULT->getTransform(VIEWTRANSFORM_DIR_FROM_REFERENCE),
-             "categories"_a = getCategoriesStdVec(DEFAULT))  
+             "categories"_a = getCategoriesStdVec(DEFAULT),
+             DOC(ViewTransform, Create))  
 
-        .def("getName", &ViewTransform::getName)
-        .def("setName", &ViewTransform::setName, "name"_a)
-        .def("getFamily", &ViewTransform::getFamily)
-        .def("setFamily", &ViewTransform::setFamily, "family"_a)
-        .def("getDescription", &ViewTransform::getDescription)
-        .def("setDescription", &ViewTransform::setDescription, "description"_a)
-        .def("hasCategory", &ViewTransform::hasCategory, "category"_a)
-        .def("addCategory", &ViewTransform::addCategory, "category"_a)
-        .def("removeCategory", &ViewTransform::removeCategory, "category"_a)
+        .def("getName", &ViewTransform::getName,
+             DOC(ViewTransform, getName))
+        .def("setName", &ViewTransform::setName, "name"_a,
+             DOC(ViewTransform, setName))
+        .def("getFamily", &ViewTransform::getFamily,
+             DOC(ViewTransform, getFamily))
+        .def("setFamily", &ViewTransform::setFamily, "family"_a,
+             DOC(ViewTransform, setFamily))
+        .def("getDescription", &ViewTransform::getDescription,
+             DOC(ViewTransform, getDescription))
+        .def("setDescription", &ViewTransform::setDescription, "description"_a,
+             DOC(ViewTransform, setDescription))
+        .def("hasCategory", &ViewTransform::hasCategory, "category"_a,
+             DOC(ViewTransform, hasCategory))
+        .def("addCategory", &ViewTransform::addCategory, "category"_a,
+             DOC(ViewTransform, addCategory))
+        .def("removeCategory", &ViewTransform::removeCategory, "category"_a,
+             DOC(ViewTransform, removeCategory))
         .def("getCategories", [](ViewTransformRcPtr & self) 
             { 
                 return ViewTransformCategoryIterator(self); 
             })
-        .def("clearCategories", &ViewTransform::clearCategories)
-        .def("getReferenceSpaceType", &ViewTransform::getReferenceSpaceType)
-        .def("getTransform", &ViewTransform::getTransform, "direction"_a)
-        .def("setTransform", &ViewTransform::setTransform, "transform"_a, "direction"_a);
+        .def("clearCategories", &ViewTransform::clearCategories,
+             DOC(ViewTransform, clearCategories))
+        .def("getReferenceSpaceType", &ViewTransform::getReferenceSpaceType,
+             DOC(ViewTransform, getReferenceSpaceType))
+        .def("getTransform", &ViewTransform::getTransform, "direction"_a,
+             DOC(ViewTransform, getTransform))
+        .def("setTransform", &ViewTransform::setTransform, "transform"_a, "direction"_a,
+             DOC(ViewTransform, setTransform));
 
-    defStr(cls);
+    defStr(clsViewTransform);
 
-    py::class_<ViewTransformCategoryIterator>(cls, "ViewTransformCategoryIterator")
+    clsViewTransformCategoryIterator
         .def("__len__", [](ViewTransformCategoryIterator & it) 
             { 
                 return it.m_obj->getNumCategories(); 
