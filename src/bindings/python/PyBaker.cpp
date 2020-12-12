@@ -26,8 +26,18 @@ void bindPyBaker(py::module & m)
 {
     BakerRcPtr DEFAULT = Baker::Create();
 
-    auto cls = py::class_<Baker, BakerRcPtr /* holder */>(m, "Baker")
-        .def(py::init(&Baker::Create))
+    auto clsBaker = 
+        py::class_<Baker, BakerRcPtr /* holder */>(
+            m, "Baker",
+            DOC(Baker));
+
+    auto clsFormatIterator = 
+        py::class_<FormatIterator>(
+            clsBaker, "FormatIterator");
+
+    clsBaker
+        .def(py::init(&Baker::Create), 
+             DOC(Baker, Create))
         .def(py::init([](const ConfigRcPtr & config,
                          const std::string & format,
                          const std::string & inputSpace,
@@ -55,32 +65,50 @@ void bindPyBaker(py::module & m)
              "looks"_a = DEFAULT->getLooks(),
              "cubeSize"_a = DEFAULT->getCubeSize(),
              "shaperSpace"_a = DEFAULT->getShaperSpace(),
-             "shaperSize"_a = DEFAULT->getShaperSize())
+             "shaperSize"_a = DEFAULT->getShaperSize(),
+             DOC(Baker, Create))
 
-        .def_static("getFormats", []() { return FormatIterator(nullptr); })
+        .def_static("getFormats", []()
+            { 
+                return FormatIterator(nullptr); 
+            })
 
-        .def("getConfig", &Baker::getConfig)
-        .def("setConfig", &Baker::setConfig, "config"_a)
-        .def("getFormat", &Baker::getFormat)
-        .def("setFormat", &Baker::setFormat, "formatName"_a)
-        .def("getFormatMetadata", 
-             (const FormatMetadata & (Baker::*)() const) &Baker::getFormatMetadata, 
-             py::return_value_policy::reference_internal)
+        .def("getConfig", &Baker::getConfig, 
+             DOC(Baker, getConfig))
+        .def("setConfig", &Baker::setConfig, "config"_a, 
+             DOC(Baker, setConfig))
+        .def("getFormat", &Baker::getFormat, 
+             DOC(Baker, getFormat))
+        .def("setFormat", &Baker::setFormat, "formatName"_a, 
+             DOC(Baker, setFormat))
         .def("getFormatMetadata", 
              (FormatMetadata & (Baker::*)()) &Baker::getFormatMetadata, 
-             py::return_value_policy::reference_internal)
-        .def("getInputSpace", &Baker::getInputSpace)
-        .def("setInputSpace", &Baker::setInputSpace, "inputSpace"_a)
-        .def("getShaperSpace", &Baker::getShaperSpace)
-        .def("setShaperSpace", &Baker::setShaperSpace, "shaperSpace"_a)
-        .def("getLooks", &Baker::getLooks)
-        .def("setLooks", &Baker::setLooks, "looks"_a)
-        .def("getTargetSpace", &Baker::getTargetSpace)
-        .def("setTargetSpace", &Baker::setTargetSpace, "targetSpace"_a)
-        .def("getShaperSize", &Baker::getShaperSize)
-        .def("setShaperSize", &Baker::setShaperSize, "shaperSize"_a)
-        .def("getCubeSize", &Baker::getCubeSize)
-        .def("setCubeSize", &Baker::setCubeSize, "cubeSize"_a)
+             py::return_value_policy::reference_internal,
+             DOC(Baker, getFormatMetadata))
+        .def("getInputSpace", &Baker::getInputSpace, 
+             DOC(Baker, getInputSpace))
+        .def("setInputSpace", &Baker::setInputSpace, "inputSpace"_a, 
+             DOC(Baker, setInputSpace))
+        .def("getShaperSpace", &Baker::getShaperSpace, 
+             DOC(Baker, getShaperSpace))
+        .def("setShaperSpace", &Baker::setShaperSpace, "shaperSpace"_a, 
+             DOC(Baker, setShaperSpace))
+        .def("getLooks", &Baker::getLooks, 
+             DOC(Baker, getLooks))
+        .def("setLooks", &Baker::setLooks, "looks"_a, 
+             DOC(Baker, setLooks))
+        .def("getTargetSpace", &Baker::getTargetSpace, 
+             DOC(Baker, getTargetSpace))
+        .def("setTargetSpace", &Baker::setTargetSpace, "targetSpace"_a, 
+             DOC(Baker, setTargetSpace))
+        .def("getShaperSize", &Baker::getShaperSize, 
+             DOC(Baker, getShaperSize))
+        .def("setShaperSize", &Baker::setShaperSize, "shaperSize"_a, 
+             DOC(Baker, setShaperSize))
+        .def("getCubeSize", &Baker::getCubeSize, 
+             DOC(Baker, getCubeSize))
+        .def("setCubeSize", &Baker::setCubeSize, "cubeSize"_a, 
+             DOC(Baker, setCubeSize))
         .def("bake", [](BakerRcPtr & self, const std::string & fileName) 
             {
                 std::ofstream f(fileName.c_str());
@@ -93,9 +121,10 @@ void bindPyBaker(py::module & m)
                 std::ostringstream os;
                 self->bake(os);
                 return os.str();
-            });
+            },
+            DOC(Baker, bake));
 
-    py::class_<FormatIterator>(cls, "FormatIterator")
+    clsFormatIterator
         .def("__len__", [](FormatIterator & it) { return Baker::getNumFormats(); })
         .def("__getitem__", [](FormatIterator & it, int i) 
             { 
@@ -103,7 +132,10 @@ void bindPyBaker(py::module & m)
                 return py::make_tuple(Baker::getFormatNameByIndex(i), 
                                       Baker::getFormatExtensionByIndex(i));
             })
-        .def("__iter__", [](FormatIterator & it) -> FormatIterator & { return it; })
+        .def("__iter__", [](FormatIterator & it) -> FormatIterator & 
+            { 
+                return it; 
+            })
         .def("__next__", [](FormatIterator & it)
             {
                 int i = it.nextIndex(Baker::getNumFormats());

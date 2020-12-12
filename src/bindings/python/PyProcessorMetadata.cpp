@@ -25,15 +25,37 @@ using LookIterator = PyIterator<ProcessorMetadataRcPtr, IT_LOOK>;
 
 void bindPyProcessorMetadata(py::module & m)
 {
-    auto cls = py::class_<ProcessorMetadata, ProcessorMetadataRcPtr /* holder */>(m, "ProcessorMetadata")
-        .def(py::init(&ProcessorMetadata::Create))
+    auto clsProcessorMetadata = 
+        py::class_<ProcessorMetadata, ProcessorMetadataRcPtr /* holder */>(
+            m, "ProcessorMetadata",
+            DOC(ProcessorMetadata));
 
-        .def("getFiles", [](ProcessorMetadataRcPtr & self) { return FileIterator(self); })
-        .def("getLooks", [](ProcessorMetadataRcPtr & self) { return LookIterator(self); })
-        .def("addFile", &ProcessorMetadata::addFile, "fileName"_a)
-        .def("addLook", &ProcessorMetadata::addLook, "look"_a);
+    auto clsFileIterator =
+        py::class_<FileIterator>(
+            clsProcessorMetadata, "FileIterator");
 
-    py::class_<FileIterator>(cls, "FileIterator")
+    auto clsLookIterator =
+        py::class_<LookIterator>(
+            clsProcessorMetadata, "LookIterator");
+
+    clsProcessorMetadata
+        .def(py::init(&ProcessorMetadata::Create),
+             DOC(ProcessorMetadata, Create))
+
+        .def("getFiles", [](ProcessorMetadataRcPtr & self) 
+            { 
+                return FileIterator(self); 
+            })
+        .def("getLooks", [](ProcessorMetadataRcPtr & self) 
+            { 
+                return LookIterator(self); 
+            })
+        .def("addFile", &ProcessorMetadata::addFile, "fileName"_a,
+             DOC(ProcessorMetadata, addFile))
+        .def("addLook", &ProcessorMetadata::addLook, "look"_a,
+             DOC(ProcessorMetadata, addLook));
+
+    clsFileIterator
         .def("__len__", [](FileIterator & it) { return it.m_obj->getNumFiles(); })
         .def("__getitem__", [](FileIterator & it, int i) 
             { 
@@ -47,7 +69,7 @@ void bindPyProcessorMetadata(py::module & m)
                 return it.m_obj->getFile(i);
             });
 
-    py::class_<LookIterator>(cls, "LookIterator")
+    clsLookIterator
         .def("__len__", [](LookIterator & it) { return it.m_obj->getNumLooks(); })
         .def("__getitem__", [](LookIterator & it, int i) 
             { 

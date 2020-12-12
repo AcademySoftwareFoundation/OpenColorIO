@@ -8,18 +8,27 @@ namespace OCIO_NAMESPACE
 
 void bindPyGPUProcessor(py::module & m)
 {
-    py::class_<GPUProcessor, GPUProcessorRcPtr /* holder */>(m, "GPUProcessor")
-        .def("isNoOp", &GPUProcessor::isNoOp)
-        .def("hasChannelCrosstalk", &GPUProcessor::hasChannelCrosstalk)
-        .def("getCacheID", &GPUProcessor::getCacheID)
+    auto clsGPUProcessor = 
+        py::class_<GPUProcessor, GPUProcessorRcPtr /* holder */>(
+            m, "GPUProcessor", 
+            DOC(GPUProcessor))
+
+        .def("isNoOp", &GPUProcessor::isNoOp, 
+             DOC(GPUProcessor, isNoOp))
+        .def("hasChannelCrosstalk", &GPUProcessor::hasChannelCrosstalk, 
+             DOC(GPUProcessor, hasChannelCrosstalk))
+        .def("getCacheID", &GPUProcessor::getCacheID, 
+             DOC(GPUProcessor, getCacheID))
         .def("extractGpuShaderInfo", 
              (void (GPUProcessor::*)(GpuShaderDescRcPtr &) const) 
              &GPUProcessor::extractGpuShaderInfo,
-             "shaderDesc"_a)
+             "shaderDesc"_a, 
+             DOC(GPUProcessor, extractGpuShaderInfo))
         .def("extractGpuShaderInfo", 
              (void (GPUProcessor::*)(GpuShaderCreatorRcPtr &) const) 
              &GPUProcessor::extractGpuShaderInfo,
-             "shaderCreator"_a);
+             "shaderCreator"_a, 
+             DOC(GPUProcessor, extractGpuShaderInfo, 2));
 }
 
 } // namespace OCIO_NAMESPACE

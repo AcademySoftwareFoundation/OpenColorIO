@@ -1143,14 +1143,14 @@ extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const Config&);
 //   in the list. The position in the list prioritizes it with respect to the other rules.
 //   StrictParsing is not used. If no color space is found in the path, the rule will not
 //   match and the next rule will be considered.
-//   See :cpp:func:`FileRules::insertPathSearchRule`.
+//   \see FileRules::insertPathSearchRule.
 //   It has the key:
 //
 //   * name: Must be "ColorSpaceNamePathSearch".
 //
 // - Default Rule: The file_rules must always end with this rule. If no prior rules match,
 //   this rule specifies the color space applications will use.
-//   See :cpp:func:`FileRules::setDefaultRuleColorSpace`.
+//   \see FileRules::setDefaultRuleColorSpace.
 //   It has the keys:
 //
 //   * name: must be "Default".
@@ -1169,6 +1169,12 @@ extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const Config&);
 class OCIOEXPORT FileRules
 {
 public:
+
+    /// Reserved rule name for the default rule.
+    static const char * DefaultRuleName;
+    /// Reserved rule name for the file path search rule \see FileRules::insertPathSearchRule.
+    static const char * FilePathSearchRuleName;
+
     /**
      * Creates FileRules for a Config. File rules will contain the default rule
      * using the default role. The default rule cannot be removed.
@@ -1727,6 +1733,9 @@ private:
     const Impl * getImpl() const { return m_impl; }
 };
 
+/** \defgroup ColorSpaceSetOperators
+ *  @{
+ */
 
 /**
  * \brief Perform the union of two sets.
@@ -1765,7 +1774,7 @@ extern OCIOEXPORT ConstColorSpaceSetRcPtr operator&&(const ConstColorSpaceSetRcP
 extern OCIOEXPORT ConstColorSpaceSetRcPtr operator-(const ConstColorSpaceSetRcPtr & lcss,
                                                     const ConstColorSpaceSetRcPtr & rcss);
 
-
+/** @}*/
 
 
 //
