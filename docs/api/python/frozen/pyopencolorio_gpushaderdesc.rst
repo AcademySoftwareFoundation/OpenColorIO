@@ -70,7 +70,6 @@
 
       Create the OCIO shader program.
 
-
       .. note::
 
 
