@@ -3868,14 +3868,37 @@ inline void load(const YAML::Node & node, FileRulesRcPtr & fr, bool & defaultRul
     try
     {
         const auto pos = fr->getNumEntries() - 1;
-        if (0==Platform::Strcasecmp(name.c_str(), FileRuleUtils::DefaultName))
+        if (0==Platform::Strcasecmp(name.c_str(), FileRules::DefaultRuleName))
         {
             if (!regex.empty() || !pattern.empty() || !extension.empty())
             {
-                throw Exception("'Default' rule can't use pattern, extension or regex.");
+                std::ostringstream oss;
+                oss << "'" << FileRules::DefaultRuleName << "' "
+                    << "rule can't use pattern, extension or regex.";
+                throw Exception(oss.str().c_str());
             }
+
+            if (colorspace.empty())
+            {
+                std::ostringstream oss;
+                oss << "'" << FileRules::DefaultRuleName << "' "
+                    << "rule cannot have an empty color space name.";
+                throw Exception(oss.str().c_str());
+            }
+
             defaultRuleFound = true;
             fr->setColorSpace(pos, colorspace.c_str());
+        }
+        else if (0==Platform::Strcasecmp(name.c_str(), FileRules::FilePathSearchRuleName))
+        {
+            if (!regex.empty() || !pattern.empty() || !extension.empty())
+            {
+                std::ostringstream oss;
+                oss << "'" << FileRules::FilePathSearchRuleName << "' "
+                    << "rule can't use pattern, extension or regex.";
+                throw Exception(oss.str().c_str());
+            }
+            fr->insertPathSearchRule(pos);
         }
         else
         {
@@ -3884,6 +3907,13 @@ inline void load(const YAML::Node & node, FileRulesRcPtr & fr, bool & defaultRul
                 std::ostringstream oss;
                 oss << "File rule '" << name << "' can't use regex '" << regex << "' and "
                     << "pattern & extension '" << pattern << "' '" << extension << "'.";
+                throw Exception(oss.str().c_str());
+            }
+            
+            if (colorspace.empty())
+            {
+                std::ostringstream oss;
+                oss << "File rule '" << name << "' cannot have an empty color space name.";
                 throw Exception(oss.str().c_str());
             }
 
