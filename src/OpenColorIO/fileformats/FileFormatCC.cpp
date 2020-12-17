@@ -4,8 +4,12 @@
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "fileformats/cdl/CDLParser.h"
+#include "fileformats/cdl/CDLWriter.h"
+#include "fileformats/xmlutils/XMLReaderUtils.h"
+#include "fileformats/xmlutils/XMLWriterUtils.h"
 #include "transforms/FileTransform.h"
 #include "OpBuilders.h"
+#include "ParseUtils.h"
 
 namespace OCIO_NAMESPACE
 {
@@ -17,12 +21,19 @@ class LocalCachedFile : public CachedFile
 public:
     LocalCachedFile ()
     {
-        transform = CDLTransform::Create();
+        m_transform = CDLTransformImpl::Create();
     };
 
     ~LocalCachedFile() = default;
 
-    CDLTransformRcPtr transform;
+    GroupTransformRcPtr getCDLGroup() const override
+    {
+        auto group = GroupTransform::Create();
+        group->appendTransform(m_transform);
+        return group;
+    }
+
+    CDLTransformImplRcPtr m_transform;
 };
 
 typedef OCIO_SHARED_PTR<LocalCachedFile> LocalCachedFileRcPtr;
@@ -41,6 +52,12 @@ public:
                          const std::string & fileName,
                          Interpolation interp) const override;
 
+    void write(const ConstConfigRcPtr & config,
+               const ConstContextRcPtr & context,
+               const GroupTransform & group,
+               const std::string & formatName,
+               std::ostream & ostream) const override;
+
     void buildFileOps(OpRcPtrVec & ops,
                       const Config & config,
                       const ConstContextRcPtr & context,
@@ -52,9 +69,9 @@ public:
 void LocalFileFormat::getFormatInfo(FormatInfoVec & formatInfoVec) const
 {
     FormatInfo info;
-    info.name = "ColorCorrection";
+    info.name = FILEFORMAT_COLOR_CORRECTION;
     info.extension = "cc";
-    info.capabilities = FORMAT_CAPABILITY_READ;
+    info.capabilities = FORMAT_CAPABILITY_READ | FORMAT_CAPABILITY_WRITE;
     formatInfoVec.push_back(info);
 }
 
@@ -67,11 +84,11 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
 {
     LocalCachedFileRcPtr cachedFile = LocalCachedFileRcPtr(new LocalCachedFile());
     
+    CDLParser parser(fileName);
     try
     {
-        CDLParser parser(fileName);
         parser.parse(istream);
-        parser.getCDLTransform(cachedFile->transform);
+        parser.getCDLTransform(cachedFile->m_transform);
     }
     catch(Exception & e)
     {
@@ -81,8 +98,34 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
         os << e.what();
         throw Exception(os.str().c_str());
     }
+    if (!parser.isCC())
+    {
+        std::ostringstream os;
+        os << "File '" << fileName << "' is not a .cc file.";
+        throw Exception(os.str().c_str());
+    }
 
     return cachedFile;
+}
+
+void LocalFileFormat::write(const ConstConfigRcPtr & /*config*/,
+                            const ConstContextRcPtr & /*context*/,
+                            const GroupTransform & group,
+                            const std::string & formatName,
+                            std::ostream & ostream) const
+{
+    if (group.getNumTransforms() != 1)
+    {
+        throw Exception("CDL write: there should be a single CDL.");
+    }
+    auto cdl = OCIO_DYNAMIC_POINTER_CAST<const CDLTransform>(group.getTransform(0));
+    if (!cdl)
+    {
+        throw Exception("CDL write: only CDL can be written.");
+    }
+
+    XmlFormatter fmt(ostream);
+    Write(fmt, cdl);
 }
 
 void
@@ -105,7 +148,7 @@ LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
 
     const auto newDir = CombineTransformDirections(dir, fileTransform.getDirection());
 
-    auto cdl = cachedFile->transform;
+    CDLTransformRcPtr cdl = cachedFile->m_transform;
     const auto fileCDLStyle = fileTransform.getCDLStyle();
     if (fileCDLStyle != CDL_TRANSFORM_DEFAULT)
     {

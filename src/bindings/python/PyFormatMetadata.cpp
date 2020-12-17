@@ -74,7 +74,7 @@ void bindPyFormatMetadata(py::module & m)
                 os << " '" << name << "'";
                 throw py::key_error(os.str());
             },
-             "name"_a, 
+             "name"_a.none(false), 
              DOC(FormatMetadata, getAttributeValue))
         .def("__setitem__", &FormatMetadata::addAttribute, "name"_a.none(false), "value"_a.none(false), 
              DOC(FormatMetadata, addAttribute))
@@ -90,7 +90,7 @@ void bindPyFormatMetadata(py::module & m)
                 }
                 return false;
             },
-             "name"_a)
+             "name"_a.none(false))
         .def("__repr__", [](const FormatMetadata & self)
             {
                 std::ostringstream oss;
@@ -98,14 +98,14 @@ void bindPyFormatMetadata(py::module & m)
                 return oss.str();
             })
 
-        .def("getName", &FormatMetadata::getName, 
-             DOC(FormatMetadata, getName))
-        .def("setName", &FormatMetadata::setName, "name"_a.none(false), 
-             DOC(FormatMetadata, setName))
-        .def("getValue", &FormatMetadata::getValue, 
-             DOC(FormatMetadata, getValue))
-        .def("setValue", &FormatMetadata::setValue, "value"_a.none(false), 
-             DOC(FormatMetadata, setValue))
+        .def("getElementName", &FormatMetadata::getElementName, 
+             DOC(FormatMetadata, getElementName))
+        .def("setElementName", &FormatMetadata::setElementName, "name"_a.none(false), 
+             DOC(FormatMetadata, setElementName))
+        .def("getElementValue", &FormatMetadata::getElementValue, 
+             DOC(FormatMetadata, getElementValue))
+        .def("setElementValue", &FormatMetadata::setElementValue, "value"_a.none(false), 
+             DOC(FormatMetadata, setElementValue))
         .def("getAttributes", [](const FormatMetadata & self) 
             { 
                 return AttributeIterator(self); 
@@ -117,6 +117,14 @@ void bindPyFormatMetadata(py::module & m)
         .def("addChildElement", &FormatMetadata::addChildElement, 
              "name"_a.none(false), "value"_a.none(false), 
              DOC(FormatMetadata, addChildElement))
+        .def("getName", &FormatMetadata::getName,
+             DOC(FormatMetadata, getName))
+        .def("setName", &FormatMetadata::setName, "name"_a.none(false),
+             DOC(FormatMetadata, setName))
+        .def("getID", &FormatMetadata::getID,
+             DOC(FormatMetadata, getID))
+        .def("setID", &FormatMetadata::setID, "id"_a.none(false),
+             DOC(FormatMetadata, setID))
         .def("clear", &FormatMetadata::clear, 
              DOC(FormatMetadata, clear));
 

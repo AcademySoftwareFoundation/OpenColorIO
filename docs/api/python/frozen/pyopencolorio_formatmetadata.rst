@@ -8,12 +8,11 @@
 
    The :ref:`FormatMetadata` class is intended to be a generic container to hold metadata from various file formats.
 
-   This class provides a hierarchical metadata container. A metadata object is similar to an element in XML. It contains:
-
-   - A name string (e.g. "Description").
-   - A value string (e.g. "updated viewing LUT").
-   - A list of attributes (name, value) string pairs (e.g. "version", "1.5").
-   - And a list of child sub-elements, which are also objects implementing :ref:`FormatMetadata`.
+   This class provides a hierarchical metadata container. A metadata object is similar to an element in XML. The top level element is named "ROOT" and can't be renamed. Several transforms have a :ref:`FormatMetadata`. The root element and all of the sub-elements may contain:
+   - A name string (e.g. "ROOT", "Description"...). Name can't be empty.
+   - A value string (e.g. "updated viewing LUT"). Value can be empty.
+   - A list of attributes (name, value) string pairs (e.g. "version", "1.5"). There are helper functions to get and set "id" and "name" attributes. Attribute names are unique.
+   - And a list of child sub-elements, which are also objects implementing :ref:`FormatMetadata`. There can be several sub-elements with the same name.
 
 
    .. py:method:: FormatMetadata.__contains__(self: PyOpenColorIO.FormatMetadata, name: str) -> bool
@@ -22,6 +21,8 @@
 
    .. py:method:: FormatMetadata.__getitem__(self: PyOpenColorIO.FormatMetadata, name: str) -> str
       :module: PyOpenColorIO
+
+      Get the value of a attribute ("" if attribute does not exist).
 
 
    .. py:method:: FormatMetadata.__init__(*args, **kwargs)
@@ -41,17 +42,21 @@
    .. py:method:: FormatMetadata.__setitem__(self: PyOpenColorIO.FormatMetadata, name: str, value: str) -> None
       :module: PyOpenColorIO
 
-      Add an attribute with a given name and value. If an attribute with the same name already exists, the value is replaced.
+      Add an attribute with a given name and value. If an attribute with the same name already exists, its value is replaced. Throw if name is NULL or empty.
 
 
    .. py:method:: FormatMetadata.addChildElement(self: PyOpenColorIO.FormatMetadata, name: str, value: str) -> None
       :module: PyOpenColorIO
 
-      Add a child element after the last child with a given name and value. Name has to be non-empty. Value may be empty, particularly if this element will have children. Use getChildElement(getNumChildrenElements()-1) to access the added element.
+      Add a child element with a given name and value.
+
+      Name has to be non-empty. Value may be empty, particularly if this element will have children. Element is added after all existing children. Use getChildElement(getNumChildrenElements()-1) to access the added element.
 
 
    .. py:method:: FormatMetadata.clear(self: PyOpenColorIO.FormatMetadata) -> None
       :module: PyOpenColorIO
+
+      Remove all children, all attributes and the value.
 
 
    .. py:method:: FormatMetadata.getAttributes(self: PyOpenColorIO.FormatMetadata) -> PyOpenColorIO.FormatMetadata.AttributeIterator
@@ -62,19 +67,41 @@
       :module: PyOpenColorIO
 
 
-   .. py:method:: FormatMetadata.getName(self: PyOpenColorIO.FormatMetadata) -> str
+   .. py:method:: FormatMetadata.getElementName(self: PyOpenColorIO.FormatMetadata) -> str
       :module: PyOpenColorIO
 
 
-   .. py:method:: FormatMetadata.getValue(self: PyOpenColorIO.FormatMetadata) -> str
+   .. py:method:: FormatMetadata.getElementValue(self: PyOpenColorIO.FormatMetadata) -> str
+      :module: PyOpenColorIO
+
+
+   .. py:method:: FormatMetadata.getID(self: PyOpenColorIO.FormatMetadata) -> str
+      :module: PyOpenColorIO
+
+      Convenience method to easily get/set the 'id' attribute. This corresponds to the ProcessNode id attribute from a CLF/CTF file or the ColorCorrection id attribute from a CC/CCC/CDL file.
+
+
+   .. py:method:: FormatMetadata.getName(self: PyOpenColorIO.FormatMetadata) -> str
+      :module: PyOpenColorIO
+
+      Convenience method to easily get/set the 'name' attribute. This corresponds to the ProcessNode name attribute from a CLF / CTF file or the name key of a transform in the config YAML.
+
+
+   .. py:method:: FormatMetadata.setElementName(self: PyOpenColorIO.FormatMetadata, name: str) -> None
+      :module: PyOpenColorIO
+
+      Name has to be a non-empty string. Top-level element can't be renamed. 'ROOT' is reserved.
+
+
+   .. py:method:: FormatMetadata.setElementValue(self: PyOpenColorIO.FormatMetadata, value: str) -> None
+      :module: PyOpenColorIO
+
+
+   .. py:method:: FormatMetadata.setID(self: PyOpenColorIO.FormatMetadata, id: str) -> None
       :module: PyOpenColorIO
 
 
    .. py:method:: FormatMetadata.setName(self: PyOpenColorIO.FormatMetadata, name: str) -> None
-      :module: PyOpenColorIO
-
-
-   .. py:method:: FormatMetadata.setValue(self: PyOpenColorIO.FormatMetadata, value: str) -> None
       :module: PyOpenColorIO
 
 

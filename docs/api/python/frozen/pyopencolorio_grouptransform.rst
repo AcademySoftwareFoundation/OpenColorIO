@@ -7,6 +7,21 @@
    :module: PyOpenColorIO
 
 
+   .. py:method:: GroupTransform.GetWriteFormats() -> OpenColorIO_v2_0beta2::PyIterator<std::shared_ptr<OpenColorIO_v2_0beta2::GroupTransform>,1>
+      :module: PyOpenColorIO
+      :staticmethod:
+
+
+   .. py:class:: GroupTransform.WriteFormatIterator
+      :module: PyOpenColorIO
+
+
+      .. py:method:: GroupTransform.WriteFormatIterator.__init__(*args, **kwargs)
+         :module: PyOpenColorIO
+
+         Initialize self.  See help(type(self)) for accurate signature.
+
+
    .. py:method:: GroupTransform.__init__(*args, **kwargs)
       :module: PyOpenColorIO
 
@@ -55,6 +70,44 @@
       :module: PyOpenColorIO
 
       Will throw if data is not valid.
+
+
+   .. py:method:: GroupTransform.write(*args, **kwargs)
+      :module: PyOpenColorIO
+
+      Overloaded function.
+
+      1. write(self: PyOpenColorIO.GroupTransform, config: OpenColorIO_v2_0beta2::Config, context: OpenColorIO_v2_0beta2::Context, formatName: str, fileName: str) -> None
+
+      Write the transforms comprising the group to the stream.
+
+      Writing (as opposed to Baking) is a lossless process. An exception is thrown if the processor cannot be losslessly written to the specified file format. Transforms such as :ref:`FileTransform` or :ref:`ColorSpaceTransform` are resolved into write-able simple transforms using the config and context. Supported formats include CTF, CLF, and CDL. All available formats can be listed with the following: .. code-block:: cpp
+
+          // What are the allowed writing output formats?
+          std::ostringstream formats;
+          formats << "Formats to write to: ";
+          for (int i = 0; i < GroupTransform::GetNumWriteFormats(); ++i)
+          {
+             if (i != 0) formats << ", ";
+             formats << GroupTransform::GetFormatNameByIndex(i);
+             formats << " (." << GroupTransform::GetFormatExtensionByIndex(i) << ")";
+          }
+
+      2. write(self: PyOpenColorIO.GroupTransform, config: OpenColorIO_v2_0beta2::Config, context: OpenColorIO_v2_0beta2::Context, formatName: str) -> str
+
+      Write the transforms comprising the group to the stream.
+
+      Writing (as opposed to Baking) is a lossless process. An exception is thrown if the processor cannot be losslessly written to the specified file format. Transforms such as :ref:`FileTransform` or :ref:`ColorSpaceTransform` are resolved into write-able simple transforms using the config and context. Supported formats include CTF, CLF, and CDL. All available formats can be listed with the following: .. code-block:: cpp
+
+          // What are the allowed writing output formats?
+          std::ostringstream formats;
+          formats << "Formats to write to: ";
+          for (int i = 0; i < GroupTransform::GetNumWriteFormats(); ++i)
+          {
+             if (i != 0) formats << ", ";
+             formats << GroupTransform::GetFormatNameByIndex(i);
+             formats << " (." << GroupTransform::GetFormatExtensionByIndex(i) << ")";
+          }
 
 
 .. py:class:: TransformIterator

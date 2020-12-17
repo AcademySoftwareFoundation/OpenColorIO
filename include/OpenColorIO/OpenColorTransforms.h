@@ -27,38 +27,44 @@ namespace OCIO_NAMESPACE
 
 
 /**
- * The FormatMetadata class is intended to be a generic
- * container to hold metadata from various file formats.
+ * The FormatMetadata class is intended to be a generic container to hold metadata from various
+ * file formats.
  *
- * This class provides a hierarchical metadata container.
- * A metadata object is similar to an element in XML.
- * It contains:
- *
- * * A name string (e.g. "Description").
- * * A value string (e.g. "updated viewing LUT").
- * * A list of attributes (name, value) string pairs (e.g. "version", "1.5").
- * * And a list of child sub-elements, which are also objects implementing
- *   FormatMetadata.
+ * This class provides a hierarchical metadata container. A metadata object is similar to an
+ * element in XML. The top level element is named "ROOT" and can't be renamed. Several transforms
+ * have a FormatMetadata.
+ * The root element and all of the sub-elements may contain:
+ * * A name string (e.g. "ROOT", "Description"...). Name can't be empty.
+ * * A value string (e.g. "updated viewing LUT"). Value can be empty.
+ * * A list of attributes (name, value) string pairs (e.g. "version", "1.5"). There are helper
+ *   functions to get and set "id" and "name" attributes. Attribute names are unique.
+ * * And a list of child sub-elements, which are also objects implementing FormatMetadata. There
+ *   can be several sub-elements with the same name.
  */
 class OCIOEXPORT FormatMetadata
 {
 public:
-    virtual const char * getName() const = 0;
-    virtual void setName(const char *) = 0;
+    virtual const char * getElementName() const noexcept = 0;
+    /// Name has to be a non-empty string. Top-level element can't be renamed. 'ROOT' is reserved.
+    virtual void setElementName(const char *) = 0;
 
-    virtual const char * getValue() const = 0;
-    virtual void setValue(const char *) = 0;
+    virtual const char * getElementValue() const noexcept = 0;
+    virtual void setElementValue(const char *) = 0;
 
-    virtual int getNumAttributes() const = 0;
-    virtual const char * getAttributeName(int i) const = 0;
-    virtual const char * getAttributeValue(int i) const = 0;
+    virtual int getNumAttributes() const noexcept = 0;
+    /// Get the name of a attribute ("" if attribute does not exist).
+    virtual const char * getAttributeName(int i) const noexcept = 0;
+    /// Get the value of a attribute ("" if attribute does not exist).
+    virtual const char * getAttributeValue(int i) const noexcept = 0;
+    /// Get the value of a attribute of a given name ("" if attribute does not exist).
+    virtual const char * getAttributeValue(const char * name) const noexcept = 0;
     /**
-     * Add an attribute with a given name and value. If an
-     * attribute with the same name already exists, the value is replaced.
+     * Add an attribute with a given name and value. If an attribute with the same name already
+     * exists, its value is replaced. Throw if name is NULL or empty.
      */
     virtual void addAttribute(const char * name, const char * value) = 0;
 
-    virtual int getNumChildrenElements() const = 0;
+    virtual int getNumChildrenElements() const noexcept = 0;
     /**
      * Access a child element.
      *
@@ -72,14 +78,33 @@ public:
     virtual FormatMetadata & getChildElement(int i) = 0;
 
     /**
-     * Add a child element after the last child with a given name and value. Name has to be
-     * non-empty. Value may be empty, particularly if this element will have children.
-     * Use getChildElement(getNumChildrenElements()-1) to access the added element.
+     * Add a child element with a given name and value.
+     *
+     * Name has to be non-empty. Value may be empty, particularly if this element will have
+     * children. Element is added after all existing children. Use
+     * getChildElement(getNumChildrenElements()-1) to access the added element.
      */
     virtual void addChildElement(const char * name, const char * value) = 0;
 
-    virtual void clear() = 0;
+    /// Remove all children, all attributes and the value.
+    virtual void clear() noexcept = 0;
+
     virtual FormatMetadata & operator=(const FormatMetadata & rhs) = 0;
+
+    /**
+     * Convenience method to easily get/set the 'name' attribute.  This corresponds to the
+     * ProcessNode name attribute from a CLF / CTF file or the name key of a transform in the
+     * config YAML.
+     */
+    virtual const char * getName() const noexcept = 0;
+    virtual void setName(const char * name) noexcept = 0;
+    /**
+     * Convenience method to easily get/set the 'id' attribute.  This corresponds to the
+     * ProcessNode id attribute from a CLF/CTF file or the ColorCorrection id attribute from a
+     * CC/CCC/CDL file.
+     */
+    virtual const char * getID() const noexcept = 0;
+    virtual void setID(const char * id) noexcept = 0;
 
     FormatMetadata(const FormatMetadata & rhs) = delete;
     /// Do not use (needed only for pybind11).
@@ -99,10 +124,7 @@ public:
     virtual TransformRcPtr createEditableCopy() const = 0;
 
     virtual TransformDirection getDirection() const noexcept = 0;
-    /**
-     * Note that this only affects the evaluation and not the values
-     * stored in the object.
-     */
+    /// Note that this only affects the evaluation and not the values stored in the object.
     virtual void setDirection(TransformDirection dir) noexcept = 0;
 
     virtual TransformType getTransformType() const noexcept = 0;
@@ -219,12 +241,25 @@ public:
     static CDLTransformRcPtr Create();
 
     /**
-     * Load the CDL from the src .cc or .ccc file.
-     * If a .ccc is used, the cccid must also be specified
-     * src must be an absolute path reference, no relative directory
-     * or envvar resolution is performed.
+     * \brief Load the CDL from the src .cdl, .cc, or .ccc file.
+     *
+     * \note
+     *    The cccid can be the ID of a CDL or the index of the CDL (as string). If cccid is NULL or
+     *    empty the first CDL is returned.  The cccid is case-sensitive. The src must be an
+     *    absolute path reference, no relative directory or envvar resolution is performed. Throws
+     *    if file does not contain any CDL or if the specified cccid is not found.
      */
     static CDLTransformRcPtr CreateFromFile(const char * src, const char * cccid);
+    
+    /**
+     * \brief Load all of the CDLs in a .cdl or .ccc file into a single GroupTransform.
+     *
+     * \note
+     *    This may be useful as a quicker way for applications to check the contents of each of
+     *    the CDLs. The src must be an absolute path reference, no relative directory or envvar
+     *    resolution is performed.
+     */
+    static GroupTransformRcPtr CreateGroupFromFile(const char * src);
 
     TransformType getTransformType() const noexcept override { return TRANSFORM_TYPE_CDL; }
 
@@ -241,10 +276,6 @@ public:
      * The default style is CDL_NO_CLAMP.
      */
     virtual void setStyle(CDLStyle style) = 0;
-
-    virtual const char * getXML() const = 0;
-    /// The default style is CDL_NO_CLAMP.
-    virtual void setXML(const char * xml) = 0;
 
     // TODO: Move to .rst
     // !rst:: **ASC_SOP**
@@ -271,26 +302,22 @@ public:
     /// These are hard-coded, by spec, to r709.
     virtual void getSatLumaCoefs(double * rgb) const = 0;
 
-    // TODO: Move to .rst
-    //!rst:: **Metadata**
-    //
-    // These do not affect the image processing, but
-    // are often useful for pipeline purposes and are
-    // included in the serialization.
-
-    /// Unique Identifier for this correction.
+    /**
+     * The get/setID methods are now deprecated. The preferred way of interacting with the ID is
+     * now via the transform's formatMetadata.
+     */
     virtual const char * getID() const = 0;
     virtual void setID(const char * id) = 0;
 
-    /**
-     * Deprecated. Use `getFormatMetadata`.
-     * First textual description of color correction (stored
-     * on the SOP). If there is already a description, the setter will
-     * replace it with the supplied text.
+    /* Get/Set the first Description element under the SOPNode.
+     * Note: These emulate the get/setDescription methods from OCIO v1.
+     *
+     * Use the FormatMetadata interface for access to other Description elements in the CDL.
+     * The Description children of the SOPNode element in the CDL XML are named 'SOPDescription'
+     * in the FormatMetadata. NULL or empty string removes the first SOPDescription element.
      */
-    virtual const char * getDescription() const = 0;
-    /// Deprecated. Use `getFormatMetadata`.
-    virtual void setDescription(const char * desc) = 0;
+    virtual const char * getFirstSOPDescription() const = 0;
+    virtual void setFirstSOPDescription(const char * description) = 0;
 
     CDLTransform(const CDLTransform &) = delete;
     CDLTransform & operator= (const CDLTransform &) = delete;
@@ -1002,6 +1029,10 @@ public:
     const char * getSrc() const;
     void setSrc(const char * src);
 
+    /**
+     * The cccid can be the ID of a CDL or the index of the CDL (as string). If cccid is NULL or
+     * empty the first CDL is returned.  The cccid is case-sensitive.
+     */
     const char * getCCCId() const;
     void setCCCId(const char * id);
 
@@ -1277,43 +1308,61 @@ class OCIOEXPORT GroupTransform : public Transform
 public:
     static GroupTransformRcPtr Create();
 
-    TransformRcPtr createEditableCopy() const override;
+    virtual const FormatMetadata & getFormatMetadata() const noexcept = 0;
+    virtual FormatMetadata & getFormatMetadata() noexcept = 0;
 
-    TransformDirection getDirection() const noexcept override;
-    void setDirection(TransformDirection dir) noexcept override;
+    /// Throws if index is not allowed.
+    virtual ConstTransformRcPtr getTransform(int index) const = 0;
 
-    TransformType getTransformType() const noexcept override { return TRANSFORM_TYPE_GROUP; }
+    /// Throws if index is not allowed.
+    virtual TransformRcPtr & getTransform(int index) = 0;
 
-    /// Will throw if data is not valid.
-    void validate() const override;
-
-    virtual const FormatMetadata & getFormatMetadata() const noexcept;
-    virtual FormatMetadata & getFormatMetadata() noexcept;
-
-    ConstTransformRcPtr getTransform(int index) const;
-
-    TransformRcPtr & getTransform(int index);
-
-    int getNumTransforms() const;
+    /// Return number of transforms.
+    virtual int getNumTransforms() const noexcept = 0;
     /// Adds a transform to the end of the group.
-    void appendTransform(TransformRcPtr transform);
+    virtual void appendTransform(TransformRcPtr transform) noexcept = 0;
     /// Add a transform at the beginning of the group.
-    void prependTransform(TransformRcPtr transform);
+    virtual void prependTransform(TransformRcPtr transform) noexcept = 0;
 
+    /**
+     * \brief Write the transforms comprising the group to the stream.
+     *
+     * Writing (as opposed to Baking) is a lossless process. An exception is thrown if the
+     * processor cannot be losslessly written to the specified file format. Transforms such as
+     * FileTransform or ColorSpaceTransform are resolved into write-able simple transforms using
+     * the config and context.  Supported formats include CTF, CLF, and CDL. All available formats
+     * can be listed with the following:
+     * @code
+     * // What are the allowed writing output formats?
+     * std::ostringstream formats;
+     * formats << "Formats to write to: ";
+     * for (int i = 0; i < GroupTransform::GetNumWriteFormats(); ++i)
+     * {
+     *    if (i != 0) formats << ", ";
+     *    formats << GroupTransform::GetFormatNameByIndex(i);
+     *    formats << " (." << GroupTransform::GetFormatExtensionByIndex(i) << ")";
+     * }
+     * @endcode
+     */
+    virtual void write(const ConstConfigRcPtr & config,
+                       const ConstContextRcPtr & context,
+                       const char * formatName,
+                       std::ostream & os) const = 0;
+
+    /// Get the number of writers.
+    static int GetNumWriteFormats() noexcept;
+
+    /// Get the writer at index, return empty string if an invalid index is specified.
+    static const char * GetFormatNameByIndex(int index) noexcept;
+    static const char * GetFormatExtensionByIndex(int index) noexcept;
+
+    GroupTransform(const GroupTransform &) = delete;
     GroupTransform & operator=(const GroupTransform &) = delete;
     /// Do not use (needed only for pybind11).
-    virtual ~GroupTransform();
+    virtual ~GroupTransform() = default;
 
-private:
-    GroupTransform();
-    GroupTransform(const GroupTransform &);
-
-    static void deleter(GroupTransform * t);
-
-    class Impl;
-    Impl * m_impl;
-    Impl * getImpl() { return m_impl; }
-    const Impl * getImpl() const { return m_impl; }
+protected:
+    GroupTransform() = default;
 };
 
 extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const GroupTransform &);
