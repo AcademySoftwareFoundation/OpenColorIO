@@ -194,11 +194,11 @@ void bindPyGpuShaderCreator(py::module & m)
              DOC(GpuShaderCreator, clone))
         .def("getUniqueID", &GpuShaderCreator::getUniqueID, 
              DOC(GpuShaderCreator, getUniqueID))
-        .def("setUniqueID", &GpuShaderCreator::setUniqueID, "uid"_a, 
+        .def("get/setUniqueID", &GpuShaderCreator::setUniqueID, "uid"_a, 
              DOC(GpuShaderCreator, setUniqueID))
         .def("getLanguage", &GpuShaderCreator::getLanguage, 
              DOC(GpuShaderCreator, getLanguage))
-        .def("setLanguage", &GpuShaderCreator::setLanguage, "language"_a, 
+        .def("get/setLanguage", &GpuShaderCreator::setLanguage, "language"_a, 
              DOC(GpuShaderCreator, setLanguage))
         .def("getFunctionName", &GpuShaderCreator::getFunctionName, 
              DOC(GpuShaderCreator, getFunctionName))
