@@ -8,6 +8,7 @@ import PyOpenColorIO as OCIO
 
 class ExposureContrastTransformTest(unittest.TestCase):
     TEST_ID = 'sample exponent linear'
+    TEST_NAME = 'name'
     TEST_VALUES = [0.1, 2, -0.5, 10]
     TEST_STYLE = OCIO.EXPOSURE_CONTRAST_LOGARITHMIC
     TEST_EXPOSURE = 1.1
@@ -184,9 +185,13 @@ class ExposureContrastTransformTest(unittest.TestCase):
         """
 
         format_metadata = self.exp_tr.getFormatMetadata()
-        format_metadata.setName(self.TEST_ID)
         self.assertIsInstance(format_metadata, OCIO.FormatMetadata)
-        self.assertEqual(format_metadata.getName(), self.TEST_ID)
+        self.assertEqual(format_metadata.getID(), '')
+        self.assertEqual(format_metadata.getName(), '')
+        format_metadata.setID(self.TEST_ID)
+        format_metadata.setName(self.TEST_NAME)
+        self.assertEqual(format_metadata.getID(), self.TEST_ID)
+        self.assertEqual(format_metadata.getName(), self.TEST_NAME)
 
     def test_validate_direction(self):
         """

@@ -714,7 +714,8 @@ const std::string & CTFReaderMetadataElt::getIdentifier() const
 
 void CTFReaderMetadataElt::setRawData(const char * str, size_t len, unsigned int)
 {
-    m_metadata.setValue(m_metadata.getValue() + std::string(str, len));
+    std::string newValue{ m_metadata.getElementValue() + std::string(str, len) };
+    m_metadata.setElementValue(newValue.c_str());
 }
 
 //////////////////////////////////////////////////////////

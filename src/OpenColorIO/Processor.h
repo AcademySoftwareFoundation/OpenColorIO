@@ -58,8 +58,6 @@ public:
 
     GroupTransformRcPtr createGroupTransform() const;
 
-    void write(const char * formatName, std::ostream & os) const;
-
     ConstProcessorRcPtr getOptimizedProcessor(OptimizationFlags oFlags) const;
 
     ConstProcessorRcPtr getOptimizedProcessor(BitDepth inBD,

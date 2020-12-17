@@ -16,7 +16,20 @@
       :module: PyOpenColorIO
       :staticmethod:
 
-      Load the CDL from the src .cc or .ccc file. If a .ccc is used, the cccid must also be specified src must be an absolute path reference, no relative directory or envvar resolution is performed.
+      Load the CDL from the src .cdl, .cc, or .ccc file.
+
+      .. note::
+         The cccid can be the ID of a CDL or the index of the CDL (as string). If cccid is NULL or empty the first CDL is returned. The cccid is case-sensitive. The src must be an absolute path reference, no relative directory or envvar resolution is performed. Throws if file does not contain any CDL or if the specified cccid is not found.
+
+
+   .. py:method:: CDLTransform.CreateGroupFromFile(src: str) -> OpenColorIO_v2_0beta2::GroupTransform
+      :module: PyOpenColorIO
+      :staticmethod:
+
+      Load all of the CDLs in a .cdl or .ccc file into a single :ref:`GroupTransform`.
+
+      .. note::
+         This may be useful as a quicker way for applications to check the contents of each of the CDLs. The src must be an absolute path reference, no relative directory or envvar resolution is performed.
 
 
    .. py:method:: CDLTransform.__init__(*args, **kwargs)
@@ -26,7 +39,7 @@
 
       1. __init__(self: PyOpenColorIO.CDLTransform) -> None
 
-      2. __init__(self: PyOpenColorIO.CDLTransform, xml: str, direction: PyOpenColorIO.TransformDirection = <TransformDirection.TRANSFORM_DIR_FORWARD: 0>) -> None
+      2. __init__(self: PyOpenColorIO.CDLTransform, direction: PyOpenColorIO.TransformDirection = <TransformDirection.TRANSFORM_DIR_FORWARD: 0>) -> None
 
       3. __init__(self: PyOpenColorIO.CDLTransform, slope: List[float[3]] = [1.0, 1.0, 1.0], offset: List[float[3]] = [0.0, 0.0, 0.0], power: List[float[3]] = [1.0, 1.0, 1.0], sat: float = 1.0, id: str = '', description: str = '', direction: PyOpenColorIO.TransformDirection = <TransformDirection.TRANSFORM_DIR_FORWARD: 0>) -> None
 
@@ -39,13 +52,11 @@
       :module: PyOpenColorIO
 
 
-   .. py:method:: CDLTransform.getDescription(self: PyOpenColorIO.CDLTransform) -> str
+   .. py:method:: CDLTransform.getDirection(self: PyOpenColorIO.Transform) -> PyOpenColorIO.TransformDirection
       :module: PyOpenColorIO
 
-      Deprecated. Use `getFormatMetadata`. First textual description of color correction (stored on the SOP). If there is already a description, the setter will replace it with the supplied text.
 
-
-   .. py:method:: CDLTransform.getDirection(self: PyOpenColorIO.Transform) -> PyOpenColorIO.TransformDirection
+   .. py:method:: CDLTransform.getFirstSOPDescription(self: PyOpenColorIO.CDLTransform) -> str
       :module: PyOpenColorIO
 
 
@@ -56,10 +67,7 @@
    .. py:method:: CDLTransform.getID(self: PyOpenColorIO.CDLTransform) -> str
       :module: PyOpenColorIO
 
-      rst:: **Metadata**
-
-
-      Unique Identifier for this correction.
+      The get/setID methods are now deprecated. The preferred way of interacting with the ID is now via the transform's formatMetadata.
 
 
    .. py:method:: CDLTransform.getOffset(self: PyOpenColorIO.CDLTransform) -> List[float[3]]
@@ -96,20 +104,14 @@
       :module: PyOpenColorIO
 
 
-   .. py:method:: CDLTransform.getXML(self: PyOpenColorIO.CDLTransform) -> str
-      :module: PyOpenColorIO
-
-
-   .. py:method:: CDLTransform.setDescription(self: PyOpenColorIO.CDLTransform, description: str) -> None
-      :module: PyOpenColorIO
-
-      Deprecated. Use `getFormatMetadata`.
-
-
    .. py:method:: CDLTransform.setDirection(self: PyOpenColorIO.Transform, direction: PyOpenColorIO.TransformDirection) -> None
       :module: PyOpenColorIO
 
       Note that this only affects the evaluation and not the values stored in the object.
+
+
+   .. py:method:: CDLTransform.setFirstSOPDescription(self: PyOpenColorIO.CDLTransform, description: str) -> None
+      :module: PyOpenColorIO
 
 
    .. py:method:: CDLTransform.setID(self: PyOpenColorIO.CDLTransform, id: str) -> None
@@ -136,24 +138,10 @@
       :module: PyOpenColorIO
 
 
-   .. py:method:: CDLTransform.setStyle(*args, **kwargs)
+   .. py:method:: CDLTransform.setStyle(self: PyOpenColorIO.CDLTransform, style: PyOpenColorIO.CDLStyle) -> None
       :module: PyOpenColorIO
 
-      Overloaded function.
-
-      1. setStyle(self: PyOpenColorIO.CDLTransform, style: PyOpenColorIO.CDLStyle) -> None
-
       Use CDL_ASC to clamp values to [0,1] per the ASC spec. Use NO_CLAMP to never clamp values (regardless of whether power is 1.0). The NO_CLAMP option passes negatives through unchanged (like the NEGATIVE_PASS_THRU style of :ref:`ExponentTransform`). The default style is CDL_NO_CLAMP.
-
-      2. setStyle(self: PyOpenColorIO.CDLTransform, style: PyOpenColorIO.CDLStyle) -> None
-
-      Use CDL_ASC to clamp values to [0,1] per the ASC spec. Use NO_CLAMP to never clamp values (regardless of whether power is 1.0). The NO_CLAMP option passes negatives through unchanged (like the NEGATIVE_PASS_THRU style of :ref:`ExponentTransform`). The default style is CDL_NO_CLAMP.
-
-
-   .. py:method:: CDLTransform.setXML(self: PyOpenColorIO.CDLTransform, xml: str) -> None
-      :module: PyOpenColorIO
-
-      The default style is CDL_NO_CLAMP.
 
 
    .. py:method:: CDLTransform.validate(self: PyOpenColorIO.Transform) -> None

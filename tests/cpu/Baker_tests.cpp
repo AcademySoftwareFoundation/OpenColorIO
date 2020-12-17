@@ -119,7 +119,7 @@ OCIO_ADD_TEST(Baker, bake)
     bake->getFormatMetadata().addChildElement("Desc", testString.c_str());
     const auto & data = bake->getFormatMetadata();
     OCIO_CHECK_EQUAL(data.getNumChildrenElements(), 1);
-    OCIO_CHECK_EQUAL(testString, data.getChildElement(0).getValue());
+    OCIO_CHECK_EQUAL(testString, data.getChildElement(0).getElementValue());
 
     bake->setFormat("cinespace");
     OCIO_CHECK_EQUAL("cinespace", std::string(bake->getFormat()));

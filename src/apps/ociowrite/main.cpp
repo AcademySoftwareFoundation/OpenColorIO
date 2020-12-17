@@ -27,11 +27,11 @@ int main(int argc, const char **argv)
     // What are the allowed writing output formats?
     std::ostringstream formats;
     formats << "Formats to write to: ";
-    for (int i = 0; i<OCIO::Processor::getNumWriteFormats(); ++i)
+    for (int i = 0; i<OCIO::GroupTransform::GetNumWriteFormats(); ++i)
     {
         if (i != 0) formats << ", ";
-        formats << OCIO::Processor::getFormatNameByIndex(i);
-        formats << " (." << OCIO::Processor::getFormatExtensionByIndex(i) << ")";
+        formats << OCIO::GroupTransform::GetFormatNameByIndex(i);
+        formats << " (." << OCIO::GroupTransform::GetFormatExtensionByIndex(i) << ")";
     }
 
     std::string pathDesc = "Transform file path. Format is implied by extension. ";
@@ -97,12 +97,12 @@ int main(int argc, const char **argv)
     {
         std::string requestedExt(ext+1);
         std::transform(requestedExt.begin(), requestedExt.end(), requestedExt.begin(), ::tolower);
-        for (int i = 0; i < OCIO::Processor::getNumWriteFormats(); ++i)
+        for (int i = 0; i < OCIO::GroupTransform::GetNumWriteFormats(); ++i)
         {
-            std::string formatExt(OCIO::Processor::getFormatExtensionByIndex(i));
+            std::string formatExt(OCIO::GroupTransform::GetFormatExtensionByIndex(i));
             if (requestedExt == formatExt)
             {
-                transformFileFormat = OCIO::Processor::getFormatNameByIndex(i);
+                transformFileFormat = OCIO::GroupTransform::GetFormatNameByIndex(i);
                 break;
             }
         }
@@ -191,7 +191,9 @@ int main(int argc, const char **argv)
             std::ofstream outfs(filepath.c_str(), std::ios::out | std::ios::trunc);
             if (outfs)
             {
-                processor->write(transformFileFormat.c_str(), outfs);
+                const auto group = processor->createGroupTransform();
+                group->write(config, config->getCurrentContext(),
+                             transformFileFormat.c_str(), outfs);
                 outfs.close();
             }
             else

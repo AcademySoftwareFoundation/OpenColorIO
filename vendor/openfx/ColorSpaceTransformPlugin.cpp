@@ -1,6 +1,7 @@
 /**
  * OpenColorIO ColorSpace Iop.
 */
+
 #include <cstring>
 #include <new>
 #include <stdexcept>
@@ -11,6 +12,19 @@
 #include "ofxMultiThread.h"
 
 #include <OpenColorIO/OpenColorIO.h>
+
+// Meta data for the plugin
+#define OCIOPluginIdentifier "org.OpenColorIO.ColorSpaceTransformPlugin"
+#define OCIOPluginName "OpenColorIO ColorSpace Transform"
+#define OCIOPluginGroup "OpenColorIO"
+#define OCIOSourceColorSpace "srcColorSpace"
+#define OCIODestinationColorSpace "dstColorSpace"
+#define ColorSpaceGroupParamName "ColorSpaces"
+#define ColorSpaceGroupParamHint "Choose Input and output colorspaces for the transform"
+#define InputColorSpaceParamName "Input ColorSpace"
+#define InputColorSpaceParamHint "Choose the input ColorSpace for the Transform"
+#define OutputColorSpaceParamName "Output ColorSpace"
+#define OutputColorSpaceParamHint "Choose the output ColorSpace for the Transform"
 
 #if defined __APPLE__ || defined linux || defined __FreeBSD__
 #  define EXPORT __attribute__((visibility("default")))
@@ -58,7 +72,7 @@ OCIO::ColorSpaceTransformRcPtr g_ColorSpaceTransform = OCIO::ColorSpaceTransform
 // Getting the current instance configuration
 OCIO::ConstConfigRcPtr g_Config = OCIO::GetCurrentConfig();
 
-// Setting up pointers for the plugin's host and its suites
+// Setting up pointers for OpenFX plugin
 OfxHost               *g_Host;
 OfxImageEffectSuiteV1 *g_EffectHost   = 0;
 OfxPropertySuiteV1    *g_PropHost     = 0;
@@ -86,7 +100,6 @@ static ColorSpaceContainer* GetContainer(OfxImageEffectHandle effect)
     return Container;
 }
 
-// Utility function to fetch suites from the host
 static OfxStatus FetchSuites(OfxImageEffectHandle effect)
 {
     g_EffectHost   = reinterpret_cast<OfxImageEffectSuiteV1 *>(const_cast<void *>(g_Host->fetchSuite(g_Host->host, kOfxImageEffectSuite, 1)));
@@ -100,7 +113,7 @@ static OfxStatus FetchSuites(OfxImageEffectHandle effect)
     return kOfxStatOK;
 }
 
-// Function to create an instance of ColorSpaceContainer and set it up
+// Creating an instance of ColorSpaceContainer and setting it up
 static OfxStatus CreateInstance(OfxImageEffectHandle effect)
 {
     // get a pointer to the effect properties
@@ -119,9 +132,9 @@ static OfxStatus CreateInstance(OfxImageEffectHandle effect)
     g_EffectHost->clipGetHandle(effect, kOfxImageEffectOutputClipName, &Container->m_dstClip, 0);
 
     // Caching all the parameters in Container
-    g_ParamHost->paramGetHandle(paramSet, "sourceColorspace", &(Container->m_srcColorSpace), 0);
-    g_ParamHost->paramGetHandle(paramSet, "destinationColorspace", &(Container->m_dstColorSpace), 0);
-    g_ParamHost->paramGetHandle(paramSet, "Config", &(Container->m_ConfigFile), 0);
+    g_ParamHost->paramGetHandle(paramSet, OCIOSourceColorSpace, &(Container->m_srcColorSpace), 0);
+    g_ParamHost->paramGetHandle(paramSet, OCIODestinationColorSpace, &(Container->m_dstColorSpace), 0);
+    //g_ParamHost->paramGetHandle(paramSet, "Config", &(Container->m_ConfigFile), 0);
 
     g_PropHost->propSetPointer(effectProps, kOfxPropInstanceData, 0, (void *) Container);
 
@@ -157,9 +170,8 @@ static void DefineColorSpaceParam(OfxParamSetHandle effectParams, const char *na
 }
 
 // A function to describe context specific properties and parameters
-static OfxStatus DescribeInContext(OfxImageEffectHandle effect)
+static OfxStatus DescribeInContext(OfxImageEffectHandle effect, OfxPropertySetHandle inArgs)
 {
-
     OfxPropertySetHandle props;
     // Defining the output clip for the plugin
     g_EffectHost->clipDefine(effect, kOfxImageEffectOutputClipName, &props);
@@ -169,7 +181,7 @@ static OfxStatus DescribeInContext(OfxImageEffectHandle effect)
     g_PropHost->propSetString(props, kOfxImageEffectPropSupportedComponents, 1, kOfxImageComponentAlpha);
 
     // Defining the source clip for the plugin
-    g_EffectHost->clipDefine(effect, kOfxImageEffectOutputClipName, &props);
+    g_EffectHost->clipDefine(effect, kOfxImageEffectSimpleSourceClipName, &props);
 
     // Set the component types we can handle on the input
     g_PropHost->propSetString(props, kOfxImageEffectPropSupportedComponents, 0, kOfxImageComponentRGBA);
@@ -180,20 +192,21 @@ static OfxStatus DescribeInContext(OfxImageEffectHandle effect)
     OfxParamSetHandle paramSet;
     g_EffectHost->getParamSet(effect, &paramSet);
 
-    g_ParamHost->paramDefine(paramSet, kOfxParamTypeGroup, "ColorSpaces", &props);
+    g_ParamHost->paramDefine(paramSet, kOfxParamTypeGroup, ColorSpaceGroupParamName, &props);
+    
     // TODO: Revise the structure of params and labels
-    g_PropHost->propSetString(props, kOfxParamPropHint, 0, "Choose Input and output colorspaces for the transform");
-    g_PropHost->propSetString(props, kOfxPropLabel, 0, "ColorSpaces");
+    g_PropHost->propSetString(props, kOfxParamPropHint, 0, ColorSpaceGroupParamHint);
+    g_PropHost->propSetString(props, kOfxPropLabel, 0, ColorSpaceGroupParamName);
 
     // Input ColorSpace
-    DefineColorSpaceParam(paramSet, "srcColorSpace", "Input ColorSpace", "Input ColorSpace", "Choose the input ColorSpace for the Transform", "ColorSpaces");
+    DefineColorSpaceParam(paramSet, OCIOSourceColorSpace, InputColorSpaceParamName, InputColorSpaceParamName, InputColorSpaceParamHint, ColorSpaceGroupParamName);
     // Output ColorSpace
-    DefineColorSpaceParam(paramSet, "dstColorSpace", "Output ColorSpace", "Output ColorSpace", "Choose the output ColorSpace for the Transform", "ColorSpaces");
+    DefineColorSpaceParam(paramSet, OCIODestinationColorSpace, OutputColorSpaceParamName, OutputColorSpaceParamName, OutputColorSpaceParamHint, ColorSpaceGroupParamName);
 
     // Making a page of controls and add the parameters to it
     g_ParamHost->paramDefine(paramSet, kOfxParamTypePage, "Main", &props);
-    g_PropHost->propSetString(props, kOfxParamPropPageChild, 0, "srcColorSpace");
-    g_PropHost->propSetString(props, kOfxParamPropPageChild, 1, "dstColorSpace");
+    g_PropHost->propSetString(props, kOfxParamPropPageChild, 0, OCIOSourceColorSpace);
+    g_PropHost->propSetString(props, kOfxParamPropPageChild, 1, OCIODestinationColorSpace);
 
     return kOfxStatOK;
 }
@@ -211,7 +224,7 @@ static OfxStatus Describe(OfxImageEffectHandle effect)
     g_EffectHost->getPropertySet(effect, &effectProps);
 
     // We can support multiple pixel depths and let the clip preferences action deal with it all.
-    g_PropHost->propSetInt(effectProps, kOfxImageEffectPropSupportsMultipleClipDepths, 0, 0);
+    g_PropHost->propSetInt(effectProps, kOfxImageEffectPropSupportsMultipleClipDepths, 0, 1);
 
     // Set the bit depths the plugin can handle
     g_PropHost->propSetString(effectProps, kOfxImageEffectPropSupportedPixelDepths, 0, kOfxBitDepthByte);
@@ -219,8 +232,8 @@ static OfxStatus Describe(OfxImageEffectHandle effect)
     g_PropHost->propSetString(effectProps, kOfxImageEffectPropSupportedPixelDepths, 2, kOfxBitDepthFloat);
 
     // Set some labels and the group it belongs to
-    g_PropHost->propSetString(effectProps, kOfxPropLabel, 0, "OpenColorIO ColorSpace Transform");
-    g_PropHost->propSetString(effectProps, kOfxImageEffectPluginPropGrouping, 0, "OpenColorIO");
+    g_PropHost->propSetString(effectProps, kOfxPropLabel, 0, OCIOPluginName);
+    g_PropHost->propSetString(effectProps, kOfxImageEffectPluginPropGrouping, 0, OCIOPluginGroup);
 
     // Define the contexts we can be used in
     g_PropHost->propSetString(effectProps, kOfxImageEffectPropSupportedContexts, 0, kOfxImageEffectContextFilter);
@@ -327,7 +340,7 @@ static OfxStatus Render(OfxImageEffectHandle effect, OfxPropertySetHandle inArgs
 
     ColorSpaceContainer *Container = GetContainer(effect);
 
-    OfxPropertySetHandle srcImg = NULL, dstImg = NULL;
+    OfxPropertySetHandle srcImg = nullptr, dstImg = nullptr;
     int srcRowBytes, srcBitDepth, dstRowBytes, dstBitDepth;
     bool srcIsAlpha, dstIsAplha;
     OfxRectI dstRect, srcRect;
@@ -360,7 +373,7 @@ static OfxStatus Render(OfxImageEffectHandle effect, OfxPropertySetHandle inArgs
 
         OCIO::ConstCPUProcessorRcPtr cpu = processor->getDefaultCPUProcessor();
 
-        OCIO::PackedImageDesc img(reinterpret_cast<float *>(dst), dstRect.x2 - dstRect.x1, dstRect.y2 - dstRect.y1, 4);
+        OCIO::PackedImageDesc img(reinterpret_cast<float *>(dst), static_cast<long>(dstRect.x2 - dstRect.x1), static_cast<long>(dstRect.y2 - dstRect.y1), static_cast<long>(4));
 
         // Applying the transfor to img
         cpu->apply(img);
@@ -430,7 +443,7 @@ static OfxStatus EntryPoint(const char* action, const void* handle, OfxPropertyS
         }
         if(strcmp(action, kOfxImageEffectActionDescribeInContext) == 0)
         {
-            return DescribeInContext(effect);
+            return DescribeInContext(effect, inArgs);
         }
         if(strcmp(action, kOfxImageEffectActionRender) == 0)
         {
@@ -479,7 +492,7 @@ static OfxPlugin ColorSpaceTransformPlugin =
 {
     kOfxImageEffectPluginApi,
     1,
-    "com.OpenColorIO.ColorSpaceTransformPlugin",
+    OCIOPluginIdentifier,
     1,
     0,
     SetHost,
