@@ -281,7 +281,6 @@ enum CategoryUsage
     IGNORED,
     NONE_FOUND
 };
-}
 struct LogMessageHelper
 {
     bool m_ignoreEncodings = false;
@@ -332,6 +331,7 @@ struct LogMessageHelper
         }
     }
 };
+}
 
 Infos FindColorSpaceInfos(ConstConfigRcPtr config,
                           const Categories & appCategories,

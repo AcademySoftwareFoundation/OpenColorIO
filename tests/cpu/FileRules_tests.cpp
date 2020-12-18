@@ -42,11 +42,11 @@ OCIO_ADD_TEST(FileRules, config_read_only)
     auto config = OCIO::Config::CreateRaw();
     auto fileRules = config->getFileRules();
     OCIO_REQUIRE_EQUAL(fileRules->getNumEntries(), 1);
-    OCIO_CHECK_EQUAL(std::string(fileRules->getName(0)), OCIO::FileRuleUtils::DefaultName);
-    OCIO_CHECK_EQUAL(fileRules->getIndexForRule(OCIO::FileRuleUtils::DefaultName), 0);
-    OCIO_CHECK_ASSERT(!fileRules->getPattern(0));
-    OCIO_CHECK_ASSERT(!fileRules->getExtension(0));
-    OCIO_CHECK_ASSERT(!fileRules->getRegex(0));
+    OCIO_CHECK_EQUAL(std::string(fileRules->getName(0)), OCIO::FileRules::DefaultRuleName);
+    OCIO_CHECK_EQUAL(fileRules->getIndexForRule(OCIO::FileRules::DefaultRuleName), 0);
+    OCIO_CHECK_EQUAL(std::string(fileRules->getPattern(0)), "");
+    OCIO_CHECK_EQUAL(std::string(fileRules->getExtension(0)), "");
+    OCIO_CHECK_EQUAL(std::string(fileRules->getRegex(0)), "");
     OCIO_CHECK_EQUAL(std::string(fileRules->getColorSpace(0)), OCIO::ROLE_DEFAULT);
 
     OCIO_CHECK_THROW_WHAT(fileRules->getName(1), 
@@ -347,7 +347,7 @@ OCIO_ADD_TEST(FileRules, pattern_error)
     auto fr = configRaw->getFileRules();
     auto rules = fr->createEditableCopy();
 
-    OCIO_CHECK_NO_THROW(rules->insertRule(0, OCIO::FileRuleUtils::ParseName, "", "", ""));
+    OCIO_CHECK_NO_THROW(rules->insertRule(0, OCIO::FileRules::FilePathSearchRuleName, "", "", ""));
     OCIO_CHECK_NO_THROW(rules->insertRule(0, "new rule", "raw", "*", "a"));
     OCIO_REQUIRE_EQUAL(rules->getNumEntries(), 3);
 
@@ -375,7 +375,7 @@ OCIO_ADD_TEST(FileRules, with_defaults)
     auto config = OCIO::Config::CreateRaw()->createEditableCopy();
     auto rules = config->getFileRules()->createEditableCopy();
 
-    OCIO_CHECK_NO_THROW(rules->insertRule(0, OCIO::FileRuleUtils::ParseName, "", "", ""));
+    OCIO_CHECK_NO_THROW(rules->insertRule(0, OCIO::FileRules::FilePathSearchRuleName, "", "", ""));
     OCIO_REQUIRE_EQUAL(rules->getNumEntries(), 2);
 
     // Null or empty pattern and/or extension throw.
@@ -398,7 +398,7 @@ OCIO_ADD_TEST(FileRules, extension_error)
     auto fr = configRaw->getFileRules();
     auto rules = fr->createEditableCopy();
 
-    OCIO_CHECK_NO_THROW(rules->insertRule(0, OCIO::FileRuleUtils::ParseName, "", "", ""));
+    OCIO_CHECK_NO_THROW(rules->insertRule(0, OCIO::FileRules::FilePathSearchRuleName, "", "", ""));
     OCIO_CHECK_NO_THROW(rules->insertRule(0, "new rule", "raw", "*", "a"));
     OCIO_REQUIRE_EQUAL(rules->getNumEntries(), 3);
 
@@ -1362,7 +1362,7 @@ OCIO_ADD_TEST(FileRules, clone)
 
     auto config    = OCIO::Config::CreateRaw()->createEditableCopy();
     auto fileRules = config->getFileRules()->createEditableCopy();
-    OCIO_CHECK_NO_THROW(fileRules->insertRule(0, OCIO::FileRuleUtils::ParseName, "", "", ""));
+    OCIO_CHECK_NO_THROW(fileRules->insertRule(0, OCIO::FileRules::FilePathSearchRuleName, "", "", ""));
     OCIO_CHECK_NO_THROW(fileRules->insertRule(0, "rule", "raw", "*", "a"));
     OCIO_REQUIRE_EQUAL(fileRules->getNumEntries(), 3);
 
