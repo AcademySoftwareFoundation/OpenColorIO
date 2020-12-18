@@ -147,7 +147,7 @@ void bindPyColorSpaceMenuHelpers(py::module & m)
             })
         .def("__getitem__", [](AddedColorSpaceIterator & it, int i)
             {
-                it.checkIndex(i, it.m_obj->getNumAddedColorSpaces());
+                it.checkIndex(i, (int)it.m_obj->getNumAddedColorSpaces());
                 return it.m_obj->getAddedColorSpace(i);
             })
         .def("__iter__", [](AddedColorSpaceIterator & it) -> AddedColorSpaceIterator &
@@ -156,7 +156,7 @@ void bindPyColorSpaceMenuHelpers(py::module & m)
             })
         .def("__next__", [](AddedColorSpaceIterator & it)
             {
-                int i = it.nextIndex(it.m_obj->getNumAddedColorSpaces());
+                int i = it.nextIndex((int)it.m_obj->getNumAddedColorSpaces());
                 return it.m_obj->getAddedColorSpace(i);
             });
 
