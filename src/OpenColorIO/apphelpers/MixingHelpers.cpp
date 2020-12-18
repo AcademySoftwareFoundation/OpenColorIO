@@ -149,7 +149,7 @@ void MixingColorSpaceManagerImpl::refresh()
 
     if (m_config->hasRole(ROLE_COLOR_PICKING))
     {
-        m_colorPicker = ColorSpaceInfo::CreateFromRole(m_config, ROLE_COLOR_PICKING, nullptr);
+        m_colorPicker = ColorSpaceInfo::CreateFromSingleRole(m_config, ROLE_COLOR_PICKING);
         m_mixingSpaces.push_back(m_colorPicker->getUIName());
     }
     else

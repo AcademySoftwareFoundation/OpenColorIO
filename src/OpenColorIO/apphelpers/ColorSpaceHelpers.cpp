@@ -10,42 +10,27 @@
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "ColorSpaceHelpers.h"
+#include "Platform.h"
 #include "utils/StringUtils.h"
 
 namespace OCIO_NAMESPACE
 {
-namespace Category
-{
-const char * INPUT = "input";
-const char * SCENE_LINEAR_WORKING_SPACE = "scene_linear_working_space";
-const char * LOG_WORKING_SPACE = "log_working_space";
-const char * VIDEO_WORKING_SPACE = "video_working_space";
-const char * LUT_INPUT_SPACE = "lut_input_space";
-
-} // Category
 
 ConstColorSpaceInfoRcPtr ColorSpaceInfo::Create(const ConstConfigRcPtr & config,
-                                                const ConstColorSpaceRcPtr & cs)
+                                                const ColorSpace & cs)
 {
-    return ConstColorSpaceInfoRcPtr(new ColorSpaceInfo(config, cs->getName(), nullptr,
-                                                       cs->getFamily(),
-                                                       cs->getDescription()),
+    return ConstColorSpaceInfoRcPtr(new ColorSpaceInfo(config, cs.getName(), nullptr,
+                                                       cs.getFamily(),
+                                                       cs.getDescription()),
                                     &ColorSpaceInfo::Deleter);
 }
 
 ConstColorSpaceInfoRcPtr ColorSpaceInfo::Create(const ConstConfigRcPtr & config,
-                                                const ConstNamedTransformRcPtr & nt)
+                                                const NamedTransform & nt)
 {
-    std::string family{ "Named transforms" };
-    const std::string srcFamily = nt->getFamily();
-    if (!srcFamily.empty())
-    {
-        family += config->getFamilySeparator();
-        family += srcFamily;
-    }
-    return ConstColorSpaceInfoRcPtr(new ColorSpaceInfo(config, nt->getName(), nullptr,
-                                                       family.c_str(),
-                                                       nt->getDescription()),
+    return ConstColorSpaceInfoRcPtr(new ColorSpaceInfo(config, nt.getName(), nullptr,
+                                                       nt.getFamily(),
+                                                       nt.getDescription()),
                                     &ColorSpaceInfo::Deleter);
 }
 
@@ -79,9 +64,27 @@ ConstColorSpaceInfoRcPtr ColorSpaceInfo::CreateFromRole(const ConstConfigRcPtr &
         uiName << role << " (" << cs->getName() << ")";
 
         return ColorSpaceInfo::Create(config,
-                                      role,
+                                      role, // use role name
                                       uiName.str().c_str(),
                                       family,
+                                      nullptr);
+    }
+    return ConstColorSpaceInfoRcPtr();
+}
+
+ConstColorSpaceInfoRcPtr ColorSpaceInfo::CreateFromSingleRole(const ConstConfigRcPtr & config,
+                                                              const char * role)
+{
+    if (config->hasRole(role))
+    {
+        ConstColorSpaceRcPtr cs = config->getColorSpace(role);
+        std::ostringstream uiName;
+        uiName << role << " (" << cs->getName() << ")";
+
+        return ColorSpaceInfo::Create(config,
+                                      cs->getName(), // use color space name
+                                      uiName.str().c_str(),
+                                      nullptr,
                                       nullptr);
     }
     return ConstColorSpaceInfoRcPtr();
@@ -156,14 +159,251 @@ const char * ColorSpaceInfo::getHierarchyLevel(size_t i) const noexcept
     return "";
 }
 
-namespace
+ColorSpaceMenuParametersRcPtr ColorSpaceMenuParameters::Create(ConstConfigRcPtr config)
 {
-ColorSpaceMenuHelperRcPtr CreateColorSpaceMenuHelper(const ConstConfigRcPtr & config,
-                                                     const char * role,
-                                                     const char * categories,
-                                                     ColorSpaceMenuHelper::IncludeTypeFlag includeFlag)
+    return std::shared_ptr<ColorSpaceMenuParameters>(new ColorSpaceMenuParametersImpl(config),
+                                                     &ColorSpaceMenuParametersImpl::Deleter);
+}
+
+ColorSpaceMenuParametersImpl::ColorSpaceMenuParametersImpl(ConstConfigRcPtr config)
+    : m_config(config)
 {
-    // Note: Add a cache to not recreate a new menu helper for the same config.   
+}
+
+void ColorSpaceMenuParametersImpl::setParameters(ConstColorSpaceMenuParametersRcPtr parameters)
+{
+    const auto & impl = dynamic_cast<const ColorSpaceMenuParametersImpl &>(*parameters);
+    m_config                 = impl.m_config;
+    m_role                   = impl.m_role;
+    m_appCategories          = impl.m_appCategories;
+    m_userCategories         = impl.m_userCategories;
+    m_encodings              = impl.m_encodings;
+    m_includeColorSpaces     = impl.m_includeColorSpaces;
+    m_includeRoles           = impl.m_includeRoles;
+    m_includeNamedTransforms = impl.m_includeNamedTransforms;
+    m_colorSpaceType         = impl.m_colorSpaceType;
+    m_additionalColorSpaces  = impl.m_additionalColorSpaces;
+}
+
+void ColorSpaceMenuParametersImpl::setConfig(ConstConfigRcPtr config) noexcept
+{
+    m_config = config;
+}
+
+ConstConfigRcPtr ColorSpaceMenuParametersImpl::getConfig() const noexcept
+{
+    return m_config;
+}
+
+void ColorSpaceMenuParametersImpl::setRole(const char * role) noexcept
+{
+    m_role = role ? role : "";
+}
+
+const char * ColorSpaceMenuParametersImpl::getRole() const noexcept
+{
+    return m_role.c_str();
+}
+
+void ColorSpaceMenuParametersImpl::setAppCategories(const char * appCategories) noexcept
+{
+    m_appCategories = appCategories ? appCategories : "";
+}
+
+const char * ColorSpaceMenuParametersImpl::getAppCategories() const noexcept
+{
+    return m_appCategories.c_str();
+}
+
+void ColorSpaceMenuParametersImpl::setUserCategories(const char * userCategories) noexcept
+{
+    m_userCategories = userCategories ? userCategories : "";
+}
+
+const char * ColorSpaceMenuParametersImpl::getUserCategories() const noexcept
+{
+    return m_userCategories.c_str();
+}
+
+void ColorSpaceMenuParametersImpl::setEncodings(const char * encodings) noexcept
+{
+    m_encodings = encodings ? encodings : "";
+}
+
+const char * ColorSpaceMenuParametersImpl::getEncodings() const noexcept
+{
+    return m_encodings.c_str();
+}
+
+void ColorSpaceMenuParametersImpl::setIncludeColorSpaces(bool include) noexcept
+{
+    m_includeColorSpaces = include;
+}
+
+bool ColorSpaceMenuParametersImpl::getIncludeColorSpaces() const noexcept
+{
+    return m_includeColorSpaces;
+}
+
+void ColorSpaceMenuParametersImpl::setIncludeRoles(bool include) noexcept
+{
+    m_includeRoles = include;
+}
+
+bool ColorSpaceMenuParametersImpl::getIncludeRoles() const noexcept
+{
+    return m_includeRoles;
+}
+
+void ColorSpaceMenuParametersImpl::setIncludeNamedTransforms(bool include) noexcept
+{
+    m_includeNamedTransforms = include;
+}
+
+bool ColorSpaceMenuParametersImpl::getIncludeNamedTransforms() const noexcept
+{
+    return m_includeNamedTransforms;
+}
+
+void ColorSpaceMenuParametersImpl::addColorSpace(const char * name) noexcept
+{
+    if (name && *name && !StringUtils::Contain(m_additionalColorSpaces, name))
+    {
+        m_additionalColorSpaces.push_back(name);
+    }
+}
+
+size_t ColorSpaceMenuParametersImpl::getNumAddedColorSpaces() const noexcept
+{
+    return m_additionalColorSpaces.size();
+}
+
+const char * ColorSpaceMenuParametersImpl::getAddedColorSpace(size_t index) const noexcept
+{
+    if (index < m_additionalColorSpaces.size())
+    {
+        return m_additionalColorSpaces[index].c_str();
+    }
+    return "";
+}
+
+void ColorSpaceMenuParametersImpl::clearAddedColorSpaces() noexcept
+{
+    m_additionalColorSpaces.clear();
+}
+
+SearchReferenceSpaceType ColorSpaceMenuParametersImpl::getSearchReferenceSpaceType() const noexcept
+{
+    return m_colorSpaceType;
+}
+
+void ColorSpaceMenuParametersImpl::setSearchReferenceSpaceType(SearchReferenceSpaceType colorSpaceType) noexcept
+{
+    m_colorSpaceType = colorSpaceType;
+}
+
+void ColorSpaceMenuParametersImpl::Deleter(ColorSpaceMenuParameters * p)
+{
+    delete (ColorSpaceMenuParametersImpl*)p;
+}
+
+std::ostream & operator<<(std::ostream & os, const ColorSpaceMenuParameters & p)
+{
+    const auto & impl = dynamic_cast<const ColorSpaceMenuParametersImpl &>(p);
+
+    os << "config: " << (impl.m_config ? impl.m_config->getCacheID() : "missing");
+    if (!impl.m_role.empty())
+    {
+        os << ", role: " << impl.m_role;
+    }
+    if (!impl.m_appCategories.empty())
+    {
+        os << ", appCategories: " << impl.m_appCategories;
+    }
+    if (!impl.m_userCategories.empty())
+    {
+        os << ", userCategories: " << impl.m_userCategories;
+    }
+    if (!impl.m_encodings.empty())
+    {
+        os << ", encodings: " << impl.m_encodings;
+    }
+    os << ", includeColorSpaces: " << (p.getIncludeColorSpaces() ? "true" : "false");
+    os << ", includeRoles: " << (p.getIncludeRoles() ? "true" : "false");
+    os << ", includeNamedTransforms: " << (p.getIncludeNamedTransforms() ? "true" : "false");
+    if (impl.m_colorSpaceType == SEARCH_REFERENCE_SPACE_SCENE)
+    {
+        os << ", colorSpaceType: scene";
+    }
+    else if (impl.m_colorSpaceType == SEARCH_REFERENCE_SPACE_DISPLAY)
+    {
+        os << ", colorSpaceType: display";
+    }
+    const auto numcs = impl.m_additionalColorSpaces.size();
+    if (numcs)
+    {
+        os << ", addedSpaces: ";
+        if (numcs == 1)
+        {
+            os << impl.m_additionalColorSpaces[0];
+        }
+        else
+        {
+            os << "[" << impl.m_additionalColorSpaces[0];
+            for (size_t cs = 1; cs < numcs; ++cs)
+            {
+                os << ", " << impl.m_additionalColorSpaces[cs];
+            }
+            os << "]";
+        }
+    }
+    return os;
+}
+
+ColorSpaceMenuHelperRcPtr ColorSpaceMenuHelper::Create(ConstColorSpaceMenuParametersRcPtr p)
+{
+    if (!p || !p->getConfig())
+    {
+        throw Exception("ColorSpaceMenuHelper needs parameters with a config.");
+    }
+
+    try
+    {
+        p->getConfig()->validate();
+    }
+    catch (Exception & e)
+    {
+        std::ostringstream oss;
+        oss << "ColorSpaceMenuHelper needs a valid config. Validation failed with: " << e.what();
+        throw Exception(oss.str().c_str());
+    }
+
+    if (!p->getIncludeColorSpaces() && p->getIncludeRoles())
+    {
+        throw Exception("ColorSpaceMenuHelper needs to include color spaces if roles are "
+                        "included.");
+    }
+
+    ConstColorSpaceMenuParametersRcPtr parameters = p;
+    // User categories from the environment variable override what is specified by the application.
+    std::string envUserCategories;
+    if (Platform::Getenv(OCIO_USER_CATEGORIES_ENVVAR, envUserCategories))
+    {
+        if (!envUserCategories.empty())
+        {
+            auto userCategories = StringUtils::Trim(envUserCategories);
+            if (!userCategories.empty())
+            {
+                auto newP = ColorSpaceMenuParameters::Create(parameters->getConfig());
+                auto * impl = dynamic_cast<ColorSpaceMenuParametersImpl *>(newP.get());
+                impl->setParameters(parameters);
+                newP->setUserCategories(userCategories.c_str());
+                parameters = newP;
+            }
+        }
+    }
+
+    // Note: Add a cache to not recreate a new menu helper for the same parameters.
 
     using Entries = std::map<std::size_t, ColorSpaceMenuHelperRcPtr>;
 
@@ -176,39 +416,22 @@ ColorSpaceMenuHelperRcPtr CreateColorSpaceMenuHelper(const ConstConfigRcPtr & co
         std::lock_guard<std::mutex> lock(g_mutex);
 
         std::ostringstream oss;
-        oss << std::string(config->getCacheID())
-            << std::string(role ? role : "")
-            << std::string(categories ? categories : "")
-            << includeFlag;
+        oss << *parameters;
 
         const std::size_t key = std::hash<std::string>{}(oss.str());
 
         ColorSpaceMenuHelperRcPtr & entry = g_entries[key];
         if (!entry)
         {
-            entry = std::shared_ptr<ColorSpaceMenuHelper>(
-                new ColorSpaceMenuHelperImpl(config, role, categories, includeFlag),
-                &ColorSpaceMenuHelperImpl::Deleter);
+            entry = std::shared_ptr<ColorSpaceMenuHelper>(new ColorSpaceMenuHelperImpl(parameters),
+                                                          &ColorSpaceMenuHelperImpl::Deleter);
         }
 
         return entry;
     }
-    else
-    {
-        return std::shared_ptr<ColorSpaceMenuHelper>(
-            new ColorSpaceMenuHelperImpl(config, role, categories, includeFlag),
-            &ColorSpaceMenuHelperImpl::Deleter);
-    }
-}
-}
 
-ColorSpaceMenuHelperRcPtr ColorSpaceMenuHelper::Create(const ConstConfigRcPtr & config,
-                                                       const char * role,
-                                                       const char * categories,
-                                                       ColorSpaceMenuHelper::IncludeTypeFlag includeFlag)
-
-{
-    return CreateColorSpaceMenuHelper(config, role, categories, includeFlag);
+    return std::shared_ptr<ColorSpaceMenuHelper>(new ColorSpaceMenuHelperImpl(parameters),
+                                                 &ColorSpaceMenuHelperImpl::Deleter);
 }
 
 void ColorSpaceMenuHelperImpl::Deleter(ColorSpaceMenuHelper * incs)
@@ -216,49 +439,71 @@ void ColorSpaceMenuHelperImpl::Deleter(ColorSpaceMenuHelper * incs)
     delete (ColorSpaceMenuHelperImpl*)incs;
 }
 
-ColorSpaceMenuHelperImpl::ColorSpaceMenuHelperImpl(const ConstConfigRcPtr & config,
-                                                   const char * role,
-                                                   const char * categories,
-                                                   IncludeTypeFlag includeFlag)
-    :   ColorSpaceMenuHelper()
-    ,   m_config(config)
-    ,   m_roleName(StringUtils::Lower(role))
-    ,   m_categories(StringUtils::Lower(categories))
-    ,   m_includeFlag(includeFlag)
+ColorSpaceMenuHelperImpl::ColorSpaceMenuHelperImpl(ConstColorSpaceMenuParametersRcPtr parameters)
+    : ColorSpaceMenuHelper()
+    , m_parameters(ConfigRcPtr())
 {
-    refresh();
-}
-
-void ColorSpaceMenuHelperImpl::refresh(const ConstConfigRcPtr & config)
-{
-    m_config = config;
+    m_parameters.setParameters(parameters);
     refresh();
 }
 
 void ColorSpaceMenuHelperImpl::refresh()
 {
-    // Find all color spaces.
+    m_entries.clear();
 
-    m_colorSpaces = getColorSpaceInfosFromCategories(m_config, m_roleName.c_str(),
-                                                     m_categories.c_str(), m_includeFlag);
-    if (m_colorSpaces.empty())
+    // 1) If the role exists, use only that space.
+
+    if (!m_parameters.m_role.empty())
     {
-        std::stringstream oss;
-        oss << "With role '" << m_roleName << "' and categories [" << m_categories <<"]"
-            << " no color spaces were found.";
-
-        throw Exception(oss.str().c_str());
+        if (m_parameters.m_config->hasRole(m_parameters.m_role.c_str()))
+        {
+            m_entries.push_back(ColorSpaceInfo::CreateFromSingleRole(m_parameters.m_config,
+                                                                     m_parameters.m_role.c_str()));
+            return;
+        }
     }
 
-    auto previouslyAdded = m_additionalColorSpaces;
-    m_additionalColorSpaces.clear();
+    // 2) & 3) Identify potential menu items and then filter them by category and encoding.
 
-    for (const auto & cs : previouslyAdded)
+    const Categories allAppCategories = ExtractItems(m_parameters.m_appCategories.c_str());
+    const Categories allUserCategories = ExtractItems(m_parameters.m_userCategories.c_str());
+    const Encodings allEncodings = ExtractItems(m_parameters.m_encodings.c_str());
+    const auto numNT = m_parameters.m_config->getNumNamedTransforms();
+    const auto numCS = m_parameters.m_config->getNumColorSpaces(m_parameters.m_colorSpaceType,
+                                                                COLORSPACE_ACTIVE);
+    if ((m_parameters.m_includeColorSpaces && numCS != 0) ||
+        (m_parameters.m_includeNamedTransforms && numNT != 0))
     {
-        if (m_config->getColorSpace(cs->getName()))
+        m_entries = FindColorSpaceInfos(m_parameters.m_config,
+                                        allAppCategories, allUserCategories,
+                                        m_parameters.m_includeColorSpaces,
+                                        m_parameters.m_includeNamedTransforms,
+                                        allEncodings, m_parameters.m_colorSpaceType);
+    }
+
+    // 4) Include roles if requested.
+
+    if (m_parameters.m_includeRoles)
+    {
+        for (int idx = 0; idx < m_parameters.m_config->getNumRoles(); ++idx)
+        {
+            auto info = ColorSpaceInfo::CreateFromRole(m_parameters.m_config,
+                                                       m_parameters.m_config->getRoleName(idx),
+                                                       "Roles");
+            m_entries.push_back(info);
+        }
+    }
+
+    // 5) Add additional color spaces.
+
+    Infos additionalColorSpaces;
+    for (const auto & name : m_parameters.m_additionalColorSpaces)
+    {
+        auto cs = m_parameters.m_config->getColorSpace(name.c_str());
+        if (cs)
         {
             bool addit = true;
-            for (const auto & entry : m_colorSpaces)
+            for (const auto & entry : m_entries)
             {
                 if (StringUtils::Compare(cs->getName(), entry->getName()))
                 {
@@ -267,19 +512,63 @@ void ColorSpaceMenuHelperImpl::refresh()
                     break;
                 }
             }
+            for (const auto & addedname : additionalColorSpaces)
+            {
+                if (StringUtils::Compare(cs->getName(), addedname->getName()))
+                {
+                    // Already there.
+                    addit = false;
+                    break;
+                }
+            }
             if (addit)
             {
-                m_additionalColorSpaces.push_back(cs);
+                auto csInfo = ColorSpaceInfo::Create(m_parameters.m_config, *cs);
+                additionalColorSpaces.push_back(csInfo);
+            }
+        }
+        else
+        {
+            auto nt = m_parameters.m_config->getNamedTransform(name.c_str());
+            if (nt)
+            {
+                bool addit = true;
+                for (const auto & entry : m_entries)
+                {
+                    if (StringUtils::Compare(nt->getName(), entry->getName()))
+                    {
+                        // Already there.
+                        addit = false;
+                        break;
+                    }
+                }
+                for (const auto & addedname : additionalColorSpaces)
+                {
+                    if (StringUtils::Compare(nt->getName(), addedname->getName()))
+                    {
+                        // Already there.
+                        addit = false;
+                        break;
+                    }
+                }
+                if (addit)
+                {
+                    auto csInfo = ColorSpaceInfo::Create(m_parameters.m_config, *nt);
+                    additionalColorSpaces.push_back(csInfo);
+                }
+            }
+            else
+            {
+                std::ostringstream oss;
+                oss << "Element '" << name << "' is neither a color space not a named transform.";
+                throw Exception(oss.str().c_str());
             }
         }
     }
 
-    // Rebuild the complete list.
-
-    m_entries = m_colorSpaces;
     m_entries.insert(m_entries.end(),
-                     m_additionalColorSpaces.begin(),
-                     m_additionalColorSpaces.end());
+                     additionalColorSpaces.begin(),
+                     additionalColorSpaces.end());
 }
 
 size_t ColorSpaceMenuHelperImpl::getNumColorSpaces() const noexcept
@@ -373,31 +662,6 @@ const char * ColorSpaceMenuHelperImpl::getHierarchyLevel(size_t idx, size_t i) c
     return "";
 }
 
-void ColorSpaceMenuHelperImpl::addColorSpaceToMenu(const char * name)
-{
-    ConstColorSpaceRcPtr cs = m_config->getColorSpace(name);
-    if (!m_config->getColorSpace(name))
-    {
-        std::ostringstream oss;
-        oss << "Color space '" << std::string(name ? name : "") << "' does not exist.";
-        throw Exception(oss.str().c_str());
-    }
-
-    for (const auto & entry : m_entries)
-    {
-        if (StringUtils::Compare(name, entry->getName()))
-        {
-            // Already there.
-            return;
-        }
-    }
-
-    auto csInfo = ColorSpaceInfo::Create(m_config, cs);
-    m_additionalColorSpaces.push_back(csInfo);
-
-    refresh();
-}
-
 const char * ColorSpaceMenuHelperImpl::getNameFromUIName(const char * uiName) const noexcept
 {
     if (uiName && *uiName)
@@ -430,20 +694,8 @@ const char * ColorSpaceMenuHelperImpl::getUINameFromName(const char * name) cons
 
 std::ostream & ColorSpaceMenuHelperImpl::serialize(std::ostream & os) const
 {
-    os << "Config: " << m_config->getCacheID();
-    if (!m_roleName.empty()) os << ", role: " << m_roleName;
-    if (!m_categories.empty()) os << ", categories: " << m_categories;
-    os << ", includeFlag: [color spaces";
-    if (HasFlag(m_includeFlag, INCLUDE_ROLES))
-    {
-        os << ", roles";
-    }
-    if (HasFlag(m_includeFlag, INCLUDE_NAMEDTRANSFORMS))
-    {
-        os << ", named transforms";
-    }
-    os << "], ";
-    os << "color spaces = [";
+    os << m_parameters;
+    os << ", color spaces = [";
     bool first = true;
     for (const auto & cs : m_entries)
     {
@@ -549,7 +801,7 @@ void AddColorSpace(ConfigRcPtr & config,
 
     if (categories && *categories)
     {
-        const Categories cats = ExtractCategories(categories);
+        const Categories cats = ExtractItems(categories);
 
         // Only add the categories if already used.
         ColorSpaceNames names = FindColorSpaceNames(config, cats);

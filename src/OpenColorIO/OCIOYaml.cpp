@@ -3693,6 +3693,11 @@ inline void load(const YAML::Node & node, NamedTransformRcPtr & nt)
                 nt->addCategory(name.c_str());
             }
         }
+        else if (key == "encoding")
+        {
+            load(second, stringval);
+            nt->setEncoding(stringval.c_str());
+        }
         else if (key == "transform")
         {
             TransformRcPtr val;
@@ -3736,6 +3741,12 @@ inline void save(YAML::Emitter & out, ConstNamedTransformRcPtr & nt, unsigned in
         }
         out << YAML::Key << "categories";
         out << YAML::Flow << YAML::Value << categories;
+    }
+
+    const char * encoding = nt->getEncoding();
+    if (encoding && *encoding)
+    {
+        out << YAML::Key << "encoding" << YAML::Value << encoding;
     }
 
     ConstTransformRcPtr transform = nt->getTransform(TRANSFORM_DIR_FORWARD);

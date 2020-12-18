@@ -1259,6 +1259,12 @@ public:
     /// Move a rule closer to the end of the list by one position.
     void decreaseRulePriority(size_t ruleIndex);
 
+    /**
+     * Check if there is only the default rule using default role and no custom key. This is the
+     * default FileRules state when creating a new config.
+     */
+    bool isDefault() const noexcept;
+
     FileRules(const FileRules &) = delete;
     FileRules & operator= (const FileRules &) = delete;
 
@@ -1471,9 +1477,9 @@ public:
     // they display in menus based on what that color space is used for.
     //
     // Here is an example config entry that could appear under a ColorSpace:
-    // categories: [input, rendering]
+    // categories: [ file-io, working-space, basic-3d ]
     //
-    // The example contains two categories: 'input' and 'rendering'.
+    // The example contains three categories: 'file-io', 'working-space' and 'basic-3d'.
     // Category strings are not case-sensitive and the order is not significant.
     // There is no limit imposed on length or number. Although users may add
     // their own categories, the strings will typically come from a fixed set
@@ -1863,6 +1869,14 @@ public:
     virtual const char * getCategory(int index) const noexcept = 0;
     /// \see ColorSpace::clearCategories
     virtual void clearCategories() noexcept = 0;
+
+    /**
+     * A NamedTransform is not a color space and does not have an encoding in the same sense.
+     * However, it may be useful to associate a color space encoding that the transform is intended
+     * to be used with, for organizational purposes.
+     */
+    virtual const char * getEncoding() const noexcept = 0;
+    virtual void setEncoding(const char * encoding) noexcept = 0;
 
     virtual ConstTransformRcPtr getTransform(TransformDirection dir) const = 0;
     virtual void setTransform(const ConstTransformRcPtr & transform, TransformDirection dir) = 0;

@@ -36,32 +36,32 @@ OCIO_ADD_TEST(DisplayViewHelpers, basic)
     // Step 1 - Validate the selected working color spaces.
     //
 
+    auto params = OCIO::ColorSpaceMenuParameters::Create(cfg);
+    params->setAppCategories("working-space");
     OCIO::ColorSpaceMenuHelperRcPtr workingMenuHelper;
-    OCIO_CHECK_NO_THROW(workingMenuHelper =
-        OCIO::ColorSpaceMenuHelper::Create(cfg, nullptr,
-                                           OCIO::Category::SCENE_LINEAR_WORKING_SPACE,
-                                           OCIO::ColorSpaceMenuHelper::INCLUDE_NO_EXTRAS));
+    OCIO_CHECK_NO_THROW(workingMenuHelper = OCIO::ColorSpaceMenuHelper::Create(params));
 
-    OCIO_REQUIRE_EQUAL(workingMenuHelper->getNumColorSpaces(), 2);
+    OCIO_REQUIRE_EQUAL(workingMenuHelper->getNumColorSpaces(), 7);
 
     OCIO_CHECK_EQUAL(workingMenuHelper->getName(0), std::string("lin_1"));
     OCIO_CHECK_EQUAL(workingMenuHelper->getName(1), std::string("lin_2"));
+    OCIO_CHECK_EQUAL(workingMenuHelper->getName(2), std::string("log_1"));
+    OCIO_CHECK_EQUAL(workingMenuHelper->getName(3), std::string("in_3"));
+    OCIO_CHECK_EQUAL(workingMenuHelper->getName(4), std::string("display_lin_1"));
+    OCIO_CHECK_EQUAL(workingMenuHelper->getName(5), std::string("display_lin_2"));
+    OCIO_CHECK_EQUAL(workingMenuHelper->getName(6), std::string("display_log_1"));
 
     //
     // Step 2 - Validate the selected connection color spaces.
     //
 
     OCIO::ColorSpaceMenuHelperRcPtr connectionMenuHelper;
-    OCIO_CHECK_NO_THROW(connectionMenuHelper =
-        OCIO::ColorSpaceMenuHelper::Create(cfg, nullptr,
-                                           OCIO::Category::LUT_INPUT_SPACE,
-                                           OCIO::ColorSpaceMenuHelper::INCLUDE_NO_EXTRAS));
+    params->setAppCategories("LUT-connection-space");
+    OCIO_CHECK_NO_THROW(connectionMenuHelper = OCIO::ColorSpaceMenuHelper::Create(params));
 
-    OCIO_REQUIRE_EQUAL(connectionMenuHelper->getNumColorSpaces(), 3);
+    OCIO_REQUIRE_EQUAL(connectionMenuHelper->getNumColorSpaces(), 1);
 
     OCIO_CHECK_EQUAL(connectionMenuHelper->getName(0), std::string("lut_input_1"));
-    OCIO_CHECK_EQUAL(connectionMenuHelper->getName(1), std::string("lut_input_2"));
-    OCIO_CHECK_EQUAL(connectionMenuHelper->getName(2), std::string("lut_input_3"));
 
     //
     // Step 3 - Create a (display, view) pair.

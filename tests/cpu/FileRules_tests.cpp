@@ -41,23 +41,17 @@ OCIO_ADD_TEST(FileRules, config_read_only)
 {
     auto config = OCIO::Config::CreateRaw();
     auto fileRules = config->getFileRules();
-    OCIO_REQUIRE_EQUAL(fileRules->getNumEntries(), 2);
-    OCIO_CHECK_EQUAL(std::string(fileRules->getName(0)), OCIO::FileRuleUtils::ParseName);
-    OCIO_CHECK_EQUAL(fileRules->getIndexForRule(OCIO::FileRuleUtils::ParseName), 0);
+    OCIO_REQUIRE_EQUAL(fileRules->getNumEntries(), 1);
+    OCIO_CHECK_EQUAL(std::string(fileRules->getName(0)), OCIO::FileRuleUtils::DefaultName);
+    OCIO_CHECK_EQUAL(fileRules->getIndexForRule(OCIO::FileRuleUtils::DefaultName), 0);
     OCIO_CHECK_ASSERT(!fileRules->getPattern(0));
     OCIO_CHECK_ASSERT(!fileRules->getExtension(0));
     OCIO_CHECK_ASSERT(!fileRules->getRegex(0));
-    OCIO_CHECK_ASSERT(std::string(fileRules->getColorSpace(0)).empty());
-    OCIO_CHECK_EQUAL(std::string(fileRules->getName(1)), OCIO::FileRuleUtils::DefaultName);
-    OCIO_CHECK_EQUAL(fileRules->getIndexForRule(OCIO::FileRuleUtils::DefaultName), 1);
-    OCIO_CHECK_ASSERT(!fileRules->getPattern(1));
-    OCIO_CHECK_ASSERT(!fileRules->getExtension(1));
-    OCIO_CHECK_ASSERT(!fileRules->getRegex(1));
-    OCIO_CHECK_EQUAL(std::string(fileRules->getColorSpace(1)), OCIO::ROLE_DEFAULT);
+    OCIO_CHECK_EQUAL(std::string(fileRules->getColorSpace(0)), OCIO::ROLE_DEFAULT);
 
-    OCIO_CHECK_THROW_WHAT(fileRules->getName(2), 
+    OCIO_CHECK_THROW_WHAT(fileRules->getName(1), 
                           OCIO::Exception, 
-                          "rule index '2' invalid. There are only '2' rules.");
+                          "rule index '1' invalid. There are only '1' rules.");
 
     OCIO_CHECK_THROW_WHAT(fileRules->getIndexForRule("toto"), 
                           OCIO::Exception, 
@@ -70,18 +64,17 @@ OCIO_ADD_TEST(FileRules, config_insert_rule)
     auto config = configRaw->createEditableCopy();
     auto fr = config->getFileRules();
     auto fileRules = fr->createEditableCopy();
-    OCIO_REQUIRE_EQUAL(fileRules->getNumEntries(), 2);
+    OCIO_REQUIRE_EQUAL(fileRules->getNumEntries(), 1);
     OCIO_CHECK_NO_THROW(fileRules->insertRule(0, "rule", "raw", "*", "a"));
-    OCIO_REQUIRE_EQUAL(fileRules->getNumEntries(), 3);
+    OCIO_REQUIRE_EQUAL(fileRules->getNumEntries(), 2);
     OCIO_CHECK_NO_THROW(fileRules->insertRule(0, "TIFF rule", "raw", R"(.*\.TIF?F$)"));
-    OCIO_REQUIRE_EQUAL(fileRules->getNumEntries(), 4);
+    OCIO_REQUIRE_EQUAL(fileRules->getNumEntries(), 3);
     OCIO_CHECK_THROW_WHAT(fileRules->insertRule(0, "rule", "raw", "*", "b"),
                           OCIO::Exception, "A rule named 'rule' already exists");
     OCIO_CHECK_THROW_WHAT(fileRules->insertRule(4, "rule2", "raw", "*", "a"),
                           OCIO::Exception, "rule index '4' invalid");
-    OCIO_CHECK_THROW_WHAT(fileRules->removeRule(4), OCIO::Exception, "invalid");
-    OCIO_CHECK_THROW_WHAT(fileRules->removeRule(3), OCIO::Exception, "is the default rule");
-    OCIO_CHECK_NO_THROW(fileRules->removeRule(2));
+    OCIO_CHECK_THROW_WHAT(fileRules->removeRule(3), OCIO::Exception, "invalid");
+    OCIO_CHECK_THROW_WHAT(fileRules->removeRule(2), OCIO::Exception, "is the default rule");
     OCIO_CHECK_NO_THROW(fileRules->removeRule(1));
     OCIO_CHECK_NO_THROW(fileRules->removeRule(0));
     OCIO_CHECK_EQUAL(fileRules->getNumEntries(), 1);
@@ -143,36 +136,29 @@ OCIO_ADD_TEST(FileRules, config_rule_customkeys)
     auto configRaw = OCIO::Config::CreateRaw();
     auto fr = configRaw->getFileRules();
     auto fileRules = fr->createEditableCopy();
-    OCIO_REQUIRE_EQUAL(fileRules->getNumEntries(), 2);
+    OCIO_REQUIRE_EQUAL(fileRules->getNumEntries(), 1);
     OCIO_CHECK_NO_THROW(fileRules->insertRule(0, "rule", "raw", "*", "a"));
-    OCIO_REQUIRE_EQUAL(fileRules->getNumEntries(), 3);
+    OCIO_REQUIRE_EQUAL(fileRules->getNumEntries(), 2);
     OCIO_CHECK_EQUAL(fileRules->getNumCustomKeys(0), 0);
     OCIO_CHECK_EQUAL(fileRules->getNumCustomKeys(1), 0);
-    OCIO_CHECK_EQUAL(fileRules->getNumCustomKeys(2), 0);
-    OCIO_CHECK_THROW_WHAT(fileRules->getNumCustomKeys(3), OCIO::Exception,
-                          "rule index '3' invalid");
+    OCIO_CHECK_THROW_WHAT(fileRules->getNumCustomKeys(2), OCIO::Exception,
+                          "rule index '2' invalid");
     OCIO_CHECK_THROW_WHAT(fileRules->getCustomKeyName(0, 0), OCIO::Exception,
                           "Key index '0' is invalid");
     OCIO_CHECK_THROW_WHAT(fileRules->getCustomKeyName(1, 0), OCIO::Exception,
-                          "Key index '0' is invalid");
-    OCIO_CHECK_THROW_WHAT(fileRules->getCustomKeyName(2, 0), OCIO::Exception,
                           "Key index '0' is invalid");
     OCIO_CHECK_THROW_WHAT(fileRules->getCustomKeyValue(0, 0), OCIO::Exception,
                           "Key index '0' is invalid");
     OCIO_CHECK_THROW_WHAT(fileRules->getCustomKeyValue(1, 0), OCIO::Exception,
                           "Key index '0' is invalid");
-    OCIO_CHECK_THROW_WHAT(fileRules->getCustomKeyValue(2, 0), OCIO::Exception,
-                          "Key index '0' is invalid");
     OCIO_CHECK_NO_THROW(fileRules->setCustomKey(0, "key", "val"));
-    OCIO_CHECK_NO_THROW(fileRules->setCustomKey(1, "key", "val"));
-    OCIO_CHECK_NO_THROW(fileRules->setCustomKey(2, "keyDef", "valDef"));
+    OCIO_CHECK_NO_THROW(fileRules->setCustomKey(1, "keyDef", "valDef"));
     OCIO_CHECK_THROW_WHAT(fileRules->setCustomKey(0, nullptr, "val"), OCIO::Exception,
                           "Key has to be a non-empty string");
     OCIO_CHECK_THROW_WHAT(fileRules->setCustomKey(0, "", "val"), OCIO::Exception,
                           "Key has to be a non-empty string");
     OCIO_REQUIRE_EQUAL(fileRules->getNumCustomKeys(0), 1);
     OCIO_REQUIRE_EQUAL(fileRules->getNumCustomKeys(1), 1);
-    OCIO_REQUIRE_EQUAL(fileRules->getNumCustomKeys(2), 1);
     OCIO_CHECK_EQUAL(std::string(fileRules->getCustomKeyName(0, 0)), "key");
     OCIO_CHECK_EQUAL(std::string(fileRules->getCustomKeyValue(0, 0)), "val");
     OCIO_CHECK_NO_THROW(fileRules->setCustomKey(0, "key", ""));
@@ -219,7 +205,6 @@ roles:
 
 file_rules:
   - !<Rule> {name: rule, colorspace: raw, pattern: "*", extension: a, custom: {4: val4, key1: new val, key2: val2, key3: 3}}
-  - !<Rule> {name: ColorSpaceNamePathSearch, custom: {key: val}}
   - !<Rule> {name: Default, colorspace: default, custom: {keyDef: valDef}}
 
 displays:
@@ -249,7 +234,7 @@ colorspaces:
     OCIO_CHECK_NO_THROW(config_reloaded = OCIO::Config::CreateFromStream(is_reload));
     auto rules_reloaded = config_reloaded->getFileRules();
 
-    OCIO_REQUIRE_EQUAL(rules_reloaded->getNumEntries(), 3);
+    OCIO_REQUIRE_EQUAL(rules_reloaded->getNumEntries(), 2);
 
     OCIO_REQUIRE_EQUAL(rules_reloaded->getNumCustomKeys(0), 4);
     OCIO_CHECK_EQUAL(std::string(rules_reloaded->getCustomKeyName(0, 1)), "key1");
@@ -262,12 +247,8 @@ colorspaces:
     OCIO_CHECK_EQUAL(std::string(rules_reloaded->getCustomKeyValue(0, 0)), "val4");
 
     OCIO_REQUIRE_EQUAL(rules_reloaded->getNumCustomKeys(1), 1);
-    OCIO_CHECK_EQUAL(std::string(rules_reloaded->getCustomKeyName(1, 0)), "key");
-    OCIO_CHECK_EQUAL(std::string(rules_reloaded->getCustomKeyValue(1, 0)), "val");
-
-    OCIO_REQUIRE_EQUAL(rules_reloaded->getNumCustomKeys(2), 1);
-    OCIO_CHECK_EQUAL(std::string(rules_reloaded->getCustomKeyName(2, 0)), "keyDef");
-    OCIO_CHECK_EQUAL(std::string(rules_reloaded->getCustomKeyValue(2, 0)), "valDef");
+    OCIO_CHECK_EQUAL(std::string(rules_reloaded->getCustomKeyName(1, 0)), "keyDef");
+    OCIO_CHECK_EQUAL(std::string(rules_reloaded->getCustomKeyValue(1, 0)), "valDef");
 }
 
 OCIO_ADD_TEST(FileRules, config_rule_u8)
@@ -275,9 +256,9 @@ OCIO_ADD_TEST(FileRules, config_rule_u8)
     auto configRaw = OCIO::Config::CreateRaw();
     auto fr = configRaw->getFileRules();
     auto fileRules = fr->createEditableCopy();
-    OCIO_REQUIRE_EQUAL(fileRules->getNumEntries(), 2);
+    OCIO_REQUIRE_EQUAL(fileRules->getNumEntries(), 1);
     OCIO_CHECK_NO_THROW(fileRules->insertRule(0, u8"éÀÂÇÉÈç$€", "raw", "*", "a"));
-    OCIO_REQUIRE_EQUAL(fileRules->getNumEntries(), 3);
+    OCIO_REQUIRE_EQUAL(fileRules->getNumEntries(), 2);
     OCIO_CHECK_NO_THROW(fileRules->setCustomKey(0, u8"key£", u8"val€"));
     OCIO_CHECK_EQUAL(std::string(fileRules->getCustomKeyName(0, 0)), u8"key£");
     OCIO_CHECK_EQUAL(std::string(fileRules->getCustomKeyValue(0, 0)), u8"val€");
@@ -295,7 +276,7 @@ OCIO_ADD_TEST(FileRules, config_rule_u8)
     OCIO_CHECK_NO_THROW(config_reloaded = OCIO::Config::CreateFromStream(is_reload));
     auto rules_reloaded = config_reloaded->getFileRules();
 
-    OCIO_REQUIRE_EQUAL(rules_reloaded->getNumEntries(), 3);
+    OCIO_REQUIRE_EQUAL(rules_reloaded->getNumEntries(), 2);
 
     OCIO_CHECK_EQUAL(std::string(fileRules->getName(0)), u8"éÀÂÇÉÈç$€");
 
@@ -367,6 +348,7 @@ OCIO_ADD_TEST(FileRules, pattern_error)
     auto fr = configRaw->getFileRules();
     auto rules = fr->createEditableCopy();
 
+    OCIO_CHECK_NO_THROW(rules->insertRule(0, OCIO::FileRuleUtils::ParseName, "", "", ""));
     OCIO_CHECK_NO_THROW(rules->insertRule(0, "new rule", "raw", "*", "a"));
     OCIO_REQUIRE_EQUAL(rules->getNumEntries(), 3);
 
@@ -393,6 +375,8 @@ OCIO_ADD_TEST(FileRules, with_defaults)
 
     auto config = OCIO::Config::CreateRaw()->createEditableCopy();
     auto rules = config->getFileRules()->createEditableCopy();
+
+    OCIO_CHECK_NO_THROW(rules->insertRule(0, OCIO::FileRuleUtils::ParseName, "", "", ""));
     OCIO_REQUIRE_EQUAL(rules->getNumEntries(), 2);
 
     // Null or empty pattern and/or extension throw.
@@ -415,6 +399,7 @@ OCIO_ADD_TEST(FileRules, extension_error)
     auto fr = configRaw->getFileRules();
     auto rules = fr->createEditableCopy();
 
+    OCIO_CHECK_NO_THROW(rules->insertRule(0, OCIO::FileRuleUtils::ParseName, "", "", ""));
     OCIO_CHECK_NO_THROW(rules->insertRule(0, "new rule", "raw", "*", "a"));
     OCIO_REQUIRE_EQUAL(rules->getNumEntries(), 3);
 
@@ -1321,6 +1306,7 @@ OCIO_ADD_TEST(FileRules, clone)
 
     auto config    = OCIO::Config::CreateRaw()->createEditableCopy();
     auto fileRules = config->getFileRules()->createEditableCopy();
+    OCIO_CHECK_NO_THROW(fileRules->insertRule(0, OCIO::FileRuleUtils::ParseName, "", "", ""));
     OCIO_CHECK_NO_THROW(fileRules->insertRule(0, "rule", "raw", "*", "a"));
     OCIO_REQUIRE_EQUAL(fileRules->getNumEntries(), 3);
 
@@ -1338,4 +1324,27 @@ OCIO_ADD_TEST(FileRules, clone)
     OCIO_CHECK_NO_THROW(newFileRules->setPattern(0, "*"));
     OCIO_CHECK_NO_THROW(fileRules->setPattern(0, "*"));
     OCIO_CHECK_EQUAL(std::string(newFileRules->getPattern(0)), std::string(fileRules->getPattern(0)));
+}
+
+OCIO_ADD_TEST(FileRules, isDefault)
+{
+    auto fileRules = OCIO::FileRules::Create();
+    OCIO_CHECK_ASSERT(fileRules->isDefault());
+    fileRules->setColorSpace(0, "DEFault");
+    OCIO_CHECK_ASSERT(fileRules->isDefault());
+    fileRules->setColorSpace(0, "raw");
+    OCIO_CHECK_ASSERT(!fileRules->isDefault());
+    fileRules->setColorSpace(0, "default");
+    OCIO_CHECK_ASSERT(fileRules->isDefault());
+
+    OCIO_CHECK_NO_THROW(fileRules->setCustomKey(0, "key", "val"));
+    OCIO_CHECK_ASSERT(!fileRules->isDefault());
+    OCIO_CHECK_NO_THROW(fileRules->setCustomKey(0, "key", ""));
+    OCIO_CHECK_ASSERT(fileRules->isDefault());
+
+    OCIO_CHECK_NO_THROW(fileRules->insertRule(0, "rule", "raw", "*", "a"));
+    OCIO_CHECK_ASSERT(!fileRules->isDefault());
+
+    const auto config = OCIO::Config::CreateRaw();
+    OCIO_CHECK_ASSERT(config->getFileRules()->isDefault());
 }

@@ -822,6 +822,24 @@ void FileRules::decreaseRulePriority(size_t ruleIndex)
     m_impl->moveRule(ruleIndex, 1);
 }
 
+bool FileRules::isDefault() const noexcept
+{
+    if (m_impl->m_rules.size() == 1)
+    {
+        const auto & rule = m_impl->m_rules[0];
+        if (rule->m_customKeys.getSize() == 0)
+        {
+            // NB: Don't need to check the rule name -- the default rule may not be removed, so if
+            // there is only one rule, it's the default one.
+            if (StringUtils::Compare(rule->getColorSpace(), ROLE_DEFAULT))
+            {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 const char * FileRules::Impl::getColorSpaceFromFilepath(const Config & config,
                                                         const char * filePath) const
 {

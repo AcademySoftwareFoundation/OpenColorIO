@@ -478,7 +478,7 @@ void AddDisplayView(ConfigRcPtr & config,
     // Add categories if any.
     if (categories && *categories)
     {
-        const Categories cats = ExtractCategories(categories);
+        const Categories cats = ExtractItems(categories);
 
         // Only add the categories if already used.
         ColorSpaceNames names = FindColorSpaceNames(config, cats);

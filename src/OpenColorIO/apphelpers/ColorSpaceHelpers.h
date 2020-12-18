@@ -10,6 +10,7 @@
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "CategoryHelpers.h"
+#include "utils/StringUtils.h"
 
 
 namespace OCIO_NAMESPACE
@@ -33,14 +34,17 @@ public:
                                            const char * description);
 
     static ConstColorSpaceInfoRcPtr Create(const ConstConfigRcPtr & config,
-                                           const ConstColorSpaceRcPtr & cs);
+                                           const ColorSpace & cs);
 
     static ConstColorSpaceInfoRcPtr Create(const ConstConfigRcPtr & config,
-                                           const ConstNamedTransformRcPtr & nt);
+                                           const NamedTransform & nt);
 
     static ConstColorSpaceInfoRcPtr CreateFromRole(const ConstConfigRcPtr & config,
                                                    const char * role,
                                                    const char * family);
+
+    static ConstColorSpaceInfoRcPtr CreateFromSingleRole(const ConstConfigRcPtr & config,
+                                                         const char * role);
 
     ColorSpaceInfo(const ConstConfigRcPtr & config,
                    const char * name,
@@ -71,7 +75,61 @@ private:
     const std::string m_description;
 
     // Extracted from the color space's family attribute to be used for a hierarchical menu.
-    std::vector<std::string> m_hierarchyLevels;
+    StringUtils::StringVec m_hierarchyLevels;
+};
+
+
+class ColorSpaceMenuParametersImpl : public ColorSpaceMenuParameters
+{
+public:
+    ColorSpaceMenuParametersImpl(ConstConfigRcPtr config);
+
+    ColorSpaceMenuParametersImpl() = delete;
+    ColorSpaceMenuParametersImpl & operator=(const ColorSpaceMenuParametersImpl &) = delete;
+
+    void setParameters(ConstColorSpaceMenuParametersRcPtr parameters);
+
+    void setConfig(ConstConfigRcPtr config) noexcept override;
+    ConstConfigRcPtr getConfig() const noexcept override;
+    void setRole(const char * role) noexcept override;
+    const char * getRole() const noexcept override;
+    void setAppCategories(const char * appCategories) noexcept override;
+    const char * getAppCategories() const noexcept override;
+    void setUserCategories(const char * userCategories) noexcept override;
+    const char * getUserCategories() const noexcept override;
+    void setEncodings(const char * encoding) noexcept override;
+    const char * getEncodings() const noexcept override;
+    void setIncludeColorSpaces(bool include) noexcept override;
+    bool getIncludeColorSpaces() const noexcept override;
+    void setIncludeRoles(bool include) noexcept override;
+    bool getIncludeRoles() const noexcept override;
+    void setIncludeNamedTransforms(bool include) noexcept override;
+    bool getIncludeNamedTransforms() const noexcept override;
+    SearchReferenceSpaceType getSearchReferenceSpaceType() const noexcept override;
+    void setSearchReferenceSpaceType(SearchReferenceSpaceType colorspaceType) noexcept override;
+
+    void addColorSpace(const char * name) noexcept override;
+    size_t getNumAddedColorSpaces() const noexcept override;
+    const char * getAddedColorSpace(size_t index) const noexcept override;
+    void clearAddedColorSpaces() noexcept override;
+
+    ColorSpaceMenuParametersImpl(const ColorSpaceMenuParametersImpl &) = delete;
+    virtual ~ColorSpaceMenuParametersImpl() = default;
+
+    static void Deleter(ColorSpaceMenuParameters * p);
+
+    // Creation data.
+    ConstConfigRcPtr m_config;
+    std::string m_role;
+    std::string m_appCategories;
+    std::string m_userCategories;
+    std::string m_encodings;
+    bool m_includeColorSpaces = true;
+    bool m_includeRoles = false;
+    bool m_includeNamedTransforms = false;
+    SearchReferenceSpaceType m_colorSpaceType = SEARCH_REFERENCE_SPACE_ALL;
+
+    StringUtils::StringVec m_additionalColorSpaces;
 };
 
 
@@ -82,10 +140,7 @@ public:
     ColorSpaceMenuHelperImpl() = delete;
     ColorSpaceMenuHelperImpl & operator=(const ColorSpaceMenuHelperImpl &) = delete;
 
-    ColorSpaceMenuHelperImpl(const ConstConfigRcPtr & config,
-                             const char * role,             // Role name to override categories.
-                             const char * categories,       // Comma-separated list of categories.
-                             IncludeTypeFlag includeFlag);
+    ColorSpaceMenuHelperImpl(ConstColorSpaceMenuParametersRcPtr parameters);
 
     ColorSpaceMenuHelperImpl(const ColorSpaceMenuHelperImpl &) = delete;
     virtual ~ColorSpaceMenuHelperImpl() = default;
@@ -105,10 +160,6 @@ public:
     const char * getNameFromUIName(const char * uiName) const noexcept override;
     const char * getUINameFromName(const char * name) const noexcept override;
 
-    void addColorSpaceToMenu(const char * name) override;
-
-    void refresh(const ConstConfigRcPtr & config) override;
-
     static void Deleter(ColorSpaceMenuHelper * hlp);
 
     std::ostream & serialize(std::ostream & os) const;
@@ -117,16 +168,11 @@ protected:
     void refresh();
 
 private:
-    ConstConfigRcPtr m_config;
-    const std::string m_roleName;
-    const std::string m_categories;
-    const IncludeTypeFlag m_includeFlag;
+    // Creation data.
+    ColorSpaceMenuParametersImpl m_parameters;
 
     // Contains all the color space names (m_colorSpaces and m_additionalColorSpaces).
     Infos m_entries;
-
-    Infos m_colorSpaces;
-    Infos m_additionalColorSpaces;
 };
 
 

@@ -88,7 +88,7 @@ class DisplayViewHelpersTest(unittest.TestCase):
         OCIO.DisplayViewHelpers.AddDisplayView(config = self.cfg,
                                                displayName = 'DISP_1', viewName = 'VIEW_5',
                                                lookName = 'look_3', colorSpaceName = 'view_5',
-                                               colorSpaceCategories = 'input, lut_input_space',
+                                               colorSpaceCategories = 'file-io, working-space',
                                                transformFilePath = filePath,
                                                connectionColorSpaceName = 'lut_input_1')
 
@@ -104,9 +104,9 @@ class DisplayViewHelpersTest(unittest.TestCase):
         # Check color space.
 
         cs = self.cfg.getColorSpace('view_5')
-        # Categories already used in the config are added them to color space.
-        self.assertTrue(cs.hasCategory('input'))
-        self.assertTrue(cs.hasCategory('lut_input_space'))
+        # Since some categories are already used in the config, they are added to the color space.
+        self.assertTrue(cs.hasCategory('file-io'))
+        self.assertTrue(cs.hasCategory('working-space'))
         self.assertEqual(cs.getFamily(), '');
         self.assertEqual(cs.getDescription(), '');
 

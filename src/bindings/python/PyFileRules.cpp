@@ -66,7 +66,8 @@ void bindPyFileRules(py::module & m)
         .def("increaseRulePriority", &FileRules::increaseRulePriority, "ruleIndex"_a,
              DOC(FileRules, increaseRulePriority))
         .def("decreaseRulePriority", &FileRules::decreaseRulePriority, "ruleIndex"_a,
-             DOC(FileRules, decreaseRulePriority));
+             DOC(FileRules, decreaseRulePriority))
+        .def("isDefault", &FileRules::isDefault, DOC(FileRules, isDefault));
 
     defStr(clsFileRules);
 }

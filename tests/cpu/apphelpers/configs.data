@@ -17,8 +17,13 @@ roles:
   reference: lin_1
   scene_linear: lin_1
   rendering: lin_1
-  default: lin_1
- 
+  default: raw
+
+view_transforms:
+  - !<ViewTransform>
+    name: view_transform
+    from_reference: !<MatrixTransform> {}
+
 displays:
   DISP_1:
     - !<View> {name: VIEW_1, colorspace: view_1}
@@ -46,16 +51,26 @@ looks:
 
 colorspaces:
   - !<ColorSpace>
+    name: raw
+    family: Raw
+    description: A raw color space. Conversions to and from this space are no-ops.
+    isdata: true
+    allocation: uniform
+
+  - !<ColorSpace>
     name: lin_1
-    categories: [ scene_linear_working_space ]
+    categories: [ working-space, basic-2d ]
+    encoding: scene-linear
 
   - !<ColorSpace>
     name: lin_2
-    categories: [ scene_linear_working_space ]
+    categories: [ working-space ]
+    encoding: scene-linear
 
   - !<ColorSpace>
     name: log_1
-    categories: [ log_working_space ]
+    categories: [ working-space ]
+    encoding: log
     to_reference: !<LogTransform> {base: 2, direction: inverse}
 
   - !<ColorSpace>
@@ -64,17 +79,20 @@ colorspaces:
     description: |
       An input color space.
       For the Acme camera.
-    categories: [ input ]
+    categories: [ file-io, basic-2d ]
     to_reference: !<ExponentTransform> {value: [2.6, 2.6, 2.6, 1]}
+    encoding: sdr-video
 
   - !<ColorSpace>
     name: in_2
-    categories: [ input ]
+    categories: [ file-io, advanced-2d ]
     to_reference: !<ExponentTransform> {value: [2.4, 2.4, 2.4, 1]}
+    encoding: sdr-video
 
   - !<ColorSpace>
     name: in_3
-    categories: [ input, log_working_space ]
+    categories: [ file-io, working-space, advanced-3d ]
+    encoding: scene-linear
     to_reference: !<ExponentTransform> {value: [2.2, 2.2, 2.2, 1]}
 
   - !<ColorSpace>
@@ -91,33 +109,53 @@ colorspaces:
 
   - !<ColorSpace>
     name: lut_input_1
-    categories: [ lut_input_space ]
+    categories: [ look-process-space, LUT-connection-space ]
     from_reference: !<ExponentTransform> {value: [2.6, 2.6, 2.6, 1], direction: inverse}
 
   - !<ColorSpace>
     name: lut_input_2
-    categories: [ lut_input_space ]
+    categories: [ look-process-space, advanced-2d ]
     from_reference: !<ExponentTransform> {value: [2.4, 2.4, 2.4, 1], direction: inverse}
 
   - !<ColorSpace>
     name: lut_input_3
-    categories: [ input, lut_input_space ]
+    categories: [ file-io, look-process-space, advanced-2d ]
     from_reference: !<ExponentTransform> {value: [2.4, 2.4, 2.4, 1], direction: inverse}
+
+display_colorspaces:
+  - !<ColorSpace>
+    name: display_lin_1
+    categories: [ working-space, basic-2d ]
+    encoding: scene-linear
+
+  - !<ColorSpace>
+    name: display_lin_2
+    categories: [ working-space ]
+    encoding: sdr-video
+
+  - !<ColorSpace>
+    name: display_log_1
+    categories: [ working-space, advanced-2d ]
+    encoding: log
+    to_display_reference: !<LogTransform> {base: 2, direction: inverse}
 
 named_transforms:
   - !<NamedTransform>
-    name: named_transform1
-    categories: [ conditioning, input ]
-    transform: !<MatrixTransform> {offset: [0.1, 0.2, 0.3, 0.4]}
+    name: nt1
+    categories: [ working-space, basic-3d, advanced-2d ]
+    encoding: sdr-video
+    transform: !<MatrixTransform> {name: forward, offset: [0.1, 0.2, 0.3, 0.4]}
 
   - !<NamedTransform>
-    name: named_transform2
-    inverse_transform: !<MatrixTransform> {offset: [-0.2, -0.1, -0.1, 0]}
+    name: nt2
+    encoding: log
+    inverse_transform: !<MatrixTransform> {name: inverse, offset: [-0.2, -0.1, -0.1, 0]}
 
   - !<NamedTransform>
-    name: named_transform3
-    categories: [ input, basic ]
-    family: Video
-    transform: !<MatrixTransform> {offset: [0.1, 0.2, 0.3, 0]}
-    inverse_transform: !<MatrixTransform> {offset: [-0.1, -0.2, -0.3, 0]}
+    name: nt3
+    categories: [ file-io, basic-2d ]
+    encoding: sdr-video
+    family: Raw 
+    transform: !<MatrixTransform> {name: forward, offset: [0.1, 0.2, 0.3, 0.4]}
+    inverse_transform: !<MatrixTransform> {name: inverse, offset: [-0.2, -0.1, -0.1, 0]}
 )"};

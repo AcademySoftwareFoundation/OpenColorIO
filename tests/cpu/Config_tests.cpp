@@ -2490,7 +2490,6 @@ OCIO_ADD_TEST(Config, display)
         "  scene_linear: lnh\n"
         "\n"
         "file_rules:\n"
-        "  - !<Rule> {name: ColorSpaceNamePathSearch}\n"
         "  - !<Rule> {name: Default, colorspace: default}\n"
         "\n"
         "displays:\n"
@@ -3023,7 +3022,6 @@ OCIO_ADD_TEST(Config, display_view_order)
             allocation: uniform
 
         file_rules:
-          - !<Rule> {name: ColorSpaceNamePathSearch}
           - !<Rule> {name: Default, colorspace: raw}
         )" };
 
@@ -4558,7 +4556,7 @@ constexpr char InactiveCSConfigEnd[] =
     "    equalitygroup: \"\"\n"
     "    bitdepth: unknown\n"
     "    isdata: false\n"
-    "    categories: [cat1]\n"
+    "    categories: [file-io]\n"
     "    allocation: uniform\n"
     "    from_reference: !<CDLTransform> {offset: [0.1, 0.1, 0.1]}\n"
     "\n"
@@ -4568,7 +4566,7 @@ constexpr char InactiveCSConfigEnd[] =
     "    equalitygroup: \"\"\n"
     "    bitdepth: unknown\n"
     "    isdata: false\n"
-    "    categories: [cat2]\n"
+    "    categories: [working-space]\n"
     "    allocation: uniform\n"
     "    from_reference: !<CDLTransform> {offset: [0.2, 0.2, 0.2]}\n"
     "\n"
@@ -4720,12 +4718,12 @@ OCIO_ADD_TEST(Config, inactive_color_space)
     OCIO_CHECK_NO_THROW(css = config->getColorSpaces(nullptr));
     OCIO_CHECK_EQUAL(css->getNumColorSpaces(), 3);
 
-    // Search using a category 'cat1' with no active color space.
-    OCIO_CHECK_NO_THROW(css = config->getColorSpaces("cat1"));
+    // Search using a category 'file-io' with no active color space.
+    OCIO_CHECK_NO_THROW(css = config->getColorSpaces("file-io"));
     OCIO_CHECK_EQUAL(css->getNumColorSpaces(), 0);
 
-    // Search using a category 'cat2' with some active color spaces.
-    OCIO_CHECK_NO_THROW(css = config->getColorSpaces("cat2"));
+    // Search using a category 'working-space' with some active color spaces.
+    OCIO_CHECK_NO_THROW(css = config->getColorSpaces("working-space"));
     OCIO_CHECK_EQUAL(css->getNumColorSpaces(), 1);
 
     // Request an active color space.
@@ -5844,7 +5842,6 @@ OCIO_ADD_TEST(Config, family_separator)
         "  default: raw\n"
         "\n"
         "file_rules:\n"
-        "  - !<Rule> {name: ColorSpaceNamePathSearch}\n"
         "  - !<Rule> {name: Default, colorspace: default}\n"
         "\n"
         "displays:\n"
@@ -7499,7 +7496,6 @@ roles:
   default: raw
 
 file_rules:
-  - !<Rule> {name: ColorSpaceNamePathSearch}
   - !<Rule> {name: Default, colorspace: default}
 
 displays:
@@ -7539,7 +7535,6 @@ roles:
   default: raw
 
 file_rules:
-  - !<Rule> {name: ColorSpaceNamePathSearch}
   - !<Rule> {name: Default, colorspace: default}
 
 displays:
@@ -7583,7 +7578,6 @@ roles:
   default: raw
 
 file_rules:
-  - !<Rule> {name: ColorSpaceNamePathSearch}
   - !<Rule> {name: Default, colorspace: default}
 
 displays:

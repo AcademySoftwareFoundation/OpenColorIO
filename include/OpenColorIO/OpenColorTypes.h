@@ -238,6 +238,10 @@ class ColorSpaceMenuHelper;
 typedef OCIO_SHARED_PTR<ColorSpaceMenuHelper> ColorSpaceMenuHelperRcPtr;
 typedef OCIO_SHARED_PTR<const ColorSpaceMenuHelper> ConstColorSpaceMenuHelperRcPtr;
 
+class ColorSpaceMenuParameters;
+typedef OCIO_SHARED_PTR<ColorSpaceMenuParameters> ColorSpaceMenuParametersRcPtr;
+typedef OCIO_SHARED_PTR<const ColorSpaceMenuParameters> ConstColorSpaceMenuParametersRcPtr;
+
 class MixingColorSpaceManager;
 typedef OCIO_SHARED_PTR<MixingColorSpaceManager> MixingColorSpaceManagerRcPtr;
 typedef OCIO_SHARED_PTR<const MixingColorSpaceManager> ConstMixingColorSpaceManagerRcPtr;
@@ -713,18 +717,14 @@ extern OCIOEXPORT ExposureContrastStyle ExposureContrastStyleFromString(const ch
 extern OCIOEXPORT const char * NegativeStyleToString(NegativeStyle style);
 extern OCIOEXPORT NegativeStyle NegativeStyleFromString(const char * style);
 
-/** \defgroup VarsEnvvar
+/** \defgroup Env. variables.
  *  @{
+ *
+ * These environmental variables are used by the OpenColorIO library.
+ * For variables that allow specifying more than one token, they should be separated by commas.
  */
 
-// TODO: Move to .rst
-/*
-Envvar
-******
-
-These environmental variables are used by the OpenColorIO library
-(i.e. these variables are defined in src/OpenColorIO/Config.cpp).
-*/
+// These variables are defined in src/OpenColorIO/Config.cpp.
 
 
 /// The envvar 'OCIO' provides a path to the config file used by \ref Config::CreateFromEnv
@@ -755,6 +755,17 @@ extern OCIOEXPORT const char * OCIO_INACTIVE_COLORSPACES_ENVVAR;
  * Ex: OCIO_OPTIMIZATION_FLAGS="20479" or "0x4FFF" for OPTIMIZATION_LOSSLESS.
  */
 extern OCIOEXPORT const char * OCIO_OPTIMIZATION_FLAGS_ENVVAR;
+
+/**
+ * The envvar 'OCIO_USER_CATEGORIES' allows the end-user to filter color spaces shown by
+ * applications.  Only color spaces that include at least one of the supplied categories will be
+ * shown in application menus.  Note that applications may also impose their own category filtering
+ * in addition to the user-supplied categories.  For example, an application may filter by
+ * 'working-space' for a menu to select a working space while the user may also filter by
+ * '3d-basic' to only show spaces intended for 3d artists who should see the basic set of color
+ * spaces. The categories will be ignored if they would result in no color spaces being found.
+ */
+extern OCIOEXPORT const char * OCIO_USER_CATEGORIES_ENVVAR;
 
 /** @}*/
 
