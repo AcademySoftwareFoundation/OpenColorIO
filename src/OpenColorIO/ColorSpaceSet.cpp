@@ -148,7 +148,7 @@ public:
             entryIdx = getIndex(alias);
             // Is an alias of the color space already used by a color space?
             // Skip existing colorspace that might be replaced.
-            if (entryIdx != -1 && replaceIdx != entryIdx)
+            if (entryIdx != -1 && static_cast<int>(replaceIdx) != entryIdx)
             {
                 std::ostringstream os;
                 os << "Cannot add '" << csName << "' color space, it has '" << alias;
