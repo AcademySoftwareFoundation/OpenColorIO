@@ -265,7 +265,7 @@ void bindPyColorSpace(py::module & m)
             })
         .def("__getitem__", [](ColorSpaceAliasIterator & it, int i)
             { 
-                it.checkIndex(i, it.m_obj->getNumAliases());
+                it.checkIndex(i, (int)it.m_obj->getNumAliases());
                 return it.m_obj->getAlias(i);
             })
         .def("__iter__", [](ColorSpaceAliasIterator & it) -> ColorSpaceAliasIterator &
@@ -274,7 +274,7 @@ void bindPyColorSpace(py::module & m)
             })
         .def("__next__", [](ColorSpaceAliasIterator & it)
             {
-                int i = it.nextIndex(it.m_obj->getNumAliases());
+                int i = it.nextIndex((int)it.m_obj->getNumAliases());
                 return it.m_obj->getAlias(i);
             });
 
