@@ -179,6 +179,9 @@ public:
     virtual size_t getNumAddedColorSpaces() const noexcept = 0;
     virtual const char * getAddedColorSpace(size_t index) const noexcept = 0;
     virtual void clearAddedColorSpaces() noexcept = 0;
+
+    /// Do not use (needed only for pybind11).
+    virtual ~ColorSpaceMenuParameters() = default;
 };
 
 extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const ColorSpaceMenuParameters &);
