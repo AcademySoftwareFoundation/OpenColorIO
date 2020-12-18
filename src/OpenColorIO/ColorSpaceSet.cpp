@@ -126,7 +126,7 @@ public:
         }
 
         auto entryIdx = getIndex(csName);
-        size_t replaceIdx = -1;
+        size_t replaceIdx = (size_t)-1;
         if (entryIdx != -1)
         {
             if (!StringUtils::Compare(m_colorSpaces[entryIdx]->getName(), csName))
@@ -157,7 +157,7 @@ public:
                 throw Exception(os.str().c_str());
             }
         }
-        if (replaceIdx != -1)
+        if (replaceIdx != (size_t)-1)
         {
             // The color space replaces the existing one.
             m_colorSpaces[replaceIdx] = cs->createEditableCopy();
