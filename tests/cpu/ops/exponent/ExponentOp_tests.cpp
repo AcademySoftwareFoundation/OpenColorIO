@@ -138,11 +138,11 @@ OCIO_ADD_TEST(ExponentOp, combining)
     OCIO_CHECK_EQUAL(combinedData->getID(), "ID1 + ID2");
     OCIO_REQUIRE_EQUAL(combinedData->getFormatMetadata().getNumChildrenElements(), 2);
     const auto & child0 = combinedData->getFormatMetadata().getChildElement(0);
-    OCIO_CHECK_EQUAL(std::string(child0.getName()), OCIO::METADATA_DESCRIPTION);
-    OCIO_CHECK_EQUAL(std::string(child0.getValue()), "First exponent");
+    OCIO_CHECK_EQUAL(std::string(child0.getElementName()), OCIO::METADATA_DESCRIPTION);
+    OCIO_CHECK_EQUAL(std::string(child0.getElementValue()), "First exponent");
     const auto & child1 = combinedData->getFormatMetadata().getChildElement(1);
-    OCIO_CHECK_EQUAL(std::string(child1.getName()), OCIO::METADATA_DESCRIPTION);
-    OCIO_CHECK_EQUAL(std::string(child1.getValue()), "Second exponent");
+    OCIO_CHECK_EQUAL(std::string(child1.getElementName()), OCIO::METADATA_DESCRIPTION);
+    OCIO_CHECK_EQUAL(std::string(child1.getElementValue()), "Second exponent");
     // 3 attributes: name, id and Attrib.
     OCIO_CHECK_EQUAL(combinedData->getFormatMetadata().getNumAttributes(), 3);
     auto & attribs = combinedData->getFormatMetadata().getAttributes();

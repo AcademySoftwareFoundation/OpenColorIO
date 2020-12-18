@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
+#include <cstring>
 #include <sstream>
 
 #include <OpenColorIO/OpenColorIO.h>
@@ -22,10 +23,9 @@ const char * METADATA_OUTPUT_DESCRIPTOR = "OutputDescriptor";
 const char * METADATA_NAME = "name";
 const char * METADATA_ID = "id";
 
-
 std::ostream & operator<< (std::ostream & os, const FormatMetadata & fd)
 {
-    const std::string name{ fd.getName() };
+    const std::string name{ fd.getElementName() };
     os << "<" << name;
     const int numAtt = fd.getNumAttributes();
     if (numAtt)
@@ -36,7 +36,7 @@ std::ostream & operator<< (std::ostream & os, const FormatMetadata & fd)
         }
     }
     os << ">";
-    const std::string val{ fd.getValue() };
+    const std::string val{ fd.getElementValue() };
     if (!val.empty())
     {
         os << val;
@@ -86,35 +86,12 @@ FormatMetadataImpl::~FormatMetadataImpl()
 {
 }
 
-void FormatMetadataImpl::setName(const std::string & name)
-{
-    if (name.empty())
-    {
-        throw Exception("FormatMetadata has to have a non-empty name.");
-    }
-    if (name == METADATA_ROOT)
-    {
-        throw Exception("FormatMetadata 'ROOT' can't be renamed.");
-
-    }
-    m_name = name;
-}
-
-void FormatMetadataImpl::setValue(const std::string & value)
-{
-    if (m_name == METADATA_ROOT)
-    {
-        throw Exception("FormatMetadata 'ROOT' can't have a value.");
-    }
-    m_value = value;
-}
-
-const FormatMetadataImpl::Attributes & FormatMetadataImpl::getAttributes() const
+const FormatMetadataImpl::Attributes & FormatMetadataImpl::getAttributes() const noexcept
 {
     return m_attributes;
 }
 
-void FormatMetadataImpl::addAttribute(const Attribute & attribute)
+void FormatMetadataImpl::addAttribute(const Attribute & attribute) noexcept
 {
     // If this attribute already exists, overwrite the value. 
     // Otherwise, add the new attribute. This ensures that we do not 
@@ -134,12 +111,12 @@ void FormatMetadataImpl::addAttribute(const Attribute & attribute)
     m_attributes.push_back(attribute);
 }
 
-FormatMetadataImpl::Elements & FormatMetadataImpl::getChildrenElements()
+FormatMetadataImpl::Elements & FormatMetadataImpl::getChildrenElements() noexcept
 {
     return m_elements;
 }
 
-const FormatMetadataImpl::Elements & FormatMetadataImpl::getChildrenElements() const
+const FormatMetadataImpl::Elements & FormatMetadataImpl::getChildrenElements() const noexcept
 {
     return m_elements;
 }
@@ -147,7 +124,7 @@ const FormatMetadataImpl::Elements & FormatMetadataImpl::getChildrenElements() c
 
 namespace
 {
-void Combine(std::string & first, const std::string & second)
+void Combine(std::string & first, const std::string & second) noexcept
 {
     if (!second.empty())
     {
@@ -225,12 +202,12 @@ bool FormatMetadataImpl::operator==(const FormatMetadataImpl & rhs) const
     return true;
 }
 
-int FormatMetadataImpl::getFirstChildIndex(const std::string & name) const
+int FormatMetadataImpl::getFirstChildIndex(const std::string & name) const noexcept
 {
     int i = 0;
     for (auto & it : m_elements)
     {
-        if (0 == Platform::Strcasecmp(name.c_str(), it.getName()))
+        if (0 == Platform::Strcasecmp(name.c_str(), it.getElementName()))
         {
             return i;
         }
@@ -239,7 +216,7 @@ int FormatMetadataImpl::getFirstChildIndex(const std::string & name) const
     return -1;
 }
 
-int FormatMetadataImpl::findNamedAttribute(const std::string & name) const
+int FormatMetadataImpl::findNamedAttribute(const std::string & name) const noexcept
 {
     int i = 0;
     for (auto & it : m_attributes)
@@ -253,73 +230,118 @@ int FormatMetadataImpl::findNamedAttribute(const std::string & name) const
     return -1;
 }
 
-const std::string & FormatMetadataImpl::getAttributeValue(const std::string & name) const
+void FormatMetadataImpl::ValidateElementName(const std::string & name)
 {
-    for (auto & it : m_attributes)
+    if (name.empty())
     {
-        if (0 == Platform::Strcasecmp(name.c_str(), it.first.c_str()))
-        {
-            return it.second;
-        }
+        throw Exception("FormatMetadata has to have a non-empty name.");
     }
-    static const std::string emptyString("");
-    return emptyString;
+    if (strcmp(name.c_str(), METADATA_ROOT) == 0)
+    {
+        throw Exception("'ROOT' is reversed for root FormatMetadata elements.");
+    }
 }
 
-const char * FormatMetadataImpl::getName() const
+void FormatMetadataImpl::validateElementName(const std::string & name) const
+{
+    ValidateElementName(name);
+    if (strcmp(m_name.c_str(), METADATA_ROOT) == 0)
+    {
+        throw Exception("FormatMetadata 'ROOT' element can't be renamed.");
+    }
+}
+
+const char * FormatMetadataImpl::getElementName() const noexcept
 {
     return m_name.c_str();
 }
 
-void FormatMetadataImpl::setName(const char * name)
+void FormatMetadataImpl::setElementName(const char * name)
 {
-    m_name = name;
-    if (m_name.empty())
-    {
-        throw Exception("FormatMetadata has to have a non-empty name.");
-    }
+    std::string nameStr{ name ? name : "" };
+    validateElementName(nameStr);
+    m_name = nameStr;
 }
 
-const char * FormatMetadataImpl::getValue() const
+const char * FormatMetadataImpl::getElementValue() const noexcept
 {
     return m_value.c_str();
 }
 
-void FormatMetadataImpl::setValue(const char * value)
+void FormatMetadataImpl::setElementValue(const char * value)
 {
-    m_value = value;
+    if (m_name == METADATA_ROOT)
+    {
+        throw Exception("FormatMetadata 'ROOT' can't have a value.");
+    }
+    m_value = std::string{ value ? value : "" };
 }
 
-int FormatMetadataImpl::getNumAttributes() const
+int FormatMetadataImpl::getNumAttributes() const noexcept
 {
     return (int)m_attributes.size();
 }
 
-const char * FormatMetadataImpl::getAttributeName(int i) const
+const char * FormatMetadataImpl::getAttributeName(int i) const noexcept
 {
     if (i >= 0 && i < getNumAttributes())
     {
         return m_attributes[i].first.c_str();
     }
-    return nullptr;
+    return "";
 }
 
-const char * FormatMetadataImpl::getAttributeValue(int i) const
+const char * FormatMetadataImpl::getAttributeValue(int i) const noexcept
 {
     if (i >= 0 && i < getNumAttributes())
     {
         return m_attributes[i].second.c_str();
     }
-    return nullptr;
+    return "";
+}
+
+const char * FormatMetadataImpl::getAttributeValue(const char * name) const noexcept
+{
+    if (name && *name)
+    {
+        for (auto & it : m_attributes)
+        {
+            if (0 == Platform::Strcasecmp(name, it.first.c_str()))
+            {
+                return it.second.c_str();
+            }
+        }
+    }
+    return "";
+}
+
+const std::string & FormatMetadataImpl::getAttributeValueString(const char * name) const noexcept
+{
+    if (name && *name)
+    {
+        for (auto & it : m_attributes)
+        {
+            if (0 == Platform::Strcasecmp(name, it.first.c_str()))
+            {
+                return it.second;
+            }
+        }
+    }
+    static const std::string emptyString{ "" };
+    return emptyString;
 }
 
 void FormatMetadataImpl::addAttribute(const char * name, const char * value)
 {
-    Attribute attrib(name, value);
+    if (!name || !*name)
+    {
+        throw Exception("Attribute must have a non-empty name.");
+    }
+    Attribute attrib(name, value ? value : "");
     addAttribute(attrib);
 }
 
-int FormatMetadataImpl::getNumChildrenElements() const
+int FormatMetadataImpl::getNumChildrenElements() const noexcept
 {
     return (int)m_elements.size();
 }
@@ -344,10 +366,12 @@ const FormatMetadata & FormatMetadataImpl::getChildElement(int i) const
 
 void FormatMetadataImpl::addChildElement(const char * name, const char * value)
 {
-    m_elements.emplace_back(name, value);
+    std::string nameStr(name ? name : "");
+    ValidateElementName(nameStr);
+    m_elements.emplace_back(nameStr, value ? value : "");
 }
 
-void FormatMetadataImpl::clear()
+void FormatMetadataImpl::clear() noexcept
 {
     m_attributes.clear();
     m_value = "";
@@ -362,6 +386,28 @@ FormatMetadata & FormatMetadataImpl::operator=(const FormatMetadata & rhs)
         *this = metadata;
     }
     return *this;
+}
+
+const char * FormatMetadataImpl::getName() const noexcept
+{
+    return getAttributeValueString(METADATA_NAME).c_str();
+}
+
+void FormatMetadataImpl::setName(const char * name) noexcept
+{
+    Attribute attrib(METADATA_NAME, name ? name : "");
+    addAttribute(attrib);
+}
+
+const char * FormatMetadataImpl::getID() const noexcept
+{
+    return getAttributeValueString(METADATA_ID).c_str();
+}
+
+void FormatMetadataImpl::setID(const char * id) noexcept
+{
+    Attribute attrib(METADATA_ID, id ? id : "");
+    addAttribute(attrib);
 }
 
 } // namespace OCIO_NAMESPACE

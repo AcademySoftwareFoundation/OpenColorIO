@@ -8,104 +8,52 @@
 
 #include "ContextVariableUtils.h"
 #include "OpBuilders.h"
+#include "transforms/FileTransform.h"
+#include "transforms/GroupTransform.h"
 
 
 namespace OCIO_NAMESPACE
 {
 GroupTransformRcPtr GroupTransform::Create()
 {
-    return GroupTransformRcPtr(new GroupTransform(), &deleter);
+    return GroupTransformRcPtr(new GroupTransformImpl(), &GroupTransformImpl::Deleter);
 }
 
-void GroupTransform::deleter(GroupTransform * t)
+void GroupTransformImpl::Deleter(GroupTransform * t)
 {
-    delete t;
+    delete static_cast<GroupTransformImpl *>(t);
 }
 
-namespace
-{
-typedef std::vector<TransformRcPtr> TransformRcPtrVec;
-}
-
-class GroupTransform::Impl
-{
-public:
-    TransformDirection m_dir;
-    TransformRcPtrVec m_vec;
-
-    Impl()
-        : m_dir(TRANSFORM_DIR_FORWARD)
-        , m_metadata()
-    { }
-
-    Impl(const Impl &) = delete;
-
-    ~Impl()
-    {
-        m_vec.clear();
-    }
-
-    Impl & operator= (const Impl & rhs)
-    {
-        if (this != &rhs)
-        {
-            m_dir = rhs.m_dir;
-
-            m_vec.clear();
-
-            for (unsigned int i = 0; i < rhs.m_vec.size(); ++i)
-            {
-                m_vec.push_back(rhs.m_vec[i]->createEditableCopy());
-            }
-        }
-        return *this;
-    }
-
-    FormatMetadata & getFormatMetadata() noexcept
-    {
-        return m_metadata;
-    }
-
-    const FormatMetadata & getFormatMetadata() const noexcept
-    {
-        return m_metadata;
-    }
-
-private:
-    FormatMetadataImpl m_metadata;
-};
 
 ///////////////////////////////////////////////////////////////////////////
 
-GroupTransform::GroupTransform()
-    : m_impl(new GroupTransform::Impl)
+GroupTransformImpl::GroupTransformImpl()
+    : m_metadata()
+    , m_dir(TRANSFORM_DIR_FORWARD)
 {
 }
 
-TransformRcPtr GroupTransform::createEditableCopy() const
+TransformRcPtr GroupTransformImpl::createEditableCopy() const
 {
     GroupTransformRcPtr transform = GroupTransform::Create();
-    *(transform->m_impl) = *m_impl;
+    auto groupImpl = dynamic_cast<GroupTransformImpl*>(transform.get());
+    groupImpl->m_dir = m_dir;
+    groupImpl->m_vec = m_vec;
+    groupImpl->m_metadata = m_metadata;
     return transform;
 }
 
-GroupTransform::~GroupTransform()
+TransformDirection GroupTransformImpl::getDirection() const noexcept
 {
-    delete m_impl;
-    m_impl = nullptr;
+    return m_dir;
 }
 
-TransformDirection GroupTransform::getDirection() const noexcept
+void GroupTransformImpl::setDirection(TransformDirection dir) noexcept
 {
-    return getImpl()->m_dir;
+    m_dir = dir;
 }
 
-void GroupTransform::setDirection(TransformDirection dir) noexcept
-{
-    getImpl()->m_dir = dir;
-}
-
-void GroupTransform::validate() const
+void GroupTransformImpl::validate() const
 {
     try
     {
@@ -118,59 +66,92 @@ void GroupTransform::validate() const
         throw Exception(errMsg.c_str());
     }
 
-    for(const auto & val : getImpl()->m_vec)
+    for(const auto & val : m_vec)
     {
         val->validate();
     }
 }
 
-FormatMetadata & GroupTransform::getFormatMetadata() noexcept
+int GroupTransformImpl::getNumTransforms() const noexcept
 {
-    return m_impl->getFormatMetadata();
+    return static_cast<int>(m_vec.size());
 }
 
-const FormatMetadata & GroupTransform::getFormatMetadata() const noexcept
+ConstTransformRcPtr GroupTransformImpl::getTransform(int index) const
 {
-    return m_impl->getFormatMetadata();
-}
-
-int GroupTransform::getNumTransforms() const
-{
-    return static_cast<int>(getImpl()->m_vec.size());
-}
-
-ConstTransformRcPtr GroupTransform::getTransform(int index) const
-{
-    if (index < 0 || index >= (int)getImpl()->m_vec.size())
+    if (index < 0 || index >= (int)m_vec.size())
     {
         std::ostringstream os;
         os << "Invalid transform index " << index << ".";
         throw Exception(os.str().c_str());
     }
 
-    return getImpl()->m_vec[index];
+    return m_vec[index];
 }
 
-TransformRcPtr & GroupTransform::getTransform(int index)
+TransformRcPtr & GroupTransformImpl::getTransform(int index)
 {
-    if (index < 0 || index >= (int)getImpl()->m_vec.size())
+    if (index < 0 || index >= (int)m_vec.size())
     {
         std::ostringstream os;
         os << "Invalid transform index " << index << ".";
         throw Exception(os.str().c_str());
     }
 
-    return getImpl()->m_vec[index];
+    return m_vec[index];
 }
 
-void GroupTransform::appendTransform(TransformRcPtr transform)
+void GroupTransformImpl::appendTransform(TransformRcPtr transform) noexcept
 {
-    getImpl()->m_vec.push_back(transform);
+    m_vec.push_back(transform);
 }
 
-void GroupTransform::prependTransform(TransformRcPtr transform)
+void GroupTransformImpl::prependTransform(TransformRcPtr transform) noexcept
 {
-    getImpl()->m_vec.insert(getImpl()->m_vec.begin(), transform);
+    m_vec.insert(m_vec.begin(), transform);
+}
+
+void GroupTransformImpl::write(const ConstConfigRcPtr & config,
+                               const ConstContextRcPtr & context,
+                               const char * formatName,
+                               std::ostream & os) const
+{
+    FileFormat* fmt = FormatRegistry::GetInstance().getFileFormatByName(formatName);
+
+    if (!fmt)
+    {
+        std::ostringstream err;
+        err << "The format named '" << formatName;
+        err << "' could not be found. ";
+        throw Exception(err.str().c_str());
+    }
+
+    try
+    {
+        fmt->write(config, context, *this, formatName, os);
+    }
+    catch (std::exception & e)
+    {
+        std::ostringstream err;
+        err << "Error writing format '" << formatName << "': ";
+        err << e.what();
+        throw Exception(err.str().c_str());
+    }
+}
+
+int GroupTransform::GetNumWriteFormats() noexcept
+{
+    return FormatRegistry::GetInstance().getNumFormats(FORMAT_CAPABILITY_WRITE);
+}
+
+const char * GroupTransform::GetFormatNameByIndex(int index) noexcept
+{
+    return FormatRegistry::GetInstance().getFormatNameByIndex(FORMAT_CAPABILITY_WRITE, index);
+}
+
+const char * GroupTransform::GetFormatExtensionByIndex(int index) noexcept
+{
+    return FormatRegistry::GetInstance().getFormatExtensionByIndex(FORMAT_CAPABILITY_WRITE, index);
 }
 
 std::ostream & operator<< (std::ostream & os, const GroupTransform & groupTransform)

@@ -16,10 +16,6 @@ namespace OCIO_NAMESPACE
 namespace FileRuleUtils
 {
 
-// Reserved rule names.
-constexpr char DefaultName[] { "Default" };
-constexpr char ParseName[]   { "ColorSpaceNamePathSearch" };
-
 constexpr char Name[]       { "name" };
 constexpr char ColorSpace[] { "colorspace" };
 constexpr char Pattern[]    { "pattern" };

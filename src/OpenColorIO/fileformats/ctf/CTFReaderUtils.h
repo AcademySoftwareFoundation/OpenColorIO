@@ -111,7 +111,6 @@ static constexpr char ATTR_LOGMIDGRAY[] = "logMidGray";
 static constexpr char ATTR_LOGSIDESLOPE[] = "logSideSlope";
 static constexpr char ATTR_LOGSIDEOFFSET[] = "logSideOffset";
 static constexpr char ATTR_MASTER[] = "master";
-static constexpr char ATTR_NAME[] = "name";
 static constexpr char ATTR_OFFSET[] = "offset";
 static constexpr char ATTR_PARAM[] = "param";
 static constexpr char ATTR_PARAMS[] = "params";

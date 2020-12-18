@@ -14,7 +14,7 @@
 #include "OpBuilders.h"
 #include "Processor.h"
 #include "TransformBuilder.h"
-#include "transforms/FileTransform.h"
+#include "utils/StringUtils.h"
 
 namespace OCIO_NAMESPACE
 {
@@ -150,26 +150,6 @@ const FormatMetadata & Processor::getTransformFormatMetadata(int index) const
 GroupTransformRcPtr Processor::createGroupTransform() const
 {
     return getImpl()->createGroupTransform();
-}
-
-void Processor::write(const char * formatName, std::ostream & os) const
-{
-    getImpl()->write(formatName, os);
-}
-
-int Processor::getNumWriteFormats()
-{
-    return FormatRegistry::GetInstance().getNumFormats(FORMAT_CAPABILITY_WRITE);
-}
-
-const char * Processor::getFormatNameByIndex(int index)
-{
-    return FormatRegistry::GetInstance().getFormatNameByIndex(FORMAT_CAPABILITY_WRITE, index);
-}
-
-const char * Processor::getFormatExtensionByIndex(int index)
-{
-    return FormatRegistry::GetInstance().getFormatExtensionByIndex(FORMAT_CAPABILITY_WRITE, index);
 }
 
 bool Processor::isDynamic() const noexcept
@@ -319,32 +299,6 @@ GroupTransformRcPtr Processor::Impl::createGroupTransform() const
     }
 
     return group;
-}
-
-void Processor::Impl::write(const char * formatName, std::ostream & os) const
-{
-    FileFormat* fmt = FormatRegistry::GetInstance().getFileFormatByName(formatName);
-
-    if (!fmt)
-    {
-        std::ostringstream err;
-        err << "The format named '" << formatName;
-        err << "' could not be found. ";
-        throw Exception(err.str().c_str());
-    }
-
-    try
-    {
-        std::string fName{ formatName };
-        fmt->write(m_ops, getFormatMetadata(), fName, os);
-    }
-    catch (std::exception & e)
-    {
-        std::ostringstream err;
-        err << "Error writing format '" << formatName << "': ";
-        err << e.what();
-        throw Exception(err.str().c_str());
-    }
 }
 
 bool Processor::Impl::isDynamic() const noexcept

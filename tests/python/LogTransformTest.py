@@ -8,6 +8,7 @@ import PyOpenColorIO as OCIO
 
 class LogTransformTest(unittest.TestCase):
     TEST_ID = 'sample log'
+    TEST_NAME = 'name of log'
     TEST_BASE = 10
     TEST_DIRECTION = OCIO.TRANSFORM_DIR_INVERSE
 
@@ -63,9 +64,13 @@ class LogTransformTest(unittest.TestCase):
         """
 
         format_metadata = self.log_tr.getFormatMetadata()
-        format_metadata.setName(self.TEST_ID)
         self.assertIsInstance(format_metadata, OCIO.FormatMetadata)
-        self.assertEqual(format_metadata.getName(), self.TEST_ID)
+        self.assertEqual(format_metadata.getID(), '')
+        self.assertEqual(format_metadata.getName(), '')
+        format_metadata.setID(self.TEST_ID)
+        format_metadata.setName(self.TEST_NAME)
+        self.assertEqual(format_metadata.getID(), self.TEST_ID)
+        self.assertEqual(format_metadata.getName(), self.TEST_NAME)
 
     def test_validate(self):
         """

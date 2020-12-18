@@ -42,9 +42,7 @@ void CDLReaderColorCorrectionElt::start(const char ** atts)
 
 void CDLReaderColorCorrectionElt::end()
 {
-    CDLTransformRcPtr transform = CDLTransform::Create();
-
-    transform->setID(m_transformData->getID().c_str());
+    CDLTransformImplRcPtr transform = CDLTransformImpl::Create();
 
     double vec9[9];
     const CDLOpData::ChannelParams & slopes = m_transformData->getSlopeParams();

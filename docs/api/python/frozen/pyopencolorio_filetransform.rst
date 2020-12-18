@@ -24,6 +24,8 @@
    .. py:method:: FileTransform.getCCCId(self: PyOpenColorIO.FileTransform) -> str
       :module: PyOpenColorIO
 
+      The cccid can be the ID of a CDL or the index of the CDL (as string). If cccid is NULL or empty the first CDL is returned. The cccid is case-sensitive.
+
 
    .. py:method:: FileTransform.getCDLStyle(self: PyOpenColorIO.FileTransform) -> PyOpenColorIO.CDLStyle
       :module: PyOpenColorIO
