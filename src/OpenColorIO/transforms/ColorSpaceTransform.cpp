@@ -220,6 +220,9 @@ namespace
 bool AreColorSpacesInSameEqualityGroup(const ConstColorSpaceRcPtr & csa,
                                        const ConstColorSpaceRcPtr & csb)
 {
+    // See issue #602.
+    if (csa.get() == csb.get()) return true;
+
     std::string a = csa->getEqualityGroup();
     std::string b = csb->getEqualityGroup();
 

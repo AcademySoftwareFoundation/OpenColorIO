@@ -197,6 +197,7 @@ class ColorSpaceTest(unittest.TestCase):
 
         cs = OCIO.ColorSpace(OCIO.REFERENCE_SPACE_SCENE,
                              'test',
+                             ['alias1', 'alias2'],
                              'ocio family',
                              'scene-linear',
                              'My_Equality',
@@ -207,6 +208,10 @@ class ColorSpaceTest(unittest.TestCase):
                              [0.0, 1.0])
 
         self.assertEqual(cs.getName(), 'test')
+        aliases = cs.getAliases()
+        self.assertEqual(len(aliases), 2)
+        self.assertEqual(aliases[0], 'alias1')
+        self.assertEqual(aliases[1], 'alias2')
         self.assertEqual(cs.getFamily(), 'ocio family')
         self.assertEqual(cs.getEncoding(), 'scene-linear')
         self.assertEqual(cs.getEqualityGroup(), 'My_Equality')

@@ -7481,7 +7481,7 @@ colorspaces:
                           " which is not defined.");
 }
 
-OCIO_ADD_TEST(Config, description)
+OCIO_ADD_TEST(Config, description_and_name)
 {
     auto cfg = OCIO::Config::CreateRaw()->createEditableCopy();
     std::ostringstream oss;
@@ -7524,6 +7524,7 @@ colorspaces:
     oss.str("");
 
     cfg->setDescription("single line description");
+    cfg->setName("Test config name");
     cfg->serialize(oss);
     static constexpr char CONFIG_DESC_SINGLELINE[]{ R"(ocio_profile_version: 2
 
@@ -7532,6 +7533,7 @@ environment:
 search_path: ""
 strictparsing: false
 luma: [0.2126, 0.7152, 0.0722]
+name: Test config name
 description: single line description
 
 roles:
@@ -7564,6 +7566,7 @@ colorspaces:
     oss.str("");
 
     cfg->setDescription("multi line description\n\nother line");
+    cfg->setName("");
     cfg->serialize(oss);
 
     static constexpr char CONFIG_DESC_MULTILINES[]{ R"(ocio_profile_version: 2
@@ -7603,4 +7606,43 @@ colorspaces:
     allocation: uniform
 )" };
     OCIO_CHECK_EQUAL(oss.str(), std::string(CONFIG_DESC_MULTILINES));
+}
+
+OCIO_ADD_TEST(Config, alias_validation)
+{
+    auto cfg = OCIO::Config::CreateRaw()->createEditableCopy();
+    auto cs = OCIO::ColorSpace::Create();
+    cs->setName("colorspace1");
+    OCIO_CHECK_NO_THROW(cfg->addColorSpace(cs));
+    cs->setName("colorspace2");
+    OCIO_CHECK_NO_THROW(cfg->addColorSpace(cs));
+    OCIO_CHECK_NO_THROW(cfg->validate());
+    cs->setName("colorspace3");
+    cs->addAlias("colorspace1");
+    OCIO_CHECK_THROW_WHAT(cfg->addColorSpace(cs), OCIO::Exception, "Cannot add 'colorspace3' "
+                          "color space, it has 'colorspace1' alias and existing color space, "
+                          "'colorspace1' is using the same alias");
+    cs->removeAlias("colorspace1");
+
+    OCIO_CHECK_NO_THROW(cfg->setRole("alias", "colorspace2"));
+    OCIO_CHECK_NO_THROW(cs->addAlias("alias"));
+    OCIO_CHECK_NO_THROW(cfg->addColorSpace(cs));
+    OCIO_CHECK_THROW_WHAT(cfg->validate(), OCIO::Exception, "A color space named 'colorspace3' "
+                          "has an alias 'alias' that is also a role name");
+    cs->removeAlias("alias");
+    OCIO_CHECK_NO_THROW(cs->addAlias("test%test"));
+    OCIO_CHECK_NO_THROW(cfg->addColorSpace(cs));
+    OCIO_CHECK_THROW_WHAT(cfg->validate(), OCIO::Exception, "A color space named 'colorspace3' "
+                          "has an alias 'test%test' that cannot contain a context variable "
+                          "reserved token i.e. % or $");
+
+    cs->removeAlias("test%test");
+    OCIO_CHECK_NO_THROW(cs->addAlias("namedtransform"));
+    OCIO_CHECK_NO_THROW(cfg->addColorSpace(cs));
+    auto nt = OCIO::NamedTransform::Create();
+    nt->setTransform(OCIO::MatrixTransform::Create(), OCIO::TRANSFORM_DIR_FORWARD);
+    nt->setName("namedtransform");
+    OCIO_CHECK_NO_THROW(cfg->addNamedTransform(nt));
+    OCIO_CHECK_THROW_WHAT(cfg->validate(), OCIO::Exception, "A color space named 'colorspace3' "
+                          "has an alias 'namedtransform' that is also a named transform name");
 }

@@ -267,6 +267,7 @@ public:
     unsigned int m_minorVersion;
     StringMap m_env;
     ContextRcPtr m_context;
+    std::string m_name;
     static constexpr char DefaultFamilySeparator = '/';
     char m_familySeparator = DefaultFamilySeparator;
     std::string m_description;
@@ -1314,7 +1315,42 @@ void Config::validate() const
                 << name
                 << "' cannot contain a context variable reserved token i.e. % or $.";
 
-            throw Exception(oss.str().c_str());
+            getImpl()->m_validationtext = oss.str();
+            throw Exception(getImpl()->m_validationtext.c_str());
+        }
+
+        const size_t numAliases = cs->getNumAliases();
+        if (getMajorVersion() >= 2 && numAliases)
+        {
+            for (size_t aidx = 0; aidx < numAliases; ++aidx)
+            {
+                const char * alias = cs->getAlias(aidx);
+                if (ContainsContextVariableToken(alias))
+                {
+                    std::ostringstream oss;
+                    oss << "Config failed sanitycheck.  A color space named '"<< name
+                        << "' has an alias '" << alias << "' that cannot contain a context "
+                           "variable reserved token i.e. % or $.";
+                    getImpl()->m_validationtext = oss.str();
+                    throw Exception(getImpl()->m_validationtext.c_str());
+                }
+                if (hasRole(alias))
+                {
+                    std::ostringstream oss;
+                    oss << "Config failed sanitycheck.  A color space named '" << name
+                        << "' has an alias '" << alias << "' that is also a role name.";
+                    getImpl()->m_validationtext = oss.str();
+                    throw Exception(getImpl()->m_validationtext.c_str());
+                }
+                if (getNamedTransform(alias))
+                {
+                    std::ostringstream oss;
+                    oss << "Config failed sanitycheck.  A color space named '" << name
+                        << "' has an alias '" << alias << "' that is also a named transform name.";
+                    getImpl()->m_validationtext = oss.str();
+                    throw Exception(getImpl()->m_validationtext.c_str());
+                }
+            }
         }
 
         const std::string namelower = StringUtils::Lower(name);
@@ -1348,8 +1384,8 @@ void Config::validate() const
                     << "A role name '"
                     << iter->first
                     << "' cannot contain a context variable reserved token i.e. % or $.";
-
-                throw Exception(oss.str().c_str());
+                getImpl()->m_validationtext = oss.str();
+                throw Exception(getImpl()->m_validationtext.c_str());
             }
 
             if(!getImpl()->hasColorSpace(iter->second.c_str()))
@@ -1863,6 +1899,18 @@ void Config::validate() const
 
 ///////////////////////////////////////////////////////////////////////////
 
+const char * Config::getName() const noexcept
+{
+    return getImpl()->m_name.c_str();
+}
+
+void Config::setName(const char * name) noexcept
+{
+    getImpl()->m_name = (name ? name : "");
+}
+
+///////////////////////////////////////////////////////////////////////////
+
 char Config::getFamilySeparator() const
 {
     return getImpl()->m_familySeparator;
@@ -2241,6 +2289,16 @@ const char * Config::getColorSpaceNameByIndex(SearchReferenceSpaceType searchRef
 ConstColorSpaceRcPtr Config::getColorSpace(const char * name) const
 {
     return getImpl()->getColorSpace(name);
+}
+
+const char * Config::getCanonicalName(const char * name) const
+{
+    ConstColorSpaceRcPtr cs = getColorSpace(name);
+    if (cs)
+    {
+        return cs->getName();
+    }
+    return "";
 }
 
 int Config::getNumColorSpaces() const

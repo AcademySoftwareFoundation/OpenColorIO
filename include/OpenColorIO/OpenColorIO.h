@@ -292,6 +292,15 @@ public:
     void validate() const;
 
     /**
+     * Get/set a name string for the config.
+     *
+     * In combination with a color space name, this may be used to provide a more global reference
+     * to a color space.
+     */
+    const char * getName() const noexcept;
+    void setName(const char * name) noexcept;
+
+    /**
      * \brief Get the family separator
      * 
      * A single character used to separate the family string into tokens for use in hierarchical
@@ -465,6 +474,9 @@ public:
      */
     ConstColorSpaceRcPtr getColorSpace(const char * name) const;
 
+    ///  Accepts an alias, role, or color space name and returns the color space name.
+    const char * getCanonicalName(const char * name) const;
+
     /**
      * \brief Add a color space to the configuration.
      *
@@ -482,15 +494,20 @@ public:
      * \brief Remove a color space from the configuration.
      *
      * \note
-     *    It does not throw an exception if the color space is not present
-     *    or used by an existing role.  Role name arguments are ignored.
+     *    It does not throw an exception.  Name must be the canonical name.  If a role name or
+     *    alias is provided or if the name is not in the config, nothing is done.
      * \note
-     *    Removing a color space to a \ref Config does not affect any
+     *    Removing a color space from a \ref Config does not affect any
      *    \ref ColorSpaceSet sets that have already been created.
      */
     void removeColorSpace(const char * name);
 
-    /// Return true if the color space is used by a transform, a role, or a look.
+    /**
+     * Return true if the color space is used by a transform, a role, or a look.
+     *
+     * \note
+     *    Name must be the canonical name.
+     */
     bool isColorSpaceUsed(const char * name) const noexcept;
 
     /**
@@ -530,6 +547,7 @@ public:
      * * Setting the list via the API takes precedence over either the env. var. or the
      *   config file list.
      * * Roles may not be used.
+     * * Aliases may not be used.
      */
     void setInactiveColorSpaces(const char * inactiveColorSpaces);
     const char * getInactiveColorSpaces() const;
@@ -1436,7 +1454,20 @@ public:
     ColorSpaceRcPtr createEditableCopy() const;
 
     const char * getName() const noexcept;
-    void setName(const char * name);
+    /// If the name is already an alias, that alias is removed.
+    void setName(const char * name) noexcept;
+
+    /// Aliases can be used instead of the name. They must be unique within the config.
+    size_t getNumAliases() const noexcept;
+    const char * getAlias(size_t idx) const noexcept;
+    /**
+     * Nothing is done if alias is NULL or empty, if it is already there, or if it is the color
+     * space name.
+     */
+    void addAlias(const char * alias) noexcept;
+    /// Does nothing if alias is not present.
+    void removeAlias(const char * alias) noexcept;
+    void clearAliases() noexcept;
 
     /**
      * Get the family, for use in user interfaces (optional)

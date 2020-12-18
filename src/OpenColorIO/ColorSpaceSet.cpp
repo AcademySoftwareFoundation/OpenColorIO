@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
+#include <sstream>
 #include <string>
 
 #include <OpenColorIO/OpenColorIO.h>
@@ -87,14 +88,23 @@ public:
 
     int getIndex(const char * csName) const 
     {
+        // Search for name and aliases.
         if (csName && *csName)
         {
             const std::string str = StringUtils::Lower(csName);
             for (size_t idx = 0; idx < m_colorSpaces.size(); ++idx)
             {
-                if (StringUtils::Lower(m_colorSpaces[idx]->getName()) == str)
+                if (StringUtils::Compare(m_colorSpaces[idx]->getName(), str))
                 {
                     return static_cast<int>(idx);
+                }
+                const size_t numAliases = m_colorSpaces[idx]->getNumAliases();
+                for (size_t aidx = 0; aidx < numAliases; ++aidx)
+                {
+                    if (StringUtils::Compare(m_colorSpaces[idx]->getAlias(aidx), str))
+                    {
+                        return static_cast<int>(idx);
+                    }
                 }
             }
         }
@@ -109,20 +119,49 @@ public:
 
     void add(const ConstColorSpaceRcPtr & cs)
     {
-        const std::string csName = StringUtils::Lower(cs->getName());
-        if (csName.empty())
+        const char * csName = cs->getName();
+        if (!*csName)
         {
             throw Exception("Cannot add a color space with an empty name.");
         }
 
-        for (auto & entry : m_colorSpaces)
+        auto entryIdx = getIndex(csName);
+        size_t replaceIdx = -1;
+        if (entryIdx != -1)
         {
-            if (StringUtils::Lower(entry->getName()) == csName)
+            if (!StringUtils::Compare(m_colorSpaces[entryIdx]->getName(), csName))
             {
-                // The color space replaces the existing one.
-                entry = cs->createEditableCopy();
-                return;
+                std::ostringstream os;
+                os << "Cannot add '" << csName << "' color space, existing color space, '";
+                os << m_colorSpaces[entryIdx]->getName() << "' is using this name as an alias.";
+                throw Exception(os.str().c_str());
             }
+            // There is a color space with the same name that will be replaced (if new color space
+            // can be used).
+            replaceIdx = entryIdx;
+        }
+
+        const size_t numAliases = cs->getNumAliases();
+        for (size_t aidx = 0; aidx < numAliases; ++aidx)
+        {
+            const char * alias = cs->getAlias(aidx);
+            entryIdx = getIndex(alias);
+            // Is an alias of the color space already used by a color space?
+            // Skip existing colorspace that might be replaced.
+            if (entryIdx != -1 && replaceIdx != entryIdx)
+            {
+                std::ostringstream os;
+                os << "Cannot add '" << csName << "' color space, it has '" << alias;
+                os << "' alias and existing color space, '";
+                os << m_colorSpaces[entryIdx]->getName() << "' is using the same alias.";
+                throw Exception(os.str().c_str());
+            }
+        }
+        if (replaceIdx != -1)
+        {
+            // The color space replaces the existing one.
+            m_colorSpaces[replaceIdx] = cs->createEditableCopy();
+            return;
         }
 
         m_colorSpaces.push_back(cs->createEditableCopy());

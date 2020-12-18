@@ -23,6 +23,7 @@ public:
     std::string m_equalityGroup;
     std::string m_description;
     std::string m_encoding;
+    StringUtils::StringVec m_aliases;
 
     BitDepth m_bitDepth{ BIT_DEPTH_UNKNOWN };
     bool m_isData{ false };
@@ -55,6 +56,7 @@ public:
         if (this != &rhs)
         {
             m_name = rhs.m_name;
+            m_aliases = rhs.m_aliases;
             m_family = rhs.m_family;
             m_equalityGroup = rhs.m_equalityGroup;
             m_description = rhs.m_description;
@@ -124,9 +126,53 @@ const char * ColorSpace::getName() const noexcept
     return getImpl()->m_name.c_str();
 }
 
-void ColorSpace::setName(const char * name)
+void ColorSpace::setName(const char * name) noexcept
 {
-    getImpl()->m_name = name;
+    getImpl()->m_name = name ? name : "";
+    // Name can no longer be an alias.
+    StringUtils::Remove(getImpl()->m_aliases, getImpl()->m_name);
+}
+
+size_t ColorSpace::getNumAliases() const noexcept
+{
+    return getImpl()->m_aliases.size();
+}
+
+const char * ColorSpace::getAlias(size_t idx) const noexcept
+{
+    if (idx < getImpl()->m_aliases.size())
+    {
+        return getImpl()->m_aliases[idx].c_str();
+    }
+    return "";
+}
+
+void ColorSpace::addAlias(const char * alias) noexcept
+{
+    if (alias && *alias)
+    {
+        if (!StringUtils::Compare(alias, getImpl()->m_name))
+        {
+            if (!StringUtils::Contain(getImpl()->m_aliases, alias))
+            {
+                getImpl()->m_aliases.push_back(alias);
+            }
+        }
+    }
+}
+
+void ColorSpace::removeAlias(const char * name) noexcept
+{
+    if (name && *name)
+    {
+        const std::string alias{ name };
+        StringUtils::Remove(getImpl()->m_aliases, alias);
+    }
+}
+
+void ColorSpace::clearAliases() noexcept
+{
+    getImpl()->m_aliases.clear();
 }
 
 const char * ColorSpace::getFamily() const noexcept
@@ -313,6 +359,20 @@ std::ostream & operator<< (std::ostream & os, const ColorSpace & cs)
     }
     os << "name=" << cs.getName() << ", ";
     std::string str{ cs.getFamily() };
+    const auto numAliases = cs.getNumAliases();
+    if (numAliases == 1)
+    {
+        os << "alias= " << cs.getAlias(0) << ", ";
+    }
+    else if (numAliases > 1)
+    {
+        os << "alias= [" << cs.getAlias(0);
+        for (size_t aidx = 1; aidx < numAliases; ++aidx)
+        {
+            os << ", " << cs.getAlias(aidx);
+        }
+        os << "], ";
+    }
     if (!str.empty())
     {
         os << "family=" << str << ", ";
