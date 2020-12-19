@@ -148,8 +148,8 @@ endif()
 # Optimization / internal linking preferences
 
 option(OCIO_USE_SSE "Specify whether to enable SSE CPU performance optimizations" ON)
-option(OCIO_USE_OPENEXR_HALF "Specify whether to use an OpenEXR/IlmBase install of the Half library (<=v2.5) instead of the newer Imath library (>=v3.0)" OFF)
 option(OCIO_USE_OIIO_CMAKE_CONFIG "Specify whether to look for OIIO using the generated CMake Config script instead of the custom FindOpenImageIO.cmake script" OFF)
+option(OCIO_USE_OIIO_FOR_APPS "Request OIIO to build apps (ociolutimage, ocioconvert and ociodisplay), the default uses OpenEXR." OFF)
 
 
 ###############################################################################

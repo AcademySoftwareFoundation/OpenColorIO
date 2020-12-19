@@ -9,15 +9,13 @@
 #include <cstring>
 #include <iostream>
 #include <fstream>
+#include <map>
 #include <sstream>
 #include <utility>
 #include <vector>
 
 #include <OpenColorIO/OpenColorIO.h>
 namespace OCIO = OCIO_NAMESPACE;
-
-#include <OpenImageIO/imageio.h>
-#include <OpenImageIO/typedesc.h>
 
 #ifdef __APPLE__
 #include <OpenGL/gl.h>
@@ -34,8 +32,10 @@ namespace OCIO = OCIO_NAMESPACE;
 #if __APPLE__
 #include "metalapp.h"
 #endif
+
 #include "glsl.h"
 #include "oglapp.h"
+#include "imageio.h"
 
 bool g_verbose   = false;
 bool g_gpulegacy = false;
@@ -45,7 +45,6 @@ bool g_useMetal  = false;
 #endif
 
 std::string g_filename;
-
 
 float g_imageAspect;
 
@@ -73,58 +72,24 @@ void UpdateOCIOGLState();
 
 static void InitImageTexture(const char * filename)
 {
-    std::vector<float> img;
-    int texWidth = 512;
-    int texHeight = 512;
-    int components = 4;
+    OCIO::ImageIO img;
 
-    if(filename && *filename)
+    if (filename && *filename)
     {
-        std::cout << "loading: " << filename << std::endl;
+        std::cout << "Loading: " << filename << std::endl;
+
         try
         {
-#if OIIO_VERSION < 10903
-            OIIO::ImageInput* f = OIIO::ImageInput::create(filename);
-#else
-            auto f = OIIO::ImageInput::create(filename);
-#endif
-            if(!f)
-            {
-                std::cerr << "Could not create image input." << std::endl;
-                exit(1);
-            }
-
-            OIIO::ImageSpec spec;
-            f->open(filename, spec);
-
-            std::string error = f->geterror();
-            if(!error.empty())
-            {
-                std::cerr << "Error loading image " << error << std::endl;
-                exit(1);
-            }
-
-            texWidth = spec.width;
-            texHeight = spec.height;
-            components = spec.nchannels;
-
-            img.resize(texWidth*texHeight*components);
-            memset(&img[0], 0, texWidth*texHeight*components*sizeof(float));
-
-            const bool ok = f->read_image(OIIO::TypeDesc::FLOAT, &img[0]);
-            if(!ok)
-            {
-                std::cerr << "Error reading \"" << filename << "\" : " << f->geterror() << "\n";
-                exit(1);
-            }
-
-#if OIIO_VERSION < 10903
-            OIIO::ImageInput::destroy(f);
-#endif
+            img.read(filename, OCIO::BIT_DEPTH_F32);
         }
-        catch(...)
+        catch (const std::exception & e)
         {
-            std::cerr << "Error loading file.";
+            std::cerr << "ERROR: Loading file failed: " << e.what() << std::endl;
+            exit(1);
+        }
+        catch (...)
+        {
+            std::cerr << "ERROR: Loading file failed." << std::endl;
             exit(1);
         }
     }
@@ -133,46 +98,53 @@ static void InitImageTexture(const char * filename)
     {
         std::cout << "No image specified, loading gradient." << std::endl;
 
-        img.resize(texWidth*texHeight*components);
-        memset(&img[0], 0, texWidth*texHeight*components*sizeof(float));
+        img.init(512, 512, OCIO::CHANNEL_ORDERING_RGBA, OCIO::BIT_DEPTH_F32);
 
-        for(int y=0; y<texHeight; ++y)
+        float * pixels = (float *) img.getData();
+        const long width = img.getWidth();
+        const long channels = img.getNumChannels();
+
+        for (int y=0; y<img.getHeight(); ++y)
         {
-            for(int x=0; x<texWidth; ++x)
+            for (int x=0; x<img.getWidth(); ++x)
             {
-                float c = (float)x/((float)texWidth-1.0f);
-                img[components*(texWidth*y+x) + 0] = c;
-                img[components*(texWidth*y+x) + 1] = c;
-                img[components*(texWidth*y+x) + 2] = c;
-                img[components*(texWidth*y+x) + 3] = 1.0f;
+                float c = (float)x / ((float)width-1.0f);
+                pixels[channels*(width*y+x) + 0] = c;
+                pixels[channels*(width*y+x) + 1] = c;
+                pixels[channels*(width*y+x) + 2] = c;
+                pixels[channels*(width*y+x) + 3] = 1.0f;
             }
         }
     }
 
     OCIO::OglApp::Components comp = OCIO::OglApp::COMPONENTS_RGBA;
-    if (components == 4)
+    if (img.getNumChannels() == 4)
     {
         comp = OCIO::OglApp::COMPONENTS_RGBA;
     }
-    else if (components == 3)
+    else if (img.getNumChannels() == 3)
     {
         comp = OCIO::OglApp::COMPONENTS_RGB;
     }
     else
     {
-        std::cerr << "Cannot load image with " << components << " components." << std::endl;
+        std::cerr << "Cannot load image with " << img.getNumChannels()
+                  << " components." << std::endl;
         exit(1);
     }
 
     g_imageAspect = 1.0;
-    if(texHeight!=0)
+    if (img.getHeight()!=0)
     {
-        g_imageAspect = (float) texWidth / (float) texHeight;
+        g_imageAspect = (float) img.getWidth() / (float) img.getHeight();
     }
 
     if (g_oglApp)
     {
-        g_oglApp->initImage(texWidth, texHeight, comp, &img[0]);
+        g_oglApp->initImage(img.getWidth(),
+                            img.getHeight(),
+                            comp,
+                            (float*) img.getData());
     }
 
 }
@@ -183,12 +155,12 @@ void InitOCIO(const char * filename)
     g_display = config->getDefaultDisplay();
     g_transformName = config->getDefaultView(g_display.c_str());
     g_look = config->getDisplayViewLooks(g_display.c_str(), g_transformName.c_str());
-
     g_inputColorSpace = OCIO::ROLE_SCENE_LINEAR;
-    if(filename && *filename)
+
+    if (filename && *filename)
     {
         std::string cs = config->getColorSpaceFromFilepath(filename);
-        if(!cs.empty())
+        if (!cs.empty())
         {
             g_inputColorSpace = cs;
             std::cout << "colorspace: " << cs << std::endl;
@@ -223,52 +195,51 @@ static void CleanUp(void)
     g_oglApp.reset();
 }
 
-
 static void Key(unsigned char key, int /*x*/, int /*y*/)
 {
-    if(key == 'c' || key == 'C')
+    if (key == 'c' || key == 'C')
     {
         g_channelHot[0] = 1;
         g_channelHot[1] = 1;
         g_channelHot[2] = 1;
         g_channelHot[3] = 1;
     }
-    else if(key == 'r' || key == 'R')
+    else if (key == 'r' || key == 'R')
     {
         g_channelHot[0] = 1;
         g_channelHot[1] = 0;
         g_channelHot[2] = 0;
         g_channelHot[3] = 0;
     }
-    else if(key == 'g' || key == 'G')
+    else if (key == 'g' || key == 'G')
     {
         g_channelHot[0] = 0;
         g_channelHot[1] = 1;
         g_channelHot[2] = 0;
         g_channelHot[3] = 0;
     }
-    else if(key == 'b' || key == 'B')
+    else if (key == 'b' || key == 'B')
     {
         g_channelHot[0] = 0;
         g_channelHot[1] = 0;
         g_channelHot[2] = 1;
         g_channelHot[3] = 0;
     }
-    else if(key == 'a' || key == 'A')
+    else if (key == 'a' || key == 'A')
     {
         g_channelHot[0] = 0;
         g_channelHot[1] = 0;
         g_channelHot[2] = 0;
         g_channelHot[3] = 1;
     }
-    else if(key == 'l' || key == 'L')
+    else if (key == 'l' || key == 'L')
     {
         g_channelHot[0] = 1;
         g_channelHot[1] = 1;
         g_channelHot[2] = 1;
         g_channelHot[3] = 0;
     }
-    else if(key == 27)
+    else if (key == 27)
     {
         CleanUp();
         exit(0);
@@ -277,7 +248,6 @@ static void Key(unsigned char key, int /*x*/, int /*y*/)
     UpdateOCIOGLState();
     glutPostRedisplay();
 }
-
 
 static void SpecialKey(int key, int x, int y)
 {
@@ -339,7 +309,7 @@ void UpdateOCIOGLState()
     vp->setLooksOverrideEnabled(true);
     vp->setLooksOverride(g_look.c_str());
 
-    if(g_verbose)
+    if (g_verbose)
     {
         std::cout << std::endl;
         std::cout << "Color transformation composed of:" << std::endl;
@@ -407,12 +377,12 @@ void UpdateOCIOGLState()
     {
         processor = vp->getProcessor(config, config->getCurrentContext());
     }
-    catch(OCIO::Exception & e)
+    catch (const OCIO::Exception & e)
     {
         std::cerr << e.what() << std::endl;
         return;
     }
-    catch(...)
+    catch (...)
     {
         return;
     }
@@ -446,7 +416,10 @@ void imageColorSpace_CB(int id)
 {
     OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
     const char * name = config->getColorSpaceNameByIndex(id);
-    if(!name) return;
+    if (!name)
+    {
+        return;
+    }
 
     g_inputColorSpace = name;
 
@@ -458,7 +431,10 @@ void displayDevice_CB(int id)
 {
     OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
     const char * display = config->getDisplay(id);
-    if(!display) return;
+    if (!display)
+    {
+        return;
+    }
 
     g_display = display;
 
@@ -479,7 +455,10 @@ void transform_CB(int id)
     OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
 
     const char * transform = config->getView(g_display.c_str(), id);
-    if(!transform) return;
+    if (!transform)
+    {
+        return;
+    }
 
     g_transformName = transform;
 
@@ -494,7 +473,10 @@ void look_CB(int id)
     OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
 
     const char * look = config->getLookNameByIndex(id);
-    if(!look || !*look) return;
+    if (!look || !*look)
+    {
+        return;
+    }
 
     g_look = look;
 
@@ -517,18 +499,18 @@ static void PopulateOCIOMenus()
     int csMenuID = glutCreateMenu(imageColorSpace_CB);
 
     std::map<std::string, int> families;
-    for(int i=0; i<config->getNumColorSpaces(); ++i)
+    for (int i=0; i<config->getNumColorSpaces(); ++i)
     {
         const char * csName = config->getColorSpaceNameByIndex(i);
-        if(csName && *csName)
+        if (csName && *csName)
         {
             OCIO::ConstColorSpaceRcPtr cs = config->getColorSpace(csName);
-            if(cs)
+            if (cs)
             {
                 const char * family = cs->getFamily();
-                if(family && *family)
+                if (family && *family)
                 {
-                    if(families.find(family)==families.end())
+                    if (families.find(family)==families.end())
                     {
                         families[family] = glutCreateMenu(imageColorSpace_CB);
                         glutAddMenuEntry(csName, i);
@@ -552,20 +534,20 @@ static void PopulateOCIOMenus()
     }
 
     int deviceMenuID = glutCreateMenu(displayDevice_CB);
-    for(int i=0; i<config->getNumDisplays(); ++i)
+    for (int i=0; i<config->getNumDisplays(); ++i)
     {
         glutAddMenuEntry(config->getDisplay(i), i);
     }
 
     int transformMenuID = glutCreateMenu(transform_CB);
     const char * defaultDisplay = config->getDefaultDisplay();
-    for(int i=0; i<config->getNumViews(defaultDisplay); ++i)
+    for (int i=0; i<config->getNumViews(defaultDisplay); ++i)
     {
         glutAddMenuEntry(config->getView(defaultDisplay, i), i);
     }
 
     int lookMenuID = glutCreateMenu(look_CB);
-    for(int i=0; i<config->getNumLooks(); ++i)
+    for (int i=0; i<config->getNumLooks(); ++i)
     {
         glutAddMenuEntry(config->getLookNameByIndex(i), i);
     }
@@ -609,27 +591,27 @@ const char * USAGE_TEXT = "\n"
 
 void parseArguments(int argc, char **argv)
 {
-    for(int i=1; i<argc; ++i)
+    for (int i=1; i<argc; ++i)
     {
-        if(0==strcmp(argv[i], "-v"))
+        if (0==strcmp(argv[i], "-v"))
         {
             g_verbose = true;
         }
-        else if(0==strcmp(argv[i], "-gpulegacy"))
+        else if (0==strcmp(argv[i], "-gpulegacy"))
         {
             g_gpulegacy = true;
         }
-        else if(0==strcmp(argv[i], "-gpuinfo"))
+        else if (0==strcmp(argv[i], "-gpuinfo"))
         {
             g_gpuinfo = true;
         }
 #if __APPLE__
-        else if(0==strcmp(argv[i], "-metal"))
+        else if (0==strcmp(argv[i], "-metal"))
         {
             g_useMetal = true;
         }
 #endif
-        else if(0==strcmp(argv[i], "-h"))
+        else if (0==strcmp(argv[i], "-h"))
         {
             std::cout << std::endl;
             std::cout << "help:" << std::endl;
@@ -660,7 +642,7 @@ int main(int argc, char **argv)
     try
     {
 #if __APPLE__
-        if(g_useMetal)
+        if (g_useMetal)
         {
             g_oglApp = std::make_shared<OCIO::MetalApp>("ociodisplay", 512, 512);
         }
@@ -689,15 +671,15 @@ int main(int argc, char **argv)
     glutSpecialFunc(SpecialKey);
     glutDisplayFunc(Redisplay);
 
-    if(g_verbose)
+    if (g_verbose)
     {
-        if(!g_filename.empty())
+        if (!g_filename.empty())
         {
             std::cout << std::endl;
             std::cout << "Image: " << g_filename << std::endl;
         }
         std::cout << std::endl;
-        std::cout << "OIIO Version: " << OIIO_VERSION_STRING << std::endl;
+        std::cout << OCIO::ImageIO::GetVersion() << std::endl;
         std::cout << "OCIO Version: " << OCIO::GetVersion() << std::endl;
     }
 
@@ -706,18 +688,18 @@ int main(int argc, char **argv)
     {
         config = OCIO::GetCurrentConfig();
     }
-    catch(...)
+    catch (...)
     {
         const char * env = OCIO::GetEnvVariable("OCIO");
         std::cerr << "Error loading the config file: '" << (env ? env : "") << "'";
         exit(1);
     }
 
-    if(g_verbose)
+    if (g_verbose)
     {
         const char * env = OCIO::GetEnvVariable("OCIO");
 
-        if(env && *env)
+        if (env && *env)
         {
             std::cout << std::endl;
             std::cout << "OCIO Config. file   : '" << env << "'" << std::endl;
@@ -747,7 +729,7 @@ int main(int argc, char **argv)
     {
         UpdateOCIOGLState();
     }
-    catch(OCIO::Exception & e)
+    catch (const OCIO::Exception & e)
     {
         std::cerr << e.what() << std::endl;
         exit(1);

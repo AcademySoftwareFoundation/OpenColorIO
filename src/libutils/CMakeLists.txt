@@ -9,6 +9,6 @@ if(TARGET test_gpu_exec OR
     add_subdirectory(oglapphelpers)
 endif()
 
-if(TARGET ocioconvert)
-    add_subdirectory(oiiohelpers)
+if(TARGET OpenColorIO::ImageIOBackend)
+    add_subdirectory(imageioapphelpers)
 endif()

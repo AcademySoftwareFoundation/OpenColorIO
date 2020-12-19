@@ -22,14 +22,12 @@
 # downloaded, built, and statically-linked into libOpenColorIO at build time.
 #
 
-# Imath components may have the version in their name
-set(_Imath_LIB_VER "${Imath_FIND_VERSION_MAJOR}_${Imath_FIND_VERSION_MINOR}")
-
 ###############################################################################
 ### Try to find package ###
 
 if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
     set(_Imath_REQUIRED_VARS Imath_LIBRARY)
+    set(_Imath_LIB_VER "${Imath_FIND_VERSION_MAJOR}_${Imath_FIND_VERSION_MINOR}")
 
     if(NOT DEFINED Imath_ROOT)
         # Search for ImathConfig.cmake
@@ -126,6 +124,7 @@ endif()
 
 if (NOT TARGET Imath::Imath)
     add_library(Imath::Imath UNKNOWN IMPORTED GLOBAL)
+    add_library(Imath::ImathConfig INTERFACE IMPORTED GLOBAL)
     set(_Imath_TARGET_CREATE TRUE)
 endif()
 
@@ -141,15 +140,18 @@ if(NOT Imath_FOUND AND NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL NONE)
 
     # Set find_package standard args
     set(Imath_FOUND TRUE)
-    set(Imath_VERSION ${Imath_FIND_VERSION})
+    set(Imath_VERSION ${_Imath_ExternalProject_VERSION})
     set(Imath_INCLUDE_DIR "${_EXT_DIST_ROOT}/${CMAKE_INSTALL_INCLUDEDIR}")
 
-    # Set the expected library name. "_d" is appended to Debug Windows builds 
-    # <= OpenEXR 2.3.0. In newer versions, it is appended to Debug libs on
-    # all platforms.
+    # Set the expected library name
     if(BUILD_TYPE_DEBUG)
         set(_Imath_LIB_SUFFIX "_d")
     endif()
+
+    include(VersionUtils)
+    split_version_string(${Imath_VERSION} _Imath_ExternalProject)
+
+    set(_Imath_LIB_VER "${_Imath_ExternalProject_VERSION_MAJOR}_${_Imath_ExternalProject_VERSION_MINOR}")
 
     set(Imath_LIBRARY
         "${_EXT_DIST_ROOT}/${CMAKE_INSTALL_LIBDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}Imath-${_Imath_LIB_VER}${_Imath_LIB_SUFFIX}${CMAKE_STATIC_LIBRARY_SUFFIX}")
@@ -179,6 +181,7 @@ if(NOT Imath_FOUND AND NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL NONE)
             -DBUILD_SHARED_LIBS=OFF
             -DBUILD_TESTING=OFF
             -DPYTHON=OFF
+            -DDOCS=OFF
             -DIMATH_HALF_USE_LOOKUP_TABLE=OFF
         )
 
@@ -227,9 +230,6 @@ if(NOT Imath_FOUND AND NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL NONE)
 
         add_dependencies(Imath::Imath imath_install)
 
-        # Some Imath versions define a second target. 
-        add_library(Imath::ImathConfig ALIAS Imath::Imath)
-
         message(STATUS "Installing Imath: ${Imath_LIBRARY} (version \"${Imath_VERSION}\")")
     endif()
 endif()
@@ -238,9 +238,14 @@ endif()
 ### Configure target ###
 
 if(_Imath_TARGET_CREATE)
+    file(MAKE_DIRECTORY ${Imath_INCLUDE_DIR}/Imath)
+
     set_target_properties(Imath::Imath PROPERTIES
         IMPORTED_LOCATION ${Imath_LIBRARY}
-        INTERFACE_INCLUDE_DIRECTORIES ${Imath_INCLUDE_DIR}
+        INTERFACE_INCLUDE_DIRECTORIES "${Imath_INCLUDE_DIR};${Imath_INCLUDE_DIR}/Imath"
+    )
+    set_target_properties(Imath::ImathConfig PROPERTIES
+        INTERFACE_INCLUDE_DIRECTORIES "${Imath_INCLUDE_DIR};${Imath_INCLUDE_DIR}/Imath"
     )
 
     mark_as_advanced(Imath_INCLUDE_DIR Imath_LIBRARY Imath_VERSION)

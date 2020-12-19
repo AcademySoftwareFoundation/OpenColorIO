@@ -2238,7 +2238,7 @@ public:
      * \brief Apply to an image with any kind of channel ordering while
      * respecting the input and output bit-depths.
      */
-    void apply(ImageDesc & imgDesc) const;
+    void apply(const ImageDesc & imgDesc) const;
     void apply(const ImageDesc & srcImgDesc, ImageDesc & dstImgDesc) const;
 
     /**

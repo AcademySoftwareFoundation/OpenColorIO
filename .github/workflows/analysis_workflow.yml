@@ -109,7 +109,7 @@ jobs:
           share/ci/scripts/multi/install_lcms2.sh 2.2 $EXT_PATH
           share/ci/scripts/multi/install_yaml-cpp.sh 0.7.0 $EXT_PATH
           share/ci/scripts/multi/install_pystring.sh 1.1.3 $EXT_PATH
-          share/ci/scripts/multi/install_pybind11.sh 2.6.1 $EXT_PATH
+          share/ci/scripts/multi/install_pybind11.sh 2.9.2 $EXT_PATH
       - name: Install latest ext package versions
         run: |
           share/ci/scripts/multi/install_openexr.sh latest $EXT_PATH
@@ -211,7 +211,7 @@ jobs:
           share/ci/scripts/multi/install_lcms2.sh 2.2 $EXT_PATH
           share/ci/scripts/multi/install_yaml-cpp.sh 0.7.0 $EXT_PATH
           share/ci/scripts/multi/install_pystring.sh 1.1.3 $EXT_PATH
-          share/ci/scripts/multi/install_pybind11.sh 2.6.1 $EXT_PATH
+          share/ci/scripts/multi/install_pybind11.sh 2.9.2 $EXT_PATH
       - name: Install latest ext package versions
         run: |
           share/ci/scripts/multi/install_openexr.sh latest $EXT_PATH
@@ -329,7 +329,7 @@ jobs:
           share/ci/scripts/multi/install_lcms2.sh 2.2 $EXT_PATH
           share/ci/scripts/multi/install_yaml-cpp.sh 0.7.0 $EXT_PATH
           share/ci/scripts/multi/install_pystring.sh 1.1.3 $EXT_PATH
-          share/ci/scripts/multi/install_pybind11.sh 2.6.1 $EXT_PATH
+          share/ci/scripts/multi/install_pybind11.sh 2.9.2 $EXT_PATH
           share/ci/scripts/multi/install_expat.sh 2.4.1 $EXT_PATH
         shell: bash
       # OSL not installed due to LLVM compilation time.
