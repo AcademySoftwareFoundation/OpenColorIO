@@ -231,7 +231,7 @@ OCIO_ADD_TEST(Config, cdltransform_duplicate)
         "colorspaces:\n"
         "  - !<ColorSpace>\n"
         "    name: raw\n"
-        "    to_reference: !<CDLTransform> {slope: [1, 2, 1], slope: [1, 2, 1]}\n"
+        "    to_scene_reference: !<CDLTransform> {slope: [1, 2, 1], slope: [1, 2, 1]}\n"
         "\n";
 
     std::istringstream is;
@@ -390,7 +390,7 @@ OCIO_ADD_TEST(Config, serialize_group_transform)
     "    bitdepth: unknown\n"
     "    isdata: false\n"
     "    allocation: uniform\n"
-    "    from_reference: !<GroupTransform>\n"
+    "    from_scene_reference: !<GroupTransform>\n"
     "      children:\n"
     "        - !<FileTransform> {src: \"\"}\n"
     "        - !<FileTransform> {src: \"\", interpolation: unknown}\n"
@@ -405,7 +405,7 @@ OCIO_ADD_TEST(Config, serialize_group_transform)
     "    bitdepth: unknown\n"
     "    isdata: false\n"
     "    allocation: uniform\n"
-    "    to_reference: !<GroupTransform>\n"
+    "    to_scene_reference: !<GroupTransform>\n"
     "      children:\n"
     "        - !<ExponentTransform> {value: 1}\n";
 
@@ -745,7 +745,7 @@ OCIO_ADD_TEST(Config, context_variable_faulty_cases)
         "view_transforms:\n"
         "  - !<ViewTransform>\n"
         "    name: vt1\n"
-        "    from_reference: !<ColorSpaceTransform> {src: cs1, dst: $DST3}\n"
+        "    from_scene_reference: !<ColorSpaceTransform> {src: cs1, dst: $DST3}\n"
         "\n"
         "displays:\n"
         "  disp1:\n"
@@ -764,11 +764,11 @@ OCIO_ADD_TEST(Config, context_variable_faulty_cases)
         "\n"
         "  - !<ColorSpace>\n"
         "    name: cs2\n"
-        "    from_reference: !<MatrixTransform> {offset: [0.11, 0.12, 0.13, 0]}\n"
+        "    from_scene_reference: !<MatrixTransform> {offset: [0.11, 0.12, 0.13, 0]}\n"
         "\n"
         "  - !<ColorSpace>\n"
         "    name: cs3\n"
-        "    from_reference: !<ColorSpaceTransform> {src: cs1, dst: $DST2}\n"
+        "    from_scene_reference: !<ColorSpaceTransform> {src: cs1, dst: $DST2}\n"
         "\n"
         "display_colorspaces:\n"
         "  - !<ColorSpace>\n"
@@ -948,7 +948,7 @@ OCIO_ADD_TEST(Config, context_variable_with_sanity_check)
         "\n"
         "  - !<ColorSpace>\n"
         "    name: cs2\n"
-        "    from_reference: !<FileTransform> {src: $CS2}\n";
+        "    from_scene_reference: !<FileTransform> {src: $CS2}\n";
 
     std::istringstream iss;
     iss.str(CONFIG);
@@ -1137,7 +1137,7 @@ OCIO_ADD_TEST(Config, context_variable_with_colorspacename)
 
         std::string configStr 
             = std::string(CONFIG)
-            + "    from_reference: !<FileTransform> {src: $VAR3}\n";
+            + "    from_scene_reference: !<FileTransform> {src: $VAR3}\n";
 
         std::istringstream iss;
         iss.str(configStr);
@@ -1157,7 +1157,7 @@ OCIO_ADD_TEST(Config, context_variable_with_colorspacename)
     {
         std::string configStr 
             = std::string(CONFIG)
-            + "    from_reference: !<ColorSpaceTransform> {src: $VAR3, dst: cs1}\n";
+            + "    from_scene_reference: !<ColorSpaceTransform> {src: $VAR3, dst: cs1}\n";
 
         std::istringstream iss;
         iss.str(configStr);
@@ -1206,7 +1206,7 @@ OCIO_ADD_TEST(Config, context_variable_with_colorspacename)
     {
         std::string configStr 
             = std::string(CONFIG)
-            + "    from_reference: !<ColorSpaceTransform> {src: $VAR3, dst: cs1}\n";
+            + "    from_scene_reference: !<ColorSpaceTransform> {src: $VAR3, dst: cs1}\n";
 
         std::istringstream iss;
         iss.str(configStr);
@@ -1262,11 +1262,11 @@ OCIO_ADD_TEST(Config, context_variable_with_role)
         "\n"
         "  - !<ColorSpace>\n"
         "    name: cs2\n"
-        "    from_reference: !<CDLTransform> {offset: [0.1, 0.1, 0.1]}\n"
+        "    from_scene_reference: !<CDLTransform> {offset: [0.1, 0.1, 0.1]}\n"
         "\n"
         "  - !<ColorSpace>\n"
         "    name: cs3\n"
-        "    from_reference: !<ColorSpaceTransform> {src: reference, dst: cs2}\n";
+        "    from_scene_reference: !<ColorSpaceTransform> {src: reference, dst: cs2}\n";
             
     {
         std::istringstream iss;
@@ -1312,7 +1312,7 @@ OCIO_ADD_TEST(Config, context_variable_with_display_view)
         "\n"
         "  - !<ColorSpace>\n"
         "    name: cs2\n"
-        "    from_reference: !<CDLTransform> {offset: [0.1, 0.1, 0.1]}\n";
+        "    from_scene_reference: !<CDLTransform> {offset: [0.1, 0.1, 0.1]}\n";
 
     {
         std::istringstream iss;
@@ -1358,7 +1358,7 @@ OCIO_ADD_TEST(Config, context_variable_with_search_path)
         "\n"
         "  - !<ColorSpace>\n"
         "    name: cs2\n"
-        "    from_reference: !<FileTransform> {src: lut1d_green.ctf}\n";
+        "    from_scene_reference: !<FileTransform> {src: lut1d_green.ctf}\n";
 
     std::istringstream iss;
     iss.str(CONFIG);
@@ -1671,7 +1671,7 @@ OCIO_ADD_TEST(Config, range_serialization)
 {
     {
         const std::string strEnd =
-            "    from_reference: !<RangeTransform> {min_in_value: 0, min_out_value: 0}\n";
+            "    from_scene_reference: !<RangeTransform> {min_in_value: 0, min_out_value: 0}\n";
         const std::string str = PROFILE_V2_START + strEnd;
 
         std::istringstream is;
@@ -1688,7 +1688,7 @@ OCIO_ADD_TEST(Config, range_serialization)
 
     {
         const std::string strEnd =
-            "    from_reference: !<RangeTransform> {min_in_value: 0, min_out_value: 0, "
+            "    from_scene_reference: !<RangeTransform> {min_in_value: 0, min_out_value: 0, "
             "direction: inverse}\n";
         const std::string str = PROFILE_V2_START + strEnd;
 
@@ -1706,7 +1706,7 @@ OCIO_ADD_TEST(Config, range_serialization)
 
     {
         const std::string strEnd =
-            "    from_reference: !<RangeTransform> {min_in_value: 0, min_out_value: 0, "
+            "    from_scene_reference: !<RangeTransform> {min_in_value: 0, min_out_value: 0, "
             "style: noClamp}\n";
         const std::string str = PROFILE_V2_START + strEnd;
 
@@ -1721,7 +1721,7 @@ OCIO_ADD_TEST(Config, range_serialization)
 
     {
         const std::string strEnd =
-            "    from_reference: !<RangeTransform> {min_in_value: 0, max_in_value: 1, "
+            "    from_scene_reference: !<RangeTransform> {min_in_value: 0, max_in_value: 1, "
             "min_out_value: 0, max_out_value: 1, style: noClamp, direction: inverse}\n";
         const std::string str = PROFILE_V2_START + strEnd;
 
@@ -1740,7 +1740,7 @@ OCIO_ADD_TEST(Config, range_serialization)
     {
         // Test Range with clamp style (i.e. default one)
         const std::string strEnd =
-            "    from_reference: !<RangeTransform> {min_in_value: -0.0109, "
+            "    from_scene_reference: !<RangeTransform> {min_in_value: -0.0109, "
             "max_in_value: 1.0505, min_out_value: 0.0009, max_out_value: 2.5001, "
             "direction: inverse}\n";
         const std::string str = PROFILE_V2_START + strEnd;
@@ -1760,7 +1760,7 @@ OCIO_ADD_TEST(Config, range_serialization)
     {
         // Test Range with clamp style
         const std::string in_strEnd =
-            "    from_reference: !<RangeTransform> {min_in_value: -0.0109, "
+            "    from_scene_reference: !<RangeTransform> {min_in_value: -0.0109, "
             "max_in_value: 1.0505, min_out_value: 0.0009, max_out_value: 2.5001, "
             "style: Clamp, direction: inverse}\n";
         const std::string in_str = PROFILE_V2_START + in_strEnd;
@@ -1774,7 +1774,7 @@ OCIO_ADD_TEST(Config, range_serialization)
 
         // Clamp style is not saved
         const std::string out_strEnd =
-            "    from_reference: !<RangeTransform> {min_in_value: -0.0109, "
+            "    from_scene_reference: !<RangeTransform> {min_in_value: -0.0109, "
             "max_in_value: 1.0505, min_out_value: 0.0009, max_out_value: 2.5001, "
             "direction: inverse}\n";
         const std::string out_str = PROFILE_V2_START + out_strEnd;
@@ -1786,7 +1786,7 @@ OCIO_ADD_TEST(Config, range_serialization)
 
     {
         const std::string strEnd =
-            "    from_reference: !<RangeTransform> "
+            "    from_scene_reference: !<RangeTransform> "
             "{min_in_value: 0, max_out_value: 1}\n";
         const std::string str = PROFILE_V2_START + strEnd;
 
@@ -1806,10 +1806,10 @@ OCIO_ADD_TEST(Config, range_serialization)
     {
         // max_in_value has an illegal second number.
         const std::string strEndFail =
-            "    from_reference: !<RangeTransform> {min_in_value: -0.01, "
+            "    from_scene_reference: !<RangeTransform> {min_in_value: -0.01, "
             "max_in_value: 1.05  10, min_out_value: 0.0009, max_out_value: 2.5}\n";
         const std::string strEnd =
-            "    from_reference: !<RangeTransform> {min_in_value: -0.01, "
+            "    from_scene_reference: !<RangeTransform> {min_in_value: -0.01, "
             "max_in_value: 1.05, min_out_value: 0.0009, max_out_value: 2.5}\n";
 
         const std::string str = PROFILE_V2 + SIMPLE_PROFILE_A + SIMPLE_PROFILE_B + strEndFail;
@@ -1834,10 +1834,10 @@ OCIO_ADD_TEST(Config, range_serialization)
     {
         // max_in_value & max_out_value have no value, they will not be defined.
         const std::string strEnd =
-            "    from_reference: !<RangeTransform> {min_in_value: -0.01, "
+            "    from_scene_reference: !<RangeTransform> {min_in_value: -0.01, "
             "max_in_value: , min_out_value: -0.01, max_out_value: }\n";
         const std::string strEndSaved =
-            "    from_reference: !<RangeTransform> {min_in_value: -0.01, "
+            "    from_scene_reference: !<RangeTransform> {min_in_value: -0.01, "
             "min_out_value: -0.01}\n";
         const std::string str = PROFILE_V2 + SIMPLE_PROFILE_A + SIMPLE_PROFILE_B + strEnd;
         const std::string strSaved = PROFILE_V2_START + strEndSaved;
@@ -1856,7 +1856,7 @@ OCIO_ADD_TEST(Config, range_serialization)
 
     {
         const std::string strEnd =
-            "    from_reference: !<RangeTransform> "
+            "    from_scene_reference: !<RangeTransform> "
             "{min_in_value: 0.12345678901234, max_out_value: 1.23456789012345}\n";
         const std::string str = PROFILE_V2_START + strEnd;
 
@@ -1875,7 +1875,7 @@ OCIO_ADD_TEST(Config, range_serialization)
 
     {
         const std::string strEnd =
-            "    from_reference: !<RangeTransform> {min_in_value: -0.01, "
+            "    from_scene_reference: !<RangeTransform> {min_in_value: -0.01, "
             "max_in_value: 1.05, min_out_value: 0.0009, max_out_value: 2.5}\n";
         const std::string str = PROFILE_V2_START + strEnd;
 
@@ -1893,7 +1893,7 @@ OCIO_ADD_TEST(Config, range_serialization)
 
     {
         const std::string strEnd =
-            "    from_reference: !<RangeTransform> {min_out_value: 0.0009, "
+            "    from_scene_reference: !<RangeTransform> {min_out_value: 0.0009, "
             "max_out_value: 2.5}\n";
         const std::string str = PROFILE_V2_START + strEnd;
 
@@ -1912,7 +1912,7 @@ OCIO_ADD_TEST(Config, range_serialization)
 
     {
         const std::string strEnd =
-            "    from_reference: !<GroupTransform>\n"
+            "    from_scene_reference: !<GroupTransform>\n"
             "      children:\n"
             "        - !<RangeTransform> {min_in_value: -0.01, max_in_value: 1.05, "
             "min_out_value: 0.0009, max_out_value: 2.5}\n"
@@ -1938,7 +1938,7 @@ OCIO_ADD_TEST(Config, range_serialization)
 
     {
         const std::string strEnd =
-            "    from_reference: !<GroupTransform>\n"
+            "    from_scene_reference: !<GroupTransform>\n"
             "      children:\n"
             // missing { (and mInValue is wrong -> that's a warning)
             "        - !<RangeTransform> mInValue: -0.01, max_in_value: 1.05, "
@@ -1955,7 +1955,7 @@ OCIO_ADD_TEST(Config, range_serialization)
     {
         const std::string strEnd =
             // The comma is missing after the min_in_value value.
-            "    from_reference: !<RangeTransform> {min_in_value: -0.01 "
+            "    from_scene_reference: !<RangeTransform> {min_in_value: -0.01 "
             "max_in_value: 1.05, min_out_value: 0.0009, max_out_value: 2.5}\n";
         const std::string str = PROFILE_V2_START + strEnd;
 
@@ -1968,7 +1968,7 @@ OCIO_ADD_TEST(Config, range_serialization)
 
     {
         const std::string strEnd =
-            "    from_reference: !<RangeTransform> {min_in_value: -0.01, "
+            "    from_scene_reference: !<RangeTransform> {min_in_value: -0.01, "
             // The comma is missing between the min_out_value value and
             // the max_out_value tag.
             "max_in_value: 1.05, min_out_value: 0.0009maxOutValue: 2.5}\n";
@@ -2002,10 +2002,29 @@ OCIO_ADD_TEST(Config, exponent_serialization)
         OCIO_CHECK_EQUAL(ss.str(), str);    
     }
 
+    // If R==G==B and A==1, and the version is > 1, it is serialized using a more compact syntax.
+    {
+        const std::string strEnd =
+            "    from_scene_reference: !<ExponentTransform> "
+            "{value: 1.101}\n";
+        const std::string str = PROFILE_V2_START + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+        OCIO::ConstConfigRcPtr config;
+        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OCIO_CHECK_NO_THROW(config->validate());
+
+        std::stringstream ss;
+        OCIO_CHECK_NO_THROW(ss << *config.get());
+        OCIO_CHECK_EQUAL(ss.str(), str);
+    }
+
+    // If version==1, then write all values for compatibility with the v1 library.
     {
         const std::string strEnd =
             "    from_reference: !<ExponentTransform> "
-            "{value: 1.101}\n";
+            "{value: [1.101, 1.101, 1.101, 1]}\n";
         const std::string str = PROFILE_V1 + SIMPLE_PROFILE + strEnd;
 
         std::istringstream is;
@@ -2038,7 +2057,7 @@ OCIO_ADD_TEST(Config, exponent_serialization)
 
      {
          const std::string strEnd =
-             "    from_reference: !<ExponentTransform> "
+             "    from_scene_reference: !<ExponentTransform> "
              "{value: [1.101, 1.202, 1.303, 1.404], style: mirror, direction: inverse}\n";
          const std::string str = PROFILE_V2_START + strEnd;
 
@@ -2055,7 +2074,7 @@ OCIO_ADD_TEST(Config, exponent_serialization)
 
      {
          const std::string strEnd =
-             "    from_reference: !<ExponentTransform> "
+             "    from_scene_reference: !<ExponentTransform> "
              "{value: [1.101, 1.202, 1.303, 1.404], style: pass_thru, direction: inverse}\n";
          const std::string str = PROFILE_V2_START + strEnd;
 
@@ -2105,7 +2124,7 @@ OCIO_ADD_TEST(Config, exponent_with_linear_serialization)
 {
     {
         const std::string strEnd =
-            "    from_reference: !<ExponentWithLinearTransform> "
+            "    from_scene_reference: !<ExponentWithLinearTransform> "
             "{gamma: [1.1, 1.2, 1.3, 1.4], offset: [0.101, 0.102, 0.103, 0.1]}\n";
         const std::string str = PROFILE_V2_START + strEnd;
 
@@ -2122,7 +2141,7 @@ OCIO_ADD_TEST(Config, exponent_with_linear_serialization)
 
     {
         const std::string strEnd =
-            "    from_reference: !<ExponentWithLinearTransform> "
+            "    from_scene_reference: !<ExponentWithLinearTransform> "
             "{gamma: [1.1, 1.2, 1.3, 1.4], offset: [0.101, 0.102, 0.103, 0.1], style: mirror}\n";
         const std::string str = PROFILE_V2_START + strEnd;
 
@@ -2139,7 +2158,7 @@ OCIO_ADD_TEST(Config, exponent_with_linear_serialization)
 
     {
         const std::string strEnd =
-            "    from_reference: !<ExponentWithLinearTransform> "
+            "    from_scene_reference: !<ExponentWithLinearTransform> "
             "{gamma: [1.1, 1.2, 1.3, 1.4], offset: [0.101, 0.102, 0.103, 0.1], "
             "direction: inverse}\n";
         const std::string str = PROFILE_V2_START + strEnd;
@@ -2158,7 +2177,7 @@ OCIO_ADD_TEST(Config, exponent_with_linear_serialization)
 
     {
         const std::string strEnd =
-            "    from_reference: !<ExponentWithLinearTransform> "
+            "    from_scene_reference: !<ExponentWithLinearTransform> "
             "{gamma: [1.1, 1.2, 1.3, 1.4], offset: [0.101, 0.102, 0.103, 0.1], style: mirror, "
             "direction: inverse}\n";
         const std::string str = PROFILE_V2_START + strEnd;
@@ -2176,7 +2195,7 @@ OCIO_ADD_TEST(Config, exponent_with_linear_serialization)
 
     {
         const std::string strEnd =
-            "    from_reference: !<ExponentWithLinearTransform> "
+            "    from_scene_reference: !<ExponentWithLinearTransform> "
             "{gamma: 1.1, offset: 0.101, "
             "direction: inverse}\n";
         const std::string str = PROFILE_V2_START + strEnd;
@@ -2197,7 +2216,7 @@ OCIO_ADD_TEST(Config, exponent_with_linear_serialization)
 
     {
         const std::string strEnd =
-            "    from_reference: !<ExponentWithLinearTransform> {}\n";
+            "    from_scene_reference: !<ExponentWithLinearTransform> {}\n";
         const std::string str = PROFILE_V2_START + strEnd;
 
         std::istringstream is;
@@ -2211,7 +2230,7 @@ OCIO_ADD_TEST(Config, exponent_with_linear_serialization)
     {
         // Offset values are missing.
         const std::string strEnd =
-            "    from_reference: !<ExponentWithLinearTransform> "
+            "    from_scene_reference: !<ExponentWithLinearTransform> "
             "{gamma: [1.1, 1.2, 1.3, 1.4]}\n";
         const std::string str = PROFILE_V2_START + strEnd;
 
@@ -2226,7 +2245,7 @@ OCIO_ADD_TEST(Config, exponent_with_linear_serialization)
     {
         // Gamma values are missing.
         const std::string strEnd =
-            "    from_reference: !<ExponentWithLinearTransform> "
+            "    from_scene_reference: !<ExponentWithLinearTransform> "
             "{offset: [1.1, 1.2, 1.3, 1.4]}\n";
         const std::string str = PROFILE_V2_START + strEnd;
 
@@ -2241,7 +2260,7 @@ OCIO_ADD_TEST(Config, exponent_with_linear_serialization)
     {
         // Some gamma values are missing.
         const std::string strEnd =
-            "    from_reference: !<ExponentWithLinearTransform> "
+            "    from_scene_reference: !<ExponentWithLinearTransform> "
             "{gamma: [1.1, 1.2, 1.3]}\n";
         const std::string str = PROFILE_V2_START + strEnd;
 
@@ -2255,7 +2274,7 @@ OCIO_ADD_TEST(Config, exponent_with_linear_serialization)
     {
         // Some offset values are missing.
         const std::string strEnd =
-            "    from_reference: !<ExponentWithLinearTransform> "
+            "    from_scene_reference: !<ExponentWithLinearTransform> "
             "{gamma: [1.1, 1.2, 1.3, 1.4], offset: [0.101, 0.102]}\n";
         const std::string str = PROFILE_V2_START + strEnd;
 
@@ -2269,7 +2288,7 @@ OCIO_ADD_TEST(Config, exponent_with_linear_serialization)
 
     {
         const std::string strEnd =
-            "    from_reference: !<ExponentWithLinearTransform> "
+            "    from_scene_reference: !<ExponentWithLinearTransform> "
             "{gamma: [1.1, 1.2, 1.3, 1.4], offset: [0.101, 0.102, 0.103, 0.1], "
             "direction: inverse, style: pass_thru}\n";
         const std::string str = PROFILE_V2_START + strEnd;
@@ -3055,9 +3074,45 @@ OCIO_ADD_TEST(Config, display_view_order)
 OCIO_ADD_TEST(Config, log_serialization)
 {
     {
-        // Log with default base value and default direction.
+        // Log with default base value (saved in V1) and default direction.
         const std::string strEnd =
-            "    from_reference: !<LogTransform> {}\n";
+            "    from_reference: !<LogTransform> {base: 2}\n";
+        const std::string str = PROFILE_V1 + SIMPLE_PROFILE_A + SIMPLE_PROFILE_B + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+
+        OCIO::ConstConfigRcPtr config;
+        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OCIO_CHECK_NO_THROW(config->validate());
+
+        std::stringstream ss;
+        OCIO_CHECK_NO_THROW(ss << *config.get());
+        OCIO_CHECK_EQUAL(ss.str(), str);
+    }
+
+    {
+        // Log with default base value (not saved in V2) and default direction.
+        const std::string strEnd =
+            "    from_scene_reference: !<LogTransform> {}\n";
+        const std::string str = PROFILE_V2_START + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+
+        OCIO::ConstConfigRcPtr config;
+        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OCIO_CHECK_NO_THROW(config->validate());
+
+        std::stringstream ss;
+        OCIO_CHECK_NO_THROW(ss << *config.get());
+        OCIO_CHECK_EQUAL(ss.str(), str);
+    }
+
+    {
+        // Log with default base value.
+        const std::string strEnd =
+            "    from_reference: !<LogTransform> {base: 2, direction: inverse}\n";
         const std::string str = PROFILE_V1 + SIMPLE_PROFILE_A + SIMPLE_PROFILE_B + strEnd;
 
         std::istringstream is;
@@ -3075,8 +3130,8 @@ OCIO_ADD_TEST(Config, log_serialization)
     {
         // Log with default base value.
         const std::string strEnd =
-            "    from_reference: !<LogTransform> {direction: inverse}\n";
-        const std::string str = PROFILE_V1 + SIMPLE_PROFILE_A + SIMPLE_PROFILE_B + strEnd;
+            "    from_scene_reference: !<LogTransform> {direction: inverse}\n";
+        const std::string str = PROFILE_V2_START + strEnd;
 
         std::istringstream is;
         is.str(str);
@@ -3129,7 +3184,7 @@ OCIO_ADD_TEST(Config, log_serialization)
     {
         // LogAffine with specified values 3 components.
         const std::string strEnd =
-            "    from_reference: !<LogAffineTransform> {"
+            "    from_scene_reference: !<LogAffineTransform> {"
             "base: 10, "
             "log_side_slope: [1.3, 1.4, 1.5], "
             "log_side_offset: [0, 0, 0.1], "
@@ -3152,7 +3207,7 @@ OCIO_ADD_TEST(Config, log_serialization)
     {
         // LogAffine with default value for base.
         const std::string strEnd =
-            "    from_reference: !<LogAffineTransform> {"
+            "    from_scene_reference: !<LogAffineTransform> {"
             "log_side_slope: [1, 1, 1.1], "
             "log_side_offset: [0.1234567890123, 0.5, 0.1], "
             "lin_side_slope: [1.3, 1.4, 1.5], "
@@ -3175,7 +3230,7 @@ OCIO_ADD_TEST(Config, log_serialization)
     {
         // LogAffine with single value for lin_side_offset.
         const std::string strEnd =
-            "    from_reference: !<LogAffineTransform> {"
+            "    from_scene_reference: !<LogAffineTransform> {"
             "base: 10, "
             "log_side_slope: [1, 1, 1.1], "
             "log_side_offset: [0.1234567890123, 0.5, 0.1], "
@@ -3198,7 +3253,7 @@ OCIO_ADD_TEST(Config, log_serialization)
     {
         // LogAffine with single value for lin_side_slope.
         const std::string strEnd =
-            "    from_reference: !<LogAffineTransform> {"
+            "    from_scene_reference: !<LogAffineTransform> {"
             "log_side_slope: [1, 1, 1.1], "
             "lin_side_slope: 1.3, "
             "lin_side_offset: [0, 0, 0.1]}\n";
@@ -3219,7 +3274,7 @@ OCIO_ADD_TEST(Config, log_serialization)
     {
         // LogAffine with single value for log_side_offset.
         const std::string strEnd =
-            "    from_reference: !<LogAffineTransform> {"
+            "    from_scene_reference: !<LogAffineTransform> {"
             "log_side_slope: [1, 1, 1.1], "
             "log_side_offset: 0.5, "
             "lin_side_slope: [1.3, 1, 1], "
@@ -3241,7 +3296,7 @@ OCIO_ADD_TEST(Config, log_serialization)
     {
         // LogAffine with single value for log_side_slope.
         const std::string strEnd =
-            "    from_reference: !<LogAffineTransform> {"
+            "    from_scene_reference: !<LogAffineTransform> {"
             "log_side_slope: 1.1, "
             "log_side_offset: [0.5, 0, 0], "
             "lin_side_slope: [1.3, 1, 1], "
@@ -3263,7 +3318,7 @@ OCIO_ADD_TEST(Config, log_serialization)
     {
         // LogAffine with default value for log_side_slope.
         const std::string strEnd =
-            "    from_reference: !<LogAffineTransform> {"
+            "    from_scene_reference: !<LogAffineTransform> {"
             "log_side_offset: [0.1234567890123, 0.5, 0.1], "
             "lin_side_slope: [1.3, 1.4, 1.5], "
             "lin_side_offset: [0.1, 0, 0]}\n";
@@ -3284,7 +3339,7 @@ OCIO_ADD_TEST(Config, log_serialization)
     {
         // LogAffine with default value for all but base.
         const std::string strEnd =
-            "    from_reference: !<LogAffineTransform> {base: 10}\n";
+            "    from_scene_reference: !<LogAffineTransform> {base: 10}\n";
         const std::string str = PROFILE_V2_START + strEnd;
 
         std::istringstream is;
@@ -3302,7 +3357,7 @@ OCIO_ADD_TEST(Config, log_serialization)
     {
         // LogAffine with wrong size for log_side_slope.
         const std::string strEnd =
-            "    from_reference: !<LogAffineTransform> {"
+            "    from_scene_reference: !<LogAffineTransform> {"
             "log_side_slope: [1, 1], "
             "log_side_offset: [0.1234567890123, 0.5, 0.1]}\n";
         const std::string str = PROFILE_V2_START + strEnd;
@@ -3319,7 +3374,7 @@ OCIO_ADD_TEST(Config, log_serialization)
     {
         // LogAffine with 3 values for base.
         const std::string strEnd =
-            "    from_reference: !<LogAffineTransform> {"
+            "    from_scene_reference: !<LogAffineTransform> {"
             "base: [2, 2, 2], "
             "log_side_offset: [0.1234567890123, 0.5, 0.1]}\n";
         const std::string str = PROFILE_V2_START + strEnd;
@@ -3335,7 +3390,7 @@ OCIO_ADD_TEST(Config, log_serialization)
     {
         // LogCamera with default value for base.
         const std::string strEnd =
-            "    from_reference: !<LogCameraTransform> {"
+            "    from_scene_reference: !<LogCameraTransform> {"
             "log_side_slope: [1, 1, 1.1], "
             "log_side_offset: [0.1234567890123, 0.5, 0.1], "
             "lin_side_slope: [1.3, 1.4, 1.5], "
@@ -3359,7 +3414,7 @@ OCIO_ADD_TEST(Config, log_serialization)
     {
         // LogCamera with default values and identical lin_side_break.
         const std::string strEnd =
-            "    from_reference: !<LogCameraTransform> {"
+            "    from_scene_reference: !<LogCameraTransform> {"
             "lin_side_break: 0.2}\n";
 
         const std::string str = PROFILE_V2_START + strEnd;
@@ -3379,7 +3434,7 @@ OCIO_ADD_TEST(Config, log_serialization)
     {
         // LogCamera with linear slope.
         const std::string strEnd =
-            "    from_reference: !<LogCameraTransform> {"
+            "    from_scene_reference: !<LogCameraTransform> {"
             "lin_side_break: 0.2, "
             "linear_slope: [1.1, 0.9, 1.2]}\n";
 
@@ -3400,7 +3455,7 @@ OCIO_ADD_TEST(Config, log_serialization)
     {
         // LogCamera with missing linSideBreak.
         const std::string strEnd =
-            "    from_reference: !<LogCameraTransform> {"
+            "    from_scene_reference: !<LogCameraTransform> {"
             "base: 5}\n";
 
         const std::string str = PROFILE_V2_START + strEnd;
@@ -3429,7 +3484,7 @@ OCIO_ADD_TEST(Config, key_value_error)
         "colorspaces:\n"
         "  - !<ColorSpace>\n"
         "    name: raw\n"
-        "    to_reference: !<MatrixTransform> \n"
+        "    to_scene_reference: !<MatrixTransform> \n"
         "                      {\n"
         "                           matrix: [1, 0, 0, 0, 0, 1]\n" // Missing values.
         "                      }\n"
@@ -3465,7 +3520,7 @@ OCIO_ADD_TEST(Config, grading_primary_serialization)
 {
     {
         const std::string strEnd =
-            "    from_reference: !<GroupTransform>\n"
+            "    from_scene_reference: !<GroupTransform>\n"
             "      children:\n"
             "        - !<GradingPrimaryTransform> {style: log}\n"
             "        - !<GradingPrimaryTransform> {style: log, contrast: {rgb: [1.1, 1, 1], master: 1.1}}\n"
@@ -3493,7 +3548,7 @@ OCIO_ADD_TEST(Config, grading_primary_serialization)
         // contrast is not default. When controls are not default, transform is saved on separate
         // lines.
         const std::string strEndBack =
-            "    from_reference: !<GroupTransform>\n"
+            "    from_scene_reference: !<GroupTransform>\n"
             "      children:\n"
             "        - !<GradingPrimaryTransform> {style: log}\n"
             "        - !<GradingPrimaryTransform>\n"
@@ -3518,7 +3573,7 @@ OCIO_ADD_TEST(Config, grading_primary_serialization)
     {
         // Pivot contrast value is included for log and linear even if it is the default value. 
         const std::string strEnd =
-            "    from_reference: !<GroupTransform>\n"
+            "    from_scene_reference: !<GroupTransform>\n"
             "      children:\n"
             "        - !<GradingPrimaryTransform>\n"
             "          style: log\n"
@@ -3613,7 +3668,7 @@ OCIO_ADD_TEST(Config, grading_primary_serialization)
     {
         // Primary can be on one line or multiple lines (but is written on multiple lines).
         const std::string strEnd =
-            "    from_reference: !<GroupTransform>\n"
+            "    from_scene_reference: !<GroupTransform>\n"
             "      children:\n"
             "        - !<GradingPrimaryTransform> {style: log, brightness: {rgb: [0.1, 0.12345678, 0], master: 0.1}, pivot: {contrast: -0.2}}\n"
             "        - !<GradingPrimaryTransform>\n"
@@ -3624,7 +3679,7 @@ OCIO_ADD_TEST(Config, grading_primary_serialization)
             "          pivot: {contrast: 0.18}\n";
 
         const std::string strEndBack =
-            "    from_reference: !<GroupTransform>\n"
+            "    from_scene_reference: !<GroupTransform>\n"
             "      children:\n"
             "        - !<GradingPrimaryTransform>\n"
             "          style: log\n"
@@ -3654,7 +3709,7 @@ OCIO_ADD_TEST(Config, grading_primary_serialization)
     {
         // Rgb not enough values.
         const std::string strEnd =
-            "    from_reference: !<GradingPrimaryTransform> {style: log, brightness: {rgb: [0.1, 0], master: 0.1}}\n";
+            "    from_scene_reference: !<GradingPrimaryTransform> {style: log, brightness: {rgb: [0.1, 0], master: 0.1}}\n";
 
         const std::string str = PROFILE_V2_START + strEnd;
 
@@ -3668,7 +3723,7 @@ OCIO_ADD_TEST(Config, grading_primary_serialization)
     {
         // Rgb too many values.
         const std::string strEnd =
-            "    from_reference: !<GradingPrimaryTransform> {style: log, brightness: {rgb: [0.1, 0.12345678, 0, 0], master: 0.1}}\n";
+            "    from_scene_reference: !<GradingPrimaryTransform> {style: log, brightness: {rgb: [0.1, 0.12345678, 0, 0], master: 0.1}}\n";
 
         const std::string str = PROFILE_V2_START + strEnd;
 
@@ -3682,7 +3737,7 @@ OCIO_ADD_TEST(Config, grading_primary_serialization)
     {
         // Rgbm has to be a map.
         const std::string strEnd =
-            "    from_reference: !<GradingPrimaryTransform> "
+            "    from_scene_reference: !<GradingPrimaryTransform> "
             "{style: log, brightness: [0.1, 0.12345678, 0, 0]}\n";
 
         const std::string str = PROFILE_V2_START + strEnd;
@@ -3697,7 +3752,7 @@ OCIO_ADD_TEST(Config, grading_primary_serialization)
     {
         // Rgbm missing master.
         const std::string strEnd =
-            "    from_reference: !<GradingPrimaryTransform> "
+            "    from_scene_reference: !<GradingPrimaryTransform> "
             "{style: log, brightness: {rgb: [0.1, 0.12345678, 0]}}\n";
 
         const std::string str = PROFILE_V2_START + strEnd;
@@ -3712,7 +3767,7 @@ OCIO_ADD_TEST(Config, grading_primary_serialization)
     {
         // Rgbm master has too many values.
         const std::string strEnd =
-            "    from_reference: !<GradingPrimaryTransform> "
+            "    from_scene_reference: !<GradingPrimaryTransform> "
             "{style: log, brightness: {rgb: [0.1, 0.12345678, 0], master: [0.1, 0.2, 0.3]}}\n";
 
         const std::string str = PROFILE_V2_START + strEnd;
@@ -3727,7 +3782,7 @@ OCIO_ADD_TEST(Config, grading_primary_serialization)
     {
         // Rgbm missing rgb.
         const std::string strEnd =
-            "    from_reference: !<GradingPrimaryTransform> {style: log, brightness: {master: 0.1}}\n";
+            "    from_scene_reference: !<GradingPrimaryTransform> {style: log, brightness: {master: 0.1}}\n";
 
         const std::string str = PROFILE_V2_START + strEnd;
 
@@ -3741,7 +3796,7 @@ OCIO_ADD_TEST(Config, grading_primary_serialization)
     {
         // Pivot has to be a map.
         const std::string strEnd =
-            "    from_reference: !<GradingPrimaryTransform> {style: log, pivot: 0.1}\n";
+            "    from_scene_reference: !<GradingPrimaryTransform> {style: log, pivot: 0.1}\n";
 
         const std::string str = PROFILE_V2_START + strEnd;
 
@@ -3755,7 +3810,7 @@ OCIO_ADD_TEST(Config, grading_primary_serialization)
     {
         // Pivot has to define some values.
         const std::string strEnd =
-            "    from_reference: !<GradingPrimaryTransform> {style: log, pivot: {}}\n";
+            "    from_scene_reference: !<GradingPrimaryTransform> {style: log, pivot: {}}\n";
 
         const std::string str = PROFILE_V2_START + strEnd;
 
@@ -3769,7 +3824,7 @@ OCIO_ADD_TEST(Config, grading_primary_serialization)
     {
         // Clamp has to be a map.
         const std::string strEnd =
-            "    from_reference: !<GradingPrimaryTransform> {style: log, clamp: 0.1}\n";
+            "    from_scene_reference: !<GradingPrimaryTransform> {style: log, clamp: 0.1}\n";
 
         const std::string str = PROFILE_V2_START + strEnd;
 
@@ -3783,7 +3838,7 @@ OCIO_ADD_TEST(Config, grading_primary_serialization)
     {
         // Clamp has to define some values.
         const std::string strEnd =
-            "    from_reference: !<GradingPrimaryTransform> {style: log, clamp: {}}\n";
+            "    from_scene_reference: !<GradingPrimaryTransform> {style: log, clamp: {}}\n";
 
         const std::string str = PROFILE_V2_START + strEnd;
 
@@ -3799,7 +3854,7 @@ OCIO_ADD_TEST(Config, grading_rgbcurve_serialization)
 {
     {
         const std::string strEnd =
-            "    from_reference: !<GroupTransform>\n"
+            "    from_scene_reference: !<GroupTransform>\n"
             "      children:\n"
             "        - !<GradingRGBCurveTransform> {style: log}\n"
             "        - !<GradingRGBCurveTransform> {style: log, direction: inverse}\n"
@@ -3826,7 +3881,7 @@ OCIO_ADD_TEST(Config, grading_rgbcurve_serialization)
 
     {
         const std::string strEnd =
-            "    from_reference: !<GroupTransform>\n"
+            "    from_scene_reference: !<GroupTransform>\n"
             "      children:\n"
             "        - !<GradingRGBCurveTransform>\n"
             "          style: log\n"
@@ -3870,7 +3925,7 @@ OCIO_ADD_TEST(Config, grading_tone_serialization)
 {
     {
         const std::string strEnd =
-            "    from_reference: !<GroupTransform>\n"
+            "    from_scene_reference: !<GroupTransform>\n"
             "      children:\n"
             "        - !<GradingToneTransform> {style: log}\n"
             "        - !<GradingToneTransform> {style: log, s_contrast: 1.1}\n"
@@ -3896,7 +3951,7 @@ OCIO_ADD_TEST(Config, grading_tone_serialization)
 
         //  When controls are not default, transform is saved on separate lines.
         const std::string strEndBack =
-            "    from_reference: !<GroupTransform>\n"
+            "    from_scene_reference: !<GroupTransform>\n"
             "      children:\n"
             "        - !<GradingToneTransform> {style: log}\n"
             "        - !<GradingToneTransform>\n"
@@ -3914,7 +3969,7 @@ OCIO_ADD_TEST(Config, grading_tone_serialization)
 
     {
         const std::string strEnd =
-            "    from_reference: !<GroupTransform>\n"
+            "    from_scene_reference: !<GroupTransform>\n"
             "      children:\n"
             "        - !<GradingToneTransform>\n"
             "          style: log\n"
@@ -3962,7 +4017,7 @@ OCIO_ADD_TEST(Config, grading_tone_serialization)
     {
         // Rgb not enough values.
         const std::string strEnd =
-            "    from_reference: !<GradingToneTransform> {style: log, whites: {rgb: [0.1, 1], master: 1, start: 1, width: 1}}\n";
+            "    from_scene_reference: !<GradingToneTransform> {style: log, whites: {rgb: [0.1, 1], master: 1, start: 1, width: 1}}\n";
 
         const std::string str = PROFILE_V2_START + strEnd;
 
@@ -3976,7 +4031,7 @@ OCIO_ADD_TEST(Config, grading_tone_serialization)
     {
         // Rgb too many values.
         const std::string strEnd =
-            "    from_reference: !<GradingToneTransform> {style: log, whites: {rgb: [0.1, 0.12345678, 1, 1], master: 0.1, start: 1, width: 1}}\n";
+            "    from_scene_reference: !<GradingToneTransform> {style: log, whites: {rgb: [0.1, 0.12345678, 1, 1], master: 0.1, start: 1, width: 1}}\n";
 
         const std::string str = PROFILE_V2_START + strEnd;
 
@@ -3990,7 +4045,7 @@ OCIO_ADD_TEST(Config, grading_tone_serialization)
     {
         // Rgbm has to be a map.
         const std::string strEnd =
-            "    from_reference: !<GradingToneTransform> "
+            "    from_scene_reference: !<GradingToneTransform> "
             "{style: log, whites: [0.1, 0.12345678, 0, 0]}\n";
 
         const std::string str = PROFILE_V2_START + strEnd;
@@ -4005,7 +4060,7 @@ OCIO_ADD_TEST(Config, grading_tone_serialization)
     {
         // Rgbmsw missing start.
         const std::string strEnd =
-            "    from_reference: !<GradingToneTransform> "
+            "    from_scene_reference: !<GradingToneTransform> "
             "{style: log, whites: {rgb: [0.1, 1, 1], master: 0.1, width: 1}}\n";
 
         const std::string str = PROFILE_V2_START + strEnd;
@@ -4020,7 +4075,7 @@ OCIO_ADD_TEST(Config, grading_tone_serialization)
     {
         // Rgbmsw missing center.
         const std::string strEnd =
-            "    from_reference: !<GradingToneTransform> "
+            "    from_scene_reference: !<GradingToneTransform> "
             "{style: log, midtones: {rgb: [0.1, 1, 1], master: 0.1, width: 1}}\n";
 
         const std::string str = PROFILE_V2_START + strEnd;
@@ -4036,7 +4091,7 @@ OCIO_ADD_TEST(Config, grading_tone_serialization)
     {
         // Rgbmsw start has too many values.
         const std::string strEnd =
-            "    from_reference: !<GradingToneTransform> "
+            "    from_scene_reference: !<GradingToneTransform> "
             "{style: log, whites: {rgb: [0.1, 1, 1], master: 0.1, start: [1, 1.1], width: 1}}\n";
 
         const std::string str = PROFILE_V2_START + strEnd;
@@ -4053,7 +4108,7 @@ OCIO_ADD_TEST(Config, fixed_function_serialization)
 {
     {
         const std::string strEnd =
-            "    from_reference: !<GroupTransform>\n"
+            "    from_scene_reference: !<GroupTransform>\n"
             "      children:\n"
             "        - !<FixedFunctionTransform> {style: ACES_RedMod03}\n"
             "        - !<FixedFunctionTransform> {style: ACES_RedMod03, direction: inverse}\n"
@@ -4094,7 +4149,7 @@ OCIO_ADD_TEST(Config, fixed_function_serialization)
 
     {
         const std::string strEnd =
-            "    from_reference: !<GroupTransform>\n"
+            "    from_scene_reference: !<GroupTransform>\n"
             "      children:\n"
             "        - !<FixedFunctionTransform> {style: ACES_DarkToDim10, params: [0.75]}\n";
 
@@ -4111,7 +4166,7 @@ OCIO_ADD_TEST(Config, fixed_function_serialization)
 
     {
         const std::string strEnd =
-            "    from_reference: !<GroupTransform>\n"
+            "    from_scene_reference: !<GroupTransform>\n"
             "      children:\n"
             "        - !<FixedFunctionTransform> {style: REC2100_Surround, direction: inverse}\n";
 
@@ -4132,7 +4187,7 @@ OCIO_ADD_TEST(Config, exposure_contrast_serialization)
 {
     {
         const std::string strEnd =
-            "    from_reference: !<GroupTransform>\n"
+            "    from_scene_reference: !<GroupTransform>\n"
             "      children:\n"
             "        - !<ExposureContrastTransform> {style: video,"
                        " contrast: 0.5, gamma: 1.1, pivot: 0.18}\n"
@@ -4212,7 +4267,7 @@ OCIO_ADD_TEST(Config, exposure_contrast_serialization)
 
     {
         const std::string strEnd =
-            "    from_reference: !<GroupTransform>\n"
+            "    from_scene_reference: !<GroupTransform>\n"
             "      children:\n"
             "        - !<ExposureContrastTransform> {style: wrong}\n";
 
@@ -4260,7 +4315,7 @@ OCIO_ADD_TEST(Config, cdl_serialization)
     // Config v2.
     {
         const std::string strEnd =
-            "    from_reference: !<GroupTransform>\n"
+            "    from_scene_reference: !<GroupTransform>\n"
             "      children:\n"
             "        - !<CDLTransform> {slope: [1, 2, 1]}\n"
             "        - !<CDLTransform> {offset: [0.1, 0.2, 0.1]}\n"
@@ -4311,7 +4366,7 @@ OCIO_ADD_TEST(Config, file_transform_serialization)
 {
     // Config v2.
     const std::string strEnd =
-        "    from_reference: !<GroupTransform>\n"
+        "    from_scene_reference: !<GroupTransform>\n"
         "      children:\n"
         "        - !<FileTransform> {src: a.clf}\n"
         "        - !<FileTransform> {src: b.ccc, cccid: cdl1, interpolation: best}\n"
@@ -4390,7 +4445,7 @@ OCIO_ADD_TEST(Config, add_color_space)
 
     const std::string str
         = PROFILE_V2_START
-            + u8"    from_reference: !<MatrixTransform> {offset: [-1, -2, -3, -4]}\n";
+            + u8"    from_scene_reference: !<MatrixTransform> {offset: [-1, -2, -3, -4]}\n";
 
     std::istringstream is;
     is.str(str);
@@ -4427,7 +4482,7 @@ OCIO_ADD_TEST(Config, add_color_space)
         + u8"    description: é À Â Ç É È ç -- $ € 円 £ 元\n"
         + u8"    isdata: false\n"
         + u8"    allocation: uniform\n"
-        + u8"    to_reference: !<FixedFunctionTransform> {style: ACES_RedMod03}\n";
+        + u8"    to_scene_reference: !<FixedFunctionTransform> {style: ACES_RedMod03}\n";
 
     std::stringstream ss;
     OCIO_CHECK_NO_THROW(ss << *config.get());
@@ -4457,12 +4512,12 @@ OCIO_ADD_TEST(Config, remove_color_space)
 
     const std::string str
         = PROFILE_V2_START
-            + "    from_reference: !<MatrixTransform> {offset: [-1, -2, -3, -4]}\n"
+            + "    from_scene_reference: !<MatrixTransform> {offset: [-1, -2, -3, -4]}\n"
             + "\n"
             + "  - !<ColorSpace>\n"
             + "    name: cs5\n"
             + "    allocation: uniform\n"
-            + "    to_reference: !<FixedFunctionTransform> {style: ACES_RedMod03}\n";
+            + "    to_scene_reference: !<FixedFunctionTransform> {style: ACES_RedMod03}\n";
 
     std::istringstream is;
     is.str(str);
@@ -4560,7 +4615,7 @@ constexpr char InactiveCSConfigEnd[] =
     "    isdata: false\n"
     "    categories: [cat1]\n"
     "    allocation: uniform\n"
-    "    from_reference: !<CDLTransform> {offset: [0.1, 0.1, 0.1]}\n"
+    "    from_scene_reference: !<CDLTransform> {offset: [0.1, 0.1, 0.1]}\n"
     "\n"
     "  - !<ColorSpace>\n"
     "    name: cs2\n"
@@ -4570,7 +4625,7 @@ constexpr char InactiveCSConfigEnd[] =
     "    isdata: false\n"
     "    categories: [cat2]\n"
     "    allocation: uniform\n"
-    "    from_reference: !<CDLTransform> {offset: [0.2, 0.2, 0.2]}\n"
+    "    from_scene_reference: !<CDLTransform> {offset: [0.2, 0.2, 0.2]}\n"
     "\n"
     "  - !<ColorSpace>\n"
     "    name: cs3\n"
@@ -4580,7 +4635,7 @@ constexpr char InactiveCSConfigEnd[] =
     "    isdata: false\n"
     "    categories: [cat3]\n"
     "    allocation: uniform\n"
-    "    from_reference: !<CDLTransform> {offset: [0.3, 0.3, 0.3]}\n";
+    "    from_scene_reference: !<CDLTransform> {offset: [0.3, 0.3, 0.3]}\n";
 
 class InactiveCSGuard
 {
@@ -5098,12 +5153,12 @@ colorspaces:
   - !<ColorSpace>
     name: test1
     allocation: uniform
-    to_reference: !<MatrixTransform> {offset: [0.01, 0.02, 0.03, 0]}
+    to_scene_reference: !<MatrixTransform> {offset: [0.01, 0.02, 0.03, 0]}
 
   - !<ColorSpace>
     name: aces1
     allocation: uniform
-    from_reference: !<ExponentTransform> {value: [1.101, 1.202, 1.303, 1.404]}
+    from_scene_reference: !<ExponentTransform> {value: [1.101, 1.202, 1.303, 1.404]}
 
 display_colorspaces:
   - !<ColorSpace>
@@ -5138,12 +5193,12 @@ colorspaces:
   - !<ColorSpace>
     name: test2
     allocation: uniform
-    from_reference: !<MatrixTransform> {offset: [0.11, 0.12, 0.13, 0]}
+    from_scene_reference: !<MatrixTransform> {offset: [0.11, 0.12, 0.13, 0]}
 
   - !<ColorSpace>
     name: aces2
     allocation: uniform
-    to_reference: !<RangeTransform> {min_in_value: -0.0109, max_in_value: 1.0505, min_out_value: 0.0009, max_out_value: 2.5001}
+    to_scene_reference: !<RangeTransform> {min_in_value: -0.0109, max_in_value: 1.0505, min_out_value: 0.0009, max_out_value: 2.5001}
 
 display_colorspaces:
   - !<ColorSpace>
@@ -5245,7 +5300,7 @@ colorspaces:
   - !<ColorSpace>
     name: test
     allocation: uniform
-    from_reference: !<MatrixTransform> {offset: [0.11, 0.12, 0.13, 0]}
+    from_scene_reference: !<MatrixTransform> {offset: [0.11, 0.12, 0.13, 0]}
 )" };
 
     is.clear();
@@ -5278,7 +5333,7 @@ OCIO_ADD_TEST(Config, display_color_spaces_serialization)
             "\n"
             "  - !<ViewTransform>\n"
             "    name: scene\n"
-            "    from_reference: !<MatrixTransform> {}\n"
+            "    from_scene_reference: !<MatrixTransform> {}\n"
             "\n"
             "display_colorspaces:\n"
             "  - !<ColorSpace>\n"
@@ -5328,7 +5383,7 @@ OCIO_ADD_TEST(Config, display_color_spaces_errors)
             "    bitdepth: unknown\n"
             "    isdata: false\n"
             "    allocation: uniform\n"
-            "    from_reference: !<ExponentTransform> {value: [2.4, 2.4, 2.4, 1], direction: inverse}\n"
+            "    from_scene_reference: !<ExponentTransform> {value: [2.4, 2.4, 2.4, 1], direction: inverse}\n"
             "\n"
             "  - !<ColorSpace>\n"
             "    name: dcs2\n"
@@ -5344,7 +5399,7 @@ OCIO_ADD_TEST(Config, display_color_spaces_errors)
         is.str(str);
 
         OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is), OCIO::Exception,
-                              "'from_reference' cannot be used for a display color space");
+                              "'from_scene_reference' cannot be used for a display color space");
     }
     {
         const std::string strDCS =
@@ -5366,14 +5421,14 @@ OCIO_ADD_TEST(Config, display_color_spaces_errors)
             "    bitdepth: unknown\n"
             "    isdata: false\n"
             "    allocation: uniform\n"
-            "    to_reference: !<ExponentTransform> {value: [2.4, 2.4, 2.4, 1]}\n";
+            "    to_scene_reference: !<ExponentTransform> {value: [2.4, 2.4, 2.4, 1]}\n";
         const std::string str = PROFILE_V2_DCS_START + strDCS + SIMPLE_PROFILE_CS;
 
         std::istringstream is;
         is.str(str);
 
         OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is), OCIO::Exception,
-                              "'to_reference' cannot be used for a display color space");
+                              "'to_scene_reference' cannot be used for a display color space");
     }
 }
 
@@ -5558,7 +5613,7 @@ view_transforms:
 
   - !<ViewTransform>
     name: view_transform
-    from_reference: !<MatrixTransform> {}
+    from_scene_reference: !<MatrixTransform> {}
 
 display_colorspaces:
   - !<ColorSpace>
@@ -5978,7 +6033,7 @@ OCIO_ADD_TEST(Config, is_colorspace_used)
         "view_transforms:\n"
         "  - !<ViewTransform>\n"
         "    name: vt1\n"
-        "    from_reference: !<ColorSpaceTransform> {src: cs11, dst: cs11}\n"
+        "    from_scene_reference: !<ColorSpaceTransform> {src: cs11, dst: cs11}\n"
         "\n"
         "displays:\n"
         "  disp1:\n"
@@ -6011,7 +6066,7 @@ OCIO_ADD_TEST(Config, is_colorspace_used)
         "\n"
         "  - !<ColorSpace>\n"
         "    name: cs4\n"
-        "    from_reference: !<ColorSpaceTransform> {src: cs3, dst: cs3}\n"
+        "    from_scene_reference: !<ColorSpaceTransform> {src: cs3, dst: cs3}\n"
         "\n"
         "  - !<ColorSpace>\n"
         "    name: cs5\n"
@@ -6024,13 +6079,13 @@ OCIO_ADD_TEST(Config, is_colorspace_used)
         "\n"
         "  - !<ColorSpace>\n"
         "    name: cs8\n"
-        "    from_reference: !<GroupTransform>\n"
+        "    from_scene_reference: !<GroupTransform>\n"
         "      children:\n"
         "        - !<ColorSpaceTransform> {src: cs7, dst: cs7}\n"
         "\n"
         "  - !<ColorSpace>\n"
         "    name: cs9\n"
-        "    from_reference: !<GroupTransform>\n"
+        "    from_scene_reference: !<GroupTransform>\n"
         "      children:\n"
         "        - !<GroupTransform>\n"
         "             children:\n"
@@ -6207,7 +6262,7 @@ colorspaces:
     bitdepth: unknown
     isdata: false
     allocation: uniform
-    from_reference: !<GroupTransform>
+    from_scene_reference: !<GroupTransform>
       children:
         - !<BuiltinTransform> {style: ACEScct_to_ACES2065-1}
         - !<BuiltinTransform> {style: ACEScct_to_ACES2065-1, direction: inverse}
@@ -6272,11 +6327,11 @@ OCIO_ADD_TEST(Config, config_context_cacheids)
         "\n"
         "  - !<ColorSpace>\n"
         "    name: cs2\n"
-        "    from_reference: !<MatrixTransform> {offset: [0.11, 0.12, 0.13, 0]}\n"
+        "    from_scene_reference: !<MatrixTransform> {offset: [0.11, 0.12, 0.13, 0]}\n"
         "\n"
         "  - !<ColorSpace>\n"
         "    name: cs3\n"
-        "    from_reference: !<FileTransform> {src: $CS3}\n";
+        "    from_scene_reference: !<FileTransform> {src: $CS3}\n";
 
     std::istringstream iss;
     iss.str(CONFIG);
@@ -6400,15 +6455,15 @@ colorspaces:
 
   - !<ColorSpace>
     name: cs1
-    from_reference: !<BuiltinTransform> {style: ACEScct_to_ACES2065-1}
+    from_scene_reference: !<BuiltinTransform> {style: ACEScct_to_ACES2065-1}
 
   - !<ColorSpace>
     name: cs2
-    from_reference: !<ColorSpaceTransform> {src: ref, dst: cs1}
+    from_scene_reference: !<ColorSpaceTransform> {src: ref, dst: cs1}
 
   - !<ColorSpace>
     name: cs3
-    from_reference: !<ColorSpaceTransform> {src: ref, dst: $VAR}
+    from_scene_reference: !<ColorSpaceTransform> {src: ref, dst: $VAR}
 )"};
 
     std::istringstream iss;
@@ -6483,11 +6538,11 @@ OCIO_ADD_TEST(Config, context_variables_typical_use_cases)
             "\n"
             "  - !<ColorSpace>\n"
             "    name: cs2\n"
-            "    from_reference: !<FileTransform> {src: exposure_contrast_linear.ctf}\n"
+            "    from_scene_reference: !<FileTransform> {src: exposure_contrast_linear.ctf}\n"
             "\n"
             "  - !<ColorSpace>\n"
             "    name: cs3\n"
-            "    from_reference: !<MatrixTransform> {offset: [0.11, 0.12, 0.13, 0]}\n";
+            "    from_scene_reference: !<MatrixTransform> {offset: [0.11, 0.12, 0.13, 0]}\n";
 
         std::istringstream iss;
         iss.str(CONFIG);
@@ -6580,7 +6635,7 @@ OCIO_ADD_TEST(Config, context_variables_typical_use_cases)
             "\n"
             "  - !<ColorSpace>\n"
             "    name: cs2\n"
-            "    from_reference: !<FileTransform> {src: $FILE}\n";
+            "    from_scene_reference: !<FileTransform> {src: $FILE}\n";
 
         std::istringstream iss;
         iss.str(CONFIG);
@@ -6667,11 +6722,11 @@ OCIO_ADD_TEST(Config, context_variables_typical_use_cases)
             "\n"
             "  - !<ColorSpace>\n"
             "    name: cs2\n"
-            "    from_reference: !<FileTransform> {src: exposure_contrast_linear.ctf}\n"
+            "    from_scene_reference: !<FileTransform> {src: exposure_contrast_linear.ctf}\n"
             "\n"
             "  - !<ColorSpace>\n"
             "    name: cs3\n"
-            "    from_reference: !<FileTransform> {src: $SHOT}\n";
+            "    from_scene_reference: !<FileTransform> {src: $SHOT}\n";
 
         {
             std::istringstream iss;
@@ -6758,7 +6813,7 @@ OCIO_ADD_TEST(Config, context_variables_typical_use_cases)
             "\n"
             "  - !<ColorSpace>\n"
             "    name: cs2\n"
-            "    from_reference: !<MatrixTransform> {offset: [0.11, 0.12, 0.13, 0]}\n";
+            "    from_scene_reference: !<MatrixTransform> {offset: [0.11, 0.12, 0.13, 0]}\n";
 
         {
             std::istringstream iss;
@@ -6837,7 +6892,7 @@ OCIO_ADD_TEST(Config, context_variables_typical_use_cases)
             "\n"
             "  - !<ColorSpace>\n"
             "    name: cs2\n"
-            "    from_reference: !<FileTransform> {src: exposure_contrast_linear.ctf}\n";
+            "    from_scene_reference: !<FileTransform> {src: exposure_contrast_linear.ctf}\n";
 
         std::istringstream iss;
         iss.str(CONFIG);
@@ -6906,7 +6961,7 @@ OCIO_ADD_TEST(Config, context_variables_typical_use_cases)
             "\n"
             "  - !<ColorSpace>\n"
             "    name: cs2\n"
-            "    from_reference: !<FileTransform> {src: exposure_contrast_linear.ctf}\n";
+            "    from_scene_reference: !<FileTransform> {src: exposure_contrast_linear.ctf}\n";
 
         std::istringstream iss;
         iss.str(CONFIG);
@@ -6990,7 +7045,7 @@ active_views: []
 view_transforms:
   - !<ViewTransform>
     name: default_vt
-    to_reference: !<CDLTransform> {sat: 1.5}
+    to_scene_reference: !<CDLTransform> {sat: 1.5}
 
   - !<ViewTransform>
     name: display_vt
@@ -7296,7 +7351,7 @@ active_views: [view]
 view_transforms:
   - !<ViewTransform>
     name: default_vt
-    to_reference: !<CDLTransform> {sat: 1.5}
+    to_scene_reference: !<CDLTransform> {sat: 1.5}
 
   - !<ViewTransform>
     name: display_vt
@@ -7419,7 +7474,7 @@ virtual_display:
 view_transforms:
   - !<ViewTransform>
     name: default_vt
-    to_reference: !<CDLTransform> {sat: 1.5}
+    to_scene_reference: !<CDLTransform> {sat: 1.5}
 
   - !<ViewTransform>
     name: display_vt

@@ -86,9 +86,9 @@ OCIO_ADD_TEST(ColorSpaceTransform, build_colorspace_ops)
 
     {
         // Test from source to destination.
-        // Source has the to_reference transform defined.
-        // Destination has the from_reference transform defined.
-        // Expecting source to_reference + destination from_reference.
+        // Source has the to_scene_reference transform defined.
+        // Destination has the from_scene_reference transform defined.
+        // Expecting source to_scene_reference + destination from_scene_reference.
         // (The no-ops are the Allocation transforms.)
 
         OCIO::OpRcPtrVec ops;
@@ -287,8 +287,8 @@ OCIO_ADD_TEST(ColorSpaceTransform, build_colorspace_ops)
     }
 
     {
-        // Color space with both to_reference and from_reference transform defined. No inversion
-        // is made.
+        // Color space with both to_scene_reference and from_scene_reference transform defined. No
+        // inversion is made.
 
         auto csSceneBoth = csSceneFromRef->createEditableCopy();
         ff->setStyle(OCIO::FIXED_FUNCTION_ACES_GLOW_10);
@@ -650,7 +650,7 @@ OCIO_ADD_TEST(ColorSpaceTransform, build_colorspace_ops_with_reference_conversio
     }
 
     //
-    // Add a to_reference transform to the view transform.
+    // Add a to_scene_reference transform to the view transform.
     //
 
     auto exp = OCIO::ExponentTransform::Create();

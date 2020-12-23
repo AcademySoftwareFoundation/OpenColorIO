@@ -506,11 +506,6 @@ void bindPyTypes(py::module & m)
     m.def("CombineTransformDirections", &CombineTransformDirections, "direction1"_a, "direction2"_a, 
           DOC(PyOpenColorIO, CombineTransformDirections));
 
-    m.def("ColorSpaceDirectionToString", &ColorSpaceDirectionToString, "direction"_a, 
-          DOC(PyOpenColorIO, ColorSpaceDirectionToString));
-    m.def("ColorSpaceDirectionFromString", &ColorSpaceDirectionFromString, "str"_a, 
-          DOC(PyOpenColorIO, ColorSpaceDirectionFromString));
-
     m.def("BitDepthToString", &BitDepthToString, "bitDepth"_a, 
           DOC(PyOpenColorIO, BitDepthToString));
     m.def("BitDepthFromString", &BitDepthFromString, "str"_a, 

@@ -131,7 +131,7 @@ colorspaces:
     bitdepth: unknown
     isdata: false
     allocation: uniform
-    from_reference: !<GroupTransform>
+    from_scene_reference: !<GroupTransform>
       children:)" };
 
     // Tests all built-in transforms.
