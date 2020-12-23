@@ -46,6 +46,16 @@ OCIO_ADD_GPU_TEST(GradingTone, style_log_midtones_fwd_dynamic)
     GradingToneLogMidtones(test, OCIO::TRANSFORM_DIR_FORWARD, true);
 }
 
+OCIO_ADD_GPU_TEST(GradingTone, style_log_midtones_rev)
+{
+    GradingToneLogMidtones(test, OCIO::TRANSFORM_DIR_INVERSE, false);
+}
+
+OCIO_ADD_GPU_TEST(GradingTone, style_log_midtones_rev_dynamic)
+{
+    GradingToneLogMidtones(test, OCIO::TRANSFORM_DIR_INVERSE, true);
+}
+
 namespace GTTest2
 {
 static constexpr OCIO::GradingStyle style = OCIO::GRADING_LOG;
@@ -85,6 +95,16 @@ OCIO_ADD_GPU_TEST(GradingTone, style_log_highlights_fwd_dynamic)
     GradingToneLogHighlights(test, OCIO::TRANSFORM_DIR_FORWARD, true);
 }
 
+OCIO_ADD_GPU_TEST(GradingTone, style_log_highlights_rev)
+{
+    GradingToneLogHighlights(test, OCIO::TRANSFORM_DIR_INVERSE, false);
+}
+
+OCIO_ADD_GPU_TEST(GradingTone, style_log_highlights_rev_dynamic)
+{
+    GradingToneLogHighlights(test, OCIO::TRANSFORM_DIR_INVERSE, true);
+}
+
 namespace GTTest3
 {
 static constexpr OCIO::GradingStyle style = OCIO::GRADING_VIDEO;
@@ -122,6 +142,16 @@ OCIO_ADD_GPU_TEST(GradingTone, style_video_shadows_fwd)
 OCIO_ADD_GPU_TEST(GradingTone, style_video_shadows_fwd_dynamic)
 {
     GradingToneVideoShadows(test, OCIO::TRANSFORM_DIR_FORWARD, true);
+}
+
+OCIO_ADD_GPU_TEST(GradingTone, style_video_shadows_rev)
+{
+    GradingToneVideoShadows(test, OCIO::TRANSFORM_DIR_INVERSE, false);
+}
+
+OCIO_ADD_GPU_TEST(GradingTone, style_video_shadows_rev_dynamic)
+{
+    GradingToneVideoShadows(test, OCIO::TRANSFORM_DIR_INVERSE, true);
 }
 
 namespace GTTest4
@@ -253,6 +283,30 @@ OCIO_ADD_GPU_TEST(GradingTone, style_log_scontrast2_fwd)
 OCIO_ADD_GPU_TEST(GradingTone, style_log_scontrast2_fwd_dynamic)
 {
     GradingToneLogSContrast(test, OCIO::TRANSFORM_DIR_FORWARD, true,
+                            GTTest6::scontrast2);
+}
+
+OCIO_ADD_GPU_TEST(GradingTone, style_log_scontrast_rev)
+{
+    GradingToneLogSContrast(test, OCIO::TRANSFORM_DIR_INVERSE, false,
+                            GTTest6::scontrast);
+}
+
+OCIO_ADD_GPU_TEST(GradingTone, style_log_scontrast_rev_dynamic)
+{
+    GradingToneLogSContrast(test, OCIO::TRANSFORM_DIR_INVERSE, true,
+                            GTTest6::scontrast);
+}
+
+OCIO_ADD_GPU_TEST(GradingTone, style_log_scontrast2_rev)
+{
+    GradingToneLogSContrast(test, OCIO::TRANSFORM_DIR_INVERSE, false,
+                            GTTest6::scontrast2);
+}
+
+OCIO_ADD_GPU_TEST(GradingTone, style_log_scontrast2_rev_dynamic)
+{
+    GradingToneLogSContrast(test, OCIO::TRANSFORM_DIR_INVERSE, true,
                             GTTest6::scontrast2);
 }
 

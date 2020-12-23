@@ -43,9 +43,9 @@ GradingPrimaryOpData & GradingPrimaryOpData::operator=(const GradingPrimaryOpDat
     OpData::operator=(rhs);
 
     m_style     = rhs.m_style;
-    m_direction = rhs.m_direction;
 
     // Copy dynamic properties. Sharing happens when needed, with CPUop for instance.
+    m_value->setDirection(rhs.m_value->getDirection());
     m_value->setValue(rhs.m_value->getValue());
     if (rhs.m_value->isDynamic())
     {
@@ -174,7 +174,8 @@ bool GradingPrimaryOpData::isInverse(ConstGradingPrimaryOpDataRcPtr & r) const
 GradingPrimaryOpDataRcPtr GradingPrimaryOpData::inverse() const
 {
     auto res = clone();
-    res->m_direction = GetInverseTransformDirection(m_direction);
+    const auto newDir = GetInverseTransformDirection(getDirection());
+    res->m_value->setDirection(newDir);
     return res;
 }
 
@@ -212,16 +213,12 @@ void GradingPrimaryOpData::setStyle(GradingStyle style) noexcept
 
 TransformDirection GradingPrimaryOpData::getDirection() const noexcept
 {
-    return m_direction;
+    return m_value->getDirection();
 }
 
 void GradingPrimaryOpData::setDirection(TransformDirection dir) noexcept
 {
-    if (dir != m_direction)
-    {
-        m_direction = dir;
-        m_value->setDirection(m_direction);
-    }
+    m_value->setDirection(dir);
 }
 
 bool GradingPrimaryOpData::isDynamic() const noexcept
@@ -250,8 +247,8 @@ bool GradingPrimaryOpData::operator==(const OpData & other) const
 
     const GradingPrimaryOpData* rop = static_cast<const GradingPrimaryOpData*>(&other);
 
-    if (m_direction != rop->m_direction ||
-        m_style     != rop->m_style ||
+    if (m_style                 != rop->m_style ||
+        m_value->getDirection() != rop->getDirection() ||
         !(*m_value == *(rop->m_value)))
     {
         return false;

@@ -175,8 +175,11 @@ void DynamicPropertyGradingPrimaryImpl::setStyle(GradingStyle style)
 
 void DynamicPropertyGradingPrimaryImpl::setDirection(TransformDirection dir) noexcept
 {
-    m_direction = dir;
-    m_preRenderValues.update(m_style, m_direction, m_value);
+    if (m_direction != dir)
+    {
+        m_direction = dir;
+        m_preRenderValues.update(m_style, m_direction, m_value);
+    }
 }
 
 DynamicPropertyGradingRGBCurveImpl::DynamicPropertyGradingRGBCurveImpl(

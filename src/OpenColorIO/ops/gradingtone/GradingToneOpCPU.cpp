@@ -99,6 +99,13 @@ public:
     explicit GradingToneRevOpCPU(ConstGradingToneOpDataRcPtr & gt);
 
     void apply(const void * inImg, void * outImg, long numPixels) const override;
+
+protected:
+
+    void mids(const GradingTone & v, const GradingTonePreRender & vpr, RGBMChannel channel, float * out) const;
+    void highlightShadow(const GradingTone & v, const GradingTonePreRender & vpr, RGBMChannel channel, bool isShadow, float * out) const;
+    void whiteBlack(const GradingTone & v, const GradingTonePreRender & vpr, RGBMChannel channel, bool isBlack, float * out) const;
+    void scontrast(const GradingTone & v, const GradingTonePreRender & vpr, float * out) const;
 };
 
 class GradingToneLinearRevOpCPU : public GradingToneRevOpCPU
@@ -325,43 +332,48 @@ void Set<float>(RGBMChannel channel, float * out, const float & val)
 }
 
 template<typename type>
-void ComputeHS(RGBMChannel channel, float * out, float val, float x0, float x1, float x2,
-              float y0, float y1, float y2, float m0, float m2, type & t)
+void ComputeHSFwd(RGBMChannel channel, float * out, float val, float x0, float x1, float x2,
+                  float y0, float y1, float y2, float m0, float m2, type & t)
 {
-    type res{ t }, tL, tR, fL, fR, cL, cR, discrimL, discrimR, outL, outR;
+    type res{ t }, tL, tR, fL, fR;
 
-    if (val < 1.)
-    {
-        tL = (t - x0) / (x1 - x0);
-        tR = (t - x1) / (x2 - x1);
-        fL = y0 * (1.f - tL*tL) + y1 * tL*tL + m0 * (1.f - tL) * tL * (x1 - x0);
-        fR = y1 * (1.f - tR)*(1.f - tR) + y2 * (2.f - tR)*tR + m2 * (tR - 1.f)*tR * (x2 - x1);
+    tL = (t - x0) / (x1 - x0);
+    tR = (t - x1) / (x2 - x1);
+    fL = y0 * (1.f - tL*tL) + y1 * tL*tL + m0 * (1.f - tL) * tL * (x1 - x0);
+    fR = y1 * (1.f - tR)*(1.f - tR) + y2 * (2.f - tR)*tR + m2 * (tR - 1.f)*tR * (x2 - x1);
 
-        setOnLimit(res, t, x1, fL, fR);
-        type r0 = (t - x0) * m0 + y0;
-        setOnLimit(res, t, x0, r0, res);
-        type r2 = (t - x2) * m2 + y2;
-        setOnLimit(res, t, x2, res, r2);
-    }
-    else if (val > 1.)
-    {
-        float bL = m0 * (x1 - x0);
-        float aL = y1 - y0 - m0 * (x1 - x0);
-        cL = y0 - t;
-        discrimL = Sqrt(bL * bL - 4.f * aL * cL);
-        outL = (-2.f * cL) / (discrimL + bL) * (x1 - x0) + x0;
-        float bR = 2.f*y2 - 2.f*y1 - m2 * (x2 - x1);
-        float aR = y1 - y2 + m2 * (x2 - x1);
-        cR = y1 - t;
-        discrimR = Sqrt(bR * bR - 4.f * aR * cR);
-        outR = (-2.f * cR) / (discrimR + bR) * (x2 - x1) + x1;
+    setOnLimit(res, t, x1, fL, fR);
+    type r0 = (t - x0) * m0 + y0;
+    setOnLimit(res, t, x0, r0, res);
+    type r2 = (t - x2) * m2 + y2;
+    setOnLimit(res, t, x2, res, r2);
 
-        setOnLimit(res, t, y1, outL, outR);
-        type r0 = (t - y0) / m0 + x0;
-        setOnLimit(res, t, y0, r0, res);
-        type r2 = (t - y2) / m2 + x2;
-        setOnLimit(res, t, y2, res, r2);
-    }
+    Set(channel, out, res);
+}
+
+template<typename type>
+void ComputeHSRev(RGBMChannel channel, float * out, float val, float x0, float x1, float x2,
+                  float y0, float y1, float y2, float m0, float m2, type & t)
+{
+    type res{ t }, cL, cR, discrimL, discrimR, outL, outR;
+
+    float bL = m0 * (x1 - x0);
+    float aL = y1 - y0 - m0 * (x1 - x0);
+    cL = y0 - t;
+    discrimL = Sqrt(bL * bL - 4.f * aL * cL);
+    outL = (-2.f * cL) / (discrimL + bL) * (x1 - x0) + x0;
+    float bR = 2.f*y2 - 2.f*y1 - m2 * (x2 - x1);
+    float aR = y1 - y2 + m2 * (x2 - x1);
+    cR = y1 - t;
+    discrimR = Sqrt(bR * bR - 4.f * aR * cR);
+    outR = (-2.f * cR) / (discrimR + bR) * (x2 - x1) + x1;
+
+    setOnLimit(res, t, y1, outL, outR);
+    type r0 = (t - y0) / m0 + x0;
+    setOnLimit(res, t, y0, r0, res);
+    type r2 = (t - y2) / m2 + x2;
+    setOnLimit(res, t, y2, res, r2);
+
     Set(channel, out, res);
 }
 
@@ -386,21 +398,86 @@ void GradingToneFwdOpCPU::highlightShadow(const GradingTone & v, const GradingTo
     const auto & m0 = vpr.m_hsM[isShadow ? 1 : 0][channel][0];
     const auto & m2 = vpr.m_hsM[isShadow ? 1 : 0][channel][1];
 
-    if (channel != M)
+    if (val < 1.)
     {
-        float t = out[channel];
-        ComputeHS(channel, out, val, x0, x1, x2, y0, y1, y2, m0, m2, t);
+        if (channel != M)
+        {
+            float t = out[channel];
+            ComputeHSFwd(channel, out, val, x0, x1, x2, y0, y1, y2, m0, m2, t);     // Fwd
+        }
+        else
+        {
+            float3 t{ out };
+            ComputeHSFwd(channel, out, val, x0, x1, x2, y0, y1, y2, m0, m2, t);
+        }
     }
     else
     {
-        float3 t{ out };
-        ComputeHS(channel, out, val, x0, x1, x2, y0, y1, y2, m0, m2, t);
+        if (channel != M)
+        {
+            float t = out[channel];
+            ComputeHSRev(channel, out, val, x0, x1, x2, y0, y1, y2, m0, m2, t);     // Rev
+        }
+        else
+        {
+            float3 t{ out };
+            ComputeHSRev(channel, out, val, x0, x1, x2, y0, y1, y2, m0, m2, t);
+        }
+    }
+}
+
+void GradingToneRevOpCPU::highlightShadow(const GradingTone & v, const GradingTonePreRender & vpr,
+                                          RGBMChannel channel,
+                                          bool isShadow, float * out) const
+{
+    float val = isShadow ? GetChannelValue(v.m_shadows, channel) :
+                           GetChannelValue(v.m_highlights, channel);
+    if (!isShadow)
+    {
+        val = 2.f - val;
+    }
+    if (val == 1.) return;
+
+    const auto & x0 = vpr.m_hsX[isShadow ? 1 : 0][channel][0];
+    const auto & x1 = vpr.m_hsX[isShadow ? 1 : 0][channel][1];
+    const auto & x2 = vpr.m_hsX[isShadow ? 1 : 0][channel][2];
+    const auto & y0 = vpr.m_hsY[isShadow ? 1 : 0][channel][0];
+    const auto & y1 = vpr.m_hsY[isShadow ? 1 : 0][channel][1];
+    const auto & y2 = vpr.m_hsY[isShadow ? 1 : 0][channel][2];
+    const auto & m0 = vpr.m_hsM[isShadow ? 1 : 0][channel][0];
+    const auto & m2 = vpr.m_hsM[isShadow ? 1 : 0][channel][1];
+
+    if (val < 1.)
+    {
+        if (channel != M)
+        {
+            float t = out[channel];
+            ComputeHSRev(channel, out, val, x0, x1, x2, y0, y1, y2, m0, m2, t);     // Rev
+        }
+        else
+        {
+            float3 t{ out };
+            ComputeHSRev(channel, out, val, x0, x1, x2, y0, y1, y2, m0, m2, t);
+        }
+    }
+    else
+    {
+        if (channel != M)
+        {
+            float t = out[channel];
+            ComputeHSFwd(channel, out, val, x0, x1, x2, y0, y1, y2, m0, m2, t);     // Fwd
+        }
+        else
+        {
+            float3 t{ out };
+            ComputeHSFwd(channel, out, val, x0, x1, x2, y0, y1, y2, m0, m2, t);
+        }
     }
 }
 
 template<typename type>
-void ComputeWB(RGBMChannel channel, bool isBlack, float * out, float val, float x0, float x1,
-               float y0, float y1, float m0, float m1, float gain, type & t)
+void ComputeWBFwd(RGBMChannel channel, bool isBlack, float * out, float val, float x0, float x1,
+                  float y0, float y1, float m0, float m1, float gain, type & t)
 {
     float mtest = (!isBlack) ? val : 2.f - val;
 
@@ -460,6 +537,74 @@ void ComputeWB(RGBMChannel channel, bool isBlack, float * out, float val, float 
     }
 }
 
+template<typename type>
+void ComputeWBRev(RGBMChannel channel, bool isBlack, float * out, float val, float x0, float x1,
+                  float y0, float y1, float m0, float m1, float gain, type & t)
+{
+    float mtest = (!isBlack) ? val : 2.f - val;
+
+    if (mtest < 1.f)
+    {
+        // Slope is decreasing case.
+
+        t = (!isBlack) ? (t - x0) * gain + x0 : (t - x1) * gain + x1;
+
+        float a = 0.5f * (m1 - m0) * (x1 - x0);
+        float b = m0 * (x1 - x0);
+
+        type c = y0 - t;
+        type discrim = Sqrt(b * b - 4.f * a * c);
+        type tmp = (-2.f * c) / (discrim + b);
+        type res = tmp * (x1 - x0) + x0;
+        type res0 = x0 + (t - y0) / m0;
+        setOnLimit(res, t, y0, res0, res);
+
+        type res1 = x1 + (t - y1) / m1;
+        setOnLimit(res, t, y1, res, res1);
+
+        Set(channel, out, res);
+    }
+    else if (mtest > 1.f)
+    {
+        // Slope is increasing case.
+
+        type tlocal = (t - x0) / (x1 - x0);
+        type res = tlocal * (x1 - x0) * (tlocal * 0.5f * (m1 - m0) + m0) + y0;
+        type res0 = y0 + (t - x0) * m0;
+        setOnLimit(res, t, x0, res0, res);
+
+        if (!isBlack)
+        {
+            res = (res - x0) / gain + x0;
+            // Quadratic extrapolation for better HDR control.
+            // TODO: These values are not per pixel and could be pre-calculated.
+            float new_y1 = (x1 - x0) / gain + x0;
+            float xd = x0 + (x1 - x0) * 0.99f;
+            float md = m0 + (xd - x0) * (m1 - m0) / (x1 - x0);
+            md = 1.f / md;
+            float aim_m = (1.f / m1 - md) / (x1 - xd);
+            float aa = 0.5f * aim_m;
+            float bb = 1.f / m1 - aim_m * x1;
+            float cc = new_y1 - bb * x1 - 0.5f * aim_m * x1 * x1;
+            t = (t - x0) / gain + x0;
+
+            type c = cc - t;
+            type discrim = Sqrt(bb * bb - 4.f * aa * c);
+            type res1 = (-2.f * c) / (discrim + bb);
+            float brk = (aa * x1 + bb) * x1 + cc;
+            setOnLimit(res, t, brk, res, res1);
+        }
+        else
+        {
+            type res1 = y1 + (t - x1) * m1;
+            setOnLimit(res, t, x1, res, res1);
+            res = (res - x1) / gain + x1;
+        }
+
+        Set(channel, out, res);
+    }
+}
+
 void GradingToneFwdOpCPU::whiteBlack(const GradingTone & v, const GradingTonePreRender & vpr,
                                      RGBMChannel channel, bool isBlack, float * out) const
 {
@@ -477,12 +622,38 @@ void GradingToneFwdOpCPU::whiteBlack(const GradingTone & v, const GradingTonePre
     if (channel != M)
     {
         float t = out[channel];
-        ComputeWB(channel, isBlack, out, val, x0, x1, y0, y1, m0, m1, gain, t);
+        ComputeWBFwd(channel, isBlack, out, val, x0, x1, y0, y1, m0, m1, gain, t);
     }
     else
     {
         float3 t{ out };
-        ComputeWB(channel, isBlack, out, val, x0, x1, y0, y1, m0, m1, gain, t);
+        ComputeWBFwd(channel, isBlack, out, val, x0, x1, y0, y1, m0, m1, gain, t);
+    }
+}
+
+void GradingToneRevOpCPU::whiteBlack(const GradingTone & v, const GradingTonePreRender & vpr,
+                                     RGBMChannel channel, bool isBlack, float * out) const
+{
+    float val = isBlack ? GetChannelValue(v.m_blacks, channel) :
+                          GetChannelValue(v.m_whites, channel);
+
+    const auto & x0 = vpr.m_wbX[isBlack ? 1 : 0][channel][0];
+    const auto & x1 = vpr.m_wbX[isBlack ? 1 : 0][channel][1];
+    const auto & y0 = vpr.m_wbY[isBlack ? 1 : 0][channel][0];
+    const auto & y1 = vpr.m_wbY[isBlack ? 1 : 0][channel][1];
+    const auto & m0 = vpr.m_wbM[isBlack ? 1 : 0][channel][0];
+    const auto & m1 = vpr.m_wbM[isBlack ? 1 : 0][channel][1];
+    const auto & gain = vpr.m_wbGain[isBlack ? 1 : 0][channel];
+    
+    if (channel != M)
+    {
+        float t = out[channel];
+        ComputeWBRev(channel, isBlack, out, val, x0, x1, y0, y1, m0, m1, gain, t);
+    }
+    else
+    {
+        float3 t{ out };
+        ComputeWBRev(channel, isBlack, out, val, x0, x1, y0, y1, m0, m1, gain, t);
     }
 }
 
@@ -518,11 +689,11 @@ void GradingToneFwdOpCPU::scontrast(const GradingTone & v, const GradingTonePreR
 
         // Bottom end
         {
-            auto & x1 = vpr.m_scX[1][1];
-            auto & x2 = vpr.m_scX[1][2];
-            auto & y1 = vpr.m_scY[1][1];
-            auto & m0 = vpr.m_scM[1][0];
-            auto & m3 = vpr.m_scM[1][1];
+            const auto & x1 = vpr.m_scX[1][1];
+            const auto & x2 = vpr.m_scX[1][2];
+            const auto & y1 = vpr.m_scY[1][1];
+            const auto & m0 = vpr.m_scM[1][0];
+            const auto & m3 = vpr.m_scM[1][1];
 
             float3 tR = (t - x1) / (x2 - x1);
             float3 res = tR * (x2 - x1) * (tR * 0.5f * (m3 - m0) + m0) + y1;
@@ -531,6 +702,62 @@ void GradingToneFwdOpCPU::scontrast(const GradingTone & v, const GradingTonePreR
 
             float3 res1 = y1 + (t - x1) * m0;
             setOnLimit(outColor, t, x1, res1, outColor);
+        }
+
+        out[0] = outColor[0];
+        out[1] = outColor[1];
+        out[2] = outColor[2];
+    }  // end if contrast != 1.
+}
+
+void GradingToneRevOpCPU::scontrast(const GradingTone & v, const GradingTonePreRender & vpr, float * out) const
+{
+    float contrast = static_cast<float>(v.m_scontrast);
+    if (contrast != 1.)
+    {
+        // Limit the range of values to prevent reversals.
+        contrast = (contrast > 1.f) ? 1.f / (1.8125f - 0.8125f * std::min(contrast, 1.99f)) :
+                                            0.28125f + 0.71875f * std::max(contrast, 0.01f);
+
+        float3 t{ out };
+        float3 outColor{ (t - vpr.m_pivot) / contrast + vpr.m_pivot };
+
+        // Top end
+        {
+            const auto & x1 = vpr.m_scX[0][1];
+            const auto & x2 = vpr.m_scX[0][2];
+            const auto & y1 = vpr.m_scY[0][1];
+            const auto & y2 = vpr.m_scY[0][2];
+            const auto & m0 = vpr.m_scM[0][0];
+            const auto & m3 = vpr.m_scM[0][1];
+
+            float b = m0 * (x2 - x1);
+            float a = (m3 - m0) * 0.5 * (x2 - x1);
+            float3 c = y1 - t;
+            float3 discrim = Sqrt(b * b - 4.f * a * c);
+            float3 res =  (x2 - x1) * (-2.f * c) / (discrim + b) + x1;
+
+            setOnLimit(outColor, t, y1, outColor, res);
+            setOnLimit(outColor, t, y2, outColor, x2 + (t - y2) / m3);
+        }
+
+        // Bottom end
+        {
+            const auto & x1 = vpr.m_scX[1][1];
+            const auto & x2 = vpr.m_scX[1][2];
+            const auto & y1 = vpr.m_scY[1][1];
+            const auto & y2 = vpr.m_scY[1][2];
+            const auto & m0 = vpr.m_scM[1][0];
+            const auto & m3 = vpr.m_scM[1][1];
+
+            float b = m0 * (x2 - x1);
+            float a = (m3 - m0) * 0.5 * (x2 - x1);
+            float3 c = y1 - t;
+            float3 discrim = Sqrt(b * b - 4.f * a * c);
+            float3 res =  (x2 - x1) * (-2.f * c) / (discrim + b) + x1;
+
+            setOnLimit(outColor, t, y2, res, outColor);
+            setOnLimit(outColor, t, y1, x1 + (t - y1) / m0, outColor);
         }
 
         out[0] = outColor[0];
@@ -748,11 +975,209 @@ GradingToneRevOpCPU::GradingToneRevOpCPU(ConstGradingToneOpDataRcPtr & gt)
 {
 }
 
+void GradingToneRevOpCPU::mids(const GradingTone & v, const GradingTonePreRender & vpr,
+                               RGBMChannel channel, float * out) const
+{
+    float mid_adj = Clamp(GetChannelValue(v.m_midtones, channel), 0.01f, 1.99f);
+
+    if (mid_adj != 1.f)
+    {
+        const auto & x0 = vpr.m_midX[channel][0];
+        const auto & x1 = vpr.m_midX[channel][1];
+        const auto & x2 = vpr.m_midX[channel][2];
+        const auto & x3 = vpr.m_midX[channel][3];
+        const auto & x4 = vpr.m_midX[channel][4];
+        const auto & x5 = vpr.m_midX[channel][5];
+        const auto & y0 = vpr.m_midY[channel][0];
+        const auto & y1 = vpr.m_midY[channel][1];
+        const auto & y2 = vpr.m_midY[channel][2];
+        const auto & y3 = vpr.m_midY[channel][3];
+        const auto & y4 = vpr.m_midY[channel][4];
+        const auto & y5 = vpr.m_midY[channel][5];
+        const auto & m0 = vpr.m_midM[channel][0];
+        const auto & m1 = vpr.m_midM[channel][1];
+        const auto & m2 = vpr.m_midM[channel][2];
+        const auto & m3 = vpr.m_midM[channel][3];
+        const auto & m4 = vpr.m_midM[channel][4];
+        const auto & m5 = vpr.m_midM[channel][5];
+
+        if (channel != M)
+        {
+            float t = out[channel];
+            float res = 0.f;
+            if (t >= y5)
+            {
+                res = x0 + (t - y0) / m0;
+            }
+            else if (t >= y4)
+            {
+                const float c = y4 - t;
+                const float b = m4 * (x5 - x4);
+                const float a = 0.5f * (m5 - m4) * (x5 - x4);
+                const float discrim = sqrt( b * b - 4.f * a * c);
+                const float tmp = (2.f * c) / (-discrim - b);
+                res = tmp * (x5 - x4) + x4;
+            }
+            else if (t >= y3)
+            {
+                const float c = y3 - t;
+                const float b = m3 * (x4 - x3);
+                const float a = 0.5f * (m4 - m3) * (x4 - x3);
+                const float discrim = sqrt( b * b - 4.f * a * c);
+                const float tmp = (2.f * c) / (-discrim - b);
+                res = tmp * (x4 - x3) + x3;
+            }
+            else if (t >= y2)
+            {
+                const float c = y2 - t;
+                const float b = m2 * (x3 - x2);
+                const float a = 0.5f * (m3 - m2) * (x3 - x2);
+                const float discrim = sqrt( b * b - 4.f * a * c);
+                const float tmp = (2.f * c) / (-discrim - b);
+                res = tmp * (x3 - x2) + x2;
+            }
+            else if (t >= y1)
+            {
+                const float c = y1 - t;
+                const float b = m1 * (x2 - x1);
+                const float a = 0.5f * (m2 - m1) * (x2 - x1);
+                const float discrim = sqrt( b * b - 4.f * a * c);
+                const float tmp = (2.f * c) / (-discrim - b);
+                res = tmp * (x2 - x1) + x1;
+            }
+            else if (t >= y0)
+            {
+                const float c = y0 - t;
+                const float b = m0 * (x1 - x0);
+                const float a = 0.5f * (m1 - m0) * (x1 - x0);
+                const float discrim = sqrt( b * b - 4.f * a * c);
+                const float tmp = (2.f * c) / (-discrim - b);
+                res = tmp * (x1 - x0) + x0;
+            }
+            else
+            {
+                res = x0 + (t - y0) / m0;
+            }
+            out[channel] = res;
+        }
+        else
+        {
+            float3 t{ out };
+            float3 outL0, outL, outM, outR, outR2, outR3, outR4;
+
+            outR4 = x5 + (t - y5) / m5;
+            {
+                float3 c = y4 - t;
+                const float b = m4 * (x5 - x4);
+                const float a = 0.5f * (m5 - m4) * (x5 - x4);
+                float3 discrim = Sqrt( b * b - 4.f * a * c);
+                float3 tmp = (2.f * c) / (-b - discrim);
+                outR3 = tmp * (x5 - x4) + x4;
+            }
+            {
+                float3 c = y3 - t;
+                const float b = m3 * (x4 - x3);
+                const float a = 0.5f * (m4 - m3) * (x4 - x3);
+                float3 discrim = Sqrt( b * b - 4.f * a * c);
+                float3 tmp = (2.f * c) / (-b - discrim);
+                outR2 = tmp * (x4 - x3) + x3;
+            }
+            {
+                float3 c = y2 - t;
+                const float b = m2 * (x3 - x2);
+                const float a = 0.5f * (m3 - m2) * (x3 - x2);
+                float3 discrim = Sqrt( b * b - 4.f * a * c);
+                float3 tmp = (2.f * c) / (-b - discrim);
+                outR = tmp * (x3 - x2) + x2;
+            }
+            {
+                float3 c = y1 - t;
+                const float b = m1 * (x2 - x1);
+                const float a = 0.5f * (m2 - m1) * (x2 - x1);
+                float3 discrim = Sqrt( b * b - 4.f * a * c);
+                float3 tmp = (2.f * c) / (-b - discrim);
+                outM = tmp * (x2 - x1) + x1;
+            }
+            {
+                float3 c = y0 - t;
+                const float b = m0 * (x1 - x0);
+                const float a = 0.5f * (m1 - m0) * (x1 - x0);
+                float3 discrim = Sqrt( b * b - 4.f * a * c);
+                float3 tmp = (2.f * c) / (-b - discrim);
+                outL = tmp * (x1 - x0) + x0;
+            }
+            outL0 = x0 + (t - y0) / m0;
+
+            float3 res;
+            res.setOnLimit(t, y1, outL, outM);
+            res.setOnLimit(t, y2, res, outR);
+            res.setOnLimit(t, y3, res, outR2);
+            res.setOnLimit(t, y4, res, outR3);
+            res.setOnLimit(t, y0, outL0, res);
+            res.setOnLimit(t, y5, res, outR4);
+
+            out[0] = res[0];
+            out[1] = res[1];
+            out[2] = res[2];
+        }
+    }
+}
+
 void GradingToneRevOpCPU::apply(const void * inImg, void * outImg, long numPixels) const
 {
-    throw Exception("GradingTone inverse CPU not implemented.");
 
-    // TODO: implement inverse.
+    if (m_gt->getLocalBypass())
+    {
+        if (inImg != outImg)
+        {
+            memcpy(outImg, inImg, numPixels * PixelSize);
+        }
+        return;
+    }
+
+    const float * in = (float *)inImg;
+    float * out = (float *)outImg;
+
+    auto & v = m_gt->getValue();
+    auto & vpr = m_gt->getComputedValue();
+
+    for (long idx = 0; idx < numPixels; ++idx)
+    {
+        // NB: 'in' and 'out' could be pointers to the same memory buffer.
+        memcpy(out, in, PixelSize);
+
+        scontrast(v, vpr, out);
+
+        whiteBlack(v, vpr, M, true, out);
+        whiteBlack(v, vpr, R, true, out);
+        whiteBlack(v, vpr, G, true, out);
+        whiteBlack(v, vpr, B, true, out);
+
+        highlightShadow(v, vpr, M, true, out);
+        highlightShadow(v, vpr, R, true, out);
+        highlightShadow(v, vpr, G, true, out);
+        highlightShadow(v, vpr, B, true, out);
+
+        whiteBlack(v, vpr, M, false, out);
+        whiteBlack(v, vpr, R, false, out);
+        whiteBlack(v, vpr, G, false, out);
+        whiteBlack(v, vpr, B, false, out);
+
+        highlightShadow(v, vpr, M, false, out);
+        highlightShadow(v, vpr, R, false, out);
+        highlightShadow(v, vpr, G, false, out);
+        highlightShadow(v, vpr, B, false, out);
+
+        mids(v, vpr, M, out);
+        mids(v, vpr, R, out);
+        mids(v, vpr, G, out);
+        mids(v, vpr, B, out);
+
+//         ClampMaxRGB(out);
+
+        in += 4;
+        out += 4;
+    }
 }
 
 GradingToneLinearRevOpCPU::GradingToneLinearRevOpCPU(ConstGradingToneOpDataRcPtr & gt)

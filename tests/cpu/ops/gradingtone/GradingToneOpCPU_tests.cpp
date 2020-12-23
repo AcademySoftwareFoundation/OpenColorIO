@@ -187,9 +187,8 @@ OCIO_ADD_TEST(GradingToneOpCPU, log_midtones)
     gt->setValue(gtd);
     OCIO_CHECK_NO_THROW(op = OCIO::GetGradingToneCPURenderer(gtc));
     OCIO_CHECK_ASSERT(op);
-    // TODO: implement inverse.
-    //OCIO_CHECK_NO_THROW(op->apply(TS1::expected_32f, res, TS1::num_samples));
-    //ValidateImage(TS1::input_32f, res, TS1::num_samples, __LINE__);
+    OCIO_CHECK_NO_THROW(op->apply(TS1::expected_32f, res, TS1::num_samples));
+    ValidateImage(TS1::input_32f, res, TS1::num_samples, __LINE__);
 }
 
 namespace TS2
@@ -235,9 +234,8 @@ OCIO_ADD_TEST(GradingToneOpCPU, log_highlights)
     gt->setValue(gtd);
     OCIO_CHECK_NO_THROW(op = OCIO::GetGradingToneCPURenderer(gtc));
     OCIO_CHECK_ASSERT(op);
-    // TODO: implement inverse.
-    //OCIO_CHECK_NO_THROW(op->apply(TS2::expected_32f, res, TS2::num_samples));
-    //ValidateImage(TS2::input_32f, res, TS2::num_samples, __LINE__);
+    OCIO_CHECK_NO_THROW(op->apply(TS2::expected_32f, res, TS2::num_samples));
+    ValidateImage(TS2::input_32f, res, TS2::num_samples, __LINE__);
 }
 
 namespace TS3
@@ -283,9 +281,8 @@ OCIO_ADD_TEST(GradingToneOpCPU, video_shadows)
     gt->setValue(gtd);
     OCIO_CHECK_NO_THROW(op = OCIO::GetGradingToneCPURenderer(gtc));
     OCIO_CHECK_ASSERT(op);
-    // TODO: implement inverse.
-    //OCIO_CHECK_NO_THROW(op->apply(TS3::expected_32f, res, TS3::num_samples));
-    //ValidateImage(TS3::input_32f, res, TS3::num_samples, __LINE__);
+    OCIO_CHECK_NO_THROW(op->apply(TS3::expected_32f, res, TS3::num_samples));
+    ValidateImage(TS3::input_32f, res, TS3::num_samples, __LINE__);
 }
 
 namespace TS4
@@ -332,8 +329,8 @@ OCIO_ADD_TEST(GradingToneOpCPU, video_white_details)
     OCIO_CHECK_NO_THROW(op = OCIO::GetGradingToneCPURenderer(gtc));
     OCIO_CHECK_ASSERT(op);
     // TODO: implement inverse.
-    //OCIO_CHECK_NO_THROW(op->apply(TS4::expected_32f, res, TS4::num_samples));
-    //ValidateImage(TS4::input_32f, res, TS4::num_samples, __LINE__);
+//     OCIO_CHECK_NO_THROW(op->apply(TS4::expected_32f, res, TS4::num_samples));
+//     ValidateImage(TS4::input_32f, res, TS4::num_samples, __LINE__);
 }
 
 namespace TS5
@@ -380,8 +377,8 @@ OCIO_ADD_TEST(GradingToneOpCPU, log_black_details)
     OCIO_CHECK_NO_THROW(op = OCIO::GetGradingToneCPURenderer(gtc));
     OCIO_CHECK_ASSERT(op);
     // TODO: implement inverse.
-    //OCIO_CHECK_NO_THROW(op->apply(TS5::expected_32f, res, TS5::num_samples));
-    //ValidateImage(TS5::input_32f, res, TS5::num_samples, __LINE__);
+    OCIO_CHECK_NO_THROW(op->apply(TS5::expected_32f, res, TS5::num_samples));
+    ValidateImage(TS5::input_32f, res, TS5::num_samples, __LINE__);
 }
 
 namespace TS6
@@ -439,25 +436,24 @@ OCIO_ADD_TEST(GradingToneOpCPU, log_scontrast)
     OCIO_CHECK_NO_THROW(op->apply(TS6::input2_32f, res, TS6::num_samples));
     ValidateImage(TS6::expected2_32f, res, TS6::num_samples, __LINE__);
 
-    // Test in inverse direction.
+    // Test in inverse direction with second value.
 
     gt->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
 
     gt->setValue(gtd);
     OCIO_CHECK_NO_THROW(op = OCIO::GetGradingToneCPURenderer(gtc));
     OCIO_CHECK_ASSERT(op);
-    // TODO: implement inverse.
-    //OCIO_CHECK_NO_THROW(op->apply(TS6::expected2_32f, res, TS6::num_samples));
-    //ValidateImage(TS6::input2_32f, res, TS6::num_samples, __LINE__);
+    OCIO_CHECK_NO_THROW(op->apply(TS6::expected2_32f, res, TS6::num_samples));
+    ValidateImage(TS6::input2_32f, res, TS6::num_samples, __LINE__);
 
-    // Test with first value.
-    gtd.m_scontrast = TS6::scontrast2;
+    // Test inverse with first value.
+    gtd.m_scontrast = TS6::scontrast;
 
+    gt->setValue(gtd);
     OCIO_CHECK_NO_THROW(op = OCIO::GetGradingToneCPURenderer(gtc));
     OCIO_CHECK_ASSERT(op);
-    // TODO: implement inverse.
-    //OCIO_CHECK_NO_THROW(op->apply(TS6::expected_32f, res, TS6::num_samples));
-    //ValidateImage(TS6::input_32f, res, TS6::num_samples, __LINE__);
+    OCIO_CHECK_NO_THROW(op->apply(TS6::expected_32f, res, TS6::num_samples));
+    ValidateImage(TS6::input_32f, res, TS6::num_samples, __LINE__);
 }
 
 namespace TS7
