@@ -198,25 +198,6 @@ TransformDirection
 
       .. doxygenfunction:: ${OCIO_NAMESPACE}::CombineTransformDirections
 
-.. _conversion_color_space_direction:
-
-ColorSpaceDirection
-^^^^^^^^^^^^^^^^^^^
-
-.. tabs::
-
-   .. group-tab:: Python
-
-      .. include:: python/${PYDIR}/pyopencolorio_colorspacedirectiontostring.rst
-
-      .. include:: python/${PYDIR}/pyopencolorio_colorspacedirectionfromstring.rst
-
-   .. group-tab:: C++
-
-      .. doxygenfunction:: ${OCIO_NAMESPACE}::ColorSpaceDirectionToString
-
-      .. doxygenfunction:: ${OCIO_NAMESPACE}::ColorSpaceDirectionFromString
-
 .. _conversion_bit_depth:
 
 BitDepth
