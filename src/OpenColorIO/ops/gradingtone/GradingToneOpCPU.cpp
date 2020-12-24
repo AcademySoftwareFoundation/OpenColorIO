@@ -123,6 +123,21 @@ GradingToneFwdOpCPU::GradingToneFwdOpCPU(ConstGradingToneOpDataRcPtr & gt)
 {
 }
 
+GradingToneLinearFwdOpCPU::GradingToneLinearFwdOpCPU(ConstGradingToneOpDataRcPtr & gt)
+    : GradingToneFwdOpCPU(gt)
+{
+}
+
+GradingToneRevOpCPU::GradingToneRevOpCPU(ConstGradingToneOpDataRcPtr & gt)
+    : GradingToneOpCPU(gt)
+{
+}
+
+GradingToneLinearRevOpCPU::GradingToneLinearRevOpCPU(ConstGradingToneOpDataRcPtr & gt)
+    : GradingToneRevOpCPU(gt)
+{
+}
+
 
 struct float3
 {
@@ -211,6 +226,45 @@ float3 operator/(const float3 & f3a, const float3 & f3b)
 }
 
 
+template<typename type>
+void setOnLimit(type & res, const type & val, float limit, const type & below, const type & above)
+{
+    res.setOnLimit(val, limit, below, above);
+}
+
+template<>
+void setOnLimit<float>(float & res, const float & val, float limit, const float & below, const float & above)
+{
+    res = val < limit ? below : above;
+}
+
+template<typename type>
+type Sqrt(const type & val)
+{
+    return type{ sqrtf(val[0]), sqrtf(val[1]), sqrtf(val[2]) };
+}
+
+template<>
+float Sqrt<float>(const float & val)
+{
+    return sqrtf(val);
+}
+
+template<typename type>
+void Set(RGBMChannel channel, float * out, const type & val)
+{
+    out[0] = val[0];
+    out[1] = val[1];
+    out[2] = val[2];
+}
+
+template<>
+void Set<float>(RGBMChannel channel, float * out, const float & val)
+{
+    out[channel] = val;
+}
+
+
 void GradingToneFwdOpCPU::mids(const GradingTone & v, const GradingTonePreRender & vpr,
                                RGBMChannel channel, float * out) const
 {
@@ -293,42 +347,152 @@ void GradingToneFwdOpCPU::mids(const GradingTone & v, const GradingTonePreRender
     }
 }
 
-template<typename type>
-void setOnLimit(type & res, const type & val, float limit, const type & below, const type & above)
+void GradingToneRevOpCPU::mids(const GradingTone & v, const GradingTonePreRender & vpr,
+                               RGBMChannel channel, float * out) const
 {
-    res.setOnLimit(val, limit, below, above);
-}
+    float mid_adj = Clamp(GetChannelValue(v.m_midtones, channel), 0.01f, 1.99f);
 
-template<>
-void setOnLimit<float>(float & res, const float & val, float limit, const float & below, const float & above)
-{
-    res = val < limit ? below : above;
-}
+    if (mid_adj != 1.f)
+    {
+        const auto & x0 = vpr.m_midX[channel][0];
+        const auto & x1 = vpr.m_midX[channel][1];
+        const auto & x2 = vpr.m_midX[channel][2];
+        const auto & x3 = vpr.m_midX[channel][3];
+        const auto & x4 = vpr.m_midX[channel][4];
+        const auto & x5 = vpr.m_midX[channel][5];
+        const auto & y0 = vpr.m_midY[channel][0];
+        const auto & y1 = vpr.m_midY[channel][1];
+        const auto & y2 = vpr.m_midY[channel][2];
+        const auto & y3 = vpr.m_midY[channel][3];
+        const auto & y4 = vpr.m_midY[channel][4];
+        const auto & y5 = vpr.m_midY[channel][5];
+        const auto & m0 = vpr.m_midM[channel][0];
+        const auto & m1 = vpr.m_midM[channel][1];
+        const auto & m2 = vpr.m_midM[channel][2];
+        const auto & m3 = vpr.m_midM[channel][3];
+        const auto & m4 = vpr.m_midM[channel][4];
+        const auto & m5 = vpr.m_midM[channel][5];
 
-template<typename type>
-type Sqrt(const type & val)
-{
-    return type{ sqrtf(val[0]), sqrtf(val[1]), sqrtf(val[2]) };
-}
+        if (channel != M)
+        {
+            float t = out[channel];
+            float res = 0.f;
+            if (t >= y5)
+            {
+                res = x0 + (t - y0) / m0;
+            }
+            else if (t >= y4)
+            {
+                const float c = y4 - t;
+                const float b = m4 * (x5 - x4);
+                const float a = 0.5f * (m5 - m4) * (x5 - x4);
+                const float discrim = sqrt( b * b - 4.f * a * c);
+                const float tmp = (2.f * c) / (-discrim - b);
+                res = tmp * (x5 - x4) + x4;
+            }
+            else if (t >= y3)
+            {
+                const float c = y3 - t;
+                const float b = m3 * (x4 - x3);
+                const float a = 0.5f * (m4 - m3) * (x4 - x3);
+                const float discrim = sqrt( b * b - 4.f * a * c);
+                const float tmp = (2.f * c) / (-discrim - b);
+                res = tmp * (x4 - x3) + x3;
+            }
+            else if (t >= y2)
+            {
+                const float c = y2 - t;
+                const float b = m2 * (x3 - x2);
+                const float a = 0.5f * (m3 - m2) * (x3 - x2);
+                const float discrim = sqrt( b * b - 4.f * a * c);
+                const float tmp = (2.f * c) / (-discrim - b);
+                res = tmp * (x3 - x2) + x2;
+            }
+            else if (t >= y1)
+            {
+                const float c = y1 - t;
+                const float b = m1 * (x2 - x1);
+                const float a = 0.5f * (m2 - m1) * (x2 - x1);
+                const float discrim = sqrt( b * b - 4.f * a * c);
+                const float tmp = (2.f * c) / (-discrim - b);
+                res = tmp * (x2 - x1) + x1;
+            }
+            else if (t >= y0)
+            {
+                const float c = y0 - t;
+                const float b = m0 * (x1 - x0);
+                const float a = 0.5f * (m1 - m0) * (x1 - x0);
+                const float discrim = sqrt( b * b - 4.f * a * c);
+                const float tmp = (2.f * c) / (-discrim - b);
+                res = tmp * (x1 - x0) + x0;
+            }
+            else
+            {
+                res = x0 + (t - y0) / m0;
+            }
+            out[channel] = res;
+        }
+        else
+        {
+            float3 t{ out };
+            float3 outL0, outL, outM, outR, outR2, outR3, outR4;
 
-template<>
-float Sqrt<float>(const float & val)
-{
-    return sqrtf(val);
-}
+            outR4 = x5 + (t - y5) / m5;
+            {
+                float3 c = y4 - t;
+                const float b = m4 * (x5 - x4);
+                const float a = 0.5f * (m5 - m4) * (x5 - x4);
+                float3 discrim = Sqrt( b * b - 4.f * a * c);
+                float3 tmp = (2.f * c) / (-b - discrim);
+                outR3 = tmp * (x5 - x4) + x4;
+            }
+            {
+                float3 c = y3 - t;
+                const float b = m3 * (x4 - x3);
+                const float a = 0.5f * (m4 - m3) * (x4 - x3);
+                float3 discrim = Sqrt( b * b - 4.f * a * c);
+                float3 tmp = (2.f * c) / (-b - discrim);
+                outR2 = tmp * (x4 - x3) + x3;
+            }
+            {
+                float3 c = y2 - t;
+                const float b = m2 * (x3 - x2);
+                const float a = 0.5f * (m3 - m2) * (x3 - x2);
+                float3 discrim = Sqrt( b * b - 4.f * a * c);
+                float3 tmp = (2.f * c) / (-b - discrim);
+                outR = tmp * (x3 - x2) + x2;
+            }
+            {
+                float3 c = y1 - t;
+                const float b = m1 * (x2 - x1);
+                const float a = 0.5f * (m2 - m1) * (x2 - x1);
+                float3 discrim = Sqrt( b * b - 4.f * a * c);
+                float3 tmp = (2.f * c) / (-b - discrim);
+                outM = tmp * (x2 - x1) + x1;
+            }
+            {
+                float3 c = y0 - t;
+                const float b = m0 * (x1 - x0);
+                const float a = 0.5f * (m1 - m0) * (x1 - x0);
+                float3 discrim = Sqrt( b * b - 4.f * a * c);
+                float3 tmp = (2.f * c) / (-b - discrim);
+                outL = tmp * (x1 - x0) + x0;
+            }
+            outL0 = x0 + (t - y0) / m0;
 
-template<typename type>
-void Set(RGBMChannel channel, float * out, const type & val)
-{
-    out[0] = val[0];
-    out[1] = val[1];
-    out[2] = val[2];
-}
+            float3 res;
+            res.setOnLimit(t, y1, outL, outM);
+            res.setOnLimit(t, y2, res, outR);
+            res.setOnLimit(t, y3, res, outR2);
+            res.setOnLimit(t, y4, res, outR3);
+            res.setOnLimit(t, y0, outL0, res);
+            res.setOnLimit(t, y5, res, outR4);
 
-template<>
-void Set<float>(RGBMChannel channel, float * out, const float & val)
-{
-    out[channel] = val;
+            out[0] = res[0];
+            out[1] = res[1];
+            out[2] = res[2];
+        }
+    }
 }
 
 template<typename type>
@@ -381,6 +545,7 @@ void GradingToneFwdOpCPU::highlightShadow(const GradingTone & v, const GradingTo
                                           RGBMChannel channel,
                                           bool isShadow, float * out) const
 {
+    // The effect of val is symmetric around 1 (<1 uses Fwd algorithm, >1 uses Rev algorithm).
     float val = isShadow ? GetChannelValue(v.m_shadows, channel) :
                            GetChannelValue(v.m_highlights, channel);
     if (!isShadow)
@@ -479,7 +644,7 @@ template<typename type>
 void ComputeWBFwd(RGBMChannel channel, bool isBlack, float * out, float val, float x0, float x1,
                   float y0, float y1, float m0, float m1, float gain, type & t)
 {
-    float mtest = (!isBlack) ? val : 2.f - val;
+    const float mtest = (!isBlack) ? val : 2.f - val;
 
     if (mtest < 1.f)
     {
@@ -500,8 +665,8 @@ void ComputeWBFwd(RGBMChannel channel, bool isBlack, float * out, float val, flo
 
         t = (!isBlack) ? (t - x0) * gain + x0 : (t - x1) * gain + x1;
 
-        float a = 0.5f * (m1 - m0) * (x1 - x0);
-        float b = m0 * (x1 - x0);
+        const float a = 0.5f * (m1 - m0) * (x1 - x0);
+        const float b = m0 * (x1 - x0);
 
         type c = y0 - t;
         type discrim = Sqrt(b * b - 4.f * a * c);
@@ -514,16 +679,17 @@ void ComputeWBFwd(RGBMChannel channel, bool isBlack, float * out, float val, flo
         {
             res = (res - x0) / gain + x0;
             // Quadratic extrapolation for better HDR control.
-            float new_y1 = (x1 - x0) / gain + x0;
-            float xd = x0 + (x1 - x0) * 0.99f;
+            // TODO: These values are not per pixel and could be pre-calculated.
+            const float new_y1 = (x1 - x0) / gain + x0;
+            const float xd = x0 + (x1 - x0) * 0.99f;
             float md = m0 + (xd - x0) * (m1 - m0) / (x1 - x0);
             md = 1.f / md;
-            float aim_m = (1.f / m1 - md) / (x1 - xd);
-            float bb = 1.f / m1 - aim_m * x1;
-            float cc = new_y1 - bb * x1 - 0.5f * aim_m * x1 * x1;
+            const float aa = 0.5f * (1.f / m1 - md) / (x1 - xd);
+            const float bb = 1.f / m1 - 2.f * aa * x1;
+            const float cc = new_y1 - bb * x1 - aa * x1 * x1;
             t = (t - x0) / gain + x0;
 
-            type res1 = (0.5f * aim_m * t + bb) * t + cc;
+            type res1 = (aa * t + bb) * t + cc;
             setOnLimit(res, t, x1, res, res1);
         }
         else
@@ -541,16 +707,15 @@ template<typename type>
 void ComputeWBRev(RGBMChannel channel, bool isBlack, float * out, float val, float x0, float x1,
                   float y0, float y1, float m0, float m1, float gain, type & t)
 {
-    float mtest = (!isBlack) ? val : 2.f - val;
+    const float mtest = (!isBlack) ? val : 2.f - val;
 
+    // TODO: Refactor to reduce duplication of Fwd code.
     if (mtest < 1.f)
     {
         // Slope is decreasing case.
 
-        t = (!isBlack) ? (t - x0) * gain + x0 : (t - x1) * gain + x1;
-
-        float a = 0.5f * (m1 - m0) * (x1 - x0);
-        float b = m0 * (x1 - x0);
+        const float a = 0.5f * (m1 - m0) * (x1 - x0);
+        const float b = m0 * (x1 - x0);
 
         type c = y0 - t;
         type discrim = Sqrt(b * b - 4.f * a * c);
@@ -568,6 +733,8 @@ void ComputeWBRev(RGBMChannel channel, bool isBlack, float * out, float val, flo
     {
         // Slope is increasing case.
 
+        t = (!isBlack) ? (t - x0) * gain + x0 : (t - x1) * gain + x1;
+
         type tlocal = (t - x0) / (x1 - x0);
         type res = tlocal * (x1 - x0) * (tlocal * 0.5f * (m1 - m0) + m0) + y0;
         type res0 = y0 + (t - x0) * m0;
@@ -578,20 +745,19 @@ void ComputeWBRev(RGBMChannel channel, bool isBlack, float * out, float val, flo
             res = (res - x0) / gain + x0;
             // Quadratic extrapolation for better HDR control.
             // TODO: These values are not per pixel and could be pre-calculated.
-            float new_y1 = (x1 - x0) / gain + x0;
-            float xd = x0 + (x1 - x0) * 0.99f;
+            const float new_y1 = (x1 - x0) / gain + x0;
+            const float xd = x0 + (x1 - x0) * 0.99f;
             float md = m0 + (xd - x0) * (m1 - m0) / (x1 - x0);
             md = 1.f / md;
-            float aim_m = (1.f / m1 - md) / (x1 - xd);
-            float aa = 0.5f * aim_m;
-            float bb = 1.f / m1 - aim_m * x1;
-            float cc = new_y1 - bb * x1 - 0.5f * aim_m * x1 * x1;
+            const float aa = 0.5f * (1.f / m1 - md) / (x1 - xd);
+            const float bb = 1.f / m1 - 2.f * aa * x1;
+            const float cc = new_y1 - bb * x1 - aa * x1 * x1;
             t = (t - x0) / gain + x0;
 
             type c = cc - t;
             type discrim = Sqrt(bb * bb - 4.f * aa * c);
             type res1 = (-2.f * c) / (discrim + bb);
-            float brk = (aa * x1 + bb) * x1 + cc;
+            const float brk = (aa * x1 + bb) * x1 + cc;
             setOnLimit(res, t, brk, res, res1);
         }
         else
@@ -834,9 +1000,61 @@ void GradingToneFwdOpCPU::apply(const void * inImg, void * outImg, long numPixel
     }
 }
 
-GradingToneLinearFwdOpCPU::GradingToneLinearFwdOpCPU(ConstGradingToneOpDataRcPtr & gt)
-    : GradingToneFwdOpCPU(gt)
+void GradingToneRevOpCPU::apply(const void * inImg, void * outImg, long numPixels) const
 {
+
+    if (m_gt->getLocalBypass())
+    {
+        if (inImg != outImg)
+        {
+            memcpy(outImg, inImg, numPixels * PixelSize);
+        }
+        return;
+    }
+
+    const float * in = (float *)inImg;
+    float * out = (float *)outImg;
+
+    auto & v = m_gt->getValue();
+    auto & vpr = m_gt->getComputedValue();
+
+    for (long idx = 0; idx < numPixels; ++idx)
+    {
+        // NB: 'in' and 'out' could be pointers to the same memory buffer.
+        memcpy(out, in, PixelSize);
+
+        scontrast(v, vpr, out);
+
+        whiteBlack(v, vpr, M, true, out);
+        whiteBlack(v, vpr, R, true, out);
+        whiteBlack(v, vpr, G, true, out);
+        whiteBlack(v, vpr, B, true, out);
+
+        highlightShadow(v, vpr, M, true, out);
+        highlightShadow(v, vpr, R, true, out);
+        highlightShadow(v, vpr, G, true, out);
+        highlightShadow(v, vpr, B, true, out);
+
+        whiteBlack(v, vpr, M, false, out);
+        whiteBlack(v, vpr, R, false, out);
+        whiteBlack(v, vpr, G, false, out);
+        whiteBlack(v, vpr, B, false, out);
+
+        highlightShadow(v, vpr, M, false, out);
+        highlightShadow(v, vpr, R, false, out);
+        highlightShadow(v, vpr, G, false, out);
+        highlightShadow(v, vpr, B, false, out);
+
+        mids(v, vpr, M, out);
+        mids(v, vpr, R, out);
+        mids(v, vpr, G, out);
+        mids(v, vpr, B, out);
+
+//         ClampMaxRGB(out);
+
+        in += 4;
+        out += 4;
+    }
 }
 
 void GradingToneLinearFwdOpCPU::apply(const void * inImg, void * outImg, long numPixels) const
@@ -968,221 +1186,6 @@ void GradingToneLinearFwdOpCPU::apply(const void * inImg, void * outImg, long nu
         in += 4;
         out += 4;
     }
-}
-
-GradingToneRevOpCPU::GradingToneRevOpCPU(ConstGradingToneOpDataRcPtr & gt)
-    : GradingToneOpCPU(gt)
-{
-}
-
-void GradingToneRevOpCPU::mids(const GradingTone & v, const GradingTonePreRender & vpr,
-                               RGBMChannel channel, float * out) const
-{
-    float mid_adj = Clamp(GetChannelValue(v.m_midtones, channel), 0.01f, 1.99f);
-
-    if (mid_adj != 1.f)
-    {
-        const auto & x0 = vpr.m_midX[channel][0];
-        const auto & x1 = vpr.m_midX[channel][1];
-        const auto & x2 = vpr.m_midX[channel][2];
-        const auto & x3 = vpr.m_midX[channel][3];
-        const auto & x4 = vpr.m_midX[channel][4];
-        const auto & x5 = vpr.m_midX[channel][5];
-        const auto & y0 = vpr.m_midY[channel][0];
-        const auto & y1 = vpr.m_midY[channel][1];
-        const auto & y2 = vpr.m_midY[channel][2];
-        const auto & y3 = vpr.m_midY[channel][3];
-        const auto & y4 = vpr.m_midY[channel][4];
-        const auto & y5 = vpr.m_midY[channel][5];
-        const auto & m0 = vpr.m_midM[channel][0];
-        const auto & m1 = vpr.m_midM[channel][1];
-        const auto & m2 = vpr.m_midM[channel][2];
-        const auto & m3 = vpr.m_midM[channel][3];
-        const auto & m4 = vpr.m_midM[channel][4];
-        const auto & m5 = vpr.m_midM[channel][5];
-
-        if (channel != M)
-        {
-            float t = out[channel];
-            float res = 0.f;
-            if (t >= y5)
-            {
-                res = x0 + (t - y0) / m0;
-            }
-            else if (t >= y4)
-            {
-                const float c = y4 - t;
-                const float b = m4 * (x5 - x4);
-                const float a = 0.5f * (m5 - m4) * (x5 - x4);
-                const float discrim = sqrt( b * b - 4.f * a * c);
-                const float tmp = (2.f * c) / (-discrim - b);
-                res = tmp * (x5 - x4) + x4;
-            }
-            else if (t >= y3)
-            {
-                const float c = y3 - t;
-                const float b = m3 * (x4 - x3);
-                const float a = 0.5f * (m4 - m3) * (x4 - x3);
-                const float discrim = sqrt( b * b - 4.f * a * c);
-                const float tmp = (2.f * c) / (-discrim - b);
-                res = tmp * (x4 - x3) + x3;
-            }
-            else if (t >= y2)
-            {
-                const float c = y2 - t;
-                const float b = m2 * (x3 - x2);
-                const float a = 0.5f * (m3 - m2) * (x3 - x2);
-                const float discrim = sqrt( b * b - 4.f * a * c);
-                const float tmp = (2.f * c) / (-discrim - b);
-                res = tmp * (x3 - x2) + x2;
-            }
-            else if (t >= y1)
-            {
-                const float c = y1 - t;
-                const float b = m1 * (x2 - x1);
-                const float a = 0.5f * (m2 - m1) * (x2 - x1);
-                const float discrim = sqrt( b * b - 4.f * a * c);
-                const float tmp = (2.f * c) / (-discrim - b);
-                res = tmp * (x2 - x1) + x1;
-            }
-            else if (t >= y0)
-            {
-                const float c = y0 - t;
-                const float b = m0 * (x1 - x0);
-                const float a = 0.5f * (m1 - m0) * (x1 - x0);
-                const float discrim = sqrt( b * b - 4.f * a * c);
-                const float tmp = (2.f * c) / (-discrim - b);
-                res = tmp * (x1 - x0) + x0;
-            }
-            else
-            {
-                res = x0 + (t - y0) / m0;
-            }
-            out[channel] = res;
-        }
-        else
-        {
-            float3 t{ out };
-            float3 outL0, outL, outM, outR, outR2, outR3, outR4;
-
-            outR4 = x5 + (t - y5) / m5;
-            {
-                float3 c = y4 - t;
-                const float b = m4 * (x5 - x4);
-                const float a = 0.5f * (m5 - m4) * (x5 - x4);
-                float3 discrim = Sqrt( b * b - 4.f * a * c);
-                float3 tmp = (2.f * c) / (-b - discrim);
-                outR3 = tmp * (x5 - x4) + x4;
-            }
-            {
-                float3 c = y3 - t;
-                const float b = m3 * (x4 - x3);
-                const float a = 0.5f * (m4 - m3) * (x4 - x3);
-                float3 discrim = Sqrt( b * b - 4.f * a * c);
-                float3 tmp = (2.f * c) / (-b - discrim);
-                outR2 = tmp * (x4 - x3) + x3;
-            }
-            {
-                float3 c = y2 - t;
-                const float b = m2 * (x3 - x2);
-                const float a = 0.5f * (m3 - m2) * (x3 - x2);
-                float3 discrim = Sqrt( b * b - 4.f * a * c);
-                float3 tmp = (2.f * c) / (-b - discrim);
-                outR = tmp * (x3 - x2) + x2;
-            }
-            {
-                float3 c = y1 - t;
-                const float b = m1 * (x2 - x1);
-                const float a = 0.5f * (m2 - m1) * (x2 - x1);
-                float3 discrim = Sqrt( b * b - 4.f * a * c);
-                float3 tmp = (2.f * c) / (-b - discrim);
-                outM = tmp * (x2 - x1) + x1;
-            }
-            {
-                float3 c = y0 - t;
-                const float b = m0 * (x1 - x0);
-                const float a = 0.5f * (m1 - m0) * (x1 - x0);
-                float3 discrim = Sqrt( b * b - 4.f * a * c);
-                float3 tmp = (2.f * c) / (-b - discrim);
-                outL = tmp * (x1 - x0) + x0;
-            }
-            outL0 = x0 + (t - y0) / m0;
-
-            float3 res;
-            res.setOnLimit(t, y1, outL, outM);
-            res.setOnLimit(t, y2, res, outR);
-            res.setOnLimit(t, y3, res, outR2);
-            res.setOnLimit(t, y4, res, outR3);
-            res.setOnLimit(t, y0, outL0, res);
-            res.setOnLimit(t, y5, res, outR4);
-
-            out[0] = res[0];
-            out[1] = res[1];
-            out[2] = res[2];
-        }
-    }
-}
-
-void GradingToneRevOpCPU::apply(const void * inImg, void * outImg, long numPixels) const
-{
-
-    if (m_gt->getLocalBypass())
-    {
-        if (inImg != outImg)
-        {
-            memcpy(outImg, inImg, numPixels * PixelSize);
-        }
-        return;
-    }
-
-    const float * in = (float *)inImg;
-    float * out = (float *)outImg;
-
-    auto & v = m_gt->getValue();
-    auto & vpr = m_gt->getComputedValue();
-
-    for (long idx = 0; idx < numPixels; ++idx)
-    {
-        // NB: 'in' and 'out' could be pointers to the same memory buffer.
-        memcpy(out, in, PixelSize);
-
-        scontrast(v, vpr, out);
-
-        whiteBlack(v, vpr, M, true, out);
-        whiteBlack(v, vpr, R, true, out);
-        whiteBlack(v, vpr, G, true, out);
-        whiteBlack(v, vpr, B, true, out);
-
-        highlightShadow(v, vpr, M, true, out);
-        highlightShadow(v, vpr, R, true, out);
-        highlightShadow(v, vpr, G, true, out);
-        highlightShadow(v, vpr, B, true, out);
-
-        whiteBlack(v, vpr, M, false, out);
-        whiteBlack(v, vpr, R, false, out);
-        whiteBlack(v, vpr, G, false, out);
-        whiteBlack(v, vpr, B, false, out);
-
-        highlightShadow(v, vpr, M, false, out);
-        highlightShadow(v, vpr, R, false, out);
-        highlightShadow(v, vpr, G, false, out);
-        highlightShadow(v, vpr, B, false, out);
-
-        mids(v, vpr, M, out);
-        mids(v, vpr, R, out);
-        mids(v, vpr, G, out);
-        mids(v, vpr, B, out);
-
-//         ClampMaxRGB(out);
-
-        in += 4;
-        out += 4;
-    }
-}
-
-GradingToneLinearRevOpCPU::GradingToneLinearRevOpCPU(ConstGradingToneOpDataRcPtr & gt)
-    : GradingToneRevOpCPU(gt)
-{
 }
 
 void GradingToneLinearRevOpCPU::apply(const void * inImg, void * outImg, long numPixels) const

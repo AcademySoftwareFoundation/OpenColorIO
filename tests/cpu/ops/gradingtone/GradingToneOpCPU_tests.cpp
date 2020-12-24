@@ -328,9 +328,8 @@ OCIO_ADD_TEST(GradingToneOpCPU, video_white_details)
     gt->setValue(gtd);
     OCIO_CHECK_NO_THROW(op = OCIO::GetGradingToneCPURenderer(gtc));
     OCIO_CHECK_ASSERT(op);
-    // TODO: implement inverse.
-//     OCIO_CHECK_NO_THROW(op->apply(TS4::expected_32f, res, TS4::num_samples));
-//     ValidateImage(TS4::input_32f, res, TS4::num_samples, __LINE__);
+    OCIO_CHECK_NO_THROW(op->apply(TS4::expected_32f, res, TS4::num_samples));
+    ValidateImage(TS4::input_32f, res, TS4::num_samples, __LINE__);
 }
 
 namespace TS5
@@ -376,7 +375,6 @@ OCIO_ADD_TEST(GradingToneOpCPU, log_black_details)
     gt->setValue(gtd);
     OCIO_CHECK_NO_THROW(op = OCIO::GetGradingToneCPURenderer(gtc));
     OCIO_CHECK_ASSERT(op);
-    // TODO: implement inverse.
     OCIO_CHECK_NO_THROW(op->apply(TS5::expected_32f, res, TS5::num_samples));
     ValidateImage(TS5::input_32f, res, TS5::num_samples, __LINE__);
 }

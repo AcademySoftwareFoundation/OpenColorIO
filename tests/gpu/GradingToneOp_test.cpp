@@ -193,6 +193,16 @@ OCIO_ADD_GPU_TEST(GradingTone, style_video_white_detail_fwd_dynamic)
     GradingToneVideoWhites(test, OCIO::TRANSFORM_DIR_FORWARD, true);
 }
 
+OCIO_ADD_GPU_TEST(GradingTone, style_video_white_detail_rev)
+{
+    GradingToneVideoWhites(test, OCIO::TRANSFORM_DIR_INVERSE, false);
+}
+
+OCIO_ADD_GPU_TEST(GradingTone, style_video_white_detail_rev_dynamic)
+{
+    GradingToneVideoWhites(test, OCIO::TRANSFORM_DIR_INVERSE, true);
+}
+
 namespace GTTest5
 {
 static constexpr OCIO::GradingStyle style = OCIO::GRADING_LOG;
@@ -230,6 +240,16 @@ OCIO_ADD_GPU_TEST(GradingTone, style_log_black_detail_fwd)
 OCIO_ADD_GPU_TEST(GradingTone, style_log_black_detail_fwd_dynamic)
 {
     GradingToneLogBlacks(test, OCIO::TRANSFORM_DIR_FORWARD, true);
+}
+
+OCIO_ADD_GPU_TEST(GradingTone, style_log_black_detail_rev)
+{
+    GradingToneLogBlacks(test, OCIO::TRANSFORM_DIR_INVERSE, false);
+}
+
+OCIO_ADD_GPU_TEST(GradingTone, style_log_black_detail_rev_dynamic)
+{
+    GradingToneLogBlacks(test, OCIO::TRANSFORM_DIR_INVERSE, true);
 }
 
 namespace GTTest6

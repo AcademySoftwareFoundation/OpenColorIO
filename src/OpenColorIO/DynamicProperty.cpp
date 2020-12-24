@@ -102,8 +102,9 @@ bool DynamicPropertyImpl::equals(const DynamicPropertyImpl & rhs) const
         }
         else
         {
-            // Both dynamic, will be same.
-            return true;
+            // Both dynamic, may not be same (this is used for processor optimization do not
+            // assume they will always have same values even if it is currently the case).
+            return false;
         }
     }
 
