@@ -90,6 +90,7 @@
 
       Helper function to insert a rule.
 
+
       Uses Config:parseColorSpaceFromString to search the path for any of the color spaces named in the config (as per OCIO v1).
 
 
@@ -101,6 +102,7 @@
       1. insertRule(self: PyOpenColorIO.FileRules, ruleIndex: int, name: str, colorSpace: str, pattern: str, extension: str) -> None
 
       Insert a rule at a given ruleIndex.
+
 
       Rule currently at ruleIndex will be pushed to index: ruleIndex + 1. Name must be unique.
       - "Default" is a reserved name for the default rule. The default rule is automatically added and can't be removed. (see :ref:`FileRules::setDefaultRuleColorSpace` ).

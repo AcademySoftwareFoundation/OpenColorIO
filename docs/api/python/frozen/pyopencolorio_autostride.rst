@@ -21,4 +21,3 @@
    Base 0 means to interpret the base from the string as an integer literal.
    >>> int('0b100', base=0)
    4
-

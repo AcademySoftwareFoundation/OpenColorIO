@@ -17,6 +17,7 @@
 
       Perform the intersection of two sets.
 
+
       .. note::
          This function provides operations on two color space sets where the result contains copied color spaces and no duplicates.
 
@@ -28,6 +29,7 @@
       :module: PyOpenColorIO
 
       Return true if the two sets are equal.
+
 
       .. note::
          The comparison is done on the color space names (not a deep comparison).
@@ -50,6 +52,7 @@
 
       Perform the union of two sets.
 
+
       .. note::
          This function provides operations on two color space sets where the result contains copied color spaces and no duplicates.
 
@@ -62,6 +65,7 @@
 
       Perform the difference of two sets.
 
+
       .. note::
          This function provides operations on two color space sets where the result contains copied color spaces and no duplicates.
 
@@ -73,6 +77,7 @@
       :module: PyOpenColorIO
 
       Add color space(s).
+
 
       .. note::
          If another color space is already registered with the same name, this will overwrite it. This stores a copy of the specified color space(s).
@@ -109,6 +114,7 @@
       :module: PyOpenColorIO
 
       Remove color space(s) using color space names (i.e. no role name).
+
 
       .. note::
          The removal of a missing color space does nothing.
