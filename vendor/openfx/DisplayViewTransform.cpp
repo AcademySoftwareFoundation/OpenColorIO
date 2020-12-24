@@ -1,7 +1,3 @@
-/**
- * OpenColorIO ColorSpace Iop.
-*/
-
 #include <cstring>
 #include <new>
 #include <stdexcept>
@@ -13,19 +9,20 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
-// Meta data for the plugin
-#define OCIOPluginIdentifier "org.OpenColorIO.ColorSpaceTransformPlugin"
-#define OCIOPluginName "ColorSpace Transform"
+// Meta data about the plugin
+#define OCIOPluginIdentifier "org.OpenColorIO.DisplayViewTransformPlugin"
+#define OCIOPluginName "DisplayView Transform"
 #define OCIOPluginGroup "Color/OpenColorIO"
-#define OCIOPluginDescription "A plugin for implementing colorspace transform through OCIO"
+#define OCIOPluginDescription "A plugin for display view transform through OCIO"
 #define OCIOSourceColorSpace "srcColorSpace"
-#define OCIODestinationColorSpace "dstColorSpace"
-#define ColorSpaceGroupParamName "ColorSpaces"
-#define ColorSpaceGroupParamHint "Choose Input and output colorspaces for the transform"
-#define InputColorSpaceParamName "Input ColorSpace"
-#define InputColorSpaceParamHint "Choose the input ColorSpace for the Transform"
-#define OutputColorSpaceParamName "Output ColorSpace"
-#define OutputColorSpaceParamHint "Choose the output ColorSpace for the Transform"
+#define OCIOSourceColorSpaceHint "Select a input colorspace for the displayview transform"
+#define OCIOConfigParam "config"
+#define OCIOConfigParamHint "Locate the config file for OCIO"
+#define OCIODisplayParam "display"
+#define OCIODisplayParamHint "Choose a display device for the displayview transform"
+#define OCIOViewParam "view"
+#define OCIOViewParamHint "Choose a view for the displayview transform"
+
 
 #if defined __APPLE__ || defined linux || defined __FreeBSD__
 #  define EXPORT __attribute__((visibility("default")))
@@ -38,16 +35,23 @@
 namespace OCIO = OCIO_NAMESPACE;
 
 // This is  a custom class made for storing plugin specific data
-class ColorSpaceContainer
+class DisplayViewContainer
 {
 public:
+
+    // Source Clip
     OfxImageClipHandle m_srcClip;
+    // Destination Clip
     OfxImageClipHandle m_dstClip;
 
-    OfxParamHandle m_ColorSpace;
+    // Source Colorspace handle
     OfxParamHandle m_srcColorSpace;
-    OfxParamHandle m_dstColorSpace;
-    OfxParamHandle m_ConfigFile;
+    // Display handle
+    OfxParamHandle m_display;
+    // View handle
+    OfxParamHandle m_view;
+    // Config file handle
+    OfxParamHandle m_configFile;
 };
 
 // Exception thrown when images are missing
@@ -67,8 +71,8 @@ protected :
     OfxStatus status_;
 };
 
-// Instanciating OCIO ColorSpace Transform API
-OCIO::ColorSpaceTransformRcPtr g_ColorSpaceTransform = OCIO::ColorSpaceTransform::Create();
+// Instanciating OCIO DisplayViewTransform API
+OCIO::DisplayViewTransformRcPtr g_DisplayViewTransformRcPtr = OCIO::DisplayViewTransform::Create();
 
 // Getting the current instance configuration
 OCIO::ConstConfigRcPtr g_Config = OCIO::GetCurrentConfig();
@@ -80,7 +84,7 @@ OfxPropertySuiteV1    *g_PropHost     = 0;
 OfxParameterSuiteV1   *g_ParamHost    = 0;
 OfxMemorySuiteV1      *g_MemoryHost   = 0;
 OfxMultiThreadSuiteV1 *g_ThreadHost   = 0;
-OfxMessageSuiteV1     *g_MessageSuite = 0;
+OfxMessageSuiteV1     *g_MessageHost  = 0;
 OfxInteractSuiteV1    *g_InteractHost = 0;
 
 OfxStatus OnLoad(void)
@@ -88,14 +92,14 @@ OfxStatus OnLoad(void)
     return kOfxStatOK;
 }
 
-// Get ColorSpaceContainer from a property set handle
-static ColorSpaceContainer* GetContainer(OfxImageEffectHandle effect)
+// Get DisplayViewContainer from a property set handle
+static DisplayViewContainer* GetContainer(OfxImageEffectHandle effect)
 {
     OfxPropertySetHandle effectProps;
     g_EffectHost->getPropertySet(effect, &effectProps);
 
 
-    ColorSpaceContainer *Container = 0;
+    DisplayViewContainer *Container = 0;
     g_PropHost->propGetPointer(effectProps, kOfxPropInstanceData, 0, (void**) &Container);
 
     return Container;
@@ -108,13 +112,13 @@ static OfxStatus FetchSuites(OfxImageEffectHandle effect)
     g_ParamHost    = reinterpret_cast<OfxParameterSuiteV1 *>  (const_cast<void *>(g_Host->fetchSuite(g_Host->host, kOfxParameterSuite, 1)));
     g_MemoryHost   = reinterpret_cast<OfxMemorySuiteV1 *>     (const_cast<void *>(g_Host->fetchSuite(g_Host->host, kOfxMemorySuite, 1)));
     g_ThreadHost   = reinterpret_cast<OfxMultiThreadSuiteV1 *>(const_cast<void *>(g_Host->fetchSuite(g_Host->host, kOfxMultiThreadSuite, 1)));
-    g_MessageSuite = reinterpret_cast<OfxMessageSuiteV1 *>    (const_cast<void *>(g_Host->fetchSuite(g_Host->host, kOfxMessageSuite, 1)));
+    g_MessageHost  = reinterpret_cast<OfxMessageSuiteV1 *>    (const_cast<void *>(g_Host->fetchSuite(g_Host->host, kOfxMessageSuite, 1)));
     g_InteractHost = reinterpret_cast<OfxInteractSuiteV1 *>   (const_cast<void *>(g_Host->fetchSuite(g_Host->host, kOfxInteractSuite, 1)));
 
     return kOfxStatOK;
 }
 
-// Creating an instance of ColorSpaceContainer and setting it up
+// Creating an instance of DisplayViewContainer and setting it up
 static OfxStatus CreateInstance(OfxImageEffectHandle effect)
 {
     // get a pointer to the effect properties
@@ -125,8 +129,8 @@ static OfxStatus CreateInstance(OfxImageEffectHandle effect)
     OfxParamSetHandle paramSet;
     g_EffectHost->getParamSet(effect, &paramSet);
 
-    // Instanciating ColorSpaceContainer
-    ColorSpaceContainer *Container = new ColorSpaceContainer;
+    // Instanciating DisplayViewContainer
+    DisplayViewContainer *Container = new DisplayViewContainer;
 
     // Cache away out clip handles
     g_EffectHost->clipGetHandle(effect, kOfxImageEffectSimpleSourceClipName, &Container->m_srcClip, 0);
@@ -134,10 +138,11 @@ static OfxStatus CreateInstance(OfxImageEffectHandle effect)
 
     // Caching all the parameters in Container
     g_ParamHost->paramGetHandle(paramSet, OCIOSourceColorSpace, &(Container->m_srcColorSpace), 0);
-    g_ParamHost->paramGetHandle(paramSet, OCIODestinationColorSpace, &(Container->m_dstColorSpace), 0);
-    //g_ParamHost->paramGetHandle(paramSet, "Config", &(Container->m_ConfigFile), 0);
+    g_ParamHost->paramGetHandle(paramSet, OCIOConfigParam, &(Container->m_configFile), 0);
+    g_ParamHost->paramGetHandle(paramSet, OCIODisplayParam, &(Container->m_display), 0);
+    g_ParamHost->paramGetHandle(paramSet, OCIOViewParam, &(Container->m_view), 0);
 
-    g_PropHost->propSetPointer(effectProps, kOfxPropInstanceData, 0, (void *) Container);
+    g_PropHost->propSetPointer(effectProps, kOfxPropInstanceData, 0, reinterpret_cast<void *>(Container));
 
     return kOfxStatOK;
 }
@@ -170,6 +175,23 @@ static void DefineColorSpaceParam(OfxParamSetHandle effectParams, const char *na
         g_PropHost->propSetString(props, kOfxParamPropParent, 0, parent);
 }
 
+static void DefineDisplayParam(OfxParamSetHandle paramSet, const char* name, const char* hint)
+{
+    OfxPropertySetHandle props;
+    OfxStatus stat;
+
+    stat = g_ParamHost->paramDefine(paramSet, kOfxParamTypeChoice, name, &props);
+
+    if(stat != kOfxStatOK)
+    {
+        throw stat;
+        return;
+    }
+
+    for (int i = 0; i < g_Config->getNumDisplays(); i++)
+        g_PropHost->propSetString(props, kOfxParamPropChoiceOption, i, g_Config->getActiveDisplays());
+}
+
 // A function to describe context specific properties and parameters
 static OfxStatus DescribeInContext(OfxImageEffectHandle effect, OfxPropertySetHandle inArgs)
 {
@@ -188,26 +210,25 @@ static OfxStatus DescribeInContext(OfxImageEffectHandle effect, OfxPropertySetHa
     g_PropHost->propSetString(props, kOfxImageEffectPropSupportedComponents, 0, kOfxImageComponentRGBA);
     g_PropHost->propSetString(props, kOfxImageEffectPropSupportedComponents, 1, kOfxImageComponentAlpha);
 
-    // Defining parameters for the plugin
     // Fetching parameter set from the effect handle
     OfxParamSetHandle paramSet;
     g_EffectHost->getParamSet(effect, &paramSet);
 
-    g_ParamHost->paramDefine(paramSet, kOfxParamTypeGroup, ColorSpaceGroupParamName, &props);
-    
-    // TODO: Revise the structure of params and labels
-    g_PropHost->propSetString(props, kOfxParamPropHint, 0, ColorSpaceGroupParamHint);
-    g_PropHost->propSetString(props, kOfxPropLabel, 0, ColorSpaceGroupParamName);
+    // Input Colorspace
+    DefineColorSpaceParam(paramSet, OCIOSourceColorSpace, OCIOSourceColorSpace, OCIOSourceColorSpace, OCIOSourceColorSpaceHint, 0);
+    // Config
+    g_ParamHost->paramDefine(paramSet, kOfxParamTypeString, OCIOConfigParam, &props);
+    // Display
+    DefineDisplayParam(paramSet, OCIODisplayParam, OCIODisplayParamHint);
 
-    // Input ColorSpace
-    DefineColorSpaceParam(paramSet, OCIOSourceColorSpace, InputColorSpaceParamName, InputColorSpaceParamName, InputColorSpaceParamHint, ColorSpaceGroupParamName);
-    // Output ColorSpace
-    DefineColorSpaceParam(paramSet, OCIODestinationColorSpace, OutputColorSpaceParamName, OutputColorSpaceParamName, OutputColorSpaceParamHint, ColorSpaceGroupParamName);
-
-    // Making a page of controls and add the parameters to it
+    // Making a page of controls
     g_ParamHost->paramDefine(paramSet, kOfxParamTypePage, "Main", &props);
+
+    // Adding the parameters to "Main"
     g_PropHost->propSetString(props, kOfxParamPropPageChild, 0, OCIOSourceColorSpace);
-    g_PropHost->propSetString(props, kOfxParamPropPageChild, 1, OCIODestinationColorSpace);
+    g_PropHost->propSetString(props, kOfxParamPropPageChild, 1, OCIOConfigParam);
+    g_PropHost->propSetString(props, kOfxParamPropPageChild, 2, OCIODisplayParam);
+    g_PropHost->propSetString(props, kOfxParamPropPageChild, 3, OCIOViewParam);
 
     return kOfxStatOK;
 }
@@ -236,9 +257,6 @@ static OfxStatus Describe(OfxImageEffectHandle effect)
     g_PropHost->propSetString(effectProps, kOfxPropLabel, 0, OCIOPluginName);
     g_PropHost->propSetString(effectProps, kOfxImageEffectPluginPropGrouping, 0, OCIOPluginGroup);
     g_PropHost->propSetString(effectProps, kOfxPropPluginDescription, 0, OCIOPluginDescription);
-
-    // Define the contexts we can be used in
-    g_PropHost->propSetString(effectProps, kOfxImageEffectPropSupportedContexts, 0, kOfxImageEffectContextFilter);
 
     return kOfxStatOK;
 }
@@ -340,7 +358,7 @@ static OfxStatus Render(OfxImageEffectHandle effect, OfxPropertySetHandle inArgs
     g_PropHost->propGetDouble(inArgs, kOfxPropTime, 0, &time);
     g_PropHost->propGetIntN(inArgs, kOfxImageEffectPropRenderWindow, 4, &renderWindow.x1);
 
-    ColorSpaceContainer *Container = GetContainer(effect);
+    DisplayViewContainer *Container = GetContainer(effect);
 
     OfxPropertySetHandle srcImg = nullptr, dstImg = nullptr;
     int srcRowBytes, srcBitDepth, dstRowBytes, dstBitDepth;
@@ -360,18 +378,18 @@ static OfxStatus Render(OfxImageEffectHandle effect, OfxPropertySetHandle inArgs
         if (srcBitDepth != dstBitDepth || srcIsAlpha != dstIsAplha)
             throw StatusException(kOfxStatErrImageFormat);
 
-        // Getting source and destination colorspaces from suite
+        // Gettin source and destination colorspaces from suite
         char *srcCS;
         char *dstCS;
         g_ParamHost->paramGetValueAtTime(Container->m_srcColorSpace, time, &srcCS);
         g_ParamHost->paramGetValueAtTime(Container->m_dstColorSpace, time, &dstCS);
 
-        // Setting up OCIO::ColorSpaceTransform API
-        g_ColorSpaceTransform->setSrc(srcCS);
-        g_ColorSpaceTransform->setDst(dstCS);
+        // Setting up OCIO::DisplayViewTransform API
+        g_DisplayViewTransform->setSrc(srcCS);
+        g_DisplayViewTransform->setDst(dstCS);
 
         // Get Processor call
-        OCIO::ConstProcessorRcPtr processor = g_Config->getProcessor(g_ColorSpaceTransform);
+        OCIO::ConstProcessorRcPtr processor = g_Config->getProcessor(g_DisplayViewTransform);
 
         OCIO::ConstCPUProcessorRcPtr cpu = processor->getDefaultCPUProcessor();
 
@@ -396,7 +414,7 @@ static OfxStatus Render(OfxImageEffectHandle effect, OfxPropertySetHandle inArgs
     }
     catch(const std::exception& e)
     {
-        std::cerr << "Error: OpenColorIO ColorSpaceTransform Plugin    " << e.what() << '\n';
+        std::cerr << "Error: OpenColorIO DisplayViewTransform Plugin    " << e.what() << '\n';
     }
 
     if(srcImg)
@@ -409,7 +427,7 @@ static OfxStatus Render(OfxImageEffectHandle effect, OfxPropertySetHandle inArgs
 
 static OfxStatus DestroyInstance(OfxImageEffectHandle effect)
 {
-    ColorSpaceContainer *Container = GetContainer(effect);
+    DisplayViewContainer *Container = GetContainer(effect);
 
     if(Container)
         delete Container;
@@ -473,7 +491,7 @@ static OfxStatus EntryPoint(const char* action, const void* handle, OfxPropertyS
     }
     catch(...)
     {
-        std::cerr << "Unknown Error: OpenColorIO ColorSpaceTransform Plugin" << std::endl;
+        std::cerr << "Unknown Error: OpenColorIO DisplayViewTransform Plugin" << std::endl;
         return kOfxStatErrUnknown;
     }
     return kOfxStatReplyDefault;
@@ -490,7 +508,7 @@ static void SetHost(OfxHost* host)
 }
 
 // Creating the plugin struct
-static OfxPlugin ColorSpaceTransformPlugin = 
+static OfxPlugin DisplayViewTransformPlugin = 
 {
     kOfxImageEffectPluginApi,
     1,
@@ -505,7 +523,7 @@ static OfxPlugin ColorSpaceTransformPlugin =
 EXPORT OfxPlugin* OfxGetPlugin(int nth)
 {
     if(nth == 0)
-        return &ColorSpaceTransformPlugin;
+        return &DisplayViewTransformPlugin;
     return 0;
 }
 
