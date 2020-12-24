@@ -3718,6 +3718,15 @@ inline void load(const YAML::Node & node, NamedTransformRcPtr & nt)
             load(second, stringval);
             nt->setName(stringval.c_str());
         }
+        else if (key == "aliases")
+        {
+            StringUtils::StringVec aliases;
+            load(second, aliases);
+            for (const auto & alias : aliases)
+            {
+                nt->addAlias(alias.c_str());
+            }
+        }
         else if (key == "description")
         {
             load(second, stringval);
@@ -3762,6 +3771,18 @@ inline void save(YAML::Emitter & out, ConstNamedTransformRcPtr & nt, unsigned in
     out << YAML::BeginMap;
 
     out << YAML::Key << "name" << YAML::Value << nt->getName();
+
+    const size_t numAliases = nt->getNumAliases();
+    if (majorVersion >= 2 && numAliases)
+    {
+        out << YAML::Key << "aliases";
+        StringUtils::StringVec aliases;
+        for (size_t aidx = 0; aidx < numAliases; ++aidx)
+        {
+            aliases.push_back(nt->getAlias(aidx));
+        }
+        out << YAML::Flow << YAML::Value << aliases;
+    }
 
     saveDescription(out, nt->getDescription());
 

@@ -459,7 +459,7 @@ public:
      *      and return -1 if the name is not found.
      *
      * \note
-     *    The fcn accepts either a color space OR role name.
+     *    The fcn accepts either a color space name, role name, or alias.
      *    (Color space names take precedence over roles.)
      */
     int getIndexForColorSpace(const char * name) const;
@@ -469,12 +469,15 @@ public:
      *      (i.e. active and inactive) and return null if the name is not found.
      *
      * \note
-     *     The fcn accepts either a color space OR role name.
+     *     The fcn accepts either a color space name, role name, or alias.
      *     (Color space names take precedence over roles.)
      */
     ConstColorSpaceRcPtr getColorSpace(const char * name) const;
 
-    ///  Accepts an alias, role, or color space name and returns the color space name.
+    /**
+     * Accepts an alias, role name, named transform name, or color space name and returns the
+     * color space name or the named transform name.
+     */
     const char * getCanonicalName(const char * name) const;
 
     /**
@@ -520,20 +523,6 @@ public:
     void clearColorSpaces();
 
     /**
-     * \brief Given the specified string, get the longest,
-     *      right-most, colorspace substring that appears.
-     *
-     * * If strict parsing is enabled, and no color space is found, return
-     *   an empty string.
-     * * If strict parsing is disabled, return ROLE_DEFAULT (if defined).
-     * * If the default role is not defined, return an empty string.
-     */
-    const char * parseColorSpaceFromString(const char * str) const;
-
-    bool isStrictParsingEnabled() const;
-    void setStrictParsingEnabled(bool enabled);
-
-    /**
      * \brief Set/get a list of inactive color space or named transform names.
      *
      * Notes:
@@ -546,8 +535,6 @@ public:
      * * The env. var. takes precedence over the inactive_colorspaces list in the config file.
      * * Setting the list via the API takes precedence over either the env. var. or the
      *   config file list.
-     * * Roles may not be used.
-     * * Aliases may not be used.
      */
     void setInactiveColorSpaces(const char * inactiveColorSpaces);
     const char * getInactiveColorSpaces() const;
@@ -960,7 +947,8 @@ public:
      * \brief Add or replace named transform.
      *
      * \note
-     *    Throws if namedTransform is null, name is missing, or no transform is set.
+     *    Throws if namedTransform is null, name is missing, or no transform is set.  Also throws
+     *    if the name or the aliases conflict with names or aliases already in the config.
      */
     void addNamedTransform(const ConstNamedTransformRcPtr & namedTransform);
 
@@ -1003,6 +991,20 @@ public:
      * choose a color space when strictParsing is true and no other rules match.
      */
     bool filepathOnlyMatchesDefaultRule(const char * filePath) const;
+
+    /**
+     * Given the specified string, get the longest, right-most, colorspace substring that
+     * appears. This is now deprecated, please use getColorSpaceFromFilepath.
+     *
+     * * If strict parsing is enabled, and no color space is found, return
+     *   an empty string.
+     * * If strict parsing is disabled, return ROLE_DEFAULT (if defined).
+     * * If the default role is not defined, return an empty string.
+     */
+    const char * parseColorSpaceFromString(const char * str) const;
+
+    bool isStrictParsingEnabled() const;
+    void setStrictParsingEnabled(bool enabled);
 
     //
     // Processors
@@ -1457,12 +1459,15 @@ public:
     /// If the name is already an alias, that alias is removed.
     void setName(const char * name) noexcept;
 
-    /// Aliases can be used instead of the name. They must be unique within the config.
     size_t getNumAliases() const noexcept;
+    /// Return empty string if idx is out of range.
     const char * getAlias(size_t idx) const noexcept;
     /**
-     * Nothing is done if alias is NULL or empty, if it is already there, or if it is the color
-     * space name.
+     * Add an alias for the color space name (the aliases may be used as a synonym for the
+     * name).  Nothing will be added if the alias is already the color space name, one of its
+     * aliases, or the argument is null.  The aliases must not conflict with existing roles,
+     * color space names, named transform names, or other aliases.  This is verified when
+     * adding the color space to the config.
      */
     void addAlias(const char * alias) noexcept;
     /// Does nothing if alias is not present.
@@ -1730,7 +1735,8 @@ public:
      * \note
      *    If another color space is already registered with the same name,
      *    this will overwrite it. This stores a copy of the specified
-     *    color space(s).
+     *    color space(s). Throws if one of the aliases is already assigned as
+     *    a name or alias to an existing color space.
      */
     void addColorSpace(const ConstColorSpaceRcPtr & cs);
     void addColorSpaces(const ConstColorSpaceSetRcPtr & cs);
@@ -1878,6 +1884,19 @@ public:
 
     virtual const char * getName() const noexcept = 0;
     virtual void setName(const char * name) noexcept = 0;
+
+    /// Aliases can be used instead of the name. They must be unique within the config.
+    virtual size_t getNumAliases() const noexcept = 0;
+    /// Return empty string if idx is  out of range.
+    virtual const char * getAlias(size_t idx) const noexcept = 0;
+    /**
+    * Nothing is done if alias is NULL or empty, if it is already there, or if it is already
+    * the named transform name.
+    */
+    virtual void addAlias(const char * alias) noexcept = 0;
+    /// Does nothing if alias is not present.
+    virtual void removeAlias(const char * alias) noexcept = 0;
+    virtual void clearAliases() noexcept = 0;
 
     /// \see ColorSpace::getFamily
     virtual const char * getFamily() const noexcept = 0;

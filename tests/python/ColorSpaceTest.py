@@ -311,3 +311,61 @@ class ColorSpaceTest(unittest.TestCase):
             log_transform = self.colorspace.getTransform(direction)
             self.assertIsInstance(log_transform, OCIO.LogTransform)
             self.assertEquals(self.log_tr.getBase(), log_transform.getBase())
+
+    def test_aliases(self):
+        """
+        Test NamedTransform aliases.
+        """
+
+        cs = OCIO.ColorSpace()
+        self.assertEqual(cs.getName(), '')
+        aliases = cs.getAliases()
+        self.assertEqual(len(aliases), 0)
+
+        cs.addAlias('alias1')
+        aliases = cs.getAliases()
+        self.assertEqual(len(aliases), 1)
+        self.assertEqual(aliases[0], 'alias1')
+
+        cs.addAlias('alias2')
+        aliases = cs.getAliases()
+        self.assertEqual(len(aliases), 2)
+        self.assertEqual(aliases[0], 'alias1')
+        self.assertEqual(aliases[1], 'alias2')
+
+        # Alias is already there, not added.
+
+        cs.addAlias('Alias2')
+        aliases = cs.getAliases()
+        self.assertEqual(len(aliases), 2)
+        self.assertEqual(aliases[0], 'alias1')
+        self.assertEqual(aliases[1], 'alias2')
+
+        # Name might remove an alias.
+
+        cs.setName('name')
+        aliases = cs.getAliases()
+        self.assertEqual(len(aliases), 2)
+
+        cs.setName('alias2')
+        aliases = cs.getAliases()
+        self.assertEqual(len(aliases), 1)
+        self.assertEqual(aliases[0], 'alias1')
+
+        # Removing an alias.
+
+        cs.addAlias('to remove')
+        aliases = cs.getAliases()
+        self.assertEqual(len(aliases), 2)
+
+        cs.removeAlias('not found')
+        aliases = cs.getAliases()
+        self.assertEqual(len(aliases), 2)
+
+        cs.removeAlias('to REMOVE')
+        aliases = cs.getAliases()
+        self.assertEqual(len(aliases), 1)
+
+        cs.clearAliases()
+        aliases = cs.getAliases()
+        self.assertEqual(len(aliases), 0)

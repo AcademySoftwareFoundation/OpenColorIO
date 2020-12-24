@@ -216,7 +216,7 @@
    .. py:method:: Config.getCanonicalName(self: PyOpenColorIO.Config, name: str) -> str
       :module: PyOpenColorIO
 
-      Accepts an alias, role, or color space name and returns the color space name.
+      Accepts an alias, role name, named transform name, or color space name and returns the color space name or the named transform name.
 
 
    .. py:method:: Config.getColorSpace(self: PyOpenColorIO.Config, name: str) -> OpenColorIO_v2_0beta2::ColorSpace
@@ -224,9 +224,8 @@
 
       Get the color space from all the color spaces (i.e. active and inactive) and return null if the name is not found.
 
-
       .. note::
-         The fcn accepts either a color space OR role name. (Color space names take precedence over roles.)
+         The fcn accepts either a color space name, role name, or alias. (Color space names take precedence over roles.)
 
 
    .. py:method:: Config.getColorSpaceFromFilepath(*args, **kwargs)
@@ -539,9 +538,7 @@
    .. py:method:: Config.parseColorSpaceFromString(self: PyOpenColorIO.Config, str: str) -> str
       :module: PyOpenColorIO
 
-      Given the specified string, get the longest, right-most, colorspace substring that appears.
-
-
+      Given the specified string, get the longest, right-most, colorspace substring that appears. This is now deprecated, please use getColorSpaceFromFilepath.
 
       - If strict parsing is enabled, and no color space is found, return an empty string.
       - If strict parsing is disabled, return ROLE_DEFAULT (if defined).
@@ -663,8 +660,6 @@
       - The environment variable OCIO_INACTIVE_COLORSPACES may also be used to set the inactive color space list.
       - The env. var. takes precedence over the inactive_colorspaces list in the config file.
       - Setting the list via the API takes precedence over either the env. var. or the config file list.
-      - Roles may not be used.
-      - Aliases may not be used.
 
 
    .. py:method:: Config.setMajorVersion(self: PyOpenColorIO.Config, major: int) -> None

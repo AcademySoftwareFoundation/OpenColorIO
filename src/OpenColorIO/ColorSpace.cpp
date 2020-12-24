@@ -366,7 +366,7 @@ std::ostream & operator<< (std::ostream & os, const ColorSpace & cs)
     }
     else if (numAliases > 1)
     {
-        os << "alias= [" << cs.getAlias(0);
+        os << "aliases=[" << cs.getAlias(0);
         for (size_t aidx = 1; aidx < numAliases; ++aidx)
         {
             os << ", " << cs.getAlias(aidx);

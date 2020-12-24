@@ -102,6 +102,7 @@ class NamedTransformTest(unittest.TestCase):
 
         named_tr = OCIO.NamedTransform(
             name = self.TEST_NAME,
+            aliases=['alias1', 'alias2'],
             family = self.TEST_FAMILY,
             description = self.TEST_DESCRIPTION,
             forwardTransform = fwd_tr,
@@ -109,6 +110,8 @@ class NamedTransformTest(unittest.TestCase):
             categories = self.TEST_CATEGORIES)
 
         self.assertEqual(named_tr.getName(), self.TEST_NAME)
+        aliases = named_tr.getAliases()
+        self.assertEqual(len(aliases), 2)
         self.assertEqual(named_tr.getFamily(), self.TEST_FAMILY)
         self.assertEqual(named_tr.getDescription(), self.TEST_DESCRIPTION)
         cur_tr = named_tr.getTransform(OCIO.TRANSFORM_DIR_FORWARD)
@@ -129,6 +132,8 @@ class NamedTransformTest(unittest.TestCase):
             family = self.TEST_FAMILY)
 
         self.assertEqual(named_tr2.getName(), self.TEST_NAME)
+        aliases = named_tr2.getAliases()
+        self.assertEqual(len(aliases), 0)
         self.assertEqual(named_tr2.getFamily(), self.TEST_FAMILY)
         self.assertEqual(named_tr2.getDescription(), self.TEST_DESCRIPTION)
         cur_tr = named_tr2.getTransform(OCIO.TRANSFORM_DIR_FORWARD)
@@ -149,6 +154,7 @@ class NamedTransformTest(unittest.TestCase):
 
         named_tr = OCIO.NamedTransform(
             self.TEST_NAME,
+            [],
             self.TEST_FAMILY,
             self.TEST_DESCRIPTION,
             fwd_tr,
@@ -156,6 +162,8 @@ class NamedTransformTest(unittest.TestCase):
             self.TEST_CATEGORIES)
 
         self.assertEqual(named_tr.getName(), self.TEST_NAME)
+        aliases = named_tr.getAliases()
+        self.assertEqual(len(aliases), 0)
         self.assertEqual(named_tr.getFamily(), self.TEST_FAMILY)
         self.assertEqual(named_tr.getDescription(), self.TEST_DESCRIPTION)
         cur_tr = named_tr.getTransform(OCIO.TRANSFORM_DIR_FORWARD)
@@ -284,3 +292,61 @@ named_transforms:
 
         self.assertEqual('inverse_both', next(atts)[1] )
         self.assertEqual(groupTransformsList[1].getOffset(), offsetI)
+
+    def test_aliases(self):
+        """
+        Test NamedTransform aliases.
+        """
+
+        named_tr = OCIO.NamedTransform()
+        self.assertEqual(named_tr.getName(), '')
+        aliases = named_tr.getAliases()
+        self.assertEqual(len(aliases), 0)
+
+        named_tr.addAlias('alias1')
+        aliases = named_tr.getAliases()
+        self.assertEqual(len(aliases), 1)
+        self.assertEqual(aliases[0], 'alias1')
+
+        named_tr.addAlias('alias2')
+        aliases = named_tr.getAliases()
+        self.assertEqual(len(aliases), 2)
+        self.assertEqual(aliases[0], 'alias1')
+        self.assertEqual(aliases[1], 'alias2')
+
+        # Alias is already there, not added.
+
+        named_tr.addAlias('Alias2')
+        aliases = named_tr.getAliases()
+        self.assertEqual(len(aliases), 2)
+        self.assertEqual(aliases[0], 'alias1')
+        self.assertEqual(aliases[1], 'alias2')
+
+        # Name might remove an alias.
+
+        named_tr.setName('name')
+        aliases = named_tr.getAliases()
+        self.assertEqual(len(aliases), 2)
+
+        named_tr.setName('alias2')
+        aliases = named_tr.getAliases()
+        self.assertEqual(len(aliases), 1)
+        self.assertEqual(aliases[0], 'alias1')
+
+        # Removing an alias.
+
+        named_tr.addAlias('to remove')
+        aliases = named_tr.getAliases()
+        self.assertEqual(len(aliases), 2)
+
+        named_tr.removeAlias('not found')
+        aliases = named_tr.getAliases()
+        self.assertEqual(len(aliases), 2)
+
+        named_tr.removeAlias('to REMOVE')
+        aliases = named_tr.getAliases()
+        self.assertEqual(len(aliases), 1)
+
+        named_tr.clearAliases()
+        aliases = named_tr.getAliases()
+        self.assertEqual(len(aliases), 0)

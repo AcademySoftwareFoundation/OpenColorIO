@@ -129,6 +129,9 @@ public:
         size_t replaceIdx = (size_t)-1;
         if (entryIdx != -1)
         {
+            // If getIndex succeeds but the csName is not the name of the matching color space, it
+            // means that csName must be an alias name.  Color space will be replaced only when
+            // canonical names match.
             if (!StringUtils::Compare(m_colorSpaces[entryIdx]->getName(), csName))
             {
                 std::ostringstream os;

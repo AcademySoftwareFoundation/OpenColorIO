@@ -25,6 +25,12 @@ public:
     const char * getName() const noexcept override;
     void setName(const char * name) noexcept override;
 
+    size_t getNumAliases() const noexcept override;
+    const char * getAlias(size_t idx) const noexcept override;
+    void addAlias(const char * alias) noexcept override;
+    void removeAlias(const char * alias) noexcept override;
+    void clearAliases() noexcept override;
+
     const char * getFamily() const noexcept override;
     void setFamily(const char * family) noexcept override;
 
@@ -50,6 +56,7 @@ public:
 
 private:
     std::string m_name;
+    StringUtils::StringVec m_aliases;
     ConstTransformRcPtr m_forwardTransform;
     ConstTransformRcPtr m_inverseTransform;
 

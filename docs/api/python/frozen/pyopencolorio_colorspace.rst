@@ -36,7 +36,7 @@
    .. py:method:: ColorSpace.addAlias(self: PyOpenColorIO.ColorSpace, alias: str) -> None
       :module: PyOpenColorIO
 
-      Nothing is done if alias is NULL or empty, if it is already there, or if it is the color space name.
+      Add an alias for the color space name (the aliases may be used as a synonym for the name). Nothing will be added if the alias is already the color space name, one of its aliases, or the argument is null. The aliases must not conflict with existing roles, color space names, named transform names, or other aliases. This is verified when adding the color space to the config.
 
 
    .. py:method:: ColorSpace.addCategory(self: PyOpenColorIO.ColorSpace, category: str) -> None

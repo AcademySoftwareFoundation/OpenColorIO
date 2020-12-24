@@ -80,7 +80,7 @@
 
 
       .. note::
-         If another color space is already registered with the same name, this will overwrite it. This stores a copy of the specified color space(s).
+         If another color space is already registered with the same name, this will overwrite it. This stores a copy of the specified color space(s). Throws if one of the aliases is already assigned as a name or alias to an existing color space.
 
 
    .. py:method:: ColorSpaceSet.addColorSpaces(self: PyOpenColorIO.ColorSpaceSet, colorSpaces: PyOpenColorIO.ColorSpaceSet) -> None

@@ -101,7 +101,7 @@ OCIO_ADD_TEST(ColorSpace, alias)
     OCIO_CHECK_EQUAL(std::string(cs->getAlias(0)), AliasB);
     OCIO_CHECK_EQUAL(std::string(cs->getAlias(1)), AliasAAlt);
 
-    // Using a color space name that is already an alias is removing the alias.
+    // Setting the name of the color space to one of its aliases removes the alias.
 
     cs->setName(AliasA);
     OCIO_CHECK_EQUAL(std::string(cs->getName()), AliasA);
@@ -684,7 +684,9 @@ colorspaces:
     OCIO_CHECK_EQUAL(std::string(config->getCanonicalName("ACES AP0, scene-linear")), "colorspace");
     OCIO_CHECK_EQUAL(std::string(config->getCanonicalName("colorspace")), "colorspace");
     OCIO_CHECK_EQUAL(std::string(config->getCanonicalName("default")), "raw");
+    OCIO_CHECK_EQUAL(std::string(config->getCanonicalName("DEFault")), "raw");
     OCIO_CHECK_EQUAL(std::string(config->getCanonicalName("not an alias")), "");
+    OCIO_CHECK_EQUAL(std::string(config->getCanonicalName("")), "");
 
     // Get the index.
 

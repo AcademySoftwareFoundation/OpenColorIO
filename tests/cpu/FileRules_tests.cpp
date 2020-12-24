@@ -895,6 +895,9 @@ OCIO_ADD_TEST(FileRules, rules_test)
     colorSpace = config->getColorSpaceFromFilepath("/mnt/user/unknown.jpg", rulePos);
     OCIO_CHECK_EQUAL(rulePos, 2); // The default rule. 
     OCIO_CHECK_ASSERT(colorSpace != nullptr && 0 == strcmp(colorSpace, OCIO::ROLE_DEFAULT));
+
+    // Note that parseColorSpaceFromString (used by the pathSearch rule) is tested with aliases
+    // in OCIO_ADD_TEST(Config, use_alias).
 }
 
 OCIO_ADD_TEST(FileRules, rules_priority)

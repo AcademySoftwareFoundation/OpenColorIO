@@ -483,18 +483,37 @@ public:
 
     ConstNamedTransformRcPtr getNamedTransform(const char * name) const noexcept
     {
+        size_t index = getNamedTransformIndex(name);
+        if (index >= m_allNamedTransforms.size())
+        {
+            return ConstNamedTransformRcPtr();
+        }
+
+        return m_allNamedTransforms[index];
+    }
+
+    size_t getNamedTransformIndex(const char * name) const noexcept
+    {
         if (name && *name)
         {
             const std::string str = StringUtils::Lower(name);
-            for (const auto & nt : m_allNamedTransforms)
+            for (size_t idx = 0; idx < m_allNamedTransforms.size(); ++idx)
             {
-                if (StringUtils::Lower(nt->getName()) == str)
+                if (StringUtils::Lower(m_allNamedTransforms[idx]->getName()) == str)
                 {
-                    return nt;
+                    return idx;
+                }
+                const auto numAliases = m_allNamedTransforms[idx]->getNumAliases();
+                for (size_t alias = 0; alias < numAliases; ++alias)
+                {
+                    if (StringUtils::Lower(m_allNamedTransforms[idx]->getAlias(alias)) == str)
+                    {
+                        return idx;
+                    }
                 }
             }
         }
-        return ConstNamedTransformRcPtr();
+        return static_cast<size_t>(-1);
     }
 
     enum InactiveType
@@ -683,7 +702,7 @@ public:
             {
                 displayCS = display.c_str();
             }
-            auto cs = m_allColorSpaces->getColorSpace(displayCS);
+            auto cs = getColorSpace(displayCS);
             if (cs && cs->getReferenceSpaceType() != REFERENCE_SPACE_DISPLAY)
             {
                 std::ostringstream os{ GetDisplayViewPrefixErrorMsg(display, view) };
@@ -768,7 +787,7 @@ public:
             {
                 // Shared views using a view transform can omit the colorspace, in that case
                 // the color space to use should be named from the display.
-                const auto displayCS = m_allColorSpaces->getColorSpace(display.c_str());
+                const auto displayCS = getColorSpace(display.c_str());
                 if (!displayCS)
                 {
                     std::ostringstream os;
@@ -1298,15 +1317,9 @@ void Config::validate() const
         }
 
         const char * name = cs->getName();
-        if (!name || !*name)
-        {
-            std::ostringstream os;
-            os << "Config failed validation. ";
-            os << "The color space at index " << i << " is not named.";
-            getImpl()->m_validationtext = os.str();
-            throw Exception(getImpl()->m_validationtext.c_str());
-        }
+        // Name is not empty and unique (checked by addColorSpace ).
 
+        // Retest that name does not contain reserved characters (vesion might have change).
         if (getMajorVersion() >= 2 && ContainsContextVariableToken(name))
         {
             std::ostringstream oss;
@@ -1320,51 +1333,20 @@ void Config::validate() const
         }
 
         const size_t numAliases = cs->getNumAliases();
-        if (getMajorVersion() >= 2 && numAliases)
+        if (numAliases && getMajorVersion() < 2)
         {
-            for (size_t aidx = 0; aidx < numAliases; ++aidx)
-            {
-                const char * alias = cs->getAlias(aidx);
-                if (ContainsContextVariableToken(alias))
-                {
-                    std::ostringstream oss;
-                    oss << "Config failed sanitycheck.  A color space named '"<< name
-                        << "' has an alias '" << alias << "' that cannot contain a context "
-                           "variable reserved token i.e. % or $.";
-                    getImpl()->m_validationtext = oss.str();
-                    throw Exception(getImpl()->m_validationtext.c_str());
-                }
-                if (hasRole(alias))
-                {
-                    std::ostringstream oss;
-                    oss << "Config failed sanitycheck.  A color space named '" << name
-                        << "' has an alias '" << alias << "' that is also a role name.";
-                    getImpl()->m_validationtext = oss.str();
-                    throw Exception(getImpl()->m_validationtext.c_str());
-                }
-                if (getNamedTransform(alias))
-                {
-                    std::ostringstream oss;
-                    oss << "Config failed sanitycheck.  A color space named '" << name
-                        << "' has an alias '" << alias << "' that is also a named transform name.";
-                    getImpl()->m_validationtext = oss.str();
-                    throw Exception(getImpl()->m_validationtext.c_str());
-                }
-            }
-        }
+            std::ostringstream oss;
+            oss << "Config failed sanitycheck. "
+                << "Aliases may not be used in a v1 config.  Color space name: '" << name << "'.";
 
-        const std::string namelower = StringUtils::Lower(name);
-        StringSet::const_iterator it = existingColorSpaces.find(namelower);
-        if (it != existingColorSpaces.end())
-        {
-            std::ostringstream os;
-            os << "Config failed validation. ";
-            os << "Two colorspaces are defined with the same name, '";
-            os << namelower << "'.";
-            getImpl()->m_validationtext = os.str();
+            getImpl()->m_validationtext = oss.str();
             throw Exception(getImpl()->m_validationtext.c_str());
         }
 
+        // AddColorSpace, addNamedTransform & setRole already check there is no name & alias
+        // conflict.
+
+        const std::string namelower = StringUtils::Lower(name);
         existingColorSpaces.insert(namelower);
         if (cs->getReferenceSpaceType() == REFERENCE_SPACE_DISPLAY)
         {
@@ -1377,6 +1359,7 @@ void Config::validate() const
         for(StringMap::const_iterator iter = getImpl()->m_roles.begin(),
             end = getImpl()->m_roles.end(); iter!=end; ++iter)
         {
+            // Retest in case version did change.
             if (getMajorVersion() >= 2 && ContainsContextVariableToken(iter->first))
             {
                 std::ostringstream oss;
@@ -1399,16 +1382,7 @@ void Config::validate() const
                 throw Exception(getImpl()->m_validationtext.c_str());
             }
 
-            // Confirm no name conflicts between colorspaces and roles.
-            if(getImpl()->hasColorSpace(iter->first.c_str()))
-            {
-                std::ostringstream os;
-                os << "Config failed validation. ";
-                os << "The role '" << iter->first << "' ";
-                os << " is in conflict with a color space of the same name.";
-                getImpl()->m_validationtext = os.str();
-                throw Exception(getImpl()->m_validationtext.c_str());
-            }
+            // AddColorSpace, addNamedTransform & setRole already check there is no name conflict.
         }
     }
 
@@ -1418,7 +1392,7 @@ void Config::validate() const
 
     for (const auto & name : inactiveColorSpaceNames)
     {
-        if (!getImpl()->m_allColorSpaces->getColorSpace(name.c_str()))
+        if (!getImpl()->getColorSpace(name.c_str()))
         {
             if (!getImpl()->getNamedTransform(name.c_str()))
             {
@@ -1850,25 +1824,14 @@ void Config::validate() const
     // (i.e. name is not null, at least forward or inverse transform exits, etc.), the code below
     // only has to validate name conflicts. The NamedTransform name can not use a role,
     // a color space, a look, or a view transform name.  All transforms are validated above.
+
     for (const auto & nt : getImpl()->m_allNamedTransforms)
     {
         const char * name = nt->getName();
-        if (hasRole(name))
-        {
-            std::ostringstream os;
-            os << "Config failed validation. NamedTransform can't be named '";
-            os << std::string(name) << "'. This name is already used for a role.";
-            getImpl()->m_validationtext = os.str();
-            throw Exception(getImpl()->m_validationtext.c_str());
-        }
-        if (getColorSpace(name))
-        {
-            std::ostringstream os;
-            os << "Config failed validation. NamedTransform can't be named '";
-            os << std::string(name) << "'. This name is already used for a color space.";
-            getImpl()->m_validationtext = os.str();
-            throw Exception(getImpl()->m_validationtext.c_str());
-        }
+
+        // AddColorSpace, addNamedTransform & setRole already check there is not name
+        // conflict.
+
         if (getLook(name))
         {
             std::ostringstream os;
@@ -1886,6 +1849,9 @@ void Config::validate() const
             getImpl()->m_validationtext = os.str();
             throw Exception(getImpl()->m_validationtext.c_str());
         }
+
+        // AddColorSpace, addNamedTransform & setRole already check there is no name & alias
+        // conflict.
     }
 
     ///// Check new features are not used with older config versions.
@@ -2298,6 +2264,11 @@ const char * Config::getCanonicalName(const char * name) const
     {
         return cs->getName();
     }
+    ConstNamedTransformRcPtr nt = getNamedTransform(name);
+    if (nt)
+    {
+        return nt->getName();
+    }
     return "";
 }
 
@@ -2347,6 +2318,70 @@ const char * Config::getInactiveColorSpaces() const
 
 void Config::addColorSpace(const ConstColorSpaceRcPtr & original)
 {
+    const std::string name(original->getName());
+    if (name.empty())
+    {
+        throw Exception("Color space must have a non-empty name.");
+    }
+
+    // Check this is not an existing role or named transform.
+    if (hasRole(name.c_str()))
+    {
+        std::ostringstream os;
+        os << "Cannot add '" << name << "' color space, there is already a role with this "
+              "name.";
+        throw Exception(os.str().c_str());
+    }
+    auto nt = getNamedTransform(name.c_str());
+    if (nt)
+    {
+        std::ostringstream os;
+        os << "Cannot add '" << name << "' color space, there is already a named transform using "
+            "this name as a name or as an alias: '" << nt->getName() << "'.";
+        throw Exception(os.str().c_str());
+    }
+
+    if (getMajorVersion() >= 2 && ContainsContextVariableToken(name))
+    {
+        std::ostringstream oss;
+        oss << "A color space name '" << name
+            << "' cannot contain a context variable reserved token i.e. % or $.";
+
+        throw Exception(oss.str().c_str());
+    }
+
+    const size_t numAliases = original->getNumAliases();
+    for (size_t aidx = 0; aidx < numAliases; ++aidx)
+    {
+        const char * alias = original->getAlias(aidx);
+
+        if (hasRole(alias))
+        {
+            std::ostringstream os;
+            os << "Cannot add '" << name << "' color space, it has an alias '" << alias
+               << "' and there is already a role with this name.";
+            throw Exception(os.str().c_str());
+        }
+        auto nt = getNamedTransform(alias);
+        if (nt)
+        {
+            std::ostringstream os;
+            os << "Cannot add '" << name << "' color space, it has an alias '" << alias
+               << "' and there is already a named transform using this name as a name or as "
+                  "an alias: '" << nt->getName() << "'.";
+            throw Exception(os.str().c_str());
+        }
+        if (ContainsContextVariableToken(alias))
+        {
+            std::ostringstream os;
+            os << "Cannot add '" << name << "' color space, it has an alias '" << alias
+                << "' that cannot contain a context variable reserved token i.e. % or $.";
+
+            throw Exception(os.str().c_str());
+        }
+    }
+
+    // This is verifying that name and aliases are fine with other color spaces.
     getImpl()->m_allColorSpaces->addColorSpace(original);
 
     AutoMutex lock(getImpl()->m_cacheidMutex);
@@ -2540,6 +2575,31 @@ void Config::setRole(const char * role, const char * colorSpaceName)
     // Set the role.
     if (colorSpaceName)
     {
+        if (!hasRole(role))
+        {
+            if (getColorSpace(role))
+            {
+                std::ostringstream os;
+                os << "Cannot add '" << role << "' role, there is already a color space using this "
+                    "as a name or an alias.";
+                throw Exception(os.str().c_str());
+            }
+            if (getNamedTransform(role))
+            {
+                std::ostringstream os;
+                os << "Cannot add '" << role << "' role, there is already a named transform using "
+                    "this as a name or an alias.";
+                throw Exception(os.str().c_str());
+            }
+            if (getMajorVersion() >= 2 && ContainsContextVariableToken(role))
+            {
+                std::ostringstream os;
+                os << "Role name '" << role
+                   << "' cannot contain a context variable reserved token i.e. % or $.";
+                throw Exception(os.str().c_str());
+            }
+
+        }
         getImpl()->m_roles[StringUtils::Lower(role)] = std::string(colorSpaceName);
     }
     // Unset the role.
@@ -2707,16 +2767,113 @@ void Config::addNamedTransform(const ConstNamedTransformRcPtr & nt)
         throw Exception("Named transform must define at least one transform.");
     }
 
-    NamedTransformRcPtr copy = nt->createEditableCopy();
-    ConstNamedTransformRcPtr namedTransformCopy = copy;
-    ConstNamedTransformRcPtr existing = getNamedTransform(name.c_str());
-    if (existing)
+    if (hasRole(name.c_str()))
     {
-        // Replace existing named transform by swapping pointers. Copy will not be needed after.
-        namedTransformCopy.swap(existing);
+        std::ostringstream os;
+        os << "Cannot add '" << name << "' named transform, there is already a role with this "
+              "name.";
+        throw Exception(os.str().c_str());
+    }
+    auto cs = getColorSpace(name.c_str());
+    if (cs)
+    {
+        std::ostringstream os;
+        os << "Cannot add '" << name << "' named transform, there is already a color space using "
+              "this name as a name or as an alias: '" << cs->getName() << "'.";
+        throw Exception(os.str().c_str());
+    }
+
+    if (ContainsContextVariableToken(name))
+    {
+        std::ostringstream oss;
+        oss << "A named transform name '" << name
+            << "' cannot contain a context variable reserved token i.e. % or $.";
+
+        throw Exception(oss.str().c_str());
+    }
+
+    size_t existing = getImpl()->getNamedTransformIndex(name.c_str());
+
+    size_t replaceIdx = (size_t)-1;
+    const auto numNT = getImpl()->m_allNamedTransforms.size();
+    if (existing < numNT)
+    {
+        const std::string existingName{ getImpl()->m_allNamedTransforms[existing]->getName() };
+        if (!StringUtils::Compare(existingName, name))
+        {
+            std::ostringstream os;
+            os << "Cannot add '" << name << "' named transform, existing named transform, '";
+            os << existingName << "' is using this name as an alias.";
+            throw Exception(os.str().c_str());
+        }
+        // There is a named transform with the same name that will be replaced (if new named
+        // transform can be used).
+        replaceIdx = existing;
+    }
+
+    const size_t numAliases = nt->getNumAliases();
+    for (size_t aidx = 0; aidx < numAliases; ++aidx)
+    {
+        const char * alias = nt->getAlias(aidx);
+
+        if (hasRole(alias))
+        {
+            std::ostringstream os;
+            os << "Cannot add '" << name << "' named transform, it has an alias '" << alias
+               << "' and there is already a role with this name.";
+            throw Exception(os.str().c_str());
+        }
+        auto cs = getColorSpace(alias);
+        if (cs)
+        {
+            std::ostringstream os;
+            os << "Cannot add '" << name << "' named transform, it has an alias '" << alias
+               << "' and there is already a color space using this name as a name or as "
+                  "an alias: '" << cs->getName() << "'.";
+            throw Exception(os.str().c_str());
+        }
+        if (ContainsContextVariableToken(alias))
+        {
+            std::ostringstream oss;
+            oss << "Cannot add '" << name << "' named transform, it has an alias '" << alias
+                << "' that cannot contain a context variable reserved token i.e. % or $.";
+
+            throw Exception(oss.str().c_str());
+        }
+
+        existing = getImpl()->getNamedTransformIndex(alias);
+        // Is an alias of the named transform already used by a named transform?
+        // Skip existing named transform that might be replaced.
+        if (existing != replaceIdx && existing < numNT)
+        {
+            const std::string existingName{ getImpl()->m_allNamedTransforms[existing]->getName() };
+            std::ostringstream os;
+            os << "Cannot add '" << name << "' named transform, it has '" << alias;
+            os << "' alias and existing named transform, '";
+            os << existingName << "' is using the same alias.";
+            throw Exception(os.str().c_str());
+        }
+    }
+
+    if (replaceIdx < numNT)
+    {
+        const std::string existingName{ getImpl()->m_allNamedTransforms[replaceIdx]->getName() };
+        if (!StringUtils::Compare(existingName, name))
+        {
+            std::ostringstream os;
+            os << "Cannot add '" << name << "' named transform, existing named transform, '";
+            os << existingName << "' is using this name as an alias.";
+            throw Exception(os.str().c_str());
+        }
+        NamedTransformRcPtr copy = nt->createEditableCopy();
+        ConstNamedTransformRcPtr namedTransformCopy = copy;
+        // Safe to swap, copy is not used after.
+        getImpl()->m_allNamedTransforms[replaceIdx].swap(namedTransformCopy);
     }
     else
     {
+        NamedTransformRcPtr copy = nt->createEditableCopy();
+        ConstNamedTransformRcPtr namedTransformCopy = copy;
         getImpl()->m_allNamedTransforms.push_back(namedTransformCopy);
     }
 
@@ -3912,7 +4069,7 @@ ConstProcessorRcPtr Config::GetProcessorFromConfigs(const ConstContextRcPtr & sr
         os << "The role '" << exchangeRoleName << "' is missing in the source config.";
         throw Exception(os.str().c_str());
     }
-    ConstColorSpaceRcPtr srcExCs = srcConfig->getImpl()->m_allColorSpaces->getColorSpace(srcExName);
+    ConstColorSpaceRcPtr srcExCs = srcConfig->getColorSpace(srcExName);
     if (!srcExCs)
     {
         std::ostringstream os;
@@ -3928,7 +4085,7 @@ ConstProcessorRcPtr Config::GetProcessorFromConfigs(const ConstContextRcPtr & sr
         os << "The role '" << exchangeRoleName << "' is missing in the destination config.";
         throw Exception(os.str().c_str());
     }
-    ConstColorSpaceRcPtr dstExCs = dstConfig->getImpl()->m_allColorSpaces->getColorSpace(dstExName);
+    ConstColorSpaceRcPtr dstExCs = dstConfig->getColorSpace(dstExName);
     if (!dstExCs)
     {
         std::ostringstream os;
@@ -4146,22 +4303,30 @@ StringUtils::StringVec Config::Impl::buildInactiveNamesList(InactiveType type) c
         {
         case INACTIVE_COLORSPACE:
         {
-            if (m_allColorSpaces->getColorSpace(v.c_str()))
+            const auto & cs = getColorSpace(v.c_str());
+            // Only add existing items.
+            if (cs)
             {
-                res.push_back(v);
+                // Use the canonical name (alias or role might have been used).
+                res.push_back(cs->getName());
             }
             break;
         }
         case INACTIVE_NAMEDTRANSFORM:
         {
-            if (getNamedTransform(v.c_str()))
+            const auto & nt = getNamedTransform(v.c_str());
+            // Only add existing items.
+            if (nt)
             {
-                res.push_back(v);
+                // Use the canonical name (alias might have been used).
+                res.push_back(nt->getName());
             }
             break;
         }
         case INACTIVE_ALL:
         {
+            // This is only used to verify that all items of the list do exists (only used by the
+            // validate() function.
             res.push_back(v);
             break;
         }
