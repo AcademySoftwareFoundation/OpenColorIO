@@ -355,7 +355,7 @@ static OfxStatus Render(OfxImageEffectHandle effect, OfxPropertySetHandle inArgs
 
         // Setting up OCIO::FileTransform API
         OCIO::TransformDirection d;
-        if(dir == "Inverse")
+        if(strcmp(dir,"Inverse") == 0)
             d = OCIO::TransformDirection::TRANSFORM_DIR_INVERSE;
         else
             d = OCIO::TransformDirection::TRANSFORM_DIR_FORWARD;

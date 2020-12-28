@@ -15,7 +15,7 @@ include_directories(
     ${CMAKE_SOURCE_DIR}/include
     ${OPENFX_INCLUDE}
     ${CMAKE_SOURCE_DIR}/export/
-    ${CMAKE_BINARY_DIR}/include/OpenColorIO/OpenColorIO
+    ${CMAKE_SOURCE_DIR}/build/include/OpenColorIO/
 )
 
 file(GLOB SRC
@@ -26,6 +26,8 @@ file(GLOB SRC
 
 file(GLOB RESOURCES
     ${RES_DIR}/ocio.svg
+    ${CMAKE_SOURCE_DIR}/LICENSE
+    ${CMAKE_SOURCE_DIR}/README.md
 )
 
 add_library(OCIOPlugins SHARED ${SRC})
@@ -94,7 +96,7 @@ else()
         RUNTIME DESTINATION OCIOPlugins.ofx.bundle/Contents/${OFX_ARCH_NAME}
         LIBRARY DESTINATION OCIOPlugins.ofx.bundle/Contents/${OFX_ARCH_NAME}
      )
-     install(FILES ${RESOURCES} LICENSE README.md
+     install(FILES ${RESOURCES}
         DESTINATION OCIOPlugins.ofx.bundle/Contents/Resources
      )
      install(FILES ${CMAKE_SOURCE_DIR}/share/openfx/Info.plist
