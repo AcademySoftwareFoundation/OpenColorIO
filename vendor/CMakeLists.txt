@@ -3,5 +3,9 @@
 
 
 if(OCIO_BUILD_NUKE)
-	add_subdirectory(nuke)
+    add_subdirectory(nuke)
+endif()
+
+if(OCIO_BUILD_OPENFX)
+    add_subdirectory(openfx)
 endif()
