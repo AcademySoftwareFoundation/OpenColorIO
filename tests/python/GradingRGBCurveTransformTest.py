@@ -96,3 +96,40 @@ class GradingRGBCurveTransformTest(unittest.TestCase):
         
         with self.assertRaises(OCIO.Exception):
             gct.setValue(vals);
+
+    def test_apply_inverse(self):
+        """
+        Test applying transform with inversion.
+        """
+
+        gct = OCIO.GradingRGBCurveTransform(OCIO.GRADING_LOG)
+        vals = OCIO.GradingRGBCurve(OCIO.GRADING_LOG)
+        vals.red = OCIO.GradingBSplineCurve([0, 0, 0.4, 0.2, 0.5, 0.7, 0.6, 1.5, 1, 2.1])
+        vals.green = OCIO.GradingBSplineCurve([-0.1, -0.5, 0.5, 0.2, 1.5, 1.1])
+        vals.blue = OCIO.GradingBSplineCurve([0, 0, 1, 1])
+        vals.master = OCIO.GradingBSplineCurve([0, -0.2, 0.3, 0.7, 1.2, 1.5, 2.5, 2.2])
+        gct.setValue(vals)
+
+        cfg = OCIO.Config().CreateRaw()
+        proc = cfg.getProcessor(gct)
+        cpu = proc.getDefaultCPUProcessor()
+
+        # Apply the transform and keep the result.
+        pixel = [0.48, 0.18, 0.18]
+        rgb1 = cpu.applyRGB(pixel)
+
+        # The processing did something.
+        self.assertAlmostEqual( 1.010323, rgb1[0], delta=1e-5)
+        self.assertAlmostEqual(-0.770639, rgb1[1], delta=1e-5)
+        self.assertAlmostEqual( 0.398450, rgb1[2], delta=1e-5)
+
+        # Invert.
+        gct.setDirection(OCIO.TRANSFORM_DIR_INVERSE)
+        proc = cfg.getProcessor(gct)
+        cpu = proc.getDefaultCPUProcessor()
+        pixel2 = cpu.applyRGB(rgb1)
+
+        # Invert back to original value.
+        self.assertAlmostEqual(pixel[0], pixel2[0], delta=1e-5)
+        self.assertAlmostEqual(pixel[1], pixel2[1], delta=1e-5)
+        self.assertAlmostEqual(pixel[2], pixel2[2], delta=1e-5)

@@ -102,6 +102,7 @@ public:
         std::vector<float> m_knotsArray;  // Contains packed knots of ALL curves.
 
         float evalCurve(int curveIdx, float x) const;
+        float evalCurveRev(int curveIdx, float x) const;
     };
 
     // Compute knots and coefs for a curve and add result to knotsCoefs. It has to be called for
@@ -110,7 +111,7 @@ public:
 
     static void AddShaderEval(GpuShaderText & st,
                               const std::string & knotsOffsets, const std::string & coefsOffsets,
-                              const std::string & knots, const std::string & coefs);
+                              const std::string & knots, const std::string & coefs, bool isInv);
 private:
     void validateIndex(size_t index) const;
 

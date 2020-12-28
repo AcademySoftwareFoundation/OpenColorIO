@@ -138,6 +138,7 @@ GradingToneLinearRevOpCPU::GradingToneLinearRevOpCPU(ConstGradingToneOpDataRcPtr
 {
 }
 
+///////////////////////////////////////////////////////////////////////////////
 
 struct float3
 {
@@ -264,6 +265,7 @@ void Set<float>(RGBMChannel channel, float * out, const float & val)
     out[channel] = val;
 }
 
+///////////////////////////////////////////////////////////////////////////////
 
 void GradingToneFwdOpCPU::mids(const GradingTone & v, const GradingTonePreRender & vpr,
                                RGBMChannel channel, float * out) const
@@ -898,7 +900,7 @@ void GradingToneRevOpCPU::scontrast(const GradingTone & v, const GradingTonePreR
             const auto & m3 = vpr.m_scM[0][1];
 
             float b = m0 * (x2 - x1);
-            float a = (m3 - m0) * 0.5 * (x2 - x1);
+            float a = (m3 - m0) * 0.5f * (x2 - x1);
             float3 c = y1 - t;
             float3 discrim = Sqrt(b * b - 4.f * a * c);
             float3 res =  (x2 - x1) * (-2.f * c) / (discrim + b) + x1;
@@ -917,7 +919,7 @@ void GradingToneRevOpCPU::scontrast(const GradingTone & v, const GradingTonePreR
             const auto & m3 = vpr.m_scM[1][1];
 
             float b = m0 * (x2 - x1);
-            float a = (m3 - m0) * 0.5 * (x2 - x1);
+            float a = (m3 - m0) * 0.5f * (x2 - x1);
             float3 c = y1 - t;
             float3 discrim = Sqrt(b * b - 4.f * a * c);
             float3 res =  (x2 - x1) * (-2.f * c) / (discrim + b) + x1;
@@ -931,6 +933,8 @@ void GradingToneRevOpCPU::scontrast(const GradingTone & v, const GradingTonePreR
         out[2] = outColor[2];
     }  // end if contrast != 1.
 }
+
+///////////////////////////////////////////////////////////////////////////////
 
 inline void ClampMaxRGB(float * out)
 {
@@ -1050,30 +1054,15 @@ void GradingToneRevOpCPU::apply(const void * inImg, void * outImg, long numPixel
         mids(v, vpr, G, out);
         mids(v, vpr, B, out);
 
-//         ClampMaxRGB(out);
+        ClampMaxRGB(out);
 
         in += 4;
         out += 4;
     }
 }
 
-void GradingToneLinearFwdOpCPU::apply(const void * inImg, void * outImg, long numPixels) const
+namespace LogLinConstants
 {
-    if (m_gt->getLocalBypass())
-    {
-        if (inImg != outImg)
-        {
-            memcpy(outImg, inImg, numPixels * PixelSize);
-        }
-        return;
-    }
-
-    const float * in = (float *)inImg;
-    float * out = (float *)outImg;
-
-    auto & v = m_gt->getValue();
-    auto & vpr = m_gt->getComputedValue();
-
     static constexpr float xbrk = 0.0041318374739483946f;
     static constexpr float shift = -0.000157849851665374f;
     static constexpr float m = 1.f / (0.18f + shift);
@@ -1093,20 +1082,19 @@ void GradingToneLinearFwdOpCPU::apply(const void * inImg, void * outImg, long nu
 #else
     static constexpr float base2 = 1.4426950408889634f; // 1/log(2)
 #endif
+}
 
-
-    for (long idx = 0; idx < numPixels; ++idx)
-    {
-        // Lin to log.
+inline void LinLog(const float * in, float * out)
+{
 #ifdef USE_SSE
         __m128 pix = _mm_loadu_ps(in);
-        __m128 flag = _mm_cmpgt_ps(pix, mxbrk);
+        __m128 flag = _mm_cmpgt_ps(pix, LogLinConstants::mxbrk);
 
-        __m128 pixLin = _mm_mul_ps(pix, mgain);
-        pixLin = _mm_add_ps(pixLin, moffs);
+        __m128 pixLin = _mm_mul_ps(pix, LogLinConstants::mgain);
+        pixLin = _mm_add_ps(pixLin, LogLinConstants::moffs);
 
-        pix = _mm_add_ps(pix, mshift);
-        pix = _mm_mul_ps(pix, mm);
+        pix = _mm_add_ps(pix, LogLinConstants::mshift);
+        pix = _mm_mul_ps(pix, LogLinConstants::mm);
         pix = sseLog2(pix);
 
         pix = _mm_or_ps(_mm_and_ps(flag, pix),
@@ -1114,17 +1102,69 @@ void GradingToneLinearFwdOpCPU::apply(const void * inImg, void * outImg, long nu
 
         _mm_storeu_ps(out, pix);
 #else
-        out[0] = (in[0] < xbrk) ?
-                 in[0] * gain + offs :
-                 base2 * std::log((in[0] + shift) * m);
-        out[1] = (in[1] < xbrk) ?
-                 in[1] * gain + offs :
-                 base2 * std::log((in[1] + shift) * m);
-        out[2] = (in[2] < xbrk) ?
-                 in[2] * gain + offs :
-                 base2 * std::log((in[2] + shift) * m);
+        out[0] = (in[0] < LogLinConstants::xbrk) ?
+                 in[0] * LogLinConstants::gain + LogLinConstants::offs :
+                 LogLinConstants::base2 * std::log((in[0] + LogLinConstants::shift) * LogLinConstants::m);
+        out[1] = (in[1] < LogLinConstants::xbrk) ?
+                 in[1] * LogLinConstants::gain + LogLinConstants::offs :
+                 LogLinConstants::base2 * std::log((in[1] + LogLinConstants::shift) * LogLinConstants::m);
+        out[2] = (in[2] < LogLinConstants::xbrk) ?
+                 in[2] * LogLinConstants::gain + LogLinConstants::offs :
+                 LogLinConstants::base2 * std::log((in[2] + LogLinConstants::shift) * LogLinConstants::m);
         out[3] = in[3];
 #endif
+}
+
+inline void LogLin(float * out)
+{
+#ifdef USE_SSE
+        __m128 pix = _mm_loadu_ps(out);
+        __m128 flag = _mm_cmpgt_ps(pix, LogLinConstants::mybrk);
+
+        __m128 pixLin = _mm_sub_ps(pix, LogLinConstants::moffs);
+        pixLin = _mm_mul_ps(pixLin, LogLinConstants::mgainInv);
+
+        pix = ssePower(LogLinConstants::mpower, pix);
+        pix = _mm_mul_ps(pix, LogLinConstants::mshift018);
+        pix = _mm_sub_ps(pix, LogLinConstants::mshift);
+
+        pix = _mm_or_ps(_mm_and_ps(flag, pix),
+              _mm_andnot_ps(flag, pixLin));
+
+        _mm_storeu_ps(out, pix);
+#else
+        out[0] = (out[0] < LogLinConstants::ybrk) ?
+                 (out[0] - LogLinConstants::offs) / LogLinConstants::gain :
+                 std::pow(2.0f, out[0]) * (0.18f + LogLinConstants::shift) - LogLinConstants::shift;
+        out[1] = (out[1] < LogLinConstants::ybrk) ?
+                 (out[1] - LogLinConstants::offs) / LogLinConstants::gain :
+                 std::pow(2.0f, out[1]) * (0.18f + LogLinConstants::shift) - LogLinConstants::shift;
+        out[2] = (out[2] < LogLinConstants::ybrk) ?
+                 (out[2] - LogLinConstants::offs) / LogLinConstants::gain :
+                 std::pow(2.0f, out[2]) * (0.18f + LogLinConstants::shift) - LogLinConstants::shift;
+#endif
+}
+
+void GradingToneLinearFwdOpCPU::apply(const void * inImg, void * outImg, long numPixels) const
+{
+    if (m_gt->getLocalBypass())
+    {
+        if (inImg != outImg)
+        {
+            memcpy(outImg, inImg, numPixels * PixelSize);
+        }
+        return;
+    }
+
+    const float * in = (float *)inImg;
+    float * out = (float *)outImg;
+
+    auto & v = m_gt->getValue();
+    auto & vpr = m_gt->getComputedValue();
+
+    for (long idx = 0; idx < numPixels; ++idx)
+    {
+        LinLog(in, out);
 
         mids(v, vpr, R, out);
         mids(v, vpr, G, out);
@@ -1153,33 +1193,7 @@ void GradingToneLinearFwdOpCPU::apply(const void * inImg, void * outImg, long nu
 
         scontrast(v, vpr, out);
 
-        // Log to lin.
-#ifdef USE_SSE
-        pix = _mm_loadu_ps(out);
-        flag = _mm_cmpgt_ps(pix, mybrk);
-
-        pixLin = _mm_sub_ps(pix, moffs);
-        pixLin = _mm_mul_ps(pixLin, mgainInv);
-
-        pix = ssePower(mpower, pix);
-        pix = _mm_mul_ps(pix, mshift018);
-        pix = _mm_sub_ps(pix, mshift);
-
-        pix = _mm_or_ps(_mm_and_ps(flag, pix),
-              _mm_andnot_ps(flag, pixLin));
-
-        _mm_storeu_ps(out, pix);
-#else
-        out[0] = (out[0] < ybrk) ?
-                 (out[0] - offs) / gain :
-                 std::pow(2.0f, out[0]) * (0.18f + shift) - shift;
-        out[1] = (out[1] < ybrk) ?
-                 (out[1] - offs) / gain :
-                 std::pow(2.0f, out[1]) * (0.18f + shift) - shift;
-        out[2] = (out[2] < ybrk) ?
-                 (out[2] - offs) / gain :
-                 std::pow(2.0f, out[2]) * (0.18f + shift) - shift;
-#endif
+        LogLin(out);
 
         ClampMaxRGB(out);
 
@@ -1190,9 +1204,59 @@ void GradingToneLinearFwdOpCPU::apply(const void * inImg, void * outImg, long nu
 
 void GradingToneLinearRevOpCPU::apply(const void * inImg, void * outImg, long numPixels) const
 {
-    throw Exception("GradingTone inverse CPU not implemented.");
+    if (m_gt->getLocalBypass())
+    {
+        if (inImg != outImg)
+        {
+            memcpy(outImg, inImg, numPixels * PixelSize);
+        }
+        return;
+    }
 
-    // TODO: implement inverse.
+    const float * in = (float *)inImg;
+    float * out = (float *)outImg;
+
+    auto & v = m_gt->getValue();
+    auto & vpr = m_gt->getComputedValue();
+
+    for (long idx = 0; idx < numPixels; ++idx)
+    {
+        LinLog(in, out);
+
+        scontrast(v, vpr, out);
+
+        whiteBlack(v, vpr, M, true, out);
+        whiteBlack(v, vpr, R, true, out);
+        whiteBlack(v, vpr, G, true, out);
+        whiteBlack(v, vpr, B, true, out);
+
+        highlightShadow(v, vpr, M, true, out);
+        highlightShadow(v, vpr, R, true, out);
+        highlightShadow(v, vpr, G, true, out);
+        highlightShadow(v, vpr, B, true, out);
+
+        whiteBlack(v, vpr, M, false, out);
+        whiteBlack(v, vpr, R, false, out);
+        whiteBlack(v, vpr, G, false, out);
+        whiteBlack(v, vpr, B, false, out);
+
+        highlightShadow(v, vpr, M, false, out);
+        highlightShadow(v, vpr, R, false, out);
+        highlightShadow(v, vpr, G, false, out);
+        highlightShadow(v, vpr, B, false, out);
+
+        mids(v, vpr, M, out);
+        mids(v, vpr, R, out);
+        mids(v, vpr, G, out);
+        mids(v, vpr, B, out);
+
+        LogLin(out);
+
+        ClampMaxRGB(out);
+
+        in += 4;
+        out += 4;
+    }
 }
 
 } // Anonymous namspace
@@ -1209,6 +1273,7 @@ ConstOpCPURcPtr GetGradingToneCPURenderer(ConstGradingToneOpDataRcPtr & tone)
             return std::make_shared<GradingToneLinearFwdOpCPU>(tone);
         }
         return std::make_shared<GradingToneFwdOpCPU>(tone);
+
     case TRANSFORM_DIR_INVERSE:
         if (tone->getStyle() == GRADING_LIN)
         {

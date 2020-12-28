@@ -12,6 +12,7 @@
 
 namespace OCIO_NAMESPACE
 {
+
 GradingBSplineCurveRcPtr GradingBSplineCurve::Create(size_t size)
 {
     auto newSpline = std::make_shared<GradingBSplineCurveImpl>(size);
@@ -133,6 +134,7 @@ bool IsGradingCurveIdentity(const ConstGradingBSplineCurveRcPtr & curve)
 
 namespace
 {
+
 void EstimateSlopes(const std::vector<GradingControlPoint> & ctrlPnts,
                     std::vector<float> & slopes)
 {
@@ -283,7 +285,8 @@ bool AdjustSlopes(const std::vector<GradingControlPoint> & ctrlPnts,
     }
     return adjustment_done;
 }
-}
+
+}   // namespace
 
 void GradingBSplineCurveImpl::computeKnotsAndCoefs(KnotsCoefs & knotsCoefs, int curveIdx) const
 {
@@ -343,54 +346,120 @@ void GradingBSplineCurveImpl::computeKnotsAndCoefs(KnotsCoefs & knotsCoefs, int 
 void GradingBSplineCurveImpl::AddShaderEval(GpuShaderText & st, 
                                             const std::string & knotsOffsets,
                                             const std::string & coefsOffsets,
-                                            const std::string & knots, const std::string & coefs)
+                                            const std::string & knots, 
+                                            const std::string & coefs, bool isInv)
 {
-    st.newLine() << "int knotsOffs = " << knotsOffsets << "[curveIdx * 2];";
-    st.newLine() << "int knotsCnt = " << knotsOffsets << "[curveIdx * 2 + 1];";
-    st.newLine() << "int coefsOffs = " << coefsOffsets << "[curveIdx * 2];";
-    st.newLine() << "int coefsCnt = " << coefsOffsets << "[curveIdx * 2 + 1];";
-    st.newLine() << "int coefsSets = coefsCnt / 3;";
-    // If the curve has the default/identity values the coef data is empty, so return the input.
-    st.newLine() << "if (coefsSets == 0)";
-    st.newLine() << "{";
-    st.newLine() << "  return x;";
-    st.newLine() << "}";
+    if (!isInv)     // Forward
+    {
+        st.newLine() << "int knotsOffs = " << knotsOffsets << "[curveIdx * 2];";
+        st.newLine() << "int knotsCnt = " << knotsOffsets << "[curveIdx * 2 + 1];";
+        st.newLine() << "int coefsOffs = " << coefsOffsets << "[curveIdx * 2];";
+        st.newLine() << "int coefsCnt = " << coefsOffsets << "[curveIdx * 2 + 1];";
+        st.newLine() << "int coefsSets = coefsCnt / 3;";
+        // If the curve has the default/identity values the coef data is empty, so return the input.
+        st.newLine() << "if (coefsSets == 0)";
+        st.newLine() << "{";
+        st.newLine() << "  return x;";
+        st.newLine() << "}";
 
-    st.newLine() << "float knStart = " << knots << "[knotsOffs];";
-    st.newLine() << "float knEnd = " << knots << "[knotsOffs + knotsCnt - 1];";
+        st.newLine() << "float knStart = " << knots << "[knotsOffs];";
+        st.newLine() << "float knEnd = " << knots << "[knotsOffs + knotsCnt - 1];";
 
-    st.newLine() << "if (x <= knStart)";
-    st.newLine() << "{";
-    st.newLine() << "  float B = " << coefs << "[coefsOffs + coefsSets];";
-    st.newLine() << "  float C = " << coefs << "[coefsOffs + coefsSets * 2];";
-    st.newLine() << "  return (x - knStart) * B + C;";
-    st.newLine() << "}";
+        st.newLine() << "if (x <= knStart)";
+        st.newLine() << "{";
+        st.newLine() << "  float B = " << coefs << "[coefsOffs + coefsSets];";
+        st.newLine() << "  float C = " << coefs << "[coefsOffs + coefsSets * 2];";
+        st.newLine() << "  return (x - knStart) * B + C;";
+        st.newLine() << "}";
 
-    st.newLine() << "else if (x >= knEnd)";
-    st.newLine() << "{";
-    st.newLine() << "  float A = " << coefs << "[coefsOffs + coefsSets - 1];";
-    st.newLine() << "  float B = " << coefs << "[coefsOffs + coefsSets * 2 - 1];";
-    st.newLine() << "  float C = " << coefs << "[coefsOffs + coefsSets * 3 - 1];";
-    st.newLine() << "  float kn = " << knots << "[knotsOffs + knotsCnt - 2];";
-    st.newLine() << "  float t = knEnd - kn;";
-    st.newLine() << "  float slope = 2. * A * t + B;";
-    st.newLine() << "  float offs = ( A * t + B ) * t + C;";
-    st.newLine() << "  return (x - knEnd) * slope + offs;";
-    st.newLine() << "}";
+        st.newLine() << "else if (x >= knEnd)";
+        st.newLine() << "{";
+        st.newLine() << "  float A = " << coefs << "[coefsOffs + coefsSets - 1];";
+        st.newLine() << "  float B = " << coefs << "[coefsOffs + coefsSets * 2 - 1];";
+        st.newLine() << "  float C = " << coefs << "[coefsOffs + coefsSets * 3 - 1];";
+        st.newLine() << "  float kn = " << knots << "[knotsOffs + knotsCnt - 2];";
+        st.newLine() << "  float t = knEnd - kn;";
+        st.newLine() << "  float slope = 2. * A * t + B;";
+        st.newLine() << "  float offs = ( A * t + B ) * t + C;";
+        st.newLine() << "  return (x - knEnd) * slope + offs;";
+        st.newLine() << "}";
 
-    // else
-    st.newLine() << "int i = 0;";
-    st.newLine() << "while ( x < " << knots << "[knotsOffs + i] || "
-                            "x > " << knots << "[knotsOffs + i + 1] )";
-    st.newLine() << "{";
-    st.newLine() << "  i++;";
-    st.newLine() << "}";
-    st.newLine() << "float A = " << coefs << "[coefsOffs + i];";
-    st.newLine() << "float B = " << coefs << "[coefsOffs + i + coefsSets];";
-    st.newLine() << "float C = " << coefs << "[coefsOffs + i + coefsSets * 2];";
-    st.newLine() << "float kn = " << knots << "[knotsOffs + i];";
-    st.newLine() << "float t = x - kn;";
-    st.newLine() << "return ( A * t + B ) * t + C;";
+        // else
+        st.newLine() << "int i = 0;";
+        st.newLine() << "for (i = 0; i < knotsCnt - 2; ++i)";
+        st.newLine() << "{";
+        st.newLine() << "  if (x < " << knots << "[knotsOffs + i + 1])";
+        st.newLine() << "    break;";
+        st.newLine() << "}";
+
+        st.newLine() << "float A = " << coefs << "[coefsOffs + i];";
+        st.newLine() << "float B = " << coefs << "[coefsOffs + coefsSets + i];";
+        st.newLine() << "float C = " << coefs << "[coefsOffs + coefsSets * 2 + i];";
+        st.newLine() << "float kn = " << knots << "[knotsOffs + i];";
+        st.newLine() << "float t = x - kn;";
+        st.newLine() << "return ( A * t + B ) * t + C;";
+    }
+    else            // Inverse
+    {
+        st.newLine() << "int knotsOffs = " << knotsOffsets << "[curveIdx * 2];";
+        st.newLine() << "int knotsCnt = " << knotsOffsets << "[curveIdx * 2 + 1];";
+        st.newLine() << "int coefsOffs = " << coefsOffsets << "[curveIdx * 2];";
+        st.newLine() << "int coefsCnt = " << coefsOffsets << "[curveIdx * 2 + 1];";
+        st.newLine() << "int coefsSets = coefsCnt / 3;";
+        // If the curve has the default/identity values the coef data is empty, so return the input.
+        st.newLine() << "if (coefsSets == 0)";
+        st.newLine() << "{";
+        st.newLine() << "  return x;";
+        st.newLine() << "}";
+
+        st.newLine() << "float knStart = " << knots << "[knotsOffs];";
+        st.newLine() << "float knEnd = " << knots << "[knotsOffs + knotsCnt - 1];";
+        st.newLine() << "float knStartY = " << coefs << "[coefsOffs + coefsSets * 2];";
+        st.newLine() << "float knEndY;";
+        st.newLine() << "{";
+        st.newLine() << "  float A = " << coefs << "[coefsOffs + coefsSets - 1];";
+        st.newLine() << "  float B = " << coefs << "[coefsOffs + coefsSets * 2 - 1];";
+        st.newLine() << "  float C = " << coefs << "[coefsOffs + coefsSets * 3 - 1];";
+        st.newLine() << "  float kn = " << knots << "[knotsOffs + knotsCnt - 2];";
+        st.newLine() << "  float t = knEnd - kn;";
+        st.newLine() << "  knEndY = ( A * t + B ) * t + C;";
+        st.newLine() << "}";
+
+        st.newLine() << "if (x <= knStartY)";
+        st.newLine() << "{";
+        st.newLine() << "  float B = " << coefs << "[coefsOffs + coefsSets];";
+        st.newLine() << "  float C = " << coefs << "[coefsOffs + coefsSets * 2];";
+        st.newLine() << "  return (x - C) / B + knStart;";
+        st.newLine() << "}";
+
+        st.newLine() << "else if (x >= knEndY)";
+        st.newLine() << "{";
+        st.newLine() << "  float A = " << coefs << "[coefsOffs + coefsSets - 1];";
+        st.newLine() << "  float B = " << coefs << "[coefsOffs + coefsSets * 2 - 1];";
+        st.newLine() << "  float C = " << coefs << "[coefsOffs + coefsSets * 3 - 1];";
+        st.newLine() << "  float kn = " << knots << "[knotsOffs + knotsCnt - 2];";
+        st.newLine() << "  float t = knEnd - kn;";
+        st.newLine() << "  float slope = 2. * A * t + B;";
+        st.newLine() << "  float offs = ( A * t + B ) * t + C;";
+        st.newLine() << "  return (x - offs) / slope + knEnd;";
+        st.newLine() << "}";
+
+        // else
+        st.newLine() << "int i = 0;";
+        st.newLine() << "for (i = 0; i < knotsCnt - 2; ++i)";
+        st.newLine() << "{";
+        st.newLine() << "  if (x < " << coefs << "[coefsOffs + coefsSets * 2 + i + 1])";
+        st.newLine() << "    break;";
+        st.newLine() << "}";
+
+        st.newLine() << "float A = " << coefs << "[coefsOffs + i];";
+        st.newLine() << "float B = " << coefs << "[coefsOffs + coefsSets + i];";
+        st.newLine() << "float C = " << coefs << "[coefsOffs + coefsSets * 2 + i];";
+        st.newLine() << "float kn = " << knots << "[knotsOffs + i];";
+        st.newLine() << "float C0 = C - x;";
+        st.newLine() << "float discrim = sqrt(B * B - 4. * A * C0);";
+        st.newLine() << "return kn + (-2. * C0) / (discrim + B);";
+    }
 }
 
 float GradingBSplineCurveImpl::KnotsCoefs::evalCurve(int c, float x) const
@@ -426,18 +495,77 @@ float GradingBSplineCurveImpl::KnotsCoefs::evalCurve(int c, float x) const
     }
     else
     {
-        int i = 0;
-        while (x < m_knotsArray[knotsOffs + i] ||
-               x > m_knotsArray[knotsOffs + i + 1])
+        int i;
+        for (i = 0; i < knotsCnt - 2; ++i)
         {
-            i++;
+            if (x < m_knotsArray[knotsOffs + i + 1])
+                break;
         }
         const float A  = m_coefsArray[coefsOffs + i];
-        const float B  = m_coefsArray[coefsOffs + i + coefsSets];
-        const float C  = m_coefsArray[coefsOffs + i + coefsSets * 2];
+        const float B  = m_coefsArray[coefsOffs + coefsSets + i];
+        const float C  = m_coefsArray[coefsOffs + coefsSets * 2 + i];
         const float kn = m_knotsArray[knotsOffs + i];
         const float t = x - kn;
         return (A * t + B) * t + C;
+    }
+}
+
+float GradingBSplineCurveImpl::KnotsCoefs::evalCurveRev(int c, float y) const
+{
+    const int coefsSets = m_coefsOffsetsArray[2 * c + 1] / 3;
+    if (coefsSets == 0)
+    {
+        return y;
+    }
+    const int coefsOffs = m_coefsOffsetsArray[2 * c];
+    const int knotsCnt = m_knotsOffsetsArray[2 * c + 1];
+    const int knotsOffs = m_knotsOffsetsArray[2 * c];
+
+    const float knStart = m_knotsArray[knotsOffs];
+    const float knEnd = m_knotsArray[knotsOffs + knotsCnt - 1];
+    const float knStartY = m_coefsArray[coefsOffs + coefsSets * 2];
+    float knEndY;
+    {
+        const float A  = m_coefsArray[coefsOffs + coefsSets - 1];
+        const float B  = m_coefsArray[coefsOffs + coefsSets * 2 - 1];
+        const float C  = m_coefsArray[coefsOffs + coefsSets * 3 - 1];
+        const float kn = m_knotsArray[knotsOffs + knotsCnt - 2];
+        const float t = knEnd - kn;
+        knEndY = (A * t + B) * t + C;
+    }
+
+    if (y <= knStartY)
+    {
+        const float B = m_coefsArray[coefsOffs + coefsSets];
+        const float C = m_coefsArray[coefsOffs + coefsSets * 2];
+        return (y - C) / B + knStart;
+    }
+    else if (y >= knEndY)
+    {
+        const float A  = m_coefsArray[coefsOffs + coefsSets - 1];
+        const float B  = m_coefsArray[coefsOffs + coefsSets * 2 - 1];
+        const float C  = m_coefsArray[coefsOffs + coefsSets * 3 - 1];
+        const float kn = m_knotsArray[knotsOffs + knotsCnt - 2];
+        const float t = knEnd - kn;
+        const float slope = 2.f * A * t + B;
+        const float offs = (A * t + B) * t + C;
+        return (y - offs) / slope + knEnd;
+    }
+    else
+    {
+        int i;
+        for (i = 0; i < knotsCnt - 2; ++i)
+        {
+            if (y < m_coefsArray[coefsOffs + coefsSets * 2 + i + 1])
+                break;
+        }
+        const float A  = m_coefsArray[coefsOffs + i];
+        const float B  = m_coefsArray[coefsOffs + coefsSets + i];
+        const float C  = m_coefsArray[coefsOffs + coefsSets * 2 + i];
+        const float kn = m_knotsArray[knotsOffs + i];
+        const float C0 = C - y;
+        const float discrim = sqrt(B * B - 4.f * A * C0);
+        return kn + (-2.f * C0) / (discrim + B);
     }
 }
 

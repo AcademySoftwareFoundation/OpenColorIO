@@ -1372,6 +1372,13 @@ void AddGTForwardShader(GpuShaderText & st, const GTProperties & props, GradingS
 void AddGTInverseShader(GpuShaderText & st, const GTProperties & props, GradingStyle style)
 {
 
+    if (style == GRADING_LIN)
+    {
+        // NB:  Although the linToLog and logToLin are correct inverses, the limits of
+        // floating-point arithmetic cause errors in the lowest bit of the round trip.
+        AddLinToLogShader(st);
+    }
+
     Add_SContrastRev_Shader(st, props, style);
 
     Add_WhiteBlackRev_Shader(M, true, st, props);
@@ -1399,8 +1406,15 @@ void AddGTInverseShader(GpuShaderText & st, const GTProperties & props, GradingS
     Add_MidsRev_Shader(G, st, props, style);
     Add_MidsRev_Shader(B, st, props, style);
 
+    if (style == GRADING_LIN)
+    {
+        AddLogToLinShader(st);
+    }
 
-//    throw Exception("GradingTone inverse GPU not implemented.");
+    // TODO: The grading controls at high values are able to push values above the max half-float
+    // at which point they overflow to infinity.  Currently the ACES view transforms make black for
+    // Inf but even if it is probably not desirable to output Inf under any circumstances.
+    st.newLine() << "outColor = min( outColor, 65504. );";
 }
 
 }

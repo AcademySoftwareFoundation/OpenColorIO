@@ -93,7 +93,8 @@ OCIO_ADD_TEST(GradingToneOpCPU, identity)
         std::string typeName = typeid(c).name();
         OCIO_CHECK_NE(std::string::npos, StringUtils::Find(typeName, "GradingToneRevOpCPU"));
     }
-    // TODO: implement inverse.
+    OCIO_CHECK_NO_THROW(op->apply(expected, res, numPixels));
+    ValidateImage(image, res, numPixels, __LINE__);
 
     gd = std::make_shared<OCIO::GradingToneOpData>(OCIO::GRADING_LIN);
     gdc = gd;
@@ -117,7 +118,8 @@ OCIO_ADD_TEST(GradingToneOpCPU, identity)
         std::string typeName = typeid(c).name();
         OCIO_CHECK_NE(std::string::npos, StringUtils::Find(typeName, "GradingToneLinearRevOpCPU"));
     }
-    // TODO: implement inverse.
+    OCIO_CHECK_NO_THROW(op->apply(expected, res, numPixels));
+    ValidateImage(image, res, numPixels, __LINE__);
 
     gd = std::make_shared<OCIO::GradingToneOpData>(OCIO::GRADING_VIDEO);
     gdc = gd;
@@ -141,7 +143,8 @@ OCIO_ADD_TEST(GradingToneOpCPU, identity)
         std::string typeName = typeid(c).name();
         OCIO_CHECK_NE(std::string::npos, StringUtils::Find(typeName, "GradingToneRevOpCPU"));
     }
-    // TODO: implement inverse.
+    OCIO_CHECK_NO_THROW(op->apply(expected, res, numPixels));
+    ValidateImage(image, res, numPixels, __LINE__);
 }
 
 namespace TS1
@@ -497,7 +500,6 @@ OCIO_ADD_TEST(GradingToneOpCPU, lin_midtones)
     gt->setValue(gtd);
     OCIO_CHECK_NO_THROW(op = OCIO::GetGradingToneCPURenderer(gtc));
     OCIO_CHECK_ASSERT(op);
-    // TODO: implement inverse.
-    //OCIO_CHECK_NO_THROW(op->apply(TS7::expected_32f, res, TS7::num_samples));
-    //ValidateImage(TS7::input_32f, res, TS7::num_samples, __LINE__);
+    OCIO_CHECK_NO_THROW(op->apply(TS7::expected_32f, res, TS7::num_samples));
+    ValidateImage(TS7::input_32f, res, TS7::num_samples, __LINE__);
 }

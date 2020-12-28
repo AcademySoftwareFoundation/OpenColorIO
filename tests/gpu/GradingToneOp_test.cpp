@@ -369,6 +369,16 @@ OCIO_ADD_GPU_TEST(GradingTone, style_lin_midtones_fwd_dynamic)
     GradingToneLinMidtones(test, OCIO::TRANSFORM_DIR_FORWARD, true);
 }
 
+OCIO_ADD_GPU_TEST(GradingTone, style_lin_midtones_rev)
+{
+    GradingToneLinMidtones(test, OCIO::TRANSFORM_DIR_INVERSE, false);
+}
+
+OCIO_ADD_GPU_TEST(GradingTone, style_lin_midtones_rev_dynamic)
+{
+    GradingToneLinMidtones(test, OCIO::TRANSFORM_DIR_INVERSE, true);
+}
+
 // TODO: add inverse tests.
 
 namespace
