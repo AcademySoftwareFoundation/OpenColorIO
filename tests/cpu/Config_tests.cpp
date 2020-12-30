@@ -1624,8 +1624,8 @@ const std::string SIMPLE_PROFILE_A =
 const std::string SIMPLE_PROFILE_DISPLAYS_LOOKS =
     "displays:\n"
     "  sRGB:\n"
-    "    - !<View> {name: Raw, colorspace: raw}\n"
-    "    - !<View> {name: Lnh, colorspace: lnh, looks: beauty}\n"
+    "    - !<View> {name: RawView, colorspace: raw}\n"
+    "    - !<View> {name: LnhView, colorspace: lnh, looks: beauty}\n"
     "\n"
     "active_displays: []\n"
     "active_views: []\n"
@@ -1649,6 +1649,15 @@ const std::string SIMPLE_PROFILE_CS =
     "    allocation: uniform\n"
     "\n"
     "  - !<ColorSpace>\n"
+    "    name: log\n"
+    "    family: \"\"\n"
+    "    equalitygroup: \"\"\n"
+    "    bitdepth: unknown\n"
+    "    isdata: false\n"
+    "    allocation: uniform\n"
+    "    from_reference: !<LogTransform> {base: 10}\n"
+    "\n"
+    "  - !<ColorSpace>\n"
     "    name: lnh\n"
     "    family: \"\"\n"
     "    equalitygroup: \"\"\n"
@@ -1665,6 +1674,37 @@ const std::string DEFAULT_RULES =
 
 const std::string PROFILE_V2_START = PROFILE_V2 + SIMPLE_PROFILE_A +
                                      DEFAULT_RULES + SIMPLE_PROFILE_B;
+}
+
+OCIO_ADD_TEST(Config, serialize_colorspace_displayview_transforms)
+{
+    // Validate that a ColorSpaceTransform and DisplayViewTransform are correctly serialized.
+    {
+        const std::string strEnd =
+            "    from_reference: !<GroupTransform>\n"
+            "      children:\n"
+            "        - !<ColorSpaceTransform> {src: raw, dst: log}\n"
+            "        - !<ColorSpaceTransform> {src: raw, dst: log, direction: inverse}\n"
+            "        - !<ColorSpaceTransform> {src: default, dst: log, data_bypass: false}\n"
+            "        - !<DisplayViewTransform> {src: raw, display: sRGB, view: RawView}\n"
+            "        - !<DisplayViewTransform> {src: default, display: sRGB, view: RawView, direction: inverse}\n"
+            "        - !<DisplayViewTransform> {src: log, display: sRGB, view: RawView, looks_bypass: true, data_bypass: false}\n";
+
+        const std::string str = PROFILE_V2_START + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+
+        OCIO::ConstConfigRcPtr config;
+        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OCIO_CHECK_NO_THROW(config->validate());
+
+        // Write the config.
+
+        std::stringstream ss;
+        OCIO_CHECK_NO_THROW(ss << *config.get());
+        OCIO_CHECK_EQUAL(ss.str(), str);
+    }
 }
 
 OCIO_ADD_TEST(Config, range_serialization)
@@ -3458,7 +3498,7 @@ OCIO_ADD_TEST(Config, unknown_key_error)
     OCIO::LogGuard g;
     OCIO_CHECK_NO_THROW(OCIO::Config::CreateFromStream(is));
     OCIO_CHECK_ASSERT(StringUtils::StartsWith(g.output(), 
-                     "[OpenColorIO Warning]: At line 47, unknown key 'dummyKey' in 'ColorSpace'."));
+                     "[OpenColorIO Warning]: At line 56, unknown key 'dummyKey' in 'ColorSpace'."));
 }
 
 OCIO_ADD_TEST(Config, grading_primary_serialization)
@@ -4414,7 +4454,7 @@ OCIO_ADD_TEST(Config, add_color_space)
     OCIO::ConfigRcPtr config;
     OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is)->createEditableCopy());
     OCIO_CHECK_NO_THROW(config->validate());
-    OCIO_CHECK_EQUAL(config->getNumColorSpaces(), 2);
+    OCIO_CHECK_EQUAL(config->getNumColorSpaces(), 3);
 
     OCIO::ColorSpaceRcPtr cs;
     OCIO_CHECK_NO_THROW(cs = OCIO::ColorSpace::Create());
@@ -4430,7 +4470,7 @@ OCIO_ADD_TEST(Config, add_color_space)
 
     OCIO_CHECK_EQUAL(config->getIndexForColorSpace(csName), -1);
     OCIO_CHECK_NO_THROW(config->addColorSpace(cs));
-    OCIO_CHECK_EQUAL(config->getIndexForColorSpace(csName), 2);
+    OCIO_CHECK_EQUAL(config->getIndexForColorSpace(csName), 3);
 
     const std::string res 
         = str
@@ -4450,7 +4490,7 @@ OCIO_ADD_TEST(Config, add_color_space)
     OCIO_CHECK_EQUAL(ss.str(), res);
 
     OCIO_CHECK_NO_THROW(config->removeColorSpace(csName));
-    OCIO_CHECK_EQUAL(config->getNumColorSpaces(), 2);
+    OCIO_CHECK_EQUAL(config->getNumColorSpaces(), 3);
     OCIO_CHECK_EQUAL(config->getIndexForColorSpace(csName), -1);
 
     OCIO_CHECK_NO_THROW(config->clearColorSpaces());
@@ -4486,13 +4526,13 @@ OCIO_ADD_TEST(Config, remove_color_space)
     OCIO::ConfigRcPtr config;
     OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is)->createEditableCopy());
     OCIO_CHECK_NO_THROW(config->validate());
-    OCIO_CHECK_EQUAL(config->getNumColorSpaces(), 3);
+    OCIO_CHECK_EQUAL(config->getNumColorSpaces(), 4);
 
     // Step 1 - Validate the remove.
 
-    OCIO_CHECK_EQUAL(config->getIndexForColorSpace("cs5"), 2);
+    OCIO_CHECK_EQUAL(config->getIndexForColorSpace("cs5"), 3);
     OCIO_CHECK_NO_THROW(config->removeColorSpace("cs5"));
-    OCIO_CHECK_EQUAL(config->getNumColorSpaces(), 2);
+    OCIO_CHECK_EQUAL(config->getNumColorSpaces(), 3);
     OCIO_CHECK_EQUAL(config->getIndexForColorSpace("cs5"), -1);
 
     // Step 2 - Validate some faulty removes.

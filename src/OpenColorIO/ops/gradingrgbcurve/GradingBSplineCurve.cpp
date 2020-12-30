@@ -34,12 +34,12 @@ GradingBSplineCurveRcPtr GradingBSplineCurve::Create(std::initializer_list<Gradi
 }
 
 GradingBSplineCurveImpl::GradingBSplineCurveImpl(size_t size)
-    : m_controlPoints(size, 0.f), m_slopesArray(size, 0.f)
+    : m_controlPoints(size), m_slopesArray(size, 0.f)
 {
 }
 
 GradingBSplineCurveImpl::GradingBSplineCurveImpl(const std::vector<GradingControlPoint> & controlPoints)
-    : m_controlPoints(controlPoints, 0.f), m_slopesArray(controlPoints.size(), 0.f)
+    : m_controlPoints(controlPoints), m_slopesArray(controlPoints.size(), 0.f)
 {
 }
 
@@ -60,7 +60,7 @@ size_t GradingBSplineCurveImpl::getNumControlPoints() const noexcept
 
 void GradingBSplineCurveImpl::setNumControlPoints(size_t size)
 {
-    m_controlPoints.resize(size, 0.f);
+    m_controlPoints.resize(size);
     m_slopesArray.resize(size, 0.f);
 }
 
