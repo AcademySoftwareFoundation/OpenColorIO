@@ -158,6 +158,26 @@ void GradingRGBCurveOpData::setStyle(GradingStyle style) noexcept
     }
 }
 
+float GradingRGBCurveOpData::getSlope(RGBCurveType c, size_t index) const
+{
+    ConstGradingBSplineCurveRcPtr curve = m_value->getValue()->getCurve(c);
+    return curve->getSlope(index);
+}
+
+void GradingRGBCurveOpData::setSlope(RGBCurveType c, size_t index, float slope)
+{
+    GradingRGBCurveRcPtr rgbcurve( m_value->getValue()->createEditableCopy() );
+    GradingBSplineCurveRcPtr curve = rgbcurve->getCurve(c);
+    curve->setSlope(index, slope);
+    m_value->setValue(rgbcurve);
+}
+
+bool GradingRGBCurveOpData::slopesAreDefault(RGBCurveType c) const
+{
+    ConstGradingBSplineCurveRcPtr curve = m_value->getValue()->getCurve(c);
+    return curve->slopesAreDefault();
+}
+
 TransformDirection GradingRGBCurveOpData::getDirection() const noexcept
 {
     return m_direction;

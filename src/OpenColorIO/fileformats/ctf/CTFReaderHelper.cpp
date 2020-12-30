@@ -2717,23 +2717,23 @@ void CTFReaderGradingCurveElt::end()
 
 //////////////////////////////////////////////////////////
 
-CTFReaderGradingCurveParamElt::CTFReaderGradingCurveParamElt(const std::string & name,
-                                                             ContainerEltRcPtr pParent,
-                                                             unsigned int xmlLineNumber,
-                                                             const std::string & xmlFile)
+CTFReaderGradingCurvePointsElt::CTFReaderGradingCurvePointsElt(const std::string & name,
+                                                              ContainerEltRcPtr pParent,
+                                                              unsigned int xmlLineNumber,
+                                                              const std::string & xmlFile)
     : XmlReaderPlainElt(name, pParent, xmlLineNumber, xmlFile)
 {
 }
 
-CTFReaderGradingCurveParamElt::~CTFReaderGradingCurveParamElt()
+CTFReaderGradingCurvePointsElt::~CTFReaderGradingCurvePointsElt()
 {
 }
 
-void CTFReaderGradingCurveParamElt::start(const char ** atts)
+void CTFReaderGradingCurvePointsElt::start(const char ** atts)
 {
-
 }
-void CTFReaderGradingCurveParamElt::end()
+
+void CTFReaderGradingCurvePointsElt::end()
 {
     if (m_data.size() % 2 != 0)
     {
@@ -2752,7 +2752,57 @@ void CTFReaderGradingCurveParamElt::end()
     }
 }
 
-void CTFReaderGradingCurveParamElt::setRawData(const char* s, size_t len, unsigned int xmlLine)
+void CTFReaderGradingCurvePointsElt::setRawData(const char* s, size_t len, unsigned int xmlLine)
+{
+    std::vector<float> data;
+
+    try
+    {
+        data = GetNumbers<float>(s, len);
+    }
+    catch (Exception & ce)
+    {
+        ThrowM(*this, "Illegal '", getTypeName(), "' values ",
+               TruncateString(s, len), " [", ce.what(), "]");
+    }
+    m_data.insert(m_data.end(), data.begin(), data.end());
+}
+
+//////////////////////////////////////////////////////////
+
+CTFReaderGradingCurveSlopesElt::CTFReaderGradingCurveSlopesElt(const std::string & name,
+                                                               ContainerEltRcPtr pParent,
+                                                               unsigned int xmlLineNumber,
+                                                               const std::string & xmlFile)
+    : XmlReaderPlainElt(name, pParent, xmlLineNumber, xmlFile)
+{
+}
+
+CTFReaderGradingCurveSlopesElt::~CTFReaderGradingCurveSlopesElt()
+{
+}
+
+void CTFReaderGradingCurveSlopesElt::start(const char ** atts)
+{
+}
+
+void CTFReaderGradingCurveSlopesElt::end()
+{
+    auto pCurve = dynamic_cast<CTFReaderGradingCurveElt*>(getParent().get());
+    const size_t numVals = m_data.size();
+    auto curve = pCurve->getCurve();
+    const size_t numCtPnts = curve->getNumControlPoints();
+    if (numVals != numCtPnts)
+    {
+        throwMessage("Number of slopes must match number of control points.");
+    }
+    for (size_t i = 0; i < numVals; ++i)
+    {
+        curve->setSlope(i, m_data[i]);
+    }
+}
+
+void CTFReaderGradingCurveSlopesElt::setRawData(const char* s, size_t len, unsigned int xmlLine)
 {
     std::vector<float> data;
 

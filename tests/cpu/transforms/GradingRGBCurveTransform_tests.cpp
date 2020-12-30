@@ -86,6 +86,14 @@ OCIO_ADD_TEST(GradingRGBCurveTransform, basic)
                           "has a x coordinate '0.2' that is less from previous control "
                           "point x cooordinate '0.5'.");
 
+    // Check slopes.
+    gct->setSlope(OCIO::RGB_BLUE, 2, 0.9f);
+    OCIO_CHECK_NO_THROW(gct->validate());
+    OCIO_CHECK_EQUAL(gct->getSlope(OCIO::RGB_BLUE, 2), 0.9f);
+    OCIO_CHECK_THROW_WHAT(gct->setSlope(OCIO::RGB_BLUE, 4, 2.f), OCIO::Exception,
+                          "There are '3' control points. '4' is invalid.");
+    OCIO_CHECK_ASSERT(gct->slopesAreDefault(OCIO::RGB_GREEN));
+    OCIO_CHECK_ASSERT(!gct->slopesAreDefault(OCIO::RGB_BLUE));
 }
 
 OCIO_ADD_TEST(GradingRGBCurveTransform, processor_several_transforms)

@@ -715,14 +715,32 @@ private:
     GradingBSplineCurveRcPtr m_curve;
 };
 
-class CTFReaderGradingCurveParamElt : public XmlReaderPlainElt
+class CTFReaderGradingCurvePointsElt : public XmlReaderPlainElt
 {
 public:
-    CTFReaderGradingCurveParamElt(const std::string & name,
-                                  ContainerEltRcPtr pParent,
-                                  unsigned int xmlLocation,
-                                  const std::string & xmlFile);
-    ~CTFReaderGradingCurveParamElt();
+    CTFReaderGradingCurvePointsElt(const std::string & name,
+                                   ContainerEltRcPtr pParent,
+                                   unsigned int xmlLocation,
+                                   const std::string & xmlFile);
+    ~CTFReaderGradingCurvePointsElt();
+
+    void start(const char ** atts);
+    void end();
+
+    void setRawData(const char* str, size_t len, unsigned int xmlLine);
+
+private:
+    std::vector<float> m_data;
+};
+
+class CTFReaderGradingCurveSlopesElt : public XmlReaderPlainElt
+{
+public:
+    CTFReaderGradingCurveSlopesElt(const std::string & name,
+                                   ContainerEltRcPtr pParent,
+                                   unsigned int xmlLocation,
+                                   const std::string & xmlFile);
+    ~CTFReaderGradingCurveSlopesElt();
 
     void start(const char ** atts);
     void end();

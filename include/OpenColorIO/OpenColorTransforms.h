@@ -519,6 +519,9 @@ public:
     virtual void setNumControlPoints(size_t size) = 0;
     virtual const GradingControlPoint & getControlPoint(size_t index) const = 0;
     virtual GradingControlPoint & getControlPoint(size_t index) = 0;
+    virtual float getSlope(size_t index) const = 0;
+    virtual void setSlope(size_t index, float slope) = 0;
+    virtual bool slopesAreDefault() const = 0;
     virtual void validate() const = 0;
 
     GradingBSplineCurve(const GradingBSplineCurve &) = delete;
@@ -1210,6 +1213,18 @@ public:
     virtual const ConstGradingRGBCurveRcPtr getValue() const = 0;
     /// Throws if value is not valid.
     virtual void setValue(const ConstGradingRGBCurveRcPtr & values) = 0;
+
+    /**
+     * It is possible to provide a desired slope value for each control point.  The number of slopes is 
+     * always the same as the number of control points and so the control points must be set before 
+     * setting the slopes.  The slopes are primarily intended for use by config authors looking to match
+     * a specific shape with as few control points as possible, they are not intended to be exposed to
+     * a user interface for direct manipulation.  When a curve is being generated for creative purposes
+     * it is better to let OCIO calculate the slopes automatically.
+     */
+    virtual float getSlope(RGBCurveType c, size_t index) const = 0;
+    virtual void setSlope(RGBCurveType c, size_t index, float slope) = 0;
+    virtual bool slopesAreDefault(RGBCurveType c) const = 0;
 
     /**
      * The scene-linear grading style applies a lin-to-log transform to the pixel

@@ -133,3 +133,44 @@ class GradingRGBCurveTransformTest(unittest.TestCase):
         self.assertAlmostEqual(pixel[0], pixel2[0], delta=1e-5)
         self.assertAlmostEqual(pixel[1], pixel2[1], delta=1e-5)
         self.assertAlmostEqual(pixel[2], pixel2[2], delta=1e-5)
+
+    def test_apply_with_slopes(self):
+        """
+        Test applying transform with supplied slopes.
+        """
+
+        gct = OCIO.GradingRGBCurveTransform(OCIO.GRADING_LOG)
+        vals = OCIO.GradingRGBCurve(OCIO.GRADING_LOG)
+        vals.master = OCIO.GradingBSplineCurve([
+            -5.26017743, -4.,
+            -3.75502745, -3.57868829,
+            -2.24987747, -1.82131329,
+            -0.74472749,  0.68124124,
+             1.06145248,  2.87457742,
+             2.86763245,  3.83406206,
+             4.67381243,  4.
+        ])
+        gct.setValue(vals)
+        self.assertEqual(gct.slopesAreDefault(OCIO.RGB_MASTER), True)
+
+        slopes = [ 0.,  0.55982688,  1.77532247,  1.55,  0.8787017,  0.18374463,  0. ]
+        for i in range(0, len(slopes)):
+            gct.setSlope( OCIO.RGB_MASTER, i, slopes[i] )
+
+        gct.validate()
+        self.assertAlmostEqual(1.55, gct.getSlope(OCIO.RGB_MASTER, 3), delta=1e-5)
+        self.assertEqual(gct.slopesAreDefault(OCIO.RGB_MASTER), False)
+        self.assertEqual(gct.slopesAreDefault(OCIO.RGB_RED), True)
+
+        cfg = OCIO.Config().CreateRaw()
+        proc = cfg.getProcessor(gct)
+        cpu = proc.getDefaultCPUProcessor()
+
+        # Apply the transform and keep the result.
+        pixel = [ -3., -1., 1.]
+        rgb1 = cpu.applyRGB(pixel)
+
+        # Test that the slopes were used (the values are significantly different without slopes).
+        self.assertAlmostEqual(-2.92582282, rgb1[0], delta=1e-5)
+        self.assertAlmostEqual( 0.28069129, rgb1[1], delta=1e-5)
+        self.assertAlmostEqual( 2.81987724, rgb1[2], delta=1e-5)

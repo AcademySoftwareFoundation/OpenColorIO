@@ -65,6 +65,12 @@ void bindPyGradingRGBCurveTransform(py::module & m)
              DOC(GradingRGBCurveTransform, getValue))
         .def("setValue", &GradingRGBCurveTransform::setValue, "values"_a, 
              DOC(GradingRGBCurveTransform, setValue))
+        .def("getSlope", &GradingRGBCurveTransform::getSlope, "channel"_a, "index"_a,
+             DOC(GradingRGBCurveTransform, getSlope))
+        .def("setSlope", &GradingRGBCurveTransform::setSlope, "channel"_a, "index"_a, "slope"_a, 
+             DOC(GradingRGBCurveTransform, setSlope))
+        .def("slopesAreDefault", &GradingRGBCurveTransform::slopesAreDefault, "channel"_a,
+             DOC(GradingRGBCurveTransform, slopesAreDefault))
         .def("getBypassLinToLog", &GradingRGBCurveTransform::getBypassLinToLog, 
              DOC(GradingRGBCurveTransform, getBypassLinToLog))
         .def("setBypassLinToLog", &GradingRGBCurveTransform::setBypassLinToLog, "bypass"_a, 

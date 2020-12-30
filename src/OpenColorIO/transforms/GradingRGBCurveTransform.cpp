@@ -94,6 +94,21 @@ void GradingRGBCurveTransformImpl::setValue(const ConstGradingRGBCurveRcPtr & va
     data().setValue(values);
 }
 
+float GradingRGBCurveTransformImpl::getSlope(RGBCurveType c, size_t index) const
+{
+    return data().getSlope(c, index);
+}
+
+void GradingRGBCurveTransformImpl::setSlope(RGBCurveType c, size_t index, float slope)
+{
+    data().setSlope(c, index, slope);
+}
+
+bool GradingRGBCurveTransformImpl::slopesAreDefault(RGBCurveType c) const
+{
+    return data().slopesAreDefault(c);
+}
+
 bool GradingRGBCurveTransformImpl::getBypassLinToLog() const
 {
     return data().getBypassLinToLog();

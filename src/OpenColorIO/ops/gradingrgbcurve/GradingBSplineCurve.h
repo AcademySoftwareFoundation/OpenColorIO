@@ -26,11 +26,16 @@ public:
     void setNumControlPoints(size_t size) override;
     const GradingControlPoint & getControlPoint(size_t index) const override;
     GradingControlPoint & getControlPoint(size_t index) override;
+    float getSlope(size_t index) const override;
+    void setSlope(size_t index, float slope) override;
+    bool slopesAreDefault() const override;
     void validate() const override;
 
     bool isIdentity() const;
 
-    // Holds knots and coefs for a set of curves. Used to evaluate a set of curves.
+    // The KnotsCoefs struct is used when evaluating the curves.  Unlike the GradingBSplineCurve
+    // class, which is for a single curve, the KnotsCoefs struct is something used by the
+    // DynamicPropertyGradingRGBCurve to hold the parameters needed to evaluate _all_ the curves.
     //
     // For optimization and reusability purposes, the renderers will expect all of the curve data
     // to be packed in arrays. The curve data will be packed in the order of the curve Type enum.
@@ -116,6 +121,7 @@ private:
     void validateIndex(size_t index) const;
 
     std::vector<GradingControlPoint> m_controlPoints;
+    std::vector<float> m_slopesArray;  // Optional slope values for the control points.
 };
 
 bool IsGradingCurveIdentity(const ConstGradingBSplineCurveRcPtr & curve);

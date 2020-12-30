@@ -3845,7 +3845,7 @@ OCIO_ADD_TEST(Config, grading_rgbcurve_serialization)
             "          style: video\n"
             "          red: {control_points: [-0.2, 0, 0.5, 0.5, 1.2, 1.5]}\n"
             "          green: {control_points: [0, 0, 0.2, 0.5, 1, 1.5]}\n"
-            "          blue: {control_points: [0, 0, 0.1, 0.5, 1, 1.5]}\n"
+            "          blue: {control_points: [0, 0, 0.1, 0.5, 1, 1.5], slopes: [0, 1, 1.1]}\n"
             "          master: {control_points: [-1, -1, 0, 0.1, 0.5, 0.6, 1, 1.1]}\n"
             "          direction: inverse\n";
 
@@ -3863,6 +3863,22 @@ OCIO_ADD_TEST(Config, grading_rgbcurve_serialization)
         std::stringstream ss;
         OCIO_CHECK_NO_THROW(ss << *config.get());
         OCIO_CHECK_EQUAL(ss.str(), str);
+    }
+
+    {
+        const std::string strEnd =
+            "    from_reference: !<GroupTransform>\n"
+            "      children:\n"
+            "        - !<GradingRGBCurveTransform>\n"
+            "          style: log\n"
+            "          blue: {control_points: [0, 0, 0.1, 0.5, 1, 1.5], slopes: [0, 1, 1.1, 1]}\n";
+        const std::string str = PROFILE_V2_START + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+
+        OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is), OCIO::Exception,
+                              "Number of slopes must match number of control points");
     }
 }
 

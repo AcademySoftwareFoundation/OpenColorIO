@@ -34,12 +34,12 @@ GradingBSplineCurveRcPtr GradingBSplineCurve::Create(std::initializer_list<Gradi
 }
 
 GradingBSplineCurveImpl::GradingBSplineCurveImpl(size_t size)
-    : m_controlPoints(size)
+    : m_controlPoints(size, 0.f), m_slopesArray(size, 0.f)
 {
 }
 
 GradingBSplineCurveImpl::GradingBSplineCurveImpl(const std::vector<GradingControlPoint> & controlPoints)
-    : m_controlPoints(controlPoints)
+    : m_controlPoints(controlPoints, 0.f), m_slopesArray(controlPoints.size(), 0.f)
 {
 }
 
@@ -47,6 +47,7 @@ GradingBSplineCurveRcPtr GradingBSplineCurveImpl::createEditableCopy() const
 {
     auto copy = std::make_shared<GradingBSplineCurveImpl>(0);
     copy->m_controlPoints = m_controlPoints;
+    copy->m_slopesArray = m_slopesArray;
     GradingBSplineCurveRcPtr res;
     res = copy;
     return res;
@@ -59,7 +60,8 @@ size_t GradingBSplineCurveImpl::getNumControlPoints() const noexcept
 
 void GradingBSplineCurveImpl::setNumControlPoints(size_t size)
 {
-    m_controlPoints.resize(size);
+    m_controlPoints.resize(size, 0.f);
+    m_slopesArray.resize(size, 0.f);
 }
 
 void GradingBSplineCurveImpl::validateIndex(size_t index) const
@@ -85,12 +87,40 @@ GradingControlPoint & GradingBSplineCurveImpl::getControlPoint(size_t index)
     return m_controlPoints[index];
 }
 
+float GradingBSplineCurveImpl::getSlope(size_t index) const
+{
+    validateIndex(index);
+    return m_slopesArray[index];
+}
+
+void GradingBSplineCurveImpl::setSlope(size_t index, float slope)
+{
+    validateIndex(index);
+    m_slopesArray[index] = slope;
+}
+
+bool GradingBSplineCurveImpl::slopesAreDefault() const
+{
+    for (size_t i = 0; i < m_slopesArray.size(); ++i)
+    {
+        if (m_slopesArray[i] != 0.f)
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
 void GradingBSplineCurveImpl::validate() const
 {
     const size_t numPoints = m_controlPoints.size();
     if (numPoints < 2)
     {
         throw Exception("There must be at least 2 control points.");
+    }
+    if (numPoints != m_slopesArray.size())
+    {
+        throw Exception("The slopes array must be the same length as the control points.");
     }
 
     // Make sure the points are non-decreasing.
@@ -119,6 +149,10 @@ bool GradingBSplineCurveImpl::isIdentity() const
             return false;
         }
     }
+    if (!slopesAreDefault())
+    {
+        return false;
+    }
     return true;
 }
 
@@ -135,8 +169,7 @@ bool IsGradingCurveIdentity(const ConstGradingBSplineCurveRcPtr & curve)
 namespace
 {
 
-void EstimateSlopes(const std::vector<GradingControlPoint> & ctrlPnts,
-                    std::vector<float> & slopes)
+void EstimateSlopes(const std::vector<GradingControlPoint> & ctrlPnts, std::vector<float> & slopes)
 {
     std::vector<float> secantSlope;
     std::vector<float> secantLen;
@@ -307,7 +340,16 @@ void GradingBSplineCurveImpl::computeKnotsAndCoefs(KnotsCoefs & knotsCoefs, int 
         std::vector<float> coefsC;
         std::vector<float> slopes;
 
-        EstimateSlopes(m_controlPoints, slopes);
+        if ( !slopesAreDefault() && (m_slopesArray.size() == m_controlPoints.size()) )
+        {
+            // If the user-supplied slopes are non-zero, use those.
+            slopes = m_slopesArray;
+        }
+        else
+        {
+            // Otherwise, estimate slopes based on the control points.
+            EstimateSlopes(m_controlPoints, slopes);
+        }
 
         FitSpline(m_controlPoints, slopes, knots, coefsA, coefsB, coefsC);
 
