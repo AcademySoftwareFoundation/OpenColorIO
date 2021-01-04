@@ -26,15 +26,13 @@ void bindPyCDLTransform(py::module & m)
 
         .def(py::init(&CDLTransform::Create), 
              DOC(CDLTransform, Create))
-        .def(py::init([](const std::string & xml, TransformDirection dir) 
+        .def(py::init([](TransformDirection dir) 
             {
                 CDLTransformRcPtr p = CDLTransform::Create();
-                if (!xml.empty()) { p->setXML(xml.c_str()); }
                 p->setDirection(dir);
                 p->validate();
                 return p;
             }), 
-             "xml"_a,
              "direction"_a = DEFAULT->getDirection(),
              DOC(CDLTransform, Create))
         .def(py::init([](const std::array<double, 3> & slope,
@@ -51,7 +49,7 @@ void bindPyCDLTransform(py::module & m)
                 p->setPower(power.data());
                 p->setSat(sat);
                 if (!id.empty())   { p->setID(id.c_str()); }
-                if (!desc.empty()) { p->setDescription(desc.c_str()); }
+                if (!desc.empty()) { p->setFirstSOPDescription(desc.c_str()); }
                 p->setDirection(dir);
                 p->validate();
                 return p;
@@ -61,12 +59,17 @@ void bindPyCDLTransform(py::module & m)
              "power"_a = DEFAULT_POWER,
              "sat"_a = DEFAULT->getSat(),
              "id"_a = DEFAULT->getID(),
-             "description"_a = DEFAULT->getDescription(),
+             "description"_a = DEFAULT->getFirstSOPDescription(),
              "direction"_a = DEFAULT->getDirection(),
              DOC(CDLTransform, Create))
 
-        .def_static("CreateFromFile", &CDLTransform::CreateFromFile, "src"_a, "id"_a, 
+        .def_static("CreateFromFile", &CDLTransform::CreateFromFile,
+                    "src"_a.none(false), "id"_a.none(false),
                     DOC(CDLTransform, CreateFromFile))
+
+        .def_static("CreateGroupFromFile", &CDLTransform::CreateGroupFromFile,
+                    "src"_a.none(false),
+                    DOC(CDLTransform, CreateGroupFromFile))
 
         .def("getFormatMetadata", 
              (FormatMetadata & (CDLTransform::*)()) &CDLTransform::getFormatMetadata,
@@ -78,12 +81,6 @@ void bindPyCDLTransform(py::module & m)
              DOC(CDLTransform, equals))
         .def("getStyle", &CDLTransform::getStyle, 
              DOC(CDLTransform, getStyle))
-        .def("setStyle", &CDLTransform::setStyle, "style"_a, 
-             DOC(CDLTransform, setStyle))
-        .def("getXML", &CDLTransform::getXML, 
-             DOC(CDLTransform, getXML))
-        .def("setXML", &CDLTransform::setXML, "xml"_a, 
-             DOC(CDLTransform, setXML))
         .def("getSlope", [](ConstCDLTransformRcPtr self)
             {
                 std::array<double, 3> rgb;
@@ -147,14 +144,15 @@ void bindPyCDLTransform(py::module & m)
                 return rgb;
             }, 
              DOC(CDLTransform, getSatLumaCoefs))
-        .def("getID", &CDLTransform::getID, 
+        .def("getID", &CDLTransform::getID,
              DOC(CDLTransform, getID))
-        .def("setID", &CDLTransform::setID, "id"_a, 
+        .def("setID", &CDLTransform::setID, "id"_a.none(false),
              DOC(CDLTransform, setID))
-        .def("getDescription", &CDLTransform::getDescription, 
-             DOC(CDLTransform, getDescription))
-        .def("setDescription", &CDLTransform::setDescription,  "description"_a, 
-             DOC(CDLTransform, setDescription));
+        .def("getFirstSOPDescription", &CDLTransform::getFirstSOPDescription,
+             DOC(CDLTransform, getFirstSOPDescription))
+        .def("setFirstSOPDescription", &CDLTransform::setFirstSOPDescription,
+             "description"_a.none(false),
+             DOC(CDLTransform, setFirstSOPDescription));
 
     defStr(clsCDLTransform);
 }

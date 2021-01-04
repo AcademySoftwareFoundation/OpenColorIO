@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-#include <fstream>
-#include <sstream>
 
 #include "PyOpenColorIO.h"
 #include "PyUtils.h"
@@ -15,13 +13,10 @@ namespace
 
 enum ProcessorIterator
 {
-    IT_WRITE_FORMAT = 0,
-    IT_TRANSFORM_FORMAT_METADATA
+    IT_TRANSFORM_FORMAT_METADATA = 0
 };
 
-using WriteFormatIterator             = PyIterator<ProcessorRcPtr, IT_WRITE_FORMAT>;
-using TransformFormatMetadataIterator = PyIterator<ProcessorRcPtr, 
-                                                   IT_TRANSFORM_FORMAT_METADATA>;
+using TransformFormatMetadataIterator = PyIterator<ProcessorRcPtr, IT_TRANSFORM_FORMAT_METADATA>;
 
 } // namespace
 
@@ -36,16 +31,7 @@ void bindPyProcessor(py::module & m)
         py::class_<TransformFormatMetadataIterator>(
             clsProcessor, "TransformFormatMetadataIterator");
 
-    auto clsWriteFormatIterator = 
-        py::class_<WriteFormatIterator>(
-            clsProcessor, "WriteFormatIterator");
-
     clsProcessor
-        .def_static("getWriteFormats", []() 
-            { 
-                return WriteFormatIterator(nullptr); 
-            })
-
         .def("isNoOp", &Processor::isNoOp,
              DOC(Processor, isNoOp))
         .def("hasChannelCrosstalk", &Processor::hasChannelCrosstalk,
@@ -63,23 +49,6 @@ void bindPyProcessor(py::module & m)
             })
         .def("createGroupTransform", &Processor::createGroupTransform,
              DOC(Processor, createGroupTransform))
-        .def("write", [](ProcessorRcPtr & self, 
-                         const std::string & formatName, 
-                         const std::string & fileName) 
-            {
-                std::ofstream f(fileName.c_str());
-                self->write(formatName.c_str(), f);
-                f.close();
-            }, 
-             "formatName"_a, "fileName"_a)
-        .def("write", [](ProcessorRcPtr & self, const std::string & formatName) 
-            {
-                std::ostringstream os;
-                self->write(formatName.c_str(), os);
-                return os.str();
-            }, 
-             "formatName"_a,
-             DOC(Processor, write))
         .def("getDynamicProperty", &Processor::getDynamicProperty, "type"_a,
              DOC(Processor, getDynamicProperty))
         .def("hasDynamicProperty",
@@ -144,28 +113,5 @@ void bindPyProcessor(py::module & m)
                 return it.m_obj->getTransformFormatMetadata(i);
             }, 
              py::return_value_policy::reference_internal);
-
-    clsWriteFormatIterator
-        .def("__len__", [](WriteFormatIterator & it) 
-            { 
-                return Processor::getNumWriteFormats(); 
-            })
-        .def("__getitem__", [](WriteFormatIterator & it, int i) 
-            { 
-                it.checkIndex(i, Processor::getNumWriteFormats());
-                return py::make_tuple(Processor::getFormatNameByIndex(i), 
-                                      Processor::getFormatExtensionByIndex(i));
-            })
-        .def("__iter__", [](WriteFormatIterator & it) -> WriteFormatIterator & 
-            { 
-                return it; 
-            })
-        .def("__next__", [](WriteFormatIterator & it)
-            {
-                int i = it.nextIndex(Processor::getNumWriteFormats());
-                return py::make_tuple(Processor::getFormatNameByIndex(i), 
-                                      Processor::getFormatExtensionByIndex(i));
-            });
 }
-
 } // namespace OCIO_NAMESPACE

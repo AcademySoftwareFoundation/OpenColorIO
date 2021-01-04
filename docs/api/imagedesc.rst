@@ -9,13 +9,13 @@ ImageDesc
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_autostride.rst
-
       .. include:: python/${PYDIR}/pyopencolorio_imagedesc.rst
 
-   .. group-tab:: C++
+      .. py:data:: AutoStride
+         :module: PyOpenColorIO
+         :type: int
 
-      .. doxygenvariable:: ${OCIO_NAMESPACE}::AutoStride
+   .. group-tab:: C++
 
       .. doxygenclass:: ${OCIO_NAMESPACE}::ImageDesc
          :members:
@@ -25,6 +25,8 @@ ImageDesc
 
       .. doxygentypedef:: ${OCIO_NAMESPACE}::ConstImageDescRcPtr
       .. doxygentypedef:: ${OCIO_NAMESPACE}::ImageDescRcPtr
+
+      .. doxygenvariable:: ${OCIO_NAMESPACE}::AutoStride
 
 PackedImageDesc
 ***************
