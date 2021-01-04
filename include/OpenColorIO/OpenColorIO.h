@@ -2014,28 +2014,12 @@ public:
     const FormatMetadata & getTransformFormatMetadata(int index) const;
 
     /**
-     * Return a \ref GroupTransform that contains a
-     * copy of the transforms that comprise the processor.
-     * (Changes to it will not modify the original processor.)
+     * Return a \ref GroupTransform that contains a copy of the transforms that comprise the
+     * processor. (Changes to it will not modify the original processor.) Note that the
+     * GroupTransform::write method may be used to serialize a Processor.  Serializing to
+     * CTF format is a useful technique for debugging Processor contents.
      */
     GroupTransformRcPtr createGroupTransform() const;
-
-    /**
-     * Write the transforms comprising the processor to the stream.
-     * Writing (as opposed to Baking) is a lossless process. An exception is thrown
-     * if the processor cannot be losslessly written to the specified file format.
-     */
-    void write(const char * formatName, std::ostream & os) const;
-
-    /// Get the number of writers.
-    static int getNumWriteFormats();
-
-    /**
-     * Get the writer at index, return empty string if
-     * an invalid index is specified.
-     */
-    static const char * getFormatNameByIndex(int index);
-    static const char * getFormatExtensionByIndex(int index);
 
     /**
      * The returned pointer may be used to set the default value of any dynamic

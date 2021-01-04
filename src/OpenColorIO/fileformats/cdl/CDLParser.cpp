@@ -14,11 +14,6 @@
 namespace OCIO_NAMESPACE
 {
 
-static constexpr char CDL_TAG_COLOR_DECISION_LIST[] = "ColorDecisionList";
-static constexpr char CDL_TAG_COLOR_CORRECTION_COLLECTION[] = "ColorCorrectionCollection";
-static constexpr char CDL_TAG_COLOR_DECISION[] = "ColorDecision";
-static constexpr char CDL_TAG_COLOR_CORRECTION[] = "ColorCorrection";
-
 class CDLParser::Impl
 {
 public:
@@ -977,10 +972,10 @@ void CDLParser::getCDLTransforms(CDLTransformMap & transformMap,
     const CDLTransformVec& pTransformList = m_impl->getCDLParsingInfo()->m_transforms;
     for (size_t i = 0; i < pTransformList.size(); ++i)
     {
-        const CDLTransformRcPtr& pTransform = pTransformList.at(i);
+        const CDLTransformImplRcPtr& pTransform = pTransformList.at(i);
         transformVec.push_back(pTransform);
 
-        const std::string id = pTransform->getID();
+        const std::string & id = pTransform->data().getID();
         if (!id.empty())
         {
             CDLTransformMap::iterator iter = transformMap.find(id);
@@ -999,7 +994,7 @@ void CDLParser::getCDLTransforms(CDLTransformMap & transformMap,
     metadata = m_impl->getCDLParsingInfo()->m_metadata;
 }
 
-void CDLParser::getCDLTransform(CDLTransformRcPtr & transform) const
+void CDLParser::getCDLTransform(CDLTransformImplRcPtr & transform) const
 {
     const CDLTransformVec& pTransformList = m_impl->getCDLParsingInfo()->m_transforms;
     if (pTransformList.empty())

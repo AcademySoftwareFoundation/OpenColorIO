@@ -18,7 +18,7 @@
    .. py:method:: Processor.createGroupTransform(self: PyOpenColorIO.Processor) -> PyOpenColorIO.GroupTransform
       :module: PyOpenColorIO
 
-      Return a :ref:`GroupTransform` that contains a copy of the transforms that comprise the processor. (Changes to it will not modify the original processor.)
+      Return a :ref:`GroupTransform` that contains a copy of the transforms that comprise the processor. (Changes to it will not modify the original processor.) Note that the :ref:`GroupTransform::write` method may be used to serialize a :ref:`Processor`. Serializing to CTF format is a useful technique for debugging :ref:`Processor` contents.
 
 
    .. py:method:: Processor.getCacheID(self: PyOpenColorIO.Processor) -> str
@@ -109,11 +109,6 @@
       :module: PyOpenColorIO
 
 
-   .. py:method:: Processor.getWriteFormats() -> PyOpenColorIO.Processor.WriteFormatIterator
-      :module: PyOpenColorIO
-      :staticmethod:
-
-
    .. py:method:: Processor.hasChannelCrosstalk(self: PyOpenColorIO.Processor) -> bool
       :module: PyOpenColorIO
 
@@ -138,18 +133,6 @@
       :module: PyOpenColorIO
 
 
-   .. py:method:: Processor.write(*args, **kwargs)
-      :module: PyOpenColorIO
-
-      Overloaded function.
-
-      1. write(self: PyOpenColorIO.Processor, formatName: str, fileName: str) -> None
-
-      2. write(self: PyOpenColorIO.Processor, formatName: str) -> str
-
-      Write the transforms comprising the processor to the stream. Writing (as opposed to Baking) is a lossless process. An exception is thrown if the processor cannot be losslessly written to the specified file format.
-
-
 .. py:class:: TransformFormatMetadataIterator
    :module: PyOpenColorIO.Processor
 
@@ -167,25 +150,5 @@
 
 
    .. py:method:: TransformFormatMetadataIterator.__next__(self: PyOpenColorIO.Processor.TransformFormatMetadataIterator) -> PyOpenColorIO.FormatMetadata
-      :module: PyOpenColorIO.Processor
-
-
-.. py:class:: WriteFormatIterator
-   :module: PyOpenColorIO.Processor
-
-
-   .. py:method:: WriteFormatIterator.__getitem__(self: PyOpenColorIO.Processor.WriteFormatIterator, arg0: int) -> tuple
-      :module: PyOpenColorIO.Processor
-
-
-   .. py:method:: WriteFormatIterator.__iter__(self: PyOpenColorIO.Processor.WriteFormatIterator) -> PyOpenColorIO.Processor.WriteFormatIterator
-      :module: PyOpenColorIO.Processor
-
-
-   .. py:method:: WriteFormatIterator.__len__(self: PyOpenColorIO.Processor.WriteFormatIterator) -> int
-      :module: PyOpenColorIO.Processor
-
-
-   .. py:method:: WriteFormatIterator.__next__(self: PyOpenColorIO.Processor.WriteFormatIterator) -> tuple
       :module: PyOpenColorIO.Processor
 
