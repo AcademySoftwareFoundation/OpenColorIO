@@ -38,6 +38,9 @@ public:
     const char * getCategory(int index) const noexcept override;
     void clearCategories() noexcept override;
 
+    const char * getEncoding() const noexcept override;
+    void setEncoding(const char * encoding) noexcept override;
+
     ConstTransformRcPtr getTransform(TransformDirection dir) const override;
     void setTransform(const ConstTransformRcPtr & transform, TransformDirection dir) override;
 
@@ -56,6 +59,7 @@ private:
     std::string m_family;
     std::string m_description;
     TokensManager m_categories;
+    std::string m_encoding;
 };
 
 ConstTransformRcPtr GetTransform(const ConstNamedTransformRcPtr & src,

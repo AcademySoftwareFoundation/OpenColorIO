@@ -38,9 +38,11 @@ import AllocationTransformTest
 import BuiltinTransformRegistryTest
 import BuiltinTransformTest
 import CDLTransformTest
+import ColorSpaceHelpersTest
 import ColorSpaceTest
 import ColorSpaceTransformTest
 import ConfigTest
+import DisplayViewHelpersTest
 import DisplayViewTransformTest
 import ExponentTransformTest
 import ExponentWithLinearTransformTest
@@ -53,8 +55,10 @@ import GradingPrimaryTransformTest
 import GradingRGBCurveTransformTest
 import GradingToneTransformTest
 import GroupTransformTest
+import LegacyViewingPipelineTest
 import LogTransformTest
 import LookTest
+import MixingHelpersTest
 import NamedTransformTest
 import OpenColorIOTest
 import ViewingRulesTest
@@ -82,9 +86,11 @@ def suite():
     suite.addTest(loader.loadTestsFromModule(BuiltinTransformRegistryTest))
     suite.addTest(loader.loadTestsFromModule(BuiltinTransformTest))
     suite.addTest(loader.loadTestsFromModule(CDLTransformTest))
+    suite.addTest(loader.loadTestsFromModule(ColorSpaceHelpersTest))
     suite.addTest(loader.loadTestsFromModule(ColorSpaceTest))
     suite.addTest(loader.loadTestsFromModule(ColorSpaceTransformTest))
     suite.addTest(loader.loadTestsFromModule(ConfigTest))
+    suite.addTest(loader.loadTestsFromModule(DisplayViewHelpersTest))
     suite.addTest(loader.loadTestsFromModule(DisplayViewTransformTest))
     suite.addTest(loader.loadTestsFromModule(ExponentTransformTest))
     suite.addTest(loader.loadTestsFromModule(ExponentWithLinearTransformTest))
@@ -97,8 +103,10 @@ def suite():
     suite.addTest(loader.loadTestsFromModule(GradingRGBCurveTransformTest))
     suite.addTest(loader.loadTestsFromModule(GradingToneTransformTest))
     suite.addTest(loader.loadTestsFromModule(GroupTransformTest))
+    suite.addTest(loader.loadTestsFromModule(LegacyViewingPipelineTest))
     suite.addTest(loader.loadTestsFromModule(LogTransformTest))
     suite.addTest(loader.loadTestsFromModule(LookTest))
+    suite.addTest(loader.loadTestsFromModule(MixingHelpersTest))
     suite.addTest(loader.loadTestsFromModule(NamedTransformTest))
     suite.addTest(loader.loadTestsFromModule(OpenColorIOTest))
     suite.addTest(loader.loadTestsFromModule(ViewingRulesTest))

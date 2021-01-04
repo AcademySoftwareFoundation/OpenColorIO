@@ -8,6 +8,7 @@ API
 .. toctree::
    :caption: API
 
+   apphelpers
    baker
    colorspace
    config
@@ -21,6 +22,7 @@ API
    grading_transforms
    imagedesc
    look
+   namedtransform
    processors
    rules
    shaders

@@ -115,6 +115,12 @@
       2. insertRule(self: PyOpenColorIO.FileRules, ruleIndex: int, name: str, colorSpace: str, regex: str) -> None
 
 
+   .. py:method:: FileRules.isDefault(self: PyOpenColorIO.FileRules) -> bool
+      :module: PyOpenColorIO
+
+      Check if there is only the default rule using default role and no custom key. This is the default :ref:`FileRules` state when creating a new config.
+
+
    .. py:method:: FileRules.removeRule(self: PyOpenColorIO.FileRules, ruleIndex: int) -> None
       :module: PyOpenColorIO
 

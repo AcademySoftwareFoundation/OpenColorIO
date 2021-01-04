@@ -71,6 +71,8 @@ void bindPyGradingToneTransform(py::module & m)
              DOC(GradingToneTransform, makeDynamic))
         .def("makeNonDynamic", &GradingToneTransform::makeNonDynamic, 
              DOC(GradingToneTransform, makeNonDynamic));
+
+    defStr(clsGradingToneTransform);
 }
 
 } // namespace OCIO_NAMESPACE

@@ -2,13 +2,10 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 
-#include <sstream>
-
-#include <OpenColorIO/OpenColorIO.h>
+#include "apphelpers/LegacyViewingPipeline.cpp"
 
 #include "testutils/UnitTest.h"
 #include "UnitTestLogUtils.h"
-#include "ViewingPipeline.h"
 
 
 namespace OCIO = OCIO_NAMESPACE;
@@ -22,64 +19,63 @@ namespace OCIO = OCIO_NAMESPACE;
 
 static const std::string ocioTestFilesDir(STR(OCIO_UNIT_TEST_FILES_DIR));
 
-
 // The configuration file used by the unit tests.
 #include "configs.data"
 
 
-OCIO_ADD_TEST(ViewingPipeline, basic)
+OCIO_ADD_TEST(LegacyViewingPipeline, basic)
 {
     // Validate default values.
-    OCIO::ViewingPipeline vp;
-    auto dt = vp.getDisplayViewTransform();
+    OCIO::LegacyViewingPipelineRcPtr vp = OCIO::LegacyViewingPipeline::Create();
+    auto dt = vp->getDisplayViewTransform();
     OCIO_CHECK_ASSERT(!dt);
-    auto cv = vp.getChannelView();
+    auto cv = vp->getChannelView();
     OCIO_CHECK_ASSERT(!cv);
-    auto ctcc = vp.getColorTimingCC();
+    auto ctcc = vp->getColorTimingCC();
     OCIO_CHECK_ASSERT(!ctcc);
-    auto dcc = vp.getDisplayCC();
+    auto dcc = vp->getDisplayCC();
     OCIO_CHECK_ASSERT(!dcc);
-    auto lcc = vp.getLinearCC();
+    auto lcc = vp->getLinearCC();
     OCIO_CHECK_ASSERT(!lcc);
-    OCIO_CHECK_ASSERT(!vp.getLooksOverrideEnabled());
-    OCIO_CHECK_EQUAL(vp.getLooksOverride(), "");
+    OCIO_CHECK_ASSERT(!vp->getLooksOverrideEnabled());
+    OCIO_CHECK_EQUAL(std::string(vp->getLooksOverride()), "");
 
     // An empty viewing pipeline transform is not valid.
     OCIO::ConfigRcPtr config = OCIO::Config::CreateRaw()->createEditableCopy();
-    OCIO_CHECK_THROW_WHAT(vp.getProcessor(config, config->getCurrentContext()),
+    OCIO_CHECK_THROW_WHAT(vp->getProcessor(config, config->getCurrentContext()),
                           OCIO::Exception,
                           "can't create a processor without a display transform");
 
     // Validate setters.
 
     OCIO::DisplayViewTransformRcPtr dte = OCIO::DisplayViewTransform::Create();
-    vp.setDisplayViewTransform(dte);
-    dt = vp.getDisplayViewTransform();
+    vp->setDisplayViewTransform(dte);
+    dt = vp->getDisplayViewTransform();
     OCIO_CHECK_ASSERT(dt);
 
     // Display transform member has to be valid.
-    OCIO_CHECK_THROW_WHAT(vp.getProcessor(config, config->getCurrentContext()),
+    OCIO_CHECK_THROW_WHAT(vp->getProcessor(config, config->getCurrentContext()),
                           OCIO::Exception,
-                          "ViewingPipeline is not valid: "
+                          "LegacyViewingPipeline is not valid: "
                           "DisplayViewTransform: empty source color space name");
 
     dte->setSrc("colorspace1");
-    vp.setDisplayViewTransform(dte);
+    vp->setDisplayViewTransform(dte);
 
     // Display transform still invalid: missing display/view.
-    OCIO_CHECK_THROW_WHAT(vp.getProcessor(config, config->getCurrentContext()),
+    OCIO_CHECK_THROW_WHAT(vp->getProcessor(config, config->getCurrentContext()),
                           OCIO::Exception,
-                          "ViewingPipeline is not valid: "
+                          "LegacyViewingPipeline is not valid: "
                           "DisplayViewTransform: empty display name");
 
     dte->setDisplay("sRGB");
     dte->setView("view1");
-    vp.setDisplayViewTransform(dte);
+    vp->setDisplayViewTransform(dte);
 
     // Validation is fine but missing elements in config.
-    OCIO_CHECK_THROW_WHAT(vp.getProcessor(config, config->getCurrentContext()),
+    OCIO_CHECK_THROW_WHAT(vp->getProcessor(config, config->getCurrentContext()),
                           OCIO::Exception,
-                          "ViewingPipeline error: Cannot find inputColorSpace, "
+                          "LegacyViewingPipeline error: Cannot find inputColorSpace, "
                           "named 'colorspace1'");
 
     auto cs = OCIO::ColorSpace::Create();
@@ -90,68 +86,68 @@ OCIO_ADD_TEST(ViewingPipeline, basic)
     config->addDisplayView("sRGB", "view1", "colorspace1", "");
 
     OCIO::ConstProcessorRcPtr proc;
-    OCIO_CHECK_NO_THROW(proc = vp.getProcessor(config, config->getCurrentContext()));
+    OCIO_CHECK_NO_THROW(proc = vp->getProcessor(config, config->getCurrentContext()));
     OCIO_CHECK_ASSERT(proc);
 
     OCIO::TransformRcPtr empty;
     auto ff = OCIO::FixedFunctionTransform::Create();
-    vp.setChannelView(ff);
-    cv = vp.getChannelView();
+    vp->setChannelView(ff);
+    cv = vp->getChannelView();
     OCIO_CHECK_ASSERT(cv);
-    OCIO_CHECK_NO_THROW(proc = vp.getProcessor(config, config->getCurrentContext()));
+    OCIO_CHECK_NO_THROW(proc = vp->getProcessor(config, config->getCurrentContext()));
     OCIO_CHECK_ASSERT(proc);
-    vp.setChannelView(empty);
-    cv = vp.getChannelView();
+    vp->setChannelView(empty);
+    cv = vp->getChannelView();
     OCIO_CHECK_ASSERT(!cv);
 
-    vp.setColorTimingCC(ff);
-    ctcc = vp.getColorTimingCC();
+    vp->setColorTimingCC(ff);
+    ctcc = vp->getColorTimingCC();
     OCIO_CHECK_ASSERT(ctcc);
     // Missing element: color_timing role.
-    OCIO_CHECK_THROW_WHAT(vp.getProcessor(config, config->getCurrentContext()),
+    OCIO_CHECK_THROW_WHAT(vp->getProcessor(config, config->getCurrentContext()),
                           OCIO::Exception,
                           "ColorTimingCC requires 'color_timing' role to be defined");
-    vp.setColorTimingCC(empty);
-    ctcc = vp.getColorTimingCC();
+    vp->setColorTimingCC(empty);
+    ctcc = vp->getColorTimingCC();
     OCIO_CHECK_ASSERT(!ctcc);
 
-    vp.setLinearCC(ff);
-    lcc = vp.getLinearCC();
+    vp->setLinearCC(ff);
+    lcc = vp->getLinearCC();
     OCIO_CHECK_ASSERT(lcc);
     // Missing element: scene_linear role.
-    OCIO_CHECK_THROW_WHAT(vp.getProcessor(config, config->getCurrentContext()),
+    OCIO_CHECK_THROW_WHAT(vp->getProcessor(config, config->getCurrentContext()),
                           OCIO::Exception,
                           "LinearCC requires 'scene_linear' role to be defined");
-    vp.setLinearCC(empty);
-    lcc = vp.getLinearCC();
+    vp->setLinearCC(empty);
+    lcc = vp->getLinearCC();
     OCIO_CHECK_ASSERT(!lcc);
 
-    vp.setDisplayCC(ff);
-    dcc = vp.getDisplayCC();
+    vp->setDisplayCC(ff);
+    dcc = vp->getDisplayCC();
     OCIO_CHECK_ASSERT(dcc);
-    OCIO_CHECK_NO_THROW(proc = vp.getProcessor(config, config->getCurrentContext()));
+    OCIO_CHECK_NO_THROW(proc = vp->getProcessor(config, config->getCurrentContext()));
     OCIO_CHECK_ASSERT(proc);
-    vp.setDisplayCC(empty);
-    dcc = vp.getDisplayCC();
+    vp->setDisplayCC(empty);
+    dcc = vp->getDisplayCC();
     OCIO_CHECK_ASSERT(!dcc);
 
-    vp.setLooksOverride("missingLook");
-    OCIO_CHECK_EQUAL(vp.getLooksOverride(), "missingLook");
+    vp->setLooksOverride("missingLook");
+    OCIO_CHECK_EQUAL(std::string(vp->getLooksOverride()), "missingLook");
 
     // Look is missing but looks override is not enabled.
-    OCIO_CHECK_NO_THROW(proc = vp.getProcessor(config, config->getCurrentContext()));
+    OCIO_CHECK_NO_THROW(proc = vp->getProcessor(config, config->getCurrentContext()));
     OCIO_CHECK_ASSERT(proc);
 
-    vp.setLooksOverrideEnabled(true);
-    OCIO_CHECK_ASSERT(vp.getLooksOverrideEnabled());
+    vp->setLooksOverrideEnabled(true);
+    OCIO_CHECK_ASSERT(vp->getLooksOverrideEnabled());
 
     // Missing look error.
-    OCIO_CHECK_THROW_WHAT(vp.getProcessor(config, config->getCurrentContext()),
+    OCIO_CHECK_THROW_WHAT(vp->getProcessor(config, config->getCurrentContext()),
                           OCIO::Exception,
                           "The specified look, 'missingLook', cannot be found");
 }
 
-OCIO_ADD_TEST(ViewingPipeline, processorWithLooks)
+OCIO_ADD_TEST(LegacyViewingPipeline, processorWithLooks)
 {
     std::istringstream is(category_test_config);
 
@@ -163,8 +159,8 @@ OCIO_ADD_TEST(ViewingPipeline, processorWithLooks)
     dt->setDisplay("DISP_2");
     dt->setView("VIEW_2");
     dt->setSrc("in_1");
-    OCIO::ViewingPipeline vp;
-    vp.setDisplayViewTransform(dt);
+    OCIO::LegacyViewingPipelineRcPtr vp = OCIO::LegacyViewingPipeline::Create();
+    vp->setDisplayViewTransform(dt);
 
     auto mat = OCIO::MatrixTransform::Create();
     double m[16] = { 1.1, 0.,  0.,  0.,
@@ -172,15 +168,15 @@ OCIO_ADD_TEST(ViewingPipeline, processorWithLooks)
                      0.,  0.,  1.1, 0.,
                      0.,  0.,  0.,  1. };
     mat->setMatrix(m);
-    vp.setChannelView(mat);
+    vp->setChannelView(mat);
 
     auto ff = OCIO::FixedFunctionTransform::Create();
-    vp.setLinearCC(ff);
+    vp->setLinearCC(ff);
 
     // Processor in forward direction.
 
     OCIO::ConstProcessorRcPtr proc;
-    OCIO_CHECK_NO_THROW(proc = vp.getProcessor(cfg, cfg->getCurrentContext()));
+    OCIO_CHECK_NO_THROW(proc = vp->getProcessor(cfg, cfg->getCurrentContext()));
     OCIO_REQUIRE_ASSERT(proc);
 
     OCIO::GroupTransformRcPtr groupTransform;
@@ -291,8 +287,8 @@ OCIO_ADD_TEST(ViewingPipeline, processorWithLooks)
     // Repeat in inverse direction.
 
     dt->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
-    vp.setDisplayViewTransform(dt);
-    OCIO_CHECK_NO_THROW(proc = vp.getProcessor(cfg, cfg->getCurrentContext()));
+    vp->setDisplayViewTransform(dt);
+    OCIO_CHECK_NO_THROW(proc = vp->getProcessor(cfg, cfg->getCurrentContext()));
     OCIO_REQUIRE_ASSERT(proc);
 
     OCIO_CHECK_NO_THROW(groupTransform = proc->createGroupTransform());
@@ -400,8 +396,8 @@ OCIO_ADD_TEST(ViewingPipeline, processorWithLooks)
 
     m[3] = 0.1;
     mat->setMatrix(m);
-    vp.setChannelView(mat);
-    OCIO_CHECK_NO_THROW(proc = vp.getProcessor(cfg, cfg->getCurrentContext()));
+    vp->setChannelView(mat);
+    OCIO_CHECK_NO_THROW(proc = vp->getProcessor(cfg, cfg->getCurrentContext()));
     OCIO_CHECK_ASSERT(proc);
 
     OCIO_CHECK_NO_THROW(groupTransform = proc->createGroupTransform());
@@ -426,10 +422,10 @@ OCIO_ADD_TEST(ViewingPipeline, processorWithLooks)
 
     // Looks are still applied if looks override is used.
 
-    vp.setLooksOverrideEnabled(true);
-    vp.setLooksOverride(cfg->getDisplayViewLooks("DISP_2", "VIEW_2"));
+    vp->setLooksOverrideEnabled(true);
+    vp->setLooksOverride(cfg->getDisplayViewLooks("DISP_2", "VIEW_2"));
 
-    OCIO_CHECK_NO_THROW(proc = vp.getProcessor(cfg, cfg->getCurrentContext()));
+    OCIO_CHECK_NO_THROW(proc = vp->getProcessor(cfg, cfg->getCurrentContext()));
     OCIO_CHECK_ASSERT(proc);
 
     OCIO_CHECK_NO_THROW(groupTransform = proc->createGroupTransform());
@@ -463,8 +459,8 @@ OCIO_ADD_TEST(ViewingPipeline, processorWithLooks)
     }
 
     dt->setDataBypass(false);
-    vp.setDisplayViewTransform(dt);
-    OCIO_CHECK_NO_THROW(proc = vp.getProcessor(cfg, cfg->getCurrentContext()));
+    vp->setDisplayViewTransform(dt);
+    OCIO_CHECK_NO_THROW(proc = vp->getProcessor(cfg, cfg->getCurrentContext()));
     OCIO_CHECK_ASSERT(proc);
 
     OCIO_CHECK_NO_THROW(groupTransform = proc->createGroupTransform());
@@ -474,7 +470,7 @@ OCIO_ADD_TEST(ViewingPipeline, processorWithLooks)
     OCIO_REQUIRE_EQUAL(groupTransform->getNumTransforms(), 8);
 }
 
-OCIO_ADD_TEST(ViewingPipeline, fullPipelineNoLook)
+OCIO_ADD_TEST(LegacyViewingPipeline, fullPipelineNoLook)
 {
     //
     // Validate BuildDisplayOps where the display/view is a simple color space
@@ -536,27 +532,27 @@ OCIO_ADD_TEST(ViewingPipeline, fullPipelineNoLook)
     dt->setDisplay(display.c_str());
     dt->setView(view.c_str());
 
-    OCIO::ViewingPipeline vp;
-    vp.setDisplayViewTransform(dt);
+    OCIO::LegacyViewingPipelineRcPtr vp = OCIO::LegacyViewingPipeline::Create();
+    vp->setDisplayViewTransform(dt);
 
     auto linearCC = OCIO::MatrixTransform::Create();
     constexpr double offsetLinearCC[4] = { 0.2, 0.3, 0.4, 0. };
     linearCC->setOffset(offsetLinearCC);
-    vp.setLinearCC(linearCC);
+    vp->setLinearCC(linearCC);
     auto timimgCC = OCIO::ExponentTransform::Create();
     constexpr double valueTimingCC[4] = { 2.2, 2.3, 2.4, 1. };
     timimgCC->setValue(valueTimingCC);
-    vp.setColorTimingCC(timimgCC);
+    vp->setColorTimingCC(timimgCC);
     constexpr double offsetCV[4] = { 0.2, 0.1, 0.1, 0. };
     auto cvTrans = OCIO::MatrixTransform::Create();
     cvTrans->setOffset(offsetCV);
-    vp.setChannelView(cvTrans);
+    vp->setChannelView(cvTrans);
     auto displayCC = OCIO::ExposureContrastTransform::Create();
-    vp.setDisplayCC(displayCC);
+    vp->setDisplayCC(displayCC);
 
     {
         OCIO::ConstProcessorRcPtr proc;
-        OCIO_CHECK_NO_THROW(proc = vp.getProcessor(cfg, cfg->getCurrentContext()));
+        OCIO_CHECK_NO_THROW(proc = vp->getProcessor(cfg, cfg->getCurrentContext()));
         OCIO_REQUIRE_ASSERT(proc);
 
         OCIO::GroupTransformRcPtr groupTransform;
@@ -695,11 +691,11 @@ OCIO_ADD_TEST(ViewingPipeline, fullPipelineNoLook)
     OCIO_CHECK_NO_THROW(cfg->validate());
 
     dt->setView(viewt.c_str());
-    vp.setDisplayViewTransform(dt);
+    vp->setDisplayViewTransform(dt);
 
     {
         OCIO::ConstProcessorRcPtr proc;
-        OCIO_CHECK_NO_THROW(proc = vp.getProcessor(cfg, cfg->getCurrentContext()));
+        OCIO_CHECK_NO_THROW(proc = vp->getProcessor(cfg, cfg->getCurrentContext()));
         OCIO_REQUIRE_ASSERT(proc);
 
         OCIO::GroupTransformRcPtr groupTransform;
@@ -759,7 +755,7 @@ OCIO_ADD_TEST(ViewingPipeline, fullPipelineNoLook)
 
     {
         OCIO::ConstProcessorRcPtr proc;
-        OCIO_CHECK_NO_THROW(proc = vp.getProcessor(cfg, cfg->getCurrentContext()));
+        OCIO_CHECK_NO_THROW(proc = vp->getProcessor(cfg, cfg->getCurrentContext()));
         OCIO_REQUIRE_ASSERT(proc);
 
         OCIO::GroupTransformRcPtr groupTransform;
@@ -807,7 +803,7 @@ OCIO_ADD_TEST(ViewingPipeline, fullPipelineNoLook)
 
     {
         OCIO::ConstProcessorRcPtr proc;
-        OCIO_CHECK_NO_THROW(proc = vp.getProcessor(cfg, cfg->getCurrentContext()));
+        OCIO_CHECK_NO_THROW(proc = vp->getProcessor(cfg, cfg->getCurrentContext()));
         OCIO_REQUIRE_ASSERT(proc);
 
         OCIO::GroupTransformRcPtr groupTransform;
@@ -843,4 +839,3 @@ OCIO_ADD_TEST(ViewingPipeline, fullPipelineNoLook)
         OCIO_REQUIRE_ASSERT(ec);
     }
 }
-
