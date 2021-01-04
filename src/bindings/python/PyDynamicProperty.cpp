@@ -9,16 +9,29 @@ namespace OCIO_NAMESPACE
 
 void bindPyDynamicProperty(py::module & m)
 {
-    py::class_<PyDynamicProperty>(m, "DynamicProperty")
-        .def("getType", &PyDynamicProperty::getType)
-        .def("getDouble", &PyDynamicProperty::getDouble)
-        .def("setDouble", &PyDynamicProperty::setDouble, "val"_a)
-        .def("getGradingPrimary", &PyDynamicProperty::getGradingPrimary)
-        .def("setGradingPrimary", &PyDynamicProperty::setGradingPrimary, "val"_a)
-        .def("getGradingRGBCurve", &PyDynamicProperty::getGradingRGBCurve)
-        .def("setGradingRGBCurve", &PyDynamicProperty::setGradingRGBCurve, "val"_a)
-        .def("getGradingTone", &PyDynamicProperty::getGradingTone)
-        .def("setGradingTone", &PyDynamicProperty::setGradingTone, "val"_a);
+    auto clsDynamicProperty = 
+        py::class_<PyDynamicProperty>(
+            m, "DynamicProperty", 
+            DOC(DynamicProperty))
+
+        .def("getType", &PyDynamicProperty::getType, 
+             DOC(DynamicProperty, getType))
+        .def("getDouble", &PyDynamicProperty::getDouble, 
+             DOC(DynamicPropertyValue, AsDouble))
+        .def("setDouble", &PyDynamicProperty::setDouble, "val"_a, 
+             DOC(DynamicPropertyValue, AsDouble))
+        .def("getGradingPrimary", &PyDynamicProperty::getGradingPrimary, 
+             DOC(DynamicPropertyValue, AsGradingPrimary))
+        .def("setGradingPrimary", &PyDynamicProperty::setGradingPrimary, "val"_a, 
+             DOC(DynamicPropertyValue, AsGradingPrimary))
+        .def("getGradingRGBCurve", &PyDynamicProperty::getGradingRGBCurve, 
+             DOC(DynamicPropertyValue, AsGradingRGBCurve))
+        .def("setGradingRGBCurve", &PyDynamicProperty::setGradingRGBCurve, "val"_a, 
+             DOC(DynamicPropertyValue, AsGradingRGBCurve))
+        .def("getGradingTone", &PyDynamicProperty::getGradingTone, 
+             DOC(DynamicPropertyValue, AsGradingTone))
+        .def("setGradingTone", &PyDynamicProperty::setGradingTone, "val"_a, 
+             DOC(DynamicPropertyValue, AsGradingTone));
 }
 
 } // namespace OCIO_NAMESPACE

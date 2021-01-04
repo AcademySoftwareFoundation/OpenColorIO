@@ -4,24 +4,83 @@ Since the API autodoc effort is happening simultaneously it will be easier for
 a lot of contributors to do a light-weight build of the Sphinx docs, which
 doesn't require building OCIO in its entirety.
 
-## How to Build RST-Only Docs
+## How to Build HTML Docs
 
-In addition to the general OCIO v2 dependencies (Python and Sphinx), install the
-Python packages listed in the `docs/requirements.txt` file.
+In addition to the general OCIO v2 dependencies, install Doxygen, Sphinx, and 
+the Python packages listed in the `docs/requirements.txt` file.
+
+Doxygen can be installed with a package manager, or by downloading a binary 
+distribution from [Doxygen's website](https://www.doxygen.nl/download.html). 
+Use one of the following commands to install Doxygen with a platform-specific 
+package manager:
+
+Linux (Debian, etc.):
+
+```
+apt-get install doxygen
+```
+
+Linux (Fedora, etc.):
+
+```
+yum install doxygen
+```
+
+macOS ([Homebrew](https://brew.sh/)):
+
+```
+brew install doxygen
+```
+
+Windows ([Chocolatey](https://chocolatey.org/)):
+
+```
+choco install doxygen.install
+```
+
+Sphinx and the other Python dependencies can be installed with a single `pip` 
+command on all platforms:
 
 ```
 pip install -r docs/requirements.txt
 ```
 
-Build the sphinx docs locally...
+To build only the RST docs (excluding API) locally:
 
 ```
 cd docs
 mkdir _build
 sphinx-build -b html . _build
-firefox _build/index.html
+<your web browser name> _build/index.html
 ```
 
+To build all HTML docs (including API) locally:
+
+```
+mkdir _build
+cd _build
+cmake ../. -DOCIO_BUILD_DOCS=ON -DCMAKE_INSTALL_PREFIX=../_install
+make -j<your thread count> docs
+<your web browser name> docs/build-html/index.html
+```
+
+Python 3 is required to build the documentation. If you have multiple Python
+installs you'll need to make sure pip and CMake find the correct version. You 
+can manually inform cmake of which to use by adding this option to the above 
+`cmake` command, which configures the documentation build:
+
+```
+-DPython_ROOT=<Path to Python 3 root directory>
+```
+
+To ease the documentation build and test on macOS one could also add these 
+three lines in the ~/.zshrc file:
+
+```
+alias python=/usr/local/bin/python3
+alias pip=/usr/local/bin/pip3
+alias <your web browser name>=open -a "<your web browser application name>"
+```
 
 ## Quirks
 

@@ -492,8 +492,8 @@ inline void EmitBaseTransformKeyValues(YAML::Emitter & out,
 inline void EmitTransformName(YAML::Emitter & out,
                               const FormatMetadata & metadata)
 {
-    const FormatMetadataImpl data = dynamic_cast<const FormatMetadataImpl &>(metadata);
-    const std::string & name{ data.getAttributeValue(METADATA_NAME) };
+    const FormatMetadataImpl & data = dynamic_cast<const FormatMetadataImpl &>(metadata);
+    const std::string & name = data.getName();
     if (!name.empty())
     {
         out << YAML::Key << "name" << YAML::Value << name;
@@ -699,7 +699,7 @@ inline void load(const YAML::Node& node, CDLTransformRcPtr& t)
         {
             std::string name;
             load(second, name);
-            t->getFormatMetadata().addAttribute(METADATA_NAME, name.c_str());
+            t->getFormatMetadata().setName(name.c_str());
         }
         else
         {
@@ -959,7 +959,7 @@ inline void load(const YAML::Node& node, ExponentTransformRcPtr& t)
         {
             std::string name;
             load(second, name);
-            t->getFormatMetadata().addAttribute(METADATA_NAME, name.c_str());
+            t->getFormatMetadata().setName(name.c_str());
         }
         else
         {
@@ -1103,7 +1103,7 @@ inline void load(const YAML::Node& node, ExponentWithLinearTransformRcPtr& t)
         {
             std::string name;
             load(second, name);
-            t->getFormatMetadata().addAttribute(METADATA_NAME, name.c_str());
+            t->getFormatMetadata().setName(name.c_str());
         }
         else
         {
@@ -1257,7 +1257,7 @@ inline void load(const YAML::Node& node, ExposureContrastTransformRcPtr& t)
         {
             std::string name;
             load(second, name);
-            t->getFormatMetadata().addAttribute(METADATA_NAME, name.c_str());
+            t->getFormatMetadata().setName(name.c_str());
         }
         else
         {
@@ -1454,7 +1454,7 @@ inline void load(const YAML::Node& node, FixedFunctionTransformRcPtr& t)
         {
             std::string name;
             load(second, name);
-            t->getFormatMetadata().addAttribute(METADATA_NAME, name.c_str());
+            t->getFormatMetadata().setName(name.c_str());
         }
         else
         {
@@ -1706,6 +1706,12 @@ inline void load(const YAML::Node & node, GradingPrimaryTransformRcPtr & t)
             loadClamp(first, second, values.m_clampBlack, clampBlackLoaded,
                       values.m_clampWhite, clampWhiteLoaded);
         }
+        else if (key == "name")
+        {
+            std::string name;
+            load(second, name);
+            t->getFormatMetadata().setName(name.c_str());
+        }
         else
         {
             LogUnknownKeyWarning(node.Tag(), first);
@@ -1837,6 +1843,8 @@ inline void save(YAML::Emitter & out, ConstGradingPrimaryTransformRcPtr t)
 
     if (vals == defaultVals) out << YAML::Flow;
     out << YAML::BeginMap;
+
+    EmitTransformName(out, t->getFormatMetadata());
 
     out << YAML::Key << "style";
     out << YAML::Value << YAML::Flow << GradingStyleToString(style);
@@ -1992,6 +2000,12 @@ inline void load(const YAML::Node & node, GradingRGBCurveTransformRcPtr & t)
             master = GradingBSplineCurve::Create(0);
             load(first, second, master);
         }
+        else if (key == "name")
+        {
+            std::string name;
+            load(second, name);
+            t->getFormatMetadata().setName(name.c_str());
+        }
         else
         {
             LogUnknownKeyWarning(node.Tag(), first);
@@ -2045,6 +2059,8 @@ inline void save(YAML::Emitter & out, ConstGradingRGBCurveTransformRcPtr t)
     out << YAML::VerbatimTag("GradingRGBCurveTransform");
     if (!saveCurve) out << YAML::Flow;
     out << YAML::BeginMap;
+
+    EmitTransformName(out, t->getFormatMetadata());
 
     const auto style = t->getStyle();
     out << YAML::Key << "style";
@@ -2198,6 +2214,12 @@ inline void load(const YAML::Node & node, GradingToneTransformRcPtr & t)
         {
             load(second, scontrast);
         }
+        else if (key == "name")
+        {
+            std::string name;
+            load(second, name);
+            t->getFormatMetadata().setName(name.c_str());
+        }
         else
         {
             LogUnknownKeyWarning(node.Tag(), first);
@@ -2243,6 +2265,8 @@ inline void save(YAML::Emitter & out, ConstGradingToneTransformRcPtr t)
 
     if (vals == defaultVals) out << YAML::Flow;
     out << YAML::BeginMap;
+
+    EmitTransformName(out, t->getFormatMetadata());
 
     out << YAML::Key << "style";
     out << YAML::Value << YAML::Flow << GradingStyleToString(style);
@@ -2307,7 +2331,7 @@ inline void load(const YAML::Node& node, GroupTransformRcPtr& t)
         {
             std::string name;
             load(second, name);
-            t->getFormatMetadata().addAttribute(METADATA_NAME, name.c_str());
+            t->getFormatMetadata().setName(name.c_str());
         }
         else
         {
@@ -2432,7 +2456,7 @@ inline void load(const YAML::Node& node, LogAffineTransformRcPtr& t)
         {
             std::string name;
             load(second, name);
-            t->getFormatMetadata().addAttribute(METADATA_NAME, name.c_str());
+            t->getFormatMetadata().setName(name.c_str());
         }
         else
         {
@@ -2576,7 +2600,7 @@ inline void load(const YAML::Node & node, LogCameraTransformRcPtr & t)
         {
             std::string name;
             load(second, name);
-            t->getFormatMetadata().addAttribute(METADATA_NAME, name.c_str());
+            t->getFormatMetadata().setName(name.c_str());
         }
         else
         {
@@ -2684,7 +2708,7 @@ inline void load(const YAML::Node& node, LogTransformRcPtr& t)
         {
             std::string name;
             load(second, name);
-            t->getFormatMetadata().addAttribute(METADATA_NAME, name.c_str());
+            t->getFormatMetadata().setName(name.c_str());
         }
         else
         {
@@ -2822,7 +2846,7 @@ inline void load(const YAML::Node& node, MatrixTransformRcPtr& t)
         {
             std::string name;
             load(second, name);
-            t->getFormatMetadata().addAttribute(METADATA_NAME, name.c_str());
+            t->getFormatMetadata().setName(name.c_str());
         }
         else
         {
@@ -2918,7 +2942,7 @@ inline void load(const YAML::Node& node, RangeTransformRcPtr& t)
         {
             std::string name;
             load(second, name);
-            t->getFormatMetadata().addAttribute(METADATA_NAME, name.c_str());
+            t->getFormatMetadata().setName(name.c_str());
         }
         else
         {
@@ -3844,14 +3868,37 @@ inline void load(const YAML::Node & node, FileRulesRcPtr & fr, bool & defaultRul
     try
     {
         const auto pos = fr->getNumEntries() - 1;
-        if (0==Platform::Strcasecmp(name.c_str(), FileRuleUtils::DefaultName))
+        if (0==Platform::Strcasecmp(name.c_str(), FileRules::DefaultRuleName))
         {
             if (!regex.empty() || !pattern.empty() || !extension.empty())
             {
-                throw Exception("'Default' rule can't use pattern, extension or regex.");
+                std::ostringstream oss;
+                oss << "'" << FileRules::DefaultRuleName << "' "
+                    << "rule can't use pattern, extension or regex.";
+                throw Exception(oss.str().c_str());
             }
+
+            if (colorspace.empty())
+            {
+                std::ostringstream oss;
+                oss << "'" << FileRules::DefaultRuleName << "' "
+                    << "rule cannot have an empty color space name.";
+                throw Exception(oss.str().c_str());
+            }
+
             defaultRuleFound = true;
             fr->setColorSpace(pos, colorspace.c_str());
+        }
+        else if (0==Platform::Strcasecmp(name.c_str(), FileRules::FilePathSearchRuleName))
+        {
+            if (!regex.empty() || !pattern.empty() || !extension.empty())
+            {
+                std::ostringstream oss;
+                oss << "'" << FileRules::FilePathSearchRuleName << "' "
+                    << "rule can't use pattern, extension or regex.";
+                throw Exception(oss.str().c_str());
+            }
+            fr->insertPathSearchRule(pos);
         }
         else
         {
@@ -3860,6 +3907,13 @@ inline void load(const YAML::Node & node, FileRulesRcPtr & fr, bool & defaultRul
                 std::ostringstream oss;
                 oss << "File rule '" << name << "' can't use regex '" << regex << "' and "
                     << "pattern & extension '" << pattern << "' '" << extension << "'.";
+                throw Exception(oss.str().c_str());
+            }
+            
+            if (colorspace.empty())
+            {
+                std::ostringstream oss;
+                oss << "File rule '" << name << "' cannot have an empty color space name.";
                 throw Exception(oss.str().c_str());
             }
 

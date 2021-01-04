@@ -212,11 +212,11 @@ OCIO_ADD_TEST(Lut3DOpData, compose)
     OCIO_CHECK_EQUAL(composed->getName(), "lut1 + lut2");
     OCIO_REQUIRE_EQUAL(composed->getFormatMetadata().getNumChildrenElements(), 2);
     const auto & desc1 = composed->getFormatMetadata().getChildElement(0);
-    OCIO_CHECK_EQUAL(std::string(desc1.getName()), OCIO::METADATA_DESCRIPTION);
-    OCIO_CHECK_EQUAL(std::string(desc1.getValue()), "description of lut1");
+    OCIO_CHECK_EQUAL(std::string(desc1.getElementName()), OCIO::METADATA_DESCRIPTION);
+    OCIO_CHECK_EQUAL(std::string(desc1.getElementValue()), "description of lut1");
     const auto & desc2 = composed->getFormatMetadata().getChildElement(1);
-    OCIO_CHECK_EQUAL(std::string(desc2.getName()), OCIO::METADATA_DESCRIPTION);
-    OCIO_CHECK_EQUAL(std::string(desc2.getValue()), "description of lut2");
+    OCIO_CHECK_EQUAL(std::string(desc2.getElementName()), OCIO::METADATA_DESCRIPTION);
+    OCIO_CHECK_EQUAL(std::string(desc2.getElementValue()), "description of lut2");
 
     OCIO_CHECK_EQUAL(composed->getArray().getLength(), (unsigned long)32);
     OCIO_CHECK_EQUAL(composed->getArray().getNumColorComponents(),

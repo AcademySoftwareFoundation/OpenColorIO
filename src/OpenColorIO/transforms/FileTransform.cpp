@@ -162,15 +162,15 @@ std::ostream& operator<< (std::ostream& os, const FileTransform& t)
     os << "direction=" << TransformDirectionToString(t.getDirection());
     os << ", interpolation=" << InterpolationToString(t.getInterpolation());
     os << ", src=" << t.getSrc();
-    const std::string cccid{ t.getCCCId() };
-    if (!cccid.empty())
+    const char * cccid = t.getCCCId();
+    if (cccid && *cccid)
     {
-        os << ", cccid=" << cccid;
+        os << ", cccid=" << t.getCCCId();
     }
-    const auto style = t.getCDLStyle();
-    if (style != CDL_TRANSFORM_DEFAULT)
+    const auto cdlStyle = t.getCDLStyle();
+    if (cdlStyle != CDL_TRANSFORM_DEFAULT)
     {
-        os << ", cdl_style=" << CDLStyleToString(style);
+        os << ", cdl_style=" << CDLStyleToString(cdlStyle);
     }
     os << ">";
 
@@ -391,7 +391,7 @@ FileFormat* FormatRegistry::getRawFormatByIndex(int index) const
     return m_rawFormats[index];
 }
 
-int FormatRegistry::getNumFormats(int capability) const
+int FormatRegistry::getNumFormats(int capability) const noexcept
 {
     if(capability == FORMAT_CAPABILITY_READ)
     {
@@ -408,8 +408,7 @@ int FormatRegistry::getNumFormats(int capability) const
     return 0;
 }
 
-const char * FormatRegistry::getFormatNameByIndex(
-    int capability, int index) const
+const char * FormatRegistry::getFormatNameByIndex(int capability, int index) const noexcept
 {
     if(capability == FORMAT_CAPABILITY_READ)
     {
@@ -438,8 +437,7 @@ const char * FormatRegistry::getFormatNameByIndex(
     return "";
 }
 
-const char * FormatRegistry::getFormatExtensionByIndex(
-    int capability, int index) const
+const char * FormatRegistry::getFormatExtensionByIndex(int capability, int index) const noexcept
 {
     if(capability == FORMAT_CAPABILITY_READ)
     {
@@ -498,8 +496,9 @@ void FileFormat::bake(const Baker & /*baker*/,
     throw Exception(os.str().c_str());
 }
 
-void FileFormat::write(const OpRcPtrVec & /*ops*/,
-                       const FormatMetadataImpl & /*metadata*/,
+void FileFormat::write(const ConstConfigRcPtr & /*config*/,
+                       const ConstContextRcPtr & /*context*/,
+                       const GroupTransform & /*group*/,
                        const std::string & formatName,
                        std::ostream & /*ostream*/) const
 {
@@ -754,8 +753,7 @@ void GetCachedFileAndFormat(FileFormat * & format,
         }
     }
 
-    // If this file has already been loaded, return
-    // the result immediately
+    // If this file has already been loaded, return the result immediately.
 
     AutoMutex lock(result->mutex);
     if (!result->ready)

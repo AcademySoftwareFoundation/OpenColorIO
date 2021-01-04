@@ -1143,14 +1143,14 @@ extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const Config&);
 //   in the list. The position in the list prioritizes it with respect to the other rules.
 //   StrictParsing is not used. If no color space is found in the path, the rule will not
 //   match and the next rule will be considered.
-//   See :cpp:func:`FileRules::insertPathSearchRule`.
+//   \see FileRules::insertPathSearchRule.
 //   It has the key:
 //
 //   * name: Must be "ColorSpaceNamePathSearch".
 //
 // - Default Rule: The file_rules must always end with this rule. If no prior rules match,
 //   this rule specifies the color space applications will use.
-//   See :cpp:func:`FileRules::setDefaultRuleColorSpace`.
+//   \see FileRules::setDefaultRuleColorSpace.
 //   It has the keys:
 //
 //   * name: must be "Default".
@@ -1169,6 +1169,12 @@ extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const Config&);
 class OCIOEXPORT FileRules
 {
 public:
+
+    /// Reserved rule name for the default rule.
+    static const char * DefaultRuleName;
+    /// Reserved rule name for the file path search rule \see FileRules::insertPathSearchRule.
+    static const char * FilePathSearchRuleName;
+
     /**
      * Creates FileRules for a Config. File rules will contain the default rule
      * using the default role. The default rule cannot be removed.
@@ -1727,6 +1733,9 @@ private:
     const Impl * getImpl() const { return m_impl; }
 };
 
+/** \defgroup ColorSpaceSetOperators
+ *  @{
+ */
 
 /**
  * \brief Perform the union of two sets.
@@ -1765,7 +1774,7 @@ extern OCIOEXPORT ConstColorSpaceSetRcPtr operator&&(const ConstColorSpaceSetRcP
 extern OCIOEXPORT ConstColorSpaceSetRcPtr operator-(const ConstColorSpaceSetRcPtr & lcss,
                                                     const ConstColorSpaceSetRcPtr & rcss);
 
-
+/** @}*/
 
 
 //
@@ -2005,28 +2014,12 @@ public:
     const FormatMetadata & getTransformFormatMetadata(int index) const;
 
     /**
-     * Return a \ref GroupTransform that contains a
-     * copy of the transforms that comprise the processor.
-     * (Changes to it will not modify the original processor.)
+     * Return a \ref GroupTransform that contains a copy of the transforms that comprise the
+     * processor. (Changes to it will not modify the original processor.) Note that the
+     * GroupTransform::write method may be used to serialize a Processor.  Serializing to
+     * CTF format is a useful technique for debugging Processor contents.
      */
     GroupTransformRcPtr createGroupTransform() const;
-
-    /**
-     * Write the transforms comprising the processor to the stream.
-     * Writing (as opposed to Baking) is a lossless process. An exception is thrown
-     * if the processor cannot be losslessly written to the specified file format.
-     */
-    void write(const char * formatName, std::ostream & os) const;
-
-    /// Get the number of writers.
-    static int getNumWriteFormats();
-
-    /**
-     * Get the writer at index, return empty string if
-     * an invalid index is specified.
-     */
-    static const char * getFormatNameByIndex(int index);
-    static const char * getFormatExtensionByIndex(int index);
 
     /**
      * The returned pointer may be used to set the default value of any dynamic

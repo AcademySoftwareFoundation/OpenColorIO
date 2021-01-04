@@ -234,6 +234,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+      - name: Install docs env
+        run: share/ci/scripts/linux/yum/install_docs_env.sh
+        if: matrix.build-docs == 'ON'
       - name: Create build directories
         run: |
           mkdir _install
@@ -351,6 +354,9 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Checkout
         uses: actions/checkout@v2
+      - name: Install docs env
+        run: share/ci/scripts/macos/install_docs_env.sh
+        if: matrix.build-docs == 'ON'
       - name: Create build directories
         run: |
           mkdir _install
@@ -469,6 +475,10 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Checkout
         uses: actions/checkout@v2
+      - name: Install docs env
+        run: share/ci/scripts/windows/install_docs_env.sh
+        shell: bash
+        if: matrix.build-docs == 'ON'
       - name: Create build directories
         run: |
           mkdir _install

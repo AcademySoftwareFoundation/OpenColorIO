@@ -25,6 +25,5 @@ void ClearAllCaches()
 {
     ClearPathCaches();
     ClearFileTransformCaches();
-    ClearCDLTransformFileCache();
 }
 } // namespace OCIO_NAMESPACE

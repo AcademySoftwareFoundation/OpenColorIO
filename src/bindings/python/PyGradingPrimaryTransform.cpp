@@ -10,9 +10,13 @@ void bindPyGradingPrimaryTransform(py::module & m)
 {
     GradingPrimaryTransformRcPtr DEFAULT = GradingPrimaryTransform::Create(GRADING_LOG);
 
-    py::class_<GradingPrimaryTransform,
-               GradingPrimaryTransformRcPtr /* holder */, 
-               Transform /* base */>(m, "GradingPrimaryTransform")
+    auto clsGradingPrimaryTransform = 
+        py::class_<GradingPrimaryTransform,
+                   GradingPrimaryTransformRcPtr /* holder */, 
+                   Transform /* base */>(
+            m, "GradingPrimaryTransform", 
+            DOC(GradingPrimaryTransform))
+
         .def(py::init([](GradingStyle style,
                          const GradingPrimary & values,
                          bool dynamic, 
@@ -29,7 +33,8 @@ void bindPyGradingPrimaryTransform(py::module & m)
              "style"_a = DEFAULT->getStyle(),
              "values"_a,
              "dynamic"_a = DEFAULT->isDynamic(),
-             "dir"_a = DEFAULT->getDirection())
+             "dir"_a = DEFAULT->getDirection(),
+             DOC(GradingPrimaryTransform, Create))
         .def(py::init([](GradingStyle style, bool dynamic, TransformDirection dir)
             {
                 GradingPrimaryTransformRcPtr p = GradingPrimaryTransform::Create(style);
@@ -42,24 +47,30 @@ void bindPyGradingPrimaryTransform(py::module & m)
                 p->validate();
                 return p;
             }),
-            "style"_a = DEFAULT->getStyle(),
-            "dynamic"_a = DEFAULT->isDynamic(),
-            "dir"_a = DEFAULT->getDirection())
+             "style"_a = DEFAULT->getStyle(),
+             "dynamic"_a = DEFAULT->isDynamic(),
+             "dir"_a = DEFAULT->getDirection(),
+             DOC(GradingPrimaryTransform, Create))
 
         .def("getFormatMetadata", 
-             (FormatMetadata & (GradingPrimaryTransform::*)()) &GradingPrimaryTransform::getFormatMetadata,
-             py::return_value_policy::reference_internal)
-        .def("getFormatMetadata", 
-             (const FormatMetadata & (GradingPrimaryTransform::*)() const)
+             (FormatMetadata & (GradingPrimaryTransform::*)()) 
              &GradingPrimaryTransform::getFormatMetadata,
-             py::return_value_policy::reference_internal)
-        .def("getStyle", &GradingPrimaryTransform::getStyle)
-        .def("setStyle", &GradingPrimaryTransform::setStyle, "style"_a)
-        .def("getValue", &GradingPrimaryTransform::getValue)
-        .def("setValue", &GradingPrimaryTransform::setValue, "values"_a)
-        .def("isDynamic", &GradingPrimaryTransform::isDynamic)
-        .def("makeDynamic", &GradingPrimaryTransform::makeDynamic)
-        .def("makeNonDynamic", &GradingPrimaryTransform::makeNonDynamic);
+             py::return_value_policy::reference_internal, 
+             DOC(GradingPrimaryTransform, getFormatMetadata))
+        .def("getStyle", &GradingPrimaryTransform::getStyle, 
+             DOC(GradingPrimaryTransform, getStyle))
+        .def("setStyle", &GradingPrimaryTransform::setStyle, "style"_a, 
+             DOC(GradingPrimaryTransform, setStyle))
+        .def("getValue", &GradingPrimaryTransform::getValue, 
+             DOC(GradingPrimaryTransform, getValue))
+        .def("setValue", &GradingPrimaryTransform::setValue, "values"_a, 
+             DOC(GradingPrimaryTransform, setValue))
+        .def("isDynamic", &GradingPrimaryTransform::isDynamic, 
+             DOC(GradingPrimaryTransform, isDynamic))
+        .def("makeDynamic", &GradingPrimaryTransform::makeDynamic, 
+             DOC(GradingPrimaryTransform, makeDynamic))
+        .def("makeNonDynamic", &GradingPrimaryTransform::makeNonDynamic, 
+             DOC(GradingPrimaryTransform, makeNonDynamic));
 }
 
 } // namespace OCIO_NAMESPACE

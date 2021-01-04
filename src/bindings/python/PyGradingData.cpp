@@ -7,9 +7,10 @@
 
 namespace OCIO_NAMESPACE
 {
-
+    
 namespace
 {
+
 enum GradingDataIterator
 {
     IT_CONTROL_POINT = 0,
@@ -26,113 +27,187 @@ void CopyGradingBSpline(GradingBSplineCurveRcPtr to, const ConstGradingBSplineCu
         to->getControlPoint(pt) = from->getControlPoint(pt);
     }
 }
-}
+
+} // namespace
 
 void bindPyGradingData(py::module & m)
 {
-    py::class_<GradingRGBM>(m, "GradingRGBM")
-        .def(py::init<>())
-        .def(py::init<double, double, double, double>(),
-            "red"_a, "green"_a, "blue"_a, "master"_a)
-        .def_readwrite("red", &GradingRGBM::m_red)
-        .def_readwrite("green", &GradingRGBM::m_green)
-        .def_readwrite("blue", &GradingRGBM::m_blue)
-        .def_readwrite("master", &GradingRGBM::m_master)
-        .def("__repr__",
-            [](const GradingRGBM & a)
-        {
-            std::ostringstream oss;
-            oss << a;
-            return oss.str();
-        });
+    GradingRGBCurveRcPtr DEFAULT_RGB_CURVE = GradingRGBCurve::Create(GRADING_LOG);
+    GradingControlPoint DEFAULT_CONTROL_POINT = GradingControlPoint();
 
-    py::class_<GradingPrimary>(m, "GradingPrimary")
-        .def(py::init<GradingStyle>())
-        .def("validate", &GradingPrimary::validate)
-        .def_readwrite("brightness", &GradingPrimary::m_brightness)
-        .def_readwrite("contrast", &GradingPrimary::m_contrast)
-        .def_readwrite("gamma", &GradingPrimary::m_gamma)
-        .def_readwrite("offset", &GradingPrimary::m_offset)
-        .def_readwrite("exposure", &GradingPrimary::m_exposure)
-        .def_readwrite("lift", &GradingPrimary::m_lift)
-        .def_readwrite("gain", &GradingPrimary::m_gain)
-        .def_readwrite("pivot", &GradingPrimary::m_pivot)
-        .def_readwrite("saturation", &GradingPrimary::m_saturation)
-        .def_readwrite("clampWhite", &GradingPrimary::m_clampWhite)
-        .def_readwrite("clampBlack", &GradingPrimary::m_clampBlack)
-        .def_readwrite("pivotWhite", &GradingPrimary::m_pivotWhite)
-        .def_readwrite("pivotBlack", &GradingPrimary::m_pivotBlack)
+    auto clsGradingRGBM = 
+        py::class_<GradingRGBM>(
+            m, "GradingRGBM", 
+            DOC(GradingRGBM));
+
+    auto clsGradingPrimary = 
+        py::class_<GradingPrimary>(
+            m, "GradingPrimary", 
+            DOC(GradingPrimary));
+
+    auto clsGradingRGBMSW = 
+        py::class_<GradingRGBMSW>(
+            m, "GradingRGBMSW", 
+            DOC(GradingRGBMSW));
+
+    auto clsGradingTone = 
+        py::class_<GradingTone>(
+            m, "GradingTone", 
+            DOC(GradingTone));
+
+    auto clsGradingControlPoint = 
+        py::class_<GradingControlPoint>(
+            m, "GradingControlPoint", 
+            DOC(GradingControlPoint));
+
+    auto clsGradingBSplineCurve = 
+        py::class_<GradingBSplineCurve, GradingBSplineCurveRcPtr /*holder*/>(
+            m, "GradingBSplineCurve", 
+            DOC(GradingBSplineCurve));
+
+    auto clsGradingControlPointIterator = 
+        py::class_<GradingControlPointIterator>(
+            clsGradingBSplineCurve, "GradingControlPointIterator");
+
+    auto clsGradingRGBCurve = 
+        py::class_<GradingRGBCurve, GradingRGBCurveRcPtr /*holder*/>(
+            m, "GradingRGBCurve", 
+            DOC(GradingRGBCurve));
+
+    clsGradingRGBM
+        .def(py::init<>(), 
+             DOC(GradingRGBM, GradingRGBM))
+        .def(py::init<double, double, double, double>(), 
+             "red"_a, "green"_a, "blue"_a, "master"_a,
+             DOC(GradingRGBM, GradingRGBM, 2))
+
+        .def_readwrite("red", &GradingRGBM::m_red, 
+                       DOC(GradingRGBM, m_red))
+        .def_readwrite("green", &GradingRGBM::m_green, 
+                       DOC(GradingRGBM, m_green))
+        .def_readwrite("blue", &GradingRGBM::m_blue, 
+                       DOC(GradingRGBM, m_blue))
+        .def_readwrite("master", &GradingRGBM::m_master, 
+                       DOC(GradingRGBM, m_master));
+
+    defStr(clsGradingRGBM);
+
+    clsGradingPrimary
+        .def(py::init<GradingStyle>(), 
+             DOC(GradingPrimary, GradingPrimary))
+
+        .def("validate", &GradingPrimary::validate, 
+             DOC(GradingPrimary, validate))
+
+        .def_readwrite("brightness", &GradingPrimary::m_brightness, 
+                       DOC(GradingPrimary, m_brightness))
+        .def_readwrite("contrast", &GradingPrimary::m_contrast, 
+                       DOC(GradingPrimary, m_contrast))
+        .def_readwrite("gamma", &GradingPrimary::m_gamma, 
+                       DOC(GradingPrimary, m_gamma))
+        .def_readwrite("offset", &GradingPrimary::m_offset, 
+                       DOC(GradingPrimary, m_offset))
+        .def_readwrite("exposure", &GradingPrimary::m_exposure, 
+                       DOC(GradingPrimary, m_exposure))
+        .def_readwrite("lift", &GradingPrimary::m_lift, 
+                       DOC(GradingPrimary, m_lift))
+        .def_readwrite("gain", &GradingPrimary::m_gain, 
+                       DOC(GradingPrimary, m_gain))
+        .def_readwrite("pivot", &GradingPrimary::m_pivot, 
+                       DOC(GradingPrimary, m_pivot))
+        .def_readwrite("saturation", &GradingPrimary::m_saturation, 
+                       DOC(GradingPrimary, m_saturation))
+        .def_readwrite("clampWhite", &GradingPrimary::m_clampWhite, 
+                       DOC(GradingPrimary, m_clampWhite))
+        .def_readwrite("clampBlack", &GradingPrimary::m_clampBlack, 
+                       DOC(GradingPrimary, m_clampBlack))
+        .def_readwrite("pivotWhite", &GradingPrimary::m_pivotWhite, 
+                       DOC(GradingPrimary, m_pivotWhite))
+        .def_readwrite("pivotBlack", &GradingPrimary::m_pivotBlack, 
+                       DOC(GradingPrimary, m_pivotBlack))
+
         .def_property_readonly_static("NoClampBlack", [](py::object /* self */)
-        {
-            return GradingPrimary::NoClampBlack();
-        })
+            {
+                return GradingPrimary::NoClampBlack();
+            }, 
+                                      DOC(GradingPrimary, m_brightness))
         .def_property_readonly_static("NoClampWhite", [](py::object /* self */)
-        {
-            return GradingPrimary::NoClampWhite();
-        })
-        .def("__repr__",
-            [](const GradingPrimary & a)
-        {
-            std::ostringstream oss;
-            oss << a;
-            return oss.str();
-        });
+            {
+                return GradingPrimary::NoClampWhite();
+            }, 
+                                      DOC(GradingPrimary, m_brightness));
 
-    py::class_<GradingRGBMSW>(m, "GradingRGBMSW")
-        .def(py::init<>())
-        .def(py::init<double, double, double, double, double, double>(),
-            "red"_a, "green"_a, "blue"_a, "master"_a, "start"_a, "width"_a)
-        .def(py::init<double, double>(),
-            "start"_a, "width"_a)
-        .def_readwrite("red", &GradingRGBMSW::m_red)
-        .def_readwrite("green", &GradingRGBMSW::m_green)
-        .def_readwrite("blue", &GradingRGBMSW::m_blue)
-        .def_readwrite("master", &GradingRGBMSW::m_master)
-        .def_readwrite("start", &GradingRGBMSW::m_start)
-        .def_readwrite("width", &GradingRGBMSW::m_width)
-        .def("__repr__",
-                [](const GradingRGBMSW & a)
-        {
-            std::ostringstream oss;
-            oss << a;
-            return oss.str();
-        });
+    defStr(clsGradingPrimary);
 
-    py::class_<GradingTone>(m, "GradingTone")
-        .def(py::init<GradingStyle>())
-        .def("validate", &GradingTone::validate)
-        .def_readwrite("blacks", &GradingTone::m_blacks)
-        .def_readwrite("whites", &GradingTone::m_whites)
-        .def_readwrite("shadows", &GradingTone::m_shadows)
-        .def_readwrite("highlights", &GradingTone::m_highlights)
-        .def_readwrite("midtones", &GradingTone::m_midtones)
-        .def_readwrite("scontrast", &GradingTone::m_scontrast)
-        .def("__repr__",
-            [](const GradingTone& a)
-        {
-            std::ostringstream oss;
-            oss << a;
-            return oss.str();
-        });
+    clsGradingRGBMSW
+        .def(py::init<>(), 
+             DOC(GradingRGBMSW, GradingRGBMSW))
+        .def(py::init<double, double, double, double, double, double>(), 
+             "red"_a, "green"_a, "blue"_a, "master"_a, "start"_a, "width"_a,
+             DOC(GradingRGBMSW, GradingRGBMSW, 2))
+        .def(py::init<double, double>(), 
+             "start"_a, "width"_a,
+             DOC(GradingRGBMSW, GradingRGBMSW, 3))
 
-    auto clsGCP = py::class_<GradingControlPoint>(m, "GradingControlPoint")
-        .def(py::init<>())
-        .def(py::init<float, float>(), "x"_a = 0., "y"_a = 0.)
-        .def_readwrite("x", &GradingControlPoint::m_x)
-        .def_readwrite("y", &GradingControlPoint::m_y)
-        .def("__repr__", [](const GradingControlPoint & cp)
-        {
-            std::ostringstream oss;
-            oss << cp;
-            return oss.str();
-        });
+        .def_readwrite("red", &GradingRGBMSW::m_red, 
+                       DOC(GradingRGBMSW, m_red))
+        .def_readwrite("green", &GradingRGBMSW::m_green, 
+                       DOC(GradingRGBMSW, m_green))
+        .def_readwrite("blue", &GradingRGBMSW::m_blue, 
+                       DOC(GradingRGBMSW, m_blue))
+        .def_readwrite("master", &GradingRGBMSW::m_master, 
+                       DOC(GradingRGBMSW, m_master))
+        .def_readwrite("start", &GradingRGBMSW::m_start, 
+                       DOC(GradingRGBMSW, m_start))
+        .def_readwrite("width", &GradingRGBMSW::m_width, 
+                       DOC(GradingRGBMSW, m_width));
 
-    auto clsGBSC = py::class_<GradingBSplineCurve, GradingBSplineCurveRcPtr /*holder*/>(m, "GradingBSplineCurve")
+    defStr(clsGradingRGBMSW);
+
+    clsGradingTone
+        .def(py::init<GradingStyle>(), 
+             DOC(GradingTone, GradingTone))
+
+        .def("validate", &GradingTone::validate, 
+             DOC(GradingTone, validate))
+
+        .def_readwrite("blacks", &GradingTone::m_blacks, 
+                       DOC(GradingTone, m_blacks))
+        .def_readwrite("whites", &GradingTone::m_whites, 
+                       DOC(GradingTone, m_whites))
+        .def_readwrite("shadows", &GradingTone::m_shadows, 
+                       DOC(GradingTone, m_shadows))
+        .def_readwrite("highlights", &GradingTone::m_highlights, 
+                       DOC(GradingTone, m_highlights))
+        .def_readwrite("midtones", &GradingTone::m_midtones, 
+                       DOC(GradingTone, m_midtones))
+        .def_readwrite("scontrast", &GradingTone::m_scontrast, 
+                       DOC(GradingTone, m_scontrast));
+
+    defStr(clsGradingTone);
+
+    clsGradingControlPoint
+        .def(py::init<>(), 
+             DOC(GradingControlPoint, GradingControlPoint))
+        .def(py::init<float, float>(), 
+             "x"_a = DEFAULT_CONTROL_POINT.m_x, 
+             "y"_a = DEFAULT_CONTROL_POINT.m_y,
+             DOC(GradingControlPoint, GradingControlPoint, 2))
+
+        .def_readwrite("x", &GradingControlPoint::m_x, 
+                       DOC(GradingControlPoint, m_x))
+        .def_readwrite("y", &GradingControlPoint::m_y, 
+                       DOC(GradingControlPoint, m_y));
+
+    defStr(clsGradingControlPoint);
+
+    clsGradingBSplineCurve
         .def(py::init([](size_t size)
             {
-                GradingBSplineCurveRcPtr c = GradingBSplineCurve::Create(size);
-                return c;
-            }), "size"_a)
+                return GradingBSplineCurve::Create(size);
+            }),
+             "size"_a,
+             DOC(GradingBSplineCurve, Create))
         .def(py::init([](const std::vector<float> & values)
             {
                 const auto size = values.size();
@@ -153,103 +228,108 @@ void bindPyGradingData(py::module & m)
                     c->getControlPoint(p).m_y = values[2 * p + 1];
                 }
                 return c;
-            }))
-        .def("validate", &GradingBSplineCurve::validate)
-        .def("setNumControlPoints", &GradingBSplineCurve::setNumControlPoints, "size"_a)
+            }),
+             DOC(GradingBSplineCurve, Create, 2))
+
+        .def("validate", &GradingBSplineCurve::validate, 
+             DOC(GradingBSplineCurve, validate))
+        .def("setNumControlPoints", &GradingBSplineCurve::setNumControlPoints, "size"_a, 
+             DOC(GradingBSplineCurve, setNumControlPoints))
         .def("getControlPoints", [](GradingBSplineCurveRcPtr & self)
             {
                 return GradingControlPointIterator(self);
-            })
-        .def("__repr__", [](const GradingBSplineCurveRcPtr & bs)
-            {
-                std::ostringstream oss;
-                oss << *bs;
-                return oss.str();
             });
 
-    py::class_<GradingControlPointIterator>(clsGBSC, "GradingControlPointIterator")
+    defStr(clsGradingBSplineCurve);
+
+    clsGradingControlPointIterator
         .def("__len__", [](GradingControlPointIterator & it)
-        {
-            return it.m_obj->getNumControlPoints();
-        })
+            {
+                return it.m_obj->getNumControlPoints();
+            })
         .def("__getitem__", [](GradingControlPointIterator & it, int i)
-        {
-            return it.m_obj->getControlPoint(i);
-        })
-        .def("__setitem__", [](GradingControlPointIterator & it, int i, const GradingControlPoint & cpt)
-        {
-            it.m_obj->getControlPoint(i) = cpt;
-        })
+            {
+                return it.m_obj->getControlPoint(i);
+            })
+        .def("__setitem__", [](GradingControlPointIterator & it, 
+                               int i, 
+                               const GradingControlPoint & cpt)
+            {
+                it.m_obj->getControlPoint(i) = cpt;
+            })
         .def("__iter__", [](GradingControlPointIterator & it) -> GradingControlPointIterator &
-        {
-            return it;
-        })
+            {
+                return it;
+            })
         .def("__next__", [](GradingControlPointIterator & it)
-        {
-            int numPt = static_cast<int>(it.m_obj->getNumControlPoints());
-            size_t i = static_cast<size_t>(it.nextIndex(numPt));
-            return it.m_obj->getControlPoint(i);
-        });
+            {
+                int numPt = static_cast<int>(it.m_obj->getNumControlPoints());
+                size_t i = static_cast<size_t>(it.nextIndex(numPt));
+                return it.m_obj->getControlPoint(i);
+            });
 
-
-   GradingRGBCurveRcPtr DEFAULT_RGBCURVE = GradingRGBCurve::Create(GRADING_LOG);
-   auto cls = py::class_<GradingRGBCurve, GradingRGBCurveRcPtr /*holder*/>(m, "GradingRGBCurve")
+    clsGradingRGBCurve
         .def(py::init([](GradingStyle style)
             {
-                GradingRGBCurveRcPtr rgbcurve = GradingRGBCurve::Create(style);
-                return rgbcurve;
-            }), "style"_a)
+                return GradingRGBCurve::Create(style);
+            }), 
+             "style"_a,
+             DOC(GradingRGBCurve, GradingRGBCurve))
         .def(py::init([](const GradingBSplineCurveRcPtr & red,
                          const GradingBSplineCurveRcPtr & green,
                          const GradingBSplineCurveRcPtr & blue, 
                          const GradingBSplineCurveRcPtr & master)
             {
-                GradingRGBCurveRcPtr rgbcurve = GradingRGBCurve::Create(red, green, blue, master);
-                return rgbcurve;
+                return GradingRGBCurve::Create(red, green, blue, master);
             }),
-            "red"_a = DEFAULT_RGBCURVE->getCurve(RGB_RED),
-            "green"_a = DEFAULT_RGBCURVE->getCurve(RGB_GREEN),
-            "blue"_a = DEFAULT_RGBCURVE->getCurve(RGB_BLUE),
-            "master"_a = DEFAULT_RGBCURVE->getCurve(RGB_MASTER))
-       .def_property("red", [](const GradingRGBCurveRcPtr & rgbcurve)
+                         "red"_a = DEFAULT_RGB_CURVE->getCurve(RGB_RED),
+                         "green"_a = DEFAULT_RGB_CURVE->getCurve(RGB_GREEN),
+                         "blue"_a = DEFAULT_RGB_CURVE->getCurve(RGB_BLUE),
+                         "master"_a = DEFAULT_RGB_CURVE->getCurve(RGB_MASTER),
+                         DOC(GradingRGBCurve, GradingRGBCurve, 2))
+
+       .def_property("red", 
+                     [](const GradingRGBCurveRcPtr & rgbCurve)
             {
-                return rgbcurve->getCurve(RGB_RED);
+                return rgbCurve->getCurve(RGB_RED);
             },
-            [](const GradingRGBCurveRcPtr & rgbCurve, const GradingBSplineCurveRcPtr & red)
+                     [](const GradingRGBCurveRcPtr & rgbCurve, 
+                        const GradingBSplineCurveRcPtr & red)
             {
                 CopyGradingBSpline(rgbCurve->getCurve(RGB_RED), red);
             })
-        .def_property("green", [](const GradingRGBCurveRcPtr & rgbcurve)
+        .def_property("green", 
+                      [](const GradingRGBCurveRcPtr & rgbCurve)
             {
-                return rgbcurve->getCurve(RGB_GREEN);
+                return rgbCurve->getCurve(RGB_GREEN);
             },
-                    [](const GradingRGBCurveRcPtr & rgbCurve, const GradingBSplineCurveRcPtr & green)
+                      [](const GradingRGBCurveRcPtr & rgbCurve, 
+                         const GradingBSplineCurveRcPtr & green)
             {
                 CopyGradingBSpline(rgbCurve->getCurve(RGB_GREEN), green);
             })
-        .def_property("blue", [](const GradingRGBCurveRcPtr & rgbcurve)
+        .def_property("blue", 
+                      [](const GradingRGBCurveRcPtr & rgbCurve)
             {
-                return rgbcurve->getCurve(RGB_BLUE);
+                return rgbCurve->getCurve(RGB_BLUE);
             },
-                    [](const GradingRGBCurveRcPtr & rgbCurve, const GradingBSplineCurveRcPtr & blue)
+                      [](const GradingRGBCurveRcPtr & rgbCurve, 
+                         const GradingBSplineCurveRcPtr & blue)
             {
                 CopyGradingBSpline(rgbCurve->getCurve(RGB_BLUE), blue);
             })
-       .def_property("master", [](const GradingRGBCurveRcPtr & rgbcurve)
+       .def_property("master", 
+                     [](const GradingRGBCurveRcPtr & rgbCurve)
             {
-                return rgbcurve->getCurve(RGB_MASTER);
+                return rgbCurve->getCurve(RGB_MASTER);
             },
-            [](const GradingRGBCurveRcPtr & rgbCurve, const GradingBSplineCurveRcPtr & master)
+                     [](const GradingRGBCurveRcPtr & rgbCurve, 
+                        const GradingBSplineCurveRcPtr & master)
             {
                 CopyGradingBSpline(rgbCurve->getCurve(RGB_MASTER), master);
-            })
-        .def("__repr__", [](const GradingRGBCurveRcPtr & rgbcurve)
-            {
-                std::ostringstream oss;
-                oss << *rgbcurve;
-                return oss.str();
             });
 
+    defStr(clsGradingRGBCurve);
 }
 
 } // namespace OCIO_NAMESPACE
