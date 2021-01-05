@@ -81,7 +81,7 @@ Some optional components also depend on:
     - sphinx-press-theme
     - sphinx-tabs
     - breathe
-- NumPy (for Python test suite)
+- NumPy (for complete Python test suite)
 - Doxygen (for the docs)
 - OpenImageIO >= 2.1.9 (for apps including ocioconvert)
 

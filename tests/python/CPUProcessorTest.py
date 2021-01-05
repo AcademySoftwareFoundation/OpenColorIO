@@ -1,9 +1,19 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright Contributors to the OpenColorIO Project.
 
+import logging
 import unittest
 
-import numpy as np
+logger = logging.getLogger(__name__)
+
+try:
+    import numpy as np
+except ImportError:
+    logger.warning(
+        "NumPy could not be imported. "
+        "Test case will lack significant coverage!"
+    )
+    np = None
 
 import PyOpenColorIO as OCIO
 
@@ -15,14 +25,83 @@ class CPUProcessorTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         # ---------------------------------------------------------------------
+        # OCIO objects
+        # ---------------------------------------------------------------------
+        cls.config = OCIO.Config()
+        cls.proc_fwd = cls.config.getProcessor(
+            OCIO.MatrixTransform.Scale([0.5, 0.5, 0.5, 1.0])
+        )
+        cls.proc_inv = cls.config.getProcessor(
+            OCIO.MatrixTransform.Scale([2.0, 2.0, 2.0, 1.0])
+        )
+
+        # BIT_DEPTH_F32
+        cls.default_cpu_proc_fwd = cls.proc_fwd.getDefaultCPUProcessor()
+        cls.default_cpu_proc_inv = cls.proc_inv.getDefaultCPUProcessor()
+
+        # BIT_DEPTH_F16
+        cls.half_cpu_proc_fwd = cls.proc_fwd.getOptimizedCPUProcessor(
+            OCIO.BIT_DEPTH_F16, 
+            OCIO.BIT_DEPTH_F16, 
+            OCIO.OPTIMIZATION_DEFAULT
+        )
+        cls.half_cpu_proc_inv = cls.proc_inv.getOptimizedCPUProcessor(
+            OCIO.BIT_DEPTH_F16, 
+            OCIO.BIT_DEPTH_F16, 
+            OCIO.OPTIMIZATION_DEFAULT
+        )
+
+        # BIT_DEPTH_UINT16
+        cls.uint16_cpu_proc_fwd = cls.proc_fwd.getOptimizedCPUProcessor(
+            OCIO.BIT_DEPTH_UINT16, 
+            OCIO.BIT_DEPTH_UINT16, 
+            OCIO.OPTIMIZATION_DEFAULT
+        )
+        cls.uint16_cpu_proc_inv = cls.proc_inv.getOptimizedCPUProcessor(
+            OCIO.BIT_DEPTH_UINT16, 
+            OCIO.BIT_DEPTH_UINT16, 
+            OCIO.OPTIMIZATION_DEFAULT
+        )
+
+        # BIT_DEPTH_UINT8
+        cls.uint8_cpu_proc_fwd = cls.proc_fwd.getOptimizedCPUProcessor(
+            OCIO.BIT_DEPTH_UINT8, 
+            OCIO.BIT_DEPTH_UINT8, 
+            OCIO.OPTIMIZATION_DEFAULT
+        )
+        cls.uint8_cpu_proc_inv = cls.proc_inv.getOptimizedCPUProcessor(
+            OCIO.BIT_DEPTH_UINT8, 
+            OCIO.BIT_DEPTH_UINT8, 
+            OCIO.OPTIMIZATION_DEFAULT
+        )
+
+        # ---------------------------------------------------------------------
         # Test image data
         # ---------------------------------------------------------------------
+        if not np:
+            # NumPy not found. Only test lists.
+            log_range = [float(2**i) for i in range(-15, 15)]
+
+            cls.float_rgb_list = (
+                [-65504.0] + 
+                list(reversed(log_range)) + 
+                [0.0] + 
+                log_range + 
+                [65504.0]
+            )
+
+            cls.float_rgba_list = list(cls.float_rgb_list)
+            for i in reversed(range(3, len(cls.float_rgb_list)+1, 3)):
+                cls.float_rgba_list.insert(i, 1.0)
+
+            return
+
         log_range = np.logspace(-15, 15, 30, base=2)
 
         # BIT_DEPTH_F32
         cls.float_rgb_1d = np.concatenate((
             [-65504.0], 
-            np.flip(-log_range), 
+            np.flip(-log_range, 0), 
             [0.0], 
             log_range, 
             [65504.0]
@@ -85,57 +164,6 @@ class CPUProcessorTest(unittest.TestCase):
         )
         cls.uint8_rgba_2d = cls.uint8_rgba_1d.reshape([21, 4])
         cls.uint8_rgba_3d = cls.uint8_rgba_1d.reshape([7, 3, 4])
-
-        # ---------------------------------------------------------------------
-        # OCIO objects
-        # ---------------------------------------------------------------------
-        cls.config = OCIO.Config()
-        cls.proc_fwd = cls.config.getProcessor(
-            OCIO.MatrixTransform.Scale([0.5, 0.5, 0.5, 1.0])
-        )
-        cls.proc_inv = cls.config.getProcessor(
-            OCIO.MatrixTransform.Scale([2.0, 2.0, 2.0, 1.0])
-        )
-
-        # BIT_DEPTH_F32
-        cls.default_cpu_proc_fwd = cls.proc_fwd.getDefaultCPUProcessor()
-        cls.default_cpu_proc_inv = cls.proc_inv.getDefaultCPUProcessor()
-
-        # BIT_DEPTH_F16
-        cls.half_cpu_proc_fwd = cls.proc_fwd.getOptimizedCPUProcessor(
-            OCIO.BIT_DEPTH_F16, 
-            OCIO.BIT_DEPTH_F16, 
-            OCIO.OPTIMIZATION_DEFAULT
-        )
-        cls.half_cpu_proc_inv = cls.proc_inv.getOptimizedCPUProcessor(
-            OCIO.BIT_DEPTH_F16, 
-            OCIO.BIT_DEPTH_F16, 
-            OCIO.OPTIMIZATION_DEFAULT
-        )
-
-        # BIT_DEPTH_UINT16
-        cls.uint16_cpu_proc_fwd = cls.proc_fwd.getOptimizedCPUProcessor(
-            OCIO.BIT_DEPTH_UINT16, 
-            OCIO.BIT_DEPTH_UINT16, 
-            OCIO.OPTIMIZATION_DEFAULT
-        )
-        cls.uint16_cpu_proc_inv = cls.proc_inv.getOptimizedCPUProcessor(
-            OCIO.BIT_DEPTH_UINT16, 
-            OCIO.BIT_DEPTH_UINT16, 
-            OCIO.OPTIMIZATION_DEFAULT
-        )
-
-        # BIT_DEPTH_UINT8
-        cls.uint8_cpu_proc_fwd = cls.proc_fwd.getOptimizedCPUProcessor(
-            OCIO.BIT_DEPTH_UINT8, 
-            OCIO.BIT_DEPTH_UINT8, 
-            OCIO.OPTIMIZATION_DEFAULT
-        )
-        cls.uint8_cpu_proc_inv = cls.proc_inv.getOptimizedCPUProcessor(
-            OCIO.BIT_DEPTH_UINT8, 
-            OCIO.BIT_DEPTH_UINT8, 
-            OCIO.OPTIMIZATION_DEFAULT
-        )
 
     def test_is_no_op(self):
         self.assertFalse(self.default_cpu_proc_fwd.isNoOp())
@@ -265,6 +293,10 @@ class CPUProcessorTest(unittest.TestCase):
         )
 
     def test_apply(self):
+        if not np:
+            logger.warning("NumPy not found. Skipping test!")
+            return
+
         # Wrap buffer in ImageDesc
         arr = self.float_rgb_3d.copy()
         image = OCIO.PackedImageDesc(arr, 7, 3, 3)
@@ -290,6 +322,10 @@ class CPUProcessorTest(unittest.TestCase):
             )
 
     def test_apply_src_dst(self):
+        if not np:
+            logger.warning("NumPy not found. Skipping test!")
+            return
+
         # Wrap buffers in ImageDesc
         src_arr = self.float_rgb_3d.copy()
         src_image = OCIO.PackedImageDesc(src_arr, 7, 3, 3)
@@ -350,6 +386,10 @@ class CPUProcessorTest(unittest.TestCase):
             )
 
     def test_apply_rgb_buffer(self):
+        if not np:
+            logger.warning("NumPy not found. Skipping test!")
+            return
+
         for arr, cpu_proc_fwd, cpu_proc_inv in [
             (
                 self.float_rgb_1d, 
@@ -479,6 +519,10 @@ class CPUProcessorTest(unittest.TestCase):
                 )
 
     def test_apply_rgba_buffer(self):
+        if not np:
+            logger.warning("NumPy not found. Skipping test!")
+            return
+
         for arr, cpu_proc_fwd, cpu_proc_inv in [
             (
                 self.float_rgba_1d, 

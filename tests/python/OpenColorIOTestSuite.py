@@ -1,9 +1,15 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright Contributors to the OpenColorIO Project.
 
+import logging
 import unittest
 import os
 import sys
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="[%(levelname)s] %(name)s: %(message)s",
+)
 
 build_location = sys.argv[1]
 os.environ["BUILD_LOCATION"] = build_location
