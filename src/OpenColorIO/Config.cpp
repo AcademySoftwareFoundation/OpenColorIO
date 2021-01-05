@@ -42,6 +42,7 @@ const char * OCIO_ACTIVE_DISPLAYS_ENVVAR      = "OCIO_ACTIVE_DISPLAYS";
 const char * OCIO_ACTIVE_VIEWS_ENVVAR         = "OCIO_ACTIVE_VIEWS";
 const char * OCIO_INACTIVE_COLORSPACES_ENVVAR = "OCIO_INACTIVE_COLORSPACES";
 const char * OCIO_OPTIMIZATION_FLAGS_ENVVAR   = "OCIO_OPTIMIZATION_FLAGS";
+const char * OCIO_USER_CATEGORIES_ENVVAR      = "OCIO_USER_CATEGORIES_ENVVAR";
 
 // A shared view using this for the color space name will use a display color space that
 // has the same name as the display the shared view is used by.
@@ -62,7 +63,6 @@ constexpr char INTERNAL_RAW_PROFILE[] =
     "roles:\n"
     "  default: raw\n"
     "file_rules:\n"
-    "  - !<Rule> {name: ColorSpaceNamePathSearch}\n"
     "  - !<Rule> {name: Default, colorspace: default}\n"
     "displays:\n"
     "  sRGB:\n"
@@ -1882,9 +1882,9 @@ char Config::getFamilySeparator() const
     return getImpl()->m_familySeparator;
 }
 
-void Config::resetFamilySeparatorToDefault() noexcept
+char Config::GetDefaultFamilySeparator() noexcept
 {
-    getImpl()->m_familySeparator = Impl::DefaultFamilySeparator;
+    return Impl::DefaultFamilySeparator;
 }
 
 void Config::setFamilySeparator(char separator)

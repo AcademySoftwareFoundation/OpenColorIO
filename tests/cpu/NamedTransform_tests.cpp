@@ -250,6 +250,7 @@ named_transforms:
   - !<NamedTransform>
     name: forward
     aliases: [nt1, ntf]
+    encoding: scene-linear
     transform: !<MatrixTransform> {name: forward, offset: [0.1, 0.2, 0.3, 0.4]}
 
   - !<NamedTransform>
@@ -282,6 +283,7 @@ named_transforms:
     {
         auto nt = config->getNamedTransform(forward.c_str());
         OCIO_REQUIRE_ASSERT(nt);
+        OCIO_CHECK_EQUAL(std::string(nt->getEncoding()), "scene-linear");
         // Get the transform in the wanted direction and make sure it exists (else use the other
         // transform in the other direction).
         auto tf = nt->getTransform(OCIO::TRANSFORM_DIR_FORWARD);
@@ -760,6 +762,7 @@ colorspaces:
     aliases: [named1, named2]
     family: family
     categories: [input, basic]
+    encoding: data
     transform: !<ColorSpaceTransform> {src: default, dst: raw}
 
   - !<NamedTransform>
@@ -790,6 +793,7 @@ colorspaces:
         OCIO_REQUIRE_EQUAL(nt->getNumCategories(), 2);
         OCIO_CHECK_EQUAL(std::string(nt->getCategory(0)), "input");
         OCIO_CHECK_EQUAL(std::string(nt->getCategory(1)), "basic");
+        OCIO_CHECK_EQUAL(std::string(nt->getEncoding()), "data");
         std::ostringstream oss;
         OCIO_CHECK_NO_THROW(oss << *config.get());
         OCIO_CHECK_EQUAL(oss.str(), configStr);
