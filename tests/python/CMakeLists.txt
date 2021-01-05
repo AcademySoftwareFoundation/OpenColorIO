@@ -1,6 +1,10 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright Contributors to the OpenColorIO Project.
 
+# NumPy
+# https://pypi.org/project/numpy/
+find_python_package(numpy REQUIRED)
+
 set(BUILD_TYPE "")
 if (MSVC_IDE)
     # Note: By default Microsoft Visual Studio editor happens the build type to the build directory.
