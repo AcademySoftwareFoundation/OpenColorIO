@@ -1,9 +1,15 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright Contributors to the OpenColorIO Project.
 
+import logging
 import unittest
 import os
 import sys
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="[%(levelname)s] %(name)s: %(message)s",
+)
 
 build_location = sys.argv[1]
 os.environ["BUILD_LOCATION"] = build_location
@@ -38,6 +44,7 @@ import AllocationTransformTest
 import BuiltinTransformRegistryTest
 import BuiltinTransformTest
 import CDLTransformTest
+import CPUProcessorTest
 import ColorSpaceHelpersTest
 import ColorSpaceTest
 import ColorSpaceTransformTest
@@ -86,6 +93,7 @@ def suite():
     suite.addTest(loader.loadTestsFromModule(BuiltinTransformRegistryTest))
     suite.addTest(loader.loadTestsFromModule(BuiltinTransformTest))
     suite.addTest(loader.loadTestsFromModule(CDLTransformTest))
+    suite.addTest(loader.loadTestsFromModule(CPUProcessorTest))
     suite.addTest(loader.loadTestsFromModule(ColorSpaceHelpersTest))
     suite.addTest(loader.loadTestsFromModule(ColorSpaceTest))
     suite.addTest(loader.loadTestsFromModule(ColorSpaceTransformTest))
