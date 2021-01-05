@@ -71,6 +71,8 @@ long chanOrderToNumChannels(ChannelOrdering chanOrder);
 
 // Return string that describes Python buffer's N-dimensional array shape
 std::string getBufferShapeStr(const py::buffer_info & info);
+// Return BitDepth for a supported Python buffer data type
+BitDepth getBufferBitDepth(const py::buffer_info & info);
 
 // Throw if Python buffer format is incompatible with a NumPy dtype
 void checkBufferType(const py::buffer_info & info, const py::dtype & dt);
