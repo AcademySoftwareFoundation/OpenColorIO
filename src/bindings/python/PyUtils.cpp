@@ -77,9 +77,8 @@ py::dtype bitDepthToDtype(BitDepth bitDepth)
         case BIT_DEPTH_UINT32:
         case BIT_DEPTH_UNKNOWN:
         default:
-            err = "PackedImageDesc Error: Unsupported bit-depth: ";
+            err = "Error: Unsupported bit-depth: ";
             err += BitDepthToString(bitDepth);
-            err += ".";
             throw Exception(err.c_str());
     }
 
@@ -105,9 +104,8 @@ ssize_t bitDepthToBytes(BitDepth bitDepth)
         case BIT_DEPTH_UINT32:
         case BIT_DEPTH_UNKNOWN:
         default:
-            err = "PackedImageDesc Error: Unsupported bit-depth: ";
+            err = "Error: Unsupported bit-depth: ";
             err += BitDepthToString(bitDepth);
-            err += ".";
             throw Exception(err.c_str());
     }
 }
@@ -138,6 +136,30 @@ std::string getBufferShapeStr(const py::buffer_info & info)
     }
     os << ")";
     return os.str();
+}
+
+BitDepth getBufferBitDepth(const py::buffer_info & info)
+{
+    BitDepth bitDepth;
+    
+    std::string dtName = formatCodeToDtypeName(info.format, info.itemsize*8);
+
+    if (dtName == "float32")
+        bitDepth = BIT_DEPTH_F32;
+    else if (dtName == "float16")
+        bitDepth = BIT_DEPTH_F16;
+    else if (dtName == "uint16" || dtName == "uint12" || dtName == "uint10")
+        bitDepth = BIT_DEPTH_UINT16;
+    else if (dtName == "uint8")
+        bitDepth = BIT_DEPTH_UINT8;
+    else 
+    {
+        std::ostringstream os;
+        os << "Unsupported data type: " << dtName;
+        throw std::runtime_error(os.str().c_str());
+    }
+
+    return bitDepth;
 }
 
 void checkBufferType(const py::buffer_info & info, const py::dtype & dt)
