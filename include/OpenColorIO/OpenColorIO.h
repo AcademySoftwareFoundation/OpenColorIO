@@ -14,6 +14,7 @@
 #include "OpenColorABI.h"
 #include "OpenColorTypes.h"
 #include "OpenColorTransforms.h"
+#include "OpenColorAppHelpers.h"
 
 
 /*
@@ -292,14 +293,24 @@ public:
     void validate() const;
 
     /**
+     * Get/set a name string for the config.
+     *
+     * The name string may be used to communicate config update details or similar information
+     * to workflows external to OCIO in cases where the config path/filename itself does not
+     * provide adequate information.
+     */
+    const char * getName() const noexcept;
+    void setName(const char * name) noexcept;
+
+    /**
      * \brief Get the family separator
      * 
      * A single character used to separate the family string into tokens for use in hierarchical
      * menus.  Defaults to '/'.
      */
     char getFamilySeparator() const;
-    /// Reset the family separator to default i.e. '/' .
-    void resetFamilySeparatorToDefault() noexcept;
+    /// Get the default family separator i.e. '/' .
+    static char GetDefaultFamilySeparator() noexcept;
     /**
      * \brief Set the family separator
      *
@@ -450,7 +461,7 @@ public:
      *      and return -1 if the name is not found.
      *
      * \note
-     *    The fcn accepts either a color space OR role name.
+     *    The fcn accepts either a color space name, role name, or alias.
      *    (Color space names take precedence over roles.)
      */
     int getIndexForColorSpace(const char * name) const;
@@ -460,10 +471,16 @@ public:
      *      (i.e. active and inactive) and return null if the name is not found.
      *
      * \note
-     *     The fcn accepts either a color space OR role name.
+     *     The fcn accepts either a color space name, role name, or alias.
      *     (Color space names take precedence over roles.)
      */
     ConstColorSpaceRcPtr getColorSpace(const char * name) const;
+
+    /**
+     * Accepts an alias, role name, named transform name, or color space name and returns the
+     * color space name or the named transform name.
+     */
+    const char * getCanonicalName(const char * name) const;
 
     /**
      * \brief Add a color space to the configuration.
@@ -482,15 +499,20 @@ public:
      * \brief Remove a color space from the configuration.
      *
      * \note
-     *    It does not throw an exception if the color space is not present
-     *    or used by an existing role.  Role name arguments are ignored.
+     *    It does not throw an exception.  Name must be the canonical name.  If a role name or
+     *    alias is provided or if the name is not in the config, nothing is done.
      * \note
-     *    Removing a color space to a \ref Config does not affect any
+     *    Removing a color space from a \ref Config does not affect any
      *    \ref ColorSpaceSet sets that have already been created.
      */
     void removeColorSpace(const char * name);
 
-    /// Return true if the color space is used by a transform, a role, or a look.
+    /**
+     * Return true if the color space is used by a transform, a role, or a look.
+     *
+     * \note
+     *    Name must be the canonical name.
+     */
     bool isColorSpaceUsed(const char * name) const noexcept;
 
     /**
@@ -501,20 +523,6 @@ public:
      *    any \ref ColorSpaceSet sets that have already been created.
      */
     void clearColorSpaces();
-
-    /**
-     * \brief Given the specified string, get the longest,
-     *      right-most, colorspace substring that appears.
-     *
-     * * If strict parsing is enabled, and no color space is found, return
-     *   an empty string.
-     * * If strict parsing is disabled, return ROLE_DEFAULT (if defined).
-     * * If the default role is not defined, return an empty string.
-     */
-    const char * parseColorSpaceFromString(const char * str) const;
-
-    bool isStrictParsingEnabled() const;
-    void setStrictParsingEnabled(bool enabled);
 
     /**
      * \brief Set/get a list of inactive color space or named transform names.
@@ -529,7 +537,6 @@ public:
      * * The env. var. takes precedence over the inactive_colorspaces list in the config file.
      * * Setting the list via the API takes precedence over either the env. var. or the
      *   config file list.
-     * * Roles may not be used.
      */
     void setInactiveColorSpaces(const char * inactiveColorSpaces);
     const char * getInactiveColorSpaces() const;
@@ -942,7 +949,8 @@ public:
      * \brief Add or replace named transform.
      *
      * \note
-     *    Throws if namedTransform is null, name is missing, or no transform is set.
+     *    Throws if namedTransform is null, name is missing, or no transform is set.  Also throws
+     *    if the name or the aliases conflict with names or aliases already in the config.
      */
     void addNamedTransform(const ConstNamedTransformRcPtr & namedTransform);
 
@@ -985,6 +993,20 @@ public:
      * choose a color space when strictParsing is true and no other rules match.
      */
     bool filepathOnlyMatchesDefaultRule(const char * filePath) const;
+
+    /**
+     * Given the specified string, get the longest, right-most, colorspace substring that
+     * appears. This is now deprecated, please use getColorSpaceFromFilepath.
+     *
+     * * If strict parsing is enabled, and no color space is found, return
+     *   an empty string.
+     * * If strict parsing is disabled, return ROLE_DEFAULT (if defined).
+     * * If the default role is not defined, return an empty string.
+     */
+    const char * parseColorSpaceFromString(const char * str) const;
+
+    bool isStrictParsingEnabled() const;
+    void setStrictParsingEnabled(bool enabled);
 
     //
     // Processors
@@ -1264,6 +1286,12 @@ public:
     /// Move a rule closer to the end of the list by one position.
     void decreaseRulePriority(size_t ruleIndex);
 
+    /**
+     * Check if there is only the default rule using default role and no custom key. This is the
+     * default FileRules state when creating a new config.
+     */
+    bool isDefault() const noexcept;
+
     FileRules(const FileRules &) = delete;
     FileRules & operator= (const FileRules &) = delete;
 
@@ -1436,7 +1464,23 @@ public:
     ColorSpaceRcPtr createEditableCopy() const;
 
     const char * getName() const noexcept;
-    void setName(const char * name);
+    /// If the name is already an alias, that alias is removed.
+    void setName(const char * name) noexcept;
+
+    size_t getNumAliases() const noexcept;
+    /// Return empty string if idx is out of range.
+    const char * getAlias(size_t idx) const noexcept;
+    /**
+     * Add an alias for the color space name (the aliases may be used as a synonym for the
+     * name).  Nothing will be added if the alias is already the color space name, one of its
+     * aliases, or the argument is null.  The aliases must not conflict with existing roles,
+     * color space names, named transform names, or other aliases.  This is verified when
+     * adding the color space to the config.
+     */
+    void addAlias(const char * alias) noexcept;
+    /// Does nothing if alias is not present.
+    void removeAlias(const char * alias) noexcept;
+    void clearAliases() noexcept;
 
     /**
      * Get the family, for use in user interfaces (optional)
@@ -1476,9 +1520,9 @@ public:
     // they display in menus based on what that color space is used for.
     //
     // Here is an example config entry that could appear under a ColorSpace:
-    // categories: [input, rendering]
+    // categories: [ file-io, working-space, basic-3d ]
     //
-    // The example contains two categories: 'input' and 'rendering'.
+    // The example contains three categories: 'file-io', 'working-space' and 'basic-3d'.
     // Category strings are not case-sensitive and the order is not significant.
     // There is no limit imposed on length or number. Although users may add
     // their own categories, the strings will typically come from a fixed set
@@ -1699,7 +1743,8 @@ public:
      * \note
      *    If another color space is already registered with the same name,
      *    this will overwrite it. This stores a copy of the specified
-     *    color space(s).
+     *    color space(s). Throws if one of the aliases is already assigned as
+     *    a name or alias to an existing color space.
      */
     void addColorSpace(const ConstColorSpaceRcPtr & cs);
     void addColorSpaces(const ConstColorSpaceSetRcPtr & cs);
@@ -1848,6 +1893,19 @@ public:
     virtual const char * getName() const noexcept = 0;
     virtual void setName(const char * name) noexcept = 0;
 
+    /// Aliases can be used instead of the name. They must be unique within the config.
+    virtual size_t getNumAliases() const noexcept = 0;
+    /// Return empty string if idx is  out of range.
+    virtual const char * getAlias(size_t idx) const noexcept = 0;
+    /**
+    * Nothing is done if alias is NULL or empty, if it is already there, or if it is already
+    * the named transform name.
+    */
+    virtual void addAlias(const char * alias) noexcept = 0;
+    /// Does nothing if alias is not present.
+    virtual void removeAlias(const char * alias) noexcept = 0;
+    virtual void clearAliases() noexcept = 0;
+
     /// \see ColorSpace::getFamily
     virtual const char * getFamily() const noexcept = 0;
     /// \see ColorSpace::setFamily
@@ -1868,6 +1926,14 @@ public:
     virtual const char * getCategory(int index) const noexcept = 0;
     /// \see ColorSpace::clearCategories
     virtual void clearCategories() noexcept = 0;
+
+    /**
+     * A NamedTransform is not a color space and does not have an encoding in the same sense.
+     * However, it may be useful to associate a color space encoding that the transform is intended
+     * to be used with, for organizational purposes.
+     */
+    virtual const char * getEncoding() const noexcept = 0;
+    virtual void setEncoding(const char * encoding) noexcept = 0;
 
     virtual ConstTransformRcPtr getTransform(TransformDirection dir) const = 0;
     virtual void setTransform(const ConstTransformRcPtr & transform, TransformDirection dir) = 0;

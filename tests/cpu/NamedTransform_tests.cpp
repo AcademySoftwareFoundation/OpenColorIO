@@ -61,6 +61,141 @@ OCIO_ADD_TEST(NamedTransform, basic)
                           "Named transform must define at least one transform");
 }
 
+OCIO_ADD_TEST(NamedTransform, alias)
+{
+    OCIO::NamedTransformRcPtr nt = OCIO::NamedTransform::Create();
+    OCIO_REQUIRE_ASSERT(nt);
+    OCIO_CHECK_EQUAL(nt->getNumAliases(), 0);
+    constexpr char AliasA[]{ "aliasA" };
+    constexpr char AliasAAlt[]{ "aLiaSa" };
+    constexpr char AliasB[]{ "aliasB" };
+    nt->addAlias(AliasA);
+    OCIO_CHECK_EQUAL(nt->getNumAliases(), 1);
+    nt->addAlias(AliasB);
+    OCIO_CHECK_EQUAL(nt->getNumAliases(), 2);
+    OCIO_CHECK_EQUAL(std::string(nt->getAlias(0)), AliasA);
+    OCIO_CHECK_EQUAL(std::string(nt->getAlias(1)), AliasB);
+
+    // Alias with same name (different case) already exists, do nothing.
+    {
+        nt->addAlias(AliasAAlt);
+        OCIO_CHECK_EQUAL(nt->getNumAliases(), 2);
+        OCIO_CHECK_EQUAL(std::string(nt->getAlias(0)), AliasA);
+        OCIO_CHECK_EQUAL(std::string(nt->getAlias(1)), AliasB);
+    }
+
+    // Remove alias (using a different case).
+    {
+        nt->removeAlias(AliasAAlt);
+        OCIO_CHECK_EQUAL(nt->getNumAliases(), 1);
+        OCIO_CHECK_EQUAL(std::string(nt->getAlias(0)), AliasB);
+    }
+
+    // Add with new case.
+    {
+        nt->addAlias(AliasAAlt);
+        OCIO_CHECK_EQUAL(nt->getNumAliases(), 2);
+        OCIO_CHECK_EQUAL(std::string(nt->getAlias(0)), AliasB);
+        OCIO_CHECK_EQUAL(std::string(nt->getAlias(1)), AliasAAlt);
+    }
+
+    // Setting the name of the named transform to one of its aliases removes the alias.
+    {
+        nt->setName(AliasA);
+        OCIO_CHECK_EQUAL(std::string(nt->getName()), AliasA);
+        OCIO_CHECK_EQUAL(nt->getNumAliases(), 1);
+        OCIO_CHECK_EQUAL(std::string(nt->getAlias(0)), AliasB);
+    }
+
+    // Alias is not added if it is already the named transform name.
+    {
+        nt->addAlias(AliasAAlt);
+        OCIO_CHECK_EQUAL(std::string(nt->getName()), AliasA);
+        OCIO_CHECK_EQUAL(nt->getNumAliases(), 1);
+        OCIO_CHECK_EQUAL(std::string(nt->getAlias(0)), AliasB);
+    }
+
+    // Remove all aliases.
+    {
+        nt->addAlias("other");
+        OCIO_CHECK_EQUAL(nt->getNumAliases(), 2);
+        nt->clearAliases();
+        OCIO_CHECK_EQUAL(nt->getNumAliases(), 0);
+    }
+
+    //
+    // Add and access named transforms in a config.
+    //
+
+    OCIO::ConfigRcPtr config = OCIO::Config::CreateRaw()->createEditableCopy();
+    nt->setName("name");
+    nt->setTransform(OCIO::MatrixTransform::Create(), OCIO::TRANSFORM_DIR_FORWARD);
+
+    {
+        OCIO_CHECK_NO_THROW(config->addNamedTransform(nt));
+
+        nt->setName("other");
+        nt->addAlias(AliasB);
+        OCIO_CHECK_NO_THROW(config->addNamedTransform(nt));
+        OCIO_CHECK_EQUAL(config->getNumNamedTransforms(), 2);
+
+        auto ntcfg = config->getNamedTransform("name");
+        OCIO_REQUIRE_ASSERT(ntcfg);
+        OCIO_CHECK_EQUAL(ntcfg->getNumAliases(), 0);
+    }
+
+    // Access by alias.
+    {
+        auto ntcfg = config->getNamedTransform(AliasB);
+        OCIO_REQUIRE_ASSERT(ntcfg);
+        OCIO_CHECK_EQUAL(std::string(ntcfg->getName()), "other");
+        OCIO_CHECK_EQUAL(ntcfg->getNumAliases(), 1);
+        OCIO_CHECK_EQUAL(std::string(config->getCanonicalName(AliasB)), "other");
+        OCIO_CHECK_EQUAL(std::string(config->getCanonicalName("other")), "other");
+        OCIO_CHECK_EQUAL(std::string(config->getCanonicalName("not found")), "");
+        OCIO_CHECK_EQUAL(std::string(config->getCanonicalName("")), "");
+    }
+
+    // Named transform with same name is replaced.
+    {
+        nt->setName("name");
+        nt->clearAliases();
+        nt->addAlias(AliasA);
+        OCIO_CHECK_NO_THROW(config->addNamedTransform(nt));
+        OCIO_CHECK_EQUAL(config->getNumNamedTransforms(), 2);
+
+        auto ntcfg = config->getNamedTransform("name");
+        OCIO_REQUIRE_ASSERT(ntcfg);
+        OCIO_CHECK_EQUAL(ntcfg->getNumAliases(), 1);
+    }
+
+    // Can't add a named transform if name is used as alias for existing named transform.
+    {
+        nt->setName(AliasA);
+        nt->clearAliases();
+        OCIO_CHECK_THROW_WHAT(config->addNamedTransform(nt), OCIO::Exception,
+                              "Cannot add 'aliasA' named transform, existing named transform, "
+                              "'name' is using this name as an alias");
+    }
+
+    // Can't add a named transform if alias is used as alias for existing named transform.
+    {
+        nt->setName("newName");
+        nt->addAlias(AliasB);
+        OCIO_CHECK_THROW_WHAT(config->addNamedTransform(nt), OCIO::Exception,
+                              "Cannot add 'newName' named transform, it has 'aliasB' alias and "
+                              "existing named transform, 'other' is using the same alias");
+    }
+
+    // Can't add a named transform if alias is used as name for existing named transform.
+    {
+        nt->addAlias("other");
+        OCIO_CHECK_THROW_WHAT(config->addNamedTransform(nt), OCIO::Exception,
+                              "Cannot add 'newName' named transform, it has 'aliasB' alias and "
+                              "existing named transform, 'other' is using the same alias");
+    }
+}
+
 OCIO_ADD_TEST(Config, named_transform_processor)
 {
     // Create a config with color spaces and named transforms.
@@ -81,6 +216,7 @@ file_rules:
 displays:
   sRGB:
     - !<View> {name: Raw, colorspace: raw}
+    - !<View> {name: ntview, colorspace: ntf}
 
 active_displays: []
 active_views: []
@@ -88,6 +224,7 @@ active_views: []
 display_colorspaces:
   - !<ColorSpace>
     name: dcs
+    aliases: [display color space]
     isdata: false
     allocation: uniform
     from_display_reference: !<RangeTransform> {min_in_value: 0, min_out_value: 0}
@@ -104,6 +241,7 @@ colorspaces:
 
   - !<ColorSpace>
     name: cs
+    aliases: [colorspace]
     isdata: false
     allocation: uniform
     to_scene_reference: !<RangeTransform> {max_in_value: 1, max_out_value: 1}
@@ -111,14 +249,18 @@ colorspaces:
 named_transforms:
   - !<NamedTransform>
     name: forward
+    aliases: [nt1, ntf]
+    encoding: scene-linear
     transform: !<MatrixTransform> {name: forward, offset: [0.1, 0.2, 0.3, 0.4]}
 
   - !<NamedTransform>
     name: inverse
+    aliases: [nt2, nti]
     inverse_transform: !<MatrixTransform> {name: inverse, offset: [-0.2, -0.1, -0.1, 0]}
 
   - !<NamedTransform>
     name: both
+    aliases: [nt3, ntb]
     transform: !<MatrixTransform> {name: forward, offset: [0.1, 0.2, 0.3, 0.4]}
     inverse_transform: !<MatrixTransform> {name: inverse, offset: [-0.2, -0.1, -0.1, 0]}
 )" };
@@ -140,6 +282,35 @@ named_transforms:
     // Basic named transform access.
     {
         auto nt = config->getNamedTransform(forward.c_str());
+        OCIO_REQUIRE_ASSERT(nt);
+        OCIO_CHECK_EQUAL(std::string(nt->getEncoding()), "scene-linear");
+        // Get the transform in the wanted direction and make sure it exists (else use the other
+        // transform in the other direction).
+        auto tf = nt->getTransform(OCIO::TRANSFORM_DIR_FORWARD);
+        OCIO_REQUIRE_ASSERT(tf);
+
+        OCIO::ConstProcessorRcPtr proc;
+        OCIO_CHECK_NO_THROW(proc = config->getProcessor(tf));
+        OCIO_REQUIRE_ASSERT(proc);
+        OCIO::GroupTransformRcPtr group;
+        OCIO_CHECK_NO_THROW(group = proc->createGroupTransform());
+        OCIO_REQUIRE_ASSERT(group);
+        OCIO_REQUIRE_EQUAL(group->getNumTransforms(), 1);
+        OCIO::TransformRcPtr transform;
+        OCIO_CHECK_NO_THROW(transform = group->getTransform(0));
+        auto matrix = OCIO_DYNAMIC_POINTER_CAST<OCIO::MatrixTransform>(transform);
+        OCIO_REQUIRE_ASSERT(matrix);
+        OCIO_CHECK_EQUAL(forward, proc->getTransformFormatMetadata(0).getAttributeValue(0));
+        double offset[]{ 0., 0., 0., 0. };
+        matrix->getOffset(offset);
+        OCIO_CHECK_EQUAL(offset[0], offsetF[0]);
+        OCIO_CHECK_EQUAL(offset[1], offsetF[1]);
+        OCIO_CHECK_EQUAL(offset[2], offsetF[2]);
+    }
+
+    // Basic named transform access using alias.
+    {
+        auto nt = config->getNamedTransform("nt1"); // Alias being used
         OCIO_REQUIRE_ASSERT(nt);
         // Get the transform in the wanted direction and make sure it exists (else use the other
         // transform in the other direction).
@@ -187,10 +358,55 @@ named_transforms:
         OCIO_CHECK_EQUAL(offset[2], -offsetF[2]);
     }
 
+    // Diplay color space to named transform using aliases.
+    {
+        OCIO::ConstProcessorRcPtr proc;
+        OCIO_CHECK_NO_THROW(proc = config->getProcessor("display color space",
+                                                        "ntf")); // Aliases.
+        OCIO_REQUIRE_ASSERT(proc);
+        OCIO::GroupTransformRcPtr group;
+        OCIO_CHECK_NO_THROW(group = proc->createGroupTransform());
+        OCIO_REQUIRE_ASSERT(group);
+        OCIO_REQUIRE_EQUAL(group->getNumTransforms(), 1);
+        OCIO::TransformRcPtr transform;
+        OCIO_CHECK_NO_THROW(transform = group->getTransform(0));
+        auto matrix = OCIO_DYNAMIC_POINTER_CAST<OCIO::MatrixTransform>(transform);
+        OCIO_REQUIRE_ASSERT(matrix);
+        // Named transform inverse transform not available, use forward transform inverted.
+        OCIO_CHECK_EQUAL(forward, proc->getTransformFormatMetadata(0).getAttributeValue(0));
+        double offset[]{ 0., 0., 0., 0. };
+        matrix->getOffset(offset);
+        OCIO_CHECK_EQUAL(offset[0], -offsetF[0]);
+        OCIO_CHECK_EQUAL(offset[1], -offsetF[1]);
+        OCIO_CHECK_EQUAL(offset[2], -offsetF[2]);
+    }
+
     // Color space to named transform.
     {
         OCIO::ConstProcessorRcPtr proc;
         OCIO_CHECK_NO_THROW(proc = config->getProcessor(csName.c_str(), inverse.c_str()));
+        OCIO_REQUIRE_ASSERT(proc);
+        OCIO::GroupTransformRcPtr group;
+        OCIO_CHECK_NO_THROW(group = proc->createGroupTransform());
+        OCIO_REQUIRE_ASSERT(group);
+        OCIO_REQUIRE_EQUAL(group->getNumTransforms(), 1);
+        OCIO::TransformRcPtr transform;
+        OCIO_CHECK_NO_THROW(transform = group->getTransform(0));
+        auto matrix = OCIO_DYNAMIC_POINTER_CAST<OCIO::MatrixTransform>(transform);
+        OCIO_REQUIRE_ASSERT(matrix);
+        // Named transform inverse transform.
+        OCIO_CHECK_EQUAL(inverse, proc->getTransformFormatMetadata(0).getAttributeValue(0));
+        double offset[]{ 0., 0., 0., 0. };
+        matrix->getOffset(offset);
+        OCIO_CHECK_EQUAL(offset[0], offsetI[0]);
+        OCIO_CHECK_EQUAL(offset[1], offsetI[1]);
+        OCIO_CHECK_EQUAL(offset[2], offsetI[2]);
+    }
+
+    // Color space to named transform using aliases.
+    {
+        OCIO::ConstProcessorRcPtr proc;
+        OCIO_CHECK_NO_THROW(proc = config->getProcessor("colorspace", "nt2")); // Aliases
         OCIO_REQUIRE_ASSERT(proc);
         OCIO::GroupTransformRcPtr group;
         OCIO_CHECK_NO_THROW(group = proc->createGroupTransform());
@@ -238,6 +454,28 @@ named_transforms:
     {
         OCIO::ConstProcessorRcPtr proc;
         OCIO_CHECK_NO_THROW(proc = config->getProcessor(forward.c_str(), csName.c_str()));
+        OCIO_REQUIRE_ASSERT(proc);
+        OCIO::GroupTransformRcPtr group;
+        OCIO_CHECK_NO_THROW(group = proc->createGroupTransform());
+        OCIO_REQUIRE_ASSERT(group);
+        OCIO_REQUIRE_EQUAL(group->getNumTransforms(), 1);
+        OCIO::TransformRcPtr transform;
+        OCIO_CHECK_NO_THROW(transform = group->getTransform(0));
+        auto matrix = OCIO_DYNAMIC_POINTER_CAST<OCIO::MatrixTransform>(transform);
+        OCIO_REQUIRE_ASSERT(matrix);
+        // Named transform forward transform.
+        OCIO_CHECK_EQUAL(forward, matrix->getFormatMetadata().getAttributeValue(0));
+        double offset[]{ 0., 0., 0., 0. };
+        matrix->getOffset(offset);
+        OCIO_CHECK_EQUAL(offset[0], offsetF[0]);
+        OCIO_CHECK_EQUAL(offset[1], offsetF[1]);
+        OCIO_CHECK_EQUAL(offset[2], offsetF[2]);
+    }
+
+    // Named transform to color space using aliases.
+    {
+        OCIO::ConstProcessorRcPtr proc;
+        OCIO_CHECK_NO_THROW(proc = config->getProcessor("ntf", "colorspace")); // Aliases
         OCIO_REQUIRE_ASSERT(proc);
         OCIO::GroupTransformRcPtr group;
         OCIO_CHECK_NO_THROW(group = proc->createGroupTransform());
@@ -332,6 +570,64 @@ named_transforms:
         OCIO_CHECK_EQUAL(offset[1], offsetI[1]);
         OCIO_CHECK_EQUAL(offset[2], offsetI[2]);
     }
+
+    // Named transform to named transform using aliases.
+    {
+        OCIO::ConstProcessorRcPtr proc;
+        OCIO_CHECK_NO_THROW(proc = config->getProcessor("nt3", "ntb")); // Aliases
+        OCIO_REQUIRE_ASSERT(proc);
+        OCIO::GroupTransformRcPtr group;
+        OCIO_CHECK_NO_THROW(group = proc->createGroupTransform());
+        OCIO_REQUIRE_ASSERT(group);
+        OCIO_REQUIRE_EQUAL(group->getNumTransforms(), 2);
+        OCIO::TransformRcPtr transform;
+        OCIO_CHECK_NO_THROW(transform = group->getTransform(0));
+        auto matrix = OCIO_DYNAMIC_POINTER_CAST<OCIO::MatrixTransform>(transform);
+        OCIO_REQUIRE_ASSERT(matrix);
+        double offset[]{ 0., 0., 0., 0. };
+        matrix->getOffset(offset);
+        // Named transform forward transform.
+        OCIO_CHECK_EQUAL(forward, proc->getTransformFormatMetadata(0).getAttributeValue(0));
+        matrix->getOffset(offset);
+        OCIO_CHECK_EQUAL(offset[0], offsetF[0]);
+        OCIO_CHECK_EQUAL(offset[1], offsetF[1]);
+        OCIO_CHECK_EQUAL(offset[2], offsetF[2]);
+
+        OCIO_CHECK_NO_THROW(transform = group->getTransform(1));
+        matrix = OCIO_DYNAMIC_POINTER_CAST<OCIO::MatrixTransform>(transform);
+        OCIO_REQUIRE_ASSERT(matrix);
+        // Named transform inverse transform.
+        OCIO_CHECK_EQUAL(inverse, proc->getTransformFormatMetadata(1).getAttributeValue(0));
+        matrix->getOffset(offset);
+        OCIO_CHECK_EQUAL(offset[0], offsetI[0]);
+        OCIO_CHECK_EQUAL(offset[1], offsetI[1]);
+        OCIO_CHECK_EQUAL(offset[2], offsetI[2]);
+    }
+
+    {
+        OCIO::ConstProcessorRcPtr proc;
+        OCIO_CHECK_NO_THROW(proc = config->getProcessor("colorspace", "sRGB", "ntview",
+                                                        OCIO::TRANSFORM_DIR_FORWARD));
+        OCIO_REQUIRE_ASSERT(proc);
+        OCIO::GroupTransformRcPtr group;
+        OCIO_CHECK_NO_THROW(group = proc->createGroupTransform());
+        OCIO_REQUIRE_ASSERT(group);
+        OCIO_REQUIRE_EQUAL(group->getNumTransforms(), 1);
+        OCIO::TransformRcPtr transform;
+        OCIO_CHECK_NO_THROW(transform = group->getTransform(0));
+        auto matrix = OCIO_DYNAMIC_POINTER_CAST<OCIO::MatrixTransform>(transform);
+        OCIO_REQUIRE_ASSERT(matrix);
+        // Named transform has both transforms, use forward transform.
+        OCIO_CHECK_EQUAL(forward, matrix->getFormatMetadata().getAttributeValue(0));
+        double offset[]{ 0., 0., 0., 0. };
+        matrix->getOffset(offset);
+        OCIO_CHECK_EQUAL(offset[0], offsetF[0]);
+        OCIO_CHECK_EQUAL(offset[1], offsetF[1]);
+        OCIO_CHECK_EQUAL(offset[2], offsetF[2]);
+    }
+
+    // See DisplayViewTransform_tests.cpp for additional named transform tests related to their
+    // use in displays/views.
 }
 
 OCIO_ADD_TEST(Config, named_transform_validation)
@@ -382,17 +678,17 @@ OCIO_ADD_TEST(Config, named_transform_validation)
                           "Color space 'missing' could not be found");
 
     // NamedTransform can't use a role name.
-    config->setRole(name1.c_str(), "raw");
-    OCIO_CHECK_THROW_WHAT(config->validate(), OCIO::Exception,
-                          "This name is already used for a role");
+    OCIO_CHECK_THROW_WHAT(config->setRole(name1.c_str(), "raw"), OCIO::Exception,
+                          "Cannot add 'name' role, there is already a named transform using this "
+                          "as a name or an alias");
     config->setRole(name1.c_str(), nullptr);
 
     // NamedTransform can't use a color space name.
     OCIO::ColorSpaceRcPtr cs = OCIO::ColorSpace::Create();
     cs->setName(name1.c_str());
-    config->addColorSpace(cs);
-    OCIO_CHECK_THROW_WHAT(config->validate(), OCIO::Exception,
-                          "This name is already used for a color space");
+    OCIO_CHECK_THROW_WHAT(config->addColorSpace(cs), OCIO::Exception,
+                          "Cannot add 'name' color space, there is already a named transform "
+                          "using this name as a name or as an alias: 'name'");
     config->removeColorSpace(name1.c_str());
 
     // NamedTransform can't use a look name.
@@ -457,14 +753,16 @@ colorspaces:
 
 )" };
 
-    // Test a valid config with 2 named transforms, then using this valid config test that look,
-    // role, and file rules can't use named transforms.
+    // Test use of named transforms in a role (not allowed), look (not allowed), and file rules
+    // (allowed).
     {
         constexpr const char * NT{ R"(named_transforms:
   - !<NamedTransform>
     name: namedTransform1
+    aliases: [named1, named2]
     family: family
     categories: [input, basic]
+    encoding: data
     transform: !<ColorSpaceTransform> {src: default, dst: raw}
 
   - !<NamedTransform>
@@ -488,10 +786,14 @@ colorspaces:
                          "namedTransform2");
         auto nt = config->getNamedTransform("namedTransform1");
         OCIO_REQUIRE_ASSERT(nt);
+        OCIO_REQUIRE_EQUAL(nt->getNumAliases(), 2);
+        OCIO_CHECK_EQUAL(std::string(nt->getAlias(0)), "named1");
+        OCIO_CHECK_EQUAL(std::string(nt->getAlias(1)), "named2");
         OCIO_CHECK_EQUAL(std::string(nt->getFamily()), "family");
         OCIO_REQUIRE_EQUAL(nt->getNumCategories(), 2);
         OCIO_CHECK_EQUAL(std::string(nt->getCategory(0)), "input");
         OCIO_CHECK_EQUAL(std::string(nt->getCategory(1)), "basic");
+        OCIO_CHECK_EQUAL(std::string(nt->getEncoding()), "data");
         std::ostringstream oss;
         OCIO_CHECK_NO_THROW(oss << *config.get());
         OCIO_CHECK_EQUAL(oss.str(), configStr);
@@ -611,6 +913,7 @@ constexpr char InactiveNTConfigEnd[] =
 "named_transforms:\n"
 "  - !<NamedTransform>\n"
 "    name: nt1\n"
+"    aliases: [alias1]\n"
 "    categories: [cat1]\n"
 "    transform: !<CDLTransform> {offset: [0.1, 0.1, 0.1]}\n"
 "\n"
@@ -680,10 +983,10 @@ OCIO_ADD_TEST(Config, inactive_named_transforms)
     // Check a faulty call.
     OCIO_CHECK_EQUAL(std::string(""), config->getNamedTransformNameByIndex(3));
 
-    // Step 2 - Some inactive color space and named transforms.
+    // Step 2 - Some inactive color space and named transforms (aliases can be used).
 
-    OCIO_CHECK_NO_THROW(config->setInactiveColorSpaces("lnh, nt1"));
-    OCIO_CHECK_EQUAL(config->getInactiveColorSpaces(), std::string("lnh, nt1"));
+    OCIO_CHECK_NO_THROW(config->setInactiveColorSpaces("lnh, alias1"));
+    OCIO_CHECK_EQUAL(config->getInactiveColorSpaces(), std::string("lnh, alias1"));
 
     OCIO_REQUIRE_EQUAL(config->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_ALL,
                                                  OCIO::COLORSPACE_INACTIVE), 1);
@@ -723,6 +1026,12 @@ OCIO_ADD_TEST(Config, inactive_named_transforms)
 
     // Request an inactive named transform.
     OCIO_CHECK_NO_THROW(nt = config->getNamedTransform("nt1"));
+    OCIO_CHECK_ASSERT(nt);
+    OCIO_CHECK_EQUAL(std::string("nt1"), nt->getName());
+    OCIO_CHECK_EQUAL(config->getIndexForNamedTransform(nt->getName()), -1);
+
+    // Request an inactive named transform using alias.
+    OCIO_CHECK_NO_THROW(nt = config->getNamedTransform("alias1"));
     OCIO_CHECK_ASSERT(nt);
     OCIO_CHECK_EQUAL(std::string("nt1"), nt->getName());
     OCIO_CHECK_EQUAL(config->getIndexForNamedTransform(nt->getName()), -1);

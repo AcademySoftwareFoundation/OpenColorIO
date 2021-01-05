@@ -123,6 +123,11 @@ if(OCIO_ADD_EXTRA_BUILTINS)
 endif()
 
 set(TESTS
+    apphelpers/CategoryHelpers_tests.cpp
+    apphelpers/ColorSpaceHelpers_tests.cpp
+    apphelpers/DisplayViewHelpers_tests.cpp
+    apphelpers/LegacyViewingPipeline_tests
+    apphelpers/MixingHelpers_tests.cpp
     Baker_tests.cpp
     BitDepthUtils_tests.cpp
     Caching_tests.cpp

@@ -126,6 +126,63 @@ OCIO_ADD_TEST(ColorSpaceTransform, build_colorspace_ops)
     }
 
     {
+        // Add alias names to color spaces.
+
+        csSceneToRef->addAlias("aliasToRef");
+        config->addColorSpace(csSceneToRef);
+
+        csSceneFromRef->addAlias("aliasFromRef");
+        config->addColorSpace(csSceneFromRef);
+
+        // Use aliases in transform.
+
+        OCIO::ColorSpaceTransformRcPtr cstAlias = OCIO::ColorSpaceTransform::Create();
+        cstAlias->setSrc("aliasToRef");
+        cstAlias->setDst("aliasFromRef");
+
+        // Same result as previous block.
+
+        OCIO::OpRcPtrVec ops;
+        OCIO_CHECK_NO_THROW(OCIO::BuildColorSpaceOps(ops, *config, config->getCurrentContext(),
+                                                     *cstAlias, OCIO::TRANSFORM_DIR_FORWARD));
+        OCIO_CHECK_NO_THROW(ops.validate());
+        OCIO_REQUIRE_EQUAL(ops.size(), 4);
+
+        // Allocation no-op.
+        auto op = OCIO_DYNAMIC_POINTER_CAST<const OCIO::Op>(ops[0]);
+        auto data = op->data();
+        OCIO_CHECK_EQUAL(data->getType(), OCIO::OpData::NoOpType);
+
+        // Src CS to reference.
+        op = OCIO_DYNAMIC_POINTER_CAST<const OCIO::Op>(ops[1]);
+        data = op->data();
+        OCIO_REQUIRE_EQUAL(data->getType(), OCIO::OpData::MatrixType);
+
+        // Reference to dst CS.
+        op = OCIO_DYNAMIC_POINTER_CAST<const OCIO::Op>(ops[2]);
+        data = op->data();
+        OCIO_REQUIRE_EQUAL(data->getType(), OCIO::OpData::FixedFunctionType);
+
+        // Allocation no-op.
+        op = OCIO_DYNAMIC_POINTER_CAST<const OCIO::Op>(ops[3]);
+        data = op->data();
+        OCIO_CHECK_EQUAL(data->getType(), OCIO::OpData::NoOpType);
+    }
+
+    {
+        // From a color space to the same one, identified by its name and an alias.
+
+        OCIO::ColorSpaceTransformRcPtr cstAlias = OCIO::ColorSpaceTransform::Create();
+        cstAlias->setSrc(src.c_str());
+        cstAlias->setDst("aliasToRef");
+
+        OCIO::OpRcPtrVec ops;
+        OCIO_CHECK_NO_THROW(OCIO::BuildColorSpaceOps(ops, *config, config->getCurrentContext(),
+                                                     *cstAlias, OCIO::TRANSFORM_DIR_FORWARD));
+        OCIO_CHECK_EQUAL(ops.size(), 0);
+    }
+
+    {
         // Test that data color space will not create a color space conversion unless the
         // color space transform forces data to be processed.
 

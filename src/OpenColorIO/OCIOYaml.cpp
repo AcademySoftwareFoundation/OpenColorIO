@@ -3251,6 +3251,15 @@ inline void load(const YAML::Node& node, ColorSpaceRcPtr& cs, unsigned int major
             load(second, stringval);
             cs->setName(stringval.c_str());
         }
+        else if (key == "aliases")
+        {
+            StringUtils::StringVec aliases;
+            load(second, aliases);
+            for (const auto & alias : aliases)
+            {
+                cs->addAlias(alias.c_str());
+            }
+        }
         else if(key == "description")
         {
             loadDescription(second, stringval);
@@ -3361,6 +3370,17 @@ inline void save(YAML::Emitter& out, ConstColorSpaceRcPtr cs, unsigned int major
     out << YAML::BeginMap;
 
     out << YAML::Key << "name" << YAML::Value << cs->getName();
+    const size_t numAliases = cs->getNumAliases();
+    if (majorVersion >= 2 && numAliases)
+    {
+        out << YAML::Key << "aliases";
+        StringUtils::StringVec aliases;
+        for (size_t aidx = 0; aidx < numAliases; ++aidx)
+        {
+            aliases.push_back(cs->getAlias(aidx));
+        }
+        out << YAML::Flow << YAML::Value << aliases;
+    }
     out << YAML::Key << "family" << YAML::Value << cs->getFamily();
     out << YAML::Key << "equalitygroup" << YAML::Value << cs->getEqualityGroup();
     out << YAML::Key << "bitdepth" << YAML::Value;
@@ -3711,6 +3731,15 @@ inline void load(const YAML::Node & node, NamedTransformRcPtr & nt)
             load(second, stringval);
             nt->setName(stringval.c_str());
         }
+        else if (key == "aliases")
+        {
+            StringUtils::StringVec aliases;
+            load(second, aliases);
+            for (const auto & alias : aliases)
+            {
+                nt->addAlias(alias.c_str());
+            }
+        }
         else if (key == "description")
         {
             load(second, stringval);
@@ -3729,6 +3758,11 @@ inline void load(const YAML::Node & node, NamedTransformRcPtr & nt)
             {
                 nt->addCategory(name.c_str());
             }
+        }
+        else if (key == "encoding")
+        {
+            load(second, stringval);
+            nt->setEncoding(stringval.c_str());
         }
         else if (key == "transform")
         {
@@ -3756,6 +3790,18 @@ inline void save(YAML::Emitter & out, ConstNamedTransformRcPtr & nt, unsigned in
 
     out << YAML::Key << "name" << YAML::Value << nt->getName();
 
+    const size_t numAliases = nt->getNumAliases();
+    if (majorVersion >= 2 && numAliases)
+    {
+        out << YAML::Key << "aliases";
+        StringUtils::StringVec aliases;
+        for (size_t aidx = 0; aidx < numAliases; ++aidx)
+        {
+            aliases.push_back(nt->getAlias(aidx));
+        }
+        out << YAML::Flow << YAML::Value << aliases;
+    }
+
     saveDescription(out, nt->getDescription());
 
     const char * family = nt->getFamily();
@@ -3773,6 +3819,12 @@ inline void save(YAML::Emitter & out, ConstNamedTransformRcPtr & nt, unsigned in
         }
         out << YAML::Key << "categories";
         out << YAML::Flow << YAML::Value << categories;
+    }
+
+    const char * encoding = nt->getEncoding();
+    if (encoding && *encoding)
+    {
+        out << YAML::Key << "encoding" << YAML::Value << encoding;
     }
 
     ConstTransformRcPtr transform = nt->getTransform(TRANSFORM_DIR_FORWARD);
@@ -4278,6 +4330,11 @@ inline void load(const YAML::Node& node, ConfigRcPtr & config, const char* filen
         {
             load(second, boolval);
             config->setStrictParsingEnabled(boolval);
+        }
+        else if (key == "name")
+        {
+            loadDescription(second, stringval);
+            config->setName(stringval.c_str());
         }
         else if (key=="family_separator")
         {
@@ -4805,6 +4862,14 @@ inline void save(YAML::Emitter & out, const Config & config)
     config.getDefaultLumaCoefs(&luma[0]);
     out << YAML::Key << "luma" << YAML::Value << YAML::Flow << luma;
 
+    if (configMajorVersion >= 2)
+    {
+        const std::string name{ config.getName() };
+        if (!name.empty())
+        {
+            out << YAML::Key << "name" << YAML::Value << name;
+        }
+    }
     saveDescription(out, config.getDescription());
 
     // Roles

@@ -1071,34 +1071,12 @@ OCIO_ADD_TEST(Config, colorspacename_with_reserved_token)
 {
     // Using context variable tokens (i.e. $ and %) in color space names is forbidden.
 
-    static constexpr char CONFIG[] = 
-        "ocio_profile_version: 2\n"
-        "\n"
-        "search_path: luts\n"
-        "\n"
-        "roles:\n"
-        "  default: cs1\n"
-        "\n"
-        "displays:\n"
-        "  disp1:\n"
-        "    - !<View> {name: view1, colorspace: cs1}\n"
-        "\n"
-        "colorspaces:\n"
-        "  - !<ColorSpace>\n"
-        "    name: cs1\n"
-        "\n"
-        "  - !<ColorSpace>\n"
-        "    name: cs1$VAR\n";
-
-    std::istringstream iss;
-    iss.str(CONFIG);
-
-    OCIO::ConstConfigRcPtr config;
-    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(iss));
-    OCIO_CHECK_THROW_WHAT(config->validate(),
-                          OCIO::Exception,
-                          "A color space name 'cs1$VAR' cannot contain a context variable"
-                          " reserved token i.e. % or $.");
+    auto cfg = OCIO::Config::CreateRaw()->createEditableCopy();
+    auto cs = OCIO::ColorSpace::Create();
+    cs->setName("cs1$VAR");
+    OCIO_CHECK_THROW_WHAT(cfg->addColorSpace(cs), OCIO::Exception,
+                          "A color space name 'cs1$VAR' cannot contain a context "
+                          "variable reserved token i.e. % or $.");
 }
 
 OCIO_ADD_TEST(Config, context_variable_with_colorspacename)
@@ -2509,7 +2487,6 @@ OCIO_ADD_TEST(Config, display)
         "  scene_linear: lnh\n"
         "\n"
         "file_rules:\n"
-        "  - !<Rule> {name: ColorSpaceNamePathSearch}\n"
         "  - !<Rule> {name: Default, colorspace: default}\n"
         "\n"
         "displays:\n"
@@ -3042,7 +3019,6 @@ OCIO_ADD_TEST(Config, display_view_order)
             allocation: uniform
 
         file_rules:
-          - !<Rule> {name: ColorSpaceNamePathSearch}
           - !<Rule> {name: Default, colorspace: raw}
         )" };
 
@@ -4609,11 +4585,12 @@ constexpr char InactiveCSConfigEnd[] =
     "\n"
     "  - !<ColorSpace>\n"
     "    name: cs1\n"
+    "    aliases: [alias1]\n"
     "    family: \"\"\n"
     "    equalitygroup: \"\"\n"
     "    bitdepth: unknown\n"
     "    isdata: false\n"
-    "    categories: [cat1]\n"
+    "    categories: [file-io]\n"
     "    allocation: uniform\n"
     "    from_scene_reference: !<CDLTransform> {offset: [0.1, 0.1, 0.1]}\n"
     "\n"
@@ -4623,7 +4600,7 @@ constexpr char InactiveCSConfigEnd[] =
     "    equalitygroup: \"\"\n"
     "    bitdepth: unknown\n"
     "    isdata: false\n"
-    "    categories: [cat2]\n"
+    "    categories: [working-space]\n"
     "    allocation: uniform\n"
     "    from_scene_reference: !<CDLTransform> {offset: [0.2, 0.2, 0.2]}\n"
     "\n"
@@ -4719,7 +4696,6 @@ OCIO_ADD_TEST(Config, inactive_color_space)
     OCIO_CHECK_EQUAL(config->getIndexForColorSpace("scene_linear"), 1);
     OCIO_CHECK_EQUAL(config->getIndexForColorSpace("lnh"), 1);
 
-
     // Step 2 - Some inactive color spaces.
 
     OCIO_CHECK_NO_THROW(config->setInactiveColorSpaces("lnh, cs1"));
@@ -4775,12 +4751,12 @@ OCIO_ADD_TEST(Config, inactive_color_space)
     OCIO_CHECK_NO_THROW(css = config->getColorSpaces(nullptr));
     OCIO_CHECK_EQUAL(css->getNumColorSpaces(), 3);
 
-    // Search using a category 'cat1' with no active color space.
-    OCIO_CHECK_NO_THROW(css = config->getColorSpaces("cat1"));
+    // Search using a category 'file-io' with no active color space.
+    OCIO_CHECK_NO_THROW(css = config->getColorSpaces("file-io"));
     OCIO_CHECK_EQUAL(css->getNumColorSpaces(), 0);
 
-    // Search using a category 'cat2' with some active color spaces.
-    OCIO_CHECK_NO_THROW(css = config->getColorSpaces("cat2"));
+    // Search using a category 'working-space' with some active color spaces.
+    OCIO_CHECK_NO_THROW(css = config->getColorSpaces("working-space"));
     OCIO_CHECK_EQUAL(css->getNumColorSpaces(), 1);
 
     // Request an active color space.
@@ -4831,7 +4807,79 @@ OCIO_ADD_TEST(Config, inactive_color_space)
     OCIO_CHECK_NO_THROW(config->getProcessor("lnh", "cs2"));
     OCIO_CHECK_NO_THROW(config->getProcessor("cs2", "scene_linear"));
 
-    // Step 3 - No inactive color spaces.
+    // Step 3 - Same as 2, but using role name.
+    
+    // Setting a role to an inactive space is actually setting the space that it points to as
+    // being inactive.  In this case, scene_linear is lnh.
+
+    OCIO_CHECK_NO_THROW(config->setInactiveColorSpaces("scene_linear, cs1"));
+    OCIO_CHECK_EQUAL(config->getInactiveColorSpaces(), std::string("scene_linear, cs1"));
+
+    OCIO_REQUIRE_EQUAL(config->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_ALL,
+                                                 OCIO::COLORSPACE_INACTIVE), 2);
+    OCIO_REQUIRE_EQUAL(config->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_ALL,
+                                                 OCIO::COLORSPACE_ACTIVE), 3);
+    OCIO_REQUIRE_EQUAL(config->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_ALL,
+                                                 OCIO::COLORSPACE_ALL), 5);
+
+    OCIO_CHECK_EQUAL(config->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_SCENE,
+                                               OCIO::COLORSPACE_INACTIVE), 2);
+    OCIO_CHECK_EQUAL(config->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_SCENE,
+                                               OCIO::COLORSPACE_ACTIVE), 3);
+    OCIO_CHECK_EQUAL(config->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_SCENE,
+                                               OCIO::COLORSPACE_ALL), 5);
+
+    OCIO_CHECK_EQUAL(config->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_DISPLAY,
+                                               OCIO::COLORSPACE_INACTIVE), 0);
+    OCIO_CHECK_EQUAL(config->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_DISPLAY,
+                                               OCIO::COLORSPACE_ACTIVE), 0);
+    OCIO_CHECK_EQUAL(config->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_DISPLAY,
+                                               OCIO::COLORSPACE_ALL), 0);
+
+    // Check methods working on only active color spaces.
+    OCIO_REQUIRE_EQUAL(config->getNumColorSpaces(), 3);
+    OCIO_CHECK_EQUAL(std::string("raw"), config->getColorSpaceNameByIndex(0));
+    OCIO_CHECK_EQUAL(std::string("cs2"), config->getColorSpaceNameByIndex(1));
+    OCIO_CHECK_EQUAL(std::string("cs3"), config->getColorSpaceNameByIndex(2));
+
+    OCIO_CHECK_ASSERT(config->hasRole("scene_linear"));
+
+    // Step 4 - Same as 2, but using an alias.
+
+    // Setting an alias to an inactive space is actually setting the space that it refers to as
+    // being inactive.  In this case, alias1 is cs1.
+
+    OCIO_CHECK_NO_THROW(config->setInactiveColorSpaces("lnh, alias1"));
+    OCIO_CHECK_EQUAL(config->getInactiveColorSpaces(), std::string("lnh, alias1"));
+
+    OCIO_REQUIRE_EQUAL(config->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_ALL,
+                                                 OCIO::COLORSPACE_INACTIVE), 2);
+    OCIO_REQUIRE_EQUAL(config->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_ALL,
+                                                 OCIO::COLORSPACE_ACTIVE), 3);
+    OCIO_REQUIRE_EQUAL(config->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_ALL,
+                                                 OCIO::COLORSPACE_ALL), 5);
+
+    OCIO_CHECK_EQUAL(config->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_SCENE,
+                                               OCIO::COLORSPACE_INACTIVE), 2);
+    OCIO_CHECK_EQUAL(config->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_SCENE,
+                                               OCIO::COLORSPACE_ACTIVE), 3);
+    OCIO_CHECK_EQUAL(config->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_SCENE,
+                                               OCIO::COLORSPACE_ALL), 5);
+
+    OCIO_CHECK_EQUAL(config->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_DISPLAY,
+                                               OCIO::COLORSPACE_INACTIVE), 0);
+    OCIO_CHECK_EQUAL(config->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_DISPLAY,
+                                               OCIO::COLORSPACE_ACTIVE), 0);
+    OCIO_CHECK_EQUAL(config->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_DISPLAY,
+                                               OCIO::COLORSPACE_ALL), 0);
+
+    // Check methods working on only active color spaces.
+    OCIO_REQUIRE_EQUAL(config->getNumColorSpaces(), 3);
+    OCIO_CHECK_EQUAL(std::string("raw"), config->getColorSpaceNameByIndex(0));
+    OCIO_CHECK_EQUAL(std::string("cs2"), config->getColorSpaceNameByIndex(1));
+    OCIO_CHECK_EQUAL(std::string("cs3"), config->getColorSpaceNameByIndex(2));
+
+    // Step 5 - No inactive color spaces.
 
     OCIO_CHECK_NO_THROW(config->setInactiveColorSpaces(""));
     OCIO_CHECK_EQUAL(config->getInactiveColorSpaces(), std::string(""));
@@ -4840,7 +4888,7 @@ OCIO_ADD_TEST(Config, inactive_color_space)
                                                OCIO::COLORSPACE_ALL), 5);
     OCIO_CHECK_EQUAL(config->getNumColorSpaces(), 5);
 
-    // Step 4 - No inactive color spaces.
+    // Step 6 - No inactive color spaces.
 
     OCIO_CHECK_NO_THROW(config->setInactiveColorSpaces(nullptr));
     OCIO_CHECK_EQUAL(config->getInactiveColorSpaces(), std::string(""));
@@ -4854,7 +4902,8 @@ OCIO_ADD_TEST(Config, inactive_color_space)
     OCIO_CHECK_EQUAL(config->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_DISPLAY,
                                                OCIO::COLORSPACE_ALL), 0);
 
-    // Step 5 - Add display color spaces.
+    // Step 7 - Add display color spaces.
+
     auto dcs0 = OCIO::ColorSpace::Create(OCIO::REFERENCE_SPACE_DISPLAY);
     dcs0->setName("display0");
     config->addColorSpace(dcs0);
@@ -4873,7 +4922,8 @@ OCIO_ADD_TEST(Config, inactive_color_space)
     OCIO_CHECK_EQUAL(config->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_DISPLAY,
                                                OCIO::COLORSPACE_ALL), 3);
 
-    // Step 6 - Some inactive color spaces.
+    // Step 8 - Some inactive color spaces.
+
     OCIO_CHECK_NO_THROW(config->setInactiveColorSpaces("cs1, display1"));
     OCIO_CHECK_EQUAL(config->getInactiveColorSpaces(), std::string("cs1, display1"));
 
@@ -5876,7 +5926,8 @@ OCIO_ADD_TEST(Config, family_separator)
     OCIO_CHECK_EQUAL(cfg->getFamilySeparator(), 0);
 
     // Reset to its default value.
-    OCIO_CHECK_NO_THROW(cfg->resetFamilySeparatorToDefault());
+    OCIO_CHECK_EQUAL(OCIO::Config::GetDefaultFamilySeparator(), '/');
+    OCIO_CHECK_NO_THROW(cfg->setFamilySeparator(OCIO::Config::GetDefaultFamilySeparator()));
     OCIO_CHECK_EQUAL(cfg->getFamilySeparator(), '/');
 
     OCIO_CHECK_THROW(cfg->setFamilySeparator((char)127), OCIO::Exception);
@@ -5898,7 +5949,6 @@ OCIO_ADD_TEST(Config, family_separator)
         "  default: raw\n"
         "\n"
         "file_rules:\n"
-        "  - !<Rule> {name: ColorSpaceNamePathSearch}\n"
         "  - !<Rule> {name: Default, colorspace: default}\n"
         "\n"
         "displays:\n"
@@ -7536,7 +7586,7 @@ colorspaces:
                           " which is not defined.");
 }
 
-OCIO_ADD_TEST(Config, description)
+OCIO_ADD_TEST(Config, description_and_name)
 {
     auto cfg = OCIO::Config::CreateRaw()->createEditableCopy();
     std::ostringstream oss;
@@ -7553,7 +7603,6 @@ roles:
   default: raw
 
 file_rules:
-  - !<Rule> {name: ColorSpaceNamePathSearch}
   - !<Rule> {name: Default, colorspace: default}
 
 displays:
@@ -7579,6 +7628,7 @@ colorspaces:
     oss.str("");
 
     cfg->setDescription("single line description");
+    cfg->setName("Test config name");
     cfg->serialize(oss);
     static constexpr char CONFIG_DESC_SINGLELINE[]{ R"(ocio_profile_version: 2
 
@@ -7587,13 +7637,13 @@ environment:
 search_path: ""
 strictparsing: false
 luma: [0.2126, 0.7152, 0.0722]
+name: Test config name
 description: single line description
 
 roles:
   default: raw
 
 file_rules:
-  - !<Rule> {name: ColorSpaceNamePathSearch}
   - !<Rule> {name: Default, colorspace: default}
 
 displays:
@@ -7619,6 +7669,7 @@ colorspaces:
     oss.str("");
 
     cfg->setDescription("multi line description\n\nother line");
+    cfg->setName("");
     cfg->serialize(oss);
 
     static constexpr char CONFIG_DESC_MULTILINES[]{ R"(ocio_profile_version: 2
@@ -7637,7 +7688,6 @@ roles:
   default: raw
 
 file_rules:
-  - !<Rule> {name: ColorSpaceNamePathSearch}
   - !<Rule> {name: Default, colorspace: default}
 
 displays:
@@ -7658,4 +7708,170 @@ colorspaces:
     allocation: uniform
 )" };
     OCIO_CHECK_EQUAL(oss.str(), std::string(CONFIG_DESC_MULTILINES));
+}
+
+OCIO_ADD_TEST(Config, alias_validation)
+{
+    // NB: This tests ColorSpaceSet::addColorSpace.
+
+    auto cfg = OCIO::Config::CreateRaw()->createEditableCopy();
+    auto cs = OCIO::ColorSpace::Create();
+    cs->setName("colorspace1");
+    OCIO_CHECK_NO_THROW(cfg->addColorSpace(cs));
+    cs->setName("colorspace2");
+    OCIO_CHECK_NO_THROW(cfg->addColorSpace(cs));
+    OCIO_CHECK_NO_THROW(cfg->validate());
+    cs->setName("colorspace3");
+    cs->addAlias("colorspace1");
+    OCIO_CHECK_THROW_WHAT(cfg->addColorSpace(cs), OCIO::Exception, "Cannot add 'colorspace3' "
+                          "color space, it has 'colorspace1' alias and existing color space, "
+                          "'colorspace1' is using the same alias");
+    cs->removeAlias("colorspace1");
+
+    OCIO_CHECK_NO_THROW(cfg->setRole("alias", "colorspace2"));
+    OCIO_CHECK_NO_THROW(cs->addAlias("alias"));
+    OCIO_CHECK_THROW_WHAT(cfg->addColorSpace(cs), OCIO::Exception,
+                          "Cannot add 'colorspace3' color space, it has an alias 'alias' and "
+                          "there is already a role with this name");
+    cs->removeAlias("alias");
+    OCIO_CHECK_NO_THROW(cs->addAlias("test%test"));
+    OCIO_CHECK_THROW_WHAT(cfg->addColorSpace(cs), OCIO::Exception,
+                          "Cannot add 'colorspace3' color space, it has an alias 'test%test' "
+                          "that cannot contain a context variable reserved token i.e. % or $");
+
+    cs->removeAlias("test%test");
+    OCIO_CHECK_NO_THROW(cs->addAlias("namedtransform"));
+    OCIO_CHECK_NO_THROW(cfg->addColorSpace(cs));
+    auto nt = OCIO::NamedTransform::Create();
+    nt->setTransform(OCIO::MatrixTransform::Create(), OCIO::TRANSFORM_DIR_FORWARD);
+    nt->setName("namedtransform");
+    OCIO_CHECK_THROW_WHAT(cfg->addNamedTransform(nt), OCIO::Exception,
+                          "Cannot add 'namedtransform' named transform, there is already a color "
+                          "space using this name as a name or as an alias: 'colorspace3");
+
+    nt->setName("nt");
+    OCIO_CHECK_NO_THROW(cfg->addNamedTransform(nt));
+    OCIO_CHECK_NO_THROW(cfg->validate());
+
+    nt->addAlias("namedtransform");
+    OCIO_CHECK_THROW_WHAT(cfg->addNamedTransform(nt), OCIO::Exception,
+                          "Cannot add 'nt' named transform, it has an alias 'namedtransform' and "
+                          "there is already a color space using this name as a name or as an "
+                          "alias: 'colorspace3'");
+
+    nt->removeAlias("namedtransform");
+    nt->addAlias("colorspace3");
+    OCIO_CHECK_THROW_WHAT(cfg->addNamedTransform(nt), OCIO::Exception,
+                          "Cannot add 'nt' named transform, it has an alias 'colorspace3' and "
+                          "there is already a color space using this name as a name or as an "
+                          "alias: 'colorspace3'");
+
+    nt->removeAlias("colorspace3");
+    nt->addAlias("alias");
+    OCIO_CHECK_THROW_WHAT(cfg->addNamedTransform(nt), OCIO::Exception,
+                          "Cannot add 'nt' named transform, it has an alias 'alias' and there "
+                          "is already a role with this name");
+
+    nt->removeAlias("alias");
+    nt->addAlias("test%test");
+    OCIO_CHECK_THROW_WHAT(cfg->addNamedTransform(nt), OCIO::Exception,
+                          "Cannot add 'nt' named transform, it has an alias 'test%test' that "
+                          "cannot contain a context variable reserved token i.e. % or $");
+}
+
+OCIO_ADD_TEST(Config, get_processor_alias)
+{
+    OCIO::ConfigRcPtr config = OCIO::Config::CreateRaw()->createEditableCopy();
+    auto csSceneToRef = OCIO::ColorSpace::Create(OCIO::REFERENCE_SPACE_SCENE);
+    csSceneToRef->setName("source");
+    auto mat = OCIO::MatrixTransform::Create();
+    const double offset[4]{ 0., 0.1, 0.2, 0. };
+    mat->setOffset(offset);
+    csSceneToRef->setTransform(mat, OCIO::COLORSPACE_DIR_TO_REFERENCE);
+    csSceneToRef->addAlias("alias source");
+    csSceneToRef->addAlias("src");
+    OCIO_CHECK_NO_THROW(config->addColorSpace(csSceneToRef));
+
+    auto csSceneFromRef = OCIO::ColorSpace::Create(OCIO::REFERENCE_SPACE_SCENE);
+    csSceneFromRef->setName("destination");
+    auto ff = OCIO::FixedFunctionTransform::Create();
+    ff->setStyle(OCIO::FIXED_FUNCTION_ACES_GLOW_03);
+    csSceneFromRef->setTransform(ff, OCIO::COLORSPACE_DIR_FROM_REFERENCE);
+    csSceneFromRef->addAlias("alias destination");
+    csSceneFromRef->addAlias("dst");
+    OCIO_CHECK_NO_THROW(config->addColorSpace(csSceneFromRef));
+
+    OCIO_CHECK_NO_THROW(config->validate());
+
+    OCIO::ConstProcessorRcPtr refProc;
+    OCIO_CHECK_NO_THROW(refProc = config->getProcessor("source", "destination"));
+    OCIO_REQUIRE_ASSERT(refProc);
+    {
+        const auto grp = refProc->createGroupTransform();
+        OCIO_CHECK_EQUAL(grp->getNumTransforms(), 2);
+        OCIO_CHECK_EQUAL(grp->getTransform(0)->getTransformType(), OCIO::TRANSFORM_TYPE_MATRIX);
+        OCIO_CHECK_EQUAL(grp->getTransform(1)->getTransformType(),
+                         OCIO::TRANSFORM_TYPE_FIXED_FUNCTION);
+    }
+
+    {
+        OCIO::ConstProcessorRcPtr withAlias;
+        OCIO_CHECK_NO_THROW(withAlias = config->getProcessor("alias source", "destination"));
+        OCIO_REQUIRE_ASSERT(withAlias);
+        // TODO: Resolve the aliases before creating the new processor. Code currently creates a
+        // second processor but only keeps the first one because they have the same cacheID.
+        OCIO_CHECK_EQUAL(withAlias.get(), refProc.get());
+    }
+
+    config->setProcessorCacheFlags(OCIO::PROCESSOR_CACHE_OFF);
+    {
+        OCIO::ConstProcessorRcPtr withAlias;
+        OCIO_CHECK_NO_THROW(withAlias = config->getProcessor("alias source", "destination"));
+        OCIO_REQUIRE_ASSERT(withAlias);
+        const auto grp = withAlias->createGroupTransform();
+        OCIO_CHECK_EQUAL(grp->getNumTransforms(), 2);
+        OCIO_CHECK_EQUAL(grp->getTransform(0)->getTransformType(), OCIO::TRANSFORM_TYPE_MATRIX);
+        OCIO_CHECK_EQUAL(grp->getTransform(1)->getTransformType(),
+                         OCIO::TRANSFORM_TYPE_FIXED_FUNCTION);
+    }
+
+    {
+        OCIO::ConstProcessorRcPtr withAlias;
+        OCIO_CHECK_NO_THROW(withAlias = config->getProcessor("alias source", "dst"));
+        OCIO_REQUIRE_ASSERT(withAlias);
+        const auto grp = withAlias->createGroupTransform();
+        OCIO_CHECK_EQUAL(grp->getNumTransforms(), 2);
+        OCIO_CHECK_EQUAL(grp->getTransform(0)->getTransformType(), OCIO::TRANSFORM_TYPE_MATRIX);
+        OCIO_CHECK_EQUAL(grp->getTransform(1)->getTransformType(),
+                         OCIO::TRANSFORM_TYPE_FIXED_FUNCTION);
+    }
+
+    auto nt = OCIO::NamedTransform::Create();
+    nt->setName("named_transform");
+    nt->addAlias("nt");
+    nt->setTransform(OCIO::ExponentTransform::Create(), OCIO::TRANSFORM_DIR_FORWARD);
+    OCIO_CHECK_NO_THROW(config->addNamedTransform(nt));
+
+    {
+        OCIO::ConstProcessorRcPtr withAlias;
+        OCIO_CHECK_NO_THROW(withAlias = config->getProcessor("nt", "dst"));
+        OCIO_REQUIRE_ASSERT(withAlias);
+        const auto grp = withAlias->createGroupTransform();
+        OCIO_CHECK_EQUAL(grp->getNumTransforms(), 1);
+        OCIO_CHECK_EQUAL(grp->getTransform(0)->getTransformType(), OCIO::TRANSFORM_TYPE_EXPONENT);
+    }
+
+    config->addDisplayView("display", "view", "alias destination", nullptr);
+
+    {
+        OCIO::ConstProcessorRcPtr withAlias;
+        OCIO_CHECK_NO_THROW(withAlias = config->getProcessor("alias source", "display", "view",
+                                                             OCIO::TRANSFORM_DIR_FORWARD));
+        OCIO_REQUIRE_ASSERT(withAlias);
+        const auto grp = withAlias->createGroupTransform();
+        OCIO_CHECK_EQUAL(grp->getNumTransforms(), 2);
+        OCIO_CHECK_EQUAL(grp->getTransform(0)->getTransformType(), OCIO::TRANSFORM_TYPE_MATRIX);
+        OCIO_CHECK_EQUAL(grp->getTransform(1)->getTransformType(),
+                         OCIO::TRANSFORM_TYPE_FIXED_FUNCTION);
+    }
 }

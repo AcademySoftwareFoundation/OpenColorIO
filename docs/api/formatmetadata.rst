@@ -17,4 +17,6 @@ FormatMetadata
          :members:
          :undoc-members:
 
+      .. doxygenfunction:: ${OCIO_NAMESPACE}::operator<<(std::ostream&, const FormatMetadata&)
+
 Constants: :ref:`vars_format_metadata`

@@ -723,3 +723,31 @@ colorspaces:
         nts = cfg.getNamedTransforms(OCIO.NAMEDTRANSFORM_ALL)
         self.assertEqual(0, len(nts))
 
+    def test_canonical_name(self):
+        # Test these Config function: getCanonicalName.
+
+        cfg = OCIO.Config().CreateRaw()
+
+        # add a named transform and a color space.
+
+        nt = OCIO.NamedTransform(
+            name = 'nt1',
+            aliases = ['alias1', 'test1'],
+            forwardTransform = OCIO.RangeTransform())
+        cfg.addNamedTransform(nt)
+        cs = OCIO.ColorSpace(
+            name = 'cs1',
+            aliases = ['cs test', 'other'])
+        cs.setTransform(OCIO.RangeTransform(), OCIO.COLORSPACE_DIR_TO_REFERENCE)
+        cfg.addColorSpace(cs)
+        cfg.setRole('role', 'cs1')
+
+        self.assertEqual(cfg.getCanonicalName(''), '')
+        self.assertEqual(cfg.getCanonicalName('not found'), '')
+        self.assertEqual(cfg.getCanonicalName('roLE'), 'cs1')
+        self.assertEqual(cfg.getCanonicalName('CS1'), 'cs1')
+        self.assertEqual(cfg.getCanonicalName('Other'), 'cs1')
+        self.assertEqual(cfg.getCanonicalName('CS test'), 'cs1')
+        self.assertEqual(cfg.getCanonicalName('NT1'), 'nt1')
+        self.assertEqual(cfg.getCanonicalName('Alias1'), 'nt1')
+        self.assertEqual(cfg.getCanonicalName('Test1'), 'nt1')

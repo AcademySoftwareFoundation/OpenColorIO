@@ -2,11 +2,8 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 
-#include <sstream>
+#include "apphelpers/MixingHelpers.cpp"
 
-#include <OpenColorIO/OpenColorIO.h>
-
-#include "MixingHelpers.h"
 #include "testutils/UnitTest.h"
 #include "UnitTestLogUtils.h"
 
@@ -26,7 +23,7 @@ OCIO_ADD_TEST(MixingColorSpaceManager, basic)
     OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
     OCIO_CHECK_NO_THROW(config->validate());
 
-    OCIO::MixingColorSpaceMenuRcPtr mixingHelper;
+    OCIO::MixingColorSpaceManagerRcPtr mixingHelper;
     OCIO_CHECK_NO_THROW(mixingHelper = OCIO::MixingColorSpaceManager::Create(config));
 
     {
@@ -148,7 +145,7 @@ OCIO_ADD_TEST(MixingColorSpaceManager, color_picker_role)
     OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
     OCIO_CHECK_NO_THROW(config->validate());
 
-    OCIO::MixingColorSpaceMenuRcPtr mixingHelper;
+    OCIO::MixingColorSpaceManagerRcPtr mixingHelper;
     OCIO_CHECK_NO_THROW(mixingHelper = OCIO::MixingColorSpaceManager::Create(config));
     OCIO_CHECK_EQUAL(mixingHelper->getNumMixingSpaces(), 2);
 
@@ -160,7 +157,8 @@ OCIO_ADD_TEST(MixingColorSpaceManager, color_picker_role)
     // The config changes so refresh the templates.
     OCIO_CHECK_NO_THROW(mixingHelper->refresh(cfg));
     OCIO_CHECK_EQUAL(mixingHelper->getNumMixingSpaces(), 1);
-    OCIO_CHECK_EQUAL(mixingHelper->getMixingSpaceUIName(0), std::string("color_picking (log_1)"));
+    OCIO_CHECK_EQUAL(mixingHelper->getMixingSpaceUIName(0),
+                     std::string("color_picking (log_1)"));
 
     {
         OCIO::ConstProcessorRcPtr processor;
@@ -241,7 +239,7 @@ OCIO_ADD_TEST(MixingSlider, basic)
     OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
     OCIO_CHECK_NO_THROW(config->validate());
 
-    OCIO::MixingColorSpaceMenuRcPtr mixingHelper;
+    OCIO::MixingColorSpaceManagerRcPtr mixingHelper;
     OCIO_CHECK_NO_THROW(mixingHelper = OCIO::MixingColorSpaceManager::Create(config));
 
     OCIO::MixingSlider & slider = mixingHelper->getSlider(0.0f, 1.0f);
@@ -297,6 +295,9 @@ OCIO_ADD_TEST(MixingSlider, basic)
 
         slider.setSliderMinEdge(-0.2f);
         slider.setSliderMaxEdge(5.f);
+
+        FLOAT_CHECK_EQUAL(     0, slider.mixingToSlider(slider.getSliderMinEdge()));
+        FLOAT_CHECK_EQUAL(100000, slider.mixingToSlider(slider.getSliderMaxEdge()));
 
         FLOAT_CHECK_EQUAL( 1923, slider.mixingToSlider(-0.1f));
         FLOAT_CHECK_EQUAL( 5769, slider.mixingToSlider( 0.1f));
@@ -381,7 +382,7 @@ OCIO_ADD_TEST(MixingSlider, color_picker_role)
     OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
     OCIO_CHECK_NO_THROW(config->validate());
 
-    OCIO::MixingColorSpaceMenuRcPtr mixingHelper;
+    OCIO::MixingColorSpaceManagerRcPtr mixingHelper;
     OCIO_CHECK_NO_THROW(mixingHelper = OCIO::MixingColorSpaceManager::Create(config));
 
     // Add the color_picking role.

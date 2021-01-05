@@ -8,17 +8,29 @@
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "utils/StringUtils.h"
-#include "ViewingPipeline.h"
+#include "LegacyViewingPipeline.h"
 
 namespace OCIO_NAMESPACE
 {
 
-ConstDisplayViewTransformRcPtr ViewingPipeline::getDisplayViewTransform() const noexcept
+LegacyViewingPipelineRcPtr LegacyViewingPipeline::Create()
+{
+    return LegacyViewingPipelineRcPtr(new LegacyViewingPipelineImpl(),
+                                      &LegacyViewingPipelineImpl::Deleter);
+
+}
+
+void LegacyViewingPipelineImpl::Deleter(LegacyViewingPipeline * vp)
+{
+    delete static_cast<LegacyViewingPipelineImpl *>(vp);
+}
+
+ConstDisplayViewTransformRcPtr LegacyViewingPipelineImpl::getDisplayViewTransform() const noexcept
 {
     return m_displayViewTransform;
 }
 
-void ViewingPipeline::setDisplayViewTransform(const ConstDisplayViewTransformRcPtr & dt) noexcept
+void LegacyViewingPipelineImpl::setDisplayViewTransform(const ConstDisplayViewTransformRcPtr & dt) noexcept
 {
     if (dt)
     {
@@ -33,12 +45,12 @@ void ViewingPipeline::setDisplayViewTransform(const ConstDisplayViewTransformRcP
     }
 }
 
-ConstTransformRcPtr ViewingPipeline::getLinearCC() const noexcept
+ConstTransformRcPtr LegacyViewingPipelineImpl::getLinearCC() const noexcept
 {
     return m_linearCC;
 }
 
-void ViewingPipeline::setLinearCC(const ConstTransformRcPtr & cc) noexcept
+void LegacyViewingPipelineImpl::setLinearCC(const ConstTransformRcPtr & cc) noexcept
 {
     if (cc)
     {
@@ -50,12 +62,12 @@ void ViewingPipeline::setLinearCC(const ConstTransformRcPtr & cc) noexcept
     }
 }
 
-ConstTransformRcPtr ViewingPipeline::getColorTimingCC() const noexcept
+ConstTransformRcPtr LegacyViewingPipelineImpl::getColorTimingCC() const noexcept
 {
     return m_colorTimingCC;
 }
 
-void ViewingPipeline::setColorTimingCC(const ConstTransformRcPtr & cc) noexcept
+void LegacyViewingPipelineImpl::setColorTimingCC(const ConstTransformRcPtr & cc) noexcept
 {
     if (cc)
     {
@@ -67,12 +79,12 @@ void ViewingPipeline::setColorTimingCC(const ConstTransformRcPtr & cc) noexcept
     }
 }
 
-ConstTransformRcPtr ViewingPipeline::getChannelView() const noexcept
+ConstTransformRcPtr LegacyViewingPipelineImpl::getChannelView() const noexcept
 {
     return m_channelView;
 }
 
-void ViewingPipeline::setChannelView(const ConstTransformRcPtr & transform) noexcept
+void LegacyViewingPipelineImpl::setChannelView(const ConstTransformRcPtr & transform) noexcept
 {
     if (transform)
     {
@@ -84,12 +96,12 @@ void ViewingPipeline::setChannelView(const ConstTransformRcPtr & transform) noex
     }
 }
 
-ConstTransformRcPtr ViewingPipeline::getDisplayCC() const noexcept
+ConstTransformRcPtr LegacyViewingPipelineImpl::getDisplayCC() const noexcept
 {
     return m_displayCC;
 }
 
-void ViewingPipeline::setDisplayCC(const ConstTransformRcPtr & cc) noexcept
+void LegacyViewingPipelineImpl::setDisplayCC(const ConstTransformRcPtr & cc) noexcept
 {
     if (cc)
     {
@@ -102,31 +114,31 @@ void ViewingPipeline::setDisplayCC(const ConstTransformRcPtr & cc) noexcept
 }
 
 
-void ViewingPipeline::setLooksOverrideEnabled(bool enable)
+void LegacyViewingPipelineImpl::setLooksOverrideEnabled(bool enable)
 {
     m_looksOverrideEnabled = enable;
 }
 
-bool ViewingPipeline::getLooksOverrideEnabled() const
+bool LegacyViewingPipelineImpl::getLooksOverrideEnabled() const
 {
     return m_looksOverrideEnabled;
 }
 
-void ViewingPipeline::setLooksOverride(const std::string & looks)
+void LegacyViewingPipelineImpl::setLooksOverride(const char * looks)
 {
-    m_looksOverride = looks;
+    m_looksOverride = looks ? looks : "";
 }
 
-const std::string & ViewingPipeline::getLooksOverride() const
+const char * LegacyViewingPipelineImpl::getLooksOverride() const
 {
-    return m_looksOverride;
+    return m_looksOverride.c_str();
 }
 
-void ViewingPipeline::validate() const
+void LegacyViewingPipelineImpl::validate() const
 {
     if (!m_displayViewTransform)
     {
-        throw Exception("ViewingPipeline: can't create a processor without "
+        throw Exception("LegacyViewingPipeline: can't create a processor without "
                         "a display transform.");
     }
 
@@ -154,19 +166,19 @@ void ViewingPipeline::validate() const
     catch (Exception & e)
     {
         std::ostringstream oss;
-        oss << "ViewingPipeline is not valid: "
+        oss << "LegacyViewingPipeline is not valid: "
             << e.what();
         throw Exception(oss.str().c_str());
     }
 }
 
-ConstProcessorRcPtr ViewingPipeline::getProcessor(const ConstConfigRcPtr & config) const
+ConstProcessorRcPtr LegacyViewingPipelineImpl::getProcessor(const ConstConfigRcPtr & config) const
 {
     return getProcessor(config, config->getCurrentContext());
 }
 
-ConstProcessorRcPtr ViewingPipeline::getProcessor(const ConstConfigRcPtr & configIn,
-                                                  const ConstContextRcPtr & context) const
+ConstProcessorRcPtr LegacyViewingPipelineImpl::getProcessor(const ConstConfigRcPtr & configIn,
+                                                            const ConstContextRcPtr & context) const
 {
     validate();
 
@@ -181,7 +193,7 @@ ConstProcessorRcPtr ViewingPipeline::getProcessor(const ConstConfigRcPtr & confi
     if (!inputColorSpace)
     {
         std::ostringstream os;
-        os << "ViewingPipeline error: ";
+        os << "LegacyViewingPipeline error: ";
         if (inputColorSpaceName.empty())
         {
             os << "InputColorSpaceName is unspecified.";
@@ -371,6 +383,72 @@ ConstProcessorRcPtr ViewingPipeline::getProcessor(const ConstConfigRcPtr & confi
     }
 
     return config->getProcessor(context, group, dir);
+}
+
+std::ostream & operator<<(std::ostream & os, const LegacyViewingPipeline & pipeline)
+{
+    bool first = true;
+    if (pipeline.getDisplayViewTransform())
+    {
+        os << "DisplayViewTransform: " << *(pipeline.getDisplayViewTransform());
+        first = false;
+    }
+    if (pipeline.getLinearCC())
+    {
+        if (!first)
+        {
+            os << ", ";
+        }
+        os << "LinearCC: " << *(pipeline.getLinearCC());
+        first = false;
+    }
+    if (pipeline.getColorTimingCC())
+    {
+        if (!first)
+        {
+            os << ", ";
+        }
+        os << "ColorTimingCC: " << *(pipeline.getColorTimingCC());
+        first = false;
+    }
+    if (pipeline.getChannelView())
+    {
+        if (!first)
+        {
+            os << ", ";
+        }
+        os << "ChannelView: " << *(pipeline.getChannelView());
+        first = false;
+    }
+    if (pipeline.getDisplayCC())
+    {
+        if (!first)
+        {
+            os << ", ";
+        }
+        os << "DisplayCC: " << *(pipeline.getDisplayCC());
+        first = false;
+    }
+    if (pipeline.getLooksOverrideEnabled())
+    {
+        if (!first)
+        {
+            os << ", ";
+        }
+        os << "LooksOveerideEnabled";
+        first = false;
+    }
+    const std::string lo{ pipeline.getLooksOverride() };
+    if (!lo.empty())
+    {
+        if (!first)
+        {
+            os << ", ";
+        }
+        os << "LooksOveeride: " << lo;
+        first = false;
+    }
+    return os;
 }
 
 } // namespace OCIO_NAMESPACE

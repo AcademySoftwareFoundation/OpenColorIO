@@ -11,11 +11,8 @@
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "CategoryHelpers.h"
-#include "CategoryNames.h"
-#include "ColorSpaceHelpers.h"
-#include "DisplayViewHelpers.h"
 #include "utils/StringUtils.h"
-#include "ViewingPipeline.h"
+#include "LegacyViewingPipeline.h"
 
 
 namespace OCIO_NAMESPACE
@@ -48,12 +45,9 @@ ConstProcessorRcPtr GetProcessor(const ConstConfigRcPtr & config,
                                  const ConstMatrixTransformRcPtr & channelView,
                                  TransformDirection direction)
 {
-    // Src of a display view can't be a named transform (don't include them).
-    auto menuHelper = ColorSpaceMenuHelper::Create(config, nullptr, nullptr, false);
-
     DisplayViewTransformRcPtr displayTransform = DisplayViewTransform::Create();
     displayTransform->setDirection(direction);
-    displayTransform->setSrc(menuHelper->getNameFromUIName(workingName));
+    displayTransform->setSrc(workingName);
     displayTransform->setDisplay(displayName);
     displayTransform->setView(viewName);
 
@@ -93,8 +87,8 @@ ConstProcessorRcPtr GetProcessor(const ConstConfigRcPtr & config,
         return processor;
     }
 
-    ViewingPipeline pipeline;
-    pipeline.setDisplayViewTransform(displayTransform);
+    LegacyViewingPipelineRcPtr pipeline = LegacyViewingPipeline::Create();
+    pipeline->setDisplayViewTransform(displayTransform);
 
     // TODO: Need to update to allow for apps that are viewing non-scene-linear images.
     if (needExposure)
@@ -107,7 +101,7 @@ ConstProcessorRcPtr GetProcessor(const ConstConfigRcPtr & config,
         ex->makeExposureDynamic();
         ex->makeContrastDynamic();
 
-        pipeline.setLinearCC(ex);
+        pipeline->setLinearCC(ex);
     }
 
     if (needGamma)
@@ -118,17 +112,42 @@ ConstProcessorRcPtr GetProcessor(const ConstConfigRcPtr & config,
 
         ex->makeGammaDynamic();
 
-        pipeline.setDisplayCC(ex);
+        pipeline->setDisplayCC(ex);
     }
 
     if (channelView)
     {
-        pipeline.setChannelView(channelView);
+        pipeline->setChannelView(channelView);
     }
 
-    return pipeline.getProcessor(config, context);
+    return pipeline->getProcessor(config, context);
 }
 
+ConstProcessorRcPtr GetIdentityProcessor(const ConstConfigRcPtr & config)
+{
+    GroupTransformRcPtr group = GroupTransform::Create();
+    {
+        ExposureContrastTransformRcPtr ex = ExposureContrastTransform::Create();
+
+        ex->setStyle(EXPOSURE_CONTRAST_LINEAR);
+        ex->setPivot(0.18);
+
+        ex->makeExposureDynamic();
+        ex->makeContrastDynamic();
+
+        group->appendTransform(ex);
+    }
+    {
+        ExposureContrastTransformRcPtr ex = ExposureContrastTransform::Create();
+        ex->setStyle(EXPOSURE_CONTRAST_VIDEO);
+        ex->setPivot(1.0);
+
+        ex->makeGammaDynamic();
+
+        group->appendTransform(ex);
+    }
+    return config->getProcessor(group);
+}
 
 void AddActiveDisplayView(ConfigRcPtr & config, const char * displayName, const char * viewName)
 {
@@ -433,15 +452,17 @@ void AddDisplayView(ConfigRcPtr & config,
                     const char * displayName,
                     const char * viewName,
                     const char * lookDefinition,
-                    const ColorSpaceInfo & colorSpaceInfo,
-                    FileTransformRcPtr & userTransform,
+                    const char * colorSpaceName,
+                    const char * colorSpaceFamily,
+                    const char * colorSpaceDescription,
                     const char * categories,
+                    const char * transformFilePath,
                     const char * connectionColorSpaceName)
 {
     ColorSpaceRcPtr colorSpace = ColorSpace::Create();
-    colorSpace->setName(colorSpaceInfo.getName());
-    colorSpace->setFamily(colorSpaceInfo.getFamily());
-    colorSpace->setDescription(colorSpaceInfo.getDescription());
+    colorSpace->setName(colorSpaceName ? colorSpaceName : "");
+    colorSpace->setFamily(colorSpaceFamily ? colorSpaceFamily : "");
+    colorSpace->setDescription(colorSpaceDescription ? colorSpaceDescription : "");
 
     // Check if the name is already a color space or a role name.
     if (config->getColorSpace(colorSpace->getName()))
@@ -457,7 +478,7 @@ void AddDisplayView(ConfigRcPtr & config,
     // Add categories if any.
     if (categories && *categories)
     {
-        const Categories cats = ExtractCategories(categories);
+        const Categories cats = ExtractItems(categories);
 
         // Only add the categories if already used.
         ColorSpaceNames names = FindColorSpaceNames(config, cats);
@@ -470,9 +491,12 @@ void AddDisplayView(ConfigRcPtr & config,
         }
     }
 
+    FileTransformRcPtr file = FileTransform::Create();
+    file->setSrc(transformFilePath);
+
     AddDisplayView(config,
                    displayName, viewName, lookDefinition,
-                   colorSpace, userTransform,
+                   colorSpace, file,
                    connectionColorSpaceName);
 }
 
