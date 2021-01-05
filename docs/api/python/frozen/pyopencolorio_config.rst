@@ -294,11 +294,19 @@
    .. py:method:: Config.getDefaultSceneToDisplayViewTransform(self: PyOpenColorIO.Config) -> OpenColorIO_v2_0beta2::ViewTransform
       :module: PyOpenColorIO
 
-      The default transform to use for scene-referred to display-referred reference space conversions is the first scene-referred view transform listed in that section of the config (the one with the lowest index). Returns a null ConstTransformRcPtr if there isn't one.
+      This view transform is the one that will be used by default if a :ref:`ColorSpaceTransform` is needed between a scene-referred and display-referred color space. The config author may specify a transform to use via the default_view_transform entry in the config. If that is not present, or does not return a valid view transform from the scene-referred connection space, the fall-back is to use the first valid view transform in the config. Returns a null ConstTransformRcPtr if there isn't one.
 
 
    .. py:method:: Config.getDefaultView(self: PyOpenColorIO.Config, display: str) -> str
       :module: PyOpenColorIO
+
+
+   .. py:method:: Config.getDefaultViewTransformName(self: PyOpenColorIO.Config) -> str
+      :module: PyOpenColorIO
+
+      Get or set the default_view_transform string from the config.
+
+      Note that if this is not the name of a valid view transform from the scene-referred connection space, it will be ignored.
 
 
    .. py:method:: Config.getDescription(self: PyOpenColorIO.Config) -> str
@@ -399,7 +407,7 @@
 
       Get/set a name string for the config.
 
-      In combination with a color space name, this may be used to provide a more global reference to a color space.
+      The name string may be used to communicate config update details or similar information to workflows external to OCIO in cases where the config path/filename itself does not provide adequate information.
 
 
    .. py:method:: Config.getNamedTransform(self: PyOpenColorIO.Config, name: str) -> OpenColorIO_v2_0beta2::NamedTransform
@@ -619,6 +627,10 @@
       These should be normalized (sum to 1.0 exactly).
 
 
+   .. py:method:: Config.setDefaultViewTransformName(self: PyOpenColorIO.Config, name: str) -> None
+      :module: PyOpenColorIO
+
+
    .. py:method:: Config.setDescription(self: PyOpenColorIO.Config, description: str) -> None
       :module: PyOpenColorIO
 
@@ -667,11 +679,13 @@
 
       Set the configuration major version.
 
+      Throws if it is not supported. Resets minor to the most recent minor for the given major.
+
 
    .. py:method:: Config.setMinorVersion(self: PyOpenColorIO.Config, minor: int) -> None
       :module: PyOpenColorIO
 
-      Set the configuration minor version.
+      Set the configuration minor version. Throws if it is not supported for the current major.
 
 
    .. py:method:: Config.setName(self: PyOpenColorIO.Config, name: str) -> None
@@ -696,15 +710,19 @@
 
       Set all search paths as a concatenated string, ':' to separate the paths.
 
-
       See :ref:`addSearchPath` for a more robust and platform-agnostic method of setting the search paths.
+
+
+   .. py:method:: Config.setVersion(self: PyOpenColorIO.Config, major: int, minor: int) -> None
+      :module: PyOpenColorIO
+
+      Set the configuration major and minor versions. Throws if version is not supported.
 
 
    .. py:method:: Config.setViewingRules(self: PyOpenColorIO.Config, ViewingRules: OpenColorIO_v2_0beta2::ViewingRules) -> None
       :module: PyOpenColorIO
 
       Set viewing rules.
-
 
       .. note::
          The argument is cloned.

@@ -678,10 +678,6 @@ extern OCIOEXPORT TransformDirection GetInverseTransformDirection(TransformDirec
 extern OCIOEXPORT TransformDirection CombineTransformDirections(TransformDirection d1,
                                                                 TransformDirection d2);
 
-extern OCIOEXPORT const char * ColorSpaceDirectionToString(ColorSpaceDirection dir);
-/// Will throw if string is not recognized.
-extern OCIOEXPORT ColorSpaceDirection ColorSpaceDirectionFromString(const char * s);
-
 extern OCIOEXPORT const char * BitDepthToString(BitDepth bitDepth);
 extern OCIOEXPORT BitDepth BitDepthFromString(const char * s);
 extern OCIOEXPORT bool BitDepthIsFloat(BitDepth bitDepth);

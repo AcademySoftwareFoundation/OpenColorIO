@@ -246,12 +246,15 @@ std::ostringstream GetDisplayViewPrefixErrorMsg(const std::string & display, con
     return oss;
 }
 
-} // namespace
-
-
 static constexpr unsigned FirstSupportedMajorVersion = 1;
 static constexpr unsigned LastSupportedMajorVersion = OCIO_VERSION_MAJOR;
-static constexpr unsigned LastSupportedMinorVersion = OCIO_VERSION_MINOR;
+
+// For each major version keep the most recent minor.
+static const unsigned int LastSupportedMinorVersion[] = {0, // Version 1
+                                                         0  // Version 2
+                                                         };
+
+} // namespace
 
 class Config::Impl
 {
@@ -305,6 +308,7 @@ public:
     Display m_virtualDisplay;
 
     std::vector<ViewTransformRcPtr> m_viewTransforms;
+    std::string m_defaultViewTransform;
 
     mutable std::string m_activeDisplaysStr;
     mutable std::string m_activeViewsStr;
@@ -334,7 +338,7 @@ public:
 
     Impl() :
         m_majorVersion(LastSupportedMajorVersion),
-        m_minorVersion(LastSupportedMinorVersion),
+        m_minorVersion(LastSupportedMinorVersion[LastSupportedMajorVersion - 1]),
         m_context(Context::Create()),
         m_allColorSpaces(ColorSpaceSet::Create()),
         m_viewingRules(ViewingRules::Create()),
@@ -1225,6 +1229,7 @@ void Config::setMajorVersion(unsigned int version)
             throw Exception(os.str().c_str());
     }
     m_impl->m_majorVersion = version;
+    m_impl->m_minorVersion = LastSupportedMinorVersion[version - 1];
 
     AutoMutex lock(getImpl()->m_cacheidMutex);
     getImpl()->resetCacheIDs();
@@ -1237,7 +1242,23 @@ unsigned Config::getMinorVersion() const
 
 void Config::setMinorVersion(unsigned int version)
 {
-     m_impl->m_minorVersion = version;
+    const unsigned int maxMinor = LastSupportedMinorVersion[m_impl->m_majorVersion - 1];
+    if (version > maxMinor)
+    {
+        std::ostringstream os;
+        os << "The minor version " << version
+            << " is not supported for major version "
+            << m_impl->m_majorVersion
+            << ". Maximum minor version is " << maxMinor << ".";
+        throw Exception(os.str().c_str());
+    }
+    m_impl->m_minorVersion = version;
+}
+
+void Config::setVersion(unsigned int major, unsigned int minor)
+{
+    setMajorVersion(major);
+    setMinorVersion(minor);
 }
 
 void Config::upgradeToLatestVersion() noexcept
@@ -1251,7 +1272,7 @@ void Config::upgradeToLatestVersion() noexcept
         }
         static_assert(LastSupportedMajorVersion == 2, "Config: Handle newer versions");
         setMajorVersion(LastSupportedMajorVersion);
-        setMinorVersion(LastSupportedMinorVersion);
+        setMinorVersion(LastSupportedMinorVersion[LastSupportedMajorVersion - 1]);
     }
 }
 
@@ -1703,6 +1724,20 @@ void Config::validate() const
         getImpl()->m_validationtext = "Config failed validation. If there are display-referred "
                                   "color spaces, there must be view_transforms.";
         throw Exception(getImpl()->m_validationtext.c_str());
+    }
+
+    if (!getImpl()->m_defaultViewTransform.empty())
+    {
+        const auto vt = getDefaultSceneToDisplayViewTransform();
+        if (!vt || !StringUtils::Compare(vt->getName(), getImpl()->m_defaultViewTransform))
+        {
+            std::ostringstream os;
+            os << "Config failed validation. Default view transform is defined as: '";
+            os << getImpl()->m_defaultViewTransform << "' but this does not correspond to ";
+            os << "an existing scene-referred view transform.";
+            getImpl()->m_validationtext = os.str();
+            throw Exception(getImpl()->m_validationtext.c_str());
+        }
     }
 
     ///// FileRules
@@ -3759,8 +3794,20 @@ const char * Config::getViewTransformNameByIndex(int index) const noexcept
 ConstViewTransformRcPtr Config::getDefaultSceneToDisplayViewTransform() const
 {
     // The default view transform between the main reference space (scene-referred) and the
-    // display-referred space is the first one in the list that uses a scene-referred
-    // reference space.
+    // display-referred space if it is not defined, it is the first one in the list that uses
+    // a scene-referred reference space.
+
+    if (!getImpl()->m_defaultViewTransform.empty())
+    {
+        const auto vt = getImpl()->getViewTransform(getImpl()->m_defaultViewTransform.c_str());
+        if (vt)
+        {
+            if (vt->getReferenceSpaceType() == REFERENCE_SPACE_SCENE)
+            {
+                return vt;
+            }
+        }
+    }
     for (const auto & viewTransform : getImpl()->m_viewTransforms)
     {
         if (viewTransform->getReferenceSpaceType() == REFERENCE_SPACE_SCENE)
@@ -3769,6 +3816,19 @@ ConstViewTransformRcPtr Config::getDefaultSceneToDisplayViewTransform() const
         }
     }
     return ConstViewTransformRcPtr();
+}
+
+const char * Config::getDefaultViewTransformName() const noexcept
+{
+    return getImpl()->m_defaultViewTransform.c_str();
+}
+
+void Config::setDefaultViewTransformName(const char * defaultVT) noexcept
+{
+    getImpl()->m_defaultViewTransform = defaultVT ? defaultVT : "";
+
+    AutoMutex lock(getImpl()->m_cacheidMutex);
+    getImpl()->resetCacheIDs();
 }
 
 void Config::addViewTransform(const ConstViewTransformRcPtr & viewTransform)
@@ -4711,7 +4771,7 @@ void Config::Impl::checkVersionConsistency() const
 
     // Check for the ViewTransforms.
 
-    if (m_majorVersion < 2 && m_viewTransforms.size() != 0)
+    if (m_majorVersion < 2 && (m_viewTransforms.size() != 0 || !m_defaultViewTransform.empty()))
     {
         throw Exception("Only version 2 (or higher) can have ViewTransforms.");
     }
