@@ -22,6 +22,7 @@ NamedTransformRcPtr NamedTransformImpl::createEditableCopy() const
 {
     auto copy = std::make_shared<NamedTransformImpl>();
     copy->m_name = m_name;
+    copy->m_aliases = m_aliases;
     copy->m_description = m_description;
     copy->m_family = m_family;
     copy->m_categories = m_categories;
@@ -45,6 +46,50 @@ const char * NamedTransformImpl::getName() const noexcept
 void NamedTransformImpl::setName(const char * name) noexcept
 {
     m_name = name ? name : "";
+    // Name can no longer be an alias.
+    StringUtils::Remove(m_aliases, m_name);
+}
+
+size_t NamedTransformImpl::getNumAliases() const noexcept
+{
+    return m_aliases.size();
+}
+
+const char * NamedTransformImpl::getAlias(size_t idx) const noexcept
+{
+    if (idx < m_aliases.size())
+    {
+        return m_aliases[idx].c_str();
+    }
+    return "";
+}
+
+void NamedTransformImpl::addAlias(const char * alias) noexcept
+{
+    if (alias && *alias)
+    {
+        if (!StringUtils::Compare(alias, m_name))
+        {
+            if (!StringUtils::Contain(m_aliases, alias))
+            {
+                m_aliases.push_back(alias);
+            }
+        }
+    }
+}
+
+void NamedTransformImpl::removeAlias(const char * name) noexcept
+{
+    if (name && *name)
+    {
+        const std::string alias{ name };
+        StringUtils::Remove(m_aliases, alias);
+    }
+}
+
+void NamedTransformImpl::clearAliases() noexcept
+{
+    m_aliases.clear();
 }
 
 const char * NamedTransformImpl::getFamily() const noexcept
@@ -196,6 +241,20 @@ std::ostream & operator<< (std::ostream & os, const NamedTransform & t)
     os << "<NamedTransform ";
     const std::string strName{ t.getName() };
     os << "name=" << strName;
+    const auto numAliases = t.getNumAliases();
+    if (numAliases == 1)
+    {
+        os << "alias= " << t.getAlias(0) << ", ";
+    }
+    else if (numAliases > 1)
+    {
+        os << "aliases=[" << t.getAlias(0);
+        for (size_t aidx = 1; aidx < numAliases; ++aidx)
+        {
+            os << ", " << t.getAlias(aidx);
+        }
+        os << "], ";
+    }
     const std::string strFamily{ t.getFamily() };
     if (!strFamily.empty())
     {
