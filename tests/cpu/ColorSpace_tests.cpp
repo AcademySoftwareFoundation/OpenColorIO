@@ -265,8 +265,8 @@ active_views: []
     encoding: scene-linear
     allocation: lg2
     allocationvars: [0.1, 0.9, 0.15]
-    to_reference: !<LogTransform> {}
-    from_reference: !<LogTransform> {}
+    to_scene_reference: !<LogTransform> {}
+    from_scene_reference: !<LogTransform> {}
 )" };
         std::string cfgString{ Start };
         cfgString += End;

@@ -181,6 +181,8 @@ void bindPyConfig(py::module & m)
              DOC(Config, getMinorVersion))
         .def("setMinorVersion", &Config::setMinorVersion, "minor"_a, 
              DOC(Config, setMinorVersion))
+        .def("setVersion", &Config::setVersion, "major"_a, "minor"_a,
+             DOC(Config, setVersion))
         .def("upgradeToLatestVersion", &Config::upgradeToLatestVersion, 
              DOC(Config, upgradeToLatestVersion))
         .def("validate", &Config::validate, 
@@ -447,6 +449,12 @@ void bindPyConfig(py::module & m)
         .def("getDefaultSceneToDisplayViewTransform", 
              &Config::getDefaultSceneToDisplayViewTransform, 
              DOC(Config, getDefaultSceneToDisplayViewTransform))
+        .def("getDefaultViewTransformName",
+            &Config::getDefaultViewTransformName,
+            DOC(Config, getDefaultViewTransformName))
+        .def("setDefaultViewTransformName",
+            &Config::setDefaultViewTransformName, "name"_a.none(false),
+            DOC(Config, setDefaultViewTransformName))
         .def("clearViewTransforms", &Config::clearViewTransforms, 
              DOC(Config, clearViewTransforms))
 

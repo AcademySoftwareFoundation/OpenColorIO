@@ -244,7 +244,7 @@ colorspaces:
     aliases: [colorspace]
     isdata: false
     allocation: uniform
-    to_reference: !<RangeTransform> {max_in_value: 1, max_out_value: 1}
+    to_scene_reference: !<RangeTransform> {max_in_value: 1, max_out_value: 1}
 
 named_transforms:
   - !<NamedTransform>
