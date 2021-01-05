@@ -927,7 +927,7 @@ public:
      * connection space, it will be ignored.
      */
     const char * getDefaultViewTransformName() const noexcept;
-    void setDefaultViewTransformName(const char * default) noexcept;
+    void setDefaultViewTransformName(const char * defaultName) noexcept;
 
 
     void clearViewTransforms();
