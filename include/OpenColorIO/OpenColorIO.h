@@ -268,17 +268,24 @@ public:
 
     ConfigRcPtr createEditableCopy() const;
 
-    /// Get the configuration major version
+    /// Get the configuration major version.
     unsigned int getMajorVersion() const;
 
-    /// Set the configuration major version
+    /**
+     * Set the configuration major version.
+     *
+     * Throws if it is not supported. Resets minor to the most recent minor for the given major.
+     */
     void setMajorVersion(unsigned int major);
 
-    /// Get the configuration minor version
+    /// Get the configuration minor version.
     unsigned int getMinorVersion() const;
 
-    /// Set the configuration minor version
+    /// Set the configuration minor version. Throws if it is not supported for the current major.
     void setMinorVersion(unsigned int minor);
+
+    /// Set the configuration major and minor versions. Throws if version is not supported.
+    void setVersion(unsigned int major, unsigned int minor);
 
     /// Allows an older config to be serialized as the current version.
     void upgradeToLatestVersion() noexcept;
@@ -613,6 +620,7 @@ public:
     const char * getDisplay(int index) const;
 
     const char * getDefaultView(const char * display) const;
+
     /**
      * Return the number of views attached to the display including the number of
      * shared views if any. Return 0 if display does not exist.
@@ -903,12 +911,24 @@ public:
     /**
      * \brief
      * 
-     * The default transform to use for scene-referred to display-referred
-     * reference space conversions is the first scene-referred view transform listed in
-     * that section of the config (the one with the lowest index).  Returns a null
-     * ConstTransformRcPtr if there isn't one.
+     * This view transform is the one that will be used by default if a ColorSpaceTransform is
+     * needed between a scene-referred and display-referred color space.  The config author may
+     * specify a transform to use via the default_view_transform entry in the config.  If that is
+     * not present, or does not return a valid view transform from the scene-referred connection
+     * space, the fall-back is to use the first valid view transform in the config.  Returns a
+     * null ConstTransformRcPtr if there isn't one.
      */
     ConstViewTransformRcPtr getDefaultSceneToDisplayViewTransform() const;
+
+    /**
+     * Get or set the default_view_transform string from the config.
+     * 
+     * Note that if this is not the name of a valid view transform from the scene-referred
+     * connection space, it will be ignored.
+     */
+    const char * getDefaultViewTransformName() const noexcept;
+    void setDefaultViewTransformName(const char * default) noexcept;
+
 
     void clearViewTransforms();
 

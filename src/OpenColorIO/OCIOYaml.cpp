@@ -4248,8 +4248,8 @@ inline void load(const YAML::Node& node, ConfigRcPtr & config, const char* filen
 
     try
     {
-        config->setMajorVersion((unsigned int)profile_major_version);
-        config->setMinorVersion((unsigned int)profile_minor_version);
+        config->setVersion((unsigned int)profile_major_version,
+                           (unsigned int)profile_minor_version);
     }
     catch(Exception & ex)
     {
@@ -4265,12 +4265,10 @@ inline void load(const YAML::Node& node, ConfigRcPtr & config, const char* filen
             << ". ";
 
         os << "This version of the OpenColorIO library (" << GetVersion() << ") ";
-        os << "is not known to be able to load this profile. ";
-        os << "An attempt will be made, but there are no guarantees that the ";
-        os << "results will be accurate. Continue at your own risk.";
+        os << "is not able to load that config version.";
         os << std::endl << ex.what();
 
-        LogWarning(os.str());
+        throw Exception(os.str().c_str());
     }
 
     bool fileRulesFound = false;
@@ -4687,6 +4685,11 @@ inline void load(const YAML::Node& node, ConfigRcPtr & config, const char* filen
                 }
             }
         }
+        else if (key == "default_view_transform")
+        {
+            load(second, stringval);
+            config->setDefaultViewTransformName(stringval.c_str());
+        }
         else if (key == "named_transforms")
         {
             if (second.Type() != YAML::NodeType::Sequence)
@@ -5072,7 +5075,14 @@ inline void save(YAML::Emitter & out, const Config & config)
         out << YAML::Newline;
     }
 
-    // View transform
+    // View transforms.
+    const std::string defVT{ config.getDefaultViewTransformName() };
+    if (!defVT.empty())
+    {
+        out << YAML::Newline;
+        out << YAML::Key << "default_view_transform" << YAML::Value << defVT;
+        out << YAML::Newline;
+    }
     const int numVT = config.getNumViewTransforms();
     if (numVT > 0)
     {

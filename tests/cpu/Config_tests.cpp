@@ -1529,12 +1529,9 @@ OCIO_ADD_TEST(Config, version)
                           "version is 20000 where supported versions start at 1 and end at 2");
 
     {
-        OCIO_CHECK_NO_THROW(config->setMinorVersion(2));
-        OCIO_CHECK_NO_THROW(config->setMinorVersion(20));
-
-        std::stringstream ss;
-        ss << *config.get();   
-        StringUtils::StartsWith(StringUtils::Lower(ss.str()), "ocio_profile_version: 2.20");
+        OCIO_CHECK_THROW_WHAT(config->setMinorVersion(1), OCIO::Exception,
+                              "The minor version 1 is not supported for major version 1. "
+                              "Maximum minor version is 0");
     }
 
     {
@@ -1542,22 +1539,39 @@ OCIO_ADD_TEST(Config, version)
 
         std::stringstream ss;
         OCIO_CHECK_NO_THROW(ss << *config.get());   
-        StringUtils::StartsWith(StringUtils::Lower(ss.str()), "ocio_profile_version: 2");
+        OCIO_CHECK_ASSERT(StringUtils::StartsWith(StringUtils::Lower(ss.str()),
+                          "ocio_profile_version: 1"));
     }
 
     {
-        OCIO_CHECK_NO_THROW(config->setMinorVersion(1));
+        OCIO_CHECK_NO_THROW(config->setMajorVersion(2));
 
         std::stringstream ss;
         OCIO_CHECK_NO_THROW(ss << *config.get());   
-        StringUtils::StartsWith(StringUtils::Lower(ss.str()), "ocio_profile_version: 1");
+        OCIO_CHECK_ASSERT(StringUtils::StartsWith(StringUtils::Lower(ss.str()),
+                          "ocio_profile_version: 2"));
+    }
+
+    {
+        OCIO_CHECK_THROW_WHAT(config->setVersion(2, 1), OCIO::Exception,
+                              "The minor version 1 is not supported for major version 2. "
+                              "Maximum minor version is 0");
+
+        OCIO_CHECK_NO_THROW(config->setMajorVersion(2));
+        OCIO_CHECK_THROW_WHAT(config->setMinorVersion(1), OCIO::Exception,
+                              "The minor version 1 is not supported for major version 2. "
+                              "Maximum minor version is 0");
+    }
+
+    {
+        OCIO_CHECK_THROW_WHAT(config->setVersion(3, 4), OCIO::Exception,
+                              "version is 3 where supported versions start at 1 and end at 2");
     }
 }
 
-OCIO_ADD_TEST(Config, version_faulty_1)
+OCIO_ADD_TEST(Config, version_validation)
 {
-    const std::string SIMPLE_PROFILE =
-        "ocio_profile_version: 2.0.1\n"
+    const std::string SIMPLE_PROFILE_END =
         "colorspaces:\n"
         "  - !<ColorSpace>\n"
         "      name: raw\n"
@@ -1569,11 +1583,53 @@ OCIO_ADD_TEST(Config, version_faulty_1)
         "  - !<View> {name: Raw, colorspace: raw}\n"
         "\n";
 
-    std::istringstream is;
-    is.str(SIMPLE_PROFILE);
-    OCIO::ConstConfigRcPtr config;
-    OCIO_CHECK_THROW_WHAT(config = OCIO::Config::CreateFromStream(is), OCIO::Exception,
-                          "does not appear to have a valid version 2.0.1");
+    {
+        std::istringstream is;
+        is.str("ocio_profile_version: 2.0.1\n" + SIMPLE_PROFILE_END);
+        OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is), OCIO::Exception,
+                              "does not appear to have a valid version 2.0.1");
+    }
+
+    {
+        std::istringstream is;
+        is.str("ocio_profile_version: 2.1\n" + SIMPLE_PROFILE_END);
+        OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is), OCIO::Exception,
+                              "The minor version 1 is not supported for major version 2");
+    }
+
+    {
+        std::istringstream is;
+        is.str("ocio_profile_version: 3\n" + SIMPLE_PROFILE_END);
+        OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is), OCIO::Exception,
+                              "The version is 3 where supported versions start at 1 and end at 2");
+    }
+
+    {
+        std::istringstream is;
+        is.str("ocio_profile_version: 3.0\n" + SIMPLE_PROFILE_END);
+        OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is), OCIO::Exception,
+                              "The version is 3 where supported versions start at 1 and end at 2");
+    }
+
+    {
+        std::istringstream is;
+        is.str("ocio_profile_version: 1.0\n" + SIMPLE_PROFILE_END);
+        OCIO::ConstConfigRcPtr config;
+        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OCIO_CHECK_ASSERT(config);
+        OCIO_CHECK_EQUAL(config->getMajorVersion(), 1);
+        OCIO_CHECK_EQUAL(config->getMinorVersion(), 0);
+    }
+
+    {
+        std::istringstream is;
+        is.str("ocio_profile_version: 2.0\n" + SIMPLE_PROFILE_END);
+        OCIO::ConstConfigRcPtr config;
+        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OCIO_CHECK_ASSERT(config);
+        OCIO_CHECK_EQUAL(config->getMajorVersion(), 2);
+        OCIO_CHECK_EQUAL(config->getMinorVersion(), 0);
+    }
 }
 
 namespace
@@ -5556,6 +5612,29 @@ OCIO_ADD_TEST(Config, view_transforms)
     OCIO_CHECK_ASSERT(configEdit->getViewTransform(vtScene.c_str()));
     OCIO_CHECK_ASSERT(!configEdit->getViewTransform("not a view transform"));
 
+    // Default view transform.
+
+    OCIO_CHECK_EQUAL(std::string(""), configEdit->getDefaultViewTransformName());
+
+    configEdit->setDefaultViewTransformName("not valid");
+    OCIO_CHECK_EQUAL(std::string("not valid"), configEdit->getDefaultViewTransformName());
+
+    OCIO_CHECK_THROW_WHAT(configEdit->validate(), OCIO::Exception,
+                          "Default view transform is defined as: 'not valid' but this does not "
+                          "correspond to an existing scene-referred view transform");
+
+    configEdit->setDefaultViewTransformName(vtDisplay.c_str());
+    OCIO_CHECK_THROW_WHAT(configEdit->validate(), OCIO::Exception,
+                          "Default view transform is defined as: 'display' but this does not "
+                          "correspond to an existing scene-referred view transform");
+
+    auto newSceneVT = sceneVT->createEditableCopy();
+    newSceneVT->setName("NotFirst");
+    configEdit->addViewTransform(newSceneVT);
+
+    configEdit->setDefaultViewTransformName("NotFirst");
+    OCIO_CHECK_NO_THROW(configEdit->validate());
+
     // Save and reload to test file io for viewTransform.
     std::stringstream os;
     os << *configEdit.get();
@@ -5571,16 +5650,22 @@ OCIO_ADD_TEST(Config, view_transforms)
     OCIO_CHECK_NO_THROW(vt->setTransform(OCIO::LogTransform::Create(),
                                          OCIO::VIEWTRANSFORM_DIR_FROM_REFERENCE));
     OCIO_CHECK_NO_THROW(configEdit->addViewTransform(vt));
-    OCIO_REQUIRE_EQUAL(configEdit->getNumViewTransforms(), 2);
+    OCIO_REQUIRE_EQUAL(configEdit->getNumViewTransforms(), 3);
     sceneVT = configEdit->getViewTransform(vtScene.c_str());
     auto trans = sceneVT->getTransform(OCIO::VIEWTRANSFORM_DIR_FROM_REFERENCE);
     OCIO_REQUIRE_ASSERT(trans);
     OCIO_CHECK_ASSERT(OCIO_DYNAMIC_POINTER_CAST<const OCIO::LogTransform>(trans));
 
-    OCIO_CHECK_EQUAL(configReloaded->getNumViewTransforms(), 2);
+    OCIO_CHECK_EQUAL(configReloaded->getNumViewTransforms(), 3);
+
+    OCIO_CHECK_EQUAL(std::string("NotFirst"), configReloaded->getDefaultViewTransformName());
+
+    // Clear all view transforms does not clear the config's default view transform string.
 
     configEdit->clearViewTransforms();
     OCIO_CHECK_EQUAL(configEdit->getNumViewTransforms(), 0);
+
+    OCIO_CHECK_EQUAL(std::string("NotFirst"), configEdit->getDefaultViewTransformName());
 }
 
 OCIO_ADD_TEST(Config, display_view)
@@ -5614,6 +5699,8 @@ OCIO_ADD_TEST(Config, display_view)
     OCIO_CHECK_NO_THROW(vt->setTransform(OCIO::MatrixTransform::Create(),
                                          OCIO::VIEWTRANSFORM_DIR_FROM_REFERENCE));
     OCIO_CHECK_NO_THROW(config->addViewTransform(vt));
+
+    config->setDefaultViewTransformName("view_transform");
 
     // Add a simple view.
     const std::string display{ "display" };
@@ -5655,6 +5742,8 @@ displays:
 
 active_displays: []
 active_views: []
+
+default_view_transform: view_transform
 
 view_transforms:
   - !<ViewTransform>
@@ -5709,6 +5798,7 @@ colorspaces:
                      configRead->getDisplayViewColorSpaceName("display", v2.c_str()));
     OCIO_CHECK_EQUAL(std::string("view_transform"),
                      configRead->getDisplayViewTransformName("display", v2.c_str()));
+    OCIO_CHECK_EQUAL(std::string("view_transform"), configRead->getDefaultViewTransformName());
 
     // Check some faulty calls related to displays & views.
 
