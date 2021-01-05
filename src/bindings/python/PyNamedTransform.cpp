@@ -11,11 +11,15 @@ namespace OCIO_NAMESPACE
 
 enum NamedTransformIterator
 {
-    IT_NAMED_TRANSFORM_DEFINITION_CATEGORY = 0
+    IT_NAMED_TRANSFORM_DEFINITION_CATEGORY = 0,
+    IT_NAMED_TRANSFORM_ALIAS
 };
 
 using NamedTransformCategoryIterator = PyIterator<NamedTransformRcPtr,
                                                   IT_NAMED_TRANSFORM_DEFINITION_CATEGORY>;
+
+using NamedTransformAliasIterator = PyIterator<NamedTransformRcPtr,
+                                               IT_NAMED_TRANSFORM_ALIAS>;
 
 std::vector<std::string> getCategoriesStdVec(const NamedTransformRcPtr & p)
 {
@@ -28,6 +32,17 @@ std::vector<std::string> getCategoriesStdVec(const NamedTransformRcPtr & p)
     return categories;
 }
 
+std::vector<std::string> getAliasesStdVec(const NamedTransformRcPtr & p)
+{
+    std::vector<std::string> aliases;
+    aliases.reserve(p->getNumAliases());
+    for (int i = 0; i < p->getNumCategories(); i++)
+    {
+        aliases.push_back(p->getAlias(i));
+    }
+    return aliases;
+}
+
 void bindPyNamedTransform(py::module & m)
 {
     NamedTransformRcPtr DEFAULT = NamedTransform::Create();
@@ -36,6 +51,7 @@ void bindPyNamedTransform(py::module & m)
         m, "NamedTransform", DOC(NamedTransform))
         .def(py::init([]() { return NamedTransform::Create(); }), DOC(NamedTransform, Create))
         .def(py::init([](const std::string & name,
+                         const std::vector<std::string> & aliases,
                          const std::string & family,
                          const std::string & description,
                          const ConstTransformRcPtr & forwardTransform,
@@ -43,6 +59,15 @@ void bindPyNamedTransform(py::module & m)
                          const std::vector<std::string> & categories)
             {
                 NamedTransformRcPtr p = NamedTransform::Create();
+                if (!aliases.empty())
+                {
+                    p->clearAliases();
+                    for (size_t i = 0; i < aliases.size(); i++)
+                    {
+                        p->addAlias(aliases[i].c_str());
+                    }
+                }
+                // Setting the name will remove alias named the same, so set name after.
                 if (!name.empty())
                 {
                     p->setName(name.c_str());
@@ -74,6 +99,7 @@ void bindPyNamedTransform(py::module & m)
                 return p;
             }),
             "name"_a.none(false) = "",
+            "aliases"_a = getAliasesStdVec(DEFAULT),
             "family"_a.none(false) = "",
             "description"_a.none(false) = "",
             "forwardTransform"_a = ConstTransformRcPtr(),
@@ -85,6 +111,19 @@ void bindPyNamedTransform(py::module & m)
             DOC(NamedTransform, getName))
         .def("setName", &NamedTransform::setName, "name"_a.none(false),
             DOC(NamedTransform, setName))
+
+        // Aliases.
+        .def("addAlias", &NamedTransform::addAlias, "alias"_a.none(false),
+            DOC(NamedTransform, addAlias))
+        .def("removeAlias", &NamedTransform::removeAlias, "alias"_a.none(false),
+            DOC(NamedTransform, removeAlias))
+        .def("getAliases", [](NamedTransformRcPtr & self)
+            { 
+                return NamedTransformAliasIterator(self);
+            })
+        .def("clearAliases", &NamedTransform::clearAliases,
+            DOC(NamedTransform, clearAliases))
+
         .def("getFamily", &NamedTransform::getFamily,
             DOC(NamedTransform, getFamily))
         .def("setFamily", &NamedTransform::setFamily, "family"_a.none(false),
@@ -139,6 +178,27 @@ void bindPyNamedTransform(py::module & m)
                 int i = it.nextIndex(it.m_obj->getNumCategories());
                 return it.m_obj->getCategory(i);
             });
+
+    py::class_<NamedTransformAliasIterator>(cls, "NamedTransformAliasIterator")
+        .def("__len__", [](NamedTransformAliasIterator & it)
+            { 
+                return it.m_obj->getNumAliases(); 
+            })
+        .def("__getitem__", [](NamedTransformAliasIterator & it, int i)
+            { 
+                it.checkIndex(i, (int)it.m_obj->getNumAliases());
+                return it.m_obj->getAlias(i);
+            })
+        .def("__iter__", [](NamedTransformAliasIterator & it) -> NamedTransformAliasIterator &
+            { 
+                return it; 
+            })
+        .def("__next__", [](NamedTransformAliasIterator & it)
+            {
+                int i = it.nextIndex((int)it.m_obj->getNumAliases());
+                return it.m_obj->getAlias(i);
+            });
+
 }
 
 } // namespace OCIO_NAMESPACE
