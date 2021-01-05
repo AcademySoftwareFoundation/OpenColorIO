@@ -133,25 +133,6 @@ OCIO_ADD_TEST(ParseUtils, transform_direction)
     OCIO_CHECK_EQUAL(OCIO::TRANSFORM_DIR_INVERSE, resDir);
 }
 
-OCIO_ADD_TEST(ParseUtils, color_space)
-{
-    std::string resStr;
-    resStr = OCIO::ColorSpaceDirectionToString(OCIO::COLORSPACE_DIR_TO_REFERENCE);
-    OCIO_CHECK_EQUAL("to_reference", resStr);
-    resStr = OCIO::ColorSpaceDirectionToString(OCIO::COLORSPACE_DIR_FROM_REFERENCE);
-    OCIO_CHECK_EQUAL("from_reference", resStr);
-
-    OCIO::ColorSpaceDirection resCSD = OCIO::COLORSPACE_DIR_FROM_REFERENCE;
-    OCIO_CHECK_NO_THROW(resCSD = OCIO::ColorSpaceDirectionFromString("to_reference"));
-    OCIO_CHECK_EQUAL(OCIO::COLORSPACE_DIR_TO_REFERENCE, resCSD);
-    OCIO_CHECK_NO_THROW(resCSD = OCIO::ColorSpaceDirectionFromString("from_reference"));
-    OCIO_CHECK_EQUAL(OCIO::COLORSPACE_DIR_FROM_REFERENCE, resCSD);
-    OCIO_CHECK_THROW_WHAT(OCIO::ColorSpaceDirectionFromString("unkwon"), OCIO::Exception,
-                          "Unrecognized color space direction: 'unkwon'");
-    OCIO_CHECK_THROW_WHAT(OCIO::ColorSpaceDirectionFromString(""), OCIO::Exception,
-                          "Unrecognized color space direction: ''");
-}
-
 OCIO_ADD_TEST(ParseUtils, bitdepth)
 {
     std::string resStr;
