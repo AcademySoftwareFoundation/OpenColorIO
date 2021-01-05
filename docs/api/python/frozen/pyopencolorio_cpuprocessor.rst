@@ -30,14 +30,14 @@
 
       Overloaded function.
 
-      1. applyRGB(self: PyOpenColorIO.CPUProcessor, pixel: buffer) -> buffer
+      1. applyRGB(self: PyOpenColorIO.CPUProcessor, data: buffer) -> None
 
       Apply to a single pixel respecting that the input and output bit-depths be 32-bit float and the image buffer be packed RGB/RGBA.
 
       .. note::
          This is not as efficient as applying to an entire image at once. If you are processing multiple pixels, and have the flexibility, use the above function instead.
 
-      2. applyRGB(self: PyOpenColorIO.CPUProcessor, pixel: List[float]) -> List[float]
+      2. applyRGB(self: PyOpenColorIO.CPUProcessor, data: List[float]) -> List[float]
 
       Apply to a single pixel respecting that the input and output bit-depths be 32-bit float and the image buffer be packed RGB/RGBA.
 
@@ -50,9 +50,9 @@
 
       Overloaded function.
 
-      1. applyRGBA(self: PyOpenColorIO.CPUProcessor, pixel: buffer) -> buffer
+      1. applyRGBA(self: PyOpenColorIO.CPUProcessor, data: buffer) -> None
 
-      2. applyRGBA(self: PyOpenColorIO.CPUProcessor, pixel: List[float]) -> List[float]
+      2. applyRGBA(self: PyOpenColorIO.CPUProcessor, data: List[float]) -> List[float]
 
 
    .. py:method:: CPUProcessor.getCacheID(self: PyOpenColorIO.CPUProcessor) -> str
