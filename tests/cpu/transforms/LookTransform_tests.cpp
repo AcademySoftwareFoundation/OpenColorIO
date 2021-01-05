@@ -120,19 +120,19 @@ colorspaces:
 
   - !<ColorSpace>
     name: source
-    to_reference: !<FixedFunctionTransform> {name: src, style: ACES_RedMod03}
+    to_scene_reference: !<FixedFunctionTransform> {name: src, style: ACES_RedMod03}
 
   - !<ColorSpace>
     name: destination
-    from_reference: !<FixedFunctionTransform> {name: dst, style: ACES_RedMod03}
+    from_scene_reference: !<FixedFunctionTransform> {name: dst, style: ACES_RedMod03}
 
   - !<ColorSpace>
     name: look1_cs
-    to_reference: !<FixedFunctionTransform> {name: look1_cs trans, style: ACES_RedMod03}
+    to_scene_reference: !<FixedFunctionTransform> {name: look1_cs trans, style: ACES_RedMod03}
 
   - !<ColorSpace>
     name: look2_3_cs
-    to_reference: !<FixedFunctionTransform> {name: look2_3_cs trans, style: ACES_RedMod03}
+    to_scene_reference: !<FixedFunctionTransform> {name: look2_3_cs trans, style: ACES_RedMod03}
 )" };
 
     std::istringstream is;
@@ -321,23 +321,23 @@ colorspaces:
 
   - !<ColorSpace>
     name: source
-    to_reference: !<FixedFunctionTransform> {name: src, style: ACES_RedMod03}
+    to_scene_reference: !<FixedFunctionTransform> {name: src, style: ACES_RedMod03}
 
   - !<ColorSpace>
     name: destination
-    from_reference: !<FixedFunctionTransform> {name: dst, style: ACES_RedMod03}
+    from_scene_reference: !<FixedFunctionTransform> {name: dst, style: ACES_RedMod03}
 
   - !<ColorSpace>
     name: look2_cs
-    to_reference: !<FixedFunctionTransform> {name: look2_cs trans, style: ACES_RedMod03}
+    to_scene_reference: !<FixedFunctionTransform> {name: look2_cs trans, style: ACES_RedMod03}
 
   - !<ColorSpace>
     name: look3_cs
-    to_reference: !<FixedFunctionTransform> {name: look3_cs trans, style: ACES_RedMod03}
+    to_scene_reference: !<FixedFunctionTransform> {name: look3_cs trans, style: ACES_RedMod03}
 
   - !<ColorSpace>
     name: look4_cs
-    to_reference: !<FixedFunctionTransform> {name: look4_cs trans, style: ACES_RedMod03}
+    to_scene_reference: !<FixedFunctionTransform> {name: look4_cs trans, style: ACES_RedMod03}
 )" };
 
     std::istringstream is;
@@ -594,19 +594,19 @@ colorspaces:
 
   - !<ColorSpace>
     name: log
-    to_reference: !<LogTransform> {base: 2, direction: inverse}
+    to_scene_reference: !<LogTransform> {base: 2, direction: inverse}
 
   - !<ColorSpace>
     name: vd
-    from_reference: !<ExponentTransform> {value: [2.4, 2.4, 2.4, 1], direction: inverse}
+    from_scene_reference: !<ExponentTransform> {value: [2.4, 2.4, 2.4, 1], direction: inverse}
 
   - !<ColorSpace>
     name: vd_graded
-    from_reference: !<LookTransform> {src: raw, dst: vd, looks: look1}
+    from_scene_reference: !<LookTransform> {src: raw, dst: vd, looks: look1}
 
   - !<ColorSpace>
     name: vd_graded_inverse
-    to_reference: !<LookTransform> {src: raw, dst: vd, looks: look1, direction: inverse}
+    to_scene_reference: !<LookTransform> {src: raw, dst: vd, looks: look1, direction: inverse}
 
 )" };
 
@@ -704,8 +704,8 @@ colorspaces:
     OCIO_CHECK_ASSERT(op->isNoOpType());
 
     // Generated ops for vd_graded_inverse should be identical to the above
-    // (only difference being that it's defined using to_reference and inverse
-    // look transform direction instead of from_reference)
+    // (only difference being that it's defined using to_scene_reference and inverse
+    // look transform direction instead of from_scene_reference)
     OCIO::ConstColorSpaceRcPtr dstColorSpaceInv;
     OCIO_CHECK_NO_THROW(dstColorSpaceInv = config->getColorSpace("vd_graded_inverse"));
 

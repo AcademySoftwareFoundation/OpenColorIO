@@ -12,6 +12,16 @@
    curve" transform where there is no need to convert to or from a reference space.
 
 
+   .. py:class:: NamedTransform.NamedTransformAliasIterator
+      :module: PyOpenColorIO
+
+
+      .. py:method:: NamedTransform.NamedTransformAliasIterator.__init__(*args, **kwargs)
+         :module: PyOpenColorIO
+
+         Initialize self.  See help(type(self)) for accurate signature.
+
+
    .. py:method:: NamedTransform.__init__(*args, **kwargs)
       :module: PyOpenColorIO
 
@@ -19,11 +29,17 @@
 
       1. __init__(self: PyOpenColorIO.NamedTransform) -> None
 
-      2. __init__(self: PyOpenColorIO.NamedTransform, name: str = '', family: str = '', description: str = '', forwardTransform: PyOpenColorIO.Transform = None, inverseTransform: PyOpenColorIO.Transform = None, categories: List[str] = []) -> None
+      2. __init__(self: PyOpenColorIO.NamedTransform, name: str = '', aliases: List[str] = [], family: str = '', description: str = '', forwardTransform: PyOpenColorIO.Transform = None, inverseTransform: PyOpenColorIO.Transform = None, categories: List[str] = []) -> None
 
 
    .. py:method:: NamedTransform.__str__(self: PyOpenColorIO.NamedTransform) -> str
       :module: PyOpenColorIO
+
+
+   .. py:method:: NamedTransform.addAlias(self: PyOpenColorIO.NamedTransform, alias: str) -> None
+      :module: PyOpenColorIO
+
+      Nothing is done if alias is NULL or empty, if it is already there, or if it is already the named transform name.
 
 
    .. py:method:: NamedTransform.addCategory(self: PyOpenColorIO.NamedTransform, category: str) -> None
@@ -33,11 +49,19 @@
          :ref:`ColorSpace::addCategory`
 
 
+   .. py:method:: NamedTransform.clearAliases(self: PyOpenColorIO.NamedTransform) -> None
+      :module: PyOpenColorIO
+
+
    .. py:method:: NamedTransform.clearCategories(self: PyOpenColorIO.NamedTransform) -> None
       :module: PyOpenColorIO
 
       .. see::
          :ref:`ColorSpace::clearCategories`
+
+
+   .. py:method:: NamedTransform.getAliases(self: PyOpenColorIO.NamedTransform) -> OpenColorIO_v2_0beta2::PyIterator<std::shared_ptr<OpenColorIO_v2_0beta2::NamedTransform>,1>
+      :module: PyOpenColorIO
 
 
    .. py:method:: NamedTransform.getCategories(self: PyOpenColorIO.NamedTransform) -> OpenColorIO_v2_0beta2::PyIterator<std::shared_ptr<OpenColorIO_v2_0beta2::NamedTransform>,0>
@@ -74,6 +98,12 @@
 
       .. see::
          :ref:`ColorSpace::hasCategory`
+
+
+   .. py:method:: NamedTransform.removeAlias(self: PyOpenColorIO.NamedTransform, alias: str) -> None
+      :module: PyOpenColorIO
+
+      Does nothing if alias is not present.
 
 
    .. py:method:: NamedTransform.removeCategory(self: PyOpenColorIO.NamedTransform, category: str) -> None
