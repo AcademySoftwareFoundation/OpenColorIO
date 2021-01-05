@@ -81,6 +81,8 @@ void bindPyGradingRGBCurveTransform(py::module & m)
              DOC(GradingRGBCurveTransform, makeDynamic))
         .def("makeNonDynamic", &GradingRGBCurveTransform::makeNonDynamic, 
              DOC(GradingRGBCurveTransform, makeNonDynamic));
+
+    defStr(clsGradingRGBCurveTransform);
 }
 
 } // namespace OCIO_NAMESPACE

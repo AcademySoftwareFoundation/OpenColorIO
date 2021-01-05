@@ -506,11 +506,6 @@ void bindPyTypes(py::module & m)
     m.def("CombineTransformDirections", &CombineTransformDirections, "direction1"_a, "direction2"_a, 
           DOC(PyOpenColorIO, CombineTransformDirections));
 
-    m.def("ColorSpaceDirectionToString", &ColorSpaceDirectionToString, "direction"_a, 
-          DOC(PyOpenColorIO, ColorSpaceDirectionToString));
-    m.def("ColorSpaceDirectionFromString", &ColorSpaceDirectionFromString, "str"_a, 
-          DOC(PyOpenColorIO, ColorSpaceDirectionFromString));
-
     m.def("BitDepthToString", &BitDepthToString, "bitDepth"_a, 
           DOC(PyOpenColorIO, BitDepthToString));
     m.def("BitDepthFromString", &BitDepthFromString, "str"_a, 
@@ -576,6 +571,7 @@ void bindPyTypes(py::module & m)
     m.attr("OCIO_ACTIVE_VIEWS_ENVVAR") = OCIO_ACTIVE_VIEWS_ENVVAR;
     m.attr("OCIO_INACTIVE_COLORSPACES_ENVVAR") = OCIO_INACTIVE_COLORSPACES_ENVVAR;
     m.attr("OCIO_OPTIMIZATION_FLAGS_ENVVAR") = OCIO_OPTIMIZATION_FLAGS_ENVVAR;
+    m.attr("OCIO_USER_CATEGORIES_ENVVAR") = OCIO_USER_CATEGORIES_ENVVAR;
 
     // Roles
     m.attr("ROLE_DEFAULT") = ROLE_DEFAULT;

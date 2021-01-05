@@ -436,7 +436,7 @@ looks:
 view_transforms:
   - !<ViewTransform>
     name: default_vt
-    to_reference: !<CDLTransform> {sat: 1.5}
+    to_scene_reference: !<CDLTransform> {sat: 1.5}
 
   - !<ViewTransform>
     name: display_vt
@@ -1004,16 +1004,16 @@ colorspaces:
 
   - !<ColorSpace>
     name: in
-    to_reference: !<MatrixTransform> {offset: [0.11, 0.12, 0.13, 0]}
+    to_scene_reference: !<MatrixTransform> {offset: [0.11, 0.12, 0.13, 0]}
 
   - !<ColorSpace>
     name: out
-    from_reference: !<MatrixTransform> {offset: [0.11, 0.12, 0.13, 0]}
+    from_scene_reference: !<MatrixTransform> {offset: [0.11, 0.12, 0.13, 0]}
 
   - !<ColorSpace>
     name: test
-    from_reference: !<DisplayViewTransform> {src: in, display: displayName, view: viewName}
-    to_reference: !<DisplayViewTransform> {src: in, display: displayName, view: viewName, looks_bypass: true, data_bypass: false}
+    from_scene_reference: !<DisplayViewTransform> {src: in, display: displayName, view: viewName}
+    to_scene_reference: !<DisplayViewTransform> {src: in, display: displayName, view: viewName, looks_bypass: true, data_bypass: false}
 )" };
 
     std::istringstream is;
@@ -1066,7 +1066,7 @@ looks:
 view_transforms:
   - !<ViewTransform>
     name: default_vt
-    to_reference: !<MatrixTransform> {offset: [0.2, 0.2, 0.4, 0]}
+    to_scene_reference: !<MatrixTransform> {offset: [0.2, 0.2, 0.4, 0]}
 
   - !<ViewTransform>
     name: display_vt
@@ -1090,7 +1090,7 @@ colorspaces:
 
   - !<ColorSpace>
     name: displayCSIn
-    to_reference: !<MatrixTransform> {offset: [-0.15, 0.15, 0.15, 0.05]}
+    to_scene_reference: !<MatrixTransform> {offset: [-0.15, 0.15, 0.15, 0.05]}
 )" };
 
     std::istringstream is;
@@ -1262,10 +1262,10 @@ looks:
 view_transforms:
   - !<ViewTransform>
     name: vt1
-    to_reference: !<FileTransform> {src: $FILE}
+    to_scene_reference: !<FileTransform> {src: $FILE}
   - !<ViewTransform>
     name: vt2
-    to_reference: !<MatrixTransform> {offset: [0.2, 0.2, 0.4, 0]}
+    to_scene_reference: !<MatrixTransform> {offset: [0.2, 0.2, 0.4, 0]}
 
 display_colorspaces:
   - !<ColorSpace>
@@ -1282,15 +1282,15 @@ colorspaces:
   - !<ColorSpace>
     name: cs2
     allocation: uniform
-    from_reference: !<MatrixTransform> {offset: [0.11, 0.12, 0.13, 0]}
+    from_scene_reference: !<MatrixTransform> {offset: [0.11, 0.12, 0.13, 0]}
   - !<ColorSpace>
     name: cs3
     allocation: uniform
-    from_reference: !<MatrixTransform> {offset: [0.1, 0.2, 0.3, 0]}
+    from_scene_reference: !<MatrixTransform> {offset: [0.1, 0.2, 0.3, 0]}
   - !<ColorSpace>
     name: cs4
     allocation: uniform
-    from_reference: !<FileTransform> {src: $FILE}
+    from_scene_reference: !<FileTransform> {src: $FILE}
 )" };
 
     std::istringstream is;

@@ -86,9 +86,9 @@ OCIO_ADD_TEST(ColorSpaceTransform, build_colorspace_ops)
 
     {
         // Test from source to destination.
-        // Source has the to_reference transform defined.
-        // Destination has the from_reference transform defined.
-        // Expecting source to_reference + destination from_reference.
+        // Source has the to_scene_reference transform defined.
+        // Destination has the from_scene_reference transform defined.
+        // Expecting source to_scene_reference + destination from_scene_reference.
         // (The no-ops are the Allocation transforms.)
 
         OCIO::OpRcPtrVec ops;
@@ -123,6 +123,63 @@ OCIO_ADD_TEST(ColorSpaceTransform, build_colorspace_ops)
         op = OCIO_DYNAMIC_POINTER_CAST<const OCIO::Op>(ops[3]);
         data = op->data();
         OCIO_CHECK_EQUAL(data->getType(), OCIO::OpData::NoOpType);
+    }
+
+    {
+        // Add alias names to color spaces.
+
+        csSceneToRef->addAlias("aliasToRef");
+        config->addColorSpace(csSceneToRef);
+
+        csSceneFromRef->addAlias("aliasFromRef");
+        config->addColorSpace(csSceneFromRef);
+
+        // Use aliases in transform.
+
+        OCIO::ColorSpaceTransformRcPtr cstAlias = OCIO::ColorSpaceTransform::Create();
+        cstAlias->setSrc("aliasToRef");
+        cstAlias->setDst("aliasFromRef");
+
+        // Same result as previous block.
+
+        OCIO::OpRcPtrVec ops;
+        OCIO_CHECK_NO_THROW(OCIO::BuildColorSpaceOps(ops, *config, config->getCurrentContext(),
+                                                     *cstAlias, OCIO::TRANSFORM_DIR_FORWARD));
+        OCIO_CHECK_NO_THROW(ops.validate());
+        OCIO_REQUIRE_EQUAL(ops.size(), 4);
+
+        // Allocation no-op.
+        auto op = OCIO_DYNAMIC_POINTER_CAST<const OCIO::Op>(ops[0]);
+        auto data = op->data();
+        OCIO_CHECK_EQUAL(data->getType(), OCIO::OpData::NoOpType);
+
+        // Src CS to reference.
+        op = OCIO_DYNAMIC_POINTER_CAST<const OCIO::Op>(ops[1]);
+        data = op->data();
+        OCIO_REQUIRE_EQUAL(data->getType(), OCIO::OpData::MatrixType);
+
+        // Reference to dst CS.
+        op = OCIO_DYNAMIC_POINTER_CAST<const OCIO::Op>(ops[2]);
+        data = op->data();
+        OCIO_REQUIRE_EQUAL(data->getType(), OCIO::OpData::FixedFunctionType);
+
+        // Allocation no-op.
+        op = OCIO_DYNAMIC_POINTER_CAST<const OCIO::Op>(ops[3]);
+        data = op->data();
+        OCIO_CHECK_EQUAL(data->getType(), OCIO::OpData::NoOpType);
+    }
+
+    {
+        // From a color space to the same one, identified by its name and an alias.
+
+        OCIO::ColorSpaceTransformRcPtr cstAlias = OCIO::ColorSpaceTransform::Create();
+        cstAlias->setSrc(src.c_str());
+        cstAlias->setDst("aliasToRef");
+
+        OCIO::OpRcPtrVec ops;
+        OCIO_CHECK_NO_THROW(OCIO::BuildColorSpaceOps(ops, *config, config->getCurrentContext(),
+                                                     *cstAlias, OCIO::TRANSFORM_DIR_FORWARD));
+        OCIO_CHECK_EQUAL(ops.size(), 0);
     }
 
     {
@@ -287,8 +344,8 @@ OCIO_ADD_TEST(ColorSpaceTransform, build_colorspace_ops)
     }
 
     {
-        // Color space with both to_reference and from_reference transform defined. No inversion
-        // is made.
+        // Color space with both to_scene_reference and from_scene_reference transform defined. No
+        // inversion is made.
 
         auto csSceneBoth = csSceneFromRef->createEditableCopy();
         ff->setStyle(OCIO::FIXED_FUNCTION_ACES_GLOW_10);
@@ -650,7 +707,7 @@ OCIO_ADD_TEST(ColorSpaceTransform, build_colorspace_ops_with_reference_conversio
     }
 
     //
-    // Add a to_reference transform to the view transform.
+    // Add a to_scene_reference transform to the view transform.
     //
 
     auto exp = OCIO::ExponentTransform::Create();

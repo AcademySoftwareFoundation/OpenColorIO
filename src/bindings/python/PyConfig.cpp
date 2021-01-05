@@ -181,10 +181,16 @@ void bindPyConfig(py::module & m)
              DOC(Config, getMinorVersion))
         .def("setMinorVersion", &Config::setMinorVersion, "minor"_a, 
              DOC(Config, setMinorVersion))
+        .def("setVersion", &Config::setVersion, "major"_a, "minor"_a,
+             DOC(Config, setVersion))
         .def("upgradeToLatestVersion", &Config::upgradeToLatestVersion, 
              DOC(Config, upgradeToLatestVersion))
         .def("validate", &Config::validate, 
              DOC(Config, validate))
+        .def("getName", &Config::getName, 
+             DOC(Config, getName))
+        .def("setName", &Config::setName, "name"_a.none(false), 
+             DOC(Config, setName))
         .def("getFamilySeparator", &Config::getFamilySeparator, 
              DOC(Config, getFamilySeparator))
         .def("setFamilySeparator", &Config::setFamilySeparator, "separator"_a, 
@@ -277,6 +283,8 @@ void bindPyConfig(py::module & m)
             {
                 return ActiveColorSpaceIterator(self);
             })
+        .def("getCanonicalName", &Config::getCanonicalName, "name"_a,
+             DOC(Config, getCanonicalName))
         .def("addColorSpace", &Config::addColorSpace, "colorSpace"_a, 
              DOC(Config, addColorSpace))
         .def("removeColorSpace", &Config::removeColorSpace, "name"_a, 
@@ -441,6 +449,12 @@ void bindPyConfig(py::module & m)
         .def("getDefaultSceneToDisplayViewTransform", 
              &Config::getDefaultSceneToDisplayViewTransform, 
              DOC(Config, getDefaultSceneToDisplayViewTransform))
+        .def("getDefaultViewTransformName",
+            &Config::getDefaultViewTransformName,
+            DOC(Config, getDefaultViewTransformName))
+        .def("setDefaultViewTransformName",
+            &Config::setDefaultViewTransformName, "name"_a.none(false),
+            DOC(Config, setDefaultViewTransformName))
         .def("clearViewTransforms", &Config::clearViewTransforms, 
              DOC(Config, clearViewTransforms))
 
