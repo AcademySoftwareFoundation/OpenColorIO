@@ -321,6 +321,13 @@ void BuildDisplayOps(OpRcPtrVec & ops,
     }
 
     const std::string display = displayViewTransform.getDisplay();
+    if (config.getNumViews(display.c_str()) == 0)
+    {
+        std::ostringstream os;
+        os << "DisplayViewTransform error.";
+        os << " Display '" << display << "' not found.";
+        throw Exception(os.str().c_str());
+    }
     const std::string view = displayViewTransform.getView();
 
     // Get the view transform if any: if it exists, it can be a view transform or a named transform.

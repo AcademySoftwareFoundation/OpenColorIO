@@ -25,6 +25,7 @@ NamedTransformRcPtr NamedTransformImpl::createEditableCopy() const
     copy->m_description = m_description;
     copy->m_family = m_family;
     copy->m_categories = m_categories;
+    copy->m_encoding = m_encoding;
     if (m_forwardTransform)
     {
         copy->m_forwardTransform = m_forwardTransform->createEditableCopy();
@@ -94,6 +95,16 @@ const char * NamedTransformImpl::getCategory(int index) const noexcept
 void NamedTransformImpl::clearCategories() noexcept
 {
     m_categories.clearTokens();
+}
+
+const char * NamedTransformImpl::getEncoding() const noexcept
+{
+    return m_encoding.c_str();
+}
+
+void NamedTransformImpl::setEncoding(const char * encoding) noexcept
+{
+    m_encoding = encoding ? encoding : "";
 }
 
 ConstTransformRcPtr NamedTransformImpl::getTransform(TransformDirection dir) const
@@ -203,6 +214,11 @@ std::ostream & operator<< (std::ostream & os, const NamedTransform & t)
     if (!desc.empty())
     {
         os << ", description=" << desc;
+    }
+    const std::string enc{ t.getEncoding() };
+    if (!enc.empty())
+    {
+        os << ", encoding=" << enc;
     }
     if (t.getTransform(TRANSFORM_DIR_FORWARD))
     {

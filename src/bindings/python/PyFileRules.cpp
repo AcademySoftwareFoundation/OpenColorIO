@@ -14,59 +14,62 @@ void bindPyFileRules(py::module & m)
             m, "FileRules", 
             DOC(FileRules))
 
-        .def(py::init(&FileRules::Create), 
+        .def(py::init(&FileRules::Create),
              DOC(FileRules, Create))
-                    
-        .def("getNumEntries", &FileRules::getNumEntries, 
+
+        .def("getNumEntries", &FileRules::getNumEntries,
              DOC(FileRules, getNumEntries))
-        .def("getIndexForRule", &FileRules::getIndexForRule, "ruleName"_a, 
+        .def("getIndexForRule", &FileRules::getIndexForRule, "ruleName"_a,
              DOC(FileRules, getIndexForRule))
-        .def("getName", &FileRules::getName, "ruleIndex"_a, 
+        .def("getName", &FileRules::getName, "ruleIndex"_a,
              DOC(FileRules, getName))
-        .def("getPattern", &FileRules::getPattern, "ruleIndex"_a, 
+        .def("getPattern", &FileRules::getPattern, "ruleIndex"_a,
              DOC(FileRules, getPattern))
-        .def("setPattern", &FileRules::setPattern, "ruleIndex"_a, "pattern"_a, 
+        .def("setPattern", &FileRules::setPattern, "ruleIndex"_a, "pattern"_a,
              DOC(FileRules, setPattern))
-        .def("getExtension", &FileRules::getExtension, "ruleIndex"_a, 
+        .def("getExtension", &FileRules::getExtension, "ruleIndex"_a,
              DOC(FileRules, getExtension))
-        .def("setExtension", &FileRules::setExtension, "ruleIndex"_a, "extension"_a, 
+        .def("setExtension", &FileRules::setExtension, "ruleIndex"_a, "extension"_a,
              DOC(FileRules, setExtension))
-        .def("getRegex", &FileRules::getRegex, "ruleIndex"_a, 
+        .def("getRegex", &FileRules::getRegex, "ruleIndex"_a,
              DOC(FileRules, getRegex))
-        .def("setRegex", &FileRules::setRegex, "ruleIndex"_a, "regex"_a, 
+        .def("setRegex", &FileRules::setRegex, "ruleIndex"_a, "regex"_a,
              DOC(FileRules, setRegex))
-        .def("getColorSpace", &FileRules::getColorSpace, "ruleIndex"_a, 
+        .def("getColorSpace", &FileRules::getColorSpace, "ruleIndex"_a,
              DOC(FileRules, getColorSpace))
-        .def("setColorSpace", &FileRules::setColorSpace, "ruleIndex"_a, "colorSpace"_a, 
+        .def("setColorSpace", &FileRules::setColorSpace, "ruleIndex"_a, "colorSpace"_a,
              DOC(FileRules, setColorSpace))
-        .def("getNumCustomKeys", &FileRules::getNumCustomKeys, "ruleIndex"_a, 
+        .def("getNumCustomKeys", &FileRules::getNumCustomKeys, "ruleIndex"_a,
              DOC(FileRules, getNumCustomKeys))
-        .def("getCustomKeyName", &FileRules::getCustomKeyName, "ruleIndex"_a, "key"_a, 
+        .def("getCustomKeyName", &FileRules::getCustomKeyName, "ruleIndex"_a, "key"_a,
              DOC(FileRules, getCustomKeyName))
-        .def("getCustomKeyValue", &FileRules::getCustomKeyValue, "ruleIndex"_a, "key"_a, 
+        .def("getCustomKeyValue", &FileRules::getCustomKeyValue, "ruleIndex"_a, "key"_a,
              DOC(FileRules, getCustomKeyValue))
-        .def("setCustomKey", &FileRules::setCustomKey, "ruleIndex"_a, "key"_a, "value"_a, 
+        .def("setCustomKey", &FileRules::setCustomKey, "ruleIndex"_a, "key"_a, "value"_a,
              DOC(FileRules, setCustomKey))
-        .def("insertRule", 
+        .def("insertRule",
              (void (FileRules::*)(size_t, const char *, const char *, const char *, const char *))
-             &FileRules::insertRule, 
-             "ruleIndex"_a, "name"_a, "colorSpace"_a, "pattern"_a, "extension"_a, 
+             &FileRules::insertRule,
+             "ruleIndex"_a, "name"_a, "colorSpace"_a, "pattern"_a, "extension"_a,
              DOC(FileRules, insertRule))
-        .def("insertRule", 
-             (void (FileRules::*)(size_t, const char *, const char *, const char *)) 
-             &FileRules::insertRule, 
-             "ruleIndex"_a, "name"_a, "colorSpace"_a, "regex"_a, 
+        .def("insertRule",
+             (void (FileRules::*)(size_t, const char *, const char *, const char *))
+             &FileRules::insertRule,
+             "ruleIndex"_a, "name"_a, "colorSpace"_a, "regex"_a,
              DOC(FileRules, insertRule, 2))
-        .def("insertPathSearchRule", &FileRules::insertPathSearchRule, "ruleIndex"_a, 
+        .def("insertPathSearchRule", &FileRules::insertPathSearchRule, "ruleIndex"_a,
              DOC(FileRules, insertPathSearchRule))
-        .def("setDefaultRuleColorSpace", &FileRules::setDefaultRuleColorSpace, "colorSpace"_a, 
+        .def("setDefaultRuleColorSpace", &FileRules::setDefaultRuleColorSpace, "colorSpace"_a,
              DOC(FileRules, setDefaultRuleColorSpace))
-        .def("removeRule", &FileRules::removeRule, "ruleIndex"_a, 
+        .def("removeRule", &FileRules::removeRule, "ruleIndex"_a,
              DOC(FileRules, removeRule))
-        .def("increaseRulePriority", &FileRules::increaseRulePriority, "ruleIndex"_a, 
+        .def("increaseRulePriority", &FileRules::increaseRulePriority, "ruleIndex"_a,
              DOC(FileRules, increaseRulePriority))
-        .def("decreaseRulePriority", &FileRules::decreaseRulePriority, "ruleIndex"_a, 
-             DOC(FileRules, decreaseRulePriority));
+        .def("decreaseRulePriority", &FileRules::decreaseRulePriority, "ruleIndex"_a,
+             DOC(FileRules, decreaseRulePriority))
+        .def("isDefault", &FileRules::isDefault, DOC(FileRules, isDefault));
+
+    defStr(clsFileRules);
 }
 
 } // namespace OCIO_NAMESPACE
