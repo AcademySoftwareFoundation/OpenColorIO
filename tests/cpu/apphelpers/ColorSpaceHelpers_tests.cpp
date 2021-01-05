@@ -169,7 +169,7 @@ roles:
 view_transforms:
   - !<ViewTransform>
     name: view_transform
-    from_reference: !<MatrixTransform> {}
+    from_scene_reference: !<MatrixTransform> {}
 
 displays:
   DISP_1:
