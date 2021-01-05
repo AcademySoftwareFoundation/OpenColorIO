@@ -34,7 +34,8 @@ void bindPyCPUProcessor(py::module & m)
         .def("getDynamicProperty", [](CPUProcessorRcPtr & self, DynamicPropertyType type) 
             {
                 return PyDynamicProperty(self->getDynamicProperty(type));
-            }, "type"_a, 
+            }, 
+            "type"_a, 
              DOC(CPUProcessor, getDynamicProperty))
 
         .def("apply", [](CPUProcessorRcPtr & self, PyImageDesc & imgDesc) 
@@ -53,48 +54,90 @@ void bindPyCPUProcessor(py::module & m)
              "srcImgDesc"_a, "dstImgDesc"_a,
              py::call_guard<py::gil_scoped_release>(),
              DOC(CPUProcessor, apply, 2))
-        .def("applyRGB", [](CPUProcessorRcPtr & self, py::buffer & pixel) 
+        .def("applyRGB", [](CPUProcessorRcPtr & self, py::buffer & data) 
             {
-                py::buffer_info info = pixel.request();
-                checkBufferType(info, py::dtype("float32"));
+                py::buffer_info info = data.request();
                 checkBufferDivisible(info, 3);
 
+                // Interpret as single row of RGB pixels
+                BitDepth bitDepth = getBufferBitDepth(info);
+                long numChannels = 3;
+                long width = (long)info.size / numChannels;
+                long height = 1;
+                ptrdiff_t chanStrideBytes = (ptrdiff_t)info.itemsize;
+                ptrdiff_t xStrideBytes = chanStrideBytes * numChannels;
+                ptrdiff_t yStrideBytes = xStrideBytes * width;
+
                 py::gil_scoped_release release;
 
-                self->applyRGB(static_cast<float *>(info.ptr));
-                return pixel;
+                PackedImageDesc img(info.ptr, 
+                                    width, height, 
+                                    numChannels, 
+                                    bitDepth, 
+                                    chanStrideBytes, 
+                                    xStrideBytes, 
+                                    yStrideBytes);
+                self->apply(img);
             },
-             "pixel"_a, 
+             "data"_a, 
              DOC(CPUProcessor, applyRGB))
-        .def("applyRGB", [](CPUProcessorRcPtr & self, std::vector<float> & pixel) 
+        .def("applyRGB", [](CPUProcessorRcPtr & self, std::vector<float> & data) 
             {
-                checkVectorDivisible(pixel, 3);
-                self->applyRGB(pixel.data());
-                return pixel;
+                checkVectorDivisible(data, 3);
+
+                long numChannels = 3;
+                long width = (long)data.size() / numChannels;
+                long height = 1;
+
+                PackedImageDesc img(&data[0], width, height, numChannels);
+                self->apply(img);
+
+                return data;
             },
-             "pixel"_a,
+             "data"_a,
              py::call_guard<py::gil_scoped_release>(), 
              DOC(CPUProcessor, applyRGB))
-        .def("applyRGBA", [](CPUProcessorRcPtr & self, py::buffer & pixel) 
+        .def("applyRGBA", [](CPUProcessorRcPtr & self, py::buffer & data) 
             {
-                py::buffer_info info = pixel.request();
-                checkBufferType(info, py::dtype("float32"));
+                py::buffer_info info = data.request();
                 checkBufferDivisible(info, 4);
+
+                // Interpret as single row of RGBA pixels
+                BitDepth bitDepth = getBufferBitDepth(info);
+                long numChannels = 4;
+                long width = (long)info.size / numChannels;
+                long height = 1;
+                ptrdiff_t chanStrideBytes = (ptrdiff_t)info.itemsize;
+                ptrdiff_t xStrideBytes = chanStrideBytes * numChannels;
+                ptrdiff_t yStrideBytes = xStrideBytes * width;
 
                 py::gil_scoped_release release;
 
-                self->applyRGBA(static_cast<float *>(info.ptr));
-                return pixel;
+                PackedImageDesc img(info.ptr, 
+                                    width, height, 
+                                    numChannels, 
+                                    bitDepth, 
+                                    chanStrideBytes, 
+                                    xStrideBytes, 
+                                    yStrideBytes);
+                self->apply(img);
             },
-             "pixel"_a, 
+             "data"_a, 
              DOC(CPUProcessor, applyRGBA))
-        .def("applyRGBA", [](CPUProcessorRcPtr & self, std::vector<float> & pixel) 
+        .def("applyRGBA", [](CPUProcessorRcPtr & self, std::vector<float> & data) 
             {
-                checkVectorDivisible(pixel, 4);
-                self->applyRGBA(pixel.data());
-                return pixel;
+                checkVectorDivisible(data, 4);
+
+                long numChannels = 4;
+                long width = (long)data.size() / numChannels;
+                long height = 1;
+
+                PackedImageDesc img(&data[0], width, height, numChannels);
+                self->apply(img);
+
+                return data;
             },
-             "pixel"_a,
+             "data"_a,
              py::call_guard<py::gil_scoped_release>(), 
              DOC(CPUProcessor, applyRGBA));
 }

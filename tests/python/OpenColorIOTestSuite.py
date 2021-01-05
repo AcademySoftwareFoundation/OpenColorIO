@@ -38,6 +38,7 @@ import AllocationTransformTest
 import BuiltinTransformRegistryTest
 import BuiltinTransformTest
 import CDLTransformTest
+import CPUProcessorTest
 import ColorSpaceTest
 import ColorSpaceTransformTest
 import ConfigTest
@@ -82,6 +83,7 @@ def suite():
     suite.addTest(loader.loadTestsFromModule(BuiltinTransformRegistryTest))
     suite.addTest(loader.loadTestsFromModule(BuiltinTransformTest))
     suite.addTest(loader.loadTestsFromModule(CDLTransformTest))
+    suite.addTest(loader.loadTestsFromModule(CPUProcessorTest))
     suite.addTest(loader.loadTestsFromModule(ColorSpaceTest))
     suite.addTest(loader.loadTestsFromModule(ColorSpaceTransformTest))
     suite.addTest(loader.loadTestsFromModule(ConfigTest))
