@@ -902,7 +902,17 @@ private:
                                           gradingRGBCurveSubElements, recognizedName))
                 {
                     pImpl->m_elms.push_back(
-                        std::make_shared<CTFReaderGradingCurveParamElt>(
+                        std::make_shared<CTFReaderGradingCurvePointsElt>(
+                            name,
+                            pContainer,
+                            pImpl->getXmLineNumber(),
+                            pImpl->getXmlFilename()));
+                }
+                else if (SupportedElement(name, pElt, TAG_CURVE_SLOPES,
+                                          gradingRGBCurveSubElements, recognizedName))
+                {
+                    pImpl->m_elms.push_back(
+                        std::make_shared<CTFReaderGradingCurveSlopesElt>(
                             name,
                             pContainer,
                             pImpl->getXmLineNumber(),
