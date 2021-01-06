@@ -52,6 +52,10 @@ endif()
 # Python libs
 
 set(SOURCES
+	apphelpers/PyColorSpaceHelpers.cpp
+	apphelpers/PyDisplayViewHelpers.cpp
+	apphelpers/PyLegacyViewingPipeline.cpp
+	apphelpers/PyMixingHelpers.cpp
 	PyAllocationTransform.cpp
 	PyBaker.cpp
 	PyBuiltinTransform.cpp

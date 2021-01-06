@@ -71,6 +71,8 @@ void bindPyGradingPrimaryTransform(py::module & m)
              DOC(GradingPrimaryTransform, makeDynamic))
         .def("makeNonDynamic", &GradingPrimaryTransform::makeNonDynamic, 
              DOC(GradingPrimaryTransform, makeNonDynamic));
+
+    defStr(clsGradingPrimaryTransform);
 }
 
 } // namespace OCIO_NAMESPACE

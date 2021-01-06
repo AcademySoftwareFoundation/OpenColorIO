@@ -213,14 +213,19 @@
       This will produce a hash of the all colorspace definitions, etc. All external references, such as files used in FileTransforms, etc., will be incorporated into the cacheID. While the contents of the files are not read, the file system is queried for relevant information (mtime, inode) so that the config's cacheID will change when the underlying luts are updated. If a context is not provided, the current :ref:`Context` will be used. If a null context is provided, file references will not be taken into account (this is essentially a hash of :ref:`Config::serialize`).
 
 
+   .. py:method:: Config.getCanonicalName(self: PyOpenColorIO.Config, name: str) -> str
+      :module: PyOpenColorIO
+
+      Accepts an alias, role name, named transform name, or color space name and returns the color space name or the named transform name.
+
+
    .. py:method:: Config.getColorSpace(self: PyOpenColorIO.Config, name: str) -> OpenColorIO_v2_0beta2::ColorSpace
       :module: PyOpenColorIO
 
       Get the color space from all the color spaces (i.e. active and inactive) and return null if the name is not found.
 
-
       .. note::
-         The fcn accepts either a color space OR role name. (Color space names take precedence over roles.)
+         The fcn accepts either a color space name, role name, or alias. (Color space names take precedence over roles.)
 
 
    .. py:method:: Config.getColorSpaceFromFilepath(*args, **kwargs)
@@ -289,11 +294,19 @@
    .. py:method:: Config.getDefaultSceneToDisplayViewTransform(self: PyOpenColorIO.Config) -> OpenColorIO_v2_0beta2::ViewTransform
       :module: PyOpenColorIO
 
-      The default transform to use for scene-referred to display-referred reference space conversions is the first scene-referred view transform listed in that section of the config (the one with the lowest index). Returns a null ConstTransformRcPtr if there isn't one.
+      This view transform is the one that will be used by default if a :ref:`ColorSpaceTransform` is needed between a scene-referred and display-referred color space. The config author may specify a transform to use via the default_view_transform entry in the config. If that is not present, or does not return a valid view transform from the scene-referred connection space, the fall-back is to use the first valid view transform in the config. Returns a null ConstTransformRcPtr if there isn't one.
 
 
    .. py:method:: Config.getDefaultView(self: PyOpenColorIO.Config, display: str) -> str
       :module: PyOpenColorIO
+
+
+   .. py:method:: Config.getDefaultViewTransformName(self: PyOpenColorIO.Config) -> str
+      :module: PyOpenColorIO
+
+      Get or set the default_view_transform string from the config.
+
+      Note that if this is not the name of a valid view transform from the scene-referred connection space, it will be ignored.
 
 
    .. py:method:: Config.getDescription(self: PyOpenColorIO.Config) -> str
@@ -387,6 +400,14 @@
       :module: PyOpenColorIO
 
       Get the configuration minor version.
+
+
+   .. py:method:: Config.getName(self: PyOpenColorIO.Config) -> str
+      :module: PyOpenColorIO
+
+      Get/set a name string for the config.
+
+      The name string may be used to communicate config update details or similar information to workflows external to OCIO in cases where the config path/filename itself does not provide adequate information.
 
 
    .. py:method:: Config.getNamedTransform(self: PyOpenColorIO.Config, name: str) -> OpenColorIO_v2_0beta2::NamedTransform
@@ -510,6 +531,9 @@
 
       Return true if the color space is used by a transform, a role, or a look.
 
+      .. note::
+         Name must be the canonical name.
+
 
    .. py:method:: Config.isStrictParsingEnabled(self: PyOpenColorIO.Config) -> bool
       :module: PyOpenColorIO
@@ -522,9 +546,7 @@
    .. py:method:: Config.parseColorSpaceFromString(self: PyOpenColorIO.Config, str: str) -> str
       :module: PyOpenColorIO
 
-      Given the specified string, get the longest, right-most, colorspace substring that appears.
-
-
+      Given the specified string, get the longest, right-most, colorspace substring that appears. This is now deprecated, please use getColorSpaceFromFilepath.
 
       - If strict parsing is enabled, and no color space is found, return an empty string.
       - If strict parsing is disabled, return ROLE_DEFAULT (if defined).
@@ -536,12 +558,11 @@
 
       Remove a color space from the configuration.
 
+      .. note::
+         It does not throw an exception. Name must be the canonical name. If a role name or alias is provided or if the name is not in the config, nothing is done.
 
       .. note::
-         It does not throw an exception if the color space is not present or used by an existing role. Role name arguments are ignored.
-
-      .. note::
-         Removing a color space to a :ref:`Config` does not affect any :ref:`ColorSpaceSet` sets that have already been created.
+         Removing a color space from a :ref:`Config` does not affect any :ref:`ColorSpaceSet` sets that have already been created.
 
 
    .. py:method:: Config.removeDisplayView(self: PyOpenColorIO.Config, display: str, view: str) -> None
@@ -606,6 +627,10 @@
       These should be normalized (sum to 1.0 exactly).
 
 
+   .. py:method:: Config.setDefaultViewTransformName(self: PyOpenColorIO.Config, name: str) -> None
+      :module: PyOpenColorIO
+
+
    .. py:method:: Config.setDescription(self: PyOpenColorIO.Config, description: str) -> None
       :module: PyOpenColorIO
 
@@ -647,7 +672,6 @@
       - The environment variable OCIO_INACTIVE_COLORSPACES may also be used to set the inactive color space list.
       - The env. var. takes precedence over the inactive_colorspaces list in the config file.
       - Setting the list via the API takes precedence over either the env. var. or the config file list.
-      - Roles may not be used.
 
 
    .. py:method:: Config.setMajorVersion(self: PyOpenColorIO.Config, major: int) -> None
@@ -655,11 +679,17 @@
 
       Set the configuration major version.
 
+      Throws if it is not supported. Resets minor to the most recent minor for the given major.
+
 
    .. py:method:: Config.setMinorVersion(self: PyOpenColorIO.Config, minor: int) -> None
       :module: PyOpenColorIO
 
-      Set the configuration minor version.
+      Set the configuration minor version. Throws if it is not supported for the current major.
+
+
+   .. py:method:: Config.setName(self: PyOpenColorIO.Config, name: str) -> None
+      :module: PyOpenColorIO
 
 
    .. py:method:: Config.setProcessorCacheFlags(self: PyOpenColorIO.Config, flags: PyOpenColorIO.ProcessorCacheFlags) -> None
@@ -680,15 +710,19 @@
 
       Set all search paths as a concatenated string, ':' to separate the paths.
 
-
       See :ref:`addSearchPath` for a more robust and platform-agnostic method of setting the search paths.
+
+
+   .. py:method:: Config.setVersion(self: PyOpenColorIO.Config, major: int, minor: int) -> None
+      :module: PyOpenColorIO
+
+      Set the configuration major and minor versions. Throws if version is not supported.
 
 
    .. py:method:: Config.setViewingRules(self: PyOpenColorIO.Config, ViewingRules: OpenColorIO_v2_0beta2::ViewingRules) -> None
       :module: PyOpenColorIO
 
       Set viewing rules.
-
 
       .. note::
          The argument is cloned.

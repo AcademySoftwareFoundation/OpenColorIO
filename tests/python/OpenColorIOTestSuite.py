@@ -1,9 +1,15 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright Contributors to the OpenColorIO Project.
 
+import logging
 import unittest
 import os
 import sys
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="[%(levelname)s] %(name)s: %(message)s",
+)
 
 build_location = sys.argv[1]
 os.environ["BUILD_LOCATION"] = build_location
@@ -38,9 +44,12 @@ import AllocationTransformTest
 import BuiltinTransformRegistryTest
 import BuiltinTransformTest
 import CDLTransformTest
+import CPUProcessorTest
+import ColorSpaceHelpersTest
 import ColorSpaceTest
 import ColorSpaceTransformTest
 import ConfigTest
+import DisplayViewHelpersTest
 import DisplayViewTransformTest
 import ExponentTransformTest
 import ExponentWithLinearTransformTest
@@ -53,8 +62,10 @@ import GradingPrimaryTransformTest
 import GradingRGBCurveTransformTest
 import GradingToneTransformTest
 import GroupTransformTest
+import LegacyViewingPipelineTest
 import LogTransformTest
 import LookTest
+import MixingHelpersTest
 import NamedTransformTest
 import OpenColorIOTest
 import ViewingRulesTest
@@ -82,9 +93,12 @@ def suite():
     suite.addTest(loader.loadTestsFromModule(BuiltinTransformRegistryTest))
     suite.addTest(loader.loadTestsFromModule(BuiltinTransformTest))
     suite.addTest(loader.loadTestsFromModule(CDLTransformTest))
+    suite.addTest(loader.loadTestsFromModule(CPUProcessorTest))
+    suite.addTest(loader.loadTestsFromModule(ColorSpaceHelpersTest))
     suite.addTest(loader.loadTestsFromModule(ColorSpaceTest))
     suite.addTest(loader.loadTestsFromModule(ColorSpaceTransformTest))
     suite.addTest(loader.loadTestsFromModule(ConfigTest))
+    suite.addTest(loader.loadTestsFromModule(DisplayViewHelpersTest))
     suite.addTest(loader.loadTestsFromModule(DisplayViewTransformTest))
     suite.addTest(loader.loadTestsFromModule(ExponentTransformTest))
     suite.addTest(loader.loadTestsFromModule(ExponentWithLinearTransformTest))
@@ -97,8 +111,10 @@ def suite():
     suite.addTest(loader.loadTestsFromModule(GradingRGBCurveTransformTest))
     suite.addTest(loader.loadTestsFromModule(GradingToneTransformTest))
     suite.addTest(loader.loadTestsFromModule(GroupTransformTest))
+    suite.addTest(loader.loadTestsFromModule(LegacyViewingPipelineTest))
     suite.addTest(loader.loadTestsFromModule(LogTransformTest))
     suite.addTest(loader.loadTestsFromModule(LookTest))
+    suite.addTest(loader.loadTestsFromModule(MixingHelpersTest))
     suite.addTest(loader.loadTestsFromModule(NamedTransformTest))
     suite.addTest(loader.loadTestsFromModule(OpenColorIOTest))
     suite.addTest(loader.loadTestsFromModule(ViewingRulesTest))

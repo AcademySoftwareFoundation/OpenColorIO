@@ -271,22 +271,24 @@ OCIO_ADD_TEST(Builtins, color_matrix_helpers)
     }
 
     {
-        // Note: Source and dest white points differ.
+        // Note: Source and dest white points differ, manual override specified.
+        const OCIO::MatrixOpData::Offsets null(0., 0., 0., 0.);
+        const OCIO::MatrixOpData::Offsets d65_wht_XYZ(0.95045592705167, 1., 1.08905775075988, 0.);
         OCIO::MatrixOpData::MatrixArrayPtr matrix
-            = build_conversion_matrix(OCIO::ACES_AP0::primaries, OCIO::CIE_XYZ_D65::primaries,
-                                      OCIO::ADAPTATION_BRADFORD);
+            = build_conversion_matrix(OCIO::ACES_AP0::primaries, OCIO::CIE_XYZ_ILLUM_E::primaries,
+                                      null, d65_wht_XYZ, OCIO::ADAPTATION_BRADFORD);
 
-        ValidateValues( 0U, matrix->getDoubleValue( 0),  0.987189224216, 1e-7, __LINE__);
-        ValidateValues( 1U, matrix->getDoubleValue( 1), -0.004683484721, 1e-7, __LINE__);
-        ValidateValues( 2U, matrix->getDoubleValue( 2),  0.017494260505, 1e-7, __LINE__);
+        ValidateValues( 0U, matrix->getDoubleValue( 0),  0.93827985, 1e-7, __LINE__);
+        ValidateValues( 1U, matrix->getDoubleValue( 1), -0.00445145, 1e-7, __LINE__);
+        ValidateValues( 2U, matrix->getDoubleValue( 2),  0.01662752, 1e-7, __LINE__);
 
-        ValidateValues( 4U, matrix->getDoubleValue( 4),  0.337368890788, 1e-7, __LINE__);
-        ValidateValues( 5U, matrix->getDoubleValue( 5),  0.729521566690 , 1e-7, __LINE__);
-        ValidateValues( 6U, matrix->getDoubleValue( 6), -0.066890457478, 1e-7, __LINE__);
+        ValidateValues( 4U, matrix->getDoubleValue( 4),  0.33736889, 1e-7, __LINE__);
+        ValidateValues( 5U, matrix->getDoubleValue( 5),  0.72952157, 1e-7, __LINE__);
+        ValidateValues( 6U, matrix->getDoubleValue( 6), -0.06689046, 1e-7, __LINE__);
 
-        ValidateValues( 8U, matrix->getDoubleValue( 8),  0.001077950962, 1e-7, __LINE__);
-        ValidateValues( 9U, matrix->getDoubleValue( 9), -0.003407263205, 1e-7, __LINE__);
-        ValidateValues(10U, matrix->getDoubleValue(10),  1.002329312243, 1e-7, __LINE__);
+        ValidateValues( 8U, matrix->getDoubleValue( 8),  0.00117395, 1e-7, __LINE__);
+        ValidateValues( 9U, matrix->getDoubleValue( 9), -0.00371071, 1e-7, __LINE__);
+        ValidateValues(10U, matrix->getDoubleValue(10),  1.09159451, 1e-7, __LINE__);
 
 
         OCIO_CHECK_EQUAL(matrix->getDoubleValue( 3), 0.);
@@ -365,9 +367,9 @@ AllValues UnitTestValues
     { "IDENTITY",
         { { 0.5f, 0.4f, 0.3f }, { 0.5f,            0.4f,            0.3f } } },
     { "ACES-AP0_to_CIE-XYZ-D65_BFD",
-        { { 0.5f, 0.4f, 0.3f }, { 0.496969496371f, 0.440425934827f, 0.299874863872f } } },
+        { { 0.5f, 0.4f, 0.3f }, { 0.472347603390f, 0.440425934827f, 0.326581044758f } } },
     { "ACES-AP1_to_CIE-XYZ-D65_BFD",
-        { { 0.5f, 0.4f, 0.3f }, { 0.450739364025f, 0.420968434905f, 0.299137367021f } } },
+        { { 0.5f, 0.4f, 0.3f }, { 0.428407900093f, 0.420968434905f, 0.325777868096f } } },
     { "ACES-AP1_to_LINEAR-REC709_BFD",
         { { 0.5f, 0.4f, 0.3f }, { 0.578830986466f, 0.388029190156f, 0.282302431033f } } },
     { "ACEScct-LOG_to_LIN",
