@@ -82,7 +82,7 @@ struct Primaries
     Chromaticities m_wht; // CIE xy chromaticities for white (or gray).
 };
 
-namespace CIE_XYZ_D65
+namespace CIE_XYZ_ILLUM_E
 {
 extern const Primaries primaries;
 }
@@ -138,11 +138,21 @@ MatrixOpData::MatrixArrayPtr build_vonkries_adapt(const MatrixOpData::Offsets & 
                                                   AdaptationMethod method);
 
 // Build a conversion matrix from source primaries to destination primaries.
+// The resulting matrix will map [1,1,1] input RGB to [1,1,1] output RGB.
 
 MatrixOpData::MatrixArrayPtr build_conversion_matrix(const Primaries & src_prims,
                                                      const Primaries & dst_prims,
                                                      AdaptationMethod method);
 
+// Build a conversion matrix from source primaries to destination primaries with the option of
+// setting the adaptation source and destination manually.  If you pass zeros for either of the
+// white points, that corresponding white point will be taken from the primaries.
+
+MatrixOpData::MatrixArrayPtr build_conversion_matrix(const Primaries & src_prims,
+                                                     const Primaries & dst_prims,
+                                                     const MatrixOpData::Offsets & src_wht_XYZ,
+                                                     const MatrixOpData::Offsets & dst_wht_XYZ,
+                                                     AdaptationMethod method);
 } // namespace OCIO_NAMESPACE
 
 #endif // INCLUDED_OCIO_COLOR_MATRIX_HELPERS_H
