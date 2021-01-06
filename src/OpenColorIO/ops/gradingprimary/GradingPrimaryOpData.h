@@ -70,7 +70,6 @@ public:
 private:
     GradingStyle                           m_style;
     DynamicPropertyGradingPrimaryImplRcPtr m_value;
-    TransformDirection                     m_direction{ TRANSFORM_DIR_FORWARD };
 };
 
 } // namespace OCIO_NAMESPACE

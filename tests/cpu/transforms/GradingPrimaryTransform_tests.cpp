@@ -368,3 +368,43 @@ OCIO_ADD_TEST(GradingPrimaryTransform, serialization)
         OCIO_CHECK_EQUAL(oss.str(), GROUP_STR);
     }
 }
+
+OCIO_ADD_TEST(GradingPrimaryTransform, log_contrast_inverse_apply)
+{
+    auto cfg = OCIO::Config::CreateRaw();
+
+    OCIO::GradingPrimary data(OCIO::GRADING_LOG);
+    data.m_contrast = OCIO::GradingRGBM(1.1, 0.9, 1.2, 1.0);
+
+    auto primary = OCIO::GradingPrimaryTransform::Create(OCIO::GRADING_LOG);
+    primary->setValue(data);
+
+    auto proc = cfg->getProcessor(primary);
+    auto cpu = proc->getDefaultCPUProcessor();
+    const float pixelRef[]{ 0.f, 0.f, 0.f };
+    float pixel[]{ 0.f, 0.f, 0.f };
+    cpu->applyRGB(pixel);
+
+    auto proc2 = cfg->getProcessor(primary, OCIO::TRANSFORM_DIR_INVERSE);
+    auto cpu2 = proc2->getDefaultCPUProcessor();
+    cpu2->applyRGB(pixel);
+
+    static constexpr float error = 1e-6f;
+    OCIO_CHECK_CLOSE(pixel[0], pixelRef[0], error);
+    OCIO_CHECK_CLOSE(pixel[1], pixelRef[1], error);
+    OCIO_CHECK_CLOSE(pixel[2], pixelRef[2], error);
+
+    pixel[0] = pixelRef[0];
+    pixel[1] = pixelRef[1];
+    pixel[2] = pixelRef[2];
+    cpu->applyRGB(pixel);
+
+    primary->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+    auto proc3 = cfg->getProcessor(primary);
+    auto cpu3 = proc3->getDefaultCPUProcessor();
+    cpu3->applyRGB(pixel);
+
+    OCIO_CHECK_CLOSE(pixel[0], pixelRef[0], error);
+    OCIO_CHECK_CLOSE(pixel[1], pixelRef[1], error);
+    OCIO_CHECK_CLOSE(pixel[2], pixelRef[2], error);
+}

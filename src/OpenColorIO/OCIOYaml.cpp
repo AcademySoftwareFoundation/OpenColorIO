@@ -1905,23 +1905,39 @@ inline void load(const YAML::Node & parent, const YAML::Node & node, GradingBSpl
             load(first, k);
             if (k == "control_points")
             {
-                std::vector<float> val;
-                load(it.second, val);
-                const size_t numVals = val.size();
+                std::vector<float> vals;
+                load(it.second, vals);
+                const size_t numVals = vals.size();
                 if (numVals % 2 != 0)
                 {
                     throwValueError(node.Tag(), first, "An even number of float values is "
                         "required.");
                 }
-                const size_t numCtPt = numVals / 2;
-                sc->setNumControlPoints(numCtPt);
-                for (size_t c = 0; c < numCtPt; ++c)
+                const size_t numCtPts = numVals / 2;
+                sc->setNumControlPoints(numCtPts);
+                for (size_t c = 0; c < numCtPts; ++c)
                 {
                     auto & pt = sc->getControlPoint(c);
-                    pt.m_x = val[2 * c];
-                    pt.m_y = val[2 * c + 1];
+                    pt.m_x = vals[2 * c];
+                    pt.m_y = vals[2 * c + 1];
                 }
                 cpOK = true;
+            }
+            else if (k == "slopes")
+            {
+                std::vector<float> vals;
+                load(it.second, vals);
+                const size_t numVals = vals.size();
+                const size_t numCtPts = sc->getNumControlPoints();
+                if (numVals != numCtPts)
+                {
+                    throwValueError(node.Tag(), first, "Number of slopes must match number "
+                        "of control points.");
+                }
+                for (size_t i = 0; i < numVals; ++i)
+                {
+                    sc->setSlope(i, vals[i]);
+                }
             }
             else
             {
@@ -2024,17 +2040,29 @@ inline void load(const YAML::Node & node, GradingRGBCurveTransformRcPtr & t)
 
 inline void save(YAML::Emitter & out, const char * paramName, const ConstGradingBSplineCurveRcPtr & curve)
 {
-    std::vector<float> ctPt;
-    const size_t numCtPt = curve->getNumControlPoints();
-    for (size_t c = 0; c < numCtPt; ++c)
+    std::vector<float> ctPts;
+    const size_t numCtPts = curve->getNumControlPoints();
+    for (size_t c = 0; c < numCtPts; ++c)
     {
         const auto & pt = curve->getControlPoint(c);
-        ctPt.push_back(pt.m_x);
-        ctPt.push_back(pt.m_y);
+        ctPts.push_back(pt.m_x);
+        ctPts.push_back(pt.m_y);
     }
     out << YAML::Key << paramName;
     out << YAML::Flow << YAML::BeginMap;
-    out << YAML::Key << "control_points" << YAML::Value << ctPt;
+    out << YAML::Key << "control_points" << YAML::Value << ctPts;
+    if (!curve->slopesAreDefault())
+    {
+        // (Number of slopes is always the same as control points.)
+        const size_t numSlopes = curve->getNumControlPoints();
+        std::vector<float> slopes;
+        for (size_t i = 0; i < numSlopes; ++i)
+        {
+            const float val = curve->getSlope(i);
+            slopes.push_back(val);
+        }
+        out << YAML::Key << "slopes" << YAML::Value << slopes;
+    }
     out << YAML::EndMap;
 }
 
@@ -2043,19 +2071,19 @@ inline void save(YAML::Emitter & out, ConstGradingRGBCurveTransformRcPtr t)
     const auto & vals = t->getValue();
     auto & defCurve = t->getStyle() == GRADING_LIN ? GradingRGBCurveImpl::DefaultLin :
                                                      GradingRGBCurveImpl::Default;
-    bool saveCurve = false;
+    bool useLineBreaks = false;
     for (int c = 0; c < RGB_NUM_CURVES; ++c)
     {
         const auto & curve = vals->getCurve(static_cast<RGBCurveType>(c));
         if (*curve != defCurve)
         {
-            saveCurve = true;
+            useLineBreaks = true;
             break;
         }
     }
 
     out << YAML::VerbatimTag("GradingRGBCurveTransform");
-    if (!saveCurve) out << YAML::Flow;
+    if (!useLineBreaks) out << YAML::Flow;
     out << YAML::BeginMap;
 
     EmitTransformName(out, t->getFormatMetadata());
@@ -2074,7 +2102,7 @@ inline void save(YAML::Emitter & out, ConstGradingRGBCurveTransformRcPtr t)
     for (int c = 0; c < RGB_NUM_CURVES; ++c)
     {
         const auto & curve = vals->getCurve(static_cast<RGBCurveType>(c));
-        if (*curve != defCurve)
+        if ((*curve != defCurve) || !(curve->slopesAreDefault()))
         {
             save(out, curveNames[c], curve);
         }

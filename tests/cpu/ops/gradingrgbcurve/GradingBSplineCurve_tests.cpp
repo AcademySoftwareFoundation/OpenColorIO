@@ -24,6 +24,11 @@ OCIO_ADD_TEST(GradingBSplineCurve, basic)
     OCIO_CHECK_EQUAL(0.4f, curve->getControlPoint(1).m_y);
     OCIO_CHECK_EQUAL(1.0f, curve->getControlPoint(2).m_x);
     OCIO_CHECK_EQUAL(0.9f, curve->getControlPoint(2).m_y);
+
+    OCIO_REQUIRE_ASSERT(curve->slopesAreDefault());
+    curve->setSlope(2, 0.9f);
+    OCIO_CHECK_EQUAL(0.9f, curve->getSlope(2));
+    OCIO_REQUIRE_ASSERT(!curve->slopesAreDefault());
     
     curve->setNumControlPoints(4);
     OCIO_CHECK_EQUAL(4, curve->getNumControlPoints());
@@ -43,6 +48,8 @@ OCIO_ADD_TEST(GradingBSplineCurve, basic)
     OCIO_CHECK_EQUAL(1.f, curve->getControlPoint(3).m_y);
 
     OCIO_CHECK_THROW_WHAT(curve->getControlPoint(42), OCIO::Exception,
+                          "There are '4' control points. '42' is invalid.");
+    OCIO_CHECK_THROW_WHAT(curve->setSlope(42, 0.2f), OCIO::Exception,
                           "There are '4' control points. '42' is invalid.");
 
     std::ostringstream oss;

@@ -151,3 +151,38 @@ class GradingPrimaryTransformTest(unittest.TestCase):
         self.assertNotEqual(rgb1[0], rgb2[0])
         self.assertNotEqual(rgb1[1], rgb2[1])
         self.assertNotEqual(rgb1[2], rgb2[2])
+
+    def test_apply_inverse(self):
+        """
+        Test applying transform with inversion.
+        """
+
+        gpt = OCIO.GradingPrimaryTransform(OCIO.GRADING_LOG)
+        val = OCIO.GradingPrimary(OCIO.GRADING_LOG)
+        val.gamma = OCIO.GradingRGBM(1.2, 1.4, 1.1, 0.7);
+        val.saturation = 1.5;
+        gpt.setValue(val)
+
+        cfg = OCIO.Config().CreateRaw()
+        proc = cfg.getProcessor(gpt)
+        cpu = proc.getDefaultCPUProcessor()
+
+        # Apply the transform and keep the result.
+        pixel = [0.48, 0.18, 0.18]
+        rgb1 = cpu.applyRGB(pixel)
+
+        # The processing did something.
+        self.assertAlmostEqual(0.515640, rgb1[0], delta=1e-5)
+        self.assertAlmostEqual(0.150299, rgb1[1], delta=1e-5)
+        self.assertAlmostEqual(0.051360, rgb1[2], delta=1e-5)
+
+        # Invert.
+        gpt.setDirection(OCIO.TRANSFORM_DIR_INVERSE)
+        proc = cfg.getProcessor(gpt)
+        cpu = proc.getDefaultCPUProcessor()
+        pixel2 = cpu.applyRGB(rgb1)
+
+        # Invert back to original value.
+        self.assertAlmostEqual(pixel[0], pixel2[0], delta=1e-5)
+        self.assertAlmostEqual(pixel[1], pixel2[1], delta=1e-5)
+        self.assertAlmostEqual(pixel[2], pixel2[2], delta=1e-5)
