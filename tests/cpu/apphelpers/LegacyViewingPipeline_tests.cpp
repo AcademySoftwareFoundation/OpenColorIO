@@ -797,6 +797,71 @@ OCIO_ADD_TEST(LegacyViewingPipeline, fullPipelineNoLook)
         OCIO_REQUIRE_ASSERT(ec);
     }
 
+    // Using a named transform.
+    auto nt = OCIO::NamedTransform::Create();
+    nt->setName("nt1");
+    auto ntTrans = OCIO::MatrixTransform::Create();
+    constexpr double offsetNT[4] = { 0.01, 0.05, 0.1, 0. };
+    ntTrans->setOffset(offsetNT);
+    nt->setTransform(ntTrans, OCIO::TRANSFORM_DIR_FORWARD);
+    cfg->addNamedTransform(nt);
+
+    {
+        const std::string viewnt{ "viewnt" };
+        OCIO_CHECK_NO_THROW(cfg->addDisplayView(display.c_str(), viewnt.c_str(), "nt1", ""));
+        OCIO_CHECK_NO_THROW(cfg->validate());
+
+        dt->setView(viewnt.c_str());
+        vp->setDisplayViewTransform(dt);
+
+        OCIO::ConstProcessorRcPtr proc;
+        OCIO_CHECK_NO_THROW(proc = vp->getProcessor(cfg, cfg->getCurrentContext()));
+        OCIO_REQUIRE_ASSERT(proc);
+
+        OCIO::GroupTransformRcPtr groupTransform;
+        OCIO_CHECK_NO_THROW(groupTransform = proc->createGroupTransform());
+
+        OCIO_REQUIRE_ASSERT(groupTransform);
+        OCIO_CHECK_NO_THROW(groupTransform->validate());
+        OCIO_REQUIRE_EQUAL(groupTransform->getNumTransforms(), 5);
+
+        // 0. LinearCC.
+        // 1. ColorTimingCC.
+        // 2. ChannelView.
+        // 3. Named transform.
+        // 4. DisplayCC.
+
+        OCIO::ConstTransformRcPtr tr;
+        OCIO_CHECK_NO_THROW(tr = groupTransform->getTransform(0));
+        auto mat = OCIO::DynamicPtrCast<const OCIO::MatrixTransform>(tr);
+        OCIO_REQUIRE_ASSERT(mat);
+
+        OCIO_CHECK_NO_THROW(tr = groupTransform->getTransform(1));
+        auto exp = OCIO::DynamicPtrCast<const OCIO::ExponentTransform>(tr);
+        OCIO_REQUIRE_ASSERT(exp);
+
+        OCIO_CHECK_NO_THROW(tr = groupTransform->getTransform(2));
+        mat = OCIO::DynamicPtrCast<const OCIO::MatrixTransform>(tr);
+        OCIO_REQUIRE_ASSERT(mat);
+
+        OCIO_CHECK_NO_THROW(tr = groupTransform->getTransform(3));
+        mat = OCIO::DynamicPtrCast<const OCIO::MatrixTransform>(tr);
+        OCIO_REQUIRE_ASSERT(mat);
+        OCIO_CHECK_EQUAL(mat->getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
+        double offset[4]{ 0. };
+        mat->getOffset(offset);
+        OCIO_CHECK_EQUAL(offset[0], offsetNT[0]);
+        OCIO_CHECK_EQUAL(offset[1], offsetNT[1]);
+        OCIO_CHECK_EQUAL(offset[2], offsetNT[2]);
+        OCIO_CHECK_EQUAL(offset[3], offsetNT[3]);
+
+        OCIO_CHECK_NO_THROW(tr = groupTransform->getTransform(4));
+        auto ec = OCIO::DynamicPtrCast<const OCIO::ExposureContrastTransform>(tr);
+        OCIO_REQUIRE_ASSERT(ec);
+    }
+
+    dt->setView(viewt.c_str());
+    vp->setDisplayViewTransform(dt);
     csSource->setIsData(true);
     cfg->addColorSpace(csSource);
     OCIO_CHECK_NO_THROW(cfg->validate());

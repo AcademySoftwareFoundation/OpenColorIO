@@ -653,6 +653,63 @@ OCIO_ADD_TEST(ColorSpaceMenuHelper, encodings)
     OCIO_REQUIRE_EQUAL(menuHelper->getNumColorSpaces(), 2);
 }
 
+OCIO_ADD_TEST(ColorSpaceMenuHelper, no_category)
+{
+    std::istringstream is{ R"(ocio_profile_version: 1
+
+environment:
+  {}
+
+search_path: luts
+strictparsing: true
+
+roles:
+  rendering: test_1
+  default: raw
+
+displays:
+  DISP_1:
+    - !<View> {name: VIEW_1, colorspace: test_1}
+    - !<View> {name: VIEW_2, colorspace: test_2}
+
+active_displays: []
+active_views: []
+
+colorspaces:
+  - !<ColorSpace>
+    name: raw
+    family: Raw
+    description: A raw color space. Conversions to and from this space are no-ops.
+    isdata: true
+    allocation: uniform
+
+  - !<ColorSpace>
+    name: test_1
+
+  - !<ColorSpace>
+    name: test_2
+ )" };
+
+    OCIO::ConstConfigRcPtr config;
+    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+    OCIO_CHECK_NO_THROW(config->validate());
+
+    OCIO::ColorSpaceMenuHelperRcPtr menuHelper;
+    auto params = OCIO::ColorSpaceMenuParameters::Create(config);
+
+    // Categories are ignored when config is version 1 and no message is logged.
+    {
+        OCIO::LogGuard guard;
+
+        params->setAppCategories("file-io");
+
+        // Return all the color spaces.
+        OCIO_CHECK_NO_THROW(menuHelper = OCIO::ColorSpaceMenuHelper::Create(params));
+        OCIO_CHECK_EQUAL(guard.output(), "");
+        OCIO_CHECK_EQUAL(menuHelper->getNumColorSpaces(), 3);
+    }
+}
+
 OCIO_ADD_TEST(ColorSpaceMenuHelper, input_color_transformation)
 {
     std::istringstream is(category_test_config);
