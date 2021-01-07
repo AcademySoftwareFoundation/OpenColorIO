@@ -47,6 +47,12 @@
       :module: PyOpenColorIO
 
 
+   .. py:method:: GradingRGBCurveTransform.getSlope(self: PyOpenColorIO.GradingRGBCurveTransform, channel: PyOpenColorIO.RGBCurveType, index: int) -> float
+      :module: PyOpenColorIO
+
+      It is possible to provide a desired slope value for each control point. The number of slopes is always the same as the number of control points and so the control points must be set before setting the slopes. The slopes are primarily intended for use by config authors looking to match a specific shape with as few control points as possible, they are not intended to be exposed to a user interface for direct manipulation. When a curve is being generated for creative purposes it is better to let OCIO calculate the slopes automatically.
+
+
    .. py:method:: GradingRGBCurveTransform.getStyle(self: PyOpenColorIO.GradingRGBCurveTransform) -> PyOpenColorIO.GradingStyle
       :module: PyOpenColorIO
 
@@ -85,6 +91,10 @@
       Note that this only affects the evaluation and not the values stored in the object.
 
 
+   .. py:method:: GradingRGBCurveTransform.setSlope(self: PyOpenColorIO.GradingRGBCurveTransform, channel: PyOpenColorIO.RGBCurveType, index: int, slope: float) -> None
+      :module: PyOpenColorIO
+
+
    .. py:method:: GradingRGBCurveTransform.setStyle(self: PyOpenColorIO.GradingRGBCurveTransform, style: PyOpenColorIO.GradingStyle) -> None
       :module: PyOpenColorIO
 
@@ -95,6 +105,10 @@
       :module: PyOpenColorIO
 
       Throws if value is not valid.
+
+
+   .. py:method:: GradingRGBCurveTransform.slopesAreDefault(self: PyOpenColorIO.GradingRGBCurveTransform, channel: PyOpenColorIO.RGBCurveType) -> bool
+      :module: PyOpenColorIO
 
 
    .. py:method:: GradingRGBCurveTransform.validate(self: PyOpenColorIO.Transform) -> None

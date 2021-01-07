@@ -1658,8 +1658,8 @@ const std::string SIMPLE_PROFILE_A =
 const std::string SIMPLE_PROFILE_DISPLAYS_LOOKS =
     "displays:\n"
     "  sRGB:\n"
-    "    - !<View> {name: Raw, colorspace: raw}\n"
-    "    - !<View> {name: Lnh, colorspace: lnh, looks: beauty}\n"
+    "    - !<View> {name: RawView, colorspace: raw}\n"
+    "    - !<View> {name: LnhView, colorspace: lnh, looks: beauty}\n"
     "\n"
     "active_displays: []\n"
     "active_views: []\n"
@@ -1671,7 +1671,7 @@ const std::string SIMPLE_PROFILE_DISPLAYS_LOOKS =
     "    transform: !<CDLTransform> {slope: [1, 2, 1]}\n"
     "\n";
 
-const std::string SIMPLE_PROFILE_CS =
+const std::string SIMPLE_PROFILE_CS_V1 =
     "\n"
     "colorspaces:\n"
     "  - !<ColorSpace>\n"
@@ -1683,6 +1683,15 @@ const std::string SIMPLE_PROFILE_CS =
     "    allocation: uniform\n"
     "\n"
     "  - !<ColorSpace>\n"
+    "    name: log\n"
+    "    family: \"\"\n"
+    "    equalitygroup: \"\"\n"
+    "    bitdepth: unknown\n"
+    "    isdata: false\n"
+    "    allocation: uniform\n"
+    "    from_reference: !<LogTransform> {base: 10}\n"
+    "\n"
+    "  - !<ColorSpace>\n"
     "    name: lnh\n"
     "    family: \"\"\n"
     "    equalitygroup: \"\"\n"
@@ -1690,7 +1699,36 @@ const std::string SIMPLE_PROFILE_CS =
     "    isdata: false\n"
     "    allocation: uniform\n";
 
-const std::string SIMPLE_PROFILE_B = SIMPLE_PROFILE_DISPLAYS_LOOKS + SIMPLE_PROFILE_CS;
+const std::string SIMPLE_PROFILE_CS_V2 =
+    "\n"
+    "colorspaces:\n"
+    "  - !<ColorSpace>\n"
+    "    name: raw\n"
+    "    family: \"\"\n"
+    "    equalitygroup: \"\"\n"
+    "    bitdepth: unknown\n"
+    "    isdata: false\n"
+    "    allocation: uniform\n"
+    "\n"
+    "  - !<ColorSpace>\n"
+    "    name: log\n"
+    "    family: \"\"\n"
+    "    equalitygroup: \"\"\n"
+    "    bitdepth: unknown\n"
+    "    isdata: false\n"
+    "    allocation: uniform\n"
+    "    from_scene_reference: !<LogTransform> {base: 10}\n"
+    "\n"
+    "  - !<ColorSpace>\n"
+    "    name: lnh\n"
+    "    family: \"\"\n"
+    "    equalitygroup: \"\"\n"
+    "    bitdepth: unknown\n"
+    "    isdata: false\n"
+    "    allocation: uniform\n";
+
+const std::string SIMPLE_PROFILE_B_V1 = SIMPLE_PROFILE_DISPLAYS_LOOKS + SIMPLE_PROFILE_CS_V1;
+const std::string SIMPLE_PROFILE_B_V2 = SIMPLE_PROFILE_DISPLAYS_LOOKS + SIMPLE_PROFILE_CS_V2;
 
 const std::string DEFAULT_RULES =
     "file_rules:\n"
@@ -1698,7 +1736,38 @@ const std::string DEFAULT_RULES =
     "\n";
 
 const std::string PROFILE_V2_START = PROFILE_V2 + SIMPLE_PROFILE_A +
-                                     DEFAULT_RULES + SIMPLE_PROFILE_B;
+                                     DEFAULT_RULES + SIMPLE_PROFILE_B_V2;
+}
+
+OCIO_ADD_TEST(Config, serialize_colorspace_displayview_transforms)
+{
+    // Validate that a ColorSpaceTransform and DisplayViewTransform are correctly serialized.
+    {
+        const std::string strEnd =
+            "    from_scene_reference: !<GroupTransform>\n"
+            "      children:\n"
+            "        - !<ColorSpaceTransform> {src: raw, dst: log}\n"
+            "        - !<ColorSpaceTransform> {src: raw, dst: log, direction: inverse}\n"
+            "        - !<ColorSpaceTransform> {src: default, dst: log, data_bypass: false}\n"
+            "        - !<DisplayViewTransform> {src: raw, display: sRGB, view: RawView}\n"
+            "        - !<DisplayViewTransform> {src: default, display: sRGB, view: RawView, direction: inverse}\n"
+            "        - !<DisplayViewTransform> {src: log, display: sRGB, view: RawView, looks_bypass: true, data_bypass: false}\n";
+
+        const std::string str = PROFILE_V2_START + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+
+        OCIO::ConstConfigRcPtr config;
+        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OCIO_CHECK_NO_THROW(config->validate());
+
+        // Write the config.
+
+        std::stringstream ss;
+        OCIO_CHECK_NO_THROW(ss << *config.get());
+        OCIO_CHECK_EQUAL(ss.str(), str);
+    }
 }
 
 OCIO_ADD_TEST(Config, range_serialization)
@@ -1846,7 +1915,7 @@ OCIO_ADD_TEST(Config, range_serialization)
             "    from_scene_reference: !<RangeTransform> {min_in_value: -0.01, "
             "max_in_value: 1.05, min_out_value: 0.0009, max_out_value: 2.5}\n";
 
-        const std::string str = PROFILE_V2 + SIMPLE_PROFILE_A + SIMPLE_PROFILE_B + strEndFail;
+        const std::string str = PROFILE_V2 + SIMPLE_PROFILE_A + SIMPLE_PROFILE_B_V2 + strEndFail;
         const std::string strSaved = PROFILE_V2_START + strEnd;
 
         std::istringstream is;
@@ -1873,7 +1942,7 @@ OCIO_ADD_TEST(Config, range_serialization)
         const std::string strEndSaved =
             "    from_scene_reference: !<RangeTransform> {min_in_value: -0.01, "
             "min_out_value: -0.01}\n";
-        const std::string str = PROFILE_V2 + SIMPLE_PROFILE_A + SIMPLE_PROFILE_B + strEnd;
+        const std::string str = PROFILE_V2 + SIMPLE_PROFILE_A + SIMPLE_PROFILE_B_V2 + strEnd;
         const std::string strSaved = PROFILE_V2_START + strEndSaved;
 
         std::istringstream is;
@@ -2018,12 +2087,12 @@ OCIO_ADD_TEST(Config, range_serialization)
 
 OCIO_ADD_TEST(Config, exponent_serialization)  
 {
-    const std::string SIMPLE_PROFILE = SIMPLE_PROFILE_A + SIMPLE_PROFILE_B;
+    const std::string SIMPLE_PROFILE_V1 = PROFILE_V1 + SIMPLE_PROFILE_A + SIMPLE_PROFILE_B_V1;
     {
         const std::string strEnd = 
             "    from_reference: !<ExponentTransform> " 
             "{value: [1.101, 1.202, 1.303, 1.404]}\n";  
-        const std::string str = PROFILE_V1 + SIMPLE_PROFILE + strEnd;
+        const std::string str = SIMPLE_PROFILE_V1 + strEnd;
 
         std::istringstream is;
         is.str(str);
@@ -2059,7 +2128,7 @@ OCIO_ADD_TEST(Config, exponent_serialization)
         const std::string strEnd =
             "    from_reference: !<ExponentTransform> "
             "{value: [1.101, 1.101, 1.101, 1]}\n";
-        const std::string str = PROFILE_V1 + SIMPLE_PROFILE + strEnd;
+        const std::string str = SIMPLE_PROFILE_V1 + strEnd;
 
         std::istringstream is;
         is.str(str);
@@ -2076,7 +2145,7 @@ OCIO_ADD_TEST(Config, exponent_serialization)
         const std::string strEnd =  
             "    from_reference: !<ExponentTransform> " 
             "{value: [1.101, 1.202, 1.303, 1.404], direction: inverse}\n";  
-        const std::string str = PROFILE_V1 + SIMPLE_PROFILE + strEnd;
+        const std::string str = SIMPLE_PROFILE_V1 + strEnd;
 
         std::istringstream is;
         is.str(str); 
@@ -2130,7 +2199,7 @@ OCIO_ADD_TEST(Config, exponent_serialization)
         const std::string strEnd =
             "    from_reference: !<ExponentTransform> "
             "{value: [1.1, 1.2, 1.3]}\n";
-        const std::string str = PROFILE_V1 + SIMPLE_PROFILE + strEnd;
+        const std::string str = SIMPLE_PROFILE_V1 + strEnd;
 
         std::istringstream is;
         is.str(str);
@@ -2144,7 +2213,7 @@ OCIO_ADD_TEST(Config, exponent_serialization)
         const std::string strEnd =
             "    from_reference: !<ExponentTransform> "
             "{value: [1.101, 1.202, 1.303, 1.404], style: wrong,}\n";
-        const std::string str = PROFILE_V1 + SIMPLE_PROFILE + strEnd;
+        const std::string str = SIMPLE_PROFILE_V1 + strEnd;
 
         std::istringstream is;
         is.str(str);
@@ -2346,7 +2415,7 @@ OCIO_ADD_TEST(Config, exponent_vs_config_version)
 
     const std::string strEnd =
         "    from_reference: !<ExponentTransform> {value: [1, 1, 1, 1]}\n";
-    const std::string str = PROFILE_V1 + SIMPLE_PROFILE_A + SIMPLE_PROFILE_B + strEnd;
+    const std::string str = PROFILE_V1 + SIMPLE_PROFILE_A + SIMPLE_PROFILE_B_V1 + strEnd;
 
     is.str(str);
     OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
@@ -2369,7 +2438,7 @@ OCIO_ADD_TEST(Config, exponent_vs_config_version)
 
     const std::string strEnd2 =
         "    from_reference: !<ExponentTransform> {value: [2, 2, 2, 1]}\n";
-    const std::string str2 = PROFILE_V1 + SIMPLE_PROFILE_A + SIMPLE_PROFILE_B + strEnd2;
+    const std::string str2 = PROFILE_V1 + SIMPLE_PROFILE_A + SIMPLE_PROFILE_B_V1 + strEnd2;
 
     is.str(str2);
     OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
@@ -3109,7 +3178,7 @@ OCIO_ADD_TEST(Config, log_serialization)
         // Log with default base value (saved in V1) and default direction.
         const std::string strEnd =
             "    from_reference: !<LogTransform> {base: 2}\n";
-        const std::string str = PROFILE_V1 + SIMPLE_PROFILE_A + SIMPLE_PROFILE_B + strEnd;
+        const std::string str = PROFILE_V1 + SIMPLE_PROFILE_A + SIMPLE_PROFILE_B_V1 + strEnd;
 
         std::istringstream is;
         is.str(str);
@@ -3145,7 +3214,7 @@ OCIO_ADD_TEST(Config, log_serialization)
         // Log with default base value.
         const std::string strEnd =
             "    from_reference: !<LogTransform> {base: 2, direction: inverse}\n";
-        const std::string str = PROFILE_V1 + SIMPLE_PROFILE_A + SIMPLE_PROFILE_B + strEnd;
+        const std::string str = PROFILE_V1 + SIMPLE_PROFILE_A + SIMPLE_PROFILE_B_V1 + strEnd;
 
         std::istringstream is;
         is.str(str);
@@ -3181,7 +3250,7 @@ OCIO_ADD_TEST(Config, log_serialization)
         // Log with specified base value.
         const std::string strEnd =
             "    from_reference: !<LogTransform> {base: 5}\n";
-        const std::string str = PROFILE_V1 + SIMPLE_PROFILE_A + SIMPLE_PROFILE_B + strEnd;
+        const std::string str = PROFILE_V1 + SIMPLE_PROFILE_A + SIMPLE_PROFILE_B_V1 + strEnd;
 
         std::istringstream is;
         is.str(str);
@@ -3199,7 +3268,7 @@ OCIO_ADD_TEST(Config, log_serialization)
         // Log with specified base value and direction.
         const std::string strEnd =
             "    from_reference: !<LogTransform> {base: 7, direction: inverse}\n";
-        const std::string str = PROFILE_V1 + SIMPLE_PROFILE_A + SIMPLE_PROFILE_B + strEnd;
+        const std::string str = PROFILE_V1 + SIMPLE_PROFILE_A + SIMPLE_PROFILE_B_V1 + strEnd;
 
         std::istringstream is;
         is.str(str);
@@ -3545,7 +3614,7 @@ OCIO_ADD_TEST(Config, unknown_key_error)
     OCIO::LogGuard g;
     OCIO_CHECK_NO_THROW(OCIO::Config::CreateFromStream(is));
     OCIO_CHECK_ASSERT(StringUtils::StartsWith(g.output(), 
-                     "[OpenColorIO Warning]: At line 47, unknown key 'dummyKey' in 'ColorSpace'."));
+                     "[OpenColorIO Warning]: At line 56, unknown key 'dummyKey' in 'ColorSpace'."));
 }
 
 OCIO_ADD_TEST(Config, grading_primary_serialization)
@@ -3932,7 +4001,7 @@ OCIO_ADD_TEST(Config, grading_rgbcurve_serialization)
             "          style: video\n"
             "          red: {control_points: [-0.2, 0, 0.5, 0.5, 1.2, 1.5]}\n"
             "          green: {control_points: [0, 0, 0.2, 0.5, 1, 1.5]}\n"
-            "          blue: {control_points: [0, 0, 0.1, 0.5, 1, 1.5]}\n"
+            "          blue: {control_points: [0, 0, 0.1, 0.5, 1, 1.5], slopes: [0, 1, 1.1]}\n"
             "          master: {control_points: [-1, -1, 0, 0.1, 0.5, 0.6, 1, 1.1]}\n"
             "          direction: inverse\n";
 
@@ -3950,6 +4019,22 @@ OCIO_ADD_TEST(Config, grading_rgbcurve_serialization)
         std::stringstream ss;
         OCIO_CHECK_NO_THROW(ss << *config.get());
         OCIO_CHECK_EQUAL(ss.str(), str);
+    }
+
+    {
+        const std::string strEnd =
+            "    from_reference: !<GroupTransform>\n"
+            "      children:\n"
+            "        - !<GradingRGBCurveTransform>\n"
+            "          style: log\n"
+            "          blue: {control_points: [0, 0, 0.1, 0.5, 1, 1.5], slopes: [0, 1, 1.1, 1]}\n";
+        const std::string str = PROFILE_V2_START + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+
+        OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is), OCIO::Exception,
+                              "Number of slopes must match number of control points");
     }
 }
 
@@ -4328,7 +4413,7 @@ OCIO_ADD_TEST(Config, matrix_serialization)
                                                 "1234.56789876, 12345.6789876, 123456.789876, 1234567.89876, "\
                                                 "0, 0, 1, 0, 0, 0, 0, 1]}\n";
 
-    const std::string str = PROFILE_V1 + SIMPLE_PROFILE_A + SIMPLE_PROFILE_B + strEnd;
+    const std::string str = PROFILE_V1 + SIMPLE_PROFILE_A + SIMPLE_PROFILE_B_V1 + strEnd;
 
     std::istringstream is;
     is.str(str);
@@ -4379,7 +4464,7 @@ OCIO_ADD_TEST(Config, cdl_serialization)
             "        - !<CDLTransform> {power: [1.1, 1.2, 1.1]}\n"
             "        - !<CDLTransform> {sat: 0.1}\n";
 
-        const std::string str = PROFILE_V1 + SIMPLE_PROFILE_A + SIMPLE_PROFILE_B + strEnd;
+        const std::string str = PROFILE_V1 + SIMPLE_PROFILE_A + SIMPLE_PROFILE_B_V1 + strEnd;
 
         std::istringstream is;
         is.str(str);
@@ -4485,7 +4570,7 @@ OCIO_ADD_TEST(Config, add_color_space)
     OCIO::ConfigRcPtr config;
     OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is)->createEditableCopy());
     OCIO_CHECK_NO_THROW(config->validate());
-    OCIO_CHECK_EQUAL(config->getNumColorSpaces(), 2);
+    OCIO_CHECK_EQUAL(config->getNumColorSpaces(), 3);
 
     OCIO::ColorSpaceRcPtr cs;
     OCIO_CHECK_NO_THROW(cs = OCIO::ColorSpace::Create());
@@ -4501,7 +4586,7 @@ OCIO_ADD_TEST(Config, add_color_space)
 
     OCIO_CHECK_EQUAL(config->getIndexForColorSpace(csName), -1);
     OCIO_CHECK_NO_THROW(config->addColorSpace(cs));
-    OCIO_CHECK_EQUAL(config->getIndexForColorSpace(csName), 2);
+    OCIO_CHECK_EQUAL(config->getIndexForColorSpace(csName), 3);
 
     const std::string res 
         = str
@@ -4521,7 +4606,7 @@ OCIO_ADD_TEST(Config, add_color_space)
     OCIO_CHECK_EQUAL(ss.str(), res);
 
     OCIO_CHECK_NO_THROW(config->removeColorSpace(csName));
-    OCIO_CHECK_EQUAL(config->getNumColorSpaces(), 2);
+    OCIO_CHECK_EQUAL(config->getNumColorSpaces(), 3);
     OCIO_CHECK_EQUAL(config->getIndexForColorSpace(csName), -1);
 
     OCIO_CHECK_NO_THROW(config->clearColorSpaces());
@@ -4557,13 +4642,13 @@ OCIO_ADD_TEST(Config, remove_color_space)
     OCIO::ConfigRcPtr config;
     OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is)->createEditableCopy());
     OCIO_CHECK_NO_THROW(config->validate());
-    OCIO_CHECK_EQUAL(config->getNumColorSpaces(), 3);
+    OCIO_CHECK_EQUAL(config->getNumColorSpaces(), 4);
 
     // Step 1 - Validate the remove.
 
-    OCIO_CHECK_EQUAL(config->getIndexForColorSpace("cs5"), 2);
+    OCIO_CHECK_EQUAL(config->getIndexForColorSpace("cs5"), 3);
     OCIO_CHECK_NO_THROW(config->removeColorSpace("cs5"));
-    OCIO_CHECK_EQUAL(config->getNumColorSpaces(), 2);
+    OCIO_CHECK_EQUAL(config->getNumColorSpaces(), 3);
     OCIO_CHECK_EQUAL(config->getIndexForColorSpace("cs5"), -1);
 
     // Step 2 - Validate some faulty removes.
@@ -5460,7 +5545,7 @@ OCIO_ADD_TEST(Config, display_color_spaces_serialization)
             "    allocation: uniform\n"
             "    to_display_reference: !<ExponentTransform> {value: 2.4}\n";
 
-        const std::string str = PROFILE_V2_DCS_START + strDCS + SIMPLE_PROFILE_CS;
+        const std::string str = PROFILE_V2_DCS_START + strDCS + SIMPLE_PROFILE_CS_V2;
 
         std::istringstream is;
         is.str(str);
@@ -5499,7 +5584,7 @@ OCIO_ADD_TEST(Config, display_color_spaces_errors)
             "    isdata: false\n"
             "    allocation: uniform\n"
             "    to_display_reference: !<ExponentTransform> {value: [2.4, 2.4, 2.4, 1]}\n";
-        const std::string str = PROFILE_V2_DCS_START + strDCS + SIMPLE_PROFILE_CS;
+        const std::string str = PROFILE_V2_DCS_START + strDCS + SIMPLE_PROFILE_CS_V2;
 
         std::istringstream is;
         is.str(str);
@@ -5528,7 +5613,7 @@ OCIO_ADD_TEST(Config, display_color_spaces_errors)
             "    isdata: false\n"
             "    allocation: uniform\n"
             "    to_scene_reference: !<ExponentTransform> {value: [2.4, 2.4, 2.4, 1]}\n";
-        const std::string str = PROFILE_V2_DCS_START + strDCS + SIMPLE_PROFILE_CS;
+        const std::string str = PROFILE_V2_DCS_START + strDCS + SIMPLE_PROFILE_CS_V2;
 
         std::istringstream is;
         is.str(str);
@@ -5566,7 +5651,7 @@ OCIO_ADD_TEST(Config, config_v1)
 
 OCIO_ADD_TEST(Config, view_transforms)
 {
-    const std::string str = PROFILE_V2_DCS_START + SIMPLE_PROFILE_CS;
+    const std::string str = PROFILE_V2_DCS_START + SIMPLE_PROFILE_CS_V2;
 
     std::istringstream is;
     is.str(str);

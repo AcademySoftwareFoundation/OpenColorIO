@@ -24,6 +24,7 @@ static constexpr char TAG_ACES_PARAMS[] = "ACESParams";
 static constexpr char TAG_ARRAY[] = "Array";
 static constexpr char TAG_CDL[] = "ASC_CDL";
 static constexpr char TAG_CURVE_CTRL_PNTS[] = "ControlPoints";
+static constexpr char TAG_CURVE_SLOPES[] = "Slopes";
 static constexpr char TAG_DYN_PROP_CONTRAST[] = "CONTRAST";
 static constexpr char TAG_DYN_PROP_EXPOSURE[] = "EXPOSURE";
 static constexpr char TAG_DYN_PROP_GAMMA[] = "GAMMA";

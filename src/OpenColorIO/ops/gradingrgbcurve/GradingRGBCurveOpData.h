@@ -56,6 +56,10 @@ public:
     const ConstGradingRGBCurveRcPtr getValue() const { return m_value->getValue(); }
     void setValue(const ConstGradingRGBCurveRcPtr & values) { m_value->setValue(values); }
 
+    float getSlope(RGBCurveType c, size_t index) const;
+    void setSlope(RGBCurveType c, size_t index, float slope);
+    bool slopesAreDefault(RGBCurveType c) const;
+
     bool getBypassLinToLog() const noexcept { return m_bypassLinToLog; }
     void setBypassLinToLog(bool bypass) noexcept { m_bypassLinToLog = bypass; }
 
