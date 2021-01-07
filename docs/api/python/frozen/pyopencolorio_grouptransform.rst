@@ -7,7 +7,7 @@
    :module: PyOpenColorIO
 
 
-   .. py:method:: GroupTransform.GetWriteFormats() -> OpenColorIO_v2_0beta2::PyIterator<std::shared_ptr<OpenColorIO_v2_0beta2::GroupTransform>,1>
+   .. py:method:: GroupTransform.GetWriteFormats() -> OpenColorIO_v2_0rc1::PyIterator<std::shared_ptr<OpenColorIO_v2_0rc1::GroupTransform>,1>
       :module: PyOpenColorIO
       :staticmethod:
 
@@ -77,7 +77,7 @@
 
       Overloaded function.
 
-      1. write(self: PyOpenColorIO.GroupTransform, config: OpenColorIO_v2_0beta2::Config, context: OpenColorIO_v2_0beta2::Context, formatName: str, fileName: str) -> None
+      1. write(self: PyOpenColorIO.GroupTransform, config: OpenColorIO_v2_0rc1::Config, context: OpenColorIO_v2_0rc1::Context, formatName: str, fileName: str) -> None
 
       Write the transforms comprising the group to the stream.
 
@@ -93,7 +93,7 @@
              formats << " (." << GroupTransform::GetFormatExtensionByIndex(i) << ")";
           }
 
-      2. write(self: PyOpenColorIO.GroupTransform, config: OpenColorIO_v2_0beta2::Config, context: OpenColorIO_v2_0beta2::Context, formatName: str) -> str
+      2. write(self: PyOpenColorIO.GroupTransform, config: OpenColorIO_v2_0rc1::Config, context: OpenColorIO_v2_0rc1::Context, formatName: str) -> str
 
       Write the transforms comprising the group to the stream.
 

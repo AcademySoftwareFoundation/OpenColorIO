@@ -85,7 +85,7 @@
       :module: PyOpenColorIO
 
 
-   .. py:method:: ColorSpaceMenuParameters.getAddedColorSpaces(self: PyOpenColorIO.ColorSpaceMenuParameters) -> OpenColorIO_v2_0beta2::PyIterator<std::shared_ptr<OpenColorIO_v2_0beta2::ColorSpaceMenuParameters>,0>
+   .. py:method:: ColorSpaceMenuParameters.getAddedColorSpaces(self: PyOpenColorIO.ColorSpaceMenuParameters) -> OpenColorIO_v2_0rc1::PyIterator<std::shared_ptr<OpenColorIO_v2_0rc1::ColorSpaceMenuParameters>,0>
       :module: PyOpenColorIO
 
 

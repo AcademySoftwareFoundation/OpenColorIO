@@ -60,11 +60,11 @@
          :ref:`ColorSpace::clearCategories`
 
 
-   .. py:method:: NamedTransform.getAliases(self: PyOpenColorIO.NamedTransform) -> OpenColorIO_v2_0beta2::PyIterator<std::shared_ptr<OpenColorIO_v2_0beta2::NamedTransform>,1>
+   .. py:method:: NamedTransform.getAliases(self: PyOpenColorIO.NamedTransform) -> OpenColorIO_v2_0rc1::PyIterator<std::shared_ptr<OpenColorIO_v2_0rc1::NamedTransform>,1>
       :module: PyOpenColorIO
 
 
-   .. py:method:: NamedTransform.getCategories(self: PyOpenColorIO.NamedTransform) -> OpenColorIO_v2_0beta2::PyIterator<std::shared_ptr<OpenColorIO_v2_0beta2::NamedTransform>,0>
+   .. py:method:: NamedTransform.getCategories(self: PyOpenColorIO.NamedTransform) -> OpenColorIO_v2_0rc1::PyIterator<std::shared_ptr<OpenColorIO_v2_0rc1::NamedTransform>,0>
       :module: PyOpenColorIO
 
 
