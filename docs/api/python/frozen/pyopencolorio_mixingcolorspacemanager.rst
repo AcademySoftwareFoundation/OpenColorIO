@@ -17,11 +17,11 @@
       :module: PyOpenColorIO
 
 
-   .. py:method:: MixingColorSpaceManager.getMixingEncodings(self: PyOpenColorIO.MixingColorSpaceManager) -> OpenColorIO_v2_0beta2::PyIterator<std::shared_ptr<OpenColorIO_v2_0beta2::MixingColorSpaceManager>,1>
+   .. py:method:: MixingColorSpaceManager.getMixingEncodings(self: PyOpenColorIO.MixingColorSpaceManager) -> OpenColorIO_v2_0rc1::PyIterator<std::shared_ptr<OpenColorIO_v2_0rc1::MixingColorSpaceManager>,1>
       :module: PyOpenColorIO
 
 
-   .. py:method:: MixingColorSpaceManager.getMixingSpaces(self: PyOpenColorIO.MixingColorSpaceManager) -> OpenColorIO_v2_0beta2::PyIterator<std::shared_ptr<OpenColorIO_v2_0beta2::MixingColorSpaceManager>,0>
+   .. py:method:: MixingColorSpaceManager.getMixingSpaces(self: PyOpenColorIO.MixingColorSpaceManager) -> OpenColorIO_v2_0rc1::PyIterator<std::shared_ptr<OpenColorIO_v2_0rc1::MixingColorSpaceManager>,0>
       :module: PyOpenColorIO
 
 

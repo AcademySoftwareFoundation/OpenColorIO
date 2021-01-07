@@ -22,7 +22,7 @@
          The cccid can be the ID of a CDL or the index of the CDL (as string). If cccid is NULL or empty the first CDL is returned. The cccid is case-sensitive. The src must be an absolute path reference, no relative directory or envvar resolution is performed. Throws if file does not contain any CDL or if the specified cccid is not found.
 
 
-   .. py:method:: CDLTransform.CreateGroupFromFile(src: str) -> OpenColorIO_v2_0beta2::GroupTransform
+   .. py:method:: CDLTransform.CreateGroupFromFile(src: str) -> OpenColorIO_v2_0rc1::GroupTransform
       :module: PyOpenColorIO
       :staticmethod:
 
