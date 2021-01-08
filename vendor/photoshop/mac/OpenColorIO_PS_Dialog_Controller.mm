@@ -521,10 +521,10 @@ static NSString *standardPath = @"/Library/Application Support/OpenColorIO";
             
             NSMutableArray *extensions = [NSMutableArray arrayWithObject:@"ocio"];
             
-            for(int i=0; i < OCIO::FileTransform::getNumFormats(); ++i)
+            for(int i=0; i < OCIO::FileTransform::GetNumFormats(); ++i)
             {
-                const char *extension = OCIO::FileTransform::getFormatExtensionByIndex(i);
-                //const char *format = OCIO::FileTransform::getFormatNameByIndex(i);
+                const char *extension = OCIO::FileTransform::GetFormatExtensionByIndex(i);
+                //const char *format = OCIO::FileTransform::GetFormatNameByIndex(i);
                 
                 NSString *extensionString = [NSString stringWithUTF8String:extension];
                 
