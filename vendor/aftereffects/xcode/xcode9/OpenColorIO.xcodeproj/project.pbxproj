@@ -294,19 +294,21 @@
 		2A41D754254B85B400893EFF /* ViewingRules.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2A41D633254B85B400893EFF /* ViewingRules.cpp */; };
 		2A41D755254B85B400893EFF /* ViewingRules.h in Headers */ = {isa = PBXBuildFile; fileRef = 2A41D634254B85B400893EFF /* ViewingRules.h */; };
 		2A41D756254B85B400893EFF /* ViewTransform.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2A41D635254B85B400893EFF /* ViewTransform.cpp */; };
-		2A41D770254B860800893EFF /* CategoryHelpers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2A41D759254B860800893EFF /* CategoryHelpers.cpp */; };
-		2A41D771254B860800893EFF /* CategoryHelpers.h in Headers */ = {isa = PBXBuildFile; fileRef = 2A41D75A254B860800893EFF /* CategoryHelpers.h */; };
-		2A41D772254B860800893EFF /* CategoryNames.h in Headers */ = {isa = PBXBuildFile; fileRef = 2A41D75B254B860800893EFF /* CategoryNames.h */; };
-		2A41D773254B860800893EFF /* ColorSpaceHelpers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2A41D75D254B860800893EFF /* ColorSpaceHelpers.cpp */; };
-		2A41D774254B860800893EFF /* ColorSpaceHelpers.h in Headers */ = {isa = PBXBuildFile; fileRef = 2A41D75E254B860800893EFF /* ColorSpaceHelpers.h */; };
-		2A41D775254B860800893EFF /* DisplayViewHelpers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2A41D75F254B860800893EFF /* DisplayViewHelpers.cpp */; };
-		2A41D776254B860800893EFF /* DisplayViewHelpers.h in Headers */ = {isa = PBXBuildFile; fileRef = 2A41D760254B860800893EFF /* DisplayViewHelpers.h */; };
-		2A41D777254B860800893EFF /* MixingHelpers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2A41D761254B860800893EFF /* MixingHelpers.cpp */; };
-		2A41D778254B860800893EFF /* MixingHelpers.h in Headers */ = {isa = PBXBuildFile; fileRef = 2A41D762254B860800893EFF /* MixingHelpers.h */; };
-		2A41D779254B860800893EFF /* ViewingPipeline.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2A41D763254B860800893EFF /* ViewingPipeline.cpp */; };
-		2A41D77A254B860800893EFF /* ViewingPipeline.h in Headers */ = {isa = PBXBuildFile; fileRef = 2A41D764254B860800893EFF /* ViewingPipeline.h */; };
 		2A41D77B254B860800893EFF /* glsl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2A41D768254B860800893EFF /* glsl.cpp */; };
 		2A41D77C254B860800893EFF /* glsl.h in Headers */ = {isa = PBXBuildFile; fileRef = 2A41D769254B860800893EFF /* glsl.h */; };
+		2AC80FA525A7E2050084CE7D /* CategoryHelpers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2AC80F9C25A7E2050084CE7D /* CategoryHelpers.cpp */; };
+		2AC80FA625A7E2050084CE7D /* CategoryHelpers.h in Headers */ = {isa = PBXBuildFile; fileRef = 2AC80F9D25A7E2050084CE7D /* CategoryHelpers.h */; };
+		2AC80FA725A7E2050084CE7D /* ColorSpaceHelpers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2AC80F9E25A7E2050084CE7D /* ColorSpaceHelpers.cpp */; };
+		2AC80FA825A7E2050084CE7D /* ColorSpaceHelpers.h in Headers */ = {isa = PBXBuildFile; fileRef = 2AC80F9F25A7E2050084CE7D /* ColorSpaceHelpers.h */; };
+		2AC80FA925A7E2050084CE7D /* DisplayViewHelpers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2AC80FA025A7E2050084CE7D /* DisplayViewHelpers.cpp */; };
+		2AC80FAA25A7E2050084CE7D /* LegacyViewingPipeline.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2AC80FA125A7E2050084CE7D /* LegacyViewingPipeline.cpp */; };
+		2AC80FAB25A7E2050084CE7D /* LegacyViewingPipeline.h in Headers */ = {isa = PBXBuildFile; fileRef = 2AC80FA225A7E2050084CE7D /* LegacyViewingPipeline.h */; };
+		2AC80FAC25A7E2050084CE7D /* MixingHelpers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2AC80FA325A7E2050084CE7D /* MixingHelpers.cpp */; };
+		2AC80FAD25A7E2050084CE7D /* MixingHelpers.h in Headers */ = {isa = PBXBuildFile; fileRef = 2AC80FA425A7E2050084CE7D /* MixingHelpers.h */; };
+		2AC80FB025A7E2AA0084CE7D /* NamedTransform.h in Headers */ = {isa = PBXBuildFile; fileRef = 2AC80FAE25A7E2A90084CE7D /* NamedTransform.h */; };
+		2AC80FB125A7E2AA0084CE7D /* NamedTransform.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2AC80FAF25A7E2AA0084CE7D /* NamedTransform.cpp */; };
+		2AC80FB425A7E3040084CE7D /* CDLWriter.h in Headers */ = {isa = PBXBuildFile; fileRef = 2AC80FB225A7E3030084CE7D /* CDLWriter.h */; };
+		2AC80FB525A7E3040084CE7D /* CDLWriter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2AC80FB325A7E3030084CE7D /* CDLWriter.cpp */; };
 		2ACF573F14776B7000991ED5 /* OpenColorABI.h in Headers */ = {isa = PBXBuildFile; fileRef = 2ACF573E14776B7000991ED5 /* OpenColorABI.h */; };
 /* End PBXBuildFile section */
 
@@ -675,23 +677,25 @@
 		2A41D633254B85B400893EFF /* ViewingRules.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ViewingRules.cpp; sourceTree = "<group>"; };
 		2A41D634254B85B400893EFF /* ViewingRules.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ViewingRules.h; sourceTree = "<group>"; };
 		2A41D635254B85B400893EFF /* ViewTransform.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ViewTransform.cpp; sourceTree = "<group>"; };
-		2A41D759254B860800893EFF /* CategoryHelpers.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CategoryHelpers.cpp; sourceTree = "<group>"; };
-		2A41D75A254B860800893EFF /* CategoryHelpers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CategoryHelpers.h; sourceTree = "<group>"; };
-		2A41D75B254B860800893EFF /* CategoryNames.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CategoryNames.h; sourceTree = "<group>"; };
-		2A41D75D254B860800893EFF /* ColorSpaceHelpers.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ColorSpaceHelpers.cpp; sourceTree = "<group>"; };
-		2A41D75E254B860800893EFF /* ColorSpaceHelpers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ColorSpaceHelpers.h; sourceTree = "<group>"; };
-		2A41D75F254B860800893EFF /* DisplayViewHelpers.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DisplayViewHelpers.cpp; sourceTree = "<group>"; };
-		2A41D760254B860800893EFF /* DisplayViewHelpers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DisplayViewHelpers.h; sourceTree = "<group>"; };
-		2A41D761254B860800893EFF /* MixingHelpers.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MixingHelpers.cpp; sourceTree = "<group>"; };
-		2A41D762254B860800893EFF /* MixingHelpers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MixingHelpers.h; sourceTree = "<group>"; };
-		2A41D763254B860800893EFF /* ViewingPipeline.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ViewingPipeline.cpp; sourceTree = "<group>"; };
-		2A41D764254B860800893EFF /* ViewingPipeline.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ViewingPipeline.h; sourceTree = "<group>"; };
 		2A41D768254B860800893EFF /* glsl.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = glsl.cpp; sourceTree = "<group>"; };
 		2A41D769254B860800893EFF /* glsl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = glsl.h; sourceTree = "<group>"; };
 		2AB2C901234D0F6600F62DB3 /* ilmbasehalf.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = ilmbasehalf.xcodeproj; path = ext/ilmbasehalf.xcodeproj; sourceTree = "<group>"; };
 		2AB2C92C234D1A7500F62DB3 /* yaml.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = yaml.xcodeproj; path = ext/yaml.xcodeproj; sourceTree = "<group>"; };
 		2AB2C934234D1A7600F62DB3 /* pystring.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = pystring.xcodeproj; path = ext/pystring.xcodeproj; sourceTree = "<group>"; };
 		2AB2C93A234D1A7600F62DB3 /* expat.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = expat.xcodeproj; path = ext/expat.xcodeproj; sourceTree = "<group>"; };
+		2AC80F9C25A7E2050084CE7D /* CategoryHelpers.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CategoryHelpers.cpp; sourceTree = "<group>"; };
+		2AC80F9D25A7E2050084CE7D /* CategoryHelpers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CategoryHelpers.h; sourceTree = "<group>"; };
+		2AC80F9E25A7E2050084CE7D /* ColorSpaceHelpers.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ColorSpaceHelpers.cpp; sourceTree = "<group>"; };
+		2AC80F9F25A7E2050084CE7D /* ColorSpaceHelpers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ColorSpaceHelpers.h; sourceTree = "<group>"; };
+		2AC80FA025A7E2050084CE7D /* DisplayViewHelpers.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DisplayViewHelpers.cpp; sourceTree = "<group>"; };
+		2AC80FA125A7E2050084CE7D /* LegacyViewingPipeline.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = LegacyViewingPipeline.cpp; sourceTree = "<group>"; };
+		2AC80FA225A7E2050084CE7D /* LegacyViewingPipeline.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LegacyViewingPipeline.h; sourceTree = "<group>"; };
+		2AC80FA325A7E2050084CE7D /* MixingHelpers.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MixingHelpers.cpp; sourceTree = "<group>"; };
+		2AC80FA425A7E2050084CE7D /* MixingHelpers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MixingHelpers.h; sourceTree = "<group>"; };
+		2AC80FAE25A7E2A90084CE7D /* NamedTransform.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NamedTransform.h; sourceTree = "<group>"; };
+		2AC80FAF25A7E2AA0084CE7D /* NamedTransform.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = NamedTransform.cpp; sourceTree = "<group>"; };
+		2AC80FB225A7E3030084CE7D /* CDLWriter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CDLWriter.h; sourceTree = "<group>"; };
+		2AC80FB325A7E3030084CE7D /* CDLWriter.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CDLWriter.cpp; sourceTree = "<group>"; };
 		2ACF567114776A0A00991ED5 /* libOpenColorIO.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libOpenColorIO.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		2ACF573E14776B7000991ED5 /* OpenColorABI.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OpenColorABI.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -733,6 +737,7 @@
 		2A41D4F6254B85B300893EFF /* OpenColorIO */ = {
 			isa = PBXGroup;
 			children = (
+				2AC80F9B25A7E2050084CE7D /* apphelpers */,
 				2A41D4F7254B85B300893EFF /* Baker.cpp */,
 				2A41D4F8254B85B300893EFF /* BitDepthUtils.cpp */,
 				2A41D4F9254B85B300893EFF /* BitDepthUtils.h */,
@@ -776,6 +781,8 @@
 				2A41D54D254B85B300893EFF /* MathUtils.h */,
 				2A41D54E254B85B300893EFF /* md5 */,
 				2A41D551254B85B300893EFF /* Mutex.h */,
+				2AC80FAF25A7E2AA0084CE7D /* NamedTransform.cpp */,
+				2AC80FAE25A7E2A90084CE7D /* NamedTransform.h */,
 				2A41D552254B85B300893EFF /* OCIOYaml.cpp */,
 				2A41D553254B85B300893EFF /* OCIOYaml.h */,
 				2A41D554254B85B300893EFF /* Op.cpp */,
@@ -853,6 +860,8 @@
 				2A41D50E254B85B300893EFF /* CDLParser.h */,
 				2A41D50F254B85B300893EFF /* CDLReaderHelper.cpp */,
 				2A41D510254B85B300893EFF /* CDLReaderHelper.h */,
+				2AC80FB325A7E3030084CE7D /* CDLWriter.cpp */,
+				2AC80FB225A7E3030084CE7D /* CDLWriter.h */,
 			);
 			path = cdl;
 			sourceTree = "<group>";
@@ -1240,29 +1249,10 @@
 		2A41D757254B860800893EFF /* libutils */ = {
 			isa = PBXGroup;
 			children = (
-				2A41D758254B860800893EFF /* apphelpers */,
 				2A41D766254B860800893EFF /* oglapphelpers */,
 			);
 			name = libutils;
 			path = ../../../../src/libutils;
-			sourceTree = "<group>";
-		};
-		2A41D758254B860800893EFF /* apphelpers */ = {
-			isa = PBXGroup;
-			children = (
-				2A41D759254B860800893EFF /* CategoryHelpers.cpp */,
-				2A41D75A254B860800893EFF /* CategoryHelpers.h */,
-				2A41D75B254B860800893EFF /* CategoryNames.h */,
-				2A41D75D254B860800893EFF /* ColorSpaceHelpers.cpp */,
-				2A41D75E254B860800893EFF /* ColorSpaceHelpers.h */,
-				2A41D75F254B860800893EFF /* DisplayViewHelpers.cpp */,
-				2A41D760254B860800893EFF /* DisplayViewHelpers.h */,
-				2A41D761254B860800893EFF /* MixingHelpers.cpp */,
-				2A41D762254B860800893EFF /* MixingHelpers.h */,
-				2A41D763254B860800893EFF /* ViewingPipeline.cpp */,
-				2A41D764254B860800893EFF /* ViewingPipeline.h */,
-			);
-			path = apphelpers;
 			sourceTree = "<group>";
 		};
 		2A41D766254B860800893EFF /* oglapphelpers */ = {
@@ -1308,6 +1298,22 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		2AC80F9B25A7E2050084CE7D /* apphelpers */ = {
+			isa = PBXGroup;
+			children = (
+				2AC80F9C25A7E2050084CE7D /* CategoryHelpers.cpp */,
+				2AC80F9D25A7E2050084CE7D /* CategoryHelpers.h */,
+				2AC80F9E25A7E2050084CE7D /* ColorSpaceHelpers.cpp */,
+				2AC80F9F25A7E2050084CE7D /* ColorSpaceHelpers.h */,
+				2AC80FA025A7E2050084CE7D /* DisplayViewHelpers.cpp */,
+				2AC80FA125A7E2050084CE7D /* LegacyViewingPipeline.cpp */,
+				2AC80FA225A7E2050084CE7D /* LegacyViewingPipeline.h */,
+				2AC80FA325A7E2050084CE7D /* MixingHelpers.cpp */,
+				2AC80FA425A7E2050084CE7D /* MixingHelpers.h */,
+			);
+			path = apphelpers;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
@@ -1319,7 +1325,8 @@
 				2A41D73B254B85B400893EFF /* FileTransform.h in Headers */,
 				2A41D715254B85B400893EFF /* SystemMonitor.h in Headers */,
 				2A41D6FB254B85B400893EFF /* OpArray.h in Headers */,
-				2A41D778254B860800893EFF /* MixingHelpers.h in Headers */,
+				2AC80FAD25A7E2050084CE7D /* MixingHelpers.h in Headers */,
+				2AC80FA625A7E2050084CE7D /* CategoryHelpers.h in Headers */,
 				2A41D64C254B85B400893EFF /* CDLReaderHelper.h in Headers */,
 				2A41D748254B85B400893EFF /* LogCameraTransform.h in Headers */,
 				2A41D718254B85B400893EFF /* TokensManager.h in Headers */,
@@ -1333,6 +1340,7 @@
 				2A41D71D254B85B400893EFF /* ACES.h in Headers */,
 				2A41D6B4254B85B400893EFF /* GammaOpGPU.h in Headers */,
 				2A41D678254B85B400893EFF /* GpuShader.h in Headers */,
+				2AC80FB025A7E2AA0084CE7D /* NamedTransform.h in Headers */,
 				2A41D741254B85B400893EFF /* GradingRGBCurveTransform.h in Headers */,
 				2A41D6F4254B85B400893EFF /* MatrixOpCPU.h in Headers */,
 				2A41D670254B85B400893EFF /* XMLReaderUtils.h in Headers */,
@@ -1353,7 +1361,6 @@
 				2A41D6B0254B85B400893EFF /* GammaOpCPU.h in Headers */,
 				2A41D703254B85B400893EFF /* RangeOpData.h in Headers */,
 				2A41D6B6254B85B400893EFF /* GammaOpUtils.h in Headers */,
-				2A41D776254B860800893EFF /* DisplayViewHelpers.h in Headers */,
 				2A41D680254B85B400893EFF /* ImagePacking.h in Headers */,
 				2A41D654254B85B400893EFF /* IndexMapping.h in Headers */,
 				2A41D6F0254B85B400893EFF /* Lut3DOpGPU.h in Headers */,
@@ -1367,7 +1374,6 @@
 				2A41D727254B85B400893EFF /* OpHelpers.h in Headers */,
 				2A41D6DA254B85B400893EFF /* LogOpCPU.h in Headers */,
 				2A41D69A254B85B400893EFF /* CDLOpGPU.h in Headers */,
-				2A41D77A254B860800893EFF /* ViewingPipeline.h in Headers */,
 				2A41D6CC254B85B400893EFF /* GradingRGBCurveOpGPU.h in Headers */,
 				2A41D723254B85B400893EFF /* CanonCameras.h in Headers */,
 				2A41D6B8254B85B400893EFF /* GradingPrimary.h in Headers */,
@@ -1387,7 +1393,6 @@
 				2A41D69E254B85B400893EFF /* ExposureContrastOp.h in Headers */,
 				2A41D725254B85B400893EFF /* ColorMatrixHelpers.h in Headers */,
 				2A41D692254B85B400893EFF /* AllocationOp.h in Headers */,
-				2A41D772254B860800893EFF /* CategoryNames.h in Headers */,
 				2A41D69C254B85B400893EFF /* ExponentOp.h in Headers */,
 				2A41D6D8254B85B400893EFF /* LogOp.h in Headers */,
 				2A41D6C0254B85B400893EFF /* GradingPrimaryOpGPU.h in Headers */,
@@ -1395,14 +1400,13 @@
 				2A41D72F254B85B400893EFF /* BuiltinTransform.h in Headers */,
 				2A41D6DE254B85B400893EFF /* LogOpGPU.h in Headers */,
 				2A41D6C6254B85B400893EFF /* GradingRGBCurveOp.h in Headers */,
-				2A41D771254B860800893EFF /* CategoryHelpers.h in Headers */,
 				2A41D68A254B85B400893EFF /* Mutex.h in Headers */,
 				2A41D710254B85B400893EFF /* Processor.h in Headers */,
 				2A41D643254B85B400893EFF /* CustomKeys.h in Headers */,
 				2A41D74A254B85B400893EFF /* LogTransform.h in Headers */,
 				2A41D66E254B85B400893EFF /* XMLReaderHelper.h in Headers */,
-				2A41D774254B860800893EFF /* ColorSpaceHelpers.h in Headers */,
 				2A41D71F254B85B400893EFF /* ArriCameras.h in Headers */,
+				2AC80FA825A7E2050084CE7D /* ColorSpaceHelpers.h in Headers */,
 				2A41D721254B85B400893EFF /* BuiltinTransformRegistry.h in Headers */,
 				2A41D6E2254B85B400893EFF /* Lut1DOp.h in Headers */,
 				2A41D6D0254B85B400893EFF /* GradingToneOp.h in Headers */,
@@ -1410,6 +1414,7 @@
 				2A41D739254B85B400893EFF /* ExposureContrastTransform.h in Headers */,
 				2A41D701254B85B400893EFF /* RangeOpCPU.h in Headers */,
 				2A41D64A254B85B400893EFF /* CDLParser.h in Headers */,
+				2AC80FB425A7E3040084CE7D /* CDLWriter.h in Headers */,
 				2A41D737254B85B400893EFF /* ExponentWithLinearTransform.h in Headers */,
 				2A41D735254B85B400893EFF /* ExponentTransform.h in Headers */,
 				2A41D6A6254B85B400893EFF /* FixedFunctionOp.h in Headers */,
@@ -1444,6 +1449,7 @@
 				2A41D755254B85B400893EFF /* ViewingRules.h in Headers */,
 				2A41D645254B85B400893EFF /* Display.h in Headers */,
 				2A41D642254B85B400893EFF /* CPUProcessor.h in Headers */,
+				2AC80FAB25A7E2050084CE7D /* LegacyViewingPipeline.h in Headers */,
 				2A41D687254B85B400893EFF /* MathUtils.h in Headers */,
 				2A41D65E254B85B400893EFF /* FileFormatICC.h in Headers */,
 				2A41D70B254B85B400893EFF /* PathUtils.h in Headers */,
@@ -1576,7 +1582,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				2A41D6AF254B85B400893EFF /* GammaOpCPU.cpp in Sources */,
-				2A41D770254B860800893EFF /* CategoryHelpers.cpp in Sources */,
 				2A41D6C7254B85B400893EFF /* GradingRGBCurveOpCPU.cpp in Sources */,
 				2A41D6CD254B85B400893EFF /* GradingTone.cpp in Sources */,
 				2A41D738254B85B400893EFF /* ExposureContrastTransform.cpp in Sources */,
@@ -1584,7 +1589,6 @@
 				2A41D70F254B85B400893EFF /* Processor.cpp in Sources */,
 				2A41D730254B85B400893EFF /* CDLTransform.cpp in Sources */,
 				2A41D6BD254B85B400893EFF /* GradingPrimaryOpData.cpp in Sources */,
-				2A41D779254B860800893EFF /* ViewingPipeline.cpp in Sources */,
 				2A41D6A3254B85B400893EFF /* ExposureContrastOpGPU.cpp in Sources */,
 				2A41D74C254B85B400893EFF /* Lut1DTransform.cpp in Sources */,
 				2A41D6FE254B85B400893EFF /* RangeOp.cpp in Sources */,
@@ -1603,7 +1607,6 @@
 				2A41D69F254B85B400893EFF /* ExposureContrastOpCPU.cpp in Sources */,
 				2A41D756254B85B400893EFF /* ViewTransform.cpp in Sources */,
 				2A41D6CB254B85B400893EFF /* GradingRGBCurveOpGPU.cpp in Sources */,
-				2A41D777254B860800893EFF /* MixingHelpers.cpp in Sources */,
 				2A41D734254B85B400893EFF /* ExponentTransform.cpp in Sources */,
 				2A41D6F7254B85B400893EFF /* MatrixOpGPU.cpp in Sources */,
 				2A41D720254B85B400893EFF /* BuiltinTransformRegistry.cpp in Sources */,
@@ -1622,10 +1625,12 @@
 				2A41D684254B85B400893EFF /* LookParse.cpp in Sources */,
 				2A41D693254B85B400893EFF /* CDLOp.cpp in Sources */,
 				2A41D72E254B85B400893EFF /* BuiltinTransform.cpp in Sources */,
+				2AC80FAC25A7E2050084CE7D /* MixingHelpers.cpp in Sources */,
 				2A41D673254B85B400893EFF /* FileRules.cpp in Sources */,
 				2A41D641254B85B400893EFF /* CPUProcessor.cpp in Sources */,
 				2A41D711254B85B400893EFF /* ScanlineHelper.cpp in Sources */,
 				2A41D660254B85B400893EFF /* FileFormatIridasItx.cpp in Sources */,
+				2AC80FAA25A7E2050084CE7D /* LegacyViewingPipeline.cpp in Sources */,
 				2A41D726254B85B400893EFF /* OpHelpers.cpp in Sources */,
 				2A41D6A9254B85B400893EFF /* FixedFunctionOpData.cpp in Sources */,
 				2A41D671254B85B400893EFF /* XMLWriterUtils.cpp in Sources */,
@@ -1646,13 +1651,13 @@
 				2A41D700254B85B400893EFF /* RangeOpCPU.cpp in Sources */,
 				2A41D65C254B85B400893EFF /* FileFormatHDL.cpp in Sources */,
 				2A41D6F5254B85B400893EFF /* MatrixOpData.cpp in Sources */,
+				2AC80FA725A7E2050084CE7D /* ColorSpaceHelpers.cpp in Sources */,
 				2A41D73A254B85B400893EFF /* FileTransform.cpp in Sources */,
 				2A41D74B254B85B400893EFF /* LookTransform.cpp in Sources */,
 				2A41D752254B85B400893EFF /* RangeTransform.cpp in Sources */,
 				2A41D6EF254B85B400893EFF /* Lut3DOpGPU.cpp in Sources */,
 				2A41D6BF254B85B400893EFF /* GradingPrimaryOpGPU.cpp in Sources */,
 				2A41D656254B85B400893EFF /* FileFormatCC.cpp in Sources */,
-				2A41D775254B860800893EFF /* DisplayViewHelpers.cpp in Sources */,
 				2A41D64D254B85B400893EFF /* CTFReaderHelper.cpp in Sources */,
 				2A41D754254B85B400893EFF /* ViewingRules.cpp in Sources */,
 				2A41D6D1254B85B400893EFF /* GradingToneOpCPU.cpp in Sources */,
@@ -1661,9 +1666,11 @@
 				2A41D6F3254B85B400893EFF /* MatrixOpCPU.cpp in Sources */,
 				2A41D6E1254B85B400893EFF /* Lut1DOp.cpp in Sources */,
 				2A41D6F1254B85B400893EFF /* MatrixOp.cpp in Sources */,
+				2AC80FB525A7E3040084CE7D /* CDLWriter.cpp in Sources */,
 				2A41D659254B85B400893EFF /* FileFormatCSP.cpp in Sources */,
 				2A41D73C254B85B400893EFF /* FixedFunctionTransform.cpp in Sources */,
 				2A41D6D7254B85B400893EFF /* LogOp.cpp in Sources */,
+				2AC80FB125A7E2AA0084CE7D /* NamedTransform.cpp in Sources */,
 				2A41D749254B85B400893EFF /* LogTransform.cpp in Sources */,
 				2A41D681254B85B400893EFF /* Logging.cpp in Sources */,
 				2A41D70A254B85B400893EFF /* PathUtils.cpp in Sources */,
@@ -1683,8 +1690,10 @@
 				2A41D63F254B85B400893EFF /* ContextVariableUtils.cpp in Sources */,
 				2A41D66F254B85B400893EFF /* XMLReaderUtils.cpp in Sources */,
 				2A41D72C254B85B400893EFF /* SonyCameras.cpp in Sources */,
+				2AC80FA525A7E2050084CE7D /* CategoryHelpers.cpp in Sources */,
 				2A41D728254B85B400893EFF /* PanasonicCameras.cpp in Sources */,
 				2A41D64F254B85B400893EFF /* CTFReaderUtils.cpp in Sources */,
+				2AC80FA925A7E2050084CE7D /* DisplayViewHelpers.cpp in Sources */,
 				2A41D6D5254B85B400893EFF /* GradingToneOpGPU.cpp in Sources */,
 				2A41D648254B85B400893EFF /* Exception.cpp in Sources */,
 				2A41D6B9254B85B400893EFF /* GradingPrimaryOp.cpp in Sources */,
@@ -1727,7 +1736,6 @@
 				2A41D695254B85B400893EFF /* CDLOpCPU.cpp in Sources */,
 				2A41D71E254B85B400893EFF /* ArriCameras.cpp in Sources */,
 				2A41D77B254B860800893EFF /* glsl.cpp in Sources */,
-				2A41D773254B860800893EFF /* ColorSpaceHelpers.cpp in Sources */,
 				2A41D699254B85B400893EFF /* CDLOpGPU.cpp in Sources */,
 				2A41D665254B85B400893EFF /* FileFormatSpi3D.cpp in Sources */,
 				2A41D6B7254B85B400893EFF /* GradingPrimary.cpp in Sources */,
