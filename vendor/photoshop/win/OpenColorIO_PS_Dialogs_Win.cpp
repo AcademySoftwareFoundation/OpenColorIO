@@ -443,10 +443,10 @@ static void TrackConfigMenu(HWND hwndDlg, bool readFromControl)
         {
             ExtensionMap extensions;
 
-            for(int i=0; i < OCIO::FileTransform::getNumFormats(); ++i)
+            for(int i=0; i < OCIO::FileTransform::GetNumFormats(); ++i)
             {
-                const std::string extension = OCIO::FileTransform::getFormatExtensionByIndex(i);
-                const std::string format = OCIO::FileTransform::getFormatNameByIndex(i);
+                const std::string extension = OCIO::FileTransform::GetFormatExtensionByIndex(i);
+                const std::string format = OCIO::FileTransform::GetFormatNameByIndex(i);
                 
                 if(extension != "ccc") // .ccc files require an ID parameter
                     extensions[ extension ] = format;
