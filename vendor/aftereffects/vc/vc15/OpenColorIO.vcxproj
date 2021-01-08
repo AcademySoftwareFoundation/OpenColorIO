@@ -44,6 +44,7 @@
     <ClInclude Include="..\..\..\..\src\OpenColorIO\DynamicProperty.h" />
     <ClInclude Include="..\..\..\..\src\OpenColorIO\fileformats\cdl\CDLParser.h" />
     <ClInclude Include="..\..\..\..\src\OpenColorIO\fileformats\cdl\CDLReaderHelper.h" />
+    <ClInclude Include="..\..\..\..\src\OpenColorIO\fileformats\cdl\CDLWriter.h" />
     <ClInclude Include="..\..\..\..\src\OpenColorIO\fileformats\ctf\CTFReaderHelper.h" />
     <ClInclude Include="..\..\..\..\src\OpenColorIO\fileformats\ctf\CTFReaderUtils.h" />
     <ClInclude Include="..\..\..\..\src\OpenColorIO\fileformats\ctf\CTFTransform.h" />
@@ -65,6 +66,7 @@
     <ClInclude Include="..\..\..\..\src\OpenColorIO\MathUtils.h" />
     <ClInclude Include="..\..\..\..\src\OpenColorIO\md5\md5.h" />
     <ClInclude Include="..\..\..\..\src\OpenColorIO\Mutex.h" />
+    <ClInclude Include="..\..\..\..\src\OpenColorIO\NamedTransform.h" />
     <ClInclude Include="..\..\..\..\src\OpenColorIO\OCIOYaml.h" />
     <ClInclude Include="..\..\..\..\src\OpenColorIO\Op.h" />
     <ClInclude Include="..\..\..\..\src\OpenColorIO\OpBuilders.h" />
@@ -182,6 +184,7 @@
     <ClCompile Include="..\..\..\..\src\OpenColorIO\Exception.cpp" />
     <ClCompile Include="..\..\..\..\src\OpenColorIO\fileformats\cdl\CDLParser.cpp" />
     <ClCompile Include="..\..\..\..\src\OpenColorIO\fileformats\cdl\CDLReaderHelper.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\fileformats\cdl\CDLWriter.cpp" />
     <ClCompile Include="..\..\..\..\src\OpenColorIO\fileformats\ctf\CTFReaderHelper.cpp" />
     <ClCompile Include="..\..\..\..\src\OpenColorIO\fileformats\ctf\CTFReaderUtils.cpp" />
     <ClCompile Include="..\..\..\..\src\OpenColorIO\fileformats\ctf\CTFTransform.cpp" />
@@ -223,6 +226,7 @@
     <ClCompile Include="..\..\..\..\src\OpenColorIO\LookParse.cpp" />
     <ClCompile Include="..\..\..\..\src\OpenColorIO\MathUtils.cpp" />
     <ClCompile Include="..\..\..\..\src\OpenColorIO\md5\md5.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\NamedTransform.cpp" />
     <ClCompile Include="..\..\..\..\src\OpenColorIO\OCIOYaml.cpp" />
     <ClCompile Include="..\..\..\..\src\OpenColorIO\Op.cpp" />
     <ClCompile Include="..\..\..\..\src\OpenColorIO\OpOptimizers.cpp" />
