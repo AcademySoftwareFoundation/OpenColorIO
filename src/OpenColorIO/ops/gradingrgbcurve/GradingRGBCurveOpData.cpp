@@ -98,8 +98,11 @@ bool GradingRGBCurveOpData::isIdentity() const
 
 bool GradingRGBCurveOpData::isInverse(ConstGradingRGBCurveOpDataRcPtr & r) const
 {
-    // This function is used to optimimize ops in a processor, if both are dynamic their values
-    // will be the same after dynamic properties are unified. Equals compares dynamic properties.
+    if (isDynamic() || r->isDynamic())
+    {
+        return false;
+    }
+
     if (m_style == r->m_style &&
         (m_style != GRADING_LIN || m_bypassLinToLog == r->m_bypassLinToLog) &&
         m_value->equals(*r->m_value))
@@ -155,6 +158,26 @@ void GradingRGBCurveOpData::setStyle(GradingStyle style) noexcept
     }
 }
 
+float GradingRGBCurveOpData::getSlope(RGBCurveType c, size_t index) const
+{
+    ConstGradingBSplineCurveRcPtr curve = m_value->getValue()->getCurve(c);
+    return curve->getSlope(index);
+}
+
+void GradingRGBCurveOpData::setSlope(RGBCurveType c, size_t index, float slope)
+{
+    GradingRGBCurveRcPtr rgbcurve( m_value->getValue()->createEditableCopy() );
+    GradingBSplineCurveRcPtr curve = rgbcurve->getCurve(c);
+    curve->setSlope(index, slope);
+    m_value->setValue(rgbcurve);
+}
+
+bool GradingRGBCurveOpData::slopesAreDefault(RGBCurveType c) const
+{
+    ConstGradingBSplineCurveRcPtr curve = m_value->getValue()->getCurve(c);
+    return curve->slopesAreDefault();
+}
+
 TransformDirection GradingRGBCurveOpData::getDirection() const noexcept
 {
     return m_direction;
@@ -194,7 +217,7 @@ bool GradingRGBCurveOpData::operator==(const OpData & other) const
     if (m_direction      != rop->m_direction ||
         m_style          != rop->m_style ||
         m_bypassLinToLog != rop->m_bypassLinToLog ||
-        !(*m_value      == *(rop->m_value)))
+       !m_value->equals(  *(rop->m_value)  ))
     {
         return false;
     }

@@ -166,26 +166,6 @@ TransformDirection GetInverseTransformDirection(TransformDirection dir)
     return TRANSFORM_DIR_FORWARD;
 }
 
-const char * ColorSpaceDirectionToString(ColorSpaceDirection dir)
-{
-    if(dir == COLORSPACE_DIR_TO_REFERENCE) return "to_reference";
-    // COLORSPACE_DIR_FROM_REFERENCE
-    return "from_reference";
-}
-
-ColorSpaceDirection ColorSpaceDirectionFromString(const char * s)
-{
-    const char * p = (s ? s : "");
-    const std::string str = StringUtils::Lower(p);
-
-    if(str == "to_reference") return COLORSPACE_DIR_TO_REFERENCE;
-    else if(str == "from_reference") return COLORSPACE_DIR_FROM_REFERENCE;
-
-    std::ostringstream oss;
-    oss << "Unrecognized color space direction: '" << p << "'.";
-    throw Exception(oss.str().c_str());
-}
-
 const char * BitDepthToString(BitDepth bitDepth)
 {
     if(bitDepth == BIT_DEPTH_UINT8) return "8ui";

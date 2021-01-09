@@ -81,8 +81,11 @@ bool GradingToneOpData::isIdentity() const
 
 bool GradingToneOpData::isInverse(ConstGradingToneOpDataRcPtr & r) const
 {
-    // This function is used to optimimize ops in a processor, if both are dynamic their values
-    // will be the same after dynamic properties are unified. Equals compares dynamic properties.
+    if (isDynamic() || r->isDynamic())
+    {
+        return false;
+    }
+
     if (m_style == r->m_style && m_value->equals(*r->m_value))
     {
         if (CombineTransformDirections(getDirection(), r->getDirection()) == TRANSFORM_DIR_INVERSE)
@@ -170,7 +173,7 @@ bool GradingToneOpData::operator==(const OpData & other) const
 
     if (m_direction         != rop->m_direction ||
         m_style             != rop->m_style ||
-        m_value->getValue() != rop->m_value->getValue())
+       !m_value->equals(     *(rop->m_value) ))
     {
         return false;
     }

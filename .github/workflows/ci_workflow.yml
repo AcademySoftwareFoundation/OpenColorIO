@@ -237,6 +237,8 @@ jobs:
       - name: Install docs env
         run: share/ci/scripts/linux/yum/install_docs_env.sh
         if: matrix.build-docs == 'ON'
+      - name: Install tests env
+        run: share/ci/scripts/linux/yum/install_tests_env.sh
       - name: Create build directories
         run: |
           mkdir _install
@@ -357,6 +359,8 @@ jobs:
       - name: Install docs env
         run: share/ci/scripts/macos/install_docs_env.sh
         if: matrix.build-docs == 'ON'
+      - name: Install tests env
+        run: share/ci/scripts/macos/install_tests_env.sh
       - name: Create build directories
         run: |
           mkdir _install
@@ -479,6 +483,8 @@ jobs:
         run: share/ci/scripts/windows/install_docs_env.sh
         shell: bash
         if: matrix.build-docs == 'ON'
+      - name: Install tests env
+        run: share/ci/scripts/windows/install_tests_env.sh
       - name: Create build directories
         run: |
           mkdir _install

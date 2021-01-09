@@ -41,6 +41,10 @@ public:
     const ConstGradingRGBCurveRcPtr getValue() const override;
     void setValue(const ConstGradingRGBCurveRcPtr & values) override;
 
+    float getSlope(RGBCurveType c, size_t index) const override;
+    void setSlope(RGBCurveType c, size_t index, float slope) override;
+    bool slopesAreDefault(RGBCurveType c) const override;
+
     bool getBypassLinToLog() const override;
     void setBypassLinToLog(bool bypass) override;
 

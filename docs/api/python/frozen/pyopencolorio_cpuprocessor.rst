@@ -18,11 +18,42 @@
 
       Overloaded function.
 
-      1. apply(self: PyOpenColorIO.CPUProcessor, imgDesc: OpenColorIO_v2_0beta2::PyImageDesc) -> None
+      1. apply(self: PyOpenColorIO.CPUProcessor, imgDesc: OpenColorIO_v2_0rc1::PyImageDesc) -> None
 
-      Apply to an image with any kind of channel ordering while respecting the input and output bit-depths.
 
-      2. apply(self: PyOpenColorIO.CPUProcessor, srcImgDesc: OpenColorIO_v2_0beta2::PyImageDesc, dstImgDesc: OpenColorIO_v2_0beta2::PyImageDesc) -> None
+      Apply to an image with any kind of channel ordering while respecting
+      the input and output bit-depths. Image values are modified in place.
+
+      .. note::
+          The GIL is released during processing, freeing up Python to execute
+          other threads concurrently.
+
+      .. note::
+          For large images, ``applyRGB`` or ``applyRGBA`` are preferred for
+          processing a NumPy array. The Python ``ImageDesc`` implementation
+          requires copying all values (once) in order to own the underlying
+          pointer. The dedicated packed ``apply*`` methods utilize
+          ``ImageDesc`` on the C++ side so avoid the copy.
+
+
+
+      2. apply(self: PyOpenColorIO.CPUProcessor, srcImgDesc: OpenColorIO_v2_0rc1::PyImageDesc, dstImgDesc: OpenColorIO_v2_0rc1::PyImageDesc) -> None
+
+
+      Apply to an image with any kind of channel ordering while respecting
+      the input and output bit-depths. Modified srcImgDesc image values are
+      written to the dstImgDesc image, leaving srcImgDesc unchanged.
+
+      .. note::
+          The GIL is released during processing, freeing up Python to execute
+          other threads concurrently.
+
+      .. note::
+          For large images, ``applyRGB`` or ``applyRGBA`` are preferred for
+          processing a NumPy array. The Python ``ImageDesc`` implementation
+          requires copying all values (once) in order to own the underlying
+          pointer. The dedicated packed ``apply*`` methods utilize
+          ``ImageDesc`` on the C++ side so avoid the copy.
 
 
    .. py:method:: CPUProcessor.applyRGB(*args, **kwargs)
@@ -30,19 +61,42 @@
 
       Overloaded function.
 
-      1. applyRGB(self: PyOpenColorIO.CPUProcessor, pixel: buffer) -> buffer
+      1. applyRGB(self: PyOpenColorIO.CPUProcessor, data: buffer) -> None
 
-      Apply to a single pixel respecting that the input and output bit-depths be 32-bit float and the image buffer be packed RGB/RGBA.
 
-      .. note::
-         This is not as efficient as applying to an entire image at once. If you are processing multiple pixels, and have the flexibility, use the above function instead.
-
-      2. applyRGB(self: PyOpenColorIO.CPUProcessor, pixel: List[float]) -> List[float]
-
-      Apply to a single pixel respecting that the input and output bit-depths be 32-bit float and the image buffer be packed RGB/RGBA.
+      Apply to a packed RGB array adhering to the Python buffer protocol.
+      This will typically be a NumPy array. Input and output bit-depths are
+      respected but must match. Any array size or shape is supported as long
+      as the flattened array size is divisible by 3. Array values are
+      modified in place.
 
       .. note::
-         This is not as efficient as applying to an entire image at once. If you are processing multiple pixels, and have the flexibility, use the above function instead.
+          This differs from the C++ implementation which only applies to a
+          single pixel. This method uses a ``PackedImageDesc`` under the
+          hood to apply to an entire image at once. The GIL is released
+          during processing, freeing up Python to execute other threads
+          concurrently.
+
+
+
+      2. applyRGB(self: PyOpenColorIO.CPUProcessor, data: List[float]) -> List[float]
+
+
+      Apply to a packed RGB list of float values. Any size is supported as
+      long as the list length is divisible by 3. A new list with processed
+      float values is returned, leaving the input list unchanged.
+
+      .. note::
+          This differs from the C++ implementation which only applies to a
+          single pixel. This method uses a ``PackedImageDesc`` under the
+          hood to apply to an entire image at once. The GIL is released
+          during processing, freeing up Python to execute other threads
+          concurrently.
+
+      .. note::
+          For large images, a NumPy array should be preferred over a list.
+          List values are copied on input and output, where an array is
+          modified in place.
 
 
    .. py:method:: CPUProcessor.applyRGBA(*args, **kwargs)
@@ -50,9 +104,42 @@
 
       Overloaded function.
 
-      1. applyRGBA(self: PyOpenColorIO.CPUProcessor, pixel: buffer) -> buffer
+      1. applyRGBA(self: PyOpenColorIO.CPUProcessor, data: buffer) -> None
 
-      2. applyRGBA(self: PyOpenColorIO.CPUProcessor, pixel: List[float]) -> List[float]
+
+      Apply to a packed RGBA array adhering to the Python buffer protocol.
+      This will typically be a NumPy array. Input and output bit-depths are
+      respected but must match. Any array size or shape is supported as long
+      as the flattened array size is divisible by 4. Array values are
+      modified in place.
+
+      .. note::
+          This differs from the C++ implementation which only applies to a
+          single pixel. This method uses a ``PackedImageDesc`` under the
+          hood to apply to an entire image at once. The GIL is released
+          during processing, freeing up Python to execute other threads
+          concurrently.
+
+
+
+      2. applyRGBA(self: PyOpenColorIO.CPUProcessor, data: List[float]) -> List[float]
+
+
+      Apply to a packed RGBA list of float values. Any size is supported as
+      long as the list length is divisible by 4. A new list with processed
+      float values is returned, leaving the input list unchanged.
+
+      .. note::
+          This differs from the C++ implementation which only applies to a
+          single pixel. This method uses a ``PackedImageDesc`` under the
+          hood to apply to an entire image at once. The GIL is released
+          during processing, freeing up Python to execute other threads
+          concurrently.
+
+      .. note::
+          For large images, a NumPy array should be preferred over a list.
+          List values are copied on input and output, where an array is
+          modified in place.
 
 
    .. py:method:: CPUProcessor.getCacheID(self: PyOpenColorIO.CPUProcessor) -> str

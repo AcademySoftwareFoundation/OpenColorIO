@@ -1533,6 +1533,25 @@ void GradingRGBCurveWriter::writeCurve(const char * tag,
             }
         }
         m_formatter.writeEndTag(TAG_CURVE_CTRL_PNTS);
+
+        if (!curve->slopesAreDefault())
+        {
+            m_formatter.writeStartTag(TAG_CURVE_SLOPES, XmlFormatter::Attributes());
+            {
+                XmlScopeIndent si1(m_formatter);
+                // (Number of slopes is always the same as control points.)
+                const size_t numSlopes = curve->getNumControlPoints();
+                std::ostringstream oss;
+                SetOStream(0.f, oss);
+                for (size_t i = 0; i < numSlopes; ++i)
+                {
+                    const float val = curve->getSlope(i);
+                    oss << val << " ";
+                }
+                m_formatter.writeContent(oss.str());
+            }
+            m_formatter.writeEndTag(TAG_CURVE_SLOPES);
+        }
     }
 
     m_formatter.writeEndTag(tag);
@@ -1553,7 +1572,7 @@ void GradingRGBCurveWriter::writeContent() const
     for (int c = 0; c < RGB_NUM_CURVES; ++c)
     {
         const auto & curve = vals->getCurve(static_cast<RGBCurveType>(c));
-        if (*curve != defCurve)
+        if ((*curve != defCurve) || !(curve->slopesAreDefault()))
         {
             writeCurve(curveTags[c], curve);
         }

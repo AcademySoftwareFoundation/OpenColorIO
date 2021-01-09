@@ -46,6 +46,16 @@ OCIO_ADD_GPU_TEST(GradingRGBCurve, style_log_fwd_dynamic)
     GradingRGBCurveLog(test, OCIO::TRANSFORM_DIR_FORWARD, true);
 }
 
+OCIO_ADD_GPU_TEST(GradingRGBCurve, style_log_rev)
+{
+    GradingRGBCurveLog(test, OCIO::TRANSFORM_DIR_INVERSE, false);
+}
+
+OCIO_ADD_GPU_TEST(GradingRGBCurve, style_log_rev_dynamic)
+{
+    GradingRGBCurveLog(test, OCIO::TRANSFORM_DIR_INVERSE, true);
+}
+
 void GradingRGBCurveLin(OCIOGPUTest & test, OCIO::TransformDirection dir, bool dynamic)
 {
     auto r = OCIO::GradingBSplineCurve::Create({ { 0.0f,   0.0f },{ 0.785f, 0.231f },
@@ -85,7 +95,15 @@ OCIO_ADD_GPU_TEST(GradingRGBCurve, style_lin_fwd_dynamic)
     GradingRGBCurveLin(test, OCIO::TRANSFORM_DIR_FORWARD, true);
 }
 
-// TODO: add inverse tests.
+OCIO_ADD_GPU_TEST(GradingRGBCurve, style_lin_rev)
+{
+    GradingRGBCurveLin(test, OCIO::TRANSFORM_DIR_INVERSE, false);
+}
+
+OCIO_ADD_GPU_TEST(GradingRGBCurve, style_lin_rev_dynamic)
+{
+    GradingRGBCurveLin(test, OCIO::TRANSFORM_DIR_INVERSE, true);
+}
 
 namespace
 {
