@@ -16,8 +16,8 @@ os.environ["BUILD_LOCATION"] = build_location
 
 opencolorio_sse = sys.argv[2].lower() == 'true'
 
-opencolorio_dir = os.path.join(build_location, 'lib')
-pyopencolorio_dir = os.path.join(build_location, 'lib', 'python3.8', 'site-packages')
+opencolorio_dir = os.path.join(build_location, 'src', 'OpenColorIO')
+pyopencolorio_dir = os.path.join(build_location, 'src', 'bindings', 'python')
 
 if os.name == 'nt':
     # On Windows we must append the build type to the build dirs and add the main library to PATH
