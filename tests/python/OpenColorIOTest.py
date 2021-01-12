@@ -56,5 +56,7 @@ class OpenColorIOTest(unittest.TestCase):
                 """Transform has unintentionally been cast as parent class!
                 transform.getTransformType(): {0}
                 type(transform): {1}
+                
+                Are there rbind polymorphic_type_hooks in src/bindings/PyOpenColorIO.h for this transform?
                 """.format(transform.getTransformType(), type(transform))
             )
