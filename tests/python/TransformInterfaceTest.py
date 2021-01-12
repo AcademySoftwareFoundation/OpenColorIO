@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright Contributors to the OpenColorIO Project.
+
 import unittest, os, sys
 import PyOpenColorIO as OCIO
 import inspect
@@ -5,16 +8,16 @@ import inspect
 class TransformInterfaceTest(unittest.TestCase):
     def test_binding_polymorphism(self):
         """
-        Tests polymorphism issue where transforms are cast as parent class when using GroupTransforms.
-        Flagged in https://github.com/AcademySoftwareFoundation/OpenColorIO/issues/1211
+        Tests polymorphism issue where transforms are cast as parent class when using
+        GroupTransforms. Flagged in https://github.com/AcademySoftwareFoundation/OpenColorIO/issues/1211
         """
         allTransformsAsGroup = OCIO.GroupTransform()
         # Search for all transform types in order to handle future transforms
         for n, c in inspect.getmembers(OCIO):
             if hasattr(c, 'getTransformType'):
                 try:
-                    # Attempt to construct each Transform subclass, raising exception in order to filter
-                    # the parent OCIO.Transform class
+                    # Attempt to construct each Transform subclass, raising exception in order to
+                    # filter the parent OCIO.Transform class
                     allTransformsAsGroup.appendTransform(c())
                 except TypeError as e:
                     # Ensure we only catch and filter for this specific error
