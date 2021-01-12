@@ -34,16 +34,22 @@ class OpenColorIOTest(unittest.TestCase):
         Flagged in https://github.com/AcademySoftwareFoundation/OpenColorIO/issues/1211
         """
         allTransformsAsGroup = OCIO.GroupTransform()
-        for n, c in inspect.getmembers(OCIO): # Search for transform types to handle future transforms
+        # Search for all transform types in order to handle future transforms
+        for n, c in inspect.getmembers(OCIO):
             if hasattr(c, 'getTransformType'):
                 try:
+                    # Attempt to construct each Transform subclass, raising exception in order to filter
+                    # the parent OCIO.Transform class
                     allTransformsAsGroup.appendTransform(c())
                 except TypeError as e:
-                    # Catch and filter only the Exception caused by trying to instantiate
-                    # parent OCIO.Transform class
-                    self.assertEqual(str(e), 'PyOpenColorIO.Transform: No constructor defined!')
+                    # Ensure we only catch and filter for this specific error
+                    self.assertEqual(
+                        str(e),
+                        'PyOpenColorIO.Transform: No constructor defined!',
+                        'Unintended Error Raised: {0}'.format(e)
+                    )
         for transform in allTransformsAsGroup:
-            # Ensure none have been cast as parent transform
+            # Ensure no transforms have been cast as parent transform
             self.assertNotEqual(
                 type(transform),
                 OCIO.Transform,
