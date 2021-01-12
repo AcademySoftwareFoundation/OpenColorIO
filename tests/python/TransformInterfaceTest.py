@@ -35,6 +35,6 @@ class TransformInterfaceTest(unittest.TestCase):
                 transform.getTransformType(): {0}
                 type(transform): {1}
     
-                Are there rbind polymorphic_type_hooks in src/bindings/PyOpenColorIO.h for this transform?
+                Are there pybind polymorphic_type_hooks in src/bindings/PyOpenColorIO.h for this transform?
                 """.format(transform.getTransformType(), type(transform))
             )
