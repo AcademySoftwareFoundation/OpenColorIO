@@ -14,8 +14,9 @@ include_directories(
     ${CMAKE_SOURCE_DIR}/src
     ${CMAKE_SOURCE_DIR}/include
     ${OPENFX_INCLUDE}
-    ${CMAKE_SOURCE_DIR}/export/
-    ${CMAKE_SOURCE_DIR}/build/include/OpenColorIO/
+    ${CMAKE_SOURCE_DIR}/export
+    ${CMAKE_SOURCE_DIR}/build/include/OpenColorIO
+    ${CMAKE_BINARY_DIR}/include
 )
 
 file(GLOB SRC
