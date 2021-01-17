@@ -12,6 +12,23 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
+// Meta data about the plugin
+#define OCIOPluginIdentifier "org.OpenColorIO.FileTransformPlugin"
+#define OCIOPluginName "File Transform"
+#define OCIOPluginGroup "Color/OpenColorIO"
+#define OCIOPluginDescription "A plugin for file transform through OCIO"
+#define OCIOToggleR "ToggleR"
+#define OCIOToggleRHint "Toggle red component"
+#define OCIOToggleG "ToggleG"
+#define OCIOToggleGHint "Toggle green component"
+#define OCIOToggleB "ToggleB"
+#define OCIOToggleBHint "Toggle blue component"
+#define OCIOFileParam "file"
+#define OCIODirectionParam "direction"
+#define OCIODirectionParamHint "Define the direction for file transform"
+#define OCIOInterpolationParam "interpolation"
+#define OCIOInterpolationParamHint "Define the interpolation for file transform"
+
 #if defined __APPLE__ || defined linux || defined __FreeBSD__
 #  define EXPORT __attribute__((visibility("default")))
 #elif defined _WIN32
@@ -165,20 +182,17 @@ static OfxStatus DescribeInContext(OfxImageEffectHandle effect)
     OfxParamSetHandle paramSet;
     g_EffectHost->getParamSet(effect, &paramSet);
 
-    g_ParamHost->paramDefine(paramSet, kOfxParamTypeGroup, "ColorSpaces", &props);
     // TODO: Revise the structure of params and labels
-    g_PropHost->propSetString(props, kOfxParamPropHint, 0, "Choose Input and output colorspaces for the transform");
-    g_PropHost->propSetString(props, kOfxPropLabel, 0, "ColorSpaces");
+    g_ParamHost->paramDefine(paramSet, kOfxParamTypeString, OCIOFileParam, &props);
+    g_ParamHost->paramDefine(paramSet, kOfxParamTypeChoice, OCIOInterpolationParam, &props);
+    g_ParamHost->paramDefine(paramSet, kOfxParamTypeChoice, OCIODirectionParam, &props);
+    g_ParamHost->paramDefine(paramSet, kOfxParamTypeBoolean, OCIOToggleR, &props);
+    g_ParamHost->paramDefine(paramSet, kOfxParamTypeBoolean, OCIOToggleG, &props);
+    g_ParamHost->paramDefine(paramSet, kOfxParamTypeBoolean, OCIOToggleB, &props);
 
-    // Input ColorSpace
-    //DefineColorSpaceParam(paramSet, "srcColorSpace", "Input ColorSpace", "Input ColorSpace", "Choose the input ColorSpace for the Transform", "ColorSpaces");
-    // Output ColorSpace
-    //DefineColorSpaceParam(paramSet, "dstColorSpace", "Output ColorSpace", "Output ColorSpace", "Choose the output ColorSpace for the Transform", "ColorSpaces");
 
     // Making a page of controls and add the parameters to it
     g_ParamHost->paramDefine(paramSet, kOfxParamTypePage, "Main", &props);
-    g_PropHost->propSetString(props, kOfxParamPropPageChild, 0, "srcColorSpace");
-    g_PropHost->propSetString(props, kOfxParamPropPageChild, 1, "dstColorSpace");
 
     return kOfxStatOK;
 }
@@ -204,8 +218,8 @@ static OfxStatus Describe(OfxImageEffectHandle effect)
     g_PropHost->propSetString(effectProps, kOfxImageEffectPropSupportedPixelDepths, 2, kOfxBitDepthFloat);
 
     // Set some labels and the group it belongs to
-    g_PropHost->propSetString(effectProps, kOfxPropLabel, 0, "OpenColorIO File Transform");
-    g_PropHost->propSetString(effectProps, kOfxImageEffectPluginPropGrouping, 0, "OpenColorIO");
+    g_PropHost->propSetString(effectProps, kOfxPropLabel, 0, OCIOPluginName);
+    g_PropHost->propSetString(effectProps, kOfxImageEffectPluginPropGrouping, 0, OCIOPluginGroup);
 
     // Define the contexts we can be used in
     g_PropHost->propSetString(effectProps, kOfxImageEffectPropSupportedContexts, 0, kOfxImageEffectContextFilter);
@@ -345,7 +359,7 @@ static OfxStatus Render(OfxImageEffectHandle effect, OfxPropertySetHandle inArgs
         if (srcBitDepth != dstBitDepth || srcIsAlpha != dstIsAplha)
             throw StatusException(kOfxStatErrImageFormat);
 
-        // Gettin source and destination colorspaces from suite
+        // Getting interpolation, direction and file from ParamSuite
         char *itp;
         char *dir;
         char *srcFile;
@@ -360,16 +374,16 @@ static OfxStatus Render(OfxImageEffectHandle effect, OfxPropertySetHandle inArgs
         else
             d = OCIO::TransformDirection::TRANSFORM_DIR_FORWARD;
 
-        OCIO::Interpolation ip = GetInterpolation(itp);
+        OCIO::Interpolation iterpolation = GetInterpolation(itp);
         g_FileTransform->setDirection(d);
-        g_FileTransform->setInterpolation(ip);
+        g_FileTransform->setInterpolation(iterpolation);
 
         // Get Processor call
         OCIO::ConstProcessorRcPtr processor = g_Config->getProcessor(g_FileTransform);
 
         OCIO::ConstCPUProcessorRcPtr cpu = processor->getDefaultCPUProcessor();
 
-        OCIO::PackedImageDesc img(reinterpret_cast<float *>(src), srcRect.x2 - srcRect.x1, srcRect.y2 - srcRect.y1, 4);
+        OCIO::PackedImageDesc img(static_cast<void *>(src), static_cast<long>(srcRect.x2 - srcRect.x1), static_cast<long>(srcRect.y2 - srcRect.y1), 4);
 
         // Applying the transfor to img
         cpu->apply(img);
@@ -488,7 +502,7 @@ static OfxPlugin FileTransformPlugin =
 {
     kOfxImageEffectPluginApi,
     1,
-    "com.OpenColorIO.FileTransformPlugin",
+    OCIOPluginIdentifier,
     1,
     0,
     SetHost,

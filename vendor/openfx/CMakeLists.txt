@@ -11,7 +11,6 @@ endif()
 
 include_directories(
     ${CMAKE_SOURCE_DIR}
-    ${CMAKE_SOURCE_DIR}/src
     ${CMAKE_SOURCE_DIR}/include
     ${OPENFX_INCLUDE}
     ${CMAKE_SOURCE_DIR}/export
@@ -22,7 +21,7 @@ include_directories(
 file(GLOB SRC
     "ColorSpaceTransformPlugin/ColorSpaceTransformPlugin.cpp"
     "FileTransformPlugin/FileTransformPlugin.cpp"
-    "DisplayViewTransformPlugin/DisplayViewTransformPlugin.cpp"
+    "DisplayViewTransformPlugin/DisplayViewTransform.cpp"
 )
 
 file(GLOB RESOURCES

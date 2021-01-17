@@ -72,7 +72,7 @@ protected :
 };
 
 // Instanciating OCIO DisplayViewTransform API
-OCIO::DisplayViewTransformRcPtr g_DisplayViewTransformRcPtr = OCIO::DisplayViewTransform::Create();
+OCIO::DisplayViewTransformRcPtr g_DisplayViewTransform = OCIO::DisplayViewTransform::Create();
 
 // Getting the current instance configuration
 OCIO::ConstConfigRcPtr g_Config = OCIO::GetCurrentConfig();
@@ -382,18 +382,16 @@ static OfxStatus Render(OfxImageEffectHandle effect, OfxPropertySetHandle inArgs
         char *srcCS;
         char *dstCS;
         g_ParamHost->paramGetValueAtTime(Container->m_srcColorSpace, time, &srcCS);
-        g_ParamHost->paramGetValueAtTime(Container->m_dstColorSpace, time, &dstCS);
 
         // Setting up OCIO::DisplayViewTransform API
         g_DisplayViewTransform->setSrc(srcCS);
-        g_DisplayViewTransform->setDst(dstCS);
 
         // Get Processor call
         OCIO::ConstProcessorRcPtr processor = g_Config->getProcessor(g_DisplayViewTransform);
 
         OCIO::ConstCPUProcessorRcPtr cpu = processor->getDefaultCPUProcessor();
 
-        OCIO::PackedImageDesc img(reinterpret_cast<float *>(dst), static_cast<long>(dstRect.x2 - dstRect.x1), static_cast<long>(dstRect.y2 - dstRect.y1), static_cast<long>(4));
+        OCIO::PackedImageDesc img(reinterpret_cast<void *>(dst), static_cast<long>(dstRect.x2 - dstRect.x1), static_cast<long>(dstRect.y2 - dstRect.y1), static_cast<long>(4));
 
         // Applying the transfor to img
         cpu->apply(img);
