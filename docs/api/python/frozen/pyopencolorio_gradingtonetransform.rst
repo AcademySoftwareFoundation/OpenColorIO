@@ -31,7 +31,7 @@
 
       Overloaded function.
 
-      1. __init__(self: PyOpenColorIO.GradingToneTransform, style: PyOpenColorIO.GradingStyle = <GradingStyle.GRADING_LOG: 0>, values: OpenColorIO_v2_0rc1::GradingTone, dynamic: bool = False, dir: PyOpenColorIO.TransformDirection = <TransformDirection.TRANSFORM_DIR_FORWARD: 0>) -> None
+      1. __init__(self: PyOpenColorIO.GradingToneTransform, style: PyOpenColorIO.GradingStyle = <GradingStyle.GRADING_LOG: 0>, values: PyOpenColorIO.GradingTone, dynamic: bool = False, dir: PyOpenColorIO.TransformDirection = <TransformDirection.TRANSFORM_DIR_FORWARD: 0>) -> None
 
       Creates an instance of :ref:`GradingToneTransform`.
 
@@ -58,7 +58,7 @@
       :module: PyOpenColorIO
 
 
-   .. py:method:: GradingToneTransform.getValue(self: PyOpenColorIO.GradingToneTransform) -> OpenColorIO_v2_0rc1::GradingTone
+   .. py:method:: GradingToneTransform.getValue(self: PyOpenColorIO.GradingToneTransform) -> PyOpenColorIO.GradingTone
       :module: PyOpenColorIO
 
 
@@ -88,7 +88,7 @@
       Will reset value to style's defaults if style is not the current style.
 
 
-   .. py:method:: GradingToneTransform.setValue(self: PyOpenColorIO.GradingToneTransform, values: OpenColorIO_v2_0rc1::GradingTone) -> None
+   .. py:method:: GradingToneTransform.setValue(self: PyOpenColorIO.GradingToneTransform, values: PyOpenColorIO.GradingTone) -> None
       :module: PyOpenColorIO
 
 

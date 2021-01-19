@@ -23,7 +23,7 @@
 
       Overloaded function.
 
-      1. __init__(self: PyOpenColorIO.GradingPrimaryTransform, style: PyOpenColorIO.GradingStyle = <GradingStyle.GRADING_LOG: 0>, values: OpenColorIO_v2_0rc1::GradingPrimary, dynamic: bool = False, dir: PyOpenColorIO.TransformDirection = <TransformDirection.TRANSFORM_DIR_FORWARD: 0>) -> None
+      1. __init__(self: PyOpenColorIO.GradingPrimaryTransform, style: PyOpenColorIO.GradingStyle = <GradingStyle.GRADING_LOG: 0>, values: PyOpenColorIO.GradingPrimary, dynamic: bool = False, dir: PyOpenColorIO.TransformDirection = <TransformDirection.TRANSFORM_DIR_FORWARD: 0>) -> None
 
       Creates an instance of :ref:`GradingPrimaryTransform`.
 
@@ -50,7 +50,7 @@
       :module: PyOpenColorIO
 
 
-   .. py:method:: GradingPrimaryTransform.getValue(self: PyOpenColorIO.GradingPrimaryTransform) -> OpenColorIO_v2_0rc1::GradingPrimary
+   .. py:method:: GradingPrimaryTransform.getValue(self: PyOpenColorIO.GradingPrimaryTransform) -> PyOpenColorIO.GradingPrimary
       :module: PyOpenColorIO
 
 
@@ -80,7 +80,7 @@
       Will reset value to style's defaults if style is not the current style.
 
 
-   .. py:method:: GradingPrimaryTransform.setValue(self: PyOpenColorIO.GradingPrimaryTransform, values: OpenColorIO_v2_0rc1::GradingPrimary) -> None
+   .. py:method:: GradingPrimaryTransform.setValue(self: PyOpenColorIO.GradingPrimaryTransform, values: PyOpenColorIO.GradingPrimary) -> None
       :module: PyOpenColorIO
 
       Throws if value is not valid.
