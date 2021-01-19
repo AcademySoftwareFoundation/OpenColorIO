@@ -85,9 +85,11 @@ class GpuShaderDescTest(unittest.TestCase):
 
         desc = OCIO.GpuShaderDesc.CreateShaderDesc()
         buf = np.linspace(0, 1, num=8*3).astype(np.float32)
+        bufTest1 = buf[3]
         desc.add3DTexture('tex', 'sampler', 2,
                           OCIO.INTERP_DEFAULT, buf)
         buf = np.linspace(0, 1, num=27*3).astype(np.float32)
+        bufTest2 = buf[42]
         desc.add3DTexture('tex2', 'sampler2', 3,
                           OCIO.INTERP_DEFAULT, buf)
 
@@ -100,7 +102,7 @@ class GpuShaderDescTest(unittest.TestCase):
         self.assertEqual(t1.interpolation, OCIO.INTERP_DEFAULT)
         v1 = t1.getValues()
         self.assertEqual(len(v1), 3*8)
-        self.assertEqual(v1[3], np.float32(3/(3*8 - 1)))
+        self.assertEqual(v1[3], bufTest1)
         t2 = next(textures)
         self.assertEqual(t2.textureName, 'tex2')
         self.assertEqual(t2.samplerName, 'sampler2')
@@ -108,4 +110,4 @@ class GpuShaderDescTest(unittest.TestCase):
         self.assertEqual(t2.interpolation, OCIO.INTERP_DEFAULT)
         v2 = t2.getValues()
         self.assertEqual(len(v2), 3*27)
-        self.assertEqual(v2[42], np.float32(42/(3*27 - 1)))
+        self.assertEqual(v2[42], bufTest2)
