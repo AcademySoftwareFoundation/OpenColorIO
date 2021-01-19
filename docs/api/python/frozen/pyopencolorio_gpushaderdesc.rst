@@ -87,10 +87,6 @@
       :module: PyOpenColorIO
 
 
-   .. py:method:: GpuShaderDesc.get3DTextureValues(self: PyOpenColorIO.GpuShaderDesc, index: int) -> numpy.ndarray
-      :module: PyOpenColorIO
-
-
    .. py:method:: GpuShaderDesc.get3DTextures(self: PyOpenColorIO.GpuShaderDesc) -> PyOpenColorIO.GpuShaderDesc.Texture3DIterator
       :module: PyOpenColorIO
 
@@ -121,14 +117,6 @@
       To avoid texture/unform name clashes always append an increasing number to the resource name.
 
 
-   .. py:method:: GpuShaderDesc.getNum3DTextures(self: PyOpenColorIO.GpuShaderDesc) -> int
-      :module: PyOpenColorIO
-
-
-   .. py:method:: GpuShaderDesc.getNumTextures(self: PyOpenColorIO.GpuShaderDesc) -> int
-      :module: PyOpenColorIO
-
-
    .. py:method:: GpuShaderDesc.getPixelName(self: PyOpenColorIO.GpuShaderCreator) -> str
       :module: PyOpenColorIO
 
@@ -141,10 +129,6 @@
 
 
    .. py:method:: GpuShaderDesc.getTextureMaxWidth(self: PyOpenColorIO.GpuShaderCreator) -> int
-      :module: PyOpenColorIO
-
-
-   .. py:method:: GpuShaderDesc.getTextureValues(self: PyOpenColorIO.GpuShaderDesc, index: int) -> numpy.ndarray
       :module: PyOpenColorIO
 
 
@@ -223,6 +207,10 @@
       :property:
 
 
+   .. py:method:: Texture.getValues(self: PyOpenColorIO.GpuShaderDesc.Texture) -> numpy.ndarray
+      :module: PyOpenColorIO.GpuShaderDesc
+
+
    .. py:method:: Texture.height
       :module: PyOpenColorIO.GpuShaderDesc
       :property:
@@ -255,6 +243,10 @@
    .. py:method:: Texture3D.edgeLen
       :module: PyOpenColorIO.GpuShaderDesc
       :property:
+
+
+   .. py:method:: Texture3D.getValues(self: PyOpenColorIO.GpuShaderDesc.Texture3D) -> numpy.ndarray
+      :module: PyOpenColorIO.GpuShaderDesc
 
 
    .. py:method:: Texture3D.interpolation
