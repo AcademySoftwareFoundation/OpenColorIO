@@ -8,6 +8,5 @@
 
    Get the version number for the library, as a dot-delimited string (e.g., "1.0.0").
 
-
    This is also available at compile time as OCIO_VERSION_FULL_STR.
 

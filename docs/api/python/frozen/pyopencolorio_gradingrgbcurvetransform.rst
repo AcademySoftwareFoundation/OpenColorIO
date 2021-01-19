@@ -20,17 +20,13 @@
 
       Overloaded function.
 
-      1. __init__(self: PyOpenColorIO.GradingRGBCurveTransform, style: PyOpenColorIO.GradingStyle = <GradingStyle.GRADING_LOG: 0>, values: PyOpenColorIO.GradingRGBCurve, dynamic: bool = False, dir: PyOpenColorIO.TransformDirection = <TransformDirection.TRANSFORM_DIR_FORWARD: 0>) -> None
+      1. __init__(self: PyOpenColorIO.GradingRGBCurveTransform, style: PyOpenColorIO.GradingStyle = <GradingStyle.GRADING_LOG: 0>, values: OpenColorIO_v2_0rc1::GradingRGBCurve, dynamic: bool = False, dir: PyOpenColorIO.TransformDirection = <TransformDirection.TRANSFORM_DIR_FORWARD: 0>) -> None
 
       Creates an instance of :ref:`GradingPrimaryTransform`.
 
       2. __init__(self: PyOpenColorIO.GradingRGBCurveTransform, style: PyOpenColorIO.GradingStyle = <GradingStyle.GRADING_LOG: 0>, dynamic: bool = False, dir: PyOpenColorIO.TransformDirection = <TransformDirection.TRANSFORM_DIR_FORWARD: 0>) -> None
 
       Creates an instance of :ref:`GradingPrimaryTransform`.
-
-
-   .. py:method:: GradingRGBCurveTransform.__str__(self: PyOpenColorIO.Transform) -> str
-      :module: PyOpenColorIO
 
 
    .. py:method:: GradingRGBCurveTransform.getBypassLinToLog(self: PyOpenColorIO.GradingRGBCurveTransform) -> bool
@@ -63,7 +59,7 @@
       :module: PyOpenColorIO
 
 
-   .. py:method:: GradingRGBCurveTransform.getValue(self: PyOpenColorIO.GradingRGBCurveTransform) -> PyOpenColorIO.GradingRGBCurve
+   .. py:method:: GradingRGBCurveTransform.getValue(self: PyOpenColorIO.GradingRGBCurveTransform) -> OpenColorIO_v2_0rc1::GradingRGBCurve
       :module: PyOpenColorIO
 
 
@@ -101,7 +97,7 @@
       Will reset value to style's defaults if style is not the current style.
 
 
-   .. py:method:: GradingRGBCurveTransform.setValue(self: PyOpenColorIO.GradingRGBCurveTransform, values: PyOpenColorIO.GradingRGBCurve) -> None
+   .. py:method:: GradingRGBCurveTransform.setValue(self: PyOpenColorIO.GradingRGBCurveTransform, values: OpenColorIO_v2_0rc1::GradingRGBCurve) -> None
       :module: PyOpenColorIO
 
       Throws if value is not valid.

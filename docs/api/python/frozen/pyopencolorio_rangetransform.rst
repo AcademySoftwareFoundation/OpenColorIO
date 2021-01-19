@@ -30,10 +30,6 @@
       Creates an instance of :ref:`RangeTransform`.
 
 
-   .. py:method:: RangeTransform.__str__(self: PyOpenColorIO.RangeTransform) -> str
-      :module: PyOpenColorIO
-
-
    .. py:method:: RangeTransform.equals(self: PyOpenColorIO.RangeTransform, other: PyOpenColorIO.RangeTransform) -> bool
       :module: PyOpenColorIO
 

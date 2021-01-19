@@ -4298,6 +4298,22 @@ OCIO_ADD_TEST(Config, fixed_function_serialization)
             "The style 'REC2100_Surround (Inverse)' must "
                               "have one parameter but 0 found.");
     }
+
+    {
+        const std::string strEnd =
+            "    from_scene_reference: !<GroupTransform>\n"
+            "      children:\n"
+            "        - !<FixedFunctionTransform> {direction: inverse}\n";
+
+        const std::string str = PROFILE_V2_START + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+
+        OCIO::ConstConfigRcPtr config;
+        OCIO_CHECK_THROW_WHAT(config = OCIO::Config::CreateFromStream(is), OCIO::Exception,
+                              "'FixedFunctionTransform' parsing failed: style value is missing.");
+    }
 }
 
 OCIO_ADD_TEST(Config, exposure_contrast_serialization)
@@ -4578,7 +4594,7 @@ OCIO_ADD_TEST(Config, add_color_space)
     cs->setDescription(u8"é À Â Ç É È ç -- $ € 円 £ 元"); // Some accents and some money symbols.
 
     OCIO::FixedFunctionTransformRcPtr tr;
-    OCIO_CHECK_NO_THROW(tr = OCIO::FixedFunctionTransform::Create());
+    OCIO_CHECK_NO_THROW(tr = OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_ACES_RED_MOD_03));
 
     OCIO_CHECK_NO_THROW(cs->setTransform(tr, OCIO::COLORSPACE_DIR_TO_REFERENCE));
 
@@ -7969,8 +7985,7 @@ OCIO_ADD_TEST(Config, get_processor_alias)
 
     auto csSceneFromRef = OCIO::ColorSpace::Create(OCIO::REFERENCE_SPACE_SCENE);
     csSceneFromRef->setName("destination");
-    auto ff = OCIO::FixedFunctionTransform::Create();
-    ff->setStyle(OCIO::FIXED_FUNCTION_ACES_GLOW_03);
+    auto ff = OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_ACES_GLOW_03);
     csSceneFromRef->setTransform(ff, OCIO::COLORSPACE_DIR_FROM_REFERENCE);
     csSceneFromRef->addAlias("alias destination");
     csSceneFromRef->addAlias("dst");
