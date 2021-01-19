@@ -100,7 +100,7 @@ class GpuShaderDescTest(unittest.TestCase):
         self.assertEqual(t1.interpolation, OCIO.INTERP_DEFAULT)
         v1 = t1.getValues()
         self.assertEqual(len(v1), 3*8)
-        self.assertEqual(v1[3], np.float32(1/(3*8)))
+        self.assertEqual(v1[3], np.float32(3/(3*8 - 1)))
         t2 = next(textures)
         self.assertEqual(t2.textureName, 'tex2')
         self.assertEqual(t2.samplerName, 'sampler2')
@@ -108,3 +108,4 @@ class GpuShaderDescTest(unittest.TestCase):
         self.assertEqual(t2.interpolation, OCIO.INTERP_DEFAULT)
         v2 = t2.getValues()
         self.assertEqual(len(v2), 3*27)
+        self.assertEqual(v2[42], np.float32(42/(3*27 - 1)))
