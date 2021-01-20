@@ -37,6 +37,19 @@
 
 namespace OCIO = OCIO_NAMESPACE;
 
+// Getting the current instance configuration
+extern OCIO::ConstConfigRcPtr g_Config;
+
+// Setting up pointers for OpenFX plugin
+extern OfxHost               *g_Host;
+extern OfxImageEffectSuiteV1 *g_EffectHost;
+extern OfxPropertySuiteV1    *g_PropHost;
+extern OfxParameterSuiteV1   *g_ParamHost;
+extern OfxMemorySuiteV1      *g_MemoryHost;
+extern OfxMultiThreadSuiteV1 *g_ThreadHost;
+extern OfxMessageSuiteV1     *g_MessageSuite;
+extern OfxInteractSuiteV1    *g_InteractHost;
+
 // This is  a custom class made for storing plugin specific data
 class ColorSpaceContainer
 {
@@ -70,20 +83,7 @@ protected :
 // Instanciating OCIO ColorSpace Transform API
 OCIO::ColorSpaceTransformRcPtr g_ColorSpaceTransform = OCIO::ColorSpaceTransform::Create();
 
-// Getting the current instance configuration
-OCIO::ConstConfigRcPtr g_Config = OCIO::GetCurrentConfig();
-
-// Setting up pointers for OpenFX plugin
-OfxHost               *g_Host;
-OfxImageEffectSuiteV1 *g_EffectHost   = 0;
-OfxPropertySuiteV1    *g_PropHost     = 0;
-OfxParameterSuiteV1   *g_ParamHost    = 0;
-OfxMemorySuiteV1      *g_MemoryHost   = 0;
-OfxMultiThreadSuiteV1 *g_ThreadHost   = 0;
-OfxMessageSuiteV1     *g_MessageSuite = 0;
-OfxInteractSuiteV1    *g_InteractHost = 0;
-
-OfxStatus OnLoad(void)
+static OfxStatus OnLoad(void)
 {
     return kOfxStatOK;
 }
@@ -101,18 +101,7 @@ static ColorSpaceContainer* GetContainer(OfxImageEffectHandle effect)
     return Container;
 }
 
-static OfxStatus FetchSuites(OfxImageEffectHandle effect)
-{
-    g_EffectHost   = reinterpret_cast<OfxImageEffectSuiteV1 *>(const_cast<void *>(g_Host->fetchSuite(g_Host->host, kOfxImageEffectSuite, 1)));
-    g_PropHost     = reinterpret_cast<OfxPropertySuiteV1 *>   (const_cast<void *>(g_Host->fetchSuite(g_Host->host, kOfxPropertySuite, 1)));
-    g_ParamHost    = reinterpret_cast<OfxParameterSuiteV1 *>  (const_cast<void *>(g_Host->fetchSuite(g_Host->host, kOfxParameterSuite, 1)));
-    g_MemoryHost   = reinterpret_cast<OfxMemorySuiteV1 *>     (const_cast<void *>(g_Host->fetchSuite(g_Host->host, kOfxMemorySuite, 1)));
-    g_ThreadHost   = reinterpret_cast<OfxMultiThreadSuiteV1 *>(const_cast<void *>(g_Host->fetchSuite(g_Host->host, kOfxMultiThreadSuite, 1)));
-    g_MessageSuite = reinterpret_cast<OfxMessageSuiteV1 *>    (const_cast<void *>(g_Host->fetchSuite(g_Host->host, kOfxMessageSuite, 1)));
-    g_InteractHost = reinterpret_cast<OfxInteractSuiteV1 *>   (const_cast<void *>(g_Host->fetchSuite(g_Host->host, kOfxInteractSuite, 1)));
-
-    return kOfxStatOK;
-}
+OfxStatus FetchSuites(OfxImageEffectHandle);
 
 // Creating an instance of ColorSpaceContainer and setting it up
 static OfxStatus CreateInstance(OfxImageEffectHandle effect)
@@ -426,7 +415,7 @@ static OfxStatus UnLoad()
 // -----------------------------------------------------------------------------------------------
 // ---------------------------------- Plugin's Main Entry point ----------------------------------
 // -----------------------------------------------------------------------------------------------
-static OfxStatus EntryPoint(const char* action, const void* handle, OfxPropertySetHandle inArgs,  OfxPropertySetHandle outArgs)
+static OfxStatus EntryPointCS(const char* action, const void* handle, OfxPropertySetHandle inArgs,  OfxPropertySetHandle outArgs)
 {
     try
     {
@@ -483,14 +472,10 @@ static OfxStatus EntryPoint(const char* action, const void* handle, OfxPropertyS
 // ------------------------ Mandatory OpenFX Functions ------------------------
 // ----------------------------------------------------------------------------
 
-// Function for setting the Host
-static void SetHost(OfxHost* host)
-{
-    g_Host = host;
-}
+void SetHost(OfxHost*);
 
 // Creating the plugin struct
-static OfxPlugin ColorSpaceTransformPlugin = 
+OfxPlugin ColorSpaceTransformPlugin = 
 {
     kOfxImageEffectPluginApi,
     1,
@@ -498,19 +483,5 @@ static OfxPlugin ColorSpaceTransformPlugin =
     1,
     0,
     SetHost,
-    EntryPoint
+    EntryPointCS
 };
-
-// The two mandated functions
-EXPORT OfxPlugin* OfxGetPlugin(int nth)
-{
-    if(nth == 0)
-        return &ColorSpaceTransformPlugin;
-    return 0;
-}
-
-EXPORT int OfxGetNumberOfPlugins(void)
-{
-    return 1;
-}
-

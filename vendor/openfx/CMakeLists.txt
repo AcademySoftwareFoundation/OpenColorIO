@@ -4,6 +4,7 @@
 set(OPENFX_SRC "${CMAKE_SOURCE_DIR}/vendor/openfx/openfx")
 set(OPENFX_INCLUDE "${OPENFX_SRC}/include")
 set(RES_DIR "${CMAKE_SOURCE_DIR}/share/openfx/resources")
+set(PLUGIN_NAME "OCIOPlugins")
 
 if(NOT EXISTS ${OPENFX_INCLUDE})
     message(FATAL_ERROR "\nOpenFX not found! Issue 'git submodule update' and try again.\n")
@@ -18,10 +19,17 @@ include_directories(
     ${CMAKE_BINARY_DIR}/include
 )
 
+file(GLOB LIB
+    ${CMAKE_BINARY_DIR}/src/OpenColorIO/libOpenColorIO2.0.0.dylib
+    ${CMAKE_BINARY_DIR}/src/OpenColorIO/libOpenColorIO2.0.dylib
+    ${CMAKE_BINARY_DIR}/src/OpenColorIO/libOpenColorIO.dylib
+)
+
 file(GLOB SRC
     "ColorSpaceTransformPlugin/ColorSpaceTransformPlugin.cpp"
     "FileTransformPlugin/FileTransformPlugin.cpp"
     "DisplayViewTransformPlugin/DisplayViewTransform.cpp"
+    "PluginMain.cpp"
 )
 
 file(GLOB RESOURCES
@@ -30,18 +38,29 @@ file(GLOB RESOURCES
     ${CMAKE_SOURCE_DIR}/README.md
 )
 
-add_library(OCIOPlugins SHARED ${SRC})
+file(GLOB PLIST
+    ${CMAKE_SOURCE_DIR}/share/openfx/Info.plist
+)
+
+add_library(${PLUGIN_NAME} SHARED ${SRC})
+
 set_target_properties(
-    OCIOPlugins
+    ${PLUGIN_NAME}
     PROPERTIES PREFIX ""
     SUFFIX ".ofx"
 )
 
 target_compile_definitions(
-    OCIOPlugins
+    ${PLUGIN_NAME}
     PRIVATE
     OFX_EXTENSIONS_OCIO
- )
+)
+
+# Linking against OCIO dylibs
+target_link_libraries(
+    ${PLUGIN_NAME}
+    ${LIB}
+)
 
 # Finding the architecture
 set(OFX_ARCH UNKNOWN)
@@ -88,18 +107,20 @@ elseif(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
     endif()
 endif()
 
-set(OFX_ARCH_NAME ${OFX_ARCH} CACHE STRING "OpenFX target OS and architecture")
-if("${OFX_ARCH_NAME}" EQUAL "UNKNOWN")
-  message(SEND_ERROR "OFX_ARCH_NAME was not detected. Install targets will be unavailable. See http://openeffects.org/documentation/reference/ch02s02.html to pick an arch name.")
+set(OFX_ARCH_NAME OFX_ARCH CACHE STRING "OpenFX target OS and architecture")
+if(OFX_ARCH_NAME EQUAL "UNKNOWN")
+    message(SEND_ERROR "OFX_ARCH_NAME was not detected. Install targets will be unavailable. See http://openeffects.org/documentation/reference/ch02s02.html to pick an arch name.")
 else()
-    install(TARGETS OCIOPlugins
-        RUNTIME DESTINATION OCIOPlugins.ofx.bundle/Contents/${OFX_ARCH_NAME}
-        LIBRARY DESTINATION OCIOPlugins.ofx.bundle/Contents/${OFX_ARCH_NAME}
-     )
-     install(FILES ${RESOURCES}
-        DESTINATION OCIOPlugins.ofx.bundle/Contents/Resources
-     )
-     install(FILES ${CMAKE_SOURCE_DIR}/share/openfx/Info.plist
-        DESTINATION OCIOPlugins.ofx.bundle/Contents
-     )
+    set(PLUGIN_CONTENTS_DIR ${CMAKE_BINARY_DIR}/vendor/openfx/${PLUGIN_NAME}.ofx.bundle/Contents)
+    set(PLUGIN_LIB_DIR ${PLUGIN_CONTENTS_DIR}/${OFX_ARCH_NAME})
+    set(PLUGIN_RES_DIR ${PLUGIN_CONTENTS_DIR}/Resources)
+    install(TARGETS ${PLUGIN_NAME}
+        DESTINATION ${PLUGIN_LIB_DIR}
+    )
+    install(FILES ${RESOURCES}
+        DESTINATION ${PLUGIN_RES_DIR}
+    )
+    install(FILES ${PLIST}
+        DESTINATION ${PLUGIN_CONTENTS_DIR}
+    )
 endif()

@@ -83,20 +83,20 @@ protected :
 OCIO::FileTransformRcPtr g_FileTransform = OCIO::FileTransform::Create();
 
 // Getting the current instance configuration
-OCIO::ConstConfigRcPtr g_Config = OCIO::GetCurrentConfig();
+extern OCIO::ConstConfigRcPtr g_Config;
 
-// Setting up pointers for the plugin's host and its suites
-OfxHost               *g_Host;
-OfxImageEffectSuiteV1 *g_EffectHost   = 0;
-OfxPropertySuiteV1    *g_PropHost     = 0;
-OfxParameterSuiteV1   *g_ParamHost    = 0;
-OfxMemorySuiteV1      *g_MemoryHost   = 0;
-OfxMultiThreadSuiteV1 *g_ThreadHost   = 0;
-OfxMessageSuiteV1     *g_MessageSuite = 0;
-OfxInteractSuiteV1    *g_InteractHost = 0;
+// Setting up pointers for OpenFX plugin
+extern OfxHost               *g_Host;
+extern OfxImageEffectSuiteV1 *g_EffectHost;
+extern OfxPropertySuiteV1    *g_PropHost;
+extern OfxParameterSuiteV1   *g_ParamHost;
+extern OfxMemorySuiteV1      *g_MemoryHost;
+extern OfxMultiThreadSuiteV1 *g_ThreadHost;
+extern OfxMessageSuiteV1     *g_MessageSuite;
+extern OfxInteractSuiteV1    *g_InteractHost;
 
 // Function
-OfxStatus OnLoad(void)
+static OfxStatus OnLoad(void)
 {
     return kOfxStatOK;
 }
@@ -114,18 +114,7 @@ static FileContainer* GetContainer(OfxImageEffectHandle effect)
     return Container;
 }
 
-static OfxStatus FetchSuites(OfxImageEffectHandle effect)
-{
-    g_EffectHost   = reinterpret_cast<OfxImageEffectSuiteV1 *>(const_cast<void *>(g_Host->fetchSuite(g_Host->host, kOfxImageEffectSuite, 1)));
-    g_PropHost     = reinterpret_cast<OfxPropertySuiteV1 *>   (const_cast<void *>(g_Host->fetchSuite(g_Host->host, kOfxPropertySuite, 1)));
-    g_ParamHost    = reinterpret_cast<OfxParameterSuiteV1 *>  (const_cast<void *>(g_Host->fetchSuite(g_Host->host, kOfxParameterSuite, 1)));
-    g_MemoryHost   = reinterpret_cast<OfxMemorySuiteV1 *>     (const_cast<void *>(g_Host->fetchSuite(g_Host->host, kOfxMemorySuite, 1)));
-    g_ThreadHost   = reinterpret_cast<OfxMultiThreadSuiteV1 *>(const_cast<void *>(g_Host->fetchSuite(g_Host->host, kOfxMultiThreadSuite, 1)));
-    g_MessageSuite = reinterpret_cast<OfxMessageSuiteV1 *>    (const_cast<void *>(g_Host->fetchSuite(g_Host->host, kOfxMessageSuite, 1)));
-    g_InteractHost = reinterpret_cast<OfxInteractSuiteV1 *>   (const_cast<void *>(g_Host->fetchSuite(g_Host->host, kOfxInteractSuite, 1)));
-
-    return kOfxStatOK;
-}
+OfxStatus FetchSuites(OfxImageEffectHandle);
 
 static OfxStatus CreateInstance(OfxImageEffectHandle effect)
 {
@@ -492,13 +481,10 @@ static OfxStatus EntryPoint(const char* action, const void* handle, OfxPropertyS
 // ----------------------------------------------------------------------------
 
 // Function for setting the Host
-static void SetHost(OfxHost* host)
-{
-    g_Host = host;
-}
+void SetHost(OfxHost*);
 
 // Creating the plugin struct
-static OfxPlugin FileTransformPlugin = 
+OfxPlugin FileTransformPlugin = 
 {
     kOfxImageEffectPluginApi,
     1,
@@ -508,17 +494,3 @@ static OfxPlugin FileTransformPlugin =
     SetHost,
     EntryPoint
 };
-
-// The two mandated functions
-EXPORT OfxPlugin* OfxGetPlugin(int nth)
-{
-    if(nth == 0)
-        return &FileTransformPlugin;
-    return 0;
-}
-
-EXPORT int OfxGetNumberOfPlugins(void)
-{
-    return 1;
-}
-
