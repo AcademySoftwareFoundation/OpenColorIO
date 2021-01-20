@@ -109,6 +109,7 @@ public:
 
     void setStyle(GradingStyle style);
     void setDirection(TransformDirection dir) noexcept;
+    TransformDirection getDirection() const noexcept { return m_direction; }
     const GradingPrimaryPreRender & getComputedValue() const { return m_preRenderValues; }
 
     const Float3 & getBrightness() const { return m_preRenderValues.getBrightness(); }

@@ -102,8 +102,9 @@ bool DynamicPropertyImpl::equals(const DynamicPropertyImpl & rhs) const
         }
         else
         {
-            // Both dynamic, will be same.
-            return true;
+            // Both dynamic, may not be same (this is used for processor optimization do not
+            // assume they will always have same values even if it is currently the case).
+            return false;
         }
     }
 
@@ -175,8 +176,11 @@ void DynamicPropertyGradingPrimaryImpl::setStyle(GradingStyle style)
 
 void DynamicPropertyGradingPrimaryImpl::setDirection(TransformDirection dir) noexcept
 {
-    m_direction = dir;
-    m_preRenderValues.update(m_style, m_direction, m_value);
+    if (m_direction != dir)
+    {
+        m_direction = dir;
+        m_preRenderValues.update(m_style, m_direction, m_value);
+    }
 }
 
 DynamicPropertyGradingRGBCurveImpl::DynamicPropertyGradingRGBCurveImpl(

@@ -18,7 +18,7 @@
 
       Overloaded function.
 
-      1. apply(self: PyOpenColorIO.CPUProcessor, imgDesc: OpenColorIO_v2_0beta2::PyImageDesc) -> None
+      1. apply(self: PyOpenColorIO.CPUProcessor, imgDesc: OpenColorIO_v2_0rc1::PyImageDesc) -> None
 
 
       Apply to an image with any kind of channel ordering while respecting
@@ -37,7 +37,7 @@
 
 
 
-      2. apply(self: PyOpenColorIO.CPUProcessor, srcImgDesc: OpenColorIO_v2_0beta2::PyImageDesc, dstImgDesc: OpenColorIO_v2_0beta2::PyImageDesc) -> None
+      2. apply(self: PyOpenColorIO.CPUProcessor, srcImgDesc: OpenColorIO_v2_0rc1::PyImageDesc, dstImgDesc: OpenColorIO_v2_0rc1::PyImageDesc) -> None
 
 
       Apply to an image with any kind of channel ordering while respecting

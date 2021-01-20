@@ -345,157 +345,164 @@ Infos FindColorSpaceInfos(ConstConfigRcPtr config,
 
     LogMessageHelper log;
 
-    ColorSpaceVec appCS;
-    NamedTransformVec appNT;
-    ColorSpaceVec appCSNoEncodings;
-    NamedTransformVec appNTNoEncodings;
-    bool appNoEncodingsComputed{ false };
-
-    size_t appSize{ 0 };
-
-    bool encsIgnored = encodings.empty();
-
-    if (!appCategories.empty())
+    // V1 does not have categories and encodings, skip them.
+    if (config->getMajorVersion() >= 2)
     {
-        // 3a) Use categories and encodings, fallback to only categories, fallback to only
-        //     encodings.
+        ColorSpaceVec appCS;
+        NamedTransformVec appNT;
+        ColorSpaceVec appCSNoEncodings;
+        NamedTransformVec appNTNoEncodings;
+        bool appNoEncodingsComputed{ false };
 
-        log.m_appCats = SHOULD_BE_USED;
+        size_t appSize{ 0 };
 
-        // Use categories and encodings.
+        bool encsIgnored = encodings.empty();
 
-        if (!encsIgnored)
+        if (!appCategories.empty())
         {
-            appCS = GetColorSpaces(config, includeColorSpaces, colorSpaceType,
-                                   appCategories, encodings);
-            appNT = GetNamedTransforms(config, includeNamedTransforms, appCategories, encodings);
-            appSize = appCS.size() + appNT.size();
+            // 3a) Use categories and encodings, fallback to only categories, fallback to only
+            //     encodings.
+
+            log.m_appCats = SHOULD_BE_USED;
+
+            // Use categories and encodings.
+
+            if (!encsIgnored)
+            {
+                appCS = GetColorSpaces(config, includeColorSpaces, colorSpaceType,
+                                       appCategories, encodings);
+                appNT = GetNamedTransforms(config, includeNamedTransforms, appCategories,
+                                           encodings);
+                appSize = appCS.size() + appNT.size();
+            }
+
+            // Do not use encodings if empty or drop them if no result is found with them.
+            if (appSize == 0)
+            {
+                encsIgnored = true;
+                log.m_ignoreEncodings = !encodings.empty();
+                appCS = GetColorSpaces(config, includeColorSpaces, colorSpaceType, appCategories);
+                appNT = GetNamedTransforms(config, includeNamedTransforms, appCategories);
+                appSize = appCS.size() + appNT.size();
+
+                // Keep these results in case we need them later.
+                appNoEncodingsComputed = true;
+                appCSNoEncodings = appCS;
+                appNTNoEncodings = appNT;
+            }
+
+            // Drop app categories and use encoding if no results.
+            if (appSize == 0 && !encodings.empty())
+            {
+                encsIgnored = false;
+                log.m_ignoreEncodings = false;
+                log.m_appCats = NONE_FOUND;
+                appCS = GetColorSpacesFromEncodings(config, includeColorSpaces, colorSpaceType,
+                                                    encodings);
+                appNT = GetNamedTransformsFromEncodings(config, includeNamedTransforms, encodings);
+                appSize = appCS.size() + appNT.size();
+            }
+
+            if (appSize == 0)
+            {
+                log.m_appCats = NONE_FOUND;
+            }
         }
-
-        // Do not use encodings if empty or drop them if no result is found with them.
-        if (appSize == 0)
+        else if (!encsIgnored)
         {
-            encsIgnored = true;
-            log.m_ignoreEncodings = !encodings.empty();
-            appCS = GetColorSpaces(config, includeColorSpaces, colorSpaceType, appCategories);
-            appNT = GetNamedTransforms(config, includeNamedTransforms, appCategories);
-            appSize = appCS.size() + appNT.size();
-
-            // Keep these results in case we need them later.
-            appNoEncodingsComputed = true;
-            appCSNoEncodings = appCS;
-            appNTNoEncodings = appNT;
-        }
-
-        // Drop app categories and use encoding if no results.
-        if (appSize == 0 && !encodings.empty())
-        {
-            encsIgnored = false;
-            log.m_ignoreEncodings = false;
-            log.m_appCats = NONE_FOUND;
             appCS = GetColorSpacesFromEncodings(config, includeColorSpaces, colorSpaceType,
                                                 encodings);
             appNT = GetNamedTransformsFromEncodings(config, includeNamedTransforms, encodings);
             appSize = appCS.size() + appNT.size();
         }
 
-        if (appSize == 0)
+        ColorSpaceVec userCS;
+        NamedTransformVec userNT;
+        size_t userSize{ 0 };
+
+        if (!userCategories.empty())
         {
-            log.m_appCats = NONE_FOUND;
-        }
-    }
-    else if (!encsIgnored)
-    {
-        appCS = GetColorSpacesFromEncodings(config, includeColorSpaces, colorSpaceType,
-                                            encodings);
-        appNT = GetNamedTransformsFromEncodings(config, includeNamedTransforms, encodings);
-        appSize = appCS.size() + appNT.size();
-    }
+            // 3b) Items using user categories.
 
-    ColorSpaceVec userCS;
-    NamedTransformVec userNT;
-    size_t userSize{ 0 };
-
-    if (!userCategories.empty())
-    {
-        // 3b) Items using user categories.
-
-        userCS = GetColorSpaces(config, includeColorSpaces, colorSpaceType, userCategories);
-        userNT = GetNamedTransforms(config, includeNamedTransforms, userCategories);
-        userSize = userCS.size() + userNT.size();
-        if (userSize == 0)
-        {
-            log.m_userCats = NONE_FOUND;
-        }
-    }
-
-    if (appSize != 0 && userSize != 0)
-    {
-        // 3c) and 3d) Use intersection of app and user categories.
-
-        ColorSpaceVec * appCSTest = &appCS;
-        NamedTransformVec * appNTTest = &appNT;
-        const auto encsIgnoredBack = encsIgnored;
-        const auto ignoreEncodingsBack = log.m_ignoreEncodings;
-
-        // Allow to run twice, with and without encodings.
-        while (1)
-        {
-            const auto css = Intersection(*appCSTest, userCS);
-            const auto nts = Intersection(*appNTTest, userNT);
-
-            if (!css.empty() || !nts.empty())
+            userCS = GetColorSpaces(config, includeColorSpaces, colorSpaceType, userCategories);
+            userNT = GetNamedTransforms(config, includeNamedTransforms, userCategories);
+            userSize = userCS.size() + userNT.size();
+            if (userSize == 0)
             {
-                // 3c) or 3d) Intersection is not empty.
-                return GetInfos(config, css, nts);
+                log.m_userCats = NONE_FOUND;
             }
+        }
 
-            if (!encsIgnored && !encodings.empty())
+        if (appSize != 0 && userSize != 0)
+        {
+            // 3c) and 3d) Use intersection of app and user categories.
+
+            ColorSpaceVec * appCSTest = &appCS;
+            NamedTransformVec * appNTTest = &appNT;
+            const auto encsIgnoredBack = encsIgnored;
+            const auto ignoreEncodingsBack = log.m_ignoreEncodings;
+
+            // Allow to run twice, with and without encodings.
+            while (1)
             {
-                // Intersection is empty, but encodings can be dropped if they were not dropped
-                // already.
-                encsIgnored = true;
-                log.m_ignoreEncodings = true;
-                if (!appNoEncodingsComputed)
+                const auto css = Intersection(*appCSTest, userCS);
+                const auto nts = Intersection(*appNTTest, userNT);
+
+                if (!css.empty() || !nts.empty())
                 {
-                    // If not already computed, compute list with app categories and no encodings.
-                    appCSNoEncodings = GetColorSpaces(config, includeColorSpaces, colorSpaceType,
-                                                      appCategories);
-                    appNTNoEncodings = GetNamedTransforms(config, includeNamedTransforms,
-                                                          appCategories);
+                    // 3c) or 3d) Intersection is not empty.
+                    return GetInfos(config, css, nts);
                 }
-                appCSTest = &appCSNoEncodings;
-                appNTTest = &appNTNoEncodings;
-            }
-            else
-            {
-                break;
-            }
-        }
-        log.m_emptyIntersection = true;
-        encsIgnored = encsIgnoredBack;
-        log.m_ignoreEncodings = ignoreEncodingsBack;
-    }
 
-    if (appSize)
-    {
-        // 3e) Only use app categories. Use the result of 3a).
-        if (!userCategories.empty() && log.m_userCats != NONE_FOUND)
+                if (!encsIgnored && !encodings.empty())
+                {
+                    // Intersection is empty, but encodings can be dropped if they were not dropped
+                    // already.
+                    encsIgnored = true;
+                    log.m_ignoreEncodings = true;
+                    if (!appNoEncodingsComputed)
+                    {
+                        // If not already computed, compute list with app categories and no
+                        // encodings.
+                        appCSNoEncodings = GetColorSpaces(config, includeColorSpaces,
+                                                          colorSpaceType, appCategories);
+                        appNTNoEncodings = GetNamedTransforms(config, includeNamedTransforms,
+                                                              appCategories);
+                    }
+                    appCSTest = &appCSNoEncodings;
+                    appNTTest = &appNTNoEncodings;
+                }
+                else
+                {
+                    break;
+                }
+            }
+            log.m_emptyIntersection = true;
+            encsIgnored = encsIgnoredBack;
+            log.m_ignoreEncodings = ignoreEncodingsBack;
+        }
+
+        if (appSize)
         {
-            log.m_userCats = IGNORED;
+            // 3e) Only use app categories. Use the result of 3a).
+            if (!userCategories.empty() && log.m_userCats != NONE_FOUND)
+            {
+                log.m_userCats = IGNORED;
+            }
+            return GetInfos(config, appCS, appNT);
         }
-        return GetInfos(config, appCS, appNT);
-    }
 
-    if (userSize)
-    {
-        // 3f) Only use user categories.
-        return GetInfos(config, userCS, userNT);
+        if (userSize)
+        {
+            // 3f) Only use user categories.
+            return GetInfos(config, userCS, userNT);
+        }
+
+        // Fallback to ignoring categories and encodings.
+        log.m_ignoreCategories = !appCategories.empty() || !userCategories.empty();
     }
 
     // 3g) Ignore all categories and encodings and return all items.
-
-    log.m_ignoreCategories = !appCategories.empty() || !userCategories.empty();
 
     Infos allInfos;
     const auto numCS = config->getNumColorSpaces(colorSpaceType, COLORSPACE_ACTIVE);

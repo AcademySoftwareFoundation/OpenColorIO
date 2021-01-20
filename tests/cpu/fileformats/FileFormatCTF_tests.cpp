@@ -4281,6 +4281,7 @@ OCIO_ADD_TEST(FileFormatCTF, load_grading_curves_lin)
                           0 0 1 1
                         1.5 1.4
             </ControlPoints>
+            <Slopes> 0 0.7 1.1 </Slopes>
         </Master>
     </GradingRGBCurve>
 </ProcessList>
@@ -4318,6 +4319,7 @@ OCIO_ADD_TEST(FileFormatCTF, load_grading_curves_lin)
     curves = gradingCurves1->getValue();
     OCIO_CHECK_ASSERT(*curves->getCurve(OCIO::RGB_RED) ==
                       OCIO::GradingRGBCurveImpl::DefaultLin);
+    OCIO_CHECK_ASSERT(curves->getCurve(OCIO::RGB_RED)->slopesAreDefault());
 
     const auto op2 = fileOps[2];
     const auto gradingCurves2 = std::dynamic_pointer_cast<const OCIO::GradingRGBCurveOpData>(op2);
@@ -4331,6 +4333,10 @@ OCIO_ADD_TEST(FileFormatCTF, load_grading_curves_lin)
     OCIO_CHECK_EQUAL(master->getControlPoint(0), OCIO::GradingControlPoint(0.f, 0.f));
     OCIO_CHECK_EQUAL(master->getControlPoint(1), OCIO::GradingControlPoint(1.f, 1.f));
     OCIO_CHECK_EQUAL(master->getControlPoint(2), OCIO::GradingControlPoint(1.5f, 1.4f));
+    OCIO_CHECK_ASSERT(!master->slopesAreDefault());
+    OCIO_CHECK_EQUAL(master->getSlope(0), 0.0f);
+    OCIO_CHECK_EQUAL(master->getSlope(1), 0.7f);
+    OCIO_CHECK_EQUAL(master->getSlope(2), 1.1f);
 }
 
 OCIO_ADD_TEST(FileFormatCTF, load_grading_curves_log)
@@ -4476,6 +4482,20 @@ OCIO_ADD_TEST(FileFormatCTF, load_grading_curves_errors)
 </ProcessList>
 )"), OCIO::Exception, "Control point at index 2 has a x coordinate '-1' that is less from "
                       "previous control point x cooordinate '0'");
+
+    // Number of slopes matches control points.
+    OCIO_CHECK_THROW_WHAT(ParseString(R"(<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList version="2" id="empty">
+    <GradingRGBCurve inBitDepth="32f" outBitDepth="32f" style="linear">
+        <Red>
+            <ControlPoints>
+                 -7 -6 0 0 1 7
+            </ControlPoints>
+            <Slopes> 1 1 1 1 </Slopes>
+        </Red>
+    </GradingRGBCurve>
+</ProcessList>
+)"), OCIO::Exception, "Number of slopes must match number of control points");
 
     // Wrong curve: warning is logged.
     OCIO::LogGuard guard;
@@ -6739,6 +6759,10 @@ OCIO_ADD_TEST(CTFTransform, grading_rgbcurve_lin_ctf)
     curves->getCurve(OCIO::RGB_MASTER)->setNumControlPoints(4);
     curves->getCurve(OCIO::RGB_MASTER)->getControlPoint(3).m_x = 16.f;
     curves->getCurve(OCIO::RGB_MASTER)->getControlPoint(3).m_y = 10.f;
+    curves->getCurve(OCIO::RGB_MASTER)->setSlope(0, 1.f);
+    curves->getCurve(OCIO::RGB_MASTER)->setSlope(1, 0.75f);
+    curves->getCurve(OCIO::RGB_MASTER)->setSlope(2, 1.1f);
+    curves->getCurve(OCIO::RGB_MASTER)->setSlope(3, 1.f);
     gradingCurves->setValue(curves);
     {
         OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
@@ -6765,6 +6789,9 @@ OCIO_ADD_TEST(CTFTransform, grading_rgbcurve_lin_ctf)
                           7 7
                          16 10
             </ControlPoints>
+            <Slopes>
+                          1 0.75 1.1 1 
+            </Slopes>
         </Master>
     </GradingRGBCurve>
 </ProcessList>

@@ -58,13 +58,14 @@ OCIO_ADD_TEST(DynamicPropertyImpl, equal_double)
     dpImpl0->makeDynamic();
     OCIO_CHECK_ASSERT(!(*dp0 == *dp1));
 
-    // Both dynamic, same value.
+    // Both dynamic, same value. Equality is used to optimized, so if values are dynamic they
+    // might or not be the same, but they are considered different so that they are not optimized.
     dpImpl1->makeDynamic();
-    OCIO_CHECK_ASSERT(*dp0 == *dp1);
+    OCIO_CHECK_ASSERT(!(*dp0 == *dp1));
 
     // Both dynamic, different values.
     dpImpl1->setValue(3.0);
-    OCIO_CHECK_ASSERT(*dp0 == *dp1);
+    OCIO_CHECK_ASSERT(!(*dp0 == *dp1));
 }
 
 namespace
@@ -195,12 +196,12 @@ OCIO_ADD_TEST(DynamicPropertyImpl, equal_grading_primary)
 
     // Both dynamic, same value.
     dpImpl1->makeDynamic();
-    OCIO_CHECK_ASSERT(*dp0 == *dp1);
+    OCIO_CHECK_ASSERT(!(*dp0 == *dp1));
 
     // Both dynamic, different values.
     gplog.m_clampWhite = 1.3;
     dpImpl1->setValue(gplog);
-    OCIO_CHECK_ASSERT(*dp0 == *dp1);
+    OCIO_CHECK_ASSERT(!(*dp0 == *dp1));
 
     // Different value types.
     OCIO::DynamicPropertyDoubleImplRcPtr dpImplDouble =
@@ -243,11 +244,11 @@ OCIO_ADD_TEST(DynamicPropertyImpl, equal_grading_rgb_curve)
 
     // Both dynamic, same value.
     dpImpl1->makeDynamic();
-    OCIO_CHECK_ASSERT(*dp0 == *dp1);
+    OCIO_CHECK_ASSERT(!(*dp0 == *dp1));
 
     // Both dynamic, different values.
     dpImpl1->setValue(rgbCurve);
-    OCIO_CHECK_ASSERT(*dp0 == *dp1);
+    OCIO_CHECK_ASSERT(!(*dp0 == *dp1));
 
     // Different value types.
     OCIO::DynamicPropertyDoubleImplRcPtr dpImplDouble =

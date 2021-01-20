@@ -110,3 +110,38 @@ class GradingToneTransformTest(unittest.TestCase):
 
         gtt = OCIO.GradingToneTransform(OCIO.GRADING_LOG)
         gtt.validate()
+
+    def test_apply_inverse(self):
+        """
+        Test applying transform with inversion.
+        """
+
+        gtt = OCIO.GradingToneTransform(OCIO.GRADING_LOG)
+        vals = OCIO.GradingTone(OCIO.GRADING_LOG)
+        vals.midtones = OCIO.GradingRGBMSW(1.6, 0.5, 1.5, 0.7, 0.1, 1.2)
+        vals.scontrast = 1.4
+        gtt.setValue(vals)
+
+        cfg = OCIO.Config().CreateRaw()
+        proc = cfg.getProcessor(gtt)
+        cpu = proc.getDefaultCPUProcessor()
+
+        # Apply the transform and keep the result.
+        pixel = [0.48, 0.18, 0.18]
+        rgb1 = cpu.applyRGB(pixel)
+
+        # The processing did something.
+        self.assertAlmostEqual(0.645454, rgb1[0], delta=1e-5)
+        self.assertAlmostEqual(0.076331, rgb1[1], delta=1e-5)
+        self.assertAlmostEqual(0.130564, rgb1[2], delta=1e-5)
+
+        # Invert.
+        gtt.setDirection(OCIO.TRANSFORM_DIR_INVERSE)
+        proc = cfg.getProcessor(gtt)
+        cpu = proc.getDefaultCPUProcessor()
+        pixel2 = cpu.applyRGB(rgb1)
+
+        # Invert back to original value.
+        self.assertAlmostEqual(pixel[0], pixel2[0], delta=1e-5)
+        self.assertAlmostEqual(pixel[1], pixel2[1], delta=1e-5)
+        self.assertAlmostEqual(pixel[2], pixel2[2], delta=1e-5)

@@ -224,24 +224,13 @@ ConstProcessorRcPtr LegacyViewingPipelineImpl::getProcessor(const ConstConfigRcP
     const bool nameFromDisplay = (0 == strcmp(name.c_str(), OCIO_VIEW_USE_DISPLAY_NAME));
     const std::string displayColorSpaceName{ nameFromDisplay ? display : name };
     ConstColorSpaceRcPtr displayColorSpace = config->getColorSpace(displayColorSpaceName.c_str());
-    if (!displayColorSpace)
-    {
-        std::ostringstream os;
-        os << "DisplayViewTransform error: ";
-        if (displayColorSpaceName.empty())
-        {
-            os << "DisplayColorSpaceName is unspecified.";
-        }
-        else
-        {
-            os << "Cannot find display colorspace,  '" << displayColorSpaceName << "'.";
-        }
-        throw Exception(os.str().c_str());
-    }
+    // If this is not a color space it can be a named transform. Error handling (missing color
+    // space or named transform) is handled by display view transform.
 
     const bool dataBypass = m_displayViewTransform->getDataBypass();
-    bool skipColorSpaceConversions = dataBypass &&
-                                     (inputColorSpace->isData() || displayColorSpace->isData());
+    const bool displayData = (!displayColorSpace ||
+                              (displayColorSpace && displayColorSpace->isData())) ? true : false;
+    bool skipColorSpaceConversions = dataBypass && (inputColorSpace->isData() || displayData);
 
     if (dataBypass)
     {
@@ -372,7 +361,8 @@ ConstProcessorRcPtr LegacyViewingPipelineImpl::getProcessor(const ConstConfigRcP
         group->appendTransform(m_channelView);
     }
 
-    if (!skipColorSpaceConversions)
+    // If there is no displayColorSpace it should be a named transform and it has to be applied.
+    if (!skipColorSpaceConversions || !displayColorSpace)
     {
         group->appendTransform(dt);
     }
