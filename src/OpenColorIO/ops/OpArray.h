@@ -9,6 +9,8 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "MathUtils.h"
+
 namespace OCIO_NAMESPACE
 {
 
@@ -113,9 +115,9 @@ public:
             bool sameCoeff = true;
             for (unsigned long idx = 0; idx < m_length && sameCoeff; ++idx)
             {
-                if (std::isnan(m_data[idx * 3]) &&
-                    std::isnan(m_data[idx * 3 + 1]) &&
-                    std::isnan(m_data[idx * 3 + 2]))
+                if (IsNan(m_data[idx * 3]) &&
+                    IsNan(m_data[idx * 3 + 1]) &&
+                    IsNan(m_data[idx * 3 + 2]))
                 {
                     continue;
                 }

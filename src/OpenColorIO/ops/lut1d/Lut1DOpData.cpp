@@ -55,7 +55,7 @@ void Lut1DOpData::Lut3by1DArray::fill(HalfFlags halfFlags, bool filterNANs)
         {
             half htemp; htemp.setBits((unsigned short)idx);
             float ftemp = static_cast<float>(htemp);
-            if (std::isnan(ftemp) && filterNANs)
+            if (IsNan(ftemp) && filterNANs)
             {
                 ftemp = 0.f;
             }
