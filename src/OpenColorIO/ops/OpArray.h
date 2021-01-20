@@ -113,6 +113,12 @@ public:
             bool sameCoeff = true;
             for (unsigned long idx = 0; idx < m_length && sameCoeff; ++idx)
             {
+                if (std::isnan(m_data[idx * 3]) &&
+                    std::isnan(m_data[idx * 3 + 1]) &&
+                    std::isnan(m_data[idx * 3 + 2]))
+                {
+                    continue;
+                }
                 if (m_data[idx * 3] != m_data[idx * 3 + 1]
                     || m_data[idx * 3] != m_data[idx * 3 + 2])
                 {

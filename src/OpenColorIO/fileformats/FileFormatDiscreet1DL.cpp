@@ -644,7 +644,7 @@ public:
             ? Lut1DOpData::LUT_INPUT_HALF_CODE
             : Lut1DOpData::LUT_STANDARD;
 
-        lut1D = std::make_shared<Lut1DOpData>(halfFlags, dimension);
+        lut1D = std::make_shared<Lut1DOpData>(halfFlags, dimension, false);
         if (Lut1DOpData::IsValidInterpolation(interp))
         {
             lut1D->setInterpolation(interp);

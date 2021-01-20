@@ -1443,7 +1443,8 @@ void LocalFileFormat::bake(const Baker & baker,
         {
             // Generate the identity shaper values, then apply the transform.
             // Using a half-domain to accurately handle floating-point, linear-space inputs.
-            shaperLut = std::make_shared<Lut1DOpData>(Lut1DOpData::LUT_INPUT_HALF_CODE, 65536);
+            shaperLut = std::make_shared<Lut1DOpData>(Lut1DOpData::LUT_INPUT_HALF_CODE,
+                                                      65536, true);
         }
         else
         {
