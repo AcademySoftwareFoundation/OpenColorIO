@@ -74,7 +74,7 @@ void bindPyFileTransform(py::module & m)
         .def("setInterpolation", &FileTransform::setInterpolation, "interpolation"_a, 
              DOC(FileTransform, setInterpolation));
 
-    defStr(clsFileTransform);
+    defRepr(clsFileTransform);
 
     clsFormatIterator
         .def("__len__", [](FormatIterator & it) 

@@ -101,8 +101,7 @@ OCIO_ADD_TEST(DisplayViewTransform, build_ops)
 
     auto cs = OCIO::ColorSpace::Create();
     cs->setName(dst.c_str());
-    auto ff = OCIO::FixedFunctionTransform::Create();
-    ff->setStyle(OCIO::FIXED_FUNCTION_ACES_GLOW_03);
+    auto ff = OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_ACES_GLOW_03);
     cs->setTransform(ff, OCIO::COLORSPACE_DIR_FROM_REFERENCE);
     config->addColorSpace(cs);
 

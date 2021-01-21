@@ -70,7 +70,7 @@ void bindPyAllocationTransform(py::module & m)
              "vars"_a,
              DOC(AllocationTransform, setVars));
 
-    defStr(clsAllocationTransform);
+    defRepr(clsAllocationTransform);
 }
 
 } // namespace OCIO_NAMESPACE

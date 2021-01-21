@@ -55,10 +55,10 @@ public:
 
     typedef std::vector<double> Params;
 
-    FixedFunctionOpData();
+    FixedFunctionOpData() = delete;
 
     explicit FixedFunctionOpData(Style style);
-    FixedFunctionOpData(const Params & params, Style style);
+    FixedFunctionOpData(Style style, const Params & params);
     FixedFunctionOpData(const FixedFunctionOpData &) = default;
     virtual ~FixedFunctionOpData();
 

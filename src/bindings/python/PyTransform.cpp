@@ -22,7 +22,7 @@ void bindPyTransform(py::module & m)
         .def("setDirection", &Transform::setDirection, "direction"_a,
              DOC(Transform, setDirection));
 
-    defStr(clsTransform);
+    defRepr(clsTransform);
 
     // Subclasses
     bindPyAllocationTransform(m);

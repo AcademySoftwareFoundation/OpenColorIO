@@ -153,7 +153,7 @@ void bindPyCDLTransform(py::module & m)
              "description"_a.none(false),
              DOC(CDLTransform, setFirstSOPDescription));
 
-    defStr(clsCDLTransform);
+    defRepr(clsCDLTransform);
 }
 
 } // namespace OCIO_NAMESPACE

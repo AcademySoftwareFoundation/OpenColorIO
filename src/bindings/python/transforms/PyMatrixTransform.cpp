@@ -154,7 +154,7 @@ void bindPyMatrixTransform(py::module & m)
         .def("setFileOutputBitDepth", &MatrixTransform::setFileOutputBitDepth, "bitDepth"_a, 
              DOC(MatrixTransform, setFileOutputBitDepth));
 
-    defStr(clsMatrixTransform);
+    defRepr(clsMatrixTransform);
 }
 
 } // namespace OCIO_NAMESPACE

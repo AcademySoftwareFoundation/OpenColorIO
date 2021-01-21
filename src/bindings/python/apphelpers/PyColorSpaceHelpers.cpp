@@ -155,7 +155,7 @@ void bindPyColorSpaceMenuHelpers(py::module & m)
         .def("clearAddedColorSpaces", &ColorSpaceMenuParameters::clearAddedColorSpaces,
              DOC(ColorSpaceMenuParameters, clearAddedColorSpaces));
 
-    defStr(clsColorSpaceMenuParameters);
+    defRepr(clsColorSpaceMenuParameters);
 
     clsAddedColorSpaceIterator
         .def("__len__", [](AddedColorSpaceIterator & it)
@@ -205,7 +205,7 @@ void bindPyColorSpaceMenuHelpers(py::module & m)
         .def("getUINameFromName", &ColorSpaceMenuHelper::getUINameFromName, "name"_a.none(false),
              DOC(ColorSpaceMenuHelper, getUINameFromName));
 
-    defStr(clsColorSpaceMenuHelper);
+    defRepr(clsColorSpaceMenuHelper);
 
     clsColorSpaceLevelIterator
         .def("__len__", [](ColorSpaceLevelIterator & it)

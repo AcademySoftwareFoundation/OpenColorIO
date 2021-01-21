@@ -104,7 +104,7 @@ void bindPyGroupTransform(py::module & m)
             "config"_a, "context"_a, "formatName"_a,
              DOC(GroupTransform, write));
 
-    defStr(clsGroupTransform);
+    defRepr(clsGroupTransform);
 
     clsTransformIterator
         .def("__len__", [](TransformIterator & it) { return it.m_obj->getNumTransforms(); })

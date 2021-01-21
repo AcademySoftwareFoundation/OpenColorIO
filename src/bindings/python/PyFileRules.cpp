@@ -68,7 +68,7 @@ void bindPyFileRules(py::module & m)
              DOC(FileRules, decreaseRulePriority))
         .def("isDefault", &FileRules::isDefault, DOC(FileRules, isDefault));
 
-    defStr(clsFileRules);
+    defRepr(clsFileRules);
 }
 
 } // namespace OCIO_NAMESPACE

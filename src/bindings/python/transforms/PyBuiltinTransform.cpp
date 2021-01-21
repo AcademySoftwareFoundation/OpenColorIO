@@ -35,7 +35,7 @@ void bindPyBuiltinTransform(py::module & m)
         .def("getDescription", &BuiltinTransform::getDescription, 
              DOC(BuiltinTransform, getDescription));
 
-    defStr(clsBuiltinTransform);
+    defRepr(clsBuiltinTransform);
 }
 
 } // namespace OCIO_NAMESPACE

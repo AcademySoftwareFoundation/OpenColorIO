@@ -89,7 +89,7 @@ void bindPyRangeTransform(py::module & m)
         .def("unsetMaxOutValue", &RangeTransform::unsetMaxOutValue,
              DOC(RangeTransform, unsetMaxOutValue));
 
-    defStr(clsRangeTransform);
+    defRepr(clsRangeTransform);
 }
 
 } // namespace OCIO_NAMESPACE

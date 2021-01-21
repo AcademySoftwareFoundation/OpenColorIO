@@ -111,7 +111,7 @@ void bindPyExposureContrastTransform(py::module & m)
         .def("setLogMidGray", &ExposureContrastTransform::setLogMidGray, "logMidGray"_a, 
              DOC(ExposureContrastTransform, setLogMidGray));
 
-    defStr(clsExposureContrastTransform);
+    defRepr(clsExposureContrastTransform);
 }
 
 } // namespace OCIO_NAMESPACE

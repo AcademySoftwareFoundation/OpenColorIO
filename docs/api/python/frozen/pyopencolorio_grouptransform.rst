@@ -38,10 +38,6 @@
       2. __init__(self: PyOpenColorIO.GroupTransform, transforms: List[PyOpenColorIO.Transform] = [], direction: PyOpenColorIO.TransformDirection = <TransformDirection.TRANSFORM_DIR_FORWARD: 0>) -> None
 
 
-   .. py:method:: GroupTransform.__str__(self: PyOpenColorIO.GroupTransform) -> str
-      :module: PyOpenColorIO
-
-
    .. py:method:: GroupTransform.appendTransform(self: PyOpenColorIO.GroupTransform, transform: PyOpenColorIO.Transform) -> None
       :module: PyOpenColorIO
 

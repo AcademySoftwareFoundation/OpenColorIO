@@ -54,7 +54,7 @@ void bindPyLegacyViewingPipeline(py::module & m)
              "context"_a = ConstContextRcPtr(),
              DOC(LegacyViewingPipeline, getProcessor));
 
-    defStr(clsLegacyViewingPipeline);
+    defRepr(clsLegacyViewingPipeline);
 }
 
 } // namespace OCIO_NAMESPACE

@@ -40,7 +40,7 @@ void bindPyLogTransform(py::module & m)
         .def("setBase", &LogTransform::setBase, "base"_a, 
              DOC(LogTransform, setBase));
 
-    defStr(clsLogTransform);
+    defRepr(clsLogTransform);
 }
 
 } // namespace OCIO_NAMESPACE
