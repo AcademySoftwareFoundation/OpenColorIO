@@ -57,6 +57,7 @@ import ExposureContrastTransformTest
 import FileTransformTest
 import FixedFunctionTransformTest
 import FormatMetadataTest
+import GpuShaderDescTest
 import GradingDataTest
 import GradingPrimaryTransformTest
 import GradingRGBCurveTransformTest
@@ -76,7 +77,6 @@ import ViewingRulesTest
 #from ConstantsTest import *
 #from ConfigTest import *
 #from ContextTest import *
-#from GpuShaderDescTest import *
 #from Baker import *
 #from TransformsTest import *
 #from RangeTransformTest import *
@@ -109,6 +109,7 @@ def suite():
     suite.addTest(loader.loadTestsFromModule(FileTransformTest))
     suite.addTest(loader.loadTestsFromModule(FixedFunctionTransformTest))
     suite.addTest(loader.loadTestsFromModule(FormatMetadataTest))
+    suite.addTest(loader.loadTestsFromModule(GpuShaderDescTest))
     suite.addTest(loader.loadTestsFromModule(GradingDataTest))
     suite.addTest(loader.loadTestsFromModule(GradingPrimaryTransformTest))
     suite.addTest(loader.loadTestsFromModule(GradingRGBCurveTransformTest))
@@ -136,7 +137,6 @@ def suite():
 
     # Processor
     # ProcessorMetadata
-    #suite.addTest(GpuShaderDescTest("test_interface"))
     #suite.addTest(BakerTest("test_interface", opencolorio_sse))
     # PackedImageDesc
     # PlanarImageDesc

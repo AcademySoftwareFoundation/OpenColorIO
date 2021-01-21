@@ -486,15 +486,18 @@ NegativeStyle NegativeStyleFromString(const char * style)
 }
 
 // Define variables declared in OpenColorTypes.h.
-const char * ROLE_DEFAULT         = "default";
-const char * ROLE_REFERENCE       = "reference";
-const char * ROLE_DATA            = "data";
-const char * ROLE_COLOR_PICKING   = "color_picking";
-const char * ROLE_SCENE_LINEAR    = "scene_linear";
-const char * ROLE_COMPOSITING_LOG = "compositing_log";
-const char * ROLE_COLOR_TIMING    = "color_timing";
-const char * ROLE_TEXTURE_PAINT   = "texture_paint";
-const char * ROLE_MATTE_PAINT     = "matte_paint";
+const char * ROLE_DEFAULT             = "default";
+const char * ROLE_REFERENCE           = "reference";
+const char * ROLE_DATA                = "data";
+const char * ROLE_COLOR_PICKING       = "color_picking";
+const char * ROLE_SCENE_LINEAR        = "scene_linear";
+const char * ROLE_COMPOSITING_LOG     = "compositing_log";
+const char * ROLE_COLOR_TIMING        = "color_timing";
+const char * ROLE_TEXTURE_PAINT       = "texture_paint";
+const char * ROLE_MATTE_PAINT         = "matte_paint";
+const char * ROLE_RENDERING           = "rendering";
+const char * ROLE_INTERCHANGE_SCENE   = "aces_interchange";
+const char * ROLE_INTERCHANGE_DISPLAY = "cie_xyz_d65_interchange";
 
 namespace
 {

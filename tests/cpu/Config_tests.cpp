@@ -5447,21 +5447,24 @@ display_colorspaces:
     OCIO_CHECK_ASSERT(m3);
 
     // Or interchange spaces can be specified.
-    OCIO_CHECK_NO_THROW(p = OCIO::Config::GetProcessorFromConfigs(config1, "test1", "aces1", config2, "test2", "aces2"));
+    OCIO_CHECK_NO_THROW(p = OCIO::Config::GetProcessorFromConfigs(
+        config1, "test1", "aces1", config2, "test2", "aces2"));
     OCIO_REQUIRE_ASSERT(p);
     OCIO_REQUIRE_ASSERT(p);
     group = p->createGroupTransform();
     OCIO_REQUIRE_EQUAL(group->getNumTransforms(), 4);
 
     // Or interchange space can be specified using role.
-    OCIO_CHECK_NO_THROW(p = OCIO::Config::GetProcessorFromConfigs(config1, "test1", "aces_interchange", config2, "test2", "aces2"));
+    OCIO_CHECK_NO_THROW(p = OCIO::Config::GetProcessorFromConfigs(
+        config1, "test1", OCIO::ROLE_INTERCHANGE_SCENE, config2, "test2", "aces2"));
     OCIO_REQUIRE_ASSERT(p);
     OCIO_REQUIRE_ASSERT(p);
     group = p->createGroupTransform();
     OCIO_REQUIRE_EQUAL(group->getNumTransforms(), 4);
 
     // Or color space can be specified using role.
-    OCIO_CHECK_NO_THROW(p = OCIO::Config::GetProcessorFromConfigs(config1, "test1", "aces_interchange", config2, "test_role", "aces2"));
+    OCIO_CHECK_NO_THROW(p = OCIO::Config::GetProcessorFromConfigs(
+        config1, "test1", OCIO::ROLE_INTERCHANGE_SCENE, config2, "test_role", "aces2"));
     OCIO_REQUIRE_ASSERT(p);
     OCIO_REQUIRE_ASSERT(p);
     group = p->createGroupTransform();
