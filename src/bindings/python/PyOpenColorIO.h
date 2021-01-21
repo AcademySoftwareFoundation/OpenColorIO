@@ -23,7 +23,7 @@ using namespace pybind11::literals;
 namespace OCIO_NAMESPACE
 {
 
-// Types
+// OpenColorIOTypes
 void bindPyTypes(py::module & m);
 
 // OpenColorIO
@@ -45,14 +45,14 @@ void bindPySystemMonitors(py::module & m);
 void bindPyViewingRules(py::module & m);
 void bindPyViewTransform(py::module & m);
 
-// Transforms
+// OpenColorIOTransforms
 void bindPyBuiltinTransformRegistry(py::module & m);
 void bindPyDynamicProperty(py::module & m);
 void bindPyFormatMetadata(py::module & m);
 void bindPyGradingData(py::module & m);
 void bindPyTransform(py::module & m);
 
-// App helpers
+// OpenColorIOAppHelpers
 void bindPyColorSpaceMenuHelpers(py::module & m);
 void bindPyDisplayViewHelpers(py::module & m);
 void bindPyLegacyViewingPipeline(py::module & m);

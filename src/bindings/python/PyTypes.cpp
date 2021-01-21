@@ -93,7 +93,7 @@ void bindPyTypes(py::module & m)
         m, "ViewTransform", 
         DOC(ViewTransform));
 
-    // Transforms
+    // OpenColorIOTransforms
     py::class_<PyBuiltinTransformRegistry>(
         m, "BuiltinTransformRegistry", 
         DOC(BuiltinTransformRegistry));
@@ -244,7 +244,7 @@ void bindPyTypes(py::module & m)
         m, "RangeTransform", 
         DOC(RangeTransform));
 
-    // App helpers
+    // OpenColorIOAppHelpers
     py::class_<ColorSpaceMenuParameters, ColorSpaceMenuParametersRcPtr /* holder */>(
         m, "ColorSpaceMenuParameters", 
         DOC(ColorSpaceMenuParameters));

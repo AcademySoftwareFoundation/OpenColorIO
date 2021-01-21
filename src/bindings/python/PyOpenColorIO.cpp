@@ -10,7 +10,7 @@ PYBIND11_MODULE(PyOpenColorIO, m)
 {
     m.doc() = DOC(PyOpenColorIO);
 
-    // Types
+    // OpenColorIOTypes
     bindPyTypes(m);
 
     // Exceptions
@@ -86,14 +86,14 @@ PYBIND11_MODULE(PyOpenColorIO, m)
     bindPyViewingRules(m);
     bindPyViewTransform(m);
 
-    // Transforms
+    // OpenColorIOTransforms
     bindPyBuiltinTransformRegistry(m);
     bindPyDynamicProperty(m);
     bindPyFormatMetadata(m);
     bindPyGradingData(m);
     bindPyTransform(m);
 
-    // App helpers
+    // OpenColorIOAppHelpers
     bindPyColorSpaceMenuHelpers(m);
     bindPyDisplayViewHelpers(m);
     bindPyLegacyViewingPipeline(m);

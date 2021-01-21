@@ -10,7 +10,7 @@ namespace OCIO_NAMESPACE
 {
 
 // Wrapper to preserve the SystemMonitors singleton.
-class PySystemMonitors
+class OCIOHIDDEN PySystemMonitors
 {
 public:
     PySystemMonitors() = default;
