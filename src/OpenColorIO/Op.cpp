@@ -6,6 +6,7 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "Logging.h"
 #include "Op.h"
 #include "ops/cdl/CDLOp.h"
 #include "ops/exponent/ExponentOp.h"
@@ -403,14 +404,15 @@ void ValidateDynamicProperty(OpRcPtr op, std::shared_ptr<T> & prop, DynamicPrope
                 break;
             }
             os << " dynamic property can only be there once.";
-            throw Exception(os.str().c_str());
+            LogWarning(os.str());
         }
     }
 }
 }
 
-// Throw if there is more than one property of a given type that is currently dynamic.  There may
-// be more than one property of a given type, but they both may not be dynamic at the same time.
+// Warn if there is more than one property of a given type that is currently dynamic.  There may
+// be more than one property of a given type, but only one will respond to parameter updates, the
+// others will use their original parameter values.
 void OpRcPtrVec::validateDynamicProperties()
 {
     // Empty shared pointers.

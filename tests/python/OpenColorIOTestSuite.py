@@ -72,6 +72,7 @@ import MatrixTransformTest
 import MixingHelpersTest
 import NamedTransformTest
 import OpenColorIOTest
+import ProcessorTest
 import ViewingRulesTest
 #from MainTest import *
 #from ConstantsTest import *
@@ -124,6 +125,7 @@ def suite():
     suite.addTest(loader.loadTestsFromModule(MixingHelpersTest))
     suite.addTest(loader.loadTestsFromModule(NamedTransformTest))
     suite.addTest(loader.loadTestsFromModule(OpenColorIOTest))
+    suite.addTest(loader.loadTestsFromModule(ProcessorTest))
     suite.addTest(loader.loadTestsFromModule(ViewingRulesTest))
     #suite.addTest(MainTest("test_interface"))
     #suite.addTest(ConstantsTest("test_interface"))
