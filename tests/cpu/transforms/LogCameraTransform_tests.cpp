@@ -21,21 +21,15 @@ bool AllEqual(double (&values)[3])
 
 OCIO_ADD_TEST(LogCameraTransform, camera)
 {
-    const OCIO::LogCameraTransformRcPtr log = OCIO::LogCameraTransform::Create();
+    const OCIO::LogCameraTransformRcPtr log = OCIO::LogCameraTransform::Create({ 0.2, 0.2, 0.2 });
 
-    OCIO_CHECK_THROW_WHAT(log->validate(), OCIO::Exception, "LinSideBreak has to be defined");
     double values[3]{ -1., -1., -1. };
 
-    OCIO_CHECK_ASSERT(!log->getLinSideBreakValue(values));
-    OCIO_CHECK_ASSERT(!log->getLinearSlopeValue(values));
-
-    OCIO_CHECK_THROW_WHAT(log->setLinearSlopeValue({ 1, 1, 1 }), OCIO::Exception,
-                          "LinSideBreak has to be defined before linearSlope");
-
-    OCIO_CHECK_NO_THROW(log->setLinSideBreakValue({ 0.1, 0.1, 0.1 }));
-    OCIO_CHECK_ASSERT(log->getLinSideBreakValue(values));
+    log->getLinSideBreakValue(values);
     OCIO_CHECK_ASSERT(AllEqual(values));
-    OCIO_CHECK_EQUAL(values[0], 0.1);
+    OCIO_CHECK_EQUAL(values[0], 0.2);
+
+    OCIO_CHECK_ASSERT(!log->getLinearSlopeValue(values));
 
     OCIO_CHECK_NO_THROW(log->setLinearSlopeValue({ 1, 1, 1 }));
     OCIO_CHECK_ASSERT(log->getLinearSlopeValue(values));

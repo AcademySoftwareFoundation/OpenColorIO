@@ -37,7 +37,7 @@ void bindPyMixingHelpers(py::module & m)
         .def("mixingToSlider", &MixingSlider::mixingToSlider, "mixingUnits"_a,
              DOC(MixingSlider, mixingToSlider));
 
-    defStr(clsMixingSlider);
+    defRepr(clsMixingSlider);
 
     auto clsMixingColorSpaceManager =
         py::class_<MixingColorSpaceManager, MixingColorSpaceManagerRcPtr /* holder */>(
@@ -92,7 +92,7 @@ void bindPyMixingHelpers(py::module & m)
              py::return_value_policy::reference_internal,
              DOC(MixingColorSpaceManager, getSlider));
 
-    defStr(clsMixingColorSpaceManager);
+    defRepr(clsMixingColorSpaceManager);
 
     py::class_<MixingSpaceIterator>(clsMixingColorSpaceManager, "MixingSpaceIterator")
         .def("__len__", [](MixingSpaceIterator & it)

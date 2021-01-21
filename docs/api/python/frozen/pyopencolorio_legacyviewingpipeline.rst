@@ -32,10 +32,6 @@
       :module: PyOpenColorIO
 
 
-   .. py:method:: LegacyViewingPipeline.__str__(self: PyOpenColorIO.LegacyViewingPipeline) -> str
-      :module: PyOpenColorIO
-
-
    .. py:method:: LegacyViewingPipeline.getChannelView(self: PyOpenColorIO.LegacyViewingPipeline) -> PyOpenColorIO.Transform
       :module: PyOpenColorIO
 

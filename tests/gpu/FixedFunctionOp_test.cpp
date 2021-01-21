@@ -11,8 +11,8 @@ namespace OCIO = OCIO_NAMESPACE;
 
 OCIO_ADD_GPU_TEST(FixedFunction, style_aces_redmod03_fwd)
 {
-    OCIO::FixedFunctionTransformRcPtr func = OCIO::FixedFunctionTransform::Create();
-    func->setStyle(OCIO::FIXED_FUNCTION_ACES_RED_MOD_03);
+    OCIO::FixedFunctionTransformRcPtr func =
+        OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_ACES_RED_MOD_03);
     func->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
 
     test.setProcessor(func);
@@ -32,8 +32,8 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_aces_redmod03_fwd)
 
 OCIO_ADD_GPU_TEST(FixedFunction, style_aces_redmod03_inv)
 {
-    OCIO::FixedFunctionTransformRcPtr func = OCIO::FixedFunctionTransform::Create();
-    func->setStyle(OCIO::FIXED_FUNCTION_ACES_RED_MOD_03);
+    OCIO::FixedFunctionTransformRcPtr func =
+        OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_ACES_RED_MOD_03);
     func->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
 
     test.setProcessor(func);
@@ -53,8 +53,8 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_aces_redmod03_inv)
 
 OCIO_ADD_GPU_TEST(FixedFunction, style_aces_redmod10_fwd)
 {
-    OCIO::FixedFunctionTransformRcPtr func = OCIO::FixedFunctionTransform::Create();
-    func->setStyle(OCIO::FIXED_FUNCTION_ACES_RED_MOD_10);
+    OCIO::FixedFunctionTransformRcPtr func =
+        OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_ACES_RED_MOD_10);
     func->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
 
     test.setProcessor(func);
@@ -74,8 +74,8 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_aces_redmod10_fwd)
 
 OCIO_ADD_GPU_TEST(FixedFunction, style_aces_redmod10_inv)
 {
-    OCIO::FixedFunctionTransformRcPtr func = OCIO::FixedFunctionTransform::Create();
-    func->setStyle(OCIO::FIXED_FUNCTION_ACES_RED_MOD_10);
+    OCIO::FixedFunctionTransformRcPtr func =
+        OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_ACES_RED_MOD_10);
     func->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
 
     test.setProcessor(func);
@@ -95,8 +95,8 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_aces_redmod10_inv)
 
 OCIO_ADD_GPU_TEST(FixedFunction, style_aces_glow03_fwd)
 {
-    OCIO::FixedFunctionTransformRcPtr func = OCIO::FixedFunctionTransform::Create();
-    func->setStyle(OCIO::FIXED_FUNCTION_ACES_GLOW_03);
+    OCIO::FixedFunctionTransformRcPtr func =
+        OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_ACES_GLOW_03);
     func->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
 
     test.setProcessor(func);
@@ -115,8 +115,8 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_aces_glow03_fwd)
 
 OCIO_ADD_GPU_TEST(FixedFunction, style_aces_glow03_inv)
 {
-    OCIO::FixedFunctionTransformRcPtr func = OCIO::FixedFunctionTransform::Create();
-    func->setStyle(OCIO::FIXED_FUNCTION_ACES_GLOW_03);
+    OCIO::FixedFunctionTransformRcPtr func =
+        OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_ACES_GLOW_03);
     func->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
 
     test.setProcessor(func);
@@ -135,8 +135,8 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_aces_glow03_inv)
 
 OCIO_ADD_GPU_TEST(FixedFunction, style_aces_glow10_fwd)
 {
-    OCIO::FixedFunctionTransformRcPtr func = OCIO::FixedFunctionTransform::Create();
-    func->setStyle(OCIO::FIXED_FUNCTION_ACES_GLOW_10);
+    OCIO::FixedFunctionTransformRcPtr func =
+        OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_ACES_GLOW_10);
     func->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
 
     test.setProcessor(func);
@@ -155,8 +155,8 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_aces_glow10_fwd)
 
 OCIO_ADD_GPU_TEST(FixedFunction, style_aces_glow10_inv)
 {
-    OCIO::FixedFunctionTransformRcPtr func = OCIO::FixedFunctionTransform::Create();
-    func->setStyle(OCIO::FIXED_FUNCTION_ACES_GLOW_10);
+    OCIO::FixedFunctionTransformRcPtr func =
+        OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_ACES_GLOW_10);
     func->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
 
     test.setProcessor(func);
@@ -178,8 +178,8 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_aces_glow10_inv)
 
 OCIO_ADD_GPU_TEST(FixedFunction, style_aces_darktodim10_fwd)
 {
-    OCIO::FixedFunctionTransformRcPtr func = OCIO::FixedFunctionTransform::Create();
-    func->setStyle(OCIO::FIXED_FUNCTION_ACES_DARK_TO_DIM_10);
+    OCIO::FixedFunctionTransformRcPtr func =
+        OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_ACES_DARK_TO_DIM_10);
     func->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
 
     test.setProcessor(func);
@@ -191,8 +191,8 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_aces_darktodim10_fwd)
 
 OCIO_ADD_GPU_TEST(FixedFunction, style_aces_darktodim10_inv)
 {
-    OCIO::FixedFunctionTransformRcPtr func = OCIO::FixedFunctionTransform::Create();
-    func->setStyle(OCIO::FIXED_FUNCTION_ACES_DARK_TO_DIM_10);
+    OCIO::FixedFunctionTransformRcPtr func =
+        OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_ACES_DARK_TO_DIM_10);
     func->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
 
     test.setProcessor(func);
@@ -204,11 +204,10 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_aces_darktodim10_inv)
 
 OCIO_ADD_GPU_TEST(FixedFunction, style_rec2100_surround_fwd)
 {
-    OCIO::FixedFunctionTransformRcPtr func = OCIO::FixedFunctionTransform::Create();
-    func->setStyle(OCIO::FIXED_FUNCTION_REC2100_SURROUND);
-    func->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
     const double data[1] = { 0.7 };
-    func->setParams(&data[0], 1);
+    OCIO::FixedFunctionTransformRcPtr func =
+        OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_REC2100_SURROUND, &data[0], 1);
+    func->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
 
     test.setProcessor(func);
 
@@ -219,12 +218,11 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_rec2100_surround_fwd)
 
 OCIO_ADD_GPU_TEST(FixedFunction, style_rec2100_surround_inv)
 {
-    OCIO::FixedFunctionTransformRcPtr func = OCIO::FixedFunctionTransform::Create();
-    func->setStyle(OCIO::FIXED_FUNCTION_REC2100_SURROUND);
-    func->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+    const double data[1] = { 1. / 0.7 };
     // (Since we're not calling inverse() here, set the param to be the inverse of prev test.)
-    const double data[1] = { 1./0.7 };
-    func->setParams(&data[0], 1);
+    OCIO::FixedFunctionTransformRcPtr func =
+        OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_REC2100_SURROUND, &data[0], 1);
+    func->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
 
     test.setProcessor(func);
 
@@ -235,8 +233,8 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_rec2100_surround_inv)
 
 OCIO_ADD_GPU_TEST(FixedFunction, style_RGB_TO_HSV_fwd)
 {
-    OCIO::FixedFunctionTransformRcPtr func = OCIO::FixedFunctionTransform::Create();
-    func->setStyle(OCIO::FIXED_FUNCTION_RGB_TO_HSV);
+    OCIO::FixedFunctionTransformRcPtr func =
+        OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_RGB_TO_HSV);
     func->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
 
     test.setProcessor(func);
@@ -251,8 +249,8 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_RGB_TO_HSV_fwd)
 
 OCIO_ADD_GPU_TEST(FixedFunction, style_RGB_TO_HSV_fwd_custom)
 {
-    OCIO::FixedFunctionTransformRcPtr func = OCIO::FixedFunctionTransform::Create();
-    func->setStyle(OCIO::FIXED_FUNCTION_RGB_TO_HSV);
+    OCIO::FixedFunctionTransformRcPtr func =
+        OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_RGB_TO_HSV);
     func->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
 
     test.setProcessor(func);
@@ -272,8 +270,8 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_RGB_TO_HSV_fwd_custom)
 
 OCIO_ADD_GPU_TEST(FixedFunction, style_RGB_TO_HSV_inv)
 {
-    OCIO::FixedFunctionTransformRcPtr func = OCIO::FixedFunctionTransform::Create();
-    func->setStyle(OCIO::FIXED_FUNCTION_RGB_TO_HSV);
+    OCIO::FixedFunctionTransformRcPtr func =
+        OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_RGB_TO_HSV);
     func->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
 
     test.setProcessor(func);
@@ -287,8 +285,8 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_RGB_TO_HSV_inv)
 
 OCIO_ADD_GPU_TEST(FixedFunction, style_RGB_TO_HSV_inv_custom)
 {
-    OCIO::FixedFunctionTransformRcPtr func = OCIO::FixedFunctionTransform::Create();
-    func->setStyle(OCIO::FIXED_FUNCTION_RGB_TO_HSV);
+    OCIO::FixedFunctionTransformRcPtr func =
+        OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_RGB_TO_HSV);
     func->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
 
     test.setProcessor(func);
@@ -312,8 +310,8 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_RGB_TO_HSV_inv_custom)
 
 OCIO_ADD_GPU_TEST(FixedFunction, style_XYZ_TO_xyY_fwd)
 {
-    OCIO::FixedFunctionTransformRcPtr func = OCIO::FixedFunctionTransform::Create();
-    func->setStyle(OCIO::FIXED_FUNCTION_XYZ_TO_xyY);
+    OCIO::FixedFunctionTransformRcPtr func =
+        OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_XYZ_TO_xyY);
     func->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
 
     test.setProcessor(func);
@@ -323,8 +321,8 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_XYZ_TO_xyY_fwd)
 
 OCIO_ADD_GPU_TEST(FixedFunction, style_XYZ_TO_xyY_inv)
 {
-    OCIO::FixedFunctionTransformRcPtr func = OCIO::FixedFunctionTransform::Create();
-    func->setStyle(OCIO::FIXED_FUNCTION_XYZ_TO_xyY);
+    OCIO::FixedFunctionTransformRcPtr func =
+        OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_XYZ_TO_xyY);
     func->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
 
     test.setProcessor(func);
@@ -334,8 +332,8 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_XYZ_TO_xyY_inv)
 
 OCIO_ADD_GPU_TEST(FixedFunction, style_XYZ_TO_uvY_fwd)
 {
-    OCIO::FixedFunctionTransformRcPtr func = OCIO::FixedFunctionTransform::Create();
-    func->setStyle(OCIO::FIXED_FUNCTION_XYZ_TO_uvY);
+    OCIO::FixedFunctionTransformRcPtr func =
+        OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_XYZ_TO_uvY);
     func->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
 
     test.setProcessor(func);
@@ -345,8 +343,8 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_XYZ_TO_uvY_fwd)
 
 OCIO_ADD_GPU_TEST(FixedFunction, style_XYZ_TO_uvY_inv)
 {
-    OCIO::FixedFunctionTransformRcPtr func = OCIO::FixedFunctionTransform::Create();
-    func->setStyle(OCIO::FIXED_FUNCTION_XYZ_TO_uvY);
+    OCIO::FixedFunctionTransformRcPtr func =
+        OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_XYZ_TO_uvY);
     func->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
 
     test.setProcessor(func);
@@ -356,8 +354,8 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_XYZ_TO_uvY_inv)
 
 OCIO_ADD_GPU_TEST(FixedFunction, style_XYZ_TO_LUV_fwd)
 {
-    OCIO::FixedFunctionTransformRcPtr func = OCIO::FixedFunctionTransform::Create();
-    func->setStyle(OCIO::FIXED_FUNCTION_XYZ_TO_LUV);
+    OCIO::FixedFunctionTransformRcPtr func =
+        OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_XYZ_TO_LUV);
     func->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
 
     test.setProcessor(func);
@@ -367,8 +365,8 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_XYZ_TO_LUV_fwd)
 
 OCIO_ADD_GPU_TEST(FixedFunction, style_XYZ_TO_LUV_inv)
 {
-    OCIO::FixedFunctionTransformRcPtr func = OCIO::FixedFunctionTransform::Create();
-    func->setStyle(OCIO::FIXED_FUNCTION_XYZ_TO_LUV);
+    OCIO::FixedFunctionTransformRcPtr func =
+        OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_XYZ_TO_LUV);
     func->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
 
     test.setProcessor(func);

@@ -121,6 +121,27 @@ External Plugins (currently known)::
          this is a 1D HDR to LDR allocation. It is normally combined with 
          another display transform in the host app for preview.
 
+      .. data:: PyOpenColorIO.ROLE_RENDERING
+
+         The rendering role may be used to identify a specific color space to be 
+         used by CGI renderers.  This is typically a scene-linear space but the 
+         primaries also matter since they influence the resulting color, especially 
+         in areas of indirect illumination.
+
+      .. data:: PyOpenColorIO.ROLE_INTERCHANGE_SCENE
+
+         The aces_interchange role is used to specify which color space in the 
+         config implements the standard ACES2065-1 color space (SMPTE ST2065-1). 
+         This may be used when converting scene-referred colors from one config 
+         to another.
+
+      .. data:: PyOpenColorIO.ROLE_INTERCHANGE_DISPLAY
+
+         The cie_xyz_d65_interchange role is used to specify which color space in 
+         the config implements CIE XYZ colorimetry with the neutral axis at D65. 
+         This may be used when converting display-referred colors from one config 
+         to another.
+
    .. group-tab:: C++
 
       .. doxygengroup:: VarsRoles

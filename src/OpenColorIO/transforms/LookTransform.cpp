@@ -181,11 +181,11 @@ const char * LookTransform::GetLooksResultColorSpace(const ConstConfigRcPtr & co
 std::ostream& operator<< (std::ostream& os, const LookTransform& t)
 {
     os << "<LookTransform";
-    os <<  " src="       << t.getSrc();
+    os <<  " direction=" << TransformDirectionToString(t.getDirection());
+    os << ", src="       << t.getSrc();
     os << ", dst="       << t.getDst();
     os << ", looks="     << t.getLooks();
     if (t.getSkipColorSpaceConversion()) os << ", skipCSConversion";
-    os << ", direction=" << TransformDirectionToString(t.getDirection());
     os << ">";
     return os;
 }

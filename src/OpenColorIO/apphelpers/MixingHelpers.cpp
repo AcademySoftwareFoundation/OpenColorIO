@@ -328,8 +328,7 @@ ConstProcessorRcPtr MixingColorSpaceManagerImpl::getProcessor(const char * worki
 
     if (getSelectedMixingEncodingIdx()==1)  // i.e. HSV
     {
-        FixedFunctionTransformRcPtr tr = FixedFunctionTransform::Create();
-        tr->setStyle(FIXED_FUNCTION_RGB_TO_HSV);
+        FixedFunctionTransformRcPtr tr = FixedFunctionTransform::Create(FIXED_FUNCTION_RGB_TO_HSV);
 
         group->appendTransform(tr);
     }

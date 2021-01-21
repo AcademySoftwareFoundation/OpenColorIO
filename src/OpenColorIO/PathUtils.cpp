@@ -206,7 +206,8 @@ int ParseColorSpaceFromString(const Config & config, const char * str)
     // Find the right-most occcurance within the string for each colorspace.
     for (int i = 0; i < config.getNumColorSpaces(SEARCH_REFERENCE_SPACE_ALL, COLORSPACE_ALL); ++i)
     {
-        const std::string csname = StringUtils::Lower(config.getColorSpaceNameByIndex(i));
+        const std::string csname = StringUtils::Lower(
+            config.getColorSpaceNameByIndex(SEARCH_REFERENCE_SPACE_ALL, COLORSPACE_ALL, i));
 
         // find right-most extension matched in filename
         int colorspacePos = (int)StringUtils::ReverseFind(fullstr, csname);
