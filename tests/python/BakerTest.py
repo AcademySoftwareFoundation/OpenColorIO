@@ -82,6 +82,25 @@ END METADATA
         bake.setCubeSize(2)
         self.assertEqual(2, bake.getCubeSize())
         output = bake.bake()
+        lines = output.splitlines()
+        expected_lines = self.EXPECTED_LUT.splitlines()
+        self.assertEqual(len(lines), len(expected_lines))
+        # Text compare for the first lines.
+        for i in range(6):
+            self.assertEqual(lines[i], expected_lines[i])
+        # Compare values after (results might be slightly different on some plaforms).
+        for i in range(6, len(lines)):
+            # Skip blank lines.
+            if lines[i] == '':
+                continue
+            # Line 16 is the cube size.
+            if i == 16:
+                self.assertEqual(lines[i], expected_lines[i])
+                continue
+            lf = lines[i].split(' ')
+            elf = expected_lines[i].split(' ')
+            for j in range(len(lf)):
+                self.assertAlmostEqual(float(lf[j]), float(elf[j]), delta = 0.00001)
         self.assertEqual(self.EXPECTED_LUT, output)
         fmts = bake.getFormats()
         self.assertEqual(len(fmts), 10)
