@@ -60,7 +60,7 @@ void bindPyLook(py::module & m)
         .def("setDescription", &Look::setDescription, "description"_a.none(false), 
              DOC(Look, setDescription));
 
-    defStr(clsLook);
+    defRepr(clsLook);
 }
 
 } // namespace OCIO_NAMESPACE

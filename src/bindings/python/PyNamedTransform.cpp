@@ -157,7 +157,7 @@ void bindPyNamedTransform(py::module & m)
         .def("clearCategories", &NamedTransform::clearCategories,
             DOC(NamedTransform, clearCategories));
 
-    defStr(cls);
+    defRepr(cls);
 
     py::class_<NamedTransformCategoryIterator>(cls, "NamedTransformCategoryIterator")
         .def("__len__", [](NamedTransformCategoryIterator & it)

@@ -17,7 +17,7 @@ namespace {
 
 void bindPyFixedFunctionTransform(py::module & m)
 {
-    FixedFunctionTransformRcPtr DEFAULT = FixedFunctionTransform::Create();
+    FixedFunctionTransformRcPtr DEFAULT = FixedFunctionTransform::Create(FIXED_FUNCTION_ACES_GLOW_03);
 
     auto clsFixedFunctionTransform = 
         py::class_<FixedFunctionTransform, 
@@ -26,20 +26,20 @@ void bindPyFixedFunctionTransform(py::module & m)
             m, "FixedFunctionTransform", 
             DOC(FixedFunctionTransform))
 
-        .def(py::init(&FixedFunctionTransform::Create), 
-             DOC(FixedFunctionTransform, Create))
         .def(py::init([](FixedFunctionStyle style, 
                          const std::vector<double> & params,
                          TransformDirection dir) 
             {
-                FixedFunctionTransformRcPtr p = FixedFunctionTransform::Create();
-                p->setStyle(style);
-                p->setParams(params.data(), params.size());
+                FixedFunctionTransformRcPtr p = params.empty() ?
+                                                FixedFunctionTransform::Create(style) :
+                                                FixedFunctionTransform::Create(style,
+                                                                               params.data(),
+                                                                               params.size());
                 p->setDirection(dir);
                 p->validate();
                 return p;
             }), 
-             "style"_a = DEFAULT->getStyle(), 
+             "style"_a, 
              "params"_a = getParamsStdVec(DEFAULT),
              "direction"_a = DEFAULT->getDirection(), 
              DOC(FixedFunctionTransform, Create))
@@ -67,7 +67,7 @@ void bindPyFixedFunctionTransform(py::module & m)
              "params"_a, 
              DOC(FixedFunctionTransform, setParams));
 
-    defStr(clsFixedFunctionTransform);
+    defRepr(clsFixedFunctionTransform);
 }
 
 } // namespace OCIO_NAMESPACE

@@ -11,7 +11,8 @@ namespace OCIO = OCIO_NAMESPACE;
 
 OCIO_ADD_TEST(FixedFunctionTransform, basic)
 {
-    OCIO::FixedFunctionTransformRcPtr func = OCIO::FixedFunctionTransform::Create();
+    OCIO::FixedFunctionTransformRcPtr func =
+        OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_ACES_RED_MOD_03);
     OCIO_CHECK_EQUAL(func->getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
     OCIO_CHECK_EQUAL(func->getStyle(), OCIO::FIXED_FUNCTION_ACES_RED_MOD_03);
     OCIO_CHECK_EQUAL(func->getNumParams(), 0);

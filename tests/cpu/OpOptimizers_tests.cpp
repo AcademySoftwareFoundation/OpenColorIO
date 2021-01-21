@@ -216,7 +216,8 @@ OCIO_ADD_TEST(OpOptimizers, remove_inverse_ops)
 {
     OCIO::OpRcPtrVec ops;
 
-    auto func = std::make_shared<OCIO::FixedFunctionOpData>();
+    auto func = std::make_shared<OCIO::FixedFunctionOpData>(
+        OCIO::FixedFunctionOpData::ACES_RED_MOD_03_FWD);
 
     const double logSlope[3]  = {0.18, 0.18, 0.18};
     const double linSlope[3]  = {2.0, 2.0, 2.0};

@@ -165,7 +165,8 @@ void CreateLogTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op)
     auto logData = DynamicPtrCast<const LogOpData>(op->data());
     if (logData->isCamera())
     {
-        auto logTransform = LogCameraTransform::Create();
+        double linSB[]{ 0.1, 0.1, 0.1 };
+        auto logTransform = LogCameraTransform::Create(linSB);
         auto & data = dynamic_cast<LogCameraTransformImpl*>(logTransform.get())->data();
         data = *logData;
         group->appendTransform(logTransform);

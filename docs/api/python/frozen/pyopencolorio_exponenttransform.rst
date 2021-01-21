@@ -23,10 +23,6 @@
       2. __init__(self: PyOpenColorIO.ExponentTransform, value: List[float[4]] = [1.0, 1.0, 1.0, 1.0], negativeStyle: PyOpenColorIO.NegativeStyle = <NegativeStyle.NEGATIVE_CLAMP: 0>, direction: PyOpenColorIO.TransformDirection = <TransformDirection.TRANSFORM_DIR_FORWARD: 0>) -> None
 
 
-   .. py:method:: ExponentTransform.__str__(self: PyOpenColorIO.ExponentTransform) -> str
-      :module: PyOpenColorIO
-
-
    .. py:method:: ExponentTransform.equals(self: PyOpenColorIO.ExponentTransform, other: PyOpenColorIO.ExponentTransform) -> bool
       :module: PyOpenColorIO
 

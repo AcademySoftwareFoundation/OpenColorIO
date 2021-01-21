@@ -192,7 +192,7 @@ void bindPyContext(py::module & m)
              "filename"_a, "usedContextVars"_a, 
              DOC(Context, resolveFileLocation, 2));
 
-    defStr(clsContext);
+    defRepr(clsContext);
 
     clsStringVarNameIterator
         .def("__len__", [](StringVarNameIterator & it) 

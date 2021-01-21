@@ -632,9 +632,38 @@ void bindPyConfig(py::module & m)
                     DOC(Config, GetProcessorFromConfigs, 4))
 
         .def("setProcessorCacheFlags", &Config::setProcessorCacheFlags, "flags"_a, 
-             DOC(Config, setProcessorCacheFlags));
-
-    defStr(clsConfig);
+             DOC(Config, setProcessorCacheFlags))
+                
+        .def("__str__", [](ConfigRcPtr & self)
+            {
+                std::ostringstream os;
+                os << (*self);
+                return os.str();
+            })
+        .def("__repr__", [](ConfigRcPtr & self)
+            {
+                std::ostringstream os;
+                os << self;
+                std::string name{ self->getName() };
+                if (!name.empty())
+                {
+                    os << " name: " << name;
+                }
+                std::string desc{ self->getDescription() };
+                if (!desc.empty())
+                {
+                    os << ", description: " << desc;
+                }
+                os << " (version: " << self->getMajorVersion();
+                const unsigned int minor = self->getMinorVersion();
+                if (minor)
+                {
+                    os << "." << minor;
+                }
+                os << "), " << self->getNumColorSpaces() << " active color spaces, ";
+                os << self->getNumDisplays() << " active displays.";
+                return os.str();
+            });
 
     clsEnvironmentVarNameIterator
         .def("__len__", [](EnvironmentVarNameIterator & it) 

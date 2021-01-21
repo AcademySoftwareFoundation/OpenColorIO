@@ -16,7 +16,9 @@ namespace OCIO_NAMESPACE
 class FixedFunctionTransformImpl : public FixedFunctionTransform
 {
 public:
-    FixedFunctionTransformImpl() = default;
+    FixedFunctionTransformImpl() = delete;
+    FixedFunctionTransformImpl(FixedFunctionStyle style);
+    FixedFunctionTransformImpl(FixedFunctionStyle style, const FixedFunctionOpData::Params & p);
     FixedFunctionTransformImpl(const FixedFunctionTransformImpl &) = delete;
     FixedFunctionTransformImpl & operator=(const FixedFunctionTransformImpl &) = delete;
     virtual ~FixedFunctionTransformImpl() = default;

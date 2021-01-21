@@ -27,7 +27,8 @@ OCIO_ADD_TEST(GroupTransform, basic)
 
     OCIO::MatrixTransformRcPtr matrix = OCIO::MatrixTransform::Create();
     group->appendTransform(matrix);
-    OCIO::FixedFunctionTransformRcPtr ff =  OCIO::FixedFunctionTransform::Create();
+    OCIO::FixedFunctionTransformRcPtr ff =
+        OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_ACES_RED_MOD_03);
     group->appendTransform(ff);
 
     OCIO_CHECK_EQUAL(group->getNumTransforms(), 2);

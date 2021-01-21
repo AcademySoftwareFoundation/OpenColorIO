@@ -707,4 +707,12 @@ colorspaces:
     // "colorspace" is present but "ColorspaceAlias" is longer (and at the same position).
     OCIO_CHECK_EQUAL(std::string(config->parseColorSpaceFromString("skdj_ColorspaceAlias_dfjdk")),
                      "raw");
+
+    // With inactive color spaces.
+
+    auto cfg = config->createEditableCopy();
+    cfg->setInactiveColorSpaces("colorspace");
+
+    OCIO_CHECK_EQUAL(std::string(cfg->parseColorSpaceFromString("test_aces_test")),
+                     "colorspace");
 }

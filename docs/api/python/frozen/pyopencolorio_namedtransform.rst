@@ -32,8 +32,10 @@
       2. __init__(self: PyOpenColorIO.NamedTransform, name: str = '', aliases: List[str] = [], family: str = '', description: str = '', forwardTransform: PyOpenColorIO.Transform = None, inverseTransform: PyOpenColorIO.Transform = None, categories: List[str] = []) -> None
 
 
-   .. py:method:: NamedTransform.__str__(self: PyOpenColorIO.NamedTransform) -> str
+   .. py:method:: NamedTransform.addAlias(self: PyOpenColorIO.NamedTransform, alias: str) -> None
       :module: PyOpenColorIO
+
+      Nothing is done if alias is NULL or empty, if it is already there, or if it is already the named transform name.
 
 
    .. py:method:: NamedTransform.addAlias(self: PyOpenColorIO.NamedTransform, alias: str) -> None

@@ -13,10 +13,6 @@
       :module: PyOpenColorIO
 
 
-   .. py:method:: GradingTone.__str__(self: PyOpenColorIO.GradingTone) -> str
-      :module: PyOpenColorIO
-
-
    .. py:method:: GradingTone.blacks
       :module: PyOpenColorIO
       :property:
