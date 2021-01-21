@@ -6,6 +6,7 @@
 
 #include "ops/exposurecontrast/ExposureContrastOp.h"
 #include "testutils/UnitTest.h"
+#include "UnitTestLogUtils.h"
 #include "UnitTestOptimFlags.h"
 
 namespace OCIO = OCIO_NAMESPACE;
@@ -62,8 +63,30 @@ OCIO_ADD_TEST(Processor, unique_dynamic_properties)
 
     OCIO_CHECK_NE(dp0->getValue(), dp1->getValue());
 
-    OCIO_CHECK_THROW_WHAT(ops.validateDynamicProperties(), OCIO::Exception,
-                          "Exposure dynamic property can only be there once");
+    OCIO::LogGuard log;
+    OCIO_CHECK_NO_THROW(ops.validateDynamicProperties());
+    OCIO_CHECK_EQUAL(log.output(), "[OpenColorIO Warning]: Exposure dynamic property can "
+                                   "only be there once.\n");
+}
+
+OCIO_ADD_TEST(Processor, dynamic_properties)
+{
+    OCIO::ExposureContrastTransformRcPtr ec = OCIO::ExposureContrastTransform::Create();
+
+    ec->setExposure(1.2);
+    ec->setPivot(0.5);
+    ec->makeContrastDynamic();
+
+    OCIO::ConfigRcPtr config = OCIO::Config::Create();
+    auto proc = config->getProcessor(ec);
+    OCIO_CHECK_ASSERT(proc->isDynamic());
+    OCIO_CHECK_ASSERT(proc->hasDynamicProperty(OCIO::DYNAMIC_PROPERTY_CONTRAST));
+    OCIO_CHECK_ASSERT(!proc->hasDynamicProperty(OCIO::DYNAMIC_PROPERTY_EXPOSURE));
+    OCIO::DynamicPropertyRcPtr dpc;
+    OCIO_CHECK_NO_THROW(dpc = proc->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_CONTRAST));
+    OCIO_CHECK_ASSERT(dpc);
+    OCIO_CHECK_THROW_WHAT(proc->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_EXPOSURE),
+                          OCIO::Exception, "Cannot find dynamic property");
 }
 
 OCIO_ADD_TEST(Processor, optimized_processor)

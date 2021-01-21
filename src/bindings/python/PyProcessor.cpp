@@ -2,6 +2,7 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 
+#include "PyDynamicProperty.h"
 #include "PyOpenColorIO.h"
 #include "PyUtils.h"
 
@@ -49,17 +50,19 @@ void bindPyProcessor(py::module & m)
             })
         .def("createGroupTransform", &Processor::createGroupTransform,
              DOC(Processor, createGroupTransform))
-        .def("getDynamicProperty", &Processor::getDynamicProperty, "type"_a,
+        .def("getDynamicProperty", [](ProcessorRcPtr & self, DynamicPropertyType type)
+            {
+                return PyDynamicProperty(self->getDynamicProperty(type));
+            },
+            "type"_a,
              DOC(Processor, getDynamicProperty))
         .def("hasDynamicProperty",
              (bool (Processor::*)(DynamicPropertyType) const noexcept)
              &Processor::hasDynamicProperty,
              "type"_a,
              DOC(Processor, hasDynamicProperty))
-        .def("hasDynamicProperty",
-             (bool (Processor::*)() const noexcept)
-             &Processor::hasDynamicProperty,
-             DOC(Processor, hasDynamicProperty))
+        .def("isDynamic", &Processor::isDynamic,
+             DOC(Processor, isDynamic))
         .def("getOptimizedProcessor",
              (ConstProcessorRcPtr(Processor::*)(OptimizationFlags) const)
              &Processor::getOptimizedProcessor, "oFlags"_a,
