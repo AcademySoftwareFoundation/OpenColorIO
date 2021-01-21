@@ -13,7 +13,7 @@ class BuiltinTransformTest(unittest.TestCase):
     # Default values
     DEFAULT_STYLE = 'IDENTITY'
     DEFAULT_DESC = ''
-    DEFAULT_STR = '<BuiltinTransform style = IDENTITY, direction = forward>'
+    DEFAULT_STR = '<BuiltinTransform direction = forward, style = IDENTITY>'
 
     # One reference style
     EXAMPLE_STYLE = 'ACES-AP0_to_CIE-XYZ-D65_BFD'

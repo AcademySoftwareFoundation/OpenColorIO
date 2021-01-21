@@ -27,10 +27,6 @@
       Create an identity 3D-LUT with specific grid size. Will throw for grid size larger than 129.
 
 
-   .. py:method:: Lut3DTransform.__str__(self: PyOpenColorIO.Lut3DTransform) -> str
-      :module: PyOpenColorIO
-
-
    .. py:method:: Lut3DTransform.equals(self: PyOpenColorIO.Lut3DTransform, other: PyOpenColorIO.Lut3DTransform) -> bool
       :module: PyOpenColorIO
 

@@ -17,9 +17,9 @@
 namespace OCIO_NAMESPACE
 {
 
-void CreateFixedFunctionOp(OpRcPtrVec & ops, 
-                           const FixedFunctionOpData::Params & data,
-                           FixedFunctionOpData::Style style);
+void CreateFixedFunctionOp(OpRcPtrVec & ops,
+                           FixedFunctionOpData::Style style,
+                           const FixedFunctionOpData::Params & data);
 
 void CreateFixedFunctionOp(OpRcPtrVec & ops,
                            FixedFunctionOpDataRcPtr & funcData,

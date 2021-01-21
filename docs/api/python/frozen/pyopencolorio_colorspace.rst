@@ -29,10 +29,6 @@
       3. __init__(self: PyOpenColorIO.ColorSpace, referenceSpace: PyOpenColorIO.ReferenceSpaceType = <ReferenceSpaceType.REFERENCE_SPACE_SCENE: 0>, name: str = '', aliases: List[str] = [], family: str = '', encoding: str = '', equalityGroup: str = '', description: str = '', bitDepth: PyOpenColorIO.BitDepth = <BitDepth.BIT_DEPTH_UNKNOWN: 0>, isData: bool = False, allocation: PyOpenColorIO.Allocation = <Allocation.ALLOCATION_UNIFORM: 1>, allocationVars: List[float] = [], toReference: PyOpenColorIO.Transform = None, fromReference: PyOpenColorIO.Transform = None, categories: List[str] = []) -> None
 
 
-   .. py:method:: ColorSpace.__str__(self: PyOpenColorIO.ColorSpace) -> str
-      :module: PyOpenColorIO
-
-
    .. py:method:: ColorSpace.addAlias(self: PyOpenColorIO.ColorSpace, alias: str) -> None
       :module: PyOpenColorIO
 

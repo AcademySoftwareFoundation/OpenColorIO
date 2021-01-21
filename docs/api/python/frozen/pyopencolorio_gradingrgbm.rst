@@ -19,10 +19,6 @@
       2. __init__(self: PyOpenColorIO.GradingRGBM, red: float, green: float, blue: float, master: float) -> None
 
 
-   .. py:method:: GradingRGBM.__str__(self: PyOpenColorIO.GradingRGBM) -> str
-      :module: PyOpenColorIO
-
-
    .. py:method:: GradingRGBM.blue
       :module: PyOpenColorIO
       :property:

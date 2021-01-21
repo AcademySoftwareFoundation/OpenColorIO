@@ -17,10 +17,6 @@
       2. __init__(self: PyOpenColorIO.FileTransform, src: str = '', cccId: str = '', interpolation: PyOpenColorIO.Interpolation = <Interpolation.INTERP_DEFAULT: 254>, direction: PyOpenColorIO.TransformDirection = <TransformDirection.TRANSFORM_DIR_FORWARD: 0>) -> None
 
 
-   .. py:method:: FileTransform.__str__(self: PyOpenColorIO.FileTransform) -> str
-      :module: PyOpenColorIO
-
-
    .. py:method:: FileTransform.getCCCId(self: PyOpenColorIO.FileTransform) -> str
       :module: PyOpenColorIO
 
