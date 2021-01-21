@@ -53,6 +53,6 @@ void bindPyLegacyViewingPipeline(py::module & m)
              "context"_a = ConstContextRcPtr(),
              DOC(LegacyViewingPipeline, getProcessor));
 
-    defStr(cls);
+    defRepr(cls);
 }
 }

@@ -84,7 +84,7 @@ void bindPyExponentWithLinearTransform(py::module & m)
         .def("setNegativeStyle", &ExponentWithLinearTransform::setNegativeStyle, "style"_a, 
              DOC(ExponentWithLinearTransform, setNegativeStyle));
 
-    defStr(clsExponentWithLinearTransform);
+    defRepr(clsExponentWithLinearTransform);
 }
 
 } // namespace OCIO_NAMESPACE

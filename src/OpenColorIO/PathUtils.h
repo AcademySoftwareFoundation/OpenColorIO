@@ -26,6 +26,7 @@ std::string GetFastFileHash(const std::string & filename);
 
 void ClearPathCaches();
 
+// Works on active and inactive color spaces name and aliases.
 int ParseColorSpaceFromString(const Config & config, const char * str);
 
 } // namespace OCIO_NAMESPACE

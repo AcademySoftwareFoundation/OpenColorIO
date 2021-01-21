@@ -19,10 +19,6 @@
       :module: PyOpenColorIO
 
 
-   .. py:method:: ColorSpaceMenuHelper.__str__(self: PyOpenColorIO.ColorSpaceMenuHelper) -> str
-      :module: PyOpenColorIO
-
-
    .. py:method:: ColorSpaceMenuHelper.getDescription(self: PyOpenColorIO.ColorSpaceMenuHelper, index: int) -> str
       :module: PyOpenColorIO
 

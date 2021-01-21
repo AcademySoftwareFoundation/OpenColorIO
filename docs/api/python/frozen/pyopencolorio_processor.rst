@@ -56,13 +56,13 @@
       Get an optimized :ref:`GPUProcessor` instance.
 
 
-   .. py:method:: Processor.getDynamicProperty(self: PyOpenColorIO.Processor, type: PyOpenColorIO.DynamicPropertyType) -> OpenColorIO_v2_0rc1::DynamicProperty
+   .. py:method:: Processor.getDynamicProperty(self: PyOpenColorIO.Processor, type: PyOpenColorIO.DynamicPropertyType) -> PyOpenColorIO.DynamicProperty
       :module: PyOpenColorIO
 
       The returned pointer may be used to set the default value of any dynamic properties of the requested type. Throws if the requested property is not found. Note that if the processor contains several ops that support the requested property, only one can be dynamic and only this one will be controlled.
 
       .. note::
-         The dynamic properties are a convenient way to change on-the-fly values without generating again and again a CPU or GPU processor instance. Color transformations can contain dynamic properties from a :cpp:class:`:ref:`ExposureContrastTransform`` for example. So, :cpp:class:`:ref:`Processor``, :cpp:class:`:ref:`CPUProcessor`` and :cpp:class:`:ref:`GpuShaderCreator`` all have ways to manage dynamic properties. However, the transform dynamic properties are decoupled between the types of processor instances so that the same :cpp:class:`:ref:`Processor`` can generate several independent CPU and/or GPU processor instances i.e. changing the value of the exposure dynamic property from a CPU processor instance does not affect the corresponding GPU processor instance. :ref:`Processor` creation will throw if there are more than one property of a given type.
+         The dynamic properties are a convenient way to change on-the-fly values without generating again and again a CPU or GPU processor instance. Color transformations can contain dynamic properties from a :ref:`ExposureContrastTransform` for example. So, :ref:`Processor`, :ref:`CPUProcessor` and :ref:`GpuShaderCreator` all have ways to manage dynamic properties. However, the transform dynamic properties are decoupled between the types of processor instances so that the same :ref:`Processor` can generate several independent CPU and/or GPU processor instances i.e. changing the value of the exposure dynamic property from a CPU processor instance does not affect the corresponding GPU processor instance. :ref:`Processor` creation will log a warning if there are more than one property of a given type. There may be more than one property of a given type, but only one will respond to parameter updates, the others will use their original parameter values.
 
 
    .. py:method:: Processor.getFormatMetadata(self: PyOpenColorIO.Processor) -> PyOpenColorIO.FormatMetadata
@@ -115,18 +115,16 @@
       True if the image transformation is non-separable. For example, if a change in red may also cause a change in green or blue.
 
 
-   .. py:method:: Processor.hasDynamicProperty(*args, **kwargs)
+   .. py:method:: Processor.hasDynamicProperty(self: PyOpenColorIO.Processor, type: PyOpenColorIO.DynamicPropertyType) -> bool
       :module: PyOpenColorIO
 
-      Overloaded function.
-
-      1. hasDynamicProperty(self: PyOpenColorIO.Processor, type: PyOpenColorIO.DynamicPropertyType) -> bool
-
       True if at least one dynamic property of that type exists.
 
-      2. hasDynamicProperty(self: PyOpenColorIO.Processor) -> bool
 
-      True if at least one dynamic property of that type exists.
+   .. py:method:: Processor.isDynamic(self: PyOpenColorIO.Processor) -> bool
+      :module: PyOpenColorIO
+
+      True if at least one dynamic property of any type exists and is dynamic.
 
 
    .. py:method:: Processor.isNoOp(self: PyOpenColorIO.Processor) -> bool

@@ -118,7 +118,7 @@ void bindPyLogAffineTransform(py::module & m)
              "values"_a,
              DOC(LogAffineTransform, setLinSideOffsetValue));
 
-    defStr(clsLogAffineTransform);
+    defRepr(clsLogAffineTransform);
 }
 
 } // namespace OCIO_NAMESPACE
