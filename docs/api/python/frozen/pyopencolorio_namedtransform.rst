@@ -38,12 +38,6 @@
       Nothing is done if alias is NULL or empty, if it is already there, or if it is already the named transform name.
 
 
-   .. py:method:: NamedTransform.addAlias(self: PyOpenColorIO.NamedTransform, alias: str) -> None
-      :module: PyOpenColorIO
-
-      Nothing is done if alias is NULL or empty, if it is already there, or if it is already the named transform name.
-
-
    .. py:method:: NamedTransform.addCategory(self: PyOpenColorIO.NamedTransform, category: str) -> None
       :module: PyOpenColorIO
 
