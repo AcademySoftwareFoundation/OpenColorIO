@@ -18,7 +18,7 @@
 
       Do not use (needed only for pybind11).
 
-      2. __init__(self: PyOpenColorIO.GradingRGBCurve, red: PyOpenColorIO.GradingBSplineCurve = <PyOpenColorIO.GradingBSplineCurve object at 0x7f9cabe66230>, green: PyOpenColorIO.GradingBSplineCurve = <PyOpenColorIO.GradingBSplineCurve object at 0x7f9cabe661f0>, blue: PyOpenColorIO.GradingBSplineCurve = <PyOpenColorIO.GradingBSplineCurve object at 0x7f9cabe66170>, master: PyOpenColorIO.GradingBSplineCurve = <PyOpenColorIO.GradingBSplineCurve object at 0x7f9cabe64f70>) -> None
+      2. __init__(self: PyOpenColorIO.GradingRGBCurve, red: PyOpenColorIO.GradingBSplineCurve = <PyOpenColorIO.GradingBSplineCurve object at 0x7f730a58bfb0>, green: PyOpenColorIO.GradingBSplineCurve = <PyOpenColorIO.GradingBSplineCurve object at 0x7f730a58bf70>, blue: PyOpenColorIO.GradingBSplineCurve = <PyOpenColorIO.GradingBSplineCurve object at 0x7f730a58bc30>, master: PyOpenColorIO.GradingBSplineCurve = <PyOpenColorIO.GradingBSplineCurve object at 0x7f730a58bbf0>) -> None
 
 
    .. py:method:: GradingRGBCurve.__str__(self: PyOpenColorIO.GradingRGBCurve) -> str

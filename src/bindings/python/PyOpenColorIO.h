@@ -5,9 +5,10 @@
 #define INCLUDED_OCIO_PYOPENCOLORIO_H
 
 #include <pybind11/pybind11.h>
+#include <pybind11/functional.h>
 #include <pybind11/numpy.h>
-#include <pybind11/stl.h>
 #include <pybind11/operators.h>
+#include <pybind11/stl.h>
 
 #include <OpenColorIO/OpenColorIO.h>
 
@@ -22,33 +23,40 @@ using namespace pybind11::literals;
 namespace OCIO_NAMESPACE
 {
 
+// Types
 void bindPyTypes(py::module & m);
-void bindPyTransform(py::module & m);
-void bindPyConfig(py::module & m);
-void bindPyFileRules(py::module & m);
+
+// OpenColorIO
+void bindPyBaker(py::module & m);
 void bindPyColorSpace(py::module & m);
 void bindPyColorSpaceSet(py::module & m);
-void bindPyLook(py::module & m);
-void bindPyViewTransform(py::module & m);
-void bindPyProcessor(py::module & m);
-void bindPyCPUProcessor(py::module & m);
-void bindPyGPUProcessor(py::module & m);
-void bindPyProcessorMetadata(py::module & m);
-void bindPyBaker(py::module & m);
-void bindPyImageDesc(py::module & m);
-void bindPyGpuShaderCreator(py::module & m);
+void bindPyConfig(py::module & m);
 void bindPyContext(py::module & m);
-void bindPyViewingRules(py::module & m);
+void bindPyCPUProcessor(py::module & m);
+void bindPyFileRules(py::module & m);
+void bindPyGPUProcessor(py::module & m);
+void bindPyGpuShaderCreator(py::module & m);
+void bindPyImageDesc(py::module & m);
+void bindPyLook(py::module & m);
+void bindPyNamedTransform(py::module & m);
+void bindPyProcessor(py::module & m);
+void bindPyProcessorMetadata(py::module & m);
 void bindPySystemMonitors(py::module & m);
+void bindPyViewingRules(py::module & m);
+void bindPyViewTransform(py::module & m);
+
+// Transforms
+void bindPyBuiltinTransformRegistry(py::module & m);
+void bindPyDynamicProperty(py::module & m);
+void bindPyFormatMetadata(py::module & m);
 void bindPyGradingData(py::module & m);
-void bindPyGradingPrimaryTransform(py::module & m);
-void bindPyGradingRGBCurveTransform(py::module & m);
-void bindPyGradingToneTransform(py::module & m);
+void bindPyTransform(py::module & m);
+
+// App helpers
 void bindPyColorSpaceMenuHelpers(py::module & m);
 void bindPyDisplayViewHelpers(py::module & m);
 void bindPyLegacyViewingPipeline(py::module & m);
 void bindPyMixingHelpers(py::module & m);
-void bindPyNamedTransform(py::module & m);
 
 } // namespace OCIO_NAMESPACE
 
@@ -60,6 +68,40 @@ namespace OCIO = OCIO_NAMESPACE;
 
 namespace pybind11 
 {
+
+template<> 
+struct polymorphic_type_hook<OCIO::ImageDesc> {
+    static const void *get(const OCIO::ImageDesc *const src, const std::type_info*& type) {
+        // Note: src may be nullptr
+        if (src)
+        {
+            if(dynamic_cast<const OCIO::PackedImageDesc*>(src))
+            {
+                type = &typeid(OCIO::PackedImageDesc);
+            }
+            else if(dynamic_cast<const OCIO::PlanarImageDesc*>(src))
+            {
+                type = &typeid(OCIO::PlanarImageDesc);
+            }
+        }
+        return src;
+    }
+};
+
+template<> 
+struct polymorphic_type_hook<OCIO::GpuShaderCreator> {
+    static const void *get(const OCIO::GpuShaderCreator *const src, const std::type_info*& type) {
+        // Note: src may be nullptr
+        if (src)
+        {
+            if(dynamic_cast<const OCIO::GpuShaderDesc*>(src))
+            {
+                type = &typeid(OCIO::GpuShaderDesc);
+            }
+        }
+        return src;
+    }
+};
 
 template<> 
 struct polymorphic_type_hook<OCIO::Transform> {

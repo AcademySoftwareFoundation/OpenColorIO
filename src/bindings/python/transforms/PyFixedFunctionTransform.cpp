@@ -20,11 +20,8 @@ void bindPyFixedFunctionTransform(py::module & m)
     FixedFunctionTransformRcPtr DEFAULT = FixedFunctionTransform::Create();
 
     auto clsFixedFunctionTransform = 
-        py::class_<FixedFunctionTransform, 
-                   FixedFunctionTransformRcPtr /* holder */, 
-                   Transform /* base */>(
-            m, "FixedFunctionTransform", 
-            DOC(FixedFunctionTransform))
+        py::class_<FixedFunctionTransform, FixedFunctionTransformRcPtr, Transform>(
+            m.attr("FixedFunctionTransform"))
 
         .def(py::init(&FixedFunctionTransform::Create), 
              DOC(FixedFunctionTransform, Create))

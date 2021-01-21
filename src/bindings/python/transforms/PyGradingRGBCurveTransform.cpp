@@ -11,14 +11,11 @@ void bindPyGradingRGBCurveTransform(py::module & m)
     GradingRGBCurveTransformRcPtr DEFAULT = GradingRGBCurveTransform::Create(GRADING_LOG);
 
     auto clsGradingRGBCurveTransform = 
-        py::class_<GradingRGBCurveTransform,
-                   GradingRGBCurveTransformRcPtr /* holder */, 
-                   Transform /* base */>(
-            m, "GradingRGBCurveTransform", 
-            DOC(GradingRGBCurveTransform))
+        py::class_<GradingRGBCurveTransform, GradingRGBCurveTransformRcPtr, Transform>(
+            m.attr("GradingRGBCurveTransform"))
 
-        .def(py::init([](GradingStyle style,
-                         const ConstGradingRGBCurveRcPtr & values,
+        .def(py::init([](const ConstGradingRGBCurveRcPtr & values,
+                         GradingStyle style,
                          bool dynamic, 
                          TransformDirection dir) 
             {
@@ -30,8 +27,8 @@ void bindPyGradingRGBCurveTransform(py::module & m)
                 p->validate();
                 return p;
             }),
-             "style"_a = DEFAULT->getStyle(),
              "values"_a,
+             "style"_a = DEFAULT->getStyle(),
              "dynamic"_a = DEFAULT->isDynamic(),
              "dir"_a = DEFAULT->getDirection(),
              DOC(GradingRGBCurveTransform, Create))

@@ -23,7 +23,7 @@
 
       Overloaded function.
 
-      1. __init__(self: PyOpenColorIO.GradingPrimaryTransform, style: PyOpenColorIO.GradingStyle = <GradingStyle.GRADING_LOG: 0>, values: PyOpenColorIO.GradingPrimary, dynamic: bool = False, dir: PyOpenColorIO.TransformDirection = <TransformDirection.TRANSFORM_DIR_FORWARD: 0>) -> None
+      1. __init__(self: PyOpenColorIO.GradingPrimaryTransform, values: PyOpenColorIO.GradingPrimary, style: PyOpenColorIO.GradingStyle = <GradingStyle.GRADING_LOG: 0>, dynamic: bool = False, dir: PyOpenColorIO.TransformDirection = <TransformDirection.TRANSFORM_DIR_FORWARD: 0>) -> None
 
       Creates an instance of :ref:`GradingPrimaryTransform`.
 
@@ -32,7 +32,7 @@
       Creates an instance of :ref:`GradingPrimaryTransform`.
 
 
-   .. py:method:: GradingPrimaryTransform.__str__(self: PyOpenColorIO.Transform) -> str
+   .. py:method:: GradingPrimaryTransform.__str__(self: PyOpenColorIO.GradingPrimaryTransform) -> str
       :module: PyOpenColorIO
 
 

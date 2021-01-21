@@ -8,6 +8,7 @@
 
    :ref:`NamedTransform`.
 
+
    A :ref:`NamedTransform` provides a way for config authors to include a set of color transforms that are independent of the color space being processed. For example a "utility
    curve" transform where there is no need to convert to or from a reference space.
 
@@ -60,11 +61,11 @@
          :ref:`ColorSpace::clearCategories`
 
 
-   .. py:method:: NamedTransform.getAliases(self: PyOpenColorIO.NamedTransform) -> OpenColorIO_v2_0rc1::PyIterator<std::shared_ptr<OpenColorIO_v2_0rc1::NamedTransform>,1>
+   .. py:method:: NamedTransform.getAliases(self: PyOpenColorIO.NamedTransform) -> PyOpenColorIO.NamedTransform.NamedTransformAliasIterator
       :module: PyOpenColorIO
 
 
-   .. py:method:: NamedTransform.getCategories(self: PyOpenColorIO.NamedTransform) -> OpenColorIO_v2_0rc1::PyIterator<std::shared_ptr<OpenColorIO_v2_0rc1::NamedTransform>,0>
+   .. py:method:: NamedTransform.getCategories(self: PyOpenColorIO.NamedTransform) -> PyOpenColorIO.NamedTransform.NamedTransformCategoryIterator
       :module: PyOpenColorIO
 
 

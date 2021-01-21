@@ -37,33 +37,27 @@ void bindPyGradingData(py::module & m)
 
     auto clsGradingRGBM = 
         py::class_<GradingRGBM>(
-            m, "GradingRGBM", 
-            DOC(GradingRGBM));
+            m.attr("GradingRGBM"));
 
     auto clsGradingPrimary = 
         py::class_<GradingPrimary>(
-            m, "GradingPrimary", 
-            DOC(GradingPrimary));
+            m.attr("GradingPrimary"));
 
     auto clsGradingRGBMSW = 
         py::class_<GradingRGBMSW>(
-            m, "GradingRGBMSW", 
-            DOC(GradingRGBMSW));
+            m.attr("GradingRGBMSW"));
 
     auto clsGradingTone = 
         py::class_<GradingTone>(
-            m, "GradingTone", 
-            DOC(GradingTone));
+            m.attr("GradingTone"));
 
     auto clsGradingControlPoint = 
         py::class_<GradingControlPoint>(
-            m, "GradingControlPoint", 
-            DOC(GradingControlPoint));
+            m.attr("GradingControlPoint"));
 
     auto clsGradingBSplineCurve = 
         py::class_<GradingBSplineCurve, GradingBSplineCurveRcPtr /*holder*/>(
-            m, "GradingBSplineCurve", 
-            DOC(GradingBSplineCurve));
+            m.attr("GradingBSplineCurve"));
 
     auto clsGradingControlPointIterator = 
         py::class_<GradingControlPointIterator>(
@@ -71,8 +65,7 @@ void bindPyGradingData(py::module & m)
 
     auto clsGradingRGBCurve = 
         py::class_<GradingRGBCurve, GradingRGBCurveRcPtr /*holder*/>(
-            m, "GradingRGBCurve", 
-            DOC(GradingRGBCurve));
+            m.attr("GradingRGBCurve"));
 
     clsGradingRGBM
         .def(py::init<>(), 

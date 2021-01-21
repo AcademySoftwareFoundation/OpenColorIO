@@ -27,13 +27,16 @@ void bindPyGroupTransform(py::module & m)
     GroupTransformRcPtr DEFAULT = GroupTransform::Create();
 
     auto clsGroupTransform = 
-        py::class_<GroupTransform, GroupTransformRcPtr /* holder */, Transform /* base */>(
-            m, "GroupTransform", 
-            DOC(GroupTransform));
+        py::class_<GroupTransform, GroupTransformRcPtr, Transform>(
+            m.attr("GroupTransform"));
 
     auto clsTransformIterator = 
         py::class_<TransformIterator>(
             clsGroupTransform, "TransformIterator");
+
+    auto clsWriteFormatIterator = 
+        py::class_<WriteFormatIterator>(
+            clsGroupTransform, "WriteFormatIterator");
 
     clsGroupTransform
         .def_static("GetWriteFormats", []()
@@ -117,7 +120,7 @@ void bindPyGroupTransform(py::module & m)
                 return it.m_obj->getTransform(i);
             });
 
-    py::class_<WriteFormatIterator>(clsGroupTransform, "WriteFormatIterator")
+    clsWriteFormatIterator
         .def("__len__", [](WriteFormatIterator & it)
             {
                 return GroupTransform::GetNumWriteFormats();

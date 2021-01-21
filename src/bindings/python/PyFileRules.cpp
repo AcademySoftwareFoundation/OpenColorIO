@@ -10,9 +10,8 @@ namespace OCIO_NAMESPACE
 void bindPyFileRules(py::module & m)
 {
     auto clsFileRules = 
-        py::class_<FileRules, FileRulesRcPtr /* holder */>(
-            m, "FileRules", 
-            DOC(FileRules))
+        py::class_<FileRules, FileRulesRcPtr>(
+            m.attr("FileRules"))
 
         .def(py::init(&FileRules::Create),
              DOC(FileRules, Create))

@@ -20,9 +20,8 @@ void bindPyCDLTransform(py::module & m)
     DEFAULT->getPower(DEFAULT_POWER.data());
 
     auto clsCDLTransform = 
-        py::class_<CDLTransform, CDLTransformRcPtr /* holder */, Transform /* base */>(
-            m, "CDLTransform", 
-            DOC(CDLTransform))
+        py::class_<CDLTransform, CDLTransformRcPtr, Transform>(
+            m.attr("CDLTransform"))
 
         .def(py::init(&CDLTransform::Create), 
              DOC(CDLTransform, Create))

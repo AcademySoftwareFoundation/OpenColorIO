@@ -27,9 +27,8 @@ void bindPyBaker(py::module & m)
     BakerRcPtr DEFAULT = Baker::Create();
 
     auto clsBaker = 
-        py::class_<Baker, BakerRcPtr /* holder */>(
-            m, "Baker",
-            DOC(Baker));
+        py::class_<Baker, BakerRcPtr>(
+             m.attr("Baker"));
 
     auto clsFormatIterator = 
         py::class_<FormatIterator>(

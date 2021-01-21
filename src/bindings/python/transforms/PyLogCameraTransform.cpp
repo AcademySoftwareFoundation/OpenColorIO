@@ -28,9 +28,8 @@ void bindPyLogCameraTransform(py::module & m)
     DEFAULT->getLinSideOffsetValue(*reinterpret_cast<double(*)[3]>(DEFAULT_LIN_SIDE_OFFSET.data()));
 
     auto clsLogCameraTransform = 
-        py::class_<LogCameraTransform, LogCameraTransformRcPtr /* holder */, Transform /* base */>(
-            m, "LogCameraTransform", 
-            DOC(LogCameraTransform))
+        py::class_<LogCameraTransform, LogCameraTransformRcPtr, Transform>(
+            m.attr("LogCameraTransform"))
 
         .def(py::init(&LogCameraTransform::Create),
              DOC(LogCameraTransform, Create))

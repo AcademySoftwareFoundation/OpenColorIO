@@ -71,9 +71,8 @@ using ActiveNamedTransformIterator     = PyIterator<ConfigRcPtr, IT_ACTIVE_NAMED
 void bindPyConfig(py::module & m)
 {
     auto clsConfig = 
-        py::class_<Config, ConfigRcPtr /* holder */>(
-            m, "Config",
-            DOC(Config));
+        py::class_<Config, ConfigRcPtr>(
+            m.attr("Config"));
 
     auto clsEnvironmentVarNameIterator = 
         py::class_<EnvironmentVarNameIterator>(

@@ -7,7 +7,7 @@
    :module: PyOpenColorIO
 
 
-   .. py:method:: GroupTransform.GetWriteFormats() -> OpenColorIO_v2_0rc1::PyIterator<std::shared_ptr<OpenColorIO_v2_0rc1::GroupTransform>,1>
+   .. py:method:: GroupTransform.GetWriteFormats() -> PyOpenColorIO.GroupTransform.WriteFormatIterator
       :module: PyOpenColorIO
       :staticmethod:
 
@@ -20,6 +20,12 @@
          :module: PyOpenColorIO
 
          Initialize self.  See help(type(self)) for accurate signature.
+
+
+      .. py:method:: GroupTransform.WriteFormatIterator.__str__()
+         :module: PyOpenColorIO
+
+         Return str(self).
 
 
    .. py:method:: GroupTransform.__init__(*args, **kwargs)
@@ -77,9 +83,10 @@
 
       Overloaded function.
 
-      1. write(self: PyOpenColorIO.GroupTransform, config: OpenColorIO_v2_0rc1::Config, context: OpenColorIO_v2_0rc1::Context, formatName: str, fileName: str) -> None
+      1. write(self: PyOpenColorIO.GroupTransform, config: PyOpenColorIO.Config, context: PyOpenColorIO.Context, formatName: str, fileName: str) -> None
 
       Write the transforms comprising the group to the stream.
+
 
       Writing (as opposed to Baking) is a lossless process. An exception is thrown if the processor cannot be losslessly written to the specified file format. Transforms such as :ref:`FileTransform` or :ref:`ColorSpaceTransform` are resolved into write-able simple transforms using the config and context. Supported formats include CTF, CLF, and CDL. All available formats can be listed with the following: .. code-block:: cpp
 
@@ -93,9 +100,10 @@
              formats << " (." << GroupTransform::GetFormatExtensionByIndex(i) << ")";
           }
 
-      2. write(self: PyOpenColorIO.GroupTransform, config: OpenColorIO_v2_0rc1::Config, context: OpenColorIO_v2_0rc1::Context, formatName: str) -> str
+      2. write(self: PyOpenColorIO.GroupTransform, config: PyOpenColorIO.Config, context: PyOpenColorIO.Context, formatName: str) -> str
 
       Write the transforms comprising the group to the stream.
+
 
       Writing (as opposed to Baking) is a lossless process. An exception is thrown if the processor cannot be losslessly written to the specified file format. Transforms such as :ref:`FileTransform` or :ref:`ColorSpaceTransform` are resolved into write-able simple transforms using the config and context. Supported formats include CTF, CLF, and CDL. All available formats can be listed with the following: .. code-block:: cpp
 

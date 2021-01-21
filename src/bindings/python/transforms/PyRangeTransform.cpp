@@ -11,9 +11,8 @@ void bindPyRangeTransform(py::module & m)
     RangeTransformRcPtr DEFAULT = RangeTransform::Create();
 
     auto clsRangeTransform = 
-        py::class_<RangeTransform, RangeTransformRcPtr /* holder */, Transform /* base */>(
-            m, "RangeTransform", 
-            DOC(RangeTransform))
+        py::class_<RangeTransform, RangeTransformRcPtr, Transform>(
+            m.attr("RangeTransform"))
 
         .def(py::init(&RangeTransform::Create),
              DOC(RangeTransform, Create))

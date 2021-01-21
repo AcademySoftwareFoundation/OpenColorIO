@@ -13,9 +13,8 @@ void bindPyLut3DTransform(py::module & m)
     Lut3DTransformRcPtr DEFAULT = Lut3DTransform::Create();
 
     auto clsLut3DTransform = 
-        py::class_<Lut3DTransform, Lut3DTransformRcPtr /* holder */, Transform /* base */>(
-            m, "Lut3DTransform", 
-            DOC(Lut3DTransform))
+        py::class_<Lut3DTransform, Lut3DTransformRcPtr, Transform>(
+            m.attr("Lut3DTransform"))
 
         .def(py::init([]() 
             { 

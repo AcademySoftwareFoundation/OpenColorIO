@@ -11,11 +11,8 @@ void bindPyDisplayViewTransform(py::module & m)
     DisplayViewTransformRcPtr DEFAULT = DisplayViewTransform::Create();
 
     auto clsDisplayViewTransform = 
-        py::class_<DisplayViewTransform, 
-                   DisplayViewTransformRcPtr /* holder */, 
-                   Transform /* base */>(
-            m, "DisplayViewTransform", 
-            DOC(DisplayViewTransform))
+        py::class_<DisplayViewTransform, DisplayViewTransformRcPtr, Transform>(
+            m.attr("DisplayViewTransform"))
 
         .def(py::init(&DisplayViewTransform::Create), 
              DOC(DisplayViewTransform, Create))

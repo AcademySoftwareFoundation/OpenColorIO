@@ -50,9 +50,8 @@ void bindPyContext(py::module & m)
     ContextRcPtr DEFAULT = Context::Create();
 
     auto clsContext = 
-        py::class_<Context, ContextRcPtr /* holder */>(
-            m, "Context", 
-            DOC(Context));
+        py::class_<Context, ContextRcPtr>(
+            m.attr("Context"));
 
     auto clsStringVarNameIterator = 
         py::class_<StringVarNameIterator>(
