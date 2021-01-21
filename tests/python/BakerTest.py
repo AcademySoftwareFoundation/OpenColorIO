@@ -101,7 +101,6 @@ END METADATA
             elf = expected_lines[i].split(' ')
             for j in range(len(lf)):
                 self.assertAlmostEqual(float(lf[j]), float(elf[j]), delta = 0.00001)
-        self.assertEqual(self.EXPECTED_LUT, output)
         fmts = bake.getFormats()
         self.assertEqual(len(fmts), 10)
         self.assertEqual("cinespace", fmts[4][0])
