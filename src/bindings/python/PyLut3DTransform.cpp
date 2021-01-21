@@ -138,7 +138,7 @@ void bindPyLut3DTransform(py::module & m)
         .def("setInterpolation", &Lut3DTransform::setInterpolation, "interpolation"_a,
              DOC(Lut3DTransform, setInterpolation));
 
-    defStr(clsLut3DTransform);
+    defRepr(clsLut3DTransform);
 }
 
 } // namespace OCIO_NAMESPACE

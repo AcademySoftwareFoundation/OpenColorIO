@@ -30,7 +30,7 @@ class GroupTransformTest(unittest.TestCase):
         self.assertEqual(self.group_tr.__len__(), 0)
 
         matrix_tr = OCIO.MatrixTransform()
-        ff_tr = OCIO.FixedFunctionTransform()
+        ff_tr = OCIO.FixedFunctionTransform(OCIO.FIXED_FUNCTION_ACES_RED_MOD_03)
 
         self.group_tr.appendTransform(matrix_tr)
         self.group_tr.appendTransform(ff_tr)
@@ -50,7 +50,7 @@ class GroupTransformTest(unittest.TestCase):
         self.assertEqual(self.group_tr.__len__(), 0)
 
         matrix_tr = OCIO.MatrixTransform()
-        ff_tr = OCIO.FixedFunctionTransform()
+        ff_tr = OCIO.FixedFunctionTransform(OCIO.FIXED_FUNCTION_ACES_RED_MOD_03)
 
         self.group_tr.prependTransform(matrix_tr)
         self.group_tr.prependTransform(ff_tr)
@@ -109,7 +109,8 @@ class GroupTransformTest(unittest.TestCase):
         Test GroupTransform constructor with keywords and validate its values.
         """
 
-        tr_list = [OCIO.MatrixTransform(), OCIO.FixedFunctionTransform()]
+        tr_list = [OCIO.MatrixTransform(),
+                   OCIO.FixedFunctionTransform(OCIO.FIXED_FUNCTION_ACES_RED_MOD_03)]
 
         group_tr = OCIO.GroupTransform(
             transforms=tr_list,
@@ -131,7 +132,8 @@ class GroupTransformTest(unittest.TestCase):
         Test GroupTransform constructor without keywords and validate its values.
         """
 
-        tr_list = [OCIO.MatrixTransform(), OCIO.FixedFunctionTransform()]
+        tr_list = [OCIO.MatrixTransform(),
+                   OCIO.FixedFunctionTransform(OCIO.FIXED_FUNCTION_ACES_RED_MOD_03)]
 
         group_tr = OCIO.GroupTransform(tr_list, self.TEST_DIRECTION)
 

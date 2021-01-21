@@ -90,7 +90,7 @@ void bindPyGradingData(py::module & m)
         .def_readwrite("master", &GradingRGBM::m_master, 
                        DOC(GradingRGBM, m_master));
 
-    defStr(clsGradingRGBM);
+    defRepr(clsGradingRGBM);
 
     clsGradingPrimary
         .def(py::init<GradingStyle>(), 
@@ -137,7 +137,7 @@ void bindPyGradingData(py::module & m)
             }, 
                                       DOC(GradingPrimary, m_brightness));
 
-    defStr(clsGradingPrimary);
+    defRepr(clsGradingPrimary);
 
     clsGradingRGBMSW
         .def(py::init<>(), 
@@ -162,7 +162,7 @@ void bindPyGradingData(py::module & m)
         .def_readwrite("width", &GradingRGBMSW::m_width, 
                        DOC(GradingRGBMSW, m_width));
 
-    defStr(clsGradingRGBMSW);
+    defRepr(clsGradingRGBMSW);
 
     clsGradingTone
         .def(py::init<GradingStyle>(), 
@@ -184,7 +184,7 @@ void bindPyGradingData(py::module & m)
         .def_readwrite("scontrast", &GradingTone::m_scontrast, 
                        DOC(GradingTone, m_scontrast));
 
-    defStr(clsGradingTone);
+    defRepr(clsGradingTone);
 
     clsGradingControlPoint
         .def(py::init<>(), 
@@ -199,7 +199,7 @@ void bindPyGradingData(py::module & m)
         .def_readwrite("y", &GradingControlPoint::m_y, 
                        DOC(GradingControlPoint, m_y));
 
-    defStr(clsGradingControlPoint);
+    defRepr(clsGradingControlPoint);
 
     clsGradingBSplineCurve
         .def(py::init([](size_t size)
@@ -240,7 +240,7 @@ void bindPyGradingData(py::module & m)
                 return GradingControlPointIterator(self);
             });
 
-    defStr(clsGradingBSplineCurve);
+    defRepr(clsGradingBSplineCurve);
 
     clsGradingControlPointIterator
         .def("__len__", [](GradingControlPointIterator & it)
@@ -329,7 +329,7 @@ void bindPyGradingData(py::module & m)
                 CopyGradingBSpline(rgbCurve->getCurve(RGB_MASTER), master);
             });
 
-    defStr(clsGradingRGBCurve);
+    defRepr(clsGradingRGBCurve);
 }
 
 } // namespace OCIO_NAMESPACE
