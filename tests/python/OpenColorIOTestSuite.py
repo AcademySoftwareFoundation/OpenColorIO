@@ -73,13 +73,13 @@ import MixingHelpersTest
 import NamedTransformTest
 import OpenColorIOTest
 import ProcessorTest
+import TransformsTest
 import ViewingRulesTest
 #from MainTest import *
 #from ConstantsTest import *
 #from ConfigTest import *
 #from ContextTest import *
 #from Baker import *
-#from TransformsTest import *
 #from RangeTransformTest import *
 
 def suite():
@@ -126,6 +126,7 @@ def suite():
     suite.addTest(loader.loadTestsFromModule(NamedTransformTest))
     suite.addTest(loader.loadTestsFromModule(OpenColorIOTest))
     suite.addTest(loader.loadTestsFromModule(ProcessorTest))
+    suite.addTest(loader.loadTestsFromModule(TransformsTest))
     suite.addTest(loader.loadTestsFromModule(ViewingRulesTest))
     #suite.addTest(MainTest("test_interface"))
     #suite.addTest(ConstantsTest("test_interface"))
@@ -135,7 +136,6 @@ def suite():
     #suite.addTest(RangeTransformTest("test_interface"))
     #suite.addTest(RangeTransformTest("test_equality"))
     #suite.addTest(RangeTransformTest("test_validation"))
-    #suite.addTest(TransformsTest("test_interface"))
 
     # Processor
     # ProcessorMetadata
