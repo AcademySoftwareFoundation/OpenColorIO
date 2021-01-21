@@ -3,6 +3,7 @@
 
 import unittest
 import logging
+import sys
 
 logger = logging.getLogger(__name__)
 
@@ -16,6 +17,9 @@ except ImportError:
     np = None
 
 import PyOpenColorIO as OCIO
+
+from UnitTestUtils import STRING_TYPES
+
 
 class GpuShaderDescTest(unittest.TestCase):
 
@@ -62,7 +66,7 @@ class GpuShaderDescTest(unittest.TestCase):
 
         # Iterates uniform name and data
         for name, uniform_data in uniforms:
-            self.assertIsInstance(name, str)
+            self.assertIsInstance(name, STRING_TYPES)
             self.assertIsInstance(uniform_data, OCIO.GpuShaderDesc.UniformData)
 
     def test_vector_uniform(self):
@@ -74,7 +78,7 @@ class GpuShaderDescTest(unittest.TestCase):
         a_curve = OCIO.GradingBSplineCurve([1.0, 2.0, 3.0, 4.0])
         rgb_curve = OCIO.GradingRGBCurve(a_curve, a_curve, a_curve, a_curve)
         tr = OCIO.GradingRGBCurveTransform(values=rgb_curve,
-                                          dynamic=True)
+                                           dynamic=True)
         config = OCIO.Config()
         proc = config.getProcessor(tr)
         desc = OCIO.GpuShaderDesc.CreateShaderDesc()
