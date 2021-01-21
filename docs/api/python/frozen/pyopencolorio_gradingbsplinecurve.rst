@@ -23,10 +23,6 @@
       Create a BSpline curve with a list of control points.
 
 
-   .. py:method:: GradingBSplineCurve.__str__(self: PyOpenColorIO.GradingBSplineCurve) -> str
-      :module: PyOpenColorIO
-
-
    .. py:method:: GradingBSplineCurve.getControlPoints(self: PyOpenColorIO.GradingBSplineCurve) -> PyOpenColorIO.GradingBSplineCurve.GradingControlPointIterator
       :module: PyOpenColorIO
 

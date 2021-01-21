@@ -23,10 +23,6 @@
       Initialize self.  See help(type(self)) for accurate signature.
 
 
-   .. py:method:: MixingSlider.__str__(self: PyOpenColorIO.MixingSlider) -> str
-      :module: PyOpenColorIO
-
-
    .. py:method:: MixingSlider.getSliderMaxEdge(self: PyOpenColorIO.MixingSlider) -> float
       :module: PyOpenColorIO
 

@@ -119,7 +119,7 @@ void bindPyViewTransform(py::module & m)
         .def("setTransform", &ViewTransform::setTransform, "transform"_a, "direction"_a,
              DOC(ViewTransform, setTransform));
 
-    defStr(clsViewTransform);
+    defRepr(clsViewTransform);
 
     clsViewTransformCategoryIterator
         .def("__len__", [](ViewTransformCategoryIterator & it) 

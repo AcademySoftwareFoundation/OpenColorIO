@@ -57,23 +57,27 @@ import ExposureContrastTransformTest
 import FileTransformTest
 import FixedFunctionTransformTest
 import FormatMetadataTest
+import GpuShaderDescTest
 import GradingDataTest
 import GradingPrimaryTransformTest
 import GradingRGBCurveTransformTest
 import GradingToneTransformTest
 import GroupTransformTest
 import LegacyViewingPipelineTest
+import LogCameraTransformTest
 import LogTransformTest
 import LookTest
+import LookTransformTest
+import MatrixTransformTest
 import MixingHelpersTest
 import NamedTransformTest
 import OpenColorIOTest
+import ProcessorTest
 import ViewingRulesTest
 #from MainTest import *
 #from ConstantsTest import *
 #from ConfigTest import *
 #from ContextTest import *
-#from GpuShaderDescTest import *
 #from Baker import *
 #from TransformsTest import *
 #from RangeTransformTest import *
@@ -106,17 +110,22 @@ def suite():
     suite.addTest(loader.loadTestsFromModule(FileTransformTest))
     suite.addTest(loader.loadTestsFromModule(FixedFunctionTransformTest))
     suite.addTest(loader.loadTestsFromModule(FormatMetadataTest))
+    suite.addTest(loader.loadTestsFromModule(GpuShaderDescTest))
     suite.addTest(loader.loadTestsFromModule(GradingDataTest))
     suite.addTest(loader.loadTestsFromModule(GradingPrimaryTransformTest))
     suite.addTest(loader.loadTestsFromModule(GradingRGBCurveTransformTest))
     suite.addTest(loader.loadTestsFromModule(GradingToneTransformTest))
     suite.addTest(loader.loadTestsFromModule(GroupTransformTest))
     suite.addTest(loader.loadTestsFromModule(LegacyViewingPipelineTest))
+    suite.addTest(loader.loadTestsFromModule(LogCameraTransformTest))
     suite.addTest(loader.loadTestsFromModule(LogTransformTest))
     suite.addTest(loader.loadTestsFromModule(LookTest))
+    suite.addTest(loader.loadTestsFromModule(LookTransformTest))
+    suite.addTest(loader.loadTestsFromModule(MatrixTransformTest))
     suite.addTest(loader.loadTestsFromModule(MixingHelpersTest))
     suite.addTest(loader.loadTestsFromModule(NamedTransformTest))
     suite.addTest(loader.loadTestsFromModule(OpenColorIOTest))
+    suite.addTest(loader.loadTestsFromModule(ProcessorTest))
     suite.addTest(loader.loadTestsFromModule(ViewingRulesTest))
     #suite.addTest(MainTest("test_interface"))
     #suite.addTest(ConstantsTest("test_interface"))
@@ -130,7 +139,6 @@ def suite():
 
     # Processor
     # ProcessorMetadata
-    #suite.addTest(GpuShaderDescTest("test_interface"))
     #suite.addTest(BakerTest("test_interface", opencolorio_sse))
     # PackedImageDesc
     # PlanarImageDesc

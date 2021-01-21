@@ -51,7 +51,7 @@ void bindPyColorSpaceTransform(py::module & m)
         .def("setDataBypass", &ColorSpaceTransform::setDataBypass, "dataBypass"_a, 
              DOC(ColorSpaceTransform, setDataBypass));
 
-    defStr(clsColorSpaceTransform);
+    defRepr(clsColorSpaceTransform);
 }
 
 } // namespace OCIO_NAMESPACE

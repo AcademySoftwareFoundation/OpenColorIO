@@ -6,24 +6,16 @@
 .. py:class:: LogCameraTransform
    :module: PyOpenColorIO
 
-   Same as :cpp:class:`:ref:`LogAffineTransform`` but with the addition of a linear segment near black. This formula is used for many camera logs (e.g., LogC) as well as ACEScct.
+   Same as :ref:`LogAffineTransform` but with the addition of a linear segment near black. This formula is used for many camera logs (e.g., LogC) as well as ACEScct.
 
    - The linSideBreak specifies the point on the linear axis where the log and linear segments meet. It must be set (there is no default).
    - The linearSlope specifies the slope of the linear segment of the forward (linToLog) transform. By default it is set equal to the slope of the log curve at the break point.
 
 
-   .. py:method:: LogCameraTransform.__init__(*args, **kwargs)
+   .. py:method:: LogCameraTransform.__init__(self: PyOpenColorIO.LogCameraTransform, linSideBreak: List[float[3]], base: float = 2.0, logSideSlope: List[float[3]] = [1.0, 1.0, 1.0], logSideOffset: List[float[3]] = [0.0, 0.0, 0.0], linSideSlope: List[float[3]] = [1.0, 1.0, 1.0], linSideOffset: List[float[3]] = [0.0, 0.0, 0.0], linearSlope: List[float] = [], direction: PyOpenColorIO.TransformDirection = <TransformDirection.TRANSFORM_DIR_FORWARD: 0>) -> None
       :module: PyOpenColorIO
 
-      Overloaded function.
-
-      1. __init__(self: PyOpenColorIO.LogCameraTransform) -> None
-
-      2. __init__(self: PyOpenColorIO.LogCameraTransform, linSideBreak: List[float[3]], logSideSlope: List[float[3]] = [1.0, 1.0, 1.0], logSideOffset: List[float[3]] = [0.0, 0.0, 0.0], linSideSlope: List[float[3]] = [1.0, 1.0, 1.0], linSideOffset: List[float[3]] = [0.0, 0.0, 0.0], direction: PyOpenColorIO.TransformDirection = <TransformDirection.TRANSFORM_DIR_FORWARD: 0>) -> None
-
-
-   .. py:method:: LogCameraTransform.__str__(self: PyOpenColorIO.LogCameraTransform) -> str
-      :module: PyOpenColorIO
+      LinSideBreak must be set for the transform to be valid (there is no default).
 
 
    .. py:method:: LogCameraTransform.equals(self: PyOpenColorIO.LogCameraTransform, other: PyOpenColorIO.LogCameraTransform) -> bool
@@ -47,8 +39,6 @@
    .. py:method:: LogCameraTransform.getLinSideBreakValue(self: PyOpenColorIO.LogCameraTransform) -> List[float[3]]
       :module: PyOpenColorIO
 
-      Return true if LinSideBreak values were set, false if they were not.
-
 
    .. py:method:: LogCameraTransform.getLinSideOffsetValue(self: PyOpenColorIO.LogCameraTransform) -> List[float[3]]
       :module: PyOpenColorIO
@@ -61,7 +51,7 @@
    .. py:method:: LogCameraTransform.getLinearSlopeValue(self: PyOpenColorIO.LogCameraTransform) -> List[float[3]]
       :module: PyOpenColorIO
 
-      Return true if LinearSlope values were set, false if they were not.
+      Return LinearSlope or 3 qnan values if not defined.
 
 
    .. py:method:: LogCameraTransform.getLogSideOffsetValue(self: PyOpenColorIO.LogCameraTransform) -> List[float[3]]
@@ -71,8 +61,14 @@
    .. py:method:: LogCameraTransform.getLogSideSlopeValue(self: PyOpenColorIO.LogCameraTransform) -> List[float[3]]
       :module: PyOpenColorIO
 
+      Get/Set values for the R, G, B components.
+
 
    .. py:method:: LogCameraTransform.getTransformType(self: PyOpenColorIO.Transform) -> PyOpenColorIO.TransformType
+      :module: PyOpenColorIO
+
+
+   .. py:method:: LogCameraTransform.isLinearSlopeValueSet(self: PyOpenColorIO.LogCameraTransform) -> bool
       :module: PyOpenColorIO
 
 
