@@ -780,6 +780,7 @@ by hardcoded names.
 
 Internal::
     Extracting color space from file path - (ROLE_DEFAULT)
+    Interchange color spaces between configs - (ROLE_EXCHANGE_SCENE, ROLE_EXCHANGE_DISPLAY)
 
 App Helpers::
     LegacyViewingPipeline   - (ROLE_SCENE_LINEAR (LinearCC for exposure))
@@ -818,6 +819,25 @@ extern OCIOEXPORT const char * ROLE_TEXTURE_PAINT;
  * another display transform in the host app for preview.
  */
 extern OCIOEXPORT const char * ROLE_MATTE_PAINT;
+
+/**
+ * The rendering role may be used to identify a specific color space to be used by CGI renderers.
+ * This is typically a scene-linear space but the primaries also matter since they influence the
+ * resulting color, especially in areas of indirect illumination.
+ */
+extern OCIOEXPORT const char * ROLE_RENDERING;
+/**
+ * The aces_interchange role is used to specify which color space in the config implements the
+ * standard ACES2065-1 color space (SMPTE ST2065-1).  This may be used when converting
+ * scene-referred colors from one config to another.
+ */
+extern OCIOEXPORT const char * ROLE_INTERCHANGE_SCENE;
+/**
+ * The cie_xyz_d65_interchange role is used to specify which color space in the config implements
+ * CIE XYZ colorimetry with the neutral axis at D65.  This may be used when converting
+ * display-referred colors from one config to another.
+ */
+extern OCIOEXPORT const char * ROLE_INTERCHANGE_DISPLAY;
 
 /** @}*/
 
