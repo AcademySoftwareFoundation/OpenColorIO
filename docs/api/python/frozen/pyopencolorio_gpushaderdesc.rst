@@ -208,6 +208,11 @@
       :value: <TextureType.TEXTURE_RGB_CHANNEL: 1>
 
 
+   .. py:method:: TextureType.value
+      :module: PyOpenColorIO.GpuShaderDesc
+      :property:
+
+
 .. py:class:: UniformData
    :module: PyOpenColorIO.GpuShaderDesc
 

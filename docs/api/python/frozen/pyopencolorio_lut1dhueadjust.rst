@@ -26,3 +26,8 @@
       :module: PyOpenColorIO
       :value: <Lut1DHueAdjust.HUE_NONE: 0>
 
+
+   .. py:method:: Lut1DHueAdjust.value
+      :module: PyOpenColorIO
+      :property:
+

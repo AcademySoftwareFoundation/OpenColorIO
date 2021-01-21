@@ -82,3 +82,8 @@
       :module: PyOpenColorIO
       :value: <FixedFunctionStyle.FIXED_FUNCTION_XYZ_TO_xyY: 7>
 
+
+   .. py:method:: FixedFunctionStyle.value
+      :module: PyOpenColorIO
+      :property:
+

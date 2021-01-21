@@ -11,6 +11,12 @@
       :module: PyOpenColorIO
 
 
+   .. py:method:: LookTransform.__str__()
+      :module: PyOpenColorIO
+
+      Return str(self).
+
+
    .. py:method:: LookTransform.getDirection(self: PyOpenColorIO.Transform) -> PyOpenColorIO.TransformDirection
       :module: PyOpenColorIO
 

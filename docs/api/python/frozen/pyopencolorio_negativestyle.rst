@@ -40,3 +40,8 @@
       :module: PyOpenColorIO
       :value: <NegativeStyle.NEGATIVE_PASS_THRU: 2>
 
+
+   .. py:method:: NegativeStyle.value
+      :module: PyOpenColorIO
+      :property:
+

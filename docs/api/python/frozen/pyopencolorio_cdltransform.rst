@@ -46,6 +46,12 @@
       3. __init__(self: PyOpenColorIO.CDLTransform, slope: List[float[3]] = [1.0, 1.0, 1.0], offset: List[float[3]] = [0.0, 0.0, 0.0], power: List[float[3]] = [1.0, 1.0, 1.0], sat: float = 1.0, id: str = '', description: str = '', direction: PyOpenColorIO.TransformDirection = <TransformDirection.TRANSFORM_DIR_FORWARD: 0>) -> None
 
 
+   .. py:method:: CDLTransform.__str__()
+      :module: PyOpenColorIO
+
+      Return str(self).
+
+
    .. py:method:: CDLTransform.equals(self: PyOpenColorIO.CDLTransform, other: PyOpenColorIO.CDLTransform) -> bool
       :module: PyOpenColorIO
 

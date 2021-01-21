@@ -168,6 +168,11 @@
       :value: <TextureType.TEXTURE_RGB_CHANNEL: 1>
 
 
+   .. py:method:: TextureType.value
+      :module: PyOpenColorIO.GpuShaderCreator
+      :property:
+
+
 .. py:class:: DynamicPropertyIterator
    :module: PyOpenColorIO.GpuShaderCreator
 
