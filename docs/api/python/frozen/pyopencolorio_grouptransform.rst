@@ -73,7 +73,7 @@
 
       Overloaded function.
 
-      1. write(self: PyOpenColorIO.GroupTransform, config: OpenColorIO_v2_0rc1::Config, context: OpenColorIO_v2_0rc1::Context, formatName: str, fileName: str) -> None
+      1. write(self: PyOpenColorIO.GroupTransform, config: PyOpenColorIO.Config, formatName: str, fileName: str) -> None
 
       Write the transforms comprising the group to the stream.
 
@@ -89,7 +89,7 @@
              formats << " (." << GroupTransform::GetFormatExtensionByIndex(i) << ")";
           }
 
-      2. write(self: PyOpenColorIO.GroupTransform, config: OpenColorIO_v2_0rc1::Config, context: OpenColorIO_v2_0rc1::Context, formatName: str) -> str
+      2. write(self: PyOpenColorIO.GroupTransform, config: PyOpenColorIO.Config, formatName: str) -> str
 
       Write the transforms comprising the group to the stream.
 

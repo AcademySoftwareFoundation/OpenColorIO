@@ -244,6 +244,15 @@ FixedFunctionOpData::Style FixedFunctionOpData::ConvertStyle(FixedFunctionStyle 
         {
             return FixedFunctionOpData::XYZ_TO_LUV;
         }
+        case FIXED_FUNCTION_ACES_GAMUTMAP_02:
+        case FIXED_FUNCTION_ACES_GAMUTMAP_07:
+        case FIXED_FUNCTION_ACES_GAMUTMAP_13:
+        {
+            throw Exception("Unimplemented fixed function types: "
+                            "FIXED_FUNCTION_ACES_GAMUTMAP_02, "
+                            "FIXED_FUNCTION_ACES_GAMUTMAP_07, and "
+                            "FIXED_FUNCTION_ACES_GAMUTMAP_13.");
+        }
     }
 
     std::stringstream ss("Unknown FixedFunction transform style: ");

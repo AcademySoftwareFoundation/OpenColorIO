@@ -495,14 +495,13 @@ void bindPyConfig(py::module & m)
         .def("setFileRules", &Config::setFileRules, "fileRules"_a, 
              DOC(Config, setFileRules))
         .def("getColorSpaceFromFilepath",
-             (const char * (Config::*)(const char *) const) &Config::getColorSpaceFromFilepath, 
-             "filePath"_a, 
-             DOC(Config, getColorSpaceFromFilepath))
-        .def("getColorSpaceFromFilepath",
-             (const char * (Config::*)(const char *, size_t &) const) 
-             &Config::getColorSpaceFromFilepath, 
-             "filePath"_a, "ruleIndex"_a, 
-             DOC(Config, getColorSpaceFromFilepath))
+            [](ConfigRcPtr & self, const std::string & filePath)
+            {
+                size_t ruleIndex = 0;
+                std::string csName = self->getColorSpaceFromFilepath(filePath.c_str(), ruleIndex);
+                return py::make_tuple(csName, ruleIndex);
+            }, "filePath"_a, 
+            DOC(Config, getColorSpaceFromFilepath))
         .def("filepathOnlyMatchesDefaultRule", &Config::filepathOnlyMatchesDefaultRule, 
              "filePath"_a, 
              DOC(Config, filepathOnlyMatchesDefaultRule))

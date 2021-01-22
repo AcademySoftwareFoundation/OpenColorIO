@@ -112,7 +112,6 @@ void GroupTransformImpl::prependTransform(TransformRcPtr transform) noexcept
 }
 
 void GroupTransformImpl::write(const ConstConfigRcPtr & config,
-                               const ConstContextRcPtr & context,
                                const char * formatName,
                                std::ostream & os) const
 {
@@ -128,7 +127,7 @@ void GroupTransformImpl::write(const ConstConfigRcPtr & config,
 
     try
     {
-        fmt->write(config, context, *this, formatName, os);
+        fmt->write(config, config->getCurrentContext(), *this, formatName, os);
     }
     catch (std::exception & e)
     {
