@@ -36,7 +36,7 @@ Lut1DTransformImpl::Lut1DTransformImpl()
 }
 
 Lut1DTransformImpl::Lut1DTransformImpl(Lut1DOpData::HalfFlags halfFlag, unsigned long length)
-    : m_data(halfFlag, length)
+    : m_data(halfFlag, length, false)
 {
 }
 
@@ -102,7 +102,8 @@ bool Lut1DTransformImpl::equals(const Lut1DTransform & other) const noexcept
 void Lut1DTransformImpl::setLength(unsigned long length)
 {
     auto & lutArray = m_data.getArray();
-    lutArray = Lut1DOpData::Lut3by1DArray(m_data.getHalfFlags(), 3, length);
+    // Use NaNs for the 2048 NaN values in the domain.
+    lutArray = Lut1DOpData::Lut3by1DArray(m_data.getHalfFlags(), 3, length, false);
 }
 
 namespace
@@ -209,9 +210,9 @@ std::ostream & operator<< (std::ostream & os, const Lut1DTransform & t)
             rMin = std::min(rMin, r);
             gMin = std::min(gMin, g);
             bMin = std::min(bMin, b);
-            rMax = std::max(rMin, r);
-            gMax = std::max(gMin, g);
-            bMax = std::max(bMin, b);
+            rMax = std::max(rMax, r);
+            gMax = std::max(gMax, g);
+            bMax = std::max(bMax, b);
         }
         os << "minrgb=[";
         os << rMin << " " << gMin << " " << bMin << "], ";
