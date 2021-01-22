@@ -69,7 +69,7 @@
 
       Overloaded function.
 
-      1. write(self: PyOpenColorIO.GroupTransform, config: PyOpenColorIO.Config = 0x1f17490 (version: 2), 0 active color spaces, 0 active displays., formatName: str, fileName: str) -> None
+      1. write(self: PyOpenColorIO.GroupTransform, config: PyOpenColorIO.Config = 0x26d9090 (version: 2), 0 active color spaces, 0 active displays., formatName: str, fileName: str) -> None
 
       Write the transforms comprising the group to the stream.
 
@@ -86,7 +86,7 @@
              formats << " (." << GroupTransform::GetFormatExtensionByIndex(i) << ")";
           }
 
-      2. write(self: PyOpenColorIO.GroupTransform, config: PyOpenColorIO.Config = 0x1f17490 (version: 2), 0 active color spaces, 0 active displays., formatName: str) -> str
+      2. write(self: PyOpenColorIO.GroupTransform, config: PyOpenColorIO.Config = 0x26d9090 (version: 2), 0 active color spaces, 0 active displays., formatName: str) -> str
 
       Write the transforms comprising the group to the stream.
 
