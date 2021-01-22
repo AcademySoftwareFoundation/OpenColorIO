@@ -21,7 +21,10 @@ namespace OCIO_NAMESPACE
 // Number of possible values for the Half domain.
 static const unsigned long HALF_DOMAIN_REQUIRED_ENTRIES = 65536;
 
-Lut1DOpData::Lut3by1DArray::Lut3by1DArray(HalfFlags halfFlags, unsigned long numChannels, unsigned long length)
+Lut1DOpData::Lut3by1DArray::Lut3by1DArray(HalfFlags halfFlags,
+                                          unsigned long numChannels,
+                                          unsigned long length,
+                                          bool filterNANs)
 {
     if (length < 2)
     {
@@ -33,14 +36,14 @@ Lut1DOpData::Lut3by1DArray::Lut3by1DArray(HalfFlags halfFlags, unsigned long num
     }
 
     resize(length, numChannels);
-    fill(halfFlags);
+    fill(halfFlags, filterNANs);
 }
 
 Lut1DOpData::Lut3by1DArray::~Lut3by1DArray()
 {
 }
 
-void Lut1DOpData::Lut3by1DArray::fill(HalfFlags halfFlags)
+void Lut1DOpData::Lut3by1DArray::fill(HalfFlags halfFlags, bool filterNANs)
 {
     const unsigned long dim         = getLength();
     const unsigned long maxChannels = getNumColorComponents();
@@ -51,7 +54,11 @@ void Lut1DOpData::Lut3by1DArray::fill(HalfFlags halfFlags)
         for (unsigned long idx = 0; idx<dim; ++idx)
         {
             half htemp; htemp.setBits((unsigned short)idx);
-            const float ftemp = static_cast<float>(htemp);
+            float ftemp = static_cast<float>(htemp);
+            if (IsNan(ftemp) && filterNANs)
+            {
+                ftemp = 0.f;
+            }
 
             const unsigned long row = maxChannels * idx;
             for (unsigned long channel = 0; channel<maxChannels; ++channel)
@@ -120,7 +127,6 @@ bool Lut1DOpData::Lut3by1DArray::isIdentity(HalfFlags halfFlags) const
         {
             half aimHalf;
             aimHalf.setBits((unsigned short)idx);
-
             const unsigned long row = maxChannels * idx;
             for (unsigned long channel = 0; channel<maxChannels; ++channel)
             {
@@ -177,7 +183,7 @@ bool Lut1DOpData::Lut3by1DArray::isIdentity(HalfFlags halfFlags) const
 Lut1DOpData::Lut1DOpData(unsigned long dimension)
     : OpData()
     , m_interpolation(INTERP_DEFAULT)
-    , m_array(LUT_STANDARD, 3, dimension)
+    , m_array(LUT_STANDARD, 3, dimension, false)
     , m_halfFlags(LUT_STANDARD)
     , m_hueAdjust(HUE_NONE)
     , m_direction(TRANSFORM_DIR_FORWARD)
@@ -187,17 +193,17 @@ Lut1DOpData::Lut1DOpData(unsigned long dimension)
 Lut1DOpData::Lut1DOpData(unsigned long dimension, TransformDirection dir)
     : OpData()
     , m_interpolation(INTERP_DEFAULT)
-    , m_array(LUT_STANDARD, 3, dimension)
+    , m_array(LUT_STANDARD, 3, dimension, false)
     , m_halfFlags(LUT_STANDARD)
     , m_hueAdjust(HUE_NONE)
     , m_direction(dir)
 {
 }
 
-Lut1DOpData::Lut1DOpData(HalfFlags halfFlags, unsigned long dimension)
+Lut1DOpData::Lut1DOpData(HalfFlags halfFlags, unsigned long dimension, bool filterNANs)
     : OpData()
     , m_interpolation(INTERP_DEFAULT)
-    , m_array(halfFlags, 3, dimension)
+    , m_array(halfFlags, 3, dimension, filterNANs)
     , m_halfFlags(halfFlags)
     , m_hueAdjust(HUE_NONE)
     , m_direction(TRANSFORM_DIR_FORWARD)
@@ -432,7 +438,7 @@ Lut1DOpDataRcPtr Lut1DOpData::MakeLookupDomain(BitDepth incomingDepth)
     // the incomingDepth, so it should be safe to rely on the constructor
     // and fill() to always return the correct length.
     // (E.g., we don't need to worry about 10i with a half domain.)
-    return std::make_shared<Lut1DOpData>(domainType, idealSize);
+    return std::make_shared<Lut1DOpData>(domainType, idealSize, true);
 }
 
 bool Lut1DOpData::haveEqualBasics(const Lut1DOpData & other) const
@@ -688,7 +694,7 @@ Lut1DOpDataRcPtr Lut1DOpData::Compose(ConstLut1DOpDataRcPtr & lutc1,
         {
             result = std::make_shared<Lut1DOpData>(needHalfDomain ? Lut1DOpData::LUT_INPUT_HALF_CODE :
                                                                     Lut1DOpData::LUT_STANDARD,
-                                                   minSize);
+                                                   minSize, true);
         }
 
 
