@@ -13,18 +13,6 @@
    To better decouple the DynamicProperties from their GPU implementation, the code provides several addUniform() methods i.e. one per access function types. For example, an :ref:`ExposureContrastTransform` instance owns three DynamicProperties and they are all implemented by a double. When creating the GPU fragment shader program, the addUniform() with :ref:`GpuShaderCreator::DoubleGetter` is called when property is dynamic, up to three times.
 
 
-   .. py:method:: GpuShaderCreator.__init__(self: PyOpenColorIO.GpuShaderCreator) -> None
-      :module: PyOpenColorIO
-
-
-   .. py:method:: GpuShaderCreator.add3DTexture(self: PyOpenColorIO.GpuShaderCreator, textureName: str, samplerName: str, edgeLen: int, interpolation: PyOpenColorIO.Interpolation, values: float) -> None
-      :module: PyOpenColorIO
-
-
-   .. py:method:: GpuShaderCreator.addTexture(self: PyOpenColorIO.GpuShaderCreator, textureName: str, samplerName: str, width: int, height: int, channel: PyOpenColorIO.GpuShaderCreator.TextureType, interpolation: PyOpenColorIO.Interpolation, values: float) -> None
-      :module: PyOpenColorIO
-
-
    .. py:method:: GpuShaderCreator.addToDeclareShaderCode(self: PyOpenColorIO.GpuShaderCreator, shaderCode: str) -> None
       :module: PyOpenColorIO
 
@@ -85,7 +73,7 @@
       :module: PyOpenColorIO
 
 
-   .. py:method:: GpuShaderCreator.getDynamicProperty(self: PyOpenColorIO.GpuShaderCreator, type: PyOpenColorIO.DynamicPropertyType) -> OpenColorIO_v2_0rc1::DynamicProperty
+   .. py:method:: GpuShaderCreator.getDynamicProperty(self: PyOpenColorIO.GpuShaderCreator, type: PyOpenColorIO.DynamicPropertyType) -> PyOpenColorIO.DynamicProperty
       :module: PyOpenColorIO
 
 
@@ -180,11 +168,16 @@
       :value: <TextureType.TEXTURE_RGB_CHANNEL: 1>
 
 
+   .. py:method:: TextureType.value
+      :module: PyOpenColorIO.GpuShaderCreator
+      :property:
+
+
 .. py:class:: DynamicPropertyIterator
    :module: PyOpenColorIO.GpuShaderCreator
 
 
-   .. py:method:: DynamicPropertyIterator.__getitem__(self: PyOpenColorIO.GpuShaderCreator.DynamicPropertyIterator, arg0: int) -> OpenColorIO_v2_0rc1::DynamicProperty
+   .. py:method:: DynamicPropertyIterator.__getitem__(self: PyOpenColorIO.GpuShaderCreator.DynamicPropertyIterator, arg0: int) -> PyOpenColorIO.DynamicProperty
       :module: PyOpenColorIO.GpuShaderCreator
 
 
@@ -196,6 +189,6 @@
       :module: PyOpenColorIO.GpuShaderCreator
 
 
-   .. py:method:: DynamicPropertyIterator.__next__(self: PyOpenColorIO.GpuShaderCreator.DynamicPropertyIterator) -> OpenColorIO_v2_0rc1::DynamicProperty
+   .. py:method:: DynamicPropertyIterator.__next__(self: PyOpenColorIO.GpuShaderCreator.DynamicPropertyIterator) -> PyOpenColorIO.DynamicProperty
       :module: PyOpenColorIO.GpuShaderCreator
 

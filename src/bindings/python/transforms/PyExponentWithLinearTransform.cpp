@@ -17,11 +17,8 @@ void bindPyExponentWithLinearTransform(py::module & m)
     DEFAULT->getOffset(*reinterpret_cast<double(*)[4]>(DEFAULT_OFFSET.data()));
 
     auto clsExponentWithLinearTransform = 
-        py::class_<ExponentWithLinearTransform, 
-                   ExponentWithLinearTransformRcPtr /* holder */, 
-                   Transform /* base */>(
-            m, "ExponentWithLinearTransform", 
-            DOC(ExponentWithLinearTransform))
+        py::class_<ExponentWithLinearTransform, ExponentWithLinearTransformRcPtr, Transform>(
+            m.attr("ExponentWithLinearTransform"))
 
         .def(py::init(&ExponentWithLinearTransform::Create), 
              DOC(ExponentWithLinearTransform, Create))

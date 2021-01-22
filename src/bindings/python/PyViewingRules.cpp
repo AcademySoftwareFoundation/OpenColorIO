@@ -19,9 +19,8 @@ using ViewingRuleEncodingIterator = PyIterator<ViewingRulesRcPtr, IT_VIEWING_RUL
 void bindPyViewingRules(py::module & m)
 {
     auto clsViewingRules = 
-        py::class_<ViewingRules, ViewingRulesRcPtr /* holder */>(
-            m, "ViewingRules", 
-            DOC(ViewingRules));
+        py::class_<ViewingRules, ViewingRulesRcPtr>(
+            m.attr("ViewingRules"));
 
     auto clsViewingRuleColorSpaceIterator = 
         py::class_<ViewingRuleColorSpaceIterator>(

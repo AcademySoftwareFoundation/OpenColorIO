@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
 #include "PyDynamicProperty.h"
 #include "PyOpenColorIO.h"
 #include "PyUtils.h"
@@ -24,9 +23,8 @@ using TransformFormatMetadataIterator = PyIterator<ProcessorRcPtr, IT_TRANSFORM_
 void bindPyProcessor(py::module & m)
 {
     auto clsProcessor = 
-        py::class_<Processor, ProcessorRcPtr /* holder */>(
-            m, "Processor", 
-            DOC(Processor));
+        py::class_<Processor, ProcessorRcPtr>(
+            m.attr("Processor"));
 
     auto clsTransformFormatMetadataIterator = 
         py::class_<TransformFormatMetadataIterator>(
@@ -117,4 +115,5 @@ void bindPyProcessor(py::module & m)
             }, 
              py::return_value_policy::reference_internal);
 }
+
 } // namespace OCIO_NAMESPACE

@@ -18,6 +18,12 @@
       LinSideBreak must be set for the transform to be valid (there is no default).
 
 
+   .. py:method:: LogCameraTransform.__str__()
+      :module: PyOpenColorIO
+
+      Return str(self).
+
+
    .. py:method:: LogCameraTransform.equals(self: PyOpenColorIO.LogCameraTransform, other: PyOpenColorIO.LogCameraTransform) -> bool
       :module: PyOpenColorIO
 

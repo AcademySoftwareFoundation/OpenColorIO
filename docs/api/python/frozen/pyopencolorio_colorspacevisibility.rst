@@ -31,3 +31,8 @@
       :module: PyOpenColorIO
       :value: <ColorSpaceVisibility.COLORSPACE_INACTIVE: 1>
 
+
+   .. py:method:: ColorSpaceVisibility.value
+      :module: PyOpenColorIO
+      :property:
+

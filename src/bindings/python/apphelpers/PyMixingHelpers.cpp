@@ -8,8 +8,10 @@
 
 namespace OCIO_NAMESPACE
 {
+
 namespace
 {
+
 enum MixingColorSpaceManagerIterator
 {
     IT_MIXING_SPACE = 0,
@@ -23,7 +25,23 @@ using MixingEncodingIterator = PyIterator<MixingColorSpaceManagerRcPtr, IT_MIXIN
 
 void bindPyMixingHelpers(py::module & m)
 {
-    auto clsMixingSlider = py::class_<MixingSlider>(m, "MixingSlider", DOC(MixingSlider))
+     auto clsMixingSlider = 
+          py::class_<MixingSlider>(
+              m.attr("MixingSlider"));
+
+     auto clsMixingColorSpaceManager =
+          py::class_<MixingColorSpaceManager, MixingColorSpaceManagerRcPtr>(
+              m.attr("MixingColorSpaceManager"));
+
+     auto clsMixingSpaceIterator = 
+          py::class_<MixingSpaceIterator>(
+               clsMixingColorSpaceManager, "MixingSpaceIterator");
+
+     auto clsMixingEncodingIterator = 
+          py::class_<MixingEncodingIterator>(
+               clsMixingColorSpaceManager, "MixingEncodingIterator");
+
+    clsMixingSlider
         .def("setSliderMinEdge", &MixingSlider::setSliderMinEdge,
              DOC(MixingSlider, setSliderMinEdge))
         .def("getSliderMinEdge", &MixingSlider::getSliderMinEdge,
@@ -39,14 +57,12 @@ void bindPyMixingHelpers(py::module & m)
 
     defRepr(clsMixingSlider);
 
-    auto clsMixingColorSpaceManager =
-        py::class_<MixingColorSpaceManager, MixingColorSpaceManagerRcPtr /* holder */>(
-            m, "MixingColorSpaceManager", DOC(MixingColorSpaceManager))
-
+    clsMixingColorSpaceManager
         .def(py::init([](ConstConfigRcPtr & config)
              {
                  return MixingColorSpaceManager::Create(config);
-             }), "config"_a.none(false),
+             }), 
+             "config"_a.none(false),
              DOC(MixingColorSpaceManager, Create))
         .def("getMixingSpaces", [](MixingColorSpaceManagerRcPtr & self)
              {
@@ -94,7 +110,7 @@ void bindPyMixingHelpers(py::module & m)
 
     defRepr(clsMixingColorSpaceManager);
 
-    py::class_<MixingSpaceIterator>(clsMixingColorSpaceManager, "MixingSpaceIterator")
+    clsMixingSpaceIterator
         .def("__len__", [](MixingSpaceIterator & it)
              {
                  return static_cast<int>(it.m_obj->getNumMixingSpaces());
@@ -114,7 +130,7 @@ void bindPyMixingHelpers(py::module & m)
                  return it.m_obj->getMixingSpaceUIName(i);
              });
 
-    py::class_<MixingEncodingIterator>(clsMixingColorSpaceManager, "MixingEncodingIterator")
+    clsMixingEncodingIterator
         .def("__len__", [](MixingEncodingIterator & it)
              {
                  return static_cast<int>(it.m_obj->getNumMixingEncodings());
@@ -133,6 +149,6 @@ void bindPyMixingHelpers(py::module & m)
                  int i = it.nextIndex(static_cast<int>(it.m_obj->getNumMixingEncodings()));
                  return it.m_obj->getMixingEncodingName(i);
              });
+}
 
-}
-}
+} // namespace OCIO_NAMESPACE

@@ -14,9 +14,8 @@ void bindPyExponentTransform(py::module & m)
     DEFAULT->getValue(*reinterpret_cast<double(*)[4]>(DEFAULT_VALUE.data()));
 
     auto clsExponentTransform = 
-        py::class_<ExponentTransform, ExponentTransformRcPtr /* holder */, Transform /* base */>(
-             m, "ExponentTransform", 
-             DOC(ExponentTransform))
+        py::class_<ExponentTransform, ExponentTransformRcPtr, Transform>(
+             m.attr("ExponentTransform"))
 
         .def(py::init(&ExponentTransform::Create), 
              DOC(ExponentTransform, Create))

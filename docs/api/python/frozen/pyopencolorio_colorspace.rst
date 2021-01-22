@@ -7,16 +7,6 @@
    :module: PyOpenColorIO
 
 
-   .. py:class:: ColorSpace.ColorSpaceAliasIterator
-      :module: PyOpenColorIO
-
-
-      .. py:method:: ColorSpace.ColorSpaceAliasIterator.__init__(*args, **kwargs)
-         :module: PyOpenColorIO
-
-         Initialize self.  See help(type(self)) for accurate signature.
-
-
    .. py:method:: ColorSpace.__init__(*args, **kwargs)
       :module: PyOpenColorIO
 
@@ -39,6 +29,7 @@
       :module: PyOpenColorIO
 
       Add a single category.
+
 
       .. note::
          Will do nothing if the category already exists.
@@ -131,6 +122,7 @@
 
       Remove a category.
 
+
       .. note::
          Will do nothing if the category is missing.
 
@@ -198,5 +190,25 @@
 
 
    .. py:method:: ColorSpaceCategoryIterator.__next__(self: PyOpenColorIO.ColorSpace.ColorSpaceCategoryIterator) -> str
+      :module: PyOpenColorIO.ColorSpace
+
+
+.. py:class:: ColorSpaceAliasIterator
+   :module: PyOpenColorIO.ColorSpace
+
+
+   .. py:method:: ColorSpaceAliasIterator.__getitem__(self: PyOpenColorIO.ColorSpace.ColorSpaceAliasIterator, arg0: int) -> str
+      :module: PyOpenColorIO.ColorSpace
+
+
+   .. py:method:: ColorSpaceAliasIterator.__iter__(self: PyOpenColorIO.ColorSpace.ColorSpaceAliasIterator) -> PyOpenColorIO.ColorSpace.ColorSpaceAliasIterator
+      :module: PyOpenColorIO.ColorSpace
+
+
+   .. py:method:: ColorSpaceAliasIterator.__len__(self: PyOpenColorIO.ColorSpace.ColorSpaceAliasIterator) -> int
+      :module: PyOpenColorIO.ColorSpace
+
+
+   .. py:method:: ColorSpaceAliasIterator.__next__(self: PyOpenColorIO.ColorSpace.ColorSpaceAliasIterator) -> str
       :module: PyOpenColorIO.ColorSpace
 

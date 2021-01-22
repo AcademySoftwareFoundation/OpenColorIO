@@ -33,8 +33,7 @@ void bindPyFormatMetadata(py::module & m)
 {
     auto clsFormatMetadata = 
         py::class_<FormatMetadata>(
-            m, "FormatMetadata", 
-            DOC(FormatMetadata));
+            m.attr("FormatMetadata"));
 
     auto clsAttributeNameIterator = 
         py::class_<AttributeNameIterator>(

@@ -31,9 +31,8 @@ void bindPyLogCameraTransform(py::module & m)
     std::vector<double> DEFAULT_EMPTY;
 
     auto clsLogCameraTransform = 
-        py::class_<LogCameraTransform, LogCameraTransformRcPtr /* holder */, Transform /* base */>(
-            m, "LogCameraTransform", 
-            DOC(LogCameraTransform))
+        py::class_<LogCameraTransform, LogCameraTransformRcPtr, Transform>(
+            m.attr("LogCameraTransform"))
 
         .def(py::init([](const std::array<double, 3> & linSideBreak,
                          double base,

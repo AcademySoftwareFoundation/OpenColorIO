@@ -11,11 +11,8 @@ void bindPyColorSpaceTransform(py::module & m)
     ColorSpaceTransformRcPtr DEFAULT = ColorSpaceTransform::Create();
 
     auto clsColorSpaceTransform = 
-        py::class_<ColorSpaceTransform, 
-                   ColorSpaceTransformRcPtr /* holder */, 
-                   Transform /* base */>(
-            m, "ColorSpaceTransform",
-            DOC(ColorSpaceTransform))
+        py::class_<ColorSpaceTransform, ColorSpaceTransformRcPtr, Transform>(
+            m.attr("ColorSpaceTransform"))
 
         .def(py::init(&ColorSpaceTransform::Create), 
              DOC(ColorSpaceTransform, Create))

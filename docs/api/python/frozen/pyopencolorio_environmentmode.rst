@@ -31,3 +31,8 @@
       :module: PyOpenColorIO
       :value: <EnvironmentMode.ENV_ENVIRONMENT_UNKNOWN: 0>
 
+
+   .. py:method:: EnvironmentMode.value
+      :module: PyOpenColorIO
+      :property:
+
