@@ -250,7 +250,7 @@ FixedFunctionOpData::Style FixedFunctionOpData::ConvertStyle(FixedFunctionStyle 
         {
             throw Exception("Unimplemented fixed function types: "
                             "FIXED_FUNCTION_ACES_GAMUTMAP_02, "
-                            "FIXED_FUNCTION_ACES_GAMUTMAP_07 & "
+                            "FIXED_FUNCTION_ACES_GAMUTMAP_07, and "
                             "FIXED_FUNCTION_ACES_GAMUTMAP_13.");
         }
     }
