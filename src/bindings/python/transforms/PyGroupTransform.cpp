@@ -40,10 +40,6 @@ void bindPyGroupTransform(py::module & m)
             clsGroupTransform, "WriteFormatIterator");
 
     clsGroupTransform
-        .def_static("GetWriteFormats", []()
-            {
-                return WriteFormatIterator(nullptr);
-            })
         .def(py::init(&GroupTransform::Create),
              DOC(GroupTransform, Create))
         .def(py::init([](const std::vector<TransformRcPtr> transforms, 
@@ -61,6 +57,11 @@ void bindPyGroupTransform(py::module & m)
              "transforms"_a = std::vector<ConstTransformRcPtr>{},
              "direction"_a = DEFAULT->getDirection(),
              DOC(GroupTransform, Create))
+
+        .def_static("GetWriteFormats", []()
+            {
+                return WriteFormatIterator(nullptr);
+            })
 
         .def("__iter__", [](GroupTransformRcPtr & self) 
             { 
