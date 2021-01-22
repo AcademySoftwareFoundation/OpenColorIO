@@ -47,6 +47,12 @@
       2. __init__(self: PyOpenColorIO.MatrixTransform, matrix: List[float[16]] = [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0], offset: List[float[4]] = [0.0, 0.0, 0.0, 0.0], direction: PyOpenColorIO.TransformDirection = <TransformDirection.TRANSFORM_DIR_FORWARD: 0>) -> None
 
 
+   .. py:method:: MatrixTransform.__str__()
+      :module: PyOpenColorIO
+
+      Return str(self).
+
+
    .. py:method:: MatrixTransform.equals(self: PyOpenColorIO.MatrixTransform, other: PyOpenColorIO.MatrixTransform) -> bool
       :module: PyOpenColorIO
 

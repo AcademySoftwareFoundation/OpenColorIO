@@ -11,11 +11,8 @@ void bindPyExposureContrastTransform(py::module & m)
     ExposureContrastTransformRcPtr DEFAULT = ExposureContrastTransform::Create();
 
     auto clsExposureContrastTransform = 
-        py::class_<ExposureContrastTransform, 
-                   ExposureContrastTransformRcPtr /* holder */, 
-                   Transform /* base */>(
-            m, "ExposureContrastTransform", 
-            DOC(ExposureContrastTransform))
+        py::class_<ExposureContrastTransform, ExposureContrastTransformRcPtr, Transform>(
+            m.attr("ExposureContrastTransform"))
 
         .def(py::init(&ExposureContrastTransform::Create), 
              DOC(ExposureContrastTransform, Create))

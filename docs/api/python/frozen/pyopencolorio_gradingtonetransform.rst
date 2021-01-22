@@ -31,13 +31,19 @@
 
       Overloaded function.
 
-      1. __init__(self: PyOpenColorIO.GradingToneTransform, style: PyOpenColorIO.GradingStyle = <GradingStyle.GRADING_LOG: 0>, values: PyOpenColorIO.GradingTone, dynamic: bool = False, dir: PyOpenColorIO.TransformDirection = <TransformDirection.TRANSFORM_DIR_FORWARD: 0>) -> None
+      1. __init__(self: PyOpenColorIO.GradingToneTransform, values: PyOpenColorIO.GradingTone, style: PyOpenColorIO.GradingStyle = <GradingStyle.GRADING_LOG: 0>, dynamic: bool = False, dir: PyOpenColorIO.TransformDirection = <TransformDirection.TRANSFORM_DIR_FORWARD: 0>) -> None
 
       Creates an instance of :ref:`GradingToneTransform`.
 
       2. __init__(self: PyOpenColorIO.GradingToneTransform, style: PyOpenColorIO.GradingStyle = <GradingStyle.GRADING_LOG: 0>, dynamic: bool = False, dir: PyOpenColorIO.TransformDirection = <TransformDirection.TRANSFORM_DIR_FORWARD: 0>) -> None
 
       Creates an instance of :ref:`GradingToneTransform`.
+
+
+   .. py:method:: GradingToneTransform.__str__()
+      :module: PyOpenColorIO
+
+      Return str(self).
 
 
    .. py:method:: GradingToneTransform.getDirection(self: PyOpenColorIO.Transform) -> PyOpenColorIO.TransformDirection

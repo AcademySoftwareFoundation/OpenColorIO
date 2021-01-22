@@ -47,8 +47,19 @@ void bindPyNamedTransform(py::module & m)
 {
     NamedTransformRcPtr DEFAULT = NamedTransform::Create();
 
-    auto cls = py::class_<NamedTransform, NamedTransformRcPtr /* holder */>(
-        m, "NamedTransform", DOC(NamedTransform))
+    auto clsNamedTransform = 
+        py::class_<NamedTransform, NamedTransformRcPtr>(
+            m.attr("NamedTransform"));
+
+    auto clsNamedTransformCategoryIterator = 
+        py::class_<NamedTransformCategoryIterator>(
+            clsNamedTransform, "NamedTransformCategoryIterator");
+
+    auto clsNamedTransformAliasIterator = 
+        py::class_<NamedTransformAliasIterator>(
+            clsNamedTransform, "NamedTransformAliasIterator");
+
+    clsNamedTransform
         .def(py::init([]() { return NamedTransform::Create(); }), DOC(NamedTransform, Create))
         .def(py::init([](const std::string & name,
                          const std::vector<std::string> & aliases,
@@ -98,68 +109,68 @@ void bindPyNamedTransform(py::module & m)
                 }
                 return p;
             }),
-            "name"_a.none(false) = "",
-            "aliases"_a = getAliasesStdVec(DEFAULT),
-            "family"_a.none(false) = "",
-            "description"_a.none(false) = "",
-            "forwardTransform"_a = ConstTransformRcPtr(),
-            "inverseTransform"_a = ConstTransformRcPtr(),
-            "categories"_a = getCategoriesStdVec(DEFAULT),
-            DOC(NamedTransform, Create))
+             "name"_a.none(false) = "",
+             "aliases"_a = getAliasesStdVec(DEFAULT),
+             "family"_a.none(false) = "",
+             "description"_a.none(false) = "",
+             "forwardTransform"_a = ConstTransformRcPtr(),
+             "inverseTransform"_a = ConstTransformRcPtr(),
+             "categories"_a = getCategoriesStdVec(DEFAULT),
+             DOC(NamedTransform, Create))
 
         .def("getName", &NamedTransform::getName,
-            DOC(NamedTransform, getName))
+             DOC(NamedTransform, getName))
         .def("setName", &NamedTransform::setName, "name"_a.none(false),
-            DOC(NamedTransform, setName))
+             DOC(NamedTransform, setName))
 
         // Aliases.
         .def("addAlias", &NamedTransform::addAlias, "alias"_a.none(false),
-            DOC(NamedTransform, addAlias))
+             DOC(NamedTransform, addAlias))
         .def("removeAlias", &NamedTransform::removeAlias, "alias"_a.none(false),
-            DOC(NamedTransform, removeAlias))
+             DOC(NamedTransform, removeAlias))
         .def("getAliases", [](NamedTransformRcPtr & self)
             { 
                 return NamedTransformAliasIterator(self);
             })
         .def("clearAliases", &NamedTransform::clearAliases,
-            DOC(NamedTransform, clearAliases))
+             DOC(NamedTransform, clearAliases))
 
         .def("getFamily", &NamedTransform::getFamily,
-            DOC(NamedTransform, getFamily))
+             DOC(NamedTransform, getFamily))
         .def("setFamily", &NamedTransform::setFamily, "family"_a.none(false),
-            DOC(NamedTransform, setFamily))
+             DOC(NamedTransform, setFamily))
         .def("getDescription", &NamedTransform::getDescription,
-            DOC(NamedTransform, getDescription))
+             DOC(NamedTransform, getDescription))
         .def("setDescription", &NamedTransform::setDescription, "description"_a.none(false),
-            DOC(NamedTransform, setDescription))
+             DOC(NamedTransform, setDescription))
         .def("getEncoding", &NamedTransform::getEncoding,
-            DOC(NamedTransform, getEncoding))
+             DOC(NamedTransform, getEncoding))
         .def("setEncoding", &NamedTransform::setEncoding, "encodig"_a.none(false),
-            DOC(NamedTransform, setEncoding))
+             DOC(NamedTransform, setEncoding))
 
         // Transform
         .def("getTransform", &NamedTransform::getTransform, "direction"_a,
-            DOC(NamedTransform, getTransform))
+             DOC(NamedTransform, getTransform))
         .def("setTransform", &NamedTransform::setTransform, "transform"_a, "direction"_a,
-            DOC(NamedTransform, setTransform))
+             DOC(NamedTransform, setTransform))
 
         // Categories
         .def("hasCategory", &NamedTransform::hasCategory, "category"_a,
-            DOC(NamedTransform, hasCategory))
+             DOC(NamedTransform, hasCategory))
         .def("addCategory", &NamedTransform::addCategory, "category"_a,
-            DOC(NamedTransform, addCategory))
+             DOC(NamedTransform, addCategory))
         .def("removeCategory", &NamedTransform::removeCategory, "category"_a,
-            DOC(NamedTransform, removeCategory))
+             DOC(NamedTransform, removeCategory))
         .def("getCategories", [](NamedTransformRcPtr & self)
             {
                 return NamedTransformCategoryIterator(self);
             })
         .def("clearCategories", &NamedTransform::clearCategories,
-            DOC(NamedTransform, clearCategories));
+             DOC(NamedTransform, clearCategories));
 
-    defRepr(cls);
+    defRepr(clsNamedTransform);
 
-    py::class_<NamedTransformCategoryIterator>(cls, "NamedTransformCategoryIterator")
+    clsNamedTransformCategoryIterator
         .def("__len__", [](NamedTransformCategoryIterator & it)
             {
                 return it.m_obj->getNumCategories();
@@ -179,7 +190,7 @@ void bindPyNamedTransform(py::module & m)
                 return it.m_obj->getCategory(i);
             });
 
-    py::class_<NamedTransformAliasIterator>(cls, "NamedTransformAliasIterator")
+    clsNamedTransformAliasIterator
         .def("__len__", [](NamedTransformAliasIterator & it)
             { 
                 return it.m_obj->getNumAliases(); 

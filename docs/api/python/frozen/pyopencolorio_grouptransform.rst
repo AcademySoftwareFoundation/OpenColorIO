@@ -7,19 +7,9 @@
    :module: PyOpenColorIO
 
 
-   .. py:method:: GroupTransform.GetWriteFormats() -> OpenColorIO_v2_0rc1::PyIterator<std::shared_ptr<OpenColorIO_v2_0rc1::GroupTransform>,1>
+   .. py:method:: GroupTransform.GetWriteFormats() -> PyOpenColorIO.GroupTransform.WriteFormatIterator
       :module: PyOpenColorIO
       :staticmethod:
-
-
-   .. py:class:: GroupTransform.WriteFormatIterator
-      :module: PyOpenColorIO
-
-
-      .. py:method:: GroupTransform.WriteFormatIterator.__init__(*args, **kwargs)
-         :module: PyOpenColorIO
-
-         Initialize self.  See help(type(self)) for accurate signature.
 
 
    .. py:method:: GroupTransform.__init__(*args, **kwargs)
@@ -30,6 +20,12 @@
       1. __init__(self: PyOpenColorIO.GroupTransform) -> None
 
       2. __init__(self: PyOpenColorIO.GroupTransform, transforms: List[PyOpenColorIO.Transform] = [], direction: PyOpenColorIO.TransformDirection = <TransformDirection.TRANSFORM_DIR_FORWARD: 0>) -> None
+
+
+   .. py:method:: GroupTransform.__str__()
+      :module: PyOpenColorIO
+
+      Return str(self).
 
 
    .. py:method:: GroupTransform.appendTransform(self: PyOpenColorIO.GroupTransform, transform: PyOpenColorIO.Transform) -> None
@@ -73,9 +69,10 @@
 
       Overloaded function.
 
-      1. write(self: PyOpenColorIO.GroupTransform, config: PyOpenColorIO.Config, formatName: str, fileName: str) -> None
+      1. write(self: PyOpenColorIO.GroupTransform, formatName: str, fileName: str, config: PyOpenColorIO.Config = None) -> None
 
       Write the transforms comprising the group to the stream.
+
 
       Writing (as opposed to Baking) is a lossless process. An exception is thrown if the processor cannot be losslessly written to the specified file format. Transforms such as :ref:`FileTransform` or :ref:`ColorSpaceTransform` are resolved into write-able simple transforms using the config and context. Supported formats include CTF, CLF, and CDL. All available formats can be listed with the following: .. code-block:: cpp
 
@@ -89,9 +86,10 @@
              formats << " (." << GroupTransform::GetFormatExtensionByIndex(i) << ")";
           }
 
-      2. write(self: PyOpenColorIO.GroupTransform, config: PyOpenColorIO.Config, formatName: str) -> str
+      2. write(self: PyOpenColorIO.GroupTransform, formatName: str, config: PyOpenColorIO.Config = None) -> str
 
       Write the transforms comprising the group to the stream.
+
 
       Writing (as opposed to Baking) is a lossless process. An exception is thrown if the processor cannot be losslessly written to the specified file format. Transforms such as :ref:`FileTransform` or :ref:`ColorSpaceTransform` are resolved into write-able simple transforms using the config and context. Supported formats include CTF, CLF, and CDL. All available formats can be listed with the following: .. code-block:: cpp
 
@@ -104,6 +102,26 @@
              formats << GroupTransform::GetFormatNameByIndex(i);
              formats << " (." << GroupTransform::GetFormatExtensionByIndex(i) << ")";
           }
+
+
+.. py:class:: WriteFormatIterator
+   :module: PyOpenColorIO.GroupTransform
+
+
+   .. py:method:: WriteFormatIterator.__getitem__(self: PyOpenColorIO.GroupTransform.WriteFormatIterator, arg0: int) -> tuple
+      :module: PyOpenColorIO.GroupTransform
+
+
+   .. py:method:: WriteFormatIterator.__iter__(self: PyOpenColorIO.GroupTransform.WriteFormatIterator) -> PyOpenColorIO.GroupTransform.WriteFormatIterator
+      :module: PyOpenColorIO.GroupTransform
+
+
+   .. py:method:: WriteFormatIterator.__len__(self: PyOpenColorIO.GroupTransform.WriteFormatIterator) -> int
+      :module: PyOpenColorIO.GroupTransform
+
+
+   .. py:method:: WriteFormatIterator.__next__(self: PyOpenColorIO.GroupTransform.WriteFormatIterator) -> tuple
+      :module: PyOpenColorIO.GroupTransform
 
 
 .. py:class:: TransformIterator

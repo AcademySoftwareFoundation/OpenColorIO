@@ -27,19 +27,19 @@
       Get the property as DynamicPropertyDoubleRcPtr to access the double value. Will throw if property type is not a type that holds a double such as DYNAMIC_PROPERTY_EXPOSURE.
 
 
-   .. py:method:: DynamicProperty.getGradingPrimary(self: PyOpenColorIO.DynamicProperty) -> OpenColorIO_v2_0rc1::GradingPrimary
+   .. py:method:: DynamicProperty.getGradingPrimary(self: PyOpenColorIO.DynamicProperty) -> PyOpenColorIO.GradingPrimary
       :module: PyOpenColorIO
 
       Get the property as DynamicPropertyGradingPrimaryRcPtr to access the :ref:`GradingPrimary` value. Will throw if property type is not DYNAMIC_PROPERTY_GRADING_PRIMARY.
 
 
-   .. py:method:: DynamicProperty.getGradingRGBCurve(self: PyOpenColorIO.DynamicProperty) -> OpenColorIO_v2_0rc1::GradingRGBCurve
+   .. py:method:: DynamicProperty.getGradingRGBCurve(self: PyOpenColorIO.DynamicProperty) -> PyOpenColorIO.GradingRGBCurve
       :module: PyOpenColorIO
 
       Get the property as DynamicPropertyGradingRGBCurveRcPtr to access the GradingRGBCurveRcPtr value. Will throw if property type is not DYNAMIC_PROPERTY_GRADING_RGBCURVE.
 
 
-   .. py:method:: DynamicProperty.getGradingTone(self: PyOpenColorIO.DynamicProperty) -> OpenColorIO_v2_0rc1::GradingTone
+   .. py:method:: DynamicProperty.getGradingTone(self: PyOpenColorIO.DynamicProperty) -> PyOpenColorIO.GradingTone
       :module: PyOpenColorIO
 
       Get the property as DynamicPropertyGradingToneRcPtr to access the :ref:`GradingTone` value. Will throw if property type is not DYNAMIC_PROPERTY_GRADING_TONE.
@@ -55,19 +55,19 @@
       Get the property as DynamicPropertyDoubleRcPtr to access the double value. Will throw if property type is not a type that holds a double such as DYNAMIC_PROPERTY_EXPOSURE.
 
 
-   .. py:method:: DynamicProperty.setGradingPrimary(self: PyOpenColorIO.DynamicProperty, val: OpenColorIO_v2_0rc1::GradingPrimary) -> None
+   .. py:method:: DynamicProperty.setGradingPrimary(self: PyOpenColorIO.DynamicProperty, val: PyOpenColorIO.GradingPrimary) -> None
       :module: PyOpenColorIO
 
       Get the property as DynamicPropertyGradingPrimaryRcPtr to access the :ref:`GradingPrimary` value. Will throw if property type is not DYNAMIC_PROPERTY_GRADING_PRIMARY.
 
 
-   .. py:method:: DynamicProperty.setGradingRGBCurve(self: PyOpenColorIO.DynamicProperty, val: OpenColorIO_v2_0rc1::GradingRGBCurve) -> None
+   .. py:method:: DynamicProperty.setGradingRGBCurve(self: PyOpenColorIO.DynamicProperty, val: PyOpenColorIO.GradingRGBCurve) -> None
       :module: PyOpenColorIO
 
       Get the property as DynamicPropertyGradingRGBCurveRcPtr to access the GradingRGBCurveRcPtr value. Will throw if property type is not DYNAMIC_PROPERTY_GRADING_RGBCURVE.
 
 
-   .. py:method:: DynamicProperty.setGradingTone(self: PyOpenColorIO.DynamicProperty, val: OpenColorIO_v2_0rc1::GradingTone) -> None
+   .. py:method:: DynamicProperty.setGradingTone(self: PyOpenColorIO.DynamicProperty, val: PyOpenColorIO.GradingTone) -> None
       :module: PyOpenColorIO
 
       Get the property as DynamicPropertyGradingToneRcPtr to access the :ref:`GradingTone` value. Will throw if property type is not DYNAMIC_PROPERTY_GRADING_TONE.
