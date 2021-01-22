@@ -641,25 +641,27 @@ void bindPyConfig(py::module & m)
         .def("__repr__", [](ConfigRcPtr & self)
             {
                 std::ostringstream os;
-                os << self;
+                os << "<Config name=";
                 std::string name{ self->getName() };
                 if (!name.empty())
                 {
-                    os << " name: " << name;
+                    os << name;
                 }
+                os << ", description=";
                 std::string desc{ self->getDescription() };
                 if (!desc.empty())
                 {
-                    os << ", description: " << desc;
+                    os << desc;
                 }
-                os << " (version: " << self->getMajorVersion();
+                os << ", ocio_profile_version=" << self->getMajorVersion();
                 const unsigned int minor = self->getMinorVersion();
                 if (minor)
                 {
                     os << "." << minor;
                 }
-                os << "), " << self->getNumColorSpaces() << " active color spaces, ";
-                os << self->getNumDisplays() << " active displays.";
+                os << ", active_colorspaces=" << self->getNumColorSpaces();
+                os << ", active_displays=" << self->getNumDisplays();
+                os << ">";
                 return os.str();
             });
 

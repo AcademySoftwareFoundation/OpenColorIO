@@ -25,7 +25,6 @@ using WriteFormatIterator = PyIterator<GroupTransformRcPtr, IT_WRITE_FORMAT>;
 void bindPyGroupTransform(py::module & m)
 {
     GroupTransformRcPtr DEFAULT = GroupTransform::Create();
-    ConfigRcPtr EMPTY_CONFIG = Config::Create();
 
     auto clsGroupTransform = 
         py::class_<GroupTransform, GroupTransformRcPtr, Transform>(
@@ -83,9 +82,9 @@ void bindPyGroupTransform(py::module & m)
         .def("prependTransform", &GroupTransform::prependTransform, "transform"_a,
              DOC(GroupTransform, prependTransform))
         .def("write", [](GroupTransformRcPtr & self,
-                         ConstConfigRcPtr & config,
                          const std::string & formatName, 
-                         const std::string & fileName) 
+                         const std::string & fileName,
+                         ConstConfigRcPtr & config) 
             {
                 if (!config)
                 {
@@ -99,12 +98,13 @@ void bindPyGroupTransform(py::module & m)
                 self->write(config, formatName.c_str(), f);
                 f.close();
             }, 
-             "config"_a = EMPTY_CONFIG,
-             "formatName"_a.none(false), "fileName"_a.none(false),
+             "formatName"_a.none(false), 
+             "fileName"_a.none(false),
+             "config"_a = nullptr,
              DOC(GroupTransform, write))
         .def("write", [](GroupTransformRcPtr & self,
-                         const ConstConfigRcPtr & config,
-                         const std::string & formatName)
+                         const std::string & formatName,
+                         const ConstConfigRcPtr & config)
             {
                 ConstConfigRcPtr cfg = config;
                 if (!config)
@@ -119,7 +119,8 @@ void bindPyGroupTransform(py::module & m)
                 self->write(cfg, formatName.c_str(), os);
                 return os.str();
             }, 
-            "config"_a = EMPTY_CONFIG, "formatName"_a,
+            "formatName"_a.none(false),
+            "config"_a = nullptr, 
             DOC(GroupTransform, write));
 
     defRepr(clsGroupTransform);
