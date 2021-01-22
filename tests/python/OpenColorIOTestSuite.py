@@ -79,6 +79,7 @@ import NamedTransformTest
 import OpenColorIOTest
 import ProcessorTest
 import RangeTransformTest
+import TransformsTest
 import ViewingRulesTest
 
 def suite():
@@ -131,6 +132,7 @@ def suite():
     suite.addTest(loader.loadTestsFromModule(OpenColorIOTest))
     suite.addTest(loader.loadTestsFromModule(ProcessorTest))
     suite.addTest(loader.loadTestsFromModule(RangeTransformTest))
+    suite.addTest(loader.loadTestsFromModule(TransformsTest))
     suite.addTest(loader.loadTestsFromModule(ViewingRulesTest))
 
     return suite
