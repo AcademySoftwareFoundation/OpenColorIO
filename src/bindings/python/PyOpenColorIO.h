@@ -113,6 +113,10 @@ struct polymorphic_type_hook<OCIO::Transform> {
             {
                 type = &typeid(OCIO::AllocationTransform);
             }
+            if(dynamic_cast<const OCIO::BuiltinTransform*>(src))
+            {
+                type = &typeid(OCIO::BuiltinTransform);
+            }
             else if(dynamic_cast<const OCIO::CDLTransform*>(src))
             {
                 type = &typeid(OCIO::CDLTransform);
@@ -153,6 +157,10 @@ struct polymorphic_type_hook<OCIO::Transform> {
             {
                 type = &typeid(OCIO::GradingRGBCurveTransform);
             }
+            if(dynamic_cast<const OCIO::GradingToneTransform*>(src))
+            {
+                type = &typeid(OCIO::GradingToneTransform);
+            }
             else if(dynamic_cast<const OCIO::GroupTransform*>(src))
             {
                 type = &typeid(OCIO::GroupTransform);
@@ -160,6 +168,10 @@ struct polymorphic_type_hook<OCIO::Transform> {
             else if(dynamic_cast<const OCIO::LogAffineTransform*>(src))
             {
                 type = &typeid(OCIO::LogAffineTransform);
+            }
+            else if(dynamic_cast<const OCIO::LogCameraTransform*>(src))
+            {
+                type = &typeid(OCIO::LogCameraTransform);
             }
             else if(dynamic_cast<const OCIO::LogTransform*>(src))
             {
