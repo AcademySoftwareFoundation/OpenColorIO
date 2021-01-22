@@ -192,8 +192,7 @@ int main(int argc, const char **argv)
             if (outfs)
             {
                 const auto group = processor->createGroupTransform();
-                group->write(config, config->getCurrentContext(),
-                             transformFileFormat.c_str(), outfs);
+                group->write(config, transformFileFormat.c_str(), outfs);
                 outfs.close();
             }
             else

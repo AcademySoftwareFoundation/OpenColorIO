@@ -67,8 +67,9 @@ PYBIND11_MODULE(PyOpenColorIO, m)
     m.attr("__doc__")       = "OpenColorIO (OCIO) is a complete color management solution geared towards motion picture production";
 
     // Classes
-    bindPyTransform(m);
     bindPyConfig(m);
+    bindPyContext(m);
+    bindPyTransform(m);
     bindPyFileRules(m);
     bindPyColorSpace(m);
     bindPyColorSpaceSet(m);
@@ -81,7 +82,6 @@ PYBIND11_MODULE(PyOpenColorIO, m)
     bindPyBaker(m);
     bindPyImageDesc(m);
     bindPyGpuShaderCreator(m);
-    bindPyContext(m);
     bindPyViewingRules(m);
     bindPySystemMonitors(m);
     bindPyGradingData(m);

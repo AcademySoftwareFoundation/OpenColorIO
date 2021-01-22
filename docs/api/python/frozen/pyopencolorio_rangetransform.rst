@@ -152,16 +152,14 @@
       Set the Range style to clamp or not input values.
 
 
-   .. py:method:: RangeTransform.unsetMaxOutValue(*args, **kwargs)
+   .. py:method:: RangeTransform.unsetMaxInValue(self: PyOpenColorIO.RangeTransform) -> None
       :module: PyOpenColorIO
 
-      Overloaded function.
+      Unset the maximum value for the input.
 
-      1. unsetMaxOutValue(self: PyOpenColorIO.RangeTransform) -> None
 
-      Unset the maximum value for the output.
-
-      2. unsetMaxOutValue(self: PyOpenColorIO.RangeTransform) -> None
+   .. py:method:: RangeTransform.unsetMaxOutValue(self: PyOpenColorIO.RangeTransform) -> None
+      :module: PyOpenColorIO
 
       Unset the maximum value for the output.
 

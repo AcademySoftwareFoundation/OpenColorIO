@@ -211,8 +211,10 @@ void bindPyTypes(py::module & m)
 
         .value("HUE_NONE", HUE_NONE, 
                DOC(PyOpenColorIO, Lut1DHueAdjust, HUE_NONE))
-        .value("HUE_DW3", HUE_DW3, 
+        .value("HUE_DW3", HUE_DW3,
                DOC(PyOpenColorIO, Lut1DHueAdjust, HUE_DW3))
+        .value("HUE_WYPN", HUE_WYPN,
+               DOC(PyOpenColorIO, Lut1DHueAdjust, HUE_WYPN))
         .export_values();
 
     py::enum_<ChannelOrdering>(
@@ -305,6 +307,12 @@ void bindPyTypes(py::module & m)
                DOC(PyOpenColorIO, FixedFunctionStyle, FIXED_FUNCTION_XYZ_TO_uvY))
         .value("FIXED_FUNCTION_XYZ_TO_LUV", FIXED_FUNCTION_XYZ_TO_LUV, 
                DOC(PyOpenColorIO, FixedFunctionStyle, FIXED_FUNCTION_XYZ_TO_LUV))
+        .value("FIXED_FUNCTION_ACES_GAMUTMAP_02", FIXED_FUNCTION_ACES_GAMUTMAP_02,
+               DOC(PyOpenColorIO, FixedFunctionStyle, FIXED_FUNCTION_ACES_GAMUTMAP_02))
+        .value("FIXED_FUNCTION_ACES_GAMUTMAP_07", FIXED_FUNCTION_ACES_GAMUTMAP_07,
+               DOC(PyOpenColorIO, FixedFunctionStyle, FIXED_FUNCTION_ACES_GAMUTMAP_07))
+        .value("FIXED_FUNCTION_ACES_GAMUTMAP_13", FIXED_FUNCTION_ACES_GAMUTMAP_13,
+               DOC(PyOpenColorIO, FixedFunctionStyle, FIXED_FUNCTION_ACES_GAMUTMAP_13))
         .export_values();
 
     py::enum_<ExposureContrastStyle>(

@@ -72,6 +72,7 @@ import LogCameraTransformTest
 import LogTransformTest
 import LookTest
 import LookTransformTest
+import Lut1DTransformTest
 import MatrixTransformTest
 import MixingHelpersTest
 import NamedTransformTest
@@ -123,6 +124,7 @@ def suite():
     suite.addTest(loader.loadTestsFromModule(LogTransformTest))
     suite.addTest(loader.loadTestsFromModule(LookTest))
     suite.addTest(loader.loadTestsFromModule(LookTransformTest))
+    suite.addTest(loader.loadTestsFromModule(Lut1DTransformTest))
     suite.addTest(loader.loadTestsFromModule(MatrixTransformTest))
     suite.addTest(loader.loadTestsFromModule(MixingHelpersTest))
     suite.addTest(loader.loadTestsFromModule(NamedTransformTest))

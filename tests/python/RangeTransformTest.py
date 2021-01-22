@@ -111,8 +111,8 @@ class RangeTransformTest(unittest.TestCase):
         rt1.setMinOutValue(0.12601234)
         rt1.validate()
 
-        rt1.setMaxInValue(1.12601234)
-        rt1.setMaxOutValue(1.12601234)
+        rt1.setMaxInValue(1.45)
+        rt1.setMaxOutValue(1.78)
         rt1.validate()
 
         # Test one faulty range (max has to be greater than min)

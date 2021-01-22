@@ -307,6 +307,11 @@ bool Lut1DOpData::IsValidInterpolation(Interpolation interpolation)
 
 void Lut1DOpData::validate() const
 {
+    if (m_hueAdjust == HUE_WYPN)
+    {
+        throw Exception("1D LUT HUE_WYPN hue adjust style is not implemented.");
+    }
+
     if (!IsValidInterpolation(m_interpolation))
     {
         std::ostringstream oss;
@@ -459,8 +464,13 @@ bool Lut1DOpData::operator==(const OpData & other) const
     return haveEqualBasics(*lop);
 }
 
-void Lut1DOpData::setHueAdjust(Lut1DHueAdjust algo) noexcept
+void Lut1DOpData::setHueAdjust(Lut1DHueAdjust algo)
 {
+    if (algo == HUE_WYPN)
+    {
+        throw Exception("1D LUT HUE_WYPN hue adjust style is not implemented.");
+    }
+
     m_hueAdjust = algo;
 }
 
@@ -519,6 +529,10 @@ const char* GetHueAdjustName(Lut1DHueAdjust algo)
     case HUE_NONE:
     {
         return "none";
+    }
+    case HUE_WYPN:
+    {
+        throw Exception("1D LUT HUE_WYPN hue adjust style is not implemented.");
     }
     }
     throw Exception("1D LUT has an invalid hue adjust style.");
