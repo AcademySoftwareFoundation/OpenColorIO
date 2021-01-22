@@ -17,6 +17,9 @@ class LookTransformTest(unittest.TestCase):
         """
         Test the constructor.
         """
+        lt = OCIO.LookTransform()
+        self.assertEqual(lt.getSrc(), '')
+        self.assertEqual(lt.getDst(), '')
         lt = OCIO.LookTransform('src', 'dst')
         self.assertEqual(lt.getSrc(), 'src')
         self.assertEqual(lt.getDst(), 'dst')
@@ -32,8 +35,6 @@ class LookTransformTest(unittest.TestCase):
         self.assertEqual(lt.getDst(), 'dst')
         self.assertEqual(lt.getDirection(), OCIO.TRANSFORM_DIR_INVERSE)
 
-        with self.assertRaises(TypeError):
-            OCIO.LookTransform()
         with self.assertRaises(TypeError):
             OCIO.LookTransform(src='src')
         with self.assertRaises(TypeError):

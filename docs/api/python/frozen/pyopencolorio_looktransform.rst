@@ -7,8 +7,14 @@
    :module: PyOpenColorIO
 
 
-   .. py:method:: LookTransform.__init__(self: PyOpenColorIO.LookTransform, src: str, dst: str, looks: str = '', skipColorSpaceConversion: bool = False, direction: PyOpenColorIO.TransformDirection = <TransformDirection.TRANSFORM_DIR_FORWARD: 0>) -> None
+   .. py:method:: LookTransform.__init__(*args, **kwargs)
       :module: PyOpenColorIO
+
+      Overloaded function.
+
+      1. __init__(self: PyOpenColorIO.LookTransform) -> None
+
+      2. __init__(self: PyOpenColorIO.LookTransform, src: str, dst: str, looks: str = '', skipColorSpaceConversion: bool = False, direction: PyOpenColorIO.TransformDirection = <TransformDirection.TRANSFORM_DIR_FORWARD: 0>) -> None
 
 
    .. py:method:: LookTransform.__str__()

@@ -124,13 +124,19 @@ void bindPyGroupTransform(py::module & m)
     defRepr(clsGroupTransform);
 
     clsTransformIterator
-        .def("__len__", [](TransformIterator & it) { return it.m_obj->getNumTransforms(); })
+        .def("__len__", [](TransformIterator & it) 
+            { 
+                return it.m_obj->getNumTransforms(); 
+            })
         .def("__getitem__", [](TransformIterator & it, int i) 
             { 
                 // GroupTransform provides index check with exception
                 return it.m_obj->getTransform(i);
             })
-        .def("__iter__", [](TransformIterator & it) -> TransformIterator & { return it; })
+        .def("__iter__", [](TransformIterator & it) -> TransformIterator & 
+            { 
+                return it; 
+            })
         .def("__next__", [](TransformIterator & it)
             {
                 int i = it.nextIndex(it.m_obj->getNumTransforms());

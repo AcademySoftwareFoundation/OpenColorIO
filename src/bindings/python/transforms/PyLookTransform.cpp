@@ -14,6 +14,8 @@ void bindPyLookTransform(py::module & m)
         py::class_<LookTransform, LookTransformRcPtr, Transform>(
             m.attr("LookTransform"))
 
+        .def(py::init(&LookTransform::Create), 
+             DOC(LookTransform, Create))
         .def(py::init([](const std::string & src,
                          const std::string & dst,
                          const std::string & looks,
