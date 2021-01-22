@@ -229,16 +229,8 @@
          The fcn accepts either a color space name, role name, or alias. (Color space names take precedence over roles.)
 
 
-   .. py:method:: Config.getColorSpaceFromFilepath(*args, **kwargs)
+   .. py:method:: Config.getColorSpaceFromFilepath(self: PyOpenColorIO.Config, filePath: str) -> tuple
       :module: PyOpenColorIO
-
-      Overloaded function.
-
-      1. getColorSpaceFromFilepath(self: PyOpenColorIO.Config, filePath: str) -> str
-
-      Get the color space of the first rule that matched filePath.
-
-      2. getColorSpaceFromFilepath(self: PyOpenColorIO.Config, filePath: str, ruleIndex: int) -> str
 
       Get the color space of the first rule that matched filePath.
 

@@ -3682,13 +3682,13 @@ namespace
 void WriteGroupCTF(OCIO::ConstGroupTransformRcPtr group, std::ostringstream & outputTransform)
 {
     OCIO::ConstConfigRcPtr cfg = OCIO::Config::CreateRaw();
-    group->write(cfg, cfg->getCurrentContext(), OCIO::FILEFORMAT_CTF, outputTransform);
+    group->write(cfg, OCIO::FILEFORMAT_CTF, outputTransform);
 }
 
 void WriteGroupCLF(OCIO::ConstGroupTransformRcPtr group, std::ostringstream & outputTransform)
 {
     OCIO::ConstConfigRcPtr cfg = OCIO::Config::CreateRaw();
-    group->write(cfg, cfg->getCurrentContext(), OCIO::FILEFORMAT_CLF, outputTransform);
+    group->write(cfg, OCIO::FILEFORMAT_CLF, outputTransform);
 }
 
 void ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::Style style, int lineNo)
@@ -5542,8 +5542,7 @@ OCIO_ADD_TEST(CTFTransform, legacy_cdl)
     group->appendTransform(cdl);
 
     std::ostringstream outputTransform;
-    OCIO_CHECK_NO_THROW(group->write(config, config->getCurrentContext(), OCIO::FILEFORMAT_CTF,
-                                     outputTransform));
+    OCIO_CHECK_NO_THROW(group->write(config, OCIO::FILEFORMAT_CTF, outputTransform));
 
     // For OCIO v1, an ASC CDL was implemented as a Matrix/Gamma/Matrix rather
     // than as a dedicated op as in v2 and onward.

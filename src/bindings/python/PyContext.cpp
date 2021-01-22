@@ -107,7 +107,7 @@ void bindPyContext(py::module & m)
             })
         .def("__len__", &Context::getNumStringVars, 
              DOC(Context, getNumStringVars))
-        .def("__getitem__", [](ContextRcPtr & self, const std::string & name) -> bool
+        .def("__getitem__", [](ContextRcPtr & self, const std::string & name) -> const char *
             { 
                 for (int i = 0; i < self->getNumStringVars(); i++)
                 {

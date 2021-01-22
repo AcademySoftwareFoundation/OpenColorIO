@@ -139,7 +139,7 @@ void Lut1DTransformImpl::setOutputRawHalfs(bool isRawHalfs) noexcept
     data().setOutputRawHalfs(isRawHalfs);
 }
 
-void Lut1DTransformImpl::setHueAdjust(Lut1DHueAdjust algo) noexcept
+void Lut1DTransformImpl::setHueAdjust(Lut1DHueAdjust algo)
 {
     data().setHueAdjust(algo);
 }

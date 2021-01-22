@@ -144,7 +144,7 @@ public:
 
     inline Lut1DHueAdjust getHueAdjust() const noexcept { return m_hueAdjust; }
 
-    void setHueAdjust(Lut1DHueAdjust algo) noexcept;
+    void setHueAdjust(Lut1DHueAdjust algo);
 
     // Get an array containing the LUT elements.
     // The elements are stored as a vector [r0,g0,b0, r1,g1,b1, r2,g2,b2, ...].

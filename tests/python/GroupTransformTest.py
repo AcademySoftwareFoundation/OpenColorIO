@@ -178,7 +178,7 @@ class GroupTransformTest(unittest.TestCase):
         fmd.setID('clfID')
         fmd.addChildElement('Description','Sample clf file.')
 
-        self.assertEqual(grp.write(config, config.getCurrentContext(), 'Academy/ASC Common LUT Format'),
+        self.assertEqual(grp.write(config=config, formatName='Academy/ASC Common LUT Format'),
                          """<?xml version="1.0" encoding="UTF-8"?>
 <ProcessList compCLFversion="3" id="clfID">
     <Description>Sample clf file.</Description>

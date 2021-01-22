@@ -54,4 +54,17 @@ OCIO_ADD_TEST(FixedFunctionTransform, basic)
     OCIO_CHECK_THROW_WHAT(func->validate(), OCIO::Exception,
                           "The style 'RGB_TO_HSV' must have "
                           "zero parameters but 1 found.");
+
+    OCIO_CHECK_THROW_WHAT(func->setStyle(OCIO::FIXED_FUNCTION_ACES_GAMUTMAP_13), OCIO::Exception,
+                          "Unimplemented fixed function types: "
+                          "FIXED_FUNCTION_ACES_GAMUTMAP_02, "
+                          "FIXED_FUNCTION_ACES_GAMUTMAP_07, and "
+                          "FIXED_FUNCTION_ACES_GAMUTMAP_13.");
+
+    OCIO_CHECK_THROW_WHAT(
+        OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_ACES_GAMUTMAP_07),
+        OCIO::Exception, "Unimplemented fixed function types: "
+                         "FIXED_FUNCTION_ACES_GAMUTMAP_02, "
+                         "FIXED_FUNCTION_ACES_GAMUTMAP_07, and "
+                         "FIXED_FUNCTION_ACES_GAMUTMAP_13.");
 }

@@ -77,8 +77,11 @@ class FixedFunctionTransformTest(unittest.TestCase):
                          OCIO.FIXED_FUNCTION_ACES_RED_MOD_03)
 
         for style in OCIO.FixedFunctionStyle.__members__.values():
-            self.fixed_func_tr.setStyle(style)
-            self.assertEqual(self.fixed_func_tr.getStyle(), style)
+            if style not in [OCIO.FIXED_FUNCTION_ACES_GAMUTMAP_02,
+                             OCIO.FIXED_FUNCTION_ACES_GAMUTMAP_07,
+                             OCIO.FIXED_FUNCTION_ACES_GAMUTMAP_13]:
+                self.fixed_func_tr.setStyle(style)
+                self.assertEqual(self.fixed_func_tr.getStyle(), style)
 
     def test_validate_direction(self):
         """

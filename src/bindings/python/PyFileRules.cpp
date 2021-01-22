@@ -69,6 +69,9 @@ void bindPyFileRules(py::module & m)
         .def("isDefault", &FileRules::isDefault, DOC(FileRules, isDefault));
 
     defRepr(clsFileRules);
+
+    m.attr("DEFAULT_RULE_NAME") = FileRules::DefaultRuleName;
+    m.attr("FILE_PATH_SEARCH_RULE_NAME") = FileRules::FilePathSearchRuleName;
 }
 
 } // namespace OCIO_NAMESPACE

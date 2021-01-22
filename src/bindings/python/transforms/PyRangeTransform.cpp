@@ -70,8 +70,8 @@ void bindPyRangeTransform(py::module & m)
              DOC(RangeTransform, setMaxInValue))
         .def("hasMaxInValue", &RangeTransform::hasMaxInValue,
              DOC(RangeTransform, hasMaxInValue))
-        .def("unsetMaxOutValue", &RangeTransform::unsetMaxOutValue,
-             DOC(RangeTransform, unsetMaxOutValue))
+        .def("unsetMaxInValue", &RangeTransform::unsetMaxInValue,
+             DOC(RangeTransform, unsetMaxInValue))
         .def("getMinOutValue", &RangeTransform::getMinOutValue,
              DOC(RangeTransform, getMinOutValue))
         .def("setMinOutValue", &RangeTransform::setMinOutValue, "value"_a,

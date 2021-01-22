@@ -171,3 +171,13 @@ OCIO_ADD_TEST(Lut1DTransform, non_monotonic)
     OCIO_CHECK_EQUAL(g, 0.25f);
     OCIO_CHECK_EQUAL(b, 0.25f);
 }
+
+OCIO_ADD_TEST(Lut1DTransform, hue_adjust)
+{
+    auto lut = OCIO::Lut1DTransform::Create();
+    OCIO_CHECK_EQUAL(lut->getHueAdjust(), OCIO::HUE_NONE);
+    OCIO_CHECK_NO_THROW(lut->setHueAdjust(OCIO::HUE_DW3));
+    OCIO_CHECK_EQUAL(lut->getHueAdjust(), OCIO::HUE_DW3);
+    OCIO_CHECK_THROW_WHAT(lut->setHueAdjust(OCIO::HUE_WYPN), OCIO::Exception,
+                          "1D LUT HUE_WYPN hue adjust style is not implemented.");
+}
