@@ -10,9 +10,8 @@ namespace OCIO_NAMESPACE
 void bindPyFileRules(py::module & m)
 {
     auto clsFileRules = 
-        py::class_<FileRules, FileRulesRcPtr /* holder */>(
-            m, "FileRules", 
-            DOC(FileRules))
+        py::class_<FileRules, FileRulesRcPtr>(
+            m.attr("FileRules"))
 
         .def(py::init(&FileRules::Create),
              DOC(FileRules, Create))
@@ -69,7 +68,10 @@ void bindPyFileRules(py::module & m)
              DOC(FileRules, decreaseRulePriority))
         .def("isDefault", &FileRules::isDefault, DOC(FileRules, isDefault));
 
-    defStr(clsFileRules);
+    defRepr(clsFileRules);
+
+    m.attr("DEFAULT_RULE_NAME") = FileRules::DefaultRuleName;
+    m.attr("FILE_PATH_SEARCH_RULE_NAME") = FileRules::FilePathSearchRuleName;
 }
 
 } // namespace OCIO_NAMESPACE

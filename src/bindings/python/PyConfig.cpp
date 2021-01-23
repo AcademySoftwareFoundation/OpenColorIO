@@ -71,9 +71,8 @@ using ActiveNamedTransformIterator     = PyIterator<ConfigRcPtr, IT_ACTIVE_NAMED
 void bindPyConfig(py::module & m)
 {
     auto clsConfig = 
-        py::class_<Config, ConfigRcPtr /* holder */>(
-            m, "Config",
-            DOC(Config));
+        py::class_<Config, ConfigRcPtr>(
+            m.attr("Config"));
 
     auto clsEnvironmentVarNameIterator = 
         py::class_<EnvironmentVarNameIterator>(
@@ -495,14 +494,13 @@ void bindPyConfig(py::module & m)
         .def("setFileRules", &Config::setFileRules, "fileRules"_a, 
              DOC(Config, setFileRules))
         .def("getColorSpaceFromFilepath",
-             (const char * (Config::*)(const char *) const) &Config::getColorSpaceFromFilepath, 
-             "filePath"_a, 
-             DOC(Config, getColorSpaceFromFilepath))
-        .def("getColorSpaceFromFilepath",
-             (const char * (Config::*)(const char *, size_t &) const) 
-             &Config::getColorSpaceFromFilepath, 
-             "filePath"_a, "ruleIndex"_a, 
-             DOC(Config, getColorSpaceFromFilepath))
+            [](ConfigRcPtr & self, const std::string & filePath)
+            {
+                size_t ruleIndex = 0;
+                std::string csName = self->getColorSpaceFromFilepath(filePath.c_str(), ruleIndex);
+                return py::make_tuple(csName, ruleIndex);
+            }, "filePath"_a, 
+            DOC(Config, getColorSpaceFromFilepath))
         .def("filepathOnlyMatchesDefaultRule", &Config::filepathOnlyMatchesDefaultRule, 
              "filePath"_a, 
              DOC(Config, filepathOnlyMatchesDefaultRule))
@@ -632,9 +630,40 @@ void bindPyConfig(py::module & m)
                     DOC(Config, GetProcessorFromConfigs, 4))
 
         .def("setProcessorCacheFlags", &Config::setProcessorCacheFlags, "flags"_a, 
-             DOC(Config, setProcessorCacheFlags));
-
-    defStr(clsConfig);
+             DOC(Config, setProcessorCacheFlags))
+                
+        .def("__str__", [](ConfigRcPtr & self)
+            {
+                std::ostringstream os;
+                os << (*self);
+                return os.str();
+            })
+        .def("__repr__", [](ConfigRcPtr & self)
+            {
+                std::ostringstream os;
+                os << "<Config name=";
+                std::string name{ self->getName() };
+                if (!name.empty())
+                {
+                    os << name;
+                }
+                os << ", description=";
+                std::string desc{ self->getDescription() };
+                if (!desc.empty())
+                {
+                    os << desc;
+                }
+                os << ", ocio_profile_version=" << self->getMajorVersion();
+                const unsigned int minor = self->getMinorVersion();
+                if (minor)
+                {
+                    os << "." << minor;
+                }
+                os << ", active_colorspaces=" << self->getNumColorSpaces();
+                os << ", active_displays=" << self->getNumDisplays();
+                os << ">";
+                return os.str();
+            });
 
     clsEnvironmentVarNameIterator
         .def("__len__", [](EnvironmentVarNameIterator & it) 

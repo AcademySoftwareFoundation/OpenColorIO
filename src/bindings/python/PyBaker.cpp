@@ -27,13 +27,17 @@ void bindPyBaker(py::module & m)
     BakerRcPtr DEFAULT = Baker::Create();
 
     auto clsBaker = 
-        py::class_<Baker, BakerRcPtr /* holder */>(
-            m, "Baker",
-            DOC(Baker));
+        py::class_<Baker, BakerRcPtr>(
+             m.attr("Baker"));
 
     auto clsFormatIterator = 
         py::class_<FormatIterator>(
-            clsBaker, "FormatIterator");
+            clsBaker, "FormatIterator",
+            R"doc(
+Iterator on LUT baker Formats.
+
+Each item is a tuple containing format name and format extension.
+)doc");
 
     clsBaker
         .def(py::init(&Baker::Create), 

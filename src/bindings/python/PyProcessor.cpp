@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
+#include "PyDynamicProperty.h"
 #include "PyOpenColorIO.h"
 #include "PyUtils.h"
 
@@ -23,9 +23,8 @@ using TransformFormatMetadataIterator = PyIterator<ProcessorRcPtr, IT_TRANSFORM_
 void bindPyProcessor(py::module & m)
 {
     auto clsProcessor = 
-        py::class_<Processor, ProcessorRcPtr /* holder */>(
-            m, "Processor", 
-            DOC(Processor));
+        py::class_<Processor, ProcessorRcPtr>(
+            m.attr("Processor"));
 
     auto clsTransformFormatMetadataIterator = 
         py::class_<TransformFormatMetadataIterator>(
@@ -49,17 +48,19 @@ void bindPyProcessor(py::module & m)
             })
         .def("createGroupTransform", &Processor::createGroupTransform,
              DOC(Processor, createGroupTransform))
-        .def("getDynamicProperty", &Processor::getDynamicProperty, "type"_a,
+        .def("getDynamicProperty", [](ProcessorRcPtr & self, DynamicPropertyType type)
+            {
+                return PyDynamicProperty(self->getDynamicProperty(type));
+            },
+            "type"_a,
              DOC(Processor, getDynamicProperty))
         .def("hasDynamicProperty",
              (bool (Processor::*)(DynamicPropertyType) const noexcept)
              &Processor::hasDynamicProperty,
              "type"_a,
              DOC(Processor, hasDynamicProperty))
-        .def("hasDynamicProperty",
-             (bool (Processor::*)() const noexcept)
-             &Processor::hasDynamicProperty,
-             DOC(Processor, hasDynamicProperty))
+        .def("isDynamic", &Processor::isDynamic,
+             DOC(Processor, isDynamic))
         .def("getOptimizedProcessor",
              (ConstProcessorRcPtr(Processor::*)(OptimizationFlags) const)
              &Processor::getOptimizedProcessor, "oFlags"_a,
@@ -114,4 +115,5 @@ void bindPyProcessor(py::module & m)
             }, 
              py::return_value_policy::reference_internal);
 }
+
 } // namespace OCIO_NAMESPACE

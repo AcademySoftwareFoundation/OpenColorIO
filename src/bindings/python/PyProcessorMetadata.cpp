@@ -26,9 +26,8 @@ using LookIterator = PyIterator<ProcessorMetadataRcPtr, IT_LOOK>;
 void bindPyProcessorMetadata(py::module & m)
 {
     auto clsProcessorMetadata = 
-        py::class_<ProcessorMetadata, ProcessorMetadataRcPtr /* holder */>(
-            m, "ProcessorMetadata",
-            DOC(ProcessorMetadata));
+        py::class_<ProcessorMetadata, ProcessorMetadataRcPtr>(
+            m.attr("ProcessorMetadata"));
 
     auto clsFileIterator =
         py::class_<FileIterator>(

@@ -27,19 +27,18 @@ void bindPyGroupTransform(py::module & m)
     GroupTransformRcPtr DEFAULT = GroupTransform::Create();
 
     auto clsGroupTransform = 
-        py::class_<GroupTransform, GroupTransformRcPtr /* holder */, Transform /* base */>(
-            m, "GroupTransform", 
-            DOC(GroupTransform));
+        py::class_<GroupTransform, GroupTransformRcPtr, Transform>(
+            m.attr("GroupTransform"));
 
     auto clsTransformIterator = 
         py::class_<TransformIterator>(
             clsGroupTransform, "TransformIterator");
 
+    auto clsWriteFormatIterator = 
+        py::class_<WriteFormatIterator>(
+            clsGroupTransform, "WriteFormatIterator");
+
     clsGroupTransform
-        .def_static("GetWriteFormats", []()
-            {
-                return WriteFormatIterator(nullptr);
-            })
         .def(py::init(&GroupTransform::Create),
              DOC(GroupTransform, Create))
         .def(py::init([](const std::vector<TransformRcPtr> transforms, 
@@ -57,6 +56,11 @@ void bindPyGroupTransform(py::module & m)
              "transforms"_a = std::vector<ConstTransformRcPtr>{},
              "direction"_a = DEFAULT->getDirection(),
              DOC(GroupTransform, Create))
+
+        .def_static("GetWriteFormats", []()
+            {
+                return WriteFormatIterator(nullptr);
+            })
 
         .def("__iter__", [](GroupTransformRcPtr & self) 
             { 
@@ -78,46 +82,70 @@ void bindPyGroupTransform(py::module & m)
         .def("prependTransform", &GroupTransform::prependTransform, "transform"_a,
              DOC(GroupTransform, prependTransform))
         .def("write", [](GroupTransformRcPtr & self,
-                         const ConstConfigRcPtr & config,
-                         const ConstContextRcPtr & context,
                          const std::string & formatName, 
-                         const std::string & fileName) 
+                         const std::string & fileName,
+                         ConstConfigRcPtr & config) 
             {
+                if (!config)
+                {
+                    config = GetCurrentConfig();
+                }
+                if (!config)
+                {
+                    throw Exception("A config is required.");
+                }
                 std::ofstream f(fileName.c_str());
-                self->write(config, context, formatName.c_str(), f);
+                self->write(config, formatName.c_str(), f);
                 f.close();
             }, 
-             "config"_a, "context"_a, "formatName"_a, "fileName"_a,
+             "formatName"_a.none(false), 
+             "fileName"_a.none(false),
+             "config"_a = nullptr,
              DOC(GroupTransform, write))
         .def("write", [](GroupTransformRcPtr & self,
-                         const ConstConfigRcPtr & config,
-                         const ConstContextRcPtr & context,
-                         const std::string & formatName)
+                         const std::string & formatName,
+                         const ConstConfigRcPtr & config)
             {
+                ConstConfigRcPtr cfg = config;
+                if (!config)
+                {
+                    cfg = GetCurrentConfig();
+                }
+                if (!cfg)
+                {
+                    throw Exception("A config is required.");
+                }
                 std::ostringstream os;
-                self->write(config, context, formatName.c_str(), os);
+                self->write(cfg, formatName.c_str(), os);
                 return os.str();
             }, 
-            "config"_a, "context"_a, "formatName"_a,
-             DOC(GroupTransform, write));
+            "formatName"_a.none(false),
+            "config"_a = nullptr, 
+            DOC(GroupTransform, write));
 
-    defStr(clsGroupTransform);
+    defRepr(clsGroupTransform);
 
     clsTransformIterator
-        .def("__len__", [](TransformIterator & it) { return it.m_obj->getNumTransforms(); })
+        .def("__len__", [](TransformIterator & it) 
+            { 
+                return it.m_obj->getNumTransforms(); 
+            })
         .def("__getitem__", [](TransformIterator & it, int i) 
             { 
                 // GroupTransform provides index check with exception
                 return it.m_obj->getTransform(i);
             })
-        .def("__iter__", [](TransformIterator & it) -> TransformIterator & { return it; })
+        .def("__iter__", [](TransformIterator & it) -> TransformIterator & 
+            { 
+                return it; 
+            })
         .def("__next__", [](TransformIterator & it)
             {
                 int i = it.nextIndex(it.m_obj->getNumTransforms());
                 return it.m_obj->getTransform(i);
             });
 
-    py::class_<WriteFormatIterator>(clsGroupTransform, "WriteFormatIterator")
+    clsWriteFormatIterator
         .def("__len__", [](WriteFormatIterator & it)
             {
                 return GroupTransform::GetNumWriteFormats();

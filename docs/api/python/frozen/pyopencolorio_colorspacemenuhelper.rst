@@ -19,10 +19,6 @@
       :module: PyOpenColorIO
 
 
-   .. py:method:: ColorSpaceMenuHelper.__str__(self: PyOpenColorIO.ColorSpaceMenuHelper) -> str
-      :module: PyOpenColorIO
-
-
    .. py:method:: ColorSpaceMenuHelper.getDescription(self: PyOpenColorIO.ColorSpaceMenuHelper, index: int) -> str
       :module: PyOpenColorIO
 
@@ -31,7 +27,7 @@
       :module: PyOpenColorIO
 
 
-   .. py:method:: ColorSpaceMenuHelper.getHierarchyLevels(self: PyOpenColorIO.ColorSpaceMenuHelper, index: int) -> OpenColorIO_v2_0rc1::PyIterator<std::shared_ptr<OpenColorIO_v2_0rc1::ColorSpaceMenuHelper>,0,unsigned __int64>
+   .. py:method:: ColorSpaceMenuHelper.getHierarchyLevels(self: PyOpenColorIO.ColorSpaceMenuHelper, index: int) -> PyOpenColorIO.ColorSpaceMenuHelper.ColorSpaceLevelIterator
       :module: PyOpenColorIO
 
 

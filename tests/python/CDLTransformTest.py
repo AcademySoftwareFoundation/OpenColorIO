@@ -165,10 +165,10 @@ class CDLTransformTest(unittest.TestCase):
         self.assertEqual(cdl.getSat(), 0.7)
 
         # Write CDL back.
-        config = OCIO.Config.CreateRaw()
+        cfg = OCIO.Config.CreateRaw()
         grp = OCIO.GroupTransform()
         grp.appendTransform(cdl)
-        self.assertEqual(grp.write(config, config.getCurrentContext(), 'ColorCorrection'),
+        self.assertEqual(grp.write(config=cfg, formatName='ColorCorrection'),
                          """<ColorCorrection id="foo">
     <SOPNode>
         <Description>this is a description</Description>

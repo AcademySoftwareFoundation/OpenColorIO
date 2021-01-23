@@ -75,8 +75,7 @@ OCIO_ADD_TEST(ColorSpaceTransform, build_colorspace_ops)
 
     auto csSceneFromRef = OCIO::ColorSpace::Create(OCIO::REFERENCE_SPACE_SCENE);
     csSceneFromRef->setName(dst.c_str());
-    auto ff = OCIO::FixedFunctionTransform::Create();
-    ff->setStyle(OCIO::FIXED_FUNCTION_ACES_GLOW_03);
+    auto ff = OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_ACES_GLOW_03);
     csSceneFromRef->setTransform(ff, OCIO::COLORSPACE_DIR_FROM_REFERENCE);
     config->addColorSpace(csSceneFromRef);
 
@@ -469,8 +468,7 @@ OCIO_ADD_TEST(ColorSpaceTransform, build_reference_conversion_ops)
     OCIO::ConfigRcPtr config = OCIO::Config::CreateRaw()->createEditableCopy();
     auto cs = OCIO::ColorSpace::Create(OCIO::REFERENCE_SPACE_SCENE);
     cs->setName(scn.c_str());
-    auto ff = OCIO::FixedFunctionTransform::Create();
-    ff->setStyle(OCIO::FIXED_FUNCTION_ACES_GLOW_03);
+    auto ff = OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_ACES_GLOW_03);
     cs->setTransform(ff, OCIO::COLORSPACE_DIR_FROM_REFERENCE);
     config->addColorSpace(cs);
 
@@ -574,8 +572,7 @@ OCIO_ADD_TEST(ColorSpaceTransform, build_colorspace_ops_with_reference_conversio
     OCIO::ConfigRcPtr config = OCIO::Config::CreateRaw()->createEditableCopy();
     auto cs = OCIO::ColorSpace::Create(OCIO::REFERENCE_SPACE_SCENE);
     cs->setName(scn.c_str());
-    auto ff = OCIO::FixedFunctionTransform::Create();
-    ff->setStyle(OCIO::FIXED_FUNCTION_ACES_GLOW_03);
+    auto ff = OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_ACES_GLOW_03);
     cs->setTransform(ff, OCIO::COLORSPACE_DIR_FROM_REFERENCE);
     config->addColorSpace(cs);
 

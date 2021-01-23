@@ -339,8 +339,7 @@ OCIO_ADD_TEST(FileFormatCCC, write)
 
     auto cfg = OCIO::Config::CreateRaw();
     std::ostringstream oss;
-    OCIO_CHECK_NO_THROW(group->write(cfg, cfg->getCurrentContext(),
-                                     OCIO::FILEFORMAT_COLOR_CORRECTION_COLLECTION, oss));
+    OCIO_CHECK_NO_THROW(group->write(cfg, OCIO::FILEFORMAT_COLOR_CORRECTION_COLLECTION, oss));
     constexpr char RESULT[] { R"(<ColorCorrectionCollection xmlns="urn:ASC:CDL:v1.01">
     <Description>This is a color correction collection example.</Description>
     <Description>It includes all possible description uses.</Description>

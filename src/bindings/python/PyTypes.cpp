@@ -2,12 +2,269 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 #include "PyOpenColorIO.h"
+#include "PyImageDesc.h"
+#include "PySystemMonitors.h"
+#include "PyBuiltinTransformRegistry.h"
+#include "PyDynamicProperty.h"
 
 namespace OCIO_NAMESPACE
 {
 
 void bindPyTypes(py::module & m)
 {
+    // OpenColorIO
+    py::class_<Baker, BakerRcPtr /* holder */>(
+        m, "Baker", 
+        DOC(Baker));
+
+    py::class_<ColorSpace, ColorSpaceRcPtr /* holder */>(
+        m, "ColorSpace", 
+        DOC(ColorSpace));
+
+    py::class_<ColorSpaceSet, ColorSpaceSetRcPtr /* holder */>(
+        m, "ColorSpaceSet",
+        DOC(ColorSpaceSet));
+
+    py::class_<Config, ConfigRcPtr /* holder */>(
+        m, "Config",
+        DOC(Config));
+
+    py::class_<Context, ContextRcPtr /* holder */>(
+        m, "Context", 
+        DOC(Context));
+
+    py::class_<CPUProcessor, CPUProcessorRcPtr /* holder */>(
+        m, "CPUProcessor", 
+        DOC(CPUProcessor));
+
+    py::class_<FileRules, FileRulesRcPtr /* holder */>(
+        m, "FileRules", 
+        DOC(FileRules));
+
+    py::class_<GPUProcessor, GPUProcessorRcPtr /* holder */>(
+        m, "GPUProcessor", 
+        DOC(GPUProcessor));
+
+    py::class_<GpuShaderCreator, GpuShaderCreatorRcPtr /* holder */>(
+        m, "GpuShaderCreator", 
+        DOC(GpuShaderCreator));
+
+    py::class_<GpuShaderDesc, GpuShaderDescRcPtr /* holder */, GpuShaderCreator /* base */>(
+        m, "GpuShaderDesc", 
+        DOC(GpuShaderDesc));
+
+    py::class_<PyImageDesc>(
+         m, "ImageDesc", 
+         DOC(ImageDesc));
+
+    py::class_<PyPackedImageDesc, PyImageDesc /* base */>(
+         m, "PackedImageDesc", 
+         DOC(PackedImageDesc));
+
+    py::class_<PyPlanarImageDesc, PyImageDesc /* base */>(
+        m, "PlanarImageDesc", 
+        DOC(PlanarImageDesc));
+
+    py::class_<Look, LookRcPtr /* holder */>(
+        m, "Look", 
+        DOC(Look));
+
+    py::class_<NamedTransform, NamedTransformRcPtr /* holder */>(
+        m, "NamedTransform", 
+        DOC(NamedTransform));
+
+    py::class_<Processor, ProcessorRcPtr /* holder */>(
+        m, "Processor", 
+        DOC(Processor));
+
+    py::class_<ProcessorMetadata, ProcessorMetadataRcPtr /* holder */>(
+        m, "ProcessorMetadata",
+        DOC(ProcessorMetadata));
+
+    py::class_<PySystemMonitors>(
+        m, "SystemMonitors", 
+        DOC(SystemMonitors));
+
+    py::class_<ViewingRules, ViewingRulesRcPtr /* holder */>(
+        m, "ViewingRules", 
+        DOC(ViewingRules));
+
+    py::class_<ViewTransform, ViewTransformRcPtr /* holder */>(
+        m, "ViewTransform", 
+        DOC(ViewTransform));
+
+    // OpenColorIOTransforms
+    py::class_<PyBuiltinTransformRegistry>(
+        m, "BuiltinTransformRegistry", 
+        DOC(BuiltinTransformRegistry));
+
+    py::class_<PyDynamicProperty>(
+        m, "DynamicProperty", 
+        DOC(DynamicProperty));
+
+    py::class_<FormatMetadata>(
+        m, "FormatMetadata", 
+        DOC(FormatMetadata));
+
+    py::class_<GradingRGBM>(
+        m, "GradingRGBM", 
+        DOC(GradingRGBM));
+
+    py::class_<GradingPrimary>(
+        m, "GradingPrimary", 
+        DOC(GradingPrimary));
+
+    py::class_<GradingRGBMSW>(
+        m, "GradingRGBMSW", 
+        DOC(GradingRGBMSW));
+
+    py::class_<GradingTone>(
+        m, "GradingTone", 
+        DOC(GradingTone));
+
+    py::class_<GradingControlPoint>(
+        m, "GradingControlPoint", 
+        DOC(GradingControlPoint));
+
+    py::class_<GradingBSplineCurve, GradingBSplineCurveRcPtr /*holder*/>(
+        m, "GradingBSplineCurve", 
+        DOC(GradingBSplineCurve));
+
+    py::class_<GradingRGBCurve, GradingRGBCurveRcPtr /*holder*/>(
+        m, "GradingRGBCurve", 
+        DOC(GradingRGBCurve));
+
+    py::class_<Transform, TransformRcPtr /* holder */>(
+        m, "Transform", 
+        DOC(Transform));
+
+    py::class_<AllocationTransform, 
+               AllocationTransformRcPtr /* holder */, 
+               Transform /* base */>(
+        m, "AllocationTransform",
+        DOC(AllocationTransform));
+
+    py::class_<BuiltinTransform, BuiltinTransformRcPtr /* holder */, Transform /* base */>(
+        m, "BuiltinTransform",
+        DOC(BuiltinTransform));
+
+    py::class_<CDLTransform, CDLTransformRcPtr /* holder */, Transform /* base */>(
+        m, "CDLTransform", 
+        DOC(CDLTransform));
+
+    py::class_<ColorSpaceTransform, 
+               ColorSpaceTransformRcPtr /* holder */, 
+               Transform /* base */>(
+        m, "ColorSpaceTransform",
+        DOC(ColorSpaceTransform));
+
+    py::class_<DisplayViewTransform, 
+               DisplayViewTransformRcPtr /* holder */, 
+               Transform /* base */>(
+        m, "DisplayViewTransform", 
+        DOC(DisplayViewTransform));
+
+    py::class_<ExponentTransform, ExponentTransformRcPtr /* holder */, Transform /* base */>(
+        m, "ExponentTransform", 
+        DOC(ExponentTransform));
+
+    py::class_<ExponentWithLinearTransform, 
+               ExponentWithLinearTransformRcPtr /* holder */, 
+               Transform /* base */>(
+        m, "ExponentWithLinearTransform", 
+        DOC(ExponentWithLinearTransform));
+
+    py::class_<ExposureContrastTransform, 
+               ExposureContrastTransformRcPtr /* holder */, 
+               Transform /* base */>(
+        m, "ExposureContrastTransform", 
+        DOC(ExposureContrastTransform));
+
+    py::class_<FileTransform, FileTransformRcPtr /* holder */, Transform /* base */>(
+        m, "FileTransform", 
+        DOC(FileTransform));
+
+    py::class_<FixedFunctionTransform, 
+               FixedFunctionTransformRcPtr /* holder */, 
+               Transform /* base */>(
+        m, "FixedFunctionTransform", 
+        DOC(FixedFunctionTransform));
+
+    py::class_<GradingPrimaryTransform,
+               GradingPrimaryTransformRcPtr /* holder */, 
+               Transform /* base */>(
+        m, "GradingPrimaryTransform", 
+        DOC(GradingPrimaryTransform));
+
+    py::class_<GradingRGBCurveTransform,
+               GradingRGBCurveTransformRcPtr /* holder */, 
+               Transform /* base */>(
+        m, "GradingRGBCurveTransform", 
+        DOC(GradingRGBCurveTransform));
+
+    py::class_<GradingToneTransform,
+               GradingToneTransformRcPtr /* holder */,
+               Transform /* base */>(
+        m, "GradingToneTransform", 
+        DOC(GradingToneTransform));
+
+    py::class_<GroupTransform, GroupTransformRcPtr /* holder */, Transform /* base */>(
+        m, "GroupTransform", 
+        DOC(GroupTransform));
+
+    py::class_<LogAffineTransform, LogAffineTransformRcPtr /* holder */, Transform /* base */>(
+        m, "LogAffineTransform",
+        DOC(LogAffineTransform));
+
+    py::class_<LogCameraTransform, LogCameraTransformRcPtr /* holder */, Transform /* base */>(
+        m, "LogCameraTransform", 
+        DOC(LogCameraTransform));
+
+    py::class_<LogTransform, LogTransformRcPtr /* holder */, Transform /* base */>(
+        m, "LogTransform", 
+        DOC(LogTransform));
+
+    py::class_<LookTransform, LookTransformRcPtr /* holder */, Transform /* base */>(
+        m, "LookTransform", 
+        DOC(LookTransform));
+
+    py::class_<Lut1DTransform, Lut1DTransformRcPtr /* holder */, Transform /* base */>(
+        m, "Lut1DTransform", 
+        DOC(Lut1DTransform));
+
+    py::class_<Lut3DTransform, Lut3DTransformRcPtr /* holder */, Transform /* base */>(
+        m, "Lut3DTransform", 
+        DOC(Lut3DTransform));
+
+    py::class_<MatrixTransform, MatrixTransformRcPtr /* holder */, Transform /* base */>(
+        m, "MatrixTransform", 
+        DOC(MatrixTransform));
+
+    py::class_<RangeTransform, RangeTransformRcPtr /* holder */, Transform /* base */>(
+        m, "RangeTransform", 
+        DOC(RangeTransform));
+
+    // OpenColorIOAppHelpers
+    py::class_<ColorSpaceMenuParameters, ColorSpaceMenuParametersRcPtr /* holder */>(
+        m, "ColorSpaceMenuParameters", 
+        DOC(ColorSpaceMenuParameters));
+
+    py::class_<ColorSpaceMenuHelper, ColorSpaceMenuHelperRcPtr /* holder */>(
+        m, "ColorSpaceMenuHelper", 
+        DOC(ColorSpaceMenuHelper));
+
+    py::class_<LegacyViewingPipeline, LegacyViewingPipelineRcPtr /* holder */>(
+        m, "LegacyViewingPipeline", 
+        DOC(LegacyViewingPipeline));
+
+    py::class_<MixingSlider>(
+        m, "MixingSlider", 
+        DOC(MixingSlider));
+
+    py::class_<MixingColorSpaceManager, MixingColorSpaceManagerRcPtr /* holder */>(
+        m, "MixingColorSpaceManager", 
+        DOC(MixingColorSpaceManager));
+
     // Enums
     py::enum_<LoggingLevel>(
         m, "LoggingLevel", py::arithmetic(), 
@@ -211,8 +468,10 @@ void bindPyTypes(py::module & m)
 
         .value("HUE_NONE", HUE_NONE, 
                DOC(PyOpenColorIO, Lut1DHueAdjust, HUE_NONE))
-        .value("HUE_DW3", HUE_DW3, 
+        .value("HUE_DW3", HUE_DW3,
                DOC(PyOpenColorIO, Lut1DHueAdjust, HUE_DW3))
+        .value("HUE_WYPN", HUE_WYPN,
+               DOC(PyOpenColorIO, Lut1DHueAdjust, HUE_WYPN))
         .export_values();
 
     py::enum_<ChannelOrdering>(
@@ -305,6 +564,12 @@ void bindPyTypes(py::module & m)
                DOC(PyOpenColorIO, FixedFunctionStyle, FIXED_FUNCTION_XYZ_TO_uvY))
         .value("FIXED_FUNCTION_XYZ_TO_LUV", FIXED_FUNCTION_XYZ_TO_LUV, 
                DOC(PyOpenColorIO, FixedFunctionStyle, FIXED_FUNCTION_XYZ_TO_LUV))
+        .value("FIXED_FUNCTION_ACES_GAMUTMAP_02", FIXED_FUNCTION_ACES_GAMUTMAP_02,
+               DOC(PyOpenColorIO, FixedFunctionStyle, FIXED_FUNCTION_ACES_GAMUTMAP_02))
+        .value("FIXED_FUNCTION_ACES_GAMUTMAP_07", FIXED_FUNCTION_ACES_GAMUTMAP_07,
+               DOC(PyOpenColorIO, FixedFunctionStyle, FIXED_FUNCTION_ACES_GAMUTMAP_07))
+        .value("FIXED_FUNCTION_ACES_GAMUTMAP_13", FIXED_FUNCTION_ACES_GAMUTMAP_13,
+               DOC(PyOpenColorIO, FixedFunctionStyle, FIXED_FUNCTION_ACES_GAMUTMAP_13))
         .export_values();
 
     py::enum_<ExposureContrastStyle>(
@@ -583,6 +848,9 @@ void bindPyTypes(py::module & m)
     m.attr("ROLE_COLOR_TIMING") = ROLE_COLOR_TIMING;
     m.attr("ROLE_TEXTURE_PAINT") = ROLE_TEXTURE_PAINT;
     m.attr("ROLE_MATTE_PAINT") = ROLE_MATTE_PAINT;
+    m.attr("ROLE_RENDERING") = ROLE_RENDERING;
+    m.attr("ROLE_INTERCHANGE_SCENE") = ROLE_INTERCHANGE_SCENE;
+    m.attr("ROLE_INTERCHANGE_DISPLAY") = ROLE_INTERCHANGE_DISPLAY;
 
     // Shared View
     m.attr("OCIO_VIEW_USE_DISPLAY_NAME") = OCIO_VIEW_USE_DISPLAY_NAME;

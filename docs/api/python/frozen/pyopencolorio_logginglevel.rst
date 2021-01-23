@@ -45,3 +45,8 @@
       :module: PyOpenColorIO
       :value: <LoggingLevel.LOGGING_LEVEL_WARNING: 1>
 
+
+   .. py:method:: LoggingLevel.value
+      :module: PyOpenColorIO
+      :property:
+
