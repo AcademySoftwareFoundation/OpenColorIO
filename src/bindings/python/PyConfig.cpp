@@ -296,6 +296,8 @@ void bindPyConfig(py::module & m)
              DOC(Config, parseColorSpaceFromString))
         .def("isStrictParsingEnabled", &Config::isStrictParsingEnabled, 
              DOC(Config, isStrictParsingEnabled))
+        .def("setStrictParsingEnabled", &Config::setStrictParsingEnabled, "enabled"_a,
+             DOC(Config, setStrictParsingEnabled))
         .def("setInactiveColorSpaces", &Config::setInactiveColorSpaces, "inactiveColorSpaces"_a,
              DOC(Config, setInactiveColorSpaces))
         .def("getInactiveColorSpaces", &Config::getInactiveColorSpaces, 
