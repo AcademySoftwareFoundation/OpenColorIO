@@ -343,6 +343,7 @@ void ValidateBuiltinTransform(const char * style, const Values & in, const Value
     OCIO::ConstCPUProcessorRcPtr cpu;
     // Use lossless mode for these tests (e.g. FAST_LOG_EXP_POW limits to about 4 sig. digits).
     OCIO_CHECK_NO_THROW_FROM(cpu = proc->getOptimizedCPUProcessor(OCIO::OPTIMIZATION_LOSSLESS), lineNo);
+//     OCIO_CHECK_NO_THROW_FROM(cpu = proc->getOptimizedCPUProcessor(OCIO::OPTIMIZATION_NONE), lineNo);
 
     OCIO::PackedImageDesc inDesc((void *)&in[0], long(in.size() / 3), 1, 3);
 
@@ -393,12 +394,39 @@ AllValues UnitTestValues
     { "ACES-LMT--BLUE_LIGHT_ARTIFACT_FIX",
         { { 0.5f, 0.4f, 0.3f }, { 0.48625676579f,  0.38454173877f,  0.30002108779f } } },
 
-    { "ACES-OUTPUT--ACES2065-1_to_CIE-XYZ_VIDEO_1.0",
+    { "ACES-OUTPUT--ACES_to_CIE-XYZ_SDR-CINEMA_1.0",
+        { { 0.5f, 0.4f, 0.3f }, { 0.33629957f,     0.31832799f,     0.22867827f } } },
+    { "ACES-OUTPUT--ACES_to_CIE-XYZ_SDR-VIDEO_1.0",
         { { 0.5f, 0.4f, 0.3f }, { 0.34128153f,     0.32533440f,     0.24217427f } } },
-    { "ACES-OUTPUT--ACES2065-1_to_CIE-XYZ_VIDEO-D60sim_1.0",
+    { "ACES-OUTPUT--ACES_to_CIE-XYZ_SDR-CINEMA-REC709lim_1.1",
+        { { 0.5f, 0.4f, 0.3f }, { 0.33629954f,     0.31832793f,     0.22867827f } } },
+    { "ACES-OUTPUT--ACES_to_CIE-XYZ_SDR-VIDEO-REC709lim_1.1",
+        { { 0.5f, 0.4f, 0.3f }, { 0.34128147f,     0.32533434f,     0.24217427f } } },
+    { "ACES-OUTPUT--ACES_to_CIE-XYZ_SDR-VIDEO-P3lim_1.1",
+        { { 0.5f, 0.4f, 0.3f }, { 0.34128150f,     0.32533440f,     0.24217424f } } },
+    { "ACES-OUTPUT--ACES_to_CIE-XYZ_SDR-CINEMA-D60sim-D65_1.1",
+        { { 0.5f, 0.4f, 0.3f }, { 0.32699189f,     0.30769098f,     0.20432013f } } },
+    { "ACES-OUTPUT--ACES_to_CIE-XYZ_SDR-VIDEO-D60sim-D65_1.0",
         { { 0.5f, 0.4f, 0.3f }, { 0.32889283f,     0.31174013f,     0.21453267f } } },
-    { "ACES-OUTPUT--ACES2065-1_to_CIE-XYZ_HDR-VIDEO-1000nits_1.1",
+    { "ACES-OUTPUT--ACES_to_CIE-XYZ_SDR-CINEMA-D60sim-DCI_1.0",
+        { { 0.5f, 0.4f, 0.3f }, { 0.34226444f,     0.30731421f,     0.23189434f } } },
+    { "ACES-OUTPUT--ACES_to_CIE-XYZ_SDR-CINEMA-D65sim-DCI_1.1",
+        { { 0.5f, 0.4f, 0.3f }, { 0.33882778f,     0.30572337f,     0.24966924f } } },
+
+    { "ACES-OUTPUT--ACES_to_CIE-XYZ_HDR-VIDEO-1000nit-15nit-REC2020lim_1.1",
         { { 0.5f, 0.4f, 0.3f }, { 0.48334542f,     0.45336276f,     0.32364485f } } },
+    { "ACES-OUTPUT--ACES_to_CIE-XYZ_HDR-VIDEO-1000nit-15nit-P3lim_1.1",
+        { { 0.5f, 0.4f, 0.3f }, { 0.48334542f,     0.45336276f,     0.32364485f } } },
+    { "ACES-OUTPUT--ACES_to_CIE-XYZ_HDR-VIDEO-2000nit-15nit-REC2020lim_1.1",
+        { { 0.5f, 0.4f, 0.3f }, { 0.50538367f,     0.47084737f,     0.32972121f } } },
+    { "ACES-OUTPUT--ACES_to_CIE-XYZ_HDR-VIDEO-2000nit-15nit-P3lim_1.1",
+        { { 0.5f, 0.4f, 0.3f }, { 0.50538367f,     0.47084737f,     0.32972121f } } },
+    { "ACES-OUTPUT--ACES_to_CIE-XYZ_HDR-VIDEO-4000nit-15nit-REC2020lim_1.1",
+        { { 0.5f, 0.4f, 0.3f }, { 0.52311981f,     0.48482567f,     0.33447576f } } },
+    { "ACES-OUTPUT--ACES_to_CIE-XYZ_HDR-VIDEO-4000nit-15nit-P3lim_1.1",
+        { { 0.5f, 0.4f, 0.3f }, { 0.52311981f,     0.48482567f,     0.33447576f } } },
+    { "ACES-OUTPUT--ACES_to_CIE-XYZ_HDR-CINEMA-108nit-7.2nit-P3lim_1.1",
+        { { 0.5f, 0.4f, 0.3f }, { 0.22214814f,     0.21179835f,     0.15639816f } } },
 
     { "ARRI_ALEXA-LOGC-EI800-AWG_to_ACES2065-1",
         { { 0.5f, 0.4f, 0.3f }, { 0.401621427766f, 0.236455447604f,  0.064830001192f } } },
@@ -443,7 +471,9 @@ AllValues UnitTestValues
     { "DISPLAY--CIE-XYZ-D65_to_REC.2100-PQ",
         { { 0.5f, 0.4f, 0.3f }, { 0.464008302136f, 0.398157119110f,  0.384828370950f } } },
     { "DISPLAY--CIE-XYZ-D65_to_ST2084-P3-D65",
-        { { 0.5f, 0.4f, 0.3f }, { 0.479939091128f, 0.392091860770f,  0.384886051856f } } }
+        { { 0.5f, 0.4f, 0.3f }, { 0.479939091128f, 0.392091860770f,  0.384886051856f } } },
+    { "DISPLAY--CIE-XYZ-D65_to_REC.2100-HLG-1000nit",
+        { { 0.5f, 0.4f, 0.3f }, { 0.5649694f,      0.4038837f,       0.3751478f } } }
 };
 
 } // anon.

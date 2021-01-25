@@ -140,7 +140,7 @@ void GenerateOps(OpRcPtrVec & ops)
 namespace ACES_OUTPUT
 {
 
-void Generate_ACES_to_APO_ops(OpRcPtrVec & ops)
+void Generate_RRT_preamble_ops(OpRcPtrVec & ops)
 {
     CreateFixedFunctionOp(ops, FixedFunctionOpData::ACES_GLOW_10_FWD, {});
 
@@ -273,17 +273,18 @@ void Generate_hdr_tonecurve_ops(OpRcPtrVec & ops, double Y_MAX)
     CreateLogOp(ops, 10., TRANSFORM_DIR_FORWARD);
 
     // Apply RRT shaper using the same quadratic B-spline as the CTL.
+    if (Y_MAX == 1000.)
     {
         auto curve = GradingBSplineCurve::Create({
-                { -5.60050155f,  -4.00000000f, },
-                { -4.09535157f,  -3.57868829f, },
-                { -2.59020159f,  -1.82131329f, },
-                { -1.08505161f,   0.68124124f, },
-                {  0.22347059f,   2.22673503f, },
-                {  1.53199279f,   2.87906206f, },
-                {  2.84051500f,   3.00000000f, }
+                { -5.60050155f,  -4.00000000f },
+                { -4.09535157f,  -3.57868829f },
+                { -2.59020159f,  -1.82131329f },
+                { -1.08505161f,   0.68124124f },
+                {  0.22347059f,   2.22673503f },
+                {  1.53199279f,   2.87906206f },
+                {  2.84051500f,   3.00000000f }
             });
-        float slopes[] = { 0.f,  0.55982688f,  1.77532247f,  1.55f,  0.81219728f,  0.1848466f,  0.f };
+        const float slopes[] = { 0.f,  0.55982688f,  1.77532247f,  1.55f,  0.81219728f,  0.1848466f,  0.f };
         for (size_t i = 0; i < 7; ++i)
         {
             curve->setSlope( i, slopes[i] );
@@ -295,12 +296,82 @@ void Generate_hdr_tonecurve_ops(OpRcPtrVec & ops, double Y_MAX)
 
         CreateGradingRGBCurveOp(ops, gc, TRANSFORM_DIR_FORWARD);
     }
+    else if (Y_MAX == 2000.)
+    {
+        auto curve = GradingBSplineCurve::Create({
+                { -5.59738488f,  -4.00000000f },
+                { -4.09223490f,  -3.57868829f },
+                { -2.58708492f,  -1.82131329f },
+                { -1.08193494f,   0.68124124f },
+                {  0.37639718f,   2.42130131f },
+                {  1.83472930f,   3.16609199f },
+                {  3.29306142f,   3.30103000f },
+            });
+        const float slopes[] = { 0.f,  0.55982688f,  1.77532247f,  1.55f,  0.83637009f,  0.18505799f,  0.f };
+        for (size_t i = 0; i < 7; ++i)
+        {
+            curve->setSlope( i, slopes[i] );
+        }
+        ConstGradingBSplineCurveRcPtr m = curve;
+        auto identity = GradingBSplineCurve::Create({ { 0.f, 0.f }, { 1.f, 1.f } });
+        ConstGradingBSplineCurveRcPtr z = identity;
+        auto gc = std::make_shared<GradingRGBCurveOpData>(GRADING_LOG, z, z, z, m);
+
+        CreateGradingRGBCurveOp(ops, gc, TRANSFORM_DIR_FORWARD);
+    }
+    else if (Y_MAX == 4000.)
+    {
+        auto curve = GradingBSplineCurve::Create({
+                { -5.59503319f,  -4.00000000f },
+                { -4.08988322f,  -3.57868829f },
+                { -2.58473324f,  -1.82131329f },
+                { -1.07958326f,   0.68124124f },
+                {  0.52855878f,   2.61625839f },
+                {  2.13670081f,   3.45351273f },
+                {  3.74484285f,   3.60205999f },
+            });
+        const float slopes[] = { 0.f,  0.55982688f,  1.77532247f,  1.55f,  0.85652519f,  0.18474395f,  0.f };
+        for (size_t i = 0; i < 7; ++i)
+        {
+            curve->setSlope( i, slopes[i] );
+        }
+        ConstGradingBSplineCurveRcPtr m = curve;
+        auto identity = GradingBSplineCurve::Create({ { 0.f, 0.f }, { 1.f, 1.f } });
+        ConstGradingBSplineCurveRcPtr z = identity;
+        auto gc = std::make_shared<GradingRGBCurveOpData>(GRADING_LOG, z, z, z, m);
+
+        CreateGradingRGBCurveOp(ops, gc, TRANSFORM_DIR_FORWARD);
+    }
+    else if (Y_MAX == 108.)
+    {
+        auto curve = GradingBSplineCurve::Create({
+                { -5.37852506f,  -4.00000000f },
+                { -3.87337508f,  -3.57868829f },
+                { -2.36822510f,  -1.82131329f },
+                { -0.86307513f,   0.68124124f },
+                { -0.03557710f,   1.60464482f },
+                {  0.79192092f,   1.96008059f },
+                {  1.61941895f,   2.03342376f },
+            });
+        const float slopes[] = { 0.f,  0.55982688f,  1.77532247f,  1.55f,  0.68179646f,  0.17726487f,  0.f };
+        for (size_t i = 0; i < 7; ++i)
+        {
+            curve->setSlope( i, slopes[i] );
+        }
+        ConstGradingBSplineCurveRcPtr m = curve;
+        auto identity = GradingBSplineCurve::Create({ { 0.f, 0.f }, { 1.f, 1.f } });
+        ConstGradingBSplineCurveRcPtr z = identity;
+        auto gc = std::make_shared<GradingRGBCurveOpData>(GRADING_LOG, z, z, z, m);
+
+        CreateGradingRGBCurveOp(ops, gc, TRANSFORM_DIR_FORWARD);
+    }
+
     // Undo the logarithm.
     CreateLogOp(ops, 10., TRANSFORM_DIR_INVERSE);
 
     // Apply Cinema White/Black correction.
     {
-        const double Y_MIN = 0.0001;
+        const double Y_MIN        = 0.0001;
         const double scale        = 1. / (Y_MAX - Y_MIN);
         const double scale4[4]    = { scale, scale, scale, 1. };
         const double offset       = -Y_MIN * scale;
@@ -310,10 +381,10 @@ void Generate_hdr_tonecurve_ops(OpRcPtrVec & ops, double Y_MAX)
     }
 }
 
-void Generate_primary_clamp_ops(OpRcPtrVec & ops)
+void Generate_sdr_primary_clamp_ops(OpRcPtrVec & ops, const Primaries & limitPrimaries)
 {
     MatrixOpData::MatrixArrayPtr matrix1
-        = build_conversion_matrix(ACES_AP1::primaries, REC2020::primaries, ADAPTATION_NONE);
+        = build_conversion_matrix(ACES_AP1::primaries, limitPrimaries, ADAPTATION_BRADFORD);
     CreateMatrixOp(ops, matrix1, TRANSFORM_DIR_FORWARD);
 
     CreateRangeOp(ops, 
@@ -322,7 +393,23 @@ void Generate_primary_clamp_ops(OpRcPtrVec & ops)
                   TRANSFORM_DIR_FORWARD);
 
     MatrixOpData::MatrixArrayPtr matrix2
-        = rgb2xyz_from_xy(REC2020::primaries);
+        = rgb2xyz_from_xy(limitPrimaries);
+    CreateMatrixOp(ops, matrix2, TRANSFORM_DIR_FORWARD);
+}
+
+void Generate_hdr_primary_clamp_ops(OpRcPtrVec & ops, const Primaries & limitPrimaries)
+{
+    MatrixOpData::MatrixArrayPtr matrix1
+        = build_conversion_matrix(ACES_AP1::primaries, limitPrimaries, ADAPTATION_NONE);
+    CreateMatrixOp(ops, matrix1, TRANSFORM_DIR_FORWARD);
+
+    CreateRangeOp(ops, 
+                  0., 1.,
+                  0., 1.,
+                  TRANSFORM_DIR_FORWARD);
+
+    MatrixOpData::MatrixArrayPtr matrix2
+        = rgb2xyz_from_xy(limitPrimaries);
     CreateMatrixOp(ops, matrix2, TRANSFORM_DIR_FORWARD);
 
     MatrixOpData::MatrixArrayPtr matrix3
@@ -337,6 +424,74 @@ void Generate_nit_normalization_ops(OpRcPtrVec & ops, double nit_level)
     const double scale     = nit_level * 0.01;
     const double scale4[4] = { scale, scale, scale, 1. };
     CreateScaleOp(ops, scale4, TRANSFORM_DIR_FORWARD);
+}
+
+void Generate_roll_white_d60_ops(OpRcPtrVec & ops)
+{
+    auto GenerateLutValues = [](double in) -> float
+    {
+        const double new_wht = 0.918;
+        const double width = 0.5;
+        const double x0 = -1.0;
+        const double x1 = x0 + width;
+        const double y0 = -new_wht;
+        const double y1 = x1;
+        const double m1 = (x1 - x0);
+        const double a = y0 - y1 + m1;
+        const double b = 2. * ( y1 - y0) - m1;
+        const double c = y0;
+        const double t = (-in - x0) / (x1 - x0);
+        double out = 0.0;
+        if (t < 0.0)
+        {
+            out = -(t * b + c);
+        }
+        else if (t > 1.0)
+        {
+            out = in;
+        }
+        else
+        {
+            out = -(( t * a + b) * t + c);
+        }
+        return float(out);
+    };
+
+    CreateHalfLut(ops, GenerateLutValues);
+}
+
+void Generate_roll_white_d65_ops(OpRcPtrVec & ops)
+{
+    auto GenerateLutValues = [](double in) -> float
+    {
+        const double new_wht = 0.908;
+        const double width = 0.5;
+        const double x0 = -1.0;
+        const double x1 = x0 + width;
+        const double y0 = -new_wht;
+        const double y1 = x1;
+        const double m1 = (x1 - x0);
+        const double a = y0 - y1 + m1;
+        const double b = 2. * ( y1 - y0) - m1;
+        const double c = y0;
+        const double t = (-in - x0) / (x1 - x0);
+        double out = 0.0;
+        if (t < 0.0)
+        {
+            out = -(t * b + c);
+        }
+        else if (t > 1.0)
+        {
+            out = in;
+        }
+        else
+        {
+            out = -(( t * a + b) * t + c);
+        }
+        return float(out);
+    };
+
+    CreateHalfLut(ops, GenerateLutValues);
 }
 
 }  // namespace ACES_OUTPUT
@@ -559,9 +714,24 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
     //
 
     {
+        auto ACES2065_1_to_CIE_XYZ_cinema_1_0_Functor = [](OpRcPtrVec & ops)
+        {
+            ACES_OUTPUT::Generate_RRT_preamble_ops(ops);
+
+            ACES_OUTPUT::Generate_tonecurve_ops(ops);
+
+            AP1_to_CIE_XYZ_D65::GenerateOps(ops);
+        };
+
+        registry.addBuiltin("ACES-OUTPUT--ACES_to_CIE-XYZ_SDR-CINEMA_1.0", 
+                            "Component of ACES Output Transforms for SDR cinema",
+                            ACES2065_1_to_CIE_XYZ_cinema_1_0_Functor);
+    }
+
+    {
         auto ACES2065_1_to_CIE_XYZ_video_1_0_Functor = [](OpRcPtrVec & ops)
         {
-            ACES_OUTPUT::Generate_ACES_to_APO_ops(ops);
+            ACES_OUTPUT::Generate_RRT_preamble_ops(ops);
 
             ACES_OUTPUT::Generate_tonecurve_ops(ops);
 
@@ -570,15 +740,90 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
             AP1_to_CIE_XYZ_D65::GenerateOps(ops);
         };
 
-        registry.addBuiltin("ACES-OUTPUT--ACES2065-1_to_CIE-XYZ_VIDEO_1.0", 
+        registry.addBuiltin("ACES-OUTPUT--ACES_to_CIE-XYZ_SDR-VIDEO_1.0", 
                             "Component of ACES Output Transforms for SDR D65 video",
                             ACES2065_1_to_CIE_XYZ_video_1_0_Functor);
     }
 
     {
+        auto ACES2065_1_to_CIE_XYZ_cinema_rec709lim_1_1_Functor = [](OpRcPtrVec & ops)
+        {
+            ACES_OUTPUT::Generate_RRT_preamble_ops(ops);
+
+            ACES_OUTPUT::Generate_tonecurve_ops(ops);
+
+            ACES_OUTPUT::Generate_sdr_primary_clamp_ops(ops, REC709::primaries);
+        };
+
+        registry.addBuiltin("ACES-OUTPUT--ACES_to_CIE-XYZ_SDR-CINEMA-REC709lim_1.1", 
+                            "Component of ACES Output Transforms for SDR cinema",
+                            ACES2065_1_to_CIE_XYZ_cinema_rec709lim_1_1_Functor);
+    }
+
+    {
+        auto ACES2065_1_to_CIE_XYZ_video_rec709lim_1_1_Functor = [](OpRcPtrVec & ops)
+        {
+            ACES_OUTPUT::Generate_RRT_preamble_ops(ops);
+
+            ACES_OUTPUT::Generate_tonecurve_ops(ops);
+
+            ACES_OUTPUT::Generate_video_adjustment_ops(ops);
+
+            ACES_OUTPUT::Generate_sdr_primary_clamp_ops(ops, REC709::primaries);
+        };
+
+        registry.addBuiltin("ACES-OUTPUT--ACES_to_CIE-XYZ_SDR-VIDEO-REC709lim_1.1", 
+                            "Component of ACES Output Transforms for SDR D65 video",
+                            ACES2065_1_to_CIE_XYZ_video_rec709lim_1_1_Functor);
+    }
+
+    {
+        auto ACES2065_1_to_CIE_XYZ_video_p3lim_1_1_Functor = [](OpRcPtrVec & ops)
+        {
+            ACES_OUTPUT::Generate_RRT_preamble_ops(ops);
+
+            ACES_OUTPUT::Generate_tonecurve_ops(ops);
+
+            ACES_OUTPUT::Generate_video_adjustment_ops(ops);
+
+            ACES_OUTPUT::Generate_sdr_primary_clamp_ops(ops, P3_D65::primaries);
+        };
+
+        registry.addBuiltin("ACES-OUTPUT--ACES_to_CIE-XYZ_SDR-VIDEO-P3lim_1.1", 
+                            "Component of ACES Output Transforms for SDR D65 video",
+                            ACES2065_1_to_CIE_XYZ_video_p3lim_1_1_Functor);
+    }
+
+    {
+        auto ACES2065_1_to_CIE_XYZ_cinema_d60sim_1_1_Functor = [](OpRcPtrVec & ops)
+        {
+            ACES_OUTPUT::Generate_RRT_preamble_ops(ops);
+
+            ACES_OUTPUT::Generate_tonecurve_ops(ops);
+
+            CreateRangeOp(ops, 
+                          RangeOpData::EmptyValue(), 1.0,  // don't clamp low end
+                          RangeOpData::EmptyValue(), 1.0,  // don't clamp low end
+                          TRANSFORM_DIR_FORWARD);
+
+            static constexpr double scale     = 0.964;
+            static constexpr double scale4[4] = { scale, scale, scale, 1. };
+            CreateScaleOp(ops, scale4, TRANSFORM_DIR_FORWARD);
+
+            MatrixOpData::MatrixArrayPtr matrix
+                = rgb2xyz_from_xy(ACES_AP1::primaries);
+            CreateMatrixOp(ops, matrix, TRANSFORM_DIR_FORWARD);
+        };
+
+        registry.addBuiltin("ACES-OUTPUT--ACES_to_CIE-XYZ_SDR-CINEMA-D60sim-D65_1.1", 
+                            "Component of ACES Output Transforms for SDR D65 cinema simulating D60 white",
+                            ACES2065_1_to_CIE_XYZ_cinema_d60sim_1_1_Functor);
+    }
+
+    {
         auto ACES2065_1_to_CIE_XYZ_video_d60sim_1_0_Functor = [](OpRcPtrVec & ops)
         {
-            ACES_OUTPUT::Generate_ACES_to_APO_ops(ops);
+            ACES_OUTPUT::Generate_RRT_preamble_ops(ops);
 
             ACES_OUTPUT::Generate_tonecurve_ops(ops);
 
@@ -598,26 +843,190 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
             CreateMatrixOp(ops, matrix, TRANSFORM_DIR_FORWARD);
         };
 
-        registry.addBuiltin("ACES-OUTPUT--ACES2065-1_to_CIE-XYZ_VIDEO-D60sim_1.0", 
+        registry.addBuiltin("ACES-OUTPUT--ACES_to_CIE-XYZ_SDR-VIDEO-D60sim-D65_1.0", 
                             "Component of ACES Output Transforms for SDR D65 video simulating D60 white",
                             ACES2065_1_to_CIE_XYZ_video_d60sim_1_0_Functor);
     }
 
     {
-        auto ACES2065_1_to_CIE_XYZ_hdr_video_1000nits_1_1_Functor = [](OpRcPtrVec & ops)
+        auto ACES2065_1_to_CIE_XYZ_cinema_d60sim_dci_1_0_Functor = [](OpRcPtrVec & ops)
         {
-            ACES_OUTPUT::Generate_ACES_to_APO_ops(ops);
+            ACES_OUTPUT::Generate_RRT_preamble_ops(ops);
+
+            ACES_OUTPUT::Generate_tonecurve_ops(ops);
+
+            ACES_OUTPUT::Generate_roll_white_d60_ops(ops);
+
+            CreateRangeOp(ops, 
+                          RangeOpData::EmptyValue(), 0.918,  // don't clamp low end
+                          RangeOpData::EmptyValue(), 0.918,  // don't clamp low end
+                          TRANSFORM_DIR_FORWARD);
+
+            static constexpr double scale     = 0.96;
+            static constexpr double scale4[4] = { scale, scale, scale, 1. };
+            CreateScaleOp(ops, scale4, TRANSFORM_DIR_FORWARD);
+
+            MatrixOpData::MatrixArrayPtr matrix
+                = rgb2xyz_from_xy(ACES_AP1::primaries);
+            CreateMatrixOp(ops, matrix, TRANSFORM_DIR_FORWARD);
+
+            MatrixOpData::MatrixArrayPtr matrix2
+                = build_vonkries_adapt(WHITEPOINT::DCI_XYZ, WHITEPOINT::D65_XYZ, ADAPTATION_BRADFORD);
+            CreateMatrixOp(ops, matrix2, TRANSFORM_DIR_FORWARD);
+        };
+
+        registry.addBuiltin("ACES-OUTPUT--ACES_to_CIE-XYZ_SDR-CINEMA-D60sim-DCI_1.0", 
+                            "Component of ACES Output Transforms for SDR DCI cinema simulating D60 white",
+                            ACES2065_1_to_CIE_XYZ_cinema_d60sim_dci_1_0_Functor);
+    }
+
+    {
+        auto ACES2065_1_to_CIE_XYZ_cinema_d65sim_dci_1_1_Functor = [](OpRcPtrVec & ops)
+        {
+            ACES_OUTPUT::Generate_RRT_preamble_ops(ops);
+
+            ACES_OUTPUT::Generate_tonecurve_ops(ops);
+
+            ACES_OUTPUT::Generate_roll_white_d65_ops(ops);
+
+            CreateRangeOp(ops, 
+                          RangeOpData::EmptyValue(), 0.908,  // don't clamp low end
+                          RangeOpData::EmptyValue(), 0.908,  // don't clamp low end
+                          TRANSFORM_DIR_FORWARD);
+
+            static constexpr double scale     = 0.9575;
+            static constexpr double scale4[4] = { scale, scale, scale, 1. };
+            CreateScaleOp(ops, scale4, TRANSFORM_DIR_FORWARD);
+
+            AP1_to_CIE_XYZ_D65::GenerateOps(ops);
+
+            MatrixOpData::MatrixArrayPtr matrix2
+                = build_vonkries_adapt(WHITEPOINT::DCI_XYZ, WHITEPOINT::D65_XYZ, ADAPTATION_BRADFORD);
+            CreateMatrixOp(ops, matrix2, TRANSFORM_DIR_FORWARD);
+        };
+
+        registry.addBuiltin("ACES-OUTPUT--ACES_to_CIE-XYZ_SDR-CINEMA-D65sim-DCI_1.1", 
+                            "Component of ACES Output Transforms for SDR DCI cinema simulating D65 white",
+                            ACES2065_1_to_CIE_XYZ_cinema_d65sim_dci_1_1_Functor);
+    }
+
+    {
+        auto ACES2065_1_to_CIE_XYZ_hdr_video_1000nits_rec2020lim_1_1_Functor = [](OpRcPtrVec & ops)
+        {
+            ACES_OUTPUT::Generate_RRT_preamble_ops(ops);
 
             ACES_OUTPUT::Generate_hdr_tonecurve_ops(ops, 1000.);
 
-            ACES_OUTPUT::Generate_primary_clamp_ops(ops);
+            ACES_OUTPUT::Generate_hdr_primary_clamp_ops(ops, REC2020::primaries);
 
             ACES_OUTPUT::Generate_nit_normalization_ops(ops, 1000.);
         };
 
-        registry.addBuiltin("ACES-OUTPUT--ACES2065-1_to_CIE-XYZ_HDR-VIDEO-1000nits_1.1", 
+        registry.addBuiltin("ACES-OUTPUT--ACES_to_CIE-XYZ_HDR-VIDEO-1000nit-15nit-REC2020lim_1.1", 
                             "Component of ACES Output Transforms for 1000 nit HDR D65 video",
-                            ACES2065_1_to_CIE_XYZ_hdr_video_1000nits_1_1_Functor);
+                            ACES2065_1_to_CIE_XYZ_hdr_video_1000nits_rec2020lim_1_1_Functor);
+    }
+
+    {
+        auto ACES2065_1_to_CIE_XYZ_hdr_video_1000nits_p3lim_1_1_Functor = [](OpRcPtrVec & ops)
+        {
+            ACES_OUTPUT::Generate_RRT_preamble_ops(ops);
+
+            ACES_OUTPUT::Generate_hdr_tonecurve_ops(ops, 1000.);
+
+            ACES_OUTPUT::Generate_hdr_primary_clamp_ops(ops, P3_D65::primaries);
+
+            ACES_OUTPUT::Generate_nit_normalization_ops(ops, 1000.);
+        };
+
+        registry.addBuiltin("ACES-OUTPUT--ACES_to_CIE-XYZ_HDR-VIDEO-1000nit-15nit-P3lim_1.1", 
+                            "Component of ACES Output Transforms for 1000 nit HDR D65 video",
+                            ACES2065_1_to_CIE_XYZ_hdr_video_1000nits_p3lim_1_1_Functor);
+    }
+
+    {
+        auto ACES2065_1_to_CIE_XYZ_hdr_video_2000nits_rec2020lim_1_1_Functor = [](OpRcPtrVec & ops)
+        {
+            ACES_OUTPUT::Generate_RRT_preamble_ops(ops);
+
+            ACES_OUTPUT::Generate_hdr_tonecurve_ops(ops, 2000.);
+
+            ACES_OUTPUT::Generate_hdr_primary_clamp_ops(ops, REC2020::primaries);
+
+            ACES_OUTPUT::Generate_nit_normalization_ops(ops, 2000.);
+        };
+
+        registry.addBuiltin("ACES-OUTPUT--ACES_to_CIE-XYZ_HDR-VIDEO-2000nit-15nit-REC2020lim_1.1", 
+                            "Component of ACES Output Transforms for 2000 nit HDR D65 video",
+                            ACES2065_1_to_CIE_XYZ_hdr_video_2000nits_rec2020lim_1_1_Functor);
+    }
+
+    {
+        auto ACES2065_1_to_CIE_XYZ_hdr_video_2000nits_p3lim_1_1_Functor = [](OpRcPtrVec & ops)
+        {
+            ACES_OUTPUT::Generate_RRT_preamble_ops(ops);
+
+            ACES_OUTPUT::Generate_hdr_tonecurve_ops(ops, 2000.);
+
+            ACES_OUTPUT::Generate_hdr_primary_clamp_ops(ops, P3_D65::primaries);
+
+            ACES_OUTPUT::Generate_nit_normalization_ops(ops, 2000.);
+        };
+
+        registry.addBuiltin("ACES-OUTPUT--ACES_to_CIE-XYZ_HDR-VIDEO-2000nit-15nit-P3lim_1.1", 
+                            "Component of ACES Output Transforms for 2000 nit HDR D65 video",
+                            ACES2065_1_to_CIE_XYZ_hdr_video_2000nits_p3lim_1_1_Functor);
+    }
+
+    {
+        auto ACES2065_1_to_CIE_XYZ_hdr_video_4000nits_rec2020lim_1_1_Functor = [](OpRcPtrVec & ops)
+        {
+            ACES_OUTPUT::Generate_RRT_preamble_ops(ops);
+
+            ACES_OUTPUT::Generate_hdr_tonecurve_ops(ops, 4000.);
+
+            ACES_OUTPUT::Generate_hdr_primary_clamp_ops(ops, REC2020::primaries);
+
+            ACES_OUTPUT::Generate_nit_normalization_ops(ops, 4000.);
+        };
+
+        registry.addBuiltin("ACES-OUTPUT--ACES_to_CIE-XYZ_HDR-VIDEO-4000nit-15nit-REC2020lim_1.1", 
+                            "Component of ACES Output Transforms for 4000 nit HDR D65 video",
+                            ACES2065_1_to_CIE_XYZ_hdr_video_4000nits_rec2020lim_1_1_Functor);
+    }
+
+    {
+        auto ACES2065_1_to_CIE_XYZ_hdr_video_4000nits_p3lim_1_1_Functor = [](OpRcPtrVec & ops)
+        {
+            ACES_OUTPUT::Generate_RRT_preamble_ops(ops);
+
+            ACES_OUTPUT::Generate_hdr_tonecurve_ops(ops, 4000.);
+
+            ACES_OUTPUT::Generate_hdr_primary_clamp_ops(ops, P3_D65::primaries);
+
+            ACES_OUTPUT::Generate_nit_normalization_ops(ops, 4000.);
+        };
+
+        registry.addBuiltin("ACES-OUTPUT--ACES_to_CIE-XYZ_HDR-VIDEO-4000nit-15nit-P3lim_1.1", 
+                            "Component of ACES Output Transforms for 4000 nit HDR D65 video",
+                            ACES2065_1_to_CIE_XYZ_hdr_video_4000nits_p3lim_1_1_Functor);
+    }
+
+    {
+        auto ACES2065_1_to_CIE_XYZ_hdr_cinema_108nits_p3lim_1_1_Functor = [](OpRcPtrVec & ops)
+        {
+            ACES_OUTPUT::Generate_RRT_preamble_ops(ops);
+
+            ACES_OUTPUT::Generate_hdr_tonecurve_ops(ops, 108.);
+
+            ACES_OUTPUT::Generate_hdr_primary_clamp_ops(ops, P3_D65::primaries);
+
+            ACES_OUTPUT::Generate_nit_normalization_ops(ops, 108.);
+        };
+
+        registry.addBuiltin("ACES-OUTPUT--ACES_to_CIE-XYZ_HDR-CINEMA-108nit-7.2nit-P3lim_1.1", 
+                            "Component of ACES Output Transforms for 108 nit HDR D65 cinema",
+                            ACES2065_1_to_CIE_XYZ_hdr_cinema_108nits_p3lim_1_1_Functor);
     }
 }
 

@@ -95,6 +95,7 @@ namespace WHITEPOINT
 {
 const MatrixOpData::Offsets D60_XYZ(0.95264607456985, 1., 1.00882518435159, 0.);
 const MatrixOpData::Offsets D65_XYZ(0.95045592705167, 1., 1.08905775075988, 0.);
+const MatrixOpData::Offsets DCI_XYZ(0.89458689458689, 1., 0.95441595441595, 0.);
 }
 
 // Here are some notes on how one derives the color space conversion

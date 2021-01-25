@@ -126,6 +126,7 @@ namespace WHITEPOINT
 {
 extern const MatrixOpData::Offsets D60_XYZ;
 extern const MatrixOpData::Offsets D65_XYZ;
+extern const MatrixOpData::Offsets DCI_XYZ;
 }
 
 // Calculate a matrix to convert arbitrary RGB primary tristimulus values
@@ -169,7 +170,7 @@ MatrixOpData::MatrixArrayPtr build_conversion_matrix(const Primaries & src_prims
                                                      const MatrixOpData::Offsets & dst_wht_XYZ,
                                                      AdaptationMethod method);
 
-// Build a conversion matrix to CIE XYZ D65 to the destination primaries.
+// Build a conversion matrix to CIE XYZ D65 from the source primaries.
 
 MatrixOpData::MatrixArrayPtr build_conversion_matrix_to_XYZ_D65(const Primaries & src_prims,
                                                                 AdaptationMethod method);

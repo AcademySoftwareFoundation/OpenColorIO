@@ -6,6 +6,7 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "ops/fixedfunction/FixedFunctionOp.h"
 #include "ops/gamma/GammaOp.h"
 #include "ops/matrix/MatrixOp.h"
 #include "ops/range/RangeOp.h"
@@ -80,6 +81,7 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
                                                            rgbParams, rgbParams, rgbParams, alphaParams);
             CreateGammaOp(ops, gammaData, TRANSFORM_DIR_FORWARD);
         };
+
         registry.addBuiltin("DISPLAY--CIE-XYZ-D65_to_REC.1886-REC.709", 
                             "Convert CIE XYZ (D65 white) to Rec.1886/Rec.709 (HD video)",
                             CIE_XYZ_D65_to_REC1886_REC709_Functor);
@@ -98,6 +100,7 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
                                                            rgbParams, rgbParams, rgbParams, alphaParams);
             CreateGammaOp(ops, gammaData, TRANSFORM_DIR_FORWARD);
         };
+
         registry.addBuiltin("DISPLAY--CIE-XYZ-D65_to_REC.1886-REC.2020", 
                             "Convert CIE XYZ (D65 white) to Rec.1886/Rec.2020 (UHD video)",
                             CIE_XYZ_D65_to_REC1886_REC2020_Functor);
@@ -116,6 +119,7 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
                                                            rgbParams, rgbParams, rgbParams, alphaParams);
             CreateGammaOp(ops, gammaData, TRANSFORM_DIR_FORWARD);
         };
+
         registry.addBuiltin("DISPLAY--CIE-XYZ-D65_to_G2.2-REC.709", 
                             "Convert CIE XYZ (D65 white) to Gamma2.2, Rec.709",
                             CIE_XYZ_D65_to_G22_REC709_Functor);
@@ -153,6 +157,7 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
                                                            rgbParams, rgbParams, rgbParams, alphaParams);
             CreateGammaOp(ops, gammaData, TRANSFORM_DIR_FORWARD);
         };
+
         registry.addBuiltin("DISPLAY--CIE-XYZ-D65_to_G2.6-P3-DCI-BFD", 
                             "Convert CIE XYZ (D65 white) to Gamma 2.6, P3-DCI (DCI white with Bradford adaptation)",
                             CIE_XYZ_D65_to_P3_DCI_BFD_Functor);
@@ -171,6 +176,7 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
                                                            rgbParams, rgbParams, rgbParams, alphaParams);
             CreateGammaOp(ops, gammaData, TRANSFORM_DIR_FORWARD);
         };
+
         registry.addBuiltin("DISPLAY--CIE-XYZ-D65_to_G2.6-P3-D65", 
                             "Convert CIE XYZ (D65 white) to Gamma 2.6, P3-D65",
                             CIE_XYZ_D65_to_P3_D65_Functor);
@@ -189,6 +195,7 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
                                                            rgbParams, rgbParams, rgbParams, alphaParams);
             CreateGammaOp(ops, gammaData, TRANSFORM_DIR_FORWARD);
         };
+
         registry.addBuiltin("DISPLAY--CIE-XYZ-D65_to_G2.6-P3-D60-BFD", 
                             "Convert CIE XYZ (D65 white) to Gamma 2.6, P3-D60 (Bradford adaptation)",
                             CIE_XYZ_D65_to_P3_D60_BFD_Functor);
@@ -244,6 +251,59 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
         registry.addBuiltin("DISPLAY--CIE-XYZ-D65_to_ST2084-P3-D65", 
                             "Convert CIE XYZ (D65 white) to ST-2084 (PQ), P3-D65 primaries",
                             CIE_XYZ_D65_to_ST2084_P3_D65_Functor);
+    }
+
+    {
+        auto CIE_XYZ_D65_to_REC2100_HLG_1000nit_Functor = [](OpRcPtrVec & ops)
+        {
+            MatrixOpData::MatrixArrayPtr matrix
+                = build_conversion_matrix_from_XYZ_D65(REC2020::primaries, ADAPTATION_NONE);
+            CreateMatrixOp(ops, matrix, TRANSFORM_DIR_FORWARD);
+
+            static constexpr double Lw    = 1000.;
+            static constexpr double E_MAX = 3.;
+            const double gamma            = 1.2 + 0.42 * std::log10(Lw / 1000.);
+            {
+                static constexpr double scale     = 100.;
+                static constexpr double scale4[4] = { scale, scale, scale, 1. };
+                CreateScaleOp(ops, scale4, TRANSFORM_DIR_FORWARD);
+            }
+            {
+                const double scale     = std::pow(E_MAX, gamma) / Lw;
+                const double scale4[4] = { scale, scale, scale, 1. };
+                CreateScaleOp(ops, scale4, TRANSFORM_DIR_FORWARD);
+            }
+
+            CreateFixedFunctionOp(ops, FixedFunctionOpData::REC2100_SURROUND_FWD, {1. / gamma});
+
+            auto GenerateLutValues = [](double in) -> float
+            {
+                const double a = 0.17883277;
+                const double b = (1. - 4. * a) * E_MAX / 12.;
+                const double c0 = 0.5 - a * std::log(4. * a);
+                const double c = std::log(12. / E_MAX) * 0.17883277 + c0;
+                const double E_scale = 3. / E_MAX;
+                const double E_break = E_MAX / 12.;
+                double out = 0.0;
+
+                const double E = std::max(in, 0.);
+                if (in < E_break)
+                {
+                    out = std::sqrt( E * E_scale );
+                }
+                else
+                {
+                    out = std::min( 1., a * std::log(E - b) + c);
+                }
+                return float(out);
+            };
+
+            CreateHalfLut(ops, GenerateLutValues);
+        };
+
+        registry.addBuiltin("DISPLAY--CIE-XYZ-D65_to_REC.2100-HLG-1000nit", 
+                            "Convert CIE XYZ (D65 white) to Rec.2100-HLG, 1000 nit",
+                            CIE_XYZ_D65_to_REC2100_HLG_1000nit_Functor);
     }
 
 }
