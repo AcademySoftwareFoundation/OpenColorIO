@@ -517,7 +517,7 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
             CreateMatrixOp(ops, matrix, TRANSFORM_DIR_FORWARD);
         };
 
-        registry.addBuiltin("UTILITY--ACES-AP0_to_CIE-XYZ-D65_BFD", 
+        registry.addBuiltin("UTILITY - ACES-AP0_to_CIE-XYZ-D65_BFD", 
                             "Convert ACES AP0 primaries to CIE XYZ with a D65 white point with Bradford adaptation",
                             ACES_AP0_to_CIE_XYZ_D65_BFD_Functor);
     }
@@ -527,7 +527,7 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
             AP1_to_CIE_XYZ_D65::GenerateOps(ops);
         };
 
-        registry.addBuiltin("UTILITY--ACES-AP1_to_CIE-XYZ-D65_BFD", 
+        registry.addBuiltin("UTILITY - ACES-AP1_to_CIE-XYZ-D65_BFD", 
                             "Convert ACES AP1 primaries to CIE XYZ with a D65 white point with Bradford adaptation",
                             ACES_AP1_to_CIE_XYZ_D65_BFD_Functor);
     }
@@ -539,7 +539,7 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
             CreateMatrixOp(ops, matrix, TRANSFORM_DIR_FORWARD);
         };
 
-        registry.addBuiltin("UTILITY--ACES-AP1_to_LINEAR-REC709_BFD", 
+        registry.addBuiltin("UTILITY - ACES-AP1_to_LINEAR-REC709_BFD", 
                             "Convert ACES AP1 primaries to linear Rec.709 primaries with Bradford adaptation",
                             ACES_AP1_to_LINEAR_REC709_BFD_Functor);
     }
@@ -550,7 +550,7 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
             CreateLogOp(ops, log, TRANSFORM_DIR_FORWARD);
         };
 
-        registry.addBuiltin("CURVE--ACEScct-LOG_to_LINEAR", 
+        registry.addBuiltin("CURVE - ACEScct-LOG_to_LINEAR", 
                             "Apply the log-to-lin curve used in ACEScct",
                             ACEScct_LOG_to_LIN_Functor);
     }
@@ -704,7 +704,7 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
             CreateMatrixOp(ops, &BLUE_LIGHT_FIX[0], TRANSFORM_DIR_FORWARD);
         };
 
-        registry.addBuiltin("ACES-LMT--BLUE_LIGHT_ARTIFACT_FIX",
+        registry.addBuiltin("ACES-LMT - BLUE_LIGHT_ARTIFACT_FIX",
                             "LMT for desaturating blue hues to reduce clipping artifacts",
                             BLUE_LIGHT_FIX_Functor);
     }
@@ -723,7 +723,7 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
             AP1_to_CIE_XYZ_D65::GenerateOps(ops);
         };
 
-        registry.addBuiltin("ACES-OUTPUT--ACES_to_CIE-XYZ_SDR-CINEMA_1.0", 
+        registry.addBuiltin("ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-CINEMA_1.0", 
                             "Component of ACES Output Transforms for SDR cinema",
                             ACES2065_1_to_CIE_XYZ_cinema_1_0_Functor);
     }
@@ -740,7 +740,7 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
             AP1_to_CIE_XYZ_D65::GenerateOps(ops);
         };
 
-        registry.addBuiltin("ACES-OUTPUT--ACES_to_CIE-XYZ_SDR-VIDEO_1.0", 
+        registry.addBuiltin("ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-VIDEO_1.0", 
                             "Component of ACES Output Transforms for SDR D65 video",
                             ACES2065_1_to_CIE_XYZ_video_1_0_Functor);
     }
@@ -755,7 +755,7 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
             ACES_OUTPUT::Generate_sdr_primary_clamp_ops(ops, REC709::primaries);
         };
 
-        registry.addBuiltin("ACES-OUTPUT--ACES_to_CIE-XYZ_SDR-CINEMA-REC709lim_1.1", 
+        registry.addBuiltin("ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-CINEMA-REC709lim_1.1", 
                             "Component of ACES Output Transforms for SDR cinema",
                             ACES2065_1_to_CIE_XYZ_cinema_rec709lim_1_1_Functor);
     }
@@ -772,7 +772,7 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
             ACES_OUTPUT::Generate_sdr_primary_clamp_ops(ops, REC709::primaries);
         };
 
-        registry.addBuiltin("ACES-OUTPUT--ACES_to_CIE-XYZ_SDR-VIDEO-REC709lim_1.1", 
+        registry.addBuiltin("ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-VIDEO-REC709lim_1.1", 
                             "Component of ACES Output Transforms for SDR D65 video",
                             ACES2065_1_to_CIE_XYZ_video_rec709lim_1_1_Functor);
     }
@@ -789,7 +789,7 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
             ACES_OUTPUT::Generate_sdr_primary_clamp_ops(ops, P3_D65::primaries);
         };
 
-        registry.addBuiltin("ACES-OUTPUT--ACES_to_CIE-XYZ_SDR-VIDEO-P3lim_1.1", 
+        registry.addBuiltin("ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-VIDEO-P3lim_1.1", 
                             "Component of ACES Output Transforms for SDR D65 video",
                             ACES2065_1_to_CIE_XYZ_video_p3lim_1_1_Functor);
     }
@@ -815,7 +815,7 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
             CreateMatrixOp(ops, matrix, TRANSFORM_DIR_FORWARD);
         };
 
-        registry.addBuiltin("ACES-OUTPUT--ACES_to_CIE-XYZ_SDR-CINEMA-D60sim-D65_1.1", 
+        registry.addBuiltin("ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-CINEMA-D60sim-D65_1.1", 
                             "Component of ACES Output Transforms for SDR D65 cinema simulating D60 white",
                             ACES2065_1_to_CIE_XYZ_cinema_d60sim_1_1_Functor);
     }
@@ -843,7 +843,7 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
             CreateMatrixOp(ops, matrix, TRANSFORM_DIR_FORWARD);
         };
 
-        registry.addBuiltin("ACES-OUTPUT--ACES_to_CIE-XYZ_SDR-VIDEO-D60sim-D65_1.0", 
+        registry.addBuiltin("ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-VIDEO-D60sim-D65_1.0", 
                             "Component of ACES Output Transforms for SDR D65 video simulating D60 white",
                             ACES2065_1_to_CIE_XYZ_video_d60sim_1_0_Functor);
     }
@@ -875,7 +875,7 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
             CreateMatrixOp(ops, matrix2, TRANSFORM_DIR_FORWARD);
         };
 
-        registry.addBuiltin("ACES-OUTPUT--ACES_to_CIE-XYZ_SDR-CINEMA-D60sim-DCI_1.0", 
+        registry.addBuiltin("ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-CINEMA-D60sim-DCI_1.0", 
                             "Component of ACES Output Transforms for SDR DCI cinema simulating D60 white",
                             ACES2065_1_to_CIE_XYZ_cinema_d60sim_dci_1_0_Functor);
     }
@@ -905,7 +905,7 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
             CreateMatrixOp(ops, matrix2, TRANSFORM_DIR_FORWARD);
         };
 
-        registry.addBuiltin("ACES-OUTPUT--ACES_to_CIE-XYZ_SDR-CINEMA-D65sim-DCI_1.1", 
+        registry.addBuiltin("ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-CINEMA-D65sim-DCI_1.1", 
                             "Component of ACES Output Transforms for SDR DCI cinema simulating D65 white",
                             ACES2065_1_to_CIE_XYZ_cinema_d65sim_dci_1_1_Functor);
     }
@@ -922,7 +922,7 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
             ACES_OUTPUT::Generate_nit_normalization_ops(ops, 1000.);
         };
 
-        registry.addBuiltin("ACES-OUTPUT--ACES_to_CIE-XYZ_HDR-VIDEO-1000nit-15nit-REC2020lim_1.1", 
+        registry.addBuiltin("ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-VIDEO-1000nit-15nit-REC2020lim_1.1", 
                             "Component of ACES Output Transforms for 1000 nit HDR D65 video",
                             ACES2065_1_to_CIE_XYZ_hdr_video_1000nits_rec2020lim_1_1_Functor);
     }
@@ -939,7 +939,7 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
             ACES_OUTPUT::Generate_nit_normalization_ops(ops, 1000.);
         };
 
-        registry.addBuiltin("ACES-OUTPUT--ACES_to_CIE-XYZ_HDR-VIDEO-1000nit-15nit-P3lim_1.1", 
+        registry.addBuiltin("ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-VIDEO-1000nit-15nit-P3lim_1.1", 
                             "Component of ACES Output Transforms for 1000 nit HDR D65 video",
                             ACES2065_1_to_CIE_XYZ_hdr_video_1000nits_p3lim_1_1_Functor);
     }
@@ -956,7 +956,7 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
             ACES_OUTPUT::Generate_nit_normalization_ops(ops, 2000.);
         };
 
-        registry.addBuiltin("ACES-OUTPUT--ACES_to_CIE-XYZ_HDR-VIDEO-2000nit-15nit-REC2020lim_1.1", 
+        registry.addBuiltin("ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-VIDEO-2000nit-15nit-REC2020lim_1.1", 
                             "Component of ACES Output Transforms for 2000 nit HDR D65 video",
                             ACES2065_1_to_CIE_XYZ_hdr_video_2000nits_rec2020lim_1_1_Functor);
     }
@@ -973,7 +973,7 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
             ACES_OUTPUT::Generate_nit_normalization_ops(ops, 2000.);
         };
 
-        registry.addBuiltin("ACES-OUTPUT--ACES_to_CIE-XYZ_HDR-VIDEO-2000nit-15nit-P3lim_1.1", 
+        registry.addBuiltin("ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-VIDEO-2000nit-15nit-P3lim_1.1", 
                             "Component of ACES Output Transforms for 2000 nit HDR D65 video",
                             ACES2065_1_to_CIE_XYZ_hdr_video_2000nits_p3lim_1_1_Functor);
     }
@@ -990,7 +990,7 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
             ACES_OUTPUT::Generate_nit_normalization_ops(ops, 4000.);
         };
 
-        registry.addBuiltin("ACES-OUTPUT--ACES_to_CIE-XYZ_HDR-VIDEO-4000nit-15nit-REC2020lim_1.1", 
+        registry.addBuiltin("ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-VIDEO-4000nit-15nit-REC2020lim_1.1", 
                             "Component of ACES Output Transforms for 4000 nit HDR D65 video",
                             ACES2065_1_to_CIE_XYZ_hdr_video_4000nits_rec2020lim_1_1_Functor);
     }
@@ -1007,7 +1007,7 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
             ACES_OUTPUT::Generate_nit_normalization_ops(ops, 4000.);
         };
 
-        registry.addBuiltin("ACES-OUTPUT--ACES_to_CIE-XYZ_HDR-VIDEO-4000nit-15nit-P3lim_1.1", 
+        registry.addBuiltin("ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-VIDEO-4000nit-15nit-P3lim_1.1", 
                             "Component of ACES Output Transforms for 4000 nit HDR D65 video",
                             ACES2065_1_to_CIE_XYZ_hdr_video_4000nits_p3lim_1_1_Functor);
     }
@@ -1024,7 +1024,7 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
             ACES_OUTPUT::Generate_nit_normalization_ops(ops, 108.);
         };
 
-        registry.addBuiltin("ACES-OUTPUT--ACES_to_CIE-XYZ_HDR-CINEMA-108nit-7.2nit-P3lim_1.1", 
+        registry.addBuiltin("ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-CINEMA-108nit-7.2nit-P3lim_1.1", 
                             "Component of ACES Output Transforms for 108 nit HDR D65 cinema",
                             ACES2065_1_to_CIE_XYZ_hdr_cinema_108nits_p3lim_1_1_Functor);
     }

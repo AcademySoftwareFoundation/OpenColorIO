@@ -82,7 +82,7 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
             CreateGammaOp(ops, gammaData, TRANSFORM_DIR_FORWARD);
         };
 
-        registry.addBuiltin("DISPLAY--CIE-XYZ-D65_to_REC.1886-REC.709", 
+        registry.addBuiltin("DISPLAY - CIE-XYZ-D65_to_REC.1886-REC.709", 
                             "Convert CIE XYZ (D65 white) to Rec.1886/Rec.709 (HD video)",
                             CIE_XYZ_D65_to_REC1886_REC709_Functor);
     }
@@ -101,7 +101,7 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
             CreateGammaOp(ops, gammaData, TRANSFORM_DIR_FORWARD);
         };
 
-        registry.addBuiltin("DISPLAY--CIE-XYZ-D65_to_REC.1886-REC.2020", 
+        registry.addBuiltin("DISPLAY - CIE-XYZ-D65_to_REC.1886-REC.2020", 
                             "Convert CIE XYZ (D65 white) to Rec.1886/Rec.2020 (UHD video)",
                             CIE_XYZ_D65_to_REC1886_REC2020_Functor);
     }
@@ -120,7 +120,7 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
             CreateGammaOp(ops, gammaData, TRANSFORM_DIR_FORWARD);
         };
 
-        registry.addBuiltin("DISPLAY--CIE-XYZ-D65_to_G2.2-REC.709", 
+        registry.addBuiltin("DISPLAY - CIE-XYZ-D65_to_G2.2-REC.709", 
                             "Convert CIE XYZ (D65 white) to Gamma2.2, Rec.709",
                             CIE_XYZ_D65_to_G22_REC709_Functor);
     }
@@ -139,7 +139,7 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
             CreateGammaOp(ops, gammaData, TRANSFORM_DIR_FORWARD);
         };
 
-        registry.addBuiltin("DISPLAY--CIE-XYZ-D65_to_sRGB", 
+        registry.addBuiltin("DISPLAY - CIE-XYZ-D65_to_sRGB", 
                             "Convert CIE XYZ (D65 white) to sRGB (piecewise EOTF)",
                             CIE_XYZ_D65_to_SRGB_Functor);
     }
@@ -158,7 +158,7 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
             CreateGammaOp(ops, gammaData, TRANSFORM_DIR_FORWARD);
         };
 
-        registry.addBuiltin("DISPLAY--CIE-XYZ-D65_to_G2.6-P3-DCI-BFD", 
+        registry.addBuiltin("DISPLAY - CIE-XYZ-D65_to_G2.6-P3-DCI-BFD", 
                             "Convert CIE XYZ (D65 white) to Gamma 2.6, P3-DCI (DCI white with Bradford adaptation)",
                             CIE_XYZ_D65_to_P3_DCI_BFD_Functor);
     }
@@ -177,7 +177,7 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
             CreateGammaOp(ops, gammaData, TRANSFORM_DIR_FORWARD);
         };
 
-        registry.addBuiltin("DISPLAY--CIE-XYZ-D65_to_G2.6-P3-D65", 
+        registry.addBuiltin("DISPLAY - CIE-XYZ-D65_to_G2.6-P3-D65", 
                             "Convert CIE XYZ (D65 white) to Gamma 2.6, P3-D65",
                             CIE_XYZ_D65_to_P3_D65_Functor);
     }
@@ -196,7 +196,7 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
             CreateGammaOp(ops, gammaData, TRANSFORM_DIR_FORWARD);
         };
 
-        registry.addBuiltin("DISPLAY--CIE-XYZ-D65_to_G2.6-P3-D60-BFD", 
+        registry.addBuiltin("DISPLAY - CIE-XYZ-D65_to_G2.6-P3-D60-BFD", 
                             "Convert CIE XYZ (D65 white) to Gamma 2.6, P3-D60 (Bradford adaptation)",
                             CIE_XYZ_D65_to_P3_D60_BFD_Functor);
     }
@@ -207,7 +207,7 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
             ST_2084::GeneratePQToLinearOps(ops);
         };
 
-        registry.addBuiltin("CURVE--ST-2084_to_LINEAR",
+        registry.addBuiltin("CURVE - ST-2084_to_LINEAR",
                             "Convert SMPTE ST-2084 (PQ) full-range to linear nits/100",
                             ST2084_to_Linear_Functor);
     }
@@ -218,7 +218,7 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
             ST_2084::GenerateLinearToPQOps(ops);
         };
 
-        registry.addBuiltin("CURVE--LINEAR_to_ST-2084",
+        registry.addBuiltin("CURVE - LINEAR_to_ST-2084",
                             "Convert linear nits/100 to SMPTE ST-2084 (PQ) full-range",
                             Linear_to_ST2084_Functor);
     }
@@ -233,7 +233,7 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
             ST_2084::GenerateLinearToPQOps(ops);
         };
 
-        registry.addBuiltin("DISPLAY--CIE-XYZ-D65_to_REC.2100-PQ", 
+        registry.addBuiltin("DISPLAY - CIE-XYZ-D65_to_REC.2100-PQ", 
                             "Convert CIE XYZ (D65 white) to Rec.2100-PQ",
                             CIE_XYZ_D65_to_REC2100_PQ_Functor);
     }
@@ -248,7 +248,7 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
             ST_2084::GenerateLinearToPQOps(ops);
         };
 
-        registry.addBuiltin("DISPLAY--CIE-XYZ-D65_to_ST2084-P3-D65", 
+        registry.addBuiltin("DISPLAY - CIE-XYZ-D65_to_ST2084-P3-D65", 
                             "Convert CIE XYZ (D65 white) to ST-2084 (PQ), P3-D65 primaries",
                             CIE_XYZ_D65_to_ST2084_P3_D65_Functor);
     }
@@ -301,7 +301,7 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
             CreateHalfLut(ops, GenerateLutValues);
         };
 
-        registry.addBuiltin("DISPLAY--CIE-XYZ-D65_to_REC.2100-HLG-1000nit", 
+        registry.addBuiltin("DISPLAY - CIE-XYZ-D65_to_REC.2100-HLG-1000nit", 
                             "Convert CIE XYZ (D65 white) to Rec.2100-HLG, 1000 nit",
                             CIE_XYZ_D65_to_REC2100_HLG_1000nit_Functor);
     }

@@ -29,8 +29,8 @@ OCIO_ADD_TEST(BuiltinTransform, creation)
     OCIO_CHECK_EQUAL(std::string(blt->getStyle()), "IDENTITY");
     OCIO_CHECK_NO_THROW(blt->validate());
 
-    OCIO_CHECK_NO_THROW(blt->setStyle("UTILITY--ACES-AP0_to_CIE-XYZ-D65_BFD"));
-    OCIO_CHECK_EQUAL(std::string(blt->getStyle()), "UTILITY--ACES-AP0_to_CIE-XYZ-D65_BFD");
+    OCIO_CHECK_NO_THROW(blt->setStyle("UTILITY - ACES-AP0_to_CIE-XYZ-D65_BFD"));
+    OCIO_CHECK_EQUAL(std::string(blt->getStyle()), "UTILITY - ACES-AP0_to_CIE-XYZ-D65_BFD");
     OCIO_CHECK_NO_THROW(blt->validate());
 
     OCIO_CHECK_EQUAL(std::string("Convert ACES AP0 primaries to CIE XYZ with a D65 white point with Bradford adaptation"),
@@ -41,13 +41,13 @@ OCIO_ADD_TEST(BuiltinTransform, creation)
     OCIO_CHECK_NO_THROW(blt->validate());
 
     // The style is case insensitive.
-    OCIO_CHECK_NO_THROW(blt->setStyle("UTILITY--ACES-AP0_to_cie-xyz-D65_BFD"));
+    OCIO_CHECK_NO_THROW(blt->setStyle("UTILITY - ACES-AP0_to_cie-xyz-D65_BFD"));
     OCIO_CHECK_NO_THROW(blt->validate());
 
     // Try an unknown style.
-    OCIO_CHECK_THROW_WHAT(blt->setStyle("UTILITY--ACES-AP0_to_CIE-XYZ-D65_BFD_UNKNOWN"),
+    OCIO_CHECK_THROW_WHAT(blt->setStyle("UTILITY - ACES-AP0_to_CIE-XYZ-D65_BFD_UNKNOWN"),
                           OCIO::Exception,
-                          "BuiltinTransform: invalid built-in transform style 'UTILITY--ACES-AP0_to_CIE-XYZ-D65_BFD_UNKNOWN'.");
+                          "BuiltinTransform: invalid built-in transform style 'UTILITY - ACES-AP0_to_CIE-XYZ-D65_BFD_UNKNOWN'.");
 }
 
 OCIO_ADD_TEST(BuiltinTransform, access)
@@ -57,7 +57,7 @@ OCIO_ADD_TEST(BuiltinTransform, access)
     OCIO_CHECK_EQUAL(std::string("IDENTITY"),
                      OCIO::BuiltinTransformRegistry::Get()->getBuiltinStyle(0));
 
-    OCIO_CHECK_EQUAL(std::string("UTILITY--ACES-AP0_to_CIE-XYZ-D65_BFD"),
+    OCIO_CHECK_EQUAL(std::string("UTILITY - ACES-AP0_to_CIE-XYZ-D65_BFD"),
                      OCIO::BuiltinTransformRegistry::Get()->getBuiltinStyle(1));
 
     OCIO_CHECK_EQUAL(std::string("Convert ACES AP0 primaries to CIE XYZ with a D65 white point with Bradford adaptation"),
@@ -343,7 +343,6 @@ void ValidateBuiltinTransform(const char * style, const Values & in, const Value
     OCIO::ConstCPUProcessorRcPtr cpu;
     // Use lossless mode for these tests (e.g. FAST_LOG_EXP_POW limits to about 4 sig. digits).
     OCIO_CHECK_NO_THROW_FROM(cpu = proc->getOptimizedCPUProcessor(OCIO::OPTIMIZATION_LOSSLESS), lineNo);
-//     OCIO_CHECK_NO_THROW_FROM(cpu = proc->getOptimizedCPUProcessor(OCIO::OPTIMIZATION_NONE), lineNo);
 
     OCIO::PackedImageDesc inDesc((void *)&in[0], long(in.size() / 3), 1, 3);
 
@@ -369,13 +368,13 @@ AllValues UnitTestValues
     { "IDENTITY",
         { { 0.5f, 0.4f, 0.3f }, { 0.5f,            0.4f,            0.3f } } },
 
-    { "UTILITY--ACES-AP0_to_CIE-XYZ-D65_BFD",
+    { "UTILITY - ACES-AP0_to_CIE-XYZ-D65_BFD",
         { { 0.5f, 0.4f, 0.3f }, { 0.472347603390f, 0.440425934827f, 0.326581044758f } } },
-    { "UTILITY--ACES-AP1_to_CIE-XYZ-D65_BFD",
+    { "UTILITY - ACES-AP1_to_CIE-XYZ-D65_BFD",
         { { 0.5f, 0.4f, 0.3f }, { 0.428407900093f, 0.420968434905f, 0.325777868096f } } },
-    { "UTILITY--ACES-AP1_to_LINEAR-REC709_BFD",
+    { "UTILITY - ACES-AP1_to_LINEAR-REC709_BFD",
         { { 0.5f, 0.4f, 0.3f }, { 0.578830986466f, 0.388029190156f, 0.282302431033f } } },
-    { "CURVE--ACEScct-LOG_to_LINEAR",
+    { "CURVE - ACEScct-LOG_to_LINEAR",
         { { 0.5f, 0.4f, 0.3f }, { 0.514056913328f, 0.152618314084f, 0.045310838527f } } },
     { "ACEScct_to_ACES2065-1",
         { { 0.5f, 0.4f, 0.3f }, { 0.386397222658f, 0.158557251811f, 0.043152537925f } } },
@@ -391,41 +390,41 @@ AllValues UnitTestValues
         { { 0.5f, 0.4f, 0.3f }, { 0.210518101020f, 0.148655364394f, 0.085189053481f } } },
     { "ADX16_to_ACES2065-1",
         { { 0.125f, 0.1f, 0.075f }, { 0.211320835792f, 0.149169650771f, 0.085452970479f } } },
-    { "ACES-LMT--BLUE_LIGHT_ARTIFACT_FIX",
+    { "ACES-LMT - BLUE_LIGHT_ARTIFACT_FIX",
         { { 0.5f, 0.4f, 0.3f }, { 0.48625676579f,  0.38454173877f,  0.30002108779f } } },
 
-    { "ACES-OUTPUT--ACES_to_CIE-XYZ_SDR-CINEMA_1.0",
+    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-CINEMA_1.0",
         { { 0.5f, 0.4f, 0.3f }, { 0.33629957f,     0.31832799f,     0.22867827f } } },
-    { "ACES-OUTPUT--ACES_to_CIE-XYZ_SDR-VIDEO_1.0",
+    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-VIDEO_1.0",
         { { 0.5f, 0.4f, 0.3f }, { 0.34128153f,     0.32533440f,     0.24217427f } } },
-    { "ACES-OUTPUT--ACES_to_CIE-XYZ_SDR-CINEMA-REC709lim_1.1",
+    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-CINEMA-REC709lim_1.1",
         { { 0.5f, 0.4f, 0.3f }, { 0.33629954f,     0.31832793f,     0.22867827f } } },
-    { "ACES-OUTPUT--ACES_to_CIE-XYZ_SDR-VIDEO-REC709lim_1.1",
+    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-VIDEO-REC709lim_1.1",
         { { 0.5f, 0.4f, 0.3f }, { 0.34128147f,     0.32533434f,     0.24217427f } } },
-    { "ACES-OUTPUT--ACES_to_CIE-XYZ_SDR-VIDEO-P3lim_1.1",
+    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-VIDEO-P3lim_1.1",
         { { 0.5f, 0.4f, 0.3f }, { 0.34128150f,     0.32533440f,     0.24217424f } } },
-    { "ACES-OUTPUT--ACES_to_CIE-XYZ_SDR-CINEMA-D60sim-D65_1.1",
+    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-CINEMA-D60sim-D65_1.1",
         { { 0.5f, 0.4f, 0.3f }, { 0.32699189f,     0.30769098f,     0.20432013f } } },
-    { "ACES-OUTPUT--ACES_to_CIE-XYZ_SDR-VIDEO-D60sim-D65_1.0",
+    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-VIDEO-D60sim-D65_1.0",
         { { 0.5f, 0.4f, 0.3f }, { 0.32889283f,     0.31174013f,     0.21453267f } } },
-    { "ACES-OUTPUT--ACES_to_CIE-XYZ_SDR-CINEMA-D60sim-DCI_1.0",
+    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-CINEMA-D60sim-DCI_1.0",
         { { 0.5f, 0.4f, 0.3f }, { 0.34226444f,     0.30731421f,     0.23189434f } } },
-    { "ACES-OUTPUT--ACES_to_CIE-XYZ_SDR-CINEMA-D65sim-DCI_1.1",
+    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-CINEMA-D65sim-DCI_1.1",
         { { 0.5f, 0.4f, 0.3f }, { 0.33882778f,     0.30572337f,     0.24966924f } } },
 
-    { "ACES-OUTPUT--ACES_to_CIE-XYZ_HDR-VIDEO-1000nit-15nit-REC2020lim_1.1",
+    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-VIDEO-1000nit-15nit-REC2020lim_1.1",
         { { 0.5f, 0.4f, 0.3f }, { 0.48334542f,     0.45336276f,     0.32364485f } } },
-    { "ACES-OUTPUT--ACES_to_CIE-XYZ_HDR-VIDEO-1000nit-15nit-P3lim_1.1",
+    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-VIDEO-1000nit-15nit-P3lim_1.1",
         { { 0.5f, 0.4f, 0.3f }, { 0.48334542f,     0.45336276f,     0.32364485f } } },
-    { "ACES-OUTPUT--ACES_to_CIE-XYZ_HDR-VIDEO-2000nit-15nit-REC2020lim_1.1",
+    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-VIDEO-2000nit-15nit-REC2020lim_1.1",
         { { 0.5f, 0.4f, 0.3f }, { 0.50538367f,     0.47084737f,     0.32972121f } } },
-    { "ACES-OUTPUT--ACES_to_CIE-XYZ_HDR-VIDEO-2000nit-15nit-P3lim_1.1",
+    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-VIDEO-2000nit-15nit-P3lim_1.1",
         { { 0.5f, 0.4f, 0.3f }, { 0.50538367f,     0.47084737f,     0.32972121f } } },
-    { "ACES-OUTPUT--ACES_to_CIE-XYZ_HDR-VIDEO-4000nit-15nit-REC2020lim_1.1",
+    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-VIDEO-4000nit-15nit-REC2020lim_1.1",
         { { 0.5f, 0.4f, 0.3f }, { 0.52311981f,     0.48482567f,     0.33447576f } } },
-    { "ACES-OUTPUT--ACES_to_CIE-XYZ_HDR-VIDEO-4000nit-15nit-P3lim_1.1",
+    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-VIDEO-4000nit-15nit-P3lim_1.1",
         { { 0.5f, 0.4f, 0.3f }, { 0.52311981f,     0.48482567f,     0.33447576f } } },
-    { "ACES-OUTPUT--ACES_to_CIE-XYZ_HDR-CINEMA-108nit-7.2nit-P3lim_1.1",
+    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-CINEMA-108nit-7.2nit-P3lim_1.1",
         { { 0.5f, 0.4f, 0.3f }, { 0.22214814f,     0.21179835f,     0.15639816f } } },
 
     { "ARRI_ALEXA-LOGC-EI800-AWG_to_ACES2065-1",
@@ -449,30 +448,30 @@ AllValues UnitTestValues
     { "SONY_SLOG3-SGAMUT3.CINE-VENICE_to_ACES2065-1",
         { { 0.5f, 0.4f, 0.3f }, { 0.32222527f,     0.17032611f,      0.04477848f } } },
 
-    { "DISPLAY--CIE-XYZ-D65_to_REC.1886-REC.709",
+    { "DISPLAY - CIE-XYZ-D65_to_REC.1886-REC.709",
         { { 0.5f, 0.4f, 0.3f }, { 0.937245093108f, 0.586817090358f,  0.573498106368f } } },
-    { "DISPLAY--CIE-XYZ-D65_to_REC.1886-REC.2020",
+    { "DISPLAY - CIE-XYZ-D65_to_REC.1886-REC.2020",
         { { 0.5f, 0.4f, 0.3f }, { 0.830338272693f, 0.620393283803f,  0.583385370254f } } },
-    { "DISPLAY--CIE-XYZ-D65_to_G2.2-REC.709",
+    { "DISPLAY - CIE-XYZ-D65_to_G2.2-REC.709",
         { { 0.5f, 0.4f, 0.3f }, { 0.931739212204f, 0.559058879141f,  0.545230761999f } } },
-    { "DISPLAY--CIE-XYZ-D65_to_sRGB",
+    { "DISPLAY - CIE-XYZ-D65_to_sRGB",
         { { 0.5f, 0.4f, 0.3f }, { 0.933793573229f, 0.564092030327f,  0.550040502218f } } },
-    { "DISPLAY--CIE-XYZ-D65_to_G2.6-P3-DCI-BFD",
+    { "DISPLAY - CIE-XYZ-D65_to_G2.6-P3-DCI-BFD",
         { { 0.5f, 0.4f, 0.3f }, { 0.908856342287f, 0.627840575107f,  0.608053675805f } } },
-    { "DISPLAY--CIE-XYZ-D65_to_G2.6-P3-D65",
+    { "DISPLAY - CIE-XYZ-D65_to_G2.6-P3-D65",
         { { 0.5f, 0.4f, 0.3f }, { 0.896805202281f, 0.627254277624f,  0.608228132100f } } },
-    { "DISPLAY--CIE-XYZ-D65_to_G2.6-P3-D60-BFD",
+    { "DISPLAY - CIE-XYZ-D65_to_G2.6-P3-D60-BFD",
         { { 0.5f, 0.4f, 0.3f }, { 0.892433142142f, 0.627011653770f,  0.608093643982f } } },
 
-    { "CURVE--ST-2084_to_LINEAR",
+    { "CURVE - ST-2084_to_LINEAR",
         { { 0.5f, 0.4f, 0.3f }, { 0.922457089941f, 0.324479178538f,  0.100382263105f } } },
-    { "CURVE--LINEAR_to_ST-2084",
+    { "CURVE - LINEAR_to_ST-2084",
         { { 0.5f, 0.4f, 0.3f }, { 0.440281573420f, 0.419284117712f,  0.392876186489f } } },
-    { "DISPLAY--CIE-XYZ-D65_to_REC.2100-PQ",
+    { "DISPLAY - CIE-XYZ-D65_to_REC.2100-PQ",
         { { 0.5f, 0.4f, 0.3f }, { 0.464008302136f, 0.398157119110f,  0.384828370950f } } },
-    { "DISPLAY--CIE-XYZ-D65_to_ST2084-P3-D65",
+    { "DISPLAY - CIE-XYZ-D65_to_ST2084-P3-D65",
         { { 0.5f, 0.4f, 0.3f }, { 0.479939091128f, 0.392091860770f,  0.384886051856f } } },
-    { "DISPLAY--CIE-XYZ-D65_to_REC.2100-HLG-1000nit",
+    { "DISPLAY - CIE-XYZ-D65_to_REC.2100-HLG-1000nit",
         { { 0.5f, 0.4f, 0.3f }, { 0.5649694f,      0.4038837f,       0.3751478f } } }
 };
 

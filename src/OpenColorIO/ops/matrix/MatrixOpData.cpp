@@ -750,7 +750,6 @@ void MatrixOpData::cleanUp(double offsetScale)
     // args.  In any case, the tolerance is small enough to pick up anything
     // that would be significant in the context of color management.
     const double scale = max_val > 1e-4 ? max_val : 1e-4;
-//    const double abs_tol = scale * 1e-6;
     const double abs_tol = scale * 1e-7;
 
     // Replace values that are close to integers by exact values.
