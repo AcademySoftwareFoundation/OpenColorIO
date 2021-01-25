@@ -110,7 +110,6 @@ void CreateHalfLut(OpRcPtrVec & ops, std::function<float(double)> lutValueGenera
                                                          65536, true);
     lut->setInterpolation(INTERP_LINEAR);
     lut->setDirection(TRANSFORM_DIR_FORWARD);
-    lut->setFileOutputBitDepth(BIT_DEPTH_F16);
 
     Array & array = lut->getArray();
     Array::Values & values = array.getValues();

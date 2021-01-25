@@ -94,6 +94,52 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
                             "Convert Sony S-Log3 S-Gamut3.Cine to ACES2065-1",
                             SONY_SLOG3_SGAMUT3_CINE_to_ACES2065_1_Functor);
     }
+
+    {
+        auto SONY_SLOG3_SGAMUT3_VENICE_to_ACES2065_1_Functor = [](OpRcPtrVec & ops)
+        {
+            LogOpDataRcPtr log = SONY_SLOG3_to_LINEAR::log.clone();
+            CreateLogOp(ops, log, TRANSFORM_DIR_FORWARD);
+
+            // NB: Primaries were not provided for this case, only the matrix.
+            // Note that in CTL, the matrices are stored transposed.
+            static constexpr double SGAMUT3_VENICE[4 * 4]
+            {
+                0.7933297411,  0.0890786256,  0.1175916333, 0., 
+                0.0155810585,  1.0327123069, -0.0482933654, 0., 
+               -0.0188647478,  0.0127694121,  1.0060953358, 0., 
+                0., 0., 0., 1.
+            };
+            CreateMatrixOp(ops, &SGAMUT3_VENICE[0], TRANSFORM_DIR_FORWARD);
+        };
+
+        registry.addBuiltin("SONY_SLOG3-SGAMUT3-VENICE_to_ACES2065-1",
+                            "Convert Sony S-Log3 S-Gamut3 for the Venice camera to ACES2065-1",
+                            SONY_SLOG3_SGAMUT3_VENICE_to_ACES2065_1_Functor);
+    }
+
+    {
+        auto SONY_SLOG3_SGAMUT3_CINE_VENICE_to_ACES2065_1_Functor = [](OpRcPtrVec & ops)
+        {
+            LogOpDataRcPtr log = SONY_SLOG3_to_LINEAR::log.clone();
+            CreateLogOp(ops, log, TRANSFORM_DIR_FORWARD);
+
+            // NB: Primaries were not provided for this case, only the matrix.
+            // Note that in CTL, the matrices are stored transposed.
+            static constexpr double SGAMUT3_CINE_VENICE[4 * 4]
+            {
+                0.6742570921,  0.2205717359,  0.1051711720, 0., 
+               -0.0093136061,  1.1059588614, -0.0966452553, 0., 
+               -0.0382090673, -0.0179383766,  1.0561474439, 0., 
+                0., 0., 0., 1.
+            };
+            CreateMatrixOp(ops, &SGAMUT3_CINE_VENICE[0], TRANSFORM_DIR_FORWARD);
+        };
+
+        registry.addBuiltin("SONY_SLOG3-SGAMUT3.CINE-VENICE_to_ACES2065-1", 
+                            "Convert Sony S-Log3 S-Gamut3.Cine for the Venice camera to ACES2065-1",
+                            SONY_SLOG3_SGAMUT3_CINE_VENICE_to_ACES2065_1_Functor);
+    }
 }
 
 } // namespace SONY
