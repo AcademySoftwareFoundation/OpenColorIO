@@ -17,9 +17,8 @@ void bindPyMatrixTransform(py::module & m)
     DEFAULT->getOffset(DEFAULT_OFFSET.data());
 
     auto clsMatrixTransform = 
-        py::class_<MatrixTransform, MatrixTransformRcPtr /* holder */, Transform /* base */>(
-            m, "MatrixTransform", 
-            DOC(MatrixTransform))
+        py::class_<MatrixTransform, MatrixTransformRcPtr, Transform>(
+            m.attr("MatrixTransform"))
 
         .def(py::init(&MatrixTransform::Create), 
              DOC(MatrixTransform, Create))
@@ -155,7 +154,7 @@ void bindPyMatrixTransform(py::module & m)
         .def("setFileOutputBitDepth", &MatrixTransform::setFileOutputBitDepth, "bitDepth"_a, 
              DOC(MatrixTransform, setFileOutputBitDepth));
 
-    defStr(clsMatrixTransform);
+    defRepr(clsMatrixTransform);
 }
 
 } // namespace OCIO_NAMESPACE

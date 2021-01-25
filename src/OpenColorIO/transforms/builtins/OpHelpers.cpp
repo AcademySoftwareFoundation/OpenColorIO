@@ -55,7 +55,8 @@ void CreateLut(OpRcPtrVec & ops,
                unsigned long lutDimension,
                std::function<float(double)> lutValueGenerator)
 {
-    Lut1DOpDataRcPtr lut = std::make_shared<Lut1DOpData>(Lut1DOpData::LUT_STANDARD, lutDimension);
+    Lut1DOpDataRcPtr lut = std::make_shared<Lut1DOpData>(Lut1DOpData::LUT_STANDARD,
+                                                         lutDimension, false);
     lut->setInterpolation(INTERP_LINEAR);
     lut->setDirection(TRANSFORM_DIR_FORWARD);
 
@@ -105,7 +106,8 @@ void CreateLut(OpRcPtrVec & ops,
 
 void CreateHalfLut(OpRcPtrVec & ops, std::function<float(double)> lutValueGenerator)
 {
-    Lut1DOpDataRcPtr lut = std::make_shared<Lut1DOpData>(Lut1DOpData::LUT_INPUT_HALF_CODE, 65536);
+    Lut1DOpDataRcPtr lut = std::make_shared<Lut1DOpData>(Lut1DOpData::LUT_INPUT_HALF_CODE,
+                                                         65536, true);
     lut->setInterpolation(INTERP_LINEAR);
     lut->setDirection(TRANSFORM_DIR_FORWARD);
     lut->setFileOutputBitDepth(BIT_DEPTH_F16);

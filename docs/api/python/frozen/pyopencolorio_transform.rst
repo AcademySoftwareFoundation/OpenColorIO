@@ -15,10 +15,6 @@
       Initialize self.  See help(type(self)) for accurate signature.
 
 
-   .. py:method:: Transform.__str__(self: PyOpenColorIO.Transform) -> str
-      :module: PyOpenColorIO
-
-
    .. py:method:: Transform.getDirection(self: PyOpenColorIO.Transform) -> PyOpenColorIO.TransformDirection
       :module: PyOpenColorIO
 

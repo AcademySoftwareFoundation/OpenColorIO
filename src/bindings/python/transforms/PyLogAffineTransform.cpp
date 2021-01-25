@@ -23,9 +23,8 @@ void bindPyLogAffineTransform(py::module & m)
     DEFAULT->getLinSideOffsetValue(*reinterpret_cast<double(*)[3]>(DEFAULT_LIN_SIDE_OFFSET.data()));
 
     auto clsLogAffineTransform = 
-        py::class_<LogAffineTransform, LogAffineTransformRcPtr /* holder */, Transform /* base */>(
-            m, "LogAffineTransform",
-            DOC(LogAffineTransform))
+        py::class_<LogAffineTransform, LogAffineTransformRcPtr, Transform>(
+            m.attr("LogAffineTransform"))
 
         .def(py::init(&LogAffineTransform::Create),
              DOC(LogAffineTransform, Create))
@@ -118,7 +117,7 @@ void bindPyLogAffineTransform(py::module & m)
              "values"_a,
              DOC(LogAffineTransform, setLinSideOffsetValue));
 
-    defStr(clsLogAffineTransform);
+    defRepr(clsLogAffineTransform);
 }
 
 } // namespace OCIO_NAMESPACE

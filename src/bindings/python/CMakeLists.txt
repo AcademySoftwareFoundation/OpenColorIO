@@ -56,50 +56,50 @@ set(SOURCES
 	apphelpers/PyDisplayViewHelpers.cpp
 	apphelpers/PyLegacyViewingPipeline.cpp
 	apphelpers/PyMixingHelpers.cpp
-	PyAllocationTransform.cpp
+	transforms/PyAllocationTransform.cpp
+	transforms/PyBuiltinTransform.cpp
+	transforms/PyCDLTransform.cpp
+	transforms/PyColorSpaceTransform.cpp
+	transforms/PyDisplayViewTransform.cpp
+	transforms/PyExponentTransform.cpp
+	transforms/PyExponentWithLinearTransform.cpp
+	transforms/PyExposureContrastTransform.cpp
+	transforms/PyFileTransform.cpp
+	transforms/PyFixedFunctionTransform.cpp
+	transforms/PyGradingPrimaryTransform.cpp
+	transforms/PyGradingRGBCurveTransform.cpp
+	transforms/PyGradingToneTransform.cpp
+	transforms/PyGroupTransform.cpp
+	transforms/PyLogAffineTransform.cpp
+	transforms/PyLogCameraTransform.cpp
+	transforms/PyLogTransform.cpp
+	transforms/PyLookTransform.cpp
+	transforms/PyLut1DTransform.cpp
+	transforms/PyLut3DTransform.cpp
+	transforms/PyMatrixTransform.cpp
+	transforms/PyRangeTransform.cpp
 	PyBaker.cpp
-	PyBuiltinTransform.cpp
 	PyBuiltinTransformRegistry.cpp
-	PyCDLTransform.cpp
 	PyColorSpace.cpp
 	PyColorSpaceSet.cpp
-	PyColorSpaceTransform.cpp
 	PyConfig.cpp
 	PyContext.cpp
 	PyCPUProcessor.cpp
-	PyDisplayViewTransform.cpp
 	PyDynamicProperty.cpp
-	PyExponentTransform.cpp
-	PyExponentWithLinearTransform.cpp
-	PyExposureContrastTransform.cpp
 	PyFileRules.cpp
-	PyFileTransform.cpp
-	PyFixedFunctionTransform.cpp
 	PyFormatMetadata.cpp
 	PyGPUProcessor.cpp
 	PyGpuShaderCreator.cpp
 	PyGpuShaderDesc.cpp
 	PyGradingData.cpp
-	PyGradingPrimaryTransform.cpp
-	PyGradingRGBCurveTransform.cpp
-	PyGradingToneTransform.cpp
-	PyGroupTransform.cpp
 	PyImageDesc.cpp
-	PyLogAffineTransform.cpp
-	PyLogCameraTransform.cpp
-	PyLogTransform.cpp
 	PyLook.cpp
-	PyLookTransform.cpp
-	PyLut1DTransform.cpp
-	PyLut3DTransform.cpp
-	PyMatrixTransform.cpp
 	PyNamedTransform.cpp
 	PyOpenColorIO.cpp
 	PyPackedImageDesc.cpp
 	PyPlanarImageDesc.cpp
 	PyProcessor.cpp
 	PyProcessorMetadata.cpp
-	PyRangeTransform.cpp
 	PySystemMonitors.cpp
 	PyTransform.cpp
 	PyTypes.cpp

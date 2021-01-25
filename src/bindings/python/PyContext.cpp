@@ -50,9 +50,8 @@ void bindPyContext(py::module & m)
     ContextRcPtr DEFAULT = Context::Create();
 
     auto clsContext = 
-        py::class_<Context, ContextRcPtr /* holder */>(
-            m, "Context", 
-            DOC(Context));
+        py::class_<Context, ContextRcPtr>(
+            m.attr("Context"));
 
     auto clsStringVarNameIterator = 
         py::class_<StringVarNameIterator>(
@@ -108,7 +107,7 @@ void bindPyContext(py::module & m)
             })
         .def("__len__", &Context::getNumStringVars, 
              DOC(Context, getNumStringVars))
-        .def("__getitem__", [](ContextRcPtr & self, const std::string & name) -> bool
+        .def("__getitem__", [](ContextRcPtr & self, const std::string & name) -> const char *
             { 
                 for (int i = 0; i < self->getNumStringVars(); i++)
                 {
@@ -192,7 +191,7 @@ void bindPyContext(py::module & m)
              "filename"_a, "usedContextVars"_a, 
              DOC(Context, resolveFileLocation, 2));
 
-    defStr(clsContext);
+    defRepr(clsContext);
 
     clsStringVarNameIterator
         .def("__len__", [](StringVarNameIterator & it) 

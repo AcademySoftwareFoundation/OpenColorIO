@@ -11,9 +11,8 @@ void bindPyLut1DTransform(py::module & m)
     Lut1DTransformRcPtr DEFAULT = Lut1DTransform::Create();
 
     auto clsLut1DTransform = 
-        py::class_<Lut1DTransform, Lut1DTransformRcPtr /* holder */, Transform /* base */>(
-            m, "Lut1DTransform", 
-            DOC(Lut1DTransform))
+        py::class_<Lut1DTransform, Lut1DTransformRcPtr, Transform>(
+            m.attr("Lut1DTransform"))
 
         .def(py::init([]() 
             { 
@@ -135,7 +134,7 @@ void bindPyLut1DTransform(py::module & m)
         .def("setInterpolation", &Lut1DTransform::setInterpolation, "interpolation"_a, 
              DOC(Lut1DTransform, setInterpolation));
 
-    defStr(clsLut1DTransform);
+    defRepr(clsLut1DTransform);
 }
 
 } // namespace OCIO_NAMESPACE

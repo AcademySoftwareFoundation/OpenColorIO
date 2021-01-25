@@ -8,10 +8,10 @@ namespace OCIO_NAMESPACE
 
 void bindPyTransform(py::module & m)
 { 
+    // Base class
     auto clsTransform = 
-        py::class_<Transform, TransformRcPtr /* holder */>(
-            m, "Transform", 
-            DOC(Transform))
+        py::class_<Transform, TransformRcPtr>(
+            m.attr("Transform"))
 
         .def("validate", &Transform::validate,
              DOC(Transform, validate))
@@ -22,11 +22,7 @@ void bindPyTransform(py::module & m)
         .def("setDirection", &Transform::setDirection, "direction"_a,
              DOC(Transform, setDirection));
 
-    defStr(clsTransform);
-
-    bindPyBuiltinTransformRegistry(m);
-    bindPyFormatMetadata(m);
-    bindPyDynamicProperty(m);
+    defRepr(clsTransform);
 
     // Subclasses
     bindPyAllocationTransform(m);

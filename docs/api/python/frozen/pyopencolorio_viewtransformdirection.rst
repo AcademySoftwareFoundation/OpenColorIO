@@ -24,3 +24,8 @@
       :module: PyOpenColorIO
       :value: <ViewTransformDirection.VIEWTRANSFORM_DIR_TO_REFERENCE: 0>
 
+
+   .. py:method:: ViewTransformDirection.value
+      :module: PyOpenColorIO
+      :property:
+

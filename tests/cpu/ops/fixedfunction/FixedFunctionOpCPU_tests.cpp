@@ -290,8 +290,8 @@ OCIO_ADD_TEST(FixedFunctionOpCPU, rec2100_surround)
 
     OCIO::FixedFunctionOpData::Params params = { 0.78 };
     OCIO::ConstFixedFunctionOpDataRcPtr funcData 
-        = std::make_shared<OCIO::FixedFunctionOpData>(params, 
-                                                      OCIO::FixedFunctionOpData::REC2100_SURROUND_FWD);
+        = std::make_shared<OCIO::FixedFunctionOpData>(OCIO::FixedFunctionOpData::REC2100_SURROUND_FWD,
+                                                      params);
 
     ApplyFixedFunction(&input_32f[0], &expected_32f[0], num_samples, 
                        funcData,
@@ -300,8 +300,8 @@ OCIO_ADD_TEST(FixedFunctionOpCPU, rec2100_surround)
 
     OCIO::FixedFunctionOpData::Params params_inv = { 1 / 0.78 };
     OCIO::ConstFixedFunctionOpDataRcPtr funcData2 
-        = std::make_shared<OCIO::FixedFunctionOpData>(params_inv, 
-                                                      OCIO::FixedFunctionOpData::REC2100_SURROUND_INV);
+        = std::make_shared<OCIO::FixedFunctionOpData>(OCIO::FixedFunctionOpData::REC2100_SURROUND_INV,
+                                                      params_inv);
 
     ApplyFixedFunction(&input2_32f[0], &expected_32f[0], num_samples, 
                        funcData2,

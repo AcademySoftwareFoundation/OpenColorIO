@@ -8,6 +8,10 @@
    :members:
    :undoc-members:
    :special-members: __init__, __str__
+   :exclude-members: AddedColorSpaceIterator
+
+.. autoclass:: PyOpenColorIO.ColorSpaceMenuHelper.AddedColorSpaceIterator
+   :special-members: __getitem__, __iter__, __len__, __next__
 
 .. autoclass:: PyOpenColorIO.ColorSpaceMenuHelper
    :members:

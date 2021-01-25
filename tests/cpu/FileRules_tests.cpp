@@ -882,7 +882,7 @@ OCIO_ADD_TEST(FileRules, rules_test)
     OCIO_CHECK_ASSERT(colorSpace != nullptr && 0 == strcmp(colorSpace, OCIO::ROLE_DEFAULT));
 
     // Note that parseColorSpaceFromString (used by the pathSearch rule) is tested with aliases
-    // in OCIO_ADD_TEST(Config, use_alias).
+    // and inactive color spaces in OCIO_ADD_TEST(Config, use_alias).
 }
 
 OCIO_ADD_TEST(FileRules, rules_priority)
@@ -944,6 +944,8 @@ colorspaces:
 OCIO_ADD_TEST(FileRules, config_default_missmatch)
 {
     constexpr char configDefaultMissmatch[] = { R"(ocio_profile_version: 2
+environment:
+  {}
 strictparsing: true
 roles:
   default: raw
@@ -984,6 +986,44 @@ file_rules:
     // The color space of the default role is preserved.
     auto cs = config->getColorSpace(OCIO::ROLE_DEFAULT);
     OCIO_CHECK_EQUAL(std::string("raw"), cs->getName());
+}
+
+OCIO_ADD_TEST(FileRules, config_no_default_role)
+{
+    // Test with a config that does not have a default role, nor a default color space.
+    // Default rule points to an existing color space.
+    constexpr char configNoDefault[] = { R"(ocio_profile_version: 2
+environment:
+  {}
+strictparsing: true
+roles:
+  role1: cs1
+  role2: cs2
+displays:
+  sRGB:
+  - !<View> {name: Raw, colorspace: raw}
+colorspaces:
+  - !<ColorSpace>
+      name: raw
+  - !<ColorSpace>
+      name: cs1
+  - !<ColorSpace>
+      name: cs2
+file_rules:
+  - !<Rule> {name: Default, colorspace: cs1}
+)" };
+
+    // As a warning message is expected, please mute it.
+    OCIO::LogGuard guard;
+
+    std::istringstream is;
+    is.str(configNoDefault);
+    OCIO::ConstConfigRcPtr config;
+    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+
+    OCIO_CHECK_ASSERT(guard.output().empty());
+
+    OCIO_CHECK_NO_THROW(config->validate());
 }
 
 OCIO_ADD_TEST(FileRules, config_default_no_colorspace)

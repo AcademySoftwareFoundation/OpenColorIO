@@ -11,9 +11,8 @@ void bindPyRangeTransform(py::module & m)
     RangeTransformRcPtr DEFAULT = RangeTransform::Create();
 
     auto clsRangeTransform = 
-        py::class_<RangeTransform, RangeTransformRcPtr /* holder */, Transform /* base */>(
-            m, "RangeTransform", 
-            DOC(RangeTransform))
+        py::class_<RangeTransform, RangeTransformRcPtr, Transform>(
+            m.attr("RangeTransform"))
 
         .def(py::init(&RangeTransform::Create),
              DOC(RangeTransform, Create))
@@ -71,8 +70,8 @@ void bindPyRangeTransform(py::module & m)
              DOC(RangeTransform, setMaxInValue))
         .def("hasMaxInValue", &RangeTransform::hasMaxInValue,
              DOC(RangeTransform, hasMaxInValue))
-        .def("unsetMaxOutValue", &RangeTransform::unsetMaxOutValue,
-             DOC(RangeTransform, unsetMaxOutValue))
+        .def("unsetMaxInValue", &RangeTransform::unsetMaxInValue,
+             DOC(RangeTransform, unsetMaxInValue))
         .def("getMinOutValue", &RangeTransform::getMinOutValue,
              DOC(RangeTransform, getMinOutValue))
         .def("setMinOutValue", &RangeTransform::setMinOutValue, "value"_a,
@@ -90,7 +89,7 @@ void bindPyRangeTransform(py::module & m)
         .def("unsetMaxOutValue", &RangeTransform::unsetMaxOutValue,
              DOC(RangeTransform, unsetMaxOutValue));
 
-    defStr(clsRangeTransform);
+    defRepr(clsRangeTransform);
 }
 
 } // namespace OCIO_NAMESPACE

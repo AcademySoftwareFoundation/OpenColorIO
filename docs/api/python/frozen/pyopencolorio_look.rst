@@ -17,10 +17,6 @@
       2. __init__(self: PyOpenColorIO.Look, name: str = '', processSpace: str = '', transform: PyOpenColorIO.Transform = None, inverseTransform: PyOpenColorIO.Transform = None, description: str = '') -> None
 
 
-   .. py:method:: Look.__str__(self: PyOpenColorIO.Look) -> str
-      :module: PyOpenColorIO
-
-
    .. py:method:: Look.getDescription(self: PyOpenColorIO.Look) -> str
       :module: PyOpenColorIO
 

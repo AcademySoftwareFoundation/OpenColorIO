@@ -6,6 +6,7 @@
 
 namespace OCIO_NAMESPACE
 {
+
 namespace
 {
 
@@ -29,7 +30,7 @@ using ColorSpaceLevelIterator = PyIterator<ColorSpaceMenuHelperRcPtr,
 
 void bindPyColorSpaceMenuHelpers(py::module & m)
 {
-    m.def_submodule("ColorSpaceHelpers")
+    auto mColorSpaceHelpers = m.def_submodule("ColorSpaceHelpers")
         .def("AddColorSpace", &ColorSpaceHelpers::AddColorSpace,
              "config"_a.none(false),
              "name"_a.none(false),
@@ -38,11 +39,26 @@ void bindPyColorSpaceMenuHelpers(py::module & m)
              "connectionColorSpaceName"_a.none(false),
              DOC(ColorSpaceHelpers, AddColorSpace));
 
-    auto params = py::class_<ColorSpaceMenuParameters, ColorSpaceMenuParametersRcPtr /* holder */>(
-        m, "ColorSpaceMenuParameters", DOC(ColorSpaceMenuParameters))
+    auto clsColorSpaceMenuParameters = 
+        py::class_<ColorSpaceMenuParameters, ColorSpaceMenuParametersRcPtr>(
+            m.attr("ColorSpaceMenuParameters"));
+
+    auto clsAddedColorSpaceIterator = 
+        py::class_<AddedColorSpaceIterator>(
+            clsColorSpaceMenuParameters, "AddedColorSpaceIterator");
+
+    auto clsColorSpaceMenuHelper =
+        py::class_<ColorSpaceMenuHelper, ColorSpaceMenuHelperRcPtr>(
+            m.attr("ColorSpaceMenuHelper"));
+
+    auto clsColorSpaceLevelIterator = 
+        py::class_<ColorSpaceLevelIterator>(
+            clsColorSpaceMenuHelper, "ColorSpaceLevelIterator");
+
+    clsColorSpaceMenuParameters
         .def(py::init(&ColorSpaceMenuParameters::Create),
-            "config"_a.none(false),
-            DOC(ColorSpaceMenuParameters, Create))
+             "config"_a.none(false),
+             DOC(ColorSpaceMenuParameters, Create))
         .def(py::init([](ConstConfigRcPtr config,
                          const std::string & role,
                          bool includeColorSpaces,
@@ -76,71 +92,72 @@ void bindPyColorSpaceMenuHelpers(py::module & m)
                  p->setIncludeNamedTransforms(includeNamedTransforms);
                  return p;
             }),
-            "config"_a.none(false),
-            "role"_a.none(false) = "",
-            "includeColorSpaces"_a = true,
-            "searchReferenceSpaceType"_a = SEARCH_REFERENCE_SPACE_ALL,
-            "includeNamedTransforms"_a = false,
-            "appCategories"_a.none(false) = "",
-            "encodings"_a.none(false) = "",
-            "userCategories"_a.none(false) = "",
-            "includeRoles"_a = false,
-            DOC(ColorSpaceMenuParameters, Create))
+             "config"_a.none(false),
+             "role"_a.none(false) = "",
+             "includeColorSpaces"_a = true,
+             "searchReferenceSpaceType"_a = SEARCH_REFERENCE_SPACE_ALL,
+             "includeNamedTransforms"_a = false,
+             "appCategories"_a.none(false) = "",
+             "encodings"_a.none(false) = "",
+             "userCategories"_a.none(false) = "",
+             "includeRoles"_a = false,
+             DOC(ColorSpaceMenuParameters, Create))
+
         .def("getConfig", &ColorSpaceMenuParameters::getConfig,
-            DOC(ColorSpaceMenuParameters, getConfig))
+             DOC(ColorSpaceMenuParameters, getConfig))
         .def("setConfig", &ColorSpaceMenuParameters::setConfig, "config"_a.none(false),
-            DOC(ColorSpaceMenuParameters, setConfig))
+             DOC(ColorSpaceMenuParameters, setConfig))
         .def("getRole", &ColorSpaceMenuParameters::getRole,
-            DOC(ColorSpaceMenuParameters, getRole))
+             DOC(ColorSpaceMenuParameters, getRole))
         .def("setRole", &ColorSpaceMenuParameters::setRole, "role"_a.none(false),
-            DOC(ColorSpaceMenuParameters, setRole))
+             DOC(ColorSpaceMenuParameters, setRole))
         .def("getIncludeColorSpaces", &ColorSpaceMenuParameters::getIncludeColorSpaces,
-            DOC(ColorSpaceMenuParameters, getIncludeColorSpaces))
+             DOC(ColorSpaceMenuParameters, getIncludeColorSpaces))
         .def("setIncludeColorSpaces", &ColorSpaceMenuParameters::setIncludeColorSpaces,
-            "includeColorSpaces"_a = true,
-            DOC(ColorSpaceMenuParameters, setIncludeColorSpaces))
+             "includeColorSpaces"_a = true,
+             DOC(ColorSpaceMenuParameters, setIncludeColorSpaces))
         .def("getSearchReferenceSpaceType", &ColorSpaceMenuParameters::getSearchReferenceSpaceType,
-            DOC(ColorSpaceMenuParameters, getSearchReferenceSpaceType))
+             DOC(ColorSpaceMenuParameters, getSearchReferenceSpaceType))
         .def("setSearchReferenceSpaceType", &ColorSpaceMenuParameters::setSearchReferenceSpaceType,
              "searchReferenceSpaceType"_a.none(false),
-            DOC(ColorSpaceMenuParameters, setSearchReferenceSpaceType))
+             DOC(ColorSpaceMenuParameters, setSearchReferenceSpaceType))
         .def("getIncludeNamedTransforms", &ColorSpaceMenuParameters::getIncludeNamedTransforms,
-            DOC(ColorSpaceMenuParameters, getIncludeNamedTransforms))
+             DOC(ColorSpaceMenuParameters, getIncludeNamedTransforms))
         .def("setIncludeNamedTransforms", &ColorSpaceMenuParameters::setIncludeNamedTransforms,
              "includeNamedTransforms"_a = true,
-            DOC(ColorSpaceMenuParameters, setIncludeNamedTransforms))
+             DOC(ColorSpaceMenuParameters, setIncludeNamedTransforms))
         .def("getEncodings", &ColorSpaceMenuParameters::getEncodings,
-            DOC(ColorSpaceMenuParameters, getEncodings))
+             DOC(ColorSpaceMenuParameters, getEncodings))
         .def("setEncodings", &ColorSpaceMenuParameters::setEncodings, "encodings"_a.none(false),
-            DOC(ColorSpaceMenuParameters, setEncodings))
+             DOC(ColorSpaceMenuParameters, setEncodings))
         .def("getAppCategories", &ColorSpaceMenuParameters::getAppCategories,
-            DOC(ColorSpaceMenuParameters, getAppCategories))
+             DOC(ColorSpaceMenuParameters, getAppCategories))
         .def("setAppCategories", &ColorSpaceMenuParameters::setAppCategories,
-            "appCategories"_a.none(false),
-            DOC(ColorSpaceMenuParameters, setAppCategories))
+             "appCategories"_a.none(false),
+             DOC(ColorSpaceMenuParameters, setAppCategories))
         .def("getUserCategories", &ColorSpaceMenuParameters::getUserCategories,
-            DOC(ColorSpaceMenuParameters, getUserCategories))
+             DOC(ColorSpaceMenuParameters, getUserCategories))
         .def("setUserCategories", &ColorSpaceMenuParameters::setUserCategories,
              "categories"_a.none(false),
-            DOC(ColorSpaceMenuParameters, setUserCategories))
+             DOC(ColorSpaceMenuParameters, setUserCategories))
         .def("getIncludeRoles", &ColorSpaceMenuParameters::getIncludeRoles,
-            DOC(ColorSpaceMenuParameters, getIncludeRoles))
+             DOC(ColorSpaceMenuParameters, getIncludeRoles))
         .def("setIncludeRoles", &ColorSpaceMenuParameters::setIncludeRoles,
-            "includeRoles"_a = true,
-            DOC(ColorSpaceMenuParameters, setIncludeRoles))
+             "includeRoles"_a = true,
+             DOC(ColorSpaceMenuParameters, setIncludeRoles))
         .def("addColorSpace", &ColorSpaceMenuParameters::addColorSpace,
-            "colorSpace"_a.none(false),
-            DOC(ColorSpaceMenuParameters, addColorSpace))
+             "colorSpace"_a.none(false),
+             DOC(ColorSpaceMenuParameters, addColorSpace))
         .def("getAddedColorSpaces", [](ColorSpaceMenuParametersRcPtr & self)
             {
                 return AddedColorSpaceIterator(self);
             })
         .def("clearAddedColorSpaces", &ColorSpaceMenuParameters::clearAddedColorSpaces,
-            DOC(ColorSpaceMenuParameters, clearAddedColorSpaces));
+             DOC(ColorSpaceMenuParameters, clearAddedColorSpaces));
 
-    defStr(params);
+    defRepr(clsColorSpaceMenuParameters);
 
-    py::class_<AddedColorSpaceIterator>(params, "AddedColorSpaceIterator")
+    clsAddedColorSpaceIterator
         .def("__len__", [](AddedColorSpaceIterator & it)
             {
                 return it.m_obj->getNumAddedColorSpaces();
@@ -160,39 +177,37 @@ void bindPyColorSpaceMenuHelpers(py::module & m)
                 return it.m_obj->getAddedColorSpace(i);
             });
 
-
-    auto clsColorSpaceMenuHelper =
-        py::class_<ColorSpaceMenuHelper, ColorSpaceMenuHelperRcPtr /* holder */>(
-            m, "ColorSpaceMenuHelper", DOC(ColorSpaceMenuHelper))
+    clsColorSpaceMenuHelper
         .def(py::init(&ColorSpaceMenuHelper::Create), "parameters"_a.none(false),
-            DOC(ColorSpaceMenuHelper, Create))
+             DOC(ColorSpaceMenuHelper, Create))
         .def("getNumColorSpaces", &ColorSpaceMenuHelper::getNumColorSpaces,
-            DOC(ColorSpaceMenuHelper, getNumColorSpaces))
+             DOC(ColorSpaceMenuHelper, getNumColorSpaces))
         .def("getName", &ColorSpaceMenuHelper::getName, "index"_a,
-            DOC(ColorSpaceMenuHelper, getName))
+             DOC(ColorSpaceMenuHelper, getName))
         .def("getUIName", &ColorSpaceMenuHelper::getUIName, "index"_a,
-            DOC(ColorSpaceMenuHelper, getUIName))
+             DOC(ColorSpaceMenuHelper, getUIName))
         .def("getIndexFromName", &ColorSpaceMenuHelper::getIndexFromName, "name"_a.none(false),
-            DOC(ColorSpaceMenuHelper, getIndexFromName))
+             DOC(ColorSpaceMenuHelper, getIndexFromName))
         .def("getIndexFromUIName", &ColorSpaceMenuHelper::getIndexFromUIName, "name"_a.none(false),
-            DOC(ColorSpaceMenuHelper, getIndexFromUIName))
+             DOC(ColorSpaceMenuHelper, getIndexFromUIName))
         .def("getDescription", &ColorSpaceMenuHelper::getDescription, "index"_a,
-            DOC(ColorSpaceMenuHelper, getDescription))
+             DOC(ColorSpaceMenuHelper, getDescription))
         .def("getFamily", &ColorSpaceMenuHelper::getFamily, "index"_a,
-            DOC(ColorSpaceMenuHelper, getFamily))
+             DOC(ColorSpaceMenuHelper, getFamily))
         .def("getHierarchyLevels",
              [](ColorSpaceMenuHelperRcPtr & self, size_t index)
-             {
+            {
                  return ColorSpaceLevelIterator(self, index);
-             }, "index"_a)
+            }, 
+             "index"_a)
         .def("getNameFromUIName", &ColorSpaceMenuHelper::getNameFromUIName, "name"_a.none(false),
-            DOC(ColorSpaceMenuHelper, getNameFromUIName))
+             DOC(ColorSpaceMenuHelper, getNameFromUIName))
         .def("getUINameFromName", &ColorSpaceMenuHelper::getUINameFromName, "name"_a.none(false),
-            DOC(ColorSpaceMenuHelper, getUINameFromName));
+             DOC(ColorSpaceMenuHelper, getUINameFromName));
 
-    defStr(clsColorSpaceMenuHelper);
+    defRepr(clsColorSpaceMenuHelper);
 
-    py::class_<ColorSpaceLevelIterator>(clsColorSpaceMenuHelper, "ColorSpaceLevelIterator")
+    clsColorSpaceLevelIterator
         .def("__len__", [](ColorSpaceLevelIterator & it)
              {
                  return it.m_obj->getNumHierarchyLevels(std::get<0>(it.m_args));
@@ -211,6 +226,6 @@ void bindPyColorSpaceMenuHelpers(py::module & m)
                  int i = it.nextIndex(static_cast<int>(it.m_obj->getNumHierarchyLevels(std::get<0>(it.m_args))));
                  return it.m_obj->getHierarchyLevel(std::get<0>(it.m_args), static_cast<size_t>(i));
              });
+}
 
-}
-}
+} // namespace OCIO_NAMESPACE
