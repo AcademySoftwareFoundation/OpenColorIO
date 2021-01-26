@@ -30,12 +30,33 @@
 
      FIXED_FUNCTION_XYZ_TO_LUV : CIE XYZ to 1976 CIELUV colour space (D65 white)
 
+     FIXED_FUNCTION_ACES_GAMUTMAP_02 : ACES 0.2 Gamut clamping algorithm -- NOT IMPLEMENTED YET.
+
+     FIXED_FUNCTION_ACES_GAMUTMAP_07 : ACES 0.7 Gamut clamping algorithm -- NOT IMPLEMENTED YET.
+
+     FIXED_FUNCTION_ACES_GAMUTMAP_13 : ACES 1.3 Gamut mapping algorithm -- NOT IMPLEMENTED YET.
+
    .. py:method:: name() -> str
       :property:
 
    .. py:attribute:: FixedFunctionStyle.FIXED_FUNCTION_ACES_DARK_TO_DIM_10
       :module: PyOpenColorIO
       :value: <FixedFunctionStyle.FIXED_FUNCTION_ACES_DARK_TO_DIM_10: 4>
+
+
+   .. py:attribute:: FixedFunctionStyle.FIXED_FUNCTION_ACES_GAMUTMAP_02
+      :module: PyOpenColorIO
+      :value: <FixedFunctionStyle.FIXED_FUNCTION_ACES_GAMUTMAP_02: 10>
+
+
+   .. py:attribute:: FixedFunctionStyle.FIXED_FUNCTION_ACES_GAMUTMAP_07
+      :module: PyOpenColorIO
+      :value: <FixedFunctionStyle.FIXED_FUNCTION_ACES_GAMUTMAP_07: 11>
+
+
+   .. py:attribute:: FixedFunctionStyle.FIXED_FUNCTION_ACES_GAMUTMAP_13
+      :module: PyOpenColorIO
+      :value: <FixedFunctionStyle.FIXED_FUNCTION_ACES_GAMUTMAP_13: 12>
 
 
    .. py:attribute:: FixedFunctionStyle.FIXED_FUNCTION_ACES_GLOW_03

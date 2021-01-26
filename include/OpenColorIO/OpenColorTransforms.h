@@ -1363,7 +1363,6 @@ public:
      * @endcode
      */
     virtual void write(const ConstConfigRcPtr & config,
-                       const ConstContextRcPtr & context,
                        const char * formatName,
                        std::ostream & os) const = 0;
 
@@ -1681,7 +1680,7 @@ public:
      * feature that was used in some versions of ACES.  This adjusts the hue
      * of the result to approximately match the input.
      */
-    virtual void setHueAdjust(Lut1DHueAdjust algo) noexcept = 0;
+    virtual void setHueAdjust(Lut1DHueAdjust algo) = 0;
 
     virtual Interpolation getInterpolation() const = 0;
     virtual void setInterpolation(Interpolation algo) = 0;

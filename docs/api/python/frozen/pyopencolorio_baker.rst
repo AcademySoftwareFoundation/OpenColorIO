@@ -145,6 +145,10 @@
 .. py:class:: FormatIterator
    :module: PyOpenColorIO.Baker
 
+   Iterator on LUT baker Formats.
+
+   Each item is a tuple containing format name and format extension.
+
 
    .. py:method:: FormatIterator.__getitem__(self: PyOpenColorIO.Baker.FormatIterator, arg0: int) -> tuple
       :module: PyOpenColorIO.Baker

@@ -417,8 +417,9 @@ enum BitDepth
 /// Used by :cpp:class`Lut1DTransform` to control optional hue restoration algorithm.
 enum Lut1DHueAdjust
 {
-    HUE_NONE = 0, // No adjustment.
-    HUE_DW3       // Algorithm used in ACES Output Transforms through v0.7.
+    HUE_NONE = 0, ///< No adjustment.
+    HUE_DW3,      ///< Algorithm used in ACES Output Transforms through v0.7.
+    HUE_WYPN      ///< Weighted Yellow Power Norm -- NOT IMPLEMENTED YET
 };
 
 /// Used by \ref PackedImageDesc to indicate the channel ordering of the image to process.
@@ -473,7 +474,10 @@ enum FixedFunctionStyle
     FIXED_FUNCTION_RGB_TO_HSV,          ///< Classic RGB to HSV function
     FIXED_FUNCTION_XYZ_TO_xyY,          ///< CIE XYZ to 1931 xy chromaticity coordinates
     FIXED_FUNCTION_XYZ_TO_uvY,          ///< CIE XYZ to 1976 u'v' chromaticity coordinates
-    FIXED_FUNCTION_XYZ_TO_LUV           ///< CIE XYZ to 1976 CIELUV colour space (D65 white)
+    FIXED_FUNCTION_XYZ_TO_LUV,          ///< CIE XYZ to 1976 CIELUV colour space (D65 white)
+    FIXED_FUNCTION_ACES_GAMUTMAP_02,    ///< ACES 0.2 Gamut clamping algorithm -- NOT IMPLEMENTED YET
+    FIXED_FUNCTION_ACES_GAMUTMAP_07,    ///< ACES 0.7 Gamut clamping algorithm -- NOT IMPLEMENTED YET
+    FIXED_FUNCTION_ACES_GAMUTMAP_13     ///< ACES 1.3 Gamut mapping algorithm -- NOT IMPLEMENTED YET
 };
 
 /// Enumeration of the :cpp:class:`ExposureContrastTransform` transform algorithms.

@@ -25,6 +25,7 @@ using WriteFormatIterator = PyIterator<GroupTransformRcPtr, IT_WRITE_FORMAT>;
 void bindPyGroupTransform(py::module & m)
 {
     GroupTransformRcPtr DEFAULT = GroupTransform::Create();
+    ConfigRcPtr EMPTY_CONFIG = Config::Create();
 
     auto clsGroupTransform = 
         py::class_<GroupTransform, GroupTransformRcPtr /* holder */, Transform /* base */>(
@@ -78,28 +79,44 @@ void bindPyGroupTransform(py::module & m)
         .def("prependTransform", &GroupTransform::prependTransform, "transform"_a,
              DOC(GroupTransform, prependTransform))
         .def("write", [](GroupTransformRcPtr & self,
-                         const ConstConfigRcPtr & config,
-                         const ConstContextRcPtr & context,
+                         ConstConfigRcPtr & config,
                          const std::string & formatName, 
                          const std::string & fileName) 
             {
+                if (!config)
+                {
+                    config = GetCurrentConfig();
+                }
+                if (!config)
+                {
+                    throw Exception("A config is required.");
+                }
                 std::ofstream f(fileName.c_str());
-                self->write(config, context, formatName.c_str(), f);
+                self->write(config, formatName.c_str(), f);
                 f.close();
             }, 
-             "config"_a, "context"_a, "formatName"_a, "fileName"_a,
+             "config"_a = EMPTY_CONFIG,
+             "formatName"_a.none(false), "fileName"_a.none(false),
              DOC(GroupTransform, write))
         .def("write", [](GroupTransformRcPtr & self,
                          const ConstConfigRcPtr & config,
-                         const ConstContextRcPtr & context,
                          const std::string & formatName)
             {
+                ConstConfigRcPtr cfg = config;
+                if (!config)
+                {
+                    cfg = GetCurrentConfig();
+                }
+                if (!cfg)
+                {
+                    throw Exception("A config is required.");
+                }
                 std::ostringstream os;
-                self->write(config, context, formatName.c_str(), os);
+                self->write(cfg, formatName.c_str(), os);
                 return os.str();
             }, 
-            "config"_a, "context"_a, "formatName"_a,
-             DOC(GroupTransform, write));
+            "config"_a = EMPTY_CONFIG, "formatName"_a,
+            DOC(GroupTransform, write));
 
     defRepr(clsGroupTransform);
 
