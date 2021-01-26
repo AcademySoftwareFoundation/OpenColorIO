@@ -1,9 +1,10 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright Contributors to the OpenColorIO Project.
 
+import logging
 import unittest
 
-import PyOpenColorIO as OCIO
+logger = logging.getLogger(__name__)
 
 try:
     import numpy as np
@@ -13,6 +14,9 @@ except ImportError:
         "Test case will lack significant coverage!"
     )
     np = None
+
+import PyOpenColorIO as OCIO
+
 
 class Lut1DTransformTest(unittest.TestCase):
 
