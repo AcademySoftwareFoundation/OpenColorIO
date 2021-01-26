@@ -20,20 +20,24 @@ using Texture3DIterator = PyIterator<GpuShaderDescRcPtr, IT_TEXTURE_3D>;
 
 struct Texture
 {
-    std::string textureName;
-    std::string samplerName;
-    unsigned width;
-    unsigned height;
-    GpuShaderDesc::TextureType channel;
-    Interpolation interpolation;
+    std::string m_textureName;
+    std::string m_samplerName;
+    unsigned m_width;
+    unsigned m_height;
+    GpuShaderDesc::TextureType m_channel;
+    Interpolation m_interpolation;
+    GpuShaderDescRcPtr m_shaderDesc;
+    int m_index;
 };
 
 struct Texture3D
 {
-    std::string textureName;
-    std::string samplerName;
-    unsigned edgelen;
-    Interpolation interpolation;
+    std::string m_textureName;
+    std::string m_samplerName;
+    unsigned m_edgelen;
+    Interpolation m_interpolation;
+    GpuShaderDescRcPtr m_shaderDesc;
+    int m_index;
 };
 
 } // namespace
@@ -108,8 +112,6 @@ void bindPyGpuShaderDesc(py::module & m)
                     DOC(GpuShaderDesc, CreateShaderDesc))  
 
         // 1D lut related methods
-        .def("getNumTextures", &GpuShaderDesc::getNumTextures, 
-             DOC(GpuShaderDesc, getNumTextures))
         .def("addTexture", [](GpuShaderDescRcPtr & self,
                               const std::string & textureName, 
                               const std::string & samplerName, 
@@ -152,48 +154,8 @@ void bindPyGpuShaderDesc(py::module & m)
             {
                 return TextureIterator(self);
             })
-        .def("getTextureValues", [](GpuShaderDescRcPtr & self, unsigned index) 
-            {
-                py::gil_scoped_release release;
-
-                const char * textureName = nullptr;
-                const char * samplerName = nullptr;
-                unsigned width, height;
-                GpuShaderDesc::TextureType channel;
-                Interpolation interpolation;
-                self->getTexture(index, textureName, samplerName, width, height, channel, 
-                                 interpolation);
-
-                ssize_t numChannels;
-
-                switch (channel)
-                {
-                    case GpuShaderDesc::TEXTURE_RED_CHANNEL:
-                        numChannels = 1;
-                        break;
-                    case GpuShaderDesc::TEXTURE_RGB_CHANNEL:
-                        numChannels = 3;
-                        break;
-                    default:
-                        throw Exception("Error: Unsupported texture type");
-                }
-
-                const float * values;
-                self->getTextureValues(index, values);
-
-                py::gil_scoped_acquire acquire;
-
-                return py::array(py::dtype("float32"), 
-                                 { height * width * numChannels },
-                                 { sizeof(float) },
-                                 values);
-            },
-             "index"_a, 
-             DOC(GpuShaderDesc, getTextureValues))
 
         // 3D lut related methods
-        .def("getNum3DTextures", &GpuShaderDesc::getNum3DTextures, 
-             DOC(GpuShaderDesc, getNum3DTextures))
         .def("add3DTexture", [](GpuShaderDescRcPtr & self,
                                 const std::string & textureName, 
                                 const std::string & samplerName, 
@@ -218,37 +180,41 @@ void bindPyGpuShaderDesc(py::module & m)
         .def("get3DTextures", [](GpuShaderDescRcPtr & self) 
             {
                 return Texture3DIterator(self);
-            })
-        .def("get3DTextureValues", [](GpuShaderDescRcPtr & self, unsigned index) 
-            {
-                py::gil_scoped_release release;
-
-                const char * textureName = nullptr;
-                const char * samplerName = nullptr;
-                unsigned edgelen;
-                Interpolation interpolation;
-                self->get3DTexture(index, textureName, samplerName, edgelen, interpolation);
-
-                const float * values;
-                self->get3DTextureValues(index, values);
-
-                py::gil_scoped_acquire acquire;
-                
-                return py::array(py::dtype("float32"), 
-                                 { edgelen*edgelen*edgelen * 3 },
-                                 { sizeof(float) },
-                                 values);
-            },
-             "index"_a, 
-             DOC(GpuShaderDesc, get3DTextureValues));
+            });
 
     clsTexture
-        .def_readonly("textureName", &Texture::textureName)
-        .def_readonly("samplerName", &Texture::samplerName)
-        .def_readonly("width", &Texture::width)
-        .def_readonly("height", &Texture::height)
-        .def_readonly("channel", &Texture::channel)
-        .def_readonly("interpolation", &Texture::interpolation);
+        .def_readonly("textureName", &Texture::m_textureName)
+        .def_readonly("samplerName", &Texture::m_samplerName)
+        .def_readonly("width", &Texture::m_width)
+        .def_readonly("height", &Texture::m_height)
+        .def_readonly("channel", &Texture::m_channel)
+        .def_readonly("interpolation", &Texture::m_interpolation)
+        .def("getValues", [](Texture & self)
+            {
+                py::gil_scoped_release release;
+            
+                const float * values;
+                self.m_shaderDesc->getTextureValues(self.m_index, values);
+            
+                ssize_t numChannels;
+                switch (self.m_channel)
+                {
+                case GpuShaderDesc::TEXTURE_RED_CHANNEL:
+                    numChannels = 1;
+                    break;
+                case GpuShaderDesc::TEXTURE_RGB_CHANNEL:
+                    numChannels = 3;
+                    break;
+                default:
+                    throw Exception("Error: Unsupported texture type");
+                }
+            
+                py::gil_scoped_acquire acquire;
+            
+                return py::array(py::dtype("float32"),
+                                 { self.m_height * self.m_width * numChannels },
+                                 { sizeof(float) }, values);
+            }, DOC(GpuShaderDesc, getTextureValues));
 
     clsTextureIterator
         .def("__len__", [](TextureIterator & it) { return it.m_obj->getNumTextures(); })
@@ -263,7 +229,8 @@ void bindPyGpuShaderDesc(py::module & m)
                 it.m_obj->getTexture(i, textureName, samplerName, width, height, channel, 
                                      interpolation);
 
-                return { textureName, samplerName, width, height, channel, interpolation };
+                return { textureName, samplerName, width, height, channel, interpolation,
+                         it.m_obj, i};
             })
         .def("__iter__", [](TextureIterator & it) -> TextureIterator & { return it; })
         .def("__next__", [](TextureIterator & it) -> Texture
@@ -278,14 +245,28 @@ void bindPyGpuShaderDesc(py::module & m)
                 it.m_obj->getTexture(i, textureName, samplerName, width, height, channel, 
                                      interpolation);
 
-                return { textureName, samplerName, width, height, channel, interpolation };
+                return { textureName, samplerName, width, height, channel, interpolation,
+                         it.m_obj, i};
             });
 
     clsTexture3D
-        .def_readonly("textureName", &Texture3D::textureName)
-        .def_readonly("samplerName", &Texture3D::samplerName)
-        .def_readonly("edgeLen", &Texture3D::edgelen)
-        .def_readonly("interpolation", &Texture3D::interpolation);
+        .def_readonly("textureName", &Texture3D::m_textureName)
+        .def_readonly("samplerName", &Texture3D::m_samplerName)
+        .def_readonly("edgeLen", &Texture3D::m_edgelen)
+        .def_readonly("interpolation", &Texture3D::m_interpolation)
+        .def("getValues", [](Texture3D & self)
+            {
+                py::gil_scoped_release release;
+        
+                const float * values;
+                self.m_shaderDesc->get3DTextureValues(self.m_index, values);
+        
+                py::gil_scoped_acquire acquire;
+        
+                return py::array(py::dtype("float32"),
+                                 { self.m_edgelen * self.m_edgelen * self.m_edgelen * 3 },
+                                 { sizeof(float) }, values);
+            }, DOC(GpuShaderDesc, get3DTextureValues));
 
     clsTexture3DIterator
         .def("__len__", [](Texture3DIterator & it) { return it.m_obj->getNum3DTextures(); })
@@ -298,7 +279,7 @@ void bindPyGpuShaderDesc(py::module & m)
                 Interpolation interpolation;
                 it.m_obj->get3DTexture(i, textureName, samplerName, edgelen, interpolation);
 
-                return { textureName, samplerName, edgelen, interpolation };
+                return { textureName, samplerName, edgelen, interpolation, it.m_obj, i };
             })
         .def("__iter__", [](Texture3DIterator & it) -> Texture3DIterator & { return it; })
         .def("__next__", [](Texture3DIterator & it) -> Texture3D
@@ -311,7 +292,7 @@ void bindPyGpuShaderDesc(py::module & m)
                 Interpolation interpolation;
                 it.m_obj->get3DTexture(i, textureName, samplerName, edgelen, interpolation);
 
-                return { textureName, samplerName, edgelen, interpolation };
+                return { textureName, samplerName, edgelen, interpolation, it.m_obj, i };
             });
 }
 
