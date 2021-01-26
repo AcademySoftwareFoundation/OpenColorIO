@@ -239,7 +239,23 @@ std::string BuildRegularExpression(const char * filePathPattern, const char * fi
 
     str += ")$";
 
-    return SanitizeRegularExpression(str);
+    std::string res;
+    try
+    {
+        res = SanitizeRegularExpression(str);
+    }
+    catch (std::regex_error & ex)
+    {
+        std::ostringstream oss;
+        oss << "File rules: invalid regular expression '"
+            << str
+            << "' built from pattern '" << filePathPattern
+            << " and extension '" << fileNameExtension << "': '"
+            << ex.what()
+            << "'.";
+        throw Exception(oss.str().c_str());
+    }
+    return res;
 }
 
 void ValidateRegularExpression(const char * regex)
@@ -462,7 +478,9 @@ public:
             const int rightMostColorSpaceIndex = ParseColorSpaceFromString(config, path);
             if (rightMostColorSpaceIndex >= 0)
             {
-                m_colorSpace = config.getColorSpaceNameByIndex(rightMostColorSpaceIndex);
+                m_colorSpace = config.getColorSpaceNameByIndex(SEARCH_REFERENCE_SPACE_ALL,
+                                                               COLORSPACE_ALL,
+                                                               rightMostColorSpaceIndex);
                 return true;
             }
             return false;
