@@ -18,7 +18,6 @@
 
 
 /*
-TODO: Move to .rst
 
 C++ API
 =======
@@ -187,45 +186,44 @@ extern OCIOEXPORT void UnsetEnvVariable(const char * name);
 extern OCIOEXPORT bool IsEnvVariablePresent(const char * name);
 
 ///////////////////////////////////////////////////////////////////////////
-// Config
-
-// TODO: Move to .rst
-//
-// A config defines all the color spaces to be available at runtime.
-//
-// The color configuration (:cpp:class:`Config`) is the main object for
-// interacting with this library. It encapsulates all of the information
-// necessary to use customized :cpp:class:`ColorSpaceTransform` and
-// :cpp:class:`DisplayViewTransform` operations.
-//
-// See the :ref:`user-guide` for more information on
-// selecting, creating, and working with custom color configurations.
-//
-// For applications interested in using only one color config at
-// a time (this is the vast majority of apps), their API would
-// traditionally get the global configuration and use that, as opposed to
-// creating a new one. This simplifies the use case for
-// plugins and bindings, as it alleviates the need to pass around configuration
-// handles.
-//
-// An example of an application where this would not be sufficient would be
-// a multi-threaded image proxy server (daemon), which wished to handle
-// multiple show configurations in a single process concurrently. This
-// app would need to keep multiple configurations alive, and to manage them
-// appropriately.
-//
-// Roughly speaking, a novice user should select a
-// default configuration that most closely approximates the use case
-// (animation, visual effects, etc.), and set the :envvar:`OCIO` environment
-// variable to point at the root of that configuration.
-//
-// \note
-//    Initialization using environment variables is typically preferable in
-//    a multi-app ecosystem, as it allows all applications to be
-//    consistently configured.
-//
-// See :ref:`developers-usageexamples`
-
+/**
+ * *Config* 
+ *
+ * A config defines all the color spaces to be available at runtime.
+ *
+ * The color configuration (:cpp:class:`Config`) is the main object for
+ * interacting with this library. It encapsulates all of the information
+ * necessary to use customized :cpp:class:`ColorSpaceTransform` and
+ * :cpp:class:`DisplayViewTransform` operations.
+ *
+ * See the :ref:`user-guide` for more information on
+ * selecting, creating, and working with custom color configurations.
+ *
+ * For applications interested in using only one color config at
+ * a time (this is the vast majority of apps), their API would
+ * traditionally get the global configuration and use that, as opposed to
+ * creating a new one. This simplifies the use case for
+ * plugins and bindings, as it alleviates the need to pass around configuration
+ * handles.
+ *
+ * An example of an application where this would not be sufficient would be
+ * a multi-threaded image proxy server (daemon), which wished to handle
+ * multiple show configurations in a single process concurrently. This
+ * app would need to keep multiple configurations alive, and to manage them
+ * appropriately.
+ *
+ * Roughly speaking, a novice user should select a
+ * default configuration that most closely approximates the use case
+ * (animation, visual effects, etc.), and set the :envvar:`OCIO` environment
+ * variable to point at the root of that configuration.
+ *
+ * \note
+ *    Initialization using environment variables is typically preferable in
+ *    a multi-app ecosystem, as it allows all applications to be
+ *    consistently configured.
+ *
+ * See :ref:`developers-usageexamples`
+ */
 /// Get the current configuration.
 extern OCIOEXPORT ConstConfigRcPtr GetCurrentConfig();
 
@@ -585,28 +583,28 @@ public:
      * @{
      */
 
-    // TODO: Move to .rst 
-    // The following methods only manipulate active displays and views. Active
-    // displays and views are defined from an env. variable or from the config file.
-    //
-    // Looks is a potentially comma (or colon) delimited list of lookNames,
-    // Where +/- prefixes are optionally allowed to denote forward/inverse
-    // look specification. (And forward is assumed in the absence of either)
+    /**
+     * The following methods only manipulate active displays and views. Active
+     * displays and views are defined from an env. variable or from the config file.
+     *
+     * Looks is a potentially comma (or colon) delimited list of lookNames,
+     * Where +/- prefixes are optionally allowed to denote forward/inverse
+     * look specification. (And forward is assumed in the absence of either)
 
-    // Add shared view (or replace existing one with same name).
-    // Shared views are defined at config level and can be referenced by several
-    // displays. Either provide a view transform and a display color space or
-    // just a color space (and a null view transform).  Looks, rule and description
-    // are optional, they can be null or empty.
-    //
-    // Shared views using a view transform may use the token <USE_DISPLAY_NAME>
-    // for the color space (see :c:var:`OCIO_VIEW_USE_DISPLAY_NAME`).  In that
-    // case, when the view is referenced in a display, the display color space
-    // that is used will be the one matching the display name.  In other words,
-    // the view will be customized based on the display it is used in.
-    // :cpp:func:`Config::validate` will throw if the config does not contain
-    // the matching display color space.
-    
+     * Add shared view (or replace existing one with same name).
+     * Shared views are defined at config level and can be referenced by several
+     * displays. Either provide a view transform and a display color space or
+     * just a color space (and a null view transform).  Looks, rule and description
+     * are optional, they can be null or empty.
+     *
+     * Shared views using a view transform may use the token <USE_DISPLAY_NAME>
+     * for the color space (see :c:var:`OCIO_VIEW_USE_DISPLAY_NAME`).  In that
+     * case, when the view is referenced in a display, the display color space
+     * that is used will be the one matching the display name.  In other words,
+     * the view will be customized based on the display it is used in.
+     * :cpp:func:`Config::validate` will throw if the config does not contain
+     * the matching display color space.
+     */
     /// Will throw if view or colorSpaceName are null or empty.
     void addSharedView(const char * view, const char * viewTransformName,
                        const char * colorSpaceName, const char * looks,
@@ -1149,64 +1147,63 @@ private:
 extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const Config&);
 
 
-
-// TODO: Move to .rst
-// FileRules
-// *********
-// The File Rules are a set of filepath to color space mappings that are evaluated
-// from first to last. The first rule to match is what determines which color space is
-// returned. There are four types of rules available. Each rule type has a name key that may
-// be used by applications to refer to that rule. Name values must be unique i.e. using a
-// case insensitive comparison. The other keys depend on the rule type:
-//
-// - Basic Rule: This is the basic rule type that uses Unix glob style pattern matching and
-//   is thus very easy to use. It contains the keys:
-//
-//   * name: Name of the rule
-//
-//   * colorspace: Color space name to be returned.
-//
-//   * pattern: Glob pattern to be used for the main part of the name/path.
-//
-//   * extension: Glob pattern to be used for the file extension. Note that if glob tokens
-//     are not used, the extension will be used in a non-case-sensitive way by default.
-//
-// - Regex Rule: This is similar to the basic rule but allows additional capabilities for
-//   power-users. It contains the keys:
-//
-//   * name: Name of the rule
-//
-//   * colorspace: Color space name to be returned.
-//
-//   * regex: Regular expression to be evaluated.
-//
-// - OCIO v1 style Rule: This rule allows the use of the OCIO v1 style, where the string
-//   is searched for color space names from the config. This rule may occur 0 or 1 times
-//   in the list. The position in the list prioritizes it with respect to the other rules.
-//   StrictParsing is not used. If no color space is found in the path, the rule will not
-//   match and the next rule will be considered.
-//   \see FileRules::insertPathSearchRule.
-//   It has the key:
-//
-//   * name: Must be "ColorSpaceNamePathSearch".
-//
-// - Default Rule: The file_rules must always end with this rule. If no prior rules match,
-//   this rule specifies the color space applications will use.
-//   \see FileRules::setDefaultRuleColorSpace.
-//   It has the keys:
-//
-//   * name: must be "Default".
-//
-//   * colorspace : Color space name to be returned.
-//
-// Custom string keys and associated string values may be used to convey app or
-// workflow-specific information, e.g. whether the color space should be left as is
-// or converted into a working space.
-//
-// Getters and setters are using the rule position, they will throw if the position is not
-// valid. If the rule at the specified position does not implement the requested property
-// getter will return NULL and setter will throw.
-//
+/**
+ * FileRules
+ * 
+ * The File Rules are a set of filepath to color space mappings that are evaluated
+ * from first to last. The first rule to match is what determines which color space is
+ * returned. There are four types of rules available. Each rule type has a name key that may
+ * be used by applications to refer to that rule. Name values must be unique i.e. using a
+ * case insensitive comparison. The other keys depend on the rule type:
+ *
+ * - Basic Rule: This is the basic rule type that uses Unix glob style pattern matching and
+ *   is thus very easy to use. It contains the keys:
+ *
+ *   * name: Name of the rule
+ *
+ *   * colorspace: Color space name to be returned.
+ *
+ *   * pattern: Glob pattern to be used for the main part of the name/path.
+ *
+ *   * extension: Glob pattern to be used for the file extension. Note that if glob tokens
+ *     are not used, the extension will be used in a non-case-sensitive way by default.
+ *
+ * - Regex Rule: This is similar to the basic rule but allows additional capabilities for
+ *   power-users. It contains the keys:
+ *
+ *   * name: Name of the rule
+ *
+ *   * colorspace: Color space name to be returned.
+ *
+ *   * regex: Regular expression to be evaluated.
+ *
+ * - OCIO v1 style Rule: This rule allows the use of the OCIO v1 style, where the string
+ *   is searched for color space names from the config. This rule may occur 0 or 1 times
+ *   in the list. The position in the list prioritizes it with respect to the other rules.
+ *   StrictParsing is not used. If no color space is found in the path, the rule will not
+ *   match and the next rule will be considered.
+ *   see \ref insertPathSearchRule.
+ *   It has the key:
+ *
+ *   * name: Must be "ColorSpaceNamePathSearch".
+ *
+ * - Default Rule: The file_rules must always end with this rule. If no prior rules match,
+ *   this rule specifies the color space applications will use.
+ *   see \ref setDefaultRuleColorSpace.
+ *   It has the keys:
+ *
+ *   * name: must be "Default".
+ *
+ *   * colorspace : Color space name to be returned.
+ *
+ * Custom string keys and associated string values may be used to convey app or
+ * workflow-specific information, e.g. whether the color space should be left as is
+ * or converted into a working space.
+ *
+ * Getters and setters are using the rule position, they will throw if the position is not
+ * valid. If the rule at the specified position does not implement the requested property
+ * getter will return NULL and setter will throw.
+ */
 
 class OCIOEXPORT FileRules
 {
@@ -1335,30 +1332,28 @@ extern OCIOEXPORT std::ostream & operator<< (std::ostream &, const FileRules &);
 
 
 
-
-// TODO: Move to .rst
-//
-// ViewingRules
-// ************
-// Viewing Rules allow config authors to filter the list of views an application should offer
-// based on the color space of an image.   For example, a config may define a large number of
-// views but not all of them may be appropriate for use with all color spaces.  E.g., some views
-// may be intended for use with scene-linear color space encodings and others with video color
-// space encodings.
-// 
-// Each rule has a name key for applications to refer to the rule.  Name values must be unique
-// (using case insensitive comparison). Viewing Rules may also have the following keys:
-//
-// * colorspaces: Either a single colorspace name or a list of names.
-//
-// * encodings: One or more strings to be found in the colorspace's encoding attribute.
-//   Either this attribute or colorspaces must be present, but not both.
-//
-// * custom : Allows arbitrary key / value string pairs, similar to FileRules.
-//
-// Getters and setters are using the rule position, they will throw if the position is not
-// valid.
-
+/**
+ * ViewingRules
+ * 
+ * Viewing Rules allow config authors to filter the list of views an application should offer
+ * based on the color space of an image.   For example, a config may define a large number of
+ * views but not all of them may be appropriate for use with all color spaces.  E.g., some views
+ * may be intended for use with scene-linear color space encodings and others with video color
+ * space encodings.
+ * 
+ * Each rule has a name key for applications to refer to the rule.  Name values must be unique
+ * (using case insensitive comparison). Viewing Rules may also have the following keys:
+ *
+ * * colorspaces: Either a single colorspace name or a list of names.
+ *
+ * * encodings: One or more strings to be found in the colorspace's encoding attribute.
+ *   Either this attribute or colorspaces must be present, but not both.
+ *
+ * * custom : Allows arbitrary key / value string pairs, similar to FileRules.
+ *
+ * Getters and setters are using the rule position, they will throw if the position is not
+ * valid.
+*/
 class OCIOEXPORT ViewingRules
 {
 public:
@@ -1459,21 +1454,20 @@ extern OCIOEXPORT std::ostream & operator<< (std::ostream &, const ViewingRules 
 //
 // ColorSpace
 //
-
-// TODO: Move to .rst
-// The *ColorSpace* is the state of an image with respect to colorimetry
-// and color encoding. Transforming images between different
-// *ColorSpaces* is the primary motivation for this library.
-//
-// While a complete discussion of color spaces is beyond the scope of
-// header documentation, traditional uses would be to have *ColorSpaces*
-// corresponding to: physical capture devices (known cameras, scanners),
-// and internal 'convenience' spaces (such as scene linear, logarithmic).
-//
-// *ColorSpaces* are specific to a particular image precision (float32,
-// uint8, etc.), and the set of ColorSpaces that provide equivalent mappings
-// (at different precisions) are referred to as a 'family'.
-
+/**
+ * The *ColorSpace* is the state of an image with respect to colorimetry
+ * and color encoding. Transforming images between different
+ * *ColorSpaces* is the primary motivation for this library.
+ *
+ * While a complete discussion of color spaces is beyond the scope of
+ * header documentation, traditional uses would be to have *ColorSpaces*
+ * corresponding to: physical capture devices (known cameras, scanners),
+ * and internal 'convenience' spaces (such as scene linear, logarithmic).
+ *
+ * *ColorSpaces* are specific to a particular image precision (float32,
+ * uint8, etc.), and the set of ColorSpaces that provide equivalent mappings
+ * (at different precisions) are referred to as a 'family'.
+ */
 class OCIOEXPORT ColorSpace
 {
 public:
@@ -1535,19 +1529,19 @@ public:
     // Categories
     //
 
-    // TODO: Move to .rst
-    // A category is used to allow applications to filter the list of color spaces
-    // they display in menus based on what that color space is used for.
-    //
-    // Here is an example config entry that could appear under a ColorSpace:
-    // categories: [ file-io, working-space, basic-3d ]
-    //
-    // The example contains three categories: 'file-io', 'working-space' and 'basic-3d'.
-    // Category strings are not case-sensitive and the order is not significant.
-    // There is no limit imposed on length or number. Although users may add
-    // their own categories, the strings will typically come from a fixed set
-    // listed in the documentation (similar to roles).
-
+     /**
+     * A category is used to allow applications to filter the list of color spaces
+     * they display in menus based on what that color space is used for.
+     *
+     * Here is an example config entry that could appear under a ColorSpace:
+     * categories: [ file-io, working-space, basic-3d ]
+     *
+     * The example contains three categories: 'file-io', 'working-space' and 'basic-3d'.
+     * Category strings are not case-sensitive and the order is not significant.
+     * There is no limit imposed on length or number. Although users may add
+     * their own categories, the strings will typically come from a fixed set
+     * listed in the documentation (similar to roles).
+     */
     /// Return true if the category is present.
     bool hasCategory(const char * category) const;
     /**
@@ -1576,79 +1570,69 @@ public:
     /// Clear all the categories.
     void clearCategories();
 
-    //
-    // Encodings
-    //
-
-    // TODO: Move to .rst
-    // It is sometimes useful for applications to group color spaces based on how the color values
-    // are digitally encoded.  For example, images in scene-linear, logarithmic, video, and data
-    // color spaces could have different default views.  Unlike the Family and EqualityGroup
-    // attributes of a color space, the list of Encodings is predefined in the OCIO documentation
-    // (rather than being config-specific) to make it easier for applications to utilize.
-    //
-    // Here is an example config entry that could appear under a ColorSpace:
-    // encoding: scene-linear
-    //
-    // Encoding strings are not case-sensitive. Although users may add their own encodings, the
-    // strings will typically come from a fixed set listed in the documentation (similar to roles).
-
+    /**
+     * *Encodings*
+     *
+     * It is sometimes useful for applications to group color spaces based on how the color values
+     * are digitally encoded.  For example, images in scene-linear, logarithmic, video, and data
+     * color spaces could have different default views.  Unlike the Family and EqualityGroup
+     * attributes of a color space, the list of Encodings is predefined in the OCIO documentation
+     * (rather than being config-specific) to make it easier for applications to utilize.
+     *
+     * Here is an example config entry that could appear under a ColorSpace:
+     * encoding: scene-linear
+     *
+     * Encoding strings are not case-sensitive. Although users may add their own encodings, the
+     * strings will typically come from a fixed set listed in the documentation (similar to roles).
+     */
     const char * getEncoding() const noexcept;
     void setEncoding(const char * encoding);
 
-
-    //
-    // Data
-    //
-
-    // TODO: Move to .rst
-    // ColorSpaces that are data are treated a bit special. Basically, any colorspace transforms
-    // you try to apply to them are ignored. (Think of applying a gamut mapping transform to an
-    // ID pass). However, the setDataBypass method on ColorSpaceTransform and DisplayViewTransform
-    // allow applications to process data when necessary.  (Think of sending mattes to an HDR
-    // monitor.)
-    //
-    // This is traditionally used for pixel data that represents non-color
-    // pixel data, such as normals, point positions, ID information, etc.
-
+    /**
+     * *Data*
+     * 
+     * ColorSpaces that are data are treated a bit special. Basically, any colorspace transforms
+     * you try to apply to them are ignored. (Think of applying a gamut mapping transform to an
+     * ID pass). However, the setDataBypass method on ColorSpaceTransform and DisplayViewTransform
+     * allow applications to process data when necessary.  (Think of sending mattes to an HDR
+     * monitor.)
+     *
+     * This is traditionally used for pixel data that represents non-color
+     * pixel data, such as normals, point positions, ID information, etc.
+     */
     bool isData() const noexcept;
     void setIsData(bool isData) noexcept;
 
-    //
-    // Allocation
-    //
-
-    // TODO: Move to .rst
-    // If this colorspace needs to be transferred to a limited dynamic
-    // range coding space (such as during display with a GPU path), use this
-    // allocation to maximize bit efficiency.
-
+    /**
+     * *Allocation*
+     * 
+     * If this colorspace needs to be transferred to a limited dynamic
+     * range coding space (such as during display with a GPU path), use this
+     * allocation to maximize bit efficiency.
+     */
     Allocation getAllocation() const noexcept;
     void setAllocation(Allocation allocation) noexcept;
 
-    // TODO: Move to .rst
-    // rst::
-    // Specify the optional variable values to configure the allocation.
-    // If no variables are specified, the defaults are used.
-    //
-    // ALLOCATION_UNIFORM::
-    //
-    //    2 vars: [min, max]
-    //
-    // ALLOCATION_LG2::
-    //
-    //    2 vars: [lg2min, lg2max]
-    //    3 vars: [lg2min, lg2max, linear_offset]
-
+    /**
+     * Specify the optional variable values to configure the allocation.
+     * If no variables are specified, the defaults are used.
+     *
+     * ALLOCATION_UNIFORM::
+     *
+     *    2 vars: [min, max]
+     *
+     * ALLOCATION_LG2::
+     *
+     *    2 vars: [lg2min, lg2max]
+     *    3 vars: [lg2min, lg2max, linear_offset]
+     */
     int getAllocationNumVars() const;
     void getAllocationVars(float * vars) const;
     void setAllocationVars(int numvars, const float * vars);
 
-    //
-    // Transform
-    //
-
     /**
+     * *Transform*
+     * 
      * If a transform in the specified direction has been specified,
      * return it. Otherwise return a null ConstTransformRcPtr
      */
@@ -1970,24 +1954,20 @@ protected:
 extern OCIOEXPORT std::ostream & operator<< (std::ostream &, const NamedTransform &);
 
 
-//
-// ViewTransform
-//
-
-// TODO: Move to .rst
-// A *ViewTransform* provides a conversion from the main (usually scene-referred) reference space
-// to the display-referred reference space.  This allows splitting the conversion from the main
-// reference space to a display into two parts: the ViewTransform plus a display color space.
-//
-// It is also possible to provide a ViewTransform that converts from the display-referred
-// reference space back to that space.  This is useful in cases when a ViewTransform is needed
-// when converting between displays (such as HDR to SDR).
-//
-// The ReferenceSpaceType indicates whether the ViewTransform converts from scene-to-display
-// reference or display-to-display reference.
-//
-// The from_reference transform direction is the one that is used when going out towards a display.
-
+/**
+ * A *ViewTransform* provides a conversion from the main (usually scene-referred) reference space
+ * to the display-referred reference space.  This allows splitting the conversion from the main
+ * reference space to a display into two parts: the ViewTransform plus a display color space.
+ *
+ * It is also possible to provide a ViewTransform that converts from the display-referred
+ * reference space back to that space.  This is useful in cases when a ViewTransform is needed
+ * when converting between displays (such as HDR to SDR).
+ *
+ * The ReferenceSpaceType indicates whether the ViewTransform converts from scene-to-display
+ * reference or display-to-display reference.
+ *
+ * The from_reference transform direction is the one that is used when going out towards a display.
+ */
 class OCIOEXPORT ViewTransform
 {
 public:
@@ -3154,15 +3134,16 @@ protected:
 
 
 ///////////////////////////////////////////////////////////////////////////
-// Context
-// *******
-// A context defines some overrides to a :cpp:class:`Config`. For example, it can override the
-// search path or change the value of a context variable.
-//
-// \note Only some :cpp:func:`Config::getProcessor` methods accept a custom context; otherwise,
-// the default context instance is used (see :cpp:func:`Config::getCurrentContext`).
-//
-
+/**
+ * Context
+ * *******
+ * A context defines some overrides to a :cpp:class:`Config`. For example, it can override the
+ * search path or change the value of a context variable.
+ *
+ * \note 
+ *    Only some :cpp:func:`Config::getProcessor` methods accept a custom context; otherwise,
+ *    the default context instance is used (see :cpp:func:`Config::getCurrentContext`).
+ */
 class OCIOEXPORT Context
 {
 public:
