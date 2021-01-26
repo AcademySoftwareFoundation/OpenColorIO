@@ -268,8 +268,7 @@ Lut3DOpData::Lut3DOpData(long gridSize, TransformDirection dir)
 {
 }
 
-Lut3DOpData::Lut3DOpData(Interpolation interpolation,
-                         unsigned long gridSize)
+Lut3DOpData::Lut3DOpData(Interpolation interpolation, unsigned long gridSize)
     : OpData()
     , m_interpolation(interpolation)
     , m_array(gridSize)
@@ -281,14 +280,19 @@ Lut3DOpData::~Lut3DOpData()
 {
 }
 
-void Lut3DOpData::setInterpolation(Interpolation algo)
+void Lut3DOpData::setInterpolation(Interpolation interpolation)
 {
-    m_interpolation = algo;
+    m_interpolation = interpolation;
 }
 
 Interpolation Lut3DOpData::getConcreteInterpolation() const
 {
-    switch (m_interpolation)
+    return GetConcreteInterpolation(m_interpolation);
+}
+
+Interpolation Lut3DOpData::GetConcreteInterpolation(Interpolation interp)
+{
+    switch (interp)
     {
     case INTERP_BEST:
     case INTERP_TETRAHEDRAL:
@@ -314,7 +318,10 @@ void Lut3DOpData::setArrayFromRedFastestOrder(const std::vector<float> & lut)
 
     if (lutSize * lutSize * lutSize * 3 != lut.size())
     {
-        throw Exception("Lut3DOpData length does not match the vector size.");
+        std::ostringstream oss;
+        oss << "Lut3D length '" << lutSize << " * " << lutSize << " * " << lutSize << " * 3";
+        oss << "' does not match the vector size '"<< lut.size()  <<"'.";
+        throw Exception(oss.str().c_str());
     }
 
     for (unsigned long b = 0; b < lutSize; ++b)
@@ -337,9 +344,7 @@ void Lut3DOpData::setArrayFromRedFastestOrder(const std::vector<float> & lut)
     }
 }
 
-namespace
-{
-bool IsValid(const Interpolation & interpolation)
+bool Lut3DOpData::IsValidInterpolation(Interpolation interpolation)
 {
     switch (interpolation)
     {
@@ -355,13 +360,16 @@ bool IsValid(const Interpolation & interpolation)
         return false;
     }
 }
-}
 
 void Lut3DOpData::validate() const
 {
-    if (!IsValid(m_interpolation))
+    if (!IsValidInterpolation(m_interpolation))
     {
-        throw Exception("Lut3D has an invalid interpolation type.");
+        std::ostringstream oss;
+        oss << "Lut3D does not support interpolation algorithm: ";
+        oss << InterpolationToString(getInterpolation());
+        oss << ".";
+        throw Exception(oss.str().c_str());
     }
 
     try
@@ -464,14 +472,7 @@ std::string Lut3DOpData::getCacheID() const
 {
     AutoMutex lock(m_mutex);
 
-    md5_state_t state;
-    md5_byte_t digest[16];
-
-    md5_init(&state);
-    md5_append(&state,
-               (const md5_byte_t *)&(getArray().getValues()[0]),
-               (int)(getArray().getValues().size() * sizeof(float)));
-    md5_finish(&state, digest);
+    const Lut3DArray::Values & values = getArray().getValues();
 
     std::ostringstream cacheIDStream;
     if (!getID().empty())
@@ -479,7 +480,10 @@ std::string Lut3DOpData::getCacheID() const
         cacheIDStream << getID() << " ";
     }
 
-    cacheIDStream << GetPrintableHash(digest)                << " ";
+    cacheIDStream << CacheIDHash(reinterpret_cast<const char*>(&values[0]),
+                                 int(values.size() * sizeof(values[0])))
+                  << " ";
+
     cacheIDStream << InterpolationToString(m_interpolation)  << " ";
     cacheIDStream << TransformDirectionToString(m_direction) << " ";
 

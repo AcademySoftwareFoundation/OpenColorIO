@@ -26,12 +26,17 @@ const char * GetEnvVariable(const char * name)
 
 void SetEnvVariable(const char * name, const char * value)
 {
-    Platform::Setenv(name, value);
+    Platform::Setenv(name, value ? value : "");
 }
 
 void UnsetEnvVariable(const char * name)
 {
     Platform::Unsetenv(name);
+}
+
+bool IsEnvVariablePresent(const char * name)
+{
+    return Platform::isEnvPresent(name);
 }
 
 namespace Platform
@@ -95,6 +100,17 @@ void Unsetenv(const char * name)
 #else
     ::unsetenv(name);
 #endif
+}
+
+bool isEnvPresent(const char * name)
+{
+    if (!name || !*name)
+    {
+        return false;
+    }
+
+    std::string value;
+    return Getenv(name, value);
 }
 
 int Strcasecmp(const char * str1, const char * str2)

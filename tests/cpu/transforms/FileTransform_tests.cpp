@@ -6,7 +6,9 @@
 
 #include "transforms/FileTransform.cpp"
 
+#include "ContextVariableUtils.h"
 #include "testutils/UnitTest.h"
+#include "UnitTestLogUtils.h"
 #include "UnitTestUtils.h"
 
 namespace OCIO = OCIO_NAMESPACE;
@@ -33,7 +35,7 @@ OCIO_ADD_TEST(FileTransform, basic)
     ft->setCDLStyle(OCIO::CDL_ASC);
     OCIO_CHECK_EQUAL(ft->getCDLStyle(), OCIO::CDL_ASC);
 
-    OCIO_CHECK_EQUAL(ft->getInterpolation(), OCIO::INTERP_UNKNOWN);
+    OCIO_CHECK_EQUAL(ft->getInterpolation(), OCIO::INTERP_DEFAULT);
     ft->setInterpolation(OCIO::INTERP_LINEAR);
     OCIO_CHECK_EQUAL(ft->getInterpolation(), OCIO::INTERP_LINEAR);
 }
@@ -207,7 +209,7 @@ OCIO_ADD_TEST(FileTransform, all_formats)
     OCIO_CHECK_EQUAL(19, formatRegistry.getNumRawFormats());
     OCIO_CHECK_EQUAL(24, formatRegistry.getNumFormats(OCIO::FORMAT_CAPABILITY_READ));
     OCIO_CHECK_EQUAL(10, formatRegistry.getNumFormats(OCIO::FORMAT_CAPABILITY_BAKE));
-    OCIO_CHECK_EQUAL(2,  formatRegistry.getNumFormats(OCIO::FORMAT_CAPABILITY_WRITE));
+    OCIO_CHECK_EQUAL(5,  formatRegistry.getNumFormats(OCIO::FORMAT_CAPABILITY_WRITE));
 
     OCIO_CHECK_ASSERT(FormatNameFoundByExtension("3dl", "flame"));
     OCIO_CHECK_ASSERT(FormatNameFoundByExtension("cc", "ColorCorrection"));
@@ -296,5 +298,137 @@ OCIO_ADD_TEST(FileTransform, validate)
     OCIO_CHECK_NO_THROW(tr->validate());
 
     tr->setSrc("");
-    OCIO_CHECK_THROW(tr->validate(), OCIO::Exception);
+    OCIO_CHECK_THROW_WHAT(tr->validate(), OCIO::Exception,
+                          "FileTransform: empty file path");
+}
+
+OCIO_ADD_TEST(FileTransform, interpolation_validity)
+{
+    OCIO::ConfigRcPtr cfg;
+    OCIO_CHECK_NO_THROW(cfg = OCIO::Config::CreateRaw()->createEditableCopy());
+    cfg->setSearchPath(OCIO::GetTestFilesDir().c_str());
+    OCIO_CHECK_NO_THROW(cfg->validate());
+
+    OCIO::FileTransformRcPtr tr = OCIO::FileTransform::Create();
+    tr->setSrc("lut1d_1.spi1d");
+
+    OCIO_CHECK_NO_THROW(tr->validate());
+
+    // File transform with format requiring a valid interpolation using default interpolation.
+    OCIO_CHECK_NO_THROW(cfg->getProcessor(tr));
+
+    // UNKNOWN can't be used by a LUT file, so the interp on the LUT is set to DEFAULT and a
+    // warning is logged. 
+
+    tr->setInterpolation(OCIO::INTERP_UNKNOWN);
+    OCIO_CHECK_NO_THROW(tr->validate());
+    {
+        OCIO::LogGuard log;
+        OCIO::SetLoggingLevel(OCIO::LOGGING_LEVEL_WARNING);
+        OCIO_CHECK_NO_THROW(cfg->getProcessor(tr));
+        OCIO_CHECK_EQUAL(log.output(), "[OpenColorIO Warning]: Interpolation specified by "
+                                       "FileTransform 'unknown' is not allowed with the "
+                                       "given file: 'lut1d_1.spi1d'.\n");
+    }
+
+    // TETRAHEDRAL can't be used for Spi1d, default is used instead (and a warning is logged).
+
+    tr->setInterpolation(OCIO::INTERP_TETRAHEDRAL);
+    {
+        OCIO::LogGuard log;
+        OCIO::SetLoggingLevel(OCIO::LOGGING_LEVEL_WARNING);
+        OCIO_CHECK_NO_THROW(cfg->getProcessor(tr));
+        OCIO_CHECK_EQUAL(log.output(), "[OpenColorIO Warning]: Interpolation specified by "
+                                       "FileTransform 'tetrahedral' is not allowed with the "
+                                       "given file: 'lut1d_1.spi1d'.\n");
+    }
+
+    // Matrices ignore interpolation, so UNKNOWN is ignored and not even logged.  Note that the
+    // spi example configs use interpolation=unknown for matrix files.
+
+    tr->setInterpolation(OCIO::INTERP_UNKNOWN);
+    tr->setSrc("camera_to_aces.spimtx");
+    OCIO_CHECK_NO_THROW(cfg->getProcessor(tr));
+}
+
+OCIO_ADD_TEST(FileTransform, context_variables)
+{
+    // Test context variables with a FileTransform i.e. the file name or the search_path could
+    // contain one or several context variables.
+ 
+    OCIO::ContextRcPtr usedContextVars = OCIO::Context::Create();
+
+    OCIO::ConfigRcPtr cfg = OCIO::Config::CreateRaw()->createEditableCopy();
+    cfg->setSearchPath(OCIO::GetTestFilesDir().c_str());
+    OCIO::ContextRcPtr ctx = cfg->getCurrentContext()->createEditableCopy();
+
+
+    // Case 1 - The 'filename' contains a context variable.
+
+    OCIO_CHECK_NO_THROW(ctx->setStringVar("ENV1", "exposure_contrast_linear.ctf"));
+    OCIO::FileTransformRcPtr file = OCIO::FileTransform::Create();
+    // The 'filename' contains a context variable.
+    file->setSrc("$ENV1");
+
+    OCIO_CHECK_ASSERT(CollectContextVariables(*cfg, *ctx, *file, usedContextVars));
+
+    // Check the used context variables.
+
+    OCIO_CHECK_EQUAL(1, usedContextVars->getNumStringVars());
+    OCIO_CHECK_EQUAL(std::string("ENV1"), usedContextVars->getStringVarNameByIndex(0));
+    OCIO_CHECK_EQUAL(std::string("exposure_contrast_linear.ctf"), usedContextVars->getStringVarByIndex(0));
+
+    // The 'filename' is *not* anymore a context variable.
+
+    file->setSrc("exposure_contrast_linear.ctf");
+
+    usedContextVars = OCIO::Context::Create(); // New & empty instance.
+    OCIO_CHECK_ASSERT(!CollectContextVariables(*cfg, *ctx, *file, usedContextVars));
+    OCIO_CHECK_EQUAL(0, usedContextVars->getNumStringVars());
+
+
+    // Case 2 - The 'search_path' now contains a context variable.
+
+    cfg->setSearchPath("$PATH1");
+    ctx = cfg->getCurrentContext()->createEditableCopy();
+    file->setSrc("exposure_contrast_linear.ctf");
+
+    OCIO_CHECK_NO_THROW(ctx->setStringVar("PATH1", OCIO::GetTestFilesDir().c_str()));
+
+    usedContextVars = OCIO::Context::Create();
+    OCIO_CHECK_ASSERT(CollectContextVariables(*cfg, *ctx, *file, usedContextVars));
+
+    OCIO_CHECK_EQUAL(1, usedContextVars->getNumStringVars());
+    OCIO_CHECK_EQUAL(std::string("PATH1"), usedContextVars->getStringVarNameByIndex(0));
+    OCIO_CHECK_EQUAL(OCIO::GetTestFilesDir(), usedContextVars->getStringVarByIndex(0));
+
+    // The 'search_path' is *not* anymore a context variable.
+    cfg->setSearchPath(OCIO::GetTestFilesDir().c_str());
+    ctx = cfg->getCurrentContext()->createEditableCopy();
+
+    usedContextVars = OCIO::Context::Create(); // New & empty instance.
+    OCIO_CHECK_ASSERT(!CollectContextVariables(*cfg, *ctx, *file, usedContextVars));
+    OCIO_CHECK_EQUAL(0, usedContextVars->getNumStringVars());
+
+
+    // Case 3 - The 'filename' and the 'search_path' now contain a context variable.
+
+    cfg->setSearchPath("$PATH1");
+    file->setSrc("$ENV1");
+
+    ctx = cfg->getCurrentContext()->createEditableCopy();
+    OCIO_CHECK_NO_THROW(ctx->setStringVar("PATH1", OCIO::GetTestFilesDir().c_str()));
+    OCIO_CHECK_NO_THROW(ctx->setStringVar("ENV1", "exposure_contrast_linear.ctf"));
+
+    usedContextVars = OCIO::Context::Create(); // New & empty instance.
+    OCIO_CHECK_ASSERT(CollectContextVariables(*cfg, *ctx, *file, usedContextVars));
+
+    OCIO_CHECK_EQUAL(2, usedContextVars->getNumStringVars());
+    OCIO_CHECK_EQUAL(std::string("PATH1"), usedContextVars->getStringVarNameByIndex(0));
+    OCIO_CHECK_EQUAL(OCIO::GetTestFilesDir(), usedContextVars->getStringVarByIndex(0));
+    OCIO_CHECK_EQUAL(std::string("ENV1"), usedContextVars->getStringVarNameByIndex(1));
+    OCIO_CHECK_EQUAL(std::string("exposure_contrast_linear.ctf"), usedContextVars->getStringVarByIndex(1));
+
+    // A basic check to validate that context variables are correctly used. 
+    OCIO_CHECK_NO_THROW(cfg->getProcessor(ctx, file, OCIO::TRANSFORM_DIR_FORWARD));
 }

@@ -16,7 +16,7 @@
 namespace OCIO_NAMESPACE
 {
 
-const char * getTestFilesDir();
+const std::string & GetTestFilesDir();
 
 // Special test function that copies the implementation of FileTransform
 // in order to be able to access ops from a file path. fileOps will not be
@@ -39,8 +39,7 @@ template <class LocalFileFormat, class LocalCachedFile>
 OCIO_SHARED_PTR<LocalCachedFile> LoadTestFile(
     const std::string & fileName, std::ios_base::openmode mode)
 {
-    const std::string filePath(std::string(getTestFilesDir()) + "/"
-                               + fileName);
+    const std::string filePath(GetTestFilesDir() + "/" + fileName);
 
     // Open the filePath
     std::ifstream filestream;
@@ -56,7 +55,7 @@ OCIO_SHARED_PTR<LocalCachedFile> LoadTestFile(
 
     // Read file
     LocalFileFormat tester;
-    OCIO_SHARED_PTR<CachedFile> cachedFile = tester.read(filestream, filePath);
+    OCIO_SHARED_PTR<CachedFile> cachedFile = tester.read(filestream, filePath, INTERP_DEFAULT);
 
     filestream.close();
 

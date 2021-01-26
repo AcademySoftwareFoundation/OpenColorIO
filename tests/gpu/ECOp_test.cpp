@@ -132,51 +132,67 @@ public:
     ECRetest(OCIOGPUTest & test)
         : m_test(test)
     {
+        // Testing infrastructure creates a new cpu processor for each retest (but keeps the
+        // shader). Changing the dynamic property on the processor will be reflected in each
+        // cpu processor. Initialize the dynamic properties for CPU. Shader is has not been
+        // created yet.
         OCIO::ConstProcessorRcPtr & processor = test.getProcessor();
 
         if(processor->hasDynamicProperty(OCIO::DYNAMIC_PROPERTY_EXPOSURE))
         {
-            m_exposure = processor->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_EXPOSURE);
+            auto dp = processor->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_EXPOSURE);
+            m_exposureCPU = OCIO::DynamicPropertyValue::AsDouble(dp);
         }
 
         if(processor->hasDynamicProperty(OCIO::DYNAMIC_PROPERTY_CONTRAST))
         {
-            m_contrast = processor->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_CONTRAST);
+            auto dp = processor->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_CONTRAST);
+            m_contrastCPU = OCIO::DynamicPropertyValue::AsDouble(dp);
         }
 
         if(processor->hasDynamicProperty(OCIO::DYNAMIC_PROPERTY_GAMMA))
         {
-            m_gamma = processor->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_GAMMA);
+            auto dp = processor->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_GAMMA);
+            m_gammaCPU = OCIO::DynamicPropertyValue::AsDouble(dp);
         }
     }
 
 protected:
 
-    template<typename T>
-    void updateUniform(OCIO::DynamicPropertyType type, T value)
+    void initializeGPUDynamicProperties()
     {
-        // Update all the GPU dynamic properties.
-        auto shaderDesc = m_test.getShaderDesc();
-
-        for(unsigned idx=0; idx<shaderDesc->getNumUniforms(); ++idx)
+        // Wait for the shader to be created to call this (first retest).
+        // Shader is created once, thus updating the dynamic property on the processor will not
+        // be reflected on the shader because dynamic properties are decoupled between processor
+        // and shader.
+        auto & shaderDesc = m_test.getShaderDesc();
+        if (shaderDesc->hasDynamicProperty(OCIO::DYNAMIC_PROPERTY_EXPOSURE))
         {
-            const char * name = nullptr;
-            OCIO::DynamicPropertyRcPtr prop;
+            auto dp = shaderDesc->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_EXPOSURE);
+            m_exposureGPU = OCIO::DynamicPropertyValue::AsDouble(dp);
+        }
 
-            shaderDesc->getUniform(idx, name, prop);
-            if(prop->getType()==type && prop->isDynamic())
-            {
-                prop->setValue(value);
-                return;
-            }
+        if (shaderDesc->hasDynamicProperty(OCIO::DYNAMIC_PROPERTY_CONTRAST))
+        {
+            auto dp = shaderDesc->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_CONTRAST);
+            m_contrastGPU = OCIO::DynamicPropertyValue::AsDouble(dp);
+        }
+
+        if (shaderDesc->hasDynamicProperty(OCIO::DYNAMIC_PROPERTY_GAMMA))
+        {
+            auto dp = shaderDesc->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_GAMMA);
+            m_gammaGPU = OCIO::DynamicPropertyValue::AsDouble(dp);
         }
     }
 
     OCIOGPUTest & m_test;
     // Keep dynamic property values for tests modifying their current value.
-    OCIO::DynamicPropertyRcPtr m_exposure;
-    OCIO::DynamicPropertyRcPtr m_contrast;
-    OCIO::DynamicPropertyRcPtr m_gamma;
+    OCIO::DynamicPropertyDoubleRcPtr m_exposureCPU;
+    OCIO::DynamicPropertyDoubleRcPtr m_contrastCPU;
+    OCIO::DynamicPropertyDoubleRcPtr m_gammaCPU;
+    OCIO::DynamicPropertyDoubleRcPtr m_exposureGPU;
+    OCIO::DynamicPropertyDoubleRcPtr m_contrastGPU;
+    OCIO::DynamicPropertyDoubleRcPtr m_gammaGPU;
 };
 
 }
@@ -203,18 +219,20 @@ OCIO_ADD_GPU_TEST(ExposureContrast, style_linear_dynamic_parameter)
 
         void retest1()
         {
-            m_exposure->setValue(m_exposure->getDoubleValue() + 0.1);
-            updateUniform(m_exposure->getType(), m_exposure->getDoubleValue());
+            initializeGPUDynamicProperties();
+
+            m_exposureCPU->setValue(m_exposureCPU->getValue() + 0.1);
+            m_exposureGPU->setValue(m_exposureCPU->getValue());
         }
         void retest2()
         {
-            m_contrast->setValue(m_contrast->getDoubleValue() + 0.1);
-            updateUniform(m_contrast->getType(), m_contrast->getDoubleValue());
+            m_contrastCPU->setValue(m_contrastCPU->getValue() + 0.1);
+            m_contrastGPU->setValue(m_contrastCPU->getValue());
         }
         void retest3()
         {
-            m_gamma->setValue(m_gamma->getDoubleValue() + 0.1);
-            updateUniform(m_gamma->getType(), m_gamma->getDoubleValue());
+            m_gammaCPU->setValue(m_gammaCPU->getValue() + 0.1);
+            m_gammaGPU->setValue(m_gammaCPU->getValue());
         }
     };
 
@@ -255,7 +273,7 @@ void Prepare2ECDynamic(OCIOGPUTest & test, bool firstDyn, bool secondDyn)
     ec2->setContrast(0.5);
     ec2->setGamma(1.5);
 
-    if (firstDyn) ec1->makeExposureDynamic();
+    if (firstDyn) ec1->makeContrastDynamic();
     if (secondDyn) ec2->makeExposureDynamic();
 
     OCIO::GroupTransformRcPtr grp = OCIO::GroupTransform::Create();
@@ -271,13 +289,31 @@ void Prepare2ECDynamic(OCIOGPUTest & test, bool firstDyn, bool secondDyn)
 
         void retest1()
         {
-            m_exposure->setValue(1.1);
-            updateUniform(m_exposure->getType(), m_exposure->getDoubleValue());
+            initializeGPUDynamicProperties();
+
+            if (m_contrastCPU)
+            {
+                m_contrastCPU->setValue(0.5);
+                m_contrastGPU->setValue(m_contrastCPU->getValue());
+            }
+            if (m_exposureCPU)
+            {
+                m_exposureCPU->setValue(1.1);
+                m_exposureGPU->setValue(m_exposureCPU->getValue());
+            }
         }
         void retest2()
         {
-            m_exposure->setValue(2.1);
-            updateUniform(m_exposure->getType(), m_exposure->getDoubleValue());
+            if (m_contrastCPU)
+            {
+                m_contrastCPU->setValue(0.7);
+                m_contrastGPU->setValue(m_contrastCPU->getValue());
+            }
+            if (m_exposureCPU)
+            {
+                m_exposureCPU->setValue(2.1);
+                m_exposureGPU->setValue(m_exposureCPU->getValue());
+            }
         }
     };
 

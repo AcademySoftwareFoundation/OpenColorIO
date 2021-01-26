@@ -7,18 +7,22 @@ import PyOpenColorIO as OCIO
 
 class RangeTransformTest(unittest.TestCase):
 
-    def test_interface(self):
-
+    def test_range_transform_interface(self):
+        """
+        Test empty contructor and accessors.
+        """
         rt = OCIO.RangeTransform()
-        self.assertEqual(rt.getStyle(), "Clamp")
+        self.assertEqual(rt.getTransformType(), OCIO.TRANSFORM_TYPE_RANGE)
+
+        self.assertEqual(rt.getStyle(), OCIO.RANGE_CLAMP)
         self.assertEqual(rt.hasMinInValue(), False)
         self.assertEqual(rt.hasMaxInValue(), False)
         self.assertEqual(rt.hasMinOutValue(), False)
         self.assertEqual(rt.hasMaxOutValue(), False)
 
-        rt.setStyle("noClamp")
-        self.assertEqual(rt.getStyle(), "noClamp")
-        rt.setStyle("Clamp")
+        rt.setStyle(OCIO.RANGE_NO_CLAMP)
+        self.assertEqual(rt.getStyle(), OCIO.RANGE_NO_CLAMP)
+        rt.setStyle(OCIO.RANGE_CLAMP)
 
         rt.setMinInValue(0.12301234)
         self.assertEqual(0.12301234, rt.getMinInValue())
@@ -70,9 +74,10 @@ class RangeTransformTest(unittest.TestCase):
         self.assertEqual(rt.hasMinOutValue(), False)
         self.assertEqual(rt.hasMaxOutValue(), False)
 
-
-    def test_equality(self):
-
+    def test_range_transform_equality(self):
+        """
+        Test range transform equality
+        """
         rt1 = OCIO.RangeTransform()
         self.assertTrue(rt1.equals(rt1))
 
@@ -92,8 +97,10 @@ class RangeTransformTest(unittest.TestCase):
         self.assertTrue(rt2.equals(rt1))
 
 
-    def test_validation(self):
-
+    def test_range_transform_validation(self):
+        """
+        Test validate() function.
+        """
         rt1 = OCIO.RangeTransform()
         with self.assertRaises(Exception):
             rt1.validate()
@@ -104,12 +111,12 @@ class RangeTransformTest(unittest.TestCase):
         rt1.setMinOutValue(0.12601234)
         rt1.validate()
 
-        rt1.setMaxInValue(1.12601234)
-        rt1.setMaxOutValue(1.12601234)
+        rt1.setMaxInValue(1.45)
+        rt1.setMaxOutValue(1.78)
         rt1.validate()
 
-        # Test one faulty range
+        # Test one faulty range (max has to be greater than min)
 
         rt1.setMaxInValue(0.12601234)
-        with self.assertRaises(Exception):
+        with self.assertRaises(OCIO.Exception):
             rt1.validate()

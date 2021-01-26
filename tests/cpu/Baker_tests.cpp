@@ -5,6 +5,9 @@
 #include "Baker.cpp"
 
 #include "testutils/UnitTest.h"
+#include "ParseUtils.h"
+#include "UnitTestUtils.h"
+#include "utils/StringUtils.h"
 
 namespace OCIO = OCIO_NAMESPACE;
 
@@ -31,9 +34,29 @@ OCIO_ADD_TEST(Baker_Unit_Tests, test_listlutwriters)
 }
 */
 
+namespace
+{
+void CompareFloats(const std::string& floats1, const std::string& floats2)
+{
+    // Number comparison.
+    const StringUtils::StringVec strings1 = StringUtils::SplitByWhiteSpaces(StringUtils::Trim(floats1));
+    std::vector<float> numbers1;
+    OCIO::StringVecToFloatVec(numbers1, strings1);
+
+    const StringUtils::StringVec strings2 = StringUtils::SplitByWhiteSpaces(StringUtils::Trim(floats2));
+    std::vector<float> numbers2;
+    OCIO::StringVecToFloatVec(numbers2, strings2);
+
+    OCIO_CHECK_EQUAL(numbers1.size(), numbers2.size());
+    for (unsigned int j = 0; j<numbers1.size(); ++j)
+    {
+        OCIO_CHECK_CLOSE(numbers1[j], numbers2[j], 1e-5f);
+    }
+}
+}
+
 OCIO_ADD_TEST(Baker, bake)
 {
-    // SSE aware test, similar to python test.
     OCIO::BakerRcPtr bake = OCIO::Baker::Create();
 
     static const std::string myProfile =
@@ -63,27 +86,6 @@ OCIO_ADD_TEST(Baker, bake)
         "this is some metadata!\n"
         "END METADATA\n"
         "\n"
-#ifdef USE_SSE
-        "4\n"
-        "0.000977 0.039373 1.587398 64.000168\n"
-        "0.000000 0.333333 0.666667 1.000000\n"
-        "4\n"
-        "0.000977 0.039373 1.587398 64.000168\n"
-        "0.000000 0.333333 0.666667 1.000000\n"
-        "4\n"
-        "0.000977 0.039373 1.587398 64.000168\n"
-        "0.000000 0.333333 0.666667 1.000000\n"
-        "\n"
-        "2 2 2\n"
-        "0.042823 0.042823 0.042823\n"
-        "6.622035 0.042823 0.042823\n"
-        "0.042823 6.622035 0.042823\n"
-        "6.622035 6.622035 0.042823\n"
-        "0.042823 0.042823 6.622035\n"
-        "6.622035 0.042823 6.622035\n"
-        "0.042823 6.622035 6.622035\n"
-        "6.622035 6.622035 6.622035\n"
-#else
         "4\n"
         "0.000977 0.039373 1.587401 64.000000\n"
         "0.000000 0.333333 0.666667 1.000000\n"
@@ -103,7 +105,6 @@ OCIO_ADD_TEST(Baker, bake)
         "6.622026 0.042823 6.622026\n"
         "0.042823 6.622026 6.622026\n"
         "6.622026 6.622026 6.622026\n"
-#endif // USE_SSE
         "\n";
     std::istringstream is(myProfile);
     OCIO::ConstConfigRcPtr config;
@@ -117,7 +118,7 @@ OCIO_ADD_TEST(Baker, bake)
     bake->getFormatMetadata().addChildElement("Desc", testString.c_str());
     const auto & data = bake->getFormatMetadata();
     OCIO_CHECK_EQUAL(data.getNumChildrenElements(), 1);
-    OCIO_CHECK_EQUAL(testString, data.getChildElement(0).getValue());
+    OCIO_CHECK_EQUAL(testString, data.getChildElement(0).getElementValue());
 
     bake->setFormat("cinespace");
     OCIO_CHECK_EQUAL("cinespace", std::string(bake->getFormat()));
@@ -134,7 +135,23 @@ OCIO_ADD_TEST(Baker, bake)
     OCIO_CHECK_EQUAL(2, bake->getCubeSize());
     std::ostringstream os;
     OCIO_CHECK_NO_THROW(bake->bake(os));
-    OCIO_CHECK_EQUAL(expectedLut, os.str());
+    const StringUtils::StringVec osvec = StringUtils::SplitByLines(expectedLut);
+    const StringUtils::StringVec resvec = StringUtils::SplitByLines(os.str());
+    OCIO_CHECK_EQUAL(osvec.size(), resvec.size());
+    for (unsigned int i = 0; i < resvec.size(); ++i)
+    {
+        if (i>6)
+        {
+            // Number comparison.
+            CompareFloats(osvec[i], resvec[i]);
+        }
+        else
+        {
+            // text comparison
+            OCIO_CHECK_EQUAL(osvec[i], resvec[i]);
+        }
+    }
+
     OCIO_CHECK_EQUAL(10, bake->getNumFormats());
     OCIO_CHECK_EQUAL("cinespace", std::string(bake->getFormatNameByIndex(4)));
     OCIO_CHECK_EQUAL("3dl", std::string(bake->getFormatExtensionByIndex(1)));

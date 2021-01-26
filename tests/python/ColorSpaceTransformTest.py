@@ -2,136 +2,121 @@
 # Copyright Contributors to the OpenColorIO Project.
 
 import unittest
-import os
-import sys
 
 import PyOpenColorIO as OCIO
+from UnitTestUtils import TEST_NAMES
 
 
 class ColorSpaceTransformTest(unittest.TestCase):
+    TEST_DIRECTION = OCIO.TRANSFORM_DIR_FORWARD
+    TEST_SRC = 'foo'
+    TEST_DST = 'bar'
 
-    TEST_COLORSPACE = ['abc', 'raw', '$test']
+    def setUp(self):
+        self.cs_tr = OCIO.ColorSpaceTransform()
 
-    def test_constructor(self):
+    def tearDown(self):
+        self.cs_tr = None
+
+    def test_transform_type(self):
         """
-        Test ColorSpaceTransform constructor without and with keywords.
+        Test the getTransformType() method.
         """
-        ct = OCIO.ColorSpaceTransform()
-        self.assertEqual("", ct.getSrc())
-        self.assertEqual("", ct.getDst())
-        self.assertEqual(OCIO.TRANSFORM_DIR_FORWARD, ct.getDirection())
-        self.assertEqual(True, ct.getDataBypass())
-
-        ct = OCIO.ColorSpaceTransform("src", "dst")
-        self.assertEqual("src", ct.getSrc())
-        self.assertEqual("dst", ct.getDst())
-        self.assertEqual(OCIO.TRANSFORM_DIR_FORWARD, ct.getDirection())
-        self.assertEqual(True, ct.getDataBypass())
-
-        ct = OCIO.ColorSpaceTransform("src", "dst", OCIO.TRANSFORM_DIR_INVERSE)
-        self.assertEqual("src", ct.getSrc())
-        self.assertEqual("dst", ct.getDst())
-        self.assertEqual(OCIO.TRANSFORM_DIR_INVERSE, ct.getDirection())
-        self.assertEqual(True, ct.getDataBypass())
-
-        ct = OCIO.ColorSpaceTransform("src", "dst", OCIO.TRANSFORM_DIR_INVERSE, False)
-        self.assertEqual("src", ct.getSrc())
-        self.assertEqual("dst", ct.getDst())
-        self.assertEqual(OCIO.TRANSFORM_DIR_INVERSE, ct.getDirection())
-        self.assertEqual(False, ct.getDataBypass())
-
-        ct = OCIO.ColorSpaceTransform(src="src", dst="dst", dataBypass=False)
-        self.assertEqual("src", ct.getSrc())
-        self.assertEqual("dst", ct.getDst())
-        self.assertEqual(OCIO.TRANSFORM_DIR_FORWARD, ct.getDirection())
-        self.assertEqual(False, ct.getDataBypass())
-
-        ct = OCIO.ColorSpaceTransform(src="src", dst="dst",
-                                      dir=OCIO.TRANSFORM_DIR_INVERSE,
-                                      dataBypass=False)
-        self.assertEqual("src", ct.getSrc())
-        self.assertEqual("dst", ct.getDst())
-        self.assertEqual(OCIO.TRANSFORM_DIR_INVERSE, ct.getDirection())
-        self.assertEqual(False, ct.getDataBypass())
-
-        # Src & dst can't be omitted and can't be empty.
-        with self.assertRaises(OCIO.Exception):
-            ct = OCIO.ColorSpaceTransform(dst="dst")
-        with self.assertRaises(OCIO.Exception):
-            ct = OCIO.ColorSpaceTransform(src="src")
-        with self.assertRaises(OCIO.Exception):
-            ct = OCIO.ColorSpaceTransform(src="", dst="dst")
-        with self.assertRaises(OCIO.Exception):
-            ct = OCIO.ColorSpaceTransform(src="src", dst="")
-        with self.assertRaises(OCIO.Exception):
-            ct = OCIO.ColorSpaceTransform("src", "")
+        self.assertEqual(self.cs_tr.getTransformType(), OCIO.TRANSFORM_TYPE_COLORSPACE)
 
     def test_src(self):
         """
-        Test setSrc() and getSrc().
+        Test the setSrc() and getSrc() methods.
         """
-        ct = OCIO.ColorSpaceTransform()
-        for src in self.TEST_COLORSPACE:
-            ct.setSrc(src)
-            self.assertEqual(src, ct.getSrc())
+
+        # Default initialized src value is ""
+        self.assertEqual(self.cs_tr.getSrc(), '')
+
+        for name in TEST_NAMES:
+            self.cs_tr.setSrc(name)
+            self.assertEqual(name, self.cs_tr.getSrc())
+
+        # Wrong type tests.
+        for invalid in (None, 1):
+            with self.assertRaises(TypeError):
+                self.cs_tr.setSrc(invalid)
 
     def test_dst(self):
         """
-        Test setDst() and getDst().
+        Test the setDst() and getDst() methods.
         """
-        ct = OCIO.ColorSpaceTransform()
-        for dst in self.TEST_COLORSPACE:
-            ct.setDst(dst)
-            self.assertEqual(dst, ct.getDst())
 
-    def test_data_bypass(self):
-        """
-        Test setDataBypass() and getDataBypass().
-        """
-        ct = OCIO.ColorSpaceTransform()
-        ct.setDataBypass(False)
-        self.assertEqual(False, ct.getDataBypass())
-        ct.setDataBypass(True)
-        self.assertEqual(True, ct.getDataBypass())
+        # Default initialized src value is ""
+        self.assertEqual(self.cs_tr.getDst(), '')
+
+        for name in TEST_NAMES:
+            self.cs_tr.setDst(name)
+            self.assertEqual(name, self.cs_tr.getDst())
+
+        # Wrong type tests.
+        for invalid in (None, 1):
+            with self.assertRaises(TypeError):
+                self.cs_tr.setDst(invalid)
 
     def test_direction(self):
         """
         Test the setDirection() and getDirection() methods.
         """
 
-        ct = OCIO.ColorSpaceTransform()
+        # Default initialized direction is forward.
+        self.assertEqual(self.cs_tr.getDirection(),
+                         OCIO.TRANSFORM_DIR_FORWARD)
+
         for direction in OCIO.TransformDirection.__members__.values():
-            # Setting the unknown direction preserves the current direction.
-            if direction != OCIO.TRANSFORM_DIR_UNKNOWN:
-                ct.setDirection(direction)
-                self.assertEqual(direction, ct.getDirection())
+            self.cs_tr.setDirection(direction)
+            self.assertEqual(self.cs_tr.getDirection(), direction)
 
-    def test_validate(self):
+        # Wrong type tests.
+        for invalid in (None, 1):
+            with self.assertRaises(TypeError):
+                self.cs_tr.setDirection(invalid)
+
+    def test_constructor_with_keyword(self):
         """
-        Test the validate().
+        Test ColorSpaceTransform constructor with keywords and validate its values.
         """
-        ct = OCIO.ColorSpaceTransform()
-        ct.setSrc("src")
-        ct.setDst("dst")
-        ct.validate()
 
-        # Src has to be non-empty.
-        ct.setSrc("")
-        with self.assertRaises(OCIO.Exception):
-            ct.validate()
-        ct.setSrc("src")
+        # With keywords in their proper order.
+        cs_tr = OCIO.ColorSpaceTransform(src=self.TEST_SRC,
+                                         dst=self.TEST_DST,
+                                         direction=self.TEST_DIRECTION)
 
-        # Dst has to be non-empty.
-        ct.setDst("")
-        with self.assertRaises(OCIO.Exception):
-            ct.validate()
-        ct.setDst("dst")
+        self.assertEqual(cs_tr.getDirection(), self.TEST_DIRECTION)
+        self.assertEqual(cs_tr.getSrc(), self.TEST_SRC)
+        self.assertEqual(cs_tr.getDst(), self.TEST_DST)
 
-        # Direction can't be unknown.
-        for direction in OCIO.TransformDirection.__members__.values():
-            ct.setDirection(direction)
-            if direction != OCIO.TRANSFORM_DIR_UNKNOWN:
-                self.assertIsNone(ct.validate())
-            else:
-                with self.assertRaises(OCIO.Exception):
-                   ct.validate()
+        # With keywords not in their proper order.
+        cs_tr2 = OCIO.ColorSpaceTransform(direction=self.TEST_DIRECTION,
+                                          src=self.TEST_SRC,
+                                          dst=self.TEST_DST)
+
+        self.assertEqual(cs_tr2.getDirection(), self.TEST_DIRECTION)
+        self.assertEqual(cs_tr2.getSrc(), self.TEST_SRC)
+        self.assertEqual(cs_tr2.getDst(), self.TEST_DST)
+
+    def test_constructor_with_positional(self):
+        """
+        Test ColorSpaceTransform constructor without keywords and validate its values.
+        """
+
+        cs_tr = OCIO.ColorSpaceTransform(self.TEST_SRC,
+                                         self.TEST_DST,
+                                         self.TEST_DIRECTION)
+
+        self.assertEqual(cs_tr.getDirection(), self.TEST_DIRECTION)
+        self.assertEqual(cs_tr.getSrc(), self.TEST_SRC)
+        self.assertEqual(cs_tr.getDst(), self.TEST_DST)
+
+    def test_constructor_wrong_parameter_type(self):
+        """
+        Test ColorSpaceTransform constructor with a wrong parameter type.
+        """
+
+        for invalid in (None, 1):
+            with self.assertRaises(TypeError):
+                cs_tr = OCIO.ColorSpaceTransform(invalid)

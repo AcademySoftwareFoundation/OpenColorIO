@@ -11,11 +11,7 @@
 
 namespace OCIO_NAMESPACE
 {
-
-void bindPyBuiltinTransformRegistry(py::module & m);
-void bindPyFormatMetadata(py::module & m);
-void bindPyDynamicProperty(py::module & m);
-
+    
 // Subclasses
 void bindPyAllocationTransform(py::module & m);
 void bindPyBuiltinTransform(py::module & m);
@@ -27,6 +23,9 @@ void bindPyExponentWithLinearTransform(py::module & m);
 void bindPyExposureContrastTransform(py::module & m);
 void bindPyFileTransform(py::module & m);
 void bindPyFixedFunctionTransform(py::module & m);
+void bindPyGradingPrimaryTransform(py::module & m);
+void bindPyGradingRGBCurveTransform(py::module & m);
+void bindPyGradingToneTransform(py::module & m);
 void bindPyGroupTransform(py::module & m);
 void bindPyLogAffineTransform(py::module & m);
 void bindPyLogCameraTransform(py::module & m);

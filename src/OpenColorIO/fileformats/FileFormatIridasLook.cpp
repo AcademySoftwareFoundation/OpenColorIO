@@ -8,6 +8,7 @@
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "expat.h"
+#include "fileformats/FileFormatUtils.h"
 #include "ops/lut1d/Lut1DOp.h"
 #include "ops/lut3d/Lut3DOp.h"
 #include "ParseUtils.h"
@@ -486,9 +487,9 @@ public:
 
     void getFormatInfo(FormatInfoVec & formatInfoVec) const override;
 
-    CachedFileRcPtr read(
-        std::istream & istream,
-        const std::string & fileName) const override;
+    CachedFileRcPtr read(std::istream & istream,
+                         const std::string & fileName,
+                         Interpolation interp) const override;
 
     void buildFileOps(OpRcPtrVec & ops,
                         const Config & config,
@@ -507,9 +508,9 @@ void LocalFileFormat::getFormatInfo(FormatInfoVec & formatInfoVec) const
     formatInfoVec.push_back(info);
 }
 
-CachedFileRcPtr LocalFileFormat::read(
-    std::istream & istream,
-    const std::string & fileName) const
+CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
+                                      const std::string & fileName,
+                                      Interpolation interp) const
 {
     XMLParserHelper parser(fileName);
     parser.Parse(istream);
@@ -527,6 +528,10 @@ CachedFileRcPtr LocalFileFormat::read(
     parser.getLut(gridSize, raw);
 
     cachedFile->lut3D = std::make_shared<Lut3DOpData>(gridSize);
+    if (Lut3DOpData::IsValidInterpolation(interp))
+    {
+        cachedFile->lut3D->setInterpolation(interp);
+    }
     cachedFile->lut3D->setFileOutputBitDepth(BIT_DEPTH_F32);
     cachedFile->lut3D->setArrayFromRedFastestOrder(raw);
 
@@ -545,28 +550,26 @@ LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
     LocalCachedFileRcPtr cachedFile = DynamicPtrCast<LocalCachedFile>(untypedCachedFile);
 
     // This should never happen.
-    if(!cachedFile)
+    if(!cachedFile || !cachedFile->lut3D)
     {
         std::ostringstream os;
         os << "Cannot build Iridas .look Op. Invalid cache type.";
         throw Exception(os.str().c_str());
     }
 
-    TransformDirection newDir = CombineTransformDirections(dir,
-        fileTransform.getDirection());
-    if(newDir == TRANSFORM_DIR_UNKNOWN)
+    const auto newDir = CombineTransformDirections(dir, fileTransform.getDirection());
+
+    const auto fileInterp = fileTransform.getInterpolation();
+
+    bool fileInterpUsed = false;
+    auto lut3D = HandleLUT3D(cachedFile->lut3D, fileInterp, fileInterpUsed);
+
+    if (!fileInterpUsed)
     {
-        std::ostringstream os;
-        os << "Cannot build file format transform,";
-        os << " unspecified transform direction.";
-        throw Exception(os.str().c_str());
+        LogWarningInterpolationNotUsed(fileInterp, fileTransform);
     }
 
-    if (cachedFile->lut3D)
-    {
-        cachedFile->lut3D->setInterpolation(fileTransform.getInterpolation());
-        CreateLut3DOp(ops, cachedFile->lut3D, newDir);
-    }
+    CreateLut3DOp(ops, lut3D, newDir);
 }
 } // namespace
 

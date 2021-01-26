@@ -204,6 +204,13 @@ void LinkShaders(GLuint program, GLuint fragShader)
 
 //////////////////////////////////////////////////////////
 
+OpenGLBuilder::Uniform::Uniform(const std::string & name, const GpuShaderDesc::UniformData & data)
+    : m_name(name)
+    , m_data(data)
+    , m_handle(0)
+{
+}
+
 void OpenGLBuilder::Uniform::setUp(unsigned program)
 {
     m_handle = glGetUniformLocation(program, m_name.c_str());
@@ -218,17 +225,38 @@ void OpenGLBuilder::Uniform::setUp(unsigned program)
     }
 }
 
-DynamicPropertyRcPtr & OpenGLBuilder::Uniform::getValue()
-{
-    return m_value;
-}
-
 void OpenGLBuilder::Uniform::use()
 {
     // Update value.
-    glUniform1f(m_handle, (GLfloat)m_value->getDoubleValue());
+    if (m_data.m_getDouble)
+    {
+        glUniform1f(m_handle, (GLfloat)m_data.m_getDouble());
+    }
+    else if (m_data.m_getBool)
+    {
+        glUniform1f(m_handle, (GLfloat)(m_data.m_getBool()?1.0f:0.0f));
+    }
+    else if (m_data.m_getFloat3)
+    {
+        glUniform3f(m_handle, (GLfloat)m_data.m_getFloat3()[0],
+                              (GLfloat)m_data.m_getFloat3()[1],
+                              (GLfloat)m_data.m_getFloat3()[2]);
+    }
+    else if (m_data.m_vectorFloat.m_getSize && m_data.m_vectorFloat.m_getVector)
+    {
+        glUniform1fv(m_handle, (GLsizei)m_data.m_vectorFloat.m_getSize(),
+                               (GLfloat*)m_data.m_vectorFloat.m_getVector());
+    }
+    else if (m_data.m_vectorInt.m_getSize && m_data.m_vectorInt.m_getVector)
+    {
+        glUniform1iv(m_handle, (GLsizei)m_data.m_vectorInt.m_getSize(),
+                               (GLint*)m_data.m_vectorInt.m_getVector());
+    }
+    else
+    {
+        throw Exception("Uniform is not linked to any value.");
+    }
 }
-
 
 
 //////////////////////////////////////////////////////////
@@ -282,14 +310,12 @@ void OpenGLBuilder::allocateAllTextures(unsigned startIndex)
 
         const char * textureName = nullptr;
         const char * samplerName = nullptr;
-        const char * uid         = nullptr;
         unsigned edgelen = 0;
         Interpolation interpolation = INTERP_LINEAR;
-        m_shaderDesc->get3DTexture(idx, textureName, samplerName, uid, edgelen, interpolation);
+        m_shaderDesc->get3DTexture(idx, textureName, samplerName, edgelen, interpolation);
 
         if(!textureName || !*textureName
             || !samplerName || !*samplerName
-            || !uid || !*uid
             || edgelen==0)
         {
             throw Exception("The texture data is corrupted");
@@ -323,16 +349,14 @@ void OpenGLBuilder::allocateAllTextures(unsigned startIndex)
 
         const char * textureName = nullptr;
         const char * samplerName = nullptr;
-        const char * uid         = nullptr;
         unsigned width = 0;
         unsigned height = 0;
         GpuShaderDesc::TextureType channel = GpuShaderDesc::TEXTURE_RGB_CHANNEL;
         Interpolation interpolation = INTERP_LINEAR;
-        m_shaderDesc->getTexture(idx, textureName, samplerName, uid, width, height, channel, interpolation);
+        m_shaderDesc->getTexture(idx, textureName, samplerName, width, height, channel, interpolation);
 
         if (!textureName || !*textureName
             || !samplerName || !*samplerName
-            || !uid || !*uid
             || width==0)
         {
             throw Exception("The texture data is corrupted");
@@ -392,11 +416,14 @@ void OpenGLBuilder::linkAllUniforms()
     const unsigned maxUniforms = m_shaderDesc->getNumUniforms();
     for (unsigned idx = 0; idx < maxUniforms; ++idx)
     {
-        const char * name;
-        DynamicPropertyRcPtr value;
-        m_shaderDesc->getUniform(idx, name, value);
+        GpuShaderDesc::UniformData data;
+        const char * name = m_shaderDesc->getUniform(idx, data);
+        if (data.m_type == UNIFORM_UNKNOWN)
+        {
+            throw Exception("Unknown uniform type.");
+        }
         // Transfer uniform.
-        m_uniforms.emplace_back(name, value);
+        m_uniforms.emplace_back(name, data);
         // Connect uniform with program.
         m_uniforms.back().setUp(m_program);
     }
@@ -415,6 +442,21 @@ void OpenGLBuilder::useAllUniforms()
     }
 }
 
+std::string OpenGLBuilder::getGLSLVersionString()
+{
+    if (m_shaderDesc->getLanguage() == GPU_LANGUAGE_GLSL_1_3)
+    {
+        return "#version 130";
+    }
+    else if (m_shaderDesc->getLanguage() == GPU_LANGUAGE_GLSL_4_0)
+    {
+        return "#version 400 core";
+    }
+
+    // That's the minimal version supported.
+    return "#version 120";
+}
+
 unsigned OpenGLBuilder::buildProgram(const std::string & clientShaderProgram)
 {
     const std::string shaderCacheID = m_shaderDesc->getCacheID();
@@ -427,7 +469,8 @@ unsigned OpenGLBuilder::buildProgram(const std::string & clientShaderProgram)
         }
 
         std::ostringstream os;
-        os  << m_shaderDesc->getShaderText() << std::endl
+        os  << getGLSLVersionString() << std::endl
+            << m_shaderDesc->getShaderText() << std::endl
             << clientShaderProgram << std::endl;
 
         if(m_verbose)

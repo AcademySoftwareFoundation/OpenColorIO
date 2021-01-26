@@ -30,11 +30,14 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "transforms/CDLTransform.h"
 #include "fileformats/cdl/CDLParser.h"
-#include "transforms/FileTransform.h"
+#include "fileformats/cdl/CDLWriter.h"
+#include "fileformats/xmlutils/XMLReaderUtils.h"
+#include "fileformats/xmlutils/XMLWriterUtils.h"
 #include "OpBuilders.h"
 #include "ParseUtils.h"
+#include "transforms/CDLTransform.h"
+#include "transforms/FileTransform.h"
 
 namespace OCIO_NAMESPACE
 {
@@ -44,17 +47,28 @@ class LocalCachedFile : public CachedFile
 {
 public:
     LocalCachedFile ()
-        : metadata()
+        : m_metadata()
     {
     }
     ~LocalCachedFile() = default;
-    
-    CDLTransformMap transformMap;
-    CDLTransformVec transformVec;
+
+    GroupTransformRcPtr getCDLGroup() const override
+    {
+        auto group = GroupTransform::Create();
+        for (const auto & cdl : m_transformVec)
+        {
+            group->appendTransform(cdl);
+        }
+        group->getFormatMetadata() = m_metadata;
+        return group;
+    }
+
+    CDLTransformMap m_transformMap;
+    CDLTransformVec m_transformVec;
     // Descriptive element children of <ColorDecisonList> are
     // stored here.  Descriptive elements of SOPNode and SatNode are
     // stored in the transforms.
-    FormatMetadataImpl metadata;
+    FormatMetadataImpl m_metadata;
 };
 
 typedef OCIO_SHARED_PTR<LocalCachedFile> LocalCachedFileRcPtr;
@@ -64,13 +78,19 @@ class LocalFileFormat : public FileFormat
 public:
     LocalFileFormat() = default;
     ~LocalFileFormat() = default;
-    
+
     void getFormatInfo(FormatInfoVec & formatInfoVec) const override;
     
-    CachedFileRcPtr read(
-        std::istream & istream,
-        const std::string & fileName) const override;
-    
+    CachedFileRcPtr read(std::istream & istream,
+                         const std::string & fileName,
+                         Interpolation interp) const override;
+
+    void write(const ConstConfigRcPtr & config,
+               const ConstContextRcPtr & context,
+               const GroupTransform & group,
+               const std::string & formatName,
+               std::ostream & ostream) const override;
+
     void buildFileOps(OpRcPtrVec & ops,
                       const Config & config,
                       const ConstContextRcPtr & context,
@@ -82,29 +102,85 @@ public:
 void LocalFileFormat::getFormatInfo(FormatInfoVec & formatInfoVec) const
 {
     FormatInfo info;
-    info.name = "ColorDecisionList";
+    info.name = FILEFORMAT_COLOR_DECISION_LIST;
     info.extension = "cdl";
-    info.capabilities = FORMAT_CAPABILITY_READ;
+    info.capabilities = FORMAT_CAPABILITY_READ | FORMAT_CAPABILITY_WRITE;
     formatInfoVec.push_back(info);
 }
 
-// Try and load the format
+// Try and load the format.
 // Raise an exception if it can't be loaded.
 
-CachedFileRcPtr LocalFileFormat::read(
-    std::istream & istream,
-    const std::string & fileName) const
+CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
+                                      const std::string & fileName,
+                                      Interpolation /*interp*/) const
 {
     CDLParser parser(fileName);
     parser.parse(istream);
 
     LocalCachedFileRcPtr cachedFile = LocalCachedFileRcPtr(new LocalCachedFile());
     
-    parser.getCDLTransforms(cachedFile->transformMap,
-                            cachedFile->transformVec,
-                            cachedFile->metadata);
+    parser.getCDLTransforms(cachedFile->m_transformMap,
+                            cachedFile->m_transformVec,
+                            cachedFile->m_metadata);
 
     return cachedFile;
+}
+
+void LocalFileFormat::write(const ConstConfigRcPtr & /*config*/,
+                            const ConstContextRcPtr & /*context*/,
+                            const GroupTransform & group,
+                            const std::string & formatName,
+                            std::ostream & ostream) const
+{
+    const auto numCDL = group.getNumTransforms();
+    if (!numCDL)
+    {
+        std::ostringstream os;
+        os << "Write to " << formatName << ": there should be at least one CDL.";
+        throw Exception(os.str().c_str());
+    }
+    for (int i = 0; i < numCDL; ++i)
+    {
+        auto cdl = OCIO_DYNAMIC_POINTER_CAST<const CDLTransform>(group.getTransform(i));
+        if (!cdl)
+        {
+            std::ostringstream os;
+            os << "Write to " << formatName << ": only CDL can be written.";
+            throw Exception(os.str().c_str());
+        }
+    }
+
+    XmlFormatter fmt(ostream);
+    XmlFormatter::Attributes attributes;
+    attributes.push_back(XmlFormatter::Attribute("xmlns", "urn:ASC:CDL:v1.01"));
+    fmt.writeStartTag(CDL_TAG_COLOR_DECISION_LIST, attributes);
+    {
+        XmlScopeIndent scopeIndent(fmt);
+
+        StringUtils::StringVec mainDesc;
+        StringUtils::StringVec inputDesc;
+        StringUtils::StringVec viewingDesc;
+        StringUtils::StringVec sopDesc;
+        StringUtils::StringVec satDesc;
+        const auto & metadata = group.getFormatMetadata();
+        ExtractCDLMetadata(metadata, mainDesc, inputDesc, viewingDesc, sopDesc, satDesc);
+        WriteStrings(fmt, TAG_DESCRIPTION, mainDesc);
+        WriteStrings(fmt, METADATA_INPUT_DESCRIPTION, inputDesc);
+        WriteStrings(fmt, METADATA_VIEWING_DESCRIPTION, viewingDesc);
+
+        for (int i = 0; i < numCDL; ++i)
+        {
+            fmt.writeStartTag(CDL_TAG_COLOR_DECISION);
+            {
+                XmlScopeIndent scopeIndent(fmt);
+                auto cdl = OCIO_DYNAMIC_POINTER_CAST<const CDLTransform>(group.getTransform(i));
+                Write(fmt, cdl);
+            }
+            fmt.writeEndTag(CDL_TAG_COLOR_DECISION);
+        }
+    }
+    fmt.writeEndTag(CDL_TAG_COLOR_DECISION_LIST);
 }
 
 void
@@ -125,15 +201,8 @@ LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
         throw Exception(os.str().c_str());
     }
 
-    TransformDirection newDir = CombineTransformDirections(dir, fileTransform.getDirection());
-    if (newDir == TRANSFORM_DIR_UNKNOWN)
-    {
-        std::ostringstream os;
-        os << "Cannot build ASC FileTransform,";
-        os << " unspecified transform direction.";
-        throw Exception(os.str().c_str());
-    }
-    
+    const auto newDir = CombineTransformDirections(dir, fileTransform.getDirection());
+
     // Below this point, we should throw ExceptionMissingFile on
     // errors rather than Exception
     // This is because we've verified that the cdl file is valid,
@@ -153,23 +222,15 @@ LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
     std::string cccid = fileTransform.getCCCId();
     cccid = context->resolveStringVar(cccid.c_str());
     
-    if (cccid.empty())
-    {
-        std::ostringstream os;
-        os << "You must specify which cccid to load from the ccc file";
-        os << " (either by name or index).";
-        throw ExceptionMissingFile(os.str().c_str());
-    }
-    
     bool success=false;
 
     const auto fileCDLStyle = fileTransform.getCDLStyle();
 
     // Try to parse the cccid as a string id.
-    CDLTransformMap::const_iterator iter = cachedFile->transformMap.find(cccid);
-    if (iter != cachedFile->transformMap.end())
+    CDLTransformMap::const_iterator iter = cachedFile->m_transformMap.find(cccid);
+    if (iter != cachedFile->m_transformMap.end())
     {
-        auto cdl = iter->second;
+        CDLTransformRcPtr cdl = iter->second;
         if (fileCDLStyle != CDL_TRANSFORM_DEFAULT)
         {
             cdl = OCIO_DYNAMIC_POINTER_CAST<CDLTransform>(cdl->createEditableCopy());
@@ -184,10 +245,11 @@ LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
     // We want to be strict, so fail if leftover chars in the parse.
     if (!success)
     {
+        // Use 0 for empty string.
         int cccindex=0;
         if (StringToInt(&cccindex, cccid.c_str(), true))
         {
-            int maxindex = ((int)cachedFile->transformVec.size())-1;
+            int maxindex = ((int)cachedFile->m_transformVec.size())-1;
             if (cccindex<0 || cccindex>maxindex)
             {
                 std::ostringstream os;
@@ -197,7 +259,7 @@ LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
                 throw ExceptionMissingFile(os.str().c_str());
             }
 
-            auto cdl = cachedFile->transformVec[cccindex];
+            CDLTransformRcPtr cdl = cachedFile->m_transformVec[cccindex];
             if (fileCDLStyle != CDL_TRANSFORM_DEFAULT)
             {
                 cdl = OCIO_DYNAMIC_POINTER_CAST<CDLTransform>(cdl->createEditableCopy());

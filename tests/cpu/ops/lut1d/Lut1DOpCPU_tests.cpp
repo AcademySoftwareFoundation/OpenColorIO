@@ -175,7 +175,7 @@ OCIO_ADD_TEST(Lut1DRenderer, nan_test)
 OCIO_ADD_TEST(Lut1DRenderer, nan_half_test)
 {
     OCIO::Lut1DOpDataRcPtr lut = std::make_shared<OCIO::Lut1DOpData>(
-        OCIO::Lut1DOpData::LUT_INPUT_HALF_CODE, 65536);
+        OCIO::Lut1DOpData::LUT_INPUT_HALF_CODE, 65536, false);
 
     float * values = &lut->getArray().getValues()[0];
 
@@ -791,7 +791,7 @@ OCIO_ADD_TEST(Lut1DRenderer, basic)
 {
     // By default, this constructor creates an 'identity LUT'.
     OCIO::Lut1DOpDataRcPtr lutData =
-        std::make_shared<OCIO::Lut1DOpData>(OCIO::Lut1DOpData::LUT_STANDARD, 65536);
+        std::make_shared<OCIO::Lut1DOpData>(OCIO::Lut1DOpData::LUT_STANDARD, 65536, false);
 
     lutData->setFileOutputBitDepth(OCIO::BIT_DEPTH_F32);
 
@@ -855,7 +855,7 @@ OCIO_ADD_TEST(Lut1DRenderer, basic)
 OCIO_ADD_TEST(Lut1DRenderer, half)
 {
     OCIO::Lut1DOpDataRcPtr lutData
-        = std::make_shared<OCIO::Lut1DOpData>(OCIO::Lut1DOpData::LUT_STANDARD, 65536);
+        = std::make_shared<OCIO::Lut1DOpData>(OCIO::Lut1DOpData::LUT_STANDARD, 65536, false);
 
     const float step = 1.f / ((float)lutData->getArray().getLength() - 1.0f);
 
@@ -893,7 +893,7 @@ OCIO_ADD_TEST(Lut1DRenderer, nan)
 {
     // By default, this constructor creates an 'identity LUT'.
     OCIO::Lut1DOpDataRcPtr lutData =
-        std::make_shared<OCIO::Lut1DOpData>(OCIO::Lut1DOpData::LUT_STANDARD, 65536);
+        std::make_shared<OCIO::Lut1DOpData>(OCIO::Lut1DOpData::LUT_STANDARD, 65536, false);
 
     OCIO_CHECK_NO_THROW(lutData->validate());
     OCIO_CHECK_NO_THROW(lutData->finalize());
@@ -925,7 +925,7 @@ OCIO_ADD_TEST(Lut1DRenderer, nan)
 OCIO_ADD_TEST(Lut1DRenderer, lut_1d_red)
 {
     OCIO::Lut1DOpDataRcPtr lutData =
-        std::make_shared<OCIO::Lut1DOpData>(OCIO::Lut1DOpData::LUT_STANDARD, 32);
+        std::make_shared<OCIO::Lut1DOpData>(OCIO::Lut1DOpData::LUT_STANDARD, 32, false);
 
     OCIO::Array::Values & vals = lutData->getArray().getValues();
     const std::vector<float> lutValues = {
@@ -1013,7 +1013,7 @@ OCIO_ADD_TEST(Lut1DRenderer, lut_1d_red)
 OCIO_ADD_TEST(Lut1DRenderer, lut_1d_green)
 {
     OCIO::Lut1DOpDataRcPtr lutData
-        = std::make_shared<OCIO::Lut1DOpData>(OCIO::Lut1DOpData::LUT_STANDARD, 32);
+        = std::make_shared<OCIO::Lut1DOpData>(OCIO::Lut1DOpData::LUT_STANDARD, 32, false);
 
     OCIO::Array::Values & vals = lutData->getArray().getValues();
     const std::vector<float> lutValues = {
@@ -1103,7 +1103,7 @@ OCIO_ADD_TEST(Lut1DRenderer, lut_1d_green)
 OCIO_ADD_TEST(Lut1DRenderer, lut_1d_blue)
 {
     OCIO::Lut1DOpDataRcPtr lutData
-        = std::make_shared<OCIO::Lut1DOpData>(OCIO::Lut1DOpData::LUT_STANDARD, 32);
+        = std::make_shared<OCIO::Lut1DOpData>(OCIO::Lut1DOpData::LUT_STANDARD, 32, false);
 
     OCIO::Array::Values & vals = lutData->getArray().getValues();
     const std::vector<float> lutValues = {
@@ -1192,7 +1192,6 @@ OCIO_ADD_TEST(Lut1DRenderer, lut_1d_special_values)
 {
     // Create empty Config to use.
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
 
     const std::string ctfLUT("lut1d_infinity.ctf");
     OCIO::FileTransformRcPtr fileTransform = OCIO::CreateFileTransform(ctfLUT);
@@ -1249,7 +1248,6 @@ OCIO_ADD_TEST(Lut1DRenderer, lut_1d_hue_adjust)
 {
     // Create empty Config to use.
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
 
     const std::string ctfLUT("lut1d_1024_hue_adjust_test.ctf");
     OCIO::FileTransformRcPtr fileTransform = OCIO::CreateFileTransform(ctfLUT);
@@ -1327,7 +1325,6 @@ OCIO_ADD_TEST(Lut1DRenderer, lut_1d_half_domain_hue_adjust)
 {
     // Create empty Config to use.
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
 
     const std::string ctfLUT("lut1d_hd_hue_adjust.ctf");
     OCIO::FileTransformRcPtr fileTransform = OCIO::CreateFileTransform(ctfLUT);
@@ -1505,7 +1502,7 @@ OCIO_ADD_TEST(Lut1DRenderer, lut_1d_identity_half)
     // By default, this constructor creates an 'identity lut'.
     OCIO::Lut1DOpDataRcPtr lutData
         = std::make_shared<OCIO::Lut1DOpData>(OCIO::Lut1DOpData::LUT_INPUT_OUTPUT_HALF_CODE,
-                                              65536);
+                                              65536, false);
 
     OCIO_CHECK_NO_THROW(lutData->validate());
     OCIO_CHECK_NO_THROW(lutData->finalize());
@@ -1571,7 +1568,8 @@ OCIO_ADD_TEST(Lut1DRenderer, lut_1d_identity_half_to_int)
 
     // By default, this constructor creates an 'identity lut'.
     OCIO::Lut1DOpDataRcPtr lutData
-        = std::make_shared<OCIO::Lut1DOpData>(OCIO::Lut1DOpData::LUT_INPUT_OUTPUT_HALF_CODE, 65536);
+        = std::make_shared<OCIO::Lut1DOpData>(OCIO::Lut1DOpData::LUT_INPUT_OUTPUT_HALF_CODE,
+                                              65536, false);
 
     OCIO_CHECK_NO_THROW(lutData->validate());
     OCIO_CHECK_NO_THROW(lutData->finalize());
@@ -1625,7 +1623,8 @@ OCIO_ADD_TEST(Lut1DRenderer, lut_1d_identity_int_to_half)
 
     // By default, this constructor creates an 'identity lut'.
     OCIO::Lut1DOpDataRcPtr lutData
-        = std::make_shared<OCIO::Lut1DOpData>(OCIO::Lut1DOpData::LUT_INPUT_OUTPUT_HALF_CODE, 65536);
+        = std::make_shared<OCIO::Lut1DOpData>(OCIO::Lut1DOpData::LUT_INPUT_OUTPUT_HALF_CODE,
+                                              65536, false);
 
     OCIO_CHECK_NO_THROW(lutData->validate());
     OCIO_CHECK_NO_THROW(lutData->finalize());
@@ -1673,7 +1672,8 @@ OCIO_ADD_TEST(Lut1DRenderer, lut_1d_identity_half_code)
 
     // By default, this constructor creates an 'identity lut'.
     OCIO::Lut1DOpDataRcPtr lutData
-        = std::make_shared<OCIO::Lut1DOpData>(OCIO::Lut1DOpData::LUT_INPUT_OUTPUT_HALF_CODE, 65536);
+        = std::make_shared<OCIO::Lut1DOpData>(OCIO::Lut1DOpData::LUT_INPUT_OUTPUT_HALF_CODE,
+                                              65536, false);
 
     OCIO_CHECK_NO_THROW(lutData->validate());
     OCIO_CHECK_NO_THROW(lutData->finalize());
@@ -1725,7 +1725,7 @@ OCIO_ADD_TEST(Lut1DRenderer, lut_1d_inv_identity)
     const auto dim = OCIO::Lut1DOpData::GetLutIdealSize(OCIO::BIT_DEPTH_UINT10);
 
     OCIO::Lut1DOpDataRcPtr lutData
-        = std::make_shared<OCIO::Lut1DOpData>(OCIO::Lut1DOpData::LUT_STANDARD, dim);
+        = std::make_shared<OCIO::Lut1DOpData>(OCIO::Lut1DOpData::LUT_STANDARD, dim, false);
 
     lutData->setFileOutputBitDepth(OCIO::BIT_DEPTH_UINT10);
 
@@ -2279,7 +2279,8 @@ OCIO_ADD_TEST(Lut1DRenderer, lut_1d_inv_half_identity)
     {
         // By default, this constructor creates an 'identity LUT'.
         OCIO::Lut1DOpDataRcPtr lutData
-            = std::make_shared<OCIO::Lut1DOpData>(OCIO::Lut1DOpData::LUT_INPUT_HALF_CODE, 65536);
+            = std::make_shared<OCIO::Lut1DOpData>(OCIO::Lut1DOpData::LUT_INPUT_HALF_CODE,
+                                                  65536, false);
         lutData->setFileOutputBitDepth(OCIO::BIT_DEPTH_UINT10);
 
         auto invLut = lutData->inverse();
@@ -2341,7 +2342,7 @@ OCIO_ADD_TEST(Lut1DRenderer, lut_1d_inv_half_identity)
         // By default, this constructor creates an 'identity LUT'.
         OCIO::Lut1DOpDataRcPtr lutData
             = std::make_shared<OCIO::Lut1DOpData>(OCIO::Lut1DOpData::LUT_INPUT_HALF_CODE,
-                                                  65536);
+                                                  65536, false);
         lutData->setFileOutputBitDepth(OCIO::BIT_DEPTH_F32);
 
         auto invLut = lutData->inverse();
@@ -2403,7 +2404,6 @@ OCIO_ADD_TEST(Lut1DRenderer, lut_1d_inv_half_ctf)
 {
     // Create empty Config to use.
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
 
     // This ctf has increasing R & B channels and decreasing G channel.
     // It also has flat spots.
@@ -2464,7 +2464,6 @@ OCIO_ADD_TEST(Lut1DRenderer, lut_1d_inv_half_fclut)
 {
     // Create empty Config to use.
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
 
     // TODO: Review the test to add LUT & inverse LUT together when optimization is reworked.
 
@@ -2548,7 +2547,6 @@ OCIO_ADD_TEST(Lut1DRenderer, lut_1d_inv_half_domain_hue_adjust)
 {
     // Create empty Config to use.
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
 
     const std::string ctfLUT("lut1d_hd_hue_adjust.ctf");
     OCIO::FileTransformRcPtr fileTransform = OCIO::CreateFileTransform(ctfLUT);

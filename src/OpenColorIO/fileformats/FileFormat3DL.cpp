@@ -9,6 +9,7 @@
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "BitDepthUtils.h"
+#include "fileformats/FileFormatUtils.h"
 #include "MathUtils.h"
 #include "ops/lut1d/Lut1DOp.h"
 #include "ops/lut3d/Lut3DOp.h"
@@ -99,9 +100,9 @@ public:
 
     void getFormatInfo(FormatInfoVec & formatInfoVec) const override;
 
-    CachedFileRcPtr read(
-        std::istream & istream,
-        const std::string & fileName) const override;
+    CachedFileRcPtr read(std::istream & istream,
+                         const std::string & fileName,
+                         Interpolation interp) const override;
 
     void bake(const Baker & baker,
                 const std::string & formatName,
@@ -230,9 +231,9 @@ bool IsIdentity(const std::vector<int> & rawshaper, BitDepth outBitDepth)
 // Try and load the format
 // Raise an exception if it can't be loaded.
 
-CachedFileRcPtr LocalFileFormat::read(
-    std::istream & istream,
-    const std::string & /* fileName unused */) const
+CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
+                                      const std::string & /* fileName unused */,
+                                      Interpolation interp) const
 {
     std::vector<int> rawshaper;
     std::vector<int> raw3d;
@@ -401,6 +402,10 @@ CachedFileRcPtr LocalFileFormat::read(
         {
             unsigned long length = (unsigned long)rawshaper.size();
             cachedFile->lut1D = std::make_shared<Lut1DOpData>(length);
+            if (Lut1DOpData::IsValidInterpolation(interp))
+            {
+                cachedFile->lut1D->setInterpolation(interp);
+            }
             cachedFile->lut1D->setFileOutputBitDepth(out1DBD);
 
             const float scale = (float)GetBitDepthMaxValue(out1DBD);
@@ -454,6 +459,10 @@ CachedFileRcPtr LocalFileFormat::read(
         BitDepth out3DBD = GetOCIOBitdepth(lut3dbitdepth);
 
         cachedFile->lut3D = std::make_shared<Lut3DOpData>(lutEdgeLen);
+        if (Lut3DOpData::IsValidInterpolation(interp))
+        {
+            cachedFile->lut3D->setInterpolation(interp);
+        }
         cachedFile->lut3D->setFileOutputBitDepth(out3DBD);
 
         const float scale = (float)GetBitDepthMaxValue(out3DBD);
@@ -527,15 +536,14 @@ void LocalFileFormat::bake(const Baker & baker,
         transform->setLooks(looks.c_str());
         transform->setSrc(baker.getInputSpace());
         transform->setDst(baker.getTargetSpace());
-        inputToTarget = config->getProcessor(transform,
-            TRANSFORM_DIR_FORWARD);
+        inputToTarget = config->getProcessor(transform, TRANSFORM_DIR_FORWARD);
     }
     else
     {
         inputToTarget = config->getProcessor(baker.getInputSpace(),
             baker.getTargetSpace());
     }
-    ConstCPUProcessorRcPtr cpu = inputToTarget->getDefaultCPUProcessor();
+    ConstCPUProcessorRcPtr cpu = inputToTarget->getOptimizedCPUProcessor(OPTIMIZATION_LOSSLESS);
     cpu->apply(cubeImg);
 
     // Write out the file.
@@ -597,51 +605,51 @@ LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
     LocalCachedFileRcPtr cachedFile = DynamicPtrCast<LocalCachedFile>(untypedCachedFile);
 
     // This should never happen.
-    if(!cachedFile)
+    if(!cachedFile || (!cachedFile->lut1D && !cachedFile->lut3D))
     {
         std::ostringstream os;
         os << "Cannot build .3dl Op. Invalid cache type.";
         throw Exception(os.str().c_str());
     }
 
-    TransformDirection newDir = fileTransform.getDirection();
-    newDir = CombineTransformDirections(dir, newDir);
-    if(newDir == TRANSFORM_DIR_UNKNOWN)
+    const auto newDir = CombineTransformDirections(dir, fileTransform.getDirection());
+
+    // If the FileTransform specifies an interpolation, and it is valid, use it.  If value can't
+    // be used for a type of LUT use DEFAULT. It logs a warning if a specified value cannot be used
+    // by any LUT in the file. FileTransform interpolation defaults to INTERP_DEFAULT.
+    const auto fileInterp = fileTransform.getInterpolation();
+
+    bool fileInterpUsed = false;
+    auto lut1D = HandleLUT1D(cachedFile->lut1D, fileInterp, fileInterpUsed);
+    auto lut3D = HandleLUT3D(cachedFile->lut3D, fileInterp, fileInterpUsed);
+
+    if (!fileInterpUsed)
     {
-        std::ostringstream os;
-        os << "Cannot build file format transform,";
-        os << " unspecified transform direction.";
-        throw Exception(os.str().c_str());
+        LogWarningInterpolationNotUsed(fileInterp, fileTransform);
     }
 
-    // 1D LUT interpolation defaults to INTERP_LINEAR.
-    // 3D LUT will take the interpolation from the FileTransform attribute.
-    if (cachedFile->lut3D)
+    switch (newDir)
     {
-        cachedFile->lut3D->setInterpolation(fileTransform.getInterpolation());
-    }
-
-    if(newDir == TRANSFORM_DIR_FORWARD)
-    {
-        if(cachedFile->lut1D)
+    case TRANSFORM_DIR_FORWARD:
+        if (lut1D)
         {
-            CreateLut1DOp(ops, cachedFile->lut1D, newDir);
+            CreateLut1DOp(ops, lut1D, newDir);
         }
-        if(cachedFile->lut3D)
+        if (lut3D)
         {
-            CreateLut3DOp(ops, cachedFile->lut3D, newDir);
+            CreateLut3DOp(ops, lut3D, newDir);
         }
-    }
-    else if(newDir == TRANSFORM_DIR_INVERSE)
-    {
-        if(cachedFile->lut3D)
+        break;
+    case TRANSFORM_DIR_INVERSE:
+        if (lut3D)
         {
-            CreateLut3DOp(ops, cachedFile->lut3D, newDir);
+            CreateLut3DOp(ops, lut3D, newDir);
         }
-        if(cachedFile->lut1D)
+        if (lut1D)
         {
-            CreateLut1DOp(ops, cachedFile->lut1D, newDir);
+            CreateLut1DOp(ops, lut1D, newDir);
         }
+        break;
     }
 }
 }

@@ -176,7 +176,7 @@ public:
     bool hasChannelCrosstalk() const override;
     std::string getCacheID() const override;
 
-    ConstOpCPURcPtr getCPUOp() const override;
+    ConstOpCPURcPtr getCPUOp(bool fastLogExpPow) const override;
 
     bool supportedByLegacyShader() const override { return false; }
     void extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const override;
@@ -275,7 +275,7 @@ std::string Lut3DOp::getCacheID() const
     return cacheIDStream.str();
 }
 
-ConstOpCPURcPtr Lut3DOp::getCPUOp() const
+ConstOpCPURcPtr Lut3DOp::getCPUOp(bool /*fastLogExpPow*/) const
 {
     ConstLut3DOpDataRcPtr data = lut3DData();
     return GetLut3DRenderer(data);
@@ -305,11 +305,7 @@ void CreateLut3DOp(OpRcPtrVec & ops, Lut3DOpDataRcPtr & lut, TransformDirection 
 {
     Lut3DOpDataRcPtr lutData = lut;
 
-    if (direction == TRANSFORM_DIR_UNKNOWN)
-    {
-        throw Exception("Cannot apply Lut3DOp op, unspecified transform direction.");
-    }
-    else if (direction == TRANSFORM_DIR_INVERSE)
+    if (direction == TRANSFORM_DIR_INVERSE)
     {
         lutData = lut->inverse();
     }
@@ -334,7 +330,6 @@ void CreateLut3DTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op)
 }
 
 void BuildLut3DOp(OpRcPtrVec & ops,
-                  const Config & config,
                   const Lut3DTransform & transform,
                   TransformDirection dir)
 {

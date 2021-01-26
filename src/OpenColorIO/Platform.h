@@ -50,6 +50,9 @@ void Setenv(const char * name, const std::string & value);
 // Remove the environment variable.
 void Unsetenv(const char * name);
 
+// Only test the presence of the envvar i.e the value does not matter.
+bool isEnvPresent(const char * name);
+
 // Case insensitive string comparison
 int Strcasecmp(const char * str1, const char * str2);
 

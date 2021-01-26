@@ -29,6 +29,7 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "fileformats/FileFormatUtils.h"
 #include "MathUtils.h"
 #include "ops/lut1d/Lut1DOp.h"
 #include "ops/lut3d/Lut3DOp.h"
@@ -229,10 +230,14 @@ public:
     }
     ~CachedFileHDL() = default;
 
-    void setLUT1D(const std::vector<float> & values)
+    void setLUT1D(const std::vector<float> & values, Interpolation interp)
     {
         auto lutSize = static_cast<unsigned long>(values.size());
         lut1D = std::make_shared<Lut1DOpData>(lutSize);
+        if (Lut1DOpData::IsValidInterpolation(interp))
+        {
+            lut1D->setInterpolation(interp);
+        }
         lut1D->setFileOutputBitDepth(BIT_DEPTH_F32);
 
         auto & lutArray = lut1D->getArray();
@@ -267,9 +272,9 @@ public:
 
     void getFormatInfo(FormatInfoVec & formatInfoVec) const override;
 
-    CachedFileRcPtr read(
-        std::istream & istream,
-        const std::string & fileName) const override;
+    CachedFileRcPtr read(std::istream & istream,
+                         const std::string & fileName,
+                         Interpolation interp) const override;
 
     void bake(const Baker & baker,
                 const std::string & formatName,
@@ -293,9 +298,9 @@ void LocalFileFormat::getFormatInfo(FormatInfoVec & formatInfoVec) const
 }
 
 CachedFileRcPtr
-LocalFileFormat::read(
-    std::istream & istream,
-    const std::string & /* fileName unused */) const
+LocalFileFormat::read(std::istream & istream,
+                      const std::string & /* fileName unused */,
+                      Interpolation interp) const
 {
 
     // this shouldn't happen
@@ -448,6 +453,10 @@ LocalFileFormat::read(
             size_3d = lut_sizes[0];
 
             lut3d_ptr = std::make_shared<Lut3DOpData>(lut_sizes[0]);
+            if (Lut3DOpData::IsValidInterpolation(interp))
+            {
+                lut3d_ptr->setInterpolation(interp);
+            }
             lut3d_ptr->setFileOutputBitDepth(BIT_DEPTH_F32);
         }
 
@@ -488,7 +497,7 @@ LocalFileFormat::read(
             throw Exception(os.str().c_str());
         }
 
-        cachedFile->setLUT1D(lut_iter->second);
+        cachedFile->setLUT1D(lut_iter->second, interp);
     }
 
     if(cachedFile->hdltype == "3d" ||
@@ -546,7 +555,7 @@ LocalFileFormat::read(
             throw Exception(os.str().c_str());
         }
 
-        cachedFile->setLUT1D(lut_iter->second);
+        cachedFile->setLUT1D(lut_iter->second, interp);
     }
 
     return cachedFile;
@@ -635,8 +644,7 @@ void LocalFileFormat::bake(const Baker & baker,
         transform->setLooks(looks.c_str());
         transform->setSrc(inputSpace.c_str());
         transform->setDst(targetSpace.c_str());
-        inputToTargetProc = config->getProcessor(transform,
-            TRANSFORM_DIR_FORWARD);
+        inputToTargetProc = config->getProcessor(transform, TRANSFORM_DIR_FORWARD);
     }
     else
     {
@@ -708,7 +716,7 @@ void LocalFileFormat::bake(const Baker & baker,
             // what the log value 1.0 is in linear).
             ConstCPUProcessorRcPtr shaperToInputProc = config->getProcessor(
                 shaperSpace.c_str(),
-                inputSpace.c_str())->getDefaultCPUProcessor();
+                inputSpace.c_str())->getOptimizedCPUProcessor(OPTIMIZATION_LOSSLESS);
 
             float minval[3] = {0.0f, 0.0f, 0.0f};
             float maxval[3] = {1.0f, 1.0f, 1.0f};
@@ -737,7 +745,7 @@ void LocalFileFormat::bake(const Baker & baker,
 
         PackedImageDesc prelutImg(&prelutData[0], shaperSize, 1, 3);
 
-        ConstCPUProcessorRcPtr cpu = inputToShaperProc->getDefaultCPUProcessor();
+        ConstCPUProcessorRcPtr cpu = inputToShaperProc->getOptimizedCPUProcessor(OPTIMIZATION_LOSSLESS);
         cpu->apply(prelutImg);
     }
 
@@ -762,13 +770,11 @@ void LocalFileFormat::bake(const Baker & baker,
                 transform->setLooks(looks.c_str());
                 transform->setSrc(shaperSpace.c_str());
                 transform->setDst(targetSpace.c_str());
-                cubeProc = config->getProcessor(transform,
-                    TRANSFORM_DIR_FORWARD);
+                cubeProc = config->getProcessor(transform, TRANSFORM_DIR_FORWARD);
             }
             else
             {
-                cubeProc = config->getProcessor(shaperSpace.c_str(),
-                                                targetSpace.c_str());
+                cubeProc = config->getProcessor(shaperSpace.c_str(), targetSpace.c_str());
             }
         }
         else
@@ -777,7 +783,7 @@ void LocalFileFormat::bake(const Baker & baker,
             cubeProc = inputToTargetProc;
         }
 
-        ConstCPUProcessorRcPtr cpu = cubeProc->getDefaultCPUProcessor();
+        ConstCPUProcessorRcPtr cpu = cubeProc->getOptimizedCPUProcessor(OPTIMIZATION_LOSSLESS);
         cpu->apply(cubeImg);
     }
 
@@ -790,7 +796,7 @@ void LocalFileFormat::bake(const Baker & baker,
 
         GenerateIdentityLut1D(&onedData[0], onedSize, 3);
         PackedImageDesc onedImg(&onedData[0], onedSize, 1, 3);
-        ConstCPUProcessorRcPtr cpu = inputToTargetProc->getDefaultCPUProcessor();
+        ConstCPUProcessorRcPtr cpu = inputToTargetProc->getOptimizedCPUProcessor(OPTIMIZATION_LOSSLESS);
         cpu->apply(onedImg);
     }
 
@@ -895,70 +901,75 @@ LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
     CachedFileHDLRcPtr cachedFile = DynamicPtrCast<CachedFileHDL>(untypedCachedFile);
 
     // This should never happen.
-    if(!cachedFile)
+    if(!cachedFile || (!cachedFile->lut1D && !cachedFile->lut3D))
     {
         std::ostringstream os;
         os << "Cannot build Houdini Op. Invalid cache type.";
         throw Exception(os.str().c_str());
     }
 
-    TransformDirection newDir = CombineTransformDirections(dir,
-        fileTransform.getDirection());
+    const auto newDir = CombineTransformDirections(dir, fileTransform.getDirection());
 
-    if (cachedFile->lut3D)
+    const auto fileInterp = fileTransform.getInterpolation();
+
+    bool fileInterpUsed = false;
+    auto lut1D = HandleLUT1D(cachedFile->lut1D, fileInterp, fileInterpUsed);
+    auto lut3D = HandleLUT3D(cachedFile->lut3D, fileInterp, fileInterpUsed);
+
+    if (!fileInterpUsed)
     {
-        cachedFile->lut3D->setInterpolation(fileTransform.getInterpolation());
-    }
-    else if (cachedFile->lut1D)
-    {
-        cachedFile->lut1D->setInterpolation(fileTransform.getInterpolation());
+        LogWarningInterpolationNotUsed(fileInterp, fileTransform);
     }
 
-    if(newDir == TRANSFORM_DIR_FORWARD)
+    switch (newDir)
     {
-        if(cachedFile->hdltype == "c")
+    case TRANSFORM_DIR_FORWARD:
+    {
+        if (cachedFile->hdltype == "c")
         {
             CreateMinMaxOp(ops, cachedFile->from_min, cachedFile->from_max, newDir);
-            CreateLut1DOp(ops, cachedFile->lut1D, newDir);
+            CreateLut1DOp(ops, lut1D, newDir);
         }
-        else if(cachedFile->hdltype == "3d")
+        else if (cachedFile->hdltype == "3d")
         {
-            CreateLut3DOp(ops, cachedFile->lut3D, newDir);
+            CreateLut3DOp(ops, lut3D, newDir);
         }
-        else if(cachedFile->hdltype == "3d+1d")
+        else if (cachedFile->hdltype == "3d+1d")
         {
             CreateMinMaxOp(ops, cachedFile->from_min, cachedFile->from_max, newDir);
-            CreateLut1DOp(ops, cachedFile->lut1D, newDir);
-            CreateLut3DOp(ops, cachedFile->lut3D, newDir);
+            CreateLut1DOp(ops, lut1D, newDir);
+            CreateLut3DOp(ops, lut3D, newDir);
         }
         else
         {
             throw Exception("Unhandled hdltype while creating forward ops");
         }
+        break;
     }
-    else if(newDir == TRANSFORM_DIR_INVERSE)
+    case TRANSFORM_DIR_INVERSE:
     {
-        if(cachedFile->hdltype == "c")
+        if (cachedFile->hdltype == "c")
         {
-            CreateLut1DOp(ops, cachedFile->lut1D, newDir);
+            CreateLut1DOp(ops, lut1D, newDir);
             CreateMinMaxOp(ops, cachedFile->from_min, cachedFile->from_max, newDir);
         }
-        else if(cachedFile->hdltype == "3d")
+        else if (cachedFile->hdltype == "3d")
         {
-            CreateLut3DOp(ops, cachedFile->lut3D, newDir);
+            CreateLut3DOp(ops, lut3D, newDir);
         }
-        else if(cachedFile->hdltype == "3d+1d")
+        else if (cachedFile->hdltype == "3d+1d")
         {
-            CreateLut3DOp(ops, cachedFile->lut3D, newDir);
-            CreateLut1DOp(ops, cachedFile->lut1D, newDir);
+            CreateLut3DOp(ops, lut3D, newDir);
+            CreateLut1DOp(ops, lut1D, newDir);
             CreateMinMaxOp(ops, cachedFile->from_min, cachedFile->from_max, newDir);
         }
         else
         {
             throw Exception("Unhandled hdltype while creating reverse ops");
         }
+        break;
     }
-    return;
+    }
 }
 }
 

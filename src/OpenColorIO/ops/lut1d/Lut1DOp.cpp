@@ -49,7 +49,7 @@ public:
     void finalize() override;
     std::string getCacheID() const override;
 
-    ConstOpCPURcPtr getCPUOp() const override;
+    ConstOpCPURcPtr getCPUOp(bool fastLogExpPow) const override;
 
     bool supportedByLegacyShader() const override { return false; }
     void extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const override;
@@ -148,7 +148,7 @@ std::string Lut1DOp::getCacheID() const
     return cacheIDStream.str();
 }
 
-ConstOpCPURcPtr Lut1DOp::getCPUOp() const
+ConstOpCPURcPtr Lut1DOp::getCPUOp(bool /*fastLogExpPow*/) const
 {
     ConstLut1DOpDataRcPtr data = lut1DData();
     return GetLut1DRenderer(data, BIT_DEPTH_F32, BIT_DEPTH_F32);
@@ -183,11 +183,7 @@ void CreateLut1DOp(OpRcPtrVec & ops,
     // If so, return a mtx instead.
 
     Lut1DOpDataRcPtr lutData = lut;
-    if (direction == TRANSFORM_DIR_UNKNOWN)
-    {
-        throw Exception("Cannot apply Lut1DOp op, unspecified transform direction.");
-    }
-    else if (direction == TRANSFORM_DIR_INVERSE)
+    if (direction == TRANSFORM_DIR_INVERSE)
     {
         lutData = lut->inverse();
     }
@@ -228,7 +224,6 @@ void CreateLut1DTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op)
 }
 
 void BuildLut1DOp(OpRcPtrVec & ops,
-                  const Config & config,
                   const Lut1DTransform & transform,
                   TransformDirection dir)
 {

@@ -95,10 +95,6 @@ MatrixOpData::MatrixArray::MatrixArray()
     fill();
 }
 
-MatrixOpData::MatrixArray::~MatrixArray()
-{
-}
-
 MatrixOpData::MatrixArray & MatrixOpData::MatrixArray::operator=(const ArrayDouble & a)
 {
     if (this == &a) return *this;
@@ -107,13 +103,6 @@ MatrixOpData::MatrixArray & MatrixOpData::MatrixArray::operator=(const ArrayDoub
 
     validate();
 
-    return *this;
-}
-
-MatrixOpData::MatrixArray & MatrixOpData::MatrixArray::operator=(const MatrixArray & m)
-{
-    // Note: it works because MatrixArray does not (and must not) have any member variables.
-    *this = *dynamic_cast<const ArrayDouble*>(&m);
     return *this;
 }
 
@@ -761,7 +750,7 @@ void MatrixOpData::cleanUp(double offsetScale)
     // args.  In any case, the tolerance is small enough to pick up anything
     // that would be significant in the context of color management.
     const double scale = max_val > 1e-4 ? max_val : 1e-4;
-    const double abs_tol = scale * 1e-6;
+    const double abs_tol = scale * 1e-7;
 
     // Replace values that are close to integers by exact values.
     for (unsigned long i = 0; i<dim; ++i)
@@ -780,7 +769,7 @@ void MatrixOpData::cleanUp(double offsetScale)
 
     // Do likewise for the offsets.
     const double scale2 = offsetScale > 1e-4 ? offsetScale : 1e-4;
-    const double abs_tol2 = scale2 * 1e-6;
+    const double abs_tol2 = scale2 * 1e-7;
 
     for (unsigned long i = 0; i<dim; ++i)
     {
@@ -805,13 +794,9 @@ bool MatrixOpData::operator==(const OpData & other) const
             m_array     == mop->m_array);
 }
 
-void MatrixOpData::setDirection(TransformDirection dir)
+void MatrixOpData::setDirection(TransformDirection dir) noexcept
 {
     m_direction = dir;
-    if (m_direction == TRANSFORM_DIR_UNKNOWN)
-    {
-        throw Exception("MatrixOpData: unspecified transform direction.");
-    }
 }
 
 MatrixOpDataRcPtr MatrixOpData::getAsForward() const

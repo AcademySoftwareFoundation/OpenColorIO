@@ -12,7 +12,7 @@ namespace OCIO_NAMESPACE
 namespace
 {
 
-void MuteLoggingFunction(const char * message)
+void MuteLoggingFunction(const char *)
 {
     // Does nothing on purpose.
 }

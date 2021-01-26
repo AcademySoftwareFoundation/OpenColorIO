@@ -52,12 +52,26 @@ inline std::string Lower(std::string str)
     return str;
 }
 
+inline std::string Lower(const char * str)
+{
+    if (!str) return "";
+    const std::string s{ str };
+    return Lower(s);
+}
+
 // Return the upper case string.
 inline std::string Upper(std::string str)
 {
     std::transform(str.begin(), str.end(), str.begin(),
                    [](unsigned char c) { return Upper(c); });
     return str;
+}
+
+inline std::string Upper(const char * str)
+{
+    if (!str) return "";
+    const std::string s{ str };
+    return Upper(s);
 }
 
 // Case insensitive comparison of strings.
@@ -216,14 +230,19 @@ inline std::string::size_type ReverseFind(const std::string & subject, const std
 }
 
 // In place replace the 'search' substring by the 'replace' string in 'str'.
-inline void ReplaceInPlace(std::string & subject, const std::string & search, const std::string & replace)
+inline bool ReplaceInPlace(std::string & subject, const std::string & search, const std::string & replace)
 {
+    bool changed = false;
+
     size_t pos =  0;
     while ((pos = subject.find(search, pos)) != std::string::npos)
     {
         subject.replace(pos, search.length(), replace);
         pos += replace.length();
+        changed = true;
     }
+
+    return changed;
 }
 
 // Replace the 'search' substring by the 'replace' string in 'str'.

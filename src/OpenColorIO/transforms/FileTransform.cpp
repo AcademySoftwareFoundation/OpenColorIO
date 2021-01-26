@@ -1,13 +1,16 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
+
 #include <algorithm>
 #include <fstream>
 #include <map>
 #include <sstream>
+#include <string.h>
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "Caching.h"
 #include "FileTransform.h"
 #include "Logging.h"
 #include "Mutex.h"
@@ -34,32 +37,16 @@ class FileTransform::Impl
 {
 public:
     TransformDirection m_dir{ TRANSFORM_DIR_FORWARD };
-    Interpolation m_interp{ INTERP_UNKNOWN };
+    Interpolation m_interp{ INTERP_DEFAULT };
     std::string m_src;
 
     std::string m_cccid;
     CDLStyle m_cdlStyle{ CDL_TRANSFORM_DEFAULT };
 
-    Impl()
-    { }
-
+    Impl() = default;
     Impl(const Impl &) = delete;
-
-    ~Impl()
-    { }
-
-    Impl& operator= (const Impl & rhs)
-    {
-        if (this != &rhs)
-        {
-            m_dir = rhs.m_dir;
-            m_interp = rhs.m_interp;
-            m_src = rhs.m_src;
-            m_cccid = rhs.m_cccid;
-            m_cdlStyle = rhs.m_cdlStyle;
-        }
-        return *this;
-    }
+    Impl & operator= (const Impl &) = default;
+    ~Impl() = default;
 };
 
 ///////////////////////////////////////////////////////////////////////////
@@ -94,12 +81,24 @@ void FileTransform::setDirection(TransformDirection dir) noexcept
 
 void FileTransform::validate() const
 {
-    Transform::validate();
+    try
+    {
+        Transform::validate();
+    }
+    catch (Exception & ex)
+    {
+        std::string errMsg("FileTransform validation failed: ");
+        errMsg += ex.what();
+        throw Exception(errMsg.c_str());
+    }
 
     if (getImpl()->m_src.empty())
     {
         throw Exception("FileTransform: empty file path");
     }
+
+    // NB: Not validating interpolation since v1 configs such as the spi examples use
+    // interpolation=unknown.  So that is a legal usage, even if it makes no sense.
 }
 
 const char * FileTransform::getSrc() const
@@ -142,37 +141,108 @@ void FileTransform::setInterpolation(Interpolation interp)
     getImpl()->m_interp = interp;
 }
 
-int FileTransform::getNumFormats()
+int FileTransform::GetNumFormats()
 {
-    return FormatRegistry::GetInstance().getNumFormats(
-        FORMAT_CAPABILITY_READ);
+    return FormatRegistry::GetInstance().getNumFormats(FORMAT_CAPABILITY_READ);
 }
 
-const char * FileTransform::getFormatNameByIndex(int index)
+const char * FileTransform::GetFormatNameByIndex(int index)
 {
-    return FormatRegistry::GetInstance().getFormatNameByIndex(
-        FORMAT_CAPABILITY_READ, index);
+    return FormatRegistry::GetInstance().getFormatNameByIndex(FORMAT_CAPABILITY_READ, index);
 }
 
-const char * FileTransform::getFormatExtensionByIndex(int index)
+const char * FileTransform::GetFormatExtensionByIndex(int index)
 {
-    return FormatRegistry::GetInstance().getFormatExtensionByIndex(
-        FORMAT_CAPABILITY_READ, index);
+    return FormatRegistry::GetInstance().getFormatExtensionByIndex(FORMAT_CAPABILITY_READ, index);
 }
 
 std::ostream& operator<< (std::ostream& os, const FileTransform& t)
 {
     os << "<FileTransform ";
-    os << "direction=";
-    os << TransformDirectionToString(t.getDirection()) << ", ";
-    os << "interpolation=" << InterpolationToString(t.getInterpolation());
-    os << ", src=" << t.getSrc() << ", ";
-    os << "cccid=" << t.getCCCId();
-    os << "cdl_style=" << CDLStyleToString(t.getCDLStyle());
+    os << "direction=" << TransformDirectionToString(t.getDirection());
+    os << ", interpolation=" << InterpolationToString(t.getInterpolation());
+    os << ", src=" << t.getSrc();
+    const char * cccid = t.getCCCId();
+    if (cccid && *cccid)
+    {
+        os << ", cccid=" << t.getCCCId();
+    }
+    const auto cdlStyle = t.getCDLStyle();
+    if (cdlStyle != CDL_TRANSFORM_DEFAULT)
+    {
+        os << ", cdl_style=" << CDLStyleToString(cdlStyle);
+    }
     os << ">";
 
     return os;
 }
+
+bool CollectContextVariables(const Config &, 
+                             const Context & context,
+                             const FileTransform & tr,
+                             ContextRcPtr & usedContextVars)
+{
+    const char * src = tr.getSrc();
+
+    if (!src || !*src) return false;
+
+    bool foundContextVars = false;
+
+    // Used to collect the context variables needed to resolve the src string itself (not involving
+    // the search_path yet). 
+    ContextRcPtr ctxFilename = Context::Create();
+    ctxFilename->setSearchPath(context.getSearchPath());
+    ctxFilename->setWorkingDir(context.getWorkingDir());
+
+    const std::string resolvedString = context.resolveStringVar(src, ctxFilename);
+    if (0 != strcmp(resolvedString.c_str(), src))
+    {
+        foundContextVars = true;
+        usedContextVars->addStringVars(ctxFilename);
+    }
+
+    // We want to determine if any context vars are needed to resolve the filename. Currently,
+    // resolveFileLocation returns all usedContextVars in the search_path, regardless of whether
+    // they are needed for the given file.  The work-around is to compare the resolved location
+    // with and without using the environment -- if they are the same, it means the environment
+    // was not used. So we create an empty context for this purpose.    
+
+    ContextRcPtr emptyContext = Context::Create();
+    emptyContext->setSearchPath(context.getSearchPath());
+    emptyContext->setWorkingDir(context.getWorkingDir());
+
+    // Used to collect the context variables needed to resolve the search_path. Note that this may
+    // contain some variables that are not actually used.
+    ContextRcPtr ctxFilepath = Context::Create();
+    ctxFilepath->setSearchPath(context.getSearchPath());
+    ctxFilepath->setWorkingDir(context.getWorkingDir());
+
+    try
+    {
+        // TODO: resolveFileLocation() tests the file existence (i.e. uses FileExists()) which is
+        // useless here, and it could potentially add some performance penalty.
+
+        const std::string resolvedFilename
+            = context.resolveFileLocation(resolvedString.c_str(), ctxFilepath);
+
+        if (0 != strcmp(resolvedFilename.c_str(),
+                        emptyContext->resolveFileLocation(resolvedString.c_str())))
+        {
+            foundContextVars = true;
+            usedContextVars->addStringVars(ctxFilepath);
+        }
+    }
+    catch (Exception &)
+    {
+        // It could throw if the file does not exist. That's not the mandate of the method to report
+        // that kind of problem.  To be safe, it returns true i.e. there is a context variable.
+        foundContextVars = true;
+        usedContextVars->addStringVars(ctxFilepath);
+    }
+
+    return foundContextVars;
+}
+
 
 ///////////////////////////////////////////////////////////////////////////
 
@@ -321,7 +391,7 @@ FileFormat* FormatRegistry::getRawFormatByIndex(int index) const
     return m_rawFormats[index];
 }
 
-int FormatRegistry::getNumFormats(int capability) const
+int FormatRegistry::getNumFormats(int capability) const noexcept
 {
     if(capability == FORMAT_CAPABILITY_READ)
     {
@@ -338,8 +408,7 @@ int FormatRegistry::getNumFormats(int capability) const
     return 0;
 }
 
-const char * FormatRegistry::getFormatNameByIndex(
-    int capability, int index) const
+const char * FormatRegistry::getFormatNameByIndex(int capability, int index) const noexcept
 {
     if(capability == FORMAT_CAPABILITY_READ)
     {
@@ -368,8 +437,7 @@ const char * FormatRegistry::getFormatNameByIndex(
     return "";
 }
 
-const char * FormatRegistry::getFormatExtensionByIndex(
-    int capability, int index) const
+const char * FormatRegistry::getFormatExtensionByIndex(int capability, int index) const noexcept
 {
     if(capability == FORMAT_CAPABILITY_READ)
     {
@@ -428,8 +496,9 @@ void FileFormat::bake(const Baker & /*baker*/,
     throw Exception(os.str().c_str());
 }
 
-void FileFormat::write(const OpRcPtrVec & /*ops*/,
-                       const FormatMetadataImpl & /*metadata*/,
+void FileFormat::write(const ConstConfigRcPtr & /*config*/,
+                       const ConstContextRcPtr & /*context*/,
+                       const GroupTransform & /*group*/,
                        const std::string & formatName,
                        std::ostream & /*ostream*/) const
 {
@@ -443,14 +512,16 @@ namespace
 
 void LoadFileUncached(FileFormat * & returnFormat,
                       CachedFileRcPtr & returnCachedFile,
-                      const std::string & filepath)
+                      const std::string & filepath,
+                      Interpolation interp)
 {
     returnFormat = NULL;
 
     {
-        std::ostringstream os;
-        os << "Opening " << filepath;
-        LogDebug(os.str());
+        std::ostringstream oss;
+        oss << "**" << std::endl
+            << "Opening " << filepath;
+        LogDebug(oss.str());
     }
 
     // Try the initial format.
@@ -489,15 +560,13 @@ void LoadFileUncached(FileFormat * & returnFormat,
                 throw Exception(os.str().c_str());
             }
 
-            CachedFileRcPtr cachedFile = tryFormat->read(
-                filestream,
-                filepath);
+            CachedFileRcPtr cachedFile = tryFormat->read(filestream, filepath, interp);
 
             if(IsDebugLoggingEnabled())
             {
                 std::ostringstream os;
                 os << "    Loaded primary format ";
-                os << tryFormat->getName();
+                os << tryFormat->getName() << std::endl;
                 LogDebug(os.str());
             }
 
@@ -513,7 +582,7 @@ void LoadFileUncached(FileFormat * & returnFormat,
                 filestream.close();
             }
 
-            primaryErrorText += "\t'";
+            primaryErrorText += "    '";
             primaryErrorText += tryFormat->getName();
             primaryErrorText += "' failed with: ";
             primaryErrorText += e.what();
@@ -562,7 +631,7 @@ void LoadFileUncached(FileFormat * & returnFormat,
                 throw Exception(os.str().c_str());
             }
 
-            cachedFile = altFormat->read(filestream, filepath);
+            cachedFile = altFormat->read(filestream, filepath, interp);
 
             if(IsDebugLoggingEnabled())
             {
@@ -633,49 +702,58 @@ void LoadFileUncached(FileFormat * & returnFormat,
 struct FileCacheResult
 {
     Mutex mutex;
-    FileFormat * format;
-    bool ready;
-    bool error;
+    FileFormat * format = nullptr;
+    bool ready = false;
+    bool error = false;
     CachedFileRcPtr cachedFile;
     std::string exceptionText;
 
-    FileCacheResult():
-        format(NULL),
-        ready(false),
-        error(false)
-    {}
+    FileCacheResult() = default;
 };
 
 typedef OCIO_SHARED_PTR<FileCacheResult> FileCacheResultPtr;
-typedef std::map<std::string, FileCacheResultPtr> FileCacheMap;
-
-FileCacheMap g_fileCache;
-Mutex g_fileCacheLock;
 
 } // namespace
 
+
+// A global file content cache.
+template class GenericCache<std::string, FileCacheResultPtr>;
+GenericCache<std::string, FileCacheResultPtr> g_fileCache;
+
+
 void GetCachedFileAndFormat(FileFormat * & format,
                             CachedFileRcPtr & cachedFile,
-                            const std::string & filepath)
+                            const std::string & filepath,
+                            Interpolation interp)
 {
+    // Have a two-mutex approach to decouple the cache entry creation from
+    // the data creation. It was originally done to improve the multi-threaded
+    // file lookup.  Refer to PR #309 for details.
+
     // Load the file cache ptr from the global map
     FileCacheResultPtr result;
     {
-        AutoMutex lock(g_fileCacheLock);
-        FileCacheMap::iterator iter = g_fileCache.find(filepath);
-        if (iter != g_fileCache.end())
+        AutoMutex guard(g_fileCache.lock());
+    
+        if (g_fileCache.isEnabled())
         {
-            result = iter->second;
+            // As the entry is a shared pointer instance, having an empty one
+            // means that the entry does not exist in the cache. So, it provides
+            // a fast existence check.
+            result = g_fileCache[filepath];
+            if (!result)
+            {
+                result = std::make_shared<FileCacheResult>();
+                g_fileCache[filepath] = result;
+            }
         }
         else
         {
-            result = FileCacheResultPtr(new FileCacheResult);
-            g_fileCache[filepath] = result;
+            result = std::make_shared<FileCacheResult>();
         }
     }
 
-    // If this file has already been loaded, return
-    // the result immediately
+    // If this file has already been loaded, return the result immediately.
 
     AutoMutex lock(result->mutex);
     if (!result->ready)
@@ -685,9 +763,7 @@ void GetCachedFileAndFormat(FileFormat * & format,
 
         try
         {
-            LoadFileUncached(result->format,
-                result->cachedFile,
-                filepath);
+            LoadFileUncached(result->format, result->cachedFile, filepath, interp);
         }
         catch (std::exception & e)
         {
@@ -735,7 +811,6 @@ void GetCachedFileAndFormat(FileFormat * & format,
 
 void ClearFileTransformCaches()
 {
-    AutoMutex lock(g_fileCacheLock);
     g_fileCache.clear();
 }
 
@@ -756,17 +831,17 @@ void BuildFileTransformOps(OpRcPtrVec & ops,
     std::string filepath = context->resolveFileLocation(src.c_str());
 
     // Verify the recursion is valid, FileNoOp is added for each file.
-    for (ConstOpRcPtr&& op : ops)
+    for (const OpRcPtr & op : ops)
     {
-        ConstOpDataRcPtr data = op->data();
+        ConstOpRcPtr const_op(op);
+        ConstOpDataRcPtr data = const_op->data();
         auto fileData = DynamicPtrCast<const FileNoOpData>(data);
         if (fileData)
         {
             // Error if file is still being loaded and is the same as the
             // one about to be loaded.
             if (!fileData->getComplete() &&
-                Platform::Strcasecmp(fileData->getPath().c_str(),
-                                        filepath.c_str()) == 0)
+                Platform::Strcasecmp(fileData->getPath().c_str(), filepath.c_str()) == 0)
             {
                 std::ostringstream os;
                 os << "Reference to: " << filepath;
@@ -780,21 +855,19 @@ void BuildFileTransformOps(OpRcPtrVec & ops,
     FileFormat* format = NULL;
     CachedFileRcPtr cachedFile;
 
-    GetCachedFileAndFormat(format, cachedFile, filepath);
+    GetCachedFileAndFormat(format, cachedFile, filepath, fileTransform.getInterpolation());
 
     try
     {
         // Add FileNoOp and keep track of it.
         CreateFileNoOp(ops, filepath);
+
         ConstOpRcPtr fileNoOpConst = ops.back();
         OpRcPtr fileNoOp = ops.back();
 
         // CTF implementation of FileFormat::buildFileOps might call
         // BuildFileTransformOps for References.
-        format->buildFileOps(ops,
-                                config, context,
-                                cachedFile, fileTransform,
-                                dir);
+        format->buildFileOps(ops, config, context, cachedFile, fileTransform, dir);
 
         // File has been loaded completely. It may now be referenced again.
         ConstOpDataRcPtr data = fileNoOpConst->data();

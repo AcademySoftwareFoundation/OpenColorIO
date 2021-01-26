@@ -547,13 +547,9 @@ bool RangeOpData::operator==(const OpData & other) const
     return true;
 }
 
-void RangeOpData::setDirection(TransformDirection dir)
+void RangeOpData::setDirection(TransformDirection dir) noexcept
 {
     m_direction = dir;
-    if (m_direction == TRANSFORM_DIR_UNKNOWN)
-    {
-        throw Exception("RangeOpData: unspecified transform direction.");
-    }
 }
 
 RangeOpDataRcPtr RangeOpData::getAsForward() const

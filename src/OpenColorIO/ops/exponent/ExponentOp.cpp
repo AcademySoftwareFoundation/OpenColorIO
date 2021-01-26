@@ -148,7 +148,7 @@ public:
 
     std::string getCacheID() const override;
 
-    ConstOpCPURcPtr getCPUOp() const override;
+    ConstOpCPURcPtr getCPUOp(bool fastLogExpPow) const override;
 
     void extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const override;
 
@@ -246,7 +246,7 @@ std::string ExponentOp::getCacheID() const
     return cacheIDStream.str();
 }
 
-ConstOpCPURcPtr ExponentOp::getCPUOp() const
+ConstOpCPURcPtr ExponentOp::getCPUOp(bool /*fastLogExpPow*/) const
 {
     return std::make_shared<ExponentOpCPU>(expData());
 }
@@ -256,14 +256,18 @@ void ExponentOp::extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) con
     GpuShaderText ss(shaderCreator->getLanguage());
     ss.indent();
 
+    ss.newLine() << "";
+    ss.newLine() << "// Add an Exponent processing";
+    ss.newLine() << "";
+
     // outColor = pow(max(outColor, 0.), exp);
 
     ss.newLine()
         << shaderCreator->getPixelName()
         << " = pow( "
         << "max( " << shaderCreator->getPixelName()
-        << ", " << ss.vec4fConst(0.0f) << " )"
-        << ", " << ss.vec4fConst(expData()->m_exp4[0], expData()->m_exp4[1],
+        << ", " << ss.float4Const(0.0f) << " )"
+        << ", " << ss.float4Const(expData()->m_exp4[0], expData()->m_exp4[1],
                                     expData()->m_exp4[2], expData()->m_exp4[3]) << " );";
 
     shaderCreator->addToFunctionShaderCode(ss.string().c_str());
@@ -285,11 +289,14 @@ void CreateExponentOp(OpRcPtrVec & ops,
                       ExponentOpDataRcPtr & expData,
                       TransformDirection direction)
 {
-    if (direction == TRANSFORM_DIR_UNKNOWN)
+    switch (direction)
     {
-        throw Exception("Cannot create ExponentOp with unspecified transform direction.");
+    case TRANSFORM_DIR_FORWARD:
+    {
+        ops.push_back(std::make_shared<ExponentOp>(expData));
+        break;
     }
-    else if (direction == TRANSFORM_DIR_INVERSE)
+    case TRANSFORM_DIR_INVERSE:
     {
         double values[4];
         for (int i = 0; i<4; ++i)
@@ -305,10 +312,8 @@ void CreateExponentOp(OpRcPtrVec & ops,
         }
         ExponentOpDataRcPtr expInv = std::make_shared<ExponentOpData>(values);
         ops.push_back(std::make_shared<ExponentOp>(expInv));
+        break;
     }
-    else
-    {
-        ops.push_back(std::make_shared<ExponentOp>(expData));
     }
 }
 

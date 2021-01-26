@@ -2,7 +2,10 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 
+#include "ops/cdl/CDLOpData.h"
 #include "ops/fixedfunction/FixedFunctionOpData.h"
+#include "ops/gamma/GammaOpData.h"
+#include "ops/log/LogOpData.h"
 
 #include "transforms/LookTransform.cpp"
 
@@ -117,19 +120,19 @@ colorspaces:
 
   - !<ColorSpace>
     name: source
-    to_reference: !<FixedFunctionTransform> {name: src, style: ACES_RedMod03}
+    to_scene_reference: !<FixedFunctionTransform> {name: src, style: ACES_RedMod03}
 
   - !<ColorSpace>
     name: destination
-    from_reference: !<FixedFunctionTransform> {name: dst, style: ACES_RedMod03}
+    from_scene_reference: !<FixedFunctionTransform> {name: dst, style: ACES_RedMod03}
 
   - !<ColorSpace>
     name: look1_cs
-    to_reference: !<FixedFunctionTransform> {name: look1_cs trans, style: ACES_RedMod03}
+    to_scene_reference: !<FixedFunctionTransform> {name: look1_cs trans, style: ACES_RedMod03}
 
   - !<ColorSpace>
     name: look2_3_cs
-    to_reference: !<FixedFunctionTransform> {name: look2_3_cs trans, style: ACES_RedMod03}
+    to_scene_reference: !<FixedFunctionTransform> {name: look2_3_cs trans, style: ACES_RedMod03}
 )" };
 
     std::istringstream is;
@@ -272,6 +275,8 @@ OCIO_ADD_TEST(LookTransform, build_look_options_ops)
     constexpr const char * OCIO_CONFIG{ R"(
 ocio_profile_version: 2
 
+search_path: luts
+
 roles:
   default: raw
 
@@ -316,23 +321,23 @@ colorspaces:
 
   - !<ColorSpace>
     name: source
-    to_reference: !<FixedFunctionTransform> {name: src, style: ACES_RedMod03}
+    to_scene_reference: !<FixedFunctionTransform> {name: src, style: ACES_RedMod03}
 
   - !<ColorSpace>
     name: destination
-    from_reference: !<FixedFunctionTransform> {name: dst, style: ACES_RedMod03}
+    from_scene_reference: !<FixedFunctionTransform> {name: dst, style: ACES_RedMod03}
 
   - !<ColorSpace>
     name: look2_cs
-    to_reference: !<FixedFunctionTransform> {name: look2_cs trans, style: ACES_RedMod03}
+    to_scene_reference: !<FixedFunctionTransform> {name: look2_cs trans, style: ACES_RedMod03}
 
   - !<ColorSpace>
     name: look3_cs
-    to_reference: !<FixedFunctionTransform> {name: look3_cs trans, style: ACES_RedMod03}
+    to_scene_reference: !<FixedFunctionTransform> {name: look3_cs trans, style: ACES_RedMod03}
 
   - !<ColorSpace>
     name: look4_cs
-    to_reference: !<FixedFunctionTransform> {name: look4_cs trans, style: ACES_RedMod03}
+    to_scene_reference: !<FixedFunctionTransform> {name: look4_cs trans, style: ACES_RedMod03}
 )" };
 
     std::istringstream is;
@@ -442,4 +447,277 @@ colorspaces:
                           OCIO::Exception,
                           "The specified file reference 'missingfile' could not be located");
 
+}
+
+OCIO_ADD_TEST(LookTransform, context_variables)
+{
+    constexpr const char * OCIO_CONFIG{ R"(
+ocio_profile_version: 2
+
+environment: { FILE1: cdl_test1.cc, FILE2: cdl_test1.cc }
+
+roles:
+  default: cs1
+
+file_rules:
+  - !<Rule> {name: Default, colorspace: default}
+
+displays:
+  Disp1:
+  - !<View> {name: View1, colorspace: cs1}
+
+looks:
+  - !<Look>
+    name: look1
+    process_space: default
+    transform: !<FileTransform> {src: $FILE1}
+  - !<Look>
+    name: look2
+    process_space: default
+    inverse_transform: !<LookTransform> {src: default, dst: cs2, looks: +look1}
+  - !<Look>
+    name: look3
+    process_space: default
+    transform: !<CDLTransform> {offset: [0.1, 0.1, 0.1]}
+  - !<Look>
+    name: look4
+    process_space: cs4
+    transform: !<CDLTransform> {offset: [0.1, 0.1, 0.1]}
+
+colorspaces:
+  - !<ColorSpace>
+    name: cs1
+  - !<ColorSpace>
+    name: cs2
+    from_reference: !<MatrixTransform> {offset: [0.11, 0.12, 0.13, 0]}
+  - !<ColorSpace>
+    name: cs3
+    from_reference: !<MatrixTransform> {offset: [0.1, 0.2, 0.3, 0]}
+  - !<ColorSpace>
+    name: cs4
+    from_reference: !<FileTransform> {src: $FILE2}
+)" };
+
+    std::istringstream is;
+    is.str(OCIO_CONFIG);
+
+    OCIO::ContextRcPtr usedContextVars = OCIO::Context::Create();
+
+    OCIO::ConfigRcPtr cfg;
+    OCIO_CHECK_NO_THROW(cfg = OCIO::Config::CreateFromStream(is)->createEditableCopy());
+    cfg->setSearchPath(OCIO::GetTestFilesDir().c_str());
+    OCIO_CHECK_NO_THROW(cfg->validate());
+
+    OCIO::LookTransformRcPtr look = OCIO::LookTransform::Create();
+    look->setSrc("cs1");
+    look->setDst("cs3");
+    usedContextVars = OCIO::Context::Create(); // New & empty instance.
+    OCIO_CHECK_ASSERT(!OCIO::CollectContextVariables(*cfg.get(), *cfg->getCurrentContext(), *look, usedContextVars));
+    OCIO_CHECK_EQUAL(0, usedContextVars->getNumStringVars());
+
+    // Step 1 - Test each basic cases.
+
+    look->setLooks("+look1");
+    usedContextVars = OCIO::Context::Create(); // New & empty instance.
+    OCIO_CHECK_ASSERT(OCIO::CollectContextVariables(*cfg.get(), *cfg->getCurrentContext(), *look, usedContextVars));
+    OCIO_CHECK_EQUAL(1, usedContextVars->getNumStringVars());
+    OCIO_CHECK_EQUAL(std::string("FILE1"), usedContextVars->getStringVarNameByIndex(0));
+    OCIO_CHECK_EQUAL(std::string("cdl_test1.cc"), usedContextVars->getStringVarByIndex(0));
+
+    look->setLooks("-look2");
+    usedContextVars = OCIO::Context::Create(); // New & empty instance.
+    OCIO_CHECK_ASSERT(OCIO::CollectContextVariables(*cfg.get(), *cfg->getCurrentContext(), *look, usedContextVars));
+    OCIO_CHECK_EQUAL(1, usedContextVars->getNumStringVars());
+    OCIO_CHECK_EQUAL(std::string("FILE1"), usedContextVars->getStringVarNameByIndex(0));
+    OCIO_CHECK_EQUAL(std::string("cdl_test1.cc"), usedContextVars->getStringVarByIndex(0));
+
+    look->setLooks("look3");
+    usedContextVars = OCIO::Context::Create(); // New & empty instance.
+    OCIO_CHECK_ASSERT(!OCIO::CollectContextVariables(*cfg.get(), *cfg->getCurrentContext(), *look, usedContextVars));
+    OCIO_CHECK_EQUAL(0, usedContextVars->getNumStringVars());
+
+    look->setLooks("+look4");
+    usedContextVars = OCIO::Context::Create(); // New & empty instance.
+    OCIO_CHECK_ASSERT(OCIO::CollectContextVariables(*cfg.get(), *cfg->getCurrentContext(), *look, usedContextVars));
+    OCIO_CHECK_EQUAL(1, usedContextVars->getNumStringVars());
+    OCIO_CHECK_EQUAL(std::string("FILE2"), usedContextVars->getStringVarNameByIndex(0));
+    OCIO_CHECK_EQUAL(std::string("cdl_test1.cc"), usedContextVars->getStringVarByIndex(0));
+
+
+    // Step 2 - Test with several looks.
+
+    look->setLooks("look3, -look1");
+    usedContextVars = OCIO::Context::Create(); // New & empty instance.
+    OCIO_CHECK_ASSERT(OCIO::CollectContextVariables(*cfg.get(), *cfg->getCurrentContext(), *look, usedContextVars));
+    OCIO_CHECK_EQUAL(1, usedContextVars->getNumStringVars());
+    OCIO_CHECK_EQUAL(std::string("FILE1"), usedContextVars->getStringVarNameByIndex(0));
+    OCIO_CHECK_EQUAL(std::string("cdl_test1.cc"), usedContextVars->getStringVarByIndex(0));
+
+    look->setLooks("look3, -look2, +look4");
+    usedContextVars = OCIO::Context::Create(); // New & empty instance.
+    OCIO_CHECK_ASSERT(OCIO::CollectContextVariables(*cfg.get(), *cfg->getCurrentContext(), *look, usedContextVars));
+    OCIO_CHECK_EQUAL(2, usedContextVars->getNumStringVars());
+    OCIO_CHECK_EQUAL(std::string("FILE1"), usedContextVars->getStringVarNameByIndex(0));
+    OCIO_CHECK_EQUAL(std::string("cdl_test1.cc"), usedContextVars->getStringVarByIndex(0));
+    OCIO_CHECK_EQUAL(std::string("FILE2"), usedContextVars->getStringVarNameByIndex(1));
+    OCIO_CHECK_EQUAL(std::string("cdl_test1.cc"), usedContextVars->getStringVarByIndex(1));}
+
+
+OCIO_ADD_TEST(LookTransform, inverse_look_transform)
+{
+    // Test inversion of the transform containing a look.
+
+    constexpr const char * OCIO_CONFIG{ R"(
+ocio_profile_version: 2
+
+search_path: luts
+
+roles:
+  default: raw
+
+displays:
+  sRGB:
+    - !<View> {name: Raw, colorspace: raw}
+
+looks:
+  - !<Look>
+    name: look1
+    process_space: log
+    transform: !<CDLTransform> {sat: 0.8}
+
+colorspaces:
+  - !<ColorSpace>
+    name: raw
+    family: raw
+    bitdepth: 32f
+    isdata: false
+
+  - !<ColorSpace>
+    name: log
+    to_scene_reference: !<LogTransform> {base: 2, direction: inverse}
+
+  - !<ColorSpace>
+    name: vd
+    from_scene_reference: !<ExponentTransform> {value: [2.4, 2.4, 2.4, 1], direction: inverse}
+
+  - !<ColorSpace>
+    name: vd_graded
+    from_scene_reference: !<LookTransform> {src: raw, dst: vd, looks: look1}
+
+  - !<ColorSpace>
+    name: vd_graded_inverse
+    to_scene_reference: !<LookTransform> {src: raw, dst: vd, looks: look1, direction: inverse}
+
+)" };
+
+    std::istringstream is;
+    is.str(OCIO_CONFIG);
+
+    OCIO::ConstConfigRcPtr config;
+    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+    OCIO_CHECK_NO_THROW(config->validate());
+
+    OCIO::ConstColorSpaceRcPtr srcColorSpace;
+    OCIO_CHECK_NO_THROW(srcColorSpace = config->getColorSpace("raw"));
+    OCIO::ConstColorSpaceRcPtr dstColorSpace;
+    OCIO_CHECK_NO_THROW(dstColorSpace = config->getColorSpace("vd_graded"));
+
+    OCIO::OpRcPtrVec ops;
+    OCIO_CHECK_NO_THROW(BuildColorSpaceOps(ops, *config, config->getCurrentContext(),
+                                           srcColorSpace, dstColorSpace, true));
+    OCIO_CHECK_NO_THROW(ops.validate());
+    OCIO_REQUIRE_EQUAL(ops.size(), 11);
+    OCIO::ConstOpRcPtr op = ops[0];
+    OCIO_CHECK_ASSERT(op->isNoOpType());
+    op = ops[1];
+    OCIO_CHECK_ASSERT(op->isNoOpType());
+    op = ops[2]; // raw to log
+    OCIO_REQUIRE_EQUAL(op->data()->getType(), OCIO::OpData::LogType);
+    auto lg = OCIO_DYNAMIC_POINTER_CAST<const OCIO::LogOpData>(op->data());
+    OCIO_CHECK_ASSERT(lg);
+    OCIO_CHECK_EQUAL(lg->getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
+    op = ops[3];
+    OCIO_CHECK_ASSERT(op->isNoOpType());
+    op = ops[4];
+    OCIO_CHECK_ASSERT(op->isNoOpType());
+    op = ops[5];  // look
+    OCIO_REQUIRE_EQUAL(op->data()->getType(), OCIO::OpData::CDLType);
+    auto cdl = OCIO_DYNAMIC_POINTER_CAST<const OCIO::CDLOpData>(op->data());
+    OCIO_CHECK_ASSERT(cdl);
+    OCIO_CHECK_EQUAL(cdl->getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
+    op = ops[6];
+    OCIO_CHECK_ASSERT(op->isNoOpType());
+    op = ops[7]; // log to raw
+    OCIO_REQUIRE_EQUAL(op->data()->getType(), OCIO::OpData::LogType);
+    lg = OCIO_DYNAMIC_POINTER_CAST<const OCIO::LogOpData>(op->data());
+    OCIO_CHECK_ASSERT(lg);
+    OCIO_CHECK_EQUAL(lg->getDirection(), OCIO::TRANSFORM_DIR_INVERSE);
+    op = ops[8]; // raw to vd
+    OCIO_REQUIRE_EQUAL(op->data()->getType(), OCIO::OpData::GammaType);
+    auto gm = OCIO_DYNAMIC_POINTER_CAST<const OCIO::GammaOpData>(op->data());
+    OCIO_CHECK_ASSERT(gm);
+    OCIO_CHECK_EQUAL(gm->getDirection(), OCIO::TRANSFORM_DIR_INVERSE);
+    op = ops[9];
+    OCIO_CHECK_ASSERT(op->isNoOpType());
+    op = ops[10];
+    OCIO_CHECK_ASSERT(op->isNoOpType());
+
+    // Test in inverse direction.
+    ops.clear();
+    OCIO_CHECK_NO_THROW(BuildColorSpaceOps(ops, *config, config->getCurrentContext(),
+                                           dstColorSpace, srcColorSpace, true));
+    OCIO_REQUIRE_EQUAL(ops.size(), 11);
+    OCIO_CHECK_NO_THROW(ops.validate());
+    op = ops[0];
+    OCIO_CHECK_ASSERT(op->isNoOpType());
+    op = ops[1];
+    OCIO_CHECK_ASSERT(op->isNoOpType());
+    op = ops[2]; // vd to raw
+    OCIO_REQUIRE_EQUAL(op->data()->getType(), OCIO::OpData::GammaType);
+    gm = OCIO_DYNAMIC_POINTER_CAST<const OCIO::GammaOpData>(op->data());
+    OCIO_CHECK_ASSERT(gm);
+    OCIO_CHECK_EQUAL(gm->getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
+    op = ops[3]; // raw to log
+    OCIO_REQUIRE_EQUAL(op->data()->getType(), OCIO::OpData::LogType);
+    lg = OCIO_DYNAMIC_POINTER_CAST<const OCIO::LogOpData>(op->data());
+    OCIO_CHECK_ASSERT(lg);
+    OCIO_CHECK_EQUAL(lg->getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
+    op = ops[4];
+    OCIO_CHECK_ASSERT(op->isNoOpType());
+    op = ops[5];
+    OCIO_CHECK_ASSERT(op->isNoOpType());
+    op = ops[6]; // look
+    OCIO_REQUIRE_EQUAL(op->data()->getType(), OCIO::OpData::CDLType);
+    cdl = OCIO_DYNAMIC_POINTER_CAST<const OCIO::CDLOpData>(op->data());
+    OCIO_CHECK_ASSERT(cdl);
+    OCIO_CHECK_EQUAL(cdl->getDirection(), OCIO::TRANSFORM_DIR_INVERSE);
+    op = ops[7];
+    OCIO_CHECK_ASSERT(op->isNoOpType());
+    op = ops[8]; // log to raw
+    OCIO_REQUIRE_EQUAL(op->data()->getType(), OCIO::OpData::LogType);
+    lg = OCIO_DYNAMIC_POINTER_CAST<const OCIO::LogOpData>(op->data());
+    OCIO_CHECK_ASSERT(lg);
+    OCIO_CHECK_EQUAL(lg->getDirection(), OCIO::TRANSFORM_DIR_INVERSE);
+    op = ops[9];
+    OCIO_CHECK_ASSERT(op->isNoOpType());
+    op = ops[10];
+    OCIO_CHECK_ASSERT(op->isNoOpType());
+
+    // Generated ops for vd_graded_inverse should be identical to the above
+    // (only difference being that it's defined using to_scene_reference and inverse
+    // look transform direction instead of from_scene_reference)
+    OCIO::ConstColorSpaceRcPtr dstColorSpaceInv;
+    OCIO_CHECK_NO_THROW(dstColorSpaceInv = config->getColorSpace("vd_graded_inverse"));
+
+    OCIO::OpRcPtrVec ops2;
+    OCIO_CHECK_NO_THROW(BuildColorSpaceOps(ops2, *config, config->getCurrentContext(),
+                                           dstColorSpaceInv, srcColorSpace, true));
+    OCIO_REQUIRE_EQUAL(ops2.size(), ops.size());
+    OCIO_CHECK_NO_THROW(ops2.validate());
+    for (std::size_t i = 0; i < ops2.size(); ++i)
+    {
+      OCIO::ConstOpRcPtr op = ops[i];
+      OCIO::ConstOpRcPtr op2 = ops2[i];
+      OCIO_REQUIRE_ASSERT(*op->data() == *op2->data());
+    }
 }

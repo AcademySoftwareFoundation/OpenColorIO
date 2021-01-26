@@ -125,7 +125,7 @@ int UnitTestMain(int argc, const char ** argv)
         const bool passing = (_tmp == unit_test_failures);
         if (!passing)
         {
-            ++unit_test_failed;
+            ++unit_test_failed; 
         }
 
         std::string name(utestGroup);
@@ -154,6 +154,7 @@ int UnitTestMain(int argc, const char ** argv)
               << unit_test_failures << " errors.\n\n";
 
     GetUnitTests().clear();
+
 
     return unit_test_failures;
 }

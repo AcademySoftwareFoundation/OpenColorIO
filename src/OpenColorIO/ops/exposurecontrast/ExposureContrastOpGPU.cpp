@@ -20,46 +20,48 @@ static constexpr char EC_CONTRAST[] = "contrastVal";
 static constexpr char EC_GAMMA[]    = "gammaVal";
 
 void AddUniform(GpuShaderCreatorRcPtr & shaderCreator,
-                GpuShaderText & st,
-                DynamicPropertyImplRcPtr prop,
+                DynamicPropertyDoubleRcPtr prop,
                 const std::string & name)
 {
-    // Add the uniform if it does not already exist.
-    if (shaderCreator->addUniform(name.c_str(), prop))
-    {
-        // Declare uniform.
-        GpuShaderText stDecl(shaderCreator->getLanguage());
-        stDecl.declareUniformFloat(name);
-        shaderCreator->addToDeclareShaderCode(stDecl.string().c_str());
-    }
+    GpuShaderCreator::DoubleGetter getDouble = std::bind(&DynamicPropertyDouble::getValue,
+                                                        prop.get());
+    shaderCreator->addUniform(name.c_str(), getDouble);
+    // Declare uniform.
+    GpuShaderText stDecl(shaderCreator->getLanguage());
+    stDecl.declareUniformFloat(name);
+    shaderCreator->addToDeclareShaderCode(stDecl.string().c_str());
 }
 
-std::string AddDynamicProperty(GpuShaderCreatorRcPtr & shaderCreator,
-                               GpuShaderText & st,
-                               DynamicPropertyImplRcPtr prop,
-                               const std::string & name)
+std::string AddProperty(GpuShaderCreatorRcPtr & shaderCreator,
+                        GpuShaderText & st,
+                        DynamicPropertyDoubleImplRcPtr prop,
+                        const std::string & name)
 {
     std::string finalName;
 
     if(prop->isDynamic())
     {
-        finalName = shaderCreator->getResourcePrefix();
-        finalName += "_";
-        finalName += name;
+        // Build the name for the uniform. The same type of property should give the same name, so
+        // that uniform is declared only once, but multiple instances of the shader code can
+        // reference that name.
+        // Note: No need to add an index to the name to avoid collisions as the dynamic properties
+        // are unique.
+        finalName = BuildResourceName(shaderCreator, "exposure_contrast", name);
 
-        // Note: Remove potentially problematic double underscores from GLSL resource names.
-        StringUtils::ReplaceInPlace(finalName, "__", "_");
+        // Property is decoupled and added to shader creator.
+        auto shaderProp = prop->createEditableCopy();
+        DynamicPropertyRcPtr newProp = shaderProp;
+        shaderCreator->addDynamicProperty(newProp);
+        auto newPropDouble = DynamicPropertyValue::AsDouble(newProp);
 
-        // NB: No need to add an index to the name to avoid collisions
-        //     as the dynamic properties are shared i.e. only one instance.
-
-        AddUniform(shaderCreator, st, prop, finalName);
+        // Uniform is added, connected to the shader creator instance of the dynamic property.
+        AddUniform(shaderCreator, newPropDouble, finalName);
     }
     else
     {
+        // Declare a local variable to be used by the shader code.
         finalName = name;
-
-        st.declareVar(finalName, (float)prop->getDoubleValue());
+        st.declareVar(finalName, (float)prop->getValue());
     }
 
     return finalName;
@@ -72,9 +74,9 @@ void AddProperties(GpuShaderCreatorRcPtr & shaderCreator,
                    std::string & contrastName,
                    std::string & gammaName)
 {
-    exposureName = AddDynamicProperty(shaderCreator, st, ec->getExposureProperty(), EC_EXPOSURE);
-    contrastName = AddDynamicProperty(shaderCreator, st, ec->getContrastProperty(), EC_CONTRAST);
-    gammaName    = AddDynamicProperty(shaderCreator, st, ec->getGammaProperty(),    EC_GAMMA);
+    exposureName = AddProperty(shaderCreator, st, ec->getExposureProperty(), EC_EXPOSURE);
+    contrastName = AddProperty(shaderCreator, st, ec->getContrastProperty(), EC_CONTRAST);
+    gammaName    = AddProperty(shaderCreator, st, ec->getGammaProperty(),    EC_GAMMA);
 }
 
 void AddECLinearShader(GpuShaderText & st,
@@ -98,12 +100,12 @@ void AddECLinearShader(GpuShaderText & st,
         st.newLine() << "outColor.rgb = "
                      <<   "pow( "
                      <<     "max( "
-                     <<       st.vec3fConst(0.0f) << ", "
-                     <<       "outColor.rgb / " << st.vec3fConst(pivot)
+                     <<       st.float3Const(0.0f) << ", "
+                     <<       "outColor.rgb / " << st.float3Const(pivot)
                      <<     " ), "
-                     <<     st.vec3fConst("contrast")
+                     <<     st.float3Const("contrast")
                      <<   " ) * "
-                     <<   st.vec3fConst(pivot) << ";";
+                     <<   st.float3Const(pivot) << ";";
         st.dedent();
     }
     st.newLine() << "}";
@@ -129,12 +131,12 @@ void AddECLinearRevShader(GpuShaderText & st,
       st.newLine() << "outColor.rgb = "
                    <<   "pow( "
                    <<      "max( "
-                   <<         st.vec3fConst(0.0f) << ", "
-                   <<         "outColor.rgb / " << st.vec3fConst(pivot)
+                   <<         st.float3Const(0.0f) << ", "
+                   <<         "outColor.rgb / " << st.float3Const(pivot)
                    <<      " ), "
-                   <<      st.vec3fConst("contrast")
+                   <<      st.float3Const("contrast")
                    <<    " ) * "
-                   <<    st.vec3fConst(pivot) << ";";
+                   <<    st.float3Const(pivot) << ";";
       st.dedent();
     }
     st.newLine() << "}";
@@ -163,12 +165,12 @@ void AddECVideoShader(GpuShaderText & st,
         st.newLine() << "outColor.rgb = "
                      <<   "pow( "
                      <<     "max( "
-                     <<       st.vec3fConst(0.0f) << ", "
-                     <<       "outColor.rgb / " << st.vec3fConst(pivot)
+                     <<       st.float3Const(0.0f) << ", "
+                     <<       "outColor.rgb / " << st.float3Const(pivot)
                      <<     " ), "
-                     <<     st.vec3fConst("contrast")
+                     <<     st.float3Const("contrast")
                      <<   " ) * "
-                     <<   st.vec3fConst(pivot) << ";";
+                     <<   st.float3Const(pivot) << ";";
         st.dedent();
     }
     st.newLine() << "}";
@@ -195,12 +197,12 @@ void AddECVideoRevShader(GpuShaderText & st,
         st.newLine() << "outColor.rgb = "
                      <<   "pow( "
                      <<     "max( "
-                     <<       st.vec3fConst(0.0f) << ", "
-                     <<       "outColor.rgb / " << st.vec3fConst(pivot)
+                     <<       st.float3Const(0.0f) << ", "
+                     <<       "outColor.rgb / " << st.float3Const(pivot)
                      <<     " ), "
-                     <<     st.vec3fConst("contrast")
+                     <<     st.float3Const("contrast")
                      <<   " ) * "
-                     <<   st.vec3fConst(pivot) << ";";
+                     <<   st.float3Const(pivot) << ";";
         st.dedent();
     }
     st.newLine() << "}";

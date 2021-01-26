@@ -432,7 +432,7 @@ OCIO_ADD_TEST(Lut1D, create_transform)
 {
     OCIO::TransformDirection direction = OCIO::TRANSFORM_DIR_FORWARD;
 
-    auto lut = std::make_shared<OCIO::Lut1DOpData>(OCIO::Lut1DOpData::LUT_STANDARD, 3);
+    auto lut = std::make_shared<OCIO::Lut1DOpData>(OCIO::Lut1DOpData::LUT_STANDARD, 3, false);
     lut->setFileOutputBitDepth(OCIO::BIT_DEPTH_UINT10);
     lut->getArray()[3] = 0.51f;
     lut->getArray()[4] = 0.52f;

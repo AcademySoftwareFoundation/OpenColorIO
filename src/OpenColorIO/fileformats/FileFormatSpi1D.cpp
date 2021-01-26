@@ -6,6 +6,7 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "fileformats/FileFormatUtils.h"
 #include "ops/lut1d/Lut1DOp.h"
 #include "ops/matrix/MatrixOp.h"
 #include "ParseUtils.h"
@@ -54,9 +55,9 @@ public:
 
     void getFormatInfo(FormatInfoVec & formatInfoVec) const override;
 
-    CachedFileRcPtr read(
-        std::istream & istream,
-        const std::string & fileName) const override;
+    CachedFileRcPtr read(std::istream & istream,
+                         const std::string & fileName,
+                         Interpolation interp) const override;
 
     void buildFileOps(OpRcPtrVec & ops,
                         const Config & config,
@@ -83,9 +84,9 @@ void LocalFileFormat::getFormatInfo(FormatInfoVec & formatInfoVec) const
 // Try and load the format.
 // Raise an exception if it can't be loaded.
 
-CachedFileRcPtr LocalFileFormat::read(
-    std::istream & istream,
-    const std::string & /*fileName*/ ) const
+CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
+                                      const std::string & /*fileName*/,
+                                      Interpolation interp) const
 {
     // Parse Header Info.
     int lut_size = -1;
@@ -164,6 +165,11 @@ CachedFileRcPtr LocalFileFormat::read(
     }
 
     Lut1DOpDataRcPtr lut1d = std::make_shared<Lut1DOpData>(lut_size);
+    if (Lut1DOpData::IsValidInterpolation(interp))
+    {
+        lut1d->setInterpolation(interp);
+    }
+
     lut1d->setFileOutputBitDepth(BIT_DEPTH_F32);
     Array & lutArray = lut1d->getArray();
     unsigned long i = 0;
@@ -260,16 +266,14 @@ void LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
 {
     LocalCachedFileRcPtr cachedFile = DynamicPtrCast<LocalCachedFile>(untypedCachedFile);
 
-    if(!cachedFile) // This should never happen.
+    if(!cachedFile || !cachedFile->lut) // This should never happen.
     {
         std::ostringstream os;
         os << "Cannot build Spi1D Op. Invalid cache type.";
         throw Exception(os.str().c_str());
     }
 
-    TransformDirection newDir = fileTransform.getDirection();
-    newDir = CombineTransformDirections(dir, newDir);
-
+    const auto newDir = CombineTransformDirections(dir, fileTransform.getDirection());
 
     const double min[3] = { cachedFile->from_min,
                             cachedFile->from_min,
@@ -279,17 +283,26 @@ void LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
                             cachedFile->from_max,
                             cachedFile->from_max };
 
-    cachedFile->lut->setInterpolation(fileTransform.getInterpolation());
+    const auto fileInterp = fileTransform.getInterpolation();
 
-    if (newDir == TRANSFORM_DIR_FORWARD)
+    bool fileInterpUsed = false;
+    Lut1DOpDataRcPtr lut = HandleLUT1D(cachedFile->lut, fileInterp, fileInterpUsed);
+
+    if (!fileInterpUsed)
     {
-        CreateMinMaxOp(ops, min, max, TRANSFORM_DIR_FORWARD);
-        CreateLut1DOp(ops, cachedFile->lut, TRANSFORM_DIR_FORWARD);
+        LogWarningInterpolationNotUsed(fileInterp, fileTransform);
     }
-    else
+
+    switch (newDir)
     {
-        CreateLut1DOp(ops, cachedFile->lut, TRANSFORM_DIR_INVERSE);
+    case TRANSFORM_DIR_FORWARD:
+        CreateMinMaxOp(ops, min, max, TRANSFORM_DIR_FORWARD);
+        CreateLut1DOp(ops, lut, TRANSFORM_DIR_FORWARD);
+        break;
+    case TRANSFORM_DIR_INVERSE:
+        CreateLut1DOp(ops, lut, TRANSFORM_DIR_INVERSE);
         CreateMinMaxOp(ops, min, max, TRANSFORM_DIR_INVERSE);
+        break;
     }
 }
 

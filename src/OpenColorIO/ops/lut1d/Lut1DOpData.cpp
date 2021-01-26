@@ -21,7 +21,10 @@ namespace OCIO_NAMESPACE
 // Number of possible values for the Half domain.
 static const unsigned long HALF_DOMAIN_REQUIRED_ENTRIES = 65536;
 
-Lut1DOpData::Lut3by1DArray::Lut3by1DArray(HalfFlags halfFlags, unsigned long numChannels, unsigned long length)
+Lut1DOpData::Lut3by1DArray::Lut3by1DArray(HalfFlags halfFlags,
+                                          unsigned long numChannels,
+                                          unsigned long length,
+                                          bool filterNANs)
 {
     if (length < 2)
     {
@@ -33,14 +36,14 @@ Lut1DOpData::Lut3by1DArray::Lut3by1DArray(HalfFlags halfFlags, unsigned long num
     }
 
     resize(length, numChannels);
-    fill(halfFlags);
+    fill(halfFlags, filterNANs);
 }
 
 Lut1DOpData::Lut3by1DArray::~Lut3by1DArray()
 {
 }
 
-void Lut1DOpData::Lut3by1DArray::fill(HalfFlags halfFlags)
+void Lut1DOpData::Lut3by1DArray::fill(HalfFlags halfFlags, bool filterNANs)
 {
     const unsigned long dim         = getLength();
     const unsigned long maxChannels = getNumColorComponents();
@@ -51,7 +54,11 @@ void Lut1DOpData::Lut3by1DArray::fill(HalfFlags halfFlags)
         for (unsigned long idx = 0; idx<dim; ++idx)
         {
             half htemp; htemp.setBits((unsigned short)idx);
-            const float ftemp = static_cast<float>(htemp);
+            float ftemp = static_cast<float>(htemp);
+            if (IsNan(ftemp) && filterNANs)
+            {
+                ftemp = 0.f;
+            }
 
             const unsigned long row = maxChannels * idx;
             for (unsigned long channel = 0; channel<maxChannels; ++channel)
@@ -120,7 +127,6 @@ bool Lut1DOpData::Lut3by1DArray::isIdentity(HalfFlags halfFlags) const
         {
             half aimHalf;
             aimHalf.setBits((unsigned short)idx);
-
             const unsigned long row = maxChannels * idx;
             for (unsigned long channel = 0; channel<maxChannels; ++channel)
             {
@@ -177,7 +183,7 @@ bool Lut1DOpData::Lut3by1DArray::isIdentity(HalfFlags halfFlags) const
 Lut1DOpData::Lut1DOpData(unsigned long dimension)
     : OpData()
     , m_interpolation(INTERP_DEFAULT)
-    , m_array(LUT_STANDARD, 3, dimension)
+    , m_array(LUT_STANDARD, 3, dimension, false)
     , m_halfFlags(LUT_STANDARD)
     , m_hueAdjust(HUE_NONE)
     , m_direction(TRANSFORM_DIR_FORWARD)
@@ -187,17 +193,17 @@ Lut1DOpData::Lut1DOpData(unsigned long dimension)
 Lut1DOpData::Lut1DOpData(unsigned long dimension, TransformDirection dir)
     : OpData()
     , m_interpolation(INTERP_DEFAULT)
-    , m_array(LUT_STANDARD, 3, dimension)
+    , m_array(LUT_STANDARD, 3, dimension, false)
     , m_halfFlags(LUT_STANDARD)
     , m_hueAdjust(HUE_NONE)
     , m_direction(dir)
 {
 }
 
-Lut1DOpData::Lut1DOpData(HalfFlags halfFlags, unsigned long dimension)
+Lut1DOpData::Lut1DOpData(HalfFlags halfFlags, unsigned long dimension, bool filterNANs)
     : OpData()
     , m_interpolation(INTERP_DEFAULT)
-    , m_array(halfFlags, 3, dimension)
+    , m_array(halfFlags, 3, dimension, filterNANs)
     , m_halfFlags(halfFlags)
     , m_hueAdjust(HUE_NONE)
     , m_direction(TRANSFORM_DIR_FORWARD)
@@ -210,6 +216,11 @@ Lut1DOpData::~Lut1DOpData()
 
 Interpolation Lut1DOpData::getConcreteInterpolation() const
 {
+    return GetConcreteInterpolation(m_interpolation);
+}
+
+Interpolation Lut1DOpData::GetConcreteInterpolation(Interpolation /*interp*/)
+{
     // TODO: currently INTERP_NEAREST is not implemented in Lut1DOpCPU.
     // This is a regression from OCIO v1.
     // NB: To have the same interpolation support (i.e. same color processing)
@@ -220,9 +231,9 @@ Interpolation Lut1DOpData::getConcreteInterpolation() const
     return INTERP_LINEAR;
 }
 
-void Lut1DOpData::setInterpolation(Interpolation algo)
+void Lut1DOpData::setInterpolation(Interpolation interpolation)
 {
-    m_interpolation = algo;
+    m_interpolation = interpolation;
 }
 
 bool Lut1DOpData::isIdentity() const
@@ -283,9 +294,7 @@ void Lut1DOpData::setOutputRawHalfs(bool isRawHalfs) noexcept
         ((HalfFlags)(m_halfFlags & ~LUT_OUTPUT_HALF_CODE));
 }
 
-namespace
-{
-bool IsValid(const Interpolation & interpolation)
+bool Lut1DOpData::IsValidInterpolation(Interpolation interpolation)
 {
     switch (interpolation)
     {
@@ -301,11 +310,15 @@ bool IsValid(const Interpolation & interpolation)
         return false;
     }
 }
-}
 
 void Lut1DOpData::validate() const
 {
-    if (!IsValid(m_interpolation))
+    if (m_hueAdjust == HUE_WYPN)
+    {
+        throw Exception("1D LUT HUE_WYPN hue adjust style is not implemented.");
+    }
+
+    if (!IsValidInterpolation(m_interpolation))
     {
         std::ostringstream oss;
         oss << "1D LUT does not support interpolation algorithm: ";
@@ -430,7 +443,7 @@ Lut1DOpDataRcPtr Lut1DOpData::MakeLookupDomain(BitDepth incomingDepth)
     // the incomingDepth, so it should be safe to rely on the constructor
     // and fill() to always return the correct length.
     // (E.g., we don't need to worry about 10i with a half domain.)
-    return std::make_shared<Lut1DOpData>(domainType, idealSize);
+    return std::make_shared<Lut1DOpData>(domainType, idealSize, true);
 }
 
 bool Lut1DOpData::haveEqualBasics(const Lut1DOpData & other) const
@@ -457,8 +470,13 @@ bool Lut1DOpData::operator==(const OpData & other) const
     return haveEqualBasics(*lop);
 }
 
-void Lut1DOpData::setHueAdjust(Lut1DHueAdjust algo) noexcept
+void Lut1DOpData::setHueAdjust(Lut1DHueAdjust algo)
 {
+    if (algo == HUE_WYPN)
+    {
+        throw Exception("1D LUT HUE_WYPN hue adjust style is not implemented.");
+    }
+
     m_hueAdjust = algo;
 }
 
@@ -518,6 +536,10 @@ const char* GetHueAdjustName(Lut1DHueAdjust algo)
     {
         return "none";
     }
+    case HUE_WYPN:
+    {
+        throw Exception("1D LUT HUE_WYPN hue adjust style is not implemented.");
+    }
     }
     throw Exception("1D LUT has an invalid hue adjust style.");
 }
@@ -528,21 +550,18 @@ std::string Lut1DOpData::getCacheID() const
 {
     AutoMutex lock(m_mutex);
 
-    md5_state_t state;
-    md5_byte_t digest[16];
-
-    md5_init(&state);
-    md5_append(&state,
-        (const md5_byte_t *)&(getArray().getValues()[0]),
-        (int)(getArray().getValues().size() * sizeof(float)));
-    md5_finish(&state, digest);
+    const Lut3by1DArray::Values & values = getArray().getValues();
 
     std::ostringstream cacheIDStream;
     if (!getID().empty())
     {
         cacheIDStream << getID() << " ";
     }
-    cacheIDStream << GetPrintableHash(digest)                                  << " ";
+
+    cacheIDStream << CacheIDHash(reinterpret_cast<const char*>(&values[0]), 
+                                 int(values.size() * sizeof(values[0])))
+                  << " ";
+
     cacheIDStream << TransformDirectionToString(m_direction)                   << " ";
     cacheIDStream << InterpolationToString(m_interpolation)                    << " ";
     cacheIDStream << (isInputHalfDomain() ? "half domain" : "standard domain") << " ";
@@ -689,7 +708,7 @@ Lut1DOpDataRcPtr Lut1DOpData::Compose(ConstLut1DOpDataRcPtr & lutc1,
         {
             result = std::make_shared<Lut1DOpData>(needHalfDomain ? Lut1DOpData::LUT_INPUT_HALF_CODE :
                                                                     Lut1DOpData::LUT_STANDARD,
-                                                   minSize);
+                                                   minSize, true);
         }
 
 

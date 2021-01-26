@@ -244,6 +244,15 @@ FixedFunctionOpData::Style FixedFunctionOpData::ConvertStyle(FixedFunctionStyle 
         {
             return FixedFunctionOpData::XYZ_TO_LUV;
         }
+        case FIXED_FUNCTION_ACES_GAMUTMAP_02:
+        case FIXED_FUNCTION_ACES_GAMUTMAP_07:
+        case FIXED_FUNCTION_ACES_GAMUTMAP_13:
+        {
+            throw Exception("Unimplemented fixed function types: "
+                            "FIXED_FUNCTION_ACES_GAMUTMAP_02, "
+                            "FIXED_FUNCTION_ACES_GAMUTMAP_07, and "
+                            "FIXED_FUNCTION_ACES_GAMUTMAP_13.");
+        }
     }
 
     std::stringstream ss("Unknown FixedFunction transform style: ");
@@ -304,12 +313,6 @@ FixedFunctionStyle FixedFunctionOpData::ConvertStyle(FixedFunctionOpData::Style 
     throw Exception(ss.str().c_str());
 }
 
-FixedFunctionOpData::FixedFunctionOpData()
-    :   OpData()
-    ,   m_style(ACES_RED_MOD_03_FWD)
-{
-}
-
 FixedFunctionOpData::FixedFunctionOpData(Style style)
     :   OpData()
     ,   m_style(style)
@@ -317,7 +320,7 @@ FixedFunctionOpData::FixedFunctionOpData(Style style)
     validate();
 }
 
-FixedFunctionOpData::FixedFunctionOpData(const Params & params, Style style)
+FixedFunctionOpData::FixedFunctionOpData(Style style, const Params & params)
     :   OpData()
     ,   m_style(style)
     ,   m_params(params)
@@ -331,7 +334,7 @@ FixedFunctionOpData::~FixedFunctionOpData()
 
 FixedFunctionOpDataRcPtr FixedFunctionOpData::clone() const
 {
-    auto clone = std::make_shared<FixedFunctionOpData>(getParams(), getStyle());
+    auto clone = std::make_shared<FixedFunctionOpData>(getStyle(), getParams());
     clone->getFormatMetadata() = getFormatMetadata();
     return clone;
 }
@@ -393,7 +396,7 @@ bool FixedFunctionOpData::isInverse(ConstFixedFunctionOpDataRcPtr & r) const
     return *r == *inverse();
 }
 
-void FixedFunctionOpData::invert()
+void FixedFunctionOpData::invert() noexcept
 {
     // NB: The following assumes the op has already been validated.
 
@@ -518,7 +521,7 @@ FixedFunctionOpDataRcPtr FixedFunctionOpData::inverse() const
 }
 
 // Convert internal OpData style into Transform direction.
-TransformDirection FixedFunctionOpData::getDirection() const
+TransformDirection FixedFunctionOpData::getDirection() const noexcept
 {
     switch (m_style)
     {
@@ -549,15 +552,11 @@ TransformDirection FixedFunctionOpData::getDirection() const
     return TRANSFORM_DIR_FORWARD;
 }
 
-void FixedFunctionOpData::setDirection(TransformDirection dir)
+void FixedFunctionOpData::setDirection(TransformDirection dir) noexcept
 {
-    if (dir != TRANSFORM_DIR_UNKNOWN)
+    if (getDirection() != dir)
     {
-        const auto curDir = getDirection();
-        if (curDir != dir)
-        {
-            invert();
-        }
+        invert();
     }
 }
 

@@ -12,6 +12,7 @@
 #include "fileformats/ctf/CTFTransform.h"
 #include "fileformats/ctf/CTFReaderHelper.h"
 #include "fileformats/ctf/CTFReaderUtils.h"
+#include "fileformats/FileFormatUtils.h"
 #include "fileformats/xmlutils/XMLReaderHelper.h"
 #include "fileformats/xmlutils/XMLReaderUtils.h"
 #include "fileformats/xmlutils/XMLWriterUtils.h"
@@ -22,6 +23,7 @@
 #include "ops/noop/NoOps.h"
 #include "Platform.h"
 #include "pystring/pystring.h"
+#include "TransformBuilder.h"
 #include "transforms/FileTransform.h"
 #include "utils/StringUtils.h"
 
@@ -119,7 +121,8 @@ public:
     void getFormatInfo(FormatInfoVec & formatInfoVec) const override;
 
     CachedFileRcPtr read(std::istream & istream,
-                         const std::string & fileName) const override;
+                         const std::string & fileName,
+                         Interpolation interp) const override;
 
     void buildFileOps(OpRcPtrVec & ops,
                       const Config & config,
@@ -132,8 +135,9 @@ public:
               const std::string & formatName,
               std::ostream & ostream) const override;
 
-    void write(const OpRcPtrVec & ops,
-               const FormatMetadataImpl & metadata,
+    void write(const ConstConfigRcPtr & config,
+               const ConstContextRcPtr & context,
+               const GroupTransform & group,
                const std::string & formatName,
                std::ostream & /*ostream*/) const override;
 };
@@ -379,6 +383,33 @@ private:
         return false;
     }
 
+    static bool SupportedElement(const char * name,
+                                 ElementRcPtr & parent,
+                                 const char * tag,
+                                 const std::vector<const char *> & parentNames,
+                                 bool & recognizedName)
+    {
+        if (name && *name && tag && *tag && parent)
+        {
+            if (0 == Platform::Strcasecmp(name, tag))
+            {
+                recognizedName |= true;
+                
+                const size_t numParents(parentNames.size());
+                size_t i = 0;
+                for (; i<numParents; ++i)
+                {
+                    if (0 == Platform::Strcasecmp(parent->getName().c_str(), parentNames[i]))
+                    {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+
     // Start the parsing of one element.
     static void StartElementHandler(void * userData,
                                     const XML_Char * name,
@@ -395,6 +426,35 @@ private:
             TAG_SLOPE,
             TAG_OFFSET,
             TAG_POWER
+        };
+
+        static const std::vector<const char *> gradingPrimarySubElements = {
+            TAG_PRIMARY_BRIGHTNESS,
+            TAG_PRIMARY_CLAMP,
+            TAG_PRIMARY_CONTRAST,
+            TAG_PRIMARY_EXPOSURE,
+            TAG_PRIMARY_GAIN,
+            TAG_PRIMARY_GAMMA,
+            TAG_PRIMARY_LIFT,
+            TAG_PRIMARY_OFFSET,
+            TAG_PRIMARY_PIVOT,
+            TAG_PRIMARY_SATURATION
+        };
+
+        static const std::vector<const char *> gradingToneSubElements = {
+            TAG_TONE_BLACKS,
+            TAG_TONE_SHADOWS,
+            TAG_TONE_MIDTONES,
+            TAG_TONE_HIGHLIGHTS,
+            TAG_TONE_WHITES,
+            TAG_TONE_SCONTRAST
+        };
+
+        static const std::vector<const char *> gradingRGBCurveSubElements = {
+            TAG_RGB_CURVE_BLUE,
+            TAG_RGB_CURVE_GREEN,
+            TAG_RGB_CURVE_MASTER,
+            TAG_RGB_CURVE_RED
         };
 
         XMLParserHelper * pImpl = (XMLParserHelper*)userData;
@@ -471,7 +531,7 @@ private:
             }
 
             // Safety check to try and ensure that all new elements will get handled here.
-            static_assert(CTFReaderOpElt::NoType == 14, "Need to handle new type here");
+            static_assert(CTFReaderOpElt::NoType == 17, "Need to handle new type here");
 
             // Will allow to give better error feedback to the user if the
             // element name is not handled. If any case recognizes the name,
@@ -508,6 +568,19 @@ private:
                      SupportedElement(name, pElt, TAG_EXPONENT, TAG_PROCESS_LIST, recognizedName))
             {
                 pImpl->AddOpReader(CTFReaderOpElt::GammaType, name);
+            }
+            else if (SupportedElement(name, pElt, TAG_PRIMARY, TAG_PROCESS_LIST, recognizedName))
+            {
+                pImpl->AddOpReader(CTFReaderOpElt::GradingPrimaryType, name);
+            }
+            else if (SupportedElement(name, pElt, TAG_RGB_CURVE,
+                                      TAG_PROCESS_LIST, recognizedName))
+            {
+                pImpl->AddOpReader(CTFReaderOpElt::GradingRGBCurveType, name);
+            }
+            else if (SupportedElement(name, pElt, TAG_TONE, TAG_PROCESS_LIST, recognizedName))
+            {
+                pImpl->AddOpReader(CTFReaderOpElt::GradingToneType, name);
             }
             else if (SupportedElement(name, pElt, TAG_INVLUT1D, TAG_PROCESS_LIST, recognizedName))
             {
@@ -738,7 +811,7 @@ private:
                     }
                 }
                 else if (SupportedElement(name, pElt, METADATA_OUTPUT_DESCRIPTOR,
-                    TAG_PROCESS_LIST, recognizedName))
+                                          TAG_PROCESS_LIST, recognizedName))
                 {
                     pImpl->m_elms.push_back(
                         std::make_shared<CTFReaderOutputDescriptorElt>(
@@ -800,6 +873,56 @@ private:
                 {
                     pImpl->m_elms.push_back(
                         std::make_shared<XmlReaderSOPValueElt>(
+                            name,
+                            pContainer,
+                            pImpl->getXmLineNumber(),
+                            pImpl->getXmlFilename()));
+                }
+                else if (SupportedElement(name, pElt, gradingPrimarySubElements,
+                                          TAG_PRIMARY, recognizedName))
+                {
+                    pImpl->m_elms.push_back(
+                        std::make_shared<CTFReaderGradingPrimaryParamElt>(
+                            name,
+                            pContainer,
+                            pImpl->getXmLineNumber(),
+                            pImpl->getXmlFilename()));
+                }
+                else if (SupportedElement(name, pElt, gradingRGBCurveSubElements,
+                                          TAG_RGB_CURVE, recognizedName))
+                {
+                    pImpl->m_elms.push_back(
+                        std::make_shared<CTFReaderGradingCurveElt>(
+                            name,
+                            pContainer,
+                            pImpl->getXmLineNumber(),
+                            pImpl->getXmlFilename()));
+                }
+                else if (SupportedElement(name, pElt, TAG_CURVE_CTRL_PNTS,
+                                          gradingRGBCurveSubElements, recognizedName))
+                {
+                    pImpl->m_elms.push_back(
+                        std::make_shared<CTFReaderGradingCurvePointsElt>(
+                            name,
+                            pContainer,
+                            pImpl->getXmLineNumber(),
+                            pImpl->getXmlFilename()));
+                }
+                else if (SupportedElement(name, pElt, TAG_CURVE_SLOPES,
+                                          gradingRGBCurveSubElements, recognizedName))
+                {
+                    pImpl->m_elms.push_back(
+                        std::make_shared<CTFReaderGradingCurveSlopesElt>(
+                            name,
+                            pContainer,
+                            pImpl->getXmLineNumber(),
+                            pImpl->getXmlFilename()));
+                }
+                else if (SupportedElement(name, pElt, gradingToneSubElements,
+                                          TAG_TONE, recognizedName))
+                {
+                    pImpl->m_elms.push_back(
+                        std::make_shared<CTFReaderGradingToneParamElt>(
                             name,
                             pContainer,
                             pImpl->getXmLineNumber(),
@@ -1039,9 +1162,9 @@ bool isLoadableCTF(std::istream & istream)
 
 // Try and load the format.
 // Raise an exception if it can't be loaded.
-CachedFileRcPtr LocalFileFormat::read(
-    std::istream & istream,
-    const std::string & filePath) const
+CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
+                                      const std::string & filePath,
+                                      Interpolation /*interp*/) const
 {
     if (!isLoadableCTF(istream))
     {
@@ -1053,8 +1176,7 @@ CachedFileRcPtr LocalFileFormat::read(
     XMLParserHelper parser(filePath);
     parser.Parse(istream);
 
-    LocalCachedFileRcPtr cachedFile =
-        LocalCachedFileRcPtr(new LocalCachedFile());
+    LocalCachedFileRcPtr cachedFile = LocalCachedFileRcPtr(new LocalCachedFile());
 
     // Keep transform.
     cachedFile->m_transform = parser.getTransform();
@@ -1078,7 +1200,7 @@ void BuildOp(OpRcPtrVec & ops,
         {
             dir = CombineTransformDirections(dir, ref->getDirection());
             FileTransformRcPtr fileTransform = FileTransform::Create();
-            fileTransform->setInterpolation(INTERP_LINEAR);
+            fileTransform->setInterpolation(INTERP_DEFAULT);
             fileTransform->setDirection(TRANSFORM_DIR_FORWARD);
             fileTransform->setSrc(ref->getPath().c_str());
             FileTransform * pFileTranform = fileTransform.get();
@@ -1096,16 +1218,51 @@ void BuildOp(OpRcPtrVec & ops,
 
 }
 
-void
-LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
-                              const Config& config,
-                              const ConstContextRcPtr & context,
-                              CachedFileRcPtr untypedCachedFile,
-                              const FileTransform& fileTransform,
-                              TransformDirection dir) const
+// CLF/CTF is different from other formats because the syntax allows specifying an interpolation
+// method in the file itself. If a LUT does specify an interpolation, use it. If it does not
+// (cached LUT interpolation is DEFAULT), then use the FileTransform interpolation if it is valid.
+template <class Lut>
+void HandleLUTInterpolation(ConstOpDataRcPtr & opData,
+                            Interpolation fileInterp)
 {
-    LocalCachedFileRcPtr cachedFile = 
-        DynamicPtrCast<LocalCachedFile>(untypedCachedFile);
+    auto lut = OCIO_DYNAMIC_POINTER_CAST<const Lut>(opData);
+    if (Lut::IsValidInterpolation(fileInterp))
+    {
+        const auto lutInterpolation = lut->getInterpolation();
+        if (lutInterpolation == INTERP_DEFAULT &&
+            Lut::GetConcreteInterpolation(lutInterpolation) !=
+            Lut::GetConcreteInterpolation(fileInterp))
+        {
+            // The FileTransform interpolation does not match the cached file LUT interpolation,
+            // so clone the LUT.
+            auto newLut = lut->clone();
+            newLut->setInterpolation(fileInterp);
+            opData = newLut;
+        }
+        // Else, use the cached LUT.
+    }
+}
+
+void HandleLUT(ConstOpDataRcPtr & opData, Interpolation fileInterp)
+{
+    if (opData->getType() == OpData::Lut1DType)
+    {
+        HandleLUTInterpolation<Lut1DOpData>(opData, fileInterp);
+    }
+    else if (opData->getType() == OpData::Lut3DType)
+    {
+        HandleLUTInterpolation<Lut3DOpData>(opData, fileInterp);
+    }
+}
+
+void LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
+                                   const Config& config,
+                                   const ConstContextRcPtr & context,
+                                   CachedFileRcPtr untypedCachedFile,
+                                   const FileTransform& fileTransform,
+                                   TransformDirection dir) const
+{
+    LocalCachedFileRcPtr cachedFile = DynamicPtrCast<LocalCachedFile>(untypedCachedFile);
 
     // This should never happen.
     if(!cachedFile)
@@ -1113,16 +1270,7 @@ LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
         throw Exception("Cannot build clf ops. Invalid cache type.");
     }
 
-    const TransformDirection newDir 
-        = CombineTransformDirections(dir, fileTransform.getDirection());
-
-    if(newDir == TRANSFORM_DIR_UNKNOWN)
-    {
-        std::ostringstream os;
-        os << "Cannot build file format transform,";
-        os << " unspecified transform direction.";
-        throw Exception(os.str().c_str());
-    }
+    const auto newDir = CombineTransformDirections(dir, fileTransform.getDirection());
 
     FormatMetadataImpl & processorData = ops.getFormatMetadata();
 
@@ -1131,19 +1279,34 @@ LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
 
     // Resolve reference path using context and load referenced files.
     const ConstOpDataVec & opDataVec = cachedFile->m_transform->getOps();
-    if (newDir == TRANSFORM_DIR_FORWARD)
+
+    // Try to use the FileTransform interpolation for any Lut1D or Lut3D that does not specify
+    // an interpolation in the CTF itself.  If the interpolation can not be used, ignore it.
+
+    const auto fileInterpolation = fileTransform.getInterpolation();
+
+    switch (newDir)
     {
-        for (auto & opData : opDataVec)
+    case TRANSFORM_DIR_FORWARD:
+    {
+        for (auto opData : opDataVec)
         {
+            // Note: HandleLUT does nothing if opData is not a LUT.
+            HandleLUT(opData, fileInterpolation);
             BuildOp(ops, config, context, opData, newDir);
         }
+        break;
     }
-    else
+    case TRANSFORM_DIR_INVERSE:
     {
         for (int idx = (int)opDataVec.size() - 1; idx >= 0; --idx)
         {
-            BuildOp(ops, config, context, opDataVec[idx], newDir);
+            auto opData = opDataVec[idx];
+            HandleLUT(opData, fileInterpolation);
+            BuildOp(ops, config, context, opData, newDir);
         }
+        break;
+    }
     }
 }
 
@@ -1216,13 +1379,11 @@ void LocalFileFormat::bake(const Baker & baker,
         transform->setLooks(looks.c_str());
         transform->setSrc(inputSpace.c_str());
         transform->setDst(targetSpace.c_str());
-        inputToTargetProc = config->getProcessor(transform,
-                                                 TRANSFORM_DIR_FORWARD);
+        inputToTargetProc = config->getProcessor(transform, TRANSFORM_DIR_FORWARD);
     }
     else
     {
-        inputToTargetProc = config->getProcessor(inputSpace.c_str(),
-                                                 targetSpace.c_str());
+        inputToTargetProc = config->getProcessor(inputSpace.c_str(), targetSpace.c_str());
     }
 
     int required_lut = -1;
@@ -1282,7 +1443,8 @@ void LocalFileFormat::bake(const Baker & baker,
         {
             // Generate the identity shaper values, then apply the transform.
             // Using a half-domain to accurately handle floating-point, linear-space inputs.
-            shaperLut = std::make_shared<Lut1DOpData>(Lut1DOpData::LUT_INPUT_HALF_CODE, 65536);
+            shaperLut = std::make_shared<Lut1DOpData>(Lut1DOpData::LUT_INPUT_HALF_CODE,
+                                                      65536, true);
         }
         else
         {
@@ -1292,7 +1454,7 @@ void LocalFileFormat::bake(const Baker & baker,
             // log value 1.0 is in linear).
             ConstProcessorRcPtr proc = config->getProcessor(shaperSpace.c_str(),
                                                             inputSpace.c_str());
-            ConstCPUProcessorRcPtr shaperToInputProc = proc->getDefaultCPUProcessor();
+            ConstCPUProcessorRcPtr shaperToInputProc = proc->getOptimizedCPUProcessor(OPTIMIZATION_LOSSLESS);
 
             float minval[3] = { 0.0f, 0.0f, 0.0f };
             float maxval[3] = { 1.0f, 1.0f, 1.0f };
@@ -1321,7 +1483,7 @@ void LocalFileFormat::bake(const Baker & baker,
         const auto shaperSize = shaperLut->getArray().getLength();
         PackedImageDesc shaperImg(shaperLut->getArray().getValues().data(),
                                   shaperSize, 1, 3);
-        ConstCPUProcessorRcPtr cpu = inputToShaperProc->getDefaultCPUProcessor();
+        ConstCPUProcessorRcPtr cpu = inputToShaperProc->getOptimizedCPUProcessor(OPTIMIZATION_LOSSLESS);
         cpu->apply(shaperImg);
     }
 
@@ -1345,13 +1507,11 @@ void LocalFileFormat::bake(const Baker & baker,
                 transform->setLooks(looks.c_str());
                 transform->setSrc(shaperSpace.c_str());
                 transform->setDst(targetSpace.c_str());
-                cubeProc = config->getProcessor(transform,
-                                                TRANSFORM_DIR_FORWARD);
+                cubeProc = config->getProcessor(transform, TRANSFORM_DIR_FORWARD);
             }
             else
             {
-                cubeProc = config->getProcessor(shaperSpace.c_str(),
-                    targetSpace.c_str());
+                cubeProc = config->getProcessor(shaperSpace.c_str(), targetSpace.c_str());
             }
         }
         else
@@ -1360,7 +1520,7 @@ void LocalFileFormat::bake(const Baker & baker,
             cubeProc = inputToTargetProc;
         }
 
-        ConstCPUProcessorRcPtr cpu = cubeProc->getDefaultCPUProcessor();
+        ConstCPUProcessorRcPtr cpu = cubeProc->getOptimizedCPUProcessor(OPTIMIZATION_LOSSLESS);
         cpu->apply(cubeImg);
     }
 
@@ -1375,7 +1535,7 @@ void LocalFileFormat::bake(const Baker & baker,
         GenerateIdentityLut1D(&onedData[0], onedSize, 3);
         PackedImageDesc onedImg(&onedData[0], onedSize, 1, 3);
 
-        ConstCPUProcessorRcPtr cpu = inputToTargetProc->getDefaultCPUProcessor();
+        ConstCPUProcessorRcPtr cpu = inputToTargetProc->getOptimizedCPUProcessor(OPTIMIZATION_LOSSLESS);
         cpu->apply(onedImg);
     }
 
@@ -1409,11 +1569,20 @@ void LocalFileFormat::bake(const Baker & baker,
         CreateLut3DOp(ops, lut3D, TRANSFORM_DIR_FORWARD);
     }
 
-    write(ops, baker.getFormatMetadata(), formatName, ostream);
+    GroupTransformRcPtr group = GroupTransform::Create();
+    // Build transforms from ops.
+    for (ConstOpRcPtr op : ops)
+    {
+        CreateTransform(group, op);
+    }
+    const auto & metadata = baker.getFormatMetadata();
+    group->getFormatMetadata() = metadata;
+    write(config, config->getCurrentContext(), *group, formatName, ostream);
 }
 
-void LocalFileFormat::write(const OpRcPtrVec & ops,
-                            const FormatMetadataImpl & metadata,
+void LocalFileFormat::write(const ConstConfigRcPtr & config,
+                            const ConstContextRcPtr & context,
+                            const GroupTransform & group,
                             const std::string & formatName,
                             std::ostream & ostream) const
 {
@@ -1430,6 +1599,11 @@ void LocalFileFormat::write(const OpRcPtrVec & ops,
         throw Exception(os.str().c_str());
     }
 
+    OpRcPtrVec ops;
+    BuildGroupOps(ops, *config, context, group, TRANSFORM_DIR_FORWARD);
+    ops.finalize(OPTIMIZATION_NONE);
+
+    const FormatMetadataImpl & metadata = group.getFormatMetadata();
     CTFReaderTransformPtr transform = std::make_shared<CTFReaderTransform>(ops, metadata);
 
     // Write XML Header.

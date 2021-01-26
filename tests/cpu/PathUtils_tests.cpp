@@ -1,28 +1,88 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
 #include "PathUtils.cpp"
 
 #include "testutils/UnitTest.h"
+#include "UnitTestUtils.h"
+
+namespace OCIO_NAMESPACE
+{
+
+namespace
+{
+
+// A custom compute hash function for testing.
+std::string CustomComputeHash(const std::string & filename)
+{
+    std::ostringstream testHasher;
+    testHasher << std::hash<std::string>{}(filename + "this is custom hash");
+    return testHasher.str();
+}
+
+} //anon.
+
+// A class for testing the working of custom callback for compute hash.
+class ComputeHashGuard
+{
+
+public:
+
+    ComputeHashGuard();
+
+    ComputeHashGuard(ComputeHashGuard &) = delete;
+
+    ~ComputeHashGuard();
+
+};
+
+ComputeHashGuard::ComputeHashGuard()
+{
+    SetComputeHashFunction(CustomComputeHash);
+}
+
+ComputeHashGuard::~ComputeHashGuard()
+{
+    ResetComputeHashFunction();
+}
+
+}
 
 namespace OCIO = OCIO_NAMESPACE;
 
 
-OCIO_ADD_TEST(PathUtils, env_expand)
+OCIO_ADD_TEST(PathUtils, compute_hash)
 {
-    // build env by hand for unit test
-    OCIO::EnvMap env_map; // = OCIO::GetEnvMap();
 
-    // add some fake env vars so the test runs
-    env_map.insert(OCIO::EnvMap::value_type("TEST1", "foo.bar"));
-    env_map.insert(OCIO::EnvMap::value_type("TEST1NG", "bar.foo"));
-    env_map.insert(OCIO::EnvMap::value_type("FOO_foo.bar", "cheese"));
+    const std::string file1 = OCIO::GetTestFilesDir() + "/lut1d_4.spi1d";
+    const std::string file2 = OCIO::GetTestFilesDir() + "/lut1d_5.spi1d";
 
-    //
-    std::string foo = "/a/b/${TEST1}/${TEST1NG}/$TEST1/$TEST1NG/${FOO_${TEST1}}/";
-    std::string foo_result = "/a/b/foo.bar/bar.foo/foo.bar/bar.foo/cheese/";
-    std::string testresult = OCIO::EnvExpand(foo, env_map);
-    OCIO_CHECK_ASSERT( testresult == foo_result );
+    OCIO_CHECK_EQUAL(OCIO::g_hashFunction(file1), OCIO::g_hashFunction(file1));
+
+    OCIO_CHECK_NE(OCIO::g_hashFunction(file1), OCIO::g_hashFunction(file2));
+
+    const std::string result1 = OCIO::g_hashFunction(file1);
+    const std::string result2 = OCIO::g_hashFunction(file2);
+    std::string result3, result4;
+
+    {
+
+        OCIO::ComputeHashGuard tester;
+
+        OCIO_CHECK_NE(OCIO::g_hashFunction(file1), result1);
+
+        OCIO_CHECK_NE(OCIO::g_hashFunction(file2), result2);
+
+        OCIO_CHECK_EQUAL(OCIO::g_hashFunction(file1), OCIO::g_hashFunction(file1));
+
+        result3 = OCIO::g_hashFunction(file1);
+
+        result4 = OCIO::g_hashFunction(file2);
+
+    }
+
+    OCIO_CHECK_NE(result3, OCIO::g_hashFunction(file1));
+
+    OCIO_CHECK_NE(result4, OCIO::g_hashFunction(file2));
+
 }
-

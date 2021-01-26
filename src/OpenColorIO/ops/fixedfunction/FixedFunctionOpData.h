@@ -55,10 +55,10 @@ public:
 
     typedef std::vector<double> Params;
 
-    FixedFunctionOpData();
+    FixedFunctionOpData() = delete;
 
     explicit FixedFunctionOpData(Style style);
-    FixedFunctionOpData(const Params & params, Style style);
+    FixedFunctionOpData(Style style, const Params & params);
     FixedFunctionOpData(const FixedFunctionOpData &) = default;
     virtual ~FixedFunctionOpData();
 
@@ -77,11 +77,11 @@ public:
 
     std::string getCacheID() const override;
 
-    Style getStyle() const { return m_style; }
-    void setStyle(Style style) { m_style = style; }
+    Style getStyle() const  noexcept { return m_style; }
+    void setStyle(Style style)  noexcept { m_style = style; }
 
-    TransformDirection getDirection() const;
-    void setDirection(TransformDirection dir);
+    TransformDirection getDirection() const noexcept;
+    void setDirection(TransformDirection dir) noexcept;
 
     void setParams(const Params & params) { m_params = params; }
     const Params & getParams() const { return m_params; }
@@ -89,7 +89,7 @@ public:
     bool operator==(const OpData & other) const override;
 
 protected:
-    void invert();
+    void invert() noexcept;
 
 private:
     Style m_style;

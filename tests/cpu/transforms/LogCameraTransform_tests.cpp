@@ -21,21 +21,15 @@ bool AllEqual(double (&values)[3])
 
 OCIO_ADD_TEST(LogCameraTransform, camera)
 {
-    const OCIO::LogCameraTransformRcPtr log = OCIO::LogCameraTransform::Create();
+    const OCIO::LogCameraTransformRcPtr log = OCIO::LogCameraTransform::Create({ 0.2, 0.2, 0.2 });
 
-    OCIO_CHECK_THROW_WHAT(log->validate(), OCIO::Exception, "LinSideBreak has to be defined");
     double values[3]{ -1., -1., -1. };
 
-    OCIO_CHECK_ASSERT(!log->getLinSideBreakValue(values));
-    OCIO_CHECK_ASSERT(!log->getLinearSlopeValue(values));
-
-    OCIO_CHECK_THROW_WHAT(log->setLinearSlopeValue({ 1, 1, 1 }), OCIO::Exception,
-                          "LinSideBreak has to be defined before linearSlope");
-
-    OCIO_CHECK_NO_THROW(log->setLinSideBreakValue({ 0.1, 0.1, 0.1 }));
-    OCIO_CHECK_ASSERT(log->getLinSideBreakValue(values));
+    log->getLinSideBreakValue(values);
     OCIO_CHECK_ASSERT(AllEqual(values));
-    OCIO_CHECK_EQUAL(values[0], 0.1);
+    OCIO_CHECK_EQUAL(values[0], 0.2);
+
+    OCIO_CHECK_ASSERT(!log->getLinearSlopeValue(values));
 
     OCIO_CHECK_NO_THROW(log->setLinearSlopeValue({ 1, 1, 1 }));
     OCIO_CHECK_ASSERT(log->getLinearSlopeValue(values));
@@ -59,10 +53,9 @@ OCIO_ADD_TEST(LogCameraTransform, camera)
     OCIO_CHECK_EQUAL(values[2], 1.2);
 
     OCIO::OpRcPtrVec ops;
-    OCIO::ConfigRcPtr config = OCIO::Config::Create();
 
     // Convert to op and back to transform.
-    OCIO::BuildLogOp(ops, *config, *log, OCIO::TRANSFORM_DIR_FORWARD);
+    OCIO::BuildLogOp(ops, *log, OCIO::TRANSFORM_DIR_FORWARD);
     OCIO_REQUIRE_EQUAL(ops.size(), 1);
     OCIO_CHECK_EQUAL(ops[0]->getInfo(), "<LogOp>");
 

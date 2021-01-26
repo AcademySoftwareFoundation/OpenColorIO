@@ -16,9 +16,13 @@
 namespace OCIO_NAMESPACE
 {
 
-// Used by both CDL parsers and CLF parsers.
+// Strings used by CDL and CLF parsers or writers.
 
 static constexpr char ATTR_ID[] = "id";
+static constexpr char ATTR_NAME[] = "name";
+
+static constexpr char CDL_TAG_COLOR_CORRECTION[] = "ColorCorrection";
+
 static constexpr char TAG_DESCRIPTION[] = "Description";
 static constexpr char TAG_OFFSET[] = "Offset";
 static constexpr char TAG_POWER[] = "Power";

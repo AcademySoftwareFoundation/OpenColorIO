@@ -214,19 +214,19 @@ void MatrixTransform::Sat(double * m44, double * offset4,
 
     if(m44)
     {
-        m44[0] = (1 - sat) * lumaCoef3[0] + sat;
-        m44[1] = (1 - sat) * lumaCoef3[1];
-        m44[2] = (1 - sat) * lumaCoef3[2];
+        m44[0] = (1. - sat) * lumaCoef3[0] + sat;
+        m44[1] = (1. - sat) * lumaCoef3[1];
+        m44[2] = (1. - sat) * lumaCoef3[2];
         m44[3] = 0.0;
 
-        m44[4] = (1 - sat) * lumaCoef3[0];
-        m44[5] = (1 - sat) * lumaCoef3[1] + sat;
-        m44[6] = (1 - sat) * lumaCoef3[2];
+        m44[4] = (1. - sat) * lumaCoef3[0];
+        m44[5] = (1. - sat) * lumaCoef3[1] + sat;
+        m44[6] = (1. - sat) * lumaCoef3[2];
         m44[7] = 0.0;
 
-        m44[8] = (1 - sat) * lumaCoef3[0];
-        m44[9] = (1 - sat) * lumaCoef3[1];
-        m44[10] = (1 - sat) * lumaCoef3[2] + sat;
+        m44[8] =  (1. - sat) * lumaCoef3[0];
+        m44[9] =  (1. - sat) * lumaCoef3[1];
+        m44[10] = (1. - sat) * lumaCoef3[2] + sat;
         m44[11] = 0.0;
 
         m44[12] = 0.0;

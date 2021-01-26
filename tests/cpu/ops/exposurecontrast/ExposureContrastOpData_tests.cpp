@@ -143,9 +143,9 @@ OCIO_ADD_TEST(ExposureContrastOpData, accessors)
     OCIO_CHECK_EQUAL(ec.getLogExposureStep(), 0.07);
     OCIO_CHECK_EQUAL(ec.getLogMidGray(), 0.5);
 
-    OCIO::DynamicPropertyRcPtr dpExp;
-    OCIO::DynamicPropertyRcPtr dpContrast;
-    OCIO::DynamicPropertyRcPtr dpGamma;
+    OCIO::DynamicPropertyDoubleImplRcPtr dpExp;
+    OCIO::DynamicPropertyDoubleImplRcPtr dpContrast;
+    OCIO::DynamicPropertyDoubleImplRcPtr dpGamma;
 
     // Property must be set as dynamic to accept a dynamic value.
     OCIO_CHECK_ASSERT(!ec.hasDynamicProperty(OCIO::DYNAMIC_PROPERTY_CONTRAST));
@@ -154,8 +154,8 @@ OCIO_ADD_TEST(ExposureContrastOpData, accessors)
                           OCIO::Exception,
                           "not dynamic")
 
-    OCIO_CHECK_NO_THROW(dpExp = ec.getDynamicProperty(OCIO::DYNAMIC_PROPERTY_EXPOSURE));
-    OCIO_CHECK_EQUAL(dpExp->getDoubleValue(), 0.1);
+    OCIO_CHECK_NO_THROW(dpExp = ec.getExposureProperty());
+    OCIO_CHECK_EQUAL(dpExp->getValue(), 0.1);
     OCIO_CHECK_ASSERT(!ec.hasDynamicProperty(OCIO::DYNAMIC_PROPERTY_CONTRAST));
     OCIO_CHECK_ASSERT(!ec.hasDynamicProperty(OCIO::DYNAMIC_PROPERTY_GAMMA));
     dpExp->setValue(1.5);
@@ -165,8 +165,8 @@ OCIO_ADD_TEST(ExposureContrastOpData, accessors)
 
     ec.getContrastProperty()->makeDynamic();
     ec.getGammaProperty()->makeDynamic();
-    OCIO_CHECK_NO_THROW(dpContrast = ec.getDynamicProperty(OCIO::DYNAMIC_PROPERTY_CONTRAST));
-    OCIO_CHECK_NO_THROW(dpGamma = ec.getDynamicProperty(OCIO::DYNAMIC_PROPERTY_GAMMA));
+    OCIO_CHECK_NO_THROW(dpContrast = ec.getContrastProperty());
+    OCIO_CHECK_NO_THROW(dpGamma = ec.getGammaProperty());
     dpContrast->setValue(1.42);
     dpGamma->setValue(0.88);
     OCIO_CHECK_EQUAL(ec.getContrast(), 1.42);
@@ -182,10 +182,10 @@ OCIO_ADD_TEST(ExposureContrastOpData, clone)
     ec.setPivot(0.2);
 
     ec.getExposureProperty()->makeDynamic();
-    OCIO::DynamicPropertyRcPtr dpExp;
+    OCIO::DynamicPropertyDoubleImplRcPtr dpExp;
 
-    OCIO_CHECK_NO_THROW(dpExp = ec.getDynamicProperty(OCIO::DYNAMIC_PROPERTY_EXPOSURE));
-    OCIO_CHECK_EQUAL(dpExp->getDoubleValue(), -1.4);
+    OCIO_CHECK_NO_THROW(dpExp = ec.getExposureProperty());
+    OCIO_CHECK_EQUAL(dpExp->getValue(), -1.4);
     dpExp->setValue(1.5);
     OCIO::ExposureContrastOpDataRcPtr ecCloned = ec.clone();
     OCIO_REQUIRE_ASSERT(ecCloned);
@@ -220,15 +220,16 @@ OCIO_ADD_TEST(ExposureContrastOpData, inverse)
     ec.setPivot(0.2);
 
     ec.getExposureProperty()->makeDynamic();
-    OCIO::DynamicPropertyRcPtr dpExp;
+    OCIO::DynamicPropertyDoubleImplRcPtr dpExp;
 
-    OCIO_CHECK_NO_THROW(dpExp = ec.getDynamicProperty(OCIO::DYNAMIC_PROPERTY_EXPOSURE));
+    OCIO_CHECK_NO_THROW(dpExp = ec.getExposureProperty());
     dpExp->setValue(1.5);
     OCIO::ExposureContrastOpDataRcPtr ecInv = ec.inverse();
     OCIO_REQUIRE_ASSERT(ecInv);
 
     OCIO::ConstExposureContrastOpDataRcPtr ecInvConst = ecInv;
-    OCIO_CHECK_ASSERT(ec.isInverse(ecInvConst));
+    // Dynamic are not inverse.
+    OCIO_CHECK_ASSERT(!ec.isInverse(ecInvConst));
 
     OCIO_CHECK_EQUAL(ecInv->getStyle(),
                      OCIO::ExposureContrastOpData::STYLE_VIDEO_REV);
@@ -253,8 +254,8 @@ OCIO_ADD_TEST(ExposureContrastOpData, inverse)
     OCIO_CHECK_EQUAL(ec.getExposure(), 0.21);
     OCIO_CHECK_EQUAL(ecInv->getExposure(), 1.5);
 
-    // Exposure is dynamic in both, so value does not matter.
-    OCIO_CHECK_ASSERT(ec.isInverse(ecInvConst));
+    // Exposure is dynamic in both, never equal.
+    OCIO_CHECK_ASSERT(!ec.isInverse(ecInvConst));
 
     ecInv->getContrastProperty()->makeDynamic();
 
@@ -262,7 +263,7 @@ OCIO_ADD_TEST(ExposureContrastOpData, inverse)
     OCIO_CHECK_ASSERT(!ec.isInverse(ecInvConst));
 
     ec.getContrastProperty()->makeDynamic();
-    OCIO_CHECK_ASSERT(ec.isInverse(ecInvConst));
+    OCIO_CHECK_ASSERT(!ec.isInverse(ecInvConst));
 
     // Gamma values are now different.
     ec.setGamma(1.2);
@@ -285,18 +286,20 @@ OCIO_ADD_TEST(ExposureContrastOpData, equality)
     ec0.getExposureProperty()->makeDynamic();
     OCIO_CHECK_ASSERT(!(ec0 == ec1));
     ec1.getExposureProperty()->makeDynamic();
-    OCIO_CHECK_ASSERT(ec0 == ec1);
+    OCIO_CHECK_ASSERT(!(ec0 == ec1));
 
     // Change value of enabled dynamic property.
     ec0.setExposure(0.5);
-    OCIO_CHECK_ASSERT(ec0 == ec1);
+    OCIO_CHECK_ASSERT(!(ec0 == ec1));
+    ec1.setExposure(0.5);
+    OCIO_CHECK_ASSERT(!(ec0 == ec1));
 
     // Change value of dynamic property not enabled.
     ec1.setContrast(0.5);
     OCIO_CHECK_ASSERT(!(ec0 == ec1));
 
     ec0.setContrast(0.5);
-    OCIO_CHECK_ASSERT(ec0 == ec1);
+    OCIO_CHECK_ASSERT(!(ec0 == ec1));
 }
 
 OCIO_ADD_TEST(ExposureContrastOpData, replace_dynamic_property)
@@ -316,7 +319,8 @@ OCIO_ADD_TEST(ExposureContrastOpData, replace_dynamic_property)
     // These are 2 different pointers.
     OCIO_CHECK_NE(dpe0.get(), dpe1.get());
 
-    ec1.replaceDynamicProperty(OCIO::DYNAMIC_PROPERTY_EXPOSURE, ec0.getExposureProperty());
+    auto dpd0 = ec0.getExposureProperty();
+    ec1.replaceDynamicProperty(OCIO::DYNAMIC_PROPERTY_EXPOSURE, dpd0);
     dpe1 = ec1.getDynamicProperty(OCIO::DYNAMIC_PROPERTY_EXPOSURE);
 
     // Now, this is the same pointer.
@@ -327,8 +331,8 @@ OCIO_ADD_TEST(ExposureContrastOpData, replace_dynamic_property)
     OCIO_CHECK_THROW(ec1.getDynamicProperty(OCIO::DYNAMIC_PROPERTY_CONTRAST), OCIO::Exception);
 
     // The property is not replaced if dynamic is not enabled.
-    OCIO_CHECK_THROW(ec1.replaceDynamicProperty(OCIO::DYNAMIC_PROPERTY_CONTRAST,
-                                                ec0.getContrastProperty()),
+    dpd0 = ec0.getContrastProperty();
+    OCIO_CHECK_THROW(ec1.replaceDynamicProperty(OCIO::DYNAMIC_PROPERTY_CONTRAST, dpd0),
                      OCIO::Exception);
     OCIO_CHECK_THROW(ec1.getDynamicProperty(OCIO::DYNAMIC_PROPERTY_CONTRAST), OCIO::Exception);
 }

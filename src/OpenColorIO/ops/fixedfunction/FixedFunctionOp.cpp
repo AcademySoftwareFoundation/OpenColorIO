@@ -43,7 +43,7 @@ public:
 
     std::string getCacheID() const override;
 
-    ConstOpCPURcPtr getCPUOp() const override;
+    ConstOpCPURcPtr getCPUOp(bool fastLogExpPow) const override;
 
     void extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const override;
 
@@ -119,7 +119,7 @@ std::string FixedFunctionOp::getCacheID() const
     return cacheIDStream.str();
 }
 
-ConstOpCPURcPtr FixedFunctionOp::getCPUOp() const
+ConstOpCPURcPtr FixedFunctionOp::getCPUOp(bool /*fastLogExpPow*/) const
 {
     ConstFixedFunctionOpDataRcPtr data = fnData();
     return GetFixedFunctionCPURenderer(data);
@@ -140,11 +140,10 @@ void FixedFunctionOp::extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator
 ///////////////////////////////////////////////////////////////////////////
 
 
-void CreateFixedFunctionOp(OpRcPtrVec & ops,
-                           const FixedFunctionOpData::Params & params,
-                           FixedFunctionOpData::Style style)
+void CreateFixedFunctionOp(OpRcPtrVec & ops, FixedFunctionOpData::Style style,
+                           const FixedFunctionOpData::Params & params)
 {
-    FixedFunctionOpDataRcPtr funcData = std::make_shared<FixedFunctionOpData>(params, style);
+    FixedFunctionOpDataRcPtr funcData = std::make_shared<FixedFunctionOpData>(style, params);
     CreateFixedFunctionOp(ops, funcData, TRANSFORM_DIR_FORWARD);
 }
 
@@ -171,7 +170,7 @@ void CreateFixedFunctionTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op
         throw Exception("CreateFixedFunctionTransform: op has to be a FixedFunctionOp");
     }
     auto ffData = DynamicPtrCast<const FixedFunctionOpData>(op->data());
-    auto ffTransform = FixedFunctionTransform::Create();
+    auto ffTransform = FixedFunctionTransform::Create(FIXED_FUNCTION_ACES_RED_MOD_03);
     auto & data = dynamic_cast<FixedFunctionTransformImpl *>(ffTransform.get())->data();
     data = *ffData;
 
@@ -179,8 +178,6 @@ void CreateFixedFunctionTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op
 }
 
 void BuildFixedFunctionOp(OpRcPtrVec & ops,
-                          const Config & /*config*/,
-                          const ConstContextRcPtr & /*context*/,
                           const FixedFunctionTransform & transform,
                           TransformDirection dir)
 {

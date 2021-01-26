@@ -5,8 +5,14 @@
 #define INCLUDED_OCIO_OPENCOLORABI_H
 
 // Makefile configuration options
-#define OCIO_NAMESPACE @OCIO_NAMESPACE@_v@OpenColorIO_VERSION_MAJOR@_@OpenColorIO_VERSION_MINOR@@OpenColorIO_VERSION_RELEASE_TYPE@
-#define OCIO_VERSION "@OpenColorIO_VERSION@@OpenColorIO_VERSION_RELEASE_TYPE@"
+#define OCIO_NAMESPACE @OCIO_NAMESPACE@
+
+#define OCIO_VERSION_STR        "@OpenColorIO_VERSION@"
+#define OCIO_VERSION_STATUS_STR "@OpenColorIO_VERSION_RELEASE_TYPE@"
+#define OCIO_VERSION_FULL_STR   "@OpenColorIO_VERSION@@OpenColorIO_VERSION_RELEASE_TYPE@"
+
+// Deprecated synonym for downstream projects that expect the 1.x name
+#define OCIO_VERSION            "@OpenColorIO_VERSION@"
 
 /* Version as a single 4-byte hex number, e.g. 0x01050200 == 1.5.2
    Use this for numeric comparisons, e.g. #if OCIO_VERSION_HEX >= ... 
@@ -30,15 +36,15 @@
 #if defined(_WIN32)
     // Windows requires you to export from the main library and then import in any others
     // only when compiling a dynamic library (i.e. DLL)
-	#ifndef OpenColorIO_SKIP_IMPORTS
-		#if defined OpenColorIO_EXPORTS
-			#define OCIOEXPORT __declspec(dllexport)
-		#else
-			#define OCIOEXPORT __declspec(dllimport)
-		#endif
-	#else
-		#define OCIOEXPORT
-	#endif
+    #ifndef OpenColorIO_SKIP_IMPORTS
+        #if defined OpenColorIO_EXPORTS
+            #define OCIOEXPORT __declspec(dllexport)
+        #else
+            #define OCIOEXPORT __declspec(dllimport)
+        #endif
+    #else
+        #define OCIOEXPORT
+    #endif
     #define OCIOHIDDEN
 #elif defined __GNUC__
     #define OCIOEXPORT __attribute__ ((visibility("default")))

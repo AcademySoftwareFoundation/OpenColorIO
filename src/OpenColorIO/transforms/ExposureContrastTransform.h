@@ -40,16 +40,19 @@ public:
     void setExposure(double exposure) override;
     bool isExposureDynamic() const override;
     void makeExposureDynamic() override;
+    void makeExposureNonDynamic() override;
 
     double getContrast() const override;
     void setContrast(double contrast) override;
     bool isContrastDynamic() const override;
     void makeContrastDynamic() override;
+    void makeContrastNonDynamic() override;
 
     double getGamma() const override;
     void setGamma(double gamma) override;
     bool isGammaDynamic() const override;
     void makeGammaDynamic() override;
+    void makeGammaNonDynamic() override;
 
     double getPivot() const override;
     void setPivot(double pivot) override;

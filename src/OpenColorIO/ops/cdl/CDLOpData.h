@@ -44,33 +44,19 @@ public:
     // (scale, offset and power) for all channels
     struct ChannelParams
     {
-        ChannelParams(double r, double g, double b, double a)
-        {
-            setRGBA(r, g, b, a);
-        }
-
         ChannelParams(double r, double g, double b)
         {
-            setRGBA(r, g, b, 1.0);
+            setRGB(r, g, b);
         }
 
         ChannelParams(double x)
         {
-            setRGBA(x, x, x, 1.0);
+            setRGB(x, x, x);
         }
 
         ChannelParams()
         {
-            setRGBA(0.0, 0.0, 0.0, 1.0);
-        }
-
-        const double * data() const { return m_data; }
-        double * data() { return m_data; }
-
-        void setRGBA(double r, double g, double b, double a)
-        {
-            setRGB(r, g, b);
-            setAlpha(a);
+            setRGB(0.0, 0.0, 0.0);
         }
 
         void setRGB(double r, double g, double b)
@@ -80,11 +66,6 @@ public:
             m_data[2] = b;
         }
 
-        void setAlpha(double a)
-        {
-            m_data[3] = a;
-        }
-
         void getRGB(double * rgb) const
         {
             rgb[0] = m_data[0];
@@ -92,17 +73,9 @@ public:
             rgb[2] = m_data[2];
         }
 
-        // Copy the content of the red, green, blue, and alpha channels 
-        //   into the array of floats.
-        void getRGBA(double * rgba) const
-        {
-            getRGB(rgba);
-            rgba[3] = m_data[3];
-        }
-
         double operator[](unsigned index) const
         {
-            if(index>=4)
+            if(index>=3)
             {
                 throw Exception("Index is out of range");
             }
@@ -111,7 +84,7 @@ public:
 
         double operator[](unsigned index)
         {
-            if(index>=4)
+            if(index>=3)
             {
                 throw Exception("Index is out of range");
             }
@@ -123,8 +96,7 @@ public:
             return 
                 EqualWithAbsError(m_data[0], other.m_data[0], 1e-9) &&
                 EqualWithAbsError(m_data[1], other.m_data[1], 1e-9) &&
-                EqualWithAbsError(m_data[2], other.m_data[2], 1e-9) &&
-                EqualWithAbsError(m_data[3], other.m_data[3], 1e-9);
+                EqualWithAbsError(m_data[2], other.m_data[2], 1e-9);
         }
 
         bool operator!=(const ChannelParams& other) const
@@ -133,7 +105,7 @@ public:
         }
 
     private:
-        double m_data[4];
+        double m_data[3];
     };
 
 
@@ -159,8 +131,8 @@ public:
     inline Style getStyle() const { return m_style; }
     void setStyle(Style cdlStyle);
 
-    TransformDirection getDirection() const;
-    void setDirection(TransformDirection dir);
+    TransformDirection getDirection() const noexcept;
+    void setDirection(TransformDirection dir) noexcept;
 
     const ChannelParams & getSlopeParams() const { return m_slopeParams; }
     void setSlopeParams(const ChannelParams& slopeParams);
@@ -178,6 +150,8 @@ public:
     bool isIdentity() const override;
 
     OpDataRcPtr getIdentityReplacement() const override;
+
+    void getSimplerReplacement(OpDataVec & tmpops) const override;
 
     bool hasChannelCrosstalk() const override;
 
@@ -200,7 +174,7 @@ protected:
     // Note: Return a boolean status based on the enum stored in the "style" variable.
     bool isClamping() const;
 
-    void invert();
+    void invert() noexcept;
 
 private:
     Style         m_style;         // CDL style

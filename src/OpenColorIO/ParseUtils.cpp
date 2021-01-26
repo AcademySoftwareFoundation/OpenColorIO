@@ -98,15 +98,14 @@ std::string ConvertXmlTokenToSpecialChar(const std::string & str)
 
 const char * BoolToString(bool val)
 {
-    if(val) return "true";
-    return "false";
+    return val ? "true" : "false";
 }
 
 bool BoolFromString(const char * s)
 {
-    const std::string str = StringUtils::Lower(s);
-    if((str == "true") || (str=="yes")) return true;
-    return false;
+    const std::string str = StringUtils::Lower(s ? s : "");
+
+    return (str == "true") || (str == "yes");
 }
 
 const char * LoggingLevelToString(LoggingLevel level)
@@ -120,7 +119,8 @@ const char * LoggingLevelToString(LoggingLevel level)
 
 LoggingLevel LoggingLevelFromString(const char * s)
 {
-    const std::string str = StringUtils::Lower(s);
+    const std::string str = StringUtils::Lower(s ? s : "");
+
     if(str == "0" || str == "none") return LOGGING_LEVEL_NONE;
     else if(str == "1" || str == "warning") return LOGGING_LEVEL_WARNING;
     else if(str == "2" || str == "info") return LOGGING_LEVEL_INFO;
@@ -131,25 +131,25 @@ LoggingLevel LoggingLevelFromString(const char * s)
 const char * TransformDirectionToString(TransformDirection dir)
 {
     if(dir == TRANSFORM_DIR_FORWARD) return "forward";
-    else if(dir == TRANSFORM_DIR_INVERSE) return "inverse";
-    return "unknown";
+    // TRANSFORM_DIR_INVERSE
+    return "inverse";
 }
 
 TransformDirection TransformDirectionFromString(const char * s)
 {
-    const std::string str = StringUtils::Lower(s);
+    const char * p = (s ? s : "");
+    const std::string str = StringUtils::Lower(p);
+
     if(str == "forward") return TRANSFORM_DIR_FORWARD;
     else if(str == "inverse") return TRANSFORM_DIR_INVERSE;
-    return TRANSFORM_DIR_UNKNOWN;
+
+    std::ostringstream oss;
+    oss << "Unrecognized transform direction: '" << p << "'.";
+    throw Exception(oss.str().c_str());
 }
 
-TransformDirection CombineTransformDirections(TransformDirection d1,
-                                                TransformDirection d2)
+TransformDirection CombineTransformDirections(TransformDirection d1, TransformDirection d2)
 {
-    // Any unknowns always combine to be unknown.
-    if(d1 == TRANSFORM_DIR_UNKNOWN || d2 == TRANSFORM_DIR_UNKNOWN)
-        return TRANSFORM_DIR_UNKNOWN;
-
     if(d1 == TRANSFORM_DIR_FORWARD && d2 == TRANSFORM_DIR_FORWARD)
         return TRANSFORM_DIR_FORWARD;
 
@@ -162,23 +162,8 @@ TransformDirection CombineTransformDirections(TransformDirection d1,
 TransformDirection GetInverseTransformDirection(TransformDirection dir)
 {
     if(dir == TRANSFORM_DIR_FORWARD) return TRANSFORM_DIR_INVERSE;
-    else if(dir == TRANSFORM_DIR_INVERSE) return TRANSFORM_DIR_FORWARD;
-    return TRANSFORM_DIR_UNKNOWN;
-}
-
-const char * ColorSpaceDirectionToString(ColorSpaceDirection dir)
-{
-    if(dir == COLORSPACE_DIR_TO_REFERENCE) return "to_reference";
-    else if(dir == COLORSPACE_DIR_FROM_REFERENCE) return "from_reference";
-    return "unknown";
-}
-
-ColorSpaceDirection ColorSpaceDirectionFromString(const char * s)
-{
-    const std::string str = StringUtils::Lower(s);
-    if(str == "to_reference") return COLORSPACE_DIR_TO_REFERENCE;
-    else if(str == "from_reference") return COLORSPACE_DIR_FROM_REFERENCE;
-    return COLORSPACE_DIR_UNKNOWN;
+    // TRANSFORM_DIR_INVERSE
+    return TRANSFORM_DIR_FORWARD;
 }
 
 const char * BitDepthToString(BitDepth bitDepth)
@@ -196,7 +181,8 @@ const char * BitDepthToString(BitDepth bitDepth)
 
 BitDepth BitDepthFromString(const char * s)
 {
-    const std::string str = StringUtils::Lower(s);
+    const std::string str = StringUtils::Lower(s ? s : "");
+
     if(str == "8ui") return BIT_DEPTH_UINT8;
     else if(str == "10ui") return BIT_DEPTH_UINT10;
     else if(str == "12ui") return BIT_DEPTH_UINT12;
@@ -236,7 +222,8 @@ const char * AllocationToString(Allocation alloc)
 
 Allocation AllocationFromString(const char * s)
 {
-    const std::string str = StringUtils::Lower(s);
+    const std::string str = StringUtils::Lower(s ? s : "");
+
     if(str == "uniform") return ALLOCATION_UNIFORM;
     else if(str == "lg2") return ALLOCATION_LG2;
     return ALLOCATION_UNKNOWN;
@@ -248,39 +235,49 @@ const char * InterpolationToString(Interpolation interp)
     else if(interp == INTERP_LINEAR) return "linear";
     else if(interp == INTERP_TETRAHEDRAL) return "tetrahedral";
     else if(interp == INTERP_BEST) return "best";
-    else if (interp == INTERP_DEFAULT) return "default";
+    else if(interp == INTERP_DEFAULT) return "default";
+    // INTERP_CUBIC is not implemented yet, but the string may be useful for error messages.
+    else if(interp == INTERP_CUBIC) return "cubic";
     return "unknown";
 }
 
 Interpolation InterpolationFromString(const char * s)
 {
-    const std::string str = StringUtils::Lower(s);
+    const std::string str = StringUtils::Lower(s ? s : "");
+
     if(str == "nearest") return INTERP_NEAREST;
     else if(str == "linear") return INTERP_LINEAR;
     else if(str == "tetrahedral") return INTERP_TETRAHEDRAL;
     else if(str == "best") return INTERP_BEST;
+    else if(str == "cubic") return INTERP_CUBIC;
     return INTERP_UNKNOWN;
 }
 
 const char * GpuLanguageToString(GpuLanguage language)
 {
     if(language == GPU_LANGUAGE_CG) return "cg";
-    else if(language == GPU_LANGUAGE_GLSL_1_0)  return "glsl_1.0";
+    else if(language == GPU_LANGUAGE_GLSL_1_2)  return "glsl_1.2";
     else if(language == GPU_LANGUAGE_GLSL_1_3)  return "glsl_1.3";
     else if(language == GPU_LANGUAGE_GLSL_4_0)  return "glsl_4.0";
     else if(language == GPU_LANGUAGE_HLSL_DX11) return "hlsl_dx11";
-    return "unknown";
+
+    throw Exception("Unsupported GPU shader language.");
 }
 
 GpuLanguage GpuLanguageFromString(const char * s)
 {
-    const std::string str = StringUtils::Lower(s);
+    const char * p = (s ? s : "");
+    const std::string str = StringUtils::Lower(p);
+
     if(str == "cg") return GPU_LANGUAGE_CG;
-    else if(str == "glsl_1.0") return GPU_LANGUAGE_GLSL_1_0;
+    else if(str == "glsl_1.2") return GPU_LANGUAGE_GLSL_1_2;
     else if(str == "glsl_1.3") return GPU_LANGUAGE_GLSL_1_3;
     else if(str == "glsl_4.0") return GPU_LANGUAGE_GLSL_4_0;
     else if(str == "hlsl_dx11") return GPU_LANGUAGE_HLSL_DX11;
-    return GPU_LANGUAGE_UNKNOWN;
+
+    std::ostringstream oss;
+    oss << "Unsupported GPU shader language: '" << p << "'.";
+    throw Exception(oss.str().c_str());
 }
 
 const char * EnvironmentModeToString(EnvironmentMode mode)
@@ -292,7 +289,8 @@ const char * EnvironmentModeToString(EnvironmentMode mode)
 
 EnvironmentMode EnvironmentModeFromString(const char * s)
 {
-    const std::string str = StringUtils::Lower(s);
+    const std::string str = StringUtils::Lower(s ? s : "");
+
     if(str == "loadpredefined") return ENV_ENVIRONMENT_LOAD_PREDEFINED;
     else if(str == "loadall") return ENV_ENVIRONMENT_LOAD_ALL;
     return ENV_ENVIRONMENT_UNKNOWN;
@@ -307,17 +305,15 @@ const char * CDLStyleToString(CDLStyle style)
 
 CDLStyle CDLStyleFromString(const char * style)
 {
-    if (style && *style)
-    {
-        const std::string str = StringUtils::Lower(style);
-        if      (str == "asc")     return CDL_ASC;
-        else if (str == "noclamp") return CDL_NO_CLAMP;
-    }
+    const char * p = (style ? style : "");
+    const std::string str = StringUtils::Lower(p);
 
-    std::string msg("Wrong CDL style: ");
-    msg += (style && *style) ? style : "<null>";
+    if      (str == "asc")     return CDL_ASC;
+    else if (str == "noclamp") return CDL_NO_CLAMP;
 
-    throw Exception(msg.c_str());
+    std::ostringstream oss;
+    oss << "Wrong CDL style: '" << p << "'.";
+    throw Exception(oss.str().c_str());
 }
 
 const char * RangeStyleToString(RangeStyle style)
@@ -329,17 +325,15 @@ const char * RangeStyleToString(RangeStyle style)
 
 RangeStyle RangeStyleFromString(const char * style)
 {
-    if(style && *style)
-    {
-        const std::string str = StringUtils::Lower(style);
-        if(str == "noclamp") return RANGE_NO_CLAMP;
-        else if(str == "clamp") return RANGE_CLAMP;
-    }
+    const char * p = (style ? style : "");
+    const std::string str = StringUtils::Lower(p);
 
-    std::string msg("Wrong Range style: ");
-    msg += (style && *style) ? style : "<null>";
+    if (str == "noclamp") return RANGE_NO_CLAMP;
+    else if (str == "clamp") return RANGE_CLAMP;
 
-    throw Exception(msg.c_str());
+    std::ostringstream oss;
+    oss << "Wrong Range style '" << p << "'.";
+    throw Exception(oss.str().c_str());
 }
 
 const char * FixedFunctionStyleToString(FixedFunctionStyle style)
@@ -356,6 +350,13 @@ const char * FixedFunctionStyleToString(FixedFunctionStyle style)
         case FIXED_FUNCTION_XYZ_TO_xyY:          return "XYZ_TO_xyY";
         case FIXED_FUNCTION_XYZ_TO_uvY:          return "XYZ_TO_uvY";
         case FIXED_FUNCTION_XYZ_TO_LUV:          return "XYZ_TO_LUV";
+        case FIXED_FUNCTION_ACES_GAMUTMAP_02:
+        case FIXED_FUNCTION_ACES_GAMUTMAP_07:
+        case FIXED_FUNCTION_ACES_GAMUTMAP_13:
+            throw Exception("Unimplemented fixed function types: "
+                            "FIXED_FUNCTION_ACES_GAMUTMAP_02, "
+                            "FIXED_FUNCTION_ACES_GAMUTMAP_07, and "
+                            "FIXED_FUNCTION_ACES_GAMUTMAP_13.");
     }
 
     // Default style is meaningless.
@@ -364,7 +365,8 @@ const char * FixedFunctionStyleToString(FixedFunctionStyle style)
 
 FixedFunctionStyle FixedFunctionStyleFromString(const char * style)
 {
-    const std::string str = StringUtils::Lower(style);
+    const char * p = (style ? style : "");
+    const std::string str = StringUtils::Lower(p);
 
     if(str == "aces_redmod03")           return FIXED_FUNCTION_ACES_RED_MOD_03;
     else if(str == "aces_redmod10")      return FIXED_FUNCTION_ACES_RED_MOD_10;
@@ -379,8 +381,42 @@ FixedFunctionStyle FixedFunctionStyleFromString(const char * style)
 
     // Default style is meaningless.
     std::stringstream ss;
-    ss << "Unknown Fixed FunctionOp style: " << style;
+    ss << "Unknown Fixed FunctionOp style: '" << p << "'.";
+    throw Exception(ss.str().c_str());
+}
 
+namespace
+{
+static constexpr char GRADING_STYLE_LINEAR[]      = "linear";
+static constexpr char GRADING_STYLE_LOGARITHMIC[] = "log";
+static constexpr char GRADING_STYLE_VIDEO[]       = "video";
+}
+
+const char * GradingStyleToString(GradingStyle style)
+{
+    switch (style)
+    {
+    case GRADING_LIN:    return GRADING_STYLE_LINEAR;
+    case GRADING_LOG:    return GRADING_STYLE_LOGARITHMIC;
+    case GRADING_VIDEO:  return GRADING_STYLE_VIDEO;
+    }
+
+    // Default style is meaningless.
+    throw Exception("Unknown grading style");
+}
+
+GradingStyle GradingStyleFromString(const char * style)
+{
+    const char * p = (style ? style : "");
+    const std::string str = StringUtils::Lower(p);
+
+    if      (str == GRADING_STYLE_LINEAR)      return GRADING_LIN;
+    else if (str == GRADING_STYLE_LOGARITHMIC) return GRADING_LOG;
+    else if (str == GRADING_STYLE_VIDEO)       return GRADING_VIDEO;
+
+    // Default style is meaningless.
+    std::stringstream ss;
+    ss << "Unknown grading style: '" << p << "'.";
     throw Exception(ss.str().c_str());
 }
 
@@ -406,7 +442,8 @@ const char * ExposureContrastStyleToString(ExposureContrastStyle style)
 
 ExposureContrastStyle ExposureContrastStyleFromString(const char * style)
 {
-    const std::string str = StringUtils::Lower(style);
+    const char * p = (style ? style : "");
+    const std::string str = StringUtils::Lower(p);
 
     if      (str == EC_STYLE_LINEAR)      return EXPOSURE_CONTRAST_LINEAR;
     else if (str == EC_STYLE_VIDEO)       return EXPOSURE_CONTRAST_VIDEO;
@@ -414,10 +451,10 @@ ExposureContrastStyle ExposureContrastStyleFromString(const char * style)
 
     // Default style is meaningless.
     std::stringstream ss;
-    ss << "Unknown exposure contrast style: " << style;
-
+    ss << "Unknown exposure contrast style: '" << p << "'.";
     throw Exception(ss.str().c_str());
 }
+
 
 namespace
 {
@@ -442,7 +479,8 @@ const char * NegativeStyleToString(NegativeStyle style)
 
 NegativeStyle NegativeStyleFromString(const char * style)
 {
-    const std::string str = StringUtils::Lower(style);
+    const char * p = (style ? style : "");
+    const std::string str = StringUtils::Lower(p);
 
     if (str == NEGATIVE_STYLE_MIRROR)         return NEGATIVE_MIRROR;
     else if (str == NEGATIVE_STYLE_PASS_THRU) return NEGATIVE_PASS_THRU;
@@ -450,21 +488,23 @@ NegativeStyle NegativeStyleFromString(const char * style)
     else if (str == NEGATIVE_STYLE_LINEAR)    return NEGATIVE_LINEAR;
 
     std::stringstream ss;
-    ss << "Unknown exponent style: " << style;
-
+    ss << "Unknown exponent style: '" << p << "'.";
     throw Exception(ss.str().c_str());
 }
 
 // Define variables declared in OpenColorTypes.h.
-const char * ROLE_DEFAULT         = "default";
-const char * ROLE_REFERENCE       = "reference";
-const char * ROLE_DATA            = "data";
-const char * ROLE_COLOR_PICKING   = "color_picking";
-const char * ROLE_SCENE_LINEAR    = "scene_linear";
-const char * ROLE_COMPOSITING_LOG = "compositing_log";
-const char * ROLE_COLOR_TIMING    = "color_timing";
-const char * ROLE_TEXTURE_PAINT   = "texture_paint";
-const char * ROLE_MATTE_PAINT     = "matte_paint";
+const char * ROLE_DEFAULT             = "default";
+const char * ROLE_REFERENCE           = "reference";
+const char * ROLE_DATA                = "data";
+const char * ROLE_COLOR_PICKING       = "color_picking";
+const char * ROLE_SCENE_LINEAR        = "scene_linear";
+const char * ROLE_COMPOSITING_LOG     = "compositing_log";
+const char * ROLE_COLOR_TIMING        = "color_timing";
+const char * ROLE_TEXTURE_PAINT       = "texture_paint";
+const char * ROLE_MATTE_PAINT         = "matte_paint";
+const char * ROLE_RENDERING           = "rendering";
+const char * ROLE_INTERCHANGE_SCENE   = "aces_interchange";
+const char * ROLE_INTERCHANGE_DISPLAY = "cie_xyz_d65_interchange";
 
 namespace
 {
@@ -544,8 +584,7 @@ std::string DoubleVecToString(const double * val, unsigned int size)
     return pretty.str();
 }
 
-bool StringVecToFloatVec(std::vector<float> &floatArray,
-                         const StringUtils::StringVec &lineParts)
+bool StringVecToFloatVec(std::vector<float> &floatArray, const StringUtils::StringVec &lineParts)
 {
     floatArray.resize(lineParts.size());
 
@@ -566,8 +605,7 @@ bool StringVecToFloatVec(std::vector<float> &floatArray,
 // This will resize intArray to the size of lineParts.
 // Returns true if all lineParts have been recognized as int.
 // Content of intArray will be unknown if function returns false.
-bool StringVecToIntVec(std::vector<int> &intArray,
-                       const StringUtils::StringVec &lineParts)
+bool StringVecToIntVec(std::vector<int> &intArray, const StringUtils::StringVec &lineParts)
 {
     intArray.resize(lineParts.size());
 

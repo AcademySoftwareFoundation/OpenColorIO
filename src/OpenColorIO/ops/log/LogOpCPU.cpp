@@ -2,7 +2,11 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 #include <algorithm>
+#include <cstring>
 #include <cmath>
+#ifndef USE_SSE
+#include <tuple>
+#endif
 
 #include <OpenColorIO/OpenColorIO.h>
 
@@ -13,10 +17,6 @@
 #include "ops/OpTools.h"
 #include "Platform.h"
 #include "SSE.h"
-
-#ifndef USE_SSE
-#include <cstring>
-#endif
 
 namespace OCIO_NAMESPACE
 {
@@ -66,6 +66,16 @@ protected:
     float m_minv[3];
 };
 
+#ifdef USE_SSE
+class Log2LinRendererSSE : public Log2LinRenderer
+{
+public:
+    explicit Log2LinRendererSSE(ConstLogOpDataRcPtr & log);
+
+    void apply(const void * inImg, void * outImg, long numPixels) const override;
+};
+#endif
+
 // Renderer for Lin2Log operations.
 class Lin2LogRenderer : public L2LBaseRenderer
 {
@@ -82,6 +92,16 @@ protected:
     float m_klog[3];
     float m_kb[3];
 };
+
+#ifdef USE_SSE
+class Lin2LogRendererSSE : public Lin2LogRenderer
+{
+public:
+    explicit Lin2LogRendererSSE(ConstLogOpDataRcPtr & log);
+
+    void apply(const void * inImg, void * outImg, long numPixels) const override;
+};
+#endif
 
 class CameraL2LBaseRenderer : public L2LBaseRenderer
 {
@@ -116,6 +136,16 @@ protected:
     float m_minuslino[3];
 };
 
+#ifdef USE_SSE
+class CameraLog2LinRendererSSE : public CameraLog2LinRenderer
+{
+public:
+    explicit CameraLog2LinRendererSSE(ConstLogOpDataRcPtr & log);
+
+    void apply(const void * inImg, void * outImg, long numPixels) const override;
+};
+#endif
+
 // Renderer for CameraLin2Log operations.
 class CameraLin2LogRenderer : public CameraL2LBaseRenderer
 {
@@ -134,6 +164,16 @@ protected:
     float m_linb[3];
 };
 
+#ifdef USE_SSE
+class CameraLin2LogRendererSSE : public CameraLin2LogRenderer
+{
+public:
+    explicit CameraLin2LogRendererSSE(ConstLogOpDataRcPtr & log);
+
+    void apply(const void * inImg, void * outImg, long numPixels) const override;
+};
+#endif
+
 // Renderer for Log10 and Log2 operations.
 class LogRenderer : public LogOpCPU
 {
@@ -142,9 +182,19 @@ public:
 
     void apply(const void * inImg, void * outImg, long numPixels) const override;
 
-private:
+protected:
     float m_logScale;
 };
+
+#ifdef USE_SSE
+class LogRendererSSE : public LogRenderer
+{
+public:
+    explicit LogRendererSSE(ConstLogOpDataRcPtr & log, float logScale);
+
+    void apply(const void * inImg, void * outImg, long numPixels) const override;
+};
+#endif
 
 // Renderer for AntiLog10 and AntiLog2 operations.
 class AntiLogRenderer : public LogOpCPU
@@ -154,63 +204,114 @@ public:
 
     void apply(const void * inImg, void * outImg, long numPixels) const override;
 
-private:
+protected:
     float m_log2_base;
 };
+
+#ifdef USE_SSE
+class AntiLogRendererSSE : public AntiLogRenderer
+{
+public:
+    explicit AntiLogRendererSSE(ConstLogOpDataRcPtr & log, float log2base);
+
+    void apply(const void * inImg, void * outImg, long numPixels) const override;
+};
+#endif
 
 static constexpr float LOG2_10 = ((float) 3.3219280948873623478703194294894);
 static constexpr float LOG10_2 = ((float) 0.3010299956639811952137388947245);
 
-ConstOpCPURcPtr GetLogRenderer(ConstLogOpDataRcPtr & log)
+ConstOpCPURcPtr GetLogRenderer(ConstLogOpDataRcPtr & log, bool fastExp)
 {
+#ifndef USE_SSE
+    std::ignore = fastExp;
+#endif
+
     const TransformDirection dir = log->getDirection();
     if (log->isLog2())
     {
-        if (dir == TRANSFORM_DIR_FORWARD)
+        switch (dir)
         {
-            return std::make_shared<LogRenderer>(log, 1.0f);
-        }
-        else
-        {
-            return std::make_shared<AntiLogRenderer>(log, 1.0f);
+        case TRANSFORM_DIR_FORWARD:
+#ifdef USE_SSE
+            if (fastExp) return std::make_shared<LogRendererSSE>(log, 1.0f);
+            else
+#endif
+                return std::make_shared<LogRenderer>(log, 1.0f);
+            break;
+        case TRANSFORM_DIR_INVERSE:
+#ifdef USE_SSE
+            if (fastExp) return std::make_shared<AntiLogRendererSSE>(log, 1.0f);
+            else
+#endif
+                return std::make_shared<AntiLogRenderer>(log, 1.0f);
+            break;
         }
     }
     else if (log->isLog10())
     {
-        if (dir == TRANSFORM_DIR_FORWARD)
+        switch (dir)
         {
-            return std::make_shared<LogRenderer>(log, LOG10_2);
-        }
-        else
-        {
-            return std::make_shared<AntiLogRenderer>(log, LOG2_10);
+        case TRANSFORM_DIR_FORWARD:
+#ifdef USE_SSE
+            if (fastExp) return std::make_shared<LogRendererSSE>(log, LOG10_2);
+            else
+#endif
+                return std::make_shared<LogRenderer>(log, LOG10_2);
+            break;
+        case TRANSFORM_DIR_INVERSE:
+#ifdef USE_SSE
+            if (fastExp) return std::make_shared<AntiLogRendererSSE>(log, LOG2_10);
+            else
+#endif
+                return std::make_shared<AntiLogRenderer>(log, LOG2_10);
+            break;
         }
     }
     else
     {
         if (log->isCamera())
         {
-            if (dir == TRANSFORM_DIR_FORWARD)
+            switch (dir)
             {
-                return std::make_shared<CameraLin2LogRenderer>(log);
-            }
-            else
-            {
-                return std::make_shared<CameraLog2LinRenderer>(log);
+            case TRANSFORM_DIR_FORWARD:
+#ifdef USE_SSE
+                if (fastExp) return std::make_shared<CameraLin2LogRendererSSE>(log);
+                else
+#endif
+                    return std::make_shared<CameraLin2LogRenderer>(log);
+                break;
+            case TRANSFORM_DIR_INVERSE:
+#ifdef USE_SSE
+                if (fastExp) return std::make_shared<CameraLog2LinRendererSSE>(log);
+                else
+#endif
+                    return std::make_shared<CameraLog2LinRenderer>(log);
+                break;
             }
         }
         else
         {
-            if (dir == TRANSFORM_DIR_FORWARD)
+            switch (dir)
             {
-                return std::make_shared<Lin2LogRenderer>(log);
-            }
-            else
-            {
-                return std::make_shared<Log2LinRenderer>(log);
+            case TRANSFORM_DIR_FORWARD:
+#ifdef USE_SSE
+                if (fastExp) return std::make_shared<Lin2LogRendererSSE>(log);
+                else
+#endif
+                    return std::make_shared<Lin2LogRenderer>(log);
+                break;
+            case TRANSFORM_DIR_INVERSE:
+#ifdef USE_SSE
+                if (fastExp) return std::make_shared<Log2LinRendererSSE>(log);
+                else
+#endif
+                    return std::make_shared<Log2LinRenderer>(log);
+                break;
             }
         }
     }
+    throw Exception("Illegal Log direction.");
 }
 
 LogOpCPU::LogOpCPU(ConstLogOpDataRcPtr & log)
@@ -244,9 +345,6 @@ LogRenderer::LogRenderer(ConstLogOpDataRcPtr & log, float logScale)
 {
     LogOpCPU::updateData(log);
 }
-
-
-#ifndef USE_SSE
 
 inline void ApplyScale(float * pix, const float scale)
 {
@@ -289,19 +387,47 @@ inline void ApplyExp2(float * pix)
     pix[1] = exp2(pix[1]);
     pix[2] = exp2(pix[2]);
 }
-#endif
 
 void LogRenderer::apply(const void * inImg, void * outImg, long numPixels) const
 {
-    //
-    // out = log2( max(in, minValue) ) * logScale;
-    //
-    const float minValue = std::numeric_limits<float>::min();
+    static constexpr float minValue = std::numeric_limits<float>::min();
 
     const float * in = (const float *)inImg;
     float * out = (float *)outImg;
 
+    for (long idx = 0; idx<numPixels; ++idx)
+    {
+        const float alphares = in[3];
+
+        // NB: 'in' and 'out' could be pointers to the same memory buffer.
+        std::memcpy(out, in, 4 * sizeof(float));
+
+        ApplyMax(out, minValue);
+        ApplyLog2(out);
+        ApplyScale(out, m_logScale);
+
+        out[3] = alphares;
+
+        in  += 4;
+        out += 4;
+    }
+}
+
 #ifdef USE_SSE
+LogRendererSSE::LogRendererSSE(ConstLogOpDataRcPtr & log, float logScale)
+    : LogRenderer(log, logScale)
+{
+}
+void LogRendererSSE::apply(const void * inImg, void * outImg, long numPixels) const
+{
+    //
+    // out = log2( max(in, minValue) ) * logScale;
+    //
+    static constexpr float minValue = std::numeric_limits<float>::min();
+
+    const float * in = (const float *)inImg;
+    float * out = (float *)outImg;
+
     const __m128 mm_minValue = _mm_set1_ps(minValue);
     const __m128 mm_logScale = _mm_set1_ps(m_logScale);
 
@@ -322,25 +448,8 @@ void LogRenderer::apply(const void * inImg, void * outImg, long numPixels) const
         in  += 4;
         out += 4;
     }
-#else
-    for (long idx = 0; idx<numPixels; ++idx)
-    {
-        const float alphares = in[3];
-
-        // NB: 'in' and 'out' could be pointers to the same memory buffer.
-        std::memcpy(out, in, 4 * sizeof(float));
-
-        ApplyMax(out, minValue);
-        ApplyLog2(out);
-        ApplyScale(out, m_logScale);
-
-        out[3] = alphares;
-
-        in  += 4;
-        out += 4;
-    }
-#endif
 }
+#endif
 
 // Renderer for AntiLog10 and AntiLog2 operations
 AntiLogRenderer::AntiLogRenderer(ConstLogOpDataRcPtr & log, float log2base)
@@ -351,6 +460,34 @@ AntiLogRenderer::AntiLogRenderer(ConstLogOpDataRcPtr & log, float log2base)
 }
 
 void AntiLogRenderer::apply(const void * inImg, void * outImg, long numPixels) const
+{
+    const float * in = (const float *)inImg;
+    float * out = (float *)outImg;
+
+    for (long idx = 0; idx<numPixels; ++idx)
+    {
+        const float alphares = in[3];
+
+        // NB: 'in' and 'out' could be pointers to the same memory buffer.
+        std::memcpy(out, in, 4 * sizeof(float));
+
+        ApplyScale(out, m_log2_base);
+        ApplyExp2(out);
+
+        out[3] = alphares;
+
+        in  += 4;
+        out += 4;
+    }
+}
+
+#ifdef USE_SSE
+AntiLogRendererSSE::AntiLogRendererSSE(ConstLogOpDataRcPtr & log, float log2base)
+    : AntiLogRenderer(log, log2base)
+{
+}
+
+void AntiLogRendererSSE::apply(const void * inImg, void * outImg, long numPixels) const
 {
     //
     // out = pow(base, in);
@@ -363,7 +500,6 @@ void AntiLogRenderer::apply(const void * inImg, void * outImg, long numPixels) c
     const float * in = (const float *)inImg;
     float * out = (float *)outImg;
 
-#ifdef USE_SSE
     const __m128 mm_log2_base = _mm_set1_ps(m_log2_base);
 
     __m128 mm_pixel;
@@ -381,24 +517,8 @@ void AntiLogRenderer::apply(const void * inImg, void * outImg, long numPixels) c
         in  += 4;
         out += 4;
     }
-#else
-    for (long idx = 0; idx<numPixels; ++idx)
-    {
-        const float alphares = in[3];
-
-        // NB: 'in' and 'out' could be pointers to the same memory buffer.
-        std::memcpy(out, in, 4 * sizeof(float));
-
-        ApplyScale(out, m_log2_base);
-        ApplyExp2(out);
-
-        out[3] = alphares;
-
-        in  += 4;
-        out += 4;
-    }
-#endif
 }
+#endif
 
 // Renderer for LogToLin operations
 Log2LinRenderer::Log2LinRenderer(ConstLogOpDataRcPtr & log)
@@ -425,7 +545,40 @@ void Log2LinRenderer::updateData(ConstLogOpDataRcPtr & log)
     m_minv[2] = 1.0f / (float)m_paramsB[LIN_SIDE_SLOPE];
 }
 
+
 void Log2LinRenderer::apply(const void * inImg, void * outImg, long numPixels) const
+{
+    const float * in = (const float *)inImg;
+    float * out = (float *)outImg;
+
+    for (long idx = 0; idx<numPixels; ++idx)
+    {
+        const float alphares = in[3];
+
+        // NB: 'in' and 'out' could be pointers to the same memory buffer.
+        std::memcpy(out, in, 4 * sizeof(float));
+
+        ApplyAdd(out, m_minuskb);
+        ApplyScale(out, m_kinv);
+        ApplyExp2(out);
+        ApplyAdd(out, m_minusb);
+        ApplyScale(out, m_minv);
+
+        out[3] = alphares;
+
+        out += 4;
+        in  += 4;
+    }
+}
+
+#ifdef USE_SSE
+Log2LinRendererSSE::Log2LinRendererSSE(ConstLogOpDataRcPtr & log)
+    : Log2LinRenderer(log)
+{
+
+}
+
+void Log2LinRendererSSE::apply(const void * inImg, void * outImg, long numPixels) const
 {
     //
     // out = ( pow( base, (in - logOffset) / logSlope ) - linOffset ) / linSlope;
@@ -440,7 +593,6 @@ void Log2LinRenderer::apply(const void * inImg, void * outImg, long numPixels) c
     const float * in = (const float *)inImg;
     float * out = (float *)outImg;
 
-#ifdef USE_SSE
     const __m128 mm_kinv = _mm_set_ps(0.0f, m_kinv[2], m_kinv[1], m_kinv[0]);
     const __m128 mm_minuskb = _mm_set_ps(0.0f, m_minuskb[2], m_minuskb[1], m_minuskb[0]);
     const __m128 mm_minusb = _mm_set_ps(0.0f, m_minusb[2], m_minusb[1], m_minusb[0]);
@@ -465,27 +617,8 @@ void Log2LinRenderer::apply(const void * inImg, void * outImg, long numPixels) c
         out += 4;
         in  += 4;
     }
-#else
-    for (long idx = 0; idx<numPixels; ++idx)
-    {
-        const float alphares = in[3];
-
-        // NB: 'in' and 'out' could be pointers to the same memory buffer.
-        std::memcpy(out, in, 4 * sizeof(float));
-
-        ApplyAdd(out, m_minuskb);
-        ApplyScale(out, m_kinv);
-        ApplyExp2(out);
-        ApplyAdd(out, m_minusb);
-        ApplyScale(out, m_minv);
-
-        out[3] = alphares;
-
-        out += 4;
-        in  += 4;
-    }
-#endif
 }
+#endif
 
 // Renderer for Lin2Log operations
 Lin2LogRenderer::Lin2LogRenderer(ConstLogOpDataRcPtr & log)
@@ -514,16 +647,49 @@ void Lin2LogRenderer::updateData(ConstLogOpDataRcPtr & log)
 
 void Lin2LogRenderer::apply(const void * inImg, void * outImg, long numPixels) const
 {
-    // out = ( logSlope * log( base, max( minValue, (in*linSlope + linOffset) ) ) + logOffset )
-    //
-    // out = log2( max( minValue, (in*linSlope + linOffset) ) ) * logSlope / log2(base) + logOffset
-    //
-    constexpr float minValue = std::numeric_limits<float>::min();
+    static constexpr float minValue = std::numeric_limits<float>::min();
 
     const float * in = (const float *)inImg;
     float * out = (float *)outImg;
 
+    for (long idx = 0; idx<numPixels; ++idx)
+    {
+        const float alphares = in[3];
+
+        // NB: 'in' and 'out' could be pointers to the same memory buffer.
+        std::memcpy(out, in, 4 * sizeof(float));
+
+        ApplyScale(out, m_m);
+        ApplyAdd(out, m_b);
+        ApplyMax(out, minValue);
+        ApplyLog2(out);
+        ApplyScale(out, m_klog);
+        ApplyAdd(out, m_kb);
+
+        out[3] = alphares;
+
+        out += 4;
+        in  += 4;
+    }
+}
+
 #ifdef USE_SSE
+Lin2LogRendererSSE::Lin2LogRendererSSE(ConstLogOpDataRcPtr & log)
+    : Lin2LogRenderer(log)
+{
+}
+
+void Lin2LogRendererSSE::apply(const void * inImg, void * outImg, long numPixels) const
+{
+    // out = ( logSlope * log( base, max( minValue, (in*linSlope + linOffset) ) ) + logOffset )
+    //
+    // out = log2( max( minValue, (in*linSlope + linOffset) ) ) * logSlope / log2(base) + logOffset
+    //
+    static constexpr float minValue = std::numeric_limits<float>::min();
+
+    const float * in = (const float *)inImg;
+    float * out = (float *)outImg;
+
     const __m128 mm_minValue = _mm_set1_ps(minValue);
 
     const __m128 mm_m = _mm_set_ps(0.0f, m_m[2], m_m[1], m_m[0]);
@@ -551,28 +717,8 @@ void Lin2LogRenderer::apply(const void * inImg, void * outImg, long numPixels) c
         out += 4;
         in  += 4;
     }
-#else
-    for (long idx = 0; idx<numPixels; ++idx)
-    {
-        const float alphares = in[3];
-
-        // NB: 'in' and 'out' could be pointers to the same memory buffer.
-        std::memcpy(out, in, 4 * sizeof(float));
-
-        ApplyScale(out, m_m);
-        ApplyAdd(out, m_b);
-        ApplyMax(out, minValue);
-        ApplyLog2(out);
-        ApplyScale(out, m_klog);
-        ApplyAdd(out, m_kb);
-
-        out[3] = alphares;
-
-        out += 4;
-        in  += 4;
-    }
-#endif
 }
+#endif
 
 CameraL2LBaseRenderer::CameraL2LBaseRenderer(ConstLogOpDataRcPtr & log)
     : L2LBaseRenderer(log)
@@ -627,6 +773,42 @@ void CameraLog2LinRenderer::updateData(ConstLogOpDataRcPtr & log)
 
 void CameraLog2LinRenderer::apply(const void * inImg, void * outImg, long numPixels) const
 {
+    const float * in = (const float *)inImg;
+    float * out = (float *)outImg;
+
+    for (long idx = 0; idx < numPixels; ++idx)
+    {
+        const float alphares = in[3];
+
+        for (int i = 0; i < 3; ++i)
+        {
+            if (in[i] < m_logSideBreak[i])
+            {
+                out[i] = m_linsinv[i] * (in[i] + m_minuslino[i]);
+            }
+            else
+            {
+                out[i] = (in[i] + m_minuskb[i]) * m_kinv[i];
+                out[i] = exp2(out[i]);
+                out[i] = (out[i] + m_minusb[i]) * m_minv[i];
+            }
+        }
+
+        out[3] = alphares;
+
+        out += 4;
+        in += 4;
+    }
+}
+
+#ifdef USE_SSE
+CameraLog2LinRendererSSE::CameraLog2LinRendererSSE(ConstLogOpDataRcPtr & log)
+    : CameraLog2LinRenderer(log)
+{
+}
+
+void CameraLog2LinRendererSSE::apply(const void * inImg, void * outImg, long numPixels) const
+{
     // if in <= logBreak
     //  out = ( in - linearOffset ) / linearSlope
     // else
@@ -638,7 +820,6 @@ void CameraLog2LinRenderer::apply(const void * inImg, void * outImg, long numPix
     const float * in = (const float *)inImg;
     float * out = (float *)outImg;
 
-#ifdef USE_SSE
     const __m128 mm_kinv = _mm_set_ps(0.0f, m_kinv[2], m_kinv[1], m_kinv[0]);
     const __m128 mm_minuskb = _mm_set_ps(0.0f, m_minuskb[2], m_minuskb[1], m_minuskb[0]);
     const __m128 mm_minusb = _mm_set_ps(0.0f, m_minusb[2], m_minusb[1], m_minusb[0]);
@@ -675,32 +856,8 @@ void CameraLog2LinRenderer::apply(const void * inImg, void * outImg, long numPix
         out += 4;
         in += 4;
     }
-#else
-    for (long idx = 0; idx < numPixels; ++idx)
-    {
-        const float alphares = in[3];
-
-        for (int i = 0; i < 3; ++i)
-        {
-            if (in[i] < m_logSideBreak[i])
-            {
-                out[i] = m_linsinv[i] * (in[i] + m_minuslino[i]);
-            }
-            else
-            {
-                out[i] = (in[i] + m_minuskb[i]) * m_kinv[i];
-                out[i] = exp2(out[i]);
-                out[i] = (out[i] + m_minusb[i]) * m_minv[i];
-            }
-        }
-
-        out[3] = alphares;
-
-        out += 4;
-        in += 4;
-    }
-#endif
 }
+#endif
 
 CameraLin2LogRenderer::CameraLin2LogRenderer(ConstLogOpDataRcPtr & log)
     : CameraL2LBaseRenderer(log)
@@ -731,6 +888,45 @@ void CameraLin2LogRenderer::updateData(ConstLogOpDataRcPtr & log)
 
 void CameraLin2LogRenderer::apply(const void * inImg, void * outImg, long numPixels) const
 {
+    static constexpr float minValue = std::numeric_limits<float>::min();
+
+    const float * in = (const float *)inImg;
+    float * out = (float *)outImg;
+
+    for (long idx = 0; idx<numPixels; ++idx)
+    {
+        const float alphares = in[3];
+
+        for (int i = 0; i < 3; ++i)
+        {
+            if (in[i] < m_linb[i])
+            {
+                out[i] = m_linearSlope[i] * in[i] + m_linearOffset[i];
+            }
+            else
+            {
+                out[i] = in[i] * m_m[i] + m_b[i];
+                out[i] = std::max(minValue, out[i]);
+                out[i] = log2(out[i]);
+                out[i] = out[i] * m_klog[i] + m_kb[i];
+            }
+        }
+
+        out[3] = alphares;
+
+        out += 4;
+        in += 4;
+    }
+}
+
+#ifdef USE_SSE
+CameraLin2LogRendererSSE::CameraLin2LogRendererSSE(ConstLogOpDataRcPtr & log)
+    : CameraLin2LogRenderer(log)
+{
+}
+
+void CameraLin2LogRendererSSE::apply(const void * inImg, void * outImg, long numPixels) const
+{
     // if in <= linBreak
     //  out = linearSlope * in + linearOffset 
     // else
@@ -738,12 +934,11 @@ void CameraLin2LogRenderer::apply(const void * inImg, void * outImg, long numPix
     //
     //  out = log2( max( minValue, (in*linSlope + linOffset) ) ) * logSlope / log2(base) + logOffset
     //
-    constexpr float minValue = std::numeric_limits<float>::min();
+    static constexpr float minValue = std::numeric_limits<float>::min();
 
     const float * in = (const float *)inImg;
     float * out = (float *)outImg;
 
-#ifdef USE_SSE
     const __m128 mm_minValue = _mm_set1_ps(minValue);
 
     const __m128 mm_m = _mm_set_ps(0.0f, m_m[2], m_m[1], m_m[0]);
@@ -783,34 +978,8 @@ void CameraLin2LogRenderer::apply(const void * inImg, void * outImg, long numPix
         out += 4;
         in += 4;
     }
-#else
-    for (long idx = 0; idx<numPixels; ++idx)
-    {
-        const float alphares = in[3];
-
-        for (int i = 0; i < 3; ++i)
-        {
-            if (in[i] < m_linb[i])
-            {
-                out[i] = m_linearSlope[i] * in[i] + m_linearOffset[i];
-            }
-            else
-            {
-                out[i] = in[i] * m_m[i] + m_b[i];
-                out[i] = std::max(minValue, out[i]);
-                out[i] = log2(out[i]);
-                out[i] = out[i] * m_klog[i] + m_kb[i];
-            }
-        }
-
-        out[3] = alphares;
-
-        out += 4;
-        in += 4;
-    }
-#endif
 }
-
+#endif
 
 } // namespace OCIO_NAMESPACE
 

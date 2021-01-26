@@ -26,6 +26,11 @@ class CachedFile
 public:
     CachedFile() {};
     virtual ~CachedFile() {};
+
+    virtual GroupTransformRcPtr getCDLGroup() const
+    {
+        throw Exception("Not a CDL file format.");
+    }
 };
 
 typedef OCIO_SHARED_PTR<CachedFile> CachedFileRcPtr;
@@ -37,8 +42,8 @@ const int FORMAT_CAPABILITY_WRITE = 4;
 
 struct FormatInfo
 {
-    std::string name;       // name must be globally unique
-    std::string extension;  // extension does not need to be unique
+    std::string name;       // Name must be globally unique
+    std::string extension;  // Extension has to be lower case and does not need to be unique
     int capabilities;
 
     FormatInfo():
@@ -58,18 +63,19 @@ public:
     // read an istream. originalFileName is used by parsers that make use
     // of aspects of the file name as part of the parsing.
     // It may be set to an empty string if not known.
-    virtual CachedFileRcPtr read(
-        std::istream & istream,
-        const std::string & originalFileName) const = 0;
+    virtual CachedFileRcPtr read(std::istream & istream,
+                                 const std::string & originalFileName,
+                                 Interpolation interp) const = 0;
 
     virtual void bake(const Baker & baker,
-                        const std::string & formatName,
-                        std::ostream & ostream) const;
+                      const std::string & formatName,
+                      std::ostream & ostream) const;
 
-    virtual void write(const OpRcPtrVec & ops,
-                        const FormatMetadataImpl & metadata,
-                        const std::string & formatName,
-                        std::ostream & ostream) const;
+    virtual void write(const ConstConfigRcPtr & config,
+                       const ConstContextRcPtr & context,
+                       const GroupTransform & group,
+                       const std::string & formatName,
+                       std::ostream & ostream) const;
 
     virtual void buildFileOps(OpRcPtrVec & ops,
                                 const Config & config,
@@ -89,6 +95,11 @@ public:
 private:
     FileFormat& operator= (const FileFormat &);
 };
+
+void GetCachedFileAndFormat(FileFormat * & format,
+                            CachedFileRcPtr & cachedFile,
+                            const std::string & filepath,
+                            Interpolation interp);
 
 typedef std::map<std::string, FileFormat*> FileFormatMap;
 typedef std::vector<FileFormat*> FileFormatVector;
@@ -110,9 +121,9 @@ public:
     int getNumRawFormats() const;
     FileFormat* getRawFormatByIndex(int index) const;
 
-    int getNumFormats(int capability) const;
-    const char * getFormatNameByIndex(int capability, int index) const;
-    const char * getFormatExtensionByIndex(int capability, int index) const;
+    int getNumFormats(int capability) const noexcept;
+    const char * getFormatNameByIndex(int capability, int index) const noexcept;
+    const char * getFormatExtensionByIndex(int capability, int index) const noexcept;
 private:
     FormatRegistry();
     ~FormatRegistry();
@@ -152,8 +163,11 @@ FileFormat * CreateFileFormatSpiMtx();
 FileFormat * CreateFileFormatTruelight();
 FileFormat * CreateFileFormatVF();
 
-static constexpr char FILEFORMAT_CLF[] = "Academy/ASC Common LUT Format";
-static constexpr char FILEFORMAT_CTF[] = "Color Transform Format";
+static constexpr char FILEFORMAT_CLF[]                         = "Academy/ASC Common LUT Format";
+static constexpr char FILEFORMAT_CTF[]                         = "Color Transform Format";
+static constexpr char FILEFORMAT_COLOR_CORRECTION[]            = "ColorCorrection";
+static constexpr char FILEFORMAT_COLOR_CORRECTION_COLLECTION[] = "ColorCorrectionCollection";
+static constexpr char FILEFORMAT_COLOR_DECISION_LIST[]         = "ColorDecisionList";
 
 } // namespace OCIO_NAMESPACE
 

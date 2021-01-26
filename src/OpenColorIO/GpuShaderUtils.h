@@ -5,9 +5,9 @@
 #ifndef INCLUDED_OCIO_GPUSHADERUTILS_H
 #define INCLUDED_OCIO_GPUSHADERUTILS_H
 
-#include <OpenColorIO/OpenColorIO.h>
-
 #include <sstream>
+
+#include <OpenColorIO/OpenColorIO.h>
 
 
 namespace OCIO_NAMESPACE
@@ -30,6 +30,7 @@ public:
         GpuShaderLine& operator<<(float value);
         GpuShaderLine& operator<<(double value);
         GpuShaderLine& operator<<(unsigned value);
+        GpuShaderLine& operator<<(int value);
         GpuShaderLine& operator<<(const std::string & str);
         GpuShaderLine& operator=(const GpuShaderLine & rhs);
 
@@ -63,75 +64,83 @@ public:
     void dedent();
 
     //
-    // Scalar helper functions
+    // Scalar & arrays helper functions.
     //
 
-    // Declare a float variable
-    void declareVar(const std::string& name, float v);
-    // Declare a float variable
-    void declareVar(const std::string& name, const std::string& v);
+    // Declare a float variable.
+    void declareVar(const std::string & name, float v);
+
+    // Declare a bool variable.
+    void declareVar(const std::string & name, bool v);
+
+    // Declare a float array variable.
+    void declareFloatArrayConst(const std::string & name, int size, const float * v);
+
+    // Declare a int array variable.
+    void declareIntArrayConst(const std::string & name, int size, const int * v);
 
     //
-    // Vec2f helper functions
+    // Float2 helper functions
     //
 
-    std::string vec2fKeyword() const;
-    std::string vec2fDecl(const std::string& name) const;
+    std::string float2Keyword() const;
+    std::string float2Decl(const std::string& name) const;
 
     //
-    // Vec3f helper functions
+    // Float3 helper functions
     //
 
     // Get the keyword for declaring/using vectors with three elements
-    std::string vec3fKeyword() const;
+    std::string float3Keyword() const;
     // Get the string for creating constant vector with three elements
-    std::string vec3fConst(float x, float y, float z) const;
-    std::string vec3fConst(double x, double y, double z) const;
+    std::string float3Const(float x, float y, float z) const;
+    std::string float3Const(double x, double y, double z) const;
     // Get the string for creating constant vector with three elements
-    std::string vec3fConst(const std::string& x, const std::string& y,
+    std::string float3Const(const std::string& x, const std::string& y,
                            const std::string& z) const;
     // Get the string for creating constant vector with three elements
-    std::string vec3fConst(float v) const;
-    std::string vec3fConst(double v) const;
+    std::string float3Const(float v) const;
+    std::string float3Const(double v) const;
     // Get the string for creating constant vector with three elements
-    std::string vec3fConst(const std::string& v) const;
+    std::string float3Const(const std::string& v) const;
     // Get the declaration for a vector with three elements
-    std::string vec3fDecl(const std::string& name) const;
+    std::string float3Decl(const std::string& name) const;
 
     // Declare and initialize a vector with three elements
-    void declareVec3f(const std::string& name,
+    void declareFloat3(const std::string& name,
                       float x, float y, float z);
-    void declareVec3f(const std::string& name,
+    void declareFloat3(const std::string& name, const Float3 & vec3);
+    void declareFloat3(const std::string& name,
                       double x, double y, double z);
     // Declare and initialize a vector with three elements
-    void declareVec3f(const std::string& name,
+    void declareFloat3(const std::string& name,
                       const std::string& x, const std::string& y, const std::string& z);
 
     //
-    // Vec4f helper functions
+    // Float4 helper functions
     //
 
     // Get the keyword for declaring/using vectors with four elements
-    std::string vec4fKeyword() const;
+    std::string float4Keyword() const;
     // Get the string for creating constant vector with four elements
-    std::string vec4fConst(float x, float y, float z, float w) const;
-    std::string vec4fConst(double x, double y, double z, double w) const;
+    std::string float4Const(float x, float y, float z, float w) const;
+    std::string float4Const(double x, double y, double z, double w) const;
     // Get the string for creating constant vector with four elements
-    std::string vec4fConst(const std::string& x, const std::string& y,
+    std::string float4Const(const std::string& x, const std::string& y,
                             const std::string& z, const std::string& w) const;
     // Get the string for creating constant vector with four elements
-    std::string vec4fConst(float v) const;
+    std::string float4Const(float v) const;
     // Get the string for creating constant vector with four elements
-    std::string vec4fConst(const std::string& v) const;
+    std::string float4Const(const std::string& v) const;
     // Get the declaration for a vector with four elements
-    std::string vec4fDecl(const std::string& name) const;
+    std::string float4Decl(const std::string& name) const;
 
     // Declare and initialize a vector with four elements
-    void declareVec4f(const std::string& name,
+    void declareFloat4(const std::string& name,
                         float x, float y, float z, float w);
-    void declareVec4f(const std::string& name,
+    void declareFloat4(const std::string& name,
                         double x, double y, double z, double w);
-    void declareVec4f(const std::string& name,
+    void declareFloat4(const std::string& name,
                         const std::string& x, const std::string& y,
                         const std::string& z, const std::string& w);
 
@@ -154,7 +163,15 @@ public:
     // Get the texture lookup call for a 3D texture.
     std::string sampleTex3D(const std::string& textureName, const std::string& coords) const;
 
+    //
+    // Uniform helpers
+    //
+
     void declareUniformFloat(const std::string & uniformName);
+    void declareUniformBool(const std::string & uniformName);
+    void declareUniformFloat3(const std::string & uniformName);
+    void declareUniformArrayFloat(const std::string & uniformName, unsigned int size);
+    void declareUniformArrayInt(const std::string & uniformName, unsigned int size);
 
     //
     // Matrix multiplication helpers
@@ -170,12 +187,12 @@ public:
 
     // Get the string for linearly interpolating two quantities
     std::string lerp(const std::string& x, const std::string& y, 
-                        const std::string& a) const;
+                     const std::string& a) const;
 
     // Get the string for creating a three or four-elements 'greater than' comparison
     //    Each element i in the resulting vector is 1 if a>b, or 0 otherwise.
-    std::string vec3fGreaterThan(const std::string& a, const std::string& b) const;
-    std::string vec4fGreaterThan(const std::string& a, const std::string& b) const;
+    std::string float3GreaterThan(const std::string& a, const std::string& b) const;
+    std::string float4GreaterThan(const std::string& a, const std::string& b) const;
 
     // Get the string for taking the four-quadrant arctangent 
     // (similar to atan(y/x) but takes into account the signs of the arguments).
@@ -189,6 +206,9 @@ private:
     //    to the current line before adding it to the shader text, and
     //    resets the current line.
     void flushLine();
+
+    std::string floatKeyword() const;
+    std::string intKeyword() const;
 
 private:
     // Shader language to use in the various shader text builder methods.
@@ -208,6 +228,19 @@ private:
     // Indentation level to use for the next line.
     unsigned m_indent;
 };
+
+// Create a resource name prepending the prefix of the shaderCreator to base.
+std::string BuildResourceName(GpuShaderCreatorRcPtr & shaderCreator, const std::string & prefix,
+                              const std::string & base);
+
+//
+// Math functions used by multiple GPU renderers.
+//
+
+// Convert scene-linear values to "grading log".
+void AddLinToLogShader(GpuShaderText & st);
+// Convert "grading log" values to scene-linear.
+void AddLogToLinShader(GpuShaderText & st);
 
 } // namespace OCIO_NAMESPACE
 

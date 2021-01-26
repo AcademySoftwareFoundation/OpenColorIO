@@ -1,7 +1,31 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright Contributors to the OpenColorIO Project.
 
+
+###############################################################################
+# CMake definition.
+
 cmake_minimum_required(VERSION 3.12)
+
+set(CMAKE_MODULE_PATH
+    ${CMAKE_MODULE_PATH}
+    ${CMAKE_SOURCE_DIR}/share/cmake/utils
+    ${CMAKE_SOURCE_DIR}/share/cmake/macros
+    ${CMAKE_SOURCE_DIR}/share/cmake/modules
+)
+
+set(CMAKE_WARN_DEPRECATED ON)
+
+
+if(APPLE AND NOT DEFINED CMAKE_OSX_DEPLOYMENT_TARGET)
+    # The value of this variable should be set prior to the first project() command invocation
+    # because it may influence configuration of the toolchain and flags.
+    set(CMAKE_OSX_DEPLOYMENT_TARGET "10.13" CACHE STRING "Minimum OS X deployment version")
+endif()
+
+
+###############################################################################
+# Project definition.
 
 project(OpenColorIO 
     VERSION 2.0.0
@@ -9,64 +33,76 @@ project(OpenColorIO
     HOMEPAGE_URL https://github.com/AcademySoftwareFoundation/OpenColorIO
     LANGUAGES CXX C)
 
-# "dev" for master or "" for any official release
-set(OpenColorIO_VERSION_RELEASE_TYPE "dev")
+# "dev", "beta1", rc1", etc or "" for an official release.
+set(OpenColorIO_VERSION_RELEASE_TYPE "")
 
 enable_testing()
 
-set(CMAKE_MODULE_PATH
-    ${CMAKE_MODULE_PATH}
-    ${CMAKE_SOURCE_DIR}/share/cmake/macros
-    ${CMAKE_SOURCE_DIR}/share/cmake/modules
-)
-set(CMAKE_WARN_DEPRECATED ON)
-
-if(NOT CMAKE_BUILD_TYPE)
-	set(CMAKE_BUILD_TYPE Release)
-endif()
 
 ###############################################################################
-# C++ version configuration
+# Forbid in-source build.
 
-set(SUPPORTED_CXX_STANDARDS 11 14)
-string(REPLACE ";" ", " SUPPORTED_CXX_STANDARDS_STR "${SUPPORTED_CXX_STANDARDS}")
-
-if(CMAKE_CXX_STANDARD AND NOT CMAKE_CXX_STANDARD IN_LIST SUPPORTED_CXX_STANDARDS)
-    message(FATAL_ERROR " CMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD} is unsupported. Supported standards are: ${SUPPORTED_CXX_STANDARDS_STR}.")
-elseif(NOT CMAKE_CXX_STANDARD)
-    set(CMAKE_CXX_STANDARD 11)
-endif()
-
-include(CheckCXXCompilerFlag)
-
-if(MSVC)
-	CHECK_CXX_COMPILER_FLAG("-std:c++11" COMPILER_SUPPORTS_CXX11)
-	CHECK_CXX_COMPILER_FLAG("-std:c++14" COMPILER_SUPPORTS_CXX14)
-else()
-	CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
-	CHECK_CXX_COMPILER_FLAG("-std=c++14" COMPILER_SUPPORTS_CXX14)
-endif()
-
-if(NOT COMPILER_SUPPORTS_CXX11 AND ${CMAKE_CXX_STANDARD} EQUAL 11)
-	message(STATUS "The compiler ${CMAKE_CXX_COMPILER_ID} has no C++11 only support. Use C++14.")
-	set(CMAKE_CXX_STANDARD 14)
-endif()
-
-if(NOT COMPILER_SUPPORTS_CXX14 AND ${CMAKE_CXX_STANDARD} EQUAL 14)
-	message(ERROR "The compiler ${CMAKE_CXX_COMPILER_ID} has no C++14 only support.")
+if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
+    message(FATAL_ERROR 
+            "In-source build not allowed. Please make a new sub-directory and run cmake from there.")
 endif()
 
 
-# Disable fallback to other C++ version if standard is not supported.
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-# Disable any compiler specific C++ extensions.
-set(CMAKE_CXX_EXTENSIONS OFF)
+###############################################################################
+# Global CMake options.
+
+# Do not output install messages.
+if(NOT DEFINED CMAKE_INSTALL_MESSAGE)
+    set(CMAKE_INSTALL_MESSAGE "NEVER")
+endif()
+
+# Change the path max size to avoid problem on Windows.
+if(NOT DEFINED CMAKE_OBJECT_PATH_MAX)
+    set(CMAKE_OBJECT_PATH_MAX 300)
+endif()
+
+
+###############################################################################
+# Define compilation mode i.e. debug or release
+
+if(NOT DEFINED CMAKE_BUILD_TYPE OR CMAKE_BUILD_TYPE STREQUAL "")
+    message(STATUS "Setting build type to 'Release' as none was specified.")
+    set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the type of build." FORCE)
+endif()
+
+# List all the valid build types.
+
+if(NOT DEFINED CMAKE_CONFIGURATION_TYPES)
+    set(CMAKE_CONFIGURATION_TYPES "Debug;Release;MinSizeRel;RelWithDebInfo" CACHE STRING "" FORCE)
+    mark_as_advanced(CMAKE_CONFIGURATION_TYPES)
+endif()
+
+set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
+
+# Is that a valid build type?
+
+if(NOT "${CMAKE_BUILD_TYPE}" IN_LIST CMAKE_CONFIGURATION_TYPES)
+    string(REPLACE ";" ", " _CMAKE_CONFIGURATION_TYPES_STR "${CMAKE_CONFIGURATION_TYPES}")
+    message(FATAL_ERROR 
+            "CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} is unsupported. Supported values are: ${_CMAKE_CONFIGURATION_TYPES_STR}.")
+endif()
+
+# Is that in debug mode?
 
 set(_BUILD_TYPE_DEBUG OFF)
 if(CMAKE_BUILD_TYPE MATCHES "[Dd][Ee][Bb][Uu][Gg]")
     set(_BUILD_TYPE_DEBUG ON)
 endif()
-set(BUILD_TYPE_DEBUG ${_BUILD_TYPE_DEBUG} CACHE BOOL "Case-insensitive CMAKE_BUILD_TYPE Debug equality flag.")
+
+set(BUILD_TYPE_DEBUG ${_BUILD_TYPE_DEBUG})
+
+
+###############################################################################
+# C++ version configuration
+
+include(Compilers)
+include(CppVersion)
+
 
 ###############################################################################
 # Components to build
@@ -74,90 +110,18 @@ set(BUILD_TYPE_DEBUG ${_BUILD_TYPE_DEBUG} CACHE BOOL "Case-insensitive CMAKE_BUI
 option(BUILD_SHARED_LIBS "Set to OFF to build static libraries" ON)
 option(OCIO_BUILD_APPS "Set to OFF to disable command-line apps" ON)
 option(OCIO_BUILD_NUKE "Specify whether to build nuke plugins" OFF)
-option(OCIO_BUILD_DOCS "Specify whether to build documentation" OFF)
 option(OCIO_BUILD_TESTS "Specify whether to build unittests" ON)
 option(OCIO_BUILD_GPU_TESTS "Specify whether to build gpu unittests" ON)
 option(OCIO_USE_HEADLESS "Specify whether the GPU rendering is headless" OFF)
+
+option(OCIO_BUILD_FROZEN_DOCS "Specify whether to build frozen documentation, necessary when modifying the OCIO public API" OFF)
+option(OCIO_BUILD_DOCS "Specify whether to build documentation" ${OCIO_BUILD_FROZEN_DOCS})
 
 option(OCIO_BUILD_PYTHON "Specify whether to build python bindings" ON)
 option(OCIO_BUILD_JAVA "Specify whether to build java bindings" OFF)
 
 option(OCIO_WARNING_AS_ERROR "Set build error level for CI testing" OFF)
 
-###############################################################################
-# GPU configuration
-
-include(PackageUtils)
-
-if(OCIO_BUILD_GPU_TESTS OR OCIO_BUILD_APPS)
-    set(OCIO_GL_ENABLED ON)
-    set(OCIO_USE_GLVND OFF)
-    set(OCIO_EGL_HEADLESS OFF)
-
-    find_package(OpenGL COMPONENTS OpenGL)
-    if(NOT OpenGL_OpenGL_FOUND AND NOT OPENGL_GLU_FOUND)
-        package_root_message(OpenGL)
-        set(OCIO_GL_ENABLED OFF)
-    endif()
-
-    if(NOT APPLE)
-        # On some Linux platform, the glew-config.cmake is found first so make it explicit
-        # to fall back on the regular search if not found.
-        find_package(GLEW CONFIG QUIET)
-        if(NOT GLEW_FOUND)
-            find_package(GLEW)
-            if(NOT GLEW_FOUND)
-                package_root_message(GLEW)
-                set(OCIO_GL_ENABLED OFF)
-            endif()
-        else()
-            # Expected variables GLEW_LIBRARIES and GLEW_INCLUDE_DIRS are missing so create
-            # the mandatory one. Note that the cmake bug is now fixed (issue 19662).
-            if(NOT GLEW_LIBRARIES)
-                set(GLEW_LIBRARIES GLEW::GLEW)
-            endif()
-        endif()
-    endif()
-
-    find_package(GLUT)
-    if(NOT GLUT_FOUND)
-        package_root_message(GLUT)
-        set(OCIO_GL_ENABLED OFF)
-    endif()
-
-    if(NOT OCIO_GL_ENABLED)
-        message(WARNING "GPU rendering disabled")
-    else()
-        # OpenGL_egl_Library is defined iff GLVND is supported (CMake 10+).
-        if(OPENGL_egl_LIBRARY)
-            message(STATUS "GLVND supported")
-            set(OCIO_USE_GLVND ON)
-        else()
-            message(STATUS "GLVND not supported; legacy OpenGL libraries used")
-        endif()
-
-        if(OCIO_USE_HEADLESS)
-            if(CMAKE_SYSTEM_NAME STREQUAL Linux)
-                if(NOT OCIO_USE_GLVND)
-                    message(STATUS "Can't find EGL without GLVND support; can't render headlessly")
-                    set(OCIO_USE_HEADLESS OFF)
-                else()
-                    find_package(OpenGL COMPONENTS EGL)
-                    if(NOT OpenGL_EGL_FOUND)
-                        message(WARNING "EGL component missing; can't render headlessly")
-                        set(OCIO_USE_HEADLESS OFF)
-                    else()
-                        add_compile_definitions(OCIO_HEADLESS_ENABLED)
-                        set(OCIO_EGL_HEADLESS ON)
-                        message(STATUS "EGL enabled")
-                    endif()
-                endif()
-            else()
-                message(WARNING "OS system is not Linux; can't render headlessly")
-            endif()
-        endif()
-    endif()
-endif()
 
 ###############################################################################
 # Optimization / internal linking preferences
@@ -165,54 +129,25 @@ endif()
 option(OCIO_USE_SSE "Specify whether to enable SSE CPU performance optimizations" ON)
 option(OCIO_INLINES_HIDDEN "Specify whether to build with -fvisibility-inlines-hidden" ${UNIX})
 
+
 ###############################################################################
 # Supplemental builtins
 
 # Add supplemental built-in transformations such as camera related one.
 option(OCIO_ADD_EXTRA_BUILTINS "Specify whether to add supplemental built-in transforms" ON)
 
+
 ###############################################################################
-# Platform & Compiler dependent compilation flags
+# GPU configuration
 
-set(PLATFORM_COMPILE_FLAGS "")
+include(CheckSupportGL)
 
-if(MSVC)
-	# Because our Exceptions derive from std::runtime_error we can safely disable warning 4275
-	# /we4062 Enables warning in switch when an enumeration value is not explicitly handled.
-	set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} /EHsc /wd4275 /DWIN32 /we4062")
 
-else()
-    if(APPLE AND OCIO_GL_ENABLED)
-        # Mute the deprecated warning for some GLUT methods.
-        set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} -Wno-deprecated-declarations")
-    endif()
+###############################################################################
+# Define compilation and link flags
 
-	# -Wswitch-enum Enables warning in switch when an enumeration value is not explicitly handled.
-	set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} -Wall -Wswitch-enum")
+include(CompilerFlags)
 
-	# TODO: OCIO being under active development, unused functions are fine for now.
-	set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} -Wno-unused-function")
-
-	# TODO: A C++17 specific warning when compiling in C++11 !!
-	if("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
-		# Use of 'register' specifier must be removed for C++17 support.
-		set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} -Wno-deprecated-register")
-	endif()
-endif()
-
-if(OCIO_WARNING_AS_ERROR)
-	if(MSVC)
-		set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} /WX")
-	else()
-		set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} -Werror")
-	endif()
-endif()
-
-include(CheckSSEFeatures)
-if(NOT HAVE_SSE2)
-	message(STATUS "Disabling SSE optimizations, as the target doesn't support them")
-	set(OCIO_USE_SSE OFF)
-endif(NOT HAVE_SSE2)
 
 ###############################################################################
 # External linking options
@@ -228,27 +163,44 @@ if(DEFINED OCIO_INSTALL_EXT_PACKAGES)
     # Case insensitive match
     string(TOUPPER "${OCIO_INSTALL_EXT_PACKAGES}" _OCIO_INSTALL_EXT_PACKAGES)
     if(NOT "${_OCIO_INSTALL_EXT_PACKAGES}" IN_LIST _EXT_OPTIONS)
-        message(FATAL_ERROR " OCIO_INSTALL_EXT_PACKAGES=${OCIO_INSTALL_EXT_PACKAGES} is unsupported. Supported values are: ${_EXT_OPTIONS_STR}.")
+        message(FATAL_ERROR 
+                "OCIO_INSTALL_EXT_PACKAGES=${OCIO_INSTALL_EXT_PACKAGES} is unsupported. Supported values are: ${_EXT_OPTIONS_STR}.")
     endif()
 endif()
 
 # Overwrite cache variable with normalized case
-set(OCIO_INSTALL_EXT_PACKAGES "${_OCIO_INSTALL_EXT_PACKAGES}" CACHE STRING "Set the condition for Installing external dependencies" FORCE)
+set(OCIO_INSTALL_EXT_PACKAGES "${_OCIO_INSTALL_EXT_PACKAGES}" CACHE STRING
+    "Set the condition for Installing external dependencies" FORCE)
+
 set_property(CACHE OCIO_INSTALL_EXT_PACKAGES PROPERTY STRINGS ${_EXT_OPTIONS})
+
 
 ###############################################################################
 # Versioning
 
-if(NOT SOVERSION)
-	set(SOVERSION "${OpenColorIO_VERSION_MAJOR}.${OpenColorIO_VERSION_MINOR}" CACHE STRING "Set the SO version in the SO name of the output library")
+if(NOT DEFINED SOVERSION)
+    set(SOVERSION "${OpenColorIO_VERSION_MAJOR}.${OpenColorIO_VERSION_MINOR}" CACHE STRING 
+        "Set the SO version in the SO name of the output library")
+    message(STATUS "Setting SOVERSION to '${SOVERSION}' as none was specified.")
+elseif(SOVERSION STREQUAL "")
+    message(FATAL_ERROR "A SOVERSION cannot be empty.")
 endif()
+
 
 ###############################################################################
 # Namespace
 
-if(NOT OCIO_NAMESPACE)
-	set(OCIO_NAMESPACE OpenColorIO CACHE STRING "Specify the master OCIO C++ namespace: Options include OpenColorIO OpenColorIO_<YOURFACILITY> etc.")
+if(NOT DEFINED OCIO_NAMESPACE)
+	set(OCIO_NAMESPACE "OpenColorIO_v${OpenColorIO_VERSION_MAJOR}_${OpenColorIO_VERSION_MINOR}${OpenColorIO_VERSION_RELEASE_TYPE}" CACHE STRING 
+        "Specify the master OCIO C++ namespace: Options include OpenColorIO OpenColorIO_<YOURFACILITY> etc.")
+elseif(OCIO_NAMESPACE STREQUAL "")
+    message(FATAL_ERROR "A namespace cannot be empty.")
+else()
+    set(OCIO_NAMESPACE "OpenColorIO_${OCIO_NAMESPACE}_v${OpenColorIO_VERSION_MAJOR}_${OpenColorIO_VERSION_MINOR}${OpenColorIO_VERSION_RELEASE_TYPE}" CACHE STRING 
+        "Specify the master OCIO C++ namespace: Options include OpenColorIO OpenColorIO_<YOURFACILITY> etc.")
+    message(STATUS "Setting namespace to '${OCIO_NAMESPACE}' as none was specified.")
 endif()
+
 
 ###############################################################################
 # Library name custom suffix
@@ -259,26 +211,31 @@ endif()
 set (OCIO_LIBNAME_SUFFIX "" CACHE STRING
      "Specify a suffix to all libraries that are built")
 
+
 ###############################################################################
 # Error checking
 
 if(OCIO_BUILD_SHARED AND OCIO_BUILD_STATIC)
-	message(FATAL_ERROR " Deprecated options OCIO_BUILD_SHARED and OCIO_BUILD_STATIC cannot both be used at once")
+	message(FATAL_ERROR 
+            "Deprecated options OCIO_BUILD_SHARED and OCIO_BUILD_STATIC cannot both be used at once")
 endif()
 
 if(OCIO_BUILD_SHARED)
-	message(DEPRECATION " Option OCIO_BUILD_SHARED is deprecated. Please use the cmake standard BUILD_SHARED_LIBS=ON (default ON)")
+	message(DEPRECATION 
+            "Option OCIO_BUILD_SHARED is deprecated. Please use the cmake standard BUILD_SHARED_LIBS=ON (default ON)")
 	if(NOT BUILD_SHARED_LIBS)
 		set(BUILD_SHARED_LIBS ON)
 	endif()
 endif()
 
 if(OCIO_BUILD_STATIC)
-	message(DEPRECATION " Option OCIO_BUILD_STATIC is deprecated. Please use the cmake standard BUILD_SHARED_LIBS=OFF (default ON)")
+	message(DEPRECATION 
+            "Option OCIO_BUILD_STATIC is deprecated. Please use the cmake standard BUILD_SHARED_LIBS=OFF (default ON)")
 	if(BUILD_SHARED_LIBS)
 		set(BUILD_SHARED_LIBS OFF)
 	endif()
 endif()
+
 
 ###############################################################################
 # Find or install external dependencies
@@ -288,13 +245,14 @@ endif()
 
 include(FindExtPackages)
 
+
 ###############################################################################
 # Progress to other sources
 
 add_subdirectory(ext)
-add_subdirectory(tests)
 add_subdirectory(include)
 add_subdirectory(src)
+add_subdirectory(tests)
 if(OCIO_BUILD_DOCS)
 	add_subdirectory(docs)
 endif()

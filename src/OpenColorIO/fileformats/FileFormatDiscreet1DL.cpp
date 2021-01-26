@@ -11,9 +11,10 @@
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "BitDepthUtils.h"
+#include "fileformats/FileFormatUtils.h"
+#include "MathUtils.h"
 #include "ops/lut1d/Lut1DOp.h"
 #include "ops/lut3d/Lut3DOp.h"
-#include "MathUtils.h"
 #include "ParseUtils.h"
 #include "pystring/pystring.h"
 #include "Platform.h"
@@ -633,15 +634,21 @@ class LocalCachedFile : public CachedFile
 {
 public:
     LocalCachedFile() = delete;
-    LocalCachedFile(BitDepth inBitDepth, BitDepth outBitDepth, unsigned long dimension)
+    LocalCachedFile(BitDepth inBitDepth,
+                    BitDepth outBitDepth,
+                    unsigned long dimension,
+                    Interpolation interp)
     {
         const Lut1DOpData::HalfFlags halfFlags =
             (inBitDepth == BIT_DEPTH_F16)
             ? Lut1DOpData::LUT_INPUT_HALF_CODE
             : Lut1DOpData::LUT_STANDARD;
 
-        lut1D = std::make_shared<Lut1DOpData>(halfFlags, dimension);
-        lut1D->setInterpolation(INTERP_LINEAR);
+        lut1D = std::make_shared<Lut1DOpData>(halfFlags, dimension, false);
+        if (Lut1DOpData::IsValidInterpolation(interp))
+        {
+            lut1D->setInterpolation(interp);
+        }
         lut1D->setFileOutputBitDepth(outBitDepth);
     };
     ~LocalCachedFile() = default;
@@ -659,9 +666,9 @@ public:
 
     void getFormatInfo(FormatInfoVec & formatInfoVec) const override;
 
-    CachedFileRcPtr read(
-        std::istream & istream,
-        const std::string & fileName) const override;
+    CachedFileRcPtr read(std::istream & istream,
+                         const std::string & fileName,
+                         Interpolation interp) const override;
 
     void buildFileOps(OpRcPtrVec & ops,
                         const Config & config,
@@ -683,9 +690,9 @@ void LocalFileFormat::getFormatInfo(FormatInfoVec & formatInfoVec) const
 // Try and load the format
 // Raise an exception if it can't be loaded.
 
-CachedFileRcPtr LocalFileFormat::read(
-    std::istream & istream,
-    const std::string & filePath) const
+CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
+                                      const std::string & filePath,
+                                      Interpolation interp) const
 {
     Lut1dUtils::IMLutStruct *discreetLut1d = 0x0;
     int errline;
@@ -720,8 +727,9 @@ CachedFileRcPtr LocalFileFormat::read(
 
     LocalCachedFileRcPtr cachedFile
         = LocalCachedFileRcPtr(new LocalCachedFile(inputBD,
-                                                    outputBD,
-                                                    (unsigned long)lutSize));
+                                                   outputBD,
+                                                   (unsigned long)lutSize,
+                                                   interp));
 
     const float scale = (float)GetBitDepthMaxValue(outputBD);
     Array & array = cachedFile->lut1D->getArray();
@@ -760,24 +768,25 @@ LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
     LocalCachedFileRcPtr cachedFile = DynamicPtrCast<LocalCachedFile>(untypedCachedFile);
 
     // This should never happen.
-    if(!cachedFile)
+    if(!cachedFile || !cachedFile->lut1D)
     {
         std::ostringstream os;
         os << "Cannot build .lut Op. Invalid cache type.";
         throw Exception(os.str().c_str());
     }
 
-    TransformDirection newDir = CombineTransformDirections(dir,
-        fileTransform.getDirection());
-    if(newDir == TRANSFORM_DIR_UNKNOWN)
+    const auto newDir = CombineTransformDirections(dir, fileTransform.getDirection());
+    const auto fileInterp = fileTransform.getInterpolation();
+
+    bool fileInterpUsed = false;
+    auto lut1D = HandleLUT1D(cachedFile->lut1D, fileInterp, fileInterpUsed);
+
+    if (!fileInterpUsed)
     {
-        std::ostringstream os;
-        os << "Cannot build file format transform,";
-        os << " unspecified transform direction.";
-        throw Exception(os.str().c_str());
+        LogWarningInterpolationNotUsed(fileInterp, fileTransform);
     }
 
-    CreateLut1DOp(ops, cachedFile->lut1D, newDir);
+    CreateLut1DOp(ops, lut1D, newDir);
 }
 }
 

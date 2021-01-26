@@ -166,25 +166,24 @@ public:
     bool hasDynamicProperty(DynamicPropertyType type) const;
 
     DynamicPropertyRcPtr getDynamicProperty(DynamicPropertyType type) const;
-    void replaceDynamicProperty(DynamicPropertyType type,
-                                DynamicPropertyImplRcPtr prop);
+    void replaceDynamicProperty(DynamicPropertyType type, DynamicPropertyDoubleImplRcPtr & prop);
     void removeDynamicProperties();
 
     ExposureContrastOpData & operator=(const ExposureContrastOpData & rhs);
 
-    Style getStyle() const { return m_style; }
-    void setStyle(Style style) { m_style = style; }
+    Style getStyle() const noexcept { return m_style; }
+    void setStyle(Style style) noexcept { m_style = style; }
 
-    TransformDirection getDirection() const;
-    void setDirection(TransformDirection dir);
+    TransformDirection getDirection() const noexcept;
+    void setDirection(TransformDirection dir) noexcept;
 
-    double getExposure() const { return m_exposure->getDoubleValue(); }
+    double getExposure() const { return m_exposure->getValue(); }
     void setExposure(double exposure) { m_exposure->setValue(exposure); }
 
-    double getContrast() const { return m_contrast->getDoubleValue(); }
+    double getContrast() const { return m_contrast->getValue(); }
     void setContrast(double contrast) { m_contrast->setValue(contrast); }
 
-    double getGamma() const { return m_gamma->getDoubleValue(); }
+    double getGamma() const { return m_gamma->getValue(); }
     void setGamma(double gamma) { m_gamma->setValue(gamma); }
 
     double getPivot() const { return m_pivot; }
@@ -196,15 +195,15 @@ public:
     double getLogMidGray() const { return m_logMidGray; }
     void setLogMidGray(double midGray) { m_logMidGray = midGray;  }
 
-    DynamicPropertyImplRcPtr getExposureProperty() const
+    DynamicPropertyDoubleImplRcPtr getExposureProperty() const
     { 
         return m_exposure;
     }
-    DynamicPropertyImplRcPtr getContrastProperty() const
+    DynamicPropertyDoubleImplRcPtr getContrastProperty() const
     {
         return m_contrast;
     }
-    DynamicPropertyImplRcPtr getGammaProperty() const
+    DynamicPropertyDoubleImplRcPtr getGammaProperty() const
     {
         return m_gamma;
     }
@@ -213,12 +212,12 @@ public:
     static constexpr double LOGMIDGRAY_DEFAULT = 0.435;
 
 private:
-    void invert();
+    void invert() noexcept;
 
     Style  m_style = STYLE_LINEAR;
-    DynamicPropertyImplRcPtr m_exposure;
-    DynamicPropertyImplRcPtr m_contrast;
-    DynamicPropertyImplRcPtr m_gamma;
+    DynamicPropertyDoubleImplRcPtr m_exposure;
+    DynamicPropertyDoubleImplRcPtr m_contrast;
+    DynamicPropertyDoubleImplRcPtr m_gamma;
     double m_pivot = 0.18;
     double m_logExposureStep = LOGEXPOSURESTEP_DEFAULT;
     double m_logMidGray = LOGMIDGRAY_DEFAULT;

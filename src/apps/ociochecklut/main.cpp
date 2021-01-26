@@ -23,10 +23,14 @@ class ProcessorWrapper
 {
 public:
     ProcessorWrapper() = delete;
-    ProcessorWrapper(bool verbose)
+    ProcessorWrapper(const ProcessorWrapper &) = delete;
+    ProcessorWrapper & operator=(const ProcessorWrapper &) = delete;
+
+    explicit ProcessorWrapper(bool verbose)
         : m_verbose(verbose)
     {
     }
+
     ~ProcessorWrapper()
     {
 #ifdef OCIO_GPU_ENABLED
@@ -214,11 +218,11 @@ int main (int argc, const char* argv[])
         {
             // What are the allowed formats?
             std::cout << "Formats supported:" << std::endl;
-            const auto nbFromats = OCIO::FileTransform::getNumFormats();
-            for (int i = 0; i < nbFromats; ++i)
+            const auto nbFormats = OCIO::FileTransform::GetNumFormats();
+            for (int i = 0; i < nbFormats; ++i)
             {
-                std::cout << OCIO::FileTransform::getFormatNameByIndex(i);
-                std::cout << " (." << OCIO::FileTransform::getFormatExtensionByIndex(i) << ")";
+                std::cout << OCIO::FileTransform::GetFormatNameByIndex(i);
+                std::cout << " (." << OCIO::FileTransform::GetFormatExtensionByIndex(i) << ")";
                 std::cout << std::endl;
             }
             return 0;

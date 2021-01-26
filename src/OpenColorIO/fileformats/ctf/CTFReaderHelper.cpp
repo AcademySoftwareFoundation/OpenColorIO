@@ -8,6 +8,7 @@
 #include "Logging.h"
 #include "MathUtils.h"
 #include "ops/log/LogUtils.h"
+#include "ParseUtils.h"
 #include "Platform.h"
 #include "utils/StringUtils.h"
 
@@ -713,7 +714,8 @@ const std::string & CTFReaderMetadataElt::getIdentifier() const
 
 void CTFReaderMetadataElt::setRawData(const char * str, size_t len, unsigned int)
 {
-    m_metadata.setValue(m_metadata.getValue() + std::string(str, len));
+    std::string newValue{ m_metadata.getElementValue() + std::string(str, len) };
+    m_metadata.setElementValue(newValue.c_str());
 }
 
 //////////////////////////////////////////////////////////
@@ -1077,6 +1079,30 @@ CTFReaderOpEltRcPtr CTFReaderOpElt::GetReader(CTFReaderOpElt::Type type,
         }
         break;
     }
+    case CTFReaderOpElt::GradingPrimaryType:
+    {
+        if (!isCLF)
+        {
+            ADD_READER_FOR_VERSIONS_STARTING_AT(CTFReaderGradingPrimaryElt, 2_0);
+        }
+        break;
+    }
+    case CTFReaderOpElt::GradingRGBCurveType:
+    {
+        if (!isCLF)
+        {
+            ADD_READER_FOR_VERSIONS_STARTING_AT(CTFReaderGradingRGBCurveElt, 2_0);
+        }
+        break;
+    }
+    case CTFReaderOpElt::GradingToneType:
+    {
+        if (!isCLF)
+        {
+            ADD_READER_FOR_VERSIONS_STARTING_AT(CTFReaderGradingToneElt, 2_0);
+        }
+        break;
+    }
     case CTFReaderOpElt::InvLut1DType:
     {
         if (!isCLF)
@@ -1164,7 +1190,7 @@ BitDepth CTFReaderOpElt::GetBitDepth(const std::string & strBD)
 
 CTFReaderACESElt::CTFReaderACESElt()
     : CTFReaderOpElt()
-    , m_fixedFunction(std::make_shared<FixedFunctionOpData>())
+    , m_fixedFunction(std::make_shared<FixedFunctionOpData>(FixedFunctionOpData::ACES_RED_MOD_03_FWD))
 {
 }
 
@@ -1390,7 +1416,7 @@ const CDLOpDataRcPtr & CTFReaderSOPNodeElt::getCDL() const
 
 CTFReaderFixedFunctionElt::CTFReaderFixedFunctionElt()
     : CTFReaderOpElt()
-    , m_fixedFunction(std::make_shared<FixedFunctionOpData>())
+    , m_fixedFunction(std::make_shared<FixedFunctionOpData>(FixedFunctionOpData::ACES_RED_MOD_03_FWD))
 {
 }
 
@@ -1469,7 +1495,7 @@ const OpDataRcPtr CTFReaderFixedFunctionElt::getOp() const
 
 CTFReaderFunctionElt::CTFReaderFunctionElt()
     : CTFReaderOpElt()
-    , m_fixedFunction(std::make_shared<FixedFunctionOpData>())
+    , m_fixedFunction(std::make_shared<FixedFunctionOpData>(FixedFunctionOpData::ACES_RED_MOD_03_FWD))
 {
 }
 
@@ -1591,6 +1617,45 @@ void CTFReaderDynamicParamElt::start(const char ** atts)
 
                 ExposureContrastOpDataRcPtr pECOp = pEC->getExposureContrast();
                 pECOp->getGammaProperty()->makeDynamic();
+            }
+            else if (0 == Platform::Strcasecmp(TAG_DYN_PROP_PRIMARY, atts[i + 1]))
+            {
+                CTFReaderGradingPrimaryElt* pGP =
+                    dynamic_cast<CTFReaderGradingPrimaryElt*>(container.get());
+                if (!pGP)
+                {
+                    ThrowM(*this, "Dynamic parameter '", atts[i + 1],
+                           "' is not supported in '", container->getName().c_str(), "'.");
+                }
+
+                GradingPrimaryOpDataRcPtr pGPOp = pGP->getGradingPrimary();
+                pGPOp->getDynamicPropertyInternal()->makeDynamic();
+            }
+            else if (0 == Platform::Strcasecmp(TAG_DYN_PROP_RGBCURVE, atts[i + 1]))
+            {
+                CTFReaderGradingRGBCurveElt* pGC =
+                    dynamic_cast<CTFReaderGradingRGBCurveElt*>(container.get());
+                if (!pGC)
+                {
+                    ThrowM(*this, "Dynamic parameter '", atts[i + 1],
+                           "' is not supported in '", container->getName().c_str(), "'.");
+                }
+
+                GradingRGBCurveOpDataRcPtr pGCOp = pGC->getGradingRGBCurve();
+                pGCOp->getDynamicPropertyInternal()->makeDynamic();
+            }
+            else if (0 == Platform::Strcasecmp(TAG_DYN_PROP_TONE, atts[i + 1]))
+            {
+                CTFReaderGradingToneElt* pGT =
+                    dynamic_cast<CTFReaderGradingToneElt*>(container.get());
+                if (!pGT)
+                {
+                    ThrowM(*this, "Dynamic parameter '", atts[i + 1],
+                        "' is not supported in '", container->getName().c_str(), "'.");
+                }
+
+                GradingToneOpDataRcPtr pGTOp = pGT->getGradingTone();
+                pGTOp->getDynamicPropertyInternal()->makeDynamic();
             }
             else if (0 == Platform::Strcasecmp(TAG_DYN_PROP_LOOK, atts[i + 1]))
             {
@@ -2135,6 +2200,893 @@ int CTFReaderGammaParamsElt_1_5::getChannelNumber(const char * name) const
         chan = CTFReaderGammaParamsElt::getChannelNumber(name);
     }
     return chan;
+}
+
+//////////////////////////////////////////////////////////
+
+CTFReaderGradingPrimaryElt::CTFReaderGradingPrimaryElt()
+    : m_gradingPrimaryOpData(std::make_shared<GradingPrimaryOpData>(GRADING_LOG))
+{
+}
+
+bool CTFReaderGradingPrimaryElt::isOpParameterValid(const char * att) const noexcept
+{
+    return CTFReaderOpElt::isOpParameterValid(att) ||
+           0 == Platform::Strcasecmp(ATTR_STYLE, att);
+}
+
+void CTFReaderGradingPrimaryElt::start(const char ** atts)
+{
+    CTFReaderOpElt::start(atts);
+
+    bool isStyleFound = false;
+
+    unsigned i = 0;
+    while (atts[i])
+    {
+        if (0 == Platform::Strcasecmp(ATTR_STYLE, atts[i]))
+        {
+            try
+            {
+                GradingStyle style;
+                TransformDirection dir;
+                ConvertStringToGradingStyleAndDir(atts[i + 1], style, dir);
+                m_gradingPrimaryOpData->setStyle(style);
+                m_gradingPrimaryOpData->setDirection(dir);
+                // Initialize default values from the style.
+                const GradingPrimary values(style);
+                m_gradingPrimary = values;
+            }
+            catch (Exception &)
+            {
+                ThrowM(*this, "Required attribute 'style' '", atts[i + 1], "' is invalid.");
+            }
+            isStyleFound = true;
+        }
+
+        i += 2;
+    }
+
+    if (!isStyleFound)
+    {
+        ThrowM(*this, "Required attribute 'style' is missing.");
+    }
+}
+
+void CTFReaderGradingPrimaryElt::end()
+{
+    CTFReaderOpElt::end();
+
+    m_gradingPrimaryOpData->setValue(m_gradingPrimary);
+    m_gradingPrimaryOpData->validate();
+}
+
+const OpDataRcPtr CTFReaderGradingPrimaryElt::getOp() const
+{
+    return m_gradingPrimaryOpData;
+}
+
+//////////////////////////////////////////////////////////
+
+CTFReaderGradingPrimaryParamElt::CTFReaderGradingPrimaryParamElt(const std::string & name,
+                                                 ContainerEltRcPtr pParent,
+                                                 unsigned int xmlLineNumber,
+                                                 const std::string & xmlFile)
+    : XmlReaderPlainElt(name, pParent, xmlLineNumber, xmlFile)
+{
+}
+
+CTFReaderGradingPrimaryParamElt::~CTFReaderGradingPrimaryParamElt()
+{
+}
+
+void CTFReaderGradingPrimaryParamElt::parseRGBMAttrValues(const char ** atts,
+                                                          GradingRGBM & rgbm) const
+{
+    bool rgbFound = false;
+    bool masterFound = false;
+    unsigned i = 0;
+    while (atts[i] && *atts[i])
+    {
+        const size_t len = strlen(atts[i + 1]);
+        std::vector<double> data;
+
+        try
+        {
+            data = GetNumbers<double>(atts[i + 1], len);
+        }
+        catch (Exception & ce)
+        {
+            ThrowM(*this, "Illegal '", getTypeName(), "' values ",
+                   TruncateString(atts[i + 1], len), " [", ce.what(), "].");
+        }
+
+        if (0 == Platform::Strcasecmp(ATTR_RGB, atts[i]))
+        {
+            if (data.size() != 3)
+            {
+                ThrowM(*this, "Illegal number of 'rgb' values for '", getTypeName(), "': '",
+                       TruncateString(atts[i + 1], len), "'.");
+            }
+
+            rgbm.m_red = data[0];
+            rgbm.m_green = data[1];
+            rgbm.m_blue = data[2];
+
+            rgbFound = true;
+        }
+        else if (0 == Platform::Strcasecmp(ATTR_MASTER, atts[i]))
+        {
+            if (data.size() != 1)
+            {
+                ThrowM(*this, "'Master' for '", getTypeName(), "' must be a single value: '",
+                       TruncateString(atts[i + 1], len), "'");
+            }
+
+            rgbm.m_master = data[0];
+            masterFound = true;
+        }
+        else
+        {
+            ThrowM(*this, "Illegal attribute for '", getName().c_str(), "': '", atts[i], "'.");
+        }
+
+        i += 2;
+    }
+
+    if (!rgbFound)
+    {
+        ThrowM(*this, "Missing 'rgb' attribute for '", getName().c_str(), "'.");
+    }
+
+    if (!masterFound)
+    {
+        ThrowM(*this, "Missing 'master' attribute for '", getName().c_str(), "'.");
+    }
+}
+
+void CTFReaderGradingPrimaryParamElt::parseBWAttrValues(const char ** atts,
+                                                        double & black,
+                                                        double & white) const
+{
+    bool blackFound = false;
+    bool whiteFound = false;
+    unsigned i = 0;
+    while (atts[i] && *atts[i])
+    {
+        const size_t len = strlen(atts[i + 1]);
+        std::vector<double> data;
+
+        try
+        {
+            data = GetNumbers<double>(atts[i + 1], len);
+        }
+        catch (Exception & ce)
+        {
+            ThrowM(*this, "Illegal '", getTypeName(), "' values ",
+                TruncateString(atts[i + 1], len), " [", ce.what(), "].");
+        }
+
+        if (0 == Platform::Strcasecmp(ATTR_PRIMARY_BLACK, atts[i]))
+        {
+            if (data.size() != 1)
+            {
+                ThrowM(*this, "'Black' for '", getTypeName(), "' must be a single value: '",
+                       TruncateString(atts[i + 1], len), "'.");
+            }
+
+            black = data[0];
+            blackFound = true;
+        }
+        else if (0 == Platform::Strcasecmp(ATTR_PRIMARY_WHITE, atts[i]))
+        {
+            if (data.size() != 1)
+            {
+                ThrowM(*this, "'White' for '", getTypeName(), "' must be a single value: '",
+                       TruncateString(atts[i + 1], len), "'.");
+            }
+
+            white = data[0];
+            whiteFound = true;
+        }
+        else
+        {
+            ThrowM(*this, "Illegal attribute for '", getName().c_str(), "': '", atts[i], "'.");
+        }
+
+        i += 2;
+    }
+
+    if (!blackFound && !whiteFound)
+    {
+        ThrowM(*this, "Missing 'black' or 'white' attribute for '", getName().c_str(), "'.");
+    }
+}
+
+void CTFReaderGradingPrimaryParamElt::parsePivotAttrValues(const char ** atts,
+                                                           double & contrast,
+                                                           double & black,
+                                                           double & white) const
+{
+    bool contrastFound = false;
+    bool blackFound = false;
+    bool whiteFound = false;
+    unsigned i = 0;
+    while (atts[i] && *atts[i])
+    {
+        const size_t len = strlen(atts[i + 1]);
+        std::vector<double> data;
+
+        try
+        {
+            data = GetNumbers<double>(atts[i + 1], len);
+        }
+        catch (Exception & ce)
+        {
+            ThrowM(*this, "Illegal '", getTypeName(), "' values ",
+                TruncateString(atts[i + 1], len), " [", ce.what(), "].");
+        }
+
+        if (0 == Platform::Strcasecmp(ATTR_PRIMARY_BLACK, atts[i]))
+        {
+            if (data.size() != 1)
+            {
+                ThrowM(*this, "'Black' for '", getTypeName(), "' must be a single value: '",
+                       TruncateString(atts[i + 1], len), "'.");
+            }
+
+            black = data[0];
+            blackFound = true;
+        }
+        else if (0 == Platform::Strcasecmp(ATTR_PRIMARY_WHITE, atts[i]))
+        {
+            if (data.size() != 1)
+            {
+                ThrowM(*this, "'White' for '", getTypeName(), "' must be a single value: '",
+                       TruncateString(atts[i + 1], len), "'.");
+            }
+
+            white = data[0];
+            whiteFound = true;
+        }
+        else if (0 == Platform::Strcasecmp(ATTR_PRIMARY_CONTRAST, atts[i]))
+        {
+            if (data.size() != 1)
+            {
+                ThrowM(*this, "'Contrast' for '", getTypeName(), "' must be a single value: '",
+                       TruncateString(atts[i + 1], len), "'.");
+            }
+
+            contrast = data[0];
+            contrastFound = true;
+        }
+        else
+        {
+            ThrowM(*this, "Illegal attribute for '", getName().c_str(), "': '", atts[i], "'.");
+        }
+
+        i += 2;
+    }
+
+    if (!contrastFound && !whiteFound && !blackFound)
+    {
+        ThrowM(*this, "Missing 'contrast', 'black' or 'white' attribute for '",
+               getName().c_str(), "'.");
+    }
+}
+
+void CTFReaderGradingPrimaryParamElt::parseScalarAttrValue(const char ** atts,
+                                                           const char * tag,
+                                                           double & value) const
+{
+    bool found = false;
+    unsigned i = 0;
+    while (atts[i] && *atts[i])
+    {
+        const size_t len = strlen(atts[i + 1]);
+        std::vector<double> data;
+
+        try
+        {
+            data = GetNumbers<double>(atts[i + 1], len);
+        }
+        catch (Exception & ce)
+        {
+            ThrowM(*this, "Illegal '", getTypeName(), "' values ",
+                   TruncateString(atts[i + 1], len), " [", ce.what(), "].");
+        }
+
+        if (0 == Platform::Strcasecmp(tag, atts[i]))
+        {
+            if (data.size() != 1)
+            {
+                ThrowM(*this, "'", tag, "' for '", getTypeName(), "' must be a single value: '",
+                       TruncateString(atts[i + 1], len), "'.");
+            }
+
+            value = data[0];
+            found = true;
+        }
+        else
+        {
+            ThrowM(*this, "Illegal attribute for '", getName().c_str(), "': '", atts[i], "'.");
+        }
+
+        i += 2;
+    }
+
+    if (!found)
+    {
+        ThrowM(*this, "Missing attribute for '", getName().c_str(), "'.");
+    }
+}
+
+void CTFReaderGradingPrimaryParamElt::start(const char ** atts)
+{
+    auto gp = dynamic_cast<CTFReaderGradingPrimaryElt *>(getParent().get());
+
+    GradingPrimary & gpValues = gp->getValue();
+
+    // Read all primary controls even those that are not used by the current style.
+    if (0 == Platform::Strcasecmp(TAG_PRIMARY_BRIGHTNESS, getName().c_str()))
+    {
+        parseRGBMAttrValues(atts, gpValues.m_brightness);
+    }
+    else if (0 == Platform::Strcasecmp(TAG_PRIMARY_CONTRAST, getName().c_str()))
+    {
+        parseRGBMAttrValues(atts, gpValues.m_contrast);
+    }
+    else if (0 == Platform::Strcasecmp(TAG_PRIMARY_GAMMA, getName().c_str()))
+    {
+        parseRGBMAttrValues(atts, gpValues.m_gamma);
+    }
+    else if (0 == Platform::Strcasecmp(TAG_PRIMARY_PIVOT, getName().c_str()))
+    {
+        parsePivotAttrValues(atts, gpValues.m_pivot, gpValues.m_pivotBlack, gpValues.m_pivotWhite);
+    }
+    else if (0 == Platform::Strcasecmp(TAG_PRIMARY_SATURATION, getName().c_str()))
+    {
+        parseScalarAttrValue(atts, ATTR_MASTER, gpValues.m_saturation);
+    }
+    else if (0 == Platform::Strcasecmp(TAG_PRIMARY_OFFSET, getName().c_str()))
+    {
+        parseRGBMAttrValues(atts, gpValues.m_offset);
+    }
+    else if (0 == Platform::Strcasecmp(TAG_PRIMARY_EXPOSURE, getName().c_str()))
+    {
+        parseRGBMAttrValues(atts, gpValues.m_exposure);
+    }
+    else if (0 == Platform::Strcasecmp(TAG_PRIMARY_LIFT, getName().c_str()))
+    {
+        parseRGBMAttrValues(atts, gpValues.m_lift);
+    }
+    else if (0 == Platform::Strcasecmp(TAG_PRIMARY_GAIN, getName().c_str()))
+    {
+        parseRGBMAttrValues(atts, gpValues.m_gain);
+    }
+    else if (0 == Platform::Strcasecmp(TAG_PRIMARY_CLAMP, getName().c_str()))
+    {
+        parseBWAttrValues(atts, gpValues.m_clampBlack, gpValues.m_clampWhite);
+    }
+}
+
+void CTFReaderGradingPrimaryParamElt::end()
+{
+}
+
+void CTFReaderGradingPrimaryParamElt::setRawData(const char*, size_t, unsigned)
+{
+}
+
+//////////////////////////////////////////////////////////
+
+CTFReaderGradingRGBCurveElt::CTFReaderGradingRGBCurveElt()
+    : m_gradingRGBCurve(std::make_shared<GradingRGBCurveOpData>(GRADING_LOG))
+{
+}
+
+bool CTFReaderGradingRGBCurveElt::isOpParameterValid(const char * att) const noexcept
+{
+    return CTFReaderOpElt::isOpParameterValid(att) ||
+           0 == Platform::Strcasecmp(ATTR_STYLE, att) ||
+           0 == Platform::Strcasecmp(ATTR_BYPASS_LIN_TO_LOG, att);
+}
+
+void CTFReaderGradingRGBCurveElt::start(const char ** atts)
+{
+    CTFReaderOpElt::start(atts);
+
+    bool isStyleFound = false;
+
+    unsigned i = 0;
+    while (atts[i])
+    {
+        if (0 == Platform::Strcasecmp(ATTR_STYLE, atts[i]))
+        {
+            try
+            {
+                GradingStyle style;
+                TransformDirection dir;
+                ConvertStringToGradingStyleAndDir(atts[i + 1], style, dir);
+                m_gradingRGBCurve->setStyle(style);
+                m_gradingRGBCurve->setDirection(dir);
+
+                // Initialize loading curve with corresponding style.
+                m_loadingRGBCurve = GradingRGBCurve::Create(style);
+            }
+            catch (Exception &)
+            {
+                ThrowM(*this, "Required attribute 'style' '", atts[i + 1], "' is invalid.");
+            }
+            isStyleFound = true;
+        }
+        else if (0 == Platform::Strcasecmp(ATTR_BYPASS_LIN_TO_LOG, atts[i]))
+        {
+            if (0 != Platform::Strcasecmp("true", atts[i + 1]))
+            {
+                std::ostringstream oss;
+                oss << "Unknown bypassLinToLog value: '" << atts[i + 1];
+                oss << "' while parsing RGBCurve.";
+                throwMessage(oss.str());
+            }
+
+            m_gradingRGBCurve->setBypassLinToLog(true);
+        }
+
+        i += 2;
+    }
+
+    if (!isStyleFound)
+    {
+        ThrowM(*this, "Required attribute 'style' is missing.");
+    }
+}
+
+void CTFReaderGradingRGBCurveElt::end()
+{
+    CTFReaderOpElt::end();
+
+    // Set the loaded data.
+    m_gradingRGBCurve->setValue(m_loadingRGBCurve);
+    // Validate the end result.
+    m_gradingRGBCurve->validate();
+}
+
+const OpDataRcPtr CTFReaderGradingRGBCurveElt::getOp() const
+{
+    return m_gradingRGBCurve;
+}
+
+//////////////////////////////////////////////////////////
+
+CTFReaderGradingCurveElt::CTFReaderGradingCurveElt(const std::string & name,
+                                                   ContainerEltRcPtr pParent,
+                                                   unsigned int xmlLineNumber,
+                                                   const std::string & xmlFile)
+    : XmlReaderComplexElt(name, pParent, xmlLineNumber, xmlFile)
+{
+}
+
+CTFReaderGradingCurveElt::~CTFReaderGradingCurveElt()
+{
+}
+
+namespace
+{
+RGBCurveType GetRGBCurveType(const std::string & name)
+{
+    if (0 == Platform::Strcasecmp(TAG_RGB_CURVE_RED, name.c_str()))
+    {
+        return RGB_RED;
+    }
+    else if (0 == Platform::Strcasecmp(TAG_RGB_CURVE_GREEN, name.c_str()))
+    {
+        return RGB_GREEN;
+    }
+    else if (0 == Platform::Strcasecmp(TAG_RGB_CURVE_BLUE, name.c_str()))
+    {
+        return RGB_BLUE;
+    }
+    else if (0 == Platform::Strcasecmp(TAG_RGB_CURVE_MASTER, name.c_str()))
+    {
+        return RGB_MASTER;
+    }
+    std::ostringstream err;
+    err << "Invalid curve name '" << name << "'.";
+    throw Exception(err.str().c_str());
+}
+}
+
+void CTFReaderGradingCurveElt::start(const char ** atts)
+{
+    try
+    {
+        const RGBCurveType type = GetRGBCurveType(getName());
+        auto pRGBCurveElt = dynamic_cast<CTFReaderGradingRGBCurveElt*>(getParent().get());
+        m_curve = pRGBCurveElt->getLoadingRGBCurve()->getCurve(type);
+    }
+    catch (Exception& ce)
+    {
+        throwMessage(ce.what());
+    }
+}
+
+void CTFReaderGradingCurveElt::end()
+{
+}
+
+//////////////////////////////////////////////////////////
+
+CTFReaderGradingCurvePointsElt::CTFReaderGradingCurvePointsElt(const std::string & name,
+                                                              ContainerEltRcPtr pParent,
+                                                              unsigned int xmlLineNumber,
+                                                              const std::string & xmlFile)
+    : XmlReaderPlainElt(name, pParent, xmlLineNumber, xmlFile)
+{
+}
+
+CTFReaderGradingCurvePointsElt::~CTFReaderGradingCurvePointsElt()
+{
+}
+
+void CTFReaderGradingCurvePointsElt::start(const char ** atts)
+{
+}
+
+void CTFReaderGradingCurvePointsElt::end()
+{
+    if (m_data.size() % 2 != 0)
+    {
+        throwMessage("Control points element: odd number of values.");
+    }
+
+    auto pCurve = dynamic_cast<CTFReaderGradingCurveElt*>(getParent().get());
+    const size_t numPts = m_data.size() / 2;
+    auto curve = pCurve->getCurve();
+    curve->setNumControlPoints(numPts);
+    for (size_t p = 0; p < numPts; ++p)
+    {
+        auto & ctPt = curve->getControlPoint(p);
+        ctPt.m_x = m_data[2 * p];
+        ctPt.m_y = m_data[2 * p + 1];
+    }
+}
+
+void CTFReaderGradingCurvePointsElt::setRawData(const char* s, size_t len, unsigned int xmlLine)
+{
+    std::vector<float> data;
+
+    try
+    {
+        data = GetNumbers<float>(s, len);
+    }
+    catch (Exception & ce)
+    {
+        ThrowM(*this, "Illegal '", getTypeName(), "' values ",
+               TruncateString(s, len), " [", ce.what(), "]");
+    }
+    m_data.insert(m_data.end(), data.begin(), data.end());
+}
+
+//////////////////////////////////////////////////////////
+
+CTFReaderGradingCurveSlopesElt::CTFReaderGradingCurveSlopesElt(const std::string & name,
+                                                               ContainerEltRcPtr pParent,
+                                                               unsigned int xmlLineNumber,
+                                                               const std::string & xmlFile)
+    : XmlReaderPlainElt(name, pParent, xmlLineNumber, xmlFile)
+{
+}
+
+CTFReaderGradingCurveSlopesElt::~CTFReaderGradingCurveSlopesElt()
+{
+}
+
+void CTFReaderGradingCurveSlopesElt::start(const char ** atts)
+{
+}
+
+void CTFReaderGradingCurveSlopesElt::end()
+{
+    auto pCurve = dynamic_cast<CTFReaderGradingCurveElt*>(getParent().get());
+    const size_t numVals = m_data.size();
+    auto curve = pCurve->getCurve();
+    const size_t numCtPnts = curve->getNumControlPoints();
+    if (numVals != numCtPnts)
+    {
+        throwMessage("Number of slopes must match number of control points.");
+    }
+    for (size_t i = 0; i < numVals; ++i)
+    {
+        curve->setSlope(i, m_data[i]);
+    }
+}
+
+void CTFReaderGradingCurveSlopesElt::setRawData(const char* s, size_t len, unsigned int xmlLine)
+{
+    std::vector<float> data;
+
+    try
+    {
+        data = GetNumbers<float>(s, len);
+    }
+    catch (Exception & ce)
+    {
+        ThrowM(*this, "Illegal '", getTypeName(), "' values ",
+               TruncateString(s, len), " [", ce.what(), "]");
+    }
+    m_data.insert(m_data.end(), data.begin(), data.end());
+}
+
+//////////////////////////////////////////////////////////
+
+CTFReaderGradingToneElt::CTFReaderGradingToneElt()
+    : m_gradingTone(std::make_shared<GradingToneOpData>(GRADING_LOG))
+{
+}
+
+bool CTFReaderGradingToneElt::isOpParameterValid(const char * att) const noexcept
+{
+    return CTFReaderOpElt::isOpParameterValid(att) ||
+        0 == Platform::Strcasecmp(ATTR_STYLE, att);
+}
+
+void CTFReaderGradingToneElt::start(const char ** atts)
+{
+    CTFReaderOpElt::start(atts);
+
+    bool isStyleFound = false;
+
+    unsigned i = 0;
+    while (atts[i])
+    {
+        if (0 == Platform::Strcasecmp(ATTR_STYLE, atts[i]))
+        {
+            try
+            {
+                GradingStyle style;
+                TransformDirection dir;
+                ConvertStringToGradingStyleAndDir(atts[i + 1], style, dir);
+                m_gradingTone->setStyle(style);
+                m_gradingTone->setDirection(dir);
+                // Initialize default values from the style.
+                const GradingTone values(style);
+                m_gradingTone->setValue(values);
+            }
+            catch (Exception &)
+            {
+                ThrowM(*this, "Required attribute 'style' '", atts[i + 1], "' is invalid.");
+            }
+            isStyleFound = true;
+        }
+
+        i += 2;
+    }
+
+    if (!isStyleFound)
+    {
+        ThrowM(*this, "Required attribute 'style' is missing.");
+    }
+}
+
+void CTFReaderGradingToneElt::end()
+{
+    CTFReaderOpElt::end();
+
+    // Validate the end result
+    m_gradingTone->validate();
+}
+
+const OpDataRcPtr CTFReaderGradingToneElt::getOp() const
+{
+    return m_gradingTone;
+}
+
+//////////////////////////////////////////////////////////
+
+CTFReaderGradingToneParamElt::CTFReaderGradingToneParamElt(const std::string & name,
+    ContainerEltRcPtr pParent,
+    unsigned int xmlLineNumber,
+    const std::string & xmlFile)
+    : XmlReaderPlainElt(name, pParent, xmlLineNumber, xmlFile)
+{
+}
+
+CTFReaderGradingToneParamElt::~CTFReaderGradingToneParamElt()
+{
+}
+
+void CTFReaderGradingToneParamElt::parseRGBMSWAttrValues(const char ** atts,
+                                                         GradingRGBMSW & rgbm,
+                                                         bool center, bool pivot) const
+{
+    bool rgbFound = false;
+    bool masterFound = false;
+    bool startFound = false;
+    bool widthFound = false;
+    unsigned i = 0;
+    while (atts[i] && *atts[i])
+    {
+        const size_t len = strlen(atts[i + 1]);
+        std::vector<double> data;
+
+        try
+        {
+            data = GetNumbers<double>(atts[i + 1], len);
+        }
+        catch (Exception & ce)
+        {
+            ThrowM(*this, "Illegal '", getTypeName(), "' values ",
+                   TruncateString(atts[i + 1], len), " [", ce.what(), "].");
+        }
+
+        if (0 == Platform::Strcasecmp(ATTR_RGB, atts[i]))
+        {
+            if (data.size() != 3)
+            {
+                ThrowM(*this, "Illegal number of 'rgb' values for '", getTypeName(), "': '",
+                       TruncateString(atts[i + 1], len), "'.");
+            }
+
+            rgbm.m_red = data[0];
+            rgbm.m_green = data[1];
+            rgbm.m_blue = data[2];
+
+            rgbFound = true;
+        }
+        else if (0 == Platform::Strcasecmp(ATTR_MASTER, atts[i]))
+        {
+            if (data.size() != 1)
+            {
+                ThrowM(*this, "'Master' for '", getTypeName(), "' must be a single value: '",
+                       TruncateString(atts[i + 1], len), "'");
+            }
+
+            rgbm.m_master = data[0];
+            masterFound = true;
+        }
+        else if (0 == Platform::Strcasecmp(center ? ATTR_CENTER : ATTR_START, atts[i]))
+        {
+            if (data.size() != 1)
+            {
+                ThrowM(*this, "'", center ? ATTR_CENTER : ATTR_START, "' for '", getTypeName(),
+                       "' must be a single value: '",
+                       TruncateString(atts[i + 1], len), "'");
+            }
+
+            rgbm.m_start = data[0];
+            startFound = true;
+        }
+        else if (0 == Platform::Strcasecmp(pivot ? ATTR_PIVOT : ATTR_WIDTH, atts[i]))
+        {
+            if (data.size() != 1)
+            {
+                ThrowM(*this, "'", pivot ? ATTR_PIVOT : ATTR_WIDTH, "' for '", getTypeName(),
+                       "' must be a single value: '",
+                       TruncateString(atts[i + 1], len), "'");
+            }
+
+            rgbm.m_width = data[0];
+            widthFound = true;
+        }
+        else
+        {
+            ThrowM(*this, "Illegal attribute for '", getName().c_str(), "': '", atts[i], "'.");
+        }
+
+        i += 2;
+    }
+
+    if (!rgbFound)
+    {
+        ThrowM(*this, "Missing 'rgb' attribute for '", getName().c_str(), "'.");
+    }
+    if (!masterFound)
+    {
+        ThrowM(*this, "Missing 'master' attribute for '", getName().c_str(), "'.");
+    }
+    if (!startFound)
+    {
+        ThrowM(*this, "Missing '", center ? ATTR_CENTER : ATTR_START, "' attribute for '",
+               getName().c_str(), "'.");
+    }
+    if (!widthFound)
+    {
+        ThrowM(*this, "Missing '", pivot ? ATTR_PIVOT : ATTR_WIDTH, "' attribute for '",
+               getName().c_str(), "'.");
+    }
+}
+
+void CTFReaderGradingToneParamElt::parseScalarAttrValue(const char ** atts,
+                                                        const char * tag,
+                                                        double & value) const
+{
+    bool found = false;
+    unsigned i = 0;
+    while (atts[i] && *atts[i])
+    {
+        const size_t len = strlen(atts[i + 1]);
+        std::vector<double> data;
+
+        try
+        {
+            data = GetNumbers<double>(atts[i + 1], len);
+        }
+        catch (Exception & ce)
+        {
+            ThrowM(*this, "Illegal '", getTypeName(), "' values ",
+                   TruncateString(atts[i + 1], len), " [", ce.what(), "].");
+        }
+
+        if (0 == Platform::Strcasecmp(tag, atts[i]))
+        {
+            if (data.size() != 1)
+            {
+                ThrowM(*this, "'", tag, "' for '", getTypeName(), "' must be a single value: '",
+                       TruncateString(atts[i + 1], len), "'.");
+            }
+
+            value = data[0];
+            found = true;
+        }
+        else
+        {
+            ThrowM(*this, "Illegal attribute for '", getName().c_str(), "': '", atts[i], "'.");
+        }
+
+        i += 2;
+    }
+
+    if (!found)
+    {
+        ThrowM(*this, "Missing attribute for '", getName().c_str(), "'.");
+    }
+}
+
+void CTFReaderGradingToneParamElt::start(const char ** atts)
+{
+    auto gt = dynamic_cast<CTFReaderGradingToneElt *>(getParent().get());
+
+    auto gtValues = gt->getGradingTone()->getValue();
+
+    if (0 == Platform::Strcasecmp(TAG_TONE_BLACKS, getName().c_str()))
+    {
+        parseRGBMSWAttrValues(atts, gtValues.m_blacks, false, false);
+    }
+    else if (0 == Platform::Strcasecmp(TAG_TONE_SHADOWS, getName().c_str()))
+    {
+        parseRGBMSWAttrValues(atts, gtValues.m_shadows, false, true);
+    }
+    else if (0 == Platform::Strcasecmp(TAG_TONE_MIDTONES, getName().c_str()))
+    {
+        parseRGBMSWAttrValues(atts, gtValues.m_midtones, true, false);
+    }
+    else if (0 == Platform::Strcasecmp(TAG_TONE_HIGHLIGHTS, getName().c_str()))
+    {
+        parseRGBMSWAttrValues(atts, gtValues.m_highlights, false, true);
+    }
+    else if (0 == Platform::Strcasecmp(TAG_TONE_WHITES, getName().c_str()))
+    {
+        parseRGBMSWAttrValues(atts, gtValues.m_whites, false, false);
+    }
+    else if (0 == Platform::Strcasecmp(TAG_TONE_SCONTRAST, getName().c_str()))
+    {
+        parseScalarAttrValue(atts, ATTR_MASTER, gtValues.m_scontrast);
+    }
+    else
+    {
+        ThrowM(*this, "Invalid element '", getName().c_str(), "'.");
+    }
+
+    gt->getGradingTone()->setValue(gtValues);
+}
+
+void CTFReaderGradingToneParamElt::end()
+{
+}
+
+void CTFReaderGradingToneParamElt::setRawData(const char*, size_t, unsigned)
+{
 }
 
 //////////////////////////////////////////////////////////

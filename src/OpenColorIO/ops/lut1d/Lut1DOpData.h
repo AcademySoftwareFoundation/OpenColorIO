@@ -86,7 +86,9 @@ public:
 
     Lut1DOpData(unsigned long dimension, TransformDirection dir);
 
-    Lut1DOpData(HalfFlags halfFlags, unsigned long dimension);
+    // If HalfFlags indicates a half-domain LUT, the filterNANs argument may be set to true to set
+    // the 2048 NaN values in the domain to 0.
+    Lut1DOpData(HalfFlags halfFlags, unsigned long dimension, bool filterNANs);
 
     virtual ~Lut1DOpData();
 
@@ -95,8 +97,10 @@ public:
     // Get the interpolation algorithm that has to be used.
     // INTERP_BEST and INTERP_DEFAULT are translated to what should be used.
     Interpolation getConcreteInterpolation() const;
+    static Interpolation GetConcreteInterpolation(Interpolation interp);
 
-    void setInterpolation(Interpolation algo);
+    void setInterpolation(Interpolation interpolation);
+    static bool IsValidInterpolation(Interpolation interpolation);
 
     TransformDirection getDirection() const { return m_direction; }
     void setDirection(TransformDirection dir) { m_direction = dir; }
@@ -140,7 +144,7 @@ public:
 
     inline Lut1DHueAdjust getHueAdjust() const noexcept { return m_hueAdjust; }
 
-    void setHueAdjust(Lut1DHueAdjust algo) noexcept;
+    void setHueAdjust(Lut1DHueAdjust algo);
 
     // Get an array containing the LUT elements.
     // The elements are stored as a vector [r0,g0,b0, r1,g1,b1, r2,g2,b2, ...].
@@ -206,7 +210,10 @@ public:
     {
     public:
         explicit Lut3by1DArray(HalfFlags halfFlags);
-        Lut3by1DArray(HalfFlags halfFlags, unsigned long numChannels, unsigned long length);
+        Lut3by1DArray(HalfFlags halfFlags,
+                      unsigned long numChannels,
+                      unsigned long length,
+                      bool filterNANs);
         ~Lut3by1DArray();
 
         bool isIdentity(HalfFlags halfFlags) const;
@@ -218,7 +225,7 @@ public:
     protected:
         // Fill the LUT 1D with appropriate default values 
         // representing an identity LUT.
-        void fill(HalfFlags halfFlags);
+        void fill(HalfFlags halfFlags, bool filterNANs);
 
     public:
         // Default copy constructor and assignation operator are fine.

@@ -1,4 +1,6 @@
-breathe
-sphinx-tabs
+six
+testresources
 recommonmark
 sphinx-press-theme
+sphinx-tabs
+breathe

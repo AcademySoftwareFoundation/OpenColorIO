@@ -19,6 +19,17 @@ OCIO_ADD_TEST(StringUtils, cases)
         const std::string str = StringUtils::Upper(ref);
         OCIO_CHECK_EQUAL(str, "LOWER 1*& CTFG");
     }
+
+    {
+        const std::string str = StringUtils::Lower(nullptr);
+        OCIO_CHECK_EQUAL(str, "");
+    }
+
+    {
+        const std::string str = StringUtils::Upper(nullptr);
+        OCIO_CHECK_EQUAL(str, "");
+    }
+
 }
 
 OCIO_ADD_TEST(StringUtils, trim)
@@ -139,7 +150,10 @@ OCIO_ADD_TEST(StringUtils, replace)
     ref = StringUtils::Replace(ref, "ZY", "TO");
     OCIO_CHECK_EQUAL(ref, "lO12ABC& ctfG");
 
-    StringUtils::ReplaceInPlace(ref, "ct", "TO");
+    OCIO_CHECK_ASSERT(StringUtils::ReplaceInPlace(ref, "ct", "TO"));
+    OCIO_CHECK_EQUAL(ref, "lO12ABC& TOfG");
+
+    OCIO_CHECK_ASSERT(!StringUtils::ReplaceInPlace(ref, "12345", "TO"));
     OCIO_CHECK_EQUAL(ref, "lO12ABC& TOfG");
 }
 

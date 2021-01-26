@@ -42,28 +42,21 @@ void ValidateParams(const LogOpData::Params & params, TransformDirection directi
         throw Exception("Log: expecting at most 6 parameters.");
     }
 
-    if (direction != TRANSFORM_DIR_UNKNOWN)
+    if (IsScalarEqualToZero(params[LIN_SIDE_SLOPE]))
     {
-        if (IsScalarEqualToZero(params[LIN_SIDE_SLOPE]))
-        {
-            std::ostringstream oss;
-            oss << "Log: Invalid linear slope value '";
-            oss << params[LIN_SIDE_SLOPE];
-            oss << "', linear slope cannot be 0.";
-            throw Exception(oss.str().c_str());
-        }
-        if (IsScalarEqualToZero(params[LOG_SIDE_SLOPE]))
-        {
-            std::ostringstream oss;
-            oss << "Log: Invalid log slope value '";
-            oss << params[LOG_SIDE_SLOPE];
-            oss << "', log slope cannot be 0.";
-            throw Exception(oss.str().c_str());
-        }
+        std::ostringstream oss;
+        oss << "Log: Invalid linear side slope value '";
+        oss << params[LIN_SIDE_SLOPE];
+        oss << "', linear side slope cannot be 0.";
+        throw Exception(oss.str().c_str());
     }
-    else
+    if (IsScalarEqualToZero(params[LOG_SIDE_SLOPE]))
     {
-        throw Exception("Log: Invalid direction.");
+        std::ostringstream oss;
+        oss << "Log: Invalid log side slope value '";
+        oss << params[LOG_SIDE_SLOPE];
+        oss << "', log side slope cannot be 0.";
+        throw Exception(oss.str().c_str());
     }
 }
 }
@@ -73,11 +66,6 @@ LogOpData::LogOpData(double base, TransformDirection direction)
     , m_base(base)
     , m_direction(direction)
 {
-    if (m_direction == TRANSFORM_DIR_UNKNOWN)
-    {
-        throw Exception("Cannot create Log op, unspecified transform direction.");
-    }
-
     setParameters(DefaultValues::logSlope, DefaultValues::logOffset,
                   DefaultValues::linSlope, DefaultValues::linOffset);
 }
@@ -92,10 +80,6 @@ LogOpData::LogOpData(double base,
     , m_base(base)
     , m_direction(direction)
 {
-    if (m_direction == TRANSFORM_DIR_UNKNOWN)
-    {
-        throw Exception("Cannot create Log op, unspecified transform direction.");
-    }
     setParameters(logSlope, logOffset, linSlope, linOffset);
 }
 
@@ -111,10 +95,6 @@ LogOpData::LogOpData(double base,
     , m_base(base)
     , m_direction(dir)
 {
-    if (m_direction == TRANSFORM_DIR_UNKNOWN)
-    {
-        throw Exception("Cannot create Log op, unspecified transform direction.");
-    }
     const auto sr = redParams.size();
     const auto sg = greenParams.size();
     const auto sb = blueParams.size();
@@ -262,29 +242,31 @@ OpDataRcPtr LogOpData::getIdentityReplacement() const
     OpDataRcPtr resOp;
     if (isLog2() || isLog10())
     {
-        if (m_direction == TRANSFORM_DIR_FORWARD)
+        switch (m_direction)
         {
+        case TRANSFORM_DIR_FORWARD:
             // The first op logarithm is not defined for negative values.
-            resOp = std::make_shared<RangeOpData>(
-                0.,
-                // Don't clamp high end.
-                RangeOpData::EmptyValue(),
-                0.,
-                RangeOpData::EmptyValue());
-        }
-        else
-        {
+            resOp = std::make_shared<RangeOpData>(0.,
+                                                  // Don't clamp high end.
+                                                  RangeOpData::EmptyValue(),
+                                                  0.,
+                                                  RangeOpData::EmptyValue());
+            break;
+        case TRANSFORM_DIR_INVERSE:
             // In principle, the power function is defined over the entire domain.
             // However, in practice the input to the following logarithm is clamped
             // to a very small positive number and this imposes a limit.
             // E.g., log10(FLOAT_MIN) = -37.93, but this is so small that it makes
             // more sense to consider it an exact inverse.
             resOp = std::make_shared<MatrixOpData>();
+            break;
         }
     }
     else if (!isCamera())
     {
-        if (m_direction == TRANSFORM_DIR_FORWARD)  // LinToLog -> LogToLin
+        switch (m_direction)
+        {
+        case TRANSFORM_DIR_FORWARD: // LinToLog -> LogToLin
         {
             // Minimum value allowed is -linOffset/linSlope so that linSlope*x+linOffset > 0.
             const double minValue = -m_redParams[LIN_SIDE_OFFSET] / m_redParams[LIN_SIDE_SLOPE];
@@ -293,11 +275,13 @@ OpDataRcPtr LogOpData::getIdentityReplacement() const
                                                   RangeOpData::EmptyValue(),
                                                   minValue,
                                                   RangeOpData::EmptyValue());
-
+            break;
         }
-        else  // LogToLin -> LinToLog
+        case TRANSFORM_DIR_INVERSE: // LogToLin -> LinToLog
         {
             resOp = std::make_shared<MatrixOpData>();
+            break;
+        }
         }
     }
     else

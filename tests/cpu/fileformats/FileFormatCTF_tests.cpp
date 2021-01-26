@@ -5,6 +5,7 @@
 #include "BitDepthUtils.h"
 #include "fileformats/FileFormatCTF.cpp"
 #include "ops/fixedfunction/FixedFunctionOp.h"
+#include "ops/gradingrgbcurve/GradingRGBCurve.h"
 #include "testutils/UnitTest.h"
 #include "UnitTestLogUtils.h"
 #include "UnitTestUtils.h"
@@ -529,7 +530,7 @@ void CheckIdentity(std::istringstream & ctfStream, unsigned line)
     std::string emptyString;
     OCIO::LocalFileFormat tester;
     OCIO::CachedFileRcPtr file;
-    OCIO_CHECK_NO_THROW_FROM(file = tester.read(ctfStream, emptyString), line);
+    OCIO_CHECK_NO_THROW_FROM(file = tester.read(ctfStream, emptyString, OCIO::INTERP_DEFAULT), line);
     OCIO::LocalCachedFileRcPtr cachedFile = OCIO_DYNAMIC_POINTER_CAST<OCIO::LocalCachedFile>(file);
     const auto & fileOps = cachedFile->m_transform->getOps();
 
@@ -939,7 +940,7 @@ OCIO::LocalCachedFileRcPtr ParseString(const std::string & str)
     // Parse stream.
     std::string emptyString;
     OCIO::LocalFileFormat tester;
-    OCIO::CachedFileRcPtr file = tester.read(ctf, emptyString);
+    OCIO::CachedFileRcPtr file = tester.read(ctf, emptyString, OCIO::INTERP_DEFAULT);
 
     return OCIO_DYNAMIC_POINTER_CAST<OCIO::LocalCachedFile>(file);
 }
@@ -1179,43 +1180,45 @@ OCIO_ADD_TEST(FileFormatCTF, info_example)
 
     // Check element values.
     //
-    OCIO_CHECK_EQUAL(std::string(info.getName()), OCIO::METADATA_INFO);
+    OCIO_CHECK_EQUAL(std::string(info.getElementName()), OCIO::METADATA_INFO);
     auto items = info.getChildrenElements();
     OCIO_REQUIRE_EQUAL(items.size(), 6);
-    OCIO_CHECK_EQUAL(std::string(items[0].getName()), "Copyright");
-    OCIO_CHECK_EQUAL(std::string(items[0].getValue()), "Copyright Contributors to the OpenColorIO Project.");
-    OCIO_CHECK_EQUAL(std::string(items[1].getName()), "AppRelease");
-    OCIO_CHECK_EQUAL(std::string(items[1].getValue()), "2020.0.63");
-    OCIO_CHECK_EQUAL(std::string(items[2].getName()), "Revision");
-    OCIO_CHECK_EQUAL(std::string(items[2].getValue()), "1");
+    OCIO_CHECK_EQUAL(std::string(items[0].getElementName()), "Copyright");
+    OCIO_CHECK_EQUAL(std::string(items[0].getElementValue()),
+                     "Copyright Contributors to the OpenColorIO Project.");
+    OCIO_CHECK_EQUAL(std::string(items[1].getElementName()), "AppRelease");
+    OCIO_CHECK_EQUAL(std::string(items[1].getElementValue()), "2020.0.63");
+    OCIO_CHECK_EQUAL(std::string(items[2].getElementName()), "Revision");
+    OCIO_CHECK_EQUAL(std::string(items[2].getElementValue()), "1");
 
-    OCIO_CHECK_EQUAL(std::string(items[3].getName()), "Category");
-    OCIO_CHECK_EQUAL(std::string(items[3].getValue()), "");
+    OCIO_CHECK_EQUAL(std::string(items[3].getElementName()), "Category");
+    OCIO_CHECK_EQUAL(std::string(items[3].getElementValue()), "");
     auto catItems = items[3].getChildrenElements();
     OCIO_REQUIRE_EQUAL(catItems.size(), 1);
-    OCIO_CHECK_EQUAL(std::string(catItems[0].getName()), "Tags");
+    OCIO_CHECK_EQUAL(std::string(catItems[0].getElementName()), "Tags");
     auto tagsItems = catItems[0].getChildrenElements();
     OCIO_REQUIRE_EQUAL(tagsItems.size(), 2);
-    OCIO_CHECK_EQUAL(std::string(tagsItems[0].getName()), "SceneLinearWorkingSpace");
-    OCIO_CHECK_EQUAL(std::string(tagsItems[0].getValue()), "");
-    OCIO_CHECK_EQUAL(std::string(tagsItems[1].getName()), "Input");
-    OCIO_CHECK_EQUAL(std::string(tagsItems[1].getValue()), "");
+    OCIO_CHECK_EQUAL(std::string(tagsItems[0].getElementName()), "SceneLinearWorkingSpace");
+    OCIO_CHECK_EQUAL(std::string(tagsItems[0].getElementValue()), "");
+    OCIO_CHECK_EQUAL(std::string(tagsItems[1].getElementName()), "Input");
+    OCIO_CHECK_EQUAL(std::string(tagsItems[1].getElementValue()), "");
 
-    OCIO_CHECK_EQUAL(std::string(items[4].getName()), "InputColorSpace");
-    OCIO_CHECK_EQUAL(std::string(items[4].getValue()), "");
+    OCIO_CHECK_EQUAL(std::string(items[4].getElementName()), "InputColorSpace");
+    OCIO_CHECK_EQUAL(std::string(items[4].getElementValue()), "");
     auto icItems = items[4].getChildrenElements();
     OCIO_REQUIRE_EQUAL(icItems.size(), 4);
-    OCIO_CHECK_EQUAL(std::string(icItems[0].getName()), OCIO::METADATA_DESCRIPTION);
-    OCIO_CHECK_EQUAL(std::string(icItems[0].getValue()), "Input color space description");
-    OCIO_CHECK_EQUAL(std::string(icItems[1].getName()), "ImageState");
-    OCIO_CHECK_EQUAL(std::string(icItems[1].getValue()), "video");
-    OCIO_CHECK_EQUAL(std::string(icItems[2].getName()), "ShortName");
-    OCIO_CHECK_EQUAL(std::string(icItems[2].getValue()), "no_version");
-    OCIO_CHECK_EQUAL(std::string(icItems[3].getName()), "ID");
-    OCIO_CHECK_EQUAL(std::string(icItems[3].getValue()), "387b23d1-f1ce-3f69-8544-e5601f45f78b");
+    OCIO_CHECK_EQUAL(std::string(icItems[0].getElementName()), OCIO::METADATA_DESCRIPTION);
+    OCIO_CHECK_EQUAL(std::string(icItems[0].getElementValue()), "Input color space description");
+    OCIO_CHECK_EQUAL(std::string(icItems[1].getElementName()), "ImageState");
+    OCIO_CHECK_EQUAL(std::string(icItems[1].getElementValue()), "video");
+    OCIO_CHECK_EQUAL(std::string(icItems[2].getElementName()), "ShortName");
+    OCIO_CHECK_EQUAL(std::string(icItems[2].getElementValue()), "no_version");
+    OCIO_CHECK_EQUAL(std::string(icItems[3].getElementName()), "ID");
+    OCIO_CHECK_EQUAL(std::string(icItems[3].getElementValue()),
+                     "387b23d1-f1ce-3f69-8544-e5601f45f78b");
 
-    OCIO_CHECK_EQUAL(std::string(items[5].getName()), "OutputColorSpace");
-    OCIO_CHECK_EQUAL(std::string(items[5].getValue()), "");
+    OCIO_CHECK_EQUAL(std::string(items[5].getElementName()), "OutputColorSpace");
+    OCIO_CHECK_EQUAL(std::string(items[5].getElementValue()), "");
     auto ocItems = items[5].getChildrenElements();
     OCIO_REQUIRE_EQUAL(ocItems.size(), 3);
     auto attribs = items[5].getAttributes();
@@ -1224,12 +1227,12 @@ OCIO_ADD_TEST(FileFormatCTF, info_example)
     OCIO_CHECK_EQUAL(attribs[0].second, "test1");
     OCIO_CHECK_EQUAL(attribs[1].first, "att2");
     OCIO_CHECK_EQUAL(attribs[1].second, "test2");
-    OCIO_CHECK_EQUAL(std::string(ocItems[0].getName()), "ImageState");
-    OCIO_CHECK_EQUAL(std::string(ocItems[0].getValue()), "scene");
-    OCIO_CHECK_EQUAL(std::string(ocItems[1].getName()), "ShortName");
-    OCIO_CHECK_EQUAL(std::string(ocItems[1].getValue()), "ACES");
-    OCIO_CHECK_EQUAL(std::string(ocItems[2].getName()), "ID");
-    OCIO_CHECK_EQUAL(std::string(ocItems[2].getValue()), "1");
+    OCIO_CHECK_EQUAL(std::string(ocItems[0].getElementName()), "ImageState");
+    OCIO_CHECK_EQUAL(std::string(ocItems[0].getElementValue()), "scene");
+    OCIO_CHECK_EQUAL(std::string(ocItems[1].getElementName()), "ShortName");
+    OCIO_CHECK_EQUAL(std::string(ocItems[1].getElementValue()), "ACES");
+    OCIO_CHECK_EQUAL(std::string(ocItems[2].getElementName()), "ID");
+    OCIO_CHECK_EQUAL(std::string(ocItems[2].getElementValue()), "1");
 }
 
 OCIO_ADD_TEST(FileFormatCTF, difficult_syntax)
@@ -1256,11 +1259,12 @@ OCIO_ADD_TEST(FileFormatCTF, difficult_syntax)
                      "yet 'another' \"valid\" desc");
 
     const OCIO::FormatMetadataImpl & info = cachedFile->m_transform->getInfoMetadata();
-    OCIO_CHECK_EQUAL(std::string(info.getName()), OCIO::METADATA_INFO);
+    OCIO_CHECK_EQUAL(std::string(info.getElementName()), OCIO::METADATA_INFO);
     auto items = info.getChildrenElements();
     OCIO_REQUIRE_EQUAL(items.size(), 1);
-    OCIO_CHECK_EQUAL(std::string(items[0].getName()), "Stuff");
-    OCIO_CHECK_EQUAL(std::string(items[0].getValue()), "This is a \"difficult\" but 'legal' color transform file.");
+    OCIO_CHECK_EQUAL(std::string(items[0].getElementName()), "Stuff");
+    OCIO_CHECK_EQUAL(std::string(items[0].getElementValue()),
+                     "This is a \"difficult\" but 'legal' color transform file.");
 
     const OCIO::ConstOpDataVec & opList = cachedFile->m_transform->getOps();
     OCIO_REQUIRE_EQUAL(opList.size(), 2);
@@ -3458,7 +3462,7 @@ OCIO_ADD_TEST(FileFormatCTF, exposure_contrast_log)
     OCIO_CHECK_ASSERT(pEC->isDynamic());
     OCIO_CHECK_ASSERT(pEC->getExposureProperty()->isDynamic());
     OCIO_CHECK_ASSERT(pEC->getContrastProperty()->isDynamic());
-    OCIO_CHECK_ASSERT(pEC->getGammaProperty()->isDynamic());
+    OCIO_CHECK_ASSERT(!pEC->getGammaProperty()->isDynamic());
 
     OCIO_REQUIRE_ASSERT(opList[1]);
     auto pECRev = std::dynamic_pointer_cast<const OCIO::ExposureContrastOpData>(opList[1]);
@@ -3466,9 +3470,9 @@ OCIO_ADD_TEST(FileFormatCTF, exposure_contrast_log)
 
     OCIO_CHECK_EQUAL(pECRev->getStyle(), OCIO::ExposureContrastOpData::STYLE_LOGARITHMIC_REV);
     OCIO_CHECK_ASSERT(pECRev->isDynamic());
-    OCIO_CHECK_ASSERT(pECRev->getExposureProperty()->isDynamic());
+    OCIO_CHECK_ASSERT(!pECRev->getExposureProperty()->isDynamic());
     OCIO_CHECK_ASSERT(!pECRev->getContrastProperty()->isDynamic());
-    OCIO_CHECK_ASSERT(!pECRev->getGammaProperty()->isDynamic());
+    OCIO_CHECK_ASSERT(pECRev->getGammaProperty()->isDynamic());
 }
 
 OCIO_ADD_TEST(FileFormatCTF, exposure_contrast_linear)
@@ -3563,8 +3567,8 @@ OCIO_ADD_TEST(FileFormatCTF, attribute_float_parse_extra_values)
     // Load file
     std::string emptyString;
     OCIO::LocalFileFormat tester;
-    OCIO_CHECK_THROW_WHAT(tester.read(ctf, emptyString), OCIO::Exception,
-        "Expecting 1 value, found 2 values");
+    OCIO_CHECK_THROW_WHAT(tester.read(ctf, emptyString, OCIO::INTERP_DEFAULT), OCIO::Exception,
+                          "Expecting 1 value, found 2 values");
 }
 
 OCIO_ADD_TEST(FileFormatCTF, attribute_float_parse_leading_spaces)
@@ -3584,7 +3588,7 @@ OCIO_ADD_TEST(FileFormatCTF, attribute_float_parse_leading_spaces)
     std::string emptyString;
     OCIO::LocalFileFormat tester;
     OCIO::CachedFileRcPtr file;
-    OCIO_CHECK_NO_THROW(file = tester.read(ctf, emptyString));
+    OCIO_CHECK_NO_THROW(file = tester.read(ctf, emptyString, OCIO::INTERP_DEFAULT));
     OCIO::LocalCachedFileRcPtr cachedFile = OCIO_DYNAMIC_POINTER_CAST<OCIO::LocalCachedFile>(file);
     const auto & fileOps = cachedFile->m_transform->getOps();
 
@@ -3673,6 +3677,20 @@ OCIO_ADD_TEST(FileFormatCTF, load_fixed_function_file)
 
 }
 
+namespace
+{
+void WriteGroupCTF(OCIO::ConstGroupTransformRcPtr group, std::ostringstream & outputTransform)
+{
+    OCIO::ConstConfigRcPtr cfg = OCIO::Config::CreateRaw();
+    group->write(cfg, OCIO::FILEFORMAT_CTF, outputTransform);
+}
+
+void WriteGroupCLF(OCIO::ConstGroupTransformRcPtr group, std::ostringstream & outputTransform)
+{
+    OCIO::ConstConfigRcPtr cfg = OCIO::Config::CreateRaw();
+    group->write(cfg, OCIO::FILEFORMAT_CLF, outputTransform);
+}
+
 void ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::Style style, int lineNo)
 {
     // Validate the load & save for any FixedFunction style without parameters.
@@ -3710,13 +3728,8 @@ void ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::Style style, i
     OCIO_CHECK_NO_THROW_FROM(OCIO::CreateFixedFunctionTransform(group, constOp), lineNo);
     OCIO_REQUIRE_EQUAL_FROM(group->getNumTransforms(), 1, lineNo);
 
-    OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
-    OCIO::ConstProcessorRcPtr processorGroup;
-    OCIO_CHECK_NO_THROW(processorGroup = config->getProcessor(group));
-
     std::ostringstream outputTransform;
-    OCIO_CHECK_NO_THROW_FROM(processorGroup->write(OCIO::FILEFORMAT_CTF, outputTransform), lineNo);
+    OCIO_CHECK_NO_THROW_FROM(WriteGroupCTF(group, outputTransform), lineNo);
 
     if (outputTransform.str() != strebuf.str())
     {
@@ -3728,6 +3741,7 @@ void ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::Style style, i
 
         OCIO_CHECK_ASSERT_MESSAGE_FROM(0, err.str(), lineNo);
     }
+}
 }
 
 OCIO_ADD_TEST(FileFormatCTF, ff_load_save_ctf)
@@ -3835,6 +3849,798 @@ OCIO_ADD_TEST(FileFormatCTF, load_ff_aces_fail_missing_param)
                           "must have one parameter");
 }
 
+OCIO_ADD_TEST(FileFormatCTF, load_grading_primary_log)
+{
+    std::istringstream ctfLog;
+    ctfLog.str(R"(<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList version="2" id="UIDEC42">
+    <GradingPrimary inBitDepth="32f" outBitDepth="32f" style="log">
+        <Brightness rgb="0.1 0 0" master="0" />
+        <Contrast rgb="1 1.1 1" master="1" />
+        <Gamma rgb="1 1 1" master="1.1" />
+        <Saturation master="1.1" />
+        <Pivot contrast="-0.1" black="0.1" white="1.1" />
+        <Clamp black="0" white="1" />
+    </GradingPrimary>
+    <GradingPrimary inBitDepth="32f" outBitDepth="32f" style="logRev">
+        <DynamicParameter param="PRIMARY" />
+    </GradingPrimary>
+    <GradingPrimary inBitDepth="32f" outBitDepth="16f" style="log">
+        <Brightness rgb="0.1 0 0" master="0" />
+        <Gamma rgb="1 1 1" master="1.1" />
+        <Saturation master="1.1" />
+        <Pivot black="0.1" />
+        <Clamp white="1" />
+    </GradingPrimary>
+    <GradingPrimary inBitDepth="16f" outBitDepth="32f" style="log">
+        <Brightness rgb="-0.25 0.5 7.62939453125e-06" master="1" />
+        <Contrast rgb="1.25 1.5 -1.25" master="103125e-5" />
+        <Gamma rgb="0.75 0.625 1.25" master="0.9e+1" />
+        <Pivot contrast="0.75" />
+        <Saturation master="1.03125" />
+        <DynamicParameter param="PRIMARY" />
+    </GradingPrimary>
+</ProcessList>
+)");
+
+    // Load file.
+    std::string emptyString;
+    OCIO::LocalFileFormat tester;
+    OCIO::CachedFileRcPtr file;
+    OCIO_CHECK_NO_THROW(file = tester.read(ctfLog, emptyString, OCIO::INTERP_DEFAULT));
+    OCIO::LocalCachedFileRcPtr cachedFile = OCIO_DYNAMIC_POINTER_CAST<OCIO::LocalCachedFile>(file);
+    OCIO_REQUIRE_ASSERT(cachedFile);
+    const auto & fileOps = cachedFile->m_transform->getOps();
+
+    OCIO_REQUIRE_EQUAL(fileOps.size(), 4);
+    const auto op0 = fileOps[0];
+    const auto gradingPrimary0 = std::dynamic_pointer_cast<const OCIO::GradingPrimaryOpData>(op0);
+    OCIO_REQUIRE_ASSERT(gradingPrimary0);
+    OCIO_CHECK_EQUAL(OCIO::GRADING_LOG, gradingPrimary0->getStyle());
+    OCIO_CHECK_EQUAL(OCIO::TRANSFORM_DIR_FORWARD, gradingPrimary0->getDirection());
+    const auto vals0 = gradingPrimary0->getValue();
+    OCIO_CHECK_EQUAL(OCIO::GradingRGBM(0.1, 0., 0., 0.), vals0.m_brightness);
+    OCIO_CHECK_EQUAL(OCIO::GradingRGBM(1., 1.1, 1., 1.), vals0.m_contrast);
+    OCIO_CHECK_EQUAL(OCIO::GradingRGBM(1., 1., 1., 1.1), vals0.m_gamma);
+    OCIO_CHECK_EQUAL(1.1, vals0.m_saturation);
+    OCIO_CHECK_EQUAL(-0.1, vals0.m_pivot);
+    OCIO_CHECK_EQUAL(0.1, vals0.m_pivotBlack);
+    OCIO_CHECK_EQUAL(1.1, vals0.m_pivotWhite);
+    OCIO_CHECK_EQUAL(0., vals0.m_clampBlack);
+    OCIO_CHECK_EQUAL(1., vals0.m_clampWhite);
+    OCIO_CHECK_ASSERT(!gradingPrimary0->isDynamic());
+
+    const auto op1 = fileOps[1];
+    const auto gradingPrimary1 = std::dynamic_pointer_cast<const OCIO::GradingPrimaryOpData>(op1);
+    OCIO_REQUIRE_ASSERT(gradingPrimary1);
+    OCIO_CHECK_EQUAL(OCIO::GRADING_LOG, gradingPrimary1->getStyle());
+    OCIO_CHECK_EQUAL(OCIO::TRANSFORM_DIR_INVERSE, gradingPrimary1->getDirection());
+    const OCIO::GradingPrimary defLog{ OCIO::GRADING_LOG };
+    OCIO_CHECK_EQUAL(defLog, gradingPrimary1->getValue());
+    OCIO_CHECK_ASSERT(gradingPrimary1->isDynamic());
+
+    const auto op2 = fileOps[2];
+    const auto gradingPrimary2 = std::dynamic_pointer_cast<const OCIO::GradingPrimaryOpData>(op2);
+    OCIO_REQUIRE_ASSERT(gradingPrimary2);
+    OCIO_CHECK_EQUAL(OCIO::GRADING_LOG, gradingPrimary2->getStyle());
+    OCIO_CHECK_EQUAL(OCIO::TRANSFORM_DIR_FORWARD, gradingPrimary2->getDirection());
+    const auto vals2 = gradingPrimary2->getValue();
+    OCIO_CHECK_EQUAL(OCIO::GradingRGBM(0.1, 0., 0., 0.), vals2.m_brightness);
+    OCIO_CHECK_EQUAL(defLog.m_contrast, vals2.m_contrast);
+    OCIO_CHECK_EQUAL(OCIO::GradingRGBM(1., 1., 1., 1.1), vals2.m_gamma);
+    OCIO_CHECK_EQUAL(1.1, vals2.m_saturation);
+    OCIO_CHECK_EQUAL(defLog.m_pivot, vals2.m_pivot);
+    OCIO_CHECK_EQUAL(0.1, vals2.m_pivotBlack);
+    OCIO_CHECK_EQUAL(defLog.m_pivotWhite, vals2.m_pivotWhite);
+    OCIO_CHECK_EQUAL(defLog.m_clampBlack, vals2.m_clampBlack);
+    OCIO_CHECK_EQUAL(1., vals2.m_clampWhite);
+    OCIO_CHECK_ASSERT(!gradingPrimary2->isDynamic());
+
+    const auto op3 = fileOps[3];
+    const auto gradingPrimary3 = std::dynamic_pointer_cast<const OCIO::GradingPrimaryOpData>(op3);
+    OCIO_REQUIRE_ASSERT(gradingPrimary3);
+    OCIO_CHECK_EQUAL(OCIO::GRADING_LOG, gradingPrimary3->getStyle());
+    OCIO_CHECK_EQUAL(OCIO::TRANSFORM_DIR_FORWARD, gradingPrimary3->getDirection());
+    const auto vals3 = gradingPrimary3->getValue();
+    OCIO_CHECK_EQUAL(OCIO::GradingRGBM(-0.25, 0.5, 7.62939453125e-06, 1.), vals3.m_brightness);
+    OCIO_CHECK_EQUAL(OCIO::GradingRGBM(1.25, 1.5, -1.25, 103125.e-5), vals3.m_contrast);
+    OCIO_CHECK_EQUAL(OCIO::GradingRGBM(0.75, 0.625, 1.25, 0.9e+1), vals3.m_gamma);
+    OCIO_CHECK_EQUAL(1.03125, vals3.m_saturation);
+    OCIO_CHECK_EQUAL(0.75, vals3.m_pivot);
+    OCIO_CHECK_EQUAL(defLog.m_pivotBlack, vals3.m_pivotBlack);
+    OCIO_CHECK_EQUAL(defLog.m_pivotWhite, vals3.m_pivotWhite);
+    OCIO_CHECK_EQUAL(defLog.m_clampBlack, vals3.m_clampBlack);
+    OCIO_CHECK_EQUAL(defLog.m_clampWhite, vals3.m_clampWhite);
+    OCIO_CHECK_ASSERT(gradingPrimary3->isDynamic());
+}
+
+OCIO_ADD_TEST(FileFormatCTF, load_grading_primary_lin)
+{
+    std::istringstream ctfLin;
+    ctfLin.str(R"(<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList version="2" id="UIDEC42">
+    <GradingPrimary inBitDepth="32f" outBitDepth="32f" style="linear">
+        <Offset rgb="0.1 0 0" master="0" />
+        <Exposure rgb="0 0 0" master="0.1" />
+        <Contrast rgb="1 1.1 1" master="1" />
+        <Saturation master="1.1" />
+        <Pivot contrast="0.28" />
+        <Clamp black="0" white="1" />
+    </GradingPrimary>
+    <GradingPrimary inBitDepth="32f" outBitDepth="32f" style="linearRev">
+        <DynamicParameter param="PRIMARY" />
+    </GradingPrimary>
+    <GradingPrimary inBitDepth="32f" outBitDepth="16f" style="linear">
+        <Offset rgb="0.1 0 0" master="0" />
+        <Exposure rgb="0 0 0" master="0.1" />
+        <Saturation master="1.1" />
+        <Clamp white="1" />
+    </GradingPrimary>
+    <GradingPrimary inBitDepth="16f" outBitDepth="32f" style="linear">
+        <Offset rgb="0.25 -0.015625 +.03125" master="0" />
+        <Exposure rgb="-0.25 0.5 7.62939453125e-06" master="1" />
+        <Contrast rgb="0.75 0.625 1.25" master=".9e+1" />
+        <Pivot contrast="1.25" />
+        <Saturation master="1.125" />
+        <DynamicParameter param="PRIMARY" />
+    </GradingPrimary>
+</ProcessList>
+)");
+
+    // Load file.
+    std::string emptyString;
+    OCIO::LocalFileFormat tester;
+    OCIO::CachedFileRcPtr file;
+    OCIO_CHECK_NO_THROW(file = tester.read(ctfLin, emptyString, OCIO::INTERP_DEFAULT));
+    OCIO::LocalCachedFileRcPtr cachedFile = OCIO_DYNAMIC_POINTER_CAST<OCIO::LocalCachedFile>(file);
+    OCIO_REQUIRE_ASSERT(cachedFile);
+    const auto & fileOps = cachedFile->m_transform->getOps();
+
+    OCIO_REQUIRE_EQUAL(fileOps.size(), 4);
+    const auto op0 = fileOps[0];
+    const auto gradingPrimary0 = std::dynamic_pointer_cast<const OCIO::GradingPrimaryOpData>(op0);
+    OCIO_REQUIRE_ASSERT(gradingPrimary0);
+    OCIO_CHECK_EQUAL(OCIO::GRADING_LIN, gradingPrimary0->getStyle());
+    OCIO_CHECK_EQUAL(OCIO::TRANSFORM_DIR_FORWARD, gradingPrimary0->getDirection());
+    const auto vals0 = gradingPrimary0->getValue();
+    OCIO_CHECK_EQUAL(OCIO::GradingRGBM(0.1, 0., 0., 0.), vals0.m_offset);
+    OCIO_CHECK_EQUAL(OCIO::GradingRGBM(0., 0., 0., 0.1), vals0.m_exposure);
+    OCIO_CHECK_EQUAL(OCIO::GradingRGBM(1., 1.1, 1., 1.), vals0.m_contrast);
+    OCIO_CHECK_EQUAL(1.1, vals0.m_saturation);
+    OCIO_CHECK_EQUAL(0.28, vals0.m_pivot);
+    OCIO_CHECK_EQUAL(0., vals0.m_clampBlack);
+    OCIO_CHECK_EQUAL(1., vals0.m_clampWhite);
+    OCIO_CHECK_ASSERT(!gradingPrimary0->isDynamic());
+
+    const auto op1 = fileOps[1];
+    const auto gradingPrimary1 = std::dynamic_pointer_cast<const OCIO::GradingPrimaryOpData>(op1);
+    OCIO_REQUIRE_ASSERT(gradingPrimary1);
+    OCIO_CHECK_EQUAL(OCIO::GRADING_LIN, gradingPrimary1->getStyle());
+    OCIO_CHECK_EQUAL(OCIO::TRANSFORM_DIR_INVERSE, gradingPrimary1->getDirection());
+    const OCIO::GradingPrimary defLin{ OCIO::GRADING_LIN };
+    OCIO_CHECK_EQUAL(defLin, gradingPrimary1->getValue());
+    OCIO_CHECK_ASSERT(gradingPrimary1->isDynamic());
+
+    const auto op2 = fileOps[2];
+    const auto gradingPrimary2 = std::dynamic_pointer_cast<const OCIO::GradingPrimaryOpData>(op2);
+    OCIO_REQUIRE_ASSERT(gradingPrimary2);
+    OCIO_CHECK_EQUAL(OCIO::GRADING_LIN, gradingPrimary2->getStyle());
+    OCIO_CHECK_EQUAL(OCIO::TRANSFORM_DIR_FORWARD, gradingPrimary2->getDirection());
+    const auto vals2 = gradingPrimary2->getValue();
+    OCIO_CHECK_EQUAL(OCIO::GradingRGBM(0.1, 0., 0., 0.), vals0.m_offset);
+    OCIO_CHECK_EQUAL(OCIO::GradingRGBM(0., 0., 0., 0.1), vals0.m_exposure);
+    OCIO_CHECK_EQUAL(defLin.m_contrast, vals2.m_contrast);
+    OCIO_CHECK_EQUAL(1.1, vals2.m_saturation);
+    OCIO_CHECK_EQUAL(defLin.m_pivot, vals2.m_pivot);
+    OCIO_CHECK_EQUAL(defLin.m_clampBlack, vals2.m_clampBlack);
+    OCIO_CHECK_EQUAL(1., vals2.m_clampWhite);
+    OCIO_CHECK_ASSERT(!gradingPrimary2->isDynamic());
+
+    const auto op3 = fileOps[3];
+    const auto gradingPrimary3 = std::dynamic_pointer_cast<const OCIO::GradingPrimaryOpData>(op3);
+    OCIO_REQUIRE_ASSERT(gradingPrimary3);
+    OCIO_CHECK_EQUAL(OCIO::GRADING_LIN, gradingPrimary3->getStyle());
+    OCIO_CHECK_EQUAL(OCIO::TRANSFORM_DIR_FORWARD, gradingPrimary3->getDirection());
+    const auto vals3 = gradingPrimary3->getValue();
+    OCIO_CHECK_EQUAL(OCIO::GradingRGBM(0.25, -0.015625, +.03125, 0.), vals3.m_offset);
+    OCIO_CHECK_EQUAL(OCIO::GradingRGBM(-0.25, 0.5, 7.62939453125e-06, 1.), vals3.m_exposure);
+    OCIO_CHECK_EQUAL(OCIO::GradingRGBM(0.75, 0.625, 1.25, 0.9e+1), vals3.m_contrast);
+    OCIO_CHECK_EQUAL(1.125, vals3.m_saturation);
+    OCIO_CHECK_EQUAL(1.25, vals3.m_pivot);
+    OCIO_CHECK_EQUAL(defLin.m_clampBlack, vals3.m_clampBlack);
+    OCIO_CHECK_EQUAL(defLin.m_clampWhite, vals3.m_clampWhite);
+    OCIO_CHECK_ASSERT(gradingPrimary3->isDynamic());
+}
+
+OCIO_ADD_TEST(FileFormatCTF, load_grading_primary_video)
+{
+    std::istringstream ctfVideo;
+    ctfVideo.str(R"(<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList version="2" id="UIDEC42">
+    <GradingPrimary inBitDepth="32f" outBitDepth="32f" style="video">
+        <Lift rgb="0.1 0 0" master="0" />
+        <Gamma rgb="1 1 1" master="1.1" />
+        <Gain rgb="1 1.1 1" master="1" />
+        <Offset rgb="0 0.1 0" master="0" />
+        <Saturation master="1.1" />
+        <Pivot black="0.1" white="1.1" />
+        <Clamp black="0" white="1" />
+    </GradingPrimary>
+    <GradingPrimary inBitDepth="32f" outBitDepth="32f" style="videoRev">
+        <DynamicParameter param="PRIMARY" />
+    </GradingPrimary>
+    <GradingPrimary inBitDepth="32f" outBitDepth="16f" style="video">
+        <Lift rgb="0.1 0 0" master="0" />
+        <Gain rgb="1 1.1 1" master="1" />
+        <Pivot black="0.1" />
+        <Clamp white="1" />
+    </GradingPrimary>
+    <GradingPrimary inBitDepth="16f" outBitDepth="32f" style="video">
+        <Lift rgb="0.25 -.015625 .03125" master="0" />
+        <Gamma rgb=".75 .625 1.25" master=".09e2" />
+        <Gain rgb="-0.25 00.500 7.62939453125e-06" master="1" />
+        <Offset rgb="02.5 +0.5 -.125" master="1" />
+        <Pivot black="-0.25" white="12" />
+        <Saturation master="1" />
+        <Clamp black="0.5" white="1.5" />
+        <DynamicParameter param="PRIMARY" />
+    </GradingPrimary>
+</ProcessList>
+)");
+
+    // Load file.
+    std::string emptyString;
+    OCIO::LocalFileFormat tester;
+    OCIO::CachedFileRcPtr file;
+    OCIO_CHECK_NO_THROW(file = tester.read(ctfVideo, emptyString, OCIO::INTERP_DEFAULT));
+    OCIO::LocalCachedFileRcPtr cachedFile = OCIO_DYNAMIC_POINTER_CAST<OCIO::LocalCachedFile>(file);
+    OCIO_REQUIRE_ASSERT(cachedFile);
+    const auto & fileOps = cachedFile->m_transform->getOps();
+
+    OCIO_REQUIRE_EQUAL(fileOps.size(), 4);
+    const auto op0 = fileOps[0];
+    const auto gradingPrimary0 = std::dynamic_pointer_cast<const OCIO::GradingPrimaryOpData>(op0);
+    OCIO_REQUIRE_ASSERT(gradingPrimary0);
+    OCIO_CHECK_EQUAL(OCIO::GRADING_VIDEO, gradingPrimary0->getStyle());
+    OCIO_CHECK_EQUAL(OCIO::TRANSFORM_DIR_FORWARD, gradingPrimary0->getDirection());
+    const auto vals0 = gradingPrimary0->getValue();
+    OCIO_CHECK_EQUAL(OCIO::GradingRGBM(0.1, 0., 0., 0.), vals0.m_lift);
+    OCIO_CHECK_EQUAL(OCIO::GradingRGBM(1., 1., 1., 1.1), vals0.m_gamma);
+    OCIO_CHECK_EQUAL(OCIO::GradingRGBM(1., 1.1, 1., 1.), vals0.m_gain);
+    OCIO_CHECK_EQUAL(OCIO::GradingRGBM(0., 0.1, 0., 0.), vals0.m_offset);
+    OCIO_CHECK_EQUAL(1.1, vals0.m_saturation);
+    OCIO_CHECK_EQUAL(0.1, vals0.m_pivotBlack);
+    OCIO_CHECK_EQUAL(1.1, vals0.m_pivotWhite);
+    OCIO_CHECK_EQUAL(0., vals0.m_clampBlack);
+    OCIO_CHECK_EQUAL(1., vals0.m_clampWhite);
+    OCIO_CHECK_ASSERT(!gradingPrimary0->isDynamic());
+
+    const auto op1 = fileOps[1];
+    const auto gradingPrimary1 = std::dynamic_pointer_cast<const OCIO::GradingPrimaryOpData>(op1);
+    OCIO_REQUIRE_ASSERT(gradingPrimary1);
+    OCIO_CHECK_EQUAL(OCIO::GRADING_VIDEO, gradingPrimary1->getStyle());
+    OCIO_CHECK_EQUAL(OCIO::TRANSFORM_DIR_INVERSE, gradingPrimary1->getDirection());
+    const OCIO::GradingPrimary defVideo{ OCIO::GRADING_VIDEO };
+    OCIO_CHECK_EQUAL(defVideo, gradingPrimary1->getValue());
+    OCIO_CHECK_ASSERT(gradingPrimary1->isDynamic());
+
+    const auto op2 = fileOps[2];
+    const auto gradingPrimary2 = std::dynamic_pointer_cast<const OCIO::GradingPrimaryOpData>(op2);
+    OCIO_REQUIRE_ASSERT(gradingPrimary2);
+    OCIO_CHECK_EQUAL(OCIO::GRADING_VIDEO, gradingPrimary2->getStyle());
+    OCIO_CHECK_EQUAL(OCIO::TRANSFORM_DIR_FORWARD, gradingPrimary2->getDirection());
+    const auto vals2 = gradingPrimary2->getValue();
+    OCIO_CHECK_EQUAL(OCIO::GradingRGBM(0.1, 0., 0., 0.), vals2.m_lift);
+    OCIO_CHECK_EQUAL(defVideo.m_gamma, vals2.m_gamma);
+    OCIO_CHECK_EQUAL(OCIO::GradingRGBM(1., 1.1, 1., 1.), vals2.m_gain);
+    OCIO_CHECK_EQUAL(defVideo.m_offset, vals2.m_offset);
+    OCIO_CHECK_EQUAL(defVideo.m_saturation, vals2.m_saturation);
+    OCIO_CHECK_EQUAL(0.1, vals2.m_pivotBlack);
+    OCIO_CHECK_EQUAL(defVideo.m_pivotWhite, vals2.m_pivotWhite);
+    OCIO_CHECK_EQUAL(defVideo.m_clampBlack, vals2.m_clampBlack);
+    OCIO_CHECK_EQUAL(1., vals2.m_clampWhite);
+
+    const auto op3 = fileOps[3];
+    const auto gradingPrimary3 = std::dynamic_pointer_cast<const OCIO::GradingPrimaryOpData>(op3);
+    OCIO_REQUIRE_ASSERT(gradingPrimary3);
+    OCIO_CHECK_EQUAL(OCIO::GRADING_VIDEO, gradingPrimary3->getStyle());
+    OCIO_CHECK_EQUAL(OCIO::TRANSFORM_DIR_FORWARD, gradingPrimary3->getDirection());
+    const auto vals3 = gradingPrimary3->getValue();
+    OCIO_CHECK_EQUAL(OCIO::GradingRGBM(0.25, -0.015625, 0.03125, 0.), vals3.m_lift);
+    OCIO_CHECK_EQUAL(OCIO::GradingRGBM(0.75, 0.625, 1.25, 0.9e+1), vals3.m_gamma);
+    OCIO_CHECK_EQUAL(OCIO::GradingRGBM(-0.25, 0.500, 7.62939453125e-06, 1.), vals3.m_gain);
+    OCIO_CHECK_EQUAL(OCIO::GradingRGBM(02.5, +0.5, -.125, 1.), vals3.m_offset);
+    OCIO_CHECK_EQUAL(1., vals3.m_saturation);
+    OCIO_CHECK_EQUAL(-0.25, vals3.m_pivotBlack);
+    OCIO_CHECK_EQUAL(12., vals3.m_pivotWhite);
+    OCIO_CHECK_EQUAL(0.5, vals3.m_clampBlack);
+    OCIO_CHECK_EQUAL(1.5, vals3.m_clampWhite);
+    OCIO_CHECK_ASSERT(gradingPrimary3->isDynamic());
+}
+
+OCIO_ADD_TEST(FileFormatCTF, load_grading_primary_errors)
+{
+    // Wrong version.
+    OCIO_CHECK_THROW_WHAT(ParseString(R"(<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList version="1.8" id="empty">
+  <GradingPrimary inBitDepth="16f" outBitDepth="32f" style="video">
+      <DynamicParameter param="PRIMARY" />
+   </GradingPrimary>
+</ProcessList>
+)"), OCIO::Exception, "CTF file version '1.8' does not support operator 'GradingPrimary'");
+
+    // Master attribute for pivot instead of contrast.
+    OCIO_CHECK_THROW_WHAT(ParseString(R"(<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList version="2" id="empty">
+  <GradingPrimary inBitDepth="16f" outBitDepth="32f" style="video">
+      <Lift rgb="0.25 0.5 0.25" master="1" />
+      <Gamma rgb="1.0 1.0 1.0" master="1" />
+      <Gain rgb="0.25 0.5 0.25" master="1" />
+      <Offset rgb="0.25 0.5 0.25" master="1" />
+      <Saturation master="1" />
+      <Pivot master="1">
+      <DynamicParameter param="PRIMARY" />
+   </GradingPrimary>
+</ProcessList>
+)"), OCIO::Exception, "Illegal attribute for 'Pivot': 'master'");
+
+    // Brightness does not have 3 rgb values.
+    OCIO_CHECK_THROW_WHAT(ParseString(R"(<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList version="2" id="empty">
+  <GradingPrimary inBitDepth="16f" outBitDepth="32f" style="log">
+      <Brightness rgb="0.25 0.5" master="1" />
+      <Contrast rgb="0.25 0.5 0.25" master="1" />
+      <Gamma rgb="0.25 0.5 0.25" master="1" />
+      <Pivot contrast="1" />
+      <Saturation master="1" />
+      <DynamicParameter param="PRIMARY" />
+   </GradingPrimary>
+</ProcessList>
+)"), OCIO::Exception, "Illegal number of 'rgb' values for 'Brightness'");
+
+    // Gamma values should be above lower bound.
+    OCIO_CHECK_THROW_WHAT(ParseString(R"(<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList version="2" id="empty">
+  <GradingPrimary inBitDepth="16f" outBitDepth="32f" style="video">
+      <Lift rgb="0.25 0.5 0.25" master="1" />
+      <Gamma rgb="0.0 0.0 0.0" master="1" />
+      <Gain rgb="0.25 0.5 0.25" master="1" />
+      <Offset rgb="0.25 0.5 0.25" master="1" />
+      <Saturation master="1" />
+      <DynamicParameter param="PRIMARY" />
+   </GradingPrimary>
+</ProcessList>
+)"), OCIO::Exception, "GradingPrimary gamma '<r=0, g=0, b=0, m=1>' are below lower bound (0.01)");
+
+    // Brightness does not have a master value.
+    OCIO_CHECK_THROW_WHAT(ParseString(R"(<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList version="2" id="empty">
+  <GradingPrimary inBitDepth="16f" outBitDepth="32f" style="log">
+      <Brightness rgb="0.25 0.5 0.25" />
+      <Contrast rgb="0.25 0.5 0.25" master="1" />
+      <Gamma rgb="0.25 0.5 0.25" master="1" />
+      <Pivot contrast="1" />
+      <Saturation master="1" />
+      <DynamicParameter param="PRIMARY" />
+   </GradingPrimary>
+</ProcessList>
+)"), OCIO::Exception, "Missing 'master' attribute for 'Brightness'");
+
+    // Missing style attribute.
+    OCIO_CHECK_THROW_WHAT(ParseString(R"(<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList version="2" id="empty">
+   <GradingPrimary inBitDepth="16f" outBitDepth="32f">
+      <Brightness rgb="0.25 0.5 0.25" master=".1" />
+      <Contrast rgb="0.25 0.5 0.25" master="1" />
+      <Gamma rgb="0.25 0.5 0.25" master="1" />
+      <Pivot contrast="1" />
+      <Saturation master="1" />
+      <DynamicParameter param="PRIMARY" />
+   </GradingPrimary>
+</ProcessList>
+)"), OCIO::Exception, "Required attribute 'style' is missing");
+
+    // Unsupported dynamic parameter for GradingPrimary.
+    OCIO_CHECK_THROW_WHAT(ParseString(R"(<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList version="2" id="empty">
+   <GradingPrimary inBitDepth="16f" outBitDepth="32f" style="video">
+      <DynamicParameter param="CONTRAST" />
+   </GradingPrimary>
+</ProcessList>
+)"), OCIO::Exception, "Dynamic parameter 'CONTRAST' is not supported in 'GradingPrimary'");
+}
+
+OCIO_ADD_TEST(FileFormatCTF, load_grading_curves_lin)
+{
+    std::istringstream ctfLin;
+    ctfLin.str(R"(<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList version="2" id="UIDGradingCurves">
+    <GradingRGBCurve inBitDepth="32f" outBitDepth="32f" style="linear">
+        <Red>
+            <ControlPoints>
+                         -7 -6
+                          0 0
+                          7 7
+            </ControlPoints>
+        </Red>
+        <Master>
+            <ControlPoints>
+                         -7 -7
+                          0 0
+                          7 7
+                         16 10
+            </ControlPoints>
+        </Master>
+    </GradingRGBCurve>
+    <GradingRGBCurve inBitDepth="32f" outBitDepth="32f" style="linear" bypassLinToLog="true">
+        <DynamicParameter param="RGB_CURVE" />
+    </GradingRGBCurve>
+    <GradingRGBCurve inBitDepth="32f" outBitDepth="32f" style="video">
+        <Master>
+            <ControlPoints>
+                          0 0 1 1
+                        1.5 1.4
+            </ControlPoints>
+            <Slopes> 0 0.7 1.1 </Slopes>
+        </Master>
+    </GradingRGBCurve>
+</ProcessList>
+)");
+
+    // Load file.
+    std::string emptyString;
+    OCIO::LocalFileFormat tester;
+    OCIO::CachedFileRcPtr file;
+    OCIO_CHECK_NO_THROW(file = tester.read(ctfLin, emptyString, OCIO::INTERP_DEFAULT));
+    OCIO::LocalCachedFileRcPtr cachedFile = OCIO_DYNAMIC_POINTER_CAST<OCIO::LocalCachedFile>(file);
+    OCIO_REQUIRE_ASSERT(cachedFile);
+    const auto & fileOps = cachedFile->m_transform->getOps();
+
+    OCIO_REQUIRE_EQUAL(fileOps.size(), 3);
+    const auto op0 = fileOps[0];
+    const auto gradingCurves0 = std::dynamic_pointer_cast<const OCIO::GradingRGBCurveOpData>(op0);
+    OCIO_REQUIRE_ASSERT(gradingCurves0);
+    OCIO_CHECK_EQUAL(gradingCurves0->getStyle(), OCIO::GRADING_LIN);
+    OCIO_CHECK_ASSERT(!gradingCurves0->getBypassLinToLog());
+    OCIO_CHECK_ASSERT(!gradingCurves0->isDynamic());
+    auto curves = gradingCurves0->getValue();
+    OCIO_CHECK_EQUAL(curves->getCurve(OCIO::RGB_MASTER)->getNumControlPoints(), 4);
+    OCIO_CHECK_ASSERT(*curves->getCurve(OCIO::RGB_BLUE) ==
+                      OCIO::GradingRGBCurveImpl::DefaultLin);
+    OCIO_CHECK_ASSERT(*curves->getCurve(OCIO::RGB_RED) !=
+                      OCIO::GradingRGBCurveImpl::DefaultLin);
+
+    const auto op1 = fileOps[1];
+    const auto gradingCurves1 = std::dynamic_pointer_cast<const OCIO::GradingRGBCurveOpData>(op1);
+    OCIO_REQUIRE_ASSERT(gradingCurves1);
+    OCIO_CHECK_EQUAL(gradingCurves1->getStyle(), OCIO::GRADING_LIN);
+    OCIO_CHECK_ASSERT(gradingCurves1->getBypassLinToLog());
+    OCIO_CHECK_ASSERT(gradingCurves1->isDynamic());
+    curves = gradingCurves1->getValue();
+    OCIO_CHECK_ASSERT(*curves->getCurve(OCIO::RGB_RED) ==
+                      OCIO::GradingRGBCurveImpl::DefaultLin);
+    OCIO_CHECK_ASSERT(curves->getCurve(OCIO::RGB_RED)->slopesAreDefault());
+
+    const auto op2 = fileOps[2];
+    const auto gradingCurves2 = std::dynamic_pointer_cast<const OCIO::GradingRGBCurveOpData>(op2);
+    OCIO_REQUIRE_ASSERT(gradingCurves2);
+    OCIO_CHECK_EQUAL(gradingCurves2->getStyle(), OCIO::GRADING_VIDEO);
+    OCIO_CHECK_ASSERT(!gradingCurves2->getBypassLinToLog());
+    OCIO_CHECK_ASSERT(!gradingCurves2->isDynamic());
+    curves = gradingCurves2->getValue();
+    auto master = curves->getCurve(OCIO::RGB_MASTER);
+    OCIO_REQUIRE_EQUAL(master->getNumControlPoints(), 3);
+    OCIO_CHECK_EQUAL(master->getControlPoint(0), OCIO::GradingControlPoint(0.f, 0.f));
+    OCIO_CHECK_EQUAL(master->getControlPoint(1), OCIO::GradingControlPoint(1.f, 1.f));
+    OCIO_CHECK_EQUAL(master->getControlPoint(2), OCIO::GradingControlPoint(1.5f, 1.4f));
+    OCIO_CHECK_ASSERT(!master->slopesAreDefault());
+    OCIO_CHECK_EQUAL(master->getSlope(0), 0.0f);
+    OCIO_CHECK_EQUAL(master->getSlope(1), 0.7f);
+    OCIO_CHECK_EQUAL(master->getSlope(2), 1.1f);
+}
+
+OCIO_ADD_TEST(FileFormatCTF, load_grading_curves_log)
+{
+    std::istringstream ctfLog;
+    ctfLog.str(R"(<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList version="2" id="empty">
+   <GradingRGBCurve inBitDepth="16f" outBitDepth="32f" style="logRev">
+      <Red>
+         <ControlPoints>
+            0.015625 0
+            0.5 0.5
+            2 2
+         </ControlPoints>
+      </Red>
+      <Green>
+         <ControlPoints>
+            0.015625 1
+            2.5 0.5
+            3.5 1.5
+         </ControlPoints>
+      </Green>
+      <Blue>
+         <ControlPoints>
+            -4 -4
+            4.5 0.5
+            5 3
+         </ControlPoints>
+      </Blue>
+      <Master>
+         <ControlPoints>
+            11 11 12.5 10.5 13.5 0.5 26.5 -1.5
+         </ControlPoints>
+      </Master>
+      <DynamicParameter param="RGB_CURVE" />
+   </GradingRGBCurve>
+</ProcessList>)");
+
+    // Load file.
+    std::string emptyString;
+    OCIO::LocalFileFormat tester;
+    OCIO::CachedFileRcPtr file;
+    OCIO_CHECK_NO_THROW(file = tester.read(ctfLog, emptyString, OCIO::INTERP_DEFAULT));
+    OCIO::LocalCachedFileRcPtr cachedFile = OCIO_DYNAMIC_POINTER_CAST<OCIO::LocalCachedFile>(file);
+    OCIO_REQUIRE_ASSERT(cachedFile);
+    const auto & fileOps = cachedFile->m_transform->getOps();
+
+    OCIO_REQUIRE_EQUAL(fileOps.size(), 1);
+    const auto op0 = fileOps[0];
+    const auto gradingCurves0 = std::dynamic_pointer_cast<const OCIO::GradingRGBCurveOpData>(op0);
+    OCIO_REQUIRE_ASSERT(gradingCurves0);
+    OCIO_CHECK_EQUAL(gradingCurves0->getStyle(), OCIO::GRADING_LOG);
+    OCIO_CHECK_EQUAL(gradingCurves0->getDirection(), OCIO::TRANSFORM_DIR_INVERSE);
+    OCIO_CHECK_ASSERT(!gradingCurves0->getBypassLinToLog());
+    OCIO_CHECK_ASSERT(gradingCurves0->isDynamic());
+    auto curves = gradingCurves0->getValue();
+    auto red = curves->getCurve(OCIO::RGB_RED);
+    OCIO_CHECK_EQUAL(red->getNumControlPoints(), 3);
+    OCIO_CHECK_EQUAL(red->getControlPoint(0).m_x, 0.015625f);
+    OCIO_CHECK_EQUAL(red->getControlPoint(0).m_y, 0.0f);
+    OCIO_CHECK_EQUAL(red->getControlPoint(1).m_x, 0.5f);
+    OCIO_CHECK_EQUAL(red->getControlPoint(1).m_y, 0.5f);
+    OCIO_CHECK_EQUAL(red->getControlPoint(2).m_x, 2.0f);
+    OCIO_CHECK_EQUAL(red->getControlPoint(2).m_y, 2.0f);
+
+    auto master = curves->getCurve(OCIO::RGB_MASTER);
+    OCIO_CHECK_EQUAL(master->getNumControlPoints(), 4);
+    OCIO_CHECK_EQUAL(master->getControlPoint(0).m_x, 11.0f);
+    OCIO_CHECK_EQUAL(master->getControlPoint(0).m_y, 11.0f);
+    OCIO_CHECK_EQUAL(master->getControlPoint(1).m_x, 12.5f);
+    OCIO_CHECK_EQUAL(master->getControlPoint(1).m_y, 10.5f);
+    OCIO_CHECK_EQUAL(master->getControlPoint(2).m_x, 13.5f);
+    OCIO_CHECK_EQUAL(master->getControlPoint(2).m_y,  0.5f);
+    OCIO_CHECK_EQUAL(master->getControlPoint(3).m_x, 26.5f);
+    OCIO_CHECK_EQUAL(master->getControlPoint(3).m_y, -1.5f);
+}
+
+OCIO_ADD_TEST(FileFormatCTF, load_grading_curves_errors)
+{
+    // Wrong version.
+    OCIO_CHECK_THROW_WHAT(ParseString(R"(<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList version="1.8" id="empty">
+  <GradingRGBCurve inBitDepth="16f" outBitDepth="32f" style="video">
+      <DynamicParameter param="RGB_CURVE" />
+   </GradingRGBCurve>
+</ProcessList>
+)"), OCIO::Exception, "CTF file version '1.8' does not support operator 'GradingRGBCurve'");
+
+    // Missing style attribute.
+    OCIO_CHECK_THROW_WHAT(ParseString(R"(<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList version="2" id="empty">
+  <GradingRGBCurve inBitDepth="16f" outBitDepth="32f">
+      <DynamicParameter param="RGB_CURVE" />
+   </GradingRGBCurve>
+</ProcessList>
+)"), OCIO::Exception, "Required attribute 'style' is missing");
+
+    // Wrong dynamic property param.
+    OCIO_CHECK_THROW_WHAT(ParseString(R"(<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList version="2" id="empty">
+  <GradingRGBCurve inBitDepth="16f" outBitDepth="32f">
+      <DynamicParameter param="PRIMARY" />
+   </GradingRGBCurve>
+</ProcessList>
+)"), OCIO::Exception, "Required attribute 'style' is missing");
+
+    // Odd number of values for control points.
+    OCIO_CHECK_THROW_WHAT(ParseString(R"(<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList version="2" id="empty">
+    <GradingRGBCurve inBitDepth="32f" outBitDepth="32f" style="linear">
+        <Red>
+            <ControlPoints>
+                         -7 -6 0 0 7
+            </ControlPoints>
+        </Red>
+    </GradingRGBCurve>
+</ProcessList>
+)"), OCIO::Exception, "Control points element: odd number of values");
+
+    // Not enough control points.
+    OCIO_CHECK_THROW_WHAT(ParseString(R"(<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList version="2" id="empty">
+    <GradingRGBCurve inBitDepth="32f" outBitDepth="32f" style="linear">
+        <Red>
+            <ControlPoints>
+                         0 1
+            </ControlPoints>
+        </Red>
+    </GradingRGBCurve>
+</ProcessList>
+)"), OCIO::Exception, "There must be at least 2 control points");
+
+    // Control points don't have increasing x.
+    OCIO_CHECK_THROW_WHAT(ParseString(R"(<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList version="2" id="empty">
+    <GradingRGBCurve inBitDepth="32f" outBitDepth="32f" style="linear">
+        <Red>
+            <ControlPoints>
+                 -7 -6 0 0 -1 7
+            </ControlPoints>
+        </Red>
+    </GradingRGBCurve>
+</ProcessList>
+)"), OCIO::Exception, "Control point at index 2 has a x coordinate '-1' that is less from "
+                      "previous control point x cooordinate '0'");
+
+    // Number of slopes matches control points.
+    OCIO_CHECK_THROW_WHAT(ParseString(R"(<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList version="2" id="empty">
+    <GradingRGBCurve inBitDepth="32f" outBitDepth="32f" style="linear">
+        <Red>
+            <ControlPoints>
+                 -7 -6 0 0 1 7
+            </ControlPoints>
+            <Slopes> 1 1 1 1 </Slopes>
+        </Red>
+    </GradingRGBCurve>
+</ProcessList>
+)"), OCIO::Exception, "Number of slopes must match number of control points");
+
+    // Wrong curve: warning is logged.
+    OCIO::LogGuard guard;
+    OCIO::SetLoggingLevel(OCIO::LOGGING_LEVEL_WARNING);
+
+    OCIO_CHECK_NO_THROW(ParseString(R"(<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList version="2" id="empty">
+    <GradingRGBCurve inBitDepth="32f" outBitDepth="32f" style="linear">
+        <Grn>
+            <ControlPoints>
+                         0 1 1 2 2 3
+            </ControlPoints>
+        </Grn>
+    </GradingRGBCurve>
+</ProcessList>
+)"));
+
+    const StringUtils::StringVec parts = StringUtils::SplitByLines(StringUtils::RightTrim(guard.output()));
+    OCIO_REQUIRE_EQUAL(parts.size(), 2);
+    OCIO_CHECK_NE(std::string::npos, StringUtils::Find(parts[0], "Unrecognized element 'Grn'"));
+    OCIO_CHECK_NE(std::string::npos, StringUtils::Find(parts[1], "Unrecognized element 'ControlPoints'"));
+
+}
+
+OCIO_ADD_TEST(CTFTransform, load_grading_tone)
+{
+    std::istringstream ctfLog;
+    ctfLog.str(R"(<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList version="2" id="UIDEC42">
+    <GradingTone inBitDepth="32f" outBitDepth="32f" style="log">
+        <Blacks rgb="1.1 1 1" master="1" start="0" width="0.98765432198" />
+        <Shadows rgb="1 1.1 1" master="1" start="1" pivot="0" />
+        <Midtones rgb="1 1 1" master="1.1" center="0" width="1" />
+        <Highlights rgb="1 1 1" master="1.1" start="0" pivot="1" />
+        <Whites rgb="1 1 1.1" master="1" start="0" width="1" />
+        <SContrast master="1.1" />
+    </GradingTone>
+    <GradingTone inBitDepth="32f" outBitDepth="32f" style="logRev">
+        <DynamicParameter param="TONE" />
+    </GradingTone>
+    <GradingTone inBitDepth="32f" outBitDepth="32f" style="linear">
+        <Blacks rgb="1.1 1 1" master="1" start="0" width="1" />
+        <Shadows rgb="1 1.1 1" master="1" start="1" pivot="0" />
+        <Whites rgb="1 1 1.1" master="1" start="0" width="1" />
+        <SContrast master="1.1" />
+        <DynamicParameter param="TONE" />
+    </GradingTone>
+    <GradingTone inBitDepth="32f" outBitDepth="32f" style="linearRev">
+        <SContrast master="1.12345678912" />
+    </GradingTone>
+    <GradingTone inBitDepth="32f" outBitDepth="32f" style="video" />
+    <GradingTone inBitDepth="32f" outBitDepth="32f" style="videoRev">
+        <Shadows rgb="1 1 1.12345678912" master="1" start="0.6" pivot="0" />
+    </GradingTone>
+</ProcessList>
+)");
+
+    // Load file.
+    std::string emptyString;
+    OCIO::LocalFileFormat tester;
+    OCIO::CachedFileRcPtr file;
+    OCIO_CHECK_NO_THROW(file = tester.read(ctfLog, emptyString, OCIO::INTERP_DEFAULT));
+    OCIO::LocalCachedFileRcPtr cachedFile = OCIO_DYNAMIC_POINTER_CAST<OCIO::LocalCachedFile>(file);
+    OCIO_REQUIRE_ASSERT(cachedFile);
+    const auto & fileOps = cachedFile->m_transform->getOps();
+
+    OCIO_REQUIRE_EQUAL(fileOps.size(), 6);
+
+    const auto op0 = fileOps[0];
+    const auto gradingTone0 = std::dynamic_pointer_cast<const OCIO::GradingToneOpData>(op0);
+    OCIO_REQUIRE_ASSERT(gradingTone0);
+    OCIO_CHECK_EQUAL(OCIO::GRADING_LOG, gradingTone0->getStyle());
+    OCIO_CHECK_EQUAL(OCIO::TRANSFORM_DIR_FORWARD, gradingTone0->getDirection());
+    const auto vals0 = gradingTone0->getValue();
+    OCIO_CHECK_EQUAL(OCIO::GradingRGBMSW(1.1, 1., 1., 1., 0., 0.98765432198), vals0.m_blacks);
+    OCIO_CHECK_EQUAL(OCIO::GradingRGBMSW(1., 1.1, 1., 1., 1., 0.), vals0.m_shadows);
+    OCIO_CHECK_EQUAL(OCIO::GradingRGBMSW(1., 1., 1., 1.1, 0., 1.), vals0.m_midtones);
+    OCIO_CHECK_EQUAL(OCIO::GradingRGBMSW(1., 1., 1., 1.1, 0., 1.), vals0.m_highlights);
+    OCIO_CHECK_EQUAL(OCIO::GradingRGBMSW(1., 1., 1.1, 1., 0., 1.), vals0.m_whites);
+    OCIO_CHECK_EQUAL(1.1, vals0.m_scontrast);
+    OCIO_CHECK_ASSERT(!gradingTone0->isDynamic());
+
+    const auto op1 = fileOps[1];
+    const auto gradingTone1 = std::dynamic_pointer_cast<const OCIO::GradingToneOpData>(op1);
+    OCIO_REQUIRE_ASSERT(gradingTone1);
+    OCIO_CHECK_EQUAL(OCIO::GRADING_LOG, gradingTone1->getStyle());
+    OCIO_CHECK_EQUAL(OCIO::TRANSFORM_DIR_INVERSE, gradingTone1->getDirection());
+    const auto vals1 = gradingTone1->getValue();
+    const auto defValsLog = OCIO::GradingTone(gradingTone1->getStyle());
+    OCIO_CHECK_EQUAL(defValsLog, vals1);
+    OCIO_CHECK_ASSERT(gradingTone1->isDynamic());
+
+    const auto op2 = fileOps[2];
+    const auto gradingTone2 = std::dynamic_pointer_cast<const OCIO::GradingToneOpData>(op2);
+    OCIO_REQUIRE_ASSERT(gradingTone2);
+    OCIO_CHECK_EQUAL(OCIO::GRADING_LIN, gradingTone2->getStyle());
+    OCIO_CHECK_EQUAL(OCIO::TRANSFORM_DIR_FORWARD, gradingTone2->getDirection());
+    const auto vals2 = gradingTone2->getValue();
+    OCIO_CHECK_EQUAL(OCIO::GradingRGBMSW(1.1, 1., 1., 1., 0., 1.), vals2.m_blacks);
+    OCIO_CHECK_EQUAL(OCIO::GradingRGBMSW(1., 1.1, 1., 1., 1., 0.), vals2.m_shadows);
+    const auto defValsLin = OCIO::GradingTone(gradingTone2->getStyle());
+    OCIO_CHECK_EQUAL(defValsLin.m_midtones, vals2.m_midtones);
+    OCIO_CHECK_EQUAL(defValsLin.m_highlights, vals2.m_highlights);
+    OCIO_CHECK_EQUAL(OCIO::GradingRGBMSW(1., 1., 1.1, 1., 0., 1.), vals2.m_whites);
+    OCIO_CHECK_EQUAL(1.1, vals2.m_scontrast);
+    OCIO_CHECK_ASSERT(gradingTone2->isDynamic());
+
+    const auto op3 = fileOps[3];
+    const auto gradingTone3 = std::dynamic_pointer_cast<const OCIO::GradingToneOpData>(op3);
+    OCIO_REQUIRE_ASSERT(gradingTone3);
+    OCIO_CHECK_EQUAL(OCIO::GRADING_LIN, gradingTone3->getStyle());
+    OCIO_CHECK_EQUAL(OCIO::TRANSFORM_DIR_INVERSE, gradingTone3->getDirection());
+    const auto vals3 = gradingTone3->getValue();
+    OCIO::GradingTone expected3(gradingTone3->getStyle());
+    expected3.m_scontrast = 1.12345678912;
+    OCIO_CHECK_EQUAL(expected3, vals3);
+    OCIO_CHECK_ASSERT(!gradingTone3->isDynamic());
+
+    const auto op4 = fileOps[4];
+    const auto gradingTone4 = std::dynamic_pointer_cast<const OCIO::GradingToneOpData>(op4);
+    OCIO_REQUIRE_ASSERT(gradingTone4);
+    OCIO_CHECK_EQUAL(OCIO::GRADING_VIDEO, gradingTone4->getStyle());
+    OCIO_CHECK_EQUAL(OCIO::TRANSFORM_DIR_FORWARD, gradingTone4->getDirection());
+    const auto vals4 = gradingTone4->getValue();
+    OCIO::GradingTone expected4(gradingTone4->getStyle());
+    OCIO_CHECK_EQUAL(expected4, vals4);
+    OCIO_CHECK_ASSERT(!gradingTone4->isDynamic());
+
+    const auto op5 = fileOps[5];
+    const auto gradingTone5 = std::dynamic_pointer_cast<const OCIO::GradingToneOpData>(op5);
+    OCIO_REQUIRE_ASSERT(gradingTone5);
+    OCIO_CHECK_EQUAL(OCIO::GRADING_VIDEO, gradingTone5->getStyle());
+    OCIO_CHECK_EQUAL(OCIO::TRANSFORM_DIR_INVERSE, gradingTone5->getDirection());
+    const auto vals5 = gradingTone5->getValue();
+    OCIO::GradingTone expected5(gradingTone5->getStyle());
+    expected5.m_shadows.m_blue = 1.12345678912;
+    OCIO_CHECK_EQUAL(expected5, vals5);
+    OCIO_CHECK_ASSERT(!gradingTone5->isDynamic());
+}
+
+OCIO_ADD_TEST(CTFTransform, load_grading_tone_errors)
+{
+    // TODO
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 // WRITER TESTS
@@ -3854,7 +4660,9 @@ OCIO_ADD_TEST(CTFTransform, load_edit_save_matrix)
     group->getFormatMetadata().addAttribute(OCIO::ATTR_INVERSE_OF, "added inverseOf");
     group->getFormatMetadata().addAttribute("Unknown", "not saved");
     group->getFormatMetadata().addChildElement("Unknown", "not saved");
-    auto & info = group->getFormatMetadata().addChildElement(OCIO::METADATA_INFO, "Preserved");
+    group->getFormatMetadata().addChildElement(OCIO::METADATA_INFO, "Preserved");
+    const auto indexInfo = group->getFormatMetadata().getNumChildrenElements() - 1;
+    auto & info = group->getFormatMetadata().getChildElement(indexInfo);
     info.addAttribute("attrib", "value");
     info.addChildElement("Child", "Preserved");
 
@@ -3867,24 +4675,19 @@ OCIO_ADD_TEST(CTFTransform, load_edit_save_matrix)
     const std::string shortName{ R"(A ' short ' " name)" };
     const std::string description1{ R"(A " short " description with a ' inside)" };
     const std::string description2{ R"(<test"'&>)" };
-    auto & desc = matTrans->getFormatMetadata().addChildElement(OCIO::METADATA_DESCRIPTION, description1.c_str());
+    matTrans->getFormatMetadata().addChildElement(OCIO::METADATA_DESCRIPTION, description1.c_str());
+    const auto indexDesc = matTrans->getFormatMetadata().getNumChildrenElements() - 1;
+    auto & desc = matTrans->getFormatMetadata().getChildElement(indexDesc);
     desc.addAttribute("Unknown", "not saved");
     matTrans->getFormatMetadata().addChildElement(OCIO::METADATA_DESCRIPTION, description2.c_str());
 
-    matTrans->getFormatMetadata().addAttribute(OCIO::METADATA_NAME, shortName.c_str());
+    matTrans->getFormatMetadata().setName(shortName.c_str());
 
     const double offset[] = { 0.1, 1.2, 2.3456789123456, 0.0 };
     matTrans->setOffset(offset);
 
-    // Create empty Config to use.
-    OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
-
-    // Get the processor corresponding to the transform.
-    OCIO::ConstProcessorRcPtr processorGroup = config->getProcessor(group);
-
     std::ostringstream outputTransform;
-    OCIO_CHECK_NO_THROW(processorGroup->write(OCIO::FILEFORMAT_CTF, outputTransform));
+    OCIO_CHECK_NO_THROW(WriteGroupCTF(group, outputTransform));
 
     // Output matrix array as '3 4 3'.
     const std::string expectedCTF{ R"(<?xml version="1.0" encoding="UTF-8"?>
@@ -3919,7 +4722,7 @@ OCIO_ADD_TEST(CTFTransform, load_edit_save_matrix)
 
     std::string emptyString;
     OCIO::LocalFileFormat tester;
-    OCIO::CachedFileRcPtr file = tester.read(inputTransform, emptyString);
+    OCIO::CachedFileRcPtr file = tester.read(inputTransform, emptyString, OCIO::INTERP_DEFAULT);
     OCIO::LocalCachedFileRcPtr cachedFile = OCIO::DynamicPtrCast<OCIO::LocalCachedFile>(file);
 
     const OCIO::ConstOpDataVec & fileOps = cachedFile->m_transform->getOps();
@@ -3934,36 +4737,32 @@ OCIO_ADD_TEST(CTFTransform, load_edit_save_matrix)
     OCIO_CHECK_EQUAL(shortName, md.getAttributeValue(1));
     OCIO_REQUIRE_EQUAL(md.getNumChildrenElements(), 4);
     const auto & desc0 = md.getChildElement(0);
-    OCIO_CHECK_EQUAL(std::string(OCIO::METADATA_DESCRIPTION), desc0.getName());
-    OCIO_CHECK_EQUAL(std::string(R"(Legacy matrix)"), desc0.getValue());
+    OCIO_CHECK_EQUAL(std::string(OCIO::METADATA_DESCRIPTION), desc0.getElementName());
+    OCIO_CHECK_EQUAL(std::string(R"(Legacy matrix)"), desc0.getElementValue());
     const auto & desc1 = md.getChildElement(2);
-    OCIO_CHECK_EQUAL(std::string(OCIO::METADATA_DESCRIPTION), desc1.getName());
-    OCIO_CHECK_EQUAL(description1, desc1.getValue());
+    OCIO_CHECK_EQUAL(std::string(OCIO::METADATA_DESCRIPTION), desc1.getElementName());
+    OCIO_CHECK_EQUAL(description1, desc1.getElementValue());
     const auto & desc2 = md.getChildElement(3);
-    OCIO_CHECK_EQUAL(std::string(OCIO::METADATA_DESCRIPTION), desc2.getName());
-    OCIO_CHECK_EQUAL(description2, desc2.getValue());
+    OCIO_CHECK_EQUAL(std::string(OCIO::METADATA_DESCRIPTION), desc2.getElementName());
+    OCIO_CHECK_EQUAL(description2, desc2.getElementValue());
 }
 
 namespace
 {
 OCIO::LocalCachedFileRcPtr WriteRead(OCIO::TransformRcPtr transform)
 {
-    // Create empty Config to use.
-    OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
-
-    // Get the processor corresponding to the transform.
-    OCIO::ConstProcessorRcPtr processor = config->getProcessor(transform);
+    auto group = OCIO::GroupTransform::Create();
+    group->appendTransform(transform);
 
     std::ostringstream outputTransform;
-    processor->write(OCIO::FILEFORMAT_CTF, outputTransform);
+    WriteGroupCTF(group, outputTransform);
 
     std::istringstream inputTransform;
     inputTransform.str(outputTransform.str());
 
     std::string emptyString;
     OCIO::LocalFileFormat tester;
-    OCIO::CachedFileRcPtr file = tester.read(inputTransform, emptyString);
+    OCIO::CachedFileRcPtr file = tester.read(inputTransform, emptyString, OCIO::INTERP_DEFAULT);
     return OCIO::DynamicPtrCast<OCIO::LocalCachedFile>(file);
 }
 }
@@ -4018,14 +4817,22 @@ OCIO_ADD_TEST(CTFTransform, save_cdl)
     OCIO_CHECK_EQUAL(cdl->getID(), "test-cdl-1");
     const auto & metadata = cdl->getFormatMetadata();
     OCIO_REQUIRE_EQUAL(metadata.getNumChildrenElements(), 8);
-    OCIO_CHECK_EQUAL(std::string(OCIO::METADATA_DESCRIPTION), metadata.getChildElement(0).getName());
-    OCIO_CHECK_EQUAL(std::string(OCIO::METADATA_DESCRIPTION), metadata.getChildElement(1).getName());
-    OCIO_CHECK_EQUAL(std::string(OCIO::METADATA_INPUT_DESCRIPTION), metadata.getChildElement(2).getName());
-    OCIO_CHECK_EQUAL(std::string(OCIO::METADATA_VIEWING_DESCRIPTION), metadata.getChildElement(3).getName());
-    OCIO_CHECK_EQUAL(std::string(OCIO::METADATA_SOP_DESCRIPTION), metadata.getChildElement(4).getName());
-    OCIO_CHECK_EQUAL(std::string(OCIO::METADATA_SOP_DESCRIPTION), metadata.getChildElement(5).getName());
-    OCIO_CHECK_EQUAL(std::string(OCIO::METADATA_SAT_DESCRIPTION), metadata.getChildElement(6).getName());
-    OCIO_CHECK_EQUAL(std::string(OCIO::METADATA_SAT_DESCRIPTION), metadata.getChildElement(7).getName());
+    OCIO_CHECK_EQUAL(std::string(OCIO::METADATA_DESCRIPTION),
+                     metadata.getChildElement(0).getElementName());
+    OCIO_CHECK_EQUAL(std::string(OCIO::METADATA_DESCRIPTION),
+                     metadata.getChildElement(1).getElementName());
+    OCIO_CHECK_EQUAL(std::string(OCIO::METADATA_INPUT_DESCRIPTION),
+                     metadata.getChildElement(2).getElementName());
+    OCIO_CHECK_EQUAL(std::string(OCIO::METADATA_VIEWING_DESCRIPTION),
+                     metadata.getChildElement(3).getElementName());
+    OCIO_CHECK_EQUAL(std::string(OCIO::METADATA_SOP_DESCRIPTION),
+                     metadata.getChildElement(4).getElementName());
+    OCIO_CHECK_EQUAL(std::string(OCIO::METADATA_SOP_DESCRIPTION),
+                     metadata.getChildElement(5).getElementName());
+    OCIO_CHECK_EQUAL(std::string(OCIO::METADATA_SAT_DESCRIPTION),
+                     metadata.getChildElement(6).getElementName());
+    OCIO_CHECK_EQUAL(std::string(OCIO::METADATA_SAT_DESCRIPTION),
+                     metadata.getChildElement(7).getElementName());
     auto params = cdl->getSlopeParams();
     OCIO_CHECK_EQUAL(params[0], slope[0]);
     OCIO_CHECK_EQUAL(params[1], slope[1]);
@@ -4088,13 +4895,12 @@ OCIO_ADD_TEST(CTFTransform, save_log_affine)
 
 OCIO_ADD_TEST(CTFTransform, save_log_camera)
 {
-    OCIO::LogCameraTransformRcPtr logT = OCIO::LogCameraTransform::Create();
+    const double vals_break[] = { 0.4, 0.5, 0.6 };
+    OCIO::LogCameraTransformRcPtr logT = OCIO::LogCameraTransform::Create(vals_break);
     const double base = 8.0;
     logT->setBase(base);
     const double vals[] = { 0.9, 1.1, 1.2 };
     logT->setLinSideSlopeValue(vals);
-    const double vals_break[] = { 0.4, 0.5, 0.6 };
-    logT->setLinSideBreakValue(vals_break);
     const double vals_ls[] = { 1.2, 1.3, 1.4 };
     logT->setLinearSlopeValue(vals_ls);
 
@@ -4120,42 +4926,45 @@ OCIO_ADD_TEST(CTFTransform, save_lut_1d_1component)
 {
     const std::string ctfFile("clf/lut1d_32f_example.clf");
     OCIO::ConstProcessorRcPtr proc = OCIO::GetFileTransformProcessor(ctfFile);
+    auto group = proc->createGroupTransform();
 
     std::ostringstream outputTransform;
-    proc->write(OCIO::FILEFORMAT_CTF, outputTransform);
+    WriteGroupCTF(group, outputTransform);
 
     const std::string result = outputTransform.str();
-    const std::string expected = "<Array dim = \"4 1\">";
-    OCIO_CHECK_ASSERT(result.find(expected));
+    const std::string expected = "<Array dim=\"4 1\">";
+    OCIO_CHECK_ASSERT(result.find(expected) != std::string::npos);
 }
 
 OCIO_ADD_TEST(CTFTransform, save_lut_1d_3components)
 {
     const std::string ctfFile("lut1d_green.ctf");
     OCIO::ConstProcessorRcPtr proc = OCIO::GetFileTransformProcessor(ctfFile);
+    auto group = proc->createGroupTransform();
 
     std::ostringstream outputTransform;
-    proc->write(OCIO::FILEFORMAT_CTF, outputTransform);
+    WriteGroupCTF(group, outputTransform);
 
     const std::string result = outputTransform.str();
-    const std::string expected = "<Array dim = \"32 3\">";
-    OCIO_CHECK_ASSERT(result.find(expected));
+    const std::string expected = "<Array dim=\"32 3\">";
+    OCIO_CHECK_ASSERT(result.find(expected) != std::string::npos);
 }
 
 OCIO_ADD_TEST(CTFTransform, save_invlut_1d_3components)
 {
     const std::string ctfFile("lut1d_inv.ctf");
     OCIO::ConstProcessorRcPtr proc = OCIO::GetFileTransformProcessor(ctfFile);
+    auto group = proc->createGroupTransform();
 
     std::ostringstream outputTransform;
-    proc->write(OCIO::FILEFORMAT_CTF, outputTransform);
+    WriteGroupCTF(group, outputTransform);
 
     const std::string result = outputTransform.str();
     const std::string expected1 = "</InverseLUT1D>";
-    OCIO_CHECK_ASSERT(result.find(expected1));
+    OCIO_CHECK_ASSERT(result.find(expected1) != std::string::npos);
     // Components are equal, so only 1 get saved.
-    const std::string expected2 = "<Array dim = \"17 1\">";
-    OCIO_CHECK_ASSERT(result.find(expected2));
+    const std::string expected2 = "<Array dim=\"17 1\">";
+    OCIO_CHECK_ASSERT(result.find(expected2) != std::string::npos);
 }
 
 OCIO_ADD_TEST(CTFTransform, save_lut1d_halfdomain)
@@ -4286,6 +5095,66 @@ OCIO_ADD_TEST(CTFTransform, save_lut1d_f32)
     OCIO_CHECK_EQUAL(lut->getArray()[21], values[7]);
 }
 
+OCIO_ADD_TEST(CTFTransform, save_lut1d_interpolation)
+{
+    OCIO::ConfigRcPtr config = OCIO::Config::Create();
+    config->setMajorVersion(2);
+
+    OCIO::Lut1DTransformRcPtr lut = OCIO::Lut1DTransform::Create();
+    lut->setInterpolation(OCIO::INTERP_DEFAULT);
+
+    OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
+    group->appendTransform(lut);
+
+    std::ostringstream outputTransform;
+    OCIO_CHECK_NO_THROW(WriteGroupCLF(group, outputTransform));
+
+    {
+        const std::string result = outputTransform.str();
+        const std::string expected = R"(<LUT1D inBitDepth="32f" outBitDepth="32f">)";
+        OCIO_CHECK_ASSERT(result.find(expected) != std::string::npos);
+    }
+
+    outputTransform.str("");
+    outputTransform.clear();
+    group = OCIO::GroupTransform::Create();
+
+    lut->setInterpolation(OCIO::INTERP_BEST);
+
+    group->appendTransform(lut);
+    OCIO_CHECK_NO_THROW(WriteGroupCLF(group, outputTransform));
+
+    {
+        const std::string result = outputTransform.str();
+        const std::string expected = R"(<LUT1D inBitDepth="32f" outBitDepth="32f" interpolation="linear">)";
+        OCIO_CHECK_ASSERT(result.find(expected) != std::string::npos);
+    }
+
+    outputTransform.str("");
+    outputTransform.clear();
+    group = OCIO::GroupTransform::Create();
+
+    lut->setInterpolation(OCIO::INTERP_LINEAR);
+
+    group->appendTransform(lut);
+    OCIO_CHECK_NO_THROW(WriteGroupCLF(group, outputTransform));
+
+    {
+        const std::string result = outputTransform.str();
+        const std::string expected = R"(<LUT1D inBitDepth="32f" outBitDepth="32f" interpolation="linear">)";
+        OCIO_CHECK_ASSERT(result.find(expected) != std::string::npos);
+    }
+
+    outputTransform.str("");
+    outputTransform.clear();
+    group = OCIO::GroupTransform::Create();
+
+    lut->setInterpolation(OCIO::INTERP_CUBIC);
+    group->appendTransform(lut);
+    OCIO_CHECK_THROW_WHAT(WriteGroupCLF(group, outputTransform), OCIO::Exception,
+                          "1D LUT does not support interpolation algorithm: cubic");
+}
+
 OCIO_ADD_TEST(CTFTransform, save_invalid_lut_1d)
 {
     OCIO::Lut1DTransformRcPtr lutT = OCIO::Lut1DTransform::Create();
@@ -4302,13 +5171,14 @@ OCIO_ADD_TEST(CTFTransform, save_lut_3d)
 {
     const std::string ctfFile("clf/lut3d_identity_12i_16f.clf");
     OCIO::ConstProcessorRcPtr proc = OCIO::GetFileTransformProcessor(ctfFile);
+    auto group = proc->createGroupTransform();
 
     std::ostringstream outputTransform;
-    proc->write(OCIO::FILEFORMAT_CTF, outputTransform);
+    WriteGroupCTF(group, outputTransform);
 
     const std::string result = outputTransform.str();
     const std::string expected = "<Array dim=\"2 2 2 3\">";
-    OCIO_CHECK_ASSERT(result.find(expected));
+    OCIO_CHECK_ASSERT(result.find(expected) != std::string::npos);
 }
 
 OCIO_ADD_TEST(CTFTransform, save_range)
@@ -4368,12 +5238,10 @@ OCIO_ADD_TEST(CTFTransform, load_save_matrix)
     OCIO::ConstProcessorRcPtr processor;
     OCIO_CHECK_NO_THROW(processor = OCIO::GetFileTransformProcessor(ctfFile));
     OCIO_REQUIRE_ASSERT(processor);
-
-    // Create empty Config to use.
-    OCIO::ConfigRcPtr config = OCIO::Config::Create();
+    auto group = processor->createGroupTransform();
 
     std::ostringstream outputTransform;
-    OCIO_CHECK_NO_THROW(processor->write(OCIO::FILEFORMAT_CTF, outputTransform));
+    OCIO_CHECK_NO_THROW(WriteGroupCTF(group, outputTransform));
 
     // Output matrix array as '3 3 3'.
     const std::string expected{ R"(<?xml version="1.0" encoding="UTF-8"?>
@@ -4400,7 +5268,6 @@ OCIO_ADD_TEST(CTFTransform, load_save_matrix)
 OCIO_ADD_TEST(CTFTransform, save_matrix_444)
 {
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
 
     OCIO::MatrixTransformRcPtr mat = OCIO::MatrixTransform::Create();
     double m[16]{  1.,  0., 0., 0.,
@@ -4417,7 +5284,7 @@ OCIO_ADD_TEST(CTFTransform, save_matrix_444)
     OCIO_CHECK_EQUAL(group->getNumTransforms(), 1);
 
     std::ostringstream outputTransform;
-    OCIO_CHECK_NO_THROW(processor->write(OCIO::FILEFORMAT_CTF, outputTransform));
+    OCIO_CHECK_NO_THROW(WriteGroupCTF(group, outputTransform));
 
     // Output matrix array as '4 4 4'.
     OCIO_CHECK_NE(outputTransform.str().find("\"4 4 4\""), std::string::npos);
@@ -4440,15 +5307,8 @@ OCIO_ADD_TEST(CTFTransform, load_edit_save_matrix_clf)
     const double offset[] = { 0.1, 1.2, 2.3, 0.0 };
     matTrans->setOffset(offset);
 
-    // Create empty Config to use.
-    OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
-
-    // Get the processor corresponding to the transform.
-    OCIO::ConstProcessorRcPtr processorGroup = config->getProcessor(group);
-
     std::ostringstream outputTransform;
-    OCIO_CHECK_NO_THROW(processorGroup->write(OCIO::FILEFORMAT_CLF, outputTransform));
+    OCIO_CHECK_NO_THROW(WriteGroupCLF(group, outputTransform));
 
     const std::string expectedCLF{
 R"(<?xml version="1.0" encoding="UTF-8"?>
@@ -4475,10 +5335,8 @@ R"(<?xml version="1.0" encoding="UTF-8"?>
     const double offsetAlpha[] = { 0.1, 1.2, 2.3, 0.9 };
     matTrans->setOffset(offsetAlpha);
 
-    OCIO::ConstProcessorRcPtr processorGroupAlpha = config->getProcessor(group);
-
     std::ostringstream outputTransformCTF;
-    OCIO_CHECK_NO_THROW(processorGroupAlpha->write(OCIO::FILEFORMAT_CTF, outputTransformCTF));
+    OCIO_CHECK_NO_THROW(WriteGroupCTF(group, outputTransformCTF));
 
     const std::string expectedCTF{
 R"(<?xml version="1.0" encoding="UTF-8"?>
@@ -4506,9 +5364,6 @@ R"(<?xml version="1.0" encoding="UTF-8"?>
 
 OCIO_ADD_TEST(CTFTransform, matrix3x3_clf)
 {
-    OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
-
     OCIO::MatrixTransformRcPtr mat = OCIO::MatrixTransform::Create();
     mat->setFileInputBitDepth(OCIO::BIT_DEPTH_UINT10);
     mat->setFileOutputBitDepth(OCIO::BIT_DEPTH_UINT10);
@@ -4523,9 +5378,8 @@ OCIO_ADD_TEST(CTFTransform, matrix3x3_clf)
     group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UID42");
     group->appendTransform(mat);
 
-    OCIO::ConstProcessorRcPtr processorGroup = config->getProcessor(group);
     std::ostringstream outputTransform;
-    OCIO_CHECK_NO_THROW(processorGroup->write(OCIO::FILEFORMAT_CLF, outputTransform));
+    OCIO_CHECK_NO_THROW(WriteGroupCLF(group, outputTransform));
 
     // In/out bit-depth equal, matrix not scaled.
     const std::string expected{ R"(<?xml version="1.0" encoding="UTF-8"?>
@@ -4546,9 +5400,6 @@ OCIO_ADD_TEST(CTFTransform, matrix3x3_clf)
 
 OCIO_ADD_TEST(CTFTransform, matrix_offset_alpha_ctf)
 {
-    OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
-
     OCIO::MatrixTransformRcPtr mat = OCIO::MatrixTransform::Create();
     mat->setFileInputBitDepth(OCIO::BIT_DEPTH_UINT10);
     mat->setFileOutputBitDepth(OCIO::BIT_DEPTH_UINT10);
@@ -4563,9 +5414,8 @@ OCIO_ADD_TEST(CTFTransform, matrix_offset_alpha_ctf)
     group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UID42");
     group->appendTransform(mat);
 
-    OCIO::ConstProcessorRcPtr processorGroup = config->getProcessor(group);
     std::ostringstream outputTransform;
-    OCIO_CHECK_NO_THROW(processorGroup->write(OCIO::FILEFORMAT_CTF, outputTransform));
+    OCIO_CHECK_NO_THROW(WriteGroupCTF(group, outputTransform));
 
     // Note that offset is scale by 1023 (for output bit-depth).
     const std::string expected{ R"(<?xml version="1.0" encoding="UTF-8"?>
@@ -4585,16 +5435,13 @@ OCIO_ADD_TEST(CTFTransform, matrix_offset_alpha_ctf)
     OCIO_CHECK_EQUAL(expected, outputTransform.str());
 
     // Alpha not handled by CLF.
-    OCIO_CHECK_THROW_WHAT(processorGroup->write(OCIO::FILEFORMAT_CLF, outputTransform),
+    OCIO_CHECK_THROW_WHAT(WriteGroupCLF(group, outputTransform),
                           OCIO::Exception, 
                           "Transform uses the 'Matrix with alpha component' op which cannot be written as CLF");
 }
 
 OCIO_ADD_TEST(CTFTransform, matrix_offset_alpha_bitdepth_ctf)
 {
-    OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
-
     OCIO::MatrixTransformRcPtr mat = OCIO::MatrixTransform::Create();
     mat->setFileInputBitDepth(OCIO::BIT_DEPTH_UINT8);
     mat->setFileOutputBitDepth(OCIO::BIT_DEPTH_UINT12);
@@ -4612,9 +5459,8 @@ OCIO_ADD_TEST(CTFTransform, matrix_offset_alpha_bitdepth_ctf)
     group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UID42");
     group->appendTransform(mat);
 
-    OCIO::ConstProcessorRcPtr processorGroup = config->getProcessor(group);
     std::ostringstream outputTransform;
-    OCIO_CHECK_NO_THROW(processorGroup->write(OCIO::FILEFORMAT_CTF, outputTransform));
+    OCIO_CHECK_NO_THROW(WriteGroupCTF(group, outputTransform));
 
     // Matrix scale following input bit-depth.
     const std::string expected{ R"(<?xml version="1.0" encoding="UTF-8"?>
@@ -4636,9 +5482,6 @@ OCIO_ADD_TEST(CTFTransform, matrix_offset_alpha_bitdepth_ctf)
 
 OCIO_ADD_TEST(CTFTransform, matrix_offset_alpha_inverse_ctf)
 {
-    OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
-
     OCIO::MatrixTransformRcPtr mat = OCIO::MatrixTransform::Create();
     mat->setFileInputBitDepth(OCIO::BIT_DEPTH_F16);
     mat->setFileOutputBitDepth(OCIO::BIT_DEPTH_F32);
@@ -4658,9 +5501,8 @@ OCIO_ADD_TEST(CTFTransform, matrix_offset_alpha_inverse_ctf)
     group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UID42");
     group->appendTransform(mat);
 
-    OCIO::ConstProcessorRcPtr processorGroup = config->getProcessor(group);
     std::ostringstream outputTransform;
-    OCIO_CHECK_NO_THROW(processorGroup->write(OCIO::FILEFORMAT_CTF, outputTransform));
+    OCIO_CHECK_NO_THROW(WriteGroupCTF(group, outputTransform));
 
     const std::string expected{ R"(<?xml version="1.0" encoding="UTF-8"?>
 <ProcessList version="1.3" id="UID42">
@@ -4699,11 +5541,8 @@ OCIO_ADD_TEST(CTFTransform, legacy_cdl)
 
     group->appendTransform(cdl);
 
-    // Get the processor corresponding to the transform.
-    OCIO::ConstProcessorRcPtr processorGroup = config->getProcessor(group);
-
     std::ostringstream outputTransform;
-    OCIO_CHECK_NO_THROW(processorGroup->write(OCIO::FILEFORMAT_CTF, outputTransform));
+    OCIO_CHECK_NO_THROW(group->write(config, OCIO::FILEFORMAT_CTF, outputTransform));
 
     // For OCIO v1, an ASC CDL was implemented as a Matrix/Gamma/Matrix rather
     // than as a dedicated op as in v2 and onward.
@@ -4738,9 +5577,6 @@ OCIO_ADD_TEST(CTFTransform, legacy_cdl)
 
 OCIO_ADD_TEST(CTFTransform, cdl_clf)
 {
-    OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
-
     OCIO::CDLTransformRcPtr cdl = OCIO::CDLTransform::Create();
     const double sop[] = { 1.0, 1.1, 1.2,
                            0.2, 0.3, 0.4,
@@ -4769,27 +5605,30 @@ OCIO_ADD_TEST(CTFTransform, cdl_clf)
 
     group->appendTransform(cdl);
 
-    auto & info = group->getFormatMetadata().addChildElement(OCIO::METADATA_INFO, "");
+    group->getFormatMetadata().addChildElement(OCIO::METADATA_INFO, "");
+    auto & info = group->getFormatMetadata().getChildElement(2);
     info.addChildElement("Release", "2019");
-    auto & sub = info.addChildElement("Directors", "");
-    auto & subSub0 = sub.addChildElement("Director", "");
+    info.addChildElement("Directors", "");
+    auto & sub = info.getChildElement(1);
+    sub.addChildElement("Director", "");
+    auto & subSub0 = sub.getChildElement(0);
     subSub0.addAttribute("FirstName", "David");
     subSub0.addAttribute("LastName", "Cronenberg");
-    auto & subSub1 = sub.addChildElement("Director", "");
+    sub.addChildElement("Director", "");
+    auto & subSub1 = sub.getChildElement(1);
     subSub1.addAttribute("FirstName", "David");
     subSub1.addAttribute("LastName", "Lynch");
-    auto & subSub2 = sub.addChildElement("Director", "");
+    sub.addChildElement("Director", "");
+    auto & subSub2 = sub.getChildElement(2);
     subSub2.addAttribute("FirstName", "David");
     subSub2.addAttribute("LastName", "Fincher");
-    auto & subSub3 = sub.addChildElement("Director", "");
+    sub.addChildElement("Director", "");
+    auto & subSub3 = sub.getChildElement(3);
     subSub3.addAttribute("FirstName", "David");
     subSub3.addAttribute("LastName", "Lean");
 
-    // Get the processor corresponding to the transform.
-    OCIO::ConstProcessorRcPtr processorGroup = config->getProcessor(group);
-
     std::ostringstream outputTransform;
-    OCIO_CHECK_NO_THROW(processorGroup->write(OCIO::FILEFORMAT_CLF, outputTransform));
+    OCIO_CHECK_NO_THROW(WriteGroupCLF(group, outputTransform));
 
     const std::string expected{ R"(<?xml version="1.0" encoding="UTF-8"?>
 <ProcessList compCLFversion="3" id="cdl1">
@@ -4831,9 +5670,6 @@ OCIO_ADD_TEST(CTFTransform, cdl_clf)
 
 OCIO_ADD_TEST(CTFTransform, cdl_ctf)
 {
-    OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
-
     OCIO::CDLTransformRcPtr cdl = OCIO::CDLTransform::Create();
     cdl->setStyle(OCIO::CDL_ASC);
 
@@ -4850,11 +5686,8 @@ OCIO_ADD_TEST(CTFTransform, cdl_ctf)
 
     group->appendTransform(cdl);
 
-    // Get the processor corresponding to the transform.
-    OCIO::ConstProcessorRcPtr processorGroup = config->getProcessor(group);
-
     std::ostringstream outputTransform;
-    OCIO_CHECK_NO_THROW(processorGroup->write(OCIO::FILEFORMAT_CTF, outputTransform));
+    OCIO_CHECK_NO_THROW(WriteGroupCTF(group, outputTransform));
 
     const std::string expected{
         "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
@@ -4877,9 +5710,6 @@ OCIO_ADD_TEST(CTFTransform, cdl_ctf)
 
 OCIO_ADD_TEST(CTFTransform, range_ctf)
 {
-    OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
-
     // Non-clamping range are converted to matrix.
     OCIO::RangeTransformRcPtr range = OCIO::RangeTransform::Create();
     range->setStyle(OCIO::RANGE_NO_CLAMP);
@@ -4901,9 +5731,8 @@ OCIO_ADD_TEST(CTFTransform, range_ctf)
 
     group->appendTransform(range);
 
-    OCIO::ConstProcessorRcPtr processorGroup = config->getProcessor(group);
     std::ostringstream outputTransform;
-    OCIO_CHECK_NO_THROW(processorGroup->write(OCIO::FILEFORMAT_CTF, outputTransform));
+    OCIO_CHECK_NO_THROW(WriteGroupCTF(group, outputTransform));
 
     const std::string expected{
         "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
@@ -4927,9 +5756,6 @@ OCIO_ADD_TEST(CTFTransform, range_ctf)
 OCIO_ADD_TEST(CTFTransform, range1_clf)
 {
     // Forward clamping range with all 4 values set and with metadata.
-    OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
-
     OCIO::RangeTransformRcPtr range = OCIO::RangeTransform::Create();
     range->setFileInputBitDepth(OCIO::BIT_DEPTH_UINT8);
     range->setStyle(OCIO::RANGE_CLAMP);
@@ -4947,9 +5773,8 @@ OCIO_ADD_TEST(CTFTransform, range1_clf)
     group->getFormatMetadata().addChildElement(OCIO::METADATA_OUTPUT_DESCRIPTOR, "Output descriptor");
     group->appendTransform(range);
 
-    OCIO::ConstProcessorRcPtr processorGroup = config->getProcessor(group);
     std::ostringstream outputTransform;
-    OCIO_CHECK_NO_THROW(processorGroup->write(OCIO::FILEFORMAT_CLF, outputTransform));
+    OCIO_CHECK_NO_THROW(WriteGroupCLF(group, outputTransform));
 
     const std::string expected{
         "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
@@ -4972,9 +5797,6 @@ OCIO_ADD_TEST(CTFTransform, range1_clf)
 OCIO_ADD_TEST(CTFTransform, range2_clf)
 {
     // Forward clamping range with just minValues set.
-    OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
-
     OCIO::RangeTransformRcPtr range = OCIO::RangeTransform::Create();
     range->setFileInputBitDepth(OCIO::BIT_DEPTH_UINT10);
     range->setFileOutputBitDepth(OCIO::BIT_DEPTH_UINT8);
@@ -4986,9 +5808,8 @@ OCIO_ADD_TEST(CTFTransform, range2_clf)
     group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UID42");
     group->appendTransform(range);
 
-    OCIO::ConstProcessorRcPtr processorGroup = config->getProcessor(group);
     std::ostringstream outputTransform;
-    OCIO_CHECK_NO_THROW(processorGroup->write(OCIO::FILEFORMAT_CLF, outputTransform));
+    OCIO_CHECK_NO_THROW(WriteGroupCLF(group, outputTransform));
 
     const std::string expected{
         "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
@@ -5006,8 +5827,6 @@ OCIO_ADD_TEST(CTFTransform, range2_clf)
 OCIO_ADD_TEST(CTFTransform, range3_clf)
 {
     // Forward clamping range with just minValues set.
-    OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
 
     // This will only do bit-depth conversion (with a clamp at 0).
     OCIO::RangeTransformRcPtr range = OCIO::RangeTransform::Create();
@@ -5021,9 +5840,8 @@ OCIO_ADD_TEST(CTFTransform, range3_clf)
     group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UID42");
     group->appendTransform(range);
 
-    OCIO::ConstProcessorRcPtr processorGroup = config->getProcessor(group);
     std::ostringstream outputTransform;
-    OCIO_CHECK_NO_THROW(processorGroup->write(OCIO::FILEFORMAT_CLF, outputTransform));
+    OCIO_CHECK_NO_THROW(WriteGroupCLF(group, outputTransform));
 
     const std::string expected{ R"(<?xml version="1.0" encoding="UTF-8"?>
 <ProcessList compCLFversion="3" id="UID42">
@@ -5041,9 +5859,6 @@ OCIO_ADD_TEST(CTFTransform, range3_clf)
 OCIO_ADD_TEST(CTFTransform, range4_clf)
 {
     // Inverse clamping range with all 4 values set.
-    OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
-
     OCIO::RangeTransformRcPtr range = OCIO::RangeTransform::Create();
     range->setFileInputBitDepth(OCIO::BIT_DEPTH_F16);
     range->setFileOutputBitDepth(OCIO::BIT_DEPTH_UINT12);
@@ -5059,9 +5874,8 @@ OCIO_ADD_TEST(CTFTransform, range4_clf)
     group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UID42");
     group->appendTransform(range);
 
-    OCIO::ConstProcessorRcPtr processorGroup = config->getProcessor(group);
     std::ostringstream outputTransform;
-    OCIO_CHECK_NO_THROW(processorGroup->write(OCIO::FILEFORMAT_CLF, outputTransform));
+    OCIO_CHECK_NO_THROW(WriteGroupCLF(group, outputTransform));
 
     // Range is saved in the forward direction.
     const std::string expected{ R"(<?xml version="1.0" encoding="UTF-8"?>
@@ -5081,9 +5895,6 @@ OCIO_ADD_TEST(CTFTransform, range4_clf)
 
 OCIO_ADD_TEST(CTFTransform, exponent_ctf)
 {
-    OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
-
     OCIO::ExponentWithLinearTransformRcPtr exp = OCIO::ExponentWithLinearTransform::Create();
     const double gamma[] = { 1.1, 1.2, 1.3, 1.0 };
     exp->setGamma(gamma);
@@ -5094,9 +5905,8 @@ OCIO_ADD_TEST(CTFTransform, exponent_ctf)
     group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UID42");
     group->appendTransform(exp);
 
-    OCIO::ConstProcessorRcPtr processorGroup = config->getProcessor(group);
     std::ostringstream outputTransform;
-    OCIO_CHECK_NO_THROW(processorGroup->write(OCIO::FILEFORMAT_CTF, outputTransform));
+    OCIO_CHECK_NO_THROW(WriteGroupCTF(group, outputTransform));
 
     const std::string expected{
         "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
@@ -5114,9 +5924,6 @@ OCIO_ADD_TEST(CTFTransform, exponent_ctf)
 
 OCIO_ADD_TEST(CTFTransform, gamma1_ctf)
 {
-    OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
-
     OCIO::ExponentTransformRcPtr exp = OCIO::ExponentTransform::Create();
     exp->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
 
@@ -5127,9 +5934,8 @@ OCIO_ADD_TEST(CTFTransform, gamma1_ctf)
     group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UID42");
     group->appendTransform(exp);
 
-    OCIO::ConstProcessorRcPtr processorGroup = config->getProcessor(group);
     std::ostringstream outputTransform;
-    OCIO_CHECK_NO_THROW(processorGroup->write(OCIO::FILEFORMAT_CTF, outputTransform));
+    OCIO_CHECK_NO_THROW(WriteGroupCTF(group, outputTransform));
 
     // Identity alpha. Transform written as version 1.3.
     const std::string expected{R"(<?xml version="1.0" encoding="UTF-8"?>
@@ -5144,7 +5950,7 @@ OCIO_ADD_TEST(CTFTransform, gamma1_ctf)
     OCIO_CHECK_EQUAL(expected, outputTransform.str());
 
     std::ostringstream outputTransformCLF;
-    OCIO_CHECK_NO_THROW(processorGroup->write(OCIO::FILEFORMAT_CLF, outputTransformCLF));
+    OCIO_CHECK_NO_THROW(WriteGroupCLF(group, outputTransformCLF));
 
     const std::string expectedCLF{ R"(<?xml version="1.0" encoding="UTF-8"?>
 <ProcessList compCLFversion="3" id="UID42">
@@ -5160,9 +5966,6 @@ OCIO_ADD_TEST(CTFTransform, gamma1_ctf)
 
 OCIO_ADD_TEST(CTFTransform, gamma1_mirror_ctf)
 {
-    OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
-
     OCIO::ExponentTransformRcPtr exp = OCIO::ExponentTransform::Create();
     exp->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
     exp->setNegativeStyle(OCIO::NEGATIVE_MIRROR);
@@ -5174,9 +5977,8 @@ OCIO_ADD_TEST(CTFTransform, gamma1_mirror_ctf)
     group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UID42");
     group->appendTransform(exp);
 
-    OCIO::ConstProcessorRcPtr processorGroup = config->getProcessor(group);
     std::ostringstream outputTransform;
-    OCIO_CHECK_NO_THROW(processorGroup->write(OCIO::FILEFORMAT_CTF, outputTransform));
+    OCIO_CHECK_NO_THROW(WriteGroupCTF(group, outputTransform));
 
     // Identity alpha. Transform written as version 2 because of new style.
     const std::string expected{ R"(<?xml version="1.0" encoding="UTF-8"?>
@@ -5191,7 +5993,7 @@ OCIO_ADD_TEST(CTFTransform, gamma1_mirror_ctf)
     OCIO_CHECK_EQUAL(expected, outputTransform.str());
 
     std::ostringstream outputTransformCLF;
-    OCIO_CHECK_NO_THROW(processorGroup->write(OCIO::FILEFORMAT_CLF, outputTransformCLF));
+    OCIO_CHECK_NO_THROW(WriteGroupCLF(group, outputTransformCLF));
 
     const std::string expectedCLF{ R"(<?xml version="1.0" encoding="UTF-8"?>
 <ProcessList compCLFversion="3" id="UID42">
@@ -5207,9 +6009,6 @@ OCIO_ADD_TEST(CTFTransform, gamma1_mirror_ctf)
 
 OCIO_ADD_TEST(CTFTransform, gamma1_pass_thru_ctf)
 {
-    OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
-
     OCIO::ExponentTransformRcPtr exp = OCIO::ExponentTransform::Create();
     exp->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
     exp->setNegativeStyle(OCIO::NEGATIVE_PASS_THRU);
@@ -5221,9 +6020,8 @@ OCIO_ADD_TEST(CTFTransform, gamma1_pass_thru_ctf)
     group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UID42");
     group->appendTransform(exp);
 
-    OCIO::ConstProcessorRcPtr processorGroup = config->getProcessor(group);
     std::ostringstream outputTransform;
-    OCIO_CHECK_NO_THROW(processorGroup->write(OCIO::FILEFORMAT_CTF, outputTransform));
+    OCIO_CHECK_NO_THROW(WriteGroupCTF(group, outputTransform));
 
     // Identity alpha. Transform written as version 2.0 because of new style.
     const std::string expected{ R"(<?xml version="1.0" encoding="UTF-8"?>
@@ -5238,7 +6036,7 @@ OCIO_ADD_TEST(CTFTransform, gamma1_pass_thru_ctf)
     OCIO_CHECK_EQUAL(expected, outputTransform.str());
 
     std::ostringstream outputTransformCLF;
-    OCIO_CHECK_NO_THROW(processorGroup->write(OCIO::FILEFORMAT_CLF, outputTransformCLF));
+    OCIO_CHECK_NO_THROW(WriteGroupCLF(group, outputTransformCLF));
 
     const std::string expectedCLF{ R"(<?xml version="1.0" encoding="UTF-8"?>
 <ProcessList compCLFversion="3" id="UID42">
@@ -5254,9 +6052,6 @@ OCIO_ADD_TEST(CTFTransform, gamma1_pass_thru_ctf)
 
 OCIO_ADD_TEST(CTFTransform, gamma2_ctf)
 {
-    OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
-
     OCIO::ExponentWithLinearTransformRcPtr exp = OCIO::ExponentWithLinearTransform::Create();
     exp->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
 
@@ -5270,9 +6065,8 @@ OCIO_ADD_TEST(CTFTransform, gamma2_ctf)
     group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UID42");
     group->appendTransform(exp);
 
-    OCIO::ConstProcessorRcPtr processorGroup = config->getProcessor(group);
     std::ostringstream outputTransform;
-    OCIO_CHECK_NO_THROW(processorGroup->write(OCIO::FILEFORMAT_CTF, outputTransform));
+    OCIO_CHECK_NO_THROW(WriteGroupCTF(group, outputTransform));
 
     // Non-identity alpha. Transform written as version 1.5.
     const std::string expected{ R"(<?xml version="1.0" encoding="UTF-8"?>
@@ -5291,16 +6085,13 @@ OCIO_ADD_TEST(CTFTransform, gamma2_ctf)
 
     // CLF does not allow alpha channel.
     std::ostringstream outputTransformCLF;
-    OCIO_CHECK_THROW_WHAT(processorGroup->write(OCIO::FILEFORMAT_CLF, outputTransformCLF),
+    OCIO_CHECK_THROW_WHAT(WriteGroupCLF(group, outputTransformCLF),
                           OCIO::Exception,
                           "Transform uses the 'Gamma with alpha component' op which cannot be written as CLF");
 }
 
 OCIO_ADD_TEST(CTFTransform, gamma3_ctf)
 {
-    OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
-
     OCIO::ExponentWithLinearTransformRcPtr exp = OCIO::ExponentWithLinearTransform::Create();
 
     const double gamma[] = { 2.42, 2.42, 2.42, 1.0 };
@@ -5313,9 +6104,8 @@ OCIO_ADD_TEST(CTFTransform, gamma3_ctf)
     group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UID42");
     group->appendTransform(exp);
 
-    OCIO::ConstProcessorRcPtr processorGroup = config->getProcessor(group);
     std::ostringstream outputTransform;
-    OCIO_CHECK_NO_THROW(processorGroup->write(OCIO::FILEFORMAT_CTF, outputTransform));
+    OCIO_CHECK_NO_THROW(WriteGroupCTF(group, outputTransform));
 
     // Identity alpha.  Transform written as version 1.3.
     const std::string expected{ R"(<?xml version="1.0" encoding="UTF-8"?>
@@ -5331,7 +6121,7 @@ OCIO_ADD_TEST(CTFTransform, gamma3_ctf)
 
     // CLF does not allow alpha channel.
     std::ostringstream outputTransformCLF;
-    OCIO_CHECK_NO_THROW(processorGroup->write(OCIO::FILEFORMAT_CLF, outputTransformCLF));
+    OCIO_CHECK_NO_THROW(WriteGroupCLF(group, outputTransformCLF));
 
     const std::string expectedCLF{ R"(<?xml version="1.0" encoding="UTF-8"?>
 <ProcessList compCLFversion="3" id="UID42">
@@ -5347,9 +6137,6 @@ OCIO_ADD_TEST(CTFTransform, gamma3_ctf)
 
 OCIO_ADD_TEST(CTFTransform, gamma4_ctf)
 {
-    OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
-
     OCIO::ExponentTransformRcPtr exp = OCIO::ExponentTransform::Create();
 
     const double gamma[] = { 2.6, 2.5, 2.4, 2.2 };
@@ -5359,9 +6146,8 @@ OCIO_ADD_TEST(CTFTransform, gamma4_ctf)
     group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UID42");
     group->appendTransform(exp);
 
-    OCIO::ConstProcessorRcPtr processorGroup = config->getProcessor(group);
     std::ostringstream outputTransform;
-    OCIO_CHECK_NO_THROW(processorGroup->write(OCIO::FILEFORMAT_CTF, outputTransform));
+    OCIO_CHECK_NO_THROW(WriteGroupCTF(group, outputTransform));
 
     // Non-identity alpha.  Transform written as version 1.5.
     const std::string expected{ R"(<?xml version="1.0" encoding="UTF-8"?>
@@ -5382,9 +6168,6 @@ OCIO_ADD_TEST(CTFTransform, gamma4_ctf)
 
 OCIO_ADD_TEST(CTFTransform, gamma5_ctf)
 {
-    OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
-
     OCIO::ExponentWithLinearTransformRcPtr exp = OCIO::ExponentWithLinearTransform::Create();
 
     const double gamma[] = { 1. / 0.45, 1. / 0.45, 1. / 0.45, 1. / 0.45 };
@@ -5397,9 +6180,8 @@ OCIO_ADD_TEST(CTFTransform, gamma5_ctf)
     group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UID42");
     group->appendTransform(exp);
 
-    OCIO::ConstProcessorRcPtr processorGroup = config->getProcessor(group);
     std::ostringstream outputTransform;
-    OCIO_CHECK_NO_THROW(processorGroup->write(OCIO::FILEFORMAT_CTF, outputTransform));
+    OCIO_CHECK_NO_THROW(WriteGroupCTF(group, outputTransform));
 
     // Non-identity alpha.  Transform written as version 1.5.
     const std::string expected{ R"(<?xml version="1.0" encoding="UTF-8"?>
@@ -5419,9 +6201,6 @@ OCIO_ADD_TEST(CTFTransform, gamma5_ctf)
 
 OCIO_ADD_TEST(CTFTransform, gamma6_ctf)
 {
-    OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
-
     OCIO::ExponentTransformRcPtr exp = OCIO::ExponentTransform::Create();
 
     const double gamma[] = { 2.4, 2.5, 2.6, 1.0 };
@@ -5431,9 +6210,8 @@ OCIO_ADD_TEST(CTFTransform, gamma6_ctf)
     group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UID42");
     group->appendTransform(exp);
 
-    OCIO::ConstProcessorRcPtr processorGroup = config->getProcessor(group);
     std::ostringstream outputTransform;
-    OCIO_CHECK_NO_THROW(processorGroup->write(OCIO::FILEFORMAT_CTF, outputTransform));
+    OCIO_CHECK_NO_THROW(WriteGroupCTF(group, outputTransform));
 
     // R,G,B channels different, but alpha is identity.
     // Transform written as version 1.3.
@@ -5453,21 +6231,16 @@ OCIO_ADD_TEST(CTFTransform, gamma6_ctf)
 
 OCIO_ADD_TEST(CTFTransform, fixed_function_rec2100_ctf)
 {
-    OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
-
-    OCIO::FixedFunctionTransformRcPtr ff = OCIO::FixedFunctionTransform::Create();
-    ff->setStyle(OCIO::FIXED_FUNCTION_REC2100_SURROUND);
     const double val = 0.5;
-    ff->setParams(&val, 1);
+    OCIO::FixedFunctionTransformRcPtr ff =
+        OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_REC2100_SURROUND, &val, 1);
 
     OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
     group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UIDFF42");
     group->appendTransform(ff);
 
-    OCIO::ConstProcessorRcPtr processorGroup = config->getProcessor(group);
     std::ostringstream outputTransform;
-    OCIO_CHECK_NO_THROW(processorGroup->write(OCIO::FILEFORMAT_CTF, outputTransform));
+    OCIO_CHECK_NO_THROW(WriteGroupCTF(group, outputTransform));
 
     const std::string expected{ R"(<?xml version="1.0" encoding="UTF-8"?>
 <ProcessList version="2" id="UIDFF42">
@@ -5482,22 +6255,17 @@ OCIO_ADD_TEST(CTFTransform, fixed_function_rec2100_ctf)
 
 OCIO_ADD_TEST(CTFTransform, fixed_function_rec2100_inverse_ctf)
 {
-    OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
-
-    OCIO::FixedFunctionTransformRcPtr ff = OCIO::FixedFunctionTransform::Create();
-    ff->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
-    ff->setStyle(OCIO::FIXED_FUNCTION_REC2100_SURROUND);
     const double val = 0.5;
-    ff->setParams(&val, 1);
+    OCIO::FixedFunctionTransformRcPtr ff =
+        OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_REC2100_SURROUND, &val, 1);
+    ff->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
 
     OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
     group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UIDFF42");
     group->appendTransform(ff);
 
-    OCIO::ConstProcessorRcPtr processorGroup = config->getProcessor(group);
     std::ostringstream outputTransform;
-    OCIO_CHECK_NO_THROW(processorGroup->write(OCIO::FILEFORMAT_CTF, outputTransform));
+    OCIO_CHECK_NO_THROW(WriteGroupCTF(group, outputTransform));
 
     const std::string expected{ R"(<?xml version="1.0" encoding="UTF-8"?>
 <ProcessList version="2" id="UIDFF42">
@@ -5512,9 +6280,6 @@ OCIO_ADD_TEST(CTFTransform, fixed_function_rec2100_inverse_ctf)
 
 OCIO_ADD_TEST(CTFTransform, exposure_contrast_video_ctf)
 {
-    OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
-
     OCIO::ExposureContrastTransformRcPtr ec = OCIO::ExposureContrastTransform::Create();
 
     ec->setStyle(OCIO::EXPOSURE_CONTRAST_VIDEO);
@@ -5526,9 +6291,8 @@ OCIO_ADD_TEST(CTFTransform, exposure_contrast_video_ctf)
     group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UIDEC42");
     group->appendTransform(ec);
 
-    OCIO::ConstProcessorRcPtr processorGroup = config->getProcessor(group);
     std::ostringstream outputTransform;
-    OCIO_CHECK_NO_THROW(processorGroup->write(OCIO::FILEFORMAT_CTF, outputTransform));
+    OCIO_CHECK_NO_THROW(WriteGroupCTF(group, outputTransform));
 
     const std::string expected{ R"(<?xml version="1.0" encoding="UTF-8"?>
 <ProcessList version="1.3" id="UIDEC42">
@@ -5546,9 +6310,6 @@ OCIO_ADD_TEST(CTFTransform, exposure_contrast_video_ctf)
 
 OCIO_ADD_TEST(CTFTransform, exposure_contrast_log_ctf)
 {
-    OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
-
     OCIO::ExposureContrastTransformRcPtr ec = OCIO::ExposureContrastTransform::Create();
 
     ec->setStyle(OCIO::EXPOSURE_CONTRAST_LOGARITHMIC);
@@ -5564,9 +6325,8 @@ OCIO_ADD_TEST(CTFTransform, exposure_contrast_log_ctf)
     group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UIDEC42");
     group->appendTransform(ec);
 
-    OCIO::ConstProcessorRcPtr processorGroup = config->getProcessor(group);
     std::ostringstream outputTransform;
-    OCIO_CHECK_NO_THROW(processorGroup->write(OCIO::FILEFORMAT_CTF, outputTransform));
+    OCIO_CHECK_NO_THROW(WriteGroupCTF(group, outputTransform));
 
     const std::string expected{ R"(<?xml version="1.0" encoding="UTF-8"?>
 <ProcessList version="1.3" id="UIDEC42">
@@ -5584,9 +6344,6 @@ OCIO_ADD_TEST(CTFTransform, exposure_contrast_log_ctf)
 
 OCIO_ADD_TEST(CTFTransform, exposure_contrast_linear_ctf)
 {
-    OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
-
     OCIO::ExposureContrastTransformRcPtr ec = OCIO::ExposureContrastTransform::Create();
 
     ec->setStyle(OCIO::EXPOSURE_CONTRAST_LINEAR);
@@ -5603,9 +6360,8 @@ OCIO_ADD_TEST(CTFTransform, exposure_contrast_linear_ctf)
     group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UIDEC42");
     group->appendTransform(ec);
 
-    OCIO::ConstProcessorRcPtr processorGroup = config->getProcessor(group);
     std::ostringstream outputTransform;
-    OCIO_CHECK_NO_THROW(processorGroup->write(OCIO::FILEFORMAT_CTF, outputTransform));
+    OCIO_CHECK_NO_THROW(WriteGroupCTF(group, outputTransform));
 
     const std::string expected{ R"(<?xml version="1.0" encoding="UTF-8"?>
 <ProcessList version="1.3" id="UIDEC42">
@@ -5623,9 +6379,6 @@ OCIO_ADD_TEST(CTFTransform, exposure_contrast_linear_ctf)
 
 OCIO_ADD_TEST(CTFTransform, exposure_contrast_not_dynamic_ctf)
 {
-    OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
-
     OCIO::ExposureContrastTransformRcPtr ec = OCIO::ExposureContrastTransform::Create();
 
     ec->setStyle(OCIO::EXPOSURE_CONTRAST_VIDEO);
@@ -5634,9 +6387,8 @@ OCIO_ADD_TEST(CTFTransform, exposure_contrast_not_dynamic_ctf)
     group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UIDEC42");
     group->appendTransform(ec);
 
-    OCIO::ConstProcessorRcPtr processorGroup = config->getProcessor(group);
     std::ostringstream outputTransform;
-    OCIO_CHECK_NO_THROW(processorGroup->write(OCIO::FILEFORMAT_CTF, outputTransform));
+    OCIO_CHECK_NO_THROW(WriteGroupCTF(group, outputTransform));
 
     const std::string expected{ R"(<?xml version="1.0" encoding="UTF-8"?>
 <ProcessList version="1.3" id="UIDEC42">
@@ -5652,9 +6404,6 @@ OCIO_ADD_TEST(CTFTransform, exposure_contrast_not_dynamic_ctf)
 
 OCIO_ADD_TEST(CTFTransform, exposure_contrast_log_params_ctf)
 {
-    OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
-
     OCIO::ExposureContrastTransformRcPtr ec = OCIO::ExposureContrastTransform::Create();
 
     ec->setStyle(OCIO::EXPOSURE_CONTRAST_LOGARITHMIC);
@@ -5672,9 +6421,8 @@ OCIO_ADD_TEST(CTFTransform, exposure_contrast_log_params_ctf)
     group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UIDEC42");
     group->appendTransform(ec);
 
-    OCIO::ConstProcessorRcPtr processorGroup = config->getProcessor(group);
     std::ostringstream outputTransform;
-    OCIO_CHECK_NO_THROW(processorGroup->write(OCIO::FILEFORMAT_CTF, outputTransform));
+    OCIO_CHECK_NO_THROW(WriteGroupCTF(group, outputTransform));
 
     const std::string expected{
         "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
@@ -5689,11 +6437,592 @@ OCIO_ADD_TEST(CTFTransform, exposure_contrast_log_params_ctf)
     OCIO_CHECK_EQUAL(expected, outputTransform.str());
 }
 
+OCIO_ADD_TEST(CTFTransform, grading_primary_log_ctf)
+{
+    auto gradingPrimary = OCIO::GradingPrimaryTransform::Create(OCIO::GRADING_LOG);
+
+    // Non-default parameters.
+    OCIO::GradingPrimary values(OCIO::GRADING_LOG);
+    values.m_brightness.m_red += 0.1;
+    values.m_contrast.m_green += 0.1;
+    values.m_gamma.m_master += 0.1;
+    values.m_saturation += 0.1;
+    values.m_pivot += 0.1;
+    values.m_pivotBlack += 0.1;
+    values.m_pivotWhite += 0.1;
+    values.m_clampBlack = 0.0;
+    values.m_clampWhite = 1.0;
+    gradingPrimary->setValue(values);
+
+    {
+        OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
+        group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UIDEC42");
+        group->appendTransform(gradingPrimary);
+
+        std::ostringstream outputTransform;
+        OCIO_CHECK_NO_THROW(WriteGroupCTF(group, outputTransform));
+
+        const std::string expectedDefault{ R"(<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList version="2" id="UIDEC42">
+    <GradingPrimary inBitDepth="32f" outBitDepth="32f" style="log">
+        <Brightness rgb="0.1 0 0" master="0" />
+        <Contrast rgb="1 1.1 1" master="1" />
+        <Gamma rgb="1 1 1" master="1.1" />
+        <Saturation master="1.1" />
+        <Pivot contrast="-0.1" black="0.1" white="1.1" />
+        <Clamp black="0" white="1" />
+    </GradingPrimary>
+</ProcessList>
+)" };
+
+        OCIO_CHECK_EQUAL(expectedDefault.size(), outputTransform.str().size());
+        OCIO_CHECK_EQUAL(expectedDefault, outputTransform.str());
+    }
+
+    // Use default parameters, make dynamic and change direction.
+    OCIO::GradingPrimary valuesDef(OCIO::GRADING_LOG);
+    gradingPrimary->setValue(valuesDef);
+    gradingPrimary->makeDynamic();
+    gradingPrimary->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+
+    {
+        OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
+        group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UIDEC42");
+        group->appendTransform(gradingPrimary);
+
+        std::ostringstream outputTransform;
+        OCIO_CHECK_NO_THROW(WriteGroupCTF(group, outputTransform));
+
+        const std::string expectedDefault{ R"(<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList version="2" id="UIDEC42">
+    <GradingPrimary inBitDepth="32f" outBitDepth="32f" style="logRev">
+        <DynamicParameter param="PRIMARY" />
+    </GradingPrimary>
+</ProcessList>
+)" };
+
+        OCIO_CHECK_EQUAL(expectedDefault.size(), outputTransform.str().size());
+        OCIO_CHECK_EQUAL(expectedDefault, outputTransform.str());
+    }
+}
+
+OCIO_ADD_TEST(CTFTransform, grading_primary_lin_ctf)
+{
+    auto gradingPrimary = OCIO::GradingPrimaryTransform::Create(OCIO::GRADING_LIN);
+
+    // Non-default parameters.
+    OCIO::GradingPrimary values(OCIO::GRADING_LIN);
+    values.m_offset.m_red += 0.1;
+    values.m_exposure.m_master += -0.99999;
+    values.m_contrast.m_green += 0.1;
+    values.m_saturation = 1.00001;
+    values.m_pivot += 0.1;
+    values.m_pivotBlack += 0.1;
+    values.m_pivotWhite += 0.1;
+    values.m_clampBlack = 0.0;
+    values.m_clampWhite = 1.0;
+    gradingPrimary->setValue(values);
+
+    {
+        OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
+        group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UIDEC42");
+        group->appendTransform(gradingPrimary);
+
+        std::ostringstream outputTransform;
+        OCIO_CHECK_NO_THROW(WriteGroupCTF(group, outputTransform));
+
+        const std::string expectedDefault{ R"(<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList version="2" id="UIDEC42">
+    <GradingPrimary inBitDepth="32f" outBitDepth="32f" style="linear">
+        <Offset rgb="0.1 0 0" master="0" />
+        <Exposure rgb="0 0 0" master="-0.99999" />
+        <Contrast rgb="1 1.1 1" master="1" />
+        <Saturation master="1.00001" />
+        <Pivot contrast="0.28" />
+        <Clamp black="0" white="1" />
+    </GradingPrimary>
+</ProcessList>
+)" };
+
+        OCIO_CHECK_EQUAL(expectedDefault.size(), outputTransform.str().size());
+        OCIO_CHECK_EQUAL(expectedDefault, outputTransform.str());
+    }
+
+    // Use default parameters, make dynamic and change direction.
+    OCIO::GradingPrimary valuesDef(OCIO::GRADING_LIN);
+    gradingPrimary->setValue(valuesDef);
+    gradingPrimary->makeDynamic();
+    gradingPrimary->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+
+    {
+        OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
+        group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UIDEC42");
+        group->appendTransform(gradingPrimary);
+
+        std::ostringstream outputTransform;
+        OCIO_CHECK_NO_THROW(WriteGroupCTF(group, outputTransform));
+
+        const std::string expectedDefault{ R"(<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList version="2" id="UIDEC42">
+    <GradingPrimary inBitDepth="32f" outBitDepth="32f" style="linearRev">
+        <DynamicParameter param="PRIMARY" />
+    </GradingPrimary>
+</ProcessList>
+)" };
+
+        OCIO_CHECK_EQUAL(expectedDefault.size(), outputTransform.str().size());
+        OCIO_CHECK_EQUAL(expectedDefault, outputTransform.str());
+    }
+}
+
+OCIO_ADD_TEST(CTFTransform, grading_primary_video_ctf)
+{
+    auto gradingPrimary = OCIO::GradingPrimaryTransform::Create(OCIO::GRADING_VIDEO);
+
+    // Non-default parameters.
+    OCIO::GradingPrimary values(OCIO::GRADING_VIDEO);
+    values.m_lift.m_red += 0.1;
+    values.m_gamma.m_master += 0.1;
+    values.m_gain.m_green += 0.1;
+    values.m_offset.m_green += 0.1;
+    values.m_saturation += 0.1;
+    values.m_pivotBlack += 0.1;
+    values.m_pivotWhite += 0.1;
+    values.m_clampBlack = 0.0;
+    values.m_clampWhite = 1.0;
+    gradingPrimary->setValue(values);
+
+    {
+        OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
+        group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UIDEC42");
+        group->appendTransform(gradingPrimary);
+
+        std::ostringstream outputTransform;
+        OCIO_CHECK_NO_THROW(WriteGroupCTF(group, outputTransform));
+
+        const std::string expectedDefault{ R"(<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList version="2" id="UIDEC42">
+    <GradingPrimary inBitDepth="32f" outBitDepth="32f" style="video">
+        <Lift rgb="0.1 0 0" master="0" />
+        <Gamma rgb="1 1 1" master="1.1" />
+        <Gain rgb="1 1.1 1" master="1" />
+        <Offset rgb="0 0.1 0" master="0" />
+        <Saturation master="1.1" />
+        <Pivot black="0.1" white="1.1" />
+        <Clamp black="0" white="1" />
+    </GradingPrimary>
+</ProcessList>
+)" };
+
+        OCIO_CHECK_EQUAL(expectedDefault.size(), outputTransform.str().size());
+        OCIO_CHECK_EQUAL(expectedDefault, outputTransform.str());
+    }
+
+    // Use default parameters, make dynamic and change direction.
+    OCIO::GradingPrimary valuesDef(OCIO::GRADING_VIDEO);
+    gradingPrimary->setValue(valuesDef);
+    gradingPrimary->makeDynamic();
+    gradingPrimary->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+
+    {
+        OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
+        group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UIDEC42");
+        group->appendTransform(gradingPrimary);
+
+        std::ostringstream outputTransform;
+        OCIO_CHECK_NO_THROW(WriteGroupCTF(group, outputTransform));
+
+        const std::string expectedDefault{ R"(<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList version="2" id="UIDEC42">
+    <GradingPrimary inBitDepth="32f" outBitDepth="32f" style="videoRev">
+        <DynamicParameter param="PRIMARY" />
+    </GradingPrimary>
+</ProcessList>
+)" };
+
+        OCIO_CHECK_EQUAL(expectedDefault.size(), outputTransform.str().size());
+        OCIO_CHECK_EQUAL(expectedDefault, outputTransform.str());
+    }
+}
+
+OCIO_ADD_TEST(CTFTransform, grading_rgbcurve_log_ctf)
+{
+    auto gradingCurves = OCIO::GradingRGBCurveTransform::Create(OCIO::GRADING_LOG);
+
+    // Two of the curves are the default curves, they are not saved.
+    OCIO::GradingRGBCurveRcPtr curves = OCIO::GradingRGBCurve::Create(OCIO::GRADING_LOG);
+    curves->getCurve(OCIO::RGB_GREEN)->getControlPoint(0).m_y = -0.5f;
+    curves->getCurve(OCIO::RGB_MASTER)->setNumControlPoints(4);
+    curves->getCurve(OCIO::RGB_MASTER)->getControlPoint(3).m_x = 1.5f;
+    curves->getCurve(OCIO::RGB_MASTER)->getControlPoint(3).m_y = 1.4f;
+    gradingCurves->setValue(curves);
+    {
+        OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
+        group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UIDGradingCurves");
+        group->appendTransform(gradingCurves);
+
+        std::ostringstream outputTransform;
+        OCIO_CHECK_NO_THROW(WriteGroupCTF(group, outputTransform));
+
+        const std::string expected{ R"(<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList version="2" id="UIDGradingCurves">
+    <GradingRGBCurve inBitDepth="32f" outBitDepth="32f" style="log">
+        <Green>
+            <ControlPoints>
+                          0 -0.5
+                        0.5 0.5
+                          1 1
+            </ControlPoints>
+        </Green>
+        <Master>
+            <ControlPoints>
+                          0 0
+                        0.5 0.5
+                          1 1
+                        1.5 1.4
+            </ControlPoints>
+        </Master>
+    </GradingRGBCurve>
+</ProcessList>
+)" };
+
+        OCIO_CHECK_EQUAL(expected.size(), outputTransform.str().size());
+        OCIO_CHECK_EQUAL(expected, outputTransform.str());
+    }
+
+    // All curves are default curves, no curve is saved.
+    curves = OCIO::GradingRGBCurve::Create(OCIO::GRADING_LOG);
+    gradingCurves->setValue(curves);
+    gradingCurves->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+    // Make it dynamic so it is not identity.
+    gradingCurves->makeDynamic();
+    {
+        OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
+        group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UIDGradingCurves");
+        group->appendTransform(gradingCurves);
+
+        std::ostringstream outputTransform;
+        OCIO_CHECK_NO_THROW(WriteGroupCTF(group, outputTransform));
+
+        const std::string expected{ R"(<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList version="2" id="UIDGradingCurves">
+    <GradingRGBCurve inBitDepth="32f" outBitDepth="32f" style="logRev">
+        <DynamicParameter param="RGB_CURVE" />
+    </GradingRGBCurve>
+</ProcessList>
+)" };
+
+        OCIO_CHECK_EQUAL(expected.size(), outputTransform.str().size());
+        OCIO_CHECK_EQUAL(expected, outputTransform.str());
+    }
+}
+
+OCIO_ADD_TEST(CTFTransform, grading_rgbcurve_video_ctf)
+{
+    auto gradingCurves = OCIO::GradingRGBCurveTransform::Create(OCIO::GRADING_VIDEO);
+
+    // All curves are default curves, no curve is saved.
+    // Make it dynamic so it is not identity.
+    gradingCurves->makeDynamic();
+    {
+        OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
+        group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UIDGradingCurves");
+        group->appendTransform(gradingCurves);
+
+        std::ostringstream outputTransform;
+        OCIO_CHECK_NO_THROW(WriteGroupCTF(group, outputTransform));
+
+        const std::string expected{ R"(<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList version="2" id="UIDGradingCurves">
+    <GradingRGBCurve inBitDepth="32f" outBitDepth="32f" style="video">
+        <DynamicParameter param="RGB_CURVE" />
+    </GradingRGBCurve>
+</ProcessList>
+)" };
+
+        OCIO_CHECK_EQUAL(expected.size(), outputTransform.str().size());
+        OCIO_CHECK_EQUAL(expected, outputTransform.str());
+    }
+}
+
+OCIO_ADD_TEST(CTFTransform, grading_rgbcurve_lin_ctf)
+{
+    auto gradingCurves = OCIO::GradingRGBCurveTransform::Create(OCIO::GRADING_LIN);
+
+    // Two of the curves are the default curves, they are not saved.
+    OCIO::GradingRGBCurveRcPtr curves = OCIO::GradingRGBCurve::Create(OCIO::GRADING_LIN);
+    curves->getCurve(OCIO::RGB_RED)->getControlPoint(0).m_y = -6.015625f;
+    curves->getCurve(OCIO::RGB_MASTER)->setNumControlPoints(4);
+    curves->getCurve(OCIO::RGB_MASTER)->getControlPoint(3).m_x = 16.f;
+    curves->getCurve(OCIO::RGB_MASTER)->getControlPoint(3).m_y = 10.f;
+    curves->getCurve(OCIO::RGB_MASTER)->setSlope(0, 1.f);
+    curves->getCurve(OCIO::RGB_MASTER)->setSlope(1, 0.75f);
+    curves->getCurve(OCIO::RGB_MASTER)->setSlope(2, 1.1f);
+    curves->getCurve(OCIO::RGB_MASTER)->setSlope(3, 1.f);
+    gradingCurves->setValue(curves);
+    {
+        OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
+        group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UIDGradingCurves");
+        group->appendTransform(gradingCurves);
+
+        std::ostringstream outputTransform;
+        OCIO_CHECK_NO_THROW(WriteGroupCTF(group, outputTransform));
+
+        const std::string expected{ R"(<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList version="2" id="UIDGradingCurves">
+    <GradingRGBCurve inBitDepth="32f" outBitDepth="32f" style="linear">
+        <Red>
+            <ControlPoints>
+                         -7 -6.015625
+                          0 0
+                          7 7
+            </ControlPoints>
+        </Red>
+        <Master>
+            <ControlPoints>
+                         -7 -7
+                          0 0
+                          7 7
+                         16 10
+            </ControlPoints>
+            <Slopes>
+                          1 0.75 1.1 1 
+            </Slopes>
+        </Master>
+    </GradingRGBCurve>
+</ProcessList>
+)" };
+
+        OCIO_CHECK_EQUAL(expected.size(), outputTransform.str().size());
+        OCIO_CHECK_EQUAL(expected, outputTransform.str());
+    }
+
+    // All curves are default curves, no curve is saved.
+    curves = OCIO::GradingRGBCurve::Create(OCIO::GRADING_LIN);
+    gradingCurves->setValue(curves);
+    gradingCurves->setBypassLinToLog(true);
+    // Make it dynamic so it is not identity.
+    gradingCurves->makeDynamic();
+    {
+        OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
+        group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UIDGradingCurves");
+        group->appendTransform(gradingCurves);
+
+        std::ostringstream outputTransform;
+        OCIO_CHECK_NO_THROW(WriteGroupCTF(group, outputTransform));
+
+        const std::string expected{ R"(<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList version="2" id="UIDGradingCurves">
+    <GradingRGBCurve inBitDepth="32f" outBitDepth="32f" style="linear" bypassLinToLog="true">
+        <DynamicParameter param="RGB_CURVE" />
+    </GradingRGBCurve>
+</ProcessList>
+)" };
+
+        OCIO_CHECK_EQUAL(expected.size(), outputTransform.str().size());
+        OCIO_CHECK_EQUAL(expected, outputTransform.str());
+    }
+}
+
+OCIO_ADD_TEST(CTFTransform, grading_tone_log_ctf)
+{
+    auto gradingTone = OCIO::GradingToneTransform::Create(OCIO::GRADING_LOG);
+
+    // Leave midtones and scontrast as default and verify they aren't saved.
+    OCIO::GradingTone values(OCIO::GRADING_LOG);
+    values.m_blacks.m_red += 0.12345678912;
+    values.m_shadows.m_green += 0.1;
+    values.m_highlights.m_start += 0.1;
+    values.m_whites.m_width += 0.1;
+    gradingTone->setValue(values);
+
+    {
+        OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
+        group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UIDEC42");
+        group->appendTransform(gradingTone);
+
+        std::ostringstream outputTransform;
+        OCIO_CHECK_NO_THROW(WriteGroupCTF(group, outputTransform));
+
+        const std::string expectedDefault{ R"(<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList version="2" id="UIDEC42">
+    <GradingTone inBitDepth="32f" outBitDepth="32f" style="log">
+        <Blacks rgb="1.12345678912 1 1" master="1" start="0.4" width="0.4" />
+        <Shadows rgb="1 1.1 1" master="1" start="0.5" pivot="0" />
+        <Highlights rgb="1 1 1" master="1" start="0.4" pivot="1" />
+        <Whites rgb="1 1 1" master="1" start="0.4" width="0.6" />
+    </GradingTone>
+</ProcessList>
+)" };
+
+        OCIO_CHECK_EQUAL(expectedDefault.size(), outputTransform.str().size());
+        OCIO_CHECK_EQUAL(expectedDefault, outputTransform.str());
+    }
+
+    // All are non-default.
+    values.m_blacks     = OCIO::GradingRGBMSW(1.1, 0.99999, 1.3, 1.2, 1.1, 1.00001);
+    values.m_shadows    = OCIO::GradingRGBMSW(0.99999, 1.00001, 1.3, 1.2, 1.1, 0.1);
+    values.m_midtones   = OCIO::GradingRGBMSW(1.1, 1.3, 0.99999, 1.00001, 1.1, 1.2);
+    values.m_highlights = OCIO::GradingRGBMSW(1.1, 1.00001, 1.3, 0.99999, 1.1, 1.2);
+    values.m_whites     = OCIO::GradingRGBMSW(1.00001, 1.1, 1.3, 1.2, 0.99999, 1.1);
+    values.m_scontrast += 0.1111;
+    gradingTone->setValue(values);
+
+    {
+        OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
+        group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UIDEC42");
+        group->appendTransform(gradingTone);
+
+        std::ostringstream outputTransform;
+        OCIO_CHECK_NO_THROW(WriteGroupCTF(group, outputTransform));
+
+        const std::string expectedDefault{ R"(<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList version="2" id="UIDEC42">
+    <GradingTone inBitDepth="32f" outBitDepth="32f" style="log">
+        <Blacks rgb="1.1 0.99999 1.3" master="1.2" start="1.1" width="1.00001" />
+        <Shadows rgb="0.99999 1.00001 1.3" master="1.2" start="1.1" pivot="0.1" />
+        <Midtones rgb="1.1 1.3 0.99999" master="1.00001" center="1.1" width="1.2" />
+        <Highlights rgb="1.1 1.00001 1.3" master="0.99999" start="1.1" pivot="1.2" />
+        <Whites rgb="1.00001 1.1 1.3" master="1.2" start="0.99999" width="1.1" />
+        <SContrast master="1.1111" />
+    </GradingTone>
+</ProcessList>
+)" };
+
+        OCIO_CHECK_EQUAL(expectedDefault.size(), outputTransform.str().size());
+        OCIO_CHECK_EQUAL(expectedDefault, outputTransform.str());
+    }
+
+    // Use default parameters, make dynamic and change direction.
+    OCIO::GradingTone valuesDef(OCIO::GRADING_LOG);
+    gradingTone->setValue(valuesDef);
+    gradingTone->makeDynamic();
+    gradingTone->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+
+    {
+        OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
+        group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UIDEC42");
+        group->appendTransform(gradingTone);
+
+        std::ostringstream outputTransform;
+        OCIO_CHECK_NO_THROW(WriteGroupCTF(group, outputTransform));
+
+        const std::string expectedDefault{ R"(<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList version="2" id="UIDEC42">
+    <GradingTone inBitDepth="32f" outBitDepth="32f" style="logRev">
+        <DynamicParameter param="TONE" />
+    </GradingTone>
+</ProcessList>
+)" };
+
+        OCIO_CHECK_EQUAL(expectedDefault.size(), outputTransform.str().size());
+        OCIO_CHECK_EQUAL(expectedDefault, outputTransform.str());
+    }
+}
+
+OCIO_ADD_TEST(CTFTransform, grading_tone_lin_ctf)
+{
+    // Only test the style, sub elements tested with GRADING_LOG.
+    auto gradingTone = OCIO::GradingToneTransform::Create(OCIO::GRADING_LIN);
+
+    // Make dynamic so it gets saved.
+    gradingTone->makeDynamic();
+
+    {
+        OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
+        group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UIDEC42");
+        group->appendTransform(gradingTone);
+
+        std::ostringstream outputTransform;
+        OCIO_CHECK_NO_THROW(WriteGroupCTF(group, outputTransform));
+
+        const std::string expectedDefault{ R"(<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList version="2" id="UIDEC42">
+    <GradingTone inBitDepth="32f" outBitDepth="32f" style="linear">
+        <DynamicParameter param="TONE" />
+    </GradingTone>
+</ProcessList>
+)" };
+
+        OCIO_CHECK_EQUAL(expectedDefault.size(), outputTransform.str().size());
+        OCIO_CHECK_EQUAL(expectedDefault, outputTransform.str());
+    }
+
+    gradingTone->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+
+    {
+        OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
+        group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UIDEC42");
+        group->appendTransform(gradingTone);
+
+        std::ostringstream outputTransform;
+        OCIO_CHECK_NO_THROW(WriteGroupCTF(group, outputTransform));
+
+        const std::string expectedDefault{ R"(<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList version="2" id="UIDEC42">
+    <GradingTone inBitDepth="32f" outBitDepth="32f" style="linearRev">
+        <DynamicParameter param="TONE" />
+    </GradingTone>
+</ProcessList>
+)" };
+
+        OCIO_CHECK_EQUAL(expectedDefault.size(), outputTransform.str().size());
+        OCIO_CHECK_EQUAL(expectedDefault, outputTransform.str());
+    }
+}
+
+OCIO_ADD_TEST(CTFTransform, grading_tone_video_ctf)
+{
+    // Only test the style, sub elements tested with GRADING_LOG.
+    auto gradingTone = OCIO::GradingToneTransform::Create(OCIO::GRADING_VIDEO);
+    // Make dynamic so it gets saved.
+    gradingTone->makeDynamic();
+
+    {
+        OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
+        group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UIDEC42");
+        group->appendTransform(gradingTone);
+
+        std::ostringstream outputTransform;
+        OCIO_CHECK_NO_THROW(WriteGroupCTF(group, outputTransform));
+
+        const std::string expectedDefault{ R"(<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList version="2" id="UIDEC42">
+    <GradingTone inBitDepth="32f" outBitDepth="32f" style="video">
+        <DynamicParameter param="TONE" />
+    </GradingTone>
+</ProcessList>
+)" };
+
+        OCIO_CHECK_EQUAL(expectedDefault.size(), outputTransform.str().size());
+        OCIO_CHECK_EQUAL(expectedDefault, outputTransform.str());
+    }
+
+    gradingTone->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+
+    {
+        OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
+        group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UIDEC42");
+        group->appendTransform(gradingTone);
+
+        std::ostringstream outputTransform;
+        OCIO_CHECK_NO_THROW(WriteGroupCTF(group, outputTransform));
+
+        const std::string expectedDefault{ R"(<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList version="2" id="UIDEC42">
+    <GradingTone inBitDepth="32f" outBitDepth="32f" style="videoRev">
+        <DynamicParameter param="TONE" />
+    </GradingTone>
+</ProcessList>
+)" };
+
+        OCIO_CHECK_EQUAL(expectedDefault.size(), outputTransform.str().size());
+        OCIO_CHECK_EQUAL(expectedDefault, outputTransform.str());
+    }
+}
+
 OCIO_ADD_TEST(CTFTransform, log_lin_to_log_ctf)
 {
-    OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
-
     OCIO::LogAffineTransformRcPtr logT = OCIO::LogAffineTransform::Create();
     
     const double base = 2.0;
@@ -5711,9 +7040,8 @@ OCIO_ADD_TEST(CTFTransform, log_lin_to_log_ctf)
     group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UIDLOG42");
     group->appendTransform(logT);
 
-    OCIO::ConstProcessorRcPtr processorGroup = config->getProcessor(group);
     std::ostringstream outputTransform;
-    OCIO_CHECK_NO_THROW(processorGroup->write(OCIO::FILEFORMAT_CTF, outputTransform));
+    OCIO_CHECK_NO_THROW(WriteGroupCTF(group, outputTransform));
 
     const std::string expected{ R"(<?xml version="1.0" encoding="UTF-8"?>
 <ProcessList version="2" id="UIDLOG42">
@@ -5731,9 +7059,6 @@ OCIO_ADD_TEST(CTFTransform, log_lin_to_log_ctf)
 
 OCIO_ADD_TEST(CTFTransform, log_log_to_lin_ctf)
 {
-    OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
-
     OCIO::LogAffineTransformRcPtr logT = OCIO::LogAffineTransform::Create();
     logT->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
 
@@ -5746,9 +7071,8 @@ OCIO_ADD_TEST(CTFTransform, log_log_to_lin_ctf)
     group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UIDLOG42");
     group->appendTransform(logT);
 
-    OCIO::ConstProcessorRcPtr processorGroup = config->getProcessor(group);
     std::ostringstream outputTransform;
-    OCIO_CHECK_NO_THROW(processorGroup->write(OCIO::FILEFORMAT_CTF, outputTransform));
+    OCIO_CHECK_NO_THROW(WriteGroupCTF(group, outputTransform));
 
     const std::string expected{ R"(<?xml version="1.0" encoding="UTF-8"?>
 <ProcessList version="2" id="UIDLOG42">
@@ -5764,9 +7088,6 @@ OCIO_ADD_TEST(CTFTransform, log_log_to_lin_ctf)
 
 OCIO_ADD_TEST(CTFTransform, log_antilog2_ctf)
 {
-    OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
-
     OCIO::LogAffineTransformRcPtr logT = OCIO::LogAffineTransform::Create();
     logT->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
 
@@ -5777,9 +7098,8 @@ OCIO_ADD_TEST(CTFTransform, log_antilog2_ctf)
     group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UIDLOG42");
     group->appendTransform(logT);
 
-    OCIO::ConstProcessorRcPtr processorGroup = config->getProcessor(group);
     std::ostringstream outputTransform;
-    OCIO_CHECK_NO_THROW(processorGroup->write(OCIO::FILEFORMAT_CTF, outputTransform));
+    OCIO_CHECK_NO_THROW(WriteGroupCTF(group, outputTransform));
 
     const std::string expected{ R"(<?xml version="1.0" encoding="UTF-8"?>
 <ProcessList version="2" id="UIDLOG42">
@@ -5794,9 +7114,6 @@ OCIO_ADD_TEST(CTFTransform, log_antilog2_ctf)
 
 OCIO_ADD_TEST(CTFTransform, lut1d_clf)
 {
-    OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
-
     OCIO::Lut1DTransformRcPtr lut = OCIO::Lut1DTransform::Create();
     lut->setInterpolation(OCIO::INTERP_LINEAR);
 
@@ -5804,9 +7121,8 @@ OCIO_ADD_TEST(CTFTransform, lut1d_clf)
     group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UIDLUT42");
     group->appendTransform(lut);
 
-    OCIO::ConstProcessorRcPtr processorGroup = config->getProcessor(group);
     std::ostringstream outputTransform;
-    OCIO_CHECK_NO_THROW(processorGroup->write(OCIO::FILEFORMAT_CLF, outputTransform));
+    OCIO_CHECK_NO_THROW(WriteGroupCLF(group, outputTransform));
 
     const std::string expected{ R"(<?xml version="1.0" encoding="UTF-8"?>
 <ProcessList compCLFversion="3" id="UIDLUT42">
@@ -5825,9 +7141,6 @@ OCIO_ADD_TEST(CTFTransform, lut1d_clf)
 
 OCIO_ADD_TEST(CTFTransform, lut1d_inverse_clf)
 {
-    OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
-
     OCIO::Lut1DTransformRcPtr lut = OCIO::Lut1DTransform::Create();
     lut->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
 
@@ -5835,18 +7148,14 @@ OCIO_ADD_TEST(CTFTransform, lut1d_inverse_clf)
     group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UIDLUT42");
     group->appendTransform(lut);
 
-    OCIO::ConstProcessorRcPtr processorGroup = config->getProcessor(group);
     std::ostringstream outputTransform;
-    OCIO_CHECK_THROW_WHAT(processorGroup->write(OCIO::FILEFORMAT_CLF, outputTransform),
+    OCIO_CHECK_THROW_WHAT(WriteGroupCLF(group, outputTransform),
                           OCIO::Exception,
                           "Transform uses the 'InverseLUT1D' op which cannot be written as CLF");
 }
 
 OCIO_ADD_TEST(CTFTransform, lut1d_ctf)
 {
-    OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
-
     OCIO::Lut1DTransformRcPtr lut = OCIO::Lut1DTransform::Create();
     lut->setInterpolation(OCIO::INTERP_DEFAULT);
 
@@ -5854,9 +7163,8 @@ OCIO_ADD_TEST(CTFTransform, lut1d_ctf)
     group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UIDLUT42");
     group->appendTransform(lut);
 
-    OCIO::ConstProcessorRcPtr processorGroup = config->getProcessor(group);
     std::ostringstream outputTransform;
-    OCIO_CHECK_NO_THROW(processorGroup->write(OCIO::FILEFORMAT_CTF, outputTransform));
+    OCIO_CHECK_NO_THROW(WriteGroupCTF(group, outputTransform));
 
     const std::string expected{ R"(<?xml version="1.0" encoding="UTF-8"?>
 <ProcessList version="1.3" id="UIDLUT42">
@@ -5875,9 +7183,6 @@ OCIO_ADD_TEST(CTFTransform, lut1d_ctf)
 
 OCIO_ADD_TEST(CTFTransform, lut1d_attributes_ctf)
 {
-    OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
-
     OCIO::Lut1DTransformRcPtr lut = OCIO::Lut1DTransform::Create();
     lut->getFormatMetadata().addAttribute(OCIO::METADATA_NAME, "test-lut");
     lut->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "lut01");
@@ -5897,9 +7202,8 @@ OCIO_ADD_TEST(CTFTransform, lut1d_attributes_ctf)
     group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UIDLUT42");
     group->appendTransform(lut);
 
-    OCIO::ConstProcessorRcPtr processorGroup = config->getProcessor(group);
     std::ostringstream outputTransform;
-    OCIO_CHECK_NO_THROW(processorGroup->write(OCIO::FILEFORMAT_CTF, outputTransform));
+    OCIO_CHECK_NO_THROW(WriteGroupCTF(group, outputTransform));
 
     std::istringstream inputTransform;
     inputTransform.str(outputTransform.str());
@@ -5931,9 +7235,6 @@ OCIO_ADD_TEST(CTFTransform, lut1d_attributes_ctf)
 
 OCIO_ADD_TEST(CTFTransform, lut1d_array_16x1_ctf)
 {
-    OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
-
     OCIO::Lut1DTransformRcPtr lut = OCIO::Lut1DTransform::Create();
     lut->setInterpolation(OCIO::INTERP_DEFAULT);
     lut->getFormatMetadata().addAttribute(OCIO::METADATA_NAME, "test-lut");
@@ -5952,9 +7253,8 @@ OCIO_ADD_TEST(CTFTransform, lut1d_array_16x1_ctf)
     group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UIDLUT42");
     group->appendTransform(lut);
 
-    OCIO::ConstProcessorRcPtr processorGroup = config->getProcessor(group);
     std::ostringstream outputTransform;
-    OCIO_CHECK_NO_THROW(processorGroup->write(OCIO::FILEFORMAT_CTF, outputTransform));
+    OCIO_CHECK_NO_THROW(WriteGroupCTF(group, outputTransform));
 
     const std::string expected{ R"(<?xml version="1.0" encoding="UTF-8"?>
 <ProcessList version="1.3" id="UIDLUT42">
@@ -5987,9 +7287,6 @@ OCIO_ADD_TEST(CTFTransform, lut1d_array_16x1_ctf)
 
 OCIO_ADD_TEST(CTFTransform, lut1d_array_16x3_ctf)
 {
-    OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
-
     OCIO::Lut1DTransformRcPtr lut = OCIO::Lut1DTransform::Create();
     lut->setInterpolation(OCIO::INTERP_DEFAULT);
     lut->getFormatMetadata().addAttribute(OCIO::METADATA_NAME, "test-lut");
@@ -6007,9 +7304,8 @@ OCIO_ADD_TEST(CTFTransform, lut1d_array_16x3_ctf)
     group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UIDLUT42");
     group->appendTransform(lut);
 
-    OCIO::ConstProcessorRcPtr processorGroup = config->getProcessor(group);
     std::ostringstream outputTransform;
-    OCIO_CHECK_NO_THROW(processorGroup->write(OCIO::FILEFORMAT_CTF, outputTransform));
+    OCIO_CHECK_NO_THROW(WriteGroupCTF(group, outputTransform));
 
     const std::string expected{ R"(<?xml version="1.0" encoding="UTF-8"?>
 <ProcessList version="1.3" id="UIDLUT42">
@@ -6042,9 +7338,6 @@ OCIO_ADD_TEST(CTFTransform, lut1d_array_16x3_ctf)
 
 OCIO_ADD_TEST(CTFTransform, lut1d_10i_ctf)
 {
-    OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
-
     OCIO::Lut1DTransformRcPtr lut = OCIO::Lut1DTransform::Create();
     lut->setInterpolation(OCIO::INTERP_DEFAULT);
     lut->getFormatMetadata().addAttribute(OCIO::METADATA_NAME, "test-lut");
@@ -6057,9 +7350,8 @@ OCIO_ADD_TEST(CTFTransform, lut1d_10i_ctf)
     group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UIDLUT42");
     group->appendTransform(lut);
 
-    OCIO::ConstProcessorRcPtr processorGroup = config->getProcessor(group);
     std::ostringstream outputTransform;
-    OCIO_CHECK_NO_THROW(processorGroup->write(OCIO::FILEFORMAT_CTF, outputTransform));
+    OCIO_CHECK_NO_THROW(WriteGroupCTF(group, outputTransform));
 
     const std::string expected{ R"(<?xml version="1.0" encoding="UTF-8"?>
 <ProcessList version="1.3" id="UIDLUT42">
@@ -6079,9 +7371,6 @@ OCIO_ADD_TEST(CTFTransform, lut1d_10i_ctf)
 
 OCIO_ADD_TEST(CTFTransform, lut1d_inverse_ctf)
 {
-    OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
-
     OCIO::Lut1DTransformRcPtr lut = OCIO::Lut1DTransform::Create();
     lut->setInterpolation(OCIO::INTERP_DEFAULT);
     lut->getFormatMetadata().addAttribute(OCIO::METADATA_NAME, "test-lut");
@@ -6101,9 +7390,8 @@ OCIO_ADD_TEST(CTFTransform, lut1d_inverse_ctf)
     group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UIDLUT42");
     group->appendTransform(lut);
 
-    OCIO::ConstProcessorRcPtr processorGroup = config->getProcessor(group);
     std::ostringstream outputTransform;
-    OCIO_CHECK_NO_THROW(processorGroup->write(OCIO::FILEFORMAT_CTF, outputTransform));
+    OCIO_CHECK_NO_THROW(WriteGroupCTF(group, outputTransform));
 
     // Note the type of the node.
     const std::string expected{ R"(<?xml version="1.0" encoding="UTF-8"?>
@@ -6137,9 +7425,6 @@ OCIO_ADD_TEST(CTFTransform, lut1d_inverse_ctf)
 
 OCIO_ADD_TEST(CTFTransform, lut3d_array_ctf)
 {
-    OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
-
     OCIO::Lut3DTransformRcPtr lut = OCIO::Lut3DTransform::Create();
     lut->getFormatMetadata().addAttribute(OCIO::METADATA_NAME, "test-lut3d");
     lut->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "lut01");
@@ -6166,9 +7451,8 @@ OCIO_ADD_TEST(CTFTransform, lut3d_array_ctf)
     group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UIDLUT42");
     group->appendTransform(lut);
 
-    OCIO::ConstProcessorRcPtr processorGroup = config->getProcessor(group);
     std::ostringstream outputTransform;
-    OCIO_CHECK_NO_THROW(processorGroup->write(OCIO::FILEFORMAT_CTF, outputTransform));
+    OCIO_CHECK_NO_THROW(WriteGroupCTF(group, outputTransform));
 
     const std::string expected{ R"(<?xml version="1.0" encoding="UTF-8"?>
 <ProcessList version="1.3" id="UIDLUT42">
@@ -6212,9 +7496,6 @@ OCIO_ADD_TEST(CTFTransform, lut3d_array_ctf)
 
 OCIO_ADD_TEST(CTFTransform, lut3d_inverse_clf)
 {
-    OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
-
     OCIO::Lut3DTransformRcPtr lut = OCIO::Lut3DTransform::Create();
     lut->getFormatMetadata().addAttribute(OCIO::METADATA_NAME, "test-lut3d");
     lut->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "lut01");
@@ -6242,18 +7523,14 @@ OCIO_ADD_TEST(CTFTransform, lut3d_inverse_clf)
     group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UIDLUT42");
     group->appendTransform(lut);
 
-    OCIO::ConstProcessorRcPtr processorGroup = config->getProcessor(group);
     std::ostringstream outputTransform;
-    OCIO_CHECK_THROW_WHAT(processorGroup->write(OCIO::FILEFORMAT_CLF, outputTransform),
+    OCIO_CHECK_THROW_WHAT(WriteGroupCLF(group, outputTransform),
                           OCIO::Exception,
                           "Transform uses the 'InverseLUT3D' op which cannot be written as CLF");
 }
 
 OCIO_ADD_TEST(CTFTransform, lut3d_inverse_ctf)
 {
-    OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
-
     OCIO::Lut3DTransformRcPtr lut = OCIO::Lut3DTransform::Create();
     lut->getFormatMetadata().addAttribute(OCIO::METADATA_NAME, "test-lut3d");
     lut->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "lut01");
@@ -6281,9 +7558,8 @@ OCIO_ADD_TEST(CTFTransform, lut3d_inverse_ctf)
     group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UIDLUT42");
     group->appendTransform(lut);
 
-    OCIO::ConstProcessorRcPtr processorGroup = config->getProcessor(group);
     std::ostringstream outputTransform;
-    OCIO_CHECK_NO_THROW(processorGroup->write(OCIO::FILEFORMAT_CTF, outputTransform));
+    OCIO_CHECK_NO_THROW(WriteGroupCTF(group, outputTransform));
 
     // Note the type of the node.
     const std::string expected{ R"(<?xml version="1.0" encoding="UTF-8"?>
@@ -6326,11 +7602,86 @@ OCIO_ADD_TEST(CTFTransform, lut3d_inverse_ctf)
     OCIO_CHECK_EQUAL(expected, outputTransform.str());
 }
 
-OCIO_ADD_TEST(CTFTransform, bitdepth_ctf)
+OCIO_ADD_TEST(CTFTransform, save_lut3d_interpolation)
 {
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
     config->setMajorVersion(2);
 
+    OCIO::Lut3DTransformRcPtr lut = OCIO::Lut3DTransform::Create();
+    lut->setInterpolation(OCIO::INTERP_DEFAULT);
+
+    OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
+    group->appendTransform(lut);
+
+    std::ostringstream outputTransform;
+    OCIO_CHECK_NO_THROW(WriteGroupCTF(group, outputTransform));
+
+    {
+        const std::string result = outputTransform.str();
+        const std::string expected = R"(<LUT3D inBitDepth="32f" outBitDepth="32f">)";
+        OCIO_CHECK_ASSERT(result.find(expected) != std::string::npos);
+    }
+
+    outputTransform.str("");
+    outputTransform.clear();
+    group = OCIO::GroupTransform::Create();
+
+    // INTERP_BEST is not a valid CTF/CLF method, so write its concrete value, which is
+    // tetrahedral.
+    lut->setInterpolation(OCIO::INTERP_BEST);
+    group = OCIO::GroupTransform::Create();
+    group->appendTransform(lut);
+    OCIO_CHECK_NO_THROW(WriteGroupCTF(group, outputTransform));
+
+    {
+        const std::string result = outputTransform.str();
+        const std::string expected = R"(<LUT3D inBitDepth="32f" outBitDepth="32f" interpolation="tetrahedral">)";
+        OCIO_CHECK_ASSERT(result.find(expected) != std::string::npos);
+    }
+
+    outputTransform.str("");
+    outputTransform.clear();
+    group = OCIO::GroupTransform::Create();
+
+    lut->setInterpolation(OCIO::INTERP_LINEAR);
+    group = OCIO::GroupTransform::Create();
+    group->appendTransform(lut);
+    OCIO_CHECK_NO_THROW(WriteGroupCTF(group, outputTransform));
+
+    {
+        const std::string result = outputTransform.str();
+        const std::string expected = R"(<LUT3D inBitDepth="32f" outBitDepth="32f" interpolation="trilinear">)";
+        OCIO_CHECK_ASSERT(result.find(expected) != std::string::npos);
+    }
+
+    outputTransform.str("");
+    outputTransform.clear();
+    group = OCIO::GroupTransform::Create();
+
+    lut->setInterpolation(OCIO::INTERP_TETRAHEDRAL);
+    group = OCIO::GroupTransform::Create();
+    group->appendTransform(lut);
+    OCIO_CHECK_NO_THROW(WriteGroupCTF(group, outputTransform));
+
+    {
+        const std::string result = outputTransform.str();
+        const std::string expected = R"(<LUT3D inBitDepth="32f" outBitDepth="32f" interpolation="tetrahedral">)";
+        OCIO_CHECK_ASSERT(result.find(expected) != std::string::npos);
+    }
+
+    outputTransform.str("");
+    outputTransform.clear();
+    group = OCIO::GroupTransform::Create();
+
+    lut->setInterpolation(OCIO::INTERP_CUBIC);
+    group = OCIO::GroupTransform::Create();
+    group->appendTransform(lut);
+    OCIO_CHECK_THROW_WHAT(WriteGroupCTF(group, outputTransform), OCIO::Exception,
+                          "Lut3D does not support interpolation algorithm: cubic");
+}
+
+OCIO_ADD_TEST(CTFTransform, bitdepth_ctf)
+{
     auto mat = OCIO::MatrixTransform::Create();
     mat->setFileInputBitDepth(OCIO::BIT_DEPTH_UINT8);
     mat->setFileOutputBitDepth(OCIO::BIT_DEPTH_UINT10);
@@ -6378,9 +7729,8 @@ OCIO_ADD_TEST(CTFTransform, bitdepth_ctf)
     // Previous op out bit-depth used for in bit-depth.
     group->appendTransform(log);
 
-    OCIO::ConstProcessorRcPtr processorGroup = config->getProcessor(group);
     std::ostringstream outputTransform;
-    OCIO_CHECK_NO_THROW(processorGroup->write(OCIO::FILEFORMAT_CTF, outputTransform));
+    OCIO_CHECK_NO_THROW(WriteGroupCTF(group, outputTransform));
 
     const std::string expected{ R"(<?xml version="1.0" encoding="UTF-8"?>
 <ProcessList version="2" id="UID42">
@@ -6422,15 +7772,11 @@ OCIO_ADD_TEST(CTFTransform, bitdepth_ctf)
 
 OCIO_ADD_TEST(CTFTransform, no_ops_ctf)
 {
-    OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
-
     OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
     group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UIDEC42");
 
-    OCIO::ConstProcessorRcPtr processorGroup = config->getProcessor(group);
     std::ostringstream outputTransform;
-    OCIO_CHECK_NO_THROW(processorGroup->write(OCIO::FILEFORMAT_CTF, outputTransform));
+    OCIO_CHECK_NO_THROW(WriteGroupCTF(group, outputTransform));
 
     const std::string expected{ R"(<?xml version="1.0" encoding="UTF-8"?>
 <ProcessList version="1.3" id="UIDEC42">
@@ -6485,9 +7831,9 @@ OCIO_ADD_TEST(FileFormatCTF, bake_1d)
 R"(<?xml version="1.0" encoding="UTF-8"?>
 <ProcessList compCLFversion="3" id="UID42">
     <LUT1D inBitDepth="32f" outBitDepth="32f">
-        <Array dim="2 3">
-          0           0           0
-          1           1           1
+        <Array dim="2 1">
+          0
+          1
         </Array>
     </LUT1D>
 </ProcessList>
@@ -6501,9 +7847,9 @@ R"(<?xml version="1.0" encoding="UTF-8"?>
     const std::string expectedCTF{ R"(<?xml version="1.0" encoding="UTF-8"?>
 <ProcessList version="1.3" id="UID42">
     <LUT1D inBitDepth="32f" outBitDepth="32f">
-        <Array dim="2 3">
-          0           0           0
-          1           1           1
+        <Array dim="2 1">
+          0
+          1
         </Array>
     </LUT1D>
 </ProcessList>
@@ -6515,6 +7861,7 @@ R"(<?xml version="1.0" encoding="UTF-8"?>
 OCIO_ADD_TEST(FileFormatCTF, bake_3d)
 {
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
+
     {
         OCIO::ColorSpaceRcPtr cs = OCIO::ColorSpace::Create();
         cs->setName("input");
@@ -6547,7 +7894,8 @@ OCIO_ADD_TEST(FileFormatCTF, bake_3d)
     data.addChildElement(OCIO::METADATA_INPUT_DESCRIPTOR, "Input descriptor");
     data.addChildElement(OCIO::METADATA_INPUT_DESCRIPTOR, "Only first is saved");
     data.addChildElement(OCIO::METADATA_OUTPUT_DESCRIPTOR, "Output descriptor");
-    auto & info = data.addChildElement(OCIO::METADATA_INFO, "");
+    data.addChildElement(OCIO::METADATA_INFO, "");
+    auto & info = data.getChildElement(6);
     info.addAttribute("attrib1", "val1");
     info.addAttribute("attrib2", "val2");
     info.addChildElement("anything", "is saved");
@@ -6589,12 +7937,9 @@ R"(<?xml version="1.0" encoding="UTF-8"?>
     OCIO_CHECK_EQUAL(expectedCLF, output.str());
 }
 
-#ifdef USE_SSE
-// Using ops that do produce slightly different results in SSE and non-SSE mode.
 OCIO_ADD_TEST(FileFormatCTF, bake_1d_3d)
 {
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setMajorVersion(2);
     {
         OCIO::ColorSpaceRcPtr cs = OCIO::ColorSpace::Create();
         cs->setName("input");
@@ -6644,7 +7989,7 @@ OCIO_ADD_TEST(FileFormatCTF, bake_1d_3d)
 
     std::string emptyString;
     OCIO::LocalFileFormat tester;
-    OCIO::CachedFileRcPtr file = tester.read(output, emptyString);
+    OCIO::CachedFileRcPtr file = tester.read(output, emptyString, OCIO::INTERP_DEFAULT);
     auto cachedFile = OCIO::DynamicPtrCast<OCIO::LocalCachedFile>(file);
 
     const OCIO::ConstOpDataVec & opList = cachedFile->m_transform->getOps();
@@ -6673,20 +8018,20 @@ OCIO_ADD_TEST(FileFormatCTF, bake_1d_3d)
     OCIO_CHECK_CLOSE(lut->getArray()[4], 0.0361f, 1.e-5f);
     OCIO_CHECK_CLOSE(lut->getArray()[5], 0.5361f, 1.e-5f);
     OCIO_CHECK_CLOSE(lut->getArray()[6], 0.3576f, 1.e-5f);
-    OCIO_CHECK_CLOSE(lut->getArray()[7], 0.85761f, 1.e-5f);
+    OCIO_CHECK_CLOSE(lut->getArray()[7], 0.8576f, 1.e-5f);
     OCIO_CHECK_CLOSE(lut->getArray()[8], 0.3576f, 1.e-5f);
     OCIO_CHECK_CLOSE(lut->getArray()[9], 0.3937f, 1.e-5f);
-    OCIO_CHECK_CLOSE(lut->getArray()[10], 0.89371f, 1.e-5f);
-    OCIO_CHECK_CLOSE(lut->getArray()[11], 0.89371f, 1.e-5f);
+    OCIO_CHECK_CLOSE(lut->getArray()[10], 0.8937f, 1.e-5f);
+    OCIO_CHECK_CLOSE(lut->getArray()[11], 0.8937f, 1.e-5f);
     OCIO_CHECK_CLOSE(lut->getArray()[12], 0.6063f, 1.e-5f);
     OCIO_CHECK_CLOSE(lut->getArray()[13], 0.1063f, 1.e-5f);
     OCIO_CHECK_CLOSE(lut->getArray()[14], 0.1063f, 1.e-5f);
     OCIO_CHECK_CLOSE(lut->getArray()[15], 0.6424f, 1.e-5f);
     OCIO_CHECK_CLOSE(lut->getArray()[16], 0.1424f, 1.e-5f);
     OCIO_CHECK_CLOSE(lut->getArray()[17], 0.6424f, 1.e-5f);
-    OCIO_CHECK_CLOSE(lut->getArray()[18], 0.96391f, 1.e-5f);
-    OCIO_CHECK_CLOSE(lut->getArray()[19], 0.96391f, 1.e-5f);
-    OCIO_CHECK_CLOSE(lut->getArray()[20], 0.463905f, 1.e-5f);
+    OCIO_CHECK_CLOSE(lut->getArray()[18], 0.9639f, 1.e-5f);
+    OCIO_CHECK_CLOSE(lut->getArray()[19], 0.9639f, 1.e-5f);
+    OCIO_CHECK_CLOSE(lut->getArray()[20], 0.4639f, 1.e-5f);
     OCIO_CHECK_EQUAL(lut->getArray()[21], 1.0f);
     OCIO_CHECK_EQUAL(lut->getArray()[22], 1.0f);
     OCIO_CHECK_EQUAL(lut->getArray()[23], 1.0f);
@@ -6705,28 +8050,28 @@ R"(<?xml version="1.0" encoding="UTF-8"?>
         <maxOutValue> 1 </maxOutValue>
     </Range>
     <LUT1D inBitDepth="32f" outBitDepth="32f">
-        <Array dim="10 3">
-          0           0           0
- 0.11111112  0.11111112  0.11111112
- 0.22222224  0.22222224  0.22222224
- 0.33333334  0.33333334  0.33333334
- 0.44444448  0.44444448  0.44444448
- 0.55555558  0.55555558  0.55555558
- 0.66666675  0.66666675  0.66666675
- 0.77777779  0.77777779  0.77777779
- 0.88888896  0.88888896  0.88888896
-          1           1           1
+        <Array dim="10 1">
+          0
+ 0.11111112
+ 0.22222224
+ 0.33333334
+ 0.44444448
+ 0.55555558
+ 0.66666675
+ 0.77777779
+ 0.88888896
+          1
         </Array>
     </LUT1D>
     <LUT3D inBitDepth="32f" outBitDepth="32f">
         <Array dim="2 2 2 3">
           0           0           0
-0.036100417 0.036100417  0.53610623
- 0.35760415  0.85760993  0.35760415
- 0.39370456  0.89371037  0.89371037
- 0.60630703  0.10630123  0.10630123
- 0.64240742  0.14240164  0.64240742
- 0.96391118  0.96391118  0.46390536
+     0.0361      0.0361  0.53609997
+     0.3576  0.85759997      0.3576
+     0.3937      0.8937      0.8937
+     0.6063      0.1063      0.1063
+ 0.64240003      0.1424  0.64239997
+ 0.96389997  0.96389997      0.4639
           1           1           1
         </Array>
     </LUT3D>
@@ -6735,34 +8080,77 @@ R"(<?xml version="1.0" encoding="UTF-8"?>
     OCIO_CHECK_EQUAL(expectedCLF.size(), output1.str().size());
     OCIO_CHECK_EQUAL(expectedCLF, output1.str());
 }
-#endif
 
-// TODO: Bring over tests when adding CTF support.
+OCIO_ADD_TEST(FileFormatCTF, lut_interpolation_option)
+{
+    // Create empty Config to use.
+    OCIO::ConfigRcPtr config = OCIO::Config::Create();
+    config->setMajorVersion(2);
 
-// checkDither
-// look_test
-// look_test_true
-// checkFunction
-// checkGamutMap
-// checkHueVector
-// checkPrimaryLog
-// checkPrimaryLin
-// checkPrimaryVideo
-// checkPrimary_invalidAttr
-// checkPrimary_missingStyle
-// checkPrimary_styleMismatch
-// checkPrimary_invalidGammaValue
-// checkPrimary_missing_attribute
-// checkPrimary_wrong_attribute
-// checkTone
-// checkTone_hightlights_only
-// checkTone_invalid_attribute_value
-// checkRGBCurve
-// checkRGBSingleCurve
-// checkHUECurve
-// checkRGBCurve_decreasingCtrlPnts
-// checkRGBCurve_mismatch
-// checkRGBCurve_empty
-// checkRGBCurve_missing_type
-// checkRGBCurve_invalid_ctrl_pnts
-// checkRGBCurve_missing_curvelist
+    // CLF file containing a LUT3D that does not specifiy an interpolation.
+    const std::string filePath{ std::string(OCIO::GetTestFilesDir()) +
+                                "/clf/lut3d_17x17x17_10i_12i.clf" };
+
+    OCIO::FileTransformRcPtr fileTransform = OCIO::FileTransform::Create();
+    fileTransform->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
+    fileTransform->setSrc(filePath.c_str());
+
+    // Get the processor corresponding to the transform with default interpolation.
+    // LUT3D is using default interpolation.
+    OCIO::ConstProcessorRcPtr proc;
+    OCIO_CHECK_NO_THROW(proc = config->getProcessor(fileTransform));
+    auto group = proc->createGroupTransform();
+    OCIO_REQUIRE_EQUAL(group->getNumTransforms(), 1);
+    auto transform = group->getTransform(0);
+    auto lut3D = OCIO_DYNAMIC_POINTER_CAST<OCIO::Lut3DTransform>(transform);
+    OCIO_REQUIRE_ASSERT(lut3D);
+    OCIO_CHECK_EQUAL(lut3D->getInterpolation(), OCIO::INTERP_DEFAULT);
+
+    // For LUTs that do not specify an interpolation, if the FileTransform interpolation may be
+    // used, it is.
+    fileTransform->setInterpolation(OCIO::INTERP_BEST);
+    OCIO_CHECK_NO_THROW(proc = config->getProcessor(fileTransform));
+    group = proc->createGroupTransform();
+    OCIO_REQUIRE_EQUAL(group->getNumTransforms(), 1);
+    transform = group->getTransform(0);
+    lut3D = OCIO_DYNAMIC_POINTER_CAST<OCIO::Lut3DTransform>(transform);
+    OCIO_REQUIRE_ASSERT(lut3D);
+    OCIO_CHECK_EQUAL(lut3D->getInterpolation(), OCIO::INTERP_BEST);
+
+    // If the FileTranform interpolation is not supported by the LUT, it is ignored and default
+    // interpolation is used.
+    fileTransform->setInterpolation(OCIO::INTERP_CUBIC);
+    OCIO_CHECK_NO_THROW(proc = config->getProcessor(fileTransform));
+    group = proc->createGroupTransform();
+    OCIO_REQUIRE_EQUAL(group->getNumTransforms(), 1);
+    transform = group->getTransform(0);
+    lut3D = OCIO_DYNAMIC_POINTER_CAST<OCIO::Lut3DTransform>(transform);
+    OCIO_REQUIRE_ASSERT(lut3D);
+    OCIO_CHECK_EQUAL(lut3D->getInterpolation(), OCIO::INTERP_DEFAULT);
+
+    // CTF file containing a LUT3D that specifies tetrahedral interpolation.
+    const std::string filePath2{ std::string(OCIO::GetTestFilesDir()) +
+                                 "/lut3d_example_Inv.ctf" };
+
+    fileTransform->setSrc(filePath2.c_str());
+
+    // Whatever the file transform interpolation, LUT will keep its interpolation.
+    fileTransform->setInterpolation(OCIO::INTERP_DEFAULT);
+    OCIO_CHECK_NO_THROW(proc = config->getProcessor(fileTransform));
+    group = proc->createGroupTransform();
+    OCIO_REQUIRE_EQUAL(group->getNumTransforms(), 1);
+    transform = group->getTransform(0);
+    lut3D = OCIO_DYNAMIC_POINTER_CAST<OCIO::Lut3DTransform>(transform);
+    OCIO_REQUIRE_ASSERT(lut3D);
+    OCIO_CHECK_EQUAL(lut3D->getInterpolation(), OCIO::INTERP_TETRAHEDRAL);
+
+    // (INTERP_LINEAR is trilinear for LUT3D.)
+    fileTransform->setInterpolation(OCIO::INTERP_LINEAR);
+    OCIO_CHECK_NO_THROW(proc = config->getProcessor(fileTransform));
+    group = proc->createGroupTransform();
+    OCIO_REQUIRE_EQUAL(group->getNumTransforms(), 1);
+    transform = group->getTransform(0);
+    lut3D = OCIO_DYNAMIC_POINTER_CAST<OCIO::Lut3DTransform>(transform);
+    OCIO_REQUIRE_ASSERT(lut3D);
+    OCIO_CHECK_EQUAL(lut3D->getInterpolation(), OCIO::INTERP_TETRAHEDRAL);
+}

@@ -201,13 +201,13 @@ void OglApp::setShader(GpuShaderDescRcPtr & shaderDesc)
 
     std::ostringstream main;
     main << std::endl
-        << "uniform sampler2D img;" << std::endl
-        << std::endl
-        << "void main()" << std::endl
-        << "{" << std::endl
-        << "    vec4 col = texture2D(img, gl_TexCoord[0].st);" << std::endl
-        << "    gl_FragColor = " << shaderDesc->getFunctionName() << "(col);" << std::endl
-        << "}" << std::endl;
+         << "uniform sampler2D img;" << std::endl
+         << std::endl
+         << "void main()" << std::endl
+         << "{" << std::endl
+         << "    vec4 col = texture2D(img, gl_TexCoord[0].st);" << std::endl
+         << "    gl_FragColor = " << shaderDesc->getFunctionName() << "(col);" << std::endl
+         << "}" << std::endl;
 
     // Build the fragment shader program.
     m_oglBuilder->buildProgram(main.str().c_str());

@@ -6,72 +6,50 @@ import PyOpenColorIO as OCIO
 
 class ConstantsTest(unittest.TestCase):
 
-    def test_interface(self):
+    def test_string_constants(self):
+        """
+        Verify string constants exposed by OCIO.
+        """
+        # EnvironmentMode (env. variables).
+        self.assertEqual(OCIO.OCIO_CONFIG_ENVVAR, 'OCIO')
+        self.assertEqual(OCIO.OCIO_ACTIVE_DISPLAYS_ENVVAR, 'OCIO_ACTIVE_DISPLAYS')
+        self.assertEqual(OCIO.OCIO_ACTIVE_VIEWS_ENVVAR, 'OCIO_ACTIVE_VIEWS')
+        self.assertEqual(OCIO.OCIO_INACTIVE_COLORSPACES_ENVVAR, 'OCIO_INACTIVE_COLORSPACES')
+        self.assertEqual(OCIO.OCIO_OPTIMIZATION_FLAGS_ENVVAR, 'OCIO_OPTIMIZATION_FLAGS')
+        self.assertEqual(OCIO.OCIO_USER_CATEGORIES_ENVVAR, 'OCIO_USER_CATEGORIES_ENVVAR')
 
-        # LoggingLevel
-        self.assertEqual(OCIO.LOGGING_LEVEL_NONE, "none")
-        self.assertEqual(OCIO.LOGGING_LEVEL_WARNING, "warning")
-        self.assertEqual(OCIO.LOGGING_LEVEL_INFO, "info")
-        self.assertEqual(OCIO.LOGGING_LEVEL_DEBUG, "debug")
-        self.assertEqual(OCIO.LOGGING_LEVEL_UNKNOWN, "unknown")
+        # Cache (env. variables).
+        self.assertEqual(OCIO.OCIO_DISABLE_ALL_CACHES, 'OCIO_DISABLE_ALL_CACHES')
+        self.assertEqual(OCIO.OCIO_DISABLE_PROCESSOR_CACHES, 'OCIO_DISABLE_PROCESSOR_CACHES')
+        self.assertEqual(OCIO.OCIO_DISABLE_CACHE_FALLBACK, 'OCIO_DISABLE_CACHE_FALLBACK')
 
-        # TransformDirection
-        self.assertEqual(OCIO.TRANSFORM_DIR_UNKNOWN, "unknown")
-        self.assertEqual(OCIO.TRANSFORM_DIR_FORWARD, "forward")
-        self.assertEqual(OCIO.TRANSFORM_DIR_INVERSE, "inverse")
-        self.assertEqual(OCIO.GetInverseTransformDirection(OCIO.TRANSFORM_DIR_UNKNOWN),
-            OCIO.TRANSFORM_DIR_UNKNOWN)
-        self.assertEqual(OCIO.GetInverseTransformDirection(OCIO.TRANSFORM_DIR_FORWARD),
-            OCIO.TRANSFORM_DIR_INVERSE)
-        self.assertEqual(OCIO.GetInverseTransformDirection(OCIO.TRANSFORM_DIR_INVERSE),
-            OCIO.TRANSFORM_DIR_FORWARD)
+        # Roles.
+        self.assertEqual(OCIO.ROLE_DEFAULT, 'default')
+        self.assertEqual(OCIO.ROLE_REFERENCE, 'reference')
+        self.assertEqual(OCIO.ROLE_DATA, 'data')
+        self.assertEqual(OCIO.ROLE_COLOR_PICKING, 'color_picking')
+        self.assertEqual(OCIO.ROLE_SCENE_LINEAR, 'scene_linear')
+        self.assertEqual(OCIO.ROLE_COMPOSITING_LOG, 'compositing_log')
+        self.assertEqual(OCIO.ROLE_COLOR_TIMING, 'color_timing')
+        self.assertEqual(OCIO.ROLE_TEXTURE_PAINT, 'texture_paint')
+        self.assertEqual(OCIO.ROLE_MATTE_PAINT, 'matte_paint')
+        self.assertEqual(OCIO.ROLE_RENDERING, 'rendering')
+        self.assertEqual(OCIO.ROLE_INTERCHANGE_SCENE, 'aces_interchange')
+        self.assertEqual(OCIO.ROLE_INTERCHANGE_DISPLAY, 'cie_xyz_d65_interchange')
 
-        # ColorSpaceDirection
-        self.assertEqual(OCIO.COLORSPACE_DIR_UNKNOWN, "unknown")
-        self.assertEqual(OCIO.COLORSPACE_DIR_TO_REFERENCE, "to_reference")
-        self.assertEqual(OCIO.COLORSPACE_DIR_FROM_REFERENCE, "from_reference")
+        # Shared View.
+        self.assertEqual(OCIO.OCIO_VIEW_USE_DISPLAY_NAME, '<USE_DISPLAY_NAME>')
 
-        # BitDepth
-        self.assertEqual(OCIO.BIT_DEPTH_UNKNOWN, "unknown")
-        self.assertEqual(OCIO.BIT_DEPTH_UINT8, "8ui")
-        self.assertEqual(OCIO.BIT_DEPTH_UINT10, "10ui")
-        self.assertEqual(OCIO.BIT_DEPTH_UINT12, "12ui")
-        self.assertEqual(OCIO.BIT_DEPTH_UINT14, "14ui")
-        self.assertEqual(OCIO.BIT_DEPTH_UINT16, "16ui")
-        self.assertEqual(OCIO.BIT_DEPTH_UINT32, "32ui")
-        self.assertEqual(OCIO.BIT_DEPTH_F16, "16f")
-        self.assertEqual(OCIO.BIT_DEPTH_F32, "32f")
+        # FormatMetadata.
+        self.assertEqual(OCIO.METADATA_DESCRIPTION, 'Description')
+        self.assertEqual(OCIO.METADATA_INFO, 'Info')
+        self.assertEqual(OCIO.METADATA_INPUT_DESCRIPTOR, 'InputDescriptor')
+        self.assertEqual(OCIO.METADATA_OUTPUT_DESCRIPTOR, 'OutputDescriptor')
+        self.assertEqual(OCIO.METADATA_NAME, 'name')
+        self.assertEqual(OCIO.METADATA_ID, 'id')
 
-        # Allocation
-        self.assertEqual(OCIO.ALLOCATION_UNKNOWN, "unknown")
-        self.assertEqual(OCIO.ALLOCATION_UNIFORM, "uniform")
-        self.assertEqual(OCIO.ALLOCATION_LG2, "lg2")
+        # FileRules.
+        self.assertEqual(OCIO.DEFAULT_RULE_NAME, 'Default')
+        self.assertEqual(OCIO.FILE_PATH_SEARCH_RULE_NAME, 'ColorSpaceNamePathSearch')
 
-        # Interpolation
-        self.assertEqual(OCIO.INTERP_UNKNOWN, "unknown")
-        self.assertEqual(OCIO.INTERP_NEAREST, "nearest")
-        self.assertEqual(OCIO.INTERP_LINEAR, "linear")
-        self.assertEqual(OCIO.INTERP_TETRAHEDRAL, "tetrahedral")
-        self.assertEqual(OCIO.INTERP_BEST, "best")
 
-        # GpuLanguage
-        self.assertEqual(OCIO.GPU_LANGUAGE_UNKNOWN, "unknown")
-        self.assertEqual(OCIO.GPU_LANGUAGE_CG, "cg")
-        self.assertEqual(OCIO.GPU_LANGUAGE_GLSL_1_0, "glsl_1.0")
-        self.assertEqual(OCIO.GPU_LANGUAGE_GLSL_1_3, "glsl_1.3")
-
-        # EnvironmentMode
-        self.assertEqual(OCIO.ENV_ENVIRONMENT_UNKNOWN, "unknown")
-        self.assertEqual(OCIO.ENV_ENVIRONMENT_LOAD_PREDEFINED, "loadpredefined")
-        self.assertEqual(OCIO.ENV_ENVIRONMENT_LOAD_ALL, "loadall")
-
-        # Roles
-        self.assertEqual(OCIO.ROLE_DEFAULT, "default")
-        self.assertEqual(OCIO.ROLE_REFERENCE, "reference")
-        self.assertEqual(OCIO.ROLE_DATA, "data")
-        self.assertEqual(OCIO.ROLE_COLOR_PICKING, "color_picking")
-        self.assertEqual(OCIO.ROLE_SCENE_LINEAR, "scene_linear")
-        self.assertEqual(OCIO.ROLE_COMPOSITING_LOG, "compositing_log")
-        self.assertEqual(OCIO.ROLE_COLOR_TIMING, "color_timing")
-        self.assertEqual(OCIO.ROLE_TEXTURE_PAINT, "texture_paint")
-        self.assertEqual(OCIO.ROLE_MATTE_PAINT, "matte_paint")

@@ -5,13 +5,17 @@
 #define INCLUDED_OCIO_PYOPENCOLORIO_H
 
 #include <pybind11/pybind11.h>
+#include <pybind11/functional.h>
 #include <pybind11/numpy.h>
-#include <pybind11/stl.h>
 #include <pybind11/operators.h>
+#include <pybind11/stl.h>
 
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "utils/StringUtils.h"
+
+// Generated at build time: '${CMAKE_BINARY_DIR}/docs/_doxygen/docstrings.h'
+#include "docstrings.h"
 
 namespace py = pybind11;
 using namespace pybind11::literals;
@@ -19,23 +23,40 @@ using namespace pybind11::literals;
 namespace OCIO_NAMESPACE
 {
 
+// OpenColorIOTypes
 void bindPyTypes(py::module & m);
-void bindPyTransform(py::module & m);
-void bindPyConfig(py::module & m);
-void bindPyFileRules(py::module & m);
+
+// OpenColorIO
+void bindPyBaker(py::module & m);
 void bindPyColorSpace(py::module & m);
 void bindPyColorSpaceSet(py::module & m);
-void bindPyLook(py::module & m);
-void bindPyViewTransform(py::module & m);
-void bindPyProcessor(py::module & m);
-void bindPyCPUProcessor(py::module & m);
-void bindPyGPUProcessor(py::module & m);
-void bindPyProcessorMetadata(py::module & m);
-void bindPyBaker(py::module & m);
-void bindPyImageDesc(py::module & m);
-void bindPyGpuShaderCreator(py::module & m);
+void bindPyConfig(py::module & m);
 void bindPyContext(py::module & m);
+void bindPyCPUProcessor(py::module & m);
+void bindPyFileRules(py::module & m);
+void bindPyGPUProcessor(py::module & m);
+void bindPyGpuShaderCreator(py::module & m);
+void bindPyImageDesc(py::module & m);
+void bindPyLook(py::module & m);
+void bindPyNamedTransform(py::module & m);
+void bindPyProcessor(py::module & m);
+void bindPyProcessorMetadata(py::module & m);
+void bindPySystemMonitors(py::module & m);
 void bindPyViewingRules(py::module & m);
+void bindPyViewTransform(py::module & m);
+
+// OpenColorIOTransforms
+void bindPyBuiltinTransformRegistry(py::module & m);
+void bindPyDynamicProperty(py::module & m);
+void bindPyFormatMetadata(py::module & m);
+void bindPyGradingData(py::module & m);
+void bindPyTransform(py::module & m);
+
+// OpenColorIOAppHelpers
+void bindPyColorSpaceMenuHelpers(py::module & m);
+void bindPyDisplayViewHelpers(py::module & m);
+void bindPyLegacyViewingPipeline(py::module & m);
+void bindPyMixingHelpers(py::module & m);
 
 } // namespace OCIO_NAMESPACE
 
@@ -49,6 +70,40 @@ namespace pybind11
 {
 
 template<> 
+struct polymorphic_type_hook<OCIO::ImageDesc> {
+    static const void *get(const OCIO::ImageDesc *const src, const std::type_info*& type) {
+        // Note: src may be nullptr
+        if (src)
+        {
+            if(dynamic_cast<const OCIO::PackedImageDesc*>(src))
+            {
+                type = &typeid(OCIO::PackedImageDesc);
+            }
+            else if(dynamic_cast<const OCIO::PlanarImageDesc*>(src))
+            {
+                type = &typeid(OCIO::PlanarImageDesc);
+            }
+        }
+        return src;
+    }
+};
+
+template<> 
+struct polymorphic_type_hook<OCIO::GpuShaderCreator> {
+    static const void *get(const OCIO::GpuShaderCreator *const src, const std::type_info*& type) {
+        // Note: src may be nullptr
+        if (src)
+        {
+            if(dynamic_cast<const OCIO::GpuShaderDesc*>(src))
+            {
+                type = &typeid(OCIO::GpuShaderDesc);
+            }
+        }
+        return src;
+    }
+};
+
+template<> 
 struct polymorphic_type_hook<OCIO::Transform> {
     static const void *get(const OCIO::Transform *const src, const std::type_info*& type) {
         // Note: src may be nullptr
@@ -57,6 +112,10 @@ struct polymorphic_type_hook<OCIO::Transform> {
             if(dynamic_cast<const OCIO::AllocationTransform*>(src))
             {
                 type = &typeid(OCIO::AllocationTransform);
+            }
+            if(dynamic_cast<const OCIO::BuiltinTransform*>(src))
+            {
+                type = &typeid(OCIO::BuiltinTransform);
             }
             else if(dynamic_cast<const OCIO::CDLTransform*>(src))
             {
@@ -90,6 +149,18 @@ struct polymorphic_type_hook<OCIO::Transform> {
             {
                 type = &typeid(OCIO::FixedFunctionTransform);
             }
+            else if (dynamic_cast<const OCIO::GradingPrimaryTransform*>(src))
+            {
+                type = &typeid(OCIO::GradingPrimaryTransform);
+            }
+            else if (dynamic_cast<const OCIO::GradingRGBCurveTransform*>(src))
+            {
+                type = &typeid(OCIO::GradingRGBCurveTransform);
+            }
+            if(dynamic_cast<const OCIO::GradingToneTransform*>(src))
+            {
+                type = &typeid(OCIO::GradingToneTransform);
+            }
             else if(dynamic_cast<const OCIO::GroupTransform*>(src))
             {
                 type = &typeid(OCIO::GroupTransform);
@@ -97,6 +168,10 @@ struct polymorphic_type_hook<OCIO::Transform> {
             else if(dynamic_cast<const OCIO::LogAffineTransform*>(src))
             {
                 type = &typeid(OCIO::LogAffineTransform);
+            }
+            else if(dynamic_cast<const OCIO::LogCameraTransform*>(src))
+            {
+                type = &typeid(OCIO::LogCameraTransform);
             }
             else if(dynamic_cast<const OCIO::LogTransform*>(src))
             {

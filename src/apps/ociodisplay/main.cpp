@@ -34,7 +34,6 @@ namespace OCIO = OCIO_NAMESPACE;
 
 #include "glsl.h"
 #include "oglapp.h"
-#include "ViewingPipeline.h"
 
 bool g_verbose   = false;
 bool g_gpulegacy = false;
@@ -330,10 +329,10 @@ void UpdateOCIOGLState()
     transform->setDisplay( g_display.c_str() );
     transform->setView( g_transformName.c_str() );
 
-    OCIO::ViewingPipeline vpt;
-    vpt.setDisplayViewTransform(transform);
-    vpt.setLooksOverrideEnabled(true);
-    vpt.setLooksOverride(g_look);
+    OCIO::LegacyViewingPipelineRcPtr vp = OCIO::LegacyViewingPipeline::Create();
+    vp->setDisplayViewTransform(transform);
+    vp->setLooksOverrideEnabled(true);
+    vp->setLooksOverride(g_look.c_str());
 
     if(g_verbose)
     {
@@ -373,7 +372,7 @@ void UpdateOCIOGLState()
         OCIO::MatrixTransformRcPtr mtx =  OCIO::MatrixTransform::Create();
         mtx->setMatrix(m44);
         mtx->setOffset(offset4);
-        vpt.setLinearCC(mtx);
+        vp->setLinearCC(mtx);
     }
 
     // Channel swizzling
@@ -386,7 +385,7 @@ void UpdateOCIOGLState()
         OCIO::MatrixTransformRcPtr swizzle = OCIO::MatrixTransform::Create();
         swizzle->setMatrix(m44);
         swizzle->setOffset(offset);
-        vpt.setChannelView(swizzle);
+        vp->setChannelView(swizzle);
     }
 
     // Post-display transform gamma
@@ -395,13 +394,13 @@ void UpdateOCIOGLState()
         const double exponent4f[4] = { exponent, exponent, exponent, exponent };
         OCIO::ExponentTransformRcPtr expTransform =  OCIO::ExponentTransform::Create();
         expTransform->setValue(exponent4f);
-        vpt.setDisplayCC(expTransform);
+        vp->setDisplayCC(expTransform);
     }
 
     OCIO::ConstProcessorRcPtr processor;
     try
     {
-        processor = vpt.getProcessor(config, config->getCurrentContext());
+        processor = vp->getProcessor(config, config->getCurrentContext());
     }
     catch(OCIO::Exception & e)
     {
@@ -423,7 +422,7 @@ void UpdateOCIOGLState()
     {
         shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
     }
-    shaderDesc->setLanguage(OCIO::GPU_LANGUAGE_GLSL_1_3);
+    shaderDesc->setLanguage(OCIO::GPU_LANGUAGE_GLSL_1_2);
     shaderDesc->setFunctionName("OCIODisplay");
     shaderDesc->setResourcePrefix("ocio_");
     processor->getOptimizedGPUProcessor(g_optimization)->extractGpuShaderInfo(shaderDesc);

@@ -2,6 +2,68 @@ import os
 import sys
 from random import randint
 
+def assertEqualRGBM(testCase, first, second):
+    testCase.assertEqual(first.red, second.red)
+    testCase.assertEqual(first.green, second.green)
+    testCase.assertEqual(first.blue, second.blue)
+    testCase.assertEqual(first.master, second.master)
+
+def assertEqualPrimary(testCase, first, second):
+    assertEqualRGBM(testCase, first.brightness, second.brightness)
+    assertEqualRGBM(testCase, first.contrast, second.contrast)
+    assertEqualRGBM(testCase, first.gamma, second.gamma)
+    assertEqualRGBM(testCase, first.offset, second.offset)
+    assertEqualRGBM(testCase, first.exposure, second.exposure)
+    assertEqualRGBM(testCase, first.lift, second.lift)
+    assertEqualRGBM(testCase, first.gain, second.gain)
+    testCase.assertEqual(first.pivot, second.pivot)
+    testCase.assertEqual(first.saturation, second.saturation)
+    testCase.assertEqual(first.clampWhite, second.clampWhite)
+    testCase.assertEqual(first.clampBlack, second.clampBlack)
+    testCase.assertEqual(first.pivotWhite, second.pivotWhite)
+    testCase.assertEqual(first.pivotBlack, second.pivotBlack)
+
+def assertEqualRGBMSW(testCase, first, second):
+    testCase.assertEqual(first.red, second.red)
+    testCase.assertEqual(first.green, second.green)
+    testCase.assertEqual(first.blue, second.blue)
+    testCase.assertEqual(first.master, second.master)
+    testCase.assertEqual(first.start, second.start)
+    testCase.assertEqual(first.width, second.width)
+
+def assertEqualTone(testCase, first, second):
+    assertEqualRGBMSW(testCase, first.blacks, second.blacks)
+    assertEqualRGBMSW(testCase, first.whites, second.whites)
+    assertEqualRGBMSW(testCase, first.shadows, second.shadows)
+    assertEqualRGBMSW(testCase, first.highlights, second.highlights)
+    assertEqualRGBMSW(testCase, first.midtones, second.midtones)
+    testCase.assertEqual(first.scontrast, second.scontrast)
+
+def assertEqualControlPoint(testCase, first, second):
+    testCase.assertEqual(first.x, second.x)
+    testCase.assertEqual(first.y, second.y)
+
+def assertEqualBSpline(testCase, first, second):
+    pts1 = first.getControlPoints()
+    pts2 = second.getControlPoints()
+    for pt1 in pts1:
+        try:
+            pt2 = next(pts2)
+            assertEqualControlPoint(testCase,pt1, pt2)
+        except StopIteration:
+            raise AssertionError("Different number of control points")
+    try:
+        pt2 = next(pts2)
+    except StopIteration:
+        pass
+    else:
+        raise AssertionError("Different number of control points")
+
+def assertEqualRGBCurve(testCase, first, second):
+    assertEqualBSpline(testCase, first.red, second.red)
+    assertEqualBSpline(testCase, first.green, second.green)
+    assertEqualBSpline(testCase, first.blue, second.blue)
+    assertEqualBSpline(testCase, first.master, second.master)
 
 # -----------------------------------------------------------------------------
 # Python 2/3 compatibility
@@ -62,9 +124,7 @@ colorspaces:
     family: raw
     equalitygroup: ""
     bitdepth: 32f
-    description: |
-      A raw color space. Conversions to and from this space are no-ops.
-
+    description: A raw color space. Conversions to and from this space are no-ops.
     isdata: true
     allocation: uniform
 
@@ -78,7 +138,6 @@ colorspaces:
       representation of the scene with primaries that correspond to
       scanned film. 0.18 in this space corresponds to a properly
       exposed 18% grey card.
-
     isdata: false
     allocation: lg2
 
@@ -87,9 +146,7 @@ colorspaces:
     family: vd8
     equalitygroup: ""
     bitdepth: 8ui
-    description: |
-      how many transforms can we use?
-
+    description: how many transforms can we use?
     isdata: false
     allocation: uniform
     to_reference: !<GroupTransform>
@@ -101,10 +158,170 @@ colorspaces:
   - !<ColorSpace>
     name: c1
     encoding: scene-linear
+    categories: [rendering, linear]
 
   - !<ColorSpace>
     name: c2
+    categories: [rendering]
 
   - !<ColorSpace>
     name: c3
+    categories: [sample]
+"""
+
+SAMPLE_CONFIG = """ocio_profile_version: 2
+
+environment:
+  {}
+
+search_path: luts
+strictparsing: true
+family_separator: /
+luma: [0.2126, 0.7152, 0.0722]
+
+roles:
+  reference: lin_1
+  scene_linear: lin_1
+  rendering: lin_1
+  default: raw
+
+view_transforms:
+  - !<ViewTransform>
+    name: view_transform
+    from_scene_reference: !<MatrixTransform> {}
+
+displays:
+  DISP_1:
+    - !<View> {name: VIEW_1, colorspace: view_1}
+    - !<View> {name: VIEW_2, colorspace: view_2}
+    - !<View> {name: VIEW_3, colorspace: view_3}
+  DISP_2:
+    - !<View> {name: VIEW_4, colorspace: view_3, looks: look_4}
+    - !<View> {name: VIEW_3, colorspace: view_3, looks: look_3}
+    - !<View> {name: VIEW_2, colorspace: view_2, looks: "look_3, -look_4"}
+    - !<View> {name: VIEW_1, colorspace: view_1}
+
+active_displays: []
+active_views: []
+
+looks:
+  - !<Look>
+    name: look_3
+    process_space: log_1
+    transform: !<CDLTransform> {slope: [1, 2, 1]}
+
+  - !<Look>
+    name: look_4
+    process_space: log_1
+    transform: !<CDLTransform> {slope: [1.2, 2.2, 1.2]}
+
+colorspaces:
+  - !<ColorSpace>
+    name: raw
+    family: Raw
+    description: A raw color space. Conversions to and from this space are no-ops.
+    isdata: true
+    allocation: uniform
+
+  - !<ColorSpace>
+    name: lin_1
+    categories: [ working-space, basic-2d ]
+    encoding: scene-linear
+
+  - !<ColorSpace>
+    name: lin_2
+    categories: [ working-space ]
+    encoding: scene-linear
+
+  - !<ColorSpace>
+    name: log_1
+    categories: [ working-space ]
+    encoding: log
+    to_reference: !<LogTransform> {base: 2, direction: inverse}
+
+  - !<ColorSpace>
+    name: in_1
+    family: Input / Camera/Acme
+    description: |
+      An input color space.
+      For the Acme camera.
+    categories: [ file-io, basic-2d ]
+    to_reference: !<ExponentTransform> {value: [2.6, 2.6, 2.6, 1]}
+    encoding: sdr-video
+
+  - !<ColorSpace>
+    name: in_2
+    categories: [ file-io, advanced-2d ]
+    to_reference: !<ExponentTransform> {value: [2.4, 2.4, 2.4, 1]}
+    encoding: sdr-video
+
+  - !<ColorSpace>
+    name: in_3
+    categories: [ file-io, working-space, advanced-3d ]
+    encoding: scene-linear
+    to_reference: !<ExponentTransform> {value: [2.2, 2.2, 2.2, 1]}
+
+  - !<ColorSpace>
+    name: view_1
+    from_reference: !<ExponentTransform> {value: [2.6, 2.6, 2.6, 1], direction: inverse}
+
+  - !<ColorSpace>
+    name: view_2
+    from_reference: !<ExponentTransform> {value: [2.4, 2.4, 2.4, 1], direction: inverse}
+
+  - !<ColorSpace>
+    name: view_3
+    from_reference: !<ExponentTransform> {value: [2.2, 2.2, 2.2, 1], direction: inverse}
+
+  - !<ColorSpace>
+    name: lut_input_1
+    categories: [ look-process-space, LUT-connection-space ]
+    from_reference: !<ExponentTransform> {value: [2.6, 2.6, 2.6, 1], direction: inverse}
+
+  - !<ColorSpace>
+    name: lut_input_2
+    categories: [ look-process-space, advanced-2d ]
+    from_reference: !<ExponentTransform> {value: [2.4, 2.4, 2.4, 1], direction: inverse}
+
+  - !<ColorSpace>
+    name: lut_input_3
+    categories: [ file-io, look-process-space, advanced-2d ]
+    from_reference: !<ExponentTransform> {value: [2.4, 2.4, 2.4, 1], direction: inverse}
+
+display_colorspaces:
+  - !<ColorSpace>
+    name: display_lin_1
+    categories: [ working-space, basic-2d ]
+    encoding: scene-linear
+
+  - !<ColorSpace>
+    name: display_lin_2
+    categories: [ working-space ]
+    encoding: sdr-video
+
+  - !<ColorSpace>
+    name: display_log_1
+    categories: [ working-space, advanced-2d ]
+    encoding: log
+    to_display_reference: !<LogTransform> {base: 2, direction: inverse}
+
+named_transforms:
+  - !<NamedTransform>
+    name: nt1
+    categories: [ working-space, basic-3d, advanced-2d ]
+    encoding: sdr-video
+    transform: !<MatrixTransform> {name: forward, offset: [0.1, 0.2, 0.3, 0.4]}
+
+  - !<NamedTransform>
+    name: nt2
+    encoding: log
+    inverse_transform: !<MatrixTransform> {name: inverse, offset: [-0.2, -0.1, -0.1, 0]}
+
+  - !<NamedTransform>
+    name: nt3
+    categories: [ file-io, basic-2d ]
+    encoding: sdr-video
+    family: Raw 
+    transform: !<MatrixTransform> {name: forward, offset: [0.1, 0.2, 0.3, 0.4]}
+    inverse_transform: !<MatrixTransform> {name: inverse, offset: [-0.2, -0.1, -0.1, 0]}
 """

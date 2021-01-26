@@ -17,6 +17,7 @@ namespace OCIO_NAMESPACE
 struct Chromaticities
 {
     Chromaticities() = delete;
+    ~Chromaticities() = default;
 
     Chromaticities(double x, double y)
     {
@@ -46,6 +47,7 @@ struct Chromaticities
 struct Primaries
 {
     Primaries() = delete;
+    ~Primaries() = default;
 
     Primaries(const Chromaticities & red, const Chromaticities & grn, const Chromaticities & blu,
               const Chromaticities & wht)
@@ -80,7 +82,7 @@ struct Primaries
     Chromaticities m_wht; // CIE xy chromaticities for white (or gray).
 };
 
-namespace CIE_XYZ_D65
+namespace CIE_XYZ_ILLUM_E
 {
 extern const Primaries primaries;
 }
@@ -100,6 +102,11 @@ namespace REC709
 extern const Primaries primaries;
 }
 
+namespace REC2020
+{
+extern const Primaries primaries;
+}
+
 namespace P3_DCI
 {
 extern const Primaries primaries;
@@ -110,6 +117,17 @@ namespace P3_D65
 extern const Primaries primaries;
 }
 
+namespace P3_D60
+{
+extern const Primaries primaries;
+}
+
+namespace WHITEPOINT
+{
+extern const MatrixOpData::Offsets D60_XYZ;
+extern const MatrixOpData::Offsets D65_XYZ;
+extern const MatrixOpData::Offsets DCI_XYZ;
+}
 
 // Calculate a matrix to convert arbitrary RGB primary tristimulus values
 // to CIE XYZ tristimulus values using the CIE xy chromaticity coordinates
@@ -136,11 +154,31 @@ MatrixOpData::MatrixArrayPtr build_vonkries_adapt(const MatrixOpData::Offsets & 
                                                   AdaptationMethod method);
 
 // Build a conversion matrix from source primaries to destination primaries.
+// The resulting matrix will map [1,1,1] input RGB to [1,1,1] output RGB.
 
 MatrixOpData::MatrixArrayPtr build_conversion_matrix(const Primaries & src_prims,
                                                      const Primaries & dst_prims,
                                                      AdaptationMethod method);
 
+// Build a conversion matrix from source primaries to destination primaries with the option of
+// setting the adaptation source and destination manually.  If you pass zeros for either of the
+// white points, that corresponding white point will be taken from the primaries.
+
+MatrixOpData::MatrixArrayPtr build_conversion_matrix(const Primaries & src_prims,
+                                                     const Primaries & dst_prims,
+                                                     const MatrixOpData::Offsets & src_wht_XYZ,
+                                                     const MatrixOpData::Offsets & dst_wht_XYZ,
+                                                     AdaptationMethod method);
+
+// Build a conversion matrix to CIE XYZ D65 from the source primaries.
+
+MatrixOpData::MatrixArrayPtr build_conversion_matrix_to_XYZ_D65(const Primaries & src_prims,
+                                                                AdaptationMethod method);
+
+// Build a conversion matrix from CIE XYZ D65 to the destination primaries.
+
+MatrixOpData::MatrixArrayPtr build_conversion_matrix_from_XYZ_D65(const Primaries & dst_prims,
+                                                                  AdaptationMethod method);
 } // namespace OCIO_NAMESPACE
 
 #endif // INCLUDED_OCIO_COLOR_MATRIX_HELPERS_H

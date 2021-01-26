@@ -79,7 +79,6 @@ void BuiltinTransformImpl::setStyle(const char * style)
 
 
 void BuildBuiltinOps(OpRcPtrVec & ops,
-                     const Config & /*config*/,
                      const BuiltinTransform & transform,
                      TransformDirection dir)
 {
@@ -93,9 +92,9 @@ void BuildBuiltinOps(OpRcPtrVec & ops,
 
 std::ostream & operator<< (std::ostream & os, const BuiltinTransform & t) noexcept
 {
-    os << "<BuiltinTransform "
-       << "style = " << t.getStyle() << ", "
-       << "direction = " << TransformDirectionToString(t.getDirection())
+    os << "<BuiltinTransform"
+       << " direction = " << TransformDirectionToString(t.getDirection())
+       << ", style = " << t.getStyle()
        << ">";
     return os;
 }

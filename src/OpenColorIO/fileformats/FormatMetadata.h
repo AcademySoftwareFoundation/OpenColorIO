@@ -50,14 +50,11 @@ public:
     FormatMetadataImpl(const FormatMetadata & other);
     ~FormatMetadataImpl();
 
-    void setName(const std::string & name);
-    void setValue(const std::string & value);
-
-    const Attributes & getAttributes() const;
+    const Attributes & getAttributes() const noexcept;
 
     // Retrieve the vector of elements under the metadata.
-    Elements & getChildrenElements();
-    const Elements & getChildrenElements() const;
+    Elements & getChildrenElements() noexcept;
+    const Elements & getChildrenElements() const noexcept;
 
     // Merge rhs into this. Expected to be used on root FormatMetadataImpl for ops.
     void combine(const FormatMetadataImpl & rhs);
@@ -67,42 +64,50 @@ public:
 
     // If child with a matching name exists, returns its index,
     // else returns -1.
-    int getFirstChildIndex(const std::string & name) const;
+    int getFirstChildIndex(const std::string & name) const noexcept;
 
-    // If attribute with a matching name does not exists, it will return an empty string.
-    const std::string & getAttributeValue(const std::string & name) const;
+    const std::string & getAttributeValueString(const char * name) const noexcept;
 
     //
     // FormatMetadata interface implementation.
     //
 
-    const char * getName() const override;
-    void setName(const char *) override;
-    const char * getValue() const override;
-    void setValue(const char *) override;
-    int getNumAttributes() const override;
-    const char * getAttributeName(int i) const override;
-    const char * getAttributeValue(int i) const override;
+    const char * getElementName() const noexcept override;
+    void setElementName(const char *) override;
+    const char * getElementValue() const noexcept override;
+    void setElementValue(const char *) override;
+    int getNumAttributes() const noexcept override;
+    const char * getAttributeName(int i) const noexcept override;
+    const char * getAttributeValue(int i) const noexcept override;
+    const char * getAttributeValue(const char * name) const noexcept override;
     void addAttribute(const char * name, const char * value) override;
 
-    int getNumChildrenElements() const override;
+    int getNumChildrenElements() const noexcept override;
     FormatMetadata & getChildElement(int i) override;
     const FormatMetadata & getChildElement(int i) const override;
-    FormatMetadata & addChildElement(const char * name, const char * value) override;
+    void addChildElement(const char * name, const char * value) override;
 
     // Reset the contents of a metadata element. The value,
     // list of attributes and sub-elements are cleared.
     // The name is preserved.
-    void clear() override;
+    void clear() noexcept override;
 
     FormatMetadata & operator=(const FormatMetadata & rhs) override;
+
+    const char * getName() const noexcept override;
+    void setName(const char * name) noexcept override;
+    const char * getID() const noexcept override;
+    void setID(const char * id) noexcept override;
 
 protected:
     // If the attribute already exists, the existing attribute's
     // value will be overwritten.
-    void addAttribute(const Attribute & attribute);
+    void addAttribute(const Attribute & attribute) noexcept;
 
-    int findNamedAttribute(const std::string & name) const;
+    int findNamedAttribute(const std::string & name) const noexcept;
+
+    static void ValidateElementName(const std::string & name);
+    void validateElementName(const std::string & name) const;
 
 private:
     std::string      m_name;       // The element name

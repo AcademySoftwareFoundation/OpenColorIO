@@ -2,6 +2,11 @@
 # Copyright Contributors to the OpenColorIO Project.
 
 set(SOURCES
+	apphelpers/CategoryHelpers.cpp
+	apphelpers/ColorSpaceHelpers.cpp
+	apphelpers/DisplayViewHelpers.cpp
+	apphelpers/LegacyViewingPipeline.cpp
+	apphelpers/MixingHelpers.cpp
 	Baker.cpp
 	BitDepthUtils.cpp
 	Caching.cpp
@@ -9,12 +14,14 @@ set(SOURCES
 	ColorSpaceSet.cpp
 	Config.cpp
 	Context.cpp
+	ContextVariableUtils.cpp
 	CPUProcessor.cpp
 	Display.cpp
 	DynamicProperty.cpp
 	Exception.cpp
 	fileformats/cdl/CDLParser.cpp
 	fileformats/cdl/CDLReaderHelper.cpp
+	fileformats/cdl/CDLWriter.cpp
 	fileformats/ctf/CTFReaderHelper.cpp
 	fileformats/ctf/CTFReaderUtils.cpp
 	fileformats/ctf/CTFTransform.cpp
@@ -37,6 +44,7 @@ set(SOURCES
 	fileformats/FileFormatSpi3D.cpp
 	fileformats/FileFormatSpiMtx.cpp
 	fileformats/FileFormatTruelight.cpp
+	fileformats/FileFormatUtils.cpp
 	fileformats/FileFormatVF.cpp
 	fileformats/FormatMetadata.cpp
 	fileformats/xmlutils/XMLReaderHelper.cpp
@@ -55,6 +63,7 @@ set(SOURCES
 	LookParse.cpp
 	MathUtils.cpp
 	md5/md5.cpp
+	NamedTransform.cpp
 	OCIOYaml.cpp
 	Op.cpp
 	OpOptimizers.cpp
@@ -77,6 +86,22 @@ set(SOURCES
 	ops/gamma/GammaOpGPU.cpp
 	ops/gamma/GammaOpUtils.cpp
 	ops/gamma/GammaOp.cpp
+	ops/gradingprimary/GradingPrimary.cpp
+	ops/gradingprimary/GradingPrimaryOpCPU.cpp
+	ops/gradingprimary/GradingPrimaryOpData.cpp
+	ops/gradingprimary/GradingPrimaryOpGPU.cpp
+	ops/gradingprimary/GradingPrimaryOp.cpp
+	ops/gradingrgbcurve/GradingBSplineCurve.cpp
+	ops/gradingrgbcurve/GradingRGBCurveOpCPU.cpp
+	ops/gradingrgbcurve/GradingRGBCurveOpData.cpp
+	ops/gradingrgbcurve/GradingRGBCurveOpGPU.cpp
+	ops/gradingrgbcurve/GradingRGBCurveOp.cpp
+	ops/gradingrgbcurve/GradingRGBCurve.cpp
+	ops/gradingtone/GradingTone.cpp
+	ops/gradingtone/GradingToneOpCPU.cpp
+	ops/gradingtone/GradingToneOpData.cpp
+	ops/gradingtone/GradingToneOpGPU.cpp
+	ops/gradingtone/GradingToneOp.cpp
 	ops/log/LogOpCPU.cpp
 	ops/log/LogOpData.cpp
 	ops/log/LogOpGPU.cpp
@@ -121,6 +146,9 @@ set(SOURCES
 	transforms/ExposureContrastTransform.cpp
 	transforms/FileTransform.cpp
 	transforms/FixedFunctionTransform.cpp
+	transforms/GradingPrimaryTransform.cpp
+	transforms/GradingRGBCurveTransform.cpp
+	transforms/GradingToneTransform.cpp
 	transforms/GroupTransform.cpp
 	transforms/LogAffineTransform.cpp
 	transforms/LogCameraTransform.cpp
@@ -132,12 +160,14 @@ set(SOURCES
 	transforms/RangeTransform.cpp
 	ViewingRules.cpp
 	ViewTransform.cpp
+	SystemMonitor.cpp
 )
 
 if(OCIO_ADD_EXTRA_BUILTINS)
 	set(SOURCES_BUILTINS
 		transforms/builtins/ArriCameras.cpp
 		transforms/builtins/CanonCameras.cpp
+		transforms/builtins/Displays.cpp
 		transforms/builtins/PanasonicCameras.cpp
 		transforms/builtins/RedCameras.cpp
 		transforms/builtins/SonyCameras.cpp
@@ -164,23 +194,18 @@ endif()
 
 # TODO: Install the OpenColorIO-config.cmake.
 
-if(WIN32 AND BUILD_SHARED_LIBS)
+add_library(OpenColorIO ${SOURCES})
 
-    # Impose a versioned name on Windows to avoid binary name clashes
-    # between different versions of the same library.
-
-    # Note: Do not append the PATCH to allow Apps to use the
-    #       latest binary compatible library.
-    set(LIBNAME_SUFFIX
-        _${OpenColorIO_VERSION_MAJOR}_${OpenColorIO_VERSION_MINOR}
+if(BUILD_SHARED_LIBS AND WIN32)
+	# Impose a versioned name on Windows to avoid binary name clashes.
+    set(OCIO_LIBNAME_SUFFIX
+    	${OCIO_LIBNAME_SUFFIX}_${OpenColorIO_VERSION_MAJOR}_${OpenColorIO_VERSION_MINOR}
     )
 
     # Create the version.rc file for the Windows DLL.
     configure_file(res/version.rc.in ${CMAKE_CURRENT_BINARY_DIR}/version.rc @ONLY)
     set(SOURCES ${SOURCES} ${CMAKE_CURRENT_BINARY_DIR}/version.rc)
 endif()
-
-add_library(OpenColorIO ${SOURCES})
 
 target_include_directories(OpenColorIO
 	PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
@@ -197,6 +222,14 @@ target_link_libraries(OpenColorIO
 		utils::strings
 		yaml-cpp
 )
+
+if(APPLE)
+	target_link_libraries(OpenColorIO
+		PRIVATE
+			"-framework Carbon"
+			"-framework IOKit"
+	)
+endif()
 
 if(NOT BUILD_SHARED_LIBS)
 	target_compile_definitions(OpenColorIO
@@ -236,7 +269,7 @@ endif()
 
 if(MSVC AND BUILD_TYPE_DEBUG AND BUILD_SHARED_LIBS)
     set_target_properties(OpenColorIO PROPERTIES
-        PDB_NAME ${PROJECT_NAME}_${LIBNAME_SUFFIX}
+        PDB_NAME ${PROJECT_NAME}${OCIO_LIBNAME_SUFFIX}
     )
 endif()
 
@@ -250,10 +283,11 @@ if(WIN32)
 endif()
 
 set_target_properties(OpenColorIO PROPERTIES
-    OUTPUT_NAME   OpenColorIO${OCIO_LIBNAME_SUFFIX}${LIBNAME_SUFFIX}
+    OUTPUT_NAME   ${PROJECT_NAME}${OCIO_LIBNAME_SUFFIX}
     COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS}"
     VERSION       ${OpenColorIO_VERSION}
-    SOVERSION     ${SOVERSION})
+    SOVERSION     ${SOVERSION}
+)
 
 if(MSVC AND BUILD_SHARED_LIBS)
 	# Install the pdb file if any.

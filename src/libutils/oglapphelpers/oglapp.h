@@ -59,6 +59,8 @@ class OglApp
 {
 public:
     OglApp() = delete;
+    OglApp(const OglApp &) = delete;
+    OglApp & operator=(const OglApp &) = delete;
 
     // Initialize the app with given window name & client rect size.
     OglApp(int winWidth, int winHeight);
@@ -152,6 +154,8 @@ class ScreenApp: public OglApp
 {
 public:
     ScreenApp() = delete;
+    ScreenApp(const ScreenApp &) = delete;
+    ScreenApp & operator=(const ScreenApp &) = delete;
 
     ScreenApp(const char * winTitle, int winWidth, int winHeight);
 

@@ -300,7 +300,8 @@ OCIO_ADD_GPU_TEST(LogAffineTransform, log2lin)
 
 OCIO_ADD_GPU_TEST(LogCameraTransform, camera_lin2log)
 {
-    OCIO::LogCameraTransformRcPtr log = OCIO::LogCameraTransform::Create();
+    const double linSideBreak[3] = { 0.12, 0.13, 0.15 };
+    OCIO::LogCameraTransformRcPtr log = OCIO::LogCameraTransform::Create(linSideBreak);
     log->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
 
     const double logSideSlope[3] = { 0.2, 0.3, 0.4 };
@@ -311,8 +312,6 @@ OCIO_ADD_GPU_TEST(LogCameraTransform, camera_lin2log)
     log->setLinSideSlopeValue(linSideSlope);
     const double linSideOffset[3] = { 0.15, 0.16, 0.25 };
     log->setLinSideOffsetValue(linSideOffset);
-    const double linSideBreak[3] = { 0.12, 0.13, 0.15 };
-    log->setLinSideBreakValue(linSideBreak);
     const double linearSlope[3] = { 1.22, 1.33, 1.44 };
     log->setLinearSlopeValue(linearSlope);
 
@@ -328,7 +327,8 @@ OCIO_ADD_GPU_TEST(LogCameraTransform, camera_lin2log)
 
 OCIO_ADD_GPU_TEST(LogCameraTransform, camera_log2lin)
 {
-    OCIO::LogCameraTransformRcPtr log = OCIO::LogCameraTransform::Create();
+    const double linSideBreak[3] = { 0.12, 0.13, 0.14 };
+    OCIO::LogCameraTransformRcPtr log = OCIO::LogCameraTransform::Create(linSideBreak);
     log->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
 
     const double logSideSlope[3] = { 0.21, 0.22, 0.23 };
@@ -339,8 +339,6 @@ OCIO_ADD_GPU_TEST(LogCameraTransform, camera_log2lin)
     log->setLinSideSlopeValue(linSideSlope);
     const double linSideOffset[3] = { 0.051, 0.052, 0.053 };
     log->setLinSideOffsetValue(linSideOffset);
-    const double linSideBreak[3] = { 0.12, 0.13, 0.14 };
-    log->setLinSideBreakValue(linSideBreak);
     const double linearSlope[3] = { 1.25, 1.23, 1.22 };
     log->setLinearSlopeValue(linearSlope);
 

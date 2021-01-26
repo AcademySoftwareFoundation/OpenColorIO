@@ -339,6 +339,7 @@ typedef enum {
     icSigPreview1Tag = 0x70726531,  /* 'pre1' */
     icSigPreview2Tag = 0x70726532,  /* 'pre2' */
     icSigProfileDescriptionTag = 0x64657363,  /* 'desc' */
+    icSigProfileDescriptionMLTag = 0x6473636d,  /* 'dscm' Custom Apple Tag */
     icSigProfileSequenceDescTag = 0x70736571,  /* 'pseq' */
     icSigPs2CRD0Tag = 0x70736430,  /* 'psd0' Removed in V4 */
     icSigPs2CRD1Tag = 0x70736431,  /* 'psd1' Removed in V4 */

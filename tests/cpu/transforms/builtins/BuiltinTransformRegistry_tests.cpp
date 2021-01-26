@@ -77,14 +77,14 @@ OCIO_ADD_TEST(Builtins, aces)
 
     {
         ops.clear();
-        CreateOps("ACES-AP0_to_CIE-XYZ-D65_BFD", OCIO::TRANSFORM_DIR_FORWARD, ops, __LINE__);
+        CreateOps("UTILITY - ACES-AP0_to_CIE-XYZ-D65_BFD", OCIO::TRANSFORM_DIR_FORWARD, ops, __LINE__);
         OCIO_REQUIRE_EQUAL(ops.size(), 1);
         OCIO_REQUIRE_EQUAL(std::string(ops[0]->getInfo()), "<MatrixOffsetOp>");
     }
 
     {
         ops.clear();
-        CreateOps("ACEScct-LOG_to_LIN", OCIO::TRANSFORM_DIR_FORWARD, ops, __LINE__);
+        CreateOps("CURVE - ACEScct-LOG_to_LINEAR", OCIO::TRANSFORM_DIR_FORWARD, ops, __LINE__);
         OCIO_REQUIRE_EQUAL(ops.size(), 1);
         OCIO_REQUIRE_EQUAL(std::string(ops[0]->getInfo()), "<LogOp>");
     }
@@ -96,6 +96,8 @@ OCIO_ADD_TEST(Builtins, read_write)
     static constexpr char CONFIG_BUILTIN_TRANSFORMS[] {
 R"(ocio_profile_version: 2
 
+environment:
+  {}
 search_path: ""
 strictparsing: true
 luma: [0.2126, 0.7152, 0.0722]
@@ -129,7 +131,7 @@ colorspaces:
     bitdepth: unknown
     isdata: false
     allocation: uniform
-    from_reference: !<GroupTransform>
+    from_scene_reference: !<GroupTransform>
       children:)" };
 
     // Tests all built-in transforms.

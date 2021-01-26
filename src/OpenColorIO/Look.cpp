@@ -1,11 +1,15 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
+
 #include <cstring>
 #include <sstream>
 #include <vector>
 
 #include <OpenColorIO/OpenColorIO.h>
+
+#include "ContextVariableUtils.h"
+
 
 namespace OCIO_NAMESPACE
 {
@@ -125,22 +129,103 @@ void Look::setDescription(const char * description)
     getImpl()->m_description = description;
 }
 
+bool CollectContextVariables(const Config & config,
+                             const Context & context,
+                             TransformDirection direction,
+                             const Look & look,
+                             ContextRcPtr & usedContext)
+{
+    bool foundContextVars = false;
+
+    switch (direction)
+    {
+    case TRANSFORM_DIR_FORWARD:
+    {
+        ConstTransformRcPtr tr = look.getTransform();
+        if (tr)
+        {
+            if (CollectContextVariables(config, context, tr, usedContext))
+            {
+                foundContextVars = true;
+            }
+        }
+        else
+        {
+            tr = look.getInverseTransform();
+            if (tr && CollectContextVariables(config, context, tr, usedContext))
+            {
+                foundContextVars = true;
+            }
+        }
+        break;
+    }
+    case TRANSFORM_DIR_INVERSE:
+    {
+        ConstTransformRcPtr tr = look.getInverseTransform();
+        if (tr)
+        {
+            if (CollectContextVariables(config, context, tr, usedContext))
+            {
+                foundContextVars = true;
+            }
+        }
+        else
+        {
+            tr = look.getTransform();
+            if (tr && CollectContextVariables(config, context, tr, usedContext))
+            {
+                foundContextVars = true;
+            }
+        }
+        break;
+    }
+    }
+
+    const char * ps = look.getProcessSpace();
+    if (ps)
+    {
+        ConstColorSpaceRcPtr cs = config.getColorSpace(ps);
+        if (cs)
+        {
+            ConstTransformRcPtr to = cs->getTransform(COLORSPACE_DIR_TO_REFERENCE);
+            if (to && CollectContextVariables(config, context, to, usedContext))
+            {
+                foundContextVars = true;
+            }
+
+            ConstTransformRcPtr from = cs->getTransform(COLORSPACE_DIR_FROM_REFERENCE);
+            if (from && CollectContextVariables(config, context, from, usedContext))
+            {
+                foundContextVars = true;
+            }
+        }
+    }
+
+    return foundContextVars;
+}
+
 std::ostream& operator<< (std::ostream& os, const Look& look)
 {
     os << "<Look";
     os << " name=" << look.getName();
     os << ", processSpace=" << look.getProcessSpace();
 
+    std::string desc{ look.getDescription() };
+    if (!desc.empty())
+    {
+        os << ", description=" << desc;
+    }
+
     if(look.getTransform())
     {
         os << ",\n    transform=";
-        os << "\n\t" << *look.getTransform();
+        os << "\n        " << *look.getTransform();
     }
 
     if(look.getInverseTransform())
     {
         os << ",\n    inverseTransform=";
-        os << "\n\t" << *look.getInverseTransform();
+        os << "\n        " << *look.getInverseTransform();
     }
 
     os << ">";

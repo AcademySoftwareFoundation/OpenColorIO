@@ -34,11 +34,11 @@ void WriteShaderHeader(GpuShaderCreatorRcPtr & shaderCreator)
     ss.newLine() << "// Declaration of the OCIO shader function";
     ss.newLine();
 
-    ss.newLine() << ss.vec4fKeyword() << " " << fcnName
-                 << "(in "  << ss.vec4fKeyword() << " inPixel)";
+    ss.newLine() << ss.float4Keyword() << " " << fcnName
+                 << "(in "  << ss.float4Keyword() << " inPixel)";
     ss.newLine() << "{";
     ss.indent();
-    ss.newLine() << ss.vec4fKeyword() << " "
+    ss.newLine() << ss.float4Keyword() << " "
                  << shaderCreator->getPixelName() << " = inPixel;";
 
     shaderCreator->addToFunctionHeaderShaderCode(ss.string().c_str());
@@ -94,12 +94,6 @@ OpRcPtrVec Create3DLut(const OpRcPtrVec & ops, unsigned edgelen)
 
 }
 
-
-DynamicPropertyRcPtr GPUProcessor::Impl::getDynamicProperty(DynamicPropertyType type) const
-{
-    return m_ops.getDynamicProperty(type);
-}
-
 void GPUProcessor::Impl::finalize(const OpRcPtrVec & rawOps,
                                   OptimizationFlags oFlags)
 {
@@ -110,7 +104,7 @@ void GPUProcessor::Impl::finalize(const OpRcPtrVec & rawOps,
     m_ops = rawOps;
 
     m_ops.finalize(oFlags);
-    m_ops.unifyDynamicProperties();
+    m_ops.validateDynamicProperties();
 
     // Is NoOp ?
     m_isNoOp  = m_ops.isNoOp();
@@ -224,11 +218,6 @@ bool GPUProcessor::hasChannelCrosstalk() const
 const char * GPUProcessor::getCacheID() const
 {
     return getImpl()->getCacheID();
-}
-
-DynamicPropertyRcPtr GPUProcessor::getDynamicProperty(DynamicPropertyType type) const
-{
-    return getImpl()->getDynamicProperty(type);
 }
 
 void GPUProcessor::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const

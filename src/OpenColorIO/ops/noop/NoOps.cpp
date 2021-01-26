@@ -40,7 +40,7 @@ public:
 
     std::string getCacheID() const override;
 
-    ConstOpCPURcPtr getCPUOp() const override { return nullptr; }
+    ConstOpCPURcPtr getCPUOp(bool /*fastLogExpPow*/) const override { return nullptr; }
 
     void apply(void * img, long numPixels) const override
     { apply(img, img, numPixels); }
@@ -235,10 +235,8 @@ void PartitionGPUOps(OpRcPtrVec & gpuPreOps,
         // (For example in the case of getProcessor(FileTransform)
         if(GetGpuAllocation(allocation, ops[gpuLut3DOpStartIndex]))
         {
-            CreateAllocationOps(gpuPreOps, allocation,
-                TRANSFORM_DIR_FORWARD);
-            CreateAllocationOps(gpuLatticeOps, allocation,
-                TRANSFORM_DIR_INVERSE);
+            CreateAllocationOps(gpuPreOps, allocation, TRANSFORM_DIR_FORWARD);
+            CreateAllocationOps(gpuLatticeOps, allocation, TRANSFORM_DIR_INVERSE);
         }
 
         // Handle cpu lattice processing
@@ -326,7 +324,7 @@ public:
 
     std::string getCacheID() const override;
 
-    ConstOpCPURcPtr getCPUOp() const override { return nullptr; }
+    ConstOpCPURcPtr getCPUOp(bool /*fastLogExpPow*/) const override { return nullptr; }
 
     void apply(void * img, long numPixels) const override
     { apply(img, img, numPixels); }
@@ -414,7 +412,7 @@ public:
 
     std::string getCacheID() const override;
 
-    ConstOpCPURcPtr getCPUOp() const override { return nullptr; }
+    ConstOpCPURcPtr getCPUOp(bool /*fastLogExpPow*/) const override { return nullptr; }
 
     void apply(void * img, long numPixels) const override
     { apply(img, img, numPixels); }

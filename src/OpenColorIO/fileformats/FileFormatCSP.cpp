@@ -13,6 +13,7 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "fileformats/FileFormatUtils.h"
 #include "MathUtils.h"
 #include "ops/lut1d/Lut1DOp.h"
 #include "ops/lut3d/Lut3DOp.h"
@@ -319,9 +320,9 @@ public:
 
     void getFormatInfo(FormatInfoVec & formatInfoVec) const override;
 
-    CachedFileRcPtr read(
-        std::istream & istream,
-        const std::string & fileName) const override;
+    CachedFileRcPtr read(std::istream & istream,
+                         const std::string & fileName,
+                         Interpolation interp) const override;
 
     void bake(const Baker & baker,
                 const std::string & formatName,
@@ -355,9 +356,9 @@ void LocalFileFormat::getFormatInfo(FormatInfoVec & formatInfoVec) const
     formatInfoVec.push_back(info);
 }
 
-CachedFileRcPtr LocalFileFormat::read(
-    std::istream & istream,
-    const std::string & fileName) const
+CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
+                                      const std::string & fileName,
+                                      Interpolation interp) const
 {
     Lut1DOpDataRcPtr lut1d_ptr;
     Lut3DOpDataRcPtr lut3d_ptr;
@@ -496,6 +497,10 @@ CachedFileRcPtr LocalFileFormat::read(
         }
 
         lut1d_ptr = std::make_shared<Lut1DOpData>(points1D);
+        if (Lut1DOpData::IsValidInterpolation(interp))
+        {
+            lut1d_ptr->setInterpolation(interp);
+        }
         lut1d_ptr->setFileOutputBitDepth(BIT_DEPTH_F32);
         Array & lutArray = lut1d_ptr->getArray();
 
@@ -565,6 +570,10 @@ CachedFileRcPtr LocalFileFormat::read(
         }
 
         lut3d_ptr = std::make_shared<Lut3DOpData>(lutSize);
+        if (Lut3DOpData::IsValidInterpolation(interp))
+        {
+            lut3d_ptr->setInterpolation(interp);
+        }
         lut3d_ptr->setFileOutputBitDepth(BIT_DEPTH_F32);
 
         Array & lutArray = lut3d_ptr->getArray();
@@ -726,7 +735,7 @@ void LocalFileFormat::bake(const Baker & baker,
 
         ConstCPUProcessorRcPtr shaperToInput 
             = config->getProcessor(baker.getShaperSpace(), 
-                                    baker.getInputSpace())->getDefaultCPUProcessor();
+                                    baker.getInputSpace())->getOptimizedCPUProcessor(OPTIMIZATION_LOSSLESS);
         if(shaperToInput->hasChannelCrosstalk())
         {
             // TODO: Automatically turn shaper into non-crosstalked version?
@@ -748,13 +757,13 @@ void LocalFileFormat::bake(const Baker & baker,
             transform->setDst(baker.getTargetSpace());
             shaperToTarget
                 = config->getProcessor(transform, 
-                                        TRANSFORM_DIR_FORWARD)->getDefaultCPUProcessor();
+                                        TRANSFORM_DIR_FORWARD)->getOptimizedCPUProcessor(OPTIMIZATION_LOSSLESS);
         }
         else
         {
             shaperToTarget
                 = config->getProcessor(baker.getShaperSpace(), 
-                                        baker.getTargetSpace())->getDefaultCPUProcessor();
+                                        baker.getTargetSpace())->getOptimizedCPUProcessor(OPTIMIZATION_LOSSLESS);
         }
         shaperToTarget->apply(cubeImg);
     }
@@ -806,7 +815,7 @@ void LocalFileFormat::bake(const Baker & baker,
 
         // Apply the forward to the allocation to the output shaper y axis, and the cube
         ConstCPUProcessorRcPtr shaperToInput
-            = config->getProcessor(allocationTransform, TRANSFORM_DIR_INVERSE)->getDefaultCPUProcessor();
+            = config->getProcessor(allocationTransform, TRANSFORM_DIR_INVERSE)->getOptimizedCPUProcessor(OPTIMIZATION_LOSSLESS);
 
         PackedImageDesc shaperInImg(&shaperInData[0], shaperSize, 1, 3);
         shaperToInput->apply(shaperInImg);
@@ -820,14 +829,13 @@ void LocalFileFormat::bake(const Baker & baker,
             transform->setLooks(looks.c_str());
             transform->setSrc(baker.getInputSpace());
             transform->setDst(baker.getTargetSpace());
-            inputToTarget = config->getProcessor(transform, 
-                                                    TRANSFORM_DIR_FORWARD);
+            inputToTarget = config->getProcessor(transform, TRANSFORM_DIR_FORWARD);
         }
         else
         {
             inputToTarget = config->getProcessor(baker.getInputSpace(), baker.getTargetSpace());
         }
-        ConstCPUProcessorRcPtr cpu = inputToTarget->getDefaultCPUProcessor();
+        ConstCPUProcessorRcPtr cpu = inputToTarget->getOptimizedCPUProcessor(OPTIMIZATION_LOSSLESS);
         cpu->apply(cubeImg);
     }
 
@@ -841,7 +849,7 @@ void LocalFileFormat::bake(const Baker & baker,
     for (int i = 0; i < nb; ++i)
     {
         const auto & child = metadata.getChildElement(i);
-        ostream << child.getValue() << "\n";
+        ostream << child.getElementValue() << "\n";
     }
     ostream << "END METADATA\n";
     ostream << "\n";
@@ -902,61 +910,70 @@ LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
     CachedFileCSPRcPtr cachedFile = DynamicPtrCast<CachedFileCSP>(untypedCachedFile);
 
     // This should never happen.
-    if(!cachedFile)
+    if(!cachedFile || (!cachedFile->prelut && !cachedFile->lut1D && !cachedFile->lut3D))
     {
         std::ostringstream os;
         os << "Cannot build CSP Op. Invalid cache type.";
         throw Exception(os.str().c_str());
     }
 
-    TransformDirection newDir = fileTransform.getDirection();
-    newDir = CombineTransformDirections(dir, newDir);
+    const auto newDir = CombineTransformDirections(dir, fileTransform.getDirection());
 
-    if(newDir == TRANSFORM_DIR_FORWARD)
+    const auto fileInterp = fileTransform.getInterpolation();
+
+    bool fileInterpUsed = false;
+    auto prelut = HandleLUT1D(cachedFile->prelut, fileInterp, fileInterpUsed);
+    auto lut1D = HandleLUT1D(cachedFile->lut1D, fileInterp, fileInterpUsed);
+    auto lut3D = HandleLUT3D(cachedFile->lut3D, fileInterp, fileInterpUsed);
+
+    if (!fileInterpUsed)
     {
-        if(cachedFile->prelut)
-        {
-            CreateMinMaxOp(ops,
-                            cachedFile->prelut_from_min,
-                            cachedFile->prelut_from_max,
-                            newDir);
-            CreateLut1DOp(ops, cachedFile->prelut, newDir);
-        }
-        if (cachedFile->lut1D)
-        {
-            cachedFile->lut1D->setInterpolation(fileTransform.getInterpolation());
-            CreateLut1DOp(ops, cachedFile->lut1D, newDir);
-        }
-        else if (cachedFile->lut3D)
-        {
-            cachedFile->lut3D->setInterpolation(fileTransform.getInterpolation());
-            CreateLut3DOp(ops, cachedFile->lut3D, newDir);
-        }
-    }
-    else if(newDir == TRANSFORM_DIR_INVERSE)
-    {
-        if (cachedFile->lut1D)
-        {
-            cachedFile->lut1D->setInterpolation(fileTransform.getInterpolation());
-            CreateLut1DOp(ops, cachedFile->lut1D, newDir);
-        }
-        else if (cachedFile->lut3D)
-        {
-            cachedFile->lut3D->setInterpolation(fileTransform.getInterpolation());
-            CreateLut3DOp(ops, cachedFile->lut3D, newDir);
-        }
-        if(cachedFile->prelut)
-        {
-            CreateLut1DOp(ops, cachedFile->prelut, newDir);
-            CreateMinMaxOp(ops,
-                            cachedFile->prelut_from_min,
-                            cachedFile->prelut_from_max,
-                            newDir);
-        }
+        LogWarningInterpolationNotUsed(fileInterp, fileTransform);
     }
 
-    return;
-
+    switch (newDir)
+    {
+    case TRANSFORM_DIR_FORWARD:
+    {
+        if (prelut)
+        {
+            CreateMinMaxOp(ops,
+                           cachedFile->prelut_from_min,
+                           cachedFile->prelut_from_max,
+                           newDir);
+            CreateLut1DOp(ops, prelut, newDir);
+        }
+        if (lut1D)
+        {
+            CreateLut1DOp(ops, lut1D, newDir);
+        }
+        else if (lut3D)
+        {
+            CreateLut3DOp(ops, lut3D, newDir);
+        }
+        break;
+    }
+    case TRANSFORM_DIR_INVERSE:
+    {
+        if (lut1D)
+        {
+            CreateLut1DOp(ops, lut1D, newDir);
+        }
+        else if (lut3D)
+        {
+            CreateLut3DOp(ops, lut3D, newDir);
+        }
+        if (prelut)
+        {
+            CreateLut1DOp(ops, prelut, newDir);
+            CreateMinMaxOp(ops,
+                           cachedFile->prelut_from_min,
+                           cachedFile->prelut_from_max,
+                           newDir);
+        }
+        break;
+    }
+    }
 }
 }
 

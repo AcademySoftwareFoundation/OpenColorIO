@@ -54,7 +54,7 @@ public:
 
     std::string getCacheID() const override;
 
-    ConstOpCPURcPtr getCPUOp() const override;
+    ConstOpCPURcPtr getCPUOp(bool fastLogExpPow) const override;
 
     void extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const override;
 
@@ -153,10 +153,10 @@ std::string CDLOp::getCacheID() const
     return cacheIDStream.str();
 }
 
-ConstOpCPURcPtr CDLOp::getCPUOp() const
+ConstOpCPURcPtr CDLOp::getCPUOp(bool fastLogExpPow) const
 {
     ConstCDLOpDataRcPtr data = cdlData();
-    return CDLOpCPU::GetRenderer(data);
+    return GetCDLCPURenderer(data, fastLogExpPow);
 }
 
 void CDLOp::extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const
@@ -246,7 +246,9 @@ void BuildCDLOp(OpRcPtrVec & ops,
 
         double sat = cdlTransform.getSat();
 
-        if (combinedDir == TRANSFORM_DIR_FORWARD)
+        switch (combinedDir)
+        {
+        case TRANSFORM_DIR_FORWARD:
         {
             // 1) Scale + Offset
             CreateScaleOffsetOp(ops, slope4, offset4, TRANSFORM_DIR_FORWARD);
@@ -258,8 +260,9 @@ void BuildCDLOp(OpRcPtrVec & ops,
             // 3) Saturation (NB: Does not clamp at 0 and 1
             //    as per ASC v1.2 spec)
             CreateSaturationOp(ops, sat, lumaCoef3, TRANSFORM_DIR_FORWARD);
+            break;
         }
-        else if (combinedDir == TRANSFORM_DIR_INVERSE)
+        case TRANSFORM_DIR_INVERSE:
         {
             // 3) Saturation (NB: Does not clamp at 0 and 1
             //    as per ASC v1.2 spec)
@@ -271,6 +274,8 @@ void BuildCDLOp(OpRcPtrVec & ops,
 
             // 1) Scale + Offset
             CreateScaleOffsetOp(ops, slope4, offset4, TRANSFORM_DIR_INVERSE);
+            break;
+        }
         }
     }
     else

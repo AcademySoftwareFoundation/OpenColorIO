@@ -44,11 +44,10 @@ public:
     bool isDynamic() const override;
     bool hasDynamicProperty(DynamicPropertyType type) const override;
     DynamicPropertyRcPtr getDynamicProperty(DynamicPropertyType type) const override;
-    void replaceDynamicProperty(DynamicPropertyType type,
-                                DynamicPropertyImplRcPtr prop) override;
+    void replaceDynamicProperty(DynamicPropertyType type, DynamicPropertyDoubleImplRcPtr & prop) override;
     void removeDynamicProperties() override;
 
-    ConstOpCPURcPtr getCPUOp() const override;
+    ConstOpCPURcPtr getCPUOp(bool fastLogExpPow) const override;
 
     void extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const override;
 
@@ -130,7 +129,7 @@ std::string ExposureContrastOp::getCacheID() const
     return cacheIDStream.str();
 }
 
-ConstOpCPURcPtr ExposureContrastOp::getCPUOp() const
+ConstOpCPURcPtr ExposureContrastOp::getCPUOp(bool /*fastLogExpPow*/) const
 {
     ConstExposureContrastOpDataRcPtr ecOpData = ecData();
     return GetExposureContrastCPURenderer(ecOpData);
@@ -158,7 +157,7 @@ DynamicPropertyRcPtr ExposureContrastOp::getDynamicProperty(DynamicPropertyType 
 }
 
 void ExposureContrastOp::replaceDynamicProperty(DynamicPropertyType type,
-                                                DynamicPropertyImplRcPtr prop)
+                                                DynamicPropertyDoubleImplRcPtr & prop)
 {
     ecData()->replaceDynamicProperty(type, prop);
 }
@@ -177,19 +176,19 @@ void CreateExposureContrastOp(OpRcPtrVec & ops,
                               ExposureContrastOpDataRcPtr & data,
                               TransformDirection direction)
 {
-    if (direction == TRANSFORM_DIR_FORWARD)
+    switch (direction)
+    {
+    case TRANSFORM_DIR_FORWARD:
     {
         ops.push_back(std::make_shared<ExposureContrastOp>(data));
+        break;
     }
-    else if (direction == TRANSFORM_DIR_INVERSE)
+    case TRANSFORM_DIR_INVERSE:
     {
         ExposureContrastOpDataRcPtr dataInv = data->inverse();
         ops.push_back(std::make_shared<ExposureContrastOp>(dataInv));
+        break;
     }
-    else
-    {
-        throw Exception("Cannot apply ExposureContrast op, "
-                        "unspecified transform direction.");
     }
 }
 
@@ -211,7 +210,6 @@ void CreateExposureContrastTransform(GroupTransformRcPtr & group, ConstOpRcPtr &
 }
 
 void BuildExposureContrastOp(OpRcPtrVec & ops,
-                             const Config & config,
                              const ExposureContrastTransform & transform,
                              TransformDirection dir)
 {

@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <iterator>
 
+#include "ContextVariableUtils.h"
 #include "LookParse.h"
 #include "ops/noop/NoOps.h"
 #include "OpBuilders.h"
@@ -83,7 +84,16 @@ void LookTransform::setDirection(TransformDirection dir) noexcept
 
 void LookTransform::validate() const
 {
-    Transform::validate();
+    try
+    {
+        Transform::validate();
+    }
+    catch (Exception & ex)
+    {
+        std::string errMsg("LookTransform validation failed: ");
+        errMsg += ex.what();
+        throw Exception(errMsg.c_str());
+    }
 
     if (getImpl()->m_src.empty())
     {
@@ -171,11 +181,11 @@ const char * LookTransform::GetLooksResultColorSpace(const ConstConfigRcPtr & co
 std::ostream& operator<< (std::ostream& os, const LookTransform& t)
 {
     os << "<LookTransform";
-    os <<  " src="       << t.getSrc();
+    os <<  " direction=" << TransformDirectionToString(t.getDirection());
+    os << ", src="       << t.getSrc();
     os << ", dst="       << t.getDst();
     os << ", looks="     << t.getLooks();
     if (t.getSkipColorSpaceConversion()) os << ", skipCSConversion";
-    os << ", direction=" << TransformDirectionToString(t.getDirection());
     os << ">";
     return os;
 }
@@ -229,37 +239,34 @@ void RunLookTokens(OpRcPtrVec & ops,
         // If it is a no-op, dont bother doing the colorspace conversion.
         OpRcPtrVec tmpOps;
 
-        if(lookTokens[i].dir == TRANSFORM_DIR_FORWARD)
+        switch (lookTokens[i].dir)
+        {
+        case TRANSFORM_DIR_FORWARD:
         {
             CreateLookNoOp(tmpOps, lookName);
-            if(look->getTransform())
+            if (look->getTransform())
             {
                 BuildOps(tmpOps, config, context, look->getTransform(), TRANSFORM_DIR_FORWARD);
             }
-            else if(look->getInverseTransform())
+            else if (look->getInverseTransform())
             {
                 BuildOps(tmpOps, config, context, look->getInverseTransform(), TRANSFORM_DIR_INVERSE);
             }
+            break;
         }
-        else if(lookTokens[i].dir == TRANSFORM_DIR_INVERSE)
+        case TRANSFORM_DIR_INVERSE:
         {
             CreateLookNoOp(tmpOps, std::string("-") + lookName);
-            if(look->getInverseTransform())
+            if (look->getInverseTransform())
             {
                 BuildOps(tmpOps, config, context, look->getInverseTransform(), TRANSFORM_DIR_FORWARD);
             }
-            else if(look->getTransform())
+            else if (look->getTransform())
             {
                 BuildOps(tmpOps, config, context, look->getTransform(), TRANSFORM_DIR_INVERSE);
             }
+            break;
         }
-        else
-        {
-            std::ostringstream os;
-            os << "BuildLookOps error. ";
-            os << "The specified look, '" << lookTokens[i].name;
-            os << "' has an ill-defined transform direction.";
-            throw Exception(os.str().c_str());
         }
 
         if (!tmpOps.isNoOp())
@@ -282,8 +289,9 @@ void RunLookTokens(OpRcPtrVec & ops,
             if (!skipColorSpaceConversion &&
                 currentColorSpace.get() != processColorSpace.get())
             {
+                // Default behavior is to bypass data color space.
                 BuildColorSpaceOps(ops, config, context,
-                                   currentColorSpace, processColorSpace, false);
+                                   currentColorSpace, processColorSpace, true);
                 currentColorSpace = processColorSpace;
             }
 
@@ -302,10 +310,7 @@ void BuildLookOps(OpRcPtrVec & ops,
                   const LookTransform & lookTransform,
                   TransformDirection dir)
 {
-    ConstColorSpaceRcPtr src, dst;
-    src = config.getColorSpace( lookTransform.getSrc() );
-    dst = config.getColorSpace( lookTransform.getDst() );
-
+    ConstColorSpaceRcPtr src = config.getColorSpace(lookTransform.getSrc());
     if(!src)
     {
         std::ostringstream os;
@@ -315,6 +320,7 @@ void BuildLookOps(OpRcPtrVec & ops,
         throw Exception(os.str().c_str());
     }
 
+    ConstColorSpaceRcPtr dst = config.getColorSpace(lookTransform.getDst());
     if(!dst)
     {
         std::ostringstream os;
@@ -327,17 +333,12 @@ void BuildLookOps(OpRcPtrVec & ops,
     LookParseResult looks;
     looks.parse(lookTransform.getLooks());
 
-    // We must handle the inverse src/dst colorspace transformation explicitly.
-    if(dir == TRANSFORM_DIR_INVERSE)
+    // The code must handle the inverse src/dst colorspace transformation explicitly.
+    const auto combinedDir = CombineTransformDirections(dir, lookTransform.getDirection());
+    if(combinedDir == TRANSFORM_DIR_INVERSE)
     {
         std::swap(src, dst);
         looks.reverse();
-    }
-    else if(dir == TRANSFORM_DIR_UNKNOWN)
-    {
-        std::ostringstream os;
-        os << "BuildLookOps error. A valid transform direction must be specified.";
-        throw Exception(os.str().c_str());
     }
 
     const bool skipColorSpaceConversion = lookTransform.getSkipColorSpaceConversion();
@@ -352,8 +353,8 @@ void BuildLookOps(OpRcPtrVec & ops,
     // If current color space is already the dst space skip the conversion.
     if (!skipColorSpaceConversion && currentColorSpace.get() != dst.get())
     {
-        BuildColorSpaceOps(ops, config, context,
-                           currentColorSpace, dst, false);
+        // Default behavior is to bypass data color space.
+        BuildColorSpaceOps(ops, config, context, currentColorSpace, dst, true);
     }
 }
 
@@ -385,7 +386,7 @@ void BuildLookOps(OpRcPtrVec & ops,
     {
         // If we have multiple look options, try each one in order,
         // and if we can create the ops without a missing file exception,
-        // push back it's results and return
+        // push back it's results and return.
 
         bool success = false;
         std::ostringstream os;
@@ -430,4 +431,50 @@ void BuildLookOps(OpRcPtrVec & ops,
         }
     }
 }
+
+bool CollectContextVariables(const Config & config, 
+                             const Context & context,
+                             const LookTransform & look,
+                             ContextRcPtr & usedContextVars)
+{
+    bool foundContextVars = false;
+
+    ConstColorSpaceRcPtr src = config.getColorSpace(look.getSrc());
+    if (CollectContextVariables(config, context, src, usedContextVars))
+    {
+        foundContextVars = true;
+    }
+
+    ConstColorSpaceRcPtr dst = config.getColorSpace(look.getDst());
+    if (CollectContextVariables(config, context, dst, usedContextVars))
+    {
+        foundContextVars = true;
+    }
+
+    const char * looks = look.getLooks();
+    if (looks && *looks)
+    {
+        LookParseResult lookList;
+        lookList.parse(looks);
+
+        // Note: For now, simply concatenating vars used by all of the options rather than trying to
+        // figure out which option would be used.
+
+        const LookParseResult::Options & options = lookList.getOptions();
+        for (const auto & tokens : options)
+        {
+            for (const auto & token : tokens)
+            {
+                ConstLookRcPtr look = config.getLook(token.name.c_str());
+                if (look && CollectContextVariables(config, context, token.dir, *look, usedContextVars))
+                {
+                    foundContextVars = true;
+                }
+            }
+        }
+    }
+
+    return foundContextVars;
+}
+
 } // namespace OCIO_NAMESPACE

@@ -41,23 +41,17 @@ OCIO_ADD_TEST(FileRules, config_read_only)
 {
     auto config = OCIO::Config::CreateRaw();
     auto fileRules = config->getFileRules();
-    OCIO_REQUIRE_EQUAL(fileRules->getNumEntries(), 2);
-    OCIO_CHECK_EQUAL(std::string(fileRules->getName(0)), OCIO::FileRuleUtils::ParseName);
-    OCIO_CHECK_EQUAL(fileRules->getIndexForRule(OCIO::FileRuleUtils::ParseName), 0);
-    OCIO_CHECK_ASSERT(!fileRules->getPattern(0));
-    OCIO_CHECK_ASSERT(!fileRules->getExtension(0));
-    OCIO_CHECK_ASSERT(!fileRules->getRegex(0));
-    OCIO_CHECK_ASSERT(std::string(fileRules->getColorSpace(0)).empty());
-    OCIO_CHECK_EQUAL(std::string(fileRules->getName(1)), OCIO::FileRuleUtils::DefaultName);
-    OCIO_CHECK_EQUAL(fileRules->getIndexForRule(OCIO::FileRuleUtils::DefaultName), 1);
-    OCIO_CHECK_ASSERT(!fileRules->getPattern(1));
-    OCIO_CHECK_ASSERT(!fileRules->getExtension(1));
-    OCIO_CHECK_ASSERT(!fileRules->getRegex(1));
-    OCIO_CHECK_EQUAL(std::string(fileRules->getColorSpace(1)), OCIO::ROLE_DEFAULT);
+    OCIO_REQUIRE_EQUAL(fileRules->getNumEntries(), 1);
+    OCIO_CHECK_EQUAL(std::string(fileRules->getName(0)), OCIO::FileRules::DefaultRuleName);
+    OCIO_CHECK_EQUAL(fileRules->getIndexForRule(OCIO::FileRules::DefaultRuleName), 0);
+    OCIO_CHECK_EQUAL(std::string(fileRules->getPattern(0)), "");
+    OCIO_CHECK_EQUAL(std::string(fileRules->getExtension(0)), "");
+    OCIO_CHECK_EQUAL(std::string(fileRules->getRegex(0)), "");
+    OCIO_CHECK_EQUAL(std::string(fileRules->getColorSpace(0)), OCIO::ROLE_DEFAULT);
 
-    OCIO_CHECK_THROW_WHAT(fileRules->getName(2), 
+    OCIO_CHECK_THROW_WHAT(fileRules->getName(1), 
                           OCIO::Exception, 
-                          "rule index '2' invalid. There are only '2' rules.");
+                          "rule index '1' invalid. There are only '1' rules.");
 
     OCIO_CHECK_THROW_WHAT(fileRules->getIndexForRule("toto"), 
                           OCIO::Exception, 
@@ -70,35 +64,34 @@ OCIO_ADD_TEST(FileRules, config_insert_rule)
     auto config = configRaw->createEditableCopy();
     auto fr = config->getFileRules();
     auto fileRules = fr->createEditableCopy();
-    OCIO_REQUIRE_EQUAL(fileRules->getNumEntries(), 2);
+    OCIO_REQUIRE_EQUAL(fileRules->getNumEntries(), 1);
     OCIO_CHECK_NO_THROW(fileRules->insertRule(0, "rule", "raw", "*", "a"));
-    OCIO_REQUIRE_EQUAL(fileRules->getNumEntries(), 3);
+    OCIO_REQUIRE_EQUAL(fileRules->getNumEntries(), 2);
     OCIO_CHECK_NO_THROW(fileRules->insertRule(0, "TIFF rule", "raw", R"(.*\.TIF?F$)"));
-    OCIO_REQUIRE_EQUAL(fileRules->getNumEntries(), 4);
+    OCIO_REQUIRE_EQUAL(fileRules->getNumEntries(), 3);
     OCIO_CHECK_THROW_WHAT(fileRules->insertRule(0, "rule", "raw", "*", "b"),
                           OCIO::Exception, "A rule named 'rule' already exists");
     OCIO_CHECK_THROW_WHAT(fileRules->insertRule(4, "rule2", "raw", "*", "a"),
                           OCIO::Exception, "rule index '4' invalid");
-    OCIO_CHECK_THROW_WHAT(fileRules->removeRule(4), OCIO::Exception, "invalid");
-    OCIO_CHECK_THROW_WHAT(fileRules->removeRule(3), OCIO::Exception, "is the default rule");
-    OCIO_CHECK_NO_THROW(fileRules->removeRule(2));
+    OCIO_CHECK_THROW_WHAT(fileRules->removeRule(3), OCIO::Exception, "invalid");
+    OCIO_CHECK_THROW_WHAT(fileRules->removeRule(2), OCIO::Exception, "is the default rule");
     OCIO_CHECK_NO_THROW(fileRules->removeRule(1));
     OCIO_CHECK_NO_THROW(fileRules->removeRule(0));
     OCIO_CHECK_EQUAL(fileRules->getNumEntries(), 1);
 
-    OCIO_CHECK_THROW_WHAT(fileRules->insertRule(0, OCIO::FileRuleUtils::ParseName,
+    OCIO_CHECK_THROW_WHAT(fileRules->insertRule(0, OCIO::FileRules::FilePathSearchRuleName,
                                                 "colorspace", "", ""),
                           OCIO::Exception, "does not accept any color space");
-    OCIO_CHECK_THROW_WHAT(fileRules->insertRule(0, OCIO::FileRuleUtils::ParseName,
+    OCIO_CHECK_THROW_WHAT(fileRules->insertRule(0, OCIO::FileRules::FilePathSearchRuleName,
                                                 "", "pattern", ""),
                           OCIO::Exception, "do not accept any pattern");
-    OCIO_CHECK_THROW_WHAT(fileRules->insertRule(0, OCIO::FileRuleUtils::ParseName,
+    OCIO_CHECK_THROW_WHAT(fileRules->insertRule(0, OCIO::FileRules::FilePathSearchRuleName,
                                                 "", "", "extension"),
                           OCIO::Exception, "do not accept any extension");
 
-    OCIO_CHECK_NO_THROW(fileRules->insertRule(0, OCIO::FileRuleUtils::ParseName, "", "", ""));
+    OCIO_CHECK_NO_THROW(fileRules->insertRule(0, OCIO::FileRules::FilePathSearchRuleName, "", "", ""));
 
-    OCIO_CHECK_THROW_WHAT(fileRules->insertRule(0, OCIO::FileRuleUtils::ParseName,
+    OCIO_CHECK_THROW_WHAT(fileRules->insertRule(0, OCIO::FileRules::FilePathSearchRuleName,
                                                 "", "", "extension"),
                           OCIO::Exception, 
                           "File rules: A rule named 'ColorSpaceNamePathSearch' already exists.");
@@ -116,8 +109,7 @@ OCIO_ADD_TEST(FileRules, config_insert_rule)
                           "File rules: A rule named 'Default' already exists.");
 
     OCIO_CHECK_NO_THROW(fileRules->removeRule(0));
-    OCIO_CHECK_NO_THROW(fileRules->insertRule(0, OCIO::FileRuleUtils::ParseName,
-                                              nullptr, nullptr, nullptr));
+    OCIO_CHECK_NO_THROW(fileRules->insertPathSearchRule(0));
 
     // Adds a rule with empty name.
     OCIO_CHECK_THROW_WHAT(fileRules->insertRule(0, nullptr, "raw", "*", "a"),
@@ -125,9 +117,9 @@ OCIO_ADD_TEST(FileRules, config_insert_rule)
 
     // Pattern and extension can't be null.
     OCIO_CHECK_THROW_WHAT(fileRules->insertRule(0, "rule", "raw", nullptr, "a"),
-                          OCIO::Exception, "file pattern is empty");
+                          OCIO::Exception, "file name pattern is empty");
     OCIO_CHECK_THROW_WHAT(fileRules->insertRule(0, "rule", "raw", "*", nullptr),
-                          OCIO::Exception, "file extension is empty");
+                          OCIO::Exception, "file extension pattern is empty");
 
     // Invalid glob pattern.
     OCIO_CHECK_THROW_WHAT(fileRules->insertRule(0, "rule", "raw", "[", "a"),
@@ -143,36 +135,29 @@ OCIO_ADD_TEST(FileRules, config_rule_customkeys)
     auto configRaw = OCIO::Config::CreateRaw();
     auto fr = configRaw->getFileRules();
     auto fileRules = fr->createEditableCopy();
-    OCIO_REQUIRE_EQUAL(fileRules->getNumEntries(), 2);
+    OCIO_REQUIRE_EQUAL(fileRules->getNumEntries(), 1);
     OCIO_CHECK_NO_THROW(fileRules->insertRule(0, "rule", "raw", "*", "a"));
-    OCIO_REQUIRE_EQUAL(fileRules->getNumEntries(), 3);
+    OCIO_REQUIRE_EQUAL(fileRules->getNumEntries(), 2);
     OCIO_CHECK_EQUAL(fileRules->getNumCustomKeys(0), 0);
     OCIO_CHECK_EQUAL(fileRules->getNumCustomKeys(1), 0);
-    OCIO_CHECK_EQUAL(fileRules->getNumCustomKeys(2), 0);
-    OCIO_CHECK_THROW_WHAT(fileRules->getNumCustomKeys(3), OCIO::Exception,
-                          "rule index '3' invalid");
+    OCIO_CHECK_THROW_WHAT(fileRules->getNumCustomKeys(2), OCIO::Exception,
+                          "rule index '2' invalid");
     OCIO_CHECK_THROW_WHAT(fileRules->getCustomKeyName(0, 0), OCIO::Exception,
                           "Key index '0' is invalid");
     OCIO_CHECK_THROW_WHAT(fileRules->getCustomKeyName(1, 0), OCIO::Exception,
-                          "Key index '0' is invalid");
-    OCIO_CHECK_THROW_WHAT(fileRules->getCustomKeyName(2, 0), OCIO::Exception,
                           "Key index '0' is invalid");
     OCIO_CHECK_THROW_WHAT(fileRules->getCustomKeyValue(0, 0), OCIO::Exception,
                           "Key index '0' is invalid");
     OCIO_CHECK_THROW_WHAT(fileRules->getCustomKeyValue(1, 0), OCIO::Exception,
                           "Key index '0' is invalid");
-    OCIO_CHECK_THROW_WHAT(fileRules->getCustomKeyValue(2, 0), OCIO::Exception,
-                          "Key index '0' is invalid");
     OCIO_CHECK_NO_THROW(fileRules->setCustomKey(0, "key", "val"));
-    OCIO_CHECK_NO_THROW(fileRules->setCustomKey(1, "key", "val"));
-    OCIO_CHECK_NO_THROW(fileRules->setCustomKey(2, "keyDef", "valDef"));
+    OCIO_CHECK_NO_THROW(fileRules->setCustomKey(1, "keyDef", "valDef"));
     OCIO_CHECK_THROW_WHAT(fileRules->setCustomKey(0, nullptr, "val"), OCIO::Exception,
                           "Key has to be a non-empty string");
     OCIO_CHECK_THROW_WHAT(fileRules->setCustomKey(0, "", "val"), OCIO::Exception,
                           "Key has to be a non-empty string");
     OCIO_REQUIRE_EQUAL(fileRules->getNumCustomKeys(0), 1);
     OCIO_REQUIRE_EQUAL(fileRules->getNumCustomKeys(1), 1);
-    OCIO_REQUIRE_EQUAL(fileRules->getNumCustomKeys(2), 1);
     OCIO_CHECK_EQUAL(std::string(fileRules->getCustomKeyName(0, 0)), "key");
     OCIO_CHECK_EQUAL(std::string(fileRules->getCustomKeyValue(0, 0)), "val");
     OCIO_CHECK_NO_THROW(fileRules->setCustomKey(0, "key", ""));
@@ -208,6 +193,8 @@ OCIO_ADD_TEST(FileRules, config_rule_customkeys)
 
     const std::string expected{ R"(ocio_profile_version: 2
 
+environment:
+  {}
 search_path: ""
 strictparsing: false
 luma: [0.2126, 0.7152, 0.0722]
@@ -217,7 +204,6 @@ roles:
 
 file_rules:
   - !<Rule> {name: rule, colorspace: raw, pattern: "*", extension: a, custom: {4: val4, key1: new val, key2: val2, key3: 3}}
-  - !<Rule> {name: ColorSpaceNamePathSearch, custom: {key: val}}
   - !<Rule> {name: Default, colorspace: default, custom: {keyDef: valDef}}
 
 displays:
@@ -233,8 +219,7 @@ colorspaces:
     family: raw
     equalitygroup: ""
     bitdepth: 32f
-    description: |
-      A raw color space. Conversions to and from this space are no-ops.
+    description: A raw color space. Conversions to and from this space are no-ops.
     isdata: true
     allocation: uniform
 )" };
@@ -248,7 +233,7 @@ colorspaces:
     OCIO_CHECK_NO_THROW(config_reloaded = OCIO::Config::CreateFromStream(is_reload));
     auto rules_reloaded = config_reloaded->getFileRules();
 
-    OCIO_REQUIRE_EQUAL(rules_reloaded->getNumEntries(), 3);
+    OCIO_REQUIRE_EQUAL(rules_reloaded->getNumEntries(), 2);
 
     OCIO_REQUIRE_EQUAL(rules_reloaded->getNumCustomKeys(0), 4);
     OCIO_CHECK_EQUAL(std::string(rules_reloaded->getCustomKeyName(0, 1)), "key1");
@@ -261,12 +246,8 @@ colorspaces:
     OCIO_CHECK_EQUAL(std::string(rules_reloaded->getCustomKeyValue(0, 0)), "val4");
 
     OCIO_REQUIRE_EQUAL(rules_reloaded->getNumCustomKeys(1), 1);
-    OCIO_CHECK_EQUAL(std::string(rules_reloaded->getCustomKeyName(1, 0)), "key");
-    OCIO_CHECK_EQUAL(std::string(rules_reloaded->getCustomKeyValue(1, 0)), "val");
-
-    OCIO_REQUIRE_EQUAL(rules_reloaded->getNumCustomKeys(2), 1);
-    OCIO_CHECK_EQUAL(std::string(rules_reloaded->getCustomKeyName(2, 0)), "keyDef");
-    OCIO_CHECK_EQUAL(std::string(rules_reloaded->getCustomKeyValue(2, 0)), "valDef");
+    OCIO_CHECK_EQUAL(std::string(rules_reloaded->getCustomKeyName(1, 0)), "keyDef");
+    OCIO_CHECK_EQUAL(std::string(rules_reloaded->getCustomKeyValue(1, 0)), "valDef");
 }
 
 OCIO_ADD_TEST(FileRules, config_rule_u8)
@@ -274,9 +255,9 @@ OCIO_ADD_TEST(FileRules, config_rule_u8)
     auto configRaw = OCIO::Config::CreateRaw();
     auto fr = configRaw->getFileRules();
     auto fileRules = fr->createEditableCopy();
-    OCIO_REQUIRE_EQUAL(fileRules->getNumEntries(), 2);
+    OCIO_REQUIRE_EQUAL(fileRules->getNumEntries(), 1);
     OCIO_CHECK_NO_THROW(fileRules->insertRule(0, u8"éÀÂÇÉÈç$€", "raw", "*", "a"));
-    OCIO_REQUIRE_EQUAL(fileRules->getNumEntries(), 3);
+    OCIO_REQUIRE_EQUAL(fileRules->getNumEntries(), 2);
     OCIO_CHECK_NO_THROW(fileRules->setCustomKey(0, u8"key£", u8"val€"));
     OCIO_CHECK_EQUAL(std::string(fileRules->getCustomKeyName(0, 0)), u8"key£");
     OCIO_CHECK_EQUAL(std::string(fileRules->getCustomKeyValue(0, 0)), u8"val€");
@@ -294,7 +275,7 @@ OCIO_ADD_TEST(FileRules, config_rule_u8)
     OCIO_CHECK_NO_THROW(config_reloaded = OCIO::Config::CreateFromStream(is_reload));
     auto rules_reloaded = config_reloaded->getFileRules();
 
-    OCIO_REQUIRE_EQUAL(rules_reloaded->getNumEntries(), 3);
+    OCIO_REQUIRE_EQUAL(rules_reloaded->getNumEntries(), 2);
 
     OCIO_CHECK_EQUAL(std::string(fileRules->getName(0)), u8"éÀÂÇÉÈç$€");
 
@@ -307,6 +288,8 @@ namespace
 {
 
 constexpr char g_config[] = { R"(ocio_profile_version: 2
+environment:
+  {}
 strictparsing: true
 roles:
   default: raw
@@ -353,7 +336,9 @@ OCIO_ADD_TEST(FileRules, rule_invalid)
 
     OCIO_CHECK_NO_THROW(rules->setColorSpace(0, "invalid_color_space"));
     config->setFileRules(rules);
-    OCIO_CHECK_THROW_WHAT(config->validate(), OCIO::Exception, "does not exist");
+    OCIO_CHECK_THROW_WHAT(config->validate(), OCIO::Exception, "rule named 'rule1' is referencing "
+                          "'invalid_color_space' that is neither a color space nor a named "
+                          "transform");
 }
 
 OCIO_ADD_TEST(FileRules, pattern_error)
@@ -362,11 +347,12 @@ OCIO_ADD_TEST(FileRules, pattern_error)
     auto fr = configRaw->getFileRules();
     auto rules = fr->createEditableCopy();
 
+    OCIO_CHECK_NO_THROW(rules->insertRule(0, OCIO::FileRules::FilePathSearchRuleName, "", "", ""));
     OCIO_CHECK_NO_THROW(rules->insertRule(0, "new rule", "raw", "*", "a"));
     OCIO_REQUIRE_EQUAL(rules->getNumEntries(), 3);
 
-    OCIO_CHECK_THROW_WHAT(rules->setPattern(0, nullptr), OCIO::Exception, "file pattern is empty");
-    OCIO_CHECK_NO_THROW(rules->setPattern(0, ""));
+    OCIO_CHECK_THROW_WHAT(rules->setPattern(0, nullptr), OCIO::Exception, "file name pattern is empty");
+    OCIO_CHECK_THROW_WHAT(rules->setPattern(0, ""),      OCIO::Exception, "file name pattern is empty");
 
     OCIO_CHECK_THROW_WHAT(rules->setPattern(0, "[]"), OCIO::Exception,
                           "invalid regular expression");
@@ -382,18 +368,44 @@ OCIO_ADD_TEST(FileRules, pattern_error)
                           "invalid regular expression");
 }
 
+OCIO_ADD_TEST(FileRules, with_defaults)
+{
+    // Validate some default behaviours.
+
+    auto config = OCIO::Config::CreateRaw()->createEditableCopy();
+    auto rules = config->getFileRules()->createEditableCopy();
+
+    OCIO_CHECK_NO_THROW(rules->insertRule(0, OCIO::FileRules::FilePathSearchRuleName, "", "", ""));
+    OCIO_REQUIRE_EQUAL(rules->getNumEntries(), 2);
+
+    // Null or empty pattern and/or extension throw.
+
+    OCIO_CHECK_THROW(rules->insertRule(0, "new rule2", "raw", nullptr, "a"), OCIO::Exception);
+    OCIO_CHECK_THROW(rules->insertRule(0, "new rule2", "raw", "", "a"), OCIO::Exception);
+
+    OCIO_CHECK_THROW(rules->insertRule(0, "new rule3", "raw", "a", nullptr), OCIO::Exception);
+    OCIO_CHECK_THROW(rules->insertRule(0, "new rule3", "raw", "a", ""), OCIO::Exception);
+
+    // Null or empty regex throws.
+
+    OCIO_CHECK_THROW(rules->insertRule(0, "new rule2", "raw", ""), OCIO::Exception);
+    OCIO_CHECK_THROW(rules->insertRule(0, "new rule2", "raw", nullptr), OCIO::Exception);
+}
+
 OCIO_ADD_TEST(FileRules, extension_error)
 {
     auto configRaw = OCIO::Config::CreateRaw();
     auto fr = configRaw->getFileRules();
     auto rules = fr->createEditableCopy();
 
+    OCIO_CHECK_NO_THROW(rules->insertRule(0, OCIO::FileRules::FilePathSearchRuleName, "", "", ""));
     OCIO_CHECK_NO_THROW(rules->insertRule(0, "new rule", "raw", "*", "a"));
     OCIO_REQUIRE_EQUAL(rules->getNumEntries(), 3);
 
     OCIO_CHECK_THROW_WHAT(rules->setExtension(0, nullptr), OCIO::Exception,
-                          "file extension is empty");
-    OCIO_CHECK_NO_THROW(rules->setExtension(0, ""));
+                          "file extension pattern is empty");
+    OCIO_CHECK_THROW_WHAT(rules->setExtension(0, ""), OCIO::Exception,
+                          "file extension pattern is empty");
 }
 
 OCIO_ADD_TEST(FileRules, multiple_rules)
@@ -460,6 +472,10 @@ OCIO_ADD_TEST(FileRules, rules_filepattern)
     config->getColorSpaceFromFilepath("/An/Arbitrary/Path/MyFile.jpeg", rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 1); // Default rule.
     config->getColorSpaceFromFilepath("/An/Arbitrary.exr/Path/MyFileexr", rulePosition);
+    OCIO_CHECK_EQUAL(rulePosition, 1); // Default rule.
+    config->getColorSpaceFromFilepath("", rulePosition);
+    OCIO_CHECK_EQUAL(rulePosition, 1); // Default rule.
+    config->getColorSpaceFromFilepath(nullptr, rulePosition);
     OCIO_CHECK_EQUAL(rulePosition, 1); // Default rule.
 
     OCIO_CHECK_NO_THROW(rules->setPattern(0, "gamma"));
@@ -833,8 +849,8 @@ OCIO_ADD_TEST(FileRules, rules_test)
     OCIO::ConfigRcPtr config;
     OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is)->createEditableCopy());
     auto rules = config->getFileRules()->createEditableCopy();
-    rules->insertRule(0, OCIO::FileRuleUtils::ParseName, nullptr, nullptr);
-    rules->insertRule(1, "dpx file", "raw", "", "dpx");
+    OCIO_CHECK_NO_THROW(rules->insertPathSearchRule(0));
+    OCIO_CHECK_NO_THROW(rules->insertRule(1, "dpx file", "raw", "*", "dpx"));
     config->setFileRules(rules);
 
     size_t rulePos = 0;
@@ -864,6 +880,9 @@ OCIO_ADD_TEST(FileRules, rules_test)
     colorSpace = config->getColorSpaceFromFilepath("/mnt/user/unknown.jpg", rulePos);
     OCIO_CHECK_EQUAL(rulePos, 2); // The default rule. 
     OCIO_CHECK_ASSERT(colorSpace != nullptr && 0 == strcmp(colorSpace, OCIO::ROLE_DEFAULT));
+
+    // Note that parseColorSpaceFromString (used by the pathSearch rule) is tested with aliases
+    // and inactive color spaces in OCIO_ADD_TEST(Config, use_alias).
 }
 
 OCIO_ADD_TEST(FileRules, rules_priority)
@@ -873,9 +892,9 @@ OCIO_ADD_TEST(FileRules, rules_priority)
     OCIO::ConfigRcPtr config;
     OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is)->createEditableCopy());
     auto rules = config->getFileRules()->createEditableCopy();
-    rules->insertRule(0, "pattern dpx file", "raw", "*cs2*", "dpx");
-    rules->insertRule(1, OCIO::FileRuleUtils::ParseName, nullptr, nullptr);
-    rules->insertRule(2, "regex rule", "cs5", ".*cs5.dpx");
+    OCIO_CHECK_NO_THROW(rules->insertRule(0, "pattern dpx file", "raw", "*cs2*", "dpx"));
+    OCIO_CHECK_NO_THROW(rules->insertPathSearchRule(1));
+    OCIO_CHECK_NO_THROW(rules->insertRule(2, "regex rule", "cs5", ".*cs5.dpx"));
     config->setFileRules(rules);
 
     size_t rulePos = 0;
@@ -925,6 +944,8 @@ colorspaces:
 OCIO_ADD_TEST(FileRules, config_default_missmatch)
 {
     constexpr char configDefaultMissmatch[] = { R"(ocio_profile_version: 2
+environment:
+  {}
 strictparsing: true
 roles:
   default: raw
@@ -958,9 +979,79 @@ file_rules:
     auto rules = config->getFileRules();
     OCIO_REQUIRE_ASSERT(rules);
     OCIO_REQUIRE_EQUAL(rules->getNumEntries(), 1);
-    // File defined default role is preserved.
+    OCIO_CHECK_EQUAL(std::string(rules->getName(0)), OCIO::FileRules::DefaultRuleName);
+    OCIO_CHECK_EQUAL(std::string(rules->getColorSpace(0)), "cs1");
+    OCIO_CHECK_EQUAL(std::string(config->getColorSpaceFromFilepath("anything")), "cs1");
+
+    // The color space of the default role is preserved.
     auto cs = config->getColorSpace(OCIO::ROLE_DEFAULT);
     OCIO_CHECK_EQUAL(std::string("raw"), cs->getName());
+}
+
+OCIO_ADD_TEST(FileRules, config_no_default_role)
+{
+    // Test with a config that does not have a default role, nor a default color space.
+    // Default rule points to an existing color space.
+    constexpr char configNoDefault[] = { R"(ocio_profile_version: 2
+environment:
+  {}
+strictparsing: true
+roles:
+  role1: cs1
+  role2: cs2
+displays:
+  sRGB:
+  - !<View> {name: Raw, colorspace: raw}
+colorspaces:
+  - !<ColorSpace>
+      name: raw
+  - !<ColorSpace>
+      name: cs1
+  - !<ColorSpace>
+      name: cs2
+file_rules:
+  - !<Rule> {name: Default, colorspace: cs1}
+)" };
+
+    // As a warning message is expected, please mute it.
+    OCIO::LogGuard guard;
+
+    std::istringstream is;
+    is.str(configNoDefault);
+    OCIO::ConstConfigRcPtr config;
+    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+
+    OCIO_CHECK_ASSERT(guard.output().empty());
+
+    OCIO_CHECK_NO_THROW(config->validate());
+}
+
+OCIO_ADD_TEST(FileRules, config_default_no_colorspace)
+{
+    constexpr char configDefaultMissmatch[] = { R"(ocio_profile_version: 2
+strictparsing: true
+roles:
+  default: raw
+  role1: cs1
+  role2: cs2
+displays:
+  sRGB:
+  - !<View> {name: Raw, colorspace: raw}
+colorspaces:
+  - !<ColorSpace>
+      name: raw
+  - !<ColorSpace>
+      name: cs1
+  - !<ColorSpace>
+      name: cs2
+file_rules:
+  - !<Rule> {name: Default}
+)" };
+
+    std::istringstream is;
+    is.str(configDefaultMissmatch);
+    OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is), OCIO::Exception,
+                          "'Default' rule cannot have an empty color space name");
 }
 
 OCIO_ADD_TEST(FileRules, config_no_default_rule)
@@ -989,6 +1080,35 @@ file_rules:
     is.str(configNoDefaultRule);
     OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is), OCIO::Exception,
                           "'file_rules' does not contain a Default <Rule>");
+}
+
+OCIO_ADD_TEST(FileRules, config_filerule_no_colorspace)
+{
+    constexpr char configNoDefaultRule[] = { R"(ocio_profile_version: 2
+strictparsing: true
+roles:
+  default: raw
+  role1: cs1
+  role2: cs2
+displays:
+  sRGB:
+  - !<View> {name: Raw, colorspace: raw}
+colorspaces:
+  - !<ColorSpace>
+      name: raw
+  - !<ColorSpace>
+      name: cs1
+  - !<ColorSpace>
+      name: cs2
+file_rules:
+  - !<Rule> {name: Custom, pattern: "*", extension: jpg}
+  - !<Rule> {name: Default, colorspace: default}
+)" };
+
+    std::istringstream is;
+    is.str(configNoDefaultRule);
+    OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is), OCIO::Exception,
+                          "File rule 'Custom' cannot have an empty color space name");
 }
 
 OCIO_ADD_TEST(FileRules, config_v1_faulty)
@@ -1087,7 +1207,9 @@ colorspaces:
         config->setMajorVersion(2);
 
         // Default rule is using 'Default' role that does not exist.
-        OCIO_CHECK_THROW_WHAT(config->validate(), OCIO::Exception, "does not exist");
+        OCIO_CHECK_THROW_WHAT(config->validate(), OCIO::Exception, "rule named 'Default' is "
+                              "referencing 'default' that is neither a color space nor a named "
+                              "transform");
 
         config = constConfig->createEditableCopy();
         OCIO_CHECK_EQUAL(config->getNumColorSpaces(), 3);
@@ -1138,7 +1260,8 @@ colorspaces:
 
         // Default rule is using 'Default' role that does not exist.
         OCIO_CHECK_THROW_WHAT(config->validate(), OCIO::Exception, "rule named 'Default' is "
-                              "referencing color space 'default' that does not exist");
+                              "referencing 'default' that is neither a color space nor a named "
+                              "transform");
 
         config = constConfig->createEditableCopy();
         OCIO_CHECK_EQUAL(config->getNumColorSpaces(), 3);
@@ -1282,6 +1405,7 @@ OCIO_ADD_TEST(FileRules, clone)
 
     auto config    = OCIO::Config::CreateRaw()->createEditableCopy();
     auto fileRules = config->getFileRules()->createEditableCopy();
+    OCIO_CHECK_NO_THROW(fileRules->insertRule(0, OCIO::FileRules::FilePathSearchRuleName, "", "", ""));
     OCIO_CHECK_NO_THROW(fileRules->insertRule(0, "rule", "raw", "*", "a"));
     OCIO_REQUIRE_EQUAL(fileRules->getNumEntries(), 3);
 
@@ -1299,4 +1423,27 @@ OCIO_ADD_TEST(FileRules, clone)
     OCIO_CHECK_NO_THROW(newFileRules->setPattern(0, "*"));
     OCIO_CHECK_NO_THROW(fileRules->setPattern(0, "*"));
     OCIO_CHECK_EQUAL(std::string(newFileRules->getPattern(0)), std::string(fileRules->getPattern(0)));
+}
+
+OCIO_ADD_TEST(FileRules, isDefault)
+{
+    auto fileRules = OCIO::FileRules::Create();
+    OCIO_CHECK_ASSERT(fileRules->isDefault());
+    fileRules->setColorSpace(0, "DEFault");
+    OCIO_CHECK_ASSERT(fileRules->isDefault());
+    fileRules->setColorSpace(0, "raw");
+    OCIO_CHECK_ASSERT(!fileRules->isDefault());
+    fileRules->setColorSpace(0, "default");
+    OCIO_CHECK_ASSERT(fileRules->isDefault());
+
+    OCIO_CHECK_NO_THROW(fileRules->setCustomKey(0, "key", "val"));
+    OCIO_CHECK_ASSERT(!fileRules->isDefault());
+    OCIO_CHECK_NO_THROW(fileRules->setCustomKey(0, "key", ""));
+    OCIO_CHECK_ASSERT(fileRules->isDefault());
+
+    OCIO_CHECK_NO_THROW(fileRules->insertRule(0, "rule", "raw", "*", "a"));
+    OCIO_CHECK_ASSERT(!fileRules->isDefault());
+
+    const auto config = OCIO::Config::CreateRaw();
+    OCIO_CHECK_ASSERT(config->getFileRules()->isDefault());
 }

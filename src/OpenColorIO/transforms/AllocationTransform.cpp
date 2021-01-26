@@ -77,14 +77,23 @@ TransformDirection AllocationTransform::getDirection() const  noexcept
     return getImpl()->m_dir;
 }
 
-void AllocationTransform::setDirection(TransformDirection dir)  noexcept
+void AllocationTransform::setDirection(TransformDirection dir) noexcept
 {
     getImpl()->m_dir = dir;
 }
 
 void AllocationTransform::validate() const
 {
-    Transform::validate();
+    try
+    {
+        Transform::validate();
+    }
+    catch (Exception & ex)
+    {
+        std::string errMsg("AllocationTransform validation failed: ");
+        errMsg += ex.what();
+        throw Exception(errMsg.c_str());
+    }
 
     if (getImpl()->m_allocation == ALLOCATION_UNIFORM)
     {
@@ -174,7 +183,6 @@ std::ostream& operator<< (std::ostream& os, const AllocationTransform& t)
 
 
 void BuildAllocationOp(OpRcPtrVec & ops,
-                       const Config & /*config*/,
                        const AllocationTransform & allocationTransform,
                        TransformDirection dir)
 {

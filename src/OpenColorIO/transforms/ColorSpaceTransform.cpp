@@ -1,8 +1,13 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
+
+#include <string.h>
+
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "ContextVariableUtils.h"
+#include "NamedTransform.h"
 #include "OpBuilders.h"
 #include "ops/noop/NoOps.h"
 
@@ -77,7 +82,16 @@ void ColorSpaceTransform::setDirection(TransformDirection dir) noexcept
 
 void ColorSpaceTransform::validate() const
 {
-    Transform::validate();
+    try
+    {
+        Transform::validate();
+    }
+    catch (Exception & ex)
+    {
+        std::string errMsg("ColorSpaceTransform validation failed: ");
+        errMsg += ex.what();
+        throw Exception(errMsg.c_str());
+    }
 
     if (getImpl()->m_src.empty())
     {
@@ -97,7 +111,7 @@ const char * ColorSpaceTransform::getSrc() const
 
 void ColorSpaceTransform::setSrc(const char * src)
 {
-    getImpl()->m_src = src;
+    getImpl()->m_src = src ? src : "";
 }
 
 const char * ColorSpaceTransform::getDst() const
@@ -107,7 +121,7 @@ const char * ColorSpaceTransform::getDst() const
 
 void ColorSpaceTransform::setDst(const char * dst)
 {
-    getImpl()->m_dst = dst;
+    getImpl()->m_dst = dst ? dst : "";
 }
 
 bool ColorSpaceTransform::getDataBypass() const noexcept
@@ -139,57 +153,66 @@ std::ostream& operator<< (std::ostream& os, const ColorSpaceTransform& t)
 
 namespace
 {
-void ThrowMissingCS(const char * srcdst, const char * cs)
+void ThrowMissingCS(const char * cs)
 {
     std::ostringstream os;
-    os << "BuildColorSpaceOps failed: " << srcdst << " color space '" << cs;
-    os << "' could not be found.";
+    os << "Color space '" << cs << "' could not be found.";
     throw Exception(os.str().c_str());
 }
-
-constexpr char SRC_CS[] = "source";
-constexpr char DST_CS[] = "destination";
 }
 
 void BuildColorSpaceOps(OpRcPtrVec & ops,
-                        const Config& config,
+                        const Config & config,
                         const ConstContextRcPtr & context,
                         const ColorSpaceTransform & colorSpaceTransform,
                         TransformDirection dir)
 {
-    auto combinedDir = CombineTransformDirections(dir, colorSpaceTransform.getDirection());
+    const auto combinedDir = CombineTransformDirections(dir, colorSpaceTransform.getDirection());
+    const bool forward = (combinedDir == TRANSFORM_DIR_FORWARD);
 
-    ConstColorSpaceRcPtr src, dst;
+    const std::string transSrcName{ colorSpaceTransform.getSrc() };
+    const std::string transDstName{ colorSpaceTransform.getDst() };
+    const std::string srcName = forward ? transSrcName : transDstName;
+    const std::string dstName = forward ? transDstName : transSrcName;
 
-    if(combinedDir == TRANSFORM_DIR_FORWARD)
+    ConstColorSpaceRcPtr src = config.getColorSpace( context->resolveStringVar(srcName.c_str()) );
+    ConstColorSpaceRcPtr dst = config.getColorSpace( context->resolveStringVar(dstName.c_str()) );
+
+    ConstNamedTransformRcPtr srcNamedTransform;
+    ConstNamedTransformRcPtr dstNamedTransform;
+
+    if (!src)
     {
-        src = config.getColorSpace( context->resolveStringVar( colorSpaceTransform.getSrc() ) );
-        if (!src)
+        srcNamedTransform = config.getNamedTransform(srcName.c_str());
+        if (!srcNamedTransform)
         {
-            ThrowMissingCS(SRC_CS, colorSpaceTransform.getSrc());
-        }
-        dst = config.getColorSpace( context->resolveStringVar( colorSpaceTransform.getDst() ) );
-        if (!dst)
-        {
-            ThrowMissingCS(DST_CS, colorSpaceTransform.getDst());
+            ThrowMissingCS(srcName.c_str());
         }
     }
-    else if(combinedDir == TRANSFORM_DIR_INVERSE)
+    if (!dst)
     {
-        dst = config.getColorSpace( context->resolveStringVar( colorSpaceTransform.getSrc() ) );
-        if (!dst)
+        dstNamedTransform = config.getNamedTransform(dstName.c_str());
+        if (!dstNamedTransform)
         {
-            ThrowMissingCS(SRC_CS, colorSpaceTransform.getSrc());
-        }
-        src = config.getColorSpace( context->resolveStringVar( colorSpaceTransform.getDst() ) );
-        if (!src)
-        {
-            ThrowMissingCS(DST_CS, colorSpaceTransform.getDst());
+            ThrowMissingCS(dstName.c_str());
         }
     }
 
-    BuildColorSpaceOps(ops, config, context, src, dst,
-                       colorSpaceTransform.getDataBypass());
+    // There are 4 cases:
+    // * (srcNamedTransform, dstNamedTransform): srcNamedTransform->forward +
+    //                                           dstNamedTransform->inverse.
+    // * (srcNamedTransform, dst): srcNamedTransform->forward (dst ignored).
+    // * (src, dstNamedTransform): dstNamedTransform->inverse (src ignored).
+    // * (src, dst): full color space transform.
+
+    if (srcNamedTransform || dstNamedTransform)
+    {
+        ConstTransformRcPtr tr = GetTransform(srcNamedTransform, dstNamedTransform);
+        BuildOps(ops, config, context, tr, TRANSFORM_DIR_FORWARD);
+        return;
+    }
+
+    BuildColorSpaceOps(ops, config, context, src, dst, colorSpaceTransform.getDataBypass());
 }
 
 namespace
@@ -197,6 +220,9 @@ namespace
 bool AreColorSpacesInSameEqualityGroup(const ConstColorSpaceRcPtr & csa,
                                        const ConstColorSpaceRcPtr & csb)
 {
+    // See issue #602. Using names in case one of the color space would be a copy.
+    if (StringUtils::Compare(csa->getName(), csb->getName())) return true;
+
     std::string a = csa->getEqualityGroup();
     std::string b = csb->getEqualityGroup();
 
@@ -364,6 +390,68 @@ void BuildReferenceConversionOps(OpRcPtrVec & ops,
             }
         }
     }
+}
+
+bool CollectContextVariables(const Config & config, 
+                             const Context & context,
+                             ConstColorSpaceRcPtr & cs,
+                             ContextRcPtr & usedContextVars)
+{
+    bool foundContextVars = false;
+
+    if (cs)
+    {
+        ConstTransformRcPtr to = cs->getTransform(COLORSPACE_DIR_TO_REFERENCE);
+        if (to && CollectContextVariables(config, context, to, usedContextVars))
+        {
+            foundContextVars = true;
+        }
+
+        ConstTransformRcPtr from = cs->getTransform(COLORSPACE_DIR_FROM_REFERENCE);
+        if (from && CollectContextVariables(config, context, from, usedContextVars))
+        {
+            foundContextVars = true;
+        }
+    }
+
+    return foundContextVars;
+}
+
+bool CollectContextVariables(const Config & config, 
+                             const Context & context,
+                             const ColorSpaceTransform & tr,
+                             ContextRcPtr & usedContextVars)
+{
+    bool foundContextVars = false;
+    
+    // NB: The search could return false positive but should not miss anything i.e. it looks
+    // for context variables in both directions even if only one will be used.
+
+    const std::string srcName(context.resolveStringVar(tr.getSrc(), usedContextVars));
+    if (0 != strcmp(srcName.c_str(), tr.getSrc()))
+    {
+        foundContextVars = true;
+    }
+
+    const std::string dstName(context.resolveStringVar(tr.getDst(), usedContextVars));
+    if (0 != strcmp(dstName.c_str(), tr.getDst()))
+    {
+        foundContextVars = true;
+    }
+
+    ConstColorSpaceRcPtr src = config.getColorSpace(srcName.c_str());
+    if (CollectContextVariables(config, context, src, usedContextVars))
+    {
+        foundContextVars = true;
+    }
+
+    ConstColorSpaceRcPtr dst = config.getColorSpace(dstName.c_str());
+    if (CollectContextVariables(config, context, dst, usedContextVars))
+    {
+        foundContextVars = true;
+    }
+
+    return foundContextVars;
 }
 
 } // namespace OCIO_NAMESPACE

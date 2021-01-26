@@ -122,6 +122,7 @@ case in:                                              \
 void CreateCPUEngine(const OpRcPtrVec & ops, 
                      BitDepth in, 
                      BitDepth out,
+                     OptimizationFlags oFlags,
                      // The bit-depth 'cast' or the first CPU Op.
                      ConstOpCPURcPtr & inBitDepthOp,
                      // The remaining CPU Ops.
@@ -130,6 +131,7 @@ void CreateCPUEngine(const OpRcPtrVec & ops,
                      ConstOpCPURcPtr & outBitDepthOp)
 {
     const size_t maxOps = ops.size();
+    const bool fastLogExpPow = HasFlag(oFlags, OPTIMIZATION_FAST_LOG_EXP_POW);
     for(size_t idx=0; idx<maxOps; ++idx)
     {
         ConstOpRcPtr op = ops[idx];
@@ -144,12 +146,12 @@ void CreateCPUEngine(const OpRcPtrVec & ops,
             }
             else if(in==BIT_DEPTH_F32)
             {
-                inBitDepthOp = op->getCPUOp();
+                inBitDepthOp = op->getCPUOp(fastLogExpPow);
             }
             else
             {
                 inBitDepthOp = CreateGenericBitDepthHelper(in, BIT_DEPTH_F32);
-                cpuOps.push_back(op->getCPUOp());
+                cpuOps.push_back(op->getCPUOp(fastLogExpPow));
             }
 
             if(maxOps==1)
@@ -166,17 +168,17 @@ void CreateCPUEngine(const OpRcPtrVec & ops,
             }
             else if(out==BIT_DEPTH_F32)
             {
-                outBitDepthOp = op->getCPUOp();
+                outBitDepthOp = op->getCPUOp(fastLogExpPow);
             }
             else
             {
                 outBitDepthOp = CreateGenericBitDepthHelper(BIT_DEPTH_F32, out);
-                cpuOps.push_back(op->getCPUOp());
+                cpuOps.push_back(op->getCPUOp(fastLogExpPow));
             }
         }
         else
         {
-            cpuOps.push_back(op->getCPUOp());
+            cpuOps.push_back(op->getCPUOp(fastLogExpPow));
         }
     }
 }
@@ -295,7 +297,7 @@ void FinalizeOpsForCPU(OpRcPtrVec & ops, const OpRcPtrVec & rawOps,
 
     if (!((oFlags & OPTIMIZATION_NO_DYNAMIC_PROPERTIES) == OPTIMIZATION_NO_DYNAMIC_PROPERTIES))
     {
-        ops.unifyDynamicProperties();
+        ops.validateDynamicProperties();
     }
 }
 
@@ -322,7 +324,7 @@ void CPUProcessor::Impl::finalize(const OpRcPtrVec & rawOps,
     m_cpuOps.clear();
     m_inBitDepthOp = nullptr;
     m_outBitDepthOp = nullptr;
-    CreateCPUEngine(ops, in, out, m_inBitDepthOp, m_cpuOps, m_outBitDepthOp);
+    CreateCPUEngine(ops, in, out, oFlags, m_inBitDepthOp, m_cpuOps, m_outBitDepthOp);
 
     // Compute the cache id.
 

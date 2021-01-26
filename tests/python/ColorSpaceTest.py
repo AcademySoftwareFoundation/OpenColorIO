@@ -131,7 +131,7 @@ class ColorSpaceTest(unittest.TestCase):
         # Test ColorSpace class object getters from config
         cs = cfg.getColorSpace('vd8')
         self.assertEqual(cs.getName(), 'vd8')
-        self.assertEqual(cs.getDescription(), 'how many transforms can we use?\n')
+        self.assertEqual(cs.getDescription(), 'how many transforms can we use?')
         self.assertEqual(cs.getFamily(), 'vd8')
         self.assertEqual(cs.getAllocation(), OCIO.ALLOCATION_UNIFORM)
         self.assertEqual(cs.getAllocationVars(), [])
@@ -197,6 +197,7 @@ class ColorSpaceTest(unittest.TestCase):
 
         cs = OCIO.ColorSpace(OCIO.REFERENCE_SPACE_SCENE,
                              'test',
+                             ['alias1', 'alias2'],
                              'ocio family',
                              'scene-linear',
                              'My_Equality',
@@ -207,6 +208,10 @@ class ColorSpaceTest(unittest.TestCase):
                              [0.0, 1.0])
 
         self.assertEqual(cs.getName(), 'test')
+        aliases = cs.getAliases()
+        self.assertEqual(len(aliases), 2)
+        self.assertEqual(aliases[0], 'alias1')
+        self.assertEqual(aliases[1], 'alias2')
         self.assertEqual(cs.getFamily(), 'ocio family')
         self.assertEqual(cs.getEncoding(), 'scene-linear')
         self.assertEqual(cs.getEqualityGroup(), 'My_Equality')
@@ -302,18 +307,65 @@ class ColorSpaceTest(unittest.TestCase):
 
         # Known constants tests
         for i, direction in enumerate(OCIO.ColorSpaceDirection.__members__.values()):
-            if direction == OCIO.COLORSPACE_DIR_UNKNOWN:
-                with self.assertRaises(OCIO.Exception):
-                    self.colorspace.setTransform(self.log_tr, direction)
-            else:
-                self.colorspace.setTransform(self.log_tr, direction)
+            self.colorspace.setTransform(self.log_tr, direction)
+            log_transform = self.colorspace.getTransform(direction)
+            self.assertIsInstance(log_transform, OCIO.LogTransform)
+            self.assertEquals(self.log_tr.getBase(), log_transform.getBase())
 
-            if direction == OCIO.COLORSPACE_DIR_UNKNOWN:
-                with self.assertRaises(OCIO.Exception):
-                    log_transform = self.colorspace.getTransform(
-                        direction)
-            else:
-                log_transform = self.colorspace.getTransform(direction)
-                self.assertIsInstance(log_transform, OCIO.LogTransform)
-                self.assertEquals(self.log_tr.getBase(),
-                                  log_transform.getBase())
+    def test_aliases(self):
+        """
+        Test NamedTransform aliases.
+        """
+
+        cs = OCIO.ColorSpace()
+        self.assertEqual(cs.getName(), '')
+        aliases = cs.getAliases()
+        self.assertEqual(len(aliases), 0)
+
+        cs.addAlias('alias1')
+        aliases = cs.getAliases()
+        self.assertEqual(len(aliases), 1)
+        self.assertEqual(aliases[0], 'alias1')
+
+        cs.addAlias('alias2')
+        aliases = cs.getAliases()
+        self.assertEqual(len(aliases), 2)
+        self.assertEqual(aliases[0], 'alias1')
+        self.assertEqual(aliases[1], 'alias2')
+
+        # Alias is already there, not added.
+
+        cs.addAlias('Alias2')
+        aliases = cs.getAliases()
+        self.assertEqual(len(aliases), 2)
+        self.assertEqual(aliases[0], 'alias1')
+        self.assertEqual(aliases[1], 'alias2')
+
+        # Name might remove an alias.
+
+        cs.setName('name')
+        aliases = cs.getAliases()
+        self.assertEqual(len(aliases), 2)
+
+        cs.setName('alias2')
+        aliases = cs.getAliases()
+        self.assertEqual(len(aliases), 1)
+        self.assertEqual(aliases[0], 'alias1')
+
+        # Removing an alias.
+
+        cs.addAlias('to remove')
+        aliases = cs.getAliases()
+        self.assertEqual(len(aliases), 2)
+
+        cs.removeAlias('not found')
+        aliases = cs.getAliases()
+        self.assertEqual(len(aliases), 2)
+
+        cs.removeAlias('to REMOVE')
+        aliases = cs.getAliases()
+        self.assertEqual(len(aliases), 1)
+
+        cs.clearAliases()
+        aliases = cs.getAliases()
+        self.assertEqual(len(aliases), 0)

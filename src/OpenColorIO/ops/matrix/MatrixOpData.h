@@ -91,10 +91,11 @@ public:
     {
     public:
         MatrixArray();
-        virtual ~MatrixArray();
+        MatrixArray(const MatrixArray &) = default;
+        MatrixArray & operator=(const MatrixArray & m) = default;
+        virtual ~MatrixArray() = default;
 
         MatrixArray & operator=(const ArrayDouble & a);
-        MatrixArray & operator=(const MatrixArray & m);
 
         bool isUnityDiagonal() const;
 
@@ -215,8 +216,8 @@ public:
 
     bool operator==(const OpData & other) const override;
 
-    TransformDirection getDirection() const { return m_direction; }
-    void setDirection(TransformDirection dir);
+    TransformDirection getDirection() const noexcept { return m_direction; }
+    void setDirection(TransformDirection dir) noexcept;
 
     MatrixOpDataRcPtr getAsForward() const;
 

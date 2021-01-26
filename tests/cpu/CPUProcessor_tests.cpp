@@ -451,8 +451,7 @@ OCIO_ADD_TEST(CPUProcessor, with_one_1d_lut)
     // processed when the op list only contains one 1D LUT because it
     // has a dedicated optimization when the input bit-depth is an integer type.
 
-    const std::string filePath
-        = std::string(OCIO::getTestFilesDir()) + "/lut1d_5.spi1d";
+    const std::string filePath = OCIO::GetTestFilesDir() + "/lut1d_5.spi1d";
 
     OCIO::FileTransformRcPtr transform = OCIO::FileTransform::Create();
     transform->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
@@ -717,7 +716,7 @@ OCIO_ADD_TEST(CPUProcessor, with_several_ops)
     const std::string SIMPLE_PROFILE =
         "ocio_profile_version: 2\n"
         "\n"
-        "search_path: " + std::string(OCIO::getTestFilesDir()) + "\n"
+        "search_path: " + OCIO::GetTestFilesDir() + "\n"
         "strictparsing: true\n"
         "luma: [0.2126, 0.7152, 0.0722]\n"
         "\n"
@@ -817,7 +816,7 @@ OCIO_ADD_TEST(CPUProcessor, with_several_ops)
 
             const std::string cacheID{ cpuProcessor->getCacheID() };
 
-            const std::string expectedID("CPU Processor: from 16ui to 32f oFlags 122879 ops"
+            const std::string expectedID("CPU Processor: from 16ui to 32f oFlags 263995331 ops"
                 ": <Lut1D $a57d7444e629d796d2234c18a0539c74 forward default standard domain none>");
 
             // Test integer optimization. The ops should be optimized into a single LUT
@@ -1047,7 +1046,7 @@ OCIO_ADD_TEST(CPUProcessor, image_desc)
     const std::string SIMPLE_PROFILE =
         "ocio_profile_version: 2\n"
         "\n"
-        "search_path: " + std::string(OCIO::getTestFilesDir()) + "\n"
+        "search_path: " + OCIO::GetTestFilesDir() + "\n"
         "strictparsing: true\n"
         "luma: [0.2126, 0.7152, 0.0722]\n"
         "\n"

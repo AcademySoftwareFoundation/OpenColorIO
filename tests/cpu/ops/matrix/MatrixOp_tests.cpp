@@ -617,24 +617,6 @@ OCIO_ADD_TEST(MatrixOffsetOp, combining)
 OCIO_ADD_TEST(MatrixOffsetOp, throw_create)
 {
     OCIO::OpRcPtrVec ops;
-    const double scale[] = { 1.1, 1.3, 0.3, 1.0 };
-    OCIO_CHECK_THROW_WHAT(
-        OCIO::CreateScaleOp(ops, scale, OCIO::TRANSFORM_DIR_UNKNOWN),
-        OCIO::Exception, "unspecified transform direction");
-
-    const double offset[] = { 1.1, -1.3, 0.3, 0.0 };
-    OCIO_CHECK_THROW_WHAT(
-        OCIO::CreateOffsetOp(ops, offset, OCIO::TRANSFORM_DIR_UNKNOWN),
-        OCIO::Exception, "unspecified transform direction");
-
-    const double matrix[16] = { 1.1, 0.2, 0.3, 0.4,
-                                0.5, 1.6, 0.7, 0.8,
-                                0.2, 0.1, 1.1, 0.2,
-                                0.3, 0.4, 0.5, 1.6 };
-
-    OCIO_CHECK_THROW_WHAT(
-        OCIO::CreateMatrixOp(ops, matrix, OCIO::TRANSFORM_DIR_UNKNOWN),
-        OCIO::Exception, "unspecified transform direction");
 
     // FitOp can't be created when old min and max are equal.
     const double oldmin4[4] = { 1.0, 0.0, 0.0,  0.0 };
@@ -960,9 +942,8 @@ OCIO_ADD_TEST(MatrixOffsetOp, create_transform)
     OCIO_CHECK_EQUAL(mval[15], mat->getArray()[15]);
 
     OCIO::OpRcPtrVec opsBack;
-    OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    OCIO::BuildMatrixOp(opsBack, *config, *mTransform, OCIO::TRANSFORM_DIR_FORWARD);
-    OCIO::BuildMatrixOp(opsBack, *config, *mTransform, OCIO::TRANSFORM_DIR_INVERSE);
+    OCIO::BuildMatrixOp(opsBack, *mTransform, OCIO::TRANSFORM_DIR_FORWARD);
+    OCIO::BuildMatrixOp(opsBack, *mTransform, OCIO::TRANSFORM_DIR_INVERSE);
     OCIO_REQUIRE_EQUAL(opsBack.size(), 2);
 
     auto o0 = OCIO_DYNAMIC_POINTER_CAST<const OCIO::MatrixOffsetOp>(opsBack[0]);

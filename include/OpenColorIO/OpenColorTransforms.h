@@ -1,9 +1,12 @@
-﻿// SPDX-License-Identifier: BSD-3-Clause
+// SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
 
 #ifndef INCLUDED_OCIO_OPENCOLORTRANSFORMS_H
 #define INCLUDED_OCIO_OPENCOLORTRANSFORMS_H
+
+#include <initializer_list>
+#include <limits>
 
 #include "OpenColorTypes.h"
 
@@ -24,57 +27,94 @@ namespace OCIO_NAMESPACE
 
 
 /**
- * The FormatMetadata class is intended to be a generic
- * container to hold metadata from various file formats.
+ * The FormatMetadata class is intended to be a generic container to hold metadata from various
+ * file formats.
  *
- * This class provides a hierarchical metadata container.
- * A metadata object is similar to an element in XML.
- * It contains:
- *
- * * A name string (e.g. "Description").
- * * A value string (e.g. "updated viewing LUT").
- * * A list of attributes (name, value) string pairs (e.g. "version", "1.5").
- * * And a list of child sub-elements, which are also objects implementing
- *   FormatMetadata.
+ * This class provides a hierarchical metadata container. A metadata object is similar to an
+ * element in XML. The top level element is named "ROOT" and can't be renamed. Several transforms
+ * have a FormatMetadata.
+ * The root element and all of the sub-elements may contain:
+ * * A name string (e.g. "ROOT", "Description"...). Name can't be empty.
+ * * A value string (e.g. "updated viewing LUT"). Value can be empty.
+ * * A list of attributes (name, value) string pairs (e.g. "version", "1.5"). There are helper
+ *   functions to get and set "id" and "name" attributes. Attribute names are unique.
+ * * And a list of child sub-elements, which are also objects implementing FormatMetadata. There
+ *   can be several sub-elements with the same name.
  */
 class OCIOEXPORT FormatMetadata
 {
 public:
-    virtual const char * getName() const = 0;
-    virtual void setName(const char *) = 0;
+    virtual const char * getElementName() const noexcept = 0;
+    /// Name has to be a non-empty string. Top-level element can't be renamed. 'ROOT' is reserved.
+    virtual void setElementName(const char *) = 0;
 
-    virtual const char * getValue() const = 0;
-    virtual void setValue(const char *) = 0;
+    virtual const char * getElementValue() const noexcept = 0;
+    virtual void setElementValue(const char *) = 0;
 
-    virtual int getNumAttributes() const = 0;
-    virtual const char * getAttributeName(int i) const = 0;
-    virtual const char * getAttributeValue(int i) const = 0;
+    virtual int getNumAttributes() const noexcept = 0;
+    /// Get the name of a attribute ("" if attribute does not exist).
+    virtual const char * getAttributeName(int i) const noexcept = 0;
+    /// Get the value of a attribute ("" if attribute does not exist).
+    virtual const char * getAttributeValue(int i) const noexcept = 0;
+    /// Get the value of a attribute of a given name ("" if attribute does not exist).
+    virtual const char * getAttributeValue(const char * name) const noexcept = 0;
     /**
-     * Add an attribute with a given name and value. If an
-     * attribute with the same name already exists, the value is replaced.
+     * Add an attribute with a given name and value. If an attribute with the same name already
+     * exists, its value is replaced. Throw if name is NULL or empty.
      */
     virtual void addAttribute(const char * name, const char * value) = 0;
 
-    virtual int getNumChildrenElements() const = 0;
+    virtual int getNumChildrenElements() const noexcept = 0;
+    /**
+     * Access a child element.
+     *
+     * \note
+     *    Adding siblings might cause a reallocation of the container and thus might make the
+     *    reference unusable.
+     *    Index i has to be positive and less than getNumChildrenElements() or the function will
+     *    throw.
+     */
     virtual const FormatMetadata & getChildElement(int i) const = 0;
     virtual FormatMetadata & getChildElement(int i) = 0;
 
     /**
-     * Add a child element with a given name and value. Name has to be
-     * non-empty. Value may be empty, particularly if this element will have children.
-     * Return a reference to the added element.
+     * Add a child element with a given name and value.
+     *
+     * Name has to be non-empty. Value may be empty, particularly if this element will have
+     * children. Element is added after all existing children. Use
+     * getChildElement(getNumChildrenElements()-1) to access the added element.
      */
-    virtual FormatMetadata & addChildElement(const char * name, const char * value) = 0;
+    virtual void addChildElement(const char * name, const char * value) = 0;
 
-    virtual void clear() = 0;
+    /// Remove all children, all attributes and the value.
+    virtual void clear() noexcept = 0;
+
     virtual FormatMetadata & operator=(const FormatMetadata & rhs) = 0;
 
+    /**
+     * Convenience method to easily get/set the 'name' attribute.  This corresponds to the
+     * ProcessNode name attribute from a CLF / CTF file or the name key of a transform in the
+     * config YAML.
+     */
+    virtual const char * getName() const noexcept = 0;
+    virtual void setName(const char * name) noexcept = 0;
+    /**
+     * Convenience method to easily get/set the 'id' attribute.  This corresponds to the
+     * ProcessNode id attribute from a CLF/CTF file or the ColorCorrection id attribute from a
+     * CC/CCC/CDL file.
+     */
+    virtual const char * getID() const noexcept = 0;
+    virtual void setID(const char * id) noexcept = 0;
+
     FormatMetadata(const FormatMetadata & rhs) = delete;
-    virtual ~FormatMetadata();
+    /// Do not use (needed only for pybind11).
+    virtual ~FormatMetadata() = default;
 
 protected:
-    FormatMetadata();
+    FormatMetadata() = default;
 };
+
+extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const FormatMetadata &);
 
 
 /// Base class for all the transform classes
@@ -84,17 +124,17 @@ public:
     virtual TransformRcPtr createEditableCopy() const = 0;
 
     virtual TransformDirection getDirection() const noexcept = 0;
-    /**
-     * Note that this only affects the evaluation and not the values
-     * stored in the object.
-     */
+    /// Note that this only affects the evaluation and not the values stored in the object.
     virtual void setDirection(TransformDirection dir) noexcept = 0;
+
+    virtual TransformType getTransformType() const noexcept = 0;
 
     /// Will throw if data is not valid.
     virtual void validate() const;
 
     Transform(const Transform &) = delete;
     Transform & operator= (const Transform &) = delete;
+    /// Do not use (needed only for pybind11).
     virtual ~Transform() = default;
 
 protected:
@@ -119,6 +159,8 @@ public:
     TransformDirection getDirection() const noexcept override;
     void setDirection(TransformDirection dir) noexcept override;
 
+    TransformType getTransformType() const noexcept override { return TRANSFORM_TYPE_ALLOCATION; }
+
     /// Will throw if data is not valid.
     void validate() const override;
 
@@ -130,6 +172,7 @@ public:
     void setVars(int numvars, const float * vars);
 
     AllocationTransform & operator= (const AllocationTransform &) = delete;
+    /// Do not use (needed only for pybind11).
     virtual ~AllocationTransform();
 
 private:
@@ -157,6 +200,8 @@ class OCIOEXPORT BuiltinTransform : public Transform
 public:
     static BuiltinTransformRcPtr Create();
 
+    TransformType getTransformType() const noexcept override { return TRANSFORM_TYPE_BUILTIN; }
+
     virtual const char * getStyle() const noexcept = 0;
     /**
      * Select an existing built-in transform style from the list accessible
@@ -167,7 +212,7 @@ public:
 
     virtual const char * getDescription() const noexcept = 0;
 
-    // Do not use (needed only for pybind11).
+    /// Do not use (needed only for pybind11).
     virtual ~BuiltinTransform() = default;
 
 protected:
@@ -196,12 +241,27 @@ public:
     static CDLTransformRcPtr Create();
 
     /**
-     * Load the CDL from the src .cc or .ccc file.
-     * If a .ccc is used, the cccid must also be specified
-     * src must be an absolute path reference, no relative directory
-     * or envvar resolution is performed.
+     * \brief Load the CDL from the src .cdl, .cc, or .ccc file.
+     *
+     * \note
+     *    The cccid can be the ID of a CDL or the index of the CDL (as string). If cccid is NULL or
+     *    empty the first CDL is returned.  The cccid is case-sensitive. The src must be an
+     *    absolute path reference, no relative directory or envvar resolution is performed. Throws
+     *    if file does not contain any CDL or if the specified cccid is not found.
      */
     static CDLTransformRcPtr CreateFromFile(const char * src, const char * cccid);
+    
+    /**
+     * \brief Load all of the CDLs in a .cdl or .ccc file into a single GroupTransform.
+     *
+     * \note
+     *    This may be useful as a quicker way for applications to check the contents of each of
+     *    the CDLs. The src must be an absolute path reference, no relative directory or envvar
+     *    resolution is performed.
+     */
+    static GroupTransformRcPtr CreateGroupFromFile(const char * src);
+
+    TransformType getTransformType() const noexcept override { return TRANSFORM_TYPE_CDL; }
 
     virtual FormatMetadata & getFormatMetadata() noexcept = 0;
     virtual const FormatMetadata & getFormatMetadata() const noexcept = 0;
@@ -216,10 +276,6 @@ public:
      * The default style is CDL_NO_CLAMP.
      */
     virtual void setStyle(CDLStyle style) = 0;
-
-    virtual const char * getXML() const = 0;
-    /// The default style is CDL_NO_CLAMP.
-    virtual void setXML(const char * xml) = 0;
 
     // TODO: Move to .rst
     // !rst:: **ASC_SOP**
@@ -246,29 +302,26 @@ public:
     /// These are hard-coded, by spec, to r709.
     virtual void getSatLumaCoefs(double * rgb) const = 0;
 
-    // TODO: Move to .rst
-    //!rst:: **Metadata**
-    //
-    // These do not affect the image processing, but
-    // are often useful for pipeline purposes and are
-    // included in the serialization.
-
-    /// Unique Identifier for this correction.
+    /**
+     * The get/setID methods are now deprecated. The preferred way of interacting with the ID is
+     * now via the transform's formatMetadata.
+     */
     virtual const char * getID() const = 0;
     virtual void setID(const char * id) = 0;
 
-    /**
-     * Deprecated. Use `getFormatMetadata`.
-     * First textual description of color correction (stored
-     * on the SOP). If there is already a description, the setter will
-     * replace it with the supplied text.
+    /* Get/Set the first Description element under the SOPNode.
+     * Note: These emulate the get/setDescription methods from OCIO v1.
+     *
+     * Use the FormatMetadata interface for access to other Description elements in the CDL.
+     * The Description children of the SOPNode element in the CDL XML are named 'SOPDescription'
+     * in the FormatMetadata. NULL or empty string removes the first SOPDescription element.
      */
-    virtual const char * getDescription() const = 0;
-    /// Deprecated. Use `getFormatMetadata`.
-    virtual void setDescription(const char * desc) = 0;
+    virtual const char * getFirstSOPDescription() const = 0;
+    virtual void setFirstSOPDescription(const char * description) = 0;
 
     CDLTransform(const CDLTransform &) = delete;
     CDLTransform & operator= (const CDLTransform &) = delete;
+    /// Do not use (needed only for pybind11).
     virtual ~CDLTransform() = default;
 
 protected:
@@ -288,6 +341,8 @@ public:
     TransformDirection getDirection() const noexcept override;
     void setDirection(TransformDirection dir) noexcept override;
 
+    TransformType getTransformType() const noexcept override { return TRANSFORM_TYPE_COLORSPACE; }
+
     void validate() const override;
 
     const char * getSrc() const;
@@ -301,7 +356,7 @@ public:
     void setDataBypass(bool enabled) noexcept;
 
     ColorSpaceTransform & operator=(const ColorSpaceTransform &) = delete;
-    // Do not use (needed only for pybind11).
+    /// Do not use (needed only for pybind11).
     virtual ~ColorSpaceTransform();
 
 private:
@@ -329,6 +384,8 @@ public:
     TransformDirection getDirection() const noexcept override;
     void setDirection(TransformDirection dir) noexcept override;
 
+    TransformType getTransformType() const noexcept override { return TRANSFORM_TYPE_DISPLAY_VIEW; }
+
     /// Will throw if data is not valid.
     void validate() const override;
 
@@ -352,7 +409,7 @@ public:
     /// Data color spaces do not get processed when true (which is the default).
     void setDataBypass(bool bypass) noexcept;
 
-    // Do not use (needed only for pybind11).
+    /// Do not use (needed only for pybind11).
     virtual ~DisplayViewTransform();
 
 private:
@@ -370,44 +427,392 @@ private:
 
 extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const DisplayViewTransform &);
 
+/**
+ * Used by the grading transforms to hold the red, green, blue, and master components
+ * of a single parameter.  The master component affects all three channels (RGB).
+ */
+struct OCIOEXPORT GradingRGBM
+{
+    GradingRGBM() = default;
+    GradingRGBM(const GradingRGBM &) = default;
+    GradingRGBM(double red, double green, double blue, double master)
+        : m_red(red)
+        , m_green(green)
+        , m_blue(blue)
+        , m_master(master)
+    {
+    }
+    GradingRGBM(const double(&rgbm)[4])
+        : m_red(rgbm[0])
+        , m_green(rgbm[1])
+        , m_blue(rgbm[2])
+        , m_master(rgbm[3])
+    {
+    }
+    double m_red{ 0. };
+    double m_green{ 0. };
+    double m_blue{ 0. };
+    double m_master{ 0. };
+};
+
+extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const GradingRGBM &);
+
+/// Grading primary values.
+struct OCIOEXPORT GradingPrimary
+{
+    GradingPrimary() = delete;
+    GradingPrimary(const GradingPrimary &) = default;
+    explicit GradingPrimary(GradingStyle style)
+        : m_pivot(style == GRADING_LOG ? -0.2 : 0.18)
+        , m_clampBlack(NoClampBlack())
+        , m_clampWhite(NoClampWhite())
+    {
+    }
+
+    GradingRGBM m_brightness{ 0.0, 0.0, 0.0, 0.0 };
+    GradingRGBM m_contrast  { 1.0, 1.0, 1.0, 1.0 };
+    GradingRGBM m_gamma     { 1.0, 1.0, 1.0, 1.0 };
+    GradingRGBM m_offset    { 0.0, 0.0, 0.0, 0.0 };
+    GradingRGBM m_exposure  { 0.0, 0.0, 0.0, 0.0 };
+    GradingRGBM m_lift      { 0.0, 0.0, 0.0, 0.0 };
+    GradingRGBM m_gain      { 1.0, 1.0, 1.0, 1.0 };
+
+    double m_saturation{ 1.0 };
+    double m_pivot; // For LOG default is -0.2. LIN default is 0.18.
+    double m_pivotBlack{ 0.0 };
+    double m_pivotWhite{ 1.0 };
+    double m_clampBlack;
+    double m_clampWhite;
+
+    /// The valid range for each parameter varies.
+    void validate(GradingStyle style) const;
+
+    static double NoClampBlack();
+    static double NoClampWhite();
+};
+
+extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const GradingPrimary &);
+
+/// 2D control point used by \ref GradingBSplineCurve.
+struct OCIOEXPORT GradingControlPoint
+{
+    GradingControlPoint() = default;
+    GradingControlPoint(const GradingControlPoint &) = default;
+    GradingControlPoint(float x, float y) : m_x(x), m_y(y) {}
+    float m_x{ 0.f };
+    float m_y{ 0.f };
+};
+
+extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const GradingControlPoint &);
+
+/// A BSpline curve defined with \ref GradingControlPoint.
+class OCIOEXPORT GradingBSplineCurve
+{
+public:
+    /// Create a BSpline curve with a specified number of control points.
+    static GradingBSplineCurveRcPtr Create(size_t size);
+    /// Create a BSpline curve with a list of control points.
+    static GradingBSplineCurveRcPtr Create(std::initializer_list<GradingControlPoint> values);
+
+    virtual GradingBSplineCurveRcPtr createEditableCopy() const = 0;
+    virtual size_t getNumControlPoints() const noexcept = 0;
+    virtual void setNumControlPoints(size_t size) = 0;
+    virtual const GradingControlPoint & getControlPoint(size_t index) const = 0;
+    virtual GradingControlPoint & getControlPoint(size_t index) = 0;
+    virtual float getSlope(size_t index) const = 0;
+    virtual void setSlope(size_t index, float slope) = 0;
+    virtual bool slopesAreDefault() const = 0;
+    virtual void validate() const = 0;
+
+    GradingBSplineCurve(const GradingBSplineCurve &) = delete;
+    GradingBSplineCurve & operator= (const GradingBSplineCurve &) = delete;
+
+    /// Do not use (needed only for pybind11).
+    virtual ~GradingBSplineCurve() = default;
+
+protected:
+    GradingBSplineCurve() = default;
+};
+
+extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const GradingBSplineCurve &);
 
 /**
- * Allows transform parameter values to be set on-the-fly
- * (after finalization).  For example, to modify the exposure in a viewport.
+ * A set of red, green, blue and master curves. It is used by RGBCurveTransform and can be used as
+ * a dynamic property (see \ref DynamicPropertyGradingRGBCurve).
+ */
+class OCIOEXPORT GradingRGBCurve
+{
+public:
+    static GradingRGBCurveRcPtr Create(GradingStyle style);
+    static GradingRGBCurveRcPtr Create(const ConstGradingRGBCurveRcPtr & rhs);
+    static GradingRGBCurveRcPtr Create(const ConstGradingBSplineCurveRcPtr & red,
+                                       const ConstGradingBSplineCurveRcPtr & green,
+                                       const ConstGradingBSplineCurveRcPtr & blue,
+                                       const ConstGradingBSplineCurveRcPtr & master);
+
+    virtual GradingRGBCurveRcPtr createEditableCopy() const = 0;
+    virtual void validate() const = 0;
+    virtual bool isIdentity() const = 0;
+    virtual ConstGradingBSplineCurveRcPtr getCurve(RGBCurveType c) const = 0;
+    virtual GradingBSplineCurveRcPtr getCurve(RGBCurveType c) = 0;
+
+    /// Do not use (needed only for pybind11).
+    virtual ~GradingRGBCurve() = default;
+
+protected:
+    GradingRGBCurve() = default;
+};
+
+extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const GradingRGBCurve &);
+
+/**
+ * Used by the grading tone transforms to hold the red, green, blue, master, start,
+ * and width components of a single parameter.  The master component affects all three channels
+ * (RGB).  The start and width components control the range of tones affected. Although this
+ * struct simply uses "start" and "width" for all the range values, the actual user-facing name
+ * changes based on the parameter.
+ */
+struct OCIOEXPORT GradingRGBMSW
+{
+    GradingRGBMSW() = default;
+    GradingRGBMSW(const GradingRGBMSW &) = default;
+    GradingRGBMSW(double red, double green, double blue, double master, double start, double width)
+        : m_red   (red)
+        , m_green (green)
+        , m_blue  (blue)
+        , m_master(master)
+        , m_start (start)
+        , m_width (width)
+    {
+    }
+    GradingRGBMSW(const double(&rgbmsw)[6])
+        : m_red   (rgbmsw[0])
+        , m_green (rgbmsw[1])
+        , m_blue  (rgbmsw[2])
+        , m_master(rgbmsw[3])
+        , m_start (rgbmsw[4])
+        , m_width (rgbmsw[5])
+    {
+    }
+    GradingRGBMSW(double start, double width)
+        : m_start(start)
+        , m_width(width)
+    {
+    }
+    double m_red   { 1. };
+    double m_green { 1. };
+    double m_blue  { 1. };
+    double m_master{ 1. };
+    double m_start { 0. }; // Or center for midtones.
+    double m_width { 1. }; // Or pivot for shadows and highlights.
+};
+
+extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const GradingRGBMSW &);
+
+/// Grading tone values.
+struct OCIOEXPORT GradingTone
+{
+    GradingTone() = delete;
+    GradingTone(const GradingTone &) = default;
+    explicit GradingTone(GradingStyle style)
+        : m_blacks(style == GRADING_LIN ? GradingRGBMSW(0., 4.) :
+                  (style == GRADING_LOG ? GradingRGBMSW(0.4, 0.4) :
+                                          GradingRGBMSW(0.4, 0.4)))
+        , m_shadows(style == GRADING_LIN ? GradingRGBMSW(2., -7.) :
+                   (style == GRADING_LOG ? GradingRGBMSW(0.5, 0.) :
+                                           GradingRGBMSW(0.6, 0.)))
+        , m_midtones(style == GRADING_LIN ? GradingRGBMSW(0., 8.) :
+                    (style == GRADING_LOG ? GradingRGBMSW(0.4, 0.6) :
+                                            GradingRGBMSW(0.4, 0.7)))
+        , m_highlights(style == GRADING_LIN ? GradingRGBMSW(-2., 9.) :
+                      (style == GRADING_LOG ? GradingRGBMSW(0.3, 1.) :
+                                              GradingRGBMSW(0.2, 1.)))
+        , m_whites(style == GRADING_LIN ? GradingRGBMSW(0., 8.) :
+                  (style == GRADING_LOG ? GradingRGBMSW(0.4, 0.5) :
+                                          GradingRGBMSW(0.5, 0.5)))
+    {
+    }
+
+    /**
+     * The valid range for each parameter varies. The client is expected to enforce
+     * these bounds in the UI.
+     */
+    void validate() const;
+
+    GradingRGBMSW m_blacks;
+    GradingRGBMSW m_shadows;
+    GradingRGBMSW m_midtones;
+    GradingRGBMSW m_highlights;
+    GradingRGBMSW m_whites;
+    double m_scontrast{ 1.0 };
+};
+
+extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const GradingTone &);
+
+/**
+ * Allows transform parameter values to be set on-the-fly (after finalization).  For
+ * example, to modify the exposure in a viewport.  Dynamic properties can be accessed from the
+ * :cpp:class:`CPUProcessor` or :cpp:class:`GpuShaderCreator` to change values between processing.
+ *
+ * .. code-block:: cpp
+ *
+ *    OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
+ *    OCIO::ConstProcessorRcPtr processor = config->getProcessor(colorSpace1, colorSpace2);
+ *    OCIO::ConstCPUProcessorRcPtr cpuProcessor = processor->getDefaultCPUProcessor();
+ *
+ *    if (cpuProcessor->hasDynamicProperty(OCIO::DYNAMIC_PROPERTY_EXPOSURE))
+ *    {
+ *        // Get the in-memory implementation of the dynamic property.
+ *        OCIO::DynamicPropertyRcPtr dynProp =
+ *            cpuProcessor->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_EXPOSURE);
+ *        // Get the interface used to change the double value.
+ *        OCIO::DynamicPropertyDoubleRcPtr exposure =
+ *            OCIO::DynamicPropertyValue::AsDouble(dynProp);
+ *        // Update of the dynamic property instance with the new value.
+ *        exposure->setValue(1.1f);
+ *    }
+ *    if (cpuProcessor->hasDynamicProperty(OCIO::DYNAMIC_PROPERTY_GRADING_PRIMARY))
+ *    {
+ *        OCIO::DynamicPropertyRcPtr dynProp =
+ *            cpuProcessor->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_GRADING_PRIMARY);
+ *        OCIO::DynamicPropertyGradingPrimaryRcPtr primaryProp =
+ *            OCIO::DynamicPropertyValue::AsGradingPrimary(dynProp);
+ *        OCIO::GradingPrimary primary = primaryProp->getValue();
+ *        primary.m_saturation += 0.1f;
+ *        rgbCurveProp->setValue(primary);
+ *    }
+ *    if (cpuProcessor->hasDynamicProperty(OCIO::DYNAMIC_PROPERTY_GRADING_RGBCURVE))
+ *    {
+ *        OCIO::DynamicPropertyRcPtr dynProp =
+ *            cpuProcessor->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_GRADING_RGBCURVE);
+ *        OCIO::DynamicPropertyGradingRGBCurveRcPtr rgbCurveProp =
+ *            OCIO::DynamicPropertyValue::AsGradingRGBCurve(dynProp);
+ *        OCIO::ConstGradingRGBCurveRcPtr rgbCurve = rgbCurveProp->getValue()->createEditableCopy();
+ *        OCIO::GradingBSplineCurveRcPtr rCurve = rgbCurve->getCurve(OCIO::RGB_RED);
+ *        rCurve->getControlPoint(1).m_y += 0.1f;
+ *        rgbCurveProp->setValue(rgbCurve);
+ *    }
  */
 class OCIOEXPORT DynamicProperty
 {
 public:
-    virtual DynamicPropertyType getType() const = 0;
-
-    virtual DynamicPropertyValueType getValueType() const = 0;
-
-    virtual double getDoubleValue() const = 0;
-    virtual void setValue(double value) = 0;
-
-    virtual bool isDynamic() const = 0;
+    virtual DynamicPropertyType getType() const noexcept = 0;
 
     DynamicProperty & operator=(const DynamicProperty &) = delete;
-    virtual ~DynamicProperty();
+    DynamicProperty(const DynamicProperty &) = delete;
+
+    /// Do not use (needed only for pybind11).
+    virtual ~DynamicProperty() = default;
 
 protected:
-    DynamicProperty();
-    DynamicProperty(const DynamicProperty &);
+    DynamicProperty() = default;
+};
+
+namespace DynamicPropertyValue
+{
+/**
+ * Get the property as DynamicPropertyDoubleRcPtr to access the double value. Will throw if
+ * property type is not a type that holds a double such as DYNAMIC_PROPERTY_EXPOSURE.
+ */
+extern OCIOEXPORT DynamicPropertyDoubleRcPtr AsDouble(DynamicPropertyRcPtr & prop);
+/**
+ * Get the property as DynamicPropertyGradingPrimaryRcPtr to access the GradingPrimary value. Will
+ * throw if property type is not DYNAMIC_PROPERTY_GRADING_PRIMARY.
+ */
+extern OCIOEXPORT DynamicPropertyGradingPrimaryRcPtr AsGradingPrimary(DynamicPropertyRcPtr & prop);
+/**
+ * Get the property as DynamicPropertyGradingRGBCurveRcPtr to access the GradingRGBCurveRcPtr
+ * value. Will throw if property type is not DYNAMIC_PROPERTY_GRADING_RGBCURVE.
+ */
+extern OCIOEXPORT DynamicPropertyGradingRGBCurveRcPtr AsGradingRGBCurve(DynamicPropertyRcPtr & prop);
+/**
+ * Get the property as DynamicPropertyGradingToneRcPtr to access the GradingTone value. Will throw
+ * if property type is not DYNAMIC_PROPERTY_GRADING_TONE.
+ */
+extern OCIOEXPORT DynamicPropertyGradingToneRcPtr AsGradingTone(DynamicPropertyRcPtr & prop);
+}
+
+/// Interface used to access dynamic property double value.
+class OCIOEXPORT DynamicPropertyDouble
+{
+public:
+    virtual double getValue() const = 0;
+    virtual void setValue(double value) = 0;
+
+    DynamicPropertyDouble(const DynamicPropertyDouble &) = delete;
+    DynamicPropertyDouble & operator=(const DynamicPropertyDouble &) = delete;
+    /// Do not use (needed only for pybind11).
+    virtual ~DynamicPropertyDouble() = default;
+
+protected:
+    DynamicPropertyDouble() = default;
+};
+
+/// Interface used to access dynamic property GradingPrimary value.
+class OCIOEXPORT DynamicPropertyGradingPrimary
+{
+public:
+    virtual const GradingPrimary & getValue() const = 0;
+    /// Will throw if value is not valid.
+    virtual void setValue(const GradingPrimary & value) = 0;
+
+    DynamicPropertyGradingPrimary(const DynamicPropertyGradingPrimary &) = delete;
+    DynamicPropertyGradingPrimary & operator=(const DynamicPropertyGradingPrimary &) = delete;
+    /// Do not use (needed only for pybind11).
+    virtual ~DynamicPropertyGradingPrimary() = default;
+
+protected:
+    DynamicPropertyGradingPrimary() = default;
+};
+
+/// Interface used to access dynamic property ConstGradingRGBCurveRcPtr value.
+class OCIOEXPORT DynamicPropertyGradingRGBCurve
+{
+public:
+    virtual const ConstGradingRGBCurveRcPtr & getValue() const = 0;
+    /// Will throw if value is not valid.
+    virtual void setValue(const ConstGradingRGBCurveRcPtr & value) = 0;
+
+    DynamicPropertyGradingRGBCurve(const DynamicPropertyGradingRGBCurve &) = delete;
+    DynamicPropertyGradingRGBCurve & operator=(const DynamicPropertyGradingRGBCurve &) = delete;
+    /// Do not use (needed only for pybind11).
+    virtual ~DynamicPropertyGradingRGBCurve() = default;
+
+protected:
+    DynamicPropertyGradingRGBCurve() = default;
+};
+
+/// Interface used to access dynamic property GradingTone value.
+class OCIOEXPORT DynamicPropertyGradingTone
+{
+public:
+    virtual const GradingTone & getValue() const = 0;
+    /// Will throw if value is not valid.
+    virtual void setValue(const GradingTone & value) = 0;
+
+    DynamicPropertyGradingTone(const DynamicPropertyGradingTone &) = delete;
+    DynamicPropertyGradingTone & operator=(const DynamicPropertyGradingTone &) = delete;
+    /// Do not use (needed only for pybind11).
+    virtual ~DynamicPropertyGradingTone() = default;
+
+protected:
+    DynamicPropertyGradingTone() = default;
 };
 
 
 /**
  * \brief Represents exponent transform: pow( clamp(color), value ).
  *
- * ​.. note::
- *    For configs with version == 1: Negative style is ignored and if the exponent is 1.0,
- *    this will not clamp. Otherwise, the input color will be clamped between [0.0, inf].
- *    For configs with version > 1: Negative value handling may be specified via setNegativeStyle.
+ * \note For configs with version == 1: Negative style is ignored and if the exponent is 1.0,
+ * this will not clamp. Otherwise, the input color will be clamped between [0.0, inf].
+ * For configs with version > 1: Negative value handling may be specified via setNegativeStyle.
  */
 class OCIOEXPORT ExponentTransform : public Transform
 {
 public:
     static ExponentTransformRcPtr Create();
+
+    TransformType getTransformType() const noexcept override { return TRANSFORM_TYPE_EXPONENT; }
 
     virtual const FormatMetadata & getFormatMetadata() const noexcept = 0;
     virtual FormatMetadata & getFormatMetadata() noexcept = 0;
@@ -431,6 +836,7 @@ public:
     
     ExponentTransform(const ExponentTransform &) = delete;
     ExponentTransform & operator= (const ExponentTransform &) = delete;
+    /// Do not use (needed only for pybind11).
     virtual ~ExponentTransform() = default;
 
 protected:
@@ -455,6 +861,8 @@ class OCIOEXPORT ExponentWithLinearTransform : public Transform
 {
 public:
     static ExponentWithLinearTransformRcPtr Create();
+
+    TransformType getTransformType() const noexcept override { return TRANSFORM_TYPE_EXPONENT_WITH_LINEAR; }
 
     virtual const FormatMetadata & getFormatMetadata() const noexcept = 0;
     virtual FormatMetadata & getFormatMetadata() noexcept = 0;
@@ -493,6 +901,7 @@ public:
     
     ExponentWithLinearTransform(const ExponentWithLinearTransform &) = delete;
     ExponentWithLinearTransform & operator= (const ExponentWithLinearTransform &) = delete;
+    /// Do not use (needed only for pybind11).
     virtual ~ExponentWithLinearTransform() = default;
 
 protected:
@@ -511,6 +920,8 @@ class OCIOEXPORT ExposureContrastTransform : public Transform
 public:
     static ExposureContrastTransformRcPtr Create();
 
+    TransformType getTransformType() const noexcept override { return TRANSFORM_TYPE_EXPOSURE_CONTRAST; }
+
     virtual const FormatMetadata & getFormatMetadata() const noexcept = 0;
     virtual FormatMetadata & getFormatMetadata() noexcept = 0;
 
@@ -518,38 +929,48 @@ public:
     virtual bool equals(const ExposureContrastTransform & other) const noexcept = 0;
 
     virtual ExposureContrastStyle getStyle() const = 0;
-    /**
-     * Select the algorithm for linear, video
-     * or log color spaces.
-     */
+    /// Select the algorithm for linear, video or log color spaces.
     virtual void setStyle(ExposureContrastStyle style) = 0;
 
     virtual double getExposure() const = 0;
     /**
-     * Applies an exposure adjustment.  The value is in
-     * units of stops (regardless of style), for example, a value of -1
-     * would be equivalent to reducing the lighting by one half.
+     * Applies an exposure adjustment.  The value is in units of stops (regardless of style), for
+     * example, a value of -1  would be equivalent to reducing the lighting by one half.
      */
     virtual void setExposure(double exposure) = 0;
+    /**
+     * Exposure can be made dynamic so the value can be changed through the CPU or GPU processor,
+     * but if there are several ExposureContrastTransform only one can have a dynamic exposure.
+     */
     virtual bool isExposureDynamic() const = 0;
     virtual void makeExposureDynamic() = 0;
+    virtual void makeExposureNonDynamic() = 0;
 
     virtual double getContrast() const = 0;
     /**
-     * Applies a contrast/gamma adjustment around a pivot
-     * point.  The contrast and gamma are mathematically the same, but two
-     * controls are provided to enable the use of separate dynamic
-     * parameters.  Contrast is usually a scene-referred adjustment that
-     * pivots around gray whereas gamma is usually a display-referred
-     * adjustment that pivots around white.
+     * Applies a contrast/gamma adjustment around a pivot point.  The contrast and gamma are
+     * mathematically the same, but two controls are provided to enable the use of separate
+     * dynamic parameters.  Contrast is usually a scene-referred adjustment that pivots around
+     * gray whereas gamma is usually a display-referred adjustment that pivots around white.
      */
     virtual void setContrast(double contrast) = 0;
+    /**
+     * Contrast can be made dynamic so the value can be changed through the CPU or GPU processor,
+     * but if there are several ExposureContrastTransform only one can have a dynamic contrast.
+     */
     virtual bool isContrastDynamic() const = 0;
     virtual void makeContrastDynamic() = 0;
+    virtual void makeContrastNonDynamic() = 0;
+
     virtual double getGamma() const = 0;
     virtual void setGamma(double gamma) = 0;
+    /**
+     * Gamma can be made dynamic so the value can be changed through the CPU or GPU processor,
+     * but if there are several ExposureContrastTransform only one can have a dynamic gamma.
+     */
     virtual bool isGammaDynamic() const = 0;
     virtual void makeGammaDynamic() = 0;
+    virtual void makeGammaNonDynamic() = 0;
 
     virtual double getPivot() const = 0;
     /**
@@ -578,6 +999,7 @@ public:
      */
     virtual void setLogMidGray(double logMidGray) = 0;
 
+    /// Do not use (needed only for pybind11).
     virtual ~ExposureContrastTransform() = default;
 
 protected:
@@ -602,12 +1024,18 @@ public:
     TransformDirection getDirection() const noexcept override;
     void setDirection(TransformDirection dir) noexcept override;
 
+    TransformType getTransformType() const noexcept override { return TRANSFORM_TYPE_FILE; }
+
     /// Will throw if data is not valid.
     void validate() const override;
 
     const char * getSrc() const;
     void setSrc(const char * src);
 
+    /**
+     * The cccid can be the ID of a CDL or the index of the CDL (as string). If cccid is NULL or
+     * empty the first CDL is returned.  The cccid is case-sensitive.
+     */
     const char * getCCCId() const;
     void setCCCId(const char * id);
 
@@ -618,24 +1046,24 @@ public:
      */
     void setCDLStyle(CDLStyle);
 
+    /**
+     * The file parsers that care about interpolation (LUTs) will try to make use of the requested
+     * interpolation method when loading the file.  In these cases, if the requested method could
+     * not be used, a warning is logged.  If no method is provided, or a method cannot be used,
+     * INTERP_DEFAULT is used.
+     */
     Interpolation getInterpolation() const;
     void setInterpolation(Interpolation interp);
 
     /// Get the number of LUT readers.
-    static int getNumFormats();
-    /**
-     * Get the LUT readers at index, return empty string if
-     * an invalid index is specified.
-     */
-    static const char * getFormatNameByIndex(int index);
-
-    /**
-     * Get the LUT reader extension at index, return empty string if
-     * an invalid index is specified.
-     */
-    static const char * getFormatExtensionByIndex(int index);
+    static int GetNumFormats();
+    /// Get the LUT readers at index, return empty string if an invalid index is specified.
+    static const char * GetFormatNameByIndex(int index);
+    /// Get the LUT reader extension at index, return empty string if an invalid index is specified.
+    static const char * GetFormatExtensionByIndex(int index);
 
     FileTransform & operator=(const FileTransform &) = delete;
+    /// Do not use (needed only for pybind11).
     virtual ~FileTransform();
 
 private:
@@ -660,7 +1088,12 @@ extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const FileTransform 
 class OCIOEXPORT FixedFunctionTransform : public Transform
 {
 public:
-    static FixedFunctionTransformRcPtr Create();
+    static FixedFunctionTransformRcPtr Create(FixedFunctionStyle style);
+    static FixedFunctionTransformRcPtr Create(FixedFunctionStyle style,
+                                              const double * params,
+                                              size_t num);
+
+    TransformType getTransformType() const noexcept override { return TRANSFORM_TYPE_FIXED_FUNCTION; }
 
     virtual const FormatMetadata & getFormatMetadata() const noexcept = 0;
     virtual FormatMetadata & getFormatMetadata() noexcept = 0;
@@ -679,6 +1112,7 @@ public:
 
     FixedFunctionTransform(const FixedFunctionTransform &) = delete;
     FixedFunctionTransform & operator= (const FixedFunctionTransform &) = delete;
+    /// Do not use (needed only for pybind11).
     virtual ~FixedFunctionTransform() = default;
 
 protected:
@@ -688,45 +1122,264 @@ protected:
 extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const FixedFunctionTransform &);
 
 
+/**
+ * Primary color correction controls.
+ *
+ * This transform is for making basic color correction adjustments to an image such as brightness,
+ * contrast, or saturation.
+ *
+ * The controls are customized for linear, logarithmic, and video color encodings.
+ * * Linear controls: Exposure, Contrast, Pivot, Offset, Saturation, Black Clip, White Clip.
+ * * Log controls: Brightness, Contrast, Pivot, Log Gamma, Saturation, Black Clip, White Clip,
+ *                 Black Pivot White Pivot.
+ * * Video controls : Lift, Gamma, Gain, Offset, Saturation, Black Clip, White Clip,
+ *                    Black Pivot White Pivot.
+ *
+ * The controls are dynamic, so they may be adjusted even after the Transform has been included
+ * in a Processor.
+ */
+class OCIOEXPORT GradingPrimaryTransform : public Transform
+{
+public:
+    /// Creates an instance of GradingPrimaryTransform.
+    static GradingPrimaryTransformRcPtr Create(GradingStyle style);
+
+    TransformType getTransformType() const noexcept override { return TRANSFORM_TYPE_GRADING_PRIMARY; }
+
+    virtual const FormatMetadata & getFormatMetadata() const noexcept = 0;
+    virtual FormatMetadata & getFormatMetadata() noexcept = 0;
+
+    /// Checks if this equals other.
+    virtual bool equals(const GradingPrimaryTransform & other) const noexcept = 0;
+
+    /// Adjusts the behavior of the transform for log, linear, or video color space encodings.
+    virtual GradingStyle getStyle() const noexcept = 0;
+    /// Will reset value to style's defaults if style is not the current style.
+    virtual void setStyle(GradingStyle style) noexcept = 0;
+
+    virtual const GradingPrimary & getValue() const = 0;
+    /// Throws if value is not valid.
+    virtual void setValue(const GradingPrimary & values) = 0;
+
+    /**
+     * Parameters can be made dynamic so the values can be changed through the CPU or GPU processor,
+     * but if there are several GradingPrimaryTransform only one can have dynamic parameters.
+     */
+    virtual bool isDynamic() const noexcept = 0;
+    virtual void makeDynamic() noexcept = 0;
+    virtual void makeNonDynamic() noexcept = 0;
+
+    GradingPrimaryTransform(const GradingPrimaryTransform &) = delete;
+    GradingPrimaryTransform & operator= (const GradingPrimaryTransform &) = delete;
+    /// Do not use (needed only for pybind11).
+    virtual ~GradingPrimaryTransform() = default;
+
+protected:
+    GradingPrimaryTransform() = default;
+};
+
+extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const GradingPrimaryTransform &) noexcept;
+
+
+/**
+ * RGB curve color correction controls.
+ *
+ * This transform allows for modifying tone reproduction via B-spline curves.
+ *
+ * There is an R, G, and B curve along with a Master curve (that applies to R, G, and B).  Each
+ * curve is specified via the x and y coordinates of its control points.  A monotonic spline is
+ * fit to the control points.  The x coordinates must be non-decreasing. When the grading style
+ * is linear, the units for the control points are photographic stops relative to 0.18.
+ *
+ * The control points are dynamic, so they may be adjusted even after the Transform is included
+ * in a Processor.
+ */
+class OCIOEXPORT GradingRGBCurveTransform : public Transform
+{
+public:
+    /// Creates an instance of GradingPrimaryTransform.
+    static GradingRGBCurveTransformRcPtr Create(GradingStyle style);
+
+    TransformType getTransformType() const noexcept override { return TRANSFORM_TYPE_GRADING_RGB_CURVE; }
+
+    virtual const FormatMetadata & getFormatMetadata() const noexcept = 0;
+    virtual FormatMetadata & getFormatMetadata() noexcept = 0;
+
+    /// Checks if this equals other.
+    virtual bool equals(const GradingRGBCurveTransform & other) const noexcept = 0;
+
+    /// Adjusts the behavior of the transform for log, linear, or video color space encodings.
+    virtual GradingStyle getStyle() const noexcept = 0;
+    /// Will reset value to style's defaults if style is not the current style.
+    virtual void setStyle(GradingStyle style) noexcept = 0;
+
+    virtual const ConstGradingRGBCurveRcPtr getValue() const = 0;
+    /// Throws if value is not valid.
+    virtual void setValue(const ConstGradingRGBCurveRcPtr & values) = 0;
+
+    /**
+     * It is possible to provide a desired slope value for each control point.  The number of slopes is 
+     * always the same as the number of control points and so the control points must be set before 
+     * setting the slopes.  The slopes are primarily intended for use by config authors looking to match
+     * a specific shape with as few control points as possible, they are not intended to be exposed to
+     * a user interface for direct manipulation.  When a curve is being generated for creative purposes
+     * it is better to let OCIO calculate the slopes automatically.
+     */
+    virtual float getSlope(RGBCurveType c, size_t index) const = 0;
+    virtual void setSlope(RGBCurveType c, size_t index, float slope) = 0;
+    virtual bool slopesAreDefault(RGBCurveType c) const = 0;
+
+    /**
+     * The scene-linear grading style applies a lin-to-log transform to the pixel
+     * values before going through the curve.  However, in some cases (e.g. drawing curves in a UI)
+     * it may be useful to bypass the lin-to-log. Default value is false.
+     */
+    virtual bool getBypassLinToLog() const = 0;
+    virtual void setBypassLinToLog(bool bypass) = 0;
+
+    /**
+     * Parameters can be made dynamic so the values can be changed through the CPU or GPU processor,
+     * but if there are several GradingRGBCurveTransform only one can have dynamic parameters.
+     */
+    virtual bool isDynamic() const noexcept = 0;
+    virtual void makeDynamic() noexcept = 0;
+    virtual void makeNonDynamic() noexcept = 0;
+
+    GradingRGBCurveTransform(const GradingRGBCurveTransform &) = delete;
+    GradingRGBCurveTransform & operator= (const GradingRGBCurveTransform &) = delete;
+    /// Do not use (needed only for pybind11).
+    virtual ~GradingRGBCurveTransform() = default;
+
+protected:
+    GradingRGBCurveTransform() = default;
+};
+
+extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const GradingRGBCurveTransform &) noexcept;
+
+
+/**
+ * Tonal color correction controls.
+ *
+ * This transform is for making fine adjustments to tone reproduction in specific tonal ranges.
+ *
+ * There are five tonal controls and each one has two parameters to control its range:
+ * * Blacks (start, width)
+ * * Shadows(start, pivot)
+ * * Midtones(center, width)
+ * * Highlights(start, pivot)
+ * * Whites(start, width)
+ *
+ * The transform has three styles that adjust the response and default ranges for linear,
+ * logarithimic, and video color encodings. The defaults vary based on the style.  When the
+ * style is linear, the units for start/width/etc. are photographic stops relative to 0.18.
+ *
+ * Each control allows R, G, B adjustments and a Master adjustment.
+ *
+ * There is also an S-contrast control for imparting an S-shape curve.
+ * 
+ * The controls are dynamic, so they may be adjusted even after the Transform has been included
+ * in a Processor.
+ */
+class OCIOEXPORT GradingToneTransform : public Transform
+{
+public:
+    /// Creates an instance of GradingToneTransform.
+    static GradingToneTransformRcPtr Create(GradingStyle style);
+
+    TransformType getTransformType() const noexcept override { return TRANSFORM_TYPE_GRADING_TONE; }
+
+    virtual const FormatMetadata & getFormatMetadata() const noexcept = 0;
+    virtual FormatMetadata & getFormatMetadata() noexcept = 0;
+
+    virtual bool equals(const GradingToneTransform & other) const noexcept = 0;
+
+    /// Adjusts the behavior of the transform for log, linear, or video color space encodings.
+    virtual GradingStyle getStyle() const noexcept = 0;
+    /// Will reset value to style's defaults if style is not the current style.
+    virtual void setStyle(GradingStyle style) noexcept = 0;
+
+    virtual const GradingTone & getValue() const = 0;
+    virtual void setValue(const GradingTone & values) = 0;
+
+    /**
+     * Parameters can be made dynamic so the values can be changed through the CPU or GPU processor,
+     * but if there are several GradingToneTransform only one can have dynamic parameters.
+     */
+    virtual bool isDynamic() const noexcept = 0;
+    virtual void makeDynamic() noexcept = 0;
+    virtual void makeNonDynamic() noexcept = 0;
+
+    GradingToneTransform(const GradingToneTransform &) = delete;
+    GradingToneTransform & operator= (const GradingToneTransform &) = delete;
+    /// Do not use (needed only for pybind11).
+    virtual ~GradingToneTransform() = default;
+
+protected:
+    GradingToneTransform() = default;
+};
+
+extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const GradingToneTransform &) noexcept;
+
+
 class OCIOEXPORT GroupTransform : public Transform
 {
 public:
     static GroupTransformRcPtr Create();
 
-    TransformRcPtr createEditableCopy() const override;
+    virtual const FormatMetadata & getFormatMetadata() const noexcept = 0;
+    virtual FormatMetadata & getFormatMetadata() noexcept = 0;
 
-    TransformDirection getDirection() const noexcept override;
-    void setDirection(TransformDirection dir) noexcept override;
+    /// Throws if index is not allowed.
+    virtual ConstTransformRcPtr getTransform(int index) const = 0;
 
-    /// Will throw if data is not valid.
-    void validate() const override;
+    /// Throws if index is not allowed.
+    virtual TransformRcPtr & getTransform(int index) = 0;
 
-    virtual const FormatMetadata & getFormatMetadata() const noexcept;
-    virtual FormatMetadata & getFormatMetadata() noexcept;
-
-    ConstTransformRcPtr getTransform(int index) const;
-
-    TransformRcPtr & getTransform(int index);
-
-    int getNumTransforms() const;
+    /// Return number of transforms.
+    virtual int getNumTransforms() const noexcept = 0;
     /// Adds a transform to the end of the group.
-    void appendTransform(TransformRcPtr transform);
+    virtual void appendTransform(TransformRcPtr transform) noexcept = 0;
     /// Add a transform at the beginning of the group.
-    void prependTransform(TransformRcPtr transform);
+    virtual void prependTransform(TransformRcPtr transform) noexcept = 0;
 
+    /**
+     * \brief Write the transforms comprising the group to the stream.
+     *
+     * Writing (as opposed to Baking) is a lossless process. An exception is thrown if the
+     * processor cannot be losslessly written to the specified file format. Transforms such as
+     * FileTransform or ColorSpaceTransform are resolved into write-able simple transforms using
+     * the config and context.  Supported formats include CTF, CLF, and CDL. All available formats
+     * can be listed with the following:
+     * @code
+     * // What are the allowed writing output formats?
+     * std::ostringstream formats;
+     * formats << "Formats to write to: ";
+     * for (int i = 0; i < GroupTransform::GetNumWriteFormats(); ++i)
+     * {
+     *    if (i != 0) formats << ", ";
+     *    formats << GroupTransform::GetFormatNameByIndex(i);
+     *    formats << " (." << GroupTransform::GetFormatExtensionByIndex(i) << ")";
+     * }
+     * @endcode
+     */
+    virtual void write(const ConstConfigRcPtr & config,
+                       const char * formatName,
+                       std::ostream & os) const = 0;
+
+    /// Get the number of writers.
+    static int GetNumWriteFormats() noexcept;
+
+    /// Get the writer at index, return empty string if an invalid index is specified.
+    static const char * GetFormatNameByIndex(int index) noexcept;
+    static const char * GetFormatExtensionByIndex(int index) noexcept;
+
+    GroupTransform(const GroupTransform &) = delete;
     GroupTransform & operator=(const GroupTransform &) = delete;
-    virtual ~GroupTransform();
+    /// Do not use (needed only for pybind11).
+    virtual ~GroupTransform() = default;
 
-private:
-    GroupTransform();
-    GroupTransform(const GroupTransform &);
-
-    static void deleter(GroupTransform * t);
-
-    class Impl;
-    Impl * m_impl;
-    Impl * getImpl() { return m_impl; }
-    const Impl * getImpl() const { return m_impl; }
+protected:
+    GroupTransform() = default;
 };
 
 extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const GroupTransform &);
@@ -734,7 +1387,7 @@ extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const GroupTransform
 
 
 /**
- *  Applies a logarithm with an affine transform before and after.
+ * Applies a logarithm with an affine transform before and after.
  * Represents the Cineon lin-to-log type transforms::
  *
  *   logSideSlope * log( linSideSlope * color + linSideOffset, base) + logSideOffset
@@ -746,6 +1399,8 @@ class OCIOEXPORT LogAffineTransform : public Transform
 {
 public:
     static LogAffineTransformRcPtr Create();
+
+    TransformType getTransformType() const noexcept override { return TRANSFORM_TYPE_LOG_AFFINE; }
 
     virtual const FormatMetadata & getFormatMetadata() const noexcept = 0;
     virtual FormatMetadata & getFormatMetadata() noexcept = 0;
@@ -769,6 +1424,7 @@ public:
 
     LogAffineTransform(const LogAffineTransform &) = delete;
     LogAffineTransform & operator= (const LogAffineTransform &) = delete;
+    /// Do not use (needed only for pybind11).
     virtual ~LogAffineTransform() = default;
 
 protected:
@@ -779,8 +1435,8 @@ extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const LogAffineTrans
 
 
 /**
- *  Same as :cpp:class:`LogAffineTransform` but with the addition of a linear segment
- * near black. This formula is used for many camera logs (e.g., LogC) as well as ACEScct.
+ * Same as LogAffineTransform but with the addition of a linear segment near black. This formula
+ * is used for many camera logs (e.g., LogC) as well as ACEScct.
  *
  * * The linSideBreak specifies the point on the linear axis where the log and linear
  *   segments meet.  It must be set (there is no default).  
@@ -790,7 +1446,10 @@ extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const LogAffineTrans
 class OCIOEXPORT LogCameraTransform : public Transform
 {
 public:
-    static LogCameraTransformRcPtr Create();
+    /// LinSideBreak must be set for the transform to be valid (there is no default).
+    static LogCameraTransformRcPtr Create(const double(&linSideBreakValues)[3]);
+
+    TransformType getTransformType() const noexcept override { return TRANSFORM_TYPE_LOG_CAMERA; }
 
     virtual const FormatMetadata & getFormatMetadata() const noexcept = 0;
     virtual FormatMetadata & getFormatMetadata() noexcept = 0;
@@ -801,8 +1460,7 @@ public:
     virtual double getBase() const noexcept = 0;
     virtual void setBase(double base) noexcept = 0;
 
-    // !rst:: **Get/Set values for the R, G, B components**
-
+    /// Get/Set values for the R, G, B components.
     virtual void getLogSideSlopeValue(double(&values)[3]) const noexcept = 0;
     virtual void setLogSideSlopeValue(const double(&values)[3]) noexcept = 0;
     virtual void getLogSideOffsetValue(double(&values)[3]) const noexcept = 0;
@@ -811,9 +1469,7 @@ public:
     virtual void setLinSideSlopeValue(const double(&values)[3]) noexcept = 0;
     virtual void getLinSideOffsetValue(double(&values)[3]) const noexcept = 0;
     virtual void setLinSideOffsetValue(const double(&values)[3]) noexcept = 0;
-
-    /// Return true if LinSideBreak values were set, false if they were not.
-    virtual bool getLinSideBreakValue(double(&values)[3]) const noexcept = 0;
+    virtual void getLinSideBreakValue(double(&values)[3]) const noexcept = 0;
     virtual void setLinSideBreakValue(const double(&values)[3]) noexcept = 0;
 
     /// Return true if LinearSlope values were set, false if they were not.
@@ -830,6 +1486,7 @@ public:
     
     LogCameraTransform(const LogCameraTransform &) = delete;
     LogCameraTransform & operator= (const LogCameraTransform &) = delete;
+    /// Do not use (needed only for pybind11).
     virtual ~LogCameraTransform() = default;
 
 protected:
@@ -851,6 +1508,8 @@ class OCIOEXPORT LogTransform : public Transform
 public:
     static LogTransformRcPtr Create();
 
+    TransformType getTransformType() const noexcept override { return TRANSFORM_TYPE_LOG; }
+
     virtual const FormatMetadata & getFormatMetadata() const noexcept = 0;
     virtual FormatMetadata & getFormatMetadata() noexcept = 0;
 
@@ -862,6 +1521,7 @@ public:
 
     LogTransform(const LogTransform &) = delete;
     LogTransform & operator= (const LogTransform &) = delete;
+    /// Do not use (needed only for pybind11).
     virtual ~LogTransform() = default;
 
 protected:
@@ -880,6 +1540,8 @@ public:
 
     TransformDirection getDirection() const noexcept override;
     void setDirection(TransformDirection dir) noexcept override;
+
+    TransformType getTransformType() const noexcept override { return TRANSFORM_TYPE_LOOK; }
 
     /// Will throw if data is not valid.
     void validate() const override;
@@ -944,6 +1606,8 @@ public:
      */
     static Lut1DTransformRcPtr Create(unsigned long length,
                                       bool isHalfDomain);
+
+    TransformType getTransformType() const noexcept override { return TRANSFORM_TYPE_LUT1D; }
 
     virtual BitDepth getFileOutputBitDepth() const noexcept = 0;
     /**
@@ -1016,13 +1680,14 @@ public:
      * feature that was used in some versions of ACES.  This adjusts the hue
      * of the result to approximately match the input.
      */
-    virtual void setHueAdjust(Lut1DHueAdjust algo) noexcept = 0;
+    virtual void setHueAdjust(Lut1DHueAdjust algo) = 0;
 
     virtual Interpolation getInterpolation() const = 0;
     virtual void setInterpolation(Interpolation algo) = 0;
 
     Lut1DTransform(const Lut1DTransform &) = delete;
     Lut1DTransform & operator= (const Lut1DTransform &) = delete;
+    /// Do not use (needed only for pybind11).
     virtual ~Lut1DTransform() = default;
 
 protected:
@@ -1044,6 +1709,8 @@ public:
      * Will throw for grid size larger than 129.
      */
     static Lut3DTransformRcPtr Create(unsigned long gridSize);
+
+    TransformType getTransformType() const noexcept override { return TRANSFORM_TYPE_LUT3D; }
 
     virtual BitDepth getFileOutputBitDepth() const noexcept = 0;
     /**
@@ -1094,6 +1761,7 @@ public:
 
     Lut3DTransform(const Lut3DTransform &) = delete;
     Lut3DTransform & operator= (const Lut3DTransform &) = delete;
+    /// Do not use (needed only for pybind11).
     virtual ~Lut3DTransform() = default;
 
 protected:
@@ -1112,6 +1780,8 @@ class OCIOEXPORT MatrixTransform : public Transform
 {
 public:
     static MatrixTransformRcPtr Create();
+
+    TransformType getTransformType() const noexcept override { return TRANSFORM_TYPE_MATRIX; }
 
     virtual const FormatMetadata & getFormatMetadata() const noexcept = 0;
     virtual FormatMetadata & getFormatMetadata() noexcept = 0;
@@ -1194,6 +1864,7 @@ public:
 
     MatrixTransform(const MatrixTransform &) = delete;
     MatrixTransform & operator= (const MatrixTransform &) = delete;
+    /// Do not use (needed only for pybind11).
     virtual ~MatrixTransform() = default;
 
 protected:
@@ -1222,6 +1893,8 @@ class OCIOEXPORT RangeTransform : public Transform
 public:
     /// Creates an instance of RangeTransform.
     static RangeTransformRcPtr Create();
+
+    TransformType getTransformType() const noexcept override { return TRANSFORM_TYPE_RANGE; }
 
     virtual RangeStyle getStyle() const noexcept = 0;
     /// Set the Range style to clamp or not input values.
@@ -1302,6 +1975,7 @@ public:
 
     RangeTransform(const RangeTransform &) = delete;
     RangeTransform & operator= (const RangeTransform &) = delete;
+    /// Do not use (needed only for pybind11).
     virtual ~RangeTransform() = default;
 
 protected:

@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-#include <fstream>
-#include <sstream>
-
+#include "PyDynamicProperty.h"
 #include "PyOpenColorIO.h"
 #include "PyUtils.h"
 
@@ -15,74 +13,85 @@ namespace
 
 enum ProcessorIterator
 {
-    IT_WRITE_FORMAT = 0,
-    IT_TRANSFORM_FORMAT_METADATA
+    IT_TRANSFORM_FORMAT_METADATA = 0
 };
 
-using WriteFormatIterator             = PyIterator<ProcessorRcPtr, IT_WRITE_FORMAT>;
-using TransformFormatMetadataIterator = PyIterator<ProcessorRcPtr, 
-                                                   IT_TRANSFORM_FORMAT_METADATA>;
+using TransformFormatMetadataIterator = PyIterator<ProcessorRcPtr, IT_TRANSFORM_FORMAT_METADATA>;
 
 } // namespace
 
 void bindPyProcessor(py::module & m)
 {
-    auto cls = py::class_<Processor, ProcessorRcPtr /* holder */>(m, "Processor")
-        .def_static("getWriteFormats", []() { return WriteFormatIterator(nullptr); })
+    auto clsProcessor = 
+        py::class_<Processor, ProcessorRcPtr>(
+            m.attr("Processor"));
 
-        .def("isNoOp", &Processor::isNoOp)
-        .def("hasChannelCrosstalk", &Processor::hasChannelCrosstalk)
-        .def("getCacheID", &Processor::getCacheID)
-        .def("getProcessorMetadata", &Processor::getProcessorMetadata)
-        .def("getFormatMetadata", &Processor::getFormatMetadata, 
-             py::return_value_policy::reference_internal)
+    auto clsTransformFormatMetadataIterator = 
+        py::class_<TransformFormatMetadataIterator>(
+            clsProcessor, "TransformFormatMetadataIterator");
+
+    clsProcessor
+        .def("isNoOp", &Processor::isNoOp,
+             DOC(Processor, isNoOp))
+        .def("hasChannelCrosstalk", &Processor::hasChannelCrosstalk,
+             DOC(Processor, hasChannelCrosstalk))
+        .def("getCacheID", &Processor::getCacheID,
+             DOC(Processor, getCacheID))
+        .def("getProcessorMetadata", &Processor::getProcessorMetadata,
+             DOC(Processor, getProcessorMetadata))
+        .def("getFormatMetadata", &Processor::getFormatMetadata,
+             py::return_value_policy::reference_internal,
+             DOC(Processor, getFormatMetadata))
         .def("getTransformFormatMetadata", [](ProcessorRcPtr & self) 
             {
                 return TransformFormatMetadataIterator(self);
             })
-        .def("createGroupTransform", &Processor::createGroupTransform)
-        .def("write", [](ProcessorRcPtr & self, 
-                         const std::string & formatName, 
-                         const std::string & fileName) 
+        .def("createGroupTransform", &Processor::createGroupTransform,
+             DOC(Processor, createGroupTransform))
+        .def("getDynamicProperty", [](ProcessorRcPtr & self, DynamicPropertyType type)
             {
-                std::ofstream f(fileName.c_str());
-                self->write(formatName.c_str(), f);
-                f.close();
-            }, 
-             "formatName"_a, "fileName"_a)
-        .def("write", [](ProcessorRcPtr & self, const std::string & formatName) 
-            {
-                std::ostringstream os;
-                self->write(formatName.c_str(), os);
-                return os.str();
-            }, 
-             "formatName"_a)
-        .def("getDynamicProperty", &Processor::getDynamicProperty, "type"_a)
-        .def("hasDynamicProperty", &Processor::hasDynamicProperty, "type"_a)
+                return PyDynamicProperty(self->getDynamicProperty(type));
+            },
+            "type"_a,
+             DOC(Processor, getDynamicProperty))
+        .def("hasDynamicProperty",
+             (bool (Processor::*)(DynamicPropertyType) const noexcept)
+             &Processor::hasDynamicProperty,
+             "type"_a,
+             DOC(Processor, hasDynamicProperty))
+        .def("isDynamic", &Processor::isDynamic,
+             DOC(Processor, isDynamic))
         .def("getOptimizedProcessor",
              (ConstProcessorRcPtr(Processor::*)(OptimizationFlags) const)
-             &Processor::getOptimizedProcessor, "oFlags"_a)
+             &Processor::getOptimizedProcessor, "oFlags"_a,
+             DOC(Processor, getOptimizedProcessor))
         .def("getOptimizedProcessor",
              (ConstProcessorRcPtr(Processor::*)(BitDepth, BitDepth, OptimizationFlags) const)
              &Processor::getOptimizedProcessor,
-             "inBitDepth"_a, "outBitDepth"_a, "oFlags"_a)
+             "inBitDepth"_a, "outBitDepth"_a, "oFlags"_a,
+             DOC(Processor, getOptimizedProcessor))
 
         // GPU Renderer
-        .def("getDefaultGPUProcessor", &Processor::getDefaultGPUProcessor)
-        .def("getOptimizedGPUProcessor", &Processor::getOptimizedGPUProcessor, "oFlags"_a)
+        .def("getDefaultGPUProcessor", &Processor::getDefaultGPUProcessor,
+             DOC(Processor, getDefaultGPUProcessor))
+        .def("getOptimizedGPUProcessor", &Processor::getOptimizedGPUProcessor, "oFlags"_a,
+             DOC(Processor, getOptimizedGPUProcessor))
 
         // CPU Renderer
-        .def("getDefaultCPUProcessor", &Processor::getDefaultCPUProcessor)
+        .def("getDefaultCPUProcessor", &Processor::getDefaultCPUProcessor,
+             DOC(Processor, getDefaultCPUProcessor))
         .def("getOptimizedCPUProcessor", 
              (ConstCPUProcessorRcPtr (Processor::*)(OptimizationFlags) const) 
              &Processor::getOptimizedCPUProcessor, 
-             "oFlags"_a)
+             "oFlags"_a,
+             DOC(Processor, getOptimizedCPUProcessor))
         .def("getOptimizedCPUProcessor", 
              (ConstCPUProcessorRcPtr (Processor::*)(BitDepth, BitDepth, OptimizationFlags) const) 
              &Processor::getOptimizedCPUProcessor, 
-             "inBitDepth"_a, "outBitDepth"_a, "oFlags"_a);
+             "inBitDepth"_a, "outBitDepth"_a, "oFlags"_a,
+             DOC(Processor, getOptimizedCPUProcessor));
 
-    py::class_<TransformFormatMetadataIterator>(cls, "TransformFormatMetadataIterator")
+    clsTransformFormatMetadataIterator
         .def("__len__", [](TransformFormatMetadataIterator & it) 
             { 
                 return it.m_obj->getNumTransforms(); 
@@ -105,25 +114,6 @@ void bindPyProcessor(py::module & m)
                 return it.m_obj->getTransformFormatMetadata(i);
             }, 
              py::return_value_policy::reference_internal);
-
-    py::class_<WriteFormatIterator>(cls, "WriteFormatIterator")
-        .def("__len__", [](WriteFormatIterator & it) 
-            { 
-                return Processor::getNumWriteFormats(); 
-            })
-        .def("__getitem__", [](WriteFormatIterator & it, int i) 
-            { 
-                it.checkIndex(i, Processor::getNumWriteFormats());
-                return py::make_tuple(Processor::getFormatNameByIndex(i), 
-                                      Processor::getFormatExtensionByIndex(i));
-            })
-        .def("__iter__", [](WriteFormatIterator & it) -> WriteFormatIterator & { return it; })
-        .def("__next__", [](WriteFormatIterator & it)
-            {
-                int i = it.nextIndex(Processor::getNumWriteFormats());
-                return py::make_tuple(Processor::getFormatNameByIndex(i), 
-                                      Processor::getFormatExtensionByIndex(i));
-            });
 }
 
 } // namespace OCIO_NAMESPACE

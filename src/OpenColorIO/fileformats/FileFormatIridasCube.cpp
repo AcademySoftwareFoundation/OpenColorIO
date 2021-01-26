@@ -8,6 +8,7 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "fileformats/FileFormatUtils.h"
 #include "ops/lut1d/Lut1DOp.h"
 #include "ops/lut3d/Lut3DOp.h"
 #include "ops/matrix/MatrixOp.h"
@@ -93,9 +94,9 @@ public:
 
     void getFormatInfo(FormatInfoVec & formatInfoVec) const override;
 
-    CachedFileRcPtr read(
-        std::istream & istream,
-        const std::string & fileName) const override;
+    CachedFileRcPtr read(std::istream & istream,
+                         const std::string & fileName,
+                         Interpolation interp) const override;
 
     void bake(const Baker & baker,
                 const std::string & formatName,
@@ -144,9 +145,9 @@ void LocalFileFormat::getFormatInfo(FormatInfoVec & formatInfoVec) const
 }
 
 CachedFileRcPtr
-LocalFileFormat::read(
-    std::istream & istream,
-    const std::string & fileName) const
+LocalFileFormat::read(std::istream & istream,
+                      const std::string & fileName,
+                      Interpolation interp) const
 {
     // this shouldn't happen
     if(!istream)
@@ -301,6 +302,10 @@ LocalFileFormat::read(
 
             const auto lutLenght = static_cast<unsigned long>(size1d);
             cachedFile->lut1D = std::make_shared<Lut1DOpData>(lutLenght);
+            if (Lut1DOpData::IsValidInterpolation(interp))
+            {
+                cachedFile->lut1D->setInterpolation(interp);
+            }
 
             cachedFile->lut1D->setFileOutputBitDepth(BIT_DEPTH_F32);
 
@@ -331,6 +336,10 @@ LocalFileFormat::read(
         memcpy(cachedFile->domain_min, domain_min, 3*sizeof(float));
         memcpy(cachedFile->domain_max, domain_max, 3*sizeof(float));
         cachedFile->lut3D = std::make_shared<Lut3DOpData>(size3d);
+        if (Lut3DOpData::IsValidInterpolation(interp))
+        {
+            cachedFile->lut3D->setInterpolation(interp);
+        }
         cachedFile->lut3D->setFileOutputBitDepth(BIT_DEPTH_F32);
         cachedFile->lut3D->setArrayFromRedFastestOrder(raw);
     }
@@ -385,7 +394,7 @@ void LocalFileFormat::bake(const Baker & baker,
     {
         inputToTarget = config->getProcessor(baker.getInputSpace(), baker.getTargetSpace());
     }
-    ConstCPUProcessorRcPtr cpu = inputToTarget->getDefaultCPUProcessor();
+    ConstCPUProcessorRcPtr cpu = inputToTarget->getOptimizedCPUProcessor(OPTIMIZATION_LOSSLESS);
     cpu->apply(cubeImg);
 
     const auto & metadata = baker.getFormatMetadata();
@@ -393,7 +402,7 @@ void LocalFileFormat::bake(const Baker & baker,
     for (int i = 0; i < nb; ++i)
     {
         const auto & child = metadata.getChildElement(i);
-        ostream << "# " << child.getValue() << "\n";
+        ostream << "# " << child.getElementValue() << "\n";
     }
     if (nb > 0)
     {
@@ -428,58 +437,57 @@ LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
     LocalCachedFileRcPtr cachedFile = DynamicPtrCast<LocalCachedFile>(untypedCachedFile);
 
     // This should never happen.
-    if(!cachedFile)
+    if(!cachedFile || (!cachedFile->lut1D && !cachedFile->lut3D))
     {
         std::ostringstream os;
         os << "Cannot build Iridas .cube Op. Invalid cache type.";
         throw Exception(os.str().c_str());
     }
 
-    TransformDirection newDir = CombineTransformDirections(dir,
-        fileTransform.getDirection());
-    if(newDir == TRANSFORM_DIR_UNKNOWN)
-    {
-        std::ostringstream os;
-        os << "Cannot build file format transform,";
-        os << " unspecified transform direction.";
-        throw Exception(os.str().c_str());
-    }
+    const auto newDir = CombineTransformDirections(dir, fileTransform.getDirection());
 
-    if (cachedFile->lut3D)
+    const auto fileInterp = fileTransform.getInterpolation();
+
+    bool fileInterpUsed = false;
+    auto lut1D = HandleLUT1D(cachedFile->lut1D, fileInterp, fileInterpUsed);
+    auto lut3D = HandleLUT3D(cachedFile->lut3D, fileInterp, fileInterpUsed);
+
+    if (!fileInterpUsed)
     {
-        cachedFile->lut3D->setInterpolation(fileTransform.getInterpolation());
-    }
-    else if (cachedFile->lut1D)
-    {
-        cachedFile->lut1D->setInterpolation(fileTransform.getInterpolation());
+        LogWarningInterpolationNotUsed(fileInterp, fileTransform);
     }
 
     const double dmin[]{ cachedFile->domain_min[0], cachedFile->domain_min[1], cachedFile->domain_min[2] };
     const double dmax[]{ cachedFile->domain_max[0], cachedFile->domain_max[1], cachedFile->domain_max[2] };
 
-    if(newDir == TRANSFORM_DIR_FORWARD)
+    switch (newDir)
+    {
+    case TRANSFORM_DIR_FORWARD:
     {
         CreateMinMaxOp(ops, dmin, dmax, newDir);
-        if(cachedFile->lut1D)
+        if(lut1D)
         {
-            CreateLut1DOp(ops, cachedFile->lut1D, newDir);
+            CreateLut1DOp(ops, lut1D, newDir);
         }
-        else if(cachedFile->lut3D)
+        else if(lut3D)
         {
-            CreateLut3DOp(ops, cachedFile->lut3D, newDir);
+            CreateLut3DOp(ops, lut3D, newDir);
         }
+        break;
     }
-    else if(newDir == TRANSFORM_DIR_INVERSE)
+    case TRANSFORM_DIR_INVERSE:
     {
-        if(cachedFile->lut3D)
+        if(lut3D)
         {
-            CreateLut3DOp(ops, cachedFile->lut3D, newDir);
+            CreateLut3DOp(ops, lut3D, newDir);
         }
-        else if(cachedFile->lut1D)
+        else if(lut1D)
         {
-            CreateLut1DOp(ops, cachedFile->lut1D, newDir);
+            CreateLut1DOp(ops, lut1D, newDir);
         }
         CreateMinMaxOp(ops, dmin, dmax, newDir);
+        break;
+    }
     }
 }
 }

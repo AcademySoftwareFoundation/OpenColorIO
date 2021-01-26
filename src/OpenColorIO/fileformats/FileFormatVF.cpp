@@ -8,6 +8,7 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "fileformats/FileFormatUtils.h"
 #include "ops/lut3d/Lut3DOp.h"
 #include "ops/matrix/MatrixOp.h"
 #include "ParseUtils.h"
@@ -42,9 +43,9 @@ public:
 
     void getFormatInfo(FormatInfoVec & formatInfoVec) const override;
 
-    CachedFileRcPtr read(
-        std::istream & istream,
-        const std::string & fileName) const override;
+    CachedFileRcPtr read(std::istream & istream,
+                         const std::string & fileName,
+                         Interpolation interp) const override;
 
     void buildFileOps(OpRcPtrVec & ops,
                         const Config & config,
@@ -88,9 +89,9 @@ void LocalFileFormat::getFormatInfo(FormatInfoVec & formatInfoVec) const
     formatInfoVec.push_back(info);
 }
 
-CachedFileRcPtr LocalFileFormat::read(
-    std::istream & istream,
-    const std::string & fileName) const
+CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
+                                      const std::string & fileName,
+                                      Interpolation interp) const
 {
     // this shouldn't happen
     if(!istream)
@@ -237,6 +238,11 @@ CachedFileRcPtr LocalFileFormat::read(
 
     // Copy raw3d vector into LutOpData object.
     cachedFile->lut3D = std::make_shared<Lut3DOpData>(size3d[0]);
+    if (Lut3DOpData::IsValidInterpolation(interp))
+    {
+        cachedFile->lut3D->setInterpolation(interp);
+    }
+
     cachedFile->lut3D->setFileOutputBitDepth(BIT_DEPTH_F32);
     // LUT in file is blue fastest.
     cachedFile->lut3D->getArray().getValues() = raw3d;
@@ -262,38 +268,47 @@ LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
         throw Exception(os.str().c_str());
     }
 
-    TransformDirection newDir = CombineTransformDirections(dir,
-        fileTransform.getDirection());
-    if(newDir == TRANSFORM_DIR_UNKNOWN)
-    {
-        std::ostringstream os;
-        os << "Cannot build file format transform,";
-        os << " unspecified transform direction.";
-        throw Exception(os.str().c_str());
-    }
+    const auto newDir = CombineTransformDirections(dir, fileTransform.getDirection());
+
+    const auto fileInterp = fileTransform.getInterpolation();
+
+    Lut3DOpDataRcPtr lut3D;
 
     if (cachedFile->lut3D)
     {
-        cachedFile->lut3D->setInterpolation(fileTransform.getInterpolation());
+        bool fileInterpUsed = false;
+        lut3D = HandleLUT3D(cachedFile->lut3D, fileInterp, fileInterpUsed);
+
+        if (!fileInterpUsed)
+        {
+            LogWarningInterpolationNotUsed(fileInterp, fileTransform);
+        }
     }
 
-    if(newDir == TRANSFORM_DIR_FORWARD)
+    switch (newDir)
     {
-        if(cachedFile->useMatrix)
+    case TRANSFORM_DIR_FORWARD:
+        if (cachedFile->useMatrix)
         {
             CreateMatrixOp(ops, cachedFile->m44, newDir);
         }
 
-        CreateLut3DOp(ops, cachedFile->lut3D, newDir);
-    }
-    else if(newDir == TRANSFORM_DIR_INVERSE)
-    {
-        CreateLut3DOp(ops, cachedFile->lut3D, newDir);
+        if (lut3D)
+        {
+            CreateLut3DOp(ops, lut3D, newDir);
+        }
+        break;
+    case TRANSFORM_DIR_INVERSE:
+        if (lut3D)
+        {
+            CreateLut3DOp(ops, lut3D, newDir);
+        }
 
-        if(cachedFile->useMatrix)
+        if (cachedFile->useMatrix)
         {
             CreateMatrixOp(ops, cachedFile->m44, newDir);
         }
+        break;
     }
 }
 }

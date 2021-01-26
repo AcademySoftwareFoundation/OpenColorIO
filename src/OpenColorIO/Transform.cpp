@@ -13,6 +13,9 @@
 #include "ops/exposurecontrast/ExposureContrastOp.h"
 #include "ops/fixedfunction/FixedFunctionOp.h"
 #include "ops/gamma/GammaOp.h"
+#include "ops/gradingprimary/GradingPrimaryOp.h"
+#include "ops/gradingrgbcurve/GradingRGBCurveOp.h"
+#include "ops/gradingtone/GradingToneOp.h"
 #include "ops/log/LogOp.h"
 #include "ops/lut1d/Lut1DOp.h"
 #include "ops/lut3d/Lut3DOp.h"
@@ -49,12 +52,12 @@ void BuildOps(OpRcPtrVec & ops,
     if(ConstAllocationTransformRcPtr allocationTransform = \
         DynamicPtrCast<const AllocationTransform>(transform))
     {
-        BuildAllocationOp(ops, config, *allocationTransform, dir);
+        BuildAllocationOp(ops, *allocationTransform, dir);
     }
     else if(ConstBuiltinTransformRcPtr builtInTransform = \
         DynamicPtrCast<const BuiltinTransform>(transform))
     {
-        BuildBuiltinOps(ops, config, *builtInTransform, dir);
+        BuildBuiltinOps(ops, *builtInTransform, dir);
     }
     else if(ConstCDLTransformRcPtr cdlTransform = \
         DynamicPtrCast<const CDLTransform>(transform))
@@ -79,12 +82,12 @@ void BuildOps(OpRcPtrVec & ops,
     else if(ConstExponentWithLinearTransformRcPtr expWithLinearTransform = \
         DynamicPtrCast<const ExponentWithLinearTransform>(transform))
     {
-        BuildExponentWithLinearOp(ops, config, *expWithLinearTransform, dir);
+        BuildExponentWithLinearOp(ops, *expWithLinearTransform, dir);
     }
     else if (ConstExposureContrastTransformRcPtr ecTransform = \
         DynamicPtrCast<const ExposureContrastTransform>(transform))
     {
-        BuildExposureContrastOp(ops, config, *ecTransform, dir);
+        BuildExposureContrastOp(ops, *ecTransform, dir);
     }
     else if(ConstFileTransformRcPtr fileTransform = \
         DynamicPtrCast<const FileTransform>(transform))
@@ -94,7 +97,22 @@ void BuildOps(OpRcPtrVec & ops,
     else if (ConstFixedFunctionTransformRcPtr fixedFunctionTransform = \
         DynamicPtrCast<const FixedFunctionTransform>(transform))
     {
-        BuildFixedFunctionOp(ops, config, context, *fixedFunctionTransform, dir);
+        BuildFixedFunctionOp(ops, *fixedFunctionTransform, dir);
+    }
+    else if (ConstGradingPrimaryTransformRcPtr gradingPrimaryTransform = \
+        DynamicPtrCast<const GradingPrimaryTransform>(transform))
+    {
+        BuildGradingPrimaryOp(ops, config, context, *gradingPrimaryTransform, dir);
+    }
+    else if (ConstGradingRGBCurveTransformRcPtr gradingCurveTransform = \
+        DynamicPtrCast<const GradingRGBCurveTransform>(transform))
+    {
+        BuildGradingRGBCurveOp(ops, config, context, *gradingCurveTransform, dir);
+    }
+    else if (ConstGradingToneTransformRcPtr gradingToneTransform = \
+        DynamicPtrCast<const GradingToneTransform>(transform))
+    {
+        BuildGradingToneOp(ops, config, context, *gradingToneTransform, dir);
     }
     else if(ConstGroupTransformRcPtr groupTransform = \
         DynamicPtrCast<const GroupTransform>(transform))
@@ -104,17 +122,17 @@ void BuildOps(OpRcPtrVec & ops,
     else if(ConstLogAffineTransformRcPtr logAffineTransform = \
         DynamicPtrCast<const LogAffineTransform>(transform))
     {
-        BuildLogOp(ops, config, *logAffineTransform, dir);
+        BuildLogOp(ops, *logAffineTransform, dir);
     }
     else if(ConstLogCameraTransformRcPtr logCameraTransform = \
         DynamicPtrCast<const LogCameraTransform>(transform))
     {
-        BuildLogOp(ops, config, *logCameraTransform, dir);
+        BuildLogOp(ops, *logCameraTransform, dir);
     }
     else if(ConstLogTransformRcPtr logTransform = \
         DynamicPtrCast<const LogTransform>(transform))
     {
-        BuildLogOp(ops, config, *logTransform, dir);
+        BuildLogOp(ops, *logTransform, dir);
     }
     else if(ConstLookTransformRcPtr lookTransform = \
         DynamicPtrCast<const LookTransform>(transform))
@@ -124,22 +142,22 @@ void BuildOps(OpRcPtrVec & ops,
     else if (ConstLut1DTransformRcPtr lut1dTransform = \
         DynamicPtrCast<const Lut1DTransform>(transform))
     {
-        BuildLut1DOp(ops, config, *lut1dTransform, dir);
+        BuildLut1DOp(ops, *lut1dTransform, dir);
     }
     else if (ConstLut3DTransformRcPtr lut3dTransform = \
         DynamicPtrCast<const Lut3DTransform>(transform))
     {
-        BuildLut3DOp(ops, config, *lut3dTransform, dir);
+        BuildLut3DOp(ops, *lut3dTransform, dir);
     }
     else if(ConstMatrixTransformRcPtr matrixTransform = \
         DynamicPtrCast<const MatrixTransform>(transform))
     {
-        BuildMatrixOp(ops, config, *matrixTransform, dir);
+        BuildMatrixOp(ops, *matrixTransform, dir);
     }
     else if(ConstRangeTransformRcPtr rangeTransform = \
         DynamicPtrCast<const RangeTransform>(transform))
     {
-        BuildRangeOp(ops, config, *rangeTransform, dir);
+        BuildRangeOp(ops, *rangeTransform, dir);
     }
     else
     {
@@ -204,6 +222,21 @@ std::ostream& operator<< (std::ostream & os, const Transform & transform)
         dynamic_cast<const FixedFunctionTransform*>(t))
     {
         os << *fixedFunctionTransform;
+    }
+    else if (const GradingPrimaryTransform * gradingPrimaryTransform = \
+        dynamic_cast<const GradingPrimaryTransform*>(t))
+    {
+        os << *gradingPrimaryTransform;
+    }
+    else if (const GradingRGBCurveTransform * gradingRGBCurveTransform = \
+        dynamic_cast<const GradingRGBCurveTransform*>(t))
+    {
+        os << *gradingRGBCurveTransform;
+    }
+    else if (const GradingToneTransform * gradingToneTransform = \
+        dynamic_cast<const GradingToneTransform*>(t))
+    {
+        os << *gradingToneTransform;
     }
     else if(const GroupTransform * groupTransform = \
         dynamic_cast<const GroupTransform*>(t))
@@ -291,6 +324,18 @@ void CreateTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op)
     else if (DynamicPtrCast<const GammaOpData>(data))
     {
         CreateGammaTransform(group, op);
+    }
+    else if (DynamicPtrCast<const GradingPrimaryOpData>(data))
+    {
+        CreateGradingPrimaryTransform(group, op);
+    }
+    else if (DynamicPtrCast<const GradingRGBCurveOpData>(data))
+    {
+        CreateGradingRGBCurveTransform(group, op);
+    }
+    else if (DynamicPtrCast<const GradingToneOpData>(data))
+    {
+        CreateGradingToneTransform(group, op);
     }
     else if (DynamicPtrCast<const LogOpData>(data))
     {
