@@ -75,3 +75,8 @@
       :module: PyOpenColorIO
       :value: <BitDepth.BIT_DEPTH_UNKNOWN: 0>
 
+
+   .. py:method:: BitDepth.value
+      :module: PyOpenColorIO
+      :property:
+

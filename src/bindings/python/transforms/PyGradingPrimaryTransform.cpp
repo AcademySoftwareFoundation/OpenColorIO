@@ -11,14 +11,11 @@ void bindPyGradingPrimaryTransform(py::module & m)
     GradingPrimaryTransformRcPtr DEFAULT = GradingPrimaryTransform::Create(GRADING_LOG);
 
     auto clsGradingPrimaryTransform = 
-        py::class_<GradingPrimaryTransform,
-                   GradingPrimaryTransformRcPtr /* holder */, 
-                   Transform /* base */>(
-            m, "GradingPrimaryTransform", 
-            DOC(GradingPrimaryTransform))
+        py::class_<GradingPrimaryTransform, GradingPrimaryTransformRcPtr, Transform>(
+            m.attr("GradingPrimaryTransform"))
 
-        .def(py::init([](GradingStyle style,
-                         const GradingPrimary & values,
+        .def(py::init([](const GradingPrimary & values,
+                         GradingStyle style,
                          bool dynamic, 
                          TransformDirection dir) 
             {
@@ -30,8 +27,8 @@ void bindPyGradingPrimaryTransform(py::module & m)
                 p->validate();
                 return p;
             }),
-             "style"_a = DEFAULT->getStyle(),
              "values"_a,
+             "style"_a = DEFAULT->getStyle(),
              "dynamic"_a = DEFAULT->isDynamic(),
              "dir"_a = DEFAULT->getDirection(),
              DOC(GradingPrimaryTransform, Create))

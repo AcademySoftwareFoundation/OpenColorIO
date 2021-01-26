@@ -12,11 +12,13 @@ namespace
 enum GpuShaderDescIterator
 {
     IT_TEXTURE = 0,
-    IT_TEXTURE_3D
+    IT_TEXTURE_3D,
+    IT_UNIFORM
 };
 
-using TextureIterator   = PyIterator<GpuShaderDescRcPtr, IT_TEXTURE>;
-using Texture3DIterator = PyIterator<GpuShaderDescRcPtr, IT_TEXTURE_3D>;
+using TextureIterator         = PyIterator<GpuShaderDescRcPtr, IT_TEXTURE>;
+using Texture3DIterator       = PyIterator<GpuShaderDescRcPtr, IT_TEXTURE_3D>;
+using UniformIterator         = PyIterator<GpuShaderDescRcPtr, IT_UNIFORM>;
 
 struct Texture
 {
@@ -47,9 +49,16 @@ void bindPyGpuShaderDesc(py::module & m)
     GpuShaderDescRcPtr DEFAULT = GpuShaderDesc::CreateShaderDesc();
 
     auto clsGpuShaderDesc = 
-        py::class_<GpuShaderDesc, GpuShaderDescRcPtr /* holder */, GpuShaderCreator /* base */>(
-            m, "GpuShaderDesc", 
-            DOC(GpuShaderDesc));
+        py::class_<GpuShaderDesc, GpuShaderDescRcPtr, GpuShaderCreator>(
+            m.attr("GpuShaderDesc"));
+
+    auto clsUniformData = 
+        py::class_<GpuShaderDesc::UniformData>(
+            clsGpuShaderDesc, "UniformData");
+
+    auto clsUniformIterator = 
+        py::class_<UniformIterator>(
+            clsGpuShaderDesc, "UniformIterator");
 
     auto clsTexture = 
         py::class_<Texture>(
@@ -110,6 +119,15 @@ void bindPyGpuShaderDesc(py::module & m)
                     "resourcePrefix"_a = DEFAULT->getResourcePrefix(),
                     "uid"_a = DEFAULT->getUniqueID(),
                     DOC(GpuShaderDesc, CreateShaderDesc))  
+
+        .def("clone", &GpuShaderDesc::clone, 
+             DOC(GpuShaderDesc, clone))
+        .def("getShaderText", &GpuShaderDesc::getShaderText,
+             DOC(GpuShaderDesc, getShaderText))
+        .def("getUniforms", [](GpuShaderDescRcPtr & self) 
+            {
+                return UniformIterator(self);
+            })
 
         // 1D lut related methods
         .def("addTexture", [](GpuShaderDescRcPtr & self,
@@ -182,6 +200,66 @@ void bindPyGpuShaderDesc(py::module & m)
                 return Texture3DIterator(self);
             });
 
+    clsUniformData
+        .def(py::init<>())
+        .def(py::init<const GpuShaderDesc::UniformData &>(), "data"_a)
+        
+        .def_readwrite("type", &GpuShaderDesc::UniformData::m_type)
+        
+        .def("getDouble", [](GpuShaderDesc::UniformData & self) -> double
+            {
+                return self.m_getDouble();
+            })
+        .def("getBool", [](GpuShaderDesc::UniformData & self) -> bool
+            {
+                return self.m_getBool();
+            })
+        .def("getFloat3", [](GpuShaderDesc::UniformData & self) -> Float3
+            {
+                return self.m_getFloat3();
+            })
+        .def("getVectorFloat", [](GpuShaderDesc::UniformData & self) -> py::array
+            {
+                return py::array(py::dtype("float32"),
+                                 { self.m_vectorFloat.m_getSize() },
+                                 { sizeof(float) }, 
+                                 self.m_vectorFloat.m_getVector());
+            })
+        .def("getVectorInt", [](GpuShaderDesc::UniformData & self) -> py::array
+            {
+                return py::array(py::dtype("intc"),
+                                 { self.m_vectorInt.m_getSize() },
+                                 { sizeof(int) }, 
+                                 self.m_vectorInt.m_getVector());
+            });
+
+    clsUniformIterator
+        .def("__len__", [](UniformIterator & it) 
+            { 
+                return it.m_obj->getNumUniforms(); 
+            })
+        .def("__getitem__", [](UniformIterator & it, int i)
+            { 
+                // GpuShaderDesc provides index check with exception
+                GpuShaderDesc::UniformData data;
+                const char * name = it.m_obj->getUniform(i, data);
+
+                return py::make_tuple(name, data);
+            })
+        .def("__iter__", [](UniformIterator & it) -> UniformIterator & 
+            { 
+                return it; 
+            })
+        .def("__next__", [](UniformIterator & it)
+            {
+                int i = it.nextIndex(it.m_obj->getNumUniforms());
+
+                GpuShaderDesc::UniformData data;
+                const char * name = it.m_obj->getUniform(i, data);
+
+                return py::make_tuple(name, data);
+            });
+
     clsTexture
         .def_readonly("textureName", &Texture::m_textureName)
         .def_readonly("samplerName", &Texture::m_samplerName)
@@ -213,11 +291,15 @@ void bindPyGpuShaderDesc(py::module & m)
             
                 return py::array(py::dtype("float32"),
                                  { self.m_height * self.m_width * numChannels },
-                                 { sizeof(float) }, values);
+                                 { sizeof(float) }, 
+                                 values);
             }, DOC(GpuShaderDesc, getTextureValues));
 
     clsTextureIterator
-        .def("__len__", [](TextureIterator & it) { return it.m_obj->getNumTextures(); })
+        .def("__len__", [](TextureIterator & it) 
+            { 
+                return it.m_obj->getNumTextures(); 
+            })
         .def("__getitem__", [](TextureIterator & it, int i) -> Texture
             { 
                 // GpuShaderDesc provides index check with exception
@@ -232,7 +314,10 @@ void bindPyGpuShaderDesc(py::module & m)
                 return { textureName, samplerName, width, height, channel, interpolation,
                          it.m_obj, i};
             })
-        .def("__iter__", [](TextureIterator & it) -> TextureIterator & { return it; })
+        .def("__iter__", [](TextureIterator & it) -> TextureIterator & 
+            { 
+                return it; 
+            })
         .def("__next__", [](TextureIterator & it) -> Texture
             {
                 int i = it.nextIndex(it.m_obj->getNumTextures());
@@ -265,11 +350,15 @@ void bindPyGpuShaderDesc(py::module & m)
         
                 return py::array(py::dtype("float32"),
                                  { self.m_edgelen * self.m_edgelen * self.m_edgelen * 3 },
-                                 { sizeof(float) }, values);
+                                 { sizeof(float) }, 
+                                 values);
             }, DOC(GpuShaderDesc, get3DTextureValues));
 
     clsTexture3DIterator
-        .def("__len__", [](Texture3DIterator & it) { return it.m_obj->getNum3DTextures(); })
+        .def("__len__", [](Texture3DIterator & it) 
+            { 
+                return it.m_obj->getNum3DTextures(); 
+            })
         .def("__getitem__", [](Texture3DIterator & it, int i) -> Texture3D
             { 
                 // GpuShaderDesc provides index check with exception
@@ -281,7 +370,10 @@ void bindPyGpuShaderDesc(py::module & m)
 
                 return { textureName, samplerName, edgelen, interpolation, it.m_obj, i };
             })
-        .def("__iter__", [](Texture3DIterator & it) -> Texture3DIterator & { return it; })
+        .def("__iter__", [](Texture3DIterator & it) -> Texture3DIterator & 
+            { 
+                return it; 
+            })
         .def("__next__", [](Texture3DIterator & it) -> Texture3D
             {
                 int i = it.nextIndex(it.m_obj->getNum3DTextures());

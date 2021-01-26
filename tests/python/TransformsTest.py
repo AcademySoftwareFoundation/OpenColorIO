@@ -19,10 +19,6 @@ class TransformsTest(unittest.TestCase):
             },
             OCIO.LogCameraTransform: {
                 'linSideBreak': [0.5, 0.5, 0.5]
-            },
-            OCIO.LookTransform: {
-                'src': 'RGB',
-                'dst': 'HSV'
             }
         }
 
