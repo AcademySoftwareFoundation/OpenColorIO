@@ -664,6 +664,8 @@ void bindPyTypes(py::module & m)
                DOC(PyOpenColorIO, UniformDataType, UNIFORM_DOUBLE))
         .value("UNIFORM_BOOL", UNIFORM_BOOL, 
                DOC(PyOpenColorIO, UniformDataType, UNIFORM_BOOL))
+        .value("UNIFORM_FLOAT3", UNIFORM_FLOAT3, 
+               DOC(PyOpenColorIO, UniformDataType, UNIFORM_FLOAT3))
         .value("UNIFORM_VECTOR_FLOAT", UNIFORM_VECTOR_FLOAT, 
                DOC(PyOpenColorIO, UniformDataType, UNIFORM_VECTOR_FLOAT))
         .value("UNIFORM_VECTOR_INT", UNIFORM_VECTOR_INT, 
