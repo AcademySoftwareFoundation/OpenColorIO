@@ -77,7 +77,7 @@ void bindPyViewingRules(py::module & m)
         .def("removeRule", &ViewingRules::removeRule, "ruleIndex"_a,
              DOC(ViewingRules, removeRule));
 
-    defStr(clsViewingRules);
+    defRepr(clsViewingRules);
 
     clsViewingRuleColorSpaceIterator
         .def("__len__", [](ViewingRuleColorSpaceIterator & it) 

@@ -13,10 +13,6 @@
       :module: PyOpenColorIO
 
 
-   .. py:method:: MixingColorSpaceManager.__str__(self: PyOpenColorIO.MixingColorSpaceManager) -> str
-      :module: PyOpenColorIO
-
-
    .. py:method:: MixingColorSpaceManager.getMixingEncodings(self: PyOpenColorIO.MixingColorSpaceManager) -> OpenColorIO_v2_0rc1::PyIterator<std::shared_ptr<OpenColorIO_v2_0rc1::MixingColorSpaceManager>,1>
       :module: PyOpenColorIO
 

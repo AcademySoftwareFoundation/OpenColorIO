@@ -11,7 +11,7 @@ namespace OCIO = OCIO_NAMESPACE;
 
 OCIO_ADD_TEST(FixedFunctionOpData, aces_red_mod_style)
 {
-    OCIO::FixedFunctionOpData func;
+    OCIO::FixedFunctionOpData func{ OCIO::FixedFunctionOpData::ACES_RED_MOD_03_FWD };
     OCIO_CHECK_EQUAL(func.getStyle(), OCIO::FixedFunctionOpData::ACES_RED_MOD_03_FWD);
     OCIO_CHECK_EQUAL(func.getParams().size(), 0);
     OCIO_CHECK_NO_THROW(func.validate());
@@ -42,8 +42,8 @@ OCIO_ADD_TEST(FixedFunctionOpData, aces_red_mod_style)
 
 OCIO_ADD_TEST(FixedFunctionOpData, aces_dark_to_dim10_style)
 {
-    OCIO::FixedFunctionOpData func(OCIO::FixedFunctionOpData::Params(), 
-                                   OCIO::FixedFunctionOpData::ACES_DARK_TO_DIM_10_FWD);
+    OCIO::FixedFunctionOpData func(OCIO::FixedFunctionOpData::ACES_DARK_TO_DIM_10_FWD,
+                                   OCIO::FixedFunctionOpData::Params());
 
     OCIO_CHECK_EQUAL(func.getStyle(), OCIO::FixedFunctionOpData::ACES_DARK_TO_DIM_10_FWD);
     OCIO_CHECK_EQUAL(func.getParams().size(), 0);
@@ -69,7 +69,7 @@ OCIO_ADD_TEST(FixedFunctionOpData, aces_dark_to_dim10_style)
 OCIO_ADD_TEST(FixedFunctionOpData, rec2100_surround_style)
 {
     OCIO::FixedFunctionOpData::Params params = { 2.0 };
-    OCIO::FixedFunctionOpData func(params, OCIO::FixedFunctionOpData::REC2100_SURROUND_FWD);
+    OCIO::FixedFunctionOpData func(OCIO::FixedFunctionOpData::REC2100_SURROUND_FWD, params);
     OCIO_CHECK_NO_THROW(func.validate());
     std::string cacheID;
     OCIO_CHECK_NO_THROW(cacheID = func.getCacheID());
@@ -120,12 +120,12 @@ OCIO_ADD_TEST(FixedFunctionOpData, is_inverse)
 {
     OCIO::FixedFunctionOpData::Params params = { 2.0 };
     auto f_s = std::make_shared<const OCIO::FixedFunctionOpData>(
-        params, OCIO::FixedFunctionOpData::REC2100_SURROUND_FWD);
+        OCIO::FixedFunctionOpData::REC2100_SURROUND_FWD, params);
     OCIO::FixedFunctionOpData::Params params_inv = { 0.5 };
     auto f_s_inv1 = std::make_shared<const OCIO::FixedFunctionOpData>(
-        params_inv, OCIO::FixedFunctionOpData::REC2100_SURROUND_FWD);
+        OCIO::FixedFunctionOpData::REC2100_SURROUND_FWD, params_inv);
     auto f_s_inv2 = std::make_shared<const OCIO::FixedFunctionOpData>(
-        params, OCIO::FixedFunctionOpData::REC2100_SURROUND_INV);
+        OCIO::FixedFunctionOpData::REC2100_SURROUND_INV, params);
 
     OCIO_CHECK_ASSERT(f_s->isInverse(f_s_inv1));
     OCIO_CHECK_ASSERT(f_s->isInverse(f_s_inv2));
@@ -137,9 +137,9 @@ OCIO_ADD_TEST(FixedFunctionOpData, is_inverse)
 
     OCIO::FixedFunctionOpData::Params p0 = {};
     auto f_g = std::make_shared<const OCIO::FixedFunctionOpData>(
-        p0, OCIO::FixedFunctionOpData::ACES_GLOW_03_FWD);
+        OCIO::FixedFunctionOpData::ACES_GLOW_03_FWD, p0);
     auto f_g_inv = std::make_shared<const OCIO::FixedFunctionOpData>(
-        p0, OCIO::FixedFunctionOpData::ACES_GLOW_03_INV);
+        OCIO::FixedFunctionOpData::ACES_GLOW_03_INV, p0);
     OCIO_CHECK_ASSERT(f_g->isInverse(f_g_inv));
     OCIO_CHECK_ASSERT(f_g_inv->isInverse(f_g));
     OCIO_CHECK_ASSERT(!f_g->isInverse(f_g));
@@ -147,9 +147,9 @@ OCIO_ADD_TEST(FixedFunctionOpData, is_inverse)
     OCIO_CHECK_ASSERT(!f_g->isInverse(f_s));
 
     auto f_r = std::make_shared<const OCIO::FixedFunctionOpData>(
-        p0, OCIO::FixedFunctionOpData::ACES_RED_MOD_03_FWD);
+        OCIO::FixedFunctionOpData::ACES_RED_MOD_03_FWD, p0);
     auto f_r_inv = std::make_shared<const OCIO::FixedFunctionOpData>(
-        p0, OCIO::FixedFunctionOpData::ACES_RED_MOD_03_INV);
+        OCIO::FixedFunctionOpData::ACES_RED_MOD_03_INV, p0);
     OCIO_CHECK_ASSERT(f_r->isInverse(f_r_inv));
     OCIO_CHECK_ASSERT(f_r_inv->isInverse(f_r));
     OCIO_CHECK_ASSERT(!f_r->isInverse(f_r));

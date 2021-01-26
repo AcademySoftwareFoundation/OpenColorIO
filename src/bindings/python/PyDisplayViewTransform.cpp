@@ -65,7 +65,7 @@ void bindPyDisplayViewTransform(py::module & m)
         .def("setDataBypass", &DisplayViewTransform::setDataBypass, "dataBypass"_a, 
              DOC(DisplayViewTransform, setDataBypass));
 
-    defStr(clsDisplayViewTransform);
+    defRepr(clsDisplayViewTransform);
 }
 
 } // namespace OCIO_NAMESPACE

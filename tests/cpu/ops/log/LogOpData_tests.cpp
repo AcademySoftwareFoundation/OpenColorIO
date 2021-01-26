@@ -174,10 +174,10 @@ OCIO_ADD_TEST(LogOpData, validation_fails_test)
     linSlope[0] = linSlope[1] = linSlope[2] = 0.0;
 
     OCIO::LogOpData logOp2(base, logSlope, logOffset, linSlope, linOffset, direction);
-    OCIO_CHECK_THROW_WHAT(logOp2.validate(), OCIO::Exception, "linear slope cannot be 0");
+    OCIO_CHECK_THROW_WHAT(logOp2.validate(), OCIO::Exception, "linear side slope cannot be 0");
     direction = OCIO::TRANSFORM_DIR_INVERSE;
     OCIO::LogOpData invlogOp2(base, logSlope, logOffset, linSlope, linOffset, direction);
-    OCIO_CHECK_THROW_WHAT(invlogOp2.validate(), OCIO::Exception, "linear slope cannot be 0");
+    OCIO_CHECK_THROW_WHAT(invlogOp2.validate(), OCIO::Exception, "linear side slope cannot be 0");
 
     linSlope[0] = linSlope[1] = linSlope[2] = 1.0;
 
@@ -186,10 +186,10 @@ OCIO_ADD_TEST(LogOpData, validation_fails_test)
     logSlope[0] = logSlope[1] = logSlope[2] = 0.0;
 
     OCIO::LogOpData logOp3(base, logSlope, logOffset, linSlope, linOffset, direction);
-    OCIO_CHECK_THROW_WHAT(logOp3.validate(), OCIO::Exception, "log slope cannot be 0");
+    OCIO_CHECK_THROW_WHAT(logOp3.validate(), OCIO::Exception, "log side slope cannot be 0");
     direction = OCIO::TRANSFORM_DIR_INVERSE;
     OCIO::LogOpData invlogOp3(base, logSlope, logOffset, linSlope, linOffset, direction);
-    OCIO_CHECK_THROW_WHAT(invlogOp3.validate(), OCIO::Exception, "log slope cannot be 0");
+    OCIO_CHECK_THROW_WHAT(invlogOp3.validate(), OCIO::Exception, "log side slope cannot be 0");
 }
 
 OCIO_ADD_TEST(LogOpData, log_inverse)

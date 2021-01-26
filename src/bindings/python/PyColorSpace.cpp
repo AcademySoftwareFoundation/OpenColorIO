@@ -236,7 +236,7 @@ void bindPyColorSpace(py::module & m)
         .def("setTransform", &ColorSpace::setTransform, "transform"_a, "direction"_a, 
              DOC(ColorSpace, setTransform));
 
-    defStr(clsColorSpace);
+    defRepr(clsColorSpace);
 
     clsColorSpaceCategoryIterator
         .def("__len__", [](ColorSpaceCategoryIterator & it) 

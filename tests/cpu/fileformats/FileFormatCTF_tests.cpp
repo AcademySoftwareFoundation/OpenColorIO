@@ -4895,13 +4895,12 @@ OCIO_ADD_TEST(CTFTransform, save_log_affine)
 
 OCIO_ADD_TEST(CTFTransform, save_log_camera)
 {
-    OCIO::LogCameraTransformRcPtr logT = OCIO::LogCameraTransform::Create();
+    const double vals_break[] = { 0.4, 0.5, 0.6 };
+    OCIO::LogCameraTransformRcPtr logT = OCIO::LogCameraTransform::Create(vals_break);
     const double base = 8.0;
     logT->setBase(base);
     const double vals[] = { 0.9, 1.1, 1.2 };
     logT->setLinSideSlopeValue(vals);
-    const double vals_break[] = { 0.4, 0.5, 0.6 };
-    logT->setLinSideBreakValue(vals_break);
     const double vals_ls[] = { 1.2, 1.3, 1.4 };
     logT->setLinearSlopeValue(vals_ls);
 
@@ -6233,10 +6232,9 @@ OCIO_ADD_TEST(CTFTransform, gamma6_ctf)
 
 OCIO_ADD_TEST(CTFTransform, fixed_function_rec2100_ctf)
 {
-    OCIO::FixedFunctionTransformRcPtr ff = OCIO::FixedFunctionTransform::Create();
-    ff->setStyle(OCIO::FIXED_FUNCTION_REC2100_SURROUND);
     const double val = 0.5;
-    ff->setParams(&val, 1);
+    OCIO::FixedFunctionTransformRcPtr ff =
+        OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_REC2100_SURROUND, &val, 1);
 
     OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
     group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UIDFF42");
@@ -6258,11 +6256,10 @@ OCIO_ADD_TEST(CTFTransform, fixed_function_rec2100_ctf)
 
 OCIO_ADD_TEST(CTFTransform, fixed_function_rec2100_inverse_ctf)
 {
-    OCIO::FixedFunctionTransformRcPtr ff = OCIO::FixedFunctionTransform::Create();
-    ff->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
-    ff->setStyle(OCIO::FIXED_FUNCTION_REC2100_SURROUND);
     const double val = 0.5;
-    ff->setParams(&val, 1);
+    OCIO::FixedFunctionTransformRcPtr ff =
+        OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_REC2100_SURROUND, &val, 1);
+    ff->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
 
     OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
     group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UIDFF42");
