@@ -389,6 +389,7 @@ public:
 
             m_env = rhs.m_env;
             m_context = rhs.m_context->createEditableCopy();
+            m_name = rhs.m_name;
             m_familySeparator = rhs.m_familySeparator;
             m_description = rhs.m_description;
 
