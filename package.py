@@ -1,5 +1,5 @@
 name = "OpenColorIO"
-version = "2.0.0rc2.0"
+version = "2.0.0.0",
 description = """
 OpenColorIO -- it's open, it's color, and it's io af
 """
@@ -22,41 +22,27 @@ def variants():
     from rez.package_py_utils import expand_requires
     requires = ["platform-**", "arch-**", "os-**"]
     pys = [
-        #'python-2.7.**',
         'python-3.7.**',
-        #'python-2.7.**',
+        'python-3.8.**',
+        'python-2.7.**',
     ]
-    #nukes = [
-    #'numpy',
-    #]
-    #boosts = [
-    #'boost-1.70.0',  # Not used by OCIO, but provided to constrain resolve (i.e., for OpenImageIO)
-    #'boost-1.73.0',
-    #]
-    openexrs = [
-        #'openexr-2.**',
-        'numpy',
-        #'openexr-2.4.**',
+    ephemerals = [
+        #'.shared',
+        '.static',
     ]
     return [
-        expand_requires(*requires + [exr, py]) for exr in openexrs
-        for py in pys
+        expand_requires(*requires + [e, py]) for e in ephemerals for py in pys
     ]
 
 
 hashed_variants = True
 
-requires = [
-    'numpy',
-    #'~openexr-2.3+',
-    '~nuke-11|12',
-    #'~OpenImageIO-2.1',
-    #'yamlcpp-0.6.3+<1',
-    #'pystring-1.1.3+<2',
-]
+requires = []
 
 private_build_requires = [
+    #"gcc-4",
     "gcc-4",
+    "ninja",
     #"llvm-8",
     "cmake-3.12+",
     #"GLEW-2.1.0",
@@ -78,33 +64,33 @@ private_build_requires = [
     #'yamlcpp-0.6.3+<1',
     #'pystring-1.1.3+',
     #'libexpat-2.2.5+',
-    "OpenImageIO-2.1.12.0",  # shared
-    #'openimageio-2',  #.12.0',
+    #"OpenImageIO-2.1.12.0",  # shared
 ]
 
 
 def pre_build_commands():
     # options
-    env.LDFLAGS = '-Wl,-rpath,{build.install_path}/lib $LDFLAGS'
-    env.CXXFLAGS = '$CXXFLAGS -Wno-deprecated-declarations -fPIC'
+    env.LDFLAGS = '-Wl,-rpath,{build.install_path}/lib $LDFLAGS -stdlib=libc++'
+    env.CXXFLAGS = '$CXXFLAGS -Wno-deprecated-declarations -Wno-unused-variable -fPIC'
 
     env.OpenImageIO_ROOT = '$REZ_OPENIMAGEIO_ROOT'
     env.Python_ROOT = resolve.python.root if 'python' in resolve else ''
     env.pystring_ROOT = resolve.pystring.root if 'pystring' in resolve else ''
     env.Pybind11_ROOT = resolve.pybind11.root if 'pybind11' in resolve else ''
-    env.Half_ROOT = resolve.openexr.root if 'openexr' in resolve else ''
+    env.Half_ROOT = resolve.openexr.root if 'openexr' in resolve else resolve.half.root if 'half' in resolve else ''
     env.Expat_ROOT = resolve.libexpat.root if 'libexpat' in resolve else ''
 
     env.REZ_BUILD_CMAKE_ARGS = ' '.join([
-        '-DBUILD_SHARED_LIBS=OFF',
-        '-DOCIO_BUILD_APPS=ON',
+        '-DBUILD_SHARED_LIBS=%s' % ('ON' if '.shared' in resolve else 'OFF'),
+        '-DOCIO_BUILD_APPS=OFF',
+        '-DOCIO_BUILD_OPENFX=OFF',
         '-DOCIO_BUILD_NUKE=OFF',
-        '-DOCIO_BUILD_DOCS=ON',
+        '-DOCIO_BUILD_DOCS=OFF',
         '-DOCIO_BUILD_TESTS=OFF',
         '-DOCIO_BUILD_GPU_TESTS=OFF',
-        '-DOCIO_USE_HEADLESS=ON',
-        '-DOCIO_BUILD_PYTHON=ON',
+        '-DOCIO_BUILD_PYTHON=%s' % ('ON' if 'python' in resolve else 'OFF'),
         '-DOCIO_BUILD_JAVA=OFF',
+        #'-DOCIO_USE_HEADLESS=ON',
         #'-DOCIO_NAMESPACE=OpenColorIO',
         #'-DOCIO_LIBNAME_SUFFIX=""',
         '-DCMAKE_INSTALL_PREFIX={build.install_path}',
@@ -119,8 +105,8 @@ def pre_build_commands():
 
 
 build_command_local = """
-cmake -d {root} $REZ_BUILD_CMAKE_ARGS
-make {install} -j$REZ_BUILD_THREAD_COUNT -Wno-unused-variable
+cmake -G Ninja -d {root} $REZ_BUILD_CMAKE_ARGS
+ninja {install}
 """
 
 build_command = """
@@ -139,6 +125,11 @@ build_command = build_command_local
 
 def commands():
     env.PATH.prepend("{root}/bin")
+    # if 'shared' in str(this.version):
+    #     if 'osx' in str(resolve.platform.version):
+    #         env.DYLD_LIBRARY_PATH.append('{root}/lib')
+    #     else:
+    #         env.LD_LIBRARY_PATH.append('{root}/lib')
 
     if 'python' in resolve:
         python_version = "{resolve.python.version.major}.{resolve.python.version.minor}"
@@ -151,10 +142,12 @@ def commands():
             '{root}/share/nuke:{root}/lib/nuke/{nuke_version}')
 
     if building:
-        env.CFLAGS.set("-I{root}/include -$CFLAGS")
-        env.CPPFLAGS.set("-I{root}/include $CPPFLAGS")
-        env.CXXFLAGS.set("-I{root}/include $CXXFLAGS")
-        env.LDFLAGS.set("-L{root}/lib -Wl,-rpath,{root}/lib $LDFLAGS")
+        env.CFLAGS.set("-I{root}/include -I{root}/include/OpenColorIO $CFLAGS")
+        env.CPPFLAGS.set(
+            "-I{root}/include -I{root}/include/OpenColorIO $CPPFLAGS")
+        env.CXXFLAGS.set(
+            "-I{root}/include -I{root}/include/OpenColorIO $CXXFLAGS")
+        env.LDFLAGS.set("-L{root}/lib -Wl,{root}/lib $LDFLAGS")
 
         env.CMAKE_INCLUDE_PATH.prepend("{root}/include")
         env.CMAKE_LIBRARY_PATH.prepend("{root}/lib")
