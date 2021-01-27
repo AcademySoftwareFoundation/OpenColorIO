@@ -7823,6 +7823,13 @@ colorspaces:
 
     cfg->setDescription("single line description");
     cfg->setName("Test config name");
+
+    // Verify name is copied.
+    {
+        auto cfg2 = cfg->createEditableCopy();
+        OCIO_CHECK_EQUAL(std::string(cfg2->getName()), "Test config name");
+    }
+
     cfg->serialize(oss);
     static constexpr char CONFIG_DESC_SINGLELINE[]{ R"(ocio_profile_version: 2
 
