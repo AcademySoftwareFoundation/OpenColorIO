@@ -15,9 +15,8 @@ namespace OCIO_NAMESPACE
 void bindPyCPUProcessor(py::module & m)
 {
     auto clsCPUProcessor = 
-        py::class_<CPUProcessor, CPUProcessorRcPtr /* holder */>(
-            m, "CPUProcessor", 
-            DOC(CPUProcessor))
+        py::class_<CPUProcessor, CPUProcessorRcPtr>(
+            m.attr("CPUProcessor"))
 
         .def("isNoOp", &CPUProcessor::isNoOp, 
              DOC(CPUProcessor, isNoOp))

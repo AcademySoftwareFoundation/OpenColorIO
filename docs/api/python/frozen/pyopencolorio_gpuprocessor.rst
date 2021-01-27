@@ -13,18 +13,10 @@
       Initialize self.  See help(type(self)) for accurate signature.
 
 
-   .. py:method:: GPUProcessor.extractGpuShaderInfo(*args, **kwargs)
+   .. py:method:: GPUProcessor.extractGpuShaderInfo(self: PyOpenColorIO.GPUProcessor, shaderDesc: PyOpenColorIO.GpuShaderDesc) -> None
       :module: PyOpenColorIO
 
-      Overloaded function.
-
-      1. extractGpuShaderInfo(self: PyOpenColorIO.GPUProcessor, shaderDesc: OpenColorIO_v2_0rc1::GpuShaderDesc) -> None
-
       Extract & Store the shader information to implement the color processing.
-
-      2. extractGpuShaderInfo(self: PyOpenColorIO.GPUProcessor, shaderCreator: OpenColorIO_v2_0rc1::GpuShaderCreator) -> None
-
-      Extract the shader information using a custom :ref:`GpuShaderCreator` class.
 
 
    .. py:method:: GPUProcessor.getCacheID(self: PyOpenColorIO.GPUProcessor) -> str

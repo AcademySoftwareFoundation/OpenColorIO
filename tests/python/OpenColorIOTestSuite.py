@@ -41,19 +41,23 @@ sys.path.insert(0, pyopencolorio_dir)
 import PyOpenColorIO as OCIO
 
 import AllocationTransformTest
+import BakerTest
 import BuiltinTransformRegistryTest
 import BuiltinTransformTest
 import CDLTransformTest
-import CPUProcessorTest
 import ColorSpaceHelpersTest
 import ColorSpaceTest
 import ColorSpaceTransformTest
 import ConfigTest
+import ConstantsTest
+import ContextTest
+import CPUProcessorTest
 import DisplayViewHelpersTest
 import DisplayViewTransformTest
 import ExponentTransformTest
 import ExponentWithLinearTransformTest
 import ExposureContrastTransformTest
+import FileRulesTest
 import FileTransformTest
 import FixedFunctionTransformTest
 import FormatMetadataTest
@@ -64,19 +68,19 @@ import GradingRGBCurveTransformTest
 import GradingToneTransformTest
 import GroupTransformTest
 import LegacyViewingPipelineTest
+import LogCameraTransformTest
 import LogTransformTest
 import LookTest
+import LookTransformTest
+import Lut1DTransformTest
+import MatrixTransformTest
 import MixingHelpersTest
 import NamedTransformTest
 import OpenColorIOTest
+import ProcessorTest
+import RangeTransformTest
+import TransformsTest
 import ViewingRulesTest
-#from MainTest import *
-#from ConstantsTest import *
-#from ConfigTest import *
-#from ContextTest import *
-#from Baker import *
-#from TransformsTest import *
-#from RangeTransformTest import *
 
 def suite():
     """Load unittest.TestCase objects from *Test.py files within ./tests/Python
@@ -90,20 +94,24 @@ def suite():
     loader = unittest.TestLoader()
 
     suite.addTest(loader.loadTestsFromModule(AllocationTransformTest))
+    suite.addTest(loader.loadTestsFromModule(BakerTest))
     suite.addTest(loader.loadTestsFromModule(BuiltinTransformRegistryTest))
     suite.addTest(loader.loadTestsFromModule(BuiltinTransformTest))
     suite.addTest(loader.loadTestsFromModule(CDLTransformTest))
-    suite.addTest(loader.loadTestsFromModule(CPUProcessorTest))
     suite.addTest(loader.loadTestsFromModule(ColorSpaceHelpersTest))
     suite.addTest(loader.loadTestsFromModule(ColorSpaceTest))
     suite.addTest(loader.loadTestsFromModule(ColorSpaceTransformTest))
     suite.addTest(loader.loadTestsFromModule(ConfigTest))
+    suite.addTest(loader.loadTestsFromModule(ConstantsTest))
+    suite.addTest(loader.loadTestsFromModule(ContextTest))
+    suite.addTest(loader.loadTestsFromModule(CPUProcessorTest))
     suite.addTest(loader.loadTestsFromModule(DisplayViewHelpersTest))
     suite.addTest(loader.loadTestsFromModule(DisplayViewTransformTest))
     suite.addTest(loader.loadTestsFromModule(ExponentTransformTest))
     suite.addTest(loader.loadTestsFromModule(ExponentWithLinearTransformTest))
     suite.addTest(loader.loadTestsFromModule(ExposureContrastTransformTest))
     suite.addTest(loader.loadTestsFromModule(FileTransformTest))
+    suite.addTest(loader.loadTestsFromModule(FileRulesTest))
     suite.addTest(loader.loadTestsFromModule(FixedFunctionTransformTest))
     suite.addTest(loader.loadTestsFromModule(FormatMetadataTest))
     suite.addTest(loader.loadTestsFromModule(GpuShaderDescTest))
@@ -113,27 +121,19 @@ def suite():
     suite.addTest(loader.loadTestsFromModule(GradingToneTransformTest))
     suite.addTest(loader.loadTestsFromModule(GroupTransformTest))
     suite.addTest(loader.loadTestsFromModule(LegacyViewingPipelineTest))
+    suite.addTest(loader.loadTestsFromModule(LogCameraTransformTest))
     suite.addTest(loader.loadTestsFromModule(LogTransformTest))
     suite.addTest(loader.loadTestsFromModule(LookTest))
+    suite.addTest(loader.loadTestsFromModule(LookTransformTest))
+    suite.addTest(loader.loadTestsFromModule(Lut1DTransformTest))
+    suite.addTest(loader.loadTestsFromModule(MatrixTransformTest))
     suite.addTest(loader.loadTestsFromModule(MixingHelpersTest))
     suite.addTest(loader.loadTestsFromModule(NamedTransformTest))
     suite.addTest(loader.loadTestsFromModule(OpenColorIOTest))
+    suite.addTest(loader.loadTestsFromModule(ProcessorTest))
+    suite.addTest(loader.loadTestsFromModule(RangeTransformTest))
+    suite.addTest(loader.loadTestsFromModule(TransformsTest))
     suite.addTest(loader.loadTestsFromModule(ViewingRulesTest))
-    #suite.addTest(MainTest("test_interface"))
-    #suite.addTest(ConstantsTest("test_interface"))
-    #suite.addTest(ConfigTest("test_interface"))
-    #suite.addTest(ConfigTest("test_is_editable"))
-    #suite.addTest(ContextTest("test_interface"))
-    #suite.addTest(RangeTransformTest("test_interface"))
-    #suite.addTest(RangeTransformTest("test_equality"))
-    #suite.addTest(RangeTransformTest("test_validation"))
-    #suite.addTest(TransformsTest("test_interface"))
-
-    # Processor
-    # ProcessorMetadata
-    #suite.addTest(BakerTest("test_interface", opencolorio_sse))
-    # PackedImageDesc
-    # PlanarImageDesc
 
     return suite
 

@@ -51,6 +51,16 @@ static const Chromaticities wht_xy(0.3127, 0.3290);
 const Primaries primaries(red_xy, grn_xy, blu_xy, wht_xy);
 }
 
+namespace REC2020
+{
+static const Chromaticities red_xy(0.708,  0.292 );
+static const Chromaticities grn_xy(0.170,  0.797 );
+static const Chromaticities blu_xy(0.131,  0.046 );
+static const Chromaticities wht_xy(0.3127, 0.3290);
+
+const Primaries primaries(red_xy, grn_xy, blu_xy, wht_xy);
+}
+
 namespace P3_DCI
 {
 static const Chromaticities red_xy(0.680, 0.320);
@@ -71,6 +81,22 @@ static const Chromaticities wht_xy(0.3127, 0.3290);
 const Primaries primaries(red_xy, grn_xy, blu_xy, wht_xy);
 }
 
+namespace P3_D60
+{
+static const Chromaticities red_xy(0.680,  0.320 );
+static const Chromaticities grn_xy(0.265,  0.690 );
+static const Chromaticities blu_xy(0.150,  0.060 );
+static const Chromaticities wht_xy(0.32168, 0.33767);
+
+const Primaries primaries(red_xy, grn_xy, blu_xy, wht_xy);
+}
+
+namespace WHITEPOINT
+{
+const MatrixOpData::Offsets D60_XYZ(0.95264607456985, 1., 1.00882518435159, 0.);
+const MatrixOpData::Offsets D65_XYZ(0.95045592705167, 1., 1.08905775075988, 0.);
+const MatrixOpData::Offsets DCI_XYZ(0.89458689458689, 1., 0.95441595441595, 0.);
+}
 
 // Here are some notes on how one derives the color space conversion
 // matrix starting with chromaticity coordinates.
@@ -250,7 +276,7 @@ MatrixOpData::MatrixArrayPtr build_conversion_matrix(const Primaries & src_prims
             return dst_xyz2rgb->inner(src_rgb2xyz);
         }
     }
-    else if ( method == ADAPTATION_NONE )
+    if ( method == ADAPTATION_NONE )
     {
         return dst_xyz2rgb->inner(src_rgb2xyz);
     }
@@ -285,8 +311,22 @@ MatrixOpData::MatrixArrayPtr build_conversion_matrix(const Primaries & src_prims
                                                      const Primaries & dst_prims,
                                                      AdaptationMethod method)
 {
-    static const MatrixOpData::Offsets null(0., 0., 0., 0.);
-    return build_conversion_matrix( src_prims, dst_prims, null, null, method );
+    static const MatrixOpData::Offsets zero(0., 0., 0., 0.);
+    return build_conversion_matrix( src_prims, dst_prims, zero, zero, method );
+}
+
+MatrixOpData::MatrixArrayPtr build_conversion_matrix_to_XYZ_D65(const Primaries & src_prims,
+                                                                AdaptationMethod method)
+{
+    static const MatrixOpData::Offsets zero(0., 0., 0., 0.);
+    return build_conversion_matrix( src_prims, CIE_XYZ_ILLUM_E::primaries, zero, WHITEPOINT::D65_XYZ, method );
+}
+
+MatrixOpData::MatrixArrayPtr build_conversion_matrix_from_XYZ_D65(const Primaries & dst_prims,
+                                                                  AdaptationMethod method)
+{
+    static const MatrixOpData::Offsets zero(0., 0., 0., 0.);
+    return build_conversion_matrix( CIE_XYZ_ILLUM_E::primaries, dst_prims, WHITEPOINT::D65_XYZ, zero, method );
 }
 
 } // namespace OCIO_NAMESPACE

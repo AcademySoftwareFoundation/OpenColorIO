@@ -1190,7 +1190,7 @@ BitDepth CTFReaderOpElt::GetBitDepth(const std::string & strBD)
 
 CTFReaderACESElt::CTFReaderACESElt()
     : CTFReaderOpElt()
-    , m_fixedFunction(std::make_shared<FixedFunctionOpData>())
+    , m_fixedFunction(std::make_shared<FixedFunctionOpData>(FixedFunctionOpData::ACES_RED_MOD_03_FWD))
 {
 }
 
@@ -1416,7 +1416,7 @@ const CDLOpDataRcPtr & CTFReaderSOPNodeElt::getCDL() const
 
 CTFReaderFixedFunctionElt::CTFReaderFixedFunctionElt()
     : CTFReaderOpElt()
-    , m_fixedFunction(std::make_shared<FixedFunctionOpData>())
+    , m_fixedFunction(std::make_shared<FixedFunctionOpData>(FixedFunctionOpData::ACES_RED_MOD_03_FWD))
 {
 }
 
@@ -1495,7 +1495,7 @@ const OpDataRcPtr CTFReaderFixedFunctionElt::getOp() const
 
 CTFReaderFunctionElt::CTFReaderFunctionElt()
     : CTFReaderOpElt()
-    , m_fixedFunction(std::make_shared<FixedFunctionOpData>())
+    , m_fixedFunction(std::make_shared<FixedFunctionOpData>(FixedFunctionOpData::ACES_RED_MOD_03_FWD))
 {
 }
 

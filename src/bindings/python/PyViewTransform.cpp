@@ -34,9 +34,8 @@ void bindPyViewTransform(py::module & m)
     ViewTransformRcPtr DEFAULT = ViewTransform::Create(REFERENCE_SPACE_SCENE);
 
     auto clsViewTransform = 
-        py::class_<ViewTransform, ViewTransformRcPtr /* holder */>(
-            m, "ViewTransform", 
-            DOC(ViewTransform));
+        py::class_<ViewTransform, ViewTransformRcPtr>(
+            m.attr("ViewTransform"));
 
     auto clsViewTransformCategoryIterator = 
         py::class_<ViewTransformCategoryIterator>(
@@ -119,7 +118,7 @@ void bindPyViewTransform(py::module & m)
         .def("setTransform", &ViewTransform::setTransform, "transform"_a, "direction"_a,
              DOC(ViewTransform, setTransform));
 
-    defStr(clsViewTransform);
+    defRepr(clsViewTransform);
 
     clsViewTransformCategoryIterator
         .def("__len__", [](ViewTransformCategoryIterator & it) 

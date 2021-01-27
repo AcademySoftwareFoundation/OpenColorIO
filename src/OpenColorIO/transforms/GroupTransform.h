@@ -53,7 +53,6 @@ public:
     void prependTransform(TransformRcPtr transform) noexcept override;
 
     void write(const ConstConfigRcPtr & config,
-               const ConstContextRcPtr & context,
                const char * formatName,
                std::ostream & os) const override;
 

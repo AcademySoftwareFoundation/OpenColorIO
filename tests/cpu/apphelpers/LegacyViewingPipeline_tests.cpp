@@ -80,7 +80,8 @@ OCIO_ADD_TEST(LegacyViewingPipeline, basic)
 
     auto cs = OCIO::ColorSpace::Create();
     cs->setName("colorspace1");
-    cs->setTransform(OCIO::FixedFunctionTransform::Create(), OCIO::COLORSPACE_DIR_FROM_REFERENCE);
+    cs->setTransform(OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_ACES_RED_MOD_03),
+                     OCIO::COLORSPACE_DIR_FROM_REFERENCE);
     config->addColorSpace(cs);
 
     config->addDisplayView("sRGB", "view1", "colorspace1", "");
@@ -90,7 +91,7 @@ OCIO_ADD_TEST(LegacyViewingPipeline, basic)
     OCIO_CHECK_ASSERT(proc);
 
     OCIO::TransformRcPtr empty;
-    auto ff = OCIO::FixedFunctionTransform::Create();
+    auto ff = OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_ACES_RED_MOD_03);
     vp->setChannelView(ff);
     cv = vp->getChannelView();
     OCIO_CHECK_ASSERT(cv);
@@ -170,7 +171,7 @@ OCIO_ADD_TEST(LegacyViewingPipeline, processorWithLooks)
     mat->setMatrix(m);
     vp->setChannelView(mat);
 
-    auto ff = OCIO::FixedFunctionTransform::Create();
+    auto ff = OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_ACES_RED_MOD_03);
     vp->setLinearCC(ff);
 
     // Processor in forward direction.
@@ -493,29 +494,24 @@ OCIO_ADD_TEST(LegacyViewingPipeline, fullPipelineNoLook)
 
     auto cs = OCIO::ColorSpace::Create();
     cs->setName(dst.c_str());
-    auto ff = OCIO::FixedFunctionTransform::Create();
-    ff->setStyle(OCIO::FIXED_FUNCTION_ACES_GLOW_03);
+    auto ff = OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_ACES_GLOW_03);
     cs->setTransform(ff, OCIO::COLORSPACE_DIR_FROM_REFERENCE);
     cfg->addColorSpace(cs);
 
     cs = OCIO::ColorSpace::Create();
     cs->setName(linearCS.c_str());
-    ff = OCIO::FixedFunctionTransform::Create();
-    ff->setStyle(OCIO::FIXED_FUNCTION_ACES_GLOW_10);
+    ff = OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_ACES_GLOW_10);
     cs->setTransform(ff, OCIO::COLORSPACE_DIR_FROM_REFERENCE);
-    ff = OCIO::FixedFunctionTransform::Create();
-    ff->setStyle(OCIO::FIXED_FUNCTION_ACES_RED_MOD_10);
+    ff = OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_ACES_RED_MOD_10);
     cs->setTransform(ff, OCIO::COLORSPACE_DIR_TO_REFERENCE);
     cfg->addColorSpace(cs);
     cfg->setRole(OCIO::ROLE_SCENE_LINEAR, linearCS.c_str());
 
     cs = OCIO::ColorSpace::Create();
     cs->setName(timingCS.c_str());
-    ff = OCIO::FixedFunctionTransform::Create();
-    ff->setStyle(OCIO::FIXED_FUNCTION_RGB_TO_HSV);
+    ff = OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_RGB_TO_HSV);
     cs->setTransform(ff, OCIO::COLORSPACE_DIR_FROM_REFERENCE);
-    ff = OCIO::FixedFunctionTransform::Create();
-    ff->setStyle(OCIO::FIXED_FUNCTION_ACES_DARK_TO_DIM_10);
+    ff = OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_ACES_DARK_TO_DIM_10);
     cs->setTransform(ff, OCIO::COLORSPACE_DIR_TO_REFERENCE);
     cfg->addColorSpace(cs);
     cfg->setRole(OCIO::ROLE_COLOR_TIMING, timingCS.c_str());

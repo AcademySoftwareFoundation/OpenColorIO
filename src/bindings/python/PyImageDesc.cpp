@@ -12,13 +12,12 @@ void bindPyImageDesc(py::module & m)
 
     auto clsImageDesc = 
         py::class_<PyImageDesc>(
-            m, "ImageDesc", 
-            DOC(ImageDesc))
+            m.attr("ImageDesc"))
 
         .def(py::init<>(), 
              DOC(ImageDesc, ImageDesc))
 
-        .def("__str__", [](const PyImageDesc & self)
+        .def("__repr__", [](const PyImageDesc & self)
             { 
                 std::ostringstream os;
                 os << self.m_img;

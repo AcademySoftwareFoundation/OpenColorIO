@@ -10,9 +10,11 @@
 
    Members:
 
-     HUE_NONE :
+     HUE_NONE : No adjustment.
 
-     HUE_DW3 :
+     HUE_DW3 : Algorithm used in ACES Output Transforms through v0.7.
+
+     HUE_WYPN : Weighted Yellow Power Norm -- NOT IMPLEMENTED YET.
 
    .. py:method:: name() -> str
       :property:
@@ -25,4 +27,14 @@
    .. py:attribute:: Lut1DHueAdjust.HUE_NONE
       :module: PyOpenColorIO
       :value: <Lut1DHueAdjust.HUE_NONE: 0>
+
+
+   .. py:attribute:: Lut1DHueAdjust.HUE_WYPN
+      :module: PyOpenColorIO
+      :value: <Lut1DHueAdjust.HUE_WYPN: 2>
+
+
+   .. py:method:: Lut1DHueAdjust.value
+      :module: PyOpenColorIO
+      :property:
 

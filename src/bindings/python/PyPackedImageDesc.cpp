@@ -9,9 +9,8 @@ namespace OCIO_NAMESPACE
 void bindPyPackedImageDesc(py::module & m)
 {
     auto clsPackedImageDesc = 
-        py::class_<PyPackedImageDesc, PyImageDesc /* base */>(
-            m, "PackedImageDesc", 
-            DOC(PackedImageDesc))
+        py::class_<PyPackedImageDesc, PyImageDesc>(
+            m.attr("PackedImageDesc"))
 
         .def(py::init([](py::buffer & data, long width, long height, long numChannels) 
             { 

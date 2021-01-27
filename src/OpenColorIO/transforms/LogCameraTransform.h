@@ -15,7 +15,8 @@ namespace OCIO_NAMESPACE
 class LogCameraTransformImpl : public LogCameraTransform
 {
 public:
-    LogCameraTransformImpl();
+    LogCameraTransformImpl() = delete;
+    LogCameraTransformImpl(const double(&linSideBreakValues)[3]);
     LogCameraTransformImpl(const LogCameraTransformImpl &) = delete;
     LogCameraTransformImpl & operator=(const LogCameraTransformImpl &) = delete;
     virtual ~LogCameraTransformImpl() = default;
@@ -44,7 +45,7 @@ public:
     void getLinSideOffsetValue(double(&values)[3]) const noexcept override;
     void setLinSideOffsetValue(const double(&values)[3]) noexcept override;
 
-    bool getLinSideBreakValue(double(&values)[3]) const noexcept override;
+    void getLinSideBreakValue(double(&values)[3]) const noexcept override;
     void setLinSideBreakValue(const double(&values)[3]) noexcept override;
     
     bool getLinearSlopeValue(double(&values)[3]) const override;

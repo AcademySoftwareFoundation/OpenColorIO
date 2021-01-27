@@ -1322,13 +1322,28 @@ OCIO::ConstCPUProcessorRcPtr BuildCPUProcessor(OCIO::TransformDirection dir)
 {
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
 
-    OCIO::MatrixTransformRcPtr transform = OCIO::MatrixTransform::Create();
-    constexpr double offset4[4] = { 1.4002, 0.4005, 0.8007, 0.5007 };
-    transform->setOffset(offset4);
-    transform->setDirection(dir);
+    OCIO::MatrixTransformRcPtr m1 = OCIO::MatrixTransform::Create();
+    constexpr double offset1[4] = { 1.0, 0.2, 0.4007, 0.3007 };
+    m1->setOffset(offset1);
+    m1->setDirection(dir);
+
+    OCIO::MatrixTransformRcPtr m2 = OCIO::MatrixTransform::Create();
+    constexpr double offset2[4] = { 0.2002, 0.2, 0.2, 0.2 };
+    m2->setOffset(offset2);
+    m2->setDirection(dir);
+
+    OCIO::MatrixTransformRcPtr m3 = OCIO::MatrixTransform::Create();
+    constexpr double offset3[4] = { 0.2, 0.0005, 0.2, 0.0 };
+    m3->setOffset(offset3);
+    m3->setDirection(dir);
+
+    auto transform = OCIO::GroupTransform::Create();
+    transform->appendTransform(m1);
+    transform->appendTransform(m2);
+    transform->appendTransform(m3);
 
     OCIO::ConstProcessorRcPtr processor = config->getProcessor(transform);
-    return processor->getDefaultCPUProcessor();
+    return processor->getOptimizedCPUProcessor(OCIO::OPTIMIZATION_NONE);
 }
 
 void Validate(const OCIO::PackedImageDesc & imgDesc, unsigned lineNo)
@@ -1336,10 +1351,10 @@ void Validate(const OCIO::PackedImageDesc & imgDesc, unsigned lineNo)
     const float * outImg = reinterpret_cast<float*>(imgDesc.getData());
     for(size_t pxl=0; pxl<NB_PIXELS; ++pxl)
     {
-        OCIO_CHECK_CLOSE_FROM(outImg[4*pxl+0], resImg[4*pxl+0], 1e-7f, lineNo);
-        OCIO_CHECK_CLOSE_FROM(outImg[4*pxl+1], resImg[4*pxl+1], 1e-7f, lineNo);
-        OCIO_CHECK_CLOSE_FROM(outImg[4*pxl+2], resImg[4*pxl+2], 1e-7f, lineNo);
-        OCIO_CHECK_CLOSE_FROM(outImg[4*pxl+3], resImg[4*pxl+3], 1e-7f, lineNo);
+        OCIO_CHECK_CLOSE_FROM(outImg[4*pxl+0], resImg[4*pxl+0], 1e-6f, lineNo);
+        OCIO_CHECK_CLOSE_FROM(outImg[4*pxl+1], resImg[4*pxl+1], 1e-6f, lineNo);
+        OCIO_CHECK_CLOSE_FROM(outImg[4*pxl+2], resImg[4*pxl+2], 1e-6f, lineNo);
+        OCIO_CHECK_CLOSE_FROM(outImg[4*pxl+3], resImg[4*pxl+3], 1e-6f, lineNo);
     }
 }
 
@@ -1374,12 +1389,12 @@ void Process(const OCIO::ConstCPUProcessorRcPtr & cpuProcessor,
 
     for(size_t pxl=0; pxl<NB_PIXELS; ++pxl)
     {
-        OCIO_CHECK_CLOSE_FROM(outImgR[pxl], resImg[4*pxl+0], 1e-7f, lineNo);
-        OCIO_CHECK_CLOSE_FROM(outImgG[pxl], resImg[4*pxl+1], 1e-7f, lineNo);
-        OCIO_CHECK_CLOSE_FROM(outImgB[pxl], resImg[4*pxl+2], 1e-7f, lineNo);
+        OCIO_CHECK_CLOSE_FROM(outImgR[pxl], resImg[4*pxl+0], 1e-6f, lineNo);
+        OCIO_CHECK_CLOSE_FROM(outImgG[pxl], resImg[4*pxl+1], 1e-6f, lineNo);
+        OCIO_CHECK_CLOSE_FROM(outImgB[pxl], resImg[4*pxl+2], 1e-6f, lineNo);
         if(outImgA)
         {
-            OCIO_CHECK_CLOSE_FROM(outImgA[pxl], resImg[4*pxl+3], 1e-7f, lineNo);
+            OCIO_CHECK_CLOSE_FROM(outImgA[pxl], resImg[4*pxl+3], 1e-6f, lineNo);
         }
     }
 }
@@ -1407,10 +1422,10 @@ OCIO_ADD_TEST(CPUProcessor, planar_vs_packed)
 
     for(size_t idx=0; idx<NB_PIXELS; ++idx)
     {
-        OCIO_CHECK_CLOSE(outR[idx], resImg[4*idx+0], 1e-7f);
-        OCIO_CHECK_CLOSE(outG[idx], resImg[4*idx+1], 1e-7f);
-        OCIO_CHECK_CLOSE(outB[idx], resImg[4*idx+2], 1e-7f);
-        OCIO_CHECK_CLOSE(outA[idx], resImg[4*idx+3], 1e-7f);
+        OCIO_CHECK_CLOSE(outR[idx], resImg[4*idx+0], 1e-6f);
+        OCIO_CHECK_CLOSE(outG[idx], resImg[4*idx+1], 1e-6f);
+        OCIO_CHECK_CLOSE(outB[idx], resImg[4*idx+2], 1e-6f);
+        OCIO_CHECK_CLOSE(outA[idx], resImg[4*idx+3], 1e-6f);
     }
 
     // 2. Process from Planar to Packed Image Desc using the inverse transform.
@@ -1768,10 +1783,10 @@ OCIO_ADD_TEST(CPUProcessor, scanline_helper_tile)
 
         for(size_t pxl=0; pxl<NB_PIXELS; ++pxl)
         {
-            OCIO_CHECK_CLOSE(outImg[4*pxl+0], resImg[4*pxl+0], 1e-7f);
-            OCIO_CHECK_CLOSE(outImg[4*pxl+1], resImg[4*pxl+1], 1e-7f);
-            OCIO_CHECK_CLOSE(outImg[4*pxl+2], resImg[4*pxl+2], 1e-7f);
-            OCIO_CHECK_CLOSE(outImg[4*pxl+3], resImg[4*pxl+3], 1e-7f);
+            OCIO_CHECK_CLOSE(outImg[4*pxl+0], resImg[4*pxl+0], 1e-6f);
+            OCIO_CHECK_CLOSE(outImg[4*pxl+1], resImg[4*pxl+1], 1e-6f);
+            OCIO_CHECK_CLOSE(outImg[4*pxl+2], resImg[4*pxl+2], 1e-6f);
+            OCIO_CHECK_CLOSE(outImg[4*pxl+3], resImg[4*pxl+3], 1e-6f);
         }
     }
 
@@ -1881,10 +1896,10 @@ OCIO_ADD_TEST(CPUProcessor, custom_scanlines)
 
         for(size_t pxl=0; pxl<NB_PIXELS; ++pxl)
         {
-            OCIO_CHECK_CLOSE(outImg[4*pxl+0], resImg[4*pxl+0], 1e-7f);
-            OCIO_CHECK_CLOSE(outImg[4*pxl+1], resImg[4*pxl+1], 1e-7f);
-            OCIO_CHECK_CLOSE(outImg[4*pxl+2], resImg[4*pxl+2], 1e-7f);
-            OCIO_CHECK_CLOSE(outImg[4*pxl+3], resImg[4*pxl+3], 1e-7f);
+            OCIO_CHECK_CLOSE(outImg[4*pxl+0], resImg[4*pxl+0], 1e-6f);
+            OCIO_CHECK_CLOSE(outImg[4*pxl+1], resImg[4*pxl+1], 1e-6f);
+            OCIO_CHECK_CLOSE(outImg[4*pxl+2], resImg[4*pxl+2], 1e-6f);
+            OCIO_CHECK_CLOSE(outImg[4*pxl+3], resImg[4*pxl+3], 1e-6f);
         }
     }
 
@@ -1914,9 +1929,9 @@ OCIO_ADD_TEST(CPUProcessor, custom_scanlines)
 
         for(size_t pxl=0; pxl<NB_PIXELS; ++pxl)
         {
-            OCIO_CHECK_CLOSE(outImg[3*pxl+0], resImg[4*pxl+0], 1e-7f);
-            OCIO_CHECK_CLOSE(outImg[3*pxl+1], resImg[4*pxl+1], 1e-7f);
-            OCIO_CHECK_CLOSE(outImg[3*pxl+2], resImg[4*pxl+2], 1e-7f);
+            OCIO_CHECK_CLOSE(outImg[3*pxl+0], resImg[4*pxl+0], 1e-6f);
+            OCIO_CHECK_CLOSE(outImg[3*pxl+1], resImg[4*pxl+1], 1e-6f);
+            OCIO_CHECK_CLOSE(outImg[3*pxl+2], resImg[4*pxl+2], 1e-6f);
         }
     }
 
@@ -1946,9 +1961,9 @@ OCIO_ADD_TEST(CPUProcessor, custom_scanlines)
 
         for(size_t pxl=0; pxl<NB_PIXELS; ++pxl)
         {
-            OCIO_CHECK_CLOSE(outImg[3*pxl+0], resImg[4*pxl+0], 1e-7f);
-            OCIO_CHECK_CLOSE(outImg[3*pxl+1], resImg[4*pxl+1], 1e-7f);
-            OCIO_CHECK_CLOSE(outImg[3*pxl+2], resImg[4*pxl+2], 1e-7f);
+            OCIO_CHECK_CLOSE(outImg[3*pxl+0], resImg[4*pxl+0], 1e-6f);
+            OCIO_CHECK_CLOSE(outImg[3*pxl+1], resImg[4*pxl+1], 1e-6f);
+            OCIO_CHECK_CLOSE(outImg[3*pxl+2], resImg[4*pxl+2], 1e-6f);
         }
     }
 
@@ -1982,9 +1997,9 @@ OCIO_ADD_TEST(CPUProcessor, custom_scanlines)
 
         for(size_t pxl=0; pxl<NB_PIXELS; ++pxl)
         {
-            OCIO_CHECK_CLOSE(outImg[3*pxl+0], resImg[4*pxl+0], 1e-7f);
-            OCIO_CHECK_CLOSE(outImg[3*pxl+1], resImg[4*pxl+1], 1e-7f);
-            OCIO_CHECK_CLOSE(outImg[3*pxl+2], resImg[4*pxl+2], 1e-7f);
+            OCIO_CHECK_CLOSE(outImg[3*pxl+0], resImg[4*pxl+0], 1e-6f);
+            OCIO_CHECK_CLOSE(outImg[3*pxl+1], resImg[4*pxl+1], 1e-6f);
+            OCIO_CHECK_CLOSE(outImg[3*pxl+2], resImg[4*pxl+2], 1e-6f);
         }
     }
 

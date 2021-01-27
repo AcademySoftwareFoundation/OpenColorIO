@@ -20,7 +20,7 @@
 
       Overloaded function.
 
-      1. __init__(self: PyOpenColorIO.GradingRGBCurveTransform, style: PyOpenColorIO.GradingStyle = <GradingStyle.GRADING_LOG: 0>, values: PyOpenColorIO.GradingRGBCurve, dynamic: bool = False, dir: PyOpenColorIO.TransformDirection = <TransformDirection.TRANSFORM_DIR_FORWARD: 0>) -> None
+      1. __init__(self: PyOpenColorIO.GradingRGBCurveTransform, values: PyOpenColorIO.GradingRGBCurve, style: PyOpenColorIO.GradingStyle = <GradingStyle.GRADING_LOG: 0>, dynamic: bool = False, dir: PyOpenColorIO.TransformDirection = <TransformDirection.TRANSFORM_DIR_FORWARD: 0>) -> None
 
       Creates an instance of :ref:`GradingPrimaryTransform`.
 
@@ -29,8 +29,10 @@
       Creates an instance of :ref:`GradingPrimaryTransform`.
 
 
-   .. py:method:: GradingRGBCurveTransform.__str__(self: PyOpenColorIO.Transform) -> str
+   .. py:method:: GradingRGBCurveTransform.__str__()
       :module: PyOpenColorIO
+
+      Return str(self).
 
 
    .. py:method:: GradingRGBCurveTransform.getBypassLinToLog(self: PyOpenColorIO.GradingRGBCurveTransform) -> bool

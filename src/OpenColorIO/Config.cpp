@@ -389,6 +389,7 @@ public:
 
             m_env = rhs.m_env;
             m_context = rhs.m_context->createEditableCopy();
+            m_name = rhs.m_name;
             m_familySeparator = rhs.m_familySeparator;
             m_description = rhs.m_description;
 
@@ -2563,6 +2564,7 @@ const char * Config::parseColorSpaceFromString(const char * str) const
 {
     int rightMostColorSpaceIndex = ParseColorSpaceFromString(*this, str);
 
+    // Index is using all color spaces.
     if(rightMostColorSpaceIndex>=0)
     {
         return getImpl()->m_allColorSpaces->getColorSpaceNameByIndex(rightMostColorSpaceIndex);
@@ -4118,10 +4120,8 @@ ConstProcessorRcPtr Config::GetProcessorFromConfigs(const ConstContextRcPtr & sr
         throw Exception(os.str().c_str());
     }
 
-    constexpr char exchangeSceneName[]{ "aces_interchange" };
-    constexpr char exchangeDisplayName[]{ "cie_xyz_d65_interchange" };
     const bool sceneReferred = (srcColorSpace->getReferenceSpaceType() == REFERENCE_SPACE_SCENE);
-    const char * exchangeRoleName = sceneReferred ? exchangeSceneName : exchangeDisplayName;
+    const char * exchangeRoleName = sceneReferred ? ROLE_INTERCHANGE_SCENE : ROLE_INTERCHANGE_DISPLAY;
     const char * srcExName = LookupRole(srcConfig->getImpl()->m_roles, exchangeRoleName);
     if (!srcExName || !*srcExName)
     {

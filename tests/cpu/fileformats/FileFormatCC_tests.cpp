@@ -169,8 +169,7 @@ OCIO_ADD_TEST(FileFormatCC, test_cc2_load_save)
 
     std::ostringstream outputTransform;
     OCIO::ConstConfigRcPtr cfg = OCIO::Config::CreateRaw();
-    OCIO_CHECK_NO_THROW(group->write(cfg, cfg->getCurrentContext(),
-                                     OCIO::FILEFORMAT_COLOR_CORRECTION, outputTransform));
+    OCIO_CHECK_NO_THROW(group->write(cfg, OCIO::FILEFORMAT_COLOR_CORRECTION, outputTransform));
     const std::string expected{ R"(<ColorCorrection id="cc0001">
     <SOPNode>
         <Description>Example look</Description>
