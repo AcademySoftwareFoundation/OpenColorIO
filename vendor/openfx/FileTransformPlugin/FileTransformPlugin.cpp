@@ -29,14 +29,6 @@
 #define OCIOInterpolationParam "interpolation"
 #define OCIOInterpolationParamHint "Define the interpolation for file transform"
 
-#if defined __APPLE__ || defined linux || defined __FreeBSD__
-#  define EXPORT __attribute__((visibility("default")))
-#elif defined _WIN32
-#  define EXPORT OfxExport
-#else
-#  error Not building on your operating system quite yet
-#endif
-
 namespace OCIO = OCIO_NAMESPACE;
 
 // This is a custom class made for storing plugin specific data

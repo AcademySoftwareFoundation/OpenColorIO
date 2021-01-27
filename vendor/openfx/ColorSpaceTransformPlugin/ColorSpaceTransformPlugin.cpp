@@ -27,14 +27,6 @@
 #define OutputColorSpaceParamName "Output ColorSpace"
 #define OutputColorSpaceParamHint "Choose the output ColorSpace for the Transform"
 
-#if defined __APPLE__ || defined linux || defined __FreeBSD__
-#  define EXPORT __attribute__((visibility("default")))
-#elif defined _WIN32
-#  define EXPORT OfxExport
-#else
-#  error Not building on your operating system quite yet
-#endif
-
 namespace OCIO = OCIO_NAMESPACE;
 
 // Getting the current instance configuration
