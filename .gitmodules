@@ -1,0 +1,3 @@
+[submodule "vendor/openfx/openfx"]
+	path = vendor/openfx/openfx
+	url = https://github.com/ofxa/openfx.git
