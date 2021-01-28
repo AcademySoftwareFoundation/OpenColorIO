@@ -32,11 +32,8 @@ void bindPyAllocationTransform(py::module & m)
     AllocationTransformRcPtr DEFAULT = AllocationTransform::Create();
 
     auto clsAllocationTransform = 
-        py::class_<AllocationTransform, 
-                   AllocationTransformRcPtr /* holder */, 
-                   Transform /* base */>(
-            m, "AllocationTransform",
-            DOC(AllocationTransform))
+        py::class_<AllocationTransform, AllocationTransformRcPtr, Transform>(
+            m.attr("AllocationTransform"))
 
         .def(py::init(&AllocationTransform::Create), 
              DOC(AllocationTransform, Create))
@@ -73,7 +70,7 @@ void bindPyAllocationTransform(py::module & m)
              "vars"_a,
              DOC(AllocationTransform, setVars));
 
-    defStr(clsAllocationTransform);
+    defRepr(clsAllocationTransform);
 }
 
 } // namespace OCIO_NAMESPACE

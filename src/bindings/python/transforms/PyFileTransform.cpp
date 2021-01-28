@@ -23,9 +23,8 @@ void bindPyFileTransform(py::module & m)
     FileTransformRcPtr DEFAULT = FileTransform::Create();
 
     auto clsFileTransform = 
-        py::class_<FileTransform, FileTransformRcPtr /* holder */, Transform /* base */>(
-            m, "FileTransform", 
-            DOC(FileTransform));
+        py::class_<FileTransform, FileTransformRcPtr, Transform>(
+            m.attr("FileTransform"));
 
     auto clsFormatIterator = 
         py::class_<FormatIterator>(
@@ -75,7 +74,7 @@ void bindPyFileTransform(py::module & m)
         .def("setInterpolation", &FileTransform::setInterpolation, "interpolation"_a, 
              DOC(FileTransform, setInterpolation));
 
-    defStr(clsFileTransform);
+    defRepr(clsFileTransform);
 
     clsFormatIterator
         .def("__len__", [](FormatIterator & it) 

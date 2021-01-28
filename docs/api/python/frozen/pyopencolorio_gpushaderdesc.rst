@@ -61,7 +61,7 @@
       Start to collect the shader data.
 
 
-   .. py:method:: GpuShaderDesc.clone(self: PyOpenColorIO.GpuShaderCreator) -> PyOpenColorIO.GpuShaderCreator
+   .. py:method:: GpuShaderDesc.clone(self: PyOpenColorIO.GpuShaderDesc) -> PyOpenColorIO.GpuShaderCreator
       :module: PyOpenColorIO
 
 
@@ -87,10 +87,6 @@
       :module: PyOpenColorIO
 
 
-   .. py:method:: GpuShaderDesc.get3DTextureValues(self: PyOpenColorIO.GpuShaderDesc, index: int) -> numpy.ndarray
-      :module: PyOpenColorIO
-
-
    .. py:method:: GpuShaderDesc.get3DTextures(self: PyOpenColorIO.GpuShaderDesc) -> PyOpenColorIO.GpuShaderDesc.Texture3DIterator
       :module: PyOpenColorIO
 
@@ -103,7 +99,7 @@
       :module: PyOpenColorIO
 
 
-   .. py:method:: GpuShaderDesc.getDynamicProperty(self: PyOpenColorIO.GpuShaderCreator, type: PyOpenColorIO.DynamicPropertyType) -> OpenColorIO_v2_0rc1::DynamicProperty
+   .. py:method:: GpuShaderDesc.getDynamicProperty(self: PyOpenColorIO.GpuShaderCreator, type: PyOpenColorIO.DynamicPropertyType) -> PyOpenColorIO.DynamicProperty
       :module: PyOpenColorIO
 
 
@@ -121,14 +117,6 @@
       To avoid texture/unform name clashes always append an increasing number to the resource name.
 
 
-   .. py:method:: GpuShaderDesc.getNum3DTextures(self: PyOpenColorIO.GpuShaderDesc) -> int
-      :module: PyOpenColorIO
-
-
-   .. py:method:: GpuShaderDesc.getNumTextures(self: PyOpenColorIO.GpuShaderDesc) -> int
-      :module: PyOpenColorIO
-
-
    .. py:method:: GpuShaderDesc.getPixelName(self: PyOpenColorIO.GpuShaderCreator) -> str
       :module: PyOpenColorIO
 
@@ -140,15 +128,21 @@
          Some applications require that textures, uniforms, and helper methods be uniquely named because several processor instances could coexist.
 
 
+   .. py:method:: GpuShaderDesc.getShaderText(self: PyOpenColorIO.GpuShaderDesc) -> str
+      :module: PyOpenColorIO
+
+      Get the complete OCIO shader program.
+
+
    .. py:method:: GpuShaderDesc.getTextureMaxWidth(self: PyOpenColorIO.GpuShaderCreator) -> int
       :module: PyOpenColorIO
 
 
-   .. py:method:: GpuShaderDesc.getTextureValues(self: PyOpenColorIO.GpuShaderDesc, index: int) -> numpy.ndarray
+   .. py:method:: GpuShaderDesc.getTextures(self: PyOpenColorIO.GpuShaderDesc) -> PyOpenColorIO.GpuShaderDesc.TextureIterator
       :module: PyOpenColorIO
 
 
-   .. py:method:: GpuShaderDesc.getTextures(self: PyOpenColorIO.GpuShaderDesc) -> PyOpenColorIO.GpuShaderDesc.TextureIterator
+   .. py:method:: GpuShaderDesc.getUniforms(self: PyOpenColorIO.GpuShaderDesc) -> PyOpenColorIO.GpuShaderDesc.UniformIterator
       :module: PyOpenColorIO
 
 
@@ -214,6 +208,40 @@
       :value: <TextureType.TEXTURE_RGB_CHANNEL: 1>
 
 
+   .. py:method:: TextureType.value
+      :module: PyOpenColorIO.GpuShaderDesc
+      :property:
+
+
+.. py:class:: UniformData
+   :module: PyOpenColorIO.GpuShaderDesc
+
+
+   .. py:method:: UniformData.getBool(self: PyOpenColorIO.GpuShaderDesc.UniformData) -> bool
+      :module: PyOpenColorIO.GpuShaderDesc
+
+
+   .. py:method:: UniformData.getDouble(self: PyOpenColorIO.GpuShaderDesc.UniformData) -> float
+      :module: PyOpenColorIO.GpuShaderDesc
+
+
+   .. py:method:: UniformData.getFloat3(self: PyOpenColorIO.GpuShaderDesc.UniformData) -> List[float[3]]
+      :module: PyOpenColorIO.GpuShaderDesc
+
+
+   .. py:method:: UniformData.getVectorFloat(self: PyOpenColorIO.GpuShaderDesc.UniformData) -> numpy.ndarray
+      :module: PyOpenColorIO.GpuShaderDesc
+
+
+   .. py:method:: UniformData.getVectorInt(self: PyOpenColorIO.GpuShaderDesc.UniformData) -> numpy.ndarray
+      :module: PyOpenColorIO.GpuShaderDesc
+
+
+   .. py:method:: UniformData.type
+      :module: PyOpenColorIO.GpuShaderDesc
+      :property:
+
+
 .. py:class:: Texture
    :module: PyOpenColorIO.GpuShaderDesc
 
@@ -221,6 +249,10 @@
    .. py:method:: Texture.channel
       :module: PyOpenColorIO.GpuShaderDesc
       :property:
+
+
+   .. py:method:: Texture.getValues(self: PyOpenColorIO.GpuShaderDesc.Texture) -> numpy.ndarray
+      :module: PyOpenColorIO.GpuShaderDesc
 
 
    .. py:method:: Texture.height
@@ -257,6 +289,10 @@
       :property:
 
 
+   .. py:method:: Texture3D.getValues(self: PyOpenColorIO.GpuShaderDesc.Texture3D) -> numpy.ndarray
+      :module: PyOpenColorIO.GpuShaderDesc
+
+
    .. py:method:: Texture3D.interpolation
       :module: PyOpenColorIO.GpuShaderDesc
       :property:
@@ -270,6 +306,26 @@
    .. py:method:: Texture3D.textureName
       :module: PyOpenColorIO.GpuShaderDesc
       :property:
+
+
+.. py:class:: UniformIterator
+   :module: PyOpenColorIO.GpuShaderDesc
+
+
+   .. py:method:: UniformIterator.__getitem__(self: PyOpenColorIO.GpuShaderDesc.UniformIterator, arg0: int) -> tuple
+      :module: PyOpenColorIO.GpuShaderDesc
+
+
+   .. py:method:: UniformIterator.__iter__(self: PyOpenColorIO.GpuShaderDesc.UniformIterator) -> PyOpenColorIO.GpuShaderDesc.UniformIterator
+      :module: PyOpenColorIO.GpuShaderDesc
+
+
+   .. py:method:: UniformIterator.__len__(self: PyOpenColorIO.GpuShaderDesc.UniformIterator) -> int
+      :module: PyOpenColorIO.GpuShaderDesc
+
+
+   .. py:method:: UniformIterator.__next__(self: PyOpenColorIO.GpuShaderDesc.UniformIterator) -> tuple
+      :module: PyOpenColorIO.GpuShaderDesc
 
 
 .. py:class:: TextureIterator
@@ -316,7 +372,7 @@
    :module: PyOpenColorIO.GpuShaderDesc
 
 
-   .. py:method:: DynamicPropertyIterator.__getitem__(self: PyOpenColorIO.GpuShaderCreator.DynamicPropertyIterator, arg0: int) -> OpenColorIO_v2_0rc1::DynamicProperty
+   .. py:method:: DynamicPropertyIterator.__getitem__(self: PyOpenColorIO.GpuShaderCreator.DynamicPropertyIterator, arg0: int) -> PyOpenColorIO.DynamicProperty
       :module: PyOpenColorIO.GpuShaderDesc
 
 
@@ -328,6 +384,6 @@
       :module: PyOpenColorIO.GpuShaderDesc
 
 
-   .. py:method:: DynamicPropertyIterator.__next__(self: PyOpenColorIO.GpuShaderCreator.DynamicPropertyIterator) -> OpenColorIO_v2_0rc1::DynamicProperty
+   .. py:method:: DynamicPropertyIterator.__next__(self: PyOpenColorIO.GpuShaderCreator.DynamicPropertyIterator) -> PyOpenColorIO.DynamicProperty
       :module: PyOpenColorIO.GpuShaderDesc
 

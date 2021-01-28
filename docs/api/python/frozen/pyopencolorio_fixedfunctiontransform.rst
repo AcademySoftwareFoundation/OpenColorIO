@@ -9,18 +9,14 @@
    Provides a set of hard-coded algorithmic building blocks that are needed to accurately implement various common color transformations.
 
 
-   .. py:method:: FixedFunctionTransform.__init__(*args, **kwargs)
+   .. py:method:: FixedFunctionTransform.__init__(self: PyOpenColorIO.FixedFunctionTransform, style: PyOpenColorIO.FixedFunctionStyle, params: List[float] = [], direction: PyOpenColorIO.TransformDirection = <TransformDirection.TRANSFORM_DIR_FORWARD: 0>) -> None
       :module: PyOpenColorIO
 
-      Overloaded function.
 
-      1. __init__(self: PyOpenColorIO.FixedFunctionTransform) -> None
-
-      2. __init__(self: PyOpenColorIO.FixedFunctionTransform, style: PyOpenColorIO.FixedFunctionStyle = <FixedFunctionStyle.FIXED_FUNCTION_ACES_RED_MOD_03: 0>, params: List[float] = [], direction: PyOpenColorIO.TransformDirection = <TransformDirection.TRANSFORM_DIR_FORWARD: 0>) -> None
-
-
-   .. py:method:: FixedFunctionTransform.__str__(self: PyOpenColorIO.FixedFunctionTransform) -> str
+   .. py:method:: FixedFunctionTransform.__str__()
       :module: PyOpenColorIO
+
+      Return str(self).
 
 
    .. py:method:: FixedFunctionTransform.equals(self: PyOpenColorIO.FixedFunctionTransform, other: PyOpenColorIO.FixedFunctionTransform) -> bool

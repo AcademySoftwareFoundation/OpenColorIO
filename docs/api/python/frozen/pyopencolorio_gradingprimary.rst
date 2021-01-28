@@ -23,10 +23,6 @@
       :module: PyOpenColorIO
 
 
-   .. py:method:: GradingPrimary.__str__(self: PyOpenColorIO.GradingPrimary) -> str
-      :module: PyOpenColorIO
-
-
    .. py:method:: GradingPrimary.brightness
       :module: PyOpenColorIO
       :property:

@@ -2115,14 +2115,15 @@ public:
      *
      * \note The dynamic properties are a convenient way to change on-the-fly values without 
      * generating again and again a CPU or GPU processor instance. Color transformations can
-     * contain dynamic properties from a :cpp:class:`ExposureContrastTransform` for example.
-     * So, :cpp:class:`Processor`, :cpp:class:`CPUProcessor` and :cpp:class:`GpuShaderCreator`
-     * all have ways to manage dynamic properties. However, the transform dynamic properties
-     * are decoupled between the types of processor instances so that the same
-     * :cpp:class:`Processor` can generate several independent CPU and/or GPU processor
-     * instances i.e. changing the value of the exposure dynamic property from a CPU processor
-     * instance does not affect the corresponding GPU processor instance. Processor creation will
-     * throw if there are more than one property of a given type.
+     * contain dynamic properties from a ExposureContrastTransform for example.
+     * So, Processor, CPUProcessor and GpuShaderCreator all have ways to manage dynamic
+     * properties. However, the transform dynamic properties are decoupled between the types
+     * of processor instances so that the same Processor can generate several independent CPU
+     * and/or GPU processor instances i.e. changing the value of the exposure dynamic property
+     * from a CPU processor  instance does not affect the corresponding GPU processor instance.
+     * Processor creation will log a warning if there are more than one property of a given type.
+     * There may be more than one property of a given type, but only one will respond to parameter
+     * updates, the others will use their original parameter values.
      */
     DynamicPropertyRcPtr getDynamicProperty(DynamicPropertyType type) const;
     /// True if at least one dynamic property of that type exists.

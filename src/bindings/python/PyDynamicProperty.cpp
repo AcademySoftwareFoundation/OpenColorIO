@@ -11,8 +11,7 @@ void bindPyDynamicProperty(py::module & m)
 {
     auto clsDynamicProperty = 
         py::class_<PyDynamicProperty>(
-            m, "DynamicProperty", 
-            DOC(DynamicProperty))
+            m.attr("DynamicProperty"))
 
         .def("getType", &PyDynamicProperty::getType, 
              DOC(DynamicProperty, getType))

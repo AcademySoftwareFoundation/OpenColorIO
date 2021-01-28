@@ -6,6 +6,7 @@
 #include "transforms/GradingRGBCurveTransform.cpp"
 
 #include "testutils/UnitTest.h"
+#include "UnitTestLogUtils.h"
 
 namespace OCIO = OCIO_NAMESPACE;
 
@@ -213,8 +214,11 @@ OCIO_ADD_TEST(GradingRGBCurveTransform, processor_several_transforms)
     grp2->appendTransform(gctb);
 
     {
-        OCIO_CHECK_THROW_WHAT(config->getProcessor(grp2), OCIO::Exception,
-                              "Grading RGB curve dynamic property can only be there once");
+        OCIO::LogGuard log;
+        OCIO::SetLoggingLevel(OCIO::LOGGING_LEVEL_WARNING);
+        OCIO_CHECK_NO_THROW(config->getProcessor(grp2));
+        OCIO_CHECK_EQUAL(log.output(), "[OpenColorIO Warning]: Grading RGB curve dynamic property "
+                                       "can only be there once.\n");
     }
 }
 

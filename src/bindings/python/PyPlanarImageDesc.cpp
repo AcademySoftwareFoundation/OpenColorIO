@@ -23,8 +23,7 @@ void bindPyPlanarImageDesc(py::module & m)
 {
     auto clsPlanarImageDesc = 
         py::class_<PyPlanarImageDesc, PyImageDesc /* base */>(
-            m, "PlanarImageDesc", 
-            DOC(PlanarImageDesc))
+            m.attr("PlanarImageDesc"))
 
         .def(py::init([](py::buffer & rData, 
                          py::buffer & gData, 

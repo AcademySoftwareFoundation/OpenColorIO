@@ -9,9 +9,8 @@ namespace OCIO_NAMESPACE
 void bindPyGPUProcessor(py::module & m)
 {
     auto clsGPUProcessor = 
-        py::class_<GPUProcessor, GPUProcessorRcPtr /* holder */>(
-            m, "GPUProcessor", 
-            DOC(GPUProcessor))
+        py::class_<GPUProcessor, GPUProcessorRcPtr>(
+            m.attr("GPUProcessor"))
 
         .def("isNoOp", &GPUProcessor::isNoOp, 
              DOC(GPUProcessor, isNoOp))
@@ -23,12 +22,7 @@ void bindPyGPUProcessor(py::module & m)
              (void (GPUProcessor::*)(GpuShaderDescRcPtr &) const) 
              &GPUProcessor::extractGpuShaderInfo,
              "shaderDesc"_a, 
-             DOC(GPUProcessor, extractGpuShaderInfo))
-        .def("extractGpuShaderInfo", 
-             (void (GPUProcessor::*)(GpuShaderCreatorRcPtr &) const) 
-             &GPUProcessor::extractGpuShaderInfo,
-             "shaderCreator"_a, 
-             DOC(GPUProcessor, extractGpuShaderInfo, 2));
+             DOC(GPUProcessor, extractGpuShaderInfo));
 }
 
 } // namespace OCIO_NAMESPACE

@@ -14,6 +14,8 @@
 
      UNIFORM_BOOL :
 
+     UNIFORM_FLOAT3 : Array of 3 floats.
+
      UNIFORM_VECTOR_FLOAT : Vector of floats (size is set by uniform).
 
      UNIFORM_VECTOR_INT : Vector of int pairs (size is set by uniform).
@@ -33,6 +35,11 @@
       :value: <UniformDataType.UNIFORM_DOUBLE: 0>
 
 
+   .. py:attribute:: UniformDataType.UNIFORM_FLOAT3
+      :module: PyOpenColorIO
+      :value: <UniformDataType.UNIFORM_FLOAT3: 2>
+
+
    .. py:attribute:: UniformDataType.UNIFORM_UNKNOWN
       :module: PyOpenColorIO
       :value: <UniformDataType.UNIFORM_UNKNOWN: 5>
@@ -46,4 +53,9 @@
    .. py:attribute:: UniformDataType.UNIFORM_VECTOR_INT
       :module: PyOpenColorIO
       :value: <UniformDataType.UNIFORM_VECTOR_INT: 4>
+
+
+   .. py:method:: UniformDataType.value
+      :module: PyOpenColorIO
+      :property:
 

@@ -12,9 +12,10 @@
 
 namespace OCIO_NAMESPACE
 {
-LogCameraTransformRcPtr LogCameraTransform::Create()
+LogCameraTransformRcPtr LogCameraTransform::Create(const double(&linSideBreakValues)[3])
 {
-    return LogCameraTransformRcPtr(new LogCameraTransformImpl(), &LogCameraTransformImpl::deleter);
+    return LogCameraTransformRcPtr(new LogCameraTransformImpl(linSideBreakValues),
+                                   &LogCameraTransformImpl::deleter);
 }
 
 void LogCameraTransformImpl::deleter(LogCameraTransform* t)
@@ -22,14 +23,16 @@ void LogCameraTransformImpl::deleter(LogCameraTransform* t)
     delete static_cast<LogCameraTransformImpl *>(t);
 }
 
-LogCameraTransformImpl::LogCameraTransformImpl()
+LogCameraTransformImpl::LogCameraTransformImpl(const double(&linSideBreakValues)[3])
     : m_data(2.0f, TRANSFORM_DIR_FORWARD)
 {
+    data().setValue(LIN_SIDE_BREAK, linSideBreakValues);
 }
 
 TransformRcPtr LogCameraTransformImpl::createEditableCopy() const
 {
-    LogCameraTransformRcPtr transform = LogCameraTransform::Create();
+    static constexpr double LIN_SB[]{ 0.1, 0.1, 0.1 };
+    LogCameraTransformRcPtr transform = LogCameraTransform::Create(LIN_SB);
     dynamic_cast<LogCameraTransformImpl*>(transform.get())->data() = data();
     return transform;
 }
@@ -138,9 +141,9 @@ void LogCameraTransformImpl::unsetLinearSlopeValue()
     data().unsetLinearSlope();
 }
 
-bool LogCameraTransformImpl::getLinSideBreakValue(double(&values)[3]) const noexcept
+void LogCameraTransformImpl::getLinSideBreakValue(double(&values)[3]) const noexcept
 {
-    return data().getValue(LIN_SIDE_BREAK, values);
+    data().getValue(LIN_SIDE_BREAK, values);
 }
 
 bool LogCameraTransformImpl::getLinearSlopeValue(double(&values)[3]) const
@@ -150,26 +153,24 @@ bool LogCameraTransformImpl::getLinearSlopeValue(double(&values)[3]) const
 
 std::ostream & operator<< (std::ostream & os, const LogCameraTransform & t)
 {
-    os << "<LogCameraTransform ";
-    os << "base=" << t.getBase() << ", ";
+    os << "<LogCameraTransform";
+    os << " direction=" << TransformDirectionToString(t.getDirection());
+    os << ", base=" << t.getBase();
     double values[3];
     t.getLogSideSlopeValue(values);
-    os << "logSideSlope=" << values[0] << " " << values[1] << " " << values[2] << ", ";
+    os << ", logSideSlope=" << values[0] << " " << values[1] << " " << values[2];
     t.getLogSideOffsetValue(values);
-    os << "logSideOffset=" << values[0] << " " << values[1] << " " << values[2] << ", ";
+    os << ", logSideOffset=" << values[0] << " " << values[1] << " " << values[2];
     t.getLinSideSlopeValue(values);
-    os << "linSideSlope=" << values[0] << " " << values[1] << " " << values[2] << ", ";
+    os << ", linSideSlope=" << values[0] << " " << values[1] << " " << values[2];
     t.getLinSideOffsetValue(values);
-    os << "linSideOffset=" << values[0] << " " << values[1] << " " << values[2] << ", ";
-    if (t.getLinSideBreakValue(values))
-    {
-        os << "linSideBreak=" << values[0] << " " << values[1] << " " << values[2] << ", ";
-    }
+    os << ", linSideOffset=" << values[0] << " " << values[1] << " " << values[2];
+    t.getLinSideBreakValue(values);
+    os << ", linSideBreak=" << values[0] << " " << values[1] << " " << values[2];
     if (t.getLinearSlopeValue(values))
     {
-        os << "linearSlope=" << values[0] << " " << values[1] << " " << values[2] << ", ";
+        os << ", linearSlope=" << values[0] << " " << values[1] << " " << values[2];
     }
-    os << "direction=" << TransformDirectionToString(t.getDirection());
     os << ">";
 
     return os;

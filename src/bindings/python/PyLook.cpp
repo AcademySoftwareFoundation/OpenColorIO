@@ -12,9 +12,8 @@ void bindPyLook(py::module & m)
     LookRcPtr DEFAULT = Look::Create();
 
     auto clsLook = 
-        py::class_<Look, LookRcPtr /* holder */>(
-            m, "Look", 
-            DOC(Look))
+        py::class_<Look, LookRcPtr>(
+            m.attr("Look"))
 
         .def(py::init(&Look::Create), 
              DOC(Look, Create))
@@ -60,7 +59,7 @@ void bindPyLook(py::module & m)
         .def("setDescription", &Look::setDescription, "description"_a.none(false), 
              DOC(Look, setDescription));
 
-    defStr(clsLook);
+    defRepr(clsLook);
 }
 
 } // namespace OCIO_NAMESPACE

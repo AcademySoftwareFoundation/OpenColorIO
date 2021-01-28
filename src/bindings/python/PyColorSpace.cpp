@@ -53,15 +53,17 @@ void bindPyColorSpace(py::module & m)
 {
     ColorSpaceRcPtr DEFAULT = ColorSpace::Create();
 
-    auto clsColorSpace = py::class_<ColorSpace, ColorSpaceRcPtr /* holder */>(
-        m, "ColorSpace", 
-        DOC(ColorSpace));
+    auto clsColorSpace = 
+        py::class_<ColorSpace, ColorSpaceRcPtr>(
+            m.attr("ColorSpace"));
 
-    auto clsColorSpaceCategoryIterator = py::class_<ColorSpaceCategoryIterator>(
-        clsColorSpace, "ColorSpaceCategoryIterator");
+    auto clsColorSpaceCategoryIterator = 
+        py::class_<ColorSpaceCategoryIterator>(
+            clsColorSpace, "ColorSpaceCategoryIterator");
 
-    auto clsColorSpacAliasIterator = py::class_<ColorSpaceAliasIterator>(
-        clsColorSpace, "ColorSpaceAliasIterator");
+    auto clsColorSpacAliasIterator = 
+        py::class_<ColorSpaceAliasIterator>(
+            clsColorSpace, "ColorSpaceAliasIterator");
 
     clsColorSpace
         .def(py::init([]() 
@@ -236,7 +238,7 @@ void bindPyColorSpace(py::module & m)
         .def("setTransform", &ColorSpace::setTransform, "transform"_a, "direction"_a, 
              DOC(ColorSpace, setTransform));
 
-    defStr(clsColorSpace);
+    defRepr(clsColorSpace);
 
     clsColorSpaceCategoryIterator
         .def("__len__", [](ColorSpaceCategoryIterator & it) 

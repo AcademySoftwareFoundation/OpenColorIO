@@ -296,8 +296,7 @@ OCIO_ADD_TEST(FileFormatCDL, write)
 
     auto cfg = OCIO::Config::CreateRaw();
     std::ostringstream oss;
-    OCIO_CHECK_NO_THROW(group->write(cfg, cfg->getCurrentContext(),
-                                     OCIO::FILEFORMAT_COLOR_DECISION_LIST, oss));
+    OCIO_CHECK_NO_THROW(group->write(cfg,OCIO::FILEFORMAT_COLOR_DECISION_LIST, oss));
     constexpr char RESULT[]{ R"(<ColorDecisionList xmlns="urn:ASC:CDL:v1.01">
     <Description>This is a color decision list example.</Description>
     <Description>It includes all possible description uses.</Description>
@@ -392,13 +391,11 @@ OCIO_ADD_TEST(FileFormatCDL, write)
 
     // Empty group.
     group = OCIO::GroupTransform::Create();
-    OCIO_CHECK_THROW_WHAT(group->write(cfg, cfg->getCurrentContext(),
-                                       OCIO::FILEFORMAT_COLOR_DECISION_LIST, oss),
+    OCIO_CHECK_THROW_WHAT(group->write(cfg, OCIO::FILEFORMAT_COLOR_DECISION_LIST, oss),
                           OCIO::Exception, "there should be at least one CDL");
 
     // Only CDL.
     group->appendTransform(OCIO::RangeTransform::Create());
-    OCIO_CHECK_THROW_WHAT(group->write(cfg, cfg->getCurrentContext(),
-                                       OCIO::FILEFORMAT_COLOR_DECISION_LIST, oss),
+    OCIO_CHECK_THROW_WHAT(group->write(cfg, OCIO::FILEFORMAT_COLOR_DECISION_LIST, oss),
                           OCIO::Exception, "only CDL can be written");
 }
