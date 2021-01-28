@@ -2,8 +2,6 @@
 # Copyright Contributors to the OpenColorIO Project.
 
 import unittest
-import os
-import sys
 
 import PyOpenColorIO as OCIO
 from UnitTestUtils import TEST_DATAFILES_DIR, TEST_NAMES, TEST_DESCS
