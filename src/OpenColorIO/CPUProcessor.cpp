@@ -406,7 +406,7 @@ void CPUProcessor::Impl::applyRGB(float * pixel) const
     const size_t numOps = m_cpuOps.size();
     for(size_t i = 0; i<numOps; ++i)
     {
-        m_cpuOps[i]->apply(pixel, pixel, 1);
+        m_cpuOps[i]->apply(v, v, 1);
     }
 
     m_outBitDepthOp->apply(v, v, 1);
