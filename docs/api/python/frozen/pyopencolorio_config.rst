@@ -708,6 +708,10 @@
       See :ref:`addSearchPath` for a more robust and platform-agnostic method of setting the search paths.
 
 
+   .. py:method:: Config.setStrictParsingEnabled(self: PyOpenColorIO.Config, enabled: bool) -> None
+      :module: PyOpenColorIO
+
+
    .. py:method:: Config.setVersion(self: PyOpenColorIO.Config, major: int, minor: int) -> None
       :module: PyOpenColorIO
 
