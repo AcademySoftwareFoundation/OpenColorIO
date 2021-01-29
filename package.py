@@ -1,5 +1,5 @@
 name = "OpenColorIO"
-version = "2.0.0.0",
+version = "2.0.0.0"
 description = """
 OpenColorIO -- it's open, it's color, and it's io af
 """
