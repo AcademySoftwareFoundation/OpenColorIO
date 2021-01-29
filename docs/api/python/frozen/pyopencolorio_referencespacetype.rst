@@ -26,8 +26,3 @@
       :module: PyOpenColorIO
       :value: <ReferenceSpaceType.REFERENCE_SPACE_SCENE: 0>
 
-
-   .. py:method:: ReferenceSpaceType.value
-      :module: PyOpenColorIO
-      :property:
-

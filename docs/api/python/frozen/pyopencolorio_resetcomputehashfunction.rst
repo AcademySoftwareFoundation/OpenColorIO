@@ -6,3 +6,12 @@
 .. py:function:: ResetComputeHashFunction() -> None
    :module: PyOpenColorIO
 
+
+.. py:function:: ResetComputeHashFunction() -> None
+   :module: PyOpenColorIO
+
+   .. doxygentypedef:: OpenColorIO_v2_0::ComputeHashFunction
+
+   .. doxygenfunction:: OpenColorIO_v2_0::SetComputeHashFunction
+
+   .. doxygenfunction:: OpenColorIO_v2_0::ResetComputeHashFunction

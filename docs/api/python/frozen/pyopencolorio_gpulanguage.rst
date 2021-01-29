@@ -47,8 +47,3 @@
       :module: PyOpenColorIO
       :value: <GpuLanguage.GPU_LANGUAGE_HLSL_DX11: 4>
 
-
-   .. py:method:: GpuLanguage.value
-      :module: PyOpenColorIO
-      :property:
-

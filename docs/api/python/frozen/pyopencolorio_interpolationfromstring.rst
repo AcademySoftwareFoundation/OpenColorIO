@@ -6,3 +6,10 @@
 .. py:function:: InterpolationFromString(str: str) -> PyOpenColorIO.Interpolation
    :module: PyOpenColorIO
 
+
+.. py:function:: InterpolationFromString(str: str) -> PyOpenColorIO.Interpolation
+   :module: PyOpenColorIO
+
+   .. doxygenfunction:: OpenColorIO_v2_0::InterpolationToString
+
+   .. doxygenfunction:: OpenColorIO_v2_0::InterpolationFromString

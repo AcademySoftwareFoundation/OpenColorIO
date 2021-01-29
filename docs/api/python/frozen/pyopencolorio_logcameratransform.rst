@@ -9,6 +9,7 @@
    Same as :ref:`LogAffineTransform` but with the addition of a linear segment near black. This formula is used for many camera logs (e.g., LogC) as well as ACEScct.
 
    - The linSideBreak specifies the point on the linear axis where the log and linear segments meet. It must be set (there is no default).
+
    - The linearSlope specifies the slope of the linear segment of the forward (linToLog) transform. By default it is set equal to the slope of the log curve at the break point.
 
 
@@ -104,7 +105,6 @@
       :module: PyOpenColorIO
 
       Set LinearSlope value.
-
 
       .. note::
          You must call setLinSideBreakValue before calling this.

@@ -8,7 +8,6 @@
 
    :ref:`NamedTransform`.
 
-
    A :ref:`NamedTransform` provides a way for config authors to include a set of color transforms that are independent of the color space being processed. For example a "utility
    curve" transform where there is no need to convert to or from a reference space.
 

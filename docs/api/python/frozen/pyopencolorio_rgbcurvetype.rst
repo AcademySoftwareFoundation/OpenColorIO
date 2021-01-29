@@ -47,8 +47,3 @@
       :module: PyOpenColorIO
       :value: <RGBCurveType.RGB_RED: 0>
 
-
-   .. py:method:: RGBCurveType.value
-      :module: PyOpenColorIO
-      :property:
-

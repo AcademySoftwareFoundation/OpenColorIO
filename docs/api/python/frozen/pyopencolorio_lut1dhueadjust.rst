@@ -33,8 +33,3 @@
       :module: PyOpenColorIO
       :value: <Lut1DHueAdjust.HUE_WYPN: 2>
 
-
-   .. py:method:: Lut1DHueAdjust.value
-      :module: PyOpenColorIO
-      :property:
-

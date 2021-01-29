@@ -13,13 +13,11 @@ their relevance for both config authors and application developers.
 Timeline
 ========
 
-OpenColorIO is "feature complete" at SIGGRAPH 2020 (late August).  This means
-that feature development concludes and a stabilization period begins during
-which the focus will shift to bug-fixing and refinement of features based on
-developer feedback and testing.
+OpenColorIO v2 was proposed to the community at SIGGRAPH 2017 and reached 
+"feature complete" at SIGGRAPH 2020.  The official 2.0.0 release was made in 
+January 2021 after a period of stabilization and refinement.  OCIO v2 is in 
+the VFX Reference Platform for calendar year 2021.
 
-OCIO v2 is in the VFX Reference Platform for calendar year 2021 and so the plan
-is to tag an official 2.0 release towards the end of the year to support this.
 
 New Feature List
 ================
@@ -77,7 +75,7 @@ the pixel apply call.  There is also now an environment variable that may be use
 to provide very fine-grained control over the optimization settings.
 
 **Config authors**: You may now override optimization settings to troubleshoot, if 
-needed.
+needed via the ``OCIO_OPTIMIZATION_FLAGS`` environment variable.
 
 **Developers**: There is now an extra step between getting a Processor and calling 
 apply().  You need to get a CPUProcessor or GPUProcessor and this is where you
@@ -109,10 +107,28 @@ an exact match to ACES Output Transforms.  Note that the new v2 ACES OCIO Config
 is still under development.
 
 **Config authors**: If you use ACES Output Transforms, please keep an eye out for
-the v2 ACES Config.
+the v2 ACES Config that will leverage built-in ACES transforms.
 
 **Developers**: The upcoming v2 ACES Config will allow your application to have
 very accurate ACES performance on both CPU and GPU.
+
+
+Built-in Color Transforms
+*************************
+
+OCIO v2 has the ability to generate a set of commonly used transforms
+on demand in memory, avoiding the need for external LUT files.  This means
+that some configs may be built with no need for any external files.
+The current set of BuiltInTransforms includes the ACES Color Space Conversion
+transforms as well as the components needed for the ACES Output Transforms.
+(In OCIO v2, the ACES Output Transforms are factored into a View Transform
+and a Display Color Space.)
+
+**Config authors**: You will be able to simply use a built-in transform rather
+than creating your own versions of common color spaces.
+
+**Developers**: It is possible to create configs that don't require external
+LUT files and are thus more robust (e.g. render farms, cloud processing).
 
 
 Support for Academy/ASC CLF
@@ -143,12 +159,13 @@ The Autodesk Color Transform Format (CTF) is able to serialize all OCIO
 transforms into an XML format that is a superset of Academy/ASC CLF.
 This is very useful for troubleshooting.  It also opens up new workflow
 possibilities.  The new ``ociowrite`` command-line tool will serialize
-an OCIO processor to a CTF file.
+an OCIO Processor object to a CTF file.  Similarly there is a write method
+on the GroupTransform class.
 
 **Config authors**: You may use CTF to store a chain of arbitrary OCIO transforms
 to an XML file for use in a config or to send as a self-contained file.
 
-**Developers**: A given OCIO processor may be easily serialized and restored.
+**Developers**: A given OCIO Processor may be easily serialized and restored.
 
 
 Access to all transforms from the public API
@@ -165,23 +182,6 @@ use OCIO to read and write the many LUT formats it supports, including the
 Common LUT Format (CLF).
 
 
-Built-in Color Transforms
-*************************
-
-OCIO v2 has the ability to generate a set of commonly used transforms
-on demand in memory, avoiding the need for external LUT files.  This means
-that some configs may be built with no need for any external files.
-The current set of BuiltInTransforms is quite limited (basically the ACES
-Color Space Conversion transforms) but the goal is to expand this to cover
-most of the transforms in the ACES config by the time v2 is released.
-
-**Config authors**: You will be able to simply use built-in transform rather
-than creating your own versions of common color spaces.
-
-**Developers**: It is possible to create configs that don't require external
-LUT files and are thus more robust (e.g. render farms, cloud processing).
-
-
 Display-referred Connection Space
 *********************************
 
@@ -189,21 +189,23 @@ There is now a second reference space in OCIO.  The original reference space
 is typically a scene-referred color space and the new space is intended to be 
 for a display-referred color space.  This means that the conversion from a
 scene-referred space to a display space may be broken down into a view transform
-plus a display color space.  There are new config sections for view_transforms
-and display_colorspaces.
+plus a display color space.  There are new config sections for ``view_transforms``
+and ``display_colorspaces``.
 
 **Config authors**: Break down your Views into a view transform and display
 color space.  Having a separate display color space faciitates direct conversion
 from one display to another without needing to convert back to the scene-referred
 reference space.
 
-**Developers**: No impact.
+**Developers**: No impact.  The new display color spaces will appear in menus
+with other color spaces by default.
 
 
 Shared Views
 ************
 
-It is now possible to define a View and reuse it for multiple displays.
+It is now possible to define a View and reuse it for multiple displays.  There is
+a new ``shared_views`` section of the config file.
 
 **Config authors**: Make your configs easier to read and maintain by using
 shared views.
@@ -218,37 +220,72 @@ OCIO v2 is able to read basic ICC monitor profiles.  Also a new virtual display
 object in the config allows a config author to define how OCIO may instantiate
 a new display and views from a user's ICC monitor profile.
 
-**Config authors**: Add a virtual display to your config to enable a user to
-use the ICC profile for their monitor.
+**Config authors**: Add a ``virtual_display`` to your config to enable a user to
+use the ICC profile for their monitor.  Note that if you do not add the virtual
+display, applications will not be able to instantiate an ICC profile with your config.
 
-**Developers**: There is new code to add ask OCIO to instantiate a new display
-and views from an ICC profile.
+**Developers**: There is new SystemMonitor code to use to ask OCIO to instantiate 
+a new display and views from an ICC profile.  This is also able to query the operating
+system on Mac and Windows to obtain the user's current profile.
 
 
 A categories attribute for color spaces
 ***************************************
 
-A new attribute called "categories" has been added to color spaces.  The goal is
+A new attribute called ``categories`` has been added to color spaces.  The goal is
 to allow applications to filter the complete list of color spaces down to only
 show users the ones needed for the task at hand.  For example, when choosing a
-working space, it may not be useful to show all the color spaces in the config.
+working space, it may not be ideal to show all the color spaces in the config.
+The list of color spaces is filtered by both a "user-defined set" and an
+"application-defined" set of categories.  For example, the user-defined set
+could include categories for which department (lighting, comp, etc.) and the
+artist experience level (e.g. basic or advanced).  The application-defined set
+could include categories for different types of menus, for example working
+spaces vs. file IO.
 
 **Config authors**: Add the categories attribute to help applications shorten 
 their menus to only include the appropriate color spaces for various tasks.
+Configure your app configuration scripts to set the ``OCIO_USER_CATEGORIES`` env
+var with the appropriate categories.
 
 **Developers**: Use the Menu Helpers classes to build your application color 
-space menus to take advantage of this feature.
+space menus to take advantage of this feature.  Publish the category string
+you use for each of your color space menus so config authors may use them in
+their configs.
+
+
+Encoding Attribute
+******************
+
+There is a new attribute called ``encoding`` that may be used to indicate the
+type of encoding used for a color space.  The encoding options are ``scene-linear``,
+``display-linear``, ``log``, ``sdr-video``, ``hdr-video``, and ``data``. This is useful
+to applications since image processing algorithms often need to know the encoding
+for optimium results.  The encoding may also be used in the viewing rules to
+filter views based on the color space.  The encoding attribute may be used
+in combination with the categories.  For example, an application may ask for
+the list of all color spaces with a category "working-space" and an encoding
+"scene-linear".
+
+**Config authors**: Set the encoding attribute on your color spaces to help
+applications know how to process images in that space better.  Also, use the
+encoding in viewing rules to allow applications to filter the views to be
+appropriate for a given color space.
+
+**Developers**: Knowing the encoding of a color space may allow you to 
+optimize your image processing algorithms.
 
 
 Inactive color space list
 *************************
 
-There is now an inactive_colorspaces list in the config and a corresponding
+There is now an ``inactive_colorspaces`` list in the config and a corresponding
 environment variable.  This allows config authors to keep color spaces in a
 config but prevent them from appearing in application menus.
 
 **Config authors**: This allows you to remove color spaces you don't want
-users to have access to.
+users to have access to.  This may also be set via the ``OCIO_INACTIVE_COLORSPACES``
+environment variable.
 
 **Developers**: These color spaces will not show up in the normal list of
 color spaces, however you may still use them as arguments to getProcessor.
@@ -256,6 +293,23 @@ color spaces, however you may still use them as arguments to getProcessor.
 of the config where those spaces were active.)  The Menu Helpers classes 
 show how to deal with temporarily adding an inactive color space to menus 
 when it is necessary.
+
+
+Color space Aliases
+*******************
+
+There is a new ``aliases`` attribute that allows the config author to define
+a set of alternate names for a color space.  For example, the official name
+may be a user-friendly name for the UI and a shorter name that is intended
+for embedding in file paths may be declared as an alias. 
+
+**Config authors**: This avoids the need to add duplicates of color spaces 
+simply to have an alternate name.  It may also be used to handle deprecated
+color space names.
+
+**Developers**: There is also a new getCanonicalName method on the Config 
+that may be used to resolve aliases to the official name.  Before saving a
+color space name, it may be desirable to convert to the canonical name.
 
 
 Hierarchical menus
@@ -272,30 +326,13 @@ long color space lists better.
 space menus to take advantage of this feature.
 
 
-Encoding Attribute
-******************
-
-There is a new attribute called "encoding" that may be used to indicate the
-type of encoding used for a color space.  Knowing this is often useful to
-applications since image processing algorithms often need to know the encoding
-for optimium results.  The encoding may also be used in the viewing rules to
-filter views based on the color space.
-
-**Config authors**: Set the encoding attribute on your color spaces to help
-applications know how to process images in that space better.  Also, use the
-encoding in viewing rules to allow applications to filter the views to be
-appropriate for a given color space.
-
-**Developers**: Knowing the encoding of a color space may allow you to 
-optimize your image processing algorithms.
-
-
 Color Picker Helper
 *******************
 
 There are Mixing Helpers classes that show how to implement a color picker
 that works well with scene-linear data.  This facilitates making UI sliders
-for linear values and also doing sensible RGB to HSV conversions.
+for linear values and also doing sensible RGB to HSV conversions with float
+values outside [0,1].
 
 **Config authors**: No impact.
 
@@ -346,11 +383,15 @@ This is useful especially when users are making live updates, for example
 when adjusting the exposure or gamma of an image in a viewport.  On the GPU,
 these are mapped to uniforms.
 
-**Config authors**: No impact.
+**Config authors**: No impact.  Dynamic properties are not exposed in configs,
+which are locked representations of a color pipeline.
 
-**Developers**: Expose dynamic properties where possible for improved 
-performance.  See the Viewing Pipeline application helpers code or the
-ociodisplay command-line utility for examples.
+**Developers**: Expose dynamic properties in situations where the user is
+creating a transform with editable values or when editing exposure or gamma
+controls on a viewing pipeline for improved performance.  See the 
+DisplayViewHelpers application helpers code or the unit tests for examples.
+Note however that transforms included in a config should be considered 
+locked.
 
 
 New Transforms for Building Looks
@@ -366,10 +407,12 @@ transforms make use of dynamic properties to facilitate live interactive
 adjustments on the CPU and GPU.
 
 **Config authors**: You may find these new transforms useful when building
-Look Transforms.
+Look Transforms.  When used in a config, the parameters may be considered
+locked (same as a CDL).
 
 **Developers**: You may want to expose editing functionality for these
-transforms and support their dynamic properties.
+transforms and support their dynamic properties.  Note however that once
+a transform is included in a config, it should be considered locked.
 
 
 Providing an Interchange Mechanism Between Configs
@@ -386,10 +429,27 @@ new roles called aces_interchange and cie_xyz_d65_interchange.
 **Developers**: This feature may open up long awaited workflows for you.
 
 
+Named Color Transforms
+**********************
+
+There is a new ``named_transforms`` section of the config that may be
+used to define transforms that the config author wants to make available
+but which are not actually a color space, look, or view.  For example, a
+gamut mapping transform or a utility curve transform.
+
+**Config authors**: These may provide a useful alternative to color spaces.
+
+**Developers**: These new transforms do not appear in color space menus
+by default.  So action is needed to make them available to users.  This
+could be done by adding a new Named Transform tool alongside an existing
+Color Space Transform tool, for example.
+
+
 Processor Caching
 *****************
 
-In OCIO v2 there is now a cache for Processors.  
+In OCIO v2 there is now a cache for Processors.  The caching system is aware of
+context variables and will detect if a variable has been changed.
 
 **Config authors**: No impact.
 
@@ -403,9 +463,10 @@ New Description and Name Attributes
 A new ``name`` attribute has been added to many of the OCIO transforms to provide
 some additional labeling options in a config file.  The ``description`` attribute
 has been added to Views to allow similar description strings as are used in color
-spaces.
+spaces.  There is also a ``name`` attribute at the top level of the config itself.
 
-**Config authors**: These may prove useful.
+**Config authors**: These may prove useful.  Consider updating the name attribute of
+the config as the config file is versioned.
 
 **Developers**: Consider exposing the description string for both color spaces
 and views.
@@ -420,7 +481,7 @@ DisplayTransform
 
 The decision was made to refactor DisplayTransform to make it easier to use
 and easier to invert.  The functionality of the DisplayTransform is now in
-the Viewing Pipeline class in src/libutils/apphelpers.  The original
+the LegacyViewingPipeline class in src/OpenColorIO/apphelpers.  The original
 DisplayTransform class has been removed.  There is a new DisplayViewTransform
 available that now supports inversion.
 
@@ -428,8 +489,8 @@ available that now supports inversion.
 
 **Developers**: The DisplayViewTransform, along with ColorSpaceTransform are
 the two key pieces of functionality to expose to users.  If you were using
-the original DisplayTransform, update to Viewing Pipeline for viewports.
-But we recommend that you still expose DisplayViewTransform to users as a
+the original DisplayTransform, update to LegacyViewingPipeline for viewports.
+But you should also consider exposing DisplayViewTransform to users as a
 tool for baking in (or inverting) a display + view.
 
 
@@ -489,7 +550,6 @@ actually context variables).
 **Developers**: No impact.
 
 
-
 Allocation Variables
 ********************
 
@@ -503,3 +563,56 @@ color spaces anymore.
 
 **Developers**: Update your applications to use the new GPU renderer.
 
+
+Color Space Conversion No-ops
+*****************************
+
+In OCIO v1, a ColorSpaceTransform from color space A to color space A (i.e.,
+using the same color space for source and destination) was not necessarily a
+no-op.  In OCIO v2, this is a no-op.  In other words, all color spaces may
+be considered to be in an equality group with themselves.
+
+**Config authors**: Please be aware of this change.
+
+**Developers**: No impact.
+
+
+CDLTransform XML read/write
+***************************
+
+In OCIO v1, the CDLTransform had getXML and setXML methods.  In OCIO v2, the
+read/write/metadata handling has been refactored to be more like other formats.
+CreateFromFile is the replacement for setXML and the write method on the
+GroupTransform class is the replacement for getXML.  The FormatMetadata class
+provides extensive metadata access.
+
+**Config authors**: No impact.
+
+**Developers**: Please update your code to use the new methods.
+
+
+Version Handling
+****************
+
+In OCIO v1, the YAML parser would warn if the config version was higher than
+the library version but continue to try to read it.  In OCIO v2, if the config
+version is higher than the library it will immediately throw an exception.
+
+**Config authors**: Please be aware of the change.
+
+**Developers**: No impact.
+
+
+Bypassing Data Spaces
+*********************
+
+In OCIO v1, if a color space set its isdata attribute to true, a ColorSpaceTransform
+would be a no-op.  The DisplayTransform also bypassed most of its processing.
+In OCIO v2, data spaces are still bypassed by default.  However, the application 
+developer may now use a new argument to specify that data spaces should be
+processed.  
+
+**Config authors**: Please be aware of the change.
+
+**Developers**: This may be useful, for example, when displaying data color spaces on
+an HDR monitor.

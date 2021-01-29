@@ -40,8 +40,3 @@
       :module: PyOpenColorIO
       :value: <ProcessorCacheFlags.PROCESSOR_CACHE_SHARE_DYN_PROPERTIES: 2>
 
-
-   .. py:method:: ProcessorCacheFlags.value
-      :module: PyOpenColorIO
-      :property:
-

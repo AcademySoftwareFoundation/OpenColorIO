@@ -18,8 +18,6 @@
 
       Add colorspace name. Will throw if:
 
-
-
       - RuleIndex is invalid.
       - :cpp:func:`:ref:`ViewingRules::getNumEncodings`` is not 0.
 
@@ -28,8 +26,6 @@
       :module: PyOpenColorIO
 
       Add encoding name. Will throw if:
-
-
 
       - RuleIndex is invalid.
       - :cpp:func:`:ref:`ViewingRules::getNumColorSpaces`` is not 0.
@@ -81,7 +77,6 @@
       :module: PyOpenColorIO
 
       Insert a rule at a given ruleIndex.
-
 
       Rule currently at ruleIndex will be pushed to index: ruleIndex + 1. If ruleIndex is :cpp:func:`ViewingRules::getNumEntries` new rule will be added at the end. Will throw if:
       - RuleIndex is invalid (must be less than or equal to cpp:func:`ViewingRules::getNumEntries`).

@@ -6,3 +6,14 @@
 .. py:function:: BitDepthToInt(bitDepth: PyOpenColorIO.BitDepth) -> int
    :module: PyOpenColorIO
 
+
+.. py:function:: BitDepthToInt(bitDepth: PyOpenColorIO.BitDepth) -> int
+   :module: PyOpenColorIO
+
+   .. doxygenfunction:: OpenColorIO_v2_0::BitDepthToString
+
+   .. doxygenfunction:: OpenColorIO_v2_0::BitDepthFromString
+
+   .. doxygenfunction:: OpenColorIO_v2_0::BitDepthIsFloat
+
+   .. doxygenfunction:: OpenColorIO_v2_0::BitDepthToInt

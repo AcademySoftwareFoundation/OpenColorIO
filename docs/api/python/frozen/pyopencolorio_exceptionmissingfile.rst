@@ -8,6 +8,20 @@
 
    An exception class for errors detected at runtime.
 
+   Thrown when OCIO cannot find a file that is expected to exist. This is provided as a custom type to distinguish cases where one wants to continue looking for missing files, but wants to properly fail for other error conditions.
+
+
+.. py:exception:: ExceptionMissingFile
+   :module: PyOpenColorIO
+
+   An exception class for errors detected at runtime.
 
    Thrown when OCIO cannot find a file that is expected to exist. This is provided as a custom type to distinguish cases where one wants to continue looking for missing files, but wants to properly fail for other error conditions.
 
+   .. doxygenclass:: OpenColorIO_v2_0::Exception
+      :members:
+      :undoc-members:
+
+   .. doxygenclass:: OpenColorIO_v2_0::ExceptionMissingFile
+      :members:
+      :undoc-members:

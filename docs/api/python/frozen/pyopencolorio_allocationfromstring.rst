@@ -6,3 +6,10 @@
 .. py:function:: AllocationFromString(str: str) -> PyOpenColorIO.Allocation
    :module: PyOpenColorIO
 
+
+.. py:function:: AllocationFromString(str: str) -> PyOpenColorIO.Allocation
+   :module: PyOpenColorIO
+
+   .. doxygenfunction:: OpenColorIO_v2_0::AllocationToString
+
+   .. doxygenfunction:: OpenColorIO_v2_0::AllocationFromString
