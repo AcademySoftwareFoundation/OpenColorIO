@@ -24,3 +24,8 @@
       :module: PyOpenColorIO
       :value: <ViewType.VIEW_SHARED: 0>
 
+
+   .. py:method:: ViewType.value
+      :module: PyOpenColorIO
+      :property:
+

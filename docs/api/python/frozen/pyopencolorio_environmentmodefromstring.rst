@@ -6,10 +6,3 @@
 .. py:function:: EnvironmentModeFromString(str: str) -> PyOpenColorIO.EnvironmentMode
    :module: PyOpenColorIO
 
-
-.. py:function:: EnvironmentModeFromString(str: str) -> PyOpenColorIO.EnvironmentMode
-   :module: PyOpenColorIO
-
-   .. doxygenfunction:: OpenColorIO_v2_0::EnvironmentModeToString
-
-   .. doxygenfunction:: OpenColorIO_v2_0::EnvironmentModeFromString

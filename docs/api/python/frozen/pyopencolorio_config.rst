@@ -13,6 +13,7 @@
 
       Create a configuration using the OCIO environment variable.
 
+
       If the variable is missing or empty, returns the same result as :ref:`Config::CreateRaw` .
 
 
@@ -36,6 +37,7 @@
 
       Create a fall-back config.
 
+
       This may be useful to allow client apps to launch in cases when the supplied config path is not loadable.
 
 
@@ -48,6 +50,7 @@
       1. GetProcessorFromConfigs(srcConfig: PyOpenColorIO.Config, srcColorSpaceName: str, dstConfig: PyOpenColorIO.Config, dstColorSpaceName: str) -> PyOpenColorIO.Processor
 
       Get a processor to convert between color spaces in two separate configs.
+
 
       This relies on both configs having the aces_interchange role (when srcName is scene-referred) or the role cie_xyz_d65_interchange (when srcName is display-referred) defined. An exception is thrown if that is not the case.
 
@@ -65,6 +68,7 @@
 
       Create an empty config of the current version.
 
+
       Note that an empty config will not pass validation since required elements will be missing.
 
 
@@ -77,6 +81,7 @@
 
       Add a color space to the configuration.
 
+
       .. note::
          If another color space is already present with the same name, this will overwrite it. This stores a copy of the specified color space.
 
@@ -88,6 +93,7 @@
       :module: PyOpenColorIO
 
       Add a (reference to a) shared view to a display.
+
 
       The shared view must be part of the config. See :ref:`Config::addSharedView`
 
@@ -129,6 +135,7 @@
 
       Add a single search path to the end of the list.
 
+
       Paths may be either absolute or relative. Relative paths are relative to the working directory. Forward slashes will be normalized to reverse for Windows. Environment (context) variables may be used in paths.
 
 
@@ -146,6 +153,7 @@
       :module: PyOpenColorIO
 
       Remove all the color spaces from the configuration.
+
 
       .. note::
          Removing color spaces from a :ref:`Config` does not affect any :ref:`ColorSpaceSet` sets that have already been created.
@@ -216,6 +224,7 @@
 
       Get the color space from all the color spaces (i.e. active and inactive) and return null if the name is not found.
 
+
       .. note::
          The fcn accepts either a color space name, role name, or alias. (Color space names take precedence over roles.)
 
@@ -245,6 +254,7 @@
 
       Get all active color spaces having a specific category in the order they appear in the config file.
 
+
       .. note::
          If the category is null or empty, the method returns all the active color spaces like :cpp:func:`:ref:`Config::getNumColorSpaces`` and :cpp:func:`:ref:`Config::getColorSpaceNameByIndex`` do.
 
@@ -268,6 +278,7 @@
       :module: PyOpenColorIO
 
       Get the default coefficients for computing luma.
+
 
       .. note::
          There is no "1 size fits all" set of luma coefficients. (The values are typically different for each colorspace, and the application of them may be nonsensical depending on the intensity coding anyways). Thus, the 'right' answer is to make these functions on the :cpp:class:`:ref:`Config`` class. However, it's often useful to have a config-wide default so here it is. We will add the colorspace specific luma call if/when another client is interesting in using it.
@@ -345,6 +356,7 @@
       :module: PyOpenColorIO
 
       Get the family separator.
+
 
       A single character used to separate the family string into tokens for use in hierarchical menus. Defaults to '/'.
 
@@ -440,6 +452,7 @@
       7. getProcessor(self: PyOpenColorIO.Config, transform: PyOpenColorIO.Transform) -> PyOpenColorIO.Processor
 
       Get the processor for the specified transform.
+
 
       Not often needed, but will allow for the re-use of atomic OCIO functionality (such as to apply an individual LUT file).
 
@@ -538,6 +551,7 @@
 
       Remove a color space from the configuration.
 
+
       .. note::
          It does not throw an exception. Name must be the canonical name. If a role name or alias is provided or if the name is not in the config, nothing is done.
 
@@ -549,6 +563,7 @@
       :module: PyOpenColorIO
 
       Remove the view and the display if no more views.
+
 
       It does not remove the associated color space. If the view name is a shared view, it only removes the reference to the view from the display but the shared view, remains in the config.
 
@@ -572,6 +587,7 @@
 
       Returns the string representation of the :ref:`Config` in YAML text form.
 
+
       This is typically stored on disk in a file with the extension .ocio. NB: This does not validate the config. Applications should validate before serializing.
 
 
@@ -579,6 +595,7 @@
       :module: PyOpenColorIO
 
       $OCIO_ACTIVE_DISPLAYS envvar can, at runtime, optionally override the allowed displays. It is a comma or colon delimited list. Active displays that are not in the specified profile will be ignored, and the left-most defined display will be the default.
+
 
       Comma-delimited list of names to filter and order the active displays.
 
@@ -590,6 +607,7 @@
       :module: PyOpenColorIO
 
       $OCIO_ACTIVE_VIEWS envvar can, at runtime, optionally override the allowed views. It is a comma or colon delimited list. Active views that are not in the specified profile will be ignored, and the left-most defined view will be the default.
+
 
       Comma-delimited list of names to filter and order the active views.
 
@@ -620,6 +638,7 @@
 
       Set the family separator.
 
+
       Succeeds if the characters is null or a valid character from the ASCII table i.e. from value 32 (i.e. space) to 126 (i.e. '~'); otherwise, it throws an exception.
 
 
@@ -627,6 +646,7 @@
       :module: PyOpenColorIO
 
       Set file rules.
+
 
       .. note::
          The argument is cloned.
@@ -636,6 +656,7 @@
       :module: PyOpenColorIO
 
       Set/get a list of inactive color space or named transform names.
+
 
       Notes:
       - List can contain color space and/or named transform names.
@@ -683,6 +704,7 @@
 
       Set all search paths as a concatenated string, ':' to separate the paths.
 
+
       See :ref:`addSearchPath` for a more robust and platform-agnostic method of setting the search paths.
 
 
@@ -700,6 +722,7 @@
       :module: PyOpenColorIO
 
       Set viewing rules.
+
 
       .. note::
          The argument is cloned.
@@ -721,6 +744,7 @@
       :module: PyOpenColorIO
 
       Performs a thorough validation for the most common user errors.
+
 
       This will throw an exception if the config is malformed. The most common error occurs when references are made to colorspaces that do not exist.
 

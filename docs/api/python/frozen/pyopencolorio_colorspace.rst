@@ -30,6 +30,7 @@
 
       Add a single category.
 
+
       .. note::
          Will do nothing if the category already exists.
 
@@ -120,6 +121,7 @@
       :module: PyOpenColorIO
 
       Remove a category.
+
 
       .. note::
          Will do nothing if the category is missing.

@@ -8,16 +8,3 @@
 
    cpp:function::
 
-
-.. py:function:: IsEnvVariablePresent(name: str) -> bool
-   :module: PyOpenColorIO
-
-   cpp:function::
-
-   .. doxygenfunction:: OpenColorIO_v2_0::GetEnvVariable
-
-   .. doxygenfunction:: OpenColorIO_v2_0::SetEnvVariable
-
-   .. doxygenfunction:: OpenColorIO_v2_0::UnsetEnvVariable
-
-   .. doxygenfunction:: OpenColorIO_v2_0::IsEnvVariablePresent

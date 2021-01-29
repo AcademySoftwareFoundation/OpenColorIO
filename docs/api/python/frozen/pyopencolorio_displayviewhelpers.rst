@@ -26,12 +26,3 @@
 
    Remove a (display, view) pair including the associated color space (only if not used). Note that the view is always removed but the display is only removed if empty.
 
-
-.. py:function:: RemoveDisplayView(config: PyOpenColorIO.Config, displayName: str, viewName: str) -> None
-   :module: PyOpenColorIO.DisplayViewHelpers
-
-   Remove a (display, view) pair including the associated color space (only if not used). Note that the view is always removed but the display is only removed if empty.
-
-   .. doxygennamespace:: OpenColorIO_v2_0::DisplayViewHelpers
-      :members:
-      :undoc-members:

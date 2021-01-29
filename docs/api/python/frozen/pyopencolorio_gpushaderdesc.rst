@@ -70,6 +70,7 @@
 
       Create the OCIO shader program.
 
+
       .. note::
 
 
@@ -205,6 +206,11 @@
    .. py:attribute:: TextureType.TEXTURE_RGB_CHANNEL
       :module: PyOpenColorIO.GpuShaderDesc
       :value: <TextureType.TEXTURE_RGB_CHANNEL: 1>
+
+
+   .. py:method:: TextureType.value
+      :module: PyOpenColorIO.GpuShaderDesc
+      :property:
 
 
 .. py:class:: UniformData

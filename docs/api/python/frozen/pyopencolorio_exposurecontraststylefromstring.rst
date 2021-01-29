@@ -6,10 +6,3 @@
 .. py:function:: ExposureContrastStyleFromString(str: str) -> PyOpenColorIO.ExposureContrastStyle
    :module: PyOpenColorIO
 
-
-.. py:function:: ExposureContrastStyleFromString(str: str) -> PyOpenColorIO.ExposureContrastStyle
-   :module: PyOpenColorIO
-
-   .. doxygenfunction:: OpenColorIO_v2_0::ExposureContrastStyleToString
-
-   .. doxygenfunction:: OpenColorIO_v2_0::ExposureContrastStyleFromString

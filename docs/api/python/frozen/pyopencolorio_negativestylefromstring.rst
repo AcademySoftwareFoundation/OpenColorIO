@@ -6,10 +6,3 @@
 .. py:function:: NegativeStyleFromString(str: str) -> PyOpenColorIO.NegativeStyle
    :module: PyOpenColorIO
 
-
-.. py:function:: NegativeStyleFromString(str: str) -> PyOpenColorIO.NegativeStyle
-   :module: PyOpenColorIO
-
-   .. doxygenfunction:: OpenColorIO_v2_0::NegativeStyleToString
-
-   .. doxygenfunction:: OpenColorIO_v2_0::NegativeStyleFromString

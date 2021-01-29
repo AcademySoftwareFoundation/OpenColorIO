@@ -13,15 +13,3 @@
    .. note::
       The method does not apply to instance specific caches such as the processor cache in a config instance or the GPU and CPU processor caches in a processor instance. Here deleting the instance flushes the cache.
 
-
-.. py:function:: ClearAllCaches() -> None
-   :module: PyOpenColorIO
-
-   During normal usage, OpenColorIO tends to cache certain global information (such as the contents of LUTs on disk, intermediate results, etc.). Calling this function will flush all such information. The global information are related to LUT file identifications, loaded LUT file content and CDL transforms from loaded CDL files.
-
-   Under normal usage, this is not necessary, but it can be helpful in particular instances, such as designing OCIO profiles, and wanting to re-read luts without restarting.
-
-   .. note::
-      The method does not apply to instance specific caches such as the processor cache in a config instance or the GPU and CPU processor caches in a processor instance. Here deleting the instance flushes the cache.
-
-   .. doxygenfunction:: OpenColorIO_v2_0::ClearAllCaches

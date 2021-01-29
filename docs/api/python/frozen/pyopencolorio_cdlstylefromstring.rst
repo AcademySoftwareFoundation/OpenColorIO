@@ -6,10 +6,3 @@
 .. py:function:: CDLStyleFromString(str: str) -> PyOpenColorIO.CDLStyle
    :module: PyOpenColorIO
 
-
-.. py:function:: CDLStyleFromString(str: str) -> PyOpenColorIO.CDLStyle
-   :module: PyOpenColorIO
-
-   .. doxygenfunction:: OpenColorIO_v2_0::CDLStyleToString
-
-   .. doxygenfunction:: OpenColorIO_v2_0::CDLStyleFromString

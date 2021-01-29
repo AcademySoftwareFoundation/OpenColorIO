@@ -244,7 +244,7 @@ Roles
 
 Required.
 
-A "role" is an alias to a color space, which can be used by
+A "role" is an alternate name to a color space, which can be used by
 applications to perform task-specific color transforms without
 requiring the user to select a color space by name.
 

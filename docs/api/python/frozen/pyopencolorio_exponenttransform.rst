@@ -8,6 +8,7 @@
 
    Represents exponent transform: pow( clamp(color), value ).
 
+
    .. note::
       For configs with version == 1: Negative style is ignored and if the exponent is 1.0, this will not clamp. Otherwise, the input color will be clamped between [0.0, inf]. For configs with version > 1: Negative value handling may be specified via setNegativeStyle.
 

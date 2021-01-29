@@ -6,14 +6,3 @@
 .. py:function:: CombineTransformDirections(direction1: PyOpenColorIO.TransformDirection, direction2: PyOpenColorIO.TransformDirection) -> PyOpenColorIO.TransformDirection
    :module: PyOpenColorIO
 
-
-.. py:function:: CombineTransformDirections(direction1: PyOpenColorIO.TransformDirection, direction2: PyOpenColorIO.TransformDirection) -> PyOpenColorIO.TransformDirection
-   :module: PyOpenColorIO
-
-   .. doxygenfunction:: OpenColorIO_v2_0::TransformDirectionToString
-
-   .. doxygenfunction:: OpenColorIO_v2_0::TransformDirectionFromString
-
-   .. doxygenfunction:: OpenColorIO_v2_0::GetInverseTransformDirection
-
-   .. doxygenfunction:: OpenColorIO_v2_0::CombineTransformDirections

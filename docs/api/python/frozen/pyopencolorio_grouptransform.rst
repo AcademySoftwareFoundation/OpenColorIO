@@ -73,6 +73,7 @@
 
       Write the transforms comprising the group to the stream.
 
+
       Writing (as opposed to Baking) is a lossless process. An exception is thrown if the processor cannot be losslessly written to the specified file format. Transforms such as :ref:`FileTransform` or :ref:`ColorSpaceTransform` are resolved into write-able simple transforms using the config and context. Supported formats include CTF, CLF, and CDL. All available formats can be listed with the following: .. code-block:: cpp
 
           // What are the allowed writing output formats?
@@ -88,6 +89,7 @@
       2. write(self: PyOpenColorIO.GroupTransform, formatName: str, config: PyOpenColorIO.Config = None) -> str
 
       Write the transforms comprising the group to the stream.
+
 
       Writing (as opposed to Baking) is a lossless process. An exception is thrown if the processor cannot be losslessly written to the specified file format. Transforms such as :ref:`FileTransform` or :ref:`ColorSpaceTransform` are resolved into write-able simple transforms using the config and context. Supported formats include CTF, CLF, and CDL. All available formats can be listed with the following: .. code-block:: cpp
 

@@ -6,10 +6,3 @@
 .. py:function:: GpuLanguageFromString(str: str) -> PyOpenColorIO.GpuLanguage
    :module: PyOpenColorIO
 
-
-.. py:function:: GpuLanguageFromString(str: str) -> PyOpenColorIO.GpuLanguage
-   :module: PyOpenColorIO
-
-   .. doxygenfunction:: OpenColorIO_v2_0::GpuLanguageToString
-
-   .. doxygenfunction:: OpenColorIO_v2_0::GpuLanguageFromString
