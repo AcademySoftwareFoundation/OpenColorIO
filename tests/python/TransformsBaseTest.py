@@ -3,6 +3,7 @@
 
 import PyOpenColorIO as OCIO
 
+
 class TransformsBaseTest(object):
     def test_direction(self):
         """
