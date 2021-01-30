@@ -1,5 +1,5 @@
 name = "OpenColorIO"
-version = "2.0.0.0"
+version = "2.0.0.1"
 description = """
 OpenColorIO -- it's open, it's color, and it's io af
 """
@@ -27,8 +27,8 @@ def variants():
         'python-2.7.**',
     ]
     ephemerals = [
-        #'.shared',
-        '.static',
+        '.shared-1',
+        '.shared-0',
     ]
     return [
         expand_requires(*requires + [e, py]) for e in ephemerals for py in pys
@@ -40,23 +40,20 @@ hashed_variants = True
 requires = []
 
 private_build_requires = [
-    #"gcc-4",
-    "gcc-4",
+    "gcc-4+<9",
     "ninja",
-    #"llvm-8",
     "cmake-3.12+",
     #"GLEW-2.1.0",
     #"GLFW-3.3.2",
     #"freeglut-3",
 
-    # docs
-    #'Sphinx',
-    'sphinx_press_theme',
-    'testresources',
-    'recommonmark',
-    'breathe',
-    'doxygen',
-    'sphinx_tabs',
+    ## docs
+    #'sphinx_press_theme',
+    #'testresources',
+    #'recommonmark',
+    #'breathe',
+    #'doxygen',
+    #'sphinx_tabs',
 
     # third-party (optional)
     #"pybind11-2.5.0",
@@ -70,7 +67,12 @@ private_build_requires = [
 
 def pre_build_commands():
     # options
-    env.LDFLAGS = '-Wl,-rpath,{build.install_path}/lib $LDFLAGS -stdlib=libc++'
+    shared = intersects(ephemerals.get('shared', '0'), '1')
+    build_python = 'python' in resolve
+    build_nuke = 'nuke' in resolve
+    build_apps = 'OpenImageIO' in resolve
+
+    env.LDFLAGS = '-Wl,-rpath,{build.install_path}/lib $LDFLAGS'
     env.CXXFLAGS = '$CXXFLAGS -Wno-deprecated-declarations -Wno-unused-variable -fPIC'
 
     env.OpenImageIO_ROOT = '$REZ_OPENIMAGEIO_ROOT'
@@ -81,16 +83,16 @@ def pre_build_commands():
     env.Expat_ROOT = resolve.libexpat.root if 'libexpat' in resolve else ''
 
     env.REZ_BUILD_CMAKE_ARGS = ' '.join([
-        '-DBUILD_SHARED_LIBS=%s' % ('ON' if '.shared' in resolve else 'OFF'),
+        '-DBUILD_SHARED_LIBS={shared}',
         '-DOCIO_BUILD_APPS=OFF',
         '-DOCIO_BUILD_OPENFX=OFF',
-        '-DOCIO_BUILD_NUKE=OFF',
+        '-DOCIO_BUILD_NUKE={build_nuke}',
         '-DOCIO_BUILD_DOCS=OFF',
         '-DOCIO_BUILD_TESTS=OFF',
         '-DOCIO_BUILD_GPU_TESTS=OFF',
-        '-DOCIO_BUILD_PYTHON=%s' % ('ON' if 'python' in resolve else 'OFF'),
+        '-DOCIO_BUILD_PYTHON={build_python}',
         '-DOCIO_BUILD_JAVA=OFF',
-        #'-DOCIO_USE_HEADLESS=ON',
+        '-DOCIO_USE_HEADLESS=ON',
         #'-DOCIO_NAMESPACE=OpenColorIO',
         #'-DOCIO_LIBNAME_SUFFIX=""',
         '-DCMAKE_INSTALL_PREFIX={build.install_path}',
@@ -100,6 +102,11 @@ def pre_build_commands():
         '-DOCIO_WARNING_AS_ERROR=OFF',
         '-DPybind11_ROOT={resolve.pybind11.root}'
         if 'pybind11' in resolve else '',
+        '-Dpystring_ROOT={resolve.pystring.root}'
+        if 'pystring' in resolve else '',
+        '-DHalf_ROOT={resolve.openexr.root}' if 'openexr' in resolve else
+        '-DHalf_ROOT={resolve.half.root}' if 'half' in resolve else '',
+        '-DExpat_ROOT={resolve.expat.root}' if 'expat' in resolve else '',
         '-DPython_EXECUTABLE={resolve.python.root}/bin/python',
     ])
 
@@ -111,12 +118,7 @@ ninja {install}
 
 build_command = """
 git clone https://github.com/AcademySoftwareFoundation/OpenColorIO.git
-cd OpenColorIO
-# git remote add autodesk-forks http://www.github.com/autodesk-forks/OpenColorIO.git
-# printf ':q\\n' | git pull -s recursive -Xtheirs autodesk-forks adsk_contrib/grading
-cd ..
 cmake OpenColorIO $REZ_BUILD_CMAKE_ARGS
-
 make {install} -j$REZ_BUILD_THREAD_COUNT -Wno-unused-variable
 """
 
