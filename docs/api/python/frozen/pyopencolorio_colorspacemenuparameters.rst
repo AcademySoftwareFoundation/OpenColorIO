@@ -46,16 +46,6 @@
    5) If AddColorSpace has been used to add any additional items, these are appended to the final list.
 
 
-   .. py:class:: ColorSpaceMenuParameters.AddedColorSpaceIterator
-      :module: PyOpenColorIO
-
-
-      .. py:method:: ColorSpaceMenuParameters.AddedColorSpaceIterator.__init__(*args, **kwargs)
-         :module: PyOpenColorIO
-
-         Initialize self.  See help(type(self)) for accurate signature.
-
-
    .. py:method:: ColorSpaceMenuParameters.__init__(*args, **kwargs)
       :module: PyOpenColorIO
 
@@ -64,10 +54,6 @@
       1. __init__(self: PyOpenColorIO.ColorSpaceMenuParameters, config: PyOpenColorIO.Config) -> None
 
       2. __init__(self: PyOpenColorIO.ColorSpaceMenuParameters, config: PyOpenColorIO.Config, role: str = '', includeColorSpaces: bool = True, searchReferenceSpaceType: PyOpenColorIO.SearchReferenceSpaceType = <SearchReferenceSpaceType.SEARCH_REFERENCE_SPACE_ALL: 2>, includeNamedTransforms: bool = False, appCategories: str = '', encodings: str = '', userCategories: str = '', includeRoles: bool = False) -> None
-
-
-   .. py:method:: ColorSpaceMenuParameters.__str__(self: PyOpenColorIO.ColorSpaceMenuParameters) -> str
-      :module: PyOpenColorIO
 
 
    .. py:method:: ColorSpaceMenuParameters.addColorSpace(self: PyOpenColorIO.ColorSpaceMenuParameters, colorSpace: str) -> None
@@ -85,7 +71,7 @@
       :module: PyOpenColorIO
 
 
-   .. py:method:: ColorSpaceMenuParameters.getAddedColorSpaces(self: PyOpenColorIO.ColorSpaceMenuParameters) -> OpenColorIO_v2_0rc1::PyIterator<std::shared_ptr<OpenColorIO_v2_0rc1::ColorSpaceMenuParameters>,0>
+   .. py:method:: ColorSpaceMenuParameters.getAddedColorSpaces(self: PyOpenColorIO.ColorSpaceMenuParameters) -> PyOpenColorIO.ColorSpaceMenuParameters.AddedColorSpaceIterator
       :module: PyOpenColorIO
 
 

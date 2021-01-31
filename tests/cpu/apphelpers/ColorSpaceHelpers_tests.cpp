@@ -412,7 +412,7 @@ OCIO_ADD_TEST(ColorSpaceMenuHelper, categories)
 
     // Use a role.
 
-    params->setRole("rendering");
+    params->setRole(OCIO::ROLE_RENDERING);
     params->setAppCategories("");
     params->setIncludeRoles(false);
 
@@ -907,7 +907,7 @@ OCIO_ADD_TEST(ColorSpaceMenuHelper, additional_color_space)
     // Add a role (first that refers to color space already there or not).
     //
 
-    params->addColorSpace("rendering");
+    params->addColorSpace(OCIO::ROLE_RENDERING);
     OCIO_CHECK_EQUAL(params->getNumAddedColorSpaces(), 3);
     OCIO_CHECK_NO_THROW(menuHelper = OCIO::ColorSpaceMenuHelper::Create(params));
     // Color space is already there: nothing is added.

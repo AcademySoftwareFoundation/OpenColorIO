@@ -9,8 +9,10 @@
    :exclude-members: TextureType, 
                      TEXTURE_RED_CHANNEL, 
                      TEXTURE_RGB_CHANNEL, 
+                     UniformData,
                      Texture, 
                      Texture3D, 
+                     UniformIterator,
                      TextureIterator, 
                      Texture3DIterator,
                      DynamicPropertyIterator
@@ -24,6 +26,10 @@
    .. py:method:: name() -> str
       :property:
 
+.. autoclass:: PyOpenColorIO.GpuShaderDesc.UniformData
+   :members:
+   :undoc-members:
+
 .. autoclass:: PyOpenColorIO.GpuShaderDesc.Texture
    :members:
    :undoc-members:
@@ -31,6 +37,9 @@
 .. autoclass:: PyOpenColorIO.GpuShaderDesc.Texture3D
    :members:
    :undoc-members:
+
+.. autoclass:: PyOpenColorIO.GpuShaderDesc.UniformIterator
+   :special-members: __getitem__, __iter__, __len__, __next__
 
 .. autoclass:: PyOpenColorIO.GpuShaderDesc.TextureIterator
    :special-members: __getitem__, __iter__, __len__, __next__

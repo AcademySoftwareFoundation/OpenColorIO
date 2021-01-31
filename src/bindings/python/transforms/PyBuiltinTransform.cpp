@@ -11,9 +11,8 @@ void bindPyBuiltinTransform(py::module & m)
     BuiltinTransformRcPtr DEFAULT = BuiltinTransform::Create();
 
     auto clsBuiltinTransform = 
-        py::class_<BuiltinTransform, BuiltinTransformRcPtr /* holder */, Transform /* base */>(
-            m, "BuiltinTransform",
-            DOC(BuiltinTransform))
+        py::class_<BuiltinTransform, BuiltinTransformRcPtr, Transform>(
+            m.attr("BuiltinTransform"))
 
         .def(py::init(&BuiltinTransform::Create), 
              DOC(BuiltinTransform, Create))
@@ -36,7 +35,7 @@ void bindPyBuiltinTransform(py::module & m)
         .def("getDescription", &BuiltinTransform::getDescription, 
              DOC(BuiltinTransform, getDescription));
 
-    defStr(clsBuiltinTransform);
+    defRepr(clsBuiltinTransform);
 }
 
 } // namespace OCIO_NAMESPACE

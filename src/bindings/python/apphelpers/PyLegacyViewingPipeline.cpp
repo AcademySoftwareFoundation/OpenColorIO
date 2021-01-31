@@ -6,11 +6,12 @@
 
 namespace OCIO_NAMESPACE
 {
+
 void bindPyLegacyViewingPipeline(py::module & m)
 {
-    auto cls =
-        py::class_<LegacyViewingPipeline, LegacyViewingPipelineRcPtr /* holder */>(
-            m, "LegacyViewingPipeline", DOC(LegacyViewingPipeline))
+    auto clsLegacyViewingPipeline =
+        py::class_<LegacyViewingPipeline, LegacyViewingPipelineRcPtr>(
+            m.attr("LegacyViewingPipeline"))
 
         .def(py::init(&LegacyViewingPipeline::Create),
              DOC(LegacyViewingPipeline, Create))
@@ -45,14 +46,15 @@ void bindPyLegacyViewingPipeline(py::module & m)
         .def("getProcessor", [](LegacyViewingPipelineRcPtr & self,
                                 const ConstConfigRcPtr & config,
                                 const ConstContextRcPtr & context)
-             {
-                 ConstContextRcPtr usedContext = context ? context : config->getCurrentContext();
-                 return self->getProcessor(config, usedContext);
-             },
+            {
+                ConstContextRcPtr usedContext = context ? context : config->getCurrentContext();
+                return self->getProcessor(config, usedContext);
+            },
              "config"_a.none(false),
              "context"_a = ConstContextRcPtr(),
              DOC(LegacyViewingPipeline, getProcessor));
 
-    defStr(cls);
+    defRepr(clsLegacyViewingPipeline);
 }
-}
+
+} // namespace OCIO_NAMESPACE

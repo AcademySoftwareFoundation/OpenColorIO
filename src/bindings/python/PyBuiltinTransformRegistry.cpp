@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-#include "PyOpenColorIO.h"
+#include "PyBuiltinTransformRegistry.h"
 #include "PyUtils.h"
 
 namespace OCIO_NAMESPACE
@@ -9,29 +9,6 @@ namespace OCIO_NAMESPACE
 
 namespace 
 {
-
-// Wrapper to preserve the BuiltinTransformRegistry singleton.
-class PyBuiltinTransformRegistry
-{
-public:
-    PyBuiltinTransformRegistry() = default;
-    ~PyBuiltinTransformRegistry() = default;
-
-    size_t getNumBuiltins() const noexcept
-    {
-        return BuiltinTransformRegistry::Get()->getNumBuiltins();
-    }
-
-    const char * getBuiltinStyle(size_t idx) const
-    {
-        return BuiltinTransformRegistry::Get()->getBuiltinStyle(idx);
-    }
-
-    const char * getBuiltinDescription(size_t idx) const
-    {
-        return BuiltinTransformRegistry::Get()->getBuiltinDescription(idx);
-    }
-};
 
 enum BuiltinTransformRegistryIterator
 {
@@ -48,8 +25,7 @@ void bindPyBuiltinTransformRegistry(py::module & m)
 {
     auto clsBuiltinTransformRegistry = 
         py::class_<PyBuiltinTransformRegistry>(
-            m, "BuiltinTransformRegistry", 
-            DOC(BuiltinTransformRegistry));
+            m.attr("BuiltinTransformRegistry"));
 
     auto clsBuiltinStyleIterator = 
         py::class_<BuiltinStyleIterator>(

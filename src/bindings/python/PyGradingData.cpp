@@ -37,33 +37,27 @@ void bindPyGradingData(py::module & m)
 
     auto clsGradingRGBM = 
         py::class_<GradingRGBM>(
-            m, "GradingRGBM", 
-            DOC(GradingRGBM));
+            m.attr("GradingRGBM"));
 
     auto clsGradingPrimary = 
         py::class_<GradingPrimary>(
-            m, "GradingPrimary", 
-            DOC(GradingPrimary));
+            m.attr("GradingPrimary"));
 
     auto clsGradingRGBMSW = 
         py::class_<GradingRGBMSW>(
-            m, "GradingRGBMSW", 
-            DOC(GradingRGBMSW));
+            m.attr("GradingRGBMSW"));
 
     auto clsGradingTone = 
         py::class_<GradingTone>(
-            m, "GradingTone", 
-            DOC(GradingTone));
+            m.attr("GradingTone"));
 
     auto clsGradingControlPoint = 
         py::class_<GradingControlPoint>(
-            m, "GradingControlPoint", 
-            DOC(GradingControlPoint));
+            m.attr("GradingControlPoint"));
 
     auto clsGradingBSplineCurve = 
         py::class_<GradingBSplineCurve, GradingBSplineCurveRcPtr /*holder*/>(
-            m, "GradingBSplineCurve", 
-            DOC(GradingBSplineCurve));
+            m.attr("GradingBSplineCurve"));
 
     auto clsGradingControlPointIterator = 
         py::class_<GradingControlPointIterator>(
@@ -71,8 +65,7 @@ void bindPyGradingData(py::module & m)
 
     auto clsGradingRGBCurve = 
         py::class_<GradingRGBCurve, GradingRGBCurveRcPtr /*holder*/>(
-            m, "GradingRGBCurve", 
-            DOC(GradingRGBCurve));
+            m.attr("GradingRGBCurve"));
 
     clsGradingRGBM
         .def(py::init<>(), 
@@ -90,7 +83,7 @@ void bindPyGradingData(py::module & m)
         .def_readwrite("master", &GradingRGBM::m_master, 
                        DOC(GradingRGBM, m_master));
 
-    defStr(clsGradingRGBM);
+    defRepr(clsGradingRGBM);
 
     clsGradingPrimary
         .def(py::init<GradingStyle>(), 
@@ -137,7 +130,7 @@ void bindPyGradingData(py::module & m)
             }, 
                                       DOC(GradingPrimary, m_brightness));
 
-    defStr(clsGradingPrimary);
+    defRepr(clsGradingPrimary);
 
     clsGradingRGBMSW
         .def(py::init<>(), 
@@ -162,7 +155,7 @@ void bindPyGradingData(py::module & m)
         .def_readwrite("width", &GradingRGBMSW::m_width, 
                        DOC(GradingRGBMSW, m_width));
 
-    defStr(clsGradingRGBMSW);
+    defRepr(clsGradingRGBMSW);
 
     clsGradingTone
         .def(py::init<GradingStyle>(), 
@@ -184,7 +177,7 @@ void bindPyGradingData(py::module & m)
         .def_readwrite("scontrast", &GradingTone::m_scontrast, 
                        DOC(GradingTone, m_scontrast));
 
-    defStr(clsGradingTone);
+    defRepr(clsGradingTone);
 
     clsGradingControlPoint
         .def(py::init<>(), 
@@ -199,7 +192,7 @@ void bindPyGradingData(py::module & m)
         .def_readwrite("y", &GradingControlPoint::m_y, 
                        DOC(GradingControlPoint, m_y));
 
-    defStr(clsGradingControlPoint);
+    defRepr(clsGradingControlPoint);
 
     clsGradingBSplineCurve
         .def(py::init([](size_t size)
@@ -240,7 +233,7 @@ void bindPyGradingData(py::module & m)
                 return GradingControlPointIterator(self);
             });
 
-    defStr(clsGradingBSplineCurve);
+    defRepr(clsGradingBSplineCurve);
 
     clsGradingControlPointIterator
         .def("__len__", [](GradingControlPointIterator & it)
@@ -329,7 +322,7 @@ void bindPyGradingData(py::module & m)
                 CopyGradingBSpline(rgbCurve->getCurve(RGB_MASTER), master);
             });
 
-    defStr(clsGradingRGBCurve);
+    defRepr(clsGradingRGBCurve);
 }
 
 } // namespace OCIO_NAMESPACE

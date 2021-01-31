@@ -24,15 +24,17 @@ void bindPyColorSpaceSet(py::module & m)
 {
     ColorSpaceSetRcPtr DEFAULT = ColorSpaceSet::Create();
 
-    auto clsColorSpaceSet = py::class_<ColorSpaceSet, ColorSpaceSetRcPtr /* holder */>(
-        m, "ColorSpaceSet",
-        DOC(ColorSpaceSet));
+    auto clsColorSpaceSet = 
+        py::class_<ColorSpaceSet, ColorSpaceSetRcPtr>(
+            m.attr("ColorSpaceSet"));
 
-    auto clsColorSpaceNameIterator = py::class_<ColorSpaceNameIterator>(
-        clsColorSpaceSet, "ColorSpaceNameIterator");
+    auto clsColorSpaceNameIterator = 
+        py::class_<ColorSpaceNameIterator>(
+            clsColorSpaceSet, "ColorSpaceNameIterator");
 
-    auto clsColorSpaceIterator = py::class_<ColorSpaceIterator>(
-        clsColorSpaceSet, "ColorSpaceIterator");
+    auto clsColorSpaceIterator = 
+        py::class_<ColorSpaceIterator>(
+            clsColorSpaceSet, "ColorSpaceIterator");
 
     clsColorSpaceSet
         .def(py::init(&ColorSpaceSet::Create), 

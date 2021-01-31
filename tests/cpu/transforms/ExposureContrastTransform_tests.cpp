@@ -5,6 +5,7 @@
 #include "transforms/ExposureContrastTransform.cpp"
 
 #include "testutils/UnitTest.h"
+#include "UnitTestLogUtils.h"
 
 namespace OCIO = OCIO_NAMESPACE;
 
@@ -225,8 +226,11 @@ OCIO_ADD_TEST(ExposureContrastTransform, processor_several_ec)
         grp2->appendTransform(ec1);
         grp2->appendTransform(ec2);
 
-        OCIO_CHECK_THROW_WHAT(config->getProcessor(grp2), OCIO::Exception,
-                              "Exposure dynamic property can only be there once");
+        OCIO::LogGuard log;
+        OCIO::SetLoggingLevel(OCIO::LOGGING_LEVEL_WARNING);
+        OCIO_CHECK_NO_THROW(config->getProcessor(grp2));
+        OCIO_CHECK_EQUAL(log.output(), "[OpenColorIO Warning]: Exposure dynamic property can "
+                                       "only be there once.\n");
     }
 }
 
