@@ -94,6 +94,7 @@ Note that a View may use either the colorspace key or it may use both
 the view_transform and dispay_colorspace keys.  No other combinations
 are allowed.
 
+
 .. _view_transforms:
 
 ``view_transforms``
@@ -119,15 +120,29 @@ A View Transform may use the following keys:
 * ``description``: A description of the ViewTransform.
 * ``family``: A family string (similar to ColorSpace).
 * ``categories``: The categories used for menu filtering (similar to ColorSpace).
-* ``from_reference``: The transform from the scene-referred reference space
+* ``from_scene_reference``: The transform from the scene-referred reference space
   to the display-referred reference space.
-* ``to_reference``: The transform from the display-referred reference space
+* ``to_scene_reference``: The transform from the display-referred reference space
   to the scene-referred reference space.
 * ``from_display_reference``: The transform from the display-referred reference 
   space to the display-referred reference space.
 * ``to_display_reference``: The inverse of the from_display_reference transform.
 
 .. TODO: Good spot for an example in a future revision.
+
+``default_view_transform``
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Optional.  Defines the default view transform.
+
+The default view transform is the view transform that is used if a ColorSpaceTransform
+needs to convert between a scene-referred and display-referred colorspace.  If this
+key is missing, the first view transform in the config is used.
+
+.. code-block:: yaml
+
+  default_view_transform: un-tone-mapped
+
 
 .. _shared_views:
 
@@ -201,6 +216,7 @@ active_views.
 Application developers do not need to worry about shared views since the
 API presents them as if they were a typical View.
 
+
 .. _active-displays:
 
 ``active_displays``
@@ -244,6 +260,7 @@ Or specify multiple active displays, by separating each with a colon::
 
     export OCIO_ACTIVE_DISPLAYS="DCIP3:sRGB"
 
+
 .. _active-views:
 
 ``active_views``
@@ -259,3 +276,38 @@ Overridden by the ``OCIO_ACTIVE_VIEWS`` env-var::
 
     export OCIO_ACTIVE_VIEWS="Film:Log:Raw"
 
+
+.. _virtual-display:
+
+``virtual_display``
+^^^^^^^^^^^^^^^^^^^
+
+Optional. A virtual display may be defined to allow OCIO to instantiate new 
+displays from ICC profiles.
+
+The syntax is similar to a conventional display.  It may incorporate both 
+views and shared views.  There may only be one virtual display in a config.
+
+When OCIO instantiates a display from an ICC monitor profile it will create
+a display colorspace which is used with any views that have the display_colorspace
+set to ``<USE_DISPLAY_NAME>``.
+
+So in this example, if the application asks OCIO to instantiate a display
+from an ICC profile, the user would then see a second display, in addition
+to "sRGB", named after the ICC profile.  The views available for that new
+display are taken from the virtual display.
+
+.. code-block:: yaml
+
+  displays:
+    sRGB:
+      - !<View> {name: ACES, view_transform: ACES-sdr-video, 
+                 display_colorspace: <USE_DISPLAY_NAME>}
+      - !<View> {name: Log, colorspace: lg10}
+      - !<Views> [ Raw ]
+
+  virtual_display:
+    - !<View> {name: ACES, view_transform: ACES-sdr-video, 
+               display_colorspace: <USE_DISPLAY_NAME>}
+    - !<View> {name: Log, colorspace: lg10}
+    - !<Views> [ Raw ]

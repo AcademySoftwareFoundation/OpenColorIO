@@ -85,10 +85,25 @@ The currently supported version strings are ``1`` and ``2``.
 
     ocio_profile_version: 2
 
+
 ``description``
 ^^^^^^^^^^^^^^^
 
 Optional. A brief description of the configuration.
+
+.. code-block:: yaml
+
+    description: This is the OCIO config for show: foo.
+
+
+``name``
+^^^^^^^^
+
+Optional. A unique name for the config.
+
+.. code-block:: yaml
+
+    name: foo_2021-02-01
 
 
 ``search_path``
@@ -147,6 +162,7 @@ This allows for some clever setups, for example per-shot LUT's with
 fallbacks to a default. For more information, see the examples in
 :ref:`userguide-looks`
 
+
 ``family_separator``
 ^^^^^^^^^^^^^^^^^^^^
 
@@ -157,6 +173,7 @@ is defined, the Menu Helpers API will not generate hierarchical menus.
 .. code-block:: yaml
 
     family_separator: /
+
 
 ``inactive_colorspaces``
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -193,6 +210,7 @@ image-viewer when displaying a single channel)
     The ``luma`` value is not respected anywhere within the OCIO
     library. Also very few (if any) applications supporting OCIO will
     respect the value either.
+
 
 .. _config-environment:
 
@@ -233,6 +251,7 @@ Every context variable used in the config must be declared since no other
 environment variables will be loaded into the context.  In studios that use
 a large number of environment variables, this may provide a performance 
 benefit for applications.
+
 
 .. _config-roles:
 
