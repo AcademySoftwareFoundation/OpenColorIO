@@ -18,6 +18,12 @@ OpenColorIO v2 was proposed to the community at SIGGRAPH 2017 and reached
 January 2021 after a period of stabilization and refinement.  OCIO v2 is in 
 the VFX Reference Platform for calendar year 2021.
 
+Demo Config
+===========
+There is a config file that illustrates many of the new OCIO v2 features
+described below.  This is available in the configs section of the documentation
+as :ref:`ocio-v2_demo`.
+
 
 New Feature List
 ================
@@ -229,7 +235,7 @@ a new display and views from an ICC profile.  This is also able to query the ope
 system on Mac and Windows to obtain the user's current profile.
 
 
-A categories attribute for color spaces
+A Categories Attribute for Color Spaces
 ***************************************
 
 A new attribute called ``categories`` has been added to color spaces.  The goal is
@@ -562,6 +568,25 @@ that use the new GPU renderer, you don't need to set the allocation variables on
 color spaces anymore.
 
 **Developers**: Update your applications to use the new GPU renderer.
+
+
+Nearest Interpolation Method
+****************************
+
+OCIO v1 implemented a "nearest neighbor" intepolation method for Lut1D and Lut3D
+which is faster than the default linear interpolation but not as accurate.  Since
+processing of integer pixel buffers was not supported in v1, the "nearest" method
+may have been used by some to speed up applying a Lut1D to integer source material.
+OCIO v2 does not implement a separate "nearest" method, and FileTransforms that
+request this style will receive "linear" instead.  However, OCIO v2 does support
+processing of integer pixel buffers directly and this provides a big speed-up
+for this use-case without requiring "nearest" mode (i.e., a look-up is done
+without interpolation for Lut1D ops when the inputs are integers).
+
+**Config authors**: Please be aware of this change.
+
+**Developers**: To benefit from this performance improvement, please call OCIO 
+directly on integer pixel buffers rather than converting them to float buffers first.
 
 
 Color Space Conversion No-ops

@@ -355,7 +355,7 @@ simply apply a LUT1D without any conversion to a reference space.  In these case
 ``named_transforms`` section may be added to the config with one or more named transforms.
 
 Note that named transforms do not show up in color space menus by default, so the 
-application developer must implement support to make them availalbe to users.
+application developer must implement support to make them available to users.
 
 This feature may be used to emulate older methods of color management that ignored the 
 RGB primaries and simply applied one-dimensional transformations.  However, config authors 
