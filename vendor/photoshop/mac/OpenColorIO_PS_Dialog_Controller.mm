@@ -17,14 +17,13 @@
 
 
 
-static NSString *standardPath = @"/Library/Application Support/OpenColorIO";
-
-
 @implementation OpenColorIO_PS_Dialog_Controller
 
 - (NSString *)pathForStandardConfig:(NSString *)config
 {
-    return [[standardPath stringByAppendingPathComponent:config] stringByAppendingPathComponent:@"config.ocio"];
+    const std::string path = GetStdConfigPath([config UTF8String]);
+
+    return [NSString stringWithUTF8String:path.c_str()];
 }
 
 - (id)initWithSource:(ControllerSource)initSource
@@ -83,27 +82,23 @@ static NSString *standardPath = @"/Library/Application Support/OpenColorIO";
         [[configurationMenu menu] addItem:[NSMenuItem separatorItem]];
         
         
-        NSArray *standardConfigs = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:standardPath error:NULL];
+        ConfigVec configs;
+        GetStdConfigs(configs);
         
-        if([standardConfigs count] > 0)
+        if(configs.size() > 0)
         {
-            for(NSString *configName in standardConfigs)
+            for(ConfigVec::const_iterator i = configs.begin(); i != configs.end(); ++i)
             {
-                NSAssert([configName isKindOfClass:[NSString class]], @"expected NSString");
+                const std::string &config = *i;
                 
-                NSString *configFilePath = [self pathForStandardConfig:configName];
+                [configurationMenu addItemWithTitle:[NSString stringWithUTF8String:config.c_str()]];
                 
-                if([[NSFileManager defaultManager] isReadableFileAtPath:configFilePath])
-                {
-                    [configurationMenu addItemWithTitle:configName];
-                    
-                    [[configurationMenu lastItem] setTag:CSOURCE_STANDARD];
-                }
+                [[configurationMenu lastItem] setTag:CSOURCE_STANDARD];
             }
         }
         else
         {
-            NSString *noConfigsMessage = [NSString stringWithFormat:@"No configs in %@", standardPath];
+            NSString *noConfigsMessage = [NSString stringWithFormat:@"No configs in /Library/Application Support/OpenColorIO"];
             
             [configurationMenu addItemWithTitle:noConfigsMessage];
             
@@ -162,102 +157,6 @@ static NSString *standardPath = @"/Library/Application Support/OpenColorIO";
     [NSApp abortModal];
 }
 
-/*
-- (void)profileChooserDidEnd:(NSWindow *)sheet returnCode:(int)returnCode contextInfo:(void *)contextInfo
-{
-    NSAssert(profileController != nil, @"profileController is nil");
-    
-    
-    [sheet orderOut:self];
-    
-
-    if(returnCode == NSRunStoppedResponse)
-    {
-        NSString *path = (NSString *)contextInfo;
-        
-        NSAssert([path isKindOfClass:[NSString class]], @"expected NSString");
-
-        try
-        {
-            OpenColorIO_PS_Context *context = (OpenColorIO_PS_Context *)contextPtr;
-        
-            NSAssert(context != NULL, @"context was NULL");
-            
-            
-            char display_icc_path[256];
-        
-            const BOOL gotICC = [profileController getMonitorProfile:display_icc_path bufferSize:255];
-            
-            if(!gotICC)
-                throw OCIO::Exception("Failed to get ICC profile");
-
-            
-            OCIO::ConstProcessorRcPtr processor;
-            
-            if(action == CACTION_CONVERT)
-            {
-                processor = context->getConvertProcessor([inputSpace UTF8String], [outputSpace UTF8String]);
-            }
-            else if(action == CACTION_DISPLAY)
-            {
-                processor = context->getDisplayProcessor([inputSpace UTF8String], [device UTF8String], [transform UTF8String]);
-            }
-            else
-            {
-                NSAssert(action == CACTION_LUT, @"expected CACTION_LUT");
-                
-                const OCIO::Interpolation interp = (interpolation == CINTERP_NEAREST ? OCIO::INTERP_NEAREST :
-                                                    interpolation == CINTERP_LINEAR ? OCIO::INTERP_LINEAR :
-                                                    interpolation == CINTERP_TETRAHEDRAL ? OCIO::INTERP_TETRAHEDRAL :
-                                                    interpolation == CINTERP_CUBIC ? OCIO::INTERP_CUBIC :
-                                                    OCIO::INTERP_BEST);
-                
-                const OCIO::TransformDirection direction = (invert ? OCIO::TRANSFORM_DIR_INVERSE : OCIO::TRANSFORM_DIR_FORWARD);
-                
-                processor = context->getLUTProcessor(interp, direction);
-            }
-            
-            
-            int cubesize = 32;
-            int whitepointtemp = 6505;
-            std::string copyright = "";
-            
-            // create a description tag from the filename
-            std::string description = [[[path lastPathComponent] stringByDeletingPathExtension] UTF8String];
-            
-            SaveICCProfileToFile([path UTF8String], processor, cubesize, whitepointtemp,
-                                    display_icc_path, description, copyright, false);
-        }
-        catch(const std::exception &e)
-        {
-            NSBeep();
-        
-            NSString *ocioString = [NSString stringWithUTF8String:e.what()];
-        
-            NSAlert *alert = [NSAlert alertWithMessageText:@"OpenColorIO error" defaultButton:nil alternateButton:nil otherButton:nil informativeTextWithFormat:@"%@", ocioString];
-
-            [alert beginSheetModalForWindow:window modalDelegate:nil didEndSelector:NULL contextInfo:NULL];
-        }
-        catch(...)
-        {
-            NSBeep();
-            
-            NSString *ocioString = @"Some unknown error";
-            
-            NSAlert *alert = [NSAlert alertWithMessageText:@"OpenColorIO error" defaultButton:nil alternateButton:nil otherButton:nil informativeTextWithFormat:@"%@", ocioString];
-
-            [alert beginSheetModalForWindow:window modalDelegate:nil didEndSelector:NULL contextInfo:NULL];
-        }
-        
-        [path release];
-    }
-    
-    
-    [profileController release];
-    
-    profileController = nil;
-}
-*/
 - (void)exportPanelDidEnd:(NSSavePanel *)panel returnCode:(int)returnCode contextInfo:(void *)contextInfo
 {
     if(returnCode == NSOKButton)
