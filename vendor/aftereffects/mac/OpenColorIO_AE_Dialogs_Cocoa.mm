@@ -128,27 +128,37 @@ bool GetMonitorProfile(char *path, int buf_len, const void *hwnd)
 
 void GetStdConfigs(ConfigVec &configs)
 {
-    const char *ocio_dir = "/Library/Application Support/OpenColorIO/";
+    NSString *ocioDir = @"/Library/Application Support/OpenColorIO";
 
     NSFileManager *man = [NSFileManager defaultManager];
 
-    NSDirectoryEnumerator *enumerator = [man enumeratorAtPath:[NSString stringWithUTF8String:ocio_dir]];
+    NSDirectoryEnumerator *enumerator = [man enumeratorAtPath:ocioDir];
+    
+    NSMutableArray<NSString *> *configSet = [NSMutableArray array];
     
     for(NSString *file in enumerator)
     {
-        std::string config_path(ocio_dir);
-        
-        config_path += [file UTF8String];
-        
-        config_path += "/config.ocio";
+        NSString *configPath = [[ocioDir stringByAppendingPathComponent:file] stringByAppendingPathComponent:@"config.ocio"];
                 
         [enumerator skipDescendents];
     
-        if([man fileExistsAtPath:[NSString stringWithUTF8String:config_path.c_str()]])
+        if([man fileExistsAtPath:configPath])
         {
-            configs.push_back( [file UTF8String] );
+            [configSet addObject:file];
         }
     }
+    
+    [configSet sortUsingComparator:
+                    ^(NSString *str1, NSString *str2)
+                    {
+                        return [str1 compare:str2];
+                    }];
+    
+    [configSet enumerateObjectsUsingBlock:
+                    ^(NSString *str, NSUInteger idx, BOOL *stop)
+                    {
+                        configs.push_back( [str UTF8String] );
+                    }];
 }
 
 
@@ -199,7 +209,9 @@ bool ColorSpacePopUpMenu(OCIO::ConstConfigRcPtr config, std::string &colorSpace,
     [menu setAutoenablesItems:NO];
     
     
-    for(int i=0; i < config->getNumColorSpaces(); ++i)
+    const int numColorSpaces = config->getNumColorSpaces();
+    
+    for(int i=0; i < numColorSpaces; ++i)
     {
         const char *colorSpaceName = config->getColorSpaceNameByIndex(i);
         
