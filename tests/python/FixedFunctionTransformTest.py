@@ -7,7 +7,7 @@ import PyOpenColorIO as OCIO
 from TransformsBaseTest import TransformsBaseTest
 
 
-class FixedFunctionTransformTest(TransformsBaseTest):
+class FixedFunctionTransformTest(unittest.TestCase, TransformsBaseTest):
     TEST_STYLE = OCIO.FIXED_FUNCTION_ACES_GLOW_03
     TEST_PARAMS = [0, 1, 2]
     TEST_DIRECTION = OCIO.TRANSFORM_DIR_INVERSE

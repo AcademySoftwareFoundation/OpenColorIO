@@ -2,15 +2,13 @@
 # Copyright Contributors to the OpenColorIO Project.
 
 import unittest
-import os
-import sys
 
 import PyOpenColorIO as OCIO
 from UnitTestUtils import TEST_DATAFILES_DIR, TEST_NAMES, TEST_DESCS
 from TransformsBaseTest import TransformsBaseTest
 
 
-class DisplayViewTransformTest(TransformsBaseTest):
+class DisplayViewTransformTest(unittest.TestCase, TransformsBaseTest):
 
     TEST_SRC = ['abc', 'raw', '$test']
     TEST_DISPLAY = ['display1', 'display2']

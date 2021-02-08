@@ -8,7 +8,7 @@ from UnitTestUtils import TEST_NAMES
 from TransformsBaseTest import TransformsBaseTest
 
 
-class ColorSpaceTransformTest(TransformsBaseTest):
+class ColorSpaceTransformTest(unittest.TestCase, TransformsBaseTest):
     TEST_DIRECTION = OCIO.TRANSFORM_DIR_FORWARD
     TEST_SRC = 'foo'
     TEST_DST = 'bar'
