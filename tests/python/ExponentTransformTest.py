@@ -1,13 +1,12 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright Contributors to the OpenColorIO Project.
 
-import unittest
 
 import PyOpenColorIO as OCIO
 from TransformsBaseTest import TransformsBaseTest
 
 
-class ExponentTransformTest(unittest.TestCase, TransformsBaseTest):
+class ExponentTransformTest(TransformsBaseTest):
     TEST_ID = 'sample exponent'
     TEST_VALUES = [1, 2, 3, 4]
     TEST_NEGATIVE_STYLE = OCIO.NEGATIVE_MIRROR
@@ -15,9 +14,6 @@ class ExponentTransformTest(unittest.TestCase, TransformsBaseTest):
 
     def setUp(self):
         self.tr = OCIO.ExponentTransform()
-
-    def tearDown(self):
-        self.tr = None
 
     def test_transform_type(self):
         """

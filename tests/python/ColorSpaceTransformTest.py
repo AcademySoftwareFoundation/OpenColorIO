@@ -8,16 +8,13 @@ from UnitTestUtils import TEST_NAMES
 from TransformsBaseTest import TransformsBaseTest
 
 
-class ColorSpaceTransformTest(unittest.TestCase, TransformsBaseTest):
+class ColorSpaceTransformTest(TransformsBaseTest):
     TEST_DIRECTION = OCIO.TRANSFORM_DIR_FORWARD
     TEST_SRC = 'foo'
     TEST_DST = 'bar'
 
     def setUp(self):
         self.tr = OCIO.ColorSpaceTransform()
-
-    def tearDown(self):
-        self.tr = None
 
     def test_transform_type(self):
         """

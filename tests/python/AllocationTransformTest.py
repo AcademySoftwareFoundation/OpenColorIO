@@ -7,16 +7,13 @@ import PyOpenColorIO as OCIO
 from TransformsBaseTest import TransformsBaseTest
 
 
-class AllocationTransformTest(unittest.TestCase, TransformsBaseTest):
+class AllocationTransformTest(TransformsBaseTest):
     TEST_ALLOCATION = OCIO.ALLOCATION_LG2
     TEST_VARS = [0, 1]
     TEST_DIRECTION = OCIO.TRANSFORM_DIR_INVERSE
 
     def setUp(self):
         self.tr = OCIO.AllocationTransform()
-
-    def tearDown(self):
-        self.tr = None
 
     def test_transform_type(self):
         """

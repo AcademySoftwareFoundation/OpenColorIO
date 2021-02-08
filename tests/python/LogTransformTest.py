@@ -1,13 +1,11 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright Contributors to the OpenColorIO Project.
 
-import unittest
-
 import PyOpenColorIO as OCIO
 from TransformsBaseTest import TransformsBaseTest
 
 
-class LogTransformTest(unittest.TestCase, TransformsBaseTest):
+class LogTransformTest(TransformsBaseTest):
     TEST_ID = 'sample log'
     TEST_NAME = 'name of log'
     TEST_BASE = 10
@@ -15,9 +13,6 @@ class LogTransformTest(unittest.TestCase, TransformsBaseTest):
 
     def setUp(self):
         self.tr = OCIO.LogTransform()
-
-    def tearDown(self):
-        self.tr = None
 
     def test_transform_type(self):
         """

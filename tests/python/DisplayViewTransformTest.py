@@ -10,7 +10,7 @@ from UnitTestUtils import TEST_DATAFILES_DIR, TEST_NAMES, TEST_DESCS
 from TransformsBaseTest import TransformsBaseTest
 
 
-class DisplayViewTransformTest(unittest.TestCase, TransformsBaseTest):
+class DisplayViewTransformTest(TransformsBaseTest):
 
     TEST_SRC = ['abc', 'raw', '$test']
     TEST_DISPLAY = ['display1', 'display2']
@@ -18,9 +18,6 @@ class DisplayViewTransformTest(unittest.TestCase, TransformsBaseTest):
 
     def setUp(self):
         self.tr = OCIO.DisplayViewTransform()
-
-    def tearDown(self):
-        self.tr = None
 
     def test_transform_type(self):
         """

@@ -7,13 +7,10 @@ import PyOpenColorIO as OCIO
 from TransformsBaseTest import TransformsBaseTest
 
 
-class LookTransformTest(unittest.TestCase, TransformsBaseTest):
+class LookTransformTest(TransformsBaseTest):
 
     def setUp(self):
         self.tr = OCIO.LookTransform('src', 'dst')
-
-    def tearDown(self):
-        self.tr = None
 
     def test_constructor(self):
         """

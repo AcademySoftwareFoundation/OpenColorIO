@@ -1,10 +1,12 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright Contributors to the OpenColorIO Project.
 
+import unittest
+
 import PyOpenColorIO as OCIO
 
 
-class TransformsBaseTest(object):
+class TransformsBaseTest(unittest.TestCase):
     def test_direction(self):
         """
         Test the setDirection() and getDirection() methods.
@@ -21,3 +23,6 @@ class TransformsBaseTest(object):
         for invalid in (None, 1):
             with self.assertRaises(TypeError):
                 self.tr.setDirection(invalid)
+
+    def tearDown(self):
+        self.tr = None

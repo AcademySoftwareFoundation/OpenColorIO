@@ -8,7 +8,7 @@ from UnitTestUtils import TEST_DATAFILES_DIR, TEST_NAMES, TEST_DESCS
 from TransformsBaseTest import TransformsBaseTest
 
 
-class CDLTransformTest(unittest.TestCase, TransformsBaseTest):
+class CDLTransformTest(TransformsBaseTest):
     # Default CDL values on initialization.
     DEFAULT_CDL_SLOPE = [1.0, 1.0, 1.0]
     DEFAULT_CDL_OFFSET = [0.0, 0.0, 0.0]
@@ -25,9 +25,6 @@ class CDLTransformTest(unittest.TestCase, TransformsBaseTest):
 
     def setUp(self):
         self.tr = OCIO.CDLTransform()
-
-    def tearDown(self):
-        self.tr = None
 
     def test_transform_type(self):
         """

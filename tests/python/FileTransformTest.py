@@ -8,7 +8,7 @@ from UnitTestUtils import TEST_DATAFILES_DIR, TEST_NAMES
 from TransformsBaseTest import TransformsBaseTest
 
 
-class FileTransformTest(unittest.TestCase, TransformsBaseTest):
+class FileTransformTest(TransformsBaseTest):
     TEST_DIRECTION = OCIO.TRANSFORM_DIR_FORWARD
     TEST_INTERPOLATION = OCIO.Interpolation.INTERP_LINEAR
     TEST_ID = 'sample file'
@@ -41,9 +41,6 @@ class FileTransformTest(unittest.TestCase, TransformsBaseTest):
 
     def setUp(self):
         self.tr = OCIO.FileTransform()
-
-    def tearDown(self):
-        self.tr = None
 
     def test_transform_type(self):
         """

@@ -7,14 +7,11 @@ import PyOpenColorIO as OCIO
 from TransformsBaseTest import TransformsBaseTest
 
 
-class GroupTransformTest(unittest.TestCase, TransformsBaseTest):
+class GroupTransformTest(TransformsBaseTest):
     TEST_DIRECTION = OCIO.TRANSFORM_DIR_INVERSE
 
     def setUp(self):
         self.tr = OCIO.GroupTransform()
-
-    def tearDown(self):
-        self.tr = None
 
     def test_transform_type(self):
         """

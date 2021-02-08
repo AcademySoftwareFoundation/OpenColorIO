@@ -7,7 +7,7 @@ import PyOpenColorIO as OCIO
 from TransformsBaseTest import TransformsBaseTest
 
 
-class ExposureContrastTransformTest(unittest.TestCase, TransformsBaseTest):
+class ExposureContrastTransformTest(TransformsBaseTest):
     TEST_ID = 'sample exponent linear'
     TEST_NAME = 'name'
     TEST_VALUES = [0.1, 2, -0.5, 10]
@@ -23,9 +23,6 @@ class ExposureContrastTransformTest(unittest.TestCase, TransformsBaseTest):
 
     def setUp(self):
         self.tr = OCIO.ExposureContrastTransform()
-
-    def tearDown(self):
-        self.tr = None
 
     def test_transform_type(self):
         """

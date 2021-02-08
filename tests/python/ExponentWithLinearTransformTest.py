@@ -7,7 +7,7 @@ import PyOpenColorIO as OCIO
 from TransformsBaseTest import TransformsBaseTest
 
 
-class ExponentWithLinearTransformTest(unittest.TestCase, TransformsBaseTest):
+class ExponentWithLinearTransformTest(TransformsBaseTest):
     TEST_ID = 'sample exponent linear'
     TEST_GAMMA = [1, 2, 3, 4]
     TEST_OFFSET = [0.1, 0.2, 0.3, 0.4]
@@ -16,9 +16,6 @@ class ExponentWithLinearTransformTest(unittest.TestCase, TransformsBaseTest):
 
     def setUp(self):
         self.tr = OCIO.ExponentWithLinearTransform()
-
-    def tearDown(self):
-        self.tr = None
 
     def test_transform_type(self):
         """

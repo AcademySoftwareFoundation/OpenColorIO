@@ -7,7 +7,7 @@ import PyOpenColorIO as OCIO
 from TransformsBaseTest import TransformsBaseTest
 
 
-class BuiltinTransformTest(unittest.TestCase, TransformsBaseTest):
+class BuiltinTransformTest(TransformsBaseTest):
     # BuiltinTransformRegistry singleton
     REGISTRY = None
 
@@ -28,9 +28,6 @@ class BuiltinTransformTest(unittest.TestCase, TransformsBaseTest):
 
     def setUp(self):
         self.tr = OCIO.BuiltinTransform()
-
-    def cleanUp(self):
-        self.tr = None
 
     def test_transform_type(self):
         # TransformType is correct
