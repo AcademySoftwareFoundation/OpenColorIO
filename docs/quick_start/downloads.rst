@@ -9,7 +9,7 @@ Downloads
 
 * Sample OCIO Configurations -- `.zip <http://github.com/imageworks/OpenColorIO-Configs/zipball/master>`__ `.tar.gz <http://github.com/imageworks/OpenColorIO-Configs/tarball/master>`__
 * Reference Images v1.0v4 -- `.tgz <http://code.google.com/p/opencolorio/downloads/detail?name=ocio-images.1.0v4.tgz>`__
-* Core Library v1.1.1 -- `.zip <https://github.com/AcademySoftwareFoundation/OpenColorIO/archive/v1.1.1.zip>`__ `.tar.gz <https://github.com/AcademySoftwareFoundation/OpenColorIO/archive/v1.1.1.tar.gz>`__
+* Core Library v2.0.0 -- `.zip <https://github.com/AcademySoftwareFoundation/OpenColorIO/archive/v2.0.0.zip>`__ `.tar.gz <https://github.com/AcademySoftwareFoundation/OpenColorIO/archive/v2.0.0.tar.gz>`__
 * Core Library dev -- `.zip <http://github.com/AcademySoftwareFoundation/OpenColorIO/zipball/master>`__ `.tar.gz <http://github.com/AcademySoftwareFoundation/OpenColorIO/tarball/master>`__
 
 Per-version updates: :ref:`changelog-main`.
@@ -28,6 +28,7 @@ Deprecated Downloads
 * Reference Images v1.0v2 `tgz <http://code.google.com/p/opencolorio/downloads/detail?name=ocio-images.1.0v2.tgz>`__
 * Reference Images v1.0v1 `tgz <http://code.google.com/p/opencolorio/downloads/detail?name=ocio-images.1.0v1.tgz>`__
 
+* Core Library v1.1.1 -- `.zip <https://github.com/AcademySoftwareFoundation/OpenColorIO/archive/v1.1.1.zip>`__ `.tar.gz <https://github.com/AcademySoftwareFoundation/OpenColorIO/archive/v1.1.1.tar.gz>`__
 * Core Library v1.1.0 -- `.zip <http://github.com/AcademySoftwareFoundation/OpenColorIO/zipball/v1.1.0>`__ `.tar.gz <http://github.com/AcademySoftwareFoundation/OpenColorIO/tarball/v1.1.0>`__
 * Core Library v1.0.9 -- `.zip <http://github.com/AcademySoftwareFoundation/OpenColorIO/zipball/v1.0.9>`__ `.tar.gz <http://github.com/AcademySoftwareFoundation/OpenColorIO/tarball/v1.0.9>`__
 * Core Library v1.0.8 -- `.zip <http://github.com/AcademySoftwareFoundation/OpenColorIO/zipball/v1.0.8>`__ `.tar.gz <http://github.com/AcademySoftwareFoundation/OpenColorIO/tarball/v1.0.8>`__
