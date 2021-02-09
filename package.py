@@ -1,5 +1,5 @@
 name = "OpenColorIO"
-version = "2.0.0.1"
+version = "2.0.0.3"
 description = """
 OpenColorIO -- it's open, it's color, and it's io af
 """
@@ -22,12 +22,12 @@ def variants():
     from rez.package_py_utils import expand_requires
     requires = ["platform-**", "arch-**", "os-**"]
     pys = [
-        'python-3.7.**',
+        #'python-3.7.**',
         'python-3.8.**',
-        'python-2.7.**',
+        #'python-2.7.**',
     ]
     ephemerals = [
-        '.shared-1',
+        #'.shared-1',
         '.shared-0',
     ]
     return [
@@ -40,22 +40,23 @@ hashed_variants = True
 requires = []
 
 private_build_requires = [
-    "gcc-4+<9",
+    "gcc-4+",
     "ninja",
     "cmake-3.12+",
     #"GLEW-2.1.0",
     #"GLFW-3.3.2",
     #"freeglut-3",
 
-    ## docs
-    #'sphinx_press_theme',
-    #'testresources',
-    #'recommonmark',
-    #'breathe',
-    #'doxygen',
-    #'sphinx_tabs',
+    ## docs (optional)
+    'sphinx_press_theme',
+    'testresources',
+    'recommonmark',
+    'breathe',
+    'doxygen',
+    'sphinx_tabs',
 
-    # third-party (optional)
+    ## third-party (optional)
+
     #"pybind11-2.5.0",
     #"lcms2-2",
     #'yamlcpp-0.6.3+<1',
@@ -85,7 +86,7 @@ def pre_build_commands():
     env.REZ_BUILD_CMAKE_ARGS = ' '.join([
         '-DBUILD_SHARED_LIBS={shared}',
         '-DOCIO_BUILD_APPS=OFF',
-        '-DOCIO_BUILD_OPENFX=OFF',
+        #'-DOCIO_BUILD_OPENFX=OFF',
         '-DOCIO_BUILD_NUKE={build_nuke}',
         '-DOCIO_BUILD_DOCS=OFF',
         '-DOCIO_BUILD_TESTS=OFF',
@@ -100,13 +101,6 @@ def pre_build_commands():
         '-DCMAKE_CXX_STANDARD=14',
         '-DOCIO_INSTALL_EXT_PACKAGES=MISSING',
         '-DOCIO_WARNING_AS_ERROR=OFF',
-        '-DPybind11_ROOT={resolve.pybind11.root}'
-        if 'pybind11' in resolve else '',
-        '-Dpystring_ROOT={resolve.pystring.root}'
-        if 'pystring' in resolve else '',
-        '-DHalf_ROOT={resolve.openexr.root}' if 'openexr' in resolve else
-        '-DHalf_ROOT={resolve.half.root}' if 'half' in resolve else '',
-        '-DExpat_ROOT={resolve.expat.root}' if 'expat' in resolve else '',
         '-DPython_EXECUTABLE={resolve.python.root}/bin/python',
     ])
 
@@ -122,16 +116,11 @@ cmake OpenColorIO $REZ_BUILD_CMAKE_ARGS
 make {install} -j$REZ_BUILD_THREAD_COUNT -Wno-unused-variable
 """
 
-build_command = build_command_local
+#build_command = build_command_local
 
 
 def commands():
     env.PATH.prepend("{root}/bin")
-    # if 'shared' in str(this.version):
-    #     if 'osx' in str(resolve.platform.version):
-    #         env.DYLD_LIBRARY_PATH.append('{root}/lib')
-    #     else:
-    #         env.LD_LIBRARY_PATH.append('{root}/lib')
 
     if 'python' in resolve:
         python_version = "{resolve.python.version.major}.{resolve.python.version.minor}"
