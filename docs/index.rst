@@ -18,13 +18,12 @@ supporting many popular formats.
 OpenColorIO version 1.0 was released in 2011, having been in development since 2003.
 OCIO v1 represented the culmination of years of production experience earned on such
 films as SpiderMan 2 (2004), Surf's Up (2007), Cloudy with a Chance of Meatballs
-(2009), Alice in Wonderland (2010), and many more.  The current stable release is 
-version 1.1.1 from April 2019.
+(2009), Alice in Wonderland (2010), and many more.  
 
-OpenColorIO v2 has been in development since 2017 and is feature complete as of
-SIGGRAPH 2020.  After a stabilization and bug-fixing period, an official 2.0 release
-will be made at the end of 2020.  OCIO v2 is in the VFX Reference Platform for
-calendar year 2021.  The OCIO v2 code is in the master branch on 
+OpenColorIO v2 has been in development since 2017 and was feature complete as of
+SIGGRAPH 2020.  After a stabilization and bug-fixing period, an official 2.0.0 
+release was made in January 2021.  OCIO v2 is in the VFX Reference Platform for
+calendar year 2021.  The OCIO v2 code is in the RB-2.0 branch on 
 `GitHub <https://github.com/AcademySoftwareFoundation/OpenColorIO>`_
 and we encourage developers to start integrating and providing feedback.
 See :ref:`upgrading_to_v2` for more.
@@ -44,7 +43,7 @@ best leverage them.  We will be working on that over the coming weeks.
 Accessing Other Versions
 ************************
 
-You are reading the documentation for OCIO v2.  The documentation for the the current
+You are reading the documentation for OCIO v2.  The documentation for the the previous
 stable release (1.1.1) is available `here <https://opencolorio.org/old/index.html>`_.
 
 

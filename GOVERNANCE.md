@@ -115,7 +115,7 @@ project at all ASWF TAC meetings.
 
 * Mark Boorer - Industrial Light & Magic
 * Mei Chu - Sony Pictures Imageworks
-* Sean Cooper - DNEG
+* Sean Cooper - ARRI
 * Michael Dolan - Epic Games
 * Patrick Hodoul - Autodesk
 * Carol Payne - Netflix

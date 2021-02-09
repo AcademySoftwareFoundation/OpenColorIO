@@ -13,8 +13,8 @@ The easy way
 While prebuilt binaries are not yet available for all platforms, OCIO
 is available via several platform's package managers.
 
-Please note that the package managers will install the current stable
-release.  If you want OCIO v2, you currently must build from source.
+Please note that the package managers are still installing the previous 
+stable release, 1.1.1.  If you want OCIO v2, you currently must build from source.
 See :ref:`building-from-source`.
 
 
@@ -73,7 +73,7 @@ Some optional components also depend on:
 - \*Little CMS >= 2.2 (for ociobakelut ICC profile baking)
 - \*pybind11 >= 2.4.3 (for the Python bindings)
 - Python >= 2.7 (for the Python bindings)
-- Python >= 3.7 (for the docs, with the following PyPi packages)
+- Python 3.7 or 3.8 (for the docs, with the following PyPi packages)
     - Sphinx
     - six
     - testresources
