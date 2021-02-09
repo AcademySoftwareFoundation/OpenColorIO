@@ -23,8 +23,15 @@ applications.
 A color space may use the following keys:
 
 
-``to_reference`` and ``from_reference``
----------------------------------------
+``to_scene_reference`` and ``from_scene_reference``
+---------------------------------------------------
+
+These keys specify the transforms that define the relationship between
+the color space and the scene-referred reference space.
+
+Note: In OCIO v1, the keys ``to_reference`` and ``from_reference`` were
+used (since there was only one reference space).  These are still supported
+as synonyms.
 
 Here is a example of a very simple ``colorspaces`` section, modified
 from the :ref:`config-spivfx` example config:
@@ -43,7 +50,7 @@ from the :ref:`config-spivfx` example config:
         bitdepth: 16ui
         description: |
           lg16 : conversion from film log
-        to_reference: !<FileTransform> {src: lg16_to_lnf.spi1d, interpolation: nearest}
+        to_scene_reference: !<FileTransform> {src: lg16_to_lnf.spi1d, interpolation: nearest}
 
 
 First the ``lnf`` colorspace (short for linear float) is used as our
@@ -71,7 +78,7 @@ to any other colorspace.
 
 
 Here is another example colorspace, which is defined using
-``from_reference``.
+``from_scene_reference``.
 
 .. code-block:: yaml
 
@@ -80,13 +87,13 @@ Here is another example colorspace, which is defined using
         bitdepth: 8ui
         description: |
           srgb8 :rgb display space for the srgb standard.
-        from_reference: !<FileTransform> {src: srgb8.spi3d, interpolation: linear}
+        from_scene_reference: !<FileTransform> {src: srgb8.spi3d, interpolation: linear}
 
-We use ``from_reference`` here because we have a LUT which transforms
+We use ``from_scene_reference`` here because we have a LUT which transforms
 from the reference colorspace (``lnf`` in this example) to sRGB.
 
 In this case ``srgb8.spi3d`` is a complex 3D LUT which cannot be
-inverted, so it is considered a "display only" colorspace. If we did have a second 3D LUT to apply the inverse transform, we can specify both ``to_reference`` and ``from_reference``
+inverted, so it is considered a "display only" colorspace. If we did have a second 3D LUT to apply the inverse transform, we can specify both ``to_scene_reference`` and ``from_scene_reference``
 
 
 .. code-block:: yaml
@@ -96,8 +103,8 @@ inverted, so it is considered a "display only" colorspace. If we did have a seco
         bitdepth: 8ui
         description: |
           srgb8 :rgb display space for the srgb standard.
-        from_reference: !<FileTransform> {src: lnf_to_srgb8.spi3d, interpolation: linear}
-        to_reference: !<FileTransform> {src: srgb8_to_lnf.spi3d, interpolation: linear}
+        from_scene_reference: !<FileTransform> {src: lnf_to_srgb8.spi3d, interpolation: linear}
+        to_scene_reference: !<FileTransform> {src: srgb8_to_lnf.spi3d, interpolation: linear}
 
 Using multiple transforms
 -------------------------
@@ -113,7 +120,7 @@ colorspace.
         bitdepth: 8ui
         description: |
           srgb8 :rgb display space for the srgb standard.
-        from_reference: !<GroupTransform>
+        from_scene_reference: !<GroupTransform>
           children:
             - !<ColorSpaceTransform> {src: lnf, dst: lg16}
             - !<FileTransform> {src: lg16_to_srgb8.spi3d, interpolation: linear}
@@ -156,14 +163,14 @@ colorspace works.
         bitdepth: 16ui
         description: |
           lg16 : conversion from film log
-        to_reference: !<FileTransform> {src: lg16.spi1d, interpolation: nearest}
+        to_scene_reference: !<FileTransform> {src: lg16.spi1d, interpolation: nearest}
 
       - !<ColorSpace>
         name: srgb8
         bitdepth: 8ui
         description: |
           srgb8 :rgb display space for the srgb standard.
-        from_reference: !<GroupTransform>
+        from_scene_reference: !<GroupTransform>
           children:
             - !<ColorSpaceTransform> {src: lnf, dst: lg16}
             - !<FileTransform> {src: lg16_to_srgb8.spi3d, interpolation: linear}
@@ -180,7 +187,7 @@ A more complex example: we have an image in the ``lg16`` colorspace,
 and convert to ``srgb8`` (using the lg16 definition from earlier, or
 the :ref:`config-spivfx` config):
 
-First OCIO converts from lg16 to the reference space, using the transform defined in lg16's to_reference:
+First OCIO converts from lg16 to the reference space, using the transform defined in lg16's to_scene_reference:
 
 * ``FileTransform`` applies the lg16.spi1d
 
@@ -197,6 +204,7 @@ With the image now in the reference space, srgb8's transform is applied:
     In the previous example, the complete transform chain would be
     "lg16 -> lnf, lnf -> lg16, lg16 -> srgb8". However the optimizer
     will reduce this to "lg16 -> srgb".
+
 
 ``encoding``
 ------------
@@ -268,10 +276,10 @@ Example:
       name: srgb8
       bitdepth: 8ui
 
-      from_reference: [...]
+      from_scene_reference: [...]
 
 
-``isdata:``
+``isdata``
 -----------
 
 Optional. Default: false. Boolean.
@@ -296,7 +304,7 @@ config:
       allocation: uniform
 
 
-``equalitygroup:``
+``equalitygroup``
 ------------------
 
 Optional.
@@ -319,20 +327,20 @@ potential clamping caused by a LUT)
       name: lg16
       equalitygroup: lg
       bitdepth: 16ui
-      to_reference: !<FileTransform> {src: lg16.spi1d, interpolation: nearest}
+      to_scene_reference: !<FileTransform> {src: lg16.spi1d, interpolation: nearest}
 
     - !<ColorSpace>
       name: lg10
       equalitygroup: lg
       bitdepth: 10ui
-      to_reference: !<FileTransform> {src: lg10.spi1d, interpolation: nearest}
+      to_scene_reference: !<FileTransform> {src: lg10.spi1d, interpolation: nearest}
 
 **Do not** put different colorspaces in the same equality group. For
   logical grouping of "similar" colorspaces, use the ``family``
   option.
 
 
-``family:``
+``family``
 -----------
 
 Optional.
@@ -373,6 +381,22 @@ family string into tokens.
 
 Unlike ``equalitygroup``, the ``family`` has no impact on image
 processing.
+
+
+``aliases``
+-----------
+
+Optional.
+
+The aliases key is used to define alternate names for the colorspace.
+For example, it may be useful to define a shorter version of the name
+that is easier to include in texture path names.  Or it may be necessary
+to define an older version of the name for the color space for backwards
+compatibility.
+
+.. code-block:: yaml
+
+    aliases: [shortName, obsoleteName]
 
 
 ``allocation`` and ``allocationvars``
@@ -444,3 +468,38 @@ It's common to use literal ``|`` block syntax to preserve all newlines:
         This is one line.
         This is the second.
 
+
+Display Colorspaces
+*******************
+
+``display_colorspaces``
+^^^^^^^^^^^^^^^^^^^^^^^
+
+Optional.
+
+This section is a list of all the display colorspaces known to OCIO. 
+A display colorspace is very similar to a colorspace except its transforms
+go from or to the display-referred reference space rather than the
+scene-referred reference space.
+
+A display colorspace may use all the same keys as a colorspace except
+it uses ``to_display_reference`` and ``from_display_reference`` rather
+than ``to_scene_reference`` and ``from_scene_reference`` to specify
+its transforms.
+
+.. code-block:: yaml
+
+    display_colorspaces:
+
+      - !<ColorSpace>
+        name: sRGB
+        family: 
+        description: |
+          sRGB monitor (piecewise EOTF)
+        isdata: false
+        categories: [ file-io ]
+        encoding: sdr-video
+        from_display_reference: !<GroupTransform>
+          children:
+            - !<BuiltinTransform> {style: "DISPLAY - CIE-XYZ-D65_to_sRGB"}
+            - !<RangeTransform> {min_in_value: 0., min_out_value: 0., max_in_value: 1., max_out_value: 1.}
