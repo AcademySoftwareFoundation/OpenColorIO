@@ -3004,7 +3004,7 @@ protected:
 //    //
 //    OCIO::GpuShaderDescRcPtr shaderDesc = MyCustomGpuShader::Create();
 //
-//    shaderDesc->setLanguage(OCIO::GPU_LANGUAGE_GLSL_1_3);
+//    shaderDesc->setLanguage(OCIO::GPU_LANGUAGE_GLSL_1_2);
 //    shaderDesc->setFunctionName("OCIODisplay");
 //
 //    // Step 2: Collect the shader program information for a specific processor
