@@ -1818,20 +1818,18 @@ public:
      * outside [0,1].
      */
     virtual void setOffset(const double * offset4) = 0;
-
-    // TODO: Move to .rst
-    // !rst:: **File bit-depth**
-    //
-    // Get the bit-depths associated with the matrix values read from a
-    // file or set the bit-depths of values to be written to a file
-    // (for file formats such as CLF that support multiple bit-depths).
-    //
-    // In a format such as CLF, the matrix values are scaled to take
-    // pixels at the specified inBitDepth to pixels at the specified
-    // outBitDepth.  This complicates the interpretation of the matrix
-    // values and so this object always holds normalized values and
-    // scaling is done on the way from or to file formats such as CLF.
-
+    
+    /**
+     * Get the bit-depths associated with the matrix values read from a
+     * file or set the bit-depths of values to be written to a file
+     * (for file formats such as CLF that support multiple bit-depths).
+     *
+     * In a format such as CLF, the matrix values are scaled to take
+     * pixels at the specified inBitDepth to pixels at the specified
+     * outBitDepth.  This complicates the interpretation of the matrix
+     * values and so this object always holds normalized values and
+     * scaling is done on the way from or to file formats such as CLF.
+     */
     virtual BitDepth getFileInputBitDepth() const noexcept = 0;
     virtual void setFileInputBitDepth(BitDepth bitDepth) noexcept = 0;
     virtual BitDepth getFileOutputBitDepth() const noexcept = 0;
