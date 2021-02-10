@@ -185,18 +185,22 @@ extern OCIOEXPORT void UnsetEnvVariable(const char * name);
 //!cpp:function::
 extern OCIOEXPORT bool IsEnvVariablePresent(const char * name);
 
-///////////////////////////////////////////////////////////////////////////
+/// Get the current configuration.
+extern OCIOEXPORT ConstConfigRcPtr GetCurrentConfig();
+
+/// Set the current configuration. This will then store a copy of the specified config.
+extern OCIOEXPORT void SetCurrentConfig(const ConstConfigRcPtr & config);
+
 /**
- * *Config* 
- *
+ * \brief
  * A config defines all the color spaces to be available at runtime.
  *
- * The color configuration (:cpp:class:`Config`) is the main object for
+ * The color configuration (Config) is the main object for
  * interacting with this library. It encapsulates all of the information
- * necessary to use customized :cpp:class:`ColorSpaceTransform` and
- * :cpp:class:`DisplayViewTransform` operations.
+ * necessary to use customized ColorSpaceTransform and
+ * DisplayViewTransform operations.
  *
- * See the :ref:`user-guide` for more information on
+ * See the \ref user-guide for more information on
  * selecting, creating, and working with custom color configurations.
  *
  * For applications interested in using only one color config at
@@ -222,15 +226,8 @@ extern OCIOEXPORT bool IsEnvVariablePresent(const char * name);
  *    a multi-app ecosystem, as it allows all applications to be
  *    consistently configured.
  *
- * See :ref:`developers-usageexamples`
+ * See \ref developers-usageexamples
  */
-/// Get the current configuration.
-extern OCIOEXPORT ConstConfigRcPtr GetCurrentConfig();
-
-/// Set the current configuration. This will then store a copy of the specified config.
-extern OCIOEXPORT void SetCurrentConfig(const ConstConfigRcPtr & config);
-
-
 class OCIOEXPORT Config
 {
 public:
@@ -1128,9 +1125,9 @@ public:
     /// Do not use (needed only for pybind11).
     ~Config();
 
-    //!cpp:function:: Control the caching of processors in the config instance.  By default, caching
-    // is on.  The flags allow turning caching off entirely or only turning it off if dynamic
-    // properties are being used by the processor.
+    /// Control the caching of processors in the config instance.  By default, caching
+    /// is on.  The flags allow turning caching off entirely or only turning it off if dynamic
+    /// properties are being used by the processor.
     void setProcessorCacheFlags(ProcessorCacheFlags flags) noexcept;
 
 private:
@@ -1148,52 +1145,38 @@ extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const Config&);
 
 
 /**
- * FileRules
- * 
+ * \brief
  * The File Rules are a set of filepath to color space mappings that are evaluated
  * from first to last. The first rule to match is what determines which color space is
  * returned. There are four types of rules available. Each rule type has a name key that may
  * be used by applications to refer to that rule. Name values must be unique i.e. using a
  * case insensitive comparison. The other keys depend on the rule type:
  *
- * - Basic Rule: This is the basic rule type that uses Unix glob style pattern matching and
+ * * Basic Rule: This is the basic rule type that uses Unix glob style pattern matching and
  *   is thus very easy to use. It contains the keys:
- *
  *   * name: Name of the rule
- *
  *   * colorspace: Color space name to be returned.
- *
  *   * pattern: Glob pattern to be used for the main part of the name/path.
- *
  *   * extension: Glob pattern to be used for the file extension. Note that if glob tokens
  *     are not used, the extension will be used in a non-case-sensitive way by default.
- *
- * - Regex Rule: This is similar to the basic rule but allows additional capabilities for
+ * * Regex Rule: This is similar to the basic rule but allows additional capabilities for
  *   power-users. It contains the keys:
- *
  *   * name: Name of the rule
- *
  *   * colorspace: Color space name to be returned.
- *
  *   * regex: Regular expression to be evaluated.
- *
- * - OCIO v1 style Rule: This rule allows the use of the OCIO v1 style, where the string
+ * * OCIO v1 style Rule: This rule allows the use of the OCIO v1 style, where the string
  *   is searched for color space names from the config. This rule may occur 0 or 1 times
  *   in the list. The position in the list prioritizes it with respect to the other rules.
  *   StrictParsing is not used. If no color space is found in the path, the rule will not
  *   match and the next rule will be considered.
  *   see \ref insertPathSearchRule.
  *   It has the key:
- *
  *   * name: Must be "ColorSpaceNamePathSearch".
- *
- * - Default Rule: The file_rules must always end with this rule. If no prior rules match,
+ * * Default Rule: The file_rules must always end with this rule. If no prior rules match,
  *   this rule specifies the color space applications will use.
  *   see \ref setDefaultRuleColorSpace.
  *   It has the keys:
- *
  *   * name: must be "Default".
- *
  *   * colorspace : Color space name to be returned.
  *
  * Custom string keys and associated string values may be used to convey app or
