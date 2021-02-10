@@ -418,8 +418,8 @@ public:
      *
      * \note
      *     If the category is null or empty, the method returns
-     *     all the active color spaces like :cpp:func:`Config::getNumColorSpaces`
-     *     and :cpp:func:`Config::getColorSpaceNameByIndex` do.
+     *     all the active color spaces like \ref Config::getNumColorSpaces
+     *     and \ref Config::getColorSpaceNameByIndex do.
      *
      * \note
      *     It's worth noticing that the method returns a copy of the
@@ -602,7 +602,7 @@ public:
      * case, when the view is referenced in a display, the display color space
      * that is used will be the one matching the display name.  In other words,
      * the view will be customized based on the display it is used in.
-     * :cpp:func:`Config::validate` will throw if the config does not contain
+     * \ref Config::validate will throw if the config does not contain
      * the matching display color space.
      */
     /// Will throw if view or colorSpaceName are null or empty.
@@ -864,7 +864,7 @@ public:
      *    values are typically different for each colorspace, and the
      *    application of them may be nonsensical depending on the
      *    intensity coding anyways). Thus, the 'right' answer is to make
-     *    these functions on the :cpp:class:`Config` class. However, it's
+     *    these functions on the Config class. However, it's
      *    often useful to have a config-wide default so here it is. We will
      *    add the colorspace specific luma call if/when another client is
      *    interesting in using it.
@@ -896,7 +896,7 @@ public:
     //
 
     // TODO: Move to .rst
-    // :cpp:class:`ViewTransform` objects are used with the display reference space.
+    // ViewTransform objects are used with the display reference space.
 
     int getNumViewTransforms() const noexcept;
 
@@ -998,7 +998,7 @@ public:
     /**
      * Most applications will use the preceding method, but this method may be
      * used for applications that want to know which was the highest priority rule to match
-     * filePath.  The :cpp:func:`FileRules::getNumCustomKeys` and custom keys methods
+     * filePath. \ref FileRules::getNumCustomKeys and custom keys methods
      * may then be used to get additional information about the matching rule.
      */
     const char * getColorSpaceFromFilepath(const char * filePath, size_t & ruleIndex) const;
@@ -1031,9 +1031,9 @@ public:
     //
 
     // TODO: Move to .rst
-    // Create a :cpp:class:`Processor` to assemble a transformation between two
-    // color spaces.  It may then be used to create a :cpp:class:`CPUProcessor`
-    // or :cpp:class:`GPUProcessor` to process/convert pixels.
+    // Create a Processor to assemble a transformation between two
+    // color spaces.  It may then be used to create a CPUProcessor
+    // or GPUProcessor to process/convert pixels.
     // rst:: Get the processor to apply a ColorSpaceTransform from a source to a destination
     // color space.
 
@@ -1383,7 +1383,7 @@ public:
      * 
      * Add colorspace name. Will throw if:
      * * RuleIndex is invalid.
-     * * :cpp:func:`ViewingRules::getNumEncodings` is not 0.
+     * * \ref ViewingRules::getNumEncodings is not 0.
      */
     void addColorSpace(size_t ruleIndex, const char * colorSpace);
     /// Remove colorspace. Will throw if ruleIndex or colorSpaceIndex is invalid.
@@ -1398,7 +1398,7 @@ public:
      * \brief
      * Add encoding name. Will throw if:
      * * RuleIndex is invalid.
-     * * :cpp:func:`ViewingRules::getNumColorSpaces` is not 0.
+     * * \ref ViewingRules::getNumColorSpaces is not 0.
      */
     void addEncoding(size_t ruleIndex, const char * encoding);
     /// Remove encoding. Will throw if ruleIndex or encodingIndex is invalid.
@@ -1420,10 +1420,10 @@ public:
      * \brief Insert a rule at a given ruleIndex.
      * 
      * Rule currently at ruleIndex will be
-     * pushed to index: ruleIndex + 1. If ruleIndex is :cpp:func:`ViewingRules::getNumEntries`
+     * pushed to index: ruleIndex + 1. If ruleIndex is \ref ViewingRules::getNumEntries
      * new rule will be added at the end. Will throw if:
      * * RuleIndex is invalid (must be less than or equal to
-     *   cpp:func:`ViewingRules::getNumEntries`).
+     *   \ref ViewingRules::getNumEntries).
      * * RuleName already exists.
      */
     void insertRule(size_t ruleIndex, const char * ruleName);
@@ -1672,14 +1672,14 @@ extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const ColorSpace&);
 
 /**
  * The *ColorSpaceSet* is a set of color spaces (i.e. no color space duplication)
- * which could be the result of :cpp:func:`Config::getColorSpaces`
+ * which could be the result of \ref Config::getColorSpaces
  * or built from scratch.
  *
  * \note
  *    The color spaces are decoupled from the config ones, i.e., any
  *    changes to the set itself or to its color spaces do not affect the
  *    original color spaces from the configuration.  If needed,
- *    use :cpp:func:`Config::addColorSpace` to update the configuration.
+ *    use \ref Config::addColorSpace to update the configuration.
  */
 class OCIOEXPORT ColorSpaceSet
 {
@@ -2039,7 +2039,7 @@ extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const ViewTransform&)
 
 /**
  * The *Processor* represents a specific color transformation which is
- * the result of :cpp:func:`Config::getProcessor`.
+ * the result of \ref Config::getProcessor.
  */
 class OCIOEXPORT Processor
 {
@@ -2112,7 +2112,7 @@ public:
     bool isDynamic() const noexcept;
 
     /**
-     * Run the optimizer on a Processor to create a new :cpp:class:`Processor`.
+     * Run the optimizer on a Processor to create a new Processor.
      * It is usually not necessary to call this since getting a CPUProcessor or GPUProcessor
      * will also optimize.  However if you need both, calling this method first makes getting
      * a CPU and GPU Processor faster since the optimization is effectively only done once.
@@ -2120,7 +2120,7 @@ public:
     ConstProcessorRcPtr getOptimizedProcessor(OptimizationFlags oFlags) const;
 
     /**
-     * Create a :cpp:class:`Processor` that is optimized for a specific in and out
+     * Create a Processor that is optimized for a specific in and out
      * bit-depth (as CPUProcessor would do).  This method is provided primarily for diagnostic
      * purposes.
      */
@@ -2140,7 +2140,7 @@ public:
     //
 
     /**
-     * Get an optimized :cpp:class:`CPUProcessor` instance.
+     * Get an optimized CPUProcessor instance.
      *
      * \note
      *    This may provide higher fidelity than anticipated due to internal
@@ -2647,7 +2647,7 @@ public:
     /**
      *
      * Note that although PlanarImageDesc is powerful enough to also describe
-     * all :cpp:class:`PackedImageDesc` scenarios, it is recommended to use
+     * all PackedImageDesc scenarios, it is recommended to use
      * a PackedImageDesc where possible since that allows for additional
      * optimizations.
      */
@@ -2694,7 +2694,7 @@ private:
  * Inherit from the class to fully customize the implementation of a GPU shader program
  * from a color transformation.
  *
- * When no customizations are needed then the :cpp:class:`GpuShaderDesc` is a better choice.
+ * When no customizations are needed then the GpuShaderDesc is a better choice.
  *
  * To better decouple the DynamicProperties from their GPU implementation, the code provides
  * several addUniform() methods i.e. one per access function types. For example, an
@@ -3134,15 +3134,16 @@ protected:
 
 
 ///////////////////////////////////////////////////////////////////////////
+
 /**
  * Context
- * *******
- * A context defines some overrides to a :cpp:class:`Config`. For example, it can override the
+ * 
+ * A context defines some overrides to a Config. For example, it can override the
  * search path or change the value of a context variable.
  *
  * \note 
- *    Only some :cpp:func:`Config::getProcessor` methods accept a custom context; otherwise,
- *    the default context instance is used (see :cpp:func:`Config::getCurrentContext`).
+ *    Only some \ref Config::getProcessor methods accept a custom context; otherwise,
+ *    the default context instance is used (see \ref Config::getCurrentContext).
  */
 class OCIOEXPORT Context
 {
@@ -3169,8 +3170,8 @@ public:
     // Context Variables
     // ^^^^^^^^^^^^^^^^^
     // The context variables allow changes at runtime using environment variables. For example,
-    // a color space name (such as src & dst for the :cpp:class:`ColorSpaceTransform`) or a file
-    // name (such as LUT file name for the :cpp:class:`FileTransform`) could be defined by context
+    // a color space name (such as src & dst for the ColorSpaceTransform) or a file
+    // name (such as LUT file name for the FileTransform) could be defined by context
     // variables. The color transformation is then customized based on some environment variables.
     //
     // In a config the context variables support three syntaxes (i.e. ${VAR}, $VAR and %VAR%) and
