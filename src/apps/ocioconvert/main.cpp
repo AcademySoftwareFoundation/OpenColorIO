@@ -189,9 +189,11 @@ int main(int argc, const char **argv)
             try
             {
                 std::cout << std::endl;
-                std::cout << "OCIO Configuration: '" << env << "'" << std::endl;
+                std::cout << "OCIO Config. file:    '" << env << "'" << std::endl;
                 OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
-                std::cout << "OCIO search_path:    " << config->getSearchPath() << std::endl;
+                std::cout << "OCIO Config. version: " << config->getMajorVersion() << "." 
+                                                      << config->getMinorVersion() << std::endl;
+                std::cout << "OCIO search_path:     " << config->getSearchPath() << std::endl;
             }
             catch (const OCIO::Exception & e)
             {
@@ -498,7 +500,7 @@ int main(int argc, const char **argv)
             {
                 shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
             }
-            shaderDesc->setLanguage(OCIO::GPU_LANGUAGE_GLSL_1_3);
+            shaderDesc->setLanguage(OCIO::GPU_LANGUAGE_GLSL_1_2);
             processor->getDefaultGPUProcessor()->extractGpuShaderInfo(shaderDesc);
             oglApp->setShader(shaderDesc);
 
