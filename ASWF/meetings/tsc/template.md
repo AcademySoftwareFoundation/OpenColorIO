@@ -5,12 +5,12 @@ DATE
 
 Host: NAME (Michael Dolan?)
 
-Rotating Secretary: NAME
+Secretary: NAME
 
 Attendees:
   * [ ] Mark Boorer (_TSC_) - Industrial Light & Magic
   * [ ] Mei Chu (_TSC_) - Sony Pictures Imageworks
-  * [ ] Sean Cooper (_TSC ACES TAC Rep_) - DNEG
+  * [ ] Sean Cooper (_TSC ACES TAC Rep_) - ARRI
   * [ ] Michael Dolan (_TSC Chair_) - Epic Games
   * [ ] Patrick Hodoul (_TSC_) - Autodesk
   * [ ] John Mertic - Academy Software Foundation / Linux Foundation
@@ -36,5 +36,3 @@ Apologies:
 
 * Items for next TSC meeting agenda:
     - xxx
-    
-
