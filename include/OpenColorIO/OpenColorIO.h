@@ -1051,16 +1051,14 @@ public:
     ConstProcessorRcPtr getProcessor(const ConstContextRcPtr & context,
                                      const char * srcColorSpaceName,
                                      const char * dstColorSpaceName) const;
-
-    // TODO: Move to .rst
-    // rst:: Get the processor to apply a DisplayViewTransform for a display and view.  Refer to the
-    // Display/View Registration section above for more info on the display and view arguments.
-
+    
+    /// Get the processor to apply a DisplayViewTransform for a display and view.  Refer to the
+    /// Display/View Registration section above for more info on the display and view arguments.
     ConstProcessorRcPtr getProcessor(const char * srcColorSpaceName,
                                      const char * display,
                                      const char * view,
                                      TransformDirection direction) const;
-    //!cpp:function::
+                                     
     ConstProcessorRcPtr getProcessor(const ConstContextRcPtr & context,
                                      const char * srcColorSpaceName,
                                      const char * display,
@@ -1813,12 +1811,12 @@ extern OCIOEXPORT ConstColorSpaceSetRcPtr operator-(const ConstColorSpaceSetRcPt
 // Look
 //
 
-// TODO: Move to .rst
-// The *Look* is an 'artistic' image modification, in a specified image
-// state.
-// The processSpace defines the ColorSpace the image is required to be
-// in, for the math to apply correctly.
-
+/**
+ * The *Look* is an 'artistic' image modification, in a specified image
+ * state.
+ * The processSpace defines the ColorSpace the image is required to be
+ * in, for the math to apply correctly.
+ */
 class OCIOEXPORT Look
 {
 public:
@@ -2201,7 +2199,8 @@ public:
     /// Bit-depth of the output pixel buffer.
     BitDepth getOutputBitDepth() const;
 
-    /* The returned pointer may be used to set the value of any dynamic properties
+    /**
+     *  The returned pointer may be used to set the value of any dynamic properties
      * of the requested type.  Throws if the requested property is not found.  Note that if the
      * processor contains several ops that support the requested property, only one can be dynamic.
      *
@@ -3116,8 +3115,6 @@ protected:
 };
 
 
-///////////////////////////////////////////////////////////////////////////
-
 /**
  * Context
  * 
@@ -3127,6 +3124,33 @@ protected:
  * \note 
  *    Only some \ref Config::getProcessor methods accept a custom context; otherwise,
  *    the default context instance is used (see \ref Config::getCurrentContext).
+ *
+ * Context Variables
+ * 
+ * The context variables allow changes at runtime using environment variables. For example,
+ * a color space name (such as src & dst for the ColorSpaceTransform) or a file
+ * name (such as LUT file name for the FileTransform) could be defined by context
+ * variables. The color transformation is then customized based on some environment variables.
+ *
+ * In a config the context variables support three syntaxes (i.e. ${VAR}, $VAR and %VAR%) and
+ * the parsing starts from longest to shortest. So, the resolve works like '$TEST_$TESTING_$TE'
+ * expands in this order '2 1 3'.
+ *
+ * Config authors are recommended to include the "environment" section in their configs. This
+ * improves performance as well as making the config more readable. When present, this section
+ * must declare all context variables used in the config. It may also provide a default value,
+ * in case the variable is not present in the user's environment.
+ *
+ * A context variable may only be used in the following places:
+ * * the \ref `ColorSpaceTransform` to define the source and the destination color space names,
+ * * the \ref `FileTransform` to define the source file name (e.g. a LUT file name),
+ * * the search_path,
+ * * the cccid of the \ref `FileTransform` to only extract one specific transform from
+ *   the CDL & CCC files.
+ *
+ * Some specific restrictions are worth calling out:
+ * * they cannot be used as either the name or value of a role,
+ * * the context variable characters $ and % are prohibited in a color space name.
  */
 class OCIOEXPORT Context
 {
@@ -3147,38 +3171,8 @@ public:
     void setWorkingDir(const char * dirname);
     const char * getWorkingDir() const;
 
-    ///////////////////////////////////////////////////////////////////////////
-    //!rst:: .. _ctxvariable_section:
-    // 
-    // Context Variables
-    // ^^^^^^^^^^^^^^^^^
-    // The context variables allow changes at runtime using environment variables. For example,
-    // a color space name (such as src & dst for the ColorSpaceTransform) or a file
-    // name (such as LUT file name for the FileTransform) could be defined by context
-    // variables. The color transformation is then customized based on some environment variables.
-    //
-    // In a config the context variables support three syntaxes (i.e. ${VAR}, $VAR and %VAR%) and
-    // the parsing starts from longest to shortest. So, the resolve works like '$TEST_$TESTING_$TE'
-    // expands in this order '2 1 3'.
-    //
-    // Config authors are recommended to include the "environment" section in their configs. This
-    // improves performance as well as making the config more readable. When present, this section
-    // must declare all context variables used in the config. It may also provide a default value,
-    // in case the variable is not present in the user's environment.
-    //
-    // A context variable may only be used in the following places:
-    // * the :cpp:class:`ColorSpaceTransform` to define the source and the destination color space names,
-    // * the :cpp:class:`FileTransform` to define the source file name (e.g. a LUT file name),
-    // * the search_path,
-    // * the cccid of the :cpp:class:`FileTransform` to only extract one specific transform from
-    //   the CDL & CCC files.
-    //
-    // Some specific restrictions are worth calling out:
-    // * they cannot be used as either the name or value of a role,
-    // * the context variable characters $ and % are prohibited in a color space name.
-
-    //!cpp:function:: Add (or update) a context variable. But it removes it if the value argument
-    // is null.
+    /// Add (or update) a context variable. But it removes it if the value argument
+    /// is null.
     void setStringVar(const char * name, const char * value) noexcept;
     /// Get the context variable value. It returns an empty string if the context 
     /// variable is null or does not exist.
@@ -3186,7 +3180,7 @@ public:
 
     int getNumStringVars() const;
     const char * getStringVarNameByIndex(int index) const;
-    //!cpp:function::
+    
     const char * getStringVarByIndex(int index) const;
 
     void clearStringVars();
@@ -3194,21 +3188,21 @@ public:
     /// Add to the instance all the context variables from ctx.
     void addStringVars(const ConstContextRcPtr & ctx) noexcept;
 
-    //!cpp:function::
+    
     void setEnvironmentMode(EnvironmentMode mode) noexcept;
 
-    //!cpp:function::
+    
     EnvironmentMode getEnvironmentMode() const noexcept;
 
     /// Seed all string vars with the current environment.
     void loadEnvironment() noexcept;
 
-    //!cpp:function:: Resolve all the context variables from the string. It could be color space
-    // names or file names. Note that it recursively applies the context variable resolution.
-    // Returns the string unchanged if it does not contain any context variable.  
+    /// Resolve all the context variables from the string. It could be color space
+    /// names or file names. Note that it recursively applies the context variable resolution.
+    /// Returns the string unchanged if it does not contain any context variable.  
     const char * resolveStringVar(const char * string) const noexcept;
-    //!cpp:function:: Resolve all the context variables from the string and return all the context
-    // variables used to resolve the string (empty if no context variables were used).
+    /// Resolve all the context variables from the string and return all the context
+    /// variables used to resolve the string (empty if no context variables were used).
     const char * resolveStringVar(const char * string, ContextRcPtr & usedContextVars) const noexcept;
 
     /**
