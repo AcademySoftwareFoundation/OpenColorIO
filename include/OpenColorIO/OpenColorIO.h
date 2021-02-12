@@ -2875,166 +2875,165 @@ protected:
     const Impl * getImpl() const { return m_impl; }
 };
 
-// TODO: Move to .rst
-// !rst::
 // GpuShaderDesc
-// *************
-// This class holds the GPU-related information needed to build a shader program
-// from a specific processor.
-//
-// This class defines the interface and there are two implementations provided.
-// The "legacy" mode implements the OCIO v1 approach of baking certain ops
-// in order to have at most one 3D-LUT.  The "generic" mode is the v2 default and
-// allows all the ops to be processed as-is, without baking, like the CPU renderer.
-// Custom implementations could be written to accommodate the GPU needs of a
-// specific client app.
-//
-//
-// The complete fragment shader program is decomposed in two main parts:
-// the OCIO shader program for the color processing and the client shader
-// program which consumes the pixel color processing.
-//
-// The OCIO shader program is fully described by the GpuShaderDesc
-// independently from the client shader program. The only critical
-// point is the agreement on the OCIO function shader name.
-//
-// To summarize, the complete shader program is:
-//
-// \code{.cpp}
-//
-//  ////////////////////////////////////////////////////////////////////////
-//  //                                                                    //
-//  //               The complete fragment shader program                 //
-//  //                                                                    //
-//  ////////////////////////////////////////////////////////////////////////
-//  //                                                                    //
-//  //   //////////////////////////////////////////////////////////////   //
-//  //   //                                                          //   //
-//  //   //               The OCIO shader program                    //   //
-//  //   //                                                          //   //
-//  //   //////////////////////////////////////////////////////////////   //
-//  //   //                                                          //   //
-//  //   //   // All global declarations                             //   //
-//  //   //   uniform sampled3D tex3;                                //   //
-//  //   //                                                          //   //
-//  //   //   // All helper methods                                  //   //
-//  //   //   vec3 computePos(vec3 color)                            //   //
-//  //   //   {                                                      //   //
-//  //   //      vec3 coords = color;                                //   //
-//  //   //      ...                                                 //   //
-//  //   //      return coords;                                      //   //
-//  //   //   }                                                      //   //
-//  //   //                                                          //   //
-//  //   //   // The OCIO shader function                            //   //
-//  //   //   vec4 OCIODisplay(in vec4 inColor)                      //   //
-//  //   //   {                                                      //   //
-//  //   //      vec4 outColor = inColor;                            //   //
-//  //   //      ...                                                 //   //
-//  //   //      outColor.rbg                                        //   //
-//  //   //         = texture3D(tex3, computePos(inColor.rgb)).rgb;  //   //
-//  //   //      ...                                                 //   //
-//  //   //      return outColor;                                    //   //
-//  //   //   }                                                      //   //
-//  //   //                                                          //   //
-//  //   //////////////////////////////////////////////////////////////   //
-//  //                                                                    //
-//  //   //////////////////////////////////////////////////////////////   //
-//  //   //                                                          //   //
-//  //   //             The client shader program                    //   //
-//  //   //                                                          //   //
-//  //   //////////////////////////////////////////////////////////////   //
-//  //   //                                                          //   //
-//  //   //   uniform sampler2D image;                               //   //
-//  //   //                                                          //   //
-//  //   //   void main()                                            //   //
-//  //   //   {                                                      //   //
-//  //   //      vec4 inColor = texture2D(image, gl_TexCoord[0].st); //   //
-//  //   //      ...                                                 //   //
-//  //   //      vec4 outColor = OCIODisplay(inColor);               //   //
-//  //   //      ...                                                 //   //
-//  //   //      gl_FragColor = outColor;                            //   //
-//  //   //   }                                                      //   //
-//  //   //                                                          //   //
-//  //   //////////////////////////////////////////////////////////////   //
-//  //                                                                    //
-//  ////////////////////////////////////////////////////////////////////////
-//
-//
-// **Usage Example:** *Building a GPU shader*
-//
-//   This example is based on the code in: src/apps/ociodisplay/main.cpp
-//
-// .. code-block:: cpp
-//
-//    // Get the processor
-//    //
-//    OCIO::ConstConfigRcPtr config = OCIO::Config::CreateFromEnv();
-//    OCIO::ConstProcessorRcPtr processor
-//       = config->getProcessor("ACES - ACEScg", "Output - sRGB");
-//
-//    // Step 1: Create a GPU shader description
-//    //
-//    // The three potential scenarios are:
-//    //
-//    //   1. Instantiate the legacy shader description.  The color processor
-//    //      is baked down to contain at most one 3D LUT and no 1D LUTs.
-//    //
-//    //      This is the v1 behavior and will remain part of OCIO v2
-//    //      for backward compatibility.
-//    //
-//    OCIO::GpuShaderDescRcPtr shaderDesc
-//          = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(LUT3D_EDGE_SIZE);
-//    //
-//    //   2. Instantiate the generic shader description.  The color processor
-//    //      is used as-is (i.e. without any baking step) and could contain
-//    //      any number of 1D & 3D luts.
-//    //
-//    //      This is the default OCIO v2 behavior and allows a much better
-//    //      match between the CPU and GPU renderers.
-//    //
-//    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::Create();
-//    //
-//    //   3. Instantiate a custom shader description.
-//    //
-//    //      Writing a custom shader description is a way to tailor the shaders
-//    //      to the needs of a given client program.  This involves writing a
-//    //      new class inheriting from the pure virtual class GpuShaderDesc.
-//    //
-//    //      Please refer to the GenericGpuShaderDesc class for an example.
-//    //
-//    OCIO::GpuShaderDescRcPtr shaderDesc = MyCustomGpuShader::Create();
-//
-//    shaderDesc->setLanguage(OCIO::GPU_LANGUAGE_GLSL_1_2);
-//    shaderDesc->setFunctionName("OCIODisplay");
-//
-//    // Step 2: Collect the shader program information for a specific processor
-//    //
-//    processor->extractGpuShaderInfo(shaderDesc);
-//
-//    // Step 3: Create a helper to build the shader. Here we use a helper for
-//    //         OpenGL but there will also be helpers for other languages.
-//    //
-//    OpenGLBuilderRcPtr oglBuilder = OpenGLBuilder::Create(shaderDesc);
-//
-//    // Step 4: Allocate & upload all the LUTs
-//    //
-//    oglBuilder->allocateAllTextures();
-//
-//    // Step 5: Build the complete fragment shader program using
-//    //         g_fragShaderText which is the client shader program.
-//    //
-//    g_programId = oglBuilder->buildProgram(g_fragShaderText);
-//
-//    // Step 6: Enable the fragment shader program, and all needed textures
-//    //
-//    glUseProgram(g_programId);
-//    glUniform1i(glGetUniformLocation(g_programId, "tex1"), 1);  // image texture
-//    oglBuilder->useAllTextures(g_programId);                    // LUT textures
-//
-//    // Step 7: Update uniforms from dynamic property instances.
-//    m_oglBuilder->useAllUniforms();
-//
-
+/**
+ * \brief This class holds the GPU-related information needed to build a shader program
+ * from a specific processor.
+ *
+ * This class defines the interface and there are two implementations provided.
+ * The "legacy" mode implements the OCIO v1 approach of baking certain ops
+ * in order to have at most one 3D-LUT.  The "generic" mode is the v2 default and
+ * allows all the ops to be processed as-is, without baking, like the CPU renderer.
+ * Custom implementations could be written to accommodate the GPU needs of a
+ * specific client app.
+ *
+ *
+ * The complete fragment shader program is decomposed in two main parts:
+ * the OCIO shader program for the color processing and the client shader
+ * program which consumes the pixel color processing.
+ *
+ * The OCIO shader program is fully described by the GpuShaderDesc
+ * independently from the client shader program. The only critical
+ * point is the agreement on the OCIO function shader name.
+ *
+ * To summarize, the complete shader program is:
+ *
+ * \code{.cpp}
+ *
+ *  ////////////////////////////////////////////////////////////////////////
+ *  //                                                                    //
+ *  //               The complete fragment shader program                 //
+ *  //                                                                    //
+ *  ////////////////////////////////////////////////////////////////////////
+ *  //                                                                    //
+ *  //   //////////////////////////////////////////////////////////////   //
+ *  //   //                                                          //   //
+ *  //   //               The OCIO shader program                    //   //
+ *  //   //                                                          //   //
+ *  //   //////////////////////////////////////////////////////////////   //
+ *  //   //                                                          //   //
+ *  //   //   // All global declarations                             //   //
+ *  //   //   uniform sampled3D tex3;                                //   //
+ *  //   //                                                          //   //
+ *  //   //   // All helper methods                                  //   //
+ *  //   //   vec3 computePos(vec3 color)                            //   //
+ *  //   //   {                                                      //   //
+ *  //   //      vec3 coords = color;                                //   //
+ *  //   //      ...                                                 //   //
+ *  //   //      return coords;                                      //   //
+ *  //   //   }                                                      //   //
+ *  //   //                                                          //   //
+ *  //   //   // The OCIO shader function                            //   //
+ *  //   //   vec4 OCIODisplay(in vec4 inColor)                      //   //
+ *  //   //   {                                                      //   //
+ *  //   //      vec4 outColor = inColor;                            //   //
+ *  //   //      ...                                                 //   //
+ *  //   //      outColor.rbg                                        //   //
+ *  //   //         = texture3D(tex3, computePos(inColor.rgb)).rgb;  //   //
+ *  //   //      ...                                                 //   //
+ *  //   //      return outColor;                                    //   //
+ *  //   //   }                                                      //   //
+ *  //   //                                                          //   //
+ *  //   //////////////////////////////////////////////////////////////   //
+ *  //                                                                    //
+ *  //   //////////////////////////////////////////////////////////////   //
+ *  //   //                                                          //   //
+ *  //   //             The client shader program                    //   //
+ *  //   //                                                          //   //
+ *  //   //////////////////////////////////////////////////////////////   //
+ *  //   //                                                          //   //
+ *  //   //   uniform sampler2D image;                               //   //
+ *  //   //                                                          //   //
+ *  //   //   void main()                                            //   //
+ *  //   //   {                                                      //   //
+ *  //   //      vec4 inColor = texture2D(image, gl_TexCoord[0].st); //   //
+ *  //   //      ...                                                 //   //
+ *  //   //      vec4 outColor = OCIODisplay(inColor);               //   //
+ *  //   //      ...                                                 //   //
+ *  //   //      gl_FragColor = outColor;                            //   //
+ *  //   //   }                                                      //   //
+ *  //   //                                                          //   //
+ *  //   //////////////////////////////////////////////////////////////   //
+ *  //                                                                    //
+ *  ////////////////////////////////////////////////////////////////////////
+ * \endcode
+ * 
+ * **Usage Example:** *Building a GPU shader*
+ *
+ *   This example is based on the code in: src/apps/ociodisplay/main.cpp
+ *
+ * \code{.cpp}
+ *
+ *    // Get the processor
+ *    //
+ *    OCIO::ConstConfigRcPtr config = OCIO::Config::CreateFromEnv();
+ *    OCIO::ConstProcessorRcPtr processor
+ *       = config->getProcessor("ACES - ACEScg", "Output - sRGB");
+ *
+ *    // Step 1: Create a GPU shader description
+ *    //
+ *    // The three potential scenarios are:
+ *    //
+ *    //   1. Instantiate the legacy shader description.  The color processor
+ *    //      is baked down to contain at most one 3D LUT and no 1D LUTs.
+ *    //
+ *    //      This is the v1 behavior and will remain part of OCIO v2
+ *    //      for backward compatibility.
+ *    //
+ *    OCIO::GpuShaderDescRcPtr shaderDesc
+ *          = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(LUT3D_EDGE_SIZE);
+ *    //
+ *    //   2. Instantiate the generic shader description.  The color processor
+ *    //      is used as-is (i.e. without any baking step) and could contain
+ *    //      any number of 1D & 3D luts.
+ *    //
+ *    //      This is the default OCIO v2 behavior and allows a much better
+ *    //      match between the CPU and GPU renderers.
+ *    //
+ *    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::Create();
+ *    //
+ *    //   3. Instantiate a custom shader description.
+ *    //
+ *    //      Writing a custom shader description is a way to tailor the shaders
+ *    //      to the needs of a given client program.  This involves writing a
+ *    //      new class inheriting from the pure virtual class GpuShaderDesc.
+ *    //
+ *    //      Please refer to the GenericGpuShaderDesc class for an example.
+ *    //
+ *    OCIO::GpuShaderDescRcPtr shaderDesc = MyCustomGpuShader::Create();
+ *
+ *    shaderDesc->setLanguage(OCIO::GPU_LANGUAGE_GLSL_1_2);
+ *    shaderDesc->setFunctionName("OCIODisplay");
+ *
+ *    // Step 2: Collect the shader program information for a specific processor
+ *    //
+ *    processor->extractGpuShaderInfo(shaderDesc);
+ *
+ *    // Step 3: Create a helper to build the shader. Here we use a helper for
+ *    //         OpenGL but there will also be helpers for other languages.
+ *    //
+ *    OpenGLBuilderRcPtr oglBuilder = OpenGLBuilder::Create(shaderDesc);
+ *
+ *    // Step 4: Allocate & upload all the LUTs
+ *    //
+ *    oglBuilder->allocateAllTextures();
+ *
+ *    // Step 5: Build the complete fragment shader program using
+ *    //         g_fragShaderText which is the client shader program.
+ *    //
+ *    g_programId = oglBuilder->buildProgram(g_fragShaderText);
+ *
+ *    // Step 6: Enable the fragment shader program, and all needed textures
+ *    //
+ *    glUseProgram(g_programId);
+ *    glUniform1i(glGetUniformLocation(g_programId, "tex1"), 1);  // image texture
+ *    oglBuilder->useAllTextures(g_programId);                    // LUT textures
+ *
+ *    // Step 7: Update uniforms from dynamic property instances.
+ *    m_oglBuilder->useAllUniforms();
+ * \endcode
+ *
+ */
 class OCIOEXPORT GpuShaderDesc : public GpuShaderCreator
 {
 public:
