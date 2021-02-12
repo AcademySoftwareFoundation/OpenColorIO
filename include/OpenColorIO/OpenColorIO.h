@@ -2683,6 +2683,48 @@ private:
  * ExposureContrastTransform instance owns three DynamicProperties and they are all
  * implemented by a double. When creating the GPU fragment shader program, the addUniform() with
  * GpuShaderCreator::DoubleGetter is called when property is dynamic, up to three times.
+ * 
+ * **An OCIO shader program could contain:**
+ *
+ * * A declaration part  e.g., uniform sampled3D tex3;
+ *
+ * * Some helper methods
+ *
+ * * The OCIO shader function may be broken down as:
+ *
+ *    * The function header  e.g., void OCIODisplay(in vec4 inColor) {
+ *    * The function body    e.g.,   vec4 outColor.rgb = texture3D(tex3, inColor.rgb).rgb;
+ *    * The function footer  e.g.,   return outColor; }
+ * 
+ * 
+ * **Usage Example:**
+ * 
+ * Below is a code snippet to highlight the different parts of the OCIO shader program.
+ * 
+ * \code{.cpp}
+ *     
+ *     // All global declarations
+ *     uniform sampled3D tex3;
+ *   
+ *     // All helper methods
+ *     vec3 computePosition(vec3 color)
+ *     {
+ *        vec3 coords = color;
+ *        // Some processing...
+ *        return coords;
+ *     }
+ *     
+ *     // The shader function
+ *     vec4 OCIODisplay(in vec4 inColor)     //
+ *     {                                     // Function Header
+ *        vec4 outColor = inColor;           //
+ *     
+ *        outColor.rgb = texture3D(tex3, computePosition(inColor.rgb)).rgb;
+ *     
+ *        return outColor;                   // Function Footer
+ *     }                                     //
+ * 
+ * \endcode
  */
 class OCIOEXPORT GpuShaderCreator
 {
@@ -2796,51 +2838,7 @@ public:
                               Interpolation interpolation,
                               const float * values) = 0;
 
-    // TODO: Move to .rst
-    // !rst:: Methods to specialize parts of a OCIO shader program.
-    //
-    // **An OCIO shader program could contain:**
-    //
-    // 1. A declaration part  e.g., uniform sampled3D tex3;
-    //
-    // 2. Some helper methods
-    //
-    // 3. The OCIO shader function may be broken down as:
-    //
-    //    1. The function header  e.g., void OCIODisplay(in vec4 inColor) {
-    //    2. The function body    e.g.,   vec4 outColor.rgb = texture3D(tex3, inColor.rgb).rgb;
-    //    3. The function footer  e.g.,   return outColor; }
-    //
-    //
-    // **Usage Example:**
-    //
-    // Below is a code snippet to highlight the different parts of the OCIO shader program.
-    //
-    // .. code-block:: cpp
-    //
-    //    // All global declarations
-    //    uniform sampled3D tex3;
-    //
-    //    // All helper methods
-    //    vec3 computePosition(vec3 color)
-    //    {
-    //       vec3 coords = color;
-    //       // Some processing...
-    //       return coords;
-    //    }
-    //
-    //    // The shader function
-    //    vec4 OCIODisplay(in vec4 inColor)     //
-    //    {                                     // Function Header
-    //       vec4 outColor = inColor;           //
-    //
-    //       outColor.rgb = texture3D(tex3, computePosition(inColor.rgb)).rgb;
-    //
-    //       return outColor;                   // Function Footer
-    //    }                                     //
-    //
-    //
-
+    // Methods to specialize parts of a OCIO shader program
     virtual void addToDeclareShaderCode(const char * shaderCode);
     virtual void addToHelperShaderCode(const char * shaderCode);
     virtual void addToFunctionHeaderShaderCode(const char * shaderCode);
@@ -2851,7 +2849,6 @@ public:
      * \brief Create the OCIO shader program
      *
      * \note
-     *
      *   The OCIO shader program is decomposed to allow a specific implementation
      *   to change some parts. Some product integrations add the color processing
      *   within a client shader program, imposing constraints requiring this flexibility.
@@ -2903,7 +2900,7 @@ protected:
 //
 // To summarize, the complete shader program is:
 //
-// .. code-block:: cpp
+// \code{.cpp}
 //
 //  ////////////////////////////////////////////////////////////////////////
 //  //                                                                    //
