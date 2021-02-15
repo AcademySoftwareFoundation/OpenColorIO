@@ -81,6 +81,11 @@ OCIO_ADD_TEST(GradingRGBCurveOpData, accessors)
     gc2.setValue(v2);
     OCIO_CHECK_ASSERT(gc1 == gc2);
 
+    gc1.setSlope(OCIO::RGB_BLUE, 2, 0.9f);
+    OCIO_CHECK_EQUAL(gc1.getSlope(OCIO::RGB_BLUE, 2), 0.9f);
+    OCIO_CHECK_ASSERT(gc1.slopesAreDefault(OCIO::RGB_GREEN));
+    OCIO_CHECK_ASSERT(!gc1.slopesAreDefault(OCIO::RGB_BLUE));
+
     OCIO_CHECK_EQUAL(gc1.isIdentity(), false);
     OCIO_CHECK_ASSERT(!gc1.hasChannelCrosstalk());
 

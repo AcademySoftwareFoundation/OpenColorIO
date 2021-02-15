@@ -297,20 +297,8 @@ void FinalizeOpsForCPU(OpRcPtrVec & ops, const OpRcPtrVec & rawOps,
 
     if (!((oFlags & OPTIMIZATION_NO_DYNAMIC_PROPERTIES) == OPTIMIZATION_NO_DYNAMIC_PROPERTIES))
     {
-        ops.unifyDynamicProperties();
+        ops.validateDynamicProperties();
     }
-}
-
-namespace
-{
-template<typename T>
-void UnifyDynamicProperty(ConstOpCPURcPtr & op, std::shared_ptr<T> & prop, DynamicPropertyType type)
-{
-    if (op->hasDynamicProperty(type))
-    {
-        op->unifyDynamicProperty(type, prop);
-    }
-}
 }
 
 void CPUProcessor::Impl::finalize(const OpRcPtrVec & rawOps,
@@ -337,30 +325,6 @@ void CPUProcessor::Impl::finalize(const OpRcPtrVec & rawOps,
     m_inBitDepthOp = nullptr;
     m_outBitDepthOp = nullptr;
     CreateCPUEngine(ops, in, out, oFlags, m_inBitDepthOp, m_cpuOps, m_outBitDepthOp);
-
-    // This ensures that dynamic properties are decoupled from processor and that when a dynamic
-    // property on a CPU processor is modified, all ops that respond to that property (and which
-    // are enabled) are synchronized.
-    DynamicPropertyDoubleImplRcPtr dpExposure;
-    DynamicPropertyDoubleImplRcPtr dpContrast;
-    DynamicPropertyDoubleImplRcPtr dpGamma;
-    DynamicPropertyGradingPrimaryImplRcPtr dpGradingPrimary;
-    DynamicPropertyGradingRGBCurveImplRcPtr dpGradingRGBCurve;
-    DynamicPropertyGradingToneImplRcPtr dpGradingTone;
-
-    ConstOpCPURcPtrVec allCpuOps = m_cpuOps;
-    allCpuOps.push_back(m_inBitDepthOp);
-    allCpuOps.push_back(m_outBitDepthOp);
-    for (auto op : allCpuOps)
-    {
-        // Duplicate & initialize or share property.
-        UnifyDynamicProperty(op, dpExposure, DYNAMIC_PROPERTY_EXPOSURE);
-        UnifyDynamicProperty(op, dpContrast, DYNAMIC_PROPERTY_CONTRAST);
-        UnifyDynamicProperty(op, dpGamma, DYNAMIC_PROPERTY_GAMMA);
-        UnifyDynamicProperty(op, dpGradingPrimary, DYNAMIC_PROPERTY_GRADING_PRIMARY);
-        UnifyDynamicProperty(op, dpGradingRGBCurve, DYNAMIC_PROPERTY_GRADING_RGBCURVE);
-        UnifyDynamicProperty(op, dpGradingTone, DYNAMIC_PROPERTY_GRADING_TONE);
-    }
 
     // Compute the cache id.
 
@@ -442,7 +406,7 @@ void CPUProcessor::Impl::applyRGB(float * pixel) const
     const size_t numOps = m_cpuOps.size();
     for(size_t i = 0; i<numOps; ++i)
     {
-        m_cpuOps[i]->apply(pixel, pixel, 1);
+        m_cpuOps[i]->apply(v, v, 1);
     }
 
     m_outBitDepthOp->apply(v, v, 1);

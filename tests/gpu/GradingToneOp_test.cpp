@@ -46,6 +46,16 @@ OCIO_ADD_GPU_TEST(GradingTone, style_log_midtones_fwd_dynamic)
     GradingToneLogMidtones(test, OCIO::TRANSFORM_DIR_FORWARD, true);
 }
 
+OCIO_ADD_GPU_TEST(GradingTone, style_log_midtones_rev)
+{
+    GradingToneLogMidtones(test, OCIO::TRANSFORM_DIR_INVERSE, false);
+}
+
+OCIO_ADD_GPU_TEST(GradingTone, style_log_midtones_rev_dynamic)
+{
+    GradingToneLogMidtones(test, OCIO::TRANSFORM_DIR_INVERSE, true);
+}
+
 namespace GTTest2
 {
 static constexpr OCIO::GradingStyle style = OCIO::GRADING_LOG;
@@ -83,6 +93,16 @@ OCIO_ADD_GPU_TEST(GradingTone, style_log_highlights_fwd)
 OCIO_ADD_GPU_TEST(GradingTone, style_log_highlights_fwd_dynamic)
 {
     GradingToneLogHighlights(test, OCIO::TRANSFORM_DIR_FORWARD, true);
+}
+
+OCIO_ADD_GPU_TEST(GradingTone, style_log_highlights_rev)
+{
+    GradingToneLogHighlights(test, OCIO::TRANSFORM_DIR_INVERSE, false);
+}
+
+OCIO_ADD_GPU_TEST(GradingTone, style_log_highlights_rev_dynamic)
+{
+    GradingToneLogHighlights(test, OCIO::TRANSFORM_DIR_INVERSE, true);
 }
 
 namespace GTTest3
@@ -124,6 +144,16 @@ OCIO_ADD_GPU_TEST(GradingTone, style_video_shadows_fwd_dynamic)
     GradingToneVideoShadows(test, OCIO::TRANSFORM_DIR_FORWARD, true);
 }
 
+OCIO_ADD_GPU_TEST(GradingTone, style_video_shadows_rev)
+{
+    GradingToneVideoShadows(test, OCIO::TRANSFORM_DIR_INVERSE, false);
+}
+
+OCIO_ADD_GPU_TEST(GradingTone, style_video_shadows_rev_dynamic)
+{
+    GradingToneVideoShadows(test, OCIO::TRANSFORM_DIR_INVERSE, true);
+}
+
 namespace GTTest4
 {
 static constexpr OCIO::GradingStyle style = OCIO::GRADING_VIDEO;
@@ -163,6 +193,16 @@ OCIO_ADD_GPU_TEST(GradingTone, style_video_white_detail_fwd_dynamic)
     GradingToneVideoWhites(test, OCIO::TRANSFORM_DIR_FORWARD, true);
 }
 
+OCIO_ADD_GPU_TEST(GradingTone, style_video_white_detail_rev)
+{
+    GradingToneVideoWhites(test, OCIO::TRANSFORM_DIR_INVERSE, false);
+}
+
+OCIO_ADD_GPU_TEST(GradingTone, style_video_white_detail_rev_dynamic)
+{
+    GradingToneVideoWhites(test, OCIO::TRANSFORM_DIR_INVERSE, true);
+}
+
 namespace GTTest5
 {
 static constexpr OCIO::GradingStyle style = OCIO::GRADING_LOG;
@@ -200,6 +240,16 @@ OCIO_ADD_GPU_TEST(GradingTone, style_log_black_detail_fwd)
 OCIO_ADD_GPU_TEST(GradingTone, style_log_black_detail_fwd_dynamic)
 {
     GradingToneLogBlacks(test, OCIO::TRANSFORM_DIR_FORWARD, true);
+}
+
+OCIO_ADD_GPU_TEST(GradingTone, style_log_black_detail_rev)
+{
+    GradingToneLogBlacks(test, OCIO::TRANSFORM_DIR_INVERSE, false);
+}
+
+OCIO_ADD_GPU_TEST(GradingTone, style_log_black_detail_rev_dynamic)
+{
+    GradingToneLogBlacks(test, OCIO::TRANSFORM_DIR_INVERSE, true);
 }
 
 namespace GTTest6
@@ -256,6 +306,30 @@ OCIO_ADD_GPU_TEST(GradingTone, style_log_scontrast2_fwd_dynamic)
                             GTTest6::scontrast2);
 }
 
+OCIO_ADD_GPU_TEST(GradingTone, style_log_scontrast_rev)
+{
+    GradingToneLogSContrast(test, OCIO::TRANSFORM_DIR_INVERSE, false,
+                            GTTest6::scontrast);
+}
+
+OCIO_ADD_GPU_TEST(GradingTone, style_log_scontrast_rev_dynamic)
+{
+    GradingToneLogSContrast(test, OCIO::TRANSFORM_DIR_INVERSE, true,
+                            GTTest6::scontrast);
+}
+
+OCIO_ADD_GPU_TEST(GradingTone, style_log_scontrast2_rev)
+{
+    GradingToneLogSContrast(test, OCIO::TRANSFORM_DIR_INVERSE, false,
+                            GTTest6::scontrast2);
+}
+
+OCIO_ADD_GPU_TEST(GradingTone, style_log_scontrast2_rev_dynamic)
+{
+    GradingToneLogSContrast(test, OCIO::TRANSFORM_DIR_INVERSE, true,
+                            GTTest6::scontrast2);
+}
+
 namespace GTTest7
 {
 static constexpr OCIO::GradingStyle style = OCIO::GRADING_LIN;
@@ -293,6 +367,16 @@ OCIO_ADD_GPU_TEST(GradingTone, style_lin_midtones_fwd)
 OCIO_ADD_GPU_TEST(GradingTone, style_lin_midtones_fwd_dynamic)
 {
     GradingToneLinMidtones(test, OCIO::TRANSFORM_DIR_FORWARD, true);
+}
+
+OCIO_ADD_GPU_TEST(GradingTone, style_lin_midtones_rev)
+{
+    GradingToneLinMidtones(test, OCIO::TRANSFORM_DIR_INVERSE, false);
+}
+
+OCIO_ADD_GPU_TEST(GradingTone, style_lin_midtones_rev_dynamic)
+{
+    GradingToneLinMidtones(test, OCIO::TRANSFORM_DIR_INVERSE, true);
 }
 
 // TODO: add inverse tests.

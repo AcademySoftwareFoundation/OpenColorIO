@@ -19,16 +19,17 @@ static constexpr char METADATA_VIEWING_DESCRIPTION[] = "ViewingDescription";
 static constexpr char METADATA_SOP_DESCRIPTION[] = "SOPDescription";
 static constexpr char METADATA_SAT_DESCRIPTION[] = "SATDescription";
 
-typedef std::map<std::string,CDLTransformRcPtr> CDLTransformMap;
-typedef std::vector<CDLTransformRcPtr> CDLTransformVec;
+class CDLTransformImpl;
+typedef OCIO_SHARED_PTR<CDLTransformImpl> CDLTransformImplRcPtr;
 
-void ClearCDLTransformFileCache();
-
-void LoadCDL(CDLTransform * cdl, const char * xml);
+typedef std::map<std::string, CDLTransformImplRcPtr> CDLTransformMap;
+typedef std::vector<CDLTransformImplRcPtr> CDLTransformVec;
 
 class CDLTransformImpl : public CDLTransform
 {
 public:
+    static CDLTransformImplRcPtr Create();
+
     CDLTransformImpl() = default;
     CDLTransformImpl(const CDLTransformImpl &) = delete;
     CDLTransformImpl & operator=(const CDLTransformImpl &) = delete;
@@ -49,9 +50,6 @@ public:
     CDLStyle getStyle() const override;
     void setStyle(CDLStyle style) override;
 
-    const char * getXML() const override;
-    void setXML(const char * xml) override;
-
     void getSlope(double * rgb) const override;
     void setSlope(const double * rgb) override;
 
@@ -71,9 +69,8 @@ public:
 
     const char * getID() const override;
     void setID(const char * id) override;
-
-    const char * getDescription() const override;
-    void setDescription(const char * desc) override;
+    const char * getFirstSOPDescription() const override;
+    void setFirstSOPDescription(const char * description) override;
 
     CDLOpData & data() noexcept { return m_data; }
     const CDLOpData & data() const noexcept { return m_data; }
@@ -84,7 +81,6 @@ private:
     mutable std::string m_xml;
     CDLOpData m_data;
 };
-
 
 } // namespace OCIO_NAMESPACE
 

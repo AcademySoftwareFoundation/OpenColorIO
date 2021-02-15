@@ -127,9 +127,9 @@ OCIO_ADD_TEST(CDLOpData, inverse)
         OCIO_CHECK_EQUAL(invOp->getID(), "test_id");
         OCIO_REQUIRE_EQUAL(invOp->getFormatMetadata().getChildrenElements().size(), 1);
         OCIO_CHECK_EQUAL(std::string(OCIO::METADATA_DESCRIPTION),
-                         invOp->getFormatMetadata().getChildrenElements()[0].getName());
+                         invOp->getFormatMetadata().getChildrenElements()[0].getElementName());
         OCIO_CHECK_EQUAL(std::string("Inverse op test description"),
-                         invOp->getFormatMetadata().getChildrenElements()[0].getValue());
+                         invOp->getFormatMetadata().getChildrenElements()[0].getElementValue());
 
         // Ensure style is inverted
         OCIO_CHECK_EQUAL(invOp->getStyle(), OCIO::CDLOpData::CDL_V1_2_REV);

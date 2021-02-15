@@ -31,9 +31,33 @@ using ChildElementIterator      = PyIterator<FormatMetadata &, IT_CHILD_ELEMENT>
 
 void bindPyFormatMetadata(py::module & m)
 {
-    auto cls = py::class_<FormatMetadata>(m, "FormatMetadata")
-        .def("__iter__", [](const FormatMetadata & self) { return AttributeNameIterator(self); })
-        .def("__len__", &FormatMetadata::getNumAttributes)
+    auto clsFormatMetadata = 
+        py::class_<FormatMetadata>(
+            m.attr("FormatMetadata"));
+
+    auto clsAttributeNameIterator = 
+        py::class_<AttributeNameIterator>(
+            clsFormatMetadata, "AttributeNameIterator");
+
+    auto clsAttributeIterator = 
+        py::class_<AttributeIterator>(
+            clsFormatMetadata, "AttributeIterator");
+
+    auto clsConstChildElementIterator = 
+        py::class_<ConstChildElementIterator>(
+            clsFormatMetadata, "ConstChildElementIterator");
+
+    auto clsChildElementIterator = 
+        py::class_<ChildElementIterator>(
+            clsFormatMetadata, "ChildElementIterator");
+
+    clsFormatMetadata
+        .def("__iter__", [](const FormatMetadata & self) 
+            { 
+                return AttributeNameIterator(self); 
+            })
+        .def("__len__", &FormatMetadata::getNumAttributes, 
+             DOC(FormatMetadata, getNumAttributes))
         .def("__getitem__", [](const FormatMetadata & self, const std::string & name) 
             {
                 for (int i = 0; i < self.getNumAttributes(); i++)
@@ -49,8 +73,10 @@ void bindPyFormatMetadata(py::module & m)
                 os << " '" << name << "'";
                 throw py::key_error(os.str());
             },
-             "name"_a)
-        .def("__setitem__", &FormatMetadata::addAttribute, "name"_a.none(false), "value"_a.none(false))
+             "name"_a.none(false), 
+             DOC(FormatMetadata, getAttributeValue))
+        .def("__setitem__", &FormatMetadata::addAttribute, "name"_a.none(false), "value"_a.none(false), 
+             DOC(FormatMetadata, addAttribute))
         .def("__contains__", [](const FormatMetadata & self, const std::string & name) -> bool
             {
                 for (int i = 0; i < self.getNumAttributes(); i++)
@@ -63,7 +89,7 @@ void bindPyFormatMetadata(py::module & m)
                 }
                 return false;
             },
-             "name"_a)
+             "name"_a.none(false))
         .def("__repr__", [](const FormatMetadata & self)
             {
                 std::ostringstream oss;
@@ -71,20 +97,37 @@ void bindPyFormatMetadata(py::module & m)
                 return oss.str();
             })
 
-        .def("getName", &FormatMetadata::getName)
-        .def("setName", &FormatMetadata::setName, "name"_a.none(false))
-        .def("getValue", &FormatMetadata::getValue)
-        .def("setValue", &FormatMetadata::setValue, "value"_a.none(false))
-        .def("getAttributes", [](const FormatMetadata & self) { return AttributeIterator(self); })
-        .def("getChildElements", [](const FormatMetadata & self)
-            {
-                return ConstChildElementIterator(self);
+        .def("getElementName", &FormatMetadata::getElementName, 
+             DOC(FormatMetadata, getElementName))
+        .def("setElementName", &FormatMetadata::setElementName, "name"_a.none(false), 
+             DOC(FormatMetadata, setElementName))
+        .def("getElementValue", &FormatMetadata::getElementValue, 
+             DOC(FormatMetadata, getElementValue))
+        .def("setElementValue", &FormatMetadata::setElementValue, "value"_a.none(false), 
+             DOC(FormatMetadata, setElementValue))
+        .def("getAttributes", [](const FormatMetadata & self) 
+            { 
+                return AttributeIterator(self); 
             })
-        .def("getChildElements", [](FormatMetadata & self) { return ChildElementIterator(self); })
-        .def("addChildElement", &FormatMetadata::addChildElement, "name"_a.none(false), "value"_a.none(false))
-        .def("clear", &FormatMetadata::clear);
+        .def("getChildElements", [](FormatMetadata & self) 
+            { 
+                return ChildElementIterator(self); 
+            })
+        .def("addChildElement", &FormatMetadata::addChildElement, 
+             "name"_a.none(false), "value"_a.none(false), 
+             DOC(FormatMetadata, addChildElement))
+        .def("getName", &FormatMetadata::getName,
+             DOC(FormatMetadata, getName))
+        .def("setName", &FormatMetadata::setName, "name"_a.none(false),
+             DOC(FormatMetadata, setName))
+        .def("getID", &FormatMetadata::getID,
+             DOC(FormatMetadata, getID))
+        .def("setID", &FormatMetadata::setID, "id"_a.none(false),
+             DOC(FormatMetadata, setID))
+        .def("clear", &FormatMetadata::clear, 
+             DOC(FormatMetadata, clear));
 
-    py::class_<AttributeNameIterator>(cls, "AttributeNameIterator")
+    clsAttributeNameIterator
         .def("__len__", [](AttributeNameIterator & it) { return it.m_obj.getNumAttributes(); })
         .def("__getitem__", [](AttributeNameIterator & it, int i) 
             { 
@@ -98,7 +141,7 @@ void bindPyFormatMetadata(py::module & m)
                 return it.m_obj.getAttributeName(i);
             });
 
-    py::class_<AttributeIterator>(cls, "AttributeIterator")
+    clsAttributeIterator
         .def("__len__", [](AttributeIterator & it) { return it.m_obj.getNumAttributes(); })
         .def("__getitem__", [](AttributeIterator & it, int i) 
             { 
@@ -114,7 +157,7 @@ void bindPyFormatMetadata(py::module & m)
                                       it.m_obj.getAttributeValue(i));
             });
 
-    py::class_<ConstChildElementIterator>(cls, "ConstChildElementIterator")
+    clsConstChildElementIterator
         .def("__len__", [](ConstChildElementIterator & it) 
             { 
                 return it.m_obj.getNumChildrenElements(); 
@@ -136,7 +179,7 @@ void bindPyFormatMetadata(py::module & m)
             }, 
              py::return_value_policy::reference_internal);
 
-    py::class_<ChildElementIterator>(cls, "ChildElementIterator")
+    clsChildElementIterator
         .def("__len__", [](ChildElementIterator & it) 
             { 
                 return it.m_obj.getNumChildrenElements(); 

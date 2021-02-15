@@ -118,7 +118,7 @@ for optimal live adjustments (e.g., in viewports).
 
 .. code-block:: yaml
 
-    !<ExposureContrastTransform> {style: linear, exposure: {value: -1.5, dynamic: true}, 
+    !<ExposureContrastTransform> {style: linear, exposure: -1.5, 
       contrast: 0.5, gamma: 1.1, pivot: 0.18}
 
 Keys:
@@ -128,13 +128,10 @@ Keys:
 * ``pivot``
 * ``gamma``
 * ``style``
+* ``log_exposure_step``
+* ``log_midway_gray``
 * ``name``
 * ``direction``
-
-Dynamic Property Keys:
-
-* ``value``
-* ``dynamic``
 
 
 ``FileTransform``
@@ -160,6 +157,63 @@ Keys:
 
 * ``style``
 * ``params``
+* ``name``
+* ``direction``
+
+
+``GradingPrimaryTransform``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Applies primary color correction.
+
+Keys:
+
+* ``style``
+* ``brightness``
+* ``contrast``
+* ``pivot``
+* ``offset``
+* ``exposure``
+* ``lift``
+* ``gamma``
+* ``gain``
+* ``saturation``
+* ``clamp``
+* ``name``
+* ``direction``
+
+
+``GradingRGBCurveTransform``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Applies a spline-based curve.
+
+Keys:
+
+* ``style``
+* ``red``
+* ``green``
+* ``blue``
+* ``master``
+* ``lintolog_bypass``
+* ``name``
+* ``direction``
+
+
+``GradingToneTransform``
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+Applies an adjustment to various tonal ranges.
+
+Keys:
+
+* ``style``
+* ``blacks``
+* ``shadows``
+* ``midtones``
+* ``highlights``
+* ``whites``
+* ``s_contrast``
 * ``name``
 * ``direction``
 
@@ -288,3 +342,39 @@ Keys:
     If a min_in_value is present, then min_out_value must also be present and the result 
     is clamped at the low end. Similarly, if max_in_value is present, then max_out_value 
     must also be present and the result is clamped at the high end.
+
+
+
+Named Transforms
+****************
+
+Sometimes it is helpful to include one or more transforms in a config that are essentially
+stand-alone transforms that do not have a fixed relationship to a reference space or a
+process space.  An example would be a "utility curve" transform where the intent is to
+simply apply a LUT1D without any conversion to a reference space.  In these cases, a
+``named_transforms`` section may be added to the config with one or more named transforms.
+
+Note that named transforms do not show up in color space menus by default, so the 
+application developer must implement support to make them available to users.
+
+This feature may be used to emulate older methods of color management that ignored the 
+RGB primaries and simply applied one-dimensional transformations.  However, config authors 
+are encouraged to implement transforms as normal OCIO color spaces wherever possible.
+
+Named transforms support the keys:
+
+* ``name``
+* ``aliases``
+* ``description``
+* ``family``
+* ``categories``
+* ``encoding``
+* ``transform``
+* ``inverse_transform``
+
+.. code-block:: yaml
+
+    named_transforms:
+      - !<NamedTransform>
+        name: Utility Curve -- Cineon Log to Lin
+        transform: !<FileTransform> {src: logtolin_curve.spi1d}

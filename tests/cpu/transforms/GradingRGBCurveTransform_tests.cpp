@@ -6,6 +6,7 @@
 #include "transforms/GradingRGBCurveTransform.cpp"
 
 #include "testutils/UnitTest.h"
+#include "UnitTestLogUtils.h"
 
 namespace OCIO = OCIO_NAMESPACE;
 
@@ -86,6 +87,14 @@ OCIO_ADD_TEST(GradingRGBCurveTransform, basic)
                           "has a x coordinate '0.2' that is less from previous control "
                           "point x cooordinate '0.5'.");
 
+    // Check slopes.
+    gct->setSlope(OCIO::RGB_BLUE, 2, 0.9f);
+    OCIO_CHECK_NO_THROW(gct->validate());
+    OCIO_CHECK_EQUAL(gct->getSlope(OCIO::RGB_BLUE, 2), 0.9f);
+    OCIO_CHECK_THROW_WHAT(gct->setSlope(OCIO::RGB_BLUE, 4, 2.f), OCIO::Exception,
+                          "There are '3' control points. '4' is invalid.");
+    OCIO_CHECK_ASSERT(gct->slopesAreDefault(OCIO::RGB_GREEN));
+    OCIO_CHECK_ASSERT(!gct->slopesAreDefault(OCIO::RGB_BLUE));
 }
 
 OCIO_ADD_TEST(GradingRGBCurveTransform, processor_several_transforms)
@@ -193,54 +202,23 @@ OCIO_ADD_TEST(GradingRGBCurveTransform, processor_several_transforms)
         OCIO_CHECK_CLOSE(pixel[2], pixel_ab[2], error);
     }
 
-    // Make first dynamic.
+    //
+    // Test two grading rgb curve transforms can't be both dynamic.
+    //
+
+    // Make first dynamic (second already is).
     gcta->makeDynamic();
 
-    //
-    // Test with two grading rgb curve transforms where both are dynamic.
-    //
     OCIO::GroupTransformRcPtr grp2 = OCIO::GroupTransform::Create();
     grp2->appendTransform(gcta);
     grp2->appendTransform(gctb);
 
-    // Change both values (will not be used).
-    auto rgbCurve = OCIO::GradingRGBCurve::Create(OCIO::GRADING_LIN);
-    gcta->setValue(rgbCurve);
-    gctb->setValue(rgbCurve);
     {
-        OCIO::ConstProcessorRcPtr processor = config->getProcessor(grp2);
-        OCIO::ConstCPUProcessorRcPtr cpuProcessor = processor->getDefaultCPUProcessor();
-
-        // The dynamic property is common to both ops.
-        OCIO::DynamicPropertyRcPtr dp;
-        OCIO_CHECK_NO_THROW(dp = cpuProcessor->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_GRADING_RGBCURVE));
-        auto dpVal = OCIO::DynamicPropertyValue::AsGradingRGBCurve(dp);
-        OCIO_REQUIRE_ASSERT(dpVal);
-
-        float pixel[3] = { srcPixel[0], srcPixel[1], srcPixel[2] };
-
-        // Change both grading rgb curve to rgbCurveA.
-        dpVal->setValue(rgbCurveA);
-
-        // Apply rgbCurveA twice.
-        cpuProcessor->applyRGB(pixel);
-
-        OCIO_CHECK_CLOSE(pixel[0], pixel_aa[0], error);
-        OCIO_CHECK_CLOSE(pixel[1], pixel_aa[1], error);
-        OCIO_CHECK_CLOSE(pixel[2], pixel_aa[2], error);
-
-        // Changing the dynamic property is changing both values to rgbCurveB.
-        dpVal->setValue(rgbCurveB);
-        pixel[0] = srcPixel[0];
-        pixel[1] = srcPixel[1];
-        pixel[2] = srcPixel[2];
-
-        // Apply rgbCurveB twice.
-        cpuProcessor->applyRGB(pixel);
-
-        OCIO_CHECK_CLOSE(pixel[0], pixel_bb[0], error);
-        OCIO_CHECK_CLOSE(pixel[1], pixel_bb[1], error);
-        OCIO_CHECK_CLOSE(pixel[2], pixel_bb[2], error);
+        OCIO::LogGuard log;
+        OCIO::SetLoggingLevel(OCIO::LOGGING_LEVEL_WARNING);
+        OCIO_CHECK_NO_THROW(config->getProcessor(grp2));
+        OCIO_CHECK_EQUAL(log.output(), "[OpenColorIO Warning]: Grading RGB curve dynamic property "
+                                       "can only be there once.\n");
     }
 }
 

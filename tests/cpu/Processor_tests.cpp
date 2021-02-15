@@ -6,6 +6,7 @@
 
 #include "ops/exposurecontrast/ExposureContrastOp.h"
 #include "testutils/UnitTest.h"
+#include "UnitTestLogUtils.h"
 #include "UnitTestOptimFlags.h"
 
 namespace OCIO = OCIO_NAMESPACE;
@@ -30,11 +31,10 @@ OCIO_ADD_TEST(Processor, basic)
     OCIO_CHECK_EQUAL(std::string(processorMat->getCacheID()), "$b8861d4acd905af0e84ddf10c860b220");
 }
 
-OCIO_ADD_TEST(Processor, shared_dynamic_properties)
+OCIO_ADD_TEST(Processor, unique_dynamic_properties)
 {
     OCIO::TransformDirection direction = OCIO::TRANSFORM_DIR_FORWARD;
-    OCIO::ExposureContrastOpDataRcPtr data =
-        std::make_shared<OCIO::ExposureContrastOpData>();
+    OCIO::ExposureContrastOpDataRcPtr data = std::make_shared<OCIO::ExposureContrastOpData>();
 
     data->setExposure(1.2);
     data->setPivot(0.5);
@@ -63,51 +63,30 @@ OCIO_ADD_TEST(Processor, shared_dynamic_properties)
 
     OCIO_CHECK_NE(dp0->getValue(), dp1->getValue());
 
-    OCIO_CHECK_NO_THROW(ops.unifyDynamicProperties());
-
-    OCIO::DynamicPropertyDoubleImplRcPtr dp0_post = data0->getExposureProperty();
-    OCIO::DynamicPropertyDoubleImplRcPtr dp1_post = data1->getExposureProperty();
-
-    OCIO_CHECK_EQUAL(dp0_post->getValue(), dp1_post->getValue());
-
-    // Both share the same pointer.
-    OCIO_CHECK_EQUAL(dp0_post.get(), dp1_post.get());
-
-    // The first pointer is the one that gets shared.
-    OCIO_CHECK_EQUAL(dp0.get(), dp0_post.get());
+    OCIO::LogGuard log;
+    OCIO_CHECK_NO_THROW(ops.validateDynamicProperties());
+    OCIO_CHECK_EQUAL(log.output(), "[OpenColorIO Warning]: Exposure dynamic property can "
+                                   "only be there once.\n");
 }
 
-namespace
+OCIO_ADD_TEST(Processor, dynamic_properties)
 {
-void GetFormatName(const std::string & extension, std::string & name)
-{
-    std::string requestedExt{ extension };
-    std::transform(requestedExt.begin(), requestedExt.end(), requestedExt.begin(), ::tolower);
-    for (int i = 0; i < OCIO::Processor::getNumWriteFormats(); ++i)
-    {
-        std::string formatExt(OCIO::Processor::getFormatExtensionByIndex(i));
-        if (requestedExt == formatExt)
-        {
-            name = OCIO::Processor::getFormatNameByIndex(i);
-            break;
-        }
-    }
-}
-}
+    OCIO::ExposureContrastTransformRcPtr ec = OCIO::ExposureContrastTransform::Create();
 
-OCIO_ADD_TEST(Processor, write_formats)
-{
-    std::string clfFileFormat;
-    GetFormatName("CLF", clfFileFormat);
-    OCIO_CHECK_EQUAL(clfFileFormat, OCIO::FILEFORMAT_CLF);
+    ec->setExposure(1.2);
+    ec->setPivot(0.5);
+    ec->makeContrastDynamic();
 
-    std::string ctfFileFormat;
-    GetFormatName("CTF", ctfFileFormat);
-    OCIO_CHECK_EQUAL(ctfFileFormat, OCIO::FILEFORMAT_CTF);
-
-    std::string noFileFormat;
-    GetFormatName("XXX", noFileFormat);
-    OCIO_CHECK_ASSERT(noFileFormat.empty());
+    OCIO::ConfigRcPtr config = OCIO::Config::Create();
+    auto proc = config->getProcessor(ec);
+    OCIO_CHECK_ASSERT(proc->isDynamic());
+    OCIO_CHECK_ASSERT(proc->hasDynamicProperty(OCIO::DYNAMIC_PROPERTY_CONTRAST));
+    OCIO_CHECK_ASSERT(!proc->hasDynamicProperty(OCIO::DYNAMIC_PROPERTY_EXPOSURE));
+    OCIO::DynamicPropertyRcPtr dpc;
+    OCIO_CHECK_NO_THROW(dpc = proc->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_CONTRAST));
+    OCIO_CHECK_ASSERT(dpc);
+    OCIO_CHECK_THROW_WHAT(proc->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_EXPOSURE),
+                          OCIO::Exception, "Cannot find dynamic property");
 }
 
 OCIO_ADD_TEST(Processor, optimized_processor)

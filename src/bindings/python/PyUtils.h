@@ -13,14 +13,25 @@
 namespace OCIO_NAMESPACE
 {
 
-// Define __str__ implementation compatible with *most* OCIO classes
+// Define __repr__ implementation compatible with *most* OCIO classes
 template<typename T, typename ... EXTRA>
-void defStr(py::class_<T, OCIO_SHARED_PTR<T>, EXTRA ...> & cls)
+void defRepr(py::class_<T, OCIO_SHARED_PTR<T>, EXTRA ...> & cls)
 {
-    cls.def("__str__", [](OCIO_SHARED_PTR<T> self)
+    cls.def("__repr__", [](OCIO_SHARED_PTR<T> & self)
         { 
             std::ostringstream os;
             os << (*self);
+            return os.str();
+        });
+}
+
+template<typename T>
+void defRepr(py::class_<T> & cls)
+{
+    cls.def("__repr__", [](T & self)
+        { 
+            std::ostringstream os;
+            os << self;
             return os.str();
         });
 }
@@ -60,6 +71,8 @@ long chanOrderToNumChannels(ChannelOrdering chanOrder);
 
 // Return string that describes Python buffer's N-dimensional array shape
 std::string getBufferShapeStr(const py::buffer_info & info);
+// Return BitDepth for a supported Python buffer data type
+BitDepth getBufferBitDepth(const py::buffer_info & info);
 
 // Throw if Python buffer format is incompatible with a NumPy dtype
 void checkBufferType(const py::buffer_info & info, const py::dtype & dt);

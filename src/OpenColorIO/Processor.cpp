@@ -14,7 +14,7 @@
 #include "OpBuilders.h"
 #include "Processor.h"
 #include "TransformBuilder.h"
-#include "transforms/FileTransform.h"
+#include "utils/StringUtils.h"
 
 namespace OCIO_NAMESPACE
 {
@@ -150,26 +150,6 @@ const FormatMetadata & Processor::getTransformFormatMetadata(int index) const
 GroupTransformRcPtr Processor::createGroupTransform() const
 {
     return getImpl()->createGroupTransform();
-}
-
-void Processor::write(const char * formatName, std::ostream & os) const
-{
-    getImpl()->write(formatName, os);
-}
-
-int Processor::getNumWriteFormats()
-{
-    return FormatRegistry::GetInstance().getNumFormats(FORMAT_CAPABILITY_WRITE);
-}
-
-const char * Processor::getFormatNameByIndex(int index)
-{
-    return FormatRegistry::GetInstance().getFormatNameByIndex(FORMAT_CAPABILITY_WRITE, index);
-}
-
-const char * Processor::getFormatExtensionByIndex(int index)
-{
-    return FormatRegistry::GetInstance().getFormatExtensionByIndex(FORMAT_CAPABILITY_WRITE, index);
 }
 
 bool Processor::isDynamic() const noexcept
@@ -321,32 +301,6 @@ GroupTransformRcPtr Processor::Impl::createGroupTransform() const
     return group;
 }
 
-void Processor::Impl::write(const char * formatName, std::ostream & os) const
-{
-    FileFormat* fmt = FormatRegistry::GetInstance().getFileFormatByName(formatName);
-
-    if (!fmt)
-    {
-        std::ostringstream err;
-        err << "The format named '" << formatName;
-        err << "' could not be found. ";
-        throw Exception(err.str().c_str());
-    }
-
-    try
-    {
-        std::string fName{ formatName };
-        fmt->write(m_ops, getFormatMetadata(), fName, os);
-    }
-    catch (std::exception & e)
-    {
-        std::ostringstream err;
-        err << "Error writing format '" << formatName << "': ";
-        err << e.what();
-        throw Exception(err.str().c_str());
-    }
-}
-
 bool Processor::Impl::isDynamic() const noexcept
 {
     return m_ops.isDynamic();
@@ -423,7 +377,7 @@ ConstProcessorRcPtr Processor::Impl::getOptimizedProcessor(BitDepth inBitDepth,
 
         proc->getImpl()->m_ops.finalize(oFlags);
         proc->getImpl()->m_ops.optimizeForBitdepth(inBitDepth, outBitDepth, oFlags);
-        proc->getImpl()->m_ops.unifyDynamicProperties();
+        proc->getImpl()->m_ops.validateDynamicProperties();
 
         return proc;
     };
@@ -583,14 +537,16 @@ void Processor::Impl::setColorSpaceConversion(const Config & config,
         throw Exception("Internal error: Processor should be empty");
     }
 
-    BuildColorSpaceOps(m_ops, config, context, srcColorSpace, dstColorSpace, false);
+    // Default behavior is to bypass data color space. ColorSpaceTransform can be used to not bypass
+    // data color spaces.
+    BuildColorSpaceOps(m_ops, config, context, srcColorSpace, dstColorSpace, true);
 
     std::ostringstream desc;
     desc << "Color space conversion from " << srcColorSpace->getName()
          << " to " << dstColorSpace->getName();
     m_ops.getFormatMetadata().addAttribute(METADATA_DESCRIPTION, desc.str().c_str());
     m_ops.finalize(OPTIMIZATION_NONE);
-    m_ops.unifyDynamicProperties();
+    m_ops.validateDynamicProperties();
 }
 
 void Processor::Impl::setTransform(const Config & config,
@@ -608,7 +564,7 @@ void Processor::Impl::setTransform(const Config & config,
     BuildOps(m_ops, config, context, transform, direction);
 
     m_ops.finalize(OPTIMIZATION_NONE);
-    m_ops.unifyDynamicProperties();
+    m_ops.validateDynamicProperties();
 }
 
 void Processor::Impl::concatenate(ConstProcessorRcPtr & p1, ConstProcessorRcPtr & p2)
@@ -619,7 +575,7 @@ void Processor::Impl::concatenate(ConstProcessorRcPtr & p1, ConstProcessorRcPtr 
     computeMetadata();
 
     // Ops have been validated by p1 & p2.
-    m_ops.unifyDynamicProperties();
+    m_ops.validateDynamicProperties();
 }
 
 

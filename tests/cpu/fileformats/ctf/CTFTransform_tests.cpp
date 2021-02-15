@@ -152,8 +152,8 @@ OCIO_ADD_TEST(CTFReaderTransform, accessors)
         OCIO::FormatMetadataImpl & info = t.getInfoMetadata();
         const OCIO::FormatMetadataImpl & cinfo = t.getInfoMetadata();
 
-        OCIO_CHECK_EQUAL(std::string(info.getName()), OCIO::METADATA_INFO);
-        OCIO_CHECK_EQUAL(std::string(cinfo.getName()), OCIO::METADATA_INFO);
+        OCIO_CHECK_EQUAL(std::string(info.getElementName()), OCIO::METADATA_INFO);
+        OCIO_CHECK_EQUAL(std::string(cinfo.getElementName()), OCIO::METADATA_INFO);
 
         OCIO_CHECK_EQUAL(t.getID(), "");
         OCIO_CHECK_EQUAL(ct.getID(), "");

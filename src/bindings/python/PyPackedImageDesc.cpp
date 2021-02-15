@@ -8,7 +8,10 @@ namespace OCIO_NAMESPACE
 
 void bindPyPackedImageDesc(py::module & m)
 {
-    py::class_<PyPackedImageDesc, PyImageDesc /* base */>(m, "PackedImageDesc")
+    auto clsPackedImageDesc = 
+        py::class_<PyPackedImageDesc, PyImageDesc>(
+            m.attr("PackedImageDesc"))
+
         .def(py::init([](py::buffer & data, long width, long height, long numChannels) 
             { 
                 PyPackedImageDesc * p = new PyPackedImageDesc();
@@ -25,7 +28,8 @@ void bindPyPackedImageDesc(py::module & m)
 
                 return p;
             }),
-             "data"_a, "width"_a, "height"_a, "numChannels"_a)
+             "data"_a, "width"_a, "height"_a, "numChannels"_a,
+             DOC(PackedImageDesc, PackedImageDesc))
         .def(py::init([](py::buffer & data,
                          long width, long height,
                          long numChannels,
@@ -54,7 +58,8 @@ void bindPyPackedImageDesc(py::module & m)
                 return p;
             }),
              "data"_a, "width"_a, "height"_a, "numChannels"_a, "bitDepth"_a, "chanStrideBytes"_a, 
-             "xStrideBytes"_a, "yStrideBytes"_a)
+             "xStrideBytes"_a, "yStrideBytes"_a,
+             DOC(PackedImageDesc, PackedImageDesc, 2))
         .def(py::init([](py::buffer & data, 
                          long width, long height, 
                          ChannelOrdering chanOrder) 
@@ -73,7 +78,8 @@ void bindPyPackedImageDesc(py::module & m)
 
                 return p;
             }),
-             "data"_a, "width"_a, "height"_a, "chanOrder"_a)
+             "data"_a, "width"_a, "height"_a, "chanOrder"_a,
+             DOC(PackedImageDesc, PackedImageDesc, 3))
         .def(py::init([](py::buffer & data,
                          long width, long height,
                          ChannelOrdering chanOrder,
@@ -102,7 +108,8 @@ void bindPyPackedImageDesc(py::module & m)
                 return p;
             }),
              "data"_a, "width"_a, "height"_a, "chanOrder"_a, "bitDepth"_a, "chanStrideBytes"_a, 
-             "xStrideBytes"_a, "yStrideBytes"_a)
+             "xStrideBytes"_a, "yStrideBytes"_a,
+             DOC(PackedImageDesc, PackedImageDesc, 4))
         
         .def("getData", [](const PyPackedImageDesc & self) 
             {
@@ -111,19 +118,23 @@ void bindPyPackedImageDesc(py::module & m)
                                  { p->getHeight() * p->getWidth() * p->getNumChannels() },
                                  { p->getChanStrideBytes() },
                                  p->getData());
-            })
+            },
+             DOC(PackedImageDesc, getData))
         .def("getChannelOrder", [](const PyPackedImageDesc & self) 
             {
                 return self.getImg()->getChannelOrder();
-            })
+            },
+             DOC(PackedImageDesc, getChannelOrder))
         .def("getNumChannels", [](const PyPackedImageDesc & self) 
             {
                 return self.getImg()->getNumChannels();
-            })
+            },
+             DOC(PackedImageDesc, getNumChannels))
         .def("getChanStrideBytes", [](const PyPackedImageDesc & self) 
             {
                 return self.getImg()->getChanStrideBytes();
-            });
+            },
+             DOC(PackedImageDesc, getChanStrideBytes));
 }
 
 } // namespace OCIO_NAMESPACE

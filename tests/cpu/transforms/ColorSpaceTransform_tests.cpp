@@ -75,8 +75,7 @@ OCIO_ADD_TEST(ColorSpaceTransform, build_colorspace_ops)
 
     auto csSceneFromRef = OCIO::ColorSpace::Create(OCIO::REFERENCE_SPACE_SCENE);
     csSceneFromRef->setName(dst.c_str());
-    auto ff = OCIO::FixedFunctionTransform::Create();
-    ff->setStyle(OCIO::FIXED_FUNCTION_ACES_GLOW_03);
+    auto ff = OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_ACES_GLOW_03);
     csSceneFromRef->setTransform(ff, OCIO::COLORSPACE_DIR_FROM_REFERENCE);
     config->addColorSpace(csSceneFromRef);
 
@@ -86,9 +85,9 @@ OCIO_ADD_TEST(ColorSpaceTransform, build_colorspace_ops)
 
     {
         // Test from source to destination.
-        // Source has the to_reference transform defined.
-        // Destination has the from_reference transform defined.
-        // Expecting source to_reference + destination from_reference.
+        // Source has the to_scene_reference transform defined.
+        // Destination has the from_scene_reference transform defined.
+        // Expecting source to_scene_reference + destination from_scene_reference.
         // (The no-ops are the Allocation transforms.)
 
         OCIO::OpRcPtrVec ops;
@@ -126,6 +125,63 @@ OCIO_ADD_TEST(ColorSpaceTransform, build_colorspace_ops)
     }
 
     {
+        // Add alias names to color spaces.
+
+        csSceneToRef->addAlias("aliasToRef");
+        config->addColorSpace(csSceneToRef);
+
+        csSceneFromRef->addAlias("aliasFromRef");
+        config->addColorSpace(csSceneFromRef);
+
+        // Use aliases in transform.
+
+        OCIO::ColorSpaceTransformRcPtr cstAlias = OCIO::ColorSpaceTransform::Create();
+        cstAlias->setSrc("aliasToRef");
+        cstAlias->setDst("aliasFromRef");
+
+        // Same result as previous block.
+
+        OCIO::OpRcPtrVec ops;
+        OCIO_CHECK_NO_THROW(OCIO::BuildColorSpaceOps(ops, *config, config->getCurrentContext(),
+                                                     *cstAlias, OCIO::TRANSFORM_DIR_FORWARD));
+        OCIO_CHECK_NO_THROW(ops.validate());
+        OCIO_REQUIRE_EQUAL(ops.size(), 4);
+
+        // Allocation no-op.
+        auto op = OCIO_DYNAMIC_POINTER_CAST<const OCIO::Op>(ops[0]);
+        auto data = op->data();
+        OCIO_CHECK_EQUAL(data->getType(), OCIO::OpData::NoOpType);
+
+        // Src CS to reference.
+        op = OCIO_DYNAMIC_POINTER_CAST<const OCIO::Op>(ops[1]);
+        data = op->data();
+        OCIO_REQUIRE_EQUAL(data->getType(), OCIO::OpData::MatrixType);
+
+        // Reference to dst CS.
+        op = OCIO_DYNAMIC_POINTER_CAST<const OCIO::Op>(ops[2]);
+        data = op->data();
+        OCIO_REQUIRE_EQUAL(data->getType(), OCIO::OpData::FixedFunctionType);
+
+        // Allocation no-op.
+        op = OCIO_DYNAMIC_POINTER_CAST<const OCIO::Op>(ops[3]);
+        data = op->data();
+        OCIO_CHECK_EQUAL(data->getType(), OCIO::OpData::NoOpType);
+    }
+
+    {
+        // From a color space to the same one, identified by its name and an alias.
+
+        OCIO::ColorSpaceTransformRcPtr cstAlias = OCIO::ColorSpaceTransform::Create();
+        cstAlias->setSrc(src.c_str());
+        cstAlias->setDst("aliasToRef");
+
+        OCIO::OpRcPtrVec ops;
+        OCIO_CHECK_NO_THROW(OCIO::BuildColorSpaceOps(ops, *config, config->getCurrentContext(),
+                                                     *cstAlias, OCIO::TRANSFORM_DIR_FORWARD));
+        OCIO_CHECK_EQUAL(ops.size(), 0);
+    }
+
+    {
         // Test that data color space will not create a color space conversion unless the
         // color space transform forces data to be processed.
 
@@ -137,12 +193,27 @@ OCIO_ADD_TEST(ColorSpaceTransform, build_colorspace_ops)
                                                      *cst, OCIO::TRANSFORM_DIR_FORWARD));
         OCIO_CHECK_NO_THROW(ops.validate());
         OCIO_CHECK_EQUAL(ops.size(), 0);
+        ops.clear();
+
+        OCIO::ConstProcessorRcPtr proc;
+        config->setProcessorCacheFlags(OCIO::PROCESSOR_CACHE_OFF); // Cache disabled
+        OCIO_CHECK_NO_THROW(proc = config->getProcessor(cst));
+        OCIO_CHECK_EQUAL(proc->getNumTransforms(), 0);
 
         cst->setDataBypass(false);
         OCIO_CHECK_NO_THROW(OCIO::BuildColorSpaceOps(ops, *config, config->getCurrentContext(),
                                                      *cst, OCIO::TRANSFORM_DIR_FORWARD));
         OCIO_CHECK_NO_THROW(ops.validate());
         OCIO_CHECK_EQUAL(ops.size(), 4);
+        ops.clear();
+
+        // Some of the ops are no-ops, processor has 2 transforms.
+        OCIO_CHECK_NO_THROW(proc = config->getProcessor(cst));
+        OCIO_CHECK_EQUAL(proc->getNumTransforms(), 2);
+
+        // Similar test with color space, data by-pass can't be controlled.
+        OCIO_CHECK_NO_THROW(proc = config->getProcessor(src.c_str(), dst.c_str()));
+        OCIO_CHECK_EQUAL(proc->getNumTransforms(), 0);
 
         // Restore default data flags.
         csSceneToRef->setIsData(false);
@@ -153,17 +224,28 @@ OCIO_ADD_TEST(ColorSpaceTransform, build_colorspace_ops)
         csSceneFromRef->setIsData(true);
         config->addColorSpace(csSceneFromRef);
 
-        ops.clear();
         OCIO_CHECK_NO_THROW(OCIO::BuildColorSpaceOps(ops, *config, config->getCurrentContext(),
                                                      *cst, OCIO::TRANSFORM_DIR_FORWARD));
         OCIO_CHECK_NO_THROW(ops.validate());
         OCIO_CHECK_EQUAL(ops.size(), 0);
+        ops.clear();
+
+        OCIO_CHECK_NO_THROW(proc = config->getProcessor(cst));
+        OCIO_CHECK_EQUAL(proc->getNumTransforms(), 0);
 
         cst->setDataBypass(false);
         OCIO_CHECK_NO_THROW(OCIO::BuildColorSpaceOps(ops, *config, config->getCurrentContext(),
                                                      *cst, OCIO::TRANSFORM_DIR_FORWARD));
         OCIO_CHECK_NO_THROW(ops.validate());
         OCIO_CHECK_EQUAL(ops.size(), 4);
+        ops.clear();
+
+        OCIO_CHECK_NO_THROW(proc = config->getProcessor(cst));
+        OCIO_CHECK_EQUAL(proc->getNumTransforms(), 2);
+
+        // Similar test with color space, data bypass can't be controlled.
+        OCIO_CHECK_NO_THROW(proc = config->getProcessor(src.c_str(), dst.c_str()));
+        OCIO_CHECK_EQUAL(proc->getNumTransforms(), 0);
 
         // Restore default data flags.
         csSceneFromRef->setIsData(false);
@@ -261,8 +343,8 @@ OCIO_ADD_TEST(ColorSpaceTransform, build_colorspace_ops)
     }
 
     {
-        // Color space with both to_reference and from_reference transform defined. No inversion
-        // is made.
+        // Color space with both to_scene_reference and from_scene_reference transform defined. No
+        // inversion is made.
 
         auto csSceneBoth = csSceneFromRef->createEditableCopy();
         ff->setStyle(OCIO::FIXED_FUNCTION_ACES_GLOW_10);
@@ -366,7 +448,7 @@ OCIO_ADD_TEST(ColorSpaceTransform, build_colorspace_ops)
         OCIO_CHECK_THROW_WHAT(OCIO::BuildColorSpaceOps(ops, *config,
                                                        config->getCurrentContext(), *cst,
                                                        OCIO::TRANSFORM_DIR_FORWARD), OCIO::Exception,
-                              "source color space 'source_missing' could not be found");
+                              "Color space 'source_missing' could not be found");
     
         cst = OCIO::ColorSpaceTransform::Create();
         cst->setSrc(src.c_str());
@@ -375,7 +457,7 @@ OCIO_ADD_TEST(ColorSpaceTransform, build_colorspace_ops)
         OCIO_CHECK_THROW_WHAT(OCIO::BuildColorSpaceOps(ops, *config,
                                                        config->getCurrentContext(), *cst,
                                                        OCIO::TRANSFORM_DIR_FORWARD), OCIO::Exception,
-                              "destination color space 'destination_missing' could not be found");
+                              "Color space 'destination_missing' could not be found");
     }
 }
 
@@ -386,8 +468,7 @@ OCIO_ADD_TEST(ColorSpaceTransform, build_reference_conversion_ops)
     OCIO::ConfigRcPtr config = OCIO::Config::CreateRaw()->createEditableCopy();
     auto cs = OCIO::ColorSpace::Create(OCIO::REFERENCE_SPACE_SCENE);
     cs->setName(scn.c_str());
-    auto ff = OCIO::FixedFunctionTransform::Create();
-    ff->setStyle(OCIO::FIXED_FUNCTION_ACES_GLOW_03);
+    auto ff = OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_ACES_GLOW_03);
     cs->setTransform(ff, OCIO::COLORSPACE_DIR_FROM_REFERENCE);
     config->addColorSpace(cs);
 
@@ -491,8 +572,7 @@ OCIO_ADD_TEST(ColorSpaceTransform, build_colorspace_ops_with_reference_conversio
     OCIO::ConfigRcPtr config = OCIO::Config::CreateRaw()->createEditableCopy();
     auto cs = OCIO::ColorSpace::Create(OCIO::REFERENCE_SPACE_SCENE);
     cs->setName(scn.c_str());
-    auto ff = OCIO::FixedFunctionTransform::Create();
-    ff->setStyle(OCIO::FIXED_FUNCTION_ACES_GLOW_03);
+    auto ff = OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_ACES_GLOW_03);
     cs->setTransform(ff, OCIO::COLORSPACE_DIR_FROM_REFERENCE);
     config->addColorSpace(cs);
 
@@ -624,7 +704,7 @@ OCIO_ADD_TEST(ColorSpaceTransform, build_colorspace_ops_with_reference_conversio
     }
 
     //
-    // Add a to_reference transform to the view transform.
+    // Add a to_scene_reference transform to the view transform.
     //
 
     auto exp = OCIO::ExponentTransform::Create();
@@ -748,5 +828,9 @@ OCIO_ADD_TEST(ColorSpaceTransform, context_variables)
     OCIO_CHECK_ASSERT(OCIO::CollectContextVariables(*cfg, *ctx, *cst, usedContextVars));
     OCIO_CHECK_EQUAL(1, usedContextVars->getNumStringVars());
     OCIO_CHECK_EQUAL(std::string("ENV1"), usedContextVars->getStringVarNameByIndex(0));
-    OCIO_CHECK_EQUAL(std::string("exposure_contrast_linear.ctf"), usedContextVars->getStringVarByIndex(0));
+    OCIO_CHECK_EQUAL(std::string("exposure_contrast_linear.ctf"),
+                     usedContextVars->getStringVarByIndex(0));
 }
+
+// Please see (Config, named_transform_processor) in NamedTransform_tests.cpp for coverage of
+// ColorSpaceTransform where the arguments are NamedTransforms.

@@ -2,6 +2,11 @@
 # Copyright Contributors to the OpenColorIO Project.
 
 set(SOURCES
+	apphelpers/CategoryHelpers.cpp
+	apphelpers/ColorSpaceHelpers.cpp
+	apphelpers/DisplayViewHelpers.cpp
+	apphelpers/LegacyViewingPipeline.cpp
+	apphelpers/MixingHelpers.cpp
 	Baker.cpp
 	BitDepthUtils.cpp
 	Caching.cpp
@@ -16,6 +21,7 @@ set(SOURCES
 	Exception.cpp
 	fileformats/cdl/CDLParser.cpp
 	fileformats/cdl/CDLReaderHelper.cpp
+	fileformats/cdl/CDLWriter.cpp
 	fileformats/ctf/CTFReaderHelper.cpp
 	fileformats/ctf/CTFReaderUtils.cpp
 	fileformats/ctf/CTFTransform.cpp
@@ -57,6 +63,7 @@ set(SOURCES
 	LookParse.cpp
 	MathUtils.cpp
 	md5/md5.cpp
+	NamedTransform.cpp
 	OCIOYaml.cpp
 	Op.cpp
 	OpOptimizers.cpp
@@ -160,6 +167,7 @@ if(OCIO_ADD_EXTRA_BUILTINS)
 	set(SOURCES_BUILTINS
 		transforms/builtins/ArriCameras.cpp
 		transforms/builtins/CanonCameras.cpp
+		transforms/builtins/Displays.cpp
 		transforms/builtins/PanasonicCameras.cpp
 		transforms/builtins/RedCameras.cpp
 		transforms/builtins/SonyCameras.cpp

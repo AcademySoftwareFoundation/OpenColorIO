@@ -14,6 +14,7 @@
 #include "OpenColorABI.h"
 #include "OpenColorTypes.h"
 #include "OpenColorTransforms.h"
+#include "OpenColorAppHelpers.h"
 
 
 /*
@@ -267,17 +268,24 @@ public:
 
     ConfigRcPtr createEditableCopy() const;
 
-    /// Get the configuration major version
+    /// Get the configuration major version.
     unsigned int getMajorVersion() const;
 
-    /// Set the configuration major version
+    /**
+     * Set the configuration major version.
+     *
+     * Throws if it is not supported. Resets minor to the most recent minor for the given major.
+     */
     void setMajorVersion(unsigned int major);
 
-    /// Get the configuration minor version
+    /// Get the configuration minor version.
     unsigned int getMinorVersion() const;
 
-    /// Set the configuration minor version
+    /// Set the configuration minor version. Throws if it is not supported for the current major.
     void setMinorVersion(unsigned int minor);
+
+    /// Set the configuration major and minor versions. Throws if version is not supported.
+    void setVersion(unsigned int major, unsigned int minor);
 
     /// Allows an older config to be serialized as the current version.
     void upgradeToLatestVersion() noexcept;
@@ -292,14 +300,24 @@ public:
     void validate() const;
 
     /**
+     * Get/set a name string for the config.
+     *
+     * The name string may be used to communicate config update details or similar information
+     * to workflows external to OCIO in cases where the config path/filename itself does not
+     * provide adequate information.
+     */
+    const char * getName() const noexcept;
+    void setName(const char * name) noexcept;
+
+    /**
      * \brief Get the family separator
      * 
      * A single character used to separate the family string into tokens for use in hierarchical
      * menus.  Defaults to '/'.
      */
     char getFamilySeparator() const;
-    /// Reset the family separator to default i.e. '/' .
-    void resetFamilySeparatorToDefault() noexcept;
+    /// Get the default family separator i.e. '/' .
+    static char GetDefaultFamilySeparator() noexcept;
     /**
      * \brief Set the family separator
      *
@@ -430,18 +448,6 @@ public:
                                           ColorSpaceVisibility visibility, int index) const;
 
     /**
-     * \brief Get the color space from all the color spaces
-     *      (i.e. active and inactive) and return null if the name is not found.
-     *
-     * \note
-     *     The fcn accepts either a color space OR role name.
-     *     (Color space names take precedence over roles.)
-     */
-    ConstColorSpaceRcPtr getColorSpace(const char * name) const;
-
-    // The following three methods only work from the list of active color spaces.
-
-    /**
      * \brief Work on the active color spaces only.
      * 
      * \note
@@ -462,10 +468,26 @@ public:
      *      and return -1 if the name is not found.
      *
      * \note
-     *    The fcn accepts either a color space OR role name.
+     *    The fcn accepts either a color space name, role name, or alias.
      *    (Color space names take precedence over roles.)
      */
     int getIndexForColorSpace(const char * name) const;
+
+    /**
+     * \brief Get the color space from all the color spaces
+     *      (i.e. active and inactive) and return null if the name is not found.
+     *
+     * \note
+     *     The fcn accepts either a color space name, role name, or alias.
+     *     (Color space names take precedence over roles.)
+     */
+    ConstColorSpaceRcPtr getColorSpace(const char * name) const;
+
+    /**
+     * Accepts an alias, role name, named transform name, or color space name and returns the
+     * color space name or the named transform name.
+     */
+    const char * getCanonicalName(const char * name) const;
 
     /**
      * \brief Add a color space to the configuration.
@@ -484,15 +506,20 @@ public:
      * \brief Remove a color space from the configuration.
      *
      * \note
-     *    It does not throw an exception if the color space is not present
-     *    or used by an existing role.  Role name arguments are ignored.
+     *    It does not throw an exception.  Name must be the canonical name.  If a role name or
+     *    alias is provided or if the name is not in the config, nothing is done.
      * \note
-     *    Removing a color space to a \ref Config does not affect any
+     *    Removing a color space from a \ref Config does not affect any
      *    \ref ColorSpaceSet sets that have already been created.
      */
     void removeColorSpace(const char * name);
 
-    /// Return true if the color space is used by a transform, a role, or a look.
+    /**
+     * Return true if the color space is used by a transform, a role, or a look.
+     *
+     * \note
+     *    Name must be the canonical name.
+     */
     bool isColorSpaceUsed(const char * name) const noexcept;
 
     /**
@@ -505,31 +532,18 @@ public:
     void clearColorSpaces();
 
     /**
-     * \brief Given the specified string, get the longest,
-     *      right-most, colorspace substring that appears.
+     * \brief Set/get a list of inactive color space or named transform names.
      *
-     * * If strict parsing is enabled, and no color space is found, return
-     *   an empty string.
-     * * If strict parsing is disabled, return ROLE_DEFAULT (if defined).
-     * * If the default role is not defined, return an empty string.
-     */
-    const char * parseColorSpaceFromString(const char * str) const;
-
-    bool isStrictParsingEnabled() const;
-    void setStrictParsingEnabled(bool enabled);
-
-    /**
-     * \brief Set/get a list of inactive color space names.
-     *
+     * Notes:
+     * * List can contain color space and/or named transform names.
      * * The inactive spaces are color spaces that should not appear in application menus.
-     * * These color spaces will still work in :cpp:func:`Config::getProcessor` calls.
+     * * These color spaces will still work in Config::getProcessor calls.
      * * The argument is a comma-delimited string.  A null or empty string empties the list.
      * * The environment variable OCIO_INACTIVE_COLORSPACES may also be used to set the
      *   inactive color space list.
      * * The env. var. takes precedence over the inactive_colorspaces list in the config file.
      * * Setting the list via the API takes precedence over either the env. var. or the
      *   config file list.
-     * * Roles may not be used.
      */
     void setInactiveColorSpaces(const char * inactiveColorSpaces);
     const char * getInactiveColorSpaces() const;
@@ -606,6 +620,7 @@ public:
     const char * getDisplay(int index) const;
 
     const char * getDefaultView(const char * display) const;
+
     /**
      * Return the number of views attached to the display including the number of
      * shared views if any. Return 0 if display does not exist.
@@ -896,14 +911,73 @@ public:
     /**
      * \brief
      * 
-     * The default transform to use for scene-referred to display-referred
-     * reference space conversions is the first scene-referred view transform listed in
-     * that section of the config (the one with the lowest index).  Returns a null
-     * ConstTransformRcPtr if there isn't one.
+     * This view transform is the one that will be used by default if a ColorSpaceTransform is
+     * needed between a scene-referred and display-referred color space.  The config author may
+     * specify a transform to use via the default_view_transform entry in the config.  If that is
+     * not present, or does not return a valid view transform from the scene-referred connection
+     * space, the fall-back is to use the first valid view transform in the config.  Returns a
+     * null ConstTransformRcPtr if there isn't one.
      */
     ConstViewTransformRcPtr getDefaultSceneToDisplayViewTransform() const;
 
+    /**
+     * Get or set the default_view_transform string from the config.
+     * 
+     * Note that if this is not the name of a valid view transform from the scene-referred
+     * connection space, it will be ignored.
+     */
+    const char * getDefaultViewTransformName() const noexcept;
+    void setDefaultViewTransformName(const char * defaultName) noexcept;
+
+
     void clearViewTransforms();
+
+    /**
+     * \defgroup Methods related to named transforms.
+     * @{
+     */
+
+    /**
+     * \brief Work on the named transforms selected by visibility.
+     */
+    int getNumNamedTransforms(NamedTransformVisibility visibility) const noexcept;
+
+    /**
+     * \brief Work on the named transforms selected by visibility (active or inactive).
+     *
+     * Return an empty string for invalid index.
+     */
+    const char * getNamedTransformNameByIndex(NamedTransformVisibility visibility,
+                                              int index) const noexcept;
+
+    /// Work on the active named transforms only.
+    int getNumNamedTransforms() const noexcept;
+
+    /// Work on the active named transforms only and return an empty string for invalid index.
+    const char * getNamedTransformNameByIndex(int index) const noexcept;
+
+    /// Get an index from the active named transforms only and return -1 if the name is not found.
+    int getIndexForNamedTransform(const char * name) const noexcept;
+
+    /**
+     * \brief Get the named transform from all the named transforms (i.e. active and inactive) and
+     *     return null if the name is not found.
+     */
+    ConstNamedTransformRcPtr getNamedTransform(const char * name) const noexcept;
+
+    /**
+     * \brief Add or replace named transform.
+     *
+     * \note
+     *    Throws if namedTransform is null, name is missing, or no transform is set.  Also throws
+     *    if the name or the aliases conflict with names or aliases already in the config.
+     */
+    void addNamedTransform(const ConstNamedTransformRcPtr & namedTransform);
+
+    /// Clear all named transforms.
+    void clearNamedTransforms();
+
+    /** @} */
 
     // 
     // File Rules
@@ -939,6 +1013,20 @@ public:
      * choose a color space when strictParsing is true and no other rules match.
      */
     bool filepathOnlyMatchesDefaultRule(const char * filePath) const;
+
+    /**
+     * Given the specified string, get the longest, right-most, colorspace substring that
+     * appears. This is now deprecated, please use getColorSpaceFromFilepath.
+     *
+     * * If strict parsing is enabled, and no color space is found, return
+     *   an empty string.
+     * * If strict parsing is disabled, return ROLE_DEFAULT (if defined).
+     * * If the default role is not defined, return an empty string.
+     */
+    const char * parseColorSpaceFromString(const char * str) const;
+
+    bool isStrictParsingEnabled() const;
+    void setStrictParsingEnabled(bool enabled);
 
     //
     // Processors
@@ -1039,7 +1127,7 @@ public:
     Config(const Config &) = delete;
     Config& operator= (const Config &) = delete;
 
-    // Do not use (needed only for pybind11).
+    /// Do not use (needed only for pybind11).
     ~Config();
 
     //!cpp:function:: Control the caching of processors in the config instance.  By default, caching
@@ -1097,14 +1185,14 @@ extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const Config&);
 //   in the list. The position in the list prioritizes it with respect to the other rules.
 //   StrictParsing is not used. If no color space is found in the path, the rule will not
 //   match and the next rule will be considered.
-//   See :cpp:func:`FileRules::insertPathSearchRule`.
+//   \see FileRules::insertPathSearchRule.
 //   It has the key:
 //
 //   * name: Must be "ColorSpaceNamePathSearch".
 //
 // - Default Rule: The file_rules must always end with this rule. If no prior rules match,
 //   this rule specifies the color space applications will use.
-//   See :cpp:func:`FileRules::setDefaultRuleColorSpace`.
+//   \see FileRules::setDefaultRuleColorSpace.
 //   It has the keys:
 //
 //   * name: must be "Default".
@@ -1120,9 +1208,15 @@ extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const Config&);
 // getter will return NULL and setter will throw.
 //
 
-class FileRules
+class OCIOEXPORT FileRules
 {
 public:
+
+    /// Reserved rule name for the default rule.
+    static const char * DefaultRuleName;
+    /// Reserved rule name for the file path search rule \see FileRules::insertPathSearchRule.
+    static const char * FilePathSearchRuleName;
+
     /**
      * Creates FileRules for a Config. File rules will contain the default rule
      * using the default role. The default rule cannot be removed.
@@ -1212,10 +1306,16 @@ public:
     /// Move a rule closer to the end of the list by one position.
     void decreaseRulePriority(size_t ruleIndex);
 
+    /**
+     * Check if there is only the default rule using default role and no custom key. This is the
+     * default FileRules state when creating a new config.
+     */
+    bool isDefault() const noexcept;
+
     FileRules(const FileRules &) = delete;
     FileRules & operator= (const FileRules &) = delete;
 
-    // Do not use (needed only for pybind11).
+    /// Do not use (needed only for pybind11).
     virtual ~FileRules();
 
 private:
@@ -1259,7 +1359,7 @@ extern OCIOEXPORT std::ostream & operator<< (std::ostream &, const FileRules &);
 // Getters and setters are using the rule position, they will throw if the position is not
 // valid.
 
-class ViewingRules
+class OCIOEXPORT ViewingRules
 {
 public:
     /// Creates ViewingRules for a Config.
@@ -1338,7 +1438,7 @@ public:
 
     ViewingRules(const ViewingRules &) = delete;
     ViewingRules & operator= (const ViewingRules &) = delete;
-    // Do not use (needed only for pybind11).
+    /// Do not use (needed only for pybind11).
     virtual ~ViewingRules();
 
 private:
@@ -1384,7 +1484,23 @@ public:
     ColorSpaceRcPtr createEditableCopy() const;
 
     const char * getName() const noexcept;
-    void setName(const char * name);
+    /// If the name is already an alias, that alias is removed.
+    void setName(const char * name) noexcept;
+
+    size_t getNumAliases() const noexcept;
+    /// Return empty string if idx is out of range.
+    const char * getAlias(size_t idx) const noexcept;
+    /**
+     * Add an alias for the color space name (the aliases may be used as a synonym for the
+     * name).  Nothing will be added if the alias is already the color space name, one of its
+     * aliases, or the argument is null.  The aliases must not conflict with existing roles,
+     * color space names, named transform names, or other aliases.  This is verified when
+     * adding the color space to the config.
+     */
+    void addAlias(const char * alias) noexcept;
+    /// Does nothing if alias is not present.
+    void removeAlias(const char * alias) noexcept;
+    void clearAliases() noexcept;
 
     /**
      * Get the family, for use in user interfaces (optional)
@@ -1424,9 +1540,9 @@ public:
     // they display in menus based on what that color space is used for.
     //
     // Here is an example config entry that could appear under a ColorSpace:
-    // categories: [input, rendering]
+    // categories: [ file-io, working-space, basic-3d ]
     //
-    // The example contains two categories: 'input' and 'rendering'.
+    // The example contains three categories: 'file-io', 'working-space' and 'basic-3d'.
     // Category strings are not case-sensitive and the order is not significant.
     // There is no limit imposed on length or number. Although users may add
     // their own categories, the strings will typically come from a fixed set
@@ -1545,7 +1661,7 @@ public:
 
     ColorSpace(const ColorSpace &) = delete;
     ColorSpace& operator= (const ColorSpace &) = delete;
-    // Do not use (needed only for pybind11).
+    /// Do not use (needed only for pybind11).
     ~ColorSpace();
 
 private:
@@ -1647,7 +1763,8 @@ public:
      * \note
      *    If another color space is already registered with the same name,
      *    this will overwrite it. This stores a copy of the specified
-     *    color space(s).
+     *    color space(s). Throws if one of the aliases is already assigned as
+     *    a name or alias to an existing color space.
      */
     void addColorSpace(const ConstColorSpaceRcPtr & cs);
     void addColorSpaces(const ConstColorSpaceSetRcPtr & cs);
@@ -1664,7 +1781,7 @@ public:
     /// Clear all color spaces.
     void clearColorSpaces();
 
-    //!cpp:function:: Do not use (needed only for pybind11).
+    /// Do not use (needed only for pybind11).
     ~ColorSpaceSet();
 
 private:
@@ -1681,6 +1798,9 @@ private:
     const Impl * getImpl() const { return m_impl; }
 };
 
+/** \defgroup ColorSpaceSetOperators
+ *  @{
+ */
 
 /**
  * \brief Perform the union of two sets.
@@ -1719,7 +1839,7 @@ extern OCIOEXPORT ConstColorSpaceSetRcPtr operator&&(const ConstColorSpaceSetRcP
 extern OCIOEXPORT ConstColorSpaceSetRcPtr operator-(const ConstColorSpaceSetRcPtr & lcss,
                                                     const ConstColorSpaceSetRcPtr & rcss);
 
-
+/** @}*/
 
 
 //
@@ -1756,11 +1876,9 @@ public:
     const char * getDescription() const;
     void setDescription(const char * description);
 
-    //!cpp:function::
     Look(const Look &) = delete;
-    //!cpp:function::
     Look& operator= (const Look &) = delete;
-    //!cpp:function:: Do not use (needed only for pybind11).
+    /// Do not use (needed only for pybind11).
     ~Look();
 
 private:
@@ -1775,6 +1893,81 @@ private:
 };
 
 extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const Look&);
+
+
+/**
+ * \brief NamedTransform.
+ *
+ * A NamedTransform provides a way for config authors to include a set of color
+ * transforms that are independent of the color space being processed.  For example a "utility
+ * curve" transform where there is no need to convert to or from a reference space.
+ */
+
+class OCIOEXPORT NamedTransform
+{
+public:
+    static NamedTransformRcPtr Create();
+
+    virtual NamedTransformRcPtr createEditableCopy() const = 0;
+
+    virtual const char * getName() const noexcept = 0;
+    virtual void setName(const char * name) noexcept = 0;
+
+    /// Aliases can be used instead of the name. They must be unique within the config.
+    virtual size_t getNumAliases() const noexcept = 0;
+    /// Return empty string if idx is  out of range.
+    virtual const char * getAlias(size_t idx) const noexcept = 0;
+    /**
+    * Nothing is done if alias is NULL or empty, if it is already there, or if it is already
+    * the named transform name.
+    */
+    virtual void addAlias(const char * alias) noexcept = 0;
+    /// Does nothing if alias is not present.
+    virtual void removeAlias(const char * alias) noexcept = 0;
+    virtual void clearAliases() noexcept = 0;
+
+    /// \see ColorSpace::getFamily
+    virtual const char * getFamily() const noexcept = 0;
+    /// \see ColorSpace::setFamily
+    virtual void setFamily(const char * family) noexcept = 0;
+
+    virtual const char * getDescription() const noexcept = 0;
+    virtual void setDescription(const char * description) noexcept = 0;
+
+    /// \see ColorSpace::hasCategory
+    virtual bool hasCategory(const char * category) const noexcept = 0;
+    /// \see ColorSpace::addCategory
+    virtual void addCategory(const char * category) noexcept = 0;
+    /// \see ColorSpace::removeCategory
+    virtual void removeCategory(const char * category) noexcept = 0;
+    /// \see ColorSpace::getNumCategories
+    virtual int getNumCategories() const noexcept = 0;
+    /// \see ColorSpace::getCategory
+    virtual const char * getCategory(int index) const noexcept = 0;
+    /// \see ColorSpace::clearCategories
+    virtual void clearCategories() noexcept = 0;
+
+    /**
+     * A NamedTransform is not a color space and does not have an encoding in the same sense.
+     * However, it may be useful to associate a color space encoding that the transform is intended
+     * to be used with, for organizational purposes.
+     */
+    virtual const char * getEncoding() const noexcept = 0;
+    virtual void setEncoding(const char * encoding) noexcept = 0;
+
+    virtual ConstTransformRcPtr getTransform(TransformDirection dir) const = 0;
+    virtual void setTransform(const ConstTransformRcPtr & transform, TransformDirection dir) = 0;
+
+    NamedTransform(const NamedTransform &) = delete;
+    NamedTransform & operator= (const NamedTransform &) = delete;
+    // Do not use (needed only for pybind11).
+    virtual ~NamedTransform() = default;
+
+protected:
+    NamedTransform() = default;
+};
+
+extern OCIOEXPORT std::ostream & operator<< (std::ostream &, const NamedTransform &);
 
 
 //
@@ -1842,7 +2035,6 @@ public:
 
     ViewTransform(const ViewTransform &) = delete;
     ViewTransform & operator= (const ViewTransform &) = delete;
-
     /// Do not use (needed only for pybind11).
     ~ViewTransform();
 
@@ -1908,44 +2100,30 @@ public:
     const FormatMetadata & getTransformFormatMetadata(int index) const;
 
     /**
-     * Return a \ref GroupTransform that contains a
-     * copy of the transforms that comprise the processor.
-     * (Changes to it will not modify the original processor.)
+     * Return a \ref GroupTransform that contains a copy of the transforms that comprise the
+     * processor. (Changes to it will not modify the original processor.) Note that the
+     * GroupTransform::write method may be used to serialize a Processor.  Serializing to
+     * CTF format is a useful technique for debugging Processor contents.
      */
     GroupTransformRcPtr createGroupTransform() const;
 
     /**
-     * Write the transforms comprising the processor to the stream.
-     * Writing (as opposed to Baking) is a lossless process. An exception is thrown
-     * if the processor cannot be losslessly written to the specified file format.
-     */
-    void write(const char * formatName, std::ostream & os) const;
-
-    /// Get the number of writers.
-    static int getNumWriteFormats();
-
-    /**
-     * Get the writer at index, return empty string if
-     * an invalid index is specified.
-     */
-    static const char * getFormatNameByIndex(int index);
-    static const char * getFormatExtensionByIndex(int index);
-
-    /**
      * The returned pointer may be used to set the default value of any dynamic
      * properties of the requested type.  Throws if the requested property is not found.  Note
-     * that if the processor contains several ops that support the requested property, only ones
-     * for which dynamic has been enabled will be controlled.
+     * that if the processor contains several ops that support the requested property, only one
+     * can be dynamic and only this one will be controlled.
      *
      * \note The dynamic properties are a convenient way to change on-the-fly values without 
      * generating again and again a CPU or GPU processor instance. Color transformations can
-     * contain dynamic properties from a :cpp:class:`ExposureContrastTransform` for example.
-     * So, :cpp:class:`Processor`, :cpp:class:`CPUProcessor` and :cpp:class:`GpuShaderCreator`
-     * all have ways to manage dynamic properties. However, the transform dynamic properties
-     * are decoupled between the types of processor instances so that the same
-     * :cpp:class:`Processor` can generate several independent CPU and/or GPU processor
-     * instances i.e. changing the value of the exposure dynamic property from a CPU processor
-     * instance does not affect the corresponding GPU processor instance.
+     * contain dynamic properties from a ExposureContrastTransform for example.
+     * So, Processor, CPUProcessor and GpuShaderCreator all have ways to manage dynamic
+     * properties. However, the transform dynamic properties are decoupled between the types
+     * of processor instances so that the same Processor can generate several independent CPU
+     * and/or GPU processor instances i.e. changing the value of the exposure dynamic property
+     * from a CPU processor  instance does not affect the corresponding GPU processor instance.
+     * Processor creation will log a warning if there are more than one property of a given type.
+     * There may be more than one property of a given type, but only one will respond to parameter
+     * updates, the others will use their original parameter values.
      */
     DynamicPropertyRcPtr getDynamicProperty(DynamicPropertyType type) const;
     /// True if at least one dynamic property of that type exists.
@@ -2015,11 +2193,9 @@ public:
                                                     BitDepth outBitDepth,
                                                     OptimizationFlags oFlags) const;
 
-    //!cpp:function::
     Processor(const Processor &) = delete;
-    //!cpp:function::
     Processor & operator= (const Processor &) = delete;
-    //!cpp:function:: Do not use (needed only for pybind11).
+    /// Do not use (needed only for pybind11).
     ~Processor();
 
 private:
@@ -2064,12 +2240,11 @@ public:
 
     /* The returned pointer may be used to set the value of any dynamic properties
      * of the requested type.  Throws if the requested property is not found.  Note that if the
-     * processor contains several ops that support the requested property, only ones for which
-     * dynamic has been enabled will be controlled.
+     * processor contains several ops that support the requested property, only one can be dynamic.
      *
      * \note The dynamic properties in this object are decoupled from the ones in the
      * \ref Processor it was generated from. For each dynamic property in the Processor,
-     * there is one ine the CPU processor.
+     * there is one in the CPU processor.
      */
     DynamicPropertyRcPtr getDynamicProperty(DynamicPropertyType type) const;
 
@@ -2092,11 +2267,9 @@ public:
     void applyRGB(float * pixel) const;
     void applyRGBA(float * pixel) const;
 
-    //!cpp:function::
     CPUProcessor(const CPUProcessor &) = delete;
-    //!cpp:function::
     CPUProcessor& operator= (const CPUProcessor &) = delete;
-    //!cpp:function:: Do not use (needed only for pybind11).
+    /// Do not use (needed only for pybind11).
     ~CPUProcessor();
 
 private:
@@ -2131,11 +2304,9 @@ public:
     /// Extract the shader information using a custom \ref GpuShaderCreator class.
     void extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const;
     
-    //!cpp:function::
     GPUProcessor(const GPUProcessor &) = delete;
-    //!cpp:function::
     GPUProcessor& operator= (const GPUProcessor &) = delete;
-    //!cpp:function:: Do not use (needed only for pybind11).
+    /// Do not use (needed only for pybind11).
     ~GPUProcessor();
 
 private:
@@ -2173,11 +2344,9 @@ public:
     void addFile(const char * fname);
     void addLook(const char * look);
 
-    //!cpp:function::
     ProcessorMetadata(const ProcessorMetadata &) = delete;
-    //!cpp:function::
     ProcessorMetadata& operator= (const ProcessorMetadata &) = delete;
-    //!cpp:function:: Do not use (needed only for pybind11).
+    /// Do not use (needed only for pybind11).
     ~ProcessorMetadata();
 
 private:
@@ -2304,11 +2473,9 @@ public:
      */
     static const char * getFormatExtensionByIndex(int index);
 
-    //!cpp:function::
     Baker(const Baker &) = delete;
-    //!cpp:function::
     Baker& operator= (const Baker &) = delete;
-    //!cpp:function:: Do not use (needed only for pybind11).
+    /// Do not use (needed only for pybind11).
     ~Baker();
 
 private:
@@ -2737,7 +2904,6 @@ public:
     
     GpuShaderCreator(const GpuShaderCreator &) = delete;
     GpuShaderCreator & operator= (const GpuShaderCreator &) = delete;
-
     /// Do not use (needed only for pybind11).
     virtual ~GpuShaderCreator();
 
@@ -2979,7 +3145,6 @@ public:
 
     GpuShaderDesc(const GpuShaderDesc &) = delete;
     GpuShaderDesc& operator= (const GpuShaderDesc &) = delete;
-
     /// Do not use (needed only for pybind11).
     virtual ~GpuShaderDesc();
 
@@ -3098,7 +3263,6 @@ public:
 
     Context(const Context &) = delete;
     Context& operator= (const Context &) = delete;
-
     /// Do not use (needed only for pybind11).
     ~Context();
 

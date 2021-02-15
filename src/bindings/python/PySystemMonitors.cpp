@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-#include "PyOpenColorIO.h"
+#include "PySystemMonitors.h"
 #include "PyUtils.h"
 
 namespace OCIO_NAMESPACE
@@ -9,29 +9,6 @@ namespace OCIO_NAMESPACE
 
 namespace 
 {
-
-// Wrapper to preserve the SystemMonitors singleton.
-class PySystemMonitors
-{
-public:
-    PySystemMonitors() = default;
-    ~PySystemMonitors() = default;
-
-    size_t getNumMonitors() const noexcept
-    {
-        return SystemMonitors::Get()->getNumMonitors();
-    }
-
-    const char * getMonitorName(size_t idx) const
-    {
-        return SystemMonitors::Get()->getMonitorName(idx);
-    }
-
-    const char * getProfileFilepath(size_t idx) const
-    {
-        return SystemMonitors::Get()->getProfileFilepath(idx);
-    }
-};
 
 enum SystemMonitorsIterator
 {
@@ -44,15 +21,24 @@ using MonitorIterator = PyIterator<PySystemMonitors, IT_MONITORS>;
 
 void bindPySystemMonitors(py::module & m)
 {
-    auto cls = py::class_<PySystemMonitors>(m, "SystemMonitors")
-        .def(py::init<>())
+    auto clsSystemMonitors = 
+        py::class_<PySystemMonitors>(
+            m.attr("SystemMonitors"));
+
+    auto clsMonitorIterator = 
+        py::class_<MonitorIterator>(
+            clsSystemMonitors, "MonitorIterator");
+
+    clsSystemMonitors
+        .def(py::init<>(),
+             DOC(SystemMonitors, SystemMonitors))
 
         .def("getMonitors", [](PySystemMonitors & self) 
             {
                 return MonitorIterator(self);
             });
 
-    py::class_<MonitorIterator>(cls, "MonitorIterator")
+    clsMonitorIterator
         .def("__len__", [](MonitorIterator & it) { return it.m_obj.getNumMonitors(); })
         .def("__getitem__", [](MonitorIterator & it, int i) 
             { 

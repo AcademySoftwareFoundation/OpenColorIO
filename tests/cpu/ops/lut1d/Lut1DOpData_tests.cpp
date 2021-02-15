@@ -48,9 +48,13 @@ OCIO_ADD_TEST(Lut1DOpData, accessors)
     l.setHueAdjust(OCIO::HUE_DW3);
     OCIO_CHECK_EQUAL(l.getHueAdjust(), OCIO::HUE_DW3);
 
-    // Note: Hue and Sat adjust do not affect identity status.
+    // Note: Hue adjust does not affect identity status.
     OCIO_CHECK_ASSERT(l.isIdentity());
+    OCIO_CHECK_NO_THROW(l.finalize());
+    OCIO_CHECK_EQUAL(l.getArray().getNumColorComponents(), 1);
 
+    // Restore the number of components
+    l.getArray().setNumColorComponents(3);
     l.getArray()[1] = 1.0f;
     OCIO_CHECK_ASSERT(!l.isNoOp());
     OCIO_CHECK_ASSERT(!l.isIdentity());
@@ -82,11 +86,29 @@ OCIO_ADD_TEST(Lut1DOpData, accessors)
     OCIO_CHECK_NO_THROW(l.finalize());
     // Finalize sets numColorComponents to 1 if the three channels are equal.
     OCIO_CHECK_EQUAL(l.getArray().getNumColorComponents(), 1);
+
+    //
+    // Number of components using NAN.
+    //
+
+    // Reset number of components.
+    l.getArray().setNumColorComponents(3);
+
+    l.getArray()[0] = std::numeric_limits<float>::quiet_NaN();
+    l.getArray()[1] = std::numeric_limits<float>::quiet_NaN();
+    l.getArray()[2] = 0;
+
+    OCIO_CHECK_NO_THROW(l.finalize());
+    OCIO_CHECK_EQUAL(l.getArray().getNumColorComponents(), 3);
+
+    l.getArray()[2] = std::numeric_limits<float>::quiet_NaN();
+    OCIO_CHECK_NO_THROW(l.finalize());
+    OCIO_CHECK_EQUAL(l.getArray().getNumColorComponents(), 1);
 }
 
 OCIO_ADD_TEST(Lut1DOpData, is_identity)
 {
-    OCIO::Lut1DOpData l1(OCIO::Lut1DOpData::LUT_STANDARD, 1024);
+    OCIO::Lut1DOpData l1(OCIO::Lut1DOpData::LUT_STANDARD, 1024, false);
 
     OCIO_CHECK_ASSERT(l1.isIdentity());
 
@@ -107,7 +129,7 @@ OCIO_ADD_TEST(Lut1DOpData, is_identity)
     l1.getArray()[lastId] = last + 1.1e-5f;
     OCIO_CHECK_ASSERT(!l1.isIdentity());
 
-    OCIO::Lut1DOpData l2(OCIO::Lut1DOpData::LUT_INPUT_HALF_CODE, 65536);
+    OCIO::Lut1DOpData l2(OCIO::Lut1DOpData::LUT_INPUT_HALF_CODE, 65536, false);
 
     unsigned long id2 = 31700 * 3;
     const float first2 = l2.getArray()[0];
@@ -153,18 +175,18 @@ OCIO_ADD_TEST(Lut1DOpData, clone)
 
 OCIO_ADD_TEST(Lut1DOpData, equality_test)
 {
-    OCIO::Lut1DOpData l1(OCIO::Lut1DOpData::LUT_STANDARD, 1024);
-    OCIO::Lut1DOpData l2(OCIO::Lut1DOpData::LUT_STANDARD, 1024);
+    OCIO::Lut1DOpData l1(OCIO::Lut1DOpData::LUT_STANDARD, 1024, false);
+    OCIO::Lut1DOpData l2(OCIO::Lut1DOpData::LUT_STANDARD, 1024, false);
     l2.setInterpolation(OCIO::INTERP_NEAREST);
 
     // LUT 1D only implements 1 style of interpolation.
     OCIO_CHECK_ASSERT(l1 == l2);
 
-    OCIO::Lut1DOpData l3(OCIO::Lut1DOpData::LUT_STANDARD, 65536);
+    OCIO::Lut1DOpData l3(OCIO::Lut1DOpData::LUT_STANDARD, 65536, false);
 
     OCIO_CHECK_ASSERT(!(l1 == l3) && !(l3 == l2));
 
-    OCIO::Lut1DOpData l4(OCIO::Lut1DOpData::LUT_STANDARD, 1024);
+    OCIO::Lut1DOpData l4(OCIO::Lut1DOpData::LUT_STANDARD, 1024, false);
 
     OCIO_CHECK_ASSERT(l1 == l4);
 
@@ -187,11 +209,11 @@ OCIO_ADD_TEST(Lut1DOpData, equality_test)
 
 OCIO_ADD_TEST(Lut1DOpData, channel)
 {
-    auto L1 = std::make_shared<OCIO::Lut1DOpData>(OCIO::Lut1DOpData::LUT_STANDARD, 17);
+    auto L1 = std::make_shared<OCIO::Lut1DOpData>(OCIO::Lut1DOpData::LUT_STANDARD, 17, false);
 
     OCIO::ConstLut1DOpDataRcPtr L2 = std::make_shared<OCIO::Lut1DOpData>(
         OCIO::Lut1DOpData::LUT_STANDARD,
-        20);
+        20, false);
 
     // False: identity.
     OCIO_CHECK_ASSERT(!L1->hasChannelCrosstalk());
@@ -308,11 +330,11 @@ OCIO_ADD_TEST(Lut1DOpData, lut_1d_compose)
         OCIO_CHECK_EQUAL(std::string(result->getFormatMetadata().getAttributeValue(0)), "lut1 + lut2");
         OCIO_REQUIRE_EQUAL(result->getFormatMetadata().getNumChildrenElements(), 2);
         const auto & desc1 = result->getFormatMetadata().getChildElement(0);
-        OCIO_CHECK_EQUAL(std::string(desc1.getName()), OCIO::METADATA_DESCRIPTION);
-        OCIO_CHECK_EQUAL(std::string(desc1.getValue()), "description of 'lut1'");
+        OCIO_CHECK_EQUAL(std::string(desc1.getElementName()), OCIO::METADATA_DESCRIPTION);
+        OCIO_CHECK_EQUAL(std::string(desc1.getElementValue()), "description of 'lut1'");
         const auto & desc2 = result->getFormatMetadata().getChildElement(1);
-        OCIO_CHECK_EQUAL(std::string(desc2.getName()), OCIO::METADATA_DESCRIPTION);
-        OCIO_CHECK_EQUAL(std::string(desc2.getValue()), "description of 'lut2'");
+        OCIO_CHECK_EQUAL(std::string(desc2.getElementName()), OCIO::METADATA_DESCRIPTION);
+        OCIO_CHECK_EQUAL(std::string(desc2.getElementValue()), "description of 'lut2'");
 
         values = &result->getArray().getValues()[0];
 
@@ -484,7 +506,7 @@ const char uid[] = "uid";
 
 OCIO_ADD_TEST(Lut1DOpData, inverse_hueadjust)
 {
-    OCIO::Lut1DOpData refLut1d(OCIO::Lut1DOpData::LUT_STANDARD, 65536);
+    OCIO::Lut1DOpData refLut1d(OCIO::Lut1DOpData::LUT_STANDARD, 65536, false);
     refLut1d.getFormatMetadata().addAttribute(OCIO::METADATA_ID, uid);
 
     refLut1d.setHueAdjust(OCIO::HUE_DW3);
@@ -498,7 +520,7 @@ OCIO_ADD_TEST(Lut1DOpData, inverse_hueadjust)
 OCIO_ADD_TEST(Lut1DOpData, is_inverse)
 {
     // Create forward LUT.
-    auto L1 = std::make_shared<OCIO::Lut1DOpData>(OCIO::Lut1DOpData::LUT_STANDARD, 5);
+    auto L1 = std::make_shared<OCIO::Lut1DOpData>(OCIO::Lut1DOpData::LUT_STANDARD, 5, false);
     L1->getFormatMetadata().addAttribute(OCIO::METADATA_ID, uid);
 
     // Make it not an identity.
@@ -556,7 +578,7 @@ void CheckInverse_IncreasingEffectiveDomain(
     bool expIncreasingG, unsigned long expStartDomainG, unsigned long expEndDomainG,
     bool expIncreasingB, unsigned long expStartDomainB, unsigned long expEndDomainB)
 {
-    OCIO::Lut1DOpData refLut1dOp(OCIO::Lut1DOpData::LUT_STANDARD, 1024);
+    OCIO::Lut1DOpData refLut1dOp(OCIO::Lut1DOpData::LUT_STANDARD, 1024, false);
     refLut1dOp.getFormatMetadata().addAttribute(OCIO::METADATA_ID, uid);
 
     SetLutArray(refLut1dOp, dimension, channels, fwdArrayData);
@@ -672,7 +694,7 @@ void CheckInverse_Flatten(unsigned long dimension,
                           const float * fwdArrayData,
                           const float * expInvArrayData)
 {
-    OCIO::Lut1DOpData refLut1dOp(OCIO::Lut1DOpData::LUT_STANDARD, 65536);
+    OCIO::Lut1DOpData refLut1dOp(OCIO::Lut1DOpData::LUT_STANDARD, 65536, false);
     refLut1dOp.getFormatMetadata().addAttribute(OCIO::METADATA_ID, uid);
 
     SetLutArray(refLut1dOp, dimension, channels, fwdArrayData);
@@ -783,7 +805,7 @@ void SetLutArrayHalf(const OCIO::Lut1DOpDataRcPtr & op, unsigned long channels)
 OCIO_ADD_TEST(Lut1DOpData, inverse_half_domain)
 {
     const auto halfFlags = OCIO::Lut1DOpData::LUT_INPUT_HALF_CODE;
-    auto refLut1dOp = std::make_shared<OCIO::Lut1DOpData>(halfFlags, 65536);
+    auto refLut1dOp = std::make_shared<OCIO::Lut1DOpData>(halfFlags, 65536, false);
     refLut1dOp->getFormatMetadata().addAttribute(OCIO::METADATA_ID, uid);
 
     SetLutArrayHalf(refLut1dOp, 3u);

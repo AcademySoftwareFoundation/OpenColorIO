@@ -51,6 +51,8 @@ class ExponentTransformTest(unittest.TestCase):
         format_metadata.setName(self.TEST_ID)
         self.assertIsInstance(format_metadata, OCIO.FormatMetadata)
         self.assertEqual(format_metadata.getName(), self.TEST_ID)
+        format_metadata.setID(self.TEST_ID)
+        self.assertEqual(format_metadata.getID(), self.TEST_ID)
 
     def test_negative_style(self):
         """

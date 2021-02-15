@@ -181,11 +181,11 @@ const char * LookTransform::GetLooksResultColorSpace(const ConstConfigRcPtr & co
 std::ostream& operator<< (std::ostream& os, const LookTransform& t)
 {
     os << "<LookTransform";
-    os <<  " src="       << t.getSrc();
+    os <<  " direction=" << TransformDirectionToString(t.getDirection());
+    os << ", src="       << t.getSrc();
     os << ", dst="       << t.getDst();
     os << ", looks="     << t.getLooks();
     if (t.getSkipColorSpaceConversion()) os << ", skipCSConversion";
-    os << ", direction=" << TransformDirectionToString(t.getDirection());
     os << ">";
     return os;
 }
@@ -289,8 +289,9 @@ void RunLookTokens(OpRcPtrVec & ops,
             if (!skipColorSpaceConversion &&
                 currentColorSpace.get() != processColorSpace.get())
             {
+                // Default behavior is to bypass data color space.
                 BuildColorSpaceOps(ops, config, context,
-                                   currentColorSpace, processColorSpace, false);
+                                   currentColorSpace, processColorSpace, true);
                 currentColorSpace = processColorSpace;
             }
 
@@ -352,8 +353,8 @@ void BuildLookOps(OpRcPtrVec & ops,
     // If current color space is already the dst space skip the conversion.
     if (!skipColorSpaceConversion && currentColorSpace.get() != dst.get())
     {
-        BuildColorSpaceOps(ops, config, context,
-                           currentColorSpace, dst, false);
+        // Default behavior is to bypass data color space.
+        BuildColorSpaceOps(ops, config, context, currentColorSpace, dst, true);
     }
 }
 

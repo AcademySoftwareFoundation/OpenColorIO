@@ -7,6 +7,7 @@
 #include "transforms/GradingPrimaryTransform.cpp"
 
 #include "testutils/UnitTest.h"
+#include "UnitTestLogUtils.h"
 
 namespace OCIO = OCIO_NAMESPACE;
 
@@ -193,53 +194,23 @@ OCIO_ADD_TEST(GradingPrimaryTransform, processor_several_transforms)
         OCIO_CHECK_CLOSE(pixel[2], pixel_ab[2], error);
     }
 
-    // To start, make only the first transform dynamic.
+    //
+    // Test that two grading primary transforms can't be both dynamic.
+    //
+
+    // Make first transform dynamic (second already is).
     gpta->makeDynamic();
 
-    //
-    // Test with two grading primary transforms where both are dynamic.
-    //
     OCIO::GroupTransformRcPtr grp2 = OCIO::GroupTransform::Create();
     grp2->appendTransform(gpta);
     grp2->appendTransform(gptb);
 
-    // Change both values (will not be used).
-    gpta->setValue(OCIO::GradingPrimary(OCIO::GRADING_LIN));
-    gptb->setValue(OCIO::GradingPrimary(OCIO::GRADING_LIN));
     {
-        OCIO::ConstProcessorRcPtr processor = config->getProcessor(grp2);
-        OCIO::ConstCPUProcessorRcPtr cpuProcessor = processor->getDefaultCPUProcessor();
-
-        // The dynamic property is common to both ops.
-        OCIO::DynamicPropertyRcPtr dp;
-        OCIO_CHECK_NO_THROW(dp = cpuProcessor->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_GRADING_PRIMARY));
-        auto dpVal = OCIO::DynamicPropertyValue::AsGradingPrimary(dp);
-        OCIO_REQUIRE_ASSERT(dpVal);
-
-        float pixel[3] = { srcPixel[0], srcPixel[1], srcPixel[2] };
-
-        // Change both grading primary to gpa.
-        dpVal->setValue(gpa);
-
-        // Apply gpa twice.
-        cpuProcessor->applyRGB(pixel);
-
-        OCIO_CHECK_CLOSE(pixel[0], pixel_aa[0], error);
-        OCIO_CHECK_CLOSE(pixel[1], pixel_aa[1], error);
-        OCIO_CHECK_CLOSE(pixel[2], pixel_aa[2], error);
-
-        // Changing the dynamic property is changing both values to gpb.
-        dpVal->setValue(gpb);
-        pixel[0] = srcPixel[0];
-        pixel[1] = srcPixel[1];
-        pixel[2] = srcPixel[2];
-
-        // Apply gpb twice.
-        cpuProcessor->applyRGB(pixel);
-
-        OCIO_CHECK_CLOSE(pixel[0], pixel_bb[0], error);
-        OCIO_CHECK_CLOSE(pixel[1], pixel_bb[1], error);
-        OCIO_CHECK_CLOSE(pixel[2], pixel_bb[2], error);
+        OCIO::LogGuard log;
+        OCIO::SetLoggingLevel(OCIO::LOGGING_LEVEL_WARNING);
+        OCIO_CHECK_NO_THROW(config->getProcessor(grp2));
+        OCIO_CHECK_EQUAL(log.output(), "[OpenColorIO Warning]: Grading primary dynamic property "
+                                       "can only be there once.\n");
     }
 }
 
@@ -400,4 +371,44 @@ OCIO_ADD_TEST(GradingPrimaryTransform, serialization)
 
         OCIO_CHECK_EQUAL(oss.str(), GROUP_STR);
     }
+}
+
+OCIO_ADD_TEST(GradingPrimaryTransform, log_contrast_inverse_apply)
+{
+    auto cfg = OCIO::Config::CreateRaw();
+
+    OCIO::GradingPrimary data(OCIO::GRADING_LOG);
+    data.m_contrast = OCIO::GradingRGBM(1.1, 0.9, 1.2, 1.0);
+
+    auto primary = OCIO::GradingPrimaryTransform::Create(OCIO::GRADING_LOG);
+    primary->setValue(data);
+
+    auto proc = cfg->getProcessor(primary);
+    auto cpu = proc->getDefaultCPUProcessor();
+    const float pixelRef[]{ 0.f, 0.f, 0.f };
+    float pixel[]{ 0.f, 0.f, 0.f };
+    cpu->applyRGB(pixel);
+
+    auto proc2 = cfg->getProcessor(primary, OCIO::TRANSFORM_DIR_INVERSE);
+    auto cpu2 = proc2->getDefaultCPUProcessor();
+    cpu2->applyRGB(pixel);
+
+    static constexpr float error = 1e-6f;
+    OCIO_CHECK_CLOSE(pixel[0], pixelRef[0], error);
+    OCIO_CHECK_CLOSE(pixel[1], pixelRef[1], error);
+    OCIO_CHECK_CLOSE(pixel[2], pixelRef[2], error);
+
+    pixel[0] = pixelRef[0];
+    pixel[1] = pixelRef[1];
+    pixel[2] = pixelRef[2];
+    cpu->applyRGB(pixel);
+
+    primary->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+    auto proc3 = cfg->getProcessor(primary);
+    auto cpu3 = proc3->getDefaultCPUProcessor();
+    cpu3->applyRGB(pixel);
+
+    OCIO_CHECK_CLOSE(pixel[0], pixelRef[0], error);
+    OCIO_CHECK_CLOSE(pixel[1], pixelRef[1], error);
+    OCIO_CHECK_CLOSE(pixel[2], pixelRef[2], error);
 }

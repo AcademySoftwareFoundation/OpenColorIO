@@ -106,13 +106,13 @@ OCIO_ADD_TEST(ParseUtils, transform_direction)
     OCIO_CHECK_NO_THROW(resDir = OCIO::TransformDirectionFromString("INVERSE"));
     OCIO_CHECK_EQUAL(OCIO::TRANSFORM_DIR_INVERSE, resDir);
     OCIO_CHECK_THROW_WHAT(resDir = OCIO::TransformDirectionFromString("unknown"), OCIO::Exception,
-                          "Unrecognized transform direction 'unknown'");
+                          "Unrecognized transform direction: 'unknown'");
     OCIO_CHECK_THROW_WHAT(resDir = OCIO::TransformDirectionFromString(""), OCIO::Exception,
-                          "Unrecognized transform direction ''");
+                          "Unrecognized transform direction: ''");
     OCIO_CHECK_THROW_WHAT(resDir = OCIO::TransformDirectionFromString("anything"), OCIO::Exception,
-                          "Unrecognized transform direction 'anything'");
+                          "Unrecognized transform direction: 'anything'");
     OCIO_CHECK_THROW_WHAT(resDir = OCIO::TransformDirectionFromString(nullptr), OCIO::Exception,
-                          "Unrecognized transform direction ''");
+                          "Unrecognized transform direction: ''");
 
     resDir = OCIO::CombineTransformDirections(OCIO::TRANSFORM_DIR_INVERSE,
                                               OCIO::TRANSFORM_DIR_INVERSE);
@@ -131,25 +131,6 @@ OCIO_ADD_TEST(ParseUtils, transform_direction)
     OCIO_CHECK_EQUAL(OCIO::TRANSFORM_DIR_FORWARD, resDir);
     resDir = OCIO::GetInverseTransformDirection(OCIO::TRANSFORM_DIR_FORWARD);
     OCIO_CHECK_EQUAL(OCIO::TRANSFORM_DIR_INVERSE, resDir);
-}
-
-OCIO_ADD_TEST(ParseUtils, color_space)
-{
-    std::string resStr;
-    resStr = OCIO::ColorSpaceDirectionToString(OCIO::COLORSPACE_DIR_TO_REFERENCE);
-    OCIO_CHECK_EQUAL("to_reference", resStr);
-    resStr = OCIO::ColorSpaceDirectionToString(OCIO::COLORSPACE_DIR_FROM_REFERENCE);
-    OCIO_CHECK_EQUAL("from_reference", resStr);
-
-    OCIO::ColorSpaceDirection resCSD = OCIO::COLORSPACE_DIR_FROM_REFERENCE;
-    OCIO_CHECK_NO_THROW(resCSD = OCIO::ColorSpaceDirectionFromString("to_reference"));
-    OCIO_CHECK_EQUAL(OCIO::COLORSPACE_DIR_TO_REFERENCE, resCSD);
-    OCIO_CHECK_NO_THROW(resCSD = OCIO::ColorSpaceDirectionFromString("from_reference"));
-    OCIO_CHECK_EQUAL(OCIO::COLORSPACE_DIR_FROM_REFERENCE, resCSD);
-    OCIO_CHECK_THROW_WHAT(OCIO::ColorSpaceDirectionFromString("unkwon"), OCIO::Exception,
-                          "Unrecognized color space direction 'unkwon'");
-    OCIO_CHECK_THROW_WHAT(OCIO::ColorSpaceDirectionFromString(""), OCIO::Exception,
-                          "Unrecognized color space direction ''");
 }
 
 OCIO_ADD_TEST(ParseUtils, bitdepth)

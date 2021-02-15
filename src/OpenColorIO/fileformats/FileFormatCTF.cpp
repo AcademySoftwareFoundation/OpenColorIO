@@ -23,6 +23,7 @@
 #include "ops/noop/NoOps.h"
 #include "Platform.h"
 #include "pystring/pystring.h"
+#include "TransformBuilder.h"
 #include "transforms/FileTransform.h"
 #include "utils/StringUtils.h"
 
@@ -134,8 +135,9 @@ public:
               const std::string & formatName,
               std::ostream & ostream) const override;
 
-    void write(const OpRcPtrVec & ops,
-               const FormatMetadataImpl & metadata,
+    void write(const ConstConfigRcPtr & config,
+               const ConstContextRcPtr & context,
+               const GroupTransform & group,
                const std::string & formatName,
                std::ostream & /*ostream*/) const override;
 };
@@ -900,7 +902,17 @@ private:
                                           gradingRGBCurveSubElements, recognizedName))
                 {
                     pImpl->m_elms.push_back(
-                        std::make_shared<CTFReaderGradingCurveParamElt>(
+                        std::make_shared<CTFReaderGradingCurvePointsElt>(
+                            name,
+                            pContainer,
+                            pImpl->getXmLineNumber(),
+                            pImpl->getXmlFilename()));
+                }
+                else if (SupportedElement(name, pElt, TAG_CURVE_SLOPES,
+                                          gradingRGBCurveSubElements, recognizedName))
+                {
+                    pImpl->m_elms.push_back(
+                        std::make_shared<CTFReaderGradingCurveSlopesElt>(
                             name,
                             pContainer,
                             pImpl->getXmLineNumber(),
@@ -1431,7 +1443,8 @@ void LocalFileFormat::bake(const Baker & baker,
         {
             // Generate the identity shaper values, then apply the transform.
             // Using a half-domain to accurately handle floating-point, linear-space inputs.
-            shaperLut = std::make_shared<Lut1DOpData>(Lut1DOpData::LUT_INPUT_HALF_CODE, 65536);
+            shaperLut = std::make_shared<Lut1DOpData>(Lut1DOpData::LUT_INPUT_HALF_CODE,
+                                                      65536, true);
         }
         else
         {
@@ -1556,11 +1569,20 @@ void LocalFileFormat::bake(const Baker & baker,
         CreateLut3DOp(ops, lut3D, TRANSFORM_DIR_FORWARD);
     }
 
-    write(ops, baker.getFormatMetadata(), formatName, ostream);
+    GroupTransformRcPtr group = GroupTransform::Create();
+    // Build transforms from ops.
+    for (ConstOpRcPtr op : ops)
+    {
+        CreateTransform(group, op);
+    }
+    const auto & metadata = baker.getFormatMetadata();
+    group->getFormatMetadata() = metadata;
+    write(config, config->getCurrentContext(), *group, formatName, ostream);
 }
 
-void LocalFileFormat::write(const OpRcPtrVec & ops,
-                            const FormatMetadataImpl & metadata,
+void LocalFileFormat::write(const ConstConfigRcPtr & config,
+                            const ConstContextRcPtr & context,
+                            const GroupTransform & group,
                             const std::string & formatName,
                             std::ostream & ostream) const
 {
@@ -1577,6 +1599,11 @@ void LocalFileFormat::write(const OpRcPtrVec & ops,
         throw Exception(os.str().c_str());
     }
 
+    OpRcPtrVec ops;
+    BuildGroupOps(ops, *config, context, group, TRANSFORM_DIR_FORWARD);
+    ops.finalize(OPTIMIZATION_NONE);
+
+    const FormatMetadataImpl & metadata = group.getFormatMetadata();
     CTFReaderTransformPtr transform = std::make_shared<CTFReaderTransform>(ops, metadata);
 
     // Write XML Header.

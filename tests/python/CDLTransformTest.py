@@ -9,18 +9,6 @@ import PyOpenColorIO as OCIO
 from UnitTestUtils import TEST_DATAFILES_DIR, TEST_NAMES, TEST_DESCS
 
 
-DEFAULT_CDL = """<ColorCorrection id="">
-    <SOPNode>
-        <Slope>1 1 1</Slope>
-        <Offset>0 0 0</Offset>
-        <Power>1 1 1</Power>
-    </SOPNode>
-    <SatNode>
-        <Saturation>1</Saturation>
-    </SatNode>
-</ColorCorrection>"""
-
-
 class CDLTransformTest(unittest.TestCase):
     # Default CDL values on initialization.
     DEFAULT_CDL_SLOPE = [1.0, 1.0, 1.0]
@@ -35,22 +23,6 @@ class CDLTransformTest(unittest.TestCase):
     TEST_CDL_OFFSET = [3, 3.5, 4]
     TEST_CDL_POWER = [4.5, 5, 5.5]
     TEST_CDL_SAT = 6
-    TEST_CDL = """<ColorCorrection id="{0}">
-    <SOPNode>
-        <Description>{1}</Description>
-        <Slope>{2}</Slope>
-        <Offset>{3}</Offset>
-        <Power>{4}</Power>
-    </SOPNode>
-    <SatNode>
-        <Saturation>{5}</Saturation>
-    </SatNode>
-</ColorCorrection>""".format(TEST_CDL_ID,
-           TEST_CDL_DESC,
-           ' '.join(map(str, TEST_CDL_SLOPE)),
-           ' '.join(map(str, TEST_CDL_OFFSET)),
-           ' '.join(map(str, TEST_CDL_POWER)),
-           str(TEST_CDL_SAT))
 
     def setUp(self):
         self.cdl_tr = OCIO.CDLTransform()
@@ -79,16 +51,16 @@ class CDLTransformTest(unittest.TestCase):
 
     def test_description(self):
         """
-        Test the setDescription() and getDescription() methods.
+        Test the setFirstSOPDescription() and getFirstSOPDescription() methods.
         """
 
         # Default initialized description value is ""
-        self.assertEqual(self.cdl_tr.getDescription(), '')
+        self.assertEqual(self.cdl_tr.getFirstSOPDescription(), '')
 
         # Test description setter and getter.
         for desc in TEST_DESCS:
-            self.cdl_tr.setDescription(desc)
-            self.assertEqual(desc, self.cdl_tr.getDescription())
+            self.cdl_tr.setFirstSOPDescription(desc)
+            self.assertEqual(desc, self.cdl_tr.getFirstSOPDescription())
 
     def test_slope(self):
         """
@@ -175,25 +147,9 @@ class CDLTransformTest(unittest.TestCase):
             self.cdl_tr.setStyle(style)
             self.assertEqual(self.cdl_tr.getStyle(), style)
 
-    def test_xml(self):
+    def test_create_from_file_cc(self):
         """
-        Test the setXML() and getXML() methods.
-        """
-
-        self.cdl_tr.setXML(self.TEST_CDL)
-        self.assertEqual(self.cdl_tr.getID(), self.TEST_CDL_ID)
-        self.assertEqual(self.cdl_tr.getDescription(), self.TEST_CDL_DESC)
-        self.assertListEqual(self.cdl_tr.getSlope(), self.TEST_CDL_SLOPE)
-        self.assertListEqual(self.cdl_tr.getOffset(), self.TEST_CDL_OFFSET)
-        self.assertListEqual(self.cdl_tr.getPower(), self.TEST_CDL_POWER)
-        self.assertEqual(self.cdl_tr.getSat(), self.TEST_CDL_SAT)
-
-        # Test the XML produced by this CDLTransform object.
-        self.assertEqual(self.cdl_tr.getXML(), self.TEST_CDL)
-
-    def test_createfromfile_cc(self):
-        """
-        Test CreateFromFile() method with a cc file.
+        Test CreateFromFile() method with a cc file and write it back.
         """
 
         # Try env var first to get test file path.
@@ -202,13 +158,31 @@ class CDLTransformTest(unittest.TestCase):
         # Test cc file.
         cdl = OCIO.CDLTransform.CreateFromFile(test_file, 'foo')
         self.assertEqual(cdl.getID(), 'foo')
-        self.assertEqual(cdl.getDescription(), 'this is a description')
+        self.assertEqual(cdl.getFirstSOPDescription(), 'this is a description')
         self.assertListEqual(cdl.getSlope(), [1.1, 1.2, 1.3])
         self.assertListEqual(cdl.getOffset(), [2.1, 2.2, 2.3])
         self.assertListEqual(cdl.getPower(), [3.1, 3.2, 3.3])
         self.assertEqual(cdl.getSat(), 0.7)
 
-    def test_createfromfile_ccc(self):
+        # Write CDL back.
+        cfg = OCIO.Config.CreateRaw()
+        grp = OCIO.GroupTransform()
+        grp.appendTransform(cdl)
+        self.assertEqual(grp.write(config=cfg, formatName='ColorCorrection'),
+                         """<ColorCorrection id="foo">
+    <SOPNode>
+        <Description>this is a description</Description>
+        <Slope>1.1 1.2 1.3</Slope>
+        <Offset>2.1 2.2 2.3</Offset>
+        <Power>3.1 3.2 3.3</Power>
+    </SOPNode>
+    <SatNode>
+        <Saturation>0.7</Saturation>
+    </SatNode>
+</ColorCorrection>
+""")
+
+    def test_create_from_file_ccc(self):
         """
         Test CreateFromFile() method with a ccc file.
         """
@@ -227,13 +201,13 @@ class CDLTransformTest(unittest.TestCase):
         # Test a specified id member of the ccc file.
         cdl2 = OCIO.CDLTransform.CreateFromFile(test_file, 'cc0003')
         self.assertEqual(cdl2.getID(), 'cc0003')
-        self.assertEqual(cdl2.getDescription(), 'golden')
+        self.assertEqual(cdl2.getFirstSOPDescription(), 'golden')
         self.assertListEqual(cdl2.getSlope(), [1.2, 1.1, 1.0])
         self.assertListEqual(cdl2.getOffset(), [0.0, 0.0, 0.0])
         self.assertListEqual(cdl2.getPower(), [0.9, 1.0, 1.2])
         self.assertEqual(cdl2.getSat(), 1.0)
 
-    def test_createfromfile_cdl(self):
+    def test_create_from_file_cdl(self):
         """
         Test CreateFromFile() method with a cdl file.
         """
@@ -241,15 +215,34 @@ class CDLTransformTest(unittest.TestCase):
         # Try env var first to get test file path.
         test_file = '%s/cdl_test1.cdl' % TEST_DATAFILES_DIR
 
+        # Mute warnings being logged.
+        curLogLevel = OCIO.GetLoggingLevel()
+        OCIO.SetLoggingLevel(OCIO.LOGGING_LEVEL_NONE)
+
         # Test a specified id member of the cdl file.
         cdl = OCIO.CDLTransform.CreateFromFile(test_file, 'cc0003')
+        OCIO.SetLoggingLevel(curLogLevel)
+
         self.assertEqual(cdl.getID(), 'cc0003')
-        self.assertEqual(cdl.getDescription(), 'golden')
+        self.assertEqual(cdl.getFirstSOPDescription(), 'golden')
         self.assertListEqual(cdl.getSlope(), [1.2, 1.1, 1.0])
         self.assertListEqual(cdl.getOffset(), [0.0, 0.0, 0.0])
         self.assertListEqual(cdl.getPower(), [0.9, 1.0, 1.2])
         self.assertEqual(cdl.getSat(), 1.0)
 
+    def test_create_group_from_file(self):
+        """
+        Test CreateGroupFromFile.
+        """
+
+        test_file = '%s/cdl_test1.ccc' % TEST_DATAFILES_DIR
+        grp_tr = OCIO.CDLTransform.CreateGroupFromFile(test_file)
+        self.assertEqual(len(grp_tr), 5)
+        self.assertEqual(grp_tr[0].getID(), 'cc0001')
+        self.assertEqual(grp_tr[1].getID(), 'cc0002')
+        self.assertEqual(grp_tr[2].getID(), 'cc0003')
+        self.assertEqual(grp_tr[3].getID(), '')
+        self.assertEqual(grp_tr[4].getID(), '')
 
     def test_validate_slope(self):
         """
@@ -333,12 +326,11 @@ class CDLTransformTest(unittest.TestCase):
                                    description=self.TEST_CDL_DESC)
 
         self.assertEqual(self.TEST_CDL_ID, cdl_tr.getID())
-        self.assertEqual(self.TEST_CDL_DESC, cdl_tr.getDescription())
+        self.assertEqual(self.TEST_CDL_DESC, cdl_tr.getFirstSOPDescription())
         self.assertEqual(self.TEST_CDL_SLOPE, cdl_tr.getSlope())
         self.assertEqual(self.TEST_CDL_OFFSET, cdl_tr.getOffset())
         self.assertEqual(self.TEST_CDL_POWER, cdl_tr.getPower())
         self.assertEqual(self.TEST_CDL_SAT, cdl_tr.getSat())
-        self.assertEqual(self.TEST_CDL, cdl_tr.getXML())
 
         # With keyword not in their proper order.
         cdl_tr2 = OCIO.CDLTransform(id=self.TEST_CDL_ID,
@@ -349,12 +341,11 @@ class CDLTransformTest(unittest.TestCase):
                                     sat=self.TEST_CDL_SAT)
 
         self.assertEqual(self.TEST_CDL_ID, cdl_tr2.getID())
-        self.assertEqual(self.TEST_CDL_DESC, cdl_tr2.getDescription())
+        self.assertEqual(self.TEST_CDL_DESC, cdl_tr2.getFirstSOPDescription())
         self.assertEqual(self.TEST_CDL_SLOPE, cdl_tr2.getSlope())
         self.assertEqual(self.TEST_CDL_OFFSET, cdl_tr2.getOffset())
         self.assertEqual(self.TEST_CDL_POWER, cdl_tr2.getPower())
         self.assertEqual(self.TEST_CDL_SAT, cdl_tr2.getSat())
-        self.assertEqual(self.TEST_CDL, cdl_tr2.getXML())
 
     def test_constructor_without_keyword(self):
         """
@@ -369,12 +360,11 @@ class CDLTransformTest(unittest.TestCase):
                                    self.TEST_CDL_DESC)
 
         self.assertEqual(self.TEST_CDL_ID, cdl_tr.getID())
-        self.assertEqual(self.TEST_CDL_DESC, cdl_tr.getDescription())
+        self.assertEqual(self.TEST_CDL_DESC, cdl_tr.getFirstSOPDescription())
         self.assertEqual(self.TEST_CDL_SLOPE, cdl_tr.getSlope())
         self.assertEqual(self.TEST_CDL_OFFSET, cdl_tr.getOffset())
         self.assertEqual(self.TEST_CDL_POWER, cdl_tr.getPower())
         self.assertEqual(self.TEST_CDL_SAT, cdl_tr.getSat())
-        self.assertEqual(self.TEST_CDL, cdl_tr.getXML())
 
     def test_constructor_without_parameter(self):
         """
@@ -384,9 +374,8 @@ class CDLTransformTest(unittest.TestCase):
         cdl_tr = OCIO.CDLTransform()
 
         self.assertEqual(cdl_tr.getID(), '')
-        self.assertEqual(cdl_tr.getDescription(), '')
+        self.assertEqual(cdl_tr.getFirstSOPDescription(), '')
         self.assertEqual(cdl_tr.getSlope(), [1.0, 1.0, 1.0])
         self.assertEqual(cdl_tr.getOffset(), [0.0, 0.0, 0.0])
         self.assertEqual(cdl_tr.getPower(), [1.0, 1.0, 1.0])
         self.assertEqual(cdl_tr.getSat(), 1.0)
-        self.assertEqual(cdl_tr.getXML(), DEFAULT_CDL)

@@ -167,6 +167,9 @@ int main(int argc, const char **argv)
                                         OCIO::ROLE_COMPOSITING_LOG, OCIO::ROLE_COLOR_TIMING,
                                         OCIO::ROLE_COLOR_PICKING,
                                         OCIO::ROLE_TEXTURE_PAINT, OCIO::ROLE_MATTE_PAINT,
+                                        OCIO::ROLE_RENDERING,
+                                        OCIO::ROLE_INTERCHANGE_SCENE,
+                                        OCIO::ROLE_INTERCHANGE_DISPLAY,
                                         NULL };
             int MAXROLES=256;
             for(int i=0;i<MAXROLES; ++i)
@@ -182,8 +185,7 @@ int main(int argc, const char **argv)
                 }
                 else
                 {
-                    std::cout << "ERROR: NOT DEFINED" << " (" << role << ")" << std::endl;
-                    errorcount += 1;
+                    std::cout << "WARNING: NOT DEFINED (" << role << ")" << std::endl;
                 }
             }
 

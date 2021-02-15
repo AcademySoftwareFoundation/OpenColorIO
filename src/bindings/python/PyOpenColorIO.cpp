@@ -8,23 +8,25 @@ namespace OCIO_NAMESPACE
 
 PYBIND11_MODULE(PyOpenColorIO, m)
 {
-    // Exceptions
-    py::register_exception<Exception>(m, "Exception");
-    py::register_exception<ExceptionMissingFile>(m, "ExceptionMissingFile");
+    m.doc() = DOC(PyOpenColorIO);
 
-    // Global functions
-    m.def("ClearAllCaches", &ClearAllCaches);
-    m.def("GetVersion", &GetVersion);
-    m.def("GetVersionHex", &GetVersionHex);
-    m.def("GetLoggingLevel", &GetLoggingLevel);
-    m.def("SetLoggingLevel", &SetLoggingLevel, "level"_a);
-    m.def("SetLoggingFunction", &SetLoggingFunction, "logFunction"_a);
-    m.def("ResetToDefaultLoggingFunction", &ResetToDefaultLoggingFunction);
-    m.def("LogMessage", &LogMessage, "level"_a, "message"_a);
-    m.def("GetEnvVariable", &GetEnvVariable, "name"_a);
-    m.def("SetEnvVariable", &SetEnvVariable, "name"_a, "value"_a);
-    m.def("UnsetEnvVariable", &UnsetEnvVariable, "name"_a);
-    m.def("IsEnvVariablePresent", &IsEnvVariablePresent, "name"_a);
+    // OpenColorIOTypes
+    bindPyTypes(m);
+
+    // Exceptions
+    auto clsException = 
+        py::register_exception<Exception>(
+            m, "Exception");
+            
+    auto clsExceptionMissingFile = 
+        py::register_exception<ExceptionMissingFile>(
+            m, "ExceptionMissingFile");
+
+#if PY_VERSION_MAJOR >= 3
+    // __doc__ is not writable after class creation in Python 2
+    clsException.doc() = DOC(Exception);
+    clsExceptionMissingFile.doc() = DOC(ExceptionMissingFile);
+#endif
 
     // Global variables
     m.attr("__author__")    = "OpenColorIO Contributors";
@@ -35,29 +37,67 @@ PYBIND11_MODULE(PyOpenColorIO, m)
     m.attr("__status__")    = std::string(OCIO_VERSION_STATUS_STR).empty() ? "Production" : OCIO_VERSION_STATUS_STR;
     m.attr("__doc__")       = "OpenColorIO (OCIO) is a complete color management solution geared towards motion picture production";
 
-    // Classes
-    bindPyTypes(m);
-    bindPyTransform(m);
-    bindPyConfig(m);
-    bindPyFileRules(m);
+    // Global functions
+    m.def("ClearAllCaches", &ClearAllCaches,
+          DOC(PyOpenColorIO, ClearAllCaches));
+    m.def("GetVersion", &GetVersion,
+          DOC(PyOpenColorIO, GetVersion));
+    m.def("GetVersionHex", &GetVersionHex,
+          DOC(PyOpenColorIO, GetVersionHex));
+    m.def("GetLoggingLevel", &GetLoggingLevel,
+          DOC(PyOpenColorIO, GetLoggingLevel));
+    m.def("SetLoggingLevel", &SetLoggingLevel, "level"_a,
+          DOC(PyOpenColorIO, SetLoggingLevel));
+    m.def("SetLoggingFunction", &SetLoggingFunction, "logFunction"_a,
+          DOC(PyOpenColorIO, SetLoggingFunction));
+    m.def("ResetToDefaultLoggingFunction", &ResetToDefaultLoggingFunction,
+          DOC(PyOpenColorIO, ResetToDefaultLoggingFunction));
+    m.def("LogMessage", &LogMessage, "level"_a, "message"_a,
+          DOC(PyOpenColorIO, LogMessage));
+    m.def("SetComputeHashFunction", &SetComputeHashFunction, "hashFunction"_a,
+          DOC(PyOpenColorIO, SetComputeHashFunction));
+    m.def("ResetComputeHashFunction", &ResetComputeHashFunction,
+          DOC(PyOpenColorIO, ResetComputeHashFunction));
+    m.def("GetEnvVariable", &GetEnvVariable, "name"_a,
+          DOC(PyOpenColorIO, GetEnvVariable));
+    m.def("SetEnvVariable", &SetEnvVariable, "name"_a, "value"_a,
+          DOC(PyOpenColorIO, SetEnvVariable));
+    m.def("UnsetEnvVariable", &UnsetEnvVariable, "name"_a,
+          DOC(PyOpenColorIO, UnsetEnvVariable));
+    m.def("IsEnvVariablePresent", &IsEnvVariablePresent, "name"_a,
+          DOC(PyOpenColorIO, IsEnvVariablePresent));
+
+    // OpenColorIO
+    bindPyBaker(m);
     bindPyColorSpace(m);
     bindPyColorSpaceSet(m);
-    bindPyLook(m);
-    bindPyViewTransform(m);
-    bindPyProcessor(m);
-    bindPyCPUProcessor(m);
-    bindPyGPUProcessor(m);
-    bindPyProcessorMetadata(m);
-    bindPyBaker(m);
-    bindPyImageDesc(m);
-    bindPyGpuShaderCreator(m);
+    bindPyConfig(m);
     bindPyContext(m);
-    bindPyViewingRules(m);
+    bindPyCPUProcessor(m);
+    bindPyFileRules(m);
+    bindPyGPUProcessor(m);
+    bindPyGpuShaderCreator(m);
+    bindPyImageDesc(m);
+    bindPyLook(m);
+    bindPyNamedTransform(m);
+    bindPyProcessor(m);
+    bindPyProcessorMetadata(m);
     bindPySystemMonitors(m);
+    bindPyViewingRules(m);
+    bindPyViewTransform(m);
+
+    // OpenColorIOTransforms
+    bindPyBuiltinTransformRegistry(m);
+    bindPyDynamicProperty(m);
+    bindPyFormatMetadata(m);
     bindPyGradingData(m);
-    bindPyGradingPrimaryTransform(m);
-    bindPyGradingRGBCurveTransform(m);
-    bindPyGradingToneTransform(m);
+    bindPyTransform(m);
+
+    // OpenColorIOAppHelpers
+    bindPyColorSpaceMenuHelpers(m);
+    bindPyDisplayViewHelpers(m);
+    bindPyLegacyViewingPipeline(m);
+    bindPyMixingHelpers(m);
 }
 
 } // namespace OCIO_NAMESPACE

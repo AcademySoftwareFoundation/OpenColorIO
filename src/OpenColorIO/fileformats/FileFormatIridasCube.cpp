@@ -402,7 +402,7 @@ void LocalFileFormat::bake(const Baker & baker,
     for (int i = 0; i < nb; ++i)
     {
         const auto & child = metadata.getChildElement(i);
-        ostream << "# " << child.getValue() << "\n";
+        ostream << "# " << child.getElementValue() << "\n";
     }
     if (nb > 0)
     {
