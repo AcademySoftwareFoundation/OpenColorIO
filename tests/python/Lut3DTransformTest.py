@@ -17,24 +17,20 @@ except ImportError:
 
 import PyOpenColorIO as OCIO
 
-
-class Lut1DTransformTest(unittest.TestCase):
+class Lut3DTransformTest(unittest.TestCase):
 
     def test_default_constructor(self):
         """
         Test the default constructor.
         """
-        lut = OCIO.Lut1DTransform()
-        self.assertEqual(lut.getLength(), 2)
+        lut = OCIO.Lut3DTransform()
+        self.assertEqual(lut.getGridSize(), 2)
         self.assertEqual(lut.getDirection(), OCIO.TRANSFORM_DIR_FORWARD)
-        self.assertEqual(lut.getHueAdjust(), OCIO.HUE_NONE)
-        self.assertFalse(lut.getInputHalfDomain())
-        self.assertFalse(lut.getOutputRawHalfs())
         self.assertEqual(lut.getInterpolation(), OCIO.INTERP_DEFAULT)
         self.assertEqual(lut.getFileOutputBitDepth(), OCIO.BIT_DEPTH_UNKNOWN)
-        r, g, b = lut.getValue(0)
+        r, g, b = lut.getValue(0, 0, 0)
         self.assertEqual([r, g, b], [0, 0, 0])
-        r, g, b = lut.getValue(1)
+        r, g, b = lut.getValue(1, 1, 1)
         self.assertEqual([r, g, b], [1, 1, 1])
 
     def test_direction(self):
@@ -42,7 +38,7 @@ class Lut1DTransformTest(unittest.TestCase):
         Test the setDirection() and getDirection() methods.
         """
 
-        lut = OCIO.Lut1DTransform()
+        lut = OCIO.Lut3DTransform()
 
         for direction in OCIO.TransformDirection.__members__.values():
             lut.setDirection(direction)
@@ -58,7 +54,7 @@ class Lut1DTransformTest(unittest.TestCase):
         Test the getFormatMetadata() method.
         """
 
-        lut = OCIO.Lut1DTransform()
+        lut = OCIO.Lut3DTransform()
         format_metadata = lut.getFormatMetadata()
         self.assertIsInstance(format_metadata, OCIO.FormatMetadata)
         self.assertEqual(format_metadata.getElementName(), 'ROOT')
@@ -73,96 +69,63 @@ class Lut1DTransformTest(unittest.TestCase):
         """
         Test get/setFileOutputBitDepth.
         """
-        lut = OCIO.Lut1DTransform()
+        lut = OCIO.Lut3DTransform()
         self.assertEqual(lut.getFileOutputBitDepth(), OCIO.BIT_DEPTH_UNKNOWN)
         lut.setFileOutputBitDepth(OCIO.BIT_DEPTH_UINT10)
         self.assertEqual(lut.getFileOutputBitDepth(), OCIO.BIT_DEPTH_UINT10)
 
-    def test_hue_adjust(self):
+    def test_grid_size(self):
         """
-        Test get/setHueAdjust.
+        Test get/setGridSize.
         """
-        lut = OCIO.Lut1DTransform()
-        self.assertEqual(lut.getHueAdjust(), OCIO.HUE_NONE)
-        lut.setHueAdjust(OCIO.HUE_DW3)
-        self.assertEqual(lut.getHueAdjust(), OCIO.HUE_DW3)
-        with self.assertRaises(OCIO.Exception):
-            lut.setHueAdjust(OCIO.HUE_WYPN)
-
-    def test_input_half_domain(self):
-        """
-        Test get/getInputHalfDomain.
-        """
-        lut = OCIO.Lut1DTransform()
-        self.assertFalse(lut.getInputHalfDomain())
-        lut.setInputHalfDomain(True)
-        self.assertTrue(lut.getInputHalfDomain())
-
-    def test_output_raw_halfs(self):
-        """
-        Test get/setOutputRawHalfs.
-        """
-        lut = OCIO.Lut1DTransform()
-        self.assertFalse(lut.getOutputRawHalfs())
-        lut.setOutputRawHalfs(True)
-        self.assertTrue(lut.getOutputRawHalfs())
-
-    def test_length(self):
-        """
-        Test get/setLength.
-        """
-        lut = OCIO.Lut1DTransform()
-        self.assertEqual(lut.getLength(), 2)
-        lut.setValue(0, 0.1, 0.2, 0.3)
-        lut.setLength(3)
-        self.assertEqual(lut.getLength(), 3)
+        lut = OCIO.Lut3DTransform()
+        self.assertEqual(lut.getGridSize(), 2)
+        lut.setValue(0, 0, 0, 0.1, 0.2, 0.3)
+        lut.setGridSize(3)
+        self.assertEqual(lut.getGridSize(), 3)
         # Changing the length reset LUT values to identity.
-        r, g, b = lut.getValue(0)
+        r, g, b = lut.getValue(0, 0, 0)
         self.assertEqual([r, g, b], [0, 0, 0])
+
+    def test_interpolation(self):
+        """
+        Test get/setInterpolation.
+        """
+        lut = OCIO.Lut3DTransform()
+        self.assertEqual(lut.getInterpolation(), OCIO.INTERP_DEFAULT)
+        lut.setInterpolation(OCIO.INTERP_TETRAHEDRAL)
+        self.assertEqual(lut.getInterpolation(), OCIO.INTERP_TETRAHEDRAL)
 
     def test_constructor_with_keywords(self):
         """
-        Test Lut1DTransform constructor with keywords and validate its values.
+        Test Lut3DTransform constructor with keywords and validate its values.
         """
-        lut = OCIO.Lut1DTransform(
-             length=65536,
-             inputHalfDomain=True,
-             outputRawHalfs=True,
+        lut = OCIO.Lut3DTransform(
+             gridSize=5,
              fileOutputBitDepth=OCIO.BIT_DEPTH_UINT10,
-             hueAdjust=OCIO.HUE_DW3,
              interpolation=OCIO.INTERP_BEST,
              direction=OCIO.TRANSFORM_DIR_INVERSE) 
-        self.assertEqual(lut.getLength(), 65536)
+        self.assertEqual(lut.getGridSize(), 5)
         self.assertEqual(lut.getDirection(), OCIO.TRANSFORM_DIR_INVERSE)
-        self.assertEqual(lut.getHueAdjust(), OCIO.HUE_DW3)
-        self.assertTrue(lut.getInputHalfDomain())
-        self.assertTrue(lut.getOutputRawHalfs())
         self.assertEqual(lut.getInterpolation(), OCIO.INTERP_BEST)
         self.assertEqual(lut.getFileOutputBitDepth(), OCIO.BIT_DEPTH_UINT10)
 
-        lut = OCIO.Lut1DTransform(
-             length=4,
+        lut = OCIO.Lut3DTransform(
+             gridSize=4,
              direction=OCIO.TRANSFORM_DIR_INVERSE) 
-        self.assertEqual(lut.getLength(), 4)
+        self.assertEqual(lut.getGridSize(), 4)
         self.assertEqual(lut.getDirection(), OCIO.TRANSFORM_DIR_INVERSE)
-        self.assertEqual(lut.getHueAdjust(), OCIO.HUE_NONE)
-        self.assertFalse(lut.getInputHalfDomain())
-        self.assertFalse(lut.getOutputRawHalfs())
         self.assertEqual(lut.getInterpolation(), OCIO.INTERP_DEFAULT)
         self.assertEqual(lut.getFileOutputBitDepth(), OCIO.BIT_DEPTH_UNKNOWN)
 
     def test_constructor_with_positional(self):
         """
-        Test Lut1DTransform constructor without keywords and validate its values.
+        Test Lut3DTransform constructor without keywords and validate its values.
         """
-        lut = OCIO.Lut1DTransform(65536, True, True, OCIO.BIT_DEPTH_UINT10,
-                                  OCIO.HUE_DW3, OCIO.INTERP_BEST,
+        lut = OCIO.Lut3DTransform(10, OCIO.BIT_DEPTH_UINT10, OCIO.INTERP_BEST,
                                   OCIO.TRANSFORM_DIR_INVERSE) 
-        self.assertEqual(lut.getLength(), 65536)
+        self.assertEqual(lut.getGridSize(), 10)
         self.assertEqual(lut.getDirection(), OCIO.TRANSFORM_DIR_INVERSE)
-        self.assertEqual(lut.getHueAdjust(), OCIO.HUE_DW3)
-        self.assertTrue(lut.getInputHalfDomain())
-        self.assertTrue(lut.getOutputRawHalfs())
         self.assertEqual(lut.getInterpolation(), OCIO.INTERP_BEST)
         self.assertEqual(lut.getFileOutputBitDepth(), OCIO.BIT_DEPTH_UINT10)
 
@@ -170,16 +133,16 @@ class Lut1DTransformTest(unittest.TestCase):
         """
         Get & set Lut array values.
         """
-        lut = OCIO.Lut1DTransform(length=3)
-        r, g, b = lut.getValue(0)
+        lut = OCIO.Lut3DTransform(gridSize=3)
+        r, g, b = lut.getValue(0, 0, 0)
         self.assertEqual([r, g, b], [0, 0, 0])
-        r, g, b = lut.getValue(1)
+        r, g, b = lut.getValue(1, 1, 1)
         self.assertEqual([r, g, b], [0.5, 0.5, 0.5])
-        r, g, b = lut.getValue(2)
+        r, g, b = lut.getValue(2, 2, 2)
         self.assertEqual([r, g, b], [1, 1, 1])
 
-        lut.setValue(0, 0.1, 0.2, 0.3)
-        r, g, b = lut.getValue(0)
+        lut.setValue(0, 0, 0, 0.1, 0.2, 0.3)
+        r, g, b = lut.getValue(0, 0, 0)
         # Values are stored as float.
         self.assertAlmostEqual(r, 0.1, delta=1e-6)
         self.assertAlmostEqual(g, 0.2, delta=1e-6)
@@ -190,16 +153,22 @@ class Lut1DTransformTest(unittest.TestCase):
             return
 
         data = lut.getData()
-        expected = np.array([0.1, 0.2, 0.3,
-                             0.5, 0.5, 0.5,
-                             1., 1., 1.]).astype(np.float32)
+        expected = np.array([0.1, 0.2, 0.3, 0.,  0.,   .5, 0.,  0.,  1.,
+                             0.,  0.5, 0.,  0.,  0.5, 0.5, 0.,  0.5, 1.,
+                             0.,  1.,  0.,  0.,  1.,  0.5, 0.,  1.,  1.,
+                             0.5, 0.,  0.,  0.5, 0.,  0.5, 0.5, 0. , 1.,
+                             0.5, 0.5, 0.,  0.5, 0.5, 0.5, 0.5, 0.5, 1.,
+                             0.5, 1.,  0.,  0.5, 1.,  0.5, 0.5, 1.,  1.,
+                             1.,  0.,  0.,  1.,  0.,  0.5, 1.,  0.,  1.,
+                             1.,  0.5, 0.,  1.,  0.5, 0.5, 1.,  0.5, 1.,
+                             1.,  1.,  0.,  1.,  1.,  0.5, 1.,  1.,  1.]).astype(np.float32)
         self.assertEqual(data.all(), expected.all())
         data[6] = 0.9
         data[7] = 1.1
         data[8] = 1.2
         lut.setData(data)
 
-        r, g, b = lut.getValue(2)
+        r, g, b = lut.getValue(0, 0, 2)
         self.assertAlmostEqual(r, 0.9, delta=1e-6)
         self.assertAlmostEqual(g, 1.1, delta=1e-6)
         self.assertAlmostEqual(b, 1.2, delta=1e-6)
@@ -208,9 +177,8 @@ class Lut1DTransformTest(unittest.TestCase):
         """
         Test equals.
         """
-        lut = OCIO.Lut1DTransform()
-        lut2 = OCIO.Lut1DTransform()
+        lut = OCIO.Lut3DTransform()
+        lut2 = OCIO.Lut3DTransform()
         self.assertTrue(lut.equals(lut2))
-        lut.setValue(0, 0.1, 0.2, 0.3)
+        lut.setValue(0, 1, 1, 0.1, 0.2, 0.3)
         self.assertFalse(lut.equals(lut2))
-
