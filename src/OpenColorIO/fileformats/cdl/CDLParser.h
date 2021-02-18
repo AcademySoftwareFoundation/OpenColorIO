@@ -30,7 +30,7 @@ public:
                           FormatMetadataImpl & metadata) const;
 
     // Can be called after parse
-    void getCDLTransform(CDLTransformRcPtr & transform) const;
+    void getCDLTransform(CDLTransformImplRcPtr & transform) const;
 
     bool isCC() const;
     bool isCCC() const;
@@ -44,6 +44,10 @@ private:
     CDLParser(const CDLParser&) = delete;
     CDLParser& operator=(const CDLParser&) = delete;
 };
+
+static constexpr char CDL_TAG_COLOR_DECISION_LIST[]         = "ColorDecisionList";
+static constexpr char CDL_TAG_COLOR_CORRECTION_COLLECTION[] = "ColorCorrectionCollection";
+static constexpr char CDL_TAG_COLOR_DECISION[]              = "ColorDecision";
 
 } // namespace OCIO_NAMESPACE
 

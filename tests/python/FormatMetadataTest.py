@@ -20,8 +20,8 @@ class FormatMetadataTest(unittest.TestCase):
         fmd = mat.getFormatMetadata()
 
         # Default name is ROOT and has no value.
-        self.assertEqual(fmd.getName(), 'ROOT')
-        self.assertEqual(fmd.getValue(), '')
+        self.assertEqual(fmd.getElementName(), 'ROOT')
+        self.assertEqual(fmd.getElementValue(), '')
 
         # No attributes.
         self.assertEqual(len(list(fmd)), 0)
@@ -56,17 +56,17 @@ class FormatMetadataTest(unittest.TestCase):
 
         children = fmd.getChildElements()
         child1 = next(children)
-        self.assertEqual(child1.getName(), 'C1')
-        self.assertEqual(child1.getValue(), 'V1')
+        self.assertEqual(child1.getElementName(), 'C1')
+        self.assertEqual(child1.getElementValue(), 'V1')
         self.assertEqual(len(list(child1.getChildElements())), 2)
         childrenC1 = child1.getChildElements()
         child4 = next(childrenC1)
-        self.assertEqual(child4.getName(), 'C4')
-        self.assertEqual(child4.getValue(), 'V4')
+        self.assertEqual(child4.getElementName(), 'C4')
+        self.assertEqual(child4.getElementValue(), 'V4')
         self.assertEqual(len(list(child4.getChildElements())), 0)
         child5 = next(childrenC1)
-        self.assertEqual(child5.getName(), 'C5')
-        self.assertEqual(child5.getValue(), 'V5')
+        self.assertEqual(child5.getElementName(), 'C5')
+        self.assertEqual(child5.getElementValue(), 'V5')
         self.assertEqual(len(list(child5.getChildElements())), 1)
         try:
             next(childrenC1)
@@ -77,16 +77,16 @@ class FormatMetadataTest(unittest.TestCase):
 
         childrenC5 = child5.getChildElements()
         child6 = next(childrenC5)
-        self.assertEqual(child6.getName(), 'C6')
-        self.assertEqual(child6.getValue(), 'V6')
+        self.assertEqual(child6.getElementName(), 'C6')
+        self.assertEqual(child6.getElementValue(), 'V6')
         self.assertEqual(len(list(child6.getChildElements())), 0)
         child2 = next(children)
-        self.assertEqual(child2.getName(), 'C2')
-        self.assertEqual(child2.getValue(), '')
+        self.assertEqual(child2.getElementName(), 'C2')
+        self.assertEqual(child2.getElementValue(), '')
         self.assertEqual(len(list(child2.getChildElements())), 0)
         child3 = next(children)
-        self.assertEqual(child3.getName(), 'C3')
-        self.assertEqual(child3.getValue(), 'V3')
+        self.assertEqual(child3.getElementName(), 'C3')
+        self.assertEqual(child3.getElementValue(), 'V3')
         self.assertEqual(len(list(child3.getChildElements())), 0)
         try:
             next(children)
@@ -105,8 +105,8 @@ class FormatMetadataTest(unittest.TestCase):
         # Clear removes children and value, but it preserves the name.
         child3.clear()
         self.assertEqual(len(list(child3.getChildElements())), 0)
-        self.assertEqual(child3.getName(), 'C3')
-        self.assertEqual(child3.getValue(), '')
+        self.assertEqual(child3.getElementName(), 'C3')
+        self.assertEqual(child3.getElementValue(), '')
 
         # FormatMetadata must have a name.
         with self.assertRaises(OCIO.Exception):

@@ -52,6 +52,10 @@ class OCIOEXPORT Look;
 typedef OCIO_SHARED_PTR<const Look> ConstLookRcPtr;
 typedef OCIO_SHARED_PTR<Look> LookRcPtr;
 
+class OCIOEXPORT NamedTransform;
+typedef OCIO_SHARED_PTR<const NamedTransform> ConstNamedTransformRcPtr;
+typedef OCIO_SHARED_PTR<NamedTransform> NamedTransformRcPtr;
+
 class OCIOEXPORT ViewTransform;
 typedef OCIO_SHARED_PTR<const ViewTransform> ConstViewTransformRcPtr;
 typedef OCIO_SHARED_PTR<ViewTransform> ViewTransformRcPtr;
@@ -109,6 +113,8 @@ typedef OCIO_SHARED_PTR<GradingBSplineCurve> GradingBSplineCurveRcPtr;
 class OCIOEXPORT GradingRGBCurve;
 typedef OCIO_SHARED_PTR<const GradingRGBCurve> ConstGradingRGBCurveRcPtr;
 typedef OCIO_SHARED_PTR<GradingRGBCurve> GradingRGBCurveRcPtr;
+
+typedef std::array<float, 3> Float3;
 
 
 // Transforms
@@ -225,7 +231,25 @@ class OCIOEXPORT RangeTransform;
 typedef OCIO_SHARED_PTR<const RangeTransform> ConstRangeTransformRcPtr;
 typedef OCIO_SHARED_PTR<RangeTransform> RangeTransformRcPtr;
 
-typedef std::array<float, 3> Float3;
+
+// Application Helpers
+
+class ColorSpaceMenuHelper;
+typedef OCIO_SHARED_PTR<ColorSpaceMenuHelper> ColorSpaceMenuHelperRcPtr;
+typedef OCIO_SHARED_PTR<const ColorSpaceMenuHelper> ConstColorSpaceMenuHelperRcPtr;
+
+class ColorSpaceMenuParameters;
+typedef OCIO_SHARED_PTR<ColorSpaceMenuParameters> ColorSpaceMenuParametersRcPtr;
+typedef OCIO_SHARED_PTR<const ColorSpaceMenuParameters> ConstColorSpaceMenuParametersRcPtr;
+
+class MixingColorSpaceManager;
+typedef OCIO_SHARED_PTR<MixingColorSpaceManager> MixingColorSpaceManagerRcPtr;
+typedef OCIO_SHARED_PTR<const MixingColorSpaceManager> ConstMixingColorSpaceManagerRcPtr;
+
+class LegacyViewingPipeline;
+typedef OCIO_SHARED_PTR<LegacyViewingPipeline> LegacyViewingPipelineRcPtr;
+typedef OCIO_SHARED_PTR<const LegacyViewingPipeline> ConstLegacyViewingPipelineRcPtr;
+
 
 template <class T, class U>
 inline OCIO_SHARED_PTR<T> DynamicPtrCast(OCIO_SHARED_PTR<U> const & ptr)
@@ -278,6 +302,13 @@ enum ColorSpaceVisibility
     COLORSPACE_ACTIVE = 0,
     COLORSPACE_INACTIVE,
     COLORSPACE_ALL
+};
+
+enum NamedTransformVisibility
+{
+    NAMEDTRANSFORM_ACTIVE = 0,
+    NAMEDTRANSFORM_INACTIVE,
+    NAMEDTRANSFORM_ALL
 };
 
 enum ViewType
@@ -386,8 +417,9 @@ enum BitDepth
 /// Used by :cpp:class`Lut1DTransform` to control optional hue restoration algorithm.
 enum Lut1DHueAdjust
 {
-    HUE_NONE = 0, // No adjustment.
-    HUE_DW3       // Algorithm used in ACES Output Transforms through v0.7.
+    HUE_NONE = 0, ///< No adjustment.
+    HUE_DW3,      ///< Algorithm used in ACES Output Transforms through v0.7.
+    HUE_WYPN      ///< Weighted Yellow Power Norm -- NOT IMPLEMENTED YET
 };
 
 /// Used by \ref PackedImageDesc to indicate the channel ordering of the image to process.
@@ -409,8 +441,7 @@ enum Allocation {
 /// Used when there is a choice of hardware shader language.
 enum GpuLanguage
 {
-    GPU_LANGUAGE_UNKNOWN = 0,
-    GPU_LANGUAGE_CG,                ///< Nvidia Cg shader
+    GPU_LANGUAGE_CG = 0,            ///< Nvidia Cg shader
     GPU_LANGUAGE_GLSL_1_2,          ///< OpenGL Shading Language
     GPU_LANGUAGE_GLSL_1_3,          ///< OpenGL Shading Language
     GPU_LANGUAGE_GLSL_4_0,          ///< OpenGL Shading Language
@@ -443,7 +474,10 @@ enum FixedFunctionStyle
     FIXED_FUNCTION_RGB_TO_HSV,          ///< Classic RGB to HSV function
     FIXED_FUNCTION_XYZ_TO_xyY,          ///< CIE XYZ to 1931 xy chromaticity coordinates
     FIXED_FUNCTION_XYZ_TO_uvY,          ///< CIE XYZ to 1976 u'v' chromaticity coordinates
-    FIXED_FUNCTION_XYZ_TO_LUV           ///< CIE XYZ to 1976 CIELUV colour space (D65 white)
+    FIXED_FUNCTION_XYZ_TO_LUV,          ///< CIE XYZ to 1976 CIELUV colour space (D65 white)
+    FIXED_FUNCTION_ACES_GAMUTMAP_02,    ///< ACES 0.2 Gamut clamping algorithm -- NOT IMPLEMENTED YET
+    FIXED_FUNCTION_ACES_GAMUTMAP_07,    ///< ACES 0.7 Gamut clamping algorithm -- NOT IMPLEMENTED YET
+    FIXED_FUNCTION_ACES_GAMUTMAP_13     ///< ACES 1.3 Gamut mapping algorithm -- NOT IMPLEMENTED YET
 };
 
 /// Enumeration of the :cpp:class:`ExposureContrastTransform` transform algorithms.
@@ -648,10 +682,6 @@ extern OCIOEXPORT TransformDirection GetInverseTransformDirection(TransformDirec
 extern OCIOEXPORT TransformDirection CombineTransformDirections(TransformDirection d1,
                                                                 TransformDirection d2);
 
-extern OCIOEXPORT const char * ColorSpaceDirectionToString(ColorSpaceDirection dir);
-/// Will throw if string is not recognized.
-extern OCIOEXPORT ColorSpaceDirection ColorSpaceDirectionFromString(const char * s);
-
 extern OCIOEXPORT const char * BitDepthToString(BitDepth bitDepth);
 extern OCIOEXPORT BitDepth BitDepthFromString(const char * s);
 extern OCIOEXPORT bool BitDepthIsFloat(BitDepth bitDepth);
@@ -687,14 +717,14 @@ extern OCIOEXPORT ExposureContrastStyle ExposureContrastStyleFromString(const ch
 extern OCIOEXPORT const char * NegativeStyleToString(NegativeStyle style);
 extern OCIOEXPORT NegativeStyle NegativeStyleFromString(const char * style);
 
-// TODO: Move to .rst
-/*
-Envvar
-******
+/** \defgroup Env. variables.
+ *  @{
+ *
+ * These environmental variables are used by the OpenColorIO library.
+ * For variables that allow specifying more than one token, they should be separated by commas.
+ */
 
-These environmental variables are used by the OpenColorIO library
-(i.e. these variables are defined in src/OpenColorIO/Config.cpp).
-*/
+// These variables are defined in src/OpenColorIO/Config.cpp.
 
 
 /// The envvar 'OCIO' provides a path to the config file used by \ref Config::CreateFromEnv
@@ -726,6 +756,23 @@ extern OCIOEXPORT const char * OCIO_INACTIVE_COLORSPACES_ENVVAR;
  */
 extern OCIOEXPORT const char * OCIO_OPTIMIZATION_FLAGS_ENVVAR;
 
+/**
+ * The envvar 'OCIO_USER_CATEGORIES' allows the end-user to filter color spaces shown by
+ * applications.  Only color spaces that include at least one of the supplied categories will be
+ * shown in application menus.  Note that applications may also impose their own category filtering
+ * in addition to the user-supplied categories.  For example, an application may filter by
+ * 'working-space' for a menu to select a working space while the user may also filter by
+ * '3d-basic' to only show spaces intended for 3d artists who should see the basic set of color
+ * spaces. The categories will be ignored if they would result in no color spaces being found.
+ */
+extern OCIOEXPORT const char * OCIO_USER_CATEGORIES_ENVVAR;
+
+/** @}*/
+
+/** \defgroup VarsRoles
+ *  @{
+ */
+
 // TODO: Move to .rst
 /*!rst::
 Roles
@@ -737,9 +784,10 @@ by hardcoded names.
 
 Internal::
     Extracting color space from file path - (ROLE_DEFAULT)
+    Interchange color spaces between configs - (ROLE_EXCHANGE_SCENE, ROLE_EXCHANGE_DISPLAY)
 
 App Helpers::
-    ViewingPipeline         - (ROLE_SCENE_LINEAR (LinearCC for exposure))
+    LegacyViewingPipeline   - (ROLE_SCENE_LINEAR (LinearCC for exposure))
                               (ROLE_COLOR_TIMING (ColorTimingCC))
     MixingColorSpaceManager - (ROLE_COLOR_PICKING)
 
@@ -776,6 +824,31 @@ extern OCIOEXPORT const char * ROLE_TEXTURE_PAINT;
  */
 extern OCIOEXPORT const char * ROLE_MATTE_PAINT;
 
+/**
+ * The rendering role may be used to identify a specific color space to be used by CGI renderers.
+ * This is typically a scene-linear space but the primaries also matter since they influence the
+ * resulting color, especially in areas of indirect illumination.
+ */
+extern OCIOEXPORT const char * ROLE_RENDERING;
+/**
+ * The aces_interchange role is used to specify which color space in the config implements the
+ * standard ACES2065-1 color space (SMPTE ST2065-1).  This may be used when converting
+ * scene-referred colors from one config to another.
+ */
+extern OCIOEXPORT const char * ROLE_INTERCHANGE_SCENE;
+/**
+ * The cie_xyz_d65_interchange role is used to specify which color space in the config implements
+ * CIE XYZ colorimetry with the neutral axis at D65.  This may be used when converting
+ * display-referred colors from one config to another.
+ */
+extern OCIOEXPORT const char * ROLE_INTERCHANGE_DISPLAY;
+
+/** @}*/
+
+/** \defgroup VarsSharedView
+ *  @{
+ */
+
 /*!rst::
 Shared View
 ***********
@@ -787,6 +860,12 @@ Shared View
  * has the same name as the display the shared view is used by.
  */
 extern OCIOEXPORT const char * OCIO_VIEW_USE_DISPLAY_NAME;
+
+/** @}*/
+
+/** \defgroup VarsFormatMetadata
+ *  @{
+ */
 
 // TODO: Move to .rst
 /*!rst::
@@ -841,6 +920,12 @@ extern OCIOEXPORT const char * METADATA_NAME;
  */
 extern OCIOEXPORT const char * METADATA_ID;
 
+/** @}*/
+
+/** \defgroup VarsCaches
+ *  @{
+ */
+
 /*!rst::
 Caches
 ******
@@ -868,6 +953,8 @@ extern OCIOEXPORT const char * OCIO_DISABLE_PROCESSOR_CACHES;
 // not match. That fallback introduces a major performance hit in some cases so there is an env.
 // variable to disable the fallback.
 extern OCIOEXPORT const char * OCIO_DISABLE_CACHE_FALLBACK;
+
+/** @}*/
 
 } // namespace OCIO_NAMESPACE
 

@@ -8,6 +8,7 @@
 
 #include "ContextVariableUtils.h"
 #include "Display.h"
+#include "NamedTransform.h"
 #include "OpBuilders.h"
 
 
@@ -258,17 +259,48 @@ void BuildDisplayToSource(OpRcPtrVec & ops,
 
     // Convert from the reference space back to the source color space.
     BuildColorSpaceFromReferenceOps(ops, config, context, sourceCS, dataBypass);
-
 }
 
-// Build ops for a display transform.
+void BuildNamedTransformToDisplay(OpRcPtrVec & ops,
+                                  const Config & config,
+                                  const ConstContextRcPtr & context,
+                                  const ConstNamedTransformRcPtr & viewNamedTransform,
+                                  const ConstColorSpaceRcPtr & displayCS,
+                                  bool dataBypass)
+{
+    // Apply view named transform.
+    auto transform = NamedTransformImpl::GetTransform(viewNamedTransform, TRANSFORM_DIR_FORWARD);
+    BuildOps(ops, config, context, transform, TRANSFORM_DIR_FORWARD);
+
+    // Convert from the display-referred reference space to the displayCS.
+    BuildColorSpaceFromReferenceOps(ops, config, context, displayCS, dataBypass);
+}
+
+void BuildDisplayToNamedTransform(OpRcPtrVec & ops,
+                                  const Config & config,
+                                  const ConstContextRcPtr & context,
+                                  const ConstColorSpaceRcPtr & displayCS,
+                                  const ConstNamedTransformRcPtr & viewNamedTransform,
+                                  bool dataBypass)
+{
+    // Convert to the display-referred reference space from the displayColorSpace.
+    BuildColorSpaceToReferenceOps(ops, config, context, displayCS, dataBypass);
+
+    // Apply view named transform.
+    auto transform = NamedTransformImpl::GetTransform(viewNamedTransform, TRANSFORM_DIR_INVERSE);
+    BuildOps(ops, config, context, transform, TRANSFORM_DIR_FORWARD);
+}
+
+// Build ops for a display/view transform.
 void BuildDisplayOps(OpRcPtrVec & ops,
                      const Config & config,
                      const ConstContextRcPtr & context,
                      const DisplayViewTransform & displayViewTransform,
                      TransformDirection dir)
 {
-    const auto combinedDir = CombineTransformDirections(dir, displayViewTransform.getDirection());
+    // There are two ways of specifying a DisplayViewTransform: either with a colorspace, or with
+    // a view_transform plus display_colorspace.  It is permitted to substitute a named_transform
+    // for either the colorspace or the view_transform.
 
     // Validate src color space.
     const std::string srcColorSpaceName = displayViewTransform.getSrc();
@@ -283,20 +315,41 @@ void BuildDisplayOps(OpRcPtrVec & ops,
         }
         else
         {
-            os <<  " Cannot find source color space, named '" << srcColorSpaceName << "'.";
+            os << " Cannot find source color space named '" << srcColorSpaceName << "'.";
         }
         throw Exception(os.str().c_str());
     }
 
     const std::string display = displayViewTransform.getDisplay();
+    if (config.getNumViews(display.c_str()) == 0)
+    {
+        std::ostringstream os;
+        os << "DisplayViewTransform error.";
+        os << " Display '" << display << "' not found.";
+        throw Exception(os.str().c_str());
+    }
     const std::string view = displayViewTransform.getView();
 
-    // Get the view transform if any.
-    const std::string viewTransformName = config.getDisplayViewTransformName(display.c_str(), view.c_str());
+    // Get the view transform if any: if it exists, it can be a view transform or a named transform.
+    const std::string viewTransformName = config.getDisplayViewTransformName(display.c_str(),
+                                                                             view.c_str());
     ConstViewTransformRcPtr viewTransform;
+    ConstNamedTransformRcPtr viewNamedTransform;
     if (!viewTransformName.empty())
     {
         viewTransform = config.getViewTransform(viewTransformName.c_str());
+        if (!viewTransform)
+        {
+            viewNamedTransform = config.getNamedTransform(viewTransformName.c_str());
+            if (!viewNamedTransform)
+            {
+                // Config::validate catch this.
+                std::ostringstream os;
+                os << "DisplayViewTransform error. The view transform '";
+                os << viewTransformName << "' is neither a view transform nor a named transform.";
+                throw Exception(os.str().c_str());
+            }
+        }
     }
 
     // Get the color space associated to the (display, view) pair.
@@ -306,25 +359,43 @@ void BuildDisplayOps(OpRcPtrVec & ops,
     // in which case we look for a display color space with the same name as the display.
     const std::string displayColorSpaceName = View::UseDisplayName(csName) ? display : csName;
     ConstColorSpaceRcPtr displayColorSpace = config.getColorSpace(displayColorSpaceName.c_str());
+    ConstNamedTransformRcPtr displayNamedTransform;
     if (!displayColorSpace)
     {
-        std::ostringstream os;
-        os << "DisplayViewTransform error.";
         if (displayColorSpaceName.empty())
         {
+            std::ostringstream os;
+            os << "DisplayViewTransform error.";
             os << " Display color space name is unspecified.";
+            throw Exception(os.str().c_str());
         }
-        else
+
+        // If there is a view transform, the display color space can't be a named transform.
+        if (viewTransform || viewNamedTransform)
         {
-            os <<  " Cannot find display color space, '" << displayColorSpaceName << "'.";
+            // Config::validate catch this.
+            std::ostringstream os;
+            os << "DisplayViewTransform error." << " The view '";
+            os << viewTransformName << "' refers to a display color space '";
+            os << displayColorSpaceName << "' that can't be found.";
+            throw Exception(os.str().c_str());
         }
-        throw Exception(os.str().c_str());
+        displayNamedTransform = config.getNamedTransform(displayColorSpaceName.c_str());
+        if (!displayNamedTransform)
+        {
+            std::ostringstream os;
+            os << "DisplayViewTransform error.";
+            os << " Cannot find color space or named transform, named '";
+            os << displayColorSpaceName << "'.";
+            throw Exception(os.str().c_str());
+        }
     }
 
     // By default, data color spaces are not processed.
     const bool dataBypass = displayViewTransform.getDataBypass();
-    if (dataBypass &&
-        (srcColorSpace->isData() || displayColorSpace->isData()))
+    const bool srcData = (srcColorSpace && srcColorSpace->isData()) ? true : false;
+    const bool displayData = (displayColorSpace && displayColorSpace->isData()) ? true : false;
+    if (dataBypass && (srcData || displayData))
     {
         return;
     }
@@ -339,6 +410,7 @@ void BuildDisplayOps(OpRcPtrVec & ops,
     // Now that all the inputs are found and validated, the following code builds the list of ops
     // for the forward or the inverse direction.
 
+    const auto combinedDir = CombineTransformDirections(dir, displayViewTransform.getDirection());
     switch (combinedDir)
     {
     case TRANSFORM_DIR_FORWARD:
@@ -351,24 +423,31 @@ void BuildDisplayOps(OpRcPtrVec & ops,
         {
             // Note that this updates the currentCS to be the process space of the last look
             // applied.
-            BuildLookOps(ops,
-                         currentCS,
-                         false,
-                         config,
-                         context,
-                         looks);
+            BuildLookOps(ops, currentCS, false, config, context, looks);
         }
 
-        // Apply the conversion from the current color space to the display color space.
-        if (viewTransform)
+        if (displayNamedTransform)
+        {
+            // Ignore currentCS.  The forward direction NamedTransform is used for the forward
+            // direction DisplayViewTransform.
+            auto transform = NamedTransformImpl::GetTransform(displayNamedTransform,
+                                                              TRANSFORM_DIR_FORWARD);
+            BuildOps(ops, config, context, transform, TRANSFORM_DIR_FORWARD);
+        }
+        else if (viewNamedTransform)
+        {
+            BuildNamedTransformToDisplay(ops, config, context, viewNamedTransform,
+                                         displayColorSpace, dataBypass);
+        }
+        else if (viewTransform)
         {
             BuildSourceToDisplay(ops, config, context, currentCS, viewTransform,
                                  displayColorSpace, dataBypass);
         }
         else
         {
-            BuildColorSpaceOps(ops, config, context, currentCS, displayColorSpace,
-                                dataBypass);
+            // Apply the conversion from the current color space to the display color space.
+            BuildColorSpaceOps(ops, config, context, currentCS, displayColorSpace, dataBypass);
         }
         break;
     }
@@ -381,38 +460,42 @@ void BuildDisplayOps(OpRcPtrVec & ops,
         ConstColorSpaceRcPtr vtSourceCS = srcColorSpace;
         if (!looks.empty())
         {
-            // Get result color space of apply looks in forward direction to find-out the source
-            // color space of the view transform.
+            // Get the result color space of applying the looks in the forward direction.
             const char * csRes = LooksResultColorSpace(config, context, looks);
             vtSourceCS = config.getColorSpace(csRes);
         }
 
-        // Apply the conversion from the display color space to the vtSourceCS.
-        if (viewTransform)
+        if (displayNamedTransform)
+        {
+            // Ignore currentCS.
+            auto transform = NamedTransformImpl::GetTransform(displayNamedTransform,
+                                                              TRANSFORM_DIR_INVERSE);
+            BuildOps(ops, config, context, transform, TRANSFORM_DIR_FORWARD);
+        }
+        else if (viewNamedTransform)
+        {
+            BuildDisplayToNamedTransform(ops, config, context, displayColorSpace,
+                                         viewNamedTransform, dataBypass);
+        }
+        else if (viewTransform)
         {
             BuildDisplayToSource(ops, config, context, displayColorSpace, viewTransform,
                                  vtSourceCS, dataBypass);
         }
         else
         {
-            BuildColorSpaceOps(ops, config, context, displayColorSpace, vtSourceCS,
-                               dataBypass);
+            // Apply the conversion from the display color space to the vtSourceCS.
+            BuildColorSpaceOps(ops, config, context, displayColorSpace, vtSourceCS, dataBypass);
         }
 
         if (!looks.empty())
         {
             // Apply looks in inverse direction.  Note that vtSourceCS is updated.
             looks.reverse();
-            BuildLookOps(ops,
-                         vtSourceCS,
-                         false,
-                         config,
-                         context,
-                         looks);
+            BuildLookOps(ops, vtSourceCS, false, config, context, looks);
 
             // End in srcColorSpace.
-            BuildColorSpaceOps(ops, config, context,
-                               vtSourceCS, srcColorSpace, dataBypass);
+            BuildColorSpaceOps(ops, config, context, vtSourceCS, srcColorSpace, dataBypass);
         }
         break;
     }

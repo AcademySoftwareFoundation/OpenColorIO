@@ -88,14 +88,17 @@ OCIO_ADD_TEST(ExposureContrastOp, inverse)
     OCIO_REQUIRE_ASSERT(ops[4]);
 
     // Exposure dynamic, same value, opposite direction.
-    OCIO_CHECK_ASSERT(ops[4]->isInverse(op3));
+    OCIO_CHECK_ASSERT(!ops[4]->isInverse(op3));
     OCIO_CHECK_ASSERT(!ops[4]->isInverse(op1));
     OCIO_CHECK_ASSERT(!ops[4]->isInverse(op0));
 
-    // Value is not taken into account when dynamic property is enabled.
+    // When dynamic property is enabled they are never equal.
     dp4->setValue(-1.);
     OCIO_CHECK_ASSERT(dp3->getValue() != dp4->getValue());
-    OCIO_CHECK_ASSERT(ops[4]->isInverse(op3));
+    OCIO_CHECK_ASSERT(!ops[4]->isInverse(op3));
+    dp3->setValue(-1.);
+    OCIO_CHECK_ASSERT(dp3->getValue() == dp4->getValue());
+    OCIO_CHECK_ASSERT(!ops[4]->isInverse(op3));
 }
 
 OCIO_ADD_TEST(ExposureContrastOp, create_transform)

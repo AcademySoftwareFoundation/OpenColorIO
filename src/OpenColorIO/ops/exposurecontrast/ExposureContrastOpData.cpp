@@ -205,13 +205,15 @@ bool ExposureContrastOpData::isDynamic() const
     return m_exposure->isDynamic() ||
            m_contrast->isDynamic() ||
            m_gamma->isDynamic();
-
 }
 
 bool ExposureContrastOpData::isInverse(ConstExposureContrastOpDataRcPtr & r) const
 {
-    // NB: Please see note in DynamicProperty.h describing how dynamic
-    //     properties are compared for equality.
+    if (isDynamic() || r->isDynamic())
+    {
+        return false;
+    }
+    
     return *r == *inverse();
 }
 
@@ -288,9 +290,9 @@ bool ExposureContrastOpData::operator==(const OpData & other) const
         && getPivot() == ec->getPivot()
         && getLogExposureStep() == ec->getLogExposureStep()
         && getLogMidGray() == ec->getLogMidGray()
-        && *m_exposure == *(ec->m_exposure)
-        && *m_contrast == *(ec->m_contrast)
-        && *m_gamma == *(ec->m_gamma);
+        && m_exposure->equals(*(ec->m_exposure))
+        && m_contrast->equals(*(ec->m_contrast))
+        && m_gamma->equals(*(ec->m_gamma));
 }
 
 bool ExposureContrastOpData::hasDynamicProperty(DynamicPropertyType type) const

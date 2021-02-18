@@ -216,7 +216,8 @@ OCIO_ADD_TEST(OpOptimizers, remove_inverse_ops)
 {
     OCIO::OpRcPtrVec ops;
 
-    auto func = std::make_shared<OCIO::FixedFunctionOpData>();
+    auto func = std::make_shared<OCIO::FixedFunctionOpData>(
+        OCIO::FixedFunctionOpData::ACES_RED_MOD_03_FWD);
 
     const double logSlope[3]  = {0.18, 0.18, 0.18};
     const double linSlope[3]  = {2.0, 2.0, 2.0};
@@ -601,10 +602,21 @@ OCIO_ADD_TEST(OpOptimizers, lut1d_identity_replacement)
         OCIO_CHECK_EQUAL(ops[0]->getInfo(), "<RangeOp>");
     }
     {
+        // By setting the filterNaNs argument to true, the constructor replaces NaN values with 0
+        // and this causes the LUT to technically no longer be an identity since the values are no
+        // longer exactly what is in a half float.
+        OCIO::Lut1DOpDataRcPtr lutData
+            = std::make_shared<OCIO::Lut1DOpData>(OCIO::Lut1DOpData::LUT_INPUT_OUTPUT_HALF_CODE,
+                                                  65536, true);
+        lutData->setFileOutputBitDepth(OCIO::BIT_DEPTH_F32);
+        OCIO_CHECK_ASSERT(!lutData->isIdentity());
+        OCIO_CHECK_ASSERT(lutData->isInputHalfDomain());
+    }
+    {
         // By default, this constructor creates an 'identity lut'.
         OCIO::Lut1DOpDataRcPtr lutData
             = std::make_shared<OCIO::Lut1DOpData>(OCIO::Lut1DOpData::LUT_INPUT_OUTPUT_HALF_CODE,
-                                                  65536);
+                                                  65536, false);
         lutData->setFileOutputBitDepth(OCIO::BIT_DEPTH_F32);
         OCIO_CHECK_ASSERT(lutData->isIdentity());
         OCIO_CHECK_ASSERT(lutData->isInputHalfDomain());
@@ -631,7 +643,7 @@ OCIO_ADD_TEST(OpOptimizers, lut1d_half_domain_keep_prior_range)
 
     OCIO::Lut1DOpDataRcPtr lutData
         = std::make_shared<OCIO::Lut1DOpData>(OCIO::Lut1DOpData::LUT_INPUT_OUTPUT_HALF_CODE,
-                                              65536);
+                                              65536, false);
     lutData->setFileOutputBitDepth(OCIO::BIT_DEPTH_F32);
 
     // Add no-op LUT.

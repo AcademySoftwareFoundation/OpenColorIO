@@ -120,19 +120,19 @@ colorspaces:
 
   - !<ColorSpace>
     name: source
-    to_reference: !<FixedFunctionTransform> {name: src, style: ACES_RedMod03}
+    to_scene_reference: !<FixedFunctionTransform> {name: src, style: ACES_RedMod03}
 
   - !<ColorSpace>
     name: destination
-    from_reference: !<FixedFunctionTransform> {name: dst, style: ACES_RedMod03}
+    from_scene_reference: !<FixedFunctionTransform> {name: dst, style: ACES_RedMod03}
 
   - !<ColorSpace>
     name: look1_cs
-    to_reference: !<FixedFunctionTransform> {name: look1_cs trans, style: ACES_RedMod03}
+    to_scene_reference: !<FixedFunctionTransform> {name: look1_cs trans, style: ACES_RedMod03}
 
   - !<ColorSpace>
     name: look2_3_cs
-    to_reference: !<FixedFunctionTransform> {name: look2_3_cs trans, style: ACES_RedMod03}
+    to_scene_reference: !<FixedFunctionTransform> {name: look2_3_cs trans, style: ACES_RedMod03}
 )" };
 
     std::istringstream is;
@@ -321,23 +321,23 @@ colorspaces:
 
   - !<ColorSpace>
     name: source
-    to_reference: !<FixedFunctionTransform> {name: src, style: ACES_RedMod03}
+    to_scene_reference: !<FixedFunctionTransform> {name: src, style: ACES_RedMod03}
 
   - !<ColorSpace>
     name: destination
-    from_reference: !<FixedFunctionTransform> {name: dst, style: ACES_RedMod03}
+    from_scene_reference: !<FixedFunctionTransform> {name: dst, style: ACES_RedMod03}
 
   - !<ColorSpace>
     name: look2_cs
-    to_reference: !<FixedFunctionTransform> {name: look2_cs trans, style: ACES_RedMod03}
+    to_scene_reference: !<FixedFunctionTransform> {name: look2_cs trans, style: ACES_RedMod03}
 
   - !<ColorSpace>
     name: look3_cs
-    to_reference: !<FixedFunctionTransform> {name: look3_cs trans, style: ACES_RedMod03}
+    to_scene_reference: !<FixedFunctionTransform> {name: look3_cs trans, style: ACES_RedMod03}
 
   - !<ColorSpace>
     name: look4_cs
-    to_reference: !<FixedFunctionTransform> {name: look4_cs trans, style: ACES_RedMod03}
+    to_scene_reference: !<FixedFunctionTransform> {name: look4_cs trans, style: ACES_RedMod03}
 )" };
 
     std::istringstream is;
@@ -594,19 +594,19 @@ colorspaces:
 
   - !<ColorSpace>
     name: log
-    to_reference: !<LogTransform> {base: 2, direction: inverse}
+    to_scene_reference: !<LogTransform> {base: 2, direction: inverse}
 
   - !<ColorSpace>
     name: vd
-    from_reference: !<ExponentTransform> {value: [2.4, 2.4, 2.4, 1], direction: inverse}
+    from_scene_reference: !<ExponentTransform> {value: [2.4, 2.4, 2.4, 1], direction: inverse}
 
   - !<ColorSpace>
     name: vd_graded
-    from_reference: !<LookTransform> {src: raw, dst: vd, looks: look1}
+    from_scene_reference: !<LookTransform> {src: raw, dst: vd, looks: look1}
 
   - !<ColorSpace>
     name: vd_graded_inverse
-    to_reference: !<LookTransform> {src: raw, dst: vd, looks: look1, direction: inverse}
+    to_scene_reference: !<LookTransform> {src: raw, dst: vd, looks: look1, direction: inverse}
 
 )" };
 
@@ -624,7 +624,7 @@ colorspaces:
 
     OCIO::OpRcPtrVec ops;
     OCIO_CHECK_NO_THROW(BuildColorSpaceOps(ops, *config, config->getCurrentContext(),
-                                           srcColorSpace, dstColorSpace, false));
+                                           srcColorSpace, dstColorSpace, true));
     OCIO_CHECK_NO_THROW(ops.validate());
     OCIO_REQUIRE_EQUAL(ops.size(), 11);
     OCIO::ConstOpRcPtr op = ops[0];
@@ -665,7 +665,7 @@ colorspaces:
     // Test in inverse direction.
     ops.clear();
     OCIO_CHECK_NO_THROW(BuildColorSpaceOps(ops, *config, config->getCurrentContext(),
-                                           dstColorSpace, srcColorSpace, false));
+                                           dstColorSpace, srcColorSpace, true));
     OCIO_REQUIRE_EQUAL(ops.size(), 11);
     OCIO_CHECK_NO_THROW(ops.validate());
     op = ops[0];
@@ -704,14 +704,14 @@ colorspaces:
     OCIO_CHECK_ASSERT(op->isNoOpType());
 
     // Generated ops for vd_graded_inverse should be identical to the above
-    // (only difference being that it's defined using to_reference and inverse
-    // look transform direction instead of from_reference)
+    // (only difference being that it's defined using to_scene_reference and inverse
+    // look transform direction instead of from_scene_reference)
     OCIO::ConstColorSpaceRcPtr dstColorSpaceInv;
     OCIO_CHECK_NO_THROW(dstColorSpaceInv = config->getColorSpace("vd_graded_inverse"));
 
     OCIO::OpRcPtrVec ops2;
     OCIO_CHECK_NO_THROW(BuildColorSpaceOps(ops2, *config, config->getCurrentContext(),
-                                           dstColorSpaceInv, srcColorSpace, false));
+                                           dstColorSpaceInv, srcColorSpace, true));
     OCIO_REQUIRE_EQUAL(ops2.size(), ops.size());
     OCIO_CHECK_NO_THROW(ops2.validate());
     for (std::size_t i = 0; i < ops2.size(); ++i)

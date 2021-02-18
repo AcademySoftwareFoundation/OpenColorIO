@@ -6,7 +6,6 @@
 
 #include "PyOpenColorIO.h"
 #include "PyUtils.h"
-
 namespace OCIO_NAMESPACE
 {
 

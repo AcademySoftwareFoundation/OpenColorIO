@@ -14,6 +14,5 @@ An easy way to get involved is to join the #docs channel on :ref:`slack`.
    :caption: Tutorials
    :maxdepth: 2
 
-   build_config
    baking_luts
    contributing

@@ -10,23 +10,34 @@ void bindPyImageDesc(py::module & m)
 {
     m.attr("AutoStride") = AutoStride;
 
-    py::class_<PyImageDesc>(m, "ImageDesc")
-        .def(py::init<>())
+    auto clsImageDesc = 
+        py::class_<PyImageDesc>(
+            m.attr("ImageDesc"))
 
-        .def("__str__", [](const PyImageDesc & self)
+        .def(py::init<>(), 
+             DOC(ImageDesc, ImageDesc))
+
+        .def("__repr__", [](const PyImageDesc & self)
             { 
                 std::ostringstream os;
                 os << self.m_img;
                 return os.str();
             })
 
-        .def("getBitDepth", &PyImageDesc::getBitDepth)
-        .def("getWidth", &PyImageDesc::getWidth)
-        .def("getHeight", &PyImageDesc::getHeight)
-        .def("getXStrideBytes", &PyImageDesc::getXStrideBytes)
-        .def("getYStrideBytes", &PyImageDesc::getYStrideBytes)
-        .def("isRGBAPacked", &PyImageDesc::isRGBAPacked)
-        .def("isFloat", &PyImageDesc::isFloat);
+        .def("getBitDepth", &PyImageDesc::getBitDepth, 
+             DOC(ImageDesc, getBitDepth))
+        .def("getWidth", &PyImageDesc::getWidth,
+             DOC(ImageDesc, getWidth))
+        .def("getHeight", &PyImageDesc::getHeight,
+             DOC(ImageDesc, getHeight))
+        .def("getXStrideBytes", &PyImageDesc::getXStrideBytes,
+             DOC(ImageDesc, getXStrideBytes))
+        .def("getYStrideBytes", &PyImageDesc::getYStrideBytes,
+             DOC(ImageDesc, getYStrideBytes))
+        .def("isRGBAPacked", &PyImageDesc::isRGBAPacked,
+             DOC(ImageDesc, isRGBAPacked))
+        .def("isFloat", &PyImageDesc::isFloat,
+             DOC(ImageDesc, isFloat));
 
     // Subclasses
     bindPyPackedImageDesc(m);

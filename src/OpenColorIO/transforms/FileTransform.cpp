@@ -97,13 +97,8 @@ void FileTransform::validate() const
         throw Exception("FileTransform: empty file path");
     }
 
-    if (getInterpolation() == INTERP_UNKNOWN)
-    {
-        std::ostringstream oss;
-        oss << "FileTransform can't use unknown interpolation. ";
-        oss << "File: '" << std::string(getImpl()->m_src) << "'.";
-        throw Exception(oss.str().c_str());
-    }
+    // NB: Not validating interpolation since v1 configs such as the spi examples use
+    // interpolation=unknown.  So that is a legal usage, even if it makes no sense.
 }
 
 const char * FileTransform::getSrc() const
@@ -146,22 +141,19 @@ void FileTransform::setInterpolation(Interpolation interp)
     getImpl()->m_interp = interp;
 }
 
-int FileTransform::getNumFormats()
+int FileTransform::GetNumFormats()
 {
-    return FormatRegistry::GetInstance().getNumFormats(
-        FORMAT_CAPABILITY_READ);
+    return FormatRegistry::GetInstance().getNumFormats(FORMAT_CAPABILITY_READ);
 }
 
-const char * FileTransform::getFormatNameByIndex(int index)
+const char * FileTransform::GetFormatNameByIndex(int index)
 {
-    return FormatRegistry::GetInstance().getFormatNameByIndex(
-        FORMAT_CAPABILITY_READ, index);
+    return FormatRegistry::GetInstance().getFormatNameByIndex(FORMAT_CAPABILITY_READ, index);
 }
 
-const char * FileTransform::getFormatExtensionByIndex(int index)
+const char * FileTransform::GetFormatExtensionByIndex(int index)
 {
-    return FormatRegistry::GetInstance().getFormatExtensionByIndex(
-        FORMAT_CAPABILITY_READ, index);
+    return FormatRegistry::GetInstance().getFormatExtensionByIndex(FORMAT_CAPABILITY_READ, index);
 }
 
 std::ostream& operator<< (std::ostream& os, const FileTransform& t)
@@ -170,15 +162,15 @@ std::ostream& operator<< (std::ostream& os, const FileTransform& t)
     os << "direction=" << TransformDirectionToString(t.getDirection());
     os << ", interpolation=" << InterpolationToString(t.getInterpolation());
     os << ", src=" << t.getSrc();
-    const std::string cccid{ t.getCCCId() };
-    if (!cccid.empty())
+    const char * cccid = t.getCCCId();
+    if (cccid && *cccid)
     {
-        os << ", cccid=" << cccid;
+        os << ", cccid=" << t.getCCCId();
     }
-    const auto style = t.getCDLStyle();
-    if (style != CDL_TRANSFORM_DEFAULT)
+    const auto cdlStyle = t.getCDLStyle();
+    if (cdlStyle != CDL_TRANSFORM_DEFAULT)
     {
-        os << ", cdl_style=" << CDLStyleToString(style);
+        os << ", cdl_style=" << CDLStyleToString(cdlStyle);
     }
     os << ">";
 
@@ -399,7 +391,7 @@ FileFormat* FormatRegistry::getRawFormatByIndex(int index) const
     return m_rawFormats[index];
 }
 
-int FormatRegistry::getNumFormats(int capability) const
+int FormatRegistry::getNumFormats(int capability) const noexcept
 {
     if(capability == FORMAT_CAPABILITY_READ)
     {
@@ -416,8 +408,7 @@ int FormatRegistry::getNumFormats(int capability) const
     return 0;
 }
 
-const char * FormatRegistry::getFormatNameByIndex(
-    int capability, int index) const
+const char * FormatRegistry::getFormatNameByIndex(int capability, int index) const noexcept
 {
     if(capability == FORMAT_CAPABILITY_READ)
     {
@@ -446,8 +437,7 @@ const char * FormatRegistry::getFormatNameByIndex(
     return "";
 }
 
-const char * FormatRegistry::getFormatExtensionByIndex(
-    int capability, int index) const
+const char * FormatRegistry::getFormatExtensionByIndex(int capability, int index) const noexcept
 {
     if(capability == FORMAT_CAPABILITY_READ)
     {
@@ -506,8 +496,9 @@ void FileFormat::bake(const Baker & /*baker*/,
     throw Exception(os.str().c_str());
 }
 
-void FileFormat::write(const OpRcPtrVec & /*ops*/,
-                       const FormatMetadataImpl & /*metadata*/,
+void FileFormat::write(const ConstConfigRcPtr & /*config*/,
+                       const ConstContextRcPtr & /*context*/,
+                       const GroupTransform & /*group*/,
                        const std::string & formatName,
                        std::ostream & /*ostream*/) const
 {
@@ -762,8 +753,7 @@ void GetCachedFileAndFormat(FileFormat * & format,
         }
     }
 
-    // If this file has already been loaded, return
-    // the result immediately
+    // If this file has already been loaded, return the result immediately.
 
     AutoMutex lock(result->mutex);
     if (!result->ready)

@@ -26,6 +26,8 @@ OCIO_ADD_TEST(ColorSpace, basic)
     OCIO_REQUIRE_EQUAL(cs->getReferenceSpaceType(), OCIO::REFERENCE_SPACE_SCENE);
 
     OCIO_CHECK_EQUAL(std::string(""), cs->getName());
+    OCIO_CHECK_EQUAL(0, cs->getNumAliases());
+    OCIO_CHECK_EQUAL(std::string(""), cs->getAlias(0));
     OCIO_CHECK_EQUAL(std::string(""), cs->getFamily());
     OCIO_CHECK_EQUAL(std::string(""), cs->getDescription());
     OCIO_CHECK_EQUAL(std::string(""), cs->getEqualityGroup());
@@ -62,6 +64,63 @@ OCIO_ADD_TEST(ColorSpace, basic)
     std::ostringstream oss;
     oss << *cs;
     OCIO_CHECK_EQUAL(oss.str().size(), 193);
+}
+
+OCIO_ADD_TEST(ColorSpace, alias)
+{
+    OCIO::ColorSpaceRcPtr cs = OCIO::ColorSpace::Create();
+    OCIO_REQUIRE_ASSERT(cs);
+    OCIO_CHECK_EQUAL(cs->getNumAliases(), 0);
+    constexpr char AliasA[]{ "aliasA" };
+    constexpr char AliasAAlt[]{ "aLiaSa" };
+    constexpr char AliasB[]{ "aliasB" };
+    cs->addAlias(AliasA);
+    OCIO_CHECK_EQUAL(cs->getNumAliases(), 1);
+    cs->addAlias(AliasB);
+    OCIO_CHECK_EQUAL(cs->getNumAliases(), 2);
+    OCIO_CHECK_EQUAL(std::string(cs->getAlias(0)), AliasA);
+    OCIO_CHECK_EQUAL(std::string(cs->getAlias(1)), AliasB);
+
+    // Alias with same name (different case) already exists, do nothing.
+
+    cs->addAlias(AliasAAlt);
+    OCIO_CHECK_EQUAL(cs->getNumAliases(), 2);
+    OCIO_CHECK_EQUAL(std::string(cs->getAlias(0)), AliasA);
+    OCIO_CHECK_EQUAL(std::string(cs->getAlias(1)), AliasB);
+
+    // Remove alias.
+
+    cs->removeAlias(AliasAAlt);
+    OCIO_CHECK_EQUAL(cs->getNumAliases(), 1);
+    OCIO_CHECK_EQUAL(std::string(cs->getAlias(0)), AliasB);
+
+    // Add with new case.
+
+    cs->addAlias(AliasAAlt);
+    OCIO_CHECK_EQUAL(cs->getNumAliases(), 2);
+    OCIO_CHECK_EQUAL(std::string(cs->getAlias(0)), AliasB);
+    OCIO_CHECK_EQUAL(std::string(cs->getAlias(1)), AliasAAlt);
+
+    // Setting the name of the color space to one of its aliases removes the alias.
+
+    cs->setName(AliasA);
+    OCIO_CHECK_EQUAL(std::string(cs->getName()), AliasA);
+    OCIO_CHECK_EQUAL(cs->getNumAliases(), 1);
+    OCIO_CHECK_EQUAL(std::string(cs->getAlias(0)), AliasB);
+
+    // Alias is not added if it is already the color space name.
+
+    cs->addAlias(AliasAAlt);
+    OCIO_CHECK_EQUAL(std::string(cs->getName()), AliasA);
+    OCIO_CHECK_EQUAL(cs->getNumAliases(), 1);
+    OCIO_CHECK_EQUAL(std::string(cs->getAlias(0)), AliasB);
+
+    // Remove all aliases.
+
+    cs->addAlias("other");
+    OCIO_CHECK_EQUAL(cs->getNumAliases(), 2);
+    cs->clearAliases();
+    OCIO_CHECK_EQUAL(cs->getNumAliases(), 0);
 }
 
 OCIO_ADD_TEST(ColorSpace, category)
@@ -194,6 +253,7 @@ active_views: []
 
   - !<ColorSpace>
     name: colorspace
+    aliases: [alias1, alias2]
     family: family
     equalitygroup: group
     bitdepth: 16f
@@ -205,8 +265,8 @@ active_views: []
     encoding: scene-linear
     allocation: lg2
     allocationvars: [0.1, 0.9, 0.15]
-    to_reference: !<LogTransform> {}
-    from_reference: !<LogTransform> {}
+    to_scene_reference: !<LogTransform> {}
+    from_scene_reference: !<LogTransform> {}
 )" };
         std::string cfgString{ Start };
         cfgString += End;
@@ -239,6 +299,9 @@ active_views: []
         OCIO_CHECK_EQUAL(std::string(cs->getEqualityGroup()), "group");
         OCIO_CHECK_EQUAL(std::string(cs->getFamily()), "family");
         OCIO_CHECK_EQUAL(std::string(cs->getName()), "colorspace");
+        OCIO_CHECK_EQUAL(cs->getNumAliases(), 2);
+        OCIO_CHECK_EQUAL(std::string(cs->getAlias(0)), "alias1");
+        OCIO_CHECK_EQUAL(std::string(cs->getAlias(1)), "alias2");
         OCIO_REQUIRE_EQUAL(cs->getNumCategories(), 2);
         OCIO_CHECK_EQUAL(std::string(cs->getCategory(0)), "one");
         OCIO_CHECK_EQUAL(std::string(cs->getCategory(1)), "two");
@@ -539,4 +602,117 @@ active_views: []
 
         OCIO_CHECK_EQUAL(cfgRes, os.str());
     }
+}
+
+OCIO_ADD_TEST(Config, use_alias)
+{
+    std::istringstream is{ R"(ocio_profile_version: 2
+
+environment:
+  {}
+search_path: ""
+strictparsing: false
+luma: [0.2126, 0.7152, 0.0722]
+
+roles:
+  testAlias: aces
+  default: raw
+
+file_rules:
+  - !<Rule> {name: ColorSpaceNamePathSearch}
+  - !<Rule> {name: Default, colorspace: default}
+
+displays:
+  sRGB:
+    - !<View> {name: Raw, colorspace: aces}
+
+active_displays: []
+active_views: []
+
+colorspaces:
+  - !<ColorSpace>
+    name: raw
+    aliases: [ colorspaceAlias ]
+    family: raw
+    equalitygroup: ""
+    bitdepth: 32f
+    description: A raw color space. Conversions to and from this space are no-ops.
+    isdata: true
+    allocation: uniform
+
+  - !<ColorSpace>
+    name: colorspace
+    aliases: [ aces, aces2065-1, ACES - ACES2065-1, "ACES AP0, scene-linear" ]
+    family: family
+    equalitygroup: group
+    bitdepth: 16f
+    description: |
+      A raw color space.
+      Second line.
+    isdata: false
+    categories: [one, two]
+    encoding: scene-linear
+    allocation: lg2
+    allocationvars: [0.1, 0.9, 0.15]
+    to_reference: !<LogTransform> {}
+    from_reference: !<LogTransform> {}
+)" };
+
+    // Load config.
+
+    OCIO::ConstConfigRcPtr config;
+    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+    OCIO_REQUIRE_ASSERT(config);
+    OCIO_CHECK_NO_THROW(config->validate());
+
+    // Get a color space from alias.
+
+    auto cs = config->getColorSpace("aces2065-1");
+    OCIO_REQUIRE_ASSERT(cs);
+    OCIO_CHECK_EQUAL(std::string(cs->getName()), "colorspace");
+
+    cs = config->getColorSpace("ACES - ACES2065-1");
+    OCIO_REQUIRE_ASSERT(cs);
+    OCIO_CHECK_EQUAL(std::string(cs->getName()), "colorspace");
+
+    cs = config->getColorSpace("alias no valid");
+    OCIO_REQUIRE_ASSERT(!cs);
+
+    // Get the canonical name.
+
+    OCIO_CHECK_EQUAL(std::string(config->getCanonicalName("aces")), "colorspace");
+    OCIO_CHECK_EQUAL(std::string(config->getCanonicalName("ACES AP0, scene-linear")), "colorspace");
+    OCIO_CHECK_EQUAL(std::string(config->getCanonicalName("colorspace")), "colorspace");
+    OCIO_CHECK_EQUAL(std::string(config->getCanonicalName("default")), "raw");
+    OCIO_CHECK_EQUAL(std::string(config->getCanonicalName("DEFault")), "raw");
+    OCIO_CHECK_EQUAL(std::string(config->getCanonicalName("not an alias")), "");
+    OCIO_CHECK_EQUAL(std::string(config->getCanonicalName("")), "");
+
+    // Get the index.
+
+    OCIO_CHECK_EQUAL(config->getIndexForColorSpace("AceS"), 1); // Case insensitve
+    OCIO_CHECK_EQUAL(config->getIndexForColorSpace("aces2065-1"), 1);
+    OCIO_CHECK_EQUAL(config->getIndexForColorSpace("not an alias"), -1);
+
+    // Get color space referenced by alias in role.
+
+    cs = config->getColorSpace("testAlias");
+    OCIO_REQUIRE_ASSERT(cs);
+    OCIO_CHECK_EQUAL(std::string(cs->getName()), "colorspace");
+
+    // Color space from string.
+
+    OCIO_CHECK_EQUAL(std::string(config->parseColorSpaceFromString("test_aces_test")),
+                     "colorspace");
+    // "colorspace" is present but "ColorspaceAlias" is longer (and at the same position).
+    OCIO_CHECK_EQUAL(std::string(config->parseColorSpaceFromString("skdj_ColorspaceAlias_dfjdk")),
+                     "raw");
+
+    // With inactive color spaces.
+
+    auto cfg = config->createEditableCopy();
+    cfg->setInactiveColorSpaces("colorspace");
+
+    OCIO_CHECK_EQUAL(std::string(cfg->parseColorSpaceFromString("test_aces_test")),
+                     "colorspace");
 }

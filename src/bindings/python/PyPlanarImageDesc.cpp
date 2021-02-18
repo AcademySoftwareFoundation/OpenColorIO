@@ -21,7 +21,10 @@ void * getBufferData(py::buffer & data, py::dtype dtype, long size)
 
 void bindPyPlanarImageDesc(py::module & m)
 {
-    py::class_<PyPlanarImageDesc, PyImageDesc /* base */>(m, "PlanarImageDesc")
+    auto clsPlanarImageDesc = 
+        py::class_<PyPlanarImageDesc, PyImageDesc /* base */>(
+            m.attr("PlanarImageDesc"))
+
         .def(py::init([](py::buffer & rData, 
                          py::buffer & gData, 
                          py::buffer & bData,
@@ -47,7 +50,8 @@ void bindPyPlanarImageDesc(py::module & m)
 
                 return p;
             }), 
-             "rData"_a, "gData"_a, "bData"_a, "width"_a, "height"_a)
+             "rData"_a, "gData"_a, "bData"_a, "width"_a, "height"_a,
+             DOC(PlanarImageDesc, PlanarImageDesc))
         .def(py::init([](py::buffer & rData, 
                          py::buffer & gData, 
                          py::buffer & bData, 
@@ -74,7 +78,8 @@ void bindPyPlanarImageDesc(py::module & m)
                     width, height);
                 return p;
             }), 
-             "rData"_a, "gData"_a, "bData"_a, "aData"_a, "width"_a, "height"_a)
+             "rData"_a, "gData"_a, "bData"_a, "aData"_a, "width"_a, "height"_a,
+             DOC(PlanarImageDesc, PlanarImageDesc, 2))
         .def(py::init([](py::buffer & rData, 
                          py::buffer & gData, 
                          py::buffer & bData,
@@ -107,7 +112,8 @@ void bindPyPlanarImageDesc(py::module & m)
                 return p;
             }),
              "rData"_a, "gData"_a, "bData"_a, "width"_a, "height"_a, "bitDepth"_a,
-             "xStrideBytes"_a, "yStrideBytes"_a)
+             "xStrideBytes"_a, "yStrideBytes"_a,
+             DOC(PlanarImageDesc, PlanarImageDesc, 3))
         .def(py::init([](py::buffer & rData, 
                          py::buffer & gData, 
                          py::buffer & bData, 
@@ -142,7 +148,8 @@ void bindPyPlanarImageDesc(py::module & m)
                 return p;
             }),
              "rData"_a, "gData"_a, "bData"_a, "aData"_a, "width"_a, "height"_a, "bitDepth"_a,
-             "xStrideBytes"_a, "yStrideBytes"_a)
+             "xStrideBytes"_a, "yStrideBytes"_a,
+             DOC(PlanarImageDesc, PlanarImageDesc, 4))
         
         .def("getRData", [](const PyPlanarImageDesc & self) 
             {
@@ -151,7 +158,8 @@ void bindPyPlanarImageDesc(py::module & m)
                                  { p->getHeight() * p->getWidth() },
                                  { bitDepthToBytes(p->getBitDepth()) },
                                  p->getRData());
-            })
+            },
+             DOC(PlanarImageDesc, getRData))
         .def("getGData", [](const PyPlanarImageDesc & self) 
             {
                 PlanarImageDescRcPtr p = self.getImg();
@@ -159,7 +167,8 @@ void bindPyPlanarImageDesc(py::module & m)
                                  { p->getHeight() * p->getWidth() },
                                  { bitDepthToBytes(p->getBitDepth()) },
                                  p->getGData());
-            })
+            },
+             DOC(PlanarImageDesc, getGData))
         .def("getBData", [](const PyPlanarImageDesc & self) 
             {
                 PlanarImageDescRcPtr p = self.getImg();
@@ -167,7 +176,8 @@ void bindPyPlanarImageDesc(py::module & m)
                                  { p->getHeight() * p->getWidth() },
                                  { bitDepthToBytes(p->getBitDepth()) },
                                  p->getBData());
-            })
+            },
+             DOC(PlanarImageDesc, getBData))
         .def("getAData", [](const PyPlanarImageDesc & self) 
             {
                 PlanarImageDescRcPtr p = self.getImg();
@@ -175,7 +185,8 @@ void bindPyPlanarImageDesc(py::module & m)
                                  { p->getHeight() * p->getWidth() },
                                  { bitDepthToBytes(p->getBitDepth()) },
                                  p->getAData());
-            });
+            },
+             DOC(PlanarImageDesc, getAData));
 }
 
 } // namespace OCIO_NAMESPACE

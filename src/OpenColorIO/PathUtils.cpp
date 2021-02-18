@@ -166,6 +166,28 @@ std::string AbsPath(const std::string & path)
     return pystring::os::path::normpath(p);
 }
 
+namespace
+{
+void AdjustRightmost(const std::string & name, int index, int & colorspacePos,
+                     int & rightMostColorPos, std::string & rightMostColorspace,
+                     int & rightMostColorSpaceIndex)
+{
+    // If we have found a match, move the pointer over to the right end
+    // of the substring.  This will allow us to find the longest name
+    // that matches the rightmost colorspace
+    colorspacePos += (int)name.size();
+
+    if ((colorspacePos > rightMostColorPos) ||
+        ((colorspacePos == rightMostColorPos) && (name.size() > rightMostColorspace.size()))
+        )
+    {
+        rightMostColorPos = colorspacePos;
+        rightMostColorspace = name;
+        rightMostColorSpaceIndex = index;
+    }
+}
+}
+
 int ParseColorSpaceFromString(const Config & config, const char * str)
 {
     if (!str) return -1;
@@ -184,25 +206,28 @@ int ParseColorSpaceFromString(const Config & config, const char * str)
     // Find the right-most occcurance within the string for each colorspace.
     for (int i = 0; i < config.getNumColorSpaces(SEARCH_REFERENCE_SPACE_ALL, COLORSPACE_ALL); ++i)
     {
-        const std::string csname = StringUtils::Lower(config.getColorSpaceNameByIndex(i));
+        const std::string csname = StringUtils::Lower(
+            config.getColorSpaceNameByIndex(SEARCH_REFERENCE_SPACE_ALL, COLORSPACE_ALL, i));
 
         // find right-most extension matched in filename
         int colorspacePos = (int)StringUtils::ReverseFind(fullstr, csname);
-        if (colorspacePos < 0)
-            continue;
-
-        // If we have found a match, move the pointer over to the right end
-        // of the substring.  This will allow us to find the longest name
-        // that matches the rightmost colorspace
-        colorspacePos += (int)csname.size();
-
-        if ((colorspacePos > rightMostColorPos) ||
-            ((colorspacePos == rightMostColorPos) && (csname.size() > rightMostColorspace.size()))
-            )
+        if (colorspacePos >= 0)
         {
-            rightMostColorPos = colorspacePos;
-            rightMostColorspace = csname;
-            rightMostColorSpaceIndex = i;
+            AdjustRightmost(csname, i, colorspacePos,
+                            rightMostColorPos, rightMostColorspace, rightMostColorSpaceIndex);
+        }
+
+        auto cs = config.getColorSpace(csname.c_str());
+        const size_t numAliases = cs->getNumAliases();
+        for (size_t j = 0; j < numAliases; ++j)
+        {
+            const std::string aliasname = StringUtils::Lower(cs->getAlias(j));
+            int colorspacePos = (int)StringUtils::ReverseFind(fullstr, aliasname);
+            if (colorspacePos >= 0)
+            {
+                AdjustRightmost(aliasname, i, colorspacePos,
+                                rightMostColorPos, rightMostColorspace, rightMostColorSpaceIndex);
+            }
         }
     }
     return rightMostColorSpaceIndex;

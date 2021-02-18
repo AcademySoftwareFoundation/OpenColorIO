@@ -150,7 +150,6 @@ a summary.
 
 .. _overview-ocioconvert:
 
-
 ocioconvert
 ***********
 
@@ -172,7 +171,6 @@ information on to the available OpenImageIO options.
 
 .. _overview-ociodisplay:
 
-
 ociodisplay
 ***********
 
@@ -183,6 +181,10 @@ typical viewer controls (scene-linear exposure control and a
 post-display gamma control). 
 
 May be useful to users to quickly check a color space configuration.
+
+NOTE: This program is not a very good example of how to build a UI.
+For example, it assumes each display has the same views, which is often
+not the case.  Also, it does not leverage any of the new OCIO v2 features.
 
 .. TODO: Link to discussion of OpenImageIO source?
 

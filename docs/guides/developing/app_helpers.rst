@@ -8,7 +8,7 @@ Application Helpers
 ===================
 
 OCIO v2 includes a collection of helper code intended to ease the development
-of applications.  This is located in src/libutils/apphelpers.
+of applications.  This is located in src/OpenColorIO/apphelpers.
 
 There are helpers for tasks such as:
 

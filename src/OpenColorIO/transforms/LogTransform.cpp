@@ -86,9 +86,9 @@ void LogTransformImpl::setBase(double val) noexcept
 
 std::ostream & operator<< (std::ostream & os, const LogTransform & t)
 {
-    os << "<LogTransform ";
-    os << "base=" << t.getBase() << ", ";
-    os << "direction=" << TransformDirectionToString(t.getDirection());
+    os << "<LogTransform";
+    os << " direction=" << TransformDirectionToString(t.getDirection());
+    os << ", base=" << t.getBase();
     os << ">";
 
     return os;

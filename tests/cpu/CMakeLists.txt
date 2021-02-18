@@ -75,6 +75,7 @@ endfunction(add_ocio_test)
 set(SOURCES
     fileformats/cdl/CDLParser.cpp
     fileformats/cdl/CDLReaderHelper.cpp
+    fileformats/cdl/CDLWriter.cpp
     fileformats/ctf/CTFReaderHelper.cpp
     fileformats/ctf/CTFReaderUtils.cpp
     fileformats/FileFormatUtils.cpp
@@ -113,6 +114,7 @@ if(OCIO_ADD_EXTRA_BUILTINS)
     set(SOURCES_BUILTINS
         transforms/builtins/ArriCameras.cpp
         transforms/builtins/CanonCameras.cpp
+        transforms/builtins/Displays.cpp
         transforms/builtins/PanasonicCameras.cpp
         transforms/builtins/RedCameras.cpp
         transforms/builtins/SonyCameras.cpp
@@ -122,6 +124,11 @@ if(OCIO_ADD_EXTRA_BUILTINS)
 endif()
 
 set(TESTS
+    apphelpers/CategoryHelpers_tests.cpp
+    apphelpers/ColorSpaceHelpers_tests.cpp
+    apphelpers/DisplayViewHelpers_tests.cpp
+    apphelpers/LegacyViewingPipeline_tests
+    apphelpers/MixingHelpers_tests.cpp
     Baker_tests.cpp
     BitDepthUtils_tests.cpp
     Caching_tests.cpp
@@ -163,6 +170,7 @@ set(TESTS
     Logging_tests.cpp
     LookParse_tests.cpp
     MathUtils_tests.cpp
+    NamedTransform_tests.cpp
     Op_tests.cpp
     OpOptimizers_tests.cpp
     ops/allocation/AllocationOp_tests.cpp

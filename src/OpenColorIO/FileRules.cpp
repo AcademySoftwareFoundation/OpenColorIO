@@ -19,6 +19,9 @@
 namespace OCIO_NAMESPACE
 {
 
+const char * FileRules::DefaultRuleName        = "Default";
+const char * FileRules::FilePathSearchRuleName = "ColorSpaceNamePathSearch";
+
 namespace
 {
 
@@ -236,7 +239,23 @@ std::string BuildRegularExpression(const char * filePathPattern, const char * fi
 
     str += ")$";
 
-    return SanitizeRegularExpression(str);
+    std::string res;
+    try
+    {
+        res = SanitizeRegularExpression(str);
+    }
+    catch (std::regex_error & ex)
+    {
+        std::ostringstream oss;
+        oss << "File rules: invalid regular expression '"
+            << str
+            << "' built from pattern '" << filePathPattern
+            << " and extension '" << fileNameExtension << "': '"
+            << ex.what()
+            << "'.";
+        throw Exception(oss.str().c_str());
+    }
+    return res;
 }
 
 void ValidateRegularExpression(const char * regex)
@@ -287,17 +306,27 @@ public:
     FileRule & operator=(const FileRule &) = delete;
 
     explicit FileRule(const char * name)
-        : m_name(name)
+        : m_name(name ? name : "")
     {
-        if (0==Platform::Strcasecmp(name, FileRuleUtils::DefaultName))
+        if (m_name.empty())
         {
-            m_name = FileRuleUtils::DefaultName; // Enforce case consistency.
+            throw Exception("The file rule name is empty");
+        }
+        else if (0==Platform::Strcasecmp(name, FileRules::DefaultRuleName))
+        {
+            m_name = FileRules::DefaultRuleName; // Enforce case consistency.
             m_type = FILE_RULE_DEFAULT;
         }
-        else if (0==Platform::Strcasecmp(name, FileRuleUtils::ParseName))
+        else if (0==Platform::Strcasecmp(name, FileRules::FilePathSearchRuleName))
         {
-            m_name = FileRuleUtils::ParseName; // Enforce case consistency.
+            m_name = FileRules::FilePathSearchRuleName; // Enforce case consistency.
             m_type = FILE_RULE_PARSE_FILEPATH;
+        }
+        else
+        {
+            m_pattern   = "*";
+            m_extension = "*";
+            m_type      = FILE_RULE_GLOB;
         }
     }
 
@@ -324,7 +353,7 @@ public:
     {
         if (m_type != FILE_RULE_GLOB)
         {
-            return nullptr;
+            return "";
         }
         return m_pattern.c_str();
     }
@@ -356,7 +385,7 @@ public:
     {
         if (m_type != FILE_RULE_GLOB)
         {
-            return nullptr;
+            return "";
         }
         return m_extension.c_str();
     }
@@ -388,7 +417,7 @@ public:
     {
         if (m_type != FILE_RULE_REGEX)
         {
-            return nullptr;
+            return "";
         }
         return m_regex.c_str();
     }
@@ -449,7 +478,9 @@ public:
             const int rightMostColorSpaceIndex = ParseColorSpaceFromString(config, path);
             if (rightMostColorSpaceIndex >= 0)
             {
-                m_colorSpace = config.getColorSpaceNameByIndex(rightMostColorSpaceIndex);
+                m_colorSpace = config.getColorSpaceNameByIndex(SEARCH_REFERENCE_SPACE_ALL,
+                                                               COLORSPACE_ALL,
+                                                               rightMostColorSpaceIndex);
                 return true;
             }
             return false;
@@ -470,18 +501,21 @@ public:
         return false;
     }
 
-    void validate(std::function<ConstColorSpaceRcPtr(const char *)> colorSpaceAccesssor) const
+    void validate(const Config & cfg) const
     {
         if (m_type != FILE_RULE_PARSE_FILEPATH)
         {
-            // Can be a color space or a role (all color spaces).
-            ConstColorSpaceRcPtr cs = colorSpaceAccesssor(m_colorSpace.c_str());
-            if (!cs)
+            // Can be a color space, a role (all color spaces) or a named transform.
+            if (!cfg.getColorSpace(m_colorSpace.c_str()))
             {
-                std::ostringstream oss;
-                oss << "File rules: rule named '" << m_name << "' is referencing color space '"
-                    << m_colorSpace << "' that does not exist.";
-                throw Exception(oss.str().c_str());
+                if (!cfg.getNamedTransform(m_colorSpace.c_str()))
+                {
+                    std::ostringstream oss;
+                    oss << "File rules: rule named '" << m_name << "' is referencing '"
+                        << m_colorSpace << "' that is neither a color space nor a named "
+                                           "transform.";
+                    throw Exception(oss.str().c_str());
+                }
             }
         }
     }
@@ -528,7 +562,7 @@ FileRulesRcPtr FileRules::createEditableCopy() const
 
 FileRules::Impl::Impl()
 {
-    auto defaultRule = std::make_shared<FileRule>(FileRuleUtils::DefaultName);
+    auto defaultRule = std::make_shared<FileRule>(FileRules::DefaultRuleName);
     defaultRule->setColorSpace(ROLE_DEFAULT);
     m_rules.push_back(defaultRule);
 }
@@ -584,7 +618,7 @@ void FileRules::Impl::validateNewRule(size_t ruleIndex, const char * name) const
         throw Exception(oss.str().c_str());
     }
     validatePosition(ruleIndex, DEFAULT_ALLOWED);
-    if (0==Platform::Strcasecmp(name, FileRuleUtils::DefaultName))
+    if (0==Platform::Strcasecmp(name, FileRules::DefaultRuleName))
     {
         std::ostringstream oss;
         oss << "File rules: Default rule already exists at index "
@@ -626,11 +660,11 @@ void FileRules::Impl::moveRule(size_t ruleIndex, int offset)
 }
 
 
-void FileRules::Impl::validate(std::function<ConstColorSpaceRcPtr(const char *)> colorSpaceAccesssor) const
+void FileRules::Impl::validate(const Config & cfg) const
 {
     for (auto & rule : m_rules)
     {
-        rule->validate(colorSpaceAccesssor);
+        rule->validate(cfg);
     }
 }
 
@@ -795,7 +829,7 @@ void FileRules::insertRule(size_t ruleIndex, const char * name, const char * col
 
 void FileRules::insertPathSearchRule(size_t ruleIndex)
 {
-    return insertRule(ruleIndex, FileRuleUtils::ParseName, nullptr, nullptr);
+    return insertRule(ruleIndex, FileRules::FilePathSearchRuleName, nullptr, nullptr);
 }
 
 void FileRules::setDefaultRuleColorSpace(const char * colorSpace)
@@ -817,6 +851,24 @@ void FileRules::increaseRulePriority(size_t ruleIndex)
 void FileRules::decreaseRulePriority(size_t ruleIndex)
 {
     m_impl->moveRule(ruleIndex, 1);
+}
+
+bool FileRules::isDefault() const noexcept
+{
+    if (m_impl->m_rules.size() == 1)
+    {
+        const auto & rule = m_impl->m_rules[0];
+        if (rule->m_customKeys.getSize() == 0)
+        {
+            // NB: Don't need to check the rule name -- the default rule may not be removed, so if
+            // there is only one rule, it's the default one.
+            if (StringUtils::Compare(rule->getColorSpace(), ROLE_DEFAULT))
+            {
+                return true;
+            }
+        }
+    }
+    return false;
 }
 
 const char * FileRules::Impl::getColorSpaceFromFilepath(const Config & config,

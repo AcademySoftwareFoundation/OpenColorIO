@@ -228,7 +228,8 @@ OCIO_ADD_TEST(ExposureContrastOpData, inverse)
     OCIO_REQUIRE_ASSERT(ecInv);
 
     OCIO::ConstExposureContrastOpDataRcPtr ecInvConst = ecInv;
-    OCIO_CHECK_ASSERT(ec.isInverse(ecInvConst));
+    // Dynamic are not inverse.
+    OCIO_CHECK_ASSERT(!ec.isInverse(ecInvConst));
 
     OCIO_CHECK_EQUAL(ecInv->getStyle(),
                      OCIO::ExposureContrastOpData::STYLE_VIDEO_REV);
@@ -253,8 +254,8 @@ OCIO_ADD_TEST(ExposureContrastOpData, inverse)
     OCIO_CHECK_EQUAL(ec.getExposure(), 0.21);
     OCIO_CHECK_EQUAL(ecInv->getExposure(), 1.5);
 
-    // Exposure is dynamic in both, so value does not matter.
-    OCIO_CHECK_ASSERT(ec.isInverse(ecInvConst));
+    // Exposure is dynamic in both, never equal.
+    OCIO_CHECK_ASSERT(!ec.isInverse(ecInvConst));
 
     ecInv->getContrastProperty()->makeDynamic();
 
@@ -262,7 +263,7 @@ OCIO_ADD_TEST(ExposureContrastOpData, inverse)
     OCIO_CHECK_ASSERT(!ec.isInverse(ecInvConst));
 
     ec.getContrastProperty()->makeDynamic();
-    OCIO_CHECK_ASSERT(ec.isInverse(ecInvConst));
+    OCIO_CHECK_ASSERT(!ec.isInverse(ecInvConst));
 
     // Gamma values are now different.
     ec.setGamma(1.2);
@@ -285,18 +286,20 @@ OCIO_ADD_TEST(ExposureContrastOpData, equality)
     ec0.getExposureProperty()->makeDynamic();
     OCIO_CHECK_ASSERT(!(ec0 == ec1));
     ec1.getExposureProperty()->makeDynamic();
-    OCIO_CHECK_ASSERT(ec0 == ec1);
+    OCIO_CHECK_ASSERT(!(ec0 == ec1));
 
     // Change value of enabled dynamic property.
     ec0.setExposure(0.5);
-    OCIO_CHECK_ASSERT(ec0 == ec1);
+    OCIO_CHECK_ASSERT(!(ec0 == ec1));
+    ec1.setExposure(0.5);
+    OCIO_CHECK_ASSERT(!(ec0 == ec1));
 
     // Change value of dynamic property not enabled.
     ec1.setContrast(0.5);
     OCIO_CHECK_ASSERT(!(ec0 == ec1));
 
     ec0.setContrast(0.5);
-    OCIO_CHECK_ASSERT(ec0 == ec1);
+    OCIO_CHECK_ASSERT(!(ec0 == ec1));
 }
 
 OCIO_ADD_TEST(ExposureContrastOpData, replace_dynamic_property)

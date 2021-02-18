@@ -27,8 +27,6 @@ public:
 
     bool hasDynamicProperty(DynamicPropertyType type) const override;
     DynamicPropertyRcPtr getDynamicProperty(DynamicPropertyType type) const override;
-    void unifyDynamicProperty(DynamicPropertyType type,
-                              DynamicPropertyGradingRGBCurveImplRcPtr & prop) const override;
 
 protected:
     void eval(const GradingBSplineCurveImpl::KnotsCoefs & knotsCoefs,
@@ -38,19 +36,32 @@ protected:
         out[1] = knotsCoefs.evalCurve(static_cast<int>(RGB_GREEN), in[1]);
         out[2] = knotsCoefs.evalCurve(static_cast<int>(RGB_BLUE), in[2]);
         // TODO: Add vectorized version for master curve.
-        out[0] = knotsCoefs.evalCurve(static_cast<int>(RGB_MASTER), in[0]);
-        out[1] = knotsCoefs.evalCurve(static_cast<int>(RGB_MASTER), in[1]);
-        out[2] = knotsCoefs.evalCurve(static_cast<int>(RGB_MASTER), in[2]);
+        out[0] = knotsCoefs.evalCurve(static_cast<int>(RGB_MASTER), out[0]);
+        out[1] = knotsCoefs.evalCurve(static_cast<int>(RGB_MASTER), out[1]);
+        out[2] = knotsCoefs.evalCurve(static_cast<int>(RGB_MASTER), out[2]);
+    }
+    void evalRev(const GradingBSplineCurveImpl::KnotsCoefs & knotsCoefs,
+                 float * out, const float * in) const
+    {
+        out[0] = knotsCoefs.evalCurveRev(static_cast<int>(RGB_MASTER), in[0]);
+        out[1] = knotsCoefs.evalCurveRev(static_cast<int>(RGB_MASTER), in[1]);
+        out[2] = knotsCoefs.evalCurveRev(static_cast<int>(RGB_MASTER), in[2]);
+        out[0] = knotsCoefs.evalCurveRev(static_cast<int>(RGB_RED), out[0]);
+        out[1] = knotsCoefs.evalCurveRev(static_cast<int>(RGB_GREEN), out[1]);
+        out[2] = knotsCoefs.evalCurveRev(static_cast<int>(RGB_BLUE), out[2]);
     }
 
-    // Mutable for the unification process.
-    mutable DynamicPropertyGradingRGBCurveImplRcPtr m_grgbcurve;
+    DynamicPropertyGradingRGBCurveImplRcPtr m_grgbcurve;
 };
 
 GradingRGBCurveOpCPU::GradingRGBCurveOpCPU(ConstGradingRGBCurveOpDataRcPtr & grgbc)
     : OpCPU()
 {
-    m_grgbcurve = OCIO_DYNAMIC_POINTER_CAST<DynamicPropertyGradingRGBCurveImpl>(grgbc->getDynamicPropertyInternal());
+    m_grgbcurve = grgbc->getDynamicPropertyInternal();
+    if (m_grgbcurve->isDynamic())
+    {
+        m_grgbcurve = m_grgbcurve->createEditableCopy();
+    }
 }
 
 bool GradingRGBCurveOpCPU::hasDynamicProperty(DynamicPropertyType type) const
@@ -78,24 +89,6 @@ DynamicPropertyRcPtr GradingRGBCurveOpCPU::getDynamicProperty(DynamicPropertyTyp
     }
 
     throw Exception("GradingRGBCurve property is not dynamic.");
-}
-
-void GradingRGBCurveOpCPU::unifyDynamicProperty(DynamicPropertyType type,
-                                                DynamicPropertyGradingRGBCurveImplRcPtr & prop) const
-{
-    if (type == DYNAMIC_PROPERTY_GRADING_RGBCURVE)
-    {
-        if (!prop)
-        {
-            // First occurence, decouple.
-            prop = m_grgbcurve->createEditableCopy();
-        }
-        m_grgbcurve = prop;
-    }
-    else
-    {
-        OpCPU::unifyDynamicProperty(type, prop);
-    }
 }
 
 class GradingRGBCurveFwdOpCPU : public GradingRGBCurveOpCPU
@@ -157,17 +150,8 @@ GradingRGBCurveLinearFwdOpCPU::GradingRGBCurveLinearFwdOpCPU(ConstGradingRGBCurv
 
 }
 
-void GradingRGBCurveLinearFwdOpCPU::apply(const void * inImg, void * outImg, long numPixels) const
+namespace LogLinConstants
 {
-    if (m_grgbcurve->getLocalBypass())
-    {
-        if (inImg != outImg)
-        {
-            memcpy(outImg, inImg, numPixels * PixelSize);
-        }
-        return;
-    }
-
     static constexpr float xbrk = 0.0041318374739483946f;
     static constexpr float shift = -0.000157849851665374f;
     static constexpr float m = 1.f / (0.18f + shift);
@@ -187,69 +171,91 @@ void GradingRGBCurveLinearFwdOpCPU::apply(const void * inImg, void * outImg, lon
 #else
     static constexpr float base2 = 1.4426950408889634f; // 1/log(2)
 #endif
+}
+
+inline void LinLog(const float * in, float * out)
+{
+#ifdef USE_SSE
+        __m128 pix = _mm_loadu_ps(in);
+        __m128 flag = _mm_cmpgt_ps(pix, LogLinConstants::mxbrk);
+
+        __m128 pixLin = _mm_mul_ps(pix, LogLinConstants::mgain);
+        pixLin = _mm_add_ps(pixLin, LogLinConstants::moffs);
+
+        pix = _mm_add_ps(pix, LogLinConstants::mshift);
+        pix = _mm_mul_ps(pix, LogLinConstants::mm);
+        pix = sseLog2(pix);
+
+        pix = _mm_or_ps(_mm_and_ps(flag, pix),
+            _mm_andnot_ps(flag, pixLin));
+
+        _mm_storeu_ps(out, pix);
+#else
+        out[0] = (in[0] < LogLinConstants::xbrk) ?
+                 in[0] * LogLinConstants::gain + LogLinConstants::offs :
+                 LogLinConstants::base2 * std::log((in[0] + LogLinConstants::shift) * LogLinConstants::m);
+        out[1] = (in[1] < LogLinConstants::xbrk) ?
+                 in[1] * LogLinConstants::gain + LogLinConstants::offs :
+                 LogLinConstants::base2 * std::log((in[1] + LogLinConstants::shift) * LogLinConstants::m);
+        out[2] = (in[2] < LogLinConstants::xbrk) ?
+                 in[2] * LogLinConstants::gain + LogLinConstants::offs :
+                 LogLinConstants::base2 * std::log((in[2] + LogLinConstants::shift) * LogLinConstants::m);
+        out[3] = in[3];
+#endif
+}
+
+inline void LogLin(float * out)
+{
+#ifdef USE_SSE
+        __m128 pix = _mm_loadu_ps(out);
+        __m128 flag = _mm_cmpgt_ps(pix, LogLinConstants::mybrk);
+
+        __m128 pixLin = _mm_sub_ps(pix, LogLinConstants::moffs);
+        pixLin = _mm_mul_ps(pixLin, LogLinConstants::mgainInv);
+
+        pix = ssePower(LogLinConstants::mpower, pix);
+        pix = _mm_mul_ps(pix, LogLinConstants::mshift018);
+        pix = _mm_sub_ps(pix, LogLinConstants::mshift);
+
+        pix = _mm_or_ps(_mm_and_ps(flag, pix),
+              _mm_andnot_ps(flag, pixLin));
+
+        _mm_storeu_ps(out, pix);
+#else
+        out[0] = (out[0] < LogLinConstants::ybrk) ?
+                 (out[0] - LogLinConstants::offs) / LogLinConstants::gain :
+                 std::pow(2.0f, out[0]) * (0.18f + LogLinConstants::shift) - LogLinConstants::shift;
+        out[1] = (out[1] < LogLinConstants::ybrk) ?
+                 (out[1] - LogLinConstants::offs) / LogLinConstants::gain :
+                 std::pow(2.0f, out[1]) * (0.18f + LogLinConstants::shift) - LogLinConstants::shift;
+        out[2] = (out[2] < LogLinConstants::ybrk) ?
+                 (out[2] - LogLinConstants::offs) / LogLinConstants::gain :
+                 std::pow(2.0f, out[2]) * (0.18f + LogLinConstants::shift) - LogLinConstants::shift;
+#endif
+}
+
+void GradingRGBCurveLinearFwdOpCPU::apply(const void * inImg, void * outImg, long numPixels) const
+{
+    if (m_grgbcurve->getLocalBypass())
+    {
+        if (inImg != outImg)
+        {
+            memcpy(outImg, inImg, numPixels * PixelSize);
+        }
+        return;
+    }
+
     const float * in = (float *)inImg;
     float * out = (float *)outImg;
 
     for (long idx = 0; idx < numPixels; ++idx)
     {
-        // Lin to log.
-#ifdef USE_SSE
-        __m128 pix = _mm_loadu_ps(in);
-        __m128 flag = _mm_cmpgt_ps(pix, mxbrk);
-
-        __m128 pixLin = _mm_mul_ps(pix, mgain);
-        pixLin = _mm_add_ps(pixLin, moffs);
-
-        pix = _mm_add_ps(pix, mshift);
-        pix = _mm_mul_ps(pix, mm);
-        pix = sseLog2(pix);
-
-        pix = _mm_or_ps(_mm_and_ps(flag, pix),
-                        _mm_andnot_ps(flag, pixLin));
-
-        _mm_storeu_ps(out, pix);
-#else
-        out[0] = (in[0] < xbrk) ?
-                 in[0] * gain + offs :
-                 base2 * std::log((in[0] + shift) * m);
-        out[1] = (in[1] < xbrk) ?
-                 in[1] * gain + offs :
-                 base2 * std::log((in[1] + shift) * m);
-        out[2] = (in[2] < xbrk) ?
-                 in[2] * gain + offs :
-                 base2 * std::log((in[2] + shift) * m);
-#endif
+        LinLog(in, out);
 
         // Curves.
-        eval(m_grgbcurve->getKnotsCoefs(), out, in);
+        eval(m_grgbcurve->getKnotsCoefs(), out, out);
 
-        // Log to lin.
-#ifdef USE_SSE
-        __m128 pix2 = _mm_loadu_ps(out);
-        flag = _mm_cmpgt_ps(pix2, mybrk);
-
-        pixLin = _mm_sub_ps(pix2, moffs);
-        pixLin = _mm_mul_ps(pixLin, mgainInv);
-
-        pix2 = ssePower(mpower, pix2);
-        pix2 = _mm_mul_ps(pix2, mshift018);
-        pix2 = _mm_sub_ps(pix2, mshift);
-
-        pix2 = _mm_or_ps(_mm_and_ps(flag, pix2),
-               _mm_andnot_ps(flag, pixLin));
-
-        _mm_storeu_ps(out, pix2);
-#else
-        out[0] = (out[0] < ybrk) ?
-                 (out[0] - offs) / gain :
-                 std::pow(2.0f, out[0]) * (0.18f + shift) - shift;
-        out[1] = (out[1] < ybrk) ?
-                 (out[1] - offs) / gain :
-                 std::pow(2.0f, out[1]) * (0.18f + shift) - shift;
-        out[2] = (out[2] < ybrk) ?
-                 (out[2] - offs) / gain :
-                 std::pow(2.0f, out[2]) * (0.18f + shift) - shift;
-#endif
+        LogLin(out);
 
         out[3] = in[3];
 
@@ -275,9 +281,27 @@ GradingRGBCurveRevOpCPU::GradingRGBCurveRevOpCPU(ConstGradingRGBCurveOpDataRcPtr
 
 void GradingRGBCurveRevOpCPU::apply(const void * inImg, void * outImg, long numPixels) const
 {
-    throw Exception("GradingRGBCurve inverse CPU not implemented.");
+    if (m_grgbcurve->getLocalBypass())
+    {
+        if (inImg != outImg)
+        {
+            memcpy(outImg, inImg, numPixels * PixelSize);
+        }
+        return;
+    }
 
-    // TODO: implement inverse.
+    const float * in = (float *)inImg;
+    float * out = (float *)outImg;
+
+    for (long idx = 0; idx < numPixels; ++idx)
+    {
+        evalRev(m_grgbcurve->getKnotsCoefs(), out, in);
+
+        out[3] = in[3];
+
+        in += 4;
+        out += 4;
+    }
 }
 
 class GradingRGBCurveLinearRevOpCPU : public GradingRGBCurveRevOpCPU
@@ -297,9 +321,32 @@ GradingRGBCurveLinearRevOpCPU::GradingRGBCurveLinearRevOpCPU(ConstGradingRGBCurv
 
 void GradingRGBCurveLinearRevOpCPU::apply(const void * inImg, void * outImg, long numPixels) const
 {
-    throw Exception("GradingRGBCurve inverse CPU not implemented.");
+    if (m_grgbcurve->getLocalBypass())
+    {
+        if (inImg != outImg)
+        {
+            memcpy(outImg, inImg, numPixels * PixelSize);
+        }
+        return;
+    }
 
-    // TODO: implement inverse.
+    const float * in = (float *)inImg;
+    float * out = (float *)outImg;
+
+    for (long idx = 0; idx < numPixels; ++idx)
+    {
+        LinLog(in, out);
+
+        // Curves.
+        evalRev(m_grgbcurve->getKnotsCoefs(), out, out);
+
+        LogLin(out);
+
+        out[3] = in[3];
+
+        in += 4;
+        out += 4;
+    }
 }
 
 } // Anonymous namespace

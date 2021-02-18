@@ -6,15 +6,18 @@
 
 namespace OCIO_NAMESPACE
 {
+
 namespace 
 {
 
 enum ColorSpaceIterator
 {
-    IT_COLOR_SPACE_CATEGORY = 0
+    IT_COLOR_SPACE_CATEGORY = 0,
+    IT_COLOR_SPACE_ALIAS
 };
 
 using ColorSpaceCategoryIterator = PyIterator<ColorSpaceRcPtr, IT_COLOR_SPACE_CATEGORY>;
+using ColorSpaceAliasIterator = PyIterator<ColorSpaceRcPtr, IT_COLOR_SPACE_ALIAS>;
 
 std::vector<float> getAllocationVarsStdVec(const ColorSpaceRcPtr & p) {
     std::vector<float> vars;
@@ -33,21 +36,50 @@ std::vector<std::string> getCategoriesStdVec(const ColorSpaceRcPtr & p) {
     return categories;
 }
 
+std::vector<std::string> getAliasesStdVec(const ColorSpaceRcPtr & p)
+{
+    std::vector<std::string> aliases;
+    aliases.reserve(p->getNumAliases());
+    for (int i = 0; i < p->getNumCategories(); i++)
+    {
+        aliases.push_back(p->getAlias(i));
+    }
+    return aliases;
+}
+
 } // namespace
 
 void bindPyColorSpace(py::module & m)
 {
     ColorSpaceRcPtr DEFAULT = ColorSpace::Create();
 
-    auto cls = py::class_<ColorSpace, ColorSpaceRcPtr /* holder */>(m, "ColorSpace")
-        .def(py::init([]() { return ColorSpace::Create(); }))
+    auto clsColorSpace = 
+        py::class_<ColorSpace, ColorSpaceRcPtr>(
+            m.attr("ColorSpace"));
+
+    auto clsColorSpaceCategoryIterator = 
+        py::class_<ColorSpaceCategoryIterator>(
+            clsColorSpace, "ColorSpaceCategoryIterator");
+
+    auto clsColorSpacAliasIterator = 
+        py::class_<ColorSpaceAliasIterator>(
+            clsColorSpace, "ColorSpaceAliasIterator");
+
+    clsColorSpace
+        .def(py::init([]() 
+            {
+                 return ColorSpace::Create(); 
+            }), 
+             DOC(ColorSpace, Create))
         .def(py::init([](ReferenceSpaceType referenceSpace) 
             { 
                 return ColorSpace::Create(referenceSpace); 
             }), 
-             "referenceSpace"_a)
+             "referenceSpace"_a,
+             DOC(ColorSpace, Create, 2))
         .def(py::init([](ReferenceSpaceType referenceSpace,
                          const std::string & name,
+                         const std::vector<std::string> & aliases,
                          const std::string & family,
                          const std::string & encoding,
                          const std::string & equalityGroup,
@@ -61,6 +93,15 @@ void bindPyColorSpace(py::module & m)
                          const std::vector<std::string> & categories) 
             {
                 ColorSpaceRcPtr p = ColorSpace::Create(referenceSpace);
+                if (!aliases.empty())
+                {
+                    p->clearAliases();
+                    for (size_t i = 0; i < aliases.size(); i++)
+                    {
+                        p->addAlias(aliases[i].c_str());
+                    }
+                }
+                // Setting the name will remove alias named the same, so set name after.
                 if (!name.empty())          { p->setName(name.c_str()); }
                 if (!family.empty())        { p->setFamily(family.c_str()); }
                 if (!encoding.empty())      { p->setEncoding(encoding.c_str()); }
@@ -96,50 +137,86 @@ void bindPyColorSpace(py::module & m)
                 return p;
             }), 
              "referenceSpace"_a = DEFAULT->getReferenceSpaceType(),
-             "name"_a = DEFAULT->getName(),
-             "family"_a = DEFAULT->getFamily(),
-             "encoding"_a = DEFAULT->getEncoding(),
-             "equalityGroup"_a = DEFAULT->getEqualityGroup(),
-             "description"_a = DEFAULT->getDescription(),
+             "name"_a.none(false) = DEFAULT->getName(),
+             "aliases"_a = getAliasesStdVec(DEFAULT),
+             "family"_a.none(false) = DEFAULT->getFamily(),
+             "encoding"_a.none(false) = DEFAULT->getEncoding(),
+             "equalityGroup"_a.none(false) = DEFAULT->getEqualityGroup(),
+             "description"_a.none(false) = DEFAULT->getDescription(),
              "bitDepth"_a = DEFAULT->getBitDepth(),
              "isData"_a = DEFAULT->isData(),
              "allocation"_a = DEFAULT->getAllocation(), 
              "allocationVars"_a = getAllocationVarsStdVec(DEFAULT),
              "toReference"_a = DEFAULT->getTransform(COLORSPACE_DIR_TO_REFERENCE),
              "fromReference"_a = DEFAULT->getTransform(COLORSPACE_DIR_FROM_REFERENCE),
-             "categories"_a = getCategoriesStdVec(DEFAULT))
+             "categories"_a = getCategoriesStdVec(DEFAULT),
+             DOC(ColorSpace, Create, 2))
 
-        .def("getName", &ColorSpace::getName)
-        .def("setName", &ColorSpace::setName, "name"_a)
-        .def("getFamily", &ColorSpace::getFamily)
-        .def("setFamily", &ColorSpace::setFamily, "family"_a)
-        .def("getEncoding", &ColorSpace::getEncoding)
-        .def("setEncoding", &ColorSpace::setEncoding, "encoding"_a)
-        .def("getEqualityGroup", &ColorSpace::getEqualityGroup)
-        .def("setEqualityGroup", &ColorSpace::setEqualityGroup, "equalityGroup"_a)
-        .def("getDescription", &ColorSpace::getDescription)
-        .def("setDescription", &ColorSpace::setDescription, "description"_a)
-        .def("getBitDepth", &ColorSpace::getBitDepth)
-        .def("setBitDepth", &ColorSpace::setBitDepth, "bitDepth"_a)
+        .def("getName", &ColorSpace::getName, 
+             DOC(ColorSpace, getName))
+        .def("setName", &ColorSpace::setName, "name"_a.none(false), 
+             DOC(ColorSpace, setName))
+
+        // Aliases.
+        .def("addAlias", &ColorSpace::addAlias, "alias"_a.none(false), 
+             DOC(ColorSpace, addAlias))
+        .def("removeAlias", &ColorSpace::removeAlias, "alias"_a.none(false), 
+             DOC(ColorSpace, removeAlias))
+        .def("getAliases", [](ColorSpaceRcPtr & self) 
+            { 
+                return ColorSpaceAliasIterator(self); 
+            })
+        .def("clearAliases", &ColorSpace::clearAliases, 
+             DOC(ColorSpace, clearAliases))
+
+        .def("getFamily", &ColorSpace::getFamily, 
+             DOC(ColorSpace, getFamily))
+        .def("setFamily", &ColorSpace::setFamily, "family"_a, 
+             DOC(ColorSpace, setFamily))
+        .def("getEncoding", &ColorSpace::getEncoding, 
+             DOC(ColorSpace, getEncoding))
+        .def("setEncoding", &ColorSpace::setEncoding, "encoding"_a, 
+             DOC(ColorSpace, setEncoding))
+        .def("getEqualityGroup", &ColorSpace::getEqualityGroup, 
+             DOC(ColorSpace, getEqualityGroup))
+        .def("setEqualityGroup", &ColorSpace::setEqualityGroup, "equalityGroup"_a, 
+             DOC(ColorSpace, setEqualityGroup))
+        .def("getDescription", &ColorSpace::getDescription, 
+             DOC(ColorSpace, getDescription))
+        .def("setDescription", &ColorSpace::setDescription, "description"_a, 
+             DOC(ColorSpace, setDescription))
+        .def("getBitDepth", &ColorSpace::getBitDepth, 
+             DOC(ColorSpace, getBitDepth))
+        .def("setBitDepth", &ColorSpace::setBitDepth, "bitDepth"_a, 
+             DOC(ColorSpace, setBitDepth))
 
         // Categories
-        .def("hasCategory", &ColorSpace::hasCategory, "category"_a)
-        .def("addCategory", &ColorSpace::addCategory, "category"_a)
-        .def("removeCategory", &ColorSpace::removeCategory, "category"_a)
+        .def("hasCategory", &ColorSpace::hasCategory, "category"_a, 
+             DOC(ColorSpace, hasCategory))
+        .def("addCategory", &ColorSpace::addCategory, "category"_a, 
+             DOC(ColorSpace, addCategory))
+        .def("removeCategory", &ColorSpace::removeCategory, "category"_a, 
+             DOC(ColorSpace, removeCategory))
         .def("getCategories", [](ColorSpaceRcPtr & self) 
             { 
                 return ColorSpaceCategoryIterator(self); 
             })
-        .def("clearCategories", &ColorSpace::clearCategories)
+        .def("clearCategories", &ColorSpace::clearCategories, 
+             DOC(ColorSpace, clearCategories))
 
         // Data
-        .def("isData", &ColorSpace::isData)
-        .def("setIsData", &ColorSpace::setIsData, "isData"_a)
-        .def("getReferenceSpaceType", &ColorSpace::getReferenceSpaceType)
+        .def("isData", &ColorSpace::isData, 
+             DOC(ColorSpace, isData))
+        .def("setIsData", &ColorSpace::setIsData, "isData"_a, 
+             DOC(ColorSpace, setIsData))
+        .def("getReferenceSpaceType", &ColorSpace::getReferenceSpaceType, 
+             DOC(ColorSpace, getReferenceSpaceType))
 
         // Allocation
-        .def("getAllocation", &ColorSpace::getAllocation)
-        .def("setAllocation", &ColorSpace::setAllocation, "allocation"_a)
+        .def("getAllocation", &ColorSpace::getAllocation, 
+             DOC(ColorSpace, getAllocation))
+        .def("setAllocation", &ColorSpace::setAllocation, "allocation"_a, 
+             DOC(ColorSpace, setAllocation))
         .def("getAllocationVars", [](ColorSpaceRcPtr & self) 
             { 
                 return getAllocationVarsStdVec(self); 
@@ -152,15 +229,18 @@ void bindPyColorSpace(py::module & m)
                 }
                 self->setAllocationVars((int)vars.size(), vars.data());
             }, 
-             "vars"_a)
+             "vars"_a,
+             DOC(ColorSpace, setAllocationVars))
 
         // Transform
-        .def("getTransform", &ColorSpace::getTransform, "direction"_a)
-        .def("setTransform", &ColorSpace::setTransform, "transform"_a, "direction"_a);
+        .def("getTransform", &ColorSpace::getTransform, "direction"_a, 
+             DOC(ColorSpace, getTransform))
+        .def("setTransform", &ColorSpace::setTransform, "transform"_a, "direction"_a, 
+             DOC(ColorSpace, setTransform));
 
-    defStr(cls);
+    defRepr(clsColorSpace);
 
-    py::class_<ColorSpaceCategoryIterator>(cls, "ColorSpaceCategoryIterator")
+    clsColorSpaceCategoryIterator
         .def("__len__", [](ColorSpaceCategoryIterator & it) 
             { 
                 return it.m_obj->getNumCategories(); 
@@ -179,6 +259,27 @@ void bindPyColorSpace(py::module & m)
                 int i = it.nextIndex(it.m_obj->getNumCategories());
                 return it.m_obj->getCategory(i);
             });
+
+    clsColorSpacAliasIterator
+        .def("__len__", [](ColorSpaceAliasIterator & it) 
+            { 
+                return it.m_obj->getNumAliases(); 
+            })
+        .def("__getitem__", [](ColorSpaceAliasIterator & it, int i)
+            { 
+                it.checkIndex(i, (int)it.m_obj->getNumAliases());
+                return it.m_obj->getAlias(i);
+            })
+        .def("__iter__", [](ColorSpaceAliasIterator & it) -> ColorSpaceAliasIterator &
+            { 
+                return it; 
+            })
+        .def("__next__", [](ColorSpaceAliasIterator & it)
+            {
+                int i = it.nextIndex((int)it.m_obj->getNumAliases());
+                return it.m_obj->getAlias(i);
+            });
+
 }
 
 } // namespace OCIO_NAMESPACE

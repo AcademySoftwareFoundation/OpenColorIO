@@ -211,9 +211,9 @@ void GetElementsValues(const FormatMetadataImpl::Elements & elements,
 {
     for (auto & element : elements)
     {
-        if (0 == Platform::Strcasecmp(name.c_str(), element.getName()))
+        if (0 == Platform::Strcasecmp(name.c_str(), element.getElementName()))
         {
-            values.push_back(element.getValue());
+            values.push_back(element.getElementValue());
         }
     }
 }
@@ -361,9 +361,9 @@ const char * GetFirstElementValue(const FormatMetadataImpl::Elements & elements,
 {
     for (auto & it : elements)
     {
-        if (0 == Platform::Strcasecmp(name.c_str(), it.getName()))
+        if (0 == Platform::Strcasecmp(name.c_str(), it.getElementName()))
         {
-            return it.getValue();
+            return it.getElementValue();
         }
     }
     return "";
@@ -373,9 +373,9 @@ const char * GetLastElementValue(const FormatMetadataImpl::Elements & elements, 
 {
     for (auto it = elements.rbegin(); it != elements.rend(); ++it)
     {
-        if (0 == Platform::Strcasecmp(name.c_str(), it->getName()))
+        if (0 == Platform::Strcasecmp(name.c_str(), it->getElementName()))
         {
-            return it->getValue();
+            return it->getElementValue();
         }
     }
     return "";
@@ -399,9 +399,9 @@ const char * GetLastElementValue(const FormatMetadataImpl::Elements & elements, 
 void CTFReaderTransform::fromMetadata(const FormatMetadataImpl & metadata)
 {
     // Name & id handled as attributes of the root metadata.
-    m_name = metadata.getAttributeValue(METADATA_NAME);
-    m_id = metadata.getAttributeValue(METADATA_ID);
-    m_inverseOfId = metadata.getAttributeValue(ATTR_INVERSE_OF);
+    m_name = metadata.getAttributeValueString(METADATA_NAME);
+    m_id = metadata.getAttributeValueString(METADATA_ID);
+    m_inverseOfId = metadata.getAttributeValueString(ATTR_INVERSE_OF);
 
     // Preserve first InputDescriptor, last OutputDescriptor, and all Descriptions.
     m_inDescriptor = GetFirstElementValue(metadata.getChildrenElements(), METADATA_INPUT_DESCRIPTOR);
@@ -411,7 +411,7 @@ void CTFReaderTransform::fromMetadata(const FormatMetadataImpl & metadata)
     // Combine all Info elements.
     for (auto elt : metadata.getChildrenElements())
     {
-        if (0 == Platform::Strcasecmp(elt.getName(), METADATA_INFO))
+        if (0 == Platform::Strcasecmp(elt.getElementName(), METADATA_INFO))
         {
             m_infoMetadata.combine(elt);
         }
@@ -450,7 +450,7 @@ void CTFReaderTransform::toMetadata(FormatMetadataImpl & metadata) const
     {
         metadata.addChildElement(METADATA_DESCRIPTION, desc.c_str());
     }
-    const std::string infoValue(m_infoMetadata.getValue());
+    const std::string infoValue(m_infoMetadata.getElementValue());
     if (m_infoMetadata.getNumAttributes() || m_infoMetadata.getNumChildrenElements() ||
         !infoValue.empty())
     {
@@ -1533,6 +1533,25 @@ void GradingRGBCurveWriter::writeCurve(const char * tag,
             }
         }
         m_formatter.writeEndTag(TAG_CURVE_CTRL_PNTS);
+
+        if (!curve->slopesAreDefault())
+        {
+            m_formatter.writeStartTag(TAG_CURVE_SLOPES, XmlFormatter::Attributes());
+            {
+                XmlScopeIndent si1(m_formatter);
+                // (Number of slopes is always the same as control points.)
+                const size_t numSlopes = curve->getNumControlPoints();
+                std::ostringstream oss;
+                SetOStream(0.f, oss);
+                for (size_t i = 0; i < numSlopes; ++i)
+                {
+                    const float val = curve->getSlope(i);
+                    oss << val << " ";
+                }
+                m_formatter.writeContent(oss.str());
+            }
+            m_formatter.writeEndTag(TAG_CURVE_SLOPES);
+        }
     }
 
     m_formatter.writeEndTag(tag);
@@ -1553,7 +1572,7 @@ void GradingRGBCurveWriter::writeContent() const
     for (int c = 0; c < RGB_NUM_CURVES; ++c)
     {
         const auto & curve = vals->getCurve(static_cast<RGBCurveType>(c));
-        if (*curve != defCurve)
+        if ((*curve != defCurve) || !(curve->slopesAreDefault()))
         {
             writeCurve(curveTags[c], curve);
         }
@@ -2430,19 +2449,20 @@ void TransformWriter::writeProcessListMetadata(const FormatMetadataImpl& m) cons
 {
     if (m.getChildrenElements().size() == 0)
     {
-        const std::string infoValue(m.getValue());
+        const std::string infoValue(m.getElementValue());
         if (m.getNumAttributes() || !infoValue.empty())
         {
-            m_formatter.writeContentTag(m.getName(), m.getAttributes(), m.getValue());
+            m_formatter.writeContentTag(m.getElementName(), m.getAttributes(),
+                                        m.getElementValue());
         }
     }
     else
     {
-        m_formatter.writeStartTag(m.getName(), m.getAttributes());
-        const std::string value{ m.getValue() };
+        m_formatter.writeStartTag(m.getElementName(), m.getAttributes());
+        const std::string value{ m.getElementValue() };
         if (!value.empty())
         {
-            m_formatter.writeContent(m.getValue());
+            m_formatter.writeContent(m.getElementValue());
         }
 
         const auto items = m.getChildrenElements();
@@ -2452,7 +2472,7 @@ void TransformWriter::writeProcessListMetadata(const FormatMetadataImpl& m) cons
             writeProcessListMetadata(*it);
         }
 
-        m_formatter.writeEndTag(m.getName());
+        m_formatter.writeEndTag(m.getElementName());
     }
 }
 

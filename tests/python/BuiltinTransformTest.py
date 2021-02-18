@@ -13,10 +13,10 @@ class BuiltinTransformTest(unittest.TestCase):
     # Default values
     DEFAULT_STYLE = 'IDENTITY'
     DEFAULT_DESC = ''
-    DEFAULT_STR = '<BuiltinTransform style = IDENTITY, direction = forward>'
+    DEFAULT_STR = '<BuiltinTransform direction = forward, style = IDENTITY>'
 
     # One reference style
-    EXAMPLE_STYLE = 'ACES-AP0_to_CIE-XYZ-D65_BFD'
+    EXAMPLE_STYLE = 'UTILITY - ACES-AP0_to_CIE-XYZ-D65_BFD'
     EXAMPLE_DESC = (
         'Convert ACES AP0 primaries to CIE XYZ with a D65 white point with '
         'Bradford adaptation')
