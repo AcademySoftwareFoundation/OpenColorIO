@@ -2,14 +2,13 @@
 # Copyright Contributors to the OpenColorIO Project.
 
 import unittest
-import os
-import sys
 
 import PyOpenColorIO as OCIO
 from UnitTestUtils import TEST_DATAFILES_DIR, TEST_NAMES, TEST_DESCS
+from TransformsBaseTest import TransformsBaseTest
 
 
-class CDLTransformTest(unittest.TestCase):
+class CDLTransformTest(unittest.TestCase, TransformsBaseTest):
     # Default CDL values on initialization.
     DEFAULT_CDL_SLOPE = [1.0, 1.0, 1.0]
     DEFAULT_CDL_OFFSET = [0.0, 0.0, 0.0]
@@ -25,16 +24,13 @@ class CDLTransformTest(unittest.TestCase):
     TEST_CDL_SAT = 6
 
     def setUp(self):
-        self.cdl_tr = OCIO.CDLTransform()
-
-    def tearDown(self):
-        self.cdl_tr = None
+        self.tr = OCIO.CDLTransform()
 
     def test_transform_type(self):
         """
         Test the getTransformType() method.
         """
-        self.assertEqual(self.cdl_tr.getTransformType(), OCIO.TRANSFORM_TYPE_CDL)
+        self.assertEqual(self.tr.getTransformType(), OCIO.TRANSFORM_TYPE_CDL)
 
     def test_id(self):
         """
@@ -42,12 +38,12 @@ class CDLTransformTest(unittest.TestCase):
         """
 
         # Default initialized id value is ""
-        self.assertEqual(self.cdl_tr.getID(), '')
+        self.assertEqual(self.tr.getID(), '')
 
         # Test id name setter and getter.
         for id_ in TEST_NAMES:
-            self.cdl_tr.setID(id_)
-            self.assertEqual(id_, self.cdl_tr.getID())
+            self.tr.setID(id_)
+            self.assertEqual(id_, self.tr.getID())
 
     def test_description(self):
         """
@@ -55,12 +51,12 @@ class CDLTransformTest(unittest.TestCase):
         """
 
         # Default initialized description value is ""
-        self.assertEqual(self.cdl_tr.getFirstSOPDescription(), '')
+        self.assertEqual(self.tr.getFirstSOPDescription(), '')
 
         # Test description setter and getter.
         for desc in TEST_DESCS:
-            self.cdl_tr.setFirstSOPDescription(desc)
-            self.assertEqual(desc, self.cdl_tr.getFirstSOPDescription())
+            self.tr.setFirstSOPDescription(desc)
+            self.assertEqual(desc, self.tr.getFirstSOPDescription())
 
     def test_slope(self):
         """
@@ -68,13 +64,13 @@ class CDLTransformTest(unittest.TestCase):
         """
 
         # Default initialized slope values are [1.0, 1.0, 1.0]
-        slope = self.cdl_tr.getSlope()
+        slope = self.tr.getSlope()
         self.assertEqual(len(slope), 3)
         self.assertListEqual(self.DEFAULT_CDL_SLOPE, slope)
 
         # Test by setting slope values to TEST_CDL_SLOPE.
-        self.cdl_tr.setSlope(self.TEST_CDL_SLOPE)
-        slope = self.cdl_tr.getSlope()
+        self.tr.setSlope(self.TEST_CDL_SLOPE)
+        slope = self.tr.getSlope()
         self.assertEqual(len(slope), 3)
         self.assertListEqual(self.TEST_CDL_SLOPE, slope)
 
@@ -84,13 +80,13 @@ class CDLTransformTest(unittest.TestCase):
         """
 
         # Default initialized offset values are [0.0, 0.0, 0.0]
-        offset = self.cdl_tr.getOffset()
+        offset = self.tr.getOffset()
         self.assertEqual(len(offset), 3)
         self.assertListEqual(self.DEFAULT_CDL_OFFSET, offset)
 
         # Test by setting offset values to TEST_CDL_OFFSET.
-        self.cdl_tr.setOffset(self.TEST_CDL_OFFSET)
-        offset = self.cdl_tr.getOffset()
+        self.tr.setOffset(self.TEST_CDL_OFFSET)
+        offset = self.tr.getOffset()
         self.assertEqual(len(offset), 3)
         self.assertListEqual(self.TEST_CDL_OFFSET, offset)
 
@@ -100,13 +96,13 @@ class CDLTransformTest(unittest.TestCase):
         """
 
         # Default initialized power values are [0.0, 0.0, 0.0]
-        power = self.cdl_tr.getPower()
+        power = self.tr.getPower()
         self.assertEqual(len(power), 3)
         self.assertListEqual(self.DEFAULT_CDL_POWER, power)
 
         # Test by setting power values to TEST_CDL_POWER.
-        self.cdl_tr.setPower(self.TEST_CDL_POWER)
-        power = self.cdl_tr.getPower()
+        self.tr.setPower(self.TEST_CDL_POWER)
+        power = self.tr.getPower()
         self.assertEqual(len(power), 3)
         self.assertListEqual(self.TEST_CDL_POWER, power)
 
@@ -116,24 +112,12 @@ class CDLTransformTest(unittest.TestCase):
         """
 
         # Default initialized saturation value is 1.0
-        saturation = self.cdl_tr.getSat()
+        saturation = self.tr.getSat()
         self.assertEqual(self.DEFAULT_CDL_SAT, saturation)
 
         # Test by setting saturation value to TEST_CDL_SAT.
-        self.cdl_tr.setSat(self.TEST_CDL_SAT)
-        self.assertEqual(self.cdl_tr.getSat(), self.TEST_CDL_SAT)
-
-    def test_direction(self):
-        """
-        Test the setDirection() and getDirection() methods.
-        """
-
-        # Default initialized direction is forward.
-        self.assertEqual(self.cdl_tr.getDirection(), OCIO.TRANSFORM_DIR_FORWARD)
-
-        for direction in OCIO.TransformDirection.__members__.values():
-            self.cdl_tr.setDirection(direction)
-            self.assertEqual(self.cdl_tr.getDirection(), direction)
+        self.tr.setSat(self.TEST_CDL_SAT)
+        self.assertEqual(self.tr.getSat(), self.TEST_CDL_SAT)
 
     def test_style(self):
         """
@@ -141,11 +125,11 @@ class CDLTransformTest(unittest.TestCase):
         """
 
         # Default initialized direction is forward.
-        self.assertEqual(self.cdl_tr.getStyle(), OCIO.CDL_NO_CLAMP)
+        self.assertEqual(self.tr.getStyle(), OCIO.CDL_NO_CLAMP)
 
         for style in OCIO.CDLStyle.__members__.values():
-            self.cdl_tr.setStyle(style)
-            self.assertEqual(self.cdl_tr.getStyle(), style)
+            self.tr.setStyle(style)
+            self.assertEqual(self.tr.getStyle(), style)
 
     def test_create_from_file_cc(self):
         """
@@ -249,39 +233,39 @@ class CDLTransformTest(unittest.TestCase):
         Test the validate() method for slope values. Values must be above 0.
         """
 
-        self.cdl_tr.setSlope(self.TEST_CDL_SLOPE)
-        self.assertIsNone(self.cdl_tr.validate())
+        self.tr.setSlope(self.TEST_CDL_SLOPE)
+        self.assertIsNone(self.tr.validate())
 
         # Exception validation test.
-        self.cdl_tr.setSlope([-1, -2, -3])
+        self.tr.setSlope([-1, -2, -3])
         with self.assertRaises(OCIO.Exception):
-            self.cdl_tr.validate()
+            self.tr.validate()
 
     def test_validate_saturation(self):
         """
         Test the validate() method for saturation value. Value must be above 0.
         """
 
-        self.cdl_tr.setSat(self.TEST_CDL_SAT)
-        self.assertIsNone(self.cdl_tr.validate())
+        self.tr.setSat(self.TEST_CDL_SAT)
+        self.assertIsNone(self.tr.validate())
 
         # Exception validation test
-        self.cdl_tr.setSat(-0.1)
+        self.tr.setSat(-0.1)
         with self.assertRaises(OCIO.Exception):
-            self.cdl_tr.validate()
+            self.tr.validate()
 
     def test_validate_power(self):
         """
         Test the validate() method for power values. Values must be above 0.
         """
 
-        self.cdl_tr.setPower(self.TEST_CDL_POWER)
-        self.assertIsNone(self.cdl_tr.validate())
+        self.tr.setPower(self.TEST_CDL_POWER)
+        self.assertIsNone(self.tr.validate())
 
         # Exception validation test
-        self.cdl_tr.setPower([-1, -2, -3])
+        self.tr.setPower([-1, -2, -3])
         with self.assertRaises(OCIO.Exception):
-            self.cdl_tr.validate()
+            self.tr.validate()
 
     def test_validate_direction(self):
         """
@@ -289,8 +273,8 @@ class CDLTransformTest(unittest.TestCase):
         Direction must be forward or inverse.
         """
 
-        self.cdl_tr.setDirection(OCIO.TRANSFORM_DIR_FORWARD)
-        self.assertIsNone(self.cdl_tr.validate())
+        self.tr.setDirection(OCIO.TRANSFORM_DIR_FORWARD)
+        self.assertIsNone(self.tr.validate())
 
     def test_equality(self):
         """
