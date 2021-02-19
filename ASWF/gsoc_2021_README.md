@@ -50,6 +50,7 @@ ecosystem.
 In 2020, the ASWF projects OpenEXR, OpenTimelineIO, and OpenCue mentored 
 GSoC students. This year, OpenColorIO is the ASWF project that looks forward 
 to welcoming and mentoring GSoC students.
+
 ## Application Instructions for Students
 
 Please review the CONTRIBUTING guidelines thoroughly before applying. OCIO 
