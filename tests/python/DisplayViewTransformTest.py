@@ -2,30 +2,27 @@
 # Copyright Contributors to the OpenColorIO Project.
 
 import unittest
-import os
-import sys
 
 import PyOpenColorIO as OCIO
 from UnitTestUtils import TEST_DATAFILES_DIR, TEST_NAMES, TEST_DESCS
+from TransformsBaseTest import TransformsBaseTest
 
 
-class DisplayViewTransformTest(unittest.TestCase):
+class DisplayViewTransformTest(unittest.TestCase, TransformsBaseTest):
 
-    TEST_SRC     = ['abc', 'raw', '$test']
+    TEST_SRC = ['abc', 'raw', '$test']
     TEST_DISPLAY = ['display1', 'display2']
-    TEST_VIEW    = ['view1', 'view2', 'film']
+    TEST_VIEW = ['view1', 'view2', 'film']
 
     def setUp(self):
-        self.dv_tr = OCIO.DisplayViewTransform()
-
-    def tearDown(self):
-        self.dv_tr = None
+        self.tr = OCIO.DisplayViewTransform()
 
     def test_transform_type(self):
         """
         Test the getTransformType() method.
         """
-        self.assertEqual(self.dv_tr.getTransformType(), OCIO.TRANSFORM_TYPE_DISPLAY_VIEW)
+        self.assertEqual(self.tr.getTransformType(),
+                         OCIO.TRANSFORM_TYPE_DISPLAY_VIEW)
 
     def test_src(self):
         """
@@ -33,12 +30,12 @@ class DisplayViewTransformTest(unittest.TestCase):
         """
 
         # Default initialized src value is "".
-        self.assertEqual('', self.dv_tr.getSrc())
+        self.assertEqual('', self.tr.getSrc())
 
         # Test src setter and getter.
         for src in self.TEST_SRC:
-            self.dv_tr.setSrc(src)
-            self.assertEqual(src, self.dv_tr.getSrc())
+            self.tr.setSrc(src)
+            self.assertEqual(src, self.tr.getSrc())
 
     def test_display(self):
         """
@@ -46,12 +43,12 @@ class DisplayViewTransformTest(unittest.TestCase):
         """
 
         # Default initialized display value is ""
-        self.assertEqual('', self.dv_tr.getDisplay())
+        self.assertEqual('', self.tr.getDisplay())
 
         # Test display setter and getter.
         for display in self.TEST_DISPLAY:
-            self.dv_tr.setDisplay(display)
-            self.assertEqual(display, self.dv_tr.getDisplay())
+            self.tr.setDisplay(display)
+            self.assertEqual(display, self.tr.getDisplay())
 
     def test_view(self):
         """
@@ -59,12 +56,12 @@ class DisplayViewTransformTest(unittest.TestCase):
         """
 
         # Default initialized view value is "".
-        self.assertEqual('', self.dv_tr.getView())
+        self.assertEqual('', self.tr.getView())
 
         # Test view setter and getter.
         for view in self.TEST_VIEW:
-            self.dv_tr.setView(view)
-            self.assertEqual(view, self.dv_tr.getView())
+            self.tr.setView(view)
+            self.assertEqual(view, self.tr.getView())
 
     def test_looksBypass(self):
         """
@@ -72,13 +69,13 @@ class DisplayViewTransformTest(unittest.TestCase):
         """
 
         # Default initialized lookBypass value is False.
-        self.assertEqual(False, self.dv_tr.getLooksBypass())
+        self.assertEqual(False, self.tr.getLooksBypass())
 
         # Test lookBypass setter and getter.
-        self.dv_tr.setLooksBypass(True)
-        self.assertEqual(True, self.dv_tr.getLooksBypass())
-        self.dv_tr.setLooksBypass(False)
-        self.assertEqual(False, self.dv_tr.getLooksBypass())
+        self.tr.setLooksBypass(True)
+        self.assertEqual(True, self.tr.getLooksBypass())
+        self.tr.setLooksBypass(False)
+        self.assertEqual(False, self.tr.getLooksBypass())
 
     def test_dataBypass(self):
         """
@@ -86,72 +83,58 @@ class DisplayViewTransformTest(unittest.TestCase):
         """
 
         # Default initialized dataBypass value is True.
-        self.assertEqual(True, self.dv_tr.getDataBypass())
+        self.assertEqual(True, self.tr.getDataBypass())
 
         # Test dataBypass setter and getter.
-        self.dv_tr.setDataBypass(False)
-        self.assertEqual(False, self.dv_tr.getDataBypass())
-        self.dv_tr.setDataBypass(True)
-        self.assertEqual(True, self.dv_tr.getDataBypass())
-
-
-    def test_direction(self):
-        """
-        Test the setDirection() and getDirection() methods.
-        """
-
-        # Default initialized direction is forward.
-        self.assertEqual(OCIO.TRANSFORM_DIR_FORWARD, self.dv_tr.getDirection())
-
-        for direction in OCIO.TransformDirection.__members__.values():
-            self.dv_tr.setDirection(direction)
-            self.assertEqual(direction, self.dv_tr.getDirection())
+        self.tr.setDataBypass(False)
+        self.assertEqual(False, self.tr.getDataBypass())
+        self.tr.setDataBypass(True)
+        self.assertEqual(True, self.tr.getDataBypass())
 
     def test_validate_src(self):
         """
         Test the validate() method for src value. Value must not be empty.
         """
 
-        self.dv_tr.setSrc('source')
-        self.dv_tr.setDisplay('display')
-        self.dv_tr.setView('view')
-        self.assertIsNone(self.dv_tr.validate())
+        self.tr.setSrc('source')
+        self.tr.setDisplay('display')
+        self.tr.setView('view')
+        self.assertIsNone(self.tr.validate())
 
         # Exception validation test.
-        self.dv_tr.setSrc('')
+        self.tr.setSrc('')
         with self.assertRaises(OCIO.Exception):
-            self.dv_tr.validate()
+            self.tr.validate()
 
     def test_validate_display(self):
         """
         Test the validate() method for display value. Value must not be empty.
         """
 
-        self.dv_tr.setSrc('source')
-        self.dv_tr.setDisplay('display')
-        self.dv_tr.setView('view')
-        self.assertIsNone(self.dv_tr.validate())
+        self.tr.setSrc('source')
+        self.tr.setDisplay('display')
+        self.tr.setView('view')
+        self.assertIsNone(self.tr.validate())
 
         # Exception validation test.
-        self.dv_tr.setDisplay('')
+        self.tr.setDisplay('')
         with self.assertRaises(OCIO.Exception):
-            self.dv_tr.validate()
+            self.tr.validate()
 
     def test_validate_view(self):
         """
         Test the validate() method for view value. Value must not be empty.
         """
 
-        self.dv_tr.setSrc('source')
-        self.dv_tr.setDisplay('display')
-        self.dv_tr.setView('view')
-        self.assertIsNone(self.dv_tr.validate())
+        self.tr.setSrc('source')
+        self.tr.setDisplay('display')
+        self.tr.setView('view')
+        self.assertIsNone(self.tr.validate())
 
         # Exception validation test.
-        self.dv_tr.setView('')
+        self.tr.setView('')
         with self.assertRaises(OCIO.Exception):
-            self.dv_tr.validate()
-
+            self.tr.validate()
 
     def test_validate_direction(self):
         """
@@ -159,13 +142,13 @@ class DisplayViewTransformTest(unittest.TestCase):
         Direction must be forward or inverse.
         """
 
-        self.dv_tr.setSrc('source')
-        self.dv_tr.setDisplay('display')
-        self.dv_tr.setView('view')
+        self.tr.setSrc('source')
+        self.tr.setDisplay('display')
+        self.tr.setView('view')
 
         for direction in OCIO.TransformDirection.__members__.values():
-            self.dv_tr.setDirection(direction)
-            self.assertIsNone(self.dv_tr.validate())
+            self.tr.setDirection(direction)
+            self.assertIsNone(self.tr.validate())
 
     def test_constructor_with_keyword(self):
         """
@@ -280,30 +263,28 @@ named_transforms:
 
         # Dst is a named transform.
         dv_tr.setSrc('in')
-        dv_tr.setView('viewCSNT');
+        dv_tr.setView('viewCSNT')
         proc = cfg.getProcessor(dv_tr)
         group = proc.createGroupTransform()
         groupTransformsList = list(group)
-        self.assertEqual(len(groupTransformsList), 1);
+        self.assertEqual(len(groupTransformsList), 1)
         self.assertIsInstance(groupTransformsList[0], OCIO.CDLTransform)
         metadata = groupTransformsList[0].getFormatMetadata()
         atts = metadata.getAttributes()
-        self.assertEqual('inverse', next(atts)[1] )
+        self.assertEqual('inverse', next(atts)[1])
 
         # View transform is a named transform.
         dv_tr.setSrc('in')
-        dv_tr.setView('viewVTNT');
+        dv_tr.setView('viewVTNT')
         proc = cfg.getProcessor(dv_tr)
         group = proc.createGroupTransform()
         groupTransformsList = list(group)
-        self.assertEqual(len(groupTransformsList), 2);
+        self.assertEqual(len(groupTransformsList), 2)
         self.assertIsInstance(groupTransformsList[0], OCIO.CDLTransform)
         metadata = groupTransformsList[0].getFormatMetadata()
         atts = metadata.getAttributes()
-        self.assertEqual('forward', next(atts)[1] )
+        self.assertEqual('forward', next(atts)[1])
         self.assertIsInstance(groupTransformsList[1], OCIO.CDLTransform)
         metadata = groupTransformsList[1].getFormatMetadata()
         atts = metadata.getAttributes()
-        self.assertEqual('out cs from ref', next(atts)[1] )
-
-
+        self.assertEqual('out cs from ref', next(atts)[1])

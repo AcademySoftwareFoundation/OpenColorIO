@@ -48,6 +48,13 @@ The following environment variables may be used with OpenColorIO:
    Overrides the optimization settings being used by an application, for 
    troubleshooting purposes.  The complete list of flags is in OpenColorTypes.h.
 
+.. envvar:: OCIO_USER_CATEGORIES
+
+   Specify the color space categories that the application should show in
+   color space menus.  Note that this requires the application developer to
+   implement support for categories (the easiest way is to use the code in
+   apphelpers/ColorSpaceHelpers.h).
+
 
 .. include:: tool_overview.rst
 

@@ -14,3 +14,4 @@ Configurations
    nuke_default
    spi_anim
    spi_vfx
+   ocio_v2_demo
