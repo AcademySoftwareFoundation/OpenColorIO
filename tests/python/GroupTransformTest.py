@@ -4,22 +4,20 @@
 import unittest
 
 import PyOpenColorIO as OCIO
+from TransformsBaseTest import TransformsBaseTest
 
 
-class GroupTransformTest(unittest.TestCase):
+class GroupTransformTest(unittest.TestCase, TransformsBaseTest):
     TEST_DIRECTION = OCIO.TRANSFORM_DIR_INVERSE
 
     def setUp(self):
-        self.group_tr = OCIO.GroupTransform()
-
-    def tearDown(self):
-        self.group_tr = None
+        self.tr = OCIO.GroupTransform()
 
     def test_transform_type(self):
         """
         Test the getTransformType() method.
         """
-        self.assertEqual(self.group_tr.getTransformType(), OCIO.TRANSFORM_TYPE_GROUP)
+        self.assertEqual(self.tr.getTransformType(), OCIO.TRANSFORM_TYPE_GROUP)
 
     def test_append_transform(self):
         """
@@ -27,17 +25,18 @@ class GroupTransformTest(unittest.TestCase):
         """
 
         # Default GroupTransform length should be 0 without append.
-        self.assertEqual(self.group_tr.__len__(), 0)
+        self.assertEqual(self.tr.__len__(), 0)
 
         matrix_tr = OCIO.MatrixTransform()
-        ff_tr = OCIO.FixedFunctionTransform(OCIO.FIXED_FUNCTION_ACES_RED_MOD_03)
+        ff_tr = OCIO.FixedFunctionTransform(
+            OCIO.FIXED_FUNCTION_ACES_RED_MOD_03)
 
-        self.group_tr.appendTransform(matrix_tr)
-        self.group_tr.appendTransform(ff_tr)
+        self.tr.appendTransform(matrix_tr)
+        self.tr.appendTransform(ff_tr)
 
-        self.assertEqual(self.group_tr.__len__(), 2)
+        self.assertEqual(self.tr.__len__(), 2)
 
-        iterator = self.group_tr.__iter__()
+        iterator = self.tr.__iter__()
         for i in [matrix_tr, ff_tr]:
             self.assertEqual(i, next(iterator))
 
@@ -47,18 +46,19 @@ class GroupTransformTest(unittest.TestCase):
         """
 
         # Default GroupTransform length should be 0 without prepend.
-        self.assertEqual(self.group_tr.__len__(), 0)
+        self.assertEqual(self.tr.__len__(), 0)
 
         matrix_tr = OCIO.MatrixTransform()
-        ff_tr = OCIO.FixedFunctionTransform(OCIO.FIXED_FUNCTION_ACES_RED_MOD_03)
+        ff_tr = OCIO.FixedFunctionTransform(
+            OCIO.FIXED_FUNCTION_ACES_RED_MOD_03)
 
-        self.group_tr.prependTransform(matrix_tr)
-        self.group_tr.prependTransform(ff_tr)
+        self.tr.prependTransform(matrix_tr)
+        self.tr.prependTransform(ff_tr)
 
-        self.assertEqual(self.group_tr.__len__(), 2)
+        self.assertEqual(self.tr.__len__(), 2)
 
         # FixedFunctionTransform goes in front due to prepend.
-        iterator = self.group_tr.__iter__()
+        iterator = self.tr.__iter__()
         for i in [ff_tr, matrix_tr]:
             self.assertEqual(i, next(iterator))
 
@@ -67,7 +67,7 @@ class GroupTransformTest(unittest.TestCase):
         Test the getFormatMetadata() method.
         """
 
-        format_metadata = self.group_tr.getFormatMetadata()
+        format_metadata = self.tr.getFormatMetadata()
         self.assertIsInstance(format_metadata, OCIO.FormatMetadata)
         self.assertEqual(format_metadata.getElementName(), 'ROOT')
         self.assertEqual(format_metadata.getName(), '')
@@ -77,32 +77,14 @@ class GroupTransformTest(unittest.TestCase):
         self.assertEqual(format_metadata.getName(), 'name')
         self.assertEqual(format_metadata.getID(), 'id')
 
-    def test_direction(self):
-        """
-        Test the setDirection() and getDirection() methods.
-        """
-
-        # Default initialized direction is forward.
-        self.assertEqual(self.group_tr.getDirection(),
-                         OCIO.TRANSFORM_DIR_FORWARD)
-
-        for direction in OCIO.TransformDirection.__members__.values():
-            self.group_tr.setDirection(direction)
-            self.assertEqual(self.group_tr.getDirection(), direction)
-
-        # Wrong type tests.
-        for invalid in (None, 1, 'test'):
-            with self.assertRaises(TypeError):
-                self.group_tr.setDirection(invalid)
-
     def test_validate_direction(self):
         """
         Test the validate() method for direction.
         Direction must be forward or inverse.
         """
 
-        self.group_tr.setDirection(OCIO.TRANSFORM_DIR_FORWARD)
-        self.assertIsNone(self.group_tr.validate())
+        self.tr.setDirection(OCIO.TRANSFORM_DIR_FORWARD)
+        self.assertIsNone(self.tr.validate())
 
     def test_constructor_with_keywords(self):
         """
@@ -160,7 +142,7 @@ class GroupTransformTest(unittest.TestCase):
         fmd = mat.getFormatMetadata()
         fmd.setID('matID')
         fmd.setName('matName')
-        fmd.addChildElement('Description','Sample matrix.')
+        fmd.addChildElement('Description', 'Sample matrix.')
         grp.appendTransform(mat)
 
         range = OCIO.RangeTransform()
@@ -171,12 +153,12 @@ class GroupTransformTest(unittest.TestCase):
         fmd = range.getFormatMetadata()
         fmd.setID('rangeID')
         fmd.setName('rangeName')
-        fmd.addChildElement('Description','Sample range.')
+        fmd.addChildElement('Description', 'Sample range.')
         grp.appendTransform(range)
 
         fmd = grp.getFormatMetadata()
         fmd.setID('clfID')
-        fmd.addChildElement('Description','Sample clf file.')
+        fmd.addChildElement('Description', 'Sample clf file.')
 
         self.assertEqual(grp.write(formatName='Academy/ASC Common LUT Format', config=config),
                          """<?xml version="1.0" encoding="UTF-8"?>
@@ -199,4 +181,3 @@ class GroupTransformTest(unittest.TestCase):
     </Range>
 </ProcessList>
 """)
-
