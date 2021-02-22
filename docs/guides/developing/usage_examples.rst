@@ -105,12 +105,8 @@ Python
 
 .. _usage_displayimage:
 
-Displaying an image, using the CPU (simple ColorSpace conversion)
-*****************************************************************
-Converting an image for display is similar to a normal color space conversion.
-The only difference is that one has to first determine the name of the display
-(destination) ColorSpace by querying the config with the device name and
-transform name. 
+Displaying an image, using the CPU using getProcessor
+*****************************************************
 
 #. **Get the Config.**
    See :ref:`usage_applybasic` for details.
@@ -175,43 +171,9 @@ Python
    except Exception, e:
        print "OpenColorIO Error",e
 
-Displaying an image, using the CPU (Full Display Pipeline)
-**********************************************************
 
-This alternative version allows for a more complex displayTransform, allowing
-for all of the controls typically added to real-world viewer interfaces. For
-example, options are allowed to control which channels (red, green, blue,
-alpha, luma) are visible, as well as allowing for optional color corrections
-(such as an exposure offset in scene linear). If you are using the OCIO Nuke
-plugins, the OCIODisplay node performs these steps internally.
-
-#. **Get the Config.**
-   See :ref:`usage_applybasic` for details.
-#. **Lookup the display ColorSpace.**
-   See :ref:`usage_displayimage` for details
-#. **Create a new DisplayTransform.**
-   This transform will embody the full 'display' pipeline you wish to control.
-   The user is required to call
-   :cpp:func:`DisplayTransform::setInputColorSpaceName` to set the input
-   ColorSpace, as well as
-   :cpp:func:`DisplayTransform::setDisplayColorSpaceName` (with the results of
-   :cpp:func:`Config::getDisplayColorSpaceName`).
-#. **Set any additional DisplayTransform options.**
-   If the user wants to specify a channel swizzle, a scene-linear exposure
-   offset, an artistic look, this is the place to add it. See below for an
-   example. Note that although we provide recommendations for display, any
-   transforms are allowed to be added into any of the slots. So if for your app
-   you want to add 3 transforms into a particular slot (chained together), you
-   are free to wrap them in a :cpp:class:`GroupTransform` and set it
-   accordingly!
-#. **Get the processor from the Config.**
-   The processor is then queried from the config passing the new
-   :cpp:class:`DisplayTransform` as the argument.   Once the processor has been
-   returned, the original :cpp:class:`DisplayTransform` is no longer necessary
-   to hold onto. (Though if you'd like to for re-use, there is no problem doing
-   so).
-#. **Convert your image, using the processor.**
-   See :ref:`usage_applybasic` for details.
+Displaying an image, using the CPU using DisplayViewTransform
+*************************************************************
 
 C++
 +++
@@ -225,8 +187,8 @@ C++
    const char * display = config->getDefaultDisplay();
    const char * view = config->getDefaultView(display);
    
-   // Step 3: Create a DisplayTransform, and set the input and display ColorSpaces
-   // (This example assumes the input is scene linear. Adapt as needed.)
+   // Step 3: Create a DisplayViewTransform, and set the input and display ColorSpaces
+   // (This example assumes the input is a role. Adapt as needed.)
    
    OCIO::DisplayTransformRcPtr transform = OCIO::DisplayViewTransform::Create();
    transform->setSrc( OCIO::ROLE_SCENE_LINEAR );
@@ -255,11 +217,11 @@ Python
     display = config.getDefaultDisplay()
     view = config.getDefaultView(display)
 
-    # Step 3: Create a DisplayTransform, and set the input, display, and view
-    # (This example assumes the input is scene linear. Adapt as needed.)
+    # Step 3: Create a DisplayViewTransform, and set the input, display, and view
+    # (This example assumes the input is a role. Adapt as needed.)
 
-    transform = OCIO.DisplayTransform()
-    transform.setInputColorSpaceName(OCIO.Constants.ROLE_SCENE_LINEAR)
+    transform = OCIO.DisplayViewTransform()
+    transform.setSrc(OCIO.Constants.ROLE_SCENE_LINEAR)
     transform.setDisplay(display)
     transform.setView(view)
 
@@ -272,11 +234,48 @@ Python
     print cpu.applyRGB(imageData)
 
 
-Displaying an image, using the GPU
-**********************************
+Displaying an image, using the GPU (Full Display Pipeline)
+**********************************************************
 
-Applying OpenColorIO's color processing using GPU processing is very customizable
-but an example helper class is provided for use with OpenGL.
+This alternative version allows for a more complex viewing pipeline, allowing
+for all of the controls typically added to real-world viewer interfaces. For
+example, options are allowed to control which channels (red, green, blue,
+alpha, luma) are visible, as well as allowing for optional color corrections
+(such as an exposure offset in scene linear). 
+
+#. **Get the Config.**
+   See :ref:`usage_applybasic` for details.
+#. **Lookup the display ColorSpace.**
+   See :ref:`usage_displayimage` for details
+#. **Create a new DisplayViewTransform.**
+   This transform has the basic conversion from the reference space to the 
+   display but without the extras such as the channel swizzling and exposure
+   control.
+   The user is required to call
+   :cpp:func:`DisplayViewTransform::setSrc` to set the input
+   ColorSpace, as well as
+   :cpp:func:`DisplayViewTransform::setDisplay` and.
+   :cpp:func:`DisplayViewTransform::setView`
+#. **Create a new LegacyViewingPipeline.**
+   This transform will embody the full 'display' pipeline you wish to control.
+   The user is required to call
+   :cpp:func:`LegacyViewingPipeline::setDisplayViewTransform` to set the
+   DisplayViewTransform.
+#. **Set any additional LegacyViewingPipeline options.**
+   If the user wants to specify a channel swizzle, a scene-linear exposure
+   offset, an artistic look, this is the place to add it. See ociodisplay for an
+   example. Note that although we provide recommendations for display, any
+   transforms are allowed to be added into any of the slots. So if for your app
+   you want to add 3 transforms into a particular slot (chained together), you
+   are free to wrap them in a :cpp:class:`GroupTransform` and set it
+   accordingly!
+#. **Get the processor from the LegacyViewingPipeline.**
+   The processor is then queried from the LegacyViewingPipeline.
+#. **Convert your image, using the processor.**
+   See :ref:`usage_applybasic` for details for using the CPU.
+
+Applying OpenColorIO's color processing using the GPU is very customizable
+and an example helper class is provided for use with OpenGL.
 
 #. **Get the Processor and GPU Processor.**
    This portion of the pipeline is identical to the CPU approach. Just get the
@@ -304,7 +303,7 @@ This example is available as a working app in the OCIO source: src/apps/ociodisp
    transform->setDisplay(display);
    transform->setView(view);
 
-   OCIO::ViewingPipeline vpt;
+   OCIO::LegacyViewingPipeline vpt;
    vpt.setDisplayViewTransform(transform);
    vpt.setLooksOverrideEnabled(true);
    vpt.setLooksOverride(look);
