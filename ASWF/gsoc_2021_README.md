@@ -29,7 +29,7 @@ to see your defined color transform “universe”. You can then direct the
 transformation of image data from one defined OCIO Color Space to another, in 
 addition to the other transforms documented elsewhere - the options are endless!
 
-## About the Academt Software Foundation
+## About the Academy Software Foundation
 
 The Academy Software Foundation (ASWF) is collaboration between the Linux
 Foundation and the Academy of Motion Picture Arts and Sciences, serving as
