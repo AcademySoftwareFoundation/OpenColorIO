@@ -271,7 +271,7 @@ static PF_Err DrawEvent(
             const float text_height = bot.FontSize();
             
             const int config_menu_width = MENU_WIDTH;
-            const int menu_width = MAX(panel_width - (MENUS_INDENT_H + MENU_LABEL_WIDTH + MENU_LABEL_SPACE) - RIGHT_MARGIN, MENU_WIDTH);;
+            const int menu_width = MAX(panel_width - (MENUS_INDENT_H + MENU_LABEL_WIDTH + MENU_LABEL_SPACE) - RIGHT_MARGIN, MENU_WIDTH);
             
             if(in_data->appl_id != 'FXTC')
             {
