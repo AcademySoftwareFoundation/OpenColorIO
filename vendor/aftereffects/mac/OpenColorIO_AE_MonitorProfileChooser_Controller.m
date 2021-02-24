@@ -3,8 +3,6 @@
 
 #import "OpenColorIO_AE_MonitorProfileChooser_Controller.h"
 
-//#import <ApplicationServices/ApplicationServices.h>
-
 
 typedef struct {
     NSMutableArray<NSString *>                  *name_array;
