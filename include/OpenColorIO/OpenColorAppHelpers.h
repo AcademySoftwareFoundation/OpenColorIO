@@ -227,7 +227,7 @@ public:
      * Get the name to use in the menu UI.  This might be different from the config name, for
      * example in the case of roles.  Will be empty if the index is out of range.
      */
-    virtual const char * getUIName(size_t idx) const noexcept = 0;;
+    virtual const char * getUIName(size_t idx) const noexcept = 0;
 
     /**
      * Get the index of the element of a given name. Return (size_t)-1 name if NULL or empty, or if
