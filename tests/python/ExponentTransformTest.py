@@ -4,50 +4,31 @@
 import unittest
 
 import PyOpenColorIO as OCIO
+from TransformsBaseTest import TransformsBaseTest
 
 
-class ExponentTransformTest(unittest.TestCase):
+class ExponentTransformTest(unittest.TestCase, TransformsBaseTest):
     TEST_ID = 'sample exponent'
     TEST_VALUES = [1, 2, 3, 4]
     TEST_NEGATIVE_STYLE = OCIO.NEGATIVE_MIRROR
     TEST_DIRECTION = OCIO.TRANSFORM_DIR_INVERSE
 
     def setUp(self):
-        self.exp_tr = OCIO.ExponentTransform()
-
-    def tearDown(self):
-        self.exp_tr = None
+        self.tr = OCIO.ExponentTransform()
 
     def test_transform_type(self):
         """
         Test the getTransformType() method.
         """
-        self.assertEqual(self.exp_tr.getTransformType(), OCIO.TRANSFORM_TYPE_EXPONENT)
-
-    def test_direction(self):
-        """
-        Test the setDirection() and getDirection() methods.
-        """
-
-        # Default initialized direction is forward.
-        self.assertEqual(self.exp_tr.getDirection(),
-                         OCIO.TRANSFORM_DIR_FORWARD)
-
-        for direction in OCIO.TransformDirection.__members__.values():
-            self.exp_tr.setDirection(direction)
-            self.assertEqual(self.exp_tr.getDirection(), direction)
-
-        # Wrong type tests.
-        for invalid in (None, 1, 'test'):
-            with self.assertRaises(TypeError):
-                self.exp_tr.setDirection(invalid)
+        self.assertEqual(self.tr.getTransformType(),
+                         OCIO.TRANSFORM_TYPE_EXPONENT)
 
     def test_format_metadata(self):
         """
         Test the getFormatMetadata() method.
         """
 
-        format_metadata = self.exp_tr.getFormatMetadata()
+        format_metadata = self.tr.getFormatMetadata()
         format_metadata.setName(self.TEST_ID)
         self.assertIsInstance(format_metadata, OCIO.FormatMetadata)
         self.assertEqual(format_metadata.getName(), self.TEST_ID)
@@ -60,17 +41,17 @@ class ExponentTransformTest(unittest.TestCase):
         """
 
         # Default initialized negative style is clamp.
-        self.assertEqual(self.exp_tr.getNegativeStyle(), OCIO.NEGATIVE_CLAMP)
+        self.assertEqual(self.tr.getNegativeStyle(), OCIO.NEGATIVE_CLAMP)
 
         # Linear negative extrapolation is not valid for basic exponent style.
         for negative_style in OCIO.NegativeStyle.__members__.values():
             if negative_style != OCIO.NEGATIVE_LINEAR:
-                self.exp_tr.setNegativeStyle(negative_style)
+                self.tr.setNegativeStyle(negative_style)
                 self.assertEqual(
-                    self.exp_tr.getNegativeStyle(), negative_style)
+                    self.tr.getNegativeStyle(), negative_style)
             else:
                 with self.assertRaises(OCIO.Exception):
-                    self.exp_tr.setNegativeStyle(negative_style)
+                    self.tr.setNegativeStyle(negative_style)
 
     def test_values(self):
         """
@@ -78,15 +59,15 @@ class ExponentTransformTest(unittest.TestCase):
         """
 
         # Default initialized vars value is [1, 1, 1, 1]
-        self.assertEqual(self.exp_tr.getValue(), [1, 1, 1, 1])
+        self.assertEqual(self.tr.getValue(), [1, 1, 1, 1])
 
-        self.exp_tr.setValue(self.TEST_VALUES)
-        self.assertEqual(self.exp_tr.getValue(), self.TEST_VALUES)
+        self.tr.setValue(self.TEST_VALUES)
+        self.assertEqual(self.tr.getValue(), self.TEST_VALUES)
 
         # Wrong type tests.
         for invalid in (None, 'hello', [1, 2, 3]):
             with self.assertRaises(TypeError):
-                self.exp_tr.setValue(invalid)
+                self.tr.setValue(invalid)
 
     def test_validate(self):
         """
@@ -94,21 +75,21 @@ class ExponentTransformTest(unittest.TestCase):
         """
 
         # Validate should pass with default values.
-        self.exp_tr.validate()
+        self.tr.validate()
 
         # Validate should pass with positive values.
-        self.exp_tr.setValue([1, 2, 3, 4])
-        self.exp_tr.validate()
+        self.tr.setValue([1, 2, 3, 4])
+        self.tr.validate()
 
         # Validate should fail with lower bound value of 0.01.
-        self.exp_tr.setValue([-1, -2, -3, -4])
+        self.tr.setValue([-1, -2, -3, -4])
         with self.assertRaises(OCIO.Exception):
-            self.exp_tr.validate()
+            self.tr.validate()
 
         # Validate should fail with higher bound value of 100.
-        self.exp_tr.setValue([101, 1, 1, 1])
+        self.tr.setValue([101, 1, 1, 1])
         with self.assertRaises(OCIO.Exception):
-            self.exp_tr.validate()
+            self.tr.validate()
 
     def test_constructor_with_keyword(self):
         """
