@@ -52,4 +52,4 @@ hugo -D --themesDir ../..
 
 It should appear in a folder labelled "public"
 
-Once your PR has been accepted for the changes to the master branch submit another PR replacing the content of the gh-pages branch with the content from Hugo's output.  Note that the old site and documentation still live in the gh-pages branch in the `old/` directly, when you replace the contents of the branch please be sure to keep that entire folder as is.
+Once your PR has been accepted for the changes to the master branch submit another PR replacing the content of the gh-pages branch with the content from Hugo's output.  Note that the old site and documentation still live in the gh-pages branch in the `old/` directory, when you replace the contents of the branch please be sure to keep that entire folder as is.
