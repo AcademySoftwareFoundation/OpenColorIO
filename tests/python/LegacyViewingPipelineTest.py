@@ -210,7 +210,7 @@ class LegacyViewingPipelineTest(unittest.TestCase):
 
         mat = OCIO.MatrixTransform.Scale([1.1, 1.2, 1.1, 1.])
         pipeline.setChannelView(mat)
-        ff = OCIO.FixedFunctionTransform()
+        ff = OCIO.FixedFunctionTransform(OCIO.FIXED_FUNCTION_ACES_RED_MOD_03)
         pipeline.setLinearCC(ff)
 
         proc = pipeline.getProcessor(cfg)

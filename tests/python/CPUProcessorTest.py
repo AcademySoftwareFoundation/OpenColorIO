@@ -101,7 +101,7 @@ class CPUProcessorTest(unittest.TestCase):
         # BIT_DEPTH_F32
         cls.float_rgb_1d = np.concatenate((
             [-65504.0], 
-            np.flip(-log_range, 0), 
+            np.flipud(-log_range), 
             [0.0], 
             log_range, 
             [65504.0]
@@ -133,9 +133,8 @@ class CPUProcessorTest(unittest.TestCase):
         cls.uint16_rgb_1d = np.linspace(
             0, 2**16-1, 
             num=63, 
-            endpoint=True, 
-            dtype=np.uint16
-        )
+            endpoint=True
+        ).astype(np.uint16)
         cls.uint16_rgb_2d = cls.uint16_rgb_1d.reshape([21, 3])
         cls.uint16_rgb_3d = cls.uint16_rgb_1d.reshape([7, 3, 3])
 
@@ -151,9 +150,7 @@ class CPUProcessorTest(unittest.TestCase):
         cls.uint8_rgb_1d = np.linspace(
             0, 2**8-1, 
             num=63, 
-            endpoint=True, 
-            dtype=np.uint8
-        )
+            endpoint=True).astype(np.uint8)
         cls.uint8_rgb_2d = cls.uint8_rgb_1d.reshape([21, 3])
         cls.uint8_rgb_3d = cls.uint8_rgb_1d.reshape([7, 3, 3])
 

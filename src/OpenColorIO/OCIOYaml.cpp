@@ -1415,11 +1415,12 @@ inline void save(YAML::Emitter& out, ConstFileTransformRcPtr t, unsigned int maj
 
 inline void load(const YAML::Node& node, FixedFunctionTransformRcPtr& t)
 {
-    t = FixedFunctionTransform::Create();
+    t = FixedFunctionTransform::Create(FIXED_FUNCTION_ACES_RED_MOD_03);
 
     CheckDuplicates(node);
 
     std::string key;
+    bool styleFound{ false };
 
     for (const auto & iter : node)
     {
@@ -1441,6 +1442,7 @@ inline void load(const YAML::Node& node, FixedFunctionTransformRcPtr& t)
             std::string style;
             load(second, style);
             t->setStyle( FixedFunctionStyleFromString(style.c_str()) );
+            styleFound = true;
         }
         else if(key == "direction")
         {
@@ -1458,6 +1460,10 @@ inline void load(const YAML::Node& node, FixedFunctionTransformRcPtr& t)
         {
             LogUnknownKeyWarning(node.Tag(), first);
         }
+    }
+    if (!styleFound)
+    {
+        throwError(node, "style value is missing.");
     }
 }
 
@@ -2554,7 +2560,8 @@ inline void save(YAML::Emitter& out, ConstLogAffineTransformRcPtr t)
 
 inline void load(const YAML::Node & node, LogCameraTransformRcPtr & t)
 {
-    t = LogCameraTransform::Create();
+    double linBreak[3] = { 0.0, 0.0, 0.0 };
+    t = LogCameraTransform::Create(linBreak);
 
     CheckDuplicates(node);
 
@@ -2564,7 +2571,6 @@ inline void load(const YAML::Node & node, LogCameraTransformRcPtr & t)
     double linSlope[3] = { 1.0, 1.0, 1.0 };
     double linOffset[3] = { 0.0, 0.0, 0.0 };
     double logOffset[3] = { 0.0, 0.0, 0.0 };
-    double linBreak[3] = { 0.0, 0.0, 0.0 };
     double linearSlope[3] = { 1.0, 1.0, 1.0 };
     bool linBreakFound = false;
     bool linearSlopeFound = false;

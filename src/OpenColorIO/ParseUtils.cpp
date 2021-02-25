@@ -350,6 +350,13 @@ const char * FixedFunctionStyleToString(FixedFunctionStyle style)
         case FIXED_FUNCTION_XYZ_TO_xyY:          return "XYZ_TO_xyY";
         case FIXED_FUNCTION_XYZ_TO_uvY:          return "XYZ_TO_uvY";
         case FIXED_FUNCTION_XYZ_TO_LUV:          return "XYZ_TO_LUV";
+        case FIXED_FUNCTION_ACES_GAMUTMAP_02:
+        case FIXED_FUNCTION_ACES_GAMUTMAP_07:
+        case FIXED_FUNCTION_ACES_GAMUTMAP_13:
+            throw Exception("Unimplemented fixed function types: "
+                            "FIXED_FUNCTION_ACES_GAMUTMAP_02, "
+                            "FIXED_FUNCTION_ACES_GAMUTMAP_07, and "
+                            "FIXED_FUNCTION_ACES_GAMUTMAP_13.");
     }
 
     // Default style is meaningless.
@@ -486,15 +493,18 @@ NegativeStyle NegativeStyleFromString(const char * style)
 }
 
 // Define variables declared in OpenColorTypes.h.
-const char * ROLE_DEFAULT         = "default";
-const char * ROLE_REFERENCE       = "reference";
-const char * ROLE_DATA            = "data";
-const char * ROLE_COLOR_PICKING   = "color_picking";
-const char * ROLE_SCENE_LINEAR    = "scene_linear";
-const char * ROLE_COMPOSITING_LOG = "compositing_log";
-const char * ROLE_COLOR_TIMING    = "color_timing";
-const char * ROLE_TEXTURE_PAINT   = "texture_paint";
-const char * ROLE_MATTE_PAINT     = "matte_paint";
+const char * ROLE_DEFAULT             = "default";
+const char * ROLE_REFERENCE           = "reference";
+const char * ROLE_DATA                = "data";
+const char * ROLE_COLOR_PICKING       = "color_picking";
+const char * ROLE_SCENE_LINEAR        = "scene_linear";
+const char * ROLE_COMPOSITING_LOG     = "compositing_log";
+const char * ROLE_COLOR_TIMING        = "color_timing";
+const char * ROLE_TEXTURE_PAINT       = "texture_paint";
+const char * ROLE_MATTE_PAINT         = "matte_paint";
+const char * ROLE_RENDERING           = "rendering";
+const char * ROLE_INTERCHANGE_SCENE   = "aces_interchange";
+const char * ROLE_INTERCHANGE_DISPLAY = "cie_xyz_d65_interchange";
 
 namespace
 {

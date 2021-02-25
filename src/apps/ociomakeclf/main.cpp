@@ -55,8 +55,7 @@ void CreateOutputLutFile(const std::string & outLutFilepath, OCIO::ConstGroupTra
         try
         {
             const auto group = optProcessor->createGroupTransform();
-            group->write(config, config->getCurrentContext(),
-                         "Academy/ASC Common LUT Format", outfs);
+            group->write(config, "Academy/ASC Common LUT Format", outfs);
         }
         catch (const OCIO::Exception &)
         {

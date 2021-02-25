@@ -114,6 +114,7 @@ if(OCIO_ADD_EXTRA_BUILTINS)
     set(SOURCES_BUILTINS
         transforms/builtins/ArriCameras.cpp
         transforms/builtins/CanonCameras.cpp
+        transforms/builtins/Displays.cpp
         transforms/builtins/PanasonicCameras.cpp
         transforms/builtins/RedCameras.cpp
         transforms/builtins/SonyCameras.cpp

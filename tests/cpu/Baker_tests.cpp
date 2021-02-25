@@ -57,7 +57,6 @@ void CompareFloats(const std::string& floats1, const std::string& floats2)
 
 OCIO_ADD_TEST(Baker, bake)
 {
-    // SSE aware test, similar to python test.
     OCIO::BakerRcPtr bake = OCIO::Baker::Create();
 
     static const std::string myProfile =

@@ -17,8 +17,9 @@
 #ifdef ADD_EXTRA_BUILTINS
 
 #include "transforms/builtins/ArriCameras.h"
-#include "transforms/builtins/PanasonicCameras.h"
 #include "transforms/builtins/CanonCameras.h"
+#include "transforms/builtins/Displays.h"
+#include "transforms/builtins/PanasonicCameras.h"
 #include "transforms/builtins/RedCameras.h"
 #include "transforms/builtins/SonyCameras.h"
 
@@ -34,7 +35,7 @@ static BuiltinTransformRegistryRcPtr globalRegistry;
 static Mutex globalRegistryMutex;
 
 
-void AddCameraBuiltins(BuiltinTransformRegistryImpl & registry)
+void AddExtraBuiltins(BuiltinTransformRegistryImpl & registry)
 {
 #ifdef ADD_EXTRA_BUILTINS
 
@@ -44,6 +45,8 @@ void AddCameraBuiltins(BuiltinTransformRegistryImpl & registry)
     CAMERA::PANASONIC::RegisterAll(registry);
     CAMERA::RED::RegisterAll(registry);
     CAMERA::SONY::RegisterAll(registry);
+    // Other transforms.
+    DISPLAY::RegisterAll(registry);
 
 #endif // ADD_EXTRA_BUILTINS
 }
@@ -125,7 +128,7 @@ void BuiltinTransformRegistryImpl::registerAll() noexcept
 
     ACES::RegisterAll(*this);
 
-    AddCameraBuiltins(*this);
+    AddExtraBuiltins(*this);
 }
 
 

@@ -121,18 +121,18 @@ void LogAffineTransformImpl::getLinSideOffsetValue(double(&values)[3]) const noe
 
 std::ostream & operator<< (std::ostream & os, const LogAffineTransform & t)
 {
-    os << "<LogAffineTransform ";
-    os << "base=" << t.getBase() << ", ";
+    os << "<LogAffineTransform";
+    os << " direction=" << TransformDirectionToString(t.getDirection());
+    os << ", base=" << t.getBase();
     double values[3];
     t.getLogSideSlopeValue(values);
-    os << "logSideSlope=" << values[0] << " " << values[1] << " " << values[2] << ", ";
+    os << ", logSideSlope=" << values[0] << " " << values[1] << " " << values[2];
     t.getLogSideOffsetValue(values);
-    os << "logSideOffset=" << values[0] << " " << values[1] << " " << values[2] << ", ";
+    os << ", logSideOffset=" << values[0] << " " << values[1] << " " << values[2];
     t.getLinSideSlopeValue(values);
-    os << "linSideSlope=" << values[0] << " " << values[1] << " " << values[2] << ", ";
+    os << ", linSideSlope=" << values[0] << " " << values[1] << " " << values[2];
     t.getLinSideOffsetValue(values);
-    os << "linSideOffset=" << values[0] << " " << values[1] << " " << values[2] << ", ";
-    os << "direction=" << TransformDirectionToString(t.getDirection());
+    os << ", linSideOffset=" << values[0] << " " << values[1] << " " << values[2];
     os << ">";
 
     return os;

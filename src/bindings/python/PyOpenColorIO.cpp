@@ -10,6 +10,7 @@ PYBIND11_MODULE(PyOpenColorIO, m)
 {
     m.doc() = DOC(PyOpenColorIO);
 
+    // OpenColorIOTypes
     bindPyTypes(m);
 
     // Exceptions
@@ -26,6 +27,15 @@ PYBIND11_MODULE(PyOpenColorIO, m)
     clsException.doc() = DOC(Exception);
     clsExceptionMissingFile.doc() = DOC(ExceptionMissingFile);
 #endif
+
+    // Global variables
+    m.attr("__author__")    = "OpenColorIO Contributors";
+    m.attr("__email__")     = "ocio-dev@lists.aswf.io";
+    m.attr("__license__")   = "SPDX-License-Identifier: BSD-3-Clause";
+    m.attr("__copyright__") = "Copyright Contributors to the OpenColorIO Project";
+    m.attr("__version__")   = OCIO_VERSION_FULL_STR;
+    m.attr("__status__")    = std::string(OCIO_VERSION_STATUS_STR).empty() ? "Production" : OCIO_VERSION_STATUS_STR;
+    m.attr("__doc__")       = "OpenColorIO (OCIO) is a complete color management solution geared towards motion picture production";
 
     // Global functions
     m.def("ClearAllCaches", &ClearAllCaches,
@@ -57,35 +67,33 @@ PYBIND11_MODULE(PyOpenColorIO, m)
     m.def("IsEnvVariablePresent", &IsEnvVariablePresent, "name"_a,
           DOC(PyOpenColorIO, IsEnvVariablePresent));
 
-    // Global variables
-    m.attr("__author__")    = "OpenColorIO Contributors";
-    m.attr("__email__")     = "ocio-dev@lists.aswf.io";
-    m.attr("__license__")   = "SPDX-License-Identifier: BSD-3-Clause";
-    m.attr("__copyright__") = "Copyright Contributors to the OpenColorIO Project";
-    m.attr("__version__")   = OCIO_VERSION_FULL_STR;
-    m.attr("__status__")    = std::string(OCIO_VERSION_STATUS_STR).empty() ? "Production" : OCIO_VERSION_STATUS_STR;
-    m.attr("__doc__")       = "OpenColorIO (OCIO) is a complete color management solution geared towards motion picture production";
-
-    // Classes
-    bindPyTransform(m);
-    bindPyConfig(m);
-    bindPyFileRules(m);
+    // OpenColorIO
+    bindPyBaker(m);
     bindPyColorSpace(m);
     bindPyColorSpaceSet(m);
-    bindPyLook(m);
-    bindPyViewTransform(m);
-    bindPyProcessor(m);
-    bindPyCPUProcessor(m);
-    bindPyGPUProcessor(m);
-    bindPyProcessorMetadata(m);
-    bindPyBaker(m);
-    bindPyImageDesc(m);
-    bindPyGpuShaderCreator(m);
+    bindPyConfig(m);
     bindPyContext(m);
-    bindPyViewingRules(m);
-    bindPySystemMonitors(m);
-    bindPyGradingData(m);
+    bindPyCPUProcessor(m);
+    bindPyFileRules(m);
+    bindPyGPUProcessor(m);
+    bindPyGpuShaderCreator(m);
+    bindPyImageDesc(m);
+    bindPyLook(m);
     bindPyNamedTransform(m);
+    bindPyProcessor(m);
+    bindPyProcessorMetadata(m);
+    bindPySystemMonitors(m);
+    bindPyViewingRules(m);
+    bindPyViewTransform(m);
+
+    // OpenColorIOTransforms
+    bindPyBuiltinTransformRegistry(m);
+    bindPyDynamicProperty(m);
+    bindPyFormatMetadata(m);
+    bindPyGradingData(m);
+    bindPyTransform(m);
+
+    // OpenColorIOAppHelpers
     bindPyColorSpaceMenuHelpers(m);
     bindPyDisplayViewHelpers(m);
     bindPyLegacyViewingPipeline(m);

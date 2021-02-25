@@ -4,49 +4,31 @@
 import unittest
 
 import PyOpenColorIO as OCIO
+from TransformsBaseTest import TransformsBaseTest
 
 
-class FixedFunctionTransformTest(unittest.TestCase):
+class FixedFunctionTransformTest(unittest.TestCase, TransformsBaseTest):
     TEST_STYLE = OCIO.FIXED_FUNCTION_ACES_GLOW_03
     TEST_PARAMS = [0, 1, 2]
     TEST_DIRECTION = OCIO.TRANSFORM_DIR_INVERSE
 
     def setUp(self):
-        self.fixed_func_tr = OCIO.FixedFunctionTransform()
-
-    def tearDown(self):
-        self.fixed_func_tr = None
+        self.tr = OCIO.FixedFunctionTransform(
+            OCIO.FIXED_FUNCTION_ACES_RED_MOD_03)
 
     def test_transform_type(self):
         """
         Test the getTransformType() method.
         """
-        self.assertEqual(self.fixed_func_tr.getTransformType(), OCIO.TRANSFORM_TYPE_FIXED_FUNCTION)
-
-    def test_direction(self):
-        """
-        Test the setDirection() and getDirection() methods.
-        """
-
-        # Default initialized direction is forward.
-        self.assertEqual(self.fixed_func_tr.getDirection(),
-                         OCIO.TRANSFORM_DIR_FORWARD)
-
-        for direction in OCIO.TransformDirection.__members__.values():
-            self.fixed_func_tr.setDirection(direction)
-            self.assertEqual(self.fixed_func_tr.getDirection(), direction)
-
-        # Wrong type tests.
-        for invalid in (None, 1, 'test'):
-            with self.assertRaises(TypeError):
-                self.fixed_func_tr.setDirection(invalid)
+        self.assertEqual(self.tr.getTransformType(),
+                         OCIO.TRANSFORM_TYPE_FIXED_FUNCTION)
 
     def test_format_metadata(self):
         """
         Test the getFormatMetadata() method.
         """
 
-        format_metadata = self.fixed_func_tr.getFormatMetadata()
+        format_metadata = self.tr.getFormatMetadata()
         self.assertIsInstance(format_metadata, OCIO.FormatMetadata)
         self.assertEqual(format_metadata.getElementName(), 'ROOT')
         self.assertEqual(format_metadata.getName(), '')
@@ -62,10 +44,10 @@ class FixedFunctionTransformTest(unittest.TestCase):
         """
 
         # Default initialized params is an empty list.
-        self.assertEqual(self.fixed_func_tr.getParams(), [])
+        self.assertEqual(self.tr.getParams(), [])
 
-        self.fixed_func_tr.setParams(self.TEST_PARAMS)
-        self.assertEqual(self.fixed_func_tr.getParams(), self.TEST_PARAMS)
+        self.tr.setParams(self.TEST_PARAMS)
+        self.assertEqual(self.tr.getParams(), self.TEST_PARAMS)
 
     def test_style(self):
         """
@@ -73,12 +55,15 @@ class FixedFunctionTransformTest(unittest.TestCase):
         """
 
         # Default initialized style is red mod 3.
-        self.assertEqual(self.fixed_func_tr.getStyle(),
+        self.assertEqual(self.tr.getStyle(),
                          OCIO.FIXED_FUNCTION_ACES_RED_MOD_03)
 
         for style in OCIO.FixedFunctionStyle.__members__.values():
-            self.fixed_func_tr.setStyle(style)
-            self.assertEqual(self.fixed_func_tr.getStyle(), style)
+            if style not in [OCIO.FIXED_FUNCTION_ACES_GAMUTMAP_02,
+                             OCIO.FIXED_FUNCTION_ACES_GAMUTMAP_07,
+                             OCIO.FIXED_FUNCTION_ACES_GAMUTMAP_13]:
+                self.tr.setStyle(style)
+                self.assertEqual(self.tr.getStyle(), style)
 
     def test_validate_direction(self):
         """
@@ -86,24 +71,35 @@ class FixedFunctionTransformTest(unittest.TestCase):
         Direction must be forward or inverse.
         """
 
-        self.fixed_func_tr.setDirection(OCIO.TRANSFORM_DIR_FORWARD)
-        self.assertIsNone(self.fixed_func_tr.validate())
+        self.tr.setDirection(OCIO.TRANSFORM_DIR_FORWARD)
+        self.assertIsNone(self.tr.validate())
 
     def test_validate_params(self):
         """
         Test the validate() method for params.
-        Params must be empty on initialization.
+        Initialization must have the correct number of params required for the style (possibly
+        none).
         """
 
+        self.tr = OCIO.FixedFunctionTransform(
+            style=self.TEST_STYLE,
+            direction=self.TEST_DIRECTION)
+
+        self.assertIsNone(self.tr.validate())
+
+        self.tr.setParams(self.TEST_PARAMS)
         with self.assertRaises(OCIO.Exception):
-            self.fixed_func_tr = OCIO.FixedFunctionTransform(
-                style=self.TEST_STYLE,
-                params=self.TEST_PARAMS,
-                direction=self.TEST_DIRECTION)
+            self.tr.validate()
+
+        self.tr.setStyle(OCIO.FIXED_FUNCTION_REC2100_SURROUND)
+        self.tr.setParams([0.78])
+        self.assertIsNone(self.tr.validate())
 
     def test_constructor_with_keywords(self):
         """
         Test FixedFunctionTransform constructor with keywords and validate its values.
+        Initialization must have the correct number of params required for the style (possibly
+        none).
         """
 
         fixed_func_tr = OCIO.FixedFunctionTransform(
@@ -124,6 +120,29 @@ class FixedFunctionTransformTest(unittest.TestCase):
         self.assertEqual(fixed_func_tr2.getStyle(), self.TEST_STYLE)
         self.assertEqual(fixed_func_tr2.getParams(), [])
         self.assertEqual(fixed_func_tr2.getDirection(), self.TEST_DIRECTION)
+
+        with self.assertRaises(OCIO.Exception):
+            self.tr = OCIO.FixedFunctionTransform(
+                style=self.TEST_STYLE,
+                params=self.TEST_PARAMS,
+                direction=self.TEST_DIRECTION)
+
+        self.tr = OCIO.FixedFunctionTransform(
+            style=OCIO.FIXED_FUNCTION_REC2100_SURROUND,
+            params=[0.78])
+
+        params = self.tr.getParams()
+        self.assertEqual(len(params), 1)
+        self.assertEqual(params[0], 0.78)
+
+        with self.assertRaises(OCIO.Exception):
+            self.tr = OCIO.FixedFunctionTransform(
+                style=OCIO.FIXED_FUNCTION_REC2100_SURROUND,
+                params=[0.78, 0.42])
+
+        with self.assertRaises(OCIO.Exception):
+            self.tr = OCIO.FixedFunctionTransform(
+                style=OCIO.FIXED_FUNCTION_REC2100_SURROUND)
 
     def test_constructor_with_positional(self):
         """

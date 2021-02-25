@@ -27,8 +27,10 @@
       Create an identity 1D-LUT with specific length and half-domain setting. Will throw for lengths longer than 1024x1024.
 
 
-   .. py:method:: Lut1DTransform.__str__(self: PyOpenColorIO.Lut1DTransform) -> str
+   .. py:method:: Lut1DTransform.__str__()
       :module: PyOpenColorIO
+
+      Return str(self).
 
 
    .. py:method:: Lut1DTransform.equals(self: PyOpenColorIO.Lut1DTransform, other: PyOpenColorIO.Lut1DTransform) -> bool
