@@ -4,9 +4,10 @@
 import unittest
 
 import PyOpenColorIO as OCIO
+from TransformsBaseTest import TransformsBaseTest
 
 
-class ExposureContrastTransformTest(unittest.TestCase):
+class ExposureContrastTransformTest(unittest.TestCase, TransformsBaseTest):
     TEST_ID = 'sample exponent linear'
     TEST_NAME = 'name'
     TEST_VALUES = [0.1, 2, -0.5, 10]
@@ -21,16 +22,14 @@ class ExposureContrastTransformTest(unittest.TestCase):
     TEST_INVALIDS = (None, 'hello', [1, 2, 3])
 
     def setUp(self):
-        self.exp_tr = OCIO.ExposureContrastTransform()
-
-    def tearDown(self):
-        self.exp_tr = None
+        self.tr = OCIO.ExposureContrastTransform()
 
     def test_transform_type(self):
         """
         Test the getTransformType() method.
         """
-        self.assertEqual(self.exp_tr.getTransformType(), OCIO.TRANSFORM_TYPE_EXPOSURE_CONTRAST)
+        self.assertEqual(self.tr.getTransformType(),
+                         OCIO.TRANSFORM_TYPE_EXPOSURE_CONTRAST)
 
     def test_style(self):
         """
@@ -38,11 +37,11 @@ class ExposureContrastTransformTest(unittest.TestCase):
         """
 
         # Default initialized style is linear.
-        self.assertEqual(self.exp_tr.getStyle(), OCIO.EXPOSURE_CONTRAST_LINEAR)
+        self.assertEqual(self.tr.getStyle(), OCIO.EXPOSURE_CONTRAST_LINEAR)
 
         for style in OCIO.ExposureContrastStyle.__members__.values():
-            self.exp_tr.setStyle(style)
-            self.assertEqual(self.exp_tr.getStyle(), style)
+            self.tr.setStyle(style)
+            self.assertEqual(self.tr.getStyle(), style)
 
     def test_exposure(self):
         """
@@ -50,16 +49,16 @@ class ExposureContrastTransformTest(unittest.TestCase):
         """
 
         # Default initialized exposure is 0.
-        self.assertEqual(self.exp_tr.getExposure(), 0)
+        self.assertEqual(self.tr.getExposure(), 0)
 
         for exposure in self.TEST_VALUES:
-            self.exp_tr.setExposure(exposure)
-            self.assertEqual(self.exp_tr.getExposure(), exposure)
+            self.tr.setExposure(exposure)
+            self.assertEqual(self.tr.getExposure(), exposure)
 
         # Wrong type tests.
         for invalid in self.TEST_INVALIDS:
             with self.assertRaises(TypeError):
-                self.exp_tr.setExposure(invalid)
+                self.tr.setExposure(invalid)
 
     def test_exposure_dynamic(self):
         """
@@ -67,10 +66,10 @@ class ExposureContrastTransformTest(unittest.TestCase):
         """
 
         # Default initialized property is False.
-        self.assertEqual(self.exp_tr.isExposureDynamic(), False)
+        self.assertEqual(self.tr.isExposureDynamic(), False)
 
-        self.exp_tr.makeExposureDynamic()
-        self.assertEqual(self.exp_tr.isExposureDynamic(), True)
+        self.tr.makeExposureDynamic()
+        self.assertEqual(self.tr.isExposureDynamic(), True)
 
     def test_contrast(self):
         """
@@ -78,16 +77,16 @@ class ExposureContrastTransformTest(unittest.TestCase):
         """
 
         # Default initialized contrast is 1.
-        self.assertEqual(self.exp_tr.getContrast(), 1)
+        self.assertEqual(self.tr.getContrast(), 1)
 
         for contrast in self.TEST_VALUES:
-            self.exp_tr.setContrast(contrast)
-            self.assertEqual(self.exp_tr.getContrast(), contrast)
+            self.tr.setContrast(contrast)
+            self.assertEqual(self.tr.getContrast(), contrast)
 
         # Wrong type tests.
         for invalid in self.TEST_INVALIDS:
             with self.assertRaises(TypeError):
-                self.exp_tr.setContrast(invalid)
+                self.tr.setContrast(invalid)
 
     def test_contrast_dynamic(self):
         """
@@ -95,10 +94,10 @@ class ExposureContrastTransformTest(unittest.TestCase):
         """
 
         # Default initialized property is False.
-        self.assertEqual(self.exp_tr.isContrastDynamic(), False)
+        self.assertEqual(self.tr.isContrastDynamic(), False)
 
-        self.exp_tr.makeContrastDynamic()
-        self.assertEqual(self.exp_tr.isContrastDynamic(), True)
+        self.tr.makeContrastDynamic()
+        self.assertEqual(self.tr.isContrastDynamic(), True)
 
     def test_gamma(self):
         """
@@ -106,16 +105,16 @@ class ExposureContrastTransformTest(unittest.TestCase):
         """
 
         # Default initialized gamma is 1.
-        self.assertEqual(self.exp_tr.getGamma(), 1)
+        self.assertEqual(self.tr.getGamma(), 1)
 
         for gamma in self.TEST_VALUES:
-            self.exp_tr.setGamma(gamma)
-            self.assertEqual(self.exp_tr.getGamma(), gamma)
+            self.tr.setGamma(gamma)
+            self.assertEqual(self.tr.getGamma(), gamma)
 
         # Wrong type tests.
         for invalid in self.TEST_INVALIDS:
             with self.assertRaises(TypeError):
-                self.exp_tr.setGamma(invalid)
+                self.tr.setGamma(invalid)
 
     def test_gamma_dynamic(self):
         """
@@ -123,10 +122,10 @@ class ExposureContrastTransformTest(unittest.TestCase):
         """
 
         # Default initialized property is False.
-        self.assertEqual(self.exp_tr.isGammaDynamic(), False)
+        self.assertEqual(self.tr.isGammaDynamic(), False)
 
-        self.exp_tr.makeGammaDynamic()
-        self.assertEqual(self.exp_tr.isGammaDynamic(), True)
+        self.tr.makeGammaDynamic()
+        self.assertEqual(self.tr.isGammaDynamic(), True)
 
     def test_pivot(self):
         """
@@ -134,16 +133,16 @@ class ExposureContrastTransformTest(unittest.TestCase):
         """
 
         # Default initialized pivot is 0.18.
-        self.assertEqual(self.exp_tr.getPivot(), 0.18)
+        self.assertEqual(self.tr.getPivot(), 0.18)
 
         for pivot in self.TEST_VALUES:
-            self.exp_tr.setPivot(pivot)
-            self.assertEqual(self.exp_tr.getPivot(), pivot)
+            self.tr.setPivot(pivot)
+            self.assertEqual(self.tr.getPivot(), pivot)
 
         # Wrong type tests.
         for invalid in self.TEST_INVALIDS:
             with self.assertRaises(TypeError):
-                self.exp_tr.setPivot(invalid)
+                self.tr.setPivot(invalid)
 
     def test_log_exposure_step(self):
         """
@@ -151,16 +150,16 @@ class ExposureContrastTransformTest(unittest.TestCase):
         """
 
         # Default initialized log exposure step is 0.088.
-        self.assertEqual(self.exp_tr.getLogExposureStep(), 0.088)
+        self.assertEqual(self.tr.getLogExposureStep(), 0.088)
 
         for exp_step in self.TEST_VALUES:
-            self.exp_tr.setLogExposureStep(exp_step)
-            self.assertEqual(self.exp_tr.getLogExposureStep(), exp_step)
+            self.tr.setLogExposureStep(exp_step)
+            self.assertEqual(self.tr.getLogExposureStep(), exp_step)
 
         # Wrong type tests.
         for invalid in self.TEST_INVALIDS:
             with self.assertRaises(TypeError):
-                self.exp_tr.setLogExposureStep(invalid)
+                self.tr.setLogExposureStep(invalid)
 
     def test_log_mid_gray(self):
         """
@@ -168,23 +167,23 @@ class ExposureContrastTransformTest(unittest.TestCase):
         """
 
         # Default initialized log mid gray value is 0.435.
-        self.assertEqual(self.exp_tr.getLogMidGray(), 0.435)
+        self.assertEqual(self.tr.getLogMidGray(), 0.435)
 
         for mid_gray in self.TEST_VALUES:
-            self.exp_tr.setLogMidGray(mid_gray)
-            self.assertEqual(self.exp_tr.getLogMidGray(), mid_gray)
+            self.tr.setLogMidGray(mid_gray)
+            self.assertEqual(self.tr.getLogMidGray(), mid_gray)
 
         # Wrong type tests.
         for invalid in self.TEST_INVALIDS:
             with self.assertRaises(TypeError):
-                self.exp_tr.setLogMidGray(invalid)
+                self.tr.setLogMidGray(invalid)
 
     def test_format_metadata(self):
         """
         Test the getFormatMetadata() method.
         """
 
-        format_metadata = self.exp_tr.getFormatMetadata()
+        format_metadata = self.tr.getFormatMetadata()
         self.assertIsInstance(format_metadata, OCIO.FormatMetadata)
         self.assertEqual(format_metadata.getID(), '')
         self.assertEqual(format_metadata.getName(), '')
@@ -199,8 +198,8 @@ class ExposureContrastTransformTest(unittest.TestCase):
         Direction must be forward or inverse.
         """
 
-        self.exp_tr.setDirection(OCIO.TRANSFORM_DIR_FORWARD)
-        self.assertIsNone(self.exp_tr.validate())
+        self.tr.setDirection(OCIO.TRANSFORM_DIR_FORWARD)
+        self.assertIsNone(self.tr.validate())
 
     def test_constructor_with_keywords(self):
         """
@@ -225,7 +224,8 @@ class ExposureContrastTransformTest(unittest.TestCase):
         self.assertEqual(exp_tr.getContrast(), self.TEST_CONTRAST)
         self.assertEqual(exp_tr.getGamma(), self.TEST_GAMMA)
         self.assertEqual(exp_tr.getPivot(), self.TEST_PIVOT)
-        self.assertEqual(exp_tr.getLogExposureStep(), self.TEST_LOGEXPOSURESTEP)
+        self.assertEqual(exp_tr.getLogExposureStep(),
+                         self.TEST_LOGEXPOSURESTEP)
         self.assertEqual(exp_tr.getLogMidGray(), self.TEST_LOGMIDGRAY)
         self.assertTrue(exp_tr.isExposureDynamic())
         self.assertTrue(exp_tr.isContrastDynamic())
@@ -282,7 +282,8 @@ class ExposureContrastTransformTest(unittest.TestCase):
         self.assertEqual(exp_tr.getContrast(), self.TEST_CONTRAST)
         self.assertEqual(exp_tr.getGamma(), self.TEST_GAMMA)
         self.assertEqual(exp_tr.getPivot(), self.TEST_PIVOT)
-        self.assertEqual(exp_tr.getLogExposureStep(), self.TEST_LOGEXPOSURESTEP)
+        self.assertEqual(exp_tr.getLogExposureStep(),
+                         self.TEST_LOGEXPOSURESTEP)
         self.assertEqual(exp_tr.getLogMidGray(), self.TEST_LOGMIDGRAY)
         self.assertTrue(exp_tr.isExposureDynamic())
         self.assertTrue(exp_tr.isContrastDynamic())
