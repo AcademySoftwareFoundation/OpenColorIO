@@ -134,7 +134,7 @@ void GetStdConfigs(ConfigVec &configs)
 
     NSDirectoryEnumerator *enumerator = [man enumeratorAtPath:ocioDir];
     
-    NSMutableArray<NSString *> *configSet = [NSMutableArray array];
+    NSMutableOrderedSet<NSString *> *configSet = [NSMutableOrderedSet orderedSet];
     
     for(NSString *file in enumerator)
     {
@@ -209,6 +209,9 @@ bool ColorSpacePopUpMenu(OCIO::ConstConfigRcPtr config, std::string &colorSpace,
     [menu setAutoenablesItems:NO];
     
     
+    NSMutableDictionary<NSString *, NSMutableOrderedSet<NSString *> *> *categoriesDict = [NSMutableDictionary dictionary];
+    
+    
     const int numColorSpaces = config->getNumColorSpaces();
     
     for(int i=0; i < numColorSpaces; ++i)
@@ -267,8 +270,84 @@ bool ColorSpacePopUpMenu(OCIO::ConstConfigRcPtr config, std::string &colorSpace,
                 currentMenu = [componentItem submenu];
             }
         }
+        
+        if(colorSpacePtr->getNumCategories() > 0)
+        {
+            for(int j=0; j < colorSpacePtr->getNumCategories(); j++)
+            {
+                const char *categoryName = colorSpacePtr->getCategory(j);
+                
+                NSString *category = [NSString stringWithUTF8String:categoryName];
+                
+                NSMutableOrderedSet<NSString *> *categorySet = [categoriesDict objectForKey:category];
+                
+                if(categorySet == nil)
+                {
+                    categorySet = [NSMutableOrderedSet orderedSet];
+                    
+                    [categoriesDict setObject:categorySet forKey:category];
+                }
+                
+                [categorySet addObject:[NSString stringWithUTF8String:colorSpaceName]];
+            }
+        }
     }
     
+    if([categoriesDict count] > 0)
+    {
+        NSMenuItem *categoriesItem = [menu insertItemWithTitle:@"Categories" action:NULL keyEquivalent:@"" atIndex:0];
+        
+        NSMenu *categoriesMenu = [[[NSMenu alloc] initWithTitle:@"Categories"] autorelease];
+        
+        [categoriesMenu setAutoenablesItems:NO];
+        
+        [categoriesItem setSubmenu:categoriesMenu];
+        
+        NSArray<NSString *> *categoriesUnsorted = [categoriesDict allKeys];
+        
+        NSMutableArray<NSString *> *categories = [NSMutableArray arrayWithArray:categoriesUnsorted];
+        
+        [categories sortUsingComparator:
+                        ^(NSString *str1, NSString *str2)
+                        {
+                            return [str1 compare:str2];
+                        }];
+
+        for(int i=0; i < [categories count]; i++)
+        {
+            NSString *category = [categories objectAtIndex:i];
+            
+            NSMenuItem *categoryItem = [categoriesMenu addItemWithTitle:category action:NULL keyEquivalent:@""];
+            
+            NSMenu *categoryMenu = [[[NSMenu alloc] initWithTitle:category] autorelease];
+            
+            [categoryMenu setAutoenablesItems:NO];
+            
+            [categoryItem setSubmenu:categoryMenu];
+            
+            NSMutableOrderedSet<NSString *> *categorySet = [categoriesDict objectForKey:category];
+            
+            [categorySet sortUsingComparator:
+                            ^(NSString *str1, NSString *str2)
+                            {
+                                return [str1 compare:str2];
+                            }];
+            
+            for(int j=0; j < [categorySet count]; j++)
+            {
+                NSString *colorSpaceName = [categorySet objectAtIndex:j];
+                
+                NSMenuItem *categoryColorSpaceItem = [categoryMenu addItemWithTitle:colorSpaceName action:@selector(textMenuItemAction:) keyEquivalent:@""];
+                
+                if(colorSpace == [colorSpaceName UTF8String])
+                {
+                    [categoryColorSpaceItem setState:NSOnState];
+                }
+            }
+        }
+        
+        [menu insertItem:[NSMenuItem separatorItem] atIndex:1];
+    }
     
     if(config->getNumRoles() > 0)
     {
@@ -311,7 +390,8 @@ bool ColorSpacePopUpMenu(OCIO::ConstConfigRcPtr config, std::string &colorSpace,
             }
         }
         
-        [menu insertItem:[NSMenuItem separatorItem] atIndex:1];
+        if([categoriesDict count] == 0)
+            [menu insertItem:[NSMenuItem separatorItem] atIndex:1];
     }
     
         
