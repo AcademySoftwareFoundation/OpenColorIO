@@ -210,7 +210,7 @@ bool ColorSpacePopUpMenu(OCIO::ConstConfigRcPtr config, std::string &colorSpace,
     
     
     NSMutableDictionary<NSString *, NSMutableOrderedSet<NSString *> *> *categoriesDict = [NSMutableDictionary dictionary];
-    
+    NSMutableDictionary<NSString *, NSMutableOrderedSet<NSString *> *> *encodingsDict = [NSMutableDictionary dictionary];
     
     const int numColorSpaces = config->getNumColorSpaces();
     
@@ -291,6 +291,80 @@ bool ColorSpacePopUpMenu(OCIO::ConstConfigRcPtr config, std::string &colorSpace,
                 [categorySet addObject:[NSString stringWithUTF8String:colorSpaceName]];
             }
         }
+        
+        const char *encoding = colorSpacePtr->getEncoding();
+        
+        if(encoding != NULL && encoding != std::string(""))
+        {
+            NSString *encodingName = [NSString stringWithUTF8String:encoding];
+            
+            NSMutableOrderedSet<NSString *> *encodingSet = [encodingsDict objectForKey:encodingName];
+            
+            if(encodingSet == nil)
+            {
+                encodingSet = [NSMutableOrderedSet orderedSet];
+                
+                [encodingsDict setObject:encodingSet forKey:encodingName];
+            }
+            
+            [encodingSet addObject:[NSString stringWithUTF8String:colorSpaceName]];
+        }
+    }
+    
+    if([encodingsDict count] > 0)
+    {
+        NSMenuItem *encodingsItem = [menu insertItemWithTitle:@"Encodings" action:NULL keyEquivalent:@"" atIndex:0];
+        
+        NSMenu *encodingsMenu = [[[NSMenu alloc] initWithTitle:@"Encodings"] autorelease];
+        
+        [encodingsMenu setAutoenablesItems:NO];
+        
+        [encodingsItem setSubmenu:encodingsMenu];
+        
+        NSArray<NSString *> *encodingsUnsorted = [encodingsDict allKeys];
+        
+        NSMutableArray<NSString *> *encodings = [NSMutableArray arrayWithArray:encodingsUnsorted];
+        
+        [encodings sortUsingComparator:
+                        ^(NSString *str1, NSString *str2)
+                        {
+                            return [str1 compare:str2];
+                        }];
+
+        for(int i=0; i < [encodings count]; i++)
+        {
+            NSString *encoding = [encodings objectAtIndex:i];
+            
+            NSMenuItem *encodingItem = [encodingsMenu addItemWithTitle:encoding action:NULL keyEquivalent:@""];
+            
+            NSMenu *encodingMenu = [[[NSMenu alloc] initWithTitle:encoding] autorelease];
+            
+            [encodingMenu setAutoenablesItems:NO];
+            
+            [encodingItem setSubmenu:encodingMenu];
+            
+            NSMutableOrderedSet<NSString *> *encodingSet = [encodingsDict objectForKey:encoding];
+            
+            [encodingSet sortUsingComparator:
+                            ^(NSString *str1, NSString *str2)
+                            {
+                                return [str1 compare:str2];
+                            }];
+            
+            for(int j=0; j < [encodingSet count]; j++)
+            {
+                NSString *colorSpaceName = [encodingSet objectAtIndex:j];
+                
+                NSMenuItem *encodingColorSpaceItem = [encodingMenu addItemWithTitle:colorSpaceName action:@selector(textMenuItemAction:) keyEquivalent:@""];
+                
+                if(colorSpace == [colorSpaceName UTF8String])
+                {
+                    [encodingColorSpaceItem setState:NSOnState];
+                }
+            }
+        }
+        
+        [menu insertItem:[NSMenuItem separatorItem] atIndex:1];
     }
     
     if([categoriesDict count] > 0)
@@ -346,7 +420,8 @@ bool ColorSpacePopUpMenu(OCIO::ConstConfigRcPtr config, std::string &colorSpace,
             }
         }
         
-        [menu insertItem:[NSMenuItem separatorItem] atIndex:1];
+        if([encodingsDict count] == 0)
+            [menu insertItem:[NSMenuItem separatorItem] atIndex:1];
     }
     
     if(config->getNumRoles() > 0)
@@ -390,7 +465,7 @@ bool ColorSpacePopUpMenu(OCIO::ConstConfigRcPtr config, std::string &colorSpace,
             }
         }
         
-        if([categoriesDict count] == 0)
+        if([categoriesDict count] == 0 && [encodingsDict count] == 0)
             [menu insertItem:[NSMenuItem separatorItem] atIndex:1];
     }
     
