@@ -127,6 +127,7 @@ class Lut3DTransformTest(unittest.TestCase, TransformsBaseTest):
         Test the setValue() and getValue() methods.
         """
 
+        self.tr = OCIO.Lut3DTransform(gridSize=3)
         r, g, b = self.tr.getValue(0, 0, 0)
         self.assertEqual([r, g, b], [0, 0, 0])
         r, g, b = self.tr.getValue(1, 1, 1)
