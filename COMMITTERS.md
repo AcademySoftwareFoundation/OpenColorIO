@@ -19,4 +19,3 @@ The current OpenColorIO Committers are:
 | Cottalango Leon | @loorthu
 | Doug Walker | @doug-walker |
 | Kevin Wheatley | @KevinJW |
-| Bernard Lefebvre | @BernardLefebvre |
