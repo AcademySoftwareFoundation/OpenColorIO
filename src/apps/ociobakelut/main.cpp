@@ -42,6 +42,8 @@ int main (int argc, const char* argv[])
     std::string shaperspace;
     std::string looks;
     std::string outputspace;
+    std::string display;
+    std::string view;
     bool usestdout = false;
     bool verbose = false;
 
@@ -103,6 +105,8 @@ int main (int argc, const char* argv[])
                //"--cubesize %d", &cubesize, "size of the ICC CLUT cube (default: 32)",
                "--whitepoint %d", &whitepointtemp, "whitepoint for the profile (default: 6505)",
                "--displayicc %s", &displayicc , "an ICC profile which matches the OCIO profiles target display",
+               "--display %s", &display, "Display for OCIO",
+               "--view %s", &view, "View for OCIO",
                "--description %s", &description , "a meaningful description, this will show up in UI like photoshop (defaults to \"filename.icc\")",
                "--copyright %s", &copyright , "a copyright field added in the file (default: \"No copyright. Use freely.\")\n",
                // TODO: add --metadata option
