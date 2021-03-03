@@ -47,7 +47,7 @@ cd OpenColorIO/docs/site/homepage
 Build the static copy of the website with Hugo:
 
 ```shell
-hugo -D --themesDir ../..
+hugo -D --minify --themesDir ../..
 ```
 
 It should appear in a folder labelled "public"
