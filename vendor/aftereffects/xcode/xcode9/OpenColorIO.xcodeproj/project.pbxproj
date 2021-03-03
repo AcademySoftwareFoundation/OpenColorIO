@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		2A33654F25F031EF00A104B9 /* Displays.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2A33654D25F031EF00A104B9 /* Displays.cpp */; };
+		2A33655025F031EF00A104B9 /* Displays.h in Headers */ = {isa = PBXBuildFile; fileRef = 2A33654E25F031EF00A104B9 /* Displays.h */; };
 		2A41D636254B85B400893EFF /* Baker.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2A41D4F7254B85B300893EFF /* Baker.cpp */; };
 		2A41D637254B85B400893EFF /* BitDepthUtils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2A41D4F8254B85B300893EFF /* BitDepthUtils.cpp */; };
 		2A41D638254B85B400893EFF /* BitDepthUtils.h in Headers */ = {isa = PBXBuildFile; fileRef = 2A41D4F9254B85B300893EFF /* BitDepthUtils.h */; };
@@ -386,6 +388,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		2A33654D25F031EF00A104B9 /* Displays.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Displays.cpp; sourceTree = "<group>"; };
+		2A33654E25F031EF00A104B9 /* Displays.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Displays.h; sourceTree = "<group>"; };
 		2A41D4F7254B85B300893EFF /* Baker.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Baker.cpp; sourceTree = "<group>"; };
 		2A41D4F8254B85B300893EFF /* BitDepthUtils.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = BitDepthUtils.cpp; sourceTree = "<group>"; };
 		2A41D4F9254B85B300893EFF /* BitDepthUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BitDepthUtils.h; sourceTree = "<group>"; };
@@ -1234,6 +1238,8 @@
 				2A41D602254B85B300893EFF /* CanonCameras.h */,
 				2A41D603254B85B300893EFF /* ColorMatrixHelpers.cpp */,
 				2A41D604254B85B300893EFF /* ColorMatrixHelpers.h */,
+				2A33654D25F031EF00A104B9 /* Displays.cpp */,
+				2A33654E25F031EF00A104B9 /* Displays.h */,
 				2A41D605254B85B300893EFF /* OpHelpers.cpp */,
 				2A41D606254B85B300893EFF /* OpHelpers.h */,
 				2A41D607254B85B300893EFF /* PanasonicCameras.cpp */,
@@ -1368,6 +1374,7 @@
 				2A41D6BC254B85B400893EFF /* GradingPrimaryOpCPU.h in Headers */,
 				2A41D67B254B85B400893EFF /* GpuShaderUtils.h in Headers */,
 				2A41D6A2254B85B400893EFF /* ExposureContrastOpData.h in Headers */,
+				2A33655025F031EF00A104B9 /* Displays.h in Headers */,
 				2A41D696254B85B400893EFF /* CDLOpCPU.h in Headers */,
 				2A41D682254B85B400893EFF /* Logging.h in Headers */,
 				2A41D707254B85B400893EFF /* ReferenceOpData.h in Headers */,
@@ -1655,6 +1662,7 @@
 				2A41D73A254B85B400893EFF /* FileTransform.cpp in Sources */,
 				2A41D74B254B85B400893EFF /* LookTransform.cpp in Sources */,
 				2A41D752254B85B400893EFF /* RangeTransform.cpp in Sources */,
+				2A33654F25F031EF00A104B9 /* Displays.cpp in Sources */,
 				2A41D6EF254B85B400893EFF /* Lut3DOpGPU.cpp in Sources */,
 				2A41D6BF254B85B400893EFF /* GradingPrimaryOpGPU.cpp in Sources */,
 				2A41D656254B85B400893EFF /* FileFormatCC.cpp in Sources */,
@@ -1782,7 +1790,10 @@
 				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PREPROCESSOR_DEFINITIONS = TIXML_USE_STL;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					TIXML_USE_STL,
+					ADD_EXTRA_BUILTINS,
+				);
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = (
@@ -1811,6 +1822,7 @@
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					NDEBUG,
 					TIXML_USE_STL,
+					ADD_EXTRA_BUILTINS,
 				);
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
