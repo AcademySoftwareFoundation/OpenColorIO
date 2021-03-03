@@ -62,7 +62,7 @@ C++
 
 The core OpenColorIO API is available for use in C++. Minimal code examples are also available in the source code distribution. 
 
-Website: `<http://github.com/AcademySoftwareFoundation/OpenColorIO/tree/master/src/OpenColorIO>`__
+Website: `<http://github.com/AcademySoftwareFoundation/OpenColorIO/tree/master/include/OpenColorIO>`__
 
 Examples:
 
