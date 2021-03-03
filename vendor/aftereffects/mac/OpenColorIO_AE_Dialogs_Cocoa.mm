@@ -311,6 +311,9 @@ bool ColorSpacePopUpMenu(OCIO::ConstConfigRcPtr config, std::string &colorSpace,
         }
     }
     
+    if([encodingsDict count] > 0 || [categoriesDict count] > 0 || config->getNumRoles() > 0)
+        [menu insertItem:[NSMenuItem separatorItem] atIndex:0];
+    
     if([encodingsDict count] > 0)
     {
         NSMenuItem *encodingsItem = [menu insertItemWithTitle:@"Encodings" action:NULL keyEquivalent:@"" atIndex:0];
@@ -363,8 +366,6 @@ bool ColorSpacePopUpMenu(OCIO::ConstConfigRcPtr config, std::string &colorSpace,
                 }
             }
         }
-        
-        [menu insertItem:[NSMenuItem separatorItem] atIndex:1];
     }
     
     if([categoriesDict count] > 0)
@@ -419,9 +420,6 @@ bool ColorSpacePopUpMenu(OCIO::ConstConfigRcPtr config, std::string &colorSpace,
                 }
             }
         }
-        
-        if([encodingsDict count] == 0)
-            [menu insertItem:[NSMenuItem separatorItem] atIndex:1];
     }
     
     if(config->getNumRoles() > 0)
@@ -464,9 +462,6 @@ bool ColorSpacePopUpMenu(OCIO::ConstConfigRcPtr config, std::string &colorSpace,
                 [roleColorSpaceItem setState:NSOnState];
             }
         }
-        
-        if([categoriesDict count] == 0 && [encodingsDict count] == 0)
-            [menu insertItem:[NSMenuItem separatorItem] atIndex:1];
     }
     
         
