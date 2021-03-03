@@ -49,8 +49,8 @@ DialogResult OpenColorIO_PS_Dialog(DialogParams &params, const void *plugHndl, c
         const BOOL invert = params.invert;
         NSString *inputSpace = (params.inputSpace.empty() ? nil : [NSString stringWithUTF8String:params.inputSpace.c_str()]);
         NSString *outputSpace = (params.outputSpace.empty() ? nil : [NSString stringWithUTF8String:params.outputSpace.c_str()]);
-        NSString *transform = (params.transform.empty() ? nil : [NSString stringWithUTF8String:params.transform.c_str()]);
-        NSString *device = (params.device.empty() ? nil : [NSString stringWithUTF8String:params.device.c_str()]);
+        NSString *transform = (params.view.empty() ? nil : [NSString stringWithUTF8String:params.view.c_str()]);
+        NSString *device = (params.display.empty() ? nil : [NSString stringWithUTF8String:params.display.c_str()]);
         
         
         OpenColorIO_PS_Dialog_Controller *controller = [[ui_controller_class alloc] initWithSource:source
@@ -99,11 +99,11 @@ DialogResult OpenColorIO_PS_Dialog(DialogParams &params, const void *plugHndl, c
                 if([controller outputSpace] != nil)
                     params.outputSpace = [[controller outputSpace] UTF8String];
                     
-                if([controller transform] != nil)
-                    params.transform = [[controller transform] UTF8String];
+                if([controller view] != nil)
+                    params.view = [[controller view] UTF8String];
                     
-                if([controller device] != nil)
-                    params.device = [[controller device] UTF8String];
+                if([controller display] != nil)
+                    params.display = [[controller display] UTF8String];
             
                 result = RESULT_OK;
             }

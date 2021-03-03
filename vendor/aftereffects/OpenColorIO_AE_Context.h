@@ -58,7 +58,7 @@ class OpenColorIO_AE_Context
     bool Verify(const ArbitraryData *arb_data, const std::string &dir);
     
     void setupConvert(const char *input, const char *output);
-    void setupDisplay(const char *input, const char *device, const char *transform);
+    void setupDisplay(const char *input, const char *display, const char *view);
     void setupLUT(OCIO_Invert invert, OCIO_Interp interpolation);
   
     typedef std::vector<std::string> SpaceVec;
@@ -66,11 +66,11 @@ class OpenColorIO_AE_Context
     OCIO_Action getAction() const { return _action; }
     const std::string & getInput() const { return _input; }
     const std::string & getOutput() const { return _output; }
-    const std::string & getDevice() const { return _device; }
-    const std::string & getTransform() const { return _transform; }
+    const std::string & getDisplay() const { return _display; }
+    const std::string & getView() const { return _view; }
     const SpaceVec & getInputs(bool fullPath=false) const { return fullPath ? _inputsFullPath : _inputs; }
-    const SpaceVec & getDevices() const { return _devices; }
-    const SpaceVec & getTransforms() const { return _transforms; }
+    const SpaceVec & getDisplays() const { return _displays; }
+    const SpaceVec & getViews() const { return _views; }
     
     OCIO::ConstConfigRcPtr config() const { return _config; }
     OCIO::ConstProcessorRcPtr processor() const { return _processor; }
@@ -94,12 +94,12 @@ class OpenColorIO_AE_Context
     
     std::string _input;
     std::string _output;
-    std::string _device;
-    std::string _transform;
+    std::string _display;
+    std::string _view;
     SpaceVec _inputs;
     SpaceVec _inputsFullPath;
-    SpaceVec _devices;
-    SpaceVec _transforms;
+    SpaceVec _displays;
+    SpaceVec _views;
     
     OCIO_Invert _invert;
     OCIO_Interp _interpolation;

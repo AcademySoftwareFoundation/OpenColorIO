@@ -205,16 +205,16 @@ resource 'aete' (ResourceID, plugInName " dictionary", purgeable)
                 "OCIO Output Space",
                 flagsSingleParameter,
                 
-                "Transform",
-                ocioKeyTransform,
+                "View",
+                ocioKeyView,
                 typeChar,
-                "OCIO Transform",
+                "OCIO View",
                 flagsSingleParameter,
                 
-                "Device",
-                ocioKeyDevice,
+                "Display",
+                ocioKeyDisplay,
                 typeChar,
-                "OCIO Device",
+                "OCIO Display",
                 flagsSingleParameter
             }
         },

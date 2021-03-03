@@ -350,7 +350,7 @@ OpenColorIO_AE_Context::OpenColorIO_AE_Context(const std::string &path, OCIO_Sou
             
             for(int i=0; i < _config->getNumDisplays(); ++i)
             {
-                _devices.push_back( _config->getDisplay(i) );
+                _displays.push_back( _config->getDisplay(i) );
             }
             
             
@@ -363,10 +363,10 @@ OpenColorIO_AE_Context::OpenColorIO_AE_Context(const std::string &path, OCIO_Sou
             
             
             const char *defaultDisplay = _config->getDefaultDisplay();
-            const char *defaultTransform = _config->getDefaultView(defaultDisplay);
+            const char *defaultView = _config->getDefaultView(defaultDisplay);
             
-            _device = defaultDisplay;
-            _transform = defaultTransform;
+            _display = defaultDisplay;
+            _view = defaultView;
         }
         else
         {
@@ -453,19 +453,19 @@ OpenColorIO_AE_Context::OpenColorIO_AE_Context(const ArbitraryData *arb_data, co
             
             for(int i=0; i < _config->getNumDisplays(); ++i)
             {
-                _devices.push_back( _config->getDisplay(i) );
+                _displays.push_back( _config->getDisplay(i) );
             }
             
             if(arb_data->action == OCIO_ACTION_CONVERT)
             {
                 setupConvert(arb_data->input, arb_data->output);
                 
-                _device = arb_data->device;
-                _transform = arb_data->transform;
+                _display = arb_data->display;
+                _view = arb_data->view;
             }
             else
             {
-                setupDisplay(arb_data->input, arb_data->device, arb_data->transform);
+                setupDisplay(arb_data->input, arb_data->display, arb_data->view);
                 
                 _output = arb_data->output;
             }
@@ -558,11 +558,11 @@ bool OpenColorIO_AE_Context::Verify(const ArbitraryData *arb_data, const std::st
     else if(arb_data->action == OCIO_ACTION_DISPLAY)
     {
         if(_input != arb_data->input ||
-            _device != arb_data->device ||
-            _transform != arb_data->transform ||
+            _display != arb_data->display ||
+            _view != arb_data->view ||
             force_reset)
         {
-            setupDisplay(arb_data->input, arb_data->device, arb_data->transform);
+            setupDisplay(arb_data->input, arb_data->display, arb_data->view);
         }
     }
     else
@@ -595,35 +595,35 @@ void OpenColorIO_AE_Context::setupConvert(const char *input, const char *output)
 }
 
 
-void OpenColorIO_AE_Context::setupDisplay(const char *input, const char *device, const char *xform)
+void OpenColorIO_AE_Context::setupDisplay(const char *input, const char *display, const char *view)
 {
-    _transforms.clear();
+    _views.clear();
     
-    bool xformValid = false;
+    bool viewValid = false;
     
-    for(int i=0; i < _config->getNumViews(device); i++)
+    for(int i=0; i < _config->getNumViews(display); i++)
     {
-        const std::string transformName = _config->getView(device, i);
+        const std::string viewName = _config->getView(display, i);
         
-        if(transformName == xform)
-            xformValid = true;
+        if(viewName == view)
+            viewValid = true;
         
-        _transforms.push_back(transformName);
+        _views.push_back(viewName);
     }
     
-    if(!xformValid)
-        xform = _config->getDefaultView(device);
+    if(!viewValid)
+        view = _config->getDefaultView(display);
     
 
     OCIO::DisplayViewTransformRcPtr transform = OCIO::DisplayViewTransform::Create();
     
     transform->setSrc(input);
-    transform->setDisplay(device);
-    transform->setView(xform);
+    transform->setDisplay(display);
+    transform->setView(view);
     
     _input = input;
-    _device = device;
-    _transform = xform;
+    _display = display;
+    _view = view;
     
 
     _processor = _config->getProcessor(transform);
@@ -744,9 +744,9 @@ bool OpenColorIO_AE_Context::ExportLUT(const std::string &path, const std::strin
             OCIO::DisplayViewTransformRcPtr transform = OCIO::DisplayViewTransform::Create();
             
             transform->setSrc(_input.c_str());
-            transform->setView(_transform.c_str());
-            transform->setDisplay(_device.c_str());
-            
+            transform->setDisplay(_display.c_str());
+            transform->setView(_view.c_str());
+
             outputColorSpace->setTransform(transform, OCIO::COLORSPACE_DIR_FROM_REFERENCE);
             
             editableConfig->addColorSpace(outputColorSpace);

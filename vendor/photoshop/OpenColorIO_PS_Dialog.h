@@ -45,8 +45,8 @@ typedef struct DialogParams
     DialogInterp    interpolation;
     std::string     inputSpace;
     std::string     outputSpace;
-    std::string     device;
-    std::string     transform;
+    std::string     display;
+    std::string     view;
 } DialogParams;
 
 

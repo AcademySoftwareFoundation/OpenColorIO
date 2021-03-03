@@ -476,11 +476,11 @@ static PF_Err DrawEvent(
                         
                         bot.Move(0, MENU_HEIGHT + MENU_SPACE_V);
                         
-                        DrawMenu(bot, menu_width, "Device:", arb_data->device);
+                        DrawMenu(bot, menu_width, "Display:", arb_data->display);
                         
                         bot.Move(0, MENU_HEIGHT + MENU_SPACE_V);
                         
-                        DrawMenu(bot, menu_width, "Transform:", arb_data->transform);
+                        DrawMenu(bot, menu_width, "View:", arb_data->view);
                     }
                 }
             }
@@ -633,8 +633,8 @@ static void DoClickPath(
             (OCIO_ACTION_LUT != new_context->getAction() &&
                (-1 == FindInVec(new_context->getInputs(), arb_data->input) ||
                 -1 == FindInVec(new_context->getInputs(), arb_data->output) ||
-                -1 == FindInVec(new_context->getTransforms(), arb_data->transform) ||
-                -1 == FindInVec(new_context->getDevices(), arb_data->device) ) ) )
+                -1 == FindInVec(new_context->getViews(), arb_data->view) ||
+                -1 == FindInVec(new_context->getDisplays(), arb_data->display) ) ) )
         {
             // Configuration is different, so initialize defaults
             arb_data->action = seq_data->context->getAction();
@@ -648,8 +648,8 @@ static void DoClickPath(
             {
                 strncpy(arb_data->input, seq_data->context->getInput().c_str(), ARB_SPACE_LEN);
                 strncpy(arb_data->output, seq_data->context->getOutput().c_str(), ARB_SPACE_LEN);
-                strncpy(arb_data->transform, seq_data->context->getTransform().c_str(), ARB_SPACE_LEN);
-                strncpy(arb_data->device, seq_data->context->getDevice().c_str(), ARB_SPACE_LEN);
+                strncpy(arb_data->view, seq_data->context->getView().c_str(), ARB_SPACE_LEN);
+                strncpy(arb_data->display, seq_data->context->getDisplay().c_str(), ARB_SPACE_LEN);
             }
         }
         else
@@ -665,10 +665,10 @@ static void DoClickPath(
             }
             else if(arb_data->action == OCIO_ACTION_DISPLAY)
             {
-                seq_data->context->setupDisplay(arb_data->input, arb_data->device, arb_data->transform);
+                seq_data->context->setupDisplay(arb_data->input, arb_data->display, arb_data->view);
                 
-                // transform may have changed
-                strncpy(arb_data->transform, seq_data->context->getTransform().c_str(), ARB_SPACE_LEN);
+                // view may have changed
+                strncpy(arb_data->view, seq_data->context->getView().c_str(), ARB_SPACE_LEN);
             }
         }
         
@@ -805,8 +805,8 @@ static void DoClickConfig(
                 (OCIO_ACTION_LUT != new_context->getAction() &&
                    (-1 == FindInVec(new_context->getInputs(), arb_data->input) ||
                     -1 == FindInVec(new_context->getInputs(), arb_data->output) ||
-                    -1 == FindInVec(new_context->getTransforms(), arb_data->transform) ||
-                    -1 == FindInVec(new_context->getDevices(), arb_data->device) ) ) )
+                    -1 == FindInVec(new_context->getViews(), arb_data->view) ||
+                    -1 == FindInVec(new_context->getDisplays(), arb_data->display) ) ) )
             {
                 // Configuration is different, so initialize defaults
                 arb_data->action = seq_data->context->getAction();
@@ -820,8 +820,8 @@ static void DoClickConfig(
                 {
                     strncpy(arb_data->input, seq_data->context->getInput().c_str(), ARB_SPACE_LEN);
                     strncpy(arb_data->output, seq_data->context->getOutput().c_str(), ARB_SPACE_LEN);
-                    strncpy(arb_data->transform, seq_data->context->getTransform().c_str(), ARB_SPACE_LEN);
-                    strncpy(arb_data->device, seq_data->context->getDevice().c_str(), ARB_SPACE_LEN);
+                    strncpy(arb_data->view, seq_data->context->getView().c_str(), ARB_SPACE_LEN);
+                    strncpy(arb_data->display, seq_data->context->getDisplay().c_str(), ARB_SPACE_LEN);
                 }
             }
             else
@@ -837,10 +837,10 @@ static void DoClickConfig(
                 }
                 else if(arb_data->action == OCIO_ACTION_DISPLAY)
                 {
-                    seq_data->context->setupDisplay(arb_data->input, arb_data->device, arb_data->transform);
+                    seq_data->context->setupDisplay(arb_data->input, arb_data->display, arb_data->view);
                     
-                    // transform may have changed
-                    strncpy(arb_data->transform, seq_data->context->getTransform().c_str(), ARB_SPACE_LEN);
+                    // view may have changed
+                    strncpy(arb_data->view, seq_data->context->getView().c_str(), ARB_SPACE_LEN);
                 }
             }
             
@@ -894,10 +894,10 @@ static void DoClickConvertDisplay(
         {
             arb_data->action = OCIO_ACTION_DISPLAY;
             
-            seq_data->context->setupDisplay(arb_data->input, arb_data->device, arb_data->transform);
+            seq_data->context->setupDisplay(arb_data->input, arb_data->display, arb_data->view);
             
-            // transform may have changed
-            strncpy(arb_data->transform, seq_data->context->getTransform().c_str(), ARB_SPACE_LEN);
+            // view may have changed
+            strncpy(arb_data->view, seq_data->context->getView().c_str(), ARB_SPACE_LEN);
             
             params[OCIO_DATA]->uu.change_flags = PF_ChangeFlag_CHANGED_VALUE;
         }
@@ -1063,15 +1063,15 @@ static void DoClickMenus(
                 }
                 else if(reg == REGION_MENU2)
                 {
-                    menu_items = seq_data->context->getDevices();
+                    menu_items = seq_data->context->getDisplays();
                     
-                    selected_item = FindInVec(menu_items, arb_data->device);
+                    selected_item = FindInVec(menu_items, arb_data->display);
                 }
                 else if(reg == REGION_MENU3)
                 {
-                    menu_items = seq_data->context->getTransforms();
+                    menu_items = seq_data->context->getViews();
                     
-                    selected_item = FindInVec(menu_items, arb_data->transform);
+                    selected_item = FindInVec(menu_items, arb_data->view);
                 }
             }
             
@@ -1124,17 +1124,17 @@ static void DoClickMenus(
                     }
                     else if(reg == REGION_MENU2)
                     {
-                        strncpy(arb_data->device, color_space.c_str(), ARB_SPACE_LEN);
+                        strncpy(arb_data->display, color_space.c_str(), ARB_SPACE_LEN);
                     }
                     else if(reg == REGION_MENU3)
                     {
-                        strncpy(arb_data->transform, color_space.c_str(), ARB_SPACE_LEN);
+                        strncpy(arb_data->view, color_space.c_str(), ARB_SPACE_LEN);
                     }
                     
-                    seq_data->context->setupDisplay(arb_data->input, arb_data->device, arb_data->transform);
+                    seq_data->context->setupDisplay(arb_data->input, arb_data->display, arb_data->view);
                     
-                    // transform may have changed
-                    strncpy(arb_data->transform, seq_data->context->getTransform().c_str(), ARB_SPACE_LEN);
+                    // view may have changed
+                    strncpy(arb_data->view, seq_data->context->getView().c_str(), ARB_SPACE_LEN);
                 }
                         
                 params[OCIO_DATA]->uu.change_flags = PF_ChangeFlag_CHANGED_VALUE;

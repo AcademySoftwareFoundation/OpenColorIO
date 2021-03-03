@@ -109,8 +109,8 @@ typedef struct {
     char            relative_path[ARB_PATH_LEN+1];
     char            input[ARB_SPACE_LEN+1];
     char            output[ARB_SPACE_LEN+1];
-    char            transform[ARB_SPACE_LEN+1];
-    char            device[ARB_SPACE_LEN+1];
+    char            view[ARB_SPACE_LEN+1];
+    char            display[ARB_SPACE_LEN+1];
     char            look[ARB_SPACE_LEN+1]; // not used currently
     A_u_char        storage_buf[1];
 } ArbitraryData;

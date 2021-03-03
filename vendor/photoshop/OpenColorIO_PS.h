@@ -54,8 +54,8 @@ typedef struct Globals
     OCIO_Interp             interpolation;
     Str255                  inputSpace;
     Str255                  outputSpace;
-    Str255                  device;
-    Str255                  transform;
+    Str255                  display;
+    Str255                  view;
 } Globals, *GPtr, **GHdl;
 
 

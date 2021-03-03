@@ -33,8 +33,8 @@
         interpolation:(ControllerInterp)initInterpolation
         inputSpace:(NSString *)initInputSpace
         outputSpace:(NSString *)initOutputSpace
-        device:(NSString *)initDevice
-        transform:(NSString *)initTransform
+        display:(NSString *)initDisplay
+        view:(NSString *)initView
 {
     self = [super init];
     
@@ -57,8 +57,8 @@
         action = initAction;
         inputSpace = [initInputSpace retain];
         outputSpace = [initOutputSpace retain];
-        device = [initDevice retain];
-        transform = [initTransform retain];
+        display = [initDisplay retain];
+        view = [initView retain];
         interpolation = initInterpolation;
         invert = initInvert;
         
@@ -141,8 +141,8 @@
     [customPath release];
     [inputSpace release];
     [outputSpace release];
-    [device release];
-    [transform release];
+    [display release];
+    [view release];
     
     [super dealloc];
 }
@@ -198,7 +198,7 @@
                     }
                     else if(action == CACTION_DISPLAY)
                     {
-                        processor = context->getDisplayProcessor([inputSpace UTF8String], [device UTF8String], [transform UTF8String]);
+                        processor = context->getDisplayProcessor([inputSpace UTF8String], [display UTF8String], [view UTF8String]);
                     }
                     else
                     {
@@ -280,7 +280,7 @@
                 }
                 else if(action == CACTION_DISPLAY)
                 {
-                    baker = context->getDisplayBaker([inputSpace UTF8String], [device UTF8String], [transform UTF8String]);
+                    baker = context->getDisplayBaker([inputSpace UTF8String], [display UTF8String], [view UTF8String]);
                 }
                 else
                 {
@@ -575,23 +575,23 @@
                 }
                 
                 
-                const SpaceVec &devices = context->getDevices();
+                const SpaceVec &displays = context->getDisplays();
                 
-                if(device == nil || -1 == FindSpace(devices, [device UTF8String]))
+                if(display == nil || -1 == FindSpace(displays, [display UTF8String]))
                 {
-                    [device release];
+                    [display release];
                     
-                    device = [[NSString alloc] initWithUTF8String:context->getDefaultDevice().c_str()];
+                    display = [[NSString alloc] initWithUTF8String:context->getDefaultDisplay().c_str()];
                 }
                 
                 
-                const SpaceVec transforms = context->getTransforms([device UTF8String]);
+                const SpaceVec views = context->getViews([display UTF8String]);
                 
-                if(transform == nil || -1 == FindSpace(transforms, [transform UTF8String]))
+                if(view == nil || -1 == FindSpace(views, [view UTF8String]))
                 {
-                    [transform release];
+                    [view release];
                     
-                    transform = [[NSString alloc] initWithUTF8String:context->getDefaultTransform([device UTF8String]).c_str()];
+                    view = [[NSString alloc] initWithUTF8String:context->getDefaultView([display UTF8String]).c_str()];
                 }
                 
                 
@@ -685,36 +685,36 @@
     
     if(action == CACTION_DISPLAY)
     {
-        NSTextField *deviceLabel = label2;
-        NSPopUpButton *deviceMenu = menu2;
+        NSTextField *displayLabel = label2;
+        NSPopUpButton *displayMenu = menu2;
         
-        NSTextField *transformLabel = label3;
-        NSPopUpButton *transformMenu = menu3;
+        NSTextField *viewLabel = label3;
+        NSPopUpButton *viewMenu = menu3;
         
     
-        [deviceLabel setStringValue:@"Device:"];
-        [deviceLabel setHidden:NO];
+        [displayLabel setStringValue:@"Display:"];
+        [displayLabel setHidden:NO];
         
-        [deviceMenu setHidden:NO];
+        [displayMenu setHidden:NO];
         
-        [deviceMenu removeAllItems];
+        [displayMenu removeAllItems];
         
-        const SpaceVec &devices = context->getDevices();
+        const SpaceVec &displays = context->getDisplays();
         
-        for(SpaceVec::const_iterator i = devices.begin(); i != devices.end(); ++i)
+        for(SpaceVec::const_iterator i = displays.begin(); i != displays.end(); ++i)
         {
-            NSString *deviceName = [NSString stringWithUTF8String:i->c_str()];
+            NSString *displayName = [NSString stringWithUTF8String:i->c_str()];
             
-            [deviceMenu addItemWithTitle:deviceName];
+            [displayMenu addItemWithTitle:displayName];
         }
         
         [outputSpaceButton setHidden:YES];
                 
         
-        [transformLabel setStringValue:@"Transform:"];
-        [transformLabel setHidden:NO];
+        [viewLabel setStringValue:@"View:"];
+        [viewLabel setHidden:NO];
         
-        [transformMenu setHidden:NO];
+        [viewMenu setHidden:NO];
         
         
         [self trackMenu2:nil];
@@ -777,21 +777,21 @@
 {
     if(action == CACTION_DISPLAY)
     {
-        NSPopUpButton *deviceMenu = menu2;
+        NSPopUpButton *displayMenu = menu2;
         
         if(sender == nil)
         {
             // set menu from values
-            NSAssert([deviceMenu itemWithTitle:device] != nil, @"don't have the device");
+            NSAssert([displayMenu itemWithTitle:display] != nil, @"don't have the device");
             
-            [deviceMenu selectItemWithTitle:device];
+            [displayMenu selectItemWithTitle:display];
         }
         else
         {
             // set values from menu
-            [device release];
+            [display release];
             
-            device = [[deviceMenu titleOfSelectedItem] retain];
+            display = [[displayMenu titleOfSelectedItem] retain];
         }
     }
     else
@@ -823,17 +823,17 @@
         
         NSAssert(context != NULL, @"context was NULL");
         
-        const SpaceVec transforms = context->getTransforms([device UTF8String]);
+        const SpaceVec views = context->getViews([view UTF8String]);
         
-        NSPopUpButton *transformMenu = menu3;
+        NSPopUpButton *viewMenu = menu3;
         
-        [transformMenu removeAllItems];
+        [viewMenu removeAllItems];
         
-        for(SpaceVec::const_iterator i = transforms.begin(); i != transforms.end(); ++i)
+        for(SpaceVec::const_iterator i = views.begin(); i != views.end(); ++i)
         {
-            NSString *transformName = [NSString stringWithUTF8String:i->c_str()];
+            NSString *viewName = [NSString stringWithUTF8String:i->c_str()];
             
-            [transformMenu addItemWithTitle:transformName];
+            [viewMenu addItemWithTitle:viewName];
         }
         
         [self trackMenu3:nil];
@@ -843,18 +843,18 @@
 - (IBAction)trackMenu3:(id)sender
 {
     NSAssert(action == CACTION_DISPLAY, @"expected Display");
-    NSAssert([[label3 stringValue] isEqualToString:@"Transform:"], @"expected Transform:");
+    NSAssert([[label3 stringValue] isEqualToString:@"View:"], @"expected View:");
     
-    NSPopUpButton *transformMenu = menu3;
+    NSPopUpButton *viewMenu = menu3;
 
     if(sender == nil)
     {
         // set menu from value
-        NSMenuItem *valueItem = [transformMenu itemWithTitle:transform];
+        NSMenuItem *valueItem = [viewMenu itemWithTitle:view];
         
         if(valueItem != nil)
         {
-            [transformMenu selectItem:valueItem];
+            [viewMenu selectItem:valueItem];
         }
         else
         {
@@ -862,26 +862,26 @@
             
             NSAssert(context != NULL, @"context was NULL");
             
-            const std::string defaultTransform = context->getDefaultTransform([device UTF8String]);
+            const std::string defaultView = context->getDefaultView([display UTF8String]);
             
-            NSMenuItem *defaultItem = [transformMenu itemWithTitle:[NSString stringWithUTF8String:defaultTransform.c_str()]];
+            NSMenuItem *defaultItem = [viewMenu itemWithTitle:[NSString stringWithUTF8String:defaultView.c_str()]];
             
             NSAssert(defaultItem != nil, @"where's that default item?");
             
-            [transformMenu selectItem:defaultItem];
+            [viewMenu selectItem:defaultItem];
             
             
-            [transform release];
+            [view release];
             
-            transform = [[transformMenu titleOfSelectedItem] retain];
+            view = [[viewMenu titleOfSelectedItem] retain];
         }
     }
     else
     {
         // set value from menu
-        [transform release];
+        [view release];
         
-        transform = [[transformMenu titleOfSelectedItem] retain];
+        view = [[viewMenu titleOfSelectedItem] retain];
     }
 }
 
@@ -981,14 +981,14 @@
     return outputSpace;
 }
 
-- (NSString *)device
+- (NSString *)display
 {
-    return device;
+    return display;
 }
 
-- (NSString *)transform
+- (NSString *)view
 {
-    return transform;
+    return view;
 }
 
 @end

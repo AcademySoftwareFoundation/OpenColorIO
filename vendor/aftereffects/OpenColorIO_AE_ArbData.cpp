@@ -39,8 +39,8 @@ PF_Err ArbNewDefault(PF_InData *in_data, PF_OutData *out_data,
             
             arb_data->input[0]          = '\0';
             arb_data->output[0]         = '\0';
-            arb_data->transform[0]      = '\0';
-            arb_data->device[0]         = '\0';
+            arb_data->view[0]           = '\0';
+            arb_data->display[0]        = '\0';
             arb_data->look[0]           = '\0';
             
             
@@ -63,8 +63,8 @@ PF_Err ArbNewDefault(PF_InData *in_data, PF_OutData *out_data,
                     {
                         strncpy(arb_data->input, context.getInput().c_str(), ARB_SPACE_LEN);
                         strncpy(arb_data->output, context.getOutput().c_str(), ARB_SPACE_LEN);
-                        strncpy(arb_data->transform, context.getTransform().c_str(), ARB_SPACE_LEN);
-                        strncpy(arb_data->device, context.getDevice().c_str(), ARB_SPACE_LEN);
+                        strncpy(arb_data->view, context.getView().c_str(), ARB_SPACE_LEN);
+                        strncpy(arb_data->display, context.getDisplay().c_str(), ARB_SPACE_LEN);
                     }
                 }
                 catch(...) {}
@@ -111,8 +111,8 @@ static void CopyArbData(ArbitraryData *out_arb_data, ArbitraryData *in_arb_data)
     
     strcpy(out_arb_data->input, in_arb_data->input);
     strcpy(out_arb_data->output, in_arb_data->output);
-    strcpy(out_arb_data->transform, in_arb_data->transform);
-    strcpy(out_arb_data->device, in_arb_data->device);
+    strcpy(out_arb_data->view, in_arb_data->view);
+    strcpy(out_arb_data->display, in_arb_data->display);
     strcpy(out_arb_data->look, in_arb_data->look);
 }
 
@@ -282,8 +282,8 @@ static PF_Err ArbCompare(PF_InData *in_data, PF_OutData *out_data,
             !strcmp(a_data->path, b_data->path) &&
             !strcmp(a_data->input, b_data->input) &&
             !strcmp(a_data->output, b_data->output) &&
-            !strcmp(a_data->transform, b_data->transform) &&
-            !strcmp(a_data->device, b_data->device) &&
+            !strcmp(a_data->view, b_data->view) &&
+            !strcmp(a_data->display, b_data->display) &&
             !strcmp(a_data->look, b_data->look) )
         {
             *compareP = PF_ArbCompare_EQUAL;

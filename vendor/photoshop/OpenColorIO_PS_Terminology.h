@@ -11,8 +11,8 @@
 #define ocioKeyInterpolation    'oInt'
 #define ocioKeyInputSpace       'oInp'
 #define ocioKeyOutputSpace      'oOut'
-#define ocioKeyTransform        'oTrn'
-#define ocioKeyDevice           'oDev'
+#define ocioKeyView        		'oTrn' // was transform
+#define ocioKeyDisplay			'oDev' // was device
 
 #define typeSource          'tSrc'
 #define sourceEnvironment   'sEnv'

@@ -53,8 +53,8 @@ typedef enum ControllerInterp
     ControllerAction action;
     NSString *inputSpace;
     NSString *outputSpace;
-    NSString *device;
-    NSString *transform;
+    NSString *display;
+    NSString *view;
     
     ControllerInterp interpolation;
     BOOL invert;
@@ -67,8 +67,8 @@ typedef enum ControllerInterp
         interpolation:(ControllerInterp)interpolation
         inputSpace:(NSString *)inputSpace
         outputSpace:(NSString *)outputSpace
-        device:(NSString *)device
-        transform:(NSString *)transform;
+        display:(NSString *)display
+        view:(NSString *)view;
         
 - (IBAction)clickedOK:(id)sender;
 - (IBAction)clickedCancel:(id)sender;
@@ -93,7 +93,7 @@ typedef enum ControllerInterp
 - (ControllerInterp)interpolation;
 - (NSString *)inputSpace;
 - (NSString *)outputSpace;
-- (NSString *)device;
-- (NSString *)transform;
+- (NSString *)display;
+- (NSString *)view;
 
 @end
