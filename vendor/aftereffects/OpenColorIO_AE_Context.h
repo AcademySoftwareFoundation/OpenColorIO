@@ -105,10 +105,10 @@ class OpenColorIO_AE_Context
     OCIO_Interp _interpolation;
     
     
-    OCIO::ConstConfigRcPtr      _config;
-    OCIO::ConstProcessorRcPtr   _processor;
-    OCIO::ConstCPUProcessorRcPtr   _cpu_processor;
-    OCIO::ConstGPUProcessorRcPtr   _gpu_processor;
+    OCIO::ConstConfigRcPtr _config;
+    OCIO::ConstProcessorRcPtr _processor;
+    OCIO::ConstCPUProcessorRcPtr _cpu_processor;
+    OCIO::ConstGPUProcessorRcPtr _gpu_processor;
     
     
     bool _gl_init;
@@ -117,16 +117,6 @@ class OpenColorIO_AE_Context
 
     GLuint _imageTexID;
 
-    GLuint _lut3dTexID;
-    std::vector<float> _lut3d;
-    std::string _lut3dcacheid;
-    std::string _shadercacheid;
-
-    std::string _inputColorSpace;
-    std::string _display;
-    std::string _transformName;
-    
-    
     GLuint _renderBuffer;
     int _bufferWidth;
     int _bufferHeight;

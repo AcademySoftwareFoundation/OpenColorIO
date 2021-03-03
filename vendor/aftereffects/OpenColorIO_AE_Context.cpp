@@ -807,22 +807,6 @@ void OpenColorIO_AE_Context::InitOCIOGL()
         SetPluginContext();
     
         glGenTextures(1, &_imageTexID);
-        glGenTextures(1, &_lut3dTexID);
-        
-        int num3Dentries = 3*LUT3D_EDGE_SIZE*LUT3D_EDGE_SIZE*LUT3D_EDGE_SIZE;
-        _lut3d.resize(num3Dentries);
-        memset(&_lut3d[0], 0, sizeof(float)*num3Dentries);
-        
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_3D, _lut3dTexID);
-        glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-        glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA32F_ARB,
-                        LUT3D_EDGE_SIZE, LUT3D_EDGE_SIZE, LUT3D_EDGE_SIZE,
-                            0, GL_RGB,GL_FLOAT, &_lut3d[0]);
                             
         _bufferWidth = _bufferHeight = 0;
         
@@ -835,63 +819,13 @@ void OpenColorIO_AE_Context::InitOCIOGL()
 
 static const char * g_fragShaderText = ""
 "\n"
-"uniform sampler2D tex1;\n"
+"uniform sampler2D img;\n"
 "\n"
 "void main()\n"
 "{\n"
-"    vec4 col = texture2D(tex1, gl_TexCoord[0].st);\n"
-"    gl_FragColor = OCIODisplay(col);\n"
+"    vec4 col = texture2D(img, gl_TexCoord[0].st);\n"
+"    gl_FragColor = OCIOMain(col);\n"
 "}\n";
-
-
-static GLuint CompileShaderText(GLenum shaderType, const char *text)
-{
-    GLuint shader;
-    GLint stat;
-    
-    shader = glCreateShader(shaderType);
-    glShaderSource(shader, 1, (const GLchar **) &text, NULL);
-    glCompileShader(shader);
-    glGetShaderiv(shader, GL_COMPILE_STATUS, &stat);
-    
-    if (!stat)
-    {
-        GLchar log[1000];
-        GLsizei len;
-        glGetShaderInfoLog(shader, 1000, &len, log);
-        return 0;
-    }
-    
-    return shader;
-}
-
-
-static GLuint LinkShaders(GLuint fragShader)
-{
-    if (!fragShader) return 0;
-    
-    GLuint program = glCreateProgram();
-    
-    if (fragShader)
-        glAttachShader(program, fragShader);
-    
-    glLinkProgram(program);
-    
-    // check link
-    {
-        GLint stat;
-        glGetProgramiv(program, GL_LINK_STATUS, &stat);
-        if (!stat) {
-            GLchar log[1000];
-            GLsizei len;
-            glGetProgramInfoLog(program, 1000, &len, log);
-            //fprintf(stderr, "Shader link error:\n%s\n", log);
-            return 0;
-        }
-    }
-    
-    return program;
-}
 
 
 void OpenColorIO_AE_Context::UpdateOCIOGLState()
@@ -903,7 +837,7 @@ void OpenColorIO_AE_Context::UpdateOCIOGLState()
         // Step 1: Create a GPU Shader Description
         OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
         shaderDesc->setLanguage(OCIO::GPU_LANGUAGE_GLSL_1_2);
-        shaderDesc->setFunctionName("OCIODisplay");
+        shaderDesc->setFunctionName("OCIOMain");
         shaderDesc->setResourcePrefix("ocio_");
         
         // Step 2: Collect the shader program information for a specific processor
@@ -911,7 +845,7 @@ void OpenColorIO_AE_Context::UpdateOCIOGLState()
         
         // Step 3: Use the helper OpenGL builder
         _oglBuilder = OCIO::OpenGLBuilder::Create(shaderDesc);
-        //oglBuilder->setVerbose(false);
+        //_oglBuilder->setVerbose(true);
         
         // Step 4: Allocate & upload all the LUTs
         //
@@ -962,23 +896,19 @@ bool OpenColorIO_AE_Context::ProcessWorldGL(PF_EffectWorld *float_world)
     glBindTexture(GL_TEXTURE_2D, _imageTexID);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F_ARB, float_world->width, float_world->height, 0,
         GL_RGBA, GL_FLOAT, rgba_origin);
+    
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-    
-    
-    glBindTexture(GL_TEXTURE_3D, _lut3dTexID);
-    glTexSubImage3D(GL_TEXTURE_3D, 0,
-                    0, 0, 0, 
-                    LUT3D_EDGE_SIZE, LUT3D_EDGE_SIZE, LUT3D_EDGE_SIZE,
-                    GL_RGB, GL_FLOAT, &_lut3d[0]);
-    
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
     
     // Step 6: Enable the fragment shader program, and all needed textures
     _oglBuilder->useProgram();
-    glUniform1i(glGetUniformLocation(_oglBuilder->getProgramHandle(), "tex1"), 0);
+    glUniform1i(glGetUniformLocation(_oglBuilder->getProgramHandle(), "img"), 0);
     _oglBuilder->useAllTextures();
+    _oglBuilder->useAllUniforms();
     
     
     if(GL_NO_ERROR != glGetError())
@@ -1000,7 +930,7 @@ bool OpenColorIO_AE_Context::ProcessWorldGL(PF_EffectWorld *float_world)
         
         glGenRenderbuffersEXT(1, &_renderBuffer);
         glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, _renderBuffer);
-        glRenderbufferStorageEXT(GL_RENDERBUFFER_EXT, GL_RGBA, _bufferWidth, _bufferHeight);
+        glRenderbufferStorageEXT(GL_RENDERBUFFER_EXT, GL_RGBA32F_ARB, _bufferWidth, _bufferHeight);
         
         // attach renderbuffer to framebuffer
         glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT,
@@ -1013,20 +943,18 @@ bool OpenColorIO_AE_Context::ProcessWorldGL(PF_EffectWorld *float_world)
         return false;
     }
     
-    glDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);
-    
     
     glViewport(0, 0, float_world->width, float_world->height);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    glOrtho(0.0, float_world->width, 0.0, float_world->height, -100.0, 100.0);
+    gluOrtho2D(0.0, float_world->width, 0.0, float_world->height);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     
     
     glEnable(GL_TEXTURE_2D);
     glClearColor(0.1f, 0.1f, 0.1f, 0.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glColor3f(1, 1, 1);
     
     glPushMatrix();
@@ -1053,9 +981,9 @@ bool OpenColorIO_AE_Context::ProcessWorldGL(PF_EffectWorld *float_world)
     glReadPixels(0, 0, float_world->width, float_world->height,
                     GL_RGBA, GL_FLOAT, rgba_origin);
     
-    
     glFinish();
     
+    const bool result = (GL_NO_ERROR == glGetError());
     
     SetAEContext();
     
