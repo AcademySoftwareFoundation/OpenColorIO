@@ -462,6 +462,7 @@ bool ColorSpacePopUpMenu(OCIO::ConstConfigRcPtr config, std::string &colorSpace,
                 [roleColorSpaceItem setState:NSOnState];
             }
         }
+
     }
     
         
