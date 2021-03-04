@@ -152,7 +152,7 @@ OpenColorIO_PS_Context::getLUTProcessor(OCIO::Interpolation interpolation, OCIO:
     
     OCIO::ConstProcessorRcPtr processor = _config->getProcessor(transform);
     
-    OCIO::ConstCPUProcessorRcPtr cpu_processor = processor->getOptimizedCPUProcessor(OCIO::OPTIMIZATION_LOSSLESS);
+    OCIO::ConstCPUProcessorRcPtr cpu_processor = processor->getDefaultCPUProcessor();
     
     return cpu_processor;
 }
