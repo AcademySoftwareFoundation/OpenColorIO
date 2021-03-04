@@ -317,9 +317,11 @@ int main(int argc, const char **argv)
             try
             {
                 std::cout << std::endl;
-                std::cout << "OCIO Configuration: '" << env << "'" << std::endl;
+                std::cout << "OCIO Config. file:    '" << env << "'" << std::endl;
                 OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
-                std::cout << "OCIO search_path:    " << config->getSearchPath() << std::endl;
+                std::cout << "OCIO Config. version: " << config->getMajorVersion() << "." 
+                                                      << config->getMinorVersion() << std::endl;
+                std::cout << "OCIO search_path:     " << config->getSearchPath() << std::endl;
             }
             catch(...)
             {
@@ -546,7 +548,7 @@ int main(int argc, const char **argv)
 
         // Get the GPU Shader.
         OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
-        shaderDesc->setLanguage(OCIO::GPU_LANGUAGE_GLSL_1_3);
+        shaderDesc->setLanguage(OCIO::GPU_LANGUAGE_GLSL_1_2);
 
         {
             CustomMeasure m("Create the GPU shader:\t\t\t", iterations);

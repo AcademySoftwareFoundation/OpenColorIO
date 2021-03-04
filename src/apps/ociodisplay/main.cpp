@@ -694,8 +694,10 @@ int main(int argc, char **argv)
         if(env && *env)
         {
             std::cout << std::endl;
-            std::cout << "OCIO Configuration: '" << env << "'" << std::endl;
-            std::cout << "OCIO search_path:    " << config->getSearchPath() << std::endl;
+            std::cout << "OCIO Config. file   : '" << env << "'" << std::endl;
+            std::cout << "OCIO Config. version: " << config->getMajorVersion() << "." 
+                                                  << config->getMinorVersion() << std::endl;
+            std::cout << "OCIO search_path    : " << config->getSearchPath() << std::endl;
         }
     }
 
