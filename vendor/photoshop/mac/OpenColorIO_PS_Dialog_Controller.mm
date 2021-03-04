@@ -782,7 +782,7 @@
         if(sender == nil)
         {
             // set menu from values
-            NSAssert([displayMenu itemWithTitle:display] != nil, @"don't have the device");
+            NSAssert([displayMenu itemWithTitle:display] != nil, @"don't have the display");
             
             [displayMenu selectItemWithTitle:display];
         }
@@ -803,7 +803,7 @@
         if(sender == nil)
         {
             // set menu from values
-            NSAssert([outputMenu itemWithTitle:outputSpace] != nil, @"don't have the device");
+            NSAssert([outputMenu itemWithTitle:outputSpace] != nil, @"don't have the color space");
             
             [outputMenu selectItemWithTitle:outputSpace];
         }
@@ -823,7 +823,7 @@
         
         NSAssert(context != NULL, @"context was NULL");
         
-        const SpaceVec views = context->getViews([view UTF8String]);
+        const SpaceVec views = context->getViews([display UTF8String]);
         
         NSPopUpButton *viewMenu = menu3;
         
