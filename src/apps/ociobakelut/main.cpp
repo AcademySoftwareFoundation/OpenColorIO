@@ -78,7 +78,7 @@ int main (int argc, const char* argv[])
                "example:  ociobakelut --cccid 0 --lut cdlgrade.ccc --lut calibration.3dl --format flame graded_display.3dl\n"
                "example:  ociobakelut --lut look.3dl --offset 0.01 -0.02 0.03 --lut display.3dl --format flame display_with_look.3dl\n"
                "example:  ociobakelut --inputspace lg10 --outputspace srgb8 --format icc ~/Library/ColorSync/Profiles/test.icc\n"
-               "example:  ociobakelut --inputspace <inputspace name> --view <view name> <display name> --format <format name> <format path>"
+               "example:  ociobakelut --inputspace <inputspace name> --view <view name> <display name> --format <format name> <format path>\n"
                "example:  ociobakelut --lut filmlut.3dl --lut calibration.3dl --format icc ~/Library/ColorSync/Profiles/test.icc\n\n",
                "%*", parse_end_args, "",
                "<SEPARATOR>", "Using Existing OCIO Configurations",
@@ -138,14 +138,9 @@ int main (int argc, const char* argv[])
         verbose = false;
     }
 
-    if(!useLut && !useDisplayView)
-    {
-        
-    }
-
     else if (useLut && useDisplayView)
     {
-        std::cerr << "ERROR: Options --lut & --view can't be used at the same time!" << std::endl;
+        std::cerr << "ERROR: Options --lut & --view can't be used at the same time" << std::endl;
         ap.usage();
         exit(1);
     }
@@ -179,11 +174,11 @@ int main (int argc, const char* argv[])
         return 1;
     }
 
-    // If --luts have been specified, synthesize a new (temporary) configuration
+    // If --luts or --view have been specified, synthesize a new (temporary) configuration
     // with the transformation embedded in a colorspace.
     if(groupTransform->getNumTransforms() > 0)
     {
-        if(groupTransform->getTransformType() == OCIO::TransformType::TRANSFORM_TYPE_FILE)
+        if(groupTransform->getTransform(0)->getTransformType() == OCIO::TransformType::TRANSFORM_TYPE_FILE)
         {
             if(!inputspace.empty())
             {
@@ -234,7 +229,7 @@ int main (int argc, const char* argv[])
             editableConfig->addColorSpace(outputColorSpace);
             config = editableConfig;
         }
-        else
+        else if(groupTransform->getTransform(0)->getTransformType() == OCIO::TransformType::TRANSFORM_TYPE_DISPLAY_VIEW)
         {
             if(inputspace.empty())
             {
@@ -248,17 +243,34 @@ int main (int argc, const char* argv[])
                 std::cerr << "See --help for more info." << std::endl;
                 return 1;
             }
+            if(view.empty())
+            {
+                std::cerr << "\nERROR: Specifying the view is required when using --view\n\n";
+                std::cerr << "See --help for more info." << std::endl;
+                return 1;
+            }
+            if(display.empty())
+            {
+                std::cerr << "\nERROR: Specifying the display is required when using --view\n\n";
+                std::cerr << "See --help for more info." << std::endl;
+                return 1;
+            }
 
+            // Creating a new config
             OCIO::ConfigRcPtr editableConfig = OCIO::Config::Create();
+
+            //Setting up input ColorSpace
             OCIO::ColorSpaceRcPtr inputColorSpace = OCIO::ColorSpace::Create();
             inputColorSpace->setName(inputspace.c_str());
             editableConfig->addColorSpace(inputColorSpace);
 
+            //Setting up the output ColorSpace
             OCIO::ColorSpaceRcPtr outputColorSpace = OCIO::ColorSpace::Create();
             outputspace = "ProcessedOutput";
             outputColorSpace->setName(outputspace.c_str());
 
-            auto t = OCIO::DisplayViewTransform::Create();
+            // Creating the transform and applying to outputColorSpace
+            OCIO::DisplayViewTransformRcPtr t = OCIO::DisplayViewTransform::Create();
             t->setSrc(inputspace.c_str());
             t->setDisplay(display.c_str());
             t->setView(view.c_str());
@@ -590,7 +602,7 @@ OCIO::GroupTransformRcPtr parse_luts(int argc, const char *argv[])
         }
         else if(arg == "--view" || arg == "-view")
         {
-            if(i + 1 >= argc)
+            if(i + 2 >= argc)
             {
                 throw OCIO::Exception("Error parsing --view. Invalid number of arguments");
             }
