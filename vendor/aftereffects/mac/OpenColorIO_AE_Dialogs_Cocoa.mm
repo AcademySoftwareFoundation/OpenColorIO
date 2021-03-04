@@ -271,25 +271,22 @@ bool ColorSpacePopUpMenu(OCIO::ConstConfigRcPtr config, std::string &colorSpace,
             }
         }
         
-        if(colorSpacePtr->getNumCategories() > 0)
+        for(int j=0; j < colorSpacePtr->getNumCategories(); j++)
         {
-            for(int j=0; j < colorSpacePtr->getNumCategories(); j++)
+            const char *categoryName = colorSpacePtr->getCategory(j);
+                
+            NSString *category = [NSString stringWithUTF8String:categoryName];
+                
+            NSMutableOrderedSet<NSString *> *categorySet = [categoriesDict objectForKey:category];
+                
+            if(categorySet == nil)
             {
-                const char *categoryName = colorSpacePtr->getCategory(j);
-                
-                NSString *category = [NSString stringWithUTF8String:categoryName];
-                
-                NSMutableOrderedSet<NSString *> *categorySet = [categoriesDict objectForKey:category];
-                
-                if(categorySet == nil)
-                {
-                    categorySet = [NSMutableOrderedSet orderedSet];
+                categorySet = [NSMutableOrderedSet orderedSet];
                     
-                    [categoriesDict setObject:categorySet forKey:category];
-                }
-                
-                [categorySet addObject:[NSString stringWithUTF8String:colorSpaceName]];
+                [categoriesDict setObject:categorySet forKey:category];
             }
+                
+            [categorySet addObject:[NSString stringWithUTF8String:colorSpaceName]];
         }
         
         const char *encoding = colorSpacePtr->getEncoding();
