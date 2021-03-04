@@ -235,6 +235,8 @@ bool ColorSpacePopUpMenu(OCIO::ConstConfigRcPtr config, std::string &colorSpace,
         }
         
         
+        assert(config->getFamilySeparator() == '/');
+        
         NSArray *pathComponents = [colorSpacePath pathComponents];
         
         NSMenu *currentMenu = menu;
@@ -459,7 +461,6 @@ bool ColorSpacePopUpMenu(OCIO::ConstConfigRcPtr config, std::string &colorSpace,
                 [roleColorSpaceItem setState:NSOnState];
             }
         }
-
     }
     
         
