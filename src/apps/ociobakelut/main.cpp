@@ -46,6 +46,8 @@ int main (int argc, const char* argv[])
     std::string view;
     bool usestdout = false;
     bool verbose = false;
+    bool useDisplayView = false;
+    bool useLut = false;
 
     int whitepointtemp = 6505;
     std::string displayicc;
@@ -76,6 +78,7 @@ int main (int argc, const char* argv[])
                "example:  ociobakelut --cccid 0 --lut cdlgrade.ccc --lut calibration.3dl --format flame graded_display.3dl\n"
                "example:  ociobakelut --lut look.3dl --offset 0.01 -0.02 0.03 --lut display.3dl --format flame display_with_look.3dl\n"
                "example:  ociobakelut --inputspace lg10 --outputspace srgb8 --format icc ~/Library/ColorSync/Profiles/test.icc\n"
+               "example:  ociobakelut --inputspace <inputspace name> --view <view name> <display name> --format <format name> <format path>"
                "example:  ociobakelut --lut filmlut.3dl --lut calibration.3dl --format icc ~/Library/ColorSync/Profiles/test.icc\n\n",
                "%*", parse_end_args, "",
                "<SEPARATOR>", "Using Existing OCIO Configurations",
@@ -98,15 +101,17 @@ int main (int argc, const char* argv[])
                "--format %s", &format, formatstr.c_str(),
                "--shapersize %d", &shapersize, "size of the shaper (default: format specific)",
                "--cubesize %d", &cubesize, "size of the cube (default: format specific)",
+               "--view %s %s", &view, &display, "for OCIO view and display instead of outputspace",
                "--stdout", &usestdout, "Write to stdout (rather than file)",
                "--v", &verbose, "Verbose",
+               "--lut", &useLut, "Bake using a LUT rather than a config file"
+               "--view", &useDisplayView,   "Convert to a (display,view) pair rather than to "
+                                            "an output color space",
                "--help", &help, "Print help message\n",
                "<SEPARATOR>", "ICC Options",
-               //"--cubesize %d", &cubesize, "size of the ICC CLUT cube (default: 32)",
+            //    "--cubesize %d", &cubesize, "size of the ICC CLUT cube (default: 32)",
                "--whitepoint %d", &whitepointtemp, "whitepoint for the profile (default: 6505)",
                "--displayicc %s", &displayicc , "an ICC profile which matches the OCIO profiles target display",
-               "--display %s", &display, "Display for OCIO",
-               "--view %s", &view, "View for OCIO",
                "--description %s", &description , "a meaningful description, this will show up in UI like photoshop (defaults to \"filename.icc\")",
                "--copyright %s", &copyright , "a copyright field added in the file (default: \"No copyright. Use freely.\")\n",
                // TODO: add --metadata option
@@ -131,6 +136,18 @@ int main (int argc, const char* argv[])
     if(usestdout)
     {
         verbose = false;
+    }
+
+    if(!useLut && !useDisplayView)
+    {
+        
+    }
+
+    else if (useLut && useDisplayView)
+    {
+        std::cerr << "ERROR: Options --lut & --view can't be used at the same time!" << std::endl;
+        ap.usage();
+        exit(1);
     }
 
     // Create the OCIO processor for the specified transform.
@@ -166,54 +183,90 @@ int main (int argc, const char* argv[])
     // with the transformation embedded in a colorspace.
     if(groupTransform->getNumTransforms() > 0)
     {
-        if(!inputspace.empty())
+        if(groupTransform->getTransformType() == OCIO::TransformType::TRANSFORM_TYPE_FILE)
         {
-            std::cerr << "\nERROR: --inputspace is not allowed when using --lut\n\n";
-            std::cerr << "See --help for more info." << std::endl;
-            return 1;
+            if(!inputspace.empty())
+            {
+                std::cerr << "\nERROR: --inputspace is not allowed when using --lut\n\n";
+                std::cerr << "See --help for more info." << std::endl;
+                return 1;
+            }
+            if(!outputspace.empty())
+            {
+                std::cerr << "\nERROR: --outputspace is not allowed when using --lut\n\n";
+                std::cerr << "See --help for more info." << std::endl;
+                return 1;
+            }
+            if(!looks.empty())
+            {
+                std::cerr << "\nERROR: --looks is not allowed when using --lut\n\n";
+                std::cerr << "See --help for more info." << std::endl;
+                return 1;
+            }
+            if(!shaperspace.empty())
+            {
+                std::cerr << "\nERROR: --shaperspace is not allowed when using --lut\n\n";
+                std::cerr << "See --help for more info." << std::endl;
+                return 1;
+            }
+
+            OCIO::ConfigRcPtr editableConfig = OCIO::Config::Create();
+
+            OCIO::ColorSpaceRcPtr inputColorSpace = OCIO::ColorSpace::Create();
+            inputspace = "RawInput";
+            inputColorSpace->setName(inputspace.c_str());
+            editableConfig->addColorSpace(inputColorSpace);
+
+            OCIO::ColorSpaceRcPtr outputColorSpace = OCIO::ColorSpace::Create();
+            outputspace = "ProcessedOutput";
+            outputColorSpace->setName(outputspace.c_str());
+
+            outputColorSpace->setTransform(groupTransform,
+                OCIO::COLORSPACE_DIR_FROM_REFERENCE);
+
+            if(verbose)
+            {
+                std::cout << "[OpenColorIO DEBUG]: Specified Transform:";
+                std::cout << *groupTransform;
+                std::cout << "\n";
+            }
+
+            editableConfig->addColorSpace(outputColorSpace);
+            config = editableConfig;
         }
-        if(!outputspace.empty())
+        else
         {
-            std::cerr << "\nERROR: --outputspace is not allowed when using --lut\n\n";
-            std::cerr << "See --help for more info." << std::endl;
-            return 1;
+            if(inputspace.empty())
+            {
+                std::cerr << "\nERROR: --inputspace is required when using --view\n\n";
+                std::cerr << "See --help for more info." << std::endl;
+                return 1;
+            }
+            if(!outputspace.empty())
+            {
+                std::cerr << "\nERROR: --outputspace is not allowed when using --view\n\n";
+                std::cerr << "See --help for more info." << std::endl;
+                return 1;
+            }
+
+            OCIO::ConfigRcPtr editableConfig = OCIO::Config::Create();
+            OCIO::ColorSpaceRcPtr inputColorSpace = OCIO::ColorSpace::Create();
+            inputColorSpace->setName(inputspace.c_str());
+            editableConfig->addColorSpace(inputColorSpace);
+
+            OCIO::ColorSpaceRcPtr outputColorSpace = OCIO::ColorSpace::Create();
+            outputspace = "ProcessedOutput";
+            outputColorSpace->setName(outputspace.c_str());
+
+            auto t = OCIO::DisplayViewTransform::Create();
+            t->setSrc(inputspace.c_str());
+            t->setDisplay(display.c_str());
+            t->setView(view.c_str());
+            outputColorSpace->setTransform(t, OCIO::COLORSPACE_DIR_FROM_REFERENCE);
+
+            editableConfig->addColorSpace(outputColorSpace);
+            config = editableConfig;
         }
-        if(!looks.empty())
-        {
-            std::cerr << "\nERROR: --looks is not allowed when using --lut\n\n";
-            std::cerr << "See --help for more info." << std::endl;
-            return 1;
-        }
-        if(!shaperspace.empty())
-        {
-            std::cerr << "\nERROR: --shaperspace is not allowed when using --lut\n\n";
-            std::cerr << "See --help for more info." << std::endl;
-            return 1;
-        }
-
-        OCIO::ConfigRcPtr editableConfig = OCIO::Config::Create();
-
-        OCIO::ColorSpaceRcPtr inputColorSpace = OCIO::ColorSpace::Create();
-        inputspace = "RawInput";
-        inputColorSpace->setName(inputspace.c_str());
-        editableConfig->addColorSpace(inputColorSpace);
-
-        OCIO::ColorSpaceRcPtr outputColorSpace = OCIO::ColorSpace::Create();
-        outputspace = "ProcessedOutput";
-        outputColorSpace->setName(outputspace.c_str());
-
-        outputColorSpace->setTransform(groupTransform,
-            OCIO::COLORSPACE_DIR_FROM_REFERENCE);
-
-        if(verbose)
-        {
-            std::cout << "[OpenColorIO DEBUG]: Specified Transform:";
-            std::cout << *groupTransform;
-            std::cout << "\n";
-        }
-
-        editableConfig->addColorSpace(outputColorSpace);
-        config = editableConfig;
     }
     else
     {
@@ -534,6 +587,19 @@ OCIO::GroupTransformRcPtr parse_luts(int argc, const char *argv[])
             groupTransform->appendTransform(t);
 
             i += 1;
+        }
+        else if(arg == "--view" || arg == "-view")
+        {
+            if(i + 1 >= argc)
+            {
+                throw OCIO::Exception("Error parsing --view. Invalid number of arguments");
+            }
+
+            OCIO::DisplayViewTransformRcPtr t = OCIO::DisplayViewTransform::Create();
+            t->setView(argv[i + 1]);
+            t->setDisplay(argv[i + 2]);
+            groupTransform->appendTransform(t);
+            i += 2;
         }
     }
 
