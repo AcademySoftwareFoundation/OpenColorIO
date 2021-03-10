@@ -11,19 +11,15 @@
 #include "OpBuilders.h"
 #include "Platform.h"
 #include "transforms/builtins/ACES.h"
-#include "transforms/builtins/BuiltinTransformRegistry.h"
-#include "utils/StringUtils.h"
-
-#ifdef ADD_EXTRA_BUILTINS
-
 #include "transforms/builtins/ArriCameras.h"
+#include "transforms/builtins/BuiltinTransformRegistry.h"
 #include "transforms/builtins/CanonCameras.h"
 #include "transforms/builtins/Displays.h"
 #include "transforms/builtins/PanasonicCameras.h"
 #include "transforms/builtins/RedCameras.h"
 #include "transforms/builtins/SonyCameras.h"
+#include "utils/StringUtils.h"
 
-#endif // ADD_EXTRA_BUILTINS
 
 namespace OCIO_NAMESPACE
 {
@@ -37,18 +33,15 @@ static Mutex globalRegistryMutex;
 
 void AddExtraBuiltins(BuiltinTransformRegistryImpl & registry)
 {
-#ifdef ADD_EXTRA_BUILTINS
-
     // Camera support.
     CAMERA::ARRI::RegisterAll(registry);
     CAMERA::CANON::RegisterAll(registry);
     CAMERA::PANASONIC::RegisterAll(registry);
     CAMERA::RED::RegisterAll(registry);
     CAMERA::SONY::RegisterAll(registry);
+
     // Other transforms.
     DISPLAY::RegisterAll(registry);
-
-#endif // ADD_EXTRA_BUILTINS
 }
 
 } // anon.
