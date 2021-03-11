@@ -137,13 +137,13 @@ set(SOURCES
 	transforms/builtins/BuiltinTransformRegistry.cpp
 	transforms/builtins/ColorMatrixHelpers.cpp
 	transforms/builtins/OpHelpers.cpp
-	transforms/BuiltinTransform.cpp
 	transforms/builtins/ArriCameras.cpp
 	transforms/builtins/CanonCameras.cpp
 	transforms/builtins/Displays.cpp
 	transforms/builtins/PanasonicCameras.cpp
 	transforms/builtins/RedCameras.cpp
 	transforms/builtins/SonyCameras.cpp
+	transforms/BuiltinTransform.cpp
 	transforms/CDLTransform.cpp
 	transforms/ColorSpaceTransform.cpp
 	transforms/DisplayViewTransform.cpp

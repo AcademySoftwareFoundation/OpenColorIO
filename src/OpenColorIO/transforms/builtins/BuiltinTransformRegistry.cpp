@@ -30,20 +30,6 @@ namespace
 static BuiltinTransformRegistryRcPtr globalRegistry;
 static Mutex globalRegistryMutex;
 
-
-void AddExtraBuiltins(BuiltinTransformRegistryImpl & registry)
-{
-    // Camera support.
-    CAMERA::ARRI::RegisterAll(registry);
-    CAMERA::CANON::RegisterAll(registry);
-    CAMERA::PANASONIC::RegisterAll(registry);
-    CAMERA::RED::RegisterAll(registry);
-    CAMERA::SONY::RegisterAll(registry);
-
-    // Other transforms.
-    DISPLAY::RegisterAll(registry);
-}
-
 } // anon.
 
 ConstBuiltinTransformRegistryRcPtr BuiltinTransformRegistry::Get() noexcept
@@ -119,9 +105,18 @@ void BuiltinTransformRegistryImpl::registerAll() noexcept
                                                 CreateIdentityMatrixOp(ops);
                                             } } );
 
+    // ACES support.
     ACES::RegisterAll(*this);
 
-    AddExtraBuiltins(*this);
+    // Camera support.
+    CAMERA::ARRI::RegisterAll(*this);
+    CAMERA::CANON::RegisterAll(*this);
+    CAMERA::PANASONIC::RegisterAll(*this);
+    CAMERA::RED::RegisterAll(*this);
+    CAMERA::SONY::RegisterAll(*this);
+
+    // Display support.
+    DISPLAY::RegisterAll(*this);
 }
 
 

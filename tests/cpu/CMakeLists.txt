@@ -100,8 +100,8 @@ set(SOURCES
     Transform.cpp
     transforms/builtins/ACES.cpp
     transforms/builtins/ArriCameras.cpp
-    transforms/builtins/ColorMatrixHelpers.cpp
     transforms/builtins/CanonCameras.cpp
+    transforms/builtins/ColorMatrixHelpers.cpp
     transforms/builtins/Displays.cpp
     transforms/builtins/OpHelpers.cpp
     transforms/builtins/PanasonicCameras.cpp
