@@ -100,6 +100,13 @@ OCIO_ADD_TEST(Lut1DTransform, basic)
     OCIO_CHECK_EQUAL(oss.str(), "<Lut1DTransform direction=inverse, fileoutdepth=8ui,"
         " interpolation=default, inputhalf=0, outputrawhalf=0, hueadjust=0,"
         " length=3, minrgb=[-0.2 0.1 -0.3], maxrgb=[1.2 1.3 0.8]>");
+
+    auto lut2 = OCIO_DYNAMIC_POINTER_CAST<const OCIO::Lut1DTransform>(lut->createEditableCopy());
+    std::ostringstream oss2;
+    oss2 << *lut2;
+    OCIO_CHECK_EQUAL(oss2.str(), oss.str());
+
+    OCIO_CHECK_ASSERT(lut->equals(*lut2));
 }
 
 OCIO_ADD_TEST(Lut1DTransform, create_with_parameters)
@@ -180,4 +187,15 @@ OCIO_ADD_TEST(Lut1DTransform, hue_adjust)
     OCIO_CHECK_EQUAL(lut->getHueAdjust(), OCIO::HUE_DW3);
     OCIO_CHECK_THROW_WHAT(lut->setHueAdjust(OCIO::HUE_WYPN), OCIO::Exception,
                           "1D LUT HUE_WYPN hue adjust style is not implemented.");
+}
+
+OCIO_ADD_TEST(Lut1DTransform, format_metadata)
+{
+    auto lut = OCIO::Lut1DTransform::Create();
+    OCIO::FormatMetadata & fmd = lut->getFormatMetadata();
+    fmd.setName("test LUT");
+    fmd.setID("LUTID");
+    const OCIO::FormatMetadata & cfmd = lut->getFormatMetadata();
+    OCIO_CHECK_EQUAL(std::string(cfmd.getName()), "test LUT");
+    OCIO_CHECK_EQUAL(std::string(cfmd.getID()), "LUTID");
 }
