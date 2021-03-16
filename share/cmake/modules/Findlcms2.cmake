@@ -97,10 +97,6 @@ endif()
 if(NOT lcms2_FOUND)
     include(ExternalProject)
 
-    if(APPLE)
-        set(CMAKE_OSX_DEPLOYMENT_TARGET ${CMAKE_OSX_DEPLOYMENT_TARGET})
-    endif()
-
     set(_EXT_DIST_ROOT "${CMAKE_BINARY_DIR}/ext/dist")
     set(_EXT_BUILD_ROOT "${CMAKE_BINARY_DIR}/ext/build")
 
@@ -113,7 +109,7 @@ if(NOT lcms2_FOUND)
 
     if(_lcms2_TARGET_CREATE)
         if(UNIX)
-            set(lcms2_C_FLAGS "${lcms2_C_FLAGS} -fPIC")
+            set(lcms2_C_FLAGS "${lcms2_C_FLAGS} -fvisibility=hidden -fPIC")
         endif()
 
         if("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
@@ -140,9 +136,15 @@ if(NOT lcms2_FOUND)
             -DCMAKE_OBJECT_PATH_MAX=${CMAKE_OBJECT_PATH_MAX}
             -DBUILD_SHARED_LIBS=OFF
         )
+
         if(CMAKE_TOOLCHAIN_FILE)
             set(lcms2_CMAKE_ARGS
                 ${lcms2_CMAKE_ARGS} -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE})
+        endif()
+
+        if(APPLE)
+            set(lcms2_CMAKE_ARGS
+                ${lcms2_CMAKE_ARGS} -DCMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET})
         endif()
 
         # Hack to let imported target be built from ExternalProject_Add

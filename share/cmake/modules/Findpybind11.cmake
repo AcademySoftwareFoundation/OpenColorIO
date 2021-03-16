@@ -138,10 +138,6 @@ if(NOT pybind11_FOUND)
     include(ExternalProject)
     include(GNUInstallDirs)
 
-    if(APPLE)
-        set(CMAKE_OSX_DEPLOYMENT_TARGET ${CMAKE_OSX_DEPLOYMENT_TARGET})
-    endif()
-
     set(_EXT_DIST_ROOT "${CMAKE_BINARY_DIR}/ext/dist")
     set(_EXT_BUILD_ROOT "${CMAKE_BINARY_DIR}/ext/build")
 
@@ -172,6 +168,16 @@ if(NOT pybind11_FOUND)
             -DPYBIND11_INSTALL=ON
             -DPYBIND11_TEST=OFF
         )
+
+        if(CMAKE_TOOLCHAIN_FILE)
+            set(pybind11_CMAKE_ARGS
+                ${pybind11_CMAKE_ARGS} -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE})
+        endif()
+
+        if(APPLE)
+            set(pybind11_CMAKE_ARGS
+                ${pybind11_CMAKE_ARGS} -DCMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET})
+        endif()
 
         ExternalProject_Add(pybind11_install
             GIT_REPOSITORY "https://github.com/pybind/pybind11.git"
