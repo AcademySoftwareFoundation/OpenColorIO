@@ -8,7 +8,7 @@ supported_apps:
       image : images/supported_apps/ae.png
       categories : ["2D", "Compositing", "Animation"]
       content : Plugin required.
-      link : "http://www.fnordware.com/OpenColorIO"
+      link : "http://fnordware.blogspot.com/2012/05/opencolorio-for-after-effects.html"
     
     # portfolio item loop
     - name : Autodesk Arnold
@@ -140,8 +140,8 @@ supported_apps:
     - name : Adobe Photoshop
       image : images/supported_apps/ps.png
       categories : ["2D", "Photography", "Paint"]
-      content : Available via ICC profiles.
-      link : "https://www.adobe.com/products/photoshop.html"
+      content : Plugin required.
+      link : "http://fnordware.blogspot.com/2017/02/opencolorio-for-photoshop.html"
 
       # portfolio item loop
     - name : PhotoFlow
