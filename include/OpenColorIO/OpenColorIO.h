@@ -18,7 +18,6 @@
 
 
 /*
-TODO: Move to .rst
 
 C++ API
 =======
@@ -83,11 +82,9 @@ public:
 /**
  * \brief An exception class for errors detected at runtime.
  * 
- * Thrown when OCIO cannot find a file that is expected to
- * exist. This is provided as a custom type to
- * distinguish cases where one wants to continue looking for
- * missing files, but wants to properly fail
- * for other error conditions.
+ * Thrown when OCIO cannot find a file that is expected to exist. This is provided as a custom 
+ * type to distinguish cases where one wants to continue looking for missing files, but wants 
+ * to properly fail for other error conditions.
  */
 class OCIOEXPORT ExceptionMissingFile : public Exception
 {
@@ -186,53 +183,44 @@ extern OCIOEXPORT void UnsetEnvVariable(const char * name);
 //!cpp:function::
 extern OCIOEXPORT bool IsEnvVariablePresent(const char * name);
 
-///////////////////////////////////////////////////////////////////////////
-// Config
-
-// TODO: Move to .rst
-//
-// A config defines all the color spaces to be available at runtime.
-//
-// The color configuration (:cpp:class:`Config`) is the main object for
-// interacting with this library. It encapsulates all of the information
-// necessary to use customized :cpp:class:`ColorSpaceTransform` and
-// :cpp:class:`DisplayViewTransform` operations.
-//
-// See the :ref:`user-guide` for more information on
-// selecting, creating, and working with custom color configurations.
-//
-// For applications interested in using only one color config at
-// a time (this is the vast majority of apps), their API would
-// traditionally get the global configuration and use that, as opposed to
-// creating a new one. This simplifies the use case for
-// plugins and bindings, as it alleviates the need to pass around configuration
-// handles.
-//
-// An example of an application where this would not be sufficient would be
-// a multi-threaded image proxy server (daemon), which wished to handle
-// multiple show configurations in a single process concurrently. This
-// app would need to keep multiple configurations alive, and to manage them
-// appropriately.
-//
-// Roughly speaking, a novice user should select a
-// default configuration that most closely approximates the use case
-// (animation, visual effects, etc.), and set the :envvar:`OCIO` environment
-// variable to point at the root of that configuration.
-//
-// \note
-//    Initialization using environment variables is typically preferable in
-//    a multi-app ecosystem, as it allows all applications to be
-//    consistently configured.
-//
-// See :ref:`developers-usageexamples`
-
 /// Get the current configuration.
 extern OCIOEXPORT ConstConfigRcPtr GetCurrentConfig();
 
 /// Set the current configuration. This will then store a copy of the specified config.
 extern OCIOEXPORT void SetCurrentConfig(const ConstConfigRcPtr & config);
 
-
+/**
+ * \brief
+ * A config defines all the color spaces to be available at runtime.
+ *
+ * The color configuration (Config) is the main object for interacting with this library. It 
+ * encapsulates all of the information necessary to use customized ColorSpaceTransform and
+ * DisplayViewTransform operations.
+ *
+ * See the \ref user-guide for more information on selecting, creating, and working with custom 
+ * color configurations.
+ *
+ * For applications interested in using only one color config at a time (this is the vast majority
+ * of apps), their API would traditionally get the global configuration and use that, as opposed 
+ * to creating a new one. This simplifies the use case for plugins and bindings, as it alleviates 
+ * the need to pass around configuration handles.
+ *
+ * An example of an application where this would not be sufficient would be a multi-threaded image
+ * proxy server (daemon), which wished to handle multiple show configurations in a single process 
+ * concurrently. This app would need to keep multiple configurations alive, and to manage them
+ * appropriately.
+ *
+ * Roughly speaking, a novice user should select a default configuration that most closely 
+ * approximates the use case (animation, visual effects, etc.), and set the :envvar:`OCIO` 
+ * environment variable to point at the root of that configuration.
+ *
+ * \note
+ *    Initialization using environment variables is typically preferable in
+ *    a multi-app ecosystem, as it allows all applications to be
+ *    consistently configured.
+ *
+ * See \ref developers-usageexamples
+ */
 class OCIOEXPORT Config
 {
 public:
@@ -300,7 +288,7 @@ public:
     void validate() const;
 
     /**
-     * Get/set a name string for the config.
+     * \brief Get/set a name string for the config.
      *
      * The name string may be used to communicate config update details or similar information
      * to workflows external to OCIO in cases where the config path/filename itself does not
@@ -338,14 +326,14 @@ public:
     void serialize(std::ostream & os) const;
 
     /**
-     * This will produce a hash of the all colorspace definitions, etc.
-     * All external references, such as files used in FileTransforms, etc.,
-     * will be incorporated into the cacheID. While the contents of
-     * the files are not read, the file system is queried for relevant
-     * information (mtime, inode) so that the config's cacheID will
-     * change when the underlying luts are updated.
+     * This will produce a hash of the all colorspace definitions, etc. All external references, 
+     * such as files used in FileTransforms, etc., will be incorporated into the cacheID. While 
+     * the contents of the files are not read, the file system is queried for relevant information 
+     * (mtime, inode) so that the config's cacheID will change when the underlying luts are updated.
+     * 
      * If a context is not provided, the current Context will be used.
-     * If a null context is provided, file references will not be taken into
+     * 
+     * If a null context is provided, file references will not be taken into 
      * account (this is essentially a hash of Config::serialize).
      */
     const char * getCacheID() const;
@@ -420,8 +408,8 @@ public:
      *
      * \note
      *     If the category is null or empty, the method returns
-     *     all the active color spaces like :cpp:func:`Config::getNumColorSpaces`
-     *     and :cpp:func:`Config::getColorSpaceNameByIndex` do.
+     *     all the active color spaces like \ref Config::getNumColorSpaces
+     *     and \ref Config::getColorSpaceNameByIndex do.
      *
      * \note
      *     It's worth noticing that the method returns a copy of the
@@ -552,7 +540,6 @@ public:
     // Roles
     //
     
-    // TODO: Move to .rst
     // A role is like an alias for a colorspace. You can query the colorspace
     // corresponding to a role using the normal getColorSpace fcn.
 
@@ -585,28 +572,28 @@ public:
      * @{
      */
 
-    // TODO: Move to .rst 
-    // The following methods only manipulate active displays and views. Active
-    // displays and views are defined from an env. variable or from the config file.
-    //
-    // Looks is a potentially comma (or colon) delimited list of lookNames,
-    // Where +/- prefixes are optionally allowed to denote forward/inverse
-    // look specification. (And forward is assumed in the absence of either)
+    /**
+     * The following methods only manipulate active displays and views. Active
+     * displays and views are defined from an env. variable or from the config file.
+     *
+     * Looks is a potentially comma (or colon) delimited list of lookNames,
+     * Where +/- prefixes are optionally allowed to denote forward/inverse
+     * look specification. (And forward is assumed in the absence of either)
 
-    // Add shared view (or replace existing one with same name).
-    // Shared views are defined at config level and can be referenced by several
-    // displays. Either provide a view transform and a display color space or
-    // just a color space (and a null view transform).  Looks, rule and description
-    // are optional, they can be null or empty.
-    //
-    // Shared views using a view transform may use the token <USE_DISPLAY_NAME>
-    // for the color space (see :c:var:`OCIO_VIEW_USE_DISPLAY_NAME`).  In that
-    // case, when the view is referenced in a display, the display color space
-    // that is used will be the one matching the display name.  In other words,
-    // the view will be customized based on the display it is used in.
-    // :cpp:func:`Config::validate` will throw if the config does not contain
-    // the matching display color space.
-    
+     * Add shared view (or replace existing one with same name).
+     * Shared views are defined at config level and can be referenced by several
+     * displays. Either provide a view transform and a display color space or
+     * just a color space (and a null view transform).  Looks, rule and description
+     * are optional, they can be null or empty.
+     *
+     * Shared views using a view transform may use the token <USE_DISPLAY_NAME>
+     * for the color space (see :c:var:`OCIO_VIEW_USE_DISPLAY_NAME`).  In that
+     * case, when the view is referenced in a display, the display color space
+     * that is used will be the one matching the display name.  In other words,
+     * the view will be customized based on the display it is used in.
+     * \ref Config::validate will throw if the config does not contain
+     * the matching display color space.
+     */
     /// Will throw if view or colorSpaceName are null or empty.
     void addSharedView(const char * view, const char * viewTransformName,
                        const char * colorSpaceName, const char * looks,
@@ -866,7 +853,7 @@ public:
      *    values are typically different for each colorspace, and the
      *    application of them may be nonsensical depending on the
      *    intensity coding anyways). Thus, the 'right' answer is to make
-     *    these functions on the :cpp:class:`Config` class. However, it's
+     *    these functions on the Config class. However, it's
      *    often useful to have a config-wide default so here it is. We will
      *    add the colorspace specific luma call if/when another client is
      *    interesting in using it.
@@ -897,8 +884,7 @@ public:
     // View Transforms
     //
 
-    // TODO: Move to .rst
-    // :cpp:class:`ViewTransform` objects are used with the display reference space.
+    // ViewTransform objects are used with the display reference space.
 
     int getNumViewTransforms() const noexcept;
 
@@ -1000,7 +986,7 @@ public:
     /**
      * Most applications will use the preceding method, but this method may be
      * used for applications that want to know which was the highest priority rule to match
-     * filePath.  The :cpp:func:`FileRules::getNumCustomKeys` and custom keys methods
+     * filePath. \ref FileRules::getNumCustomKeys and custom keys methods
      * may then be used to get additional information about the matching rule.
      */
     const char * getColorSpaceFromFilepath(const char * filePath, size_t & ruleIndex) const;
@@ -1032,13 +1018,12 @@ public:
     // Processors
     //
 
-    // TODO: Move to .rst
-    // Create a :cpp:class:`Processor` to assemble a transformation between two
-    // color spaces.  It may then be used to create a :cpp:class:`CPUProcessor`
-    // or :cpp:class:`GPUProcessor` to process/convert pixels.
-    // rst:: Get the processor to apply a ColorSpaceTransform from a source to a destination
-    // color space.
+    // Create a Processor to assemble a transformation between two
+    // color spaces.  It may then be used to create a CPUProcessor
+    // or GPUProcessor to process/convert pixels.
 
+    /// Get the processor to apply a ColorSpaceTransform from a source to a destination
+    /// color space.
     ConstProcessorRcPtr getProcessor(const ConstContextRcPtr & context,
                                      const ConstColorSpaceRcPtr & srcColorSpace,
                                      const ConstColorSpaceRcPtr & dstColorSpace) const;
@@ -1056,16 +1041,14 @@ public:
     ConstProcessorRcPtr getProcessor(const ConstContextRcPtr & context,
                                      const char * srcColorSpaceName,
                                      const char * dstColorSpaceName) const;
-
-    // TODO: Move to .rst
-    // rst:: Get the processor to apply a DisplayViewTransform for a display and view.  Refer to the
-    // Display/View Registration section above for more info on the display and view arguments.
-
+    
+    /// Get the processor to apply a DisplayViewTransform for a display and view.  Refer to the
+    /// Display/View Registration section above for more info on the display and view arguments.
     ConstProcessorRcPtr getProcessor(const char * srcColorSpaceName,
                                      const char * display,
                                      const char * view,
                                      TransformDirection direction) const;
-    //!cpp:function::
+                                     
     ConstProcessorRcPtr getProcessor(const ConstContextRcPtr & context,
                                      const char * srcColorSpaceName,
                                      const char * display,
@@ -1130,9 +1113,9 @@ public:
     /// Do not use (needed only for pybind11).
     ~Config();
 
-    //!cpp:function:: Control the caching of processors in the config instance.  By default, caching
-    // is on.  The flags allow turning caching off entirely or only turning it off if dynamic
-    // properties are being used by the processor.
+    /// Control the caching of processors in the config instance.  By default, caching is on.  
+    /// The flags allow turning caching off entirely or only turning it off if dynamic
+    /// properties are being used by the processor.
     void setProcessorCacheFlags(ProcessorCacheFlags flags) noexcept;
 
 private:
@@ -1149,64 +1132,52 @@ private:
 extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const Config&);
 
 
-
-// TODO: Move to .rst
-// FileRules
-// *********
-// The File Rules are a set of filepath to color space mappings that are evaluated
-// from first to last. The first rule to match is what determines which color space is
-// returned. There are four types of rules available. Each rule type has a name key that may
-// be used by applications to refer to that rule. Name values must be unique i.e. using a
-// case insensitive comparison. The other keys depend on the rule type:
-//
-// - Basic Rule: This is the basic rule type that uses Unix glob style pattern matching and
-//   is thus very easy to use. It contains the keys:
-//
-//   * name: Name of the rule
-//
-//   * colorspace: Color space name to be returned.
-//
-//   * pattern: Glob pattern to be used for the main part of the name/path.
-//
-//   * extension: Glob pattern to be used for the file extension. Note that if glob tokens
-//     are not used, the extension will be used in a non-case-sensitive way by default.
-//
-// - Regex Rule: This is similar to the basic rule but allows additional capabilities for
-//   power-users. It contains the keys:
-//
-//   * name: Name of the rule
-//
-//   * colorspace: Color space name to be returned.
-//
-//   * regex: Regular expression to be evaluated.
-//
-// - OCIO v1 style Rule: This rule allows the use of the OCIO v1 style, where the string
-//   is searched for color space names from the config. This rule may occur 0 or 1 times
-//   in the list. The position in the list prioritizes it with respect to the other rules.
-//   StrictParsing is not used. If no color space is found in the path, the rule will not
-//   match and the next rule will be considered.
-//   \see FileRules::insertPathSearchRule.
-//   It has the key:
-//
-//   * name: Must be "ColorSpaceNamePathSearch".
-//
-// - Default Rule: The file_rules must always end with this rule. If no prior rules match,
-//   this rule specifies the color space applications will use.
-//   \see FileRules::setDefaultRuleColorSpace.
-//   It has the keys:
-//
-//   * name: must be "Default".
-//
-//   * colorspace : Color space name to be returned.
-//
-// Custom string keys and associated string values may be used to convey app or
-// workflow-specific information, e.g. whether the color space should be left as is
-// or converted into a working space.
-//
-// Getters and setters are using the rule position, they will throw if the position is not
-// valid. If the rule at the specified position does not implement the requested property
-// getter will return NULL and setter will throw.
-//
+/**
+ * \brief
+ * The File Rules are a set of filepath to color space mappings that are evaluated
+ * from first to last. The first rule to match is what determines which color space is
+ * returned. There are four types of rules available. Each rule type has a name key that may
+ * be used by applications to refer to that rule. Name values must be unique i.e. using a
+ * case insensitive comparison. The other keys depend on the rule type:
+ *
+ * * *Basic Rule*: This is the basic rule type that uses Unix glob style pattern matching and
+ *   is thus very easy to use. It contains the keys:
+ *     * name: Name of the rule
+ *     * colorspace: Color space name to be returned.
+ *     * pattern: Glob pattern to be used for the main part of the name/path.
+ *     * extension: Glob pattern to be used for the file extension. Note that if glob tokens
+ *       are not used, the extension will be used in a non-case-sensitive way by default.
+ * 
+ * * *Regex Rule*: This is similar to the basic rule but allows additional capabilities for
+ *   power-users. It contains the keys:
+ *     * name: Name of the rule
+ *     * colorspace: Color space name to be returned.
+ *     * regex: Regular expression to be evaluated.
+ * 
+ * * *OCIO v1 style Rule*: This rule allows the use of the OCIO v1 style, where the string
+ *   is searched for color space names from the config. This rule may occur 0 or 1 times
+ *   in the list. The position in the list prioritizes it with respect to the other rules.
+ *   StrictParsing is not used. If no color space is found in the path, the rule will not
+ *   match and the next rule will be considered.
+ *   see \ref insertPathSearchRule.
+ *   It has the key:
+ *     * name: Must be "ColorSpaceNamePathSearch".
+ * 
+ * * *Default Rule*: The file_rules must always end with this rule. If no prior rules match,
+ *   this rule specifies the color space applications will use.
+ *   see \ref setDefaultRuleColorSpace.
+ *   It has the keys:
+ *     * name: must be "Default".
+ *     * colorspace : Color space name to be returned.
+ *
+ * Custom string keys and associated string values may be used to convey app or
+ * workflow-specific information, e.g. whether the color space should be left as is
+ * or converted into a working space.
+ *
+ * Getters and setters are using the rule position, they will throw if the position is not
+ * valid. If the rule at the specified position does not implement the requested property
+ * getter will return NULL and setter will throw.
+ */
 
 class OCIOEXPORT FileRules
 {
@@ -1335,30 +1306,28 @@ extern OCIOEXPORT std::ostream & operator<< (std::ostream &, const FileRules &);
 
 
 
-
-// TODO: Move to .rst
-//
-// ViewingRules
-// ************
-// Viewing Rules allow config authors to filter the list of views an application should offer
-// based on the color space of an image.   For example, a config may define a large number of
-// views but not all of them may be appropriate for use with all color spaces.  E.g., some views
-// may be intended for use with scene-linear color space encodings and others with video color
-// space encodings.
-// 
-// Each rule has a name key for applications to refer to the rule.  Name values must be unique
-// (using case insensitive comparison). Viewing Rules may also have the following keys:
-//
-// * colorspaces: Either a single colorspace name or a list of names.
-//
-// * encodings: One or more strings to be found in the colorspace's encoding attribute.
-//   Either this attribute or colorspaces must be present, but not both.
-//
-// * custom : Allows arbitrary key / value string pairs, similar to FileRules.
-//
-// Getters and setters are using the rule position, they will throw if the position is not
-// valid.
-
+/**
+ * ViewingRules
+ * 
+ * Viewing Rules allow config authors to filter the list of views an application should offer
+ * based on the color space of an image.   For example, a config may define a large number of
+ * views but not all of them may be appropriate for use with all color spaces.  E.g., some views
+ * may be intended for use with scene-linear color space encodings and others with video color
+ * space encodings.
+ * 
+ * Each rule has a name key for applications to refer to the rule.  Name values must be unique
+ * (using case insensitive comparison). Viewing Rules may also have the following keys:
+ *
+ * * colorspaces: Either a single colorspace name or a list of names.
+ *
+ * * encodings: One or more strings to be found in the colorspace's encoding attribute.
+ *   Either this attribute or colorspaces must be present, but not both.
+ *
+ * * custom : Allows arbitrary key / value string pairs, similar to FileRules.
+ *
+ * Getters and setters are using the rule position, they will throw if the position is not
+ * valid.
+*/
 class OCIOEXPORT ViewingRules
 {
 public:
@@ -1388,7 +1357,7 @@ public:
      * 
      * Add colorspace name. Will throw if:
      * * RuleIndex is invalid.
-     * * :cpp:func:`ViewingRules::getNumEncodings` is not 0.
+     * * \ref ViewingRules::getNumEncodings is not 0.
      */
     void addColorSpace(size_t ruleIndex, const char * colorSpace);
     /// Remove colorspace. Will throw if ruleIndex or colorSpaceIndex is invalid.
@@ -1403,7 +1372,7 @@ public:
      * \brief
      * Add encoding name. Will throw if:
      * * RuleIndex is invalid.
-     * * :cpp:func:`ViewingRules::getNumColorSpaces` is not 0.
+     * * \ref ViewingRules::getNumColorSpaces is not 0.
      */
     void addEncoding(size_t ruleIndex, const char * encoding);
     /// Remove encoding. Will throw if ruleIndex or encodingIndex is invalid.
@@ -1424,11 +1393,10 @@ public:
     /**
      * \brief Insert a rule at a given ruleIndex.
      * 
-     * Rule currently at ruleIndex will be
-     * pushed to index: ruleIndex + 1. If ruleIndex is :cpp:func:`ViewingRules::getNumEntries`
-     * new rule will be added at the end. Will throw if:
+     * Rule currently at ruleIndex will be pushed to index: ruleIndex + 1. If ruleIndex is 
+     * \ref ViewingRules::getNumEntries, a new rule will be added at the end. Will throw if:
      * * RuleIndex is invalid (must be less than or equal to
-     *   cpp:func:`ViewingRules::getNumEntries`).
+     *   \ref ViewingRules::getNumEntries).
      * * RuleName already exists.
      */
     void insertRule(size_t ruleIndex, const char * ruleName);
@@ -1459,21 +1427,20 @@ extern OCIOEXPORT std::ostream & operator<< (std::ostream &, const ViewingRules 
 //
 // ColorSpace
 //
-
-// TODO: Move to .rst
-// The *ColorSpace* is the state of an image with respect to colorimetry
-// and color encoding. Transforming images between different
-// *ColorSpaces* is the primary motivation for this library.
-//
-// While a complete discussion of color spaces is beyond the scope of
-// header documentation, traditional uses would be to have *ColorSpaces*
-// corresponding to: physical capture devices (known cameras, scanners),
-// and internal 'convenience' spaces (such as scene linear, logarithmic).
-//
-// *ColorSpaces* are specific to a particular image precision (float32,
-// uint8, etc.), and the set of ColorSpaces that provide equivalent mappings
-// (at different precisions) are referred to as a 'family'.
-
+/**
+ * The *ColorSpace* is the state of an image with respect to colorimetry
+ * and color encoding. Transforming images between different
+ * *ColorSpaces* is the primary motivation for this library.
+ *
+ * While a complete discussion of color spaces is beyond the scope of
+ * header documentation, traditional uses would be to have *ColorSpaces*
+ * corresponding to: physical capture devices (known cameras, scanners),
+ * and internal 'convenience' spaces (such as scene linear, logarithmic).
+ *
+ * *ColorSpaces* are specific to a particular image precision (float32,
+ * uint8, etc.), and the set of ColorSpaces that provide equivalent mappings
+ * (at different precisions) are referred to as a 'family'.
+ */
 class OCIOEXPORT ColorSpace
 {
 public:
@@ -1535,19 +1502,25 @@ public:
     // Categories
     //
 
-    // TODO: Move to .rst
-    // A category is used to allow applications to filter the list of color spaces
-    // they display in menus based on what that color space is used for.
-    //
-    // Here is an example config entry that could appear under a ColorSpace:
-    // categories: [ file-io, working-space, basic-3d ]
-    //
-    // The example contains three categories: 'file-io', 'working-space' and 'basic-3d'.
-    // Category strings are not case-sensitive and the order is not significant.
-    // There is no limit imposed on length or number. Although users may add
-    // their own categories, the strings will typically come from a fixed set
-    // listed in the documentation (similar to roles).
-
+     /**
+     * A category is used to allow applications to filter the list of color spaces
+     * they display in menus based on what that color space is used for.
+     *
+     * Here is an example config entry that could appear under a ColorSpace:
+     * 
+     * \code{.yaml}
+     *     categories: [ file-io, working-space, basic-3d ]
+     * \endcode
+     * 
+     * The example contains three categories: 'file-io', 'working-space' and 'basic-3d'.
+     * 
+     * \note
+     *     Category strings are not case-sensitive and the order is not significant.
+     * 
+     * There is no limit imposed on length or number. Although users may add their own categories,
+     * the strings will typically come from a fixed set listed in the documentation (similar to 
+     * roles).
+     */
     /// Return true if the category is present.
     bool hasCategory(const char * category) const;
     /**
@@ -1576,79 +1549,72 @@ public:
     /// Clear all the categories.
     void clearCategories();
 
-    //
-    // Encodings
-    //
-
-    // TODO: Move to .rst
-    // It is sometimes useful for applications to group color spaces based on how the color values
-    // are digitally encoded.  For example, images in scene-linear, logarithmic, video, and data
-    // color spaces could have different default views.  Unlike the Family and EqualityGroup
-    // attributes of a color space, the list of Encodings is predefined in the OCIO documentation
-    // (rather than being config-specific) to make it easier for applications to utilize.
-    //
-    // Here is an example config entry that could appear under a ColorSpace:
-    // encoding: scene-linear
-    //
-    // Encoding strings are not case-sensitive. Although users may add their own encodings, the
-    // strings will typically come from a fixed set listed in the documentation (similar to roles).
-
+    /**
+     * *Encodings*
+     *
+     * It is sometimes useful for applications to group color spaces based on how the color values
+     * are digitally encoded.  For example, images in scene-linear, logarithmic, video, and data
+     * color spaces could have different default views.  Unlike the Family and EqualityGroup
+     * attributes of a color space, the list of Encodings is predefined in the OCIO documentation
+     * (rather than being config-specific) to make it easier for applications to utilize.
+     *
+     * Here is an example config entry that could appear under a ColorSpace:
+     * 
+     * \code{.yaml}
+     *     encoding: scene-linear
+     * \endcode
+     *
+     * Encoding strings are not case-sensitive. Although users may add their own encodings, the
+     * strings will typically come from a fixed set listed in the documentation (similar to roles).
+     */
     const char * getEncoding() const noexcept;
     void setEncoding(const char * encoding);
 
-
-    //
-    // Data
-    //
-
-    // TODO: Move to .rst
-    // ColorSpaces that are data are treated a bit special. Basically, any colorspace transforms
-    // you try to apply to them are ignored. (Think of applying a gamut mapping transform to an
-    // ID pass). However, the setDataBypass method on ColorSpaceTransform and DisplayViewTransform
-    // allow applications to process data when necessary.  (Think of sending mattes to an HDR
-    // monitor.)
-    //
-    // This is traditionally used for pixel data that represents non-color
-    // pixel data, such as normals, point positions, ID information, etc.
-
+    /**
+     * *Data*
+     * 
+     * ColorSpaces that are data are treated a bit special. Basically, any colorspace transforms
+     * you try to apply to them are ignored. (Think of applying a gamut mapping transform to an
+     * ID pass). However, the setDataBypass method on ColorSpaceTransform and DisplayViewTransform
+     * allow applications to process data when necessary.  (Think of sending mattes to an HDR
+     * monitor.)
+     *
+     * This is traditionally used for pixel data that represents non-color
+     * pixel data, such as normals, point positions, ID information, etc.
+     */
     bool isData() const noexcept;
     void setIsData(bool isData) noexcept;
 
-    //
-    // Allocation
-    //
-
-    // TODO: Move to .rst
-    // If this colorspace needs to be transferred to a limited dynamic
-    // range coding space (such as during display with a GPU path), use this
-    // allocation to maximize bit efficiency.
-
+    /**
+     * *Allocation*
+     * 
+     * If this colorspace needs to be transferred to a limited dynamic
+     * range coding space (such as during display with a GPU path), use this
+     * allocation to maximize bit efficiency.
+     */
     Allocation getAllocation() const noexcept;
     void setAllocation(Allocation allocation) noexcept;
 
-    // TODO: Move to .rst
-    // rst::
-    // Specify the optional variable values to configure the allocation.
-    // If no variables are specified, the defaults are used.
-    //
-    // ALLOCATION_UNIFORM::
-    //
-    //    2 vars: [min, max]
-    //
-    // ALLOCATION_LG2::
-    //
-    //    2 vars: [lg2min, lg2max]
-    //    3 vars: [lg2min, lg2max, linear_offset]
-
+    /**
+     * Specify the optional variable values to configure the allocation.
+     * If no variables are specified, the defaults are used.
+     *
+     * ALLOCATION_UNIFORM::
+     *
+     *    2 vars: [min, max]
+     *
+     * ALLOCATION_LG2::
+     *
+     *    2 vars: [lg2min, lg2max]
+     *    3 vars: [lg2min, lg2max, linear_offset]
+     */
     int getAllocationNumVars() const;
     void getAllocationVars(float * vars) const;
     void setAllocationVars(int numvars, const float * vars);
 
-    //
-    // Transform
-    //
-
     /**
+     * *Transform*
+     * 
      * If a transform in the specified direction has been specified,
      * return it. Otherwise return a null ConstTransformRcPtr
      */
@@ -1688,14 +1654,14 @@ extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const ColorSpace&);
 
 /**
  * The *ColorSpaceSet* is a set of color spaces (i.e. no color space duplication)
- * which could be the result of :cpp:func:`Config::getColorSpaces`
+ * which could be the result of \ref Config::getColorSpaces
  * or built from scratch.
  *
  * \note
  *    The color spaces are decoupled from the config ones, i.e., any
  *    changes to the set itself or to its color spaces do not affect the
  *    original color spaces from the configuration.  If needed,
- *    use :cpp:func:`Config::addColorSpace` to update the configuration.
+ *    use \ref Config::addColorSpace to update the configuration.
  */
 class OCIOEXPORT ColorSpaceSet
 {
@@ -1846,12 +1812,12 @@ extern OCIOEXPORT ConstColorSpaceSetRcPtr operator-(const ConstColorSpaceSetRcPt
 // Look
 //
 
-// TODO: Move to .rst
-// The *Look* is an 'artistic' image modification, in a specified image
-// state.
-// The processSpace defines the ColorSpace the image is required to be
-// in, for the math to apply correctly.
-
+/**
+ * The *Look* is an 'artistic' image modification, in a specified image
+ * state.
+ * The processSpace defines the ColorSpace the image is required to be
+ * in, for the math to apply correctly.
+ */
 class OCIOEXPORT Look
 {
 public:
@@ -1970,24 +1936,20 @@ protected:
 extern OCIOEXPORT std::ostream & operator<< (std::ostream &, const NamedTransform &);
 
 
-//
-// ViewTransform
-//
-
-// TODO: Move to .rst
-// A *ViewTransform* provides a conversion from the main (usually scene-referred) reference space
-// to the display-referred reference space.  This allows splitting the conversion from the main
-// reference space to a display into two parts: the ViewTransform plus a display color space.
-//
-// It is also possible to provide a ViewTransform that converts from the display-referred
-// reference space back to that space.  This is useful in cases when a ViewTransform is needed
-// when converting between displays (such as HDR to SDR).
-//
-// The ReferenceSpaceType indicates whether the ViewTransform converts from scene-to-display
-// reference or display-to-display reference.
-//
-// The from_reference transform direction is the one that is used when going out towards a display.
-
+/**
+ * A *ViewTransform* provides a conversion from the main (usually scene-referred) reference space
+ * to the display-referred reference space.  This allows splitting the conversion from the main
+ * reference space to a display into two parts: the ViewTransform plus a display color space.
+ *
+ * It is also possible to provide a ViewTransform that converts from the display-referred
+ * reference space back to that space.  This is useful in cases when a ViewTransform is needed
+ * when converting between displays (such as HDR to SDR).
+ *
+ * The ReferenceSpaceType indicates whether the ViewTransform converts from scene-to-display
+ * reference or display-to-display reference.
+ *
+ * The from_reference transform direction is the one that is used when going out towards a display.
+ */
 class OCIOEXPORT ViewTransform
 {
 public:
@@ -2059,7 +2021,7 @@ extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const ViewTransform&)
 
 /**
  * The *Processor* represents a specific color transformation which is
- * the result of :cpp:func:`Config::getProcessor`.
+ * the result of \ref Config::getProcessor.
  */
 class OCIOEXPORT Processor
 {
@@ -2132,7 +2094,7 @@ public:
     bool isDynamic() const noexcept;
 
     /**
-     * Run the optimizer on a Processor to create a new :cpp:class:`Processor`.
+     * Run the optimizer on a Processor to create a new Processor.
      * It is usually not necessary to call this since getting a CPUProcessor or GPUProcessor
      * will also optimize.  However if you need both, calling this method first makes getting
      * a CPU and GPU Processor faster since the optimization is effectively only done once.
@@ -2140,7 +2102,7 @@ public:
     ConstProcessorRcPtr getOptimizedProcessor(OptimizationFlags oFlags) const;
 
     /**
-     * Create a :cpp:class:`Processor` that is optimized for a specific in and out
+     * Create a Processor that is optimized for a specific in and out
      * bit-depth (as CPUProcessor would do).  This method is provided primarily for diagnostic
      * purposes.
      */
@@ -2160,7 +2122,7 @@ public:
     //
 
     /**
-     * Get an optimized :cpp:class:`CPUProcessor` instance.
+     * Get an optimized CPUProcessor instance.
      *
      * \note
      *    This may provide higher fidelity than anticipated due to internal
@@ -2238,7 +2200,8 @@ public:
     /// Bit-depth of the output pixel buffer.
     BitDepth getOutputBitDepth() const;
 
-    /* The returned pointer may be used to set the value of any dynamic properties
+    /**
+     *  The returned pointer may be used to set the value of any dynamic properties
      * of the requested type.  Throws if the requested property is not found.  Note that if the
      * processor contains several ops that support the requested property, only one can be dynamic.
      *
@@ -2493,10 +2456,6 @@ private:
 ///////////////////////////////////////////////////////////////////////////
 // ImageDesc
 
-// rst::
-// .. c:var:: const ptrdiff_t AutoStride
-//    AutoStride
-
 const ptrdiff_t AutoStride = std::numeric_limits<ptrdiff_t>::min();
 
 /**
@@ -2667,7 +2626,7 @@ public:
     /**
      *
      * Note that although PlanarImageDesc is powerful enough to also describe
-     * all :cpp:class:`PackedImageDesc` scenarios, it is recommended to use
+     * all PackedImageDesc scenarios, it is recommended to use
      * a PackedImageDesc where possible since that allows for additional
      * optimizations.
      */
@@ -2714,13 +2673,55 @@ private:
  * Inherit from the class to fully customize the implementation of a GPU shader program
  * from a color transformation.
  *
- * When no customizations are needed then the :cpp:class:`GpuShaderDesc` is a better choice.
+ * When no customizations are needed then the GpuShaderDesc is a better choice.
  *
  * To better decouple the DynamicProperties from their GPU implementation, the code provides
  * several addUniform() methods i.e. one per access function types. For example, an
  * ExposureContrastTransform instance owns three DynamicProperties and they are all
  * implemented by a double. When creating the GPU fragment shader program, the addUniform() with
  * GpuShaderCreator::DoubleGetter is called when property is dynamic, up to three times.
+ * 
+ * **An OCIO shader program could contain:**
+ *
+ * * A declaration part  e.g., uniform sampled3D tex3;
+ *
+ * * Some helper methods
+ *
+ * * The OCIO shader function may be broken down as:
+ *
+ *    * The function header  e.g., void OCIODisplay(in vec4 inColor) {
+ *    * The function body    e.g.,   vec4 outColor.rgb = texture3D(tex3, inColor.rgb).rgb;
+ *    * The function footer  e.g.,   return outColor; }
+ * 
+ * 
+ * **Usage Example:**
+ * 
+ * Below is a code snippet to highlight the different parts of the OCIO shader program.
+ * 
+ * \code{.cpp}
+ *     
+ *     // All global declarations
+ *     uniform sampled3D tex3;
+ *   
+ *     // All helper methods
+ *     vec3 computePosition(vec3 color)
+ *     {
+ *        vec3 coords = color;
+ *        // Some processing...
+ *        return coords;
+ *     }
+ *     
+ *     // The shader function
+ *     vec4 OCIODisplay(in vec4 inColor)     //
+ *     {                                     // Function Header
+ *        vec4 outColor = inColor;           //
+ *     
+ *        outColor.rgb = texture3D(tex3, computePosition(inColor.rgb)).rgb;
+ *     
+ *        return outColor;                   // Function Footer
+ *     }                                     //
+ * 
+ * \endcode
  */
 class OCIOEXPORT GpuShaderCreator
 {
@@ -2834,51 +2835,7 @@ public:
                               Interpolation interpolation,
                               const float * values) = 0;
 
-    // TODO: Move to .rst
-    // !rst:: Methods to specialize parts of a OCIO shader program.
-    //
-    // **An OCIO shader program could contain:**
-    //
-    // 1. A declaration part  e.g., uniform sampled3D tex3;
-    //
-    // 2. Some helper methods
-    //
-    // 3. The OCIO shader function may be broken down as:
-    //
-    //    1. The function header  e.g., void OCIODisplay(in vec4 inColor) {
-    //    2. The function body    e.g.,   vec4 outColor.rgb = texture3D(tex3, inColor.rgb).rgb;
-    //    3. The function footer  e.g.,   return outColor; }
-    //
-    //
-    // **Usage Example:**
-    //
-    // Below is a code snippet to highlight the different parts of the OCIO shader program.
-    //
-    // .. code-block:: cpp
-    //
-    //    // All global declarations
-    //    uniform sampled3D tex3;
-    //
-    //    // All helper methods
-    //    vec3 computePosition(vec3 color)
-    //    {
-    //       vec3 coords = color;
-    //       // Some processing...
-    //       return coords;
-    //    }
-    //
-    //    // The shader function
-    //    vec4 OCIODisplay(in vec4 inColor)     //
-    //    {                                     // Function Header
-    //       vec4 outColor = inColor;           //
-    //
-    //       outColor.rgb = texture3D(tex3, computePosition(inColor.rgb)).rgb;
-    //
-    //       return outColor;                   // Function Footer
-    //    }                                     //
-    //
-    //
-
+    // Methods to specialize parts of a OCIO shader program
     virtual void addToDeclareShaderCode(const char * shaderCode);
     virtual void addToHelperShaderCode(const char * shaderCode);
     virtual void addToFunctionHeaderShaderCode(const char * shaderCode);
@@ -2889,7 +2846,6 @@ public:
      * \brief Create the OCIO shader program
      *
      * \note
-     *
      *   The OCIO shader program is decomposed to allow a specific implementation
      *   to change some parts. Some product integrations add the color processing
      *   within a client shader program, imposing constraints requiring this flexibility.
@@ -2916,166 +2872,165 @@ protected:
     const Impl * getImpl() const { return m_impl; }
 };
 
-// TODO: Move to .rst
-// !rst::
 // GpuShaderDesc
-// *************
-// This class holds the GPU-related information needed to build a shader program
-// from a specific processor.
-//
-// This class defines the interface and there are two implementations provided.
-// The "legacy" mode implements the OCIO v1 approach of baking certain ops
-// in order to have at most one 3D-LUT.  The "generic" mode is the v2 default and
-// allows all the ops to be processed as-is, without baking, like the CPU renderer.
-// Custom implementations could be written to accommodate the GPU needs of a
-// specific client app.
-//
-//
-// The complete fragment shader program is decomposed in two main parts:
-// the OCIO shader program for the color processing and the client shader
-// program which consumes the pixel color processing.
-//
-// The OCIO shader program is fully described by the GpuShaderDesc
-// independently from the client shader program. The only critical
-// point is the agreement on the OCIO function shader name.
-//
-// To summarize, the complete shader program is:
-//
-// .. code-block:: cpp
-//
-//  ////////////////////////////////////////////////////////////////////////
-//  //                                                                    //
-//  //               The complete fragment shader program                 //
-//  //                                                                    //
-//  ////////////////////////////////////////////////////////////////////////
-//  //                                                                    //
-//  //   //////////////////////////////////////////////////////////////   //
-//  //   //                                                          //   //
-//  //   //               The OCIO shader program                    //   //
-//  //   //                                                          //   //
-//  //   //////////////////////////////////////////////////////////////   //
-//  //   //                                                          //   //
-//  //   //   // All global declarations                             //   //
-//  //   //   uniform sampled3D tex3;                                //   //
-//  //   //                                                          //   //
-//  //   //   // All helper methods                                  //   //
-//  //   //   vec3 computePos(vec3 color)                            //   //
-//  //   //   {                                                      //   //
-//  //   //      vec3 coords = color;                                //   //
-//  //   //      ...                                                 //   //
-//  //   //      return coords;                                      //   //
-//  //   //   }                                                      //   //
-//  //   //                                                          //   //
-//  //   //   // The OCIO shader function                            //   //
-//  //   //   vec4 OCIODisplay(in vec4 inColor)                      //   //
-//  //   //   {                                                      //   //
-//  //   //      vec4 outColor = inColor;                            //   //
-//  //   //      ...                                                 //   //
-//  //   //      outColor.rbg                                        //   //
-//  //   //         = texture3D(tex3, computePos(inColor.rgb)).rgb;  //   //
-//  //   //      ...                                                 //   //
-//  //   //      return outColor;                                    //   //
-//  //   //   }                                                      //   //
-//  //   //                                                          //   //
-//  //   //////////////////////////////////////////////////////////////   //
-//  //                                                                    //
-//  //   //////////////////////////////////////////////////////////////   //
-//  //   //                                                          //   //
-//  //   //             The client shader program                    //   //
-//  //   //                                                          //   //
-//  //   //////////////////////////////////////////////////////////////   //
-//  //   //                                                          //   //
-//  //   //   uniform sampler2D image;                               //   //
-//  //   //                                                          //   //
-//  //   //   void main()                                            //   //
-//  //   //   {                                                      //   //
-//  //   //      vec4 inColor = texture2D(image, gl_TexCoord[0].st); //   //
-//  //   //      ...                                                 //   //
-//  //   //      vec4 outColor = OCIODisplay(inColor);               //   //
-//  //   //      ...                                                 //   //
-//  //   //      gl_FragColor = outColor;                            //   //
-//  //   //   }                                                      //   //
-//  //   //                                                          //   //
-//  //   //////////////////////////////////////////////////////////////   //
-//  //                                                                    //
-//  ////////////////////////////////////////////////////////////////////////
-//
-//
-// **Usage Example:** *Building a GPU shader*
-//
-//   This example is based on the code in: src/apps/ociodisplay/main.cpp
-//
-// .. code-block:: cpp
-//
-//    // Get the processor
-//    //
-//    OCIO::ConstConfigRcPtr config = OCIO::Config::CreateFromEnv();
-//    OCIO::ConstProcessorRcPtr processor
-//       = config->getProcessor("ACES - ACEScg", "Output - sRGB");
-//
-//    // Step 1: Create a GPU shader description
-//    //
-//    // The three potential scenarios are:
-//    //
-//    //   1. Instantiate the legacy shader description.  The color processor
-//    //      is baked down to contain at most one 3D LUT and no 1D LUTs.
-//    //
-//    //      This is the v1 behavior and will remain part of OCIO v2
-//    //      for backward compatibility.
-//    //
-//    OCIO::GpuShaderDescRcPtr shaderDesc
-//          = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(LUT3D_EDGE_SIZE);
-//    //
-//    //   2. Instantiate the generic shader description.  The color processor
-//    //      is used as-is (i.e. without any baking step) and could contain
-//    //      any number of 1D & 3D luts.
-//    //
-//    //      This is the default OCIO v2 behavior and allows a much better
-//    //      match between the CPU and GPU renderers.
-//    //
-//    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::Create();
-//    //
-//    //   3. Instantiate a custom shader description.
-//    //
-//    //      Writing a custom shader description is a way to tailor the shaders
-//    //      to the needs of a given client program.  This involves writing a
-//    //      new class inheriting from the pure virtual class GpuShaderDesc.
-//    //
-//    //      Please refer to the GenericGpuShaderDesc class for an example.
-//    //
-//    OCIO::GpuShaderDescRcPtr shaderDesc = MyCustomGpuShader::Create();
-//
-//    shaderDesc->setLanguage(OCIO::GPU_LANGUAGE_GLSL_1_2);
-//    shaderDesc->setFunctionName("OCIODisplay");
-//
-//    // Step 2: Collect the shader program information for a specific processor
-//    //
-//    processor->extractGpuShaderInfo(shaderDesc);
-//
-//    // Step 3: Create a helper to build the shader. Here we use a helper for
-//    //         OpenGL but there will also be helpers for other languages.
-//    //
-//    OpenGLBuilderRcPtr oglBuilder = OpenGLBuilder::Create(shaderDesc);
-//
-//    // Step 4: Allocate & upload all the LUTs
-//    //
-//    oglBuilder->allocateAllTextures();
-//
-//    // Step 5: Build the complete fragment shader program using
-//    //         g_fragShaderText which is the client shader program.
-//    //
-//    g_programId = oglBuilder->buildProgram(g_fragShaderText);
-//
-//    // Step 6: Enable the fragment shader program, and all needed textures
-//    //
-//    glUseProgram(g_programId);
-//    glUniform1i(glGetUniformLocation(g_programId, "tex1"), 1);  // image texture
-//    oglBuilder->useAllTextures(g_programId);                    // LUT textures
-//
-//    // Step 7: Update uniforms from dynamic property instances.
-//    m_oglBuilder->useAllUniforms();
-//
-
+/**
+ * \brief This class holds the GPU-related information needed to build a shader program
+ * from a specific processor.
+ *
+ * This class defines the interface and there are two implementations provided.
+ * The "legacy" mode implements the OCIO v1 approach of baking certain ops
+ * in order to have at most one 3D-LUT.  The "generic" mode is the v2 default and
+ * allows all the ops to be processed as-is, without baking, like the CPU renderer.
+ * Custom implementations could be written to accommodate the GPU needs of a
+ * specific client app.
+ *
+ *
+ * The complete fragment shader program is decomposed in two main parts:
+ * the OCIO shader program for the color processing and the client shader
+ * program which consumes the pixel color processing.
+ *
+ * The OCIO shader program is fully described by the GpuShaderDesc
+ * independently from the client shader program. The only critical
+ * point is the agreement on the OCIO function shader name.
+ *
+ * To summarize, the complete shader program is:
+ *
+ * \code{.cpp}
+ *
+ *  ////////////////////////////////////////////////////////////////////////
+ *  //                                                                    //
+ *  //               The complete fragment shader program                 //
+ *  //                                                                    //
+ *  ////////////////////////////////////////////////////////////////////////
+ *  //                                                                    //
+ *  //   //////////////////////////////////////////////////////////////   //
+ *  //   //                                                          //   //
+ *  //   //               The OCIO shader program                    //   //
+ *  //   //                                                          //   //
+ *  //   //////////////////////////////////////////////////////////////   //
+ *  //   //                                                          //   //
+ *  //   //   // All global declarations                             //   //
+ *  //   //   uniform sampled3D tex3;                                //   //
+ *  //   //                                                          //   //
+ *  //   //   // All helper methods                                  //   //
+ *  //   //   vec3 computePos(vec3 color)                            //   //
+ *  //   //   {                                                      //   //
+ *  //   //      vec3 coords = color;                                //   //
+ *  //   //      ...                                                 //   //
+ *  //   //      return coords;                                      //   //
+ *  //   //   }                                                      //   //
+ *  //   //                                                          //   //
+ *  //   //   // The OCIO shader function                            //   //
+ *  //   //   vec4 OCIODisplay(in vec4 inColor)                      //   //
+ *  //   //   {                                                      //   //
+ *  //   //      vec4 outColor = inColor;                            //   //
+ *  //   //      ...                                                 //   //
+ *  //   //      outColor.rbg                                        //   //
+ *  //   //         = texture3D(tex3, computePos(inColor.rgb)).rgb;  //   //
+ *  //   //      ...                                                 //   //
+ *  //   //      return outColor;                                    //   //
+ *  //   //   }                                                      //   //
+ *  //   //                                                          //   //
+ *  //   //////////////////////////////////////////////////////////////   //
+ *  //                                                                    //
+ *  //   //////////////////////////////////////////////////////////////   //
+ *  //   //                                                          //   //
+ *  //   //             The client shader program                    //   //
+ *  //   //                                                          //   //
+ *  //   //////////////////////////////////////////////////////////////   //
+ *  //   //                                                          //   //
+ *  //   //   uniform sampler2D image;                               //   //
+ *  //   //                                                          //   //
+ *  //   //   void main()                                            //   //
+ *  //   //   {                                                      //   //
+ *  //   //      vec4 inColor = texture2D(image, gl_TexCoord[0].st); //   //
+ *  //   //      ...                                                 //   //
+ *  //   //      vec4 outColor = OCIODisplay(inColor);               //   //
+ *  //   //      ...                                                 //   //
+ *  //   //      gl_FragColor = outColor;                            //   //
+ *  //   //   }                                                      //   //
+ *  //   //                                                          //   //
+ *  //   //////////////////////////////////////////////////////////////   //
+ *  //                                                                    //
+ *  ////////////////////////////////////////////////////////////////////////
+ * \endcode
+ * 
+ * **Usage Example:** *Building a GPU shader*
+ *
+ *   This example is based on the code in: src/apps/ociodisplay/main.cpp
+ *
+ * \code{.cpp}
+ *
+ *    // Get the processor
+ *    //
+ *    OCIO::ConstConfigRcPtr config = OCIO::Config::CreateFromEnv();
+ *    OCIO::ConstProcessorRcPtr processor
+ *       = config->getProcessor("ACES - ACEScg", "Output - sRGB");
+ *
+ *    // Step 1: Create a GPU shader description
+ *    //
+ *    // The three potential scenarios are:
+ *    //
+ *    //   1. Instantiate the legacy shader description.  The color processor
+ *    //      is baked down to contain at most one 3D LUT and no 1D LUTs.
+ *    //
+ *    //      This is the v1 behavior and will remain part of OCIO v2
+ *    //      for backward compatibility.
+ *    //
+ *    OCIO::GpuShaderDescRcPtr shaderDesc
+ *          = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(LUT3D_EDGE_SIZE);
+ *    //
+ *    //   2. Instantiate the generic shader description.  The color processor
+ *    //      is used as-is (i.e. without any baking step) and could contain
+ *    //      any number of 1D & 3D luts.
+ *    //
+ *    //      This is the default OCIO v2 behavior and allows a much better
+ *    //      match between the CPU and GPU renderers.
+ *    //
+ *    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::Create();
+ *    //
+ *    //   3. Instantiate a custom shader description.
+ *    //
+ *    //      Writing a custom shader description is a way to tailor the shaders
+ *    //      to the needs of a given client program.  This involves writing a
+ *    //      new class inheriting from the pure virtual class GpuShaderDesc.
+ *    //
+ *    //      Please refer to the GenericGpuShaderDesc class for an example.
+ *    //
+ *    OCIO::GpuShaderDescRcPtr shaderDesc = MyCustomGpuShader::Create();
+ *
+ *    shaderDesc->setLanguage(OCIO::GPU_LANGUAGE_GLSL_1_2);
+ *    shaderDesc->setFunctionName("OCIODisplay");
+ *
+ *    // Step 2: Collect the shader program information for a specific processor
+ *    //
+ *    processor->extractGpuShaderInfo(shaderDesc);
+ *
+ *    // Step 3: Create a helper to build the shader. Here we use a helper for
+ *    //         OpenGL but there will also be helpers for other languages.
+ *    //
+ *    OpenGLBuilderRcPtr oglBuilder = OpenGLBuilder::Create(shaderDesc);
+ *
+ *    // Step 4: Allocate & upload all the LUTs
+ *    //
+ *    oglBuilder->allocateAllTextures();
+ *
+ *    // Step 5: Build the complete fragment shader program using
+ *    //         g_fragShaderText which is the client shader program.
+ *    //
+ *    g_programId = oglBuilder->buildProgram(g_fragShaderText);
+ *
+ *    // Step 6: Enable the fragment shader program, and all needed textures
+ *    //
+ *    glUseProgram(g_programId);
+ *    glUniform1i(glGetUniformLocation(g_programId, "tex1"), 1);  // image texture
+ *    oglBuilder->useAllTextures(g_programId);                    // LUT textures
+ *
+ *    // Step 7: Update uniforms from dynamic property instances.
+ *    m_oglBuilder->useAllUniforms();
+ * \endcode
+ *
+ */
 class OCIOEXPORT GpuShaderDesc : public GpuShaderCreator
 {
 public:
@@ -3153,16 +3108,43 @@ protected:
 };
 
 
-///////////////////////////////////////////////////////////////////////////
-// Context
-// *******
-// A context defines some overrides to a :cpp:class:`Config`. For example, it can override the
-// search path or change the value of a context variable.
-//
-// \note Only some :cpp:func:`Config::getProcessor` methods accept a custom context; otherwise,
-// the default context instance is used (see :cpp:func:`Config::getCurrentContext`).
-//
-
+/**
+ * Context
+ * 
+ * A context defines some overrides to a Config. For example, it can override the
+ * search path or change the value of a context variable.
+ *
+ * \note 
+ *    Only some \ref Config::getProcessor methods accept a custom context; otherwise,
+ *    the default context instance is used (see \ref Config::getCurrentContext).
+ *
+ * Context Variables
+ * 
+ * The context variables allow changes at runtime using environment variables. For example,
+ * a color space name (such as src & dst for the ColorSpaceTransform) or a file
+ * name (such as LUT file name for the FileTransform) could be defined by context
+ * variables. The color transformation is then customized based on some environment variables.
+ *
+ * In a config the context variables support three syntaxes (i.e. ${VAR}, $VAR and %VAR%) and
+ * the parsing starts from longest to shortest. So, the resolve works like '$TEST_$TESTING_$TE'
+ * expands in this order '2 1 3'.
+ *
+ * Config authors are recommended to include the "environment" section in their configs. This
+ * improves performance as well as making the config more readable. When present, this section
+ * must declare all context variables used in the config. It may also provide a default value,
+ * in case the variable is not present in the user's environment.
+ *
+ * A context variable may only be used in the following places:
+ * * the \ref `ColorSpaceTransform` to define the source and the destination color space names,
+ * * the \ref `FileTransform` to define the source file name (e.g. a LUT file name),
+ * * the search_path,
+ * * the cccid of the \ref `FileTransform` to only extract one specific transform from
+ *   the CDL & CCC files.
+ *
+ * Some specific restrictions are worth calling out:
+ * * they cannot be used as either the name or value of a role,
+ * * the context variable characters $ and % are prohibited in a color space name.
+ */
 class OCIOEXPORT Context
 {
 public:
@@ -3182,38 +3164,8 @@ public:
     void setWorkingDir(const char * dirname);
     const char * getWorkingDir() const;
 
-    ///////////////////////////////////////////////////////////////////////////
-    //!rst:: .. _ctxvariable_section:
-    // 
-    // Context Variables
-    // ^^^^^^^^^^^^^^^^^
-    // The context variables allow changes at runtime using environment variables. For example,
-    // a color space name (such as src & dst for the :cpp:class:`ColorSpaceTransform`) or a file
-    // name (such as LUT file name for the :cpp:class:`FileTransform`) could be defined by context
-    // variables. The color transformation is then customized based on some environment variables.
-    //
-    // In a config the context variables support three syntaxes (i.e. ${VAR}, $VAR and %VAR%) and
-    // the parsing starts from longest to shortest. So, the resolve works like '$TEST_$TESTING_$TE'
-    // expands in this order '2 1 3'.
-    //
-    // Config authors are recommended to include the "environment" section in their configs. This
-    // improves performance as well as making the config more readable. When present, this section
-    // must declare all context variables used in the config. It may also provide a default value,
-    // in case the variable is not present in the user's environment.
-    //
-    // A context variable may only be used in the following places:
-    // * the :cpp:class:`ColorSpaceTransform` to define the source and the destination color space names,
-    // * the :cpp:class:`FileTransform` to define the source file name (e.g. a LUT file name),
-    // * the search_path,
-    // * the cccid of the :cpp:class:`FileTransform` to only extract one specific transform from
-    //   the CDL & CCC files.
-    //
-    // Some specific restrictions are worth calling out:
-    // * they cannot be used as either the name or value of a role,
-    // * the context variable characters $ and % are prohibited in a color space name.
-
-    //!cpp:function:: Add (or update) a context variable. But it removes it if the value argument
-    // is null.
+    /// Add (or update) a context variable. But it removes it if the value argument
+    /// is null.
     void setStringVar(const char * name, const char * value) noexcept;
     /// Get the context variable value. It returns an empty string if the context 
     /// variable is null or does not exist.
@@ -3221,7 +3173,7 @@ public:
 
     int getNumStringVars() const;
     const char * getStringVarNameByIndex(int index) const;
-    //!cpp:function::
+    
     const char * getStringVarByIndex(int index) const;
 
     void clearStringVars();
@@ -3229,21 +3181,21 @@ public:
     /// Add to the instance all the context variables from ctx.
     void addStringVars(const ConstContextRcPtr & ctx) noexcept;
 
-    //!cpp:function::
+    
     void setEnvironmentMode(EnvironmentMode mode) noexcept;
 
-    //!cpp:function::
+    
     EnvironmentMode getEnvironmentMode() const noexcept;
 
     /// Seed all string vars with the current environment.
     void loadEnvironment() noexcept;
 
-    //!cpp:function:: Resolve all the context variables from the string. It could be color space
-    // names or file names. Note that it recursively applies the context variable resolution.
-    // Returns the string unchanged if it does not contain any context variable.  
+    /// Resolve all the context variables from the string. It could be color space
+    /// names or file names. Note that it recursively applies the context variable resolution.
+    /// Returns the string unchanged if it does not contain any context variable.  
     const char * resolveStringVar(const char * string) const noexcept;
-    //!cpp:function:: Resolve all the context variables from the string and return all the context
-    // variables used to resolve the string (empty if no context variables were used).
+    /// Resolve all the context variables from the string and return all the context
+    /// variables used to resolve the string (empty if no context variables were used).
     const char * resolveStringVar(const char * string, ContextRcPtr & usedContextVars) const noexcept;
 
     /**
