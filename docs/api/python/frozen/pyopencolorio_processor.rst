@@ -6,7 +6,7 @@
 .. py:class:: Processor
    :module: PyOpenColorIO
 
-   The *:ref:`Processor`* represents a specific color transformation which is the result of :cpp:func:`Config::getProcessor`.
+   The *:ref:`Processor`* represents a specific color transformation which is the result of :ref:`Config::getProcessor`.
 
 
    .. py:method:: Processor.__init__(*args, **kwargs)
@@ -28,7 +28,7 @@
    .. py:method:: Processor.getDefaultCPUProcessor(self: PyOpenColorIO.Processor) -> PyOpenColorIO.CPUProcessor
       :module: PyOpenColorIO
 
-      Get an optimized :cpp:class:`:ref:`CPUProcessor`` instance.
+      Get an optimized :ref:`CPUProcessor` instance.
 
       .. note::
          This may provide higher fidelity than anticipated due to internal optimizations. For example, if the inputColorSpace and the outputColorSpace are members of the same family, no conversion will be applied, even though strictly speaking quantization should be added.
@@ -92,11 +92,11 @@
 
       1. getOptimizedProcessor(self: PyOpenColorIO.Processor, oFlags: PyOpenColorIO.OptimizationFlags) -> PyOpenColorIO.Processor
 
-      Run the optimizer on a :ref:`Processor` to create a new :cpp:class:`:ref:`Processor``. It is usually not necessary to call this since getting a :ref:`CPUProcessor` or :ref:`GPUProcessor` will also optimize. However if you need both, calling this method first makes getting a CPU and GPU :ref:`Processor` faster since the optimization is effectively only done once.
+      Run the optimizer on a :ref:`Processor` to create a new :ref:`Processor`. It is usually not necessary to call this since getting a :ref:`CPUProcessor` or :ref:`GPUProcessor` will also optimize. However if you need both, calling this method first makes getting a CPU and GPU :ref:`Processor` faster since the optimization is effectively only done once.
 
       2. getOptimizedProcessor(self: PyOpenColorIO.Processor, inBitDepth: PyOpenColorIO.BitDepth, outBitDepth: PyOpenColorIO.BitDepth, oFlags: PyOpenColorIO.OptimizationFlags) -> PyOpenColorIO.Processor
 
-      Run the optimizer on a :ref:`Processor` to create a new :cpp:class:`:ref:`Processor``. It is usually not necessary to call this since getting a :ref:`CPUProcessor` or :ref:`GPUProcessor` will also optimize. However if you need both, calling this method first makes getting a CPU and GPU :ref:`Processor` faster since the optimization is effectively only done once.
+      Run the optimizer on a :ref:`Processor` to create a new :ref:`Processor`. It is usually not necessary to call this since getting a :ref:`CPUProcessor` or :ref:`GPUProcessor` will also optimize. However if you need both, calling this method first makes getting a CPU and GPU :ref:`Processor` faster since the optimization is effectively only done once.
 
 
    .. py:method:: Processor.getProcessorMetadata(self: PyOpenColorIO.Processor) -> PyOpenColorIO.ProcessorMetadata

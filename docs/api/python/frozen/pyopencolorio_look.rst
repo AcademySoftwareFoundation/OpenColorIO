@@ -6,6 +6,8 @@
 .. py:class:: Look
    :module: PyOpenColorIO
 
+   The *:ref:`Look`* is an 'artistic' image modification, in a specified image state. The processSpace defines the :ref:`ColorSpace` the image is required to be in, for the math to apply correctly.
+
 
    .. py:method:: Look.__init__(*args, **kwargs)
       :module: PyOpenColorIO
