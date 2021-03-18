@@ -82,11 +82,9 @@ public:
 /**
  * \brief An exception class for errors detected at runtime.
  * 
- * Thrown when OCIO cannot find a file that is expected to
- * exist. This is provided as a custom type to
- * distinguish cases where one wants to continue looking for
- * missing files, but wants to properly fail
- * for other error conditions.
+ * Thrown when OCIO cannot find a file that is expected to exist. This is provided as a custom 
+ * type to distinguish cases where one wants to continue looking for missing files, but wants 
+ * to properly fail for other error conditions.
  */
 class OCIOEXPORT ExceptionMissingFile : public Exception
 {
@@ -195,31 +193,26 @@ extern OCIOEXPORT void SetCurrentConfig(const ConstConfigRcPtr & config);
  * \brief
  * A config defines all the color spaces to be available at runtime.
  *
- * The color configuration (Config) is the main object for
- * interacting with this library. It encapsulates all of the information
- * necessary to use customized ColorSpaceTransform and
+ * The color configuration (Config) is the main object for interacting with this library. It 
+ * encapsulates all of the information necessary to use customized ColorSpaceTransform and
  * DisplayViewTransform operations.
  *
- * See the \ref user-guide for more information on
- * selecting, creating, and working with custom color configurations.
+ * See the \ref user-guide for more information on selecting, creating, and working with custom 
+ * color configurations.
  *
- * For applications interested in using only one color config at
- * a time (this is the vast majority of apps), their API would
- * traditionally get the global configuration and use that, as opposed to
- * creating a new one. This simplifies the use case for
- * plugins and bindings, as it alleviates the need to pass around configuration
- * handles.
+ * For applications interested in using only one color config at a time (this is the vast majority
+ * of apps), their API would traditionally get the global configuration and use that, as opposed 
+ * to creating a new one. This simplifies the use case for plugins and bindings, as it alleviates 
+ * the need to pass around configuration handles.
  *
- * An example of an application where this would not be sufficient would be
- * a multi-threaded image proxy server (daemon), which wished to handle
- * multiple show configurations in a single process concurrently. This
- * app would need to keep multiple configurations alive, and to manage them
+ * An example of an application where this would not be sufficient would be a multi-threaded image
+ * proxy server (daemon), which wished to handle multiple show configurations in a single process 
+ * concurrently. This app would need to keep multiple configurations alive, and to manage them
  * appropriately.
  *
- * Roughly speaking, a novice user should select a
- * default configuration that most closely approximates the use case
- * (animation, visual effects, etc.), and set the :envvar:`OCIO` environment
- * variable to point at the root of that configuration.
+ * Roughly speaking, a novice user should select a default configuration that most closely 
+ * approximates the use case (animation, visual effects, etc.), and set the :envvar:`OCIO` 
+ * environment variable to point at the root of that configuration.
  *
  * \note
  *    Initialization using environment variables is typically preferable in
@@ -295,7 +288,7 @@ public:
     void validate() const;
 
     /**
-     * Get/set a name string for the config.
+     * \brief Get/set a name string for the config.
      *
      * The name string may be used to communicate config update details or similar information
      * to workflows external to OCIO in cases where the config path/filename itself does not
@@ -333,14 +326,14 @@ public:
     void serialize(std::ostream & os) const;
 
     /**
-     * This will produce a hash of the all colorspace definitions, etc.
-     * All external references, such as files used in FileTransforms, etc.,
-     * will be incorporated into the cacheID. While the contents of
-     * the files are not read, the file system is queried for relevant
-     * information (mtime, inode) so that the config's cacheID will
-     * change when the underlying luts are updated.
+     * This will produce a hash of the all colorspace definitions, etc. All external references, 
+     * such as files used in FileTransforms, etc., will be incorporated into the cacheID. While 
+     * the contents of the files are not read, the file system is queried for relevant information 
+     * (mtime, inode) so that the config's cacheID will change when the underlying luts are updated.
+     * 
      * If a context is not provided, the current Context will be used.
-     * If a null context is provided, file references will not be taken into
+     * 
+     * If a null context is provided, file references will not be taken into 
      * account (this is essentially a hash of Config::serialize).
      */
     const char * getCacheID() const;
@@ -547,7 +540,6 @@ public:
     // Roles
     //
     
-    // TODO: Move to .rst
     // A role is like an alias for a colorspace. You can query the colorspace
     // corresponding to a role using the normal getColorSpace fcn.
 
@@ -892,7 +884,6 @@ public:
     // View Transforms
     //
 
-    // TODO: Move to .rst
     // ViewTransform objects are used with the display reference space.
 
     int getNumViewTransforms() const noexcept;
@@ -1027,13 +1018,12 @@ public:
     // Processors
     //
 
-    // TODO: Move to .rst
     // Create a Processor to assemble a transformation between two
     // color spaces.  It may then be used to create a CPUProcessor
     // or GPUProcessor to process/convert pixels.
-    // rst:: Get the processor to apply a ColorSpaceTransform from a source to a destination
-    // color space.
 
+    /// Get the processor to apply a ColorSpaceTransform from a source to a destination
+    /// color space.
     ConstProcessorRcPtr getProcessor(const ConstContextRcPtr & context,
                                      const ConstColorSpaceRcPtr & srcColorSpace,
                                      const ConstColorSpaceRcPtr & dstColorSpace) const;
@@ -1123,8 +1113,8 @@ public:
     /// Do not use (needed only for pybind11).
     ~Config();
 
-    /// Control the caching of processors in the config instance.  By default, caching
-    /// is on.  The flags allow turning caching off entirely or only turning it off if dynamic
+    /// Control the caching of processors in the config instance.  By default, caching is on.  
+    /// The flags allow turning caching off entirely or only turning it off if dynamic
     /// properties are being used by the processor.
     void setProcessorCacheFlags(ProcessorCacheFlags flags) noexcept;
 
@@ -1150,32 +1140,35 @@ extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const Config&);
  * be used by applications to refer to that rule. Name values must be unique i.e. using a
  * case insensitive comparison. The other keys depend on the rule type:
  *
- * * Basic Rule: This is the basic rule type that uses Unix glob style pattern matching and
+ * * *Basic Rule*: This is the basic rule type that uses Unix glob style pattern matching and
  *   is thus very easy to use. It contains the keys:
- *   * name: Name of the rule
- *   * colorspace: Color space name to be returned.
- *   * pattern: Glob pattern to be used for the main part of the name/path.
- *   * extension: Glob pattern to be used for the file extension. Note that if glob tokens
- *     are not used, the extension will be used in a non-case-sensitive way by default.
- * * Regex Rule: This is similar to the basic rule but allows additional capabilities for
+ *     * name: Name of the rule
+ *     * colorspace: Color space name to be returned.
+ *     * pattern: Glob pattern to be used for the main part of the name/path.
+ *     * extension: Glob pattern to be used for the file extension. Note that if glob tokens
+ *       are not used, the extension will be used in a non-case-sensitive way by default.
+ * 
+ * * *Regex Rule*: This is similar to the basic rule but allows additional capabilities for
  *   power-users. It contains the keys:
- *   * name: Name of the rule
- *   * colorspace: Color space name to be returned.
- *   * regex: Regular expression to be evaluated.
- * * OCIO v1 style Rule: This rule allows the use of the OCIO v1 style, where the string
+ *     * name: Name of the rule
+ *     * colorspace: Color space name to be returned.
+ *     * regex: Regular expression to be evaluated.
+ * 
+ * * *OCIO v1 style Rule*: This rule allows the use of the OCIO v1 style, where the string
  *   is searched for color space names from the config. This rule may occur 0 or 1 times
  *   in the list. The position in the list prioritizes it with respect to the other rules.
  *   StrictParsing is not used. If no color space is found in the path, the rule will not
  *   match and the next rule will be considered.
  *   see \ref insertPathSearchRule.
  *   It has the key:
- *   * name: Must be "ColorSpaceNamePathSearch".
- * * Default Rule: The file_rules must always end with this rule. If no prior rules match,
+ *     * name: Must be "ColorSpaceNamePathSearch".
+ * 
+ * * *Default Rule*: The file_rules must always end with this rule. If no prior rules match,
  *   this rule specifies the color space applications will use.
  *   see \ref setDefaultRuleColorSpace.
  *   It has the keys:
- *   * name: must be "Default".
- *   * colorspace : Color space name to be returned.
+ *     * name: must be "Default".
+ *     * colorspace : Color space name to be returned.
  *
  * Custom string keys and associated string values may be used to convey app or
  * workflow-specific information, e.g. whether the color space should be left as is
@@ -1400,9 +1393,8 @@ public:
     /**
      * \brief Insert a rule at a given ruleIndex.
      * 
-     * Rule currently at ruleIndex will be
-     * pushed to index: ruleIndex + 1. If ruleIndex is \ref ViewingRules::getNumEntries
-     * new rule will be added at the end. Will throw if:
+     * Rule currently at ruleIndex will be pushed to index: ruleIndex + 1. If ruleIndex is 
+     * \ref ViewingRules::getNumEntries, a new rule will be added at the end. Will throw if:
      * * RuleIndex is invalid (must be less than or equal to
      *   \ref ViewingRules::getNumEntries).
      * * RuleName already exists.
@@ -1515,13 +1507,19 @@ public:
      * they display in menus based on what that color space is used for.
      *
      * Here is an example config entry that could appear under a ColorSpace:
-     * categories: [ file-io, working-space, basic-3d ]
-     *
+     * 
+     * \code{.yaml}
+     *     categories: [ file-io, working-space, basic-3d ]
+     * \endcode
+     * 
      * The example contains three categories: 'file-io', 'working-space' and 'basic-3d'.
-     * Category strings are not case-sensitive and the order is not significant.
-     * There is no limit imposed on length or number. Although users may add
-     * their own categories, the strings will typically come from a fixed set
-     * listed in the documentation (similar to roles).
+     * 
+     * \note
+     *     Category strings are not case-sensitive and the order is not significant.
+     * 
+     * There is no limit imposed on length or number. Although users may add their own categories,
+     * the strings will typically come from a fixed set listed in the documentation (similar to 
+     * roles).
      */
     /// Return true if the category is present.
     bool hasCategory(const char * category) const;
@@ -1561,7 +1559,10 @@ public:
      * (rather than being config-specific) to make it easier for applications to utilize.
      *
      * Here is an example config entry that could appear under a ColorSpace:
-     * encoding: scene-linear
+     * 
+     * \code{.yaml}
+     *     encoding: scene-linear
+     * \endcode
      *
      * Encoding strings are not case-sensitive. Although users may add their own encodings, the
      * strings will typically come from a fixed set listed in the documentation (similar to roles).
@@ -2454,10 +2455,6 @@ private:
 
 ///////////////////////////////////////////////////////////////////////////
 // ImageDesc
-
-// rst::
-// .. c:var:: const ptrdiff_t AutoStride
-//    AutoStride
 
 const ptrdiff_t AutoStride = std::numeric_limits<ptrdiff_t>::min();
 

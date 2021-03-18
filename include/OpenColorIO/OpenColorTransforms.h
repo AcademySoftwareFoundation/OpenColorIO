@@ -14,12 +14,12 @@
 #error This header cannot be used directly. Use <OpenColorIO/OpenColorIO.h> instead.
 #endif
 
-/*!rst::
-C++ Transforms
-==============
-
-Typically only needed when creating and/or manipulating configurations
-*/
+/**
+ * C++ Transforms
+ * ==============
+ * 
+ * Typically only needed when creating and/or manipulating configurations
+ */
 
 namespace OCIO_NAMESPACE
 {
@@ -228,9 +228,15 @@ extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const BuiltinTransfo
 
 
 /**
- * An implementation of the ASC Color Decision List (CDL), based on the ASC v1.2
- * specification.
+ * \brief 
+ *     An implementation of the ASC Color Decision List (CDL), based on the ASC v1.2
+ *     specification.
  *
+ * **ASC_SOP**
+ *
+ * Slope, offset, power::
+ *    out = clamp( (in * slope) + offset ) ^ power
+ * 
  * \note​
  *    If the config version is 1, negative values are clamped if the power is not 1.0.
  *    For config version 2 and higher, the negative handling is controlled by the CDL style.
@@ -276,13 +282,6 @@ public:
      * The default style is CDL_NO_CLAMP.
      */
     virtual void setStyle(CDLStyle style) = 0;
-
-    // TODO: Move to .rst
-    // !rst:: **ASC_SOP**
-    //
-    // Slope, offset, power::
-    //
-    //    out = clamp( (in * slope) + offset ) ^ power
 
     virtual void getSlope(double * rgb) const = 0;
     virtual void setSlope(const double * rgb) = 0;
@@ -652,9 +651,9 @@ extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const GradingTone &)
 /**
  * Allows transform parameter values to be set on-the-fly (after finalization).  For
  * example, to modify the exposure in a viewport.  Dynamic properties can be accessed from the
- * :cpp:class:`CPUProcessor` or :cpp:class:`GpuShaderCreator` to change values between processing.
+ * `CPUProcessor` or `GpuShaderCreator` to change values between processing.
  *
- * .. code-block:: cpp
+ * \code{.cpp}
  *
  *    OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
  *    OCIO::ConstProcessorRcPtr processor = config->getProcessor(colorSpace1, colorSpace2);
@@ -692,6 +691,7 @@ extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const GradingTone &)
  *        rCurve->getControlPoint(1).m_y += 0.1f;
  *        rgbCurveProp->setValue(rgbCurve);
  *    }
+ * \endcode
  */
 class OCIOEXPORT DynamicProperty
 {
@@ -1350,7 +1350,7 @@ public:
      * FileTransform or ColorSpaceTransform are resolved into write-able simple transforms using
      * the config and context.  Supported formats include CTF, CLF, and CDL. All available formats
      * can be listed with the following:
-     * @code
+     * \code{.cpp}
      * // What are the allowed writing output formats?
      * std::ostringstream formats;
      * formats << "Formats to write to: ";
@@ -1360,7 +1360,7 @@ public:
      *    formats << GroupTransform::GetFormatNameByIndex(i);
      *    formats << " (." << GroupTransform::GetFormatExtensionByIndex(i) << ")";
      * }
-     * @endcode
+     * \endcode
      */
     virtual void write(const ConstConfigRcPtr & config,
                        const char * formatName,
@@ -1835,15 +1835,14 @@ public:
     virtual BitDepth getFileOutputBitDepth() const noexcept = 0;
     virtual void setFileOutputBitDepth(BitDepth bitDepth) noexcept = 0;
 
-    // TODO: Move to .rst
-    // !rst:: **Convenience functions**
-    //
-    // Build the matrix and offset corresponding to higher-level concepts.
-    // 
-    // .. note::
-    //    These can throw an exception if for any component
-    //    ``oldmin == oldmax. (divide by 0)``
 
+    /// **Convenience functions**
+    ///
+    /// Build the matrix and offset corresponding to higher-level concepts.
+    /// 
+    /// \note
+    ///    These can throw an exception if for any component
+    ///    ``oldmin == oldmax. (divide by 0)``
     static void Fit(double * m44, double* offset4,
                     const double * oldmin4, const double * oldmax4,
                     const double * newmin4, const double * newmax4);
@@ -1883,8 +1882,13 @@ extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const MatrixTransfor
  * for Look-Up Tables" from the Academy of Motion Picture Arts and Sciences
  * and the American Society of Cinematographers.
  *
- * The "noClamp" style described in the specification S-2014-006 becomes a
- * MatrixOp at the processor level.
+ * \note
+ *    The "noClamp" style described in the specification S-2014-006 becomes a
+ *    MatrixOp at the processor level.
+ *
+ * \note
+ *   Changing the transform direction does not modify the in/out values --
+ *   they are always specified with respect to the "forward" direction.
  */
 class OCIOEXPORT RangeTransform : public Transform
 {
@@ -1904,36 +1908,34 @@ public:
     /// Checks if this equals other.
     virtual bool equals(const RangeTransform & other) const noexcept = 0;
 
-    // TODO: Move to .rst
-    // !rst:: **File bit-depth**
-    //
-    // Get the bit-depths associated with the range values read from a file
-    // or set the bit-depths of values to be written to a file (for file
-    // formats such as CLF that support multiple bit-depths).
-    //
-    // In a format such as CLF, the range values are scaled to take
-    // pixels at the specified inBitDepth to pixels at the specified
-    // outBitDepth. This complicates the interpretation of the range
-    // values and so this object always holds normalized values and
-    // scaling is done on the way from or to file formats such as CLF.
+    /**
+     * **File bit-depth**
+     *
+     * In a format such as CLF, the range values are scaled to take
+     * pixels at the specified inBitDepth to pixels at the specified
+     * outBitDepth. This complicates the interpretation of the range
+     * values and so this object always holds normalized values and
+     * scaling is done on the way from or to file formats such as CLF.
+     */
 
+    /// Get the bit-depths associated with the range values read from a file
+    /// or set the bit-depths of values to be written to a file (for file
+    /// formats such as CLF that support multiple bit-depths).
     virtual BitDepth getFileInputBitDepth() const noexcept = 0;
     virtual void setFileInputBitDepth(BitDepth bitDepth) noexcept = 0;
     virtual BitDepth getFileOutputBitDepth() const noexcept = 0;
     virtual void setFileOutputBitDepth(BitDepth bitDepth) noexcept = 0;
 
-    // TODO: Move to .rst
-    // !rst:: **Range values**
-    //
-    // Note that changing the transform direction does not modify the
-    // in/out values, they are always for the "forward" direction.
-    //
-    // These values are normalized relative to what may be stored in file
-    // formats such as CLF. For example in a CLF file using a "10i" input
-    // depth, a MaxInValue of 1023 in the file is normalized to 1.0.
-    // Likewise, for an output depth of "12i", a MaxOutValue of 4095 in the
-    // file is normalized to 1.0. The values here are unclamped and may
-    // extend outside [0,1].
+    /**
+     * **Range values**
+     *
+     * These values are normalized relative to what may be stored in file
+     * formats such as CLF. For example in a CLF file using a "10i" input
+     * depth, a MaxInValue of 1023 in the file is normalized to 1.0.
+     * Likewise, for an output depth of "12i", a MaxOutValue of 4095 in the
+     * file is normalized to 1.0. The values here are unclamped and may
+     * extend outside [0,1].
+     */
 
     /// Get the minimum value for the input.
     virtual double getMinInValue() const noexcept = 0;
