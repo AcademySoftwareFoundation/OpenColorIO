@@ -13,32 +13,32 @@
 std::string GetProjectDir(PF_InData *in_data);
 
 
-static PF_Err About(  
+static PF_Err About(
     PF_InData       *in_data,
     PF_OutData      *out_data,
     PF_ParamDef     *params[],
     PF_LayerDef     *output )
 {
-    PF_SPRINTF( out_data->return_msg, 
+    PF_SPRINTF( out_data->return_msg,
                 "OpenColorIO\r\r"
                 "opencolorio.org\r"
                 "version %s",
                 OCIO::GetVersion() );
-                
+    
     return PF_Err_NONE;
 }
 
 
-static PF_Err GlobalSetup(    
+static PF_Err GlobalSetup(
     PF_InData       *in_data,
     PF_OutData      *out_data,
     PF_ParamDef     *params[],
     PF_LayerDef     *output )
 {
-    out_data->my_version    =   PF_VERSION( MAJOR_VERSION, 
+    out_data->my_version    =   PF_VERSION( MAJOR_VERSION,
                                             MINOR_VERSION,
-                                            BUG_VERSION, 
-                                            STAGE_VERSION, 
+                                            BUG_VERSION,
+                                            STAGE_VERSION,
                                             BUILD_VERSION);
 
     out_data->out_flags     =   PF_OutFlag_DEEP_COLOR_AWARE     |
@@ -50,7 +50,9 @@ static PF_Err GlobalSetup(
     out_data->out_flags2    =   PF_OutFlag2_PARAM_GROUP_START_COLLAPSED_FLAG |
                                 PF_OutFlag2_SUPPORTS_SMART_RENDER   |
                                 PF_OutFlag2_FLOAT_COLOR_AWARE       |
-                                PF_OutFlag2_PPRO_DO_NOT_CLONE_SEQUENCE_DATA_FOR_RENDER;
+                                PF_OutFlag2_PPRO_DO_NOT_CLONE_SEQUENCE_DATA_FOR_RENDER |
+                                PF_OutFlag2_SUPPORTS_GET_FLATTENED_SEQUENCE_DATA |
+                                PF_OutFlag2_SUPPORTS_THREADED_RENDERING;
     
     
     GlobalSetup_GL();
@@ -63,7 +65,7 @@ static PF_Err GlobalSetup(
         in_data->pica_basicP->AcquireSuite(kPFPixelFormatSuite,
                                             kPFPixelFormatSuiteVersion1,
                                             (const void **)&pfS);
-                                            
+        
         if(pfS)
         {
             pfS->ClearSupportedPixelFormats(in_data->effect_ref);
@@ -80,7 +82,7 @@ static PF_Err GlobalSetup(
 }
 
 
-static PF_Err GlobalSetdown(  
+static PF_Err GlobalSetdown(
     PF_InData       *in_data,
     PF_OutData      *out_data,
     PF_ParamDef     *params[],
@@ -124,12 +126,12 @@ static PF_Err ParamsSetup(
                     FALSE,
                     0,
                     OCIO_GPU_ID);
-                    
+    
 
     out_data->num_params = OCIO_NUM_PARAMS;
 
     // register custom UI
-    if (!err) 
+    if (!err)
     {
         PF_CustomUIInfo         ci;
 
@@ -155,6 +157,7 @@ static PF_Err ParamsSetup(
     return err;
 }
 
+
 static PF_Err SequenceSetup(
     PF_InData       *in_data,
     PF_OutData      *out_data,
@@ -163,37 +166,61 @@ static PF_Err SequenceSetup(
 {
     PF_Err err = PF_Err_NONE;
     
-    SequenceData *seq_data = NULL;
-    
     // set up sequence data
-    if( (in_data->sequence_data == NULL) )
-    {
-        out_data->sequence_data = PF_NEW_HANDLE( sizeof(SequenceData) );
-        
-        seq_data = (SequenceData *)PF_LOCK_HANDLE(out_data->sequence_data);
-        
-        seq_data->path[0] = '\0';
-        seq_data->relative_path[0] = '\0';
-    }
-    else // reset pre-existing sequence data
-    {
-        if( PF_GET_HANDLE_SIZE(in_data->sequence_data) != sizeof(SequenceData) )
-        {
-            PF_RESIZE_HANDLE(sizeof(SequenceData), &in_data->sequence_data);
-        }
-            
-        seq_data = (SequenceData *)PF_LOCK_HANDLE(in_data->sequence_data);
-    }
+    assert(in_data->sequence_data == NULL);
     
+    out_data->sequence_data = PF_NEW_HANDLE( sizeof(SequenceData) );
     
+    SequenceData *seq_data = (SequenceData *)PF_LOCK_HANDLE(out_data->sequence_data);
+
     seq_data->status = STATUS_UNKNOWN;
     seq_data->gpu_err = GPU_ERR_NONE;
     seq_data->prem_status = PREMIERE_UNKNOWN;
     seq_data->context = NULL;
     
+    strncpy(seq_data->path, "", ARB_PATH_LEN+1);
+    strncpy(seq_data->relative_path, "", ARB_PATH_LEN+1);
+
+    PF_UNLOCK_HANDLE(out_data->sequence_data);
     
-    PF_UNLOCK_HANDLE(in_data->sequence_data);
+    return err;
+}
+
+
+static PF_Err SequenceResetup(
+    PF_InData       *in_data,
+    PF_OutData      *out_data,
+    PF_ParamDef     *params[],
+    PF_LayerDef     *output )
+{
+    PF_Err err = PF_Err_NONE;
     
+    // reset pre-existing sequence data
+    if(in_data->sequence_data != NULL)
+    {
+        SequenceData *seq_data_old = (SequenceData *)PF_LOCK_HANDLE(in_data->sequence_data);
+        
+        out_data->sequence_data = PF_NEW_HANDLE( sizeof(SequenceData) );
+        
+        assert(PF_GET_HANDLE_SIZE(in_data->sequence_data) == PF_GET_HANDLE_SIZE(out_data->sequence_data));
+        
+        SequenceData *seq_data = (SequenceData *)PF_LOCK_HANDLE(out_data->sequence_data);
+        
+        seq_data->status = STATUS_UNKNOWN;
+        seq_data->gpu_err = GPU_ERR_NONE;
+        seq_data->prem_status = PREMIERE_UNKNOWN;
+        assert(seq_data->context == NULL);
+        seq_data->context = NULL;
+        
+        strncpy(seq_data->path, seq_data_old->path, ARB_PATH_LEN+1);
+        strncpy(seq_data->relative_path, seq_data_old->relative_path, ARB_PATH_LEN+1);
+        
+        PF_UNLOCK_HANDLE(out_data->sequence_data);
+        PF_UNLOCK_HANDLE(in_data->sequence_data);
+    }
+    else
+        assert(FALSE);
+
     return err;
 }
 
@@ -208,20 +235,21 @@ static PF_Err SequenceSetdown(
     
     if(in_data->sequence_data)
     {
-        SequenceData *seq_data = (SequenceData *)PF_LOCK_HANDLE(out_data->sequence_data);
+        SequenceData *seq_data = (SequenceData *)PF_LOCK_HANDLE(in_data->sequence_data);
         
-        if(seq_data->context)
+        if(seq_data->context != NULL)
         {
             delete seq_data->context;
             
-            seq_data->status = STATUS_UNKNOWN;
-            seq_data->gpu_err = GPU_ERR_NONE;
-            seq_data->prem_status = PREMIERE_UNKNOWN;
             seq_data->context = NULL;
         }
         
+        PF_UNLOCK_HANDLE(in_data->sequence_data);
+        
         PF_DISPOSE_HANDLE(in_data->sequence_data);
     }
+    else
+        assert(FALSE);
 
     return err;
 }
@@ -235,26 +263,77 @@ static PF_Err SequenceFlatten(
 {
     PF_Err err = PF_Err_NONE;
 
-    if(in_data->sequence_data)
+    if(in_data->sequence_data != NULL)
     {
-        SequenceData *seq_data = (SequenceData *)PF_LOCK_HANDLE(in_data->sequence_data);
+        SequenceData *seq_data_old = (SequenceData *)PF_LOCK_HANDLE(in_data->sequence_data);
         
-        if(seq_data->context)
+        out_data->sequence_data = PF_NEW_HANDLE( sizeof(SequenceData) );
+        
+        assert(PF_GET_HANDLE_SIZE(in_data->sequence_data) == PF_GET_HANDLE_SIZE(out_data->sequence_data));
+        
+        SequenceData *seq_data = (SequenceData *)PF_LOCK_HANDLE(out_data->sequence_data);
+        
+        if(seq_data_old->context != NULL)
         {
-            delete seq_data->context;
+            delete seq_data_old->context;
             
-            seq_data->status = STATUS_UNKNOWN;
-            seq_data->gpu_err = GPU_ERR_NONE;
-            seq_data->prem_status = PREMIERE_UNKNOWN;
-            seq_data->context = NULL;
+            seq_data_old->context = NULL;
         }
-
+        
+        seq_data->status = STATUS_UNKNOWN;
+        seq_data->gpu_err = GPU_ERR_NONE;
+        seq_data->prem_status = PREMIERE_UNKNOWN;
+        
+        strncpy(seq_data->path, seq_data_old->path, ARB_PATH_LEN+1);
+        strncpy(seq_data->relative_path, seq_data_old->relative_path, ARB_PATH_LEN+1);
+        
+        PF_UNLOCK_HANDLE(out_data->sequence_data);
         PF_UNLOCK_HANDLE(in_data->sequence_data);
+        
+        PF_DISPOSE_HANDLE(in_data->sequence_data);
     }
+    else
+        assert(FALSE);
 
     return err;
 }
 
+
+static PF_Err
+GetFlattenedSequenceData (
+    PF_InData        *in_data,
+    PF_OutData        *out_data,
+    PF_ParamDef        *params[],
+    PF_LayerDef        *output )
+{
+    PF_Err err = PF_Err_NONE;
+    
+    if(in_data->sequence_data != NULL)
+    {
+        SequenceData *seq_data_old = (SequenceData *)PF_LOCK_HANDLE(in_data->sequence_data);
+        
+        out_data->sequence_data = PF_NEW_HANDLE( sizeof(SequenceData) );
+        
+        assert(PF_GET_HANDLE_SIZE(in_data->sequence_data) == PF_GET_HANDLE_SIZE(out_data->sequence_data));
+        
+        SequenceData *seq_data = (SequenceData *)PF_LOCK_HANDLE(out_data->sequence_data);
+        
+        seq_data->status = STATUS_UNKNOWN;
+        seq_data->gpu_err = GPU_ERR_NONE;
+        seq_data->prem_status = PREMIERE_UNKNOWN;
+        seq_data->context = NULL;
+        
+        strncpy(seq_data->path, seq_data_old->path, ARB_PATH_LEN+1);
+        strncpy(seq_data->relative_path, seq_data_old->relative_path, ARB_PATH_LEN+1);
+        
+        PF_UNLOCK_HANDLE(out_data->sequence_data);
+        PF_UNLOCK_HANDLE(in_data->sequence_data);
+    }
+    else
+        assert(FALSE);
+
+    return PF_Err_NONE;
+}
 
 
 static PF_Boolean IsEmptyRect(const PF_LRect *r){
@@ -302,7 +381,7 @@ static PF_Err PreRender(
 
 
     UnionLRect(&in_result.result_rect,      &extra->output->result_rect);
-    UnionLRect(&in_result.max_result_rect,  &extra->output->max_result_rect);   
+    UnionLRect(&in_result.max_result_rect,  &extra->output->max_result_rect);
     
     return err;
 }
@@ -371,7 +450,7 @@ static PF_Err CopyWorld_Iterate(
     IterateData *i_data = (IterateData *)refconPV;
     PF_InData *in_data = i_data->in_data;
     
-    InFormat *in_pix = (InFormat *)((char *)i_data->in_buffer + (i * i_data->in_rowbytes)); 
+    InFormat *in_pix = (InFormat *)((char *)i_data->in_buffer + (i * i_data->in_rowbytes));
     OutFormat *out_pix = (OutFormat *)((char *)i_data->out_buffer + (i * i_data->out_rowbytes));
     
 #ifdef NDEBUG
@@ -451,7 +530,7 @@ static PF_Err Process_Iterate(
     ProcessData *i_data = (ProcessData *)refconPV;
     PF_InData *in_data = i_data->in_data;
     
-    PF_PixelFloat *pix = (PF_PixelFloat *)((char *)i_data->buffer + (i * i_data->rowbytes)); 
+    PF_PixelFloat *pix = (PF_PixelFloat *)((char *)i_data->buffer + (i * i_data->rowbytes));
     
 #ifdef NDEBUG
     if(thread_indexL == 0)
@@ -463,7 +542,7 @@ static PF_Err Process_Iterate(
         float *rOut = &pix->red;
 
         OCIO::PackedImageDesc img(rOut, i_data->width, 1, 4);
-                                                
+        
         i_data->context->cpu_processor()->apply(img);
     }
     catch(...)
@@ -862,13 +941,13 @@ static PF_Err DoRender(
                             err = iterate_generic(output->height, &i_data,
                                                     CopyWorld_Iterate<float, float>);
                         }
-                            
+                        
                     }
 
                     PF_DISPOSE_HANDLE(temp_worldH);
                 }
-                    
-                    
+                
+                
                 PF_UNLOCK_HANDLE(OCIO_data->u.arb_d.value);
                 PF_UNLOCK_HANDLE(in_data->sequence_data);
 
@@ -890,7 +969,7 @@ static PF_Err DoRender(
     
     if(wsP)
         in_data->pica_basicP->ReleaseSuite(kPFWorldSuite, kPFWorldSuiteVersion2);
-        
+    
     
     
     return err;
@@ -905,7 +984,7 @@ static PF_Err SmartRender(
 {
     PF_Err          err     = PF_Err_NONE,
                     err2    = PF_Err_NONE;
-                    
+    
     PF_EffectWorld *input, *output;
     
     PF_ParamDef OCIO_data, OCIO_gpu;
@@ -932,11 +1011,11 @@ static PF_Err SmartRender(
     ERR(    PF_CHECKOUT_PARAM_NOW( OCIO_DATA,   &OCIO_data )    );
     ERR(    PF_CHECKOUT_PARAM_NOW( OCIO_GPU,    &OCIO_gpu  )    );
 
-    ERR(DoRender(   in_data, 
-                    input, 
+    ERR(DoRender(   in_data,
+                    input,
                     &OCIO_data,
                     &OCIO_gpu,
-                    out_data, 
+                    out_data,
                     output));
 
     // Always check in, no matter what the error condition!
@@ -1012,7 +1091,7 @@ static PF_Err GetExternalDependencies(
     else if(seq_data->source == OCIO_SOURCE_CUSTOM && seq_data->path[0] != '\0')
     {
         std::string dir = GetProjectDir(in_data);
-            
+        
         Path absolute_path(seq_data->path, "");
         Path relative_path(seq_data->relative_path, dir);
     
@@ -1074,14 +1153,19 @@ DllExport PF_Err PluginMain(
                 err = ParamsSetup(in_data,out_data,params,output);
                 break;
             case PF_Cmd_SEQUENCE_SETUP:
-            case PF_Cmd_SEQUENCE_RESETUP:
                 err = SequenceSetup(in_data, out_data, params, output);
+                break;
+            case PF_Cmd_SEQUENCE_RESETUP:
+                err = SequenceResetup(in_data, out_data, params, output);
                 break;
             case PF_Cmd_SEQUENCE_FLATTEN:
                 err = SequenceFlatten(in_data, out_data, params, output);
                 break;
             case PF_Cmd_SEQUENCE_SETDOWN:
                 err = SequenceSetdown(in_data, out_data, params, output);
+                break;
+            case PF_Cmd_GET_FLATTENED_SEQUENCE_DATA:
+                err = GetFlattenedSequenceData(in_data, out_data, params, output);
                 break;
             case PF_Cmd_SMART_PRE_RENDER:
                 err = PreRender(in_data, out_data, (PF_PreRenderExtra*)extra);
