@@ -257,3 +257,18 @@ if(OCIO_BUILD_DOCS)
 	add_subdirectory(docs)
 endif()
 add_subdirectory(vendor)
+
+
+###############################################################################
+# Configure env script
+
+if(WIN32)
+    set(OCIO_SETUP_NAME setup_ocio.bat)
+else()
+    set(OCIO_SETUP_NAME setup_ocio.sh)
+endif()
+
+configure_file(${CMAKE_SOURCE_DIR}/share/ocio/${OCIO_SETUP_NAME}.in
+    ${CMAKE_CURRENT_BINARY_DIR}/share/ocio/${OCIO_SETUP_NAME} @ONLY)
+
+INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/share/ocio/${OCIO_SETUP_NAME} DESTINATION share/ocio/)
