@@ -800,7 +800,11 @@ DLLExport SPAPI void PluginMain(const int16 selector,
 			if(*data != NULL)
 			{
 				globalPtr = filterRecord->handleProcs->lockProc((Handle)*data, TRUE);
+				globals = (GPtr)globalPtr;
 				
+				globals->result = result;
+				globals->filterParamBlock = filterRecord;
+
 				if(must_init)
 					InitGlobals(globalPtr);
 			}
@@ -823,11 +827,21 @@ DLLExport SPAPI void PluginMain(const int16 selector,
 				}
 				
 				globalPtr = (Ptr)*data;
+				globals = (GPtr)globalPtr;
 				
+				globals->result = result;
+				globals->filterParamBlock = filterRecord;
+
 				InitGlobals(globalPtr);
 			}
 			else
+			{
 				globalPtr = (Ptr)*data;
+				globals = (GPtr)globalPtr;
+				
+				globals->result = result;
+				globals->filterParamBlock = filterRecord;
+			}
 		}
 
         if(globalPtr == NULL)
@@ -836,10 +850,6 @@ DLLExport SPAPI void PluginMain(const int16 selector,
             return;
         }
 
-        globals = (GPtr)globalPtr;
-        
-		globals->result = result;
-		globals->filterParamBlock = filterRecord;
 		
 
         if (gStuff->bigDocumentData != NULL)
