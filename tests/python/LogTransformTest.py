@@ -20,6 +20,7 @@ class LogTransformTest(unittest.TestCase, TransformsBaseTest):
         """
         Test the getTransformType() method.
         """
+
         self.assertEqual(self.tr.getTransformType(), OCIO.TRANSFORM_TYPE_LOG)
 
     def test_base(self):
