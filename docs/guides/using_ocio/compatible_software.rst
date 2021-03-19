@@ -383,7 +383,7 @@ Documentation :
 - `VRayTexOCIO <https://docs.chaosgroup.com/display/VRAY4MAYA/VRayTexOCIO>`__
 
 
-cineSync (ftrach)
+cineSync (ftrack)
 *********************
 
 Website : `<https://cospective.com/cinesync/>`__
