@@ -387,6 +387,16 @@ Documentation :
 - `VRayTexOCIO <https://docs.chaosgroup.com/display/VRAY4MAYA/VRayTexOCIO>`__
 
 
+cineSync (ftrack)
+*********************
+
+Website : `<https://cospective.com/cinesync/>`__
+
+Documentation :
+
+- `Colour Grading <https://www.cinesync.com/manual/latest/Colour_Grading.html>`__
+
+
 Apps w/icc or luts
 ******************
 flame (.3dl), lustre (.3dl), cinespace (.csp), houdini (.lut), iridas_itx (.itx)
