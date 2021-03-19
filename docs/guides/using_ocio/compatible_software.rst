@@ -77,6 +77,16 @@ Documentation:
 - `Usage Examples <https://opencolorio.org/developers/usage_examples.html>`__
 
 
+cineSync (ftrack)
+*********************
+
+Website : `<https://cospective.com/cinesync/>`__
+
+Documentation :
+
+- `Colour Grading <https://www.cinesync.com/manual/latest/Colour_Grading.html>`__
+
+
 Clarisse (Isotropix)
 ********************
 
@@ -385,16 +395,6 @@ Documentation :
 - `OpenColorIO support <https://docs.chaosgroup.com/display/VRAY4MAX/OpenColorIO+Support>`__
 
 - `VRayTexOCIO <https://docs.chaosgroup.com/display/VRAY4MAYA/VRayTexOCIO>`__
-
-
-cineSync (ftrack)
-*********************
-
-Website : `<https://cospective.com/cinesync/>`__
-
-Documentation :
-
-- `Colour Grading <https://www.cinesync.com/manual/latest/Colour_Grading.html>`__
 
 
 Apps w/icc or luts
