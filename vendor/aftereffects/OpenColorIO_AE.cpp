@@ -9,6 +9,9 @@
 
 #include "AEGP_SuiteHandler.h"
 
+#include <assert.h>
+
+
 // this lives in OpenColorIO_AE_UI.cpp
 std::string GetProjectDir(PF_InData *in_data);
 
