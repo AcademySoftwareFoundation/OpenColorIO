@@ -45,6 +45,9 @@ resource 'PiPL' ( 16000, "OpenColorIO", purgeable )
         Version { (latestFilterVersion << 16) | latestFilterSubVersion },
 
         #ifdef __PIMac__
+			#if defined(__arm64__)
+				CodeMacARM64 { "PluginMain" },
+			#endif
             #if (defined(__x86_64__))
                 CodeMacIntel64 { "PluginMain" },
             #endif

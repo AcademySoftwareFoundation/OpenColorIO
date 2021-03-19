@@ -786,12 +786,49 @@ DLLExport SPAPI void PluginMain(const int16 selector,
         GPtr globals = NULL;        // actual globals
 
 
-        globalPtr = AllocateGlobals ((void *)result,
-                                        (void *)filterRecord,
-                                        filterRecord->handleProcs,
-                                        sizeof(Globals),
-                                        (intptr_t *)data,
-                                        InitGlobals);
+		if(filterRecord->handleProcs)
+		{
+			bool must_init = false;
+			
+			if(*data == NULL)
+			{
+				*data = (intptr_t)filterRecord->handleProcs->newProc(sizeof(Globals));
+				
+				must_init = true;
+			}
+
+			if(*data != NULL)
+			{
+				globalPtr = filterRecord->handleProcs->lockProc((Handle)*data, TRUE);
+				
+				if(must_init)
+					InitGlobals(globalPtr);
+			}
+			else
+			{
+				*result = memFullErr;
+				return;
+			}
+		}
+		else
+		{
+			if(*data == NULL)
+			{
+				*data = (intptr_t)malloc(sizeof(Globals));
+				
+				if(*data == NULL)
+				{
+					*result = memFullErr;
+					return;
+				}
+				
+				globalPtr = (Ptr)*data;
+				
+				InitGlobals(globalPtr);
+			}
+			else
+				globalPtr = (Ptr)*data;
+		}
 
         if(globalPtr == NULL)
         {       
@@ -800,7 +837,10 @@ DLLExport SPAPI void PluginMain(const int16 selector,
         }
 
         globals = (GPtr)globalPtr;
-
+        
+		globals->result = result;
+		globals->filterParamBlock = filterRecord;
+		
 
         if (gStuff->bigDocumentData != NULL)
             gStuff->bigDocumentData->PluginUsing32BitCoordinates = true;
