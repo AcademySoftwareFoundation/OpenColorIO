@@ -192,6 +192,11 @@ supported_apps:
       content : V-Ray 4 and up.
       link : "https://chaosgroup.com/"
 
-
+    # portfolio item loop
+    - name : cineSync
+      image : images/supported_apps/cinesync.png
+      categories : ["Playback", "Review"]
+      content : Native support.
+      link : "https://cospective.com/cinesync/"
 
   
