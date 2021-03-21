@@ -9,6 +9,8 @@
 
 #include "AEGP_SuiteHandler.h"
 
+#include <mutex>
+
 #include <assert.h>
 
 
@@ -799,6 +801,8 @@ static PF_Err MyGenericIterateFunc(
 }
 
 
+static std::mutex gpu_mutex;
+
 static PF_Err DoRender(
     PF_InData       *in_data,
     PF_EffectWorld  *input,
@@ -949,7 +953,11 @@ static PF_Err DoRender(
                     {
                         if( HaveOpenGL() )
                         {
+                            gpu_mutex.lock();
+                        
                             gpu_rendered = seq_data->context->ProcessWorldGL(float_world);
+                            
+                            gpu_mutex.unlock();
                             
                             if(!gpu_rendered)
                                 seq_data->gpu_err = GPU_ERR_RENDER_ERR;
