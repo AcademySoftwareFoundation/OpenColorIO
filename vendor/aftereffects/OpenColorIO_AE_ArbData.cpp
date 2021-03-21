@@ -9,6 +9,14 @@
 #include <assert.h>
 
 
+// version of strncpy that guarantees the string will be null-terminated
+char *nt_strncpy(char *dst, const char *src, size_t n)
+{
+    strncpy(dst, src, n);
+    
+    dst[n-1] = '\0';
+}
+
 PF_Err ArbNewDefault(PF_InData *in_data, PF_OutData *out_data,
     void                *refconPV,
     PF_ArbitraryH       *arbPH)
@@ -17,6 +25,8 @@ PF_Err ArbNewDefault(PF_InData *in_data, PF_OutData *out_data,
     
     if(arbPH)
     {
+        assert(sizeof(ArbitraryData) == 900);
+    
         *arbPH = PF_NEW_HANDLE( sizeof(ArbitraryData) );
         
         if(*arbPH)
@@ -54,17 +64,17 @@ PF_Err ArbNewDefault(PF_InData *in_data, PF_OutData *out_data,
                 {
                     OpenColorIO_AE_Context context(env, OCIO_SOURCE_ENVIRONMENT);
                     
-                    strncpy(arb_data->path, env.c_str(), ARB_PATH_LEN);
+                    nt_strncpy(arb_data->path, env.c_str(), ARB_PATH_LEN+1);
                     
                     arb_data->action = context.getAction();
                     arb_data->source = OCIO_SOURCE_ENVIRONMENT;
                     
                     if(arb_data->action != OCIO_ACTION_LUT)
                     {
-                        strncpy(arb_data->input, context.getInput().c_str(), ARB_SPACE_LEN);
-                        strncpy(arb_data->output, context.getOutput().c_str(), ARB_SPACE_LEN);
-                        strncpy(arb_data->view, context.getView().c_str(), ARB_SPACE_LEN);
-                        strncpy(arb_data->display, context.getDisplay().c_str(), ARB_SPACE_LEN);
+                        nt_strncpy(arb_data->input, context.getInput().c_str(), ARB_SPACE_LEN+1);
+                        nt_strncpy(arb_data->output, context.getOutput().c_str(), ARB_SPACE_LEN+1);
+                        nt_strncpy(arb_data->view, context.getView().c_str(), ARB_SPACE_LEN+1);
+                        nt_strncpy(arb_data->display, context.getDisplay().c_str(), ARB_SPACE_LEN+1);
                     }
                 }
                 catch(...) {}
@@ -106,14 +116,14 @@ static void CopyArbData(ArbitraryData *out_arb_data, ArbitraryData *in_arb_data)
     
     out_arb_data->interpolation = in_arb_data->interpolation;
     
-    strcpy(out_arb_data->path, in_arb_data->path);
-    strcpy(out_arb_data->relative_path, in_arb_data->relative_path);
+    nt_strncpy(out_arb_data->path, in_arb_data->path, ARB_PATH_LEN+1);
+    nt_strncpy(out_arb_data->relative_path, in_arb_data->relative_path, ARB_PATH_LEN+1);
     
-    strcpy(out_arb_data->input, in_arb_data->input);
-    strcpy(out_arb_data->output, in_arb_data->output);
-    strcpy(out_arb_data->view, in_arb_data->view);
-    strcpy(out_arb_data->display, in_arb_data->display);
-    strcpy(out_arb_data->look, in_arb_data->look);
+    nt_strncpy(out_arb_data->input, in_arb_data->input, ARB_SPACE_LEN+1);
+    nt_strncpy(out_arb_data->output, in_arb_data->output, ARB_SPACE_LEN+1);
+    nt_strncpy(out_arb_data->view, in_arb_data->view, ARB_SPACE_LEN+1);
+    nt_strncpy(out_arb_data->display, in_arb_data->display, ARB_SPACE_LEN+1);
+    nt_strncpy(out_arb_data->look, in_arb_data->look, ARB_SPACE_LEN+1);
 }
 
 

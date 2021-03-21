@@ -201,6 +201,8 @@ PF_Err HandleArbitrary(
     PF_ArbParamsExtra   *extra);
 
 
+char *nt_strncpy(char *dst, const char *src, size_t n);
+
 #ifdef __cplusplus
     }
 #endif

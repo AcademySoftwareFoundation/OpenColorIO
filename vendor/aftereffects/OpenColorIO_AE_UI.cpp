@@ -252,7 +252,6 @@ static PF_Err DrawEvent(
 {
     PF_Err          err     =   PF_Err_NONE;
     
-
     if(!(event_extra->evt_in_flags & PF_EI_DONT_DRAW) &&
         params[OCIO_DATA]->u.arb_d.value != NULL)
     {
@@ -618,11 +617,11 @@ static void DoClickPath(
         
         arb_data->source = seq_data->source = OCIO_SOURCE_CUSTOM;
         
-        strncpy(arb_data->path, path.full_path().c_str(), ARB_PATH_LEN);
-        strncpy(arb_data->relative_path, path.relative_path(false).c_str(), ARB_PATH_LEN);
+        nt_strncpy(arb_data->path, path.full_path().c_str(), ARB_PATH_LEN+1);
+        nt_strncpy(arb_data->relative_path, path.relative_path(false).c_str(), ARB_PATH_LEN+1);
         
-        strncpy(seq_data->path, arb_data->path, ARB_PATH_LEN);
-        strncpy(seq_data->relative_path, arb_data->relative_path, ARB_PATH_LEN);
+        nt_strncpy(seq_data->path, arb_data->path, ARB_PATH_LEN+1);
+        nt_strncpy(seq_data->relative_path, arb_data->relative_path, ARB_PATH_LEN+1);
         
         
         // try to retain settings if it looks like the same situation,
@@ -646,10 +645,10 @@ static void DoClickPath(
             }
             else
             {
-                strncpy(arb_data->input, seq_data->context->getInput().c_str(), ARB_SPACE_LEN);
-                strncpy(arb_data->output, seq_data->context->getOutput().c_str(), ARB_SPACE_LEN);
-                strncpy(arb_data->view, seq_data->context->getView().c_str(), ARB_SPACE_LEN);
-                strncpy(arb_data->display, seq_data->context->getDisplay().c_str(), ARB_SPACE_LEN);
+                nt_strncpy(arb_data->input, seq_data->context->getInput().c_str(), ARB_SPACE_LEN+1);
+                nt_strncpy(arb_data->output, seq_data->context->getOutput().c_str(), ARB_SPACE_LEN+1);
+                nt_strncpy(arb_data->view, seq_data->context->getView().c_str(), ARB_SPACE_LEN+1);
+                nt_strncpy(arb_data->display, seq_data->context->getDisplay().c_str(), ARB_SPACE_LEN+1);
             }
         }
         else
@@ -668,7 +667,7 @@ static void DoClickPath(
                 seq_data->context->setupDisplay(arb_data->input, arb_data->display, arb_data->view);
                 
                 // view may have changed
-                strncpy(arb_data->view, seq_data->context->getView().c_str(), ARB_SPACE_LEN);
+                nt_strncpy(arb_data->view, seq_data->context->getView().c_str(), ARB_SPACE_LEN+1);
             }
         }
         
@@ -757,8 +756,8 @@ static void DoClickConfig(
                 
                 arb_data->source = seq_data->source = OCIO_SOURCE_ENVIRONMENT;
                 
-                strncpy(arb_data->path, path.full_path().c_str(), ARB_PATH_LEN);
-                strncpy(arb_data->relative_path, path.relative_path(false).c_str(), ARB_PATH_LEN);
+                nt_strncpy(arb_data->path, path.full_path().c_str(), ARB_PATH_LEN+1);
+                nt_strncpy(arb_data->relative_path, path.relative_path(false).c_str(), ARB_PATH_LEN+1);
             }
             else
                 throw OCIO::Exception("No $OCIO environment variable defined."); 
@@ -776,8 +775,8 @@ static void DoClickConfig(
                 
                 arb_data->source = seq_data->source = OCIO_SOURCE_STANDARD;
                 
-                strncpy(arb_data->path, config.c_str(), ARB_PATH_LEN);
-                strncpy(arb_data->relative_path, path.c_str(), ARB_PATH_LEN);
+                nt_strncpy(arb_data->path, config.c_str(), ARB_PATH_LEN+1);
+                nt_strncpy(arb_data->relative_path, path.c_str(), ARB_PATH_LEN+1);
             }
             else
                 throw OCIO::Exception("Problem loading OCIO configuration."); 
@@ -794,8 +793,8 @@ static void DoClickConfig(
             seq_data->context = new_context;
             
             
-            strncpy(seq_data->path, arb_data->path, ARB_PATH_LEN);
-            strncpy(seq_data->relative_path, arb_data->relative_path, ARB_PATH_LEN);
+            nt_strncpy(seq_data->path, arb_data->path, ARB_PATH_LEN+1);
+            nt_strncpy(seq_data->relative_path, arb_data->relative_path, ARB_PATH_LEN+1);
             
             // try to retain settings if it looks like the same situation,
             // possibly fixing a moved path
@@ -818,10 +817,10 @@ static void DoClickConfig(
                 }
                 else
                 {
-                    strncpy(arb_data->input, seq_data->context->getInput().c_str(), ARB_SPACE_LEN);
-                    strncpy(arb_data->output, seq_data->context->getOutput().c_str(), ARB_SPACE_LEN);
-                    strncpy(arb_data->view, seq_data->context->getView().c_str(), ARB_SPACE_LEN);
-                    strncpy(arb_data->display, seq_data->context->getDisplay().c_str(), ARB_SPACE_LEN);
+                    nt_strncpy(arb_data->input, seq_data->context->getInput().c_str(), ARB_SPACE_LEN+1);
+                    nt_strncpy(arb_data->output, seq_data->context->getOutput().c_str(), ARB_SPACE_LEN+1);
+                    nt_strncpy(arb_data->view, seq_data->context->getView().c_str(), ARB_SPACE_LEN+1);
+                    nt_strncpy(arb_data->display, seq_data->context->getDisplay().c_str(), ARB_SPACE_LEN+1);
                 }
             }
             else
@@ -840,7 +839,7 @@ static void DoClickConfig(
                     seq_data->context->setupDisplay(arb_data->input, arb_data->display, arb_data->view);
                     
                     // view may have changed
-                    strncpy(arb_data->view, seq_data->context->getView().c_str(), ARB_SPACE_LEN);
+                    nt_strncpy(arb_data->view, seq_data->context->getView().c_str(), ARB_SPACE_LEN+1);
                 }
             }
             
@@ -897,7 +896,7 @@ static void DoClickConvertDisplay(
             seq_data->context->setupDisplay(arb_data->input, arb_data->display, arb_data->view);
             
             // view may have changed
-            strncpy(arb_data->view, seq_data->context->getView().c_str(), ARB_SPACE_LEN);
+            nt_strncpy(arb_data->view, seq_data->context->getView().c_str(), ARB_SPACE_LEN+1);
             
             params[OCIO_DATA]->uu.change_flags = PF_ChangeFlag_CHANGED_VALUE;
         }
@@ -915,6 +914,13 @@ static void DoClickExport(
     SequenceData    *seq_data,
     UIRegion        reg )
 {
+    if(seq_data->context == NULL)
+    {
+        assert(FALSE);
+        
+        return;
+    }
+
     ExtensionMap extensions;
     
     for(int i=0; i < OCIO::Baker::getNumFormats(); ++i)
@@ -1005,11 +1011,11 @@ static void DoClickMenus(
             {
                 if(reg == REGION_MENU1)
                 {
-                    strncpy(arb_data->input, selected_item.c_str(), ARB_SPACE_LEN);
+                    nt_strncpy(arb_data->input, selected_item.c_str(), ARB_SPACE_LEN+1);
                 }
                 else
                 {
-                    strncpy(arb_data->output, selected_item.c_str(), ARB_SPACE_LEN);
+                    nt_strncpy(arb_data->output, selected_item.c_str(), ARB_SPACE_LEN+1);
                 }
                 
                 params[OCIO_DATA]->uu.change_flags = PF_ChangeFlag_CHANGED_VALUE;
@@ -1107,11 +1113,11 @@ static void DoClickMenus(
                 {
                     if(reg == REGION_MENU1)
                     {
-                        strncpy(arb_data->input, color_space.c_str(), ARB_SPACE_LEN);
+                        nt_strncpy(arb_data->input, color_space.c_str(), ARB_SPACE_LEN+1);
                     }
                     else if(reg == REGION_MENU2)
                     {
-                        strncpy(arb_data->output, color_space.c_str(), ARB_SPACE_LEN);
+                        nt_strncpy(arb_data->output, color_space.c_str(), ARB_SPACE_LEN+1);
                     }
                     
                     seq_data->context->setupConvert(arb_data->input, arb_data->output);
@@ -1120,21 +1126,21 @@ static void DoClickMenus(
                 {
                     if(reg == REGION_MENU1)
                     {
-                        strncpy(arb_data->input, color_space.c_str(), ARB_SPACE_LEN);
+                        nt_strncpy(arb_data->input, color_space.c_str(), ARB_SPACE_LEN+1);
                     }
                     else if(reg == REGION_MENU2)
                     {
-                        strncpy(arb_data->display, color_space.c_str(), ARB_SPACE_LEN);
+                        nt_strncpy(arb_data->display, color_space.c_str(), ARB_SPACE_LEN+1);
                     }
                     else if(reg == REGION_MENU3)
                     {
-                        strncpy(arb_data->view, color_space.c_str(), ARB_SPACE_LEN);
+                        nt_strncpy(arb_data->view, color_space.c_str(), ARB_SPACE_LEN+1);
                     }
                     
                     seq_data->context->setupDisplay(arb_data->input, arb_data->display, arb_data->view);
                     
                     // view may have changed
-                    strncpy(arb_data->view, seq_data->context->getView().c_str(), ARB_SPACE_LEN);
+                    nt_strncpy(arb_data->view, seq_data->context->getView().c_str(), ARB_SPACE_LEN+1);
                 }
                         
                 params[OCIO_DATA]->uu.change_flags = PF_ChangeFlag_CHANGED_VALUE;
