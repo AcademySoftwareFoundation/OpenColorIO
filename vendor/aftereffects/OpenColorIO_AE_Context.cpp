@@ -834,28 +834,35 @@ void OpenColorIO_AE_Context::UpdateOCIOGLState()
     {
         SetPluginContext();
         
-        // Step 1: Create a GPU Shader Description
-        OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
-        shaderDesc->setLanguage(OCIO::GPU_LANGUAGE_GLSL_1_2);
-        shaderDesc->setFunctionName("OCIOMain");
-        shaderDesc->setResourcePrefix("ocio_");
-        
-        // Step 2: Collect the shader program information for a specific processor
-        _gpu_processor->extractGpuShaderInfo(shaderDesc);
-        
-        // Step 3: Use the helper OpenGL builder
-        _oglBuilder = OCIO::OpenGLBuilder::Create(shaderDesc);
-        //_oglBuilder->setVerbose(true);
-        
-        // Step 4: Allocate & upload all the LUTs
-        //
-        // NB: The start index for the texture indices is 1 as one texture
-        //     was already created for the input image.
-        //
-        _oglBuilder->allocateAllTextures(1);
-        
-        // Step 5: Build the fragment shader program
-        _oglBuilder->buildProgram(g_fragShaderText);
+        try
+        {
+            // Step 1: Create a GPU Shader Description
+            OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
+            shaderDesc->setLanguage(OCIO::GPU_LANGUAGE_GLSL_1_2);
+            shaderDesc->setFunctionName("OCIOMain");
+            shaderDesc->setResourcePrefix("ocio_");
+            
+            // Step 2: Collect the shader program information for a specific processor
+            _gpu_processor->extractGpuShaderInfo(shaderDesc);
+            
+            // Step 3: Use the helper OpenGL builder
+            _oglBuilder = OCIO::OpenGLBuilder::Create(shaderDesc);
+            //_oglBuilder->setVerbose(true);
+            
+            // Step 4: Allocate & upload all the LUTs
+            //
+            // NB: The start index for the texture indices is 1 as one texture
+            //     was already created for the input image.
+            //
+            _oglBuilder->allocateAllTextures(1);
+            
+            // Step 5: Build the fragment shader program
+            _oglBuilder->buildProgram(g_fragShaderText);
+        }
+        catch(...)
+        {
+            _oglBuilder.reset();
+        }
         
         SetAEContext();
     }
