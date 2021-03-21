@@ -9,6 +9,7 @@
 
 #include "DrawbotBot.h"
 
+#include <assert.h>
 
 
 // UI drawing constants

@@ -15,7 +15,10 @@ char *nt_strncpy(char *dst, const char *src, size_t n)
     strncpy(dst, src, n);
     
     dst[n-1] = '\0';
+    
+    return dst;
 }
+
 
 PF_Err ArbNewDefault(PF_InData *in_data, PF_OutData *out_data,
     void                *refconPV,
