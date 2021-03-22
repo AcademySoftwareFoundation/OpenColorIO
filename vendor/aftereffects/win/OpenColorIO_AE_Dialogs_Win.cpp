@@ -535,9 +535,32 @@ tokenize(std::vector<std::string> &tokens,
 }
 
 
+static bool compare_nocase(const std::string &first, const std::string &second)
+{
+  unsigned int i=0;
+
+  while( (i < first.length()) && (i < second.length()) )
+  {
+    if(tolower(first[i]) < tolower(second[i]))
+        return true;
+    else if(tolower(first[i]) > tolower(second[i]))
+        return false;
+
+    ++i;
+  }
+
+  return ( first.length() < second.length() );
+}
+
 bool ColorSpacePopUpMenu(OCIO::ConstConfigRcPtr config, std::string &colorSpace, bool selectRoles, const void *hwnd)
 {
     HMENU menu = CreatePopupMenu();
+
+    typedef std::list<std::string> CatList;
+    typedef std::map<std::string, CatList> CatMap;
+
+    CatMap categoriesMap;
+    CatMap encodingsMap;
 
     for(int i=0; i < config->getNumColorSpaces(); ++i)
     {
@@ -559,6 +582,8 @@ bool ColorSpacePopUpMenu(OCIO::ConstConfigRcPtr config, std::string &colorSpace,
             colorSpacePath = std::string(family) + "/" + colorSpaceName;
         }
         
+        
+        assert(config->getFamilySeparator() == '/');
         
         std::vector<std::string> pathComponents;
 
@@ -613,9 +638,143 @@ bool ColorSpacePopUpMenu(OCIO::ConstConfigRcPtr config, std::string &colorSpace,
                 currentMenu = GetSubMenu(currentMenu, componentMenuPos);
             }
         }
+
+        for(int j=0; j < colorSpacePtr->getNumCategories(); j++)
+        {
+            const char *categoryName = colorSpacePtr->getCategory(j);
+
+            categoriesMap[categoryName].push_back(colorSpaceName);
+        }
+
+        const char *encoding = colorSpacePtr->getEncoding();
+
+        if(encoding != NULL && encoding != std::string(""))
+        {
+            encodingsMap[encoding].push_back(colorSpaceName);
+        }
     }
     
-    
+    if(encodingsMap.size() > 0 || categoriesMap.size() > 0 || config->getNumRoles() > 0)
+    {
+        const BOOL dividerInserted = InsertMenu(menu, 0, MF_STRING | MF_BYPOSITION | MF_SEPARATOR, 0, "Sep");
+
+        assert(dividerInserted);
+    }
+
+    if(encodingsMap.size() > 0)
+    {
+        HMENU encodingsMenu = CreatePopupMenu();
+
+        const BOOL encodingsInserted = InsertMenu(menu, 0, MF_STRING | MF_BYPOSITION | MF_POPUP, (UINT_PTR)encodingsMenu, "Encodings");
+
+        assert(encodingsInserted);
+
+        CatList encodingsList;
+
+        for(CatMap::const_iterator i = encodingsMap.begin(); i != encodingsMap.end(); ++i)
+        {
+            encodingsList.push_back(i->first);
+        }
+
+        encodingsList.sort(compare_nocase);
+
+        for(CatList::const_iterator i = encodingsList.begin(); i != encodingsList.end(); ++i)
+        {
+            const std::string &encoding = *i;
+
+            CatList &spacesList = encodingsMap[encoding];
+
+            spacesList.sort(compare_nocase);
+
+            HMENU encodingSubmenu = CreatePopupMenu();
+
+            const BOOL encodingInserted = AppendMenu(encodingsMenu, MF_STRING | MF_POPUP, (UINT_PTR)encodingSubmenu, encoding.c_str());
+
+            assert(encodingInserted);
+
+            for(CatList::const_iterator j = spacesList.begin(); j != spacesList.end(); ++j)
+            {
+                const std::string &colorSpaceName = *j;
+
+                int colorSpaceIndex = -1;
+
+                for(int k=0; k < config->getNumColorSpaces() && colorSpaceIndex < 0; k++)
+                {
+                    const std::string colorSpaceName2 = config->getColorSpaceNameByIndex(k);
+
+                    if(colorSpaceName2 == colorSpaceName)
+                        colorSpaceIndex = k;
+                }
+
+                UINT colorSpaceFlags = MF_STRING;
+
+                if(colorSpaceName == colorSpace)
+                    colorSpaceFlags |= MF_CHECKED;
+
+                const BOOL colorSpaceInsterted = AppendMenu(encodingSubmenu, colorSpaceFlags, colorSpaceIndex + 1, colorSpaceName.c_str());
+
+                assert(colorSpaceInsterted);
+            }
+        }
+    }
+
+    if(categoriesMap.size() > 0)
+    {
+        HMENU categoriesMenu = CreatePopupMenu();
+
+        const BOOL categoriesInserted = InsertMenu(menu, 0, MF_STRING | MF_BYPOSITION | MF_POPUP, (UINT_PTR)categoriesMenu, "Categories");
+
+        assert(categoriesInserted);
+
+        CatList categoriesList;
+
+        for(CatMap::const_iterator i = categoriesMap.begin(); i != categoriesMap.end(); ++i)
+        {
+            categoriesList.push_back(i->first);
+        }
+
+        categoriesList.sort(compare_nocase);
+
+        for(CatList::const_iterator i = categoriesList.begin(); i != categoriesList.end(); ++i)
+        {
+            const std::string &category = *i;
+
+            CatList &spacesList = categoriesMap[category];
+
+            spacesList.sort(compare_nocase);
+
+            HMENU categorySubmenu = CreatePopupMenu();
+
+            const BOOL categoryInserted = AppendMenu(categoriesMenu, MF_STRING | MF_POPUP, (UINT_PTR)categorySubmenu, category.c_str());
+
+            assert(categoryInserted);
+
+            for(CatList::const_iterator j = spacesList.begin(); j != spacesList.end(); ++j)
+            {
+                const std::string &colorSpaceName = *j;
+
+                int colorSpaceIndex = -1;
+
+                for(int k=0; k < config->getNumColorSpaces() && colorSpaceIndex < 0; k++)
+                {
+                    const std::string colorSpaceName2 = config->getColorSpaceNameByIndex(k);
+
+                    if(colorSpaceName2 == colorSpaceName)
+                        colorSpaceIndex = k;
+                }
+
+                UINT colorSpaceFlags = MF_STRING;
+
+                if(colorSpaceName == colorSpace)
+                    colorSpaceFlags |= MF_CHECKED;
+
+                const BOOL colorSpaceInsterted = AppendMenu(categorySubmenu, colorSpaceFlags, colorSpaceIndex + 1, colorSpaceName.c_str());
+
+                assert(colorSpaceInsterted);
+            }
+        }
+    }
+
     if(config->getNumRoles() > 0)
     {
         HMENU rolesMenu = CreatePopupMenu();
@@ -662,10 +821,6 @@ bool ColorSpacePopUpMenu(OCIO::ConstConfigRcPtr config, std::string &colorSpace,
 
             assert(colorSpaceInsterted);
         }
-        
-        const BOOL dividerInserted = InsertMenu(menu, 1, MF_STRING | MF_BYPOSITION | MF_SEPARATOR, 0, "Sep");
-
-        assert(dividerInserted);
     }
 
     POINT pos;
