@@ -9,8 +9,8 @@ set(SUPPORTED_CXX_STANDARDS 11 14 17)
 string(REPLACE ";" ", " SUPPORTED_CXX_STANDARDS_STR "${SUPPORTED_CXX_STANDARDS}")
 
 if(NOT DEFINED CMAKE_CXX_STANDARD)
-    message(STATUS "Setting C++ version to '17' as none was specified.")
-    set(CMAKE_CXX_STANDARD 17 CACHE STRING "C++ standard to compile against")
+    message(STATUS "Setting C++ version to '11' as none was specified.")
+    set(CMAKE_CXX_STANDARD 11 CACHE STRING "C++ standard to compile against")
 elseif(NOT CMAKE_CXX_STANDARD IN_LIST SUPPORTED_CXX_STANDARDS)
     message(FATAL_ERROR 
             "CMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD} is unsupported. Supported standards are: ${SUPPORTED_CXX_STANDARDS_STR}.")
