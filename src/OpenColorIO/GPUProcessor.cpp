@@ -97,7 +97,41 @@ void GPUProcessor::Impl::extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCrea
     LegacyGpuShaderDesc * legacy = dynamic_cast<LegacyGpuShaderDesc*>(shaderCreator.get());
     if(legacy)
     {
-        throw Exception("The legacy GPU path should now use Config::getOptimizedLegacyGPUProcessor()");
+        gpuOps = m_ops;
+
+        // GPU Process setup
+        //
+        // Partition the original, raw opvec into 3 segments for GPU Processing
+        //
+        // Interior index range does not support the gpu shader.
+        // This is used to bound our analytical shader text generation
+        // start index and end index are inclusive.
+
+        // These 3 op vecs represent the 3 stages in our gpu pipe.
+        // 1) preprocess shader text
+        // 2) 3D LUT process lookup
+        // 3) postprocess shader text
+
+        OpRcPtrVec gpuOpsHwPreProcess;
+        OpRcPtrVec gpuOpsCpuLatticeProcess;
+        OpRcPtrVec gpuOpsHwPostProcess;
+
+        PartitionGPUOps(gpuOpsHwPreProcess,
+                        gpuOpsCpuLatticeProcess,
+                        gpuOpsHwPostProcess,
+                        gpuOps);
+
+        LogDebug("GPU Ops: 3DLUT");
+        gpuOpsCpuLatticeProcess.finalize();
+        OpRcPtrVec gpuLut = Create3DLut(gpuOpsCpuLatticeProcess, legacy->getEdgelen());
+
+        gpuOps.clear();
+        gpuOps += gpuOpsHwPreProcess;
+        gpuOps += gpuLut;
+        gpuOps += gpuOpsHwPostProcess;
+
+        gpuOps.finalize();
+        gpuOps.optimize(OPTIMIZATION_DEFAULT);
     }
     else
     {
