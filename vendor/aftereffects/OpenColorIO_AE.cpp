@@ -110,9 +110,10 @@ static PF_Err ParamsSetup(
     PF_ParamDef     def;
 
     // readout
+    AEFX_CLR_STRUCT(def);
+    
     ArbNewDefault(in_data, out_data, NULL, &def.u.arb_d.dephault);
     
-    AEFX_CLR_STRUCT(def);
     PF_ADD_ARBITRARY2("OCIO",
                         UI_CONTROL_WIDTH,
                         UI_CONTROL_HEIGHT,
@@ -166,6 +167,8 @@ static void UpdateContext(
     ArbitraryData   *arb_data,
     SequenceData    *seq_data)
 {
+    assert(seq_data != NULL && arb_data != NULL);
+
     seq_data->status = STATUS_OK;
 
     std::string dir = GetProjectDir(in_data);
