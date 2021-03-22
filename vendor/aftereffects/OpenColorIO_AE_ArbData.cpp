@@ -46,6 +46,7 @@ PF_Err ArbNewDefault(PF_InData *in_data, PF_OutData *out_data,
             arb_data->storage_size      = 0;
             arb_data->source            = OCIO_SOURCE_NONE;
             arb_data->interpolation     = OCIO_INTERP_LINEAR;
+            memset(arb_data->reserved, 0, 54);
             
             arb_data->path[0]           = '\0';
             arb_data->relative_path[0]  = '\0';
@@ -118,6 +119,8 @@ static void CopyArbData(ArbitraryData *out_arb_data, ArbitraryData *in_arb_data)
     out_arb_data->source = in_arb_data->source;
     
     out_arb_data->interpolation = in_arb_data->interpolation;
+
+    memset(out_arb_data->reserved, 0, 54);
     
     nt_strncpy(out_arb_data->path, in_arb_data->path, ARB_PATH_LEN+1);
     nt_strncpy(out_arb_data->relative_path, in_arb_data->relative_path, ARB_PATH_LEN+1);

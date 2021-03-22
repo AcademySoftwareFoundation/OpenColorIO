@@ -342,6 +342,7 @@ static PF_Err SequenceSetup(
     seq_data->status = STATUS_UNKNOWN;
     seq_data->gpu_err = GPU_ERR_NONE;
     seq_data->prem_status = PREMIERE_UNKNOWN;
+    memset(seq_data->reserved, 0, 4);
     seq_data->context = NULL;
     
     seq_data->source = OCIO_SOURCE_NONE;
@@ -376,6 +377,7 @@ static PF_Err SequenceResetup(
         seq_data->status = STATUS_UNKNOWN;
         seq_data->gpu_err = GPU_ERR_NONE;
         seq_data->prem_status = PREMIERE_UNKNOWN;
+        memset(seq_data->reserved, 0, 4);
         assert(seq_data_old->context == NULL);
         seq_data->context = NULL;
         
@@ -451,6 +453,7 @@ static PF_Err SequenceFlatten(
         flat_seq_data->status = STATUS_UNKNOWN;
         flat_seq_data->gpu_err = GPU_ERR_NONE;
         flat_seq_data->prem_status = PREMIERE_UNKNOWN;
+        memset(flat_seq_data->reserved, 0, 4);
         flat_seq_data->context = NULL;
         
         flat_seq_data->source = seq_data->source;
@@ -491,6 +494,7 @@ GetFlattenedSequenceData (
         flat_seq_data->status = STATUS_UNKNOWN;
         flat_seq_data->gpu_err = GPU_ERR_NONE;
         flat_seq_data->prem_status = PREMIERE_UNKNOWN;
+        memset(flat_seq_data->reserved, 0, 4);
         flat_seq_data->context = NULL;
         
         flat_seq_data->source = seq_data->source;

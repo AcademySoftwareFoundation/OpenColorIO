@@ -150,6 +150,7 @@ typedef struct {
     GPUErr                  gpu_err;
     PremiereStatus          prem_status;
     OCIO_Source             source;
+    A_u_char                reserved[4];
     OpenColorIO_AE_Context  *context;
     char                    path[ARB_PATH_LEN+1];
     char                    relative_path[ARB_PATH_LEN+1];
