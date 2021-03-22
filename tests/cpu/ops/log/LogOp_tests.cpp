@@ -39,7 +39,8 @@ OCIO_ADD_TEST(LogOp, lin_to_log)
     OCIO_REQUIRE_EQUAL(ops.size(), 1);
     OCIO_REQUIRE_ASSERT((bool)ops[0]);
 
-    OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_DEFAULT));
+    OCIO_CHECK_NO_THROW(ops.finalize());
+    OCIO_CHECK_NO_THROW(ops.optimize(OCIO::OPTIMIZATION_DEFAULT));
 
     // Validate properties.
     std::string opCache;
@@ -85,7 +86,8 @@ OCIO_ADD_TEST(LogOp, log_to_lin)
                                           linSlope, linOffset,
                                           OCIO::TRANSFORM_DIR_INVERSE));
 
-    OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_DEFAULT));
+    OCIO_CHECK_NO_THROW(ops.finalize());
+    OCIO_CHECK_NO_THROW(ops.optimize(OCIO::OPTIMIZATION_DEFAULT));
 
     // Apply the result.
     for(OCIO::OpRcPtrVec::size_type i = 0, size = ops.size(); i < size; ++i)
@@ -167,7 +169,8 @@ OCIO_ADD_TEST(LogOp, inverse)
         data[i] = result[i];
     }
 
-    OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_NONE));
+    OCIO_CHECK_NO_THROW(ops.finalize());
+    OCIO_CHECK_NO_THROW(ops.optimize(OCIO::OPTIMIZATION_NONE));
 
     ops[0]->apply(data, 3);
     // Note: Skip testing alpha channels.
@@ -222,7 +225,8 @@ OCIO_ADD_TEST(LogOp, cache_id)
     OCIO_REQUIRE_ASSERT((bool)ops[1]);
     OCIO_REQUIRE_ASSERT((bool)ops[2]);
 
-    OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_DEFAULT));
+    OCIO_CHECK_NO_THROW(ops.finalize());
+    OCIO_CHECK_NO_THROW(ops.optimize(OCIO::OPTIMIZATION_DEFAULT));
 
     std::string opCacheID0;
     OCIO_CHECK_NO_THROW(opCacheID0 = ops[0]->getCacheID());

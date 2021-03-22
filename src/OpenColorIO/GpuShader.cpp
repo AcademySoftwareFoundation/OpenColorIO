@@ -401,7 +401,7 @@ private:
 
 GpuShaderDescRcPtr LegacyGpuShaderDesc::Create(unsigned edgelen)
 {
-    return GpuShaderDescRcPtr(new LegacyGpuShaderDesc(edgelen), &LegacyGpuShaderDesc::Deleter);
+    throw Exception("The legacy GPU path should now use Config::getOptimizedLegacyGPUProcessor()");
 }
 
 LegacyGpuShaderDesc::LegacyGpuShaderDesc(unsigned edgelen)

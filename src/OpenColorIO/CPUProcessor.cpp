@@ -270,8 +270,11 @@ void FinalizeOpsForCPU(OpRcPtrVec & ops, const OpRcPtrVec & rawOps,
 
     if(!ops.empty())
     {
+        // Finalize of all ops.
+        ops.finalize();
+
         // Optimize the ops.
-        ops.finalize(oFlags);
+        ops.optimize(oFlags);
         ops.optimizeForBitdepth(in, out, oFlags);
     }
 
@@ -332,11 +335,7 @@ void CPUProcessor::Impl::finalize(const OpRcPtrVec & rawOps,
     ss << "CPU Processor: from " << BitDepthToString(in)
        << " to "  << BitDepthToString(out)
        << " oFlags " << oFlags
-       << " ops:";
-    for(const auto & op : ops)
-    {
-        ss << " " << op->getCacheID();
-    }
+       << " ops: " << ops.getCacheID();
 
     m_cacheID = ss.str();
 }

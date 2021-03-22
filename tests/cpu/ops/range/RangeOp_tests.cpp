@@ -81,7 +81,7 @@ OCIO_ADD_TEST(RangeOp, combining_with_inverse)
 
     OCIO_CHECK_THROW_WHAT(ops[0]->canCombineWith(op1), OCIO::Exception,
                           "Op::finalize has to be called");
-    OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_NONE));
+    OCIO_CHECK_NO_THROW(ops.finalize());
     OCIO_REQUIRE_EQUAL(ops.size(), 2);
     OCIO_CHECK_NO_THROW(ops[0]->canCombineWith(op1));
     OCIO_CHECK_NO_THROW(ops[0]->combineWith(ops, op1));

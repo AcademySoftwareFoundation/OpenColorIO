@@ -412,20 +412,18 @@ void UpdateOCIOGLState()
         return;
     }
 
-    // Set shader.
-    OCIO::GpuShaderDescRcPtr shaderDesc;
-    if (g_gpulegacy)
-    {
-        shaderDesc = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(32);
-    }
-    else
-    {
-        shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
-    }
+    // Set the shader context.
+    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
     shaderDesc->setLanguage(OCIO::GPU_LANGUAGE_GLSL_1_2);
     shaderDesc->setFunctionName("OCIODisplay");
     shaderDesc->setResourcePrefix("ocio_");
-    processor->getOptimizedGPUProcessor(g_optimization)->extractGpuShaderInfo(shaderDesc);
+
+    // Extract the shader information.
+    OCIO::ConstGPUProcessorRcPtr gpu
+        = g_gpulegacy ? processor->getOptimizedLegacyGPUProcessor(g_optimization, 32)
+                      : processor->getOptimizedGPUProcessor(g_optimization);
+    gpu->extractGpuShaderInfo(shaderDesc);
+
     g_oglApp->setShader(shaderDesc);
 }
 

@@ -28,7 +28,7 @@ OCIO_ADD_TEST(Processor, basic)
     auto processorMat = config->getProcessor(mat);
     OCIO_CHECK_EQUAL(processorMat->getNumTransforms(), 1);
 
-    OCIO_CHECK_EQUAL(std::string(processorMat->getCacheID()), "$b8861d4acd905af0e84ddf10c860b220");
+    OCIO_CHECK_EQUAL(std::string(processorMat->getCacheID()), "$096c01a0daf07446874bd91f7c2abdea");
 }
 
 OCIO_ADD_TEST(Processor, unique_dynamic_properties)

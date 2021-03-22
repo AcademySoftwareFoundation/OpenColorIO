@@ -2151,9 +2151,17 @@ public:
     // GPU Renderer
     //
 
-    /// Get an optimized \ref GPUProcessor instance.
+    /// Get an optimized GPUProcessor instance.
     ConstGPUProcessorRcPtr getDefaultGPUProcessor() const;
     ConstGPUProcessorRcPtr getOptimizedGPUProcessor(OptimizationFlags oFlags) const;
+
+    /** 
+     * Get an optimized GPUProcessor instance that will emulate the OCIO v1 GPU path. This approach
+     * bakes some of the ops into a single Lut3D and so is less accurate than the current GPU
+     * processing methods.
+     */
+    ConstGPUProcessorRcPtr getOptimizedLegacyGPUProcessor(OptimizationFlags oFlags, 
+                                                          unsigned edgelen) const;
 
     //
     // CPU Renderer
@@ -2301,7 +2309,7 @@ public:
     /// Extract & Store the shader information to implement the color processing.
     void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const;
 
-    /// Extract the shader information using a custom \ref GpuShaderCreator class.
+    /// Extract the shader information using a custom GpuShaderCreator class.
     void extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const;
     
     GPUProcessor(const GPUProcessor &) = delete;
@@ -3080,7 +3088,11 @@ class OCIOEXPORT GpuShaderDesc : public GpuShaderCreator
 {
 public:
 
-    /// Create the legacy shader description.
+    /**
+     * Create the legacy GPU shader description. Do not use.
+     * This method has been superseded by the pair Processor::getOptimizedLegacyGPUProcessor()
+     * and GpuShaderDesc::CreateShaderDesc();
+     */
     static GpuShaderDescRcPtr CreateLegacyShaderDesc(unsigned edgelen);
 
     /// Create the default shader description.

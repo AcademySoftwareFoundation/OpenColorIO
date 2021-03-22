@@ -11,7 +11,9 @@
 #include "CPUProcessor.h"
 #include "GPUProcessor.h"
 #include "HashUtils.h"
+#include "Logging.h"
 #include "OpBuilders.h"
+#include "ops/noop/NoOps.h"
 #include "Processor.h"
 #include "TransformBuilder.h"
 #include "utils/StringUtils.h"
@@ -193,6 +195,12 @@ ConstGPUProcessorRcPtr Processor::getOptimizedGPUProcessor(OptimizationFlags oFl
     return getImpl()->getOptimizedGPUProcessor(oFlags);
 }
 
+ConstGPUProcessorRcPtr Processor::getOptimizedLegacyGPUProcessor(OptimizationFlags oFlags,
+                                                                 unsigned edgelen) const
+{
+    return getImpl()->getOptimizedLegacyGPUProcessor(oFlags, edgelen);
+}
+
 ConstCPUProcessorRcPtr Processor::getDefaultCPUProcessor() const
 {
     return getImpl()->getDefaultCPUProcessor();
@@ -328,13 +336,7 @@ const char * Processor::Impl::getCacheID() const
     }
     else
     {
-        std::ostringstream cacheidStream;
-        for(const auto & op : m_ops)
-        {
-            cacheidStream << op->getCacheID() << " ";
-        }
-
-        const std::string fullstr = cacheidStream.str();
+        const std::string fullstr = m_ops.getCacheID();
         m_cacheID = CacheIDHash(fullstr.c_str(), (int)fullstr.size());
     }
 
@@ -375,7 +377,8 @@ ConstProcessorRcPtr Processor::Impl::getOptimizedProcessor(BitDepth inBitDepth,
         ProcessorRcPtr proc = Create();
         *proc->getImpl() = procImpl;
 
-        proc->getImpl()->m_ops.finalize(oFlags);
+        proc->getImpl()->m_ops.finalize();
+        proc->getImpl()->m_ops.optimize(oFlags);
         proc->getImpl()->m_ops.optimizeForBitdepth(inBitDepth, outBitDepth, oFlags);
         proc->getImpl()->m_ops.validateDynamicProperties();
 
@@ -418,10 +421,60 @@ ConstProcessorRcPtr Processor::Impl::getOptimizedProcessor(BitDepth inBitDepth,
 
 ConstGPUProcessorRcPtr Processor::Impl::getDefaultGPUProcessor() const
 {
-    return getOptimizedGPUProcessor(OPTIMIZATION_DEFAULT);
+    return getGPUProcessor(m_ops, OPTIMIZATION_DEFAULT);
 }
 
 ConstGPUProcessorRcPtr Processor::Impl::getOptimizedGPUProcessor(OptimizationFlags oFlags) const
+{
+    return getGPUProcessor(m_ops, oFlags);
+}
+
+ConstGPUProcessorRcPtr Processor::Impl::getOptimizedLegacyGPUProcessor(OptimizationFlags oFlags,
+                                                                       unsigned edgelen) const
+{
+
+    OpRcPtrVec gpuOps = m_ops;
+
+    {
+        // Legacy GPU Process setup
+        //
+        // Partition the original, raw opvec into 3 segments for GPU Processing
+        //
+        // Interior index range does not support the gpu shader.
+        // This is used to bound our analytical shader text generation
+        // start index and end index are inclusive.
+
+        // These 3 op vecs represent the 3 stages in our gpu pipe.
+        // 1) preprocess shader text
+        // 2) 3D LUT process lookup
+        // 3) postprocess shader text
+
+        OpRcPtrVec gpuOpsHwPreProcess;
+        OpRcPtrVec gpuOpsCpuLatticeProcess;
+        OpRcPtrVec gpuOpsHwPostProcess;
+
+        PartitionGPUOps(gpuOpsHwPreProcess,
+                        gpuOpsCpuLatticeProcess,
+                        gpuOpsHwPostProcess,
+                        gpuOps);
+
+        LogDebug("Legacy GPU Ops: 3DLUT");
+        gpuOpsCpuLatticeProcess.finalize();
+        OpRcPtrVec gpuLut = Create3DLut(gpuOpsCpuLatticeProcess, edgelen);
+
+        gpuOps.clear();
+        gpuOps += gpuOpsHwPreProcess;
+        gpuOps += gpuLut;
+        gpuOps += gpuOpsHwPostProcess;
+
+        gpuOps.finalize();
+    }
+
+    return getGPUProcessor(gpuOps, oFlags);
+}
+
+ConstGPUProcessorRcPtr Processor::Impl::getGPUProcessor(const OpRcPtrVec & gpuOps,
+                                                        OptimizationFlags oFlags) const
 {
     // Helper method.
     auto CreateProcessor = [](const OpRcPtrVec & ops,
@@ -443,14 +496,14 @@ ConstGPUProcessorRcPtr Processor::Impl::getOptimizedGPUProcessor(OptimizationFla
         GPUProcessorRcPtr & processor = m_gpuProcessorCache[oFlags];
         if (!processor)
         {
-            processor = CreateProcessor(m_ops, oFlags);
+            processor = CreateProcessor(gpuOps, oFlags);
         }
         
         return processor;
     }
     else
     {
-        return CreateProcessor(m_ops, oFlags);
+        return CreateProcessor(gpuOps, oFlags);
     }
 }
 
@@ -545,7 +598,10 @@ void Processor::Impl::setColorSpaceConversion(const Config & config,
     desc << "Color space conversion from " << srcColorSpace->getName()
          << " to " << dstColorSpace->getName();
     m_ops.getFormatMetadata().addAttribute(METADATA_DESCRIPTION, desc.str().c_str());
-    m_ops.finalize(OPTIMIZATION_NONE);
+
+    // NB: No-ops are not removed yet since they are still needed to build the legacy GPU processor.
+    m_ops.finalize();
+
     m_ops.validateDynamicProperties();
 }
 
@@ -563,7 +619,9 @@ void Processor::Impl::setTransform(const Config & config,
 
     BuildOps(m_ops, config, context, transform, direction);
 
-    m_ops.finalize(OPTIMIZATION_NONE);
+    // NB: No-ops are not removed yet since they are still needed to build the legacy GPU processor.
+    m_ops.finalize();
+
     m_ops.validateDynamicProperties();
 }
 
