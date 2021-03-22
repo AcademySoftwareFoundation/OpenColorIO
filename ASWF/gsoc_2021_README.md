@@ -100,6 +100,7 @@ This could also include upgrading an existing implementation to support the OCIO
 v2 API and leverage new functionality.
 Special skills: Familiarity with prospective host library or tool, and knowledge 
 of working with image buffers and authoring plugins.
+
 **OpenFX Plugin Development**
 OCIO currently has a number of plug-ins in the GitHub repo for proprietary 
 application interfaces. (And in several cases, these have become out of sync 
@@ -110,6 +111,7 @@ on OCIO v1, the new OpenFX plug-ins would be the perfect place to showcase the
 new OCIO v2 features.
 Special skills: Access to a host application that supports OpenFX plug-ins and 
 ability to build the basic demo plug-ins in the OpenFX SDK.
+
 **Add support for more ICC profile structures**
 OCIO currently supports basic ICC monitor profiles.  These are the type that 
 are most often set as monitor profiles on Mac and Windows.  But it would be nice 
