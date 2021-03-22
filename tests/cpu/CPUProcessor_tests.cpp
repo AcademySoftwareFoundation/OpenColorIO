@@ -2017,19 +2017,19 @@ OCIO_ADD_TEST(CPUProcessor, scanline_packed_custom)
                     const size_t resDep = y * width + x;
 
                     const uint8_t red
-                        = OCIO::Converter<OCIO::BIT_DEPTH_UINT8>::CastValue(255. * resImg[4 * resDep + 0]);
+                        = OCIO::Converter<OCIO::BIT_DEPTH_UINT8>::CastValue(255.0f * resImg[4 * resDep + 0]);
                     OCIO_CHECK_EQUAL(charOutImg[4 * outDep + 0], red);
 
                     const uint8_t green
-                        = OCIO::Converter<OCIO::BIT_DEPTH_UINT8>::CastValue(255. * resImg[4 * resDep + 1]);
+                        = OCIO::Converter<OCIO::BIT_DEPTH_UINT8>::CastValue(255.0f * resImg[4 * resDep + 1]);
                     OCIO_CHECK_EQUAL(charOutImg[4 * outDep + 1], green);
 
                     const uint8_t blue
-                        = OCIO::Converter<OCIO::BIT_DEPTH_UINT8>::CastValue(255. * resImg[4 * resDep + 2]);
+                        = OCIO::Converter<OCIO::BIT_DEPTH_UINT8>::CastValue(255.0f * resImg[4 * resDep + 2]);
                     OCIO_CHECK_EQUAL(charOutImg[4 * outDep + 2], blue);
 
                     const uint8_t alpha
-                        = OCIO::Converter<OCIO::BIT_DEPTH_UINT8>::CastValue(255. * resImg[4 * resDep + 3]);
+                        = OCIO::Converter<OCIO::BIT_DEPTH_UINT8>::CastValue(255.0f * resImg[4 * resDep + 3]);
                     OCIO_CHECK_EQUAL(charOutImg[4 * outDep + 3], alpha);
                 }
             }
@@ -2059,19 +2059,19 @@ OCIO_ADD_TEST(CPUProcessor, scanline_packed_custom)
                     const size_t dep = y * width + x;
 
                     const uint8_t red
-                        = OCIO::Converter<OCIO::BIT_DEPTH_UINT8>::CastValue(255. * resImg[4 * dep + 0]);
+                        = OCIO::Converter<OCIO::BIT_DEPTH_UINT8>::CastValue(255.0f * resImg[4 * dep + 0]);
                     OCIO_CHECK_EQUAL(charOutImg[4 * dep + 0], red);
 
                     const uint8_t green
-                        = OCIO::Converter<OCIO::BIT_DEPTH_UINT8>::CastValue(255. * resImg[4 * dep + 1]);
+                        = OCIO::Converter<OCIO::BIT_DEPTH_UINT8>::CastValue(255.0f * resImg[4 * dep + 1]);
                     OCIO_CHECK_EQUAL(charOutImg[4 * dep + 1], green);
 
                     const uint8_t blue
-                        = OCIO::Converter<OCIO::BIT_DEPTH_UINT8>::CastValue(255. * resImg[4 * dep + 2]);
+                        = OCIO::Converter<OCIO::BIT_DEPTH_UINT8>::CastValue(255.0f * resImg[4 * dep + 2]);
                     OCIO_CHECK_EQUAL(charOutImg[4 * dep + 2], blue);
 
                     const uint8_t alpha
-                        = OCIO::Converter<OCIO::BIT_DEPTH_UINT8>::CastValue(255. * resImg[4 * dep + 3]);
+                        = OCIO::Converter<OCIO::BIT_DEPTH_UINT8>::CastValue(255.0f * resImg[4 * dep + 3]);
                     OCIO_CHECK_EQUAL(charOutImg[4 * dep + 3], alpha);
                 }
             }
@@ -2537,19 +2537,19 @@ OCIO_ADD_TEST(CPUProcessor, scanline_planar_custom)
                 const size_t dep = y * width + x;
 
                 const uint8_t red
-                    = OCIO::Converter<OCIO::BIT_DEPTH_UINT8>::CastValue(255. * resImgR[dep]);
+                    = OCIO::Converter<OCIO::BIT_DEPTH_UINT8>::CastValue(255.0f * resImgR[dep]);
                 OCIO_CHECK_EQUAL(outImgR[dep], red);
 
                 const uint8_t green
-                    = OCIO::Converter<OCIO::BIT_DEPTH_UINT8>::CastValue(255. * resImgG[dep]);
+                    = OCIO::Converter<OCIO::BIT_DEPTH_UINT8>::CastValue(255.0f * resImgG[dep]);
                 OCIO_CHECK_EQUAL(outImgG[dep], green);
 
                 const uint8_t blue
-                    = OCIO::Converter<OCIO::BIT_DEPTH_UINT8>::CastValue(255. * resImgB[dep]);
+                    = OCIO::Converter<OCIO::BIT_DEPTH_UINT8>::CastValue(255.0f * resImgB[dep]);
                 OCIO_CHECK_EQUAL(outImgB[dep], blue);
 
                 const uint8_t alpha
-                    = OCIO::Converter<OCIO::BIT_DEPTH_UINT8>::CastValue(255. * resImgA[dep]);
+                    = OCIO::Converter<OCIO::BIT_DEPTH_UINT8>::CastValue(255.0f * resImgA[dep]);
                 OCIO_CHECK_EQUAL(outImgA[dep], alpha);
             }
         }
@@ -2626,19 +2626,19 @@ OCIO_ADD_TEST(CPUProcessor, scanline_planar_custom)
                 const size_t dep = y * width + x;
 
                 const uint8_t red
-                    = OCIO::Converter<OCIO::BIT_DEPTH_UINT8>::CastValue(255. * resImgR[dep]);
+                    = OCIO::Converter<OCIO::BIT_DEPTH_UINT8>::CastValue(255.0f * resImgR[dep]);
                 OCIO_CHECK_EQUAL(outImgR[dep], red);
 
                 const uint8_t green
-                    = OCIO::Converter<OCIO::BIT_DEPTH_UINT8>::CastValue(255. * resImgG[dep]);
+                    = OCIO::Converter<OCIO::BIT_DEPTH_UINT8>::CastValue(255.0f * resImgG[dep]);
                 OCIO_CHECK_EQUAL(outImgG[dep], green);
 
                 const uint8_t blue
-                    = OCIO::Converter<OCIO::BIT_DEPTH_UINT8>::CastValue(255. * resImgB[dep]);
+                    = OCIO::Converter<OCIO::BIT_DEPTH_UINT8>::CastValue(255.0f * resImgB[dep]);
                 OCIO_CHECK_EQUAL(outImgB[dep], blue);
 
                 const uint8_t alpha
-                    = OCIO::Converter<OCIO::BIT_DEPTH_UINT8>::CastValue(255. * resImgA[dep]);
+                    = OCIO::Converter<OCIO::BIT_DEPTH_UINT8>::CastValue(255.0f * resImgA[dep]);
                 OCIO_CHECK_EQUAL(outImgA[dep], alpha);
             }
         }
