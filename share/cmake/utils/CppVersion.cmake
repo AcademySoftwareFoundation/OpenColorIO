@@ -27,7 +27,7 @@ if(${CMAKE_CXX_STANDARD} EQUAL 11)
         CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
     endif()
 
-    if(NOT COMPILER_SUPPORTS_CXX11 AND ${CMAKE_CXX_STANDARD} EQUAL 11)
+    if(NOT COMPILER_SUPPORTS_CXX11)
         message(STATUS "The compiler ${CMAKE_CXX_COMPILER_ID} has no C++11 only support. Use C++14.")
         set(CMAKE_CXX_STANDARD 14)
     endif()
