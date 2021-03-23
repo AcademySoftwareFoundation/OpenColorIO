@@ -2095,7 +2095,7 @@ OCIO_ADD_TEST(CPUProcessor, scanline_packed_custom)
                                              OCIO::AutoStride,
                                              OCIO::AutoStride,
                                              // Bytes to the next line.
-                                             -(width * 4 * sizeof(float)));
+                                             -1 * (width * 4 * sizeof(float)));
 
             OCIO_CHECK_NO_THROW(cpuProcessor->apply(srcImgDesc, dstImgDesc));
 
@@ -2122,7 +2122,7 @@ OCIO_ADD_TEST(CPUProcessor, scanline_packed_custom)
             OCIO::PackedImageDesc srcImgDesc(&img[(width-1) * 4], width, height, 4,
                                              OCIO::BIT_DEPTH_F32,
                                              OCIO::AutoStride,
-                                             -(4 * sizeof(float)),
+                                             -1 * (4 * sizeof(float)),
                                              // Bytes to the next line.
                                              yStrideInBytes);
 
@@ -2238,7 +2238,7 @@ OCIO_ADD_TEST(CPUProcessor, scanline_packed_custom)
                                              OCIO::AutoStride,
                                              OCIO::AutoStride,
                                              // Bytes to the next line.
-                                             -(width * 4 * sizeof(float)));
+                                             -1 * (width * 4 * sizeof(float)));
 
             OCIO_CHECK_NO_THROW(cpuProcessor->apply(srcImgDesc, dstImgDesc));
 
@@ -2265,7 +2265,7 @@ OCIO_ADD_TEST(CPUProcessor, scanline_packed_custom)
             OCIO::PackedImageDesc srcImgDesc(&img[(width-1) * 4], width, height, 4,
                                              OCIO::BIT_DEPTH_F32,
                                              OCIO::AutoStride,
-                                             -(4 * sizeof(float)),
+                                             -1 * (4 * sizeof(float)),
                                              // Bytes to the next line.
                                              yStrideInBytes);
 
@@ -2570,7 +2570,7 @@ OCIO_ADD_TEST(CPUProcessor, scanline_planar_custom)
                                          width, height,
                                          OCIO::BIT_DEPTH_F32,
                                          OCIO::AutoStride,
-                                         -(width * sizeof(float)));
+                                         -1 * (width * sizeof(float)));
         OCIO::PlanarImageDesc dstImgDesc(&outImgR[0], &outImgG[0], &outImgB[0], &outImgA[0],
                                          width, height);
 
@@ -2610,12 +2610,12 @@ OCIO_ADD_TEST(CPUProcessor, scanline_planar_custom)
                                          width, height,
                                          OCIO::BIT_DEPTH_F32,
                                          OCIO::AutoStride,
-                                         -(width * sizeof(float)));
+                                         -1 * (width * sizeof(float)));
         OCIO::PlanarImageDesc dstImgDesc(&outImgR[width], &outImgG[width], &outImgB[width], &outImgA[width],
                                          width, height,
                                          OCIO::BIT_DEPTH_UINT8,
                                          OCIO::AutoStride,
-                                         -(width * sizeof(uint8_t)));
+                                         -1 * (width * sizeof(uint8_t)));
 
         OCIO_CHECK_NO_THROW(cpuProcessor->apply(srcImgDesc, dstImgDesc));
 
