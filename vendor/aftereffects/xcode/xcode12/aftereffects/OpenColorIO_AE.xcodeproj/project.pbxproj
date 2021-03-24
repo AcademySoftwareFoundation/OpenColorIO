@@ -538,6 +538,7 @@
 					"../../../../../ext/yaml-cpp/include",
 					"../../../../../ext/Little-CMS/include",
 				);
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				REZ_PREPROCESSOR_DEFINITIONS = __MACH__;
 				REZ_SEARCH_PATHS = "$(SDK_PATH)/Developer/Headers/FlatCarbon";
 				SDKROOT = macosx;
@@ -583,6 +584,7 @@
 					"../../../../../ext/yaml-cpp/include",
 					"../../../../../ext/Little-CMS/include",
 				);
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				REZ_PREPROCESSOR_DEFINITIONS = __MACH__;
 				REZ_SEARCH_PATHS = "$(SDK_PATH)/Developer/Headers/FlatCarbon";
 				SDKROOT = macosx;
