@@ -74,11 +74,11 @@ int main(int argc, const char **argv)
     ap.options("ocioconvert -- apply colorspace transform to an image \n\n"
                "usage: ocioconvert [options]  inputimage inputcolorspace outputimage outputcolorspace\n"
                "   or: ocioconvert [options] --lut lutfile inputimage outputimage\n"
-               "   or: ocioconvert [options] --view inputimage inputcolorspace outputimage displayname viewname\n\n",
+               "   or: ocioconvert [options] --displayview inputimage inputcolorspace outputimage displayname viewname\n\n",
                "%*", parse_end_args, "",
                "<SEPARATOR>", "Options:",
                "--lut",       &useLut,         "Convert using a LUT rather than a config file",
-               "--view",      &useDisplayView, "Convert to a (display,view) pair rather than to "
+               "--displayview",      &useDisplayView, "Convert to a (display,view) pair rather than to "
                                                "an output color space",
                "--gpu",       &usegpu,         "Use GPU color processing instead of CPU (CPU is the default)",
                "--gpulegacy", &usegpuLegacy,   "Use the legacy (i.e. baked) GPU color processing "
@@ -166,7 +166,7 @@ int main(int argc, const char **argv)
     {
         if (args.size() != 5)
         {
-            std::cerr << "ERROR: Expecting 5 arguments for --view option, found "
+            std::cerr << "ERROR: Expecting 5 arguments for --displayview option, found "
                       << args.size() << "." << std::endl;
             ap.usage();
             exit(1);

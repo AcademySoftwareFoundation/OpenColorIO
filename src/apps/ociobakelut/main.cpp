@@ -78,7 +78,7 @@ int main (int argc, const char* argv[])
                "example:  ociobakelut --cccid 0 --lut cdlgrade.ccc --lut calibration.3dl --format flame graded_display.3dl\n"
                "example:  ociobakelut --lut look.3dl --offset 0.01 -0.02 0.03 --lut display.3dl --format flame display_with_look.3dl\n"
                "example:  ociobakelut --inputspace lg10 --outputspace srgb8 --format icc ~/Library/ColorSync/Profiles/test.icc\n"
-               "example:  ociobakelut --inputspace <inputspace name> --display <display name> <view name> --format <format name> <format path>\n"
+               "example:  ociobakelut --inputspace <inputspace name> --displayview <display name> <view name> --format <format name> <format path>\n"
                "example:  ociobakelut --lut filmlut.3dl --lut calibration.3dl --format icc ~/Library/ColorSync/Profiles/test.icc\n\n",
                "%*", parse_end_args, "",
                "<SEPARATOR>", "Using Existing OCIO Configurations",
@@ -101,11 +101,11 @@ int main (int argc, const char* argv[])
                "--format %s", &format, formatstr.c_str(),
                "--shapersize %d", &shapersize, "size of the shaper (default: format specific)",
                "--cubesize %d", &cubesize, "size of the cube (default: format specific)",
-               "--display %s %s", &display, &view, "for OCIO view and display instead of outputspace",
+               "--displayview %s %s", &display, &view, "for OCIO view and display instead of outputspace",
                "--stdout", &usestdout, "Write to stdout (rather than file)",
                "--v", &verbose, "Verbose",
                "--lut", &useLut, "Bake using a LUT rather than a config file"
-               "--display", &useDisplayView,   "Convert to a (display,view) pair rather than to "
+               "--displayview", &useDisplayView,   "Convert to a (display,view) pair rather than to "
                                             "an output color space",
                "--help", &help, "Print help message\n",
                "<SEPARATOR>", "ICC Options",
@@ -140,9 +140,9 @@ int main (int argc, const char* argv[])
 
     else if (useLut && useDisplayView)
     {
-        std::cerr << "ERROR: Options --lut & --view can't be used at the same time" << std::endl;
+        std::cerr << "ERROR: Options --lut & --displayview can't be used at the same time" << std::endl;
         ap.usage();
-        exit(1);
+        return 1;
     }
 
     // Create the OCIO processor for the specified transform.
@@ -174,7 +174,7 @@ int main (int argc, const char* argv[])
         return 1;
     }
 
-    // If --luts or --view have been specified, synthesize a new (temporary) configuration
+    // If --luts or --displayview have been specified, synthesize a new (temporary) configuration
     // with the transformation embedded in a colorspace.
     if(groupTransform->getNumTransforms() > 0)
     {
@@ -233,25 +233,25 @@ int main (int argc, const char* argv[])
         {
             if(inputspace.empty())
             {
-                std::cerr << "\nERROR: --inputspace is required when using --view\n\n";
+                std::cerr << "\nERROR: --inputspace is required when using --displayview\n\n";
                 std::cerr << "See --help for more info." << std::endl;
                 return 1;
             }
             if(!outputspace.empty())
             {
-                std::cerr << "\nERROR: --outputspace is not allowed when using --view\n\n";
+                std::cerr << "\nERROR: --outputspace is not allowed when using --displayview\n\n";
                 std::cerr << "See --help for more info." << std::endl;
                 return 1;
             }
             if(view.empty())
             {
-                std::cerr << "\nERROR: Specifying the view is required when using --view\n\n";
+                std::cerr << "\nERROR: Specifying the view is required when using --displayview\n\n";
                 std::cerr << "See --help for more info." << std::endl;
                 return 1;
             }
             if(display.empty())
             {
-                std::cerr << "\nERROR: Specifying the display is required when using --view\n\n";
+                std::cerr << "\nERROR: Specifying the display is required when using --displayview\n\n";
                 std::cerr << "See --help for more info." << std::endl;
                 return 1;
             }
@@ -598,11 +598,11 @@ OCIO::GroupTransformRcPtr parse_luts(int argc, const char *argv[])
 
             i += 1;
         }
-        else if(arg == "--display" || arg == "-display")
+        else if(arg == "--displayview" || arg == "-displayview")
         {
             if(i + 2 >= argc)
             {
-                throw OCIO::Exception("Error parsing --display. Invalid number of arguments");
+                throw OCIO::Exception("Error parsing --displayview. Invalid number of arguments");
             }
 
             OCIO::DisplayViewTransformRcPtr t = OCIO::DisplayViewTransform::Create();
