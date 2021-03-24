@@ -1807,6 +1807,7 @@
 					../../../../ext/libexpat/expat,
 					../../../../ext/sampleicc/src/include,
 				);
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				ONLY_ACTIVE_ARCH = YES;
 				PREBINDING = NO;
 				SDKROOT = macosx;
@@ -1837,6 +1838,7 @@
 					../../../../ext/libexpat/expat,
 					../../../../ext/sampleicc/src/include,
 				);
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				PREBINDING = NO;
 				SDKROOT = macosx;
 			};

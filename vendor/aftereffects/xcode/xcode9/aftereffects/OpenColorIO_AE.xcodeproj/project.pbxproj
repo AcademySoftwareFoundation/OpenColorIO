@@ -302,9 +302,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		C4E618CB095A3CE80012CA3F /* OpenColorIO */ = {
+		C4E618CB095A3CE80012CA3F /* OpenColorIO_AE */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = C4E618CE095A3CE90012CA3F /* Build configuration list for PBXNativeTarget "OpenColorIO" */;
+			buildConfigurationList = C4E618CE095A3CE90012CA3F /* Build configuration list for PBXNativeTarget "OpenColorIO_AE" */;
 			buildPhases = (
 				C4E618C8095A3CE80012CA3F /* Resources */,
 				C4E618C9095A3CE80012CA3F /* Sources */,
@@ -321,7 +321,7 @@
 				2AF999CD147E1DDB00FEB83B /* PBXTargetDependency */,
 				2AF57017147AE18600F9968C /* PBXTargetDependency */,
 			);
-			name = OpenColorIO;
+			name = OpenColorIO_AE;
 			productName = SDK_Backwards.plugin;
 			productReference = C4E618CC095A3CE80012CA3F /* OpenColorIO.plugin */;
 			productType = "com.apple.product-type.bundle";
@@ -374,7 +374,7 @@
 			);
 			projectRoot = "";
 			targets = (
-				C4E618CB095A3CE80012CA3F /* OpenColorIO */,
+				C4E618CB095A3CE80012CA3F /* OpenColorIO_AE */,
 			);
 		};
 /* End PBXProject section */
@@ -538,6 +538,7 @@
 					"../../../../../ext/yaml-cpp/include",
 					"../../../../../ext/Little-CMS/include",
 				);
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				REZ_PREPROCESSOR_DEFINITIONS = __MACH__;
 				REZ_SEARCH_PATHS = "$(SDK_PATH)/Developer/Headers/FlatCarbon";
 				SDKROOT = macosx;
@@ -583,6 +584,7 @@
 					"../../../../../ext/yaml-cpp/include",
 					"../../../../../ext/Little-CMS/include",
 				);
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				REZ_PREPROCESSOR_DEFINITIONS = __MACH__;
 				REZ_SEARCH_PATHS = "$(SDK_PATH)/Developer/Headers/FlatCarbon";
 				SDKROOT = macosx;
@@ -620,7 +622,7 @@
 			defaultConfigurationIsVisible = 1;
 			defaultConfigurationName = Debug;
 		};
-		C4E618CE095A3CE90012CA3F /* Build configuration list for PBXNativeTarget "OpenColorIO" */ = {
+		C4E618CE095A3CE90012CA3F /* Build configuration list for PBXNativeTarget "OpenColorIO_AE" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				C4E618CF095A3CE90012CA3F /* Debug */,
