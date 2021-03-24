@@ -78,7 +78,7 @@ int main (int argc, const char* argv[])
                "example:  ociobakelut --cccid 0 --lut cdlgrade.ccc --lut calibration.3dl --format flame graded_display.3dl\n"
                "example:  ociobakelut --lut look.3dl --offset 0.01 -0.02 0.03 --lut display.3dl --format flame display_with_look.3dl\n"
                "example:  ociobakelut --inputspace lg10 --outputspace srgb8 --format icc ~/Library/ColorSync/Profiles/test.icc\n"
-               "example:  ociobakelut --inputspace <inputspace name> --view <view name> <display name> --format <format name> <format path>\n"
+               "example:  ociobakelut --inputspace <inputspace name> --display <display name> <view name> --format <format name> <format path>\n"
                "example:  ociobakelut --lut filmlut.3dl --lut calibration.3dl --format icc ~/Library/ColorSync/Profiles/test.icc\n\n",
                "%*", parse_end_args, "",
                "<SEPARATOR>", "Using Existing OCIO Configurations",
@@ -101,11 +101,11 @@ int main (int argc, const char* argv[])
                "--format %s", &format, formatstr.c_str(),
                "--shapersize %d", &shapersize, "size of the shaper (default: format specific)",
                "--cubesize %d", &cubesize, "size of the cube (default: format specific)",
-               "--view %s %s", &view, &display, "for OCIO view and display instead of outputspace",
+               "--display %s %s", &display, &view, "for OCIO view and display instead of outputspace",
                "--stdout", &usestdout, "Write to stdout (rather than file)",
                "--v", &verbose, "Verbose",
                "--lut", &useLut, "Bake using a LUT rather than a config file"
-               "--view", &useDisplayView,   "Convert to a (display,view) pair rather than to "
+               "--display", &useDisplayView,   "Convert to a (display,view) pair rather than to "
                                             "an output color space",
                "--help", &help, "Print help message\n",
                "<SEPARATOR>", "ICC Options",
@@ -269,11 +269,9 @@ int main (int argc, const char* argv[])
             outputspace = "ProcessedOutput";
             outputColorSpace->setName(outputspace.c_str());
 
-            // Creating the transform and applying to outputColorSpace
-            OCIO::DisplayViewTransformRcPtr t = OCIO::DisplayViewTransform::Create();
+            // Obtaining the transform and applying to outputColorSpace
+            OCIO::DisplayViewTransformRcPtr t = std::dynamic_pointer_cast<OCIO::DisplayViewTransform>(groupTransform->getTransform(0));
             t->setSrc(inputspace.c_str());
-            t->setDisplay(display.c_str());
-            t->setView(view.c_str());
             outputColorSpace->setTransform(t, OCIO::COLORSPACE_DIR_FROM_REFERENCE);
 
             editableConfig->addColorSpace(outputColorSpace);
@@ -600,11 +598,11 @@ OCIO::GroupTransformRcPtr parse_luts(int argc, const char *argv[])
 
             i += 1;
         }
-        else if(arg == "--view" || arg == "-view")
+        else if(arg == "--display" || arg == "-display")
         {
             if(i + 2 >= argc)
             {
-                throw OCIO::Exception("Error parsing --view. Invalid number of arguments");
+                throw OCIO::Exception("Error parsing --display. Invalid number of arguments");
             }
 
             OCIO::DisplayViewTransformRcPtr t = OCIO::DisplayViewTransform::Create();
