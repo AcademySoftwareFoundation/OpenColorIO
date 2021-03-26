@@ -330,13 +330,12 @@ inline void throwValueError(const YAML::Node & key,
 
 inline void CheckDuplicates(const YAML::Node & node)
 {
-    std::string key;
     std::unordered_set<std::string> keyset;
 
-    for (const auto & iter : node)
+    for (Iterator iter = node.begin(); iter != node.end(); ++iter)
     {
-        const YAML::Node & first = iter.first;
-        load(first, key);
+        const std::string & key = iter->first.as<std::string>();
+
         if (keyset.find(key) == keyset.end())
         {
             keyset.insert(key);
@@ -346,7 +345,7 @@ inline void CheckDuplicates(const YAML::Node & node)
             std::ostringstream os;
             os << "Key-value pair with key '" << key;
             os << "' specified more than once. ";
-            throwValueError(node.Tag(), first, os.str());
+            throwValueError(node.Tag(), iter->first, os.str());
         }
     }
 }
@@ -360,59 +359,49 @@ inline void load(const YAML::Node& node, View& v)
 
     CheckDuplicates(node);
 
-    std::string key, stringval;
     bool expectingSceneCS = false;
     bool expectingDisplayCS = false;
+
     for (Iterator iter = node.begin(); iter != node.end(); ++iter)
     {
-        const YAML::Node& first = iter->first;
-        const YAML::Node& second = iter->second;
+        const std::string & key = iter->first.as<std::string>();
 
-        load(first, key);
-
-        if (second.IsNull() || !second.IsDefined()) continue;
+        if (iter->second.IsNull() || !iter->second.IsDefined()) continue;
 
         if(key == "name")
         {
-            load(second, stringval);
-            v.m_name = stringval;
+            load(iter->second, v.m_name);
         }
         else if (key == "view_transform")
         {
             expectingDisplayCS = true;
-            load(second, stringval);
-            v.m_viewTransform = stringval;
+            load(iter->second, v.m_viewTransform);
         }
         else if(key == "colorspace")
         {
             expectingSceneCS = true;
-            load(second, stringval);
-            v.m_colorspace = stringval;
+            load(iter->second, v.m_colorspace);
         }
         else if (key == "display_colorspace")
         {
             expectingDisplayCS = true;
-            load(second, stringval);
-            v.m_colorspace = stringval;
+            load(iter->second, v.m_colorspace);
         }
         else if(key == "looks" || key == "look")
         {
-            load(second, stringval);
-            v.m_looks = stringval;
+            load(iter->second, v.m_looks);
         }
         else if (key == "rule")
         {
-            load(second, stringval);
-            v.m_rule = stringval;
+            load(iter->second, v.m_rule);
         }
         else if (key == "description")
         {
-            load(second, stringval);
-            v.m_description = stringval;
+            load(iter->second, v.m_description);
         }
         else
         {
-            LogUnknownKeyWarning(node, first);
+            LogUnknownKeyWarning(node, iter->first);
         }
     }
     if(v.m_name.empty())
@@ -497,29 +486,22 @@ inline void load(const YAML::Node& node, AllocationTransformRcPtr& t)
 
     CheckDuplicates(node);
 
-    std::string key;
-
-    for (Iterator iter = node.begin();
-            iter != node.end();
-            ++iter)
+    for (Iterator iter = node.begin(); iter != node.end(); ++iter)
     {
-        const YAML::Node& first = iter->first;
-        const YAML::Node& second = iter->second;
+        const std::string & key = iter->first.as<std::string>();
 
-        load(first, key);
-
-        if (second.IsNull() || !second.IsDefined()) continue;
+        if (iter->second.IsNull() || !iter->second.IsDefined()) continue;
 
         if(key == "allocation")
         {
             Allocation val;
-            load(second, val);
+            load(iter->second, val);
             t->setAllocation(val);
         }
         else if(key == "vars")
         {
             std::vector<float> val;
-            load(second, val);
+            load(iter->second, val);
             if(!val.empty())
             {
                 t->setVars(static_cast<int>(val.size()), &val[0]);
@@ -528,12 +510,12 @@ inline void load(const YAML::Node& node, AllocationTransformRcPtr& t)
         else if(key == "direction")
         {
             TransformDirection val;
-            load(second, val);
+            load(iter->second, val);
             t->setDirection(val);
         }
         else
         {
-            LogUnknownKeyWarning(node, first);
+            LogUnknownKeyWarning(node, iter->first);
         }
     }
 }
@@ -567,30 +549,27 @@ inline void load(const YAML::Node & node, BuiltinTransformRcPtr & t)
 
     std::string key;
 
-    for (const auto & iter : node)
+    for (Iterator iter = node.begin(); iter != node.end(); ++iter)
     {
-        const YAML::Node & first  = iter.first;
-        const YAML::Node & second = iter.second;
+        const std::string & key = iter->first.as<std::string>();
 
-        load(first, key);
-
-        if (second.IsNull() || !second.IsDefined()) continue;
+        if (iter->second.IsNull() || !iter->second.IsDefined()) continue;
 
         if (key == "style")
         {
             std::string transformStyle;
-            load(second, transformStyle);
+            load(iter->second, transformStyle);
             t->setStyle(transformStyle.c_str());
         }
         else if (key == "direction")
         {
             TransformDirection dir = TRANSFORM_DIR_FORWARD;
-            load(second, dir);
+            load(iter->second, dir);
             t->setDirection(dir);
         }
         else
         {
-            LogUnknownKeyWarning(node, first);
+            LogUnknownKeyWarning(node, iter->first);
         }
     }
 }
@@ -616,83 +595,78 @@ inline void load(const YAML::Node& node, CDLTransformRcPtr& t)
 
     CheckDuplicates(node);
 
-    std::string key;
-    std::vector<double> floatvecval;
-
-    for (Iterator iter = node.begin();
-            iter != node.end();
-            ++iter)
+    for (Iterator iter = node.begin(); iter != node.end(); ++iter)
     {
-        const YAML::Node& first = iter->first;
-        const YAML::Node& second = iter->second;
+        const std::string & key = iter->first.as<std::string>();
 
-        load(first, key);
-
-        if (second.IsNull() || !second.IsDefined()) continue;
+        if (iter->second.IsNull() || !iter->second.IsDefined()) continue;
 
         if (key == "slope")
         {
-            load(second, floatvecval);
+            std::vector<double> floatvecval;
+            load(iter->second, floatvecval);
             if(floatvecval.size() != 3)
             {
                 std::ostringstream os;
                 os << "'slope' values must be 3 ";
                 os << "floats. Found '" << floatvecval.size() << "'.";
-                throwValueError(node.Tag(), first, os.str());
+                throwValueError(node.Tag(), iter->first, os.str());
             }
             t->setSlope(&floatvecval[0]);
         }
         else if (key == "offset")
         {
-            load(second, floatvecval);
+            std::vector<double> floatvecval;
+            load(iter->second, floatvecval);
             if(floatvecval.size() != 3)
             {
                 std::ostringstream os;
                 os << "'offset' values must be 3 ";
                 os << "floats. Found '" << floatvecval.size() << "'.";
-                throwValueError(node.Tag(), first, os.str());
+                throwValueError(node.Tag(), iter->first, os.str());
             }
             t->setOffset(&floatvecval[0]);
         }
         else if (key == "power")
         {
-            load(second, floatvecval);
+            std::vector<double> floatvecval;
+            load(iter->second, floatvecval);
             if(floatvecval.size() != 3)
             {
                 std::ostringstream os;
                 os << "'power' values must be 3 ";
                 os << "floats. Found '" << floatvecval.size() << "'.";
-                throwValueError(node.Tag(), first, os.str());
+                throwValueError(node.Tag(), iter->first, os.str());
             }
             t->setPower(&floatvecval[0]);
         }
         else if (key == "saturation" || key == "sat")
         {
             double val = 0.0f;
-            load(second, val);
+            load(iter->second, val);
             t->setSat(val);
         }
         else if (key == "style")
         {
             std::string style;
-            load(second, style);
+            load(iter->second, style);
             t->setStyle(CDLStyleFromString(style.c_str()));
         }
         else if (key == "direction")
         {
             TransformDirection val;
-            load(second, val);
+            load(iter->second, val);
             t->setDirection(val);
         }
         else if (key == "name")
         {
             std::string name;
-            load(second, name);
+            load(iter->second, name);
             t->getFormatMetadata().setName(name.c_str());
         }
         else
         {
-            LogUnknownKeyWarning(node, first);
+            LogUnknownKeyWarning(node, iter->first);
         }
     }
 }
@@ -753,44 +727,39 @@ inline void load(const YAML::Node& node, ColorSpaceTransformRcPtr& t)
 
     CheckDuplicates(node);
 
-    std::string key, stringval;
-
-    for (Iterator iter = node.begin();
-            iter != node.end();
-            ++iter)
+    for (Iterator iter = node.begin(); iter != node.end(); ++iter)
     {
-        const YAML::Node& first = iter->first;
-        const YAML::Node& second = iter->second;
+        const std::string & key = iter->first.as<std::string>();
 
-        load(first, key);
-
-        if (second.IsNull() || !second.IsDefined()) continue;
+        if (iter->second.IsNull() || !iter->second.IsDefined()) continue;
 
         if(key == "src")
         {
-            load(second, stringval);
+            std::string stringval;
+            load(iter->second, stringval);
             t->setSrc(stringval.c_str());
         }
         else if(key == "dst")
         {
-            load(second, stringval);
+            std::string stringval;
+            load(iter->second, stringval);
             t->setDst(stringval.c_str());
         }
         else if(key == "direction")
         {
             TransformDirection val;
-            load(second, val);
+            load(iter->second, val);
             t->setDirection(val);
         }
         else if(key == "data_bypass")
         {
             bool val;
-            load(second, val);
+            load(iter->second, val);
             t->setDataBypass(val);
         }
         else
         {
-            LogUnknownKeyWarning(node, first);
+            LogUnknownKeyWarning(node, iter->first);
         }
     }
 }
@@ -818,54 +787,51 @@ inline void load(const YAML::Node& node, DisplayViewTransformRcPtr& t)
 {
     t = DisplayViewTransform::Create();
 
-    std::string key, stringval;
-    bool boolval{ true };
-
-    for (Iterator iter = node.begin();
-        iter != node.end();
-        ++iter)
+    for (Iterator iter = node.begin(); iter != node.end(); ++iter)
     {
-        const YAML::Node& first = iter->first;
-        const YAML::Node& second = iter->second;
+        const std::string & key = iter->first.as<std::string>();
 
-        load(first, key);
-
-        if (second.IsNull() || !second.IsDefined()) continue;
+        if (iter->second.IsNull() || !iter->second.IsDefined()) continue;
 
         if (key == "src")
         {
-            load(second, stringval);
+            std::string stringval;
+            load(iter->second, stringval);
             t->setSrc(stringval.c_str());
         }
         else if (key == "display")
         {
-            load(second, stringval);
+            std::string stringval;
+            load(iter->second, stringval);
             t->setDisplay(stringval.c_str());
         }
         else if (key == "view")
         {
-            load(second, stringval);
+            std::string stringval;
+            load(iter->second, stringval);
             t->setView(stringval.c_str());
         }
         else if (key == "direction")
         {
             TransformDirection val;
-            load(second, val);
+            load(iter->second, val);
             t->setDirection(val);
         }
         else if (key == "looks_bypass")
         {
-            load(second, boolval);
+            bool boolval{ true };
+            load(iter->second, boolval);
             t->setLooksBypass(boolval);
         }
         else if (key == "data_bypass")
         {
-            load(second, boolval);
+            bool boolval{ true };
+            load(iter->second, boolval);
             t->setDataBypass(boolval);
         }
         else
         {
-            LogUnknownKeyWarning(node, first);
+            LogUnknownKeyWarning(node, iter->first);
         }
     }
 }
@@ -900,29 +866,24 @@ inline void load(const YAML::Node& node, ExponentTransformRcPtr& t)
 
     CheckDuplicates(node);
 
-    std::string key;
-
-    for (const auto & iter : node)
+    for (Iterator iter = node.begin(); iter != node.end(); ++iter)
     {
-        const YAML::Node& first = iter.first;
-        const YAML::Node& second = iter.second;
+        const std::string & key = iter->first.as<std::string>();
 
-        load(first, key);
-
-        if (second.IsNull() || !second.IsDefined()) continue;
+        if (iter->second.IsNull() || !iter->second.IsDefined()) continue;
 
         if (key == "value")
         {
             std::vector<double> val;
-            if (second.Type() == YAML::NodeType::Sequence)
+            if (iter->second.Type() == YAML::NodeType::Sequence)
             {
-                load(second, val);
+                load(iter->second, val);
             }
             else
             {
                 // If a single value is supplied...
                 double singleVal;
-                load(second, singleVal);
+                load(iter->second, singleVal);
                 val.resize(4, singleVal);
                 val[3] = 1.0;
             }
@@ -931,7 +892,7 @@ inline void load(const YAML::Node& node, ExponentTransformRcPtr& t)
                 std::ostringstream os;
                 os << "'value' values must be 4 ";
                 os << "floats. Found '" << val.size() << "'.";
-                throwValueError(node.Tag(), first, os.str());
+                throwValueError(node.Tag(), iter->first, os.str());
             }
             const double v[4] = { val[0], val[1], val[2], val[3] };
             t->setValue(v);
@@ -939,24 +900,24 @@ inline void load(const YAML::Node& node, ExponentTransformRcPtr& t)
         else if (key == "style")
         {
             std::string style;
-            load(second, style);
+            load(iter->second, style);
             t->setNegativeStyle(NegativeStyleFromString(style.c_str()));
         }
         else if(key == "direction")
         {
             TransformDirection val;
-            load(second, val);
+            load(iter->second, val);
             t->setDirection(val);
         }
         else if(key == "name")
         {
             std::string name;
-            load(second, name);
+            load(iter->second, name);
             t->getFormatMetadata().setName(name.c_str());
         }
         else
         {
-            LogUnknownKeyWarning(node, first);
+            LogUnknownKeyWarning(node, iter->first);
         }
     }
 }
@@ -1013,33 +974,29 @@ inline void load(const YAML::Node& node, ExponentWithLinearTransformRcPtr& t)
     };
 
     FieldFound fields = NOTHING_FOUND;
+
     static const std::string err("ExponentWithLinear parse error, ");
 
     CheckDuplicates(node);
 
-    std::string key;
-
-    for (const auto & iter : node)
+    for (Iterator iter = node.begin(); iter != node.end(); ++iter)
     {
-        const YAML::Node& first = iter.first;
-        const YAML::Node& second = iter.second;
+        const std::string & key = iter->first.as<std::string>();
 
-        load(first, key);
-
-        if (second.IsNull() || !second.IsDefined()) continue;
+        if (iter->second.IsNull() || !iter->second.IsDefined()) continue;
 
         if (key == "gamma")
         {
             std::vector<double> val;
-            if (second.Type() == YAML::NodeType::Sequence)
+            if (iter->second.Type() == YAML::NodeType::Sequence)
             {
-                load(second, val);
+                load(iter->second, val);
             }
             else
             {
                 // If a single value is supplied...
                 double singleVal;
-                load(second, singleVal);
+                load(iter->second, singleVal);
                 val.resize(4, singleVal);
                 val[3] = 1.0;
             }
@@ -1059,15 +1016,15 @@ inline void load(const YAML::Node& node, ExponentWithLinearTransformRcPtr& t)
         else if(key == "offset")
         {
             std::vector<double> val;
-            if (second.Type() == YAML::NodeType::Sequence)
+            if (iter->second.Type() == YAML::NodeType::Sequence)
             {
-                load(second, val);
+                load(iter->second, val);
             }
             else
             {
                 // If a single value is supplied...
                 double singleVal;
-                load(second, singleVal);
+                load(iter->second, singleVal);
                 val.resize(4, singleVal);
                 val[3] = 0.0;
             }
@@ -1087,24 +1044,24 @@ inline void load(const YAML::Node& node, ExponentWithLinearTransformRcPtr& t)
         else if (key == "style")
         {
             std::string style;
-            load(second, style);
+            load(iter->second, style);
             t->setNegativeStyle(NegativeStyleFromString(style.c_str()));
         }
         else if(key == "direction")
         {
             TransformDirection val;
-            load(second, val);
+            load(iter->second, val);
             t->setDirection(val);
         }
         else if(key == "name")
         {
             std::string name;
-            load(second, name);
+            load(iter->second, name);
             t->getFormatMetadata().setName(name.c_str());
         }
         else
         {
-            LogUnknownKeyWarning(node.Tag(), first);
+            LogUnknownKeyWarning(node.Tag(), iter->first);
         }
     }
 
@@ -1185,80 +1142,77 @@ inline void load(const YAML::Node& node, ExposureContrastTransformRcPtr& t)
     t = ExposureContrastTransform::Create();
 
     CheckDuplicates(node);
-    std::string key;
+
     bool dynExposure = true;
     bool dynContrast = true;
     bool dynGamma    = true;
 
-    for (const auto & iter : node)
+    for (Iterator iter = node.begin(); iter != node.end(); ++iter)
     {
-        const YAML::Node& first = iter.first;
-        const YAML::Node& second = iter.second;
+        const std::string & key = iter->first.as<std::string>();
 
-        load(first, key);
-
-        if (second.IsNull() || !second.IsDefined()) continue;
+        if (iter->second.IsNull() || !iter->second.IsDefined()) continue;
 
         if (key == "exposure")
         {
             double param;
-            load(second, param);
+            load(iter->second, param);
             t->setExposure(param);
             dynExposure = false;
         }
         else if (key == "contrast")
         {
             double param;
-            load(second, param);
+            load(iter->second, param);
             t->setContrast(param);
             dynContrast = false;
         }
         else if (key == "gamma")
         {
             double param;
-            load(second, param);
+            load(iter->second, param);
             t->setGamma(param);
             dynGamma = false;
         }
         else if (key == "pivot")
         {
             double param;
-            load(second, param);
+            load(iter->second, param);
             t->setPivot(param);
         }
         else if (key == "log_exposure_step")
         {
             double param;
-            load(second, param);
+            load(iter->second, param);
             t->setLogExposureStep(param);
         }
         else if (key == "log_midway_gray")
         {
             double param;
-            load(second, param);
+            load(iter->second, param);
             t->setLogMidGray(param);
         }
         else if (key == "style")
         {
             std::string style;
-            load(second, style);
+            load(iter->second, style);
             t->setStyle(ExposureContrastStyleFromString(style.c_str()));
         }
         else if (key == "direction")
         {
             TransformDirection val;
-            load(second, val);
+            load(iter->second, val);
             t->setDirection(val);
         }
         else if (key == "name")
         {
             std::string name;
-            load(second, name);
+            load(iter->second, name);
             t->getFormatMetadata().setName(name.c_str());
         }
         else
         {
-            LogUnknownKeyWarning(node, first);
+            LogUnknownKeyWarning(node, iter->first);
         }
     }
 
@@ -1331,47 +1285,44 @@ inline void load(const YAML::Node& node, FileTransformRcPtr& t)
 
     CheckDuplicates(node);
 
-    std::string key, stringval;
+    std::string stringval;
 
-    for (const auto & iter : node)
+    for (Iterator iter = node.begin(); iter != node.end(); ++iter)
     {
-        const YAML::Node& first = iter.first;
-        const YAML::Node& second = iter.second;
+        const std::string & key = iter->first.as<std::string>();
 
-        load(first, key);
-
-        if (second.IsNull() || !second.IsDefined()) continue;
+        if (iter->second.IsNull() || !iter->second.IsDefined()) continue;
 
         if (key == "src")
         {
-            load(second, stringval);
+            load(iter->second, stringval);
             t->setSrc(stringval.c_str());
         }
         else if (key == "cccid")
         {
-            load(second, stringval);
+            load(iter->second, stringval);
             t->setCCCId(stringval.c_str());
         }
         else if (key == "cdl_style")
         {
-            load(second, stringval);
+            load(iter->second, stringval);
             t->setCDLStyle(CDLStyleFromString(stringval.c_str()));
         }
         else if (key == "interpolation")
         {
             Interpolation val;
-            load(second, val);
+            load(iter->second, val);
             t->setInterpolation(val);
         }
         else if (key == "direction")
         {
             TransformDirection val;
-            load(second, val);
+            load(iter->second, val);
             t->setDirection(val);
         }
         else
         {
-            LogUnknownKeyWarning(node, first);
+            LogUnknownKeyWarning(node, iter->first);
         }
     }
 }
@@ -1419,46 +1370,42 @@ inline void load(const YAML::Node& node, FixedFunctionTransformRcPtr& t)
 
     CheckDuplicates(node);
 
-    std::string key;
     bool styleFound{ false };
 
-    for (const auto & iter : node)
+    for (Iterator iter = node.begin(); iter != node.end(); ++iter)
     {
-        const YAML::Node& first = iter.first;
-        const YAML::Node& second = iter.second;
+        const std::string & key = iter->first.as<std::string>();
 
-        load(first, key);
-
-        if (second.IsNull() || !second.IsDefined()) continue;
+        if (iter->second.IsNull() || !iter->second.IsDefined()) continue;
 
         if(key == "params")
         {
             std::vector<double> params;
-            load(second, params);
+            load(iter->second, params);
             t->setParams(&params[0], params.size());
         }
         else if(key == "style")
         {
             std::string style;
-            load(second, style);
+            load(iter->second, style);
             t->setStyle( FixedFunctionStyleFromString(style.c_str()) );
             styleFound = true;
         }
         else if(key == "direction")
         {
             TransformDirection val;
-            load(second, val);
+            load(iter->second, val);
             t->setDirection(val);
         }
         else if(key == "name")
         {
             std::string name;
-            load(second, name);
+            load(iter->second, name);
             t->getFormatMetadata().setName(name.c_str());
         }
         else
         {
-            LogUnknownKeyWarning(node.Tag(), first);
+            LogUnknownKeyWarning(node.Tag(), iter->first);
         }
     }
     if (!styleFound)
@@ -1498,32 +1445,34 @@ inline void load(const YAML::Node & parent, const YAML::Node & node, GradingRGBM
     {
         bool rgbOK{ false };
         bool masterOK{ false };
-        for (const auto & it : node)
+
+        for (Iterator iter = node.begin(); iter != node.end(); ++iter)
         {
-            std::string k;
-            const YAML::Node& first = it.first;
-            load(first, k);
-            if (k == "rgb")
+            const std::string & key = iter->first.as<std::string>();
+
+            if (iter->second.IsNull() || !iter->second.IsDefined()) continue;
+
+            if (key == "rgb")
             {
                 std::vector<double> vals;
-                load(it.second, vals);
+                load(iter->second, vals);
                 if (vals.size() != 3)
                 {
-                    throwError(first, "The RGB value needs to be a 3 doubles.");
+                    throwError(iter->first, "The RGB value needs to be a 3 doubles.");
                 }
                 rgbm.m_red = vals[0];
                 rgbm.m_green = vals[1];
                 rgbm.m_blue = vals[2];
                 rgbOK = true;
             }
-            else if (k == "master")
+            else if (key == "master")
             {
-                load(it.second, rgbm.m_master);
+                load(iter->second, rgbm.m_master);
                 masterOK = true;
             }
             else
             {
-                LogUnknownKeyWarning(parent, first);
+                LogUnknownKeyWarning(parent, iter->first);
             }
         }
         if (!rgbOK || !masterOK)
@@ -1544,31 +1493,33 @@ inline void loadPivot(const YAML::Node & parent, const YAML::Node & node,
 {
     if (node.Type() == YAML::NodeType::Map)
     {
-        for (const auto & it : node)
+        for (Iterator iter = node.begin(); iter != node.end(); ++iter)
         {
-            std::string k;
-            const YAML::Node& first = it.first;
-            load(first, k);
-            if (k == "contrast")
+            const std::string & key = iter->first.as<std::string>();
+
+            if (iter->second.IsNull() || !iter->second.IsDefined()) continue;
+
+            if (key == "contrast")
             {
-                load(it.second, val);
+                load(iter->second, val);
                 valLoaded = true;
             }
-            else if (k == "black")
+            else if (key == "black")
             {
-                load(it.second, blackVal);
+                load(iter->second, blackVal);
                 blackValLoaded = true;
             }
-            else if (k == "white")
+            else if (key == "white")
             {
-                load(it.second, whiteVal);
+                load(iter->second, whiteVal);
                 whiteValLoaded = true;
             }
             else
             {
-                LogUnknownKeyWarning(node, first);
+                LogUnknownKeyWarning(node, iter->first);
             }
         }
+
         if (!valLoaded && !blackValLoaded && !whiteValLoaded)
         {
             throwValueError(parent, "At least one of the pivot values must be provided.");
@@ -1586,26 +1537,28 @@ inline void loadClamp(const YAML::Node & parent, const YAML::Node & node,
 {
     if (node.Type() == YAML::NodeType::Map)
     {
-        for (const auto & it : node)
+        for (Iterator iter = node.begin(); iter != node.end(); ++iter)
         {
-            std::string k;
-            const YAML::Node& first = it.first;
-            load(first, k);
-            if (k == "black")
+            const std::string & key = iter->first.as<std::string>();
+
+            if (iter->second.IsNull() || !iter->second.IsDefined()) continue;
+
+            if (key == "black")
             {
-                load(it.second, blackVal);
+                load(iter->second, blackVal);
                 blackValLoaded = true;
             }
-            else if (k == "white")
+            else if (key == "white")
             {
-                load(it.second, whiteVal);
+                load(iter->second, whiteVal);
                 whiteValLoaded = true;
             }
             else
             {
-                LogUnknownKeyWarning(node, first);
+                LogUnknownKeyWarning(node, iter->first);
             }
         }
+
         if (!blackValLoaded && !whiteValLoaded)
         {
             throwValueError(parent, "At least one of the clamp values must be provided.");
@@ -1637,88 +1590,83 @@ inline void load(const YAML::Node & node, GradingPrimaryTransformRcPtr & t)
     bool clampBlackLoaded{ false };
     bool clampWhiteLoaded{ false };
 
-    std::string key;
-
-    for (const auto & iter : node)
+    for (Iterator iter = node.begin(); iter != node.end(); ++iter)
     {
-        const YAML::Node& first = iter.first;
-        const YAML::Node& second = iter.second;
+        const std::string & key = iter->first.as<std::string>();
 
-        load(first, key);
-
-        if (second.IsNull() || !second.IsDefined()) continue;
+        if (iter->second.IsNull() || !iter->second.IsDefined()) continue;
 
         if (key == "style")
         {
             std::string style;
-            load(second, style);
+            load(iter->second, style);
             t->setStyle(GradingStyleFromString(style.c_str()));
         }
         else if (key == "direction")
         {
             TransformDirection val;
-            load(second, val);
+            load(iter->second, val);
             t->setDirection(val);
         }
         else if (key == "brightness")
         {
             brightnessLoaded = true;
-            load(first, second, values.m_brightness);
+            load(iter->first, iter->second, values.m_brightness);
         }
         else if (key == "contrast")
         {
             contrastLoaded = true;
-            load(first, second, values.m_contrast);
+            load(iter->first, iter->second, values.m_contrast);
         }
         else if (key == "gamma")
         {
             gammaLoaded = true;
-            load(first, second, values.m_gamma);
+            load(iter->first, iter->second, values.m_gamma);
         }
         else if (key == "offset")
         {
             offsetLoaded = true;
-            load(first, second, values.m_offset);
+            load(iter->first, iter->second, values.m_offset);
         }
         else if (key == "exposure")
         {
             exposureLoaded = true;
-            load(first, second, values.m_exposure);
+            load(iter->first, iter->second, values.m_exposure);
         }
         else if (key == "lift")
         {
             liftLoaded = true;
-            load(first, second, values.m_lift);
+            load(iter->first, iter->second, values.m_lift);
         }
         else if (key == "gain")
         {
             gainLoaded = true;
-            load(first, second, values.m_gain);
+            load(iter->first, iter->second, values.m_gain);
         }
         else if (key == "pivot")
         {
-            loadPivot(first, second, values.m_pivot, pivotLoaded,
+            loadPivot(iter->first, iter->second, values.m_pivot, pivotLoaded,
                       values.m_pivotBlack, pivotBlackLoaded, values.m_pivotWhite, pivotWhiteLoaded);
         }
         else if (key == "saturation")
         {
             saturationLoaded = true;
-            load(second, values.m_saturation);
+            load(iter->second, values.m_saturation);
         }
         else if (key == "clamp")
         {
-            loadClamp(first, second, values.m_clampBlack, clampBlackLoaded,
+            loadClamp(iter->first, iter->second, values.m_clampBlack, clampBlackLoaded,
                       values.m_clampWhite, clampWhiteLoaded);
         }
         else if (key == "name")
         {
             std::string name;
-            load(second, name);
+            load(iter->second, name);
             t->getFormatMetadata().setName(name.c_str());
         }
         else
         {
-            LogUnknownKeyWarning(node.Tag(), first);
+            LogUnknownKeyWarning(node.Tag(), iter->first);
         }
     }
 
@@ -1904,19 +1852,20 @@ inline void load(const YAML::Node & parent, const YAML::Node & node, GradingBSpl
     if (node.Type() == YAML::NodeType::Map)
     {
         bool cpOK{ false };
-        for (const auto & it : node)
+        for (Iterator iter = node.begin(); iter != node.end(); ++iter)
         {
-            std::string k;
-            const YAML::Node& first = it.first;
-            load(first, k);
-            if (k == "control_points")
+            const std::string & key = iter->first.as<std::string>();
+
+            if (iter->second.IsNull() || !iter->second.IsDefined()) continue;
+
+            if (key == "control_points")
             {
                 std::vector<float> vals;
-                load(it.second, vals);
+                load(iter->second, vals);
                 const size_t numVals = vals.size();
                 if (numVals % 2 != 0)
                 {
-                    throwValueError(node.Tag(), first, "An even number of float values is "
+                    throwValueError(node.Tag(), iter->first, "An even number of float values is "
                         "required.");
                 }
                 const size_t numCtPts = numVals / 2;
@@ -1929,15 +1878,15 @@ inline void load(const YAML::Node & parent, const YAML::Node & node, GradingBSpl
                 }
                 cpOK = true;
             }
-            else if (k == "slopes")
+            else if (key == "slopes")
             {
                 std::vector<float> vals;
-                load(it.second, vals);
+                load(iter->second, vals);
                 const size_t numVals = vals.size();
                 const size_t numCtPts = sc->getNumControlPoints();
                 if (numVals != numCtPts)
                 {
-                    throwValueError(node.Tag(), first, "Number of slopes must match number "
+                    throwValueError(node.Tag(), iter->first, "Number of slopes must match number "
                         "of control points.");
                 }
                 for (size_t i = 0; i < numVals; ++i)
@@ -1947,9 +1896,10 @@ inline void load(const YAML::Node & parent, const YAML::Node & node, GradingBSpl
             }
             else
             {
-                LogUnknownKeyWarning(parent, first);
+                LogUnknownKeyWarning(parent, iter->first);
             }
         }
+
         if (!cpOK)
         {
             throwValueError(parent, "control_points is required.");
@@ -1971,64 +1921,60 @@ inline void load(const YAML::Node & node, GradingRGBCurveTransformRcPtr & t)
     GradingBSplineCurveRcPtr green;
     GradingBSplineCurveRcPtr blue;
     GradingBSplineCurveRcPtr master;
-    std::string key;
 
-    for (const auto & iter : node)
+    for (Iterator iter = node.begin(); iter != node.end(); ++iter)
     {
-        const YAML::Node& first = iter.first;
-        const YAML::Node& second = iter.second;
+        const std::string & key = iter->first.as<std::string>();
 
-        load(first, key);
-
-        if (second.IsNull() || !second.IsDefined()) continue;
+        if (iter->second.IsNull() || !iter->second.IsDefined()) continue;
 
         if (key == "style")
         {
             std::string style;
-            load(second, style);
+            load(iter->second, style);
             t->setStyle(GradingStyleFromString(style.c_str()));
         }
         else if (key == "direction")
         {
             TransformDirection val;
-            load(second, val);
+            load(iter->second, val);
             t->setDirection(val);
         }
         else if (key == "lintolog_bypass")
         {
             bool bypass = true;
-            load(second, bypass);
+            load(iter->second, bypass);
             t->setBypassLinToLog(bypass);
         }
         else if (key == "red")
         {
             red = GradingBSplineCurve::Create(0);
-            load(first, second, red);
+            load(iter->first, iter->second, red);
         }
         else if (key == "green")
         {
             green = GradingBSplineCurve::Create(0);
-            load(first, second, green);
+            load(iter->first, iter->second, green);
         }
         else if (key == "blue")
         {
             blue = GradingBSplineCurve::Create(0);
-            load(first, second, blue);
+            load(iter->first, iter->second, blue);
         }
         else if (key == "master")
         {
             master = GradingBSplineCurve::Create(0);
-            load(first, second, master);
+            load(iter->first, iter->second, master);
         }
         else if (key == "name")
         {
             std::string name;
-            load(second, name);
+            load(iter->second, name);
             t->getFormatMetadata().setName(name.c_str());
         }
         else
         {
-            LogUnknownKeyWarning(node.Tag(), first);
+            LogUnknownKeyWarning(node.Tag(), iter->first);
         }
     }
 
@@ -2129,44 +2075,47 @@ inline void load(const YAML::Node & parent, const YAML::Node & node, GradingRGBM
         bool masterOK{ false };
         bool startOK{ false };
         bool widthOK{ false };
-        for (const auto & it : node)
+
+        for (Iterator iter = node.begin(); iter != node.end(); ++iter)
         {
-            std::string k;
-            const YAML::Node& first = it.first;
-            load(first, k);
-            if (k == "rgb")
+            const std::string & key = iter->first.as<std::string>();
+
+            if (iter->second.IsNull() || !iter->second.IsDefined()) continue;
+
+            if (key == "rgb")
             {
                 std::vector<double> vals;
-                load(it.second, vals);
+                load(iter->second, vals);
                 if (vals.size() != 3)
                 {
-                    throwError(first, "The RGB value needs to be a 3 doubles.");
+                    throwError(iter->first, "The RGB value needs to be a 3 doubles.");
                 }
                 rgbm.m_red = vals[0];
                 rgbm.m_green = vals[1];
                 rgbm.m_blue = vals[2];
                 rgbOK = true;
             }
-            else if (k == "master")
+            else if (key == "master")
             {
-                load(it.second, rgbm.m_master);
+                load(iter->second, rgbm.m_master);
                 masterOK = true;
             }
-            else if (k == (center ? "center" : "start"))
+            else if (key == (center ? "center" : "start"))
             {
-                load(it.second, rgbm.m_start);
+                load(iter->second, rgbm.m_start);
                 startOK = true;
             }
-            else if (k == (pivot ? "pivot" : "width"))
+            else if (key == (pivot ? "pivot" : "width"))
             {
-                load(it.second, rgbm.m_width);
+                load(iter->second, rgbm.m_width);
                 widthOK = true;
             }
             else
             {
-                LogUnknownKeyWarning(parent, first);
+                LogUnknownKeyWarning(parent, iter->first);
             }
         }
+
         if (!rgbOK || !masterOK || !startOK || !widthOK)
         {
             std::ostringstream oss;
@@ -2194,67 +2143,63 @@ inline void load(const YAML::Node & node, GradingToneTransformRcPtr & t)
     bool whitesLoaded = false;
     GradingRGBMSW blacks, shadows, midtones, highlights, whites;
     double scontrast = 1.0;
-    std::string key;
 
-    for (const auto & iter : node)
+    for (Iterator iter = node.begin(); iter != node.end(); ++iter)
     {
-        const YAML::Node& first = iter.first;
-        const YAML::Node& second = iter.second;
+        const std::string & key = iter->first.as<std::string>();
 
-        load(first, key);
-
-        if (second.IsNull() || !second.IsDefined()) continue;
+        if (iter->second.IsNull() || !iter->second.IsDefined()) continue;
 
         if (key == "style")
         {
             std::string style;
-            load(second, style);
+            load(iter->second, style);
             t->setStyle(GradingStyleFromString(style.c_str()));
         }
         else if (key == "direction")
         {
             TransformDirection val;
-            load(second, val);
+            load(iter->second, val);
             t->setDirection(val);
         }
         else if (key == "blacks")
         {
             blacksLoaded = true;
-            load(first, second, blacks, false, false);
+            load(iter->first, iter->second, blacks, false, false);
         }
         else if (key == "shadows")
         {
             shadowsLoaded = true;
-            load(first, second, shadows, false, true);
+            load(iter->first, iter->second, shadows, false, true);
         }
         else if (key == "midtones")
         {
             midtonesLoaded = true;
-            load(first, second, midtones, true, false);
+            load(iter->first, iter->second, midtones, true, false);
         }
         else if (key == "highlights")
         {
             highlightsLoaded = true;
-            load(first, second, highlights, false, true);
+            load(iter->first, iter->second, highlights, false, true);
         }
         else if (key == "whites")
         {
             whitesLoaded = true;
-            load(first, second, whites, false, false);
+            load(iter->first, iter->second, whites, false, false);
         }
         else if (key == "s_contrast")
         {
-            load(second, scontrast);
+            load(iter->second, scontrast);
         }
         else if (key == "name")
         {
             std::string name;
-            load(second, name);
+            load(iter->second, name);
             t->getFormatMetadata().setName(name.c_str());
         }
         else
         {
-            LogUnknownKeyWarning(node.Tag(), first);
+            LogUnknownKeyWarning(node.Tag(), iter->first);
         }
     }
 
@@ -2324,21 +2269,18 @@ inline void load(const YAML::Node& node, GroupTransformRcPtr& t)
 
     CheckDuplicates(node);
 
-    std::string key;
-
-    for (const auto & iter : node)
+    for (Iterator iter = node.begin(); iter != node.end(); ++iter)
     {
-        const YAML::Node& first = iter.first;
-        const YAML::Node& second = iter.second;
+        const std::string & key = iter->first.as<std::string>();
 
-        load(first, key);
-
-        if (second.IsNull() || !second.IsDefined()) continue;
+        if (iter->second.IsNull() || !iter->second.IsDefined()) continue;
 
         if(key == "children")
         {
-            for(const auto & val : second)
+            for (std::size_t i = 0; i < iter->second.size(); i++)
             {
+                const YAML::Node & val = iter->second[i];
+
                 TransformRcPtr childTransform;
                 load(val, childTransform);
 
@@ -2346,7 +2288,7 @@ inline void load(const YAML::Node& node, GroupTransformRcPtr& t)
                 // throwing an exception.  Should this be a warning, instead?
                 if(!childTransform)
                 {
-                    throwValueError(node.Tag(), first, 
+                    throwValueError(node.Tag(), iter->first, 
                                     "Child transform could not be parsed.");
                 }
 
@@ -2356,18 +2298,18 @@ inline void load(const YAML::Node& node, GroupTransformRcPtr& t)
         else if(key == "direction")
         {
             TransformDirection val;
-            load(second, val);
+            load(iter->second, val);
             t->setDirection(val);
         }
         else if(key == "name")
         {
             std::string name;
-            load(second, name);
+            load(iter->second, name);
             t->getFormatMetadata().setName(name.c_str());
         }
         else
         {
-            LogUnknownKeyWarning(node, first);
+            LogUnknownKeyWarning(node, iter->first);
         }
     }
 }
@@ -2434,28 +2376,24 @@ inline void load(const YAML::Node& node, LogAffineTransformRcPtr& t)
 
     CheckDuplicates(node);
 
-    std::string key;
     double base = 2.0;
     double logSlope[3] = { 1.0, 1.0, 1.0 };
     double linSlope[3] = { 1.0, 1.0, 1.0 };
     double linOffset[3] = { 0.0, 0.0, 0.0 };
     double logOffset[3] = { 0.0, 0.0, 0.0 };
 
-    for (const auto & iter : node)
+    for (Iterator iter = node.begin(); iter != node.end(); ++iter)
     {
-        const YAML::Node& first = iter.first;
-        const YAML::Node& second = iter.second;
+        const std::string & key = iter->first.as<std::string>();
 
-        load(first, key);
-
-        if (second.IsNull() || !second.IsDefined()) continue;
+        if (iter->second.IsNull() || !iter->second.IsDefined()) continue;
 
         if (key == "base")
         {
-            size_t nb = second.size();
+            size_t nb = iter->second.size();
             if (nb == 0)
             {
-                load(second, base);
+                load(iter->second, base);
             }
             else
             {
@@ -2467,35 +2405,35 @@ inline void load(const YAML::Node& node, LogAffineTransformRcPtr& t)
         }
         else if (key == "lin_side_offset")
         {
-            loadLogParam(second, linOffset, key);
+            loadLogParam(iter->second, linOffset, key);
         }
         else if (key == "lin_side_slope")
         {
-            loadLogParam(second, linSlope, key);
+            loadLogParam(iter->second, linSlope, key);
         }
         else if (key == "log_side_offset")
         {
-            loadLogParam(second, logOffset, key);
+            loadLogParam(iter->second, logOffset, key);
         }
         else if (key == "log_side_slope")
         {
-            loadLogParam(second, logSlope, key);
+            loadLogParam(iter->second, logSlope, key);
         }
         else if(key == "direction")
         {
             TransformDirection val;
-            load(second, val);
+            load(iter->second, val);
             t->setDirection(val);
         }
         else if(key == "name")
         {
             std::string name;
-            load(second, name);
+            load(iter->second, name);
             t->getFormatMetadata().setName(name.c_str());
         }
         else
         {
-            LogUnknownKeyWarning(node, first);
+            LogUnknownKeyWarning(node, iter->first);
         }
     }
     t->setBase(base);
@@ -2565,7 +2503,6 @@ inline void load(const YAML::Node & node, LogCameraTransformRcPtr & t)
 
     CheckDuplicates(node);
 
-    std::string key;
     double base = 2.0;
     double logSlope[3] = { 1.0, 1.0, 1.0 };
     double linSlope[3] = { 1.0, 1.0, 1.0 };
@@ -2575,21 +2512,18 @@ inline void load(const YAML::Node & node, LogCameraTransformRcPtr & t)
     bool linBreakFound = false;
     bool linearSlopeFound = false;
 
-    for (const auto & iter : node)
+    for (Iterator iter = node.begin(); iter != node.end(); ++iter)
     {
-        const YAML::Node & first = iter.first;
-        const YAML::Node & second = iter.second;
+        const std::string & key = iter->first.as<std::string>();
 
-        load(first, key);
-
-        if (second.IsNull() || !second.IsDefined()) continue;
+        if (iter->second.IsNull() || !iter->second.IsDefined()) continue;
 
         if (key == "base")
         {
-            size_t nb = second.size();
+            size_t nb = iter->second.size();
             if (nb == 0)
             {
-                load(second, base);
+                load(iter->second, base);
             }
             else
             {
@@ -2601,45 +2535,45 @@ inline void load(const YAML::Node & node, LogCameraTransformRcPtr & t)
         }
         else if (key == "lin_side_offset")
         {
-            loadLogParam(second, linOffset, key);
+            loadLogParam(iter->second, linOffset, key);
         }
         else if (key == "lin_side_slope")
         {
-            loadLogParam(second, linSlope, key);
+            loadLogParam(iter->second, linSlope, key);
         }
         else if (key == "log_side_offset")
         {
-            loadLogParam(second, logOffset, key);
+            loadLogParam(iter->second, logOffset, key);
         }
         else if (key == "log_side_slope")
         {
-            loadLogParam(second, logSlope, key);
+            loadLogParam(iter->second, logSlope, key);
         }
         else if (key == "lin_side_break")
         {
             linBreakFound = true;
-            loadLogParam(second, linBreak, key);
+            loadLogParam(iter->second, linBreak, key);
         }
         else if (key == "linear_slope")
         {
             linearSlopeFound = true;
-            loadLogParam(second, linearSlope, key);
+            loadLogParam(iter->second, linearSlope, key);
         }
         else if (key == "direction")
         {
             TransformDirection val;
-            load(second, val);
+            load(iter->second, val);
             t->setDirection(val);
         }
         else if (key == "name")
         {
             std::string name;
-            load(second, name);
+            load(iter->second, name);
             t->getFormatMetadata().setName(name.c_str());
         }
         else
         {
-            LogUnknownKeyWarning(node, first);
+            LogUnknownKeyWarning(node, iter->first);
         }
     }
     if (!linBreakFound)
@@ -2705,24 +2639,19 @@ inline void load(const YAML::Node& node, LogTransformRcPtr& t)
 
     CheckDuplicates(node);
 
-    std::string key;
-
-    for (const auto & iter : node)
+    for (Iterator iter = node.begin(); iter != node.end(); ++iter)
     {
-        const YAML::Node& first = iter.first;
-        const YAML::Node& second = iter.second;
+        const std::string & key = iter->first.as<std::string>();
 
-        load(first, key);
-
-        if (second.IsNull() || !second.IsDefined()) continue;
+        if (iter->second.IsNull() || !iter->second.IsDefined()) continue;
 
         if (key == "base")
         {
             double base = 2.0;
-            size_t nb = second.size();
+            size_t nb = iter->second.size();
             if (nb == 0)
             {
-                load(second, base);
+                load(iter->second, base);
             }
             else
             {
@@ -2736,18 +2665,18 @@ inline void load(const YAML::Node& node, LogTransformRcPtr& t)
         else if (key == "direction")
         {
             TransformDirection val;
-            load(second, val);
+            load(iter->second, val);
             t->setDirection(val);
         }
         else if (key == "name")
         {
             std::string name;
-            load(second, name);
+            load(iter->second, name);
             t->getFormatMetadata().setName(name.c_str());
         }
         else
         {
-            LogUnknownKeyWarning(node.Tag(), first);
+            LogUnknownKeyWarning(node.Tag(), iter->first);
         }
     }
 }
@@ -2779,41 +2708,39 @@ inline void load(const YAML::Node& node, LookTransformRcPtr& t)
 
     CheckDuplicates(node);
 
-    std::string key, stringval;
-
-    for (const auto & iter : node)
+    for (Iterator iter = node.begin(); iter != node.end(); ++iter)
     {
-        const YAML::Node& first = iter.first;
-        const YAML::Node& second = iter.second;
+        const std::string & key = iter->first.as<std::string>();
 
-        load(first, key);
-
-        if (second.IsNull() || !second.IsDefined()) continue;
+        if (iter->second.IsNull() || !iter->second.IsDefined()) continue;
 
         if(key == "src")
         {
-            load(second, stringval);
+            std::string stringval;
+            load(iter->second, stringval);
             t->setSrc(stringval.c_str());
         }
         else if(key == "dst")
         {
-            load(second, stringval);
+            std::string stringval;
+            load(iter->second, stringval);
             t->setDst(stringval.c_str());
         }
         else if(key == "looks")
         {
-            load(second, stringval);
+            std::string stringval;
+            load(iter->second, stringval);
             t->setLooks(stringval.c_str());
         }
         else if(key == "direction")
         {
             TransformDirection val;
-            load(second, val);
+            load(iter->second, val);
             t->setDirection(val);
         }
         else
         {
-            LogUnknownKeyWarning(node, first);
+            LogUnknownKeyWarning(node, iter->first);
         }
     }
 }
@@ -2837,58 +2764,53 @@ inline void load(const YAML::Node& node, MatrixTransformRcPtr& t)
 
     CheckDuplicates(node);
 
-    std::string key;
-
-    for (const auto & iter : node)
+    for (Iterator iter = node.begin(); iter != node.end(); ++iter)
     {
-        const YAML::Node& first = iter.first;
-        const YAML::Node& second = iter.second;
+        const std::string & key = iter->first.as<std::string>();
 
-        load(first, key);
-
-        if (second.IsNull() || !second.IsDefined()) continue;
+        if (iter->second.IsNull() || !iter->second.IsDefined()) continue;
 
         if(key == "matrix")
         {
             std::vector<double> val;
-            load(second, val);
+            load(iter->second, val);
             if(val.size() != 16)
             {
                 std::ostringstream os;
                 os << "'matrix' values must be 16 ";
                 os << "numbers. Found '" << val.size() << "'.";
-                throwValueError(node.Tag(), first, os.str());
+                throwValueError(node.Tag(), iter->first, os.str());
             }
             t->setMatrix(&val[0]);
         }
         else if(key == "offset")
         {
             std::vector<double> val;
-            load(second, val);
+            load(iter->second, val);
             if(val.size() != 4)
             {
                 std::ostringstream os;
                 os << "'offset' values must be 4 ";
                 os << "numbers. Found '" << val.size() << "'.";
-                throwValueError(node.Tag(), first, os.str());
+                throwValueError(node.Tag(), iter->first, os.str());
             }
             t->setOffset(&val[0]);
         }
         else if(key == "direction")
         {
             TransformDirection val;
-            load(second, val);
+            load(iter->second, val);
             t->setDirection(val);
         }
         else if(key == "name")
         {
             std::string name;
-            load(second, name);
+            load(iter->second, name);
             t->getFormatMetadata().setName(name.c_str());
         }
         else
         {
-            LogUnknownKeyWarning(node, first);
+            LogUnknownKeyWarning(node, iter->first);
         }
     }
 }
@@ -2931,16 +2853,11 @@ inline void load(const YAML::Node& node, RangeTransformRcPtr& t)
 
     CheckDuplicates(node);
 
-    std::string key;
-
-    for (const auto & iter : node)
+    for (Iterator iter = node.begin(); iter != node.end(); ++iter)
     {
-        const YAML::Node& first = iter.first;
-        const YAML::Node& second = iter.second;
+        const std::string & key = iter->first.as<std::string>();
 
-        load(first, key);
-
-        if (second.IsNull() || !second.IsDefined()) continue;
+        if (iter->second.IsNull() || !iter->second.IsDefined()) continue;
 
         double val = 0.0;
 
@@ -2949,45 +2866,45 @@ inline void load(const YAML::Node& node, RangeTransformRcPtr& t)
         // are only there once.
         if(key == "min_in_value")
         {
-            load(second, val);
+            load(iter->second, val);
             t->setMinInValue(val);
         }
         else if(key == "max_in_value")
         {
-            load(second, val);
+            load(iter->second, val);
             t->setMaxInValue(val);
         }
         else if(key == "min_out_value")
         {
-            load(second, val);
+            load(iter->second, val);
             t->setMinOutValue(val);
         }
         else if(key == "max_out_value")
         {
-            load(second, val);
+            load(iter->second, val);
             t->setMaxOutValue(val);
         }
         else if(key == "style")
         {
             std::string style;
-            load(second, style);
+            load(iter->second, style);
             t->setStyle(RangeStyleFromString(style.c_str()));
         }
         else if(key == "direction")
         {
             TransformDirection dir;
-            load(second, dir);
+            load(iter->second, dir);
             t->setDirection(dir);
         }
         else if(key == "name")
         {
             std::string name;
-            load(second, name);
+            load(iter->second, name);
             t->getFormatMetadata().setName(name.c_str());
         }
         else
         {
-            LogUnknownKeyWarning(node, first);
+            LogUnknownKeyWarning(node, iter->first);
         }
     }
 }
@@ -3268,27 +3185,24 @@ inline void load(const YAML::Node& node, ColorSpaceRcPtr& cs, unsigned int major
 
     CheckDuplicates(node);
 
-    std::string key, stringval;
+    std::string stringval;
     bool boolval;
 
-    for (const auto & iter : node)
+    for (Iterator iter = node.begin(); iter != node.end(); ++iter)
     {
-        const YAML::Node& first = iter.first;
-        const YAML::Node& second = iter.second;
+        const std::string & key = iter->first.as<std::string>();
 
-        load(first, key);
-
-        if (second.IsNull() || !second.IsDefined()) continue;
+        if (iter->second.IsNull() || !iter->second.IsDefined()) continue;
 
         if(key == "name")
         {
-            load(second, stringval);
+            load(iter->second, stringval);
             cs->setName(stringval.c_str());
         }
         else if (key == "aliases")
         {
             StringUtils::StringVec aliases;
-            load(second, aliases);
+            load(iter->second, aliases);
             for (const auto & alias : aliases)
             {
                 cs->addAlias(alias.c_str());
@@ -3296,34 +3210,34 @@ inline void load(const YAML::Node& node, ColorSpaceRcPtr& cs, unsigned int major
         }
         else if(key == "description")
         {
-            loadDescription(second, stringval);
+            loadDescription(iter->second, stringval);
             cs->setDescription(stringval.c_str());
         }
         else if(key == "family")
         {
-            load(second, stringval);
+            load(iter->second, stringval);
             cs->setFamily(stringval.c_str());
         }
         else if(key == "equalitygroup")
         {
-            load(second, stringval);
+            load(iter->second, stringval);
             cs->setEqualityGroup(stringval.c_str());
         }
         else if(key == "bitdepth")
         {
             BitDepth ret;
-            load(second, ret);
+            load(iter->second, ret);
             cs->setBitDepth(ret);
         }
         else if(key == "isdata")
         {
-            load(second, boolval);
+            load(iter->second, boolval);
             cs->setIsData(boolval);
         }
         else if(key == "categories")
         {
             StringUtils::StringVec categories;
-            load(second, categories);
+            load(iter->second, categories);
             for(auto name : categories)
             {
                 cs->addCategory(name.c_str());
@@ -3331,19 +3245,19 @@ inline void load(const YAML::Node& node, ColorSpaceRcPtr& cs, unsigned int major
         }
         else if (key == "encoding")
         {
-            load(second, stringval);
+            load(iter->second, stringval);
             cs->setEncoding(stringval.c_str());
         }
         else if(key == "allocation")
         {
             Allocation val;
-            load(second, val);
+            load(iter->second, val);
             cs->setAllocation(val);
         }
         else if(key == "allocationvars")
         {
             std::vector<float> val;
-            load(second, val);
+            load(iter->second, val);
             if(!val.empty())
                 cs->setAllocationVars(static_cast<int>(val.size()), &val[0]);
         }
@@ -3355,7 +3269,7 @@ inline void load(const YAML::Node& node, ColorSpaceRcPtr& cs, unsigned int major
                                  "display color space.");
             }
             TransformRcPtr val;
-            load(second, val);
+            load(iter->second, val);
             cs->setTransform(val, COLORSPACE_DIR_TO_REFERENCE);
         }
         else if (key == "to_display_reference")
@@ -3366,7 +3280,7 @@ inline void load(const YAML::Node& node, ColorSpaceRcPtr& cs, unsigned int major
                                  "non-display color space.");
             }
             TransformRcPtr val;
-            load(second, val);
+            load(iter->second, val);
             cs->setTransform(val, COLORSPACE_DIR_TO_REFERENCE);
         }
         else if(key == "from_reference" || (majorVersion >= 2 && key == "from_scene_reference"))
@@ -3377,7 +3291,7 @@ inline void load(const YAML::Node& node, ColorSpaceRcPtr& cs, unsigned int major
                                  "a display color space.");
             }
             TransformRcPtr val;
-            load(second, val);
+            load(iter->second, val);
             cs->setTransform(val, COLORSPACE_DIR_FROM_REFERENCE);
         }
         else if (key == "from_display_reference")
@@ -3388,12 +3302,12 @@ inline void load(const YAML::Node& node, ColorSpaceRcPtr& cs, unsigned int major
                                  "non-display color space.");
             }
             TransformRcPtr val;
-            load(second, val);
+            load(iter->second, val);
             cs->setTransform(val, COLORSPACE_DIR_FROM_REFERENCE);
         }
         else
         {
-            LogUnknownKeyWarning(node, first);
+            LogUnknownKeyWarning(node, iter->first);
         }
     }
 }
@@ -3482,47 +3396,45 @@ inline void load(const YAML::Node& node, LookRcPtr& look)
 
     CheckDuplicates(node);
 
-    std::string key, stringval;
-
-    for (const auto & iter : node)
+    for (Iterator iter = node.begin(); iter != node.end(); ++iter)
     {
-        const YAML::Node& first = iter.first;
-        const YAML::Node& second = iter.second;
+        const std::string & key = iter->first.as<std::string>();
 
-        load(first, key);
-
-        if (second.IsNull() || !second.IsDefined()) continue;
+        if (iter->second.IsNull() || !iter->second.IsDefined()) continue;
 
         if(key == "name")
         {
-            load(second, stringval);
+            std::string stringval;
+            load(iter->second, stringval);
             look->setName(stringval.c_str());
         }
         else if(key == "process_space")
         {
-            load(second, stringval);
+            std::string stringval;
+            load(iter->second, stringval);
             look->setProcessSpace(stringval.c_str());
         }
         else if(key == "transform")
         {
             TransformRcPtr val;
-            load(second, val);
+            load(iter->second, val);
             look->setTransform(val);
         }
         else if(key == "inverse_transform")
         {
             TransformRcPtr val;
-            load(second, val);
+            load(iter->second, val);
             look->setInverseTransform(val);
         }
         else if(key == "description")
         {
-            loadDescription(second, stringval);
+            std::string stringval;
+            loadDescription(iter->second, stringval);
             look->setDescription(stringval.c_str());
         }
         else
         {
-            LogUnknownKeyWarning(node, first);
+            LogUnknownKeyWarning(node, iter->first);
         }
     }
 }
@@ -3562,18 +3474,14 @@ inline ReferenceSpaceType peekViewTransformReferenceSpace(const YAML::Node & nod
         throwError(node, "The '!<ViewTransform>' content needs to be a map.");
     }
 
-    std::string key;
     bool isScene = false;
     bool isDisplay = false;
 
-    for (const auto & iter : node)
+    for (Iterator iter = node.begin(); iter != node.end(); ++iter)
     {
-        const YAML::Node& first = iter.first;
-        const YAML::Node& second = iter.second;
+        const std::string & key = iter->first.as<std::string>();
 
-        load(first, key);
-
-        if (second.IsNull() || !second.IsDefined()) continue;
+        if (iter->second.IsNull() || !iter->second.IsDefined()) continue;
 
         if (key == "to_scene_reference")
         {
@@ -3622,36 +3530,34 @@ inline void load(const YAML::Node & node, ViewTransformRcPtr & vt)
     
     CheckDuplicates(node);
 
-    std::string key, stringval;
-
-    for (const auto & iter : node)
+    for (Iterator iter = node.begin(); iter != node.end(); ++iter)
     {
-        const YAML::Node& first = iter.first;
-        const YAML::Node& second = iter.second;
+        const std::string & key = iter->first.as<std::string>();
 
-        load(first, key);
-
-        if (second.IsNull() || !second.IsDefined()) continue;
+        if (iter->second.IsNull() || !iter->second.IsDefined()) continue;
 
         if (key == "name")
         {
-            load(second, stringval);
+            std::string stringval;
+            load(iter->second, stringval);
             vt->setName(stringval.c_str());
         }
         else if (key == "description")
         {
-            loadDescription(second, stringval);
+            std::string stringval;
+            loadDescription(iter->second, stringval);
             vt->setDescription(stringval.c_str());
         }
         else if (key == "family")
         {
-            load(second, stringval);
+            std::string stringval;
+            load(iter->second, stringval);
             vt->setFamily(stringval.c_str());
         }
         else if (key == "categories")
         {
             StringUtils::StringVec categories;
-            load(second, categories);
+            load(iter->second, categories);
             for (auto name : categories)
             {
                 vt->addCategory(name.c_str());
@@ -3660,30 +3566,30 @@ inline void load(const YAML::Node & node, ViewTransformRcPtr & vt)
         else if (key == "to_scene_reference")
         {
             TransformRcPtr val;
-            load(second, val);
+            load(iter->second, val);
             vt->setTransform(val, VIEWTRANSFORM_DIR_TO_REFERENCE);
         }
         else if (key == "to_display_reference")
         {
             TransformRcPtr val;
-            load(second, val);
+            load(iter->second, val);
             vt->setTransform(val, VIEWTRANSFORM_DIR_TO_REFERENCE);
         }
         else if (key == "from_scene_reference")
         {
             TransformRcPtr val;
-            load(second, val);
+            load(iter->second, val);
             vt->setTransform(val, VIEWTRANSFORM_DIR_FROM_REFERENCE);
         }
         else if (key == "from_display_reference")
         {
             TransformRcPtr val;
-            load(second, val);
+            load(iter->second, val);
             vt->setTransform(val, VIEWTRANSFORM_DIR_FROM_REFERENCE);
         }
         else
         {
-            LogUnknownKeyWarning(node, first);
+            LogUnknownKeyWarning(node, iter->first);
         }
     }
 }
@@ -3749,26 +3655,23 @@ inline void load(const YAML::Node & node, NamedTransformRcPtr & nt)
 
     CheckDuplicates(node);
 
-    std::string key, stringval;
+    std::string stringval;
 
-    for (const auto & iter : node)
+    for (Iterator iter = node.begin(); iter != node.end(); ++iter)
     {
-        const YAML::Node& first = iter.first;
-        const YAML::Node& second = iter.second;
+        const std::string & key = iter->first.as<std::string>();
 
-        load(first, key);
-
-        if (second.IsNull() || !second.IsDefined()) continue;
+        if (iter->second.IsNull() || !iter->second.IsDefined()) continue;
 
         if (key == "name")
         {
-            load(second, stringval);
+            load(iter->second, stringval);
             nt->setName(stringval.c_str());
         }
         else if (key == "aliases")
         {
             StringUtils::StringVec aliases;
-            load(second, aliases);
+            load(iter->second, aliases);
             for (const auto & alias : aliases)
             {
                 nt->addAlias(alias.c_str());
@@ -3776,18 +3679,18 @@ inline void load(const YAML::Node & node, NamedTransformRcPtr & nt)
         }
         else if (key == "description")
         {
-            load(second, stringval);
+            load(iter->second, stringval);
             nt->setDescription(stringval.c_str());
         }
         else if (key == "family")
         {
-            load(second, stringval);
+            load(iter->second, stringval);
             nt->setFamily(stringval.c_str());
         }
         else if (key == "categories")
         {
             StringUtils::StringVec categories;
-            load(second, categories);
+            load(iter->second, categories);
             for (auto name : categories)
             {
                 nt->addCategory(name.c_str());
@@ -3795,24 +3698,24 @@ inline void load(const YAML::Node & node, NamedTransformRcPtr & nt)
         }
         else if (key == "encoding")
         {
-            load(second, stringval);
+            load(iter->second, stringval);
             nt->setEncoding(stringval.c_str());
         }
         else if (key == "transform")
         {
             TransformRcPtr val;
-            load(second, val);
+            load(iter->second, val);
             nt->setTransform(val, TRANSFORM_DIR_FORWARD);
         }
         else if (key == "inverse_transform")
         {
             TransformRcPtr val;
-            load(second, val);
+            load(iter->second, val);
             nt->setTransform(val, TRANSFORM_DIR_INVERSE);
         }
         else
         {
-            LogUnknownKeyWarning(node, first);
+            LogUnknownKeyWarning(node, iter->first);
         }
     }
 }
@@ -3890,15 +3793,13 @@ inline void loadCustomKeys(const YAML::Node& node, CustomKeysLoader & ck)
 {
     if (node.Type() == YAML::NodeType::Map)
     {
-        for (const auto & it : node)
+        for (Iterator iter = node.begin(); iter != node.end(); ++iter)
         {
-            std::string k;
-            std::string v;
-            const YAML::Node& first = it.first;
-            load(first, k);
-            load(it.second, v);
-            ck.m_keyVals.push_back(k);
-            ck.m_keyVals.push_back(v);
+            const std::string & key = iter->first.as<std::string>();
+            const std::string & val = iter->second.as<std::string>();
+
+            ck.m_keyVals.push_back(key);
+            ck.m_keyVals.push_back(val);
         }
     }
     else
@@ -3914,53 +3815,50 @@ inline void load(const YAML::Node & node, FileRulesRcPtr & fr, bool & defaultRul
 
     CheckDuplicates(node);
 
-    std::string key, stringval;
+    std::string stringval;
     std::string name, colorspace, pattern, extension, regex;
     StringUtils::StringVec keyVals;
 
-    for (const auto & iter : node)
+    for (Iterator iter = node.begin(); iter != node.end(); ++iter)
     {
-        const YAML::Node & first = iter.first;
-        const YAML::Node & second = iter.second;
+        const std::string & key = iter->first.as<std::string>();
 
-        load(first, key);
-
-        if (second.IsNull() || !second.IsDefined()) continue;
+        if (iter->second.IsNull() || !iter->second.IsDefined()) continue;
 
         if (key == FileRuleUtils::Name)
         {
-            load(second, stringval);
+            load(iter->second, stringval);
             name = stringval;
         }
         else if (key == FileRuleUtils::ColorSpace)
         {
-            load(second, stringval);
+            load(iter->second, stringval);
             colorspace = stringval;
         }
         else if (key == FileRuleUtils::Pattern)
         {
-            load(second, stringval);
+            load(iter->second, stringval);
             pattern = stringval;
         }
         else if (key == FileRuleUtils::Extension)
         {
-            load(second, stringval);
+            load(iter->second, stringval);
             extension = stringval;
         }
         else if (key == FileRuleUtils::Regex)
         {
-            load(second, stringval);
+            load(iter->second, stringval);
             regex = stringval;
         }
         else if (key == FileRuleUtils::CustomKey)
         {
             CustomKeysLoader kv;
-            loadCustomKeys(second, kv);
+            loadCustomKeys(iter->second, kv);
             keyVals = kv.m_keyVals;
         }
         else
         {
-            LogUnknownKeyWarning(node, first);
+            LogUnknownKeyWarning(node, iter->first);
         }
     }
 
@@ -4090,60 +3988,57 @@ inline void load(const YAML::Node & node, ViewingRulesRcPtr & vr)
     if (node.Tag() != "Rule")
         return;
 
-    std::string key, stringval;
+    std::string stringval;
     std::string name;
     StringUtils::StringVec colorspaces, encodings;
     StringUtils::StringVec keyVals;
 
-    for (const auto & iter : node)
+    for (Iterator iter = node.begin(); iter != node.end(); ++iter)
     {
-        const YAML::Node & first = iter.first;
-        const YAML::Node & second = iter.second;
+        const std::string & key = iter->first.as<std::string>();
 
-        load(first, key);
-
-        if (second.IsNull() || !second.IsDefined()) continue;
+        if (iter->second.IsNull() || !iter->second.IsDefined()) continue;
 
         if (key == ViewingRuleUtils::Name)
         {
-            load(second, stringval);
+            load(iter->second, stringval);
             name = stringval;
         }
         else if (key == ViewingRuleUtils::ColorSpaces)
         {
-            if (second.Type() == YAML::NodeType::Sequence)
+            if (iter->second.Type() == YAML::NodeType::Sequence)
             {
-                load(second, colorspaces);
+                load(iter->second, colorspaces);
             }
             else
             {
                 // If a single value is supplied...
-                load(second, stringval);
+                load(iter->second, stringval);
                 colorspaces.emplace_back(stringval);
             }
         }
         else if (key == ViewingRuleUtils::Encodings)
         {
-            if (second.Type() == YAML::NodeType::Sequence)
+            if (iter->second.Type() == YAML::NodeType::Sequence)
             {
-                load(second, encodings);
+                load(iter->second, encodings);
             }
             else
             {
                 // If a single value is supplied...
-                load(second, stringval);
+                load(iter->second, stringval);
                 encodings.emplace_back(stringval);
             }
         }
         else if (key == ViewingRuleUtils::CustomKey)
         {
             CustomKeysLoader kv;
-            loadCustomKeys(second, kv);
+            loadCustomKeys(iter->second, kv);
             keyVals = kv.m_keyVals;
         }
         else
         {
-            LogUnknownKeyWarning(node, first);
+            LogUnknownKeyWarning(node, iter->first);
         }
     }
 
@@ -4311,47 +4206,43 @@ inline void load(const YAML::Node& node, ConfigRcPtr & config, const char* filen
 
     CheckDuplicates(node);
 
-    std::string key, stringval;
+    std::string stringval;
     bool boolval = false;
     EnvironmentMode mode = ENV_ENVIRONMENT_LOAD_ALL;
 
-    for (const auto & iter : node)
+    for (Iterator iter = node.begin(); iter != node.end(); ++iter)
     {
-        const YAML::Node& first = iter.first;
-        const YAML::Node& second = iter.second;
+        const std::string & key = iter->first.as<std::string>();
 
-        load(first, key);
-
-        if (second.IsNull() || !second.IsDefined()) continue;
+        if (iter->second.IsNull() || !iter->second.IsDefined()) continue;
 
         if(key == "ocio_profile_version") { } // Already handled above.
         else if(key == "environment")
         {
             mode = ENV_ENVIRONMENT_LOAD_PREDEFINED;
-            if(second.Type() != YAML::NodeType::Map)
+            if(iter->second.Type() != YAML::NodeType::Map)
             {
-                throwValueError(node.Tag(), first, "The value type of key 'environment' needs "
-                                                   "to be a map.");
+                throwValueError(node.Tag(), iter->first, 
+                                "The value type of key 'environment' needs to be a map.");
             }
-            for (const auto & it : second)
+            for (Iterator it = iter->second.begin(); it != iter->second.end(); ++it)
             {
-                std::string k, v;
-                load(it.first, k);
-                load(it.second, v);
+                const std::string & k = it->first.as<std::string>();
+                const std::string & v = it->second.as<std::string>();
                 config->addEnvironmentVar(k.c_str(), v.c_str());
             }
         }
         else if(key == "search_path" || key == "resource_path")
         {
-            if (second.size() == 0)
+            if (iter->second.size() == 0)
             {
-                load(second, stringval);
+                load(iter->second, stringval);
                 config->setSearchPath(stringval.c_str());
             }
             else
             {
                 StringUtils::StringVec paths;
-                load(second, paths);
+                load(iter->second, paths);
                 for (const auto & path : paths)
                 {
                     config->addSearchPath(path.c_str());
@@ -4360,12 +4251,12 @@ inline void load(const YAML::Node& node, ConfigRcPtr & config, const char* filen
         }
         else if(key == "strictparsing")
         {
-            load(second, boolval);
+            load(iter->second, boolval);
             config->setStrictParsingEnabled(boolval);
         }
         else if (key == "name")
         {
-            loadDescription(second, stringval);
+            loadDescription(iter->second, stringval);
             config->setName(stringval.c_str());
         }
         else if (key=="family_separator")
@@ -4374,49 +4265,48 @@ inline void load(const YAML::Node& node, ConfigRcPtr & config, const char* filen
             // able to detect this).
             if (config->getMajorVersion() < 2)
             {
-                throwError(first, "Config v1 can't have 'family_separator'.");
+                throwError(iter->first, "Config v1 can't have 'family_separator'.");
             }
 
-            load(second, stringval);
+            load(iter->second, stringval);
             if(stringval.size()!=1)
             {
                 std::ostringstream os;
                 os << "'family_separator' value must be a single character.";
                 os << " Found '" << stringval << "'.";
-                throwValueError(node.Tag(), first, os.str());
+                throwValueError(node.Tag(), iter->first, os.str());
             }
             config->setFamilySeparator(stringval[0]);
         }
         else if(key == "description")
         {
-            loadDescription(second, stringval);
+            loadDescription(iter->second, stringval);
             config->setDescription(stringval.c_str());
         }
         else if(key == "luma")
         {
             std::vector<double> val;
-            load(second, val);
+            load(iter->second, val);
             if(val.size() != 3)
             {
                 std::ostringstream os;
                 os << "'luma' values must be 3 ";
                 os << "floats. Found '" << val.size() << "'.";
-                throwValueError(node.Tag(), first, os.str());
+                throwValueError(node.Tag(), iter->first, os.str());
             }
             config->setDefaultLumaCoefs(&val[0]);
         }
         else if(key == "roles")
         {
-            if(second.Type() != YAML::NodeType::Map)
+            if(iter->second.Type() != YAML::NodeType::Map)
             {
-                throwValueError(node.Tag(), first, "The value type of the key 'roles' needs "
-                                                   "to be a map.");
+                throwValueError(node.Tag(), iter->first,
+                                "The value type of the key 'roles' needs to be a map.");
             }
-            for (const auto & it : second)
+            for (Iterator it = iter->second.begin(); it != iter->second.end(); ++it)
             {
-                std::string k, v;
-                load(it.first, k);
-                load(it.second, v);
+                const std::string & k = it->first.as<std::string>();
+                const std::string & v = it->second.as<std::string>();
                 config->setRole(k.c_str(), v.c_str());
             }
         }
@@ -4426,21 +4316,23 @@ inline void load(const YAML::Node& node, ConfigRcPtr & config, const char* filen
             // able to detect this).
             if (config->getMajorVersion() < 2)
             {
-                throwError(first, "Config v1 can't use 'file_rules'");
+                throwError(iter->first, "Config v1 can't use 'file_rules'");
             }
 
-            if (second.Type() != YAML::NodeType::Sequence)
+            if (iter->second.Type() != YAML::NodeType::Sequence)
             {
-                throwError(second, "The 'file_rules' field needs to be a (- !<Rule>) list.");
+                throwError(iter->second, "The 'file_rules' field needs to be a (- !<Rule>) list.");
             }
 
-            for (const auto & val : second)
+            for (std::size_t i = 0; i < iter->second.size(); i++)
             {
+                const YAML::Node & val = iter->second[i];
+
                 if (val.Tag() == "Rule")
                 {
                     if (defaultFileRuleFound)
                     {
-                        throwError(second, "The 'file_rules' Default rule has to be "
+                        throwError(iter->second, "The 'file_rules' Default rule has to be "
                                            "the last rule.");
                     }
                     load(val, fileRules, defaultFileRuleFound);
@@ -4456,20 +4348,23 @@ inline void load(const YAML::Node& node, ConfigRcPtr & config, const char* filen
 
             if (!defaultFileRuleFound)
             {
-                throwError(first, "The 'file_rules' does not contain a Default <Rule>.");
+                throwError(iter->first, "The 'file_rules' does not contain a Default <Rule>.");
             }
             fileRulesFound = true;
         }
         else if (key == "viewing_rules")
         {
-            if (second.Type() != YAML::NodeType::Sequence)
+            if (iter->second.Type() != YAML::NodeType::Sequence)
             {
-                throwError(second, "The 'viewing_rules' field needs to be a (- !<Rule>) list.");
+                throwError(iter->second, "The 'viewing_rules' field needs to be a (- !<Rule>) list.");
             }
 
             auto viewingRules = ViewingRules::Create();
-            for (const auto & val : second)
+
+            for (std::size_t i = 0; i < iter->second.size(); i++)
             {
+                const YAML::Node & val = iter->second[i];
+
                 if (val.Tag() == "Rule")
                 {
                     load(val, viewingRules);
@@ -4487,13 +4382,15 @@ inline void load(const YAML::Node& node, ConfigRcPtr & config, const char* filen
         }
         else if (key == "shared_views")
         {
-            if (second.Type() != YAML::NodeType::Sequence)
+            if (iter->second.Type() != YAML::NodeType::Sequence)
             {
-                throwValueError(node.Tag(), first, "The view list is a sequence.");
+                throwValueError(node.Tag(), iter->first, "The view list is a sequence.");
             }
 
-            for (const auto & val : second)
+            for (std::size_t i = 0; i < iter->second.size(); i++)
             {
+                const YAML::Node & val = iter->second[i];
+
                 View view;
                 load(val, view);
                 config->addSharedView(view.m_name.c_str(),
@@ -4504,37 +4401,37 @@ inline void load(const YAML::Node& node, ConfigRcPtr & config, const char* filen
         }
         else if (key == "displays")
         {
-            if(second.Type() != YAML::NodeType::Map)
+            if(iter->second.Type() != YAML::NodeType::Map)
             {
-                throwValueError(node.Tag(), first, "The value type of the key 'displays' "
-                                                   "needs to be a map.");
+                throwValueError(node.Tag(), iter->first,
+                                "The value type of the key 'displays' needs to be a map.");
             }
-            for (const auto & it : second)
+            for (Iterator it = iter->second.begin(); it != iter->second.end(); ++it)
             {
-                std::string display;
-                load(it.first, display);
+                const std::string & display = it->first.as<std::string>();
 
-                const YAML::Node& dsecond = it.second;
-                if (dsecond.Type() != YAML::NodeType::Sequence)
+                if (it->second.Type() != YAML::NodeType::Sequence)
                 {
-                    throwValueError(node.Tag(), first, "The view list is a sequence.");
+                    throwValueError(node.Tag(), iter->first, "The view list is a sequence.");
                 }
 
-                for (const auto & val : dsecond)
+                for (std::size_t i = 0; i < it->second.size(); i++)
                 {
-                    if (val.Tag() == "View")
+                    const YAML::Node & node = it->second[i];
+
+                    if (node.Tag() == "View")
                     {
                         View view;
-                        load(val, view);
+                        load(node, view);
                         config->addDisplayView(display.c_str(), view.m_name.c_str(),
                                                view.m_viewTransform.c_str(), view.m_colorspace.c_str(),
                                                view.m_looks.c_str(), view.m_rule.c_str(),
                                                view.m_description.c_str());
                     }
-                    else if (val.Tag() == "Views")
+                    else if (node.Tag() == "Views")
                     {
                         StringUtils::StringVec views;
-                        load(val, views);
+                        load(node, views);
                         for (const auto & sharedView : views)
                         {
                             config->addDisplaySharedView(display.c_str(), sharedView.c_str());
@@ -4545,13 +4442,15 @@ inline void load(const YAML::Node& node, ConfigRcPtr & config, const char* filen
         }
         else if (key == "virtual_display")
         {
-            if (second.Type() != YAML::NodeType::Sequence)
+            if (iter->second.Type() != YAML::NodeType::Sequence)
             {
-                throwValueError(node.Tag(), first, "The view list is a sequence.");
+                throwValueError(node.Tag(), iter->first, "The view list is a sequence.");
             }
 
-            for (const auto & val : second)
+            for (std::size_t i = 0; i < iter->second.size(); i++)
             {
+                const YAML::Node & val = iter->second[i];
+
                 if (val.Tag() == "View")
                 {
                     View view;
@@ -4584,32 +4483,35 @@ inline void load(const YAML::Node& node, ConfigRcPtr & config, const char* filen
         else if(key == "active_displays")
         {
             StringUtils::StringVec display;
-            load(second, display);
+            load(iter->second, display);
             std::string displays = JoinStringEnvStyle(display);
             config->setActiveDisplays(displays.c_str());
         }
         else if(key == "active_views")
         {
             StringUtils::StringVec view;
-            load(second, view);
+            load(iter->second, view);
             std::string views = JoinStringEnvStyle(view);
             config->setActiveViews(views.c_str());
         }
         else if(key == "inactive_colorspaces")
         {
             StringUtils::StringVec inactiveCSs;
-            load(second, inactiveCSs);
+            load(iter->second, inactiveCSs);
             const std::string inactivecCSsStr = JoinStringEnvStyle(inactiveCSs);
             config->setInactiveColorSpaces(inactivecCSsStr.c_str());
         }
         else if(key == "colorspaces")
         {
-            if (second.Type() != YAML::NodeType::Sequence)
+            if (iter->second.Type() != YAML::NodeType::Sequence)
             {
-                throwError(second, "'colorspaces' field needs to be a (- !<ColorSpace>) list.");
+                throwError(iter->second, "'colorspaces' field needs to be a (- !<ColorSpace>) list.");
             }
-            for(const auto & val : second)
+
+            for (std::size_t i = 0; i < iter->second.size(); i++)
             {
+                const YAML::Node & val = iter->second[i];
+
                 if(val.Tag() == "ColorSpace")
                 {
                     ColorSpaceRcPtr cs = ColorSpace::Create(REFERENCE_SPACE_SCENE);
@@ -4620,7 +4522,7 @@ inline void load(const YAML::Node& node, ConfigRcPtr & config, const char* filen
                         {
                             std::ostringstream os;
                             os << "Colorspace with name '" << cs->getName() << "' already defined.";
-                            throwError(second, os.str());
+                            throwError(iter->second, os.str());
                         }
                     }
                     config->addColorSpace(cs);
@@ -4637,12 +4539,15 @@ inline void load(const YAML::Node& node, ConfigRcPtr & config, const char* filen
         }
         else if (key == "display_colorspaces")
         {
-            if (second.Type() != YAML::NodeType::Sequence)
+            if (iter->second.Type() != YAML::NodeType::Sequence)
             {
-                throwError(second, "'display_colorspaces' field needs to be a (- !<ColorSpace>) list.");
+                throwError(iter->second, "'display_colorspaces' field needs to be a (- !<ColorSpace>) list.");
             }
-            for (const auto & val : second)
+
+            for (std::size_t i = 0; i < iter->second.size(); i++)
             {
+                const YAML::Node & val = iter->second[i];
+
                 if (val.Tag() == "ColorSpace")
                 {
                     ColorSpaceRcPtr cs = ColorSpace::Create(REFERENCE_SPACE_DISPLAY);
@@ -4653,7 +4558,7 @@ inline void load(const YAML::Node& node, ConfigRcPtr & config, const char* filen
                         {
                             std::ostringstream os;
                             os << "Colorspace with name '" << cs->getName() << "' already defined.";
-                            throwError(second, os.str());
+                            throwError(iter->second, os.str());
                         }
                     }
                     config->addColorSpace(cs);
@@ -4670,13 +4575,15 @@ inline void load(const YAML::Node& node, ConfigRcPtr & config, const char* filen
         }
         else if (key == "looks")
         {
-            if (second.Type() != YAML::NodeType::Sequence)
+            if (iter->second.Type() != YAML::NodeType::Sequence)
             {
-                throwError(second, "'looks' field needs to be a (- !<Look>) list.");
+                throwError(iter->second, "'looks' field needs to be a (- !<Look>) list.");
             }
 
-            for(const auto & val : second)
+            for (std::size_t i = 0; i < iter->second.size(); i++)
             {
+                const YAML::Node & val = iter->second[i];
+
                 if(val.Tag() == "Look")
                 {
                     LookRcPtr look = Look::Create();
@@ -4695,13 +4602,15 @@ inline void load(const YAML::Node& node, ConfigRcPtr & config, const char* filen
         }
         else if (key == "view_transforms")
         {
-            if (second.Type() != YAML::NodeType::Sequence)
+            if (iter->second.Type() != YAML::NodeType::Sequence)
             {
-                throwError(second, "'view_transforms' field needs to be a (- !<ViewTransform>) list.");
+                throwError(iter->second, "'view_transforms' field needs to be a (- !<ViewTransform>) list.");
             }
 
-            for (const auto & val : second)
+            for (std::size_t i = 0; i < iter->second.size(); i++)
             {
+                const YAML::Node & val = iter->second[i];
+
                 if (val.Tag() == "ViewTransform")
                 {
                     ReferenceSpaceType rst = peekViewTransformReferenceSpace(val);
@@ -4721,19 +4630,21 @@ inline void load(const YAML::Node& node, ConfigRcPtr & config, const char* filen
         }
         else if (key == "default_view_transform")
         {
-            load(second, stringval);
+            load(iter->second, stringval);
             config->setDefaultViewTransformName(stringval.c_str());
         }
         else if (key == "named_transforms")
         {
-            if (second.Type() != YAML::NodeType::Sequence)
+            if (iter->second.Type() != YAML::NodeType::Sequence)
             {
-                throwError(second, "'named_transforms' field needs to be a (- !<NamedTransform>) "
-                                   "list.");
+                throwError(iter->second, 
+                           "'named_transforms' field needs to be a (- !<NamedTransform>) list.");
             }
 
-            for (const auto & val : second)
+            for (std::size_t i = 0; i < iter->second.size(); i++)
             {
+                const YAML::Node & val = iter->second[i];
+
                 if (val.Tag() == "NamedTransform")
                 {
                     auto nt = NamedTransform::Create();
@@ -4764,7 +4675,7 @@ inline void load(const YAML::Node& node, ConfigRcPtr & config, const char* filen
         }
         else
         {
-            LogUnknownKeyWarning("profile", first);
+            LogUnknownKeyWarning("profile", iter->first);
         }
     }
 
