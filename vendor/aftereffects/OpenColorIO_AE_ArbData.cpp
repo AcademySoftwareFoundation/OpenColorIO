@@ -9,6 +9,17 @@
 #include <assert.h>
 
 
+// version of strncpy that guarantees the string will be null-terminated
+char *nt_strncpy(char *dst, const char *src, size_t n)
+{
+    strncpy(dst, src, n);
+    
+    dst[n-1] = '\0';
+    
+    return dst;
+}
+
+
 PF_Err ArbNewDefault(PF_InData *in_data, PF_OutData *out_data,
     void                *refconPV,
     PF_ArbitraryH       *arbPH)
@@ -17,6 +28,8 @@ PF_Err ArbNewDefault(PF_InData *in_data, PF_OutData *out_data,
     
     if(arbPH)
     {
+        assert(sizeof(ArbitraryData) == 900);
+    
         *arbPH = PF_NEW_HANDLE( sizeof(ArbitraryData) );
         
         if(*arbPH)
@@ -33,14 +46,15 @@ PF_Err ArbNewDefault(PF_InData *in_data, PF_OutData *out_data,
             arb_data->storage_size      = 0;
             arb_data->source            = OCIO_SOURCE_NONE;
             arb_data->interpolation     = OCIO_INTERP_LINEAR;
+            memset(arb_data->reserved, 0, 54);
             
             arb_data->path[0]           = '\0';
             arb_data->relative_path[0]  = '\0';
             
             arb_data->input[0]          = '\0';
             arb_data->output[0]         = '\0';
-            arb_data->transform[0]      = '\0';
-            arb_data->device[0]         = '\0';
+            arb_data->view[0]           = '\0';
+            arb_data->display[0]        = '\0';
             arb_data->look[0]           = '\0';
             
             
@@ -54,17 +68,17 @@ PF_Err ArbNewDefault(PF_InData *in_data, PF_OutData *out_data,
                 {
                     OpenColorIO_AE_Context context(env, OCIO_SOURCE_ENVIRONMENT);
                     
-                    strncpy(arb_data->path, env.c_str(), ARB_PATH_LEN);
+                    nt_strncpy(arb_data->path, env.c_str(), ARB_PATH_LEN+1);
                     
                     arb_data->action = context.getAction();
                     arb_data->source = OCIO_SOURCE_ENVIRONMENT;
                     
                     if(arb_data->action != OCIO_ACTION_LUT)
                     {
-                        strncpy(arb_data->input, context.getInput().c_str(), ARB_SPACE_LEN);
-                        strncpy(arb_data->output, context.getOutput().c_str(), ARB_SPACE_LEN);
-                        strncpy(arb_data->transform, context.getTransform().c_str(), ARB_SPACE_LEN);
-                        strncpy(arb_data->device, context.getDevice().c_str(), ARB_SPACE_LEN);
+                        nt_strncpy(arb_data->input, context.getInput().c_str(), ARB_SPACE_LEN+1);
+                        nt_strncpy(arb_data->output, context.getOutput().c_str(), ARB_SPACE_LEN+1);
+                        nt_strncpy(arb_data->view, context.getView().c_str(), ARB_SPACE_LEN+1);
+                        nt_strncpy(arb_data->display, context.getDisplay().c_str(), ARB_SPACE_LEN+1);
                     }
                 }
                 catch(...) {}
@@ -105,15 +119,17 @@ static void CopyArbData(ArbitraryData *out_arb_data, ArbitraryData *in_arb_data)
     out_arb_data->source = in_arb_data->source;
     
     out_arb_data->interpolation = in_arb_data->interpolation;
+
+    memset(out_arb_data->reserved, 0, 54);
     
-    strcpy(out_arb_data->path, in_arb_data->path);
-    strcpy(out_arb_data->relative_path, in_arb_data->relative_path);
+    nt_strncpy(out_arb_data->path, in_arb_data->path, ARB_PATH_LEN+1);
+    nt_strncpy(out_arb_data->relative_path, in_arb_data->relative_path, ARB_PATH_LEN+1);
     
-    strcpy(out_arb_data->input, in_arb_data->input);
-    strcpy(out_arb_data->output, in_arb_data->output);
-    strcpy(out_arb_data->transform, in_arb_data->transform);
-    strcpy(out_arb_data->device, in_arb_data->device);
-    strcpy(out_arb_data->look, in_arb_data->look);
+    nt_strncpy(out_arb_data->input, in_arb_data->input, ARB_SPACE_LEN+1);
+    nt_strncpy(out_arb_data->output, in_arb_data->output, ARB_SPACE_LEN+1);
+    nt_strncpy(out_arb_data->view, in_arb_data->view, ARB_SPACE_LEN+1);
+    nt_strncpy(out_arb_data->display, in_arb_data->display, ARB_SPACE_LEN+1);
+    nt_strncpy(out_arb_data->look, in_arb_data->look, ARB_SPACE_LEN+1);
 }
 
 
@@ -282,8 +298,8 @@ static PF_Err ArbCompare(PF_InData *in_data, PF_OutData *out_data,
             !strcmp(a_data->path, b_data->path) &&
             !strcmp(a_data->input, b_data->input) &&
             !strcmp(a_data->output, b_data->output) &&
-            !strcmp(a_data->transform, b_data->transform) &&
-            !strcmp(a_data->device, b_data->device) &&
+            !strcmp(a_data->view, b_data->view) &&
+            !strcmp(a_data->display, b_data->display) &&
             !strcmp(a_data->look, b_data->look) )
         {
             *compareP = PF_ArbCompare_EQUAL;
