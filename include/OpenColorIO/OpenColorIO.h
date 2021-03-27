@@ -2102,9 +2102,8 @@ public:
     ConstProcessorRcPtr getOptimizedProcessor(OptimizationFlags oFlags) const;
 
     /**
-     * Create a Processor that is optimized for a specific in and out
-     * bit-depth (as CPUProcessor would do).  This method is provided primarily for diagnostic
-     * purposes.
+     * Create a Processor that is optimized for a specific in and out bit-depth (as CPUProcessor 
+     * would do).  This method is provided primarily for diagnostic purposes.
      */
     ConstProcessorRcPtr getOptimizedProcessor(BitDepth inBD, BitDepth outBD,
                                               OptimizationFlags oFlags) const;
