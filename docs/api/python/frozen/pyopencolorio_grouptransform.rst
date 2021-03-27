@@ -22,12 +22,6 @@
       2. __init__(self: PyOpenColorIO.GroupTransform, transforms: List[PyOpenColorIO.Transform] = [], direction: PyOpenColorIO.TransformDirection = <TransformDirection.TRANSFORM_DIR_FORWARD: 0>) -> None
 
 
-   .. py:method:: GroupTransform.__str__()
-      :module: PyOpenColorIO
-
-      Return str(self).
-
-
    .. py:method:: GroupTransform.appendTransform(self: PyOpenColorIO.GroupTransform, transform: PyOpenColorIO.Transform) -> None
       :module: PyOpenColorIO
 
@@ -73,16 +67,15 @@
 
       Write the transforms comprising the group to the stream.
 
-
       Writing (as opposed to Baking) is a lossless process. An exception is thrown if the processor cannot be losslessly written to the specified file format. Transforms such as :ref:`FileTransform` or :ref:`ColorSpaceTransform` are resolved into write-able simple transforms using the config and context. Supported formats include CTF, CLF, and CDL. All available formats can be listed with the following: .. code-block:: cpp
 
           // What are the allowed writing output formats?
           std::ostringstream formats;
           formats << "Formats to write to: ";
-          for (int i = 0; i < GroupTransform::GetNumWriteFormats(); ++i)
+          for (int i = 0; i < :ref:`GroupTransform::GetNumWriteFormats`(); ++i)
           {
              if (i != 0) formats << ", ";
-             formats << GroupTransform::GetFormatNameByIndex(i);
+             formats << :ref:`GroupTransform::GetFormatNameByIndex`(i);
              formats << " (." << GroupTransform::GetFormatExtensionByIndex(i) << ")";
           }
 
@@ -90,16 +83,15 @@
 
       Write the transforms comprising the group to the stream.
 
-
       Writing (as opposed to Baking) is a lossless process. An exception is thrown if the processor cannot be losslessly written to the specified file format. Transforms such as :ref:`FileTransform` or :ref:`ColorSpaceTransform` are resolved into write-able simple transforms using the config and context. Supported formats include CTF, CLF, and CDL. All available formats can be listed with the following: .. code-block:: cpp
 
           // What are the allowed writing output formats?
           std::ostringstream formats;
           formats << "Formats to write to: ";
-          for (int i = 0; i < GroupTransform::GetNumWriteFormats(); ++i)
+          for (int i = 0; i < :ref:`GroupTransform::GetNumWriteFormats`(); ++i)
           {
              if (i != 0) formats << ", ";
-             formats << GroupTransform::GetFormatNameByIndex(i);
+             formats << :ref:`GroupTransform::GetFormatNameByIndex`(i);
              formats << " (." << GroupTransform::GetFormatExtensionByIndex(i) << ")";
           }
 

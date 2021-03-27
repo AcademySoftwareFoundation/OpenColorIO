@@ -8,6 +8,10 @@
 
    An implementation of the ASC Color Decision List (CDL), based on the ASC v1.2 specification.
 
+   **ASC_SOP**
+
+   Slope, offset, power:: out = clamp( (in * slope) + offset ) ^ power
+
    .. note::
       ​ If the config version is 1, negative values are clamped if the power is not 1.0. For config version 2 and higher, the negative handling is controlled by the CDL style.
 
@@ -18,7 +22,6 @@
 
       Load the CDL from the src .cdl, .cc, or .ccc file.
 
-
       .. note::
          The cccid can be the ID of a CDL or the index of the CDL (as string). If cccid is NULL or empty the first CDL is returned. The cccid is case-sensitive. The src must be an absolute path reference, no relative directory or envvar resolution is performed. Throws if file does not contain any CDL or if the specified cccid is not found.
 
@@ -28,7 +31,6 @@
       :staticmethod:
 
       Load all of the CDLs in a .cdl or .ccc file into a single :ref:`GroupTransform`.
-
 
       .. note::
          This may be useful as a quicker way for applications to check the contents of each of the CDLs. The src must be an absolute path reference, no relative directory or envvar resolution is performed.
@@ -44,12 +46,6 @@
       2. __init__(self: PyOpenColorIO.CDLTransform, direction: PyOpenColorIO.TransformDirection = <TransformDirection.TRANSFORM_DIR_FORWARD: 0>) -> None
 
       3. __init__(self: PyOpenColorIO.CDLTransform, slope: List[float[3]] = [1.0, 1.0, 1.0], offset: List[float[3]] = [0.0, 0.0, 0.0], power: List[float[3]] = [1.0, 1.0, 1.0], sat: float = 1.0, id: str = '', description: str = '', direction: PyOpenColorIO.TransformDirection = <TransformDirection.TRANSFORM_DIR_FORWARD: 0>) -> None
-
-
-   .. py:method:: CDLTransform.__str__()
-      :module: PyOpenColorIO
-
-      Return str(self).
 
 
    .. py:method:: CDLTransform.equals(self: PyOpenColorIO.CDLTransform, other: PyOpenColorIO.CDLTransform) -> bool

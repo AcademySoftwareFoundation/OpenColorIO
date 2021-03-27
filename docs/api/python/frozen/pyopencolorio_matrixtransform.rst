@@ -16,6 +16,13 @@
       :module: PyOpenColorIO
       :staticmethod:
 
+      **Convenience functions**
+
+      Build the matrix and offset corresponding to higher-level concepts.
+
+      .. note::
+         These can throw an exception if for any component `oldmin == oldmax. (divide by 0)`
+
 
    .. py:method:: MatrixTransform.Identity() -> PyOpenColorIO.MatrixTransform
       :module: PyOpenColorIO
@@ -47,12 +54,6 @@
       2. __init__(self: PyOpenColorIO.MatrixTransform, matrix: List[float[16]] = [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0], offset: List[float[4]] = [0.0, 0.0, 0.0, 0.0], direction: PyOpenColorIO.TransformDirection = <TransformDirection.TRANSFORM_DIR_FORWARD: 0>) -> None
 
 
-   .. py:method:: MatrixTransform.__str__()
-      :module: PyOpenColorIO
-
-      Return str(self).
-
-
    .. py:method:: MatrixTransform.equals(self: PyOpenColorIO.MatrixTransform, other: PyOpenColorIO.MatrixTransform) -> bool
       :module: PyOpenColorIO
 
@@ -65,6 +66,10 @@
 
    .. py:method:: MatrixTransform.getFileInputBitDepth(self: PyOpenColorIO.MatrixTransform) -> PyOpenColorIO.BitDepth
       :module: PyOpenColorIO
+
+      Get the bit-depths associated with the matrix values read from a file or set the bit-depths of values to be written to a file (for file formats such as CLF that support multiple bit-depths).
+
+      In a format such as CLF, the matrix values are scaled to take pixels at the specified inBitDepth to pixels at the specified outBitDepth. This complicates the interpretation of the matrix values and so this object always holds normalized values and scaling is done on the way from or to file formats such as CLF.
 
 
    .. py:method:: MatrixTransform.getFileOutputBitDepth(self: PyOpenColorIO.MatrixTransform) -> PyOpenColorIO.BitDepth

@@ -40,12 +40,6 @@
       Creates an instance of :ref:`GradingToneTransform`.
 
 
-   .. py:method:: GradingToneTransform.__str__()
-      :module: PyOpenColorIO
-
-      Return str(self).
-
-
    .. py:method:: GradingToneTransform.getDirection(self: PyOpenColorIO.Transform) -> PyOpenColorIO.TransformDirection
       :module: PyOpenColorIO
 

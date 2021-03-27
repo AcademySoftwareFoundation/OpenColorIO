@@ -6,6 +6,12 @@
 .. py:class:: ColorSpace
    :module: PyOpenColorIO
 
+   The *:ref:`ColorSpace`* is the state of an image with respect to colorimetry and color encoding. Transforming images between different *ColorSpaces* is the primary motivation for this library.
+
+   While a complete discussion of color spaces is beyond the scope of header documentation, traditional uses would be to have *ColorSpaces* corresponding to: physical capture devices (known cameras, scanners), and internal 'convenience' spaces (such as scene linear, logarithmic).
+
+   *ColorSpaces* are specific to a particular image precision (float32, uint8, etc.), and the set of ColorSpaces that provide equivalent mappings (at different precisions) are referred to as a 'family'.
+
 
    .. py:method:: ColorSpace.__init__(*args, **kwargs)
       :module: PyOpenColorIO
@@ -30,7 +36,6 @@
 
       Add a single category.
 
-
       .. note::
          Will do nothing if the category already exists.
 
@@ -52,6 +57,10 @@
    .. py:method:: ColorSpace.getAllocation(self: PyOpenColorIO.ColorSpace) -> PyOpenColorIO.Allocation
       :module: PyOpenColorIO
 
+      *Allocation*
+
+      If this colorspace needs to be transferred to a limited dynamic range coding space (such as during display with a GPU path), use this allocation to maximize bit efficiency.
+
 
    .. py:method:: ColorSpace.getAllocationVars(self: PyOpenColorIO.ColorSpace) -> List[float]
       :module: PyOpenColorIO
@@ -71,6 +80,18 @@
 
    .. py:method:: ColorSpace.getEncoding(self: PyOpenColorIO.ColorSpace) -> str
       :module: PyOpenColorIO
+
+      *Encodings*
+
+      It is sometimes useful for applications to group color spaces based on how the color values are digitally encoded. For example, images in scene-linear, logarithmic, video, and data color spaces could have different default views. Unlike the Family and EqualityGroup attributes of a color space, the list of Encodings is predefined in the OCIO documentation (rather than being config-specific) to make it easier for applications to utilize.
+
+      Here is an example config entry that could appear under a :ref:`ColorSpace`:
+
+      .. code-block:: cpp
+
+          encoding: scene-linear
+
+      Encoding strings are not case-sensitive. Although users may add their own encodings, the strings will typically come from a fixed set listed in the documentation (similar to roles).
 
 
    .. py:method:: ColorSpace.getEqualityGroup(self: PyOpenColorIO.ColorSpace) -> str
@@ -98,6 +119,8 @@
    .. py:method:: ColorSpace.getTransform(self: PyOpenColorIO.ColorSpace, direction: PyOpenColorIO.ColorSpaceDirection) -> PyOpenColorIO.Transform
       :module: PyOpenColorIO
 
+      *:ref:`Transform`*
+
       If a transform in the specified direction has been specified, return it. Otherwise return a null ConstTransformRcPtr
 
 
@@ -106,9 +129,30 @@
 
       Return true if the category is present.
 
+      A category is used to allow applications to filter the list of color spaces they display in menus based on what that color space is used for.
+
+      Here is an example config entry that could appear under a :ref:`ColorSpace`:
+
+      .. code-block:: cpp
+
+          categories: [ file-io, working-space, basic-3d ]
+
+      The example contains three categories: 'file-io', 'working-space' and 'basic-3d'.
+
+      .. note::
+         Category strings are not case-sensitive and the order is not significant.
+
+      There is no limit imposed on length or number. Although users may add their own categories, the strings will typically come from a fixed set listed in the documentation (similar to roles).
+
 
    .. py:method:: ColorSpace.isData(self: PyOpenColorIO.ColorSpace) -> bool
       :module: PyOpenColorIO
+
+      *Data*
+
+      ColorSpaces that are data are treated a bit special. Basically, any colorspace transforms you try to apply to them are ignored. (Think of applying a gamut mapping transform to an ID pass). However, the setDataBypass method on :ref:`ColorSpaceTransform` and :ref:`DisplayViewTransform` allow applications to process data when necessary. (Think of sending mattes to an HDR monitor.)
+
+      This is traditionally used for pixel data that represents non-color pixel data, such as normals, point positions, ID information, etc.
 
 
    .. py:method:: ColorSpace.removeAlias(self: PyOpenColorIO.ColorSpace, alias: str) -> None
@@ -121,7 +165,6 @@
       :module: PyOpenColorIO
 
       Remove a category.
-
 
       .. note::
          Will do nothing if the category is missing.
