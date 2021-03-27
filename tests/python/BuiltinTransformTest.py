@@ -4,9 +4,10 @@
 import unittest
 
 import PyOpenColorIO as OCIO
+from TransformsBaseTest import TransformsBaseTest
 
 
-class BuiltinTransformTest(unittest.TestCase):
+class BuiltinTransformTest(unittest.TestCase, TransformsBaseTest):
     # BuiltinTransformRegistry singleton
     REGISTRY = None
 
@@ -26,42 +27,32 @@ class BuiltinTransformTest(unittest.TestCase):
         cls.REGISTRY = OCIO.BuiltinTransformRegistry()
 
     def setUp(self):
-        self.builtin_tr = OCIO.BuiltinTransform()
-
-    def cleanUp(self):
-        self.builtin_tr = None
+        self.tr = OCIO.BuiltinTransform()
 
     def test_transform_type(self):
         # TransformType is correct
-        self.assertEqual(self.builtin_tr.getTransformType(), OCIO.TRANSFORM_TYPE_BUILTIN)
+        self.assertEqual(self.tr.getTransformType(), OCIO.TRANSFORM_TYPE_BUILTIN)
 
     def test_style(self):
         # Default style is identity
-        self.assertEqual(self.builtin_tr.getStyle(), self.DEFAULT_STYLE)
-        self.assertEqual(self.builtin_tr.getDescription(), self.DEFAULT_DESC)
+        self.assertEqual(self.tr.getStyle(), self.DEFAULT_STYLE)
+        self.assertEqual(self.tr.getDescription(), self.DEFAULT_DESC)
 
         # Set/get all styles from registry
         for style, desc in self.REGISTRY.getBuiltins():
-            self.builtin_tr.setStyle(style)
-            self.assertEqual(self.builtin_tr.getStyle(), style)
-            self.assertEqual(self.builtin_tr.getDescription(), desc)
-            self.assertIsNone(self.builtin_tr.validate())  # Does not raise
+            self.tr.setStyle(style)
+            self.assertEqual(self.tr.getStyle(), style)
+            self.assertEqual(self.tr.getDescription(), desc)
+            self.assertIsNone(self.tr.validate())  # Does not raise
 
         # Invalid style raises OCIO Exception
         with self.assertRaises(OCIO.Exception):
-            self.builtin_tr.setStyle("invalid")
+            self.tr.setStyle("invalid")
 
         # Safe invalid type handling
         for invalid in (None, 1, True):
             with self.assertRaises(TypeError):
-                self.builtin_tr.setStyle(invalid)
-
-    def test_direction(self):
-        # All transform directions are supported
-        for direction in OCIO.TransformDirection.__members__.values():
-            # Does not raise
-            self.assertIsNone(self.builtin_tr.setDirection(direction))
-            self.assertEqual(self.builtin_tr.getDirection(), direction)
+                self.tr.setStyle(invalid)
 
     def test_constructor_keyword(self):
         # Keyword args in order
@@ -94,4 +85,4 @@ class BuiltinTransformTest(unittest.TestCase):
 
     def test_str(self):
         # str() and print() result matches C++ << operator
-        self.assertEqual(str(self.builtin_tr), self.DEFAULT_STR)
+        self.assertEqual(str(self.tr), self.DEFAULT_STR)

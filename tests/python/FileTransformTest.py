@@ -5,8 +5,10 @@ import unittest
 
 import PyOpenColorIO as OCIO
 from UnitTestUtils import TEST_DATAFILES_DIR, TEST_NAMES
+from TransformsBaseTest import TransformsBaseTest
 
-class FileTransformTest(unittest.TestCase):
+
+class FileTransformTest(unittest.TestCase, TransformsBaseTest):
     TEST_DIRECTION = OCIO.TRANSFORM_DIR_FORWARD
     TEST_INTERPOLATION = OCIO.Interpolation.INTERP_LINEAR
     TEST_ID = 'sample file'
@@ -38,16 +40,13 @@ class FileTransformTest(unittest.TestCase):
                        ('nukevf', 'vf')]
 
     def setUp(self):
-        self.file_tr = OCIO.FileTransform()
-
-    def tearDown(self):
-        self.file_tr = None
+        self.tr = OCIO.FileTransform()
 
     def test_transform_type(self):
         """
         Test the getTransformType() method.
         """
-        self.assertEqual(self.file_tr.getTransformType(), OCIO.TRANSFORM_TYPE_FILE)
+        self.assertEqual(self.tr.getTransformType(), OCIO.TRANSFORM_TYPE_FILE)
 
     def test_cccid(self):
         """
@@ -55,17 +54,17 @@ class FileTransformTest(unittest.TestCase):
         """
 
         # Default initialized id value is ""
-        self.assertEqual(self.file_tr.getCCCId(), '')
+        self.assertEqual(self.tr.getCCCId(), '')
 
         # Test id name setter and getter.
         for id_ in TEST_NAMES:
-            self.file_tr.setCCCId(id_)
-            self.assertEqual(self.file_tr.getCCCId(), id_)
+            self.tr.setCCCId(id_)
+            self.assertEqual(self.tr.getCCCId(), id_)
 
         # Wrong type tests.
         for invalid in (None, 1):
             with self.assertRaises(TypeError):
-                self.file_tr.setCCCId(invalid)
+                self.tr.setCCCId(invalid)
 
     def test_cdlstyle(self):
         """
@@ -73,35 +72,17 @@ class FileTransformTest(unittest.TestCase):
         """
 
         # Default initialized CDL Style value is no clamp.
-        self.assertEqual(self.file_tr.getCDLStyle(),
+        self.assertEqual(self.tr.getCDLStyle(),
                          OCIO.CDLStyle.CDL_NO_CLAMP)
 
         for cdl_style in OCIO.CDLStyle.__members__.values():
-            self.file_tr.setCDLStyle(cdl_style)
-            self.assertEqual(self.file_tr.getCDLStyle(), cdl_style)
+            self.tr.setCDLStyle(cdl_style)
+            self.assertEqual(self.tr.getCDLStyle(), cdl_style)
 
         # Wrong type tests.
         for invalid in (None, 1):
             with self.assertRaises(TypeError):
-                self.file_tr.setCDLStyle(invalid)
-
-    def test_direction(self):
-        """
-        Test the setDirection() and getDirection() methods.
-        """
-
-        # Default initialized direction is forward.
-        self.assertEqual(self.file_tr.getDirection(),
-                         OCIO.TRANSFORM_DIR_FORWARD)
-
-        for direction in OCIO.TransformDirection.__members__.values():
-            self.file_tr.setDirection(direction)
-            self.assertEqual(self.file_tr.getDirection(), direction)
-
-        # Wrong type tests.
-        for invalid in (None, 1):
-            with self.assertRaises(TypeError):
-                self.file_tr.setDirection(invalid)
+                self.tr.setCDLStyle(invalid)
 
     def test_getformats(self):
         """
@@ -123,16 +104,16 @@ class FileTransformTest(unittest.TestCase):
         """
 
         # Default initialized interpolation is default.
-        self.assertEqual(self.file_tr.getInterpolation(), OCIO.INTERP_DEFAULT)
+        self.assertEqual(self.tr.getInterpolation(), OCIO.INTERP_DEFAULT)
 
         for interpolation in OCIO.Interpolation.__members__.values():
-            self.file_tr.setInterpolation(interpolation)
-            self.assertEqual(self.file_tr.getInterpolation(), interpolation)
+            self.tr.setInterpolation(interpolation)
+            self.assertEqual(self.tr.getInterpolation(), interpolation)
 
         # Wrong type tests.
         for invalid in (None, 1):
             with self.assertRaises(TypeError):
-                self.file_tr.setInterpolation(invalid)
+                self.tr.setInterpolation(invalid)
 
     def test_src(self):
         """
@@ -140,16 +121,16 @@ class FileTransformTest(unittest.TestCase):
         """
 
         # Default initialized src value is ""
-        self.assertEqual(self.file_tr.getSrc(), '')
+        self.assertEqual(self.tr.getSrc(), '')
 
         for name in TEST_NAMES:
-            self.file_tr.setSrc(name)
-            self.assertEqual(name, self.file_tr.getSrc())
+            self.tr.setSrc(name)
+            self.assertEqual(name, self.tr.getSrc())
 
         # Wrong type tests.
         for invalid in (None, 1):
             with self.assertRaises(TypeError):
-                self.file_tr.setSrc(invalid)
+                self.tr.setSrc(invalid)
 
     def test_constructor_with_keyword(self):
         """

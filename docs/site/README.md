@@ -1,31 +1,55 @@
-## OCIO Homepage Setup / Dev
+# OCIO Homepage Development
 
-# Easy Setup (Hugo + Github Pages)
+The OCIO homepage is built with Hugo which you will need to build the static HTML served from the gh-pages branch.
 
-### What you need !!
+## Building For Development
 
-### Step 1 : Fork or Clone repository - follow OCIO dev guidelines
+**Step 1:** Fork or clone the repository, be sure to make a new branch for your changes, follow [OCIO contribution guidelines](https://github.com/AcademySoftwareFoundation/OpenColorIO/blob/master/CONTRIBUTING.md) for branch naming!
 
-Steps here
+```shell
+git clone https://github.com/AcademySoftwareFoundation/OpenColorIO.git
+```
 
-### Step 2 : Install Hugo
+**Step 2:** Install Hugo.
 
-Insert Hugo info here
+[Instructions available here!](https://gohugo.io/getting-started/installing)
 
-### Step 3 : Run locally
+**Step 3:** Run locally.
 
-cd into homepage dir
-hugo server --themesDir ../..
-http://localhost:1313/
+Navigate to the homepage folder:
 
-### Step 4 : Make changes! 
+```shell
+cd OpenColorIO/docs/site/homepage
+```
 
-See them live locally.
+Run Hugo:
 
-### Step 5 : Submit a PR (back to OCIO guidelines)
+```shell
+hugo server --themesDir ../.. http://localhost:1313/
+```
 
+**Step 4:** Make changes!
 
+Navigate to http://localhost:1313 in your web browser of choice and see your changes live!
 
+**Step 5:** Submit a PR
 
+Check out the [OCIO guidelines](https://github.com/AcademySoftwareFoundation/OpenColorIO/blob/master/CONTRIBUTING.md) for information about this too!
 
+## Building the Static Website
 
+Navigate to the homepage folder:
+
+```shell
+cd OpenColorIO/docs/site/homepage
+```
+
+Build the static copy of the website with Hugo:
+
+```shell
+hugo -D --minify --themesDir ../..
+```
+
+It should appear in a folder labelled "public"
+
+Once your PR has been accepted for the changes to the master branch submit another PR replacing the content of the gh-pages branch with the content from Hugo's output.  Note that the old site and documentation still live in the gh-pages branch in the `old/` directory, when you replace the contents of the branch please be sure to keep that entire folder as is.

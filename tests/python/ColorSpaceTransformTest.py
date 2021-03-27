@@ -5,24 +5,23 @@ import unittest
 
 import PyOpenColorIO as OCIO
 from UnitTestUtils import TEST_NAMES
+from TransformsBaseTest import TransformsBaseTest
 
 
-class ColorSpaceTransformTest(unittest.TestCase):
+class ColorSpaceTransformTest(unittest.TestCase, TransformsBaseTest):
     TEST_DIRECTION = OCIO.TRANSFORM_DIR_FORWARD
     TEST_SRC = 'foo'
     TEST_DST = 'bar'
 
     def setUp(self):
-        self.cs_tr = OCIO.ColorSpaceTransform()
-
-    def tearDown(self):
-        self.cs_tr = None
+        self.tr = OCIO.ColorSpaceTransform()
 
     def test_transform_type(self):
         """
         Test the getTransformType() method.
         """
-        self.assertEqual(self.cs_tr.getTransformType(), OCIO.TRANSFORM_TYPE_COLORSPACE)
+        self.assertEqual(self.tr.getTransformType(),
+                         OCIO.TRANSFORM_TYPE_COLORSPACE)
 
     def test_src(self):
         """
@@ -30,16 +29,16 @@ class ColorSpaceTransformTest(unittest.TestCase):
         """
 
         # Default initialized src value is ""
-        self.assertEqual(self.cs_tr.getSrc(), '')
+        self.assertEqual(self.tr.getSrc(), '')
 
         for name in TEST_NAMES:
-            self.cs_tr.setSrc(name)
-            self.assertEqual(name, self.cs_tr.getSrc())
+            self.tr.setSrc(name)
+            self.assertEqual(name, self.tr.getSrc())
 
         # Wrong type tests.
         for invalid in (None, 1):
             with self.assertRaises(TypeError):
-                self.cs_tr.setSrc(invalid)
+                self.tr.setSrc(invalid)
 
     def test_dst(self):
         """
@@ -47,34 +46,16 @@ class ColorSpaceTransformTest(unittest.TestCase):
         """
 
         # Default initialized src value is ""
-        self.assertEqual(self.cs_tr.getDst(), '')
+        self.assertEqual(self.tr.getDst(), '')
 
         for name in TEST_NAMES:
-            self.cs_tr.setDst(name)
-            self.assertEqual(name, self.cs_tr.getDst())
+            self.tr.setDst(name)
+            self.assertEqual(name, self.tr.getDst())
 
         # Wrong type tests.
         for invalid in (None, 1):
             with self.assertRaises(TypeError):
-                self.cs_tr.setDst(invalid)
-
-    def test_direction(self):
-        """
-        Test the setDirection() and getDirection() methods.
-        """
-
-        # Default initialized direction is forward.
-        self.assertEqual(self.cs_tr.getDirection(),
-                         OCIO.TRANSFORM_DIR_FORWARD)
-
-        for direction in OCIO.TransformDirection.__members__.values():
-            self.cs_tr.setDirection(direction)
-            self.assertEqual(self.cs_tr.getDirection(), direction)
-
-        # Wrong type tests.
-        for invalid in (None, 1):
-            with self.assertRaises(TypeError):
-                self.cs_tr.setDirection(invalid)
+                self.tr.setDst(invalid)
 
     def test_constructor_with_keyword(self):
         """

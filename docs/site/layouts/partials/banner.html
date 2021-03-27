@@ -13,11 +13,11 @@
 			<i class="{{ .icon }}"></i>
 		</div>
 		{{ end }}
-		<div class="row justify-content-center" style="padding:50px 20px;">
+		<div class="row justify-content-center" style="padding: 50px 20px; margin: 0;">
 			<img class="hero-area-logo" src="{{ .logo | absURL }}" alt="{{ site.Title }}" />
 		</div>
 		<p>{{ .content | markdownify }}</p>
-		
+
 		{{ if .button.enable }}
 		{{ with .button }}
 		<a href="{{ .link }}" class="btn btn-transparent page-scroll">{{ .label }}</a>

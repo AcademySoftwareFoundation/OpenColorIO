@@ -4,24 +4,23 @@
 import unittest
 
 import PyOpenColorIO as OCIO
+from TransformsBaseTest import TransformsBaseTest
 
 
-class AllocationTransformTest(unittest.TestCase):
+class AllocationTransformTest(unittest.TestCase, TransformsBaseTest):
     TEST_ALLOCATION = OCIO.ALLOCATION_LG2
     TEST_VARS = [0, 1]
     TEST_DIRECTION = OCIO.TRANSFORM_DIR_INVERSE
 
     def setUp(self):
-        self.allo_tr = OCIO.AllocationTransform()
-
-    def tearDown(self):
-        self.allo_tr = None
+        self.tr = OCIO.AllocationTransform()
 
     def test_transform_type(self):
         """
         Test the getTransformType() method.
         """
-        self.assertEqual(self.allo_tr.getTransformType(), OCIO.TRANSFORM_TYPE_ALLOCATION)
+        self.assertEqual(self.tr.getTransformType(),
+                         OCIO.TRANSFORM_TYPE_ALLOCATION)
 
     def test_allocation(self):
         """
@@ -29,34 +28,16 @@ class AllocationTransformTest(unittest.TestCase):
         """
 
         # Default initialized allocation value is OCIO.ALLOCATION_UNIFORM
-        self.assertEqual(self.allo_tr.getAllocation(), OCIO.ALLOCATION_UNIFORM)
+        self.assertEqual(self.tr.getAllocation(), OCIO.ALLOCATION_UNIFORM)
 
         for allocation in OCIO.Allocation.__members__.values():
-            self.allo_tr.setAllocation(allocation)
-            self.assertEqual(self.allo_tr.getAllocation(), allocation)
+            self.tr.setAllocation(allocation)
+            self.assertEqual(self.tr.getAllocation(), allocation)
 
         # Wrong type tests.
         for invalid in (None, 1):
             with self.assertRaises(TypeError):
-                self.allo_tr.setAllocation(invalid)
-
-    def test_direction(self):
-        """
-        Test the setDirection() and getDirection() methods.
-        """
-
-        # Default initialized direction is forward.
-        self.assertEqual(self.allo_tr.getDirection(),
-                         OCIO.TRANSFORM_DIR_FORWARD)
-
-        for direction in OCIO.TransformDirection.__members__.values():
-            self.allo_tr.setDirection(direction)
-            self.assertEqual(self.allo_tr.getDirection(), direction)
-
-        # Wrong type tests.
-        for invalid in (None, 1):
-            with self.assertRaises(TypeError):
-                self.allo_tr.setDirection(invalid)
+                self.tr.setAllocation(invalid)
 
     def test_vars(self):
         """
@@ -64,7 +45,7 @@ class AllocationTransformTest(unittest.TestCase):
         """
 
         # Default initialized vars value is []
-        self.assertEqual(self.allo_tr.getVars(), [])
+        self.assertEqual(self.tr.getVars(), [])
 
         vars_array = []
         for i in range(1, 5):
@@ -74,16 +55,16 @@ class AllocationTransformTest(unittest.TestCase):
             # setVars() only take in array in length of 2 or 3.
             if len(vars_array) < 2 or len(vars_array) > 3:
                 with self.assertRaises(OCIO.Exception):
-                    self.allo_tr.setVars(vars_array)
+                    self.tr.setVars(vars_array)
             else:
-                self.allo_tr.setVars(vars_array)
-                for i, var in enumerate(self.allo_tr.getVars()):
+                self.tr.setVars(vars_array)
+                for i, var in enumerate(self.tr.getVars()):
                     self.assertAlmostEqual(vars_array[i], var, places=7)
 
         # Wrong type tests.
         for invalid in (None, 'hello'):
             with self.assertRaises(TypeError):
-                self.allo_tr.setVars(invalid)
+                self.tr.setVars(invalid)
 
     def test_constructor_with_keyword(self):
         """

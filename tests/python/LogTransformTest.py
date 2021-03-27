@@ -4,25 +4,24 @@
 import unittest
 
 import PyOpenColorIO as OCIO
+from TransformsBaseTest import TransformsBaseTest
 
 
-class LogTransformTest(unittest.TestCase):
+class LogTransformTest(unittest.TestCase, TransformsBaseTest):
     TEST_ID = 'sample log'
     TEST_NAME = 'name of log'
     TEST_BASE = 10
     TEST_DIRECTION = OCIO.TRANSFORM_DIR_INVERSE
 
     def setUp(self):
-        self.log_tr = OCIO.LogTransform()
-
-    def tearDown(self):
-        self.log_tr = None
+        self.tr = OCIO.LogTransform()
 
     def test_transform_type(self):
         """
         Test the getTransformType() method.
         """
-        self.assertEqual(self.log_tr.getTransformType(), OCIO.TRANSFORM_TYPE_LOG)
+
+        self.assertEqual(self.tr.getTransformType(), OCIO.TRANSFORM_TYPE_LOG)
 
     def test_base(self):
         """
@@ -30,40 +29,22 @@ class LogTransformTest(unittest.TestCase):
         """
 
         # Default initialized base is 2.
-        self.assertEqual(self.log_tr.getBase(), 2)
+        self.assertEqual(self.tr.getBase(), 2)
 
-        self.log_tr.setBase(self.TEST_BASE)
-        self.assertEqual(self.log_tr.getBase(), self.TEST_BASE)
+        self.tr.setBase(self.TEST_BASE)
+        self.assertEqual(self.tr.getBase(), self.TEST_BASE)
 
         # Wrong type tests.
         for invalid in (None, 'test'):
             with self.assertRaises(TypeError):
-                self.log_tr.setBase(invalid)
-
-    def test_direction(self):
-        """
-        Test the setDirection() and getDirection() methods.
-        """
-
-        # Default initialized direction is forward.
-        self.assertEqual(self.log_tr.getDirection(),
-                         OCIO.TRANSFORM_DIR_FORWARD)
-
-        for direction in OCIO.TransformDirection.__members__.values():
-            self.log_tr.setDirection(direction)
-            self.assertEqual(self.log_tr.getDirection(), direction)
-
-        # Wrong type tests.
-        for invalid in (None, 1, 'test'):
-            with self.assertRaises(TypeError):
-                self.log_tr.setDirection(invalid)
+                self.tr.setBase(invalid)
 
     def test_format_metadata(self):
         """
         Test the getFormatMetadata() method.
         """
 
-        format_metadata = self.log_tr.getFormatMetadata()
+        format_metadata = self.tr.getFormatMetadata()
         self.assertIsInstance(format_metadata, OCIO.FormatMetadata)
         self.assertEqual(format_metadata.getID(), '')
         self.assertEqual(format_metadata.getName(), '')
@@ -78,17 +59,17 @@ class LogTransformTest(unittest.TestCase):
         """
 
         # Validate should pass with default values.
-        self.log_tr.validate()
+        self.tr.validate()
 
         # Validate should pass with positive values.
-        self.log_tr.setBase(5)
-        self.log_tr.validate()
+        self.tr.setBase(5)
+        self.tr.validate()
 
         # Fail validation tests.
         for invalid in (1, -1):
-            self.log_tr.setBase(invalid)
+            self.tr.setBase(invalid)
             with self.assertRaises(OCIO.Exception):
-                self.log_tr.validate()
+                self.tr.validate()
 
     def test_constructor_with_keyword(self):
         """

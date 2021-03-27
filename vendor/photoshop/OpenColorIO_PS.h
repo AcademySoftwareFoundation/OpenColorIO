@@ -54,8 +54,8 @@ typedef struct Globals
     OCIO_Interp             interpolation;
     Str255                  inputSpace;
     Str255                  outputSpace;
-    Str255                  device;
-    Str255                  transform;
+    Str255                  display;
+    Str255                  view;
 } Globals, *GPtr, **GHdl;
 
 
@@ -66,13 +66,8 @@ extern FilterRecord *gFilterRecord;
 #define gResult             (*(globals->result))
 #define gStuff              (globals->filterParamBlock)
 
-#ifdef PS_CS4_SDK
 typedef intptr_t entryData;
 typedef void * allocateGlobalsPointer;
-#else
-typedef long entryData;
-typedef uint32 allocateGlobalsPointer;
-#endif
 
 // our entry function
 DLLExport SPAPI void PluginMain(const int16 selector,
