@@ -109,8 +109,8 @@ typedef struct {
     char            relative_path[ARB_PATH_LEN+1];
     char            input[ARB_SPACE_LEN+1];
     char            output[ARB_SPACE_LEN+1];
-    char            transform[ARB_SPACE_LEN+1];
-    char            device[ARB_SPACE_LEN+1];
+    char            view[ARB_SPACE_LEN+1];
+    char            display[ARB_SPACE_LEN+1];
     char            look[ARB_SPACE_LEN+1]; // not used currently
     A_u_char        storage_buf[1];
 } ArbitraryData;
@@ -150,6 +150,7 @@ typedef struct {
     GPUErr                  gpu_err;
     PremiereStatus          prem_status;
     OCIO_Source             source;
+    A_u_char                reserved[4];
     OpenColorIO_AE_Context  *context;
     char                    path[ARB_PATH_LEN+1];
     char                    relative_path[ARB_PATH_LEN+1];
@@ -200,6 +201,8 @@ PF_Err HandleArbitrary(
     PF_LayerDef         *output,
     PF_ArbParamsExtra   *extra);
 
+
+char *nt_strncpy(char *dst, const char *src, size_t n);
 
 #ifdef __cplusplus
     }
