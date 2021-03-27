@@ -8,7 +8,6 @@
 
    Represents exponent transform: pow( clamp(color), value ).
 
-
    .. note::
       For configs with version == 1: Negative style is ignored and if the exponent is 1.0, this will not clamp. Otherwise, the input color will be clamped between [0.0, inf]. For configs with version > 1: Negative value handling may be specified via setNegativeStyle.
 
@@ -21,12 +20,6 @@
       1. __init__(self: PyOpenColorIO.ExponentTransform) -> None
 
       2. __init__(self: PyOpenColorIO.ExponentTransform, value: List[float[4]] = [1.0, 1.0, 1.0, 1.0], negativeStyle: PyOpenColorIO.NegativeStyle = <NegativeStyle.NEGATIVE_CLAMP: 0>, direction: PyOpenColorIO.TransformDirection = <TransformDirection.TRANSFORM_DIR_FORWARD: 0>) -> None
-
-
-   .. py:method:: ExponentTransform.__str__()
-      :module: PyOpenColorIO
-
-      Return str(self).
 
 
    .. py:method:: ExponentTransform.equals(self: PyOpenColorIO.ExponentTransform, other: PyOpenColorIO.ExponentTransform) -> bool

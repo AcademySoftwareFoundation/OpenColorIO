@@ -25,12 +25,6 @@
       2. __init__(self: PyOpenColorIO.ExponentWithLinearTransform, gamma: List[float[4]] = [1.0, 1.0, 1.0, 1.0], offset: List[float[4]] = [0.0, 0.0, 0.0, 0.0], negativeStyle: PyOpenColorIO.NegativeStyle = <NegativeStyle.NEGATIVE_LINEAR: 3>, direction: PyOpenColorIO.TransformDirection = <TransformDirection.TRANSFORM_DIR_FORWARD: 0>) -> None
 
 
-   .. py:method:: ExponentWithLinearTransform.__str__()
-      :module: PyOpenColorIO
-
-      Return str(self).
-
-
    .. py:method:: ExponentWithLinearTransform.equals(self: PyOpenColorIO.ExponentWithLinearTransform, other: PyOpenColorIO.ExponentWithLinearTransform) -> bool
       :module: PyOpenColorIO
 

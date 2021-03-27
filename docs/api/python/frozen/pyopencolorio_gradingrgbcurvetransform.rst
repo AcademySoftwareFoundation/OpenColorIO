@@ -29,12 +29,6 @@
       Creates an instance of :ref:`GradingPrimaryTransform`.
 
 
-   .. py:method:: GradingRGBCurveTransform.__str__()
-      :module: PyOpenColorIO
-
-      Return str(self).
-
-
    .. py:method:: GradingRGBCurveTransform.getBypassLinToLog(self: PyOpenColorIO.GradingRGBCurveTransform) -> bool
       :module: PyOpenColorIO
 
