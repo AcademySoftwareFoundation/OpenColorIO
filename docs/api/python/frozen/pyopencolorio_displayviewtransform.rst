@@ -17,12 +17,6 @@
       2. __init__(self: PyOpenColorIO.DisplayViewTransform, src: str = '', display: str = '', view: str = '', looksBypass: bool = False, dataBypass: bool = True, direction: PyOpenColorIO.TransformDirection = <TransformDirection.TRANSFORM_DIR_FORWARD: 0>) -> None
 
 
-   .. py:method:: DisplayViewTransform.__str__()
-      :module: PyOpenColorIO
-
-      Return str(self).
-
-
    .. py:method:: DisplayViewTransform.getDataBypass(self: PyOpenColorIO.DisplayViewTransform) -> bool
       :module: PyOpenColorIO
 

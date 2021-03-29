@@ -6,17 +6,16 @@
 .. py:class:: ColorSpaceSet
    :module: PyOpenColorIO
 
-   The *:ref:`ColorSpaceSet`* is a set of color spaces (i.e. no color space duplication) which could be the result of :cpp:func:`:ref:`Config::getColorSpaces`` or built from scratch.
+   The *:ref:`ColorSpaceSet`* is a set of color spaces (i.e. no color space duplication) which could be the result of :ref:`Config::getColorSpaces` or built from scratch.
 
    .. note::
-      The color spaces are decoupled from the config ones, i.e., any changes to the set itself or to its color spaces do not affect the original color spaces from the configuration. If needed, use :cpp:func:`:ref:`Config::addColorSpace`` to update the configuration.
+      The color spaces are decoupled from the config ones, i.e., any changes to the set itself or to its color spaces do not affect the original color spaces from the configuration. If needed, use :ref:`Config::addColorSpace` to update the configuration.
 
 
    .. py:method:: ColorSpaceSet.__and__(self: PyOpenColorIO.ColorSpaceSet, arg0: PyOpenColorIO.ColorSpaceSet) -> PyOpenColorIO.ColorSpaceSet
       :module: PyOpenColorIO
 
       Perform the intersection of two sets.
-
 
       .. note::
          This function provides operations on two color space sets where the result contains copied color spaces and no duplicates.
@@ -29,7 +28,6 @@
       :module: PyOpenColorIO
 
       Return true if the two sets are equal.
-
 
       .. note::
          The comparison is done on the color space names (not a deep comparison).
@@ -52,7 +50,6 @@
 
       Perform the union of two sets.
 
-
       .. note::
          This function provides operations on two color space sets where the result contains copied color spaces and no duplicates.
 
@@ -65,7 +62,6 @@
 
       Perform the difference of two sets.
 
-
       .. note::
          This function provides operations on two color space sets where the result contains copied color spaces and no duplicates.
 
@@ -77,7 +73,6 @@
       :module: PyOpenColorIO
 
       Add color space(s).
-
 
       .. note::
          If another color space is already registered with the same name, this will overwrite it. This stores a copy of the specified color space(s). Throws if one of the aliases is already assigned as a name or alias to an existing color space.
@@ -114,7 +109,6 @@
       :module: PyOpenColorIO
 
       Remove color space(s) using color space names (i.e. no role name).
-
 
       .. note::
          The removal of a missing color space does nothing.
