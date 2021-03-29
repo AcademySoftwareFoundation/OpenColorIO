@@ -125,7 +125,7 @@
       <AdditionalOptions>/MP /GS %(AdditionalOptions)</AdditionalOptions>
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
-      <AdditionalIncludeDirectories>..\..;..\..\..\aftereffects;..\..\..\aftereffects\vc\vc15;..\..\..\..\include;..\..\..\..\src\utils\oglbuilder;..\..\..\..\src\apps\ociobakelut;..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\PhotoshopAPI;..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\PhotoshopAPI\Photoshop;..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\PhotoshopAPI\PICA_SP;..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\samplecode\filter\dissolve\common;..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\samplecode\common\Includes;..\..\..\..\ext\Little-CMS\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..;..\..\..\aftereffects;..\..\..\aftereffects\vc\vc15;..\..\..\..\include;..\..\..\..\src\utils\oglbuilder;..\..\..\..\src\apps\ociobakelut;..\..\..\..\ext\adobe_photoshop_sdk_2021_win\pluginsdk\PhotoshopAPI;..\..\..\..\ext\adobe_photoshop_sdk_2021_win\pluginsdk\PhotoshopAPI\Photoshop;..\..\..\..\ext\adobe_photoshop_sdk_2021_win\pluginsdk\PhotoshopAPI\PICA_SP;..\..\..\..\ext\adobe_photoshop_sdk_2021_win\pluginsdk\samplecode\filter\dissolve\common;..\..\..\..\ext\adobe_photoshop_sdk_2021_win\pluginsdk\samplecode\common\Includes;..\..\..\..\ext\Little-CMS\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>OpenColorIO_SKIP_IMPORTS;SUPPLY_HINSTANCE;_CRT_SECURE_NO_DEPRECATE;ISOLATION_AWARE_ENABLED=1;WIN32=1;NDEBUG;_WINDOWS;_USRDLL;DISSOLVE_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
@@ -171,7 +171,7 @@
       <AdditionalOptions>/MP /GS %(AdditionalOptions)</AdditionalOptions>
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
-      <AdditionalIncludeDirectories>..\..;..\..\..\aftereffects;..\..\..\aftereffects\vc\vc15;..\..\..\..\include;..\..\..\..\src\utils\oglbuilder;..\..\..\..\src\apps\ociobakelut;..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\PhotoshopAPI;..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\PhotoshopAPI\Photoshop;..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\PhotoshopAPI\PICA_SP;..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\samplecode\filter\dissolve\common;..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\samplecode\common\Includes;..\..\..\..\ext\Little-CMS\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..;..\..\..\aftereffects;..\..\..\aftereffects\vc\vc15;..\..\..\..\include;..\..\..\..\src\utils\oglbuilder;..\..\..\..\src\apps\ociobakelut;..\..\..\..\ext\adobe_photoshop_sdk_2021_win\pluginsdk\PhotoshopAPI;..\..\..\..\ext\adobe_photoshop_sdk_2021_win\pluginsdk\PhotoshopAPI\Photoshop;..\..\..\..\ext\adobe_photoshop_sdk_2021_win\pluginsdk\PhotoshopAPI\PICA_SP;..\..\..\..\ext\adobe_photoshop_sdk_2021_win\pluginsdk\samplecode\filter\dissolve\common;..\..\..\..\ext\adobe_photoshop_sdk_2021_win\pluginsdk\samplecode\common\Includes;..\..\..\..\ext\Little-CMS\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>OpenColorIO_SKIP_IMPORTS;SUPPLY_HINSTANCE;_CRT_SECURE_NO_DEPRECATE;ISOLATION_AWARE_ENABLED=1;WIN32=1;NDEBUG;_WINDOWS;_USRDLL;DISSOLVE_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
@@ -216,7 +216,7 @@
     <ClCompile>
       <AdditionalOptions>/MP /GS %(AdditionalOptions)</AdditionalOptions>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>..\..;..\..\..\aftereffects;..\..\..\aftereffects\vc\vc15;..\..\..\..\include;..\..\..\..\src\utils\oglbuilder;..\..\..\..\src\apps\ociobakelut;..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\PhotoshopAPI;..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\PhotoshopAPI\Photoshop;..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\PhotoshopAPI\PICA_SP;..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\samplecode\filter\dissolve\common;..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\samplecode\common\Includes;..\..\..\..\ext\Little-CMS\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..;..\..\..\aftereffects;..\..\..\aftereffects\vc\vc15;..\..\..\..\include;..\..\..\..\src\utils\oglbuilder;..\..\..\..\src\apps\ociobakelut;..\..\..\..\ext\adobe_photoshop_sdk_2021_win\pluginsdk\PhotoshopAPI;..\..\..\..\ext\adobe_photoshop_sdk_2021_win\pluginsdk\PhotoshopAPI\Photoshop;..\..\..\..\ext\adobe_photoshop_sdk_2021_win\pluginsdk\PhotoshopAPI\PICA_SP;..\..\..\..\ext\adobe_photoshop_sdk_2021_win\pluginsdk\samplecode\filter\dissolve\common;..\..\..\..\ext\adobe_photoshop_sdk_2021_win\pluginsdk\samplecode\common\Includes;..\..\..\..\ext\Little-CMS\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>OpenColorIO_SKIP_IMPORTS;SUPPLY_HINSTANCE;ISOLATION_AWARE_ENABLED=1;WIN32=1;_DEBUG;_CRT_SECURE_NO_DEPRECATE;_SCL_SECURE_NO_DEPRECATE;_WINDOWS;_USRDLL;DISSOLVE_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -256,7 +256,7 @@
     <ClCompile>
       <AdditionalOptions>/MP /GS %(AdditionalOptions)</AdditionalOptions>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>..\..;..\..\..\aftereffects;..\..\..\aftereffects\vc\vc15;..\..\..\..\include;..\..\..\..\src\utils\oglbuilder;..\..\..\..\src\apps\ociobakelut;..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\PhotoshopAPI;..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\PhotoshopAPI\Photoshop;..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\PhotoshopAPI\PICA_SP;..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\samplecode\filter\dissolve\common;..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\samplecode\common\Includes;..\..\..\..\ext\Little-CMS\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..;..\..\..\aftereffects;..\..\..\aftereffects\vc\vc15;..\..\..\..\include;..\..\..\..\src\utils\oglbuilder;..\..\..\..\src\apps\ociobakelut;..\..\..\..\ext\adobe_photoshop_sdk_2021_win\pluginsdk\PhotoshopAPI;..\..\..\..\ext\adobe_photoshop_sdk_2021_win\pluginsdk\PhotoshopAPI\Photoshop;..\..\..\..\ext\adobe_photoshop_sdk_2021_win\pluginsdk\PhotoshopAPI\PICA_SP;..\..\..\..\ext\adobe_photoshop_sdk_2021_win\pluginsdk\samplecode\filter\dissolve\common;..\..\..\..\ext\adobe_photoshop_sdk_2021_win\pluginsdk\samplecode\common\Includes;..\..\..\..\ext\Little-CMS\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>OpenColorIO_SKIP_IMPORTS;SUPPLY_HINSTANCE;ISOLATION_AWARE_ENABLED=1;WIN32=1;_DEBUG;_CRT_SECURE_NO_DEPRECATE;_SCL_SECURE_NO_DEPRECATE;_WINDOWS;_USRDLL;DISSOLVE_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -285,10 +285,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\samplecode\common\sources\Logger.cpp" />
-    <ClCompile Include="..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\samplecode\common\sources\PIUFile.cpp" />
-    <ClCompile Include="..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\samplecode\common\sources\Timer.cpp" />
-    <ClCompile Include="..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\samplecode\common\sources\DialogUtilitiesWin.cpp">
+    <ClCompile Include="..\..\..\..\ext\adobe_photoshop_sdk_2021_win\pluginsdk\samplecode\common\sources\Logger.cpp" />
+    <ClCompile Include="..\..\..\..\ext\adobe_photoshop_sdk_2021_win\pluginsdk\samplecode\common\sources\PIUFile.cpp" />
+    <ClCompile Include="..\..\..\..\ext\adobe_photoshop_sdk_2021_win\pluginsdk\samplecode\common\sources\Timer.cpp" />
+    <ClCompile Include="..\..\..\..\ext\adobe_photoshop_sdk_2021_win\pluginsdk\samplecode\common\sources\DialogUtilitiesWin.cpp">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Disabled</Optimization>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">ISOLATION_AWARE_ENABLED=1;WIN32=1;_DEBUG;_CRT_SECURE_NO_DEPRECATE;_SCL_SECURE_NO_DEPRECATE;_WINDOWS;_MBCS;_USRDLL;DISSOLVE_EXPORTS</PreprocessorDefinitions>
@@ -306,7 +306,7 @@
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">_CRT_SECURE_NO_DEPRECATE;ISOLATION_AWARE_ENABLED=1;WIN32=1;NDEBUG;_WINDOWS;_MBCS;_USRDLL;DISSOLVE_EXPORTS</PreprocessorDefinitions>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\samplecode\common\sources\FilterBigDocument.cpp">
+    <ClCompile Include="..\..\..\..\ext\adobe_photoshop_sdk_2021_win\pluginsdk\samplecode\common\sources\FilterBigDocument.cpp">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Disabled</Optimization>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">ISOLATION_AWARE_ENABLED=1;WIN32=1;_DEBUG;_CRT_SECURE_NO_DEPRECATE;_SCL_SECURE_NO_DEPRECATE;_WINDOWS;_MBCS;_USRDLL;DISSOLVE_EXPORTS</PreprocessorDefinitions>
@@ -324,7 +324,7 @@
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">ISOLATION_AWARE_ENABLED=1;WIN32=1;NDEBUG;_WINDOWS;_MBCS;_USRDLL;DISSOLVE_EXPORTS</PreprocessorDefinitions>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\samplecode\common\sources\PIDLLInstance.cpp">
+    <ClCompile Include="..\..\..\..\ext\adobe_photoshop_sdk_2021_win\pluginsdk\samplecode\common\sources\PIDLLInstance.cpp">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Disabled</Optimization>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">ISOLATION_AWARE_ENABLED=1;WIN32=1;_DEBUG;_CRT_SECURE_NO_DEPRECATE;_SCL_SECURE_NO_DEPRECATE;_WINDOWS;_MBCS;_USRDLL;DISSOLVE_EXPORTS</PreprocessorDefinitions>
@@ -342,7 +342,7 @@
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">ISOLATION_AWARE_ENABLED=1;WIN32=1;NDEBUG;_WINDOWS;_MBCS;_USRDLL;DISSOLVE_EXPORTS</PreprocessorDefinitions>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\samplecode\common\sources\PIUSuites.cpp">
+    <ClCompile Include="..\..\..\..\ext\adobe_photoshop_sdk_2021_win\pluginsdk\samplecode\common\sources\PIUSuites.cpp">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Disabled</Optimization>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">ISOLATION_AWARE_ENABLED=1;WIN32=1;_DEBUG;_CRT_SECURE_NO_DEPRECATE;_SCL_SECURE_NO_DEPRECATE;_WINDOWS;_MBCS;_USRDLL;DISSOLVE_EXPORTS</PreprocessorDefinitions>
@@ -360,7 +360,7 @@
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">ISOLATION_AWARE_ENABLED=1;WIN32=1;NDEBUG;_WINDOWS;_MBCS;_USRDLL;DISSOLVE_EXPORTS</PreprocessorDefinitions>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\samplecode\common\sources\PIUtilities.cpp">
+    <ClCompile Include="..\..\..\..\ext\adobe_photoshop_sdk_2021_win\pluginsdk\samplecode\common\sources\PIUtilities.cpp">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Disabled</Optimization>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">ISOLATION_AWARE_ENABLED=1;WIN32=1;_DEBUG;_CRT_SECURE_NO_DEPRECATE;_SCL_SECURE_NO_DEPRECATE;_WINDOWS;_MBCS;_USRDLL;DISSOLVE_EXPORTS</PreprocessorDefinitions>
@@ -378,7 +378,7 @@
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">_CRT_SECURE_NO_DEPRECATE;ISOLATION_AWARE_ENABLED=1;WIN32=1;NDEBUG;_WINDOWS;_MBCS;_USRDLL;DISSOLVE_EXPORTS</PreprocessorDefinitions>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\samplecode\common\sources\PIUtilitiesWin.cpp">
+    <ClCompile Include="..\..\..\..\ext\adobe_photoshop_sdk_2021_win\pluginsdk\samplecode\common\sources\PIUtilitiesWin.cpp">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Disabled</Optimization>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">ISOLATION_AWARE_ENABLED=1;WIN32=1;_DEBUG;_CRT_SECURE_NO_DEPRECATE;_SCL_SECURE_NO_DEPRECATE;_WINDOWS;_MBCS;_USRDLL;DISSOLVE_EXPORTS</PreprocessorDefinitions>
@@ -404,23 +404,23 @@
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="..\..\OpenColorIO_PS.r">
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">cl /I..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\samplecode\common\Includes /I..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\PhotoshopAPI\Photoshop /I..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\PhotoshopAPI\PICA_SP /I..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\samplecode\common\Resources /EP /DMSWindows=1 /DWIN32=1 /Tc"%(FullPath)" &gt; "$(IntDir)%(Filename).rr"
-..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\samplecode\resources\cnvtpipl.exe "$(IntDir)%(Filename).rr" "$(ProjectDir)%(Filename)_PiPL.rc"
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">cl /I..\..\..\..\ext\adobe_photoshop_sdk_2021_win\pluginsdk\samplecode\common\Includes /I..\..\..\..\ext\adobe_photoshop_sdk_2021_win\pluginsdk\PhotoshopAPI\Photoshop /I..\..\..\..\ext\adobe_photoshop_sdk_2021_win\pluginsdk\PhotoshopAPI\PICA_SP /I..\..\..\..\ext\adobe_photoshop_sdk_2021_win\pluginsdk\samplecode\common\Resources /EP /DMSWindows=1 /DWIN32=1 /Tc"%(FullPath)" &gt; "$(IntDir)%(Filename).rr"
+..\..\..\..\ext\adobe_photoshop_sdk_2021_win\pluginsdk\samplecode\resources\cnvtpipl.exe "$(IntDir)%(Filename).rr" "$(ProjectDir)%(Filename)_PiPL.rc"
 del "$(IntDir)%(Filename).rr"
 </Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectDir)%(Filename)_PiPL.rc;%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">cl /I..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\samplecode\common\Includes /I..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\PhotoshopAPI\Photoshop /I..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\PhotoshopAPI\PICA_SP /I..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\samplecode\common\Resources /EP /DMSWindows=1 /DWIN32=1 /Tc"%(FullPath)" &gt; "$(IntDir)%(Filename).rr"
-..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\samplecode\resources\cnvtpipl.exe "$(IntDir)%(Filename).rr" "$(ProjectDir)%(Filename)_PiPL.rc"
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">cl /I..\..\..\..\ext\adobe_photoshop_sdk_2021_win\pluginsdk\samplecode\common\Includes /I..\..\..\..\ext\adobe_photoshop_sdk_2021_win\pluginsdk\PhotoshopAPI\Photoshop /I..\..\..\..\ext\adobe_photoshop_sdk_2021_win\pluginsdk\PhotoshopAPI\PICA_SP /I..\..\..\..\ext\adobe_photoshop_sdk_2021_win\pluginsdk\samplecode\common\Resources /EP /DMSWindows=1 /DWIN32=1 /Tc"%(FullPath)" &gt; "$(IntDir)%(Filename).rr"
+..\..\..\..\ext\adobe_photoshop_sdk_2021_win\pluginsdk\samplecode\resources\cnvtpipl.exe "$(IntDir)%(Filename).rr" "$(ProjectDir)%(Filename)_PiPL.rc"
 del "$(IntDir)%(Filename).rr"
 </Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)%(Filename)_PiPL.rc;%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">cl /I..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\samplecode\common\Includes /I..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\PhotoshopAPI\Photoshop /I..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\PhotoshopAPI\PICA_SP /I..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\samplecode\common\Resources /EP /DMSWindows=1 /DWIN32=1 /Tc"%(FullPath)" &gt; "$(IntDir)%(Filename).rr"
-..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\samplecode\resources\cnvtpipl.exe "$(IntDir)%(Filename).rr" "$(ProjectDir)%(Filename)_PiPL.rc"
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">cl /I..\..\..\..\ext\adobe_photoshop_sdk_2021_win\pluginsdk\samplecode\common\Includes /I..\..\..\..\ext\adobe_photoshop_sdk_2021_win\pluginsdk\PhotoshopAPI\Photoshop /I..\..\..\..\ext\adobe_photoshop_sdk_2021_win\pluginsdk\PhotoshopAPI\PICA_SP /I..\..\..\..\ext\adobe_photoshop_sdk_2021_win\pluginsdk\samplecode\common\Resources /EP /DMSWindows=1 /DWIN32=1 /Tc"%(FullPath)" &gt; "$(IntDir)%(Filename).rr"
+..\..\..\..\ext\adobe_photoshop_sdk_2021_win\pluginsdk\samplecode\resources\cnvtpipl.exe "$(IntDir)%(Filename).rr" "$(ProjectDir)%(Filename)_PiPL.rc"
 del "$(IntDir)%(Filename).rr"
 </Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectDir)%(Filename)_PiPL.rc;%(Outputs)</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">cl /I..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\samplecode\common\Includes /I..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\PhotoshopAPI\Photoshop /I..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\PhotoshopAPI\PICA_SP /I..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\samplecode\common\Resources /EP /DMSWindows=1 /DWIN32=1 /Tc"%(FullPath)" &gt; "$(IntDir)%(Filename).rr"
-..\..\..\..\ext\adobe_photoshop_sdk_cc_2017_win\pluginsdk\samplecode\resources\cnvtpipl.exe "$(IntDir)%(Filename).rr" "$(ProjectDir)%(Filename)_PiPL.rc"
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">cl /I..\..\..\..\ext\adobe_photoshop_sdk_2021_win\pluginsdk\samplecode\common\Includes /I..\..\..\..\ext\adobe_photoshop_sdk_2021_win\pluginsdk\PhotoshopAPI\Photoshop /I..\..\..\..\ext\adobe_photoshop_sdk_2021_win\pluginsdk\PhotoshopAPI\PICA_SP /I..\..\..\..\ext\adobe_photoshop_sdk_2021_win\pluginsdk\samplecode\common\Resources /EP /DMSWindows=1 /DWIN32=1 /Tc"%(FullPath)" &gt; "$(IntDir)%(Filename).rr"
+..\..\..\..\ext\adobe_photoshop_sdk_2021_win\pluginsdk\samplecode\resources\cnvtpipl.exe "$(IntDir)%(Filename).rr" "$(ProjectDir)%(Filename)_PiPL.rc"
 del "$(IntDir)%(Filename).rr"
 </Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)%(Filename)_PiPL.rc;%(Outputs)</Outputs>

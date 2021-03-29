@@ -8,7 +8,7 @@ supported_apps:
       image : images/supported_apps/ae.png
       categories : ["2D", "Compositing", "Animation"]
       content : Plugin required.
-      link : "http://www.fnordware.com/OpenColorIO"
+      link : "http://fnordware.blogspot.com/2012/05/opencolorio-for-after-effects.html"
     
     # portfolio item loop
     - name : Autodesk Arnold
@@ -23,6 +23,13 @@ supported_apps:
       categories : ["3D", "Animation"]
       content : "Version 2.64 and up."
       link : "http://www.blender.org/"
+
+    # portfolio item loop
+    - name : cineSync
+      image : images/supported_apps/cinesync.png
+      categories : ["Playback", "Review"]
+      content : Native support.
+      link : "https://cospective.com/cinesync/"
 
     # portfolio item loop
     - name : Clarisse
@@ -140,8 +147,8 @@ supported_apps:
     - name : Adobe Photoshop
       image : images/supported_apps/ps.png
       categories : ["2D", "Photography", "Paint"]
-      content : Available via ICC profiles.
-      link : "https://www.adobe.com/products/photoshop.html"
+      content : Plugin required.
+      link : "http://fnordware.blogspot.com/2017/02/opencolorio-for-photoshop.html"
 
       # portfolio item loop
     - name : PhotoFlow
@@ -191,7 +198,3 @@ supported_apps:
       categories : ["Render", "3D"]
       content : V-Ray 4 and up.
       link : "https://chaosgroup.com/"
-
-
-
-  

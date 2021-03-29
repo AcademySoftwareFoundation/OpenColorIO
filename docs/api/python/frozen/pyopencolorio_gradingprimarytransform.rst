@@ -32,12 +32,6 @@
       Creates an instance of :ref:`GradingPrimaryTransform`.
 
 
-   .. py:method:: GradingPrimaryTransform.__str__()
-      :module: PyOpenColorIO
-
-      Return str(self).
-
-
    .. py:method:: GradingPrimaryTransform.getDirection(self: PyOpenColorIO.Transform) -> PyOpenColorIO.TransformDirection
       :module: PyOpenColorIO
 

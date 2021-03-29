@@ -13,7 +13,11 @@
    Refer to section 7.2.4 in specification S-2014-006 "A Common File Format
    for Look-Up Tables" from the Academy of Motion Picture Arts and Sciences and the American Society of Cinematographers.
 
-   The "noClamp" style described in the specification S-2014-006 becomes a MatrixOp at the processor level.
+   .. note::
+      The "noClamp" style described in the specification S-2014-006 becomes a MatrixOp at the processor level.
+
+   .. note::
+      Changing the transform direction does not modify the in/out values -- they are always specified with respect to the "forward" direction.
 
 
    .. py:method:: RangeTransform.__init__(*args, **kwargs)
@@ -30,12 +34,6 @@
       Creates an instance of :ref:`RangeTransform`.
 
 
-   .. py:method:: RangeTransform.__str__()
-      :module: PyOpenColorIO
-
-      Return str(self).
-
-
    .. py:method:: RangeTransform.equals(self: PyOpenColorIO.RangeTransform, other: PyOpenColorIO.RangeTransform) -> bool
       :module: PyOpenColorIO
 
@@ -48,6 +46,10 @@
 
    .. py:method:: RangeTransform.getFileInputBitDepth(self: PyOpenColorIO.RangeTransform) -> PyOpenColorIO.BitDepth
       :module: PyOpenColorIO
+
+      **File bit-depth**
+
+      In a format such as CLF, the range values are scaled to take pixels at the specified inBitDepth to pixels at the specified outBitDepth. This complicates the interpretation of the range values and so this object always holds normalized values and scaling is done on the way from or to file formats such as CLF. Get the bit-depths associated with the range values read from a file or set the bit-depths of values to be written to a file (for file formats such as CLF that support multiple bit-depths).
 
 
    .. py:method:: RangeTransform.getFileOutputBitDepth(self: PyOpenColorIO.RangeTransform) -> PyOpenColorIO.BitDepth
@@ -74,6 +76,10 @@
       :module: PyOpenColorIO
 
       Get the minimum value for the input.
+
+      **Range values**
+
+      These values are normalized relative to what may be stored in file formats such as CLF. For example in a CLF file using a "10i" input depth, a MaxInValue of 1023 in the file is normalized to 1.0. Likewise, for an output depth of "12i", a MaxOutValue of 4095 in the file is normalized to 1.0. The values here are unclamped and may extend outside [0,1].
 
 
    .. py:method:: RangeTransform.getMinOutValue(self: PyOpenColorIO.RangeTransform) -> float

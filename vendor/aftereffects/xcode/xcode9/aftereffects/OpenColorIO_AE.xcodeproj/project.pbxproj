@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		2A180A6914801EB90000D11A /* OpenColorIO_AE_MonitorProfileChooser.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2A180A6814801EB90000D11A /* OpenColorIO_AE_MonitorProfileChooser.xib */; };
 		2A180A6D14801FFA0000D11A /* OpenColorIO_AE_MonitorProfileChooser_Controller.m in Sources */ = {isa = PBXBuildFile; fileRef = 2A180A6B14801FFA0000D11A /* OpenColorIO_AE_MonitorProfileChooser_Controller.m */; };
+		2A41D964254B8EBE00893EFF /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2A41D963254B8EBE00893EFF /* IOKit.framework */; };
 		2A4A0AF61554679400D5AEB7 /* ocioicc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2A4A0AF41554679400D5AEB7 /* ocioicc.cpp */; };
 		2A4F8FEF234D0DFC008A9921 /* libexpat.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2A4F8FE5234D0DED008A9921 /* libexpat.a */; };
 		2A4F8FF0234D0DFC008A9921 /* libpystring.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2A4F8FEA234D0DED008A9921 /* libpystring.a */; };
@@ -137,6 +138,7 @@
 		2A180A6814801EB90000D11A /* OpenColorIO_AE_MonitorProfileChooser.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = OpenColorIO_AE_MonitorProfileChooser.xib; path = ../../../mac/OpenColorIO_AE_MonitorProfileChooser.xib; sourceTree = "<group>"; };
 		2A180A6B14801FFA0000D11A /* OpenColorIO_AE_MonitorProfileChooser_Controller.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = OpenColorIO_AE_MonitorProfileChooser_Controller.m; path = ../../../mac/OpenColorIO_AE_MonitorProfileChooser_Controller.m; sourceTree = "<group>"; usesTabs = 0; };
 		2A180A6C14801FFA0000D11A /* OpenColorIO_AE_MonitorProfileChooser_Controller.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = OpenColorIO_AE_MonitorProfileChooser_Controller.h; path = ../../../mac/OpenColorIO_AE_MonitorProfileChooser_Controller.h; sourceTree = "<group>"; usesTabs = 0; };
+		2A41D963254B8EBE00893EFF /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = System/Library/Frameworks/IOKit.framework; sourceTree = SDKROOT; };
 		2A4A0AF41554679400D5AEB7 /* ocioicc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ocioicc.cpp; path = ../../../../../src/apps/ociobakelut/ocioicc.cpp; sourceTree = SOURCE_ROOT; };
 		2A4A0AF51554679400D5AEB7 /* ocioicc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ocioicc.h; path = ../../../../../src/apps/ociobakelut/ocioicc.h; sourceTree = SOURCE_ROOT; };
 		2A60CAD91491A506009D6DBF /* OpenColorIO_AE_GL.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = OpenColorIO_AE_GL.h; path = ../../../OpenColorIO_AE_GL.h; sourceTree = SOURCE_ROOT; usesTabs = 0; };
@@ -146,8 +148,6 @@
 		2AB82E42227FDC2D00CF8E58 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		2AB82E44227FDC5B00CF8E58 /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
 		2AB82E46227FDC6200CF8E58 /* AGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AGL.framework; path = System/Library/Frameworks/AGL.framework; sourceTree = SDKROOT; };
-		2AC48DD5234D0DDA00EAA2BB /* libexpat.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; path = libexpat.a; sourceTree = BUILT_PRODUCTS_DIR; };
-		2AC48DD7234D0DDA00EAA2BB /* libpystring.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; path = libpystring.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		2AEABA1C23424F150053BCB6 /* pystring.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = pystring.xcodeproj; path = ../ext/pystring.xcodeproj; sourceTree = SOURCE_ROOT; };
 		2AF56B8F147A431100F9968C /* OpenColorIO_AE_ArbData.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = OpenColorIO_AE_ArbData.cpp; path = ../../../OpenColorIO_AE_ArbData.cpp; sourceTree = SOURCE_ROOT; usesTabs = 0; };
 		2AF56B90147A431100F9968C /* OpenColorIO_AE_Dialogs_Cocoa.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = OpenColorIO_AE_Dialogs_Cocoa.mm; path = ../../../mac/OpenColorIO_AE_Dialogs_Cocoa.mm; sourceTree = SOURCE_ROOT; usesTabs = 0; };
@@ -155,9 +155,9 @@
 		2AF56B93147A431100F9968C /* OpenColorIO_AE_UI.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = OpenColorIO_AE_UI.cpp; path = ../../../OpenColorIO_AE_UI.cpp; sourceTree = SOURCE_ROOT; usesTabs = 0; };
 		2AF56B94147A431100F9968C /* OpenColorIO_AE.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = OpenColorIO_AE.cpp; path = ../../../OpenColorIO_AE.cpp; sourceTree = SOURCE_ROOT; usesTabs = 0; };
 		2AF56B95147A431100F9968C /* OpenColorIO_AE.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = OpenColorIO_AE.h; path = ../../../OpenColorIO_AE.h; sourceTree = SOURCE_ROOT; usesTabs = 0; };
-		2AF56B9D147A458800F9968C /* AEGP_SuiteHandler.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AEGP_SuiteHandler.cpp; path = "../../../../../ext/Adobe After Effects CS5 Mac SDK/Examples/Util/AEGP_SuiteHandler.cpp"; sourceTree = SOURCE_ROOT; usesTabs = 0; };
-		2AF56B9E147A458800F9968C /* AEGP_SuiteHandler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AEGP_SuiteHandler.h; path = "../../../../../ext/Adobe After Effects CS5 Mac SDK/Examples/Util/AEGP_SuiteHandler.h"; sourceTree = SOURCE_ROOT; usesTabs = 0; };
-		2AF56B9F147A458800F9968C /* MissingSuiteError.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MissingSuiteError.cpp; path = "../../../../../ext/Adobe After Effects CS5 Mac SDK/Examples/Util/MissingSuiteError.cpp"; sourceTree = SOURCE_ROOT; usesTabs = 0; };
+		2AF56B9D147A458800F9968C /* AEGP_SuiteHandler.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AEGP_SuiteHandler.cpp; path = "../../../../../ext/Adobe After Effects 2020 Mac SDK/Examples/Util/AEGP_SuiteHandler.cpp"; sourceTree = SOURCE_ROOT; usesTabs = 0; };
+		2AF56B9E147A458800F9968C /* AEGP_SuiteHandler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AEGP_SuiteHandler.h; path = "../../../../../ext/Adobe After Effects 2020 Mac SDK/Examples/Util/AEGP_SuiteHandler.h"; sourceTree = SOURCE_ROOT; usesTabs = 0; };
+		2AF56B9F147A458800F9968C /* MissingSuiteError.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MissingSuiteError.cpp; path = "../../../../../ext/Adobe After Effects 2020 Mac SDK/Examples/Util/MissingSuiteError.cpp"; sourceTree = SOURCE_ROOT; usesTabs = 0; };
 		2AF56D04147AB5C900F9968C /* DrawbotBot.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = DrawbotBot.cpp; path = ../../../DrawbotBot.cpp; sourceTree = SOURCE_ROOT; usesTabs = 0; };
 		2AF56D05147AB5C900F9968C /* DrawbotBot.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DrawbotBot.h; path = ../../../DrawbotBot.h; sourceTree = SOURCE_ROOT; usesTabs = 0; };
 		2AF56EE2147AD10E00F9968C /* OpenColorIO.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = OpenColorIO.xcodeproj; path = ../OpenColorIO.xcodeproj; sourceTree = SOURCE_ROOT; };
@@ -176,9 +176,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				2AB82E47227FDC6200CF8E58 /* AGL.framework in Frameworks */,
-				2AB82E45227FDC5C00CF8E58 /* OpenGL.framework in Frameworks */,
 				2AB82E43227FDC2D00CF8E58 /* Cocoa.framework in Frameworks */,
+				2A41D964254B8EBE00893EFF /* IOKit.framework in Frameworks */,
+				2AB82E45227FDC5C00CF8E58 /* OpenGL.framework in Frameworks */,
+				2AB82E47227FDC6200CF8E58 /* AGL.framework in Frameworks */,
 				2AF56EE8147AD11200F9968C /* libOpenColorIO.a in Frameworks */,
 				2AF57005147AE17400F9968C /* libyaml.a in Frameworks */,
 				2AF999CB147E1DD200FEB83B /* liblcms.a in Frameworks */,
@@ -220,11 +221,10 @@
 		2AB82E40227FDC2D00CF8E58 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				2AC48DD5234D0DDA00EAA2BB /* libexpat.a */,
-				2AC48DD7234D0DDA00EAA2BB /* libpystring.a */,
-				2AB82E46227FDC6200CF8E58 /* AGL.framework */,
-				2AB82E44227FDC5B00CF8E58 /* OpenGL.framework */,
 				2AB82E42227FDC2D00CF8E58 /* Cocoa.framework */,
+				2A41D963254B8EBE00893EFF /* IOKit.framework */,
+				2AB82E44227FDC5B00CF8E58 /* OpenGL.framework */,
+				2AB82E46227FDC6200CF8E58 /* AGL.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -519,9 +519,7 @@
 		2A1BAC2310C3C82A00244D12 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				AE_SDK = "\"../../../../../ext/Adobe After Effects CS5 Mac SDK\"";
-				"AE_SDK[arch=i386]" = "\"../../../../../ext/Adobe After Effects CS3 Mac SDK\"";
-				"AE_SDK[arch=ppc]" = "\"../../../../../ext/Adobe After Effects CS3 Mac SDK\"";
+				AE_SDK = "\"../../../../../ext/Adobe After Effects 2020 Mac SDK\"";
 				ARCHS = "$(ARCHS_STANDARD)";
 				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
@@ -532,7 +530,7 @@
 				HEADER_SEARCH_PATHS = (
 					..,
 					../../../../../include,
-					../../../../../src/utils/oglbuilder,
+					../../../../../src/libutils/oglapphelpers,
 					"$(AE_SDK)/Examples/Headers",
 					"$(AE_SDK)/Examples/Util",
 					"$(AE_SDK)/Examples/Headers/SP",
@@ -567,9 +565,7 @@
 		C4E61880095A3C800012CA3F /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				AE_SDK = "\"../../../../../ext/Adobe After Effects CS5 Mac SDK\"";
-				"AE_SDK[arch=i386]" = "\"../../../../../ext/Adobe After Effects CS3 Mac SDK\"";
-				"AE_SDK[arch=ppc]" = "\"../../../../../ext/Adobe After Effects CS3 Mac SDK\"";
+				AE_SDK = "\"../../../../../ext/Adobe After Effects 2020 Mac SDK\"";
 				ARCHS = "$(ARCHS_STANDARD)";
 				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
 				COPY_PHASE_STRIP = NO;
@@ -579,7 +575,7 @@
 				HEADER_SEARCH_PATHS = (
 					..,
 					../../../../../include,
-					../../../../../src/utils/oglbuilder,
+					../../../../../src/libutils/oglapphelpers,
 					"$(AE_SDK)/Examples/Headers",
 					"$(AE_SDK)/Examples/Util",
 					"$(AE_SDK)/Examples/Headers/SP",

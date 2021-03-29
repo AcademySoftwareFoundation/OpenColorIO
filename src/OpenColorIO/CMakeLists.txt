@@ -137,6 +137,12 @@ set(SOURCES
 	transforms/builtins/BuiltinTransformRegistry.cpp
 	transforms/builtins/ColorMatrixHelpers.cpp
 	transforms/builtins/OpHelpers.cpp
+	transforms/builtins/ArriCameras.cpp
+	transforms/builtins/CanonCameras.cpp
+	transforms/builtins/Displays.cpp
+	transforms/builtins/PanasonicCameras.cpp
+	transforms/builtins/RedCameras.cpp
+	transforms/builtins/SonyCameras.cpp
 	transforms/BuiltinTransform.cpp
 	transforms/CDLTransform.cpp
 	transforms/ColorSpaceTransform.cpp
@@ -162,21 +168,6 @@ set(SOURCES
 	ViewTransform.cpp
 	SystemMonitor.cpp
 )
-
-if(OCIO_ADD_EXTRA_BUILTINS)
-	set(SOURCES_BUILTINS
-		transforms/builtins/ArriCameras.cpp
-		transforms/builtins/CanonCameras.cpp
-		transforms/builtins/Displays.cpp
-		transforms/builtins/PanasonicCameras.cpp
-		transforms/builtins/RedCameras.cpp
-		transforms/builtins/SonyCameras.cpp
-	)
-
-	list(INSERT SOURCES 0 ${SOURCES_BUILTINS})
-else()
-	message(WARNING "Disabling supplemental built-in transforms removes all built-in camera transforms, limiting OCIO configuration compatibility.")
-endif()
 
 if(NOT WIN32)
 
@@ -257,13 +248,6 @@ if(OCIO_USE_SSE)
 	target_compile_definitions(OpenColorIO
 		PRIVATE
 			USE_SSE
-	)
-endif()
-
-if(OCIO_ADD_EXTRA_BUILTINS)
-	target_compile_definitions(OpenColorIO
-		PRIVATE
-			ADD_EXTRA_BUILTINS
 	)
 endif()
 
