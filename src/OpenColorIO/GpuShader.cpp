@@ -378,20 +378,20 @@ private:
 
 } // namespace GPUShaderImpl
 
-class LegacyGpuShaderDesc::Impl : public GPUShaderImpl::PrivateImpl
+class LegacyGpuShaderDesc::ImplLegacy : public GPUShaderImpl::PrivateImpl
 {
 public:
-    Impl() = delete;
-    Impl(const Impl &) = delete;
-    Impl & operator=(const Impl &) = delete;
+    ImplLegacy() = delete;
+    ImplLegacy(const ImplLegacy &) = delete;
+    ImplLegacy & operator=(const ImplLegacy &) = delete;
 
-    explicit Impl(unsigned edgelen)
+    explicit ImplLegacy(unsigned edgelen)
         :   GPUShaderImpl::PrivateImpl()
         ,   m_edgelen(edgelen)
     {
     }
 
-    virtual ~Impl() {}
+    virtual ~ImplLegacy() {}
 
     inline unsigned getEdgelen() const { return m_edgelen; }
 
@@ -406,19 +406,19 @@ GpuShaderDescRcPtr LegacyGpuShaderDesc::Create(unsigned edgelen)
 
 LegacyGpuShaderDesc::LegacyGpuShaderDesc(unsigned edgelen)
     :   GpuShaderDesc()
-    ,   m_impl(new Impl(edgelen))
+    ,   m_implLegacy(new ImplLegacy(edgelen))
 {
 }
 
 LegacyGpuShaderDesc::~LegacyGpuShaderDesc()
 {
-    delete m_impl;
-    m_impl = 0x0;
+    delete m_implLegacy;
+    m_implLegacy = nullptr;
 }
 
 unsigned LegacyGpuShaderDesc::getEdgelen() const
 {
-    return getImpl()->getEdgelen();
+    return getImplLegacy()->getEdgelen();
 }
 
 unsigned LegacyGpuShaderDesc::getNumUniforms() const noexcept
@@ -494,7 +494,7 @@ void LegacyGpuShaderDesc::getTextureValues(unsigned, const float *&) const
 
 unsigned LegacyGpuShaderDesc::getNum3DTextures() const noexcept
 {
-    return unsigned(getImpl()->m_textures3D.size());
+    return unsigned(getImplLegacy()->m_textures3D.size());
 }
 
 void LegacyGpuShaderDesc::add3DTexture(const char * textureName,
@@ -503,21 +503,21 @@ void LegacyGpuShaderDesc::add3DTexture(const char * textureName,
                                        Interpolation interpolation,
                                        const float * values)
 {
-    if(dimension!=getImpl()->getEdgelen())
+    if(dimension!= getImplLegacy()->getEdgelen())
     {
         std::ostringstream ss;
         ss << "3D Texture size unexpected: " << dimension
-           << " instead of " << getImpl()->getEdgelen();
+           << " instead of " << getImplLegacy()->getEdgelen();
         throw Exception(ss.str().c_str());
     }
 
-    if(getImpl()->m_textures3D.size()!=0)
+    if(getImplLegacy()->m_textures3D.size()!=0)
     {
         const std::string ss("3D Texture error: only one 3D texture allowed");
         throw Exception(ss.c_str());
     }
 
-    getImpl()->add3DTexture(textureName, samplerName, dimension, interpolation, values);
+    getImplLegacy()->add3DTexture(textureName, samplerName, dimension, interpolation, values);
 }
 
 void LegacyGpuShaderDesc::get3DTexture(unsigned index,
@@ -526,12 +526,12 @@ void LegacyGpuShaderDesc::get3DTexture(unsigned index,
                                        unsigned & edgelen,
                                        Interpolation & interpolation) const
 {
-    getImpl()->get3DTexture(index, textureName, samplerName, edgelen, interpolation);
+    getImplLegacy()->get3DTexture(index, textureName, samplerName, edgelen, interpolation);
 }
 
 void LegacyGpuShaderDesc::get3DTextureValues(unsigned index, const float *& values) const
 {
-    getImpl()->get3DTextureValues(index, values);
+    getImplLegacy()->get3DTextureValues(index, values);
 }
 
 void LegacyGpuShaderDesc::Deleter(LegacyGpuShaderDesc* c)
@@ -540,11 +540,11 @@ void LegacyGpuShaderDesc::Deleter(LegacyGpuShaderDesc* c)
 }
 
 
-class GenericGpuShaderDesc::Impl : public GPUShaderImpl::PrivateImpl
+class GenericGpuShaderDesc::ImplGeneric : public GPUShaderImpl::PrivateImpl
 {
 public:
-    Impl() : GPUShaderImpl::PrivateImpl() {}
-    ~Impl() {}
+    ImplGeneric() : GPUShaderImpl::PrivateImpl() {}
+    ~ImplGeneric() {}
 };
 
 GpuShaderDescRcPtr GenericGpuShaderDesc::Create()
@@ -554,69 +554,69 @@ GpuShaderDescRcPtr GenericGpuShaderDesc::Create()
 
 GenericGpuShaderDesc::GenericGpuShaderDesc()
     :   GpuShaderDesc()
-    ,   m_impl(new Impl())
+    ,   m_implGeneric(new ImplGeneric())
 {
 }
 
 GenericGpuShaderDesc::~GenericGpuShaderDesc()
 {
-    delete m_impl;
-    m_impl = 0x0;
+    delete m_implGeneric;
+    m_implGeneric = nullptr;
 }
 
 unsigned GenericGpuShaderDesc::getNumUniforms() const noexcept
 {
-    return getImpl()->getNumUniforms();
+    return getImplGeneric()->getNumUniforms();
 }
 
 const char * GenericGpuShaderDesc::getUniform(unsigned index, GpuShaderDesc::UniformData & data) const
 {
-    return getImpl()->getUniform(index, data);
+    return getImplGeneric()->getUniform(index, data);
 }
 
 bool GenericGpuShaderDesc::addUniform(const char * name, const DoubleGetter & getter)
 {
-    return getImpl()->addUniform(name, getter);
+    return getImplGeneric()->addUniform(name, getter);
 }
 
 bool GenericGpuShaderDesc::addUniform(const char * name, const BoolGetter & getter)
 {
-    return getImpl()->addUniform(name, getter);
+    return getImplGeneric()->addUniform(name, getter);
 }
 
 bool GenericGpuShaderDesc::addUniform(const char * name, const Float3Getter & getter)
 {
-    return getImpl()->addUniform(name, getter);
+    return getImplGeneric()->addUniform(name, getter);
 }
 
 bool GenericGpuShaderDesc::addUniform(const char * name,
                                       const SizeGetter & getSize,
                                       const VectorFloatGetter & getFloatArray)
 {
-    return getImpl()->addUniform(name, getSize, getFloatArray);
+    return getImplGeneric()->addUniform(name, getSize, getFloatArray);
 }
 
 bool GenericGpuShaderDesc::addUniform(const char * name,
                                       const SizeGetter & getSize,
                                       const VectorIntGetter & getVectorInt)
 {
-    return getImpl()->addUniform(name, getSize, getVectorInt);
+    return getImplGeneric()->addUniform(name, getSize, getVectorInt);
 }
 
 
 unsigned GenericGpuShaderDesc::getTextureMaxWidth() const noexcept
 {
-    return getImpl()->get1dLutMaxWidth();
+    return getImplGeneric()->get1dLutMaxWidth();
 }
 
 void GenericGpuShaderDesc::setTextureMaxWidth(unsigned maxWidth)
 {
-    getImpl()->set1dLutMaxWidth(maxWidth);
+    getImplGeneric()->set1dLutMaxWidth(maxWidth);
 }
 
 unsigned GenericGpuShaderDesc::getNumTextures() const noexcept
 {
-    return unsigned(getImpl()->m_textures.size());
+    return unsigned(getImplGeneric()->m_textures.size());
 }
 
 void GenericGpuShaderDesc::addTexture(const char * textureName,
@@ -626,7 +626,7 @@ void GenericGpuShaderDesc::addTexture(const char * textureName,
                                       Interpolation interpolation,
                                       const float * values)
 {
-    getImpl()->addTexture(textureName, samplerName, width, height, channel, interpolation, values);
+    getImplGeneric()->addTexture(textureName, samplerName, width, height, channel, interpolation, values);
 }
 
 void GenericGpuShaderDesc::getTexture(unsigned index,
@@ -636,17 +636,17 @@ void GenericGpuShaderDesc::getTexture(unsigned index,
                                       TextureType & channel,
                                       Interpolation & interpolation) const
 {
-    getImpl()->getTexture(index, textureName, samplerName, width, height, channel, interpolation);
+    getImplGeneric()->getTexture(index, textureName, samplerName, width, height, channel, interpolation);
 }
 
 void GenericGpuShaderDesc::getTextureValues(unsigned index, const float *& values) const
 {
-    getImpl()->getTextureValues(index, values);
+    getImplGeneric()->getTextureValues(index, values);
 }
 
 unsigned GenericGpuShaderDesc::getNum3DTextures() const noexcept
 {
-    return unsigned(getImpl()->m_textures3D.size());
+    return unsigned(getImplGeneric()->m_textures3D.size());
 }
 
 void GenericGpuShaderDesc::add3DTexture(const char * textureName,
@@ -655,7 +655,7 @@ void GenericGpuShaderDesc::add3DTexture(const char * textureName,
                                         Interpolation interpolation,
                                         const float * values)
 {
-    getImpl()->add3DTexture(textureName, samplerName, edgelen, interpolation, values);
+    getImplGeneric()->add3DTexture(textureName, samplerName, edgelen, interpolation, values);
 }
 
 void GenericGpuShaderDesc::get3DTexture(unsigned index,
@@ -664,12 +664,12 @@ void GenericGpuShaderDesc::get3DTexture(unsigned index,
                                         unsigned & edgelen,
                                         Interpolation & interpolation) const
 {
-    getImpl()->get3DTexture(index, textureName, samplerName, edgelen, interpolation);
+    getImplGeneric()->get3DTexture(index, textureName, samplerName, edgelen, interpolation);
 }
 
 void GenericGpuShaderDesc::get3DTextureValues(unsigned index, const float *& values) const
 {
-    getImpl()->get3DTextureValues(index, values);
+    getImplGeneric()->get3DTextureValues(index, values);
 }
 
 void GenericGpuShaderDesc::Deleter(GenericGpuShaderDesc* c)
