@@ -77,3 +77,18 @@ if(NOT HAVE_SSE2)
     message(STATUS "Disabling SSE optimizations, as the target doesn't support them")
     set(OCIO_USE_SSE OFF)
 endif(NOT HAVE_SSE2)
+
+
+###############################################################################
+# Define RPATH.
+
+if (UNIX AND NOT CMAKE_SKIP_RPATH)
+    # With the 'usual' install path structure in mind, search from the bin directory
+    # (i.e. a binary loading a dynamic library) and then from the current directory
+    # (i.e. dynamic library loading another dynamic library).  
+    if (APPLE)
+        set(CMAKE_INSTALL_RPATH "@loader_path/../lib;@loader_path")
+    else()
+        set(CMAKE_INSTALL_RPATH "$ORIGIN/../lib;$ORIGIN")
+    endif()
+endif()

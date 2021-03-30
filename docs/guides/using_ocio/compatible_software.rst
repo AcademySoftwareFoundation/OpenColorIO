@@ -27,7 +27,7 @@ Documentation :
 
 - See `src/aftereffects <http://github.com/AcademySoftwareFoundation/OpenColorIO/tree/master/src/aftereffects>`__ if you are interested in building your own OCIO plugins.
 
-- Pre-built binaries are also available for `download <http://www.fnordware.com/OpenColorIO>`__, courtesy of `fnordware <http://www.fnordware.com>`__.
+- Pre-built binaries are also available for `download <http://fnordware.blogspot.com/2012/05/opencolorio-for-after-effects.html>`__, courtesy of `fnordware <http://www.fnordware.com>`__.
 
 
 Arnold (Autodesk)
@@ -75,6 +75,16 @@ Documentation:
 - `Developer Guide <https://opencolorio.org/developers/index.html>`__
 
 - `Usage Examples <https://opencolorio.org/developers/usage_examples.html>`__
+
+
+cineSync (ftrack)
+*********************
+
+Website : `<https://cospective.com/cinesync/>`__
+
+Documentation :
+
+- `Colour Grading <https://www.cinesync.com/manual/latest/Colour_Grading.html>`__
 
 
 Clarisse (Isotropix)
@@ -298,6 +308,10 @@ Photoshop
 OpenColorIO display luts can be exported as ICC profiles for use in photoshop. The core idea is to create an .icc profile, with a valid description, and then to save it to the proper OS icc directory. (On OSX, ``~/Library/ColorSync/Profiles/``). Upon a Photoshop relaunch, Edit->Assign Profile, and then select your new OCIO lut.
 
 Website : `<https://www.adobe.com/products/photoshop.html>`__
+
+An OpenColorIO plugin is also available for use in Photoshop. The plug-in can perform color operations to an image as a filter and can also export LUTs and ICC profiles to be used by Photoshop.
+
+Plugin binaries are available for `download <http://fnordware.blogspot.com/2017/02/opencolorio-for-photoshop.html>`__, courtesy of `fnordware <http://www.fnordware.com>`__.
 
 Python
 ******

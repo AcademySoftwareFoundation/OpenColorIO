@@ -350,7 +350,7 @@ OpenColorIO_AE_Context::OpenColorIO_AE_Context(const std::string &path, OCIO_Sou
             
             for(int i=0; i < _config->getNumDisplays(); ++i)
             {
-                _devices.push_back( _config->getDisplay(i) );
+                _displays.push_back( _config->getDisplay(i) );
             }
             
             
@@ -363,10 +363,10 @@ OpenColorIO_AE_Context::OpenColorIO_AE_Context(const std::string &path, OCIO_Sou
             
             
             const char *defaultDisplay = _config->getDefaultDisplay();
-            const char *defaultTransform = _config->getDefaultView(defaultDisplay);
+            const char *defaultView = _config->getDefaultView(defaultDisplay);
             
-            _device = defaultDisplay;
-            _transform = defaultTransform;
+            _display = defaultDisplay;
+            _view = defaultView;
         }
         else
         {
@@ -453,19 +453,19 @@ OpenColorIO_AE_Context::OpenColorIO_AE_Context(const ArbitraryData *arb_data, co
             
             for(int i=0; i < _config->getNumDisplays(); ++i)
             {
-                _devices.push_back( _config->getDisplay(i) );
+                _displays.push_back( _config->getDisplay(i) );
             }
             
             if(arb_data->action == OCIO_ACTION_CONVERT)
             {
                 setupConvert(arb_data->input, arb_data->output);
                 
-                _device = arb_data->device;
-                _transform = arb_data->transform;
+                _display = arb_data->display;
+                _view = arb_data->view;
             }
             else
             {
-                setupDisplay(arb_data->input, arb_data->device, arb_data->transform);
+                setupDisplay(arb_data->input, arb_data->display, arb_data->view);
                 
                 _output = arb_data->output;
             }
@@ -558,11 +558,11 @@ bool OpenColorIO_AE_Context::Verify(const ArbitraryData *arb_data, const std::st
     else if(arb_data->action == OCIO_ACTION_DISPLAY)
     {
         if(_input != arb_data->input ||
-            _device != arb_data->device ||
-            _transform != arb_data->transform ||
+            _display != arb_data->display ||
+            _view != arb_data->view ||
             force_reset)
         {
-            setupDisplay(arb_data->input, arb_data->device, arb_data->transform);
+            setupDisplay(arb_data->input, arb_data->display, arb_data->view);
         }
     }
     else
@@ -595,35 +595,35 @@ void OpenColorIO_AE_Context::setupConvert(const char *input, const char *output)
 }
 
 
-void OpenColorIO_AE_Context::setupDisplay(const char *input, const char *device, const char *xform)
+void OpenColorIO_AE_Context::setupDisplay(const char *input, const char *display, const char *view)
 {
-    _transforms.clear();
+    _views.clear();
     
-    bool xformValid = false;
+    bool viewValid = false;
     
-    for(int i=0; i < _config->getNumViews(device); i++)
+    for(int i=0; i < _config->getNumViews(display); i++)
     {
-        const std::string transformName = _config->getView(device, i);
+        const std::string viewName = _config->getView(display, i);
         
-        if(transformName == xform)
-            xformValid = true;
+        if(viewName == view)
+            viewValid = true;
         
-        _transforms.push_back(transformName);
+        _views.push_back(viewName);
     }
     
-    if(!xformValid)
-        xform = _config->getDefaultView(device);
+    if(!viewValid)
+        view = _config->getDefaultView(display);
     
 
-    OCIO::DisplayTransformRcPtr transform = OCIO::DisplayTransform::Create();
+    OCIO::DisplayViewTransformRcPtr transform = OCIO::DisplayViewTransform::Create();
     
-    transform->setInputColorSpaceName(input);
-    transform->setDisplay(device);
-    transform->setView(xform);
+    transform->setSrc(input);
+    transform->setDisplay(display);
+    transform->setView(view);
     
     _input = input;
-    _device = device;
-    _transform = xform;
+    _display = display;
+    _view = view;
     
 
     _processor = _config->getProcessor(transform);
@@ -656,8 +656,8 @@ void OpenColorIO_AE_Context::setupLUT(OCIO_Invert invert, OCIO_Interp interpolat
     
     if(invert == OCIO_INVERT_EXACT)
     {
-        _cpu_processor = _processor->getOptimizedCPUProcessor(OCIO::OPTIMIZATION_DEFAULT, OCIO::FINALIZATION_EXACT);
-        _gpu_processor = _processor->getOptimizedGPUProcessor(OCIO::OPTIMIZATION_DEFAULT, OCIO::FINALIZATION_EXACT);
+        _cpu_processor = _processor->getOptimizedCPUProcessor(OCIO::OPTIMIZATION_LOSSLESS);
+        _gpu_processor = _processor->getOptimizedGPUProcessor(OCIO::OPTIMIZATION_LOSSLESS);
     }
     else
     {
@@ -741,12 +741,12 @@ bool OpenColorIO_AE_Context::ExportLUT(const std::string &path, const std::strin
             std::string outputspace = "ProcessedOutput";
             outputColorSpace->setName(outputspace.c_str());
             
-            OCIO::DisplayTransformRcPtr transform = OCIO::DisplayTransform::Create();
+            OCIO::DisplayViewTransformRcPtr transform = OCIO::DisplayViewTransform::Create();
             
-            transform->setInputColorSpaceName(_input.c_str());
-            transform->setView(_transform.c_str());
-            transform->setDisplay(_device.c_str());
-            
+            transform->setSrc(_input.c_str());
+            transform->setDisplay(_display.c_str());
+            transform->setView(_view.c_str());
+
             outputColorSpace->setTransform(transform, OCIO::COLORSPACE_DIR_FROM_REFERENCE);
             
             editableConfig->addColorSpace(outputColorSpace);
@@ -807,22 +807,6 @@ void OpenColorIO_AE_Context::InitOCIOGL()
         SetPluginContext();
     
         glGenTextures(1, &_imageTexID);
-        glGenTextures(1, &_lut3dTexID);
-        
-        int num3Dentries = 3*LUT3D_EDGE_SIZE*LUT3D_EDGE_SIZE*LUT3D_EDGE_SIZE;
-        _lut3d.resize(num3Dentries);
-        memset(&_lut3d[0], 0, sizeof(float)*num3Dentries);
-        
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_3D, _lut3dTexID);
-        glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-        glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA32F_ARB,
-                        LUT3D_EDGE_SIZE, LUT3D_EDGE_SIZE, LUT3D_EDGE_SIZE,
-                            0, GL_RGB,GL_FLOAT, &_lut3d[0]);
                             
         _bufferWidth = _bufferHeight = 0;
         
@@ -835,63 +819,13 @@ void OpenColorIO_AE_Context::InitOCIOGL()
 
 static const char * g_fragShaderText = ""
 "\n"
-"uniform sampler2D tex1;\n"
+"uniform sampler2D img;\n"
 "\n"
 "void main()\n"
 "{\n"
-"    vec4 col = texture2D(tex1, gl_TexCoord[0].st);\n"
-"    gl_FragColor = OCIODisplay(col);\n"
+"    vec4 col = texture2D(img, gl_TexCoord[0].st);\n"
+"    gl_FragColor = OCIOMain(col);\n"
 "}\n";
-
-
-static GLuint CompileShaderText(GLenum shaderType, const char *text)
-{
-    GLuint shader;
-    GLint stat;
-    
-    shader = glCreateShader(shaderType);
-    glShaderSource(shader, 1, (const GLchar **) &text, NULL);
-    glCompileShader(shader);
-    glGetShaderiv(shader, GL_COMPILE_STATUS, &stat);
-    
-    if (!stat)
-    {
-        GLchar log[1000];
-        GLsizei len;
-        glGetShaderInfoLog(shader, 1000, &len, log);
-        return 0;
-    }
-    
-    return shader;
-}
-
-
-static GLuint LinkShaders(GLuint fragShader)
-{
-    if (!fragShader) return 0;
-    
-    GLuint program = glCreateProgram();
-    
-    if (fragShader)
-        glAttachShader(program, fragShader);
-    
-    glLinkProgram(program);
-    
-    // check link
-    {
-        GLint stat;
-        glGetProgramiv(program, GL_LINK_STATUS, &stat);
-        if (!stat) {
-            GLchar log[1000];
-            GLsizei len;
-            glGetProgramInfoLog(program, 1000, &len, log);
-            //fprintf(stderr, "Shader link error:\n%s\n", log);
-            return 0;
-        }
-    }
-    
-    return program;
-}
 
 
 void OpenColorIO_AE_Context::UpdateOCIOGLState()
@@ -900,28 +834,35 @@ void OpenColorIO_AE_Context::UpdateOCIOGLState()
     {
         SetPluginContext();
         
-        // Step 1: Create a GPU Shader Description
-        OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
-        shaderDesc->setLanguage(OCIO::GPU_LANGUAGE_GLSL_1_0);
-        shaderDesc->setFunctionName("OCIODisplay");
-        shaderDesc->setResourcePrefix("ocio_");
-        
-        // Step 2: Collect the shader program information for a specific processor
-        _gpu_processor->extractGpuShaderInfo(shaderDesc);
-        
-        // Step 3: Use the helper OpenGL builder
-        _oglBuilder = OCIO::OpenGLBuilder::Create(shaderDesc);
-        //oglBuilder->setVerbose(false);
-        
-        // Step 4: Allocate & upload all the LUTs
-        //
-        // NB: The start index for the texture indices is 1 as one texture
-        //     was already created for the input image.
-        //
-        _oglBuilder->allocateAllTextures(1);
-        
-        // Step 5: Build the fragment shader program
-        _oglBuilder->buildProgram(g_fragShaderText);
+        try
+        {
+            // Step 1: Create a GPU Shader Description
+            OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
+            shaderDesc->setLanguage(OCIO::GPU_LANGUAGE_GLSL_1_2);
+            shaderDesc->setFunctionName("OCIOMain");
+            shaderDesc->setResourcePrefix("ocio_");
+            
+            // Step 2: Collect the shader program information for a specific processor
+            _gpu_processor->extractGpuShaderInfo(shaderDesc);
+            
+            // Step 3: Use the helper OpenGL builder
+            _oglBuilder = OCIO::OpenGLBuilder::Create(shaderDesc);
+            //_oglBuilder->setVerbose(true);
+            
+            // Step 4: Allocate & upload all the LUTs
+            //
+            // NB: The start index for the texture indices is 1 as one texture
+            //     was already created for the input image.
+            //
+            _oglBuilder->allocateAllTextures(1);
+            
+            // Step 5: Build the fragment shader program
+            _oglBuilder->buildProgram(g_fragShaderText);
+        }
+        catch(...)
+        {
+            _oglBuilder.reset();
+        }
         
         SetAEContext();
     }
@@ -962,23 +903,19 @@ bool OpenColorIO_AE_Context::ProcessWorldGL(PF_EffectWorld *float_world)
     glBindTexture(GL_TEXTURE_2D, _imageTexID);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F_ARB, float_world->width, float_world->height, 0,
         GL_RGBA, GL_FLOAT, rgba_origin);
+    
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-    
-    
-    glBindTexture(GL_TEXTURE_3D, _lut3dTexID);
-    glTexSubImage3D(GL_TEXTURE_3D, 0,
-                    0, 0, 0, 
-                    LUT3D_EDGE_SIZE, LUT3D_EDGE_SIZE, LUT3D_EDGE_SIZE,
-                    GL_RGB, GL_FLOAT, &_lut3d[0]);
-    
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
     
     // Step 6: Enable the fragment shader program, and all needed textures
     _oglBuilder->useProgram();
-    glUniform1i(glGetUniformLocation(_oglBuilder->getProgramHandle(), "tex1"), 0);
+    glUniform1i(glGetUniformLocation(_oglBuilder->getProgramHandle(), "img"), 0);
     _oglBuilder->useAllTextures();
+    _oglBuilder->useAllUniforms();
     
     
     if(GL_NO_ERROR != glGetError())
@@ -1000,7 +937,7 @@ bool OpenColorIO_AE_Context::ProcessWorldGL(PF_EffectWorld *float_world)
         
         glGenRenderbuffersEXT(1, &_renderBuffer);
         glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, _renderBuffer);
-        glRenderbufferStorageEXT(GL_RENDERBUFFER_EXT, GL_RGBA, _bufferWidth, _bufferHeight);
+        glRenderbufferStorageEXT(GL_RENDERBUFFER_EXT, GL_RGBA32F_ARB, _bufferWidth, _bufferHeight);
         
         // attach renderbuffer to framebuffer
         glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT,
@@ -1013,20 +950,18 @@ bool OpenColorIO_AE_Context::ProcessWorldGL(PF_EffectWorld *float_world)
         return false;
     }
     
-    glDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);
-    
     
     glViewport(0, 0, float_world->width, float_world->height);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    glOrtho(0.0, float_world->width, 0.0, float_world->height, -100.0, 100.0);
+    gluOrtho2D(0.0, float_world->width, 0.0, float_world->height);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     
     
     glEnable(GL_TEXTURE_2D);
     glClearColor(0.1f, 0.1f, 0.1f, 0.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glColor3f(1, 1, 1);
     
     glPushMatrix();
@@ -1053,9 +988,9 @@ bool OpenColorIO_AE_Context::ProcessWorldGL(PF_EffectWorld *float_world)
     glReadPixels(0, 0, float_world->width, float_world->height,
                     GL_RGBA, GL_FLOAT, rgba_origin);
     
-    
     glFinish();
     
+    const bool result = (GL_NO_ERROR == glGetError());
     
     SetAEContext();
     
