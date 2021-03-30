@@ -19,12 +19,6 @@
       2. __init__(self: PyOpenColorIO.AllocationTransform, allocation: PyOpenColorIO.Allocation = <Allocation.ALLOCATION_UNIFORM: 1>, vars: List[float] = [], direction: PyOpenColorIO.TransformDirection = <TransformDirection.TRANSFORM_DIR_FORWARD: 0>) -> None
 
 
-   .. py:method:: AllocationTransform.__str__()
-      :module: PyOpenColorIO
-
-      Return str(self).
-
-
    .. py:method:: AllocationTransform.getAllocation(self: PyOpenColorIO.AllocationTransform) -> PyOpenColorIO.Allocation
       :module: PyOpenColorIO
 

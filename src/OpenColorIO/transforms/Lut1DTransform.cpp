@@ -31,7 +31,6 @@ void Lut1DTransformImpl::deleter(Lut1DTransform* t)
 }
 
 Lut1DTransformImpl::Lut1DTransformImpl()
-    : m_data(2)
 {
 }
 
@@ -64,7 +63,7 @@ void Lut1DTransformImpl::validate() const
         Transform::validate();
         data().validate();
     }
-    catch (Exception & ex)
+    catch (const Exception & ex)
     {
         std::ostringstream oss;
         oss << "Lut1DTransform validation failed: ";
