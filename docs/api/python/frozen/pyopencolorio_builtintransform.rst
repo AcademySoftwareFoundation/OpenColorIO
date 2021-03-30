@@ -19,12 +19,6 @@
       2. __init__(self: PyOpenColorIO.BuiltinTransform, style: str = 'IDENTITY', direction: PyOpenColorIO.TransformDirection = <TransformDirection.TRANSFORM_DIR_FORWARD: 0>) -> None
 
 
-   .. py:method:: BuiltinTransform.__str__()
-      :module: PyOpenColorIO
-
-      Return str(self).
-
-
    .. py:method:: BuiltinTransform.getDescription(self: PyOpenColorIO.BuiltinTransform) -> str
       :module: PyOpenColorIO
 

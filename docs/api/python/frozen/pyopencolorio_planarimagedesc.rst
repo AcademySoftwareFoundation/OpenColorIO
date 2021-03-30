@@ -21,7 +21,7 @@
 
       2. __init__(self: PyOpenColorIO.PlanarImageDesc, rData: buffer, gData: buffer, bData: buffer, aData: buffer, width: int, height: int) -> None
 
-      Note that although :ref:`PlanarImageDesc` is powerful enough to also describe all :cpp:class:`:ref:`PackedImageDesc`` scenarios, it is recommended to use a :ref:`PackedImageDesc` where possible since that allows for additional optimizations.
+      Note that although :ref:`PlanarImageDesc` is powerful enough to also describe all :ref:`PackedImageDesc` scenarios, it is recommended to use a :ref:`PackedImageDesc` where possible since that allows for additional optimizations.
 
       3. __init__(self: PyOpenColorIO.PlanarImageDesc, rData: buffer, gData: buffer, bData: buffer, width: int, height: int, bitDepth: PyOpenColorIO.BitDepth, xStrideBytes: int, yStrideBytes: int) -> None
 

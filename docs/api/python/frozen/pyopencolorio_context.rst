@@ -6,6 +6,31 @@
 .. py:class:: Context
    :module: PyOpenColorIO
 
+   :ref:`Context`
+
+   A context defines some overrides to a :ref:`Config`. For example, it can override the search path or change the value of a context variable.
+
+   .. note::
+      Only some :ref:`Config::getProcessor` methods accept a custom context; otherwise, the default context instance is used (see Config::getCurrentContext).
+
+   :ref:`Context` Variables
+
+   The context variables allow changes at runtime using environment variables. For example, a color space name (such as src & dst for the :ref:`ColorSpaceTransform`) or a file name (such as LUT file name for the :ref:`FileTransform`) could be defined by context variables. The color transformation is then customized based on some environment variables.
+
+   In a config the context variables support three syntaxes (i.e. ${VAR}, $VAR and VAR%) and the parsing starts from longest to shortest. So, the resolve works like '$TEST_$TESTING_$TE' expands in this order '2 1 3'.
+
+   :ref:`Config` authors are recommended to include the "environment" section in their configs. This improves performance as well as making the config more readable. When present, this section must declare all context variables used in the config. It may also provide a default value, in case the variable is not present in the user's environment.
+
+   A context variable may only be used in the following places:
+   - the `:ref:`ColorSpaceTransform`` to define the source and the destination color space names,
+   - the `:ref:`FileTransform`` to define the source file name (e.g. a LUT file name),
+   - the search_path,
+   - the cccid of the `:ref:`FileTransform`` to only extract one specific transform from the CDL & CCC files.
+
+   Some specific restrictions are worth calling out:
+   - they cannot be used as either the name or value of a role,
+   - the context variable characters $ and % are prohibited in a color space name.
+
 
    .. py:method:: Context.__init__(*args, **kwargs)
       :module: PyOpenColorIO
@@ -35,8 +60,6 @@
 
    .. py:method:: Context.getEnvironmentMode(self: PyOpenColorIO.Context) -> PyOpenColorIO.EnvironmentMode
       :module: PyOpenColorIO
-
-      cpp:function::
 
 
    .. py:method:: Context.getSearchPath(self: PyOpenColorIO.Context) -> str
@@ -88,17 +111,15 @@
 
       1. resolveStringVar(self: PyOpenColorIO.Context, string: str) -> str
 
-      cpp:function:: Resolve all the context variables from the string. It could be color space
+      Resolve all the context variables from the string. It could be color space names or file names. Note that it recursively applies the context variable resolution. Returns the string unchanged if it does not contain any context variable.
 
       2. resolveStringVar(self: PyOpenColorIO.Context, string: str, usedContextVars: PyOpenColorIO.Context) -> str
 
-      cpp:function:: Resolve all the context variables from the string and return all the context
+      Resolve all the context variables from the string and return all the context variables used to resolve the string (empty if no context variables were used).
 
 
    .. py:method:: Context.setEnvironmentMode(self: PyOpenColorIO.Context, mode: PyOpenColorIO.EnvironmentMode) -> None
       :module: PyOpenColorIO
-
-      cpp:function::
 
 
    .. py:method:: Context.setSearchPath(self: PyOpenColorIO.Context, path: str) -> None

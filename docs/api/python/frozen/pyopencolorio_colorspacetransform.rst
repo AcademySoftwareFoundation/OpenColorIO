@@ -17,12 +17,6 @@
       2. __init__(self: PyOpenColorIO.ColorSpaceTransform, src: str = '', dst: str = '', direction: PyOpenColorIO.TransformDirection = <TransformDirection.TRANSFORM_DIR_FORWARD: 0>, dataBypass: bool = True) -> None
 
 
-   .. py:method:: ColorSpaceTransform.__str__()
-      :module: PyOpenColorIO
-
-      Return str(self).
-
-
    .. py:method:: ColorSpaceTransform.getDataBypass(self: PyOpenColorIO.ColorSpaceTransform) -> bool
       :module: PyOpenColorIO
 

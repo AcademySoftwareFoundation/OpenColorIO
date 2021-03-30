@@ -8,9 +8,45 @@
 
    Inherit from the class to fully customize the implementation of a GPU shader program from a color transformation.
 
-   When no customizations are needed then the :cpp:class:`:ref:`GpuShaderDesc`` is a better choice.
+   When no customizations are needed then the :ref:`GpuShaderDesc` is a better choice.
 
    To better decouple the DynamicProperties from their GPU implementation, the code provides several addUniform() methods i.e. one per access function types. For example, an :ref:`ExposureContrastTransform` instance owns three DynamicProperties and they are all implemented by a double. When creating the GPU fragment shader program, the addUniform() with :ref:`GpuShaderCreator::DoubleGetter` is called when property is dynamic, up to three times.
+
+   **An OCIO shader program could contain:**
+
+   - A declaration part e.g., uniform sampled3D tex3;
+   - Some helper methods
+   - The OCIO shader function may be broken down as:
+   - The function header e.g., void OCIODisplay(in vec4 inColor) {
+   - The function body e.g., vec4 outColor.rgb = texture3D(tex3, inColor.rgb).rgb;
+   - The function footer e.g., return outColor; }
+
+   **Usage Example:**
+
+   Below is a code snippet to highlight the different parts of the OCIO shader program.
+
+   .. code-block:: cpp
+
+       // All global declarations
+       uniform sampled3D tex3;
+
+       // All helper methods
+       vec3 computePosition(vec3 color)
+       {
+          vec3 coords = color;
+          // Some processing...
+          return coords;
+       }
+
+       // The shader function
+       vec4 OCIODisplay(in vec4 inColor)     //
+       {                                     // Function Header
+          vec4 outColor = inColor;           //
+
+          outColor.rgb = texture3D(tex3, computePosition(inColor.rgb)).rgb;
+
+          return outColor;                   // Function Footer
+       }                                     //
 
 
    .. py:method:: GpuShaderCreator.addToDeclareShaderCode(self: PyOpenColorIO.GpuShaderCreator, shaderCode: str) -> None
@@ -48,11 +84,8 @@
 
       Create the OCIO shader program.
 
-
       .. note::
-
-
-      The OCIO shader program is decomposed to allow a specific implementation to change some parts. Some product integrations add the color processing within a client shader program, imposing constraints requiring this flexibility.
+         The OCIO shader program is decomposed to allow a specific implementation to change some parts. Some product integrations add the color processing within a client shader program, imposing constraints requiring this flexibility.
 
 
    .. py:method:: GpuShaderCreator.end(self: PyOpenColorIO.GpuShaderCreator) -> None
@@ -166,11 +199,6 @@
    .. py:attribute:: TextureType.TEXTURE_RGB_CHANNEL
       :module: PyOpenColorIO.GpuShaderCreator
       :value: <TextureType.TEXTURE_RGB_CHANNEL: 1>
-
-
-   .. py:method:: TextureType.value
-      :module: PyOpenColorIO.GpuShaderCreator
-      :property:
 
 
 .. py:class:: DynamicPropertyIterator

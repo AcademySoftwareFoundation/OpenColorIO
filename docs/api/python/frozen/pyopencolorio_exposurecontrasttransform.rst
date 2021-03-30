@@ -19,12 +19,6 @@
       2. __init__(self: PyOpenColorIO.ExposureContrastTransform, style: PyOpenColorIO.ExposureContrastStyle = <ExposureContrastStyle.EXPOSURE_CONTRAST_LINEAR: 0>, exposure: float = 0.0, contrast: float = 1.0, gamma: float = 1.0, pivot: float = 0.18, logExposureStep: float = 0.088, logMidGray: float = 0.435, dynamicExposure: bool = False, dynamicContrast: bool = False, dynamicGamma: bool = False, direction: PyOpenColorIO.TransformDirection = <TransformDirection.TRANSFORM_DIR_FORWARD: 0>) -> None
 
 
-   .. py:method:: ExposureContrastTransform.__str__()
-      :module: PyOpenColorIO
-
-      Return str(self).
-
-
    .. py:method:: ExposureContrastTransform.equals(self: PyOpenColorIO.ExposureContrastTransform, other: PyOpenColorIO.ExposureContrastTransform) -> bool
       :module: PyOpenColorIO
 

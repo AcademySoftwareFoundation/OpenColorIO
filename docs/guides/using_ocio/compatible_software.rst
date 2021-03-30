@@ -77,6 +77,16 @@ Documentation:
 - `Usage Examples <https://opencolorio.org/developers/usage_examples.html>`__
 
 
+cineSync (ftrack)
+*********************
+
+Website : `<https://cospective.com/cinesync/>`__
+
+Documentation :
+
+- `Colour Grading <https://www.cinesync.com/manual/latest/Colour_Grading.html>`__
+
+
 Clarisse (Isotropix)
 ********************
 
