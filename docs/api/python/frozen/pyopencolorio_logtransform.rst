@@ -23,12 +23,6 @@
       2. __init__(self: PyOpenColorIO.LogTransform, base: float = 2.0, direction: PyOpenColorIO.TransformDirection = <TransformDirection.TRANSFORM_DIR_FORWARD: 0>) -> None
 
 
-   .. py:method:: LogTransform.__str__()
-      :module: PyOpenColorIO
-
-      Return str(self).
-
-
    .. py:method:: LogTransform.equals(self: PyOpenColorIO.LogTransform, other: PyOpenColorIO.LogTransform) -> bool
       :module: PyOpenColorIO
 
