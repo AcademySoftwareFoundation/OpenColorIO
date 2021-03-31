@@ -129,10 +129,6 @@ if(NOT yaml-cpp_FOUND)
 
     include(ExternalProject)
 
-    if(APPLE)
-        set(CMAKE_OSX_DEPLOYMENT_TARGET ${CMAKE_OSX_DEPLOYMENT_TARGET})
-    endif()
-
     # TODO: yaml-cpp master is using GNUInstallDirs to define include and lib 
     #       dir names. Once that change is released and OCIO updates the 
     #       minimum yaml-cpp version, toggle the three disabled lines below.
@@ -156,8 +152,6 @@ if(NOT yaml-cpp_FOUND)
     endif()
     set(yaml-cpp_LIBRARY
         "${_EXT_DIST_ROOT}/lib/libyaml-cpp${_yaml-cpp_LIB_SUFFIX}${CMAKE_STATIC_LIBRARY_SUFFIX}")
-    # set(yaml-cpp_LIBRARY
-    #     "${_EXT_DIST_ROOT}/${CMAKE_INSTALL_LIBDIR}/libyaml-cpp${_yaml-cpp_LIB_SUFFIX}${CMAKE_STATIC_LIBRARY_SUFFIX}")
 
     if(_yaml-cpp_TARGET_CREATE)
         if(MSVC)
@@ -166,8 +160,14 @@ if(NOT yaml-cpp_FOUND)
 
         if(UNIX)
             set(yaml-cpp_CXX_FLAGS "${yaml-cpp_CXX_FLAGS} -fvisibility=hidden -fPIC")
+
             if(OCIO_INLINES_HIDDEN)
                 set(yaml-cpp_CXX_FLAGS "${yaml-cpp_CXX_FLAGS} -fvisibility-inlines-hidden")
+            endif()
+
+            if(USE_CLANG)
+                # Remove some global 'shadow' warnings.
+                set(yaml-cpp_CXX_FLAGS "${yaml-cpp_CXX_FLAGS} -Wno-shadow")
             endif()
         endif()
 
@@ -187,9 +187,15 @@ if(NOT yaml-cpp_FOUND)
             -DYAML_CPP_BUILD_TOOLS=OFF
             -DYAML_CPP_BUILD_CONTRIB=OFF
         )
+
         if(CMAKE_TOOLCHAIN_FILE)
             set(yaml-cpp_CMAKE_ARGS
                 ${yaml-cpp_CMAKE_ARGS} -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE})
+        endif()
+
+        if(APPLE)
+            set(yaml-cpp_CMAKE_ARGS
+                ${yaml-cpp_CMAKE_ARGS} -DCMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET})
         endif()
 
         if(NOT BUILD_SHARED_LIBS)
