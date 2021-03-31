@@ -9,36 +9,41 @@
 
 #include "AEGP_SuiteHandler.h"
 
+#include <mutex>
+
+#include <assert.h>
+
+
 // this lives in OpenColorIO_AE_UI.cpp
 std::string GetProjectDir(PF_InData *in_data);
 
 
-static PF_Err About(  
+static PF_Err About(
     PF_InData       *in_data,
     PF_OutData      *out_data,
     PF_ParamDef     *params[],
     PF_LayerDef     *output )
 {
-    PF_SPRINTF( out_data->return_msg, 
+    PF_SPRINTF( out_data->return_msg,
                 "OpenColorIO\r\r"
                 "opencolorio.org\r"
                 "version %s",
                 OCIO::GetVersion() );
-                
+    
     return PF_Err_NONE;
 }
 
 
-static PF_Err GlobalSetup(    
+static PF_Err GlobalSetup(
     PF_InData       *in_data,
     PF_OutData      *out_data,
     PF_ParamDef     *params[],
     PF_LayerDef     *output )
 {
-    out_data->my_version    =   PF_VERSION( MAJOR_VERSION, 
+    out_data->my_version    =   PF_VERSION( MAJOR_VERSION,
                                             MINOR_VERSION,
-                                            BUG_VERSION, 
-                                            STAGE_VERSION, 
+                                            BUG_VERSION,
+                                            STAGE_VERSION,
                                             BUILD_VERSION);
 
     out_data->out_flags     =   PF_OutFlag_DEEP_COLOR_AWARE     |
@@ -50,7 +55,9 @@ static PF_Err GlobalSetup(
     out_data->out_flags2    =   PF_OutFlag2_PARAM_GROUP_START_COLLAPSED_FLAG |
                                 PF_OutFlag2_SUPPORTS_SMART_RENDER   |
                                 PF_OutFlag2_FLOAT_COLOR_AWARE       |
-                                PF_OutFlag2_PPRO_DO_NOT_CLONE_SEQUENCE_DATA_FOR_RENDER;
+                                PF_OutFlag2_PPRO_DO_NOT_CLONE_SEQUENCE_DATA_FOR_RENDER |
+                                PF_OutFlag2_SUPPORTS_GET_FLATTENED_SEQUENCE_DATA |
+                                PF_OutFlag2_SUPPORTS_THREADED_RENDERING;
     
     
     GlobalSetup_GL();
@@ -63,7 +70,7 @@ static PF_Err GlobalSetup(
         in_data->pica_basicP->AcquireSuite(kPFPixelFormatSuite,
                                             kPFPixelFormatSuiteVersion1,
                                             (const void **)&pfS);
-                                            
+        
         if(pfS)
         {
             pfS->ClearSupportedPixelFormats(in_data->effect_ref);
@@ -80,7 +87,7 @@ static PF_Err GlobalSetup(
 }
 
 
-static PF_Err GlobalSetdown(  
+static PF_Err GlobalSetdown(
     PF_InData       *in_data,
     PF_OutData      *out_data,
     PF_ParamDef     *params[],
@@ -99,19 +106,18 @@ static PF_Err ParamsSetup(
     PF_LayerDef     *output)
 {
     PF_Err          err = PF_Err_NONE;
+    
     PF_ParamDef     def;
-
 
     // readout
     AEFX_CLR_STRUCT(def);
-    // we can time_vary once we're willing to print and scan ArbData text
-    def.flags = PF_ParamFlag_CANNOT_TIME_VARY;
     
     ArbNewDefault(in_data, out_data, NULL, &def.u.arb_d.dephault);
     
-    PF_ADD_ARBITRARY("OCIO",
+    PF_ADD_ARBITRARY2("OCIO",
                         UI_CONTROL_WIDTH,
                         UI_CONTROL_HEIGHT,
+                        PF_ParamFlag_SUPERVISE | PF_ParamFlag_CANNOT_TIME_VARY,
                         PF_PUI_CONTROL,
                         def.u.arb_d.dephault,
                         OCIO_DATA,
@@ -124,12 +130,12 @@ static PF_Err ParamsSetup(
                     FALSE,
                     0,
                     OCIO_GPU_ID);
-                    
+    
 
     out_data->num_params = OCIO_NUM_PARAMS;
 
     // register custom UI
-    if (!err) 
+    if (!err)
     {
         PF_CustomUIInfo         ci;
 
@@ -155,6 +161,168 @@ static PF_Err ParamsSetup(
     return err;
 }
 
+
+static void UpdateContext(
+    PF_InData       *in_data,
+    ArbitraryData   *arb_data,
+    SequenceData    *seq_data)
+{
+    assert(seq_data != NULL && arb_data != NULL);
+
+    seq_data->status = STATUS_OK;
+
+    std::string dir = GetProjectDir(in_data);
+
+    // must always verify that our context lines up with the parameters
+    // things like undo can change them without notice
+    if(seq_data->context != NULL)
+    {
+        bool verified = seq_data->context->Verify(arb_data, dir);
+        
+        if(!verified)
+        {
+            delete seq_data->context;
+            
+            seq_data->status = STATUS_UNKNOWN;
+            seq_data->context = NULL;
+        }
+    }
+
+
+    if(arb_data->action == OCIO_ACTION_NONE)
+    {
+        seq_data->status = STATUS_NO_FILE;
+    }
+    else
+    {
+        const bool refreshSeqData = (seq_data->source != arb_data->source ||
+                                    0 != strcmp(seq_data->path, arb_data->path) ||
+                                    0 != strcmp(seq_data->relative_path, arb_data->relative_path));
+        
+        if(seq_data->context == NULL || refreshSeqData)
+        {
+            seq_data->source = arb_data->source;
+            
+            if(arb_data->source == OCIO_SOURCE_ENVIRONMENT)
+            {
+                std::string env;
+                OpenColorIO_AE_Context::getenvOCIO(env);
+                
+                if(env.empty())
+                {
+                    seq_data->status = STATUS_FILE_MISSING;
+                }
+                else
+                {
+                    nt_strncpy(seq_data->path, "", ARB_PATH_LEN+1);
+                    nt_strncpy(seq_data->relative_path, "", ARB_PATH_LEN+1);
+                }
+            }
+            else if(arb_data->source == OCIO_SOURCE_STANDARD)
+            {
+                std::string path = GetStdConfigPath(arb_data->path);
+                
+                if( path.empty() )
+                {
+                    seq_data->status = STATUS_FILE_MISSING;
+                }
+                else
+                {
+                    nt_strncpy(seq_data->path, arb_data->path, ARB_PATH_LEN+1);
+                    nt_strncpy(seq_data->relative_path, arb_data->relative_path, ARB_PATH_LEN+1);
+                }
+            }
+            else if(arb_data->source == OCIO_SOURCE_CUSTOM)
+            {
+                Path absolute_path(arb_data->path, dir);
+                Path relative_path(arb_data->relative_path, dir);
+                Path seq_absolute_path(seq_data->path, dir);
+                Path seq_relative_path(seq_data->relative_path, dir);
+                
+                if( absolute_path.exists() )
+                {
+                    seq_data->status = STATUS_USING_ABSOLUTE;
+                    
+                    nt_strncpy(seq_data->path, absolute_path.full_path().c_str(), ARB_PATH_LEN+1);
+                    nt_strncpy(seq_data->relative_path, absolute_path.relative_path(false).c_str(), ARB_PATH_LEN+1);
+                }
+                else if( relative_path.exists() )
+                {
+                    seq_data->status = STATUS_USING_RELATIVE;
+                    
+                    nt_strncpy(seq_data->path, relative_path.full_path().c_str(), ARB_PATH_LEN+1);
+                    nt_strncpy(seq_data->relative_path, relative_path.relative_path(false).c_str(), ARB_PATH_LEN+1);
+                }
+                else if( seq_absolute_path.exists() )
+                {
+                    // In some cases, we may have a good path in sequence options but not in
+                    // the arbitrary parameter.  An alert will not be provided because it is the
+                    // sequence data that gets checked.  Therefore, we have to use the sequence
+                    // options as a last resort.  We copy the path back to arb data, but the change
+                    // should not stick.
+                    seq_data->status = STATUS_USING_ABSOLUTE;
+                    
+                    nt_strncpy(arb_data->path, seq_absolute_path.full_path().c_str(), ARB_PATH_LEN+1);
+                    nt_strncpy(arb_data->relative_path, seq_absolute_path.relative_path(false).c_str(), ARB_PATH_LEN+1);
+                }
+                else if( seq_relative_path.exists() )
+                {
+                    seq_data->status = STATUS_USING_RELATIVE;
+                    
+                    nt_strncpy(arb_data->path, seq_relative_path.full_path().c_str(), ARB_PATH_LEN+1);
+                    nt_strncpy(arb_data->relative_path, seq_relative_path.relative_path(false).c_str(), ARB_PATH_LEN+1);
+                }
+                else
+                    seq_data->status = STATUS_FILE_MISSING;
+            }
+            
+            
+            if(seq_data->status != STATUS_FILE_MISSING)
+            {
+                seq_data->context = new OpenColorIO_AE_Context(arb_data, dir);
+            }
+        }
+    }
+}
+
+
+static PF_Err UserChangedParam(
+    PF_InData       *in_data,
+    PF_OutData      *out_data,
+    PF_ParamDef     *params[],
+    PF_LayerDef     *output,
+    PF_UserChangedParamExtra *extra)
+{
+    PF_Err          err = PF_Err_NONE;
+    
+    if(extra->param_index == OCIO_DATA)
+    {
+        assert(params[OCIO_DATA]->u.arb_d.value != NULL && in_data->sequence_data != NULL);
+    
+        ArbitraryData *arb_data = (ArbitraryData *)PF_LOCK_HANDLE(params[OCIO_DATA]->u.arb_d.value);
+        SequenceData *seq_data = (SequenceData *)PF_LOCK_HANDLE(in_data->sequence_data);
+        
+        try
+        {
+            UpdateContext(in_data, arb_data, seq_data);
+        }
+        catch(...)
+        {
+            seq_data->status = STATUS_OCIO_ERROR;
+            
+            assert(FALSE);
+        }
+        
+        PF_UNLOCK_HANDLE(params[OCIO_DATA]->u.arb_d.value);
+        PF_UNLOCK_HANDLE(in_data->sequence_data);
+    }
+    else
+        assert(FALSE);
+    
+    return err;
+}
+
+
 static PF_Err SequenceSetup(
     PF_InData       *in_data,
     PF_OutData      *out_data,
@@ -163,37 +331,66 @@ static PF_Err SequenceSetup(
 {
     PF_Err err = PF_Err_NONE;
     
-    SequenceData *seq_data = NULL;
-    
     // set up sequence data
-    if( (in_data->sequence_data == NULL) )
-    {
-        out_data->sequence_data = PF_NEW_HANDLE( sizeof(SequenceData) );
-        
-        seq_data = (SequenceData *)PF_LOCK_HANDLE(out_data->sequence_data);
-        
-        seq_data->path[0] = '\0';
-        seq_data->relative_path[0] = '\0';
-    }
-    else // reset pre-existing sequence data
-    {
-        if( PF_GET_HANDLE_SIZE(in_data->sequence_data) != sizeof(SequenceData) )
-        {
-            PF_RESIZE_HANDLE(sizeof(SequenceData), &in_data->sequence_data);
-        }
-            
-        seq_data = (SequenceData *)PF_LOCK_HANDLE(in_data->sequence_data);
-    }
+    assert(in_data->sequence_data == NULL);
+    assert(sizeof(SequenceData) == 528);
     
+    out_data->sequence_data = PF_NEW_HANDLE( sizeof(SequenceData) );
     
+    SequenceData *seq_data = (SequenceData *)PF_LOCK_HANDLE(out_data->sequence_data);
+
     seq_data->status = STATUS_UNKNOWN;
     seq_data->gpu_err = GPU_ERR_NONE;
     seq_data->prem_status = PREMIERE_UNKNOWN;
+    memset(seq_data->reserved, 0, 4);
     seq_data->context = NULL;
     
+    seq_data->source = OCIO_SOURCE_NONE;
+    nt_strncpy(seq_data->path, "", ARB_PATH_LEN+1);
+    nt_strncpy(seq_data->relative_path, "", ARB_PATH_LEN+1);
+
+    PF_UNLOCK_HANDLE(out_data->sequence_data);
     
-    PF_UNLOCK_HANDLE(in_data->sequence_data);
+    return err;
+}
+
+
+static PF_Err SequenceResetup(
+    PF_InData       *in_data,
+    PF_OutData      *out_data,
+    PF_ParamDef     *params[],
+    PF_LayerDef     *output )
+{
+    PF_Err err = PF_Err_NONE;
     
+    // reset pre-existing sequence data
+    if(in_data->sequence_data != NULL)
+    {
+        SequenceData *seq_data_old = (SequenceData *)PF_LOCK_HANDLE(in_data->sequence_data);
+        
+        out_data->sequence_data = PF_NEW_HANDLE( sizeof(SequenceData) );
+        
+        assert(PF_GET_HANDLE_SIZE(in_data->sequence_data) == PF_GET_HANDLE_SIZE(out_data->sequence_data));
+        
+        SequenceData *seq_data = (SequenceData *)PF_LOCK_HANDLE(out_data->sequence_data);
+        
+        seq_data->status = STATUS_UNKNOWN;
+        seq_data->gpu_err = GPU_ERR_NONE;
+        seq_data->prem_status = PREMIERE_UNKNOWN;
+        memset(seq_data->reserved, 0, 4);
+        assert(seq_data_old->context == NULL);
+        seq_data->context = NULL;
+        
+        seq_data->source = seq_data_old->source;
+        nt_strncpy(seq_data->path, seq_data_old->path, ARB_PATH_LEN+1);
+        nt_strncpy(seq_data->relative_path, seq_data_old->relative_path, ARB_PATH_LEN+1);
+        
+        PF_UNLOCK_HANDLE(out_data->sequence_data);
+        PF_UNLOCK_HANDLE(in_data->sequence_data);
+    }
+    else
+        assert(FALSE);
+
     return err;
 }
 
@@ -208,20 +405,21 @@ static PF_Err SequenceSetdown(
     
     if(in_data->sequence_data)
     {
-        SequenceData *seq_data = (SequenceData *)PF_LOCK_HANDLE(out_data->sequence_data);
+        SequenceData *seq_data = (SequenceData *)PF_LOCK_HANDLE(in_data->sequence_data);
         
-        if(seq_data->context)
+        if(seq_data->context != NULL)
         {
             delete seq_data->context;
             
-            seq_data->status = STATUS_UNKNOWN;
-            seq_data->gpu_err = GPU_ERR_NONE;
-            seq_data->prem_status = PREMIERE_UNKNOWN;
             seq_data->context = NULL;
         }
         
+        PF_UNLOCK_HANDLE(in_data->sequence_data);
+        
         PF_DISPOSE_HANDLE(in_data->sequence_data);
     }
+    else
+        assert(FALSE);
 
     return err;
 }
@@ -235,26 +433,82 @@ static PF_Err SequenceFlatten(
 {
     PF_Err err = PF_Err_NONE;
 
-    if(in_data->sequence_data)
+    if(in_data->sequence_data != NULL)
     {
         SequenceData *seq_data = (SequenceData *)PF_LOCK_HANDLE(in_data->sequence_data);
         
-        if(seq_data->context)
+        out_data->sequence_data = PF_NEW_HANDLE( sizeof(SequenceData) );
+        
+        assert(PF_GET_HANDLE_SIZE(in_data->sequence_data) == PF_GET_HANDLE_SIZE(out_data->sequence_data));
+        
+        SequenceData *flat_seq_data = (SequenceData *)PF_LOCK_HANDLE(out_data->sequence_data);
+        
+        if(seq_data->context != NULL)
         {
             delete seq_data->context;
             
-            seq_data->status = STATUS_UNKNOWN;
-            seq_data->gpu_err = GPU_ERR_NONE;
-            seq_data->prem_status = PREMIERE_UNKNOWN;
             seq_data->context = NULL;
         }
-
+        
+        flat_seq_data->status = STATUS_UNKNOWN;
+        flat_seq_data->gpu_err = GPU_ERR_NONE;
+        flat_seq_data->prem_status = PREMIERE_UNKNOWN;
+        memset(flat_seq_data->reserved, 0, 4);
+        flat_seq_data->context = NULL;
+        
+        flat_seq_data->source = seq_data->source;
+        nt_strncpy(flat_seq_data->path, seq_data->path, ARB_PATH_LEN+1);
+        nt_strncpy(flat_seq_data->relative_path, seq_data->relative_path, ARB_PATH_LEN+1);
+        
+        PF_UNLOCK_HANDLE(out_data->sequence_data);
         PF_UNLOCK_HANDLE(in_data->sequence_data);
+        
+        PF_DISPOSE_HANDLE(in_data->sequence_data);
     }
+    else
+        assert(FALSE);
 
     return err;
 }
 
+
+static PF_Err
+GetFlattenedSequenceData (
+    PF_InData        *in_data,
+    PF_OutData        *out_data,
+    PF_ParamDef        *params[],
+    PF_LayerDef        *output )
+{
+    PF_Err err = PF_Err_NONE;
+    
+    if(in_data->sequence_data != NULL)
+    {
+        SequenceData *seq_data = (SequenceData *)PF_LOCK_HANDLE(in_data->sequence_data);
+        
+        out_data->sequence_data = PF_NEW_HANDLE( sizeof(SequenceData) );
+        
+        assert(PF_GET_HANDLE_SIZE(in_data->sequence_data) == PF_GET_HANDLE_SIZE(out_data->sequence_data));
+        
+        SequenceData *flat_seq_data = (SequenceData *)PF_LOCK_HANDLE(out_data->sequence_data);
+        
+        flat_seq_data->status = STATUS_UNKNOWN;
+        flat_seq_data->gpu_err = GPU_ERR_NONE;
+        flat_seq_data->prem_status = PREMIERE_UNKNOWN;
+        memset(flat_seq_data->reserved, 0, 4);
+        flat_seq_data->context = NULL;
+        
+        flat_seq_data->source = seq_data->source;
+        nt_strncpy(flat_seq_data->path, seq_data->path, ARB_PATH_LEN+1);
+        nt_strncpy(flat_seq_data->relative_path, seq_data->relative_path, ARB_PATH_LEN+1);
+        
+        PF_UNLOCK_HANDLE(out_data->sequence_data);
+        PF_UNLOCK_HANDLE(in_data->sequence_data);
+    }
+    else
+        assert(FALSE);
+
+    return PF_Err_NONE;
+}
 
 
 static PF_Boolean IsEmptyRect(const PF_LRect *r){
@@ -302,7 +556,7 @@ static PF_Err PreRender(
 
 
     UnionLRect(&in_result.result_rect,      &extra->output->result_rect);
-    UnionLRect(&in_result.max_result_rect,  &extra->output->max_result_rect);   
+    UnionLRect(&in_result.max_result_rect,  &extra->output->max_result_rect);
     
     return err;
 }
@@ -371,7 +625,7 @@ static PF_Err CopyWorld_Iterate(
     IterateData *i_data = (IterateData *)refconPV;
     PF_InData *in_data = i_data->in_data;
     
-    InFormat *in_pix = (InFormat *)((char *)i_data->in_buffer + (i * i_data->in_rowbytes)); 
+    InFormat *in_pix = (InFormat *)((char *)i_data->in_buffer + (i * i_data->in_rowbytes));
     OutFormat *out_pix = (OutFormat *)((char *)i_data->out_buffer + (i * i_data->out_rowbytes));
     
 #ifdef NDEBUG
@@ -451,7 +705,7 @@ static PF_Err Process_Iterate(
     ProcessData *i_data = (ProcessData *)refconPV;
     PF_InData *in_data = i_data->in_data;
     
-    PF_PixelFloat *pix = (PF_PixelFloat *)((char *)i_data->buffer + (i * i_data->rowbytes)); 
+    PF_PixelFloat *pix = (PF_PixelFloat *)((char *)i_data->buffer + (i * i_data->rowbytes));
     
 #ifdef NDEBUG
     if(thread_indexL == 0)
@@ -463,7 +717,7 @@ static PF_Err Process_Iterate(
         float *rOut = &pix->red;
 
         OCIO::PackedImageDesc img(rOut, i_data->width, 1, 4);
-                                                
+        
         i_data->context->cpu_processor()->apply(img);
     }
     catch(...)
@@ -554,6 +808,8 @@ static PF_Err MyGenericIterateFunc(
 }
 
 
+static std::mutex gpu_mutex;
+
 static PF_Err DoRender(
     PF_InData       *in_data,
     PF_EffectWorld  *input,
@@ -579,106 +835,7 @@ static PF_Err DoRender(
         
         try
         {
-            seq_data->status = STATUS_OK;
-        
-            std::string dir = GetProjectDir(in_data);
-
-            // must always verify that our context lines up with the parameters
-            // things like undo can change them without notice
-            if(seq_data->context != NULL)
-            {
-                bool verified = seq_data->context->Verify(arb_data, dir);
-                
-                if(!verified)
-                {
-                    delete seq_data->context;
-                    
-                    seq_data->status = STATUS_UNKNOWN;
-                    seq_data->context = NULL;
-                }
-            }
-        
-        
-            if(arb_data->action == OCIO_ACTION_NONE)
-            {
-                seq_data->status = STATUS_NO_FILE;
-            }
-            else if(seq_data->context == NULL)
-            {
-                seq_data->source = arb_data->source;
-                
-                if(arb_data->source == OCIO_SOURCE_ENVIRONMENT)
-                {
-                    std::string env;
-                    OpenColorIO_AE_Context::getenvOCIO(env);
-                    
-                    if(env.empty())
-                        seq_data->status = STATUS_FILE_MISSING;
-                }
-                else if(arb_data->source == OCIO_SOURCE_STANDARD)
-                {
-                    std::string path = GetStdConfigPath(arb_data->path);
-                    
-                    if( path.empty() )
-                    {
-                        seq_data->status = STATUS_FILE_MISSING;
-                    }
-                    else
-                    {
-                        strncpy(seq_data->path, arb_data->path, ARB_PATH_LEN);
-                        strncpy(seq_data->relative_path, arb_data->relative_path, ARB_PATH_LEN);
-                    }
-                }
-                else if(arb_data->source == OCIO_SOURCE_CUSTOM)
-                {
-                    Path absolute_path(arb_data->path, dir);
-                    Path relative_path(arb_data->relative_path, dir);
-                    Path seq_absolute_path(seq_data->path, dir);
-                    Path seq_relative_path(seq_data->relative_path, dir);
-                    
-                    if( absolute_path.exists() )
-                    {
-                        seq_data->status = STATUS_USING_ABSOLUTE;
-                        
-                        strncpy(seq_data->path, absolute_path.full_path().c_str(), ARB_PATH_LEN);
-                        strncpy(seq_data->relative_path, absolute_path.relative_path(false).c_str(), ARB_PATH_LEN);
-                    }
-                    else if( relative_path.exists() )
-                    {
-                        seq_data->status = STATUS_USING_RELATIVE;
-                        
-                        strncpy(seq_data->path, relative_path.full_path().c_str(), ARB_PATH_LEN);
-                        strncpy(seq_data->relative_path, relative_path.relative_path(false).c_str(), ARB_PATH_LEN);
-                    }
-                    else if( seq_absolute_path.exists() )
-                    {
-                        // In some cases, we may have a good path in sequence options but not in
-                        // the arbitrary parameter.  An alert will not be provided because it is the
-                        // sequence options that get checked.  Therefore, we have to use the sequence
-                        // options as a last resort.  We copy the path back to arb data, but the change
-                        // should not stick.
-                        seq_data->status = STATUS_USING_ABSOLUTE;
-                        
-                        strncpy(arb_data->path, seq_absolute_path.full_path().c_str(), ARB_PATH_LEN);
-                        strncpy(arb_data->relative_path, seq_absolute_path.relative_path(false).c_str(), ARB_PATH_LEN);
-                    }
-                    else if( seq_relative_path.exists() )
-                    {
-                        seq_data->status = STATUS_USING_RELATIVE;
-                        
-                        strncpy(arb_data->path, seq_relative_path.full_path().c_str(), ARB_PATH_LEN);
-                        strncpy(arb_data->relative_path, seq_relative_path.relative_path(false).c_str(), ARB_PATH_LEN);
-                    }
-                    else
-                        seq_data->status = STATUS_FILE_MISSING;
-                }
-            
-            
-                if(seq_data->status != STATUS_FILE_MISSING)
-                {
-                    seq_data->context = new OpenColorIO_AE_Context(arb_data, dir);
-                }
-            }
+            UpdateContext(in_data, arb_data, seq_data);
         }
         catch(...)
         {
@@ -803,7 +960,11 @@ static PF_Err DoRender(
                     {
                         if( HaveOpenGL() )
                         {
+                            gpu_mutex.lock();
+                        
                             gpu_rendered = seq_data->context->ProcessWorldGL(float_world);
+                            
+                            gpu_mutex.unlock();
                             
                             if(!gpu_rendered)
                                 seq_data->gpu_err = GPU_ERR_RENDER_ERR;
@@ -862,13 +1023,13 @@ static PF_Err DoRender(
                             err = iterate_generic(output->height, &i_data,
                                                     CopyWorld_Iterate<float, float>);
                         }
-                            
+                        
                     }
 
                     PF_DISPOSE_HANDLE(temp_worldH);
                 }
-                    
-                    
+                
+                
                 PF_UNLOCK_HANDLE(OCIO_data->u.arb_d.value);
                 PF_UNLOCK_HANDLE(in_data->sequence_data);
 
@@ -890,7 +1051,7 @@ static PF_Err DoRender(
     
     if(wsP)
         in_data->pica_basicP->ReleaseSuite(kPFWorldSuite, kPFWorldSuiteVersion2);
-        
+    
     
     
     return err;
@@ -905,7 +1066,7 @@ static PF_Err SmartRender(
 {
     PF_Err          err     = PF_Err_NONE,
                     err2    = PF_Err_NONE;
-                    
+    
     PF_EffectWorld *input, *output;
     
     PF_ParamDef OCIO_data, OCIO_gpu;
@@ -932,11 +1093,11 @@ static PF_Err SmartRender(
     ERR(    PF_CHECKOUT_PARAM_NOW( OCIO_DATA,   &OCIO_data )    );
     ERR(    PF_CHECKOUT_PARAM_NOW( OCIO_GPU,    &OCIO_gpu  )    );
 
-    ERR(DoRender(   in_data, 
-                    input, 
+    ERR(DoRender(   in_data,
+                    input,
                     &OCIO_data,
                     &OCIO_gpu,
-                    out_data, 
+                    out_data,
                     output));
 
     // Always check in, no matter what the error condition!
@@ -968,7 +1129,6 @@ static PF_Err GetExternalDependencies(
     PF_InData                   *in_data,
     PF_OutData                  *out_data,
     PF_ExtDependenciesExtra     *extra)
-
 {
     PF_Err err = PF_Err_NONE;
     
@@ -1012,7 +1172,7 @@ static PF_Err GetExternalDependencies(
     else if(seq_data->source == OCIO_SOURCE_CUSTOM && seq_data->path[0] != '\0')
     {
         std::string dir = GetProjectDir(in_data);
-            
+        
         Path absolute_path(seq_data->path, "");
         Path relative_path(seq_data->relative_path, dir);
     
@@ -1035,13 +1195,27 @@ static PF_Err GetExternalDependencies(
     
     if( !dependency.empty() )
     {
-        extra->dependencies_strH = PF_NEW_HANDLE(sizeof(char) * (dependency.size() + 1));
+        const size_t len = sizeof(char) * (dependency.size() + 1);
+        
+        extra->dependencies_strH = PF_NEW_HANDLE(len);
         
         char *p = (char *)PF_LOCK_HANDLE(extra->dependencies_strH);
         
-        strcpy(p, dependency.c_str());
+        nt_strncpy(p, dependency.c_str(), len);
+        
+        PF_UNLOCK_HANDLE(extra->dependencies_strH);
+        
+        // After Effects introduced a bug in CC 2018 where the missing dependencies
+        // are no longer being reported.  Until the bug is fixed, I have to put up
+        // my own alert.
+        // Hey Plabt, check out DVAAE-4210509.
+        if(extra->check_type == PF_DepCheckType_MISSING_DEPENDENCIES &&
+            in_data->version.major == PF_AE150_PLUG_IN_VERSION &&
+            in_data->version.minor >= PF_AE150_PLUG_IN_SUBVERS)
+        {
+            PF_SPRINTF(out_data->return_msg, "OpenColorIO missing dependency:\r%s", dependency.c_str());
+        }
     }
-    
     
     PF_UNLOCK_HANDLE(in_data->sequence_data);
     
@@ -1073,15 +1247,23 @@ DllExport PF_Err PluginMain(
             case PF_Cmd_PARAMS_SETUP:
                 err = ParamsSetup(in_data,out_data,params,output);
                 break;
+            case PF_Cmd_USER_CHANGED_PARAM:
+                err = UserChangedParam(in_data, out_data, params, output, (PF_UserChangedParamExtra *)extra);
+                break;
             case PF_Cmd_SEQUENCE_SETUP:
-            case PF_Cmd_SEQUENCE_RESETUP:
                 err = SequenceSetup(in_data, out_data, params, output);
+                break;
+            case PF_Cmd_SEQUENCE_RESETUP:
+                err = SequenceResetup(in_data, out_data, params, output);
                 break;
             case PF_Cmd_SEQUENCE_FLATTEN:
                 err = SequenceFlatten(in_data, out_data, params, output);
                 break;
             case PF_Cmd_SEQUENCE_SETDOWN:
                 err = SequenceSetdown(in_data, out_data, params, output);
+                break;
+            case PF_Cmd_GET_FLATTENED_SEQUENCE_DATA:
+                err = GetFlattenedSequenceData(in_data, out_data, params, output);
                 break;
             case PF_Cmd_SMART_PRE_RENDER:
                 err = PreRender(in_data, out_data, (PF_PreRenderExtra*)extra);
@@ -1100,6 +1282,7 @@ DllExport PF_Err PluginMain(
                 break;
             case PF_Cmd_GET_EXTERNAL_DEPENDENCIES:
                 err = GetExternalDependencies(in_data, out_data, (PF_ExtDependenciesExtra *)extra);
+                assert(params == NULL); // would love to check my ArbData, but...
                 break;
         }
     }

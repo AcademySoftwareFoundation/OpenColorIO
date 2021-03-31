@@ -376,7 +376,7 @@ void Lut3DOpData::validate() const
     {
         getArray().validate();
     }
-    catch (Exception& e)
+    catch (const Exception& e)
     {
         std::ostringstream oss;
         oss << "Lut3D content array issue: ";

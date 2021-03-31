@@ -13,12 +13,6 @@
       :module: PyOpenColorIO
 
 
-   .. py:method:: FixedFunctionTransform.__str__()
-      :module: PyOpenColorIO
-
-      Return str(self).
-
-
    .. py:method:: FixedFunctionTransform.equals(self: PyOpenColorIO.FixedFunctionTransform, other: PyOpenColorIO.FixedFunctionTransform) -> bool
       :module: PyOpenColorIO
 

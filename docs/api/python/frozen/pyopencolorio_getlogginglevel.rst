@@ -8,6 +8,5 @@
 
    Get the global logging level.
 
-
    You can override this at runtime using the OCIO_LOGGING_LEVEL environment variable. The client application that sets this should use :ref:`SetLoggingLevel`, and not the environment variable. The default value is INFO.
 

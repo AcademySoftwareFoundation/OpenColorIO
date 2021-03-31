@@ -25,6 +25,13 @@ supported_apps:
       link : "http://www.blender.org/"
 
     # portfolio item loop
+    - name : cineSync
+      image : images/supported_apps/cinesync.png
+      categories : ["Playback", "Review"]
+      content : Native support.
+      link : "https://cospective.com/cinesync/"
+
+    # portfolio item loop
     - name : Clarisse
       image : images/supported_apps/clarisse.png
       categories : ["3D", "Render"]
@@ -191,7 +198,3 @@ supported_apps:
       categories : ["Render", "3D"]
       content : V-Ray 4 and up.
       link : "https://chaosgroup.com/"
-
-
-
-  
