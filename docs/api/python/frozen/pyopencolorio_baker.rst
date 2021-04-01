@@ -103,7 +103,7 @@
    .. py:method:: Baker.setCubeSize(self: PyOpenColorIO.Baker, cubeSize: int) -> None
       :module: PyOpenColorIO
 
-      Override the default cube sample size. default: <format specific>="">
+      Override the default cube sample size. default: <format specific>
 
 
    .. py:method:: Baker.setFormat(self: PyOpenColorIO.Baker, formatName: str) -> None

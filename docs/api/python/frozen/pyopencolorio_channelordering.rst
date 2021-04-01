@@ -47,8 +47,3 @@
       :module: PyOpenColorIO
       :value: <ChannelOrdering.CHANNEL_ORDERING_RGBA: 0>
 
-
-   .. py:method:: ChannelOrdering.value
-      :module: PyOpenColorIO
-      :property:
-

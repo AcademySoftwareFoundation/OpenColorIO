@@ -133,10 +133,6 @@ if(NOT expat_FOUND)
     include(ExternalProject)
     include(GNUInstallDirs)
 
-    if(APPLE)
-        set(CMAKE_OSX_DEPLOYMENT_TARGET ${CMAKE_OSX_DEPLOYMENT_TARGET})
-    endif()
-
     set(_EXT_DIST_ROOT "${CMAKE_BINARY_DIR}/ext/dist")
     set(_EXT_BUILD_ROOT "${CMAKE_BINARY_DIR}/ext/build")
 
@@ -159,8 +155,11 @@ if(NOT expat_FOUND)
 
     if(_expat_TARGET_CREATE)
         if(UNIX)
-            set(EXPAT_C_FLAGS "${EXPAT_C_FLAGS} -fPIC")
-            set(EXPAT_CXX_FLAGS "${EXPAT_CXX_FLAGS} -fPIC")
+            set(EXPAT_C_FLAGS "${EXPAT_C_FLAGS} -fvisibility=hidden -fPIC")
+            set(EXPAT_CXX_FLAGS "${EXPAT_CXX_FLAGS} -fvisibility=hidden -fPIC")
+            if(OCIO_INLINES_HIDDEN)
+                set(EXPAT_CXX_FLAGS "${EXPAT_CXX_FLAGS} -fvisibility-inlines-hidden")
+            endif()
         endif()
 
         if(MSVC)
@@ -186,9 +185,15 @@ if(NOT expat_FOUND)
             -DEXPAT_BUILD_TOOLS=OFF
             -DEXPAT_SHARED_LIBS=OFF
         )
+
         if(CMAKE_TOOLCHAIN_FILE)
             set(EXPAT_CMAKE_ARGS
                 ${EXPAT_CMAKE_ARGS} -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE})
+        endif()
+
+        if(APPLE)
+            set(EXPAT_CMAKE_ARGS
+                ${EXPAT_CMAKE_ARGS} -DCMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET})
         endif()
 
         # Hack to let imported target be built from ExternalProject_Add

@@ -6,13 +6,29 @@
 .. py:class:: Config
    :module: PyOpenColorIO
 
+   A config defines all the color spaces to be available at runtime.
+
+   The color configuration (:ref:`Config`) is the main object for interacting with this library. It encapsulates all of the information necessary to use customized :ref:`ColorSpaceTransform` and :ref:`DisplayViewTransform` operations.
+
+   See the user-guide for more information on selecting, creating, and working with custom color configurations.
+
+   For applications interested in using only one color config at a time (this is the vast majority of apps), their API would traditionally get the global configuration and use that, as opposed to creating a new one. This simplifies the use case for plugins and bindings, as it alleviates the need to pass around configuration handles.
+
+   An example of an application where this would not be sufficient would be a multi-threaded image proxy server (daemon), which wished to handle multiple show configurations in a single process concurrently. This app would need to keep multiple configurations alive, and to manage them appropriately.
+
+   Roughly speaking, a novice user should select a default configuration that most closely approximates the use case (animation, visual effects, etc.), and set the :envvar:`OCIO` environment variable to point at the root of that configuration.
+
+   .. note::
+      Initialization using environment variables is typically preferable in a multi-app ecosystem, as it allows all applications to be consistently configured.
+
+   See developers-usageexamples
+
 
    .. py:method:: Config.CreateFromEnv() -> PyOpenColorIO.Config
       :module: PyOpenColorIO
       :staticmethod:
 
       Create a configuration using the OCIO environment variable.
-
 
       If the variable is missing or empty, returns the same result as :ref:`Config::CreateRaw` .
 
@@ -37,7 +53,6 @@
 
       Create a fall-back config.
 
-
       This may be useful to allow client apps to launch in cases when the supplied config path is not loadable.
 
 
@@ -50,7 +65,6 @@
       1. GetProcessorFromConfigs(srcConfig: PyOpenColorIO.Config, srcColorSpaceName: str, dstConfig: PyOpenColorIO.Config, dstColorSpaceName: str) -> PyOpenColorIO.Processor
 
       Get a processor to convert between color spaces in two separate configs.
-
 
       This relies on both configs having the aces_interchange role (when srcName is scene-referred) or the role cie_xyz_d65_interchange (when srcName is display-referred) defined. An exception is thrown if that is not the case.
 
@@ -68,7 +82,6 @@
 
       Create an empty config of the current version.
 
-
       Note that an empty config will not pass validation since required elements will be missing.
 
 
@@ -81,7 +94,6 @@
 
       Add a color space to the configuration.
 
-
       .. note::
          If another color space is already present with the same name, this will overwrite it. This stores a copy of the specified color space.
 
@@ -93,7 +105,6 @@
       :module: PyOpenColorIO
 
       Add a (reference to a) shared view to a display.
-
 
       The shared view must be part of the config. See :ref:`Config::addSharedView`
 
@@ -135,7 +146,6 @@
 
       Add a single search path to the end of the list.
 
-
       Paths may be either absolute or relative. Relative paths are relative to the working directory. Forward slashes will be normalized to reverse for Windows. Environment (context) variables may be used in paths.
 
 
@@ -143,6 +153,14 @@
       :module: PyOpenColorIO
 
       Will throw if view or colorSpaceName are null or empty.
+
+      The following methods only manipulate active displays and views. Active displays and views are defined from an env. variable or from the config file.
+
+      Looks is a potentially comma (or colon) delimited list of lookNames, Where +/- prefixes are optionally allowed to denote forward/inverse look specification. (And forward is assumed in the absence of either)
+
+      Add shared view (or replace existing one with same name). Shared views are defined at config level and can be referenced by several displays. Either provide a view transform and a display color space or just a color space (and a null view transform). Looks, rule and description are optional, they can be null or empty.
+
+      Shared views using a view transform may use the token <USE_DISPLAY_NAME> for the color space (see :c:var:`OCIO_VIEW_USE_DISPLAY_NAME`). In that case, when the view is referenced in a display, the display color space that is used will be the one matching the display name. In other words, the view will be customized based on the display it is used in. :ref:`Config::validate` will throw if the config does not contain the matching display color space.
 
 
    .. py:method:: Config.addViewTransform(self: PyOpenColorIO.Config, viewTransform: PyOpenColorIO.ViewTransform) -> None
@@ -153,7 +171,6 @@
       :module: PyOpenColorIO
 
       Remove all the color spaces from the configuration.
-
 
       .. note::
          Removing color spaces from a :ref:`Config` does not affect any :ref:`ColorSpaceSet` sets that have already been created.
@@ -206,11 +223,19 @@
 
       1. getCacheID(self: PyOpenColorIO.Config) -> str
 
-      This will produce a hash of the all colorspace definitions, etc. All external references, such as files used in FileTransforms, etc., will be incorporated into the cacheID. While the contents of the files are not read, the file system is queried for relevant information (mtime, inode) so that the config's cacheID will change when the underlying luts are updated. If a context is not provided, the current :ref:`Context` will be used. If a null context is provided, file references will not be taken into account (this is essentially a hash of :ref:`Config::serialize`).
+      This will produce a hash of the all colorspace definitions, etc. All external references, such as files used in FileTransforms, etc., will be incorporated into the cacheID. While the contents of the files are not read, the file system is queried for relevant information (mtime, inode) so that the config's cacheID will change when the underlying luts are updated.
+
+      If a context is not provided, the current :ref:`Context` will be used.
+
+      If a null context is provided, file references will not be taken into account (this is essentially a hash of :ref:`Config::serialize`).
 
       2. getCacheID(self: PyOpenColorIO.Config, context: PyOpenColorIO.Context) -> str
 
-      This will produce a hash of the all colorspace definitions, etc. All external references, such as files used in FileTransforms, etc., will be incorporated into the cacheID. While the contents of the files are not read, the file system is queried for relevant information (mtime, inode) so that the config's cacheID will change when the underlying luts are updated. If a context is not provided, the current :ref:`Context` will be used. If a null context is provided, file references will not be taken into account (this is essentially a hash of :ref:`Config::serialize`).
+      This will produce a hash of the all colorspace definitions, etc. All external references, such as files used in FileTransforms, etc., will be incorporated into the cacheID. While the contents of the files are not read, the file system is queried for relevant information (mtime, inode) so that the config's cacheID will change when the underlying luts are updated.
+
+      If a context is not provided, the current :ref:`Context` will be used.
+
+      If a null context is provided, file references will not be taken into account (this is essentially a hash of :ref:`Config::serialize`).
 
 
    .. py:method:: Config.getCanonicalName(self: PyOpenColorIO.Config, name: str) -> str
@@ -223,7 +248,6 @@
       :module: PyOpenColorIO
 
       Get the color space from all the color spaces (i.e. active and inactive) and return null if the name is not found.
-
 
       .. note::
          The fcn accepts either a color space name, role name, or alias. (Color space names take precedence over roles.)
@@ -254,9 +278,8 @@
 
       Get all active color spaces having a specific category in the order they appear in the config file.
 
-
       .. note::
-         If the category is null or empty, the method returns all the active color spaces like :cpp:func:`:ref:`Config::getNumColorSpaces`` and :cpp:func:`:ref:`Config::getColorSpaceNameByIndex`` do.
+         If the category is null or empty, the method returns all the active color spaces like :ref:`Config::getNumColorSpaces` and :ref:`Config::getColorSpaceNameByIndex` do.
 
       .. note::
          It's worth noticing that the method returns a copy of the selected color spaces decoupling the result from the config. Hence, any changes on the config do not affect the existing color space sets, and vice-versa.
@@ -279,9 +302,8 @@
 
       Get the default coefficients for computing luma.
 
-
       .. note::
-         There is no "1 size fits all" set of luma coefficients. (The values are typically different for each colorspace, and the application of them may be nonsensical depending on the intensity coding anyways). Thus, the 'right' answer is to make these functions on the :cpp:class:`:ref:`Config`` class. However, it's often useful to have a config-wide default so here it is. We will add the colorspace specific luma call if/when another client is interesting in using it.
+         There is no "1 size fits all" set of luma coefficients. (The values are typically different for each colorspace, and the application of them may be nonsensical depending on the intensity coding anyways). Thus, the 'right' answer is to make these functions on the :ref:`Config` class. However, it's often useful to have a config-wide default so here it is. We will add the colorspace specific luma call if/when another client is interesting in using it.
 
 
    .. py:method:: Config.getDefaultSceneToDisplayViewTransform(self: PyOpenColorIO.Config) -> PyOpenColorIO.ViewTransform
@@ -356,7 +378,6 @@
       :module: PyOpenColorIO
 
       Get the family separator.
-
 
       A single character used to separate the family string into tokens for use in hierarchical menus. Defaults to '/'.
 
@@ -434,6 +455,8 @@
 
       1. getProcessor(self: PyOpenColorIO.Config, srcColorSpace: PyOpenColorIO.ColorSpace, dstColorSpace: PyOpenColorIO.ColorSpace) -> PyOpenColorIO.Processor
 
+      Get the processor to apply a :ref:`ColorSpaceTransform` from a source to a destination color space.
+
       2. getProcessor(self: PyOpenColorIO.Config, context: PyOpenColorIO.Context, srcColorSpace: PyOpenColorIO.ColorSpace, dstColorSpace: PyOpenColorIO.ColorSpace) -> PyOpenColorIO.Processor
 
       3. getProcessor(self: PyOpenColorIO.Config, srcColorSpaceName: str, dstColorSpaceName: str) -> PyOpenColorIO.Processor
@@ -445,14 +468,13 @@
 
       5. getProcessor(self: PyOpenColorIO.Config, srcColorSpaceName: str, display: str, view: str, direction: PyOpenColorIO.TransformDirection) -> PyOpenColorIO.Processor
 
-      6. getProcessor(self: PyOpenColorIO.Config, context: PyOpenColorIO.Context, srcColorSpaceName: str, display: str, view: str, direction: PyOpenColorIO.TransformDirection) -> PyOpenColorIO.Processor
+      Get the processor to apply a :ref:`DisplayViewTransform` for a display and view. Refer to the Display/View Registration section above for more info on the display and view arguments.
 
-      cpp:function::
+      6. getProcessor(self: PyOpenColorIO.Config, context: PyOpenColorIO.Context, srcColorSpaceName: str, display: str, view: str, direction: PyOpenColorIO.TransformDirection) -> PyOpenColorIO.Processor
 
       7. getProcessor(self: PyOpenColorIO.Config, transform: PyOpenColorIO.Transform) -> PyOpenColorIO.Processor
 
       Get the processor for the specified transform.
-
 
       Not often needed, but will allow for the re-use of atomic OCIO functionality (such as to apply an individual LUT file).
 
@@ -551,7 +573,6 @@
 
       Remove a color space from the configuration.
 
-
       .. note::
          It does not throw an exception. Name must be the canonical name. If a role name or alias is provided or if the name is not in the config, nothing is done.
 
@@ -563,7 +584,6 @@
       :module: PyOpenColorIO
 
       Remove the view and the display if no more views.
-
 
       It does not remove the associated color space. If the view name is a shared view, it only removes the reference to the view from the display but the shared view, remains in the config.
 
@@ -587,7 +607,6 @@
 
       Returns the string representation of the :ref:`Config` in YAML text form.
 
-
       This is typically stored on disk in a file with the extension .ocio. NB: This does not validate the config. Applications should validate before serializing.
 
 
@@ -595,7 +614,6 @@
       :module: PyOpenColorIO
 
       $OCIO_ACTIVE_DISPLAYS envvar can, at runtime, optionally override the allowed displays. It is a comma or colon delimited list. Active displays that are not in the specified profile will be ignored, and the left-most defined display will be the default.
-
 
       Comma-delimited list of names to filter and order the active displays.
 
@@ -607,7 +625,6 @@
       :module: PyOpenColorIO
 
       $OCIO_ACTIVE_VIEWS envvar can, at runtime, optionally override the allowed views. It is a comma or colon delimited list. Active views that are not in the specified profile will be ignored, and the left-most defined view will be the default.
-
 
       Comma-delimited list of names to filter and order the active views.
 
@@ -638,7 +655,6 @@
 
       Set the family separator.
 
-
       Succeeds if the characters is null or a valid character from the ASCII table i.e. from value 32 (i.e. space) to 126 (i.e. '~'); otherwise, it throws an exception.
 
 
@@ -646,7 +662,6 @@
       :module: PyOpenColorIO
 
       Set file rules.
-
 
       .. note::
          The argument is cloned.
@@ -657,11 +672,10 @@
 
       Set/get a list of inactive color space or named transform names.
 
-
       Notes:
       - List can contain color space and/or named transform names.
       - The inactive spaces are color spaces that should not appear in application menus.
-      - These color spaces will still work in Config::getProcessor calls.
+      - These color spaces will still work in :ref:`Config::getProcessor` calls.
       - The argument is a comma-delimited string. A null or empty string empties the list.
       - The environment variable OCIO_INACTIVE_COLORSPACES may also be used to set the inactive color space list.
       - The env. var. takes precedence over the inactive_colorspaces list in the config file.
@@ -689,7 +703,8 @@
    .. py:method:: Config.setProcessorCacheFlags(self: PyOpenColorIO.Config, flags: PyOpenColorIO.ProcessorCacheFlags) -> None
       :module: PyOpenColorIO
 
-      cpp:function:: Control the caching of processors in the config instance. By default, caching
+      Control the caching of processors in the config instance. By default, caching is on.
+       The flags allow turning caching off entirely or only turning it off if dynamic properties are being used by the processor.
 
 
    .. py:method:: Config.setRole(self: PyOpenColorIO.Config, role: str, colorSpaceName: str) -> None
@@ -703,7 +718,6 @@
       :module: PyOpenColorIO
 
       Set all search paths as a concatenated string, ':' to separate the paths.
-
 
       See :ref:`addSearchPath` for a more robust and platform-agnostic method of setting the search paths.
 
@@ -722,7 +736,6 @@
       :module: PyOpenColorIO
 
       Set viewing rules.
-
 
       .. note::
          The argument is cloned.
@@ -744,7 +757,6 @@
       :module: PyOpenColorIO
 
       Performs a thorough validation for the most common user errors.
-
 
       This will throw an exception if the config is malformed. The most common error occurs when references are made to colorspaces that do not exist.
 

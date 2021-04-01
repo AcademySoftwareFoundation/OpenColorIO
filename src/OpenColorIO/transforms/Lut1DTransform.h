@@ -61,7 +61,7 @@ public:
     static void deleter(Lut1DTransform * t);
 
 private:
-    Lut1DOpData m_data;
+    Lut1DOpData m_data{ 2 };
 };
 
 
