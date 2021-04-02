@@ -87,7 +87,7 @@
    .. py:method:: LegacyViewingPipeline.setLooksOverride(self: PyOpenColorIO.LegacyViewingPipeline, looks: str) -> None
       :module: PyOpenColorIO
 
-      A user can optionally override the looks that are, by default, used with the expected display / view combination. A common use case for this functionality is in an image viewing app, where per-shot looks are supported. If for some reason a per-shot look is not defined for the current :ref:`Context`, the Config::getProcessor fcn will not succeed by default. Thus, with this mechanism the viewing app could override to looks = "", and this will allow image display to continue (though hopefully) the interface would reflect this fallback option.
+      A user can optionally override the looks that are, by default, used with the expected display / view combination. A common use case for this functionality is in an image viewing app, where per-shot looks are supported. If for some reason a per-shot look is not defined for the current :ref:`Context`, the :ref:`Config::getProcessor` fcn will not succeed by default. Thus, with this mechanism the viewing app could override to looks = "", and this will allow image display to continue (though hopefully) the interface would reflect this fallback option.
 
       Looks is a potentially comma (or colon) delimited list of lookNames, where +/- prefixes are optionally allowed to denote forward/inverse look specification (and forward is assumed in the absence of either).
 

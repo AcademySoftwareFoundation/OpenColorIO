@@ -22,6 +22,27 @@ class BuiltinTransformRegistryImpl : public BuiltinTransformRegistry
 
     struct BuiltinData
     {
+        BuiltinData(const char * style, const char * description, OpCreator creator)
+            : m_style(style ? style : "")
+            , m_description(description ? description : "")
+            , m_creator(creator)
+        {
+        }
+        BuiltinData() = delete;
+        BuiltinData(const BuiltinData & o) = default;
+        BuiltinData(BuiltinData && o) noexcept
+            : m_style(std::move(o.m_style))
+            , m_description(std::move(o.m_description))
+            , m_creator(std::move(o.m_creator))
+        {
+        }
+        BuiltinData & operator= (const BuiltinData & o)
+        {
+            m_style = o.m_style;
+            m_description = o.m_description;
+            m_creator = o.m_creator;
+            return *this;
+        }
         std::string m_style;       // The built-in transform style.
         std::string m_description; // The optional built-in transform description.
         OpCreator   m_creator;     // Functor to create the op(s).

@@ -6,13 +6,46 @@
 .. py:class:: DynamicProperty
    :module: PyOpenColorIO
 
-   Allows transform parameter values to be set on-the-fly (after finalization). For example, to modify the exposure in a viewport. Dynamic properties can be accessed from the :cpp:class:`:ref:`CPUProcessor`` or :cpp:class:`:ref:`GpuShaderCreator`` to change values between processing.
+   Allows transform parameter values to be set on-the-fly (after finalization). For example, to modify the exposure in a viewport. Dynamic properties can be accessed from the `:ref:`CPUProcessor`` or `:ref:`GpuShaderCreator`` to change values between processing.
 
    .. code-block:: cpp
 
-   OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig(); OCIO::ConstProcessorRcPtr processor = config->getProcessor(colorSpace1, colorSpace2); OCIO::ConstCPUProcessorRcPtr cpuProcessor = processor->getDefaultCPUProcessor();
+       OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
+       OCIO::ConstProcessorRcPtr processor = config->getProcessor(colorSpace1, colorSpace2);
+       OCIO::ConstCPUProcessorRcPtr cpuProcessor = processor->getDefaultCPUProcessor();
 
-   if (cpuProcessor->hasDynamicProperty(OCIO::DYNAMIC_PROPERTY_EXPOSURE)) { // Get the in-memory implementation of the dynamic property. OCIO::DynamicPropertyRcPtr dynProp = cpuProcessor->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_EXPOSURE); // Get the interface used to change the double value. OCIO::DynamicPropertyDoubleRcPtr exposure = OCIO::DynamicPropertyValue::AsDouble(dynProp); // Update of the dynamic property instance with the new value. exposure->setValue(1.1f); } if (cpuProcessor->hasDynamicProperty(OCIO::DYNAMIC_PROPERTY_GRADING_PRIMARY)) { OCIO::DynamicPropertyRcPtr dynProp = cpuProcessor->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_GRADING_PRIMARY); OCIO::DynamicPropertyGradingPrimaryRcPtr primaryProp = OCIO::DynamicPropertyValue::AsGradingPrimary(dynProp); OCIO::GradingPrimary primary = primaryProp->getValue(); primary.m_saturation += 0.1f; rgbCurveProp->setValue(primary); } if (cpuProcessor->hasDynamicProperty(OCIO::DYNAMIC_PROPERTY_GRADING_RGBCURVE)) { OCIO::DynamicPropertyRcPtr dynProp = cpuProcessor->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_GRADING_RGBCURVE); OCIO::DynamicPropertyGradingRGBCurveRcPtr rgbCurveProp = OCIO::DynamicPropertyValue::AsGradingRGBCurve(dynProp); OCIO::ConstGradingRGBCurveRcPtr rgbCurve = rgbCurveProp->getValue()->createEditableCopy(); OCIO::GradingBSplineCurveRcPtr rCurve = rgbCurve->getCurve(OCIO::RGB_RED); rCurve->getControlPoint(1).m_y += 0.1f; rgbCurveProp->setValue(rgbCurve); }
+       if (cpuProcessor->hasDynamicProperty(OCIO::DYNAMIC_PROPERTY_EXPOSURE))
+       {
+           // Get the in-memory implementation of the dynamic property.
+           OCIO::DynamicPropertyRcPtr dynProp =
+               cpuProcessor->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_EXPOSURE);
+           // Get the interface used to change the double value.
+           OCIO::DynamicPropertyDoubleRcPtr exposure =
+               OCIO::DynamicPropertyValue::AsDouble(dynProp);
+           // Update of the dynamic property instance with the new value.
+           exposure->setValue(1.1f);
+       }
+       if (cpuProcessor->hasDynamicProperty(OCIO::DYNAMIC_PROPERTY_GRADING_PRIMARY))
+       {
+           OCIO::DynamicPropertyRcPtr dynProp =
+               cpuProcessor->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_GRADING_PRIMARY);
+           OCIO::DynamicPropertyGradingPrimaryRcPtr primaryProp =
+               OCIO::DynamicPropertyValue::AsGradingPrimary(dynProp);
+           OCIO::GradingPrimary primary = primaryProp->getValue();
+           primary.m_saturation += 0.1f;
+           rgbCurveProp->setValue(primary);
+       }
+       if (cpuProcessor->hasDynamicProperty(OCIO::DYNAMIC_PROPERTY_GRADING_RGBCURVE))
+       {
+           OCIO::DynamicPropertyRcPtr dynProp =
+               cpuProcessor->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_GRADING_RGBCURVE);
+           OCIO::DynamicPropertyGradingRGBCurveRcPtr rgbCurveProp =
+               OCIO::DynamicPropertyValue::AsGradingRGBCurve(dynProp);
+           OCIO::ConstGradingRGBCurveRcPtr rgbCurve = rgbCurveProp->getValue()->createEditableCopy();
+           OCIO::GradingBSplineCurveRcPtr rCurve = rgbCurve->getCurve(OCIO::RGB_RED);
+           rCurve->getControlPoint(1).m_y += 0.1f;
+           rgbCurveProp->setValue(rgbCurve);
+       }
 
 
    .. py:method:: DynamicProperty.__init__(*args, **kwargs)

@@ -6,6 +6,18 @@
 .. py:class:: ViewingRules
    :module: PyOpenColorIO
 
+   :ref:`ViewingRules`
+
+   Viewing Rules allow config authors to filter the list of views an application should offer based on the color space of an image. For example, a config may define a large number of views but not all of them may be appropriate for use with all color spaces. E.g., some views may be intended for use with scene-linear color space encodings and others with video color space encodings.
+
+   Each rule has a name key for applications to refer to the rule. Name values must be unique (using case insensitive comparison). Viewing Rules may also have the following keys:
+
+   - colorspaces: Either a single colorspace name or a list of names.
+   - encodings: One or more strings to be found in the colorspace's encoding attribute. Either this attribute or colorspaces must be present, but not both.
+   - custom : Allows arbitrary key / value string pairs, similar to :ref:`FileRules`.
+
+   Getters and setters are using the rule position, they will throw if the position is not valid.
+
 
    .. py:method:: ViewingRules.__init__(self: PyOpenColorIO.ViewingRules) -> None
       :module: PyOpenColorIO
@@ -18,10 +30,8 @@
 
       Add colorspace name. Will throw if:
 
-
-
       - RuleIndex is invalid.
-      - :cpp:func:`:ref:`ViewingRules::getNumEncodings`` is not 0.
+      - :ref:`ViewingRules::getNumEncodings` is not 0.
 
 
    .. py:method:: ViewingRules.addEncoding(self: PyOpenColorIO.ViewingRules, ruleIndex: int, encodingName: str) -> None
@@ -29,10 +39,8 @@
 
       Add encoding name. Will throw if:
 
-
-
       - RuleIndex is invalid.
-      - :cpp:func:`:ref:`ViewingRules::getNumColorSpaces`` is not 0.
+      - :ref:`ViewingRules::getNumColorSpaces` is not 0.
 
 
    .. py:method:: ViewingRules.getColorSpaces(self: PyOpenColorIO.ViewingRules, ruleIndex: int) -> PyOpenColorIO.ViewingRules.ViewingRuleColorSpaceIterator
@@ -82,9 +90,8 @@
 
       Insert a rule at a given ruleIndex.
 
-
-      Rule currently at ruleIndex will be pushed to index: ruleIndex + 1. If ruleIndex is :cpp:func:`ViewingRules::getNumEntries` new rule will be added at the end. Will throw if:
-      - RuleIndex is invalid (must be less than or equal to cpp:func:`ViewingRules::getNumEntries`).
+      Rule currently at ruleIndex will be pushed to index: ruleIndex + 1. If ruleIndex is ViewingRules::getNumEntries, a new rule will be added at the end. Will throw if:
+      - RuleIndex is invalid (must be less than or equal to ViewingRules::getNumEntries).
       - RuleName already exists.
 
 

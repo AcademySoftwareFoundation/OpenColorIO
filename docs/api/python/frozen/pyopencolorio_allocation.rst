@@ -31,8 +31,3 @@
       :module: PyOpenColorIO
       :value: <Allocation.ALLOCATION_UNKNOWN: 0>
 
-
-   .. py:method:: Allocation.value
-      :module: PyOpenColorIO
-      :property:
-

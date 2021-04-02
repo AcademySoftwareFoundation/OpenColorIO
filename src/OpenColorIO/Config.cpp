@@ -42,7 +42,7 @@ const char * OCIO_ACTIVE_DISPLAYS_ENVVAR      = "OCIO_ACTIVE_DISPLAYS";
 const char * OCIO_ACTIVE_VIEWS_ENVVAR         = "OCIO_ACTIVE_VIEWS";
 const char * OCIO_INACTIVE_COLORSPACES_ENVVAR = "OCIO_INACTIVE_COLORSPACES";
 const char * OCIO_OPTIMIZATION_FLAGS_ENVVAR   = "OCIO_OPTIMIZATION_FLAGS";
-const char * OCIO_USER_CATEGORIES_ENVVAR      = "OCIO_USER_CATEGORIES_ENVVAR";
+const char * OCIO_USER_CATEGORIES_ENVVAR      = "OCIO_USER_CATEGORIES";
 
 // A shared view using this for the color space name will use a display color space that
 // has the same name as the display the shared view is used by.
