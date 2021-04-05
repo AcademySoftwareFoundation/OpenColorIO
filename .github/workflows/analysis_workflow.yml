@@ -39,6 +39,7 @@ jobs:
           # C++11, Python 3.7
           - build: 1
             build-docs: 'ON'
+            build-openfx: 'ON'
             cxx-standard: 11
             cxx-compiler: g++
             cc-compiler: gcc
@@ -47,6 +48,7 @@ jobs:
           # C++14
           - build: 2
             build-docs: 'OFF'
+            build-openfx: 'ON'
             cxx-standard: 14
             cxx-compiler: g++
             cc-compiler: gcc
@@ -59,6 +61,7 @@ jobs:
           - build: 3
             # Doc build requires Python 3
             build-docs: 'OFF'
+            build-openfx: 'OFF'
             cxx-standard: 11
             cxx-compiler: g++
             cc-compiler: gcc
@@ -70,6 +73,7 @@ jobs:
           # C++11, Python 3.7
           - build: 4
             build-docs: 'OFF'
+            build-openfx: 'ON'
             cxx-standard: 11
             cxx-compiler: clang++
             cc-compiler: clang
@@ -78,6 +82,7 @@ jobs:
           # C++14
           - build: 5
             build-docs: 'OFF'
+            build-openfx: 'ON'
             cxx-standard: 14
             cxx-compiler: clang++
             cc-compiler: clang
@@ -90,6 +95,7 @@ jobs:
           - build: 6
             # Doc build requires Python 3
             build-docs: 'OFF'
+            build-openfx: 'OFF'
             cxx-standard: 11
             cxx-compiler: clang++
             cc-compiler: clang
@@ -106,6 +112,8 @@ jobs:
         if: matrix.build-docs == 'ON'
       - name: Install tests env
         run: share/ci/scripts/linux/yum/install_tests_env.sh
+      # TODO: Reset install_openexr.sh to 'latest' once we support the 
+      #       OpenEXR/Imath 3 restructure.
       - name: Install latest ext package versions
         run: |
           share/ci/scripts/linux/install_expat.sh latest
@@ -113,8 +121,9 @@ jobs:
           share/ci/scripts/linux/install_yaml-cpp.sh latest
           share/ci/scripts/linux/install_pystring.sh latest
           share/ci/scripts/linux/install_pybind11.sh latest
-          share/ci/scripts/linux/install_openexr.sh latest
+          share/ci/scripts/linux/install_openexr.sh 2.5.5
           share/ci/scripts/linux/install_oiio.sh latest
+          share/ci/scripts/linux/install_openfx.sh latest
       - name: Create build directories
         run: |
           mkdir _install
@@ -126,6 +135,7 @@ jobs:
                 -DCMAKE_BUILD_TYPE=Release \
                 -DCMAKE_CXX_STANDARD=${{ matrix.cxx-standard }} \
                 -DOCIO_BUILD_DOCS=${{ matrix.build-docs }} \
+                -DOCIO_BUILD_OPENFX=${{ matrix.build-openfx }} \
                 -DOCIO_BUILD_GPU_TESTS=OFF \
                 -DOCIO_INSTALL_EXT_PACKAGES=NONE \
                 -DOCIO_WARNING_AS_ERROR=OFF \

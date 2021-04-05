@@ -58,12 +58,13 @@ jobs:
         build: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
         include:
           # -------------------------------------------------------------------
-          # VFX CY2021
+          # GCC, VFX CY2021
           # -------------------------------------------------------------------
           - build: 12
             build-type: Debug
             build-shared: 'ON'
             build-docs: 'OFF'
+            build-openfx: 'ON'
             build-gpu: 'OFF'
             use-headless: 'OFF'
             use-sse: 'OFF'
@@ -72,10 +73,14 @@ jobs:
             cc-compiler: clang
             compiler-desc: Clang 9
             vfx-cy: 2021
+          # -------------------------------------------------------------------
+          # Clang, VFX CY2021
+          # -------------------------------------------------------------------
           - build: 11
             build-type: Release
             build-shared: 'ON'
             build-docs: 'OFF'
+            build-openfx: 'ON'
             build-gpu: 'OFF'
             use-headless: 'OFF'
             use-sse: 'ON'
@@ -92,6 +97,7 @@ jobs:
             build-type: Release
             build-shared: 'ON'
             build-docs: 'ON'
+            build-openfx: 'ON'
             build-gpu: 'OFF'
             use-headless: 'OFF'
             use-sse: 'ON'
@@ -105,6 +111,7 @@ jobs:
             build-type: Debug
             build-shared: 'ON'
             build-docs: 'OFF'
+            build-openfx: 'ON'
             build-gpu: 'OFF'
             use-headless: 'OFF'
             use-sse: 'ON'
@@ -118,6 +125,7 @@ jobs:
             build-type: Release
             build-shared: 'ON'
             build-docs: 'OFF'
+            build-openfx: 'ON'
             build-gpu: 'OFF'
             use-headless: 'OFF'
             use-sse: 'ON'
@@ -131,6 +139,7 @@ jobs:
             build-type: Release
             build-shared: 'OFF'
             build-docs: 'OFF'
+            build-openfx: 'ON'
             build-gpu: 'OFF'
             use-headless: 'OFF'
             use-sse: 'OFF'
@@ -148,6 +157,7 @@ jobs:
             build-shared: 'ON'
             # Doc build requires Python 3
             build-docs: 'OFF'
+            build-openfx: 'OFF'
             build-gpu: 'OFF'
             use-headless: 'OFF'
             use-sse: 'ON'
@@ -164,6 +174,7 @@ jobs:
             build-type: Release
             build-shared: 'ON'
             build-docs: 'ON'
+            build-openfx: 'ON'
             build-gpu: 'OFF'
             use-headless: 'OFF'
             use-sse: 'ON'
@@ -177,6 +188,7 @@ jobs:
             build-type: Debug
             build-shared: 'ON'
             build-docs: 'OFF'
+            build-openfx: 'ON'
             build-gpu: 'OFF'
             build-headless: 'OFF'
             use-sse: 'ON'
@@ -190,6 +202,7 @@ jobs:
             build-type: Release
             build-shared: 'ON'
             build-docs: 'OFF'
+            build-openfx: 'ON'
             build-gpu: 'OFF'
             use-headless: 'OFF'
             use-sse: 'ON'
@@ -203,6 +216,7 @@ jobs:
             build-type: Release
             build-shared: 'OFF'
             build-docs: 'OFF'
+            build-openfx: 'ON'
             build-gpu: 'OFF'
             use-headless: 'OFF'
             use-sse: 'OFF'
@@ -220,6 +234,7 @@ jobs:
             build-shared: 'ON'
             # Doc build requires Python 3
             build-docs: 'OFF'
+            build-openfx: 'OFF'
             build-gpu: 'OFF'
             use-headless: 'OFF'
             use-sse: 'ON'
@@ -251,6 +266,7 @@ jobs:
                 -DCMAKE_CXX_STANDARD=${{ matrix.cxx-standard }} \
                 -DBUILD_SHARED_LIBS=${{ matrix.build-shared }} \
                 -DOCIO_BUILD_DOCS=${{ matrix.build-docs }} \
+                -DOCIO_BUILD_OPENFX=${{ matrix.build-openfx }} \
                 -DOCIO_BUILD_GPU_TESTS=${{ matrix.build-gpu }} \
                 -DOCIO_USE_HEADLESS=${{ matrix.use-headless }} \
                 -DOCIO_USE_SSE=${{ matrix.use-sse }} \
@@ -292,17 +308,18 @@ jobs:
             build-type: Release
             build-shared: 'ON'
             build-docs: 'OFF'
+            build-openfx: 'ON'
             build-gpu: 'OFF'
             use-headless: 'OFF'
             use-sse: 'ON'
             cxx-standard: 17
             python-version: 3.7
-          # Static, no SSE
           # C++11, Python 3.7
           - build: 5
             build-type: Release
             build-shared: 'ON'
             build-docs: 'ON'
+            build-openfx: 'ON'
             build-gpu: 'OFF'
             use-headless: 'OFF'
             use-sse: 'ON'
@@ -313,6 +330,7 @@ jobs:
             build-type: Debug
             build-shared: 'ON'
             build-docs: 'OFF'
+            build-openfx: 'ON'
             build-gpu: 'OFF'
             use-headless: 'OFF'
             use-sse: 'ON'
@@ -323,6 +341,7 @@ jobs:
             build-type: Release
             build-shared: 'ON'
             build-docs: 'OFF'
+            build-openfx: 'ON'
             build-gpu: 'OFF'
             use-headless: 'OFF'
             use-sse: 'ON'
@@ -333,6 +352,7 @@ jobs:
             build-type: Release
             build-shared: 'OFF'
             build-docs: 'OFF'
+            build-openfx: 'ON'
             build-gpu: 'OFF'
             use-headless: 'OFF'
             use-sse: 'OFF'
@@ -344,6 +364,7 @@ jobs:
             build-shared: 'ON'
             # Doc build requires Python 3
             build-docs: 'OFF'
+            build-openfx: 'OFF'
             build-gpu: 'OFF'
             use-headless: 'OFF'
             use-sse: 'ON'
@@ -373,6 +394,7 @@ jobs:
                 -DCMAKE_CXX_STANDARD=${{ matrix.cxx-standard }} \
                 -DBUILD_SHARED_LIBS=${{ matrix.build-shared }} \
                 -DOCIO_BUILD_DOCS=${{ matrix.build-docs }} \
+                -DOCIO_BUILD_OPENFX=${{ matrix.build-openfx }} \
                 -DOCIO_BUILD_GPU_TESTS=${{ matrix.build-gpu }} \
                 -DOCIO_USE_HEADLESS=${{ matrix.use-headless }} \
                 -DOCIO_USE_SSE=${{ matrix.use-sse }} \
@@ -416,6 +438,7 @@ jobs:
             build-type: Release
             build-shared: 'ON'
             build-docs: 'OFF'
+            build-openfx: 'ON'
             build-gpu: 'OFF'
             use-headless: 'OFF'
             use-sse: 'ON'
@@ -426,6 +449,7 @@ jobs:
             build-type: Release
             build-shared: 'ON'
             build-docs: 'ON'
+            build-openfx: 'ON'
             build-gpu: 'OFF'
             use-headless: 'OFF'
             use-sse: 'ON'
@@ -436,6 +460,7 @@ jobs:
             build-type: Debug
             build-shared: 'ON'
             build-docs: 'OFF'
+            build-openfx: 'ON'
             build-gpu: 'OFF'
             use-headless: 'OFF'
             use-sse: 'ON'
@@ -446,6 +471,7 @@ jobs:
             build-type: Release
             build-shared: 'ON'
             build-docs: 'OFF'
+            build-openfx: 'ON'
             build-gpu: 'OFF'
             use-headless: 'OFF'
             use-sse: 'ON'
@@ -456,6 +482,7 @@ jobs:
             build-type: Release
             build-shared: 'OFF'
             build-docs: 'OFF'
+            build-openfx: 'ON'
             build-gpu: 'OFF'
             use-headless: 'OFF'
             use-sse: 'OFF'
@@ -467,6 +494,7 @@ jobs:
             build-shared: 'ON'
             # Doc build requires Python 3
             build-docs: 'OFF'
+            build-openfx: 'OFF'
             build-gpu: 'OFF'
             use-headless: 'OFF'
             use-sse: 'ON'
@@ -499,6 +527,7 @@ jobs:
                 -DCMAKE_GENERATOR_PLATFORM=x64 \
                 -DBUILD_SHARED_LIBS=${{ matrix.build-shared }} \
                 -DOCIO_BUILD_DOCS=${{ matrix.build-docs }} \
+                -DOCIO_BUILD_OPENFX=${{ matrix.build-openfx }} \
                 -DOCIO_BUILD_GPU_TESTS=${{ matrix.build-gpu }} \
                 -DOCIO_USE_HEADLESS=${{ matrix.use-headless }} \
                 -DOCIO_USE_SSE=${{ matrix.use-sse }} \

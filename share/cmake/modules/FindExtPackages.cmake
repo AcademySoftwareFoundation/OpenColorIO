@@ -52,6 +52,12 @@ if(OCIO_BUILD_APPS)
     find_package(lcms2 2.2 REQUIRED)
 endif()
 
+if(OCIO_BUILD_OPENFX)
+    # openfx
+    # https://github.com/ofxa/openfx
+    find_package(openfx 1.4 REQUIRED)
+endif()
+
 if(OCIO_BUILD_PYTHON)
 
     # NOTE: Depending of the compiler version pybind11 2.4.3 does not compile 
