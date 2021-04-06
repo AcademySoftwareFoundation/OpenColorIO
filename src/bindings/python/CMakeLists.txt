@@ -156,6 +156,18 @@ if(UNIX)
 	set_property(TARGET PyOpenColorIO PROPERTY POSITION_INDEPENDENT_CODE ON)
 endif()
 
+if (UNIX AND NOT CMAKE_SKIP_RPATH)
+    # Update the default RPATH so the Python binding dynamic library can find the OpenColorIO
+    # dynamic library based on the default installation directory structure.
+    if (APPLE)
+        set_target_properties(PyOpenColorIO PROPERTIES
+            INSTALL_RPATH "@loader_path/../..;${CMAKE_INSTALL_RPATH}")
+    else()
+        set_target_properties(PyOpenColorIO PROPERTIES
+            INSTALL_RPATH "$ORIGIN/../..;${CMAKE_INSTALL_RPATH}")
+    endif()
+endif()
+
 # OSX demands that the linker resolve all symbols at build time
 # we pass this flag to allow dynamic linking
 if(APPLE)
@@ -206,6 +218,10 @@ if(WIN32)
 else()
     set(_Python_VARIANT_PATH "lib${LIB_SUFFIX}/python${Python_VERSION_MAJOR}.${Python_VERSION_MINOR}/site-packages")
 endif()
+
+# Create an internal global variable to access it in another scope but not publicly visible
+# using ccmake.
+set(PYTHON_VARIANT_PATH ${_Python_VARIANT_PATH} CACHE INTERNAL "")
 
 install(TARGETS PyOpenColorIO
     LIBRARY DESTINATION ${_Python_VARIANT_PATH}

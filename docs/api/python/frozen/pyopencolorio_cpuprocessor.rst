@@ -149,6 +149,11 @@
    .. py:method:: CPUProcessor.getDynamicProperty(self: PyOpenColorIO.CPUProcessor, type: PyOpenColorIO.DynamicPropertyType) -> PyOpenColorIO.DynamicProperty
       :module: PyOpenColorIO
 
+      The returned pointer may be used to set the value of any dynamic properties of the requested type. Throws if the requested property is not found. Note that if the processor contains several ops that support the requested property, only one can be dynamic.
+
+      .. note::
+         The dynamic properties in this object are decoupled from the ones in the :ref:`Processor` it was generated from. For each dynamic property in the :ref:`Processor`, there is one in the CPU processor.
+
 
    .. py:method:: CPUProcessor.getInputBitDepth(self: PyOpenColorIO.CPUProcessor) -> PyOpenColorIO.BitDepth
       :module: PyOpenColorIO

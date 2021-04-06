@@ -6,6 +6,14 @@
 .. py:class:: ViewTransform
    :module: PyOpenColorIO
 
+   A *:ref:`ViewTransform`* provides a conversion from the main (usually scene-referred) reference space to the display-referred reference space. This allows splitting the conversion from the main reference space to a display into two parts: the :ref:`ViewTransform` plus a display color space.
+
+   It is also possible to provide a :ref:`ViewTransform` that converts from the display-referred reference space back to that space. This is useful in cases when a :ref:`ViewTransform` is needed when converting between displays (such as HDR to SDR).
+
+   The ReferenceSpaceType indicates whether the :ref:`ViewTransform` converts from scene-to-display reference or display-to-display reference.
+
+   The from_reference transform direction is the one that is used when going out towards a display.
+
 
    .. py:method:: ViewTransform.__init__(*args, **kwargs)
       :module: PyOpenColorIO

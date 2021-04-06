@@ -331,7 +331,7 @@ void Lut1DOpData::validate() const
     {
         getArray().validate();
     }
-    catch (Exception& e)
+    catch (const Exception& e)
     {
         std::ostringstream oss;
         oss << "1D LUT content array issue: ";
