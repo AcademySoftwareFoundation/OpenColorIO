@@ -219,6 +219,10 @@ else()
     set(_Python_VARIANT_PATH "lib${LIB_SUFFIX}/python${Python_VERSION_MAJOR}.${Python_VERSION_MINOR}/site-packages")
 endif()
 
+# Create an internal global variable to access it in another scope but not publicly visible
+# using ccmake.
+set(PYTHON_VARIANT_PATH ${_Python_VARIANT_PATH} CACHE INTERNAL "")
+
 install(TARGETS PyOpenColorIO
     LIBRARY DESTINATION ${_Python_VARIANT_PATH}
 )
