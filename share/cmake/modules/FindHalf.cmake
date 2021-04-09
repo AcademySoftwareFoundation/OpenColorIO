@@ -139,10 +139,6 @@ if(NOT Half_FOUND)
     include(ExternalProject)
     include(GNUInstallDirs)
 
-    if(APPLE)
-        set(CMAKE_OSX_DEPLOYMENT_TARGET ${CMAKE_OSX_DEPLOYMENT_TARGET})
-    endif()
-
     set(_EXT_DIST_ROOT "${CMAKE_BINARY_DIR}/ext/dist")
     set(_EXT_BUILD_ROOT "${CMAKE_BINARY_DIR}/ext/build")
 
@@ -163,7 +159,10 @@ if(NOT Half_FOUND)
 
     if(_Half_TARGET_CREATE)
         if(UNIX)
-            set(Half_CXX_FLAGS "${Half_CXX_FLAGS} -fPIC")
+            set(Half_CXX_FLAGS "${Half_CXX_FLAGS} -fvisibility=hidden -fPIC")
+            if(OCIO_INLINES_HIDDEN)
+                set(Half_CXX_FLAGS "${Half_CXX_FLAGS} -fvisibility-inlines-hidden")
+            endif()
         endif()
 
         if(MSVC)
@@ -189,6 +188,11 @@ if(NOT Half_FOUND)
         if(CMAKE_TOOLCHAIN_FILE)
             set(Half_CMAKE_ARGS
                 ${Half_CMAKE_ARGS} -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE})
+        endif()
+
+        if(APPLE)
+            set(Half_CMAKE_ARGS
+                ${Half_CMAKE_ARGS} -DCMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET})
         endif()
 
         # Hack to let imported target be built from ExternalProject_Add

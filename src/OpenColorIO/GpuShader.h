@@ -89,11 +89,11 @@ private:
 
     static void Deleter(LegacyGpuShaderDesc* c);
 
-    class Impl;
-    Impl * m_impl;
+    class ImplLegacy;
+    ImplLegacy * m_implLegacy;
 
-    Impl * getImpl() { return m_impl; }
-    const Impl * getImpl() const { return m_impl; }
+    ImplLegacy * getImplLegacy() { return m_implLegacy; }
+    const ImplLegacy * getImplLegacy() const { return m_implLegacy; }
 };
 
 
@@ -171,11 +171,11 @@ private:
 
     static void Deleter(GenericGpuShaderDesc* c);
 
-    class Impl;
-    Impl * m_impl;
+    class ImplGeneric;
+    ImplGeneric * m_implGeneric;
 
-    Impl * getImpl() { return m_impl; }
-    const Impl * getImpl() const { return m_impl; }
+    ImplGeneric * getImplGeneric() { return m_implGeneric; }
+    const ImplGeneric * getImplGeneric() const { return m_implGeneric; }
 };
 
 } // namespace OCIO_NAMESPACE
