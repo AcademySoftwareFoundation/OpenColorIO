@@ -8,7 +8,6 @@
 
    An exception class to throw for errors detected at runtime.
 
-
    .. warning::
       All functions in the :ref:`Config` class can potentially throw this exception.
 

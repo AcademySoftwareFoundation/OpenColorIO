@@ -17,12 +17,6 @@
       2. __init__(self: PyOpenColorIO.LookTransform, src: str, dst: str, looks: str = '', skipColorSpaceConversion: bool = False, direction: PyOpenColorIO.TransformDirection = <TransformDirection.TRANSFORM_DIR_FORWARD: 0>) -> None
 
 
-   .. py:method:: LookTransform.__str__()
-      :module: PyOpenColorIO
-
-      Return str(self).
-
-
    .. py:method:: LookTransform.getDirection(self: PyOpenColorIO.Transform) -> PyOpenColorIO.TransformDirection
       :module: PyOpenColorIO
 
