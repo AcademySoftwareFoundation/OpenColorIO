@@ -4,10 +4,13 @@
 include(CheckCXXSourceCompiles)
 
 if(NOT CMAKE_SIZE_OF_VOID_P EQUAL 8)
+    # As CheckCXXCompilerFlag implicitly uses CMAKE_CXX_FLAGS some custom flags could trigger
+    # unrelated warnings causing a detection failure. So, the code disables all warnings to focus
+    # on the SSE2 detection.
     if(USE_MSVC)
-        set(CMAKE_REQUIRED_FLAGS "/arch:SSE2")
+        set(CMAKE_REQUIRED_FLAGS "/w /arch:SSE2")
     elseif(USE_GCC OR USE_CLANG)
-        set(CMAKE_REQUIRED_FLAGS "-msse2")
+        set(CMAKE_REQUIRED_FLAGS "-w -msse2")
     endif()
 endif()
 
