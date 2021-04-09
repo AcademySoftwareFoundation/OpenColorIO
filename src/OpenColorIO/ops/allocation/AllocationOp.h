@@ -11,9 +11,25 @@
 
 namespace OCIO_NAMESPACE
 {
+struct AllocationData
+{
+    Allocation allocation;
+    std::vector<float> vars;
+
+    AllocationData():
+        allocation(ALLOCATION_UNIFORM)
+        {};
+
+    std::string getCacheID() const;
+};
+
+std::ostream& operator<< (std::ostream&, const AllocationData&);
+
+void CreateGpuAllocationNoOp(OpRcPtrVec & ops, const AllocationData & allocationData);
+
 void CreateAllocationOps(OpRcPtrVec & ops,
-                            const AllocationData & data,
-                            TransformDirection dir);
+                         const AllocationData & data,
+                         TransformDirection dir);
 
 } // namespace OCIO_NAMESPACE
 

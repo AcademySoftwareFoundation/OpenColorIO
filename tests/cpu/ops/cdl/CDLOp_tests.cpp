@@ -76,7 +76,7 @@ OCIO_ADD_TEST(CDLOp, computed_identifier)
                       CDL_DATA_1::power, CDL_DATA_1::saturation, 
                       OCIO::TRANSFORM_DIR_FORWARD);
 
-    OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_NONE));
+    OCIO_CHECK_NO_THROW(ops.finalize());
     OCIO_REQUIRE_EQUAL(ops.size(), 2);
 
     std::string id0, id1;
@@ -102,7 +102,7 @@ OCIO_ADD_TEST(CDLOp, computed_identifier)
 
     OCIO::CreateCDLOp(ops, cdlData, OCIO::TRANSFORM_DIR_FORWARD);
 
-    OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_NONE));
+    OCIO_CHECK_NO_THROW(ops.finalize());
     OCIO_REQUIRE_EQUAL(ops.size(), 3);
 
     std::string id2;
@@ -117,7 +117,7 @@ OCIO_ADD_TEST(CDLOp, computed_identifier)
                       CDL_DATA_1::power, CDL_DATA_1::saturation + 0.002f, 
                       OCIO::TRANSFORM_DIR_FORWARD);
 
-    OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_NONE));
+    OCIO_CHECK_NO_THROW(ops.finalize());
     OCIO_REQUIRE_EQUAL(ops.size(), 4);
 
     std::string id3;
@@ -133,7 +133,7 @@ OCIO_ADD_TEST(CDLOp, computed_identifier)
                       CDL_DATA_1::power, CDL_DATA_1::saturation + 0.002f, 
                       OCIO::TRANSFORM_DIR_FORWARD);
 
-    OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_NONE));
+    OCIO_CHECK_NO_THROW(ops.finalize());
     OCIO_REQUIRE_EQUAL(ops.size(), 5);
 
     std::string id4;
@@ -150,7 +150,7 @@ OCIO_ADD_TEST(CDLOp, computed_identifier)
                       CDL_DATA_1::power, CDL_DATA_1::saturation + 0.002f, 
                       OCIO::TRANSFORM_DIR_FORWARD);
 
-    OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_NONE));
+    OCIO_CHECK_NO_THROW(ops.finalize());
     OCIO_REQUIRE_EQUAL(ops.size(), 6);
 
     std::string id5;
@@ -177,7 +177,7 @@ OCIO_ADD_TEST(CDLOp, is_inverse)
                       CDL_DATA_1::power, CDL_DATA_1::saturation, 
                       OCIO::TRANSFORM_DIR_INVERSE);
 
-    OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_NONE));
+    OCIO_CHECK_NO_THROW(ops.finalize());
     OCIO_REQUIRE_EQUAL(ops.size(), 2);
 
     OCIO::ConstOpRcPtr op0 = ops[0];
@@ -192,7 +192,7 @@ OCIO_ADD_TEST(CDLOp, is_inverse)
                       CDL_DATA_1::power, 1.30, 
                       OCIO::TRANSFORM_DIR_INVERSE);
 
-    OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_NONE));
+    OCIO_CHECK_NO_THROW(ops.finalize());
     OCIO_REQUIRE_EQUAL(ops.size(), 3);
     OCIO::ConstOpRcPtr op2 = ops[2];
 
@@ -207,7 +207,7 @@ OCIO_ADD_TEST(CDLOp, is_inverse)
                       CDL_DATA_1::power, 1.30, 
                       OCIO::TRANSFORM_DIR_INVERSE);
 
-    OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_NONE));
+    OCIO_CHECK_NO_THROW(ops.finalize());
     OCIO_REQUIRE_EQUAL(ops.size(), 4);
     OCIO::ConstOpRcPtr op3 = ops[3];
 
@@ -219,7 +219,7 @@ OCIO_ADD_TEST(CDLOp, is_inverse)
                       CDL_DATA_1::power, 1.30, 
                       OCIO::TRANSFORM_DIR_FORWARD);
 
-    OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_NONE));
+    OCIO_CHECK_NO_THROW(ops.finalize());
     OCIO_REQUIRE_EQUAL(ops.size(), 5);
     OCIO::ConstOpRcPtr op4 = ops[4];
 
@@ -232,7 +232,7 @@ OCIO_ADD_TEST(CDLOp, is_inverse)
                       CDL_DATA_1::power, 1.30, 
                       OCIO::TRANSFORM_DIR_FORWARD);
 
-    OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_NONE));
+    OCIO_CHECK_NO_THROW(ops.finalize());
     OCIO_REQUIRE_EQUAL(ops.size(), 6);
     OCIO::ConstOpRcPtr op5 = ops[5];
 
@@ -246,7 +246,7 @@ OCIO_ADD_TEST(CDLOp, is_inverse)
                       CDL_DATA_1::power, 1.30, 
                       OCIO::TRANSFORM_DIR_INVERSE);
 
-    OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_NONE));
+    OCIO_CHECK_NO_THROW(ops.finalize());
     OCIO_REQUIRE_EQUAL(ops.size(), 7);
     OCIO::ConstOpRcPtr op6 = ops[6];
 

@@ -1601,7 +1601,12 @@ void LocalFileFormat::write(const ConstConfigRcPtr & config,
 
     OpRcPtrVec ops;
     BuildGroupOps(ops, *config, context, group, TRANSFORM_DIR_FORWARD);
-    ops.finalize(OPTIMIZATION_NONE);
+
+    ops.finalize();
+
+    // Call optimize to remove no-op types (e.g., allocation, file no-ops) since they do not have
+    // a CTF representation.
+    ops.optimize(OPTIMIZATION_NONE);
 
     const FormatMetadataImpl & metadata = group.getFormatMetadata();
     CTFReaderTransformPtr transform = std::make_shared<CTFReaderTransform>(ops, metadata);

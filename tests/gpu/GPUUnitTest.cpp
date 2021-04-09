@@ -160,14 +160,7 @@ OCIO::GpuShaderDescRcPtr & OCIOGPUTest::getShaderDesc()
 {
     if (!m_shaderDesc)
     {
-        if (isLegacyShader())
-        {
-            m_shaderDesc = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(getLegacyShaderLutEdge());
-        }
-        else
-        {
-            m_shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
-        }
+        m_shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
         m_shaderDesc->setLanguage(OCIO::GPU_LANGUAGE_GLSL_1_2);
     }
     return m_shaderDesc;
@@ -325,10 +318,24 @@ namespace
     void UpdateOCIOGLState(OCIO::OglAppRcPtr & app, OCIOGPUTestRcPtr & test)
     {
         app->setPrintShader(test->isVerbose());
+
         OCIO::ConstProcessorRcPtr & processor = test->getProcessor();
         OCIO::GpuShaderDescRcPtr & shaderDesc = test->getShaderDesc();
+
+        OCIO::ConstGPUProcessorRcPtr gpu;
+        if (test->isLegacyShader())
+        {
+            gpu = processor->getOptimizedLegacyGPUProcessor(OCIO::OPTIMIZATION_DEFAULT, 
+                                                            test->getLegacyShaderLutEdge());
+        }
+        else
+        {
+            gpu = processor->getDefaultGPUProcessor();
+        }
+
         // Collect the shader program information for a specific processor.
-        processor->getDefaultGPUProcessor()->extractGpuShaderInfo(shaderDesc);
+        gpu->extractGpuShaderInfo(shaderDesc);
+
         app->setShader(shaderDesc);
     }
 
