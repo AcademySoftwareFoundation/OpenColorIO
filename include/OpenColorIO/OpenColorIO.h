@@ -3043,7 +3043,8 @@ class OCIOEXPORT GpuShaderDesc : public GpuShaderCreator
 public:
 
     /**
-     * Create the legacy GPU shader description. This is now deprecated.
+     * Create the legacy GPU shader description. This is now deprecated (to be removed in 
+     * the coming release i.e. 2.1.x).
      * Do not use it because that's broken. So, this method has been replaced by the pair 
      * Processor::getOptimizedLegacyGPUProcessor() and GpuShaderDesc::CreateShaderDesc().
      */
