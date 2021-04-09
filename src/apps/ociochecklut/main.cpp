@@ -46,6 +46,7 @@ public:
         m_cpu = cpu;
     }
 
+#ifdef OCIO_GPU_ENABLED
     void setGPU(OCIO::ConstGPUProcessorRcPtr gpu)
     {
         m_gpu = gpu;
@@ -65,7 +66,7 @@ public:
         m_oglApp->setShader(shaderDesc);
     }
 #else
-    void setGPU(OCIO::ConstGPUProcessorRcPtr, bool)
+    void setGPU(OCIO::ConstGPUProcessorRcPtr)
     {
     }
 #endif // OCIO_GPU_ENABLED
