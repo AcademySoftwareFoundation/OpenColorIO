@@ -70,6 +70,9 @@ public:
     // Get an optimized GPU processor instance for F32 images.
     ConstGPUProcessorRcPtr getOptimizedGPUProcessor(OptimizationFlags oFlags) const;
 
+    // Get an optimized legacy GPU processor for F32 images.
+    ConstGPUProcessorRcPtr getOptimizedLegacyGPUProcessor(OptimizationFlags oFlags, unsigned edgelen) const;
+
     // Get an optimized CPU processor instance for F32 images with default optimizations.
     ConstCPUProcessorRcPtr getDefaultCPUProcessor() const;
 
@@ -101,6 +104,10 @@ public:
     void concatenate(ConstProcessorRcPtr & p1, ConstProcessorRcPtr & p2);
 
     void computeMetadata();
+
+protected:
+    ConstGPUProcessorRcPtr getGPUProcessor(const OpRcPtrVec & gpuOps,
+                                           OptimizationFlags oFlags) const;
 };
 
 } // namespace OCIO_NAMESPACE

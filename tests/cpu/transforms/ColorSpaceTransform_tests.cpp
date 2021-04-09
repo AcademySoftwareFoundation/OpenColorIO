@@ -207,8 +207,10 @@ OCIO_ADD_TEST(ColorSpaceTransform, build_colorspace_ops)
         OCIO_CHECK_EQUAL(ops.size(), 4);
         ops.clear();
 
-        // Some of the ops are no-ops, processor has 2 transforms.
+        // Some of the ops are no-ops, processor has in fact 2 transforms.
         OCIO_CHECK_NO_THROW(proc = config->getProcessor(cst));
+        // Remove the no-ops, since they are useless here.
+        OCIO_CHECK_NO_THROW(proc = proc->getOptimizedProcessor(OCIO::OPTIMIZATION_NONE));
         OCIO_CHECK_EQUAL(proc->getNumTransforms(), 2);
 
         // Similar test with color space, data by-pass can't be controlled.
@@ -241,6 +243,8 @@ OCIO_ADD_TEST(ColorSpaceTransform, build_colorspace_ops)
         ops.clear();
 
         OCIO_CHECK_NO_THROW(proc = config->getProcessor(cst));
+        // Remove the no-ops, since they are useless here.
+        OCIO_CHECK_NO_THROW(proc = proc->getOptimizedProcessor(OCIO::OPTIMIZATION_NONE));
         OCIO_CHECK_EQUAL(proc->getNumTransforms(), 2);
 
         // Similar test with color space, data bypass can't be controlled.
@@ -291,8 +295,8 @@ OCIO_ADD_TEST(ColorSpaceTransform, build_colorspace_ops)
         OCIO_CHECK_EQUAL(data->getType(), OCIO::OpData::NoOpType);
 
         // Finalize converts invert matrix into forward matrix.
-        OCIO_CHECK_NO_THROW(ops.validate());
-        OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_NONE));
+        OCIO_CHECK_NO_THROW(ops.finalize());
+        OCIO_CHECK_NO_THROW(ops.optimize(OCIO::OPTIMIZATION_NONE));
         // No-ops are gone.
         OCIO_REQUIRE_EQUAL(ops.size(), 2);
         op = OCIO_DYNAMIC_POINTER_CAST<const OCIO::Op>(ops[1]);
