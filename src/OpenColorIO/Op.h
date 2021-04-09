@@ -17,21 +17,6 @@
 namespace OCIO_NAMESPACE
 {
 
-struct AllocationData
-{
-    Allocation allocation;
-    std::vector<float> vars;
-
-    AllocationData():
-        allocation(ALLOCATION_UNIFORM)
-        {};
-
-    std::string getCacheID() const;
-};
-
-std::ostream& operator<< (std::ostream&, const AllocationData&);
-
-
 class OpCPU;
 typedef OCIO_SHARED_PTR<OpCPU> OpCPURcPtr;
 typedef OCIO_SHARED_PTR<const OpCPU> ConstOpCPURcPtr;
@@ -387,12 +372,19 @@ public:
 
     void validate() const;
 
-    // This calls validate and finalize for each op, then performs optimization. Ops resulting
-    // from the optimization are finalized. The optimization step in the finalization could create
-    // new Ops but they are finalized by default. For instance combining two matrices will only create
-    // a fwd matrix as the inv matrices were already inverted (i.e. no inv matrices are present in the
-    // OpVec when reaching the optimization step).
-    void finalize(OptimizationFlags oFlags);
+    std::string getCacheID() const;
+
+    // The method validates and finalizes each op.
+    void finalize();
+
+    // The method optimizes the list of ops.
+    //
+    // Note: The optimization step could create new Ops but they are finalized by default. For
+    // instance combining two matrices will only create a fwd matrix as the inv matrices were
+    // already inverted (i.e. no inv matrices are present in the OpVec when reaching the
+    // optimization step).
+    //
+    void optimize(OptimizationFlags oFlags);
 
     // Only OptimizationFlags related to bitdepth optimization are used.
     void optimizeForBitdepth(const BitDepth & inBitDepth,

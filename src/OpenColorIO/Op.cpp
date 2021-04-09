@@ -435,34 +435,28 @@ void OpRcPtrVec::validateDynamicProperties()
     }
 }
 
+std::string OpRcPtrVec::getCacheID() const
+{
+    std::ostringstream stream;
+
+    for (const auto & op : m_ops)
+    {
+        if (!op->isNoOpType())
+        {
+            const std::string id = op->getCacheID();
+            if (!id.empty())
+            {
+                stream << " " << id;
+            }
+        }
+    }
+
+    return stream.str();
+}
+
 std::ostream& operator<< (std::ostream & os, const Op & op)
 {
     os << op.getInfo();
-    return os;
-}
-
-namespace
-{
-const int FLOAT_DECIMALS = 7;
-}
-
-std::string AllocationData::getCacheID() const
-{
-    std::ostringstream os;
-    os.precision(FLOAT_DECIMALS);
-    os << AllocationToString(allocation) << " ";
-
-    for(unsigned int i=0; i<vars.size(); ++i)
-    {
-        os << vars[i] << " ";
-    }
-
-    return os.str();
-}
-
-std::ostream& operator<< (std::ostream & os, const AllocationData & allocation)
-{
-    os << allocation.getCacheID();
     return os;
 }
 
@@ -476,17 +470,7 @@ std::string SerializeOpVec(const OpRcPtrVec & ops, int indent)
 
         oss << pystring::mul(" ", indent);
         oss << "Op " << idx << ": " << *op << " ";
-
-        // When serializing not optimized ops, some no-op ops (such as FileNopOp, etc)
-        // could still be present. 
-        if (op->isNoOpType())
-        {
-            oss << op->getInfo();
-        }
-        else
-        {
-            oss << op->getCacheID();
-        }
+        oss << op->getCacheID();
 
         oss << "\n";
     }

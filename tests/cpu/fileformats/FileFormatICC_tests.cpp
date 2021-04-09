@@ -47,7 +47,8 @@ OCIO_ADD_TEST(FileFormatICC, test_file)
         OCIO_CHECK_EQUAL("<Lut1DOp>",        ops[3]->getInfo());
     
         // No-ops are removed even without any optimizations.
-        OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_NONE));
+        OCIO_CHECK_NO_THROW(ops.finalize());
+        OCIO_CHECK_NO_THROW(ops.optimize(OCIO::OPTIMIZATION_NONE));
         OCIO_REQUIRE_EQUAL(3, ops.size());
 
         std::vector<float> v0 = {1.0f, 0.0f, 0.0f, 0.0f};
@@ -222,7 +223,8 @@ OCIO_ADD_TEST(FileFormatICC, test_apply)
         static const std::string iccFileName("icc-test-3.icm");
         OCIO::OpRcPtrVec ops;
         OCIO_CHECK_NO_THROW(BuildOpsTest(ops, iccFileName, context, OCIO::TRANSFORM_DIR_INVERSE));
-        OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_LOSSLESS));
+        OCIO_CHECK_NO_THROW(ops.finalize());
+        OCIO_CHECK_NO_THROW(ops.optimize(OCIO::OPTIMIZATION_LOSSLESS));
 
         // apply ops
         float srcImage[] = {
@@ -252,7 +254,8 @@ OCIO_ADD_TEST(FileFormatICC, test_apply)
 
         OCIO::OpRcPtrVec opsInv;
         OCIO_CHECK_NO_THROW(BuildOpsTest(opsInv, iccFileName, context, OCIO::TRANSFORM_DIR_FORWARD));
-        OCIO_CHECK_NO_THROW(opsInv.finalize(OCIO::OPTIMIZATION_LOSSLESS));
+        OCIO_CHECK_NO_THROW(opsInv.finalize());
+        OCIO_CHECK_NO_THROW(opsInv.optimize(OCIO::OPTIMIZATION_LOSSLESS));
 
         for (const auto & op : opsInv)
         {
@@ -278,7 +281,8 @@ OCIO_ADD_TEST(FileFormatICC, test_apply)
         static const std::string iccFileName("icc-test-2.pf");
         OCIO::OpRcPtrVec ops;
         OCIO_CHECK_NO_THROW(BuildOpsTest(ops, iccFileName, context, OCIO::TRANSFORM_DIR_INVERSE));
-        OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_LOSSLESS));
+        OCIO_CHECK_NO_THROW(ops.finalize());
+        OCIO_CHECK_NO_THROW(ops.optimize(OCIO::OPTIMIZATION_LOSSLESS));
 
         // apply ops
         float srcImage[] = {
@@ -308,7 +312,8 @@ OCIO_ADD_TEST(FileFormatICC, test_apply)
 
         OCIO::OpRcPtrVec opsInv;
         OCIO_CHECK_NO_THROW(BuildOpsTest(opsInv, iccFileName, context, OCIO::TRANSFORM_DIR_FORWARD));
-        OCIO_CHECK_NO_THROW(opsInv.finalize(OCIO::OPTIMIZATION_LOSSLESS));
+        OCIO_CHECK_NO_THROW(opsInv.finalize());
+        OCIO_CHECK_NO_THROW(opsInv.optimize(OCIO::OPTIMIZATION_LOSSLESS));
 
         for (const auto & op : opsInv)
         {

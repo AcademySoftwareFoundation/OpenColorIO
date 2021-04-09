@@ -9,6 +9,7 @@
 #include "ContextVariableUtils.h"
 #include "NamedTransform.h"
 #include "OpBuilders.h"
+#include "ops/allocation/AllocationOp.h"
 #include "ops/noop/NoOps.h"
 
 

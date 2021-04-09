@@ -46,8 +46,7 @@ public:
         m_cpu = cpu;
     }
 
-#ifdef OCIO_GPU_ENABLED
-    void setGPU(OCIO::ConstGPUProcessorRcPtr gpu, bool legacyGpu)
+    void setGPU(OCIO::ConstGPUProcessorRcPtr gpu)
     {
         m_gpu = gpu;
         m_oglApp = OCIO::OglApp::CreateOglApp("ociochecklut", 256, 20);
@@ -60,15 +59,7 @@ public:
         float image[4]{ 0.f, 0.f, 0.f, 0.f };
         m_oglApp->initImage(1, 1, OCIO::OglApp::COMPONENTS_RGBA, image);
         m_oglApp->createGLBuffers();
-        OCIO::GpuShaderDescRcPtr shaderDesc;
-        if (legacyGpu)
-        {
-            shaderDesc = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(32);
-        }
-        else
-        {
-            shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
-        }
+        OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
         shaderDesc->setLanguage(OCIO::GPU_LANGUAGE_GLSL_1_2);
         m_gpu->extractGpuShaderInfo(shaderDesc);
         m_oglApp->setShader(shaderDesc);
@@ -289,7 +280,8 @@ int main (int argc, const char* argv[])
             }
             if (usegpu || usegpuLegacy)
             {
-                proc.setGPU(processor->getDefaultGPUProcessor(), usegpuLegacy);
+                proc.setGPU(usegpuLegacy ? processor->getOptimizedLegacyGPUProcessor(OCIO::OPTIMIZATION_DEFAULT, 32)
+                                         : processor->getDefaultGPUProcessor());
             }
             else
             {

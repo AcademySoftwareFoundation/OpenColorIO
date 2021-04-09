@@ -59,43 +59,9 @@ void WriteShaderFooter(GpuShaderCreatorRcPtr & shaderCreator)
 }
 
 
-OpRcPtrVec Create3DLut(const OpRcPtrVec & ops, unsigned edgelen)
-{
-    if(ops.size()==0) return OpRcPtrVec();
-
-    const unsigned lut3DEdgeLen   = edgelen;
-    const unsigned lut3DNumPixels = lut3DEdgeLen*lut3DEdgeLen*lut3DEdgeLen;
-
-    Lut3DOpDataRcPtr lut = std::make_shared<Lut3DOpData>(lut3DEdgeLen);
-
-    // Allocate 3D LUT image, RGBA
-    std::vector<float> lut3D(lut3DNumPixels*4);
-    GenerateIdentityLut3D(&lut3D[0], lut3DEdgeLen, 4, LUT3DORDER_FAST_BLUE);
-
-    // Apply the lattice ops to it
-    for(const auto & op : ops)
-    {
-        op->apply(&lut3D[0], &lut3D[0], lut3DNumPixels);
-    }
-
-    // Convert the RGBA image to an RGB image, in place.
-    auto & lutArray = lut->getArray();
-    for(unsigned i=0; i<lut3DNumPixels; ++i)
-    {
-        lutArray[3*i+0] = lut3D[4*i+0];
-        lutArray[3*i+1] = lut3D[4*i+1];
-        lutArray[3*i+2] = lut3D[4*i+2];
-    }
-
-    OpRcPtrVec newOps;
-    CreateLut3DOp(newOps, lut, TRANSFORM_DIR_FORWARD);
-    return newOps;
 }
 
-}
-
-void GPUProcessor::Impl::finalize(const OpRcPtrVec & rawOps,
-                                  OptimizationFlags oFlags)
+void GPUProcessor::Impl::finalize(const OpRcPtrVec & rawOps, OptimizationFlags oFlags)
 {
     AutoMutex lock(m_mutex);
 
@@ -103,7 +69,8 @@ void GPUProcessor::Impl::finalize(const OpRcPtrVec & rawOps,
 
     m_ops = rawOps;
 
-    m_ops.finalize(oFlags);
+    m_ops.finalize();
+    m_ops.optimize(oFlags);
     m_ops.validateDynamicProperties();
 
     // Is NoOp ?
@@ -116,11 +83,7 @@ void GPUProcessor::Impl::finalize(const OpRcPtrVec & rawOps,
 
     std::stringstream ss;
     ss << "GPU Processor: oFlags " << oFlags
-       << " ops :";
-    for(const auto & op : m_ops)
-    {
-        ss << " " << op->getCacheID();
-    }
+       << " ops : " << m_ops.getCacheID();
 
     m_cacheID = ss.str();
 }
@@ -159,6 +122,7 @@ void GPUProcessor::Impl::extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCrea
                         gpuOps);
 
         LogDebug("GPU Ops: 3DLUT");
+        gpuOpsCpuLatticeProcess.finalize();
         OpRcPtrVec gpuLut = Create3DLut(gpuOpsCpuLatticeProcess, legacy->getEdgelen());
 
         gpuOps.clear();
@@ -166,7 +130,8 @@ void GPUProcessor::Impl::extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCrea
         gpuOps += gpuLut;
         gpuOps += gpuOpsHwPostProcess;
 
-        gpuOps.finalize(OPTIMIZATION_DEFAULT);
+        gpuOps.finalize();
+        gpuOps.optimize(OPTIMIZATION_DEFAULT);
     }
     else
     {

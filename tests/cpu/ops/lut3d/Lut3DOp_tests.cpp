@@ -145,8 +145,7 @@ OCIO_ADD_TEST(Lut3DOpData, create_op)
     OCIO_REQUIRE_EQUAL(ops.size(), 1);
 
     // Inverse is fine.
-    OCIO_CHECK_NO_THROW(ops.validate());
-    OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_NONE));
+    OCIO_CHECK_NO_THROW(ops.finalize());
 }
 
 OCIO_ADD_TEST(Lut3DOp, cache_id)
@@ -383,8 +382,8 @@ OCIO_ADD_TEST(Lut3DOp, cpu_renderer_cloned)
     auto lutData = OCIO::DynamicPtrCast<const OCIO::Lut3DOpData>(op1->data());
     OCIO_CHECK_EQUAL(lutData->getFileOutputBitDepth(), OCIO::BIT_DEPTH_UINT12);
 
-    OCIO_CHECK_NO_THROW(ops.validate());
-    OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_NONE));
+    OCIO_CHECK_NO_THROW(ops.finalize());
+    OCIO_CHECK_NO_THROW(ops.optimize(OCIO::OPTIMIZATION_NONE));
     OCIO_REQUIRE_EQUAL(1, ops.size());
 
     auto op0 = OCIO::DynamicPtrCast<const OCIO::Lut3DOp>(ops[0]);
@@ -441,13 +440,10 @@ OCIO_ADD_TEST(Lut3DOp, cpu_renderer_inverse)
     const std::string fileName("clf/lut3d_17x17x17_10i_12i.clf");
     OCIO::OpRcPtrVec ops;
     OCIO::ContextRcPtr context = OCIO::Context::Create();
-    OCIO_CHECK_NO_THROW(BuildOpsTest(ops, fileName, context,
-                                     OCIO::TRANSFORM_DIR_FORWARD));
+    OCIO_CHECK_NO_THROW(BuildOpsTest(ops, fileName, context, OCIO::TRANSFORM_DIR_FORWARD));
 
-    OCIO_CHECK_NO_THROW(ops.validate());
-    OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_DEFAULT));
-    // Exact LUT inversion.
-    OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_NONE));
+    OCIO_CHECK_NO_THROW(ops.finalize());
+    OCIO_CHECK_NO_THROW(ops.optimize(OCIO::OPTIMIZATION_DEFAULT));
 
     auto op0 = OCIO::DynamicPtrCast<const OCIO::Lut3DOp>(ops[0]);
     OCIO_REQUIRE_ASSERT(op0);
@@ -554,8 +550,8 @@ OCIO_ADD_TEST(Lut3DOp, cpu_renderer_lut3d_with_nan)
     OCIO_CHECK_NO_THROW(BuildOpsTest(ops, fileName, context,
                                      OCIO::TRANSFORM_DIR_FORWARD));
 
-    OCIO_CHECK_NO_THROW(ops.validate());
-    OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_NONE));
+    OCIO_CHECK_NO_THROW(ops.finalize());
+    OCIO_CHECK_NO_THROW(ops.optimize(OCIO::OPTIMIZATION_NONE));
     OCIO_REQUIRE_EQUAL(1, ops.size());
     OCIO::ConstOpRcPtr op0 = ops[0];
     OCIO_CHECK_EQUAL(op0->data()->getType(), OCIO::OpData::Lut3DType);

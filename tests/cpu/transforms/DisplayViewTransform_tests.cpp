@@ -1111,6 +1111,8 @@ colorspaces:
 
     OCIO::ConstProcessorRcPtr proc;
     OCIO_CHECK_NO_THROW(proc = config->getProcessor(dt));
+    // Remove the no-ops, since they are useless here.
+    OCIO_CHECK_NO_THROW(proc = proc->getOptimizedProcessor(OCIO::OPTIMIZATION_NONE));
     OCIO_REQUIRE_ASSERT(proc);
     OCIO_CHECK_EQUAL(proc->getNumTransforms(), 7);
     auto procGroup = proc->createGroupTransform();
@@ -1123,6 +1125,8 @@ colorspaces:
 
     OCIO::ConstProcessorRcPtr procInv;
     OCIO_CHECK_NO_THROW(procInv = config->getProcessor(dt, OCIO::TRANSFORM_DIR_INVERSE));
+    // Remove the no-ops, since they are useless here.
+    OCIO_CHECK_NO_THROW(procInv = procInv->getOptimizedProcessor(OCIO::OPTIMIZATION_NONE));
     OCIO_REQUIRE_ASSERT(procInv);
     OCIO_CHECK_EQUAL(procInv->getNumTransforms(), 7);
     procGroup = procInv->createGroupTransform();
@@ -1170,6 +1174,8 @@ colorspaces:
     dt->setView("viewNoVT");
 
     OCIO_CHECK_NO_THROW(proc = config->getProcessor(dt));
+    // Remove the no-ops, since they are useless here.
+    OCIO_CHECK_NO_THROW(proc = proc->getOptimizedProcessor(OCIO::OPTIMIZATION_NONE));
     OCIO_REQUIRE_ASSERT(proc);
     OCIO_CHECK_EQUAL(proc->getNumTransforms(), 6);
     procGroup = proc->createGroupTransform();
@@ -1179,6 +1185,8 @@ colorspaces:
     OCIO_REQUIRE_ASSERT(cpuProc);
 
     OCIO_CHECK_NO_THROW(procInv = config->getProcessor(dt, OCIO::TRANSFORM_DIR_INVERSE));
+    // Remove the no-ops, since they are useless here.
+    OCIO_CHECK_NO_THROW(procInv = procInv->getOptimizedProcessor(OCIO::OPTIMIZATION_NONE));
     OCIO_REQUIRE_ASSERT(procInv);
     OCIO_CHECK_EQUAL(procInv->getNumTransforms(), 6);
     procGroup = procInv->createGroupTransform();
