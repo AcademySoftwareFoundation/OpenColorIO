@@ -24,12 +24,12 @@
 
 namespace OCIO_NAMESPACE
 {
-bool OpCPU::hasDynamicProperty(DynamicPropertyType type) const
+bool OpCPU::hasDynamicProperty(DynamicPropertyType /* type */) const
 {
     return false;
 }
 
-DynamicPropertyRcPtr OpCPU::getDynamicProperty(DynamicPropertyType type) const
+DynamicPropertyRcPtr OpCPU::getDynamicProperty(DynamicPropertyType /* type */) const
 {
     throw Exception("Op does not implement dynamic property.");
 }
@@ -62,7 +62,7 @@ OpDataRcPtr OpData::getIdentityReplacement() const
     return std::make_shared<MatrixOpData>();
 }
 
-void OpData::getSimplerReplacement(OpDataVec & ops) const
+void OpData::getSimplerReplacement(OpDataVec & /* ops */) const
 {
 }
 
@@ -160,12 +160,12 @@ bool Op::isDynamic() const
     return false;
 }
 
-bool Op::hasDynamicProperty(DynamicPropertyType type) const
+bool Op::hasDynamicProperty(DynamicPropertyType /* type */) const
 {
     return false;
 }
 
-DynamicPropertyRcPtr Op::getDynamicProperty(DynamicPropertyType type) const
+DynamicPropertyRcPtr Op::getDynamicProperty(DynamicPropertyType /* type */) const
 {
     throw Exception("Op does not implement dynamic property.");
 }

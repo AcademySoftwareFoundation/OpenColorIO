@@ -887,7 +887,7 @@ void Add_WhiteBlackPre_Shader(unsigned channel, std::string & channelSuffix, boo
     }
 }
 
-void Add_WBFwd_Shader(unsigned channel, std::string & channelSuffix, bool linearExtrap, GpuShaderText & st)
+void Add_WBFwd_Shader(unsigned channel, bool linearExtrap, GpuShaderText & st)
 {
     if (channel != M)
     {
@@ -918,7 +918,7 @@ void Add_WBFwd_Shader(unsigned channel, std::string & channelSuffix, bool linear
     }
 }
 
-void Add_WBRev_Shader(unsigned channel, std::string & channelSuffix, bool linearExtrap, GpuShaderText & st)
+void Add_WBRev_Shader(unsigned channel, bool linearExtrap, GpuShaderText & st)
 {
     st.newLine() << "  float a = 0.5 * (m1 - m0) * (x1 - x0);";
     st.newLine() << "  float b = m0 * (x1 - x0);";
@@ -991,7 +991,7 @@ void Add_WhiteBlackFwd_Shader(unsigned channel, bool isBlack, GpuShaderText & st
         st.newLine() << "  float y0 = y1 - (m0 + m1) * (x1 - x0) * 0.5;";
     }
 
-    Add_WBFwd_Shader(channel, channelSuffix, true, st);
+    Add_WBFwd_Shader(channel, true, st);
 
     if (channel != M)
     {
@@ -1023,7 +1023,7 @@ void Add_WhiteBlackFwd_Shader(unsigned channel, bool isBlack, GpuShaderText & st
         st.newLine() << "  t = (t - x1) * gain + x1;";
     }
 
-    Add_WBRev_Shader(channel, channelSuffix, isBlack, st);
+    Add_WBRev_Shader(channel, isBlack, st);
 
     if (!isBlack)
     {
@@ -1080,7 +1080,7 @@ void Add_WhiteBlackRev_Shader(unsigned channel, bool isBlack, GpuShaderText & st
         st.newLine() << "  float y0 = y1 - (m0 + m1) * (x1 - x0) * 0.5;";
     }
 
-    Add_WBRev_Shader(channel, channelSuffix, true, st);
+    Add_WBRev_Shader(channel, true, st);
 
     if (channel != M)
     {
@@ -1112,7 +1112,7 @@ void Add_WhiteBlackRev_Shader(unsigned channel, bool isBlack, GpuShaderText & st
         st.newLine() << "  t = (t - x1) * gain + x1;";
     }
 
-    Add_WBFwd_Shader(channel, channelSuffix, isBlack, st);
+    Add_WBFwd_Shader(channel, isBlack, st);
 
     if (!isBlack)
     {

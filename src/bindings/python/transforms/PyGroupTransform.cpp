@@ -146,7 +146,7 @@ void bindPyGroupTransform(py::module & m)
             });
 
     clsWriteFormatIterator
-        .def("__len__", [](WriteFormatIterator & it)
+        .def("__len__", [](WriteFormatIterator & /* it */)
             {
                 return GroupTransform::GetNumWriteFormats();
             })

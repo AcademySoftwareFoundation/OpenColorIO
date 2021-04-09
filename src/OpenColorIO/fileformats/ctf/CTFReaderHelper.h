@@ -132,7 +132,7 @@ public:
     {
     }
 
-    void start(const char ** atts) override
+    void start(const char ** /* atts */) override
     {
     }
 
@@ -168,7 +168,7 @@ public:
     {
     }
 
-    void start(const char **atts) override
+    void start(const char ** /* atts */) override
     {
     }
 
@@ -176,7 +176,7 @@ public:
     {
     }
 
-    void setRawData(const char* str, size_t len, unsigned int xmlLine) override
+    void setRawData(const char* str, size_t len, unsigned int /* xmlLine */) override
     {
         CTFReaderTransformElt* pTransform
             = dynamic_cast<CTFReaderTransformElt*>(getParent().get());
@@ -413,9 +413,9 @@ public:
 
     void start(const char **atts) override;
 
-    void end() override;
+    void end() override {}
 
-    void setRawData(const char * str, size_t len, unsigned int xmlLine) override;
+    void setRawData(const char * /* str */, size_t /* len */, unsigned int /* xmlLine */) override {}
 };
 
 class CTFReaderCDLElt : public CTFReaderOpElt
@@ -1193,9 +1193,9 @@ public:
     ~CTFReaderECParamsElt();
 
     void start(const char ** atts) override;
-    void end() override;
+    void end() override {}
 
-    void setRawData(const char * str, size_t len, unsigned int xmlLine) override;
+    void setRawData(const char * /* str */, size_t /* len */, unsigned int /* xmlLine */) override {}
 };
 
 class CTFReaderDynamicParamElt : public XmlReaderPlainElt
@@ -1208,9 +1208,9 @@ public:
     ~CTFReaderDynamicParamElt();
 
     void start(const char ** atts) override;
-    void end() override;
+    void end() override {}
 
-    void setRawData(const char * str, size_t len, unsigned int xmlLine) override;
+    void setRawData(const char * /* str */, size_t /* len */, unsigned int /* xmlLine */) override {}
 };
 
 } // namespace OCIO_NAMESPACE

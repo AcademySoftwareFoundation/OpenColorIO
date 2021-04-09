@@ -29,7 +29,7 @@ const std::streamsize FLOAT_DECIMALS = 7;
 namespace
 {
 // Validate number of parameters and their respective range and value.
-void ValidateParams(const LogOpData::Params & params, TransformDirection direction)
+void ValidateParams(const LogOpData::Params & params, TransformDirection /* direction */)
 {
     constexpr size_t minSize = 4;
     if (params.size() < minSize)

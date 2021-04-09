@@ -99,8 +99,13 @@ OCIO_ADD_TEST(GammaOp, basic)
     const OCIO::GammaOpData::Params blueParams = { 2. };
     const OCIO::GammaOpData::Params alphaParams = { 1. };
 
-    const OCIO::GammaOp op0(OCIO::GammaOpData::BASIC_FWD,
-                            redParams, greenParams, blueParams, alphaParams);
+    OCIO::GammaOpDataRcPtr gamma1
+        = std::make_shared<OCIO::GammaOpData>(OCIO::GammaOpData::BASIC_FWD,
+                                              redParams,
+                                              greenParams,
+                                              blueParams,
+                                              alphaParams);
+    const OCIO::GammaOp op0(gamma1);
 
     OCIO_CHECK_EQUAL(op0.data()->getType(), OCIO::OpData::GammaType);
     auto gammaData = OCIO_DYNAMIC_POINTER_CAST<const OCIO::GammaOpData>(op0.data());

@@ -255,23 +255,23 @@ public:
     virtual bool isDynamic() const;
     virtual bool hasDynamicProperty(DynamicPropertyType type) const;
     virtual DynamicPropertyRcPtr getDynamicProperty(DynamicPropertyType type) const;
-    virtual void replaceDynamicProperty(DynamicPropertyType type,
-                                        DynamicPropertyDoubleImplRcPtr & prop)
+    virtual void replaceDynamicProperty(DynamicPropertyType /* type */,
+                                        DynamicPropertyDoubleImplRcPtr & /* prop */)
     {
         throw Exception("Op does not implement double dynamic property.");
     }
-    virtual void replaceDynamicProperty(DynamicPropertyType type,
-                                        DynamicPropertyGradingPrimaryImplRcPtr & prop)
+    virtual void replaceDynamicProperty(DynamicPropertyType /* type */,
+                                        DynamicPropertyGradingPrimaryImplRcPtr & /* prop */)
     {
         throw Exception("Op does not implement grading primary dynamic property.");
     }
-    virtual void replaceDynamicProperty(DynamicPropertyType type,
-                                        DynamicPropertyGradingRGBCurveImplRcPtr & prop)
+    virtual void replaceDynamicProperty(DynamicPropertyType /* type */,
+                                        DynamicPropertyGradingRGBCurveImplRcPtr & /* prop */)
     {
         throw Exception("Op does not implement grading rgb curve dynamic property.");
     }
-    virtual void replaceDynamicProperty(DynamicPropertyType type,
-                                        DynamicPropertyGradingToneImplRcPtr & prop)
+    virtual void replaceDynamicProperty(DynamicPropertyType /* type */,
+                                        DynamicPropertyGradingToneImplRcPtr & /* prop */)
     {
         throw Exception("Op does not implement grading tone dynamic property.");
     }

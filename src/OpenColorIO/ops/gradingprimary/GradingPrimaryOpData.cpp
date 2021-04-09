@@ -18,7 +18,8 @@ const std::streamsize FLOAT_DECIMALS = 7;
 }
 
 GradingPrimaryOpData::GradingPrimaryOpData(GradingStyle style)
-    : m_style(style)
+    : OpData()
+    , m_style(style)
     , m_value(std::make_shared<DynamicPropertyGradingPrimaryImpl>(style,
                                                                   TRANSFORM_DIR_FORWARD,
                                                                   GradingPrimary(style),
@@ -27,7 +28,8 @@ GradingPrimaryOpData::GradingPrimaryOpData(GradingStyle style)
 }
 
 GradingPrimaryOpData::GradingPrimaryOpData(const GradingPrimaryOpData & rhs)
-    : m_style(rhs.m_style)
+    : OpData(rhs)
+    , m_style(rhs.m_style)
     , m_value(std::make_shared<DynamicPropertyGradingPrimaryImpl>(rhs.m_style,
                                                                   TRANSFORM_DIR_FORWARD,
                                                                   GradingPrimary(rhs.m_style),
