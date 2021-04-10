@@ -129,7 +129,7 @@
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <AdditionalIncludeDirectories>..;..\..\..;..\..\..\..\..\include;..\..\..\..\..\src\libutils\oglapphelpers;..\..\..\..\..\src\apps\ociobakelut;..\..\..\..\..\ext\Adobe After Effects 2020 Win SDK\Examples\Headers;..\..\..\..\..\ext\Adobe After Effects 2020 Win SDK\Examples\Headers\SP;..\..\..\..\..\ext\Adobe After Effects 2020 Win SDK\Examples\Headers\Win;..\..\..\..\..\ext\Adobe After Effects 2020 Win SDK\Examples\Resources;..\..\..\..\..\ext\Adobe After Effects 2020 Win SDK\Examples\Util;..\..\..\..\..\ext\glew-2.2.0\include;..\..\..\..\..\ext\Little-CMS\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>OpenColorIO_SKIP_IMPORTS;GLEW_STATIC;MSWindows;WIN32;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>OpenColorIO_SKIP_IMPORTS;GLEW_STATIC;MSWindows;WIN32;_WINDOWS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <StructMemberAlignment>4Bytes</StructMemberAlignment>
       <PrecompiledHeader>
