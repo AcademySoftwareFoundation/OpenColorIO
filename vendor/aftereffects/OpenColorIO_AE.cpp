@@ -389,7 +389,7 @@ static PF_Err SequenceResetup(
         PF_UNLOCK_HANDLE(in_data->sequence_data);
     }
     else
-        assert(FALSE);
+        err = SequenceSetup(in_data, out_data, params, output); // getting this after pasting the effect
 
     return err;
 }
