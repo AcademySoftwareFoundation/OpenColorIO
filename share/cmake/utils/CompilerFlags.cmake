@@ -24,6 +24,8 @@ if(USE_MSVC)
 
     if(OCIO_WARNING_AS_ERROR)
         set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} /WX")
+    else()
+        set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} /Wall")
     endif()
 
 elseif(USE_CLANG)
@@ -57,7 +59,7 @@ if(USE_GCC OR USE_CLANG)
     endif()
 
     if(APPLE)
-        # Mute the deprecated warning for some GLUT methods.
+        # TODO: There are still some deprecated methods.
         set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} -Wno-deprecated-declarations")
     endif()
 

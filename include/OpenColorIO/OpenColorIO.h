@@ -1002,13 +1002,14 @@ public:
 
     /**
      * Given the specified string, get the longest, right-most, colorspace substring that
-     * appears. This is now deprecated, please use getColorSpaceFromFilepath.
+     * appears.
      *
      * * If strict parsing is enabled, and no color space is found, return
      *   an empty string.
      * * If strict parsing is disabled, return ROLE_DEFAULT (if defined).
      * * If the default role is not defined, return an empty string.
      */
+    OCIO_DEPRECATED("This is now deprecated, please use Config::getColorSpaceFromFilepath().")
     const char * parseColorSpaceFromString(const char * str) const;
 
     bool isStrictParsingEnabled() const;
@@ -2976,7 +2977,7 @@ protected:
  *
  *    // Step 1: Create a GPU shader description
  *    //
- *    // The three potential scenarios are:
+ *    // The two potential scenarios are:
  *    //
  *    //   1. Instantiate the legacy shader description.  The color processor
  *    //      is baked down to contain at most one 3D LUT and no 1D LUTs.
@@ -2984,19 +2985,9 @@ protected:
  *    //      This is the v1 behavior and will remain part of OCIO v2
  *    //      for backward compatibility.
  *    //
- *    OCIO::GpuShaderDescRcPtr shaderDesc
- *          = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(LUT3D_EDGE_SIZE);
- *    //
- *    //   2. Instantiate the generic shader description.  The color processor
- *    //      is used as-is (i.e. without any baking step) and could contain
- *    //      any number of 1D & 3D luts.
- *    //
- *    //      This is the default OCIO v2 behavior and allows a much better
- *    //      match between the CPU and GPU renderers.
- *    //
  *    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::Create();
  *    //
- *    //   3. Instantiate a custom shader description.
+ *    //   2. Instantiate a custom shader description.
  *    //
  *    //      Writing a custom shader description is a way to tailor the shaders
  *    //      to the needs of a given client program.  This involves writing a
@@ -3041,14 +3032,6 @@ protected:
 class OCIOEXPORT GpuShaderDesc : public GpuShaderCreator
 {
 public:
-
-    /**
-     * Create the legacy GPU shader description. This is now deprecated (to be removed in 
-     * the coming release i.e. 2.1.x).
-     * Do not use it because that's broken. So, this method has been replaced by the pair 
-     * Processor::getOptimizedLegacyGPUProcessor() and GpuShaderDesc::CreateShaderDesc().
-     */
-    static GpuShaderDescRcPtr CreateLegacyShaderDesc(unsigned edgelen);
 
     /// Create the default shader description.
     static GpuShaderDescRcPtr CreateShaderDesc();

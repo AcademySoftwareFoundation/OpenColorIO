@@ -702,10 +702,10 @@ colorspaces:
 
     // Color space from string.
 
-    OCIO_CHECK_EQUAL(std::string(config->parseColorSpaceFromString("test_aces_test")),
+    OCIO_CHECK_EQUAL(std::string(config->getColorSpaceFromFilepath("test_aces_test")),
                      "colorspace");
     // "colorspace" is present but "ColorspaceAlias" is longer (and at the same position).
-    OCIO_CHECK_EQUAL(std::string(config->parseColorSpaceFromString("skdj_ColorspaceAlias_dfjdk")),
+    OCIO_CHECK_EQUAL(std::string(config->getColorSpaceFromFilepath("skdj_ColorspaceAlias_dfjdk")),
                      "raw");
 
     // With inactive color spaces.
@@ -713,6 +713,6 @@ colorspaces:
     auto cfg = config->createEditableCopy();
     cfg->setInactiveColorSpaces("colorspace");
 
-    OCIO_CHECK_EQUAL(std::string(cfg->parseColorSpaceFromString("test_aces_test")),
+    OCIO_CHECK_EQUAL(std::string(cfg->getColorSpaceFromFilepath("test_aces_test")),
                      "colorspace");
 }
