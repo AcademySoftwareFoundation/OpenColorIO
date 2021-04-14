@@ -817,7 +817,7 @@ OCIO_ADD_TEST(CPUProcessor, with_several_ops)
             const std::string cacheID{ cpuProcessor->getCacheID() };
 
             const std::string expectedID("CPU Processor: from 16ui to 32f oFlags 263995331 ops"
-                ": <Lut1D $a57d7444e629d796d2234c18a0539c74 forward default standard domain none>");
+                ":  <Lut1D $a57d7444e629d796d2234c18a0539c74 forward default standard domain none>");
 
             // Test integer optimization. The ops should be optimized into a single LUT
             // when finalizing with an integer input bit-depth.
@@ -1318,7 +1318,7 @@ const std::vector<float> resImg =
       resImgR[5], resImgG[5], resImgB[5], resImgA[5] };
 
 
-OCIO::ConstCPUProcessorRcPtr BuildCPUProcessor(OCIO::TransformDirection dir)
+OCIO::ConstProcessorRcPtr BuildProcessor(OCIO::TransformDirection dir)
 {
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
 
@@ -1342,7 +1342,12 @@ OCIO::ConstCPUProcessorRcPtr BuildCPUProcessor(OCIO::TransformDirection dir)
     transform->appendTransform(m2);
     transform->appendTransform(m3);
 
-    OCIO::ConstProcessorRcPtr processor = config->getProcessor(transform);
+    return config->getProcessor(transform);
+}
+
+OCIO::ConstCPUProcessorRcPtr BuildCPUProcessor(OCIO::TransformDirection dir)
+{
+    OCIO::ConstProcessorRcPtr processor = BuildProcessor(dir);
     return processor->getOptimizedCPUProcessor(OCIO::OPTIMIZATION_NONE);
 }
 
@@ -1443,7 +1448,7 @@ OCIO_ADD_TEST(CPUProcessor, planar_vs_packed)
     }
 }
 
-OCIO_ADD_TEST(CPUProcessor, scanline_helper_packed)
+OCIO_ADD_TEST(CPUProcessor, scanline_packed)
 {
     // Test the packed image description.
 
@@ -1565,7 +1570,48 @@ OCIO_ADD_TEST(CPUProcessor, scanline_helper_packed)
     }
 }
 
-OCIO_ADD_TEST(CPUProcessor, scanline_helper_packed_one_buffer)
+OCIO_ADD_TEST(CPUProcessor, scanline_packed_planar)
+{
+    // Test to validate the conversion from packed to planar images with a bit-depth different
+    // from the default F32.
+ 
+    std::vector<uint8_t> routImg(NB_PIXELS);
+    std::vector<uint8_t> goutImg(NB_PIXELS);
+    std::vector<uint8_t> boutImg(NB_PIXELS);
+    std::vector<uint8_t> aoutImg(NB_PIXELS);
+
+    OCIO::PackedImageDesc srcImgDesc(&inImg[0], 2, 3, 4);
+    OCIO::PlanarImageDesc dstImgDesc(&routImg[0], &goutImg[0], &boutImg[0], &aoutImg[0], 2, 3,
+                                     OCIO::BIT_DEPTH_UINT8,
+                                     OCIO::AutoStride,
+                                     OCIO::AutoStride);
+
+    OCIO::ConfigRcPtr config = OCIO::Config::Create();
+
+    OCIO::MatrixTransformRcPtr m = OCIO::MatrixTransform::Create();
+
+    static constexpr double offset[4] = { 0.1, 0.2, 0.4007, 0.3007 };
+    m->setOffset(offset);
+
+    OCIO::ConstProcessorRcPtr processor = config->getProcessor(m);
+    auto cpuProc = processor->getOptimizedCPUProcessor(OCIO::BIT_DEPTH_F32,
+                                                       OCIO::BIT_DEPTH_UINT8,
+                                                       OCIO::OPTIMIZATION_NONE);
+
+    OCIO_CHECK_NO_THROW(cpuProc->apply(srcImgDesc, dstImgDesc));
+
+    static const std::vector<uint8_t> rresImg = {  0,   0,  51, 179, 255, 255 };
+    static const std::vector<uint8_t> gresImg = {  0,   0, 115, 255, 255, 255 };
+    static const std::vector<uint8_t> bresImg = {  0,  77, 217, 255, 255, 255 };
+    static const std::vector<uint8_t> aresImg = { 78, 180, 255,  78, 255, 101 };
+
+    OCIO_CHECK_ASSERT(routImg == rresImg);
+    OCIO_CHECK_ASSERT(goutImg == gresImg);
+    OCIO_CHECK_ASSERT(boutImg == bresImg);
+    OCIO_CHECK_ASSERT(aoutImg == aresImg);
+}
+
+OCIO_ADD_TEST(CPUProcessor, scanline_packed_one_buffer)
 {
     // Now that the previous unit test covers all cases with different buffers,
     // let's test some cases using the same in and out buffer.
@@ -1600,7 +1646,7 @@ OCIO_ADD_TEST(CPUProcessor, scanline_helper_packed_one_buffer)
     }
 }
 
-OCIO_ADD_TEST(CPUProcessor, scanline_helper_planar)
+OCIO_ADD_TEST(CPUProcessor, scanline_planar)
 {
     // Test the planar image description.
 
@@ -1738,7 +1784,7 @@ OCIO_ADD_TEST(CPUProcessor, scanline_helper_planar)
     }
 }
 
-OCIO_ADD_TEST(CPUProcessor, scanline_helper_tile)
+OCIO_ADD_TEST(CPUProcessor, scanline_packed_tile)
 {
     // Process tiles.
 
@@ -1857,16 +1903,249 @@ OCIO_ADD_TEST(CPUProcessor, scanline_helper_tile)
 
 }
 
-
-OCIO_ADD_TEST(CPUProcessor, custom_scanlines)
+OCIO_ADD_TEST(CPUProcessor, scanline_packed_custom)
 {
-    // Cases testing custom xStrideBytes and yStrideBytes values.
+    // Cases testing custom xStrideInBytes and yStrideInBytes values.
 
-    const float magicNumber = 12345.6789f;
+    static constexpr float magicNumber = 12345.6789f;
+    static constexpr long width  = 3;
+    static constexpr long height = 2;
+
+    static_assert(width * height == NB_PIXELS, "Validation of the image dimensions");
+
 
     OCIO::ConstCPUProcessorRcPtr cpuProcessor;
     OCIO_CHECK_NO_THROW(cpuProcessor = BuildCPUProcessor(OCIO::TRANSFORM_DIR_FORWARD));
 
+    {
+        // Pixels are { RGBA, RGBA, RGBA,
+        //              RGBA, RGBA, RGBA  }.
+
+        std::vector<float> img
+            = { inImg[ 0], inImg[ 1], inImg[ 2], inImg[ 3],
+                inImg[ 4], inImg[ 5], inImg[ 6], inImg[ 7],
+                inImg[ 8], inImg[ 9], inImg[10], inImg[11],
+                inImg[12], inImg[13], inImg[14], inImg[15],
+                inImg[16], inImg[17], inImg[18], inImg[19],
+                inImg[20], inImg[21], inImg[22], inImg[23]
+              };
+
+        // NB: Do not use OCIO::AutoStride for the y stride to test a custom value.
+        static constexpr ptrdiff_t yStrideInBytes = width * 4 * sizeof(float);
+
+        {
+            // Test a positive y stride.
+
+            // It means to start the processing from the first pixel of the first line.
+            OCIO::PackedImageDesc srcImgDesc(&img[0], width, height, 4,
+                                             OCIO::BIT_DEPTH_F32,
+                                             OCIO::AutoStride,
+                                             OCIO::AutoStride,
+                                             // Bytes to the next line.
+                                             yStrideInBytes);
+
+            std::vector<float> outImg(NB_PIXELS*4);
+            OCIO::PackedImageDesc dstImgDesc(&outImg[0], width, height, 4);
+
+            OCIO_CHECK_NO_THROW(cpuProcessor->apply(srcImgDesc, dstImgDesc));
+
+            for (size_t pxl = 0; pxl < NB_PIXELS; ++pxl)
+            {
+                const size_t dep = 4 * pxl;
+                OCIO_CHECK_CLOSE(outImg[dep + 0], resImg[dep + 0], 1e-6f);
+                OCIO_CHECK_CLOSE(outImg[dep + 1], resImg[dep + 1], 1e-6f);
+                OCIO_CHECK_CLOSE(outImg[dep + 2], resImg[dep + 2], 1e-6f);
+                OCIO_CHECK_CLOSE(outImg[dep + 3], resImg[dep + 3], 1e-6f);
+            }
+        }
+        {
+            // Test a negative y stride.
+            //
+            // Note: It 'inverts' the processed image i.e. the last line is then moved to become
+            // the first line and so on.
+
+            // It means to start the processing from the first pixel of the last line.
+            OCIO::PackedImageDesc srcImgDesc(&img[yStrideInBytes / sizeof(float)], width, height, 4,
+                                             OCIO::BIT_DEPTH_F32,
+                                             OCIO::AutoStride,
+                                             OCIO::AutoStride,
+                                             // Bytes to the next line.
+                                             -yStrideInBytes);
+
+            // Output to 32-bits float.
+
+            std::vector<float> floatOutImg(NB_PIXELS*4);
+            OCIO::PackedImageDesc floatDstImgDesc(&floatOutImg[0], width, height, 4);
+
+            OCIO_CHECK_NO_THROW(cpuProcessor->apply(srcImgDesc, floatDstImgDesc));
+
+            for (size_t y = 0; y < height; ++y)
+            {
+                for (size_t x = 0; x < width; ++x)
+                {
+                    const size_t outDep = (height - y - 1) * width + x;
+                    const size_t resDep = y * width + x;
+
+                    OCIO_CHECK_CLOSE(floatOutImg[4 * outDep + 0], resImg[4 * resDep + 0], 1e-6f);
+                    OCIO_CHECK_CLOSE(floatOutImg[4 * outDep + 1], resImg[4 * resDep + 1], 1e-6f);
+                    OCIO_CHECK_CLOSE(floatOutImg[4 * outDep + 2], resImg[4 * resDep + 2], 1e-6f);
+                    OCIO_CHECK_CLOSE(floatOutImg[4 * outDep + 3], resImg[4 * resDep + 3], 1e-6f);
+                }
+            }
+
+            // Output to 8-bits integer.
+
+            std::vector<uint8_t> charOutImg(NB_PIXELS*4);
+            OCIO::PackedImageDesc charDstImgDesc(&charOutImg[0], width, height, 4, 
+                                                 OCIO::BIT_DEPTH_UINT8,
+                                                 OCIO::AutoStride,
+                                                 OCIO::AutoStride,
+                                                 OCIO::AutoStride);
+
+            auto new_proc = BuildProcessor(OCIO::TRANSFORM_DIR_FORWARD);
+            auto new_cpu = new_proc->getOptimizedCPUProcessor(OCIO::BIT_DEPTH_F32,
+                                                              OCIO::BIT_DEPTH_UINT8,
+                                                              OCIO::OPTIMIZATION_NONE);
+
+            OCIO_CHECK_NO_THROW(new_cpu->apply(srcImgDesc, charDstImgDesc));
+
+            for (size_t y = 0; y < height; ++y)
+            {
+                for (size_t x = 0; x < width; ++x)
+                {
+                    const size_t outDep = (height - y - 1) * width + x;
+                    const size_t resDep = y * width + x;
+
+                    const uint8_t red
+                        = OCIO::Converter<OCIO::BIT_DEPTH_UINT8>::CastValue(255.0f * resImg[4 * resDep + 0]);
+                    OCIO_CHECK_EQUAL(charOutImg[4 * outDep + 0], red);
+
+                    const uint8_t green
+                        = OCIO::Converter<OCIO::BIT_DEPTH_UINT8>::CastValue(255.0f * resImg[4 * resDep + 1]);
+                    OCIO_CHECK_EQUAL(charOutImg[4 * outDep + 1], green);
+
+                    const uint8_t blue
+                        = OCIO::Converter<OCIO::BIT_DEPTH_UINT8>::CastValue(255.0f * resImg[4 * resDep + 2]);
+                    OCIO_CHECK_EQUAL(charOutImg[4 * outDep + 2], blue);
+
+                    const uint8_t alpha
+                        = OCIO::Converter<OCIO::BIT_DEPTH_UINT8>::CastValue(255.0f * resImg[4 * resDep + 3]);
+                    OCIO_CHECK_EQUAL(charOutImg[4 * outDep + 3], alpha);
+                }
+            }
+
+            // Output to 8-bits integer with a negative y stride.
+
+            static constexpr ptrdiff_t out_yStrideInBytes = width * 4 * sizeof(uint8_t);
+
+            charOutImg.assign(charOutImg.size(), 0);
+            OCIO::PackedImageDesc new_charDstImgDesc(&charOutImg[out_yStrideInBytes / sizeof(uint8_t)],
+                                                     width, height, 4, 
+                                                     OCIO::BIT_DEPTH_UINT8,
+                                                     OCIO::AutoStride,
+                                                     OCIO::AutoStride,
+                                                     -out_yStrideInBytes);
+
+            new_cpu = new_proc->getOptimizedCPUProcessor(OCIO::BIT_DEPTH_F32,
+                                                         OCIO::BIT_DEPTH_UINT8,
+                                                         OCIO::OPTIMIZATION_NONE);
+
+            OCIO_CHECK_NO_THROW(new_cpu->apply(srcImgDesc, new_charDstImgDesc));
+
+            for (size_t y = 0; y < height; ++y)
+            {
+                for (size_t x = 0; x < width; ++x)
+                {
+                    const size_t dep = y * width + x;
+
+                    const uint8_t red
+                        = OCIO::Converter<OCIO::BIT_DEPTH_UINT8>::CastValue(255.0f * resImg[4 * dep + 0]);
+                    OCIO_CHECK_EQUAL(charOutImg[4 * dep + 0], red);
+
+                    const uint8_t green
+                        = OCIO::Converter<OCIO::BIT_DEPTH_UINT8>::CastValue(255.0f * resImg[4 * dep + 1]);
+                    OCIO_CHECK_EQUAL(charOutImg[4 * dep + 1], green);
+
+                    const uint8_t blue
+                        = OCIO::Converter<OCIO::BIT_DEPTH_UINT8>::CastValue(255.0f * resImg[4 * dep + 2]);
+                    OCIO_CHECK_EQUAL(charOutImg[4 * dep + 2], blue);
+
+                    const uint8_t alpha
+                        = OCIO::Converter<OCIO::BIT_DEPTH_UINT8>::CastValue(255.0f * resImg[4 * dep + 3]);
+                    OCIO_CHECK_EQUAL(charOutImg[4 * dep + 3], alpha);
+                }
+            }
+        }
+        {
+            // Test a negative y stride for the in and out images.
+            //
+            // Note: For the two images, the processing starts from the last line which means
+            // to process from the first pixel of the last line for the two image buffers.
+
+            OCIO::PackedImageDesc srcImgDesc(&img[yStrideInBytes / sizeof(float)], width, height, 4,
+                                             OCIO::BIT_DEPTH_F32,
+                                             OCIO::AutoStride,
+                                             OCIO::AutoStride,
+                                             // Bytes to the next line.
+                                             -yStrideInBytes);
+
+            std::vector<float> outImg(NB_PIXELS*4);
+            OCIO::PackedImageDesc dstImgDesc(&outImg[width * 4 * (height - 1)], width, height, 4,
+                                             OCIO::BIT_DEPTH_F32,
+                                             OCIO::AutoStride,
+                                             OCIO::AutoStride,
+                                             // Bytes to the next line.
+                                             -1 * (width * 4 * sizeof(float)));
+
+            OCIO_CHECK_NO_THROW(cpuProcessor->apply(srcImgDesc, dstImgDesc));
+
+            for (size_t y = 0; y < height; ++y)
+            {
+                for (size_t x = 0; x < width; ++x)
+                {
+                    const size_t dep = y * width + x;
+
+                    OCIO_CHECK_CLOSE(outImg[4 * dep + 0], resImg[4 * dep + 0], 1e-6f);
+                    OCIO_CHECK_CLOSE(outImg[4 * dep + 1], resImg[4 * dep + 1], 1e-6f);
+                    OCIO_CHECK_CLOSE(outImg[4 * dep + 2], resImg[4 * dep + 2], 1e-6f);
+                    OCIO_CHECK_CLOSE(outImg[4 * dep + 3], resImg[4 * dep + 3], 1e-6f);
+                }
+            }
+        }
+        {
+            // Test a positive y stride with a negative x stride.
+            //
+            // Note: It 'inverts' the lines of the processed image i.e. the last pixel of a line is
+            // then moved to become the first pxel of the same line and so on.
+
+            // It means to start the processing from the last pixel of the first line.
+            OCIO::PackedImageDesc srcImgDesc(&img[(width-1) * 4], width, height, 4,
+                                             OCIO::BIT_DEPTH_F32,
+                                             OCIO::AutoStride,
+                                             -1 * (4 * sizeof(float)),
+                                             // Bytes to the next line.
+                                             yStrideInBytes);
+
+            std::vector<float> outImg(NB_PIXELS*4);
+            OCIO::PackedImageDesc dstImgDesc(&outImg[0], width, height, 4);
+
+            OCIO_CHECK_NO_THROW(cpuProcessor->apply(srcImgDesc, dstImgDesc));
+
+            for (size_t y = 0; y < height; ++y)
+            {
+                for (size_t x = 0; x < width; ++x)
+                {
+                    const size_t outDep = y * width + (width - x - 1);
+                    const size_t resDep = y * width + x;
+
+                    OCIO_CHECK_CLOSE(outImg[4 * outDep + 0], resImg[4 * resDep + 0], 1e-6f);
+                    OCIO_CHECK_CLOSE(outImg[4 * outDep + 1], resImg[4 * resDep + 1], 1e-6f);
+                    OCIO_CHECK_CLOSE(outImg[4 * outDep + 2], resImg[4 * resDep + 2], 1e-6f);
+                    OCIO_CHECK_CLOSE(outImg[4 * outDep + 3], resImg[4 * resDep + 3], 1e-6f);
+                }
+            }
+        }
+    }
     {
         // Pixels are { RGBA, RGBA, RGBA, x,
         //              RGBA, RGBA, RGBA, x  } where x is not a color channel.
@@ -1881,25 +2160,133 @@ OCIO_ADD_TEST(CPUProcessor, custom_scanlines)
                 inImg[20], inImg[21], inImg[22], inImg[23],
                 magicNumber };
 
-        OCIO::PackedImageDesc srcImgDesc(&img[0],
-                                         3, 2, 4,
-                                         OCIO::BIT_DEPTH_F32,
-                                         OCIO::AutoStride,
-                                         OCIO::AutoStride,
-                                         // Bytes to the next line.
-                                         3*4*sizeof(float)+sizeof(float));
+        static constexpr ptrdiff_t yStrideInBytes = width * 4 * sizeof(float) + sizeof(float);
 
-        std::vector<float> outImg(NB_PIXELS*4);
-        OCIO::PackedImageDesc dstImgDesc(&outImg[0], 3, 2, 4);
-
-        OCIO_CHECK_NO_THROW(cpuProcessor->apply(srcImgDesc, dstImgDesc));
-
-        for(size_t pxl=0; pxl<NB_PIXELS; ++pxl)
         {
-            OCIO_CHECK_CLOSE(outImg[4*pxl+0], resImg[4*pxl+0], 1e-6f);
-            OCIO_CHECK_CLOSE(outImg[4*pxl+1], resImg[4*pxl+1], 1e-6f);
-            OCIO_CHECK_CLOSE(outImg[4*pxl+2], resImg[4*pxl+2], 1e-6f);
-            OCIO_CHECK_CLOSE(outImg[4*pxl+3], resImg[4*pxl+3], 1e-6f);
+            // Test a positive y stride.
+
+            // It means to start the processing from the first pixel of the first line.
+            OCIO::PackedImageDesc srcImgDesc(&img[0], width, height, 4,
+                                             OCIO::BIT_DEPTH_F32,
+                                             OCIO::AutoStride,
+                                             OCIO::AutoStride,
+                                             // Bytes to the next line.
+                                             yStrideInBytes);
+
+            std::vector<float> outImg(NB_PIXELS*4);
+            OCIO::PackedImageDesc dstImgDesc(&outImg[0], width, height, 4);
+
+            OCIO_CHECK_NO_THROW(cpuProcessor->apply(srcImgDesc, dstImgDesc));
+
+            for(size_t pxl=0; pxl<NB_PIXELS; ++pxl)
+            {
+                OCIO_CHECK_CLOSE(outImg[4*pxl+0], resImg[4*pxl+0], 1e-6f);
+                OCIO_CHECK_CLOSE(outImg[4*pxl+1], resImg[4*pxl+1], 1e-6f);
+                OCIO_CHECK_CLOSE(outImg[4*pxl+2], resImg[4*pxl+2], 1e-6f);
+                OCIO_CHECK_CLOSE(outImg[4*pxl+3], resImg[4*pxl+3], 1e-6f);
+            }
+        }
+        {
+            // Test a negative y stride.
+            //
+            // Note: It 'inverts' the processed image i.e. the last line is then moved to become
+            // the first line and so on.
+
+            // It means to start the processing from the first pixel of the last line.
+            OCIO::PackedImageDesc srcImgDesc(&img[yStrideInBytes / sizeof(float)], width, height, 4,
+                                             OCIO::BIT_DEPTH_F32,
+                                             OCIO::AutoStride,
+                                             OCIO::AutoStride,
+                                             // Bytes to the next line.
+                                             -yStrideInBytes);
+
+            std::vector<float> outImg(NB_PIXELS*4);
+            OCIO::PackedImageDesc dstImgDesc(&outImg[0], width, height, 4);
+
+            OCIO_CHECK_NO_THROW(cpuProcessor->apply(srcImgDesc, dstImgDesc));
+
+            for (size_t y = 0; y < height; ++y)
+            {
+                for (size_t x = 0; x < width; ++x)
+                {
+                    const size_t outDep = (height - y - 1) * width + x;
+                    const size_t resDep = y * width + x;
+
+                    OCIO_CHECK_CLOSE(outImg[4 * outDep + 0], resImg[4 * resDep + 0], 1e-6f);
+                    OCIO_CHECK_CLOSE(outImg[4 * outDep + 1], resImg[4 * resDep + 1], 1e-6f);
+                    OCIO_CHECK_CLOSE(outImg[4 * outDep + 2], resImg[4 * resDep + 2], 1e-6f);
+                    OCIO_CHECK_CLOSE(outImg[4 * outDep + 3], resImg[4 * resDep + 3], 1e-6f);
+                }
+            }
+        }
+        {
+            // Test a negative y stride for the in and out images.
+            //
+            // Note: For the two images, the processing starts from the last line which means
+            // to process from the first pixel of the last line for the two image buffers.
+
+            OCIO::PackedImageDesc srcImgDesc(&img[yStrideInBytes / sizeof(float)], width, height, 4,
+                                             OCIO::BIT_DEPTH_F32,
+                                             OCIO::AutoStride,
+                                             OCIO::AutoStride,
+                                             // Bytes to the next line.
+                                             -yStrideInBytes);
+
+            std::vector<float> outImg(NB_PIXELS*4);
+            OCIO::PackedImageDesc dstImgDesc(&outImg[width * 4 * (height - 1)], width, height, 4,
+                                             OCIO::BIT_DEPTH_F32,
+                                             OCIO::AutoStride,
+                                             OCIO::AutoStride,
+                                             // Bytes to the next line.
+                                             -1 * (width * 4 * sizeof(float)));
+
+            OCIO_CHECK_NO_THROW(cpuProcessor->apply(srcImgDesc, dstImgDesc));
+
+            for (size_t y = 0; y < height; ++y)
+            {
+                for (size_t x = 0; x < width; ++x)
+                {
+                    const size_t dep = y * width + x;
+
+                    OCIO_CHECK_CLOSE(outImg[4 * dep + 0], resImg[4 * dep + 0], 1e-6f);
+                    OCIO_CHECK_CLOSE(outImg[4 * dep + 1], resImg[4 * dep + 1], 1e-6f);
+                    OCIO_CHECK_CLOSE(outImg[4 * dep + 2], resImg[4 * dep + 2], 1e-6f);
+                    OCIO_CHECK_CLOSE(outImg[4 * dep + 3], resImg[4 * dep + 3], 1e-6f);
+                }
+            }
+        }
+        {
+            // Test a positive y stride with a negative x stride.
+            //
+            // Note: It 'inverts' the lines of the processed image i.e. the last pixel of a line is
+            // then moved to become the first pxel of the same line and so on.
+
+            // It means to start the processing from the last pixel of the first line.
+            OCIO::PackedImageDesc srcImgDesc(&img[(width-1) * 4], width, height, 4,
+                                             OCIO::BIT_DEPTH_F32,
+                                             OCIO::AutoStride,
+                                             -1 * (4 * sizeof(float)),
+                                             // Bytes to the next line.
+                                             yStrideInBytes);
+
+            std::vector<float> outImg(NB_PIXELS*4);
+            OCIO::PackedImageDesc dstImgDesc(&outImg[0], width, height, 4);
+
+            OCIO_CHECK_NO_THROW(cpuProcessor->apply(srcImgDesc, dstImgDesc));
+
+            for (size_t y = 0; y < height; ++y)
+            {
+                for (size_t x = 0; x < width; ++x)
+                {
+                    const size_t outDep = y * width + (width - x - 1);
+                    const size_t resDep = y * width + x;
+
+                    OCIO_CHECK_CLOSE(outImg[4 * outDep + 0], resImg[4 * resDep + 0], 1e-6f);
+                    OCIO_CHECK_CLOSE(outImg[4 * outDep + 1], resImg[4 * resDep + 1], 1e-6f);
+                    OCIO_CHECK_CLOSE(outImg[4 * outDep + 2], resImg[4 * resDep + 2], 1e-6f);
+                    OCIO_CHECK_CLOSE(outImg[4 * outDep + 3], resImg[4 * resDep + 3], 1e-6f);
+                }
+            }
         }
     }
 
@@ -1915,23 +2302,89 @@ OCIO_ADD_TEST(CPUProcessor, custom_scanlines)
                 inImg[16], magicNumber, inImg[17], magicNumber, inImg[18], magicNumber, inImg[19], magicNumber,
                 inImg[20], magicNumber, inImg[21], magicNumber, inImg[22], magicNumber, inImg[23], magicNumber };
 
-        OCIO::PackedImageDesc srcImgDesc(&img[0],  3, 2, 4,
-                                         OCIO::BIT_DEPTH_F32,
-                                         // Bytes to the next channel.
-                                         sizeof(float)+sizeof(float),
-                                         OCIO::AutoStride,
-                                         OCIO::AutoStride);
+        static constexpr ptrdiff_t chanInBytes    = sizeof(float) + sizeof(float);
+        static constexpr ptrdiff_t xStrideInBytes = chanInBytes * 4;
+        static constexpr ptrdiff_t yStrideInBytes = xStrideInBytes * width;
 
-        std::vector<float> outImg(NB_PIXELS*3);
-        OCIO::PackedImageDesc dstImgDesc(&outImg[0], 3, 2, 3);
-
-        OCIO_CHECK_NO_THROW(cpuProcessor->apply(srcImgDesc, dstImgDesc));
-
-        for(size_t pxl=0; pxl<NB_PIXELS; ++pxl)
         {
-            OCIO_CHECK_CLOSE(outImg[3*pxl+0], resImg[4*pxl+0], 1e-6f);
-            OCIO_CHECK_CLOSE(outImg[3*pxl+1], resImg[4*pxl+1], 1e-6f);
-            OCIO_CHECK_CLOSE(outImg[3*pxl+2], resImg[4*pxl+2], 1e-6f);
+            OCIO::PackedImageDesc srcImgDesc(&img[0], width, height, 4,
+                                             OCIO::BIT_DEPTH_F32,
+                                             // Bytes to the next color channel.
+                                             chanInBytes,
+                                             OCIO::AutoStride,
+                                             OCIO::AutoStride);
+
+            std::vector<float> outImg(NB_PIXELS*3);
+            OCIO::PackedImageDesc dstImgDesc(&outImg[0], width, height, 3);
+
+            OCIO_CHECK_NO_THROW(cpuProcessor->apply(srcImgDesc, dstImgDesc));
+
+            for (size_t pxl = 0; pxl < NB_PIXELS; ++pxl)
+            {
+                OCIO_CHECK_CLOSE(outImg[3 * pxl + 0], resImg[4 * pxl + 0], 1e-6f);
+                OCIO_CHECK_CLOSE(outImg[3 * pxl + 1], resImg[4 * pxl + 1], 1e-6f);
+                OCIO_CHECK_CLOSE(outImg[3 * pxl + 2], resImg[4 * pxl + 2], 1e-6f);
+            }
+        }
+        {
+            // Test with a negative y stride.
+
+            OCIO::PackedImageDesc srcImgDesc(&img[yStrideInBytes/sizeof(float)], width, height, 4,
+                                             OCIO::BIT_DEPTH_F32,
+                                             // Bytes to the next color channel.
+                                             chanInBytes,
+                                             OCIO::AutoStride,
+                                             // Bytes to the next line.
+                                             -yStrideInBytes);
+
+            std::vector<float> outImg(NB_PIXELS*3);
+            OCIO::PackedImageDesc dstImgDesc(&outImg[0], width, height, 3);
+
+            OCIO_CHECK_NO_THROW(cpuProcessor->apply(srcImgDesc, dstImgDesc));
+
+            for (size_t y = 0; y < height; ++y)
+            {
+                for (size_t x = 0; x < width; ++x)
+                {
+                    const size_t outDep = (height - y - 1) * width + x;
+                    const size_t resDep = y * width + x;
+
+                    OCIO_CHECK_CLOSE(outImg[3 * outDep + 0], resImg[4 * resDep + 0], 1e-6f);
+                    OCIO_CHECK_CLOSE(outImg[3 * outDep + 1], resImg[4 * resDep + 1], 1e-6f);
+                    OCIO_CHECK_CLOSE(outImg[3 * outDep + 2], resImg[4 * resDep + 2], 1e-6f);
+                }
+            }
+        }
+        {
+            // Test with a negative x stride.
+
+            OCIO::PackedImageDesc srcImgDesc(&img[(xStrideInBytes / sizeof(float)) * (width - 1)], 
+                                             width, height, 4,
+                                             OCIO::BIT_DEPTH_F32,
+                                             // Bytes to the next color channel.
+                                             chanInBytes,
+                                             // Bytes to the next pixel.
+                                             -xStrideInBytes,
+                                             // Bytes to the next line.
+                                             yStrideInBytes);
+
+            std::vector<float> outImg(NB_PIXELS*3);
+            OCIO::PackedImageDesc dstImgDesc(&outImg[0], width, height, 3);
+
+            OCIO_CHECK_NO_THROW(cpuProcessor->apply(srcImgDesc, dstImgDesc));
+
+            for (size_t y = 0; y < height; ++y)
+            {
+                for (size_t x = 0; x < width; ++x)
+                {
+                    const size_t outDep = y * width + (width - x -1);
+                    const size_t resDep = y * width + x;
+
+                    OCIO_CHECK_CLOSE(outImg[3 * outDep + 0], resImg[4 * resDep + 0], 1e-6f);
+                    OCIO_CHECK_CLOSE(outImg[3 * outDep + 1], resImg[4 * resDep + 1], 1e-6f);
+                    OCIO_CHECK_CLOSE(outImg[3 * outDep + 2], resImg[4 * resDep + 2], 1e-6f);
+                }
+            }
         }
     }
 
@@ -1947,7 +2400,7 @@ OCIO_ADD_TEST(CPUProcessor, custom_scanlines)
                 inImg[16], inImg[17], inImg[18], inImg[19], magicNumber,
                 inImg[20], inImg[21], inImg[22], inImg[23], magicNumber };
 
-        OCIO::PackedImageDesc srcImgDesc(&img[0], 3, 2, 4,
+        OCIO::PackedImageDesc srcImgDesc(&img[0], width, height, 4,
                                          OCIO::BIT_DEPTH_F32,
                                          OCIO::AutoStride,
                                          // Bytes to the next pixel.
@@ -1955,7 +2408,7 @@ OCIO_ADD_TEST(CPUProcessor, custom_scanlines)
                                          OCIO::AutoStride);
 
         std::vector<float> outImg(NB_PIXELS*3);
-        OCIO::PackedImageDesc dstImgDesc(&outImg[0], 3, 2, 3);
+        OCIO::PackedImageDesc dstImgDesc(&outImg[0], width, height, 3);
 
         OCIO_CHECK_NO_THROW(cpuProcessor->apply(srcImgDesc, dstImgDesc));
 
@@ -1982,16 +2435,16 @@ OCIO_ADD_TEST(CPUProcessor, custom_scanlines)
                 magicNumber };
 
         OCIO::PackedImageDesc srcImgDesc(&img[0],
-                                         3, 2, 4,
+                                         width, height, 4,
                                          OCIO::BIT_DEPTH_F32,
                                          OCIO::AutoStride,
                                          // Bytes to the next pixel.
                                          4*sizeof(float)+sizeof(float),
                                          // Bytes to the next line.
-                                         3*(4*sizeof(float)+sizeof(float))+sizeof(float));
+                                         width*(4*sizeof(float)+sizeof(float))+sizeof(float));
 
         std::vector<float> outImg(NB_PIXELS*3);
-        OCIO::PackedImageDesc dstImgDesc(&outImg[0], 3, 2, 3);
+        OCIO::PackedImageDesc dstImgDesc(&outImg[0], width, height, 3);
 
         OCIO_CHECK_NO_THROW(cpuProcessor->apply(srcImgDesc, dstImgDesc));
 
@@ -2003,6 +2456,193 @@ OCIO_ADD_TEST(CPUProcessor, custom_scanlines)
         }
     }
 
+}
+
+OCIO_ADD_TEST(CPUProcessor, scanline_planar_custom)
+{
+    // Cases testing custom stride values for planar.
+
+    static constexpr long width  = 3;
+    static constexpr long height = 2;
+
+    static_assert(width * height == NB_PIXELS, "Validation of the image dimensions");
+
+     {
+        // Test with default strides.
+
+        OCIO::ConstCPUProcessorRcPtr cpuProcessor;
+        OCIO_CHECK_NO_THROW(cpuProcessor = BuildCPUProcessor(OCIO::TRANSFORM_DIR_FORWARD));
+
+        std::vector<float> outImgR(NB_PIXELS);
+        std::vector<float> outImgG(NB_PIXELS);
+        std::vector<float> outImgB(NB_PIXELS);
+        std::vector<float> outImgA(NB_PIXELS);
+
+        OCIO::PlanarImageDesc srcImgDesc(&inImgR[0], &inImgG[0], &inImgB[0], &inImgA[0],
+                                         width, height,
+                                         OCIO::BIT_DEPTH_F32,
+                                         OCIO::AutoStride,
+                                         width * sizeof(float));
+        OCIO::PlanarImageDesc dstImgDesc(&outImgR[0], &outImgG[0], &outImgB[0], &outImgA[0],
+                                         width, height);
+
+        OCIO_CHECK_NO_THROW(cpuProcessor->apply(srcImgDesc, dstImgDesc));
+
+        for (size_t y = 0; y < height; ++y)
+        {
+            for (size_t x = 0; x < width; ++x)
+            {
+                const size_t dep = y * width + x;
+                OCIO_CHECK_CLOSE(outImgR[dep], resImgR[dep], 1e-6f);
+                OCIO_CHECK_CLOSE(outImgG[dep], resImgG[dep], 1e-6f);
+                OCIO_CHECK_CLOSE(outImgB[dep], resImgB[dep], 1e-6f);
+                OCIO_CHECK_CLOSE(outImgA[dep], resImgA[dep], 1e-6f);
+            }
+        }
+    }
+
+    {
+        // Test with default strides, and output in 8-bits integer.
+
+        OCIO::ConstProcessorRcPtr processor;
+        OCIO_CHECK_NO_THROW(processor = BuildProcessor(OCIO::TRANSFORM_DIR_FORWARD));
+
+        OCIO::ConstCPUProcessorRcPtr cpuProcessor;
+        OCIO_CHECK_NO_THROW(cpuProcessor = processor->getOptimizedCPUProcessor(OCIO::BIT_DEPTH_F32,
+                                                                               OCIO::BIT_DEPTH_UINT8,
+                                                                               OCIO::OPTIMIZATION_NONE));
+
+        std::vector<uint8_t> outImgR(NB_PIXELS);
+        std::vector<uint8_t> outImgG(NB_PIXELS);
+        std::vector<uint8_t> outImgB(NB_PIXELS);
+        std::vector<uint8_t> outImgA(NB_PIXELS);
+
+        OCIO::PlanarImageDesc srcImgDesc(&inImgR[0], &inImgG[0], &inImgB[0], &inImgA[0],
+                                         width, height,
+                                         OCIO::BIT_DEPTH_F32,
+                                         OCIO::AutoStride,
+                                         width * sizeof(float));
+        OCIO::PlanarImageDesc dstImgDesc(&outImgR[0], &outImgG[0], &outImgB[0], &outImgA[0],
+                                         width, height,
+                                         OCIO::BIT_DEPTH_UINT8,
+                                         OCIO::AutoStride,
+                                         OCIO::AutoStride);
+
+        OCIO_CHECK_NO_THROW(cpuProcessor->apply(srcImgDesc, dstImgDesc));
+
+        for (size_t y = 0; y < height; ++y)
+        {
+            for (size_t x = 0; x < width; ++x)
+            {
+                const size_t dep = y * width + x;
+
+                const uint8_t red
+                    = OCIO::Converter<OCIO::BIT_DEPTH_UINT8>::CastValue(255.0f * resImgR[dep]);
+                OCIO_CHECK_EQUAL(outImgR[dep], red);
+
+                const uint8_t green
+                    = OCIO::Converter<OCIO::BIT_DEPTH_UINT8>::CastValue(255.0f * resImgG[dep]);
+                OCIO_CHECK_EQUAL(outImgG[dep], green);
+
+                const uint8_t blue
+                    = OCIO::Converter<OCIO::BIT_DEPTH_UINT8>::CastValue(255.0f * resImgB[dep]);
+                OCIO_CHECK_EQUAL(outImgB[dep], blue);
+
+                const uint8_t alpha
+                    = OCIO::Converter<OCIO::BIT_DEPTH_UINT8>::CastValue(255.0f * resImgA[dep]);
+                OCIO_CHECK_EQUAL(outImgA[dep], alpha);
+            }
+        }
+    }
+
+    {
+        // Test with a negative y stride.
+
+        OCIO::ConstCPUProcessorRcPtr cpuProcessor;
+        OCIO_CHECK_NO_THROW(cpuProcessor = BuildCPUProcessor(OCIO::TRANSFORM_DIR_FORWARD));
+
+        std::vector<float> outImgR(NB_PIXELS);
+        std::vector<float> outImgG(NB_PIXELS);
+        std::vector<float> outImgB(NB_PIXELS);
+        std::vector<float> outImgA(NB_PIXELS);
+
+        OCIO::PlanarImageDesc srcImgDesc(&inImgR[width], &inImgG[width], &inImgB[width], &inImgA[width],
+                                         width, height,
+                                         OCIO::BIT_DEPTH_F32,
+                                         OCIO::AutoStride,
+                                         -1 * (width * sizeof(float)));
+        OCIO::PlanarImageDesc dstImgDesc(&outImgR[0], &outImgG[0], &outImgB[0], &outImgA[0],
+                                         width, height);
+
+        OCIO_CHECK_NO_THROW(cpuProcessor->apply(srcImgDesc, dstImgDesc));
+
+        for (size_t y = 0; y < height; ++y)
+        {
+            for (size_t x = 0; x < width; ++x)
+            {
+                const size_t outDep = (height - y - 1) * width + x;
+                const size_t resDep = y * width + x;
+                OCIO_CHECK_CLOSE(outImgR[outDep], resImgR[resDep], 1e-6f);
+                OCIO_CHECK_CLOSE(outImgG[outDep], resImgG[resDep], 1e-6f);
+                OCIO_CHECK_CLOSE(outImgB[outDep], resImgB[resDep], 1e-6f);
+                OCIO_CHECK_CLOSE(outImgA[outDep], resImgA[resDep], 1e-6f);
+            }
+        }
+    }
+
+    {
+        // Test with negative y strides on in and out buffers, and output in 8-bits integer.
+
+        OCIO::ConstProcessorRcPtr processor;
+        OCIO_CHECK_NO_THROW(processor = BuildProcessor(OCIO::TRANSFORM_DIR_FORWARD));
+
+        OCIO::ConstCPUProcessorRcPtr cpuProcessor;
+        OCIO_CHECK_NO_THROW(cpuProcessor = processor->getOptimizedCPUProcessor(OCIO::BIT_DEPTH_F32,
+                                                                               OCIO::BIT_DEPTH_UINT8,
+                                                                               OCIO::OPTIMIZATION_NONE));
+
+        std::vector<uint8_t> outImgR(NB_PIXELS);
+        std::vector<uint8_t> outImgG(NB_PIXELS);
+        std::vector<uint8_t> outImgB(NB_PIXELS);
+        std::vector<uint8_t> outImgA(NB_PIXELS);
+
+        OCIO::PlanarImageDesc srcImgDesc(&inImgR[width], &inImgG[width], &inImgB[width], &inImgA[width],
+                                         width, height,
+                                         OCIO::BIT_DEPTH_F32,
+                                         OCIO::AutoStride,
+                                         -1 * (width * sizeof(float)));
+        OCIO::PlanarImageDesc dstImgDesc(&outImgR[width], &outImgG[width], &outImgB[width], &outImgA[width],
+                                         width, height,
+                                         OCIO::BIT_DEPTH_UINT8,
+                                         OCIO::AutoStride,
+                                         -1 * (width * sizeof(uint8_t)));
+
+        OCIO_CHECK_NO_THROW(cpuProcessor->apply(srcImgDesc, dstImgDesc));
+
+        for (size_t y = 0; y < height; ++y)
+        {
+            for (size_t x = 0; x < width; ++x)
+            {
+                const size_t dep = y * width + x;
+
+                const uint8_t red
+                    = OCIO::Converter<OCIO::BIT_DEPTH_UINT8>::CastValue(255.0f * resImgR[dep]);
+                OCIO_CHECK_EQUAL(outImgR[dep], red);
+
+                const uint8_t green
+                    = OCIO::Converter<OCIO::BIT_DEPTH_UINT8>::CastValue(255.0f * resImgG[dep]);
+                OCIO_CHECK_EQUAL(outImgG[dep], green);
+
+                const uint8_t blue
+                    = OCIO::Converter<OCIO::BIT_DEPTH_UINT8>::CastValue(255.0f * resImgB[dep]);
+                OCIO_CHECK_EQUAL(outImgB[dep], blue);
+
+                const uint8_t alpha
+                    = OCIO::Converter<OCIO::BIT_DEPTH_UINT8>::CastValue(255.0f * resImgA[dep]);
+                OCIO_CHECK_EQUAL(outImgA[dep], alpha);
+            }
+        }
+    }
 }
 
 OCIO_ADD_TEST(CPUProcessor, one_pixel)

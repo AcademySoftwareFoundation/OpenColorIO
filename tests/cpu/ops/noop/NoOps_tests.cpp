@@ -50,6 +50,48 @@ void CreateGenericLutOp(OCIO::OpRcPtrVec & ops)
     OCIO::CreateLut1DOp(ops, lut, OCIO::TRANSFORM_DIR_FORWARD);
 }
 
+void AssertPartitionIntegrity(OCIO::OpRcPtrVec & gpuPreOps,
+                              OCIO::OpRcPtrVec & gpuLatticeOps,
+                              OCIO::OpRcPtrVec & gpuPostOps)
+{
+    // All gpu pre ops must support analytical gpu shader generation.
+    for(unsigned int i=0; i<gpuPreOps.size(); ++i)
+    {
+        if(!gpuPreOps[i]->supportedByLegacyShader())
+        {
+            throw OCIO::Exception("Partition failed check. One gpuPreOps op does not support GPU.");
+        }
+    }
+
+    // If there are any lattice ops, at lease one must NOT support GPU
+    // shaders (otherwise this block isnt necessary!).
+    if(gpuLatticeOps.size()>0)
+    {
+        bool requiresLattice = false;
+        for(unsigned int i=0; i<gpuLatticeOps.size() && !requiresLattice; ++i)
+        {
+            if (!gpuLatticeOps[i]->supportedByLegacyShader())
+            {
+                requiresLattice = true;
+            }
+        }
+
+        if(!requiresLattice)
+        {
+            throw OCIO::Exception("Partition failed check. All gpuLatticeOps ops do support GPU.");
+        }
+    }
+
+    // All gpu post ops must support analytical gpu shader generation.
+    for(unsigned int i=0; i<gpuPostOps.size(); ++i)
+    {
+        if(!gpuPostOps[i]->supportedByLegacyShader())
+        {
+            throw OCIO::Exception("Partition failed check. One gpuPostOps op does not support GPU.");
+        }
+    }
+}
+
 } // anon.
 
 OCIO_ADD_TEST(NoOps, partition_gpu_ops)

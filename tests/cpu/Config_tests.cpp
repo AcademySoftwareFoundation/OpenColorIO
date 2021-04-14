@@ -6748,7 +6748,8 @@ colorspaces:
 
         OCIO_CHECK_NO_THROW(cfg->addEnvironmentVar("VAR", "ref"));
 
-        // Keys are different but processors are identical.
+        // Keys are different but processors are identical
+        // i.e. unchanged because it does not need $VAR.
         OCIO_CHECK_EQUAL(cfg->getProcessor("ref", "cs1").get(),
                          cfg->getProcessor("ref", "cs2").get());
 

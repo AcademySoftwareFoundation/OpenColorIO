@@ -13,9 +13,9 @@
 
 namespace OCIO_NAMESPACE
 {
-void CreateGpuAllocationNoOp(OpRcPtrVec & ops,
-                                const AllocationData & allocationData);
 
+// Create a 3D LUT from an arbitrary list of ops.
+OpRcPtrVec Create3DLut(const OpRcPtrVec & ops, unsigned edgelen);
 
 // Partition an opvec into 3 segments for GPU Processing
 //
@@ -26,9 +26,9 @@ void CreateGpuAllocationNoOp(OpRcPtrVec & ops,
 // allocation transformations
 
 void PartitionGPUOps(OpRcPtrVec & gpuPreOps,
-                        OpRcPtrVec & gpuLatticeOps,
-                        OpRcPtrVec & gpuPostOps,
-                        const OpRcPtrVec & ops);
+                     OpRcPtrVec & gpuLatticeOps,
+                     OpRcPtrVec & gpuPostOps,
+                     const OpRcPtrVec & ops);
 
 void CreateFileNoOp(OpRcPtrVec & ops,
                     const std::string & fname);
@@ -46,10 +46,7 @@ public:
     bool isNoOp() const override { return true; }
     bool isIdentity() const override { return true; }
     bool hasChannelCrosstalk() const override { return false; }
-    std::string getCacheID() const override
-    {
-        return "";
-    }
+    std::string getCacheID() const override { return ""; }
     void validate() const override {}
 };
 
