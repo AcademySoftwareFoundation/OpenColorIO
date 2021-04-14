@@ -53,7 +53,8 @@ OCIO_ADD_TEST(FinalizeOpVec, optimize_combine)
         OCIO_CHECK_EQUAL(ops.size(), 2);
 
         // No optimize: keep both matrix ops.
-        OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_NONE));
+        OCIO_CHECK_NO_THROW(ops.finalize());
+        OCIO_CHECK_NO_THROW(ops.optimize(OCIO::OPTIMIZATION_NONE));
         OCIO_CHECK_EQUAL(ops.size(), 2);
 
         // Apply ops.
@@ -62,7 +63,8 @@ OCIO_ADD_TEST(FinalizeOpVec, optimize_combine)
         Apply(ops, tmp, 3);
 
         // Optimize: Combine 2 matrix ops.
-        OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_DEFAULT));
+        OCIO_CHECK_NO_THROW(ops.finalize());
+        OCIO_CHECK_NO_THROW(ops.optimize(OCIO::OPTIMIZATION_DEFAULT));
         OCIO_CHECK_EQUAL(ops.size(), 1);
 
         // Apply ops.
@@ -91,7 +93,8 @@ OCIO_ADD_TEST(FinalizeOpVec, optimize_combine)
         OCIO_CHECK_EQUAL(ops.size(), 4);
 
         // No optimize: only no-ops types are removed. Keep 3 other ops.
-        OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_NONE));
+        OCIO_CHECK_NO_THROW(ops.finalize());
+        OCIO_CHECK_NO_THROW(ops.optimize(OCIO::OPTIMIZATION_NONE));
         OCIO_CHECK_EQUAL(ops.size(), 3);
 
         // Apply ops.
@@ -100,7 +103,8 @@ OCIO_ADD_TEST(FinalizeOpVec, optimize_combine)
         Apply(ops, tmp, 3);
 
         // Optimize: remove all no-ops.
-        OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_DEFAULT));
+        OCIO_CHECK_NO_THROW(ops.finalize());
+        OCIO_CHECK_NO_THROW(ops.optimize(OCIO::OPTIMIZATION_DEFAULT));
         OCIO_CHECK_EQUAL(ops.size(), 2);
         OCIO_CHECK_EQUAL(ops[0]->getInfo(), "<MatrixOffsetOp>");
         OCIO_CHECK_EQUAL(ops[1]->getInfo(), "<LogOp>");
@@ -131,7 +135,8 @@ OCIO_ADD_TEST(FinalizeOpVec, optimize_combine)
         OCIO_CHECK_EQUAL(ops.size(), 4);
 
         // No optimize: only no-ops types are removed.
-        OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_NONE));
+        OCIO_CHECK_NO_THROW(ops.finalize());
+        OCIO_CHECK_NO_THROW(ops.optimize(OCIO::OPTIMIZATION_NONE));
         OCIO_CHECK_EQUAL(ops.size(), 3);
 
         // Apply ops.
@@ -140,7 +145,8 @@ OCIO_ADD_TEST(FinalizeOpVec, optimize_combine)
         Apply(ops, tmp, 3);
 
         // Optimize: remove all no ops.
-        OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_DEFAULT));
+        OCIO_CHECK_NO_THROW(ops.finalize());
+        OCIO_CHECK_NO_THROW(ops.optimize(OCIO::OPTIMIZATION_DEFAULT));
         OCIO_CHECK_EQUAL(ops.size(), 2);
         OCIO_CHECK_EQUAL(ops[0]->getInfo(), "<MatrixOffsetOp>");
         OCIO_CHECK_EQUAL(ops[1]->getInfo(), "<LogOp>");
@@ -171,7 +177,8 @@ OCIO_ADD_TEST(FinalizeOpVec, optimize_combine)
         OCIO_CHECK_EQUAL(ops.size(), 4);
 
         // No optimize: only no-op types are removed.
-        OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_NONE));
+        OCIO_CHECK_NO_THROW(ops.finalize());
+        OCIO_CHECK_NO_THROW(ops.optimize(OCIO::OPTIMIZATION_NONE));
         OCIO_CHECK_EQUAL(ops.size(), 3);
 
         // Apply ops.
@@ -180,7 +187,8 @@ OCIO_ADD_TEST(FinalizeOpVec, optimize_combine)
         Apply(ops, tmp, 3);
 
         // Optimize: remove the no op
-        OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_DEFAULT));
+        OCIO_CHECK_NO_THROW(ops.finalize());
+        OCIO_CHECK_NO_THROW(ops.optimize(OCIO::OPTIMIZATION_DEFAULT));
         OCIO_CHECK_EQUAL(ops.size(), 2);
         OCIO_CHECK_EQUAL(ops[0]->getInfo(), "<MatrixOffsetOp>");
         OCIO_CHECK_EQUAL(ops[1]->getInfo(), "<LogOp>");
@@ -215,7 +223,8 @@ OCIO_ADD_TEST(FinalizeOpVec, optimize_combine)
         OCIO_CHECK_EQUAL(ops.size(), 9);
 
         // No optimize: only no-op types are removed.
-        OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_NONE));
+        OCIO_CHECK_NO_THROW(ops.finalize());
+        OCIO_CHECK_NO_THROW(ops.optimize(OCIO::OPTIMIZATION_NONE));
         OCIO_CHECK_EQUAL(ops.size(), 5);
 
         // Apply ops.
@@ -224,7 +233,8 @@ OCIO_ADD_TEST(FinalizeOpVec, optimize_combine)
         Apply(ops, tmp, 3);
 
         // Optimize: remove all no ops.
-        OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_DEFAULT));
+        OCIO_CHECK_NO_THROW(ops.finalize());
+        OCIO_CHECK_NO_THROW(ops.optimize(OCIO::OPTIMIZATION_DEFAULT));
         OCIO_CHECK_EQUAL(ops.size(), 2);
         OCIO_CHECK_EQUAL(ops[0]->getInfo(), "<MatrixOffsetOp>");
         OCIO_CHECK_EQUAL(ops[1]->getInfo(), "<LogOp>");

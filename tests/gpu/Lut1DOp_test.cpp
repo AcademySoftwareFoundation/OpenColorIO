@@ -54,7 +54,7 @@ OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_1_small_legacy_shader)
     test.setProcessor(file);
 
     test.setLegacyShader(true);
-    test.setErrorThreshold(1e-4f);
+    test.setErrorThreshold(2e-4f);
 }
 
 OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_1_small_inverse_legacy_shader)
@@ -65,7 +65,7 @@ OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_1_small_inverse_legacy_shader)
     test.setProcessor(file);
 
     test.setLegacyShader(true);
-    test.setErrorThreshold(1e-4f);
+    test.setErrorThreshold(2e-4f);
 }
 
 OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_1_small_generic_shader)
@@ -142,7 +142,7 @@ OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_3_big_legacy_shader)
     test.setProcessor(file);
 
     test.setLegacyShader(true);
-    test.setErrorThreshold(1e-4f);
+    test.setErrorThreshold(2e-4f);
 }
 
 OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_3_big_inverse_legacy_shader)
@@ -153,7 +153,7 @@ OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_3_big_inverse_legacy_shader)
     test.setProcessor(file);
 
     test.setLegacyShader(true);
-    test.setErrorThreshold(1e-4f);
+    test.setErrorThreshold(2e-4f);
 }
 
 OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_3_big_generic_shader)

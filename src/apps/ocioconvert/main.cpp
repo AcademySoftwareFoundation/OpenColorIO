@@ -431,10 +431,12 @@ int main(int argc, const char **argv)
             exit(1);
         }
 
-        if (outputgpuInfo)
+        if (verbose)
         {
             oglApp->printGLInfo();
         }
+
+        oglApp->setPrintShader(outputgpuInfo);
 
         oglApp->initImage(imgwidth, imgheight, comp, (float *)img.getBuffer());
         
@@ -491,19 +493,15 @@ int main(int argc, const char **argv)
         if (usegpu || usegpuLegacy)
         {
             // Get the GPU shader program from the processor and set oglApp to use it.
-            OCIO::GpuShaderDescRcPtr shaderDesc;
-            if (usegpuLegacy)
-            {
-                shaderDesc = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(32);
-            }
-            else
-            {
-                shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
-            }
+            OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
             shaderDesc->setLanguage(OCIO::GPU_LANGUAGE_GLSL_1_2);
-            processor->getDefaultGPUProcessor()->extractGpuShaderInfo(shaderDesc);
-            oglApp->setShader(shaderDesc);
 
+            OCIO::ConstGPUProcessorRcPtr gpu
+                = usegpuLegacy ? processor->getOptimizedLegacyGPUProcessor(OCIO::OPTIMIZATION_DEFAULT, 32)
+                               : processor->getDefaultGPUProcessor();
+            gpu->extractGpuShaderInfo(shaderDesc);
+
+            oglApp->setShader(shaderDesc);
             oglApp->reshape(imgwidth, imgheight);
             oglApp->redisplay();
             oglApp->readImage((float *)img.getBuffer());

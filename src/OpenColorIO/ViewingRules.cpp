@@ -277,7 +277,8 @@ void ViewingRules::addColorSpace(size_t ruleIndex, const char * colorSpace)
 
 void ViewingRules::removeColorSpace(size_t ruleIndex, size_t colorSpaceIndex)
 {
-    m_impl->m_rules[ruleIndex]->m_colorSpaces.removeToken(getColorSpace(ruleIndex, colorSpaceIndex));
+    const char * cs = getColorSpace(ruleIndex, colorSpaceIndex);
+    m_impl->m_rules[ruleIndex]->m_colorSpaces.removeToken(cs);
 }
 
 size_t ViewingRules::getNumEncodings(size_t ruleIndex) const
@@ -324,7 +325,8 @@ void ViewingRules::addEncoding(size_t ruleIndex, const char * encoding)
 
 void ViewingRules::removeEncoding(size_t ruleIndex, size_t encodingIndex)
 {
-    m_impl->m_rules[ruleIndex]->m_encodings.removeToken(getEncoding(ruleIndex, encodingIndex));
+    const char * encoding = getEncoding(ruleIndex, encodingIndex);
+    m_impl->m_rules[ruleIndex]->m_encodings.removeToken(encoding);
 }
 
 size_t ViewingRules::getNumCustomKeys(size_t ruleIndex) const

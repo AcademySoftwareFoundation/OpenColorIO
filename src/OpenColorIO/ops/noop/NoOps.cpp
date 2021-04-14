@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
+
 #include <sstream>
 #include <string.h>
 
@@ -10,9 +11,12 @@
 #include "NoOps.h"
 #include "OpBuilders.h"
 #include "Op.h"
+#include "ops/lut3d/Lut3DOp.h"
+
 
 namespace OCIO_NAMESPACE
 {
+
 namespace
 {
 class AllocationNoOp : public Op
@@ -42,8 +46,7 @@ public:
 
     ConstOpCPURcPtr getCPUOp(bool /*fastLogExpPow*/) const override { return nullptr; }
 
-    void apply(void * img, long numPixels) const override
-    { apply(img, img, numPixels); }
+    void apply(void * img, long numPixels) const override {}
 
     void apply(const void * inImg, void * outImg, long numPixels) const override
     { memcpy(outImg, inImg, numPixels * 4 * sizeof(float)); }
@@ -79,8 +82,7 @@ bool AllocationNoOp::isInverse(ConstOpRcPtr & op) const
 
 std::string AllocationNoOp::getCacheID() const
 {
-    throw Exception("AllocationNoOp::getCacheID should never be called. "
-                    "NoOp types should have been removed.");
+    return m_allocationData.getCacheID();
 }
 
 void AllocationNoOp::getGpuAllocation(AllocationData & allocation) const
@@ -99,8 +101,7 @@ bool DefinesGpuAllocation(const OpRcPtr & op)
 }
 }
 
-void CreateGpuAllocationNoOp(OpRcPtrVec & ops,
-                                const AllocationData & allocationData)
+void CreateGpuAllocationNoOp(OpRcPtrVec & ops, const AllocationData & allocationData)
 {
     ops.push_back( std::make_shared<AllocationNoOp>(allocationData) );
 }
@@ -171,6 +172,38 @@ bool GetGpuAllocation(AllocationData & allocation,
 }
 }
 
+OpRcPtrVec Create3DLut(const OpRcPtrVec & ops, unsigned edgelen)
+{
+    if(ops.size()==0) return OpRcPtrVec();
+
+    const unsigned lut3DEdgeLen   = edgelen;
+    const unsigned lut3DNumPixels = lut3DEdgeLen*lut3DEdgeLen*lut3DEdgeLen;
+
+    Lut3DOpDataRcPtr lut = std::make_shared<Lut3DOpData>(lut3DEdgeLen);
+
+    // Allocate 3D LUT image, RGBA
+    std::vector<float> lut3D(lut3DNumPixels*4);
+    GenerateIdentityLut3D(&lut3D[0], lut3DEdgeLen, 4, LUT3DORDER_FAST_BLUE);
+
+    // Apply the lattice ops to it
+    for(const auto & op : ops)
+    {
+        op->apply(&lut3D[0], &lut3D[0], lut3DNumPixels);
+    }
+
+    // Convert the RGBA image to an RGB image, in place.
+    auto & lutArray = lut->getArray();
+    for(unsigned i=0; i<lut3DNumPixels; ++i)
+    {
+        lutArray[3*i+0] = lut3D[4*i+0];
+        lutArray[3*i+1] = lut3D[4*i+1];
+        lutArray[3*i+2] = lut3D[4*i+2];
+    }
+
+    OpRcPtrVec newOps;
+    CreateLut3DOp(newOps, lut, TRANSFORM_DIR_FORWARD);
+    return newOps;
+}
 
 void PartitionGPUOps(OpRcPtrVec & gpuPreOps,
                         OpRcPtrVec & gpuLatticeOps,
@@ -253,48 +286,6 @@ void PartitionGPUOps(OpRcPtrVec & gpuPreOps,
     }
 }
 
-void AssertPartitionIntegrity(OpRcPtrVec & gpuPreOps,
-                                OpRcPtrVec & gpuLatticeOps,
-                                OpRcPtrVec & gpuPostOps)
-{
-    // All gpu pre ops must support analytical gpu shader generation
-    for(unsigned int i=0; i<gpuPreOps.size(); ++i)
-    {
-        if(!gpuPreOps[i]->supportedByLegacyShader())
-        {
-            throw Exception("Partition failed check. One gpuPreOps op does not support GPU.");
-        }
-    }
-
-    // If there are any lattice ops, at lease one must NOT support GPU
-    // shaders (otherwise this block isnt necessary!)
-    if(gpuLatticeOps.size()>0)
-    {
-        bool requiresLattice = false;
-        for(unsigned int i=0; i<gpuLatticeOps.size() && !requiresLattice; ++i)
-        {
-            if (!gpuLatticeOps[i]->supportedByLegacyShader())
-            {
-                requiresLattice = true;
-            }
-        }
-
-        if(!requiresLattice)
-        {
-            throw Exception("Partition failed check. All gpuLatticeOps ops do support GPU.");
-        }
-    }
-
-    // All gpu post ops must support analytical gpu shader generation
-    for(unsigned int i=0; i<gpuPostOps.size(); ++i)
-    {
-        if(!gpuPostOps[i]->supportedByLegacyShader())
-        {
-            throw Exception("Partition failed check. One gpuPostOps op does not support GPU.");
-        }
-    }
-}
-
 ////////////////////////////////////////////////////////////////////////////
 
 namespace
@@ -326,8 +317,7 @@ public:
 
     ConstOpCPURcPtr getCPUOp(bool /*fastLogExpPow*/) const override { return nullptr; }
 
-    void apply(void * img, long numPixels) const override
-    { apply(img, img, numPixels); }
+    void apply(void * img, long numPixels) const override {}
 
     void apply(const void * inImg, void * outImg, long numPixels) const override
     { memcpy(outImg, inImg, numPixels * 4 * sizeof(float)); }
@@ -367,8 +357,7 @@ void FileNoOp::dumpMetadata(ProcessorMetadataRcPtr & metadata) const
 
 std::string FileNoOp::getCacheID() const
 {
-    throw Exception("FileNoOp::getCacheID should never be called. "
-                    "NoOp types should have been removed.");
+    return m_fileReference;
 }
 
 }
@@ -414,8 +403,7 @@ public:
 
     ConstOpCPURcPtr getCPUOp(bool /*fastLogExpPow*/) const override { return nullptr; }
 
-    void apply(void * img, long numPixels) const override
-    { apply(img, img, numPixels); }
+    void apply(void * img, long numPixels) const override {}
 
     void apply(const void * inImg, void * outImg, long numPixels) const override
     { memcpy(outImg, inImg, numPixels * 4 * sizeof(float)); }
@@ -453,8 +441,7 @@ void LookNoOp::dumpMetadata(ProcessorMetadataRcPtr & metadata) const
 
 std::string LookNoOp::getCacheID() const
 {
-    throw Exception("LookNoOp::getCacheID should never be called. "
-                    "NoOp types should have been removed.");
+    return m_look;
 }
 
 }

@@ -2,6 +2,7 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 #include <cstdlib>
+#include <math.h>
 #include <sstream>
 
 #include <OpenColorIO/OpenColorIO.h>
@@ -279,47 +280,48 @@ struct PackedImageDesc::Impl
 
     void validate() const
     {
-        if(m_data==nullptr)
+        if (m_data == nullptr)
         {
             throw Exception("PackedImageDesc Error: Invalid image buffer.");
         }
 
-        if(m_width<=0 || m_height<=0)
+        if (m_width <= 0 || m_height <= 0 )
         {
             throw Exception("PackedImageDesc Error: Invalid image dimensions.");
         }
 
-        if(m_chanStrideBytes<0 || m_chanStrideBytes==AutoStride)
+        if (std::abs(m_chanStrideBytes) < GetChannelSizeInBytes(m_bitDepth)
+            || m_chanStrideBytes == AutoStride)
         {
             throw Exception("PackedImageDesc Error: Invalid channel stride.");
         }
 
-        if(m_numChannels<3 || m_numChannels>4)
+        if (m_numChannels < 3 || m_numChannels > 4)
         {
             throw Exception("PackedImageDesc Error: Invalid channel number.");
         }
 
-        if((m_chanStrideBytes*m_numChannels)>m_xStrideBytes)
+        if (std::abs(m_chanStrideBytes * m_numChannels) > std::abs(m_xStrideBytes))
         {
             throw Exception("PackedImageDesc Error: The channel and x strides are inconsistent.");
         }
 
-        if(m_xStrideBytes<0 || m_xStrideBytes==AutoStride)
+        if (m_xStrideBytes == AutoStride)
         {
             throw Exception("PackedImageDesc Error: Invalid x stride.");
         }
 
-        if(m_yStrideBytes<0 || m_yStrideBytes==AutoStride)
+        if (m_yStrideBytes == AutoStride)
         {
             throw Exception("PackedImageDesc Error: Invalid y stride.");
         }
 
-        if((m_xStrideBytes*m_width)>m_yStrideBytes)
+        if ((std::abs(m_xStrideBytes) * m_width) > std::abs(m_yStrideBytes))
         {
             throw Exception("PackedImageDesc Error: The x and y strides are inconsistent.");
         }
 
-        if(m_bitDepth==BIT_DEPTH_UNKNOWN)
+        if (m_bitDepth == BIT_DEPTH_UNKNOWN)
         {
             throw Exception("PackedImageDesc Error: Unknown bit-depth of the image buffer.");
         }
@@ -610,22 +612,22 @@ struct PlanarImageDesc::Impl
 
     void validate() const
     {
-        if(m_xStrideBytes<0 || m_xStrideBytes==AutoStride)
+        if (m_xStrideBytes == AutoStride)
         {
             throw Exception("PlanarImageDesc Error: Invalid x stride.");
         }
 
-        if(m_yStrideBytes<0 || m_yStrideBytes==AutoStride)
+        if (m_yStrideBytes == AutoStride)
         {
             throw Exception("PlanarImageDesc Error: Invalid y stride.");
         }
 
-        if((m_xStrideBytes*m_width)>m_yStrideBytes)
+        if (std::abs(m_xStrideBytes*m_width) > std::abs(m_yStrideBytes))
         {
             throw Exception("PlanarImageDesc Error: The x and y strides are inconsistent.");
         }
 
-        if(m_bitDepth==BIT_DEPTH_UNKNOWN)
+        if (m_bitDepth == BIT_DEPTH_UNKNOWN)
         {
             throw Exception("PlanarImageDesc Error: Unknown bit-depth of the image buffer.");
         }
@@ -633,7 +635,7 @@ struct PlanarImageDesc::Impl
 };
 
 PlanarImageDesc::PlanarImageDesc(void * rData, void * gData, void * bData, void * aData,
-                                    long width, long height)
+                                 long width, long height)
     :   ImageDesc()
     ,   m_impl(new PlanarImageDesc::Impl())
 {
@@ -666,10 +668,10 @@ PlanarImageDesc::PlanarImageDesc(void * rData, void * gData, void * bData, void 
 }
 
 PlanarImageDesc::PlanarImageDesc(void * rData, void * gData, void * bData, void * aData,
-                                    long width, long height,
-                                    BitDepth bitDepth,
-                                    ptrdiff_t xStrideBytes,
-                                    ptrdiff_t yStrideBytes)
+                                 long width, long height,
+                                 BitDepth bitDepth,
+                                 ptrdiff_t xStrideBytes,
+                                 ptrdiff_t yStrideBytes)
     :   ImageDesc()
     ,   m_impl(new PlanarImageDesc::Impl())
 {
@@ -693,13 +695,10 @@ PlanarImageDesc::PlanarImageDesc(void * rData, void * gData, void * bData, void 
     getImpl()->m_width  = width;
     getImpl()->m_height = height;
 
-    getImpl()->m_xStrideBytes = (xStrideBytes == AutoStride)
-        ? sizeof(BitDepthInfo<BIT_DEPTH_F32>::Type) : xStrideBytes;
+    const unsigned oneChannelInBytes = GetChannelSizeInBytes(bitDepth);
 
-    if(xStrideBytes==AutoStride && bitDepth!=BIT_DEPTH_F32)
-    {
-        throw Exception("PlanarImageDesc Error: Mimsmatch between the bit-depth and channel stride.");
-    }
+    getImpl()->m_xStrideBytes = (xStrideBytes == AutoStride)
+        ? oneChannelInBytes : xStrideBytes;
 
     getImpl()->m_yStrideBytes = (yStrideBytes == AutoStride)
         ? getImpl()->m_xStrideBytes * width : yStrideBytes;
