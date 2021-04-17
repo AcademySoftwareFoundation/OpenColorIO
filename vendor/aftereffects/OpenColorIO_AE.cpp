@@ -57,7 +57,8 @@ static PF_Err GlobalSetup(
                                 PF_OutFlag2_FLOAT_COLOR_AWARE       |
                                 PF_OutFlag2_PPRO_DO_NOT_CLONE_SEQUENCE_DATA_FOR_RENDER |
                                 PF_OutFlag2_SUPPORTS_GET_FLATTENED_SEQUENCE_DATA |
-                                PF_OutFlag2_SUPPORTS_THREADED_RENDERING;
+                                PF_OutFlag2_SUPPORTS_THREADED_RENDERING |
+                                PF_OutFlag2_MUTABLE_RENDER_SEQUENCE_DATA_SLOWER;
     
     
     GlobalSetup_GL();
