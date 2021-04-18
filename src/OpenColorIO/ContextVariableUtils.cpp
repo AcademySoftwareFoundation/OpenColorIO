@@ -6,6 +6,7 @@
 
 #include "ContextVariableUtils.h"
 #include "utils/StringUtils.h"
+#include "Platform.h"
 
 
 #if defined(__APPLE__) && !defined(__IPHONE__)
@@ -19,6 +20,12 @@ extern char ** environ;
 namespace
 {
 
+#ifdef _WIN32
+inline wchar_t ** GetEnviron()
+{
+    return _wenviron;
+}
+#else
 inline char ** GetEnviron()
 {
 #if __IPHONE__
@@ -30,6 +37,7 @@ inline char ** GetEnviron()
     return environ;
 #endif
 }
+#endif
 
 } // anon.
 
@@ -71,11 +79,28 @@ void LoadEnvironment(EnvMap & map, bool update)
 {
     // First, add or update the context variables with existing env. variables.
 
+#ifdef _WIN32
+    if (GetEnviron() == NULL) {
+        // If the program starts with "main" instead of "wmain", then wenviron returns NULL until
+        // the first call to either wgetenv or wputenv. Calling wgetenv, even with an empty
+        // variable name, will populate wenviron correctly. We also use wgetenv_s (which requires
+        // a valid size pointer) to suppress safety warnings about wgetenv during the compile.
+        size_t sz;
+        _wgetenv_s(&sz, NULL, 0, L"");
+    }
+
+    for (wchar_t **env = GetEnviron(); *env != NULL; ++env)
+    {
+        // Split environment up into std::map[name] = value.
+
+        const std::string env_str = Platform::Utf16ToUtf8((wchar_t*)*env);
+#else
     for (char **env = GetEnviron(); *env != NULL; ++env)
     {
         // Split environment up into std::map[name] = value.
 
         const std::string env_str = (char*)*env;
+#endif
         const int pos = static_cast<int>(env_str.find_first_of('='));
 
         const std::string name  = env_str.substr(0, pos);

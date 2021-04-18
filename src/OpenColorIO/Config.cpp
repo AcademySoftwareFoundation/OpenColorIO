@@ -1180,7 +1180,7 @@ ConstConfigRcPtr Config::CreateFromEnv()
 
 ConstConfigRcPtr Config::CreateFromFile(const char * filename)
 {
-    std::ifstream istream(filename);
+    std::ifstream istream = Platform::CreateInputFileStream(filename, std::ios_base::in);
     if (istream.fail())
     {
         std::ostringstream os;

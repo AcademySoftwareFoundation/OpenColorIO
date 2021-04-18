@@ -17,17 +17,35 @@ OCIO_ADD_TEST(Platform, envVariable)
     // Only validates the public API.
     // Complete validations are done below using the private methods.
 
-    const char * path = OCIO::GetEnvVariable("PATH");
+    const char * path = OCIO::GetEnvVariable(u8"PATH");
     OCIO_CHECK_ASSERT(path && *path);
 
-    OCIO::SetEnvVariable("MY_DUMMY_ENV", "SomeValue");
-    const char * value = OCIO::GetEnvVariable("MY_DUMMY_ENV");
+    OCIO::SetEnvVariable(u8"MY_DUMMY_ENV", u8"SomeValue");
+    const char * value = OCIO::GetEnvVariable(u8"MY_DUMMY_ENV");
     OCIO_CHECK_ASSERT(value && *value);
-    OCIO_CHECK_EQUAL(std::string(value), "SomeValue");
+    OCIO_CHECK_EQUAL(std::string(value), u8"SomeValue");
 
-    OCIO::UnsetEnvVariable("MY_DUMMY_ENV");
-    value = OCIO::GetEnvVariable("MY_DUMMY_ENV");
+#ifdef _WIN32
+    // Assert that we retrieve the correct value from the Windows API too.
+    uint32_t win_env_sz = GetEnvironmentVariable(L"MY_DUMMY_ENV", NULL, 0);
+    OCIO_CHECK_NE(win_env_sz, 0);
+
+    std::wstring win_env_value(win_env_sz, 0);
+    GetEnvironmentVariable(L"MY_DUMMY_ENV", &win_env_value[0], win_env_sz);
+    win_env_value.pop_back(); // Remove null terminator that interferes with comparison
+    OCIO_CHECK_ASSERT(win_env_value == L"SomeValue");
+#endif
+
+    OCIO::UnsetEnvVariable(u8"MY_DUMMY_ENV");
+    value = OCIO::GetEnvVariable(u8"MY_DUMMY_ENV");
     OCIO_CHECK_ASSERT(!value || !*value);
+
+#ifdef _WIN32
+    // Assert that the variable has been unset from the Windows API too, which will result in
+    // GetEnvironmentVariable returning 0 and GetLastError returning ERROR_ENVVAR_NOT_FOUND.
+    OCIO_CHECK_EQUAL(GetEnvironmentVariable(L"MY_DUMMY_ENV", NULL, 0), 0);
+    OCIO_CHECK_EQUAL(GetLastError(), ERROR_ENVVAR_NOT_FOUND);
+#endif
 }
 
 OCIO_ADD_TEST(Platform, getenv)
@@ -52,6 +70,32 @@ OCIO_ADD_TEST(Platform, getenv)
 
     OCIO_CHECK_ASSERT(OCIO::Platform::Getenv("PATH", env));
     OCIO_CHECK_ASSERT(!env.empty());
+
+#ifdef _WIN32
+    // Assert that all results match in Windows API.
+
+    // Assert this variable doesn't exist, which will result in GetEnvironmentVariable returning
+    // 0 and GetLastError returning ERROR_ENVVAR_NOT_FOUND.
+    OCIO_CHECK_EQUAL(GetEnvironmentVariable(L"NotExistingEnvVariable", NULL, 0), 0);
+    OCIO_CHECK_EQUAL(GetLastError(), ERROR_ENVVAR_NOT_FOUND);
+
+    // Assert this variable does exist.
+    OCIO_CHECK_NE(GetEnvironmentVariable(L"PATH", NULL, 0), 0);
+
+    // Create a variable and test that it's retrievable through the Windows API.
+    OCIO::Platform::Setenv(u8"MY_WINDOWS_DUMMY_ENV", u8"SomeValue");
+    uint32_t win_env_sz = GetEnvironmentVariable(L"MY_WINDOWS_DUMMY_ENV", NULL, 0);
+    OCIO_CHECK_NE(win_env_sz, 0);
+
+    std::wstring win_env_value(win_env_sz, 0);
+    GetEnvironmentVariable(L"MY_WINDOWS_DUMMY_ENV", &win_env_value[0], win_env_sz);
+    win_env_value.pop_back(); // Remove null terminator that interferes with comparison
+    OCIO_CHECK_ASSERT(win_env_value == L"SomeValue");
+
+    OCIO::Platform::Unsetenv(u8"MY_WINDOWS_DUMMY_ENV");
+    OCIO_CHECK_EQUAL(GetEnvironmentVariable(L"MY_WINDOWS_DUMMY_ENV", NULL, 0), 0);
+    OCIO_CHECK_EQUAL(GetLastError(), ERROR_ENVVAR_NOT_FOUND);
+#endif
 }
 
 OCIO_ADD_TEST(Platform, setenv)
@@ -62,61 +106,61 @@ OCIO_ADD_TEST(Platform, setenv)
         Guard() = default;
         ~Guard()
         {
-            OCIO::Platform::Unsetenv("MY_DUMMY_ENV");
-            OCIO::Platform::Unsetenv("MY_WINDOWS_DUMMY_ENV");
+            OCIO::Platform::Unsetenv(u8"MY_DUMMY_ENV");
+            OCIO::Platform::Unsetenv(u8"MY_WINDOWS_DUMMY_ENV");
         }
     } guard;
 
     {
-        OCIO::Platform::Setenv("MY_DUMMY_ENV", "SomeValue");
+        OCIO::Platform::Setenv(u8"MY_DUMMY_ENV", u8"SomeValue");
         std::string env;
-        OCIO_CHECK_ASSERT(OCIO::Platform::Getenv("MY_DUMMY_ENV", env));
+        OCIO_CHECK_ASSERT(OCIO::Platform::Getenv(u8"MY_DUMMY_ENV", env));
         OCIO_CHECK_ASSERT(!env.empty());
 
-        OCIO_CHECK_ASSERT(0==std::strcmp("SomeValue", env.c_str()));
-        OCIO_CHECK_EQUAL(strlen("SomeValue"), env.size());
+        OCIO_CHECK_ASSERT(0==std::strcmp(u8"SomeValue", env.c_str()));
+        OCIO_CHECK_EQUAL(strlen(u8"SomeValue"), env.size());
     }
     {
-        OCIO::Platform::Setenv("MY_DUMMY_ENV", " ");
+        OCIO::Platform::Setenv(u8"MY_DUMMY_ENV", u8" ");
         std::string env;
-        OCIO_CHECK_ASSERT(OCIO::Platform::Getenv("MY_DUMMY_ENV", env));
+        OCIO_CHECK_ASSERT(OCIO::Platform::Getenv(u8"MY_DUMMY_ENV", env));
         OCIO_CHECK_ASSERT(!env.empty());
 
-        OCIO_CHECK_ASSERT(0==std::strcmp(" ", env.c_str()));
-        OCIO_CHECK_EQUAL(std::strlen(" "), env.size());
+        OCIO_CHECK_ASSERT(0==std::strcmp(u8" ", env.c_str()));
+        OCIO_CHECK_EQUAL(std::strlen(u8" "), env.size());
     }
     {
-        OCIO::Platform::Unsetenv("MY_DUMMY_ENV");
+        OCIO::Platform::Unsetenv(u8"MY_DUMMY_ENV");
         std::string env;
-        OCIO_CHECK_ASSERT(!OCIO::Platform::Getenv("MY_DUMMY_ENV", env));
+        OCIO_CHECK_ASSERT(!OCIO::Platform::Getenv(u8"MY_DUMMY_ENV", env));
         OCIO_CHECK_ASSERT(env.empty());
     }
 #ifdef _WIN32
     {
-        SetEnvironmentVariable("MY_WINDOWS_DUMMY_ENV", "1");
+        SetEnvironmentVariable(L"MY_WINDOWS_DUMMY_ENV", L"1");
         std::string env;
-        OCIO_CHECK_ASSERT(OCIO::Platform::Getenv("MY_WINDOWS_DUMMY_ENV", env));
-        OCIO_CHECK_EQUAL(env, std::string("1"));
+        OCIO_CHECK_ASSERT(OCIO::Platform::Getenv(u8"MY_WINDOWS_DUMMY_ENV", env));
+        OCIO_CHECK_EQUAL(env, std::string(u8"1"));
     }
     {
-        SetEnvironmentVariable("MY_WINDOWS_DUMMY_ENV", " ");
+        SetEnvironmentVariable(L"MY_WINDOWS_DUMMY_ENV", L" ");
         std::string env;
-        OCIO_CHECK_ASSERT(OCIO::Platform::Getenv("MY_WINDOWS_DUMMY_ENV", env));
-        OCIO_CHECK_EQUAL(env, std::string(" "));
+        OCIO_CHECK_ASSERT(OCIO::Platform::Getenv(u8"MY_WINDOWS_DUMMY_ENV", env));
+        OCIO_CHECK_EQUAL(env, std::string(u8" "));
     }
     {
         // Windows SetEnvironmentVariable() sets the env. variable to empty like
         // the Linux ::setenv() in contradiction with the Windows _putenv_s().
 
-        SetEnvironmentVariable("MY_WINDOWS_DUMMY_ENV", "");
+        SetEnvironmentVariable(L"MY_WINDOWS_DUMMY_ENV", L"");
         std::string env;
-        OCIO_CHECK_ASSERT(OCIO::Platform::Getenv("MY_WINDOWS_DUMMY_ENV", env));
+        OCIO_CHECK_ASSERT(OCIO::Platform::Getenv(u8"MY_WINDOWS_DUMMY_ENV", env));
         OCIO_CHECK_ASSERT(env.empty());
     }
     {
-        SetEnvironmentVariable("MY_WINDOWS_DUMMY_ENV", nullptr);
+        SetEnvironmentVariable(L"MY_WINDOWS_DUMMY_ENV", nullptr);
         std::string env;
-        OCIO_CHECK_ASSERT(!OCIO::Platform::Getenv("MY_WINDOWS_DUMMY_ENV", env));
+        OCIO_CHECK_ASSERT(!OCIO::Platform::Getenv(u8"MY_WINDOWS_DUMMY_ENV", env));
         OCIO_CHECK_ASSERT(env.empty());
     }
 #endif
@@ -159,4 +203,25 @@ OCIO_ADD_TEST(Platform, create_temp_filename)
 
     // Check that it only generates unique random strings.
     OCIO_CHECK_EQUAL(uids.size(), TestMax);
+}
+
+OCIO_ADD_TEST(Platform, utf8_utf16_convert)
+{
+    // Define the same string in both UTF-8 and UTF-16LE encoding:
+    // - Hiragana letter KO:        xe3, x81, x93       x3053
+    // - Hiragana letter N:         xe3, x82, x93       x3093
+    // - Hiragana letter NI:        xe3, x81, xab       x306b
+    // - Hiragana letter CHI:       xe3, x81, xa1       x3061
+    // - Hiragana letter HA/WA:     xe3, x81, xaf       x306f
+    std::string utf8_str = "\xe3\x81\x93\xe3\x82\x93\xe3\x81\xab\xe3\x81\xa1\xe3\x81\xaf";
+    std::wstring utf16_str = L"\x3053\x3093\x306b\x3061\x306f";
+
+    // Convert each string to the other encoding and assert that the result matches the other
+    std::string utf16_to_utf8 = OCIO::Platform::Utf16ToUtf8(utf16_str);
+    std::wstring utf8_to_utf16 = OCIO::Platform::Utf8ToUtf16(utf8_str);
+
+    OCIO_CHECK_EQUAL(utf16_to_utf8, utf8_str);
+
+    // wstring can't be sent to cout, so we run an assert
+    OCIO_CHECK_ASSERT(wcscmp(utf8_to_utf16.c_str(), utf16_str.c_str()) == 0);
 }

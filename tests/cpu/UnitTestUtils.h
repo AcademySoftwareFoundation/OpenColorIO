@@ -11,6 +11,7 @@
 
 #include "MathUtils.h"
 #include "Op.h"
+#include "Platform.h"
 #include "pystring/pystring.h"
 
 namespace OCIO_NAMESPACE
@@ -43,7 +44,7 @@ OCIO_SHARED_PTR<LocalCachedFile> LoadTestFile(
 
     // Open the filePath
     std::ifstream filestream;
-    filestream.open(filePath.c_str(), mode);
+    Platform::OpenInputFileStream(filestream, filePath.c_str(), mode);
 
     if (!filestream.is_open())
     {

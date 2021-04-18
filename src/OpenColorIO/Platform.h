@@ -15,11 +15,26 @@
 #define WIN32_LEAN_AND_MEAN
 #endif
 
+// Many Win32 API functions are split into two versions: ANSI-only and Unicode, marked with an A or
+// W suffix respectively. Calling a documented function will actually resolve to one of these
+// variants depending on whether the calling code has declared that it's Unicode-compatible or not
+// (by defining UNICODE). Example excerpt from Windows header:
+//
+// #ifdef UNICODE
+// #define SetWindowText  SetWindowTextW
+// #else
+// #define SetWindowText  SetWindowTextA
+// #endif
+//
+// By defining UNICODE, we ensure that any documented function will resolve to its Unicode version.
+#define UNICODE
+
 #include <windows.h>
 
 #endif // _WIN32
 
 
+#include <fstream>
 #include <string>
 
 
@@ -72,6 +87,21 @@ void AlignedFree(void * memBlock);
 //       and various platform specific settings). To be safe, add some code to remove
 //       the file if created.
 std::string CreateTempFilename(const std::string & filenameExt);
+
+// Create an input file stream (std::ifstream) using a UTF-8 filename on any platform.
+std::ifstream CreateInputFileStream(const char * filename, std::ios_base::openmode mode);
+
+// Open an input file stream (std::ifstream) using a UTF-8 filename on any platform.
+void OpenInputFileStream(std::ifstream & stream, const char * filename, std::ios_base::openmode mode);
+
+// Create a unique hash of a file provided as a UTF-8 filename on any platform.
+std::string CreateFileContentHash(const std::string &filename);
+
+// Convert UTF-8 string to UTF-16LE.
+std::wstring Utf8ToUtf16(std::string str);
+
+// Convert UTF-16LE string to UTF-8.
+std::string Utf16ToUtf8(std::wstring str);
 
 }
 
