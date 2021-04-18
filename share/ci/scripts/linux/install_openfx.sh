@@ -22,8 +22,6 @@ fi
 
 sudo mkdir -p /usr/local/include/openfx
 sudo cp include/*.h /usr/local/include/openfx
-sudo mkdir -p /usr/local/share/openfx
-sudo cp -r Support /usr/local/share/openfx
 
 cd ..
 rm -rf openfx

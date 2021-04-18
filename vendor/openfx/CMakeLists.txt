@@ -8,14 +8,14 @@ set(SOURCES
     OCIOUtils.cpp
 )
 set(OFXS_SOURCES
-    ${openfx_SUPPORT_DIR}/Library/ofxsCore.cpp
-    ${openfx_SUPPORT_DIR}/Library/ofxsImageEffect.cpp
-    ${openfx_SUPPORT_DIR}/Library/ofxsInteract.cpp
-    ${openfx_SUPPORT_DIR}/Library/ofxsLog.cpp
-    ${openfx_SUPPORT_DIR}/Library/ofxsMultiThread.cpp
-    ${openfx_SUPPORT_DIR}/Library/ofxsParams.cpp
-    ${openfx_SUPPORT_DIR}/Library/ofxsProperty.cpp
-    ${openfx_SUPPORT_DIR}/Library/ofxsPropertyValidation.cpp
+    Support/Library/ofxsCore.cpp
+    Support/Library/ofxsImageEffect.cpp
+    Support/Library/ofxsInteract.cpp
+    Support/Library/ofxsLog.cpp
+    Support/Library/ofxsMultiThread.cpp
+    Support/Library/ofxsParams.cpp
+    Support/Library/ofxsProperty.cpp
+    Support/Library/ofxsPropertyValidation.cpp
 )
 set(PLIST
     ${CMAKE_SOURCE_DIR}/share/openfx/Info.plist
@@ -34,37 +34,9 @@ if(NOT BUILD_SHARED_LIBS)
     )
 endif()
 
-# Needed to define OpenFX Support Library visibility macros on Linux
-if(UNIX AND NOT APPLE)
-    target_compile_definitions(ofxplugin 
-        PRIVATE
-            linux
-    )
-endif()
-
-# These source files may be a future byproduct of OCIO_INSTALL_EXT_PACKAGES. 
-# Skip existence validation unless an explicit install location is provided.
-if(NOT DEFINED openfx_ROOT)
-    set_source_files_properties(${OFXS_SOURCES} PROPERTIES 
-        GENERATED TRUE)
-endif()
-
 # Disable known compiler warnings from OpenFX Support Library
 if(MSVC)
     set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} /wd4996 /wd4101")
-else()
-    set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} -Wno-deprecated \
-                                                          -Wno-deprecated-declarations \
-                                                          -Wno-switch-enum \
-                                                          -Wno-dynamic-exception-spec \
-                                                          -Wno-catch-value \
-                                                          -Wno-unknown-warning-option")
-endif()
-
-# OpenFX Support Library source doesn't currently support C++17
-set(OFX_CXX_STANDARD ${CMAKE_CXX_STANDARD})
-if(${CMAKE_CXX_STANDARD} GREATER_EQUAL 17)
-    set(OFX_CXX_STANDARD 11)
 endif()
 
 set_target_properties(ofxplugin PROPERTIES
@@ -72,15 +44,13 @@ set_target_properties(ofxplugin PROPERTIES
     OUTPUT_NAME "OpenColorIO"
     SUFFIX ".ofx"
     COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS}"
-    CXX_STANDARD ${OFX_CXX_STANDARD}
 )
 
 target_include_directories(ofxplugin
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}
+        Support/include
         ${openfx_INCLUDE_DIR}
-        ${openfx_SUPPORT_DIR}/include
-        ${openfx_SUPPORT_DIR}/Plugins/include
         ${CMAKE_SOURCE_DIR}/include/
         ${CMAKE_BINARY_DIR}/include/
 )

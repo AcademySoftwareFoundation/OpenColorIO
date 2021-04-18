@@ -24,8 +24,8 @@ OCIOColorSpace::OCIOColorSpace(OfxImageEffectHandle handle)
 void OCIOColorSpace::render(const OFX::RenderArguments & args)
 {
     // Get images
-    std::auto_ptr<OFX::Image> dst(dstClip_->fetchImage(args.time));
-    std::auto_ptr<OFX::Image> src(srcClip_->fetchImage(args.time));
+    std::unique_ptr<OFX::Image> dst(dstClip_->fetchImage(args.time));
+    std::unique_ptr<OFX::Image> src(srcClip_->fetchImage(args.time));
 
     // Get color spaces
     std::string srcCsName = getChoiceParamOption(srcCsNameParam_);

@@ -6,7 +6,6 @@
 # Variables defined by this module:
 #   openfx_FOUND - If FALSE, do not try to include openfx
 #   openfx_INCLUDE_DIR - Where to find ofxCore.h
-#   openfx_SUPPORT_DIR - Where to find LibraryofxsImageEffect.cpp
 #   openfx_VERSION - The version of the library
 #
 # Targets defined by this module:
@@ -40,18 +39,6 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
             include/openfx
     )
 
-    # Find support library directory
-    find_path(openfx_SUPPORT_DIR
-        NAMES
-            Library/ofxsImageEffect.cpp
-        HINTS
-            ${openfx_ROOT}
-        PATH_SUFFIXES
-            Support
-            openfx/Support
-            share/openfx/Support
-    )
-
     # TODO: Find method for setting openfx_VERSION from found openfx headers.
     #       There are some changelog hints with version references, but 
     #       nothing appears to concretely indicate the current version.
@@ -65,7 +52,6 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
     find_package_handle_standard_args(openfx
         REQUIRED_VARS 
             openfx_INCLUDE_DIR
-            openfx_SUPPORT_DIR
     )
 endif()
 
@@ -84,12 +70,10 @@ if(NOT openfx_FOUND)
     set(openfx_FOUND TRUE)
     set(openfx_VERSION ${openfx_FIND_VERSION})
     set(openfx_INCLUDE_DIR "${_EXT_DIST_ROOT}/${CMAKE_INSTALL_INCLUDEDIR}/openfx")
-    set(openfx_SUPPORT_DIR "${_EXT_DIST_ROOT}/${CMAKE_INSTALL_DATAROOTDIR}/openfx/Support")
 
     if(_openfx_TARGET_CREATE)
         # Hack to let imported target be built from ExternalProject_Add
         file(MAKE_DIRECTORY ${openfx_INCLUDE_DIR})
-        file(MAKE_DIRECTORY ${openfx_SUPPORT_DIR})
 
         ExternalProject_Add(openfx_install
             GIT_REPOSITORY "https://github.com/ofxa/openfx.git"
@@ -97,23 +81,19 @@ if(NOT openfx_FOUND)
             GIT_CONFIG advice.detachedHead=false
             GIT_SHALLOW TRUE
             PREFIX "${_EXT_BUILD_ROOT}/openfx"
-            BUILD_BYPRODUCTS ${openfx_INCLUDE_DIR} ${openfx_SUPPORT_DIR}
+            BUILD_BYPRODUCTS ${openfx_INCLUDE_DIR}
             CONFIGURE_COMMAND ""
             BUILD_COMMAND
                 ${CMAKE_COMMAND} -E copy_directory
                 "${_EXT_BUILD_ROOT}/openfx/src/openfx_install/include"
                 "${openfx_INCLUDE_DIR}"
-                COMMAND
-                ${CMAKE_COMMAND} -E copy_directory
-                "${_EXT_BUILD_ROOT}/openfx/src/openfx_install/Support"
-                "${openfx_SUPPORT_DIR}"
             INSTALL_COMMAND ""
             CMAKE_ARGS ${openfx_CMAKE_ARGS}
             EXCLUDE_FROM_ALL TRUE
         )
 
         add_dependencies(openfx::module openfx_install)
-        message(STATUS "Installing openfx: ${openfx_INCLUDE_DIR} ${openfx_SUPPORT_DIR} (version \"${openfx_VERSION}\")")
+        message(STATUS "Installing openfx: ${openfx_INCLUDE_DIR} (version \"${openfx_VERSION}\")")
     endif()
 endif()
 
@@ -125,5 +105,5 @@ if(_openfx_TARGET_CREATE)
         INTERFACE_INCLUDE_DIRECTORIES ${openfx_INCLUDE_DIR}
     )
 
-    mark_as_advanced(openfx_INCLUDE_DIR openfx_SUPPORT_DIR)
+    mark_as_advanced(openfx_INCLUDE_DIR)
 endif()
