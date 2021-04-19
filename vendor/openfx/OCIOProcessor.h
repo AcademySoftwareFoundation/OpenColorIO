@@ -32,7 +32,7 @@ public:
     void setTransform(OCIO::ConstTransformRcPtr tr);
 
     /* Process image on multiple threads */
-    void multiThreadProcessImages(OfxRectI procWindow);
+    void multiThreadProcessImages(OfxRectI procWindow) override;
 
 };
 
