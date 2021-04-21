@@ -2979,11 +2979,12 @@ protected:
  *    //
  *    // The two potential scenarios are:
  *    //
- *    //   1. Instantiate the legacy shader description.  The color processor
- *    //      is baked down to contain at most one 3D LUT and no 1D LUTs.
+ *    //   1. Instantiate the generic shader description.  The color processor
+ *    //      is used as-is (i.e. without any baking step) and could contain
+ *    //      any number of 1D & 3D luts.
  *    //
- *    //      This is the v1 behavior and will remain part of OCIO v2
- *    //      for backward compatibility.
+ *    //      This is the default OCIO v2 behavior and allows a much better
+ *    //      match between the CPU and GPU renderers.
  *    //
  *    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::Create();
  *    //
