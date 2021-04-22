@@ -22,86 +22,6 @@
 namespace OCIO_NAMESPACE
 {
 
-namespace
-{
-// Linear
-inline float lerp(float a, float b, float z)
-{
-    return (b - a) * z + a;
-}
-
-inline void lerp_rgb(float * out, float * a, float * b, float * z)
-{
-    out[0] = (b[0] - a[0]) * z[0] + a[0];
-    out[1] = (b[1] - a[1]) * z[1] + a[1];
-    out[2] = (b[2] - a[2]) * z[2] + a[2];
-}
-
-// Bilinear
-inline float lerp(float a, float b, float c, float d, float y, float z)
-{
-    return lerp(lerp(a, b, z), lerp(c, d, z), y);
-}
-
-inline void lerp_rgb(float * out, float * a, float * b, float * c,
-                     float * d, float * y, float * z)
-{
-    float v1[3];
-    float v2[3];
-
-    lerp_rgb(v1, a, b, z);
-    lerp_rgb(v2, c, d, z);
-    lerp_rgb(out, v1, v2, y);
-}
-
-// Trilinear
-inline float lerp(float a, float b, float c, float d,
-                  float e, float f, float g, float h,
-                  float x, float y, float z)
-{
-    return lerp(lerp(a,b,c,d,y,z), lerp(e,f,g,h,y,z), x);
-}
-
-inline void lerp_rgb(float * out, float * a, float * b, float * c, float * d,
-                     float * e, float * f, float * g, float * h,
-                     float * x, float * y, float * z)
-{
-    float v1[3];
-    float v2[3];
-
-    lerp_rgb(v1, a,b,c,d,y,z);
-    lerp_rgb(v2, e,f,g,h,y,z);
-    lerp_rgb(out, v1, v2, x);
-}
-
-inline float lookupNearest_3D(int rIndex, int gIndex, int bIndex,
-                              int size_red, int size_green, int size_blue,
-                              const float * simple_rgb_lut, int channelIndex)
-{
-    return simple_rgb_lut[GetLut3DIndex_RedFast(rIndex, gIndex, bIndex,
-                                                size_red, size_green, size_blue)
-                          + channelIndex];
-}
-
-inline void lookupNearest_3D_rgb(float * rgb,
-                                 int rIndex, int gIndex, int bIndex,
-                                 int size_red, int size_green, int size_blue,
-                                 const float * simple_rgb_lut)
-{
-    int offset = GetLut3DIndex_RedFast(rIndex, gIndex, bIndex, size_red, size_green, size_blue);
-    rgb[0] = simple_rgb_lut[offset];
-    rgb[1] = simple_rgb_lut[offset + 1];
-    rgb[2] = simple_rgb_lut[offset + 2];
-}
-
-// Note: This function assumes that minVal is less than maxVal
-inline int clamp(float k, float minVal, float maxVal)
-{
-    return static_cast<int>(roundf(std::max(std::min(k, maxVal), minVal)));
-}
-
-}
-
 void GenerateIdentityLut3D(float * img, int edgeLen, int numChannels, Lut3DOrder lut3DOrder)
 {
     if (!img) return;
@@ -135,7 +55,6 @@ void GenerateIdentityLut3D(float * img, int edgeLen, int numChannels, Lut3DOrder
         throw Exception("Unknown Lut3DOrder.");
     }
 }
-
 
 int Get3DLutEdgeLenFromNumPixels(int numPixels)
 {

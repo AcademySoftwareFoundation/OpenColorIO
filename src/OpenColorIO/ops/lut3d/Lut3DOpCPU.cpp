@@ -185,12 +185,8 @@ private:
 };
 
 
-int GetLut3DIndexBlueFast(int indexR, int indexG, int indexB, long dim)
-{
-    return 3 * (indexB + (int)dim * (indexG + (int)dim * indexR));
-}
-
 #ifdef USE_SSE
+
 //----------------------------------------------------------------------------
 // RGB channel ordering.
 // Pixels ordered in such a way that the blue coordinate changes fastest,
@@ -257,7 +253,13 @@ inline void LookupNearest4(float* optLut,
     res[2] = _mm_load_ps(optLut + offsetInt[2]);
     res[3] = _mm_load_ps(optLut + offsetInt[3]);
 }
+
 #else
+
+int GetLut3DIndexBlueFast(int indexR, int indexG, int indexB, long dim)
+{
+    return 3 * (indexB + (int)dim * (indexG + (int)dim * indexR));
+}
 
 // Linear
 inline void lerp_rgb(float* out, float* a, float* b, float* z)
@@ -1398,7 +1400,7 @@ void InvLut3DRenderer::RangeTree::updateChildren(
     unsigned long cnt = 1;
 
     m_levels[level].child0offsets[0] = 0;
-    const unsigned long prevSize = (const unsigned long)hashes.size();
+    const unsigned long prevSize = static_cast<unsigned long>(hashes.size());
     for (unsigned long i = 1; i < prevSize; i++)
     {
         if (hashes[i] - hashes[i - 1] > gap)
@@ -1413,7 +1415,8 @@ void InvLut3DRenderer::RangeTree::updateChildren(
         m_levels[level].numChildren[i] = m_levels[level].child0offsets[i + 1] -
                                          m_levels[level].child0offsets[i];
     }
-    const unsigned long tmp = (const unsigned long)(hashes.size() - m_levels[level].child0offsets[levelSize - 1]);
+    const unsigned long tmp
+        = static_cast<unsigned long>(hashes.size() - m_levels[level].child0offsets[levelSize - 1]);
     m_levels[level].numChildren[levelSize - 1] = tmp;
 }
 
@@ -1509,7 +1512,7 @@ void InvLut3DRenderer::RangeTree::initialize(float *grvec, unsigned long gsz)
 
     // Calculate hash for indices.
 
-    const unsigned long cnt = (const unsigned long)m_baseInds.size();
+    const unsigned long cnt = static_cast<unsigned long>(m_baseInds.size());
     for (unsigned long i = 0; i < cnt; i++)
     {
         indsToHash(i);
