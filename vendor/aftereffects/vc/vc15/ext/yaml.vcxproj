@@ -35,23 +35,28 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\..\..\ext\yaml-cpp\src\aliasmanager.cpp" />
     <ClCompile Include="..\..\..\..\..\ext\yaml-cpp\src\binary.cpp" />
-    <ClCompile Include="..\..\..\..\..\ext\yaml-cpp\src\conversion.cpp" />
+    <ClCompile Include="..\..\..\..\..\ext\yaml-cpp\src\contrib\graphbuilder.cpp" />
+    <ClCompile Include="..\..\..\..\..\ext\yaml-cpp\src\contrib\graphbuilderadapter.cpp" />
+    <ClCompile Include="..\..\..\..\..\ext\yaml-cpp\src\convert.cpp" />
     <ClCompile Include="..\..\..\..\..\ext\yaml-cpp\src\directives.cpp" />
+    <ClCompile Include="..\..\..\..\..\ext\yaml-cpp\src\emit.cpp" />
     <ClCompile Include="..\..\..\..\..\ext\yaml-cpp\src\emitfromevents.cpp" />
     <ClCompile Include="..\..\..\..\..\ext\yaml-cpp\src\emitter.cpp" />
     <ClCompile Include="..\..\..\..\..\ext\yaml-cpp\src\emitterstate.cpp" />
     <ClCompile Include="..\..\..\..\..\ext\yaml-cpp\src\emitterutils.cpp" />
+    <ClCompile Include="..\..\..\..\..\ext\yaml-cpp\src\exceptions.cpp" />
     <ClCompile Include="..\..\..\..\..\ext\yaml-cpp\src\exp.cpp" />
-    <ClCompile Include="..\..\..\..\..\ext\yaml-cpp\src\iterator.cpp" />
+    <ClCompile Include="..\..\..\..\..\ext\yaml-cpp\src\memory.cpp" />
     <ClCompile Include="..\..\..\..\..\ext\yaml-cpp\src\node.cpp" />
     <ClCompile Include="..\..\..\..\..\ext\yaml-cpp\src\nodebuilder.cpp" />
-    <ClCompile Include="..\..\..\..\..\ext\yaml-cpp\src\nodeownership.cpp" />
+    <ClCompile Include="..\..\..\..\..\ext\yaml-cpp\src\nodeevents.cpp" />
+    <ClCompile Include="..\..\..\..\..\ext\yaml-cpp\src\node_data.cpp" />
     <ClCompile Include="..\..\..\..\..\ext\yaml-cpp\src\null.cpp" />
-    <ClCompile Include="..\..\..\..\..\ext\yaml-cpp\src\ostream.cpp" />
+    <ClCompile Include="..\..\..\..\..\ext\yaml-cpp\src\ostream_wrapper.cpp" />
+    <ClCompile Include="..\..\..\..\..\ext\yaml-cpp\src\parse.cpp" />
     <ClCompile Include="..\..\..\..\..\ext\yaml-cpp\src\parser.cpp" />
-    <ClCompile Include="..\..\..\..\..\ext\yaml-cpp\src\regex.cpp" />
+    <ClCompile Include="..\..\..\..\..\ext\yaml-cpp\src\regex_yaml.cpp" />
     <ClCompile Include="..\..\..\..\..\ext\yaml-cpp\src\scanner.cpp" />
     <ClCompile Include="..\..\..\..\..\ext\yaml-cpp\src\scanscalar.cpp" />
     <ClCompile Include="..\..\..\..\..\ext\yaml-cpp\src\scantag.cpp" />
@@ -63,18 +68,17 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\..\ext\yaml-cpp\src\collectionstack.h" />
+    <ClInclude Include="..\..\..\..\..\ext\yaml-cpp\src\contrib\graphbuilderadapter.h" />
     <ClInclude Include="..\..\..\..\..\ext\yaml-cpp\src\directives.h" />
     <ClInclude Include="..\..\..\..\..\ext\yaml-cpp\src\emitterstate.h" />
     <ClInclude Include="..\..\..\..\..\ext\yaml-cpp\src\emitterutils.h" />
     <ClInclude Include="..\..\..\..\..\ext\yaml-cpp\src\exp.h" />
     <ClInclude Include="..\..\..\..\..\ext\yaml-cpp\src\indentation.h" />
-    <ClInclude Include="..\..\..\..\..\ext\yaml-cpp\src\iterpriv.h" />
     <ClInclude Include="..\..\..\..\..\ext\yaml-cpp\src\nodebuilder.h" />
-    <ClInclude Include="..\..\..\..\..\ext\yaml-cpp\src\nodeownership.h" />
-    <ClInclude Include="..\..\..\..\..\ext\yaml-cpp\src\ptr_stack.h" />
+    <ClInclude Include="..\..\..\..\..\ext\yaml-cpp\src\nodeevents.h" />
     <ClInclude Include="..\..\..\..\..\ext\yaml-cpp\src\ptr_vector.h" />
-    <ClInclude Include="..\..\..\..\..\ext\yaml-cpp\src\regex.h" />
     <ClInclude Include="..\..\..\..\..\ext\yaml-cpp\src\regeximpl.h" />
+    <ClInclude Include="..\..\..\..\..\ext\yaml-cpp\src\regex_yaml.h" />
     <ClInclude Include="..\..\..\..\..\ext\yaml-cpp\src\scanner.h" />
     <ClInclude Include="..\..\..\..\..\ext\yaml-cpp\src\scanscalar.h" />
     <ClInclude Include="..\..\..\..\..\ext\yaml-cpp\src\scantag.h" />
@@ -235,7 +239,7 @@
 
 if exist yaml-cpp goto dontbother
 
-git clone https://github.com/jbeder/yaml-cpp -b release-0.3.0
+git clone https://github.com/jbeder/yaml-cpp -b yaml-cpp-0.6.3
 
 :dontbother</Command>
     </PreBuildEvent>
@@ -263,7 +267,7 @@ git clone https://github.com/jbeder/yaml-cpp -b release-0.3.0
 
 if exist yaml-cpp goto dontbother
 
-git clone https://github.com/jbeder/yaml-cpp -b release-0.3.0
+git clone https://github.com/jbeder/yaml-cpp -b yaml-cpp-0.6.3
 
 :dontbother</Command>
     </PreBuildEvent>
@@ -290,7 +294,7 @@ git clone https://github.com/jbeder/yaml-cpp -b release-0.3.0
 
 if exist yaml-cpp goto dontbother
 
-git clone https://github.com/jbeder/yaml-cpp -b release-0.3.0
+git clone https://github.com/jbeder/yaml-cpp -b yaml-cpp-0.6.3
 
 :dontbother</Command>
     </PreBuildEvent>
@@ -317,7 +321,7 @@ git clone https://github.com/jbeder/yaml-cpp -b release-0.3.0
 
 if exist yaml-cpp goto dontbother
 
-git clone https://github.com/jbeder/yaml-cpp -b release-0.3.0
+git clone https://github.com/jbeder/yaml-cpp -b yaml-cpp-0.6.3
 
 :dontbother</Command>
     </PreBuildEvent>
@@ -348,7 +352,7 @@ git clone https://github.com/jbeder/yaml-cpp -b release-0.3.0
 
 if exist yaml-cpp goto dontbother
 
-git clone https://github.com/jbeder/yaml-cpp -b release-0.3.0
+git clone https://github.com/jbeder/yaml-cpp -b yaml-cpp-0.6.3
 
 :dontbother</Command>
     </PreBuildEvent>
@@ -379,7 +383,7 @@ git clone https://github.com/jbeder/yaml-cpp -b release-0.3.0
 
 if exist yaml-cpp goto dontbother
 
-git clone https://github.com/jbeder/yaml-cpp -b release-0.3.0
+git clone https://github.com/jbeder/yaml-cpp -b yaml-cpp-0.6.3
 
 :dontbother</Command>
     </PreBuildEvent>
@@ -410,7 +414,7 @@ git clone https://github.com/jbeder/yaml-cpp -b release-0.3.0
 
 if exist yaml-cpp goto dontbother
 
-git clone https://github.com/jbeder/yaml-cpp -b release-0.3.0
+git clone https://github.com/jbeder/yaml-cpp -b yaml-cpp-0.6.3
 
 :dontbother</Command>
     </PreBuildEvent>
@@ -442,7 +446,7 @@ git clone https://github.com/jbeder/yaml-cpp -b release-0.3.0
 
 if exist yaml-cpp goto dontbother
 
-git clone https://github.com/jbeder/yaml-cpp -b release-0.3.0
+git clone https://github.com/jbeder/yaml-cpp -b yaml-cpp-0.6.3
 
 :dontbother</Command>
     </PreBuildEvent>
