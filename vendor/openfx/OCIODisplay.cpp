@@ -1,29 +1,31 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-#include "OCIOColorSpace.h"
+#include "OCIODisplay.h"
 #include "OCIOProcessor.h"
 #include "OCIOUtils.h"
 
 namespace OCIO = OCIO_NAMESPACE;
 
-OCIOColorSpace::OCIOColorSpace(OfxImageEffectHandle handle)
+OCIODisplay::OCIODisplay(OfxImageEffectHandle handle)
     : ImageEffect(handle)
     , dstClip_(0)
     , srcClip_(0)
     , srcCsNameParam_(0)
-    , dstCsNameParam_(0)
+    , displayParam_(0)
+    , viewParam_(0)
     , inverseParam_(0)
 {
     dstClip_ = fetchClip(kOfxImageEffectOutputClipName);
     srcClip_ = fetchClip(kOfxImageEffectSimpleSourceClipName);
 
     srcCsNameParam_ = fetchChoiceParam("src_cs");
-    dstCsNameParam_ = fetchChoiceParam("dst_cs");
+    displayParam_   = fetchChoiceParam("display");
+    viewParam_      = fetchChoiceParam("view");
     inverseParam_   = fetchBooleanParam("inverse");
 }
 
-void OCIOColorSpace::render(const OFX::RenderArguments & args)
+void OCIODisplay::render(const OFX::RenderArguments & args)
 {
     // Get images
     std::unique_ptr<OFX::Image> dst(dstClip_->fetchImage(args.time));
@@ -31,13 +33,15 @@ void OCIOColorSpace::render(const OFX::RenderArguments & args)
 
     // Get transform parameters
     std::string srcCsName = getChoiceParamOption(srcCsNameParam_);
-    std::string dstCsName = getChoiceParamOption(dstCsNameParam_);
+    std::string display   = getChoiceParamOption(displayParam_);
+    std::string view      = getChoiceParamOption(viewParam_);
     bool inverse = inverseParam_->getValue();
 
     // Build transform
-    OCIO::ColorSpaceTransformRcPtr tr = OCIO::ColorSpaceTransform::Create();
+    OCIO::DisplayViewTransformRcPtr tr = OCIO::DisplayViewTransform::Create();
     tr->setSrc(srcCsName.c_str());
-    tr->setDst(dstCsName.c_str());
+    tr->setDisplay(display.c_str());
+    tr->setView(view.c_str());
     tr->setDirection((inverse ? OCIO::TRANSFORM_DIR_INVERSE 
                               : OCIO::TRANSFORM_DIR_FORWARD));
 
@@ -52,15 +56,21 @@ void OCIOColorSpace::render(const OFX::RenderArguments & args)
     proc.process();
 }
 
-bool OCIOColorSpace::isIdentity(const OFX::IsIdentityArguments & args, 
+bool OCIODisplay::isIdentity(const OFX::IsIdentityArguments & args, 
                                 OFX::Clip *& identityClip, 
                                 double & identityTime)
 {
     std::string srcCsName = getChoiceParamOption(srcCsNameParam_);
-    std::string dstCsName = getChoiceParamOption(dstCsNameParam_);
+    OCIO::ConstColorSpaceRcPtr srcCs;
+
+    if (!srcCsName.empty())
+    {
+        OCIO::ConstConfigRcPtr config = getOCIOConfig();
+        srcCs = config->getColorSpace(srcCsName.c_str());
+    }
 
     // Is processing needed?
-    if (srcCsName.empty() || dstCsName.empty() || srcCsName == dstCsName)
+    if (!srcCs || srcCs->isData())
     {
         identityClip = srcClip_;
         identityTime = args.time;
@@ -70,57 +80,19 @@ bool OCIOColorSpace::isIdentity(const OFX::IsIdentityArguments & args,
     return false;
 }
 
-void OCIOColorSpace::changedParam(const OFX::InstanceChangedArgs & args, 
-                                  const std::string & paramName)
+void OCIODisplay::changedParam(const OFX::InstanceChangedArgs & args, 
+                               const std::string & paramName)
 {
-    if (paramName == "src_cs" || paramName == "dst_cs")
+    if (paramName == "display")
     {
-        OCIO::ConstConfigRcPtr config = getOCIOConfig();
-
-        std::string configName(config->getName());
-        if (!configName.empty())
-        {
-            configName = " '" + configName + "'";
-        }
-
-        std::string defaultViewTrName(config->getDefaultViewTransformName());
-        int numViewTransforms = config->getNumViewTransforms();
-
-        std::string srcCsName = getChoiceParamOption(srcCsNameParam_);
-        OCIO::ConstColorSpaceRcPtr srcCs = 
-            config->getColorSpace(srcCsName.c_str());
-        OCIO::ReferenceSpaceType srcRef = srcCs->getReferenceSpaceType();
-
-        std::string dstCsName = getChoiceParamOption(dstCsNameParam_);
-        OCIO::ConstColorSpaceRcPtr dstCs = 
-            config->getColorSpace(dstCsName.c_str());
-        OCIO::ReferenceSpaceType dstRef = dstCs->getReferenceSpaceType();
-
-        // Suggest using OCIODisplay instead
-        if (numViewTransforms > 1 && srcRef != dstRef)
-        {
-            std::ostringstream os;
-            os << "Color space '" << srcCsName << "' is ";
-            os << (srcRef == OCIO::REFERENCE_SPACE_SCENE ? "scene" : "display");
-            os << " referred and '" << dstCsName << "' is ";
-            os << (dstRef == OCIO::REFERENCE_SPACE_SCENE ? "scene" : "display");
-            os << " referred. The OCIO config" << configName << " contains ";
-            os << numViewTransforms << " view transforms and the default '";
-            os << defaultViewTrName << "' will be used for this conversion, ";
-            os << "which may not be the intended behvior. Please use ";
-            os << "'OCIODisplay' to ensure a correct viewing pipeline result.";
-
-            sendMessage(OFX::Message::eMessageWarning,
-                        "view_transform_warning",
-                        os.str());
-        }
+        updateViewParamOptions(displayParam_, viewParam_);
     }
 }
 
-void OCIOColorSpaceFactory::describe(OFX::ImageEffectDescriptor& desc)
+void OCIODisplayFactory::describe(OFX::ImageEffectDescriptor& desc)
 {
     // Labels
-    desc.setLabels("OCIOColorSpace", "OCIOColorSpace", "OCIOColorSpace");
+    desc.setLabels("OCIODisplay", "OCIODisplay", "OCIODisplay");
     desc.setPluginGrouping("OpenColorIO");
 
     // Supported contexts
@@ -137,7 +109,7 @@ void OCIOColorSpaceFactory::describe(OFX::ImageEffectDescriptor& desc)
     desc.setRenderTwiceAlways(false);
 }
 
-void OCIOColorSpaceFactory::describeInContext(OFX::ImageEffectDescriptor& desc, 
+void OCIODisplayFactory::describeInContext(OFX::ImageEffectDescriptor& desc, 
                                               OFX::ContextEnum context)
 {
     // Create the mandated source clip
@@ -165,14 +137,23 @@ void OCIOColorSpaceFactory::describeInContext(OFX::ImageEffectDescriptor& desc,
         0);
     page->addChild(*srcCsNameParam);
 
-    // dst color space
-    OFX::ChoiceParamDescriptor * dstCsNameParam = defineCsNameParam(
+    // display
+    OFX::ChoiceParamDescriptor * displayParam = defineDisplayParam(
         desc, 
-        "dst_cs", 
-        "dst color space", 
-        "destination color space name", 
+        "display", 
+        "display", 
+        "display device name", 
         0);
-    page->addChild(*dstCsNameParam);
+    page->addChild(*displayParam);
+
+    // view
+    OFX::ChoiceParamDescriptor * viewParam = defineViewParam(
+        desc, 
+        "view", 
+        "view", 
+        "view name", 
+        0);
+    page->addChild(*viewParam);
 
     // inverse
     OFX::BooleanParamDescriptor * inverseParam = defineBooleanParam(
@@ -184,9 +165,9 @@ void OCIOColorSpaceFactory::describeInContext(OFX::ImageEffectDescriptor& desc,
     page->addChild(*inverseParam);
 }
 
-OFX::ImageEffect * OCIOColorSpaceFactory::createInstance(
+OFX::ImageEffect * OCIODisplayFactory::createInstance(
     OfxImageEffectHandle handle, 
     OFX::ContextEnum /*context*/)
 {
-    return new OCIOColorSpace(handle);
+    return new OCIODisplay(handle);
 }

@@ -3,6 +3,7 @@
 
 set(SOURCES
     OCIOColorSpace.cpp
+    OCIODisplay.cpp
     OCIOMain.cpp
     OCIOProcessor.cpp
     OCIOUtils.cpp
@@ -23,6 +24,8 @@ set(PLIST
 set(RESOURCES
     ${CMAKE_SOURCE_DIR}/share/openfx/resources/OpenColorIO.OCIOColorSpace.png
     ${CMAKE_SOURCE_DIR}/share/openfx/resources/OpenColorIO.OCIOColorSpace.svg
+    ${CMAKE_SOURCE_DIR}/share/openfx/resources/OpenColorIO.OCIODisplay.png
+    ${CMAKE_SOURCE_DIR}/share/openfx/resources/OpenColorIO.OCIODisplay.svg
 )
 
 add_library(ofxplugin MODULE ${SOURCES} ${OFXS_SOURCES})

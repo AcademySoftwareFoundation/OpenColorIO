@@ -81,7 +81,7 @@ void OCIOProcessor::multiThreadProcessImages(OfxRectI procWindow)
 
     // Offset image address to processing window start
     int begin = procWindow.y1 * yStrideBytes 
-                + procWindow.x1 * xStrideBytes;
+              + procWindow.x1 * xStrideBytes;
     int w = procWindow.x2 - procWindow.x1;
     int h = procWindow.y2 - procWindow.y1;
 

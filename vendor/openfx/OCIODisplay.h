@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-#ifndef INCLUDED_OFX_OCIOCOLORSPACE_H
-#define INCLUDED_OFX_OCIOCOLORSPACE_H
+#ifndef INCLUDED_OFX_OCIODISPLAY_H
+#define INCLUDED_OFX_OCIODISPLAY_H
 
 #include "ofxsImageEffect.h"
 
-class OCIOColorSpace : public OFX::ImageEffect
+class OCIODisplay : public OFX::ImageEffect
 {
 protected:
     // Do not need to delete these. The ImageEffect is managing them for us.
@@ -14,11 +14,12 @@ protected:
     OFX::Clip *srcClip_;
 
     OFX::ChoiceParam * srcCsNameParam_;
-    OFX::ChoiceParam * dstCsNameParam_;
+    OFX::ChoiceParam * displayParam_;
+    OFX::ChoiceParam * viewParam_;
     OFX::BooleanParam * inverseParam_;
 
 public:
-    OCIOColorSpace(OfxImageEffectHandle handle);
+    OCIODisplay(OfxImageEffectHandle handle);
 
     /* Override the render */
     virtual void render(const OFX::RenderArguments & args);
@@ -31,8 +32,9 @@ public:
     /* Override changedParam */
     virtual void changedParam(const OFX::InstanceChangedArgs & args, 
                               const std::string & paramName);
+
 };
 
-mDeclarePluginFactory(OCIOColorSpaceFactory, {}, {});
+mDeclarePluginFactory(OCIODisplayFactory, {}, {});
 
-#endif // INCLUDED_OFX_OCIOCOLORSPACE_H
+#endif // INCLUDED_OFX_OCIODISPLAY_H

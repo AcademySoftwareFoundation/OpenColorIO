@@ -9,6 +9,27 @@ namespace OCIO = OCIO_NAMESPACE;
 
 #include "ofxsLog.h"
 
+namespace
+{
+
+void initParam(OFX::ParamDescriptor * param,
+               const std::string & name, 
+               const std::string & label, 
+               const std::string & hint,
+               OFX::GroupParamDescriptor * parent)
+{
+    param->setLabels(label, label, label);
+    param->setScriptName(name);
+    param->setHint(hint);
+
+    if (parent) 
+    {
+        param->setParent(*parent);
+    }
+}
+
+} // namespace
+
 OCIO::ConstConfigRcPtr getOCIOConfig()
 {
     OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
@@ -92,24 +113,108 @@ OFX::ChoiceParamDescriptor * defineCsNameParam(
     OFX::GroupParamDescriptor * parent)
 {
     OFX::ChoiceParamDescriptor * param = desc.defineChoiceParam(name);
-
-    param->setLabels(label, label, label);
-    param->setScriptName(name);
-    param->setHint(hint);
-    param->setDefault(0);
-
-    if (parent) 
-    {
-        param->setParent(*parent);
-    }
+    initParam(param, name, label, hint, parent);
 
     OCIO::ConstConfigRcPtr config = getOCIOConfig();
 
+    // Populate color space names
     for (int i = 0; i < config->getNumColorSpaces(); i++)
     {
-        std::string csName = std::string(config->getColorSpaceNameByIndex(i));
+        std::string csName(config->getColorSpaceNameByIndex(i));
         param->appendOption(csName, csName);
     }
+
+    // Set a reasonable default color space
+    int defaultCsIdx = config->getIndexForColorSpace(OCIO::ROLE_SCENE_LINEAR);
+    if (defaultCsIdx == -1)
+    {
+        defaultCsIdx = config->getIndexForColorSpace(OCIO::ROLE_DEFAULT);
+        if (defaultCsIdx == -1)
+        {
+            defaultCsIdx = 0;
+        }
+    }
+    param->setDefault(defaultCsIdx);
+
+    return param;
+}
+
+OFX::ChoiceParamDescriptor * defineDisplayParam(
+    OFX::ImageEffectDescriptor & desc,
+    const std::string & name, 
+    const std::string & label, 
+    const std::string & hint,
+    OFX::GroupParamDescriptor * parent)
+{
+    OFX::ChoiceParamDescriptor * param = desc.defineChoiceParam(name);
+    initParam(param, name, label, hint, parent);
+
+    OCIO::ConstConfigRcPtr config = getOCIOConfig();
+
+    // Populate displays and set default
+    std::string defaultDisplay(config->getDefaultDisplay());
+    int defaultDisplayIdx = 0;
+
+    for (int i = 0; i < config->getNumDisplays(); i++)
+    {
+        std::string display(config->getDisplay(i));
+        param->appendOption(display, display);
+
+        if (display == defaultDisplay)
+        {
+            defaultDisplayIdx = i;
+        }
+    }
+    param->setDefault(defaultDisplayIdx);
+
+    return param;
+}
+
+OFX::ChoiceParamDescriptor * defineViewParam(
+    OFX::ImageEffectDescriptor & desc,
+    const std::string & name, 
+    const std::string & label, 
+    const std::string & hint,
+    OFX::GroupParamDescriptor * parent)
+{
+    OFX::ChoiceParamDescriptor * param = desc.defineChoiceParam(name);
+    initParam(param, name, label, hint, parent);
+
+    OCIO::ConstConfigRcPtr config = getOCIOConfig();
+
+    // Populate views and set default
+    const char * defaultDisplay = config->getDefaultDisplay();
+
+    std::string defaultView(config->getDefaultView(defaultDisplay));
+    int defaultViewIdx = 0;
+
+    for (int i = 0; i < config->getNumViews(defaultDisplay); i++)
+    {
+        std::string view(config->getView(defaultDisplay, i));
+        param->appendOption(view, view);
+
+        if (view == defaultView)
+        {
+            defaultViewIdx = i;
+        }
+    }
+    param->setDefault(defaultViewIdx);
+
+    return param;
+}
+
+OFX::BooleanParamDescriptor * defineBooleanParam(
+    OFX::ImageEffectDescriptor & desc,
+    const std::string & name, 
+    const std::string & label, 
+    const std::string & hint,
+    OFX::GroupParamDescriptor * parent,
+    bool default)
+{
+    OFX::BooleanParamDescriptor * param = desc.defineBooleanParam(name);
+    initParam(param, name, label, hint, parent);
+
+    param->setDefault(default);
 
     return param;
 }
@@ -122,4 +227,46 @@ std::string getChoiceParamOption(OFX::ChoiceParam * param)
     param->getOption(idx, name);
 
     return name;
+}
+
+void updateViewParamOptions(OFX::ChoiceParam * displayParam, 
+                            OFX::ChoiceParam * viewParam)
+{
+    OCIO::ConstConfigRcPtr config = getOCIOConfig();
+
+    // Current display and view
+    std::string currentView = getChoiceParamOption(viewParam);
+    std::string display     = getChoiceParamOption(displayParam);
+
+    // Clear views
+    viewParam->resetOptions();
+
+    // Get new default view
+    std::string defaultView(config->getDefaultView(display.c_str()));
+    int defaultViewIdx = 0;
+    int currentViewIdx = -1;
+
+    // Re=populate views and find current and default index
+    for (int i = 0; i < config->getNumViews(display.c_str()); i++)
+    {
+        std::string view(config->getView(display.c_str(), i));
+        viewParam->appendOption(view, view);
+
+        if (view == currentView)
+        {
+            currentViewIdx = i;
+        }
+        if (view == defaultView)
+        {
+            defaultViewIdx = i;
+        }
+    }
+
+    // Set new current and default option
+    if (currentViewIdx == -1)
+    {
+        currentViewIdx = defaultViewIdx;
+    }
+    viewParam->setValue(currentViewIdx);
+    viewParam->setDefault(defaultViewIdx);
 }
