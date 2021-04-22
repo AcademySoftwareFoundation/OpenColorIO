@@ -40,6 +40,10 @@ endif()
 # Disable known compiler warnings from OpenFX Support Library
 if(MSVC)
     set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} /wd4996 /wd4101")
+else()
+    # Some reported unused parameters in openfx are used when DEBUG macro is 
+    # defined
+    set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} -Wno-unused-parameter")
 endif()
 
 set_target_properties(ofxplugin PROPERTIES
