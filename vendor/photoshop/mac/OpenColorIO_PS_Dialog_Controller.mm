@@ -17,14 +17,13 @@
 
 
 
-static NSString *standardPath = @"/Library/Application Support/OpenColorIO";
-
-
 @implementation OpenColorIO_PS_Dialog_Controller
 
 - (NSString *)pathForStandardConfig:(NSString *)config
 {
-    return [[standardPath stringByAppendingPathComponent:config] stringByAppendingPathComponent:@"config.ocio"];
+    const std::string path = GetStdConfigPath([config UTF8String]);
+
+    return [NSString stringWithUTF8String:path.c_str()];
 }
 
 - (id)initWithSource:(ControllerSource)initSource
@@ -34,8 +33,8 @@ static NSString *standardPath = @"/Library/Application Support/OpenColorIO";
         interpolation:(ControllerInterp)initInterpolation
         inputSpace:(NSString *)initInputSpace
         outputSpace:(NSString *)initOutputSpace
-        device:(NSString *)initDevice
-        transform:(NSString *)initTransform
+        display:(NSString *)initDisplay
+        view:(NSString *)initView
 {
     self = [super init];
     
@@ -58,8 +57,8 @@ static NSString *standardPath = @"/Library/Application Support/OpenColorIO";
         action = initAction;
         inputSpace = [initInputSpace retain];
         outputSpace = [initOutputSpace retain];
-        device = [initDevice retain];
-        transform = [initTransform retain];
+        display = [initDisplay retain];
+        view = [initView retain];
         interpolation = initInterpolation;
         invert = initInvert;
         
@@ -83,27 +82,23 @@ static NSString *standardPath = @"/Library/Application Support/OpenColorIO";
         [[configurationMenu menu] addItem:[NSMenuItem separatorItem]];
         
         
-        NSArray *standardConfigs = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:standardPath error:NULL];
+        ConfigVec configs;
+        GetStdConfigs(configs);
         
-        if([standardConfigs count] > 0)
+        if(configs.size() > 0)
         {
-            for(NSString *configName in standardConfigs)
+            for(ConfigVec::const_iterator i = configs.begin(); i != configs.end(); ++i)
             {
-                NSAssert([configName isKindOfClass:[NSString class]], @"expected NSString");
+                const std::string &config = *i;
                 
-                NSString *configFilePath = [self pathForStandardConfig:configName];
+                [configurationMenu addItemWithTitle:[NSString stringWithUTF8String:config.c_str()]];
                 
-                if([[NSFileManager defaultManager] isReadableFileAtPath:configFilePath])
-                {
-                    [configurationMenu addItemWithTitle:configName];
-                    
-                    [[configurationMenu lastItem] setTag:CSOURCE_STANDARD];
-                }
+                [[configurationMenu lastItem] setTag:CSOURCE_STANDARD];
             }
         }
         else
         {
-            NSString *noConfigsMessage = [NSString stringWithFormat:@"No configs in %@", standardPath];
+            NSString *noConfigsMessage = [NSString stringWithFormat:@"No configs in /Library/Application Support/OpenColorIO"];
             
             [configurationMenu addItemWithTitle:noConfigsMessage];
             
@@ -146,8 +141,8 @@ static NSString *standardPath = @"/Library/Application Support/OpenColorIO";
     [customPath release];
     [inputSpace release];
     [outputSpace release];
-    [device release];
-    [transform release];
+    [display release];
+    [view release];
     
     [super dealloc];
 }
@@ -162,102 +157,6 @@ static NSString *standardPath = @"/Library/Application Support/OpenColorIO";
     [NSApp abortModal];
 }
 
-/*
-- (void)profileChooserDidEnd:(NSWindow *)sheet returnCode:(int)returnCode contextInfo:(void *)contextInfo
-{
-    NSAssert(profileController != nil, @"profileController is nil");
-    
-    
-    [sheet orderOut:self];
-    
-
-    if(returnCode == NSRunStoppedResponse)
-    {
-        NSString *path = (NSString *)contextInfo;
-        
-        NSAssert([path isKindOfClass:[NSString class]], @"expected NSString");
-
-        try
-        {
-            OpenColorIO_PS_Context *context = (OpenColorIO_PS_Context *)contextPtr;
-        
-            NSAssert(context != NULL, @"context was NULL");
-            
-            
-            char display_icc_path[256];
-        
-            const BOOL gotICC = [profileController getMonitorProfile:display_icc_path bufferSize:255];
-            
-            if(!gotICC)
-                throw OCIO::Exception("Failed to get ICC profile");
-
-            
-            OCIO::ConstProcessorRcPtr processor;
-            
-            if(action == CACTION_CONVERT)
-            {
-                processor = context->getConvertProcessor([inputSpace UTF8String], [outputSpace UTF8String]);
-            }
-            else if(action == CACTION_DISPLAY)
-            {
-                processor = context->getDisplayProcessor([inputSpace UTF8String], [device UTF8String], [transform UTF8String]);
-            }
-            else
-            {
-                NSAssert(action == CACTION_LUT, @"expected CACTION_LUT");
-                
-                const OCIO::Interpolation interp = (interpolation == CINTERP_NEAREST ? OCIO::INTERP_NEAREST :
-                                                    interpolation == CINTERP_LINEAR ? OCIO::INTERP_LINEAR :
-                                                    interpolation == CINTERP_TETRAHEDRAL ? OCIO::INTERP_TETRAHEDRAL :
-                                                    interpolation == CINTERP_CUBIC ? OCIO::INTERP_CUBIC :
-                                                    OCIO::INTERP_BEST);
-                
-                const OCIO::TransformDirection direction = (invert ? OCIO::TRANSFORM_DIR_INVERSE : OCIO::TRANSFORM_DIR_FORWARD);
-                
-                processor = context->getLUTProcessor(interp, direction);
-            }
-            
-            
-            int cubesize = 32;
-            int whitepointtemp = 6505;
-            std::string copyright = "";
-            
-            // create a description tag from the filename
-            std::string description = [[[path lastPathComponent] stringByDeletingPathExtension] UTF8String];
-            
-            SaveICCProfileToFile([path UTF8String], processor, cubesize, whitepointtemp,
-                                    display_icc_path, description, copyright, false);
-        }
-        catch(const std::exception &e)
-        {
-            NSBeep();
-        
-            NSString *ocioString = [NSString stringWithUTF8String:e.what()];
-        
-            NSAlert *alert = [NSAlert alertWithMessageText:@"OpenColorIO error" defaultButton:nil alternateButton:nil otherButton:nil informativeTextWithFormat:@"%@", ocioString];
-
-            [alert beginSheetModalForWindow:window modalDelegate:nil didEndSelector:NULL contextInfo:NULL];
-        }
-        catch(...)
-        {
-            NSBeep();
-            
-            NSString *ocioString = @"Some unknown error";
-            
-            NSAlert *alert = [NSAlert alertWithMessageText:@"OpenColorIO error" defaultButton:nil alternateButton:nil otherButton:nil informativeTextWithFormat:@"%@", ocioString];
-
-            [alert beginSheetModalForWindow:window modalDelegate:nil didEndSelector:NULL contextInfo:NULL];
-        }
-        
-        [path release];
-    }
-    
-    
-    [profileController release];
-    
-    profileController = nil;
-}
-*/
 - (void)exportPanelDidEnd:(NSSavePanel *)panel returnCode:(int)returnCode contextInfo:(void *)contextInfo
 {
     if(returnCode == NSOKButton)
@@ -276,7 +175,7 @@ static NSString *standardPath = @"/Library/Application Support/OpenColorIO";
             OpenColorIO_AE_MonitorProfileChooser_Controller *profileController = [[OpenColorIO_AE_MonitorProfileChooser_Controller alloc] init];
             
             // the sheet is still active, so can't run another one...will settle for modal
-            const NSInteger modal_result = [NSApp runModalForWindow:[profileController getWindow]];
+            const NSInteger modal_result = [NSApp runModalForWindow:[profileController window]];
             
                                     
             if(modal_result == NSRunStoppedResponse)
@@ -299,7 +198,7 @@ static NSString *standardPath = @"/Library/Application Support/OpenColorIO";
                     }
                     else if(action == CACTION_DISPLAY)
                     {
-                        processor = context->getDisplayProcessor([inputSpace UTF8String], [device UTF8String], [transform UTF8String]);
+                        processor = context->getDisplayProcessor([inputSpace UTF8String], [display UTF8String], [view UTF8String]);
                     }
                     else
                     {
@@ -349,7 +248,7 @@ static NSString *standardPath = @"/Library/Application Support/OpenColorIO";
                 }
             }
             
-            [[profileController getWindow] close];
+            [profileController close];
             
             [profileController release];
         }
@@ -381,7 +280,7 @@ static NSString *standardPath = @"/Library/Application Support/OpenColorIO";
                 }
                 else if(action == CACTION_DISPLAY)
                 {
-                    baker = context->getDisplayBaker([inputSpace UTF8String], [device UTF8String], [transform UTF8String]);
+                    baker = context->getDisplayBaker([inputSpace UTF8String], [display UTF8String], [view UTF8String]);
                 }
                 else
                 {
@@ -521,10 +420,10 @@ static NSString *standardPath = @"/Library/Application Support/OpenColorIO";
             
             NSMutableArray *extensions = [NSMutableArray arrayWithObject:@"ocio"];
             
-            for(int i=0; i < OCIO::FileTransform::getNumFormats(); ++i)
+            for(int i=0; i < OCIO::FileTransform::GetNumFormats(); ++i)
             {
-                const char *extension = OCIO::FileTransform::getFormatExtensionByIndex(i);
-                //const char *format = OCIO::FileTransform::getFormatNameByIndex(i);
+                const char *extension = OCIO::FileTransform::GetFormatExtensionByIndex(i);
+                //const char *format = OCIO::FileTransform::GetFormatNameByIndex(i);
                 
                 NSString *extensionString = [NSString stringWithUTF8String:extension];
                 
@@ -676,23 +575,23 @@ static NSString *standardPath = @"/Library/Application Support/OpenColorIO";
                 }
                 
                 
-                const SpaceVec &devices = context->getDevices();
+                const SpaceVec &displays = context->getDisplays();
                 
-                if(device == nil || -1 == FindSpace(devices, [device UTF8String]))
+                if(display == nil || -1 == FindSpace(displays, [display UTF8String]))
                 {
-                    [device release];
+                    [display release];
                     
-                    device = [[NSString alloc] initWithUTF8String:context->getDefaultDevice().c_str()];
+                    display = [[NSString alloc] initWithUTF8String:context->getDefaultDisplay().c_str()];
                 }
                 
                 
-                const SpaceVec transforms = context->getTransforms([device UTF8String]);
+                const SpaceVec views = context->getViews([display UTF8String]);
                 
-                if(transform == nil || -1 == FindSpace(transforms, [transform UTF8String]))
+                if(view == nil || -1 == FindSpace(views, [view UTF8String]))
                 {
-                    [transform release];
+                    [view release];
                     
-                    transform = [[NSString alloc] initWithUTF8String:context->getDefaultTransform([device UTF8String]).c_str()];
+                    view = [[NSString alloc] initWithUTF8String:context->getDefaultView([display UTF8String]).c_str()];
                 }
                 
                 
@@ -786,36 +685,36 @@ static NSString *standardPath = @"/Library/Application Support/OpenColorIO";
     
     if(action == CACTION_DISPLAY)
     {
-        NSTextField *deviceLabel = label2;
-        NSPopUpButton *deviceMenu = menu2;
+        NSTextField *displayLabel = label2;
+        NSPopUpButton *displayMenu = menu2;
         
-        NSTextField *transformLabel = label3;
-        NSPopUpButton *transformMenu = menu3;
+        NSTextField *viewLabel = label3;
+        NSPopUpButton *viewMenu = menu3;
         
     
-        [deviceLabel setStringValue:@"Device:"];
-        [deviceLabel setHidden:NO];
+        [displayLabel setStringValue:@"Display:"];
+        [displayLabel setHidden:NO];
         
-        [deviceMenu setHidden:NO];
+        [displayMenu setHidden:NO];
         
-        [deviceMenu removeAllItems];
+        [displayMenu removeAllItems];
         
-        const SpaceVec &devices = context->getDevices();
+        const SpaceVec &displays = context->getDisplays();
         
-        for(SpaceVec::const_iterator i = devices.begin(); i != devices.end(); ++i)
+        for(SpaceVec::const_iterator i = displays.begin(); i != displays.end(); ++i)
         {
-            NSString *deviceName = [NSString stringWithUTF8String:i->c_str()];
+            NSString *displayName = [NSString stringWithUTF8String:i->c_str()];
             
-            [deviceMenu addItemWithTitle:deviceName];
+            [displayMenu addItemWithTitle:displayName];
         }
         
         [outputSpaceButton setHidden:YES];
                 
         
-        [transformLabel setStringValue:@"Transform:"];
-        [transformLabel setHidden:NO];
+        [viewLabel setStringValue:@"View:"];
+        [viewLabel setHidden:NO];
         
-        [transformMenu setHidden:NO];
+        [viewMenu setHidden:NO];
         
         
         [self trackMenu2:nil];
@@ -878,21 +777,21 @@ static NSString *standardPath = @"/Library/Application Support/OpenColorIO";
 {
     if(action == CACTION_DISPLAY)
     {
-        NSPopUpButton *deviceMenu = menu2;
+        NSPopUpButton *displayMenu = menu2;
         
         if(sender == nil)
         {
             // set menu from values
-            NSAssert([deviceMenu itemWithTitle:device] != nil, @"don't have the device");
+            NSAssert([displayMenu itemWithTitle:display] != nil, @"don't have the display");
             
-            [deviceMenu selectItemWithTitle:device];
+            [displayMenu selectItemWithTitle:display];
         }
         else
         {
             // set values from menu
-            [device release];
+            [display release];
             
-            device = [[deviceMenu titleOfSelectedItem] retain];
+            display = [[displayMenu titleOfSelectedItem] retain];
         }
     }
     else
@@ -904,7 +803,7 @@ static NSString *standardPath = @"/Library/Application Support/OpenColorIO";
         if(sender == nil)
         {
             // set menu from values
-            NSAssert([outputMenu itemWithTitle:outputSpace] != nil, @"don't have the device");
+            NSAssert([outputMenu itemWithTitle:outputSpace] != nil, @"don't have the color space");
             
             [outputMenu selectItemWithTitle:outputSpace];
         }
@@ -924,17 +823,17 @@ static NSString *standardPath = @"/Library/Application Support/OpenColorIO";
         
         NSAssert(context != NULL, @"context was NULL");
         
-        const SpaceVec transforms = context->getTransforms([device UTF8String]);
+        const SpaceVec views = context->getViews([display UTF8String]);
         
-        NSPopUpButton *transformMenu = menu3;
+        NSPopUpButton *viewMenu = menu3;
         
-        [transformMenu removeAllItems];
+        [viewMenu removeAllItems];
         
-        for(SpaceVec::const_iterator i = transforms.begin(); i != transforms.end(); ++i)
+        for(SpaceVec::const_iterator i = views.begin(); i != views.end(); ++i)
         {
-            NSString *transformName = [NSString stringWithUTF8String:i->c_str()];
+            NSString *viewName = [NSString stringWithUTF8String:i->c_str()];
             
-            [transformMenu addItemWithTitle:transformName];
+            [viewMenu addItemWithTitle:viewName];
         }
         
         [self trackMenu3:nil];
@@ -944,18 +843,18 @@ static NSString *standardPath = @"/Library/Application Support/OpenColorIO";
 - (IBAction)trackMenu3:(id)sender
 {
     NSAssert(action == CACTION_DISPLAY, @"expected Display");
-    NSAssert([[label3 stringValue] isEqualToString:@"Transform:"], @"expected Transform:");
+    NSAssert([[label3 stringValue] isEqualToString:@"View:"], @"expected View:");
     
-    NSPopUpButton *transformMenu = menu3;
+    NSPopUpButton *viewMenu = menu3;
 
     if(sender == nil)
     {
         // set menu from value
-        NSMenuItem *valueItem = [transformMenu itemWithTitle:transform];
+        NSMenuItem *valueItem = [viewMenu itemWithTitle:view];
         
         if(valueItem != nil)
         {
-            [transformMenu selectItem:valueItem];
+            [viewMenu selectItem:valueItem];
         }
         else
         {
@@ -963,26 +862,26 @@ static NSString *standardPath = @"/Library/Application Support/OpenColorIO";
             
             NSAssert(context != NULL, @"context was NULL");
             
-            const std::string defaultTransform = context->getDefaultTransform([device UTF8String]);
+            const std::string defaultView = context->getDefaultView([display UTF8String]);
             
-            NSMenuItem *defaultItem = [transformMenu itemWithTitle:[NSString stringWithUTF8String:defaultTransform.c_str()]];
+            NSMenuItem *defaultItem = [viewMenu itemWithTitle:[NSString stringWithUTF8String:defaultView.c_str()]];
             
             NSAssert(defaultItem != nil, @"where's that default item?");
             
-            [transformMenu selectItem:defaultItem];
+            [viewMenu selectItem:defaultItem];
             
             
-            [transform release];
+            [view release];
             
-            transform = [[transformMenu titleOfSelectedItem] retain];
+            view = [[viewMenu titleOfSelectedItem] retain];
         }
     }
     else
     {
         // set value from menu
-        [transform release];
+        [view release];
         
-        transform = [[transformMenu titleOfSelectedItem] retain];
+        view = [[viewMenu titleOfSelectedItem] retain];
     }
 }
 
@@ -1082,14 +981,14 @@ static NSString *standardPath = @"/Library/Application Support/OpenColorIO";
     return outputSpace;
 }
 
-- (NSString *)device
+- (NSString *)display
 {
-    return device;
+    return display;
 }
 
-- (NSString *)transform
+- (NSString *)view
 {
-    return transform;
+    return view;
 }
 
 @end
