@@ -49,12 +49,6 @@ function(add_ocio_test NAME SOURCES PRIVATE_INCLUDES)
                 USE_SSE
         )
     endif(OCIO_USE_SSE)
-    if(OCIO_ADD_EXTRA_BUILTINS)
-        target_compile_definitions(${TEST_BINARY}
-            PRIVATE
-                ADD_EXTRA_BUILTINS
-        )
-    endif(OCIO_ADD_EXTRA_BUILTINS)
     if(WIN32)
         # A windows application linking to eXpat static libraries must
         # have the global macro XML_STATIC defined
@@ -105,29 +99,22 @@ set(SOURCES
     ScanlineHelper.cpp
     Transform.cpp
     transforms/builtins/ACES.cpp
+    transforms/builtins/ArriCameras.cpp
+    transforms/builtins/CanonCameras.cpp
     transforms/builtins/ColorMatrixHelpers.cpp
+    transforms/builtins/Displays.cpp
     transforms/builtins/OpHelpers.cpp
+    transforms/builtins/PanasonicCameras.cpp
+    transforms/builtins/RedCameras.cpp
+    transforms/builtins/SonyCameras.cpp
     SystemMonitor.cpp
 )
-
-if(OCIO_ADD_EXTRA_BUILTINS)
-    set(SOURCES_BUILTINS
-        transforms/builtins/ArriCameras.cpp
-        transforms/builtins/CanonCameras.cpp
-        transforms/builtins/Displays.cpp
-        transforms/builtins/PanasonicCameras.cpp
-        transforms/builtins/RedCameras.cpp
-        transforms/builtins/SonyCameras.cpp
-    )
-
-    list(INSERT SOURCES 0 ${SOURCES_BUILTINS})
-endif()
 
 set(TESTS
     apphelpers/CategoryHelpers_tests.cpp
     apphelpers/ColorSpaceHelpers_tests.cpp
     apphelpers/DisplayViewHelpers_tests.cpp
-    apphelpers/LegacyViewingPipeline_tests
+    apphelpers/LegacyViewingPipeline_tests.cpp
     apphelpers/MixingHelpers_tests.cpp
     Baker_tests.cpp
     BitDepthUtils_tests.cpp
