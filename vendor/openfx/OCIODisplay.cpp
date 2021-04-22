@@ -80,7 +80,7 @@ bool OCIODisplay::isIdentity(const OFX::IsIdentityArguments & args,
     return false;
 }
 
-void OCIODisplay::changedParam(const OFX::InstanceChangedArgs & args, 
+void OCIODisplay::changedParam(const OFX::InstanceChangedArgs & /*args*/, 
                                const std::string & paramName)
 {
     if (paramName == "display")
@@ -110,7 +110,7 @@ void OCIODisplayFactory::describe(OFX::ImageEffectDescriptor& desc)
 }
 
 void OCIODisplayFactory::describeInContext(OFX::ImageEffectDescriptor& desc, 
-                                              OFX::ContextEnum context)
+                                           OFX::ContextEnum /*context*/)
 {
     // Create the mandated source clip
     OFX::ClipDescriptor * srcClip = desc.defineClip(

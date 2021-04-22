@@ -21,16 +21,16 @@ public:
     OCIOColorSpace(OfxImageEffectHandle handle);
 
     /* Override the render */
-    virtual void render(const OFX::RenderArguments & args);
+    void render(const OFX::RenderArguments & args) override;
 
     /* Override identity (~no-op) check */
-    virtual bool isIdentity(const OFX::IsIdentityArguments & args, 
-                            OFX::Clip *& identityClip, 
-                            double & identityTime);
+    bool isIdentity(const OFX::IsIdentityArguments & args, 
+                    OFX::Clip *& identityClip, 
+                    double & identityTime) override;
 
     /* Override changedParam */
-    virtual void changedParam(const OFX::InstanceChangedArgs & args, 
-                              const std::string & paramName);
+    void changedParam(const OFX::InstanceChangedArgs & args, 
+                      const std::string & paramName) override;
 };
 
 mDeclarePluginFactory(OCIOColorSpaceFactory, {}, {});
