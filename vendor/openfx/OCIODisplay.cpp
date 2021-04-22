@@ -160,8 +160,7 @@ void OCIODisplayFactory::describeInContext(OFX::ImageEffectDescriptor& desc,
         desc, 
         "inverse", 
         "inverse", 
-        "invert the transform", 
-        false,
+        "invert the transform",
         0);
     page->addChild(*inverseParam);
 }

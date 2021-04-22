@@ -208,13 +208,13 @@ OFX::BooleanParamDescriptor * defineBooleanParam(
     const std::string & name, 
     const std::string & label, 
     const std::string & hint,
-    bool default,
-    OFX::GroupParamDescriptor * parent)
+    OFX::GroupParamDescriptor * parent,
+    bool default_value)
 {
     OFX::BooleanParamDescriptor * param = desc.defineBooleanParam(name);
     initParam(param, name, label, hint, parent);
 
-    param->setDefault(default);
+    param->setDefault(default_value);
 
     return param;
 }

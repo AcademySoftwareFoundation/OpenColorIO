@@ -50,8 +50,8 @@ OFX::BooleanParamDescriptor * defineBooleanParam(
     const std::string & name, 
     const std::string & label, 
     const std::string & hint,
-    bool default,
-    OFX::GroupParamDescriptor * parent);
+    OFX::GroupParamDescriptor * parent,
+    bool default_value = false);
 
 /* Get current option string from a ChoiceParam */
 std::string getChoiceParamOption(OFX::ChoiceParam * param);
