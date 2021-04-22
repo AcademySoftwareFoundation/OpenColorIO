@@ -30,21 +30,21 @@ class OpenColorIO_PS_Context
     OCIO::ConstConfigRcPtr getConfig() const { return _config; }
     
     OCIO::ConstCPUProcessorRcPtr getConvertProcessor(const std::string &inputSpace, const std::string &outputSpace) const;
-    OCIO::ConstCPUProcessorRcPtr getDisplayProcessor(const std::string &inputSpace, const std::string &device, const std::string &transform) const;
+    OCIO::ConstCPUProcessorRcPtr getDisplayProcessor(const std::string &inputSpace, const std::string &display, const std::string &view) const;
     OCIO::ConstCPUProcessorRcPtr getLUTProcessor(OCIO::Interpolation interpolation, OCIO::TransformDirection direction) const;
     
     OCIO::BakerRcPtr getConvertBaker(const std::string &inputSpace, const std::string &outputSpace) const;
-    OCIO::BakerRcPtr getDisplayBaker(const std::string &inputSpace, const std::string &device, const std::string &transform) const;
+    OCIO::BakerRcPtr getDisplayBaker(const std::string &inputSpace, const std::string &display, const std::string &view) const;
     OCIO::BakerRcPtr getLUTBaker(OCIO::Interpolation interpolation, OCIO::TransformDirection direction) const;
 
     const SpaceVec & getColorSpaces(bool fullPath=false) const { return (fullPath ? _colorSpacesFullPaths : _colorSpaces); }
     const std::string & getDefaultColorSpace() const { return _defaultColorSpace; }
     
-    const SpaceVec & getDevices() const { return _devices; };
-    const std::string & getDefaultDevice() const { return _defaultDevice; }
+    const SpaceVec & getDisplays() const { return _displays; };
+    const std::string & getDefaultDisplay() const { return _defaultDisplay; }
     
-    SpaceVec getTransforms(const std::string &device) const;
-    std::string getDefaultTransform(const std::string &device) const;
+    SpaceVec getViews(const std::string &display) const;
+    std::string getDefaultView(const std::string &display) const;
 
     static void getenv(const char *name, std::string &value);
 
@@ -58,8 +58,8 @@ class OpenColorIO_PS_Context
     SpaceVec _colorSpaces;
     SpaceVec _colorSpacesFullPaths;
     std::string _defaultColorSpace;
-    SpaceVec _devices;
-    std::string _defaultDevice;
+    SpaceVec _displays;
+    std::string _defaultDisplay;
     
     bool _isLUT;
     bool _canInvertLUT;
