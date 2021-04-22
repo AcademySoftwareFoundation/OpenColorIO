@@ -19,7 +19,13 @@ void ApplyCDL(float * in, const float * ref, unsigned numPixels,
               const double * power, double saturation,
               OCIO::CDLOpData::Style style, float errorThreshold)
 {
-    OCIO::CDLOp cdlOp(style, slope, offset, power, saturation);
+    OCIO::CDLOpDataRcPtr data
+        = std::make_shared<OCIO::CDLOpData>(style,
+                                            OCIO::CDLOpData::ChannelParams(slope[0],  slope[1],  slope[2]),
+                                            OCIO::CDLOpData::ChannelParams(offset[0], offset[1], offset[2]),
+                                            OCIO::CDLOpData::ChannelParams(power[0],  power[1],  power[2]),
+                                            saturation);
+    OCIO::CDLOp cdlOp(data);
 
     OCIO_CHECK_NO_THROW(cdlOp.validate());
 

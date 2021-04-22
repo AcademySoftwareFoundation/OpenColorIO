@@ -112,7 +112,7 @@ bool MatrixOffsetOp::isSameType(ConstOpRcPtr & op) const
     return true;
 }
 
-bool MatrixOffsetOp::isInverse(ConstOpRcPtr & op) const
+bool MatrixOffsetOp::isInverse(ConstOpRcPtr & /* op */) const
 {
     // It is simpler to handle a pair of inverses by combining them and then removing
     // the identity.  So we just return false here.

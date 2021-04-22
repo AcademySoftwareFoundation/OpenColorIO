@@ -314,12 +314,12 @@ ConstOpCPURcPtr GetLogRenderer(ConstLogOpDataRcPtr & log, bool fastExp)
     throw Exception("Illegal Log direction.");
 }
 
-LogOpCPU::LogOpCPU(ConstLogOpDataRcPtr & log)
+LogOpCPU::LogOpCPU(ConstLogOpDataRcPtr & /* log */)
     : OpCPU()
 {
 }
 
-void LogOpCPU::updateData(ConstLogOpDataRcPtr & log)
+void LogOpCPU::updateData(ConstLogOpDataRcPtr & /* log */)
 {
 }
 
