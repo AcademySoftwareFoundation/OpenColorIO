@@ -34,12 +34,6 @@ public:
 
     CDLOp(CDLOpDataRcPtr & cdl);
 
-    CDLOp(CDLOpData::Style style,
-          const double * slope3,
-          const double * offset3,
-          const double * power3,
-          double saturation);
-
     virtual ~CDLOp();
 
     OpRcPtr clone() const override;
@@ -68,26 +62,6 @@ CDLOp::CDLOp(CDLOpDataRcPtr & cdl)
     :   Op()
 {
     data() = cdl;
-}
-
-CDLOp::CDLOp(CDLOpData::Style style,
-             const double * slope3,
-             const double * offset3,
-             const double * power3,
-             double saturation)
-    :   Op()
-{
-    if (!slope3 || !offset3 || !power3)
-    {
-        throw Exception("CDLOp: NULL pointer.");
-    }
-
-    data().reset(
-        new CDLOpData(style,
-                      CDLOpData::ChannelParams(slope3[0], slope3[1], slope3[2]),
-                      CDLOpData::ChannelParams(offset3[0], offset3[1], offset3[2]),
-                      CDLOpData::ChannelParams(power3[0], power3[1], power3[2]),
-                      saturation));
 }
 
 OpRcPtr CDLOp::clone() const

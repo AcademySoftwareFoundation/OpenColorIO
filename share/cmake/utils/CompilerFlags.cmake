@@ -42,11 +42,13 @@ endif()
 
 if(USE_GCC OR USE_CLANG)
 
-    # -Wswitch-enum Enables warning in switch when an enumeration value is not explicitly handled.
-    set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} -Wall -Wswitch-enum")
+    set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} -Wall")
 
-    # TODO: OCIO being under active development, unused functions are fine for now.
-    set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} -Wno-unused-function")
+    # Add more warning detection.
+    set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} -Wextra")
+
+    # -Wswitch-enum Enables warning in switch when an enumeration value is not explicitly handled.
+    set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} -Wswitch-enum")
 
     if(OCIO_WARNING_AS_ERROR)
         set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} -Werror")

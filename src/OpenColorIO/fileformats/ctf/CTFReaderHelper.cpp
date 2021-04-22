@@ -310,7 +310,7 @@ void CTFReaderArrayElt::start(const char ** atts)
             }
             else
             {
-                const unsigned max = (const unsigned)(dims.empty() ? 0 : (dims.size() - 1));
+                const size_t max = dims.empty() ? 0 : (dims.size() - 1);
                 if (max == 0)
                 {
                     ThrowM(*this, "Illegal '", getTypeName(), "' array dimensions ",
@@ -1314,14 +1314,6 @@ void CTFReaderACESParamsElt::start(const char **atts)
     }
 }
 
-void CTFReaderACESParamsElt::end()
-{
-}
-
-void CTFReaderACESParamsElt::setRawData(const char * str, size_t len, unsigned int xmlLine)
-{
-}
-
 //////////////////////////////////////////////////////////
 
 CTFReaderCDLElt::CTFReaderCDLElt()
@@ -1681,14 +1673,6 @@ void CTFReaderDynamicParamElt::start(const char ** atts)
 
 }
 
-void CTFReaderDynamicParamElt::end()
-{
-}
-
-void CTFReaderDynamicParamElt::setRawData(const char * str, size_t len, unsigned int xmlLine)
-{
-}
-
 //////////////////////////////////////////////////////////
 
 CTFReaderExposureContrastElt::CTFReaderExposureContrastElt()
@@ -1850,14 +1834,6 @@ void CTFReaderECParamsElt::start(const char ** atts)
     {
         pEC->getExposureContrast()->setLogMidGray(logMidGray);
     }
-}
-
-void CTFReaderECParamsElt::end()
-{
-}
-
-void CTFReaderECParamsElt::setRawData(const char * str, size_t len, unsigned int xmlLine)
-{
 }
 
 //////////////////////////////////////////////////////////
@@ -2697,7 +2673,7 @@ RGBCurveType GetRGBCurveType(const std::string & name)
 }
 }
 
-void CTFReaderGradingCurveElt::start(const char ** atts)
+void CTFReaderGradingCurveElt::start(const char ** /* atts */)
 {
     try
     {
@@ -2729,7 +2705,7 @@ CTFReaderGradingCurvePointsElt::~CTFReaderGradingCurvePointsElt()
 {
 }
 
-void CTFReaderGradingCurvePointsElt::start(const char ** atts)
+void CTFReaderGradingCurvePointsElt::start(const char ** /* atts */)
 {
 }
 
@@ -2752,7 +2728,7 @@ void CTFReaderGradingCurvePointsElt::end()
     }
 }
 
-void CTFReaderGradingCurvePointsElt::setRawData(const char* s, size_t len, unsigned int xmlLine)
+void CTFReaderGradingCurvePointsElt::setRawData(const char* s, size_t len, unsigned int /* xmlLine */)
 {
     std::vector<float> data;
 
@@ -2782,7 +2758,7 @@ CTFReaderGradingCurveSlopesElt::~CTFReaderGradingCurveSlopesElt()
 {
 }
 
-void CTFReaderGradingCurveSlopesElt::start(const char ** atts)
+void CTFReaderGradingCurveSlopesElt::start(const char ** /* atts */)
 {
 }
 
@@ -2802,7 +2778,7 @@ void CTFReaderGradingCurveSlopesElt::end()
     }
 }
 
-void CTFReaderGradingCurveSlopesElt::setRawData(const char* s, size_t len, unsigned int xmlLine)
+void CTFReaderGradingCurveSlopesElt::setRawData(const char* s, size_t len, unsigned int /* xmlLine */)
 {
     std::vector<float> data;
 
