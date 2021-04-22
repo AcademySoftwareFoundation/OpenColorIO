@@ -520,7 +520,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				AE_SDK = "\"../../../../../ext/Adobe After Effects 2020 Mac SDK\"";
-				ARCHS = "$(ARCHS_STANDARD)";
+				ARCHS = x86_64;
 				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
 				GCC_MODEL_TUNING = "";
@@ -566,7 +566,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				AE_SDK = "\"../../../../../ext/Adobe After Effects 2020 Mac SDK\"";
-				ARCHS = "$(ARCHS_STANDARD)";
+				ARCHS = x86_64;
 				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
 				COPY_PHASE_STRIP = NO;
 				GCC_MODEL_TUNING = "";

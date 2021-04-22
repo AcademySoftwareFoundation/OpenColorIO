@@ -131,13 +131,6 @@ option(OCIO_INLINES_HIDDEN "Specify whether to build with -fvisibility-inlines-h
 
 
 ###############################################################################
-# Supplemental builtins
-
-# Add supplemental built-in transformations such as camera related one.
-option(OCIO_ADD_EXTRA_BUILTINS "Specify whether to add supplemental built-in transforms" ON)
-
-
-###############################################################################
 # GPU configuration
 
 include(CheckSupportGL)
@@ -272,4 +265,3 @@ configure_file(${CMAKE_SOURCE_DIR}/share/ocio/${OCIO_SETUP_NAME}.in
     ${CMAKE_CURRENT_BINARY_DIR}/share/ocio/${OCIO_SETUP_NAME} @ONLY)
 
 INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/share/ocio/${OCIO_SETUP_NAME} DESTINATION share/ocio/)
-

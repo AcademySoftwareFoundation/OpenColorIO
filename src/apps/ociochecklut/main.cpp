@@ -69,7 +69,7 @@ public:
         {
             shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
         }
-        shaderDesc->setLanguage(OCIO::GPU_LANGUAGE_GLSL_1_3);
+        shaderDesc->setLanguage(OCIO::GPU_LANGUAGE_GLSL_1_2);
         m_gpu->extractGpuShaderInfo(shaderDesc);
         m_oglApp->setShader(shaderDesc);
 #endif // OCIO_GPU_ENABLED
