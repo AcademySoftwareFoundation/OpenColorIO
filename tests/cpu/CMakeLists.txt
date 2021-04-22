@@ -114,7 +114,7 @@ set(TESTS
     apphelpers/CategoryHelpers_tests.cpp
     apphelpers/ColorSpaceHelpers_tests.cpp
     apphelpers/DisplayViewHelpers_tests.cpp
-    apphelpers/LegacyViewingPipeline_tests
+    apphelpers/LegacyViewingPipeline_tests.cpp
     apphelpers/MixingHelpers_tests.cpp
     Baker_tests.cpp
     BitDepthUtils_tests.cpp
