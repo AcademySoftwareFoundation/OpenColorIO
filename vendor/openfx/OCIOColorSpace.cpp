@@ -165,7 +165,7 @@ void OCIOColorSpaceFactory::describeInContext(OFX::ImageEffectDescriptor& desc,
         desc, 
         "src_cs", 
         "Src Color Space", 
-        "source color space name", 
+        "Source color space name", 
         0);
     page->addChild(*srcCsNameParam);
 
@@ -174,7 +174,7 @@ void OCIOColorSpaceFactory::describeInContext(OFX::ImageEffectDescriptor& desc,
         desc, 
         "dst_cs", 
         "Dst Color Space", 
-        "destination color space name", 
+        "Destination color space name", 
         0);
     page->addChild(*dstCsNameParam);
 
@@ -183,7 +183,7 @@ void OCIOColorSpaceFactory::describeInContext(OFX::ImageEffectDescriptor& desc,
         desc, 
         "inverse", 
         "Inverse", 
-        "invert the transform",
+        "Invert the transform",
         0);
     page->addChild(*inverseParam);
 

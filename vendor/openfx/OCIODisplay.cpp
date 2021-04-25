@@ -137,7 +137,7 @@ void OCIODisplayFactory::describeInContext(OFX::ImageEffectDescriptor& desc,
         desc, 
         "src_cs", 
         "Src Color Space", 
-        "source color space name", 
+        "Source color space name", 
         0);
     page->addChild(*srcCsNameParam);
 
@@ -146,7 +146,7 @@ void OCIODisplayFactory::describeInContext(OFX::ImageEffectDescriptor& desc,
         desc, 
         "display", 
         "Display", 
-        "display device name", 
+        "Display device name", 
         0);
     page->addChild(*displayParam);
 
@@ -155,7 +155,7 @@ void OCIODisplayFactory::describeInContext(OFX::ImageEffectDescriptor& desc,
         desc, 
         "view", 
         "View", 
-        "view name", 
+        "View name", 
         0);
     page->addChild(*viewParam);
 
@@ -164,7 +164,7 @@ void OCIODisplayFactory::describeInContext(OFX::ImageEffectDescriptor& desc,
         desc, 
         "inverse", 
         "Inverse", 
-        "invert the transform",
+        "Invert the transform",
         0);
     page->addChild(*inverseParam);
 

@@ -257,7 +257,7 @@ void defineContextParams(OFX::ImageEffectDescriptor & desc,
             desc, 
             "context_" + envVarName,        // name
             envVarName,                     // label
-            ("override context variable: "  // hint
+            ("Override context variable: "  // hint
              + envVarName + " (default: '" 
              + envVarDefault + "')"),
             group);
