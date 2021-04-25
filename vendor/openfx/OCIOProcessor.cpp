@@ -10,9 +10,9 @@ namespace OCIO = OCIO_NAMESPACE;
 
 #include "ofxsLog.h"
 
-void OCIOProcessor::setSrcImg(OFX::Image * v)
-{ 
-    _srcImg = v;
+void OCIOProcessor::setSrcImg(OFX::Image * img)
+{
+    _srcImg = img;
 
     // Make sure input and output bit-depth match
     OFX::BitDepthEnum srcBitDepth = _srcImg->getPixelDepth();
@@ -45,17 +45,20 @@ void OCIOProcessor::setSrcImg(OFX::Image * v)
     }
 }
 
-void OCIOProcessor::setTransform(OCIO::ConstTransformRcPtr tr)
+void OCIOProcessor::setTransform(OCIO::ContextRcPtr context,
+                                 OCIO::ConstTransformRcPtr transform,
+                                 OCIO::TransformDirection direction)
 {
+    OCIO::ConstConfigRcPtr config = getOCIOConfig();
     OCIO::BitDepth bitDepth = getOCIOBitDepth(_dstImg->getPixelDepth());
 
     try
     {
         // Throw if the transform is invalid
-        tr->validate();
+        transform->validate();
 
-        OCIO::ConstConfigRcPtr config = getOCIOConfig();
-        OCIO::ConstProcessorRcPtr proc = config->getProcessor(tr);
+        OCIO::ConstProcessorRcPtr proc = 
+            config->getProcessor(context, transform, direction);
 
         // Build processor which optimizes for input and output bit-depth
         _cpuProc = proc->getOptimizedCPUProcessor(
@@ -92,20 +95,20 @@ void OCIOProcessor::multiThreadProcessImages(OfxRectI procWindow)
 
     // Wrap in OCIO image description, which doesn't take ownership of data
     OCIO::PackedImageDesc srcImgDesc(srcData, 
-                                        w, h, 
-                                        numChannels, 
-                                        bitDepth,
-                                        chanStrideBytes,
-                                        xStrideBytes,
-                                        yStrideBytes);
+                                     w, h, 
+                                     numChannels, 
+                                     bitDepth,
+                                     chanStrideBytes,
+                                     xStrideBytes,
+                                     yStrideBytes);
 
     OCIO::PackedImageDesc dstImgDesc(dstData, 
-                                        w, h, 
-                                        numChannels, 
-                                        bitDepth,
-                                        chanStrideBytes,
-                                        xStrideBytes,
-                                        yStrideBytes);
+                                     w, h, 
+                                     numChannels, 
+                                     bitDepth,
+                                     chanStrideBytes,
+                                     xStrideBytes,
+                                     yStrideBytes);
 
     // Apply processor on CPU
     _cpuProc->apply(srcImgDesc, dstImgDesc);

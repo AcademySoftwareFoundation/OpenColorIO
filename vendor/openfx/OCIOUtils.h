@@ -5,6 +5,7 @@
 #define INCLUDED_OFX_OCIOUTILS_H
 
 #include <string>
+#include <map>
 
 #include "ofxsImageEffect.h"
 
@@ -52,6 +53,32 @@ OFX::BooleanParamDescriptor * defineBooleanParam(
     const std::string & hint,
     OFX::GroupParamDescriptor * parent,
     bool default_value = false);
+
+/* Build simple StringParam */
+OFX::StringParamDescriptor * defineStringParam(
+    OFX::ImageEffectDescriptor & desc,
+    const std::string & name, 
+    const std::string & label, 
+    const std::string & hint,
+    OFX::GroupParamDescriptor * parent,
+    std::string default_value = "");
+
+/* Build GroupParam with a override StringParam per declared environment 
+   variable in the current OCIO config. Each param is named 'context_<name>' 
+   where <name> is the OCIO config environment var name.
+ */
+void defineContextParams(OFX::ImageEffectDescriptor & desc,
+                         OFX::PageParamDescriptor * page);
+
+/* Fetch map of StringParams defined by defineContextParams */
+void fetchContextParams(OFX::ImageEffect & instance, 
+                        std::map<std::string, OFX::StringParam *> & params);
+
+/* Create copy of the current OCIO context with overrides from StringParams 
+   defined by defineContextParams.
+ */
+OCIO::ContextRcPtr createOCIOContext(
+    std::map<std::string, OFX::StringParam *> & params);
 
 /* Get current option string from a ChoiceParam */
 std::string getChoiceParamOption(OFX::ChoiceParam * param);

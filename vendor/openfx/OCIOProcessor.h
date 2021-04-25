@@ -26,10 +26,12 @@ public:
     {}
 
     /* Set the src image */
-    void setSrcImg(OFX::Image * v);
+    void setSrcImg(OFX::Image * img);
 
     /* Set the processor's transform */
-    void setTransform(OCIO::ConstTransformRcPtr tr);
+    void setTransform(OCIO::ContextRcPtr context,
+                      OCIO::ConstTransformRcPtr transform,
+                      OCIO::TransformDirection direction);
 
     /* Process image on multiple threads */
     void multiThreadProcessImages(OfxRectI procWindow) override;

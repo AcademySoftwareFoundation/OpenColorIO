@@ -23,6 +23,8 @@ OCIODisplay::OCIODisplay(OfxImageEffectHandle handle)
     displayParam_   = fetchChoiceParam("display");
     viewParam_      = fetchChoiceParam("view");
     inverseParam_   = fetchBooleanParam("inverse");
+
+    fetchContextParams(*this, contextParams_);
 }
 
 void OCIODisplay::render(const OFX::RenderArguments & args)
@@ -37,13 +39,14 @@ void OCIODisplay::render(const OFX::RenderArguments & args)
     std::string view      = getChoiceParamOption(viewParam_);
     bool inverse = inverseParam_->getValue();
 
+    // Create context with overrides
+    OCIO::ContextRcPtr context = createOCIOContext(contextParams_);
+
     // Build transform
     OCIO::DisplayViewTransformRcPtr tr = OCIO::DisplayViewTransform::Create();
     tr->setSrc(srcCsName.c_str());
     tr->setDisplay(display.c_str());
     tr->setView(view.c_str());
-    tr->setDirection((inverse ? OCIO::TRANSFORM_DIR_INVERSE 
-                              : OCIO::TRANSFORM_DIR_FORWARD));
 
     // Setup and apply processor
     OCIOProcessor proc(*this);
@@ -51,7 +54,8 @@ void OCIODisplay::render(const OFX::RenderArguments & args)
     proc.setDstImg(dst.get());
     proc.setSrcImg(src.get());
     proc.setRenderWindow(args.renderWindow);
-    proc.setTransform(tr);
+    proc.setTransform(context, tr, (inverse ? OCIO::TRANSFORM_DIR_INVERSE 
+                                            : OCIO::TRANSFORM_DIR_FORWARD));
 
     proc.process();
 }
@@ -132,7 +136,7 @@ void OCIODisplayFactory::describeInContext(OFX::ImageEffectDescriptor& desc,
     OFX::ChoiceParamDescriptor * srcCsNameParam = defineCsNameParam(
         desc, 
         "src_cs", 
-        "src color space", 
+        "Src Color Space", 
         "source color space name", 
         0);
     page->addChild(*srcCsNameParam);
@@ -141,7 +145,7 @@ void OCIODisplayFactory::describeInContext(OFX::ImageEffectDescriptor& desc,
     OFX::ChoiceParamDescriptor * displayParam = defineDisplayParam(
         desc, 
         "display", 
-        "display", 
+        "Display", 
         "display device name", 
         0);
     page->addChild(*displayParam);
@@ -150,7 +154,7 @@ void OCIODisplayFactory::describeInContext(OFX::ImageEffectDescriptor& desc,
     OFX::ChoiceParamDescriptor * viewParam = defineViewParam(
         desc, 
         "view", 
-        "view", 
+        "View", 
         "view name", 
         0);
     page->addChild(*viewParam);
@@ -159,10 +163,13 @@ void OCIODisplayFactory::describeInContext(OFX::ImageEffectDescriptor& desc,
     OFX::BooleanParamDescriptor * inverseParam = defineBooleanParam(
         desc, 
         "inverse", 
-        "inverse", 
+        "Inverse", 
         "invert the transform",
         0);
     page->addChild(*inverseParam);
+
+    // Context overrides
+    defineContextParams(desc, page);
 }
 
 OFX::ImageEffect * OCIODisplayFactory::createInstance(

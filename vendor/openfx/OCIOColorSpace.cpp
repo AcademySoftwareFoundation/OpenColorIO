@@ -21,6 +21,8 @@ OCIOColorSpace::OCIOColorSpace(OfxImageEffectHandle handle)
     srcCsNameParam_ = fetchChoiceParam("src_cs");
     dstCsNameParam_ = fetchChoiceParam("dst_cs");
     inverseParam_   = fetchBooleanParam("inverse");
+
+    fetchContextParams(*this, contextParams_);
 }
 
 void OCIOColorSpace::render(const OFX::RenderArguments & args)
@@ -34,12 +36,13 @@ void OCIOColorSpace::render(const OFX::RenderArguments & args)
     std::string dstCsName = getChoiceParamOption(dstCsNameParam_);
     bool inverse = inverseParam_->getValue();
 
+    // Create context with overrides
+    OCIO::ContextRcPtr context = createOCIOContext(contextParams_);
+
     // Build transform
     OCIO::ColorSpaceTransformRcPtr tr = OCIO::ColorSpaceTransform::Create();
     tr->setSrc(srcCsName.c_str());
     tr->setDst(dstCsName.c_str());
-    tr->setDirection((inverse ? OCIO::TRANSFORM_DIR_INVERSE 
-                              : OCIO::TRANSFORM_DIR_FORWARD));
 
     // Setup and apply processor
     OCIOProcessor proc(*this);
@@ -47,7 +50,8 @@ void OCIOColorSpace::render(const OFX::RenderArguments & args)
     proc.setDstImg(dst.get());
     proc.setSrcImg(src.get());
     proc.setRenderWindow(args.renderWindow);
-    proc.setTransform(tr);
+    proc.setTransform(context, tr, (inverse ? OCIO::TRANSFORM_DIR_INVERSE 
+                                            : OCIO::TRANSFORM_DIR_FORWARD));
 
     proc.process();
 }
@@ -160,7 +164,7 @@ void OCIOColorSpaceFactory::describeInContext(OFX::ImageEffectDescriptor& desc,
     OFX::ChoiceParamDescriptor * srcCsNameParam = defineCsNameParam(
         desc, 
         "src_cs", 
-        "src color space", 
+        "Src Color Space", 
         "source color space name", 
         0);
     page->addChild(*srcCsNameParam);
@@ -169,7 +173,7 @@ void OCIOColorSpaceFactory::describeInContext(OFX::ImageEffectDescriptor& desc,
     OFX::ChoiceParamDescriptor * dstCsNameParam = defineCsNameParam(
         desc, 
         "dst_cs", 
-        "dst color space", 
+        "Dst Color Space", 
         "destination color space name", 
         0);
     page->addChild(*dstCsNameParam);
@@ -178,10 +182,13 @@ void OCIOColorSpaceFactory::describeInContext(OFX::ImageEffectDescriptor& desc,
     OFX::BooleanParamDescriptor * inverseParam = defineBooleanParam(
         desc, 
         "inverse", 
-        "inverse", 
+        "Inverse", 
         "invert the transform",
         0);
     page->addChild(*inverseParam);
+
+    // Context overrides
+    defineContextParams(desc, page);
 }
 
 OFX::ImageEffect * OCIOColorSpaceFactory::createInstance(

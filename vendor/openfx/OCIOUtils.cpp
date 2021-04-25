@@ -219,6 +219,93 @@ OFX::BooleanParamDescriptor * defineBooleanParam(
     return param;
 }
 
+OFX::StringParamDescriptor * defineStringParam(
+    OFX::ImageEffectDescriptor & desc,
+    const std::string & name, 
+    const std::string & label, 
+    const std::string & hint,
+    OFX::GroupParamDescriptor * parent,
+    std::string default_value)
+{
+    OFX::StringParamDescriptor * param = desc.defineStringParam(name);
+    initParam(param, name, label, hint, parent);
+
+    param->setDefault(default_value);
+
+    return param;
+}
+
+void defineContextParams(OFX::ImageEffectDescriptor & desc,
+                         OFX::PageParamDescriptor * page)
+{
+    OFX::GroupParamDescriptor * group = desc.defineGroupParam("Context");
+    group->setOpen(false);
+    group->setHint("override context variables declared in OCIO config "
+                   "'environment' section");
+
+    // Define StringParam per config-declared environment variable
+    OCIO::ConstConfigRcPtr config = getOCIOConfig();
+
+    for (int i = 0; i < config->getNumEnvironmentVars(); i++)
+    {
+        std::string envVarName(
+            config->getEnvironmentVarNameByIndex(i));
+        std::string envVarDefault(
+            config->getEnvironmentVarDefault(envVarName.c_str()));
+
+        OFX::StringParamDescriptor * contextParam = defineStringParam(
+            desc, 
+            "context_" + envVarName,        // name
+            envVarName,                     // label
+            ("override context variable: "  // hint
+             + envVarName + " (default: '" 
+             + envVarDefault + "')"),
+            group);
+
+        page->addChild(*contextParam);
+    }
+}
+
+void fetchContextParams(OFX::ImageEffect & instance,
+                        std::map<std::string, OFX::StringParam *> & params)
+{
+    OCIO::ConstConfigRcPtr config = getOCIOConfig();
+
+    for (int i = 0; i < config->getNumEnvironmentVars(); i++)
+    {
+        std::string envVarName(config->getEnvironmentVarNameByIndex(i));
+
+        OFX::StringParam * contextParam = 
+            instance.fetchStringParam("context_" + envVarName);
+
+        params[envVarName] = contextParam;
+    }
+}
+
+OCIO::ContextRcPtr createOCIOContext(
+    std::map<std::string, OFX::StringParam *> & params)
+{
+    OCIO::ConstConfigRcPtr config = getOCIOConfig();
+    OCIO::ConstContextRcPtr srcContext = config->getCurrentContext();
+    OCIO::ContextRcPtr context = srcContext->createEditableCopy();
+
+    std::map<std::string, OFX::StringParam *>::const_iterator it = 
+        params.begin();
+
+    for (; it != params.end(); it++)
+    {
+        std::string value;
+        it->second->getValue(value);
+        
+        if (!value.empty())
+        {
+            context->setStringVar(it->first.c_str(), value.c_str());
+        }
+    }
+
+    return context;
+}
+
 std::string getChoiceParamOption(OFX::ChoiceParam * param)
 {
     int idx;

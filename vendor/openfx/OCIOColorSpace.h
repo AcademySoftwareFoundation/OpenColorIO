@@ -17,6 +17,8 @@ protected:
     OFX::ChoiceParam * dstCsNameParam_;
     OFX::BooleanParam * inverseParam_;
 
+    std::map<std::string, OFX::StringParam *> contextParams_;
+
 public:
     OCIOColorSpace(OfxImageEffectHandle handle);
 
