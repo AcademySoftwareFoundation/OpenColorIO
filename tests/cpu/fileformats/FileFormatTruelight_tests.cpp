@@ -99,7 +99,9 @@ OCIO_ADD_TEST(FileFormatTruelight, shaper_and_lut_3d)
     {
         CreateLut3DOp(ops, lut->lut3D, OCIO::TRANSFORM_DIR_FORWARD);
     }
-    OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_DEFAULT));
+
+    OCIO_CHECK_NO_THROW(ops.finalize());
+    OCIO_CHECK_NO_THROW(ops.optimize(OCIO::OPTIMIZATION_DEFAULT));
 
     // Apply the result
     for(OCIO::OpRcPtrVec::size_type i = 0, size = ops.size(); i < size; ++i)
@@ -166,7 +168,9 @@ OCIO_ADD_TEST(FileFormatTruelight, shaper)
     {
         CreateLut3DOp(ops, lut->lut3D, OCIO::TRANSFORM_DIR_FORWARD);
     }
-    OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_DEFAULT));
+
+    OCIO_CHECK_NO_THROW(ops.finalize());
+    OCIO_CHECK_NO_THROW(ops.optimize(OCIO::OPTIMIZATION_DEFAULT));
 
     // Apply the result
     for(OCIO::OpRcPtrVec::size_type i = 0, size = ops.size(); i < size; ++i)
@@ -250,7 +254,9 @@ OCIO_ADD_TEST(FileFormatTruelight, lut_3d)
     {
         CreateLut3DOp(ops, lut->lut3D, OCIO::TRANSFORM_DIR_FORWARD);
     }
-    OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_DEFAULT));
+
+    OCIO_CHECK_NO_THROW(ops.finalize());
+    OCIO_CHECK_NO_THROW(ops.optimize(OCIO::OPTIMIZATION_DEFAULT));
 
     // Apply the result
     for(OCIO::OpRcPtrVec::size_type i = 0, size = ops.size(); i < size; ++i)

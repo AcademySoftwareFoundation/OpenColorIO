@@ -58,7 +58,8 @@ OCIO_ADD_TEST(AllocationOps, create)
     OCIO::ConstOpRcPtr op1 = ops[1];
     // second op is a fit transform
     OCIO_CHECK_EQUAL(forwardFitOp->isSameType(op1), true);
-    OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_DEFAULT));
+    OCIO_CHECK_NO_THROW(ops.finalize());
+    OCIO_CHECK_NO_THROW(ops.optimize(OCIO::OPTIMIZATION_DEFAULT));
     OCIO_REQUIRE_EQUAL(ops.size(), 2);
     OCIO::ConstOpRcPtr defaultLogOp = ops[0];
     OCIO::ConstOpRcPtr defaultFitOp = ops[1];
@@ -121,7 +122,8 @@ OCIO_ADD_TEST(AllocationOps, create)
         OCIO::CreateAllocationOps(ops, allocData, OCIO::TRANSFORM_DIR_FORWARD));
     OCIO_REQUIRE_EQUAL(ops.size(), 2);
     // Identity is removed.
-    OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_DEFAULT));
+    OCIO_CHECK_NO_THROW(ops.finalize());
+    OCIO_CHECK_NO_THROW(ops.optimize(OCIO::OPTIMIZATION_DEFAULT));
     OCIO_REQUIRE_EQUAL(ops.size(), 1);
     OCIO::ConstOpRcPtr op0 = ops[0];
     OCIO_CHECK_EQUAL(defaultLogOp->isSameType(op0), true);
@@ -130,7 +132,8 @@ OCIO_ADD_TEST(AllocationOps, create)
         OCIO::CreateAllocationOps(ops, allocData, OCIO::TRANSFORM_DIR_INVERSE));
     OCIO_REQUIRE_EQUAL(ops.size(), 2);
     // Identity is removed.
-    OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_DEFAULT));
+    OCIO_CHECK_NO_THROW(ops.finalize());
+    OCIO_CHECK_NO_THROW(ops.optimize(OCIO::OPTIMIZATION_DEFAULT));
     OCIO_REQUIRE_EQUAL(ops.size(), 1);
     op0 = ops[0];
     OCIO_CHECK_EQUAL(defaultLogOp->isSameType(op0), true);
@@ -141,7 +144,8 @@ OCIO_ADD_TEST(AllocationOps, create)
     OCIO_CHECK_NO_THROW(
         OCIO::CreateAllocationOps(ops, allocData, OCIO::TRANSFORM_DIR_FORWARD));
     OCIO_CHECK_EQUAL(ops.size(), 2);
-    OCIO_CHECK_NO_THROW(ops.finalize(OCIO::OPTIMIZATION_DEFAULT));
+    OCIO_CHECK_NO_THROW(ops.finalize());
+    OCIO_CHECK_NO_THROW(ops.optimize(OCIO::OPTIMIZATION_DEFAULT));
     OCIO_REQUIRE_EQUAL(ops.size(), 1);
 
     memcpy(tmp, &src[0], 4 * NB_PIXELS * sizeof(float));
