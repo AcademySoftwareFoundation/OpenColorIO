@@ -79,3 +79,38 @@ OCIO_ADD_TEST(GroupTransform, write_formats)
     OCIO_CHECK_EQUAL(GetFormatName("cdl"), OCIO::FILEFORMAT_COLOR_DECISION_LIST);
     OCIO_CHECK_ASSERT(GetFormatName("XXX").empty());
 }
+
+OCIO_ADD_TEST(GroupTransform, write_with_noops)
+{
+    // The unit test validates that the no-ops are transparent when writing to a lut file format.
+
+    const OCIO::ConstConfigRcPtr config = OCIO::Config::Create();
+
+    OCIO::FileTransformRcPtr file;
+    OCIO::GroupTransformRcPtr group;
+    OCIO::ConstProcessorRcPtr proc;
+
+    // Step 1 - Write to CLF from a group transform.
+
+    {
+        OCIO_CHECK_NO_THROW(file = OCIO::CreateFileTransform("logtolin_8to8.lut"));
+
+        group = OCIO::GroupTransform::Create();
+        OCIO_CHECK_NO_THROW(group->appendTransform(file));
+
+        std::ostringstream oss;
+        OCIO_CHECK_NO_THROW(group->write(config, OCIO::FILEFORMAT_CLF, oss));
+    }
+    
+    // Step 2 - Write to CLF from a processor.
+
+    {
+        OCIO_CHECK_NO_THROW(file = OCIO::CreateFileTransform("logtolin_8to8.lut"));
+
+        OCIO_CHECK_NO_THROW(proc = config->getProcessor(file));
+        OCIO_CHECK_NO_THROW(group = proc->createGroupTransform());
+
+        std::ostringstream oss;
+        OCIO_CHECK_NO_THROW(group->write(config, OCIO::FILEFORMAT_CLF, oss));
+    }
+}

@@ -551,10 +551,25 @@ void OptimizeSeparablePrefix(OpRcPtrVec & ops, BitDepth in)
 }
 } // namespace
 
-void OpRcPtrVec::finalize(OptimizationFlags oFlags)
+void OpRcPtrVec::finalize()
 {
     if (m_ops.empty())
+    {
         return;
+    }
+
+    validate();
+
+    // Prepare LUT 1D for inversion and ensure Matrix & Range are forward.
+    FinalizeOps(*this);
+}
+
+void OpRcPtrVec::optimize(OptimizationFlags oFlags)
+{
+    if (m_ops.empty())
+    {
+        return;
+    }
 
     if (IsDebugLoggingEnabled())
     {
@@ -571,11 +586,6 @@ void OpRcPtrVec::finalize(OptimizationFlags oFlags)
 
     // NoOpType can be removed (facilitates conversion to a CPU/GPUProcessor).
     const int total_nooptype = RemoveNoOpTypes(*this);
-
-    validate();
-
-    // Prepare LUT 1D for inversion and ensure Matrix & Range are forward.
-    FinalizeOps(*this);
 
     if (oFlags == OPTIMIZATION_NONE)
     {

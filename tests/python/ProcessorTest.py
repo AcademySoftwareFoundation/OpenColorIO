@@ -49,7 +49,7 @@ class ProcessorTest(unittest.TestCase):
         # Make the transform dynamic.
         ec.makeContrastDynamic()
         p = cfg.getProcessor(ec)
-        self.assertEqual(p.getCacheID(), '$3686dc0e9e639d52b07172b7b0a5c61b')
+        self.assertEqual(p.getCacheID(), '$4c4a89725a9a2164f1f8afe60c8967a0')
 
     def test_create_group_transform(self):
         # Test createGroupTransform() function.
@@ -146,6 +146,8 @@ class ProcessorTest(unittest.TestCase):
         test_file = '%s/clf/xyz_to_rgb.clf' % TEST_DATAFILES_DIR
         file_tr = OCIO.FileTransform(src=test_file)
         proc = cfg.getProcessor(file_tr)
+        # Remove the no-ops, since they are useless here.
+        proc = proc.getOptimizedProcessor(OCIO.OPTIMIZATION_NONE)
 
         # For CTF, ProcessList metadata is added to processor FormatMetadata.
         proc_fmd = proc.getFormatMetadata()

@@ -2757,7 +2757,7 @@ void TransformWriter::writeOps(const CTFVersion & version) const
             }
             case OpData::NoOpType:
             {
-                break;
+                throw Exception("Noop ops should have been removed.");
             }
             }
 
