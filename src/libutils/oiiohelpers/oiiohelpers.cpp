@@ -81,7 +81,7 @@ void * AllocateImageBuffer(const OIIO::ImageSpec & spec)
     return (void *)new char[imgSizeInChars];
 }
 
-void DeallocateImageBuffer(const OIIO::ImageSpec & spec, void * & img)
+void DeallocateImageBuffer(const OIIO::ImageSpec & /* spec */, void * & img)
 {
     delete [](char*)img;
     img = nullptr;

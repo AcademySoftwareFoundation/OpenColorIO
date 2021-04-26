@@ -217,7 +217,7 @@ class XmlReaderDummyElt : public XmlReaderPlainElt
 
         const std::string & getIdentifier() const override;
 
-        void start(const char ** atts) override
+        void start(const char ** /* atts */) override
         {
         }
 
@@ -244,7 +244,7 @@ public:
 
     const std::string & getIdentifier() const override;
 
-    void start(const char ** atts) override
+    void start(const char ** /* atts */) override
     {
     }
 
@@ -252,7 +252,7 @@ public:
     {
     }
 
-    void setRawData(const char * str, size_t len, unsigned int xmlLine) override
+    void setRawData(const char * str, size_t len, unsigned int /* xmlLine */) override
     {
         m_rawData.push_back(std::string(str, len));
     }
@@ -286,7 +286,7 @@ public:
     {
     }
 
-    void start(const char ** atts) override
+    void start(const char ** /* atts */) override
     {
         m_description.resize(0);
         m_changed = false;
@@ -294,7 +294,7 @@ public:
 
     void end() override;
 
-    void setRawData(const char * str, size_t len, unsigned int xmlLine) override
+    void setRawData(const char * str, size_t len, unsigned int /* xmlLine */) override
     {
         // Keep adding to the string.
         m_description += std::string(str, len);
@@ -363,7 +363,7 @@ public:
     {
     }
 
-    void start(const char ** atts) override
+    void start(const char ** /* atts */) override
     {
         m_isSlopeInit = m_isOffsetInit = m_isPowerInit = false;
     }
@@ -392,7 +392,7 @@ public:
     void setIsOffsetInit(bool status) { m_isOffsetInit = status; }
     void setIsPowerInit(bool status) { m_isPowerInit = status; }
 
-    void appendMetadata(const std::string & name, const std::string & value) override
+    void appendMetadata(const std::string & /* name */, const std::string & value) override
     {
         // Add description to parent and override name.
         FormatMetadataImpl item(METADATA_SOP_DESCRIPTION, value);
@@ -442,7 +442,7 @@ public:
     {
     }
 
-    void start(const char ** atts) override
+    void start(const char ** /* atts */) override
     {
     }
 
@@ -452,7 +452,7 @@ public:
 
     virtual const CDLOpDataRcPtr & getCDL() const = 0;
 
-    void appendMetadata(const std::string & name, const std::string & value) override
+    void appendMetadata(const std::string & /* name */, const std::string & value) override
     {
         // Add description to parent and override name.
         FormatMetadataImpl item(METADATA_SAT_DESCRIPTION, value);
