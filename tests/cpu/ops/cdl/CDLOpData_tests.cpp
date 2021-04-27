@@ -236,26 +236,63 @@ OCIO_ADD_TEST(CDLOpData, style)
     OCIO::CDLOpData cdlOp;
 
     // Check CDL_V1_2_FWD
+
     cdlOp.setStyle(OCIO::CDLOpData::CDL_V1_2_FWD);
     OCIO_CHECK_EQUAL(cdlOp.getStyle(), OCIO::CDLOpData::CDL_V1_2_FWD);
     OCIO_CHECK_ASSERT(!cdlOp.isReverse());
 
+    // Check the identity replacement.
+    OCIO::OpDataRcPtr op = cdlOp.getIdentityReplacement();
+    OCIO::RangeOpDataRcPtr rg = OCIO::DynamicPtrCast<OCIO::RangeOpData>(op);
+    OCIO_REQUIRE_ASSERT(rg);
+    OCIO_CHECK_ASSERT(rg->hasMinInValue()  && (rg->getMinInValue()  == 0.));
+    OCIO_CHECK_ASSERT(rg->hasMaxInValue()  && (rg->getMaxInValue()  == 1.));
+    OCIO_CHECK_ASSERT(rg->hasMinOutValue() && (rg->getMinOutValue() == 0.));
+    OCIO_CHECK_ASSERT(rg->hasMaxOutValue() && (rg->getMaxOutValue() == 1.));
+    OCIO_CHECK_ASSERT(!rg->scales());
+
     // Check CDL_V1_2_REV
+
     cdlOp.setStyle(OCIO::CDLOpData::CDL_V1_2_REV);
     OCIO_CHECK_EQUAL(cdlOp.getStyle(), OCIO::CDLOpData::CDL_V1_2_REV);
     OCIO_CHECK_ASSERT(cdlOp.isReverse());
 
+    // Check the identity replacement.
+    op = cdlOp.getIdentityReplacement();
+    rg = OCIO::DynamicPtrCast<OCIO::RangeOpData>(op);
+    OCIO_REQUIRE_ASSERT(rg);
+    OCIO_CHECK_ASSERT(rg->hasMinInValue()  && (rg->getMinInValue()  == 0.));
+    OCIO_CHECK_ASSERT(rg->hasMaxInValue()  && (rg->getMaxInValue()  == 1.));
+    OCIO_CHECK_ASSERT(rg->hasMinOutValue() && (rg->getMinOutValue() == 0.));
+    OCIO_CHECK_ASSERT(rg->hasMaxOutValue() && (rg->getMaxOutValue() == 1.));
+    OCIO_CHECK_ASSERT(!rg->scales());
+
     // Check CDL_NO_CLAMP_FWD
+
     cdlOp.setStyle(OCIO::CDLOpData::CDL_NO_CLAMP_FWD);
     OCIO_CHECK_EQUAL(cdlOp.getStyle(), OCIO::CDLOpData::CDL_NO_CLAMP_FWD);
     OCIO_CHECK_ASSERT(!cdlOp.isReverse());
 
+    // Check the identity replacement.
+    op = cdlOp.getIdentityReplacement();
+    OCIO::MatrixOpDataRcPtr mtx = OCIO::DynamicPtrCast<OCIO::MatrixOpData>(op);
+    OCIO_REQUIRE_ASSERT(mtx);
+    OCIO_CHECK_ASSERT(mtx->isIdentity());
+
     // Check CDL_NO_CLAMP_REV
+
     cdlOp.setStyle(OCIO::CDLOpData::CDL_NO_CLAMP_REV);
     OCIO_CHECK_EQUAL(cdlOp.getStyle(), OCIO::CDLOpData::CDL_NO_CLAMP_REV);
     OCIO_CHECK_ASSERT(cdlOp.isReverse());
 
+    // Check the identity replacement.
+    op = cdlOp.getIdentityReplacement();
+    mtx = OCIO::DynamicPtrCast<OCIO::MatrixOpData>(op);
+    OCIO_REQUIRE_ASSERT(mtx);
+    OCIO_CHECK_ASSERT(mtx->isIdentity());
+
     // Check unknown style
+
     OCIO_CHECK_THROW_WHAT(OCIO::CDLOpData::GetStyle("unknown_style"),
                           OCIO::Exception, 
                           "Unknown style for CDL");
