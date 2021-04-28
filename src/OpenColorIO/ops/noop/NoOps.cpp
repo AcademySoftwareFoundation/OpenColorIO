@@ -46,7 +46,7 @@ public:
 
     ConstOpCPURcPtr getCPUOp(bool /*fastLogExpPow*/) const override { return nullptr; }
 
-    void apply(void * img, long numPixels) const override {}
+    void apply(void * /*img*/, long /*numPixels*/) const override {}
 
     void apply(const void * inImg, void * outImg, long numPixels) const override
     { memcpy(outImg, inImg, numPixels * 4 * sizeof(float)); }
@@ -317,7 +317,7 @@ public:
 
     ConstOpCPURcPtr getCPUOp(bool /*fastLogExpPow*/) const override { return nullptr; }
 
-    void apply(void * img, long numPixels) const override {}
+    void apply(void * /*img*/, long /*numPixels*/) const override {}
 
     void apply(const void * inImg, void * outImg, long numPixels) const override
     { memcpy(outImg, inImg, numPixels * 4 * sizeof(float)); }
@@ -403,7 +403,7 @@ public:
 
     ConstOpCPURcPtr getCPUOp(bool /*fastLogExpPow*/) const override { return nullptr; }
 
-    void apply(void * img, long numPixels) const override {}
+    void apply(void * /*img*/, long /*numPixels*/) const override {}
 
     void apply(const void * inImg, void * outImg, long numPixels) const override
     { memcpy(outImg, inImg, numPixels * 4 * sizeof(float)); }

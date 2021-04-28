@@ -34,14 +34,16 @@ GradingRGBCurveOpData::GradingRGBCurveOpData(GradingStyle style,
                                              ConstGradingBSplineCurveRcPtr green,
                                              ConstGradingBSplineCurveRcPtr blue,
                                              ConstGradingBSplineCurveRcPtr master)
-    : m_style(style)
+    : OpData()
+    , m_style(style)
 {
     ConstGradingRGBCurveRcPtr rgbCurve = GradingRGBCurve::Create(red, green, blue, master);
     m_value = std::make_shared<DynamicPropertyGradingRGBCurveImpl>(rgbCurve, false);
 }
 
 GradingRGBCurveOpData::GradingRGBCurveOpData(const GradingRGBCurveOpData & rhs)
-    : m_style(rhs.m_style)
+    : OpData(rhs)
+    , m_style(rhs.m_style)
 {
     ConstGradingRGBCurveRcPtr rgbCurve = GradingRGBCurve::Create(rhs.m_style);
     m_value = std::make_shared<DynamicPropertyGradingRGBCurveImpl>(rgbCurve, false);

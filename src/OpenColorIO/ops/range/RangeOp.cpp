@@ -87,7 +87,7 @@ bool RangeOp::isSameType(ConstOpRcPtr & op) const
     return (bool)typedRcPtr;
 }
 
-bool RangeOp::isInverse(ConstOpRcPtr & op) const
+bool RangeOp::isInverse(ConstOpRcPtr & /* op */) const
 {
     // It is simpler to handle a pair of inverses by combining them and then removing
     // the identity.  So we just return false here.
