@@ -1608,10 +1608,6 @@ private:
                      const GradingRGBMSW & val,
                      bool center, bool pivot) const;
     void writeScalarElement(const char * tag, double defaultVal, double val) const;
-    void addAttribute(XmlFormatter::Attributes & attributes, const char * attr,
-        double val) const;
-    void addAttribute(XmlFormatter::Attributes & attributes, const char * attr,
-        double defaultVal, double val) const;
 
     ConstGradingToneOpDataRcPtr m_tone;
 };
@@ -1692,24 +1688,6 @@ void GradingToneWriter::writeScalarElement(const char * tag,
         attributes.push_back(XmlFormatter::Attribute(ATTR_MASTER, stream.str()));
         m_formatter.writeEmptyTag(tag, attributes);
     }
-}
-
-void GradingToneWriter::addAttribute(XmlFormatter::Attributes & attributes, const char * attr,
-                                     double defaultVal, double val) const
-{
-    if (val != defaultVal)
-    {
-        addAttribute(attributes, attr, val);
-    }
-}
-
-void GradingToneWriter::addAttribute(XmlFormatter::Attributes & attributes, const char * attr,
-                                     double val) const
-{
-    std::stringstream master;
-    master.precision(DOUBLE_PRECISION);
-    master << val;
-    attributes.push_back(XmlFormatter::Attribute(attr, master.str()));
 }
 
 void GradingToneWriter::writeContent() const

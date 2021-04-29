@@ -15,7 +15,7 @@ namespace OCIO_NAMESPACE
 namespace
 {
 
-void AddLogShader(GpuShaderCreatorRcPtr & shaderCreator, ConstLogOpDataRcPtr & logData, float base)
+void AddLogShader(GpuShaderCreatorRcPtr & shaderCreator, ConstLogOpDataRcPtr & /* logData */, float base)
 {
     const float minValue = std::numeric_limits<float>::min();
 
@@ -43,7 +43,7 @@ void AddLogShader(GpuShaderCreatorRcPtr & shaderCreator, ConstLogOpDataRcPtr & l
     shaderCreator->addToFunctionShaderCode(st.string().c_str());
 }
 
-void AddAntiLogShader(GpuShaderCreatorRcPtr & shaderCreator, ConstLogOpDataRcPtr & logData, float base)
+void AddAntiLogShader(GpuShaderCreatorRcPtr & shaderCreator, ConstLogOpDataRcPtr & /* logData */, float base)
 {
     GpuShaderText st(shaderCreator->getLanguage());
 
