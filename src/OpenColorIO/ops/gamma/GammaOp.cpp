@@ -29,12 +29,6 @@ public:
     explicit GammaOp(GammaOpDataRcPtr & gamma);
     GammaOp(const GammaOp &) = delete;
 
-    GammaOp(GammaOpData::Style style,
-            GammaOpData::Params red,
-            GammaOpData::Params green,
-            GammaOpData::Params blue,
-            GammaOpData::Params alpha);
-
     virtual ~GammaOp();
 
     std::string getInfo() const override;
@@ -61,18 +55,6 @@ protected:
 GammaOp::GammaOp(GammaOpDataRcPtr & gamma)
     :   Op()
 {
-    data() = gamma;
-}
-
-GammaOp::GammaOp(GammaOpData::Style style,
-                 GammaOpData::Params red,
-                 GammaOpData::Params green,
-                 GammaOpData::Params blue,
-                 GammaOpData::Params alpha)
-    :   Op()
-{
-    GammaOpDataRcPtr gamma = std::make_shared<GammaOpData>(style, red, green, blue, alpha);
-
     data() = gamma;
 }
 

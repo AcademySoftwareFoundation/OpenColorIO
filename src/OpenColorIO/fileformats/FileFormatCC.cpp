@@ -111,7 +111,7 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
 void LocalFileFormat::write(const ConstConfigRcPtr & /*config*/,
                             const ConstContextRcPtr & /*context*/,
                             const GroupTransform & group,
-                            const std::string & formatName,
+                            const std::string & /* formatName */,
                             std::ostream & ostream) const
 {
     if (group.getNumTransforms() != 1)

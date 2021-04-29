@@ -77,7 +77,7 @@ void bindPyFileTransform(py::module & m)
     defRepr(clsFileTransform);
 
     clsFormatIterator
-        .def("__len__", [](FormatIterator & it) 
+        .def("__len__", [](FormatIterator & /* it */) 
             { 
                 return FileTransform::GetNumFormats(); 
             })
