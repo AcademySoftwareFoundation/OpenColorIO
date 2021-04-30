@@ -6,4 +6,5 @@ set -ex
 
 HERE=$(dirname $0)
 
+yum install -y sudo
 sudo pip install -r $HERE/../../../../../tests/python/requirements.txt

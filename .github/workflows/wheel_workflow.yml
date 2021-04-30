@@ -1,0 +1,221 @@
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright Contributors to the OpenColorIO Project.
+#
+
+name: Wheel
+
+on: [pull_request]
+
+jobs:
+  # Linux jobs run in Docker containers (manylinux), so the latest OS version
+  # is OK. macOS and Windows jobs need to be locked to specific virtual
+  # environment versions to mitigate issues from OS updates, and will require
+  # maintenance as OS versions are retired.
+  #
+  # Notes:
+  #
+  # Documentation fails to build on manylinux2010, maybe too old
+  # doxygen ? First fail in PyColorSpaceSet for documentation
+  # referencing PyOpenColorIO (eg. __sub__). Consequence is we don't
+  # support python 2.7, alternatively build without docstrings, or
+  # fix the doxygen issue.
+  #
+  # When installing doc environment, Python package are not used as the wheel
+  # is built in it's own isolated environment, hence package are listed again
+  # in pyproject.toml.
+  #
+  # Wheels are currently uploaded to the test package index for testing
+  # https://test.pypi.org/
+  #
+  # Filters on event to decide when to build and upload the wheels are up for
+  # dicussions.
+  #
+
+  # ---------------------------------------------------------------------------
+  # Linux
+  # ---------------------------------------------------------------------------
+
+  linux:
+    name: Build wheels on Linux
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          # -------------------------------------------------------------------
+          # CPython 32 bits
+          # -------------------------------------------------------------------
+          - build: CPython 3.6 32 bits
+            python: cp36-*
+            arch: i686
+          - build: CPython 3.7 32 bits
+            python: cp37-*
+            arch: i686
+          - build: CPython 3.8 32 bits
+            python: cp38-*
+            arch: i686
+          - build: CPython 3.9 32 bits
+            python: cp39-*
+            arch: i686
+          # -------------------------------------------------------------------
+          # CPython 64 bits
+          # -------------------------------------------------------------------
+          - build: CPython 3.6 64 bits
+            python: cp36-*
+            arch: x86_64
+          - build: CPython 3.7 64 bits
+            python: cp37-*
+            arch: x86_64
+          - build: CPython 3.8 64 bits
+            python: cp38-*
+            arch: x86_64
+          - build: CPython 3.9 64 bits
+            python: cp39-*
+            arch: x86_64
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions/setup-python@v2
+        name: Install Python
+        with:
+          python-version: '3.8'
+
+      - name: Build wheels
+        uses: joerick/cibuildwheel@v1.11.0
+        env:
+          CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
+          CIBW_MANYLINUX_I686_IMAGE: manylinux2014
+          CIBW_BUILD_VERBOSITY: 1
+          CIBW_BUILD: ${{ matrix.python }}
+          CIBW_ARCHS: ${{ matrix.arch }}
+          CIBW_BEFORE_BUILD: share/ci/scripts/linux/yum/install_docs_env.sh
+
+      - uses: actions/upload-artifact@v2
+        with:
+          path: ./wheelhouse/*.whl
+
+  # ---------------------------------------------------------------------------
+  # macOS
+  # ---------------------------------------------------------------------------
+
+  macos:
+    name: Build wheels on macOS
+    runs-on: macos-10.15
+    strategy:
+      matrix:
+        include:
+          # -------------------------------------------------------------------
+          # CPython 64 bits
+          # -------------------------------------------------------------------
+          - build: CPython 3.6 64 bits
+            python: cp36-*
+            arch: x86_64
+          - build: CPython 3.7 64 bits
+            python: cp37-*
+            arch: x86_64
+          - build: CPython 3.8 64 bits
+            python: cp38-*
+            arch: x86_64
+          - build: CPython 3.9 64 bits
+            python: cp39-*
+            arch: x86_64
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions/setup-python@v2
+        name: Install Python
+        with:
+          python-version: '3.8'
+
+      - name: Build wheels
+        uses: joerick/cibuildwheel@v1.11.0
+        env:
+          CIBW_BUILD_VERBOSITY: 1
+          CIBW_BUILD: ${{ matrix.python }}
+          CIBW_ARCHS: ${{ matrix.arch }}
+          CIBW_BEFORE_BUILD: share/ci/scripts/macos/install_docs_env.sh
+
+      - uses: actions/upload-artifact@v2
+        with:
+          path: ./wheelhouse/*.whl
+
+  # ---------------------------------------------------------------------------
+  # Windows
+  # ---------------------------------------------------------------------------
+
+  windows:
+    name: Build wheels on Windows
+    runs-on: windows-2019
+    strategy:
+      matrix:
+        include:
+          # -------------------------------------------------------------------
+          # CPython 32 bits
+          # -------------------------------------------------------------------
+          - build: CPython 3.6 32 bits
+            python: cp36-*
+            arch: x86
+          - build: CPython 3.7 32 bits
+            python: cp37-*
+            arch: x86
+          - build: CPython 3.8 32 bits
+            python: cp38-*
+            arch: x86
+          - build: CPython 3.9 32 bits
+            python: cp39-*
+            arch: x86
+          # -------------------------------------------------------------------
+          # CPython 64 bits
+          # -------------------------------------------------------------------
+          - build: CPython 3.6 64 bits
+            python: cp36-*
+            arch: AMD64
+          - build: CPython 3.7 64 bits
+            python: cp37-*
+            arch: AMD64
+          - build: CPython 3.8 64 bits
+            python: cp38-*
+            arch: AMD64
+          - build: CPython 3.9 64 bits
+            python: cp39-*
+            arch: AMD64
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions/setup-python@v2
+        name: Install Python
+        with:
+          python-version: '3.8'
+
+      - name: Build wheels
+        uses: joerick/cibuildwheel@v1.11.0
+        env:
+          CIBW_BUILD_VERBOSITY: 1
+          CIBW_BUILD: ${{ matrix.python }}
+          CIBW_ARCHS: ${{ matrix.arch }}
+          CIBW_BEFORE_BUILD: bash -c share/ci/scripts/windows/install_docs_env.sh
+
+      - uses: actions/upload-artifact@v2
+        with:
+          path: ./wheelhouse/*.whl
+
+
+  upload_pypi:
+    needs: [linux, macos, windows]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v')
+    steps:
+      - uses: actions/setup-python@v2
+
+      - uses: actions/download-artifact@v2
+        with:
+          name: artifact
+          path: dist
+
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_API_TOKEN }}
+          repository_url: https://test.pypi.org/legacy/

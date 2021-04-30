@@ -78,7 +78,12 @@ if(OCIO_BUILD_PYTHON OR OCIO_BUILD_DOCS)
     # and referenced throughout the project.
 
     set(_Python_COMPONENTS Interpreter)
-    if(OCIO_BUILD_PYTHON)
+
+    # Support building on manylinux docker images.
+    # https://pybind11.readthedocs.io/en/stable/compiling.html#findpython-mode
+    if(OCIO_BUILD_PYTHON AND ${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.18.0")
+        list(APPEND _Python_COMPONENTS Development.Module)
+    elseif(OCIO_BUILD_PYTHON)
         list(APPEND _Python_COMPONENTS Development)
     endif()
 
@@ -91,4 +96,17 @@ if(OCIO_BUILD_PYTHON OR OCIO_BUILD_DOCS)
         # https://github.com/pybind/pybind11
         find_package(pybind11 2.6.1 REQUIRED)
     endif()
+endif()
+
+if(OCIO_BUILD_PYTHON)
+
+    # NOTE: Depending of the compiler version pybind11 2.4.3 does not compile 
+    # with C++17 so, if you change the pybind11 version update the code to 
+    # compile pybind11 and dependencies with C++17 or higher i.e. remove the 
+    # cap of C++ version in FindPybind11.cmake and 
+    # src/bindings/python/CMakeLists.txt.
+
+    # pybind11
+    # https://github.com/pybind/pybind11
+    find_package(pybind11 2.6.1 REQUIRED)
 endif()
