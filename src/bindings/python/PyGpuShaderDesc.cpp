@@ -77,28 +77,6 @@ void bindPyGpuShaderDesc(py::module & m)
             clsGpuShaderDesc, "Texture3DIterator");
 
     clsGpuShaderDesc
-        .def_static("CreateLegacyShaderDesc", [](unsigned edgelen,
-                                                 GpuLanguage lang,
-                                                 const std::string & functionName,
-                                                 const std::string & pixelName,
-                                                 const std::string & resourcePrefix,
-                                                 const std::string & uid) 
-            {
-                GpuShaderDescRcPtr p = GpuShaderDesc::CreateLegacyShaderDesc(edgelen);
-                p->setLanguage(lang);
-                if (!functionName.empty())   { p->setFunctionName(functionName.c_str()); }
-                if (!pixelName.empty())      { p->setPixelName(pixelName.c_str()); }
-                if (!resourcePrefix.empty()) { p->setResourcePrefix(resourcePrefix.c_str()); }
-                if (!uid.empty())   { p->setUniqueID(uid.c_str()); }
-                return p;
-            }, 
-                    "edgeLen"_a,
-                    "language"_a = DEFAULT->getLanguage(),
-                    "functionName"_a = DEFAULT->getFunctionName(),
-                    "pixelName"_a = DEFAULT->getPixelName(),
-                    "resourcePrefix"_a = DEFAULT->getResourcePrefix(),
-                    "uid"_a = DEFAULT->getUniqueID(),
-                    DOC(GpuShaderDesc, CreateLegacyShaderDesc)) 
         .def_static("CreateShaderDesc", [](GpuLanguage lang,
                                            const std::string & functionName,
                                            const std::string & pixelName,
