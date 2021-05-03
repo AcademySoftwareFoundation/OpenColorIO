@@ -3,7 +3,6 @@
 
 #include "OCIOColorSpace.h"
 #include "OCIOProcessor.h"
-#include "OCIOUtils.h"
 
 namespace OCIO = OCIO_NAMESPACE;
 
@@ -14,13 +13,15 @@ OCIOColorSpace::OCIOColorSpace(OfxImageEffectHandle handle)
     , srcCsNameParam_(0)
     , dstCsNameParam_(0)
     , inverseParam_(0)
+    , swapSrcDstParam_(0)
 {
     dstClip_ = fetchClip(kOfxImageEffectOutputClipName);
     srcClip_ = fetchClip(kOfxImageEffectSimpleSourceClipName);
 
-    srcCsNameParam_ = fetchChoiceParam("src_cs");
-    dstCsNameParam_ = fetchChoiceParam("dst_cs");
-    inverseParam_   = fetchBooleanParam("inverse");
+    srcCsNameParam_  = fetchChoiceParam("src_cs");
+    dstCsNameParam_  = fetchChoiceParam("dst_cs");
+    inverseParam_    = fetchBooleanParam("inverse");
+    swapSrcDstParam_ = fetchPushButtonParam("swap_src_dst");
 
     fetchContextParams(*this, contextParams_);
 }
@@ -119,6 +120,17 @@ void OCIOColorSpace::changedParam(const OFX::InstanceChangedArgs & /*args*/,
                         os.str());
         }
     }
+
+    else if (paramName == "swap_src_dst")
+    {
+        int srcCsIdx, dstCsIdx;
+        srcCsNameParam_->getValue(srcCsIdx);
+        dstCsNameParam_->getValue(dstCsIdx);
+
+        // Swap src and dst color space indices
+        srcCsNameParam_->setValue(dstCsIdx);
+        dstCsNameParam_->setValue(srcCsIdx);
+    }
 }
 
 void OCIOColorSpaceFactory::describe(OFX::ImageEffectDescriptor& desc)
@@ -160,7 +172,7 @@ void OCIOColorSpaceFactory::describeInContext(OFX::ImageEffectDescriptor& desc,
     // Define parameters
     OFX::PageParamDescriptor * page = desc.definePageParam("Controls");
 
-    // src color space
+    // Src color space
     OFX::ChoiceParamDescriptor * srcCsNameParam = defineCsNameParam(
         desc, 
         "src_cs", 
@@ -169,7 +181,7 @@ void OCIOColorSpaceFactory::describeInContext(OFX::ImageEffectDescriptor& desc,
         0);
     page->addChild(*srcCsNameParam);
 
-    // dst color space
+    // Dst color space
     OFX::ChoiceParamDescriptor * dstCsNameParam = defineCsNameParam(
         desc, 
         "dst_cs", 
@@ -178,7 +190,7 @@ void OCIOColorSpaceFactory::describeInContext(OFX::ImageEffectDescriptor& desc,
         0);
     page->addChild(*dstCsNameParam);
 
-    // inverse
+    // Inverse
     OFX::BooleanParamDescriptor * inverseParam = defineBooleanParam(
         desc, 
         "inverse", 
@@ -186,6 +198,15 @@ void OCIOColorSpaceFactory::describeInContext(OFX::ImageEffectDescriptor& desc,
         "Invert the transform",
         0);
     page->addChild(*inverseParam);
+
+    // Swap color spaces
+    OFX::PushButtonParamDescriptor * swapSrcDstParam = definePushButtonParam(
+        desc, 
+        "swap_src_dst", 
+        "Swap color spaces", 
+        "Sap src and dst color spaces",
+        0);
+    page->addChild(*swapSrcDstParam);
 
     // Context overrides
     defineContextParams(desc, page);

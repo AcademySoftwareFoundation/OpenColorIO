@@ -132,7 +132,7 @@ void OCIODisplayFactory::describeInContext(OFX::ImageEffectDescriptor& desc,
     // Define parameters
     OFX::PageParamDescriptor * page = desc.definePageParam("Controls");
 
-    // src color space
+    // Src color space
     OFX::ChoiceParamDescriptor * srcCsNameParam = defineCsNameParam(
         desc, 
         "src_cs", 
@@ -141,7 +141,7 @@ void OCIODisplayFactory::describeInContext(OFX::ImageEffectDescriptor& desc,
         0);
     page->addChild(*srcCsNameParam);
 
-    // display
+    // Display
     OFX::ChoiceParamDescriptor * displayParam = defineDisplayParam(
         desc, 
         "display", 
@@ -150,7 +150,7 @@ void OCIODisplayFactory::describeInContext(OFX::ImageEffectDescriptor& desc,
         0);
     page->addChild(*displayParam);
 
-    // view
+    // View
     OFX::ChoiceParamDescriptor * viewParam = defineViewParam(
         desc, 
         "view", 
@@ -159,7 +159,7 @@ void OCIODisplayFactory::describeInContext(OFX::ImageEffectDescriptor& desc,
         0);
     page->addChild(*viewParam);
 
-    // inverse
+    // Inverse
     OFX::BooleanParamDescriptor * inverseParam = defineBooleanParam(
         desc, 
         "inverse", 

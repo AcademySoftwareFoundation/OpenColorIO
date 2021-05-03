@@ -4,6 +4,8 @@
 #ifndef INCLUDED_OFX_OCIOCOLORSPACE_H
 #define INCLUDED_OFX_OCIOCOLORSPACE_H
 
+#include "OCIOUtils.h"
+
 #include "ofxsImageEffect.h"
 
 class OCIOColorSpace : public OFX::ImageEffect
@@ -16,8 +18,9 @@ protected:
     OFX::ChoiceParam * srcCsNameParam_;
     OFX::ChoiceParam * dstCsNameParam_;
     OFX::BooleanParam * inverseParam_;
+    OFX::PushButtonParam * swapSrcDstParam_;
 
-    std::map<std::string, OFX::StringParam *> contextParams_;
+    ParamMap contextParams_;
 
 public:
     OCIOColorSpace(OfxImageEffectHandle handle);

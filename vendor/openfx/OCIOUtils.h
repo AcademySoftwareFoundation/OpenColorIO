@@ -12,6 +12,8 @@
 #include <OpenColorIO/OpenColorIO.h>
 namespace OCIO = OCIO_NAMESPACE;
 
+typedef std::map<std::string, OFX::StringParam *> ParamMap;
+
 /* Get the current OCIO config */
 OCIO::ConstConfigRcPtr getOCIOConfig();
 
@@ -52,7 +54,7 @@ OFX::BooleanParamDescriptor * defineBooleanParam(
     const std::string & label, 
     const std::string & hint,
     OFX::GroupParamDescriptor * parent,
-    bool default_value = false);
+    bool defaultValue = false);
 
 /* Build simple StringParam */
 OFX::StringParamDescriptor * defineStringParam(
@@ -61,24 +63,27 @@ OFX::StringParamDescriptor * defineStringParam(
     const std::string & label, 
     const std::string & hint,
     OFX::GroupParamDescriptor * parent,
-    std::string default_value = "");
+    std::string defaultValue = "",
+    OFX::StringTypeEnum stringType = OFX::eStringTypeSingleLine);
 
-/* Build GroupParam with a override StringParam per declared environment 
-   variable in the current OCIO config. Each param is named 'context_<name>' 
-   where <name> is the OCIO config environment var name.
- */
+OFX::PushButtonParamDescriptor * definePushButtonParam(
+    OFX::ImageEffectDescriptor & desc,
+    const std::string & name, 
+    const std::string & label, 
+    const std::string & hint,
+    OFX::GroupParamDescriptor * parent);
+
+/* Build GroupParam with four context variable StringParam name/value pairs */
 void defineContextParams(OFX::ImageEffectDescriptor & desc,
                          OFX::PageParamDescriptor * page);
 
-/* Fetch map of StringParams defined by defineContextParams */
-void fetchContextParams(OFX::ImageEffect & instance, 
-                        std::map<std::string, OFX::StringParam *> & params);
+/* Fetch StringParams defined by defineContextParams */
+void fetchContextParams(OFX::ImageEffect & instance, ParamMap & params);
 
-/* Create copy of the current OCIO context with overrides from StringParams 
-   defined by defineContextParams.
+/* Create copy of the current OCIO context with additional or overridden context
+   variables from StringParams defined by defineContextParams.
  */
-OCIO::ContextRcPtr createOCIOContext(
-    std::map<std::string, OFX::StringParam *> & params);
+OCIO::ContextRcPtr createOCIOContext(ParamMap & params);
 
 /* Get current option string from a ChoiceParam */
 std::string getChoiceParamOption(OFX::ChoiceParam * param);

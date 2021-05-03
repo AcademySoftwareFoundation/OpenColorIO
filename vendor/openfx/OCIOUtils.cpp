@@ -209,12 +209,12 @@ OFX::BooleanParamDescriptor * defineBooleanParam(
     const std::string & label, 
     const std::string & hint,
     OFX::GroupParamDescriptor * parent,
-    bool default_value)
+    bool defaultValue)
 {
     OFX::BooleanParamDescriptor * param = desc.defineBooleanParam(name);
     initParam(param, name, label, hint, parent);
 
-    param->setDefault(default_value);
+    param->setDefault(defaultValue);
 
     return param;
 }
@@ -225,12 +225,27 @@ OFX::StringParamDescriptor * defineStringParam(
     const std::string & label, 
     const std::string & hint,
     OFX::GroupParamDescriptor * parent,
-    std::string default_value)
+    std::string defaultValue,
+    OFX::StringTypeEnum stringType)
 {
     OFX::StringParamDescriptor * param = desc.defineStringParam(name);
     initParam(param, name, label, hint, parent);
 
-    param->setDefault(default_value);
+    param->setDefault(defaultValue);
+    param->setStringType(stringType);
+
+    return param;
+}
+
+OFX::PushButtonParamDescriptor * definePushButtonParam(
+    OFX::ImageEffectDescriptor & desc,
+    const std::string & name, 
+    const std::string & label, 
+    const std::string & hint,
+    OFX::GroupParamDescriptor * parent)
+{
+    OFX::PushButtonParamDescriptor * param = desc.definePushButtonParam(name);
+    initParam(param, name, label, hint, parent);
 
     return param;
 }
@@ -240,7 +255,7 @@ void defineContextParams(OFX::ImageEffectDescriptor & desc,
 {
     OFX::GroupParamDescriptor * group = desc.defineGroupParam("Context");
     group->setOpen(false);
-    group->setHint("override context variables declared in OCIO config "
+    group->setHint("Set or override context variables declared in OCIO config "
                    "'environment' section");
 
     // Define StringParam per config-declared environment variable
@@ -255,9 +270,9 @@ void defineContextParams(OFX::ImageEffectDescriptor & desc,
 
         OFX::StringParamDescriptor * contextParam = defineStringParam(
             desc, 
-            "context_" + envVarName,        // name
-            envVarName,                     // label
-            ("Override context variable: "  // hint
+            "context_" + envVarName,              // name
+            envVarName,                           // label
+            ("Set or override context variable: " // hint
              + envVarName + " (default: '" 
              + envVarDefault + "')"),
             group);
@@ -266,8 +281,7 @@ void defineContextParams(OFX::ImageEffectDescriptor & desc,
     }
 }
 
-void fetchContextParams(OFX::ImageEffect & instance,
-                        std::map<std::string, OFX::StringParam *> & params)
+void fetchContextParams(OFX::ImageEffect & instance, ParamMap & params)
 {
     OCIO::ConstConfigRcPtr config = getOCIOConfig();
 
@@ -282,15 +296,13 @@ void fetchContextParams(OFX::ImageEffect & instance,
     }
 }
 
-OCIO::ContextRcPtr createOCIOContext(
-    std::map<std::string, OFX::StringParam *> & params)
+OCIO::ContextRcPtr createOCIOContext(ParamMap & params)
 {
     OCIO::ConstConfigRcPtr config = getOCIOConfig();
     OCIO::ConstContextRcPtr srcContext = config->getCurrentContext();
     OCIO::ContextRcPtr context = srcContext->createEditableCopy();
 
-    std::map<std::string, OFX::StringParam *>::const_iterator it = 
-        params.begin();
+    ParamMap::const_iterator it = params.begin();
 
     for (; it != params.end(); it++)
     {

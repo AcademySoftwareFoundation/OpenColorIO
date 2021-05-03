@@ -4,7 +4,8 @@
 #ifndef INCLUDED_OFX_OCIODISPLAY_H
 #define INCLUDED_OFX_OCIODISPLAY_H
 
-#include <map>
+#include "OCIOUtils.h"
+
 #include <string>
 
 #include "ofxsImageEffect.h"
@@ -21,7 +22,7 @@ protected:
     OFX::ChoiceParam * viewParam_;
     OFX::BooleanParam * inverseParam_;
 
-    std::map<std::string, OFX::StringParam *> contextParams_;
+    ParamMap contextParams_;
 
 public:
     OCIODisplay(OfxImageEffectHandle handle);
