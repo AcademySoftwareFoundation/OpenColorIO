@@ -316,11 +316,6 @@ void GpuShaderCreator::finalize()
 
 
 
-GpuShaderDescRcPtr GpuShaderDesc::CreateLegacyShaderDesc(unsigned edgelen)
-{
-    return LegacyGpuShaderDesc::Create(edgelen);
-}
-
 GpuShaderDescRcPtr GpuShaderDesc::CreateShaderDesc()
 {
     return GenericGpuShaderDesc::Create();

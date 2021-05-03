@@ -26,8 +26,14 @@ if(NOT BUILD_SHARED_LIBS)
     )
 endif()
 
+set(CUSTOM_COMPILE_FLAGS ${PLATFORM_COMPILE_FLAGS})
+if(APPLE)
+    # Mute the deprecated warning for some GLUT methods.
+    set(CUSTOM_COMPILE_FLAGS "${CUSTOM_COMPILE_FLAGS} -DGL_SILENCE_DEPRECATION")
+endif()
+
 set_target_properties(oglapphelpers PROPERTIES 
-    COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS}"
+    COMPILE_FLAGS "${CUSTOM_COMPILE_FLAGS}"
 )
 
 target_include_directories(oglapphelpers
