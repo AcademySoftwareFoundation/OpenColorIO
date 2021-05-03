@@ -19,13 +19,15 @@ const std::streamsize FLOAT_DECIMALS = 7;
 }
 
 GradingToneOpData::GradingToneOpData(GradingStyle style)
-    : m_style(style)
+    : OpData()
+    , m_style(style)
     , m_value(std::make_shared<DynamicPropertyGradingToneImpl>(GradingTone(style), style, false))
 {
 }
 
 GradingToneOpData::GradingToneOpData(const GradingToneOpData & other)
-    : m_style(other.m_style)
+    : OpData(other)
+    , m_style(other.m_style)
     , m_value(std::make_shared<DynamicPropertyGradingToneImpl>(GradingTone(other.m_style), other.m_style, false))
 {
     *this = other;
