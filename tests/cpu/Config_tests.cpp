@@ -840,9 +840,6 @@ OCIO_ADD_TEST(Config, context_variable)
         "  VAR1: $VAR1\n"     // No default value so the env. variable must exist.
         "  VAR2: var2\n"      // Default value if env. variable does not exist.
         "  VAR3: env3\n"      // Same as above.
-        "  VAR4: env4$VAR1\n" // Same as above and built from another envvar.
-        "  VAR5: env5$VAR2\n" // Same as above and built from another envvar.
-        "  VAR6: env6$VAR3\n" // Same as above and built from another envvar.
         "search_path: luts\n"
         "strictparsing: true\n"
         "luma: [0.2126, 0.7152, 0.0722]\n"
@@ -895,10 +892,6 @@ OCIO_ADD_TEST(Config, context_variable)
     OCIO_CHECK_EQUAL(std::string("env2"), config->getCurrentContext()->resolveStringVar("$VAR2"));
     OCIO_CHECK_EQUAL(std::string("env3"), config->getCurrentContext()->resolveStringVar("$VAR3"));
 
-    OCIO_CHECK_EQUAL(std::string("env4env1"), config->getCurrentContext()->resolveStringVar("$VAR4"));
-    OCIO_CHECK_EQUAL(std::string("env5env2"), config->getCurrentContext()->resolveStringVar("$VAR5"));
-    OCIO_CHECK_EQUAL(std::string("env6env3"), config->getCurrentContext()->resolveStringVar("$VAR6"));
-
     std::ostringstream oss;
     OCIO_CHECK_NO_THROW(oss << *config.get());
     OCIO_CHECK_EQUAL(oss.str(), iss.str());
@@ -910,14 +903,146 @@ OCIO_ADD_TEST(Config, context_variable)
     OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(iss));
     OCIO_CHECK_NO_THROW(config->validate());
 
-    // Test a faulty case i.e. the env. variable VAR1 is now missing.
+    OCIO_CHECK_EQUAL(std::string("env1"), config->getCurrentContext()->resolveStringVar("$VAR1"));
+    OCIO_CHECK_EQUAL(std::string("var2"), config->getCurrentContext()->resolveStringVar("$VAR2"));
+    OCIO_CHECK_EQUAL(std::string("env3"), config->getCurrentContext()->resolveStringVar("$VAR3"));
+
+    // System env. variable VAR1 is now missing but the context variable VAR1 is still a valid one.
 
     OCIO::Platform::Unsetenv("VAR1");
     iss.str(CONFIG);
     OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(iss));
-    OCIO_CHECK_THROW_WHAT(config->validate(),
-                          OCIO::Exception,
-                          "Unresolved context variable 'VAR1 = $VAR1'.");
+    OCIO_CHECK_NO_THROW(config->validate());
+
+    OCIO_CHECK_EQUAL(std::string("$VAR1"), config->getCurrentContext()->resolveStringVar("$VAR1"));
+    OCIO_CHECK_EQUAL(std::string("var2"),  config->getCurrentContext()->resolveStringVar("$VAR2"));
+    OCIO_CHECK_EQUAL(std::string("env3"),  config->getCurrentContext()->resolveStringVar("$VAR3"));
+}
+
+OCIO_ADD_TEST(Config, context_variable_unresolved)
+{
+    // Test for invalid unresolved context variables.
+
+    static const std::string BODY_CONFIG =
+        "\n"
+        "search_path: luts\n"
+        "\n"
+        "roles:\n"
+        "  default: cs1\n"
+        "  reference: cs1\n"
+        "\n"
+        "displays:\n"
+        "  disp1:\n"
+        "    - !<View> {name: view1, colorspace: cs2}\n"
+        "\n"
+        "colorspaces:\n"
+        "  - !<ColorSpace>\n"
+        "    name: cs1\n"
+        "\n"
+        "  - !<ColorSpace>\n"
+        "    name: cs2\n"
+        "    from_reference: !<MatrixTransform> {offset: [0.1, 0.2, 0.3, 0.0]}\n";
+
+    {
+        static const std::string CONFIG =
+            std::string("ocio_profile_version: 2\nenvironment: {ENV1: $ENV1}\n") 
+            + BODY_CONFIG;
+
+        std::istringstream iss;
+        iss.str(CONFIG);
+
+        OCIO::ConstConfigRcPtr config;
+        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(iss));
+        OCIO_CHECK_NO_THROW(config->validate());
+    }
+
+    {
+        static const std::string CONFIG =
+            std::string("ocio_profile_version: 2\nenvironment:\n  ENV1: ${ENV1}\n") 
+            + BODY_CONFIG;
+
+        std::istringstream iss;
+        iss.str(CONFIG);
+
+        OCIO::ConstConfigRcPtr config;
+        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(iss));
+        OCIO_CHECK_NO_THROW(config->validate());
+    }
+
+    {
+        static const std::string CONFIG =
+            std::string("ocio_profile_version: 2\nenvironment: {ENV1: $ENV2}\n") 
+            + BODY_CONFIG;
+
+        std::istringstream iss;
+        iss.str(CONFIG);
+
+        OCIO::ConstConfigRcPtr config;
+        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(iss));
+        OCIO_CHECK_THROW_WHAT(config->validate(),
+                              OCIO::Exception,
+                              "Unresolved context variable in environment declaration 'ENV1 = $ENV2'.");
+    }
+
+    {
+        static const std::string CONFIG =
+            std::string("ocio_profile_version: 2\nenvironment: {ENV1: env, ENV2: $ENV1}\n") 
+            + BODY_CONFIG;
+
+        std::istringstream iss;
+        iss.str(CONFIG);
+
+        OCIO::ConstConfigRcPtr config;
+        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(iss));
+        OCIO_CHECK_THROW_WHAT(config->validate(),
+                              OCIO::Exception,
+                              "Unresolved context variable in environment declaration 'ENV2 = $ENV1'.");
+    }
+
+    {
+        static const std::string CONFIG =
+            std::string("ocio_profile_version: 2\nenvironment: {ENV1: env$ENV1}\n") 
+            + BODY_CONFIG;
+
+        std::istringstream iss;
+        iss.str(CONFIG);
+
+        OCIO::ConstConfigRcPtr config;
+        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(iss));
+        OCIO_CHECK_THROW_WHAT(config->validate(),
+                              OCIO::Exception,
+                              "Unresolved context variable in environment declaration 'ENV1 = env$ENV1'.");
+    }
+
+    {
+        static const std::string CONFIG =
+            std::string("ocio_profile_version: 2\nenvironment:\n ENV1: env${ENV2}\n") 
+            + BODY_CONFIG;
+
+        std::istringstream iss;
+        iss.str(CONFIG);
+
+        OCIO::ConstConfigRcPtr config;
+        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(iss));
+        OCIO_CHECK_THROW_WHAT(config->validate(),
+                              OCIO::Exception,
+                              "Unresolved context variable in environment declaration 'ENV1 = env${ENV2}'.");
+    }
+
+    {
+        static const std::string CONFIG =
+            std::string("ocio_profile_version: 2\nenvironment: {ENV1: $ENV1$ENV2}\n") 
+            + BODY_CONFIG;
+
+        std::istringstream iss;
+        iss.str(CONFIG);
+
+        OCIO::ConstConfigRcPtr config;
+        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(iss));
+        OCIO_CHECK_THROW_WHAT(config->validate(),
+                              OCIO::Exception,
+                              "Unresolved context variable in environment declaration 'ENV1 = $ENV1$ENV2'.");
+    }
 }
 
 OCIO_ADD_TEST(Config, context_variable_with_sanity_check)
@@ -994,26 +1119,23 @@ OCIO_ADD_TEST(Config, context_variable_with_sanity_check)
     }
 
     {
-        // Update $CS2 to use $TOTO. That's still a self-contained context because
-        // $TOTO exists. 
+        // Update $CS2 to use $TOTO. That's an invalid case because a context variable value can
+        // only be a string (i.e. "VAR: env") or the context variable itself (i.e. "VAR: $VAR"). 
         OCIO_CHECK_NO_THROW(cfg->addEnvironmentVar("CS2", "$TOTO")); 
         OCIO_CHECK_EQUAL(cfg->getNumEnvironmentVars(), 2);
-        OCIO_CHECK_NO_THROW(cfg->validate());
-
-        // Note that the default value of the context variable is unresolved.
-        OCIO_CHECK_EQUAL(std::string(cfg->getEnvironmentVarDefault("CS2")), std::string("$TOTO"));
+        OCIO_CHECK_THROW_WHAT(cfg->validate(),
+                              OCIO::Exception,
+                              "Unresolved context variable in environment declaration 'CS2 = $TOTO'.");
     }
 
     {
-        // Remove $TOTO from the context. That's a faulty case because $CS2 is still used
-        // but resolved using $TOTO so, the environment is not self-contained. Sanity check
-        // must throw in that case.
+        // Remove $TOTO from the context. That's an invalid case as explained above.
         OCIO_CHECK_NO_THROW(cfg->addEnvironmentVar("TOTO", nullptr)); 
         OCIO_CHECK_EQUAL(cfg->getNumEnvironmentVars(), 1);
 
         OCIO_CHECK_THROW_WHAT(cfg->validate(),
                               OCIO::Exception,
-                              "Unresolved context variable 'CS2 = $TOTO'.");
+                              "Unresolved context variable in environment declaration 'CS2 = $TOTO'.");
         OCIO_CHECK_THROW_WHAT(cfg->getProcessor("cs1", "disp1", "view1", OCIO::TRANSFORM_DIR_FORWARD),
                               OCIO::Exception,
                               "The specified file reference '$CS2' could not be located");
