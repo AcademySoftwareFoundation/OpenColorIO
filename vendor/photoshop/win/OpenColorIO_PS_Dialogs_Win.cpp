@@ -587,6 +587,8 @@ static void TrackConfigMenu(HWND hwndDlg, bool readFromControl)
                 SHOW_ITEM(DLOG_Convert_Radio, TRUE);
                 SHOW_ITEM(DLOG_Display_Radio, TRUE);
                                 
+                ENABLE_ITEM(DLOG_Convert_Radio, TRUE);
+                ENABLE_ITEM(DLOG_Display_Radio, TRUE);
                 
                 const SpaceVec &colorSpaces = g_context->getColorSpaces();
                 
@@ -648,6 +650,11 @@ static void TrackConfigMenu(HWND hwndDlg, bool readFromControl)
         delete g_context;
 
         g_context = NULL;
+
+        SHOW_ITEM(DLOG_Invert_Check, FALSE);
+
+        ENABLE_ITEM(DLOG_Convert_Radio, FALSE);
+        ENABLE_ITEM(DLOG_Display_Radio, FALSE);
 
         REMOVE_ALL_MENU_ITEMS(DLOG_Menu1_Menu);
         REMOVE_ALL_MENU_ITEMS(DLOG_Menu2_Menu);
