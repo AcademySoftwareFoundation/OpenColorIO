@@ -131,6 +131,10 @@ void OCIOColorSpace::changedParam(const OFX::InstanceChangedArgs & /*args*/,
         srcCsNameParam_->setValue(dstCsIdx);
         dstCsNameParam_->setValue(srcCsIdx);
     }
+    else
+    {
+        contextParamChanged(*this, paramName);
+    }
 }
 
 void OCIOColorSpaceFactory::describe(OFX::ImageEffectDescriptor& desc)

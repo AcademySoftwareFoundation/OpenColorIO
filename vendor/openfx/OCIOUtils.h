@@ -13,6 +13,7 @@
 namespace OCIO = OCIO_NAMESPACE;
 
 typedef std::map<std::string, OFX::StringParam *> ParamMap;
+typedef std::map<std::string, std::string> ContextMap;
 
 /* Get the current OCIO config */
 OCIO::ConstConfigRcPtr getOCIOConfig();
@@ -79,6 +80,10 @@ void defineContextParams(OFX::ImageEffectDescriptor & desc,
 
 /* Fetch StringParams defined by defineContextParams */
 void fetchContextParams(OFX::ImageEffect & instance, ParamMap & params);
+
+/* Update internal context_store param on context variable StringParam change */
+void contextParamChanged(OFX::ImageEffect & instance, 
+                         const std::string & paramName);
 
 /* Create copy of the current OCIO context with additional or overridden context
    variables from StringParams defined by defineContextParams.

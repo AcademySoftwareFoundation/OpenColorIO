@@ -91,6 +91,10 @@ void OCIODisplay::changedParam(const OFX::InstanceChangedArgs & /*args*/,
     {
         updateViewParamOptions(displayParam_, viewParam_);
     }
+    else
+    {
+        contextParamChanged(*this, paramName);
+    }
 }
 
 void OCIODisplayFactory::describe(OFX::ImageEffectDescriptor& desc)

@@ -6,8 +6,10 @@
 namespace OCIO = OCIO_NAMESPACE;
 
 #include <sstream>
+#include <vector>
 
 #include "ofxsLog.h"
+#include "pystring/pystring.h"
 
 namespace
 {
@@ -26,6 +28,45 @@ void initParam(OFX::ParamDescriptor * param,
     {
         param->setParent(*parent);
     }
+}
+
+ContextMap deserializeContextStore(const std::string & contextStoreRaw)
+{
+    ContextMap contextMap;
+
+    // Format: key0:value0;key1:value1;...
+    std::vector<std::string> contextPairsRaw;
+    pystring::split(contextStoreRaw, contextPairsRaw, ";");
+
+    for (int i = 0; i < contextPairsRaw.size(); i++)
+    {
+        std::vector<std::string> contextPair;
+        pystring::split(contextPairsRaw[i], contextPair, ":");
+        
+        if (contextPair.size() == 2)
+        {
+            contextMap[contextPair[0]] = contextPair[1];
+        }
+    }
+
+    return contextMap;
+}
+
+std::string serializeContextStore(const ContextMap & contextMap)
+{
+    std::string contextStoreRaw;
+
+    std::ostringstream os;
+    ContextMap::const_iterator it = contextMap.begin();
+
+    for (; it != contextMap.end(); it++)
+    {
+        os << it->first << ":" << it->second << ";";
+    }
+
+    contextStoreRaw = os.str();
+
+    return pystring::rstrip(contextStoreRaw, ";");
 }
 
 } // namespace
@@ -279,12 +320,33 @@ void defineContextParams(OFX::ImageEffectDescriptor & desc,
 
         page->addChild(*contextParam);
     }
+
+    // Preserve all context_* param values through OCIO config/context changes
+    OFX::StringParamDescriptor * contextStoreParam = defineStringParam(
+        desc,
+        "context_store",
+        "Context store",
+        "Persistent context parameter value storage",
+        group
+    );
+    // contextStoreParam->setIsSecret(true);
+
+    page->addChild(*contextStoreParam);
 }
 
 void fetchContextParams(OFX::ImageEffect & instance, ParamMap & params)
 {
     OCIO::ConstConfigRcPtr config = getOCIOConfig();
 
+    OFX::StringParam * contextStoreParam = 
+        instance.fetchStringParam("context_store");
+    
+    // Deserialize raw context store string into a context map
+    std::string contextStoreRaw;
+    contextStoreParam->getValue(contextStoreRaw);
+    ContextMap contextMap = deserializeContextStore(contextStoreRaw);
+
+    // Fetch current context params and set their values from store if empty
     for (int i = 0; i < config->getNumEnvironmentVars(); i++)
     {
         std::string envVarName(config->getEnvironmentVarNameByIndex(i));
@@ -292,8 +354,64 @@ void fetchContextParams(OFX::ImageEffect & instance, ParamMap & params)
         OFX::StringParam * contextParam = 
             instance.fetchStringParam("context_" + envVarName);
 
-        params[envVarName] = contextParam;
+        if (contextParam != 0)
+        {
+            params[envVarName] = contextParam;
+
+            std::string envVarValue;
+            contextParam->getValue(envVarValue);
+
+            // Only load from store if param is currently empty
+            if (envVarValue.empty())
+            {
+                ContextMap::const_iterator it = contextMap.find(envVarName);
+
+                if (it != contextMap.end())
+                {
+                    contextParam->setValue(it->second);
+                }
+            }
+        }
     }
+}
+
+void contextParamChanged(OFX::ImageEffect & instance, 
+                         const std::string & paramName)
+{
+    // Is changed param a context variable?
+    if (!pystring::startswith(paramName, "context_") 
+            || paramName == "context_store")
+    {
+        return;
+    }
+    
+    OFX::StringParam * contextStoreParam = 
+        instance.fetchStringParam("context_store");
+
+    // Deserialize raw context store string into a context map
+    std::string contextStoreRaw;
+    contextStoreParam->getValue(contextStoreRaw);
+    ContextMap contextMap = deserializeContextStore(contextStoreRaw);
+    
+    // Update context map with new value
+    OFX::StringParam * contextParam = instance.fetchStringParam(paramName);
+
+    if (contextParam != 0)
+    {
+        // "context_name" -> "name"
+        std::string envVarName = paramName;
+        envVarName.erase(0, 8);
+
+        std::string envVarValue;
+        contextParam->getValue(envVarValue);
+
+        // NOTE: This could be storing an empty value
+        contextMap[envVarName] = envVarValue;
+    }
+
+    // Serialize context map into raw context store string
+    contextStoreRaw = serializeContextStore(contextMap);
+    contextStoreParam->setValue(contextStoreRaw);
 }
 
 OCIO::ContextRcPtr createOCIOContext(ParamMap & params)
