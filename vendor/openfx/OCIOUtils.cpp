@@ -329,7 +329,7 @@ void defineContextParams(OFX::ImageEffectDescriptor & desc,
         "Persistent context parameter value storage",
         group
     );
-    // contextStoreParam->setIsSecret(true);
+    contextStoreParam->setIsSecret(true);
 
     page->addChild(*contextStoreParam);
 }
