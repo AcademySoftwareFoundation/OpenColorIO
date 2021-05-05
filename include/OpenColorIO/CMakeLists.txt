@@ -27,4 +27,6 @@ list(APPEND core_export_headers ${CMAKE_CURRENT_BINARY_DIR}/OpenColorABI.h)
 install(FILES ${core_export_headers}
     DESTINATION include/OpenColorIO)
 
-install_targets(OpenColorIOHeaders)
+install(TARGETS OpenColorIOHeaders
+    EXPORT ${PROJECT_NAME}_EXPORTED_TARGETS
+)

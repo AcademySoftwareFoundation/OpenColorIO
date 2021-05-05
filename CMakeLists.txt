@@ -240,14 +240,6 @@ include(FindExtPackages)
 
 
 ###############################################################################
-# Target definition utilities
-# This includes the install_targets macro, to make target available for
-# import by external projects.
-
-include(TargetUtils)
-
-
-###############################################################################
 # Progress to other sources
 
 add_subdirectory(vendor)
@@ -277,6 +269,8 @@ INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/share/ocio/${OCIO_SETUP_NAME} DESTINAT
 
 ###############################################################################
 # Generate OpenColorIO-config.cmake
+# Targets exported to ${PROJECT_NAME}_EXPORTED_TARGETS will be available for
+# import using find_package(OpenColorIO).
 
 include(CMakePackageConfigHelpers)
 
