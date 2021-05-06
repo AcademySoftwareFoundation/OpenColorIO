@@ -38,7 +38,7 @@ ContextMap deserializeContextStore(const std::string & contextStoreRaw)
     std::vector<std::string> contextPairsRaw;
     pystring::split(contextStoreRaw, contextPairsRaw, ";");
 
-    for (int i = 0; i < contextPairsRaw.size(); i++)
+    for (size_t i = 0; i < contextPairsRaw.size(); i++)
     {
         std::vector<std::string> contextPair;
         pystring::split(contextPairsRaw[i], contextPair, ":");
