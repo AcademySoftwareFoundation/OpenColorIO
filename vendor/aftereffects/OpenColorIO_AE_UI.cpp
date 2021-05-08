@@ -1019,6 +1019,15 @@ static void DoClickMenus(
                     nt_strncpy(arb_data->output, selected_item.c_str(), ARB_SPACE_LEN+1);
                 }
                 
+                if(arb_data->action == OCIO_ACTION_CONVERT)
+                {
+                    seq_data->context->setupConvert(arb_data->input, arb_data->output);
+                }
+                else if(arb_data->action == OCIO_ACTION_DISPLAY)
+                {
+                    seq_data->context->setupDisplay(arb_data->input, arb_data->display, arb_data->view);
+                }
+
                 params[OCIO_DATA]->uu.change_flags = PF_ChangeFlag_CHANGED_VALUE;
             }
         }
@@ -1049,6 +1058,8 @@ static void DoClickMenus(
             }
             else if(arb_data->action == OCIO_ACTION_CONVERT)
             {
+                assert(FALSE);
+            
                 menu_items = seq_data->context->getInputs();
                 
                 if(reg == REGION_MENU1)
@@ -1064,6 +1075,8 @@ static void DoClickMenus(
             {
                 if(reg == REGION_MENU1)
                 {
+                    assert(FALSE);
+                
                     menu_items = seq_data->context->getInputs();
                     
                     selected_item = FindInVec(menu_items, arb_data->input);
@@ -1112,6 +1125,8 @@ static void DoClickMenus(
                 }
                 else if(arb_data->action == OCIO_ACTION_CONVERT)
                 {
+                    assert(FALSE);
+                
                     if(reg == REGION_MENU1)
                     {
                         nt_strncpy(arb_data->input, color_space.c_str(), ARB_SPACE_LEN+1);
@@ -1127,6 +1142,8 @@ static void DoClickMenus(
                 {
                     if(reg == REGION_MENU1)
                     {
+                        assert(FALSE);
+                    
                         nt_strncpy(arb_data->input, color_space.c_str(), ARB_SPACE_LEN+1);
                     }
                     else if(reg == REGION_MENU2)
