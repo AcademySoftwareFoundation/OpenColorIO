@@ -571,25 +571,17 @@ bool ColorSpacePopUpMenu(OCIO::ConstConfigRcPtr config, std::string &colorSpace,
         const char *family = colorSpacePtr->getFamily();
         
         
-        std::string colorSpacePath;
-        
-        if(family == NULL || family == std::string(""))
-        {
-            colorSpacePath = colorSpaceName;
-        }
-        else
-        {
-            colorSpacePath = std::string(family) + "/" + colorSpaceName;
-        }
-        
-        
-        assert(config->getFamilySeparator() == '/');
-        
         std::vector<std::string> pathComponents;
-
-        tokenize(pathComponents, colorSpacePath, "/");
-
-
+        
+        if(family != NULL && family != std::string(""))
+        {
+            assert(config->getFamilySeparator() == '/');
+            
+            tokenize(pathComponents, family, config->getFamilySeparator());
+        }
+        
+        pathComponents.push_back(colorSpaceName);
+        
         
         HMENU currentMenu = menu;
         
