@@ -23,6 +23,19 @@
 #define OCIO_VERSION_MAJOR 2
 #define OCIO_VERSION_MINOR 1
 
+
+// Highlight deprecated methods or classes.
+#if defined(_MSC_VER)
+    #define OCIO_DEPRECATED(msg) __declspec(deprecated(msg))
+#elif __cplusplus >= 201402L
+    #define OCIO_DEPRECATED(msg) [[deprecated(msg)]]
+#elif defined(__GNUC__) || defined(__clang__)
+    #define OCIO_DEPRECATED(msg) __attribute__((deprecated(msg)))
+#else
+    #define OCIO_DEPRECATED(msg) /* unsupported on this platform */
+#endif
+
+
 // shared_ptr / dynamic_pointer_cast
 #include <memory>
 #define OCIO_SHARED_PTR std::shared_ptr
