@@ -1,0 +1,83 @@
+<ColorCorrectionCollection xmlns="urn:ASC:CDL:v1.01">
+
+<!-- Note that the file may contain unknown elements that we should ignore. -->
+<!-- These might be used by customers for their internal workflows. -->
+
+	<Description>This is a color correction collection example.</Description>
+	<Description>It includes all possible description uses.</Description>
+	<InputDescription>These should be applied in ACESproxy color space.</InputDescription>
+	<ViewingDescription>View using the ACES RRT+ODT transforms.</ViewingDescription>
+
+		<ColorCorrection id="cc0001">
+			<Description>CC-level description 1a</Description>
+			<Description>CC-level description 1b</Description>
+			<InputDescription>CC-level input description 1</InputDescription>
+			<ViewingDescription>CC-level viewing description 1</ViewingDescription>
+
+			<SOPNode>
+				<Description>Example look</Description>
+				<Description>For scenes 1 and 2</Description>
+				<Slope>1.0 1.0 0.9</Slope>
+				<Offset>-.03 -2e-2 0</Offset>
+				<Power>1.25 1 1e0</Power>
+			</SOPNode>
+			<SatNode>
+				<Description>boosting sat</Description>
+				<Saturation>1.700000</Saturation>
+			</SatNode>
+		</ColorCorrection>
+
+		<ColorCorrection id="cc0002">
+			<Description>CC-level description 2a</Description>
+			<Description>CC-level description 2b</Description>
+			<InputDescription>CC-level input description 2</InputDescription>
+			<ViewingDescription>CC-level viewing description 2</ViewingDescription>
+
+			<SOPNode>
+				<Description>pastel</Description>
+				<Description>another example</Description>
+				<Slope>0.9000 0.700 0.6000</Slope>
+				<Offset>0.100 0.100 0.100</Offset>
+				<Power>0.9 0.9 0.9</Power>
+			</SOPNode>
+			<SatNode>
+				<Description>dropping sat</Description>
+				<Saturation>0.7</Saturation>
+			</SatNode>
+		</ColorCorrection>
+
+		<ColorCorrection id="cc0003">
+			<Description>CC-level description 3</Description>
+			<InputDescription>CC-level input description 3</InputDescription>
+			<ViewingDescription>CC-level viewing description 3</ViewingDescription>
+
+			<SOPNode>
+				<Description>golden</Description>
+				<Slope>1.2000 1.1000 1.0000</Slope>
+				<Offset>0.000 0.0000 0.0000</Offset>
+				<Power>0.9 1.0 1.2</Power>
+			</SOPNode>
+			<SatNode>
+				<Description>no sat change</Description>
+				<Description>sat==1</Description>
+				<Saturation>1.000000</Saturation>
+			</SatNode>
+		</ColorCorrection>
+
+		<!-- Check that an empty id does not prevent the look from being loaded. -->
+		<ColorCorrection id="">
+			<SOPNode>
+				<Slope>4.000 5.000 6.0000</Slope>
+				<Offset>0.000 0.0000 0.0000</Offset>
+				<Power>0.9 1.0 1.2</Power>
+			</SOPNode>
+		</ColorCorrection>
+
+		<!-- Check that a missing id does not prevent the look from being loaded. -->
+		<ColorCorrection>
+			<SatNode>
+				<Saturation>.000000</Saturation>
+			</SatNode>
+		</ColorCorrection>
+
+</ColorCorrectionCollection>

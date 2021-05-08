@@ -8,7 +8,7 @@ requires = [
     "wheel",
     "cmake>=3.12",
     "ninja",
-    "pybind11",
+    "pybind11>=2.6.1",
     # Documentation requirements
     "six",
     "testresources",

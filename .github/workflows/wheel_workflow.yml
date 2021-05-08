@@ -89,6 +89,8 @@ jobs:
           CIBW_BUILD: ${{ matrix.python }}
           CIBW_ARCHS: ${{ matrix.arch }}
           CIBW_BEFORE_BUILD: share/ci/scripts/linux/yum/install_docs_env.sh
+          CIBW_TEST_REQUIRES: numpy
+          CIBW_TEST_COMMAND: python -m PyOpenColorIOTests.OpenColorIOTestSuite
 
       - uses: actions/upload-artifact@v2
         with:
@@ -135,6 +137,8 @@ jobs:
           CIBW_BUILD: ${{ matrix.python }}
           CIBW_ARCHS: ${{ matrix.arch }}
           CIBW_BEFORE_BUILD: share/ci/scripts/macos/install_docs_env.sh
+          CIBW_TEST_REQUIRES: numpy
+          CIBW_TEST_COMMAND: python -m PyOpenColorIOTests.OpenColorIOTestSuite
 
       - uses: actions/upload-artifact@v2
         with:
@@ -196,6 +200,8 @@ jobs:
           CIBW_BUILD: ${{ matrix.python }}
           CIBW_ARCHS: ${{ matrix.arch }}
           CIBW_BEFORE_BUILD: bash -c share/ci/scripts/windows/install_docs_env.sh
+          CIBW_TEST_REQUIRES: numpy
+          CIBW_TEST_COMMAND: python -m PyOpenColorIOTests.OpenColorIOTestSuite
 
       - uses: actions/upload-artifact@v2
         with:

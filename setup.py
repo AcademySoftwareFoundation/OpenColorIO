@@ -11,6 +11,16 @@ import subprocess
 from setuptools import setup, Extension
 from setuptools.command.build_ext import build_ext
 
+
+# Discover tests files for setuptools
+def install_test_files():
+    res = ['data/LICENSE.md', 'data/README.md']
+    for root, folder, files in os.walk('tests/python/data/files'):
+        if files:
+            rel_path = os.path.relpath(root, start='tests/python')
+            res.extend([os.path.join(rel_path, f) for f in files])
+    return res
+
 # Convert distutils Windows platform specifiers to CMake -A arguments
 PLAT_TO_CMAKE = {
     "win32": "Win32",
@@ -18,7 +28,6 @@ PLAT_TO_CMAKE = {
     "win-arm32": "ARM",
     "win-arm64": "ARM64",
 }
-
 
 # A CMakeExtension needs a sourcedir instead of a file list.
 # The name must be the _single_ output extension from the CMake build.
@@ -51,7 +60,8 @@ class CMakeBuild(build_ext):
             "-DCMAKE_BUILD_TYPE={}".format(cfg),
             "-DBUILD_SHARED_LIBS=OFF",
             "-DOCIO_BUILD_DOCS=ON",
-            "-DOCIO_BUILD_TESTS=ON",
+            "-DOCIO_BUILD_APPS=OFF",
+            "-DOCIO_BUILD_TESTS=OFF",
             "-DOCIO_BUILD_GPU_TESTS=OFF",
             # Install pybind11 via pip to avoid issue on Windows where
             # ExternalProject pybind11 build detect the wrong version
@@ -109,7 +119,17 @@ class CMakeBuild(build_ext):
         )
 
 
+# For historical reason, we use PyOpenColorIO as the import name
 setup(
-    ext_modules=[CMakeExtension("OpenColorIO")],
+    package_dir={
+        'PyOpenColorIOTests': 'tests/python',
+    },
+    package_data={
+        'PyOpenColorIOTests': install_test_files()
+    },
+    packages=[
+        'PyOpenColorIOTests',
+    ],
+    ext_modules=[CMakeExtension("PyOpenColorIO")],
     cmdclass={"build_ext": CMakeBuild},
 )

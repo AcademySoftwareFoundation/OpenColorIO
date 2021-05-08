@@ -6,7 +6,5 @@ set -ex
 
 HERE=$(dirname $0)
 
-yum install -y sudo
-
 bash $HERE/install_doxygen.sh latest
-sudo pip install -r $HERE/../../../../../docs/requirements.txt
+pip install -r $HERE/../../../../../docs/requirements.txt

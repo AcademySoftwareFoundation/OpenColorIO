@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList id="1d399a07-1936-49b8-9225-e6824790358c" xmlns="urn:AMPAS:CLF:v3.0" compCLFversion="3.0">
+    <Description>Example with a Matrix and Lut1D</Description>
+    <Matrix id="72f85641-8c80-4bd6-b96b-a2f67ccb948a" inBitDepth="32f" outBitDepth="32f">
+        <Description>XYZ to sRGB matrix</Description>
+        <Array dim="3 3">
+ 3.24000 -1.53700 -0.49850
+-0.96930  1.87600  0.04156
+ 0.05560 -0.20400  1.05730
+        </Array>
+    </Matrix>
+    <LUT1D id="4ed2af07-9319-430a-b18a-43368163c808" inBitDepth="32f" outBitDepth="32f">
+        <Description>linear to approx. gamma corrected code values</Description>
+        <Array dim="17 3">
+ 0.00000  0.00000  0.00000
+ 0.28358  0.28358  0.28358
+ 0.38860  0.38860  0.38860
+ 0.46725  0.46725  0.46725
+ 0.53252  0.53252  0.53252
+ 0.58937  0.58937  0.58937
+ 0.64029  0.64029  0.64029
+ 0.68677  0.68677  0.68677
+ 0.72974  0.72974  0.72974
+ 0.76987  0.76987  0.76987
+ 0.80764  0.80764  0.80764
+ 0.84340  0.84340  0.84340
+ 0.87742  0.87742  0.87742
+ 0.90994  0.90994  0.90994
+ 0.94111  0.94111  0.94111
+ 0.97109  0.97109  0.97109
+ 1.00000  1.00000  1.00000
+        </Array>
+    </LUT1D>
+</ProcessList>
