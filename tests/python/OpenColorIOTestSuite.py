@@ -11,6 +11,7 @@ logging.basicConfig(
     format="[%(levelname)s] %(name)s: %(message)s",
 )
 
+# We are called from CTest if called with arguments (build_tree, build_type)
 if len(sys.argv) > 1:
     build_location = sys.argv[1]
     os.environ["TEST_DATAFILES_DIR"] = os.path.join(build_location, 'testdata')
@@ -37,6 +38,7 @@ if len(sys.argv) > 1:
             opencolorio_dir, os.getenv('DYLD_LIBRARY_PATH', ''))
 
     sys.path.insert(0, pyopencolorio_dir)
+# Else it probably means direct invokation from installed package
 else:
     here = os.path.dirname(__file__)
     os.environ["TEST_DATAFILES_DIR"] = os.path.join(here, 'data', 'files')

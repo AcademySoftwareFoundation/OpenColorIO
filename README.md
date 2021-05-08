@@ -10,7 +10,7 @@ OpenColorIO
 [![Analysis Status](https://github.com/AcademySoftwareFoundation/OpenColorIO/workflows/Analysis/badge.svg)](https://github.com/AcademySoftwareFoundation/OpenColorIO/actions?query=workflow%3AAnalysis)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=AcademySoftwareFoundation_OpenColorIO&metric=alert_status)](https://sonarcloud.io/dashboard?id=AcademySoftwareFoundation_OpenColorIO)
 [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/2612/badge)](https://bestpractices.coreinfrastructure.org/projects/2612)
-[![Wheels](https://github.com/AcademySoftwareFoundation/OpenColorIO/workflows/Wheels/badge.svg)](https://github.com/AcademySoftwareFoundation/OpenColorIO/actions?query=workflow%3AWheels)
+[![Wheels](https://github.com/AcademySoftwareFoundation/OpenColorIO/workflows/Wheel/badge.svg)](https://github.com/AcademySoftwareFoundation/OpenColorIO/actions?query=workflow%3AWheel)
 
 Introduction
 ------------
