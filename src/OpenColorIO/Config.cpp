@@ -1075,7 +1075,7 @@ public:
 
             m_allColorSpaces->removeColorSpace(colorSpaceName.c_str());
 
-            throw ex;
+            throw;
         }
 
         // The display must be active.
