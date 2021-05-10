@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
+
 #include <cstring>
 #include <map>
 #include <mutex>
@@ -10,8 +11,10 @@
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "ColorSpaceHelpers.h"
+#include "Logging.h"
 #include "Platform.h"
 #include "utils/StringUtils.h"
+
 
 namespace OCIO_NAMESPACE
 {
@@ -374,8 +377,8 @@ ColorSpaceMenuHelperRcPtr ColorSpaceMenuHelper::Create(ConstColorSpaceMenuParame
     catch (Exception & e)
     {
         std::ostringstream oss;
-        oss << "ColorSpaceMenuHelper needs a valid config. Validation failed with: " << e.what();
-        throw Exception(oss.str().c_str());
+        oss << "ColorSpaceMenuHelper needs a valid config. Validation warning is: " << e.what();
+        LogWarning(oss.str().c_str());
     }
 
     if (!p->getIncludeColorSpaces() && p->getIncludeRoles())
