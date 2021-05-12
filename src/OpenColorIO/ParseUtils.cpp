@@ -350,13 +350,12 @@ const char * FixedFunctionStyleToString(FixedFunctionStyle style)
         case FIXED_FUNCTION_XYZ_TO_xyY:          return "XYZ_TO_xyY";
         case FIXED_FUNCTION_XYZ_TO_uvY:          return "XYZ_TO_uvY";
         case FIXED_FUNCTION_XYZ_TO_LUV:          return "XYZ_TO_LUV";
+        case FIXED_FUNCTION_ACES_GAMUTMAP_13:    return "ACES_GamutMap13";
         case FIXED_FUNCTION_ACES_GAMUTMAP_02:
         case FIXED_FUNCTION_ACES_GAMUTMAP_07:
-        case FIXED_FUNCTION_ACES_GAMUTMAP_13:
             throw Exception("Unimplemented fixed function types: "
                             "FIXED_FUNCTION_ACES_GAMUTMAP_02, "
-                            "FIXED_FUNCTION_ACES_GAMUTMAP_07, and "
-                            "FIXED_FUNCTION_ACES_GAMUTMAP_13.");
+                            "FIXED_FUNCTION_ACES_GAMUTMAP_07.");
     }
 
     // Default style is meaningless.
@@ -378,6 +377,7 @@ FixedFunctionStyle FixedFunctionStyleFromString(const char * style)
     else if(str == "xyz_to_xyy")         return FIXED_FUNCTION_XYZ_TO_xyY;
     else if(str == "xyz_to_uvy")         return FIXED_FUNCTION_XYZ_TO_uvY;
     else if(str == "xyz_to_luv")         return FIXED_FUNCTION_XYZ_TO_LUV;
+    else if(str == "aces_gamutmap13")   return FIXED_FUNCTION_ACES_GAMUTMAP_13;
 
     // Default style is meaningless.
     std::stringstream ss;
@@ -721,4 +721,3 @@ int FindInStringVecCaseIgnore(const StringUtils::StringVec & vec, const std::str
     return -1;
 }
 } // namespace OCIO_NAMESPACE
-

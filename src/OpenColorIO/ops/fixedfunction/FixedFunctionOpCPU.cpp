@@ -103,6 +103,31 @@ protected:
     float m_gamma;
 };
 
+class Renderer_ACES_GamutMap13_Fwd : public OpCPU
+{
+public:
+    Renderer_ACES_GamutMap13_Fwd(ConstFixedFunctionOpDataRcPtr & data);
+
+    void apply(const void * inImg, void * outImg, long numPixels) const override;
+
+protected:
+    float m_limCyan;
+    float m_limMagenta;
+    float m_limYellow;
+    float m_thrCyan;
+    float m_thrMagenta;
+    float m_thrYellow;
+    float m_power;
+};
+
+class Renderer_ACES_GamutMap13_Inv : public Renderer_ACES_GamutMap13_Fwd
+{
+public:
+    Renderer_ACES_GamutMap13_Inv(ConstFixedFunctionOpDataRcPtr & data);
+
+    void apply(const void * inImg, void * outImg, long numPixels) const override;
+};
+
 class Renderer_REC2100_Surround : public OpCPU
 {
 public:
@@ -653,6 +678,123 @@ void Renderer_ACES_DarkToDim10_Fwd::apply(const void * inImg, void * outImg, lon
     }
 }
 
+Renderer_ACES_GamutMap13_Fwd::Renderer_ACES_GamutMap13_Fwd(ConstFixedFunctionOpDataRcPtr & data)
+    :   OpCPU()
+{
+    m_limCyan = (float)data->getParams()[0];
+    m_limMagenta = (float)data->getParams()[1];
+    m_limYellow = (float)data->getParams()[2];
+    m_thrCyan = (float)data->getParams()[3];
+    m_thrMagenta = (float)data->getParams()[4];
+    m_thrYellow = (float)data->getParams()[5];
+    m_power = (float)data->getParams()[6];
+}
+
+__inline float compress_gm_13(float dist, float lim, float thr, float pwr, bool invert)
+{
+    float comprDist;
+    float scl;
+    float nd;
+    float p;
+
+    if (dist < thr) {
+        comprDist = dist; // No compression below threshold
+    }
+    else {
+        // Calculate scale factor for y = 1 intersect
+        scl = (lim - thr) / powf(powf((1.0f - thr) / (lim - thr), -pwr) - 1.0f, 1.0f / pwr);
+
+        // Normalize distance outside threshold by scale factor
+        nd = (dist - thr) / scl;
+        p = powf(nd, pwr);
+
+        if (!invert) {
+            comprDist = thr + scl * nd / (powf(1.0f + p, 1.0f / pwr)); // Compress
+        }
+        else {
+            if (dist > (thr + scl)) {
+                comprDist = dist; // Avoid singularity
+            }
+            else {
+                comprDist = thr + scl * powf(-(p / (p - 1.0f)), 1.0f / pwr); // Uncompress
+            }
+        }
+    }
+
+    return comprDist;
+}
+
+__inline float gm_13(float val, float ach, float lim, float thr, float pwr, bool invert)
+{
+    // Distance from the achromatic axis, aka inverse RGB ratios
+    float dist;
+    if (ach == 0.0)
+        dist = 0.0;
+    else
+        dist = (ach - val) / std::fabs(ach);
+
+    // Compress distance with parameterized shaper function
+    const float comprDist = compress_gm_13(dist, lim, thr, pwr, invert);
+
+    // Recalculate RGB from compressed distance and achromatic
+    const float compr = ach - comprDist * std::fabs(ach);
+
+    return compr;
+}
+
+void Renderer_ACES_GamutMap13_Fwd::apply(const void * inImg, void * outImg, long numPixels) const
+{
+    const float * in = (const float *)inImg;
+    float * out = (float *)outImg;
+
+    for(long idx=0; idx<numPixels; ++idx)
+    {
+        const float red = in[0];
+        const float grn = in[1];
+        const float blu = in[2];
+
+        // Achromatic axis
+        const float ach = std::max(red, std::max(grn, blu));
+
+        out[0] = gm_13(red, ach, m_limCyan, m_thrCyan, m_power, false);
+        out[1] = gm_13(grn, ach, m_limMagenta, m_thrMagenta, m_power, false);
+        out[2] = gm_13(blu, ach, m_limYellow, m_thrYellow, m_power, false);
+        out[3] = in[3];
+
+        in  += 4;
+        out += 4;
+    }
+}
+
+Renderer_ACES_GamutMap13_Inv::Renderer_ACES_GamutMap13_Inv(ConstFixedFunctionOpDataRcPtr & data)
+    :   Renderer_ACES_GamutMap13_Fwd(data)
+{
+}
+
+void Renderer_ACES_GamutMap13_Inv::apply(const void * inImg, void * outImg, long numPixels) const
+{
+    const float * in = (const float *)inImg;
+    float * out = (float *)outImg;
+
+    for(long idx=0; idx<numPixels; ++idx)
+    {
+        const float red = in[0];
+        const float grn = in[1];
+        const float blu = in[2];
+
+        // Achromatic axis
+        const float ach = std::max(red, std::max(grn, blu));
+
+        out[0] = gm_13(red, ach, m_limCyan, m_thrCyan, m_power, true);
+        out[1] = gm_13(grn, ach, m_limMagenta, m_thrMagenta, m_power, true);
+        out[2] = gm_13(blu, ach, m_limYellow, m_thrYellow, m_power, true);
+        out[3] = in[3];
+
+        in  += 4;
+        out += 4;
+    }
+}
+
 Renderer_REC2100_Surround::Renderer_REC2100_Surround(ConstFixedFunctionOpDataRcPtr & data)
     :   OpCPU()
 {
@@ -1069,11 +1211,11 @@ ConstOpCPURcPtr GetFixedFunctionCPURenderer(ConstFixedFunctionOpDataRcPtr & func
         case FixedFunctionOpData::ACES_GLOW_03_FWD:
         {
             return std::make_shared<Renderer_ACES_Glow03_Fwd>(func, 0.075f, 0.1f);
-        }        
+        }
         case FixedFunctionOpData::ACES_GLOW_03_INV:
         {
             return std::make_shared<Renderer_ACES_Glow03_Inv>(func, 0.075f, 0.1f);
-        }        
+        }
         case FixedFunctionOpData::ACES_GLOW_10_FWD:
         {
             return std::make_shared<Renderer_ACES_Glow03_Fwd>(func, 0.05f, 0.08f);
@@ -1089,6 +1231,14 @@ ConstOpCPURcPtr GetFixedFunctionCPURenderer(ConstFixedFunctionOpDataRcPtr & func
         case FixedFunctionOpData::ACES_DARK_TO_DIM_10_INV:
         {
             return std::make_shared<Renderer_ACES_DarkToDim10_Fwd>(func, 1.0192640913260627f);
+        }
+        case FixedFunctionOpData::ACES_GAMUTMAP_13_FWD:
+        {
+            return std::make_shared<Renderer_ACES_GamutMap13_Fwd>(func);
+        }
+        case FixedFunctionOpData::ACES_GAMUTMAP_13_INV:
+        {
+            return std::make_shared<Renderer_ACES_GamutMap13_Inv>(func);
         }
         case FixedFunctionOpData::REC2100_SURROUND_FWD:
         case FixedFunctionOpData::REC2100_SURROUND_INV:

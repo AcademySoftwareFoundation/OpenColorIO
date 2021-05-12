@@ -26,6 +26,8 @@ constexpr char ACES_GLOW_10_FWD_STR[]      = "Glow10Fwd";
 constexpr char ACES_GLOW_10_REV_STR[]      = "Glow10Rev";
 constexpr char ACES_DARK_TO_DIM_10_STR[]   = "DarkToDim10";
 constexpr char ACES_DIM_TO_DARK_10_STR[]   = "DimToDark10";
+constexpr char ACES_GAMUTMAP_13_FWD_STR[]  = "GamutMap13Fwd";
+constexpr char ACES_GAMUTMAP_13_REV_STR[]  = "GamutMap13Rev";
 constexpr char SURROUND_STR[]              = "Surround"; // Old name for Rec2100SurroundFwd
 constexpr char REC_2100_SURROUND_FWD_STR[] = "Rec2100SurroundFwd";
 constexpr char REC_2100_SURROUND_REV_STR[] = "Rec2100SurroundRev";
@@ -68,6 +70,10 @@ const char * FixedFunctionOpData::ConvertStyleToString(Style style, bool detaile
             return detailed ? "ACES_DarkToDim10 (Forward)" : ACES_DARK_TO_DIM_10_STR;
         case ACES_DARK_TO_DIM_10_INV:
             return detailed ? "ACES_DarkToDim10 (Inverse)" : ACES_DIM_TO_DARK_10_STR;
+        case ACES_GAMUTMAP_13_FWD:
+            return detailed ? "ACES_GamutMap13 (Forward)" : ACES_GAMUTMAP_13_FWD_STR;
+        case ACES_GAMUTMAP_13_INV:
+            return detailed ? "ACES_GamutMap13 (Inverse)" : ACES_GAMUTMAP_13_REV_STR;
         case REC2100_SURROUND_FWD:
             return detailed ? "REC2100_Surround (Forward)" : REC_2100_SURROUND_FWD_STR;
         case REC2100_SURROUND_INV:
@@ -140,6 +146,14 @@ FixedFunctionOpData::Style FixedFunctionOpData::GetStyle(const char * name)
         else if (0 == Platform::Strcasecmp(name, ACES_DIM_TO_DARK_10_STR))
         {
             return ACES_DARK_TO_DIM_10_INV;
+        }
+        else if (0 == Platform::Strcasecmp(name, ACES_GAMUTMAP_13_FWD_STR))
+        {
+            return ACES_GAMUTMAP_13_FWD;
+        }
+        else if (0 == Platform::Strcasecmp(name, ACES_GAMUTMAP_13_REV_STR))
+        {
+            return ACES_GAMUTMAP_13_INV;
         }
         else if (0 == Platform::Strcasecmp(name, SURROUND_STR) ||
                  0 == Platform::Strcasecmp(name, REC_2100_SURROUND_FWD_STR))
@@ -223,6 +237,11 @@ FixedFunctionOpData::Style FixedFunctionOpData::ConvertStyle(FixedFunctionStyle 
             return isForward ? FixedFunctionOpData::ACES_DARK_TO_DIM_10_FWD :
                                FixedFunctionOpData::ACES_DARK_TO_DIM_10_INV;
         }
+        case FIXED_FUNCTION_ACES_GAMUTMAP_13:
+        {
+            return isForward ? FixedFunctionOpData::ACES_GAMUTMAP_13_FWD :
+                               FixedFunctionOpData::ACES_GAMUTMAP_13_INV;
+        }
         case FIXED_FUNCTION_REC2100_SURROUND:
         {
             return isForward ? FixedFunctionOpData::REC2100_SURROUND_FWD :
@@ -246,12 +265,10 @@ FixedFunctionOpData::Style FixedFunctionOpData::ConvertStyle(FixedFunctionStyle 
         }
         case FIXED_FUNCTION_ACES_GAMUTMAP_02:
         case FIXED_FUNCTION_ACES_GAMUTMAP_07:
-        case FIXED_FUNCTION_ACES_GAMUTMAP_13:
         {
             throw Exception("Unimplemented fixed function types: "
                             "FIXED_FUNCTION_ACES_GAMUTMAP_02, "
-                            "FIXED_FUNCTION_ACES_GAMUTMAP_07, and "
-                            "FIXED_FUNCTION_ACES_GAMUTMAP_13.");
+                            "FIXED_FUNCTION_ACES_GAMUTMAP_07.");
         }
     }
 
@@ -285,6 +302,10 @@ FixedFunctionStyle FixedFunctionOpData::ConvertStyle(FixedFunctionOpData::Style 
     case FixedFunctionOpData::ACES_DARK_TO_DIM_10_FWD:
     case FixedFunctionOpData::ACES_DARK_TO_DIM_10_INV:
         return FIXED_FUNCTION_ACES_DARK_TO_DIM_10;
+
+    case FixedFunctionOpData::ACES_GAMUTMAP_13_FWD:
+    case FixedFunctionOpData::ACES_GAMUTMAP_13_INV:
+        return FIXED_FUNCTION_ACES_GAMUTMAP_13;
 
     case FixedFunctionOpData::REC2100_SURROUND_FWD:
     case FixedFunctionOpData::REC2100_SURROUND_INV:
@@ -341,7 +362,80 @@ FixedFunctionOpDataRcPtr FixedFunctionOpData::clone() const
 
 void FixedFunctionOpData::validate() const
 {
-    if(m_style==REC2100_SURROUND_FWD || m_style == REC2100_SURROUND_INV)
+    if(m_style==ACES_GAMUTMAP_13_FWD || m_style == ACES_GAMUTMAP_13_INV)
+    {
+        if (m_params.size() != 7)
+        {
+            std::stringstream ss;
+            ss  << "The style '" << ConvertStyleToString(m_style, true)
+                << "' must have seven parameters but "
+                << m_params.size() << " found.";
+            throw Exception(ss.str().c_str());
+        }
+
+        const double lim_cyan = m_params[0];
+        const double lim_magenta = m_params[1];
+        const double lim_yellow = m_params[2];
+        const double thr_cyan = m_params[3];
+        const double thr_magenta = m_params[4];
+        const double thr_yellow = m_params[5];
+        const double power = m_params[6];
+
+        const double lim_low_bound = 1.0;
+        const double lim_hi_bound = 10.0;
+
+        if (lim_cyan < lim_low_bound || lim_cyan > lim_hi_bound)
+        {
+            std::stringstream ss;
+            ss << "Parameter " << lim_cyan << " (lim_cyan) is outside valid range [" << lim_low_bound << "," << lim_hi_bound << "]";
+            throw Exception(ss.str().c_str());
+        }
+        if (lim_magenta < lim_low_bound || lim_magenta > lim_hi_bound)
+        {
+            std::stringstream ss;
+            ss << "Parameter " << lim_magenta << " (lim_magenta) is outside valid range [" << lim_low_bound << "," << lim_hi_bound << "]";
+            throw Exception(ss.str().c_str());
+        }
+        if (lim_yellow < lim_low_bound || lim_yellow > lim_hi_bound)
+        {
+            std::stringstream ss;
+            ss << "Parameter " << lim_yellow << " (lim_yellow) is outside valid range [" << lim_low_bound << "," << lim_hi_bound << "]";
+            throw Exception(ss.str().c_str());
+        }
+
+        const double thr_low_bound = 0.4;
+        const double thr_hi_bound = 1.0;
+
+        if (thr_cyan < thr_low_bound || thr_cyan > thr_hi_bound)
+        {
+            std::stringstream ss;
+            ss << "Parameter " << thr_cyan << " (thr_cyan) is outside valid range [" << thr_low_bound << "," << thr_hi_bound << "]";
+            throw Exception(ss.str().c_str());
+        }
+        if (thr_magenta < thr_low_bound || thr_magenta > thr_hi_bound)
+        {
+            std::stringstream ss;
+            ss << "Parameter " << thr_magenta << " (thr_magenta) is outside valid range [" << thr_low_bound << "," << thr_hi_bound << "]";
+            throw Exception(ss.str().c_str());
+        }
+        if (thr_yellow < thr_low_bound || thr_yellow > thr_hi_bound)
+        {
+            std::stringstream ss;
+            ss << "Parameter " << thr_yellow << " (thr_yellow) is outside valid range [" << thr_low_bound << "," << thr_hi_bound << "]";
+            throw Exception(ss.str().c_str());
+        }
+
+        const double pwr_low_bound = 1.0;
+        const double pwr_hi_bound = 3.0;
+
+        if (power < pwr_low_bound || power > pwr_hi_bound)
+        {
+            std::stringstream ss;
+            ss << "Parameter " << power << " (power) is outside valid range [" << pwr_low_bound << "," << pwr_hi_bound << "]";
+            throw Exception(ss.str().c_str());
+        }
+    }
+    else if(m_style==REC2100_SURROUND_FWD || m_style == REC2100_SURROUND_INV)
     {
         if (m_params.size() != 1)
         {
@@ -452,6 +546,16 @@ void FixedFunctionOpData::invert() noexcept
             setStyle(ACES_DARK_TO_DIM_10_FWD);
             break;
         }
+        case ACES_GAMUTMAP_13_FWD:
+        {
+            setStyle(ACES_GAMUTMAP_13_INV);
+            break;
+        }
+        case ACES_GAMUTMAP_13_INV:
+        {
+            setStyle(ACES_GAMUTMAP_13_FWD);
+            break;
+        }
         case REC2100_SURROUND_FWD:
         {
             setStyle(REC2100_SURROUND_INV);
@@ -530,6 +634,7 @@ TransformDirection FixedFunctionOpData::getDirection() const noexcept
     case FixedFunctionOpData::ACES_GLOW_03_FWD:
     case FixedFunctionOpData::ACES_GLOW_10_FWD:
     case FixedFunctionOpData::ACES_DARK_TO_DIM_10_FWD:
+    case FixedFunctionOpData::ACES_GAMUTMAP_13_FWD:
     case FixedFunctionOpData::REC2100_SURROUND_FWD:
     case FixedFunctionOpData::RGB_TO_HSV:
     case FixedFunctionOpData::XYZ_TO_xyY:
@@ -542,6 +647,7 @@ TransformDirection FixedFunctionOpData::getDirection() const noexcept
     case FixedFunctionOpData::ACES_GLOW_03_INV:
     case FixedFunctionOpData::ACES_GLOW_10_INV:
     case FixedFunctionOpData::ACES_DARK_TO_DIM_10_INV:
+    case FixedFunctionOpData::ACES_GAMUTMAP_13_INV:
     case FixedFunctionOpData::REC2100_SURROUND_INV:
     case FixedFunctionOpData::HSV_TO_RGB:
     case FixedFunctionOpData::xyY_TO_XYZ:
@@ -566,7 +672,7 @@ bool FixedFunctionOpData::operator==(const OpData & other) const
 
     const FixedFunctionOpData* fop = static_cast<const FixedFunctionOpData*>(&other);
 
-    return getStyle() == fop->getStyle() && getParams()==fop->getParams();
+    return getStyle() == fop->getStyle() && getParams() == fop->getParams();
 }
 
 std::string FixedFunctionOpData::getCacheID() const
@@ -592,4 +698,3 @@ std::string FixedFunctionOpData::getCacheID() const
 }
 
 } // namespace OCIO_NAMESPACE
-

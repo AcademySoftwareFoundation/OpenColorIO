@@ -36,6 +36,12 @@ public:
         ACES_GLOW_10_INV,         // Glow function inverse (ACES 1.0)
         ACES_DARK_TO_DIM_10_FWD,  // Dark to dim surround correction (ACES 1.0)
         ACES_DARK_TO_DIM_10_INV,  // Dim to dark surround correction (ACES 1.0)
+        // ---
+        // Consider whether to call this ACES or not to emphasis that ACES is
+        // really the BuiltInTransform version of it with fixed parameters.
+        ACES_GAMUTMAP_13_FWD,     // Gamut mapping (ACES 1.3)
+        ACES_GAMUTMAP_13_INV,     // Gamut mapping inverse (ACES 1.3)
+        // ---
         REC2100_SURROUND_FWD,     // Rec.2100 surround correction (takes one double for the gamma param)
         REC2100_SURROUND_INV,     // Rec.2100 surround correction inverse (takes one gamma param)
         RGB_TO_HSV,               // Classic RGB to HSV function

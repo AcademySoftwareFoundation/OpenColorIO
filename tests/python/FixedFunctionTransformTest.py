@@ -60,8 +60,7 @@ class FixedFunctionTransformTest(unittest.TestCase, TransformsBaseTest):
 
         for style in OCIO.FixedFunctionStyle.__members__.values():
             if style not in [OCIO.FIXED_FUNCTION_ACES_GAMUTMAP_02,
-                             OCIO.FIXED_FUNCTION_ACES_GAMUTMAP_07,
-                             OCIO.FIXED_FUNCTION_ACES_GAMUTMAP_13]:
+                             OCIO.FIXED_FUNCTION_ACES_GAMUTMAP_07]:
                 self.tr.setStyle(style)
                 self.assertEqual(self.tr.getStyle(), style)
 

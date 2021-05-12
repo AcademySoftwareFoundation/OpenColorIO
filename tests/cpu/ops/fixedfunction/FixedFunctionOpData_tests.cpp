@@ -66,6 +66,104 @@ OCIO_ADD_TEST(FixedFunctionOpData, aces_dark_to_dim10_style)
                           "The style 'ACES_DarkToDim10 (Forward)' must have zero parameters but 1 found.");
 }
 
+OCIO_ADD_TEST(FixedFunctionOpData, aces_gamut_map_13_style)
+{
+    OCIO::FixedFunctionOpData::Params params = { 1.147, 1.264, 1.312, 0.815, 0.803, 0.880, 1.2 };
+    OCIO::FixedFunctionOpData func(OCIO::FixedFunctionOpData::ACES_GAMUTMAP_13_FWD, params);
+    OCIO_CHECK_NO_THROW(func.validate());
+    std::string cacheID;
+    OCIO_CHECK_NO_THROW(cacheID = func.getCacheID());
+    OCIO_CHECK_ASSERT(func.getParams() == params);
+
+    OCIO::FixedFunctionOpDataRcPtr inv = func.inverse();
+    OCIO_CHECK_EQUAL(inv->getParams()[0], func.getParams()[0]);
+    OCIO_CHECK_EQUAL(inv->getStyle(), OCIO::FixedFunctionOpData::ACES_GAMUTMAP_13_INV);
+    std::string cacheIDUpdated;
+    OCIO_CHECK_NO_THROW(cacheIDUpdated = inv->getCacheID());
+    OCIO_CHECK_ASSERT(cacheID != cacheIDUpdated);
+
+    OCIO_CHECK_ASSERT(func == func);
+    OCIO_CHECK_ASSERT(!(func == *inv));
+
+    auto test_params = params;
+    test_params.push_back(12);
+    OCIO_CHECK_NO_THROW(func.setParams(test_params));
+    OCIO_CHECK_THROW_WHAT(func.validate(),
+                          OCIO::Exception,
+                          "The style 'ACES_GamutMap13 (Forward)' must have "
+                          "seven parameters but 8 found.");
+
+    test_params = params;
+    test_params.pop_back();
+    OCIO_CHECK_NO_THROW(func.setParams(test_params));
+    OCIO_CHECK_THROW_WHAT(func.validate(),
+                          OCIO::Exception,
+                          "The style 'ACES_GamutMap13 (Forward)' must have "
+                          "seven parameters but 6 found.");
+
+    test_params = params;
+    test_params.clear();
+    OCIO_CHECK_NO_THROW(func.setParams(test_params));
+    OCIO_CHECK_THROW_WHAT(func.validate(),
+                          OCIO::Exception,
+                          "The style 'ACES_GamutMap13 (Forward)' must have "
+                          "seven parameters but 0 found.");
+
+
+    test_params = params;
+    test_params[0] = 0.0;
+    OCIO_CHECK_NO_THROW(func.setParams(test_params));
+    OCIO_CHECK_THROW_WHAT(func.validate(), OCIO::Exception, "Parameter 0 (lim_cyan) is outside valid range [1,10]");
+    test_params[0] = 10.5;
+    OCIO_CHECK_NO_THROW(func.setParams(test_params));
+    OCIO_CHECK_THROW_WHAT(func.validate(), OCIO::Exception, "Parameter 10.5 (lim_cyan) is outside valid range [1,10]");
+    test_params = params;
+    test_params[1] = 0.0;
+    OCIO_CHECK_NO_THROW(func.setParams(test_params));
+    OCIO_CHECK_THROW_WHAT(func.validate(), OCIO::Exception, "Parameter 0 (lim_magenta) is outside valid range [1,10]");
+    test_params[1] = 10.5;
+    OCIO_CHECK_NO_THROW(func.setParams(test_params));
+    OCIO_CHECK_THROW_WHAT(func.validate(), OCIO::Exception, "Parameter 10.5 (lim_magenta) is outside valid range [1,10]");
+    test_params = params;
+    test_params[2] = 0.0;
+    OCIO_CHECK_NO_THROW(func.setParams(test_params));
+    OCIO_CHECK_THROW_WHAT(func.validate(), OCIO::Exception, "Parameter 0 (lim_yellow) is outside valid range [1,10]");
+    test_params[2] = 10.5;
+    OCIO_CHECK_NO_THROW(func.setParams(test_params));
+    OCIO_CHECK_THROW_WHAT(func.validate(), OCIO::Exception, "Parameter 10.5 (lim_yellow) is outside valid range [1,10]");
+
+    test_params = params;
+    test_params[3] = 0.0;
+    OCIO_CHECK_NO_THROW(func.setParams(test_params));
+    OCIO_CHECK_THROW_WHAT(func.validate(), OCIO::Exception, "Parameter 0 (thr_cyan) is outside valid range [0.4,1]");
+    test_params[3] = 2.0;
+    OCIO_CHECK_NO_THROW(func.setParams(test_params));
+    OCIO_CHECK_THROW_WHAT(func.validate(), OCIO::Exception, "Parameter 2 (thr_cyan) is outside valid range [0.4,1]");
+    test_params = params;
+    test_params[4] = 0.0;
+    OCIO_CHECK_NO_THROW(func.setParams(test_params));
+    OCIO_CHECK_THROW_WHAT(func.validate(), OCIO::Exception, "Parameter 0 (thr_magenta) is outside valid range [0.4,1]");
+    test_params[4] = 2.0;
+    OCIO_CHECK_NO_THROW(func.setParams(test_params));
+    OCIO_CHECK_THROW_WHAT(func.validate(), OCIO::Exception, "Parameter 2 (thr_magenta) is outside valid range [0.4,1]");
+    test_params = params;
+    test_params[5] = 0.0;
+    OCIO_CHECK_NO_THROW(func.setParams(test_params));
+    OCIO_CHECK_THROW_WHAT(func.validate(), OCIO::Exception, "Parameter 0 (thr_yellow) is outside valid range [0.4,1]");
+    test_params[5] = 2.0;
+    OCIO_CHECK_NO_THROW(func.setParams(test_params));
+    OCIO_CHECK_THROW_WHAT(func.validate(), OCIO::Exception, "Parameter 2 (thr_yellow) is outside valid range [0.4,1]");
+
+    test_params = params;
+    test_params[6] = 0.0;
+    OCIO_CHECK_NO_THROW(func.setParams(test_params));
+    OCIO_CHECK_THROW_WHAT(func.validate(), OCIO::Exception, "Parameter 0 (power) is outside valid range [1,3]");
+    test_params = params;
+    test_params[6] = 4.0;
+    OCIO_CHECK_NO_THROW(func.setParams(test_params));
+    OCIO_CHECK_THROW_WHAT(func.validate(), OCIO::Exception, "Parameter 4 (power) is outside valid range [1,3]");
+}
+
 OCIO_ADD_TEST(FixedFunctionOpData, rec2100_surround_style)
 {
     OCIO::FixedFunctionOpData::Params params = { 2.0 };
@@ -155,4 +253,15 @@ OCIO_ADD_TEST(FixedFunctionOpData, is_inverse)
     OCIO_CHECK_ASSERT(!f_r->isInverse(f_r));
     OCIO_CHECK_ASSERT(!f_r_inv->isInverse(f_r_inv));
     OCIO_CHECK_ASSERT(!f_r->isInverse(f_g));
+
+    OCIO::FixedFunctionOpData::Params p7 = { 1.147, 1.264, 1.312, 0.815, 0.803, 0.880, 1.2 };
+    auto f_gm = std::make_shared<const OCIO::FixedFunctionOpData>(
+        OCIO::FixedFunctionOpData::ACES_GAMUTMAP_13_FWD, p7);
+    auto f_gm_inv = std::make_shared<const OCIO::FixedFunctionOpData>(
+        OCIO::FixedFunctionOpData::ACES_GAMUTMAP_13_INV, p7);
+    OCIO_CHECK_ASSERT(f_gm->isInverse(f_gm_inv));
+    OCIO_CHECK_ASSERT(f_gm_inv->isInverse(f_gm));
+    OCIO_CHECK_ASSERT(!f_gm->isInverse(f_gm));
+    OCIO_CHECK_ASSERT(!f_gm_inv->isInverse(f_gm_inv));
+    OCIO_CHECK_ASSERT(!f_gm->isInverse(f_r));
 }

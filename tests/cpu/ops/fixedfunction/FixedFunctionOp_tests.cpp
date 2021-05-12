@@ -150,6 +150,34 @@ OCIO_ADD_TEST(FixedFunctionOp, aces_darktodim10_inv)
     OCIO_CHECK_ASSERT(op1->isInverse(op0));
 }
 
+OCIO_ADD_TEST(FixedFunctionOp, aces_gamutmap13_inv)
+{
+    OCIO::OpRcPtrVec ops;
+
+    OCIO::FixedFunctionOpData::Params params = { 1.147, 1.264, 1.312, 0.815, 0.803, 0.880, 1.2 };
+
+    OCIO_CHECK_NO_THROW(OCIO::CreateFixedFunctionOp(ops,
+                                                    OCIO::FixedFunctionOpData::ACES_GAMUTMAP_13_INV,
+                                                    params));
+
+    OCIO_CHECK_NO_THROW(OCIO::CreateFixedFunctionOp(ops,
+                                                    OCIO::FixedFunctionOpData::ACES_GAMUTMAP_13_FWD,
+                                                    params));
+
+    OCIO_CHECK_NO_THROW(ops.finalize());
+    OCIO_REQUIRE_EQUAL(ops.size(), 2);
+
+    OCIO::ConstOpRcPtr op0 = ops[0];
+    OCIO::ConstOpRcPtr op1 = ops[1];
+
+    OCIO_CHECK_ASSERT(!op0->isIdentity());
+    OCIO_CHECK_ASSERT(!op1->isIdentity());
+
+    OCIO_CHECK_ASSERT(op0->isSameType(op1));
+    OCIO_CHECK_ASSERT(op0->isInverse(op1));
+    OCIO_CHECK_ASSERT(op1->isInverse(op0));
+}
+
 OCIO_ADD_TEST(FixedFunctionOp, rec2100_surround_inv)
 {
     OCIO::OpRcPtrVec ops;

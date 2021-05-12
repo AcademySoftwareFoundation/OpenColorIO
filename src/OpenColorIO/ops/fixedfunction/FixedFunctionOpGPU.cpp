@@ -192,6 +192,149 @@ void Add_Glow_03_Inv_Shader(GpuShaderText & ss, float glowGain, float glowMid)
     ss.newLine() << "outColor.rgb = outColor.rgb * glowGainOut + outColor.rgb;";
 }
 
+void Add_GamutMap_13_Compress(GpuShaderText & ss,
+                              const char * dist,
+                              const char * comprDist,
+                              float lim,
+                              float thr,
+                              float power,
+                              float invert)
+{
+    ss.newLine() << "{";
+    ss.indent();
+
+    ss.newLine() << "float lim = " << lim << ";";
+    ss.newLine() << "float thr = " << thr << ";";
+    ss.newLine() << "float pwr = " << power << ";";
+ 
+    // No compression below threshold
+    ss.newLine() << "if (" << dist << " < thr)";
+    ss.newLine() << "{";
+    ss.indent();
+    ss.newLine() << comprDist << " = " << dist << ";";
+    ss.dedent();
+    ss.newLine() << "}"; // if (dist < thr)
+    
+    // Compress
+    ss.newLine() << "else";
+    ss.newLine() << "{";
+    ss.indent();
+
+    ss.newLine() << "float scl;";
+    ss.newLine() << "float nd;";
+    ss.newLine() << "float p;";
+    // Calculate scale factor for y = 1 intersect
+    ss.newLine() << "scl = (lim - thr) / pow(pow((1.0 - thr) / (lim - thr), - pwr) - 1.0, 1.0 / pwr);";
+    // Normalize distance outside threshold by scale factor
+    ss.newLine() << "nd = (" << dist << " - thr) / scl;";
+    ss.newLine() << "p = pow(nd, pwr);";
+
+    // Fwd
+    ss.newLine() << "if (" << invert << " == 0.0f)";
+    ss.newLine() << "{";
+    ss.indent();
+    ss.newLine() << comprDist << " = thr + scl * nd / (pow(1.0 + p, 1.0 / pwr));";
+    ss.dedent();
+    ss.newLine() << "}"; // if (!invert)
+
+    // Rev
+    ss.newLine() << "else";
+    ss.newLine() << "{";
+    ss.indent();
+
+    // Avoid singularity
+    ss.newLine() << "if (" << dist << " > (thr + scl))";
+    ss.newLine() << "{";
+    ss.indent();
+    ss.newLine() << comprDist << " = " << dist << ";";
+    ss.dedent();
+    ss.newLine() << "}"; // if (dist > (thr + scl))
+    // Uncompress
+    ss.newLine() << "else";
+    ss.newLine() << "{";
+    ss.indent();
+    ss.newLine() << comprDist << " = thr + scl * pow(-(p / (p - 1.0)), 1.0 / pwr);";
+    ss.dedent();
+    ss.newLine() << "}"; // else
+
+    ss.dedent();
+    ss.newLine() << "}"; // else
+
+    ss.dedent();
+    ss.newLine() << "}"; // else
+
+    ss.dedent();
+    ss.newLine() << "}"; // local scope
+}
+
+void Add_GamutMap_13_Fwd_Shader(GpuShaderText & ss,
+                                float limCyan,
+                                float limMagenta,
+                                float limYellow,
+                                float thrCyan,
+                                float thrMagenta,
+                                float thrYellow,
+                                float power)
+{
+    // achromatic axis 
+    ss.newLine() << "float ach = max( outColor.x, max( outColor.y, outColor.z ) );";
+
+    // distance from the achromatic axis for each color component aka inverse rgb ratios
+    ss.newLine() << ss.float3Decl("dist") << ";";
+    ss.newLine() << "dist.x = ach == 0.0 ? 0.0 : (ach-outColor.x)/abs(ach);";
+    ss.newLine() << "dist.y = ach == 0.0 ? 0.0 : (ach-outColor.y)/abs(ach);";
+    ss.newLine() << "dist.z = ach == 0.0 ? 0.0 : (ach-outColor.z)/abs(ach);";
+
+    // compress distance with user controlled parameterized shaper function
+    ss.newLine() << ss.float3Decl("cdist") << ";";
+    Add_GamutMap_13_Compress(ss, "dist.x", "cdist.x", limCyan, thrCyan, power, 0.0f);
+    Add_GamutMap_13_Compress(ss, "dist.y", "cdist.y", limMagenta, thrMagenta, power, 0.0f);
+    Add_GamutMap_13_Compress(ss, "dist.z", "cdist.z", limYellow, thrYellow, power, 0.0f);
+
+    // recalculate rgb from compressed distance and achromatic
+    // effectively this scales each color component relative to achromatic axis by the compressed distance
+    ss.newLine() << ss.float3Decl("crgb") << ";";
+    ss.newLine() << "crgb.x = ach-cdist.x*abs(ach);";
+    ss.newLine() << "crgb.y = ach-cdist.y*abs(ach);";
+    ss.newLine() << "crgb.z = ach-cdist.z*abs(ach);";
+
+    ss.newLine() << "outColor.rgb = crgb.rgb;";
+}
+
+void Add_GamutMap_13_Inv_Shader(GpuShaderText & ss,
+                                float limCyan,
+                                float limMagenta,
+                                float limYellow,
+                                float thrCyan,
+                                float thrMagenta,
+                                float thrYellow,
+                                float power)
+{
+    // achromatic axis 
+    ss.newLine() << "float ach = max( outColor.x, max( outColor.y, outColor.z ) );";
+
+    // distance from the achromatic axis for each color component aka inverse rgb ratios
+    ss.newLine() << ss.float3Decl("dist") << ";";
+    ss.newLine() << "dist.x = ach == 0.0 ? 0.0 : (ach-outColor.x)/abs(ach);";
+    ss.newLine() << "dist.y = ach == 0.0 ? 0.0 : (ach-outColor.y)/abs(ach);";
+    ss.newLine() << "dist.z = ach == 0.0 ? 0.0 : (ach-outColor.z)/abs(ach);";
+
+    // compress distance with user controlled parameterized shaper function
+    ss.newLine() << ss.float3Decl("cdist") << ";";
+    Add_GamutMap_13_Compress(ss, "dist.x", "cdist.x", limCyan, thrCyan, power, 1.0f);
+    Add_GamutMap_13_Compress(ss, "dist.y", "cdist.y", limMagenta, thrMagenta, power, 1.0f);
+    Add_GamutMap_13_Compress(ss, "dist.z", "cdist.z", limYellow, thrYellow, power, 1.0f);
+
+    // recalculate rgb from compressed distance and achromatic
+    // effectively this scales each color component relative to achromatic axis by the compressed distance
+    ss.newLine() << ss.float3Decl("crgb") << ";";
+    ss.newLine() << "crgb.x = ach-cdist.x*abs(ach);";
+    ss.newLine() << "crgb.y = ach-cdist.y*abs(ach);";
+    ss.newLine() << "crgb.z = ach-cdist.z*abs(ach);";
+
+    ss.newLine() << "outColor.rgb = crgb.rgb;";
+}
+
 void Add_Surround_10_Fwd_Shader(GpuShaderText & ss, float gamma)
 {
     // TODO: -- add vector inner product to GPUShaderUtils
@@ -413,6 +556,34 @@ void GetFixedFunctionGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
         {
             // Call forward renderer with the inverse gamma.
             Add_Surround_10_Fwd_Shader(ss, 1.0192640913260627f);
+            break;
+        }
+        case FixedFunctionOpData::ACES_GAMUTMAP_13_FWD:
+        {
+            Add_GamutMap_13_Fwd_Shader(
+                ss,
+                (float) func->getParams()[0],
+                (float) func->getParams()[1],
+                (float) func->getParams()[2],
+                (float) func->getParams()[3],
+                (float) func->getParams()[4],
+                (float) func->getParams()[5],
+                (float) func->getParams()[6]
+            );
+            break;
+        }
+        case FixedFunctionOpData::ACES_GAMUTMAP_13_INV:
+        {
+            Add_GamutMap_13_Inv_Shader(
+                ss,
+                (float) func->getParams()[0],
+                (float) func->getParams()[1],
+                (float) func->getParams()[2],
+                (float) func->getParams()[3],
+                (float) func->getParams()[4],
+                (float) func->getParams()[5],
+                (float) func->getParams()[6]
+            );
             break;
         }
         case FixedFunctionOpData::REC2100_SURROUND_FWD:
