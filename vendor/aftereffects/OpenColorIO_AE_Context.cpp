@@ -359,7 +359,7 @@ OpenColorIO_AE_Context::OpenColorIO_AE_Context(const std::string &path, OCIO_Sou
             const char *defaultInputName = (defaultInput ? defaultInput->getName() : OCIO::ROLE_DEFAULT);
             
             
-            setupConvert(defaultInputName, defaultInputName);
+            setupConvert(defaultInputName, defaultInputName, OCIO_INVERT_OFF);
             
             
             const char *defaultDisplay = _config->getDefaultDisplay();
@@ -372,7 +372,7 @@ OpenColorIO_AE_Context::OpenColorIO_AE_Context(const std::string &path, OCIO_Sou
         {
             _config = OCIO::Config::Create();
             
-            setupLUT(false, OCIO_INTERP_LINEAR);
+            setupLUT(OCIO_INVERT_OFF, OCIO_INTERP_LINEAR);
         }
     }
     else
@@ -458,14 +458,14 @@ OpenColorIO_AE_Context::OpenColorIO_AE_Context(const ArbitraryData *arb_data, co
             
             if(arb_data->action == OCIO_ACTION_CONVERT)
             {
-                setupConvert(arb_data->input, arb_data->output);
+                setupConvert(arb_data->input, arb_data->output, arb_data->invert);
                 
                 _display = arb_data->display;
                 _view = arb_data->view;
             }
             else
             {
-                setupDisplay(arb_data->input, arb_data->display, arb_data->view);
+                setupDisplay(arb_data->input, arb_data->display, arb_data->view, arb_data->invert);
                 
                 _output = arb_data->output;
             }
@@ -550,9 +550,10 @@ bool OpenColorIO_AE_Context::Verify(const ArbitraryData *arb_data, const std::st
     {
         if(_input != arb_data->input ||
             _output != arb_data->output ||
+            _invert != arb_data->invert ||
             force_reset)
         {
-            setupConvert(arb_data->input, arb_data->output);
+            setupConvert(arb_data->input, arb_data->output, arb_data->invert);
         }
     }
     else if(arb_data->action == OCIO_ACTION_DISPLAY)
@@ -560,9 +561,10 @@ bool OpenColorIO_AE_Context::Verify(const ArbitraryData *arb_data, const std::st
         if(_input != arb_data->input ||
             _display != arb_data->display ||
             _view != arb_data->view ||
+            _invert != arb_data->invert ||
             force_reset)
         {
-            setupDisplay(arb_data->input, arb_data->display, arb_data->view);
+            setupDisplay(arb_data->input, arb_data->display, arb_data->view, arb_data->invert);
         }
     }
     else
@@ -573,29 +575,39 @@ bool OpenColorIO_AE_Context::Verify(const ArbitraryData *arb_data, const std::st
 }
 
 
-void OpenColorIO_AE_Context::setupConvert(const char *input, const char *output)
+void OpenColorIO_AE_Context::setupConvert(const char *input, const char *output, OCIO_Invert invert)
 {
     OCIO::ColorSpaceTransformRcPtr transform = OCIO::ColorSpaceTransform::Create();
     
     transform->setSrc(input);
     transform->setDst(output);
-    transform->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
+    transform->setDirection(invert == OCIO_INVERT_OFF ? OCIO::TRANSFORM_DIR_FORWARD : OCIO::TRANSFORM_DIR_INVERSE);
     
     _input = input;
     _output = output;
+    _invert = invert;
+    
     
     _processor = _config->getProcessor(transform);
     
-    _cpu_processor = _processor->getDefaultCPUProcessor();
-    _gpu_processor = _processor->getDefaultGPUProcessor();
-    
+    if(invert == OCIO_INVERT_EXACT)
+    {
+        _cpu_processor = _processor->getOptimizedCPUProcessor(OCIO::OPTIMIZATION_LOSSLESS);
+        _gpu_processor = _processor->getOptimizedGPUProcessor(OCIO::OPTIMIZATION_LOSSLESS);
+    }
+    else
+    {
+        _cpu_processor = _processor->getDefaultCPUProcessor();
+        _gpu_processor = _processor->getDefaultGPUProcessor();
+    }
+
     _action = OCIO_ACTION_CONVERT;
     
     UpdateOCIOGLState();
 }
 
 
-void OpenColorIO_AE_Context::setupDisplay(const char *input, const char *display, const char *view)
+void OpenColorIO_AE_Context::setupDisplay(const char *input, const char *display, const char *view, OCIO_Invert invert)
 {
     _views.clear();
     
@@ -620,17 +632,27 @@ void OpenColorIO_AE_Context::setupDisplay(const char *input, const char *display
     transform->setSrc(input);
     transform->setDisplay(display);
     transform->setView(view);
-    
+    transform->setDirection(invert == OCIO_INVERT_OFF ? OCIO::TRANSFORM_DIR_FORWARD : OCIO::TRANSFORM_DIR_INVERSE);
+
     _input = input;
     _display = display;
     _view = view;
+    _invert = invert;
     
 
     _processor = _config->getProcessor(transform);
     
-    _cpu_processor = _processor->getDefaultCPUProcessor();
-    _gpu_processor = _processor->getDefaultGPUProcessor();
-    
+    if(invert == OCIO_INVERT_EXACT)
+    {
+        _cpu_processor = _processor->getOptimizedCPUProcessor(OCIO::OPTIMIZATION_LOSSLESS);
+        _gpu_processor = _processor->getOptimizedGPUProcessor(OCIO::OPTIMIZATION_LOSSLESS);
+    }
+    else
+    {
+        _cpu_processor = _processor->getDefaultCPUProcessor();
+        _gpu_processor = _processor->getDefaultGPUProcessor();
+    }
+
     _action = OCIO_ACTION_DISPLAY;
     
     UpdateOCIOGLState();
@@ -651,6 +673,7 @@ void OpenColorIO_AE_Context::setupLUT(OCIO_Invert invert, OCIO_Interp interpolat
     transform->setSrc( _path.c_str() );
     transform->setInterpolation(static_cast<OCIO::Interpolation>(interpolation));
     transform->setDirection(invert > OCIO_INVERT_OFF ? OCIO::TRANSFORM_DIR_INVERSE : OCIO::TRANSFORM_DIR_FORWARD);
+    
     
     _processor = _config->getProcessor(transform);
     
