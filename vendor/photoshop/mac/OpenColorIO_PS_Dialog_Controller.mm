@@ -115,8 +115,6 @@
         [[configurationMenu lastItem] setTag:CSOURCE_CUSTOM];
         
         
-        [invertCheck setHidden:YES];
-        
         [menu1 removeAllItems];
         [menu2 removeAllItems];
         [menu3 removeAllItems];
@@ -194,11 +192,11 @@
                     
                     if(action == CACTION_CONVERT)
                     {
-                        processor = context->getConvertProcessor([inputSpace UTF8String], [outputSpace UTF8String]);
+                        processor = context->getConvertProcessor([inputSpace UTF8String], [outputSpace UTF8String], invert);
                     }
                     else if(action == CACTION_DISPLAY)
                     {
-                        processor = context->getDisplayProcessor([inputSpace UTF8String], [display UTF8String], [view UTF8String]);
+                        processor = context->getDisplayProcessor([inputSpace UTF8String], [display UTF8String], [view UTF8String], invert);
                     }
                     else
                     {
@@ -210,9 +208,7 @@
                                                             interpolation == CINTERP_CUBIC ? OCIO::INTERP_CUBIC :
                                                             OCIO::INTERP_BEST);
                         
-                        const OCIO::TransformDirection direction = (invert ? OCIO::TRANSFORM_DIR_INVERSE : OCIO::TRANSFORM_DIR_FORWARD);
-                        
-                        processor = context->getLUTProcessor(interp, direction);
+                        processor = context->getLUTProcessor(interp, invert);
                     }
                     
                     
@@ -276,11 +272,11 @@
                 
                 if(action == CACTION_CONVERT)
                 {
-                    baker = context->getConvertBaker([inputSpace UTF8String], [outputSpace UTF8String]);
+                    baker = context->getConvertBaker([inputSpace UTF8String], [outputSpace UTF8String], invert);
                 }
                 else if(action == CACTION_DISPLAY)
                 {
-                    baker = context->getDisplayBaker([inputSpace UTF8String], [display UTF8String], [view UTF8String]);
+                    baker = context->getDisplayBaker([inputSpace UTF8String], [display UTF8String], [view UTF8String], invert);
                 }
                 else
                 {
@@ -292,9 +288,7 @@
                                                         interpolation == CINTERP_CUBIC ? OCIO::INTERP_CUBIC :
                                                         OCIO::INTERP_BEST);
                     
-                    const OCIO::TransformDirection direction = (invert ? OCIO::TRANSFORM_DIR_INVERSE : OCIO::TRANSFORM_DIR_FORWARD);
-                    
-                    baker = context->getLUTBaker(interp, direction);
+                    baker = context->getLUTBaker(interp, invert);
                 }
                 
                 baker->setFormat( format.c_str() );
@@ -476,6 +470,17 @@
     
     if(configPath != nil && [[NSFileManager defaultManager] isReadableFileAtPath:configPath])
     {
+		[actionRadios setEnabled:YES];
+		[invertCheck setEnabled:YES];
+		[label1 setEnabled:YES];
+		[label2 setEnabled:YES];
+		[label3 setEnabled:YES];
+		[menu1 setEnabled:YES];
+		[menu2 setEnabled:YES];
+		[menu3 setEnabled:YES];
+		[inputSpaceButton setEnabled:YES];
+		[outputSpaceButton setEnabled:YES];
+		
         try
         {
             OpenColorIO_PS_Context *oldContext = (OpenColorIO_PS_Context *)contextPtr;
@@ -492,24 +497,11 @@
             {
                 action = CACTION_LUT;
                 
-                [invertCheck setHidden:NO];
-                
-                if( context->canInvertLUT() )
-                {
-                    [invertCheck setEnabled:YES];
-                }
-                else
-                {
-                    [invertCheck setEnabled:NO];
-                
-                    invert = NO;
-                }
-                
+                [actionRadios setHidden:YES];
+				
                 [invertCheck setState:(invert ? NSOnState : NSOffState)];
                 
-                [actionRadios setHidden:YES];
-                
-                
+
                 NSTextField *interpolationLabel = label1;
                 NSPopUpButton *interpolationMenu = menu1;
                 
@@ -548,14 +540,14 @@
             }
             else
             {
-                [invertCheck setHidden:YES];
-            
                 if(action == CACTION_LUT)
                 {
                     action = CACTION_CONVERT;
                 }
                 
                 [actionRadios setHidden:NO];
+				
+                [invertCheck setState:(invert ? NSOnState : NSOffState)];
                                 
                 
                 const SpaceVec &colorSpaces = context->getColorSpaces();
@@ -633,6 +625,19 @@
             }
         }
     }
+    else
+    {
+		[actionRadios setEnabled:NO];
+		[invertCheck setEnabled:NO];
+		[label1 setEnabled:NO];
+		[label2 setEnabled:NO];
+		[label3 setEnabled:NO];
+		[menu1 setEnabled:NO];
+		[menu2 setEnabled:NO];
+		[menu3 setEnabled:NO];
+		[inputSpaceButton setEnabled:NO];
+		[outputSpaceButton setEnabled:NO];
+	}
             
     [configurationMenu setToolTip:configPath];
 }

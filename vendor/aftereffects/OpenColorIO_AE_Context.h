@@ -57,8 +57,8 @@ class OpenColorIO_AE_Context
     
     bool Verify(const ArbitraryData *arb_data, const std::string &dir);
     
-    void setupConvert(const char *input, const char *output);
-    void setupDisplay(const char *input, const char *display, const char *view);
+    void setupConvert(const char *input, const char *output, OCIO_Invert invert);
+    void setupDisplay(const char *input, const char *display, const char *view, OCIO_Invert invert);
     void setupLUT(OCIO_Invert invert, OCIO_Interp interpolation);
   
     typedef std::vector<std::string> SpaceVec;

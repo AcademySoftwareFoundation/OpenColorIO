@@ -22,20 +22,17 @@ class OpenColorIO_PS_Context
     OpenColorIO_PS_Context(const std::string &path);
     ~OpenColorIO_PS_Context() {}
     
-    //const std::string getPath() const { return _path; }
-    
     bool isLUT() const { return _isLUT; }
-    bool canInvertLUT() const { return (isLUT() && _canInvertLUT); }
-    
+	
     OCIO::ConstConfigRcPtr getConfig() const { return _config; }
     
-    OCIO::ConstCPUProcessorRcPtr getConvertProcessor(const std::string &inputSpace, const std::string &outputSpace) const;
-    OCIO::ConstCPUProcessorRcPtr getDisplayProcessor(const std::string &inputSpace, const std::string &display, const std::string &view) const;
-    OCIO::ConstCPUProcessorRcPtr getLUTProcessor(OCIO::Interpolation interpolation, OCIO::TransformDirection direction) const;
+    OCIO::ConstCPUProcessorRcPtr getConvertProcessor(const std::string &inputSpace, const std::string &outputSpace, bool invert) const;
+    OCIO::ConstCPUProcessorRcPtr getDisplayProcessor(const std::string &inputSpace, const std::string &display, const std::string &view, bool invert) const;
+    OCIO::ConstCPUProcessorRcPtr getLUTProcessor(OCIO::Interpolation interpolation, bool invert) const;
     
-    OCIO::BakerRcPtr getConvertBaker(const std::string &inputSpace, const std::string &outputSpace) const;
-    OCIO::BakerRcPtr getDisplayBaker(const std::string &inputSpace, const std::string &display, const std::string &view) const;
-    OCIO::BakerRcPtr getLUTBaker(OCIO::Interpolation interpolation, OCIO::TransformDirection direction) const;
+    OCIO::BakerRcPtr getConvertBaker(const std::string &inputSpace, const std::string &outputSpace, bool invert) const;
+    OCIO::BakerRcPtr getDisplayBaker(const std::string &inputSpace, const std::string &display, const std::string &view, bool invert) const;
+    OCIO::BakerRcPtr getLUTBaker(OCIO::Interpolation interpolation, bool invert) const;
 
     const SpaceVec & getColorSpaces(bool fullPath=false) const { return (fullPath ? _colorSpacesFullPaths : _colorSpaces); }
     const std::string & getDefaultColorSpace() const { return _defaultColorSpace; }
@@ -62,7 +59,6 @@ class OpenColorIO_PS_Context
     std::string _defaultDisplay;
     
     bool _isLUT;
-    bool _canInvertLUT;
 };
 
 #endif // _OPENCOLORIO_PS_CONTEXT_H_
