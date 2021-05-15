@@ -470,17 +470,19 @@
     
     if(configPath != nil && [[NSFileManager defaultManager] isReadableFileAtPath:configPath])
     {
-		[actionRadios setEnabled:YES];
-		[invertCheck setEnabled:YES];
-		[label1 setEnabled:YES];
-		[label2 setEnabled:YES];
-		[label3 setEnabled:YES];
-		[menu1 setEnabled:YES];
-		[menu2 setEnabled:YES];
-		[menu3 setEnabled:YES];
-		[inputSpaceButton setEnabled:YES];
-		[outputSpaceButton setEnabled:YES];
-		
+        [okButton setEnabled:YES];
+        [exportButton setEnabled:YES];
+        [actionRadios setEnabled:YES];
+        [invertCheck setEnabled:YES];
+        [label1 setEnabled:YES];
+        [label2 setEnabled:YES];
+        [label3 setEnabled:YES];
+        [menu1 setEnabled:YES];
+        [menu2 setEnabled:YES];
+        [menu3 setEnabled:YES];
+        [inputSpaceButton setEnabled:YES];
+        [outputSpaceButton setEnabled:YES];
+        
         try
         {
             OpenColorIO_PS_Context *oldContext = (OpenColorIO_PS_Context *)contextPtr;
@@ -498,7 +500,7 @@
                 action = CACTION_LUT;
                 
                 [actionRadios setHidden:YES];
-				
+                
                 [invertCheck setState:(invert ? NSOnState : NSOffState)];
                 
 
@@ -546,7 +548,7 @@
                 }
                 
                 [actionRadios setHidden:NO];
-				
+                
                 [invertCheck setState:(invert ? NSOnState : NSOffState)];
                                 
                 
@@ -592,6 +594,19 @@
         }
         catch(const std::exception &e)
         {
+            [okButton setEnabled:NO];
+            [exportButton setEnabled:NO];
+            [actionRadios setEnabled:NO];
+            [invertCheck setEnabled:NO];
+            [label1 setEnabled:NO];
+            [label2 setEnabled:NO];
+            [label3 setEnabled:NO];
+            [menu1 setEnabled:NO];
+            [menu2 setEnabled:NO];
+            [menu3 setEnabled:NO];
+            [inputSpaceButton setEnabled:NO];
+            [outputSpaceButton setEnabled:NO];
+        
             NSBeep();
         
             NSString *ocioString = [NSString stringWithUTF8String:e.what()];
@@ -609,6 +624,19 @@
         }
         catch(...)
         {
+            [okButton setEnabled:NO];
+            [exportButton setEnabled:NO];
+            [actionRadios setEnabled:NO];
+            [invertCheck setEnabled:NO];
+            [label1 setEnabled:NO];
+            [label2 setEnabled:NO];
+            [label3 setEnabled:NO];
+            [menu1 setEnabled:NO];
+            [menu2 setEnabled:NO];
+            [menu3 setEnabled:NO];
+            [inputSpaceButton setEnabled:NO];
+            [outputSpaceButton setEnabled:NO];
+        
             NSBeep();
             
             NSString *ocioString = @"Some unknown error";
@@ -627,17 +655,23 @@
     }
     else
     {
-		[actionRadios setEnabled:NO];
-		[invertCheck setEnabled:NO];
-		[label1 setEnabled:NO];
-		[label2 setEnabled:NO];
-		[label3 setEnabled:NO];
-		[menu1 setEnabled:NO];
-		[menu2 setEnabled:NO];
-		[menu3 setEnabled:NO];
-		[inputSpaceButton setEnabled:NO];
-		[outputSpaceButton setEnabled:NO];
-	}
+        [okButton setEnabled:NO];
+        [exportButton setEnabled:NO];
+        [actionRadios setEnabled:NO];
+        [invertCheck setEnabled:NO];
+        [label1 setEnabled:NO];
+        [label2 setEnabled:NO];
+        [label3 setEnabled:NO];
+        [menu1 setEnabled:NO];
+        [menu2 setEnabled:NO];
+        [menu3 setEnabled:NO];
+        [inputSpaceButton setEnabled:NO];
+        [outputSpaceButton setEnabled:NO];
+        
+        [menu1 removeAllItems];
+        [menu2 removeAllItems];
+        [menu3 removeAllItems];
+    }
             
     [configurationMenu setToolTip:configPath];
 }
