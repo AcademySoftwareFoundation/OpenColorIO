@@ -31,6 +31,8 @@ enum ControllerInterp
 
 @interface OpenColorIO_PS_Dialog_Controller : NSObject
 {
+    IBOutlet NSButton *okButton;
+    IBOutlet NSButton *exportButton;
     IBOutlet NSPopUpButton *configurationMenu;
     IBOutlet NSMatrix *actionRadios;
     IBOutlet NSButton *invertCheck;
