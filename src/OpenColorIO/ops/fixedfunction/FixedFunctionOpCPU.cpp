@@ -697,10 +697,19 @@ __inline float compress_gm_13(float dist, float lim, float thr, float pwr, bool 
     float nd;
     float p;
 
-    if (dist < thr) {
-        comprDist = dist; // No compression below threshold
+    // No compression below threshold
+    if (dist < thr)
+    {
+        comprDist = dist;
     }
-    else {
+    else
+    {
+        // Disable compression, avoid nan
+        if (lim < 1.0001f)
+        {
+            return dist;
+        }
+
         // Calculate scale factor for y = 1 intersect
         scl = (lim - thr) / powf(powf((1.0f - thr) / (lim - thr), -pwr) - 1.0f, 1.0f / pwr);
 
@@ -708,15 +717,22 @@ __inline float compress_gm_13(float dist, float lim, float thr, float pwr, bool 
         nd = (dist - thr) / scl;
         p = powf(nd, pwr);
 
-        if (!invert) {
-            comprDist = thr + scl * nd / (powf(1.0f + p, 1.0f / pwr)); // Compress
+        // Compress
+        if (!invert)
+        {
+            comprDist = thr + scl * nd / (powf(1.0f + p, 1.0f / pwr));
         }
-        else {
-            if (dist > (thr + scl)) {
-                comprDist = dist; // Avoid singularity
+        // Uncompress
+        else
+        {
+            // Avoid singularity
+            if (dist > (thr + scl))
+            {
+                comprDist = dist;
             }
-            else {
-                comprDist = thr + scl * powf(-(p / (p - 1.0f)), 1.0f / pwr); // Uncompress
+            else
+            {
+                comprDist = thr + scl * powf(-(p / (p - 1.0f)), 1.0f / pwr);
             }
         }
     }
@@ -726,10 +742,12 @@ __inline float compress_gm_13(float dist, float lim, float thr, float pwr, bool 
 
 __inline float gm_13(float val, float ach, float lim, float thr, float pwr, bool invert)
 {
+    thr = std::min(0.9999f, thr);
+
     // Distance from the achromatic axis, aka inverse RGB ratios
     float dist;
-    if (ach == 0.0)
-        dist = 0.0;
+    if (ach == 0.0f)
+        dist = 0.0f;
     else
         dist = (ach - val) / std::fabs(ach);
 

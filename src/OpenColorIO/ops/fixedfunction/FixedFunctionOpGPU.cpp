@@ -220,6 +220,18 @@ void Add_GamutMap_13_Compress(GpuShaderText & ss,
     ss.newLine() << "{";
     ss.indent();
 
+    // Disable compression, avoid nan
+    ss.newLine() << "if (lim < 1.0001f)";
+    ss.newLine() << "{";
+    ss.indent();
+    ss.newLine() << comprDist << " = " << dist << ";";
+    ss.dedent();
+    ss.newLine() << "}"; // if (lim < 1.0001f)
+
+    ss.newLine() << "else";
+    ss.newLine() << "{";
+    ss.indent();
+
     ss.newLine() << "float scl;";
     ss.newLine() << "float nd;";
     ss.newLine() << "float p;";
@@ -264,7 +276,49 @@ void Add_GamutMap_13_Compress(GpuShaderText & ss,
     ss.newLine() << "}"; // else
 
     ss.dedent();
+    ss.newLine() << "}"; // else
+
+    ss.dedent();
     ss.newLine() << "}"; // local scope
+}
+
+void Add_GamutMap_13_Shader(GpuShaderText & ss,
+                            float limCyan,
+                            float limMagenta,
+                            float limYellow,
+                            float thrCyan,
+                            float thrMagenta,
+                            float thrYellow,
+                            float power,
+                            float invert)
+{
+    thrCyan = std::min(0.9999f, thrCyan);
+    thrMagenta = std::min(0.9999f, thrMagenta);
+    thrYellow = std::min(0.9999f, thrYellow);
+
+    // achromatic axis 
+    ss.newLine() << "float ach = max( outColor.x, max( outColor.y, outColor.z ) );";
+
+    // distance from the achromatic axis for each color component aka inverse rgb ratios
+    ss.newLine() << ss.float3Decl("dist") << ";";
+    ss.newLine() << "dist.x = ach == 0.0 ? 0.0 : (ach-outColor.x)/abs(ach);";
+    ss.newLine() << "dist.y = ach == 0.0 ? 0.0 : (ach-outColor.y)/abs(ach);";
+    ss.newLine() << "dist.z = ach == 0.0 ? 0.0 : (ach-outColor.z)/abs(ach);";
+
+    // compress distance with user controlled parameterized shaper function
+    ss.newLine() << ss.float3Decl("cdist") << ";";
+    Add_GamutMap_13_Compress(ss, "dist.x", "cdist.x", limCyan, thrCyan, power, invert);
+    Add_GamutMap_13_Compress(ss, "dist.y", "cdist.y", limMagenta, thrMagenta, power, invert);
+    Add_GamutMap_13_Compress(ss, "dist.z", "cdist.z", limYellow, thrYellow, power, invert);
+
+    // recalculate rgb from compressed distance and achromatic
+    // effectively this scales each color component relative to achromatic axis by the compressed distance
+    ss.newLine() << ss.float3Decl("crgb") << ";";
+    ss.newLine() << "crgb.x = ach-cdist.x*abs(ach);";
+    ss.newLine() << "crgb.y = ach-cdist.y*abs(ach);";
+    ss.newLine() << "crgb.z = ach-cdist.z*abs(ach);";
+
+    ss.newLine() << "outColor.rgb = crgb.rgb;";
 }
 
 void Add_GamutMap_13_Fwd_Shader(GpuShaderText & ss,
@@ -276,29 +330,17 @@ void Add_GamutMap_13_Fwd_Shader(GpuShaderText & ss,
                                 float thrYellow,
                                 float power)
 {
-    // achromatic axis 
-    ss.newLine() << "float ach = max( outColor.x, max( outColor.y, outColor.z ) );";
-
-    // distance from the achromatic axis for each color component aka inverse rgb ratios
-    ss.newLine() << ss.float3Decl("dist") << ";";
-    ss.newLine() << "dist.x = ach == 0.0 ? 0.0 : (ach-outColor.x)/abs(ach);";
-    ss.newLine() << "dist.y = ach == 0.0 ? 0.0 : (ach-outColor.y)/abs(ach);";
-    ss.newLine() << "dist.z = ach == 0.0 ? 0.0 : (ach-outColor.z)/abs(ach);";
-
-    // compress distance with user controlled parameterized shaper function
-    ss.newLine() << ss.float3Decl("cdist") << ";";
-    Add_GamutMap_13_Compress(ss, "dist.x", "cdist.x", limCyan, thrCyan, power, 0.0f);
-    Add_GamutMap_13_Compress(ss, "dist.y", "cdist.y", limMagenta, thrMagenta, power, 0.0f);
-    Add_GamutMap_13_Compress(ss, "dist.z", "cdist.z", limYellow, thrYellow, power, 0.0f);
-
-    // recalculate rgb from compressed distance and achromatic
-    // effectively this scales each color component relative to achromatic axis by the compressed distance
-    ss.newLine() << ss.float3Decl("crgb") << ";";
-    ss.newLine() << "crgb.x = ach-cdist.x*abs(ach);";
-    ss.newLine() << "crgb.y = ach-cdist.y*abs(ach);";
-    ss.newLine() << "crgb.z = ach-cdist.z*abs(ach);";
-
-    ss.newLine() << "outColor.rgb = crgb.rgb;";
+    Add_GamutMap_13_Shader(
+        ss,
+        limCyan,
+        limMagenta,
+        limYellow,
+        thrCyan,
+        thrMagenta,
+        thrYellow,
+        power,
+        0.0f
+    );
 }
 
 void Add_GamutMap_13_Inv_Shader(GpuShaderText & ss,
@@ -310,29 +352,17 @@ void Add_GamutMap_13_Inv_Shader(GpuShaderText & ss,
                                 float thrYellow,
                                 float power)
 {
-    // achromatic axis 
-    ss.newLine() << "float ach = max( outColor.x, max( outColor.y, outColor.z ) );";
-
-    // distance from the achromatic axis for each color component aka inverse rgb ratios
-    ss.newLine() << ss.float3Decl("dist") << ";";
-    ss.newLine() << "dist.x = ach == 0.0 ? 0.0 : (ach-outColor.x)/abs(ach);";
-    ss.newLine() << "dist.y = ach == 0.0 ? 0.0 : (ach-outColor.y)/abs(ach);";
-    ss.newLine() << "dist.z = ach == 0.0 ? 0.0 : (ach-outColor.z)/abs(ach);";
-
-    // compress distance with user controlled parameterized shaper function
-    ss.newLine() << ss.float3Decl("cdist") << ";";
-    Add_GamutMap_13_Compress(ss, "dist.x", "cdist.x", limCyan, thrCyan, power, 1.0f);
-    Add_GamutMap_13_Compress(ss, "dist.y", "cdist.y", limMagenta, thrMagenta, power, 1.0f);
-    Add_GamutMap_13_Compress(ss, "dist.z", "cdist.z", limYellow, thrYellow, power, 1.0f);
-
-    // recalculate rgb from compressed distance and achromatic
-    // effectively this scales each color component relative to achromatic axis by the compressed distance
-    ss.newLine() << ss.float3Decl("crgb") << ";";
-    ss.newLine() << "crgb.x = ach-cdist.x*abs(ach);";
-    ss.newLine() << "crgb.y = ach-cdist.y*abs(ach);";
-    ss.newLine() << "crgb.z = ach-cdist.z*abs(ach);";
-
-    ss.newLine() << "outColor.rgb = crgb.rgb;";
+    Add_GamutMap_13_Shader(
+        ss,
+        limCyan,
+        limMagenta,
+        limYellow,
+        thrCyan,
+        thrMagenta,
+        thrYellow,
+        power,
+        1.0f
+    );
 }
 
 void Add_Surround_10_Fwd_Shader(GpuShaderText & ss, float gamma)
