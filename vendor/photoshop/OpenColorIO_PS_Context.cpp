@@ -204,13 +204,13 @@ OpenColorIO_PS_Context::getLUTBaker(OCIO::Interpolation interpolation, bool inve
     OCIO::ConfigRcPtr editableConfig = OCIO::Config::Create();
 
     OCIO::ColorSpaceRcPtr inputColorSpace = OCIO::ColorSpace::Create();
-    std::string inputspace = "RawInput";
+    const std::string inputspace = "RawInput";
     inputColorSpace->setName(inputspace.c_str());
     editableConfig->addColorSpace(inputColorSpace);
     
     
     OCIO::ColorSpaceRcPtr outputColorSpace = OCIO::ColorSpace::Create();
-    std::string outputspace = "ProcessedOutput";
+    const std::string outputspace = "ProcessedOutput";
     outputColorSpace->setName(outputspace.c_str());
     
     OCIO::FileTransformRcPtr transform = OCIO::FileTransform::Create();

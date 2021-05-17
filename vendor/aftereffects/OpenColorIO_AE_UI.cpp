@@ -985,7 +985,12 @@ static void DoClickExport(
         }
         
         if(do_export)
-            seq_data->context->ExportLUT(the_path, monitor_icc_path);
+        {
+            const bool exported = seq_data->context->ExportLUT(the_path, monitor_icc_path);
+            
+            if(!exported)
+                throw OCIO::Exception("Failed to Export LUT");
+        }
     }
 }
 
