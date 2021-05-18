@@ -353,7 +353,7 @@ void GetFixedFunctionGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
     ss.indent();
 
     ss.newLine() << "";
-    ss.newLine() << "// Add FixedFunction '"
+    ss.newLine() << "// Add a FixedFunction '"
                  << FixedFunctionOpData::ConvertStyleToString(func->getStyle(), true)
                  << "' processing";
     ss.newLine() << "";

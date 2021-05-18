@@ -1439,7 +1439,7 @@ void GetGradingToneGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
     st.indent();
 
     st.newLine() << "";
-    st.newLine() << "// Add GradingTone '"
+    st.newLine() << "// Add a GradingTone '"
                  << GradingStyleToString(style) << "' "
                  << TransformDirectionToString(dir) << " processing";
     st.newLine() << "";

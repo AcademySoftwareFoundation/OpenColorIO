@@ -229,7 +229,7 @@ void AddCurveEvalMethodTextToShaderProgram(GpuShaderCreatorRcPtr & shaderCreator
     st.newLine() << "{";
     st.indent();
 
-    bool isInv = gcData->getDirection() == TRANSFORM_DIR_INVERSE;
+    const bool isInv = gcData->getDirection() == TRANSFORM_DIR_INVERSE;
     GradingBSplineCurveImpl::AddShaderEval(st, props.m_knotsOffsets, props.m_coefsOffsets,
                                            props.m_knots, props.m_coefs, isInv);
 
@@ -347,7 +347,7 @@ void GetGradingRGBCurveGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
     st.indent();
 
     st.newLine() << "";
-    st.newLine() << "// Add GradingRGBCurve '"
+    st.newLine() << "// Add a GradingRGBCurve '"
                  << GradingStyleToString(style) << "' "
                  << TransformDirectionToString(dir) << " processing";
     st.newLine() << "";
@@ -361,6 +361,7 @@ void GetGradingRGBCurveGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
     {
         // Add the dynamic property to the shader creator.
         auto prop = gcData->getDynamicPropertyInternal();
+
         // Property is decoupled.
         auto shaderProp = prop->createEditableCopy();
         DynamicPropertyRcPtr newProp = shaderProp;
@@ -368,6 +369,7 @@ void GetGradingRGBCurveGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
 
         // Add uniforms.
         AddGCPropertiesUniforms(shaderCreator, shaderProp, properties);
+
         // Add helper function.
         AddCurveEvalMethodTextToShaderProgram(shaderCreator, gcData, properties);
     }
