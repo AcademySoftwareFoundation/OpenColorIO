@@ -68,7 +68,7 @@ class OpenColorIO_AE_Context
     const std::string & getOutput() const { return _output; }
     const std::string & getDisplay() const { return _display; }
     const std::string & getView() const { return _view; }
-    const SpaceVec & getInputs() const { return _inputs; }
+    const SpaceVec & getColorSpaces() const { return _colorSpaces; }
     const SpaceVec & getDisplays() const { return _displays; }
     const SpaceVec & getViews() const { return _views; }
     
@@ -96,7 +96,7 @@ class OpenColorIO_AE_Context
     std::string _output;
     std::string _display;
     std::string _view;
-    SpaceVec _inputs;
+    SpaceVec _colorSpaces;
     SpaceVec _displays;
     SpaceVec _views;
     
