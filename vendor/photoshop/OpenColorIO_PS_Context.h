@@ -34,7 +34,7 @@ class OpenColorIO_PS_Context
     OCIO::BakerRcPtr getDisplayBaker(const std::string &inputSpace, const std::string &display, const std::string &view, bool invert) const;
     OCIO::BakerRcPtr getLUTBaker(OCIO::Interpolation interpolation, bool invert) const;
 
-    const SpaceVec & getColorSpaces(bool fullPath=false) const { return (fullPath ? _colorSpacesFullPaths : _colorSpaces); }
+    const SpaceVec & getColorSpaces() const { return _colorSpaces; }
     const std::string & getDefaultColorSpace() const { return _defaultColorSpace; }
     
     const SpaceVec & getDisplays() const { return _displays; };
@@ -53,7 +53,6 @@ class OpenColorIO_PS_Context
     OCIO::ConstConfigRcPtr _config;
     
     SpaceVec _colorSpaces;
-    SpaceVec _colorSpacesFullPaths;
     std::string _defaultColorSpace;
     SpaceVec _displays;
     std::string _defaultDisplay;
