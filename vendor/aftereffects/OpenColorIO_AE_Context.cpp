@@ -336,15 +336,7 @@ OpenColorIO_AE_Context::OpenColorIO_AE_Context(const std::string &path, OCIO_Sou
             {
                 const char *colorSpaceName = _config->getColorSpaceNameByIndex(i);
                 
-                OCIO::ConstColorSpaceRcPtr colorSpace = _config->getColorSpace(colorSpaceName);
-                
-                const char *family = colorSpace->getFamily();
-                
                 _inputs.push_back(colorSpaceName);
-                
-                const std::string fullPath = (family == NULL ? colorSpaceName : std::string(family) + "/" + colorSpaceName);
-                
-                _inputsFullPath.push_back(fullPath);
             }
             
             
@@ -439,15 +431,7 @@ OpenColorIO_AE_Context::OpenColorIO_AE_Context(const ArbitraryData *arb_data, co
             {
                 const char *colorSpaceName = _config->getColorSpaceNameByIndex(i);
                 
-                OCIO::ConstColorSpaceRcPtr colorSpace = _config->getColorSpace(colorSpaceName);
-                
-                const char *family = colorSpace->getFamily();
-                
                 _inputs.push_back(colorSpaceName);
-                
-                const std::string fullPath = (family == NULL ? colorSpaceName : std::string(family) + "/" + colorSpaceName);
-                
-                _inputsFullPath.push_back(fullPath);
             }
             
             

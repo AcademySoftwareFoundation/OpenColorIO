@@ -41,16 +41,7 @@ OpenColorIO_PS_Context::OpenColorIO_PS_Context(const std::string &path) :
         {
             const std::string colorSpaceName = _config->getColorSpaceNameByIndex(i);
             
-            OCIO::ConstColorSpaceRcPtr colorSpace = _config->getColorSpace( colorSpaceName.c_str() );
-            
-            const std::string colorSpaceFamily = colorSpace->getFamily();
-            
-            const std::string colorSpacePath = (colorSpaceFamily.empty() ? colorSpaceName :
-                                                (colorSpaceFamily + "/" + colorSpaceName));
-                                                
             _colorSpaces.push_back(colorSpaceName);
-            
-            _colorSpacesFullPaths.push_back(colorSpacePath);
         }
         
         OCIO::ConstColorSpaceRcPtr defaultInput = _config->getColorSpace(OCIO::ROLE_SCENE_LINEAR);
