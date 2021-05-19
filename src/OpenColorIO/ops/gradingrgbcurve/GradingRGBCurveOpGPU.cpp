@@ -218,13 +218,14 @@ void AddCurveEvalMethodTextToShaderProgram(GpuShaderCreatorRcPtr & shaderCreator
         auto propGC = gcData->getDynamicPropertyInternal();
 
         // 2 ints for each curve.
+        st.newLine() << "";
         st.declareIntArrayConst(props.m_knotsOffsets, 4 * 2, propGC->getKnotsOffsetsArray());
         st.declareFloatArrayConst(props.m_knots, propGC->getNumKnots(), propGC->getKnotsArray());
         st.declareIntArrayConst(props.m_coefsOffsets, 4 * 2, propGC->getCoefsOffsetsArray());
         st.declareFloatArrayConst(props.m_coefs, propGC->getNumCoefs(), propGC->getCoefsArray());
-        st.newLine() << "";
     }
 
+    st.newLine() << "";
     st.newLine() << "float " << props.m_eval << "(in int curveIdx, in float x)";
     st.newLine() << "{";
     st.indent();
@@ -367,10 +368,10 @@ void GetGradingRGBCurveGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
         DynamicPropertyRcPtr newProp = shaderProp;
         shaderCreator->addDynamicProperty(newProp);
 
-        // Add uniforms.
+        // Add uniforms only if needed.
         AddGCPropertiesUniforms(shaderCreator, shaderProp, properties);
 
-        // Add helper function.
+        // Add helper function plus global variables if they are not dynamic.
         AddCurveEvalMethodTextToShaderProgram(shaderCreator, gcData, properties);
     }
     else

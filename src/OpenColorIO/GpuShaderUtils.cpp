@@ -349,7 +349,17 @@ void GpuShaderText::declareFloatArrayConst(const std::string & name, int size, c
         }
         case GPU_LANGUAGE_CG:
         {
-            throw Exception("Unsupported GPU shader language.");
+            nl << floatKeyword() << " " << name << "[" << size << "] = {";
+            for (int i = 0; i < size; ++i)
+            {
+                nl << getFloatString(v[i], m_lang);
+                if (i + 1 != size)
+                {
+                    nl << ", ";
+                }
+            }
+            nl << "};";
+            break;
         }
     }
 }
@@ -402,7 +412,17 @@ void GpuShaderText::declareIntArrayConst(const std::string & name, int size, con
         }
         case GPU_LANGUAGE_CG:
         {
-            throw Exception("Unsupported GPU shader language.");
+            nl << intKeyword() << " " << name << "[" << size << "] = {";
+            for (int i = 0; i < size; ++i)
+            {
+                nl << v[i];
+                if (i + 1 != size)
+                {
+                    nl << ", ";
+                }
+            }
+            nl << "};";
+            break;
         }
     }
 }
