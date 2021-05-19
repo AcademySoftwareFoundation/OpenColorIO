@@ -336,7 +336,7 @@ OpenColorIO_AE_Context::OpenColorIO_AE_Context(const std::string &path, OCIO_Sou
             {
                 const char *colorSpaceName = _config->getColorSpaceNameByIndex(i);
                 
-                _inputs.push_back(colorSpaceName);
+                _colorSpaces.push_back(colorSpaceName);
             }
             
             
@@ -431,7 +431,7 @@ OpenColorIO_AE_Context::OpenColorIO_AE_Context(const ArbitraryData *arb_data, co
             {
                 const char *colorSpaceName = _config->getColorSpaceNameByIndex(i);
                 
-                _inputs.push_back(colorSpaceName);
+                _colorSpaces.push_back(colorSpaceName);
             }
             
             

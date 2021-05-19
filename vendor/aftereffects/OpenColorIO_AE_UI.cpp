@@ -635,9 +635,8 @@ static void DoClickPath(
             (OCIO_ACTION_LUT == new_context->getAction() && OCIO_ACTION_LUT != arb_data->action) ||
             (OCIO_ACTION_LUT != new_context->getAction() && OCIO_ACTION_LUT == arb_data->action) ||
             (OCIO_ACTION_LUT != new_context->getAction() &&
-               (-1 == FindInVec(new_context->getInputs(), arb_data->input) ||
-                -1 == FindInVec(new_context->getInputs(), arb_data->output) ||
-                -1 == FindInVec(new_context->getViews(), arb_data->view) ||
+               (-1 == FindInVec(new_context->getColorSpaces(), arb_data->input) ||
+                -1 == FindInVec(new_context->getColorSpaces(), arb_data->output) ||
                 -1 == FindInVec(new_context->getDisplays(), arb_data->display) ) ) )
         {
             // Configuration is different, so initialize defaults
@@ -807,9 +806,8 @@ static void DoClickConfig(
                 (OCIO_ACTION_LUT == new_context->getAction() && OCIO_ACTION_LUT != arb_data->action) ||
                 (OCIO_ACTION_LUT != new_context->getAction() && OCIO_ACTION_LUT == arb_data->action) ||
                 (OCIO_ACTION_LUT != new_context->getAction() &&
-                   (-1 == FindInVec(new_context->getInputs(), arb_data->input) ||
-                    -1 == FindInVec(new_context->getInputs(), arb_data->output) ||
-                    -1 == FindInVec(new_context->getViews(), arb_data->view) ||
+                   (-1 == FindInVec(new_context->getColorSpaces(), arb_data->input) ||
+                    -1 == FindInVec(new_context->getColorSpaces(), arb_data->output) ||
                     -1 == FindInVec(new_context->getDisplays(), arb_data->display) ) ) )
             {
                 // Configuration is different, so initialize defaults
@@ -1084,7 +1082,7 @@ static void DoClickMenus(
             {
                 assert(FALSE);
             
-                menu_items = seq_data->context->getInputs();
+                menu_items = seq_data->context->getColorSpaces();
                 
                 if(reg == REGION_MENU1)
                 {
@@ -1101,7 +1099,7 @@ static void DoClickMenus(
                 {
                     assert(FALSE);
                 
-                    menu_items = seq_data->context->getInputs();
+                    menu_items = seq_data->context->getColorSpaces();
                     
                     selected_item = FindInVec(menu_items, arb_data->input);
                 }
