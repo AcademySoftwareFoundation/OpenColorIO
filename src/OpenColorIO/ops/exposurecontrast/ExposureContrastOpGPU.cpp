@@ -262,7 +262,7 @@ void GetExposureContrastGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
     st.indent();
 
     st.newLine() << "";
-    st.newLine() << "// Add an ExposureContrast '"
+    st.newLine() << "// Add ExposureContrast '"
                  << ExposureContrastOpData::ConvertStyleToString(ec->getStyle())
                  << "' processing";
     st.newLine() << "";

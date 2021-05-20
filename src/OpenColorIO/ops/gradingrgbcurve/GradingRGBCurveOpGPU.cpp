@@ -348,7 +348,7 @@ void GetGradingRGBCurveGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
     st.indent();
 
     st.newLine() << "";
-    st.newLine() << "// Add a GradingRGBCurve '"
+    st.newLine() << "// Add GradingRGBCurve '"
                  << GradingStyleToString(style) << "' "
                  << TransformDirectionToString(dir) << " processing";
     st.newLine() << "";

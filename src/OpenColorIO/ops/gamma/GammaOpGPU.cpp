@@ -252,7 +252,7 @@ void GetGammaGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
     ss.indent();
 
     ss.newLine() << "";
-    ss.newLine() << "// Add a Gamma '"
+    ss.newLine() << "// Add Gamma '"
         << GammaOpData::ConvertStyleToString(gammaData->getStyle())
         << "' processing";
     ss.newLine() << "";

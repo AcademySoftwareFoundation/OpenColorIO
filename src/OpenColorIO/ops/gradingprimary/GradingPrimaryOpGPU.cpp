@@ -494,7 +494,7 @@ void GetGradingPrimaryGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
     st.indent();
 
     st.newLine() << "";
-    st.newLine() << "// Add a GradingPrimary '"
+    st.newLine() << "// Add GradingPrimary '"
                  << GradingStyleToString(style) << "' "
                  << TransformDirectionToString(dir) << " processing";
     st.newLine() << "";
