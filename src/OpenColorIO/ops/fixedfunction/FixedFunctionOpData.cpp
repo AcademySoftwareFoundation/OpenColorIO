@@ -381,59 +381,30 @@ void FixedFunctionOpData::validate() const
         const double thr_yellow = m_params[5];
         const double power = m_params[6];
 
+        auto check_bounds = [](const std::string & name, double val, double low, double high) {
+            if (val < low || val > high)
+            {
+                std::stringstream ss;
+                ss << "Parameter " << val << " (" << name << ") is outside valid range [" << low << "," << high << "]";
+                throw Exception(ss.str().c_str());
+            }
+        };
+
         const double lim_low_bound = 1.0;
         const double lim_hi_bound = 10.0;
-
-        if (lim_cyan < lim_low_bound || lim_cyan > lim_hi_bound)
-        {
-            std::stringstream ss;
-            ss << "Parameter " << lim_cyan << " (lim_cyan) is outside valid range [" << lim_low_bound << "," << lim_hi_bound << "]";
-            throw Exception(ss.str().c_str());
-        }
-        if (lim_magenta < lim_low_bound || lim_magenta > lim_hi_bound)
-        {
-            std::stringstream ss;
-            ss << "Parameter " << lim_magenta << " (lim_magenta) is outside valid range [" << lim_low_bound << "," << lim_hi_bound << "]";
-            throw Exception(ss.str().c_str());
-        }
-        if (lim_yellow < lim_low_bound || lim_yellow > lim_hi_bound)
-        {
-            std::stringstream ss;
-            ss << "Parameter " << lim_yellow << " (lim_yellow) is outside valid range [" << lim_low_bound << "," << lim_hi_bound << "]";
-            throw Exception(ss.str().c_str());
-        }
+        check_bounds("lim_cyan", lim_cyan, lim_low_bound, lim_hi_bound);
+        check_bounds("lim_magenta", lim_magenta, lim_low_bound, lim_hi_bound);
+        check_bounds("lim_yellow", lim_yellow, lim_low_bound, lim_hi_bound);
 
         const double thr_low_bound = 0.4;
         const double thr_hi_bound = 1.0;
-
-        if (thr_cyan < thr_low_bound || thr_cyan > thr_hi_bound)
-        {
-            std::stringstream ss;
-            ss << "Parameter " << thr_cyan << " (thr_cyan) is outside valid range [" << thr_low_bound << "," << thr_hi_bound << "]";
-            throw Exception(ss.str().c_str());
-        }
-        if (thr_magenta < thr_low_bound || thr_magenta > thr_hi_bound)
-        {
-            std::stringstream ss;
-            ss << "Parameter " << thr_magenta << " (thr_magenta) is outside valid range [" << thr_low_bound << "," << thr_hi_bound << "]";
-            throw Exception(ss.str().c_str());
-        }
-        if (thr_yellow < thr_low_bound || thr_yellow > thr_hi_bound)
-        {
-            std::stringstream ss;
-            ss << "Parameter " << thr_yellow << " (thr_yellow) is outside valid range [" << thr_low_bound << "," << thr_hi_bound << "]";
-            throw Exception(ss.str().c_str());
-        }
+        check_bounds("thr_cyan", thr_cyan, thr_low_bound, thr_hi_bound);
+        check_bounds("thr_magenta", thr_magenta, thr_low_bound, thr_hi_bound);
+        check_bounds("thr_yellow", thr_yellow, thr_low_bound, thr_hi_bound);
 
         const double pwr_low_bound = 1.0;
         const double pwr_hi_bound = 3.0;
-
-        if (power < pwr_low_bound || power > pwr_hi_bound)
-        {
-            std::stringstream ss;
-            ss << "Parameter " << power << " (power) is outside valid range [" << pwr_low_bound << "," << pwr_hi_bound << "]";
-            throw Exception(ss.str().c_str());
-        }
+        check_bounds("power", power, pwr_low_bound, pwr_hi_bound);
     }
     else if(m_style==REC2100_SURROUND_FWD || m_style == REC2100_SURROUND_INV)
     {
