@@ -997,7 +997,7 @@ public:
             // Note that it adds it or updates the existing one.
             m_allColorSpaces->addColorSpace(cs);
         }
-        catch(const Exception & ex)
+        catch(const Exception & /* ex */)
         {
             DisplayMap::iterator iter = FindDisplay(m_displays, colorSpaceName);
             if (iter!=m_displays.end())
@@ -1007,7 +1007,7 @@ public:
 
             m_allColorSpaces->removeColorSpace(colorSpaceName.c_str());
 
-            throw ex;
+            throw;
         }
 
         // The display must be active.
