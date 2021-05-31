@@ -373,15 +373,16 @@ void FixedFunctionOpData::validate() const
             throw Exception(ss.str().c_str());
         }
 
-        const double lim_cyan = m_params[0];
+        const double lim_cyan    = m_params[0];
         const double lim_magenta = m_params[1];
-        const double lim_yellow = m_params[2];
-        const double thr_cyan = m_params[3];
+        const double lim_yellow  = m_params[2];
+        const double thr_cyan    = m_params[3];
         const double thr_magenta = m_params[4];
-        const double thr_yellow = m_params[5];
-        const double power = m_params[6];
+        const double thr_yellow  = m_params[5];
+        const double power       = m_params[6];
 
-        auto check_bounds = [](const std::string & name, double val, double low, double high) {
+        auto check_bounds = [](const std::string & name, double val, double low, double high)
+        {
             if (val < low || val > high)
             {
                 std::stringstream ss;
@@ -390,21 +391,21 @@ void FixedFunctionOpData::validate() const
             }
         };
 
-        const double lim_low_bound = 1.0;
-        const double lim_hi_bound = 10.0;
-        check_bounds("lim_cyan", lim_cyan, lim_low_bound, lim_hi_bound);
+        static constexpr double lim_low_bound = 1.0;
+        static constexpr double lim_hi_bound  = 10.0;
+        check_bounds("lim_cyan",    lim_cyan,    lim_low_bound, lim_hi_bound);
         check_bounds("lim_magenta", lim_magenta, lim_low_bound, lim_hi_bound);
-        check_bounds("lim_yellow", lim_yellow, lim_low_bound, lim_hi_bound);
+        check_bounds("lim_yellow",  lim_yellow,  lim_low_bound, lim_hi_bound);
 
-        const double thr_low_bound = 0.4;
-        const double thr_hi_bound = 1.0;
-        check_bounds("thr_cyan", thr_cyan, thr_low_bound, thr_hi_bound);
+        static constexpr double thr_low_bound = 0.4;
+        static constexpr double thr_hi_bound  = 1.0;
+        check_bounds("thr_cyan",    thr_cyan,    thr_low_bound, thr_hi_bound);
         check_bounds("thr_magenta", thr_magenta, thr_low_bound, thr_hi_bound);
-        check_bounds("thr_yellow", thr_yellow, thr_low_bound, thr_hi_bound);
+        check_bounds("thr_yellow",  thr_yellow,  thr_low_bound, thr_hi_bound);
 
-        const double pwr_low_bound = 1.0;
-        const double pwr_hi_bound = 3.0;
-        check_bounds("power", power, pwr_low_bound, pwr_hi_bound);
+        static constexpr double pwr_low_bound = 1.0;
+        static constexpr double pwr_hi_bound  = 3.0;
+        check_bounds("power",       power,       pwr_low_bound, pwr_hi_bound);
     }
     else if(m_style==REC2100_SURROUND_FWD || m_style == REC2100_SURROUND_INV)
     {

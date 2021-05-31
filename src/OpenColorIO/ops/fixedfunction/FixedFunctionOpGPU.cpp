@@ -200,15 +200,13 @@ void Add_GamutMap_13_Compress(GpuShaderText & ss,
                               float power,
                               float invert)
 {
+    float one_over_power = 1.f / power;
+
     ss.newLine() << "{";
     ss.indent();
-
-    ss.newLine() << "float lim = " << lim << ";";
-    ss.newLine() << "float thr = " << thr << ";";
-    ss.newLine() << "float pwr = " << power << ";";
  
     // No compression below threshold
-    ss.newLine() << "if (" << dist << " < thr)";
+    ss.newLine() << "if (" << dist << " < " << thr << ")";
     ss.newLine() << "{";
     ss.indent();
     ss.newLine() << comprDist << " = " << dist << ";";
@@ -221,7 +219,7 @@ void Add_GamutMap_13_Compress(GpuShaderText & ss,
     ss.indent();
 
     // Disable compression, avoid nan
-    ss.newLine() << "if (lim < 1.0001f)";
+    ss.newLine() << "if (" << lim << " < 1.0001f)";
     ss.newLine() << "{";
     ss.indent();
     ss.newLine() << comprDist << " = " << dist << ";";
@@ -236,16 +234,16 @@ void Add_GamutMap_13_Compress(GpuShaderText & ss,
     ss.newLine() << "float nd;";
     ss.newLine() << "float p;";
     // Calculate scale factor for y = 1 intersect
-    ss.newLine() << "scl = (lim - thr) / pow(pow((1.0 - thr) / (lim - thr), - pwr) - 1.0, 1.0 / pwr);";
+    ss.newLine() << "scl = (" << lim << " - " << thr << ") / pow(pow((1.0 - " << thr << ") / (" << lim << " - " << thr << "), - " << power << ") - 1.0, " << one_over_power << ");";
     // Normalize distance outside threshold by scale factor
-    ss.newLine() << "nd = (" << dist << " - thr) / scl;";
-    ss.newLine() << "p = pow(nd, pwr);";
+    ss.newLine() << "nd = (" << dist << " - " << thr << ") / scl;";
+    ss.newLine() << "p = pow(nd, " << power << ");";
 
     // Fwd
     ss.newLine() << "if (" << invert << " == 0.0f)";
     ss.newLine() << "{";
     ss.indent();
-    ss.newLine() << comprDist << " = thr + scl * nd / (pow(1.0 + p, 1.0 / pwr));";
+    ss.newLine() << comprDist << " = " << thr << " + scl * nd / (pow(1.0 + p, " << one_over_power << "));";
     ss.dedent();
     ss.newLine() << "}"; // if (!invert)
 
@@ -255,7 +253,7 @@ void Add_GamutMap_13_Compress(GpuShaderText & ss,
     ss.indent();
 
     // Avoid singularity
-    ss.newLine() << "if (" << dist << " > (thr + scl))";
+    ss.newLine() << "if (" << dist << " > (" << thr << " + scl))";
     ss.newLine() << "{";
     ss.indent();
     ss.newLine() << comprDist << " = " << dist << ";";
@@ -265,7 +263,7 @@ void Add_GamutMap_13_Compress(GpuShaderText & ss,
     ss.newLine() << "else";
     ss.newLine() << "{";
     ss.indent();
-    ss.newLine() << comprDist << " = thr + scl * pow(-(p / (p - 1.0)), 1.0 / pwr);";
+    ss.newLine() << comprDist << " = " << thr << " + scl * pow(-(p / (p - 1.0)), " << one_over_power << ");";
     ss.dedent();
     ss.newLine() << "}"; // else
 
@@ -292,9 +290,9 @@ void Add_GamutMap_13_Shader(GpuShaderText & ss,
                             float power,
                             float invert)
 {
-    thrCyan = std::min(0.9999f, thrCyan);
+    thrCyan    = std::min(0.9999f, thrCyan);
     thrMagenta = std::min(0.9999f, thrMagenta);
-    thrYellow = std::min(0.9999f, thrYellow);
+    thrYellow  = std::min(0.9999f, thrYellow);
 
     // achromatic axis 
     ss.newLine() << "float ach = max( outColor.x, max( outColor.y, outColor.z ) );";
@@ -307,9 +305,9 @@ void Add_GamutMap_13_Shader(GpuShaderText & ss,
 
     // compress distance with user controlled parameterized shaper function
     ss.newLine() << ss.float3Decl("cdist") << ";";
-    Add_GamutMap_13_Compress(ss, "dist.x", "cdist.x", limCyan, thrCyan, power, invert);
+    Add_GamutMap_13_Compress(ss, "dist.x", "cdist.x", limCyan,    thrCyan,    power, invert);
     Add_GamutMap_13_Compress(ss, "dist.y", "cdist.y", limMagenta, thrMagenta, power, invert);
-    Add_GamutMap_13_Compress(ss, "dist.z", "cdist.z", limYellow, thrYellow, power, invert);
+    Add_GamutMap_13_Compress(ss, "dist.z", "cdist.z", limYellow,  thrYellow,  power, invert);
 
     // recalculate rgb from compressed distance and achromatic
     // effectively this scales each color component relative to achromatic axis by the compressed distance

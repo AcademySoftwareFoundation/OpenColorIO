@@ -69,6 +69,9 @@ public:
 class Renderer_ACES_Glow03_Fwd : public OpCPU
 {
 public:
+    Renderer_ACES_Glow03_Fwd() = delete;
+    Renderer_ACES_Glow03_Fwd(const Renderer_ACES_Glow03_Fwd &) = delete;
+
     Renderer_ACES_Glow03_Fwd(ConstFixedFunctionOpDataRcPtr & data,
                              float glowGain, float glowMid);
 
@@ -106,7 +109,10 @@ protected:
 class Renderer_ACES_GamutMap13_Fwd : public OpCPU
 {
 public:
-    Renderer_ACES_GamutMap13_Fwd(ConstFixedFunctionOpDataRcPtr & data);
+    Renderer_ACES_GamutMap13_Fwd() = delete;
+    Renderer_ACES_GamutMap13_Fwd(const Renderer_ACES_GamutMap13_Fwd &) = delete;
+
+    explicit Renderer_ACES_GamutMap13_Fwd(ConstFixedFunctionOpDataRcPtr & data);
 
     void apply(const void * inImg, void * outImg, long numPixels) const override;
 
@@ -123,6 +129,8 @@ protected:
     float m_thrYellow;
     float m_power;
 
+    float m_one_over_power;
+
     float m_scaleCyan;
     float m_scaleMagenta;
     float m_scaleYellow;
@@ -131,7 +139,7 @@ protected:
 class Renderer_ACES_GamutMap13_Inv : public Renderer_ACES_GamutMap13_Fwd
 {
 public:
-    Renderer_ACES_GamutMap13_Inv(ConstFixedFunctionOpDataRcPtr & data);
+    explicit Renderer_ACES_GamutMap13_Inv(ConstFixedFunctionOpDataRcPtr & data);
 
     void apply(const void * inImg, void * outImg, long numPixels) const override;
 };
@@ -689,25 +697,27 @@ void Renderer_ACES_DarkToDim10_Fwd::apply(const void * inImg, void * outImg, lon
 Renderer_ACES_GamutMap13_Fwd::Renderer_ACES_GamutMap13_Fwd(ConstFixedFunctionOpDataRcPtr & data)
     :   OpCPU()
 {
-    m_limCyan = (float)data->getParams()[0];
-    m_limMagenta = (float)data->getParams()[1];
-    m_limYellow = (float)data->getParams()[2];
-    m_thrCyan = (float)data->getParams()[3];
-    m_thrMagenta = (float)data->getParams()[4];
-    m_thrYellow = (float)data->getParams()[5];
-    m_power = (float)data->getParams()[6];
+    m_limCyan        = (float)data->getParams()[0];
+    m_limMagenta     = (float)data->getParams()[1];
+    m_limYellow      = (float)data->getParams()[2];
+    m_thrCyan        = (float)data->getParams()[3];
+    m_thrMagenta     = (float)data->getParams()[4];
+    m_thrYellow      = (float)data->getParams()[5];
+    m_power          = (float)data->getParams()[6];
 
-    m_thrCyan = std::min(0.9999f, m_thrCyan);
-    m_thrMagenta = std::min(0.9999f, m_thrMagenta);
-    m_thrYellow = std::min(0.9999f, m_thrYellow);
+    m_one_over_power = 1.f / m_power;
+
+    m_thrCyan        = std::min(0.9999f, m_thrCyan);
+    m_thrMagenta     = std::min(0.9999f, m_thrMagenta);
+    m_thrYellow      = std::min(0.9999f, m_thrYellow);
 
     // Precompute scale factor for y = 1 intersect
     auto f_scale = [this](float lim, float thr) {
-        return (lim - thr) / powf(powf((1.0f - thr) / (lim - thr), -m_power) - 1.0f, 1.0f / m_power);
+        return (lim - thr) / powf(powf((1.0f - thr) / (lim - thr), -m_power) - 1.0f, m_one_over_power);
     };
-    m_scaleCyan = f_scale(m_limCyan, m_thrCyan);
-    m_scaleMagenta = f_scale(m_limMagenta, m_thrMagenta);
-    m_scaleYellow = f_scale(m_limYellow, m_thrYellow);
+    m_scaleCyan      = f_scale(m_limCyan,    m_thrCyan);
+    m_scaleMagenta   = f_scale(m_limMagenta, m_thrMagenta);
+    m_scaleYellow    = f_scale(m_limYellow,  m_thrYellow);
 }
 
 __inline float Renderer_ACES_GamutMap13_Fwd::compress(float dist, float lim, float thr, float scale, bool invert) const
@@ -727,28 +737,26 @@ __inline float Renderer_ACES_GamutMap13_Fwd::compress(float dist, float lim, flo
             return dist;
         }
 
-        // Scale factor for y = 1 intersect
-        const float scl = scale;
         // Normalize distance outside threshold by scale factor
-        const float nd = (dist - thr) / scl;
+        const float nd = (dist - thr) / scale;
         const float p = powf(nd, m_power);
 
         // Compress
         if (!invert)
         {
-            comprDist = thr + scl * nd / (powf(1.0f + p, 1.0f / m_power));
+            comprDist = thr + scale * nd / (powf(1.0f + p, m_one_over_power));
         }
         // Uncompress
         else
         {
             // Avoid singularity
-            if (dist > (thr + scl))
+            if (dist > (thr + scale))
             {
                 comprDist = dist;
             }
             else
             {
-                comprDist = thr + scl * powf(-(p / (p - 1.0f)), 1.0f / m_power);
+                comprDist = thr + scale * powf(-(p / (p - 1.0f)), m_one_over_power);
             }
         }
     }
@@ -761,9 +769,13 @@ __inline float Renderer_ACES_GamutMap13_Fwd::gamut_map(float val, float ach, flo
     // Distance from the achromatic axis, aka inverse RGB ratios
     float dist;
     if (ach == 0.0f)
+    {
         dist = 0.0f;
+    }
     else
+    {
         dist = (ach - val) / std::fabs(ach);
+    }
 
     // Compress distance with parameterized shaper function
     const float comprDist = compress(dist, lim, thr, scale, invert);
@@ -788,9 +800,9 @@ void Renderer_ACES_GamutMap13_Fwd::apply(const void * inImg, void * outImg, long
         // Achromatic axis
         const float ach = std::max(red, std::max(grn, blu));
 
-        out[0] = gamut_map(red, ach, m_limCyan, m_thrCyan, m_scaleCyan, false);
+        out[0] = gamut_map(red, ach, m_limCyan,    m_thrCyan,    m_scaleCyan,    false);
         out[1] = gamut_map(grn, ach, m_limMagenta, m_thrMagenta, m_scaleMagenta, false);
-        out[2] = gamut_map(blu, ach, m_limYellow, m_thrYellow, m_scaleYellow, false);
+        out[2] = gamut_map(blu, ach, m_limYellow,  m_thrYellow,  m_scaleYellow,  false);
         out[3] = in[3];
 
         in  += 4;
@@ -817,9 +829,9 @@ void Renderer_ACES_GamutMap13_Inv::apply(const void * inImg, void * outImg, long
         // Achromatic axis
         const float ach = std::max(red, std::max(grn, blu));
 
-        out[0] = gamut_map(red, ach, m_limCyan, m_thrCyan, m_scaleCyan, true);
+        out[0] = gamut_map(red, ach, m_limCyan,    m_thrCyan,    m_scaleCyan,    true);
         out[1] = gamut_map(grn, ach, m_limMagenta, m_thrMagenta, m_scaleMagenta, true);
-        out[2] = gamut_map(blu, ach, m_limYellow, m_thrYellow, m_scaleYellow, true);
+        out[2] = gamut_map(blu, ach, m_limYellow,  m_thrYellow,  m_scaleYellow,  true);
         out[3] = in[3];
 
         in  += 4;
