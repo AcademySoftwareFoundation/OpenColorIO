@@ -155,9 +155,9 @@
 		2AF56B93147A431100F9968C /* OpenColorIO_AE_UI.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = OpenColorIO_AE_UI.cpp; path = ../../../OpenColorIO_AE_UI.cpp; sourceTree = SOURCE_ROOT; usesTabs = 0; };
 		2AF56B94147A431100F9968C /* OpenColorIO_AE.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = OpenColorIO_AE.cpp; path = ../../../OpenColorIO_AE.cpp; sourceTree = SOURCE_ROOT; usesTabs = 0; };
 		2AF56B95147A431100F9968C /* OpenColorIO_AE.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = OpenColorIO_AE.h; path = ../../../OpenColorIO_AE.h; sourceTree = SOURCE_ROOT; usesTabs = 0; };
-		2AF56B9D147A458800F9968C /* AEGP_SuiteHandler.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AEGP_SuiteHandler.cpp; path = "../../../../../ext/Adobe After Effects 2020 Mac SDK/Examples/Util/AEGP_SuiteHandler.cpp"; sourceTree = SOURCE_ROOT; usesTabs = 0; };
-		2AF56B9E147A458800F9968C /* AEGP_SuiteHandler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AEGP_SuiteHandler.h; path = "../../../../../ext/Adobe After Effects 2020 Mac SDK/Examples/Util/AEGP_SuiteHandler.h"; sourceTree = SOURCE_ROOT; usesTabs = 0; };
-		2AF56B9F147A458800F9968C /* MissingSuiteError.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MissingSuiteError.cpp; path = "../../../../../ext/Adobe After Effects 2020 Mac SDK/Examples/Util/MissingSuiteError.cpp"; sourceTree = SOURCE_ROOT; usesTabs = 0; };
+		2AF56B9D147A458800F9968C /* AEGP_SuiteHandler.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AEGP_SuiteHandler.cpp; path = "../../../../../ext/Adobe After Effects 2021 Mac SDK/Examples/Util/AEGP_SuiteHandler.cpp"; sourceTree = SOURCE_ROOT; usesTabs = 0; };
+		2AF56B9E147A458800F9968C /* AEGP_SuiteHandler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AEGP_SuiteHandler.h; path = "../../../../../ext/Adobe After Effects 2021 Mac SDK/Examples/Util/AEGP_SuiteHandler.h"; sourceTree = SOURCE_ROOT; usesTabs = 0; };
+		2AF56B9F147A458800F9968C /* MissingSuiteError.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MissingSuiteError.cpp; path = "../../../../../ext/Adobe After Effects 2021 Mac SDK/Examples/Util/MissingSuiteError.cpp"; sourceTree = SOURCE_ROOT; usesTabs = 0; };
 		2AF56D04147AB5C900F9968C /* DrawbotBot.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = DrawbotBot.cpp; path = ../../../DrawbotBot.cpp; sourceTree = SOURCE_ROOT; usesTabs = 0; };
 		2AF56D05147AB5C900F9968C /* DrawbotBot.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DrawbotBot.h; path = ../../../DrawbotBot.h; sourceTree = SOURCE_ROOT; usesTabs = 0; };
 		2AF56EE2147AD10E00F9968C /* OpenColorIO.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = OpenColorIO.xcodeproj; path = ../OpenColorIO.xcodeproj; sourceTree = SOURCE_ROOT; };
@@ -519,7 +519,7 @@
 		2A1BAC2310C3C82A00244D12 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				AE_SDK = "\"../../../../../ext/Adobe After Effects 2020 Mac SDK\"";
+				AE_SDK = "\"../../../../../ext/Adobe After Effects 2021 Mac SDK\"";
 				ARCHS = x86_64;
 				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
@@ -538,6 +538,7 @@
 					"../../../../../ext/yaml-cpp/include",
 					"../../../../../ext/Little-CMS/include",
 				);
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				REZ_PREPROCESSOR_DEFINITIONS = __MACH__;
 				REZ_SEARCH_PATHS = "$(SDK_PATH)/Developer/Headers/FlatCarbon";
 				SDKROOT = macosx;
@@ -565,7 +566,7 @@
 		C4E61880095A3C800012CA3F /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				AE_SDK = "\"../../../../../ext/Adobe After Effects 2020 Mac SDK\"";
+				AE_SDK = "\"../../../../../ext/Adobe After Effects 2021 Mac SDK\"";
 				ARCHS = x86_64;
 				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
 				COPY_PHASE_STRIP = NO;
@@ -583,6 +584,7 @@
 					"../../../../../ext/yaml-cpp/include",
 					"../../../../../ext/Little-CMS/include",
 				);
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				REZ_PREPROCESSOR_DEFINITIONS = __MACH__;
 				REZ_SEARCH_PATHS = "$(SDK_PATH)/Developer/Headers/FlatCarbon";
 				SDKROOT = macosx;
