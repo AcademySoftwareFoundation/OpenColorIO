@@ -7,9 +7,9 @@
 // Makefile configuration options
 #define OCIO_NAMESPACE OpenColorIO
 
-#define OCIO_VERSION_STR        "2.0.0"
+#define OCIO_VERSION_STR        "2.1.0"
 #define OCIO_VERSION_STATUS_STR ""
-#define OCIO_VERSION_FULL_STR   "2.0.0"
+#define OCIO_VERSION_FULL_STR   "2.1.0"
 
 /* Version as a single 4-byte hex number, e.g. 0x01050200 == 1.5.2
    Use this for numeric comparisons, e.g. #if OCIO_VERSION_HEX >= ... 
@@ -17,11 +17,24 @@
    this will reflect the original API version number.
    */
 #define OCIO_VERSION_HEX ((2 << 24) | \
-                          (0 << 16) | \
+                          (1 << 16) | \
                           (0 <<  8))
 
 #define OCIO_VERSION_MAJOR 2
-#define OCIO_VERSION_MINOR 0
+#define OCIO_VERSION_MINOR 1
+
+
+// Highlight deprecated methods or classes.
+#if defined(_MSC_VER)
+    #define OCIO_DEPRECATED(msg) __declspec(deprecated(msg))
+#elif __cplusplus >= 201402L
+    #define OCIO_DEPRECATED(msg) [[deprecated(msg)]]
+#elif defined(__GNUC__) || defined(__clang__)
+    #define OCIO_DEPRECATED(msg) __attribute__((deprecated(msg)))
+#else
+    #define OCIO_DEPRECATED(msg) /* unsupported on this platform */
+#endif
+
 
 // shared_ptr / dynamic_pointer_cast
 #include <memory>
