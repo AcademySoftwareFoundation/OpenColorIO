@@ -8,7 +8,7 @@
 
 # OpenImageIO
 # https://github.com/OpenImageIO/oiio
-find_package(OpenImageIO 2.1.9)
+find_package(OpenImageIO 2.1.10)
 package_root_message(OpenImageIO)
 
 # The order defines the architecture of the project i.e. layers and dependencies.
