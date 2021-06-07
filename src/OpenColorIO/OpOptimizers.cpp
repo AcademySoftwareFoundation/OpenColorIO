@@ -207,7 +207,7 @@ int RemoveInverseOps(OpRcPtrVec & opVec, OptimizationFlags oFlags)
     int count      = 0;
     int firstindex = 0; // this must be a signed int
 
-    while (firstindex < static_cast<int>(opVec.size() - 1))
+    while (firstindex < (static_cast<int>(opVec.size()) - 1))
     {
         ConstOpRcPtr op1 = opVec[firstindex];
         ConstOpRcPtr op2 = opVec[firstindex + 1];
@@ -273,7 +273,7 @@ int CombineOps(OpRcPtrVec & opVec, OptimizationFlags oFlags)
 
     OpRcPtrVec tmpops;
 
-    while (firstindex < static_cast<int>(opVec.size() - 1))
+    while (firstindex < (static_cast<int>(opVec.size()) - 1))
     {
         ConstOpRcPtr op1 = opVec[firstindex];
         ConstOpRcPtr op2 = opVec[firstindex + 1];

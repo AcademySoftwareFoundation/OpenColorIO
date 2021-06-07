@@ -90,7 +90,14 @@ OCIO_ADD_TEST(GradingPrimary, precompute)
     OCIO_CHECK_CLOSE(comp.getPivot(), 0.4f, 1.e-6f);
     OCIO_CHECK_ASSERT(comp.isGammaIdentity());
 
+    gp.m_brightness.m_green = 0.1 * 1023. / 6.25;
+    comp.update(OCIO::GRADING_LOG, OCIO::TRANSFORM_DIR_FORWARD, gp);
+    OCIO_CHECK_ASSERT(comp.getBrightness() == OCIO::Float3({ 0.f, 0.1f, 0.f }));
+    OCIO_CHECK_ASSERT(!comp.getLocalBypass());
+    OCIO_CHECK_ASSERT(comp.isGammaIdentity());
+
     gp.m_brightness.m_red = 0.1 * 1023. / 6.25;
+    gp.m_brightness.m_green = 0.;
     gp.m_contrast.m_red = 0.; // Inverse will be 1.
     gp.m_contrast.m_green = 1.25;
     gp.m_gamma.m_blue = 0.8;
