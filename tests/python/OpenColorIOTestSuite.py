@@ -38,7 +38,7 @@ if len(sys.argv) > 1:
             opencolorio_dir, os.getenv('DYLD_LIBRARY_PATH', ''))
 
     sys.path.insert(0, pyopencolorio_dir)
-# Else it probably means direct invokation from installed package
+# Else it probably means direct invocation from installed package
 else:
     here = os.path.dirname(__file__)
     os.environ["TEST_DATAFILES_DIR"] = os.path.join(here, 'data', 'files')

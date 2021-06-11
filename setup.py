@@ -12,14 +12,6 @@ from setuptools import setup, Extension
 from setuptools.command.build_ext import build_ext
 
 
-# Discover tests files for setuptools
-def install_test_files():
-    res = ['data/LICENSE.md', 'data/README.md']
-    for root, folder, files in os.walk('tests/python/data/files'):
-        if files:
-            rel_path = os.path.relpath(root, start='tests/python')
-            res.extend([os.path.join(rel_path, f) for f in files])
-    return res
 
 # Convert distutils Windows platform specifiers to CMake -A arguments
 PLAT_TO_CMAKE = {
@@ -123,13 +115,10 @@ class CMakeBuild(build_ext):
 setup(
     package_dir={
         'PyOpenColorIOTests': 'tests/python',
+        'PyOpenColorIOTests.data': 'tests/data',
     },
-    package_data={
-        'PyOpenColorIOTests': install_test_files()
-    },
-    packages=[
-        'PyOpenColorIOTests',
-    ],
+    packages=['PyOpenColorIOTests', 'PyOpenColorIOTests.data'],
     ext_modules=[CMakeExtension("PyOpenColorIO")],
     cmdclass={"build_ext": CMakeBuild},
+    include_package_data=True
 )
