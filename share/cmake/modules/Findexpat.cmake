@@ -154,14 +154,6 @@ if(NOT expat_FOUND)
         "${_EXT_DIST_ROOT}/${CMAKE_INSTALL_LIBDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}expat${_expat_LIB_SUFFIX}${CMAKE_STATIC_LIBRARY_SUFFIX}")
 
     if(_expat_TARGET_CREATE)
-        if(UNIX)
-            set(EXPAT_C_FLAGS "${EXPAT_C_FLAGS} -fvisibility=hidden -fPIC")
-            set(EXPAT_CXX_FLAGS "${EXPAT_CXX_FLAGS} -fvisibility=hidden -fPIC")
-            if(OCIO_INLINES_HIDDEN)
-                set(EXPAT_CXX_FLAGS "${EXPAT_CXX_FLAGS} -fvisibility-inlines-hidden")
-            endif()
-        endif()
-
         if(MSVC)
             set(EXPAT_C_FLAGS "${EXPAT_C_FLAGS} /EHsc")
             set(EXPAT_CXX_FLAGS "${EXPAT_CXX_FLAGS} /EHsc")
@@ -172,6 +164,11 @@ if(NOT expat_FOUND)
 
         set(EXPAT_CMAKE_ARGS
             ${EXPAT_CMAKE_ARGS}
+            -DCMAKE_POLICY_DEFAULT_CMP0063=NEW
+            -DCMAKE_C_VISIBILITY_PRESET=${CMAKE_C_VISIBILITY_PRESET}
+            -DCMAKE_CXX_VISIBILITY_PRESET=${CMAKE_CXX_VISIBILITY_PRESET}
+            -DCMAKE_VISIBILITY_INLINES_HIDDEN=${CMAKE_VISIBILITY_INLINES_HIDDEN}
+            -DCMAKE_POSITION_INDEPENDENT_CODE=ON
             -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
             -DCMAKE_C_FLAGS=${EXPAT_C_FLAGS}
             -DCMAKE_CXX_FLAGS=${EXPAT_CXX_FLAGS}
