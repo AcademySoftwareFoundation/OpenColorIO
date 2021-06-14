@@ -71,9 +71,11 @@ mark_as_advanced(PLATFORM_COMPILE_FLAGS)
 ###############################################################################
 # Define hidden symbol visibility by default for all targets.
 
-set(CMAKE_C_VISIBILITY_PRESET hidden)
-set(CMAKE_CXX_VISIBILITY_PRESET hidden)
-set(CMAKE_VISIBILITY_INLINES_HIDDEN YES)
+include(VariableUtils)
+
+set_unless_defined(CMAKE_C_VISIBILITY_PRESET hidden)
+set_unless_defined(CMAKE_CXX_VISIBILITY_PRESET hidden)
+set_unless_defined(CMAKE_VISIBILITY_INLINES_HIDDEN YES)
 
 
 ###############################################################################
