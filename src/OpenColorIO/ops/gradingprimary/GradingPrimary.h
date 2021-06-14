@@ -24,7 +24,7 @@ struct GradingPrimaryPreRender
     void update(GradingStyle style, TransformDirection dir, const GradingPrimary & v) noexcept;
 
     // Do not apply the op if all params are identity.
-    bool m_localBypass{ false };
+    bool getLocalBypass() const { return m_localBypass; }
 
     // Access to the precomputed values. Note that values are already inversed based on the
     // direction so that no computation is required before using them.
@@ -58,6 +58,8 @@ private:
     double m_pivot{ 0. };
 
     bool m_isPowerIdentity{ false };
+
+    bool m_localBypass{ false };
 };
 
 bool operator==(const GradingRGBM & lhs, const GradingRGBM & rhs);

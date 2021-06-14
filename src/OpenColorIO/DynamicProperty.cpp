@@ -76,25 +76,25 @@ bool DynamicPropertyImpl::equals(const DynamicPropertyImpl & rhs) const
             {
                 auto lhst = dynamic_cast<const DynamicPropertyDouble *>(this);
                 auto rhst = dynamic_cast<const DynamicPropertyDouble *>(&rhs);
-                return (lhst->getValue() == rhst->getValue());
+                return lhst && rhst && (lhst->getValue() == rhst->getValue());
             }
             case DYNAMIC_PROPERTY_GRADING_PRIMARY:
             {
                 auto lhst = dynamic_cast<const DynamicPropertyGradingPrimary *>(this);
                 auto rhst = dynamic_cast<const DynamicPropertyGradingPrimary *>(&rhs);
-                return (lhst->getValue() == rhst->getValue());
+                return lhst && rhst && (lhst->getValue() == rhst->getValue());
             }
             case DYNAMIC_PROPERTY_GRADING_RGBCURVE:
             {
                 auto lhst = dynamic_cast<const DynamicPropertyGradingRGBCurve *>(this);
                 auto rhst = dynamic_cast<const DynamicPropertyGradingRGBCurve *>(&rhs);
-                return (*lhst->getValue() == *rhst->getValue());
+                return lhst && rhst && (*lhst->getValue() == *rhst->getValue());
             }
             case DYNAMIC_PROPERTY_GRADING_TONE:
             {
                 auto lhst = dynamic_cast<const DynamicPropertyGradingTone *>(this);
                 auto rhst = dynamic_cast<const DynamicPropertyGradingTone *>(&rhs);
-                return (lhst->getValue() == rhst->getValue());
+                return lhst && rhst && (lhst->getValue() == rhst->getValue());
             }
             }
             // Different values.
