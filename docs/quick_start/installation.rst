@@ -74,7 +74,7 @@ Some optional components also depend on:
 - \*pybind11 >= 2.6.1 (for the Python bindings)
 - Python >= 2.7 (for the Python bindings)
 - Python 3.7 or 3.8 (for the docs, with the following PyPi packages)
-    - sphinx
+    - Sphinx
     - six
     - testresources
     - recommonmark
