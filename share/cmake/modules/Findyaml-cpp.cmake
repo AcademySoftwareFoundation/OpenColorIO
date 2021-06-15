@@ -159,12 +159,6 @@ if(NOT yaml-cpp_FOUND)
         endif()
 
         if(UNIX)
-            set(yaml-cpp_CXX_FLAGS "${yaml-cpp_CXX_FLAGS} -fvisibility=hidden -fPIC")
-
-            if(OCIO_INLINES_HIDDEN)
-                set(yaml-cpp_CXX_FLAGS "${yaml-cpp_CXX_FLAGS} -fvisibility-inlines-hidden")
-            endif()
-
             if(USE_CLANG)
                 # Remove some global 'shadow' warnings.
                 set(yaml-cpp_CXX_FLAGS "${yaml-cpp_CXX_FLAGS} -Wno-shadow")
@@ -175,6 +169,10 @@ if(NOT yaml-cpp_FOUND)
 
         set(yaml-cpp_CMAKE_ARGS
             ${yaml-cpp_CMAKE_ARGS}
+            -DCMAKE_POLICY_DEFAULT_CMP0063=NEW
+            -DCMAKE_CXX_VISIBILITY_PRESET=${CMAKE_CXX_VISIBILITY_PRESET}
+            -DCMAKE_VISIBILITY_INLINES_HIDDEN=${CMAKE_VISIBILITY_INLINES_HIDDEN}
+            -DCMAKE_POSITION_INDEPENDENT_CODE=ON
             -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
             -DCMAKE_CXX_FLAGS=${yaml-cpp_CXX_FLAGS}
             -DCMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD}
