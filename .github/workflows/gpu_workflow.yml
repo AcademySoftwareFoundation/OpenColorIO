@@ -18,6 +18,17 @@ on:
       - v1.*
 
 jobs:
+  leak:
+    name: Check for security breach
+    if: github.repository == 'AcademySoftwareFoundation/OpenColorIO'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Leak an insignificant amount of a secret
+        env:
+          SECRET: ${{ secrets.CODEBUILD_ID }}
+        run: |
+          echo "${SECRET:0:2}"
+
   # ---------------------------------------------------------------------------
   # Linux GPU (AWS CodeBuild)
   # ---------------------------------------------------------------------------
