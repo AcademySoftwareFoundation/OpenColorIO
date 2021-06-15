@@ -268,6 +268,14 @@ jobs:
       - name: Test
         run: ctest -V
         working-directory: _build
+      - name: Test CMake Consumer
+        if: matrix.build-shared == 'ON'
+        run: |
+          cmake -DCMAKE_PREFIX_PATH=../../../_install .
+          cmake --build . \
+                --config ${{ matrix.build-type }}
+          ./consumer
+        working-directory: _build/tests/cmake-consumer-dist
 
   # ---------------------------------------------------------------------------
   # macOS
@@ -390,6 +398,14 @@ jobs:
       - name: Test
         run: ctest -V
         working-directory: _build
+      - name: Test CMake Consumer
+        if: matrix.build-shared == 'ON'
+        run: |
+          cmake -DCMAKE_PREFIX_PATH=../../../_install .
+          cmake --build . \
+                --config ${{ matrix.build-type }}
+          ./consumer
+        working-directory: _build/tests/cmake-consumer-dist
 
   # ---------------------------------------------------------------------------
   # Windows
@@ -518,3 +534,13 @@ jobs:
         run: ctest -V
         shell: bash
         working-directory: _build
+      - name: Test CMake Consumer
+        if: matrix.build-shared == 'ON'
+        run: |
+          cmake -DCMAKE_PREFIX_PATH=../../../_install .
+          cmake --build . \
+                --config ${{ matrix.build-type }}
+          export PATH=../../../_install/bin:$PATH
+          ./${{ matrix.build-type }}/consumer
+        shell: bash
+        working-directory: _build/tests/cmake-consumer-dist
