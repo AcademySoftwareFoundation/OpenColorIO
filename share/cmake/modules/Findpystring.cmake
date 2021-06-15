@@ -88,13 +88,6 @@ if(NOT pystring_FOUND)
         "${_EXT_DIST_ROOT}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}pystring${CMAKE_STATIC_LIBRARY_SUFFIX}")
 
     if(_pystring_TARGET_CREATE)
-        if(UNIX)
-            set(pystring_CXX_FLAGS "${pystring_CXX_FLAGS} -fvisibility=hidden -fPIC")
-            if(OCIO_INLINES_HIDDEN)
-                set(pystring_CXX_FLAGS "${pystring_CXX_FLAGS} -fvisibility-inlines-hidden")
-            endif()
-        endif()
-
         if(MSVC)
             set(pystring_CXX_FLAGS "${pystring_CXX_FLAGS} /EHsc")
         endif()
@@ -103,6 +96,9 @@ if(NOT pystring_FOUND)
 
         set(pystring_CMAKE_ARGS
             ${pystring_CMAKE_ARGS}
+            -DCMAKE_CXX_VISIBILITY_PRESET=${CMAKE_CXX_VISIBILITY_PRESET}
+            -DCMAKE_VISIBILITY_INLINES_HIDDEN=${CMAKE_VISIBILITY_INLINES_HIDDEN}
+            -DCMAKE_POSITION_INDEPENDENT_CODE=ON
             -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
             -DCMAKE_CXX_FLAGS=${pystring_CXX_FLAGS}
             -DCMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD}
