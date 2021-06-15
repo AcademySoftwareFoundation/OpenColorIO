@@ -182,12 +182,18 @@ if(NOT WIN32)
     configure_file(res/OpenColorIO.pc.in ${CMAKE_CURRENT_BINARY_DIR}/OpenColorIO.pc @ONLY)
     install(FILES ${CMAKE_CURRENT_BINARY_DIR}/OpenColorIO.pc DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
 endif()
+
 add_library(OpenColorIO ${SOURCES})
 
+# Require at least a C++11 compatible compiler for consumer projects.
+target_compile_features(OpenColorIO
+    PUBLIC cxx_std_11
+)
+
 if(BUILD_SHARED_LIBS AND WIN32)
-	# Impose a versioned name on Windows to avoid binary name clashes.
+    # Impose a versioned name on Windows to avoid binary name clashes.
     set(OCIO_LIBNAME_SUFFIX
-    	${OCIO_LIBNAME_SUFFIX}_${OpenColorIO_VERSION_MAJOR}_${OpenColorIO_VERSION_MINOR}
+        ${OCIO_LIBNAME_SUFFIX}_${OpenColorIO_VERSION_MAJOR}_${OpenColorIO_VERSION_MINOR}
     )
 
     # Create the version.rc file for the Windows DLL.
