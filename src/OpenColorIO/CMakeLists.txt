@@ -182,9 +182,6 @@ if(NOT WIN32)
     configure_file(res/OpenColorIO.pc.in ${CMAKE_CURRENT_BINARY_DIR}/OpenColorIO.pc @ONLY)
     install(FILES ${CMAKE_CURRENT_BINARY_DIR}/OpenColorIO.pc DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
 endif()
-
-# TODO: Install the OpenColorIO-config.cmake.
-
 add_library(OpenColorIO ${SOURCES})
 
 if(BUILD_SHARED_LIBS AND WIN32)
@@ -199,12 +196,12 @@ if(BUILD_SHARED_LIBS AND WIN32)
 endif()
 
 target_include_directories(OpenColorIO
-	PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
 target_link_libraries(OpenColorIO
 	PUBLIC
-		public_api
+		OpenColorIOHeaders
 	PRIVATE
 		expat::expat
 		IlmBase::Half
@@ -279,6 +276,7 @@ if(MSVC AND BUILD_SHARED_LIBS)
 endif()
 
 install(TARGETS OpenColorIO
+	EXPORT ${PROJECT_NAME}_EXPORTED_TARGETS
 	LIBRARY DESTINATION lib
 	RUNTIME DESTINATION bin
 	ARCHIVE DESTINATION lib
