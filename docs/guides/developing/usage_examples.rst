@@ -96,9 +96,10 @@ Python
       config = OCIO.GetCurrentConfig()
       processor = config.getProcessor(OCIO.ROLE_COMPOSITING_LOG,
                                       OCIO.ROLE_SCENE_LINEAR)
-      cpu = processor->getDefaultCPUProcessor()
+      cpu = processor.getDefaultCPUProcessor()
        
       # Apply the color transform to the existing RGBA pixel data
+      img = [1, 0, 0, 0]
       img = cpu.applyRGBA(img)
    except Exception as e:
       print("OpenColorIO Error: ", e)
@@ -139,7 +140,8 @@ C++
       const char * view = config->getDefaultView(display);
    
       OCIO::ConstProcessorRcPtr processor = config->getProcessor(OCIO::ROLE_SCENE_LINEAR,
-                                                                 display, view);
+                                                                 display, view,
+                                                                 OCIO::TRANSFORM_DIR_FORWARD);
       OCIO::ConstCPUProcessorRcPtr cpu = processor->getDefaultCPUProcessor();
    
       OCIO::PackedImageDesc img(imageData, width, height, 4);
@@ -163,10 +165,10 @@ Python
       display = config.getDefaultDisplay()
       view = config.getDefaultView(display)
 
-      processor = config.getProcessor(OCIO.ROLE_SCENE_LINEAR, display, view)
+      processor = config.getProcessor(OCIO.ROLE_SCENE_LINEAR, display, view, OCIO.TRANSFORM_DIR_FORWARD)
       cpu = processor.getDefaultCPUProcessor()
 
-      imageData = [1, 0, 0]
+      img = [1, 0, 0]
       cpu.applyRGB(img)
    except Exception as e:
       print("OpenColorIO Error: ", e)
