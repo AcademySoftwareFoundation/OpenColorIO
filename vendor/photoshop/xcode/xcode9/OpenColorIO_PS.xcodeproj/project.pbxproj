@@ -246,7 +246,7 @@
 		64CF8E9E0AA3A6F300120C5A /* ASPragma.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = ASPragma.h; sourceTree = "<group>"; };
 		64CF8E9F0AA3A6F300120C5A /* ASConfig.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = ASConfig.h; sourceTree = "<group>"; };
 		64FC86591118F81900F6232D /* JSScriptingSuite.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = JSScriptingSuite.h; sourceTree = "<group>"; };
-		8D01CCD20486CAD60068D4B7 /* OpenColorIO_PS.plugin */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = OpenColorIO_PS.plugin; sourceTree = BUILT_PRODUCTS_DIR; };
+		8D01CCD20486CAD60068D4B7 /* OpenColorIO PS.plugin */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "OpenColorIO PS.plugin"; sourceTree = BUILT_PRODUCTS_DIR; };
 		E29FC5AE0B0ADACC00614548 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -312,7 +312,7 @@
 		19C28FB4FE9D528D11CA2CBB /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				8D01CCD20486CAD60068D4B7 /* OpenColorIO_PS.plugin */,
+				8D01CCD20486CAD60068D4B7 /* OpenColorIO PS.plugin */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -544,7 +544,7 @@
 			name = OpenColorIO_PS;
 			productInstallPath = "$(HOME)/Library/Bundles";
 			productName = Dissolve;
-			productReference = 8D01CCD20486CAD60068D4B7 /* OpenColorIO_PS.plugin */;
+			productReference = 8D01CCD20486CAD60068D4B7 /* OpenColorIO PS.plugin */;
 			productType = "com.apple.product-type.bundle";
 		};
 /* End PBXNativeTarget section */
@@ -765,7 +765,7 @@
 					"../../../../ext/yaml-cpp/include",
 					"../../../../ext/Little-CMS/include",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				PRECOMPS_INCLUDE_HEADERS_FROM_BUILT_PRODUCTS_DIR = YES;
 				REZ_PREFIX_FILE = "$(SRCROOT)/../../../../ext/adobe_photoshop_sdk_cc_2017_mac/photoshopsdk/pluginsdk/samplecode/common/includes/MachOMacrezXcode.h";
 				SDKROOT = macosx;
@@ -790,7 +790,7 @@
 				INFOPLIST_FILE = ../../mac/OpenColorIO_PS_Info.plist;
 				INSTALL_PATH = "$(HOME)/Library/Bundles";
 				PLUGIN_TYPE = 8BFM;
-				PRODUCT_NAME = OpenColorIO_PS;
+				PRODUCT_NAME = "OpenColorIO PS";
 				REZ_PREFIX_FILE = "$(SRCROOT)/../../../../ext/adobe_photoshop_sdk_cc_2017_mac/photoshopsdk/pluginsdk/samplecode/common/includes/MachOMacrezXcode.h";
 				VALID_ARCHS = x86_64;
 				WRAPPER_EXTENSION = plugin;
@@ -818,7 +818,7 @@
 					"../../../../ext/yaml-cpp/include",
 					"../../../../ext/Little-CMS/include",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				SDKROOT = macosx;
 			};
 			name = Release;
@@ -838,7 +838,7 @@
 				INFOPLIST_FILE = ../../mac/OpenColorIO_PS_Info.plist;
 				INSTALL_PATH = "$(HOME)/Library/Bundles";
 				PLUGIN_TYPE = 8BFM;
-				PRODUCT_NAME = OpenColorIO_PS;
+				PRODUCT_NAME = "OpenColorIO PS";
 				REZ_PREFIX_FILE = "$(SRCROOT)/../../../../ext/adobe_photoshop_sdk_cc_2017_mac/photoshopsdk/pluginsdk/samplecode/common/includes/MachOMacrezXcode.h";
 				VALID_ARCHS = x86_64;
 				WRAPPER_EXTENSION = plugin;

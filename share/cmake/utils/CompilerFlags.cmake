@@ -56,10 +56,6 @@ if(USE_GCC OR USE_CLANG)
         set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} -Werror")
     endif()
 
-    if(OCIO_INLINES_HIDDEN)
-        set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} -fvisibility-inlines-hidden")
-    endif()
-
     if(APPLE)
         # TODO: There are still some deprecated methods.
         set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} -Wno-deprecated-declarations")
@@ -70,6 +66,16 @@ endif()
 # An advanced variable will not be displayed in any of the cmake GUIs
 
 mark_as_advanced(PLATFORM_COMPILE_FLAGS)
+
+
+###############################################################################
+# Define hidden symbol visibility by default for all targets.
+
+include(VariableUtils)
+
+set_unless_defined(CMAKE_C_VISIBILITY_PRESET hidden)
+set_unless_defined(CMAKE_CXX_VISIBILITY_PRESET hidden)
+set_unless_defined(CMAKE_VISIBILITY_INLINES_HIDDEN YES)
 
 
 ###############################################################################

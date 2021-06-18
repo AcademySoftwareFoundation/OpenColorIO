@@ -476,7 +476,7 @@
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>OpenColorIO_SKIP_IMPORTS;XML_STATIC;ADD_EXTRA_BUILTINS;_SCL_SECURE_NO_WARNINGS;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>OpenColorIO_SKIP_IMPORTS;XML_STATIC;_SCL_SECURE_NO_WARNINGS;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>.;..\..\..\..\include;..\..\..\..\src;..\..\..\..\src\OpenColorIO;..\..\..\..\ext\openexr\IlmBase;..\..\..\..\ext\yaml-cpp\include;..\..\..\..\ext\libexpat\expat\expat;..\..\..\..\ext\pystring;..\..\..\..\ext\sampleicc\src\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/wd4146</AdditionalOptions>
@@ -491,7 +491,7 @@
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>OpenColorIO_SKIP_IMPORTS;XML_STATIC;ADD_EXTRA_BUILTINS;_SCL_SECURE_NO_WARNINGS;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>OpenColorIO_SKIP_IMPORTS;XML_STATIC;_SCL_SECURE_NO_WARNINGS;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>.;..\..\..\..\include;..\..\..\..\src;..\..\..\..\src\OpenColorIO;..\..\..\..\ext\openexr\IlmBase;..\..\..\..\ext\yaml-cpp\include;..\..\..\..\ext\libexpat\expat\expat;..\..\..\..\ext\pystring;..\..\..\..\ext\sampleicc\src\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/wd4146</AdditionalOptions>
@@ -508,7 +508,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>OpenColorIO_SKIP_IMPORTS;XML_STATIC;ADD_EXTRA_BUILTINS;WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>OpenColorIO_SKIP_IMPORTS;XML_STATIC;WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>.;..\..\..\..\include;..\..\..\..\src;..\..\..\..\src\OpenColorIO;..\..\..\..\ext\openexr\IlmBase;..\..\..\..\ext\yaml-cpp\include;..\..\..\..\ext\libexpat\expat\expat;..\..\..\..\ext\pystring;..\..\..\..\ext\sampleicc\src\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/wd4146</AdditionalOptions>
@@ -524,7 +524,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>OpenColorIO_SKIP_IMPORTS;XML_STATIC;ADD_EXTRA_BUILTINS;WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>OpenColorIO_SKIP_IMPORTS;XML_STATIC;WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>.;..\..\..\..\include;..\..\..\..\src;..\..\..\..\src\OpenColorIO;..\..\..\..\ext\openexr\IlmBase;..\..\..\..\ext\yaml-cpp\include;..\..\..\..\ext\libexpat\expat\expat;..\..\..\..\ext\pystring;..\..\..\..\ext\sampleicc\src\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/wd4146</AdditionalOptions>
@@ -542,7 +542,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>OpenColorIO_SKIP_IMPORTS;XML_STATIC;ADD_EXTRA_BUILTINS;WIN32;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>OpenColorIO_SKIP_IMPORTS;XML_STATIC;WIN32;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>.;..\..\..\..\include;..\..\..\..\src;..\..\..\..\src\OpenColorIO;..\..\..\..\ext\openexr\IlmBase;..\..\..\..\ext\yaml-cpp\include;..\..\..\..\ext\libexpat\expat\expat;..\..\..\..\ext\pystring;..\..\..\..\ext\sampleicc\src\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/wd4146</AdditionalOptions>
@@ -562,7 +562,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>OpenColorIO_SKIP_IMPORTS;XML_STATIC;ADD_EXTRA_BUILTINS;WIN32;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>OpenColorIO_SKIP_IMPORTS;XML_STATIC;WIN32;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>.;..\..\..\..\include;..\..\..\..\src;..\..\..\..\src\OpenColorIO;..\..\..\..\ext\openexr\IlmBase;..\..\..\..\ext\yaml-cpp\include;..\..\..\..\ext\libexpat\expat\expat;..\..\..\..\ext\pystring;..\..\..\..\ext\sampleicc\src\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/wd4146</AdditionalOptions>
@@ -581,7 +581,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>OpenColorIO_SKIP_IMPORTS;XML_STATIC;ADD_EXTRA_BUILTINS;_SCL_SECURE_NO_WARNINGS;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>OpenColorIO_SKIP_IMPORTS;XML_STATIC;_SCL_SECURE_NO_WARNINGS;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>.;..\..\..\..\include;..\..\..\..\src;..\..\..\..\src\OpenColorIO;..\..\..\..\ext\openexr\IlmBase;..\..\..\..\ext\yaml-cpp\include;..\..\..\..\ext\libexpat\expat\expat;..\..\..\..\ext\pystring;..\..\..\..\ext\sampleicc\src\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/wd4146</AdditionalOptions>
@@ -600,7 +600,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>OpenColorIO_SKIP_IMPORTS;XML_STATIC;ADD_EXTRA_BUILTINS;_SCL_SECURE_NO_WARNINGS;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>OpenColorIO_SKIP_IMPORTS;XML_STATIC;_SCL_SECURE_NO_WARNINGS;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>.;..\..\..\..\include;..\..\..\..\src;..\..\..\..\src\OpenColorIO;..\..\..\..\ext\openexr\IlmBase;..\..\..\..\ext\yaml-cpp\include;..\..\..\..\ext\libexpat\expat\expat;..\..\..\..\ext\pystring;..\..\..\..\ext\sampleicc\src\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/wd4146</AdditionalOptions>
