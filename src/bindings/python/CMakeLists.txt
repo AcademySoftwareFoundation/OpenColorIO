@@ -134,10 +134,18 @@ if(${CMAKE_CXX_STANDARD} GREATER_EQUAL 17)
 	set(APP_CXX_STANDARD 11)
 endif()
 
+set(CUSTOM_COMPILE_FLAGS ${PLATFORM_COMPILE_FLAGS})
+
+# The Python binding contains deprecated methods for backward compatibility reason,
+# so disable the warning.
+if(USE_GCC OR USE_CLANG)
+	set(CUSTOM_COMPILE_FLAGS "${CUSTOM_COMPILE_FLAGS} -Wno-deprecated-declarations")
+endif()
+
 set_target_properties(PyOpenColorIO
 	PROPERTIES
-		COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS}"
-		CXX_STANDARD ${APP_CXX_STANDARD}
+		COMPILE_FLAGS ${CUSTOM_COMPILE_FLAGS}
+		CXX_STANDARD  ${APP_CXX_STANDARD}
 )
 
 if(NOT BUILD_SHARED_LIBS)

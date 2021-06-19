@@ -14,27 +14,203 @@ namespace OCIO = OCIO_NAMESPACE;
 
 OCIO_ADD_TEST(FileRules, config_v1)
 {
-    static const char CONFIG[] = 
-        "ocio_profile_version: 1\n"
-        "strictparsing: false\n"
-        "roles:\n"
-        "  default: raw\n"
-        "displays:\n"
-        "  sRGB:\n"
-        "  - !<View> {name: Raw, colorspace: raw}\n"
-        "colorspaces:\n"
-        "  - !<ColorSpace>\n"
-        "      name: raw\n";
+    // From a v1 config create valid file rules.
+  
+    {
+        static const char CONFIG[] = 
+            "ocio_profile_version: 1\n"
+            "\n"
+            "search_path: \"\"\n"
+            "strictparsing: false\n"
+            "luma: [0.2126, 0.7152, 0.0722]\n"
+            "\n"
+            "roles:\n"
+            "  default: raw\n"
+            "\n"
+            "displays:\n"
+            "  sRGB:\n"
+            "    - !<View> {name: Raw, colorspace: raw}\n"
+            "\n"
+            "active_displays: []\n"
+            "active_views: []\n"
+            "\n"
+            "colorspaces:\n"
+            "  - !<ColorSpace>\n"
+            "    name: raw\n"
+            "    family: \"\"\n"
+            "    equalitygroup: \"\"\n"
+            "    bitdepth: unknown\n"
+            "    isdata: false\n"
+            "    allocation: uniform\n";
 
-    std::istringstream is;
-    is.str(CONFIG);
+        std::istringstream is;
+        is.str(CONFIG);
 
-    OCIO::ConstConfigRcPtr config;
-    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-    OCIO_CHECK_NO_THROW(config->validate());
+        OCIO::ConstConfigRcPtr config;
+        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OCIO_CHECK_NO_THROW(config->validate());
 
-    OCIO_CHECK_EQUAL(config->getFileRules()->getNumEntries(), 1);
-    OCIO_CHECK_EQUAL(std::string(config->getFileRules()->getName(0)), "Default");
+        OCIO_REQUIRE_EQUAL(config->getFileRules()->getNumEntries(), 2);
+        OCIO_CHECK_EQUAL(std::string(config->getFileRules()->getName(0)), OCIO::FileRules::FilePathSearchRuleName);
+        OCIO_CHECK_EQUAL(std::string(config->getFileRules()->getName(1)), OCIO::FileRules::DefaultRuleName);
+
+        OCIO_CHECK_EQUAL(std::string(config->getFileRules()->getColorSpace(1)), std::string("default"));
+
+        // Check that the file rules are not saved in a v1 config.
+        std::stringstream ss;
+        OCIO_CHECK_NO_THROW(ss << *config.get());
+        OCIO_CHECK_EQUAL(ss.str(), std::string(CONFIG));
+    }
+
+    // Test fallback 1: The default role is missing and there is a data color space named 'raw'.
+
+    {
+        static const char CONFIG[] = 
+            "ocio_profile_version: 1\n"
+            "displays:\n"
+            "  sRGB:\n"
+            "    - !<View> {name: Raw, colorspace: raw}\n"
+            "colorspaces:\n"
+            "  - !<ColorSpace>\n"
+            "    name: cs2\n"
+            "  - !<ColorSpace>\n"
+            "    name: raw\n"
+            "    isdata: true\n";
+
+        std::istringstream is;
+        is.str(CONFIG);
+
+        OCIO::ConstConfigRcPtr config;
+        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OCIO_CHECK_NO_THROW(config->validate());
+
+        OCIO_REQUIRE_EQUAL(config->getFileRules()->getNumEntries(), 2);
+        OCIO_CHECK_EQUAL(std::string(config->getFileRules()->getName(0)), OCIO::FileRules::FilePathSearchRuleName);
+        OCIO_CHECK_EQUAL(std::string(config->getFileRules()->getName(1)), OCIO::FileRules::DefaultRuleName);
+
+        OCIO_CHECK_EQUAL(std::string(config->getFileRules()->getColorSpace(1)), std::string("raw"));
+    }
+
+    // Test fallback 2: The default role is missing and there is a data color space.
+    // But 'raw' is not a data color space.
+
+    {
+        static const char CONFIG[] = 
+            "ocio_profile_version: 1\n"
+            "displays:\n"
+            "  sRGB:\n"
+            "    - !<View> {name: Raw, colorspace: raw}\n"
+            "colorspaces:\n"
+            "  - !<ColorSpace>\n"
+            "    name: cs2\n"
+            "  - !<ColorSpace>\n"
+            "    name: raw\n"
+            "  - !<ColorSpace>\n"
+            "    name: cs3\n"
+            "    isdata: true\n";
+
+        std::istringstream is;
+        is.str(CONFIG);
+
+        OCIO::ConstConfigRcPtr config;
+        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OCIO_CHECK_NO_THROW(config->validate());
+
+        OCIO_REQUIRE_EQUAL(config->getFileRules()->getNumEntries(), 2);
+        OCIO_CHECK_EQUAL(std::string(config->getFileRules()->getName(0)), OCIO::FileRules::FilePathSearchRuleName);
+        OCIO_CHECK_EQUAL(std::string(config->getFileRules()->getName(1)), OCIO::FileRules::DefaultRuleName);
+
+        OCIO_CHECK_EQUAL(std::string(config->getFileRules()->getColorSpace(1)), std::string("cs3"));
+    }
+
+    // Test fallback 3: The default role is missing and there is no data color space but there is
+    // an active color space.
+
+    {
+        static const char CONFIG[] = 
+            "ocio_profile_version: 1\n"
+            "displays:\n"
+            "  sRGB:\n"
+            "    - !<View> {name: Raw, colorspace: raw}\n"
+            "colorspaces:\n"
+            "  - !<ColorSpace>\n"
+            "    name: cs2\n"
+            "  - !<ColorSpace>\n"
+            "    name: raw\n";
+
+        std::istringstream is;
+        is.str(CONFIG);
+
+        OCIO::ConstConfigRcPtr config;
+        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OCIO_CHECK_NO_THROW(config->validate());
+
+        OCIO_REQUIRE_EQUAL(config->getFileRules()->getNumEntries(), 2);
+        OCIO_CHECK_EQUAL(std::string(config->getFileRules()->getName(0)), OCIO::FileRules::FilePathSearchRuleName);
+        OCIO_CHECK_EQUAL(std::string(config->getFileRules()->getName(1)), OCIO::FileRules::DefaultRuleName);
+
+        OCIO_CHECK_EQUAL(std::string(config->getFileRules()->getColorSpace(1)), std::string("cs2"));
+    }
+
+    // Test that getColorSpaceFromFilePath works even with a v1 config (that pre-dates the
+    // introduction of file rules).
+
+    {
+        static const char CONFIG[] = 
+            "ocio_profile_version: 1\n"
+            "roles:\n"
+            "  default: raw\n"
+            "displays:\n"
+            "  sRGB:\n"
+            "    - !<View> {name: Raw, colorspace: raw}\n"
+            "colorspaces:\n"
+            "  - !<ColorSpace>\n"
+            "    name: cs2\n"
+            "  - !<ColorSpace>\n"
+            "    name: raw\n"
+            "  - !<ColorSpace>\n"
+            "    name: cs3\n"
+            "    isdata: true\n";
+
+        std::istringstream is;
+        is.str(CONFIG);
+
+        OCIO::ConstConfigRcPtr config;
+        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OCIO_CHECK_NO_THROW(config->validate());
+
+        OCIO_REQUIRE_EQUAL(config->getFileRules()->getNumEntries(), 2);
+        OCIO_CHECK_EQUAL(std::string(config->getFileRules()->getName(0)), OCIO::FileRules::FilePathSearchRuleName);
+        OCIO_CHECK_EQUAL(std::string(config->getFileRules()->getName(1)), OCIO::FileRules::DefaultRuleName);
+
+        OCIO_CHECK_EQUAL(std::string(config->getFileRules()->getColorSpace(1)), std::string("default"));
+
+        // Test the file path search rule i.e. implemented using Config::parseColorSpaceFromString()
+
+        size_t ruleIndex = size_t(-1);
+
+        OCIO_CHECK_EQUAL(std::string(config->getColorSpaceFromFilepath("/usr/cs2_file.exr", ruleIndex)),
+                         std::string("cs2"));
+        OCIO_CHECK_EQUAL(ruleIndex, 0);
+        OCIO_CHECK_ASSERT(!config->filepathOnlyMatchesDefaultRule("/usr/cs2_file.exr"));
+
+        OCIO_CHECK_EQUAL(std::string(config->getColorSpaceFromFilepath("/usr/cs3/file.exr", ruleIndex)),
+                         std::string("cs3"));
+        OCIO_CHECK_EQUAL(ruleIndex, 0);
+        OCIO_CHECK_ASSERT(!config->filepathOnlyMatchesDefaultRule("/usr/cs3/file.exr"));
+
+        OCIO_CHECK_EQUAL(std::string(config->getColorSpaceFromFilepath("/usr/cs3/cs2_file.exr", ruleIndex)),
+                         std::string("cs2"));
+        OCIO_CHECK_EQUAL(ruleIndex, 0);
+        OCIO_CHECK_ASSERT(!config->filepathOnlyMatchesDefaultRule("/usr/cs3/cs2_file.exr"));
+
+        // Test that it fallbacks to the default rule when nothing found.
+
+        OCIO_CHECK_EQUAL(std::string(config->getColorSpaceFromFilepath("/usr/file.exr", ruleIndex)),
+                         std::string("default"));
+        OCIO_CHECK_EQUAL(ruleIndex, 1);
+        OCIO_CHECK_ASSERT(config->filepathOnlyMatchesDefaultRule("/usr/file.exr"));
+    }
 }
 
 OCIO_ADD_TEST(FileRules, config_read_only)
@@ -1140,9 +1316,16 @@ file_rules:
 
 }
 
-OCIO_ADD_TEST(FileRules, config_v1_to_v2)
+OCIO_ADD_TEST(FileRules, config_v1_to_v2_from_file)
 {
+    // The unit test checks the file rules when loading a v1 config, the upgrade from v1 to v2
+    // and finally, the use of file rules with the upgraded v2 in-memory config.
+    //
+    // Note: For now, only the file rules and the versions are impacted by the upgrade.
+
     {
+        // Test the common use case i.e. read a v1 config file and upgrade it to v2.
+
         constexpr char config_v1[] = { R"(ocio_profile_version: 1
 strictparsing: true
 roles:
@@ -1165,80 +1348,61 @@ colorspaces:
         is.str(config_v1);
         OCIO::ConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is)->createEditableCopy());
-
-        OCIO_CHECK_NO_THROW(config->validate());
-        config->setMajorVersion(2);
-
         OCIO_CHECK_NO_THROW(config->validate());
 
-        auto rules = config->getFileRules()->createEditableCopy();
-        OCIO_CHECK_EQUAL(std::string(rules->getColorSpace(rules->getNumEntries() - 1)),
-                         "default");
-        rules->setDefaultRuleColorSpace("cs1");
-        OCIO_CHECK_EQUAL(std::string(rules->getColorSpace(rules->getNumEntries() - 1)),
-                         "cs1");
-    }
+        // Check the version.
 
-    {
-        constexpr char config_v1_no_default[] = { R"(ocio_profile_version: 1
-strictparsing: true
-roles:
-  role1: cs1
-  role2: cs2
-displays:
-  sRGB:
-  - !<View> {name: Raw, colorspace: raw}
-colorspaces:
-  - !<ColorSpace>
-      name: raw
-  - !<ColorSpace>
-      name: cs1
-  - !<ColorSpace>
-      name: cs2
-)" };
+        OCIO_CHECK_EQUAL(config->getMajorVersion(), 1);
 
-        std::istringstream is;
-        is.str(config_v1_no_default);
-        OCIO::ConstConfigRcPtr constConfig;
-        OCIO_CHECK_NO_THROW(constConfig = OCIO::Config::CreateFromStream(is));
-        OCIO::ConfigRcPtr config = constConfig->createEditableCopy();
+        // Check the file rules.
 
-        OCIO_CHECK_NO_THROW(config->validate());
-        config->setMajorVersion(2);
+        auto rules = config->getFileRules();
+        OCIO_CHECK_EQUAL(rules->getNumEntries(), 2);
+        OCIO_CHECK_EQUAL(std::string(rules->getName(0)), OCIO::FileRules::FilePathSearchRuleName);
+        OCIO_CHECK_EQUAL(std::string(rules->getName(1)), OCIO::FileRules::DefaultRuleName);
+        OCIO_CHECK_EQUAL(std::string(rules->getColorSpace(1)), "default");
 
-        // Default rule is using 'Default' role that does not exist.
-        OCIO_CHECK_THROW_WHAT(config->validate(), OCIO::Exception, "rule named 'Default' is "
-                              "referencing 'default' that is neither a color space nor a named "
-                              "transform");
+        // Check the v1 in-memory file rules are working.
 
-        config = constConfig->createEditableCopy();
-        OCIO_CHECK_EQUAL(config->getNumColorSpaces(), 3);
+        // It checks that the rule 'FileRules::FilePathSearchRuleName' exists.
+        OCIO_CHECK_EQUAL(std::string(config->getColorSpaceFromFilepath("/usr/cs2_file.exr")), "cs2");
+        // It checks that the rule 'Default' exists.
+        OCIO_CHECK_EQUAL(std::string(config->getColorSpaceFromFilepath("/usr/file.exr")), "default");
 
-        // Upgrading is making sure that a valid v1 config will be a valid v2 config.
+        // Upgrading is making sure to build a valid v2 config.
+
         config->upgradeToLatestVersion();
+        OCIO_CHECK_NO_THROW(config->validate());
+
+        // Check the new version.
 
         OCIO_CHECK_EQUAL(config->getMajorVersion(), 2);
-        OCIO_CHECK_NO_THROW(config->validate());
 
-        // 'Default' does not exist, 'Raw' is not a data color-space, so a new color-space has
-        // been created with a unique name.
-        OCIO_CHECK_EQUAL(config->getNumColorSpaces(), 3);
-        OCIO_CHECK_EQUAL(config->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_ALL,
-                                                   OCIO::COLORSPACE_ALL), 4);
-        OCIO_CHECK_EQUAL(std::string(config->getColorSpaceNameByIndex(OCIO::SEARCH_REFERENCE_SPACE_ALL,
-                                                                      OCIO::COLORSPACE_ALL, 3)),
-                         "added_default_rule_colorspace");
+        // Check the new file rules.
+
+        rules = config->getFileRules();
+        OCIO_CHECK_EQUAL(rules->getNumEntries(), 2);
+        OCIO_CHECK_EQUAL(std::string(rules->getName(0)), OCIO::FileRules::FilePathSearchRuleName);
+        OCIO_CHECK_EQUAL(std::string(rules->getName(1)), OCIO::FileRules::DefaultRuleName);
+        OCIO_CHECK_EQUAL(std::string(rules->getColorSpace(1)), "default");
+
+        // Check the v1 in-memory file rules are working.
+
+        OCIO_CHECK_EQUAL(std::string(config->getColorSpaceFromFilepath("/usr/cs2_file.exr")), "cs2");
+        OCIO_CHECK_EQUAL(std::string(config->getColorSpaceFromFilepath("/usr/file.exr")), "default");
     }
 
     {
-        constexpr char config_v1_no_default[] = { R"(ocio_profile_version: 1
+        // The default role is missing and there is a 'data' color space named rAw.
+
+        constexpr char config_v1[] = { R"(ocio_profile_version: 1
 strictparsing: true
 roles:
   role1: cs1
   role2: cs2
 displays:
   sRGB:
-  - !<View> {name: Raw, colorspace: raw}
+  - !<View> {name: Raw, colorspace: rAw}
 colorspaces:
   - !<ColorSpace>
       name: rAw
@@ -1250,33 +1414,301 @@ colorspaces:
 )" };
 
         std::istringstream is;
-        is.str(config_v1_no_default);
-        OCIO::ConstConfigRcPtr constConfig;
-        OCIO_CHECK_NO_THROW(constConfig = OCIO::Config::CreateFromStream(is));
-        OCIO::ConfigRcPtr config = constConfig->createEditableCopy();
-
+        is.str(config_v1);
+        OCIO::ConfigRcPtr config;
+        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is)->createEditableCopy());
         OCIO_CHECK_NO_THROW(config->validate());
-        config->setMajorVersion(2);
+
+        // Check the version.
+
+        OCIO_CHECK_EQUAL(config->getMajorVersion(), 1);
+
+        // Check the file rules.
+
+        auto rules = config->getFileRules();
+        OCIO_CHECK_EQUAL(rules->getNumEntries(), 2);
+        OCIO_CHECK_EQUAL(std::string(rules->getName(0)), OCIO::FileRules::FilePathSearchRuleName);
+        OCIO_CHECK_EQUAL(std::string(rules->getName(1)), OCIO::FileRules::DefaultRuleName);
+        OCIO_CHECK_EQUAL(std::string(rules->getColorSpace(1)), "rAw");
+
+        // Check the v1 in-memory file rules are working.
+
+        OCIO_CHECK_EQUAL(std::string(config->getColorSpaceFromFilepath("/usr/cs2_file.exr")), "cs2");
+        OCIO_CHECK_EQUAL(std::string(config->getColorSpaceFromFilepath("/usr/file.exr")), "rAw");
+
+        // Upgrading is making sure to build a valid v2 config.
+
+        config->upgradeToLatestVersion();
+        OCIO_CHECK_NO_THROW(config->validate());
+
+        // Check the new version.
+
+        OCIO_CHECK_EQUAL(config->getMajorVersion(), 2);
+
+        // Check the new file rules.
+
+        rules = config->getFileRules();
+        OCIO_CHECK_EQUAL(rules->getNumEntries(), 2);
+        OCIO_CHECK_EQUAL(std::string(rules->getName(0)), OCIO::FileRules::FilePathSearchRuleName);
+        OCIO_CHECK_EQUAL(std::string(rules->getName(1)), OCIO::FileRules::DefaultRuleName);
+        OCIO_CHECK_EQUAL(std::string(rules->getColorSpace(1)), "rAw");
+
+        OCIO_CHECK_EQUAL(std::string(config->getColorSpaceFromFilepath("/usr/cs2_file.exr")), "cs2");
+        OCIO_CHECK_EQUAL(std::string(config->getColorSpaceFromFilepath("/usr/file.exr")), "rAw");
+    }
+
+    {
+        // The default role is missing and there is no 'data' color space so, the first
+        // color space is used in v1, and the first active color space is used in v2.
+
+        // Note that inactive color spaces do not exist in v1 explaining why the first color
+        // space is used.
+
+        constexpr char config_v1[] = { R"(ocio_profile_version: 1
+strictparsing: true
+roles:
+  role1: cs1
+  role2: cs2
+displays:
+  sRGB:
+  - !<View> {name: Raw, colorspace: rAw}
+colorspaces:
+  - !<ColorSpace>
+      name: cs1
+  - !<ColorSpace>
+      name: cs2
+  - !<ColorSpace>
+      name: rAw
+)" };
+
+        std::istringstream is;
+        is.str(config_v1);
+        OCIO::ConstConfigRcPtr config;
+        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OCIO_CHECK_NO_THROW(config->validate());
+
+        // Check the version.
+
+        OCIO_CHECK_EQUAL(config->getMajorVersion(), 1);
+
+        // Check the file rules.
+
+        auto rules = config->getFileRules();
+        OCIO_CHECK_EQUAL(rules->getNumEntries(), 2);
+        OCIO_CHECK_EQUAL(std::string(rules->getName(0)), OCIO::FileRules::FilePathSearchRuleName);
+        OCIO_CHECK_EQUAL(std::string(rules->getName(1)), OCIO::FileRules::DefaultRuleName);
+        OCIO_CHECK_EQUAL(std::string(rules->getColorSpace(1)), "cs1");
+
+        // Check the v1 in-memory file rules are working.
+
+        OCIO_CHECK_EQUAL(std::string(config->getColorSpaceFromFilepath("/usr/cs2_file.exr")), "cs2");
+        OCIO_CHECK_EQUAL(std::string(config->getColorSpaceFromFilepath("/usr/file.exr")), "cs1");
+
+        {
+            // In v2, the first active color space is then used for the 'Default' rule.
+
+            OCIO::ConfigRcPtr cfg;
+            OCIO_CHECK_NO_THROW(cfg = config->createEditableCopy());
+
+            // Upgrading is making sure to build a valid v2 config.
+
+            cfg->setInactiveColorSpaces("cs1");
+            cfg->upgradeToLatestVersion();
+            OCIO_CHECK_NO_THROW(cfg->validate());
+
+            // Check the new version.
+
+            OCIO_CHECK_EQUAL(cfg->getMajorVersion(), 2);
+
+            // Check the new file rules.
+
+            rules = cfg->getFileRules();
+            OCIO_CHECK_EQUAL(rules->getNumEntries(), 2);
+            OCIO_CHECK_EQUAL(std::string(rules->getName(0)), OCIO::FileRules::FilePathSearchRuleName);
+            OCIO_CHECK_EQUAL(std::string(rules->getName(1)), OCIO::FileRules::DefaultRuleName);
+            OCIO_CHECK_EQUAL(std::string(rules->getColorSpace(1)), "cs2");
+
+            OCIO_CHECK_EQUAL(std::string(cfg->getColorSpaceFromFilepath("/usr/cs1_file.exr")), "cs1");
+            OCIO_CHECK_EQUAL(std::string(cfg->getColorSpaceFromFilepath("/usr/file.exr")), "cs2");
+        }
+
+        {
+            // In v2, the first color space is used for the 'Default' rule because there no active
+            // color spaces.
+
+            OCIO::ConfigRcPtr cfg;
+            OCIO_CHECK_NO_THROW(cfg = config->createEditableCopy());
+
+            // Upgrading is making sure to build a valid v2 config.
+
+            cfg->setInactiveColorSpaces("cs1, cs2, raw");
+
+            {
+                OCIO::LogGuard l;      
+        
+                cfg->upgradeToLatestVersion();
+                
+                OCIO_CHECK_EQUAL(
+                    std::string("[OpenColorIO Warning]: The default rule creation fallbacks to the"\
+                                " first color space because no suitable color space exists.\n"), 
+                    l.output());
+            }
+
+            OCIO_CHECK_NO_THROW(cfg->validate());
+
+            // Check the new version.
+
+            OCIO_CHECK_EQUAL(cfg->getMajorVersion(), 2);
+
+            // Check the new file rules.
+
+            rules = cfg->getFileRules();
+            OCIO_CHECK_EQUAL(rules->getNumEntries(), 2);
+            OCIO_CHECK_EQUAL(std::string(rules->getName(0)), OCIO::FileRules::FilePathSearchRuleName);
+            OCIO_CHECK_EQUAL(std::string(rules->getName(1)), OCIO::FileRules::DefaultRuleName);
+            OCIO_CHECK_EQUAL(std::string(rules->getColorSpace(1)), "cs1");
+
+            OCIO_CHECK_EQUAL(std::string(cfg->getColorSpaceFromFilepath("/usr/raw_file.exr")), "rAw");
+            OCIO_CHECK_EQUAL(std::string(cfg->getColorSpaceFromFilepath("/usr/file.exr")), "cs1");
+        }
+    }
+}
+
+OCIO_ADD_TEST(FileRules, config_v1_to_v2_from_memory)
+{
+    // The unit test checks the file rules from an in-memory v1 config, the upgrade from v1 to v2,
+    // and finally, the file rules in the upgraded v2 in-memory config.
+    //
+    // Note: For now, only the file rules and the versions are impacted by the upgrade.
+
+    // The following tests manually create an in-memory v1 config with faulty file rules. As the
+    // config file read (which automatically updates in-memory v1 file rules like in previous tests)
+    // is not used, only an explicit upgrade to the latest version, can fix the file rules.
+
+    {
+      // The default role is missing but there is an active 'data' color space.
+
+        OCIO::ConfigRcPtr config = OCIO::Config::Create();
+        config->setMajorVersion(1);
+        config->addDisplayView("disp1", "view1", "cs1", nullptr);
+        OCIO::ColorSpaceRcPtr cs1 = OCIO::ColorSpace::Create();
+        cs1->setName("cs1");
+        cs1->setIsData(true);
+        config->addColorSpace(cs1);
+        OCIO::ColorSpaceRcPtr raw = OCIO::ColorSpace::Create();
+        raw->setName("rAw");
+        config->addColorSpace(raw);
+        OCIO_CHECK_NO_THROW(config->validate());  // because file rules are not validated.
 
         // Default rule is using 'Default' role that does not exist.
+        config->setMajorVersion(2);
         OCIO_CHECK_THROW_WHAT(config->validate(), OCIO::Exception, "rule named 'Default' is "
                               "referencing 'default' that is neither a color space nor a named "
                               "transform");
 
-        config = constConfig->createEditableCopy();
-        OCIO_CHECK_EQUAL(config->getNumColorSpaces(), 3);
-
-        // Upgrading is making sure that a valid v1 config will be a valid v2 config.
+        // Upgrading is making sure to build a valid v2 config.
+        config->setMajorVersion(1);
         config->upgradeToLatestVersion();
-
-        OCIO_CHECK_EQUAL(config->getMajorVersion(), 2);
         OCIO_CHECK_NO_THROW(config->validate());
 
-        // 'Default' does not exist, 'Raw' is a data color-space.
-        OCIO_CHECK_EQUAL(config->getNumColorSpaces(), 3);
+        // Check the new version.
+
+        OCIO_CHECK_EQUAL(config->getMajorVersion(), 2);
+
+        // 'cs1' is an active & 'data' color space.
+
         auto rules = config->getFileRules();
-        const auto numRules = rules->getNumEntries();
-        OCIO_CHECK_EQUAL(std::string(rules->getColorSpace(numRules - 1)), "rAw");
+        OCIO_CHECK_EQUAL(rules->getNumEntries(), 2);
+        OCIO_CHECK_EQUAL(std::string(rules->getName(0)), OCIO::FileRules::FilePathSearchRuleName);
+        OCIO_CHECK_EQUAL(std::string(rules->getName(1)), OCIO::FileRules::DefaultRuleName);
+        OCIO_CHECK_EQUAL(std::string(rules->getColorSpace(1)), "cs1");
+    }
+
+    // The default role is missing and there is no 'data' color space.
+
+    {
+        OCIO::ConfigRcPtr config = OCIO::Config::Create();
+        config->setMajorVersion(1);
+        config->addDisplayView("disp1", "view1", "cs1", nullptr);
+        OCIO::ColorSpaceRcPtr cs1 = OCIO::ColorSpace::Create();
+        cs1->setName("cs1");
+        config->addColorSpace(cs1);
+        OCIO::ColorSpaceRcPtr raw = OCIO::ColorSpace::Create();
+        raw->setName("rAw");
+        config->addColorSpace(raw);
+        OCIO_CHECK_NO_THROW(config->validate());  // because file rules are not validated.
+
+        // Default rule is using 'Default' role but the associated color space does not exist.
+        config->setMajorVersion(2);
+        OCIO_CHECK_THROW_WHAT(config->validate(), OCIO::Exception, "rule named 'Default' is "
+                              "referencing 'default' that is neither a color space nor a named "
+                              "transform");
+
+        // Upgrading is making sure to build a valid v2 config.
+        config->setMajorVersion(1);
+        config->upgradeToLatestVersion();
+        OCIO_CHECK_NO_THROW(config->validate());
+
+        // Check the new version.
+
+        OCIO_CHECK_EQUAL(config->getMajorVersion(), 2);
+
+        // 'Default' role does not exist, 'Raw' is not a data color-space, so use the first active
+        // color space.
+
+        auto rules = config->getFileRules();
+        OCIO_CHECK_EQUAL(rules->getNumEntries(), 2);
+        OCIO_CHECK_EQUAL(std::string(rules->getName(0)), OCIO::FileRules::FilePathSearchRuleName);
+        OCIO_CHECK_EQUAL(std::string(rules->getName(1)), OCIO::FileRules::DefaultRuleName);
+        OCIO_CHECK_EQUAL(std::string(rules->getColorSpace(1)), "cs1");
+    }
+
+    // The default role is missing and there is no 'data' & active color space. The algorithm then
+    // fallbacks to the first available color space and logs a warning.
+
+    {
+        OCIO::ConfigRcPtr config = OCIO::Config::Create();
+        config->setMajorVersion(1);
+        config->addDisplayView("disp1", "view1", "cs1", nullptr);
+        OCIO::ColorSpaceRcPtr cs1 = OCIO::ColorSpace::Create();
+        cs1->setName("cs1");
+        config->addColorSpace(cs1);
+        OCIO_CHECK_NO_THROW(config->validate());  // because file rules are not validated.
+
+        // Default rule is using 'Default' role but the associated color space does not exist.
+        config->setInactiveColorSpaces("cs1");
+        config->setMajorVersion(2);
+        OCIO_CHECK_THROW_WHAT(config->validate(), OCIO::Exception, "rule named 'Default' is "
+                              "referencing 'default' that is neither a color space nor a named "
+                              "transform");
+
+        config->setMajorVersion(1);
+        
+        {
+            OCIO::LogGuard l;      
+    
+            config->upgradeToLatestVersion();
+            
+            OCIO_CHECK_EQUAL(
+                std::string("[OpenColorIO Warning]: The default rule creation fallbacks to the"\
+                            " first color space because no suitable color space exists.\n"), 
+                l.output());
+        }
+
+        OCIO_CHECK_NO_THROW(config->validate());
+
+        // Check the new version.
+
+        OCIO_CHECK_EQUAL(config->getMajorVersion(), 2);
+
+        // Check the 'default' rule. As there is not 'data' or active color space, the default
+        // rule is using an inactive color space.
+
+        auto rules = config->getFileRules();
+        OCIO_CHECK_EQUAL(rules->getNumEntries(), 2);
+        OCIO_CHECK_EQUAL(std::string(rules->getName(0)), OCIO::FileRules::FilePathSearchRuleName);
+        OCIO_CHECK_EQUAL(std::string(rules->getName(1)), OCIO::FileRules::DefaultRuleName);
+        OCIO_CHECK_EQUAL(std::string(rules->getColorSpace(1)), "cs1");
     }
 }
 

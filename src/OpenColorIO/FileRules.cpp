@@ -11,6 +11,7 @@
 
 #include "CustomKeys.h"
 #include "FileRules.h"
+#include "Logging.h"
 #include "PathUtils.h"
 #include "Platform.h"
 #include "utils/StringUtils.h"
@@ -662,9 +663,23 @@ void FileRules::Impl::moveRule(size_t ruleIndex, int offset)
 
 void FileRules::Impl::validate(const Config & cfg) const
 {
-    for (auto & rule : m_rules)
+    // All Config objects have a fileRules object, regardless of version. This object is
+    // initialized to have a defaultRule with the color space set to "default" (i.e., the default
+    // role). The fileRules->validate call will validate that all color spaces used in rules
+    // exist, or if they are roles that they point to a color space that exists.
+    //
+    // Because this would cause validate to improperly fail on v1 configs (since they are not
+    // required to actually contain file rules), we don't do this check on v1 configs when there is
+    // only two rules. In some case (e.g. load a v1 config from disk), the two expected rules are
+    // the 'Default' and 'ColorSpaceNamePathSearch' ones.
+
+    if (cfg.getMajorVersion() >= 2
+            || (cfg.getMajorVersion() == 1 && m_rules.size() > 2))
     {
-        rule->validate(cfg);
+        for (auto & rule : m_rules)
+        {
+            rule->validate(cfg);
+        }
     }
 }
 
@@ -940,5 +955,96 @@ std::ostream & operator<< (std::ostream & os, const FileRules & fr)
     }
     return os;
 }
+
+void UpdateFileRulesFromV1ToV2(const Config & config, FileRulesRcPtr & fileRules)
+{
+    if (config.getMajorVersion() != 1)
+    {
+        return;
+    }
+
+    // In order to preserve the v1 behavior using Config:getColorSpaceFromFilepath() (i.e.
+    // mimic the Config::parseColorSpaceFromString() behavior) add the file path search
+    // rule to the list of file rules.
+
+    try
+    {
+        // Throws if the file rule does not exist.
+        fileRules->getIndexForRule(FileRules::FilePathSearchRuleName);
+    }
+    catch(const Exception & /* ex */)
+    {
+        fileRules->insertPathSearchRule(0);
+    }
+
+    // Now, double-check the default rule (which is using the default role) to find the
+    // right alternative if the default role is missing.
+
+    // In order to always return a valid color space, the algorithm for the default rule is:
+    //   1. Use the default role if it exists (i.e. that's the default implementation)
+    //   2. Use the "raw" color space (case insensitive) if it exists & is a 'data' color space
+    //   3. Use the first 'data' color space if one exists
+    //   4. Use the first active color space
+    //   5. finally, fallback to the first color space.
+
+    auto defaultCS = config.getColorSpace(ROLE_DEFAULT);
+
+    if (!defaultCS)
+    {
+        ConstColorSpaceRcPtr cs = config.getColorSpace("raw");
+        if (cs && cs->isData())
+        {
+            fileRules->setColorSpace(1, cs->getName());
+        }
+        else
+        {
+            const int numColorSpaces
+                = config.getNumColorSpaces(SEARCH_REFERENCE_SPACE_SCENE, COLORSPACE_ALL);
+
+            bool found = false;
+            for (int idx = 0; idx < numColorSpaces && !found; ++idx)
+            {
+                const char * csName 
+                    = config.getColorSpaceNameByIndex(SEARCH_REFERENCE_SPACE_SCENE,
+                                                      COLORSPACE_ALL,
+                                                      idx);
+                ConstColorSpaceRcPtr cs = config.getColorSpace(csName);
+                
+                if (cs->isData())
+                {
+                    fileRules->setColorSpace(1, csName);
+                    found = true;
+                }
+            }
+
+            if (!found)
+            {
+                if (config.getNumColorSpaces() > 0)
+                {
+                    // Take the first active color space.
+                    fileRules->setColorSpace(1, config.getColorSpaceNameByIndex(0));
+                }
+                else
+                {
+                    static constexpr char msg[]
+                        = "The default rule creation fallbacks to the first color space because "\
+                          "no suitable color space exists.";
+
+                    LogWarning(msg);
+
+                    // Take the first available color space.
+                    const char * csName
+                        = config.getColorSpaceNameByIndex(SEARCH_REFERENCE_SPACE_SCENE,
+                                                          COLORSPACE_ALL,
+                                                          0);
+
+                    fileRules->setColorSpace(1, csName);
+                }
+            }
+        }
+    }
+}
+
+
 } // namespace OCIO_NAMESPACE
 
