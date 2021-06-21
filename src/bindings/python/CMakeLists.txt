@@ -139,7 +139,9 @@ set(CUSTOM_COMPILE_FLAGS ${PLATFORM_COMPILE_FLAGS})
 # The Python binding contains deprecated methods for backward compatibility reason,
 # so disable the warning.
 if(USE_GCC OR USE_CLANG)
-	set(CUSTOM_COMPILE_FLAGS "${CUSTOM_COMPILE_FLAGS} -Wno-deprecated-declarations")
+    set(CUSTOM_COMPILE_FLAGS "${CUSTOM_COMPILE_FLAGS} -Wno-deprecated-declarations")
+elseif(USE_MSVC)
+    set(CUSTOM_COMPILE_FLAGS "${CUSTOM_COMPILE_FLAGS} /wd4996")
 endif()
 
 set_target_properties(PyOpenColorIO
