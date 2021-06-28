@@ -49,7 +49,7 @@ void AddAntiLogShader(GpuShaderCreatorRcPtr & shaderCreator, ConstLogOpDataRcPtr
 
     st.indent();
     st.newLine() << "";
-    st.newLine() << "// Add Anti-Log processing";
+    st.newLine() << "// Add Log 'Anti-Log' processing";
     st.newLine() << "";
 
     const char * pix = shaderCreator->getPixelName();
@@ -69,7 +69,7 @@ void AddLogToLinShader(GpuShaderCreatorRcPtr & shaderCreator, ConstLogOpDataRcPt
 
     st.indent();
     st.newLine() << "";
-    st.newLine() << "// Add Log to Lin processing";
+    st.newLine() << "// Add Log 'Log to Lin' processing";
     st.newLine() << "{";
     st.indent();
 
@@ -117,7 +117,7 @@ void AddLinToLogShader(GpuShaderCreatorRcPtr & shaderCreator, ConstLogOpDataRcPt
 
     st.indent();
     st.newLine() << "";
-    st.newLine() << "// Add Lin to Log processing";
+    st.newLine() << "// Add Log 'Lin to Log' processing";
     st.newLine() << "{";
     st.indent();
 
@@ -181,7 +181,7 @@ void AddCameraLogToLinShader(GpuShaderCreatorRcPtr & shaderCreator,
 
     st.indent();
     st.newLine() << "";
-    st.newLine() << "// Add Camera Log to Lin processing";
+    st.newLine() << "// Add Log 'Camera Log to Lin' processing";
     st.newLine() << "{";
     st.indent();
 
@@ -255,7 +255,7 @@ void AddCameraLinToLogShader(GpuShaderCreatorRcPtr & shaderCreator,
 
     st.indent();
     st.newLine() << "";
-    st.newLine() << "// Add Camera Lin to Log processing";
+    st.newLine() << "// Add Log 'Camera Lin to Log' processing";
     st.newLine() << "{";
     st.indent();
 
