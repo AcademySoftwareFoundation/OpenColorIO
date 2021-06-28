@@ -66,7 +66,7 @@ OCIO_ADD_TEST(FixedFunctionOpData, aces_dark_to_dim10_style)
                           "The style 'ACES_DarkToDim10 (Forward)' must have zero parameters but 1 found.");
 }
 
-OCIO_ADD_TEST(FixedFunctionOpData, aces_gamut_map_13_style)
+OCIO_ADD_TEST(FixedFunctionOpData, aces_gamut_comp_13_style)
 {
     OCIO::FixedFunctionOpData::Params params = { 1.147, 1.264, 1.312, 0.815, 0.803, 0.880, 1.2 };
     OCIO::FixedFunctionOpData func(OCIO::FixedFunctionOpData::ACES_GAMUT_COMP_13_FWD, params);
@@ -264,4 +264,10 @@ OCIO_ADD_TEST(FixedFunctionOpData, is_inverse)
     OCIO_CHECK_ASSERT(!f_gm->isInverse(f_gm));
     OCIO_CHECK_ASSERT(!f_gm_inv->isInverse(f_gm_inv));
     OCIO_CHECK_ASSERT(!f_gm->isInverse(f_r));
+
+    p7[6] += 0.01;
+    f_gm_inv = std::make_shared<const OCIO::FixedFunctionOpData>(
+        OCIO::FixedFunctionOpData::ACES_GAMUT_COMP_13_INV, p7);
+    OCIO_CHECK_ASSERT(!f_gm_inv->isInverse(f_gm));
+    OCIO_CHECK_ASSERT(!f_gm->isInverse(f_gm_inv));
 }

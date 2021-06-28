@@ -94,6 +94,22 @@ class FixedFunctionTransformTest(unittest.TestCase, TransformsBaseTest):
         self.tr.setParams([0.78])
         self.assertIsNone(self.tr.validate())
 
+        self.tr.setStyle(OCIO.FIXED_FUNCTION_ACES_GAMUT_COMP_13)
+        self.tr.setParams([1.147, 1.264, 1.312, 0.815, 0.803, 0.880, 1.2])
+        self.assertIsNone(self.tr.validate())
+
+        # Invalid parameter count
+        self.tr.setStyle(OCIO.FIXED_FUNCTION_ACES_GAMUT_COMP_13)
+        self.tr.setParams([1.0])
+        with self.assertRaises(OCIO.Exception):
+            self.assertIsNone(self.tr.validate())
+
+        # Invalid parameter range
+        self.tr.setStyle(OCIO.FIXED_FUNCTION_ACES_GAMUT_COMP_13)
+        self.tr.setParams([1.147, 1.264, 1.312, 0.815, 0.803, 0.880, 0.5])
+        with self.assertRaises(OCIO.Exception):
+            self.assertIsNone(self.tr.validate())
+
     def test_constructor_with_keywords(self):
         """
         Test FixedFunctionTransform constructor with keywords and validate its values.
@@ -126,6 +142,7 @@ class FixedFunctionTransformTest(unittest.TestCase, TransformsBaseTest):
                 params=self.TEST_PARAMS,
                 direction=self.TEST_DIRECTION)
 
+        # FIXED_FUNCTION_REC2100_SURROUND
         self.tr = OCIO.FixedFunctionTransform(
             style=OCIO.FIXED_FUNCTION_REC2100_SURROUND,
             params=[0.78])
@@ -142,6 +159,24 @@ class FixedFunctionTransformTest(unittest.TestCase, TransformsBaseTest):
         with self.assertRaises(OCIO.Exception):
             self.tr = OCIO.FixedFunctionTransform(
                 style=OCIO.FIXED_FUNCTION_REC2100_SURROUND)
+
+        # FIXED_FUNCTION_ACES_GAMUT_COMP_13
+        self.tr = OCIO.FixedFunctionTransform(
+            style=OCIO.FIXED_FUNCTION_ACES_GAMUT_COMP_13,
+            params=[1.147, 1.264, 1.312, 0.815, 0.803, 0.880, 1.2])
+
+        params = self.tr.getParams()
+        self.assertEqual(len(params), 7)
+        self.assertEqual(params[6], 1.2)
+
+        with self.assertRaises(OCIO.Exception):
+            self.tr = OCIO.FixedFunctionTransform(
+                style=OCIO.FIXED_FUNCTION_ACES_GAMUT_COMP_13,
+                params=[1.147, 1.264, 1.312, 0.815, 0.803, 0.880])
+
+        with self.assertRaises(OCIO.Exception):
+            self.tr = OCIO.FixedFunctionTransform(
+                style=OCIO.FIXED_FUNCTION_ACES_GAMUT_COMP_13)
 
     def test_constructor_with_positional(self):
         """

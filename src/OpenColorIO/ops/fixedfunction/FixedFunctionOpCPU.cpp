@@ -718,7 +718,7 @@ float uncompress(float dist, float thr, float scale, float power, float one_over
 }
 
 template <typename Func>
-float gamut_map(float val, float ach, float lim, float thr, float scale, float power, float one_over_power, Func f)
+float gamut_comp(float val, float ach, float lim, float thr, float scale, float power, float one_over_power, Func f)
 {
     // Disable compression
     if (ach == 0.0f)
@@ -790,9 +790,9 @@ void Renderer_ACES_GamutComp13_Fwd::apply(const void * inImg, void * outImg, lon
         // Achromatic axis
         const float ach = std::max(red, std::max(grn, blu));
 
-        out[0] = gamut_map(red, ach, m_limCyan,    m_thrCyan,    m_scaleCyan,    m_power, m_one_over_power, compress);
-        out[1] = gamut_map(grn, ach, m_limMagenta, m_thrMagenta, m_scaleMagenta, m_power, m_one_over_power, compress);
-        out[2] = gamut_map(blu, ach, m_limYellow,  m_thrYellow,  m_scaleYellow,  m_power, m_one_over_power, compress);
+        out[0] = gamut_comp(red, ach, m_limCyan,    m_thrCyan,    m_scaleCyan,    m_power, m_one_over_power, compress);
+        out[1] = gamut_comp(grn, ach, m_limMagenta, m_thrMagenta, m_scaleMagenta, m_power, m_one_over_power, compress);
+        out[2] = gamut_comp(blu, ach, m_limYellow,  m_thrYellow,  m_scaleYellow,  m_power, m_one_over_power, compress);
         out[3] = in[3];
 
         in  += 4;
@@ -819,9 +819,9 @@ void Renderer_ACES_GamutComp13_Inv::apply(const void * inImg, void * outImg, lon
         // Achromatic axis
         const float ach = std::max(red, std::max(grn, blu));
 
-        out[0] = gamut_map(red, ach, m_limCyan,    m_thrCyan,    m_scaleCyan,    m_power, m_one_over_power, uncompress);
-        out[1] = gamut_map(grn, ach, m_limMagenta, m_thrMagenta, m_scaleMagenta, m_power, m_one_over_power, uncompress);
-        out[2] = gamut_map(blu, ach, m_limYellow,  m_thrYellow,  m_scaleYellow,  m_power, m_one_over_power, uncompress);
+        out[0] = gamut_comp(red, ach, m_limCyan,    m_thrCyan,    m_scaleCyan,    m_power, m_one_over_power, uncompress);
+        out[1] = gamut_comp(grn, ach, m_limMagenta, m_thrMagenta, m_scaleMagenta, m_power, m_one_over_power, uncompress);
+        out[2] = gamut_comp(blu, ach, m_limYellow,  m_thrYellow,  m_scaleYellow,  m_power, m_one_over_power, uncompress);
         out[3] = in[3];
 
         in  += 4;
