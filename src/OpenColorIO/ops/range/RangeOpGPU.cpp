@@ -18,7 +18,7 @@ void GetRangeGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator, ConstRangeO
     ss.indent();
 
     ss.newLine() << "";
-    ss.newLine() << "// Add a Range processing";
+    ss.newLine() << "// Add Range processing";
     ss.newLine() << "";
 
     if(range->scales())
