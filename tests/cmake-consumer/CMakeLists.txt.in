@@ -17,12 +17,6 @@ find_package(OpenColorIO CONFIG REQUIRED)
 
 add_executable(consumer consumer.cpp)
 
-if(MSVC)
-    # C4275 can be ignored in Visual C++ if you are deriving from a type
-    # in the C++ Standard Library.
-    set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} /wd4275")
-endif()
-
 set_target_properties(consumer
     PROPERTIES
         COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS}"

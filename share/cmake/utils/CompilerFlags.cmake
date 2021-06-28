@@ -11,9 +11,8 @@ if(USE_MSVC)
 
     set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} /DUSE_MSVC")
 
-    # /wd4275 Exceptions derive from std::runtime_error but STL classes are not exportable.
     # /we4062 Enables warning in switch when an enumeration value is not explicitly handled.
-    set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} /EHsc /wd4275 /DWIN32 /we4062")
+    set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} /EHsc /DWIN32 /we4062")
 
     if(${CMAKE_CXX_STANDARD} GREATER_EQUAL 17)
         # Inheriting from std::iterator is deprecated starting with C++17 and Yaml 0.6.3 does that.
