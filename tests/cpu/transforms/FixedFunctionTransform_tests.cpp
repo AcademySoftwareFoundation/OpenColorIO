@@ -30,12 +30,12 @@ OCIO_ADD_TEST(FixedFunctionTransform, basic)
     OCIO_CHECK_EQUAL(func->getNumParams(), 0);
     OCIO_CHECK_NO_THROW(func->validate());
 
-    OCIO_CHECK_NO_THROW(func->setStyle(OCIO::FIXED_FUNCTION_ACES_GAMUTMAP_13));
-    OCIO_CHECK_EQUAL(func->getStyle(), OCIO::FIXED_FUNCTION_ACES_GAMUTMAP_13);
+    OCIO_CHECK_NO_THROW(func->setStyle(OCIO::FIXED_FUNCTION_ACES_GAMUT_COMP_13));
+    OCIO_CHECK_EQUAL(func->getStyle(), OCIO::FIXED_FUNCTION_ACES_GAMUT_COMP_13);
     OCIO_CHECK_EQUAL(func->getDirection(), OCIO::TRANSFORM_DIR_INVERSE);
     OCIO_CHECK_EQUAL(func->getNumParams(), 0);
     OCIO_CHECK_THROW_WHAT(func->validate(), OCIO::Exception,
-                          "The style 'ACES_GamutMap13 (Inverse)' must have "
+                          "The style 'ACES_GamutComp13 (Inverse)' must have "
                           "seven parameters but 0 found.");
     OCIO::FixedFunctionOpData::Params values_7 = { 1.147, 1.264, 1.312, 0.815, 0.803, 0.880, 1.2 };
     OCIO_CHECK_NO_THROW(func->setParams(&values_7[0], 7));

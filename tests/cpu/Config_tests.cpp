@@ -4359,8 +4359,8 @@ OCIO_ADD_TEST(Config, fixed_function_serialization)
             "        - !<FixedFunctionTransform> {style: ACES_Glow10, direction: inverse}\n"
             "        - !<FixedFunctionTransform> {style: ACES_DarkToDim10}\n"
             "        - !<FixedFunctionTransform> {style: ACES_DarkToDim10, direction: inverse}\n"
-            "        - !<FixedFunctionTransform> {style: ACES_GamutMap13, params: [1.147, 1.264, 1.312, 0.815, 0.803, 0.88, 1.2]}\n"
-            "        - !<FixedFunctionTransform> {style: ACES_GamutMap13, params: [1.147, 1.264, 1.312, 0.815, 0.803, 0.88, 1.2], direction: inverse}\n"
+            "        - !<FixedFunctionTransform> {style: ACES_GamutComp13, params: [1.147, 1.264, 1.312, 0.815, 0.803, 0.88, 1.2]}\n"
+            "        - !<FixedFunctionTransform> {style: ACES_GamutComp13, params: [1.147, 1.264, 1.312, 0.815, 0.803, 0.88, 1.2], direction: inverse}\n"
             "        - !<FixedFunctionTransform> {style: REC2100_Surround, params: [0.75]}\n"
             "        - !<FixedFunctionTransform> {style: REC2100_Surround, params: [0.75], direction: inverse}\n"
             "        - !<FixedFunctionTransform> {style: RGB_TO_HSV}\n"
@@ -4409,7 +4409,7 @@ OCIO_ADD_TEST(Config, fixed_function_serialization)
         const std::string strEnd =
             "    from_scene_reference: !<GroupTransform>\n"
             "      children:\n"
-            "        - !<FixedFunctionTransform> {style: ACES_GamutMap13}\n";
+            "        - !<FixedFunctionTransform> {style: ACES_GamutComp13}\n";
 
         const std::string str = PROFILE_V2_START + strEnd;
 
@@ -4419,7 +4419,7 @@ OCIO_ADD_TEST(Config, fixed_function_serialization)
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
         OCIO_CHECK_THROW_WHAT(config->validate(), OCIO::Exception,
-            "The style 'ACES_GamutMap13 (Forward)' must have seven parameters but 0 found.");
+            "The style 'ACES_GamutComp13 (Forward)' must have seven parameters but 0 found.");
     }
 
     {

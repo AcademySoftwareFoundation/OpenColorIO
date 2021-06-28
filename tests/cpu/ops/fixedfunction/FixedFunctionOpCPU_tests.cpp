@@ -378,7 +378,7 @@ OCIO_ADD_TEST(FixedFunctionOpCPU, aces_gamut_map_13)
 
     {
         OCIO::ConstFixedFunctionOpDataRcPtr funcData 
-            = std::make_shared<OCIO::FixedFunctionOpData>(OCIO::FixedFunctionOpData::ACES_GAMUTMAP_13_FWD,
+            = std::make_shared<OCIO::FixedFunctionOpData>(OCIO::FixedFunctionOpData::ACES_GAMUT_COMP_13_FWD,
                                                           params);
 
         ApplyFixedFunction(&output_32f[0], &expected_32f[0], num_samples, 
@@ -389,7 +389,7 @@ OCIO_ADD_TEST(FixedFunctionOpCPU, aces_gamut_map_13)
 
     {
         OCIO::ConstFixedFunctionOpDataRcPtr funcData 
-            = std::make_shared<OCIO::FixedFunctionOpData>(OCIO::FixedFunctionOpData::ACES_GAMUTMAP_13_INV,
+            = std::make_shared<OCIO::FixedFunctionOpData>(OCIO::FixedFunctionOpData::ACES_GAMUT_COMP_13_INV,
                                                           params);
 
         ApplyFixedFunction(&output_32f[0], &input_32f[0], num_samples, 

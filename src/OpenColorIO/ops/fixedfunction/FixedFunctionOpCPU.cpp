@@ -1276,11 +1276,11 @@ ConstOpCPURcPtr GetFixedFunctionCPURenderer(ConstFixedFunctionOpDataRcPtr & func
         {
             return std::make_shared<Renderer_ACES_DarkToDim10_Fwd>(func, 1.0192640913260627f);
         }
-        case FixedFunctionOpData::ACES_GAMUTMAP_13_FWD:
+        case FixedFunctionOpData::ACES_GAMUT_COMP_13_FWD:
         {
             return std::make_shared<Renderer_ACES_GamutMap13_Fwd>(func);
         }
-        case FixedFunctionOpData::ACES_GAMUTMAP_13_INV:
+        case FixedFunctionOpData::ACES_GAMUT_COMP_13_INV:
         {
             return std::make_shared<Renderer_ACES_GamutMap13_Inv>(func);
         }

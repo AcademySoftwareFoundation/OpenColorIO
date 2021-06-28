@@ -173,11 +173,11 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_aces_glow10_inv)
     test.setErrorThreshold(1e-7f);
 }
 
-OCIO_ADD_GPU_TEST(FixedFunction, style_aces_gamutmap13_fwd)
+OCIO_ADD_GPU_TEST(FixedFunction, style_aces_gamutcomp13_fwd)
 {
     const double data[7] = { 1.147, 1.264, 1.312, 0.815, 0.803, 0.880, 1.2 };
     OCIO::FixedFunctionTransformRcPtr func =
-        OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_ACES_GAMUTMAP_13, &data[0], 7);
+        OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_ACES_GAMUT_COMP_13, &data[0], 7);
     func->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
 
     test.setProcessor(func);
@@ -238,11 +238,11 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_aces_gamutmap13_fwd)
     test.setErrorThreshold(1e-6f);
 }
 
-OCIO_ADD_GPU_TEST(FixedFunction, style_aces_gamutmap13_inv)
+OCIO_ADD_GPU_TEST(FixedFunction, style_aces_gamutcomp13_inv)
 {
     const double data[7] = { 1.147, 1.264, 1.312, 0.815, 0.803, 0.880, 1.2 };
     OCIO::FixedFunctionTransformRcPtr func =
-        OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_ACES_GAMUTMAP_13, &data[0], 7);
+        OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_ACES_GAMUT_COMP_13, &data[0], 7);
     func->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
 
     test.setProcessor(func);

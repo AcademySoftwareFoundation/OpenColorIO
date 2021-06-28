@@ -157,11 +157,11 @@ OCIO_ADD_TEST(FixedFunctionOp, aces_gamutmap13_inv)
     OCIO::FixedFunctionOpData::Params params = { 1.147, 1.264, 1.312, 0.815, 0.803, 0.880, 1.2 };
 
     OCIO_CHECK_NO_THROW(OCIO::CreateFixedFunctionOp(ops,
-                                                    OCIO::FixedFunctionOpData::ACES_GAMUTMAP_13_INV,
+                                                    OCIO::FixedFunctionOpData::ACES_GAMUT_COMP_13_INV,
                                                     params));
 
     OCIO_CHECK_NO_THROW(OCIO::CreateFixedFunctionOp(ops,
-                                                    OCIO::FixedFunctionOpData::ACES_GAMUTMAP_13_FWD,
+                                                    OCIO::FixedFunctionOpData::ACES_GAMUT_COMP_13_FWD,
                                                     params));
 
     OCIO_CHECK_NO_THROW(ops.finalize());

@@ -6229,11 +6229,11 @@ OCIO_ADD_TEST(CTFTransform, gamma6_ctf)
     OCIO_CHECK_EQUAL(expected, outputTransform.str());
 }
 
-OCIO_ADD_TEST(CTFTransform, fixed_function_aces_gamutmap_13)
+OCIO_ADD_TEST(CTFTransform, fixed_function_aces_gamut_comp_13_ctf)
 {
     const double data[7] = { 1.147, 1.264, 1.312, 0.815, 0.803, 0.880, 1.2 };
     OCIO::FixedFunctionTransformRcPtr ff =
-        OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_ACES_GAMUTMAP_13, &data[0], 7);
+        OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_ACES_GAMUT_COMP_13, &data[0], 7);
 
     OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
     group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UIDFF42");
@@ -6244,7 +6244,7 @@ OCIO_ADD_TEST(CTFTransform, fixed_function_aces_gamutmap_13)
 
     const std::string expected{ R"(<?xml version="1.0" encoding="UTF-8"?>
 <ProcessList version="2" id="UIDFF42">
-    <FixedFunction inBitDepth="32f" outBitDepth="32f" style="GamutMap13Fwd" params="1.147 1.264 1.312 0.815 0.803 0.88 1.2">
+    <FixedFunction inBitDepth="32f" outBitDepth="32f" style="GamutComp13Fwd" params="1.147 1.264 1.312 0.815 0.803 0.88 1.2">
     </FixedFunction>
 </ProcessList>
 )" };

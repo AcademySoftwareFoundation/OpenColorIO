@@ -345,7 +345,7 @@ const char * FixedFunctionStyleToString(FixedFunctionStyle style)
         case FIXED_FUNCTION_ACES_GLOW_03:        return "ACES_Glow03";
         case FIXED_FUNCTION_ACES_GLOW_10:        return "ACES_Glow10";
         case FIXED_FUNCTION_ACES_DARK_TO_DIM_10: return "ACES_DarkToDim10";
-        case FIXED_FUNCTION_ACES_GAMUTMAP_13:    return "ACES_GamutMap13";
+        case FIXED_FUNCTION_ACES_GAMUT_COMP_13:  return "ACES_GamutComp13";
         case FIXED_FUNCTION_REC2100_SURROUND:    return "REC2100_Surround";
         case FIXED_FUNCTION_RGB_TO_HSV:          return "RGB_TO_HSV";
         case FIXED_FUNCTION_XYZ_TO_xyY:          return "XYZ_TO_xyY";
@@ -372,7 +372,7 @@ FixedFunctionStyle FixedFunctionStyleFromString(const char * style)
     else if(str == "aces_glow03")        return FIXED_FUNCTION_ACES_GLOW_03;
     else if(str == "aces_glow10")        return FIXED_FUNCTION_ACES_GLOW_10;
     else if(str == "aces_darktodim10")   return FIXED_FUNCTION_ACES_DARK_TO_DIM_10;
-    else if(str == "aces_gamutmap13")    return FIXED_FUNCTION_ACES_GAMUTMAP_13;
+    else if(str == "aces_gamutcomp13")   return FIXED_FUNCTION_ACES_GAMUT_COMP_13;
     else if(str == "rec2100_surround")   return FIXED_FUNCTION_REC2100_SURROUND;
     else if(str == "rgb_to_hsv")         return FIXED_FUNCTION_RGB_TO_HSV;
     else if(str == "xyz_to_xyy")         return FIXED_FUNCTION_XYZ_TO_xyY;

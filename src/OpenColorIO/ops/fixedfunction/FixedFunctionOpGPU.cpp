@@ -192,7 +192,7 @@ void Add_Glow_03_Inv_Shader(GpuShaderText & ss, float glowGain, float glowMid)
     ss.newLine() << "outColor.rgb = outColor.rgb * glowGainOut + outColor.rgb;";
 }
 
-void Add_GamutMap_13_Compress(GpuShaderText & ss,
+void Add_GamutComp_13_Compress(GpuShaderText & ss,
                               const char * dist,
                               const char * comprDist,
                               float lim,
@@ -280,7 +280,7 @@ void Add_GamutMap_13_Compress(GpuShaderText & ss,
     ss.newLine() << "}"; // local scope
 }
 
-void Add_GamutMap_13_Shader(GpuShaderText & ss,
+void Add_GamutComp_13_Shader(GpuShaderText & ss,
                             float limCyan,
                             float limMagenta,
                             float limYellow,
@@ -305,9 +305,9 @@ void Add_GamutMap_13_Shader(GpuShaderText & ss,
 
     // compress distance with user controlled parameterized shaper function
     ss.newLine() << ss.float3Decl("cdist") << ";";
-    Add_GamutMap_13_Compress(ss, "dist.x", "cdist.x", limCyan,    thrCyan,    power, invert);
-    Add_GamutMap_13_Compress(ss, "dist.y", "cdist.y", limMagenta, thrMagenta, power, invert);
-    Add_GamutMap_13_Compress(ss, "dist.z", "cdist.z", limYellow,  thrYellow,  power, invert);
+    Add_GamutComp_13_Compress(ss, "dist.x", "cdist.x", limCyan,    thrCyan,    power, invert);
+    Add_GamutComp_13_Compress(ss, "dist.y", "cdist.y", limMagenta, thrMagenta, power, invert);
+    Add_GamutComp_13_Compress(ss, "dist.z", "cdist.z", limYellow,  thrYellow,  power, invert);
 
     // recalculate rgb from compressed distance and achromatic
     // effectively this scales each color component relative to achromatic axis by the compressed distance
@@ -319,7 +319,7 @@ void Add_GamutMap_13_Shader(GpuShaderText & ss,
     ss.newLine() << "outColor.rgb = crgb.rgb;";
 }
 
-void Add_GamutMap_13_Fwd_Shader(GpuShaderText & ss,
+void Add_GamutComp_13_Fwd_Shader(GpuShaderText & ss,
                                 float limCyan,
                                 float limMagenta,
                                 float limYellow,
@@ -328,7 +328,7 @@ void Add_GamutMap_13_Fwd_Shader(GpuShaderText & ss,
                                 float thrYellow,
                                 float power)
 {
-    Add_GamutMap_13_Shader(
+    Add_GamutComp_13_Shader(
         ss,
         limCyan,
         limMagenta,
@@ -341,7 +341,7 @@ void Add_GamutMap_13_Fwd_Shader(GpuShaderText & ss,
     );
 }
 
-void Add_GamutMap_13_Inv_Shader(GpuShaderText & ss,
+void Add_GamutComp_13_Inv_Shader(GpuShaderText & ss,
                                 float limCyan,
                                 float limMagenta,
                                 float limYellow,
@@ -350,7 +350,7 @@ void Add_GamutMap_13_Inv_Shader(GpuShaderText & ss,
                                 float thrYellow,
                                 float power)
 {
-    Add_GamutMap_13_Shader(
+    Add_GamutComp_13_Shader(
         ss,
         limCyan,
         limMagenta,
@@ -586,9 +586,9 @@ void GetFixedFunctionGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
             Add_Surround_10_Fwd_Shader(ss, 1.0192640913260627f);
             break;
         }
-        case FixedFunctionOpData::ACES_GAMUTMAP_13_FWD:
+        case FixedFunctionOpData::ACES_GAMUT_COMP_13_FWD:
         {
-            Add_GamutMap_13_Fwd_Shader(
+            Add_GamutComp_13_Fwd_Shader(
                 ss,
                 (float) func->getParams()[0],
                 (float) func->getParams()[1],
@@ -600,9 +600,9 @@ void GetFixedFunctionGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
             );
             break;
         }
-        case FixedFunctionOpData::ACES_GAMUTMAP_13_INV:
+        case FixedFunctionOpData::ACES_GAMUT_COMP_13_INV:
         {
-            Add_GamutMap_13_Inv_Shader(
+            Add_GamutComp_13_Inv_Shader(
                 ss,
                 (float) func->getParams()[0],
                 (float) func->getParams()[1],

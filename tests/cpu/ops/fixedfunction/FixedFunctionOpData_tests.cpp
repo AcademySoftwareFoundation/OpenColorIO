@@ -69,7 +69,7 @@ OCIO_ADD_TEST(FixedFunctionOpData, aces_dark_to_dim10_style)
 OCIO_ADD_TEST(FixedFunctionOpData, aces_gamut_map_13_style)
 {
     OCIO::FixedFunctionOpData::Params params = { 1.147, 1.264, 1.312, 0.815, 0.803, 0.880, 1.2 };
-    OCIO::FixedFunctionOpData func(OCIO::FixedFunctionOpData::ACES_GAMUTMAP_13_FWD, params);
+    OCIO::FixedFunctionOpData func(OCIO::FixedFunctionOpData::ACES_GAMUT_COMP_13_FWD, params);
     OCIO_CHECK_NO_THROW(func.validate());
     std::string cacheID;
     OCIO_CHECK_NO_THROW(cacheID = func.getCacheID());
@@ -77,7 +77,7 @@ OCIO_ADD_TEST(FixedFunctionOpData, aces_gamut_map_13_style)
 
     OCIO::FixedFunctionOpDataRcPtr inv = func.inverse();
     OCIO_CHECK_EQUAL(inv->getParams()[0], func.getParams()[0]);
-    OCIO_CHECK_EQUAL(inv->getStyle(), OCIO::FixedFunctionOpData::ACES_GAMUTMAP_13_INV);
+    OCIO_CHECK_EQUAL(inv->getStyle(), OCIO::FixedFunctionOpData::ACES_GAMUT_COMP_13_INV);
     std::string cacheIDUpdated;
     OCIO_CHECK_NO_THROW(cacheIDUpdated = inv->getCacheID());
     OCIO_CHECK_ASSERT(cacheID != cacheIDUpdated);
@@ -90,7 +90,7 @@ OCIO_ADD_TEST(FixedFunctionOpData, aces_gamut_map_13_style)
     OCIO_CHECK_NO_THROW(func.setParams(test_params));
     OCIO_CHECK_THROW_WHAT(func.validate(),
                           OCIO::Exception,
-                          "The style 'ACES_GamutMap13 (Forward)' must have "
+                          "The style 'ACES_GamutComp13 (Forward)' must have "
                           "seven parameters but 8 found.");
 
     test_params = params;
@@ -98,7 +98,7 @@ OCIO_ADD_TEST(FixedFunctionOpData, aces_gamut_map_13_style)
     OCIO_CHECK_NO_THROW(func.setParams(test_params));
     OCIO_CHECK_THROW_WHAT(func.validate(),
                           OCIO::Exception,
-                          "The style 'ACES_GamutMap13 (Forward)' must have "
+                          "The style 'ACES_GamutComp13 (Forward)' must have "
                           "seven parameters but 6 found.");
 
     test_params = params;
@@ -106,7 +106,7 @@ OCIO_ADD_TEST(FixedFunctionOpData, aces_gamut_map_13_style)
     OCIO_CHECK_NO_THROW(func.setParams(test_params));
     OCIO_CHECK_THROW_WHAT(func.validate(),
                           OCIO::Exception,
-                          "The style 'ACES_GamutMap13 (Forward)' must have "
+                          "The style 'ACES_GamutComp13 (Forward)' must have "
                           "seven parameters but 0 found.");
 
 
@@ -256,9 +256,9 @@ OCIO_ADD_TEST(FixedFunctionOpData, is_inverse)
 
     OCIO::FixedFunctionOpData::Params p7 = { 1.147, 1.264, 1.312, 0.815, 0.803, 0.880, 1.2 };
     auto f_gm = std::make_shared<const OCIO::FixedFunctionOpData>(
-        OCIO::FixedFunctionOpData::ACES_GAMUTMAP_13_FWD, p7);
+        OCIO::FixedFunctionOpData::ACES_GAMUT_COMP_13_FWD, p7);
     auto f_gm_inv = std::make_shared<const OCIO::FixedFunctionOpData>(
-        OCIO::FixedFunctionOpData::ACES_GAMUTMAP_13_INV, p7);
+        OCIO::FixedFunctionOpData::ACES_GAMUT_COMP_13_INV, p7);
     OCIO_CHECK_ASSERT(f_gm->isInverse(f_gm_inv));
     OCIO_CHECK_ASSERT(f_gm_inv->isInverse(f_gm));
     OCIO_CHECK_ASSERT(!f_gm->isInverse(f_gm));

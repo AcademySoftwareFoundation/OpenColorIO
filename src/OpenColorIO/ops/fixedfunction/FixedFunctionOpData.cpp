@@ -26,8 +26,8 @@ constexpr char ACES_GLOW_10_FWD_STR[]      = "Glow10Fwd";
 constexpr char ACES_GLOW_10_REV_STR[]      = "Glow10Rev";
 constexpr char ACES_DARK_TO_DIM_10_STR[]   = "DarkToDim10";
 constexpr char ACES_DIM_TO_DARK_10_STR[]   = "DimToDark10";
-constexpr char ACES_GAMUTMAP_13_FWD_STR[]  = "GamutMap13Fwd";
-constexpr char ACES_GAMUTMAP_13_REV_STR[]  = "GamutMap13Rev";
+constexpr char ACES_GAMUT_COMP_13_FWD_STR[]= "GamutComp13Fwd";
+constexpr char ACES_GAMUT_COMP_13_REV_STR[]= "GamutComp13Rev";
 constexpr char SURROUND_STR[]              = "Surround"; // Old name for Rec2100SurroundFwd
 constexpr char REC_2100_SURROUND_FWD_STR[] = "Rec2100SurroundFwd";
 constexpr char REC_2100_SURROUND_REV_STR[] = "Rec2100SurroundRev";
@@ -70,10 +70,10 @@ const char * FixedFunctionOpData::ConvertStyleToString(Style style, bool detaile
             return detailed ? "ACES_DarkToDim10 (Forward)" : ACES_DARK_TO_DIM_10_STR;
         case ACES_DARK_TO_DIM_10_INV:
             return detailed ? "ACES_DarkToDim10 (Inverse)" : ACES_DIM_TO_DARK_10_STR;
-        case ACES_GAMUTMAP_13_FWD:
-            return detailed ? "ACES_GamutMap13 (Forward)" : ACES_GAMUTMAP_13_FWD_STR;
-        case ACES_GAMUTMAP_13_INV:
-            return detailed ? "ACES_GamutMap13 (Inverse)" : ACES_GAMUTMAP_13_REV_STR;
+        case ACES_GAMUT_COMP_13_FWD:
+            return detailed ? "ACES_GamutComp13 (Forward)" : ACES_GAMUT_COMP_13_FWD_STR;
+        case ACES_GAMUT_COMP_13_INV:
+            return detailed ? "ACES_GamutComp13 (Inverse)" : ACES_GAMUT_COMP_13_REV_STR;
         case REC2100_SURROUND_FWD:
             return detailed ? "REC2100_Surround (Forward)" : REC_2100_SURROUND_FWD_STR;
         case REC2100_SURROUND_INV:
@@ -147,13 +147,13 @@ FixedFunctionOpData::Style FixedFunctionOpData::GetStyle(const char * name)
         {
             return ACES_DARK_TO_DIM_10_INV;
         }
-        else if (0 == Platform::Strcasecmp(name, ACES_GAMUTMAP_13_FWD_STR))
+        else if (0 == Platform::Strcasecmp(name, ACES_GAMUT_COMP_13_FWD_STR))
         {
-            return ACES_GAMUTMAP_13_FWD;
+            return ACES_GAMUT_COMP_13_FWD;
         }
-        else if (0 == Platform::Strcasecmp(name, ACES_GAMUTMAP_13_REV_STR))
+        else if (0 == Platform::Strcasecmp(name, ACES_GAMUT_COMP_13_REV_STR))
         {
-            return ACES_GAMUTMAP_13_INV;
+            return ACES_GAMUT_COMP_13_INV;
         }
         else if (0 == Platform::Strcasecmp(name, SURROUND_STR) ||
                  0 == Platform::Strcasecmp(name, REC_2100_SURROUND_FWD_STR))
@@ -237,10 +237,10 @@ FixedFunctionOpData::Style FixedFunctionOpData::ConvertStyle(FixedFunctionStyle 
             return isForward ? FixedFunctionOpData::ACES_DARK_TO_DIM_10_FWD :
                                FixedFunctionOpData::ACES_DARK_TO_DIM_10_INV;
         }
-        case FIXED_FUNCTION_ACES_GAMUTMAP_13:
+        case FIXED_FUNCTION_ACES_GAMUT_COMP_13:
         {
-            return isForward ? FixedFunctionOpData::ACES_GAMUTMAP_13_FWD :
-                               FixedFunctionOpData::ACES_GAMUTMAP_13_INV;
+            return isForward ? FixedFunctionOpData::ACES_GAMUT_COMP_13_FWD :
+                               FixedFunctionOpData::ACES_GAMUT_COMP_13_INV;
         }
         case FIXED_FUNCTION_REC2100_SURROUND:
         {
@@ -303,9 +303,9 @@ FixedFunctionStyle FixedFunctionOpData::ConvertStyle(FixedFunctionOpData::Style 
     case FixedFunctionOpData::ACES_DARK_TO_DIM_10_INV:
         return FIXED_FUNCTION_ACES_DARK_TO_DIM_10;
 
-    case FixedFunctionOpData::ACES_GAMUTMAP_13_FWD:
-    case FixedFunctionOpData::ACES_GAMUTMAP_13_INV:
-        return FIXED_FUNCTION_ACES_GAMUTMAP_13;
+    case FixedFunctionOpData::ACES_GAMUT_COMP_13_FWD:
+    case FixedFunctionOpData::ACES_GAMUT_COMP_13_INV:
+        return FIXED_FUNCTION_ACES_GAMUT_COMP_13;
 
     case FixedFunctionOpData::REC2100_SURROUND_FWD:
     case FixedFunctionOpData::REC2100_SURROUND_INV:
@@ -362,7 +362,7 @@ FixedFunctionOpDataRcPtr FixedFunctionOpData::clone() const
 
 void FixedFunctionOpData::validate() const
 {
-    if(m_style==ACES_GAMUTMAP_13_FWD || m_style == ACES_GAMUTMAP_13_INV)
+    if(m_style==ACES_GAMUT_COMP_13_FWD || m_style == ACES_GAMUT_COMP_13_INV)
     {
         if (m_params.size() != 7)
         {
@@ -518,14 +518,14 @@ void FixedFunctionOpData::invert() noexcept
             setStyle(ACES_DARK_TO_DIM_10_FWD);
             break;
         }
-        case ACES_GAMUTMAP_13_FWD:
+        case ACES_GAMUT_COMP_13_FWD:
         {
-            setStyle(ACES_GAMUTMAP_13_INV);
+            setStyle(ACES_GAMUT_COMP_13_INV);
             break;
         }
-        case ACES_GAMUTMAP_13_INV:
+        case ACES_GAMUT_COMP_13_INV:
         {
-            setStyle(ACES_GAMUTMAP_13_FWD);
+            setStyle(ACES_GAMUT_COMP_13_FWD);
             break;
         }
         case REC2100_SURROUND_FWD:
@@ -606,7 +606,7 @@ TransformDirection FixedFunctionOpData::getDirection() const noexcept
     case FixedFunctionOpData::ACES_GLOW_03_FWD:
     case FixedFunctionOpData::ACES_GLOW_10_FWD:
     case FixedFunctionOpData::ACES_DARK_TO_DIM_10_FWD:
-    case FixedFunctionOpData::ACES_GAMUTMAP_13_FWD:
+    case FixedFunctionOpData::ACES_GAMUT_COMP_13_FWD:
     case FixedFunctionOpData::REC2100_SURROUND_FWD:
     case FixedFunctionOpData::RGB_TO_HSV:
     case FixedFunctionOpData::XYZ_TO_xyY:
@@ -619,7 +619,7 @@ TransformDirection FixedFunctionOpData::getDirection() const noexcept
     case FixedFunctionOpData::ACES_GLOW_03_INV:
     case FixedFunctionOpData::ACES_GLOW_10_INV:
     case FixedFunctionOpData::ACES_DARK_TO_DIM_10_INV:
-    case FixedFunctionOpData::ACES_GAMUTMAP_13_INV:
+    case FixedFunctionOpData::ACES_GAMUT_COMP_13_INV:
     case FixedFunctionOpData::REC2100_SURROUND_INV:
     case FixedFunctionOpData::HSV_TO_RGB:
     case FixedFunctionOpData::xyY_TO_XYZ:
