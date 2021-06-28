@@ -63,15 +63,15 @@ default, cmake will try to install all of the items labelled with * and so
 it is not necessary to install those items manually:
 
 - cmake >= 3.12
-- \*Expat >= 2.2.5 (XML parser for CDL/CLF/CTF)
+- \*Expat >= 2.2.8 (XML parser for CDL/CLF/CTF)
 - \*yaml-cpp >= 0.6.3 (YAML parser for Configs)
-- \*IlmBase (Half only) >= 2.3.0 (for half domain LUTs)
+- \*IlmBase (Half only) >= 2.4.0 (for half domain LUTs)
 - \*pystring >= 1.1.3
 
 Some optional components also depend on:
 
 - \*Little CMS >= 2.2 (for ociobakelut ICC profile baking)
-- \*pybind11 >= 2.4.3 (for the Python bindings)
+- \*pybind11 >= 2.6.1 (for the Python bindings)
 - Python >= 2.7 (for the Python bindings)
 - Python 3.7 or 3.8 (for the docs, with the following PyPi packages)
     - Sphinx
