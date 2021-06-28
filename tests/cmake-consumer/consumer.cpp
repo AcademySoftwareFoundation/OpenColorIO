@@ -5,7 +5,6 @@
 // Check that OCIO library can be consumed by a cmake build
 
 #include <cassert>
-#include <iostream>
 
 #include <OpenColorIO/OpenColorIO.h>
 

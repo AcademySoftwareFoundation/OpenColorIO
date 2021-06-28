@@ -271,7 +271,9 @@ jobs:
       - name: Test CMake Consumer
         if: matrix.build-shared == 'ON'
         run: |
-          cmake -DCMAKE_PREFIX_PATH=../../../_install .
+          cmake . \
+                -DCMAKE_PREFIX_PATH=../../../_install \
+                -DCMAKE_BUILD_TYPE=${{ matrix.build-type }}
           cmake --build . \
                 --config ${{ matrix.build-type }}
           ./consumer
@@ -401,7 +403,9 @@ jobs:
       - name: Test CMake Consumer
         if: matrix.build-shared == 'ON'
         run: |
-          cmake -DCMAKE_PREFIX_PATH=../../../_install .
+          cmake . \
+                -DCMAKE_PREFIX_PATH=../../../_install \
+                -DCMAKE_BUILD_TYPE=${{ matrix.build-type }}
           cmake --build . \
                 --config ${{ matrix.build-type }}
           ./consumer
@@ -537,7 +541,9 @@ jobs:
       - name: Test CMake Consumer
         if: matrix.build-shared == 'ON'
         run: |
-          cmake -DCMAKE_PREFIX_PATH=../../../_install .
+          cmake . \
+                -DCMAKE_PREFIX_PATH=../../../_install \
+                -DCMAKE_BUILD_TYPE=${{ matrix.build-type }}
           cmake --build . \
                 --config ${{ matrix.build-type }}
           export PATH=../../../_install/bin:$PATH
