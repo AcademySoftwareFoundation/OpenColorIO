@@ -1549,7 +1549,7 @@ colorspaces:
                 cfg->upgradeToLatestVersion();
                 
                 OCIO_CHECK_EQUAL(
-                    std::string("[OpenColorIO Warning]: The default rule creation fallbacks to the"\
+                    std::string("[OpenColorIO Warning]: The default rule creation falls back to the"\
                                 " first color space because no suitable color space exists.\n"), 
                     l.output());
             }
@@ -1690,7 +1690,7 @@ OCIO_ADD_TEST(FileRules, config_v1_to_v2_from_memory)
             config->upgradeToLatestVersion();
             
             OCIO_CHECK_EQUAL(
-                std::string("[OpenColorIO Warning]: The default rule creation fallbacks to the"\
+                std::string("[OpenColorIO Warning]: The default rule creation falls back to the"\
                             " first color space because no suitable color space exists.\n"), 
                 l.output());
         }
