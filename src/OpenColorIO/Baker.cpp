@@ -29,39 +29,31 @@ public:
 
     ConfigRcPtr m_config;
     std::string m_formatName;
-	FormatMetadataImpl m_formatMetadata{ METADATA_ROOT, "" };
+    FormatMetadataImpl m_formatMetadata{ METADATA_ROOT, "" };
     std::string m_inputSpace;
     std::string m_shaperSpace;
     std::string m_looks;
     std::string m_targetSpace;
-    int m_shapersize;
-    int m_cubesize;
+    int m_shapersize = -1;
+    int m_cubesize   = -1;
 
-    Impl() :
-        m_shapersize(-1),
-        m_cubesize(-1)
-    {
-    }
-
+    Impl() = default;
     Impl(const Impl &) = delete;
-
-    ~Impl()
-    {
-    }
+    ~Impl() = default;
 
     Impl& operator= (const Impl & rhs)
     {
         if (this != &rhs)
         {
-            m_config = rhs.m_config;
-            m_formatName = rhs.m_formatName;
+            m_config         = rhs.m_config;
+            m_formatName     = rhs.m_formatName;
             m_formatMetadata = rhs.m_formatMetadata;
-            m_inputSpace = rhs.m_inputSpace;
-            m_shaperSpace = rhs.m_shaperSpace;
-            m_looks = rhs.m_looks;
-            m_targetSpace = rhs.m_targetSpace;
-            m_shapersize = rhs.m_shapersize;
-            m_cubesize = rhs.m_cubesize;
+            m_inputSpace     = rhs.m_inputSpace;
+            m_shaperSpace    = rhs.m_shaperSpace;
+            m_looks          = rhs.m_looks;
+            m_targetSpace    = rhs.m_targetSpace;
+            m_shapersize     = rhs.m_shapersize;
+            m_cubesize       = rhs.m_cubesize;
         }
         return *this;
     }
