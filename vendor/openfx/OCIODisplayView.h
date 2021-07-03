@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-#ifndef INCLUDED_OFX_OCIODISPLAY_H
-#define INCLUDED_OFX_OCIODISPLAY_H
+#ifndef INCLUDED_OFX_OCIODISPLAYVIEW_H
+#define INCLUDED_OFX_OCIODISPLAYVIEW_H
 
 #include "OCIOUtils.h"
 
@@ -10,7 +10,7 @@
 
 #include "ofxsImageEffect.h"
 
-class OCIODisplay : public OFX::ImageEffect
+class OCIODisplayView : public OFX::ImageEffect
 {
 protected:
     // Do not need to delete these. The ImageEffect is managing them for us.
@@ -25,7 +25,7 @@ protected:
     ParamMap contextParams_;
 
 public:
-    OCIODisplay(OfxImageEffectHandle handle);
+    OCIODisplayView(OfxImageEffectHandle handle);
 
     /* Override the render */
     void render(const OFX::RenderArguments & args) override;
@@ -41,6 +41,6 @@ public:
 
 };
 
-mDeclarePluginFactory(OCIODisplayFactory, {}, {});
+mDeclarePluginFactory(OCIODisplayViewFactory, {}, {});
 
-#endif // INCLUDED_OFX_OCIODISPLAY_H
+#endif // INCLUDED_OFX_OCIODISPLAYVIEW_H

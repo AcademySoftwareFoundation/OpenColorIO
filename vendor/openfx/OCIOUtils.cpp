@@ -71,6 +71,42 @@ std::string serializeContextStore(const ContextMap & contextMap)
 
 } // namespace
 
+void baseDescribe(const std::string & name, OFX::ImageEffectDescriptor& desc)
+{
+    // Labels
+    desc.setLabels(name, name, name);
+    desc.setPluginGrouping("OpenColorIO");
+
+    // Supported contexts
+    desc.addSupportedContext(OFX::eContextFilter);
+    desc.addSupportedContext(OFX::eContextGeneral);
+
+    // Supported pixel depths
+    desc.addSupportedBitDepth(OFX::eBitDepthHalf);
+    desc.addSupportedBitDepth(OFX::eBitDepthFloat);
+
+    // Flags
+    desc.setRenderTwiceAlways(false);
+    desc.setSupportsMultipleClipDepths(false);
+}
+
+void baseDescribeInContext(OFX::ImageEffectDescriptor& desc)
+{
+    // Create the mandated source clip
+    OFX::ClipDescriptor * srcClip = desc.defineClip(
+        kOfxImageEffectSimpleSourceClipName);
+
+    srcClip->addSupportedComponent(OFX::ePixelComponentRGBA);
+    srcClip->addSupportedComponent(OFX::ePixelComponentRGB);
+
+    // Create the mandated output clip
+    OFX::ClipDescriptor * dstClip = desc.defineClip(
+        kOfxImageEffectOutputClipName);
+
+    dstClip->addSupportedComponent(OFX::ePixelComponentRGBA);
+    dstClip->addSupportedComponent(OFX::ePixelComponentRGB);
+}
+
 OCIO::ConstConfigRcPtr getOCIOConfig()
 {
     OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();

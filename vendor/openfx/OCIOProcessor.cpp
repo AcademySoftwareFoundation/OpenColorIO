@@ -14,21 +14,6 @@ void OCIOProcessor::setSrcImg(OFX::Image * img)
 {
     _srcImg = img;
 
-    // Make sure input and output bit-depth match
-    OFX::BitDepthEnum srcBitDepth = _srcImg->getPixelDepth();
-    OFX::BitDepthEnum dstBitDepth = _dstImg->getPixelDepth();
-
-    if (srcBitDepth != dstBitDepth)
-    {
-        std::ostringstream os;
-        os << "Input bit-depth mismatch: ";
-        os << OFX::mapBitDepthEnumToStr(srcBitDepth);
-        os << " != ";
-        os << OFX::mapBitDepthEnumToStr(dstBitDepth);
-        OFX::Log::error(true, os.str().c_str());
-        OFX::throwSuiteStatusException(kOfxStatErrFormat);
-    }
-
     // Make sure input and output channels match
     OFX::PixelComponentEnum srcComponents = _srcImg->getPixelComponents();
     OFX::PixelComponentEnum dstComponents = _dstImg->getPixelComponents();
@@ -50,7 +35,9 @@ void OCIOProcessor::setTransform(OCIO::ContextRcPtr context,
                                  OCIO::TransformDirection direction)
 {
     OCIO::ConstConfigRcPtr config = getOCIOConfig();
-    OCIO::BitDepth bitDepth = getOCIOBitDepth(_dstImg->getPixelDepth());
+    // Src and dst bit-depth always match, since 
+    // kOfxImageEffectPropSupportsMultipleClipDepths is 0.
+    OCIO::BitDepth bitDepth = getOCIOBitDepth(_srcImg->getPixelDepth());
 
     try
     {

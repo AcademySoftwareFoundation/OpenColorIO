@@ -82,15 +82,6 @@ void OCIOColorSpace::changedParam(const OFX::InstanceChangedArgs & /*args*/,
     {
         OCIO::ConstConfigRcPtr config = getOCIOConfig();
 
-        std::string configName(config->getName());
-        if (!configName.empty())
-        {
-            configName = " '" + configName + "'";
-        }
-
-        std::string defaultViewTrName(config->getDefaultViewTransformName());
-        int numViewTransforms = config->getNumViewTransforms();
-
         std::string srcCsName = getChoiceParamOption(srcCsNameParam_);
         OCIO::ConstColorSpaceRcPtr srcCs = 
             config->getColorSpace(srcCsName.c_str());
@@ -101,19 +92,31 @@ void OCIOColorSpace::changedParam(const OFX::InstanceChangedArgs & /*args*/,
             config->getColorSpace(dstCsName.c_str());
         OCIO::ReferenceSpaceType dstRef = dstCs->getReferenceSpaceType();
 
-        // Suggest using OCIODisplay instead
+        // Suggest using OCIODisplayView instead
+        int numViewTransforms = config->getNumViewTransforms();
+
         if (numViewTransforms > 1 && srcRef != dstRef)
         {
+            std::string configName(config->getName());
+            if (!configName.empty())
+            {
+                configName = " '" + configName + "'";
+            }
+
+            OCIO::ConstViewTransformRcPtr defaultViewTr = 
+                config->getDefaultSceneToDisplayViewTransform();
+
             std::ostringstream os;
             os << "Color space '" << srcCsName << "' is ";
             os << (srcRef == OCIO::REFERENCE_SPACE_SCENE ? "scene" : "display");
-            os << " referred and '" << dstCsName << "' is ";
+            os << "-referred and '" << dstCsName << "' is ";
             os << (dstRef == OCIO::REFERENCE_SPACE_SCENE ? "scene" : "display");
-            os << " referred. The OCIO config" << configName << " contains ";
+            os << "-referred. The OCIO config" << configName << " contains ";
             os << numViewTransforms << " view transforms and the default '";
-            os << defaultViewTrName << "' will be used for this conversion, ";
-            os << "which may not be the intended behvior. Please use ";
-            os << "'OCIODisplay' to ensure a correct viewing pipeline result.";
+            os << defaultViewTr->getName() << "' will be used for this ";
+            os << "conversion. If this is not what you want, please ";
+            os << "use 'OCIODisplayView' to select your desired view";
+            os << "transform.";
 
             sendMessage(OFX::Message::eMessageWarning,
                         "view_transform_warning",
@@ -139,48 +142,22 @@ void OCIOColorSpace::changedParam(const OFX::InstanceChangedArgs & /*args*/,
 
 void OCIOColorSpaceFactory::describe(OFX::ImageEffectDescriptor& desc)
 {
-    // Labels
-    desc.setLabels("OCIOColorSpace", "OCIOColorSpace", "OCIOColorSpace");
-    desc.setPluginGrouping("OpenColorIO");
-
-    // Supported contexts
-    desc.addSupportedContext(OFX::eContextFilter);
-    desc.addSupportedContext(OFX::eContextGeneral);
-
-    // Supported pixel depths
-    desc.addSupportedBitDepth(OFX::eBitDepthUByte);
-    desc.addSupportedBitDepth(OFX::eBitDepthUShort);
-    desc.addSupportedBitDepth(OFX::eBitDepthHalf);
-    desc.addSupportedBitDepth(OFX::eBitDepthFloat);
-
-    // Flags
-    desc.setRenderTwiceAlways(false);
+    baseDescribe("OCIOColorSpace", desc);
 }
 
 void OCIOColorSpaceFactory::describeInContext(OFX::ImageEffectDescriptor& desc, 
                                               OFX::ContextEnum /*context*/)
 {
-    // Create the mandated source clip
-    OFX::ClipDescriptor * srcClip = desc.defineClip(
-        kOfxImageEffectSimpleSourceClipName);
-
-    srcClip->addSupportedComponent(OFX::ePixelComponentRGBA);
-    srcClip->addSupportedComponent(OFX::ePixelComponentRGB);
-
-    // Create the mandated output clip
-    OFX::ClipDescriptor * dstClip = desc.defineClip(kOfxImageEffectOutputClipName);
-
-    dstClip->addSupportedComponent(OFX::ePixelComponentRGBA);
-    dstClip->addSupportedComponent(OFX::ePixelComponentRGB);
+    baseDescribeInContext(desc);
 
     // Define parameters
-    OFX::PageParamDescriptor * page = desc.definePageParam("Controls");
+    OFX::PageParamDescriptor * page = desc.definePageParam(PARAM_NAME_PAGE_0);
 
     // Src color space
     OFX::ChoiceParamDescriptor * srcCsNameParam = defineCsNameParam(
         desc, 
         "src_cs", 
-        "Src Color Space", 
+        "Source Color Space", 
         "Source color space name", 
         0);
     page->addChild(*srcCsNameParam);
@@ -189,7 +166,7 @@ void OCIOColorSpaceFactory::describeInContext(OFX::ImageEffectDescriptor& desc,
     OFX::ChoiceParamDescriptor * dstCsNameParam = defineCsNameParam(
         desc, 
         "dst_cs", 
-        "Dst Color Space", 
+        "Destination Color Space", 
         "Destination color space name", 
         0);
     page->addChild(*dstCsNameParam);
@@ -208,7 +185,7 @@ void OCIOColorSpaceFactory::describeInContext(OFX::ImageEffectDescriptor& desc,
         desc, 
         "swap_src_dst", 
         "Swap color spaces", 
-        "Sap src and dst color spaces",
+        "Swap src and dst color spaces",
         0);
     page->addChild(*swapSrcDstParam);
 

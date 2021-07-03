@@ -15,6 +15,13 @@ namespace OCIO = OCIO_NAMESPACE;
 typedef std::map<std::string, OFX::StringParam *> ParamMap;
 typedef std::map<std::string, std::string> ContextMap;
 
+/* Constants */
+static const std::string PARAM_NAME_PAGE_0 = "Controls";
+
+/* Default plugin setup */
+void baseDescribe(const std::string & name, OFX::ImageEffectDescriptor& desc);
+void baseDescribeInContext(OFX::ImageEffectDescriptor& desc);
+
 /* Get the current OCIO config */
 OCIO::ConstConfigRcPtr getOCIOConfig();
 

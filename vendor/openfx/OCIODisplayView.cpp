@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-#include "OCIODisplay.h"
+#include "OCIODisplayView.h"
 #include "OCIOProcessor.h"
 #include "OCIOUtils.h"
 
 namespace OCIO = OCIO_NAMESPACE;
 
-OCIODisplay::OCIODisplay(OfxImageEffectHandle handle)
+OCIODisplayView::OCIODisplayView(OfxImageEffectHandle handle)
     : ImageEffect(handle)
     , dstClip_(0)
     , srcClip_(0)
@@ -27,7 +27,7 @@ OCIODisplay::OCIODisplay(OfxImageEffectHandle handle)
     fetchContextParams(*this, contextParams_);
 }
 
-void OCIODisplay::render(const OFX::RenderArguments & args)
+void OCIODisplayView::render(const OFX::RenderArguments & args)
 {
     // Get images
     std::unique_ptr<OFX::Image> dst(dstClip_->fetchImage(args.time));
@@ -60,9 +60,9 @@ void OCIODisplay::render(const OFX::RenderArguments & args)
     proc.process();
 }
 
-bool OCIODisplay::isIdentity(const OFX::IsIdentityArguments & args, 
-                                OFX::Clip *& identityClip, 
-                                double & identityTime)
+bool OCIODisplayView::isIdentity(const OFX::IsIdentityArguments & args, 
+                                 OFX::Clip *& identityClip, 
+                                 double & identityTime)
 {
     std::string srcCsName = getChoiceParamOption(srcCsNameParam_);
     OCIO::ConstColorSpaceRcPtr srcCs;
@@ -84,8 +84,8 @@ bool OCIODisplay::isIdentity(const OFX::IsIdentityArguments & args,
     return false;
 }
 
-void OCIODisplay::changedParam(const OFX::InstanceChangedArgs & /*args*/, 
-                               const std::string & paramName)
+void OCIODisplayView::changedParam(const OFX::InstanceChangedArgs & /*args*/, 
+                                   const std::string & paramName)
 {
     if (paramName == "display")
     {
@@ -97,50 +97,24 @@ void OCIODisplay::changedParam(const OFX::InstanceChangedArgs & /*args*/,
     }
 }
 
-void OCIODisplayFactory::describe(OFX::ImageEffectDescriptor& desc)
+void OCIODisplayViewFactory::describe(OFX::ImageEffectDescriptor& desc)
 {
-    // Labels
-    desc.setLabels("OCIODisplay", "OCIODisplay", "OCIODisplay");
-    desc.setPluginGrouping("OpenColorIO");
-
-    // Supported contexts
-    desc.addSupportedContext(OFX::eContextFilter);
-    desc.addSupportedContext(OFX::eContextGeneral);
-
-    // Supported pixel depths
-    desc.addSupportedBitDepth(OFX::eBitDepthUByte);
-    desc.addSupportedBitDepth(OFX::eBitDepthUShort);
-    desc.addSupportedBitDepth(OFX::eBitDepthHalf);
-    desc.addSupportedBitDepth(OFX::eBitDepthFloat);
-
-    // Flags
-    desc.setRenderTwiceAlways(false);
+    baseDescribe("OCIODisplayView", desc);
 }
 
-void OCIODisplayFactory::describeInContext(OFX::ImageEffectDescriptor& desc, 
-                                           OFX::ContextEnum /*context*/)
+void OCIODisplayViewFactory::describeInContext(OFX::ImageEffectDescriptor& desc, 
+                                               OFX::ContextEnum /*context*/)
 {
-    // Create the mandated source clip
-    OFX::ClipDescriptor * srcClip = desc.defineClip(
-        kOfxImageEffectSimpleSourceClipName);
-
-    srcClip->addSupportedComponent(OFX::ePixelComponentRGBA);
-    srcClip->addSupportedComponent(OFX::ePixelComponentRGB);
-
-    // Create the mandated output clip
-    OFX::ClipDescriptor * dstClip = desc.defineClip(kOfxImageEffectOutputClipName);
-
-    dstClip->addSupportedComponent(OFX::ePixelComponentRGBA);
-    dstClip->addSupportedComponent(OFX::ePixelComponentRGB);
+    baseDescribeInContext(desc);
 
     // Define parameters
-    OFX::PageParamDescriptor * page = desc.definePageParam("Controls");
+    OFX::PageParamDescriptor * page = desc.definePageParam(PARAM_NAME_PAGE_0);
 
     // Src color space
     OFX::ChoiceParamDescriptor * srcCsNameParam = defineCsNameParam(
         desc, 
         "src_cs", 
-        "Src Color Space", 
+        "Source Color Space", 
         "Source color space name", 
         0);
     page->addChild(*srcCsNameParam);
@@ -176,9 +150,9 @@ void OCIODisplayFactory::describeInContext(OFX::ImageEffectDescriptor& desc,
     defineContextParams(desc, page);
 }
 
-OFX::ImageEffect * OCIODisplayFactory::createInstance(
+OFX::ImageEffect * OCIODisplayViewFactory::createInstance(
     OfxImageEffectHandle handle, 
     OFX::ContextEnum /*context*/)
 {
-    return new OCIODisplay(handle);
+    return new OCIODisplayView(handle);
 }
