@@ -328,7 +328,8 @@ OCIO_ADD_TEST(FixedFunctionOpCPU, aces_gamut_map_13)
     memcpy(&output_32f[0], &input_32f[0], sizeof(float)*num_samples*4);
 
     // Above values are passed through ctlrender and the CTL implementation (1),
-    // using openEXR 32bits as the i/o image format.
+    // using openEXR 32bits as the i/o image format. For more details, see
+    // https://gist.github.com/remia/380d972fa568493d570f2ba298b3f23a
     // (1) urn:ampas:aces:transformId:v1.5:LMT.Academy.GamutCompress.a1.3.0
     //     Note: AP0 to / from AP1 conversions have been disabled
     const float expected_32f[num_samples*4] = {
