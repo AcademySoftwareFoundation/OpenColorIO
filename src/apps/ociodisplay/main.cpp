@@ -182,7 +182,7 @@ void InitOCIO(const char * filename)
     g_inputColorSpace = OCIO::ROLE_SCENE_LINEAR;
     if(filename && *filename)
     {
-        std::string cs = config->parseColorSpaceFromString(filename);
+        std::string cs = config->getColorSpaceFromFilepath(filename);
         if(!cs.empty())
         {
             g_inputColorSpace = cs;

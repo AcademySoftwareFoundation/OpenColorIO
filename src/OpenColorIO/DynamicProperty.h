@@ -123,7 +123,7 @@ public:
     const Float3 & getSlope() const { return m_preRenderValues.getSlope(); }
 
     // Do not apply the op if all params are identity.
-    bool getLocalBypass() const { return m_preRenderValues.m_localBypass; }
+    bool getLocalBypass() const { return m_preRenderValues.getLocalBypass(); }
 
     DynamicPropertyGradingPrimaryImplRcPtr createEditableCopy() const;
 

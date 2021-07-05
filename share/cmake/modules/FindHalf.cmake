@@ -158,13 +158,6 @@ if(NOT Half_FOUND)
         "${_EXT_DIST_ROOT}/${CMAKE_INSTALL_LIBDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}Half-${_Half_LIB_VER}${_Half_LIB_SUFFIX}${CMAKE_STATIC_LIBRARY_SUFFIX}")
 
     if(_Half_TARGET_CREATE)
-        if(UNIX)
-            set(Half_CXX_FLAGS "${Half_CXX_FLAGS} -fvisibility=hidden -fPIC")
-            if(OCIO_INLINES_HIDDEN)
-                set(Half_CXX_FLAGS "${Half_CXX_FLAGS} -fvisibility-inlines-hidden")
-            endif()
-        endif()
-
         if(MSVC)
             set(Half_CXX_FLAGS "${Half_CXX_FLAGS} /EHsc")
         endif()
@@ -173,6 +166,9 @@ if(NOT Half_FOUND)
  
         set(Half_CMAKE_ARGS
             ${Half_CMAKE_ARGS}
+            -DCMAKE_CXX_VISIBILITY_PRESET=${CMAKE_CXX_VISIBILITY_PRESET}
+            -DCMAKE_VISIBILITY_INLINES_HIDDEN=${CMAKE_VISIBILITY_INLINES_HIDDEN}
+            -DCMAKE_POSITION_INDEPENDENT_CODE=ON
             -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
             -DCMAKE_CXX_FLAGS=${Half_CXX_FLAGS}
             -DCMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD}

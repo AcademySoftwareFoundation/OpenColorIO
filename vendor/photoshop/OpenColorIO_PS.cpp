@@ -200,7 +200,6 @@ static OSErr WriteScriptParams(GPtr globals)
             
             if(globals->action == OCIO_ACTION_LUT)
             {
-                PIPutBool(token, ocioKeyInvert, globals->invert);
                 PIPutEnum(token, ocioKeyInterpolation, typeInterpolation, (globals->interpolation == OCIO_INTERP_NEAREST ? interpNearest :
                                                                         globals->interpolation == OCIO_INTERP_LINEAR ? interpLinear :
                                                                         globals->interpolation == OCIO_INTERP_TETRAHEDRAL ? interpTetrahedral :
@@ -222,7 +221,8 @@ static OSErr WriteScriptParams(GPtr globals)
                 PIPutStr(token, ocioKeyOutputSpace, globals->outputSpace);
             }
             
-            
+			PIPutBool(token, ocioKeyInvert, globals->invert);
+
             gotErr = CloseWriter(&token); // closes and sets dialog optional
         }
     }
@@ -646,21 +646,19 @@ static void DoStart(GPtr globals)
                                                             globals->interpolation == OCIO_INTERP_CUBIC ? OCIO::INTERP_CUBIC :
                                                             OCIO::INTERP_BEST);
                                                             
-                const OCIO::TransformDirection direction = (globals->invert ? OCIO::TRANSFORM_DIR_INVERSE : OCIO::TRANSFORM_DIR_FORWARD);
-                
-                 processor = context.getLUTProcessor(interpolation, direction);
+                processor = context.getLUTProcessor(interpolation, globals->invert);
             }
             else
             {
                 if(globals->action == OCIO_ACTION_DISPLAY)
                 {
-                    processor = context.getDisplayProcessor(myP2CString(globals->inputSpace), myP2CString(globals->display), myP2CString(globals->view));
+                    processor = context.getDisplayProcessor(myP2CString(globals->inputSpace), myP2CString(globals->display), myP2CString(globals->view), globals->invert);
                 }
                 else
                 {
                     assert(globals->action == OCIO_ACTION_CONVERT);
                     
-                    processor = context.getConvertProcessor(myP2CString(globals->inputSpace), myP2CString(globals->outputSpace));
+                    processor = context.getConvertProcessor(myP2CString(globals->inputSpace), myP2CString(globals->outputSpace), globals->invert);
                 }
             }
             

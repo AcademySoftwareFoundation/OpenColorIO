@@ -148,13 +148,6 @@
        m_oglBuilder->useAllUniforms();
 
 
-   .. py:method:: GpuShaderDesc.CreateLegacyShaderDesc(edgeLen: int, language: PyOpenColorIO.GpuLanguage = <GpuLanguage.GPU_LANGUAGE_GLSL_1_2: 1>, functionName: str = 'OCIOMain', pixelName: str = 'outColor', resourcePrefix: str = 'ocio', uid: str = '') -> PyOpenColorIO.GpuShaderDesc
-      :module: PyOpenColorIO
-      :staticmethod:
-
-      Create the legacy shader description.
-
-
    .. py:method:: GpuShaderDesc.CreateShaderDesc(language: PyOpenColorIO.GpuLanguage = <GpuLanguage.GPU_LANGUAGE_GLSL_1_2: 1>, functionName: str = 'OCIOMain', pixelName: str = 'outColor', resourcePrefix: str = 'ocio', uid: str = '') -> PyOpenColorIO.GpuShaderDesc
       :module: PyOpenColorIO
       :staticmethod:

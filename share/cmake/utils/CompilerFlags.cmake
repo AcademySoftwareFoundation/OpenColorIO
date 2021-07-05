@@ -24,6 +24,8 @@ if(USE_MSVC)
 
     if(OCIO_WARNING_AS_ERROR)
         set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} /WX")
+    else()
+        set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} /Wall")
     endif()
 
 elseif(USE_CLANG)
@@ -42,22 +44,20 @@ endif()
 
 if(USE_GCC OR USE_CLANG)
 
-    # -Wswitch-enum Enables warning in switch when an enumeration value is not explicitly handled.
-    set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} -Wall -Wswitch-enum")
+    set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} -Wall")
 
-    # TODO: OCIO being under active development, unused functions are fine for now.
-    set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} -Wno-unused-function")
+    # Add more warning detection.
+    set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} -Wextra")
+
+    # -Wswitch-enum Enables warning in switch when an enumeration value is not explicitly handled.
+    set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} -Wswitch-enum")
 
     if(OCIO_WARNING_AS_ERROR)
         set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} -Werror")
     endif()
 
-    if(OCIO_INLINES_HIDDEN)
-        set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} -fvisibility-inlines-hidden")
-    endif()
-
     if(APPLE)
-        # Mute the deprecated warning for some GLUT methods.
+        # TODO: There are still some deprecated methods.
         set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} -Wno-deprecated-declarations")
     endif()
 
@@ -66,6 +66,16 @@ endif()
 # An advanced variable will not be displayed in any of the cmake GUIs
 
 mark_as_advanced(PLATFORM_COMPILE_FLAGS)
+
+
+###############################################################################
+# Define hidden symbol visibility by default for all targets.
+
+include(VariableUtils)
+
+set_unless_defined(CMAKE_C_VISIBILITY_PRESET hidden)
+set_unless_defined(CMAKE_CXX_VISIBILITY_PRESET hidden)
+set_unless_defined(CMAKE_VISIBILITY_INLINES_HIDDEN YES)
 
 
 ###############################################################################
