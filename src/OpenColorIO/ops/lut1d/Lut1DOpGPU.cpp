@@ -296,7 +296,7 @@ void GetLut1DGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
     ss.indent();
 
     ss.newLine() << "";
-    ss.newLine() << "// Add a LUT 1D processing for " << name;
+    ss.newLine() << "// Add LUT 1D processing for " << name;
     ss.newLine() << "";
 
     ss.newLine() << "{";

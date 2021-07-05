@@ -16,7 +16,7 @@ void GetMatrixGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator, ConstMatri
     ss.indent();
 
     ss.newLine() << "";
-    ss.newLine() << "// Add a Matrix processing";
+    ss.newLine() << "// Add Matrix processing";
     ss.newLine() << "";
 
     ArrayDouble::Values values = matrix->getArray().getValues();
