@@ -690,7 +690,7 @@ void Renderer_ACES_DarkToDim10_Fwd::apply(const void * inImg, void * outImg, lon
 
 float compress(float dist, float thr, float scale, float power)
 {
-    // Normalize distance outside threshold by scale factor
+    // Normalize distance outside threshold by scale factor.
     const float nd = (dist - thr) / scale;
     const float p = std::powf(nd, power);
 
@@ -707,7 +707,7 @@ float uncompress(float dist, float thr, float scale, float power)
     }
     else
     {
-        // Normalize distance outside threshold by scale factor
+        // Normalize distance outside threshold by scale factor.
         const float nd = (dist - thr) / scale;
         const float p = std::powf(nd, power);
 
@@ -719,7 +719,12 @@ float uncompress(float dist, float thr, float scale, float power)
 template <typename Func>
 float gamut_comp(float val, float ach, float lim, float thr, float scale, float power, Func f)
 {
-    // Disable compression
+    // Note: Strict equality is fine here. For example, consider the RGB { 1e-7, 0, -1e-5 }.
+    // This will become a dist = (1e-7 - -1e-5) / 1e-7 = 101.0. So, there will definitely be
+    // very large dist values. But the compression function is able to handle those since
+    // they approach the asymptote. So 101 will become something like 1.12.  Then at the
+    // other end the B values is reconstructed as 1e-7 - 1.12 * 1e-7 = -1.2e-8. So it went
+    // from -1e-5 to -1.2e-8, but it caused no numerical instability.
     if (ach == 0.0f)
     {
         return 0.0f;
@@ -740,10 +745,10 @@ float gamut_comp(float val, float ach, float lim, float thr, float scale, float 
         return val;
     }
 
-    // Compress / Uncompress distance with parameterized shaper function
+    // Compress / Uncompress distance with parameterized shaper function.
     const float comprDist = f(dist, thr, scale, power);
 
-    // Recalculate RGB from compressed distance and achromatic
+    // Recalculate RGB from compressed distance and achromatic.
     const float compr = ach - comprDist * std::fabs(ach);
 
     return compr;
@@ -752,14 +757,13 @@ float gamut_comp(float val, float ach, float lim, float thr, float scale, float 
 Renderer_ACES_GamutComp13_Fwd::Renderer_ACES_GamutComp13_Fwd(ConstFixedFunctionOpDataRcPtr & data)
     :   OpCPU()
 {
-    m_limCyan        = (float)data->getParams()[0];
-    m_limMagenta     = (float)data->getParams()[1];
-    m_limYellow      = (float)data->getParams()[2];
-    m_thrCyan        = (float)data->getParams()[3];
-    m_thrMagenta     = (float)data->getParams()[4];
-    m_thrYellow      = (float)data->getParams()[5];
-    m_power          = (float)data->getParams()[6];
-
+    m_limCyan        = (float) data->getParams()[0];
+    m_limMagenta     = (float) data->getParams()[1];
+    m_limYellow      = (float) data->getParams()[2];
+    m_thrCyan        = (float) data->getParams()[3];
+    m_thrMagenta     = (float) data->getParams()[4];
+    m_thrYellow      = (float) data->getParams()[5];
+    m_power          = (float) data->getParams()[6];
 
     m_thrCyan        = std::min(0.9999f, m_thrCyan);
     m_thrMagenta     = std::min(0.9999f, m_thrMagenta);
