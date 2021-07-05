@@ -51,7 +51,7 @@ void GetLut3DGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator, ConstLut3DO
         ss.indent();
 
         ss.newLine() << "";
-        ss.newLine() << "// Add a LUT 3D processing for " << name;
+        ss.newLine() << "// Add LUT 3D processing for " << name;
         ss.newLine() << "";
 
 
