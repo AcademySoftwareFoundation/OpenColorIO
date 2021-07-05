@@ -204,7 +204,7 @@ void Add_GamutComp_13_Shader_Compress(GpuShaderText & ss,
     thr = std::min(0.9999f, thr);
     const float one_over_power = 1.0f / power;
     // Calculate scale factor for y = 1 intersect.
-    const float scl = (lim - thr) / std::powf(std::powf((1.0f - thr) / (lim - thr), -power) - 1.0f, one_over_power);
+    const float scl = (lim - thr) / std::pow(std::pow((1.0f - thr) / (lim - thr), -power) - 1.0f, one_over_power);
 
     // Disable compression, avoid nan
     if (lim < 1.0001f)
@@ -237,7 +237,7 @@ void Add_GamutComp_13_Shader_UnCompress(GpuShaderText & ss,
     thr = std::min(0.9999f, thr);
     const float one_over_power = 1.0f / power;
     // Calculate scale factor for y = 1 intersect.
-    const float scl = (lim - thr) / std::powf(std::powf((1.0f - thr) / (lim - thr), -power) - 1.0f, one_over_power);
+    const float scl = (lim - thr) / std::pow(std::pow((1.0f - thr) / (lim - thr), -power) - 1.0f, one_over_power);
 
     // Disable compression, avoid nan
     if (lim < 1.0001f)

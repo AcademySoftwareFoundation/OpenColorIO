@@ -692,10 +692,10 @@ float compress(float dist, float thr, float scale, float power)
 {
     // Normalize distance outside threshold by scale factor.
     const float nd = (dist - thr) / scale;
-    const float p = std::powf(nd, power);
+    const float p = std::pow(nd, power);
 
     // Note: assume the compiler will optimize out "1.0f / power".
-    return thr + scale * nd / (std::powf(1.0f + p, 1.0f / power));
+    return thr + scale * nd / (std::pow(1.0f + p, 1.0f / power));
 }
 
 float uncompress(float dist, float thr, float scale, float power)
@@ -709,10 +709,10 @@ float uncompress(float dist, float thr, float scale, float power)
     {
         // Normalize distance outside threshold by scale factor.
         const float nd = (dist - thr) / scale;
-        const float p = std::powf(nd, power);
+        const float p = std::pow(nd, power);
 
         // Note: assume the compiler will optimize out "1.0f / power".
-        return thr + scale * std::powf(-(p / (p - 1.0f)), 1.0f / power);
+        return thr + scale * std::pow(-(p / (p - 1.0f)), 1.0f / power);
     }
 }
 
@@ -771,7 +771,7 @@ Renderer_ACES_GamutComp13_Fwd::Renderer_ACES_GamutComp13_Fwd(ConstFixedFunctionO
 
     // Precompute scale factor for y = 1 intersect
     auto f_scale = [this](float lim, float thr) {
-        return (lim - thr) / std::powf(std::powf((1.0f - thr) / (lim - thr), -m_power) - 1.0f, 1.0f / m_power);
+        return (lim - thr) / std::pow(std::pow((1.0f - thr) / (lim - thr), -m_power) - 1.0f, 1.0f / m_power);
     };
     m_scaleCyan      = f_scale(m_limCyan,    m_thrCyan);
     m_scaleMagenta   = f_scale(m_limMagenta, m_thrMagenta);
