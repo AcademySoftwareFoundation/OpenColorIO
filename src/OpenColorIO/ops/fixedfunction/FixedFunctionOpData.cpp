@@ -391,7 +391,6 @@ void FixedFunctionOpData::validate() const
             }
         };
 
-        // Clamped to 1.0001 for numerical stability
         static constexpr double lim_low_bound = 1.0;
         static constexpr double lim_hi_bound  = 10.0;
         check_bounds("lim_cyan",    lim_cyan,    lim_low_bound, lim_hi_bound);
