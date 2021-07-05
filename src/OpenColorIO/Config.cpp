@@ -1102,16 +1102,21 @@ ConstConfigRcPtr Config::CreateFromEnv()
     Platform::Getenv(OCIO_CONFIG_ENVVAR, file);
     if(!file.empty()) return CreateFromFile(file.c_str());
 
-    std::ostringstream os;
-    os << "Color management disabled. ";
-    os << "(Specify the $OCIO environment variable to enable.)";
-    LogInfo(os.str());
+    static const char err[] =
+        "Color management disabled. (Specify the $OCIO environment variable to enable.)";
+
+    LogInfo(err);
 
     return CreateRaw();
 }
 
 ConstConfigRcPtr Config::CreateFromFile(const char * filename)
 {
+    if (!filename || !*filename)
+    {
+        throw ExceptionMissingFile ("The config filepath is missing.");
+    }
+
     std::ifstream istream(filename);
     if (istream.fail())
     {
