@@ -75,7 +75,7 @@
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>..;..\..\..;..\..\..\..\..\include;..\..\..\..\..\src\libutils\oglapphelpers;..\..\..\..\..\src\apps\ociobakelut;..\..\..\..\..\ext\Adobe After Effects 2020 Win SDK\Examples\Headers;..\..\..\..\..\ext\Adobe After Effects 2020 Win SDK\Examples\Headers\SP;..\..\..\..\..\ext\Adobe After Effects 2020 Win SDK\Examples\Headers\Win;..\..\..\..\..\ext\Adobe After Effects 2020 Win SDK\Examples\Resources;..\..\..\..\..\ext\Adobe After Effects 2020 Win SDK\Examples\Util;..\..\..\..\..\ext\glew-2.2.0\include;..\..\..\..\..\ext\Little-CMS\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..;..\..\..;..\..\..\..\..\include;..\..\..\..\..\src\libutils\oglapphelpers;..\..\..\..\..\src\apps\ociobakelut;..\..\..\..\..\ext\Adobe After Effects 2021 Win SDK\Examples\Headers;..\..\..\..\..\ext\Adobe After Effects 2021 Win SDK\Examples\Headers\SP;..\..\..\..\..\ext\Adobe After Effects 2021 Win SDK\Examples\Headers\Win;..\..\..\..\..\ext\Adobe After Effects 2021 Win SDK\Examples\Resources;..\..\..\..\..\ext\Adobe After Effects 2021 Win SDK\Examples\Util;..\..\..\..\..\ext\glew-2.2.0\include;..\..\..\..\..\ext\Little-CMS\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>OpenColorIO_SKIP_IMPORTS;GLEW_STATIC;MSWindows;WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <StructMemberAlignment>4Bytes</StructMemberAlignment>
@@ -128,8 +128,8 @@
     </Midl>
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
-      <AdditionalIncludeDirectories>..;..\..\..;..\..\..\..\..\include;..\..\..\..\..\src\libutils\oglapphelpers;..\..\..\..\..\src\apps\ociobakelut;..\..\..\..\..\ext\Adobe After Effects 2020 Win SDK\Examples\Headers;..\..\..\..\..\ext\Adobe After Effects 2020 Win SDK\Examples\Headers\SP;..\..\..\..\..\ext\Adobe After Effects 2020 Win SDK\Examples\Headers\Win;..\..\..\..\..\ext\Adobe After Effects 2020 Win SDK\Examples\Resources;..\..\..\..\..\ext\Adobe After Effects 2020 Win SDK\Examples\Util;..\..\..\..\..\ext\glew-2.2.0\include;..\..\..\..\..\ext\Little-CMS\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>OpenColorIO_SKIP_IMPORTS;GLEW_STATIC;MSWindows;WIN32;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..;..\..\..;..\..\..\..\..\include;..\..\..\..\..\src\libutils\oglapphelpers;..\..\..\..\..\src\apps\ociobakelut;..\..\..\..\..\ext\Adobe After Effects 2021 Win SDK\Examples\Headers;..\..\..\..\..\ext\Adobe After Effects 2021 Win SDK\Examples\Headers\SP;..\..\..\..\..\ext\Adobe After Effects 2021 Win SDK\Examples\Headers\Win;..\..\..\..\..\ext\Adobe After Effects 2021 Win SDK\Examples\Resources;..\..\..\..\..\ext\Adobe After Effects 2021 Win SDK\Examples\Util;..\..\..\..\..\ext\glew-2.2.0\include;..\..\..\..\..\ext\Little-CMS\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>OpenColorIO_SKIP_IMPORTS;GLEW_STATIC;MSWindows;WIN32;_WINDOWS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <StructMemberAlignment>4Bytes</StructMemberAlignment>
       <PrecompiledHeader>
@@ -171,31 +171,31 @@
     </Bscmake>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\..\..\ext\Adobe After Effects 2020 Win SDK\Examples\Headers\AEFX_SuiteHandlerTemplate.h" />
-    <ClInclude Include="..\..\..\..\..\ext\Adobe After Effects 2020 Win SDK\Examples\Headers\AE_PluginData.h" />
-    <ClInclude Include="..\..\..\..\..\ext\Adobe After Effects 2020 Win SDK\Examples\Util\Smart_Utils.h" />
-    <ClInclude Include="..\..\..\..\..\ext\Adobe After Effects 2020 Win SDK\Examples\Util\String_Utils.h" />
-    <ClInclude Include="..\..\..\..\..\ext\Adobe After Effects 2020 Win SDK\Examples\Headers\A.h" />
-    <ClInclude Include="..\..\..\..\..\ext\Adobe After Effects 2020 Win SDK\Examples\Headers\AE_Effect.h" />
-    <ClInclude Include="..\..\..\..\..\ext\Adobe After Effects 2020 Win SDK\Examples\Headers\AE_EffectCB.h" />
-    <ClInclude Include="..\..\..\..\..\ext\Adobe After Effects 2020 Win SDK\Examples\Headers\AE_EffectCBSuites.h" />
-    <ClInclude Include="..\..\..\..\..\ext\Adobe After Effects 2020 Win SDK\Examples\Headers\AE_EffectSuites.h" />
-    <ClInclude Include="..\..\..\..\..\ext\Adobe After Effects 2020 Win SDK\Examples\Util\AE_EffectSuitesHelper.h" />
-    <ClInclude Include="..\..\..\..\..\ext\Adobe After Effects 2020 Win SDK\Examples\Headers\AE_EffectUI.h" />
-    <ClInclude Include="..\..\..\..\..\ext\Adobe After Effects 2020 Win SDK\Examples\Headers\AE_GeneralPlug.h" />
-    <ClInclude Include="..\..\..\..\..\ext\Adobe After Effects 2020 Win SDK\Examples\Headers\AE_GeneralPlugOld.h" />
-    <ClInclude Include="..\..\..\..\..\ext\Adobe After Effects 2020 Win SDK\Examples\Headers\AE_IO.h" />
-    <ClInclude Include="..\..\..\..\..\ext\Adobe After Effects 2020 Win SDK\Examples\Headers\AE_Macros.h" />
-    <ClInclude Include="..\..\..\..\..\ext\Adobe After Effects 2020 Win SDK\Examples\Util\AEGP_SuiteHandler.h" />
-    <ClInclude Include="..\..\..\..\..\ext\Adobe After Effects 2020 Win SDK\Examples\Util\entry.h" />
-    <ClInclude Include="..\..\..\..\..\ext\Adobe After Effects 2020 Win SDK\Examples\Headers\FIEL_Public.h" />
-    <ClInclude Include="..\..\..\..\..\ext\Adobe After Effects 2020 Win SDK\Examples\Util\Param_Utils.h" />
-    <ClInclude Include="..\..\..\..\..\ext\Adobe After Effects 2020 Win SDK\Examples\Headers\PF_Masks.h" />
-    <ClInclude Include="..\..\..\..\..\ext\Adobe After Effects 2020 Win SDK\Examples\Util\PF_Suite_Helper.h" />
-    <ClInclude Include="..\..\..\..\..\ext\Adobe After Effects 2020 Win SDK\Examples\Headers\PR_Public.h" />
-    <ClInclude Include="..\..\..\..\..\ext\Adobe After Effects 2020 Win SDK\Examples\Headers\PrSDKAESupport.h" />
-    <ClInclude Include="..\..\..\..\..\ext\Adobe After Effects 2020 Win SDK\Examples\Headers\PrSDKAEUI.h" />
-    <ClInclude Include="..\..\..\..\..\ext\Adobe After Effects 2020 Win SDK\Examples\Headers\PrSDKPixelFormat.h" />
+    <ClInclude Include="..\..\..\..\..\ext\Adobe After Effects 2021 Win SDK\Examples\Headers\AEFX_SuiteHandlerTemplate.h" />
+    <ClInclude Include="..\..\..\..\..\ext\Adobe After Effects 2021 Win SDK\Examples\Headers\AE_PluginData.h" />
+    <ClInclude Include="..\..\..\..\..\ext\Adobe After Effects 2021 Win SDK\Examples\Util\Smart_Utils.h" />
+    <ClInclude Include="..\..\..\..\..\ext\Adobe After Effects 2021 Win SDK\Examples\Util\String_Utils.h" />
+    <ClInclude Include="..\..\..\..\..\ext\Adobe After Effects 2021 Win SDK\Examples\Headers\A.h" />
+    <ClInclude Include="..\..\..\..\..\ext\Adobe After Effects 2021 Win SDK\Examples\Headers\AE_Effect.h" />
+    <ClInclude Include="..\..\..\..\..\ext\Adobe After Effects 2021 Win SDK\Examples\Headers\AE_EffectCB.h" />
+    <ClInclude Include="..\..\..\..\..\ext\Adobe After Effects 2021 Win SDK\Examples\Headers\AE_EffectCBSuites.h" />
+    <ClInclude Include="..\..\..\..\..\ext\Adobe After Effects 2021 Win SDK\Examples\Headers\AE_EffectSuites.h" />
+    <ClInclude Include="..\..\..\..\..\ext\Adobe After Effects 2021 Win SDK\Examples\Util\AE_EffectSuitesHelper.h" />
+    <ClInclude Include="..\..\..\..\..\ext\Adobe After Effects 2021 Win SDK\Examples\Headers\AE_EffectUI.h" />
+    <ClInclude Include="..\..\..\..\..\ext\Adobe After Effects 2021 Win SDK\Examples\Headers\AE_GeneralPlug.h" />
+    <ClInclude Include="..\..\..\..\..\ext\Adobe After Effects 2021 Win SDK\Examples\Headers\AE_GeneralPlugOld.h" />
+    <ClInclude Include="..\..\..\..\..\ext\Adobe After Effects 2021 Win SDK\Examples\Headers\AE_IO.h" />
+    <ClInclude Include="..\..\..\..\..\ext\Adobe After Effects 2021 Win SDK\Examples\Headers\AE_Macros.h" />
+    <ClInclude Include="..\..\..\..\..\ext\Adobe After Effects 2021 Win SDK\Examples\Util\AEGP_SuiteHandler.h" />
+    <ClInclude Include="..\..\..\..\..\ext\Adobe After Effects 2021 Win SDK\Examples\Util\entry.h" />
+    <ClInclude Include="..\..\..\..\..\ext\Adobe After Effects 2021 Win SDK\Examples\Headers\FIEL_Public.h" />
+    <ClInclude Include="..\..\..\..\..\ext\Adobe After Effects 2021 Win SDK\Examples\Util\Param_Utils.h" />
+    <ClInclude Include="..\..\..\..\..\ext\Adobe After Effects 2021 Win SDK\Examples\Headers\PF_Masks.h" />
+    <ClInclude Include="..\..\..\..\..\ext\Adobe After Effects 2021 Win SDK\Examples\Util\PF_Suite_Helper.h" />
+    <ClInclude Include="..\..\..\..\..\ext\Adobe After Effects 2021 Win SDK\Examples\Headers\PR_Public.h" />
+    <ClInclude Include="..\..\..\..\..\ext\Adobe After Effects 2021 Win SDK\Examples\Headers\PrSDKAESupport.h" />
+    <ClInclude Include="..\..\..\..\..\ext\Adobe After Effects 2021 Win SDK\Examples\Headers\PrSDKAEUI.h" />
+    <ClInclude Include="..\..\..\..\..\ext\Adobe After Effects 2021 Win SDK\Examples\Headers\PrSDKPixelFormat.h" />
     <ClInclude Include="..\..\..\..\..\src\apps\ociobakelut\ocioicc.h" />
     <ClInclude Include="..\..\..\..\..\src\libutils\oglapphelpers\glsl.h" />
     <ClInclude Include="..\..\..\DrawbotBot.h" />
@@ -208,12 +208,12 @@
     <CustomBuild Include="..\..\..\OpenColorIO_AE_PiPL.r">
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compiling the PiPL</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compiling the PiPL</Message>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">cl /I "$(ProjectDir)..\..\..\..\..\ext\Adobe After Effects 2020 Win SDK\Examples\Headers" /EP "..\..\..\%(Filename).r" &gt; "$(IntDir)"\\"%(Filename).rr"
-"$(ProjectDir)..\..\..\..\..\ext\Adobe After Effects 2020 Win SDK\Examples\Resources\PiPLTool" "$(IntDir)%(Filename).rr" "$(IntDir)%(Filename).rrc"
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">cl /I "$(ProjectDir)..\..\..\..\..\ext\Adobe After Effects 2021 Win SDK\Examples\Headers" /EP "..\..\..\%(Filename).r" &gt; "$(IntDir)"\\"%(Filename).rr"
+"$(ProjectDir)..\..\..\..\..\ext\Adobe After Effects 2021 Win SDK\Examples\Resources\PiPLTool" "$(IntDir)%(Filename).rr" "$(IntDir)%(Filename).rrc"
 cl /D "MSWindows" /EP $(IntDir)%(Filename).rrc &gt;               "$(ProjectDir)"\\"%(Filename)".rc
 </Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">cl /I "$(ProjectDir)..\..\..\..\..\ext\Adobe After Effects 2020 Win SDK\Examples\Headers" /EP "..\..\..\%(Filename).r" &gt; "$(IntDir)"\\"%(Filename).rr"
-"$(ProjectDir)..\..\..\..\..\ext\Adobe After Effects 2020 Win SDK\Examples\Resources\PiPLTool" "$(IntDir)%(Filename).rr" "$(IntDir)%(Filename).rrc"
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">cl /I "$(ProjectDir)..\..\..\..\..\ext\Adobe After Effects 2021 Win SDK\Examples\Headers" /EP "..\..\..\%(Filename).r" &gt; "$(IntDir)"\\"%(Filename).rr"
+"$(ProjectDir)..\..\..\..\..\ext\Adobe After Effects 2021 Win SDK\Examples\Resources\PiPLTool" "$(IntDir)%(Filename).rr" "$(IntDir)%(Filename).rrc"
 cl /D "MSWindows" /EP $(IntDir)%(Filename).rrc &gt;               "$(ProjectDir)"\\"%(Filename)".rc
 </Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)%(Filename).rc;%(Outputs)</Outputs>
@@ -225,9 +225,9 @@ cl /D "MSWindows" /EP $(IntDir)%(Filename).rrc &gt;               "$(ProjectDir)
     <ResourceCompile Include="OpenColorIO_AE_PiPL.rc" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\..\..\ext\Adobe After Effects 2020 Win SDK\Examples\Util\AEGP_SuiteHandler.cpp" />
-    <ClCompile Include="..\..\..\..\..\ext\Adobe After Effects 2020 Win SDK\Examples\Util\MissingSuiteError.cpp" />
-    <ClCompile Include="..\..\..\..\..\ext\Adobe After Effects 2020 Win SDK\Examples\Util\Smart_Utils.cpp" />
+    <ClCompile Include="..\..\..\..\..\ext\Adobe After Effects 2021 Win SDK\Examples\Util\AEGP_SuiteHandler.cpp" />
+    <ClCompile Include="..\..\..\..\..\ext\Adobe After Effects 2021 Win SDK\Examples\Util\MissingSuiteError.cpp" />
+    <ClCompile Include="..\..\..\..\..\ext\Adobe After Effects 2021 Win SDK\Examples\Util\Smart_Utils.cpp" />
     <ClCompile Include="..\..\..\..\..\src\apps\ociobakelut\ocioicc.cpp" />
     <ClCompile Include="..\..\..\..\..\src\libutils\oglapphelpers\glsl.cpp" />
     <ClCompile Include="..\..\..\DrawbotBot.cpp" />

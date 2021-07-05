@@ -50,38 +50,6 @@ inline void load(const YAML::Node& node, bool& x)
     }
 }
 
-inline void load(const YAML::Node& node, int& x)
-{
-    try
-    {
-        x = node.as<int>();
-    }
-    catch (const std::exception & e)
-    {
-        std::ostringstream os;
-        os << "At line " << (node.Mark().line + 1)
-            << ", '" << node.Tag() << "' parsing integer failed "
-            << "with: " << e.what();
-        throw Exception(os.str().c_str());
-    }
-}
-
-inline void load(const YAML::Node& node, float& x)
-{
-    try
-    {
-        x = node.as<float>();
-    }
-    catch (const std::exception & e)
-    {
-        std::ostringstream os;
-        os << "At line " << (node.Mark().line + 1)
-            << ", '" << node.Tag() << "' parsing float failed "
-            << "with: " << e.what();
-        throw Exception(os.str().c_str());
-    }
-}
-
 inline void load(const YAML::Node& node, double& x)
 {
     try

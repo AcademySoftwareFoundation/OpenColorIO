@@ -62,7 +62,7 @@ C++
 
 The core OpenColorIO API is available for use in C++. Minimal code examples are also available in the source code distribution. 
 
-Website: `<http://github.com/AcademySoftwareFoundation/OpenColorIO/tree/master/export/OpenColorIO>`__
+Website: `<http://github.com/AcademySoftwareFoundation/OpenColorIO/tree/master/include/OpenColorIO>`__
 
 Examples:
 
@@ -72,9 +72,9 @@ Examples:
 
 Documentation:
 
-- `Developer Guide <https://opencolorio.org/developers/index.html>`__
+- :ref:`developing`
 
-- `Usage Examples <https://opencolorio.org/developers/usage_examples.html>`__
+- :ref:`developers-usageexamples`
 
 
 cineSync (ftrack)

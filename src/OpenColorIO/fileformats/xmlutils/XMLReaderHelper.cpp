@@ -118,7 +118,7 @@ XmlReaderElementStack::~XmlReaderElementStack()
 
 unsigned XmlReaderElementStack::size() const
 {
-    return (const unsigned)m_elms.size();
+    return static_cast<unsigned>(m_elms.size());
 }
 
 bool XmlReaderElementStack::empty() const
@@ -166,7 +166,7 @@ XmlReaderSOPValueElt::~XmlReaderSOPValueElt()
 {
 }
 
-void XmlReaderSOPValueElt::start(const char ** atts)
+void XmlReaderSOPValueElt::start(const char ** /* atts */)
 {
     m_contentData = "";
 }
@@ -218,7 +218,7 @@ void XmlReaderSOPValueElt::end()
 
 void XmlReaderSOPValueElt::setRawData(const char * str,
                                       size_t len,
-                                      unsigned int xmlLine)
+                                      unsigned int /* xmlLine */)
 {
     m_contentData += std::string(str, len) + " ";
 }

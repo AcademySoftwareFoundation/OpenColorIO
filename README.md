@@ -34,7 +34,7 @@ such films as SpiderMan 2 (2004), Surf's Up (2007), Cloudy with a Chance of
 Meatballs (2009), Alice in Wonderland (2010), and many more. OpenColorIO is
 natively supported in commercial applications like Katana, Mari, Nuke, Maya,
 Houdini, Silhouette FX, and
-[others](https://opencolorio.org/CompatibleSoftware.html).
+[others](https://opencolorio.org/#supported_apps).
 
 OpenColorIO is free and open source software ([LICENSE](LICENSE)), and
 one of several projects actvively sponsored by the ASWF

@@ -226,41 +226,34 @@ float3 operator/(const float3 & f3a, const float3 & f3b)
     return float3{ f3a[0] / f3b[0], f3a[1] / f3b[1], f3a[2] / f3b[2] };
 }
 
-
-template<typename type>
-void setOnLimit(type & res, const type & val, float limit, const type & below, const type & above)
+void setOnLimit(float3 & res, const float3 & val, float limit, const float3 & below, const float3 & above)
 {
     res.setOnLimit(val, limit, below, above);
 }
 
-template<>
-void setOnLimit<float>(float & res, const float & val, float limit, const float & below, const float & above)
+void setOnLimit(float & res, const float & val, float limit, const float & below, const float & above)
 {
     res = val < limit ? below : above;
 }
 
-template<typename type>
-type Sqrt(const type & val)
+float3 Sqrt(const float3 & val)
 {
-    return type{ sqrtf(val[0]), sqrtf(val[1]), sqrtf(val[2]) };
+    return float3{ sqrtf(val[0]), sqrtf(val[1]), sqrtf(val[2]) };
 }
 
-template<>
-float Sqrt<float>(const float & val)
+float Sqrt(const float & val)
 {
     return sqrtf(val);
 }
 
-template<typename type>
-void Set(RGBMChannel channel, float * out, const type & val)
+void Set(RGBMChannel /* channel */, float * out, const float3 & val)
 {
     out[0] = val[0];
     out[1] = val[1];
     out[2] = val[2];
 }
 
-template<>
-void Set<float>(RGBMChannel channel, float * out, const float & val)
+void Set(RGBMChannel channel, float * out, const float & val)
 {
     out[channel] = val;
 }
@@ -498,7 +491,7 @@ void GradingToneRevOpCPU::mids(const GradingTone & v, const GradingTonePreRender
 }
 
 template<typename type>
-void ComputeHSFwd(RGBMChannel channel, float * out, float val, float x0, float x1, float x2,
+void ComputeHSFwd(RGBMChannel channel, float * out, float x0, float x1, float x2,
                   float y0, float y1, float y2, float m0, float m2, type & t)
 {
     type res{ t }, tL, tR, fL, fR;
@@ -518,7 +511,7 @@ void ComputeHSFwd(RGBMChannel channel, float * out, float val, float x0, float x
 }
 
 template<typename type>
-void ComputeHSRev(RGBMChannel channel, float * out, float val, float x0, float x1, float x2,
+void ComputeHSRev(RGBMChannel channel, float * out, float x0, float x1, float x2,
                   float y0, float y1, float y2, float m0, float m2, type & t)
 {
     type res{ t }, cL, cR, discrimL, discrimR, outL, outR;
@@ -570,12 +563,12 @@ void GradingToneFwdOpCPU::highlightShadow(const GradingTone & v, const GradingTo
         if (channel != M)
         {
             float t = out[channel];
-            ComputeHSFwd(channel, out, val, x0, x1, x2, y0, y1, y2, m0, m2, t);     // Fwd
+            ComputeHSFwd(channel, out, x0, x1, x2, y0, y1, y2, m0, m2, t);     // Fwd
         }
         else
         {
             float3 t{ out };
-            ComputeHSFwd(channel, out, val, x0, x1, x2, y0, y1, y2, m0, m2, t);
+            ComputeHSFwd(channel, out, x0, x1, x2, y0, y1, y2, m0, m2, t);
         }
     }
     else
@@ -583,12 +576,12 @@ void GradingToneFwdOpCPU::highlightShadow(const GradingTone & v, const GradingTo
         if (channel != M)
         {
             float t = out[channel];
-            ComputeHSRev(channel, out, val, x0, x1, x2, y0, y1, y2, m0, m2, t);     // Rev
+            ComputeHSRev(channel, out, x0, x1, x2, y0, y1, y2, m0, m2, t);     // Rev
         }
         else
         {
             float3 t{ out };
-            ComputeHSRev(channel, out, val, x0, x1, x2, y0, y1, y2, m0, m2, t);
+            ComputeHSRev(channel, out, x0, x1, x2, y0, y1, y2, m0, m2, t);
         }
     }
 }
@@ -619,12 +612,12 @@ void GradingToneRevOpCPU::highlightShadow(const GradingTone & v, const GradingTo
         if (channel != M)
         {
             float t = out[channel];
-            ComputeHSRev(channel, out, val, x0, x1, x2, y0, y1, y2, m0, m2, t);     // Rev
+            ComputeHSRev(channel, out, x0, x1, x2, y0, y1, y2, m0, m2, t);     // Rev
         }
         else
         {
             float3 t{ out };
-            ComputeHSRev(channel, out, val, x0, x1, x2, y0, y1, y2, m0, m2, t);
+            ComputeHSRev(channel, out, x0, x1, x2, y0, y1, y2, m0, m2, t);
         }
     }
     else
@@ -632,12 +625,12 @@ void GradingToneRevOpCPU::highlightShadow(const GradingTone & v, const GradingTo
         if (channel != M)
         {
             float t = out[channel];
-            ComputeHSFwd(channel, out, val, x0, x1, x2, y0, y1, y2, m0, m2, t);     // Fwd
+            ComputeHSFwd(channel, out, x0, x1, x2, y0, y1, y2, m0, m2, t);     // Fwd
         }
         else
         {
             float3 t{ out };
-            ComputeHSFwd(channel, out, val, x0, x1, x2, y0, y1, y2, m0, m2, t);
+            ComputeHSFwd(channel, out, x0, x1, x2, y0, y1, y2, m0, m2, t);
         }
     }
 }
