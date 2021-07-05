@@ -521,6 +521,20 @@ static void TrackConfigMenu(HWND hwndDlg, bool readFromControl)
 
     if( !configPath.empty() )
     {
+        ENABLE_ITEM(DLOG_OK, TRUE);
+        ENABLE_ITEM(DLOG_Export, TRUE);
+        ENABLE_ITEM(DLOG_Convert_Radio, TRUE);
+        ENABLE_ITEM(DLOG_Display_Radio, TRUE);
+        ENABLE_ITEM(DLOG_Menu1_Label, TRUE);
+        ENABLE_ITEM(DLOG_Menu1_Menu, TRUE);
+        ENABLE_ITEM(DLOG_Menu1_Button, TRUE);
+        ENABLE_ITEM(DLOG_Menu2_Label, TRUE);
+        ENABLE_ITEM(DLOG_Menu2_Menu, TRUE);
+        ENABLE_ITEM(DLOG_Menu2_Button, TRUE);
+        ENABLE_ITEM(DLOG_Menu3_Label, TRUE);
+        ENABLE_ITEM(DLOG_Menu3_Menu, TRUE);
+        ENABLE_ITEM(DLOG_Invert_Check, TRUE);
+                
         try
         {
             delete g_context;
@@ -532,24 +546,10 @@ static void TrackConfigMenu(HWND hwndDlg, bool readFromControl)
             {
                 g_action = ACTION_LUT;
                 
-                SHOW_ITEM(DLOG_Invert_Check, TRUE);
-                
-                if( g_context->canInvertLUT() )
-                {
-                    ENABLE_ITEM(DLOG_Invert_Check, TRUE);
-                }
-                else
-                {
-                    ENABLE_ITEM(DLOG_Invert_Check, FALSE);
-                
-                    g_invert = false;
-                }
-                
-                SET_CHECK(DLOG_Invert_Check, g_invert);
-                
                 SHOW_ITEM(DLOG_Convert_Radio, FALSE);
                 SHOW_ITEM(DLOG_Display_Radio, FALSE);
 
+                SET_CHECK(DLOG_Invert_Check, g_invert);
                 
                 const int interpLabel = DLOG_Menu1_Label;
                 const int interpMenu = DLOG_Menu1_Menu;
@@ -577,8 +577,6 @@ static void TrackConfigMenu(HWND hwndDlg, bool readFromControl)
             }
             else
             {
-                SHOW_ITEM(DLOG_Invert_Check, FALSE);
-            
                 if(g_action == ACTION_LUT)
                 {
                     g_action = ACTION_CONVERT;
@@ -587,8 +585,7 @@ static void TrackConfigMenu(HWND hwndDlg, bool readFromControl)
                 SHOW_ITEM(DLOG_Convert_Radio, TRUE);
                 SHOW_ITEM(DLOG_Display_Radio, TRUE);
                                 
-                ENABLE_ITEM(DLOG_Convert_Radio, TRUE);
-                ENABLE_ITEM(DLOG_Display_Radio, TRUE);
+                SET_CHECK(DLOG_Invert_Check, g_invert);
                 
                 const SpaceVec &colorSpaces = g_context->getColorSpaces();
                 
@@ -624,6 +621,20 @@ static void TrackConfigMenu(HWND hwndDlg, bool readFromControl)
         }
         catch(const std::exception &e)
         {
+            ENABLE_ITEM(DLOG_OK, FALSE);
+            ENABLE_ITEM(DLOG_Export, FALSE);
+            ENABLE_ITEM(DLOG_Convert_Radio, FALSE);
+            ENABLE_ITEM(DLOG_Display_Radio, FALSE);
+            ENABLE_ITEM(DLOG_Menu1_Label, FALSE);
+            ENABLE_ITEM(DLOG_Menu1_Menu, FALSE);
+            ENABLE_ITEM(DLOG_Menu1_Button, FALSE);
+            ENABLE_ITEM(DLOG_Menu2_Label, FALSE);
+            ENABLE_ITEM(DLOG_Menu2_Menu, FALSE);
+            ENABLE_ITEM(DLOG_Menu2_Button, FALSE);
+            ENABLE_ITEM(DLOG_Menu3_Label, FALSE);
+            ENABLE_ITEM(DLOG_Menu3_Menu, FALSE);
+            ENABLE_ITEM(DLOG_Invert_Check, FALSE);
+
             MessageBox(hwndDlg, e.what(), "OpenColorIO error", MB_OK);
 
             if(g_source != SOURCE_ENVIRONMENT)
@@ -635,6 +646,20 @@ static void TrackConfigMenu(HWND hwndDlg, bool readFromControl)
         }
         catch(...)
         {
+            ENABLE_ITEM(DLOG_OK, FALSE);
+            ENABLE_ITEM(DLOG_Export, FALSE);
+            ENABLE_ITEM(DLOG_Convert_Radio, FALSE);
+            ENABLE_ITEM(DLOG_Display_Radio, FALSE);
+            ENABLE_ITEM(DLOG_Menu1_Label, FALSE);
+            ENABLE_ITEM(DLOG_Menu1_Menu, FALSE);
+            ENABLE_ITEM(DLOG_Menu1_Button, FALSE);
+            ENABLE_ITEM(DLOG_Menu2_Label, FALSE);
+            ENABLE_ITEM(DLOG_Menu2_Menu, FALSE);
+            ENABLE_ITEM(DLOG_Menu2_Button, FALSE);
+            ENABLE_ITEM(DLOG_Menu3_Label, FALSE);
+            ENABLE_ITEM(DLOG_Menu3_Menu, FALSE);
+            ENABLE_ITEM(DLOG_Invert_Check, FALSE);
+
             MessageBox(hwndDlg, "Some unknown error", "OpenColorIO error", MB_OK);
 
             if(g_source != SOURCE_ENVIRONMENT)
@@ -651,10 +676,19 @@ static void TrackConfigMenu(HWND hwndDlg, bool readFromControl)
 
         g_context = NULL;
 
-        SHOW_ITEM(DLOG_Invert_Check, FALSE);
-
+        ENABLE_ITEM(DLOG_OK, FALSE);
+        ENABLE_ITEM(DLOG_Export, FALSE);
         ENABLE_ITEM(DLOG_Convert_Radio, FALSE);
         ENABLE_ITEM(DLOG_Display_Radio, FALSE);
+        ENABLE_ITEM(DLOG_Menu1_Label, FALSE);
+        ENABLE_ITEM(DLOG_Menu1_Menu, FALSE);
+        ENABLE_ITEM(DLOG_Menu1_Button, FALSE);
+        ENABLE_ITEM(DLOG_Menu2_Label, FALSE);
+        ENABLE_ITEM(DLOG_Menu2_Menu, FALSE);
+        ENABLE_ITEM(DLOG_Menu2_Button, FALSE);
+        ENABLE_ITEM(DLOG_Menu3_Label, FALSE);
+        ENABLE_ITEM(DLOG_Menu3_Menu, FALSE);
+        ENABLE_ITEM(DLOG_Invert_Check, FALSE);
 
         REMOVE_ALL_MENU_ITEMS(DLOG_Menu1_Menu);
         REMOVE_ALL_MENU_ITEMS(DLOG_Menu2_Menu);
@@ -738,11 +772,11 @@ static void DoExport(HWND hwndDlg)
                         
                         if(g_action == ACTION_CONVERT)
                         {
-                            processor = g_context->getConvertProcessor(g_inputSpace, g_outputSpace);
+                            processor = g_context->getConvertProcessor(g_inputSpace, g_outputSpace, g_invert);
                         }
                         else if(g_action == ACTION_DISPLAY)
                         {
-                            processor = g_context->getDisplayProcessor(g_inputSpace, g_display, g_view);
+                            processor = g_context->getDisplayProcessor(g_inputSpace, g_display, g_view, g_invert);
                         }
                         else
                         {
@@ -754,9 +788,7 @@ static void DoExport(HWND hwndDlg)
                                                                 g_interpolation == INTERPO_CUBIC ? OCIO::INTERP_CUBIC :
                                                                 OCIO::INTERP_BEST);
                             
-                            const OCIO::TransformDirection direction = (g_invert ? OCIO::TRANSFORM_DIR_INVERSE : OCIO::TRANSFORM_DIR_FORWARD);
-                            
-                            processor = g_context->getLUTProcessor(interp, direction);
+                            processor = g_context->getLUTProcessor(interp, g_invert);
                         }
                         
                         
@@ -796,11 +828,11 @@ static void DoExport(HWND hwndDlg)
                     
                     if(g_action == ACTION_CONVERT)
                     {
-                        baker = g_context->getConvertBaker(g_inputSpace, g_outputSpace);
+                        baker = g_context->getConvertBaker(g_inputSpace, g_outputSpace, g_invert);
                     }
                     else if(g_action == ACTION_DISPLAY)
                     {
-                        baker = g_context->getDisplayBaker(g_inputSpace, g_display, g_view);
+                        baker = g_context->getDisplayBaker(g_inputSpace, g_display, g_view, g_invert);
                     }
                     else
                     {
@@ -812,9 +844,7 @@ static void DoExport(HWND hwndDlg)
                                                             g_interpolation == INTERPO_CUBIC ? OCIO::INTERP_CUBIC :
                                                             OCIO::INTERP_BEST);
                         
-                        const OCIO::TransformDirection direction = (g_invert ? OCIO::TRANSFORM_DIR_INVERSE : OCIO::TRANSFORM_DIR_FORWARD);
-                        
-                        baker = g_context->getLUTBaker(interp, direction);
+                        baker = g_context->getLUTBaker(interp, g_invert);
                     }
                     
                     baker->setFormat( format.c_str() );

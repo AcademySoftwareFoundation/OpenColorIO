@@ -57,8 +57,8 @@ class OpenColorIO_AE_Context
     
     bool Verify(const ArbitraryData *arb_data, const std::string &dir);
     
-    void setupConvert(const char *input, const char *output);
-    void setupDisplay(const char *input, const char *display, const char *view);
+    void setupConvert(const char *input, const char *output, OCIO_Invert invert);
+    void setupDisplay(const char *input, const char *display, const char *view, OCIO_Invert invert);
     void setupLUT(OCIO_Invert invert, OCIO_Interp interpolation);
   
     typedef std::vector<std::string> SpaceVec;
@@ -68,7 +68,7 @@ class OpenColorIO_AE_Context
     const std::string & getOutput() const { return _output; }
     const std::string & getDisplay() const { return _display; }
     const std::string & getView() const { return _view; }
-    const SpaceVec & getInputs(bool fullPath=false) const { return fullPath ? _inputsFullPath : _inputs; }
+    const SpaceVec & getColorSpaces() const { return _colorSpaces; }
     const SpaceVec & getDisplays() const { return _displays; }
     const SpaceVec & getViews() const { return _views; }
     
@@ -96,8 +96,7 @@ class OpenColorIO_AE_Context
     std::string _output;
     std::string _display;
     std::string _view;
-    SpaceVec _inputs;
-    SpaceVec _inputsFullPath;
+    SpaceVec _colorSpaces;
     SpaceVec _displays;
     SpaceVec _views;
     

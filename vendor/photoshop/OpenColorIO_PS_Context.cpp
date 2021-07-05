@@ -41,16 +41,7 @@ OpenColorIO_PS_Context::OpenColorIO_PS_Context(const std::string &path) :
         {
             const std::string colorSpaceName = _config->getColorSpaceNameByIndex(i);
             
-            OCIO::ConstColorSpaceRcPtr colorSpace = _config->getColorSpace( colorSpaceName.c_str() );
-            
-            const std::string colorSpaceFamily = colorSpace->getFamily();
-            
-            const std::string colorSpacePath = (colorSpaceFamily.empty() ? colorSpaceName :
-                                                (colorSpaceFamily + "/" + colorSpaceName));
-                                                
             _colorSpaces.push_back(colorSpaceName);
-            
-            _colorSpacesFullPaths.push_back(colorSpacePath);
         }
         
         OCIO::ConstColorSpaceRcPtr defaultInput = _config->getColorSpace(OCIO::ROLE_SCENE_LINEAR);
@@ -81,28 +72,11 @@ OpenColorIO_PS_Context::OpenColorIO_PS_Context(const std::string &path) :
         OCIO::ConstProcessorRcPtr forwardProcessor = _config->getProcessor(forwardTransform);
         
         _isLUT = true;
-        
-        _canInvertLUT = true;
-        
-        try
-        {
-            OCIO::FileTransformRcPtr inverseTransform = OCIO::FileTransform::Create();
-            
-            inverseTransform->setSrc( _path.c_str() );
-            inverseTransform->setInterpolation(OCIO::INTERP_LINEAR);
-            inverseTransform->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
-            
-            OCIO::ConstProcessorRcPtr inverseProcessor = _config->getProcessor(inverseTransform);
-        }
-        catch(...)
-        {
-            _canInvertLUT = false;
-        }
     }
 }
 
 OCIO::ConstCPUProcessorRcPtr
-OpenColorIO_PS_Context::getConvertProcessor(const std::string &inputSpace, const std::string &outputSpace) const
+OpenColorIO_PS_Context::getConvertProcessor(const std::string &inputSpace, const std::string &outputSpace, bool invert) const
 {
     assert( !isLUT() );
 
@@ -110,7 +84,7 @@ OpenColorIO_PS_Context::getConvertProcessor(const std::string &inputSpace, const
     
     transform->setSrc( inputSpace.c_str() );
     transform->setDst( outputSpace.c_str() );
-    transform->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
+    transform->setDirection(invert ? OCIO::TRANSFORM_DIR_INVERSE : OCIO::TRANSFORM_DIR_FORWARD);
     
     OCIO::ConstProcessorRcPtr processor = _config->getProcessor(transform);
     
@@ -121,17 +95,18 @@ OpenColorIO_PS_Context::getConvertProcessor(const std::string &inputSpace, const
 
 
 OCIO::ConstCPUProcessorRcPtr
-OpenColorIO_PS_Context::getDisplayProcessor(const std::string &inputSpace, const std::string &display, const std::string &view) const
+OpenColorIO_PS_Context::getDisplayProcessor(const std::string &inputSpace, const std::string &display, const std::string &view, bool invert) const
 {
     assert( !isLUT() );
 
-    OCIO::DisplayViewTransformRcPtr ocio_transform = OCIO::DisplayViewTransform::Create();
+    OCIO::DisplayViewTransformRcPtr transform = OCIO::DisplayViewTransform::Create();
 
-    ocio_transform->setSrc( inputSpace.c_str() );
-    ocio_transform->setDisplay( display.c_str() );
-    ocio_transform->setView( view.c_str() );
+    transform->setSrc( inputSpace.c_str() );
+    transform->setDisplay( display.c_str() );
+    transform->setView( view.c_str() );
+    transform->setDirection(invert ? OCIO::TRANSFORM_DIR_INVERSE : OCIO::TRANSFORM_DIR_FORWARD);
 
-    OCIO::ConstProcessorRcPtr processor = _config->getProcessor(ocio_transform);
+    OCIO::ConstProcessorRcPtr processor = _config->getProcessor(transform);
     
     OCIO::ConstCPUProcessorRcPtr cpu_processor = processor->getDefaultCPUProcessor();
     
@@ -140,7 +115,7 @@ OpenColorIO_PS_Context::getDisplayProcessor(const std::string &inputSpace, const
 
 
 OCIO::ConstCPUProcessorRcPtr
-OpenColorIO_PS_Context::getLUTProcessor(OCIO::Interpolation interpolation, OCIO::TransformDirection direction) const
+OpenColorIO_PS_Context::getLUTProcessor(OCIO::Interpolation interpolation, bool invert) const
 {
     assert( isLUT() );
 
@@ -148,7 +123,7 @@ OpenColorIO_PS_Context::getLUTProcessor(OCIO::Interpolation interpolation, OCIO:
     
     transform->setSrc( _path.c_str() );
     transform->setInterpolation(interpolation);
-    transform->setDirection(direction);
+    transform->setDirection(invert ? OCIO::TRANSFORM_DIR_INVERSE : OCIO::TRANSFORM_DIR_FORWARD);
     
     OCIO::ConstProcessorRcPtr processor = _config->getProcessor(transform);
     
@@ -159,22 +134,22 @@ OpenColorIO_PS_Context::getLUTProcessor(OCIO::Interpolation interpolation, OCIO:
 
 
 OCIO::BakerRcPtr
-OpenColorIO_PS_Context::getConvertBaker(const std::string &inputSpace, const std::string &outputSpace) const
+OpenColorIO_PS_Context::getConvertBaker(const std::string &inputSpace, const std::string &outputSpace, bool invert) const
 {
     assert( !isLUT() );
 
     OCIO::BakerRcPtr baker = OCIO::Baker::Create();
     
     baker->setConfig(_config);
-    baker->setInputSpace( inputSpace.c_str() );
-    baker->setTargetSpace( outputSpace.c_str() );
-    
+    baker->setInputSpace(invert ? outputSpace.c_str() : inputSpace.c_str());
+    baker->setTargetSpace(invert ? inputSpace.c_str() : outputSpace.c_str() );
+	
     return baker;
 }
 
 
 OCIO::BakerRcPtr
-OpenColorIO_PS_Context::getDisplayBaker(const std::string &inputSpace, const std::string &display, const std::string &view) const
+OpenColorIO_PS_Context::getDisplayBaker(const std::string &inputSpace, const std::string &display, const std::string &view, bool invert) const
 {
     assert( !isLUT() );
 
@@ -190,13 +165,14 @@ OpenColorIO_PS_Context::getDisplayBaker(const std::string &inputSpace, const std
     const std::string output_space = "ProcessedOutput";
     outputColorSpace->setName( output_space.c_str() );
     
-    OCIO::DisplayViewTransformRcPtr transformPtr = OCIO::DisplayViewTransform::Create();
+    OCIO::DisplayViewTransformRcPtr transform = OCIO::DisplayViewTransform::Create();
     
-    transformPtr->setSrc( inputSpace.c_str() );
-    transformPtr->setDisplay( display.c_str() );
-    transformPtr->setView( view.c_str() );
+    transform->setSrc( inputSpace.c_str() );
+    transform->setDisplay( display.c_str() );
+    transform->setView( view.c_str() );
+    transform->setDirection(invert ? OCIO::TRANSFORM_DIR_INVERSE : OCIO::TRANSFORM_DIR_FORWARD);
     
-    outputColorSpace->setTransform(transformPtr, OCIO::COLORSPACE_DIR_FROM_REFERENCE);
+    outputColorSpace->setTransform(transform, OCIO::COLORSPACE_DIR_FROM_REFERENCE);
     
     editableConfig->addColorSpace(outputColorSpace);
     
@@ -212,20 +188,20 @@ OpenColorIO_PS_Context::getDisplayBaker(const std::string &inputSpace, const std
 
 
 OCIO::BakerRcPtr
-OpenColorIO_PS_Context::getLUTBaker(OCIO::Interpolation interpolation, OCIO::TransformDirection direction) const
+OpenColorIO_PS_Context::getLUTBaker(OCIO::Interpolation interpolation, bool invert) const
 {
     assert( isLUT() );
 
     OCIO::ConfigRcPtr editableConfig = OCIO::Config::Create();
 
     OCIO::ColorSpaceRcPtr inputColorSpace = OCIO::ColorSpace::Create();
-    std::string inputspace = "RawInput";
+    const std::string inputspace = "RawInput";
     inputColorSpace->setName(inputspace.c_str());
     editableConfig->addColorSpace(inputColorSpace);
     
     
     OCIO::ColorSpaceRcPtr outputColorSpace = OCIO::ColorSpace::Create();
-    std::string outputspace = "ProcessedOutput";
+    const std::string outputspace = "ProcessedOutput";
     outputColorSpace->setName(outputspace.c_str());
     
     OCIO::FileTransformRcPtr transform = OCIO::FileTransform::Create();
@@ -233,7 +209,7 @@ OpenColorIO_PS_Context::getLUTBaker(OCIO::Interpolation interpolation, OCIO::Tra
     transform = OCIO::FileTransform::Create();
     transform->setSrc(_path.c_str());
     transform->setInterpolation(interpolation);
-    transform->setDirection(direction);
+    transform->setDirection(invert ? OCIO::TRANSFORM_DIR_INVERSE : OCIO::TRANSFORM_DIR_FORWARD);
     
     outputColorSpace->setTransform(transform, OCIO::COLORSPACE_DIR_FROM_REFERENCE);
     
