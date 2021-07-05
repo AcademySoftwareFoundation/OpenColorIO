@@ -125,8 +125,6 @@ protected:
     float m_thrYellow;
     float m_power;
 
-    float m_one_over_power;
-
     float m_scaleCyan;
     float m_scaleMagenta;
     float m_scaleYellow;
@@ -690,17 +688,17 @@ void Renderer_ACES_DarkToDim10_Fwd::apply(const void * inImg, void * outImg, lon
     }
 }
 
-float compress(float dist, float thr, float scale, float power, float one_over_power)
+float compress(float dist, float thr, float scale, float power)
 {
     // Normalize distance outside threshold by scale factor
     const float nd = (dist - thr) / scale;
-    const float p = powf(nd, power);
+    const float p = std::powf(nd, power);
 
-    // Compress
-    return thr + scale * nd / (powf(1.0f + p, one_over_power));
+    // Note: assume the compiler will optimize out "1.0f / power".
+    return thr + scale * nd / (std::powf(1.0f + p, 1.0f / power));
 }
 
-float uncompress(float dist, float thr, float scale, float power, float one_over_power)
+float uncompress(float dist, float thr, float scale, float power)
 {
     // Avoid singularity
     if (dist >= (thr + scale))
@@ -711,14 +709,15 @@ float uncompress(float dist, float thr, float scale, float power, float one_over
     {
         // Normalize distance outside threshold by scale factor
         const float nd = (dist - thr) / scale;
-        const float p = powf(nd, power);
+        const float p = std::powf(nd, power);
 
-        return thr + scale * powf(-(p / (p - 1.0f)), one_over_power);
+        // Note: assume the compiler will optimize out "1.0f / power".
+        return thr + scale * std::powf(-(p / (p - 1.0f)), 1.0f / power);
     }
 }
 
 template <typename Func>
-float gamut_comp(float val, float ach, float lim, float thr, float scale, float power, float one_over_power, Func f)
+float gamut_comp(float val, float ach, float lim, float thr, float scale, float power, Func f)
 {
     // Disable compression
     if (ach == 0.0f)
@@ -742,7 +741,7 @@ float gamut_comp(float val, float ach, float lim, float thr, float scale, float 
     }
 
     // Compress / Uncompress distance with parameterized shaper function
-    const float comprDist = f(dist, thr, scale, power, one_over_power);
+    const float comprDist = f(dist, thr, scale, power);
 
     // Recalculate RGB from compressed distance and achromatic
     const float compr = ach - comprDist * std::fabs(ach);
@@ -761,7 +760,6 @@ Renderer_ACES_GamutComp13_Fwd::Renderer_ACES_GamutComp13_Fwd(ConstFixedFunctionO
     m_thrYellow      = (float)data->getParams()[5];
     m_power          = (float)data->getParams()[6];
 
-    m_one_over_power = 1.f / m_power;
 
     m_thrCyan        = std::min(0.9999f, m_thrCyan);
     m_thrMagenta     = std::min(0.9999f, m_thrMagenta);
@@ -769,7 +767,7 @@ Renderer_ACES_GamutComp13_Fwd::Renderer_ACES_GamutComp13_Fwd(ConstFixedFunctionO
 
     // Precompute scale factor for y = 1 intersect
     auto f_scale = [this](float lim, float thr) {
-        return (lim - thr) / powf(powf((1.0f - thr) / (lim - thr), -m_power) - 1.0f, m_one_over_power);
+        return (lim - thr) / std::powf(std::powf((1.0f - thr) / (lim - thr), -m_power) - 1.0f, 1.0f / m_power);
     };
     m_scaleCyan      = f_scale(m_limCyan,    m_thrCyan);
     m_scaleMagenta   = f_scale(m_limMagenta, m_thrMagenta);
@@ -790,9 +788,9 @@ void Renderer_ACES_GamutComp13_Fwd::apply(const void * inImg, void * outImg, lon
         // Achromatic axis
         const float ach = std::max(red, std::max(grn, blu));
 
-        out[0] = gamut_comp(red, ach, m_limCyan,    m_thrCyan,    m_scaleCyan,    m_power, m_one_over_power, compress);
-        out[1] = gamut_comp(grn, ach, m_limMagenta, m_thrMagenta, m_scaleMagenta, m_power, m_one_over_power, compress);
-        out[2] = gamut_comp(blu, ach, m_limYellow,  m_thrYellow,  m_scaleYellow,  m_power, m_one_over_power, compress);
+        out[0] = gamut_comp(red, ach, m_limCyan,    m_thrCyan,    m_scaleCyan,    m_power, compress);
+        out[1] = gamut_comp(grn, ach, m_limMagenta, m_thrMagenta, m_scaleMagenta, m_power, compress);
+        out[2] = gamut_comp(blu, ach, m_limYellow,  m_thrYellow,  m_scaleYellow,  m_power, compress);
         out[3] = in[3];
 
         in  += 4;
@@ -819,9 +817,9 @@ void Renderer_ACES_GamutComp13_Inv::apply(const void * inImg, void * outImg, lon
         // Achromatic axis
         const float ach = std::max(red, std::max(grn, blu));
 
-        out[0] = gamut_comp(red, ach, m_limCyan,    m_thrCyan,    m_scaleCyan,    m_power, m_one_over_power, uncompress);
-        out[1] = gamut_comp(grn, ach, m_limMagenta, m_thrMagenta, m_scaleMagenta, m_power, m_one_over_power, uncompress);
-        out[2] = gamut_comp(blu, ach, m_limYellow,  m_thrYellow,  m_scaleYellow,  m_power, m_one_over_power, uncompress);
+        out[0] = gamut_comp(red, ach, m_limCyan,    m_thrCyan,    m_scaleCyan,    m_power, uncompress);
+        out[1] = gamut_comp(grn, ach, m_limMagenta, m_thrMagenta, m_scaleMagenta, m_power, uncompress);
+        out[2] = gamut_comp(blu, ach, m_limYellow,  m_thrYellow,  m_scaleYellow,  m_power, uncompress);
         out[3] = in[3];
 
         in  += 4;
