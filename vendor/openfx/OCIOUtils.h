@@ -32,54 +32,56 @@ OCIO::BitDepth getOCIOBitDepth(OFX::BitDepthEnum ofxBitDepth);
 int getChanStrideBytes(OCIO::BitDepth ocioBitDepth);
 
 /* Build color space ChoiceParam from the current OCIO config */
-OFX::ChoiceParamDescriptor * defineCsNameParam(
-    OFX::ImageEffectDescriptor & desc,
-    const std::string & name, 
-    const std::string & label, 
-    const std::string & hint,
-    OFX::GroupParamDescriptor * parent);
+void defineCsNameParam(OFX::ImageEffectDescriptor & desc,
+                       OFX::PageParamDescriptor * page,
+                       const std::string & name, 
+                       const std::string & label, 
+                       const std::string & hint,
+                       OFX::GroupParamDescriptor * parent);
 
 /* Build display ChoiceParam from the current OCIO config */
-OFX::ChoiceParamDescriptor * defineDisplayParam(
-    OFX::ImageEffectDescriptor & desc,
-    const std::string & name, 
-    const std::string & label, 
-    const std::string & hint,
-    OFX::GroupParamDescriptor * parent);
+void defineDisplayParam(OFX::ImageEffectDescriptor & desc,
+                        OFX::PageParamDescriptor * page,
+                        const std::string & name, 
+                        const std::string & label, 
+                        const std::string & hint,
+                        OFX::GroupParamDescriptor * parent);
 
 /* Build view ChoiceParam from the default OCIO config display */
-OFX::ChoiceParamDescriptor * defineViewParam(
-    OFX::ImageEffectDescriptor & desc,
-    const std::string & name, 
-    const std::string & label, 
-    const std::string & hint,
-    OFX::GroupParamDescriptor * parent);
+void defineViewParam(OFX::ImageEffectDescriptor & desc,
+                     OFX::PageParamDescriptor * page,
+                     const std::string & name, 
+                     const std::string & label, 
+                     const std::string & hint,
+                     OFX::GroupParamDescriptor * parent);
 
 /* Build simple BooleanParam, defaulting to false */
-OFX::BooleanParamDescriptor * defineBooleanParam(
-    OFX::ImageEffectDescriptor & desc,
-    const std::string & name, 
-    const std::string & label, 
-    const std::string & hint,
-    OFX::GroupParamDescriptor * parent,
-    bool defaultValue = false);
+void defineBooleanParam(OFX::ImageEffectDescriptor & desc,
+                        OFX::PageParamDescriptor * page,
+                        const std::string & name, 
+                        const std::string & label, 
+                        const std::string & hint,
+                        OFX::GroupParamDescriptor * parent,
+                        bool defaultValue = false);
 
 /* Build simple StringParam */
-OFX::StringParamDescriptor * defineStringParam(
-    OFX::ImageEffectDescriptor & desc,
-    const std::string & name, 
-    const std::string & label, 
-    const std::string & hint,
-    OFX::GroupParamDescriptor * parent,
-    std::string defaultValue = "",
-    OFX::StringTypeEnum stringType = OFX::eStringTypeSingleLine);
+void defineStringParam(OFX::ImageEffectDescriptor & desc,
+                       OFX::PageParamDescriptor * page,
+                       const std::string & name, 
+                       const std::string & label, 
+                       const std::string & hint,
+                       OFX::GroupParamDescriptor * parent,
+                       bool isSecret = false,
+                       std::string defaultValue = "",
+                       OFX::StringTypeEnum stringType = OFX::eStringTypeSingleLine);
 
-OFX::PushButtonParamDescriptor * definePushButtonParam(
-    OFX::ImageEffectDescriptor & desc,
-    const std::string & name, 
-    const std::string & label, 
-    const std::string & hint,
-    OFX::GroupParamDescriptor * parent);
+/* Build simple PushButtonParam */
+void definePushButtonParam(OFX::ImageEffectDescriptor & desc,
+                           OFX::PageParamDescriptor * page,
+                           const std::string & name, 
+                           const std::string & label, 
+                           const std::string & hint,
+                           OFX::GroupParamDescriptor * parent);
 
 /* Build GroupParam with four context variable StringParam name/value pairs */
 void defineContextParams(OFX::ImageEffectDescriptor & desc,
@@ -99,6 +101,15 @@ OCIO::ContextRcPtr createOCIOContext(ParamMap & params);
 
 /* Get current option string from a ChoiceParam */
 std::string getChoiceParamOption(OFX::ChoiceParam * param);
+
+/* Update internal *_store param on config ChoiceParam change */
+void choiceParamChanged(OFX::ImageEffect & instance, 
+                        const std::string & paramName);
+
+/* Restore "missing" config ChoiceParam option from internal *_store param */
+void restoreChoiceParamOption(OFX::ImageEffect & instance,
+                              const std::string & paramName,
+                              const std::string & pluginType);
 
 /* Update view ChoiceParam options from current display ChoiceParam option */
 void updateViewParamOptions(OFX::ChoiceParam * displayParam, 

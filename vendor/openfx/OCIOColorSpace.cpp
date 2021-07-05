@@ -6,6 +6,13 @@
 
 namespace OCIO = OCIO_NAMESPACE;
 
+namespace
+{
+
+const std::string PLUGIN_TYPE = "OCIOColorSpace";
+
+} // namespace
+
 OCIOColorSpace::OCIOColorSpace(OfxImageEffectHandle handle)
     : ImageEffect(handle)
     , dstClip_(0)
@@ -22,6 +29,10 @@ OCIOColorSpace::OCIOColorSpace(OfxImageEffectHandle handle)
     dstCsNameParam_  = fetchChoiceParam("dst_cs");
     inverseParam_    = fetchBooleanParam("inverse");
     swapSrcDstParam_ = fetchPushButtonParam("swap_src_dst");
+
+    // Handle missing config values
+    restoreChoiceParamOption(*this, "src_cs", PLUGIN_TYPE);
+    restoreChoiceParamOption(*this, "dst_cs", PLUGIN_TYPE);
 
     fetchContextParams(*this, contextParams_);
 }
@@ -107,7 +118,8 @@ void OCIOColorSpace::changedParam(const OFX::InstanceChangedArgs & /*args*/,
                 config->getDefaultSceneToDisplayViewTransform();
 
             std::ostringstream os;
-            os << "Color space '" << srcCsName << "' is ";
+            os << PLUGIN_TYPE << " WARNING: Color space '";
+            os << srcCsName << "' is ";
             os << (srcRef == OCIO::REFERENCE_SPACE_SCENE ? "scene" : "display");
             os << "-referred and '" << dstCsName << "' is ";
             os << (dstRef == OCIO::REFERENCE_SPACE_SCENE ? "scene" : "display");
@@ -122,8 +134,10 @@ void OCIOColorSpace::changedParam(const OFX::InstanceChangedArgs & /*args*/,
                         "view_transform_warning",
                         os.str());
         }
-    }
 
+        // Store config values
+        choiceParamChanged(*this, paramName);
+    }
     else if (paramName == "swap_src_dst")
     {
         int srcCsIdx, dstCsIdx;
@@ -136,13 +150,14 @@ void OCIOColorSpace::changedParam(const OFX::InstanceChangedArgs & /*args*/,
     }
     else
     {
+        // Store context overrides
         contextParamChanged(*this, paramName);
     }
 }
 
 void OCIOColorSpaceFactory::describe(OFX::ImageEffectDescriptor& desc)
 {
-    baseDescribe("OCIOColorSpace", desc);
+    baseDescribe(PLUGIN_TYPE, desc);
 }
 
 void OCIOColorSpaceFactory::describeInContext(OFX::ImageEffectDescriptor& desc, 
@@ -154,40 +169,32 @@ void OCIOColorSpaceFactory::describeInContext(OFX::ImageEffectDescriptor& desc,
     OFX::PageParamDescriptor * page = desc.definePageParam(PARAM_NAME_PAGE_0);
 
     // Src color space
-    OFX::ChoiceParamDescriptor * srcCsNameParam = defineCsNameParam(
-        desc, 
-        "src_cs", 
-        "Source Color Space", 
-        "Source color space name", 
-        0);
-    page->addChild(*srcCsNameParam);
+    defineCsNameParam(desc, page, 
+                      "src_cs", 
+                      "Source Color Space", 
+                      "Source color space name", 
+                      0);
 
     // Dst color space
-    OFX::ChoiceParamDescriptor * dstCsNameParam = defineCsNameParam(
-        desc, 
-        "dst_cs", 
-        "Destination Color Space", 
-        "Destination color space name", 
-        0);
-    page->addChild(*dstCsNameParam);
+    defineCsNameParam(desc, page, 
+                      "dst_cs", 
+                      "Destination Color Space", 
+                      "Destination color space name", 
+                      0);
 
     // Inverse
-    OFX::BooleanParamDescriptor * inverseParam = defineBooleanParam(
-        desc, 
-        "inverse", 
-        "Inverse", 
-        "Invert the transform",
-        0);
-    page->addChild(*inverseParam);
+    defineBooleanParam(desc, page,
+                       "inverse", 
+                       "Inverse", 
+                       "Invert the transform",
+                       0);
 
     // Swap color spaces
-    OFX::PushButtonParamDescriptor * swapSrcDstParam = definePushButtonParam(
-        desc, 
-        "swap_src_dst", 
-        "Swap color spaces", 
-        "Swap src and dst color spaces",
-        0);
-    page->addChild(*swapSrcDstParam);
+    definePushButtonParam(desc, page,
+                          "swap_src_dst", 
+                          "Swap color spaces", 
+                          "Swap src and dst color spaces",
+                          0);
 
     // Context overrides
     defineContextParams(desc, page);

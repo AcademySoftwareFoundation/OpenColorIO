@@ -7,6 +7,13 @@
 
 namespace OCIO = OCIO_NAMESPACE;
 
+namespace
+{
+
+const std::string PLUGIN_TYPE = "OCIODisplayView";
+
+} // namespace
+
 OCIODisplayView::OCIODisplayView(OfxImageEffectHandle handle)
     : ImageEffect(handle)
     , dstClip_(0)
@@ -23,6 +30,11 @@ OCIODisplayView::OCIODisplayView(OfxImageEffectHandle handle)
     displayParam_   = fetchChoiceParam("display");
     viewParam_      = fetchChoiceParam("view");
     inverseParam_   = fetchBooleanParam("inverse");
+
+    // Handle missing config values
+    restoreChoiceParamOption(*this, "src_cs", PLUGIN_TYPE);
+    restoreChoiceParamOption(*this, "display", PLUGIN_TYPE);
+    restoreChoiceParamOption(*this, "view", PLUGIN_TYPE);
 
     fetchContextParams(*this, contextParams_);
 }
@@ -87,19 +99,26 @@ bool OCIODisplayView::isIdentity(const OFX::IsIdentityArguments & args,
 void OCIODisplayView::changedParam(const OFX::InstanceChangedArgs & /*args*/, 
                                    const std::string & paramName)
 {
-    if (paramName == "display")
+    if (paramName == "src_cs" || paramName == "display" || paramName == "view")
     {
-        updateViewParamOptions(displayParam_, viewParam_);
+        if (paramName == "display")
+        {
+            updateViewParamOptions(displayParam_, viewParam_);
+        }
+
+        // Store config values
+        choiceParamChanged(*this, paramName);
     }
     else
     {
+        // Store context overrides
         contextParamChanged(*this, paramName);
     }
 }
 
 void OCIODisplayViewFactory::describe(OFX::ImageEffectDescriptor& desc)
 {
-    baseDescribe("OCIODisplayView", desc);
+    baseDescribe(PLUGIN_TYPE, desc);
 }
 
 void OCIODisplayViewFactory::describeInContext(OFX::ImageEffectDescriptor& desc, 
@@ -111,40 +130,32 @@ void OCIODisplayViewFactory::describeInContext(OFX::ImageEffectDescriptor& desc,
     OFX::PageParamDescriptor * page = desc.definePageParam(PARAM_NAME_PAGE_0);
 
     // Src color space
-    OFX::ChoiceParamDescriptor * srcCsNameParam = defineCsNameParam(
-        desc, 
-        "src_cs", 
-        "Source Color Space", 
-        "Source color space name", 
-        0);
-    page->addChild(*srcCsNameParam);
+    defineCsNameParam(desc, page,
+                      "src_cs", 
+                      "Source Color Space", 
+                      "Source color space name", 
+                      0);
 
     // Display
-    OFX::ChoiceParamDescriptor * displayParam = defineDisplayParam(
-        desc, 
-        "display", 
-        "Display", 
-        "Display device name", 
-        0);
-    page->addChild(*displayParam);
+    defineDisplayParam(desc, page,
+                       "display", 
+                       "Display", 
+                       "Display device name", 
+                       0);
 
     // View
-    OFX::ChoiceParamDescriptor * viewParam = defineViewParam(
-        desc, 
-        "view", 
-        "View", 
-        "View name", 
-        0);
-    page->addChild(*viewParam);
+    defineViewParam(desc, page, 
+                    "view", 
+                    "View", 
+                    "View name", 
+                    0);
 
     // Inverse
-    OFX::BooleanParamDescriptor * inverseParam = defineBooleanParam(
-        desc, 
-        "inverse", 
-        "Inverse", 
-        "Invert the transform",
-        0);
-    page->addChild(*inverseParam);
+    defineBooleanParam(desc, page,
+                       "inverse", 
+                       "Inverse", 
+                       "Invert the transform",
+                       0);
 
     // Context overrides
     defineContextParams(desc, page);
