@@ -2972,6 +2972,11 @@ const char * Config::getDefaultView(const char * display) const
     return getView(display, 0);
 }
 
+const char * Config::getDefaultView(const char * display, const char * colorspaceName) const
+{
+    return getView(display, colorspaceName, 0);
+}
+
 int Config::getNumViews(const char * display) const
 {
     if (!display || !*display) return 0;
