@@ -22,6 +22,10 @@ if(USE_MSVC)
         )
     endif()
 
+    # Explicitely specify the default warning level i.e. /W3.
+    # Note: Do not use /Wall (i.e. /W4) which adds 'informational' warnings.
+    set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} /W3")
+
     if(OCIO_WARNING_AS_ERROR)
         set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} /WX")
     endif()
