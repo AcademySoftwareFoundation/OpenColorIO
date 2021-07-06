@@ -292,14 +292,8 @@ void bindPyConfig(py::module & m)
              DOC(Config, isColorSpaceUsed))
         .def("clearColorSpaces", &Config::clearColorSpaces, 
              DOC(Config, clearColorSpaces))
-
-        .def("parseColorSpaceFromString", [](ConfigRcPtr & self, const char * str) 
-            {
-                return self->getColorSpaceFromFilepath(str);
-            }, 
-             "str"_a, 
+        .def("parseColorSpaceFromString", &Config::parseColorSpaceFromString, "str"_a, 
              DOC(Config, parseColorSpaceFromString))
-
         .def("isStrictParsingEnabled", &Config::isStrictParsingEnabled, 
              DOC(Config, isStrictParsingEnabled))
         .def("setStrictParsingEnabled", &Config::setStrictParsingEnabled, "enabled"_a,
