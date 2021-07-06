@@ -980,7 +980,8 @@ public:
      */
     void setFileRules(ConstFileRulesRcPtr fileRules);
 
-    ///  Get the color space of the first rule that matched filePath.
+    /// Get the color space of the first rule that matched filePath. (For v1 configs, this is
+    /// equivalent to calling parseColorSpaceFromString with strictparsing set to false.)
     const char * getColorSpaceFromFilepath(const char * filePath) const;
 
     /**
@@ -1009,7 +1010,7 @@ public:
      * * If strict parsing is disabled, return ROLE_DEFAULT (if defined).
      * * If the default role is not defined, return an empty string.
      */
-    OCIO_DEPRECATED("This is now deprecated, please use Config::getColorSpaceFromFilepath().")
+    OCIO_DEPRECATED("This was marked as deprecated starting in v2.0, please use Config::getColorSpaceFromFilepath().")
     const char * parseColorSpaceFromString(const char * str) const;
 
     bool isStrictParsingEnabled() const;
@@ -1178,6 +1179,10 @@ extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const Config&);
  * Getters and setters are using the rule position, they will throw if the position is not
  * valid. If the rule at the specified position does not implement the requested property
  * getter will return NULL and setter will throw.
+ *
+ * When loading a v1 config, a set of FileRules are created with ColorSpaceNamePathSearch followed
+ * by the Default rule pointing to the default role. This allows getColorSpaceFromFilepath to emulate
+ * OCIO v1 code that used parseColorSpaceFromString with strictparsing set to false.
  */
 
 class OCIOEXPORT FileRules
