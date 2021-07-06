@@ -607,6 +607,9 @@ public:
     const char * getDisplay(int index) const;
 
     const char * getDefaultView(const char * display) const;
+    // Get the default view for a given color space using the viewing rules.
+    // This is the preferred call to use if the color space being viewed is known.
+    const char * getDefaultView(const char * display, const char * colorspaceName) const;
 
     /**
      * Return the number of views attached to the display including the number of

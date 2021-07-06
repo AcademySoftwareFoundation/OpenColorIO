@@ -508,4 +508,10 @@ colorspaces:
     OCIO_CHECK_EQUAL(view, "SView_a");
     OCIO_CHECK_NO_THROW(view = configav->getView("sRGB", "c3", 4));
     OCIO_CHECK_EQUAL(view, "View_b");
+
+    // Test the default methods.
+
+    OCIO_CHECK_EQUAL(std::string("sRGB"), std::string(configav->getDefaultDisplay()));
+    OCIO_CHECK_EQUAL(std::string(configav->getView("sRGB", "c3", 0)), 
+                     std::string(configav->getDefaultView("sRGB", "c3")));
 }
