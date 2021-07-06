@@ -994,7 +994,8 @@ public:
      */
     void setFileRules(ConstFileRulesRcPtr fileRules);
 
-    ///  Get the color space of the first rule that matched filePath.
+    /// Get the color space of the first rule that matched filePath. (For v1 configs, this is
+    /// equivalent to calling parseColorSpaceFromString with strictparsing set to false.)
     const char * getColorSpaceFromFilepath(const char * filePath) const;
 
     /**
@@ -1023,6 +1024,7 @@ public:
      * * If strict parsing is disabled, return ROLE_DEFAULT (if defined).
      * * If the default role is not defined, return an empty string.
      */
+    OCIO_DEPRECATED("This was marked as deprecated starting in v2.0, please use Config::getColorSpaceFromFilepath().")
     const char * parseColorSpaceFromString(const char * str) const;
 
     bool isStrictParsingEnabled() const;
@@ -1149,64 +1151,56 @@ private:
 extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const Config&);
 
 
-
-// TODO: Move to .rst
-// FileRules
-// *********
-// The File Rules are a set of filepath to color space mappings that are evaluated
-// from first to last. The first rule to match is what determines which color space is
-// returned. There are four types of rules available. Each rule type has a name key that may
-// be used by applications to refer to that rule. Name values must be unique i.e. using a
-// case insensitive comparison. The other keys depend on the rule type:
-//
-// - Basic Rule: This is the basic rule type that uses Unix glob style pattern matching and
-//   is thus very easy to use. It contains the keys:
-//
-//   * name: Name of the rule
-//
-//   * colorspace: Color space name to be returned.
-//
-//   * pattern: Glob pattern to be used for the main part of the name/path.
-//
-//   * extension: Glob pattern to be used for the file extension. Note that if glob tokens
-//     are not used, the extension will be used in a non-case-sensitive way by default.
-//
-// - Regex Rule: This is similar to the basic rule but allows additional capabilities for
-//   power-users. It contains the keys:
-//
-//   * name: Name of the rule
-//
-//   * colorspace: Color space name to be returned.
-//
-//   * regex: Regular expression to be evaluated.
-//
-// - OCIO v1 style Rule: This rule allows the use of the OCIO v1 style, where the string
-//   is searched for color space names from the config. This rule may occur 0 or 1 times
-//   in the list. The position in the list prioritizes it with respect to the other rules.
-//   StrictParsing is not used. If no color space is found in the path, the rule will not
-//   match and the next rule will be considered.
-//   \see FileRules::insertPathSearchRule.
-//   It has the key:
-//
-//   * name: Must be "ColorSpaceNamePathSearch".
-//
-// - Default Rule: The file_rules must always end with this rule. If no prior rules match,
-//   this rule specifies the color space applications will use.
-//   \see FileRules::setDefaultRuleColorSpace.
-//   It has the keys:
-//
-//   * name: must be "Default".
-//
-//   * colorspace : Color space name to be returned.
-//
-// Custom string keys and associated string values may be used to convey app or
-// workflow-specific information, e.g. whether the color space should be left as is
-// or converted into a working space.
-//
-// Getters and setters are using the rule position, they will throw if the position is not
-// valid. If the rule at the specified position does not implement the requested property
-// getter will return NULL and setter will throw.
-//
+/**
+ * \brief
+ * The File Rules are a set of filepath to color space mappings that are evaluated
+ * from first to last. The first rule to match is what determines which color space is
+ * returned. There are four types of rules available. Each rule type has a name key that may
+ * be used by applications to refer to that rule. Name values must be unique i.e. using a
+ * case insensitive comparison. The other keys depend on the rule type:
+ *
+ * * *Basic Rule*: This is the basic rule type that uses Unix glob style pattern matching and
+ *   is thus very easy to use. It contains the keys:
+ *     * name: Name of the rule
+ *     * colorspace: Color space name to be returned.
+ *     * pattern: Glob pattern to be used for the main part of the name/path.
+ *     * extension: Glob pattern to be used for the file extension. Note that if glob tokens
+ *       are not used, the extension will be used in a non-case-sensitive way by default.
+ * 
+ * * *Regex Rule*: This is similar to the basic rule but allows additional capabilities for
+ *   power-users. It contains the keys:
+ *     * name: Name of the rule
+ *     * colorspace: Color space name to be returned.
+ *     * regex: Regular expression to be evaluated.
+ * 
+ * * *OCIO v1 style Rule*: This rule allows the use of the OCIO v1 style, where the string
+ *   is searched for color space names from the config. This rule may occur 0 or 1 times
+ *   in the list. The position in the list prioritizes it with respect to the other rules.
+ *   StrictParsing is not used. If no color space is found in the path, the rule will not
+ *   match and the next rule will be considered.
+ *   see \ref insertPathSearchRule.
+ *   It has the key:
+ *     * name: Must be "ColorSpaceNamePathSearch".
+ * 
+ * * *Default Rule*: The file_rules must always end with this rule. If no prior rules match,
+ *   this rule specifies the color space applications will use.
+ *   see \ref setDefaultRuleColorSpace.
+ *   It has the keys:
+ *     * name: must be "Default".
+ *     * colorspace : Color space name to be returned.
+ *
+ * Custom string keys and associated string values may be used to convey app or
+ * workflow-specific information, e.g. whether the color space should be left as is
+ * or converted into a working space.
+ *
+ * Getters and setters are using the rule position, they will throw if the position is not
+ * valid. If the rule at the specified position does not implement the requested property
+ * getter will return NULL and setter will throw.
+ *
+ * When loading a v1 config, a set of FileRules are created with ColorSpaceNamePathSearch followed
+ * by the Default rule pointing to the default role. This allows getColorSpaceFromFilepath to emulate
+ * OCIO v1 code that used parseColorSpaceFromString with strictparsing set to false.
+ */
 
 class OCIOEXPORT FileRules
 {
