@@ -4,7 +4,24 @@
 
 name: Wheel
 
-on: [pull_request]
+on:
+  push:
+    # Versioned branches and tags are ignored for OCIO <= 1.x.x
+    branches-ignore:
+      - RB-0.*
+      - RB-1.*
+      - gh-pages
+    tags-ignore:
+      - v0.*
+      - v1.*
+  pull_request:
+    branches-ignore:
+      - RB-0.*
+      - RB-1.*
+      - gh-pages
+    tags-ignore:
+      - v0.*
+      - v1.*
 
 jobs:
   # Linux jobs run in Docker containers (manylinux), so the latest OS version
@@ -23,12 +40,6 @@ jobs:
   # When installing doc environment, Python package are not used as the wheel
   # is built in it's own isolated environment, hence package are listed again
   # in pyproject.toml.
-  #
-  # Wheels are currently uploaded to the test package index for testing
-  # https://test.pypi.org/
-  #
-  # Filters on event to decide when to build and upload the wheels are up for
-  # dicussions.
   #
 
   # ---------------------------------------------------------------------------
@@ -224,4 +235,3 @@ jobs:
         with:
           user: __token__
           password: ${{ secrets.PYPI_API_TOKEN }}
-          repository_url: https://test.pypi.org/legacy/
