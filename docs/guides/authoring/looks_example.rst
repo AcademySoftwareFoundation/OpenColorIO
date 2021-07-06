@@ -52,7 +52,7 @@ Example Python API call:
 .. code-block:: python
 
     look = OCIO.Look(name='di', processSpace='rclg16')
-    t = OCIO.FileTransform('look_di.cc', interpolation=OCIO.Constants.INTERP_LINEAR)
+    t = OCIO.FileTransform('look_di.cc', interpolation=OCIO.INTERP_LINEAR)
     look.setTransform(t)
     config.addLook(look)
 
