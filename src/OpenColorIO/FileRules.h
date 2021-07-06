@@ -69,6 +69,12 @@ private:
     std::vector<FileRuleRcPtr> m_rules;
 };
 
+
+// Helper method to build valid v2 file rules from a v1 config. Note that it does not change
+// the config instance version.
+void UpdateFileRulesFromV1ToV2(const Config & config, FileRulesRcPtr & fileRules);
+
+
 } // namespace OCIO_NAMESPACE
 
 #endif
