@@ -319,7 +319,7 @@ to use to control other types of tasks not listed below.
 
 * ``color_picking`` - colors in a color-selection UI can be displayed
   in this space, while selecting colors in a different working space
-  (e.g. ``scene_linear`` or ``texture_paint``)
+  (e.g. ``scene_linear`` or ``texture_paint``).
 
 * ``color_timing`` - color space used for applying color corrections,
   e.g. user-specified grade within an image viewer (if the application
@@ -327,32 +327,32 @@ to use to control other types of tasks not listed below.
 
 * ``compositing_log`` - a log color space used for certain processing
   operations (plate resizing, pulling keys, degrain, etc). Used by the
-  OCIOLogConvert Nuke node
+  OCIOLogConvert Nuke node.
 
 * ``data`` - used when writing data outputs such as normals, depth
   data, and other "non color" data. The color space in this role should
   typically have ``data: true`` specified, so no color transforms are
-  applied
+  applied.
 
 * ``default`` - when ``strictparsing: false``, this color space is used
-  as a fallback. If not defined, the ``scene_linear`` role is used
+  as a fallback.
 
 * ``matte_paint`` - color space which matte-paintings are created in
   (for more information, :ref:`see the guide on baking ICC profiles
   for Photoshop <userguide-bakelut-photoshop>`, and
-  :ref:`config-spivfx`)
+  :ref:`config-spivfx`).
 
 * ``reference`` - the color space against which the other color spaces
-  are defined
+  are defined.
 
 .. note::
    The reference role has sometimes been misinterpreted as being the
    space in which "reference art" is stored in.
 
 * ``scene_linear`` - the scene-referred linear-to-light color space,
-  often the same as the reference space (see:ref:`faq-terminology`)
+  often the same as the reference space (see:ref:`faq-terminology`).
 
 * ``texture_paint`` - similar to ``matte_paint`` but for painting
   textures for 3D objects (see the description of texture painting in
-  :ref:`SPI's pipeline <config-spipipeline-texture>`)
+  :ref:`SPI's pipeline <config-spipipeline-texture>`).
 

@@ -192,24 +192,6 @@ void GetColorSpaceReferences(std::set<std::string> & colorSpaceNames,
     }
 }
 
-static constexpr char AddedDefault[]{ "added_default_rule_colorspace" };
-
-void FindAvailableName(const ColorSpaceSetRcPtr & colorspaces, std::string & csname)
-{
-    int i = 0;
-    csname = AddedDefault;
-    while (true)
-    {
-        if (!colorspaces->hasColorSpace(csname.c_str()))
-        {
-            break;
-        }
-
-        csname = AddedDefault + std::to_string(i);
-        ++i;
-    }
-}
-
 // Views are stored in two vectors of objects, using pointers to temporarily group them.
 typedef std::vector<const View *> ViewPtrVec;
 
@@ -590,56 +572,6 @@ public:
     void getAllInternalTransforms(ConstTransformVec & transformVec) const;
 
     static ConstConfigRcPtr Read(std::istream & istream, const char * filename);
-
-    // Upgrade from v1 to v2.
-    void upgradeFromVersion1ToVersion2() noexcept
-    {
-        // V2 adds file_rules and these require a default rule. We try to initialize the default
-        // rule using the default role. If the default role doesn't exist, we look for a Raw
-        // ColorSpace with isdata true. If that is not found either, we add new ColorSpace
-        // named "added_default_rule_colorspace".
-
-        m_majorVersion = 2;
-        m_minorVersion = 0;
-
-        const char * rname = LookupRole(m_roles, ROLE_DEFAULT);
-        if (!hasColorSpace(rname))
-        {
-            std::string defaultCS;
-            bool addNewDefault = true;
-            // The default role doesn't exist so look for a color space named "raw"
-            // (not case-sensitive) with isdata true.
-            const int csindex = getColorSpaceIndex("raw");
-            if (-1 != csindex)
-            {
-                auto cs = m_allColorSpaces->getColorSpaceByIndex(csindex);
-                if (cs->isData())
-                {
-                    // "Raw" color space can be used for default.
-                    addNewDefault = false;
-                    defaultCS = cs->getName();
-                }
-            }
-
-            if (addNewDefault)
-            {
-                FindAvailableName(m_allColorSpaces, defaultCS);
-                auto newCS = ColorSpace::Create();
-                newCS->setName(defaultCS.c_str());
-                newCS->setIsData(true);
-                m_allColorSpaces->addColorSpace(newCS);
-                // Put the added CS in the inactive list to avoid it showing up in user menus.
-                if (!m_inactiveColorSpaceNamesConf.empty())
-                {
-                    m_inactiveColorSpaceNamesConf += ",";
-                }
-                m_inactiveColorSpaceNamesConf += defaultCS;
-                setInactiveColorSpaces(m_inactiveColorSpaceNamesConf.c_str());
-            }
-
-            m_fileRules->setColorSpace(m_fileRules->getNumEntries() - 1, defaultCS.c_str());
-        }
-    }
 
     // Validate view object that can be a config defined shared view or a display-defined view.
     void validateView(const std::string & display, const View & view, bool checkUseDisplayName) const
@@ -1170,16 +1102,21 @@ ConstConfigRcPtr Config::CreateFromEnv()
     Platform::Getenv(OCIO_CONFIG_ENVVAR, file);
     if(!file.empty()) return CreateFromFile(file.c_str());
 
-    std::ostringstream os;
-    os << "Color management disabled. ";
-    os << "(Specify the $OCIO environment variable to enable.)";
-    LogInfo(os.str());
+    static const char err[] =
+        "Color management disabled. (Specify the $OCIO environment variable to enable.)";
+
+    LogInfo(err);
 
     return CreateRaw();
 }
 
 ConstConfigRcPtr Config::CreateFromFile(const char * filename)
 {
+    if (!filename || !*filename)
+    {
+        throw ExceptionMissingFile ("The config filepath is missing.");
+    }
+
     std::ifstream istream(filename);
     if (istream.fail())
     {
@@ -1269,14 +1206,18 @@ void Config::upgradeToLatestVersion() noexcept
     {
         if (wasVersion == 1)
         {
-            m_impl->upgradeFromVersion1ToVersion2();
+            UpdateFileRulesFromV1ToV2(*this, m_impl->m_fileRules);
+
+            // The instance version is now 2.0
+            m_impl->m_majorVersion = 2;
+            m_impl->m_minorVersion = 0;
         }
+
         static_assert(LastSupportedMajorVersion == 2, "Config: Handle newer versions");
         setMajorVersion(LastSupportedMajorVersion);
         setMinorVersion(LastSupportedMinorVersion[LastSupportedMajorVersion - 1]);
     }
 }
-
 
 ConfigRcPtr Config::createEditableCopy() const
 {
@@ -1757,26 +1698,17 @@ void Config::validate() const
 
     ///// FileRules
 
-    // All Config objects have a fileRules object, regardless of version. This object is
-    // initialized to have a defaultRule with the color space set to "default" (i.e., the default
-    // role). The fileRules->validate call will validate that all color spaces used in rules
-    // exist, or if they are roles that they point to a color space that exists. Because this would
-    // cause validate to improperly fail on v1 configs (since they are not required to actually
-    // contain file rules), we don't do this check on v1 configs when there is only one rule.
-    if (getMajorVersion() >= 2 || getImpl()->m_fileRules->getNumEntries() != 1)
+    try
     {
-        try
-        {
-            getImpl()->m_fileRules->getImpl()->validate(*this);
-        }
-        catch (const Exception & e)
-        {
-            std::ostringstream os;
-            os << "Config failed validation. File rules failed with: ";
-            os << e.what();
-            getImpl()->m_validationtext = os.str();
-            throw Exception(getImpl()->m_validationtext.c_str());
-        }
+        getImpl()->m_fileRules->getImpl()->validate(*this);
+    }
+    catch (const Exception & e)
+    {
+        std::ostringstream os;
+        os << "Config failed validation. File rules failed with: ";
+        os << e.what();
+        getImpl()->m_validationtext = os.str();
+        throw Exception(getImpl()->m_validationtext.c_str());
     }
 
     ///// Resolve all file Transforms using context variables.
@@ -3038,6 +2970,11 @@ const char * Config::getDisplay(int index) const
 const char * Config::getDefaultView(const char * display) const
 {
     return getView(display, 0);
+}
+
+const char * Config::getDefaultView(const char * display, const char * colorspaceName) const
+{
+    return getView(display, colorspaceName, 0);
 }
 
 int Config::getNumViews(const char * display) const
@@ -4718,7 +4655,7 @@ void Config::Impl::checkVersionConsistency() const
 
     // Check for the file rules.
 
-    if (m_majorVersion < 2 && m_fileRules->getNumEntries() > 1)
+    if (m_majorVersion < 2 && m_fileRules->getNumEntries() > 2)
     {
         throw Exception("Only version 2 (or higher) can have file rules.");
     }

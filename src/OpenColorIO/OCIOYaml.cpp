@@ -4657,10 +4657,23 @@ inline void load(const YAML::Node& node, ConfigRcPtr & config, const char* filen
     auto defaultCS = config->getColorSpace(ROLE_DEFAULT);
     if (!fileRulesFound)
     {
-        if (!defaultCS && config->getMajorVersion() >= 2)
+        if (config->getMajorVersion() >= 2)
         {
-            throwError(node, "The config must contain either a Default file rule or "
-                             "the 'default' role.");
+            if (!defaultCS)
+            {
+                throwError(node, "The config must contain either a Default file rule or "
+                                 "the 'default' role.");
+            }
+        }        
+        else
+        {
+            // In order to use Config::getColorSpaceFromFilepath() method for any version of
+            // config instance, the method updates the in-memory file rules created by a v1 config
+            // to have valid file rules and most importantly, to mimic
+            // Config::parseColorSpaceFromString() which is now deprecated since v2.
+            UpdateFileRulesFromV1ToV2(*config.get(), fileRules);
+
+            config->setFileRules(fileRules);
         }
     }
     else
