@@ -24,7 +24,7 @@ namespace OIIO = OIIO_NAMESPACE;
 #endif // OCIO_GPU_ENABLED
 
 #include "oiiohelpers.h"
-#include "OpenEXR/half.h"
+#include "half.h"
 
 
 // Array of non OpenColorIO arguments.

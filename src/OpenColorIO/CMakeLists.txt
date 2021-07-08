@@ -204,7 +204,7 @@ target_link_libraries(OpenColorIO
 		OpenColorIOHeaders
 	PRIVATE
 		expat::expat
-		IlmBase::Half
+		${OCIO_HALF_LIB}
 		pystring::pystring
 		sampleicc::sampleicc
 		utils::strings

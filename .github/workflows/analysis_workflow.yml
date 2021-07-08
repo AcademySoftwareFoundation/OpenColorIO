@@ -114,6 +114,7 @@ jobs:
           share/ci/scripts/linux/install_pystring.sh latest
           share/ci/scripts/linux/install_pybind11.sh latest
           share/ci/scripts/linux/install_openexr.sh latest
+          share/ci/scripts/linux/install_imath.sh latest
           share/ci/scripts/linux/install_oiio.sh latest
       - name: Create build directories
         run: |

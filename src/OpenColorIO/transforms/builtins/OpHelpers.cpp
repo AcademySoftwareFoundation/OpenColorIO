@@ -4,7 +4,7 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "OpenEXR/half.h"
+#include "half.h"
 #include "ops/lut1d/Lut1DOp.h"
 #include "transforms/builtins/OpHelpers.h"
 

@@ -7,7 +7,7 @@
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "GpuShaderUtils.h"
-#include "OpenEXR/half.h"
+#include "half.h"
 #include "HashUtils.h"
 #include "MathUtils.h"
 #include "ops/lut1d/Lut1DOpData.h"

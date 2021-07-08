@@ -32,13 +32,26 @@ find_package(expat 2.2.8 REQUIRED)
 # https://github.com/jbeder/yaml-cpp
 find_package(yaml-cpp 0.6.3 REQUIRED)
 
-# Half (OpenEXR/IlmBase)
-# https://github.com/openexr/openexr
-find_package(Half 2.4.0 REQUIRED)
-
 # pystring
 # https://github.com/imageworks/pystring
 find_package(pystring 1.1.3 REQUIRED)
+
+# Half
+if(NOT OCIO_USE_ILMBASE)
+
+    # Imath (>=3.0)
+    # https://github.com/AcademySoftwareFoundation/Imath
+    find_package(Imath 3.0.1 REQUIRED)
+    
+    set(OCIO_HALF_LIB Imath::Imath CACHE STRING "Half library target" FORCE)
+else()
+
+    # OpenEXR/IlmBase (<=2.5)
+    # https://github.com/AcademySoftwareFoundation/openexr
+    find_package(Half 2.4.0 REQUIRED)
+
+    set(OCIO_HALF_LIB IlmBase::Half CACHE STRING "Half library target" FORCE)
+endif()
 
 if(OCIO_BUILD_APPS)
 
