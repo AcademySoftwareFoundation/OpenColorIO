@@ -9,7 +9,16 @@ name: Analysis
 on:
   schedule:
     # Nightly build
-    - cron: "0 0 * * *"
+    #- cron: "0 0 * * *"
+  push:
+    # Versioned branches and tags are ignored for OCIO <= 1.x.x
+    branches-ignore:
+      - RB-0.*
+      - RB-1.*
+      - gh-pages
+    tags-ignore:
+      - v0.*
+      - v1.*
 
 jobs:
   # ---------------------------------------------------------------------------
@@ -22,7 +31,7 @@ jobs:
        cxx=${{ matrix.cxx-standard }}, 
        docs=${{ matrix.build-docs }}>'
     # Don't run on OCIO forks
-    if: github.repository == 'AcademySoftwareFoundation/OpenColorIO'
+    #if: github.repository == 'AcademySoftwareFoundation/OpenColorIO'
     # GH-hosted VM. The build runs in CentOS 7 'container' defined below.
     runs-on: ubuntu-latest
     container:
@@ -34,67 +43,59 @@ jobs:
         build: [1, 2, 3, 4, 5, 6]
         include:
           # -------------------------------------------------------------------
-          # GCC, VFX CY2020
+          # GCC
           # -------------------------------------------------------------------
-          # C++11, Python 3.7
+          # VFX CY2022, C++17, docs
           - build: 1
             build-docs: 'ON'
-            cxx-standard: 11
+            cxx-standard: 17
             cxx-compiler: g++
             cc-compiler: gcc
-            compiler-desc: GCC 6.3.1
-            vfx-cy: 2020
-          # C++14
+            compiler-desc: GCC 9.3.1
+            vfx-cy: 2022
+          # VFX CY2021, C++14
           - build: 2
             build-docs: 'OFF'
             cxx-standard: 14
             cxx-compiler: g++
             cc-compiler: gcc
-            compiler-desc: GCC 6.3.1
-            vfx-cy: 2020
-          # -------------------------------------------------------------------
-          # GCC, VFX CY2019
-          # -------------------------------------------------------------------
-          # Python 2.7
-          - build: 3
-            # Doc build requires Python 3
+            compiler-desc: GCC 9.3.1
+            vfx-cy: 2021
+          # VFX CY2020, C++11
+          - build: 2
             build-docs: 'OFF'
             cxx-standard: 11
             cxx-compiler: g++
             cc-compiler: gcc
             compiler-desc: GCC 6.3.1
-            vfx-cy: 2019
+            vfx-cy: 2020
           # -------------------------------------------------------------------
-          # Clang, VFX CY2020
+          # Clang
           # -------------------------------------------------------------------
-          # C++11, Python 3.7
+          # VFX CY2022, C++17
           - build: 4
             build-docs: 'OFF'
-            cxx-standard: 11
+            cxx-standard: 17
             cxx-compiler: clang++
             cc-compiler: clang
-            compiler-desc: Clang 7
-            vfx-cy: 2020
-          # C++14
+            compiler-desc: Clang 9
+            vfx-cy: 2022
+          # VFX CY2021, C++14, docs
           - build: 5
-            build-docs: 'OFF'
+            build-docs: 'ON'
             cxx-standard: 14
             cxx-compiler: clang++
             cc-compiler: clang
-            compiler-desc: Clang 7
-            vfx-cy: 2020
-          # -------------------------------------------------------------------
-          # Clang, VFX CY2019
-          # -------------------------------------------------------------------
-          # Python 2.7
-          - build: 6
-            # Doc build requires Python 3
+            compiler-desc: Clang 9
+            vfx-cy: 2021
+          # VFX CY2020, C++11
+          - build: 5
             build-docs: 'OFF'
             cxx-standard: 11
             cxx-compiler: clang++
             cc-compiler: clang
             compiler-desc: Clang 7
-            vfx-cy: 2019
+            vfx-cy: 2020
     env:
       CXX: ${{ matrix.cxx-compiler }}
       CC: ${{ matrix.cc-compiler }}
@@ -150,7 +151,7 @@ jobs:
   linux_sonarcloud:
     name: 'Linux CentOS 7 VFX CY2020 SonarCloud <GCC 6.3.1>'
     # Don't run on OCIO forks
-    if: github.repository == 'AcademySoftwareFoundation/OpenColorIO'
+    #if: github.repository == 'AcademySoftwareFoundation/OpenColorIO'
     # GH-hosted VM. The build runs in CentOS 7 'container' defined below.
     runs-on: ubuntu-latest
     container:

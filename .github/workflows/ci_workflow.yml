@@ -58,175 +58,163 @@ jobs:
         build: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
         include:
           # -------------------------------------------------------------------
-          # VFX CY2021
+          # VFX CY2022 (Python 3.9)
           # -------------------------------------------------------------------
+          # Clang, Debug
           - build: 12
             build-type: Debug
             build-shared: 'ON'
             build-docs: 'OFF'
-            build-gpu: 'OFF'
-            use-headless: 'OFF'
+            use-sse: 'ON'
+            use-ilmbase: 'OFF'
+            cxx-standard: 17
+            cxx-compiler: clang++
+            cc-compiler: clang
+            compiler-desc: Clang 9
+            vfx-cy: 2022
+          # GCC, no SSE
+          - build: 11
+            build-type: Release
+            build-shared: 'ON'
+            build-docs: 'OFF'
             use-sse: 'OFF'
+            use-ilmbase: 'OFF'
+            cxx-standard: 17
+            cxx-compiler: g++
+            cc-compiler: gcc
+            compiler-desc: GCC 9.3.1
+            vfx-cy: 2022
+          # GCC, static, docs
+          - build: 10
+            build-type: Release
+            build-shared: 'OFF'
+            build-docs: 'ON'
+            use-sse: 'ON'
+            use-ilmbase: 'OFF'
+            cxx-standard: 17
+            cxx-compiler: g++
+            cc-compiler: gcc
+            compiler-desc: GCC 9.3.1
+            vfx-cy: 2022
+          # -------------------------------------------------------------------
+          # VFX CY2021 (Python 3.7)
+          # -------------------------------------------------------------------
+          # Clang, docs
+          - build: 9
+            build-type: Release
+            build-shared: 'ON'
+            build-docs: 'ON'
+            use-sse: 'ON'
+            use-ilmbase: 'ON'
             cxx-standard: 17
             cxx-compiler: clang++
             cc-compiler: clang
             compiler-desc: Clang 9
             vfx-cy: 2021
-          - build: 11
+          # Clang, static, no SSE
+          - build: 8
             build-type: Release
+            build-shared: 'OFF'
+            build-docs: 'OFF'
+            use-sse: 'OFF'
+            use-ilmbase: 'ON'
+            cxx-standard: 17
+            cxx-compiler: clang++
+            cc-compiler: clang
+            compiler-desc: Clang 9
+            vfx-cy: 2021
+          # GCC, Debug
+          - build: 7
+            build-type: Debug
             build-shared: 'ON'
             build-docs: 'OFF'
-            build-gpu: 'OFF'
-            use-headless: 'OFF'
             use-sse: 'ON'
+            use-ilmbase: 'ON'
             cxx-standard: 17
             cxx-compiler: g++
             cc-compiler: gcc
             compiler-desc: GCC 9.3.1
             vfx-cy: 2021
           # -------------------------------------------------------------------
-          # GCC, VFX CY2020
+          # VFX CY2020 (Python 3.7)
           # -------------------------------------------------------------------
-          # C++11, Python 3.7
-          - build: 10
-            build-type: Release
-            build-shared: 'ON'
-            build-docs: 'ON'
-            build-gpu: 'OFF'
-            use-headless: 'OFF'
-            use-sse: 'ON'
-            cxx-standard: 11
-            cxx-compiler: g++
-            cc-compiler: gcc
-            compiler-desc: GCC 6.3.1
-            vfx-cy: 2020
-          # Debug
-          - build: 9
-            build-type: Debug
-            build-shared: 'ON'
-            build-docs: 'OFF'
-            build-gpu: 'OFF'
-            use-headless: 'OFF'
-            use-sse: 'ON'
-            cxx-standard: 11
-            cxx-compiler: g++
-            cc-compiler: gcc
-            compiler-desc: GCC 6.3.1
-            vfx-cy: 2020
-          # C++14
-          - build: 8
-            build-type: Release
-            build-shared: 'ON'
-            build-docs: 'OFF'
-            build-gpu: 'OFF'
-            use-headless: 'OFF'
-            use-sse: 'ON'
-            cxx-standard: 14
-            cxx-compiler: g++
-            cc-compiler: gcc
-            compiler-desc: GCC 6.3.1
-            vfx-cy: 2020
-          # Static, no SSE
-          - build: 7
-            build-type: Release
-            build-shared: 'OFF'
-            build-docs: 'OFF'
-            build-gpu: 'OFF'
-            use-headless: 'OFF'
-            use-sse: 'OFF'
-            cxx-standard: 11
-            cxx-compiler: g++
-            cc-compiler: gcc
-            compiler-desc: GCC 6.3.1
-            vfx-cy: 2020
-          # -------------------------------------------------------------------
-          # GCC, VFX CY2019
-          # -------------------------------------------------------------------
-          # Python 2.7
+          # Clang
           - build: 6
             build-type: Release
             build-shared: 'ON'
-            # Doc build requires Python 3
             build-docs: 'OFF'
-            build-gpu: 'OFF'
-            use-headless: 'OFF'
-            use-sse: 'ON'
-            cxx-standard: 11
-            cxx-compiler: g++
-            cc-compiler: gcc
-            compiler-desc: GCC 6.3.1
-            vfx-cy: 2019
-          # -------------------------------------------------------------------
-          # Clang, VFX CY2020
-          # -------------------------------------------------------------------
-          # C++11, Python 3.7
-          - build: 5
-            build-type: Release
-            build-shared: 'ON'
-            build-docs: 'ON'
-            build-gpu: 'OFF'
-            use-headless: 'OFF'
-            use-sse: 'ON'
-            cxx-standard: 11
-            cxx-compiler: clang++
-            cc-compiler: clang
-            compiler-desc: Clang 7
-            vfx-cy: 2020
-          # Debug
-          - build: 4
-            build-type: Debug
-            build-shared: 'ON'
-            build-docs: 'OFF'
-            build-gpu: 'OFF'
-            build-headless: 'OFF'
-            use-sse: 'ON'
-            cxx-standard: 11
-            cxx-compiler: clang++
-            cc-compiler: clang
-            compiler-desc: Clang 7
-            vfx-cy: 2020
-          # C++14
-          - build: 3
-            build-type: Release
-            build-shared: 'ON'
-            build-docs: 'OFF'
-            build-gpu: 'OFF'
-            use-headless: 'OFF'
-            use-sse: 'ON'
+            use-sse: 'OFF'
+            use-ilmbase: 'ON'
             cxx-standard: 14
             cxx-compiler: clang++
             cc-compiler: clang
             compiler-desc: Clang 7
             vfx-cy: 2020
-          # Static, no SSE
-          - build: 2
-            build-type: Release
+          # GCC, static, Debug
+          - build: 5
+            build-type: Debug
             build-shared: 'OFF'
             build-docs: 'OFF'
-            build-gpu: 'OFF'
-            use-headless: 'OFF'
-            use-sse: 'OFF'
+            use-sse: 'ON'
+            use-ilmbase: 'ON'
+            cxx-standard: 14
+            cxx-compiler: g++
+            cc-compiler: gcc
+            compiler-desc: GCC 6.3.1
+            vfx-cy: 2020
+          # GCC, no SSE, docs
+          - build: 4
+            build-type: Release
+            build-shared: 'ON'
+            build-docs: 'ON'
+            use-sse: 'ON'
+            use-ilmbase: 'ON'
+            cxx-standard: 14
+            cxx-compiler: g++
+            cc-compiler: gcc
+            compiler-desc: GCC 6.3.1
+            vfx-cy: 2020
+          # -------------------------------------------------------------------
+          # VFX CY2019 (Python 2.7)
+          # -------------------------------------------------------------------
+          # Clang, static
+          - build: 3
+            build-type: Release
+            build-shared: 'OFF'
+            # Doc build requires Python 3
+            build-docs: 'OFF'
+            use-sse: 'ON'
+            use-ilmbase: 'ON'
             cxx-standard: 11
             cxx-compiler: clang++
             cc-compiler: clang
             compiler-desc: Clang 7
-            vfx-cy: 2020
-          # -------------------------------------------------------------------
-          # Clang, VFX CY2019
-          # -------------------------------------------------------------------
-          # Python 2.7
+            vfx-cy: 2019
+          # Clang, Debug, no SSE
+          - build: 2
+            build-type: Debug
+            build-shared: 'ON'
+            # Doc build requires Python 3
+            build-docs: 'OFF'
+            use-sse: 'OFF'
+            use-ilmbase: 'ON'
+            cxx-standard: 11
+            cxx-compiler: clang++
+            cc-compiler: clang
+            compiler-desc: Clang 7
+            vfx-cy: 2019
+          # GCC
           - build: 1
             build-type: Release
             build-shared: 'ON'
             # Doc build requires Python 3
             build-docs: 'OFF'
-            build-gpu: 'OFF'
-            use-headless: 'OFF'
             use-sse: 'ON'
+            use-ilmbase: 'ON'
             cxx-standard: 11
-            cxx-compiler: clang++
-            cc-compiler: clang
-            compiler-desc: Clang 7
+            cxx-compiler: g++
+            cc-compiler: gcc
+            compiler-desc: GCC 6.3.1
             vfx-cy: 2019
     env:
       CXX: ${{ matrix.cxx-compiler }}
@@ -251,9 +239,9 @@ jobs:
                 -DCMAKE_CXX_STANDARD=${{ matrix.cxx-standard }} \
                 -DBUILD_SHARED_LIBS=${{ matrix.build-shared }} \
                 -DOCIO_BUILD_DOCS=${{ matrix.build-docs }} \
-                -DOCIO_BUILD_GPU_TESTS=${{ matrix.build-gpu }} \
-                -DOCIO_USE_HEADLESS=${{ matrix.use-headless }} \
+                -DOCIO_BUILD_GPU_TESTS=OFF \
                 -DOCIO_USE_SSE=${{ matrix.use-sse }} \
+                -DOCIO_USE_ILMBASE=${{ matrix.use-ilmbase }} \
                 -DOCIO_INSTALL_EXT_PACKAGES=ALL \
                 -DOCIO_WARNING_AS_ERROR=ON \
                 -DPython_EXECUTABLE=$(which python)
@@ -292,20 +280,18 @@ jobs:
             build-type: Release
             build-shared: 'ON'
             build-docs: 'OFF'
-            build-gpu: 'OFF'
-            use-headless: 'OFF'
             use-sse: 'ON'
+            use-ilmbase: 'OFF'
             cxx-standard: 17
-            python-version: 3.7
+            python-version: 3.9
           # Static, no SSE
           # C++11, Python 3.7
           - build: 5
             build-type: Release
             build-shared: 'ON'
             build-docs: 'ON'
-            build-gpu: 'OFF'
-            use-headless: 'OFF'
             use-sse: 'ON'
+            use-ilmbase: 'OFF'
             cxx-standard: 11
             python-version: 3.7
           # Debug
@@ -313,19 +299,17 @@ jobs:
             build-type: Debug
             build-shared: 'ON'
             build-docs: 'OFF'
-            build-gpu: 'OFF'
-            use-headless: 'OFF'
             use-sse: 'ON'
+            use-ilmbase: 'OFF'
             cxx-standard: 11
             python-version: 3.7
-          # C++14
+          # C++14, IlmBase
           - build: 3
             build-type: Release
             build-shared: 'ON'
             build-docs: 'OFF'
-            build-gpu: 'OFF'
-            use-headless: 'OFF'
             use-sse: 'ON'
+            use-ilmbase: 'ON'
             cxx-standard: 14
             python-version: 3.7
           # Static, no SSE
@@ -333,9 +317,8 @@ jobs:
             build-type: Release
             build-shared: 'OFF'
             build-docs: 'OFF'
-            build-gpu: 'OFF'
-            use-headless: 'OFF'
             use-sse: 'OFF'
+            use-ilmbase: 'OFF'
             cxx-standard: 11
             python-version: 3.7
           # Python 2.7
@@ -344,9 +327,8 @@ jobs:
             build-shared: 'ON'
             # Doc build requires Python 3
             build-docs: 'OFF'
-            build-gpu: 'OFF'
-            use-headless: 'OFF'
             use-sse: 'ON'
+            use-ilmbase: 'OFF'
             cxx-standard: 11
             python-version: 2.7
     steps:
@@ -373,9 +355,9 @@ jobs:
                 -DCMAKE_CXX_STANDARD=${{ matrix.cxx-standard }} \
                 -DBUILD_SHARED_LIBS=${{ matrix.build-shared }} \
                 -DOCIO_BUILD_DOCS=${{ matrix.build-docs }} \
-                -DOCIO_BUILD_GPU_TESTS=${{ matrix.build-gpu }} \
-                -DOCIO_USE_HEADLESS=${{ matrix.use-headless }} \
+                -DOCIO_BUILD_GPU_TESTS=OFF \
                 -DOCIO_USE_SSE=${{ matrix.use-sse }} \
+                -DOCIO_USE_ILMBASE=${{ matrix.use-ilmbase }} \
                 -DOCIO_INSTALL_EXT_PACKAGES=ALL \
                 -DOCIO_WARNING_AS_ERROR=ON \
                 -DPython_EXECUTABLE=$(which python)
@@ -416,19 +398,17 @@ jobs:
             build-type: Release
             build-shared: 'ON'
             build-docs: 'OFF'
-            build-gpu: 'OFF'
-            use-headless: 'OFF'
             use-sse: 'ON'
+            use-ilmbase: 'OFF'
             cxx-standard: 17
-            python-version: 3.7
+            python-version: 3.9
           # C++11, Python 3.7
           - build: 5
             build-type: Release
             build-shared: 'ON'
             build-docs: 'ON'
-            build-gpu: 'OFF'
-            use-headless: 'OFF'
             use-sse: 'ON'
+            use-ilmbase: 'OFF'
             cxx-standard: 11
             python-version: 3.7
           # Debug
@@ -436,19 +416,17 @@ jobs:
             build-type: Debug
             build-shared: 'ON'
             build-docs: 'OFF'
-            build-gpu: 'OFF'
-            use-headless: 'OFF'
             use-sse: 'ON'
+            use-ilmbase: 'OFF'
             cxx-standard: 11
             python-version: 3.7
-          # C++14
+          # C++14, IlmBase
           - build: 3
             build-type: Release
             build-shared: 'ON'
             build-docs: 'OFF'
-            build-gpu: 'OFF'
-            use-headless: 'OFF'
             use-sse: 'ON'
+            use-ilmbase: 'ON'
             cxx-standard: 14
             python-version: 3.7
           # Static, no SSE
@@ -456,9 +434,8 @@ jobs:
             build-type: Release
             build-shared: 'OFF'
             build-docs: 'OFF'
-            build-gpu: 'OFF'
-            use-headless: 'OFF'
             use-sse: 'OFF'
+            use-ilmbase: 'OFF'
             cxx-standard: 11
             python-version: 3.7
           # Python 2.7
@@ -467,9 +444,8 @@ jobs:
             build-shared: 'ON'
             # Doc build requires Python 3
             build-docs: 'OFF'
-            build-gpu: 'OFF'
-            use-headless: 'OFF'
             use-sse: 'ON'
+            use-ilmbase: 'OFF'
             cxx-standard: 11
             python-version: 2.7
     steps:
@@ -499,9 +475,9 @@ jobs:
                 -DCMAKE_GENERATOR_PLATFORM=x64 \
                 -DBUILD_SHARED_LIBS=${{ matrix.build-shared }} \
                 -DOCIO_BUILD_DOCS=${{ matrix.build-docs }} \
-                -DOCIO_BUILD_GPU_TESTS=${{ matrix.build-gpu }} \
-                -DOCIO_USE_HEADLESS=${{ matrix.use-headless }} \
+                -DOCIO_BUILD_GPU_TESTS=OFF \
                 -DOCIO_USE_SSE=${{ matrix.use-sse }} \
+                -DOCIO_USE_ILMBASE=${{ matrix.use-ilmbase }} \
                 -DOCIO_INSTALL_EXT_PACKAGES=ALL \
                 -DOCIO_WARNING_AS_ERROR=ON \
                 -DPython_EXECUTABLE=$(which python)
