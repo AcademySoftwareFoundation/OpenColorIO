@@ -717,7 +717,7 @@ float uncompress(float dist, float thr, float scale, float power)
 }
 
 template <typename Func>
-float gamut_comp(float val, float ach, float lim, float thr, float scale, float power, Func f)
+float gamut_comp(float val, float ach, float thr, float scale, float power, Func f)
 {
     // Note: Strict equality is fine here. For example, consider the RGB { 1e-7, 0, -1e-5 }.
     // This will become a dist = (1e-7 - -1e-5) / 1e-7 = 101.0. So, there will definitely be
@@ -728,12 +728,6 @@ float gamut_comp(float val, float ach, float lim, float thr, float scale, float 
     if (ach == 0.0f)
     {
         return 0.0f;
-    }
-
-    // Disable compression, avoid nan
-    if (lim < 1.0001f)
-    {
-        return val;
     }
 
     // Distance from the achromatic axis, aka inverse RGB ratios
@@ -765,6 +759,11 @@ Renderer_ACES_GamutComp13_Fwd::Renderer_ACES_GamutComp13_Fwd(ConstFixedFunctionO
     m_thrYellow      = (float) data->getParams()[5];
     m_power          = (float) data->getParams()[6];
 
+    // Clamp for numerical stability
+    m_limCyan        = std::max(1.0001f, m_limCyan);
+    m_limMagenta     = std::max(1.0001f, m_limMagenta);
+    m_limYellow      = std::max(1.0001f, m_limYellow);
+
     m_thrCyan        = std::min(0.9999f, m_thrCyan);
     m_thrMagenta     = std::min(0.9999f, m_thrMagenta);
     m_thrYellow      = std::min(0.9999f, m_thrYellow);
@@ -792,9 +791,9 @@ void Renderer_ACES_GamutComp13_Fwd::apply(const void * inImg, void * outImg, lon
         // Achromatic axis
         const float ach = std::max(red, std::max(grn, blu));
 
-        out[0] = gamut_comp(red, ach, m_limCyan,    m_thrCyan,    m_scaleCyan,    m_power, compress);
-        out[1] = gamut_comp(grn, ach, m_limMagenta, m_thrMagenta, m_scaleMagenta, m_power, compress);
-        out[2] = gamut_comp(blu, ach, m_limYellow,  m_thrYellow,  m_scaleYellow,  m_power, compress);
+        out[0] = gamut_comp(red, ach, m_thrCyan,    m_scaleCyan,    m_power, compress);
+        out[1] = gamut_comp(grn, ach, m_thrMagenta, m_scaleMagenta, m_power, compress);
+        out[2] = gamut_comp(blu, ach, m_thrYellow,  m_scaleYellow,  m_power, compress);
         out[3] = in[3];
 
         in  += 4;
@@ -821,9 +820,9 @@ void Renderer_ACES_GamutComp13_Inv::apply(const void * inImg, void * outImg, lon
         // Achromatic axis
         const float ach = std::max(red, std::max(grn, blu));
 
-        out[0] = gamut_comp(red, ach, m_limCyan,    m_thrCyan,    m_scaleCyan,    m_power, uncompress);
-        out[1] = gamut_comp(grn, ach, m_limMagenta, m_thrMagenta, m_scaleMagenta, m_power, uncompress);
-        out[2] = gamut_comp(blu, ach, m_limYellow,  m_thrYellow,  m_scaleYellow,  m_power, uncompress);
+        out[0] = gamut_comp(red, ach, m_thrCyan,    m_scaleCyan,    m_power, uncompress);
+        out[1] = gamut_comp(grn, ach, m_thrMagenta, m_scaleMagenta, m_power, uncompress);
+        out[2] = gamut_comp(blu, ach, m_thrYellow,  m_scaleYellow,  m_power, uncompress);
         out[3] = in[3];
 
         in  += 4;

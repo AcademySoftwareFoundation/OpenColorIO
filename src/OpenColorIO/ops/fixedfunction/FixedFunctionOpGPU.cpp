@@ -194,24 +194,12 @@ void Add_Glow_03_Inv_Shader(GpuShaderText & ss, float glowGain, float glowMid)
 }
 
 void Add_GamutComp_13_Shader_Compress(GpuShaderText & ss,
-                             const char * dist,
-                             const char * cdist,
-                             float lim,
-                             float thr,
-                             float power)
+                                      const char * dist,
+                                      const char * cdist,
+                                      float scl,
+                                      float thr,
+                                      float power)
 {
-    // Precompute
-    thr = std::min(0.9999f, thr);
-    const float one_over_power = 1.0f / power;
-    // Calculate scale factor for y = 1 intersect.
-    const float scl = (lim - thr) / std::pow(std::pow((1.0f - thr) / (lim - thr), -power) - 1.0f, one_over_power);
-
-    // Disable compression, avoid nan
-    if (lim < 1.0001f)
-    {
-        return;
-    }
-
     // Only compress if greater or equal than threshold.
     ss.newLine() << "if (" << dist << " >= " << thr << ")";
     ss.newLine() << "{";
@@ -220,31 +208,19 @@ void Add_GamutComp_13_Shader_Compress(GpuShaderText & ss,
     // Normalize distance outside threshold by scale factor.
     ss.newLine() << "float nd = (" << dist << " - " << thr << ") / " << scl << ";";
     ss.newLine() << "float p = pow(nd, " << power << ");";
-    ss.newLine() << cdist << " = " << thr << " + " << scl << " * nd / (pow(1.0 + p, " << one_over_power << "));";
+    ss.newLine() << cdist << " = " << thr << " + " << scl << " * nd / (pow(1.0 + p, " << 1.0f / power << "));";
 
     ss.dedent();
     ss.newLine() << "}"; // if (dist >= thr)
 }
 
 void Add_GamutComp_13_Shader_UnCompress(GpuShaderText & ss,
-                             const char * dist,
-                             const char * cdist,
-                             float lim,
-                             float thr,
-                             float power)
+                                        const char * dist,
+                                        const char * cdist,
+                                        float scl,
+                                        float thr,
+                                        float power)
 {
-    // Precompute
-    thr = std::min(0.9999f, thr);
-    const float one_over_power = 1.0f / power;
-    // Calculate scale factor for y = 1 intersect.
-    const float scl = (lim - thr) / std::pow(std::pow((1.0f - thr) / (lim - thr), -power) - 1.0f, one_over_power);
-
-    // Disable compression, avoid nan
-    if (lim < 1.0001f)
-    {
-        return;
-    }
-
     // Only compress if greater or equal than threshold, avoid singularity.
     ss.newLine() << "if (" << dist << " >= " << thr << " && " << dist << " < " << thr + scl << " )";
     ss.newLine() << "{";
@@ -253,10 +229,64 @@ void Add_GamutComp_13_Shader_UnCompress(GpuShaderText & ss,
     // Normalize distance outside threshold by scale factor.
     ss.newLine() << "float nd = (" << dist << " - " << thr << ") / " << scl << ";";
     ss.newLine() << "float p = pow(nd, " << power << ");";
-    ss.newLine() << cdist << " = " << thr << " + " << scl << " * pow(-(p / (p - 1.0)), " << one_over_power << ");";
+    ss.newLine() << cdist << " = " << thr << " + " << scl << " * pow(-(p / (p - 1.0)), " << 1.0f / power << ");";
 
     ss.dedent();
     ss.newLine() << "}"; // if (dist >= thr && dist < thr + scl)
+}
+
+template <typename Func>
+void Add_GamutComp_13_Shader(GpuShaderText & ss,
+                             GpuShaderCreatorRcPtr & sc,
+                             float limCyan,
+                             float limMagenta,
+                             float limYellow,
+                             float thrCyan,
+                             float thrMagenta,
+                             float thrYellow,
+                             float power,
+                             Func f)
+{
+    // Clamp for numerical stability
+    limCyan        = std::max(1.0001f, limCyan);
+    limMagenta     = std::max(1.0001f, limMagenta);
+    limYellow      = std::max(1.0001f, limYellow);
+
+    thrCyan        = std::min(0.9999f, thrCyan);
+    thrMagenta     = std::min(0.9999f, thrMagenta);
+    thrYellow      = std::min(0.9999f, thrYellow);
+
+    // Precompute scale factor for y = 1 intersect
+    auto f_scale = [power](float lim, float thr) {
+        return (lim - thr) / std::pow(std::pow((1.0f - thr) / (lim - thr), -power) - 1.0f, 1.0f / power);
+    };
+    const float scaleCyan      = f_scale(limCyan,    thrCyan);
+    const float scaleMagenta   = f_scale(limMagenta, thrMagenta);
+    const float scaleYellow    = f_scale(limYellow,  thrYellow);
+
+    const char * pix = sc->getPixelName();
+
+    // Achromatic axis
+    ss.newLine() << "float ach = max( " << pix << ".x, max( " << pix << ".y, " << pix << ".z ) );";
+
+    ss.newLine() << "if ( ach != 0.0f )";
+    ss.newLine() << "{";
+    ss.indent();
+
+    // Distance from the achromatic axis for each color component aka inverse rgb ratios.
+    ss.newLine() << ss.float3Decl("dist") << " = (ach-" << pix << ".rgb)/abs(ach);";
+    ss.newLine() << ss.float3Decl("cdist") << " = dist;";
+
+    f(ss, "dist.x", "cdist.x", scaleCyan,    thrCyan,    power);
+    f(ss, "dist.y", "cdist.y", scaleMagenta, thrMagenta, power);
+    f(ss, "dist.z", "cdist.z", scaleYellow,  thrYellow,  power);
+
+    // Recalculate rgb from compressed distance and achromatic.
+    // Effectively this scales each color component relative to achromatic axis by the compressed distance.
+    ss.newLine() << pix << ".rgb = ach-cdist*abs(ach);";
+
+    ss.dedent();
+    ss.newLine() << "}"; // if ( ach != 0.0f )
 }
 
 void Add_GamutComp_13_Fwd_Shader(GpuShaderText & ss,
@@ -269,27 +299,18 @@ void Add_GamutComp_13_Fwd_Shader(GpuShaderText & ss,
                                  float thrYellow,
                                  float power)
 {
-    // Achromatic axis
-    ss.newLine() << "float ach = max( outColor.x, max( outColor.y, outColor.z ) );";
-
-    ss.newLine() << "if ( ach != 0.0f )";
-    ss.newLine() << "{";
-    ss.indent();
-
-    // Distance from the achromatic axis for each color component aka inverse rgb ratios.
-    ss.newLine() << ss.float3Decl("dist") << " = (ach-outColor.rgb)/abs(ach);";
-    ss.newLine() << ss.float3Decl("cdist") << " = dist;";
-
-    Add_GamutComp_13_Shader_Compress(ss, "dist.x", "cdist.x", limCyan,    thrCyan,    power);
-    Add_GamutComp_13_Shader_Compress(ss, "dist.y", "cdist.y", limMagenta, thrMagenta, power);
-    Add_GamutComp_13_Shader_Compress(ss, "dist.z", "cdist.z", limYellow,  thrYellow,  power);
-
-    // Recalculate rgb from compressed distance and achromatic.
-    // Effectively this scales each color component relative to achromatic axis by the compressed distance.
-    ss.newLine() << sc->getPixelName() << ".rgb = ach-cdist*abs(ach);";
-
-    ss.dedent();
-    ss.newLine() << "}"; // if ( ach != 0.0f )
+    Add_GamutComp_13_Shader(
+        ss,
+        sc,
+        limCyan,
+        limMagenta,
+        limYellow,
+        thrCyan,
+        thrMagenta,
+        thrYellow,
+        power,
+        Add_GamutComp_13_Shader_Compress
+    );
 }
 
 void Add_GamutComp_13_Inv_Shader(GpuShaderText & ss,
@@ -302,27 +323,18 @@ void Add_GamutComp_13_Inv_Shader(GpuShaderText & ss,
                                  float thrYellow,
                                  float power)
 {
-    // Achromatic axis
-    ss.newLine() << "float ach = max( outColor.x, max( outColor.y, outColor.z ) );";
-
-    ss.newLine() << "if ( ach != 0.0f )";
-    ss.newLine() << "{";
-    ss.indent();
-
-    // Distance from the achromatic axis for each color component aka inverse rgb ratios.
-    ss.newLine() << ss.float3Decl("dist") << " = (ach-outColor.rgb)/abs(ach);";
-    ss.newLine() << ss.float3Decl("cdist") << " = dist;";
-
-    Add_GamutComp_13_Shader_UnCompress(ss, "dist.x", "cdist.x", limCyan,    thrCyan,    power);
-    Add_GamutComp_13_Shader_UnCompress(ss, "dist.y", "cdist.y", limMagenta, thrMagenta, power);
-    Add_GamutComp_13_Shader_UnCompress(ss, "dist.z", "cdist.z", limYellow,  thrYellow,  power);
-
-    // Recalculate rgb from compressed distance and achromatic.
-    // Effectively this scales each color component relative to achromatic axis by the compressed distance.
-    ss.newLine() << sc->getPixelName() << ".rgb = ach-cdist*abs(ach);";
-
-    ss.dedent();
-    ss.newLine() << "}"; // if ( ach != 0.0f )
+    Add_GamutComp_13_Shader(
+        ss,
+        sc,
+        limCyan,
+        limMagenta,
+        limYellow,
+        thrCyan,
+        thrMagenta,
+        thrYellow,
+        power,
+        Add_GamutComp_13_Shader_UnCompress
+    );
 }
 
 void Add_Surround_10_Fwd_Shader(GpuShaderText & ss, float gamma)

@@ -362,7 +362,7 @@ FixedFunctionOpDataRcPtr FixedFunctionOpData::clone() const
 
 void FixedFunctionOpData::validate() const
 {
-    if(m_style==ACES_GAMUT_COMP_13_FWD || m_style == ACES_GAMUT_COMP_13_INV)
+    if (m_style==ACES_GAMUT_COMP_13_FWD || m_style == ACES_GAMUT_COMP_13_INV)
     {
         if (m_params.size() != 7)
         {
@@ -391,6 +391,7 @@ void FixedFunctionOpData::validate() const
             }
         };
 
+        // Clamped to 1.0001 for numerical stability
         static constexpr double lim_low_bound = 1.0;
         static constexpr double lim_hi_bound  = 10.0;
         check_bounds("lim_cyan",    lim_cyan,    lim_low_bound, lim_hi_bound);
@@ -408,7 +409,7 @@ void FixedFunctionOpData::validate() const
         static constexpr double pwr_hi_bound  = 3.0;
         check_bounds("power",       power,       pwr_low_bound, pwr_hi_bound);
     }
-    else if(m_style==REC2100_SURROUND_FWD || m_style == REC2100_SURROUND_INV)
+    else if (m_style==REC2100_SURROUND_FWD || m_style == REC2100_SURROUND_INV)
     {
         if (m_params.size() != 1)
         {
@@ -438,7 +439,7 @@ void FixedFunctionOpData::validate() const
     }
     else
     {
-        if(m_params.size()!=0)
+        if (m_params.size()!=0)
         {
             std::stringstream ss;
             ss  << "The style '" << ConvertStyleToString(m_style, true)
