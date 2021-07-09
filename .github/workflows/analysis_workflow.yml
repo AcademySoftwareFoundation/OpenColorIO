@@ -7,9 +7,9 @@
 name: Analysis
 
 on:
-  schedule:
-    # Nightly build
-    #- cron: "0 0 * * *"
+  #schedule:
+  # Nightly build
+  #- cron: "0 0 * * *"
   push:
     # Versioned branches and tags are ignored for OCIO <= 1.x.x
     branches-ignore:
