@@ -62,7 +62,7 @@ jobs:
             compiler-desc: GCC 9.3.1
             vfx-cy: 2021
           # VFX CY2020, C++11
-          - build: 2
+          - build: 3
             build-docs: 'OFF'
             cxx-standard: 11
             cxx-compiler: g++
@@ -89,7 +89,7 @@ jobs:
             compiler-desc: Clang 9
             vfx-cy: 2021
           # VFX CY2020, C++11
-          - build: 5
+          - build: 6
             build-docs: 'OFF'
             cxx-standard: 11
             cxx-compiler: clang++
@@ -157,7 +157,7 @@ jobs:
     container:
       # DockerHub: https://hub.docker.com/u/aswf
       # Source: https://github.com/AcademySoftwareFoundation/aswf-docker
-      image: aswf/ci-ocio:2020
+      image: aswf/ci-ocio:2022
     env:
       CXX: g++
       CC: gcc
