@@ -10,6 +10,7 @@ git clone https://github.com/AcademySoftwareFoundation/Imath.git
 cd Imath
 
 if [ "$IMATH_VERSION" == "latest" ]; then
+    git checkout release
     LATEST_TAG=$(git describe --abbrev=0 --tags)
     git checkout tags/${LATEST_TAG} -b ${LATEST_TAG}
 else
