@@ -7,18 +7,9 @@
 name: Analysis
 
 on:
-  #schedule:
-  # Nightly build
-  #- cron: "0 0 * * *"
-  push:
-    # Versioned branches and tags are ignored for OCIO <= 1.x.x
-    branches-ignore:
-      - RB-0.*
-      - RB-1.*
-      - gh-pages
-    tags-ignore:
-      - v0.*
-      - v1.*
+  schedule:
+    # Nightly build
+    - cron: "0 0 * * *"
 
 jobs:
   # ---------------------------------------------------------------------------
@@ -31,7 +22,7 @@ jobs:
        cxx=${{ matrix.cxx-standard }}, 
        docs=${{ matrix.build-docs }}>'
     # Don't run on OCIO forks
-    #if: github.repository == 'AcademySoftwareFoundation/OpenColorIO'
+    if: github.repository == 'AcademySoftwareFoundation/OpenColorIO'
     # GH-hosted VM. The build runs in CentOS 7 'container' defined below.
     runs-on: ubuntu-latest
     container:
@@ -135,7 +126,7 @@ jobs:
   linux_sonarcloud:
     name: 'Linux CentOS 7 VFX CY2020 SonarCloud <GCC 6.3.1>'
     # Don't run on OCIO forks
-    #if: github.repository == 'AcademySoftwareFoundation/OpenColorIO'
+    if: github.repository == 'AcademySoftwareFoundation/OpenColorIO'
     # GH-hosted VM. The build runs in CentOS 7 'container' defined below.
     runs-on: ubuntu-latest
     container:
