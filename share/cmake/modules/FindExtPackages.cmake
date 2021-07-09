@@ -41,7 +41,7 @@ if(NOT OCIO_USE_ILMBASE)
 
     # Imath (>=3.0)
     # https://github.com/AcademySoftwareFoundation/Imath
-    find_package(Imath 3.0.1 REQUIRED)
+    find_package(Imath 3.0.5 REQUIRED)
     
     set(OCIO_HALF_LIB Imath::Imath CACHE STRING "Half library target" FORCE)
 else()

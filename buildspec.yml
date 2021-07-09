@@ -41,6 +41,7 @@ phases:
         cmake ../. \
               -DCMAKE_INSTALL_PREFIX=../_install \
               -DOCIO_USE_HEADLESS=ON \
+              -DOCIO_USE_ILMBASE=ON \
               -DOCIO_BUILD_APPS=ON \
               -DOCIO_BUILD_DOCS=OFF \
               -DOCIO_BUILD_TESTS=ON \
