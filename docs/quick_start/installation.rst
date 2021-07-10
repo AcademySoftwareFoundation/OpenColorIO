@@ -425,3 +425,10 @@ Note: For other user facing environment variables, see :ref:`using_env_vars`.
 
     Note that :envvar:`DYLD_LIBRARY_PATH` or :envvar:`LD_LIBRARY_PATH`
     must be set correctly for the module to work.
+
+.. envvar:: OFX_PLUGIN_PATH
+
+    When building the OCIO OpenFX plugins, include the installed 
+    ``OpenColorIO/lib`` directory (where ``OpenColorIO.ofx.bundle`` is located) 
+    in this path. The path to a shared OpenColorIO lib (*.so, *.dll, *.dylib) 
+    should also be present on ``PATH``.

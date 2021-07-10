@@ -195,6 +195,8 @@ void defineCsNameParam(OFX::ImageEffectDescriptor & desc,
     OCIO::ConstConfigRcPtr config = getOCIOConfig();
 
     // Populate color space names
+    // TODO: Use ColorSpaceMenuHelper to generate the menus in order to 
+    //       leverage features such as categories.
     for (int i = 0; i < config->getNumColorSpaces(); i++)
     {
         std::string csName(config->getColorSpaceNameByIndex(i));
@@ -573,6 +575,7 @@ void restoreChoiceParamOption(OFX::ImageEffect & instance,
             if (name == storedValue)
             {
                 idx = i;
+                break;
             }
         }
 
