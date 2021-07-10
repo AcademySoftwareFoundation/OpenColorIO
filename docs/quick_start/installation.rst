@@ -65,7 +65,10 @@ it is not necessary to install those items manually:
 - cmake >= 3.12
 - \*Expat >= 2.2.8 (XML parser for CDL/CLF/CTF)
 - \*yaml-cpp >= 0.6.3 (YAML parser for Configs)
-- \*IlmBase (Half only) >= 2.4.0 (for half domain LUTs)
+- \*Imath >= 3.0.5 (for half domain LUTs)
+    - \*IlmBase (Half only) >= 2.4.0 (Alternative half implementation when 
+      OpenEXR 2 is available. Use ``-DOCIO_USE_ILMBASE=ON`` CMake option to 
+      enable).
 - \*pystring >= 1.1.3
 
 Some optional components also depend on:
@@ -122,10 +125,12 @@ When using existing system libraries, the following CMake variables can be
 defined to hint at non-standard install locations and preference of shared
 or static linking:
 
-- ``-DExpat_ROOT=<path>`` (include and/or library root dir)
-- ``-DExpat_STATIC_LIBRARY=ON`` (prefer static lib)
+- ``-Dexpat_ROOT=<path>`` (include and/or library root dir)
+- ``-Dexpat_STATIC_LIBRARY=ON`` (prefer static lib)
 - ``-Dyaml-cpp_ROOT=<path>`` (include and/or library root dir)
 - ``-Dyaml-cpp_STATIC_LIBRARY=ON`` (prefer static lib)
+- ``-DImath_ROOT=<path>`` (include and/or library root dir)
+- ``-DImath_STATIC_LIBRARY=ON`` (prefer static lib)
 - ``-DHalf_ROOT=<path>`` (include and/or library root dir)
 - ``-DHalf_STATIC_LIBRARY=ON`` (prefer static lib)
 - ``-Dpystring_ROOT=<path>`` (include and/or library root dir)
