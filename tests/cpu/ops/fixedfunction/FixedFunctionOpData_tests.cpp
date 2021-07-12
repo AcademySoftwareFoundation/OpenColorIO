@@ -111,57 +111,57 @@ OCIO_ADD_TEST(FixedFunctionOpData, aces_gamut_comp_13_style)
 
 
     test_params = params;
-    test_params[0] = 0.0;
+    test_params[0] = 1.0;
     OCIO_CHECK_NO_THROW(func.setParams(test_params));
-    OCIO_CHECK_THROW_WHAT(func.validate(), OCIO::Exception, "Parameter 0 (lim_cyan) is outside valid range [1,10]");
-    test_params[0] = 10.5;
+    OCIO_CHECK_THROW_WHAT(func.validate(), OCIO::Exception, "Parameter 1 (lim_cyan) is outside valid range [1.001,65504]");
+    test_params[0] = 65535.0;
     OCIO_CHECK_NO_THROW(func.setParams(test_params));
-    OCIO_CHECK_THROW_WHAT(func.validate(), OCIO::Exception, "Parameter 10.5 (lim_cyan) is outside valid range [1,10]");
+    OCIO_CHECK_THROW_WHAT(func.validate(), OCIO::Exception, "Parameter 65535 (lim_cyan) is outside valid range [1.001,65504]");
     test_params = params;
-    test_params[1] = 0.0;
+    test_params[1] = 1.0;
     OCIO_CHECK_NO_THROW(func.setParams(test_params));
-    OCIO_CHECK_THROW_WHAT(func.validate(), OCIO::Exception, "Parameter 0 (lim_magenta) is outside valid range [1,10]");
-    test_params[1] = 10.5;
+    OCIO_CHECK_THROW_WHAT(func.validate(), OCIO::Exception, "Parameter 1 (lim_magenta) is outside valid range [1.001,65504]");
+    test_params[1] = 65535.0;
     OCIO_CHECK_NO_THROW(func.setParams(test_params));
-    OCIO_CHECK_THROW_WHAT(func.validate(), OCIO::Exception, "Parameter 10.5 (lim_magenta) is outside valid range [1,10]");
+    OCIO_CHECK_THROW_WHAT(func.validate(), OCIO::Exception, "Parameter 65535 (lim_magenta) is outside valid range [1.001,65504]");
     test_params = params;
-    test_params[2] = 0.0;
+    test_params[2] = 1.0;
     OCIO_CHECK_NO_THROW(func.setParams(test_params));
-    OCIO_CHECK_THROW_WHAT(func.validate(), OCIO::Exception, "Parameter 0 (lim_yellow) is outside valid range [1,10]");
-    test_params[2] = 10.5;
+    OCIO_CHECK_THROW_WHAT(func.validate(), OCIO::Exception, "Parameter 1 (lim_yellow) is outside valid range [1.001,65504]");
+    test_params[2] = 65535.0;
     OCIO_CHECK_NO_THROW(func.setParams(test_params));
-    OCIO_CHECK_THROW_WHAT(func.validate(), OCIO::Exception, "Parameter 10.5 (lim_yellow) is outside valid range [1,10]");
+    OCIO_CHECK_THROW_WHAT(func.validate(), OCIO::Exception, "Parameter 65535 (lim_yellow) is outside valid range [1.001,65504]");
 
     test_params = params;
-    test_params[3] = 0.0;
+    test_params[3] = -0.1;
     OCIO_CHECK_NO_THROW(func.setParams(test_params));
-    OCIO_CHECK_THROW_WHAT(func.validate(), OCIO::Exception, "Parameter 0 (thr_cyan) is outside valid range [0.4,1]");
-    test_params[3] = 2.0;
+    OCIO_CHECK_THROW_WHAT(func.validate(), OCIO::Exception, "Parameter -0.1 (thr_cyan) is outside valid range [0,0.9995]");
+    test_params[3] = 1.0;
     OCIO_CHECK_NO_THROW(func.setParams(test_params));
-    OCIO_CHECK_THROW_WHAT(func.validate(), OCIO::Exception, "Parameter 2 (thr_cyan) is outside valid range [0.4,1]");
+    OCIO_CHECK_THROW_WHAT(func.validate(), OCIO::Exception, "Parameter 1 (thr_cyan) is outside valid range [0,0.9995]");
     test_params = params;
-    test_params[4] = 0.0;
+    test_params[4] = -0.1;
     OCIO_CHECK_NO_THROW(func.setParams(test_params));
-    OCIO_CHECK_THROW_WHAT(func.validate(), OCIO::Exception, "Parameter 0 (thr_magenta) is outside valid range [0.4,1]");
-    test_params[4] = 2.0;
+    OCIO_CHECK_THROW_WHAT(func.validate(), OCIO::Exception, "Parameter -0.1 (thr_magenta) is outside valid range [0,0.9995]");
+    test_params[4] = 1.0;
     OCIO_CHECK_NO_THROW(func.setParams(test_params));
-    OCIO_CHECK_THROW_WHAT(func.validate(), OCIO::Exception, "Parameter 2 (thr_magenta) is outside valid range [0.4,1]");
+    OCIO_CHECK_THROW_WHAT(func.validate(), OCIO::Exception, "Parameter 1 (thr_magenta) is outside valid range [0,0.9995]");
     test_params = params;
-    test_params[5] = 0.0;
+    test_params[5] = -0.1;
     OCIO_CHECK_NO_THROW(func.setParams(test_params));
-    OCIO_CHECK_THROW_WHAT(func.validate(), OCIO::Exception, "Parameter 0 (thr_yellow) is outside valid range [0.4,1]");
-    test_params[5] = 2.0;
+    OCIO_CHECK_THROW_WHAT(func.validate(), OCIO::Exception, "Parameter -0.1 (thr_yellow) is outside valid range [0,0.9995]");
+    test_params[5] = 1.0;
     OCIO_CHECK_NO_THROW(func.setParams(test_params));
-    OCIO_CHECK_THROW_WHAT(func.validate(), OCIO::Exception, "Parameter 2 (thr_yellow) is outside valid range [0.4,1]");
+    OCIO_CHECK_THROW_WHAT(func.validate(), OCIO::Exception, "Parameter 1 (thr_yellow) is outside valid range [0,0.9995]");
 
     test_params = params;
     test_params[6] = 0.0;
     OCIO_CHECK_NO_THROW(func.setParams(test_params));
-    OCIO_CHECK_THROW_WHAT(func.validate(), OCIO::Exception, "Parameter 0 (power) is outside valid range [1,3]");
+    OCIO_CHECK_THROW_WHAT(func.validate(), OCIO::Exception, "Parameter 0 (power) is outside valid range [1,65504]");
     test_params = params;
-    test_params[6] = 4.0;
+    test_params[6] = 65535.0;
     OCIO_CHECK_NO_THROW(func.setParams(test_params));
-    OCIO_CHECK_THROW_WHAT(func.validate(), OCIO::Exception, "Parameter 4 (power) is outside valid range [1,3]");
+    OCIO_CHECK_THROW_WHAT(func.validate(), OCIO::Exception, "Parameter 65535 (power) is outside valid range [1,65504]");
 }
 
 OCIO_ADD_TEST(FixedFunctionOpData, rec2100_surround_style)

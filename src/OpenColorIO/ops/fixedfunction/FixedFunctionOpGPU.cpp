@@ -247,15 +247,6 @@ void Add_GamutComp_13_Shader(GpuShaderText & ss,
                              float power,
                              Func f)
 {
-    // Clamp for numerical stability
-    limCyan        = std::max(1.0001f, limCyan);
-    limMagenta     = std::max(1.0001f, limMagenta);
-    limYellow      = std::max(1.0001f, limYellow);
-
-    thrCyan        = std::min(0.9999f, thrCyan);
-    thrMagenta     = std::min(0.9999f, thrMagenta);
-    thrYellow      = std::min(0.9999f, thrYellow);
-
     // Precompute scale factor for y = 1 intersect
     auto f_scale = [power](float lim, float thr) {
         return (lim - thr) / std::pow(std::pow((1.0f - thr) / (lim - thr), -power) - 1.0f, 1.0f / power);

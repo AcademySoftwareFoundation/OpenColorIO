@@ -759,15 +759,6 @@ Renderer_ACES_GamutComp13_Fwd::Renderer_ACES_GamutComp13_Fwd(ConstFixedFunctionO
     m_thrYellow      = (float) data->getParams()[5];
     m_power          = (float) data->getParams()[6];
 
-    // Clamp for numerical stability
-    m_limCyan        = std::max(1.0001f, m_limCyan);
-    m_limMagenta     = std::max(1.0001f, m_limMagenta);
-    m_limYellow      = std::max(1.0001f, m_limYellow);
-
-    m_thrCyan        = std::min(0.9999f, m_thrCyan);
-    m_thrMagenta     = std::min(0.9999f, m_thrMagenta);
-    m_thrYellow      = std::min(0.9999f, m_thrYellow);
-
     // Precompute scale factor for y = 1 intersect
     auto f_scale = [this](float lim, float thr) {
         return (lim - thr) / std::pow(std::pow((1.0f - thr) / (lim - thr), -m_power) - 1.0f, 1.0f / m_power);

@@ -391,22 +391,22 @@ void FixedFunctionOpData::validate() const
             }
         };
 
-        // Clamped to 1.0001 for numerical stability
-        static constexpr double lim_low_bound = 1.0;
-        static constexpr double lim_hi_bound  = 10.0;
+        // Clamped to the smallest increment above 1 in half float precision for numerical stability.
+        static constexpr double lim_low_bound = 1.001;
+        static constexpr double lim_hi_bound  = 65504.0;
         check_bounds("lim_cyan",    lim_cyan,    lim_low_bound, lim_hi_bound);
         check_bounds("lim_magenta", lim_magenta, lim_low_bound, lim_hi_bound);
         check_bounds("lim_yellow",  lim_yellow,  lim_low_bound, lim_hi_bound);
 
-        static constexpr double thr_low_bound = 0.4;
-        // Clamped to 0.9999 for numerical stability
-        static constexpr double thr_hi_bound  = 1.0;
+        static constexpr double thr_low_bound = 0.0;
+        // Clamped to the smallest increment below 1 in half float precision for numerical stability.
+        static constexpr double thr_hi_bound  = 0.9995;
         check_bounds("thr_cyan",    thr_cyan,    thr_low_bound, thr_hi_bound);
         check_bounds("thr_magenta", thr_magenta, thr_low_bound, thr_hi_bound);
         check_bounds("thr_yellow",  thr_yellow,  thr_low_bound, thr_hi_bound);
 
         static constexpr double pwr_low_bound = 1.0;
-        static constexpr double pwr_hi_bound  = 3.0;
+        static constexpr double pwr_hi_bound  = 65504.0;
         check_bounds("power",       power,       pwr_low_bound, pwr_hi_bound);
     }
     else if (m_style==REC2100_SURROUND_FWD || m_style == REC2100_SURROUND_INV)
