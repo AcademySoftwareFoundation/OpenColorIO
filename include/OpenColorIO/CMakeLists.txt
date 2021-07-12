@@ -2,13 +2,22 @@
 # Copyright Contributors to the OpenColorIO Project.
 
 configure_file("OpenColorABI.h.in" "${CMAKE_CURRENT_BINARY_DIR}/OpenColorABI.h" @ONLY)
-add_library(public_api INTERFACE)
+add_library(OpenColorIOHeaders INTERFACE)
 
-set_property(TARGET public_api 
-	PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR}/..;${CMAKE_CURRENT_SOURCE_DIR};${CMAKE_CURRENT_BINARY_DIR};${CMAKE_CURRENT_BINARY_DIR}/OpenColorIO
+set(BUILD_INCLUDES
+    ${CMAKE_CURRENT_SOURCE_DIR}/..
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_BINARY_DIR}
+    ${CMAKE_CURRENT_BINARY_DIR}/OpenColorIO
 )
 
-add_dependencies(public_api "${CMAKE_CURRENT_BINARY_DIR}/OpenColorABI.h")
+target_include_directories(OpenColorIOHeaders
+    INTERFACE
+        "$<BUILD_INTERFACE:${BUILD_INCLUDES}>"
+        "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
+)
+
+add_dependencies(OpenColorIOHeaders "${CMAKE_CURRENT_BINARY_DIR}/OpenColorABI.h")
 
 # public interface
 
@@ -17,3 +26,7 @@ list(APPEND core_export_headers ${CMAKE_CURRENT_BINARY_DIR}/OpenColorABI.h)
 
 install(FILES ${core_export_headers}
     DESTINATION include/OpenColorIO)
+
+install(TARGETS OpenColorIOHeaders
+    EXPORT ${PROJECT_NAME}_EXPORTED_TARGETS
+)

@@ -113,7 +113,6 @@ void CreateAllocationOps(OpRcPtrVec & ops,
         }
         case ALLOCATION_UNKNOWN:
             throw Exception("Unsupported Allocation Type.");
-            break;
     }
 }
 
