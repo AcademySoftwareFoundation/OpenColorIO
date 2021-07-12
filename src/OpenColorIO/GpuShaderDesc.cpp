@@ -171,13 +171,12 @@ bool GpuShaderCreator::hasDynamicProperty(DynamicPropertyType type) const
 
 void GpuShaderCreator::addDynamicProperty(DynamicPropertyRcPtr & prop)
 {
-    for (auto dp : getImpl()->m_dynamicProperties)
+    if (hasDynamicProperty(prop->getType()))
     {
-        if (dp->getType() == prop->getType())
-        {
-            // Dynamic property is already there.
-            throw Exception("Dynamic property already here.");
-        }
+        // Dynamic property is already there.
+        std::ostringstream oss;
+        oss << "Dynamic property already here: " << prop->getType() << ".";
+        throw Exception(oss.str().c_str());
     }
 
     getImpl()->m_dynamicProperties.push_back(prop);

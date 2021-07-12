@@ -6229,6 +6229,55 @@ OCIO_ADD_TEST(CTFTransform, gamma6_ctf)
     OCIO_CHECK_EQUAL(expected, outputTransform.str());
 }
 
+OCIO_ADD_TEST(CTFTransform, fixed_function_aces_gamut_comp_13_ctf)
+{
+    const double data[7] = { 1.147, 1.264, 1.312, 0.815, 0.803, 0.880, 1.2 };
+    OCIO::FixedFunctionTransformRcPtr ff =
+        OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_ACES_GAMUT_COMP_13, &data[0], 7);
+
+    OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
+    group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UIDFF42");
+    group->appendTransform(ff);
+
+    std::ostringstream outputTransform;
+    OCIO_CHECK_NO_THROW(WriteGroupCTF(group, outputTransform));
+
+    const std::string expected{ R"(<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList version="2" id="UIDFF42">
+    <FixedFunction inBitDepth="32f" outBitDepth="32f" style="GamutComp13Fwd" params="1.147 1.264 1.312 0.815 0.803 0.88 1.2">
+    </FixedFunction>
+</ProcessList>
+)" };
+
+    OCIO_CHECK_EQUAL(expected.size(), outputTransform.str().size());
+    OCIO_CHECK_EQUAL(expected, outputTransform.str());
+}
+
+OCIO_ADD_TEST(CTFTransform, fixed_function_aces_gamut_comp_13_inverse_ctf)
+{
+    const double data[7] = { 1.147, 1.264, 1.312, 0.815, 0.803, 0.880, 1.2 };
+    OCIO::FixedFunctionTransformRcPtr ff =
+        OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_ACES_GAMUT_COMP_13, &data[0], 7);
+    ff->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+
+    OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
+    group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UIDFF42");
+    group->appendTransform(ff);
+
+    std::ostringstream outputTransform;
+    OCIO_CHECK_NO_THROW(WriteGroupCTF(group, outputTransform));
+
+    const std::string expected{ R"(<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList version="2" id="UIDFF42">
+    <FixedFunction inBitDepth="32f" outBitDepth="32f" style="GamutComp13Rev" params="1.147 1.264 1.312 0.815 0.803 0.88 1.2">
+    </FixedFunction>
+</ProcessList>
+)" };
+
+    OCIO_CHECK_EQUAL(expected.size(), outputTransform.str().size());
+    OCIO_CHECK_EQUAL(expected, outputTransform.str());
+}
+
 OCIO_ADD_TEST(CTFTransform, fixed_function_rec2100_ctf)
 {
     const double val = 0.5;

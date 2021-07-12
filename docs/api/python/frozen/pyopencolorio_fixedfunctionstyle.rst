@@ -34,7 +34,7 @@
 
      FIXED_FUNCTION_ACES_GAMUTMAP_07 : ACES 0.7 Gamut clamping algorithm -- NOT IMPLEMENTED YET.
 
-     FIXED_FUNCTION_ACES_GAMUTMAP_13 : ACES 1.3 Gamut mapping algorithm -- NOT IMPLEMENTED YET.
+     FIXED_FUNCTION_ACES_GAMUTMAP_13 : ACES 1.3 Gamut mapping algorithm.
 
    .. py:method:: name() -> str
       :property:

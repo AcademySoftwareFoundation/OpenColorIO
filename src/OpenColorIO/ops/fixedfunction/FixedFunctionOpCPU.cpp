@@ -69,6 +69,9 @@ public:
 class Renderer_ACES_Glow03_Fwd : public OpCPU
 {
 public:
+    Renderer_ACES_Glow03_Fwd() = delete;
+    Renderer_ACES_Glow03_Fwd(const Renderer_ACES_Glow03_Fwd &) = delete;
+
     Renderer_ACES_Glow03_Fwd(ConstFixedFunctionOpDataRcPtr & data,
                              float glowGain, float glowMid);
 
@@ -101,6 +104,38 @@ public:
 
 protected:
     float m_gamma;
+};
+
+class Renderer_ACES_GamutComp13_Fwd : public OpCPU
+{
+public:
+    Renderer_ACES_GamutComp13_Fwd() = delete;
+    Renderer_ACES_GamutComp13_Fwd(const Renderer_ACES_GamutComp13_Fwd &) = delete;
+
+    explicit Renderer_ACES_GamutComp13_Fwd(ConstFixedFunctionOpDataRcPtr & data);
+
+    void apply(const void * inImg, void * outImg, long numPixels) const override;
+
+protected:
+    float m_limCyan;
+    float m_limMagenta;
+    float m_limYellow;
+    float m_thrCyan;
+    float m_thrMagenta;
+    float m_thrYellow;
+    float m_power;
+
+    float m_scaleCyan;
+    float m_scaleMagenta;
+    float m_scaleYellow;
+};
+
+class Renderer_ACES_GamutComp13_Inv : public Renderer_ACES_GamutComp13_Fwd
+{
+public:
+    explicit Renderer_ACES_GamutComp13_Inv(ConstFixedFunctionOpDataRcPtr & data);
+
+    void apply(const void * inImg, void * outImg, long numPixels) const override;
 };
 
 class Renderer_REC2100_Surround : public OpCPU
@@ -653,6 +688,139 @@ void Renderer_ACES_DarkToDim10_Fwd::apply(const void * inImg, void * outImg, lon
     }
 }
 
+float compress(float dist, float thr, float scale, float power)
+{
+    // Normalize distance outside threshold by scale factor.
+    const float nd = (dist - thr) / scale;
+    const float p = std::pow(nd, power);
+
+    // Note: assume the compiler will optimize out "1.0f / power".
+    return thr + scale * nd / (std::pow(1.0f + p, 1.0f / power));
+}
+
+float uncompress(float dist, float thr, float scale, float power)
+{
+    // Avoid singularity
+    if (dist >= (thr + scale))
+    {
+        return dist;
+    }
+    else
+    {
+        // Normalize distance outside threshold by scale factor.
+        const float nd = (dist - thr) / scale;
+        const float p = std::pow(nd, power);
+
+        // Note: assume the compiler will optimize out "1.0f / power".
+        return thr + scale * std::pow(-(p / (p - 1.0f)), 1.0f / power);
+    }
+}
+
+template <typename Func>
+float gamut_comp(float val, float ach, float thr, float scale, float power, Func f)
+{
+    // Note: Strict equality is fine here. For example, consider the RGB { 1e-7, 0, -1e-5 }.
+    // This will become a dist = (1e-7 - -1e-5) / 1e-7 = 101.0. So, there will definitely be
+    // very large dist values. But the compression function is able to handle those since
+    // they approach the asymptote. So 101 will become something like 1.12.  Then at the
+    // other end the B values is reconstructed as 1e-7 - 1.12 * 1e-7 = -1.2e-8. So it went
+    // from -1e-5 to -1.2e-8, but it caused no numerical instability.
+    if (ach == 0.0f)
+    {
+        return 0.0f;
+    }
+
+    // Distance from the achromatic axis, aka inverse RGB ratios
+    const float dist = (ach - val) / std::fabs(ach);
+
+    // No compression below threshold
+    if (dist < thr)
+    {
+        return val;
+    }
+
+    // Compress / Uncompress distance with parameterized shaper function.
+    const float comprDist = f(dist, thr, scale, power);
+
+    // Recalculate RGB from compressed distance and achromatic.
+    const float compr = ach - comprDist * std::fabs(ach);
+
+    return compr;
+}
+
+Renderer_ACES_GamutComp13_Fwd::Renderer_ACES_GamutComp13_Fwd(ConstFixedFunctionOpDataRcPtr & data)
+    :   OpCPU()
+{
+    m_limCyan        = (float) data->getParams()[0];
+    m_limMagenta     = (float) data->getParams()[1];
+    m_limYellow      = (float) data->getParams()[2];
+    m_thrCyan        = (float) data->getParams()[3];
+    m_thrMagenta     = (float) data->getParams()[4];
+    m_thrYellow      = (float) data->getParams()[5];
+    m_power          = (float) data->getParams()[6];
+
+    // Precompute scale factor for y = 1 intersect
+    auto f_scale = [this](float lim, float thr) {
+        return (lim - thr) / std::pow(std::pow((1.0f - thr) / (lim - thr), -m_power) - 1.0f, 1.0f / m_power);
+    };
+    m_scaleCyan      = f_scale(m_limCyan,    m_thrCyan);
+    m_scaleMagenta   = f_scale(m_limMagenta, m_thrMagenta);
+    m_scaleYellow    = f_scale(m_limYellow,  m_thrYellow);
+}
+
+void Renderer_ACES_GamutComp13_Fwd::apply(const void * inImg, void * outImg, long numPixels) const
+{
+    const float * in = (const float *)inImg;
+    float * out = (float *)outImg;
+
+    for(long idx=0; idx<numPixels; ++idx)
+    {
+        const float red = in[0];
+        const float grn = in[1];
+        const float blu = in[2];
+
+        // Achromatic axis
+        const float ach = std::max(red, std::max(grn, blu));
+
+        out[0] = gamut_comp(red, ach, m_thrCyan,    m_scaleCyan,    m_power, compress);
+        out[1] = gamut_comp(grn, ach, m_thrMagenta, m_scaleMagenta, m_power, compress);
+        out[2] = gamut_comp(blu, ach, m_thrYellow,  m_scaleYellow,  m_power, compress);
+        out[3] = in[3];
+
+        in  += 4;
+        out += 4;
+    }
+}
+
+Renderer_ACES_GamutComp13_Inv::Renderer_ACES_GamutComp13_Inv(ConstFixedFunctionOpDataRcPtr & data)
+    :   Renderer_ACES_GamutComp13_Fwd(data)
+{
+}
+
+void Renderer_ACES_GamutComp13_Inv::apply(const void * inImg, void * outImg, long numPixels) const
+{
+    const float * in = (const float *)inImg;
+    float * out = (float *)outImg;
+
+    for(long idx=0; idx<numPixels; ++idx)
+    {
+        const float red = in[0];
+        const float grn = in[1];
+        const float blu = in[2];
+
+        // Achromatic axis
+        const float ach = std::max(red, std::max(grn, blu));
+
+        out[0] = gamut_comp(red, ach, m_thrCyan,    m_scaleCyan,    m_power, uncompress);
+        out[1] = gamut_comp(grn, ach, m_thrMagenta, m_scaleMagenta, m_power, uncompress);
+        out[2] = gamut_comp(blu, ach, m_thrYellow,  m_scaleYellow,  m_power, uncompress);
+        out[3] = in[3];
+
+        in  += 4;
+        out += 4;
+    }
+}
+
 Renderer_REC2100_Surround::Renderer_REC2100_Surround(ConstFixedFunctionOpDataRcPtr & data)
     :   OpCPU()
 {
@@ -1069,11 +1237,11 @@ ConstOpCPURcPtr GetFixedFunctionCPURenderer(ConstFixedFunctionOpDataRcPtr & func
         case FixedFunctionOpData::ACES_GLOW_03_FWD:
         {
             return std::make_shared<Renderer_ACES_Glow03_Fwd>(func, 0.075f, 0.1f);
-        }        
+        }
         case FixedFunctionOpData::ACES_GLOW_03_INV:
         {
             return std::make_shared<Renderer_ACES_Glow03_Inv>(func, 0.075f, 0.1f);
-        }        
+        }
         case FixedFunctionOpData::ACES_GLOW_10_FWD:
         {
             return std::make_shared<Renderer_ACES_Glow03_Fwd>(func, 0.05f, 0.08f);
@@ -1089,6 +1257,14 @@ ConstOpCPURcPtr GetFixedFunctionCPURenderer(ConstFixedFunctionOpDataRcPtr & func
         case FixedFunctionOpData::ACES_DARK_TO_DIM_10_INV:
         {
             return std::make_shared<Renderer_ACES_DarkToDim10_Fwd>(func, 1.0192640913260627f);
+        }
+        case FixedFunctionOpData::ACES_GAMUT_COMP_13_FWD:
+        {
+            return std::make_shared<Renderer_ACES_GamutComp13_Fwd>(func);
+        }
+        case FixedFunctionOpData::ACES_GAMUT_COMP_13_INV:
+        {
+            return std::make_shared<Renderer_ACES_GamutComp13_Inv>(func);
         }
         case FixedFunctionOpData::REC2100_SURROUND_FWD:
         case FixedFunctionOpData::REC2100_SURROUND_INV:

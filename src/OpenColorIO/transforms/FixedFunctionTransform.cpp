@@ -46,7 +46,21 @@ void FixedFunctionTransformImpl::deleter(FixedFunctionTransform * t)
 
 TransformRcPtr FixedFunctionTransformImpl::createEditableCopy() const
 {
-    TransformRcPtr transform = FixedFunctionTransform::Create(getStyle());
+    TransformRcPtr transform;
+
+    const FixedFunctionOpData::Params & params = data().getParams();
+    if (params.empty())
+    {
+        transform = FixedFunctionTransform::Create(getStyle());
+    }
+    else
+    {
+        // A validation is done when creating the instance so the params are mandatory.
+        const double * values = &params[0];
+        transform = FixedFunctionTransform::Create(getStyle(), values, params.size());
+    }
+
+    // Also copy the Format Metadata if any.
     dynamic_cast<FixedFunctionTransformImpl*>(transform.get())->data() = data();
     return transform;
 }
