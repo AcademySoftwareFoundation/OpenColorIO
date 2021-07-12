@@ -30,18 +30,31 @@ OCIO_ADD_TEST(FixedFunctionTransform, basic)
     OCIO_CHECK_EQUAL(func->getNumParams(), 0);
     OCIO_CHECK_NO_THROW(func->validate());
 
+    OCIO_CHECK_NO_THROW(func->setStyle(OCIO::FIXED_FUNCTION_ACES_GAMUT_COMP_13));
+    OCIO_CHECK_EQUAL(func->getStyle(), OCIO::FIXED_FUNCTION_ACES_GAMUT_COMP_13);
+    OCIO_CHECK_EQUAL(func->getDirection(), OCIO::TRANSFORM_DIR_INVERSE);
+    OCIO_CHECK_EQUAL(func->getNumParams(), 0);
+    OCIO_CHECK_THROW_WHAT(func->validate(), OCIO::Exception,
+                          "The style 'ACES_GamutComp13 (Inverse)' must have "
+                          "seven parameters but 0 found.");
+    OCIO::FixedFunctionOpData::Params values_7 = { 1.147, 1.264, 1.312, 0.815, 0.803, 0.880, 1.2 };
+    OCIO_CHECK_NO_THROW(func->setParams(&values_7[0], 7));
+    OCIO_CHECK_EQUAL(func->getNumParams(), 7);
+    OCIO_CHECK_NO_THROW(func->validate());
+
+    OCIO_CHECK_NO_THROW(func->setParams(nullptr, 0));
     OCIO_CHECK_NO_THROW(func->setStyle(OCIO::FIXED_FUNCTION_REC2100_SURROUND));
     OCIO_CHECK_THROW_WHAT(func->validate(), OCIO::Exception,
                           "The style 'REC2100_Surround (Inverse)' must have "
                           "one parameter but 0 found.");
 
     OCIO_CHECK_EQUAL(func->getNumParams(), 0);
-    const double values[1] = { 1. };
-    OCIO_CHECK_NO_THROW(func->setParams(&values[0], 1));
+    const double values_1[1] = { 1. };
+    OCIO_CHECK_NO_THROW(func->setParams(&values_1[0], 1));
     OCIO_CHECK_EQUAL(func->getNumParams(), 1);
     double results[1] = { 0. };
     OCIO_CHECK_NO_THROW(func->getParams(&results[0]));
-    OCIO_CHECK_EQUAL(results[0], values[0]);
+    OCIO_CHECK_EQUAL(results[0], values_1[0]);
 
     OCIO_CHECK_NO_THROW(func->validate());
 
@@ -55,18 +68,16 @@ OCIO_ADD_TEST(FixedFunctionTransform, basic)
                           "The style 'RGB_TO_HSV' must have "
                           "zero parameters but 1 found.");
 
-    OCIO_CHECK_THROW_WHAT(func->setStyle(OCIO::FIXED_FUNCTION_ACES_GAMUTMAP_13), OCIO::Exception,
+    OCIO_CHECK_THROW_WHAT(func->setStyle(OCIO::FIXED_FUNCTION_ACES_GAMUTMAP_02), OCIO::Exception,
                           "Unimplemented fixed function types: "
                           "FIXED_FUNCTION_ACES_GAMUTMAP_02, "
-                          "FIXED_FUNCTION_ACES_GAMUTMAP_07, and "
-                          "FIXED_FUNCTION_ACES_GAMUTMAP_13.");
+                          "FIXED_FUNCTION_ACES_GAMUTMAP_07.");
 
     OCIO_CHECK_THROW_WHAT(
         OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_ACES_GAMUTMAP_07),
         OCIO::Exception, "Unimplemented fixed function types: "
                          "FIXED_FUNCTION_ACES_GAMUTMAP_02, "
-                         "FIXED_FUNCTION_ACES_GAMUTMAP_07, and "
-                         "FIXED_FUNCTION_ACES_GAMUTMAP_13.");
+                         "FIXED_FUNCTION_ACES_GAMUTMAP_07.");
 }
 
 OCIO_ADD_TEST(FixedFunctionTransform, createEditableCopy)
