@@ -92,7 +92,7 @@ jobs:
           python-version: '3.8'
 
       - name: Build wheels
-        uses: joerick/cibuildwheel@v1.11.0
+        uses: joerick/cibuildwheel@v1.12.0
         env:
           CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
           CIBW_MANYLINUX_I686_IMAGE: manylinux2014
@@ -132,6 +132,15 @@ jobs:
           - build: CPython 3.9 64 bits
             python: cp39-*
             arch: x86_64
+          # -------------------------------------------------------------------
+          # CPython ARM 64 bits
+          # -------------------------------------------------------------------
+          - build: CPython 3.8 ARM 64 bits
+            python: cp38-*
+            arch: arm64
+          - build: CPython 3.9 ARM 64 bits
+            python: cp39-*
+            arch: arm64
 
     steps:
       - uses: actions/checkout@v2
@@ -142,7 +151,7 @@ jobs:
           python-version: '3.8'
 
       - name: Build wheels
-        uses: joerick/cibuildwheel@v1.11.0
+        uses: joerick/cibuildwheel@v1.12.0
         env:
           CIBW_BUILD_VERBOSITY: 1
           CIBW_BUILD: ${{ matrix.python }}
@@ -205,7 +214,7 @@ jobs:
           python-version: '3.8'
 
       - name: Build wheels
-        uses: joerick/cibuildwheel@v1.11.0
+        uses: joerick/cibuildwheel@v1.12.0
         env:
           CIBW_BUILD_VERBOSITY: 1
           CIBW_BUILD: ${{ matrix.python }}
