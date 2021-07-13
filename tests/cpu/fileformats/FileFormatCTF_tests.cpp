@@ -867,6 +867,26 @@ OCIO_ADD_TEST(FileFormatCTF, 3by1d_lut)
     OCIO_CHECK_EQUAL(a2.getValues()[50], 0.28472f);
 }
 
+OCIO_ADD_TEST(FileFormatCTF, lut1d_long_lut)
+{
+    OCIO::LocalCachedFileRcPtr cachedFile;
+    const std::string ctfFile("clf/lut1d_long.clf");
+    OCIO_CHECK_NO_THROW(cachedFile = LoadCLFFile(ctfFile));
+    OCIO_REQUIRE_ASSERT((bool)cachedFile);
+
+    const OCIO::ConstOpDataVec & opList = cachedFile->m_transform->getOps();
+    OCIO_REQUIRE_EQUAL(opList.size(), 1);
+    auto pLut = std::dynamic_pointer_cast<const OCIO::Lut1DOpData>(opList[0]);
+    OCIO_REQUIRE_ASSERT(pLut);
+
+    const OCIO::Array & a = pLut->getArray();
+    OCIO_CHECK_EQUAL(a.getLength(), 131072);
+    OCIO_CHECK_EQUAL(a.getNumColorComponents(), 1);
+    OCIO_CHECK_EQUAL(a.getNumValues(),
+                     a.getLength()*pLut->getArray().getMaxColorComponents());
+    OCIO_CHECK_EQUAL(a.getValues()[393215], 1.293f);
+}
+
 OCIO_ADD_TEST(FileFormatCTF, lut1d_inv)
 {
     OCIO::LocalCachedFileRcPtr cachedFile;
@@ -1126,6 +1146,40 @@ OCIO_ADD_TEST(FileFormatCTF, matrix_windows_eol)
     OCIO_CHECK_EQUAL(opList[0]->getType(), OCIO::OpData::MatrixType);
     OCIO_CHECK_EQUAL(opList[0]->getID(), "");
     OCIO_CHECK_EQUAL(opList[0]->getName(), "identity matrix");
+}
+
+OCIO_ADD_TEST(FileFormatCTF, matrix_no_newlines)
+{
+    OCIO::LocalCachedFileRcPtr cachedFile;
+    const std::string ctfFile("clf/matrix_no_newlines.clf");
+    OCIO_CHECK_NO_THROW(cachedFile = LoadCLFFile(ctfFile));
+    const OCIO::ConstOpDataVec & opList = cachedFile->m_transform->getOps();
+    OCIO_REQUIRE_EQUAL(opList.size(), 1);
+    OCIO_CHECK_EQUAL(opList[0]->getType(), OCIO::OpData::MatrixType);
+    auto pMatrix = std::dynamic_pointer_cast<const OCIO::MatrixOpData>(opList[0]);
+    OCIO_REQUIRE_ASSERT(pMatrix);
+    const OCIO::ArrayDouble & array = pMatrix->getArray();
+
+    const float scale = 4095.f / 1023.f;
+    OCIO_CHECK_CLOSE(array.getValues()[0] * scale, 3.6f, 1e-6f);
+    OCIO_CHECK_CLOSE(array.getValues()[1] * scale, 0.1f, 1e-6f);
+    OCIO_CHECK_CLOSE(array.getValues()[2] * scale,-0.2f, 1e-6f);
+    OCIO_CHECK_CLOSE(array.getValues()[3] * scale, 0.0f, 1e-6f);
+    OCIO_CHECK_CLOSE(array.getValues()[4] * scale, 0.2f, 1e-6f);
+    OCIO_CHECK_CLOSE(array.getValues()[5] * scale, 3.5f, 1e-6f);
+    OCIO_CHECK_CLOSE(array.getValues()[6] * scale, 0.1f, 1e-6f);
+    OCIO_CHECK_CLOSE(array.getValues()[7] * scale, 0.0f, 1e-6f);
+    OCIO_CHECK_CLOSE(array.getValues()[8] * scale, 0.1f, 1e-6f);
+    OCIO_CHECK_CLOSE(array.getValues()[9] * scale,-0.3f, 1e-6f);
+    OCIO_CHECK_CLOSE(array.getValues()[10] * scale,3.4f, 1e-6f);
+    OCIO_CHECK_CLOSE(array.getValues()[11] * scale,0.0f, 1e-6f);
+
+    const OCIO::MatrixOpData::Offsets & offsets = pMatrix->getOffsets();
+    const float oscale = 4095.f;
+    OCIO_CHECK_CLOSE(offsets[0] * oscale, 0.3f, 1e-6f);
+    OCIO_CHECK_CLOSE(offsets[1] * oscale,-0.05f,1e-6f);
+    OCIO_CHECK_CLOSE(offsets[2] * oscale,-0.4f, 1e-6f);
+    OCIO_CHECK_CLOSE(offsets[3] * oscale, 0.0f, 1e-6f);
 }
 
 OCIO_ADD_TEST(FileFormatCTF, check_utf8)
