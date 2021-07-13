@@ -712,7 +712,7 @@ OCIO_ADD_TEST(FileFormatCTF, lut1d_hue_adjust_invalid_style)
 OCIO_ADD_TEST(FileFormatCTF, lut_3by1d_with_nan_infinity)
 {
     OCIO::LocalCachedFileRcPtr cachedFile;
-    const std::string ctfFile("clf/lut3by1d_nan_infinity_example.clf");
+    const std::string ctfFile("lut3by1d_nan_infinity_example.clf");
     OCIO_CHECK_NO_THROW(cachedFile = LoadCLFFile(ctfFile));
     OCIO_REQUIRE_ASSERT((bool)cachedFile);
 

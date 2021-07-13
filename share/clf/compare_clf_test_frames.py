@@ -1,16 +1,20 @@
-#! /usr/bin/python
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright Contributors to the OpenColorIO Project.
 
 # Use OpenImageIO's oiiotool to compare the reference image set to the actual image set produced
-# by a CLF implementation.  The result of each image comparison is printed to the shell.  If none
-# of the comparisons result in an error and they all say "0  > .002,.002,.002", which means that
-# there are zero pixels that exceed the error metric threshold, then the test is a success.
+# by a CLF implementation.  
+#
+# The script iterates over the images in the directory and prints the oiiotool command being run.
+# It will then print either 'Test passed' or 'Test failed' after each command and then at the end
+# will summarize with 'All tests passed' or 'These tests failed' with a list of the failed images.
 #
 # Usage:
 # > python compare_clf_test_frames.py <PATH-TO-REFERENCE-IMAGES> <PATH-TO-ACTUAL-IMAGES>
 
-# This script is python 2 and python 3 compatible.
+# This script is python 2.7 and python 3 compatible.
 
 import os
+import subprocess
 import tempfile
 
 def process_frames( ref_path, act_path ):
@@ -40,6 +44,7 @@ def process_frames( ref_path, act_path ):
     oiio_cmd = base_cmd + box_cmd + nan_err_cmd + range_cmd + avoid_warning_cmd
 
     # Iterate over each pair of test images.
+    failed_tests = []
     for f in sorted(os.listdir( ref_path )):
         fname, ext = os.path.splitext( f )
         if ext == '.exr':
@@ -54,11 +59,33 @@ def process_frames( ref_path, act_path ):
             print('');  print( cmd )
 
             # Process the image.
-            os.system( cmd )
+            try:
+                result = subprocess.check_output(cmd, shell=True)
+
+                ind = str(result).find('0  > .002,.002,.002')
+                if ind > -1:
+                    print('** Test passed **')
+                else:
+                    failed_tests.append(f)
+                    print('\n** TEST FAILED **')
+                    print(result)
+
+            except:
+                failed_tests.append(f)
+                print('\n** TEST FAILED **')
+                print(result)
+
+    if len(failed_tests) == 0:
+        print("\n\nALL TESTS PASSED SUCCESSFULLY!\n\n")
+    else:
+        print("\n\nTHESE TESTS FAILED!\n")
+        for s in failed_tests:
+            print(s)
+        print('')
 
 
 if __name__=='__main__':
     import sys
-    if len( sys.argv ) is not 3:
+    if len( sys.argv ) != 3:
         raise ValueError( "USAGE: python  compare_clf_test_frames.py  <REF_IMAGE_DIR>  <ACTUAL_IMAGE_DIR>" )
     process_frames( sys.argv[1], sys.argv[2] )

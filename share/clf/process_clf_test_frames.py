@@ -1,9 +1,11 @@
-#! /usr/bin/python
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright Contributors to the OpenColorIO Project.
 
-# Use OpenColorIO to apply the CLF files from the CLF test kit to the CLF target image.
+# Use OpenColorIO to apply the CLF files from the CLF test kit to the CLF target image
+# and produce a directory of processed OpenEXR images at the specified location.
 # Run the script with "-h" for usage information.
 
-# This script is python 2 and python 3 compatible.
+# This script is python 2.7 and python 3 compatible.
 
 import os
 import argparse
@@ -31,22 +33,27 @@ def process_frames( options ):
 
     # Set the optimization level. None or lossless avoids the fast SSE log/exponent.
     # (Note that the decimal value is available by simply printing the enum in Python.)
-    if opt_level == 'none':
-        print 'Optimization level: None'
+    if (opt_level == 'none') or (opt_level is None):
+        # For default for this script, use no optimization rather than OCIO's default optimization
+        # in order to apply the operators exactly as they appear in the CLF file with no attempt
+        # to speed up the processing.
+        print( 'Optimization level: None' )
         os.environ["OCIO_OPTIMIZATION_FLAGS"] = "0"
     elif opt_level == 'lossless':
-        print 'Optimization level: Lossless'
+        print( 'Optimization level: Lossless' )
         os.environ["OCIO_OPTIMIZATION_FLAGS"] = "144457667"
+    elif opt_level == 'default':
+        print( 'Optimization level: Default' )
     else:
-        print 'Optimization level: Default'
+        raise ValueError( 'Unexpected --opt argument.' )
 
     # TODO:  Add an option to turn on only SSE without removing any ops.
 
     if use_gpu:
-        print 'Processing on the GPU'
+        print( 'Processing on the GPU\n' )
         cmd_base = 'ocioconvert --gpu --lut %s %s %s'
     else:
-        print 'Processing on the CPU'
+        print( 'Processing on the CPU\n' )
         cmd_base = 'ocioconvert --lut %s %s %s'
 
     # Iterate over each legal CLF file in the suite.
@@ -78,7 +85,7 @@ if __name__=='__main__':
     parser.add_argument('--gpu', action='store_true',
                         help='Process using the GPU rather than the CPU.')
     parser.add_argument('--opt', choices=['none','lossless','default'],
-                        help='Specify the optimization level.')
+                        help='Specify the OCIO optimization level. If not specified, "none" will be used.')
     options = parser.parse_args(sys.argv[1:])
 
     process_frames(options)

@@ -2,9 +2,9 @@
 <ProcessList id="1" compCLFversion="3.0" >
     <Description>Two Lut1D ops</Description>
     <LUT1D inBitDepth="8i" outBitDepth="8i">
-        <Array dim="2 1">
-64
-196
+        <Description>Linear spacing between 64 and 196</Description>
+        <Array dim="23 1">
+64 70 76 82 88 94 100 106 112 118 124 130 136 142 148 154 160 166 172 178 184 190 196
         </Array>
     </LUT1D>
     <LUT1D inBitDepth="8i" outBitDepth="32f">
