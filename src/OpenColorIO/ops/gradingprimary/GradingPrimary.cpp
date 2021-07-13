@@ -150,8 +150,8 @@ void GradingPrimaryPreRender::update(GradingStyle style,
         m_isPowerIdentity = m_gamma[0] == 1.0f && m_gamma[1] == 1.0f && m_gamma[2] == 1.0f;
         m_pivot = 0.5 + v.m_pivot * 0.5;
         m_localBypass = m_localBypass && m_isPowerIdentity &&
-                        m_brightness[0] == 0.f && m_brightness[2] == 0.f && m_brightness[2] == 0.f &&
-                        m_contrast[0] == 1.f && m_contrast[2] == 1.f && m_contrast[2] == 1.f;
+                        m_brightness[0] == 0.f && m_brightness[1] == 0.f && m_brightness[2] == 0.f &&
+                        m_contrast[0] == 1.f && m_contrast[1] == 1.f && m_contrast[2] == 1.f;
         break;
     }
     case GRADING_LIN:
@@ -193,8 +193,8 @@ void GradingPrimaryPreRender::update(GradingStyle style,
                             m_contrast[2] == 1.0f;
         m_pivot = 0.18 * std::pow(2., v.m_pivot);
         m_localBypass = m_localBypass && m_isPowerIdentity &&
-                        m_exposure[0] == 1.f && m_exposure[2] == 1.f && m_exposure[2] == 1.f &&
-                        m_offset[0] == 0.f && m_offset[2] == 0.f && m_offset[2] == 0.f;
+                        m_exposure[0] == 1.f && m_exposure[1] == 1.f && m_exposure[2] == 1.f &&
+                        m_offset[0] == 0.f && m_offset[1] == 0.f && m_offset[2] == 0.f;
         break;
     }
     case GRADING_VIDEO:
@@ -251,8 +251,8 @@ void GradingPrimaryPreRender::update(GradingStyle style,
         }
         m_isPowerIdentity = m_gamma[0] == 1.0f || m_gamma[1] == 1.0f || m_gamma[2] == 1.0f;
         m_localBypass = m_localBypass && m_isPowerIdentity &&
-                        m_slope[0] == 1.f && m_slope[2] == 1.f && m_slope[2] == 1.f &&
-                        m_offset[0] == 0.f && m_offset[2] == 0.f && m_offset[2] == 0.f;
+                        m_slope[0] == 1.f && m_slope[1] == 1.f && m_slope[2] == 1.f &&
+                        m_offset[0] == 0.f && m_offset[1] == 0.f && m_offset[2] == 0.f;
         break;
     }
     }
