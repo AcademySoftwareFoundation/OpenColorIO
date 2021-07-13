@@ -130,7 +130,6 @@ option(OCIO_WARNING_AS_ERROR "Set build error level for CI testing" OFF)
 # Optimization / internal linking preferences
 
 option(OCIO_USE_SSE "Specify whether to enable SSE CPU performance optimizations" ON)
-option(OCIO_INLINES_HIDDEN "Specify whether to build with -fvisibility-inlines-hidden" ${UNIX})
 
 
 ###############################################################################
