@@ -616,6 +616,8 @@ int main(int argc, const char **argv)
             exit(1);
         }
 
+        spec.attribute("oiio:ColorSpace", outputcolorspace);
+
         f->open(outputimage, spec);
 
         if(!f->write_image(spec.format, img.getBuffer()))
