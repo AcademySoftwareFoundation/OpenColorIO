@@ -292,9 +292,9 @@ for compiling on Windows as provided by `@hodoulp <https://github.com/hodoulp>`_
         -DOCIO_USE_SSE=ON ^
         -DOCIO_WARNING_AS_ERROR=ON ^
         -DOCIO_BUILD_PYTHON=%OCIO_BUILD_PYTHON% ^
-        -DPython_LIBRARY=%PYTHONPATH%\libs\python27.lib ^
-        -DPython_INCLUDE_DIR=%PYTHONPATH%\include ^
-        -DPython_EXECUTABLE=%PYTHONPATH%\python.exe ^
+        -DPython_LIBRARY=%PYTHON_PATH%\libs\python27.lib ^
+        -DPython_INCLUDE_DIR=%PYTHON_PATH%\include ^
+        -DPython_EXECUTABLE=%PYTHON_PATH%\python.exe ^
         -DOCIO_BUILD_JAVA=OFF ^
         -DCMAKE_PREFIX_PATH=%COMPILED_THIRD_PARTY_HOME%\OpenImageIO-1.9.0;%COMPILED_THIRD_PARTY_HOME%/ilmbase-2.2.0 ^
         %OCIO_PATH%
