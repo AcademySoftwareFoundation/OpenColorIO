@@ -118,6 +118,9 @@ option(OCIO_BUILD_FROZEN_DOCS "Specify whether to build frozen documentation, ne
 option(OCIO_BUILD_DOCS "Specify whether to build documentation" ${OCIO_BUILD_FROZEN_DOCS})
 
 option(OCIO_BUILD_PYTHON "Specify whether to build python bindings" ON)
+set (OCIO_PYTHON_VERSION "" CACHE STRING
+     "Preferred Python version (if any) in case multiple are available")
+
 option(OCIO_BUILD_JAVA "Specify whether to build java bindings" OFF)
 
 option(OCIO_WARNING_AS_ERROR "Set build error level for CI testing" OFF)
