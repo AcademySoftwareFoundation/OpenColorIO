@@ -15,7 +15,7 @@ function(add_ocio_test NAME SOURCES PRIVATE_INCLUDES)
     )
     target_link_libraries(${TEST_BINARY}
         PUBLIC
-            public_api
+            OpenColorIOHeaders
         PRIVATE
             expat::expat
             IlmBase::Half

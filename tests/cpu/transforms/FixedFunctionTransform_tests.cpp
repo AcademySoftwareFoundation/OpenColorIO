@@ -68,3 +68,21 @@ OCIO_ADD_TEST(FixedFunctionTransform, basic)
                          "FIXED_FUNCTION_ACES_GAMUTMAP_07, and "
                          "FIXED_FUNCTION_ACES_GAMUTMAP_13.");
 }
+
+OCIO_ADD_TEST(FixedFunctionTransform, createEditableCopy)
+{
+    OCIO::FixedFunctionTransformRcPtr func;
+
+    // Create an editable copy for fixed transforms without params.
+
+    OCIO_CHECK_NO_THROW(func
+        = OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_ACES_RED_MOD_03));
+    OCIO_CHECK_NO_THROW(func->createEditableCopy());
+
+    // Create an editable copy for fixed transforms with params.
+
+    constexpr double values[1] = { 1. };
+    OCIO_CHECK_NO_THROW(func
+        = OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_REC2100_SURROUND, &values[0], 1));
+    OCIO_CHECK_NO_THROW(func->createEditableCopy());
+}
