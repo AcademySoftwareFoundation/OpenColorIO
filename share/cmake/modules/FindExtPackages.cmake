@@ -71,6 +71,10 @@ if(OCIO_BUILD_PYTHON)
     find_package(pybind11 2.6.1 REQUIRED)
 endif()
 
+if (OCIO_PYTHON_VERSION AND NOT OCIO_BUILD_PYTHON)
+    message (WARNING "OCIO_PYTHON_VERSION=${OCIO_PYTHON_VERSION} but OCIO_BUILD_PYTHON is off.")
+endif ()
+
 if(OCIO_BUILD_PYTHON OR OCIO_BUILD_DOCS)
 
     # NOTE: We find Python once in the global scope so that it can be checked 
@@ -82,5 +86,12 @@ if(OCIO_BUILD_PYTHON OR OCIO_BUILD_DOCS)
     endif()
 
     # Python
-    find_package(Python REQUIRED COMPONENTS ${_Python_COMPONENTS})
+    find_package(Python ${OCIO_PYTHON_VERSION} REQUIRED
+                 COMPONENTS ${_Python_COMPONENTS})
+
+    if(OCIO_BUILD_PYTHON)
+        # pybind11
+        # https://github.com/pybind/pybind11
+        find_package(pybind11 2.6.1 REQUIRED)
+    endif()
 endif()
