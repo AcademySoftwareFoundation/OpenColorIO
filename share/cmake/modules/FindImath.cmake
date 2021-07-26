@@ -177,6 +177,7 @@ if(NOT Imath_FOUND)
             -DBUILD_SHARED_LIBS=OFF
             -DBUILD_TESTING=OFF
             -DPYTHON=OFF
+            -DIMATH_HALF_USE_LOOKUP_TABLE=OFF
         )
 
         if(CMAKE_TOOLCHAIN_FILE)
