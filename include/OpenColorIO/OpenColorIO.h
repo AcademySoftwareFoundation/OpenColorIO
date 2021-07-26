@@ -60,6 +60,13 @@ namespace OCIO_NAMESPACE
 ///////////////////////////////////////////////////////////////////////////
 // Exceptions
 
+// Silence warning C4275 under Visual Studio:
+// Exceptions derive from std::runtime_error but STL classes are not exportable.
+#ifdef _MSC_VER
+#pragma warning( push )
+#pragma warning( disable : 4275 )
+#endif
+
 /**
  * \brief An exception class to throw for errors detected at runtime.
  *
@@ -98,6 +105,11 @@ public:
 
     ~ExceptionMissingFile();
 };
+
+// Restore default warning behaviour for Visual Studio.
+#ifdef _MSC_VER
+#pragma warning( pop )
+#endif
 
 ///////////////////////////////////////////////////////////////////////////
 // Global

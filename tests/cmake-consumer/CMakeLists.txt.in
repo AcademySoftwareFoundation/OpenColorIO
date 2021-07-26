@@ -1,0 +1,28 @@
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright Contributors to the OpenColorIO Project.
+
+# Check the OCIO CMake config find module
+
+cmake_minimum_required(VERSION 3.12)
+project(consumer LANGUAGES CXX)
+
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE "Release")
+endif()
+
+message(STATUS "Building ${PROJECT_NAME} - ${CMAKE_BUILD_TYPE}")
+
+# Make sure we have dependencies we need
+find_package(OpenColorIO CONFIG REQUIRED)
+
+add_executable(consumer consumer.cpp)
+
+set_target_properties(consumer
+    PROPERTIES
+        COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS}"
+        CXX_STANDARD 11
+        CXX_STANDARD_REQUIRED ON
+        CXX_EXTENSIONS OFF
+)
+
+target_link_libraries(consumer PRIVATE OpenColorIO::OpenColorIO)
