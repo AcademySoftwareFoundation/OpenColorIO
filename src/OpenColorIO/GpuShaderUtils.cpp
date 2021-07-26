@@ -313,32 +313,54 @@ void GpuShaderText::declareFloatArrayConst(const std::string & name, int size, c
     }
 
     auto nl = newLine();
-    if (m_lang != GPU_LANGUAGE_HLSL_DX11)
+
+    switch (m_lang)
     {
-        nl << "const " << floatKeyword() << " " << name << "[" << size << "]" << " = ";
-        nl << floatKeyword() << "[" << size << "](";
-        for (int i = 0; i < size; ++i)
+        case GPU_LANGUAGE_GLSL_1_2:
+        case GPU_LANGUAGE_GLSL_1_3:
+        case GPU_LANGUAGE_GLSL_4_0:
         {
-            nl << getFloatString(v[i], m_lang);
-            if (i + 1 != size)
+            nl << "const " << floatKeyword() << " " << name << "[" << size << "] = ";
+            nl << floatKeyword() << "[" << size << "](";
+            for (int i = 0; i < size; ++i)
             {
-                nl << ", ";
+                nl << getFloatString(v[i], m_lang);
+                if (i + 1 != size)
+                {
+                    nl << ", ";
+                }
             }
+            nl << ");";
+            break;
         }
-        nl << ");";
-    }
-    else
-    {
-        nl << "vector<float, "<< size << "> " << name << " = {";
-        for (int i = 0; i < size; ++i)
+        case GPU_LANGUAGE_HLSL_DX11:
         {
-            nl << getFloatString(v[i], m_lang);
-            if (i + 1 != size)
+            nl << "const " << floatKeyword() << " " << name << "[" << size << "] = {";
+            for (int i = 0; i < size; ++i)
             {
-                nl << ", ";
+                nl << getFloatString(v[i], m_lang);
+                if (i + 1 != size)
+                {
+                    nl << ", ";
+                }
             }
+            nl << "};";
+            break;
         }
-        nl << "};";
+        case GPU_LANGUAGE_CG:
+        {
+            nl << floatKeyword() << " " << name << "[" << size << "] = {";
+            for (int i = 0; i < size; ++i)
+            {
+                nl << getFloatString(v[i], m_lang);
+                if (i + 1 != size)
+                {
+                    nl << ", ";
+                }
+            }
+            nl << "};";
+            break;
+        }
     }
 }
 
@@ -354,32 +376,54 @@ void GpuShaderText::declareIntArrayConst(const std::string & name, int size, con
     }
 
     auto nl = newLine();
-    if (m_lang != GPU_LANGUAGE_HLSL_DX11)
+
+    switch (m_lang)
     {
-        nl << "const " << intKeyword() << " " << name << "[" << size << "]"
-           << " = " << intKeyword() << "[" << size << "](";
-        for (int i = 0; i < size; ++i)
+        case GPU_LANGUAGE_GLSL_1_2:
+        case GPU_LANGUAGE_GLSL_1_3:
+        case GPU_LANGUAGE_GLSL_4_0:
         {
-            nl << v[i];
-            if (i + 1 != size)
+            nl << "const " << intKeyword() << " " << name << "[" << size << "] = "
+               << intKeyword() << "[" << size << "](";
+            for (int i = 0; i < size; ++i)
             {
-                nl << ", ";
+                nl << v[i];
+                if (i + 1 != size)
+                {
+                    nl << ", ";
+                }
             }
+            nl << ");";
+            break;
         }
-        nl << ");";
-    }
-    else
-    {
-        nl << "vector<" << intKeyword() << ", " << size << "> " << name << " = {";
-        for (int i = 0; i < size; ++i)
+        case GPU_LANGUAGE_HLSL_DX11:
         {
-            nl << v[i];
-            if (i + 1 != size)
+            nl << "const " << intKeyword() << " " << name << "[" << size << "] = {";
+            for (int i = 0; i < size; ++i)
             {
-                nl << ", ";
+                nl << v[i];
+                if (i + 1 != size)
+                {
+                    nl << ", ";
+                }
             }
+            nl << "};";
+            break;
         }
-        nl << "};";
+        case GPU_LANGUAGE_CG:
+        {
+            nl << intKeyword() << " " << name << "[" << size << "] = {";
+            for (int i = 0; i < size; ++i)
+            {
+                nl << v[i];
+                if (i + 1 != size)
+                {
+                    nl << ", ";
+                }
+            }
+            nl << "};";
+            break;
+        }
     }
 }
 
