@@ -392,6 +392,8 @@ AllValues UnitTestValues
         { { 0.125f, 0.1f, 0.075f }, { 0.211320835792f, 0.149169650771f, 0.085452970479f } } },
     { "ACES-LMT - BLUE_LIGHT_ARTIFACT_FIX",
         { { 0.5f, 0.4f, 0.3f }, { 0.48625676579f,  0.38454173877f,  0.30002108779f } } },
+    { "ACES-LMT - ACES 1.3 Reference Gamut Compression",
+        { { 0.5f, 0.4f, -0.3f }, { 0.54812347889f, 0.42805567384f, -0.00588858686f } } },
 
     { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-CINEMA_1.0",
         { { 0.5f, 0.4f, 0.3f }, { 0.33629957f,     0.31832799f,     0.22867827f } } },
