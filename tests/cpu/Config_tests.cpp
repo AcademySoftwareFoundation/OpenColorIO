@@ -8217,3 +8217,146 @@ OCIO_ADD_TEST(Config, get_processor_alias)
                          OCIO::TRANSFORM_TYPE_FIXED_FUNCTION);
     }
 }
+
+OCIO_ADD_TEST(Config, test1)
+{
+    static constexpr char sFromSpace[] = "ACEScg";
+    static constexpr char sDiplay[] = "AdobeRGB";
+    static constexpr char sView[] = "raw";
+
+    static constexpr char CONFIG[] = { R"(ocio_profile_version: 2
+environment: {}
+search_path: "./"
+roles:
+  data: Raw
+  default: Raw
+  scene_linear: ACEScg
+
+file_rules:
+  - !<Rule> {name: Default, colorspace: default}
+
+displays:
+  AdobeRGB:
+    - !<View> {name: Raw, colorspace: Raw}
+
+colorspaces:
+  - !<ColorSpace>
+    name: ACEScg
+    to_reference: !<MatrixTransform> {matrix: [ 0.695452241357, 0.140678696470, 0.163869062172, 0, 0.044794563372, 0.859671118456, 0.095534318172, 0, -0.005525882558, 0.004025210306, 1.001500672252, 0, 0, 0, 0, 1 ]}
+  - !<ColorSpace>
+    name: Raw
+    isdata: true)" };
+
+    {
+        std::istringstream iss;
+        iss.str(CONFIG);
+
+        OCIO::ConstConfigRcPtr mOCIOCfg;
+        OCIO_CHECK_NO_THROW(mOCIOCfg = OCIO::Config::CreateFromStream(iss));
+        OCIO_CHECK_NO_THROW(mOCIOCfg->validate());
+
+        // Create the two processors.
+
+        OCIO::DisplayViewTransformRcPtr transform = OCIO::DisplayViewTransform::Create();
+        transform->setSrc(sFromSpace);
+        transform->setDisplay(sDiplay);
+        transform->setView(sView);
+
+        auto proc = mOCIOCfg->getProcessor(transform);
+    
+        auto cpu1 = proc->getDefaultCPUProcessor();
+        auto cpu2 = proc->getOptimizedCPUProcessor(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_UINT8, OCIO::OPTIMIZATION_DEFAULT);
+
+        // Declare all the buffers.
+
+        float inCol[4] = { 0.5f, 0.5f, 0.5f, 1.0f };
+        float outCol1[4];
+        uint8_t outCol2[4];
+
+        // Wrap source and destination colors.
+
+        OCIO::PackedImageDesc descSrc(inCol, 1, 1, OCIO::CHANNEL_ORDERING_RGBA);
+
+        OCIO::PackedImageDesc descDst1(outCol1, 1, 1, OCIO::CHANNEL_ORDERING_RGBA);
+        OCIO::PackedImageDesc descDst2(outCol2, 1, 1, OCIO::CHANNEL_ORDERING_RGBA, OCIO::BIT_DEPTH_UINT8, 1, 4, 4);
+
+        cpu1->apply(descSrc, descDst1); //outCol1 is {0.5, 0.5, 0.5} good!
+        cpu2->apply(descSrc, descDst2); //outCol2 is {255, 255, 255} not good!
+
+        // Check results.
+
+        OCIO_CHECK_EQUAL(outCol1[0], 0.5f);
+        OCIO_CHECK_EQUAL(outCol1[1], 0.5f);
+        OCIO_CHECK_EQUAL(outCol1[2], 0.5f);
+        OCIO_CHECK_EQUAL(outCol1[3], 1.0f);
+
+        OCIO_CHECK_EQUAL((uint32_t)outCol2[0], 128);
+        OCIO_CHECK_EQUAL((uint32_t)outCol2[1], 128);
+        OCIO_CHECK_EQUAL((uint32_t)outCol2[2], 128);
+        OCIO_CHECK_EQUAL((uint32_t)outCol2[3], 255);
+    }
+
+    {
+        std::istringstream iss;
+        iss.str(CONFIG);
+
+        OCIO::ConstConfigRcPtr mOCIOCfg;
+        OCIO_CHECK_NO_THROW(mOCIOCfg = OCIO::Config::CreateFromStream(iss));
+        OCIO_CHECK_NO_THROW(mOCIOCfg->validate());
+
+        // Setup viewing pipeline for proc1.
+
+        OCIO::DisplayViewTransformRcPtr transform = OCIO::DisplayViewTransform::Create();
+        transform->setSrc(sFromSpace);
+        transform->setDisplay(sDiplay);
+        transform->setView(sView);
+        OCIO::LegacyViewingPipelineRcPtr vp = OCIO::LegacyViewingPipeline::Create();
+        vp->setDisplayViewTransform(transform);
+
+        // Add Exposure / Contrast.
+        {
+            OCIO::ExposureContrastTransformRcPtr ex = OCIO::ExposureContrastTransform::Create();
+            ex->setStyle(OCIO::EXPOSURE_CONTRAST_LINEAR);
+            ex->setPivot(0.18);
+            ex->makeExposureDynamic();
+            ex->makeContrastDynamic();
+            ex->makeGammaDynamic();
+            vp->setLinearCC(ex);
+        }
+
+        // Create two processors 1: using viewing pipeline, 2: using just Display/View pair.
+
+        auto processor1 = vp->getProcessor(mOCIOCfg, mOCIOCfg->getCurrentContext());
+        auto processor2 = mOCIOCfg->getProcessor(sFromSpace, sDiplay, sView, OCIO::TRANSFORM_DIR_FORWARD);
+
+        // Get optimized processors.
+
+        auto cpu1 = processor1->getOptimizedCPUProcessor(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_UINT8, OCIO::OPTIMIZATION_DEFAULT);
+        auto cpu2 = processor2->getOptimizedCPUProcessor(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_UINT8, OCIO::OPTIMIZATION_DEFAULT);
+
+        // Declare all the buffers.
+
+        float inCol[4] = { 0.5f, 0.5f, 0.5f, 1.0f };
+        uint8_t outCol1[3];
+        uint8_t outCol2[3];
+
+        // Wrap source and destination colors.
+
+        OCIO::PackedImageDesc descSrc(inCol, 1, 1, OCIO::CHANNEL_ORDERING_RGBA);
+        OCIO::PackedImageDesc descDst1(outCol1, 1, 1, OCIO::CHANNEL_ORDERING_RGB, OCIO::BIT_DEPTH_UINT8, 1, 3, 3);
+        OCIO::PackedImageDesc descDst2(outCol2, 1, 1, OCIO::CHANNEL_ORDERING_RGB, OCIO::BIT_DEPTH_UINT8, 1, 3, 3);
+
+        cpu1->apply(descSrc, descDst1); //outCol1 is {128, 128, 128} good!
+        cpu2->apply(descSrc, descDst2); //outCol2 is {255, 255, 255} not good!
+
+        // Check results.
+
+        OCIO_CHECK_EQUAL((uint32_t)outCol1[0], 128);
+        OCIO_CHECK_EQUAL((uint32_t)outCol1[1], 128);
+        OCIO_CHECK_EQUAL((uint32_t)outCol1[2], 128);
+
+        OCIO_CHECK_EQUAL((uint32_t)outCol2[0], 128);
+        OCIO_CHECK_EQUAL((uint32_t)outCol2[1], 128);
+        OCIO_CHECK_EQUAL((uint32_t)outCol2[2], 128);
+    }
+}
