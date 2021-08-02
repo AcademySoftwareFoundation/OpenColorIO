@@ -1024,7 +1024,6 @@ public:
      * * If strict parsing is disabled, return ROLE_DEFAULT (if defined).
      * * If the default role is not defined, return an empty string.
      */
-    OCIO_DEPRECATED("This was marked as deprecated starting in v2.0, please use Config::getColorSpaceFromFilepath().")
     const char * parseColorSpaceFromString(const char * str) const;
 
     bool isStrictParsingEnabled() const;
