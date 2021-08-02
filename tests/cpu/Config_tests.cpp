@@ -8218,8 +8218,11 @@ OCIO_ADD_TEST(Config, get_processor_alias)
     }
 }
 
-OCIO_ADD_TEST(Config, test1)
+OCIO_ADD_TEST(Config, optimization_with_bitdepths)
 {
+    // The unit test validates that the bit-depth conversion is correctly done for an empty list of
+    // ops i.e. the color transformation does nothing.
+
     static constexpr char sFromSpace[] = "ACEScg";
     static constexpr char sDiplay[] = "AdobeRGB";
     static constexpr char sView[] = "raw";
@@ -8280,8 +8283,8 @@ colorspaces:
         OCIO::PackedImageDesc descDst1(outCol1, 1, 1, OCIO::CHANNEL_ORDERING_RGBA);
         OCIO::PackedImageDesc descDst2(outCol2, 1, 1, OCIO::CHANNEL_ORDERING_RGBA, OCIO::BIT_DEPTH_UINT8, 1, 4, 4);
 
-        cpu1->apply(descSrc, descDst1); //outCol1 is {0.5, 0.5, 0.5} good!
-        cpu2->apply(descSrc, descDst2); //outCol2 is {255, 255, 255} not good!
+        cpu1->apply(descSrc, descDst1);
+        cpu2->apply(descSrc, descDst2);
 
         // Check results.
 
@@ -8346,8 +8349,8 @@ colorspaces:
         OCIO::PackedImageDesc descDst1(outCol1, 1, 1, OCIO::CHANNEL_ORDERING_RGB, OCIO::BIT_DEPTH_UINT8, 1, 3, 3);
         OCIO::PackedImageDesc descDst2(outCol2, 1, 1, OCIO::CHANNEL_ORDERING_RGB, OCIO::BIT_DEPTH_UINT8, 1, 3, 3);
 
-        cpu1->apply(descSrc, descDst1); //outCol1 is {128, 128, 128} good!
-        cpu2->apply(descSrc, descDst2); //outCol2 is {255, 255, 255} not good!
+        cpu1->apply(descSrc, descDst1);
+        cpu2->apply(descSrc, descDst2);
 
         // Check results.
 

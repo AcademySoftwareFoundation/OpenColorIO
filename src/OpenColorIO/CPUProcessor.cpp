@@ -278,6 +278,7 @@ void FinalizeOpsForCPU(OpRcPtrVec & ops, const OpRcPtrVec & rawOps,
         ops.optimizeForBitdepth(in, out, oFlags);
     }
 
+    // The previous code could change the list of ops so an explicit check to empty is still needed.
     if(ops.empty())
     {
         // Needs at least one op (even an identity one) as the input and output buffers could be
@@ -297,7 +298,7 @@ void CPUProcessor::Impl::finalize(const OpRcPtrVec & rawOps,
 {
     AutoMutex lock(m_mutex);
 
-    // Get the ops of the color transformation without the bit-depth concern.
+    // Get the ops of the color transformation without the bit-depth adjustments.
 
     OpRcPtrVec ops;
     FinalizeOpsForCPU(ops, rawOps, in, out, oFlags);
