@@ -40,8 +40,14 @@
     <Exponent inBitDepth="8i" outBitDepth="16f" style="monCurveMirrorFwd">
         <ExponentParams exponent="3" offset="0.16" />
     </Exponent>
-    <Exponent inBitDepth="16f" outBitDepth="8i" style="monCurveMirrorRev">
+    <Exponent inBitDepth="16f" outBitDepth="32f" style="monCurveMirrorRev">
         <ExponentParams channel="R" exponent="3" offset="0.16" />
         <!-- The G & B channels are not specified and should be set to an identity -->
     </Exponent>
+    <Range inBitDepth="32f" outBitDepth="32f" style="Clamp">
+        <minInValue>-65504</minInValue>
+        <maxInValue>65504</maxInValue>
+        <minOutValue>-65504</minOutValue>
+        <maxOutValue>65504</maxOutValue>
+    </Range>
 </ProcessList>
