@@ -900,3 +900,56 @@ OCIO_ADD_TEST(LegacyViewingPipeline, fullPipelineNoLook)
         OCIO_REQUIRE_ASSERT(ec);
     }
 }
+
+OCIO_ADD_TEST(LegacyViewingPipeline, processorWithNoOpLook)
+{
+    //
+    // Validate LegacyViewingPipeline::getProcessor when a noop look override
+    // is specified.
+    //
+
+    std::istringstream is(category_test_config);
+
+    OCIO::ConstConfigRcPtr cfg;
+    OCIO_CHECK_NO_THROW(cfg = OCIO::Config::CreateFromStream(is));
+    OCIO_CHECK_NO_THROW(cfg->validate());
+
+    OCIO::DisplayViewTransformRcPtr dt = OCIO::DisplayViewTransform::Create();
+    dt->setDisplay("DISP_2");
+    dt->setView("VIEW_2");
+    dt->setSrc("in_1");
+
+    OCIO::LegacyViewingPipelineRcPtr vp = OCIO::LegacyViewingPipeline::Create();
+    vp->setDisplayViewTransform(dt);
+    vp->setLooksOverrideEnabled(true);
+    vp->setLooksOverride("look_noop");
+
+    // Processor in forward direction.
+
+    OCIO::ConstProcessorRcPtr proc;
+    OCIO_CHECK_NO_THROW(proc = vp->getProcessor(cfg, cfg->getCurrentContext()));
+    OCIO_REQUIRE_ASSERT(proc);
+
+    OCIO::GroupTransformRcPtr groupTransform;
+    OCIO_CHECK_NO_THROW(groupTransform = proc->createGroupTransform());
+
+    OCIO_REQUIRE_ASSERT(groupTransform);
+    OCIO_CHECK_NO_THROW(groupTransform->validate());
+
+    // Repeat in inverse direction.
+
+    dt->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+    vp->setDisplayViewTransform(dt);
+    vp->setLooksOverrideEnabled(true);
+    vp->setLooksOverride("look_noop");
+
+    // Processor in inverse direction.
+
+    OCIO_CHECK_NO_THROW(proc = vp->getProcessor(cfg, cfg->getCurrentContext()));
+    OCIO_REQUIRE_ASSERT(proc);
+
+    OCIO_CHECK_NO_THROW(groupTransform = proc->createGroupTransform());
+
+    OCIO_REQUIRE_ASSERT(groupTransform);
+    OCIO_CHECK_NO_THROW(groupTransform->validate());
+}
