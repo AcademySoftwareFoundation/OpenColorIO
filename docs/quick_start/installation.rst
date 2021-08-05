@@ -122,8 +122,8 @@ When using existing system libraries, the following CMake variables can be
 defined to hint at non-standard install locations and preference of shared
 or static linking:
 
-- ``-DExpat_ROOT=<path>`` (include and/or library root dir)
-- ``-DExpat_STATIC_LIBRARY=ON`` (prefer static lib)
+- ``-Dexpat_ROOT=<path>`` (include and/or library root dir)
+- ``-Dexpat_STATIC_LIBRARY=ON`` (prefer static lib)
 - ``-Dyaml-cpp_ROOT=<path>`` (include and/or library root dir)
 - ``-Dyaml-cpp_STATIC_LIBRARY=ON`` (prefer static lib)
 - ``-DHalf_ROOT=<path>`` (include and/or library root dir)
@@ -132,7 +132,7 @@ or static linking:
 - ``-Dpystring_STATIC_LIBRARY=ON`` (prefer static lib)
 - ``-Dlcms2_ROOT=<path>`` (include and/or library root dir)
 - ``-Dlcms2_STATIC_LIBRARY=ON`` (prefer static lib)
-- ``-pybind11_ROOT=<path>`` (include and/or library root dir)
+- ``-Dpybind11_ROOT=<path>`` (include and/or library root dir)
 - ``-DPython_EXECUTABLE=<path>`` (Python executable)
 
 To hint at Python package locations, add paths to the ``PYTHONPATH`` 
@@ -292,9 +292,9 @@ for compiling on Windows as provided by `@hodoulp <https://github.com/hodoulp>`_
         -DOCIO_USE_SSE=ON ^
         -DOCIO_WARNING_AS_ERROR=ON ^
         -DOCIO_BUILD_PYTHON=%OCIO_BUILD_PYTHON% ^
-        -DPython_LIBRARY=%PYTHONPATH%\libs\python27.lib ^
-        -DPython_INCLUDE_DIR=%PYTHONPATH%\include ^
-        -DPython_EXECUTABLE=%PYTHONPATH%\python.exe ^
+        -DPython_LIBRARY=%PYTHON_PATH%\libs\python27.lib ^
+        -DPython_INCLUDE_DIR=%PYTHON_PATH%\include ^
+        -DPython_EXECUTABLE=%PYTHON_PATH%\python.exe ^
         -DOCIO_BUILD_JAVA=OFF ^
         -DCMAKE_PREFIX_PATH=%COMPILED_THIRD_PARTY_HOME%\OpenImageIO-1.9.0;%COMPILED_THIRD_PARTY_HOME%/ilmbase-2.2.0 ^
         %OCIO_PATH%
