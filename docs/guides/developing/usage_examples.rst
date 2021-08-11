@@ -93,15 +93,16 @@ Python
    import PyOpenColorIO as OCIO
    
    try:
-       config = OCIO.GetCurrentConfig()
-       processor = config.getProcessor(OCIO.Constants.ROLE_COMPOSITING_LOG,
-                                       OCIO.Constants.ROLE_SCENE_LINEAR)
-       cpu = processor->getDefaultCPUProcessor()
+      config = OCIO.GetCurrentConfig()
+      processor = config.getProcessor(OCIO.ROLE_COMPOSITING_LOG,
+                                      OCIO.ROLE_SCENE_LINEAR)
+      cpu = processor.getDefaultCPUProcessor()
        
-       # Apply the color transform to the existing RGBA pixel data
-       img = cpu.applyRGBA(img)
-   except Exception, e:
-       print "OpenColorIO Error",e
+      # Apply the color transform to the existing RGBA pixel data
+      img = [1, 0, 0, 0]
+      img = cpu.applyRGBA(img)
+   except Exception as e:
+      print("OpenColorIO Error: ", e)
 
 .. _usage_displayimage:
 
@@ -137,17 +138,18 @@ C++
    
    try
    {
-     OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
+      OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
    
-     const char * display = config->getDefaultDisplay();
-     const char * view = config->getDefaultView(display);
+      const char * display = config->getDefaultDisplay();
+      const char * view = config->getDefaultView(display);
    
-     OCIO::ConstProcessorRcPtr processor = config->getProcessor(OCIO::ROLE_SCENE_LINEAR,
-                                                                display, view);
-     OCIO::ConstCPUProcessorRcPtr cpu = processor->getDefaultCPUProcessor();
+      OCIO::ConstProcessorRcPtr processor = config->getProcessor(OCIO::ROLE_SCENE_LINEAR,
+                                                                 display, view,
+                                                                 OCIO::TRANSFORM_DIR_FORWARD);
+      OCIO::ConstCPUProcessorRcPtr cpu = processor->getDefaultCPUProcessor();
    
-     OCIO::PackedImageDesc img(imageData, width, height, 4);
-     cpu->apply(img);
+      OCIO::PackedImageDesc img(imageData, width, height, 4);
+      cpu->apply(img);
    }
    catch(OCIO::Exception & exception)
    {
@@ -159,21 +161,21 @@ Python
 
 .. code-block:: python
 
-    import PyOpenColorIO as OCIO
+   import PyOpenColorIO as OCIO
 
    try:
-    config = OCIO.GetCurrentConfig()
+      config = OCIO.GetCurrentConfig()
 
-     display = config.getDefaultDisplay()
-     view = config.getDefaultView(display)
+      display = config.getDefaultDisplay()
+      view = config.getDefaultView(display)
 
-     processor = config.getProcessor(OCIO.Constants.ROLE_SCENE_LINEAR, display, view)
-     cpu = processor.getDefaultCPUProcessor()
+      processor = config.getProcessor(OCIO.ROLE_SCENE_LINEAR, display, view, OCIO.TRANSFORM_DIR_FORWARD)
+      cpu = processor.getDefaultCPUProcessor()
 
-     imageData = [1, 0, 0]
-     cpu.applyRGB(img)
-   except Exception, e:
-       print "OpenColorIO Error",e
+      img = [1, 0, 0]
+      cpu.applyRGB(img)
+   except Exception as e:
+      print("OpenColorIO Error: ", e)
 
 Displaying an image, using the CPU (Full Display Pipeline)
 **********************************************************
@@ -246,30 +248,30 @@ Python
 
 .. code-block:: python
 
-    import PyOpenColorIO as OCIO
+   import PyOpenColorIO as OCIO
 
-    # Step 1: Get the config
-    config = OCIO.GetCurrentConfig()
+   # Step 1: Get the config
+   config = OCIO.GetCurrentConfig()
 
-    # Step 2: Lookup the display ColorSpace
-    display = config.getDefaultDisplay()
-    view = config.getDefaultView(display)
+   # Step 2: Lookup the display ColorSpace
+   display = config.getDefaultDisplay()
+   view = config.getDefaultView(display)
 
-    # Step 3: Create a DisplayTransform, and set the input, display, and view
-    # (This example assumes the input is scene linear. Adapt as needed.)
+   # Step 3: Create a DisplayViewTransform, and set the input, display, and view
+   # (This example assumes the input is a role. Adapt as needed.)
 
-    transform = OCIO.DisplayTransform()
-    transform.setInputColorSpaceName(OCIO.Constants.ROLE_SCENE_LINEAR)
-    transform.setDisplay(display)
-    transform.setView(view)
+   transform = OCIO.DisplayViewTransform()
+   transform.setSrc(OCIO.Constants.ROLE_SCENE_LINEAR)
+   transform.setDisplay(display)
+   transform.setView(view)
 
-    # Step 4: Create the processor
-    processor = config.getProcessor(transform)
-    cpu = processor.getDefaultCPUProcessor()
+   # Step 4: Create the processor
+   processor = config.getProcessor(transform)
+   cpu = processor.getDefaultCPUProcessor()
 
-    # Step 5: Apply the color transform to an existing RGB pixel
-    imageData = [1, 0, 0]
-    print cpu.applyRGB(imageData)
+   # Step 5: Apply the color transform to an existing RGB pixel
+   imageData = [1, 0, 0]
+   print(cpu.applyRGB(imageData))
 
 
 Displaying an image, using the GPU
