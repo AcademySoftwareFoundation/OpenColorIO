@@ -115,7 +115,7 @@ determine the colorspace ``lnf`` (it being the right-most substring
 containing a colorspace name)
 
 However, if the colorspace cannot be determined and ``strictparsing:
-true``, it will produce an error.
+true``, it will return an empty string.
 
 If the colorspace cannot be determined and ``strictparsing: false``,
 the default role will be used. This allows unhandled images to operate
