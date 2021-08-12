@@ -54,7 +54,7 @@ OCIO_ADD_TEST(FileFormatCTF, clf_examples)
         const OCIO::ConstOpDataVec & opList = cachedFile->m_transform->getOps();
         OCIO_REQUIRE_EQUAL(opList.size(), 1);
         OCIO_CHECK_EQUAL(opList[0]->getType(), OCIO::OpData::Lut1DType);
-        OCIO_CHECK_EQUAL(opList[0]->getName(), "4valueLut");
+        OCIO_CHECK_EQUAL(opList[0]->getName(), "65valueLut");
         OCIO_CHECK_EQUAL(opList[0]->getID(), "lut-23");
         auto lut = OCIO::DynamicPtrCast<const OCIO::Lut1DOpData>(opList[0]);
         OCIO_REQUIRE_ASSERT(lut);
@@ -62,8 +62,9 @@ OCIO_ADD_TEST(FileFormatCTF, clf_examples)
         StringUtils::StringVec desc;
         GetElementsValues(opList[0]->getFormatMetadata().getChildrenElements(),
                           OCIO::TAG_DESCRIPTION, desc);
-        OCIO_REQUIRE_EQUAL(desc.size(), 1);
+        OCIO_REQUIRE_EQUAL(desc.size(), 2);
         OCIO_CHECK_EQUAL(desc[0], "Note that the bit-depth does not constrain the legal range of values.");
+        OCIO_CHECK_EQUAL(desc[1], "Formula: flipud(1.25 - 1.5 * x^2.2)");
     }
 
     {
@@ -129,19 +130,19 @@ OCIO_ADD_TEST(FileFormatCTF, clf_examples)
 
         // Check matrix ...
         OCIO_REQUIRE_EQUAL(array.getValues().size(), array.getNumValues());
-        OCIO_CHECK_EQUAL(array.getValues()[0] * scale,  4.80);
+        OCIO_CHECK_EQUAL(array.getValues()[0] * scale,  3.60);
         OCIO_CHECK_EQUAL(array.getValues()[1] * scale,  0.10);
         OCIO_CHECK_EQUAL(array.getValues()[2] * scale, -0.20);
         OCIO_CHECK_EQUAL(array.getValues()[3],  0.0);
 
-        OCIO_CHECK_EQUAL(array.getValues()[4] * scale,  0.40);
+        OCIO_CHECK_EQUAL(array.getValues()[4] * scale,  0.20);
         OCIO_CHECK_EQUAL(array.getValues()[5] * scale,  3.50);
         OCIO_CHECK_EQUAL(array.getValues()[6] * scale,  0.10);
         OCIO_CHECK_EQUAL(array.getValues()[7],  0.0);
 
-        OCIO_CHECK_EQUAL(array.getValues()[8]  * scale, 0.60);
-        OCIO_CHECK_EQUAL(array.getValues()[9]  * scale,-0.70);
-        OCIO_CHECK_EQUAL(array.getValues()[10] * scale, 4.20);
+        OCIO_CHECK_EQUAL(array.getValues()[8]  * scale, 0.10);
+        OCIO_CHECK_EQUAL(array.getValues()[9]  * scale,-0.30);
+        OCIO_CHECK_EQUAL(array.getValues()[10] * scale, 3.40);
         OCIO_CHECK_EQUAL(array.getValues()[11], 0.0);
 
         OCIO_CHECK_EQUAL(array.getValues()[12], 0.0);
@@ -711,7 +712,7 @@ OCIO_ADD_TEST(FileFormatCTF, lut1d_hue_adjust_invalid_style)
 OCIO_ADD_TEST(FileFormatCTF, lut_3by1d_with_nan_infinity)
 {
     OCIO::LocalCachedFileRcPtr cachedFile;
-    const std::string ctfFile("clf/lut3by1d_nan_infinity_example.clf");
+    const std::string ctfFile("lut3by1d_nan_infinity_example.clf");
     OCIO_CHECK_NO_THROW(cachedFile = LoadCLFFile(ctfFile));
     OCIO_REQUIRE_ASSERT((bool)cachedFile);
 
@@ -775,16 +776,16 @@ OCIO_ADD_TEST(FileFormatCTF, lut1d_half_domain_raw_half_set)
     OCIO_CHECK_ASSERT(pLut1d->isInputHalfDomain());
     OCIO_CHECK_ASSERT(pLut1d->isOutputRawHalfs());
     
-    OCIO_CHECK_EQUAL(pLut1d->getArray().getValues()[0] * 1023.0f,
-                     OCIO::ConvertHalfBitsToFloat(0));
-    OCIO_CHECK_EQUAL(pLut1d->getArray().getValues()[3] * 1023.0f,
-                     OCIO::ConvertHalfBitsToFloat(215));
-    OCIO_CHECK_EQUAL(pLut1d->getArray().getValues()[6] * 1023.0f,
-                     OCIO::ConvertHalfBitsToFloat(294));
-    OCIO_CHECK_EQUAL(pLut1d->getArray().getValues()[9] * 1023.0f,
-                     OCIO::ConvertHalfBitsToFloat(354));
-    OCIO_CHECK_EQUAL(pLut1d->getArray().getValues()[12] * 1023.0f,
-                     OCIO::ConvertHalfBitsToFloat(403));
+    OCIO_CHECK_EQUAL(pLut1d->getArray().getValues()[0],
+                     OCIO::ConvertHalfBitsToFloat(44646));
+    OCIO_CHECK_EQUAL(pLut1d->getArray().getValues()[3],
+                     OCIO::ConvertHalfBitsToFloat(44637));
+    OCIO_CHECK_EQUAL(pLut1d->getArray().getValues()[6],
+                     OCIO::ConvertHalfBitsToFloat(44634));
+    OCIO_CHECK_EQUAL(pLut1d->getArray().getValues()[9],
+                     OCIO::ConvertHalfBitsToFloat(44631));
+    OCIO_CHECK_EQUAL(pLut1d->getArray().getValues()[12],
+                     OCIO::ConvertHalfBitsToFloat(44629));
 }
 
 OCIO_ADD_TEST(FileFormatCTF, lut1d_half_domain_missing_values)
@@ -805,7 +806,7 @@ OCIO_ADD_TEST(FileFormatCTF, 3by1d_lut)
     OCIO_REQUIRE_ASSERT((bool)cachedFile);
 
     const OCIO::ConstOpDataVec & opList = cachedFile->m_transform->getOps();
-    OCIO_REQUIRE_EQUAL(opList.size(), 2);
+    OCIO_REQUIRE_EQUAL(opList.size(), 3);
     auto pMatrix = std::dynamic_pointer_cast<const OCIO::MatrixOpData>(opList[0]);
     OCIO_REQUIRE_ASSERT(pMatrix);
 
@@ -835,14 +836,18 @@ OCIO_ADD_TEST(FileFormatCTF, 3by1d_lut)
     OCIO_CHECK_EQUAL(a1.getValues()[14], 0.0);
     OCIO_CHECK_EQUAL(a1.getValues()[15], 1.0);
 
+    auto pRng =
+        std::dynamic_pointer_cast<const OCIO::RangeOpData>(opList[1]);
+    OCIO_REQUIRE_ASSERT(pRng);
+
     auto pLut =
-        std::dynamic_pointer_cast<const OCIO::Lut1DOpData>(opList[1]);
+        std::dynamic_pointer_cast<const OCIO::Lut1DOpData>(opList[2]);
     OCIO_REQUIRE_ASSERT(pLut);
     OCIO_CHECK_EQUAL(pLut->getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
     OCIO_CHECK_EQUAL(pLut->getFileOutputBitDepth(), OCIO::BIT_DEPTH_F32);
 
     const OCIO::Array & a2 = pLut->getArray();
-    OCIO_CHECK_EQUAL(a2.getLength(), 17);
+    OCIO_CHECK_EQUAL(a2.getLength(), 128);
     OCIO_CHECK_EQUAL(a2.getNumColorComponents(), 3);
     OCIO_CHECK_EQUAL(a2.getNumValues(),
                      a2.getLength()*pLut->getArray().getMaxColorComponents());
@@ -851,15 +856,35 @@ OCIO_ADD_TEST(FileFormatCTF, 3by1d_lut)
     OCIO_CHECK_EQUAL(a2.getValues()[0], 0.0f);
     OCIO_CHECK_EQUAL(a2.getValues()[1], 0.0f);
     OCIO_CHECK_EQUAL(a2.getValues()[2], 0.0f);
-    OCIO_CHECK_EQUAL(a2.getValues()[3], 0.28358f);
+    OCIO_CHECK_EQUAL(a2.getValues()[3], 0.06780f);
 
-    OCIO_CHECK_EQUAL(a2.getValues()[21], 0.68677f);
-    OCIO_CHECK_EQUAL(a2.getValues()[22], 0.68677f);
-    OCIO_CHECK_EQUAL(a2.getValues()[23], 0.68677f);
+    OCIO_CHECK_EQUAL(a2.getValues()[21], 0.19986f);
+    OCIO_CHECK_EQUAL(a2.getValues()[22], 0.18986f);
+    OCIO_CHECK_EQUAL(a2.getValues()[23], 0.17987f);
 
-    OCIO_CHECK_EQUAL(a2.getValues()[48], 1.0f);
-    OCIO_CHECK_EQUAL(a2.getValues()[49], 1.0f);
-    OCIO_CHECK_EQUAL(a2.getValues()[50], 1.0f);
+    OCIO_CHECK_EQUAL(a2.getValues()[48], 0.31636f);
+    OCIO_CHECK_EQUAL(a2.getValues()[49], 0.30054f);
+    OCIO_CHECK_EQUAL(a2.getValues()[50], 0.28472f);
+}
+
+OCIO_ADD_TEST(FileFormatCTF, lut1d_long_lut)
+{
+    OCIO::LocalCachedFileRcPtr cachedFile;
+    const std::string ctfFile("clf/lut1d_long.clf");
+    OCIO_CHECK_NO_THROW(cachedFile = LoadCLFFile(ctfFile));
+    OCIO_REQUIRE_ASSERT((bool)cachedFile);
+
+    const OCIO::ConstOpDataVec & opList = cachedFile->m_transform->getOps();
+    OCIO_REQUIRE_EQUAL(opList.size(), 1);
+    auto pLut = std::dynamic_pointer_cast<const OCIO::Lut1DOpData>(opList[0]);
+    OCIO_REQUIRE_ASSERT(pLut);
+
+    const OCIO::Array & a = pLut->getArray();
+    OCIO_CHECK_EQUAL(a.getLength(), 131072);
+    OCIO_CHECK_EQUAL(a.getNumColorComponents(), 1);
+    OCIO_CHECK_EQUAL(a.getNumValues(),
+                     a.getLength()*pLut->getArray().getMaxColorComponents());
+    OCIO_CHECK_EQUAL(a.getValues()[393215], 1.293f);
 }
 
 OCIO_ADD_TEST(FileFormatCTF, lut1d_inv)
@@ -1078,7 +1103,7 @@ OCIO_ADD_TEST(FileFormatCTF, tabluation_support)
     OCIO_REQUIRE_ASSERT(pL);
 
     OCIO_CHECK_EQUAL(pL->getFileOutputBitDepth(), OCIO::BIT_DEPTH_UINT10);
-    OCIO_CHECK_EQUAL(pL->getInterpolation(), OCIO::INTERP_LINEAR);
+    OCIO_CHECK_EQUAL(pL->getInterpolation(), OCIO::INTERP_TETRAHEDRAL);
 
     const OCIO::Array & array = pL->getArray();
     OCIO_CHECK_EQUAL(array.getLength(), 3U);
@@ -1121,6 +1146,40 @@ OCIO_ADD_TEST(FileFormatCTF, matrix_windows_eol)
     OCIO_CHECK_EQUAL(opList[0]->getType(), OCIO::OpData::MatrixType);
     OCIO_CHECK_EQUAL(opList[0]->getID(), "");
     OCIO_CHECK_EQUAL(opList[0]->getName(), "identity matrix");
+}
+
+OCIO_ADD_TEST(FileFormatCTF, matrix_no_newlines)
+{
+    OCIO::LocalCachedFileRcPtr cachedFile;
+    const std::string ctfFile("clf/matrix_no_newlines.clf");
+    OCIO_CHECK_NO_THROW(cachedFile = LoadCLFFile(ctfFile));
+    const OCIO::ConstOpDataVec & opList = cachedFile->m_transform->getOps();
+    OCIO_REQUIRE_EQUAL(opList.size(), 1);
+    OCIO_CHECK_EQUAL(opList[0]->getType(), OCIO::OpData::MatrixType);
+    auto pMatrix = std::dynamic_pointer_cast<const OCIO::MatrixOpData>(opList[0]);
+    OCIO_REQUIRE_ASSERT(pMatrix);
+    const OCIO::ArrayDouble & array = pMatrix->getArray();
+
+    const float scale = 4095.f / 1023.f;
+    OCIO_CHECK_CLOSE(array.getValues()[0] * scale, 3.6f, 1e-6f);
+    OCIO_CHECK_CLOSE(array.getValues()[1] * scale, 0.1f, 1e-6f);
+    OCIO_CHECK_CLOSE(array.getValues()[2] * scale,-0.2f, 1e-6f);
+    OCIO_CHECK_CLOSE(array.getValues()[3] * scale, 0.0f, 1e-6f);
+    OCIO_CHECK_CLOSE(array.getValues()[4] * scale, 0.2f, 1e-6f);
+    OCIO_CHECK_CLOSE(array.getValues()[5] * scale, 3.5f, 1e-6f);
+    OCIO_CHECK_CLOSE(array.getValues()[6] * scale, 0.1f, 1e-6f);
+    OCIO_CHECK_CLOSE(array.getValues()[7] * scale, 0.0f, 1e-6f);
+    OCIO_CHECK_CLOSE(array.getValues()[8] * scale, 0.1f, 1e-6f);
+    OCIO_CHECK_CLOSE(array.getValues()[9] * scale,-0.3f, 1e-6f);
+    OCIO_CHECK_CLOSE(array.getValues()[10] * scale,3.4f, 1e-6f);
+    OCIO_CHECK_CLOSE(array.getValues()[11] * scale,0.0f, 1e-6f);
+
+    const OCIO::MatrixOpData::Offsets & offsets = pMatrix->getOffsets();
+    const float oscale = 4095.f;
+    OCIO_CHECK_CLOSE(offsets[0] * oscale, 0.3f, 1e-6f);
+    OCIO_CHECK_CLOSE(offsets[1] * oscale,-0.05f,1e-6f);
+    OCIO_CHECK_CLOSE(offsets[2] * oscale,-0.4f, 1e-6f);
+    OCIO_CHECK_CLOSE(offsets[3] * oscale, 0.0f, 1e-6f);
 }
 
 OCIO_ADD_TEST(FileFormatCTF, check_utf8)
@@ -1322,23 +1381,23 @@ OCIO_ADD_TEST(FileFormatCTF, difficult_syntax)
         OCIO_CHECK_EQUAL(desc[2], "& another <valid> desc");
 
         const OCIO::Array & array2 = pLut->getArray();
-        OCIO_CHECK_EQUAL(array2.getLength(), 17);
+        OCIO_CHECK_EQUAL(array2.getLength(), 128);
         OCIO_CHECK_EQUAL(array2.getNumColorComponents(), 3);
         OCIO_CHECK_EQUAL(array2.getNumValues(),
                          array2.getLength()
                          *pLut->getArray().getMaxColorComponents());
 
-        OCIO_REQUIRE_EQUAL(array2.getValues().size(), 51);
+        OCIO_REQUIRE_EQUAL(array2.getValues().size(), 384);
         OCIO_CHECK_EQUAL(array2.getValues()[0], 0.0f);
         OCIO_CHECK_EQUAL(array2.getValues()[1], 0.0f);
         OCIO_CHECK_EQUAL(array2.getValues()[2], 0.0f);
-        OCIO_CHECK_EQUAL(array2.getValues()[3], 0.28358f);
-        OCIO_CHECK_EQUAL(array2.getValues()[4], 0.28358f);
-        OCIO_CHECK_EQUAL(array2.getValues()[5], 0.28358f);
-        OCIO_CHECK_EQUAL(array2.getValues()[6], 0.38860f);
-        OCIO_CHECK_EQUAL(array2.getValues()[45], 0.97109f);
-        OCIO_CHECK_EQUAL(array2.getValues()[46], 0.97109f);
-        OCIO_CHECK_EQUAL(array2.getValues()[47], 0.99999f);
+        OCIO_CHECK_EQUAL(array2.getValues()[3], 0.06780f);
+        OCIO_CHECK_EQUAL(array2.getValues()[4], 0.06441f);
+        OCIO_CHECK_EQUAL(array2.getValues()[5], 0.06102f);
+        OCIO_CHECK_EQUAL(array2.getValues()[6], 0.09965f);
+        OCIO_CHECK_EQUAL(array2.getValues()[378], 0.99562f);
+        OCIO_CHECK_EQUAL(array2.getValues()[379], 0.94584f);
+        OCIO_CHECK_EQUAL(array2.getValues()[380], 0.89606f);
     }
 }
 
@@ -1889,8 +1948,8 @@ OCIO_ADD_TEST(FileFormatCTF, range_test1_noclamp)
     OCIO_CHECK_EQUAL(array.getNumValues(),
                      array.getLength()*array.getLength());
 
-    const float scalef = (2.f - -0.5f) / (240.f - 16.f);
-    const float offsetf = -0.5f - scalef * 16.f;
+    const float scalef = (1.05f + 0.05f) / (272.f + 16.f);
+    const float offsetf = -0.05f - scalef * -16.f;
     const float prec = 10000.f;
     const int scale = (int)(prec * scalef);
     const int offset = (int)(prec * offsetf);
@@ -1951,6 +2010,13 @@ OCIO_ADD_TEST(FileFormatCTF, range_bad_noclamp)
     const std::string ctfFile("clf/illegal/range_bad_noclamp.clf");
     OCIO_CHECK_THROW_WHAT(LoadCLFFile(ctfFile), OCIO::Exception,
                           "Non-clamping Range min & max values have to be set");
+}
+
+OCIO_ADD_TEST(FileFormatCTF, range_bad_values)
+{
+    const std::string ctfFile("clf/illegal/range_bad_values.clf");
+    OCIO_CHECK_THROW_WHAT(LoadCLFFile(ctfFile), OCIO::Exception,
+                          "Range maxInValue is too close to minInValue");
 }
 
 OCIO_ADD_TEST(FileFormatCTF, indexMap_test)
@@ -2413,7 +2479,7 @@ OCIO_ADD_TEST(FileFormatCTF, exponent_all_styles)
     const std::string fileName("clf/exponent_all_styles.clf");
     OCIO_CHECK_NO_THROW(cachedFile = LoadCLFFile(fileName));
     const OCIO::ConstOpDataVec & opList = cachedFile->m_transform->getOps();
-    OCIO_REQUIRE_EQUAL(opList.size(), 11);
+    OCIO_REQUIRE_EQUAL(opList.size(), 12);
 
     {   // Op 0 == basicFwd.
         auto opData = std::dynamic_pointer_cast<const OCIO::GammaOpData>(opList[0]);
@@ -2547,6 +2613,10 @@ OCIO_ADD_TEST(FileFormatCTF, exponent_all_styles)
         OCIO_CHECK_ASSERT(OCIO::GammaOpData::isIdentityParameters(
                           opData->getBlueParams(),
                           opData->getStyle()));
+    }
+    {   // Op 11 == Range.
+        auto opData = std::dynamic_pointer_cast<const OCIO::RangeOpData>(opList[11]);
+        OCIO_REQUIRE_ASSERT(opData);
     }
 }
 
@@ -2819,7 +2889,7 @@ OCIO_ADD_TEST(FileFormatCTF, log_all_styles)
     const std::string fileName("clf/log_all_styles.clf");
     OCIO_CHECK_NO_THROW(cachedFile = LoadCLFFile(fileName));
     const OCIO::ConstOpDataVec & opList = cachedFile->m_transform->getOps();
-    OCIO_REQUIRE_EQUAL(opList.size(), 10);
+    OCIO_REQUIRE_EQUAL(opList.size(), 11);
     double error = 1e-9;
 
     {   // Op 0 == antiLog2.
@@ -2953,30 +3023,34 @@ OCIO_ADD_TEST(FileFormatCTF, log_all_styles)
         {
             auto & param = opData->getRedParams();
             OCIO_REQUIRE_EQUAL(param.size(), 4);
-            OCIO_CHECK_EQUAL(param[OCIO::LOG_SIDE_SLOPE],  0.9);
-            OCIO_CHECK_EQUAL(param[OCIO::LOG_SIDE_OFFSET], 0.2);
-            OCIO_CHECK_EQUAL(param[OCIO::LIN_SIDE_SLOPE],  1.1);
-            OCIO_CHECK_EQUAL(param[OCIO::LIN_SIDE_OFFSET], 0.1);
-            OCIO_CHECK_EQUAL(opData->getBase(), 4.);
+            OCIO_CHECK_EQUAL(param[OCIO::LOG_SIDE_SLOPE],  0.3);
+            OCIO_CHECK_EQUAL(param[OCIO::LOG_SIDE_OFFSET], 0.6);
+            OCIO_CHECK_EQUAL(param[OCIO::LIN_SIDE_SLOPE],  0.9);
+            OCIO_CHECK_EQUAL(param[OCIO::LIN_SIDE_OFFSET], 0.05);
+            OCIO_CHECK_EQUAL(opData->getBase(), 8.);
         }
         {
             auto & param = opData->getGreenParams();
             OCIO_REQUIRE_EQUAL(param.size(), 4);
-            OCIO_CHECK_EQUAL(param[OCIO::LOG_SIDE_SLOPE],  1.1);
-            OCIO_CHECK_EQUAL(param[OCIO::LOG_SIDE_OFFSET], 0.1);
-            OCIO_CHECK_EQUAL(param[OCIO::LIN_SIDE_SLOPE],  1.0);
-            OCIO_CHECK_EQUAL(param[OCIO::LIN_SIDE_OFFSET],-0.1);
-            OCIO_CHECK_EQUAL(opData->getBase(), 4.);
+            OCIO_CHECK_EQUAL(param[OCIO::LOG_SIDE_SLOPE],  0.25);
+            OCIO_CHECK_EQUAL(param[OCIO::LOG_SIDE_OFFSET], 0.4);
+            OCIO_CHECK_EQUAL(param[OCIO::LIN_SIDE_SLOPE],  5.0);
+            OCIO_CHECK_EQUAL(param[OCIO::LIN_SIDE_OFFSET], 0.05);
+            OCIO_CHECK_EQUAL(opData->getBase(), 8.);
         }
         {
             auto & param = opData->getBlueParams();
             OCIO_REQUIRE_EQUAL(param.size(), 4);
-            OCIO_CHECK_EQUAL(param[OCIO::LOG_SIDE_SLOPE],  0.95);
-            OCIO_CHECK_EQUAL(param[OCIO::LOG_SIDE_OFFSET],-0.2);
-            OCIO_CHECK_EQUAL(param[OCIO::LIN_SIDE_SLOPE],  1.2);
-            OCIO_CHECK_EQUAL(param[OCIO::LIN_SIDE_OFFSET], 0.2);
-            OCIO_CHECK_EQUAL(opData->getBase(), 4.);
+            OCIO_CHECK_EQUAL(param[OCIO::LOG_SIDE_SLOPE],  0.28);
+            OCIO_CHECK_EQUAL(param[OCIO::LOG_SIDE_OFFSET], 0.5);
+            OCIO_CHECK_EQUAL(param[OCIO::LIN_SIDE_SLOPE],  2.0);
+            OCIO_CHECK_EQUAL(param[OCIO::LIN_SIDE_OFFSET], 0.1);
+            OCIO_CHECK_EQUAL(opData->getBase(), 8.);
         }
+    }
+    {   // Op 10 == Range.
+        auto opData = std::dynamic_pointer_cast<const OCIO::RangeOpData>(opList[10]);
+        OCIO_REQUIRE_ASSERT(opData);
     }
 }
 
@@ -3214,12 +3288,12 @@ OCIO_ADD_TEST(FileFormatCTF, multiple_ops)
         OCIO_CHECK_EQUAL(desc[0], "scene 1 exterior look");
         OCIO_CHECK_EQUAL(cdlOpData->getStyle(), OCIO::CDLOpData::CDL_V1_2_REV);
         OCIO_CHECK_ASSERT(cdlOpData->getSlopeParams()
-                          == OCIO::CDLOpData::ChannelParams(1., 1., 0.8));
+                          == OCIO::CDLOpData::ChannelParams(1.1, 1., 0.8));
         OCIO_CHECK_ASSERT(cdlOpData->getOffsetParams()
-                          == OCIO::CDLOpData::ChannelParams(-0.02, 0., 0.15));
+                          == OCIO::CDLOpData::ChannelParams(-0.01, 0., 0.05));
         OCIO_CHECK_ASSERT(cdlOpData->getPowerParams()
-                          == OCIO::CDLOpData::ChannelParams(1.05, 1.15, 1.4));
-        OCIO_CHECK_EQUAL(cdlOpData->getSaturation(), 0.75);
+                          == OCIO::CDLOpData::ChannelParams(1.05, 1.15, 0.8));
+        OCIO_CHECK_EQUAL(cdlOpData->getSaturation(), 0.85);
     }
     {   // Op 1 == Lut1D.
         auto l1OpData = std::dynamic_pointer_cast<const OCIO::Lut1DOpData>(opList[1]);
@@ -3229,7 +3303,7 @@ OCIO_ADD_TEST(FileFormatCTF, multiple_ops)
         GetElementsValues(l1OpData->getFormatMetadata().getChildrenElements(),
                           OCIO::TAG_DESCRIPTION, desc);
         OCIO_CHECK_EQUAL(desc.size(), 0);
-        OCIO_CHECK_EQUAL(l1OpData->getArray().getLength(), 32u);
+        OCIO_CHECK_EQUAL(l1OpData->getArray().getLength(), 65u);
     }
     {   // Op 2 == Range.
         // Check that the noClamp style Range became a Matrix.
@@ -3246,7 +3320,7 @@ OCIO_ADD_TEST(FileFormatCTF, multiple_ops)
         OCIO_CHECK_EQUAL(array.getNumValues(),
                          array.getLength()*array.getLength());
 
-        const float scalef = (900.f - 20.f) / (3760.f - 256.f);
+        const float scalef = (1200.f - 20.f) / (3760.f - 256.f);
         const float offsetf = 20.f - scalef * 256.f;
         const float prec = 10000.f;
         const int scale = (int)(prec * scalef);
@@ -3290,9 +3364,9 @@ OCIO_ADD_TEST(FileFormatCTF, multiple_ops)
         OCIO_REQUIRE_ASSERT(matOpData2);
         const OCIO::ArrayDouble & array2 = matOpData2->getArray();
         OCIO_CHECK_EQUAL(array2.getLength(), 4u);
-        OCIO_CHECK_EQUAL(array2.getValues()[2], 0.2);
+        OCIO_CHECK_EQUAL(array2.getValues()[2], -0.2);
         const OCIO::MatrixOpData::Offsets & offsets2 = matOpData2->getOffsets();
-        OCIO_CHECK_EQUAL(offsets2[1], -0.005);
+        OCIO_CHECK_EQUAL(offsets2[1], -0.11);
     }
     {   // Op 7 == Exponent.
         auto expOpData = std::dynamic_pointer_cast<const OCIO::GammaOpData>(opList[7]);
@@ -4693,8 +4767,8 @@ OCIO_ADD_TEST(CTFTransform, load_edit_save_matrix)
     const std::string expectedCTF{ R"(<?xml version="1.0" encoding="UTF-8"?>
 <ProcessList version="1.3" id="b5cc7aed-d405-4d8b-b64b-382b2341a378" name="matrix example" inverseOf="added inverseOf">
     <Description>Basic matrix example using CLF v2 dim syntax</Description>
-    <InputDescriptor>XYZ</InputDescriptor>
-    <OutputDescriptor>RGB</OutputDescriptor>
+    <InputDescriptor>RGB</InputDescriptor>
+    <OutputDescriptor>XYZ</OutputDescriptor>
     <Info attrib="value">
     Preserved
         <Child>Preserved</Child>
@@ -4705,9 +4779,9 @@ OCIO_ADD_TEST(CTFTransform, load_edit_save_matrix)
         <Description>A &quot; short &quot; description with a &apos; inside</Description>
         <Description>&lt;test&quot;&apos;&amp;&gt;</Description>
         <Array dim="3 4 3">
-               3.24              -1.537             -0.4985                 0.1
-            -0.9693               1.876             0.04156                 1.2
-             0.0556              -0.204              1.0573     2.3456789123456
+          0.4123908          0.35758434          0.18048079                 0.1
+         0.21263901          0.71516868          0.07219232                 1.2
+         0.01933082          0.01191948          0.95053215     2.3456789123456
         </Array>
     </Matrix>
 </ProcessList>
@@ -4932,7 +5006,7 @@ OCIO_ADD_TEST(CTFTransform, save_lut_1d_1component)
     WriteGroupCTF(group, outputTransform);
 
     const std::string result = outputTransform.str();
-    const std::string expected = "<Array dim=\"4 1\">";
+    const std::string expected = "<Array dim=\"65 1\">";
     OCIO_CHECK_ASSERT(result.find(expected) != std::string::npos);
 }
 
@@ -5247,15 +5321,15 @@ OCIO_ADD_TEST(CTFTransform, load_save_matrix)
     const std::string expected{ R"(<?xml version="1.0" encoding="UTF-8"?>
 <ProcessList version="1.3" id="b5cc7aed-d405-4d8b-b64b-382b2341a378" name="matrix example">
     <Description>Basic matrix example using CLF v2 dim syntax</Description>
-    <InputDescriptor>XYZ</InputDescriptor>
-    <OutputDescriptor>RGB</OutputDescriptor>
+    <InputDescriptor>RGB</InputDescriptor>
+    <OutputDescriptor>XYZ</OutputDescriptor>
     <Matrix id="c61daf06-539f-4254-81fc-9800e6d02a37" inBitDepth="32f" outBitDepth="32f">
         <Description>Legacy matrix</Description>
         <Description>Note that dim=&quot;3 3 3&quot; should be supported for CLF v2 compatibility</Description>
         <Array dim="3 3 3">
-               3.24              -1.537             -0.4985
-            -0.9693               1.876             0.04156
-             0.0556              -0.204              1.0573
+          0.4123908          0.35758434          0.18048079
+         0.21263901          0.71516868          0.07219232
+         0.01933082          0.01191948          0.95053215
         </Array>
     </Matrix>
 </ProcessList>
@@ -5314,16 +5388,16 @@ OCIO_ADD_TEST(CTFTransform, load_edit_save_matrix_clf)
 R"(<?xml version="1.0" encoding="UTF-8"?>
 <ProcessList compCLFversion="3" id="b5cc7aed-d405-4d8b-b64b-382b2341a378" name="matrix example">
     <Description>Basic matrix example using CLF v2 dim syntax</Description>
-    <InputDescriptor>XYZ</InputDescriptor>
-    <OutputDescriptor>RGB</OutputDescriptor>
+    <InputDescriptor>RGB</InputDescriptor>
+    <OutputDescriptor>XYZ</OutputDescriptor>
     <Matrix id="c61daf06-539f-4254-81fc-9800e6d02a37" inBitDepth="32f" outBitDepth="32f">
         <Description>Legacy matrix</Description>
         <Description>Note that dim=&quot;3 3 3&quot; should be supported for CLF v2 compatibility</Description>
         <Description>Added description</Description>
         <Array dim="3 4">
-               3.24              -1.537             -0.4985                 0.1
-            -0.9693               1.876             0.04156                 1.2
-             0.0556              -0.204              1.0573                 2.3
+          0.4123908          0.35758434          0.18048079                 0.1
+         0.21263901          0.71516868          0.07219232                 1.2
+         0.01933082          0.01191948          0.95053215                 2.3
         </Array>
     </Matrix>
 </ProcessList>
@@ -5342,16 +5416,16 @@ R"(<?xml version="1.0" encoding="UTF-8"?>
 R"(<?xml version="1.0" encoding="UTF-8"?>
 <ProcessList version="1.3" id="b5cc7aed-d405-4d8b-b64b-382b2341a378" name="matrix example">
     <Description>Basic matrix example using CLF v2 dim syntax</Description>
-    <InputDescriptor>XYZ</InputDescriptor>
-    <OutputDescriptor>RGB</OutputDescriptor>
+    <InputDescriptor>RGB</InputDescriptor>
+    <OutputDescriptor>XYZ</OutputDescriptor>
     <Matrix id="c61daf06-539f-4254-81fc-9800e6d02a37" inBitDepth="32f" outBitDepth="32f">
         <Description>Legacy matrix</Description>
         <Description>Note that dim=&quot;3 3 3&quot; should be supported for CLF v2 compatibility</Description>
         <Description>Added description</Description>
         <Array dim="4 5 4">
-               3.24              -1.537             -0.4985                   0                 0.1
-            -0.9693               1.876             0.04156                   0                 1.2
-             0.0556              -0.204              1.0573                   0                 2.3
+          0.4123908          0.35758434          0.18048079                   0                 0.1
+         0.21263901          0.71516868          0.07219232                   0                 1.2
+         0.01933082          0.01191948          0.95053215                   0                 2.3
                   0                   0                   0                   1                 0.9
         </Array>
     </Matrix>

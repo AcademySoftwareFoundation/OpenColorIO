@@ -39,9 +39,15 @@
     </Log>
 
     <Log inBitDepth="10i" outBitDepth="32f" style="linToLog">
-        <LogParams channel="R" logSideSlope='0.9' logSideOffset='0.2' linSideSlope='1.1' linSideOffset='0.1' base="4"/>
-        <LogParams channel="G" linSideSlope='1.0' linSideOffset='-0.1' logSideSlope='1.1' logSideOffset='0.1' base="4"/>
-        <LogParams channel="B" linSideSlope='1.2' linSideOffset='0.2' logSideSlope='0.95' logSideOffset='-0.2' base="4"/>
+        <LogParams channel="R" logSideSlope='0.3' logSideOffset='0.6' linSideSlope='0.9' linSideOffset='0.05' base="8"/>
+        <LogParams channel="G" linSideSlope='5' linSideOffset='0.05' logSideSlope='0.25' logSideOffset='0.4' base="8"/>
+        <LogParams channel="B" linSideSlope='2' linSideOffset='0.1' logSideSlope='0.28' logSideOffset='0.5' base="8"/>
     </Log>
 
+    <Range inBitDepth="32f" outBitDepth="32f" style="Clamp">
+        <minInValue>-65504</minInValue>
+        <maxInValue>65504</maxInValue>
+        <minOutValue>-65504</minOutValue>
+        <maxOutValue>65504</maxOutValue>
+    </Range>
 </ProcessList>

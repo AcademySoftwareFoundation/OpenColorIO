@@ -15,17 +15,17 @@
         <SOPNode>
             <Slope>1.000000  1.000000  0.800000</Slope>
             <Offset>-0.020000  0.00000  0.150000</Offset>
-            <Power>1.0500000  1.150000  1.40000</Power>
+            <Power>0.8000000  1.150000  1.40000</Power>
         </SOPNode>
         <SatNode>
-            <Saturation>0.750000</Saturation>
+            <Saturation>1.050000</Saturation>
         </SatNode>
     </ASC_CDL>
     <ASC_CDL id="clf/ctf no-clamp fwd" inBitDepth="10i" outBitDepth="8i" style="FwdNoClamp">
         <SOPNode>
             <Slope>1.000000  1.000000  0.800000</Slope>
             <Offset>-0.020000  0.00000  0.150000</Offset>
-            <Power>1.0500000  1.150000  1.40000</Power>
+            <Power>0.8000000  1.150000  1.40000</Power>
         </SOPNode>
         <SatNode>
             <Saturation>0.750000</Saturation>
@@ -38,7 +38,7 @@
             <Power>1.0500000  1.150000  1.40000</Power>
         </SOPNode>
         <SatNode>
-            <Saturation>1.750000</Saturation>
+            <Saturation>1.050000</Saturation>
         </SatNode>
     </ASC_CDL>
 </ProcessList>
