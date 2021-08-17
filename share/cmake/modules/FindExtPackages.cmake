@@ -37,13 +37,15 @@ find_package(yaml-cpp 0.6.3 REQUIRED)
 find_package(pystring 1.1.3 REQUIRED)
 
 # Half
-if(NOT OCIO_USE_ILMBASE)
+# NOTE: OCIO_USE_IMATH_HALF needs to be an integer for use in utils/Half.h.in
+if(NOT OCIO_USE_OPENEXR_HALF)
 
     # Imath (>=3.0)
     # https://github.com/AcademySoftwareFoundation/Imath
     find_package(Imath 3.1.2 REQUIRED)
     
     set(OCIO_HALF_LIB Imath::Imath CACHE STRING "Half library target" FORCE)
+    set(OCIO_USE_IMATH_HALF "1" CACHE STRING "Whether 'half' type will be sourced from the Imath library (>=v3.0)" FORCE)
 else()
 
     # OpenEXR/IlmBase (<=2.5)
@@ -51,6 +53,7 @@ else()
     find_package(Half 2.4.0 REQUIRED)
 
     set(OCIO_HALF_LIB IlmBase::Half CACHE STRING "Half library target" FORCE)
+    set(OCIO_USE_IMATH_HALF "0" CACHE STRING "Whether 'half' type will be sourced from the Imath library (>=v3.0)" FORCE)
 endif()
 
 if(OCIO_BUILD_APPS)

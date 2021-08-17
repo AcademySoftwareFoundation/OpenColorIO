@@ -67,7 +67,7 @@ it is not necessary to install those items manually:
 - \*yaml-cpp >= 0.6.3 (YAML parser for Configs)
 - \*Imath >= 3.0.5 (for half domain LUTs)
     - \*IlmBase (Half only) >= 2.4.0 (Alternative half implementation when 
-      OpenEXR 2 is available. Use ``-DOCIO_USE_ILMBASE=ON`` CMake option to 
+      OpenEXR 2 is available. Use ``-DOCIO_USE_OPENEXR_HALF=ON`` CMake option to 
       enable).
 - \*pystring >= 1.1.3
 

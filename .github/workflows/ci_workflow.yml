@@ -66,7 +66,7 @@ jobs:
             build-shared: 'ON'
             build-docs: 'OFF'
             use-sse: 'ON'
-            use-ilmbase: 'OFF'
+            use-openexr-half: 'OFF'
             cxx-standard: 17
             cxx-compiler: clang++
             cc-compiler: clang
@@ -78,7 +78,7 @@ jobs:
             build-shared: 'ON'
             build-docs: 'OFF'
             use-sse: 'OFF'
-            use-ilmbase: 'OFF'
+            use-openexr-half: 'OFF'
             cxx-standard: 17
             cxx-compiler: g++
             cc-compiler: gcc
@@ -90,7 +90,7 @@ jobs:
             build-shared: 'OFF'
             build-docs: 'ON'
             use-sse: 'ON'
-            use-ilmbase: 'OFF'
+            use-openexr-half: 'OFF'
             cxx-standard: 17
             cxx-compiler: g++
             cc-compiler: gcc
@@ -105,7 +105,7 @@ jobs:
             build-shared: 'ON'
             build-docs: 'ON'
             use-sse: 'ON'
-            use-ilmbase: 'ON'
+            use-openexr-half: 'ON'
             cxx-standard: 17
             cxx-compiler: clang++
             cc-compiler: clang
@@ -117,7 +117,7 @@ jobs:
             build-shared: 'OFF'
             build-docs: 'OFF'
             use-sse: 'OFF'
-            use-ilmbase: 'ON'
+            use-openexr-half: 'ON'
             cxx-standard: 17
             cxx-compiler: clang++
             cc-compiler: clang
@@ -129,7 +129,7 @@ jobs:
             build-shared: 'ON'
             build-docs: 'OFF'
             use-sse: 'ON'
-            use-ilmbase: 'ON'
+            use-openexr-half: 'ON'
             cxx-standard: 17
             cxx-compiler: g++
             cc-compiler: gcc
@@ -144,7 +144,7 @@ jobs:
             build-shared: 'ON'
             build-docs: 'OFF'
             use-sse: 'OFF'
-            use-ilmbase: 'ON'
+            use-openexr-half: 'ON'
             cxx-standard: 14
             cxx-compiler: clang++
             cc-compiler: clang
@@ -156,7 +156,7 @@ jobs:
             build-shared: 'OFF'
             build-docs: 'OFF'
             use-sse: 'ON'
-            use-ilmbase: 'ON'
+            use-openexr-half: 'ON'
             cxx-standard: 14
             cxx-compiler: g++
             cc-compiler: gcc
@@ -168,7 +168,7 @@ jobs:
             build-shared: 'ON'
             build-docs: 'ON'
             use-sse: 'ON'
-            use-ilmbase: 'ON'
+            use-openexr-half: 'ON'
             cxx-standard: 14
             cxx-compiler: g++
             cc-compiler: gcc
@@ -184,7 +184,7 @@ jobs:
             # Doc build requires Python 3
             build-docs: 'OFF'
             use-sse: 'ON'
-            use-ilmbase: 'ON'
+            use-openexr-half: 'ON'
             cxx-standard: 11
             cxx-compiler: clang++
             cc-compiler: clang
@@ -197,7 +197,7 @@ jobs:
             # Doc build requires Python 3
             build-docs: 'OFF'
             use-sse: 'OFF'
-            use-ilmbase: 'ON'
+            use-openexr-half: 'ON'
             cxx-standard: 11
             cxx-compiler: clang++
             cc-compiler: clang
@@ -210,7 +210,7 @@ jobs:
             # Doc build requires Python 3
             build-docs: 'OFF'
             use-sse: 'ON'
-            use-ilmbase: 'ON'
+            use-openexr-half: 'ON'
             cxx-standard: 11
             cxx-compiler: g++
             cc-compiler: gcc
@@ -241,7 +241,7 @@ jobs:
                 -DOCIO_BUILD_DOCS=${{ matrix.build-docs }} \
                 -DOCIO_BUILD_GPU_TESTS=OFF \
                 -DOCIO_USE_SSE=${{ matrix.use-sse }} \
-                -DOCIO_USE_ILMBASE=${{ matrix.use-ilmbase }} \
+                -DOCIO_USE_OPENEXR_HALF=${{ matrix.use-openexr-half }} \
                 -DOCIO_INSTALL_EXT_PACKAGES=ALL \
                 -DOCIO_WARNING_AS_ERROR=ON \
                 -DPython_EXECUTABLE=$(which python)
@@ -281,7 +281,7 @@ jobs:
             build-shared: 'ON'
             build-docs: 'OFF'
             use-sse: 'ON'
-            use-ilmbase: 'OFF'
+            use-openexr-half: 'OFF'
             cxx-standard: 17
             python-version: 3.9
           # Static, no SSE
@@ -291,7 +291,7 @@ jobs:
             build-shared: 'ON'
             build-docs: 'ON'
             use-sse: 'ON'
-            use-ilmbase: 'OFF'
+            use-openexr-half: 'OFF'
             cxx-standard: 11
             python-version: 3.7
           # Debug
@@ -300,7 +300,7 @@ jobs:
             build-shared: 'ON'
             build-docs: 'OFF'
             use-sse: 'ON'
-            use-ilmbase: 'OFF'
+            use-openexr-half: 'OFF'
             cxx-standard: 11
             python-version: 3.7
           # C++14, IlmBase
@@ -309,7 +309,7 @@ jobs:
             build-shared: 'ON'
             build-docs: 'OFF'
             use-sse: 'ON'
-            use-ilmbase: 'ON'
+            use-openexr-half: 'ON'
             cxx-standard: 14
             python-version: 3.7
           # Static, no SSE
@@ -318,7 +318,7 @@ jobs:
             build-shared: 'OFF'
             build-docs: 'OFF'
             use-sse: 'OFF'
-            use-ilmbase: 'OFF'
+            use-openexr-half: 'OFF'
             cxx-standard: 11
             python-version: 3.7
           # Python 2.7
@@ -328,7 +328,7 @@ jobs:
             # Doc build requires Python 3
             build-docs: 'OFF'
             use-sse: 'ON'
-            use-ilmbase: 'OFF'
+            use-openexr-half: 'OFF'
             cxx-standard: 11
             python-version: 2.7
     steps:
@@ -357,7 +357,7 @@ jobs:
                 -DOCIO_BUILD_DOCS=${{ matrix.build-docs }} \
                 -DOCIO_BUILD_GPU_TESTS=OFF \
                 -DOCIO_USE_SSE=${{ matrix.use-sse }} \
-                -DOCIO_USE_ILMBASE=${{ matrix.use-ilmbase }} \
+                -DOCIO_USE_OPENEXR_HALF=${{ matrix.use-openexr-half }} \
                 -DOCIO_INSTALL_EXT_PACKAGES=ALL \
                 -DOCIO_WARNING_AS_ERROR=ON \
                 -DPython_EXECUTABLE=$(which python)
@@ -399,7 +399,7 @@ jobs:
             build-shared: 'ON'
             build-docs: 'OFF'
             use-sse: 'ON'
-            use-ilmbase: 'OFF'
+            use-openexr-half: 'OFF'
             cxx-standard: 17
             python-version: 3.9
           # C++11, Python 3.7
@@ -408,7 +408,7 @@ jobs:
             build-shared: 'ON'
             build-docs: 'ON'
             use-sse: 'ON'
-            use-ilmbase: 'OFF'
+            use-openexr-half: 'OFF'
             cxx-standard: 11
             python-version: 3.7
           # Debug
@@ -417,7 +417,7 @@ jobs:
             build-shared: 'ON'
             build-docs: 'OFF'
             use-sse: 'ON'
-            use-ilmbase: 'OFF'
+            use-openexr-half: 'OFF'
             cxx-standard: 11
             python-version: 3.7
           # C++14, IlmBase
@@ -426,7 +426,7 @@ jobs:
             build-shared: 'ON'
             build-docs: 'OFF'
             use-sse: 'ON'
-            use-ilmbase: 'ON'
+            use-openexr-half: 'ON'
             cxx-standard: 14
             python-version: 3.7
           # Static, no SSE
@@ -435,7 +435,7 @@ jobs:
             build-shared: 'OFF'
             build-docs: 'OFF'
             use-sse: 'OFF'
-            use-ilmbase: 'OFF'
+            use-openexr-half: 'OFF'
             cxx-standard: 11
             python-version: 3.7
           # Python 2.7
@@ -445,7 +445,7 @@ jobs:
             # Doc build requires Python 3
             build-docs: 'OFF'
             use-sse: 'ON'
-            use-ilmbase: 'OFF'
+            use-openexr-half: 'OFF'
             cxx-standard: 11
             python-version: 2.7
     steps:
@@ -477,7 +477,7 @@ jobs:
                 -DOCIO_BUILD_DOCS=${{ matrix.build-docs }} \
                 -DOCIO_BUILD_GPU_TESTS=OFF \
                 -DOCIO_USE_SSE=${{ matrix.use-sse }} \
-                -DOCIO_USE_ILMBASE=${{ matrix.use-ilmbase }} \
+                -DOCIO_USE_OPENEXR_HALF=${{ matrix.use-openexr-half }} \
                 -DOCIO_INSTALL_EXT_PACKAGES=ALL \
                 -DOCIO_WARNING_AS_ERROR=ON \
                 -DPython_EXECUTABLE=$(which python)
