@@ -547,14 +547,16 @@ int main(int argc, const char **argv)
         }
 
         // Get the GPU Shader.
-        OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
-        shaderDesc->setLanguage(OCIO::GPU_LANGUAGE_GLSL_1_2);
+        OCIO::GpuShaderDescRcPtr shaderDesc;
 
         {
             CustomMeasure m("Create the GPU shader:\t\t\t", iterations);
 
             for(unsigned iter=0; iter<iterations; ++iter)
             {
+                shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
+                shaderDesc->setLanguage(OCIO::GPU_LANGUAGE_GLSL_1_2);
+
                 m.resume();
                 gpuProcessor->extractGpuShaderInfo(shaderDesc);
                 m.pause();

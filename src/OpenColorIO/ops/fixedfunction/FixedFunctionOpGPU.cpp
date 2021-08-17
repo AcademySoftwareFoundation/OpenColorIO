@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
+#include <cmath>
 
 #include <OpenColorIO/OpenColorIO.h>
 
@@ -190,6 +191,141 @@ void Add_Glow_03_Inv_Shader(GpuShaderText & ss, float glowGain, float glowMid)
     ss.newLine() << "glowGainOut = " << ss.lerp( "glowGainOut", "0.", "float( YC > GlowMid * 2. )" ) << ";";
 
     ss.newLine() << "outColor.rgb = outColor.rgb * glowGainOut + outColor.rgb;";
+}
+
+void Add_GamutComp_13_Shader_Compress(GpuShaderText & ss,
+                                      const char * dist,
+                                      const char * cdist,
+                                      float scl,
+                                      float thr,
+                                      float power)
+{
+    // Only compress if greater or equal than threshold.
+    ss.newLine() << "if (" << dist << " >= " << thr << ")";
+    ss.newLine() << "{";
+    ss.indent();
+
+    // Normalize distance outside threshold by scale factor.
+    ss.newLine() << "float nd = (" << dist << " - " << thr << ") / " << scl << ";";
+    ss.newLine() << "float p = pow(nd, " << power << ");";
+    ss.newLine() << cdist << " = " << thr << " + " << scl << " * nd / (pow(1.0 + p, " << 1.0f / power << "));";
+
+    ss.dedent();
+    ss.newLine() << "}"; // if (dist >= thr)
+}
+
+void Add_GamutComp_13_Shader_UnCompress(GpuShaderText & ss,
+                                        const char * dist,
+                                        const char * cdist,
+                                        float scl,
+                                        float thr,
+                                        float power)
+{
+    // Only compress if greater or equal than threshold, avoid singularity.
+    ss.newLine() << "if (" << dist << " >= " << thr << " && " << dist << " < " << thr + scl << " )";
+    ss.newLine() << "{";
+    ss.indent();
+
+    // Normalize distance outside threshold by scale factor.
+    ss.newLine() << "float nd = (" << dist << " - " << thr << ") / " << scl << ";";
+    ss.newLine() << "float p = pow(nd, " << power << ");";
+    ss.newLine() << cdist << " = " << thr << " + " << scl << " * pow(-(p / (p - 1.0)), " << 1.0f / power << ");";
+
+    ss.dedent();
+    ss.newLine() << "}"; // if (dist >= thr && dist < thr + scl)
+}
+
+template <typename Func>
+void Add_GamutComp_13_Shader(GpuShaderText & ss,
+                             GpuShaderCreatorRcPtr & sc,
+                             float limCyan,
+                             float limMagenta,
+                             float limYellow,
+                             float thrCyan,
+                             float thrMagenta,
+                             float thrYellow,
+                             float power,
+                             Func f)
+{
+    // Precompute scale factor for y = 1 intersect
+    auto f_scale = [power](float lim, float thr) {
+        return (lim - thr) / std::pow(std::pow((1.0f - thr) / (lim - thr), -power) - 1.0f, 1.0f / power);
+    };
+    const float scaleCyan      = f_scale(limCyan,    thrCyan);
+    const float scaleMagenta   = f_scale(limMagenta, thrMagenta);
+    const float scaleYellow    = f_scale(limYellow,  thrYellow);
+
+    const char * pix = sc->getPixelName();
+
+    // Achromatic axis
+    ss.newLine() << "float ach = max( " << pix << ".x, max( " << pix << ".y, " << pix << ".z ) );";
+
+    ss.newLine() << "if ( ach != 0.0f )";
+    ss.newLine() << "{";
+    ss.indent();
+
+    // Distance from the achromatic axis for each color component aka inverse rgb ratios.
+    ss.newLine() << ss.float3Decl("dist") << " = (ach-" << pix << ".rgb)/abs(ach);";
+    ss.newLine() << ss.float3Decl("cdist") << " = dist;";
+
+    f(ss, "dist.x", "cdist.x", scaleCyan,    thrCyan,    power);
+    f(ss, "dist.y", "cdist.y", scaleMagenta, thrMagenta, power);
+    f(ss, "dist.z", "cdist.z", scaleYellow,  thrYellow,  power);
+
+    // Recalculate rgb from compressed distance and achromatic.
+    // Effectively this scales each color component relative to achromatic axis by the compressed distance.
+    ss.newLine() << pix << ".rgb = ach-cdist*abs(ach);";
+
+    ss.dedent();
+    ss.newLine() << "}"; // if ( ach != 0.0f )
+}
+
+void Add_GamutComp_13_Fwd_Shader(GpuShaderText & ss,
+                                 GpuShaderCreatorRcPtr & sc,
+                                 float limCyan,
+                                 float limMagenta,
+                                 float limYellow,
+                                 float thrCyan,
+                                 float thrMagenta,
+                                 float thrYellow,
+                                 float power)
+{
+    Add_GamutComp_13_Shader(
+        ss,
+        sc,
+        limCyan,
+        limMagenta,
+        limYellow,
+        thrCyan,
+        thrMagenta,
+        thrYellow,
+        power,
+        Add_GamutComp_13_Shader_Compress
+    );
+}
+
+void Add_GamutComp_13_Inv_Shader(GpuShaderText & ss,
+                                 GpuShaderCreatorRcPtr & sc,
+                                 float limCyan,
+                                 float limMagenta,
+                                 float limYellow,
+                                 float thrCyan,
+                                 float thrMagenta,
+                                 float thrYellow,
+                                 float power)
+{
+    Add_GamutComp_13_Shader(
+        ss,
+        sc,
+        limCyan,
+        limMagenta,
+        limYellow,
+        thrCyan,
+        thrMagenta,
+        thrYellow,
+        power,
+        Add_GamutComp_13_Shader_UnCompress
+    );
 }
 
 void Add_Surround_10_Fwd_Shader(GpuShaderText & ss, float gamma)
@@ -413,6 +549,36 @@ void GetFixedFunctionGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
         {
             // Call forward renderer with the inverse gamma.
             Add_Surround_10_Fwd_Shader(ss, 1.0192640913260627f);
+            break;
+        }
+        case FixedFunctionOpData::ACES_GAMUT_COMP_13_FWD:
+        {
+            Add_GamutComp_13_Fwd_Shader(
+                ss,
+                shaderCreator,
+                (float) func->getParams()[0],
+                (float) func->getParams()[1],
+                (float) func->getParams()[2],
+                (float) func->getParams()[3],
+                (float) func->getParams()[4],
+                (float) func->getParams()[5],
+                (float) func->getParams()[6]
+            );
+            break;
+        }
+        case FixedFunctionOpData::ACES_GAMUT_COMP_13_INV:
+        {
+            Add_GamutComp_13_Inv_Shader(
+                ss,
+                shaderCreator,
+                (float) func->getParams()[0],
+                (float) func->getParams()[1],
+                (float) func->getParams()[2],
+                (float) func->getParams()[3],
+                (float) func->getParams()[4],
+                (float) func->getParams()[5],
+                (float) func->getParams()[6]
+            );
             break;
         }
         case FixedFunctionOpData::REC2100_SURROUND_FWD:

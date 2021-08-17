@@ -216,7 +216,7 @@ ConstProcessorRcPtr LegacyViewingPipelineImpl::getProcessor(const ConstConfigRcP
         viewTransform = config->getViewTransform(viewTransformName.c_str());
     }
 
-    // NB: If the viewTranform is present, then displayColorSpace is a true display color space
+    // NB: If the viewTransform is present, then displayColorSpace is a true display color space
     // rather than a traditional color space.
     const std::string name{ config->getDisplayViewColorSpaceName(display.c_str(), view.c_str()) };
     // A shared view containing a view transform may set the color space to USE_DISPLAY_NAME,
@@ -344,16 +344,21 @@ ConstProcessorRcPtr LegacyViewingPipelineImpl::getProcessor(const ConstConfigRcP
         const char * outCS = skipColorSpaceConversions ? inCS :
                              LookTransform::GetLooksResultColorSpace(configIn, context,
                                                                      looks.c_str());
-        auto lt = LookTransform::Create();
-        lt->setSrc(inCS);
-        lt->setDst(outCS);
-        lt->setLooks(looks.c_str());
-        lt->setSkipColorSpaceConversion(skipColorSpaceConversions);
 
-        group->appendTransform(lt);
+        // Resulting color space could be null in case of a noop look.
+        if (outCS && *outCS)
+        {
+            auto lt = LookTransform::Create();
+            lt->setSrc(inCS);
+            lt->setDst(outCS);
+            lt->setLooks(looks.c_str());
+            lt->setSkipColorSpaceConversion(skipColorSpaceConversions);
 
-        // Adjust display transform input color space.
-        dt->setSrc(outCS);
+            group->appendTransform(lt);
+
+            // Adjust display transform input color space.
+            dt->setSrc(outCS);
+        }
     }
 
     if (m_channelView)
@@ -425,7 +430,7 @@ std::ostream & operator<<(std::ostream & os, const LegacyViewingPipeline & pipel
         {
             os << ", ";
         }
-        os << "LooksOveerideEnabled";
+        os << "LooksOverrideEnabled";
         first = false;
     }
     const std::string lo{ pipeline.getLooksOverride() };
@@ -435,11 +440,10 @@ std::ostream & operator<<(std::ostream & os, const LegacyViewingPipeline & pipel
         {
             os << ", ";
         }
-        os << "LooksOveeride: " << lo;
+        os << "LooksOverride: " << lo;
         first = false;
     }
     return os;
 }
 
 } // namespace OCIO_NAMESPACE
-

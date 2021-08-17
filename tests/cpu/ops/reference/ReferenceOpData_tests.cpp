@@ -156,7 +156,7 @@ OCIO_ADD_TEST(Reference, load_multiple_resolve_internal)
     std::string fileName("references_some_inverted.ctf");
     OCIO::OpRcPtrVec ops;
     OCIO_CHECK_NO_THROW(BuildOpsTest(ops, fileName, context, OCIO::TRANSFORM_DIR_FORWARD));
-    OCIO_REQUIRE_EQUAL(ops.size(), 9);
+    OCIO_REQUIRE_EQUAL(ops.size(), 10);
     OCIO_REQUIRE_ASSERT(ops[0]);
     std::string path;
     OCIO::ConstOpRcPtr op = ops[0];
@@ -186,21 +186,26 @@ OCIO_ADD_TEST(Reference, load_multiple_resolve_internal)
 
     OCIO_REQUIRE_ASSERT(ops[5]);
     op = ops[5];
-    auto matrixData2 = OCIO::DynamicPtrCast<const OCIO::MatrixOpData>(op->data());
-    OCIO_REQUIRE_ASSERT(matrixData2);
-
-    OCIO_REQUIRE_ASSERT(ops[6]);
-    op = ops[6];
     auto rangeData = OCIO::DynamicPtrCast<const OCIO::RangeOpData>(op->data());
     OCIO_REQUIRE_ASSERT(rangeData);
 
+    OCIO_REQUIRE_ASSERT(ops[6]);
+    op = ops[6];
+    auto matrixData2 = OCIO::DynamicPtrCast<const OCIO::MatrixOpData>(op->data());
+    OCIO_REQUIRE_ASSERT(matrixData2);
+
     OCIO_REQUIRE_ASSERT(ops[7]);
     op = ops[7];
-    OCIO_REQUIRE_ASSERT(GetFilePath(path, op));
-    OCIO_CHECK_NE(path.find("cdl_clamp_fwd.clf"), std::string::npos);
+    auto rangeData2 = OCIO::DynamicPtrCast<const OCIO::RangeOpData>(op->data());
+    OCIO_REQUIRE_ASSERT(rangeData2);
 
     OCIO_REQUIRE_ASSERT(ops[8]);
     op = ops[8];
+    OCIO_REQUIRE_ASSERT(GetFilePath(path, op));
+    OCIO_CHECK_NE(path.find("cdl_clamp_fwd.clf"), std::string::npos);
+
+    OCIO_REQUIRE_ASSERT(ops[9]);
+    op = ops[9];
     auto cdlData = OCIO::DynamicPtrCast<const OCIO::CDLOpData>(op->data());
     OCIO_REQUIRE_ASSERT(cdlData);
 }

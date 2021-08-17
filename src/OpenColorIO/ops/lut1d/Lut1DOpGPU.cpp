@@ -262,9 +262,9 @@ void GetLut1DGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
             }
             else
             {
-                // Need min() to protect against f > 1 causing a bogus x value.
-                // min( f, 1.) * (dim - 1)
-                ss.newLine() << "float dep = min(f, 1.0) * " << float(length - 1) << ";";
+                // Need clamp() to protect against f outside [0,1] causing a bogus x value.
+                // clamp( f, 0., 1.) * (dim - 1)
+                ss.newLine() << "float dep = clamp(f, 0.0, 1.0) * " << float(length - 1) << ";";
 
                 ss.newLine() << ss.float2Decl("retVal") << ";";
                 // float(int( dep / (width-1) ))
