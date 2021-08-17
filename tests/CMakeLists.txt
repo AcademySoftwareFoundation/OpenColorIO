@@ -12,6 +12,7 @@ if(OCIO_BUILD_TESTS)
 	add_subdirectory(testutils)
 	add_subdirectory(utils)
 	add_subdirectory(cpu)
+	add_subdirectory(cmake-consumer)
 endif()
 
 if(OCIO_BUILD_GPU_TESTS)

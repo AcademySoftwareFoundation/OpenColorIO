@@ -708,6 +708,24 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
                             "LMT for desaturating blue hues to reduce clipping artifacts",
                             BLUE_LIGHT_FIX_Functor);
     }
+    {
+        auto GAMUT_COMP_13_Functor = [](OpRcPtrVec & ops)
+        {
+            MatrixOpData::MatrixArrayPtr matrix
+                = build_conversion_matrix(ACES_AP0::primaries, ACES_AP1::primaries, ADAPTATION_NONE);
+
+            CreateMatrixOp(ops, matrix, TRANSFORM_DIR_FORWARD);
+
+            CreateFixedFunctionOp(ops, FixedFunctionOpData::ACES_GAMUT_COMP_13_FWD, {
+                1.147, 1.264, 1.312, 0.815, 0.803, 0.880, 1.2});
+
+            CreateMatrixOp(ops, matrix, TRANSFORM_DIR_INVERSE);
+        };
+
+        registry.addBuiltin("ACES-LMT - ACES 1.3 Reference Gamut Compression",
+                            "LMT (applied in ACES2065-1) to compress scene-referred values from common cameras into the AP1 gamut",
+                            GAMUT_COMP_13_Functor);
+    }
 
     //
     // ACES OUTPUT TRANSFORMS

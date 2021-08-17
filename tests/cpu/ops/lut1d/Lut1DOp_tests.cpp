@@ -307,13 +307,16 @@ OCIO_ADD_TEST(Lut1D, lut_1d_compose_with_bit_depth)
             OCIO::Lut1DOpData::Compose(lut1, lut2, OCIO::Lut1DOpData::COMPOSE_RESAMPLE_NO));
 
         const float error = 1e-5f;
-        OCIO_CHECK_EQUAL(lutComposed->getArray().getLength(), 2);
-        OCIO_CHECK_CLOSE(lutComposed->getArray().getValues()[0], 0.00744791f, error);
-        OCIO_CHECK_CLOSE(lutComposed->getArray().getValues()[1], 0.03172233f, error);
-        OCIO_CHECK_CLOSE(lutComposed->getArray().getValues()[2], 0.07058375f, error);
-        OCIO_CHECK_CLOSE(lutComposed->getArray().getValues()[3], 0.3513808f, error);
-        OCIO_CHECK_CLOSE(lutComposed->getArray().getValues()[4], 0.51819527f, error);
-        OCIO_CHECK_CLOSE(lutComposed->getArray().getValues()[5], 0.67463773f, error);
+        OCIO_CHECK_EQUAL(lutComposed->getArray().getLength(), 23);
+        OCIO_CHECK_CLOSE(lutComposed->getArray().getValues()[0], 0.463939786f, error);
+        OCIO_CHECK_CLOSE(lutComposed->getArray().getValues()[1], 0.440741241f, error);
+        OCIO_CHECK_CLOSE(lutComposed->getArray().getValues()[2], 0.417542696f, error);
+        OCIO_CHECK_CLOSE(lutComposed->getArray().getValues()[3], 0.4876194298f, error);
+        OCIO_CHECK_CLOSE(lutComposed->getArray().getValues()[4], 0.4632416070f, error);
+        OCIO_CHECK_CLOSE(lutComposed->getArray().getValues()[5], 0.4388564825f, error);
+        OCIO_CHECK_CLOSE(lutComposed->getArray().getValues()[66], 0.863989234f, error);
+        OCIO_CHECK_CLOSE(lutComposed->getArray().getValues()[67], 0.820785284f, error);
+        OCIO_CHECK_CLOSE(lutComposed->getArray().getValues()[68], 0.777587533f, error);
     }
     {
         OCIO::Lut1DOpDataRcPtr lutComposed;
@@ -322,15 +325,15 @@ OCIO_ADD_TEST(Lut1D, lut_1d_compose_with_bit_depth)
 
         const float error = 1e-5f;
         OCIO_CHECK_EQUAL(lutComposed->getArray().getLength(), 65536);
-        OCIO_CHECK_CLOSE(lutComposed->getArray().getValues()[0], 0.00744791f, error);
-        OCIO_CHECK_CLOSE(lutComposed->getArray().getValues()[1], 0.03172233f, error);
-        OCIO_CHECK_CLOSE(lutComposed->getArray().getValues()[2], 0.07058375f, error);
-        OCIO_CHECK_CLOSE(lutComposed->getArray().getValues()[98688], 0.09914176f, error);
-        OCIO_CHECK_CLOSE(lutComposed->getArray().getValues()[98689], 0.1866852f, error);
-        OCIO_CHECK_CLOSE(lutComposed->getArray().getValues()[98690], 0.2830042f, error);
-        OCIO_CHECK_CLOSE(lutComposed->getArray().getValues()[196605], 0.3513808f, error);
-        OCIO_CHECK_CLOSE(lutComposed->getArray().getValues()[196606], 0.51819527f, error);
-        OCIO_CHECK_CLOSE(lutComposed->getArray().getValues()[196607], 0.67463773f, error);
+        OCIO_CHECK_CLOSE(lutComposed->getArray().getValues()[0], 0.463939786f, error);
+        OCIO_CHECK_CLOSE(lutComposed->getArray().getValues()[1], 0.440741241f, error);
+        OCIO_CHECK_CLOSE(lutComposed->getArray().getValues()[2], 0.417542696f, error);
+        OCIO_CHECK_CLOSE(lutComposed->getArray().getValues()[98688], 0.6885353923f, error);
+        OCIO_CHECK_CLOSE(lutComposed->getArray().getValues()[98689], 0.6541032195f, error);
+        OCIO_CHECK_CLOSE(lutComposed->getArray().getValues()[98690], 0.619679749f, error);
+        OCIO_CHECK_CLOSE(lutComposed->getArray().getValues()[196605], 0.863989234f, error);
+        OCIO_CHECK_CLOSE(lutComposed->getArray().getValues()[196606], 0.820785284f, error);
+        OCIO_CHECK_CLOSE(lutComposed->getArray().getValues()[196607], 0.777587533f, error);
     }
 }
 
