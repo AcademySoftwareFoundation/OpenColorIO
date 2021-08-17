@@ -48,14 +48,12 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
         # Find include directory
         find_path(Half_INCLUDE_DIR
             NAMES
-                half.h
+                OpenEXR/half.h
             HINTS
                 ${Half_ROOT}
                 ${PC_Half_INCLUDE_DIRS}
             PATH_SUFFIXES
                 include
-                include/OpenEXR
-                OpenEXR/include
         )
 
         # Lib names to search for
@@ -92,10 +90,10 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
 
         # Get version from config header file
         if(Half_INCLUDE_DIR)
-            if(EXISTS "${Half_INCLUDE_DIR}/IlmBaseConfig.h")
-                set(_Half_CONFIG "${Half_INCLUDE_DIR}/IlmBaseConfig.h")
-            elseif(EXISTS "${Half_INCLUDE_DIR}/OpenEXRConfig.h")
-                set(_Half_CONFIG "${Half_INCLUDE_DIR}/OpenEXRConfig.h")
+            if(EXISTS "${Half_INCLUDE_DIR}/OpenEXR/IlmBaseConfig.h")
+                set(_Half_CONFIG "${Half_INCLUDE_DIR}/OpenEXR/IlmBaseConfig.h")
+            elseif(EXISTS "${Half_INCLUDE_DIR}/OpenEXR/OpenEXRConfig.h")
+                set(_Half_CONFIG "${Half_INCLUDE_DIR}/OpenEXR/OpenEXRConfig.h")
             endif()
         endif()
 
@@ -146,7 +144,7 @@ if(NOT Half_FOUND)
     # Set find_package standard args
     set(Half_FOUND TRUE)
     set(Half_VERSION ${Half_FIND_VERSION})
-    set(Half_INCLUDE_DIR "${_EXT_DIST_ROOT}/${CMAKE_INSTALL_INCLUDEDIR}/OpenEXR")
+    set(Half_INCLUDE_DIR "${_EXT_DIST_ROOT}/${CMAKE_INSTALL_INCLUDEDIR}")
 
     # Set the expected library name. "_d" is appended to Debug Windows builds 
     # <= OpenEXR 2.3.0. In newer versions, it is appended to Debug libs on

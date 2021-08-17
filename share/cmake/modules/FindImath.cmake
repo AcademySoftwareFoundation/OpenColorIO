@@ -48,14 +48,12 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
         # Find include directory
         find_path(Imath_INCLUDE_DIR
             NAMES
-                ImathConfig.h
+                Imath/ImathConfig.h
             HINTS
                 ${Imath_ROOT}
                 ${PC_Imath_INCLUDE_DIRS}
             PATH_SUFFIXES
                 include
-                include/Imath
-                Imath/include
         )
 
         # Lib names to search for
@@ -92,8 +90,8 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
 
         # Get version from config header file
         if(Imath_INCLUDE_DIR)
-            if(EXISTS "${Imath_INCLUDE_DIR}/ImathConfig.h")
-                set(_Imath_CONFIG "${Imath_INCLUDE_DIR}/ImathConfig.h")
+            if(EXISTS "${Imath_INCLUDE_DIR}/Imath/ImathConfig.h")
+                set(_Imath_CONFIG "${Imath_INCLUDE_DIR}/Imath/ImathConfig.h")
             endif()
         endif()
 
@@ -144,7 +142,7 @@ if(NOT Imath_FOUND)
     # Set find_package standard args
     set(Imath_FOUND TRUE)
     set(Imath_VERSION ${Imath_FIND_VERSION})
-    set(Imath_INCLUDE_DIR "${_EXT_DIST_ROOT}/${CMAKE_INSTALL_INCLUDEDIR}/Imath")
+    set(Imath_INCLUDE_DIR "${_EXT_DIST_ROOT}/${CMAKE_INSTALL_INCLUDEDIR}")
 
     # Set the expected library name. "_d" is appended to Debug Windows builds 
     # <= OpenEXR 2.3.0. In newer versions, it is appended to Debug libs on

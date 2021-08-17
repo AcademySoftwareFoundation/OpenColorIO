@@ -11,8 +11,8 @@ namespace OIIO = OIIO_NAMESPACE;
 #endif
 
 #include "apputils/argparse.h"
-#include "half.h"
 #include "oiiohelpers.h"
+#include "utils/Half.h"
 #include "utils/StringUtils.h"
 
 

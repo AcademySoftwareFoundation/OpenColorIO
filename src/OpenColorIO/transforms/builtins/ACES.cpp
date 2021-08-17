@@ -6,7 +6,7 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "half.h"
+#include "utils/Half.h"
 #include "ops/fixedfunction/FixedFunctionOp.h"
 #include "ops/gradingrgbcurve/GradingRGBCurveOp.h"
 #include "ops/log/LogOp.h"

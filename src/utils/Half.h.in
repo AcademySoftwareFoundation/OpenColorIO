@@ -1,0 +1,16 @@
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright Contributors to the OpenColorIO Project.
+
+
+#ifndef INCLUDED_OCIO_IMATH_H
+#define INCLUDED_OCIO_IMATH_H
+
+#define OCIO_USE_ILMBASE @OCIO_USE_ILMBASE@
+
+#if OCIO_USE_ILMBASE
+#   include <OpenEXR/half.h>
+#else
+#   include <Imath/half.h>
+#endif
+
+#endif
