@@ -5,9 +5,9 @@
 <Matrix id="mat-25" name="colorspace conversion" inBitDepth="10i" outBitDepth="12i" >
 <Description> 3x4 Matrix , 4th column is offset </Description>
 <Array dim="3 4">
-4.8   0.1  -0.2   0.3
-0.4   3.5   0.1  -0.05
-0.6  -0.7   4.2  -4e-1
+3.6    0.1 -0.2       0.3
+0.2    3.5 +0.1      -0.05
+1E-01 -0.3  0.34e+01 -4e-1
 </Array>
 </Matrix>
 </ProcessList>

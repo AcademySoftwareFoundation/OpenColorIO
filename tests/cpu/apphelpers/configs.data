@@ -49,6 +49,11 @@ looks:
     process_space: log_1
     transform: !<CDLTransform> {slope: [1.2, 2.2, 1.2]}
 
+  - !<Look>
+    name: look_noop
+    process_space: log_1
+    transform: !<CDLTransform> {slope: [1, 1, 1], offset: [0, 0, 0], power: [1, 1, 1]}
+
 colorspaces:
   - !<ColorSpace>
     name: raw
