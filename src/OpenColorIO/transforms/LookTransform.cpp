@@ -195,10 +195,15 @@ std::ostream& operator<< (std::ostream& os, const LookTransform& t)
 namespace
 {
 
-void RunLookTokens(OpRcPtrVec & ops,
-                   ConstColorSpaceRcPtr & currentColorSpace,
+// The method gets the list of ops from the list of looks.
+//
+// It returns the list of ops (which could be empty if looks are all no-ops), and the final process
+// color space after applying the complete look transformation.
+//
+void RunLookTokens(OpRcPtrVec & ops,                         // [in/out]
+                   ConstColorSpaceRcPtr & currentColorSpace, // [in/out]
                    bool skipColorSpaceConversion,
-                   const Config& config,
+                   const Config & config,
                    const ConstContextRcPtr & context,
                    const LookParseResult::Tokens & lookTokens)
 {
@@ -269,34 +274,33 @@ void RunLookTokens(OpRcPtrVec & ops,
         }
         }
 
-        if (!tmpOps.isNoOp())
+        ConstColorSpaceRcPtr processColorSpace = config.getColorSpace(look->getProcessSpace());
+        if(!processColorSpace)
         {
-            ConstColorSpaceRcPtr processColorSpace = config.getColorSpace(look->getProcessSpace());
-            if(!processColorSpace)
-            {
-                std::ostringstream os;
-                os << "RunLookTokens error. ";
-                os << "The specified look, '" << lookTokens[i].name;
-                os << "', requires processing in the ColorSpace, '";
-                os << look->getProcessSpace() << "' which is not defined.";
-                throw Exception(os.str().c_str());
-            }
-            if (!currentColorSpace)
-            {
-                currentColorSpace = processColorSpace;
-            }
-            // If current color space is already the process space skip the conversion.
-            if (!skipColorSpaceConversion &&
-                currentColorSpace.get() != processColorSpace.get())
-            {
-                // Default behavior is to bypass data color space.
-                BuildColorSpaceOps(ops, config, context,
-                                   currentColorSpace, processColorSpace, true);
-                currentColorSpace = processColorSpace;
-            }
-
-            ops += tmpOps;
+            std::ostringstream os;
+            os << "RunLookTokens error. ";
+            os << "The specified look, '" << lookTokens[i].name;
+            os << "', requires processing in the ColorSpace, '";
+            os << look->getProcessSpace() << "' which is not defined.";
+            throw Exception(os.str().c_str());
         }
+
+        if (!currentColorSpace)
+        {
+            currentColorSpace = processColorSpace;
+        }
+
+        // If current color space is already the process space skip the conversion.
+        if (!skipColorSpaceConversion &&
+            currentColorSpace.get() != processColorSpace.get())
+        {
+            // Default behavior is to bypass data color space.
+            BuildColorSpaceOps(ops, config, context,
+                               currentColorSpace, processColorSpace, true);
+            currentColorSpace = processColorSpace;
+        }
+
+        ops += tmpOps;
     }
 }
 
@@ -369,12 +373,12 @@ void BuildLookOps(OpRcPtrVec & ops,
 
     if(options.empty())
     {
-        // Do nothing
+        // Do nothing.
     }
     else if(options.size() == 1)
     {
-        // As an optimization, if we only have a single look option,
-        // just push back onto the final location
+        // As an optimization, if we only have a single look option, just push back onto the
+        // final location.
         RunLookTokens(ops,
                       currentColorSpace,
                       skipColorSpaceConversion,
@@ -384,9 +388,9 @@ void BuildLookOps(OpRcPtrVec & ops,
     }
     else
     {
-        // If we have multiple look options, try each one in order,
-        // and if we can create the ops without a missing file exception,
-        // push back it's results and return.
+        // If we have multiple look options, try each one in order, and if we can create the ops
+        // without a missing file exception, push back it's results and return i.e., take the 
+        // first successully created look.
 
         bool success = false;
         std::ostringstream os;
