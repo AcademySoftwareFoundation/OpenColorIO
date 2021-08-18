@@ -11,10 +11,6 @@
 # Targets defined by this module:
 #   pystring::pystring - IMPORTED target, if found
 #
-# By default, the dynamic libraries of pystring will be found. To find the 
-# static ones instead, you must set the pystring_STATIC_LIBRARY variable to 
-# TRUE before calling find_package(pystring ...).
-#
 # If pystring is not installed in a standard path, you can use the 
 # pystring_ROOT variable to tell CMake where to find it. If it is not found 
 # and OCIO_INSTALL_EXT_PACKAGES is set to MISSING or ALL, pystring will be 
@@ -41,16 +37,10 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
             pystring/include
     )
 
-    # Attempt to find static library first if this is set
-    if(pystring_STATIC_LIBRARY)
-        set(_pystring_STATIC 
-            "${CMAKE_STATIC_LIBRARY_PREFIX}pystring${CMAKE_STATIC_LIBRARY_SUFFIX}")
-    endif()
-
     # Find library
     find_library(pystring_LIBRARY
         NAMES
-            ${_pystring_STATIC} pystring
+            pystring libpystring
         HINTS
             ${_pystring_SEARCH_DIRS}
         PATH_SUFFIXES
