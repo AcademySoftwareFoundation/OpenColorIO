@@ -145,6 +145,11 @@ void CreatePaddedRedChannel(unsigned long width,
 void GetLut1DGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
                               ConstLut1DOpDataRcPtr & lutData)
 {
+    if (shaderCreator->getLanguage() == LANGUAGE_OSL)
+    {
+        throw Exception("The Lut1DOp is not yet supported by the 'Open Shading language (OSL)' translation");
+    }
+
     const unsigned long defaultMaxWidth = shaderCreator->getTextureMaxWidth();
 
     const unsigned long length      = lutData->getArray().getLength();

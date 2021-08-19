@@ -4,6 +4,7 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "Logging.h"
 #include "ops/gradingprimary/GradingPrimaryOpGPU.h"
 
 
@@ -80,7 +81,7 @@ void AddGPLogProperties(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & s
                         GPProperties & propNames)
 {
     auto prop = gpData->getDynamicPropertyInternal();
-    if (gpData->isDynamic())
+    if (gpData->isDynamic() && shaderCreator->getLanguage() != LANGUAGE_OSL)
     {
         // Build names. No need to add an index to the name to avoid collisions as the dynamic
         // properties are unique.
@@ -147,14 +148,28 @@ void AddGPLogProperties(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & s
         st.declareVar(propNames.clampBlack, static_cast<float>(value.m_clampBlack));
         st.declareVar(propNames.clampWhite, static_cast<float>(value.m_clampWhite));
         st.declareVar(propNames.saturation, static_cast<float>(value.m_saturation));
+
+        if (shaderCreator->getLanguage() == LANGUAGE_OSL && prop->isDynamic())
+        {
+            std::string msg("The dynamic properties are not yet supported by the 'Open Shading language"\
+                            " (OSL)' translation: The '");
+            msg += opPrefix;
+            msg += "' dynamic property is replaced by a local variable.";
+
+            LogWarning(msg);
+        }
     }
 }
 
-void AddGPLogForwardShader(GpuShaderText & st, const GPProperties & props)
+void AddGPLogForwardShader(GpuShaderCreatorRcPtr & shaderCreator, 
+                           GpuShaderText & st,
+                           const GPProperties & props)
 {
-    st.newLine() << "outColor.rgb += " << props.brightness << ";";
+    const std::string pxl(shaderCreator->getPixelName());
 
-    st.newLine() << "outColor.rgb = ( outColor.rgb - " << props.pivot << " ) * " << props.contrast
+    st.newLine() << pxl << ".rgb += " << props.brightness << ";";
+
+    st.newLine() << pxl << ".rgb = ( " << pxl << ".rgb - " << props.pivot << " ) * " << props.contrast
                  << " + " << props.pivot << ";";
 
     // Not sure if the if helps performance, but it does allow out == in at the default values.
@@ -162,35 +177,39 @@ void AddGPLogForwardShader(GpuShaderText & st, const GPProperties & props)
     st.newLine() << "{";
     st.indent();
     st.newLine() << st.float3Decl("normalizedOut")
-                         << " = abs(outColor.rgb - " << props.pivotBlack << ") / "
+                         << " = abs(" << pxl << ".rgb - " << props.pivotBlack << ") / "
                          << "(" << props.pivotWhite << " - " << props.pivotBlack << ");";
     // NB: The sign(outColor.rgb) is a vec3, preserving the sign of each channel.
     st.newLine() << st.float3Decl("scale")
-                         << " = sign(outColor.rgb - " << props.pivotBlack << ") * "
+                         << " = sign(" << pxl << ".rgb - " << props.pivotBlack << ") * "
                          << "(" << props.pivotWhite << " - " << props.pivotBlack << ");";
-    st.newLine() << "outColor.rgb = pow( normalizedOut, " << props.gamma << " ) * scale + "
+    st.newLine() << pxl << ".rgb = pow( normalizedOut, " << props.gamma << " ) * scale + "
                          << props.pivotBlack << ";";
     st.dedent();
     st.newLine() << "}";
 
     st.declareFloat3("lumaWgts", 0.2126f, 0.7152f, 0.0722f);
-    st.newLine() << "float luma = dot( outColor.rgb, lumaWgts );";
-    st.newLine() << "outColor.rgb = luma + " << props.saturation << " * (outColor.rgb - luma);";
+    st.newLine() << st.floatDecl("luma") << " = dot( " << pxl << ".rgb, lumaWgts );";
+    st.newLine() << pxl << ".rgb = luma + " << props.saturation << " * (" << pxl << ".rgb - luma);";
 
-    st.newLine() << "outColor.rgb = clamp( outColor.rgb, " << props.clampBlack << ", "
-                                        << props.clampWhite << " );";
+    st.newLine() << pxl << ".rgb = clamp( " << pxl << ".rgb, " << props.clampBlack << ", "
+                                            << props.clampWhite << " );";
 }
 
-void AddGPLogInverseShader(GpuShaderText & st, const GPProperties & props)
+void AddGPLogInverseShader(GpuShaderCreatorRcPtr & shaderCreator,
+                           GpuShaderText & st,
+                           const GPProperties & props)
 {
-    st.newLine() << "outColor.rgb = clamp( outColor.rgb, " << props.clampBlack << ", "
+    const std::string pxl(shaderCreator->getPixelName());
+
+    st.newLine() << pxl << ".rgb = clamp( " << pxl << ".rgb, " << props.clampBlack << ", "
                                         << props.clampWhite << " );";
     st.newLine() << "if (" << props.saturation << " != 0. && " << props.saturation << " != 1.)";
     st.newLine() << "{";
     st.indent();
     st.declareFloat3("lumaWgts", 0.2126f, 0.7152f, 0.0722f);
-    st.newLine() << "float luma = dot( outColor.rgb, lumaWgts );";
-    st.newLine() << "outColor.rgb = luma + (outColor.rgb - luma) / " << props.saturation << ";";
+    st.newLine() << st.floatDecl("luma") << " = dot( " << pxl << ".rgb, lumaWgts );";
+    st.newLine() << pxl << ".rgb = luma + (" << pxl << ".rgb - luma) / " << props.saturation << ";";
     st.dedent();
     st.newLine() << "}";
 
@@ -199,21 +218,21 @@ void AddGPLogInverseShader(GpuShaderText & st, const GPProperties & props)
     st.newLine() << "{";
     st.indent();
     st.newLine() << st.float3Decl("normalizedOut")
-                         << " = abs(outColor.rgb - " << props.pivotBlack << ") / "
+                         << " = abs(" << pxl << ".rgb - " << props.pivotBlack << ") / "
                          << "(" << props.pivotWhite << " - " << props.pivotBlack << ");";
     // NB: The sign(outColor.rgb) is a vec3, preserving the sign of each channel.
     st.newLine() << st.float3Decl("scale")
-                         << " = sign(outColor.rgb - " << props.pivotBlack << ") * "
+                         << " = sign(" << pxl << ".rgb - " << props.pivotBlack << ") * "
                          << "(" << props.pivotWhite << " - " << props.pivotBlack << ");";
-    st.newLine() << "outColor.rgb = pow( normalizedOut, " << props.gamma << " ) * scale + "
+    st.newLine() << pxl << ".rgb = pow( normalizedOut, " << props.gamma << " ) * scale + "
                          << props.pivotBlack << ";";
     st.dedent();
     st.newLine() << "}";
 
-    st.newLine() << "outColor.rgb = ( outColor.rgb - " << props.pivot << " ) * " << props.contrast
+    st.newLine() << pxl << ".rgb = ( " << pxl << ".rgb - " << props.pivot << " ) * " << props.contrast
                  << " + " << props.pivot << ";";
 
-    st.newLine() << "outColor.rgb += " << props.brightness << ";";
+    st.newLine() << pxl << ".rgb += " << props.brightness << ";";
 }
 
 void AddGPLinProperties(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & st,
@@ -282,11 +301,15 @@ void AddGPLinProperties(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & s
     }
 }
 
-void AddGPLinForwardShader(GpuShaderText & st, const GPProperties & props)
+void AddGPLinForwardShader(GpuShaderCreatorRcPtr & shaderCreator,
+                           GpuShaderText & st,
+                           const GPProperties & props)
 {
-    st.newLine() << "outColor.rgb += " << props.offset << ";";
+    const std::string pxl(shaderCreator->getPixelName());
 
-    st.newLine() << "outColor.rgb *= " << props.exposure << ";";
+    st.newLine() << pxl << ".rgb += " << props.offset << ";";
+
+    st.newLine() << pxl << ".rgb *= " << props.exposure << ";";
 
     // Not sure if the if helps performance, but it does allow out == in at the default values.
     // Although note that the log-to-lin in Tone Op also prevents out == in.
@@ -295,30 +318,34 @@ void AddGPLinForwardShader(GpuShaderText & st, const GPProperties & props)
     st.indent();
 
     // NB: The sign(outColor.rgb) is a vec3, preserving the sign of each channel.
-    st.newLine() << "outColor.rgb = pow( abs(outColor.rgb / " << props.pivot << "), " << props.contrast << " ) * "
-                                << "sign(outColor.rgb) * " << props.pivot << ";";
+    st.newLine() << pxl << ".rgb = pow( abs(" << pxl << ".rgb / " << props.pivot << "), " << props.contrast << " ) * "
+                                << "sign(" << pxl << ".rgb) * " << props.pivot << ";";
     st.dedent();
     st.newLine() << "}";
 
     st.declareFloat3("lumaWgts", 0.2126f, 0.7152f, 0.0722f);
-    st.newLine() << "float luma = dot( outColor.rgb, lumaWgts );";
-    st.newLine() << "outColor.rgb = luma + " << props.saturation << " * (outColor.rgb - luma);";
+    st.newLine() << st.floatDecl("luma") << " = dot( " << pxl << ".rgb, lumaWgts );";
+    st.newLine() << pxl << ".rgb = luma + " << props.saturation << " * (" << pxl << ".rgb - luma);";
 
-    st.newLine() << "outColor.rgb = clamp( outColor.rgb, " << props.clampBlack << ", "
+    st.newLine() << pxl << ".rgb = clamp( " << pxl << ".rgb, " << props.clampBlack << ", "
                                         << props.clampWhite << " );";
 }
 
-void AddGPLinInverseShader(GpuShaderText & st, const GPProperties & props)
+void AddGPLinInverseShader(GpuShaderCreatorRcPtr & shaderCreator,
+                           GpuShaderText & st,
+                           const GPProperties & props)
 {
-    st.newLine() << "outColor.rgb = clamp( outColor.rgb, " << props.clampBlack << ", "
+    const std::string pxl(shaderCreator->getPixelName());
+
+    st.newLine() << pxl << ".rgb = clamp( " << pxl << ".rgb, " << props.clampBlack << ", "
                                         << props.clampWhite << " );";
 
     st.newLine() << "if (" << props.saturation << " != 0. && " << props.saturation << " != 1.)";
     st.newLine() << "{";
     st.indent();
     st.declareFloat3("lumaWgts", 0.2126f, 0.7152f, 0.0722f);
-    st.newLine() << "float luma = dot( outColor.rgb, lumaWgts );";
-    st.newLine() << "outColor.rgb = luma + (outColor.rgb - luma) / " << props.saturation << ";";
+    st.newLine() << st.floatDecl("luma") << " = dot( " << pxl << ".rgb, lumaWgts );";
+    st.newLine() << pxl << ".rgb = luma + (" << pxl << ".rgb - luma) / " << props.saturation << ";";
     st.dedent();
     st.newLine() << "}";
 
@@ -328,15 +355,15 @@ void AddGPLinInverseShader(GpuShaderText & st, const GPProperties & props)
     st.newLine() << "{";
     st.indent();
     // NB: The sign(outColor.rgb) is a vec3, preserving the sign of each channel.
-    st.newLine() << "outColor.rgb = pow( abs(outColor.rgb / " << props.pivot << "), "
+    st.newLine() << pxl << ".rgb = pow( abs(" << pxl << ".rgb / " << props.pivot << "), "
                                       << props.contrast << " ) * "
-                                << "sign(outColor.rgb) * " << props.pivot << ";";
+                                << "sign(" << pxl << ".rgb) * " << props.pivot << ";";
     st.dedent();
     st.newLine() << "}";
 
-    st.newLine() << "outColor.rgb *= " << props.exposure << ";";
+    st.newLine() << pxl << ".rgb *= " << props.exposure << ";";
 
-    st.newLine() << "outColor.rgb += " << props.offset << ";";
+    st.newLine() << pxl << ".rgb += " << props.offset << ";";
 }
 
 void AddGPVideoProperties(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & st,
@@ -412,10 +439,14 @@ void AddGPVideoProperties(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText &
     }
 }
 
-void AddGPVideoForwardShader(GpuShaderText & st, const GPProperties & props)
+void AddGPVideoForwardShader(GpuShaderCreatorRcPtr & shaderCreator,
+                             GpuShaderText & st,
+                             const GPProperties & props)
 {
-    st.newLine() << "outColor.rgb += " << props.offset << ";";
-    st.newLine() << "outColor.rgb = ( outColor.rgb - " << props.pivotBlack << " ) * " << props.slope
+    const std::string pxl(shaderCreator->getPixelName());
+
+    st.newLine() << pxl << ".rgb += " << props.offset << ";";
+    st.newLine() << pxl << ".rgb = ( " << pxl << ".rgb - " << props.pivotBlack << " ) * " << props.slope
                                << " + " << props.pivotBlack << ";";
 
     // Not sure if the if helps performance, but it does allow out == in at the default values.
@@ -423,34 +454,38 @@ void AddGPVideoForwardShader(GpuShaderText & st, const GPProperties & props)
     st.newLine() << "{";
     st.indent();
     st.newLine() << st.float3Decl("normalizedOut")
-                         << " = abs(outColor.rgb - " << props.pivotBlack << ") / "
+                         << " = abs(" << pxl << ".rgb - " << props.pivotBlack << ") / "
                          << "(" << props.pivotWhite << " - " << props.pivotBlack << ");";
     st.newLine() << st.float3Decl("scale")
-                         << " = sign(outColor.rgb - " << props.pivotBlack << ") * "
+                         << " = sign(" << pxl << ".rgb - " << props.pivotBlack << ") * "
                          << "(" << props.pivotWhite << " - " << props.pivotBlack << ");";
-    st.newLine() << "  outColor.rgb = pow( normalizedOut, " << props.gamma << " ) * scale + " << props.pivotBlack << ";";
+    st.newLine() << "  " << pxl << ".rgb = pow( normalizedOut, " << props.gamma << " ) * scale + " << props.pivotBlack << ";";
     st.dedent();
     st.newLine() << "}";
 
     st.declareFloat3("lumaWgts", 0.2126f, 0.7152f, 0.0722f);
-    st.newLine() << "float luma = dot( outColor.rgb, lumaWgts );";
-    st.newLine() << "outColor.rgb = luma + " << props.saturation << " * (outColor.rgb - luma);";
+    st.newLine() << st.floatDecl("luma") << " = dot( " << pxl << ".rgb, lumaWgts );";
+    st.newLine() << pxl << ".rgb = luma + " << props.saturation << " * (" << pxl << ".rgb - luma);";
 
-    st.newLine() << "outColor.rgb = clamp( outColor.rgb, " << props.clampBlack << ", "
+    st.newLine() << pxl << ".rgb = clamp( " << pxl << ".rgb, " << props.clampBlack << ", "
                                         << props.clampWhite << " );";
 }
 
-void AddGPVideoInverseShader(GpuShaderText & st, const GPProperties & props)
+void AddGPVideoInverseShader(GpuShaderCreatorRcPtr & shaderCreator,
+                             GpuShaderText & st,
+                             const GPProperties & props)
 {
-    st.newLine() << "outColor.rgb = clamp( outColor.rgb, " << props.clampBlack << ", "
+    const std::string pxl(shaderCreator->getPixelName());
+
+    st.newLine() << pxl << ".rgb = clamp( " << pxl << ".rgb, " << props.clampBlack << ", "
                                         << props.clampWhite << " );";
 
     st.newLine() << "if (" << props.saturation << " != 0. && " << props.saturation << " != 1.)";
     st.newLine() << "{";
     st.indent();
     st.declareFloat3("lumaWgts", 0.2126f, 0.7152f, 0.0722f);
-    st.newLine() << "float luma = dot( outColor.rgb, lumaWgts );";
-    st.newLine() << "outColor.rgb = luma + (outColor.rgb - luma) / " << props.saturation << ";";
+    st.newLine() << st.floatDecl("luma") << " = dot( " << pxl << ".rgb, lumaWgts );";
+    st.newLine() << pxl << ".rgb = luma + (" << pxl << ".rgb - luma) / " << props.saturation << ";";
     st.dedent();
     st.newLine() << "}";
 
@@ -459,18 +494,18 @@ void AddGPVideoInverseShader(GpuShaderText & st, const GPProperties & props)
     st.newLine() << "{";
     st.indent();
     st.newLine() << st.float3Decl("normalizedOut")
-                         << " = abs(outColor.rgb - " << props.pivotBlack << ") / "
+                         << " = abs(" << pxl << ".rgb - " << props.pivotBlack << ") / "
                          << "(" << props.pivotWhite << " - " << props.pivotBlack << ");";
     st.newLine() << st.float3Decl("scale")
-                         << " = sign(outColor.rgb - " << props.pivotBlack << ") * "
+                         << " = sign(" << pxl << ".rgb - " << props.pivotBlack << ") * "
                          << "(" << props.pivotWhite << " - " << props.pivotBlack << ");";
-    st.newLine() << "outColor.rgb = pow( normalizedOut, " << props.gamma << " ) * scale + " << props.pivotBlack << ";";
+    st.newLine() << pxl << ".rgb = pow( normalizedOut, " << props.gamma << " ) * scale + " << props.pivotBlack << ";";
     st.dedent();
     st.newLine() << "}";
 
-    st.newLine() << "outColor.rgb = ( outColor.rgb - " << props.pivotBlack << " ) * "<< props.slope
+    st.newLine() << pxl << ".rgb = ( " << pxl << ".rgb - " << props.pivotBlack << " ) * "<< props.slope
                                 <<" + " << props.pivotBlack << ";";
-    st.newLine() << "outColor.rgb += " << props.offset << " );";
+    st.newLine() << pxl << ".rgb += " << props.offset << " );";
 }
 }
 
@@ -519,10 +554,10 @@ void GetGradingPrimaryGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
         switch (dir)
         {
         case TRANSFORM_DIR_FORWARD:
-            AddGPLogForwardShader(st, properties);
+            AddGPLogForwardShader(shaderCreator, st, properties);
             break;
         case TRANSFORM_DIR_INVERSE:
-            AddGPLogInverseShader(st, properties);
+            AddGPLogInverseShader(shaderCreator, st, properties);
             break;
         }
 
@@ -546,10 +581,10 @@ void GetGradingPrimaryGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
         switch (dir)
         {
         case TRANSFORM_DIR_FORWARD:
-            AddGPLinForwardShader(st, properties);
+            AddGPLinForwardShader(shaderCreator, st, properties);
             break;
         case TRANSFORM_DIR_INVERSE:
-            AddGPLinInverseShader(st, properties);
+            AddGPLinInverseShader(shaderCreator, st, properties);
             break;
         }
 
@@ -573,10 +608,10 @@ void GetGradingPrimaryGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
         switch (dir)
         {
         case TRANSFORM_DIR_FORWARD:
-            AddGPVideoForwardShader(st, properties);
+            AddGPVideoForwardShader(shaderCreator, st, properties);
             break;
         case TRANSFORM_DIR_INVERSE:
-            AddGPVideoInverseShader(st, properties);
+            AddGPVideoInverseShader(shaderCreator, st, properties);
             break;
         }
 

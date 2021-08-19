@@ -17,6 +17,11 @@ namespace OCIO_NAMESPACE
 void GetLut3DGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator, ConstLut3DOpDataRcPtr & lutData)
 {
 
+    if (shaderCreator->getLanguage() == LANGUAGE_OSL)
+    {
+        throw Exception("The Lut3DOp is not yet supported by the 'Open Shading language (OSL)' translation");
+    }
+
     std::ostringstream resName;
     resName << shaderCreator->getResourcePrefix()
             << std::string("_")
