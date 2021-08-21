@@ -29,7 +29,7 @@ configuration options suitable for high-end production usage. OCIO is
 compatible with the Academy Color Encoding Specification (ACES) and is
 LUT-format agnostic, supporting many popular formats.
 
-OpenColorIO is released as version 1.0 and has been in development since 2003.
+OpenColorIO is released as version 2.0 and has been in development since 2003.
 OCIO represents the culmination of years of production experience earned on
 such films as SpiderMan 2 (2004), Surf's Up (2007), Cloudy with a Chance of
 Meatballs (2009), Alice in Wonderland (2010), and many more. OpenColorIO is
