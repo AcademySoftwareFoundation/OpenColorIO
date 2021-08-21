@@ -240,8 +240,6 @@ void RunLookTokens(OpRcPtrVec & ops,                         // [in/out]
             throw Exception(os.str().c_str());
         }
 
-        // Put the new ops into a temp array, to see if it's a no-op
-        // If it is a no-op, dont bother doing the colorspace conversion.
         OpRcPtrVec tmpOps;
 
         switch (lookTokens[i].dir)
