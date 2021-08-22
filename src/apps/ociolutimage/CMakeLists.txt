@@ -17,6 +17,11 @@ endif()
 set_target_properties(ociolutimage PROPERTIES
 	COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS}")
 
+target_include_directories(ociolutimage
+	SYSTEM
+	PRIVATE
+		${Half_INCLUDE_DIR}
+)
 target_link_libraries(ociolutimage
 	PRIVATE
 		apputils
