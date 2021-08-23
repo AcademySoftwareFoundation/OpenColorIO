@@ -33,7 +33,8 @@ enum ConfigIterator
     IT_NAMED_TRANSFORM_NAME,
     IT_NAMED_TRANSFORM,
     IT_ACTIVE_NAMED_TRANSFORM_NAME,
-    IT_ACTIVE_NAMED_TRANSFORM
+    IT_ACTIVE_NAMED_TRANSFORM,
+    IT_VIRTUAL_DISPLAY_VIEW,
 };
 
 using EnvironmentVarNameIterator       = PyIterator<ConfigRcPtr, IT_ENVIRONMENT_VAR_NAME>;
@@ -65,6 +66,8 @@ using NamedTransformIterator           = PyIterator<ConfigRcPtr, IT_NAMED_TRANSF
                                                     NamedTransformVisibility>;
 using ActiveNamedTransformNameIterator = PyIterator<ConfigRcPtr, IT_ACTIVE_NAMED_TRANSFORM_NAME>;
 using ActiveNamedTransformIterator     = PyIterator<ConfigRcPtr, IT_ACTIVE_NAMED_TRANSFORM>;
+using VirtualViewIterator              = PyIterator<ConfigRcPtr, IT_VIRTUAL_DISPLAY_VIEW, 
+                                                    ViewType>;
 
 } // namespace
 
@@ -153,6 +156,10 @@ void bindPyConfig(py::module & m)
     auto clsActiveNamedTransformIterator =
         py::class_<ActiveNamedTransformIterator>(
             clsConfig, "ActiveNamedTransformIterator");
+
+    auto clsVirtualViewIterator = 
+        py::class_<VirtualViewIterator>(
+            clsConfig, "VirtualViewIterator");
 
     clsConfig
         .def(py::init(&Config::Create), 
@@ -400,6 +407,46 @@ void bindPyConfig(py::module & m)
              DOC(Config, removeDisplayView))
         .def("clearDisplays", &Config::clearDisplays, 
              DOC(Config, clearDisplays))
+
+        // Virtual Display
+        .def("addVirtualDisplayView", &Config::addVirtualDisplayView, 
+             "view"_a, "viewTransform"_a, "displayColorSpaceName"_a, 
+             "looks"_a = "",
+             "ruleName"_a = "", 
+             "description"_a = "", 
+             DOC(Config, addVirtualDisplayView))
+        .def("addVirtualDisplaySharedView", &Config::addVirtualDisplaySharedView, "sharedView"_a,
+             DOC(Config, addVirtualDisplaySharedView))
+        .def("getVirtualDisplayViews", [](ConfigRcPtr & self, ViewType type)
+             {
+                 return VirtualViewIterator(self, type);
+             },
+             "display"_a)
+        .def("getVirtualDisplayViewTransformName", &Config::getVirtualDisplayViewTransformName, 
+             "view"_a,
+             DOC(Config, getVirtualDisplayViewTransformName))
+        .def("getVirtualDisplayViewColorSpaceName", &Config::getVirtualDisplayViewColorSpaceName, 
+             "view"_a,
+             DOC(Config, getVirtualDisplayViewColorSpaceName))
+        .def("getVirtualDisplayViewLooks", &Config::getVirtualDisplayViewLooks, "view"_a,
+             DOC(Config, getVirtualDisplayViewLooks))
+        .def("getVirtualDisplayViewRule", &Config::getVirtualDisplayViewRule, "view"_a,
+             DOC(Config, getVirtualDisplayViewRule))
+        .def("getVirtualDisplayViewDescription", &Config::getVirtualDisplayViewDescription, 
+             "view"_a,
+             DOC(Config, getVirtualDisplayViewDescription))
+        .def("removeVirtualDisplayView", &Config::removeVirtualDisplayView, "view"_a,
+             DOC(Config, removeVirtualDisplayView))
+        .def("clearVirtualDisplay", &Config::clearVirtualDisplay,
+             DOC(Config, clearVirtualDisplay))
+        .def("instantiateDisplayFromMonitorName", &Config::instantiateDisplayFromMonitorName, 
+             "monitorName"_a,
+             DOC(Config, instantiateDisplayFromMonitorName))
+        .def("instantiateDisplayFromICCProfile", &Config::instantiateDisplayFromICCProfile, 
+             "ICCProfileFilepath"_a,
+             DOC(Config, instantiateDisplayFromICCProfile))
+
+        // Active Displays and Views
         .def("setActiveDisplays", &Config::setActiveDisplays, "displays"_a, 
              DOC(Config, setActiveDisplays))
         .def("getActiveDisplays", &Config::getActiveDisplays, 
@@ -1054,6 +1101,23 @@ void bindPyConfig(py::module & m)
                 int i = it.nextIndex((int)it.m_obj->getNumNamedTransforms());
                 const char * name = it.m_obj->getNamedTransformNameByIndex(i);
                 return it.m_obj->getNamedTransform(name);
+            });
+
+    clsVirtualViewIterator
+        .def("__len__", [](VirtualViewIterator & it)
+            { 
+                return it.m_obj->getVirtualDisplayNumViews(std::get<0>(it.m_args)); 
+            })
+        .def("__getitem__", [](VirtualViewIterator & it, int i)
+            { 
+                it.checkIndex(i, it.m_obj->getVirtualDisplayNumViews(std::get<0>(it.m_args)));
+                return it.m_obj->getVirtualDisplayView(std::get<0>(it.m_args), i);
+            })
+        .def("__iter__", [](VirtualViewIterator & it) -> VirtualViewIterator & { return it; })
+        .def("__next__", [](VirtualViewIterator & it)
+            {
+                int i = it.nextIndex(it.m_obj->getVirtualDisplayNumViews(std::get<0>(it.m_args)));
+                return it.m_obj->getVirtualDisplayView(std::get<0>(it.m_args), i);
             });
 
     m.def("GetCurrentConfig", &GetCurrentConfig, 
