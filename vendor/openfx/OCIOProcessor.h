@@ -14,15 +14,13 @@ namespace OCIO = OCIO_NAMESPACE;
 class OCIOProcessor : public OFX::ImageProcessor 
 {
 protected:
-    OFX::Image * _srcImg;
+    OFX::Image * _srcImg = nullptr;
 
     OCIO::ConstCPUProcessorRcPtr _cpuProc;
 
 public:
     OCIOProcessor(OFX::ImageEffect & instance)
         : OFX::ImageProcessor(instance)
-        , _srcImg(0)
-        , _cpuProc(nullptr)
     {}
 
     /* Set the src image */
