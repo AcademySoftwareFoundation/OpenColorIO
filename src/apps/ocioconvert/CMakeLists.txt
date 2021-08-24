@@ -27,7 +27,7 @@ set_target_properties(ocioconvert PROPERTIES
 target_link_libraries(ocioconvert
     PRIVATE
         apputils
-        IlmBase::Half
+        ${OCIO_HALF_LIB}
         ${OCIO_GL_LIB}
         oiiohelpers
         OpenColorIO
