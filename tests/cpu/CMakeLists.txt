@@ -11,12 +11,10 @@ function(add_ocio_test NAME SOURCES PRIVATE_INCLUDES)
     target_compile_definitions(${TEST_BINARY}
         PRIVATE
             OpenColorIO_SKIP_IMPORTS
-
     )
     target_link_libraries(${TEST_BINARY}
-        PUBLIC
-            OpenColorIOHeaders
         PRIVATE
+            OpenColorIO
             expat::expat
             ${OCIO_HALF_LIB}
             pystring::pystring
@@ -39,7 +37,6 @@ function(add_ocio_test NAME SOURCES PRIVATE_INCLUDES)
     if(PRIVATE_INCLUDES)
         target_include_directories(${TEST_BINARY}
             PRIVATE
-                "${CMAKE_SOURCE_DIR}/src/OpenColorIO"
                 "${CMAKE_SOURCE_DIR}/tests/cpu"
         )
     endif(PRIVATE_INCLUDES)

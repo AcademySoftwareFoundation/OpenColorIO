@@ -61,8 +61,8 @@ else:
     description = "@CMAKE_PROJECT_DESCRIPTION@"
     version = "@CMAKE_PROJECT_VERSION@"
     version_major = "@OpenColorIO_VERSION_MAJOR@"
-    version_minor = "@OpenColorIO_VERSION_MAJOR@"
-    version_patch = "@OpenColorIO_VERSION_MAJOR@"
+    version_minor = "@OpenColorIO_VERSION_MINOR@"
+    version_patch = "@OpenColorIO_VERSION_PATCH@"
     ocio_namespace = "@OCIO_NAMESPACE@"
 
 author = "Contributors to the {} Project".format(project)

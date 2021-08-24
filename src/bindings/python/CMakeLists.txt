@@ -203,14 +203,10 @@ target_include_directories(PyOpenColorIO
 # macOS, to prevent segfaults when potentially working with multiple Python 
 # installations. See note in:
 #   https://pybind11.readthedocs.io/en/stable/compiling.html#building-manually
-set(PYOCIO_LINK_PUBLIC OpenColorIOHeaders)
-if(WIN32)
-	list(INSERT PYOCIO_LINK_PUBLIC 0 ${Python_LIBRARIES})
-endif()
 
 target_link_libraries(PyOpenColorIO
 	PUBLIC
-		${PYOCIO_LINK_PUBLIC}
+		"$<$<BOOL:${WIN32}>:${Python_LIBRARIES}>"
 	PRIVATE
 		OpenColorIO
 		utils::strings

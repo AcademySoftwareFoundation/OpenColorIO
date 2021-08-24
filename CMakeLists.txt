@@ -252,7 +252,6 @@ if(OCIO_BUILD_DOCS)
 endif()
 add_subdirectory(tests)
 add_subdirectory(src)
-add_subdirectory(include)
 add_subdirectory(ext)
 
 
