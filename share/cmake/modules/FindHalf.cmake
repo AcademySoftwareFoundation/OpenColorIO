@@ -54,7 +54,6 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
                 ${PC_Half_INCLUDE_DIRS}
             PATH_SUFFIXES
                 include
-                OpenEXR/include
         )
 
         # Lib names to search for
@@ -195,7 +194,7 @@ if(NOT Half_FOUND)
         file(MAKE_DIRECTORY ${Half_INCLUDE_DIR})
 
         ExternalProject_Add(ilmbase_install
-            GIT_REPOSITORY "https://github.com/openexr/openexr.git"
+            GIT_REPOSITORY "https://github.com/AcademySoftwareFoundation/openexr.git"
             GIT_TAG "v${Half_VERSION}"
             GIT_CONFIG advice.detachedHead=false
             GIT_SHALLOW TRUE

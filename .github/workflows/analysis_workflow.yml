@@ -31,70 +31,46 @@ jobs:
       image: aswf/ci-base:${{ matrix.vfx-cy }}
     strategy:
       matrix:
-        build: [1, 2, 3, 4, 5, 6]
+        build: [1, 2, 3, 4]
         include:
           # -------------------------------------------------------------------
-          # GCC, VFX CY2020
+          # GCC
           # -------------------------------------------------------------------
-          # C++11, Python 3.7
+          # VFX CY2022, C++17, docs
           - build: 1
             build-docs: 'ON'
-            cxx-standard: 11
+            cxx-standard: 17
             cxx-compiler: g++
             cc-compiler: gcc
-            compiler-desc: GCC 6.3.1
-            vfx-cy: 2020
-          # C++14
+            compiler-desc: GCC 9.3.1
+            vfx-cy: 2022
+          # VFX CY2021, C++14
           - build: 2
             build-docs: 'OFF'
             cxx-standard: 14
             cxx-compiler: g++
             cc-compiler: gcc
-            compiler-desc: GCC 6.3.1
-            vfx-cy: 2020
+            compiler-desc: GCC 9.3.1
+            vfx-cy: 2021
           # -------------------------------------------------------------------
-          # GCC, VFX CY2019
+          # Clang
           # -------------------------------------------------------------------
-          # Python 2.7
+          # VFX CY2022, C++17
           - build: 3
-            # Doc build requires Python 3
             build-docs: 'OFF'
-            cxx-standard: 11
-            cxx-compiler: g++
-            cc-compiler: gcc
-            compiler-desc: GCC 6.3.1
-            vfx-cy: 2019
-          # -------------------------------------------------------------------
-          # Clang, VFX CY2020
-          # -------------------------------------------------------------------
-          # C++11, Python 3.7
-          - build: 4
-            build-docs: 'OFF'
-            cxx-standard: 11
+            cxx-standard: 17
             cxx-compiler: clang++
             cc-compiler: clang
-            compiler-desc: Clang 7
-            vfx-cy: 2020
-          # C++14
-          - build: 5
-            build-docs: 'OFF'
+            compiler-desc: Clang 9
+            vfx-cy: 2022
+          # VFX CY2021, C++14, docs
+          - build: 4
+            build-docs: 'ON'
             cxx-standard: 14
             cxx-compiler: clang++
             cc-compiler: clang
-            compiler-desc: Clang 7
-            vfx-cy: 2020
-          # -------------------------------------------------------------------
-          # Clang, VFX CY2019
-          # -------------------------------------------------------------------
-          # Python 2.7
-          - build: 6
-            # Doc build requires Python 3
-            build-docs: 'OFF'
-            cxx-standard: 11
-            cxx-compiler: clang++
-            cc-compiler: clang
-            compiler-desc: Clang 7
-            vfx-cy: 2019
+            compiler-desc: Clang 9
+            vfx-cy: 2021
     env:
       CXX: ${{ matrix.cxx-compiler }}
       CC: ${{ matrix.cc-compiler }}
@@ -114,6 +90,7 @@ jobs:
           share/ci/scripts/linux/install_pystring.sh latest
           share/ci/scripts/linux/install_pybind11.sh latest
           share/ci/scripts/linux/install_openexr.sh latest
+          share/ci/scripts/linux/install_imath.sh latest
           share/ci/scripts/linux/install_oiio.sh latest
       - name: Create build directories
         run: |
@@ -155,7 +132,7 @@ jobs:
     container:
       # DockerHub: https://hub.docker.com/u/aswf
       # Source: https://github.com/AcademySoftwareFoundation/aswf-docker
-      image: aswf/ci-ocio:2020
+      image: aswf/ci-ocio:2022
     env:
       CXX: g++
       CC: gcc
