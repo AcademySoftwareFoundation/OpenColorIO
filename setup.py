@@ -5,12 +5,38 @@
 #
 
 import os
-import sys
+import re
+import shutil
 import subprocess
+import sys
+import tempfile
 
 from setuptools import setup, Extension
 from setuptools.command.build_ext import build_ext
 
+
+# Extract the project version from CMake generated ABI header.
+# NOTE: When droping support for Python2 we can use
+# tempfile.TemporaryDirectory() context manager instead of try...finally.
+def get_version():
+    VERSION_REGEX = re.compile(
+        r"^\s*#\s*define\s+OCIO_VERSION_FULL_STR\s+\"(.*)\"\s*$", re.MULTILINE)
+
+    here = os.path.abspath(os.path.dirname(__file__))
+    dirpath = tempfile.mkdtemp()
+
+    try:
+        stdout = subprocess.check_output(["cmake", here], cwd=dirpath)
+        path = os.path.join(dirpath, "include", "OpenColorIO", "OpenColorABI.h")
+        with open(path) as f:
+            match = VERSION_REGEX.search(f.read())
+            return match.group(1)
+    except Exception as e:
+        raise RuntimeError(
+            "Unable to find OpenColorIO version: {}".format(str(e))
+        )
+    finally:
+        shutil.rmtree(dirpath)
 
 
 # Convert distutils Windows platform specifiers to CMake -A arguments
@@ -113,6 +139,7 @@ class CMakeBuild(build_ext):
 
 # For historical reason, we use PyOpenColorIO as the import name
 setup(
+    version=get_version(),
     package_dir={
         'PyOpenColorIOTests': 'tests/python',
         'PyOpenColorIOTests.data': 'tests/data',
