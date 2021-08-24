@@ -58,7 +58,7 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
         NAMES
             ${_lcms2_STATIC} lcms2 liblcms2
         HINTS
-            ${_lcms2_SEARCH_DIRS}
+            ${_lcms2_ROOT}
             ${PC_lcms2_LIBRARY_DIRS}
         PATH_SUFFIXES
             lib64 lib 

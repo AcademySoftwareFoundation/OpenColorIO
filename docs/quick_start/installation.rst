@@ -65,7 +65,10 @@ it is not necessary to install those items manually:
 - cmake >= 3.12
 - \*Expat >= 2.2.8 (XML parser for CDL/CLF/CTF)
 - \*yaml-cpp >= 0.6.3 (YAML parser for Configs)
-- \*IlmBase (Half only) >= 2.4.0 (for half domain LUTs)
+- \*Imath >= 3.0.5 (for half domain LUTs)
+    - \*IlmBase (Half only) >= 2.4.0 (Alternative half implementation when 
+      OpenEXR 2 is available. Use ``-DOCIO_USE_OPENEXR_HALF=ON`` CMake option to 
+      enable).
 - \*pystring >= 1.1.3
 
 Some optional components also depend on:
@@ -126,6 +129,8 @@ or static linking:
 - ``-Dexpat_STATIC_LIBRARY=ON`` (prefer static lib)
 - ``-Dyaml-cpp_ROOT=<path>`` (include and/or library root dir)
 - ``-Dyaml-cpp_STATIC_LIBRARY=ON`` (prefer static lib)
+- ``-DImath_ROOT=<path>`` (include and/or library root dir)
+- ``-DImath_STATIC_LIBRARY=ON`` (prefer static lib)
 - ``-DHalf_ROOT=<path>`` (include and/or library root dir)
 - ``-DHalf_STATIC_LIBRARY=ON`` (prefer static lib)
 - ``-Dpystring_ROOT=<path>`` (include and/or library root dir)
@@ -425,3 +430,10 @@ Note: For other user facing environment variables, see :ref:`using_env_vars`.
 
     Note that :envvar:`DYLD_LIBRARY_PATH` or :envvar:`LD_LIBRARY_PATH`
     must be set correctly for the module to work.
+
+.. envvar:: OFX_PLUGIN_PATH
+
+    When building the OCIO OpenFX plugins, include the installed 
+    ``OpenColorIO/lib`` directory (where ``OpenColorIO.ofx.bundle`` is located) 
+    in this path. The path to a shared OpenColorIO lib (*.so, *.dll, *.dylib) 
+    should also be present on ``PATH``.

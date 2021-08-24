@@ -18,7 +18,7 @@ function(add_ocio_test NAME SOURCES PRIVATE_INCLUDES)
             OpenColorIOHeaders
         PRIVATE
             expat::expat
-            IlmBase::Half
+            ${OCIO_HALF_LIB}
             pystring::pystring
             sampleicc::sampleicc
             unittest_data
