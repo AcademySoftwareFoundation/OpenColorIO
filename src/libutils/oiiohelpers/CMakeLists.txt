@@ -31,7 +31,7 @@ target_link_libraries(oiiohelpers
 
     PRIVATE
         OpenColorIO
-        IlmBase::Half
+        ${OCIO_HALF_LIB}
         utils::strings
 )
 

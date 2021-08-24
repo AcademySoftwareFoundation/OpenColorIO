@@ -131,6 +131,7 @@ option(OCIO_WARNING_AS_ERROR "Set build error level for CI testing" OFF)
 # Optimization / internal linking preferences
 
 option(OCIO_USE_SSE "Specify whether to enable SSE CPU performance optimizations" ON)
+option(OCIO_USE_OPENEXR_HALF "Specify whether to use an OpenEXR/IlmBase install of the Half library (<=v2.5) instead of the newer Imath library (>=v3.0)" OFF)
 
 
 ###############################################################################

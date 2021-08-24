@@ -182,13 +182,21 @@ if(NOT WIN32)
     configure_file(res/OpenColorIO.pc.in ${CMAKE_CURRENT_BINARY_DIR}/OpenColorIO.pc @ONLY)
     install(FILES ${CMAKE_CURRENT_BINARY_DIR}/OpenColorIO.pc DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
 endif()
+
 add_library(OpenColorIO ${SOURCES})
 
+# Require at least a C++11 compatible compiler for consumer projects.
+target_compile_features(OpenColorIO
+    PUBLIC cxx_std_11
+)
+
 if(BUILD_SHARED_LIBS AND WIN32)
-	# Impose a versioned name on Windows to avoid binary name clashes.
+    # Impose a versioned name on Windows to avoid binary name clashes.
     set(OCIO_LIBNAME_SUFFIX
-    	${OCIO_LIBNAME_SUFFIX}_${OpenColorIO_VERSION_MAJOR}_${OpenColorIO_VERSION_MINOR}
+        ${OCIO_LIBNAME_SUFFIX}_${OpenColorIO_VERSION_MAJOR}_${OpenColorIO_VERSION_MINOR}
     )
+
+    set(CMAKE_SHARED_LIBRARY_SUFFIX ${OCIO_LIBNAME_SUFFIX}.dll)
 
     # Create the version.rc file for the Windows DLL.
     configure_file(res/version.rc.in ${CMAKE_CURRENT_BINARY_DIR}/version.rc @ONLY)
@@ -204,7 +212,7 @@ target_link_libraries(OpenColorIO
 		OpenColorIOHeaders
 	PRIVATE
 		expat::expat
-		IlmBase::Half
+		${OCIO_HALF_LIB}
 		pystring::pystring
 		sampleicc::sampleicc
 		utils::strings
@@ -264,7 +272,7 @@ if(WIN32)
 endif()
 
 set_target_properties(OpenColorIO PROPERTIES
-    OUTPUT_NAME   ${PROJECT_NAME}${OCIO_LIBNAME_SUFFIX}
+    OUTPUT_NAME   ${PROJECT_NAME}
     COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS}"
     VERSION       ${OpenColorIO_VERSION}
     SOVERSION     ${SOVERSION}
