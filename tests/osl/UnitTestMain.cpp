@@ -24,7 +24,7 @@ public:
     static OCIO::GpuShaderCreatorRcPtr Create(const GPUTestRcPtr & test)
     {
         OCIO::GpuShaderCreatorRcPtr ptr(new MyOSLShaderCreator(test));
-        ptr->setLanguage(OCIO::LANGUAGE_OSL);
+        ptr->setLanguage(OCIO::LANGUAGE_OSL_1);
         return ptr;
     }
 

@@ -34,7 +34,7 @@ void WriteShaderHeader(GpuShaderCreatorRcPtr & shaderCreator)
     ss.newLine() << "// Declaration of the OCIO shader function";
     ss.newLine();
 
-    if (shaderCreator->getLanguage() == LANGUAGE_OSL)
+    if (shaderCreator->getLanguage() == LANGUAGE_OSL_1)
     {
         ss.newLine() << "color4 " << fcnName << "(color4 inPixel)";
         ss.newLine() << "{";

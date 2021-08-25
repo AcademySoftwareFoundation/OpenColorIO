@@ -446,7 +446,7 @@ enum GpuLanguage
     GPU_LANGUAGE_GLSL_1_3,          ///< OpenGL Shading Language
     GPU_LANGUAGE_GLSL_4_0,          ///< OpenGL Shading Language
     GPU_LANGUAGE_HLSL_DX11,         ///< DirectX Shading Language
-    LANGUAGE_OSL                    ///< Open Shading Language                
+    LANGUAGE_OSL_1                  ///< Open Shading Language                
 };
 
 enum EnvironmentMode

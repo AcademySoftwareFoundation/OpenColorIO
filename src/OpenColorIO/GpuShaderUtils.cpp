@@ -58,7 +58,7 @@ std::string getVecKeyword(GpuLanguage lang)
             kw << "float" << N;
             break;
         }
-        case LANGUAGE_OSL:
+        case LANGUAGE_OSL_1:
         {
             kw << "vector" << N;
             break;
@@ -104,7 +104,7 @@ void getTexDecl(GpuLanguage lang,
             samplerDecl = t.str();
             break;
         }
-        case LANGUAGE_OSL:
+        case LANGUAGE_OSL_1:
         {
             throw Exception("Unsupported by the Open Shading language (OSL) translation.");
         }
@@ -147,7 +147,7 @@ std::string getTexSample(GpuLanguage lang,
             kw << "texture(" << samplerName << ", " << coords << ")";
             break;
         }
-        case LANGUAGE_OSL:
+        case LANGUAGE_OSL_1:
         {
             throw Exception("Unsupported by the Open Shading language (OSL) translation.");
         }
@@ -305,7 +305,7 @@ std::string GpuShaderText::floatKeywordConst() const
             str += " ";
             break;
         }
-        case LANGUAGE_OSL:
+        case LANGUAGE_OSL_1:
         case GPU_LANGUAGE_CG:
             break;
     }
@@ -337,7 +337,7 @@ std::string GpuShaderText::colorDecl(const std::string & name) const
         throw Exception("GPU variable name is empty.");
     }
 
-    return (m_lang==LANGUAGE_OSL ? "color" : float3Keyword()) + " " + name;
+    return (m_lang==LANGUAGE_OSL_1 ? "color" : float3Keyword()) + " " + name;
 }
 
 // TODO: OSL: The method only solves the problem for constant float values. The code must also
@@ -418,7 +418,7 @@ void GpuShaderText::declareFloatArrayConst(const std::string & name, int size, c
             nl << ");";
             break;
         }
-        case LANGUAGE_OSL:
+        case LANGUAGE_OSL_1:
         case GPU_LANGUAGE_CG:
         case GPU_LANGUAGE_HLSL_DX11:
         {
@@ -483,7 +483,7 @@ void GpuShaderText::declareIntArrayConst(const std::string & name, int size, con
             nl << "};";
             break;
         }
-        case LANGUAGE_OSL:
+        case LANGUAGE_OSL_1:
         case GPU_LANGUAGE_CG:
         {
             nl << intKeyword() << " " << name << "[" << size << "] = {";
@@ -518,7 +518,7 @@ std::string GpuShaderText::float2Decl(const std::string & name) const
 
 std::string GpuShaderText::float3Keyword() const
 {
-    return m_lang == LANGUAGE_OSL ? "vector" : getVecKeyword<3>(m_lang);
+    return m_lang == LANGUAGE_OSL_1 ? "vector" : getVecKeyword<3>(m_lang);
 }
 
 std::string GpuShaderText::float3Const(float x, float y, float z) const
@@ -816,7 +816,7 @@ std::string matrix4Mul(const T * m4x4, const std::string & vecName, GpuLanguage 
                 << ", float4x4(" << getMatrixValues<T, 4>(m4x4, lang, true) << "))";
             break;
         }
-        case LANGUAGE_OSL:
+        case LANGUAGE_OSL_1:
         {
             kw << vecName << " * matrix(" 
                << m4x4[ 0] << ", " << m4x4[ 1] << ", " << m4x4[ 2] << ", " << m4x4[ 3] << ", "
@@ -854,7 +854,7 @@ std::string GpuShaderText::lerp(const std::string & x,
     std::ostringstream kw;
     switch (m_lang)
     {
-        case LANGUAGE_OSL:
+        case LANGUAGE_OSL_1:
         case GPU_LANGUAGE_GLSL_1_2:
         case GPU_LANGUAGE_GLSL_1_3:
         case GPU_LANGUAGE_GLSL_4_0:
@@ -891,7 +891,7 @@ std::string GpuShaderText::float3GreaterThan(const std::string & a,
             kw << float3Keyword() << "(greaterThan( " << a << ", " << b << "))";
             break;
         }
-        case LANGUAGE_OSL:
+        case LANGUAGE_OSL_1:
         case GPU_LANGUAGE_HLSL_DX11:
         {
             kw << float3Keyword() << "(" 
@@ -932,7 +932,7 @@ std::string GpuShaderText::float4GreaterThan(const std::string & a,
                << "(" << a << "[3] > " << b << "[3]) ? 1.0 : 0.0)";
             break;
         }
-        case LANGUAGE_OSL:
+        case LANGUAGE_OSL_1:
         {
             kw << float4Keyword() << "(" 
                << "(" << a << ".rgb.r > " << b << ".x) ? 1.0 : 0.0, "
@@ -965,7 +965,7 @@ std::string GpuShaderText::atan2(const std::string & y,
             kw << "atan(" << y << ", " << x << ")";
             break;
         }
-        case LANGUAGE_OSL:
+        case LANGUAGE_OSL_1:
         case GPU_LANGUAGE_HLSL_DX11:
         {
             // note: operand order is swapped in HLSL
@@ -995,7 +995,7 @@ std::string GpuShaderText::sign(const std::string & v) const
             kw << "sign(" << v << ");";
             break;
         }
-        case LANGUAGE_OSL:
+        case LANGUAGE_OSL_1:
         {
             // The challenge is only to return a vector4 type instead of a color4.
             kw << "sign(" << float4Const(v + ".rgb.r", v + ".rgb.g",

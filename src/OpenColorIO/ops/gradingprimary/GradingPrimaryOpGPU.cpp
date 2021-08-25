@@ -81,7 +81,7 @@ void AddGPLogProperties(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & s
                         GPProperties & propNames)
 {
     auto prop = gpData->getDynamicPropertyInternal();
-    if (gpData->isDynamic() && shaderCreator->getLanguage() != LANGUAGE_OSL)
+    if (gpData->isDynamic() && shaderCreator->getLanguage() != LANGUAGE_OSL_1)
     {
         // Build names. No need to add an index to the name to avoid collisions as the dynamic
         // properties are unique.
@@ -149,7 +149,7 @@ void AddGPLogProperties(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & s
         st.declareVar(propNames.clampWhite, static_cast<float>(value.m_clampWhite));
         st.declareVar(propNames.saturation, static_cast<float>(value.m_saturation));
 
-        if (shaderCreator->getLanguage() == LANGUAGE_OSL && prop->isDynamic())
+        if (shaderCreator->getLanguage() == LANGUAGE_OSL_1 && prop->isDynamic())
         {
             std::string msg("The dynamic properties are not yet supported by the 'Open Shading language"\
                             " (OSL)' translation: The '");

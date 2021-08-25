@@ -91,7 +91,7 @@ void AddGTProperties(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & st,
     static const std::string opPrefix{ "grading_tone" };
 
     auto prop = gtData->getDynamicPropertyInternal();
-    if (gtData->isDynamic() && shaderCreator->getLanguage() != LANGUAGE_OSL)
+    if (gtData->isDynamic() && shaderCreator->getLanguage() != LANGUAGE_OSL_1)
     {
         // Build names. No need to add an index to the name to avoid collisions as the dynamic
         // properties are unique.
@@ -259,7 +259,7 @@ void AddGTProperties(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & st,
 
         st.declareVar(propNames.sContrast, static_cast<float>(value.m_scontrast));
 
-        if (shaderCreator->getLanguage() == LANGUAGE_OSL && prop->isDynamic())
+        if (shaderCreator->getLanguage() == LANGUAGE_OSL_1 && prop->isDynamic())
         {
             std::string msg("The dynamic properties are not yet supported by the 'Open Shading language"\
                             " (OSL)' translation: The '");

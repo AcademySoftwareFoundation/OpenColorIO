@@ -40,7 +40,7 @@ std::string AddProperty(GpuShaderCreatorRcPtr & shaderCreator,
 {
     std::string finalName;
 
-    if(prop->isDynamic() && shaderCreator->getLanguage() != LANGUAGE_OSL)
+    if(prop->isDynamic() && shaderCreator->getLanguage() != LANGUAGE_OSL_1)
     {
         // Build the name for the uniform. The same type of property should give the same name, so
         // that uniform is declared only once, but multiple instances of the shader code can
@@ -64,7 +64,7 @@ std::string AddProperty(GpuShaderCreatorRcPtr & shaderCreator,
         finalName = name;
         st.declareVar(finalName, (float)prop->getValue());
 
-        if (shaderCreator->getLanguage() == LANGUAGE_OSL && prop->isDynamic())
+        if (shaderCreator->getLanguage() == LANGUAGE_OSL_1 && prop->isDynamic())
         {
             std::string msg("The dynamic properties are not yet supported by the 'Open Shading language"\
                             " (OSL)' translation: The '");

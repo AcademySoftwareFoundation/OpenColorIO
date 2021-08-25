@@ -140,7 +140,7 @@ void SetGCProperties(GpuShaderCreatorRcPtr & shaderCreator, bool dynamic, GCProp
 {
     static const std::string opPrefix{ "grading_rgbcurve" };
 
-    if (dynamic && shaderCreator->getLanguage() != LANGUAGE_OSL)
+    if (dynamic && shaderCreator->getLanguage() != LANGUAGE_OSL_1)
     {
         // If there are several dynamic ops, they will use the same names for uniforms.
         propNames.m_knotsOffsets = BuildResourceName(shaderCreator, opPrefix,
@@ -169,7 +169,7 @@ void SetGCProperties(GpuShaderCreatorRcPtr & shaderCreator, bool dynamic, GCProp
         propNames.m_eval = BuildResourceNameIndexed(shaderCreator, opPrefix,
                                                     propNames.m_eval, resIndex);
 
-        if (shaderCreator->getLanguage() == LANGUAGE_OSL && dynamic)
+        if (shaderCreator->getLanguage() == LANGUAGE_OSL_1 && dynamic)
         {
             std::string msg("The dynamic properties are not yet supported by the 'Open Shading language"\
                             " (OSL)' translation: The '");
@@ -223,7 +223,7 @@ void AddCurveEvalMethodTextToShaderProgram(GpuShaderCreatorRcPtr & shaderCreator
 
     // Dynamic version uses uniforms declared globaly. Non-dynamic version declares local
     // variables in the op specific helper function.
-    if (!gcData->isDynamic() || shaderCreator->getLanguage() == LANGUAGE_OSL)
+    if (!gcData->isDynamic() || shaderCreator->getLanguage() == LANGUAGE_OSL_1)
     {
         auto propGC = gcData->getDynamicPropertyInternal();
 
@@ -236,7 +236,7 @@ void AddCurveEvalMethodTextToShaderProgram(GpuShaderCreatorRcPtr & shaderCreator
     }
 
     st.newLine() << "";
-    if (shaderCreator->getLanguage() == LANGUAGE_OSL)
+    if (shaderCreator->getLanguage() == LANGUAGE_OSL_1)
     {
         st.newLine() << st.floatKeyword() << " " << props.m_eval << "(int curveIdx, float x)";
     }

@@ -296,7 +296,7 @@ void GpuShaderCreator::createShaderText(const char * shaderDeclarations,
 
 void GpuShaderCreator::finalize()
 {
-    if (getLanguage() == LANGUAGE_OSL)
+    if (getLanguage() == LANGUAGE_OSL_1)
     {
         GpuShaderText kw(getLanguage());
 
@@ -380,16 +380,15 @@ void GpuShaderCreator::finalize()
 
         const std::string str = kw.string() + getImpl()->m_declarations;
         getImpl()->m_declarations = str;
-    }
 
-    if (getLanguage() == LANGUAGE_OSL)
-    {
-        GpuShaderText kw(getLanguage());
-        kw.newLine() << "";
-        kw.newLine() << "outColor = " << getFunctionName() << "(inColor);";
-        kw.newLine() << "}";
+        // Change the footer part.
 
-        getImpl()->m_functionFooter += kw.string();
+        GpuShaderText kw1(getLanguage());
+        kw1.newLine() << "";
+        kw1.newLine() << "outColor = " << getFunctionName() << "(inColor);";
+        kw1.newLine() << "}";
+
+        getImpl()->m_functionFooter += kw1.string();
     }
 
 
