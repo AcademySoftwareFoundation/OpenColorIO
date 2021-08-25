@@ -7,7 +7,7 @@ set -ex
 DOXYGEN_VERSION="$1"
 
 if [ "$DOXYGEN_VERSION" == "latest" ]; then
-    sudo yum install doxygen
+    yum install -y doxygen
 else
-    sudo yum install doxygen-${DOXYGEN_VERSION}
+    yum install -y doxygen-${DOXYGEN_VERSION}
 fi

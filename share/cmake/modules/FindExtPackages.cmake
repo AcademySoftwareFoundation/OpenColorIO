@@ -97,7 +97,12 @@ if(OCIO_BUILD_PYTHON OR OCIO_BUILD_DOCS)
     # and referenced throughout the project.
 
     set(_Python_COMPONENTS Interpreter)
-    if(OCIO_BUILD_PYTHON)
+
+    # Support building on manylinux docker images.
+    # https://pybind11.readthedocs.io/en/stable/compiling.html#findpython-mode
+    if(OCIO_BUILD_PYTHON AND ${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.18.0")
+        list(APPEND _Python_COMPONENTS Development.Module)
+    elseif(OCIO_BUILD_PYTHON)
         list(APPEND _Python_COMPONENTS Development)
     endif()
 

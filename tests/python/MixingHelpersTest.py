@@ -10,9 +10,7 @@ from UnitTestUtils import SAMPLE_CONFIG
 
 def test_percent_1000(a, b):
     # Helper function to test sliders.
-    if (a == (int)(100000 * b)):
-        return True
-    return False
+    return abs(a - int(100000 * b)) <= 1
 
 class MixingHelpersTest(unittest.TestCase):
 
@@ -28,7 +26,7 @@ class MixingHelpersTest(unittest.TestCase):
         """
         mix = OCIO.MixingColorSpaceManager(self.cfg)
 
-        self.assertEqual(mix.getSelectedMixingEncodingIdx(), 0);
+        self.assertEqual(mix.getSelectedMixingEncodingIdx(), 0)
         encodings = mix.getMixingEncodings()
         self.assertEqual(len(encodings), 2)
         self.assertEqual(encodings[0], 'RGB')
@@ -64,7 +62,7 @@ class MixingHelpersTest(unittest.TestCase):
         """
         mix = OCIO.MixingColorSpaceManager(self.cfg)
 
-        self.assertEqual(mix.getSelectedMixingSpaceIdx(), 0);
+        self.assertEqual(mix.getSelectedMixingSpaceIdx(), 0)
         mixSpaces = mix.getMixingSpaces()
         self.assertEqual(len(mixSpaces), 2)
         self.assertEqual(mixSpaces[0], 'Rendering Space')
@@ -253,8 +251,8 @@ class MixingHelpersTest(unittest.TestCase):
         mix.setSelectedMixingSpaceIdx(0) # i.e. Rendering Space
         self.assertEqual(mix.getSelectedMixingSpaceIdx(), 0)
 
-        slider.setSliderMinEdge(0.0);
-        slider.setSliderMaxEdge(1.0);
+        slider.setSliderMinEdge(0.0)
+        slider.setSliderMaxEdge(1.0)
 
         self.assertTrue(test_percent_1000(    0, slider.getSliderMinEdge()))
         self.assertTrue(test_percent_1000(83386, slider.getSliderMaxEdge()))

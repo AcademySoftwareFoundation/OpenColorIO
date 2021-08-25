@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright Contributors to the OpenColorIO Project.
 
+import os
 import unittest
 
 import PyOpenColorIO as OCIO
@@ -194,7 +195,7 @@ class FileTransformTest(unittest.TestCase, TransformsBaseTest):
         """
 
         config = OCIO.Config.CreateRaw()
-        test_file = '%s/lut1d_1.spi1d' % TEST_DATAFILES_DIR
+        test_file = os.path.join(TEST_DATAFILES_DIR, 'lut1d_1.spi1d')
         file_tr = OCIO.FileTransform(src=test_file)
         processor = config.getProcessor(file_tr)
         # INTERP_UNKNOWN will be ignored by the LUT and a warning will be logged.
