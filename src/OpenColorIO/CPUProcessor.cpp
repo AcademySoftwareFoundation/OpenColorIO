@@ -278,24 +278,12 @@ void FinalizeOpsForCPU(OpRcPtrVec & ops, const OpRcPtrVec & rawOps,
         ops.optimizeForBitdepth(in, out, oFlags);
     }
 
+    // The previous code could change the list of ops so an explicit check to empty is still needed.
     if(ops.empty())
     {
-        // Support an empty list.
-
-        const double scale = GetBitDepthMaxValue(out) / GetBitDepthMaxValue(in);
-
-        if(scale==1.0f)
-        {
-            // Needs at least one op (even an identity one) as the input
-            // and output buffers could be different.
-            CreateIdentityMatrixOp(ops);
-        }
-        else
-        {
-            // Note: CreateScaleOp will not add an op if scale == 1.
-            const double scale4[4] = {scale, scale, scale, scale};
-            CreateScaleOp(ops, scale4, TRANSFORM_DIR_FORWARD);
-        }
+        // Needs at least one op (even an identity one) as the input and output buffers could be
+        // different.
+        CreateIdentityMatrixOp(ops);
     }
 
     if (!((oFlags & OPTIMIZATION_NO_DYNAMIC_PROPERTIES) == OPTIMIZATION_NO_DYNAMIC_PROPERTIES))
@@ -309,6 +297,8 @@ void CPUProcessor::Impl::finalize(const OpRcPtrVec & rawOps,
                                   OptimizationFlags oFlags)
 {
     AutoMutex lock(m_mutex);
+
+    // Get the ops of the color transformation without the bit-depth adjustments.
 
     OpRcPtrVec ops;
     FinalizeOpsForCPU(ops, rawOps, in, out, oFlags);
