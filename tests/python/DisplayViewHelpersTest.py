@@ -81,7 +81,7 @@ class DisplayViewHelpersTest(unittest.TestCase):
         """
         Test the AddDisplayView() and RemoveDisplayView() functions.
         """
-        filePath = '%s/lut1d_green.ctf' % TEST_DATAFILES_DIR
+        filePath = os.path.join(TEST_DATAFILES_DIR, 'lut1d_green.ctf')
 
         self.assertEqual(len(self.cfg.getViews('DISP_1')), 3);
 

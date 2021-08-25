@@ -108,6 +108,8 @@ set(SOURCES
 	PyViewTransform.cpp
 )
 
+# Reason not to use pybind11_add_module ?
+# https://pybind11.readthedocs.io/en/stable/compiling.html#pybind11-add-module
 add_library(PyOpenColorIO MODULE ${SOURCES})
 
 if(OCIO_BUILD_DOCS)
