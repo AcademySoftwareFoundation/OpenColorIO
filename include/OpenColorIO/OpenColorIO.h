@@ -868,7 +868,7 @@ public:
      *    values are typically different for each colorspace, and the
      *    application of them may be nonsensical depending on the
      *    intensity coding anyways). Thus, the 'right' answer is to make
-     *    these functions on the Config class. However, it's
+     *    these functions on the ColorSpace class. However, it's
      *    often useful to have a config-wide default so here it is. We will
      *    add the colorspace specific luma call if/when another client is
      *    interesting in using it.

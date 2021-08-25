@@ -6,4 +6,4 @@ set -ex
 
 HERE=$(dirname $0)
 
-sudo pip install -r $HERE/../../../../../tests/python/requirements.txt
+pip install -r $HERE/../../../../../tests/python/requirements.txt

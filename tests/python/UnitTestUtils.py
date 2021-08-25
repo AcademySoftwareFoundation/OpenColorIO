@@ -76,7 +76,7 @@ else:  # Python 2
 # -----------------------------------------------------------------------------
 # Test data
 # -----------------------------------------------------------------------------
-TEST_DATAFILES_DIR = os.path.join(os.getenv('BUILD_LOCATION'), 'testdata')
+TEST_DATAFILES_DIR = os.getenv('TEST_DATAFILES_DIR')
 
 TEST_NAMES = ['default_name', 'HelloWorld', 'Simple Colourspace', 'a1b2c3d4', 
               'RGBA.1&2*3#']
