@@ -21,7 +21,7 @@ namespace
 class MyOSLShaderCreator : public OCIO::GpuShaderCreator
 {
 public:
-    static OCIO::GpuShaderCreatorRcPtr Create(const GPUTestRcPtr & test)
+    static OCIO::GpuShaderCreatorRcPtr Create(const OSLDataRcPtr & test)
     {
         OCIO::GpuShaderCreatorRcPtr ptr(new MyOSLShaderCreator(test));
         ptr->setLanguage(OCIO::LANGUAGE_OSL_1);
@@ -100,21 +100,50 @@ public:
         m_shaderCode += shaderFunctionHeader;
         m_shaderCode += shaderFunctionBody;
         m_shaderCode += shaderFunctionFooter;
-
-        // TODO: OSL: Change the shader code.
-
     }
 
 protected:
-    MyOSLShaderCreator(const GPUTestRcPtr & test) : OCIO::GpuShaderCreator(), m_test(test) {}
+    MyOSLShaderCreator(const OSLDataRcPtr & test) : OCIO::GpuShaderCreator(), m_test(test) {}
 
 private:
-    const GPUTestRcPtr m_test;
+    const OSLDataRcPtr m_test;
     std::string m_shaderCode;
 };
 
+class ErrorRecorder final : public OIIO::ErrorHandler
+{
+public:
+    ErrorRecorder() : ErrorHandler() {}
+ 
+    virtual void operator()(int errcode, const std::string& msg)
+    {
+        if (errcode >= EH_ERROR) {
+            if (m_errormessage.size()
+                && m_errormessage[m_errormessage.length() - 1] != '\n')
+                m_errormessage += '\n';
+            m_errormessage += msg;
+        }
+    }
 
-typedef std::vector<GPUTestRcPtr> UnitTests;
+    bool haserror() const { return m_errormessage.size(); }
+ 
+    std::string geterror(bool erase = true)
+    {
+        std::string s;
+        if (erase)
+            std::swap(s, m_errormessage);
+        else
+            s = m_errormessage;
+        return s;
+    }
+
+private:
+    std::string m_errormessage;
+} g_errhandler;
+
+
+
+typedef std::vector<OSLDataRcPtr> UnitTests;
 
 UnitTests & GetUnitTests()
 {
@@ -122,7 +151,7 @@ UnitTests & GetUnitTests()
     return ocio_osl_unit_tests;
 }
 
-void AddUnitTest(const GPUTestRcPtr & test)
+void AddUnitTest(const OSLDataRcPtr & test)
 {
     GetUnitTests().push_back(test);
 }
@@ -130,9 +159,9 @@ void AddUnitTest(const GPUTestRcPtr & test)
 } //anon namespace
 
 
-GPUTestRcPtr GPUTest::Create()
+OSLDataRcPtr OSLData::Create()
 { 
-    GPUTestRcPtr ptr = std::make_shared<GPUTest>(); 
+    OSLDataRcPtr ptr = std::make_shared<OSLData>(); 
     AddUnitTest(ptr);
     return ptr;
 }
@@ -150,18 +179,26 @@ int main(int, const char **)
 
     for (const auto & test : GetUnitTests())
     {
+        constexpr size_t maxCharToDisplay = 59;
+        if (test->m_name.size() > maxCharToDisplay)
+        {
+            test->m_name.resize(maxCharToDisplay);
+        }
+
         std::cerr << "["
                   << std::right << std::setw(3)
                   << (noTest+1) << "/" << GetUnitTests().size() << "] ["
-                  << std::left
+                  << std::left << std::setw(maxCharToDisplay+1)
                   << test->m_name 
-                  << " = " << test->m_inValue << " -> " << test->m_outValue << "] - ";
+                  << "] - ";
 
         OSL::RendererServices * renderer = new OSL::RendererServices();
         OIIO::TextureSystem * texturesys = OIIO::TextureSystem::create();
 
         OSL::ShadingSystem * shadingsys = new OSL::ShadingSystem(renderer, texturesys);
         OSL::ShaderGroupRef shadergroup = shadingsys->ShaderGroupBegin();
+        
+        // TODO: OSL: Create the OSL group!
 
         try
         {
@@ -172,7 +209,7 @@ int main(int, const char **)
             OCIO::GpuShaderCreatorRcPtr shaderDesc = MyOSLShaderCreator::Create(test);
             gpu->extractGpuShaderInfo(shaderDesc);
 
-            OSL::OSLCompiler compiler;
+            OSL::OSLCompiler compiler(&g_errhandler);
             const std::string oslBuffer
                 = dynamic_cast<MyOSLShaderCreator*>(shaderDesc.get())->getShaderCode();
             std::string osoBuffer;
@@ -181,6 +218,20 @@ int main(int, const char **)
             {
                 failures++;
                 std::cerr << "FAILED\n";
+
+                std::string errormessage;
+
+                if (g_errhandler.haserror())
+                {
+                    errormessage = g_errhandler.geterror();
+                }
+                else
+                {
+                    errormessage = "OSL: Could not compile the shader";
+                }
+
+                std::cerr << errormessage << std::endl;
+
                 continue;
             }
 
@@ -188,6 +239,20 @@ int main(int, const char **)
             {
                 failures++;
                 std::cerr << "FAILED\n";
+
+                std::string errormessage;
+
+                if (g_errhandler.haserror())
+                {
+                    errormessage = g_errhandler.geterror();
+                }
+                else
+                {
+                    errormessage = "OSL: Could not load the shader";
+                }
+
+                std::cerr << errormessage << std::endl;
+
                 continue;
             }
 
@@ -195,13 +260,19 @@ int main(int, const char **)
             // TODO: OSL: Add the CPU execution of the shader to validate the processing.
 
 
-            std::cerr << "SUCCESS\n";
+            std::cerr << "PASSED\n";
         }
-        catch(OCIO::Exception & ex)
+        catch(std::exception & ex)
         {
             failures++;
             std::cerr << "FAILED\n";
-            std::cerr << "\t" << ex.what() << std::endl;
+            std::cerr << ex.what() << std::endl;
+        }
+        catch(...)
+        {
+            failures++;
+            std::cerr << "FAILED\n";
+            std::cerr << "Unexpected exception!" << std::endl;
         }
 
         shadergroup.reset();

@@ -2,7 +2,10 @@
 # Copyright Contributors to the OpenColorIO Project.
 
 set(SOURCES
+    ExponentOp_test.cpp
+    FixedFunctionOp_test.cpp
     MatrixOp_test.cpp
+    RangeOp_test.cpp
     UnitTestMain.cpp
 )
 
