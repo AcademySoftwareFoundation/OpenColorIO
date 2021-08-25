@@ -109,6 +109,7 @@ include(CppVersion)
 
 option(BUILD_SHARED_LIBS "Set to OFF to build static libraries" ON)
 option(OCIO_BUILD_APPS "Set to OFF to disable command-line apps" ON)
+option(OCIO_BUILD_OPENFX "Specify whether to build OpenFX plugins" OFF)
 option(OCIO_BUILD_NUKE "Specify whether to build nuke plugins" OFF)
 option(OCIO_BUILD_TESTS "Specify whether to build unittests" ON)
 option(OCIO_BUILD_GPU_TESTS "Specify whether to build gpu unittests" ON)
@@ -130,6 +131,7 @@ option(OCIO_WARNING_AS_ERROR "Set build error level for CI testing" OFF)
 # Optimization / internal linking preferences
 
 option(OCIO_USE_SSE "Specify whether to enable SSE CPU performance optimizations" ON)
+option(OCIO_USE_OPENEXR_HALF "Specify whether to use an OpenEXR/IlmBase install of the Half library (<=v2.5) instead of the newer Imath library (>=v3.0)" OFF)
 
 
 ###############################################################################

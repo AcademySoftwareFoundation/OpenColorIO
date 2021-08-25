@@ -6,10 +6,11 @@ set -ex
 
 OPENEXR_VERSION="$1"
 
-git clone https://github.com/openexr/openexr.git
+git clone https://github.com/AcademySoftwareFoundation/openexr.git
 cd openexr
 
 if [ "$OPENEXR_VERSION" == "latest" ]; then
+    git checkout release
     LATEST_TAG=$(git describe --abbrev=0 --tags)
     git checkout tags/${LATEST_TAG} -b ${LATEST_TAG}
 else
