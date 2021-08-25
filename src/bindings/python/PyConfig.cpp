@@ -33,7 +33,10 @@ enum ConfigIterator
     IT_NAMED_TRANSFORM_NAME,
     IT_NAMED_TRANSFORM,
     IT_ACTIVE_NAMED_TRANSFORM_NAME,
-    IT_ACTIVE_NAMED_TRANSFORM
+    IT_ACTIVE_NAMED_TRANSFORM,
+    IT_DISPLAY_ALL,
+    IT_DISPLAY_VIEW_TYPE,
+    IT_VIRTUAL_DISPLAY_VIEW,
 };
 
 using EnvironmentVarNameIterator       = PyIterator<ConfigRcPtr, IT_ENVIRONMENT_VAR_NAME>;
@@ -45,16 +48,21 @@ using ColorSpaceNameIterator           = PyIterator<ConfigRcPtr,
 using ColorSpaceIterator               = PyIterator<ConfigRcPtr, 
                                                     IT_COLOR_SPACE, 
                                                     SearchReferenceSpaceType,
-                                                     ColorSpaceVisibility>;
+                                                    ColorSpaceVisibility>;
 using ActiveColorSpaceNameIterator     = PyIterator<ConfigRcPtr, IT_ACTIVE_COLOR_SPACE_NAME>;
 using ActiveColorSpaceIterator         = PyIterator<ConfigRcPtr, IT_ACTIVE_COLOR_SPACE>;
 using RoleNameIterator                 = PyIterator<ConfigRcPtr, IT_ROLE_NAME>;
 using RoleColorSpaceIterator           = PyIterator<ConfigRcPtr, IT_ROLE_COLOR_SPACE>;
 using DisplayIterator                  = PyIterator<ConfigRcPtr, IT_DISPLAY>;
+using DisplayAllIterator               = PyIterator<ConfigRcPtr, IT_DISPLAY_ALL>;
 using SharedViewIterator               = PyIterator<ConfigRcPtr, IT_SHARED_VIEW>;
+using VirtualViewIterator              = PyIterator<ConfigRcPtr, IT_VIRTUAL_DISPLAY_VIEW, 
+                                                    ViewType>;
 using ViewIterator                     = PyIterator<ConfigRcPtr, IT_DISPLAY_VIEW, std::string>;
 using ViewForColorSpaceIterator        = PyIterator<ConfigRcPtr, IT_DISPLAY_VIEW_COLORSPACE,
                                                     std::string, std::string>;
+using ViewForViewTypeIterator          = PyIterator<ConfigRcPtr, IT_DISPLAY_VIEW_TYPE, 
+                                                    ViewType, std::string>;
 using LookNameIterator                 = PyIterator<ConfigRcPtr, IT_LOOK_NAME>;
 using LookIterator                     = PyIterator<ConfigRcPtr, IT_LOOK>;
 using ViewTransformNameIterator        = PyIterator<ConfigRcPtr, IT_VIEW_TRANSFORM_NAME>;
@@ -110,9 +118,17 @@ void bindPyConfig(py::module & m)
         py::class_<DisplayIterator>(
             clsConfig, "DisplayIterator");
 
+    auto clsDisplayAllIterator = 
+        py::class_<DisplayAllIterator>(
+            clsConfig, "DisplayAllIterator");
+
     auto clsSharedViewIterator = 
         py::class_<SharedViewIterator>(
             clsConfig, "SharedViewIterator");
+
+    auto clsVirtualViewIterator = 
+        py::class_<VirtualViewIterator>(
+            clsConfig, "VirtualViewIterator");
 
     auto clsViewIterator = 
         py::class_<ViewIterator>(
@@ -121,6 +137,10 @@ void bindPyConfig(py::module & m)
     auto clsViewForColorSpaceIterator = 
         py::class_<ViewForColorSpaceIterator>(
             clsConfig, "ViewForColorSpaceIterator");
+
+    auto clsViewForViewTypeIterator =
+        py::class_<ViewForViewTypeIterator>(
+            clsConfig, "ViewForViewTypeIterator");
 
     auto clsLookNameIterator = 
         py::class_<LookNameIterator>(
@@ -342,6 +362,10 @@ void bindPyConfig(py::module & m)
             { 
                 return DisplayIterator(self); 
             })
+        .def("getDisplaysAll", [](ConfigRcPtr & self) 
+            { 
+                return DisplayAllIterator(self); 
+            })
         .def("getDefaultView",
              (const char * (Config::*)(const char *) const)
              &Config::getDefaultView, "display"_a, 
@@ -355,6 +379,11 @@ void bindPyConfig(py::module & m)
                  return ViewIterator(self, display);
              },
              "display"_a)
+        .def("getViews", [](ConfigRcPtr & self, ViewType type, const std::string & display)
+             {
+                 return ViewForViewTypeIterator(self, type, display);
+             },
+             "type"_a, "display"_a)
         .def("getViews", [](ConfigRcPtr & self, 
                             const std::string & display, 
                             const std::string & colorSpaceName)
@@ -400,6 +429,59 @@ void bindPyConfig(py::module & m)
              DOC(Config, removeDisplayView))
         .def("clearDisplays", &Config::clearDisplays, 
              DOC(Config, clearDisplays))
+
+        // Virtual Display
+        .def("addVirtualDisplayView", &Config::addVirtualDisplayView, 
+             "view"_a, "viewTransformName"_a, "colorSpaceName"_a, 
+             "looks"_a = "",
+             "ruleName"_a = "", 
+             "description"_a = "", 
+             DOC(Config, addVirtualDisplayView))
+        .def("addVirtualDisplaySharedView", &Config::addVirtualDisplaySharedView, "sharedView"_a,
+             DOC(Config, addVirtualDisplaySharedView))
+        .def("getVirtualDisplayViews", [](ConfigRcPtr & self, ViewType type)
+             {
+                 return VirtualViewIterator(self, type);
+             },
+             "display"_a)
+        .def("getVirtualDisplayViewTransformName", &Config::getVirtualDisplayViewTransformName, 
+             "view"_a,
+             DOC(Config, getVirtualDisplayViewTransformName))
+        .def("getVirtualDisplayViewColorSpaceName", &Config::getVirtualDisplayViewColorSpaceName, 
+             "view"_a,
+             DOC(Config, getVirtualDisplayViewColorSpaceName))
+        .def("getVirtualDisplayViewLooks", &Config::getVirtualDisplayViewLooks, "view"_a,
+             DOC(Config, getVirtualDisplayViewLooks))
+        .def("getVirtualDisplayViewRule", &Config::getVirtualDisplayViewRule, "view"_a,
+             DOC(Config, getVirtualDisplayViewRule))
+        .def("getVirtualDisplayViewDescription", &Config::getVirtualDisplayViewDescription, 
+             "view"_a,
+             DOC(Config, getVirtualDisplayViewDescription))
+        .def("removeVirtualDisplayView", &Config::removeVirtualDisplayView, "view"_a,
+             DOC(Config, removeVirtualDisplayView))
+        .def("clearVirtualDisplay", &Config::clearVirtualDisplay,
+             DOC(Config, clearVirtualDisplay))
+        .def("instantiateDisplayFromMonitorName", &Config::instantiateDisplayFromMonitorName, 
+             "monitorName"_a,
+             DOC(Config, instantiateDisplayFromMonitorName))
+        .def("instantiateDisplayFromICCProfile", &Config::instantiateDisplayFromICCProfile, 
+             "ICCProfileFilepath"_a,
+             DOC(Config, instantiateDisplayFromICCProfile))
+        .def("isDisplayTemporary", [](ConfigRcPtr & self, const std::string & display) -> bool
+             {
+                 for (int i = 0; i < self->getNumDisplaysAll(); i++)
+                 {
+                     std::string other(self->getDisplayAll(i));
+                     if (StringUtils::Compare(display, other))
+                     {
+                         return self->isDisplayTemporary(i);
+                     }
+                 }
+                 return false;
+             },
+             "display"_a)
+
+        // Active Displays and Views
         .def("setActiveDisplays", &Config::setActiveDisplays, "displays"_a, 
              DOC(Config, setActiveDisplays))
         .def("getActiveDisplays", &Config::getActiveDisplays, 
@@ -850,6 +932,20 @@ void bindPyConfig(py::module & m)
                 return it.m_obj->getDisplay(i);
             });
 
+    clsDisplayAllIterator
+        .def("__len__", [](DisplayAllIterator & it) { return it.m_obj->getNumDisplaysAll(); })
+        .def("__getitem__", [](DisplayAllIterator & it, int i) 
+            { 
+                it.checkIndex(i, it.m_obj->getNumDisplaysAll());
+                return it.m_obj->getDisplayAll(i);
+            })
+        .def("__iter__", [](DisplayAllIterator & it) -> DisplayAllIterator & { return it; })
+        .def("__next__", [](DisplayAllIterator & it)
+            {
+                int i = it.nextIndex(it.m_obj->getNumDisplaysAll());
+                return it.m_obj->getDisplayAll(i);
+            });
+
     clsSharedViewIterator
         .def("__len__", [](SharedViewIterator & it) { return it.m_obj->getNumViews(VIEW_SHARED,
                                                                                    nullptr); })
@@ -863,6 +959,23 @@ void bindPyConfig(py::module & m)
             {
                 int i = it.nextIndex(it.m_obj->getNumViews(VIEW_SHARED, nullptr));
                 return it.m_obj->getView(VIEW_SHARED, nullptr, i);
+            });
+
+    clsVirtualViewIterator
+        .def("__len__", [](VirtualViewIterator & it)
+            { 
+                return it.m_obj->getVirtualDisplayNumViews(std::get<0>(it.m_args)); 
+            })
+        .def("__getitem__", [](VirtualViewIterator & it, int i)
+            { 
+                it.checkIndex(i, it.m_obj->getVirtualDisplayNumViews(std::get<0>(it.m_args)));
+                return it.m_obj->getVirtualDisplayView(std::get<0>(it.m_args), i);
+            })
+        .def("__iter__", [](VirtualViewIterator & it) -> VirtualViewIterator & { return it; })
+        .def("__next__", [](VirtualViewIterator & it)
+            {
+                int i = it.nextIndex(it.m_obj->getVirtualDisplayNumViews(std::get<0>(it.m_args)));
+                return it.m_obj->getVirtualDisplayView(std::get<0>(it.m_args), i);
             });
 
     clsViewIterator
@@ -891,12 +1004,38 @@ void bindPyConfig(py::module & m)
                 return it.m_obj->getView(std::get<0>(it.m_args).c_str(),
                                          std::get<1>(it.m_args).c_str(), i);
             })
-        .def("__iter__", [](ViewForColorSpaceIterator & it) -> ViewForColorSpaceIterator & { return it; })
+        .def("__iter__", [](ViewForColorSpaceIterator & it) -> ViewForColorSpaceIterator & 
+            { 
+                return it; 
+            })
         .def("__next__", [](ViewForColorSpaceIterator & it)
             {
                 int i = it.nextIndex(it.m_obj->getNumViews(std::get<0>(it.m_args).c_str(),
                                                            std::get<1>(it.m_args).c_str()));
                 return it.m_obj->getView(std::get<0>(it.m_args).c_str(),
+                                         std::get<1>(it.m_args).c_str(), i);
+            });
+
+    clsViewForViewTypeIterator
+        .def("__len__", [](ViewForViewTypeIterator & it)
+                        { return it.m_obj->getNumViews(std::get<0>(it.m_args),
+                                                       std::get<1>(it.m_args).c_str()); })
+        .def("__getitem__", [](ViewForViewTypeIterator & it, int i)
+            { 
+                it.checkIndex(i, it.m_obj->getNumViews(std::get<0>(it.m_args),
+                                                       std::get<1>(it.m_args).c_str()));
+                return it.m_obj->getView(std::get<0>(it.m_args),
+                                         std::get<1>(it.m_args).c_str(), i);
+            })
+        .def("__iter__", [](ViewForViewTypeIterator & it) -> ViewForViewTypeIterator & 
+            { 
+                return it; 
+            })
+        .def("__next__", [](ViewForViewTypeIterator & it)
+            {
+                int i = it.nextIndex(it.m_obj->getNumViews(std::get<0>(it.m_args),
+                                                           std::get<1>(it.m_args).c_str()));
+                return it.m_obj->getView(std::get<0>(it.m_args),
                                          std::get<1>(it.m_args).c_str(), i);
             });
 
