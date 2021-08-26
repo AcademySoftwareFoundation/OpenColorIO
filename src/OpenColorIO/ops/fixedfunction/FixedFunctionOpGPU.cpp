@@ -277,9 +277,9 @@ void Add_GamutComp_13_Shader(GpuShaderText & ss,
     const char * pix = sc->getPixelName();
 
     // Achromatic axis
-    ss.newLine() << ss.floatDecl("ach") << " = max( " << pix << ".r, max( " << pix << ".g, " << pix << ".b ) );";
+    ss.newLine() << ss.floatDecl("ach") << " = max( " << pix << ".rgb.r, max( " << pix << ".rgb.g, " << pix << ".rgb.b ) );";
 
-    ss.newLine() << "if ( ach != 0.0f )";
+    ss.newLine() << "if ( ach != 0. )";
     ss.newLine() << "{";
     ss.indent();
 

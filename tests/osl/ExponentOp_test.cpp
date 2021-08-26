@@ -10,9 +10,8 @@ namespace OCIO = OCIO_NAMESPACE;
 
 OCIO_OSL_TEST(Exponent, value)
 {
-    m_data->m_inValue   = OSL::Vec4(0.1, 0.3, 0.9, 0.5);
-    m_data->m_outValue  = OSL::Vec4(0.0630957261, 0.209053621,
-                                    0.862858355, 0.353553385);
+    m_data->m_inValue   = OSL::Vec4(0.1,          0.3,         0.9,         0.5);
+    m_data->m_outValue  = OSL::Vec4(0.0630957261, 0.209053621, 0.862858355, 0.353553385);
 
     OCIO::ExponentTransformRcPtr exp = OCIO::ExponentTransform::Create();
 

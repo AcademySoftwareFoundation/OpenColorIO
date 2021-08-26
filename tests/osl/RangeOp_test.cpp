@@ -37,7 +37,7 @@ OCIO_OSL_TEST(Range, scale)
 OCIO_OSL_TEST(Range, scale_and_clamp)
 {
     m_data->m_inValue   = OSL::Vec4(-0.1, 0.2, 1.6, 0.0);
-    m_data->m_outValue  = OSL::Vec4(0.2, 0.4, 1.2, 0.0);
+    m_data->m_outValue  = OSL::Vec4( 0.2, 0.4, 1.2, 0.0);
 
     OCIO::RangeTransformRcPtr range = OCIO::RangeTransform::Create();
     range->setMinInValue(0.);
