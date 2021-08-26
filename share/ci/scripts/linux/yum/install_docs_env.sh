@@ -7,4 +7,4 @@ set -ex
 HERE=$(dirname $0)
 
 bash $HERE/install_doxygen.sh latest
-sudo pip install -r $HERE/../../../../../docs/requirements.txt
+pip install -r $HERE/../../../../../docs/requirements.txt
