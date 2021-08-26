@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright Contributors to the OpenColorIO Project.
 
+import os
 import unittest
 import PyOpenColorIO as OCIO
 
@@ -143,7 +144,7 @@ class ProcessorTest(unittest.TestCase):
         # Test FormatMetadata related functions.
 
         cfg = OCIO.Config.CreateRaw()
-        test_file = '%s/clf/xyz_to_rgb.clf' % TEST_DATAFILES_DIR
+        test_file = os.path.join(TEST_DATAFILES_DIR, 'clf', 'xyz_to_rgb.clf')
         file_tr = OCIO.FileTransform(src=test_file)
         proc = cfg.getProcessor(file_tr)
         # Remove the no-ops, since they are useless here.

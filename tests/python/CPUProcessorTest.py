@@ -84,7 +84,7 @@ class CPUProcessorTest(unittest.TestCase):
 
             cls.float_rgb_list = (
                 [-65504.0] + 
-                list(reversed(log_range)) + 
+                [-x for x in reversed(log_range)] +
                 [0.0] + 
                 log_range + 
                 [65504.0]

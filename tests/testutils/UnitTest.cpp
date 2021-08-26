@@ -137,7 +137,7 @@ int UnitTestMain(int argc, const char ** argv)
             name.resize(maxCharToDisplay);
         }
 
-        std::cerr << "[" << std::right << std::setw(3)
+        std::cerr << "[" << std::right << std::setw(4)
                   << (index+1) << "/" << numTests << "] ["
                   << std::left << std::setw(maxCharToDisplay+1)
                   << name << "] - "

@@ -8363,3 +8363,96 @@ colorspaces:
         OCIO_CHECK_EQUAL((uint32_t)outCol2[2], 128);
     }
 }
+
+OCIO_ADD_TEST(Config, look_is_noop)
+{
+    // Test that the processor creation from a color space to a (dislay, view) pair succeeds even
+    // if the look transformation is a 'no-op'.
+
+    {
+        static constexpr char CONFIG[]{ R"(ocio_profile_version: 1
+roles:
+  scene_linear: cs
+
+displays:
+  disp1:
+    - !<View>
+      name: view1
+      colorspace: cs
+      looks: cdl
+
+looks:
+  - !<Look>
+    name: cdl
+    process_space: cs
+    transform: !<CDLTransform> {}
+
+colorspaces:
+  - !<ColorSpace>
+    name: cs
+)" };
+
+        std::istringstream iss;
+        iss.str(CONFIG);
+
+        OCIO::ConstConfigRcPtr config;
+        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(iss));
+        OCIO_CHECK_NO_THROW(config->validate());
+
+        OCIO::ConstProcessorRcPtr proc;
+
+        OCIO_CHECK_NO_THROW(proc = config->getProcessor("cs", "disp1", "view1", OCIO::TRANSFORM_DIR_FORWARD));
+        OCIO_CHECK_ASSERT(proc->isNoOp());
+
+        OCIO_CHECK_NO_THROW(proc = config->getProcessor("cs", "disp1", "view1", OCIO::TRANSFORM_DIR_INVERSE));
+        OCIO_CHECK_ASSERT(proc->isNoOp());
+    }
+
+    {
+        static constexpr char CONFIG[]{ R"(ocio_profile_version: 1
+roles:
+  scene_linear: cs
+
+displays:
+  disp1:
+    - !<View>
+      name: view1
+      colorspace: cs
+      looks: cdl
+
+looks:
+  - !<Look>
+    name: cdl
+    process_space: cs1
+    transform: !<CDLTransform> {}
+
+colorspaces:
+  - !<ColorSpace>
+    name: cs
+  - !<ColorSpace>
+    name: cs1
+    from_reference: !<CDLTransform> {offset: [0.3, 0.3, 0.3]}
+)" };
+
+        std::istringstream iss;
+        iss.str(CONFIG);
+
+        OCIO::ConstConfigRcPtr config;
+        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(iss));
+        OCIO_CHECK_NO_THROW(config->validate());
+
+        OCIO::ConstProcessorRcPtr proc;
+
+        OCIO_CHECK_NO_THROW(proc = config->getProcessor("cs", "disp1", "view1", OCIO::TRANSFORM_DIR_FORWARD));
+        // Because the look process space is not a no-op.
+        OCIO_CHECK_ASSERT(!proc->isNoOp());
+        OCIO_CHECK_NO_THROW(proc = proc->getOptimizedProcessor(OCIO::OPTIMIZATION_DEFAULT));
+        // Because the look process space forward and inverse ops are then optimized.
+        OCIO_CHECK_ASSERT(proc->isNoOp());
+
+        OCIO_CHECK_NO_THROW(proc = config->getProcessor("cs", "disp1", "view1", OCIO::TRANSFORM_DIR_INVERSE));
+        OCIO_CHECK_ASSERT(!proc->isNoOp());
+        OCIO_CHECK_NO_THROW(proc = proc->getOptimizedProcessor(OCIO::OPTIMIZATION_DEFAULT));
+        OCIO_CHECK_ASSERT(proc->isNoOp());
+    }
+}
