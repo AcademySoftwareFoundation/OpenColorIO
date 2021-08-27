@@ -27,6 +27,7 @@ target_include_directories(ociodisplay
 	PRIVATE
 		${GLEW_INCLUDE_DIRS}
 		${GLUT_INCLUDE_DIR}
+		${Half_INCLUDE_DIR}
 		${OPENGL_INCLUDE_DIR}
 )
 target_link_libraries(ociodisplay
