@@ -116,6 +116,7 @@ OCIO_ADD_TEST(DisplayViewHelpers, basic)
                                                            "lin_1", "DISP_1", "VIEW_5",
                                                            OCIO::ConstMatrixTransformRcPtr(),
                                                            OCIO::TRANSFORM_DIR_FORWARD));
+    OCIO_REQUIRE_ASSERT(processor);
 
     OCIO::GroupTransformRcPtr groupTransform;
     OCIO_CHECK_NO_THROW(groupTransform = processor->createGroupTransform());
