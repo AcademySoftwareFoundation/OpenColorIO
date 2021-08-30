@@ -20,6 +20,11 @@ void GetRangeGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator, ConstRangeO
     ss.newLine() << "";
     ss.newLine() << "// Add Range processing";
     ss.newLine() << "";
+    ss.newLine() << "{";
+    ss.indent();
+
+    const std::string pix(shaderCreator->getPixelName());
+    const std::string pixrgb = pix + std::string(".rgb");
 
     if(range->scales())
     {
@@ -33,8 +38,8 @@ void GetRangeGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator, ConstRangeO
                 range->getOffset(),
                 range->getOffset() };
 
-        ss.newLine() << shaderCreator->getPixelName() << ".rgb = "
-                     << shaderCreator->getPixelName() << ".rgb * "
+        ss.newLine() << pixrgb << " = "
+                     << pixrgb << " * "
                      << ss.float3Const(scale[0], scale[1], scale[2])
                      << " + "
                      << ss.float3Const(offset[0], offset[1], offset[2])
@@ -48,12 +53,11 @@ void GetRangeGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator, ConstRangeO
                 range->getMinOutValue(),
                 range->getMinOutValue() };
 
-        ss.newLine() << shaderCreator->getPixelName() << ".rgb = "
+        ss.newLine() << pixrgb << " = "
                      << "max(" << ss.float3Const(lowerBound[0],
                                                  lowerBound[1],
                                                  lowerBound[2]) << ", "
-                     << shaderCreator->getPixelName()
-                     << ".rgb);";
+                               << pixrgb << ");";
     }
 
     if (!range->maxIsEmpty())
@@ -63,14 +67,17 @@ void GetRangeGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator, ConstRangeO
                 range->getMaxOutValue(),
                 range->getMaxOutValue() };
 
-        ss.newLine() << shaderCreator->getPixelName() << ".rgb = "
+        ss.newLine() << pixrgb << " = "
             << "min(" << ss.float3Const(upperBound[0],
                                         upperBound[1],
                                         upperBound[2]) << ", "
-            << shaderCreator->getPixelName()
-            << ".rgb);";
+                      << pixrgb << ");";
     }
 
+    ss.dedent();
+    ss.newLine() << "}";
+
+    ss.dedent();
     shaderCreator->addToFunctionShaderCode(ss.string().c_str());
 }
 

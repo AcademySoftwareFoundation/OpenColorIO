@@ -162,6 +162,7 @@ OCIO::GpuShaderDescRcPtr & OCIOGPUTest::getShaderDesc()
     {
         m_shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
         m_shaderDesc->setLanguage(OCIO::GPU_LANGUAGE_GLSL_1_2);
+        m_shaderDesc->setPixelName("myPixel");
     }
     return m_shaderDesc;
 }
