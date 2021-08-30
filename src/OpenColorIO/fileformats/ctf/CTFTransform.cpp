@@ -245,6 +245,19 @@ CTFVersion GetOpMinimumVersion(const ConstOpDataRcPtr & op)
         break;
     }
     case OpData::FixedFunctionType:
+    {
+        minVersion = CTF_PROCESS_LIST_VERSION_2_0;
+
+        auto ff = OCIO_DYNAMIC_POINTER_CAST<const FixedFunctionOpData>(op);
+        
+        if (ff->getStyle() == FixedFunctionOpData::ACES_GAMUT_COMP_13_FWD 
+                || ff->getStyle() == FixedFunctionOpData::ACES_GAMUT_COMP_13_INV)
+        {
+            minVersion = CTF_PROCESS_LIST_VERSION_2_1;
+        }
+
+        break;
+    }
     case OpData::GradingPrimaryType:
     case OpData::GradingRGBCurveType:
     case OpData::GradingToneType:

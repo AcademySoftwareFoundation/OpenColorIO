@@ -361,7 +361,7 @@ OCIO_ADD_TEST(Config, serialize_group_transform)
     config->serialize(os);
 
     std::string PROFILE_OUT =
-    "ocio_profile_version: 2\n"
+    "ocio_profile_version: 2.1\n"
     "\n"
     "environment:\n"
     "  {}\n"
@@ -434,7 +434,7 @@ OCIO_ADD_TEST(Config, serialize_searchpath)
         config->serialize(os);
 
         std::string PROFILE_OUT =
-            "ocio_profile_version: 2\n"
+            "ocio_profile_version: 2.1\n"
             "\n"
             "environment:\n"
             "  {}\n"
@@ -1675,14 +1675,14 @@ OCIO_ADD_TEST(Config, version)
     }
 
     {
-        OCIO_CHECK_THROW_WHAT(config->setVersion(2, 1), OCIO::Exception,
-                              "The minor version 1 is not supported for major version 2. "
-                              "Maximum minor version is 0");
+        OCIO_CHECK_THROW_WHAT(config->setVersion(2, 2), OCIO::Exception,
+                              "The minor version 2 is not supported for major version 2. "
+                              "Maximum minor version is 1");
 
         OCIO_CHECK_NO_THROW(config->setMajorVersion(2));
-        OCIO_CHECK_THROW_WHAT(config->setMinorVersion(1), OCIO::Exception,
-                              "The minor version 1 is not supported for major version 2. "
-                              "Maximum minor version is 0");
+        OCIO_CHECK_THROW_WHAT(config->setMinorVersion(2), OCIO::Exception,
+                              "The minor version 2 is not supported for major version 2. "
+                              "Maximum minor version is 1");
     }
 
     {
@@ -1714,9 +1714,9 @@ OCIO_ADD_TEST(Config, version_validation)
 
     {
         std::istringstream is;
-        is.str("ocio_profile_version: 2.1\n" + SIMPLE_PROFILE_END);
+        is.str("ocio_profile_version: 2.2\n" + SIMPLE_PROFILE_END);
         OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is), OCIO::Exception,
-                              "The minor version 1 is not supported for major version 2");
+                              "The minor version 2 is not supported for major version 2");
     }
 
     {
@@ -1763,6 +1763,12 @@ const std::string PROFILE_V1 =
 
 const std::string PROFILE_V2 =
     "ocio_profile_version: 2\n"
+    "\n"
+    "environment:\n"
+    "  {}\n";
+
+const std::string PROFILE_V21 =
+    "ocio_profile_version: 2.1\n"
     "\n"
     "environment:\n"
     "  {}\n";
@@ -1859,6 +1865,9 @@ const std::string DEFAULT_RULES =
 
 const std::string PROFILE_V2_START = PROFILE_V2 + SIMPLE_PROFILE_A +
                                      DEFAULT_RULES + SIMPLE_PROFILE_B_V2;
+
+const std::string PROFILE_V21_START = PROFILE_V21 + SIMPLE_PROFILE_A +
+                                      DEFAULT_RULES + SIMPLE_PROFILE_B_V2;
 }
 
 OCIO_ADD_TEST(Config, serialize_colorspace_displayview_transforms)
@@ -4359,8 +4368,6 @@ OCIO_ADD_TEST(Config, fixed_function_serialization)
             "        - !<FixedFunctionTransform> {style: ACES_Glow10, direction: inverse}\n"
             "        - !<FixedFunctionTransform> {style: ACES_DarkToDim10}\n"
             "        - !<FixedFunctionTransform> {style: ACES_DarkToDim10, direction: inverse}\n"
-            "        - !<FixedFunctionTransform> {style: ACES_GamutComp13, params: [1.147, 1.264, 1.312, 0.815, 0.803, 0.88, 1.2]}\n"
-            "        - !<FixedFunctionTransform> {style: ACES_GamutComp13, params: [1.147, 1.264, 1.312, 0.815, 0.803, 0.88, 1.2], direction: inverse}\n"
             "        - !<FixedFunctionTransform> {style: REC2100_Surround, params: [0.75]}\n"
             "        - !<FixedFunctionTransform> {style: REC2100_Surround, params: [0.75], direction: inverse}\n"
             "        - !<FixedFunctionTransform> {style: RGB_TO_HSV}\n"
@@ -4392,6 +4399,46 @@ OCIO_ADD_TEST(Config, fixed_function_serialization)
         const std::string strEnd =
             "    from_scene_reference: !<GroupTransform>\n"
             "      children:\n"
+            "        - !<FixedFunctionTransform> {style: ACES_GamutComp13, params: [1.147, 1.264, 1.312, 0.815, 0.803, 0.88, 1.2]}\n"
+            "        - !<FixedFunctionTransform> {style: ACES_GamutComp13, params: [1.147, 1.264, 1.312, 0.815, 0.803, 0.88, 1.2], direction: inverse}\n";
+
+        const std::string str = PROFILE_V21_START + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+
+        OCIO::ConstConfigRcPtr config;
+        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OCIO_CHECK_NO_THROW(config->validate());
+
+        // Write the config.
+
+        std::stringstream ss;
+        OCIO_CHECK_NO_THROW(ss << *config.get());
+        OCIO_CHECK_EQUAL(ss.str(), str);
+    }
+
+    {
+        const std::string strEnd =
+            "    from_scene_reference: !<GroupTransform>\n"
+            "      children:\n"
+            "        - !<FixedFunctionTransform> {style: ACES_GamutComp13, params: [1.147, 1.264, 1.312, 0.815, 0.803, 0.88, 1.2]}\n"
+            "        - !<FixedFunctionTransform> {style: ACES_GamutComp13, params: [1.147, 1.264, 1.312, 0.815, 0.803, 0.88, 1.2], direction: inverse}\n";
+
+        const std::string str = PROFILE_V2_START + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+
+        OCIO::ConstConfigRcPtr config;
+        OCIO_CHECK_THROW_WHAT(config = OCIO::Config::CreateFromStream(is), OCIO::Exception,
+            "Only config version 2.1 (or higher) can have FixedFunctionTransform style 'ACES_GAMUT_COMP_13'.");
+    }
+
+    {
+        const std::string strEnd =
+            "    from_scene_reference: !<GroupTransform>\n"
+            "      children:\n"
             "        - !<FixedFunctionTransform> {style: ACES_DarkToDim10, params: [0.75]}\n";
 
         const std::string str = PROFILE_V2_START + strEnd;
@@ -4412,6 +4459,22 @@ OCIO_ADD_TEST(Config, fixed_function_serialization)
             "        - !<FixedFunctionTransform> {style: ACES_GamutComp13}\n";
 
         const std::string str = PROFILE_V2_START + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+
+        OCIO::ConstConfigRcPtr config;
+        OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is), OCIO::Exception,
+            "Only config version 2.1 (or higher) can have FixedFunctionTransform style 'ACES_GAMUT_COMP_13'.");
+    }
+
+    {
+        const std::string strEnd =
+            "    from_scene_reference: !<GroupTransform>\n"
+            "      children:\n"
+            "        - !<FixedFunctionTransform> {style: ACES_GamutComp13}\n";
+
+        const std::string str = PROFILE_V21_START + strEnd;
 
         std::istringstream is;
         is.str(str);
@@ -5966,7 +6029,7 @@ OCIO_ADD_TEST(Config, display_view)
 
     std::stringstream os;
     os << *config.get();
-    constexpr char expected[]{ R"(ocio_profile_version: 2
+    constexpr char expected[]{ R"(ocio_profile_version: 2.1
 
 environment:
   {}
