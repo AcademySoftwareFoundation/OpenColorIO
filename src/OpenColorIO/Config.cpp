@@ -1073,7 +1073,7 @@ public:
 
 
 // Instantiate the cache with the right types.
-template class ProcessorCache<std::size_t, ProcessorRcPtr>;
+extern template class ProcessorCache<std::size_t, ProcessorRcPtr>;
 
 
 ///////////////////////////////////////////////////////////////////////////
