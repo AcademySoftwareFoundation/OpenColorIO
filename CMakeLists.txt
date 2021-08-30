@@ -246,6 +246,13 @@ include(FindExtPackages)
 ###############################################################################
 # Progress to other sources
 
+# The presence of OpenImageIO allows additional ocio apps and the OSL translation unit tests
+# to be built.
+
+# OpenImageIO
+# https://github.com/OpenImageIO/oiio
+find_package(OpenImageIO 2.1.9)
+
 add_subdirectory(vendor)
 if(OCIO_BUILD_DOCS)
 	add_subdirectory(docs)
