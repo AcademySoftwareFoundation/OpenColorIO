@@ -6317,7 +6317,7 @@ OCIO_ADD_TEST(CTFTransform, fixed_function_aces_gamut_comp_13_ctf)
     OCIO_CHECK_NO_THROW(WriteGroupCTF(group, outputTransform));
 
     const std::string expected{ R"(<?xml version="1.0" encoding="UTF-8"?>
-<ProcessList version="2" id="UIDFF42">
+<ProcessList version="2.1" id="UIDFF42">
     <FixedFunction inBitDepth="32f" outBitDepth="32f" style="GamutComp13Fwd" params="1.147 1.264 1.312 0.815 0.803 0.88 1.2">
     </FixedFunction>
 </ProcessList>
@@ -6342,7 +6342,7 @@ OCIO_ADD_TEST(CTFTransform, fixed_function_aces_gamut_comp_13_inverse_ctf)
     OCIO_CHECK_NO_THROW(WriteGroupCTF(group, outputTransform));
 
     const std::string expected{ R"(<?xml version="1.0" encoding="UTF-8"?>
-<ProcessList version="2" id="UIDFF42">
+<ProcessList version="2.1" id="UIDFF42">
     <FixedFunction inBitDepth="32f" outBitDepth="32f" style="GamutComp13Rev" params="1.147 1.264 1.312 0.815 0.803 0.88 1.2">
     </FixedFunction>
 </ProcessList>
