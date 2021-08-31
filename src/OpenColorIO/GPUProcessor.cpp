@@ -34,12 +34,21 @@ void WriteShaderHeader(GpuShaderCreatorRcPtr & shaderCreator)
     ss.newLine() << "// Declaration of the OCIO shader function";
     ss.newLine();
 
-    ss.newLine() << ss.float4Keyword() << " " << fcnName
-                 << "(in "  << ss.float4Keyword() << " inPixel)";
-    ss.newLine() << "{";
-    ss.indent();
-    ss.newLine() << ss.float4Keyword() << " "
-                 << shaderCreator->getPixelName() << " = inPixel;";
+    if (shaderCreator->getLanguage() == LANGUAGE_OSL_1)
+    {
+        ss.newLine() << "color4 " << fcnName << "(color4 inPixel)";
+        ss.newLine() << "{";
+        ss.indent();
+        ss.newLine() << "color4 " << shaderCreator->getPixelName() << " = inPixel;";
+    }
+    else
+    {
+        ss.newLine() << ss.float4Keyword() << " " << fcnName 
+                     << "(" << ss.float4Keyword() << " inPixel)";
+        ss.newLine() << "{";
+        ss.indent();
+        ss.newLine() << ss.float4Decl(shaderCreator->getPixelName()) << " = inPixel;";
+    }
 
     shaderCreator->addToFunctionHeaderShaderCode(ss.string().c_str());
 }
