@@ -306,7 +306,7 @@ endif ()
 
 if(MSVC AND BUILD_SHARED_LIBS)
     # Install the pdb file if any.
-    install(FILES $<TARGET_PDB_FILE:${PROJECT_NAME}> DESTINATION bin OPTIONAL)
+    install(FILES $<TARGET_PDB_FILE:${PROJECT_NAME}> DESTINATION ${CMAKE_INSTALL_BINDIR} OPTIONAL)
 endif()
 
 install(TARGETS OpenColorIO
