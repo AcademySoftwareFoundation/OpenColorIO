@@ -222,9 +222,9 @@ target_compile_definitions(PyOpenColorIO
 )
 
 if(WIN32)
-    set(_Python_VARIANT_PATH "lib${LIB_SUFFIX}/site-packages")
+    set(_Python_VARIANT_PATH "${CMAKE_INSTALL_LIBDIR}/site-packages")
 else()
-    set(_Python_VARIANT_PATH "lib${LIB_SUFFIX}/python${Python_VERSION_MAJOR}.${Python_VERSION_MINOR}/site-packages")
+    set(_Python_VARIANT_PATH "${CMAKE_INSTALL_LIBDIR}/python${Python_VERSION_MAJOR}.${Python_VERSION_MINOR}/site-packages")
 endif()
 
 # Create an internal global variable to access it in another scope but not publicly visible
