@@ -7,8 +7,9 @@
 
 #if !defined(_WIN32)
 #include <sstream>
-#include <stdlib.h>
+#include <cstdlib>
 #include <time.h>
+#include <cerrno>
 #endif
 
 #include <OpenColorIO/OpenColorIO.h>
@@ -18,7 +19,7 @@
 namespace OCIO = OCIO_NAMESPACE;
 
 
-// TODO: Make OCIO::Platform::CreateTempFilename() public so it could be used here.
+// TODO: Make OCIO::Platform::CreateTempFile() public so it could be used here.
 
 std::string createTempFile(const std::string& fileExt, const std::string& fileContent)
 {
@@ -34,17 +35,17 @@ std::string createTempFile(const std::string& fileExt, const std::string& fileCo
         throw OCIO::Exception("Could not create a temporary file");
     }
 
-    filename = tmpFilename;
+    filename = tmpFilename[0] == '\\' ? tmpFilename + 1 : tmpFilename;
     filename += fileExt;
 
 #else
 
-    std::stringstream ss;
-    ss << "/tmp/ocio";
-    ss << std::rand();
-    ss << fileExt;
-
-    filename = ss.str();
+    filename = "/tmp/ocio_XXXXXX" + fileExt;
+    
+    if(mkstemps(filename.data(), fileExt.size()) == -1)
+    {
+        throw std::system_error(errno, std::system_category(), "Could not create a temporary file.");
+    }
 
 #endif
 

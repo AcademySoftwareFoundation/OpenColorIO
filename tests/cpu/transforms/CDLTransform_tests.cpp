@@ -210,7 +210,7 @@ struct FileGuard
 {
     explicit FileGuard(unsigned lineNo)
     {
-        OCIO_CHECK_NO_THROW_FROM(m_filename = OCIO::Platform::CreateTempFilename(""), lineNo);
+        OCIO_CHECK_NO_THROW_FROM(m_filename = OCIO::Platform::CreateTempFile(""), lineNo);
     }
     ~FileGuard()
     {

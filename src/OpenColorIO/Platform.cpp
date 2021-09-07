@@ -11,6 +11,9 @@
 
 #ifndef _WIN32
 #include <strings.h>
+#else
+#include <cstdlib>
+#include <cerrno>
 #endif
 
 
@@ -151,22 +154,7 @@ void AlignedFree(void* memBlock)
 #endif
 }
 
-namespace
-{
-
-int GenerateRandomNumber()
-{
-    // Note: Read https://isocpp.org/files/papers/n3551.pdf for details.
-
-    static std::mt19937 engine{};
-    static std::uniform_int_distribution<> dist{};
-
-    return dist(engine);
-}
-
-}
-
-std::string CreateTempFilename(const std::string & filenameExt)
+std::string CreateTempFile(const std::string & filenameExt)
 {
     std::string filename;
 
@@ -180,19 +168,20 @@ std::string CreateTempFilename(const std::string & filenameExt)
         throw Exception("Could not create a temporary file.");
     }
 
-    filename = tmpFilename;
+    filename = tmpFilename[0] == '\\' ? tmpFilename + 1 : tmpFilename;
+    filename += filenameExt;
 
 #else
 
     // Linux flavors must have a /tmp directory.
-    std::stringstream ss;
-    ss << "/tmp/ocio_" << GenerateRandomNumber();
-
-    filename = ss.str();
+    filename = "/tmp/ocio_XXXXXX" + filenameExt;
+    
+    if(mkstemps(filename.data(), filenameExt.size()) == -1)
+    {
+        throw std::system_error(errno, std::system_category(), "Could not create a temporary file.");
+    }
 
 #endif
-
-    filename += filenameExt;
 
     return filename;
 }
