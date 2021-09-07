@@ -59,6 +59,10 @@ find_library ( OPENIMAGEIO_LIBRARY
                NAMES OpenImageIO${OIIO_LIBNAME_SUFFIX}
                HINTS ${OPENIMAGEIO_ROOT_DIR}
                PATH_SUFFIXES lib64 lib )
+find_library ( OPENIMAGEIO_UTIL_LIBRARY
+               NAMES OpenImageIO${OIIO_LIBNAME_SUFFIX}_Util
+               HINTS ${OPENIMAGEIO_ROOT_DIR}
+               PATH_SUFFIXES lib64 lib )
 find_path ( OPENIMAGEIO_INCLUDE_DIR
             NAMES OpenImageIO/imageio.h
             HINTS ${OPENIMAGEIO_ROOT_DIR} )
@@ -112,6 +116,13 @@ if (OpenImageIO_FOUND)
 
         set_property(TARGET OpenImageIO::OpenImageIO APPEND PROPERTY
             IMPORTED_LOCATION "${OPENIMAGEIO_LIBRARIES}")
+    endif ()
+
+    if (NOT TARGET OpenImageIO::OpenImageIO_Util AND EXISTS "${OPENIMAGEIO_UTIL_LIBRARY}")
+        add_library(OpenImageIO::OpenImageIO_Util UNKNOWN IMPORTED)
+        set_target_properties(OpenImageIO::OpenImageIO_Util PROPERTIES
+            IMPORTED_LOCATION "${OPENIMAGEIO_UTIL_LIBRARY}")
+        target_link_libraries(OpenImageIO::OpenImageIO INTERFACE OpenImageIO::OpenImageIO_Util)
     endif ()
 
     if (NOT TARGET OpenImageIO::oiiotool AND EXISTS "${OIIOTOOL_BIN}")
