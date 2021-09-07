@@ -154,7 +154,17 @@ OCIO_ADD_TEST(Platform, create_temp_filename)
     std::set<std::string> uids;
     for (size_t idx=0; idx<TestMax; ++idx)
     {
-        uids.insert(OCIO::Platform::CreateTempFile(""));
+        struct FGuard
+        {
+            ~FGuard()
+            {
+                std::remove(m_filename.c_str());
+            }
+            
+            std::string m_filename;
+        } file{ OCIO::Platform::CreateTempFile("") };
+        
+        uids.insert(file.m_filename);
     }
 
     // Check that it only generates unique random strings.
