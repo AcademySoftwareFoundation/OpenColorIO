@@ -117,7 +117,9 @@ if (OpenImageIO_FOUND)
             IMPORTED_LOCATION "${OPENIMAGEIO_LIBRARIES}")
     endif ()
 
-    if (NOT TARGET OpenImageIO::OpenImageIO_Util AND EXISTS "${OPENIMAGEIO_UTIL_LIBRARY}")
+    # Starting with OIIO v2.3, some utility classes are now only declared in OpenImageIO_Util
+    # (and not in both libraries like in older versions).
+    if (${OPENIMAGEIO_VERSION} VERSION_GREATER_EQUAL "2.3" AND NOT TARGET OpenImageIO::OpenImageIO_Util)
         add_library(OpenImageIO::OpenImageIO_Util UNKNOWN IMPORTED)
         set_target_properties(OpenImageIO::OpenImageIO_Util PROPERTIES
             IMPORTED_LOCATION "${OPENIMAGEIO_UTIL_LIBRARY}")
