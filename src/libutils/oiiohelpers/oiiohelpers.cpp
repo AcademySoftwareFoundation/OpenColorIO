@@ -6,7 +6,6 @@
 
 
 #include "oiiohelpers.h"
-#include "utils/Half.h"
 #include "utils/StringUtils.h"
 
 
