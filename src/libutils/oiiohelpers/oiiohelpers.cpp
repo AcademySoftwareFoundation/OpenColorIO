@@ -18,7 +18,6 @@ BitDepth GetBitDepth(const OIIO::ImageSpec & spec)
     {
         case OIIO::TypeDesc::FLOAT:  return BIT_DEPTH_F32;
         case OIIO::TypeDesc::HALF:   return BIT_DEPTH_F16;
-        case OIIO::TypeDesc::UINT32: return BIT_DEPTH_UINT32;
         case OIIO::TypeDesc::UINT16: return BIT_DEPTH_UINT16;
         case OIIO::TypeDesc::UINT8:  return BIT_DEPTH_UINT8;
     }

@@ -279,7 +279,7 @@ __inline float CalcHueWeight(const float red, const float grn, const float blu,
 {
     // Convert RGB to Yab (luma/chroma).
     const float a = 2.f * red - (grn + blu);
-    static const float sqrt3 = 1.7320508075688772f;
+    static constexpr float sqrt3 = 1.7320508075688772f;
     const float b = sqrt3 * (grn - blu);
 
     const float hue = atan2f(b, a);
@@ -667,7 +667,7 @@ void Renderer_ACES_DarkToDim10_Fwd::apply(const void * inImg, void * outImg, lon
 
         // With the modest 2% ACES surround, this minLum allows the min/max gain
         // applied to dark colors to be about 0.6 to 1.6.
-        constexpr float minLum = 1e-10f;
+        static constexpr float minLum = 1e-10f;
 
         // Calculate luminance assuming input is AP1 RGB.
         const float Y = std::max( minLum, ( 0.27222871678091454f  * red + 
@@ -676,7 +676,7 @@ void Renderer_ACES_DarkToDim10_Fwd::apply(const void * inImg, void * outImg, lon
 
         // TODO: Currently our fast approx. requires SSE registers.
         //       Either make this whole routine SSE or make fast scalar pow.
-        const float Ypow_over_Y = powf(Y, m_gamma);
+        const float Ypow_over_Y = std::pow(Y, m_gamma);
 
         out[0] = red * Ypow_over_Y;
         out[1] = grn * Ypow_over_Y;

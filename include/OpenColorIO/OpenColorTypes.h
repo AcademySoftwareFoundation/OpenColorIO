@@ -409,7 +409,7 @@ enum BitDepth
     BIT_DEPTH_UINT12,
     BIT_DEPTH_UINT14,
     BIT_DEPTH_UINT16,
-    BIT_DEPTH_UINT32,
+    BIT_DEPTH_UINT32, ///< Here for historical reason but that's not supported.
     BIT_DEPTH_F16,
     BIT_DEPTH_F32
 };
