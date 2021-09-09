@@ -40,5 +40,5 @@ target_link_libraries(ociobakelut
 )
 
 install(TARGETS ociobakelut
-    RUNTIME DESTINATION bin
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )

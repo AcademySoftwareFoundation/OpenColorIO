@@ -45,5 +45,5 @@ target_link_libraries(ociodisplay
 		OpenImageIO::OpenImageIO
 )
 install(TARGETS ociodisplay
-    RUNTIME DESTINATION bin
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )

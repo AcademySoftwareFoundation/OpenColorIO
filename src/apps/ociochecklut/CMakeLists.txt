@@ -36,5 +36,5 @@ target_link_libraries(ociochecklut
 )
 
 install(TARGETS ociochecklut
-    RUNTIME DESTINATION bin
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
