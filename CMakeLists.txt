@@ -315,3 +315,12 @@ install(
     FILES "${OCIO_PROJECT_CONFIG}" "${OCIO_VERSION_CONFIG}"
     DESTINATION "${OCIO_CONFIG_INSTALL_DIR}"
 )
+
+
+###############################################################################
+# ctest
+
+# To correctly generate the DartConfiguration.tcl, include the CTest CMake file.
+# By doing so 'ctest -F memcheck' works.
+include (CTest)
+

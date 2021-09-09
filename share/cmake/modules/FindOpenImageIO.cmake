@@ -125,6 +125,11 @@ if (OpenImageIO_FOUND)
         target_link_libraries(OpenImageIO::OpenImageIO INTERFACE OpenImageIO::OpenImageIO_Util)
     endif ()
 
+    if (${OPENIMAGEIO_VERSION} VERSION_GREATER_EQUAL "2.3" AND ${CMAKE_CXX_STANDARD} LESS_EQUAL 11)
+        set(OpenImageIO_FOUND OFF)
+        message(WARNING "Need C++14 or higher to compile with OpenImageIO ${OPENIMAGEIO_VERSION}.")
+    endif ()
+
     if (NOT TARGET OpenImageIO::oiiotool AND EXISTS "${OIIOTOOL_BIN}")
         add_executable(OpenImageIO::oiiotool IMPORTED)
         set_target_properties(OpenImageIO::oiiotool PROPERTIES
