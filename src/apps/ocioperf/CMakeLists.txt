@@ -27,6 +27,5 @@ target_link_libraries(ocioperf
 )
 
 install(TARGETS ocioperf
-    RUNTIME DESTINATION bin
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
-
