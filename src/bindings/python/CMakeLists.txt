@@ -204,9 +204,13 @@ target_include_directories(PyOpenColorIO
 # installations. See note in:
 #   https://pybind11.readthedocs.io/en/stable/compiling.html#building-manually
 
+if (WIN32)
+	set(_PublicLibs ${Python_LIBRARIES})
+endif()
+
 target_link_libraries(PyOpenColorIO
 	PUBLIC
-		"$<$<BOOL:${WIN32}>:${Python_LIBRARIES}>"
+		${_PublicLibs}
 	PRIVATE
 		OpenColorIO
 		utils::strings
