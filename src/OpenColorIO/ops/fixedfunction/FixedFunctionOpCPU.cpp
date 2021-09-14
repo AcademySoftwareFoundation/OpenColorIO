@@ -18,8 +18,6 @@ class Renderer_ACES_RedMod03_Fwd : public OpCPU
 {
 public:
     Renderer_ACES_RedMod03_Fwd() = delete;
-    Renderer_ACES_RedMod03_Fwd(const Renderer_ACES_RedMod03_Fwd &) = delete;
-
     explicit Renderer_ACES_RedMod03_Fwd(ConstFixedFunctionOpDataRcPtr & data);
 
     void apply(const void * inImg, void * outImg, long numPixels) const override;
@@ -29,7 +27,7 @@ protected:
     float m_pivot;
     float m_inv_width;
 
-    const float m_noiseLimit = 1e-2f;
+    static constexpr float m_noiseLimit = 1e-2f;
 };
 
 class Renderer_ACES_RedMod03_Inv : public Renderer_ACES_RedMod03_Fwd
@@ -44,8 +42,6 @@ class Renderer_ACES_RedMod10_Fwd : public OpCPU
 {
 public:
     Renderer_ACES_RedMod10_Fwd() = delete;
-    Renderer_ACES_RedMod10_Fwd(const Renderer_ACES_RedMod03_Fwd &) = delete;
-
     explicit Renderer_ACES_RedMod10_Fwd(ConstFixedFunctionOpDataRcPtr & data);
 
     void apply(const void * inImg, void * outImg, long numPixels) const override;
@@ -55,7 +51,7 @@ protected:
     float m_pivot;
     float m_inv_width;
 
-    const float m_noiseLimit = 1e-2f;
+    static constexpr float m_noiseLimit = 1e-2f;
 };
 
 class Renderer_ACES_RedMod10_Inv : public Renderer_ACES_RedMod10_Fwd
@@ -70,24 +66,20 @@ class Renderer_ACES_Glow03_Fwd : public OpCPU
 {
 public:
     Renderer_ACES_Glow03_Fwd() = delete;
-    Renderer_ACES_Glow03_Fwd(const Renderer_ACES_Glow03_Fwd &) = delete;
-
-    Renderer_ACES_Glow03_Fwd(ConstFixedFunctionOpDataRcPtr & data,
-                             float glowGain, float glowMid);
+    Renderer_ACES_Glow03_Fwd(ConstFixedFunctionOpDataRcPtr & data, float glowGain, float glowMid);
 
     void apply(const void * inImg, void * outImg, long numPixels) const override;
 
 protected:
     float m_glowGain, m_glowMid;
 
-    const float m_noiseLimit = 1e-2f;
+    static constexpr float m_noiseLimit = 1e-2f;
 };
 
 class Renderer_ACES_Glow03_Inv : public Renderer_ACES_Glow03_Fwd
 {
 public:
-    Renderer_ACES_Glow03_Inv(ConstFixedFunctionOpDataRcPtr & data,
-                            float glowGain, float glowMid);
+    Renderer_ACES_Glow03_Inv(ConstFixedFunctionOpDataRcPtr & data, float glowGain, float glowMid);
 
     void apply(const void * inImg, void * outImg, long numPixels) const override;
 };
@@ -96,8 +88,6 @@ class Renderer_ACES_DarkToDim10_Fwd : public OpCPU
 {
 public:
     Renderer_ACES_DarkToDim10_Fwd() = delete;
-    Renderer_ACES_DarkToDim10_Fwd(const Renderer_ACES_RedMod03_Fwd &) = delete;
-
     Renderer_ACES_DarkToDim10_Fwd(ConstFixedFunctionOpDataRcPtr & data, float gamma);
 
     void apply(const void * inImg, void * outImg, long numPixels) const override;
@@ -110,8 +100,6 @@ class Renderer_ACES_GamutComp13_Fwd : public OpCPU
 {
 public:
     Renderer_ACES_GamutComp13_Fwd() = delete;
-    Renderer_ACES_GamutComp13_Fwd(const Renderer_ACES_GamutComp13_Fwd &) = delete;
-
     explicit Renderer_ACES_GamutComp13_Fwd(ConstFixedFunctionOpDataRcPtr & data);
 
     void apply(const void * inImg, void * outImg, long numPixels) const override;
@@ -142,8 +130,6 @@ class Renderer_REC2100_Surround : public OpCPU
 {
 public:
     Renderer_REC2100_Surround() = delete;
-    Renderer_REC2100_Surround(const Renderer_ACES_RedMod03_Fwd &) = delete;
-
     explicit Renderer_REC2100_Surround(ConstFixedFunctionOpDataRcPtr & data);
 
     void apply(const void * inImg, void * outImg, long numPixels) const override;
@@ -156,8 +142,6 @@ class Renderer_RGB_TO_HSV : public OpCPU
 {
 public:
     Renderer_RGB_TO_HSV() = delete;
-    Renderer_RGB_TO_HSV(const Renderer_ACES_RedMod03_Fwd &) = delete;
-
     explicit Renderer_RGB_TO_HSV(ConstFixedFunctionOpDataRcPtr & data);
 
     void apply(const void * inImg, void * outImg, long numPixels) const override;
@@ -167,8 +151,6 @@ class Renderer_HSV_TO_RGB : public OpCPU
 {
 public:
     Renderer_HSV_TO_RGB() = delete;
-    Renderer_HSV_TO_RGB(const Renderer_ACES_RedMod03_Fwd &) = delete;
-
     explicit Renderer_HSV_TO_RGB(ConstFixedFunctionOpDataRcPtr & data);
 
     void apply(const void * inImg, void * outImg, long numPixels) const override;
@@ -178,8 +160,6 @@ class Renderer_XYZ_TO_xyY : public OpCPU
 {
 public:
     Renderer_XYZ_TO_xyY() = delete;
-    Renderer_XYZ_TO_xyY(const Renderer_ACES_RedMod03_Fwd &) = delete;
-
     explicit Renderer_XYZ_TO_xyY(ConstFixedFunctionOpDataRcPtr & data);
 
     void apply(const void * inImg, void * outImg, long numPixels) const override;
@@ -189,8 +169,6 @@ class Renderer_xyY_TO_XYZ : public OpCPU
 {
 public:
     Renderer_xyY_TO_XYZ() = delete;
-    Renderer_xyY_TO_XYZ(const Renderer_ACES_RedMod03_Fwd &) = delete;
-
     explicit Renderer_xyY_TO_XYZ(ConstFixedFunctionOpDataRcPtr & data);
 
     void apply(const void * inImg, void * outImg, long numPixels) const override;
@@ -200,8 +178,6 @@ class Renderer_XYZ_TO_uvY : public OpCPU
 {
 public:
     Renderer_XYZ_TO_uvY() = delete;
-    Renderer_XYZ_TO_uvY(const Renderer_ACES_RedMod03_Fwd &) = delete;
-
     explicit Renderer_XYZ_TO_uvY(ConstFixedFunctionOpDataRcPtr & data);
 
     void apply(const void * inImg, void * outImg, long numPixels) const override;
@@ -211,8 +187,6 @@ class Renderer_uvY_TO_XYZ : public OpCPU
 {
 public:
     Renderer_uvY_TO_XYZ() = delete;
-    Renderer_uvY_TO_XYZ(const Renderer_ACES_RedMod03_Fwd &) = delete;
-
     explicit Renderer_uvY_TO_XYZ(ConstFixedFunctionOpDataRcPtr & data);
 
     void apply(const void * inImg, void * outImg, long numPixels) const override;
@@ -222,8 +196,6 @@ class Renderer_XYZ_TO_LUV : public OpCPU
 {
 public:
     Renderer_XYZ_TO_LUV() = delete;
-    Renderer_XYZ_TO_LUV(const Renderer_ACES_RedMod03_Fwd &) = delete;
-
     explicit Renderer_XYZ_TO_LUV(ConstFixedFunctionOpDataRcPtr & data);
 
     void apply(const void * inImg, void * outImg, long numPixels) const override;
@@ -233,8 +205,6 @@ class Renderer_LUV_TO_XYZ : public OpCPU
 {
 public:
     Renderer_LUV_TO_XYZ() = delete;
-    Renderer_LUV_TO_XYZ(const Renderer_ACES_RedMod03_Fwd &) = delete;
-
     explicit Renderer_LUV_TO_XYZ(ConstFixedFunctionOpDataRcPtr & data);
 
     void apply(const void * inImg, void * outImg, long numPixels) const override;
@@ -282,7 +252,7 @@ __inline float CalcHueWeight(const float red, const float grn, const float blu,
     static constexpr float sqrt3 = 1.7320508075688772f;
     const float b = sqrt3 * (grn - blu);
 
-    const float hue = atan2f(b, a);
+    const float hue = std::atan2f(b, a);
 
     // NB: The code in RedMod03 apply() assumes that in the range of the modification
     // window that red will be the largest channel.  The center and width must be
@@ -302,7 +272,7 @@ __inline float CalcHueWeight(const float red, const float grn, const float blu,
 
     // These are the coefficients for a quadratic B-spline basis function.
     // (All coefs taken from the ACES ctl code on github.)
-    static const float _M[4][4] = {
+    static constexpr float _M[4][4] = {
         { 0.25f,  0.00f,  0.00f,  0.00f},
         {-0.75f,  0.75f,  0.75f,  0.25f},
         { 0.75f, -1.50f,  0.00f,  1.00f},
