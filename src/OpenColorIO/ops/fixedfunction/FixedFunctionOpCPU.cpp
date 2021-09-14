@@ -252,7 +252,7 @@ __inline float CalcHueWeight(const float red, const float grn, const float blu,
     static constexpr float sqrt3 = 1.7320508075688772f;
     const float b = sqrt3 * (grn - blu);
 
-    const float hue = std::atan2f(b, a);
+    const float hue = std::atan2(b, a);
 
     // NB: The code in RedMod03 apply() assumes that in the range of the modification
     // window that red will be the largest channel.  The center and width must be
