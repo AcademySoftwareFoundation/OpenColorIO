@@ -31,15 +31,14 @@ target_link_libraries(oiiohelpers
 
     PRIVATE
         OpenColorIO
-        ${OCIO_HALF_LIB}
         utils::strings
 )
 
 install(TARGETS oiiohelpers
-    LIBRARY DESTINATION lib
-    ARCHIVE DESTINATION lib
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
 
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/oiiohelpers.h
-    DESTINATION include/OpenColorIO/oiiohelpers
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/OpenColorIO/oiiohelpers
 )
