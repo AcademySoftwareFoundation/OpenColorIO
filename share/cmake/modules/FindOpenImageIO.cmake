@@ -59,6 +59,10 @@ find_library ( OPENIMAGEIO_LIBRARY
                NAMES OpenImageIO${OIIO_LIBNAME_SUFFIX}
                HINTS ${OPENIMAGEIO_ROOT_DIR}
                PATH_SUFFIXES lib64 lib )
+find_library ( OPENIMAGEIO_UTIL_LIBRARY
+               NAMES OpenImageIO_Util${OIIO_LIBNAME_SUFFIX}
+               HINTS ${OPENIMAGEIO_ROOT_DIR}
+               PATH_SUFFIXES lib64 lib )
 find_path ( OPENIMAGEIO_INCLUDE_DIR
             NAMES OpenImageIO/imageio.h
             HINTS ${OPENIMAGEIO_ROOT_DIR} )
@@ -102,7 +106,6 @@ if (OpenImageIO_FOUND)
         message ( STATUS "OpenImageIO includes     = ${OPENIMAGEIO_INCLUDE_DIR}" )
         message ( STATUS "OpenImageIO libraries    = ${OPENIMAGEIO_LIBRARIES}" )
         message ( STATUS "OpenImageIO library_dirs = ${OPENIMAGEIO_LIBRARY_DIRS}" )
-        message ( STATUS "OpenImageIO oiiotool     = ${OIIOTOOL_BIN}" )
     endif ()
 
     if (NOT TARGET OpenImageIO::OpenImageIO)
@@ -114,10 +117,13 @@ if (OpenImageIO_FOUND)
             IMPORTED_LOCATION "${OPENIMAGEIO_LIBRARIES}")
     endif ()
 
-    if (NOT TARGET OpenImageIO::oiiotool AND EXISTS "${OIIOTOOL_BIN}")
-        add_executable(OpenImageIO::oiiotool IMPORTED)
-        set_target_properties(OpenImageIO::oiiotool PROPERTIES
-            IMPORTED_LOCATION "${OIIOTOOL_BIN}")
+    # Starting with OIIO v2.3, some utility classes are now only declared in OpenImageIO_Util
+    # (and not in both libraries like in older versions).
+    if (${OPENIMAGEIO_VERSION} VERSION_GREATER_EQUAL "2.3" AND NOT TARGET OpenImageIO::OpenImageIO_Util)
+        add_library(OpenImageIO::OpenImageIO_Util UNKNOWN IMPORTED)
+        set_target_properties(OpenImageIO::OpenImageIO_Util PROPERTIES
+            IMPORTED_LOCATION "${OPENIMAGEIO_UTIL_LIBRARY}")
+        target_link_libraries(OpenImageIO::OpenImageIO INTERFACE OpenImageIO::OpenImageIO_Util)
     endif ()
 endif ()
 
