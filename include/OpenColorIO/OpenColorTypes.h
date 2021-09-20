@@ -445,6 +445,8 @@ enum GpuLanguage
     GPU_LANGUAGE_GLSL_1_2,          ///< OpenGL Shading Language
     GPU_LANGUAGE_GLSL_1_3,          ///< OpenGL Shading Language
     GPU_LANGUAGE_GLSL_4_0,          ///< OpenGL Shading Language
+    GPU_LANGUAGE_GLSL_ES_1_0,       ///< OpenGL ES Shading Language
+    GPU_LANGUAGE_GLSL_ES_3_0,       ///< OpenGL ES Shading Language
     GPU_LANGUAGE_HLSL_DX11,         ///< DirectX Shading Language
     LANGUAGE_OSL_1                  ///< Open Shading Language                
 };

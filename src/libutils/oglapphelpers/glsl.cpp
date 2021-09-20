@@ -452,6 +452,14 @@ std::string OpenGLBuilder::getGLSLVersionString()
     {
         return "#version 400 core";
     }
+    else if (m_shaderDesc->getLanguage() == GPU_LANGUAGE_GLSL_ES_1_0)
+    {
+        return "#version 100";
+    }
+    else if (m_shaderDesc->getLanguage() == GPU_LANGUAGE_GLSL_ES_3_0)
+    {
+        return "#version 300 es";
+    }
 
     // That's the minimal version supported.
     return "#version 120";
