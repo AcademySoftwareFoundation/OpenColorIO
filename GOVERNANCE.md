@@ -113,6 +113,7 @@ project at all ASWF TAC meetings.
 
 ### TSC Members
 
+* Rémi Achard - DNEG
 * Mark Boorer - Industrial Light & Magic
 * Mei Chu - Sony Pictures Imageworks
 * Sean Cooper - ARRI
