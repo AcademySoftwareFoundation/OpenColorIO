@@ -26,5 +26,5 @@ target_link_libraries(ociolutimage
 )
 
 install(TARGETS ociolutimage
-	RUNTIME DESTINATION bin
+	RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )

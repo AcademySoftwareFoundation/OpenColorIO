@@ -60,11 +60,12 @@ jobs:
           # -------------------------------------------------------------------
           # VFX CY2022 (Python 3.9)
           # -------------------------------------------------------------------
-          # Clang, Debug
+          # Clang, Debug, OpenFX
           - build: 12
             build-type: Debug
             build-shared: 'ON'
             build-docs: 'OFF'
+            build-openfx: 'ON'
             use-sse: 'ON'
             use-openexr-half: 'OFF'
             cxx-standard: 17
@@ -72,11 +73,12 @@ jobs:
             cc-compiler: clang
             compiler-desc: Clang 9
             vfx-cy: 2022
-          # GCC, no SSE
+          # GCC, no SSE, OpenFX
           - build: 11
             build-type: Release
             build-shared: 'ON'
             build-docs: 'OFF'
+            build-openfx: 'ON'
             use-sse: 'OFF'
             use-openexr-half: 'OFF'
             cxx-standard: 17
@@ -89,6 +91,7 @@ jobs:
             build-type: Release
             build-shared: 'OFF'
             build-docs: 'ON'
+            build-openfx: 'OFF'
             use-sse: 'ON'
             use-openexr-half: 'OFF'
             cxx-standard: 17
@@ -104,6 +107,7 @@ jobs:
             build-type: Release
             build-shared: 'ON'
             build-docs: 'ON'
+            build-openfx: 'OFF'
             use-sse: 'ON'
             use-openexr-half: 'ON'
             cxx-standard: 17
@@ -111,11 +115,12 @@ jobs:
             cc-compiler: clang
             compiler-desc: Clang 9
             vfx-cy: 2021
-          # Clang, static, no SSE
+          # Clang, static, no SSE, OpenFX
           - build: 8
             build-type: Release
             build-shared: 'OFF'
             build-docs: 'OFF'
+            build-openfx: 'ON'
             use-sse: 'OFF'
             use-openexr-half: 'ON'
             cxx-standard: 17
@@ -128,6 +133,7 @@ jobs:
             build-type: Debug
             build-shared: 'ON'
             build-docs: 'OFF'
+            build-openfx: 'OFF'
             use-sse: 'ON'
             use-openexr-half: 'ON'
             cxx-standard: 17
@@ -138,11 +144,12 @@ jobs:
           # -------------------------------------------------------------------
           # VFX CY2020 (Python 3.7)
           # -------------------------------------------------------------------
-          # Clang
+          # Clang, OpenFX
           - build: 6
             build-type: Release
             build-shared: 'ON'
             build-docs: 'OFF'
+            build-openfx: 'ON'
             use-sse: 'OFF'
             use-openexr-half: 'ON'
             cxx-standard: 14
@@ -150,11 +157,12 @@ jobs:
             cc-compiler: clang
             compiler-desc: Clang 7
             vfx-cy: 2020
-          # GCC, static, Debug
+          # GCC, static, Debug, OpenFX
           - build: 5
             build-type: Debug
             build-shared: 'OFF'
             build-docs: 'OFF'
+            build-openfx: 'ON'
             use-sse: 'ON'
             use-openexr-half: 'ON'
             cxx-standard: 14
@@ -167,6 +175,7 @@ jobs:
             build-type: Release
             build-shared: 'ON'
             build-docs: 'ON'
+            build-openfx: 'OFF'
             use-sse: 'ON'
             use-openexr-half: 'ON'
             cxx-standard: 14
@@ -183,6 +192,7 @@ jobs:
             build-shared: 'OFF'
             # Doc build requires Python 3
             build-docs: 'OFF'
+            build-openfx: 'OFF'
             use-sse: 'ON'
             use-openexr-half: 'ON'
             cxx-standard: 11
@@ -196,6 +206,7 @@ jobs:
             build-shared: 'ON'
             # Doc build requires Python 3
             build-docs: 'OFF'
+            build-openfx: 'OFF'
             use-sse: 'OFF'
             use-openexr-half: 'ON'
             cxx-standard: 11
@@ -203,12 +214,13 @@ jobs:
             cc-compiler: clang
             compiler-desc: Clang 7
             vfx-cy: 2019
-          # GCC
+          # GCC, OpenFX
           - build: 1
             build-type: Release
             build-shared: 'ON'
             # Doc build requires Python 3
             build-docs: 'OFF'
+            build-openfx: 'ON'
             use-sse: 'ON'
             use-openexr-half: 'ON'
             cxx-standard: 11
@@ -239,6 +251,7 @@ jobs:
                 -DCMAKE_CXX_STANDARD=${{ matrix.cxx-standard }} \
                 -DBUILD_SHARED_LIBS=${{ matrix.build-shared }} \
                 -DOCIO_BUILD_DOCS=${{ matrix.build-docs }} \
+                -DOCIO_BUILD_OPENFX=${{ matrix.build-openfx }} \
                 -DOCIO_BUILD_GPU_TESTS=OFF \
                 -DOCIO_USE_SSE=${{ matrix.use-sse }} \
                 -DOCIO_USE_OPENEXR_HALF=${{ matrix.use-openexr-half }} \
@@ -285,39 +298,42 @@ jobs:
       matrix:
         build: [1, 2, 3, 4, 5, 6]
         include:
-          # C++17
+          # C++17, OpenFX
           - build: 6
             build-type: Release
             build-shared: 'ON'
             build-docs: 'OFF'
+            build-openfx: 'ON'
             use-sse: 'ON'
             use-openexr-half: 'OFF'
             cxx-standard: 17
             python-version: 3.9
-          # Static, no SSE
           # C++11, Python 3.7
           - build: 5
             build-type: Release
             build-shared: 'ON'
             build-docs: 'ON'
+            build-openfx: 'OFF'
             use-sse: 'ON'
             use-openexr-half: 'OFF'
             cxx-standard: 11
             python-version: 3.7
-          # Debug
+          # Debug, OpenFX
           - build: 4
             build-type: Debug
             build-shared: 'ON'
             build-docs: 'OFF'
+            build-openfx: 'ON'
             use-sse: 'ON'
             use-openexr-half: 'OFF'
             cxx-standard: 11
             python-version: 3.7
-          # C++14, IlmBase
+          # C++14, OpenEXR, OpenFX
           - build: 3
             build-type: Release
             build-shared: 'ON'
             build-docs: 'OFF'
+            build-openfx: 'ON'
             use-sse: 'ON'
             use-openexr-half: 'ON'
             cxx-standard: 14
@@ -327,6 +343,7 @@ jobs:
             build-type: Release
             build-shared: 'OFF'
             build-docs: 'OFF'
+            build-openfx: 'OFF'
             use-sse: 'OFF'
             use-openexr-half: 'OFF'
             cxx-standard: 11
@@ -337,6 +354,7 @@ jobs:
             build-shared: 'ON'
             # Doc build requires Python 3
             build-docs: 'OFF'
+            build-openfx: 'OFF'
             use-sse: 'ON'
             use-openexr-half: 'OFF'
             cxx-standard: 11
@@ -365,6 +383,7 @@ jobs:
                 -DCMAKE_CXX_STANDARD=${{ matrix.cxx-standard }} \
                 -DBUILD_SHARED_LIBS=${{ matrix.build-shared }} \
                 -DOCIO_BUILD_DOCS=${{ matrix.build-docs }} \
+                -DOCIO_BUILD_OPENFX=${{ matrix.build-openfx }} \
                 -DOCIO_BUILD_GPU_TESTS=OFF \
                 -DOCIO_USE_SSE=${{ matrix.use-sse }} \
                 -DOCIO_USE_OPENEXR_HALF=${{ matrix.use-openexr-half }} \
@@ -413,11 +432,12 @@ jobs:
       matrix:
         build: [1, 2, 3, 4, 5, 6]
         include:
-          # C++17
+          # C++17, OpenFX
           - build: 6
             build-type: Release
             build-shared: 'ON'
             build-docs: 'OFF'
+            build-openfx: 'ON'
             use-sse: 'ON'
             use-openexr-half: 'OFF'
             cxx-standard: 17
@@ -427,6 +447,7 @@ jobs:
             build-type: Release
             build-shared: 'ON'
             build-docs: 'ON'
+            build-openfx: 'OFF'
             use-sse: 'ON'
             use-openexr-half: 'OFF'
             cxx-standard: 11
@@ -436,24 +457,27 @@ jobs:
             build-type: Debug
             build-shared: 'ON'
             build-docs: 'OFF'
+            build-openfx: 'OFF'
             use-sse: 'ON'
             use-openexr-half: 'OFF'
             cxx-standard: 11
             python-version: 3.7
-          # C++14, IlmBase
+          # C++14, OpenEXR, OpenFX
           - build: 3
             build-type: Release
             build-shared: 'ON'
             build-docs: 'OFF'
+            build-openfx: 'ON'
             use-sse: 'ON'
             use-openexr-half: 'ON'
             cxx-standard: 14
             python-version: 3.7
-          # Static, no SSE
+          # Static, no SSE, OpenFX
           - build: 2
             build-type: Release
             build-shared: 'OFF'
             build-docs: 'OFF'
+            build-openfx: 'ON'
             use-sse: 'OFF'
             use-openexr-half: 'OFF'
             cxx-standard: 11
@@ -464,6 +488,7 @@ jobs:
             build-shared: 'ON'
             # Doc build requires Python 3
             build-docs: 'OFF'
+            build-openfx: 'OFF'
             use-sse: 'ON'
             use-openexr-half: 'OFF'
             cxx-standard: 11
@@ -495,6 +520,7 @@ jobs:
                 -DCMAKE_GENERATOR_PLATFORM=x64 \
                 -DBUILD_SHARED_LIBS=${{ matrix.build-shared }} \
                 -DOCIO_BUILD_DOCS=${{ matrix.build-docs }} \
+                -DOCIO_BUILD_OPENFX=${{ matrix.build-openfx }} \
                 -DOCIO_BUILD_GPU_TESTS=OFF \
                 -DOCIO_USE_SSE=${{ matrix.use-sse }} \
                 -DOCIO_USE_OPENEXR_HALF=${{ matrix.use-openexr-half }} \

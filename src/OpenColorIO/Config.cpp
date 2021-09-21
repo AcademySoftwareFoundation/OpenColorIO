@@ -233,7 +233,7 @@ static constexpr unsigned LastSupportedMajorVersion = OCIO_VERSION_MAJOR;
 
 // For each major version keep the most recent minor.
 static const unsigned int LastSupportedMinorVersion[] = {0, // Version 1
-                                                         0  // Version 2
+                                                         1  // Version 2
                                                          };
 
 } // namespace
@@ -1073,7 +1073,7 @@ public:
 
 
 // Instantiate the cache with the right types.
-template class ProcessorCache<std::size_t, ProcessorRcPtr>;
+extern template class ProcessorCache<std::size_t, ProcessorRcPtr>;
 
 
 ///////////////////////////////////////////////////////////////////////////
@@ -4504,11 +4504,18 @@ void Config::Impl::checkVersionConsistency(ConstTransformRcPtr & transform) cons
 {
     if (transform)
     {
-        if (ConstBuiltinTransformRcPtr ex = DynamicPtrCast<const BuiltinTransform>(transform))
+        if (ConstBuiltinTransformRcPtr blt = DynamicPtrCast<const BuiltinTransform>(transform))
         {
             if (m_majorVersion < 2)
             {
                 throw Exception("Only config version 2 (or higher) can have BuiltinInTransform.");
+            }
+
+            if (m_majorVersion == 2 && m_minorVersion < 1
+                    && 0 == Platform::Strcasecmp(blt->getStyle(), "ACES-LMT - ACES 1.3 Reference Gamut Compression"))
+            {
+                throw Exception("Only config version 2.1 (or higher) can have "
+                                "BuiltinTransform style 'ACES-LMT - ACES 1.3 Reference Gamut Compression'.");
             }
         }
         else if (ConstCDLTransformRcPtr cdl = DynamicPtrCast<const CDLTransform>(transform))
@@ -4516,7 +4523,7 @@ void Config::Impl::checkVersionConsistency(ConstTransformRcPtr & transform) cons
             if (m_majorVersion < 2 && cdl->getStyle() != CDL_TRANSFORM_DEFAULT)
             {
                 throw Exception("Only config version 2 (or higher) can have style for "
-                               "CDLTransform.");
+                                "CDLTransform.");
             }
         }
         else if (DynamicPtrCast<const DisplayViewTransform>(transform))
@@ -4569,12 +4576,18 @@ void Config::Impl::checkVersionConsistency(ConstTransformRcPtr & transform) cons
                 }
             }
         }
-        else if (DynamicPtrCast<const FixedFunctionTransform>(transform))
+        else if (ConstFixedFunctionTransformRcPtr ff = DynamicPtrCast<const FixedFunctionTransform>(transform))
         {
             if (m_majorVersion < 2)
             {
                 throw Exception("Only config version 2 (or higher) can have "
                                 "FixedFunctionTransform.");
+            }
+
+            if (m_majorVersion == 2 && m_minorVersion < 1 && ff->getStyle() == FIXED_FUNCTION_ACES_GAMUT_COMP_13)
+            {
+                throw Exception("Only config version 2.1 (or higher) can have "
+                                "FixedFunctionTransform style 'ACES_GAMUT_COMP_13'.");
             }
         }
         else if (DynamicPtrCast<const GradingPrimaryTransform>(transform))

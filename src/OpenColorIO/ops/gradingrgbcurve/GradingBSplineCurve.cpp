@@ -431,7 +431,9 @@ void GradingBSplineCurveImpl::AddShaderEval(GpuShaderText & st,
         st.newLine() << "for (i = 0; i < knotsCnt - 2; ++i)";
         st.newLine() << "{";
         st.newLine() << "  if (x < " << knots << "[knotsOffs + i + 1])";
+        st.newLine() << "  {";
         st.newLine() << "    break;";
+        st.newLine() << "  }";
         st.newLine() << "}";
 
         st.newLine() << "float A = " << coefs << "[coefsOffs + i];";
@@ -491,7 +493,9 @@ void GradingBSplineCurveImpl::AddShaderEval(GpuShaderText & st,
         st.newLine() << "for (i = 0; i < knotsCnt - 2; ++i)";
         st.newLine() << "{";
         st.newLine() << "  if (x < " << coefs << "[coefsOffs + coefsSets * 2 + i + 1])";
+        st.newLine() << "  {";
         st.newLine() << "    break;";
+        st.newLine() << "  }";
         st.newLine() << "}";
 
         st.newLine() << "float A = " << coefs << "[coefsOffs + i];";

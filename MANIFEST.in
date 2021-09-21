@@ -1,0 +1,2 @@
+graft tests/data
+exclude tests/data/CMakeLists.txt
