@@ -25,20 +25,26 @@ void AddLogShader(GpuShaderCreatorRcPtr & shaderCreator, ConstLogOpDataRcPtr & /
     st.newLine() << "";
     st.newLine() << "// Add Log processing";
     st.newLine() << "";
+    st.newLine() << "{";
+    st.indent();
 
-    const char * pix = shaderCreator->getPixelName();
+    const std::string pix(shaderCreator->getPixelName());
+    const std::string pixrgb = pix + std::string(".rgb");
 
-    st.newLine() << pix << ".rgb = max( " << st.float3Const(minValue) << ", " << pix << ".rgb);";
+    st.newLine() << pixrgb << " = max( " << st.float3Const(minValue) << ", " << pixrgb << ");";
 
     if (base == 2.0f)
     {
-        st.newLine() << pix << ".rgb = log2(" << pix << ".rgb);";
+        st.newLine() << pixrgb << " = log2(" << pixrgb << ");";
     }
     else // base 10
     {
         const float oneOverLog10 = 1.0f / logf(base);
-        st.newLine() << pix << ".rgb = log(" << pix << ".rgb) * " << st.float3Const(oneOverLog10) << ";";
+        st.newLine() << pixrgb << " = log(" << pixrgb << ") * " << st.float3Const(oneOverLog10) << ";";
     }
+
+    st.dedent();
+    st.newLine() << "}";
 
     shaderCreator->addToFunctionShaderCode(st.string().c_str());
 }
@@ -51,10 +57,16 @@ void AddAntiLogShader(GpuShaderCreatorRcPtr & shaderCreator, ConstLogOpDataRcPtr
     st.newLine() << "";
     st.newLine() << "// Add Log 'Anti-Log' processing";
     st.newLine() << "";
+    st.newLine() << "{";
+    st.indent();
 
-    const char * pix = shaderCreator->getPixelName();
+    const std::string pix(shaderCreator->getPixelName());
+    const std::string pixrgb = pix + std::string(".rgb");
 
-    st.newLine() << pix << ".rgb = pow( " << st.float3Const(base) << ", " << pix <<".rgb );";
+    st.newLine() << pixrgb << " = pow( " << st.float3Const(base) << ", " << pixrgb << ");";
+
+    st.dedent();
+    st.newLine() << "}";
 
     shaderCreator->addToFunctionShaderCode(st.string().c_str());
 }
@@ -65,15 +77,6 @@ void AddLogToLinShader(GpuShaderCreatorRcPtr & shaderCreator, ConstLogOpDataRcPt
     const auto & paramsG = logData->getGreenParams();
     const auto & paramsB = logData->getBlueParams();
     const double base = logData->getBase();
-    GpuShaderText st(shaderCreator->getLanguage());
-
-    st.indent();
-    st.newLine() << "";
-    st.newLine() << "// Add Log 'Log to Lin' processing";
-    st.newLine() << "{";
-    st.indent();
-
-    const char * pix = shaderCreator->getPixelName();
 
     const float logSlopeInv[3] = { 1.0f / (float)paramsR[LOG_SIDE_SLOPE],
                                    1.0f / (float)paramsG[LOG_SIDE_SLOPE],
@@ -82,6 +85,19 @@ void AddLogToLinShader(GpuShaderCreatorRcPtr & shaderCreator, ConstLogOpDataRcPt
     const float linSlopeInv[3] = { 1.0f / (float)paramsR[LIN_SIDE_SLOPE],
                                    1.0f / (float)paramsG[LIN_SIDE_SLOPE],
                                    1.0f / (float)paramsB[LIN_SIDE_SLOPE] };
+
+    GpuShaderText st(shaderCreator->getLanguage());
+
+    st.indent();
+    st.newLine() << "";
+    st.newLine() << "// Add Log 'Log to Lin' processing";
+    st.newLine() << "";
+    st.newLine() << "{";
+    st.indent();
+
+    const std::string pix(shaderCreator->getPixelName());
+    const std::string pixrgb = pix + std::string(".rgb");
+
 
     st.declareFloat3("log_slopeinv", logSlopeInv[0], logSlopeInv[1], logSlopeInv[2]);
     st.declareFloat3("lin_slopeinv", linSlopeInv[0], linSlopeInv[1], linSlopeInv[2]);
@@ -92,9 +108,9 @@ void AddLogToLinShader(GpuShaderCreatorRcPtr & shaderCreator, ConstLogOpDataRcPt
     // 1) (x - logOffset) * logSlopeInv
     // 2) pow(base, x)
     // 3) linSlopeInv * (x - linOffset)
-    st.newLine() << pix << ".rgb = (" << pix << ".rgb - log_offset) * log_slopeinv;";
-    st.newLine() << pix << ".rgb = pow(log_base, " << pix << ".rgb);";
-    st.newLine() << pix << ".rgb = lin_slopeinv * (" << pix << ".rgb - lin_offset);";
+    st.newLine() << pixrgb << " = (" << pixrgb << " - log_offset) * log_slopeinv;";
+    st.newLine() << pixrgb << " = pow(log_base, " << pixrgb << ");";
+    st.newLine() << pixrgb << " = lin_slopeinv * (" << pixrgb << " - lin_offset);";
 
     st.dedent();
     st.newLine() << "}";
@@ -118,10 +134,12 @@ void AddLinToLogShader(GpuShaderCreatorRcPtr & shaderCreator, ConstLogOpDataRcPt
     st.indent();
     st.newLine() << "";
     st.newLine() << "// Add Log 'Lin to Log' processing";
+    st.newLine() << "";
     st.newLine() << "{";
     st.indent();
 
-    const char * pix = shaderCreator->getPixelName();
+    const std::string pix(shaderCreator->getPixelName());
+    const std::string pixrgb = pix + std::string(".rgb");
 
     st.declareFloat3("minValue", minValue, minValue, minValue);
     st.declareFloat3("lin_slope", paramsR[LIN_SIDE_SLOPE], paramsG[LIN_SIDE_SLOPE], paramsB[LIN_SIDE_SLOPE]);
@@ -135,8 +153,8 @@ void AddLinToLogShader(GpuShaderCreatorRcPtr & shaderCreator, ConstLogOpDataRcPt
     // Decompose into 2 steps:
     // 1) clamp(fltmin, linSlope * x + linOffset)
     // 2) logSlopeNew * log(x) + logOffset
-    st.newLine() << pix << ".rgb = max( minValue, (" << pix << ".rgb * lin_slope + lin_offset) );";
-    st.newLine() << pix << ".rgb = log_slope * log(" << pix << ".rgb ) + log_offset;";
+    st.newLine() << pixrgb << " = max( minValue, (" << pixrgb << " * lin_slope + lin_offset) );";
+    st.newLine() << pixrgb << " = log_slope * log(" << pixrgb << " ) + log_offset;";
 
     st.dedent();
     st.newLine() << "}";
@@ -182,11 +200,13 @@ void AddCameraLogToLinShader(GpuShaderCreatorRcPtr & shaderCreator,
     st.indent();
     st.newLine() << "";
     st.newLine() << "// Add Log 'Camera Log to Lin' processing";
+    st.newLine() << "";
     st.newLine() << "{";
     st.indent();
 
-    const char * pix = shaderCreator->getPixelName();
+    const std::string pix(shaderCreator->getPixelName());
     const std::string pixrgb = pix + std::string(".rgb");
+
 
     st.declareFloat3("log_break", logSideBreakR, logSideBreakG, logSideBreakB);
     st.declareFloat3("linear_segment_offset", linearOffsetR, linearOffsetG, linearOffsetB);
@@ -256,10 +276,11 @@ void AddCameraLinToLogShader(GpuShaderCreatorRcPtr & shaderCreator,
     st.indent();
     st.newLine() << "";
     st.newLine() << "// Add Log 'Camera Lin to Log' processing";
+    st.newLine() << "";
     st.newLine() << "{";
     st.indent();
 
-    const char * pix = shaderCreator->getPixelName();
+    const std::string pix(shaderCreator->getPixelName());
     const std::string pixrgb = pix + std::string(".rgb");
 
     st.declareFloat3("minValue", minValue, minValue, minValue);

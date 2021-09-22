@@ -24,7 +24,7 @@ OCIO_ADD_TEST(ExponentOp, value)
 
     float error = 1e-6f;
 
-    const float source[] = {  0.1f, 0.3f, 0.9f, 0.5f, };
+    const float source[] = {  0.1f, 0.3f, 0.9f, 0.5f };
 
     const float result1[] = { 0.0630957261f, 0.209053621f,
                               0.862858355f, 0.353553385f };
@@ -68,19 +68,19 @@ OCIO_ADD_TEST(ExponentOp, value_limits)
 
     float error = 1e-6f;
 
-    const float source1[] = { 1.0f, 1.0f, 1.0f, 1.0f, };
+    const float source1[] = { 1.0f, 1.0f, 1.0f, 1.0f };
     const float result1[] = { 1.0f, 1.0f, 1.0f, 1.0f };
     ValidateOp(source1, ops[0], result1, error);
 
-    const float source2[] = { 2.0f, 2.0f, 2.0f, 2.0f, };
+    const float source2[] = { 2.0f, 2.0f, 2.0f, 2.0f };
     const float result2[] = { 1.0f, 4.0f, 0.25f, 2.82842708f };
     ValidateOp(source2, ops[0], result2, error);
 
-    const float source3[] = { -2.0f, -2.0f, 1.0f, -2.0f, };
+    const float source3[] = { -2.0f, -2.0f, 1.0f, -2.0f };
     const float result3[] = { 1.0f, 0.0f, 1.0f, 0.0f };
     ValidateOp(source3, ops[0], result3, error);
 
-    const float source4[] = { 0.0f, 0.0f, 1.0f, 0.0f, };
+    const float source4[] = { 0.0f, 0.0f, 1.0f, 0.0f };
     const float result4[] = { 1.0f, 0.0f, 1.0f, 0.0f };
     ValidateOp(source4, ops[0], result4, error);
 }

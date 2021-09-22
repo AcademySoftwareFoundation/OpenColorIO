@@ -20,7 +20,6 @@ set_target_properties(ocioperf PROPERTIES
 target_link_libraries(ocioperf
     PRIVATE
         apputils
-        IlmBase::Half
         oiiohelpers
         OpenColorIO
         OpenImageIO::OpenImageIO
@@ -28,6 +27,5 @@ target_link_libraries(ocioperf
 )
 
 install(TARGETS ocioperf
-    RUNTIME DESTINATION bin
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
-

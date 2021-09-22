@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright Contributors to the OpenColorIO Project.
 
+import os
 import unittest
 import PyOpenColorIO as OCIO
 
@@ -143,7 +144,7 @@ class ProcessorTest(unittest.TestCase):
         # Test FormatMetadata related functions.
 
         cfg = OCIO.Config.CreateRaw()
-        test_file = '%s/clf/xyz_to_rgb.clf' % TEST_DATAFILES_DIR
+        test_file = os.path.join(TEST_DATAFILES_DIR, 'clf', 'xyz_to_rgb.clf')
         file_tr = OCIO.FileTransform(src=test_file)
         proc = cfg.getProcessor(file_tr)
         # Remove the no-ops, since they are useless here.
@@ -159,9 +160,9 @@ class ProcessorTest(unittest.TestCase):
         self.assertEqual(child.getElementValue(),
                          'Example with a Matrix and Lut1D')
 
-        # Each transform in the CTF file has a FormatMetadata. There are 2 transforms in this file.
+        # Each transform in the CTF file has a FormatMetadata. There are 3 transforms in this file.
         proc_tfmd = proc.getTransformFormatMetadata()
-        self.assertEqual(len(proc_tfmd), 2)
+        self.assertEqual(len(proc_tfmd), 3)
 
         tfmd = next(proc_tfmd)
         self.assertEqual(tfmd.getID(), '72f85641-8c80-4bd6-b96b-a2f67ccb948a')
@@ -173,10 +174,12 @@ class ProcessorTest(unittest.TestCase):
                          'XYZ to sRGB matrix')
 
         tfmd = next(proc_tfmd)
+
+        tfmd = next(proc_tfmd)
         self.assertEqual(tfmd.getID(), '4ed2af07-9319-430a-b18a-43368163c808')
         tfmd_children = tfmd.getChildElements()
         self.assertEqual(len(tfmd_children), 1)
         child = next(tfmd_children)
         self.assertEqual(child.getElementName(), 'Description')
         self.assertEqual(child.getElementValue(),
-                         'linear to approx. gamma corrected code values')
+                         'x^1/1.8, with 0.95 and 0.9 scaling for G and B')

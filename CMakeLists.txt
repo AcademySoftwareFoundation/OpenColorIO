@@ -28,7 +28,7 @@ endif()
 # Project definition.
 
 project(OpenColorIO 
-    VERSION 2.1.0
+    VERSION 2.2.0
     DESCRIPTION "OpenColorIO (OCIO) is a complete color management solution"
     HOMEPAGE_URL https://github.com/AcademySoftwareFoundation/OpenColorIO
     LANGUAGES CXX C)
@@ -109,6 +109,7 @@ include(CppVersion)
 
 option(BUILD_SHARED_LIBS "Set to OFF to build static libraries" ON)
 option(OCIO_BUILD_APPS "Set to OFF to disable command-line apps" ON)
+option(OCIO_BUILD_OPENFX "Specify whether to build OpenFX plugins" OFF)
 option(OCIO_BUILD_NUKE "Specify whether to build nuke plugins" OFF)
 option(OCIO_BUILD_TESTS "Specify whether to build unittests" ON)
 option(OCIO_BUILD_GPU_TESTS "Specify whether to build gpu unittests" ON)
@@ -130,6 +131,7 @@ option(OCIO_WARNING_AS_ERROR "Set build error level for CI testing" OFF)
 # Optimization / internal linking preferences
 
 option(OCIO_USE_SSE "Specify whether to enable SSE CPU performance optimizations" ON)
+option(OCIO_USE_OPENEXR_HALF "Specify whether to use an OpenEXR/IlmBase install of the Half library (<=v2.5) instead of the newer Imath library (>=v3.0)" OFF)
 
 
 ###############################################################################
@@ -244,13 +246,19 @@ include(FindExtPackages)
 ###############################################################################
 # Progress to other sources
 
+# The presence of OpenImageIO allows additional ocio apps and the OSL translation unit tests
+# to be built.
+
+# OpenImageIO
+# https://github.com/OpenImageIO/oiio
+find_package(OpenImageIO 2.1.9)
+
 add_subdirectory(vendor)
 if(OCIO_BUILD_DOCS)
 	add_subdirectory(docs)
 endif()
 add_subdirectory(tests)
 add_subdirectory(src)
-add_subdirectory(include)
 add_subdirectory(ext)
 
 

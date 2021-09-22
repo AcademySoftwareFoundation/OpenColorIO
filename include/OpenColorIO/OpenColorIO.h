@@ -60,6 +60,13 @@ namespace OCIO_NAMESPACE
 ///////////////////////////////////////////////////////////////////////////
 // Exceptions
 
+// Silence warning C4275 under Visual Studio:
+// Exceptions derive from std::runtime_error but STL classes are not exportable.
+#ifdef _MSC_VER
+#pragma warning( push )
+#pragma warning( disable : 4275 )
+#endif
+
 /**
  * \brief An exception class to throw for errors detected at runtime.
  *
@@ -98,6 +105,11 @@ public:
 
     ~ExceptionMissingFile();
 };
+
+// Restore default warning behaviour for Visual Studio.
+#ifdef _MSC_VER
+#pragma warning( pop )
+#endif
 
 ///////////////////////////////////////////////////////////////////////////
 // Global
@@ -856,7 +868,7 @@ public:
      *    values are typically different for each colorspace, and the
      *    application of them may be nonsensical depending on the
      *    intensity coding anyways). Thus, the 'right' answer is to make
-     *    these functions on the Config class. However, it's
+     *    these functions on the ColorSpace class. However, it's
      *    often useful to have a config-wide default so here it is. We will
      *    add the colorspace specific luma call if/when another client is
      *    interesting in using it.

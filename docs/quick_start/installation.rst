@@ -65,7 +65,10 @@ it is not necessary to install those items manually:
 - cmake >= 3.12
 - \*Expat >= 2.2.8 (XML parser for CDL/CLF/CTF)
 - \*yaml-cpp >= 0.6.3 (YAML parser for Configs)
-- \*IlmBase (Half only) >= 2.4.0 (for half domain LUTs)
+- \*Imath >= 3.0.5 (for half domain LUTs)
+    - \*IlmBase (Half only) >= 2.4.0 (Alternative half implementation when 
+      OpenEXR 2 is available. Use ``-DOCIO_USE_OPENEXR_HALF=ON`` CMake option to 
+      enable).
 - \*pystring >= 1.1.3
 
 Some optional components also depend on:
@@ -122,17 +125,19 @@ When using existing system libraries, the following CMake variables can be
 defined to hint at non-standard install locations and preference of shared
 or static linking:
 
-- ``-DExpat_ROOT=<path>`` (include and/or library root dir)
-- ``-DExpat_STATIC_LIBRARY=ON`` (prefer static lib)
+- ``-Dexpat_ROOT=<path>`` (include and/or library root dir)
+- ``-Dexpat_STATIC_LIBRARY=ON`` (prefer static lib)
 - ``-Dyaml-cpp_ROOT=<path>`` (include and/or library root dir)
 - ``-Dyaml-cpp_STATIC_LIBRARY=ON`` (prefer static lib)
+- ``-DImath_ROOT=<path>`` (include and/or library root dir)
+- ``-DImath_STATIC_LIBRARY=ON`` (prefer static lib)
 - ``-DHalf_ROOT=<path>`` (include and/or library root dir)
 - ``-DHalf_STATIC_LIBRARY=ON`` (prefer static lib)
 - ``-Dpystring_ROOT=<path>`` (include and/or library root dir)
 - ``-Dpystring_STATIC_LIBRARY=ON`` (prefer static lib)
 - ``-Dlcms2_ROOT=<path>`` (include and/or library root dir)
 - ``-Dlcms2_STATIC_LIBRARY=ON`` (prefer static lib)
-- ``-pybind11_ROOT=<path>`` (include and/or library root dir)
+- ``-Dpybind11_ROOT=<path>`` (include and/or library root dir)
 - ``-DPython_EXECUTABLE=<path>`` (Python executable)
 
 To hint at Python package locations, add paths to the ``PYTHONPATH`` 
@@ -292,9 +297,9 @@ for compiling on Windows as provided by `@hodoulp <https://github.com/hodoulp>`_
         -DOCIO_USE_SSE=ON ^
         -DOCIO_WARNING_AS_ERROR=ON ^
         -DOCIO_BUILD_PYTHON=%OCIO_BUILD_PYTHON% ^
-        -DPython_LIBRARY=%PYTHONPATH%\libs\python27.lib ^
-        -DPython_INCLUDE_DIR=%PYTHONPATH%\include ^
-        -DPython_EXECUTABLE=%PYTHONPATH%\python.exe ^
+        -DPython_LIBRARY=%PYTHON_PATH%\libs\python27.lib ^
+        -DPython_INCLUDE_DIR=%PYTHON_PATH%\include ^
+        -DPython_EXECUTABLE=%PYTHON_PATH%\python.exe ^
         -DOCIO_BUILD_JAVA=OFF ^
         -DCMAKE_PREFIX_PATH=%COMPILED_THIRD_PARTY_HOME%\OpenImageIO-1.9.0;%COMPILED_THIRD_PARTY_HOME%/ilmbase-2.2.0 ^
         %OCIO_PATH%
@@ -425,3 +430,10 @@ Note: For other user facing environment variables, see :ref:`using_env_vars`.
 
     Note that :envvar:`DYLD_LIBRARY_PATH` or :envvar:`LD_LIBRARY_PATH`
     must be set correctly for the module to work.
+
+.. envvar:: OFX_PLUGIN_PATH
+
+    When building the OCIO OpenFX plugins, include the installed 
+    ``OpenColorIO/lib`` directory (where ``OpenColorIO.ofx.bundle`` is located) 
+    in this path. The path to a shared OpenColorIO lib (*.so, *.dll, *.dylib) 
+    should also be present on ``PATH``.

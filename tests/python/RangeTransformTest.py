@@ -2,7 +2,6 @@
 # Copyright Contributors to the OpenColorIO Project.
 
 import unittest, os, sys
-sys.path.append(os.path.join(sys.argv[1], "src", "pyglue"))
 import PyOpenColorIO as OCIO
 
 class RangeTransformTest(unittest.TestCase):

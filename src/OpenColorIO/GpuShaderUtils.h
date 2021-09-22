@@ -64,6 +64,18 @@ public:
     void dedent();
 
     //
+    // Basic types.
+    //
+
+    std::string floatKeyword() const;
+    std::string floatKeywordConst() const;
+    std::string floatDecl(const std::string& name) const;
+
+    std::string intKeyword() const;
+
+    std::string colorDecl(const std::string& name) const;
+
+    //
     // Scalar & arrays helper functions.
     //
 
@@ -185,7 +197,7 @@ public:
     // Special function helpers
     //
 
-    // Get the string for linearly interpolating two quantities
+    // Get the string for linearly interpolating two quantities.
     std::string lerp(const std::string& x, const std::string& y, 
                      const std::string& a) const;
 
@@ -198,6 +210,9 @@ public:
     // (similar to atan(y/x) but takes into account the signs of the arguments).
     std::string atan2(const std::string& y, const std::string& x) const;
 
+    // Get the string for taking the sign of a vector.
+    std::string sign(const std::string & v) const;
+
     friend class GpuShaderLine;
 
 private:
@@ -206,9 +221,6 @@ private:
     //    to the current line before adding it to the shader text, and
     //    resets the current line.
     void flushLine();
-
-    std::string floatKeyword() const;
-    std::string intKeyword() const;
 
 private:
     // Shader language to use in the various shader text builder methods.
@@ -238,9 +250,9 @@ std::string BuildResourceName(GpuShaderCreatorRcPtr & shaderCreator, const std::
 //
 
 // Convert scene-linear values to "grading log".
-void AddLinToLogShader(GpuShaderText & st);
+void AddLinToLogShader(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & st);
 // Convert "grading log" values to scene-linear.
-void AddLogToLinShader(GpuShaderText & st);
+void AddLogToLinShader(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & st);
 
 } // namespace OCIO_NAMESPACE
 

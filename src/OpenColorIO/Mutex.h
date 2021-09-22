@@ -7,6 +7,7 @@
 
 
 #include <mutex> 
+#include <thread>
 #include <assert.h>
 
 
@@ -24,18 +25,30 @@ public:
     DebugLock() = default;
     DebugLock(const DebugLock &) = delete;
     DebugLock& operator=(const DebugLock &) = delete;
-    ~DebugLock() { assert(!m_locked); }
+    ~DebugLock() { assert(m_owner == std::thread::id()); }
 
-    void lock()     { assert(!m_locked); m_mutex.lock();   m_locked = true;  }
-    void unlock()   { assert(m_locked);  m_mutex.unlock(); m_locked = false; }
-    void try_lock() { assert(!m_locked); m_locked = m_mutex.try_lock(); }
-
-    bool locked() const { return m_locked; }
+    void lock()
+    {
+        assert(m_owner != std::this_thread::get_id());
+        m_mutex.lock();
+        m_owner = std::this_thread::get_id();
+    }
+    void unlock()
+    {
+        assert(m_owner == std::this_thread::get_id());
+        m_owner = std::thread::id();
+        m_mutex.unlock();
+    }
+    bool try_lock()
+    {
+      assert(m_owner != std::this_thread::get_id());
+      return m_mutex.try_lock();
+    }
 
 private:
     // An exclusive and non-recursive ownership lock.
-    std::mutex m_mutex;
-    bool       m_locked = false;
+    std::mutex      m_mutex;
+    std::thread::id m_owner;
 };
 
 typedef DebugLock Mutex;

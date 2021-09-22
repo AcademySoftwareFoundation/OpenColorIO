@@ -260,6 +260,9 @@ void ExponentOp::extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) con
     ss.newLine() << "// Add an Exponent processing";
     ss.newLine() << "";
 
+    ss.newLine() << "{";
+    ss.indent();
+
     // outColor = pow(max(outColor, 0.), exp);
 
     ss.newLine()
@@ -268,7 +271,10 @@ void ExponentOp::extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) con
         << "max( " << shaderCreator->getPixelName()
         << ", " << ss.float4Const(0.0f) << " )"
         << ", " << ss.float4Const(expData()->m_exp4[0], expData()->m_exp4[1],
-                                    expData()->m_exp4[2], expData()->m_exp4[3]) << " );";
+                                  expData()->m_exp4[2], expData()->m_exp4[3]) << " );";
+
+    ss.dedent();
+    ss.newLine() << "}";
 
     shaderCreator->addToFunctionShaderCode(ss.string().c_str());
 }
