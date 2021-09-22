@@ -625,7 +625,10 @@ int main(int argc, const char **argv)
             exit(1);
         }
 
-        spec.attribute("oiio:ColorSpace", outputcolorspace);
+        if (outputcolorspace)
+        {
+            spec.attribute("oiio:ColorSpace", outputcolorspace);
+        }
 
         f->open(outputimage, spec);
 
