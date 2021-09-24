@@ -27,7 +27,6 @@ set_target_properties(ocioconvert PROPERTIES
 target_link_libraries(ocioconvert
     PRIVATE
         apputils
-        ${OCIO_HALF_LIB}
         ${OCIO_GL_LIB}
         oiiohelpers
         OpenColorIO
@@ -35,5 +34,5 @@ target_link_libraries(ocioconvert
 )
 
 install(TARGETS ocioconvert
-    RUNTIME DESTINATION bin
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )

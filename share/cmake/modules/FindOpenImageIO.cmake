@@ -59,6 +59,10 @@ find_library ( OPENIMAGEIO_LIBRARY
                NAMES OpenImageIO${OIIO_LIBNAME_SUFFIX}
                HINTS ${OPENIMAGEIO_ROOT_DIR}
                PATH_SUFFIXES lib64 lib )
+find_library ( OPENIMAGEIO_UTIL_LIBRARY
+               NAMES OpenImageIO_Util${OIIO_LIBNAME_SUFFIX}
+               HINTS ${OPENIMAGEIO_ROOT_DIR}
+               PATH_SUFFIXES lib64 lib )
 find_path ( OPENIMAGEIO_INCLUDE_DIR
             NAMES OpenImageIO/imageio.h
             HINTS ${OPENIMAGEIO_ROOT_DIR} )
