@@ -44,6 +44,8 @@ set(OpenColorIO_VERSION_RELEASE_TYPE "dev")
 # By doing so 'ctest -F memcheck' works.
 include (CTest)
 
+enable_testing()
+
 
 ###############################################################################
 # Forbid in-source build.
