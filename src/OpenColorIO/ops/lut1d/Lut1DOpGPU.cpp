@@ -201,9 +201,12 @@ void GetLut1DGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
 
     // Add the LUT code to the OCIO shader program.
 
-    if (height > 1 || lutData->isInputHalfDomain())
+    if (height > 1 || lutData->isInputHalfDomain()
+        || shaderCreator->getLanguage() == GPU_LANGUAGE_GLSL_ES_1_0
+        || shaderCreator->getLanguage() == GPU_LANGUAGE_GLSL_ES_3_0)
     {
-        // In case the 1D LUT length exceeds the 1D texture maximum length
+        // In case the 1D LUT length exceeds the 1D texture maximum length,
+        // or the language doesn't support 1D textures,
         // a 2D texture is used.
 
         {
@@ -321,7 +324,9 @@ void GetLut1DGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
         ss.newLine() << "";
     }
 
-    if (height > 1 || lutData->isInputHalfDomain())
+    if (height > 1 || lutData->isInputHalfDomain()
+        || shaderCreator->getLanguage() == GPU_LANGUAGE_GLSL_ES_1_0
+        || shaderCreator->getLanguage() == GPU_LANGUAGE_GLSL_ES_3_0)
     {
         const std::string str = name + "_computePos(" + shaderCreator->getPixelName();
 
