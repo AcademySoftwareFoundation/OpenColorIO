@@ -191,12 +191,8 @@ target_compile_features(OpenColorIO
 )
 
 if(BUILD_SHARED_LIBS AND WIN32)
-    # Impose a versioned name on Windows to avoid binary name clashes.
-    set(OCIO_LIBNAME_SUFFIX
-        ${OCIO_LIBNAME_SUFFIX}_${OpenColorIO_VERSION_MAJOR}_${OpenColorIO_VERSION_MINOR}
-    )
-
-    set(CMAKE_SHARED_LIBRARY_SUFFIX ${OCIO_LIBNAME_SUFFIX}.dll)
+    # Only use the versioned name with the dynamic library.
+    set(CMAKE_SHARED_LIBRARY_SUFFIX _${OpenColorIO_VERSION_MAJOR}_${OpenColorIO_VERSION_MINOR}.dll)
 
     # Create the version.rc file for the Windows DLL.
     configure_file(res/version.rc.in ${CMAKE_CURRENT_BINARY_DIR}/version.rc @ONLY)
@@ -275,7 +271,7 @@ endif()
 
 if(MSVC AND BUILD_TYPE_DEBUG AND BUILD_SHARED_LIBS)
     set_target_properties(OpenColorIO PROPERTIES
-        PDB_NAME ${PROJECT_NAME}${OCIO_LIBNAME_SUFFIX}
+        PDB_NAME ${PROJECT_NAME}${OCIO_LIBNAME_SUFFIX}_${OpenColorIO_VERSION_MAJOR}_${OpenColorIO_VERSION_MINOR}
     )
 endif()
 
@@ -289,7 +285,7 @@ if(WIN32)
 endif()
 
 set_target_properties(OpenColorIO PROPERTIES
-    OUTPUT_NAME   ${PROJECT_NAME}
+    OUTPUT_NAME   ${PROJECT_NAME}${OCIO_LIBNAME_SUFFIX}
     COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS}"
     VERSION       ${OpenColorIO_VERSION}
     SOVERSION     ${SOVERSION}
