@@ -174,6 +174,12 @@ std::string CreateTempFilename(const std::string & filenameExt)
 
     // Note: Because of security issue, tmpnam could not be used.
 
+    // Note 2: MinGW doesn't define L_tmpnam_s, we need to patch it in.
+    // https://www.mail-archive.com/mingw-w64-public@lists.sourceforge.net/msg17360.html
+#if !defined(L_tmpnam_s)
+#define L_tmpnam_s L_tmpnam
+#endif
+
     char tmpFilename[L_tmpnam_s];
     if(tmpnam_s(tmpFilename))
     {
