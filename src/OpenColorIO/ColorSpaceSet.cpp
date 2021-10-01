@@ -35,7 +35,7 @@ public:
         return *this;
     }
 
-    bool operator== (const Impl & rhs)
+    bool operator== (const Impl & rhs) const
     {
         if (this == &rhs) return true;
 

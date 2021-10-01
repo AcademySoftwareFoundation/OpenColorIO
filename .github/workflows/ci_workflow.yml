@@ -55,13 +55,13 @@ jobs:
       image: aswf/ci-ocio:${{ matrix.vfx-cy }}
     strategy:
       matrix:
-        build: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+        build: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
         include:
           # -------------------------------------------------------------------
           # VFX CY2022 (Python 3.9)
           # -------------------------------------------------------------------
           # Clang, Debug, OpenFX
-          - build: 12
+          - build: 13
             build-type: Debug
             build-shared: 'ON'
             build-docs: 'OFF'
@@ -74,7 +74,7 @@ jobs:
             compiler-desc: Clang 9
             vfx-cy: 2022
           # GCC, no SSE, OpenFX
-          - build: 11
+          - build: 12
             build-type: Release
             build-shared: 'ON'
             build-docs: 'OFF'
@@ -86,15 +86,28 @@ jobs:
             cc-compiler: gcc
             compiler-desc: GCC 9.3.1
             vfx-cy: 2022
-          # GCC, static, docs
-          - build: 10
+          # C++14, GCC, static, docs
+          - build: 11
             build-type: Release
             build-shared: 'OFF'
             build-docs: 'ON'
             build-openfx: 'OFF'
             use-sse: 'ON'
             use-openexr-half: 'OFF'
-            cxx-standard: 17
+            cxx-standard: 14
+            cxx-compiler: g++
+            cc-compiler: gcc
+            compiler-desc: GCC 9.3.1
+            vfx-cy: 2022
+          # C++11 (not supported by OSL & OIIO)
+          - build: 10
+            build-type: Release
+            build-shared: 'OFF'
+            build-docs: 'OFF'
+            build-openfx: 'OFF'
+            use-sse: 'ON'
+            use-openexr-half: 'OFF'
+            cxx-standard: 11
             cxx-compiler: g++
             cc-compiler: gcc
             compiler-desc: GCC 9.3.1
@@ -123,7 +136,7 @@ jobs:
             build-openfx: 'ON'
             use-sse: 'OFF'
             use-openexr-half: 'ON'
-            cxx-standard: 17
+            cxx-standard: 14
             cxx-compiler: clang++
             cc-compiler: clang
             compiler-desc: Clang 9
@@ -136,7 +149,7 @@ jobs:
             build-openfx: 'OFF'
             use-sse: 'ON'
             use-openexr-half: 'ON'
-            cxx-standard: 17
+            cxx-standard: 11
             cxx-compiler: g++
             cc-compiler: gcc
             compiler-desc: GCC 9.3.1
@@ -178,13 +191,13 @@ jobs:
             build-openfx: 'OFF'
             use-sse: 'ON'
             use-openexr-half: 'ON'
-            cxx-standard: 14
+            cxx-standard: 11
             cxx-compiler: g++
             cc-compiler: gcc
             compiler-desc: GCC 6.3.1
             vfx-cy: 2020
           # -------------------------------------------------------------------
-          # VFX CY2019 (Python 2.7)
+          # VFX CY2019 (C++11, Python 2.7)
           # -------------------------------------------------------------------
           # Clang, static
           - build: 3
@@ -318,7 +331,7 @@ jobs:
             use-openexr-half: 'OFF'
             cxx-standard: 11
             python-version: 3.7
-          # Debug, OpenFX
+          # C++11, Debug, OpenFX
           - build: 4
             build-type: Debug
             build-shared: 'ON'
@@ -338,7 +351,7 @@ jobs:
             use-openexr-half: 'ON'
             cxx-standard: 14
             python-version: 3.7
-          # Static, no SSE
+          # C++11, Static, no SSE
           - build: 2
             build-type: Release
             build-shared: 'OFF'
@@ -348,7 +361,7 @@ jobs:
             use-openexr-half: 'OFF'
             cxx-standard: 11
             python-version: 3.7
-          # Python 2.7
+          # C++11, Python 2.7
           - build: 1
             build-type: Release
             build-shared: 'ON'
@@ -452,7 +465,7 @@ jobs:
             use-openexr-half: 'OFF'
             cxx-standard: 11
             python-version: 3.7
-          # Debug
+          # C++11, Debug
           - build: 4
             build-type: Debug
             build-shared: 'ON'
@@ -472,7 +485,7 @@ jobs:
             use-openexr-half: 'ON'
             cxx-standard: 14
             python-version: 3.7
-          # Static, no SSE, OpenFX
+          # C++11, Static, no SSE, OpenFX
           - build: 2
             build-type: Release
             build-shared: 'OFF'
@@ -482,7 +495,7 @@ jobs:
             use-openexr-half: 'OFF'
             cxx-standard: 11
             python-version: 3.7
-          # Python 2.7
+          # C++11, Python 2.7
           - build: 1
             build-type: Release
             build-shared: 'ON'
