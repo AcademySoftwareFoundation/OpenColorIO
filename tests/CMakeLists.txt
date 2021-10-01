@@ -19,7 +19,7 @@ if(OCIO_BUILD_GPU_TESTS)
     add_subdirectory(gpu)
 endif()
 
-if(TARGET OpenImageIO::OpenImageIO)
+if(OpenImageIO_FOUND AND TARGET OpenImageIO::OpenImageIO)
 
     # Running the OSL unit tests requires OSL which imposes OIIO and Imath.
 
