@@ -242,12 +242,12 @@ int UnitTestMain(int argc, const char ** argv);
     try {                                                               \
         S;                                                              \
     } catch (std::exception & ex ) {                                    \
-        std::cout << __FILE__ << ":" << __LINE__ << ":\n"               \
+        std::cout << __FILE__ << ":" << line << ":\n"                   \
             << "FAILED: exception thrown from " << FIELD_STR(S)         \
             << ": \"" << ex.what() << "\"\n";                           \
         ++unit_test_failures;                                           \
     } catch (...) {                                                     \
-        std::cout << __FILE__ << ":" << __LINE__ << ":\n"               \
+        std::cout << __FILE__ << ":" << line << ":\n"                   \
         << "FAILED: exception thrown from " << FIELD_STR(S) <<"\n";     \
         ++unit_test_failures; }
 

@@ -4,6 +4,8 @@
 #ifndef INCLUDED_OCIO_FILEFORMATS_XML_XMLREADERUTILS_H
 #define INCLUDED_OCIO_FILEFORMATS_XML_XMLREADERUTILS_H
 
+
+#include <type_traits>
 #include <string>
 #include <sstream>
 #include <vector>
@@ -12,6 +14,7 @@
 
 #include "MathUtils.h"
 #include "Platform.h"
+
 
 namespace OCIO_NAMESPACE
 {
@@ -121,14 +124,18 @@ inline size_t FindDelim(const char * str, size_t len, size_t pos)
 
 namespace
 {
+
 // When using an integer ParseNumber template, it is an error if the string
 // actually contains a number with a decimal part.
 template<typename T>
-bool IsValid(T value, double val) { return (double)value == val; }
-template<>
-bool IsValid(float, double) { return true; }
-template<>
-bool IsValid(double, double) { return true; }
+bool IsValid(T value, double val)
+{
+    // Returns true, if T is the type float, double or long double.
+    if (std::is_floating_point<T>::value) return true;
+
+    return static_cast<double>(value) == val;
+}
+
 }
 
 // Get first number from a string between startPos & endPos.

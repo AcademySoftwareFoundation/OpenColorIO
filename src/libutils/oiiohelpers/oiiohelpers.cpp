@@ -5,7 +5,6 @@
 #include <OpenColorIO/OpenColorIO.h>
 
 
-#include "OpenEXR/half.h"
 #include "oiiohelpers.h"
 #include "utils/StringUtils.h"
 
@@ -81,7 +80,7 @@ void * AllocateImageBuffer(const OIIO::ImageSpec & spec)
     return (void *)new char[imgSizeInChars];
 }
 
-void DeallocateImageBuffer(const OIIO::ImageSpec & spec, void * & img)
+void DeallocateImageBuffer(const OIIO::ImageSpec & /* spec */, void * & img)
 {
     delete [](char*)img;
     img = nullptr;

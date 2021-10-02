@@ -44,6 +44,8 @@ std::string getVecKeyword(GpuLanguage lang)
         case GPU_LANGUAGE_GLSL_1_2:
         case GPU_LANGUAGE_GLSL_1_3:
         case GPU_LANGUAGE_GLSL_4_0:
+        case GPU_LANGUAGE_GLSL_ES_1_0:
+        case GPU_LANGUAGE_GLSL_ES_3_0:
         {
             kw << "vec" << N;
             break;
@@ -56,6 +58,11 @@ std::string getVecKeyword(GpuLanguage lang)
         case GPU_LANGUAGE_HLSL_DX11:
         {
             kw << "float" << N;
+            break;
+        }
+        case LANGUAGE_OSL_1:
+        {
+            kw << "vector" << N;
             break;
         }
 
@@ -80,6 +87,8 @@ void getTexDecl(GpuLanguage lang,
         case GPU_LANGUAGE_GLSL_1_3:
         case GPU_LANGUAGE_CG:
         case GPU_LANGUAGE_GLSL_4_0:
+        case GPU_LANGUAGE_GLSL_ES_1_0:
+        case GPU_LANGUAGE_GLSL_ES_3_0:
         {
             textureDecl = "";
 
@@ -98,6 +107,10 @@ void getTexDecl(GpuLanguage lang,
             t << "SamplerState" << " " << samplerName << ";";
             samplerDecl = t.str();
             break;
+        }
+        case LANGUAGE_OSL_1:
+        {
+            throw Exception("Unsupported by the Open Shading language (OSL) translation.");
         }
 
         default:
@@ -123,6 +136,15 @@ std::string getTexSample(GpuLanguage lang,
             kw << "texture" << N << "D(" << samplerName << ", " << coords << ")";
             break;
         }
+        case GPU_LANGUAGE_GLSL_ES_1_0:
+        {
+            if (N == 1) {
+                throw Exception("1D textures are unsupported by OpenGL ES.");
+            }
+
+            kw << "texture" << N << "D(" << samplerName << ", " << coords << ")";
+            break;
+        }
         case GPU_LANGUAGE_CG:
         {
             kw << "tex" << N << "D(" << samplerName << ", " << coords << ")";
@@ -137,6 +159,19 @@ std::string getTexSample(GpuLanguage lang,
         {
             kw << "texture(" << samplerName << ", " << coords << ")";
             break;
+        }
+        case GPU_LANGUAGE_GLSL_ES_3_0:
+        {
+            if (N == 1) {
+                throw Exception("1D textures are unsupported by OpenGL ES.");
+            }
+
+            kw << "texture(" << samplerName << ", " << coords << ")";
+            break;
+        }
+        case LANGUAGE_OSL_1:
+        {
+            throw Exception("Unsupported by the Open Shading language (OSL) translation.");
         }
 
         default:
@@ -262,7 +297,7 @@ std::string GpuShaderText::string() const
 
 void GpuShaderText::flushLine()
 {
-    static const unsigned tabSize = 2;
+    static constexpr unsigned tabSize = 2;
 
     m_ossText << std::string(tabSize * m_indent, ' ')
               << m_ossLine.str()
@@ -277,10 +312,60 @@ std::string GpuShaderText::floatKeyword() const
     return (m_lang == GPU_LANGUAGE_CG ? "half" : "float");
 }
 
+std::string GpuShaderText::floatKeywordConst() const
+{
+    std::string str;
+
+    switch (m_lang)
+    {
+        case GPU_LANGUAGE_GLSL_1_2:
+        case GPU_LANGUAGE_GLSL_1_3:
+        case GPU_LANGUAGE_GLSL_4_0:
+        case GPU_LANGUAGE_GLSL_ES_1_0:
+        case GPU_LANGUAGE_GLSL_ES_3_0:
+        case GPU_LANGUAGE_HLSL_DX11:
+        {
+            str += "const";
+            str += " ";
+            break;
+        }
+        case LANGUAGE_OSL_1:
+        case GPU_LANGUAGE_CG:
+            break;
+    }
+
+    str += floatKeyword();
+
+    return str;
+}
+
+std::string GpuShaderText::floatDecl(const std::string & name) const
+{
+    if (name.empty())
+    {
+        throw Exception("GPU variable name is empty.");
+    }
+
+    return floatKeyword() + " " + name;
+}
+
 std::string GpuShaderText::intKeyword() const
 {
     return "int";
 }
+
+std::string GpuShaderText::colorDecl(const std::string & name) const
+{
+    if (name.empty())
+    {
+        throw Exception("GPU variable name is empty.");
+    }
+
+    return (m_lang==LANGUAGE_OSL_1 ? "color" : float3Keyword()) + " " + name;
+}
+
+// TODO: OSL: The method only solves the problem for constant float values. The code must also
+// support the in-place declarations (like res = t + vec3(...) for example).
 
 void GpuShaderText::declareVar(const std::string & name, float v)
 {
@@ -288,8 +373,32 @@ void GpuShaderText::declareVar(const std::string & name, float v)
     {
         throw Exception("GPU variable name is empty.");
     }
-    newLine() << floatKeyword()
-              << " " << name << " = " << getFloatString(v, m_lang) << ";";
+
+    // Note that OSL does not support inf and -inf so the code below adjusts the value to float max.
+
+    if (std::isinf(v))
+    {
+        float newVal = v;
+
+        if (std::signbit(v))
+        {
+            newVal = -1 * std::numeric_limits<float>::max();
+        }
+        else
+        {
+            newVal = std::numeric_limits<float>::max();
+        }
+
+        std::ostringstream oss;
+        oss.precision(std::numeric_limits<float>::max_digits10);
+        oss << newVal;
+
+        newLine() << floatDecl(name) << " = " << oss.str() << ";";
+
+        return;
+    }
+
+    newLine() << floatDecl(name) << " = " << getFloatString(v, m_lang) << ";";
 }
 
 void GpuShaderText::declareVar(const std::string & name, bool v)
@@ -313,32 +422,44 @@ void GpuShaderText::declareFloatArrayConst(const std::string & name, int size, c
     }
 
     auto nl = newLine();
-    if (m_lang != GPU_LANGUAGE_HLSL_DX11)
+
+    switch (m_lang)
     {
-        nl << "const " << floatKeyword() << " " << name << "[" << size << "]" << " = ";
-        nl << floatKeyword() << "[" << size << "](";
-        for (int i = 0; i < size; ++i)
+        case GPU_LANGUAGE_GLSL_1_2:
+        case GPU_LANGUAGE_GLSL_1_3:
+        case GPU_LANGUAGE_GLSL_4_0:
+        case GPU_LANGUAGE_GLSL_ES_1_0:
+        case GPU_LANGUAGE_GLSL_ES_3_0:
         {
-            nl << getFloatString(v[i], m_lang);
-            if (i + 1 != size)
+            nl << floatKeywordConst() << " " << name << "[" << size << "] = ";
+            nl << floatKeyword() << "[" << size << "](";
+            for (int i = 0; i < size; ++i)
             {
-                nl << ", ";
+                nl << getFloatString(v[i], m_lang);
+                if (i + 1 != size)
+                {
+                    nl << ", ";
+                }
             }
+            nl << ");";
+            break;
         }
-        nl << ");";
-    }
-    else
-    {
-        nl << "vector<float, "<< size << "> " << name << " = {";
-        for (int i = 0; i < size; ++i)
+        case LANGUAGE_OSL_1:
+        case GPU_LANGUAGE_CG:
+        case GPU_LANGUAGE_HLSL_DX11:
         {
-            nl << getFloatString(v[i], m_lang);
-            if (i + 1 != size)
+            nl << floatKeywordConst() << " " << name << "[" << size << "] = {";
+            for (int i = 0; i < size; ++i)
             {
-                nl << ", ";
+                nl << getFloatString(v[i], m_lang);
+                if (i + 1 != size)
+                {
+                    nl << ", ";
+                }
             }
+            nl << "};";
+            break;
         }
-        nl << "};";
     }
 }
 
@@ -354,32 +475,57 @@ void GpuShaderText::declareIntArrayConst(const std::string & name, int size, con
     }
 
     auto nl = newLine();
-    if (m_lang != GPU_LANGUAGE_HLSL_DX11)
+
+    switch (m_lang)
     {
-        nl << "const " << intKeyword() << " " << name << "[" << size << "]"
-           << " = " << intKeyword() << "[" << size << "](";
-        for (int i = 0; i < size; ++i)
+        case GPU_LANGUAGE_GLSL_1_2:
+        case GPU_LANGUAGE_GLSL_1_3:
+        case GPU_LANGUAGE_GLSL_4_0:
+        case GPU_LANGUAGE_GLSL_ES_1_0:
+        case GPU_LANGUAGE_GLSL_ES_3_0:
         {
-            nl << v[i];
-            if (i + 1 != size)
+            nl << "const " << intKeyword() << " " << name << "[" << size << "] = "
+               << intKeyword() << "[" << size << "](";
+            for (int i = 0; i < size; ++i)
             {
-                nl << ", ";
+                nl << v[i];
+                if (i + 1 != size)
+                {
+                    nl << ", ";
+                }
             }
+            nl << ");";
+            break;
         }
-        nl << ");";
-    }
-    else
-    {
-        nl << "vector<" << intKeyword() << ", " << size << "> " << name << " = {";
-        for (int i = 0; i < size; ++i)
+        case GPU_LANGUAGE_HLSL_DX11:
         {
-            nl << v[i];
-            if (i + 1 != size)
+            nl << "const " << intKeyword() << " " << name << "[" << size << "] = {";
+            for (int i = 0; i < size; ++i)
             {
-                nl << ", ";
+                nl << v[i];
+                if (i + 1 != size)
+                {
+                    nl << ", ";
+                }
             }
+            nl << "};";
+            break;
         }
-        nl << "};";
+        case LANGUAGE_OSL_1:
+        case GPU_LANGUAGE_CG:
+        {
+            nl << intKeyword() << " " << name << "[" << size << "] = {";
+            for (int i = 0; i < size; ++i)
+            {
+                nl << v[i];
+                if (i + 1 != size)
+                {
+                    nl << ", ";
+                }
+            }
+            nl << "};";
+            break;
+        }
     }
 }
 
@@ -400,26 +546,26 @@ std::string GpuShaderText::float2Decl(const std::string & name) const
 
 std::string GpuShaderText::float3Keyword() const
 {
-    return getVecKeyword<3>(m_lang);
+    return m_lang == LANGUAGE_OSL_1 ? "vector" : getVecKeyword<3>(m_lang);
 }
 
 std::string GpuShaderText::float3Const(float x, float y, float z) const
 {
     return float3Const(getFloatString(x, m_lang),
-                      getFloatString(y, m_lang), 
-                      getFloatString(z, m_lang));
+                       getFloatString(y, m_lang), 
+                       getFloatString(z, m_lang));
 }
 
 std::string GpuShaderText::float3Const(double x, double y, double z) const
 {
     return float3Const(getFloatString(x, m_lang),
-                      getFloatString(y, m_lang), 
-                      getFloatString(z, m_lang));
+                       getFloatString(y, m_lang), 
+                       getFloatString(z, m_lang));
 }
 
 std::string GpuShaderText::float3Const(const std::string& x,
-                                      const std::string& y,
-                                      const std::string& z) const
+                                       const std::string& y,
+                                       const std::string& z) const
 {
     std::ostringstream kw;
     kw << float3Keyword() << "(" << x << ", " << y << ", " << z << ")";
@@ -451,12 +597,11 @@ std::string GpuShaderText::float3Decl(const std::string &  name) const
     return float3Keyword() + " " + name;
 }
 
-void GpuShaderText::declareFloat3(const std::string & name,
-                                 float x, float y, float z)
+void GpuShaderText::declareFloat3(const std::string & name, float x, float y, float z)
 {
     declareFloat3(name, getFloatString(x, m_lang), 
-                       getFloatString(y, m_lang), 
-                       getFloatString(z, m_lang));
+                        getFloatString(y, m_lang), 
+                        getFloatString(z, m_lang));
 }
 
 void GpuShaderText::declareFloat3(const std::string& name, const Float3 & vec3)
@@ -465,17 +610,17 @@ void GpuShaderText::declareFloat3(const std::string& name, const Float3 & vec3)
 }
 
 void GpuShaderText::declareFloat3(const std::string & name, 
-                                 double x, double y, double z)
+                                  double x, double y, double z)
 {
     declareFloat3(name, getFloatString(x, m_lang), 
-                       getFloatString(y, m_lang), 
-                       getFloatString(z, m_lang));
+                        getFloatString(y, m_lang), 
+                        getFloatString(z, m_lang));
 }
 
 void GpuShaderText::declareFloat3(const std::string & name, 
-                                 const std::string & x,
-                                 const std::string & y,
-                                 const std::string & z)
+                                  const std::string & x,
+                                  const std::string & y,
+                                  const std::string & z)
 {
     newLine() << float3Decl(name) << " = " << float3Const(x, y, z) << ";";
 }
@@ -488,23 +633,23 @@ std::string GpuShaderText::float4Keyword() const
 std::string GpuShaderText::float4Const(const float x, const float y, const float z, const float w) const
 {
     return float4Const(getFloatString(x, m_lang),
-                      getFloatString(y, m_lang), 
-                      getFloatString(z, m_lang),
-                      getFloatString(w, m_lang));
+                       getFloatString(y, m_lang), 
+                       getFloatString(z, m_lang),
+                       getFloatString(w, m_lang));
 }
 
 std::string GpuShaderText::float4Const(const double x, const double y, const double z, const double w) const
 {
     return float4Const(getFloatString(x, m_lang),
-                      getFloatString(y, m_lang), 
-                      getFloatString(z, m_lang),
-                      getFloatString(w, m_lang));
+                       getFloatString(y, m_lang), 
+                       getFloatString(z, m_lang),
+                       getFloatString(w, m_lang));
 }
 
-std::string GpuShaderText::float4Const(const std::string& x,
-                                      const std::string& y,
-                                      const std::string& z,
-                                      const std::string& w) const
+std::string GpuShaderText::float4Const(const std::string & x,
+                                       const std::string & y,
+                                       const std::string & z,
+                                       const std::string & w) const
 {
     std::ostringstream kw;
     kw << float4Keyword() << "("
@@ -681,6 +826,8 @@ std::string matrix4Mul(const T * m4x4, const std::string & vecName, GpuLanguage 
         case GPU_LANGUAGE_GLSL_1_2:
         case GPU_LANGUAGE_GLSL_1_3:
         case GPU_LANGUAGE_GLSL_4_0:
+        case GPU_LANGUAGE_GLSL_ES_1_0:
+        case GPU_LANGUAGE_GLSL_ES_3_0:
         {
             // OpenGL shader program requests a transposed matrix
             kw << "mat4(" 
@@ -697,6 +844,16 @@ std::string matrix4Mul(const T * m4x4, const std::string & vecName, GpuLanguage 
         {
             kw << "mul(" << vecName 
                 << ", float4x4(" << getMatrixValues<T, 4>(m4x4, lang, true) << "))";
+            break;
+        }
+        case LANGUAGE_OSL_1:
+        {
+            kw << vecName << " * matrix(" 
+               << m4x4[ 0] << ", " << m4x4[ 1] << ", " << m4x4[ 2] << ", " << m4x4[ 3] << ", "
+               << m4x4[ 4] << ", " << m4x4[ 5] << ", " << m4x4[ 6] << ", " << m4x4[ 7] << ", "
+               << m4x4[ 8] << ", " << m4x4[ 9] << ", " << m4x4[10] << ", " << m4x4[11] << ", "
+               << m4x4[12] << ", " << m4x4[13] << ", " << m4x4[14] << ", " << m4x4[15] 
+               << ")";
             break;
         }
 
@@ -727,9 +884,12 @@ std::string GpuShaderText::lerp(const std::string & x,
     std::ostringstream kw;
     switch (m_lang)
     {
+        case LANGUAGE_OSL_1:
         case GPU_LANGUAGE_GLSL_1_2:
         case GPU_LANGUAGE_GLSL_1_3:
         case GPU_LANGUAGE_GLSL_4_0:
+        case GPU_LANGUAGE_GLSL_ES_1_0:
+        case GPU_LANGUAGE_GLSL_ES_3_0:
         {
             kw << "mix(" << x << ", " << y << ", " << a << ")";
             break;
@@ -758,15 +918,20 @@ std::string GpuShaderText::float3GreaterThan(const std::string & a,
         case GPU_LANGUAGE_GLSL_1_2:
         case GPU_LANGUAGE_GLSL_1_3:
         case GPU_LANGUAGE_GLSL_4_0:
+        case GPU_LANGUAGE_GLSL_ES_1_0:
+        case GPU_LANGUAGE_GLSL_ES_3_0:
         case GPU_LANGUAGE_CG:
         {
             kw << float3Keyword() << "(greaterThan( " << a << ", " << b << "))";
             break;
         }
+        case LANGUAGE_OSL_1:
         case GPU_LANGUAGE_HLSL_DX11:
         {
-            kw << float3Keyword() << "((" << a << " > " << b << ") ? "
-                << float3Const(1.0f) << " : " << float3Const(0.0f) << ")";
+            kw << float3Keyword() << "(" 
+               << "(" << a << "[0] > " << b << "[0]) ? 1.0 : 0.0, "
+               << "(" << a << "[1] > " << b << "[1]) ? 1.0 : 0.0, "
+               << "(" << a << "[2] > " << b << "[2]) ? 1.0 : 0.0)";
             break;
         }
 
@@ -787,6 +952,8 @@ std::string GpuShaderText::float4GreaterThan(const std::string & a,
         case GPU_LANGUAGE_GLSL_1_2:
         case GPU_LANGUAGE_GLSL_1_3:
         case GPU_LANGUAGE_GLSL_4_0:
+        case GPU_LANGUAGE_GLSL_ES_1_0:
+        case GPU_LANGUAGE_GLSL_ES_3_0:
         case GPU_LANGUAGE_CG:
         {
             kw << float4Keyword() << "(greaterThan( " << a << ", " << b << "))";
@@ -794,8 +961,20 @@ std::string GpuShaderText::float4GreaterThan(const std::string & a,
         }
         case GPU_LANGUAGE_HLSL_DX11:
         {
-            kw << float4Keyword() << "((" << a << " > " << b << ") ? "
-                << float4Const(1.0f) << " : " << float4Const(0.0f) << ")";
+            kw << float4Keyword() << "(" 
+               << "(" << a << "[0] > " << b << "[0]) ? 1.0 : 0.0, "
+               << "(" << a << "[1] > " << b << "[1]) ? 1.0 : 0.0, "
+               << "(" << a << "[2] > " << b << "[2]) ? 1.0 : 0.0) "
+               << "(" << a << "[3] > " << b << "[3]) ? 1.0 : 0.0)";
+            break;
+        }
+        case LANGUAGE_OSL_1:
+        {
+            kw << float4Keyword() << "(" 
+               << "(" << a << ".rgb.r > " << b << ".x) ? 1.0 : 0.0, "
+               << "(" << a << ".rgb.g > " << b << ".y) ? 1.0 : 0.0, "
+               << "(" << a << ".rgb.b > " << b << ".z) ? 1.0 : 0.0, "
+               << "(" << a << ".a > " << b << ".w) ? 1.0 : 0.0)";
             break;
         }
 
@@ -817,11 +996,14 @@ std::string GpuShaderText::atan2(const std::string & y,
         case GPU_LANGUAGE_GLSL_1_2:
         case GPU_LANGUAGE_GLSL_1_3:
         case GPU_LANGUAGE_GLSL_4_0:
+        case GPU_LANGUAGE_GLSL_ES_1_0:
+        case GPU_LANGUAGE_GLSL_ES_3_0:
         {
             // note: "atan" not "atan2"
             kw << "atan(" << y << ", " << x << ")";
             break;
         }
+        case LANGUAGE_OSL_1:
         case GPU_LANGUAGE_HLSL_DX11:
         {
             // note: operand order is swapped in HLSL
@@ -836,6 +1018,39 @@ std::string GpuShaderText::atan2(const std::string & y,
     }
     return kw.str();
 }
+
+std::string GpuShaderText::sign(const std::string & v) const
+{
+    std::ostringstream kw;
+    switch(m_lang)
+    {
+        case GPU_LANGUAGE_CG:
+        case GPU_LANGUAGE_GLSL_1_2:
+        case GPU_LANGUAGE_GLSL_1_3:
+        case GPU_LANGUAGE_GLSL_4_0:
+        case GPU_LANGUAGE_GLSL_ES_1_0:
+        case GPU_LANGUAGE_GLSL_ES_3_0:
+        case GPU_LANGUAGE_HLSL_DX11:
+        {
+            kw << "sign(" << v << ");";
+            break;
+        }
+        case LANGUAGE_OSL_1:
+        {
+            // The challenge is only to return a vector4 type instead of a color4.
+            kw << "sign(" << float4Const(v + ".rgb.r", v + ".rgb.g",
+                                         v + ".rgb.b", v + ".a") << ");";
+            break;
+        }
+
+        default:
+        {
+            throw Exception("Unknown GPU shader language.");
+        }
+    }
+    return kw.str();
+}
+
 
 std::string BuildResourceName(GpuShaderCreatorRcPtr & shaderCreator, const std::string & prefix,
                               const std::string & base)
@@ -856,39 +1071,43 @@ std::string BuildResourceName(GpuShaderCreatorRcPtr & shaderCreator, const std::
 // with 0 being 18% grey.  Above about -5, it is pretty much exactly F-Stops but below
 // that it is a pseudo-log so that 0.0 is at -7 stops rather than -Inf (as in a pure log).
 //
-void AddLinToLogShader(GpuShaderText & st)
+void AddLinToLogShader(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & st)
 {
+    const std::string pix(shaderCreator->getPixelName());
+
     st.newLine() << "{";   // establish scope so local variable names won't conflict
     st.indent();
-    st.newLine() << "const float xbrk = 0.0041318374739483946;";
-    st.newLine() << "const float shift = -0.000157849851665374;";
-    st.newLine() << "const float m = 1. / (0.18 + shift);";
-    st.newLine() << "const float base2 = 1.4426950408889634;";  // 1/log(2)
-    st.newLine() << "const float gain = 363.034608563;";
-    st.newLine() << "const float offs = -7.;";
-    st.newLine() << st.float3Decl("ylin") << " = outColor.rgb * gain + offs;";
-    st.newLine() << st.float3Decl("ylog") << " = base2 * log( ( outColor.rgb + shift ) * m );";
-    st.newLine() << "outColor.r = (outColor.r < xbrk) ? ylin.r : ylog.r;";
-    st.newLine() << "outColor.g = (outColor.g < xbrk) ? ylin.g : ylog.g;";
-    st.newLine() << "outColor.b = (outColor.b < xbrk) ? ylin.b : ylog.b;";
+    st.newLine() << st.floatKeywordConst() << " xbrk = 0.0041318374739483946;";
+    st.newLine() << st.floatKeywordConst() << " shift = -0.000157849851665374;";
+    st.newLine() << st.floatKeywordConst() << " m = 1. / (0.18 + shift);";
+    st.newLine() << st.floatKeywordConst() << " base2 = 1.4426950408889634;";  // 1/log(2)
+    st.newLine() << st.floatKeywordConst() << " gain = 363.034608563;";
+    st.newLine() << st.floatKeywordConst() << " offs = -7.;";
+    st.newLine() << st.float3Decl("ylin") << " = " << pix << ".rgb * gain + offs;";
+    st.newLine() << st.float3Decl("ylog") << " = base2 * log( ( " << pix << ".rgb + shift ) * m );";
+    st.newLine() << pix << ".rgb.r = (" << pix << ".rgb.r < xbrk) ? ylin.x : ylog.x;";
+    st.newLine() << pix << ".rgb.g = (" << pix << ".rgb.g < xbrk) ? ylin.y : ylog.y;";
+    st.newLine() << pix << ".rgb.b = (" << pix << ".rgb.b < xbrk) ? ylin.z : ylog.z;";
     st.dedent();
     st.newLine() << "}";
 }
 
-void AddLogToLinShader(GpuShaderText & st)
+void AddLogToLinShader(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & st)
 {
+    const std::string pix(shaderCreator->getPixelName());
+
     st.newLine() << "{";   // establish scope so local variable names won't conflict
     st.indent();
-    st.newLine() << "const float ybrk = -5.5;";
-    st.newLine() << "const float shift = -0.000157849851665374;";
-    st.newLine() << "const float gain = 363.034608563;";
-    st.newLine() << "const float offs = -7.;";
-    st.newLine() << st.float3Decl("xlin") << " = (outColor.rgb - offs) / gain;";
+    st.newLine() << st.floatKeywordConst() << " ybrk = -5.5;";
+    st.newLine() << st.floatKeywordConst() << " shift = -0.000157849851665374;";
+    st.newLine() << st.floatKeywordConst() << " gain = 363.034608563;";
+    st.newLine() << st.floatKeywordConst() << " offs = -7.;";
+    st.newLine() << st.float3Decl("xlin") << " = (" << pix << ".rgb - offs) / gain;";
     st.newLine() << st.float3Decl("xlog") << " = pow( " << st.float3Const(2.0f)
-                                          <<        ", outColor.rgb ) * (0.18 + shift) - shift;";
-    st.newLine() << "outColor.r = (outColor.r < ybrk) ? xlin.r : xlog.r;";
-    st.newLine() << "outColor.g = (outColor.g < ybrk) ? xlin.g : xlog.g;";
-    st.newLine() << "outColor.b = (outColor.b < ybrk) ? xlin.b : xlog.b;";
+                                          <<          ", " << pix << ".rgb ) * (0.18 + shift) - shift;";
+    st.newLine() << pix << ".rgb.r = (" << pix << ".rgb.r < ybrk) ? xlin.x : xlog.x;";
+    st.newLine() << pix << ".rgb.g = (" << pix << ".rgb.g < ybrk) ? xlin.y : xlog.y;";
+    st.newLine() << pix << ".rgb.b = (" << pix << ".rgb.b < ybrk) ? xlin.z : xlog.z;";
     st.dedent();
     st.newLine() << "}";
 }

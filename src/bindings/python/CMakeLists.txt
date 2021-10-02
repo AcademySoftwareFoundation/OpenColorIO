@@ -108,6 +108,8 @@ set(SOURCES
 	PyViewTransform.cpp
 )
 
+# Reason not to use pybind11_add_module ?
+# https://pybind11.readthedocs.io/en/stable/compiling.html#pybind11-add-module
 add_library(PyOpenColorIO MODULE ${SOURCES})
 
 if(OCIO_BUILD_DOCS)
@@ -134,10 +136,20 @@ if(${CMAKE_CXX_STANDARD} GREATER_EQUAL 17)
 	set(APP_CXX_STANDARD 11)
 endif()
 
+set(CUSTOM_COMPILE_FLAGS ${PLATFORM_COMPILE_FLAGS})
+
+# The Python binding contains deprecated methods for backward compatibility reason,
+# so disable the warning.
+if(USE_GCC OR USE_CLANG)
+    set(CUSTOM_COMPILE_FLAGS "${CUSTOM_COMPILE_FLAGS} -Wno-deprecated-declarations")
+elseif(USE_MSVC)
+    set(CUSTOM_COMPILE_FLAGS "${CUSTOM_COMPILE_FLAGS} /wd4996")
+endif()
+
 set_target_properties(PyOpenColorIO
 	PROPERTIES
-		COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS}"
-		CXX_STANDARD ${APP_CXX_STANDARD}
+		COMPILE_FLAGS ${CUSTOM_COMPILE_FLAGS}
+		CXX_STANDARD  ${APP_CXX_STANDARD}
 )
 
 if(NOT BUILD_SHARED_LIBS)
@@ -191,14 +203,14 @@ target_include_directories(PyOpenColorIO
 # macOS, to prevent segfaults when potentially working with multiple Python 
 # installations. See note in:
 #   https://pybind11.readthedocs.io/en/stable/compiling.html#building-manually
-set(PYOCIO_LINK_PUBLIC public_api)
-if(WIN32)
-	list(INSERT PYOCIO_LINK_PUBLIC 0 ${Python_LIBRARIES})
+
+if (WIN32)
+	set(_PublicLibs ${Python_LIBRARIES})
 endif()
 
 target_link_libraries(PyOpenColorIO
 	PUBLIC
-		${PYOCIO_LINK_PUBLIC}
+		${_PublicLibs}
 	PRIVATE
 		OpenColorIO
 		utils::strings
@@ -214,9 +226,9 @@ target_compile_definitions(PyOpenColorIO
 )
 
 if(WIN32)
-    set(_Python_VARIANT_PATH "lib${LIB_SUFFIX}/site-packages")
+    set(_Python_VARIANT_PATH "${CMAKE_INSTALL_LIBDIR}/site-packages")
 else()
-    set(_Python_VARIANT_PATH "lib${LIB_SUFFIX}/python${Python_VERSION_MAJOR}.${Python_VERSION_MINOR}/site-packages")
+    set(_Python_VARIANT_PATH "${CMAKE_INSTALL_LIBDIR}/python${Python_VERSION_MAJOR}.${Python_VERSION_MINOR}/site-packages")
 endif()
 
 # Create an internal global variable to access it in another scope but not publicly visible

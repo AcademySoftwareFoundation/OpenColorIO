@@ -29,5 +29,5 @@ target_link_libraries(ociomakeclf
 )
 
 install(TARGETS ociomakeclf
-    RUNTIME DESTINATION bin
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )

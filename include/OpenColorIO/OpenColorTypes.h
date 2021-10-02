@@ -409,7 +409,7 @@ enum BitDepth
     BIT_DEPTH_UINT12,
     BIT_DEPTH_UINT14,
     BIT_DEPTH_UINT16,
-    BIT_DEPTH_UINT32,
+    BIT_DEPTH_UINT32, ///< Here for historical reason but that's not supported.
     BIT_DEPTH_F16,
     BIT_DEPTH_F32
 };
@@ -445,7 +445,10 @@ enum GpuLanguage
     GPU_LANGUAGE_GLSL_1_2,          ///< OpenGL Shading Language
     GPU_LANGUAGE_GLSL_1_3,          ///< OpenGL Shading Language
     GPU_LANGUAGE_GLSL_4_0,          ///< OpenGL Shading Language
-    GPU_LANGUAGE_HLSL_DX11          ///< DirectX Shading Language
+    GPU_LANGUAGE_HLSL_DX11,         ///< DirectX Shading Language
+    LANGUAGE_OSL_1,                 ///< Open Shading Language
+    GPU_LANGUAGE_GLSL_ES_1_0,       ///< OpenGL ES Shading Language
+    GPU_LANGUAGE_GLSL_ES_3_0,       ///< OpenGL ES Shading Language
 };
 
 enum EnvironmentMode
@@ -477,7 +480,7 @@ enum FixedFunctionStyle
     FIXED_FUNCTION_XYZ_TO_LUV,          ///< CIE XYZ to 1976 CIELUV colour space (D65 white)
     FIXED_FUNCTION_ACES_GAMUTMAP_02,    ///< ACES 0.2 Gamut clamping algorithm -- NOT IMPLEMENTED YET
     FIXED_FUNCTION_ACES_GAMUTMAP_07,    ///< ACES 0.7 Gamut clamping algorithm -- NOT IMPLEMENTED YET
-    FIXED_FUNCTION_ACES_GAMUTMAP_13     ///< ACES 1.3 Gamut mapping algorithm -- NOT IMPLEMENTED YET
+    FIXED_FUNCTION_ACES_GAMUT_COMP_13   ///< ACES 1.3 Parametric Gamut Compression (expects ACEScg values)
 };
 
 /// Enumeration of the :cpp:class:`ExposureContrastTransform` transform algorithms.

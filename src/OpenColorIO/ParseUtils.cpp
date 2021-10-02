@@ -255,11 +255,17 @@ Interpolation InterpolationFromString(const char * s)
 
 const char * GpuLanguageToString(GpuLanguage language)
 {
-    if(language == GPU_LANGUAGE_CG) return "cg";
-    else if(language == GPU_LANGUAGE_GLSL_1_2)  return "glsl_1.2";
-    else if(language == GPU_LANGUAGE_GLSL_1_3)  return "glsl_1.3";
-    else if(language == GPU_LANGUAGE_GLSL_4_0)  return "glsl_4.0";
-    else if(language == GPU_LANGUAGE_HLSL_DX11) return "hlsl_dx11";
+    switch(language)
+    {
+        case GPU_LANGUAGE_CG: return "cg";
+        case GPU_LANGUAGE_GLSL_1_2:  return "glsl_1.2";
+        case GPU_LANGUAGE_GLSL_1_3:  return "glsl_1.3";
+        case GPU_LANGUAGE_GLSL_4_0:  return "glsl_4.0";
+        case GPU_LANGUAGE_GLSL_ES_1_0:  return "glsl_es_1.0";
+        case GPU_LANGUAGE_GLSL_ES_3_0:  return "glsl_es_3.0";
+        case GPU_LANGUAGE_HLSL_DX11: return "hlsl_dx11";
+        case LANGUAGE_OSL_1: return "osl_1";
+    }
 
     throw Exception("Unsupported GPU shader language.");
 }
@@ -273,7 +279,10 @@ GpuLanguage GpuLanguageFromString(const char * s)
     else if(str == "glsl_1.2") return GPU_LANGUAGE_GLSL_1_2;
     else if(str == "glsl_1.3") return GPU_LANGUAGE_GLSL_1_3;
     else if(str == "glsl_4.0") return GPU_LANGUAGE_GLSL_4_0;
+    else if(str == "glsl_es_1.0") return GPU_LANGUAGE_GLSL_ES_1_0;
+    else if(str == "glsl_es_3.0") return GPU_LANGUAGE_GLSL_ES_3_0;
     else if(str == "hlsl_dx11") return GPU_LANGUAGE_HLSL_DX11;
+    else if(str == "osl_1") return LANGUAGE_OSL_1;
 
     std::ostringstream oss;
     oss << "Unsupported GPU shader language: '" << p << "'.";
@@ -345,6 +354,7 @@ const char * FixedFunctionStyleToString(FixedFunctionStyle style)
         case FIXED_FUNCTION_ACES_GLOW_03:        return "ACES_Glow03";
         case FIXED_FUNCTION_ACES_GLOW_10:        return "ACES_Glow10";
         case FIXED_FUNCTION_ACES_DARK_TO_DIM_10: return "ACES_DarkToDim10";
+        case FIXED_FUNCTION_ACES_GAMUT_COMP_13:  return "ACES_GamutComp13";
         case FIXED_FUNCTION_REC2100_SURROUND:    return "REC2100_Surround";
         case FIXED_FUNCTION_RGB_TO_HSV:          return "RGB_TO_HSV";
         case FIXED_FUNCTION_XYZ_TO_xyY:          return "XYZ_TO_xyY";
@@ -352,11 +362,9 @@ const char * FixedFunctionStyleToString(FixedFunctionStyle style)
         case FIXED_FUNCTION_XYZ_TO_LUV:          return "XYZ_TO_LUV";
         case FIXED_FUNCTION_ACES_GAMUTMAP_02:
         case FIXED_FUNCTION_ACES_GAMUTMAP_07:
-        case FIXED_FUNCTION_ACES_GAMUTMAP_13:
             throw Exception("Unimplemented fixed function types: "
                             "FIXED_FUNCTION_ACES_GAMUTMAP_02, "
-                            "FIXED_FUNCTION_ACES_GAMUTMAP_07, and "
-                            "FIXED_FUNCTION_ACES_GAMUTMAP_13.");
+                            "FIXED_FUNCTION_ACES_GAMUTMAP_07.");
     }
 
     // Default style is meaningless.
@@ -373,6 +381,7 @@ FixedFunctionStyle FixedFunctionStyleFromString(const char * style)
     else if(str == "aces_glow03")        return FIXED_FUNCTION_ACES_GLOW_03;
     else if(str == "aces_glow10")        return FIXED_FUNCTION_ACES_GLOW_10;
     else if(str == "aces_darktodim10")   return FIXED_FUNCTION_ACES_DARK_TO_DIM_10;
+    else if(str == "aces_gamutcomp13")   return FIXED_FUNCTION_ACES_GAMUT_COMP_13;
     else if(str == "rec2100_surround")   return FIXED_FUNCTION_REC2100_SURROUND;
     else if(str == "rgb_to_hsv")         return FIXED_FUNCTION_RGB_TO_HSV;
     else if(str == "xyz_to_xyy")         return FIXED_FUNCTION_XYZ_TO_xyY;
@@ -721,4 +730,3 @@ int FindInStringVecCaseIgnore(const StringUtils::StringVec & vec, const std::str
     return -1;
 }
 } // namespace OCIO_NAMESPACE
-

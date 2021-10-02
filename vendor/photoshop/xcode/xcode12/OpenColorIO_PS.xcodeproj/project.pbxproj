@@ -775,7 +775,7 @@
 					"../../../../ext/yaml-cpp/include",
 					"../../../../ext/Little-CMS/include",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				PRECOMPS_INCLUDE_HEADERS_FROM_BUILT_PRODUCTS_DIR = YES;
 				REZ_PREFIX_FILE = "$(SRCROOT)/../../../../ext/adobe_photoshop_sdk_2021_mac/photoshopsdk/pluginsdk/samplecode/common/includes/MachOMacrezXcode.h";
 				SDKROOT = macosx;
@@ -799,7 +799,7 @@
 				INFOPLIST_FILE = ../../mac/OpenColorIO_PS_Info.plist;
 				INSTALL_PATH = "$(HOME)/Library/Bundles";
 				PLUGIN_TYPE = 8BFM;
-				PRODUCT_NAME = OpenColorIO_PS;
+				PRODUCT_NAME = "OpenColorIO PS";
 				REZ_PREFIX_FILE = "$(SRCROOT)/../../../../ext/adobe_photoshop_sdk_2021_mac/photoshopsdk/pluginsdk/samplecode/common/includes/MachOMacrezXcode.h";
 				VALID_ARCHS = x86_64;
 				WRAPPER_EXTENSION = plugin;
@@ -828,7 +828,7 @@
 					"../../../../ext/yaml-cpp/include",
 					"../../../../ext/Little-CMS/include",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				SDKROOT = macosx;
 			};
 			name = Release;
@@ -847,7 +847,7 @@
 				INFOPLIST_FILE = ../../mac/OpenColorIO_PS_Info.plist;
 				INSTALL_PATH = "$(HOME)/Library/Bundles";
 				PLUGIN_TYPE = 8BFM;
-				PRODUCT_NAME = OpenColorIO_PS;
+				PRODUCT_NAME = "OpenColorIO PS";
 				REZ_PREFIX_FILE = "$(SRCROOT)/../../../../ext/adobe_photoshop_sdk_2021_mac/photoshopsdk/pluginsdk/samplecode/common/includes/MachOMacrezXcode.h";
 				VALID_ARCHS = x86_64;
 				WRAPPER_EXTENSION = plugin;

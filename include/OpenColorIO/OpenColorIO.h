@@ -60,6 +60,13 @@ namespace OCIO_NAMESPACE
 ///////////////////////////////////////////////////////////////////////////
 // Exceptions
 
+// Silence warning C4275 under Visual Studio:
+// Exceptions derive from std::runtime_error but STL classes are not exportable.
+#ifdef _MSC_VER
+#pragma warning( push )
+#pragma warning( disable : 4275 )
+#endif
+
 /**
  * \brief An exception class to throw for errors detected at runtime.
  *
@@ -98,6 +105,11 @@ public:
 
     ~ExceptionMissingFile();
 };
+
+// Restore default warning behaviour for Visual Studio.
+#ifdef _MSC_VER
+#pragma warning( pop )
+#endif
 
 ///////////////////////////////////////////////////////////////////////////
 // Global
@@ -607,6 +619,9 @@ public:
     const char * getDisplay(int index) const;
 
     const char * getDefaultView(const char * display) const;
+    // Get the default view for a given color space using the viewing rules.
+    // This is the preferred call to use if the color space being viewed is known.
+    const char * getDefaultView(const char * display, const char * colorspaceName) const;
 
     /**
      * Return the number of views attached to the display including the number of
@@ -853,7 +868,7 @@ public:
      *    values are typically different for each colorspace, and the
      *    application of them may be nonsensical depending on the
      *    intensity coding anyways). Thus, the 'right' answer is to make
-     *    these functions on the Config class. However, it's
+     *    these functions on the ColorSpace class. However, it's
      *    often useful to have a config-wide default so here it is. We will
      *    add the colorspace specific luma call if/when another client is
      *    interesting in using it.
@@ -980,7 +995,8 @@ public:
      */
     void setFileRules(ConstFileRulesRcPtr fileRules);
 
-    ///  Get the color space of the first rule that matched filePath.
+    /// Get the color space of the first rule that matched filePath. (For v1 configs, this is
+    /// equivalent to calling parseColorSpaceFromString with strictparsing set to false.)
     const char * getColorSpaceFromFilepath(const char * filePath) const;
 
     /**
@@ -1002,13 +1018,14 @@ public:
 
     /**
      * Given the specified string, get the longest, right-most, colorspace substring that
-     * appears. This is now deprecated, please use getColorSpaceFromFilepath.
+     * appears.
      *
      * * If strict parsing is enabled, and no color space is found, return
      *   an empty string.
      * * If strict parsing is disabled, return ROLE_DEFAULT (if defined).
      * * If the default role is not defined, return an empty string.
      */
+    OCIO_DEPRECATED("This was marked as deprecated starting in v2.0, please use Config::getColorSpaceFromFilepath().")
     const char * parseColorSpaceFromString(const char * str) const;
 
     bool isStrictParsingEnabled() const;
@@ -1177,6 +1194,10 @@ extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const Config&);
  * Getters and setters are using the rule position, they will throw if the position is not
  * valid. If the rule at the specified position does not implement the requested property
  * getter will return NULL and setter will throw.
+ *
+ * When loading a v1 config, a set of FileRules are created with ColorSpaceNamePathSearch followed
+ * by the Default rule pointing to the default role. This allows getColorSpaceFromFilepath to emulate
+ * OCIO v1 code that used parseColorSpaceFromString with strictparsing set to false.
  */
 
 class OCIOEXPORT FileRules
@@ -2678,15 +2699,17 @@ private:
 // GpuShaderCreator
 /**
  * Inherit from the class to fully customize the implementation of a GPU shader program
- * from a color transformation.
+ * from a color transformation. 
  *
- * When no customizations are needed then the GpuShaderDesc is a better choice.
+ * When no customizations are needed and the intermediate in-memory step is acceptable then the
+ * \ref GpuShaderDesc is a better choice.
  *
- * To better decouple the DynamicProperties from their GPU implementation, the code provides
- * several addUniform() methods i.e. one per access function types. For example, an
- * ExposureContrastTransform instance owns three DynamicProperties and they are all
- * implemented by a double. When creating the GPU fragment shader program, the addUniform() with
- * GpuShaderCreator::DoubleGetter is called when property is dynamic, up to three times.
+ * \note
+ *   To better decouple the \ref DynamicProperties from their GPU implementation, the code provides
+ *   several addUniform() methods i.e. one per access function types. For example, an
+ *   \ref ExposureContrastTransform instance owns three \ref DynamicProperties and they are all
+ *   implemented by a double. When creating the GPU fragment shader program, the addUniform() with
+ *   GpuShaderCreator::DoubleGetter is called when property is dynamic, up to three times.
  * 
  * **An OCIO shader program could contain:**
  *
@@ -2774,8 +2797,8 @@ public:
     virtual unsigned getTextureMaxWidth() const noexcept = 0;
 
     /**
-     * To avoid texture/unform name clashes always append
-     * an increasing number to the resource name.
+     * To avoid global texture sampler and uniform name clashes always append an increasing index
+     * to the resource name.
      */
     unsigned getNextResourceIndex() noexcept;
 
@@ -2825,10 +2848,17 @@ public:
 
     enum TextureType
     {
-        TEXTURE_RED_CHANNEL, ///< Only use the red channel of the texture
-        TEXTURE_RGB_CHANNEL
+        TEXTURE_RED_CHANNEL, ///< Only need a red channel texture
+        TEXTURE_RGB_CHANNEL  ///< Need a RGB texture
     };
 
+    /**
+     *  Add a 2D texture (1D texture if height equals 1).
+     * 
+     * \note 
+     *   The 'values' parameter contains the LUT data which must be used as-is as the dimensions and
+     *   origin are hard-coded in the fragment shader program. So, it means one GPU texture per entry.
+     **/
     virtual void addTexture(const char * textureName,
                             const char * samplerName,
                             unsigned width, unsigned height,
@@ -2836,6 +2866,14 @@ public:
                             Interpolation interpolation,
                             const float * values) = 0;
 
+    /**
+     *  Add a 3D texture with RGB channel type.
+     * 
+     * \note 
+     *   The 'values' parameter contains the 3D LUT data which must be used as-is as the dimension
+     *   and origin are hard-coded in the fragment shader program. So, it means one GPU 3D texture
+     *   per entry.
+     **/
     virtual void add3DTexture(const char * textureName,
                               const char * samplerName,
                               unsigned edgelen,
@@ -2976,18 +3014,9 @@ protected:
  *
  *    // Step 1: Create a GPU shader description
  *    //
- *    // The three potential scenarios are:
+ *    // The two potential scenarios are:
  *    //
- *    //   1. Instantiate the legacy shader description.  The color processor
- *    //      is baked down to contain at most one 3D LUT and no 1D LUTs.
- *    //
- *    //      This is the v1 behavior and will remain part of OCIO v2
- *    //      for backward compatibility.
- *    //
- *    OCIO::GpuShaderDescRcPtr shaderDesc
- *          = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(LUT3D_EDGE_SIZE);
- *    //
- *    //   2. Instantiate the generic shader description.  The color processor
+ *    //   1. Instantiate the generic shader description.  The color processor
  *    //      is used as-is (i.e. without any baking step) and could contain
  *    //      any number of 1D & 3D luts.
  *    //
@@ -2996,7 +3025,7 @@ protected:
  *    //
  *    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::Create();
  *    //
- *    //   3. Instantiate a custom shader description.
+ *    //   2. Instantiate a custom shader description.
  *    //
  *    //      Writing a custom shader description is a way to tailor the shaders
  *    //      to the needs of a given client program.  This involves writing a
@@ -3041,14 +3070,6 @@ protected:
 class OCIOEXPORT GpuShaderDesc : public GpuShaderCreator
 {
 public:
-
-    /**
-     * Create the legacy GPU shader description. This is now deprecated (to be removed in 
-     * the coming release i.e. 2.1.x).
-     * Do not use it because that's broken. So, this method has been replaced by the pair 
-     * Processor::getOptimizedLegacyGPUProcessor() and GpuShaderDesc::CreateShaderDesc().
-     */
-    static GpuShaderDescRcPtr CreateLegacyShaderDesc(unsigned edgelen);
 
     /// Create the default shader description.
     static GpuShaderDescRcPtr CreateShaderDesc();

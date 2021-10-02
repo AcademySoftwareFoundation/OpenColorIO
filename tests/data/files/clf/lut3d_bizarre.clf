@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ProcessList id="e0a0ae4b-adc2-4c25-ad70-fa6f31ba219d" compCLFversion="3.0" xmlns="urn:AMPAS:CLF:v3.0">
     <Description>Unusual 3d-LUT useful for showing interpolation errors</Description>
-    <LUT3D interpolation="trilinear" inBitDepth="10i" outBitDepth="10i">
+    <LUT3D interpolation="tetrahedral" inBitDepth="10i" outBitDepth="10i">
         <Description>3d-LUT with extended range values</Description>
         <Array dim="3 3 3 3">
 -60 5 75

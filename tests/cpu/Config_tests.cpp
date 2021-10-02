@@ -361,7 +361,7 @@ OCIO_ADD_TEST(Config, serialize_group_transform)
     config->serialize(os);
 
     std::string PROFILE_OUT =
-    "ocio_profile_version: 2\n"
+    "ocio_profile_version: 2.1\n"
     "\n"
     "environment:\n"
     "  {}\n"
@@ -434,7 +434,7 @@ OCIO_ADD_TEST(Config, serialize_searchpath)
         config->serialize(os);
 
         std::string PROFILE_OUT =
-            "ocio_profile_version: 2\n"
+            "ocio_profile_version: 2.1\n"
             "\n"
             "environment:\n"
             "  {}\n"
@@ -840,9 +840,6 @@ OCIO_ADD_TEST(Config, context_variable)
         "  VAR1: $VAR1\n"     // No default value so the env. variable must exist.
         "  VAR2: var2\n"      // Default value if env. variable does not exist.
         "  VAR3: env3\n"      // Same as above.
-        "  VAR4: env4$VAR1\n" // Same as above and built from another envvar.
-        "  VAR5: env5$VAR2\n" // Same as above and built from another envvar.
-        "  VAR6: env6$VAR3\n" // Same as above and built from another envvar.
         "search_path: luts\n"
         "strictparsing: true\n"
         "luma: [0.2126, 0.7152, 0.0722]\n"
@@ -895,10 +892,6 @@ OCIO_ADD_TEST(Config, context_variable)
     OCIO_CHECK_EQUAL(std::string("env2"), config->getCurrentContext()->resolveStringVar("$VAR2"));
     OCIO_CHECK_EQUAL(std::string("env3"), config->getCurrentContext()->resolveStringVar("$VAR3"));
 
-    OCIO_CHECK_EQUAL(std::string("env4env1"), config->getCurrentContext()->resolveStringVar("$VAR4"));
-    OCIO_CHECK_EQUAL(std::string("env5env2"), config->getCurrentContext()->resolveStringVar("$VAR5"));
-    OCIO_CHECK_EQUAL(std::string("env6env3"), config->getCurrentContext()->resolveStringVar("$VAR6"));
-
     std::ostringstream oss;
     OCIO_CHECK_NO_THROW(oss << *config.get());
     OCIO_CHECK_EQUAL(oss.str(), iss.str());
@@ -910,14 +903,146 @@ OCIO_ADD_TEST(Config, context_variable)
     OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(iss));
     OCIO_CHECK_NO_THROW(config->validate());
 
-    // Test a faulty case i.e. the env. variable VAR1 is now missing.
+    OCIO_CHECK_EQUAL(std::string("env1"), config->getCurrentContext()->resolveStringVar("$VAR1"));
+    OCIO_CHECK_EQUAL(std::string("var2"), config->getCurrentContext()->resolveStringVar("$VAR2"));
+    OCIO_CHECK_EQUAL(std::string("env3"), config->getCurrentContext()->resolveStringVar("$VAR3"));
+
+    // System env. variable VAR1 is now missing but the context variable VAR1 is still a valid one.
 
     OCIO::Platform::Unsetenv("VAR1");
     iss.str(CONFIG);
     OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(iss));
-    OCIO_CHECK_THROW_WHAT(config->validate(),
-                          OCIO::Exception,
-                          "Unresolved context variable 'VAR1 = $VAR1'.");
+    OCIO_CHECK_NO_THROW(config->validate());
+
+    OCIO_CHECK_EQUAL(std::string("$VAR1"), config->getCurrentContext()->resolveStringVar("$VAR1"));
+    OCIO_CHECK_EQUAL(std::string("var2"),  config->getCurrentContext()->resolveStringVar("$VAR2"));
+    OCIO_CHECK_EQUAL(std::string("env3"),  config->getCurrentContext()->resolveStringVar("$VAR3"));
+}
+
+OCIO_ADD_TEST(Config, context_variable_unresolved)
+{
+    // Test for invalid unresolved context variables.
+
+    static const std::string BODY_CONFIG =
+        "\n"
+        "search_path: luts\n"
+        "\n"
+        "roles:\n"
+        "  default: cs1\n"
+        "  reference: cs1\n"
+        "\n"
+        "displays:\n"
+        "  disp1:\n"
+        "    - !<View> {name: view1, colorspace: cs2}\n"
+        "\n"
+        "colorspaces:\n"
+        "  - !<ColorSpace>\n"
+        "    name: cs1\n"
+        "\n"
+        "  - !<ColorSpace>\n"
+        "    name: cs2\n"
+        "    from_reference: !<MatrixTransform> {offset: [0.1, 0.2, 0.3, 0.0]}\n";
+
+    {
+        static const std::string CONFIG =
+            std::string("ocio_profile_version: 2\nenvironment: {ENV1: $ENV1}\n") 
+            + BODY_CONFIG;
+
+        std::istringstream iss;
+        iss.str(CONFIG);
+
+        OCIO::ConstConfigRcPtr config;
+        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(iss));
+        OCIO_CHECK_NO_THROW(config->validate());
+    }
+
+    {
+        static const std::string CONFIG =
+            std::string("ocio_profile_version: 2\nenvironment:\n  ENV1: ${ENV1}\n") 
+            + BODY_CONFIG;
+
+        std::istringstream iss;
+        iss.str(CONFIG);
+
+        OCIO::ConstConfigRcPtr config;
+        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(iss));
+        OCIO_CHECK_NO_THROW(config->validate());
+    }
+
+    {
+        static const std::string CONFIG =
+            std::string("ocio_profile_version: 2\nenvironment: {ENV1: $ENV2}\n") 
+            + BODY_CONFIG;
+
+        std::istringstream iss;
+        iss.str(CONFIG);
+
+        OCIO::ConstConfigRcPtr config;
+        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(iss));
+        OCIO_CHECK_THROW_WHAT(config->validate(),
+                              OCIO::Exception,
+                              "Unresolved context variable in environment declaration 'ENV1 = $ENV2'.");
+    }
+
+    {
+        static const std::string CONFIG =
+            std::string("ocio_profile_version: 2\nenvironment: {ENV1: env, ENV2: $ENV1}\n") 
+            + BODY_CONFIG;
+
+        std::istringstream iss;
+        iss.str(CONFIG);
+
+        OCIO::ConstConfigRcPtr config;
+        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(iss));
+        OCIO_CHECK_THROW_WHAT(config->validate(),
+                              OCIO::Exception,
+                              "Unresolved context variable in environment declaration 'ENV2 = $ENV1'.");
+    }
+
+    {
+        static const std::string CONFIG =
+            std::string("ocio_profile_version: 2\nenvironment: {ENV1: env$ENV1}\n") 
+            + BODY_CONFIG;
+
+        std::istringstream iss;
+        iss.str(CONFIG);
+
+        OCIO::ConstConfigRcPtr config;
+        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(iss));
+        OCIO_CHECK_THROW_WHAT(config->validate(),
+                              OCIO::Exception,
+                              "Unresolved context variable in environment declaration 'ENV1 = env$ENV1'.");
+    }
+
+    {
+        static const std::string CONFIG =
+            std::string("ocio_profile_version: 2\nenvironment:\n ENV1: env${ENV2}\n") 
+            + BODY_CONFIG;
+
+        std::istringstream iss;
+        iss.str(CONFIG);
+
+        OCIO::ConstConfigRcPtr config;
+        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(iss));
+        OCIO_CHECK_THROW_WHAT(config->validate(),
+                              OCIO::Exception,
+                              "Unresolved context variable in environment declaration 'ENV1 = env${ENV2}'.");
+    }
+
+    {
+        static const std::string CONFIG =
+            std::string("ocio_profile_version: 2\nenvironment: {ENV1: $ENV1$ENV2}\n") 
+            + BODY_CONFIG;
+
+        std::istringstream iss;
+        iss.str(CONFIG);
+
+        OCIO::ConstConfigRcPtr config;
+        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(iss));
+        OCIO_CHECK_THROW_WHAT(config->validate(),
+                              OCIO::Exception,
+                              "Unresolved context variable in environment declaration 'ENV1 = $ENV1$ENV2'.");
+    }
 }
 
 OCIO_ADD_TEST(Config, context_variable_with_sanity_check)
@@ -994,26 +1119,23 @@ OCIO_ADD_TEST(Config, context_variable_with_sanity_check)
     }
 
     {
-        // Update $CS2 to use $TOTO. That's still a self-contained context because
-        // $TOTO exists. 
+        // Update $CS2 to use $TOTO. That's an invalid case because a context variable value can
+        // only be a string (i.e. "VAR: env") or the context variable itself (i.e. "VAR: $VAR"). 
         OCIO_CHECK_NO_THROW(cfg->addEnvironmentVar("CS2", "$TOTO")); 
         OCIO_CHECK_EQUAL(cfg->getNumEnvironmentVars(), 2);
-        OCIO_CHECK_NO_THROW(cfg->validate());
-
-        // Note that the default value of the context variable is unresolved.
-        OCIO_CHECK_EQUAL(std::string(cfg->getEnvironmentVarDefault("CS2")), std::string("$TOTO"));
+        OCIO_CHECK_THROW_WHAT(cfg->validate(),
+                              OCIO::Exception,
+                              "Unresolved context variable in environment declaration 'CS2 = $TOTO'.");
     }
 
     {
-        // Remove $TOTO from the context. That's a faulty case because $CS2 is still used
-        // but resolved using $TOTO so, the environment is not self-contained. Sanity check
-        // must throw in that case.
+        // Remove $TOTO from the context. That's an invalid case as explained above.
         OCIO_CHECK_NO_THROW(cfg->addEnvironmentVar("TOTO", nullptr)); 
         OCIO_CHECK_EQUAL(cfg->getNumEnvironmentVars(), 1);
 
         OCIO_CHECK_THROW_WHAT(cfg->validate(),
                               OCIO::Exception,
-                              "Unresolved context variable 'CS2 = $TOTO'.");
+                              "Unresolved context variable in environment declaration 'CS2 = $TOTO'.");
         OCIO_CHECK_THROW_WHAT(cfg->getProcessor("cs1", "disp1", "view1", OCIO::TRANSFORM_DIR_FORWARD),
                               OCIO::Exception,
                               "The specified file reference '$CS2' could not be located");
@@ -1553,14 +1675,14 @@ OCIO_ADD_TEST(Config, version)
     }
 
     {
-        OCIO_CHECK_THROW_WHAT(config->setVersion(2, 1), OCIO::Exception,
-                              "The minor version 1 is not supported for major version 2. "
-                              "Maximum minor version is 0");
+        OCIO_CHECK_THROW_WHAT(config->setVersion(2, 2), OCIO::Exception,
+                              "The minor version 2 is not supported for major version 2. "
+                              "Maximum minor version is 1");
 
         OCIO_CHECK_NO_THROW(config->setMajorVersion(2));
-        OCIO_CHECK_THROW_WHAT(config->setMinorVersion(1), OCIO::Exception,
-                              "The minor version 1 is not supported for major version 2. "
-                              "Maximum minor version is 0");
+        OCIO_CHECK_THROW_WHAT(config->setMinorVersion(2), OCIO::Exception,
+                              "The minor version 2 is not supported for major version 2. "
+                              "Maximum minor version is 1");
     }
 
     {
@@ -1592,9 +1714,9 @@ OCIO_ADD_TEST(Config, version_validation)
 
     {
         std::istringstream is;
-        is.str("ocio_profile_version: 2.1\n" + SIMPLE_PROFILE_END);
+        is.str("ocio_profile_version: 2.2\n" + SIMPLE_PROFILE_END);
         OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is), OCIO::Exception,
-                              "The minor version 1 is not supported for major version 2");
+                              "The minor version 2 is not supported for major version 2");
     }
 
     {
@@ -1641,6 +1763,12 @@ const std::string PROFILE_V1 =
 
 const std::string PROFILE_V2 =
     "ocio_profile_version: 2\n"
+    "\n"
+    "environment:\n"
+    "  {}\n";
+
+const std::string PROFILE_V21 =
+    "ocio_profile_version: 2.1\n"
     "\n"
     "environment:\n"
     "  {}\n";
@@ -1737,6 +1865,9 @@ const std::string DEFAULT_RULES =
 
 const std::string PROFILE_V2_START = PROFILE_V2 + SIMPLE_PROFILE_A +
                                      DEFAULT_RULES + SIMPLE_PROFILE_B_V2;
+
+const std::string PROFILE_V21_START = PROFILE_V21 + SIMPLE_PROFILE_A +
+                                      DEFAULT_RULES + SIMPLE_PROFILE_B_V2;
 }
 
 OCIO_ADD_TEST(Config, serialize_colorspace_displayview_transforms)
@@ -4268,6 +4399,46 @@ OCIO_ADD_TEST(Config, fixed_function_serialization)
         const std::string strEnd =
             "    from_scene_reference: !<GroupTransform>\n"
             "      children:\n"
+            "        - !<FixedFunctionTransform> {style: ACES_GamutComp13, params: [1.147, 1.264, 1.312, 0.815, 0.803, 0.88, 1.2]}\n"
+            "        - !<FixedFunctionTransform> {style: ACES_GamutComp13, params: [1.147, 1.264, 1.312, 0.815, 0.803, 0.88, 1.2], direction: inverse}\n";
+
+        const std::string str = PROFILE_V21_START + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+
+        OCIO::ConstConfigRcPtr config;
+        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OCIO_CHECK_NO_THROW(config->validate());
+
+        // Write the config.
+
+        std::stringstream ss;
+        OCIO_CHECK_NO_THROW(ss << *config.get());
+        OCIO_CHECK_EQUAL(ss.str(), str);
+    }
+
+    {
+        const std::string strEnd =
+            "    from_scene_reference: !<GroupTransform>\n"
+            "      children:\n"
+            "        - !<FixedFunctionTransform> {style: ACES_GamutComp13, params: [1.147, 1.264, 1.312, 0.815, 0.803, 0.88, 1.2]}\n"
+            "        - !<FixedFunctionTransform> {style: ACES_GamutComp13, params: [1.147, 1.264, 1.312, 0.815, 0.803, 0.88, 1.2], direction: inverse}\n";
+
+        const std::string str = PROFILE_V2_START + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+
+        OCIO::ConstConfigRcPtr config;
+        OCIO_CHECK_THROW_WHAT(config = OCIO::Config::CreateFromStream(is), OCIO::Exception,
+            "Only config version 2.1 (or higher) can have FixedFunctionTransform style 'ACES_GAMUT_COMP_13'.");
+    }
+
+    {
+        const std::string strEnd =
+            "    from_scene_reference: !<GroupTransform>\n"
+            "      children:\n"
             "        - !<FixedFunctionTransform> {style: ACES_DarkToDim10, params: [0.75]}\n";
 
         const std::string str = PROFILE_V2_START + strEnd;
@@ -4279,6 +4450,39 @@ OCIO_ADD_TEST(Config, fixed_function_serialization)
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
         OCIO_CHECK_THROW_WHAT(config->validate(), OCIO::Exception,
             "The style 'ACES_DarkToDim10 (Forward)' must have zero parameters but 1 found.");
+    }
+
+    {
+        const std::string strEnd =
+            "    from_scene_reference: !<GroupTransform>\n"
+            "      children:\n"
+            "        - !<FixedFunctionTransform> {style: ACES_GamutComp13}\n";
+
+        const std::string str = PROFILE_V2_START + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+
+        OCIO::ConstConfigRcPtr config;
+        OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is), OCIO::Exception,
+            "Only config version 2.1 (or higher) can have FixedFunctionTransform style 'ACES_GAMUT_COMP_13'.");
+    }
+
+    {
+        const std::string strEnd =
+            "    from_scene_reference: !<GroupTransform>\n"
+            "      children:\n"
+            "        - !<FixedFunctionTransform> {style: ACES_GamutComp13}\n";
+
+        const std::string str = PROFILE_V21_START + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+
+        OCIO::ConstConfigRcPtr config;
+        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OCIO_CHECK_THROW_WHAT(config->validate(), OCIO::Exception,
+            "The style 'ACES_GamutComp13 (Forward)' must have seven parameters but 0 found.");
     }
 
     {
@@ -5825,7 +6029,7 @@ OCIO_ADD_TEST(Config, display_view)
 
     std::stringstream os;
     os << *config.get();
-    constexpr char expected[]{ R"(ocio_profile_version: 2
+    constexpr char expected[]{ R"(ocio_profile_version: 2.1
 
 environment:
   {}
@@ -8074,5 +8278,244 @@ OCIO_ADD_TEST(Config, get_processor_alias)
         OCIO_CHECK_EQUAL(grp->getTransform(0)->getTransformType(), OCIO::TRANSFORM_TYPE_MATRIX);
         OCIO_CHECK_EQUAL(grp->getTransform(1)->getTransformType(),
                          OCIO::TRANSFORM_TYPE_FIXED_FUNCTION);
+    }
+}
+
+OCIO_ADD_TEST(Config, optimization_with_bitdepths)
+{
+    // The unit test validates that the bit-depth conversion is correctly done for an empty list of
+    // ops i.e. the color transformation does nothing.
+
+    static constexpr char sFromSpace[] = "ACEScg";
+    static constexpr char sDiplay[] = "AdobeRGB";
+    static constexpr char sView[] = "raw";
+
+    static constexpr char CONFIG[] = { R"(ocio_profile_version: 2
+environment: {}
+search_path: "./"
+roles:
+  data: Raw
+  default: Raw
+  scene_linear: ACEScg
+
+file_rules:
+  - !<Rule> {name: Default, colorspace: default}
+
+displays:
+  AdobeRGB:
+    - !<View> {name: Raw, colorspace: Raw}
+
+colorspaces:
+  - !<ColorSpace>
+    name: ACEScg
+    to_reference: !<MatrixTransform> {matrix: [ 0.695452241357, 0.140678696470, 0.163869062172, 0, 0.044794563372, 0.859671118456, 0.095534318172, 0, -0.005525882558, 0.004025210306, 1.001500672252, 0, 0, 0, 0, 1 ]}
+  - !<ColorSpace>
+    name: Raw
+    isdata: true)" };
+
+    {
+        std::istringstream iss;
+        iss.str(CONFIG);
+
+        OCIO::ConstConfigRcPtr mOCIOCfg;
+        OCIO_CHECK_NO_THROW(mOCIOCfg = OCIO::Config::CreateFromStream(iss));
+        OCIO_CHECK_NO_THROW(mOCIOCfg->validate());
+
+        // Create the two processors.
+
+        OCIO::DisplayViewTransformRcPtr transform = OCIO::DisplayViewTransform::Create();
+        transform->setSrc(sFromSpace);
+        transform->setDisplay(sDiplay);
+        transform->setView(sView);
+
+        auto proc = mOCIOCfg->getProcessor(transform);
+    
+        auto cpu1 = proc->getDefaultCPUProcessor();
+        auto cpu2 = proc->getOptimizedCPUProcessor(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_UINT8, OCIO::OPTIMIZATION_DEFAULT);
+
+        // Declare all the buffers.
+
+        float inCol[4] = { 0.5f, 0.5f, 0.5f, 1.0f };
+        float outCol1[4];
+        uint8_t outCol2[4];
+
+        // Wrap source and destination colors.
+
+        OCIO::PackedImageDesc descSrc(inCol, 1, 1, OCIO::CHANNEL_ORDERING_RGBA);
+
+        OCIO::PackedImageDesc descDst1(outCol1, 1, 1, OCIO::CHANNEL_ORDERING_RGBA);
+        OCIO::PackedImageDesc descDst2(outCol2, 1, 1, OCIO::CHANNEL_ORDERING_RGBA, OCIO::BIT_DEPTH_UINT8, 1, 4, 4);
+
+        cpu1->apply(descSrc, descDst1);
+        cpu2->apply(descSrc, descDst2);
+
+        // Check results.
+
+        OCIO_CHECK_EQUAL(outCol1[0], 0.5f);
+        OCIO_CHECK_EQUAL(outCol1[1], 0.5f);
+        OCIO_CHECK_EQUAL(outCol1[2], 0.5f);
+        OCIO_CHECK_EQUAL(outCol1[3], 1.0f);
+
+        OCIO_CHECK_EQUAL((uint32_t)outCol2[0], 128);
+        OCIO_CHECK_EQUAL((uint32_t)outCol2[1], 128);
+        OCIO_CHECK_EQUAL((uint32_t)outCol2[2], 128);
+        OCIO_CHECK_EQUAL((uint32_t)outCol2[3], 255);
+    }
+
+    {
+        std::istringstream iss;
+        iss.str(CONFIG);
+
+        OCIO::ConstConfigRcPtr mOCIOCfg;
+        OCIO_CHECK_NO_THROW(mOCIOCfg = OCIO::Config::CreateFromStream(iss));
+        OCIO_CHECK_NO_THROW(mOCIOCfg->validate());
+
+        // Setup viewing pipeline for proc1.
+
+        OCIO::DisplayViewTransformRcPtr transform = OCIO::DisplayViewTransform::Create();
+        transform->setSrc(sFromSpace);
+        transform->setDisplay(sDiplay);
+        transform->setView(sView);
+        OCIO::LegacyViewingPipelineRcPtr vp = OCIO::LegacyViewingPipeline::Create();
+        vp->setDisplayViewTransform(transform);
+
+        // Add Exposure / Contrast.
+        {
+            OCIO::ExposureContrastTransformRcPtr ex = OCIO::ExposureContrastTransform::Create();
+            ex->setStyle(OCIO::EXPOSURE_CONTRAST_LINEAR);
+            ex->setPivot(0.18);
+            ex->makeExposureDynamic();
+            ex->makeContrastDynamic();
+            ex->makeGammaDynamic();
+            vp->setLinearCC(ex);
+        }
+
+        // Create two processors 1: using viewing pipeline, 2: using just Display/View pair.
+
+        auto processor1 = vp->getProcessor(mOCIOCfg, mOCIOCfg->getCurrentContext());
+        auto processor2 = mOCIOCfg->getProcessor(sFromSpace, sDiplay, sView, OCIO::TRANSFORM_DIR_FORWARD);
+
+        // Get optimized processors.
+
+        auto cpu1 = processor1->getOptimizedCPUProcessor(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_UINT8, OCIO::OPTIMIZATION_DEFAULT);
+        auto cpu2 = processor2->getOptimizedCPUProcessor(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_UINT8, OCIO::OPTIMIZATION_DEFAULT);
+
+        // Declare all the buffers.
+
+        float inCol[4] = { 0.5f, 0.5f, 0.5f, 1.0f };
+        uint8_t outCol1[3];
+        uint8_t outCol2[3];
+
+        // Wrap source and destination colors.
+
+        OCIO::PackedImageDesc descSrc(inCol, 1, 1, OCIO::CHANNEL_ORDERING_RGBA);
+        OCIO::PackedImageDesc descDst1(outCol1, 1, 1, OCIO::CHANNEL_ORDERING_RGB, OCIO::BIT_DEPTH_UINT8, 1, 3, 3);
+        OCIO::PackedImageDesc descDst2(outCol2, 1, 1, OCIO::CHANNEL_ORDERING_RGB, OCIO::BIT_DEPTH_UINT8, 1, 3, 3);
+
+        cpu1->apply(descSrc, descDst1);
+        cpu2->apply(descSrc, descDst2);
+
+        // Check results.
+
+        OCIO_CHECK_EQUAL((uint32_t)outCol1[0], 128);
+        OCIO_CHECK_EQUAL((uint32_t)outCol1[1], 128);
+        OCIO_CHECK_EQUAL((uint32_t)outCol1[2], 128);
+
+        OCIO_CHECK_EQUAL((uint32_t)outCol2[0], 128);
+        OCIO_CHECK_EQUAL((uint32_t)outCol2[1], 128);
+        OCIO_CHECK_EQUAL((uint32_t)outCol2[2], 128);
+    }
+}
+
+OCIO_ADD_TEST(Config, look_is_noop)
+{
+    // Test that the processor creation from a color space to a (dislay, view) pair succeeds even
+    // if the look transformation is a 'no-op'.
+
+    {
+        static constexpr char CONFIG[]{ R"(ocio_profile_version: 1
+roles:
+  scene_linear: cs
+
+displays:
+  disp1:
+    - !<View>
+      name: view1
+      colorspace: cs
+      looks: cdl
+
+looks:
+  - !<Look>
+    name: cdl
+    process_space: cs
+    transform: !<CDLTransform> {}
+
+colorspaces:
+  - !<ColorSpace>
+    name: cs
+)" };
+
+        std::istringstream iss;
+        iss.str(CONFIG);
+
+        OCIO::ConstConfigRcPtr config;
+        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(iss));
+        OCIO_CHECK_NO_THROW(config->validate());
+
+        OCIO::ConstProcessorRcPtr proc;
+
+        OCIO_CHECK_NO_THROW(proc = config->getProcessor("cs", "disp1", "view1", OCIO::TRANSFORM_DIR_FORWARD));
+        OCIO_CHECK_ASSERT(proc->isNoOp());
+
+        OCIO_CHECK_NO_THROW(proc = config->getProcessor("cs", "disp1", "view1", OCIO::TRANSFORM_DIR_INVERSE));
+        OCIO_CHECK_ASSERT(proc->isNoOp());
+    }
+
+    {
+        static constexpr char CONFIG[]{ R"(ocio_profile_version: 1
+roles:
+  scene_linear: cs
+
+displays:
+  disp1:
+    - !<View>
+      name: view1
+      colorspace: cs
+      looks: cdl
+
+looks:
+  - !<Look>
+    name: cdl
+    process_space: cs1
+    transform: !<CDLTransform> {}
+
+colorspaces:
+  - !<ColorSpace>
+    name: cs
+  - !<ColorSpace>
+    name: cs1
+    from_reference: !<CDLTransform> {offset: [0.3, 0.3, 0.3]}
+)" };
+
+        std::istringstream iss;
+        iss.str(CONFIG);
+
+        OCIO::ConstConfigRcPtr config;
+        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(iss));
+        OCIO_CHECK_NO_THROW(config->validate());
+
+        OCIO::ConstProcessorRcPtr proc;
+
+        OCIO_CHECK_NO_THROW(proc = config->getProcessor("cs", "disp1", "view1", OCIO::TRANSFORM_DIR_FORWARD));
+        // Because the look process space is not a no-op.
+        OCIO_CHECK_ASSERT(!proc->isNoOp());
+        OCIO_CHECK_NO_THROW(proc = proc->getOptimizedProcessor(OCIO::OPTIMIZATION_DEFAULT));
+        // Because the look process space forward and inverse ops are then optimized.
+        OCIO_CHECK_ASSERT(proc->isNoOp());
+
+        OCIO_CHECK_NO_THROW(proc = config->getProcessor("cs", "disp1", "view1", OCIO::TRANSFORM_DIR_INVERSE));
+        OCIO_CHECK_ASSERT(!proc->isNoOp());
+        OCIO_CHECK_NO_THROW(proc = proc->getOptimizedProcessor(OCIO::OPTIMIZATION_DEFAULT));
+        OCIO_CHECK_ASSERT(proc->isNoOp());
     }
 }

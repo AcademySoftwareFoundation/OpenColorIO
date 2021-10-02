@@ -129,7 +129,7 @@ Each item is a tuple containing format name and format extension.
             DOC(Baker, bake));
 
     clsFormatIterator
-        .def("__len__", [](FormatIterator & it) { return Baker::getNumFormats(); })
+        .def("__len__", [](FormatIterator & /* it */) { return Baker::getNumFormats(); })
         .def("__getitem__", [](FormatIterator & it, int i) 
             { 
                 it.checkIndex(i, Baker::getNumFormats());

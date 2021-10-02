@@ -38,7 +38,7 @@ BEGIN
             VALUE "LegalCopyright",   ""
             VALUE "LegalTrademarks1", ""
             VALUE "LegalTrademarks2", ""
-            VALUE "OriginalFilename", "@PROJECT_NAME@@OCIO_LIBNAME_SUFFIX@@LIBNAME_SUFFIX@.dll"
+            VALUE "OriginalFilename", "@PROJECT_NAME@@OCIO_LIBNAME_SUFFIX@_@OpenColorIO_VERSION_MAJOR@_@OpenColorIO_VERSION_MINOR@@LIBNAME_SUFFIX@.dll"
             VALUE "ProductName",      "@PROJECT_NAME@"
             VALUE "ProductVersion",   VER_PRODUCTVERSION_STR
         END

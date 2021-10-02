@@ -301,7 +301,7 @@ void ScreenApp::printGLInfo() const noexcept
 
 #ifdef OCIO_HEADLESS_ENABLED
 
-HeadlessApp::HeadlessApp(const char * winTitle, int bufWidth, int bufHeight)
+HeadlessApp::HeadlessApp(const char * /* winTitle */, int bufWidth, int bufHeight)
     : OglApp(bufWidth, bufHeight)
     , m_pixBufferWidth(bufWidth)
     , m_pixBufferHeight(bufHeight)

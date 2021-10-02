@@ -1790,10 +1790,7 @@
 				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					TIXML_USE_STL,
-					ADD_EXTRA_BUILTINS,
-				);
+				GCC_PREPROCESSOR_DEFINITIONS = TIXML_USE_STL;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = (
@@ -1807,6 +1804,7 @@
 					../../../../ext/libexpat/expat,
 					../../../../ext/sampleicc/src/include,
 				);
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				ONLY_ACTIVE_ARCH = YES;
 				PREBINDING = NO;
 				SDKROOT = macosx;
@@ -1822,7 +1820,6 @@
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					NDEBUG,
 					TIXML_USE_STL,
-					ADD_EXTRA_BUILTINS,
 				);
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
@@ -1837,6 +1834,7 @@
 					../../../../ext/libexpat/expat,
 					../../../../ext/sampleicc/src/include,
 				);
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				PREBINDING = NO;
 				SDKROOT = macosx;
 			};

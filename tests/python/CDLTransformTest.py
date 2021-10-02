@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright Contributors to the OpenColorIO Project.
 
+import os
 import unittest
 
 import PyOpenColorIO as OCIO
@@ -137,7 +138,7 @@ class CDLTransformTest(unittest.TestCase, TransformsBaseTest):
         """
 
         # Try env var first to get test file path.
-        test_file = '%s/cdl_test1.cc' % TEST_DATAFILES_DIR
+        test_file = os.path.join(TEST_DATAFILES_DIR, 'cdl_test1.cc')
 
         # Test cc file.
         cdl = OCIO.CDLTransform.CreateFromFile(test_file, 'foo')
@@ -172,7 +173,7 @@ class CDLTransformTest(unittest.TestCase, TransformsBaseTest):
         """
 
         # Try env var first to get test file path.
-        test_file = '%s/cdl_test1.ccc' % TEST_DATAFILES_DIR
+        test_file = os.path.join(TEST_DATAFILES_DIR, 'cdl_test1.ccc')
 
         # Test 4th member of the ccc file.
         cdl1 = OCIO.CDLTransform.CreateFromFile(test_file, '3')
@@ -197,7 +198,7 @@ class CDLTransformTest(unittest.TestCase, TransformsBaseTest):
         """
 
         # Try env var first to get test file path.
-        test_file = '%s/cdl_test1.cdl' % TEST_DATAFILES_DIR
+        test_file = os.path.join(TEST_DATAFILES_DIR, 'cdl_test1.cdl')
 
         # Mute warnings being logged.
         curLogLevel = OCIO.GetLoggingLevel()
@@ -219,7 +220,7 @@ class CDLTransformTest(unittest.TestCase, TransformsBaseTest):
         Test CreateGroupFromFile.
         """
 
-        test_file = '%s/cdl_test1.ccc' % TEST_DATAFILES_DIR
+        test_file = os.path.join(TEST_DATAFILES_DIR, 'cdl_test1.ccc')
         grp_tr = OCIO.CDLTransform.CreateGroupFromFile(test_file)
         self.assertEqual(len(grp_tr), 5)
         self.assertEqual(grp_tr[0].getID(), 'cc0001')

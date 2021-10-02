@@ -514,6 +514,10 @@ void bindPyTypes(py::module & m)
                DOC(PyOpenColorIO, GpuLanguage, GPU_LANGUAGE_GLSL_1_3))
         .value("GPU_LANGUAGE_GLSL_4_0", GPU_LANGUAGE_GLSL_4_0, 
                DOC(PyOpenColorIO, GpuLanguage, GPU_LANGUAGE_GLSL_4_0))
+        .value("GPU_LANGUAGE_GLSL_ES_1_0", GPU_LANGUAGE_GLSL_ES_1_0, 
+               DOC(PyOpenColorIO, GpuLanguage, GPU_LANGUAGE_GLSL_ES_1_0))
+        .value("GPU_LANGUAGE_GLSL_ES_3_0", GPU_LANGUAGE_GLSL_ES_3_0, 
+               DOC(PyOpenColorIO, GpuLanguage, GPU_LANGUAGE_GLSL_ES_3_0))
         .value("GPU_LANGUAGE_HLSL_DX11", GPU_LANGUAGE_HLSL_DX11, 
                DOC(PyOpenColorIO, GpuLanguage, GPU_LANGUAGE_HLSL_DX11))
         .export_values();
@@ -568,8 +572,8 @@ void bindPyTypes(py::module & m)
                DOC(PyOpenColorIO, FixedFunctionStyle, FIXED_FUNCTION_ACES_GAMUTMAP_02))
         .value("FIXED_FUNCTION_ACES_GAMUTMAP_07", FIXED_FUNCTION_ACES_GAMUTMAP_07,
                DOC(PyOpenColorIO, FixedFunctionStyle, FIXED_FUNCTION_ACES_GAMUTMAP_07))
-        .value("FIXED_FUNCTION_ACES_GAMUTMAP_13", FIXED_FUNCTION_ACES_GAMUTMAP_13,
-               DOC(PyOpenColorIO, FixedFunctionStyle, FIXED_FUNCTION_ACES_GAMUTMAP_13))
+        .value("FIXED_FUNCTION_ACES_GAMUT_COMP_13", FIXED_FUNCTION_ACES_GAMUT_COMP_13,
+               DOC(PyOpenColorIO, FixedFunctionStyle, FIXED_FUNCTION_ACES_GAMUT_COMP_13))
         .export_values();
 
     py::enum_<ExposureContrastStyle>(

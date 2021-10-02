@@ -24,6 +24,5 @@ target_link_libraries(ociowrite
 )
 
 install(TARGETS ociowrite
-    RUNTIME DESTINATION bin
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
-

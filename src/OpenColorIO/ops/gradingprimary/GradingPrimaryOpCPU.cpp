@@ -120,6 +120,7 @@ public:
 ///////////////////////////////////////////////////////////////////////////////
 
 #ifdef USE_SSE
+
 inline void ApplyContrast(__m128 & pix, const __m128 contrast, const __m128 pivot)
 {
     pix = _mm_add_ps(_mm_mul_ps(_mm_sub_ps(pix, pivot), contrast), pivot);
@@ -168,13 +169,6 @@ inline void ApplyClamp(__m128 & pix, const __m128 blackClamp, const __m128 white
 }
 
 #else
-
-inline void ApplyScale(float * pix, const float scale)
-{
-    pix[0] = pix[0] * scale;
-    pix[1] = pix[1] * scale;
-    pix[2] = pix[2] * scale;
-}
 
 inline void ApplyContrast(float * pix, const float * contrast, const float pivot)
 {

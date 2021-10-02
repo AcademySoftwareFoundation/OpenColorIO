@@ -7,6 +7,7 @@
 
 #include "DynamicProperty.h"
 #include "GpuShader.h"
+#include "GpuShaderUtils.h"
 #include "HashUtils.h"
 #include "Logging.h"
 #include "Mutex.h"
@@ -171,13 +172,12 @@ bool GpuShaderCreator::hasDynamicProperty(DynamicPropertyType type) const
 
 void GpuShaderCreator::addDynamicProperty(DynamicPropertyRcPtr & prop)
 {
-    for (auto dp : getImpl()->m_dynamicProperties)
+    if (hasDynamicProperty(prop->getType()))
     {
-        if (dp->getType() == prop->getType())
-        {
-            // Dynamic property is already there.
-            throw Exception("Dynamic property already here.");
-        }
+        // Dynamic property is already there.
+        std::ostringstream oss;
+        oss << "Dynamic property already here: " << prop->getType() << ".";
+        throw Exception(oss.str().c_str());
     }
 
     getImpl()->m_dynamicProperties.push_back(prop);
@@ -281,6 +281,7 @@ void GpuShaderCreator::createShaderText(const char * shaderDeclarations,
     AutoMutex lock(getImpl()->m_cacheIDMutex);
 
     getImpl()->m_shaderCode.clear();
+    
     getImpl()->m_shaderCode += (shaderDeclarations   && *shaderDeclarations)   ? shaderDeclarations   : "";
     getImpl()->m_shaderCode += (shaderHelperMethods  && *shaderHelperMethods)  ? shaderHelperMethods  : "";
     getImpl()->m_shaderCode += (shaderFunctionHeader && *shaderFunctionHeader) ? shaderFunctionHeader : "";
@@ -295,6 +296,102 @@ void GpuShaderCreator::createShaderText(const char * shaderDeclarations,
 
 void GpuShaderCreator::finalize()
 {
+    if (getLanguage() == LANGUAGE_OSL_1)
+    {
+        GpuShaderText kw(getLanguage());
+
+        kw.newLine() << "";
+        kw.newLine() << "/* All the includes */";
+        kw.newLine() << "";
+        kw.newLine() << "#include \"vector4.h\"";
+        kw.newLine() << "#include \"color4.h\"";
+
+        kw.newLine() << "";
+        kw.newLine() << "/* All the generic helper methods */";
+        kw.newLine() << "";
+        kw.newLine() << "vector4 __operator__mul__(vector4 v, matrix m)";
+        kw.newLine() << "{";
+        kw.indent();
+        kw.newLine() << "return vector4(v.x * m[0][0] + v.y * m[1][0] + v.z * m[2][0] + v.w * m[3][0], "\
+                                       "v.x * m[0][1] + v.y * m[1][1] + v.z * m[2][1] + v.w * m[3][1], "\
+                                       "v.x * m[0][2] + v.y * m[1][2] + v.z * m[2][2] + v.w * m[3][2], "\
+                                       "v.x * m[0][3] + v.y * m[1][3] + v.z * m[2][3] + v.w * m[3][3]);";
+        kw.dedent();
+        kw.newLine() << "}";
+
+        kw.newLine() << "";
+        kw.newLine() << "vector4 __operator__mul__(color4 c, vector4 v)";
+        kw.newLine() << "{";
+        kw.indent();
+        kw.newLine() << "return vector4(c.rgb.r, c.rgb.g, c.rgb.b, c.a) * v;";
+        kw.dedent();
+        kw.newLine() << "}";
+
+        kw.newLine() << "";
+        kw.newLine() << "vector4 __operator__mul__(vector4 v, color4 c)";
+        kw.newLine() << "{";
+        kw.indent();
+        kw.newLine() << "return v * vector4(c.rgb.r, c.rgb.g, c.rgb.b, c.a);";
+        kw.dedent();
+        kw.newLine() << "}";
+
+        kw.newLine() << "";
+        kw.newLine() << "vector4 __operator__sub__(color4 c, vector4 v)";
+        kw.newLine() << "{";
+        kw.indent();
+        kw.newLine() << "return vector4(c.rgb.r, c.rgb.g, c.rgb.b, c.a) - v;";
+        kw.dedent();
+        kw.newLine() << "}";
+
+        kw.newLine() << "";
+        kw.newLine() << "vector4 __operator__add__(vector4 v, color4 c) {";
+        kw.indent();
+        kw.newLine() << "return v + vector4(c.rgb.r, c.rgb.g, c.rgb.b, c.a);";
+        kw.dedent();
+        kw.newLine() << "}";
+
+        kw.newLine() << "";
+        kw.newLine() << "vector4 __operator__add__(color4 c, vector4 v) {";
+        kw.indent();
+        kw.newLine() << "return vector4(c.rgb.r, c.rgb.g, c.rgb.b, c.a) + v;";
+        kw.dedent();
+        kw.newLine() << "}";
+
+        kw.newLine() << "";
+        kw.newLine() << "vector4 pow(color4 c, vector4 v) {";
+        kw.indent();
+        kw.newLine() << "return pow(vector4(c.rgb.r, c.rgb.g, c.rgb.b, c.a), v);";
+        kw.dedent();
+        kw.newLine() << "}";
+
+        kw.newLine() << "";
+        kw.newLine() << "vector4 max(vector4 v, color4 c) {";
+        kw.indent();
+        kw.newLine() << "return max(v, vector4(c.rgb.r, c.rgb.g, c.rgb.b, c.a));";
+        kw.dedent();
+        kw.newLine() << "}";
+
+        kw.newLine() << "";
+        kw.newLine() << "/* The shader implementation */";
+        kw.newLine() << "";
+        kw.newLine() << "shader " << "OSL_" << getFunctionName() 
+                     << "(color4 inColor = {color(0), 1}, output color4 outColor = {color(0), 1})";
+        kw.newLine() << "{";
+
+        const std::string str = kw.string() + getImpl()->m_declarations;
+        getImpl()->m_declarations = str;
+
+        // Change the footer part.
+
+        GpuShaderText kw1(getLanguage());
+        kw1.newLine() << "";
+        kw1.newLine() << "outColor = " << getFunctionName() << "(inColor);";
+        kw1.newLine() << "}";
+
+        getImpl()->m_functionFooter += kw1.string();
+    }
+
+
     createShaderText(getImpl()->m_declarations.c_str(),
                      getImpl()->m_helperMethods.c_str(),
                      getImpl()->m_functionHeader.c_str(),
@@ -315,11 +412,6 @@ void GpuShaderCreator::finalize()
 }
 
 
-
-GpuShaderDescRcPtr GpuShaderDesc::CreateLegacyShaderDesc(unsigned edgelen)
-{
-    return LegacyGpuShaderDesc::Create(edgelen);
-}
 
 GpuShaderDescRcPtr GpuShaderDesc::CreateShaderDesc()
 {

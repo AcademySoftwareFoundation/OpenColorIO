@@ -2,171 +2,171 @@
 # Copyright Contributors to the OpenColorIO Project.
 
 set(SOURCES
-	apphelpers/CategoryHelpers.cpp
-	apphelpers/ColorSpaceHelpers.cpp
-	apphelpers/DisplayViewHelpers.cpp
-	apphelpers/LegacyViewingPipeline.cpp
-	apphelpers/MixingHelpers.cpp
-	Baker.cpp
-	BitDepthUtils.cpp
-	Caching.cpp
-	ColorSpace.cpp
-	ColorSpaceSet.cpp
-	Config.cpp
-	Context.cpp
-	ContextVariableUtils.cpp
-	CPUProcessor.cpp
-	Display.cpp
-	DynamicProperty.cpp
-	Exception.cpp
-	fileformats/cdl/CDLParser.cpp
-	fileformats/cdl/CDLReaderHelper.cpp
-	fileformats/cdl/CDLWriter.cpp
-	fileformats/ctf/CTFReaderHelper.cpp
-	fileformats/ctf/CTFReaderUtils.cpp
-	fileformats/ctf/CTFTransform.cpp
-	fileformats/ctf/IndexMapping.cpp
-	fileformats/FileFormat3DL.cpp
-	fileformats/FileFormatCCC.cpp
-	fileformats/FileFormatCC.cpp
-	fileformats/FileFormatCDL.cpp
-	fileformats/FileFormatCSP.cpp
-	fileformats/FileFormatCTF.cpp
-	fileformats/FileFormatDiscreet1DL.cpp
-	fileformats/FileFormatHDL.cpp
-	fileformats/FileFormatICC.cpp
-	fileformats/FileFormatIridasCube.cpp
-	fileformats/FileFormatIridasItx.cpp
-	fileformats/FileFormatIridasLook.cpp
-	fileformats/FileFormatPandora.cpp
-	fileformats/FileFormatResolveCube.cpp
-	fileformats/FileFormatSpi1D.cpp
-	fileformats/FileFormatSpi3D.cpp
-	fileformats/FileFormatSpiMtx.cpp
-	fileformats/FileFormatTruelight.cpp
-	fileformats/FileFormatUtils.cpp
-	fileformats/FileFormatVF.cpp
-	fileformats/FormatMetadata.cpp
-	fileformats/xmlutils/XMLReaderHelper.cpp
-	fileformats/xmlutils/XMLReaderUtils.cpp
-	fileformats/xmlutils/XMLWriterUtils.cpp
-	FileRules.cpp
-	GPUProcessor.cpp
-	GpuShader.cpp
-	GpuShaderDesc.cpp
-	GpuShaderUtils.cpp
-	HashUtils.cpp
-	ImageDesc.cpp
-	ImagePacking.cpp
-	Logging.cpp
-	Look.cpp
-	LookParse.cpp
-	MathUtils.cpp
-	md5/md5.cpp
-	NamedTransform.cpp
-	OCIOYaml.cpp
-	Op.cpp
-	OpOptimizers.cpp
-	ops/allocation/AllocationOp.cpp
-	ops/cdl/CDLOpCPU.cpp
-	ops/cdl/CDLOpData.cpp
-	ops/cdl/CDLOpGPU.cpp
-	ops/cdl/CDLOp.cpp
-	ops/exponent/ExponentOp.cpp
-	ops/exposurecontrast/ExposureContrastOpCPU.cpp
-	ops/exposurecontrast/ExposureContrastOpData.cpp
-	ops/exposurecontrast/ExposureContrastOpGPU.cpp
-	ops/exposurecontrast/ExposureContrastOp.cpp
-	ops/fixedfunction/FixedFunctionOpCPU.cpp
-	ops/fixedfunction/FixedFunctionOpData.cpp
-	ops/fixedfunction/FixedFunctionOpGPU.cpp
-	ops/fixedfunction/FixedFunctionOp.cpp
-	ops/gamma/GammaOpCPU.cpp
-	ops/gamma/GammaOpData.cpp
-	ops/gamma/GammaOpGPU.cpp
-	ops/gamma/GammaOpUtils.cpp
-	ops/gamma/GammaOp.cpp
-	ops/gradingprimary/GradingPrimary.cpp
-	ops/gradingprimary/GradingPrimaryOpCPU.cpp
-	ops/gradingprimary/GradingPrimaryOpData.cpp
-	ops/gradingprimary/GradingPrimaryOpGPU.cpp
-	ops/gradingprimary/GradingPrimaryOp.cpp
-	ops/gradingrgbcurve/GradingBSplineCurve.cpp
-	ops/gradingrgbcurve/GradingRGBCurveOpCPU.cpp
-	ops/gradingrgbcurve/GradingRGBCurveOpData.cpp
-	ops/gradingrgbcurve/GradingRGBCurveOpGPU.cpp
-	ops/gradingrgbcurve/GradingRGBCurveOp.cpp
-	ops/gradingrgbcurve/GradingRGBCurve.cpp
-	ops/gradingtone/GradingTone.cpp
-	ops/gradingtone/GradingToneOpCPU.cpp
-	ops/gradingtone/GradingToneOpData.cpp
-	ops/gradingtone/GradingToneOpGPU.cpp
-	ops/gradingtone/GradingToneOp.cpp
-	ops/log/LogOpCPU.cpp
-	ops/log/LogOpData.cpp
-	ops/log/LogOpGPU.cpp
-	ops/log/LogOp.cpp
-	ops/log/LogUtils.cpp
-	ops/lut1d/Lut1DOp.cpp
-	ops/lut1d/Lut1DOpCPU.cpp
-	ops/lut1d/Lut1DOpData.cpp
-	ops/lut1d/Lut1DOpGPU.cpp
-	ops/lut3d/Lut3DOp.cpp
-	ops/lut3d/Lut3DOpCPU.cpp
-	ops/lut3d/Lut3DOpData.cpp
-	ops/lut3d/Lut3DOpGPU.cpp
-	ops/matrix/MatrixOpCPU.cpp
-	ops/matrix/MatrixOpData.cpp
-	ops/matrix/MatrixOpGPU.cpp
-	ops/matrix/MatrixOp.cpp
-	ops/noop/NoOps.cpp
-	ops/OpTools.cpp
-	ops/range/RangeOpCPU.cpp
-	ops/range/RangeOpData.cpp
-	ops/range/RangeOpGPU.cpp
-	ops/range/RangeOp.cpp
-	ops/reference/ReferenceOpData.cpp
-	ParseUtils.cpp
-	PathUtils.cpp
-	Platform.cpp
-	Processor.cpp
-	ScanlineHelper.cpp
-	Transform.cpp
-	transforms/AllocationTransform.cpp
-	transforms/builtins/ACES.cpp
-	transforms/builtins/BuiltinTransformRegistry.cpp
-	transforms/builtins/ColorMatrixHelpers.cpp
-	transforms/builtins/OpHelpers.cpp
-	transforms/builtins/ArriCameras.cpp
-	transforms/builtins/CanonCameras.cpp
-	transforms/builtins/Displays.cpp
-	transforms/builtins/PanasonicCameras.cpp
-	transforms/builtins/RedCameras.cpp
-	transforms/builtins/SonyCameras.cpp
-	transforms/BuiltinTransform.cpp
-	transforms/CDLTransform.cpp
-	transforms/ColorSpaceTransform.cpp
-	transforms/DisplayViewTransform.cpp
-	transforms/ExponentTransform.cpp
-	transforms/ExponentWithLinearTransform.cpp
-	transforms/ExposureContrastTransform.cpp
-	transforms/FileTransform.cpp
-	transforms/FixedFunctionTransform.cpp
-	transforms/GradingPrimaryTransform.cpp
-	transforms/GradingRGBCurveTransform.cpp
-	transforms/GradingToneTransform.cpp
-	transforms/GroupTransform.cpp
-	transforms/LogAffineTransform.cpp
-	transforms/LogCameraTransform.cpp
-	transforms/LogTransform.cpp
-	transforms/LookTransform.cpp
-	transforms/Lut1DTransform.cpp
-	transforms/Lut3DTransform.cpp
-	transforms/MatrixTransform.cpp
-	transforms/RangeTransform.cpp
-	ViewingRules.cpp
-	ViewTransform.cpp
-	SystemMonitor.cpp
+    apphelpers/CategoryHelpers.cpp
+    apphelpers/ColorSpaceHelpers.cpp
+    apphelpers/DisplayViewHelpers.cpp
+    apphelpers/LegacyViewingPipeline.cpp
+    apphelpers/MixingHelpers.cpp
+    Baker.cpp
+    BitDepthUtils.cpp
+    Caching.cpp
+    ColorSpace.cpp
+    ColorSpaceSet.cpp
+    Config.cpp
+    Context.cpp
+    ContextVariableUtils.cpp
+    CPUProcessor.cpp
+    Display.cpp
+    DynamicProperty.cpp
+    Exception.cpp
+    fileformats/cdl/CDLParser.cpp
+    fileformats/cdl/CDLReaderHelper.cpp
+    fileformats/cdl/CDLWriter.cpp
+    fileformats/ctf/CTFReaderHelper.cpp
+    fileformats/ctf/CTFReaderUtils.cpp
+    fileformats/ctf/CTFTransform.cpp
+    fileformats/ctf/IndexMapping.cpp
+    fileformats/FileFormat3DL.cpp
+    fileformats/FileFormatCCC.cpp
+    fileformats/FileFormatCC.cpp
+    fileformats/FileFormatCDL.cpp
+    fileformats/FileFormatCSP.cpp
+    fileformats/FileFormatCTF.cpp
+    fileformats/FileFormatDiscreet1DL.cpp
+    fileformats/FileFormatHDL.cpp
+    fileformats/FileFormatICC.cpp
+    fileformats/FileFormatIridasCube.cpp
+    fileformats/FileFormatIridasItx.cpp
+    fileformats/FileFormatIridasLook.cpp
+    fileformats/FileFormatPandora.cpp
+    fileformats/FileFormatResolveCube.cpp
+    fileformats/FileFormatSpi1D.cpp
+    fileformats/FileFormatSpi3D.cpp
+    fileformats/FileFormatSpiMtx.cpp
+    fileformats/FileFormatTruelight.cpp
+    fileformats/FileFormatUtils.cpp
+    fileformats/FileFormatVF.cpp
+    fileformats/FormatMetadata.cpp
+    fileformats/xmlutils/XMLReaderHelper.cpp
+    fileformats/xmlutils/XMLReaderUtils.cpp
+    fileformats/xmlutils/XMLWriterUtils.cpp
+    FileRules.cpp
+    GPUProcessor.cpp
+    GpuShader.cpp
+    GpuShaderDesc.cpp
+    GpuShaderUtils.cpp
+    HashUtils.cpp
+    ImageDesc.cpp
+    ImagePacking.cpp
+    Logging.cpp
+    Look.cpp
+    LookParse.cpp
+    MathUtils.cpp
+    md5/md5.cpp
+    NamedTransform.cpp
+    OCIOYaml.cpp
+    Op.cpp
+    OpOptimizers.cpp
+    ops/allocation/AllocationOp.cpp
+    ops/cdl/CDLOpCPU.cpp
+    ops/cdl/CDLOpData.cpp
+    ops/cdl/CDLOpGPU.cpp
+    ops/cdl/CDLOp.cpp
+    ops/exponent/ExponentOp.cpp
+    ops/exposurecontrast/ExposureContrastOpCPU.cpp
+    ops/exposurecontrast/ExposureContrastOpData.cpp
+    ops/exposurecontrast/ExposureContrastOpGPU.cpp
+    ops/exposurecontrast/ExposureContrastOp.cpp
+    ops/fixedfunction/FixedFunctionOpCPU.cpp
+    ops/fixedfunction/FixedFunctionOpData.cpp
+    ops/fixedfunction/FixedFunctionOpGPU.cpp
+    ops/fixedfunction/FixedFunctionOp.cpp
+    ops/gamma/GammaOpCPU.cpp
+    ops/gamma/GammaOpData.cpp
+    ops/gamma/GammaOpGPU.cpp
+    ops/gamma/GammaOpUtils.cpp
+    ops/gamma/GammaOp.cpp
+    ops/gradingprimary/GradingPrimary.cpp
+    ops/gradingprimary/GradingPrimaryOpCPU.cpp
+    ops/gradingprimary/GradingPrimaryOpData.cpp
+    ops/gradingprimary/GradingPrimaryOpGPU.cpp
+    ops/gradingprimary/GradingPrimaryOp.cpp
+    ops/gradingrgbcurve/GradingBSplineCurve.cpp
+    ops/gradingrgbcurve/GradingRGBCurveOpCPU.cpp
+    ops/gradingrgbcurve/GradingRGBCurveOpData.cpp
+    ops/gradingrgbcurve/GradingRGBCurveOpGPU.cpp
+    ops/gradingrgbcurve/GradingRGBCurveOp.cpp
+    ops/gradingrgbcurve/GradingRGBCurve.cpp
+    ops/gradingtone/GradingTone.cpp
+    ops/gradingtone/GradingToneOpCPU.cpp
+    ops/gradingtone/GradingToneOpData.cpp
+    ops/gradingtone/GradingToneOpGPU.cpp
+    ops/gradingtone/GradingToneOp.cpp
+    ops/log/LogOpCPU.cpp
+    ops/log/LogOpData.cpp
+    ops/log/LogOpGPU.cpp
+    ops/log/LogOp.cpp
+    ops/log/LogUtils.cpp
+    ops/lut1d/Lut1DOp.cpp
+    ops/lut1d/Lut1DOpCPU.cpp
+    ops/lut1d/Lut1DOpData.cpp
+    ops/lut1d/Lut1DOpGPU.cpp
+    ops/lut3d/Lut3DOp.cpp
+    ops/lut3d/Lut3DOpCPU.cpp
+    ops/lut3d/Lut3DOpData.cpp
+    ops/lut3d/Lut3DOpGPU.cpp
+    ops/matrix/MatrixOpCPU.cpp
+    ops/matrix/MatrixOpData.cpp
+    ops/matrix/MatrixOpGPU.cpp
+    ops/matrix/MatrixOp.cpp
+    ops/noop/NoOps.cpp
+    ops/OpTools.cpp
+    ops/range/RangeOpCPU.cpp
+    ops/range/RangeOpData.cpp
+    ops/range/RangeOpGPU.cpp
+    ops/range/RangeOp.cpp
+    ops/reference/ReferenceOpData.cpp
+    ParseUtils.cpp
+    PathUtils.cpp
+    Platform.cpp
+    Processor.cpp
+    ScanlineHelper.cpp
+    Transform.cpp
+    transforms/AllocationTransform.cpp
+    transforms/builtins/ACES.cpp
+    transforms/builtins/BuiltinTransformRegistry.cpp
+    transforms/builtins/ColorMatrixHelpers.cpp
+    transforms/builtins/OpHelpers.cpp
+    transforms/builtins/ArriCameras.cpp
+    transforms/builtins/CanonCameras.cpp
+    transforms/builtins/Displays.cpp
+    transforms/builtins/PanasonicCameras.cpp
+    transforms/builtins/RedCameras.cpp
+    transforms/builtins/SonyCameras.cpp
+    transforms/BuiltinTransform.cpp
+    transforms/CDLTransform.cpp
+    transforms/ColorSpaceTransform.cpp
+    transforms/DisplayViewTransform.cpp
+    transforms/ExponentTransform.cpp
+    transforms/ExponentWithLinearTransform.cpp
+    transforms/ExposureContrastTransform.cpp
+    transforms/FileTransform.cpp
+    transforms/FixedFunctionTransform.cpp
+    transforms/GradingPrimaryTransform.cpp
+    transforms/GradingRGBCurveTransform.cpp
+    transforms/GradingToneTransform.cpp
+    transforms/GroupTransform.cpp
+    transforms/LogAffineTransform.cpp
+    transforms/LogCameraTransform.cpp
+    transforms/LogTransform.cpp
+    transforms/LookTransform.cpp
+    transforms/Lut1DTransform.cpp
+    transforms/Lut3DTransform.cpp
+    transforms/MatrixTransform.cpp
+    transforms/RangeTransform.cpp
+    ViewingRules.cpp
+    ViewTransform.cpp
+    SystemMonitor.cpp
 )
 
 if(NOT WIN32)
@@ -183,77 +183,95 @@ if(NOT WIN32)
     install(FILES ${CMAKE_CURRENT_BINARY_DIR}/OpenColorIO.pc DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
 endif()
 
-# TODO: Install the OpenColorIO-config.cmake.
-
 add_library(OpenColorIO ${SOURCES})
 
+# Require at least a C++11 compatible compiler for consumer projects.
+target_compile_features(OpenColorIO
+    PUBLIC cxx_std_11
+)
+
 if(BUILD_SHARED_LIBS AND WIN32)
-	# Impose a versioned name on Windows to avoid binary name clashes.
-    set(OCIO_LIBNAME_SUFFIX
-    	${OCIO_LIBNAME_SUFFIX}_${OpenColorIO_VERSION_MAJOR}_${OpenColorIO_VERSION_MINOR}
-    )
+    # Only use the versioned name with the dynamic library.
+    set(CMAKE_SHARED_LIBRARY_SUFFIX _${OpenColorIO_VERSION_MAJOR}_${OpenColorIO_VERSION_MINOR}.dll)
 
     # Create the version.rc file for the Windows DLL.
     configure_file(res/version.rc.in ${CMAKE_CURRENT_BINARY_DIR}/version.rc @ONLY)
     set(SOURCES ${SOURCES} ${CMAKE_CURRENT_BINARY_DIR}/version.rc)
 endif()
 
+
+set(HEADER_LOCATION "${CMAKE_SOURCE_DIR}/include/OpenColorIO")
+file(GLOB_RECURSE INSTALL_HEADERS "${HEADER_LOCATION}/*.h")
+
+# Some part of the build process expect to find the ABI header here,
+# notably the documentation.
+set(ABI_HEADER_LOCATION "${CMAKE_BINARY_DIR}/include/OpenColorIO")
+list(APPEND INSTALL_HEADERS ${ABI_HEADER_LOCATION}/OpenColorABI.h)
+configure_file("${HEADER_LOCATION}/OpenColorABI.h.in" "${ABI_HEADER_LOCATION}/OpenColorABI.h" @ONLY)
+
+set(BUILD_INCLUDES
+    ${HEADER_LOCATION}/..
+    ${HEADER_LOCATION}
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${ABI_HEADER_LOCATION}
+)
+
 target_include_directories(OpenColorIO
-	PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
+    PUBLIC
+        "$<BUILD_INTERFACE:${BUILD_INCLUDES}>"
+        "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 )
 
 target_link_libraries(OpenColorIO
-	PUBLIC
-		public_api
-	PRIVATE
-		expat::expat
-		IlmBase::Half
-		pystring::pystring
-		sampleicc::sampleicc
-		utils::strings
-		yaml-cpp
+    PRIVATE
+        expat::expat
+        ${OCIO_HALF_LIB}
+        pystring::pystring
+        sampleicc::sampleicc
+        utils::strings
+        yaml-cpp
 )
 
 if(APPLE)
-	target_link_libraries(OpenColorIO
-		PRIVATE
-			"-framework Carbon"
-			"-framework IOKit"
-	)
+    target_link_libraries(OpenColorIO
+        PRIVATE
+            "-framework Carbon"
+            "-framework IOKit"
+    )
 endif()
 
 if(NOT BUILD_SHARED_LIBS)
-	target_compile_definitions(OpenColorIO
-		PRIVATE
-			OpenColorIO_SKIP_IMPORTS
-	)
+    target_compile_definitions(OpenColorIO
+        PRIVATE
+            OpenColorIO_SKIP_IMPORTS
+    )
 else()
-	# Only exports selected symbols.
-	target_compile_definitions(OpenColorIO
-		PRIVATE
-			OpenColorIO_EXPORTS
-	)
+    # Only exports selected symbols.
+    target_compile_definitions(OpenColorIO
+        PRIVATE
+            OpenColorIO_EXPORTS
+    )
 endif()
 
 if(BUILD_SHARED_LIBS OR (OCIO_BUILD_PYTHON AND UNIX))
-	# The Python bindings is a 'module' which is a dynamic library on Linux
-	# (i.e. '-fPIC' needed), but a static library on Windows.
+    # The Python bindings is a 'module' which is a dynamic library on Linux
+    # (i.e. '-fPIC' needed), but a static library on Windows.
 
-	# If supported for the target machine, emit position-independent code
-	# suitable for dynamic linking.
-	set_property(TARGET OpenColorIO PROPERTY POSITION_INDEPENDENT_CODE ON)
+    # If supported for the target machine, emit position-independent code
+    # suitable for dynamic linking.
+    set_property(TARGET OpenColorIO PROPERTY POSITION_INDEPENDENT_CODE ON)
 endif()
 
 if(OCIO_USE_SSE)
-	target_compile_definitions(OpenColorIO
-		PRIVATE
-			USE_SSE
-	)
+    target_compile_definitions(OpenColorIO
+        PRIVATE
+            USE_SSE
+    )
 endif()
 
 if(MSVC AND BUILD_TYPE_DEBUG AND BUILD_SHARED_LIBS)
     set_target_properties(OpenColorIO PROPERTIES
-        PDB_NAME ${PROJECT_NAME}${OCIO_LIBNAME_SUFFIX}
+        PDB_NAME ${PROJECT_NAME}${OCIO_LIBNAME_SUFFIX}_${OpenColorIO_VERSION_MAJOR}_${OpenColorIO_VERSION_MINOR}
     )
 endif()
 
@@ -271,15 +289,26 @@ set_target_properties(OpenColorIO PROPERTIES
     COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS}"
     VERSION       ${OpenColorIO_VERSION}
     SOVERSION     ${SOVERSION}
+    PUBLIC_HEADER "${INSTALL_HEADERS}"
 )
 
+if (UNIX AND NOT APPLE)
+    # Also hide all the symbols of dependent libraries to prevent clashes if
+    # an app using this project is linked against other versions of our
+    # dependencies.
+    set_property (TARGET OpenColorIO
+                  APPEND PROPERTY LINK_FLAGS "-Wl,--exclude-libs,ALL")
+endif ()
+
 if(MSVC AND BUILD_SHARED_LIBS)
-	# Install the pdb file if any.
-	install(FILES $<TARGET_PDB_FILE:${PROJECT_NAME}> DESTINATION bin OPTIONAL)
+    # Install the pdb file if any.
+    install(FILES $<TARGET_PDB_FILE:${PROJECT_NAME}> DESTINATION ${CMAKE_INSTALL_BINDIR} OPTIONAL)
 endif()
 
 install(TARGETS OpenColorIO
-	LIBRARY DESTINATION lib
-	RUNTIME DESTINATION bin
-	ARCHIVE DESTINATION lib
+    EXPORT ${PROJECT_NAME}_EXPORTED_TARGETS
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/OpenColorIO
 )

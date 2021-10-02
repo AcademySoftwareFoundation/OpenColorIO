@@ -34,12 +34,21 @@ void WriteShaderHeader(GpuShaderCreatorRcPtr & shaderCreator)
     ss.newLine() << "// Declaration of the OCIO shader function";
     ss.newLine();
 
-    ss.newLine() << ss.float4Keyword() << " " << fcnName
-                 << "(in "  << ss.float4Keyword() << " inPixel)";
-    ss.newLine() << "{";
-    ss.indent();
-    ss.newLine() << ss.float4Keyword() << " "
-                 << shaderCreator->getPixelName() << " = inPixel;";
+    if (shaderCreator->getLanguage() == LANGUAGE_OSL_1)
+    {
+        ss.newLine() << "color4 " << fcnName << "(color4 inPixel)";
+        ss.newLine() << "{";
+        ss.indent();
+        ss.newLine() << "color4 " << shaderCreator->getPixelName() << " = inPixel;";
+    }
+    else
+    {
+        ss.newLine() << ss.float4Keyword() << " " << fcnName 
+                     << "(" << ss.float4Keyword() << " inPixel)";
+        ss.newLine() << "{";
+        ss.indent();
+        ss.newLine() << ss.float4Decl(shaderCreator->getPixelName()) << " = inPixel;";
+    }
 
     shaderCreator->addToFunctionHeaderShaderCode(ss.string().c_str());
 }
@@ -92,54 +101,8 @@ void GPUProcessor::Impl::extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCrea
 {
     AutoMutex lock(m_mutex);
 
-    OpRcPtrVec gpuOps;
-
-    LegacyGpuShaderDesc * legacy = dynamic_cast<LegacyGpuShaderDesc*>(shaderCreator.get());
-    if(legacy)
-    {
-        gpuOps = m_ops;
-
-        // GPU Process setup
-        //
-        // Partition the original, raw opvec into 3 segments for GPU Processing
-        //
-        // Interior index range does not support the gpu shader.
-        // This is used to bound our analytical shader text generation
-        // start index and end index are inclusive.
-
-        // These 3 op vecs represent the 3 stages in our gpu pipe.
-        // 1) preprocess shader text
-        // 2) 3D LUT process lookup
-        // 3) postprocess shader text
-
-        OpRcPtrVec gpuOpsHwPreProcess;
-        OpRcPtrVec gpuOpsCpuLatticeProcess;
-        OpRcPtrVec gpuOpsHwPostProcess;
-
-        PartitionGPUOps(gpuOpsHwPreProcess,
-                        gpuOpsCpuLatticeProcess,
-                        gpuOpsHwPostProcess,
-                        gpuOps);
-
-        LogDebug("GPU Ops: 3DLUT");
-        gpuOpsCpuLatticeProcess.finalize();
-        OpRcPtrVec gpuLut = Create3DLut(gpuOpsCpuLatticeProcess, legacy->getEdgelen());
-
-        gpuOps.clear();
-        gpuOps += gpuOpsHwPreProcess;
-        gpuOps += gpuLut;
-        gpuOps += gpuOpsHwPostProcess;
-
-        gpuOps.finalize();
-        gpuOps.optimize(OPTIMIZATION_DEFAULT);
-    }
-    else
-    {
-        gpuOps = m_ops;
-    }
-
     // Create the shader program information.
-    for(const auto & op : gpuOps)
+    for(const auto & op : m_ops)
     {
         op->extractGpuShaderInfo(shaderCreator);
     }

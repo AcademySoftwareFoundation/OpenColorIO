@@ -336,15 +336,7 @@ OpenColorIO_AE_Context::OpenColorIO_AE_Context(const std::string &path, OCIO_Sou
             {
                 const char *colorSpaceName = _config->getColorSpaceNameByIndex(i);
                 
-                OCIO::ConstColorSpaceRcPtr colorSpace = _config->getColorSpace(colorSpaceName);
-                
-                const char *family = colorSpace->getFamily();
-                
-                _inputs.push_back(colorSpaceName);
-                
-                const std::string fullPath = (family == NULL ? colorSpaceName : std::string(family) + "/" + colorSpaceName);
-                
-                _inputsFullPath.push_back(fullPath);
+                _colorSpaces.push_back(colorSpaceName);
             }
             
             
@@ -359,7 +351,7 @@ OpenColorIO_AE_Context::OpenColorIO_AE_Context(const std::string &path, OCIO_Sou
             const char *defaultInputName = (defaultInput ? defaultInput->getName() : OCIO::ROLE_DEFAULT);
             
             
-            setupConvert(defaultInputName, defaultInputName);
+            setupConvert(defaultInputName, defaultInputName, OCIO_INVERT_OFF);
             
             
             const char *defaultDisplay = _config->getDefaultDisplay();
@@ -372,7 +364,7 @@ OpenColorIO_AE_Context::OpenColorIO_AE_Context(const std::string &path, OCIO_Sou
         {
             _config = OCIO::Config::Create();
             
-            setupLUT(false, OCIO_INTERP_LINEAR);
+            setupLUT(OCIO_INVERT_OFF, OCIO_INTERP_LINEAR);
         }
     }
     else
@@ -439,15 +431,7 @@ OpenColorIO_AE_Context::OpenColorIO_AE_Context(const ArbitraryData *arb_data, co
             {
                 const char *colorSpaceName = _config->getColorSpaceNameByIndex(i);
                 
-                OCIO::ConstColorSpaceRcPtr colorSpace = _config->getColorSpace(colorSpaceName);
-                
-                const char *family = colorSpace->getFamily();
-                
-                _inputs.push_back(colorSpaceName);
-                
-                const std::string fullPath = (family == NULL ? colorSpaceName : std::string(family) + "/" + colorSpaceName);
-                
-                _inputsFullPath.push_back(fullPath);
+                _colorSpaces.push_back(colorSpaceName);
             }
             
             
@@ -458,14 +442,14 @@ OpenColorIO_AE_Context::OpenColorIO_AE_Context(const ArbitraryData *arb_data, co
             
             if(arb_data->action == OCIO_ACTION_CONVERT)
             {
-                setupConvert(arb_data->input, arb_data->output);
+                setupConvert(arb_data->input, arb_data->output, arb_data->invert);
                 
                 _display = arb_data->display;
                 _view = arb_data->view;
             }
             else
             {
-                setupDisplay(arb_data->input, arb_data->display, arb_data->view);
+                setupDisplay(arb_data->input, arb_data->display, arb_data->view, arb_data->invert);
                 
                 _output = arb_data->output;
             }
@@ -550,9 +534,10 @@ bool OpenColorIO_AE_Context::Verify(const ArbitraryData *arb_data, const std::st
     {
         if(_input != arb_data->input ||
             _output != arb_data->output ||
+            _invert != arb_data->invert ||
             force_reset)
         {
-            setupConvert(arb_data->input, arb_data->output);
+            setupConvert(arb_data->input, arb_data->output, arb_data->invert);
         }
     }
     else if(arb_data->action == OCIO_ACTION_DISPLAY)
@@ -560,9 +545,10 @@ bool OpenColorIO_AE_Context::Verify(const ArbitraryData *arb_data, const std::st
         if(_input != arb_data->input ||
             _display != arb_data->display ||
             _view != arb_data->view ||
+            _invert != arb_data->invert ||
             force_reset)
         {
-            setupDisplay(arb_data->input, arb_data->display, arb_data->view);
+            setupDisplay(arb_data->input, arb_data->display, arb_data->view, arb_data->invert);
         }
     }
     else
@@ -573,29 +559,39 @@ bool OpenColorIO_AE_Context::Verify(const ArbitraryData *arb_data, const std::st
 }
 
 
-void OpenColorIO_AE_Context::setupConvert(const char *input, const char *output)
+void OpenColorIO_AE_Context::setupConvert(const char *input, const char *output, OCIO_Invert invert)
 {
     OCIO::ColorSpaceTransformRcPtr transform = OCIO::ColorSpaceTransform::Create();
     
     transform->setSrc(input);
     transform->setDst(output);
-    transform->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
+    transform->setDirection(invert == OCIO_INVERT_OFF ? OCIO::TRANSFORM_DIR_FORWARD : OCIO::TRANSFORM_DIR_INVERSE);
     
     _input = input;
     _output = output;
+    _invert = invert;
+    
     
     _processor = _config->getProcessor(transform);
     
-    _cpu_processor = _processor->getDefaultCPUProcessor();
-    _gpu_processor = _processor->getDefaultGPUProcessor();
-    
+    if(invert == OCIO_INVERT_EXACT)
+    {
+        _cpu_processor = _processor->getOptimizedCPUProcessor(OCIO::OPTIMIZATION_LOSSLESS);
+        _gpu_processor = _processor->getOptimizedGPUProcessor(OCIO::OPTIMIZATION_LOSSLESS);
+    }
+    else
+    {
+        _cpu_processor = _processor->getDefaultCPUProcessor();
+        _gpu_processor = _processor->getDefaultGPUProcessor();
+    }
+
     _action = OCIO_ACTION_CONVERT;
     
     UpdateOCIOGLState();
 }
 
 
-void OpenColorIO_AE_Context::setupDisplay(const char *input, const char *display, const char *view)
+void OpenColorIO_AE_Context::setupDisplay(const char *input, const char *display, const char *view, OCIO_Invert invert)
 {
     _views.clear();
     
@@ -620,17 +616,27 @@ void OpenColorIO_AE_Context::setupDisplay(const char *input, const char *display
     transform->setSrc(input);
     transform->setDisplay(display);
     transform->setView(view);
-    
+    transform->setDirection(invert == OCIO_INVERT_OFF ? OCIO::TRANSFORM_DIR_FORWARD : OCIO::TRANSFORM_DIR_INVERSE);
+
     _input = input;
     _display = display;
     _view = view;
+    _invert = invert;
     
 
     _processor = _config->getProcessor(transform);
     
-    _cpu_processor = _processor->getDefaultCPUProcessor();
-    _gpu_processor = _processor->getDefaultGPUProcessor();
-    
+    if(invert == OCIO_INVERT_EXACT)
+    {
+        _cpu_processor = _processor->getOptimizedCPUProcessor(OCIO::OPTIMIZATION_LOSSLESS);
+        _gpu_processor = _processor->getOptimizedGPUProcessor(OCIO::OPTIMIZATION_LOSSLESS);
+    }
+    else
+    {
+        _cpu_processor = _processor->getDefaultCPUProcessor();
+        _gpu_processor = _processor->getDefaultGPUProcessor();
+    }
+
     _action = OCIO_ACTION_DISPLAY;
     
     UpdateOCIOGLState();
@@ -651,6 +657,7 @@ void OpenColorIO_AE_Context::setupLUT(OCIO_Invert invert, OCIO_Interp interpolat
     transform->setSrc( _path.c_str() );
     transform->setInterpolation(static_cast<OCIO::Interpolation>(interpolation));
     transform->setDirection(invert > OCIO_INVERT_OFF ? OCIO::TRANSFORM_DIR_INVERSE : OCIO::TRANSFORM_DIR_FORWARD);
+    
     
     _processor = _config->getProcessor(transform);
     
@@ -676,22 +683,22 @@ void OpenColorIO_AE_Context::setupLUT(OCIO_Invert invert, OCIO_Interp interpolat
 
 bool OpenColorIO_AE_Context::ExportLUT(const std::string &path, const std::string &display_icc_path)
 {
-    std::string the_extension = path.substr( path.find_last_of('.') + 1 );
+    const std::string the_extension = path.substr( path.find_last_of('.') + 1 );
     
     try{
     
     if(the_extension == "icc")
     {
-        int cubesize = 32;
-        int whitepointtemp = 6505;
-        std::string copyright = "";
+        const int cubesize = 32;
+        const int whitepointtemp = 6505;
+        const std::string copyright = "";
         
         // create a description tag from the filename
-        size_t filename_start = path.find_last_of(delimiter) + 1;
-        size_t filename_end = path.find_last_of('.') - 1;
+        const size_t filename_start = path.find_last_of(delimiter) + 1;
+        const size_t filename_end = path.find_last_of('.') - 1;
         
-        std::string description = path.substr(path.find_last_of(delimiter) + 1,
-                                            1 + filename_end - filename_start);
+        const std::string description = path.substr(path.find_last_of(delimiter) + 1,
+                                                    1 + filename_end - filename_start);
         
         SaveICCProfileToFile(path, _cpu_processor, cubesize, whitepointtemp,
                                 display_icc_path, description, copyright, false);
@@ -700,18 +707,22 @@ bool OpenColorIO_AE_Context::ExportLUT(const std::string &path, const std::strin
     {
         // this code lovingly pulled from ociobakelut
         
-        // need an extension->format map (yes, just did this one call up)
-        std::map<std::string, std::string> extensions;
+        std::string format;
         
         for(int i=0; i < OCIO::Baker::getNumFormats(); ++i)
         {
             const char *extension = OCIO::Baker::getFormatExtensionByIndex(i);
-            const char *format = OCIO::Baker::getFormatNameByIndex(i);
+            const char *formatName = OCIO::Baker::getFormatNameByIndex(i);
             
-            extensions[ extension ] = format;
+            if(the_extension == extension)
+            {
+                format = formatName;
+                break;
+            }
         }
         
-        std::string format = extensions[ the_extension ];
+        if(format.empty())
+            return false;
         
         
         OCIO::BakerRcPtr baker = OCIO::Baker::Create();
@@ -721,8 +732,8 @@ bool OpenColorIO_AE_Context::ExportLUT(const std::string &path, const std::strin
         if(_action == OCIO_ACTION_CONVERT)
         {
             baker->setConfig(_config);
-            baker->setInputSpace(_input.c_str());
-            baker->setTargetSpace(_output.c_str());
+            baker->setInputSpace(_invert ? _output.c_str() : _input.c_str());
+            baker->setTargetSpace(_invert ? _input.c_str() : _output.c_str());
         
             std::ofstream f(path.c_str());
             baker->bake(f);
@@ -732,13 +743,13 @@ bool OpenColorIO_AE_Context::ExportLUT(const std::string &path, const std::strin
             OCIO::ConfigRcPtr editableConfig = _config->createEditableCopy();
             
             OCIO::ColorSpaceRcPtr inputColorSpace = OCIO::ColorSpace::Create();
-            std::string inputspace = "RawInput";
+            const std::string inputspace = "RawInput";
             inputColorSpace->setName(inputspace.c_str());
             editableConfig->addColorSpace(inputColorSpace);
             
             
             OCIO::ColorSpaceRcPtr outputColorSpace = OCIO::ColorSpace::Create();
-            std::string outputspace = "ProcessedOutput";
+            const std::string outputspace = "ProcessedOutput";
             outputColorSpace->setName(outputspace.c_str());
             
             OCIO::DisplayViewTransformRcPtr transform = OCIO::DisplayViewTransform::Create();
@@ -746,6 +757,7 @@ bool OpenColorIO_AE_Context::ExportLUT(const std::string &path, const std::strin
             transform->setSrc(_input.c_str());
             transform->setDisplay(_display.c_str());
             transform->setView(_view.c_str());
+            transform->setDirection(_invert ? OCIO::TRANSFORM_DIR_INVERSE : OCIO::TRANSFORM_DIR_FORWARD);
 
             outputColorSpace->setTransform(transform, OCIO::COLORSPACE_DIR_FROM_REFERENCE);
             
@@ -764,13 +776,13 @@ bool OpenColorIO_AE_Context::ExportLUT(const std::string &path, const std::strin
             OCIO::ConfigRcPtr editableConfig = OCIO::Config::Create();
 
             OCIO::ColorSpaceRcPtr inputColorSpace = OCIO::ColorSpace::Create();
-            std::string inputspace = "RawInput";
+            const std::string inputspace = "RawInput";
             inputColorSpace->setName(inputspace.c_str());
             editableConfig->addColorSpace(inputColorSpace);
             
             
             OCIO::ColorSpaceRcPtr outputColorSpace = OCIO::ColorSpace::Create();
-            std::string outputspace = "ProcessedOutput";
+            const std::string outputspace = "ProcessedOutput";
             outputColorSpace->setName(outputspace.c_str());
             
             OCIO::FileTransformRcPtr transform = OCIO::FileTransform::Create();

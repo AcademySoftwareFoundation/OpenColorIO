@@ -303,14 +303,11 @@ OpDataRcPtr CDLOpData::getIdentityReplacement() const
     OpDataRcPtr op;
     switch(getStyle())
     {
-        // These clamp values below 0 -- replace with range.
+        // These clamp values -- replace with range.
         case CDL_V1_2_FWD:
         case CDL_V1_2_REV:
         {
-            op = std::make_shared<RangeOpData>(0.,
-                                               RangeOpData::EmptyValue(), // don't clamp high end
-                                               0.,
-                                               RangeOpData::EmptyValue());
+            op = std::make_shared<RangeOpData>(0., 1., 0., 1.);
             break;
         }
 

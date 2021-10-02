@@ -34,7 +34,40 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
     endif()
 
     if(expat_FOUND)
+        if (TARGET expat::libexpat)
+            message(STATUS "Expat ${expat_VERSION} detected, aliasing targets.")
+            add_library(expat::expat ALIAS expat::libexpat)
+        endif()
+
+        get_target_property(expat_INCLUDE_DIR expat::expat INTERFACE_INCLUDE_DIRECTORIES)
+
         get_target_property(expat_LIBRARY expat::expat LOCATION)
+
+        if (NOT expat_INCLUDE_DIR)
+            # Find include directory too, as its Config module doesn't include it
+            find_path(expat_INCLUDE_DIR
+                NAMES
+                    expat.h
+                HINTS
+                    ${expat_ROOT}
+                    ${PC_expat_INCLUDE_DIRS}
+                PATH_SUFFIXES
+                    include
+                    expat/include
+            )
+            message(WARNING "Expat's include directory not specified in its Config module, patching it now to ${expat_INCLUDE_DIR}.")
+            if (TARGET expat::libexpat)
+                set_target_properties(expat::libexpat PROPERTIES
+                    INTERFACE_INCLUDE_DIRECTORIES ${expat_INCLUDE_DIR}
+                )
+            else()
+                set_target_properties(expat::expat PROPERTIES
+                    INTERFACE_INCLUDE_DIRECTORIES ${expat_INCLUDE_DIR}
+                )
+            endif()
+        endif()
+
+        set(_expat_REQUIRED_VARS ${expat_REQUIRED_VARS} expat_INCLUDE_DIR)
     else()
         list(APPEND _expat_REQUIRED_VARS expat_INCLUDE_DIR)
 
@@ -154,14 +187,6 @@ if(NOT expat_FOUND)
         "${_EXT_DIST_ROOT}/${CMAKE_INSTALL_LIBDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}expat${_expat_LIB_SUFFIX}${CMAKE_STATIC_LIBRARY_SUFFIX}")
 
     if(_expat_TARGET_CREATE)
-        if(UNIX)
-            set(EXPAT_C_FLAGS "${EXPAT_C_FLAGS} -fvisibility=hidden -fPIC")
-            set(EXPAT_CXX_FLAGS "${EXPAT_CXX_FLAGS} -fvisibility=hidden -fPIC")
-            if(OCIO_INLINES_HIDDEN)
-                set(EXPAT_CXX_FLAGS "${EXPAT_CXX_FLAGS} -fvisibility-inlines-hidden")
-            endif()
-        endif()
-
         if(MSVC)
             set(EXPAT_C_FLAGS "${EXPAT_C_FLAGS} /EHsc")
             set(EXPAT_CXX_FLAGS "${EXPAT_CXX_FLAGS} /EHsc")
@@ -172,6 +197,11 @@ if(NOT expat_FOUND)
 
         set(EXPAT_CMAKE_ARGS
             ${EXPAT_CMAKE_ARGS}
+            -DCMAKE_POLICY_DEFAULT_CMP0063=NEW
+            -DCMAKE_C_VISIBILITY_PRESET=${CMAKE_C_VISIBILITY_PRESET}
+            -DCMAKE_CXX_VISIBILITY_PRESET=${CMAKE_CXX_VISIBILITY_PRESET}
+            -DCMAKE_VISIBILITY_INLINES_HIDDEN=${CMAKE_VISIBILITY_INLINES_HIDDEN}
+            -DCMAKE_POSITION_INDEPENDENT_CODE=ON
             -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
             -DCMAKE_C_FLAGS=${EXPAT_C_FLAGS}
             -DCMAKE_CXX_FLAGS=${EXPAT_CXX_FLAGS}

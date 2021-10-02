@@ -34,8 +34,12 @@ typedef std::vector<ConstOpCPURcPtr> ConstOpCPURcPtrVec;
 class OpCPU
 {
 public:
-    OpCPU() {}
-    virtual ~OpCPU() {}
+    OpCPU() = default;
+    OpCPU(const OpCPU &) = delete;
+    OpCPU(OpCPU &&) = delete;
+    OpCPU & operator=(const OpCPU &) = delete;
+    OpCPU & operator=(OpCPU &&) = delete;
+    virtual ~OpCPU() = default;
 
     // All the Ops assume float pointers (i.e. always float bit depths) except 
     // the 1D LUT CPU Op where the finalization depends on input and output bit depths.
@@ -114,8 +118,10 @@ public:
 public:
     OpData();
     OpData(const OpData & rhs);
+    OpData(OpData && rhs) = delete;
     OpData & operator=(const OpData & rhs);
-    virtual ~OpData();
+    OpData & operator=(OpData && rhs) = delete;
+    virtual ~OpData() = default;
 
     const std::string & getID() const;
     void setID(const std::string & id);
@@ -168,7 +174,11 @@ const char * GetTypeName(OpData::Type type);
 class Op
 {
 public:
-    virtual ~Op();
+    Op(const Op & rhs) = delete;
+    Op(Op && rhs) = delete;
+    Op & operator=(const Op & rhs) = delete;
+    Op & operator=(Op && rhs) = delete;
+    virtual ~Op() = default;
 
     virtual OpRcPtr clone() const = 0;
 
@@ -240,23 +250,23 @@ public:
     virtual bool isDynamic() const;
     virtual bool hasDynamicProperty(DynamicPropertyType type) const;
     virtual DynamicPropertyRcPtr getDynamicProperty(DynamicPropertyType type) const;
-    virtual void replaceDynamicProperty(DynamicPropertyType type,
-                                        DynamicPropertyDoubleImplRcPtr & prop)
+    virtual void replaceDynamicProperty(DynamicPropertyType /* type */,
+                                        DynamicPropertyDoubleImplRcPtr & /* prop */)
     {
         throw Exception("Op does not implement double dynamic property.");
     }
-    virtual void replaceDynamicProperty(DynamicPropertyType type,
-                                        DynamicPropertyGradingPrimaryImplRcPtr & prop)
+    virtual void replaceDynamicProperty(DynamicPropertyType /* type */,
+                                        DynamicPropertyGradingPrimaryImplRcPtr & /* prop */)
     {
         throw Exception("Op does not implement grading primary dynamic property.");
     }
-    virtual void replaceDynamicProperty(DynamicPropertyType type,
-                                        DynamicPropertyGradingRGBCurveImplRcPtr & prop)
+    virtual void replaceDynamicProperty(DynamicPropertyType /* type */,
+                                        DynamicPropertyGradingRGBCurveImplRcPtr & /* prop */)
     {
         throw Exception("Op does not implement grading rgb curve dynamic property.");
     }
-    virtual void replaceDynamicProperty(DynamicPropertyType type,
-                                        DynamicPropertyGradingToneImplRcPtr & prop)
+    virtual void replaceDynamicProperty(DynamicPropertyType /* type */,
+                                        DynamicPropertyGradingToneImplRcPtr & /* prop */)
     {
         throw Exception("Op does not implement grading tone dynamic property.");
     }
@@ -270,12 +280,10 @@ public:
     ConstOpDataRcPtr data() const { return std::const_pointer_cast<const OpData>(m_data); }
 
 protected:
-    Op();
+    Op() = default;
     OpDataRcPtr & data() { return m_data; }
 
 private:
-    Op(const Op &) = delete;
-    Op& operator= (const Op &) = delete;
 
     // The OpData instance holds the parameters (LUT values, matrix coefs, etc.) being used.
     OpDataRcPtr m_data;
