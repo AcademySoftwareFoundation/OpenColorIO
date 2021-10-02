@@ -52,7 +52,7 @@ bool Getenv(const char * name, std::string & value)
         return false;
     }
 
-#ifdef _WIN32
+#if defined(_WIN32) && defined(UNICODE)
     std::wstring name_u16 = Utf8ToUtf16(name);
     if(uint32_t size = GetEnvironmentVariable(name_u16.c_str(), nullptr, 0))
     {
@@ -94,7 +94,13 @@ void Setenv(const char * name, const std::string & value)
     // exists. To avoid the ambiguity, use Unsetenv() when the env. variable removal if needed.
 
 #ifdef _WIN32
+
+#ifdef UNICODE
     _wputenv_s(Utf8ToUtf16(name).c_str(), Utf8ToUtf16(value).c_str());
+#else
+    _putenv_s(name, value.c_str());
+#endif
+
 #else
     ::setenv(name, value.c_str(), 1);
 #endif
@@ -108,8 +114,14 @@ void Unsetenv(const char * name)
     }
 
 #ifdef _WIN32
+
+#ifdef UNICODE
     // Note that the Windows _putenv_s() removes the env. variable if the value is empty.
-    _wputenv_s(Utf8ToUtf16(name).c_str(), L"");
+    _wputenv_s(Utf8ToUtf16(name).c_str(), TEXT(""));
+#else
+    _putenv_s(name, "");
+#endif
+
 #else
     ::unsetenv(name);
 #endif
@@ -218,7 +230,7 @@ std::string CreateTempFilename(const std::string & filenameExt)
 
 std::ifstream CreateInputFileStream(const char * filename, std::ios_base::openmode mode)
 {
-#ifdef _WIN32
+#if defined(_WIN32) && defined(UNICODE)
     return std::ifstream(Utf8ToUtf16(filename).c_str(), mode);
 #else
     return std::ifstream(filename, mode);
@@ -227,7 +239,7 @@ std::ifstream CreateInputFileStream(const char * filename, std::ios_base::openmo
 
 void OpenInputFileStream(std::ifstream & stream, const char * filename, std::ios_base::openmode mode)
 {
-#ifdef _WIN32
+#if defined(_WIN32) && defined(UNICODE)
     stream.open(Utf8ToUtf16(filename).c_str(), mode);
 #else
     stream.open(filename, mode);
@@ -269,7 +281,7 @@ std::string Utf16ToUtf8(std::wstring wstr)
 // That's the default hash method implementation to compute a hash key based on a file content.
 std::string CreateFileContentHash(const std::string &filename)
 {
-#ifdef _WIN32
+#if defined(_WIN32) && defined(UNICODE)
     struct _stat fileInfo;
     if (_wstat(Platform::Utf8ToUtf16(filename).c_str(), &fileInfo) == 0)
 #else

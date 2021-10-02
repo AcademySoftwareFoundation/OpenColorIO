@@ -48,10 +48,13 @@ function(add_ocio_test NAME SOURCES PRIVATE_INCLUDES)
     endif(OCIO_USE_SSE)
     if(WIN32)
         # A windows application linking to eXpat static libraries must
-        # have the global macro XML_STATIC defined
+        # have the global macro XML_STATIC defined. Additionally, to
+        # support Unicode fully, UNICODE and _UNICODE must be defined
         target_compile_definitions(${TEST_BINARY}
             PRIVATE
                 XML_STATIC
+                UNICODE
+                _UNICODE
         )
     endif(WIN32)
     set_target_properties(${TEST_BINARY} PROPERTIES

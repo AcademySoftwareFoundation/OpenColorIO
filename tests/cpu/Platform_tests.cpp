@@ -27,13 +27,13 @@ OCIO_ADD_TEST(Platform, envVariable)
 
 #ifdef _WIN32
     // Assert that we retrieve the correct value from the Windows API too.
-    uint32_t win_env_sz = GetEnvironmentVariable(L"MY_DUMMY_ENV", NULL, 0);
+    uint32_t win_env_sz = GetEnvironmentVariable(TEXT("MY_DUMMY_ENV"), NULL, 0);
     OCIO_CHECK_NE(win_env_sz, 0);
 
-    std::wstring win_env_value(win_env_sz, 0);
-    GetEnvironmentVariable(L"MY_DUMMY_ENV", &win_env_value[0], win_env_sz);
+    std::tstring win_env_value(win_env_sz, 0);
+    GetEnvironmentVariable(TEXT("MY_DUMMY_ENV"), &win_env_value[0], win_env_sz);
     win_env_value.pop_back(); // Remove null terminator that interferes with comparison
-    OCIO_CHECK_ASSERT(win_env_value == L"SomeValue");
+    OCIO_CHECK_ASSERT(win_env_value == TEXT("SomeValue"));
 #endif
 
     OCIO::UnsetEnvVariable(u8"MY_DUMMY_ENV");
@@ -43,7 +43,7 @@ OCIO_ADD_TEST(Platform, envVariable)
 #ifdef _WIN32
     // Assert that the variable has been unset from the Windows API too, which will result in
     // GetEnvironmentVariable returning 0 and GetLastError returning ERROR_ENVVAR_NOT_FOUND.
-    OCIO_CHECK_EQUAL(GetEnvironmentVariable(L"MY_DUMMY_ENV", NULL, 0), 0);
+    OCIO_CHECK_EQUAL(GetEnvironmentVariable(TEXT("MY_DUMMY_ENV"), NULL, 0), 0);
     OCIO_CHECK_EQUAL(GetLastError(), ERROR_ENVVAR_NOT_FOUND);
 #endif
 }
@@ -76,24 +76,24 @@ OCIO_ADD_TEST(Platform, getenv)
 
     // Assert this variable doesn't exist, which will result in GetEnvironmentVariable returning
     // 0 and GetLastError returning ERROR_ENVVAR_NOT_FOUND.
-    OCIO_CHECK_EQUAL(GetEnvironmentVariable(L"NotExistingEnvVariable", NULL, 0), 0);
+    OCIO_CHECK_EQUAL(GetEnvironmentVariable(TEXT("NotExistingEnvVariable"), NULL, 0), 0);
     OCIO_CHECK_EQUAL(GetLastError(), ERROR_ENVVAR_NOT_FOUND);
 
     // Assert this variable does exist.
-    OCIO_CHECK_NE(GetEnvironmentVariable(L"PATH", NULL, 0), 0);
+    OCIO_CHECK_NE(GetEnvironmentVariable(TEXT("PATH"), NULL, 0), 0);
 
     // Create a variable and test that it's retrievable through the Windows API.
     OCIO::Platform::Setenv(u8"MY_WINDOWS_DUMMY_ENV", u8"SomeValue");
-    uint32_t win_env_sz = GetEnvironmentVariable(L"MY_WINDOWS_DUMMY_ENV", NULL, 0);
+    uint32_t win_env_sz = GetEnvironmentVariable(TEXT("MY_WINDOWS_DUMMY_ENV"), NULL, 0);
     OCIO_CHECK_NE(win_env_sz, 0);
 
-    std::wstring win_env_value(win_env_sz, 0);
-    GetEnvironmentVariable(L"MY_WINDOWS_DUMMY_ENV", &win_env_value[0], win_env_sz);
+    std::tstring win_env_value(win_env_sz, 0);
+    GetEnvironmentVariable(TEXT("MY_WINDOWS_DUMMY_ENV"), &win_env_value[0], win_env_sz);
     win_env_value.pop_back(); // Remove null terminator that interferes with comparison
-    OCIO_CHECK_ASSERT(win_env_value == L"SomeValue");
+    OCIO_CHECK_ASSERT(win_env_value == TEXT("SomeValue"));
 
     OCIO::Platform::Unsetenv(u8"MY_WINDOWS_DUMMY_ENV");
-    OCIO_CHECK_EQUAL(GetEnvironmentVariable(L"MY_WINDOWS_DUMMY_ENV", NULL, 0), 0);
+    OCIO_CHECK_EQUAL(GetEnvironmentVariable(TEXT("MY_WINDOWS_DUMMY_ENV"), NULL, 0), 0);
     OCIO_CHECK_EQUAL(GetLastError(), ERROR_ENVVAR_NOT_FOUND);
 #endif
 }
@@ -137,13 +137,13 @@ OCIO_ADD_TEST(Platform, setenv)
     }
 #ifdef _WIN32
     {
-        SetEnvironmentVariable(L"MY_WINDOWS_DUMMY_ENV", L"1");
+        SetEnvironmentVariable(TEXT("MY_WINDOWS_DUMMY_ENV"), TEXT("1"));
         std::string env;
         OCIO_CHECK_ASSERT(OCIO::Platform::Getenv(u8"MY_WINDOWS_DUMMY_ENV", env));
         OCIO_CHECK_EQUAL(env, std::string(u8"1"));
     }
     {
-        SetEnvironmentVariable(L"MY_WINDOWS_DUMMY_ENV", L" ");
+        SetEnvironmentVariable(TEXT("MY_WINDOWS_DUMMY_ENV"), TEXT(" "));
         std::string env;
         OCIO_CHECK_ASSERT(OCIO::Platform::Getenv(u8"MY_WINDOWS_DUMMY_ENV", env));
         OCIO_CHECK_EQUAL(env, std::string(u8" "));
@@ -152,13 +152,13 @@ OCIO_ADD_TEST(Platform, setenv)
         // Windows SetEnvironmentVariable() sets the env. variable to empty like
         // the Linux ::setenv() in contradiction with the Windows _putenv_s().
 
-        SetEnvironmentVariable(L"MY_WINDOWS_DUMMY_ENV", L"");
+        SetEnvironmentVariable(TEXT("MY_WINDOWS_DUMMY_ENV"), TEXT(""));
         std::string env;
         OCIO_CHECK_ASSERT(OCIO::Platform::Getenv(u8"MY_WINDOWS_DUMMY_ENV", env));
         OCIO_CHECK_ASSERT(env.empty());
     }
     {
-        SetEnvironmentVariable(L"MY_WINDOWS_DUMMY_ENV", nullptr);
+        SetEnvironmentVariable(TEXT("MY_WINDOWS_DUMMY_ENV"), nullptr);
         std::string env;
         OCIO_CHECK_ASSERT(!OCIO::Platform::Getenv(u8"MY_WINDOWS_DUMMY_ENV", env));
         OCIO_CHECK_ASSERT(env.empty());

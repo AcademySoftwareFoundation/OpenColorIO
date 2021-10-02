@@ -277,10 +277,13 @@ endif()
 
 if(WIN32)
     # A windows application linking to eXpat static libraries must
-    # have the global macro XML_STATIC defined
+    # have the global macro XML_STATIC defined. Additionally, to
+    # support Unicode fully, UNICODE and _UNICODE must be defined
     target_compile_definitions(OpenColorIO
         PRIVATE
             XML_STATIC
+            UNICODE
+            _UNICODE
     )
 endif()
 

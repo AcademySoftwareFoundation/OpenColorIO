@@ -15,20 +15,6 @@
 #define WIN32_LEAN_AND_MEAN
 #endif
 
-// Many Win32 API functions are split into two versions: ANSI-only and Unicode, marked with an A or
-// W suffix respectively. Calling a documented function will actually resolve to one of these
-// variants depending on whether the calling code has declared that it's Unicode-compatible or not
-// (by defining UNICODE). Example excerpt from Windows header:
-//
-// #ifdef UNICODE
-// #define SetWindowText  SetWindowTextW
-// #else
-// #define SetWindowText  SetWindowTextA
-// #endif
-//
-// By defining UNICODE, we ensure that any documented function will resolve to its Unicode version.
-#define UNICODE
-
 #include <windows.h>
 
 #endif // _WIN32
@@ -42,6 +28,20 @@
 #ifdef _WIN32
 
 #define sscanf sscanf_s
+
+// Define std::tstring as a wstring when Unicode is enabled and a regular string otherwise
+namespace std
+{
+#ifdef _UNICODE
+typedef wstring tstring;
+typedef wostringstream tostringstream;
+#define LogDebugT(x) LogDebug(Platform::Utf16ToUtf8(x))
+#else
+typedef string tstring;
+typedef ostringstream tostringstream;
+#define LogDebugT(x) LogDebug(x)
+#endif
+}
 
 #endif // _WIN32
 
