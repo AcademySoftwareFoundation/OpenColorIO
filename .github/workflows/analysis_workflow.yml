@@ -130,7 +130,7 @@ jobs:
   # ---------------------------------------------------------------------------
 
   linux_sonarcloud:
-    name: 'Linux CentOS 7 VFX CY2020 SonarCloud <GCC 6.3.1>'
+    name: 'Linux CentOS 7 VFX CY2022 SonarCloud <GCC 9.3.1>'
     # Don't run on OCIO forks
     if: github.repository == 'AcademySoftwareFoundation/OpenColorIO'
     # GH-hosted VM. The build runs in CentOS 7 'container' defined below.
@@ -160,7 +160,7 @@ jobs:
           cmake ../. \
                 -DCMAKE_INSTALL_PREFIX=../_install \
                 -DCMAKE_BUILD_TYPE=Release \
-                -DCMAKE_CXX_STANDARD=11 \
+                -DCMAKE_CXX_STANDARD=14 \
                 -DCMAKE_CXX_FLAGS="-g -O0 -fprofile-arcs -ftest-coverage" \
                 -DCMAKE_CXX_OUTPUT_EXTENSION_REPLACE=ON \
                 -DCMAKE_EXE_LINKER_FLAGS="-lgcov" \

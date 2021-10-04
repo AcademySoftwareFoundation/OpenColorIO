@@ -36,6 +36,14 @@ project(OpenColorIO
 # "dev", "beta1", rc1", etc or "" for an official release.
 set(OpenColorIO_VERSION_RELEASE_TYPE "dev")
 
+
+###############################################################################
+# ctest
+
+# To correctly generate the DartConfiguration.tcl, include the CTest CMake file.
+# By doing so 'ctest -F memcheck' works.
+include (CTest)
+
 enable_testing()
 
 
@@ -314,3 +322,4 @@ install(
     FILES "${OCIO_PROJECT_CONFIG}" "${OCIO_VERSION_CONFIG}"
     DESTINATION "${OCIO_CONFIG_INSTALL_DIR}"
 )
+
