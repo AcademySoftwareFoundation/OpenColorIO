@@ -34,7 +34,40 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
     endif()
 
     if(expat_FOUND)
+        if (TARGET expat::libexpat)
+            message(STATUS "Expat ${expat_VERSION} detected, aliasing targets.")
+            add_library(expat::expat ALIAS expat::libexpat)
+        endif()
+
+        get_target_property(expat_INCLUDE_DIR expat::expat INTERFACE_INCLUDE_DIRECTORIES)
+
         get_target_property(expat_LIBRARY expat::expat LOCATION)
+
+        if (NOT expat_INCLUDE_DIR)
+            # Find include directory too, as its Config module doesn't include it
+            find_path(expat_INCLUDE_DIR
+                NAMES
+                    expat.h
+                HINTS
+                    ${expat_ROOT}
+                    ${PC_expat_INCLUDE_DIRS}
+                PATH_SUFFIXES
+                    include
+                    expat/include
+            )
+            message(WARNING "Expat's include directory not specified in its Config module, patching it now to ${expat_INCLUDE_DIR}.")
+            if (TARGET expat::libexpat)
+                set_target_properties(expat::libexpat PROPERTIES
+                    INTERFACE_INCLUDE_DIRECTORIES ${expat_INCLUDE_DIR}
+                )
+            else()
+                set_target_properties(expat::expat PROPERTIES
+                    INTERFACE_INCLUDE_DIRECTORIES ${expat_INCLUDE_DIR}
+                )
+            endif()
+        endif()
+
+        set(_expat_REQUIRED_VARS ${expat_REQUIRED_VARS} expat_INCLUDE_DIR)
     else()
         list(APPEND _expat_REQUIRED_VARS expat_INCLUDE_DIR)
 
