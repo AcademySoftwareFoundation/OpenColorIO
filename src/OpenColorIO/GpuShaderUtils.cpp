@@ -44,6 +44,8 @@ std::string getVecKeyword(GpuLanguage lang)
         case GPU_LANGUAGE_GLSL_1_2:
         case GPU_LANGUAGE_GLSL_1_3:
         case GPU_LANGUAGE_GLSL_4_0:
+        case GPU_LANGUAGE_GLSL_ES_1_0:
+        case GPU_LANGUAGE_GLSL_ES_3_0:
         {
             kw << "vec" << N;
             break;
@@ -85,6 +87,8 @@ void getTexDecl(GpuLanguage lang,
         case GPU_LANGUAGE_GLSL_1_3:
         case GPU_LANGUAGE_CG:
         case GPU_LANGUAGE_GLSL_4_0:
+        case GPU_LANGUAGE_GLSL_ES_1_0:
+        case GPU_LANGUAGE_GLSL_ES_3_0:
         {
             textureDecl = "";
 
@@ -132,6 +136,15 @@ std::string getTexSample(GpuLanguage lang,
             kw << "texture" << N << "D(" << samplerName << ", " << coords << ")";
             break;
         }
+        case GPU_LANGUAGE_GLSL_ES_1_0:
+        {
+            if (N == 1) {
+                throw Exception("1D textures are unsupported by OpenGL ES.");
+            }
+
+            kw << "texture" << N << "D(" << samplerName << ", " << coords << ")";
+            break;
+        }
         case GPU_LANGUAGE_CG:
         {
             kw << "tex" << N << "D(" << samplerName << ", " << coords << ")";
@@ -144,6 +157,15 @@ std::string getTexSample(GpuLanguage lang,
         }
         case GPU_LANGUAGE_GLSL_4_0:
         {
+            kw << "texture(" << samplerName << ", " << coords << ")";
+            break;
+        }
+        case GPU_LANGUAGE_GLSL_ES_3_0:
+        {
+            if (N == 1) {
+                throw Exception("1D textures are unsupported by OpenGL ES.");
+            }
+
             kw << "texture(" << samplerName << ", " << coords << ")";
             break;
         }
@@ -299,6 +321,8 @@ std::string GpuShaderText::floatKeywordConst() const
         case GPU_LANGUAGE_GLSL_1_2:
         case GPU_LANGUAGE_GLSL_1_3:
         case GPU_LANGUAGE_GLSL_4_0:
+        case GPU_LANGUAGE_GLSL_ES_1_0:
+        case GPU_LANGUAGE_GLSL_ES_3_0:
         case GPU_LANGUAGE_HLSL_DX11:
         {
             str += "const";
@@ -404,6 +428,8 @@ void GpuShaderText::declareFloatArrayConst(const std::string & name, int size, c
         case GPU_LANGUAGE_GLSL_1_2:
         case GPU_LANGUAGE_GLSL_1_3:
         case GPU_LANGUAGE_GLSL_4_0:
+        case GPU_LANGUAGE_GLSL_ES_1_0:
+        case GPU_LANGUAGE_GLSL_ES_3_0:
         {
             nl << floatKeywordConst() << " " << name << "[" << size << "] = ";
             nl << floatKeyword() << "[" << size << "](";
@@ -455,6 +481,8 @@ void GpuShaderText::declareIntArrayConst(const std::string & name, int size, con
         case GPU_LANGUAGE_GLSL_1_2:
         case GPU_LANGUAGE_GLSL_1_3:
         case GPU_LANGUAGE_GLSL_4_0:
+        case GPU_LANGUAGE_GLSL_ES_1_0:
+        case GPU_LANGUAGE_GLSL_ES_3_0:
         {
             nl << "const " << intKeyword() << " " << name << "[" << size << "] = "
                << intKeyword() << "[" << size << "](";
@@ -798,6 +826,8 @@ std::string matrix4Mul(const T * m4x4, const std::string & vecName, GpuLanguage 
         case GPU_LANGUAGE_GLSL_1_2:
         case GPU_LANGUAGE_GLSL_1_3:
         case GPU_LANGUAGE_GLSL_4_0:
+        case GPU_LANGUAGE_GLSL_ES_1_0:
+        case GPU_LANGUAGE_GLSL_ES_3_0:
         {
             // OpenGL shader program requests a transposed matrix
             kw << "mat4(" 
@@ -858,6 +888,8 @@ std::string GpuShaderText::lerp(const std::string & x,
         case GPU_LANGUAGE_GLSL_1_2:
         case GPU_LANGUAGE_GLSL_1_3:
         case GPU_LANGUAGE_GLSL_4_0:
+        case GPU_LANGUAGE_GLSL_ES_1_0:
+        case GPU_LANGUAGE_GLSL_ES_3_0:
         {
             kw << "mix(" << x << ", " << y << ", " << a << ")";
             break;
@@ -886,6 +918,8 @@ std::string GpuShaderText::float3GreaterThan(const std::string & a,
         case GPU_LANGUAGE_GLSL_1_2:
         case GPU_LANGUAGE_GLSL_1_3:
         case GPU_LANGUAGE_GLSL_4_0:
+        case GPU_LANGUAGE_GLSL_ES_1_0:
+        case GPU_LANGUAGE_GLSL_ES_3_0:
         case GPU_LANGUAGE_CG:
         {
             kw << float3Keyword() << "(greaterThan( " << a << ", " << b << "))";
@@ -918,6 +952,8 @@ std::string GpuShaderText::float4GreaterThan(const std::string & a,
         case GPU_LANGUAGE_GLSL_1_2:
         case GPU_LANGUAGE_GLSL_1_3:
         case GPU_LANGUAGE_GLSL_4_0:
+        case GPU_LANGUAGE_GLSL_ES_1_0:
+        case GPU_LANGUAGE_GLSL_ES_3_0:
         case GPU_LANGUAGE_CG:
         {
             kw << float4Keyword() << "(greaterThan( " << a << ", " << b << "))";
@@ -960,6 +996,8 @@ std::string GpuShaderText::atan2(const std::string & y,
         case GPU_LANGUAGE_GLSL_1_2:
         case GPU_LANGUAGE_GLSL_1_3:
         case GPU_LANGUAGE_GLSL_4_0:
+        case GPU_LANGUAGE_GLSL_ES_1_0:
+        case GPU_LANGUAGE_GLSL_ES_3_0:
         {
             // note: "atan" not "atan2"
             kw << "atan(" << y << ", " << x << ")";
@@ -990,6 +1028,8 @@ std::string GpuShaderText::sign(const std::string & v) const
         case GPU_LANGUAGE_GLSL_1_2:
         case GPU_LANGUAGE_GLSL_1_3:
         case GPU_LANGUAGE_GLSL_4_0:
+        case GPU_LANGUAGE_GLSL_ES_1_0:
+        case GPU_LANGUAGE_GLSL_ES_3_0:
         case GPU_LANGUAGE_HLSL_DX11:
         {
             kw << "sign(" << v << ");";
