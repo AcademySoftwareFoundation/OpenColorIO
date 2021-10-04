@@ -66,7 +66,7 @@ endif()
 
 if(${CMAKE_CXX_STANDARD} LESS_EQUAL 11)
     set(OSL_FOUND OFF)
-    message(WARNING "Need C++14 or higher to compile OpenShadingLanguage. Skipping build the OSL unit tests")
+    message(WARNING "Need C++14 or higher to compile OpenShadingLanguage. Skipping build of the OSL unit tests")
 endif()
 
 
