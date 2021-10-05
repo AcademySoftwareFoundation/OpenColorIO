@@ -125,6 +125,12 @@ if (OpenImageIO_FOUND)
             IMPORTED_LOCATION "${OPENIMAGEIO_UTIL_LIBRARY}")
         target_link_libraries(OpenImageIO::OpenImageIO INTERFACE OpenImageIO::OpenImageIO_Util)
     endif ()
+
+    # Starting with OIIO v2.3, OIIO needs to compile at least in C++14.
+    if (${OPENIMAGEIO_VERSION} VERSION_GREATER_EQUAL "2.3" AND ${CMAKE_CXX_STANDARD} LESS_EQUAL 11)
+        set(OpenImageIO_FOUND OFF)
+        message(WARNING "Need C++14 or higher to compile with OpenImageIO ${OPENIMAGEIO_VERSION}.")
+    endif ()
 endif ()
 
 mark_as_advanced (
