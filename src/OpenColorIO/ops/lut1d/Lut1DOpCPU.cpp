@@ -107,16 +107,9 @@ private:
 // special case 16f/64k 1D LUT.
 struct IndexPair
 {
-    unsigned short valA;
-    unsigned short valB;
-    float fraction;
-
-    IndexPair()
-    {
-        valA = 0;
-        valB = 0;
-        fraction = 0.0f;
-    }
+    unsigned short valA = 0;
+    unsigned short valB = 0;
+    float fraction      = 0.0f;
 
     static IndexPair GetEdgeFloatValues(float fIn);
 };
