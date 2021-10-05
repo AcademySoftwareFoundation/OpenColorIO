@@ -60,19 +60,19 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
 
         # Lib names to search for
         set(_yaml-cpp_LIB_NAMES yaml-cpp)
-        if(WIN32 AND BUILD_TYPE_DEBUG)
+        if(WIN32 AND BUILD_TYPE_DEBUG AND NOT MINGW)
             # Prefer Debug lib names (Windows only)
             list(INSERT _yaml-cpp_LIB_NAMES 0 yaml-cppd)
         endif()
 
         if(yaml-cpp_STATIC_LIBRARY)
             # Prefer static lib names
-            if(WIN32)
+            if(WIN32 AND NOT MINGW)
                 set(_yaml-cpp_LIB_SUFFIX "md")
             endif()
             set(_yaml-cpp_STATIC_LIB_NAMES 
                 "libyaml-cpp${_yaml-cpp_LIB_SUFFIX}${CMAKE_STATIC_LIBRARY_SUFFIX}")
-            if(WIN32 AND BUILD_TYPE_DEBUG)
+            if(WIN32 AND BUILD_TYPE_DEBUG AND NOT MINGW)
                 # Prefer static Debug lib names (Windows only)
                 list(INSERT _yaml-cpp_STATIC_LIB_NAMES 0
                     "libyaml-cpp${_yaml-cpp_LIB_SUFFIX}d${CMAKE_STATIC_LIBRARY_SUFFIX}")
@@ -144,7 +144,7 @@ if(NOT yaml-cpp_FOUND)
     #set(yaml-cpp_INCLUDE_DIR "${_EXT_DIST_ROOT}/${CMAKE_INSTALL_INCLUDEDIR}")
 
     # Set the expected library name
-    if(WIN32)
+    if(WIN32 AND NOT MINGW)
         set(_yaml-cpp_LIB_SUFFIX "md")
         if(BUILD_TYPE_DEBUG)
             string(APPEND _yaml-cpp_LIB_SUFFIX "d")
