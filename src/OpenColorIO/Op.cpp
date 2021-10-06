@@ -54,9 +54,6 @@ OpData & OpData::operator=(const OpData & rhs)
     return *this;
 }
 
-OpData::~OpData()
-{ }
-
 OpDataRcPtr OpData::getIdentityReplacement() const
 {
     return std::make_shared<MatrixOpData>();
@@ -130,12 +127,6 @@ const char * GetTypeName(OpData::Type type)
     }
     throw Exception("Unexpected op type.");
 }
-
-Op::Op()
-{ }
-
-Op::~Op()
-{ }
 
 bool Op::canCombineWith(ConstOpRcPtr & /*op*/) const
 {
