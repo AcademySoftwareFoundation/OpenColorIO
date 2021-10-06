@@ -514,6 +514,10 @@ void bindPyTypes(py::module & m)
                DOC(PyOpenColorIO, GpuLanguage, GPU_LANGUAGE_GLSL_1_3))
         .value("GPU_LANGUAGE_GLSL_4_0", GPU_LANGUAGE_GLSL_4_0, 
                DOC(PyOpenColorIO, GpuLanguage, GPU_LANGUAGE_GLSL_4_0))
+        .value("GPU_LANGUAGE_GLSL_ES_1_0", GPU_LANGUAGE_GLSL_ES_1_0, 
+               DOC(PyOpenColorIO, GpuLanguage, GPU_LANGUAGE_GLSL_ES_1_0))
+        .value("GPU_LANGUAGE_GLSL_ES_3_0", GPU_LANGUAGE_GLSL_ES_3_0, 
+               DOC(PyOpenColorIO, GpuLanguage, GPU_LANGUAGE_GLSL_ES_3_0))
         .value("GPU_LANGUAGE_HLSL_DX11", GPU_LANGUAGE_HLSL_DX11, 
                DOC(PyOpenColorIO, GpuLanguage, GPU_LANGUAGE_HLSL_DX11))
         .export_values();
