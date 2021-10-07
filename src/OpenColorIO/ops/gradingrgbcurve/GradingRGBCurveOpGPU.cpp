@@ -136,11 +136,11 @@ std::string BuildResourceNameIndexed(GpuShaderCreatorRcPtr & shaderCreator, cons
     return name;
 }
 
+static const std::string opPrefix{ "grading_rgbcurve" };
+
 void SetGCProperties(GpuShaderCreatorRcPtr & shaderCreator, bool dynamic, GCProperties & propNames)
 {
-    static const std::string opPrefix{ "grading_rgbcurve" };
-
-    if (dynamic && shaderCreator->getLanguage() != LANGUAGE_OSL_1)
+    if (dynamic)
     {
         // If there are several dynamic ops, they will use the same names for uniforms.
         propNames.m_knotsOffsets = BuildResourceName(shaderCreator, opPrefix,
@@ -168,16 +168,6 @@ void SetGCProperties(GpuShaderCreatorRcPtr & shaderCreator, bool dynamic, GCProp
                                                      propNames.m_coefs, resIndex);
         propNames.m_eval = BuildResourceNameIndexed(shaderCreator, opPrefix,
                                                     propNames.m_eval, resIndex);
-
-        if (shaderCreator->getLanguage() == LANGUAGE_OSL_1 && dynamic)
-        {
-            std::string msg("The dynamic properties are not yet supported by the 'Open Shading language"\
-                            " (OSL)' translation: The '");
-            msg += opPrefix;
-            msg += "' dynamic property is replaced by a local variable.";
-
-            LogWarning(msg);
-        }
     }
 }
 
@@ -217,13 +207,14 @@ void AddGCPropertiesUniforms(GpuShaderCreatorRcPtr & shaderCreator,
 
 void AddCurveEvalMethodTextToShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
                                            ConstGradingRGBCurveOpDataRcPtr & gcData,
-                                           const GCProperties & props)
+                                           const GCProperties & props,
+                                           bool dyn)
 {
     GpuShaderText st(shaderCreator->getLanguage());
 
-    // Dynamic version uses uniforms declared globaly. Non-dynamic version declares local
+    // Dynamic version uses uniforms declared globally. Non-dynamic version declares local
     // variables in the op specific helper function.
-    if (!gcData->isDynamic() || shaderCreator->getLanguage() == LANGUAGE_OSL_1)
+    if (!dyn)
     {
         auto propGC = gcData->getDynamicPropertyInternal();
 
@@ -261,7 +252,8 @@ void AddCurveEvalMethodTextToShaderProgram(GpuShaderCreatorRcPtr & shaderCreator
 void AddGCForwardShader(GpuShaderCreatorRcPtr & shaderCreator,
                         GpuShaderText & st,
                         const GCProperties & props,
-                        bool dyn, bool doLinToLog)
+                        bool dyn,
+                        bool doLinToLog)
 {
     if (dyn)
     {
@@ -308,7 +300,8 @@ void AddGCForwardShader(GpuShaderCreatorRcPtr & shaderCreator,
 void AddGCInverseShader(GpuShaderCreatorRcPtr & shaderCreator, 
                         GpuShaderText & st,
                         const GCProperties & props,
-                        bool dyn, bool doLinToLog)
+                        bool dyn,
+                        bool doLinToLog)
 {
     if (dyn)
     {
@@ -356,7 +349,7 @@ void AddGCInverseShader(GpuShaderCreatorRcPtr & shaderCreator,
 void GetGradingRGBCurveGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
                                         ConstGradingRGBCurveOpDataRcPtr & gcData)
 {
-    const bool dyn = gcData->isDynamic();
+    const bool dyn = gcData->isDynamic() &&  shaderCreator->getLanguage() != LANGUAGE_OSL_1;
     if (!dyn)
     {
         auto propGC = gcData->getDynamicPropertyInternal();
@@ -364,6 +357,16 @@ void GetGradingRGBCurveGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
         {
             return;
         }
+    }
+
+    if (gcData->isDynamic() && shaderCreator->getLanguage() == LANGUAGE_OSL_1)
+    {
+        std::string msg("The dynamic properties are not yet supported by the 'Open Shading language"\
+                        " (OSL)' translation: The '");
+        msg += opPrefix;
+        msg += "' dynamic property is replaced by a local variable.";
+
+        LogWarning(msg);
     }
 
     const GradingStyle style = gcData->getStyle();
@@ -397,12 +400,12 @@ void GetGradingRGBCurveGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
         AddGCPropertiesUniforms(shaderCreator, shaderProp, properties);
 
         // Add helper function plus global variables if they are not dynamic.
-        AddCurveEvalMethodTextToShaderProgram(shaderCreator, gcData, properties);
+        AddCurveEvalMethodTextToShaderProgram(shaderCreator, gcData, properties, dyn);
     }
     else
     {
         // Declare the op specific helper function.
-        AddCurveEvalMethodTextToShaderProgram(shaderCreator, gcData, properties);
+        AddCurveEvalMethodTextToShaderProgram(shaderCreator, gcData, properties, dyn);
     }
 
     const bool doLinToLog = (style == GRADING_LIN) && !gcData->getBypassLinToLog();

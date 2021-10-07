@@ -84,14 +84,16 @@ void AddBoolUniform(GpuShaderCreatorRcPtr & shaderCreator,
     }
 }
 
-void AddGTProperties(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & st,
-                     ConstGradingToneOpDataRcPtr & gtData,
-                     GTProperties & propNames)
-{
-    static const std::string opPrefix{ "grading_tone" };
+static const std::string opPrefix{ "grading_tone" };
 
+void AddGTProperties(GpuShaderCreatorRcPtr & shaderCreator,
+                     GpuShaderText & st,
+                     ConstGradingToneOpDataRcPtr & gtData,
+                     GTProperties & propNames,
+                     bool dyn)
+{
     auto prop = gtData->getDynamicPropertyInternal();
-    if (gtData->isDynamic() && shaderCreator->getLanguage() != LANGUAGE_OSL_1)
+    if (dyn)
     {
         // Build names. No need to add an index to the name to avoid collisions as the dynamic
         // properties are unique.
@@ -222,52 +224,42 @@ void AddGTProperties(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & st,
         const auto & value = prop->getValue();
         const auto & compVal = prop->getComputedValue();
 
-        st.declareVar(propNames.blacksR, static_cast<float>(value.m_blacks.m_red));
-        st.declareVar(propNames.blacksG, static_cast<float>(value.m_blacks.m_green));
-        st.declareVar(propNames.blacksB, static_cast<float>(value.m_blacks.m_blue));
-        st.declareVar(propNames.blacksM, static_cast<float>(value.m_blacks.m_master));
-        st.declareVar(propNames.blacksS, static_cast<float>(compVal.m_blacksStart));
-        st.declareVar(propNames.blacksW, static_cast<float>(compVal.m_blacksWidth));
+        st.declareVarConst(propNames.blacksR, static_cast<float>(value.m_blacks.m_red));
+        st.declareVarConst(propNames.blacksG, static_cast<float>(value.m_blacks.m_green));
+        st.declareVarConst(propNames.blacksB, static_cast<float>(value.m_blacks.m_blue));
+        st.declareVarConst(propNames.blacksM, static_cast<float>(value.m_blacks.m_master));
+        st.declareVarConst(propNames.blacksS, static_cast<float>(compVal.m_blacksStart));
+        st.declareVarConst(propNames.blacksW, static_cast<float>(compVal.m_blacksWidth));
 
-        st.declareVar(propNames.shadowsR, static_cast<float>(value.m_shadows.m_red));
-        st.declareVar(propNames.shadowsG, static_cast<float>(value.m_shadows.m_green));
-        st.declareVar(propNames.shadowsB, static_cast<float>(value.m_shadows.m_blue));
-        st.declareVar(propNames.shadowsM, static_cast<float>(value.m_shadows.m_master));
-        st.declareVar(propNames.shadowsS, static_cast<float>(compVal.m_shadowsStart));
-        st.declareVar(propNames.shadowsW, static_cast<float>(compVal.m_shadowsWidth));
+        st.declareVarConst(propNames.shadowsR, static_cast<float>(value.m_shadows.m_red));
+        st.declareVarConst(propNames.shadowsG, static_cast<float>(value.m_shadows.m_green));
+        st.declareVarConst(propNames.shadowsB, static_cast<float>(value.m_shadows.m_blue));
+        st.declareVarConst(propNames.shadowsM, static_cast<float>(value.m_shadows.m_master));
+        st.declareVarConst(propNames.shadowsS, static_cast<float>(compVal.m_shadowsStart));
+        st.declareVarConst(propNames.shadowsW, static_cast<float>(compVal.m_shadowsWidth));
 
-        st.declareVar(propNames.midtonesR, static_cast<float>(value.m_midtones.m_red));
-        st.declareVar(propNames.midtonesG, static_cast<float>(value.m_midtones.m_green));
-        st.declareVar(propNames.midtonesB, static_cast<float>(value.m_midtones.m_blue));
-        st.declareVar(propNames.midtonesM, static_cast<float>(value.m_midtones.m_master));
-        st.declareVar(propNames.midtonesS, static_cast<float>(value.m_midtones.m_start));
-        st.declareVar(propNames.midtonesW, static_cast<float>(value.m_midtones.m_width));
+        st.declareVarConst(propNames.midtonesR, static_cast<float>(value.m_midtones.m_red));
+        st.declareVarConst(propNames.midtonesG, static_cast<float>(value.m_midtones.m_green));
+        st.declareVarConst(propNames.midtonesB, static_cast<float>(value.m_midtones.m_blue));
+        st.declareVarConst(propNames.midtonesM, static_cast<float>(value.m_midtones.m_master));
+        st.declareVarConst(propNames.midtonesS, static_cast<float>(value.m_midtones.m_start));
+        st.declareVarConst(propNames.midtonesW, static_cast<float>(value.m_midtones.m_width));
 
-        st.declareVar(propNames.highlightsR, static_cast<float>(value.m_highlights.m_red));
-        st.declareVar(propNames.highlightsG, static_cast<float>(value.m_highlights.m_green));
-        st.declareVar(propNames.highlightsB, static_cast<float>(value.m_highlights.m_blue));
-        st.declareVar(propNames.highlightsM, static_cast<float>(value.m_highlights.m_master));
-        st.declareVar(propNames.highlightsS, static_cast<float>(compVal.m_highlightsStart));
-        st.declareVar(propNames.highlightsW, static_cast<float>(compVal.m_highlightsWidth));
+        st.declareVarConst(propNames.highlightsR, static_cast<float>(value.m_highlights.m_red));
+        st.declareVarConst(propNames.highlightsG, static_cast<float>(value.m_highlights.m_green));
+        st.declareVarConst(propNames.highlightsB, static_cast<float>(value.m_highlights.m_blue));
+        st.declareVarConst(propNames.highlightsM, static_cast<float>(value.m_highlights.m_master));
+        st.declareVarConst(propNames.highlightsS, static_cast<float>(compVal.m_highlightsStart));
+        st.declareVarConst(propNames.highlightsW, static_cast<float>(compVal.m_highlightsWidth));
 
-        st.declareVar(propNames.whitesR, static_cast<float>(value.m_whites.m_red));
-        st.declareVar(propNames.whitesG, static_cast<float>(value.m_whites.m_green));
-        st.declareVar(propNames.whitesB, static_cast<float>(value.m_whites.m_blue));
-        st.declareVar(propNames.whitesM, static_cast<float>(value.m_whites.m_master));
-        st.declareVar(propNames.whitesS, static_cast<float>(compVal.m_whitesStart));
-        st.declareVar(propNames.whitesW, static_cast<float>(compVal.m_whitesWidth));
+        st.declareVarConst(propNames.whitesR, static_cast<float>(value.m_whites.m_red));
+        st.declareVarConst(propNames.whitesG, static_cast<float>(value.m_whites.m_green));
+        st.declareVarConst(propNames.whitesB, static_cast<float>(value.m_whites.m_blue));
+        st.declareVarConst(propNames.whitesM, static_cast<float>(value.m_whites.m_master));
+        st.declareVarConst(propNames.whitesS, static_cast<float>(compVal.m_whitesStart));
+        st.declareVarConst(propNames.whitesW, static_cast<float>(compVal.m_whitesWidth));
 
-        st.declareVar(propNames.sContrast, static_cast<float>(value.m_scontrast));
-
-        if (shaderCreator->getLanguage() == LANGUAGE_OSL_1 && prop->isDynamic())
-        {
-            std::string msg("The dynamic properties are not yet supported by the 'Open Shading language"\
-                            " (OSL)' translation: The '");
-            msg += opPrefix;
-            msg += "' dynamic property is replaced by a local variable.";
-
-            LogWarning(msg);
-        }
+        st.declareVarConst(propNames.sContrast, static_cast<float>(value.m_scontrast));
     }
 }
 
@@ -542,12 +534,12 @@ void Add_MidsRev_Shader(GpuShaderCreatorRcPtr & shaderCreator,
     }
     else
     {
-        st.newLine() << st.float3Decl("t") << " = " << pix << ".rgb;";
-        st.newLine() << st.float3Decl("outL") << ";";
-        st.newLine() << st.float3Decl("outM") << ";";
-        st.newLine() << st.float3Decl("outR") << ";";
-        st.newLine() << st.float3Decl("outR2") << ";";
-        st.newLine() << st.float3Decl("outR3") << ";";
+        st.newLine() << st.colorDecl("t") << " = " << pix << ".rgb;";
+        st.newLine() << st.colorDecl("outL") << ";";
+        st.newLine() << st.colorDecl("outM") << ";";
+        st.newLine() << st.colorDecl("outR") << ";";
+        st.newLine() << st.colorDecl("outR2") << ";";
+        st.newLine() << st.colorDecl("outR3") << ";";
 
         // TODO: Would probably be better to call the preceding if-block 3 times
         // rather than trying to do a float3 computation here.  Extra computation is
@@ -603,25 +595,25 @@ void Add_MidsRev_Shader(GpuShaderCreatorRcPtr & shaderCreator,
         st.dedent();
         st.newLine() << "}";
 
-        st.newLine() << st.float3Decl("res") << ";";
-        st.newLine() << "res.x = (t.x < y1) ? outL.x : outM.x;";
-        st.newLine() << "res.y = (t.y < y1) ? outL.y : outM.y;";
-        st.newLine() << "res.z = (t.z < y1) ? outL.z : outM.z;";
-        st.newLine() << "res.x = (t.x > y2) ? outR.x : res.x;";
-        st.newLine() << "res.y = (t.y > y2) ? outR.y : res.y;";
-        st.newLine() << "res.z = (t.z > y2) ? outR.z : res.z;";
-        st.newLine() << "res.x = (t.x > y3) ? outR2.x : res.x;";
-        st.newLine() << "res.y = (t.y > y3) ? outR2.y : res.y;";
-        st.newLine() << "res.z = (t.z > y3) ? outR2.z : res.z;";
-        st.newLine() << "res.x = (t.x > y4) ? outR3.x : res.x;";
-        st.newLine() << "res.y = (t.y > y4) ? outR3.y : res.y;";
-        st.newLine() << "res.z = (t.z > y4) ? outR3.z : res.z;";
-        st.newLine() << "res.x = (t.x < y0) ? x0 + (t.x - y0) * m0 : res.x;";
-        st.newLine() << "res.y = (t.y < y0) ? x0 + (t.y - y0) * m0 : res.y;";
-        st.newLine() << "res.z = (t.z < y0) ? x0 + (t.z - y0) * m0 : res.z;";
-        st.newLine() << "res.x = (t.x > y5) ? x5 + (t.x - y5) * m5 : res.x;";
-        st.newLine() << "res.y = (t.y > y5) ? x5 + (t.y - y5) * m5 : res.y;";
-        st.newLine() << "res.z = (t.z > y5) ? x5 + (t.z - y5) * m5 : res.z;";
+        st.newLine() << st.colorDecl("res") << ";";
+        st.newLine() << "res.r = (t.r < y1) ? outL.r : outM.r;";
+        st.newLine() << "res.g = (t.g < y1) ? outL.g : outM.g;";
+        st.newLine() << "res.b = (t.b < y1) ? outL.b : outM.b;";
+        st.newLine() << "res.r = (t.r > y2) ? outR.r : res.r;";
+        st.newLine() << "res.g = (t.g > y2) ? outR.g : res.g;";
+        st.newLine() << "res.b = (t.b > y2) ? outR.b : res.b;";
+        st.newLine() << "res.r = (t.r > y3) ? outR2.r : res.r;";
+        st.newLine() << "res.g = (t.g > y3) ? outR2.g : res.g;";
+        st.newLine() << "res.b = (t.b > y3) ? outR2.b : res.b;";
+        st.newLine() << "res.r = (t.r > y4) ? outR3.r : res.r;";
+        st.newLine() << "res.g = (t.g > y4) ? outR3.g : res.g;";
+        st.newLine() << "res.b = (t.b > y4) ? outR3.b : res.b;";
+        st.newLine() << "res.r = (t.r < y0) ? x0 + (t.r - y0) * m0 : res.r;";
+        st.newLine() << "res.g = (t.g < y0) ? x0 + (t.g - y0) * m0 : res.g;";
+        st.newLine() << "res.b = (t.b < y0) ? x0 + (t.b - y0) * m0 : res.b;";
+        st.newLine() << "res.r = (t.r > y5) ? x5 + (t.r - y5) * m5 : res.r;";
+        st.newLine() << "res.g = (t.g > y5) ? x5 + (t.g - y5) * m5 : res.g;";
+        st.newLine() << "res.b = (t.b > y5) ? x5 + (t.b - y5) * m5 : res.b;";
         st.newLine() << pix << ".rgb = res;";
     }
 
@@ -707,12 +699,12 @@ void Add_FauxCubicFwdEval_Shader(GpuShaderCreatorRcPtr & shaderCreator,
     }
     else
     {
-        st.newLine() << st.float3Decl("t") << " = " << pix << "." << channelSuffix << ";";
-        st.newLine() << st.float3Decl("res") << ";";
-        st.newLine() << st.float3Decl("tL") << ";";
-        st.newLine() << st.float3Decl("tR") << ";";
-        st.newLine() << st.float3Decl("fL") << ";";
-        st.newLine() << st.float3Decl("fR") << ";";
+        st.newLine() << st.colorDecl("t") << " = " << pix << "." << channelSuffix << ";";
+        st.newLine() << st.colorDecl("res") << ";";
+        st.newLine() << st.colorDecl("tL") << ";";
+        st.newLine() << st.colorDecl("tR") << ";";
+        st.newLine() << st.colorDecl("fL") << ";";
+        st.newLine() << st.colorDecl("fR") << ";";
     }
 
     st.newLine() << "tL = (t - x0) / (x1 - x0);";
@@ -729,15 +721,15 @@ void Add_FauxCubicFwdEval_Shader(GpuShaderCreatorRcPtr & shaderCreator,
     }
     else
     {
-        st.newLine() << "res.x = (t.x < x1) ? fL.x : fR.x;";
-        st.newLine() << "res.y = (t.y < x1) ? fL.y : fR.y;";
-        st.newLine() << "res.z = (t.z < x1) ? fL.z : fR.z;";
-        st.newLine() << "res.x = (t.x < x0) ? y0 + (t.x - x0) * m0 : res.x;";
-        st.newLine() << "res.y = (t.y < x0) ? y0 + (t.y - x0) * m0 : res.y;";
-        st.newLine() << "res.z = (t.z < x0) ? y0 + (t.z - x0) * m0 : res.z;";
-        st.newLine() << "res.x = (t.x > x2) ? y2 + (t.x - x2) * m2 : res.x;";
-        st.newLine() << "res.y = (t.y > x2) ? y2 + (t.y - x2) * m2 : res.y;";
-        st.newLine() << "res.z = (t.z > x2) ? y2 + (t.z - x2) * m2 : res.z;";
+        st.newLine() << "res.r = (t.r < x1) ? fL.r : fR.r;";
+        st.newLine() << "res.g = (t.g < x1) ? fL.g : fR.g;";
+        st.newLine() << "res.b = (t.b < x1) ? fL.b : fR.b;";
+        st.newLine() << "res.r = (t.r < x0) ? y0 + (t.r - x0) * m0 : res.r;";
+        st.newLine() << "res.g = (t.g < x0) ? y0 + (t.g - x0) * m0 : res.g;";
+        st.newLine() << "res.b = (t.b < x0) ? y0 + (t.b - x0) * m0 : res.b;";
+        st.newLine() << "res.r = (t.r > x2) ? y2 + (t.r - x2) * m2 : res.r;";
+        st.newLine() << "res.g = (t.g > x2) ? y2 + (t.g - x2) * m2 : res.g;";
+        st.newLine() << "res.b = (t.b > x2) ? y2 + (t.b - x2) * m2 : res.b;";
     }
     st.newLine() << pix << "." << channelSuffix << " = res;";
 }
@@ -759,14 +751,14 @@ void Add_FauxCubicRevEval_Shader(GpuShaderCreatorRcPtr & shaderCreator,
     }
     else
     {
-        st.newLine() << st.float3Decl("t") << " = " << pix << "." << channelSuffix << ";";
-        st.newLine() << st.float3Decl("res") << ";";
-        st.newLine() << st.float3Decl("cL") << ";";
-        st.newLine() << st.float3Decl("cR") << ";";
-        st.newLine() << st.float3Decl("discrimL") << ";";
-        st.newLine() << st.float3Decl("discrimR") << ";";
-        st.newLine() << st.float3Decl("outL") << ";";
-        st.newLine() << st.float3Decl("outR") << ";";
+        st.newLine() << st.colorDecl("t") << " = " << pix << "." << channelSuffix << ";";
+        st.newLine() << st.colorDecl("res") << ";";
+        st.newLine() << st.colorDecl("cL") << ";";
+        st.newLine() << st.colorDecl("cR") << ";";
+        st.newLine() << st.colorDecl("discrimL") << ";";
+        st.newLine() << st.colorDecl("discrimR") << ";";
+        st.newLine() << st.colorDecl("outL") << ";";
+        st.newLine() << st.colorDecl("outR") << ";";
     }
 
     st.newLine() << "cL = y0 - t;";
@@ -787,15 +779,15 @@ void Add_FauxCubicRevEval_Shader(GpuShaderCreatorRcPtr & shaderCreator,
     }
     else
     {
-        st.newLine() << "res.x = (t.x < y1) ? outL.x : outR.x;";
-        st.newLine() << "res.y = (t.y < y1) ? outL.y : outR.y;";
-        st.newLine() << "res.z = (t.z < y1) ? outL.z : outR.z;";
-        st.newLine() << "res.x = (t.x < y0) ? x0 + (t.x - y0) / m0 : res.x;";
-        st.newLine() << "res.y = (t.y < y0) ? x0 + (t.y - y0) / m0 : res.y;";
-        st.newLine() << "res.z = (t.z < y0) ? x0 + (t.z - y0) / m0 : res.z;";
-        st.newLine() << "res.x = (t.x > y2) ? x2 + (t.x - y2) / m2 : res.x;";
-        st.newLine() << "res.y = (t.y > y2) ? x2 + (t.y - y2) / m2 : res.y;";
-        st.newLine() << "res.z = (t.z > y2) ? x2 + (t.z - y2) / m2 : res.z;";
+        st.newLine() << "res.r = (t.r < y1) ? outL.r : outR.r;";
+        st.newLine() << "res.g = (t.g < y1) ? outL.g : outR.g;";
+        st.newLine() << "res.b = (t.b < y1) ? outL.b : outR.b;";
+        st.newLine() << "res.r = (t.r < y0) ? x0 + (t.r - y0) / m0 : res.r;";
+        st.newLine() << "res.g = (t.g < y0) ? x0 + (t.g - y0) / m0 : res.g;";
+        st.newLine() << "res.b = (t.b < y0) ? x0 + (t.b - y0) / m0 : res.b;";
+        st.newLine() << "res.r = (t.r > y2) ? x2 + (t.r - y2) / m2 : res.r;";
+        st.newLine() << "res.g = (t.g > y2) ? x2 + (t.g - y2) / m2 : res.g;";
+        st.newLine() << "res.b = (t.b > y2) ? x2 + (t.b - y2) / m2 : res.b;";
     }
     st.newLine() << pix << "." << channelSuffix << " = res;";
 }
@@ -954,7 +946,7 @@ void Add_WhiteBlackPre_Shader(GpuShaderCreatorRcPtr & shaderCreator,
     }
     else
     {
-        st.newLine() << st.float3Decl("t") << " = " << pix << ".rgb;";
+        st.newLine() << st.colorDecl("t") << " = " << pix << ".rgb;";
     }
 }
 
@@ -962,83 +954,83 @@ void Add_WBFwd_Shader(unsigned channel, bool linearExtrap, GpuShaderText & st)
 {
     if (channel != M)
     {
-        st.newLine() << "  float tlocal = (t - x0) / (x1 - x0);";
-        st.newLine() << "  float res = tlocal * (x1 - x0) * ( tlocal * 0.5 * (m1 - m0) + m0 ) + y0;";
-        st.newLine() << "  res = (t < x0) ? y0 + (t - x0) * m0 : res;";
+        st.newLine() << st.floatKeyword() << " tlocal = (t - x0) / (x1 - x0);";
+        st.newLine() << st.floatKeyword() << " res = tlocal * (x1 - x0) * ( tlocal * 0.5 * (m1 - m0) + m0 ) + y0;";
+        st.newLine() << "res = (t < x0) ? y0 + (t - x0) * m0 : res;";
     }
     else
     {
-        st.newLine() << "  " << st.float3Decl("tlocal") << " = (t - x0) / (x1 - x0);";
-        st.newLine() << "  " << st.float3Decl("res") << " = tlocal * (x1 - x0) * ( tlocal * 0.5 * (m1 - m0) + m0 ) + y0;";
-        st.newLine() << "  res.x = (t.x < x0) ? y0 + (t.x - x0) * m0 : res.x;";
-        st.newLine() << "  res.y = (t.y < x0) ? y0 + (t.y - x0) * m0 : res.y;";
-        st.newLine() << "  res.z = (t.z < x0) ? y0 + (t.z - x0) * m0 : res.z;";
+        st.newLine() << st.float3Decl("tlocal") << " = (t - x0) / (x1 - x0);";
+        st.newLine() << st.colorDecl("res") << " = tlocal * (x1 - x0) * ( tlocal * 0.5 * (m1 - m0) + m0 ) + y0;";
+        st.newLine() << "res.r = (t.r < x0) ? y0 + (t.r - x0) * m0 : res.r;";
+        st.newLine() << "res.g = (t.g < x0) ? y0 + (t.g - x0) * m0 : res.g;";
+        st.newLine() << "res.b = (t.b < x0) ? y0 + (t.b - x0) * m0 : res.b;";
     }
     if ( linearExtrap )
     {
         if (channel != M)
         {
-            st.newLine() << "  res = (t > x1) ? y1 + (t - x1) * m1 : res;";
+            st.newLine() << "res = (t > x1) ? y1 + (t - x1) * m1 : res;";
         }
         else
         {
-            st.newLine() << "  res.x = (t.x > x1) ? y1 + (t.x - x1) * m1 : res.x;";
-            st.newLine() << "  res.y = (t.y > x1) ? y1 + (t.y - x1) * m1 : res.y;";
-            st.newLine() << "  res.z = (t.z > x1) ? y1 + (t.z - x1) * m1 : res.z;";
+            st.newLine() << "res.r = (t.r > x1) ? y1 + (t.r - x1) * m1 : res.r;";
+            st.newLine() << "res.g = (t.g > x1) ? y1 + (t.g - x1) * m1 : res.g;";
+            st.newLine() << "res.b = (t.b > x1) ? y1 + (t.b - x1) * m1 : res.b;";
         }
     }
 }
 
 void Add_WBRev_Shader(unsigned channel, bool linearExtrap, GpuShaderText & st)
 {
-    st.newLine() << "  float a = 0.5 * (m1 - m0) * (x1 - x0);";
-    st.newLine() << "  float b = m0 * (x1 - x0);";
+    st.newLine() << st.floatKeyword() << " a = 0.5 * (m1 - m0) * (x1 - x0);";
+    st.newLine() << st.floatKeyword() << " b = m0 * (x1 - x0);";
     if (channel != M)
     {
-        st.newLine() << "  float c = y0 - t;";
-        st.newLine() << "  float discrim = sqrt( b * b - 4. * a * c );";
-        st.newLine() << "  float tmp = ( -2. * c ) / ( discrim + b );";
-        st.newLine() << "  float res = tmp * (x1 - x0) + x0;";
-        st.newLine() << "  res = (t < y0) ? x0 + (t - y0) / m0 : res;";
+        st.newLine() << st.floatKeyword() << " c = y0 - t;";
+        st.newLine() << st.floatKeyword() << " discrim = sqrt( b * b - 4. * a * c );";
+        st.newLine() << st.floatKeyword() << " tmp = ( -2. * c ) / ( discrim + b );";
+        st.newLine() << st.floatKeyword() << " res = tmp * (x1 - x0) + x0;";
+        st.newLine() << "res = (t < y0) ? x0 + (t - y0) / m0 : res;";
     }
     else
     {
-        st.newLine() << "  " << st.float3Decl("c") << " = y0 - t;";
-        st.newLine() << "  " << st.float3Decl("discrim") << " = sqrt( b * b - 4. * a * c );";
-        st.newLine() << "  " << st.float3Decl("tmp") << " = ( -2. * c ) / ( discrim + b );";
-        st.newLine() << "  " << st.float3Decl("res") << " = tmp * (x1 - x0) + x0;";
-        st.newLine() << "  res.x = (t.x < y0) ? x0 + (t.x - y0) / m0 : res.x;";
-        st.newLine() << "  res.y = (t.y < y0) ? x0 + (t.y - y0) / m0 : res.y;";
-        st.newLine() << "  res.z = (t.z < y0) ? x0 + (t.z - y0) / m0 : res.z;";
+        st.newLine() << st.float3Decl("c") << " = y0 - t;";
+        st.newLine() << st.float3Decl("discrim") << " = sqrt( b * b - 4. * a * c );";
+        st.newLine() << st.float3Decl("tmp") << " = ( -2. * c ) / ( discrim + b );";
+        st.newLine() << st.colorDecl("res") << " = tmp * (x1 - x0) + x0;";
+        st.newLine() << "res.r = (t.r < y0) ? x0 + (t.r - y0) / m0 : res.r;";
+        st.newLine() << "res.g = (t.g < y0) ? x0 + (t.g - y0) / m0 : res.g;";
+        st.newLine() << "res.b = (t.b < y0) ? x0 + (t.b - y0) / m0 : res.b;";
     }
     if ( linearExtrap )
     {
         if (channel != M)
         {
-            st.newLine() << "  res = (t > y1) ? x1 + (t - y1) / m1 : res;";
+            st.newLine() << "res = (t > y1) ? x1 + (t - y1) / m1 : res;";
         }
         else
         {
             // TODO: When m1 = 1., y1=x1, this becomes t.
-            st.newLine() << "  res.x = (t.x > y1) ? x1 + (t.x - y1) / m1 : res.x;";
-            st.newLine() << "  res.y = (t.y > y1) ? x1 + (t.y - y1) / m1 : res.y;";
-            st.newLine() << "  res.z = (t.z > y1) ? x1 + (t.z - y1) / m1 : res.z;";
+            st.newLine() << "res.r = (t.r > y1) ? x1 + (t.r - y1) / m1 : res.r;";
+            st.newLine() << "res.g = (t.g > y1) ? x1 + (t.g - y1) / m1 : res.g;";
+            st.newLine() << "res.b = (t.b > y1) ? x1 + (t.b - y1) / m1 : res.b;";
         }
     }
 }
 
 void Add_WBExtrapPre_Shader(GpuShaderText & st)
 {
-    st.newLine() << "  res = (res - x0) / gain + x0;";
+    st.newLine() << "res = (res - x0) / gain + x0;";
     // Quadratic extrapolation for better HDR control.
-    st.newLine() << "  float new_y1 = (x1 - x0) / gain + x0;";
-    st.newLine() << "  float xd = x0 + (x1 - x0) * 0.99;";
-    st.newLine() << "  float md = m0 + (xd - x0) * (m1 - m0) / (x1 - x0);";
-    st.newLine() << "  md = 1. / md;";
-    st.newLine() << "  float aa = 0.5 * (1. / m1 - md) / (x1 - xd);";
-    st.newLine() << "  float bb = 1. / m1 - 2. * aa * x1;";
-    st.newLine() << "  float cc = new_y1 - bb * x1 - aa * x1 * x1;";
-    st.newLine() << "  t = (t - x0) / gain + x0;";
+    st.newLine() << st.floatKeyword() << " new_y1 = (x1 - x0) / gain + x0;";
+    st.newLine() << st.floatKeyword() << " xd = x0 + (x1 - x0) * 0.99;";
+    st.newLine() << st.floatKeyword() << " md = m0 + (xd - x0) * (m1 - m0) / (x1 - x0);";
+    st.newLine() << "md = 1. / md;";
+    st.newLine() << st.floatKeyword() << " aa = 0.5 * (1. / m1 - md) / (x1 - xd);";
+    st.newLine() << st.floatKeyword() << " bb = 1. / m1 - 2. * aa * x1;";
+    st.newLine() << st.floatKeyword() << " cc = new_y1 - bb * x1 - aa * x1 * x1;";
+    st.newLine() << "t = (t - x0) / gain + x0;";
 }
 
 void Add_WhiteBlackFwd_Shader(GpuShaderCreatorRcPtr & shaderCreator,
@@ -1056,47 +1048,50 @@ void Add_WhiteBlackFwd_Shader(GpuShaderCreatorRcPtr & shaderCreator,
 
     st.newLine() << "if (mtest < 1.)";
     st.newLine() << "{";
+    st.indent();
     if (!isBlack)
     {
-        st.newLine() << "  m1 = max( 0.01, m1 );";
-        st.newLine() << "  float y1 = y0 + (m0 + m1) * (x1 - x0) * 0.5;";
+        st.newLine() << "m1 = max( 0.01, m1 );";
+        st.newLine() << st.floatKeyword() << " y1 = y0 + (m0 + m1) * (x1 - x0) * 0.5;";
     }
     else
     {
-        st.newLine() << "  m0 = max( 0.01, m0 );";
-        st.newLine() << "  float y0 = y1 - (m0 + m1) * (x1 - x0) * 0.5;";
+        st.newLine() << "m0 = max( 0.01, m0 );";
+        st.newLine() << st.floatKeyword() << " y0 = y1 - (m0 + m1) * (x1 - x0) * 0.5;";
     }
 
     Add_WBFwd_Shader(channel, true, st);
 
     if (channel != M)
     {
-        st.newLine() << "  " << pix << "." << channelSuffix << " = res;";
+        st.newLine() << pix << "." << channelSuffix << " = res;";
     }
     else
     {
-        st.newLine() << "  " << pix << ".rgb = res;";
+        st.newLine() << pix << ".rgb = res;";
     }
+    st.dedent();
     st.newLine() << "}";
 
     // Slope is increasing case.
 
     st.newLine() << "else if (mtest > 1.)";
     st.newLine() << "{";
+    st.indent();
     if (!isBlack)
     {
-        st.newLine() << "  m1 = 2. - m1;";
-        st.newLine() << "  m1 = max( 0.01, m1 );";
-        st.newLine() << "  float gain = (m0 + m1) * 0.5;";
-        st.newLine() << "  t = (t - x0) * gain + x0;";
+        st.newLine() << "m1 = 2. - m1;";
+        st.newLine() << "m1 = max( 0.01, m1 );";
+        st.newLine() << st.floatKeyword() << " gain = (m0 + m1) * 0.5;";
+        st.newLine() << "t = (t - x0) * gain + x0;";
     }
     else
     {
-        st.newLine() << "  m0 = 2. - m0;";
-        st.newLine() << "  m0 = max( 0.01, m0 );";
-        st.newLine() << "  float y0 = y1 - (m0 + m1) * (x1 - x0) * 0.5;";
-        st.newLine() << "  float gain = (m0 + m1) * 0.5;";
-        st.newLine() << "  t = (t - x1) * gain + x1;";
+        st.newLine() << "m0 = 2. - m0;";
+        st.newLine() << "m0 = max( 0.01, m0 );";
+        st.newLine() << st.floatKeyword() << " y0 = y1 - (m0 + m1) * (x1 - x0) * 0.5;";
+        st.newLine() << st.floatKeyword() << " gain = (m0 + m1) * 0.5;";
+        st.newLine() << "t = (t - x1) * gain + x1;";
     }
 
     Add_WBRev_Shader(channel, isBlack, st);
@@ -1107,28 +1102,29 @@ void Add_WhiteBlackFwd_Shader(GpuShaderCreatorRcPtr & shaderCreator,
 
         if (channel != M)
         {
-            st.newLine() << "  if (t > x1) res = (aa * t  + bb) * t + cc;";
+            st.newLine() << "if (t > x1) res = (aa * t  + bb) * t + cc;";
         }
         else
         {
-            st.newLine() << "  if (t.x > x1) res.x = (aa * t.x + bb) * t.x + cc;";
-            st.newLine() << "  if (t.y > x1) res.y = (aa * t.y + bb) * t.y + cc;";
-            st.newLine() << "  if (t.z > x1) res.z = (aa * t.z + bb) * t.z + cc;";
+            st.newLine() << "if (t.r > x1) res.r = (aa * t.r + bb) * t.r + cc;";
+            st.newLine() << "if (t.g > x1) res.g = (aa * t.g + bb) * t.g + cc;";
+            st.newLine() << "if (t.b > x1) res.b = (aa * t.b + bb) * t.b + cc;";
         }
     }
     else
     {
-        st.newLine() << "  res = (res - x1) / gain + x1;";
+        st.newLine() << "res = (res - x1) / gain + x1;";
     }
 
     if (channel != M)
     {
-        st.newLine() << "  " << pix << "." << channelSuffix << " = res;";
+        st.newLine() << pix << "." << channelSuffix << " = res;";
     }
     else
     {
-        st.newLine() << "  " << pix << ".rgb = res;";
+        st.newLine() << pix << ".rgb = res;";
     }
+    st.dedent();
     st.newLine() << "}";   // else if (mtest > 1.)
 
     st.dedent();
@@ -1148,15 +1144,16 @@ void Add_WhiteBlackRev_Shader(GpuShaderCreatorRcPtr & shaderCreator,
 
     st.newLine() << "if (mtest < 1.)";
     st.newLine() << "{";
+    st.indent();
     if (!isBlack)
     {
-        st.newLine() << "  m1 = max( 0.01, m1 );";
-        st.newLine() << "  float y1 = y0 + (m0 + m1) * (x1 - x0) * 0.5;";
+        st.newLine() << "m1 = max( 0.01, m1 );";
+        st.newLine() << st.floatKeyword() << " y1 = y0 + (m0 + m1) * (x1 - x0) * 0.5;";
     }
     else
     {
-        st.newLine() << "  m0 = max( 0.01, m0 );";
-        st.newLine() << "  float y0 = y1 - (m0 + m1) * (x1 - x0) * 0.5;";
+        st.newLine() << "m0 = max( 0.01, m0 );";
+        st.newLine() << st.floatKeyword() << " y0 = y1 - (m0 + m1) * (x1 - x0) * 0.5;";
     }
 
     Add_WBRev_Shader(channel, true, st);
@@ -1165,32 +1162,34 @@ void Add_WhiteBlackRev_Shader(GpuShaderCreatorRcPtr & shaderCreator,
 
     if (channel != M)
     {
-        st.newLine() << "  " << pix << "." << channelSuffix << " = res;";
+        st.newLine() << pix << "." << channelSuffix << " = res;";
     }
     else
     {
-        st.newLine() << "  " << pix << ".rgb = res;";
+        st.newLine() << pix << ".rgb = res;";
     }
+    st.dedent();
     st.newLine() << "}";
 
     // Slope is increasing case.
 
     st.newLine() << "else if (mtest > 1.)";
     st.newLine() << "{";
+    st.indent();
     if (!isBlack)
     {
-        st.newLine() << "  m1 = 2. - m1;";
-        st.newLine() << "  m1 = max( 0.01, m1 );";
-        st.newLine() << "  float gain = (m0 + m1) * 0.5;";
-        st.newLine() << "  t = (t - x0) * gain + x0;";
+        st.newLine() << "m1 = 2. - m1;";
+        st.newLine() << "m1 = max( 0.01, m1 );";
+        st.newLine() << st.floatKeyword() << " gain = (m0 + m1) * 0.5;";
+        st.newLine() << "t = (t - x0) * gain + x0;";
     }
     else
     {
-        st.newLine() << "  m0 = 2. - m0;";
-        st.newLine() << "  m0 = max( 0.01, m0 );";
-        st.newLine() << "  float y0 = y1 - (m0 + m1) * (x1 - x0) * 0.5;";
-        st.newLine() << "  float gain = (m0 + m1) * 0.5;";
-        st.newLine() << "  t = (t - x1) * gain + x1;";
+        st.newLine() << "m0 = 2. - m0;";
+        st.newLine() << "m0 = max( 0.01, m0 );";
+        st.newLine() << st.floatKeyword() << " y0 = y1 - (m0 + m1) * (x1 - x0) * 0.5;";
+        st.newLine() << st.floatKeyword() << " gain = (m0 + m1) * 0.5;";
+        st.newLine() << "t = (t - x1) * gain + x1;";
     }
 
     Add_WBFwd_Shader(channel, isBlack, st);
@@ -1201,36 +1200,37 @@ void Add_WhiteBlackRev_Shader(GpuShaderCreatorRcPtr & shaderCreator,
 
         if (channel != M)
         {
-            st.newLine() << "  float c = cc - t;";
-            st.newLine() << "  float discrim = sqrt( bb * bb - 4. * aa * c );";
-            st.newLine() << "  float res1 = ( -2. * c ) / ( discrim + bb );";
-            st.newLine() << "  float brk = (aa * x1 + bb) * x1 + cc;";
-            st.newLine() << "  res = (t < brk) ? res : res1;";
+            st.newLine() << st.floatKeyword() << " c = cc - t;";
+            st.newLine() << st.floatKeyword() << " discrim = sqrt( bb * bb - 4. * aa * c );";
+            st.newLine() << st.floatKeyword() << " res1 = ( -2. * c ) / ( discrim + bb );";
+            st.newLine() << st.floatKeyword() << " brk = (aa * x1 + bb) * x1 + cc;";
+            st.newLine() << "res = (t < brk) ? res : res1;";
         }
         else
         {
-            st.newLine() << "  " << st.float3Decl("c") << " = cc - t;";
-            st.newLine() << "  " << st.float3Decl("discrim") << " = sqrt( bb * bb - 4. * aa * c );";
-            st.newLine() << "  " << st.float3Decl("res1") << " = ( -2. * c ) / ( discrim + bb );";
-            st.newLine() << "  float brk = (aa * x1 + bb) * x1 + cc;";
-            st.newLine() << "  res.x = (t.x < brk) ? res.x : res1.x;";
-            st.newLine() << "  res.y = (t.y < brk) ? res.y : res1.y;";
-            st.newLine() << "  res.z = (t.z < brk) ? res.z : res1.z;";
+            st.newLine() << st.float3Decl("c") << " = cc - t;";
+            st.newLine() << st.float3Decl("discrim") << " = sqrt( bb * bb - 4. * aa * c );";
+            st.newLine() << st.colorDecl("res1") << " = ( -2. * c ) / ( discrim + bb );";
+            st.newLine() << st.floatKeyword() << " brk = (aa * x1 + bb) * x1 + cc;";
+            st.newLine() << "res.r = (t.r < brk) ? res.r : res1.r;";
+            st.newLine() << "res.g = (t.g < brk) ? res.g : res1.g;";
+            st.newLine() << "res.b = (t.b < brk) ? res.b : res1.b;";
         }
     }
     else
     {
-        st.newLine() << "  res = (res - x1) / gain + x1;";
+        st.newLine() << "res = (res - x1) / gain + x1;";
     }
 
     if (channel != M)
     {
-        st.newLine() << "  " << pix << "." << channelSuffix << " = res;";
+        st.newLine() << pix << "." << channelSuffix << " = res;";
     }
     else
     {
-        st.newLine() << "  " << pix << ".rgb = res;";
+        st.newLine() << pix << ".rgb = res;";
     }
+    st.dedent();
     st.newLine() << "}";   // else if (mtest > 1.)
 
     st.dedent();
@@ -1260,7 +1260,7 @@ void Add_SContrastTopPre_Shader(GpuShaderCreatorRcPtr & shaderCreator,
     st.newLine() << st.floatKeywordConst() << " pivot = " << std::to_string(pivot) << ";";
 
 
-    st.newLine() << st.float3Decl("t") << " = " << pix << ".rgb;";
+    st.newLine() << st.colorDecl("t") << " = " << pix << ".rgb;";
 
     // Top end
     st.newLine() << "{";   // establish scope so local variable names won't conflict
@@ -1341,28 +1341,28 @@ void Add_SContrastFwd_Shader(GpuShaderCreatorRcPtr & shaderCreator,
     st.newLine() << pix << ".rgb = (t - pivot) * contrast + pivot;";
 
     st.newLine() << st.float3Decl("tR") << " = (t - x1) / (x2 - x1);";
-    st.newLine() << st.float3Decl("res") << " = tR * (x2 - x1) * ( tR * 0.5 * (m3 - m0) + m0 ) + y1;";
+    st.newLine() << st.colorDecl("res") << " = tR * (x2 - x1) * ( tR * 0.5 * (m3 - m0) + m0 ) + y1;";
 
-    st.newLine() << pix << ".rgb.r = (t.x > x1) ? res.x : " << pix << ".rgb.r;";
-    st.newLine() << pix << ".rgb.g = (t.y > x1) ? res.y : " << pix << ".rgb.g;";
-    st.newLine() << pix << ".rgb.b = (t.z > x1) ? res.z : " << pix << ".rgb.b;";
-    st.newLine() << pix << ".rgb.r = (t.x > x2) ? y2 + (t.x - x2) * m3 : " << pix << ".rgb.r;";
-    st.newLine() << pix << ".rgb.g = (t.y > x2) ? y2 + (t.y - x2) * m3 : " << pix << ".rgb.g;";
-    st.newLine() << pix << ".rgb.b = (t.z > x2) ? y2 + (t.z - x2) * m3 : " << pix << ".rgb.b;";
+    st.newLine() << pix << ".rgb.r = (t.r > x1) ? res.r : " << pix << ".rgb.r;";
+    st.newLine() << pix << ".rgb.g = (t.g > x1) ? res.g : " << pix << ".rgb.g;";
+    st.newLine() << pix << ".rgb.b = (t.b > x1) ? res.b : " << pix << ".rgb.b;";
+    st.newLine() << pix << ".rgb.r = (t.r > x2) ? y2 + (t.r - x2) * m3 : " << pix << ".rgb.r;";
+    st.newLine() << pix << ".rgb.g = (t.g > x2) ? y2 + (t.g - x2) * m3 : " << pix << ".rgb.g;";
+    st.newLine() << pix << ".rgb.b = (t.b > x2) ? y2 + (t.b - x2) * m3 : " << pix << ".rgb.b;";
     st.dedent();
     st.newLine() << "}";  // end local scope
 
     Add_SContrastBottomPre_Shader(st, style);
 
     st.newLine() << st.float3Decl("tR") << " = (t - x1) / (x2 - x1);";
-    st.newLine() << st.float3Decl("res") << " = tR * (x2 - x1) * ( tR * 0.5 * (m3 - m0) + m0 ) + y1;";
+    st.newLine() << st.colorDecl("res") << " = tR * (x2 - x1) * ( tR * 0.5 * (m3 - m0) + m0 ) + y1;";
 
-    st.newLine() << pix << ".rgb.r = (t.x < x2) ? res.x : " << pix << ".rgb.r;";
-    st.newLine() << pix << ".rgb.g = (t.y < x2) ? res.y : " << pix << ".rgb.g;";
-    st.newLine() << pix << ".rgb.b = (t.z < x2) ? res.z : " << pix << ".rgb.b;";
-    st.newLine() << pix << ".rgb.r = (t.x < x1) ? y1 + (t.x - x1) * m0 : " << pix << ".rgb.r;";
-    st.newLine() << pix << ".rgb.g = (t.y < x1) ? y1 + (t.y - x1) * m0 : " << pix << ".rgb.g;";
-    st.newLine() << pix << ".rgb.b = (t.z < x1) ? y1 + (t.z - x1) * m0 : " << pix << ".rgb.b;";
+    st.newLine() << pix << ".rgb.r = (t.r < x2) ? res.r : " << pix << ".rgb.r;";
+    st.newLine() << pix << ".rgb.g = (t.g < x2) ? res.g : " << pix << ".rgb.g;";
+    st.newLine() << pix << ".rgb.b = (t.b < x2) ? res.b : " << pix << ".rgb.b;";
+    st.newLine() << pix << ".rgb.r = (t.r < x1) ? y1 + (t.r - x1) * m0 : " << pix << ".rgb.r;";
+    st.newLine() << pix << ".rgb.g = (t.g < x1) ? y1 + (t.g - x1) * m0 : " << pix << ".rgb.g;";
+    st.newLine() << pix << ".rgb.b = (t.b < x1) ? y1 + (t.b - x1) * m0 : " << pix << ".rgb.b;";
     st.dedent();
     st.newLine() << "}";  // end local scope
 
@@ -1385,14 +1385,14 @@ void Add_SContrastRev_Shader(GpuShaderCreatorRcPtr & shaderCreator,
     st.newLine() << st.floatDecl("b")  << " = m0 * (x2 - x1);";
     st.newLine() << st.floatDecl("a")  << " = (m3 - m0) * 0.5 * (x2 - x1);";
     st.newLine() << st.float3Decl("discrim") << " = sqrt( b * b - 4. * a * c );";
-    st.newLine() << st.float3Decl("res") << " = (x2 - x1) * (-2. * c) / ( discrim + b ) + x1;";
+    st.newLine() << st.colorDecl("res") << " = (x2 - x1) * (-2. * c) / ( discrim + b ) + x1;";
 
-    st.newLine() << pix << ".rgb.r = (t.x > y1) ? res.x : " << pix << ".rgb.r;";
-    st.newLine() << pix << ".rgb.g = (t.y > y1) ? res.y : " << pix << ".rgb.g;";
-    st.newLine() << pix << ".rgb.b = (t.z > y1) ? res.z : " << pix << ".rgb.b;";
-    st.newLine() << pix << ".rgb.r = (t.x > y2) ? x2 + (t.x - y2) / m3 : " << pix << ".rgb.r;";
-    st.newLine() << pix << ".rgb.g = (t.y > y2) ? x2 + (t.y - y2) / m3 : " << pix << ".rgb.g;";
-    st.newLine() << pix << ".rgb.b = (t.z > y2) ? x2 + (t.z - y2) / m3 : " << pix << ".rgb.b;";
+    st.newLine() << pix << ".rgb.r = (t.r > y1) ? res.r : " << pix << ".rgb.r;";
+    st.newLine() << pix << ".rgb.g = (t.g > y1) ? res.g : " << pix << ".rgb.g;";
+    st.newLine() << pix << ".rgb.b = (t.b > y1) ? res.b : " << pix << ".rgb.b;";
+    st.newLine() << pix << ".rgb.r = (t.r > y2) ? x2 + (t.r - y2) / m3 : " << pix << ".rgb.r;";
+    st.newLine() << pix << ".rgb.g = (t.g > y2) ? x2 + (t.g - y2) / m3 : " << pix << ".rgb.g;";
+    st.newLine() << pix << ".rgb.b = (t.b > y2) ? x2 + (t.b - y2) / m3 : " << pix << ".rgb.b;";
     st.dedent();
     st.newLine() << "}";  // end local scope
 
@@ -1402,14 +1402,14 @@ void Add_SContrastRev_Shader(GpuShaderCreatorRcPtr & shaderCreator,
     st.newLine() << st.floatDecl("b")  << " = m0 * (x2 - x1);";
     st.newLine() << st.floatDecl("a")  << " = (m3 - m0) * 0.5 * (x2 - x1);";
     st.newLine() << st.float3Decl("discrim") << " = sqrt( b * b - 4. * a * c );";
-    st.newLine() << st.float3Decl("res") << " = (x2 - x1) * (-2. * c) / ( discrim + b ) + x1;";
+    st.newLine() << st.colorDecl("res") << " = (x2 - x1) * (-2. * c) / ( discrim + b ) + x1;";
 
-    st.newLine() << pix << ".rgb.r = (t.x > y2) ? " << pix << ".rgb.r : res.x;";
-    st.newLine() << pix << ".rgb.g = (t.y > y2) ? " << pix << ".rgb.g : res.y;";
-    st.newLine() << pix << ".rgb.b = (t.z > y2) ? " << pix << ".rgb.b : res.z;";
-    st.newLine() << pix << ".rgb.r = (t.x > y1) ? " << pix << ".rgb.r : x1 + (t.x - y1) / m0;";
-    st.newLine() << pix << ".rgb.g = (t.y > y1) ? " << pix << ".rgb.g : x1 + (t.y - y1) / m0;";
-    st.newLine() << pix << ".rgb.b = (t.z > y1) ? " << pix << ".rgb.b : x1 + (t.z - y1) / m0;";
+    st.newLine() << pix << ".rgb.r = (t.r > y2) ? " << pix << ".rgb.r : res.r;";
+    st.newLine() << pix << ".rgb.g = (t.g > y2) ? " << pix << ".rgb.g : res.g;";
+    st.newLine() << pix << ".rgb.b = (t.b > y2) ? " << pix << ".rgb.b : res.b;";
+    st.newLine() << pix << ".rgb.r = (t.r > y1) ? " << pix << ".rgb.r : x1 + (t.r - y1) / m0;";
+    st.newLine() << pix << ".rgb.g = (t.g > y1) ? " << pix << ".rgb.g : x1 + (t.g - y1) / m0;";
+    st.newLine() << pix << ".rgb.b = (t.b > y1) ? " << pix << ".rgb.b : x1 + (t.b - y1) / m0;";
     st.dedent();
     st.newLine() << "}";  // end local scope
 
@@ -1528,7 +1528,7 @@ void AddGTInverseShader(GpuShaderCreatorRcPtr & shaderCreator,
 void GetGradingToneGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
                                     ConstGradingToneOpDataRcPtr & gtData)
 {
-    const bool dyn = gtData->isDynamic();
+    const bool dyn = gtData->isDynamic() &&  shaderCreator->getLanguage() != LANGUAGE_OSL_1;
     if (!dyn)
     {
         auto propGT = gtData->getDynamicPropertyInternal();
@@ -1536,6 +1536,16 @@ void GetGradingToneGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
         {
             return;
         }
+    }
+
+    if (gtData->isDynamic() && shaderCreator->getLanguage() == LANGUAGE_OSL_1)
+    {
+        std::string msg("The dynamic properties are not yet supported by the 'Open Shading language"\
+                        " (OSL)' translation: The '");
+        msg += opPrefix;
+        msg += "' dynamic property is replaced by a local variable.";
+
+        LogWarning(msg);
     }
 
     const GradingStyle style = gtData->getStyle();
@@ -1555,7 +1565,7 @@ void GetGradingToneGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
     // Properties holds shader variables names and is initialized with undecorated names suitable
     // for local variables.
     GTProperties properties;
-    AddGTProperties(shaderCreator, st, gtData, properties);
+    AddGTProperties(shaderCreator, st, gtData, properties, dyn);
 
     if (dyn)
     {

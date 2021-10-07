@@ -25,7 +25,7 @@ if(TARGET OpenImageIO::OpenImageIO)
 
     # OpenShadingLanguage
     # https://github.com/AcademySoftwareFoundation/OpenShadingLanguage
-    find_package(OpenShadingLanguage 1.11)
+    find_package(OpenShadingLanguage 1.11.15)
     if(NOT OSL_FOUND)
         message(WARNING "Could NOT find OpenShadingLanguage. Skipping build the OSL unit tests")
     endif()
@@ -33,7 +33,7 @@ if(TARGET OpenImageIO::OpenImageIO)
     if(OCIO_USE_OPENEXR_HALF)
         # Imath
         # https://github.com/AcademySoftwareFoundation/Imath
-        find_package(Imath 3)
+        find_package(Imath 3.1)
         if(NOT Imath_FOUND)
             message(WARNING "Could NOT find Imath. Skipping build the OSL unit tests")
         endif()
