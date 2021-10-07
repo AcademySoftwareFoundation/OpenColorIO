@@ -117,7 +117,7 @@ void bindPyGpuShaderDesc(py::module & m)
                               const py::buffer & values)
             {
                 py::buffer_info info = values.request();
-                ssize_t numChannels;
+                py::ssize_t numChannels;
 
                 switch (channel)
                 {
@@ -252,7 +252,7 @@ void bindPyGpuShaderDesc(py::module & m)
                 const float * values;
                 self.m_shaderDesc->getTextureValues(self.m_index, values);
             
-                ssize_t numChannels;
+                py::ssize_t numChannels;
                 switch (self.m_channel)
                 {
                 case GpuShaderDesc::TEXTURE_RED_CHANNEL:

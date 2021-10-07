@@ -98,8 +98,8 @@ if (UNIX AND NOT CMAKE_SKIP_RPATH)
     # (i.e. a binary loading a dynamic library) and then from the current directory
     # (i.e. dynamic library loading another dynamic library).  
     if (APPLE)
-        set(CMAKE_INSTALL_RPATH "@loader_path/../lib;@loader_path")
+        set(CMAKE_INSTALL_RPATH "@loader_path/../${CMAKE_INSTALL_LIBDIR};@loader_path")
     else()
-        set(CMAKE_INSTALL_RPATH "$ORIGIN/../lib;$ORIGIN")
+        set(CMAKE_INSTALL_RPATH "$ORIGIN/../${CMAKE_INSTALL_LIBDIR};$ORIGIN")
     endif()
 endif()
