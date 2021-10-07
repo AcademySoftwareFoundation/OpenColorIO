@@ -337,7 +337,7 @@ active_views: []
     bitdepth: 32f
     description: |
       One line.
-      
+
       Other line.
     isdata: true
     allocation: uniform
@@ -538,7 +538,7 @@ active_views: []
     bitdepth: unknown
     description: |
       Multiple lines
-      
+
       Other line.
     isdata: false
     allocation: uniform

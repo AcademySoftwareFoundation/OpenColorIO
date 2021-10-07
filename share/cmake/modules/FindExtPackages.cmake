@@ -30,7 +30,7 @@ find_package(expat 2.2.8 REQUIRED)
 
 # yaml-cpp
 # https://github.com/jbeder/yaml-cpp
-find_package(yaml-cpp 0.6.3 REQUIRED)
+find_package(yaml-cpp 0.7.0 REQUIRED)
 
 # pystring
 # https://github.com/imageworks/pystring

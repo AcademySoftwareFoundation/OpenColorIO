@@ -40,11 +40,16 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
         # As yaml-cpp-config.cmake search fails, search an installed library
         # using yaml-cpp.pc .
 
-        list(APPEND _yaml-cpp_REQUIRED_VARS yaml-cpp_INCLUDE_DIR)
+        list(APPEND _yaml-cpp_REQUIRED_VARS yaml-cpp_INCLUDE_DIR yaml-cpp_VERSION)
 
         # Search for yaml-cpp.pc
         find_package(PkgConfig QUIET)
         pkg_check_modules(PC_yaml-cpp QUIET "yaml-cpp>=${yaml-cpp_FIND_VERSION}")
+
+        # Try to detect the version installed, if any.
+        if(NOT PC_yaml-cpp_FOUND)
+            pkg_search_module(PC_yaml-cpp QUIET "yaml-cpp")
+        endif()
         
         # Find include directory
         find_path(yaml-cpp_INCLUDE_DIR 
@@ -123,35 +128,27 @@ endif()
 ### Install package from source ###
 
 if(NOT yaml-cpp_FOUND)
-
-    # As searches using yaml-cpp-config.cmake and yaml-cpp.pc failed, it now
-    # installs the library from the yaml-cpp source.
-
     include(ExternalProject)
-
-    # TODO: yaml-cpp master is using GNUInstallDirs to define include and lib 
-    #       dir names. Once that change is released and OCIO updates the 
-    #       minimum yaml-cpp version, toggle the three disabled lines below.
-    #include(GNUInstallDirs)
+    include(GNUInstallDirs)
 
     set(_EXT_DIST_ROOT "${CMAKE_BINARY_DIR}/ext/dist")
     set(_EXT_BUILD_ROOT "${CMAKE_BINARY_DIR}/ext/build")
 
+
     # Set find_package standard args
     set(yaml-cpp_FOUND TRUE)
     set(yaml-cpp_VERSION ${yaml-cpp_FIND_VERSION})
-    set(yaml-cpp_INCLUDE_DIR "${_EXT_DIST_ROOT}/include")
-    #set(yaml-cpp_INCLUDE_DIR "${_EXT_DIST_ROOT}/${CMAKE_INSTALL_INCLUDEDIR}")
+    set(yaml-cpp_INCLUDE_DIR "${_EXT_DIST_ROOT}/${CMAKE_INSTALL_INCLUDEDIR}")
+
+    # Starting from 0.7.0, this is included on all platforms, we could also
+    # override CMAKE_DEBUG_POSTFIX to bypass it.
+    if(BUILD_TYPE_DEBUG)
+        string(APPEND _yaml-cpp_LIB_SUFFIX "d")
+    endif()
 
     # Set the expected library name
-    if(WIN32 AND NOT MINGW)
-        set(_yaml-cpp_LIB_SUFFIX "md")
-        if(BUILD_TYPE_DEBUG)
-            string(APPEND _yaml-cpp_LIB_SUFFIX "d")
-        endif()
-    endif()
     set(yaml-cpp_LIBRARY
-        "${_EXT_DIST_ROOT}/lib/libyaml-cpp${_yaml-cpp_LIB_SUFFIX}${CMAKE_STATIC_LIBRARY_SUFFIX}")
+        "${_EXT_DIST_ROOT}/${CMAKE_INSTALL_LIBDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}yaml-cpp${_yaml-cpp_LIB_SUFFIX}${CMAKE_STATIC_LIBRARY_SUFFIX}")
 
     if(_yaml-cpp_TARGET_CREATE)
         if(MSVC)
