@@ -5,6 +5,7 @@
 #ifndef OPENCOLORIO_OSL_UNITTEST_TYPES_H
 #define OPENCOLORIO_OSL_UNITTEST_TYPES_H
 
+#include <array>
 #include <string>
 #include <vector>
 
