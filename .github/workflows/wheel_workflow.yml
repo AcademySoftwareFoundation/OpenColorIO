@@ -41,6 +41,10 @@ jobs:
   linux:
     name: Build wheels on Linux
     runs-on: ubuntu-latest
+    # Don't run on OCIO forks
+    if: |
+      github.event_name != 'schedule' ||
+      github.repository == 'AcademySoftwareFoundation/OpenColorIO'
     strategy:
       matrix:
         include:
@@ -129,6 +133,10 @@ jobs:
   macos:
     name: Build wheels on macOS
     runs-on: macos-10.15
+    # Don't run on OCIO forks
+    if: |
+      github.event_name != 'schedule' ||
+      github.repository == 'AcademySoftwareFoundation/OpenColorIO'
     strategy:
       matrix:
         include:
@@ -195,6 +203,10 @@ jobs:
   windows:
     name: Build wheels on Windows
     runs-on: windows-2019
+    # Don't run on OCIO forks
+    if: |
+      github.event_name != 'schedule' ||
+      github.repository == 'AcademySoftwareFoundation/OpenColorIO'
     strategy:
       matrix:
         include:
