@@ -31,15 +31,10 @@ if(TARGET OpenImageIO::OpenImageIO)
     endif()
  
     if(OCIO_USE_OPENEXR_HALF)
-        # Imath
-        # https://github.com/AcademySoftwareFoundation/Imath
-        find_package(Imath 3.1)
-        if(NOT Imath_FOUND)
-            message(WARNING "Could NOT find Imath. Skipping build the OSL unit tests")
-        endif()
+        message(WARNING "Supported OpenShadingLanguage versions need Imath. Skipping build the OSL unit tests")
     endif()
 
-    if(OSL_FOUND AND Imath_FOUND)
+    if(OSL_FOUND AND NOT OCIO_USE_OPENEXR_HALF)
         add_subdirectory(osl)
     endif()
 else()

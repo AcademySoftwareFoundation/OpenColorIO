@@ -39,7 +39,6 @@ target_link_libraries(test_osl_exec
     PRIVATE
         OpenColorIO
         osl::osl
-        Imath::Imath
         OpenImageIO::OpenImageIO
 )
 
