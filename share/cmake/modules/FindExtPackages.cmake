@@ -26,7 +26,7 @@ set(CMAKE_FIND_PACKAGE_NO_SYSTEM_PACKAGE_REGISTRY ON CACHE BOOL
 
 # expat
 # https://github.com/libexpat/libexpat
-find_package(expat 2.2.8 REQUIRED)
+find_package(expat 2.4.1 REQUIRED)
 
 # yaml-cpp
 # https://github.com/jbeder/yaml-cpp

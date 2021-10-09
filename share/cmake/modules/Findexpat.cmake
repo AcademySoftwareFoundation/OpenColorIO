@@ -183,8 +183,13 @@ if(NOT expat_FOUND)
         #   https://github.com/libexpat/libexpat/blob/R_2_2_8/expat/win32/README.txt
         set(_expat_LIB_SUFFIX "${_expat_LIB_SUFFIX}MD")
     endif()
+
+    # Expat use a hardcoded lib prefix instead of CMAKE_STATIC_LIBRARY_PREFIX
+    # https://github.com/libexpat/libexpat/blob/R_2_4_1/expat/CMakeLists.txt#L374
+    set(_expat_LIB_PREFIX "lib")
+
     set(expat_LIBRARY
-        "${_EXT_DIST_ROOT}/${CMAKE_INSTALL_LIBDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}expat${_expat_LIB_SUFFIX}${CMAKE_STATIC_LIBRARY_SUFFIX}")
+        "${_EXT_DIST_ROOT}/${CMAKE_INSTALL_LIBDIR}/${_expat_LIB_PREFIX}expat${_expat_LIB_SUFFIX}${CMAKE_STATIC_LIBRARY_SUFFIX}")
 
     if(_expat_TARGET_CREATE)
         if(MSVC)
