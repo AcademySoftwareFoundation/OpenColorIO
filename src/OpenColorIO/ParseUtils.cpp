@@ -525,6 +525,7 @@ static constexpr int DOUBLE_DECIMALS = 16;
 std::string FloatToString(float value)
 {
     std::ostringstream pretty;
+    pretty.imbue(std::locale::classic());
     pretty.precision(FLOAT_DECIMALS);
     pretty << value;
     return pretty.str();
@@ -535,6 +536,7 @@ std::string FloatVecToString(const float * fval, unsigned int size)
     if(size<=0) return "";
 
     std::ostringstream pretty;
+    pretty.imbue(std::locale::classic());
     pretty.precision(FLOAT_DECIMALS);
     for(unsigned int i=0; i<size; ++i)
     {
@@ -566,6 +568,7 @@ bool StringToInt(int * ival, const char * str, bool failIfLeftoverChars)
     if(!ival) return false;
 
     std::istringstream i(str);
+    i.imbue(std::locale::classic());
     char c=0;
     if (!(i >> *ival) || (failIfLeftoverChars && i.get(c))) return false;
     return true;
@@ -574,6 +577,7 @@ bool StringToInt(int * ival, const char * str, bool failIfLeftoverChars)
 std::string DoubleToString(double value)
 {
     std::ostringstream pretty;
+    pretty.imbue(std::locale::classic());
     pretty.precision(DOUBLE_DECIMALS);
     pretty << value;
     return pretty.str();
@@ -584,6 +588,7 @@ std::string DoubleVecToString(const double * val, unsigned int size)
     if (size <= 0) return "";
 
     std::ostringstream pretty;
+    pretty.imbue(std::locale::classic());
     pretty.precision(DOUBLE_DECIMALS);
     for (unsigned int i = 0; i<size; ++i)
     {
