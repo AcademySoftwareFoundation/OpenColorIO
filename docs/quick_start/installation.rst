@@ -65,7 +65,7 @@ it is not necessary to install those items manually:
 - cmake >= 3.12
 - \*Expat >= 2.4.1 (XML parser for CDL/CLF/CTF)
 - \*yaml-cpp >= 0.7.0 (YAML parser for Configs)
-- \*Imath >= 3.0.5 (for half domain LUTs)
+- \*Imath >= 3.1.2 (for half domain LUTs)
     - \*IlmBase (Half only) >= 2.4.0 (Alternative half implementation when 
       OpenEXR 2 is available. Use ``-DOCIO_USE_OPENEXR_HALF=ON`` CMake option to 
       enable).

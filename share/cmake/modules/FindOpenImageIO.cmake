@@ -132,4 +132,4 @@ endif ()
 mark_as_advanced (
     OPENIMAGEIO_INCLUDE_DIR
     OPENIMAGEIO_LIBRARY
-    )
+)
