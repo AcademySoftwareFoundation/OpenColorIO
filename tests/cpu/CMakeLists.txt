@@ -19,6 +19,7 @@ function(add_ocio_test NAME SOURCES PRIVATE_INCLUDES)
             ${OCIO_HALF_LIB}
             pystring::pystring
             sampleicc::sampleicc
+            fast_float::fast_float
             unittest_data
             utils::strings
             yaml-cpp

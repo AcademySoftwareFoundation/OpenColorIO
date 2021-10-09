@@ -5,6 +5,7 @@
 #include <iostream>
 #include <set>
 #include <sstream>
+#include <fast_float/fast_float.h>
 
 #include <OpenColorIO/OpenColorIO.h>
 
@@ -548,9 +549,9 @@ bool StringToFloat(float * fval, const char * str)
 {
     if(!str) return false;
 
-    std::istringstream inputStringstream(str);
     float x;
-    if(!(inputStringstream >> x))
+    const auto result = fast_float::from_chars(str, str + strlen(str), x);
+    if (result.ec != std::errc())
     {
         return false;
     }
@@ -599,10 +600,10 @@ bool StringVecToFloatVec(std::vector<float> &floatArray, const StringUtils::Stri
 
     for(unsigned int i=0; i<lineParts.size(); i++)
     {
-        std::istringstream inputStringstream(lineParts[i]);
         float x;
-        if(!(inputStringstream >> x))
-        {
+        const char *str = lineParts[i].c_str();
+        const auto result = fast_float::from_chars(str, str + strlen(str), x);
+        if (result.ec != std::errc()) {
             return false;
         }
         floatArray[i] = x;

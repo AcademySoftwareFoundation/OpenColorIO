@@ -56,6 +56,10 @@ else()
     set(OCIO_USE_IMATH_HALF "0" CACHE STRING "Whether 'half' type will be sourced from the Imath library (>=v3.0)" FORCE)
 endif()
 
+# fast_float
+# https://github.com/fastfloat/fast_float
+find_package(FastFloat 3.2.0 REQUIRED)
+
 if(OCIO_BUILD_APPS)
 
     # NOTE: Depending of the compiler version lcms2 2.2 does not compile with 

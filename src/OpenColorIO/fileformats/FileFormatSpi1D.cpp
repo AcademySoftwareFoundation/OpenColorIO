@@ -3,6 +3,7 @@
 
 #include <cstdio>
 #include <sstream>
+#include <fast_float/fast_float.h>
 
 #include <OpenColorIO/OpenColorIO.h>
 
@@ -124,9 +125,24 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
             }
             else if(StringUtils::StartsWith(headerLine, "From"))
             {
-                if (sscanf(lineBuffer, "From %f %f", &from_min, &from_max) != 2)
+                char fromMinS[64] = "";
+                char fromMaxS[64] = "";
+#ifdef _WIN32
+                if (sscanf(lineBuffer, "From %s %s", fromMinS, 64, fromMaxS, 64) != 2)
+#else
+                if (sscanf(lineBuffer, "From %s %s", fromMinS, fromMaxS) != 2)
+#endif
                 {
                     ThrowErrorMessage("Invalid 'From' Tag", currentLine, headerLine);
+                }
+                else
+                {
+                    const auto fromMinAnswer = fast_float::from_chars(fromMinS, fromMinS +64, from_min);
+                    const auto fromMaxAnswer = fast_float::from_chars(fromMaxS, fromMaxS + 64, from_max);
+
+                    if (fromMinAnswer.ec != std::errc() || fromMaxAnswer.ec != std::errc()) {
+                        ThrowErrorMessage("Invalid 'From' Tag", currentLine, headerLine);
+                    }
                 }
             }
             else if(StringUtils::StartsWith(headerLine, "Components"))
