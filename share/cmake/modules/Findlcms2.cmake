@@ -157,12 +157,18 @@ if(NOT lcms2_FOUND)
             GIT_SHALLOW TRUE
             PREFIX "${_EXT_BUILD_ROOT}/Little-CMS"
             BUILD_BYPRODUCTS ${lcms2_LIBRARY}
+            CMAKE_ARGS ${lcms2_CMAKE_ARGS}
+            EXCLUDE_FROM_ALL TRUE
             PATCH_COMMAND
                 ${CMAKE_COMMAND} -E copy
                 "${CMAKE_SOURCE_DIR}/share/cmake/projects/Buildlcms2.cmake"
                 "CMakeLists.txt"
-            CMAKE_ARGS ${lcms2_CMAKE_ARGS}
-            EXCLUDE_FROM_ALL TRUE
+            BUILD_COMMAND ""
+            INSTALL_COMMAND
+                ${CMAKE_COMMAND} --build .
+                                 --config ${CMAKE_BUILD_TYPE}
+                                 --target install
+                                 --parallel
         )
 
         add_dependencies(lcms2::lcms2 lcms2_install)

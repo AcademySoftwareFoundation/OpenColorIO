@@ -244,6 +244,12 @@ if(NOT expat_FOUND)
             SOURCE_SUBDIR expat
             CMAKE_ARGS ${EXPAT_CMAKE_ARGS}
             EXCLUDE_FROM_ALL TRUE
+            BUILD_COMMAND ""
+            INSTALL_COMMAND
+                ${CMAKE_COMMAND} --build .
+                                 --config ${CMAKE_BUILD_TYPE}
+                                 --target install
+                                 --parallel
         )
 
         add_dependencies(expat::expat expat_install)

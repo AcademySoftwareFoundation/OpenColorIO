@@ -125,12 +125,18 @@ if(NOT pystring_FOUND)
             GIT_SHALLOW TRUE
             PREFIX "${_EXT_BUILD_ROOT}/pystring"
             BUILD_BYPRODUCTS ${pystring_LIBRARY}
+            CMAKE_ARGS ${pystring_CMAKE_ARGS}
+            EXCLUDE_FROM_ALL TRUE
             PATCH_COMMAND
                 ${CMAKE_COMMAND} -E copy
                 "${CMAKE_SOURCE_DIR}/share/cmake/projects/Buildpystring.cmake"
                 "CMakeLists.txt"
-            CMAKE_ARGS ${pystring_CMAKE_ARGS}
-            EXCLUDE_FROM_ALL TRUE
+            BUILD_COMMAND ""
+            INSTALL_COMMAND
+                ${CMAKE_COMMAND} --build .
+                                 --config ${CMAKE_BUILD_TYPE}
+                                 --target install
+                                 --parallel
         )
 
         add_dependencies(pystring::pystring pystring_install)
