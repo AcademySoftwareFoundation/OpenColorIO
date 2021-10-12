@@ -271,3 +271,32 @@ OCIO_ADD_TEST(GradingRGBCurveTransform, serialization)
     }
 }
 
+
+OCIO_ADD_TEST(GradingRGBCurveTransform, local_bypass)
+{
+    // Test that the GPU is empty for an identity transform.
+
+    OCIO::GradingRGBCurveTransformRcPtr transform
+        = OCIO::GradingRGBCurveTransform::Create(OCIO::GRADING_LOG);
+
+    OCIO::ConstConfigRcPtr config = OCIO::Config::CreateRaw();
+
+    OCIO::ConstProcessorRcPtr proc = config->getProcessor(transform);
+    OCIO::ConstGPUProcessorRcPtr gpu = proc->getOptimizedGPUProcessor(OCIO::OPTIMIZATION_NONE);
+
+    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
+
+    OCIO_CHECK_NO_THROW(gpu->extractGpuShaderInfo(shaderDesc));
+
+    static const std::string gpuStr("\n"
+                                    "// Declaration of the OCIO shader function\n"
+                                    "\n"
+                                    "vec4 OCIOMain(vec4 inPixel)\n"
+                                    "{\n"
+                                    "  vec4 outColor = inPixel;\n"
+                                    "\n"
+                                    "  return outColor;\n"
+                                    "}\n");
+
+    OCIO_CHECK_EQUAL(gpuStr, std::string(shaderDesc->getShaderText()));
+}

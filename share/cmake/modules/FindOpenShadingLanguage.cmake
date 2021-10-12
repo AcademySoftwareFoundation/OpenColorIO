@@ -7,8 +7,6 @@
 # variable to tell CMake where to find it. 
 #
 
-# TODO: OSL: Use "find_package(OSL 1.11 CONFIG)" directly instead of this file!
-
 
 if(NOT TARGET osl::osl)
     add_library(osl::osl INTERFACE IMPORTED GLOBAL)
