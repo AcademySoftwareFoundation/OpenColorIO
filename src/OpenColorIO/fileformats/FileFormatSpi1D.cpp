@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
+#include <cmath>
 #include <cstdio>
 #include <sstream>
 #include <fast_float/fast_float.h>
@@ -195,7 +196,6 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
 
         int lineCount=0;
 
-        StringUtils::StringVec inputLUT;
         std::vector<float> values;
 
         while (istream.good())
@@ -208,10 +208,17 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
 
             if (line.length() != 0)
             {
-                inputLUT = StringUtils::SplitByWhiteSpaces(StringUtils::Trim(lineBuffer));
                 values.clear();
-                if (!StringVecToFloatVec(values, inputLUT)
-                    || components != (int)values.size())
+
+                char inputLUT[4][64] = {"", "", "", ""};
+#ifdef _WIN32
+                if (sscanf(lineBuffer, "%s %s %s %63s", inputLUT[0], 64,
+                           inputLUT[1], 64, inputLUT[2], 64, inputLUT[3],
+                           64) != components)
+#else
+                if (sscanf(lineBuffer, "%s %s %s %63s", inputLUT[0],
+                           inputLUT[1], inputLUT[2], inputLUT[3]) != components)
+#endif
                 {
                     std::ostringstream os;
                     os << "Malformed LUT line. Expecting a ";
@@ -223,6 +230,26 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
                 if (lineCount >= lut_size)
                 {
                     ThrowErrorMessage("Too many entries found", currentLine, "");
+                }
+
+                values.resize(components);
+
+                for (int i = 0; i < components; i++) {
+                  float v = NAN;
+                  const auto result = fast_float::from_chars(
+                      inputLUT[i], inputLUT[i] + strlen(inputLUT[i]), v);
+
+                    if (result.ec != std::errc())
+                    {
+                        std::ostringstream os;
+                        os << "Malformed LUT line. Could not convert component";
+                        os << i << " to a floating point number.";
+
+                        ThrowErrorMessage("Malformed LUT line", currentLine,
+                                            line);
+                    }
+
+                    values[i] = v;
                 }
 
                 // If 1 component is specified, use x1 x1 x1.
