@@ -9,10 +9,12 @@
 #include <string>
 #include <sstream>
 #include <vector>
+#include <fast_float/fast_float.h>
 
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "MathUtils.h"
+#include "utils/StringUtils.h"
 #include "Platform.h"
 
 
@@ -154,18 +156,51 @@ void ParseNumber(const char * str, size_t startPos, size_t endPos, T & value)
     }
 
     const char * startParse = str + startPos;
+    const char * adjustedParse = startParse;
 
     double val = 0.0f;
-    char * endParse = nullptr;
 
-    // The strtod expects a C string and str might not be null terminated.
-    // However since strtod will stop parsing when it encounters characters
-    // that it cannot convert to a number, in practice it does not need to
-    // be null terminated.
-    // C++11 version of strtod processes NAN & INF ASCII values.
-    val = strtod(startParse, &endParse);
-    value = (T)val;
-    if (endParse == startParse)
+    // charconv's from_chars expects a C string and str might not be null terminated.
+    // However, since from_chars also takes a pointer to the last character,
+    // the string does not need to be null terminated explicitly.
+    // Do note, however, that plus signs and leading whitespace
+    // need to be skipped manually -- this
+    // was left implicit in the usage of strtod.
+    // TODO: allow hex numbers -- this will probably mean we need another from_chars library
+    const std::string parsedStr = StringUtils::LeftTrim({startParse, endPos - startPos});
+    if (startPos + parsedStr.size() != endPos) {
+        adjustedParse = str + endPos - parsedStr.size();
+    }
+
+    if (StringUtils::StartsWith(parsedStr, "+")) {
+        adjustedParse += 1;
+    }
+
+    fast_float::from_chars_result result{};
+
+    if (StringUtils::StartsWith(parsedStr, "0x")
+        || StringUtils::StartsWith(parsedStr, "0X"))
+    {
+        // HACK!! fast_float does not support hex values
+        // replace num separator with the locale's on a duplicate string,
+        // then feed it to strtod
+        const auto& numSep = std::use_facet<std::numpunct<char>>(std::locale());
+        const auto testStr = StringUtils::Replace(parsedStr, ".", {numSep.decimal_point()});
+        char * endParse = nullptr;
+        val = strtod(testStr.data(), &endParse);
+
+        result.ptr = endParse - testStr.data() + adjustedParse;
+        if (endParse == testStr.data())
+        {
+            result.ec = std::errc::invalid_argument;
+        }
+    }
+    else
+    {
+        result = fast_float::from_chars(adjustedParse, str + endPos, val);
+    }
+
+    if (result.ec == std::errc::invalid_argument)
     {
         std::string fullStr(str, endPos);
         std::string parsedStr(startParse, endPos - startPos);
@@ -176,7 +211,7 @@ void ParseNumber(const char * str, size_t startPos, size_t endPos, T & value)
             << TruncateString(fullStr.c_str(), endPos, 100) << "'.";
         throw Exception(oss.str().c_str());
     }
-    else if (!IsValid(value, val))
+    else if (result.ec == std::errc::result_out_of_range)
     {
         std::string fullStr(str, endPos);
         std::string parsedStr(startParse, endPos - startPos);
@@ -187,10 +222,10 @@ void ParseNumber(const char * str, size_t startPos, size_t endPos, T & value)
             << TruncateString(fullStr.c_str(), endPos, 100) << "'.";
         throw Exception(oss.str().c_str());
     }
-    else if (endParse != str + endPos)
+    else if (result.ptr != str + endPos)
     {
         // Number is followed by something.
-        std::string fullStr(str, startPos + (endParse - startParse));
+        std::string fullStr(str, endPos);
         std::string parsedStr(startParse, endPos - startPos);
         std::ostringstream oss;
         oss << "ParserNumber: '"
@@ -199,6 +234,8 @@ void ParseNumber(const char * str, size_t startPos, size_t endPos, T & value)
             << TruncateString(fullStr.c_str(), endPos, 100) << "'.";
         throw Exception(oss.str().c_str());
     }
+
+    value = (T) val;
 }
 
 // Extract the next number contained in the string.

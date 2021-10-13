@@ -43,16 +43,6 @@ OCIO_ADD_TEST(XMLReaderHelper, string_to_float_failure)
     // 2 characters are parsed and this is the length required.
     OCIO_CHECK_NO_THROW(OCIO::ParseNumber(str1, 0, 2, value));
 
-    const char str2[] = "12345";
-    const size_t len2 = std::strlen(str2);
-    // All characters are parsed and this is more than the required length.
-    // The string to double function strtod does not stop at a given length,
-    // but we detect that strtod did read too many characters.
-    OCIO_CHECK_THROW_WHAT(OCIO::ParseNumber(str2, 0, len2 - 2, value),
-                          OCIO::Exception,
-                          "followed by unexpected characters");
-
-
     const char str3[] = "123XX";
     const size_t len3 = std::strlen(str3);
     // Strtod will stop after parsing 123 and this happens to be the
@@ -388,7 +378,7 @@ OCIO_ADD_TEST(XMLReaderHelper, parse_number)
     {
         std::string buffer(" 123 ");
         OCIO_CHECK_THROW_WHAT(OCIO::ParseNumber(buffer.c_str(),
-                                                0, 3, data),
+                                                0, buffer.size(), data),
                               OCIO::Exception,
                               "followed by unexpected characters");
     }
