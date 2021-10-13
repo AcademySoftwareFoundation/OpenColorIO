@@ -246,8 +246,12 @@ void OpenInputFileStream(std::ifstream & stream, const char * filename, std::ios
 #endif
 }
 
-std::wstring Utf8ToUtf16(std::string str)
+std::wstring Utf8ToUtf16(const std::string & str)
 {
+    if (str.empty()) {
+        return std::wstring();
+    }
+
 #ifdef _WIN32
     int sz = MultiByteToWideChar(CP_UTF8, 0, &str[0], (int)str.size(), NULL, 0);
     std::wstring wstr(sz, 0);
@@ -258,8 +262,12 @@ std::wstring Utf8ToUtf16(std::string str)
 #endif
 }
 
-std::string Utf16ToUtf8(std::wstring wstr)
+std::string Utf16ToUtf8(const std::wstring & wstr)
 {
+    if (wstr.empty()) {
+        return std::string();
+    }
+
 #ifdef _WIN32
     int sz = WideCharToMultiByte(CP_UTF8, 0, &wstr[0], (int)wstr.size(), NULL, 0, NULL, NULL);
     std::string str(sz, 0);

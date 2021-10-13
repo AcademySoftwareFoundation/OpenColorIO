@@ -98,10 +98,10 @@ void OpenInputFileStream(std::ifstream & stream, const char * filename, std::ios
 std::string CreateFileContentHash(const std::string &filename);
 
 // Convert UTF-8 string to UTF-16LE.
-std::wstring Utf8ToUtf16(std::string str);
+std::wstring Utf8ToUtf16(const std::string & str);
 
 // Convert UTF-16LE string to UTF-8.
-std::string Utf16ToUtf8(std::wstring str);
+std::string Utf16ToUtf8(const std::wstring & str);
 
 }
 
