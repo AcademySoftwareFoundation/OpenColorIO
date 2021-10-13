@@ -165,7 +165,8 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
 
             if (redValueAnswer.ec != std::errc()
                 || greenValueAnswer.ec != std::errc()
-                || blueValueAnswer.ec != std::errc()) {
+                || blueValueAnswer.ec != std::errc())
+            {
                 std::ostringstream os;
                 os << "Error parsing .spi3d file (";
                 os << fileName;
