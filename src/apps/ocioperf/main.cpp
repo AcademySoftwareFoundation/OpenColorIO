@@ -4,15 +4,12 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include <OpenImageIO/imageio.h>
-#include <OpenImageIO/typedesc.h>
-#if (OIIO_VERSION < 10100)
-namespace OIIO = OIIO_NAMESPACE;
-#endif
-
 #include "apputils/argparse.h"
-#include "oiiohelpers.h"
 #include "utils/StringUtils.h"
+
+#include <cmath>
+#include <limits>
+#include <iostream>
 
 
 namespace OCIO = OCIO_NAMESPACE;
@@ -111,151 +108,62 @@ private:
     std::vector<std::chrono::duration<float, std::milli>> m_durations;
 };
 
-// Load in memory an image from disk.
-void LoadImage(const std::string & filepath,
-               bool verbose,
-               OIIO::ImageSpec & spec, // [out] Image specifications.
-               OCIO::ImgBuffer & img)  // [out] In memory image buffer.
-{
-    if(filepath.empty())
-    {
-        throw std::runtime_error("The image filepath is missing.");
-    }
-
-    // Load the image
-    std::cout << std::endl;
-    std::cout << "Loading " << filepath << std::endl;
-
-#if OIIO_VERSION < 10903
-    OIIO::ImageInput* f = OIIO::ImageInput::create(filepath);
-#else
-    auto f = OIIO::ImageInput::create(filepath);
-#endif
-    if(!f)
-    {
-        throw std::runtime_error("Could not create image input.");
-    }
-
-    f->open(filepath, spec);
-
-    std::string error = f->geterror();
-    if(!error.empty())
-    {
-        std::ostringstream oss;
-        oss << "Error loading image " << error;
-        throw std::runtime_error(oss.str().c_str());
-    }
-
-    OCIO::PrintImageSpec(spec, verbose);
-
-    img.allocate(spec);
-
-    std::cout << std::endl;
-    CustomMeasure m("Load image: ");
-
-    const bool ok = f->read_image(spec.format, img.getBuffer());
-    if(!ok)
-    {
-        std::ostringstream oss;
-        oss << "Error reading \"" << filepath << "\" : " << f->geterror();
-        throw std::runtime_error(oss.str().c_str());
-    }
-
-#if OIIO_VERSION < 10903
-    OIIO::ImageInput::destroy(f);
-#endif
-}
-
-// Process the complete image in one shot.
-void ProcessImage(CustomMeasure & m, OCIO::ConstCPUProcessorRcPtr & cpuProcessor,
-                  const OIIO::ImageSpec & spec, const OCIO::ImgBuffer & img)
+// Process the complete image line by line.
+void ProcessLines(CustomMeasure & m,
+                  OCIO::ConstCPUProcessorRcPtr & cpuProcessor,
+                  const OCIO::PackedImageDesc & img)
 {
     // Always process the same complete image.
-    OCIO::ImgBuffer srcImg(img);
-    OCIO::ImageDescRcPtr imgDesc = OCIO::CreateImageDesc(spec, srcImg);
+    char * lineToProcess = reinterpret_cast<char *>(img.getData());
 
     m.resume();
 
-    // Apply the color transformation (in place).
-    cpuProcessor->apply(*imgDesc);
-
-    m.pause();
-}
-
-// Process the complete image line by line.
-void ProcessLines(CustomMeasure & m, OCIO::ConstCPUProcessorRcPtr & cpuProcessor,
-                  const OIIO::ImageSpec & spec, const OCIO::ImgBuffer & img)
-{
-    // Always process the same complete image.
-    OCIO::ImgBuffer srcImg(img);
-    char * lineToProcess = reinterpret_cast<char *>(srcImg.getBuffer());
-
-    for(int h=0; h<spec.height; ++h)
+    for(int h=0; h<img.getHeight(); ++h)
     {
         OCIO::PackedImageDesc imageDesc((void*)lineToProcess,
-                                        spec.width,
+                                        img.getWidth(),
                                         1, // Only one line.
-                                        spec.nchannels,
-                                        OCIO::GetBitDepth(spec),
-                                        spec.channel_bytes(),
-                                        spec.pixel_bytes(),
-                                        spec.scanline_bytes());
-
-        m.resume();
+                                        img.getNumChannels(),
+                                        img.getBitDepth(),
+                                        OCIO::AutoStride,
+                                        OCIO::AutoStride,
+                                        OCIO::AutoStride);
 
         // Apply the color transformation (in place).
         cpuProcessor->apply(imageDesc);
 
         // Find the next line.
-        lineToProcess += spec.scanline_bytes();
-
-        m.pause();
+        lineToProcess += img.getYStrideBytes();
     }
+
+    m.pause();
 }
 
 // Process the complete image pixel per pixel.
-void ProcessPixels(CustomMeasure & m, OCIO::ConstCPUProcessorRcPtr & cpuProcessor,
-                   const OIIO::ImageSpec & spec, const OCIO::ImgBuffer & img)
+void ProcessPixels(CustomMeasure & m,
+                   OCIO::ConstCPUProcessorRcPtr & cpuProcessor,
+                   const OCIO::PackedImageDesc & img)
 {
     // Always process the same complete image.
-    OCIO::ImgBuffer buf(img);
-    char * lineToProcess = reinterpret_cast<char *>(buf.getBuffer());
+    char * lineToProcess = reinterpret_cast<char *>(img.getData());
 
     m.resume();
-    if(spec.nchannels==3)
+
+    for(int h=0; h<img.getHeight(); ++h)
     {
-        for(int h=0; h<spec.height; ++h)
+        char * pixelToProcess = lineToProcess;
+        for(int w=0; w<img.getWidth(); ++w)
         {
-            char * pixelToProcess = lineToProcess;
-            for(int w=0; w<spec.width; ++w)
-            {
-                cpuProcessor->applyRGB(reinterpret_cast<float*>(pixelToProcess));
+            cpuProcessor->applyRGBA(reinterpret_cast<float*>(pixelToProcess));
 
-                // Find the next pixel.
-                pixelToProcess += spec.pixel_bytes();
-            }
-
-            // Find the next line.
-            lineToProcess += spec.scanline_bytes();
+            // Find the next pixel.
+            pixelToProcess += img.getXStrideBytes();
         }
-    }
-    else
-    {
-        for(int h=0; h<spec.height; ++h)
-        {
-            char * pixelToProcess = lineToProcess;
-            for(int w=0; w<spec.width; ++w)
-            {
-                cpuProcessor->applyRGBA(reinterpret_cast<float*>(pixelToProcess));
 
-                // Find the next pixel.
-                pixelToProcess += spec.pixel_bytes();
-            }
-
-            // Find the next line.
-            lineToProcess += spec.scanline_bytes();
-        }
+        // Find the next line.
+        lineToProcess += img.getYStrideBytes();
     }
+
     m.pause();
 }
 
@@ -265,12 +173,10 @@ int main(int argc, const char **argv)
     bool verbose = false;
     signed int testType = -1;
     std::string transformFile;
-    std::string inputColorSpace, outputColorSpace, display, view;
-    std::string filepath;
+    std::string inColorSpace, outColorSpace, display, view;
+    std::string inBitDepthStr("f32"), outBitDepthStr("f32");
     unsigned iterations = 50;
-    bool nocache = false;
-
-    std::string outBitDepthStr("auto");
+    bool nocache = false, nooptim = false;
 
     ArgParse ap;
     ap.options("ocioperf -- apply and measure a color transformation processing\n\n"
@@ -281,15 +187,15 @@ int main(int argc, const char **argv)
                                        "0 means on the complete image (the default), 1 is line-by-line, "\
                                        "2 is pixel-per-pixel and -1 performs all the test types",
                "--transform %s", &transformFile, "Provide the transform file to apply on the image",
-               "--colorspaces %s %s", &inputColorSpace, &outputColorSpace,
+               "--colorspaces %s %s", &inColorSpace, &outColorSpace,
                                       "Provide the input and output color spaces to apply on the image",
-               "--displayview %s %s %s", &inputColorSpace, &display, &view,
+               "--displayview %s %s %s", &inColorSpace, &display, &view,
                                       "Provide the input and (display, view) pair to apply on the image",
-               "--image %s", &filepath, "Provide the filepath of the image to process",
                "--iter %d", &iterations, "Provide the number of iterations on the processing. Default is 10",
-               "--out %s", &outBitDepthStr, "Provide an output bit-depth (auto, ui16, f32)"\
-                                            " where auto preserves the input bit-depth",
-               "--nocache", &nocache, "Bypass all caches",
+               "--bitdepths %s %s", &inBitDepthStr, &outBitDepthStr,
+                                    "Provide input and output bit-depths (i.e. ui16, f32). Default is f32",
+               "--nocache", &nocache, "Bypass all caches. Default is false",
+               "--nooptim", &nooptim, "Disable the processor optimizations. Default is false",
                NULL);
 
     if (ap.parse (argc, argv) < 0)
@@ -308,7 +214,6 @@ int main(int argc, const char **argv)
     if (verbose)
     {
         std::cout << std::endl;
-        std::cout << "OIIO Version: " << OIIO_VERSION_STRING << std::endl;
         std::cout << "OCIO Version: " << OCIO::GetVersion() << std::endl;
         const char * env = OCIO::GetEnvVariable("OCIO");
         if(env && *env)
@@ -331,25 +236,6 @@ int main(int argc, const char **argv)
         }
     }
 
-    OIIO::ImageSpec spec;
-    OCIO::ImgBuffer img;
-    try
-    {
-        LoadImage(filepath, verbose, spec, img);
-    }
-    catch (std::exception & ex)
-    {
-        std::cerr << "ERROR: " << ex.what() << std::endl;
-        return 1;
-    }
-    catch (...)
-    {
-        std::cerr << "ERROR: Unknown error encountered." << std::endl;
-        return 1;
-    }
-
-    outBitDepthStr = StringUtils::Lower(outBitDepthStr);
-
     if (!transformFile.empty())
     {
         std::cout << std::endl;
@@ -367,7 +253,9 @@ int main(int argc, const char **argv)
         OCIO::ConstProcessorRcPtr processor;
         if (!transformFile.empty())
         {
-            OCIO::ConstConfigRcPtr config  = OCIO::Config::Create();
+            OCIO::ConfigRcPtr config  = OCIO::Config::CreateRaw()->createEditableCopy();
+            config->setProcessorCacheFlags(nocache ? OCIO::PROCESSOR_CACHE_OFF 
+                                                   : OCIO::PROCESSOR_CACHE_DEFAULT);
 
             // Get the transform.
             OCIO::FileTransformRcPtr transform = OCIO::FileTransform::Create();
@@ -388,7 +276,7 @@ int main(int argc, const char **argv)
                 }
             }
         }
-        else if (!inputColorSpace.empty())
+        else if (!inColorSpace.empty())
         {
             if (verbose)
             {
@@ -396,8 +284,8 @@ int main(int argc, const char **argv)
                 if (env && *env)
                 {
                     std::cout << std::endl;
-                    std::cout << "Processing from '" << inputColorSpace << "' to '"
-                              << outputColorSpace << "'" << std::endl << std::endl;
+                    std::cout << "Processing from '" << inColorSpace << "' to '"
+                              << outColorSpace << "'" << std::endl << std::endl;
                 }
                 else
                 {
@@ -413,13 +301,6 @@ int main(int argc, const char **argv)
                 CustomMeasure m("Create the config identifier:\t\t", iterations);
                 for (unsigned iter = 0; iter < iterations; ++iter)
                 {
-                    if (nocache)
-                    {
-                        config = OCIO::Config::CreateFromEnv()->createEditableCopy();
-                        config->setProcessorCacheFlags(nocache ? OCIO::PROCESSOR_CACHE_OFF 
-                                                               : OCIO::PROCESSOR_CACHE_DEFAULT);
-                    }
-
                     m.resume();
                     config->getCacheID();
                     m.pause();
@@ -430,13 +311,6 @@ int main(int argc, const char **argv)
                 CustomMeasure m("Create the context identifier:\t\t", iterations);
                 for (unsigned iter = 0; iter < iterations; ++iter)
                 {
-                    if (nocache)
-                    {
-                        config = OCIO::Config::CreateFromEnv()->createEditableCopy();
-                        config->setProcessorCacheFlags(nocache ? OCIO::PROCESSOR_CACHE_OFF 
-                                                               : OCIO::PROCESSOR_CACHE_DEFAULT);
-                    }
-
                     m.resume();
                     config->getCurrentContext()->getCacheID();
                     m.pause();
@@ -445,7 +319,7 @@ int main(int argc, const char **argv)
 
             {
                 std::string msg;
-                if (!outputColorSpace.empty())
+                if (!outColorSpace.empty())
                 {
                     if (!display.empty() || !view.empty())
                     {
@@ -471,10 +345,10 @@ int main(int argc, const char **argv)
                         OCIO::ClearAllCaches();
                     }
 
-                    if (!outputColorSpace.empty())
+                    if (!outColorSpace.empty())
                     {
                         m.resume();
-                        processor = config->getProcessor(inputColorSpace.c_str(), outputColorSpace.c_str());
+                        processor = config->getProcessor(inColorSpace.c_str(), outColorSpace.c_str());
                         m.pause();
                     }
                     else
@@ -483,7 +357,7 @@ int main(int argc, const char **argv)
 
                         m.resume();
                         processor = OCIO::DisplayViewHelpers::GetProcessor(config,
-                                                                           inputColorSpace.c_str(),
+                                                                           inColorSpace.c_str(),
                                                                            display.c_str(),
                                                                            view.c_str(),
                                                                            noChannelView,
@@ -498,22 +372,33 @@ int main(int argc, const char **argv)
             throw OCIO::Exception("Missing color transformation description.");
         }
 
-        const OCIO::BitDepth inBitDepth  = OCIO::GetBitDepth(spec);
-        OCIO::BitDepth outBitDepth = inBitDepth;
-        if(outBitDepthStr=="f32")
+        const OCIO::OptimizationFlags optimFlags
+            = nooptim ? OCIO::OPTIMIZATION_NONE : OCIO::OPTIMIZATION_DEFAULT;
+
+        auto GetBitDepthFromString = [](const std::string & str) -> OCIO::BitDepth 
         {
-            outBitDepth= OCIO::BIT_DEPTH_F32;
-        }
-        else if(outBitDepthStr=="ui16")
-        {
-            outBitDepth= OCIO::BIT_DEPTH_UINT16;
-        }
-        else if(outBitDepthStr!="auto")
-        {
-            std::string err("Unsupported output bit-depth: ");
-            err += outBitDepthStr;
-            throw OCIO::Exception(err.c_str());
-        }
+            OCIO::BitDepth bd = OCIO::BIT_DEPTH_F32;
+    
+            if (str == "f32")
+            {
+                bd = OCIO::BIT_DEPTH_F32;
+            }
+            else if (str == "ui16")
+            {
+                bd = OCIO::BIT_DEPTH_UINT16;
+            }
+            else
+            {
+                std::string err("Unsupported bit-depth: ");
+                err += str;
+                throw OCIO::Exception(err.c_str());
+            }
+
+            return bd;
+        };
+
+        const OCIO::BitDepth inBitDepth  = GetBitDepthFromString(inBitDepthStr);
+        const OCIO::BitDepth outBitDepth = GetBitDepthFromString(outBitDepthStr);
 
         // Get the optimized processor.
         OCIO::ConstProcessorRcPtr optProcessor;
@@ -525,8 +410,8 @@ int main(int argc, const char **argv)
             {
                 m.resume();
                 optProcessor = processor->getOptimizedProcessor(inBitDepth,
-                                                                outBitDepth,
-                                                                OCIO::OPTIMIZATION_DEFAULT);
+                                                                inBitDepth,
+                                                                optimFlags);
                 m.pause();
             }
         }
@@ -540,7 +425,7 @@ int main(int argc, const char **argv)
             for(unsigned iter=0; iter<iterations; ++iter)
             {
                 m.resume();
-                gpuProcessor = optProcessor->getOptimizedGPUProcessor(OCIO::OPTIMIZATION_DEFAULT);
+                gpuProcessor = optProcessor->getOptimizedGPUProcessor(optimFlags);
                 m.pause();
             }
         }
@@ -572,8 +457,8 @@ int main(int argc, const char **argv)
             {
                 m.resume();
                 cpuProcessor = optProcessor->getOptimizedCPUProcessor(inBitDepth,
-                                                                      outBitDepth,
-                                                                      OCIO::OPTIMIZATION_DEFAULT);
+                                                                      inBitDepth,
+                                                                      optimFlags);
                 m.pause();
             }
         }
@@ -581,93 +466,163 @@ int main(int argc, const char **argv)
         std::cout << std::endl << std::endl;
         std::cout << "Image processing statistics:" << std::endl << std::endl;
 
+        // Create an arbitrary 4K RGBA image.
+
+        static constexpr size_t width  = 3840;
+        static constexpr size_t height = 2160;
+        static constexpr size_t numChannels = 4;
+
+        std::vector<float> img_f32_ref;
+        std::vector<uint16_t> img_ui16_ref;
+
+        if (inBitDepth == OCIO::BIT_DEPTH_F32)
+        {
+            static constexpr float min = -1.0f;
+            static constexpr float max =  2.0f;
+            static const float range = std::fabs(max - min);
+
+            img_f32_ref.resize(width * height * numChannels);
+
+            const size_t maxElts = img_f32_ref.size();
+            const float step = range / maxElts;
+
+            for (size_t idx = 0; idx < maxElts; ++idx)
+            {
+                img_f32_ref[idx] = min + float(idx) * step;
+            }
+        }
+        else // request an integer image
+        {
+            img_ui16_ref.resize(width * height * numChannels);
+
+            const size_t maxElts = img_ui16_ref.size();
+
+            for (size_t idx = 0; idx < maxElts; ++idx)
+            {
+                img_ui16_ref[idx] = idx % 65536;
+            }
+        }
 
         if(testType==0 || testType==-1)
         {
             // Process the complete image (in place).
 
-            if(inBitDepth==outBitDepth)
+            if (inBitDepth == outBitDepth)
             {
-                CustomMeasure m("Process the complete image (in place):\t\t", iterations);
+                CustomMeasure m("Process the complete image (in place):\t\t\t\t", iterations);
 
                 for(unsigned iter=0; iter<iterations; ++iter)
                 {
-                    ProcessImage(m, cpuProcessor, spec, img);
+                    std::vector<float>    inImg_f32  = img_f32_ref;
+                    std::vector<uint16_t> inImg_ui16 = img_ui16_ref;
+
+                    OCIO::PackedImageDesc imgDesc(inBitDepth == OCIO::BIT_DEPTH_F32
+                                                    ? (void*)&inImg_f32[0] : (void*)&inImg_ui16[0], 
+                                                  width, 
+                                                  height,
+                                                  numChannels,
+                                                  inBitDepth,
+                                                  OCIO::AutoStride,
+                                                  OCIO::AutoStride,
+                                                  OCIO::AutoStride);
+
+                    // Apply the color transformation.
+                    m.resume();
+                    cpuProcessor->apply(imgDesc);
+                    m.pause();
                 }
             }
 
             // Process the complete image with input and output buffers.
 
-            CustomMeasure m("Process the complete image (two buffers):\t", iterations);
-
-            OIIO::TypeDesc fmt = spec.format;
-            if(inBitDepth!=outBitDepth)
             {
-                if(outBitDepth==OCIO::BIT_DEPTH_F32)
-                {
-                    fmt = OIIO::TypeDesc::FLOAT;
-                }
-                else if(outBitDepth==OCIO::BIT_DEPTH_UINT16)
-                {
-                    fmt = OIIO::TypeDesc::UINT16;
-                }
-                else
-                {
-                    throw OCIO::Exception("Unsupported output bit-depth.");
-                }
-            }
+                std::vector<float>    inImg_f32 = img_f32_ref;
+                std::vector<uint16_t> inImg_ui16 = img_ui16_ref;
 
-            OIIO::ImageSpec dstSpec(spec.width, spec.height, spec.nchannels, fmt);
-            OCIO::ImgBuffer dstImg(dstSpec);
-            OCIO::ImageDescRcPtr dstImgDesc = OCIO::CreateImageDesc(dstSpec, dstImg);
+                OCIO::PackedImageDesc inImgDesc(inBitDepth == OCIO::BIT_DEPTH_F32
+                                                    ? (void*)&inImg_f32[0] : (void*)&inImg_ui16[0], 
+                                                width, 
+                                                height,
+                                                numChannels,
+                                                inBitDepth,
+                                                OCIO::AutoStride,
+                                                OCIO::AutoStride,
+                                                OCIO::AutoStride);
 
-            for(unsigned iter=0; iter<iterations; ++iter)
-            {
-                // Always process the same complete image.
-                OCIO::ImgBuffer srcImg(img);
-                OCIO::ImageDescRcPtr srcImgDesc = OCIO::CreateImageDesc(spec, srcImg);
+                std::vector<float> outImg_f32 = img_f32_ref;
+                outImg_f32.resize(outBitDepth == OCIO::BIT_DEPTH_F32 ? width * height * numChannels : 0);
 
-                // Apply the color transformation.
-                m.resume();
-                cpuProcessor->apply(*srcImgDesc, *dstImgDesc);
-                m.pause();
-            }
+                std::vector<uint16_t> outImg_ui16 = img_ui16_ref;
+                outImg_ui16.resize(outBitDepth == OCIO::BIT_DEPTH_UINT16 ? width * height * numChannels : 0);
 
-        }
+                OCIO::PackedImageDesc outImgDesc(outBitDepth == OCIO::BIT_DEPTH_F32 
+                                                    ? (void*)&outImg_f32[0] : (void*)&outImg_ui16[0], 
+                                                 width, 
+                                                 height,
+                                                 numChannels,
+                                                 outBitDepth,
+                                                 OCIO::AutoStride,
+                                                 OCIO::AutoStride,
+                                                 OCIO::AutoStride);
 
-        if((testType==1 || testType==-1) && (inBitDepth==outBitDepth))
-        {
-            // Process line by line.
+                // Use a custom cpu processor as input and output bit depths could be different.
+                auto cpu = optProcessor->getOptimizedCPUProcessor(inBitDepth,
+                                                                  outBitDepth,
+                                                                  optimFlags);
 
-            CustomMeasure m("Process the complete image (in place) but line by line: ", iterations);
-
-            for(unsigned iter=0; iter<iterations; ++iter)
-            {
-                ProcessLines(m, cpuProcessor, spec, img);
-            }
-        }
-
-        if((testType==2 || testType==-1) && inBitDepth==outBitDepth)
-        {
-            // Process pixel per pixel if the image buffer is packed RGBA 32-bit float.
-
-            OCIO::PackedImageDesc imgDesc(img.getBuffer(),
-                                          spec.width,
-                                          spec.height,
-                                          spec.nchannels,
-                                          OCIO::GetBitDepth(spec),
-                                          spec.channel_bytes(),
-                                          spec.pixel_bytes(),
-                                          spec.scanline_bytes());
-
-            if(imgDesc.isRGBAPacked() && imgDesc.isFloat())
-            {
-                CustomMeasure m("Process the complete image (in place) but pixel per pixel:", iterations);
+                CustomMeasure m("Process the complete image (two buffers):\t\t\t", iterations);
 
                 for(unsigned iter=0; iter<iterations; ++iter)
                 {
-                    ProcessPixels(m, cpuProcessor, spec, img);
+                    // Apply the color transformation.
+                    m.resume();
+                    cpu->apply(inImgDesc, outImgDesc);
+                    m.pause();
                 }
+            }
+        }
+
+        if ((testType == 1 || testType == -1) && inBitDepth == outBitDepth)
+        {
+            // Process line by line.
+
+            std::vector<float>    inImg_f32  = img_f32_ref;
+            std::vector<uint16_t> inImg_ui16 = img_ui16_ref;
+
+            OCIO::PackedImageDesc inImgDesc(inBitDepth == OCIO::BIT_DEPTH_F32
+                                                ? (void*)&inImg_f32[0] : (void*)&inImg_ui16[0],
+                                            width, 
+                                            height,
+                                            numChannels,
+                                            inBitDepth,
+                                            OCIO::AutoStride,
+                                            OCIO::AutoStride,
+                                            OCIO::AutoStride);
+
+            CustomMeasure m("Process the complete image (in place) but line by line:\t\t", iterations);
+
+            for(unsigned iter=0; iter<iterations; ++iter)
+            {
+                ProcessLines(m, cpuProcessor, inImgDesc);
+            }
+        }
+
+        if ((testType == 2 || testType == -1) && inBitDepth == outBitDepth && inBitDepth == OCIO::BIT_DEPTH_F32)
+        {
+            // Process pixel per pixel.
+
+            std::vector<float> inImg_f32 = img_f32_ref;
+
+            OCIO::PackedImageDesc inImgDesc((void*)&inImg_f32[0], 
+                                            width, 
+                                            height,
+                                            numChannels);
+
+            CustomMeasure m("Process the complete image (in place) but pixel per pixel:\t", iterations);
+
+            for(unsigned iter=0; iter<iterations; ++iter)
+            {
+                ProcessPixels(m, cpuProcessor, inImgDesc);
             }
         }
 

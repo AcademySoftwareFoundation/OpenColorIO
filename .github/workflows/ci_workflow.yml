@@ -59,13 +59,13 @@ jobs:
       image: aswf/ci-ocio:${{ matrix.vfx-cy }}
     strategy:
       matrix:
-        build: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+        build: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
         include:
           # -------------------------------------------------------------------
           # VFX CY2022 (Python 3.9)
           # -------------------------------------------------------------------
           # Clang, Debug, OpenFX
-          - build: 12
+          - build: 13
             build-type: Debug
             build-shared: 'ON'
             build-docs: 'OFF'
@@ -78,7 +78,7 @@ jobs:
             compiler-desc: Clang 9
             vfx-cy: 2022
           # GCC, no SSE, OpenFX
-          - build: 11
+          - build: 12
             build-type: Release
             build-shared: 'ON'
             build-docs: 'OFF'
@@ -90,15 +90,28 @@ jobs:
             cc-compiler: gcc
             compiler-desc: GCC 9.3.1
             vfx-cy: 2022
-          # GCC, static, docs
-          - build: 10
+          # C++14, GCC, static, docs
+          - build: 11
             build-type: Release
             build-shared: 'OFF'
             build-docs: 'ON'
             build-openfx: 'OFF'
             use-sse: 'ON'
             use-openexr-half: 'OFF'
-            cxx-standard: 17
+            cxx-standard: 14
+            cxx-compiler: g++
+            cc-compiler: gcc
+            compiler-desc: GCC 9.3.1
+            vfx-cy: 2022
+          # C++11, GCC, static
+          - build: 10
+            build-type: Release
+            build-shared: 'OFF'
+            build-docs: 'OFF'
+            build-openfx: 'OFF'
+            use-sse: 'ON'
+            use-openexr-half: 'OFF'
+            cxx-standard: 11
             cxx-compiler: g++
             cc-compiler: gcc
             compiler-desc: GCC 9.3.1
@@ -119,7 +132,7 @@ jobs:
             cc-compiler: clang
             compiler-desc: Clang 9
             vfx-cy: 2021
-          # Clang, static, no SSE, OpenFX
+          # C++14, Clang, static, no SSE, OpenFX
           - build: 8
             build-type: Release
             build-shared: 'OFF'
@@ -127,12 +140,12 @@ jobs:
             build-openfx: 'ON'
             use-sse: 'OFF'
             use-openexr-half: 'ON'
-            cxx-standard: 17
+            cxx-standard: 14
             cxx-compiler: clang++
             cc-compiler: clang
             compiler-desc: Clang 9
             vfx-cy: 2021
-          # GCC, Debug
+          # C++11, GCC, Debug
           - build: 7
             build-type: Debug
             build-shared: 'ON'
@@ -140,7 +153,7 @@ jobs:
             build-openfx: 'OFF'
             use-sse: 'ON'
             use-openexr-half: 'ON'
-            cxx-standard: 17
+            cxx-standard: 11
             cxx-compiler: g++
             cc-compiler: gcc
             compiler-desc: GCC 9.3.1
@@ -148,7 +161,7 @@ jobs:
           # -------------------------------------------------------------------
           # VFX CY2020 (Python 3.7)
           # -------------------------------------------------------------------
-          # Clang, OpenFX
+          # C++14, Clang, OpenFX
           - build: 6
             build-type: Release
             build-shared: 'ON'
@@ -161,7 +174,7 @@ jobs:
             cc-compiler: clang
             compiler-desc: Clang 7
             vfx-cy: 2020
-          # GCC, static, Debug, OpenFX
+          # C++14, GCC, static, Debug, OpenFX
           - build: 5
             build-type: Debug
             build-shared: 'OFF'
@@ -174,7 +187,7 @@ jobs:
             cc-compiler: gcc
             compiler-desc: GCC 6.3.1
             vfx-cy: 2020
-          # GCC, no SSE, docs
+          # C++11, GCC, no SSE, docs
           - build: 4
             build-type: Release
             build-shared: 'ON'
@@ -182,7 +195,7 @@ jobs:
             build-openfx: 'OFF'
             use-sse: 'ON'
             use-openexr-half: 'ON'
-            cxx-standard: 14
+            cxx-standard: 11
             cxx-compiler: g++
             cc-compiler: gcc
             compiler-desc: GCC 6.3.1
@@ -190,7 +203,7 @@ jobs:
           # -------------------------------------------------------------------
           # VFX CY2019 (Python 2.7)
           # -------------------------------------------------------------------
-          # Clang, static
+          # C++11, Clang, static
           - build: 3
             build-type: Release
             build-shared: 'OFF'
@@ -204,7 +217,7 @@ jobs:
             cc-compiler: clang
             compiler-desc: Clang 7
             vfx-cy: 2019
-          # Clang, Debug, no SSE
+          # C++11, Clang, Debug, no SSE
           - build: 2
             build-type: Debug
             build-shared: 'ON'
@@ -218,7 +231,7 @@ jobs:
             cc-compiler: clang
             compiler-desc: Clang 7
             vfx-cy: 2019
-          # GCC, OpenFX
+          # C++11, GCC, OpenFX
           - build: 1
             build-type: Release
             build-shared: 'ON'
