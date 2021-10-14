@@ -410,7 +410,7 @@ int main(int argc, const char **argv)
             {
                 m.resume();
                 optProcessor = processor->getOptimizedProcessor(inBitDepth,
-                                                                inBitDepth,
+                                                                outBitDepth,
                                                                 optimFlags);
                 m.pause();
             }
@@ -457,7 +457,7 @@ int main(int argc, const char **argv)
             {
                 m.resume();
                 cpuProcessor = optProcessor->getOptimizedCPUProcessor(inBitDepth,
-                                                                      inBitDepth,
+                                                                      outBitDepth,
                                                                       optimFlags);
                 m.pause();
             }
