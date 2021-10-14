@@ -7,6 +7,7 @@
 #include "apputils/argparse.h"
 #include "utils/StringUtils.h"
 
+#include <chrono>
 #include <cmath>
 #include <limits>
 #include <iostream>
