@@ -174,6 +174,11 @@ std::string getTexSample(GpuLanguage lang,
             throw Exception("Unsupported by the Open Shading language (OSL) translation.");
         }
 
+        case GPU_LANGUAGE_METAL:
+        {
+            kw << textureName << ".sample(" << samplerName << ", " << coords << ")";
+            break;
+        }
         default:
         {
             throw Exception("Unknown GPU shader language.");
