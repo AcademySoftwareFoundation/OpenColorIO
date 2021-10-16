@@ -55,6 +55,8 @@ std::string getVecKeyword(GpuLanguage lang)
             kw << "half" << N;
             break;
         }
+
+        case GPU_LANGUAGE_METAL:
         case GPU_LANGUAGE_HLSL_DX11:
         {
             kw << "float" << N;
@@ -111,6 +113,17 @@ void getTexDecl(GpuLanguage lang,
         case LANGUAGE_OSL_1:
         {
             throw Exception("Unsupported by the Open Shading language (OSL) translation.");
+        }
+        case GPU_LANGUAGE_METAL:
+        {
+            std::ostringstream t;
+            t << "texture" << N << "d<float> " << textureName << ";";
+            textureDecl = t.str();
+
+            t.str("");
+            t << "sampler" << " " << samplerName << ";";
+            samplerDecl = t.str();
+            break;
         }
 
         default:
@@ -861,6 +874,12 @@ std::string matrix4Mul(const T * m4x4, const std::string & vecName, GpuLanguage 
                << ")";
             break;
         }
+        case GPU_LANGUAGE_METAL:
+        {
+            //TODO IHH - make sure the use case requires the transpose
+            kw << "float4x4(" << getMatrixValues<T, 4>(m4x4, lang, true) << ") * " << vecName;
+            break;
+        }
 
         default:
         {
@@ -895,6 +914,7 @@ std::string GpuShaderText::lerp(const std::string & x,
         case GPU_LANGUAGE_GLSL_4_0:
         case GPU_LANGUAGE_GLSL_ES_1_0:
         case GPU_LANGUAGE_GLSL_ES_3_0:
+        case GPU_LANGUAGE_METAL:
         {
             kw << "mix(" << x << ", " << y << ", " << a << ")";
             break;
@@ -931,6 +951,7 @@ std::string GpuShaderText::float3GreaterThan(const std::string & a,
             break;
         }
         case LANGUAGE_OSL_1:
+        case GPU_LANGUAGE_METAL:
         case GPU_LANGUAGE_HLSL_DX11:
         {
             kw << float3Keyword() << "(" 
@@ -964,6 +985,7 @@ std::string GpuShaderText::float4GreaterThan(const std::string & a,
             kw << float4Keyword() << "(greaterThan( " << a << ", " << b << "))";
             break;
         }
+        case GPU_LANGUAGE_METAL:
         case GPU_LANGUAGE_HLSL_DX11:
         {
             kw << float4Keyword() << "(" 
@@ -1015,6 +1037,12 @@ std::string GpuShaderText::atan2(const std::string & y,
             kw << "atan2(" << x << ", " << y << ")";
             break;
         }
+            
+        case GPU_LANGUAGE_METAL:
+        {
+            kw << "atan2(" << y << ", " << x << ")";
+            break;
+        }
 
         default:
         {
@@ -1045,6 +1073,16 @@ std::string GpuShaderText::sign(const std::string & v) const
             // The challenge is only to return a vector4 type instead of a color4.
             kw << "sign(" << float4Const(v + ".rgb.r", v + ".rgb.g",
                                          v + ".rgb.b", v + ".a") << ");";
+            break;
+        }
+            
+        case GPU_LANGUAGE_METAL:
+        {
+            kw << "float4( (" + v + ".x < 0 ? -1 : (" + v + ".x == 0 ? 0 : +1)),"
+               <<        " (" + v + ".y < 0 ? -1 : (" + v + ".y == 0 ? 0 : +1)),"
+               <<        " (" + v + ".z < 0 ? -1 : (" + v + ".z == 0 ? 0 : +1)),"
+               <<        " (" + v + ".w < 0 ? -1 : (" + v + ".w == 0 ? 0 : +1))"
+               << " );";
             break;
         }
 
