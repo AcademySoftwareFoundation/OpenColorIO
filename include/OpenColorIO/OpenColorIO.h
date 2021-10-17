@@ -2880,6 +2880,9 @@ public:
                               Interpolation interpolation,
                               const float * values) = 0;
 
+    virtual void addToClassWrapperHeaderShaderCode(const char * shaderCode);
+    virtual void addToClassWrapperFooterShaderCode(const char * shaderCode);
+    
     // Methods to specialize parts of a OCIO shader program
     virtual void addToDeclareShaderCode(const char * shaderCode);
     virtual void addToHelperShaderCode(const char * shaderCode);
@@ -2895,11 +2898,13 @@ public:
      *   to change some parts. Some product integrations add the color processing
      *   within a client shader program, imposing constraints requiring this flexibility.
      */
-    virtual void createShaderText(const char * shaderDeclarations,
+    virtual void createShaderText(const char * shaderClassWrapperHeader,
+                                  const char * shaderDeclarations,
                                   const char * shaderHelperMethods,
                                   const char * shaderFunctionHeader,
                                   const char * shaderFunctionBody,
-                                  const char * shaderFunctionFooter);
+                                  const char * shaderFunctionFooter,
+                                  const char * shaderClassWrapperFooter);
 
     virtual void finalize();
     

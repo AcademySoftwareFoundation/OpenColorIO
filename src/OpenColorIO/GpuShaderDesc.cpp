@@ -30,11 +30,13 @@ public:
     mutable std::string m_cacheID;
     mutable Mutex m_cacheIDMutex;
 
+    std::string m_classWrapHeader;
     std::string m_declarations;
     std::string m_helperMethods;
     std::string m_functionHeader;
     std::string m_functionBody;
     std::string m_functionFooter;
+    std::string m_classWrapFooter;
 
     std::string m_shaderCode;
     std::string m_shaderCodeID;
@@ -239,6 +241,24 @@ const char * GpuShaderCreator::getCacheID() const noexcept
     return getImpl()->m_cacheID.c_str();
 }
 
+void GpuShaderCreator::addToClassWrapperHeaderShaderCode(const char * shaderCode)
+{
+    if(getImpl()->m_classWrapHeader.empty())
+    {
+        getImpl()->m_classWrapHeader += "\n// Declaration of class wrapper\n\n";
+    }
+    getImpl()->m_classWrapHeader += (shaderCode && *shaderCode) ? shaderCode : "";
+}
+
+void GpuShaderCreator::addToClassWrapperFooterShaderCode(const char * shaderCode)
+{
+    if(getImpl()->m_classWrapFooter.empty())
+    {
+        getImpl()->m_classWrapFooter += "\n// close class wrapper\n\n";
+    }
+    getImpl()->m_classWrapFooter += (shaderCode && *shaderCode) ? shaderCode : "";
+}
+
 void GpuShaderCreator::addToDeclareShaderCode(const char * shaderCode)
 {
     if(getImpl()->m_declarations.empty())
@@ -272,21 +292,27 @@ void GpuShaderCreator::addToFunctionFooterShaderCode(const char * shaderCode)
     getImpl()->m_functionFooter += (shaderCode && *shaderCode) ? shaderCode : "";
 }
 
-void GpuShaderCreator::createShaderText(const char * shaderDeclarations,
+void GpuShaderCreator::createShaderText(const char * shaderClassWrapperHeader,
+                                        const char * shaderDeclarations,
                                         const char * shaderHelperMethods,
                                         const char * shaderFunctionHeader,
                                         const char * shaderFunctionBody,
-                                        const char * shaderFunctionFooter)
+                                        const char * shaderFunctionFooter,
+                                        const char * shaderClassWrapperFooter
+                                        )
 {
     AutoMutex lock(getImpl()->m_cacheIDMutex);
 
     getImpl()->m_shaderCode.clear();
     
+    getImpl()->m_shaderCode += (shaderClassWrapperHeader   && *shaderClassWrapperHeader)   ? shaderClassWrapperHeader   : "";
     getImpl()->m_shaderCode += (shaderDeclarations   && *shaderDeclarations)   ? shaderDeclarations   : "";
     getImpl()->m_shaderCode += (shaderHelperMethods  && *shaderHelperMethods)  ? shaderHelperMethods  : "";
     getImpl()->m_shaderCode += (shaderFunctionHeader && *shaderFunctionHeader) ? shaderFunctionHeader : "";
     getImpl()->m_shaderCode += (shaderFunctionBody   && *shaderFunctionBody)   ? shaderFunctionBody   : "";
     getImpl()->m_shaderCode += (shaderFunctionFooter && *shaderFunctionFooter) ? shaderFunctionFooter : "";
+    getImpl()->m_shaderCode += (shaderClassWrapperFooter && *shaderClassWrapperFooter) ? shaderClassWrapperFooter : "";
+
 
     getImpl()->m_shaderCodeID = CacheIDHash(getImpl()->m_shaderCode.c_str(),
                                             unsigned(getImpl()->m_shaderCode.length()));
@@ -392,11 +418,13 @@ void GpuShaderCreator::finalize()
     }
 
 
-    createShaderText(getImpl()->m_declarations.c_str(),
+    createShaderText(getImpl()->m_classWrapHeader.c_str(),
+                     getImpl()->m_declarations.c_str(),
                      getImpl()->m_helperMethods.c_str(),
                      getImpl()->m_functionHeader.c_str(),
                      getImpl()->m_functionBody.c_str(),
-                     getImpl()->m_functionFooter.c_str());
+                     getImpl()->m_functionFooter.c_str(),
+                     getImpl()->m_classWrapFooter.c_str());
 
 
     if(IsDebugLoggingEnabled())

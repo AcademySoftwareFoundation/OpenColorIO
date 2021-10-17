@@ -24,6 +24,35 @@ namespace OCIO_NAMESPACE
 namespace
 {
 
+void WriteShaderClassWrapperHeader(GpuShaderCreatorRcPtr & shaderCreator)
+{
+    GpuShaderText ss(shaderCreator->getLanguage());
+    bool hasClassWrapper = ss.hasClassWrapper();
+    if(!hasClassWrapper)
+    {
+        return;
+    }
+    std::string className = std::string(shaderCreator->getResourcePrefix()) + "ClassWrapper";
+    ss.newLine();
+    ss.newLine() << "// Declaration of the OCIO class wrapper function";
+    ss.newLine();
+    ss.newLine() << ss.classWrapperHeader(className);
+    shaderCreator->addToClassWrapperHeaderShaderCode(ss.string().c_str());
+}
+
+void WriteShaderClassWrapperFooter(GpuShaderCreatorRcPtr & shaderCreator)
+{
+    GpuShaderText ss(shaderCreator->getLanguage());
+    bool hasClassWrapper = ss.hasClassWrapper();
+    if(!hasClassWrapper)
+    {
+        return;
+    }
+    ss.newLine();
+    ss.newLine() << ss.classWrapperFooter();
+    shaderCreator->addToClassWrapperFooterShaderCode(ss.string().c_str());
+}
+
 void WriteShaderHeader(GpuShaderCreatorRcPtr & shaderCreator)
 {
     const std::string fcnName(shaderCreator->getFunctionName());
@@ -106,7 +135,8 @@ void GPUProcessor::Impl::extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCrea
     {
         op->extractGpuShaderInfo(shaderCreator);
     }
-
+    WriteShaderClassWrapperHeader(shaderCreator);
+    WriteShaderClassWrapperFooter(shaderCreator);
     WriteShaderHeader(shaderCreator);
     WriteShaderFooter(shaderCreator);
 

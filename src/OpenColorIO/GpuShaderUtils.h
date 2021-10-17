@@ -212,6 +212,13 @@ public:
 
     // Get the string for taking the sign of a vector.
     std::string sign(const std::string & v) const;
+    
+    //Checks if the given language requires us to create a class wrapper
+    bool hasClassWrapper() const;
+    
+    std::string classWrapperHeader(const std::string &className) const;
+    
+    std::string classWrapperFooter() const;
 
     friend class GpuShaderLine;
 

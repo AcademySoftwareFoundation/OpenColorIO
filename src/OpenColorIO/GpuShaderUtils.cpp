@@ -1155,5 +1155,27 @@ void AddLogToLinShader(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & st
     st.newLine() << "}";
 }
 
+bool GpuShaderText::hasClassWrapper() const {
+    return m_lang == GPU_LANGUAGE_METAL;
+}
+
+std::string GpuShaderText::classWrapperHeader(const std::string &className) const {
+    if (m_lang != GPU_LANGUAGE_METAL)
+    {
+        return std::string();
+    }
+    std::ostringstream kw;
+    kw << "class " << className << std::endl;
+    kw << "{" << std::endl;
+    return kw.str();
+}
+
+std::string GpuShaderText::classWrapperFooter() const {
+    if (m_lang != GPU_LANGUAGE_METAL)
+    {
+        return std::string();
+    }
+    return "}\n";
+}
 } // namespace OCIO_NAMESPACE
 
