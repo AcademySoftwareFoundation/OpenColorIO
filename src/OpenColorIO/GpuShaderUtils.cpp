@@ -9,6 +9,12 @@
 #include "MathUtils.h"
 #include "utils/StringUtils.h"
 
+#include <math.h>
+#include <vector>
+#include <iomanip>
+#include <string>
+
+
 
 namespace OCIO_NAMESPACE
 {
@@ -342,6 +348,7 @@ std::string GpuShaderText::floatKeywordConst() const
         case GPU_LANGUAGE_GLSL_ES_1_0:
         case GPU_LANGUAGE_GLSL_ES_3_0:
         case GPU_LANGUAGE_HLSL_DX11:
+        case GPU_LANGUAGE_METAL:
         {
             str += "const";
             str += " ";
@@ -465,6 +472,7 @@ void GpuShaderText::declareFloatArrayConst(const std::string & name, int size, c
         case LANGUAGE_OSL_1:
         case GPU_LANGUAGE_CG:
         case GPU_LANGUAGE_HLSL_DX11:
+        case GPU_LANGUAGE_METAL:
         {
             nl << floatKeywordConst() << " " << name << "[" << size << "] = {";
             for (int i = 0; i < size; ++i)
@@ -516,6 +524,7 @@ void GpuShaderText::declareIntArrayConst(const std::string & name, int size, con
             break;
         }
         case GPU_LANGUAGE_HLSL_DX11:
+        case GPU_LANGUAGE_METAL:
         {
             nl << "const " << intKeyword() << " " << name << "[" << size << "] = {";
             for (int i = 0; i < size; ++i)
@@ -737,6 +746,70 @@ std::string GpuShaderText::getSamplerName(const std::string& textureName)
     return textureName + "Sampler";
 }
 
+std::string GpuShaderText::getTexType(unsigned int dimensions, const std::string &textureFormat) const
+{
+    if (m_lang != GPU_LANGUAGE_METAL)
+    {
+        throw Exception("Not implemented for GPU shader language");
+    }
+    if(dimensions > 3 || dimensions == 0)
+    {
+        throw Exception(("Texture dimensions must be 3 or less and more than 0. Passed in was dimensions: " + std::to_string(dimensions)).c_str());
+    }
+    if(textureFormat.empty())
+    {
+        throw Exception("Texture format must contain at least one character");
+    }
+
+    std::ostringstream t;
+    t << "texture" << dimensions << "d<"+textureFormat+">";
+    return t.str();
+}
+
+void GpuShaderText::getTexParam(const std::string &textureName,
+                 const std::string &textureFormat,
+                 std::string &textureParameterOut,
+                 unsigned int dimensions
+) const
+{
+    if (m_lang != GPU_LANGUAGE_METAL)
+    {
+        throw Exception("Not implemented for GPU shader language");
+    }
+    if (textureName.length() < 1)
+    {
+        throw Exception("Name of texture variable must be at least 1 character");
+    }
+    std::ostringstream t;
+    t << getTexType(dimensions, textureFormat) << " " << textureName;
+    textureParameterOut = t.str();
+}
+
+TextureDimensions GpuShaderText::getDimensions(std::string textureType) const
+{
+    if (m_lang != GPU_LANGUAGE_METAL)
+    {
+         throw Exception("getDimensions is currently only supported for Metal");
+    }
+
+    // here we assume the keyword textureXD<T> to be the Metal keyword where X=dimensions
+    if(textureType[8] == 'd')
+    {
+        switch (textureType[7])
+         {
+             case '1':
+                 return TextureDimensions::D1;
+             case '2':
+                 return TextureDimensions::D2;
+             case '3':
+                 return TextureDimensions::D3;
+         }
+     }
+    
+    throw Exception(("Unable to parse dimensions from textureType. Invalid string passed in: " + textureType).c_str());
+}
+
+
 void GpuShaderText::declareTex1D(const std::string & textureName)
 {
     std::string textureDecl, samplerDecl;
@@ -876,7 +949,6 @@ std::string matrix4Mul(const T * m4x4, const std::string & vecName, GpuLanguage 
         }
         case GPU_LANGUAGE_METAL:
         {
-            //TODO IHH - make sure the use case requires the transpose
             kw << "float4x4(" << getMatrixValues<T, 4>(m4x4, lang, true) << ") * " << vecName;
             break;
         }
@@ -1155,27 +1227,92 @@ void AddLogToLinShader(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & st
     st.newLine() << "}";
 }
 
-bool GpuShaderText::hasClassWrapper() const {
-    return m_lang == GPU_LANGUAGE_METAL;
-}
-
-std::string GpuShaderText::classWrapperHeader(const std::string &className) const {
-    if (m_lang != GPU_LANGUAGE_METAL)
-    {
-        return std::string();
+    bool GpuShaderText::hasClassWrapper() const {
+        return m_lang == GPU_LANGUAGE_METAL;
     }
-    std::ostringstream kw;
-    kw << "class " << className << std::endl;
-    kw << "{" << std::endl;
-    return kw.str();
-}
-
-std::string GpuShaderText::classWrapperFooter() const {
-    if (m_lang != GPU_LANGUAGE_METAL)
-    {
-        return std::string();
+    
+    std::string GpuShaderText::classWrapperHeader(const std::string &className, const std::vector<TextureInfo> &textureInfo) const {
+        if (m_lang != GPU_LANGUAGE_METAL)
+        {
+            return std::string();
+        }
+        
+        if(className.length() < 1)
+        {
+            throw Exception("Class name must include at least 1 character");
+        }
+        if(isdigit(className[0]))
+        {
+            throw Exception(("Class name must not start with a digit. Invalid className passed in: " + className).c_str());
+        }
+        
+        std::ostringstream kw;
+        kw << "class " << className << std::endl;
+        kw << "{" << std::endl << std::endl;
+        kw << className <<"(";
+        std::string texParamOut;
+        for(auto it = textureInfo.begin(); it != textureInfo.end(); ++it)
+        {
+            getTexParam(it->textureName, "float", texParamOut, (int)it->textureDimensions);
+            kw << texParamOut;
+            if(std::next(it) != textureInfo.end() && textureInfo.size() > 1)
+            {
+                kw << ", ";
+            }
+        }
+        kw << ")" << std::endl << "{" << std::endl;
+        for(const auto & it : textureInfo)
+        {
+            kw << "\tthis->" << it.textureName << " = " << it.textureName << ";" << std::endl;
+        }
+        kw <<"}";
+        return kw.str();
     }
-    return "}\n";
-}
+    
+    std::string GpuShaderText::classWrapperFooter(const std::string &className, const std::vector<TextureInfo> &textureInfo,
+                                                  const std::string &ocioFunctionName) const {
+
+        if (m_lang != GPU_LANGUAGE_METAL)
+        {
+            return std::string();
+        }
+        if(className.length() < 1)
+        {
+            throw Exception("Class name must include at least 1 character");
+        }
+        if(isdigit(className[0]))
+        {
+            throw Exception(("Class name must not start with a digit. Invalid className passed in: " + className).c_str());
+        }
+
+        std::ostringstream kw;
+        kw << "};" << std::endl << std::endl;
+        
+        kw << float4Keyword() << " " << ocioFunctionName<< "(";
+        std::string texParamOut;
+        for(auto it = textureInfo.begin(); it != textureInfo.end(); ++it)
+        {
+            getTexParam(it->textureName, "float", texParamOut, (int)it->textureDimensions);
+            kw << texParamOut;
+            kw << ", ";
+        }
+        kw << float4Keyword() << " inPixel);" << std::endl;
+        kw << "{" << std::setw(4) << std::endl;
+        kw << "\treturn " << className << "(";
+
+        for(auto it = textureInfo.begin(); it != textureInfo.end(); ++it)
+        {
+            kw << it->textureName;
+            if(it != textureInfo.begin() && std::next(it) != textureInfo.end())
+            {
+                kw << ", ";
+            }
+        }
+        
+        kw << ")." << "(inPixel);" << std::endl;
+        kw << "}";
+        
+        return kw.str();
+    }
 } // namespace OCIO_NAMESPACE
 

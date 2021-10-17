@@ -2,6 +2,8 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 #include <sstream>
+#include <utility>
+#include <vector>
 
 #include <OpenColorIO/OpenColorIO.h>
 
@@ -37,6 +39,7 @@ public:
     std::string m_functionBody;
     std::string m_functionFooter;
     std::string m_classWrapFooter;
+    std::vector<const FunctionParam> m_classWrapFunctionParams;
 
     std::string m_shaderCode;
     std::string m_shaderCodeID;
@@ -107,6 +110,10 @@ void GpuShaderCreator::setLanguage(GpuLanguage lang) noexcept
 {
     AutoMutex lock(getImpl()->m_cacheIDMutex);
     getImpl()->m_language = lang;
+    if(lang == GPU_LANGUAGE_METAL)
+    {
+        getImpl()->m_functionName = "Display";
+    }
     getImpl()->m_cacheID.clear();
 }
 
@@ -241,6 +248,11 @@ const char * GpuShaderCreator::getCacheID() const noexcept
     return getImpl()->m_cacheID.c_str();
 }
 
+void GpuShaderCreator::addToClassWrapperFunctionParameter(const char * type, const char * paramName)
+{
+    getImpl()->m_classWrapFunctionParams.push_back({{type}, {paramName}});
+}
+
 void GpuShaderCreator::addToClassWrapperHeaderShaderCode(const char * shaderCode)
 {
     if(getImpl()->m_classWrapHeader.empty())
@@ -290,6 +302,11 @@ void GpuShaderCreator::addToFunctionHeaderShaderCode(const char * shaderCode)
 void GpuShaderCreator::addToFunctionFooterShaderCode(const char * shaderCode)
 {
     getImpl()->m_functionFooter += (shaderCode && *shaderCode) ? shaderCode : "";
+}
+
+    const std::vector<const FunctionParam>& GpuShaderCreator::getClassWrapperFunctionParameters() const
+{
+    return getImpl()->m_classWrapFunctionParams;
 }
 
 void GpuShaderCreator::createShaderText(const char * shaderClassWrapperHeader,

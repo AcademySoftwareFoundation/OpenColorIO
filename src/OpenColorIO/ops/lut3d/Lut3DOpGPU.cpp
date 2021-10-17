@@ -53,6 +53,12 @@ void GetLut3DGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator, ConstLut3DO
 
     {
         GpuShaderText ss(shaderCreator->getLanguage());
+        
+        if (shaderCreator->getLanguage() == GPU_LANGUAGE_METAL)
+        {
+            auto texType = ss.getTexType(3, "float");
+            shaderCreator->addToClassWrapperFunctionParameter(texType.c_str(), name.c_str());
+        }
         ss.indent();
 
         ss.newLine() << "";

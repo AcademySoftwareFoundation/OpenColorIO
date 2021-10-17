@@ -2694,6 +2694,14 @@ private:
     PlanarImageDesc& operator= (const PlanarImageDesc &);
 };
 
+struct FunctionParam
+{
+    FunctionParam(std::string type, std::string name) : type(std::move(type)), name(std::move(name)) {}
+
+    const std::string type;
+    const std::string name;
+};
+
 
 ///////////////////////////////////////////////////////////////////////////
 // GpuShaderCreator
@@ -2880,6 +2888,7 @@ public:
                               Interpolation interpolation,
                               const float * values) = 0;
 
+    virtual void addToClassWrapperFunctionParameter(const char * type, const char * paramName);
     virtual void addToClassWrapperHeaderShaderCode(const char * shaderCode);
     virtual void addToClassWrapperFooterShaderCode(const char * shaderCode);
     
@@ -2889,6 +2898,8 @@ public:
     virtual void addToFunctionHeaderShaderCode(const char * shaderCode);
     virtual void addToFunctionShaderCode(const char * shaderCode);
     virtual void addToFunctionFooterShaderCode(const char * shaderCode);
+    //!cpp:function::
+    virtual const std::vector<const FunctionParam>& getClassWrapperFunctionParameters() const;
 
     /**
      * \brief Create the OCIO shader program

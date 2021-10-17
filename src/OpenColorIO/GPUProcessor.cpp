@@ -24,6 +24,21 @@ namespace OCIO_NAMESPACE
 namespace
 {
 
+void TextureInfoFromParams(const GpuShaderCreatorRcPtr &shaderCreator, GpuShaderText &shaderText,
+                           std::vector<TextureInfo> &textureInfoses) {
+    const std::vector<const FunctionParam> &functionParams = shaderCreator->getClassWrapperFunctionParameters();
+    for(const auto &fParam : functionParams)
+    {
+        TextureDimensions dimensions = shaderText.getDimensions(fParam.type);
+        textureInfoses.emplace_back(TextureInfo{fParam.name, dimensions});
+    }
+}
+
+void GetClassWrapperName(GpuShaderCreatorRcPtr & shaderCreator, std::string &name)
+{
+    name = "OCIO";
+}
+
 void WriteShaderClassWrapperHeader(GpuShaderCreatorRcPtr & shaderCreator)
 {
     GpuShaderText ss(shaderCreator->getLanguage());
@@ -32,11 +47,12 @@ void WriteShaderClassWrapperHeader(GpuShaderCreatorRcPtr & shaderCreator)
     {
         return;
     }
-    std::string className = std::string(shaderCreator->getResourcePrefix()) + "ClassWrapper";
+    std::string className;
+    GetClassWrapperName(shaderCreator, className);
+    std::vector<TextureInfo> textureInfoses;
+    TextureInfoFromParams(shaderCreator, ss, textureInfoses);
+    ss.newLine() << ss.classWrapperHeader(className, textureInfoses);
     ss.newLine();
-    ss.newLine() << "// Declaration of the OCIO class wrapper function";
-    ss.newLine();
-    ss.newLine() << ss.classWrapperHeader(className);
     shaderCreator->addToClassWrapperHeaderShaderCode(ss.string().c_str());
 }
 
@@ -49,7 +65,12 @@ void WriteShaderClassWrapperFooter(GpuShaderCreatorRcPtr & shaderCreator)
         return;
     }
     ss.newLine();
-    ss.newLine() << ss.classWrapperFooter();
+    std::string className;
+    GetClassWrapperName(shaderCreator, className);
+
+    std::vector<TextureInfo> textureInfoses;
+    TextureInfoFromParams(shaderCreator, ss, textureInfoses);
+    ss.newLine() << ss.classWrapperFooter(className, textureInfoses, shaderCreator->getFunctionName());
     shaderCreator->addToClassWrapperFooterShaderCode(ss.string().c_str());
 }
 
@@ -135,6 +156,7 @@ void GPUProcessor::Impl::extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCrea
     {
         op->extractGpuShaderInfo(shaderCreator);
     }
+
     WriteShaderClassWrapperHeader(shaderCreator);
     WriteShaderClassWrapperFooter(shaderCreator);
     WriteShaderHeader(shaderCreator);
