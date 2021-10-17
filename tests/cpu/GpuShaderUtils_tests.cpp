@@ -132,7 +132,7 @@ OCIO_ADD_TEST(GpuShaderUtils, class_footer_header_no_textures)
     std::string classWrapper = ss.classWrapperFooter("className", {}, "OCIODisplay");
     std::string expected =
         "};\n\n"
-        "float4 OCIODisplay(float4 inPixel);\n"
+        "float4 OCIODisplay(float4 inPixel)\n"
         "{\n"
             "\treturn className().(inPixel);\n"
         "}";
@@ -148,7 +148,7 @@ OCIO_ADD_TEST(GpuShaderUtils, class_wrapper_footer_1_texture)
     std::string classWrapper = ss.classWrapperFooter("className", textureInfo,"OCIODisplay");
     std::string expected =
         "};\n\n"
-        "float4 OCIODisplay(texture2d<float> texName, float4 inPixel);\n"
+        "float4 OCIODisplay(texture2d<float> texName, float4 inPixel)\n"
         "{\n"
             "\treturn className(texName).(inPixel);\n"
         "}";
@@ -165,7 +165,7 @@ OCIO_ADD_TEST(GpuShaderUtils, class_wrapper_footer_2_texture)
     std::string classWrapper = ss.classWrapperFooter("className", textureInfo, "OCIODisplay");
     std::string expected =
         "};\n\n"
-        "float4 OCIODisplay(texture2d<float> texName1, texture2d<float> texName2, float4 inPixel);\n"
+        "float4 OCIODisplay(texture2d<float> texName1, texture2d<float> texName2, float4 inPixel)\n"
         "{\n"
             "\treturn className(texName1texName2).(inPixel);\n"
         "}";

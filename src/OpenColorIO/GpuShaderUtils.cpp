@@ -1296,7 +1296,7 @@ void AddLogToLinShader(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & st
             kw << texParamOut;
             kw << ", ";
         }
-        kw << float4Keyword() << " inPixel);" << std::endl;
+        kw << float4Keyword() << " inPixel)" << std::endl;
         kw << "{" << std::setw(4) << std::endl;
         kw << "\treturn " << className << "(";
 

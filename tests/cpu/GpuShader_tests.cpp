@@ -264,7 +264,7 @@ colorspaces:
             "}\n\n"
             "// close class wrapper\n\n\n"
         "};\n\n"
-        "float4 Display(float4 inPixel);\n"
+        "float4 Display(float4 inPixel)\n"
         "{\n"
             "\treturn OCIO().(inPixel);\n"
         "}\n";
