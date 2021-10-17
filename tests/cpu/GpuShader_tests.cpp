@@ -271,3 +271,54 @@ colorspaces:
         OCIO_CHECK_EQUAL(expected, text);
     }
 }
+
+OCIO_ADD_TEST(GpuShader, MetalLutTest2)
+{
+    // default config should be set to "OCIO_CONFIGS/aces_1.0.3/config.ocio"
+    OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
+
+    OCIO::DisplayViewTransformRcPtr transform = OCIO::DisplayViewTransform::Create();
+    auto processor = config->getProcessor("out_dcdm", "out_p3d60");
+    
+    const unsigned edgelen = 2;
+    auto gpuProcessor = processor->getOptimizedLegacyGPUProcessor(OpenColorIO_v2_1::OPTIMIZATION_ALL, edgelen);
+    
+    auto shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
+    shaderDesc->setLanguage(OCIO::GPU_LANGUAGE_METAL);
+    gpuProcessor->extractGpuShaderInfo(shaderDesc);
+    const std::string text = shaderDesc->getShaderText();;
+    const std::string expected =
+    "\n"
+    "// Declaration of class wrapper\n\n"
+    "class OCIO\n"
+    "{\n\n"
+        "OCIO(texture3d<float> ocio_lut3d_0)\n"
+        "{\n"
+            "\tthis->ocio_lut3d_0 = ocio_lut3d_0;\n"
+        "}\n\n\n"
+
+        "// Declaration of all variables\n\n"
+        "texture3d<float> ocio_lut3d_0;\n"
+        "sampler ocio_lut3d_0Sampler;\n\n"
+        
+        "// Declaration of the OCIO shader function\n\n"
+        "float4 Display(float4 inPixel)\n"
+        "{\n"
+          "  float4 outColor = inPixel;\n"
+          "  \n"
+          "  // Add LUT 3D processing for ocio_lut3d_0\n"
+          "  \n"
+          "  float3 ocio_lut3d_0_coords = (outColor.zyx * float3(1., 1., 1.) + float3(0.5, 0.5, 0.5)) / float3(2., 2., 2.);\n"
+          "  outColor.rgb = ocio_lut3d_0.sample(ocio_lut3d_0Sampler, ocio_lut3d_0_coords).rgb;\n\n"
+          "  return outColor;\n"
+        "}\n\n"
+        "// close class wrapper\n\n\n"
+    "};\n\n"
+
+    "float4 Display(texture3d<float> ocio_lut3d_0, float4 inPixel)\n"
+    "{\n"
+        "\treturn OCIO(ocio_lut3d_0).(inPixel);\n"
+    "}\n";
+
+    OCIO_CHECK_EQUAL(expected, text);
+}
