@@ -192,3 +192,63 @@ OCIO_ADD_TEST(GpuShader, generic_shader)
         OCIO_CHECK_EQUAL(fragText, shaderDesc->getShaderText());
     }
 }
+
+OCIO_ADD_TEST(GpuShader, MetalLutTest)
+{
+    //expect default config
+    OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
+
+    OCIO::DisplayViewTransformRcPtr transform = OCIO::DisplayViewTransform::Create();
+    auto processor = config->getProcessor("dt16", "p3dci8");
+    auto gpuProcessor = processor->getDefaultGPUProcessor();
+
+    const unsigned edgelen = 2;
+    auto shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
+
+    shaderDesc->setLanguage(OCIO::GPU_LANGUAGE_METAL);
+
+    gpuProcessor->extractGpuShaderInfo(shaderDesc);
+    const std::string text = shaderDesc->getShaderText();;
+    const std::string expected = R"(
+// Declaration of class wrapper
+
+class OCIO
+{
+
+OCIO(texture3d<float> ocio_lut3d_0)
+{
+	this->ocio_lut3d_0 = ocio_lut3d_0;
+}
+
+
+// Declaration of all variables
+
+texture3d<float> ocio_lut3d_0;
+sampler ocio_lut3d_0Sampler;
+
+// Declaration of the OCIO shader function
+
+float4 Display(in float4 inPixel)
+{
+  float4 outColor = inPixel;
+  
+  // Add a LUT 3D processing for ocio_lut3d_0
+  
+  float3 ocio_lut3d_0_coords = (outColor.zyx * float3(1., 1., 1.) + float3(0.5, 0.5, 0.5)) / float3(2., 2., 2.);
+  outColor.rgb = ocio_lut3d_0.sample(ocio_lut3d_0Sampler, ocio_lut3d_0_coords).rgb;
+
+  return outColor;
+}
+
+// close class wrapper
+
+
+};
+
+float4 Display(texture3d<float> ocio_lut3d_0, float4 inPixel);
+{
+	return OCIO(ocio_lut3d_0).(inPixel);
+}
+)";
+OCIO_CHECK_EQUAL(expected, text);
+}
