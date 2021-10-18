@@ -52,12 +52,21 @@ bool Getenv(const char * name, std::string & value)
         return false;
     }
 
-#if defined(_WIN32) && defined(UNICODE)
-    std::wstring name_u16 = Utf8ToUtf16(name);
-    if(uint32_t size = GetEnvironmentVariable(name_u16.c_str(), nullptr, 0))
+#if defined(_WIN32)
+    // Define working strings, converting to UTF-16 if necessary
+#ifdef UNICODE
+    std::wstring name_str = Utf8ToUtf16(name);
+    std::wstring value_str;
+#else
+    std::string name_str = name;
+    std::string value_str;
+#endif
+
+    if(uint32_t size = GetEnvironmentVariable(name_str.c_str(), nullptr, 0))
     {
-        std::wstring value_u16(size, 0);
-        GetEnvironmentVariable(name_u16.c_str(), &value_u16[0], size);
+        value_str.resize(size);
+
+        GetEnvironmentVariable(name_str.c_str(), &value_str[0], size);
 
         // GetEnvironmentVariable is designed for raw pointer strings and therefore requires that
         // the destination buffer be long enough to place a null terminator at the end of it. Since
@@ -65,9 +74,14 @@ bool Getenv(const char * name, std::string & value)
         // negatives in unit tests since the extra character makes it "non-equal" to normally
         // defined std::wstrings). Therefore, we pop the last character off (the null terminator)
         // to ensure that the string conforms to expectations.
-        value_u16.pop_back();
+        value_str.pop_back();
 
-        value = Utf16ToUtf8(value_u16);
+        // Return value, converting to UTF-8 if necessary
+#ifdef UNICODE
+        value = Utf16ToUtf8(value_str);
+#else
+        value = value_str;
+#endif
         return true;
     }
     else
