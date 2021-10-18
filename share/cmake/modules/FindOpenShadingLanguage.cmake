@@ -18,7 +18,7 @@ endif()
 
 if(NOT DEFINED OSL_ROOT)
 
-    find_package(OSL ${OpenShadingLanguage_VERSION} CONFIG)
+    find_package(OSL ${OpenShadingLanguage_FIND_VERSION} CONFIG)
     
     set(OpenShadingLanguage_VERSION ${OSL_VERSION})
 
@@ -28,6 +28,15 @@ if(NOT DEFINED OSL_ROOT)
 
     # Variable used by the OSL unit tests. 
     set(OSL_SHADERS_DIR ${OSL_SHADERS_INCLUDE_DIR}/OSL/shaders)
+
+    include (FindPackageHandleStandardArgs)
+    find_package_handle_standard_args (OpenShadingLanguage
+        FOUND_VAR     OpenShadingLanguage_FOUND
+        REQUIRED_VARS OSL_INCLUDE_DIR OSL_LIB_DIR OpenShadingLanguage_VERSION
+        VERSION_VAR   OpenShadingLanguage_VERSION
+    )
+
+    set(OSL_FOUND ${OpenShadingLanguage_FOUND})
 
 else()
 
