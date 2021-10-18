@@ -1,29 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright Contributors to the OpenColorIO Project.
 
-"""
-This minimal image viewer implementation demonstrates use of the
-OCIO GPU renderer in a Python application. This module depends on:
-
-- PySide2
-- PyOpenColorIO (>=2.1.0)
-- OpenImageIO (python bindings)
-- Imath (python bindings)
-- NumPy
-- PyOpenGL
-
-Implementation notes:
-    - App assumes the ``OCIO`` environment variable is defined and
-      pointing to a compatible OCIO config file.
-    - Code takes into account file and viewing rules, and may change
-      the input color space and/or view automatically when you load a
-      new image.
-    - Exposure and gamma controls are dynamic parameters, driving
-      uniforms in the underlying shader program.
-    - Specific channel views can be toggled with R, G, B, A keys, and
-      the RGBA view restored with C.
-"""
-
 # TODO: Much of the OpenGL code in this module is adapted from the
 #       oglapphelpers library bundled with OCIO. We should fully
 #       reimplement that in Python for direct use in applications.
@@ -185,12 +162,12 @@ class ImagePlane(QtOpenGL.QGLWidget):
         GL.glTexParameteri(
             GL.GL_TEXTURE_2D,
             GL.GL_TEXTURE_WRAP_S,
-            GL.GL_CLAMP
+            GL.GL_CLAMP_TO_EDGE
         )
         GL.glTexParameteri(
             GL.GL_TEXTURE_2D,
             GL.GL_TEXTURE_WRAP_T,
-            GL.GL_CLAMP
+            GL.GL_CLAMP_TO_EDGE
         )
         self._set_ocio_tex_params(GL.GL_TEXTURE_2D, ocio.INTERP_LINEAR)
 
@@ -1361,6 +1338,14 @@ class ImageView(QtWidgets.QWidget):
 
 
 if __name__ == "__main__":
+    # OpenGL core profile needed on macOS to access programmatic pipeline
+    gl_format = QtOpenGL.QGLFormat()
+    gl_format.setProfile(QtOpenGL.QGLFormat.CoreProfile)
+    gl_format.setSampleBuffers(True)
+    gl_format.setSwapInterval(1)
+    gl_format.setVersion(4, 0)
+    QtOpenGL.QGLFormat.setDefaultFormat(gl_format)
+
     app = QtWidgets.QApplication(sys.argv)
     viewer = ImageView()
     viewer.show()

@@ -1,0 +1,3 @@
+numpy
+PyOpenGL
+PySide2
