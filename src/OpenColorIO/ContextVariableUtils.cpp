@@ -20,7 +20,7 @@ extern char ** environ;
 namespace
 {
 
-#ifdef _WIN32
+#if defined(_WIN32) && defined(UNICODE)
 inline wchar_t ** GetEnviron()
 {
     return _wenviron;
@@ -79,7 +79,7 @@ void LoadEnvironment(EnvMap & map, bool update)
 {
     // First, add or update the context variables with existing env. variables.
 
-#ifdef _WIN32
+#if defined(_WIN32) && defined(UNICODE)
     if (GetEnviron() == NULL) {
         // If the program starts with "main" instead of "wmain", then wenviron returns NULL until
         // the first call to either wgetenv or wputenv. Calling wgetenv, even with an empty
