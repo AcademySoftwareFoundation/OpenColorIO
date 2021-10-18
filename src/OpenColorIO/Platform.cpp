@@ -260,6 +260,15 @@ void OpenInputFileStream(std::ifstream & stream, const char * filename, std::ios
 #endif
 }
 
+class WindowsOnlyException : public exception
+{
+public:
+    virtual const char * what() const throw()
+    {
+        return "Only supported by the Windows platform.";
+    }
+};
+
 std::wstring Utf8ToUtf16(const std::string & str)
 {
     if (str.empty()) {
@@ -272,7 +281,7 @@ std::wstring Utf8ToUtf16(const std::string & str)
     MultiByteToWideChar(CP_UTF8, 0, &str[0], (int)str.size(), &wstr[0], sz);
     return wstr;
 #else
-    return std::wstring_convert<std::codecvt_utf8_utf16<wchar_t, 0x10ffff, std::codecvt_mode::little_endian>, wchar_t>{}.from_bytes(str);
+    throw WindowsOnlyException;
 #endif
 }
 
@@ -288,7 +297,7 @@ std::string Utf16ToUtf8(const std::wstring & wstr)
     WideCharToMultiByte(CP_UTF8, 0, &wstr[0], (int)wstr.size(), &str[0], sz, NULL, NULL);
     return str;
 #else
-    return std::wstring_convert<std::codecvt_utf8_utf16<wchar_t, 0x10ffff, std::codecvt_mode::little_endian>, wchar_t>{}.to_bytes(wstr);
+    throw WindowsOnlyException;
 #endif
 }
 
