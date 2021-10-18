@@ -22,7 +22,7 @@ if(TARGET OpenImageIO::OpenImageIO)
     if(TARGET Imath::Imath)
         # OpenShadingLanguage
         # https://github.com/AcademySoftwareFoundation/OpenShadingLanguage
-        find_package(OpenShadingLanguage 1.11.15)
+        find_package(OpenShadingLanguage 1.11)
         if(OSL_FOUND)
             add_subdirectory(osl)
         else()
