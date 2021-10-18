@@ -1,7 +1,12 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright Contributors to the OpenColorIO Project.
 
-import collections
+try:
+    from collections.abc import Iterable
+except ImportError:
+    # Python 2
+    from collections import Iterable
+
 import unittest
 
 import PyOpenColorIO as OCIO
@@ -30,7 +35,7 @@ class BuiltinTransformRegistryTest(unittest.TestCase):
 
         # Test iterator instance
         iterator = iter(self.REGISTRY)
-        self.assertIsInstance(iterator, collections.Iterable)
+        self.assertIsInstance(iterator, Iterable)
 
         # Iterator size is available
         self.assertEqual(len(iterator), len(self.REGISTRY))
@@ -59,7 +64,7 @@ class BuiltinTransformRegistryTest(unittest.TestCase):
 
         # Test iterator instance
         iterator = self.REGISTRY.getBuiltins()
-        self.assertIsInstance(iterator, collections.Iterable)
+        self.assertIsInstance(iterator, Iterable)
 
         # Iterator size is available
         self.assertEqual(len(iterator), len(self.REGISTRY))

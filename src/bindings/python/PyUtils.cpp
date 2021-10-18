@@ -23,7 +23,7 @@ const std::vector<std::string> FLOAT_FORMATS = { "e", "f", "d", "g", "Ze", "Zf",
 
 } // namespace
 
-std::string formatCodeToDtypeName(const std::string & format, ssize_t numBits)
+std::string formatCodeToDtypeName(const std::string & format, py::ssize_t numBits)
 {
     std::ostringstream os;
 
@@ -85,7 +85,7 @@ py::dtype bitDepthToDtype(BitDepth bitDepth)
     return py::dtype(name);
 }
 
-ssize_t bitDepthToBytes(BitDepth bitDepth)
+py::ssize_t bitDepthToBytes(BitDepth bitDepth)
 {
     std::string name, err;
 
@@ -179,7 +179,7 @@ void checkBufferType(const py::buffer_info & info, BitDepth bitDepth)
     checkBufferType(info, bitDepthToDtype(bitDepth));
 }
 
-void checkBufferDivisible(const py::buffer_info & info, ssize_t numChannels)
+void checkBufferDivisible(const py::buffer_info & info, py::ssize_t numChannels)
 {
     if (info.size % numChannels != 0)
     {
@@ -190,7 +190,7 @@ void checkBufferDivisible(const py::buffer_info & info, ssize_t numChannels)
     }
 }
 
-void checkBufferSize(const py::buffer_info & info, ssize_t numEntries)
+void checkBufferSize(const py::buffer_info & info, py::ssize_t numEntries)
 {
     if (info.size != numEntries)
     {
