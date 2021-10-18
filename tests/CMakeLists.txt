@@ -18,7 +18,7 @@ if(OCIO_BUILD_GPU_TESTS)
     add_subdirectory(gpu)
 endif()
 
-if(TARGET OpenImageIO::OpenImageIO)
+if(OpenImageIO_FOUND AND TARGET OpenImageIO::OpenImageIO)
     if(TARGET Imath::Imath)
         # OpenShadingLanguage
         # https://github.com/AcademySoftwareFoundation/OpenShadingLanguage

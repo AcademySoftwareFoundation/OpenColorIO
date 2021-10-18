@@ -19,6 +19,8 @@ endif()
 if(NOT DEFINED OSL_ROOT)
 
     find_package(OSL ${OpenShadingLanguage_VERSION} CONFIG)
+    
+    set(OpenShadingLanguage_VERSION ${OSL_VERSION})
 
     # TODO: No variable to have the share directory?
 
