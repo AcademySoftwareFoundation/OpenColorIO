@@ -56,7 +56,7 @@ function(add_ocio_test NAME SOURCES PRIVATE_INCLUDES)
 
         if (OCIO_USE_UNICODE)
             # Add Unicode definitions to use Unicode functions
-            target_compile_definitions(OpenColorIO
+            target_compile_definitions(${TEST_BINARY}
                 PRIVATE
                     UNICODE
                     _UNICODE
