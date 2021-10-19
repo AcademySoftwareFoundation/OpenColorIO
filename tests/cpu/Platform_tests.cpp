@@ -207,6 +207,7 @@ OCIO_ADD_TEST(Platform, create_temp_filename)
 
 OCIO_ADD_TEST(Platform, utf8_utf16_convert)
 {
+#ifdef _WIN32
     // Define the same string in both UTF-8 and UTF-16LE encoding:
     // - Hiragana letter KO:        xe3, x81, x93       x3053
     // - Hiragana letter N:         xe3, x82, x93       x3093
@@ -224,4 +225,5 @@ OCIO_ADD_TEST(Platform, utf8_utf16_convert)
 
     // wstring can't be sent to cout, so we run an assert
     OCIO_CHECK_ASSERT(wcscmp(utf8_to_utf16.c_str(), utf16_str.c_str()) == 0);
+#endif
 }
