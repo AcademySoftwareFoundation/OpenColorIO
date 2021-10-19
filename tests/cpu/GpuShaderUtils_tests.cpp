@@ -77,7 +77,7 @@ OCIO_ADD_TEST(GpuShaderUtils, class_wrapper_header_no_textures)
 {
     OCIO::GpuShaderText ss(OCIO::GpuLanguage::GPU_LANGUAGE_METAL);
     std::string classWrapper = ss.classWrapperHeader("className", {});
-    std::string expected = "class className\n{\n\nclassName()\n{\n}";
+    std::string expected = "struct className\n{\n\nclassName()\n{\n}";
     OCIO_CHECK_EQUAL(classWrapper, expected);
 }
 
@@ -89,7 +89,7 @@ OCIO_ADD_TEST(GpuShaderUtils, class_wrapper_header_1_texture)
     };
     std::string classWrapper = ss.classWrapperHeader("className", textureInfo);
     std::string expected =
-    "class className\n"
+    "struct className\n"
     "{\n\n"
     "className(texture2d<float> texName)\n"
     "{\n"
@@ -107,7 +107,7 @@ OCIO_ADD_TEST(GpuShaderUtils, class_wrapper_header_2_texture)
     };
     std::string classWrapper = ss.classWrapperHeader("className", textureInfo);
     std::string expected =
-        "class className\n"
+        "struct className\n"
         "{\n\n"
             "className(texture2d<float> texName1, texture2d<float> texName2)\n"
             "{\n"
@@ -134,7 +134,7 @@ OCIO_ADD_TEST(GpuShaderUtils, class_footer_header_no_textures)
         "};\n\n"
         "float4 OCIODisplay(float4 inPixel)\n"
         "{\n"
-            "\treturn className().(inPixel);\n"
+            "\treturn className().OCIODisplay(inPixel);\n"
         "}";
     OCIO_CHECK_EQUAL(classWrapper, expected);
 }
@@ -150,7 +150,7 @@ OCIO_ADD_TEST(GpuShaderUtils, class_wrapper_footer_1_texture)
         "};\n\n"
         "float4 OCIODisplay(texture2d<float> texName, float4 inPixel)\n"
         "{\n"
-            "\treturn className(texName).(inPixel);\n"
+            "\treturn className(texName).OCIODisplay(inPixel);\n"
         "}";
     OCIO_CHECK_EQUAL(classWrapper, expected);
 }
@@ -167,7 +167,7 @@ OCIO_ADD_TEST(GpuShaderUtils, class_wrapper_footer_2_texture)
         "};\n\n"
         "float4 OCIODisplay(texture2d<float> texName1, texture2d<float> texName2, float4 inPixel)\n"
         "{\n"
-            "\treturn className(texName1texName2).(inPixel);\n"
+            "\treturn className(texName1, texName2).OCIODisplay(inPixel);\n"
         "}";
     OCIO_CHECK_EQUAL(classWrapper, expected);
 }

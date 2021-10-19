@@ -251,7 +251,7 @@ colorspaces:
         const std::string expected =
         "\n"
         "// Declaration of class wrapper\n\n"
-        "class OCIO\n"
+        "struct OCIO\n"
         "{\n\n"
             "OCIO()\n"
             "{\n"
@@ -266,7 +266,7 @@ colorspaces:
         "};\n\n"
         "float4 Display(float4 inPixel)\n"
         "{\n"
-            "\treturn OCIO().(inPixel);\n"
+            "\treturn OCIO().Display(inPixel);\n"
         "}\n";
         OCIO_CHECK_EQUAL(expected, text);
     }
@@ -281,7 +281,7 @@ OCIO_ADD_TEST(GpuShader, MetalLutTest2)
     auto processor = config->getProcessor("out_dcdm", "out_p3d60");
     
     const unsigned edgelen = 2;
-    auto gpuProcessor = processor->getOptimizedLegacyGPUProcessor(OpenColorIO_v2_1::OPTIMIZATION_ALL, edgelen);
+    auto gpuProcessor = processor->getOptimizedLegacyGPUProcessor(OCIO::OPTIMIZATION_ALL, edgelen);
     
     auto shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
     shaderDesc->setLanguage(OCIO::GPU_LANGUAGE_METAL);
@@ -290,7 +290,7 @@ OCIO_ADD_TEST(GpuShader, MetalLutTest2)
     const std::string expected =
     "\n"
     "// Declaration of class wrapper\n\n"
-    "class OCIO\n"
+    "struct OCIO\n"
     "{\n\n"
         "OCIO(texture3d<float> ocio_lut3d_0)\n"
         "{\n"
@@ -317,7 +317,7 @@ OCIO_ADD_TEST(GpuShader, MetalLutTest2)
 
     "float4 Display(texture3d<float> ocio_lut3d_0, float4 inPixel)\n"
     "{\n"
-        "\treturn OCIO(ocio_lut3d_0).(inPixel);\n"
+        "\treturn OCIO(ocio_lut3d_0).Display(inPixel);\n"
     "}\n";
 
     OCIO_CHECK_EQUAL(expected, text);

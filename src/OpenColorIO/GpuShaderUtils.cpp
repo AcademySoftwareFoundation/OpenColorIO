@@ -1239,15 +1239,15 @@ void AddLogToLinShader(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & st
         
         if(className.length() < 1)
         {
-            throw Exception("Class name must include at least 1 character");
+            throw Exception("Struct name must include at least 1 character");
         }
         if(isdigit(className[0]))
         {
-            throw Exception(("Class name must not start with a digit. Invalid className passed in: " + className).c_str());
+            throw Exception(("Struct name must not start with a digit. Invalid className passed in: " + className).c_str());
         }
         
         std::ostringstream kw;
-        kw << "class " << className << std::endl;
+        kw << "struct " << className << std::endl;
         kw << "{" << std::endl << std::endl;
         kw << className <<"(";
         std::string texParamOut;
@@ -1278,11 +1278,11 @@ void AddLogToLinShader(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & st
         }
         if(className.length() < 1)
         {
-            throw Exception("Class name must include at least 1 character");
+            throw Exception("Struct name must include at least 1 character");
         }
         if(isdigit(className[0]))
         {
-            throw Exception(("Class name must not start with a digit. Invalid className passed in: " + className).c_str());
+            throw Exception(("Struct name must not start with a digit. Invalid className passed in: " + className).c_str());
         }
 
         std::ostringstream kw;
@@ -1303,13 +1303,13 @@ void AddLogToLinShader(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & st
         for(auto it = textureInfo.begin(); it != textureInfo.end(); ++it)
         {
             kw << it->textureName;
-            if(it != textureInfo.begin() && std::next(it) != textureInfo.end())
+            if(std::next(it) != textureInfo.end())
             {
                 kw << ", ";
             }
         }
         
-        kw << ")." << "(inPixel);" << std::endl;
+        kw << ")." << ocioFunctionName << "(inPixel);" << std::endl;
         kw << "}";
         
         return kw.str();
