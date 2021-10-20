@@ -1255,6 +1255,7 @@ void AddLogToLinShader(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & st
         {
             getTexParam(it->textureName, "float", texParamOut, (int)it->textureDimensions);
             kw << texParamOut;
+            kw << ", sampler " << getSamplerName(it->textureName);
             if(std::next(it) != textureInfo.end() && textureInfo.size() > 1)
             {
                 kw << ", ";
@@ -1263,7 +1264,8 @@ void AddLogToLinShader(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & st
         kw << ")" << std::endl << "{" << std::endl;
         for(const auto & it : textureInfo)
         {
-            kw << "\tthis->" << it.textureName << " = " << it.textureName << ";" << std::endl;
+            kw << "\tthis->" <<                it.textureName  << " = " <<                it.textureName  << ";" << std::endl;
+            kw << "\tthis->" << getSamplerName(it.textureName) << " = " << getSamplerName(it.textureName) << ";" << std::endl;
         }
         kw <<"}";
         return kw.str();
@@ -1293,8 +1295,8 @@ void AddLogToLinShader(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & st
         for(auto it = textureInfo.begin(); it != textureInfo.end(); ++it)
         {
             getTexParam(it->textureName, "float", texParamOut, (int)it->textureDimensions);
-            kw << texParamOut;
-            kw << ", ";
+            kw << texParamOut << ", ";
+            kw << "sampler " << getSamplerName(it->textureName) << ", ";
         }
         kw << float4Keyword() << " inPixel)" << std::endl;
         kw << "{" << std::setw(4) << std::endl;
@@ -1303,6 +1305,7 @@ void AddLogToLinShader(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & st
         for(auto it = textureInfo.begin(); it != textureInfo.end(); ++it)
         {
             kw << it->textureName;
+            kw << ", " << getSamplerName(it->textureName);
             if(std::next(it) != textureInfo.end())
             {
                 kw << ", ";

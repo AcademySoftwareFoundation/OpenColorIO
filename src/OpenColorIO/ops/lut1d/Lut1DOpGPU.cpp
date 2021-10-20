@@ -213,6 +213,13 @@ void GetLut1DGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
             GpuShaderText ss(shaderCreator->getLanguage());
             ss.declareTex2D(name);
             shaderCreator->addToDeclareShaderCode(ss.string().c_str());
+            
+            if (shaderCreator->getLanguage() == GPU_LANGUAGE_METAL)
+            {
+                auto texType = ss.getTexType(2, "float");
+                shaderCreator->addToClassWrapperFunctionParameter(texType.c_str(), name.c_str());
+                shaderCreator->addToClassWrapperFunctionParameter("sampler", GpuShaderText::getSamplerName(name).c_str());
+            }
         }
 
         {

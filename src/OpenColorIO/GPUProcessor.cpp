@@ -29,6 +29,9 @@ void TextureInfoFromParams(const GpuShaderCreatorRcPtr &shaderCreator, GpuShader
     const std::vector<const FunctionParam> &functionParams = shaderCreator->getClassWrapperFunctionParameters();
     for(const auto &fParam : functionParams)
     {
+        if(fParam.type == "sampler")
+            continue;
+        
         TextureDimensions dimensions = shaderText.getDimensions(fParam.type);
         textureInfoses.emplace_back(TextureInfo{fParam.name, dimensions});
     }

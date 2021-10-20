@@ -91,9 +91,10 @@ OCIO_ADD_TEST(GpuShaderUtils, class_wrapper_header_1_texture)
     std::string expected =
     "struct className\n"
     "{\n\n"
-    "className(texture2d<float> texName)\n"
+    "className(texture2d<float> texName, sampler texNameSampler)\n"
     "{\n"
         "\tthis->texName = texName;\n"
+        "\tthis->texNameSampler = texNameSampler;\n"
     "}";
     OCIO_CHECK_EQUAL(classWrapper, expected);
 }
@@ -109,10 +110,12 @@ OCIO_ADD_TEST(GpuShaderUtils, class_wrapper_header_2_texture)
     std::string expected =
         "struct className\n"
         "{\n\n"
-            "className(texture2d<float> texName1, texture2d<float> texName2)\n"
+            "className(texture2d<float> texName1, sampler texName1Sampler, texture2d<float> texName2, sampler texName2Sampler)\n"
             "{\n"
                 "\tthis->texName1 = texName1;\n"
+                "\tthis->texName1Sampler = texName1Sampler;\n"
                 "\tthis->texName2 = texName2;\n"
+                "\tthis->texName2Sampler = texName2Sampler;\n"
             "}";
     OCIO_CHECK_EQUAL(classWrapper, expected);
 }
@@ -148,9 +151,9 @@ OCIO_ADD_TEST(GpuShaderUtils, class_wrapper_footer_1_texture)
     std::string classWrapper = ss.classWrapperFooter("className", textureInfo,"OCIODisplay");
     std::string expected =
         "};\n\n"
-        "float4 OCIODisplay(texture2d<float> texName, float4 inPixel)\n"
+        "float4 OCIODisplay(texture2d<float> texName, sampler texNameSampler, float4 inPixel)\n"
         "{\n"
-            "\treturn className(texName).OCIODisplay(inPixel);\n"
+            "\treturn className(texName, texNameSampler).OCIODisplay(inPixel);\n"
         "}";
     OCIO_CHECK_EQUAL(classWrapper, expected);
 }
@@ -165,9 +168,9 @@ OCIO_ADD_TEST(GpuShaderUtils, class_wrapper_footer_2_texture)
     std::string classWrapper = ss.classWrapperFooter("className", textureInfo, "OCIODisplay");
     std::string expected =
         "};\n\n"
-        "float4 OCIODisplay(texture2d<float> texName1, texture2d<float> texName2, float4 inPixel)\n"
+        "float4 OCIODisplay(texture2d<float> texName1, sampler texName1Sampler, texture2d<float> texName2, sampler texName2Sampler, float4 inPixel)\n"
         "{\n"
-            "\treturn className(texName1, texName2).OCIODisplay(inPixel);\n"
+            "\treturn className(texName1, texName1Sampler, texName2, texName2Sampler).OCIODisplay(inPixel);\n"
         "}";
     OCIO_CHECK_EQUAL(classWrapper, expected);
 }

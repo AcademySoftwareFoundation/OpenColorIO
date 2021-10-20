@@ -58,6 +58,7 @@ void GetLut3DGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator, ConstLut3DO
         {
             auto texType = ss.getTexType(3, "float");
             shaderCreator->addToClassWrapperFunctionParameter(texType.c_str(), name.c_str());
+            shaderCreator->addToClassWrapperFunctionParameter("sampler", GpuShaderText::getSamplerName(name).c_str());
         }
         ss.indent();
 
