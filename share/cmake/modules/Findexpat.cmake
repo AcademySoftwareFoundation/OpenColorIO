@@ -162,7 +162,7 @@ endif()
 ###############################################################################
 ### Install package from source ###
 
-if(NOT expat_FOUND)
+if(NOT expat_FOUND AND NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL NONE)
     include(ExternalProject)
     include(GNUInstallDirs)
 
