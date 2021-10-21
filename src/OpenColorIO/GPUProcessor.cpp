@@ -37,7 +37,7 @@ void TextureInfoFromParams(const GpuShaderCreatorRcPtr &shaderCreator, GpuShader
     }
 }
 
-void GetClassWrapperName(GpuShaderCreatorRcPtr & shaderCreator, std::string &name)
+void GetClassWrapperName(GpuShaderCreatorRcPtr & /*shaderCreator*/, std::string &name)
 {
     name = "OCIO";
 }

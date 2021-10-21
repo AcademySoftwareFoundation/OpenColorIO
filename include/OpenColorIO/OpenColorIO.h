@@ -2700,9 +2700,9 @@ class OCIOEXPORT ClassWrappingInterface
 public:
     virtual ~ClassWrappingInterface() = default;
     
-    virtual void addToFunctionParameter(const char * type, const char * paramName) {}
-    virtual void addToHeaderShaderCode(const char * shaderCode) {}
-    virtual void addToFooterShaderCode(const char * shaderCode) {}
+    virtual void addToFunctionParameter(const char * /*type*/, const char * /*paramName*/) {}
+    virtual void addToHeaderShaderCode(const char * /*shaderCode*/) {}
+    virtual void addToFooterShaderCode(const char * /*shaderCode*/) {}
     
     virtual const char* getClassWrapHeader() const { return ""; }
     virtual const char* getClassWrapFooter() const { return ""; }
