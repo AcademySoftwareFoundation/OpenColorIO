@@ -2715,7 +2715,7 @@ public:
         const std::string name;
     };
     
-    virtual std::vector<const FunctionParam> getFunctionParameters() const { return {}; }
+    virtual std::vector<FunctionParam> getFunctionParameters() const { return {}; }
 };
 
 

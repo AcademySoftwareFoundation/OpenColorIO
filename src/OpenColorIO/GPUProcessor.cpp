@@ -26,7 +26,7 @@ namespace
 
 void TextureInfoFromParams(const GpuShaderCreatorRcPtr &shaderCreator, GpuShaderText &shaderText,
                            std::vector<TextureInfo> &textureInfoses) {
-    std::vector<const ClassWrappingInterface::FunctionParam> functionParams = shaderCreator->getClassWrappingInterface()->getFunctionParameters();
+    std::vector<ClassWrappingInterface::FunctionParam> functionParams = shaderCreator->getClassWrappingInterface()->getFunctionParameters();
     for(const auto &fParam : functionParams)
     {
         if(fParam.type == "sampler")

@@ -28,12 +28,12 @@ public:
     
     virtual const char* getClassWrapHeader() const final { return m_classWrapHeader.c_str(); }
     virtual const char* getClassWrapFooter() const final { return m_classWrapFooter.c_str(); }
-    std::vector<const ClassWrappingInterface::FunctionParam> getFunctionParameters() const final;
+    std::vector<ClassWrappingInterface::FunctionParam> getFunctionParameters() const final;
     
 private:
     std::string m_classWrapHeader;
     std::string m_classWrapFooter;
-    std::vector<const FunctionParam> m_classWrapFunctionParams;
+    std::vector<FunctionParam> m_classWrapFunctionParams;
 };
 
 class GpuShaderCreator::Impl
@@ -328,7 +328,7 @@ void GpuShaderCreator::addToFunctionFooterShaderCode(const char * shaderCode)
     getImpl()->m_functionFooter += (shaderCode && *shaderCode) ? shaderCode : "";
 }
 
-std::vector<const ClassWrappingInterface::FunctionParam> MetalClassWrappingInterface::getFunctionParameters() const
+std::vector<ClassWrappingInterface::FunctionParam> MetalClassWrappingInterface::getFunctionParameters() const
 {
     return m_classWrapFunctionParams;
 }
