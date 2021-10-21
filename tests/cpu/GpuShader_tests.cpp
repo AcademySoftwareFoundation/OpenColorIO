@@ -192,3 +192,164 @@ OCIO_ADD_TEST(GpuShader, generic_shader)
         OCIO_CHECK_EQUAL(fragText, shaderDesc->getShaderText());
     }
 }
+
+OCIO_ADD_TEST(GpuShader, MetalLutTest)
+{
+    static constexpr char sFromSpace[] = "ACEScg";
+    static constexpr char sDiplay[] = "AdobeRGB";
+    static constexpr char sView[] = "raw";
+
+    static constexpr char CONFIG[] = { R"(ocio_profile_version: 2
+environment: {}
+search_path: "./"
+roles:
+  data: Raw
+  default: Raw
+  scene_linear: ACEScg
+
+file_rules:
+  - !<Rule> {name: Default, colorspace: default}
+
+displays:
+  AdobeRGB:
+    - !<View> {name: Raw, colorspace: Raw}
+
+colorspaces:
+  - !<ColorSpace>
+    name: ACEScg
+    to_reference: !<MatrixTransform> {matrix: [ 0.695452241357, 0.140678696470, 0.163869062172, 0, 0.044794563372, 0.859671118456, 0.095534318172, 0, -0.005525882558, 0.004025210306, 1.001500672252, 0, 0, 0, 0, 1 ]}
+  - !<ColorSpace>
+    name: Raw
+    isdata: true)" };
+
+    {
+        std::istringstream iss;
+        iss.str(CONFIG);
+
+        OCIO::ConstConfigRcPtr mOCIOCfg;
+        OCIO_CHECK_NO_THROW(mOCIOCfg = OCIO::Config::CreateFromStream(iss));
+        OCIO_CHECK_NO_THROW(mOCIOCfg->validate());
+
+        // Create the two processors.
+
+        OCIO::DisplayViewTransformRcPtr transform = OCIO::DisplayViewTransform::Create();
+        transform->setSrc(sFromSpace);
+        transform->setDisplay(sDiplay);
+        transform->setView(sView);
+        
+        auto processor = mOCIOCfg->getProcessor(transform);
+
+        const unsigned edgelen = 2;
+        auto gpuProcessor = processor->getOptimizedLegacyGPUProcessor(OCIO::OPTIMIZATION_ALL, edgelen);
+    
+        auto shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
+
+        shaderDesc->setLanguage(OCIO::GPU_LANGUAGE_METAL);
+
+        gpuProcessor->extractGpuShaderInfo(shaderDesc);
+        const std::string text = shaderDesc->getShaderText();;
+        const std::string expected =
+        "\n"
+        "// Declaration of class wrapper\n\n"
+        "struct OCIO\n"
+        "{\n\n"
+            "OCIO()\n"
+            "{\n"
+            "}\n\n\n"
+            "// Declaration of the OCIO shader function\n\n"
+            "float4 Display(float4 inPixel)\n"
+            "{\n"
+            "  float4 outColor = inPixel;\n\n"
+            "  return outColor;\n"
+            "}\n\n"
+            "// close class wrapper\n\n\n"
+        "};\n\n"
+        "float4 Display(float4 inPixel)\n"
+        "{\n"
+            "\treturn OCIO().Display(inPixel);\n"
+        "}\n";
+        OCIO_CHECK_EQUAL(expected, text);
+    }
+}
+
+OCIO_ADD_TEST(GpuShader, MetalLutTest2)
+{
+    static constexpr char sFromSpace[] = "ACEScg";
+    static constexpr char sDiplay[] = "AdobeRGB";
+    static constexpr char sView[] = "raw";
+
+    static constexpr char CONFIG[] = { R"(ocio_profile_version: 2
+environment: {}
+search_path: "./"
+roles:
+  data: Raw
+  default: Raw
+  scene_linear: ACEScg
+
+file_rules:
+  - !<Rule> {name: Default, colorspace: default}
+
+displays:
+  AdobeRGB:
+    - !<View> {name: Raw, colorspace: Raw}
+
+colorspaces:
+  - !<ColorSpace>
+    name: ACEScg
+    to_reference: !<MatrixTransform> {matrix: [ 0.695452241357, 0.140678696470, 0.163869062172, 0, 0.044794563372, 0.859671118456, 0.095534318172, 0, -0.005525882558, 0.004025210306, 1.001500672252, 0, 0, 0, 0, 1 ]}
+  - !<ColorSpace>
+    name: Raw
+    isdata: true)" };
+
+    {
+        std::istringstream iss;
+        iss.str(CONFIG);
+
+        OCIO::ConstConfigRcPtr mOCIOCfg;
+        OCIO_CHECK_NO_THROW(mOCIOCfg = OCIO::Config::CreateFromStream(iss));
+        OCIO_CHECK_NO_THROW(mOCIOCfg->validate());
+
+        // Create the two processors.
+
+        OCIO::DisplayViewTransformRcPtr transform = OCIO::DisplayViewTransform::Create();
+        transform->setSrc(sFromSpace);
+        transform->setDisplay(sDiplay);
+        transform->setView(sView);
+        
+        auto processor = mOCIOCfg->getProcessor(transform);
+
+        auto gpuProcessor = processor->getDefaultGPUProcessor();
+    
+        auto shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
+
+        shaderDesc->setLanguage(OCIO::GPU_LANGUAGE_METAL);
+
+        gpuProcessor->extractGpuShaderInfo(shaderDesc);
+        const std::string text = shaderDesc->getShaderText();;
+        const std::string expected =
+        "\n"
+        "// Declaration of class wrapper\n\n"
+        "struct OCIO\n"
+        "{\n\n"
+            "OCIO()\n"
+            "{\n"
+            "}\n\n\n"
+            "// Declaration of the OCIO shader function\n\n"
+            "float4 Display(float4 inPixel)\n"
+            "{\n"
+            "  float4 outColor = inPixel;\n\n"
+            "  return outColor;\n"
+            "}\n\n"
+            "// close class wrapper\n\n\n"
+        "};\n\n"
+        "float4 Display(float4 inPixel)\n"
+        "{\n"
+            "\treturn OCIO().Display(inPixel);\n"
+        "}\n";
+        
+        
+        
+        
+        OCIO_CHECK_EQUAL(expected, text);
+    }
+}
