@@ -19,6 +19,23 @@
 namespace OCIO_NAMESPACE
 {
 
+class MetalClassWrappingInterface : public ClassWrappingInterface
+{
+public:
+    void addToFunctionParameter(const char * type, const char  * paramName) final;
+    void addToHeaderShaderCode(const char * shaderCode) final;
+    void addToFooterShaderCode(const char * shaderCode) final;
+    
+    virtual const char* getClassWrapHeader() const final { return m_classWrapHeader.c_str(); }
+    virtual const char* getClassWrapFooter() const final { return m_classWrapFooter.c_str(); }
+    std::vector<const ClassWrappingInterface::FunctionParam> getFunctionParameters() const final;
+    
+private:
+    std::string m_classWrapHeader;
+    std::string m_classWrapFooter;
+    std::vector<const FunctionParam> m_classWrapFunctionParams;
+};
+
 class GpuShaderCreator::Impl
 {
 public:
@@ -32,14 +49,11 @@ public:
     mutable std::string m_cacheID;
     mutable Mutex m_cacheIDMutex;
 
-    std::string m_classWrapHeader;
     std::string m_declarations;
     std::string m_helperMethods;
     std::string m_functionHeader;
     std::string m_functionBody;
     std::string m_functionFooter;
-    std::string m_classWrapFooter;
-    std::vector<const FunctionParam> m_classWrapFunctionParams;
 
     std::string m_shaderCode;
     std::string m_shaderCodeID;
@@ -84,7 +98,7 @@ public:
 };
 
 GpuShaderCreator::GpuShaderCreator()
-    :   m_impl(new GpuShaderDesc::Impl)
+    :   m_impl(new GpuShaderDesc::Impl), m_classWrappingInterface(new ClassWrappingInterface)
 {
 }
 
@@ -92,6 +106,9 @@ GpuShaderCreator::~GpuShaderCreator()
 {
     delete m_impl;
     m_impl = nullptr;
+    
+    delete m_classWrappingInterface;
+    m_classWrappingInterface = nullptr;
 }
 
 void GpuShaderCreator::setUniqueID(const char * uid) noexcept
@@ -109,11 +126,18 @@ const char * GpuShaderCreator::getUniqueID() const noexcept
 void GpuShaderCreator::setLanguage(GpuLanguage lang) noexcept
 {
     AutoMutex lock(getImpl()->m_cacheIDMutex);
+    
+    if(m_classWrappingInterface)
+        delete m_classWrappingInterface;
+    
     getImpl()->m_language = lang;
     if(lang == GPU_LANGUAGE_METAL)
     {
         getImpl()->m_functionName = "Display";
+        m_classWrappingInterface = new MetalClassWrappingInterface();
     }
+    else
+        m_classWrappingInterface = new ClassWrappingInterface();
     getImpl()->m_cacheID.clear();
 }
 
@@ -248,27 +272,27 @@ const char * GpuShaderCreator::getCacheID() const noexcept
     return getImpl()->m_cacheID.c_str();
 }
 
-void GpuShaderCreator::addToClassWrapperFunctionParameter(const char * type, const char * paramName)
+void MetalClassWrappingInterface::addToFunctionParameter(const char * type, const char * paramName)
 {
-    getImpl()->m_classWrapFunctionParams.push_back({{type}, {paramName}});
+    m_classWrapFunctionParams.push_back({{type}, {paramName}});
 }
 
-void GpuShaderCreator::addToClassWrapperHeaderShaderCode(const char * shaderCode)
+void MetalClassWrappingInterface::addToHeaderShaderCode(const char * shaderCode)
 {
-    if(getImpl()->m_classWrapHeader.empty())
+    if(m_classWrapHeader.empty())
     {
-        getImpl()->m_classWrapHeader += "\n// Declaration of class wrapper\n\n";
+        m_classWrapHeader += "\n// Declaration of class wrapper\n\n";
     }
-    getImpl()->m_classWrapHeader += (shaderCode && *shaderCode) ? shaderCode : "";
+    m_classWrapHeader += (shaderCode && *shaderCode) ? shaderCode : "";
 }
 
-void GpuShaderCreator::addToClassWrapperFooterShaderCode(const char * shaderCode)
+void MetalClassWrappingInterface::addToFooterShaderCode(const char * shaderCode)
 {
-    if(getImpl()->m_classWrapFooter.empty())
+    if(m_classWrapFooter.empty())
     {
-        getImpl()->m_classWrapFooter += "\n// close class wrapper\n\n";
+        m_classWrapFooter += "\n// close class wrapper\n\n";
     }
-    getImpl()->m_classWrapFooter += (shaderCode && *shaderCode) ? shaderCode : "";
+    m_classWrapFooter += (shaderCode && *shaderCode) ? shaderCode : "";
 }
 
 void GpuShaderCreator::addToDeclareShaderCode(const char * shaderCode)
@@ -304,9 +328,9 @@ void GpuShaderCreator::addToFunctionFooterShaderCode(const char * shaderCode)
     getImpl()->m_functionFooter += (shaderCode && *shaderCode) ? shaderCode : "";
 }
 
-    const std::vector<const FunctionParam>& GpuShaderCreator::getClassWrapperFunctionParameters() const
+std::vector<const ClassWrappingInterface::FunctionParam> MetalClassWrappingInterface::getFunctionParameters() const
 {
-    return getImpl()->m_classWrapFunctionParams;
+    return m_classWrapFunctionParams;
 }
 
 void GpuShaderCreator::createShaderText(const char * shaderDeclarations,
@@ -320,8 +344,8 @@ void GpuShaderCreator::createShaderText(const char * shaderDeclarations,
 
     getImpl()->m_shaderCode.clear();
     
-    const char* shaderClassWrapperHeader = getImpl()->m_classWrapHeader.c_str();
-    const char* shaderClassWrapperFooter = getImpl()->m_classWrapFooter.c_str();
+    const char* shaderClassWrapperHeader = getClassWrappingInterface()->getClassWrapHeader();
+    const char* shaderClassWrapperFooter = getClassWrappingInterface()->getClassWrapFooter();
     
     getImpl()->m_shaderCode += (shaderClassWrapperHeader   && *shaderClassWrapperHeader)   ? shaderClassWrapperHeader  : "";
     getImpl()->m_shaderCode += (shaderDeclarations   && *shaderDeclarations)               ? shaderDeclarations        : "";

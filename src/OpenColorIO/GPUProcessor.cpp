@@ -26,7 +26,7 @@ namespace
 
 void TextureInfoFromParams(const GpuShaderCreatorRcPtr &shaderCreator, GpuShaderText &shaderText,
                            std::vector<TextureInfo> &textureInfoses) {
-    const std::vector<const FunctionParam> &functionParams = shaderCreator->getClassWrapperFunctionParameters();
+    std::vector<const ClassWrappingInterface::FunctionParam> functionParams = shaderCreator->getClassWrappingInterface()->getFunctionParameters();
     for(const auto &fParam : functionParams)
     {
         if(fParam.type == "sampler")
@@ -56,7 +56,7 @@ void WriteShaderClassWrapperHeader(GpuShaderCreatorRcPtr & shaderCreator)
     TextureInfoFromParams(shaderCreator, ss, textureInfoses);
     ss.newLine() << ss.classWrapperHeader(className, textureInfoses);
     ss.newLine();
-    shaderCreator->addToClassWrapperHeaderShaderCode(ss.string().c_str());
+    shaderCreator->getClassWrappingInterface()->addToHeaderShaderCode(ss.string().c_str());
 }
 
 void WriteShaderClassWrapperFooter(GpuShaderCreatorRcPtr & shaderCreator)
@@ -74,7 +74,7 @@ void WriteShaderClassWrapperFooter(GpuShaderCreatorRcPtr & shaderCreator)
     std::vector<TextureInfo> textureInfoses;
     TextureInfoFromParams(shaderCreator, ss, textureInfoses);
     ss.newLine() << ss.classWrapperFooter(className, textureInfoses, shaderCreator->getFunctionName());
-    shaderCreator->addToClassWrapperFooterShaderCode(ss.string().c_str());
+    shaderCreator->getClassWrappingInterface()->addToFooterShaderCode(ss.string().c_str());
 }
 
 void WriteShaderHeader(GpuShaderCreatorRcPtr & shaderCreator)

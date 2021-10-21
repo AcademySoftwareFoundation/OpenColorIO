@@ -10,6 +10,7 @@
 #include <limits>
 #include <stdexcept>
 #include <string>
+#include <vector>
 
 #include "OpenColorABI.h"
 #include "OpenColorTypes.h"
@@ -2694,12 +2695,27 @@ private:
     PlanarImageDesc& operator= (const PlanarImageDesc &);
 };
 
-struct FunctionParam
+class OCIOEXPORT ClassWrappingInterface
 {
-    FunctionParam(std::string type, std::string name) : type(std::move(type)), name(std::move(name)) {}
+public:
+    virtual ~ClassWrappingInterface() = default;
+    
+    virtual void addToFunctionParameter(const char * type, const char * paramName) {}
+    virtual void addToHeaderShaderCode(const char * shaderCode) {}
+    virtual void addToFooterShaderCode(const char * shaderCode) {}
+    
+    virtual const char* getClassWrapHeader() const { return ""; }
+    virtual const char* getClassWrapFooter() const { return ""; }
 
-    const std::string type;
-    const std::string name;
+    struct FunctionParam
+    {
+        FunctionParam(std::string type = "", std::string name = "") : type(std::move(type)), name(std::move(name)) {}
+
+        const std::string type;
+        const std::string name;
+    };
+    
+    virtual std::vector<const FunctionParam> getFunctionParameters() const { return {}; }
 };
 
 
@@ -2888,9 +2904,7 @@ public:
                               Interpolation interpolation,
                               const float * values) = 0;
 
-    virtual void addToClassWrapperFunctionParameter(const char * type, const char * paramName);
-    virtual void addToClassWrapperHeaderShaderCode(const char * shaderCode);
-    virtual void addToClassWrapperFooterShaderCode(const char * shaderCode);
+    ClassWrappingInterface* getClassWrappingInterface() { return m_classWrappingInterface; }
     
     // Methods to specialize parts of a OCIO shader program
     virtual void addToDeclareShaderCode(const char * shaderCode);
@@ -2898,8 +2912,6 @@ public:
     virtual void addToFunctionHeaderShaderCode(const char * shaderCode);
     virtual void addToFunctionShaderCode(const char * shaderCode);
     virtual void addToFunctionFooterShaderCode(const char * shaderCode);
-    //!cpp:function::
-    virtual const std::vector<const FunctionParam>& getClassWrapperFunctionParameters() const;
 
     /**
      * \brief Create the OCIO shader program
@@ -2929,6 +2941,8 @@ protected:
     Impl * m_impl;
     Impl * getImpl() { return m_impl; }
     const Impl * getImpl() const { return m_impl; }
+    
+    ClassWrappingInterface* m_classWrappingInterface;
 };
 
 // GpuShaderDesc
