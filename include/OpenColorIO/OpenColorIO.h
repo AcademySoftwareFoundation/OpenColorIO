@@ -10,7 +10,6 @@
 #include <limits>
 #include <stdexcept>
 #include <string>
-#include <vector>
 
 #include "OpenColorABI.h"
 #include "OpenColorTypes.h"
@@ -2695,30 +2694,6 @@ private:
     PlanarImageDesc& operator= (const PlanarImageDesc &);
 };
 
-class OCIOEXPORT ClassWrappingInterface
-{
-public:
-    virtual ~ClassWrappingInterface() = default;
-    
-    virtual void addToFunctionParameter(const char * /*type*/, const char * /*paramName*/) {}
-    virtual void addToHeaderShaderCode(const char * /*shaderCode*/) {}
-    virtual void addToFooterShaderCode(const char * /*shaderCode*/) {}
-    
-    virtual const char* getClassWrapHeader() const { return ""; }
-    virtual const char* getClassWrapFooter() const { return ""; }
-
-    struct FunctionParam
-    {
-        FunctionParam(std::string type = "", std::string name = "") : type(std::move(type)), name(std::move(name)) {}
-
-        const std::string type;
-        const std::string name;
-    };
-    
-    virtual std::vector<FunctionParam> getFunctionParameters() const { return {}; }
-};
-
-
 ///////////////////////////////////////////////////////////////////////////
 // GpuShaderCreator
 /**
@@ -2903,8 +2878,6 @@ public:
                               unsigned edgelen,
                               Interpolation interpolation,
                               const float * values) = 0;
-
-    ClassWrappingInterface* getClassWrappingInterface() { return m_classWrappingInterface; }
     
     // Methods to specialize parts of a OCIO shader program
     virtual void addToDeclareShaderCode(const char * shaderCode);
@@ -2941,8 +2914,6 @@ protected:
     Impl * m_impl;
     Impl * getImpl() { return m_impl; }
     const Impl * getImpl() const { return m_impl; }
-    
-    ClassWrappingInterface* m_classWrappingInterface;
 };
 
 // GpuShaderDesc

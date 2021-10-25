@@ -11,8 +11,6 @@
 #include "GpuShader.h"
 #include <set>
 #include <algorithm>
-#include <OpenColorIO/OpenColorIO.h>
-#include <OpenColorIO/OpenColorTypes.h>
 
 namespace OCIO = OCIO_NAMESPACE;
 
@@ -32,7 +30,9 @@ OCIO_ADD_TEST(GpuShaderUtils, float_to_string)
 std::vector<OCIO::GpuLanguage> GetAllLanguagesExcept(std::set<OCIO::GpuLanguage> excluded)
 {
     std::vector<OCIO::GpuLanguage> included;
-    for(int i = OCIO::GpuLanguage::FirstLanguage; i <= OCIO::GpuLanguage::LastLanguage; i++)
+    OCIO::GpuLanguage firstLanguage = OCIO::GPU_LANGUAGE_CG;
+    OCIO::GpuLanguage lastLanguage = OCIO::GPU_LANGUAGE_MSL_METAL;
+    for(int i = firstLanguage; i <= lastLanguage; i++)
     {
         OCIO::GpuLanguage current = (OCIO::GpuLanguage)i;
         if(excluded.find(current) == excluded.end())
@@ -52,12 +52,12 @@ void assertLanguageHasClassWrapper(OCIO::GpuLanguage lang, bool flag)
 
 OCIO_ADD_TEST(GpuShadersUtils, has_class_wrapper_true)
 {
-    assertLanguageHasClassWrapper(OCIO::GPU_LANGUAGE_METAL, true);
+    assertLanguageHasClassWrapper(OCIO::GPU_LANGUAGE_MSL_METAL, true);
 }
 
 OCIO_ADD_TEST(GpuShadersUtils, has_class_wrapper_false)
 {
-    auto nonMetalLanguages = GetAllLanguagesExcept({OCIO::GPU_LANGUAGE_METAL});
+    auto nonMetalLanguages = GetAllLanguagesExcept({OCIO::GPU_LANGUAGE_MSL_METAL});
     std::for_each(nonMetalLanguages.begin(), nonMetalLanguages.end(), [](OCIO::GpuLanguage lang){
         assertLanguageHasClassWrapper(lang, false);
     });
@@ -65,7 +65,7 @@ OCIO_ADD_TEST(GpuShadersUtils, has_class_wrapper_false)
 
 OCIO_ADD_TEST(GpuShaderUtils, class_wrapper_header_invalid_languages_empty_string)
 {
-    auto nonMetalLanguages = GetAllLanguagesExcept({OCIO::GPU_LANGUAGE_METAL});
+    auto nonMetalLanguages = GetAllLanguagesExcept({OCIO::GPU_LANGUAGE_MSL_METAL});
     std::for_each(nonMetalLanguages.begin(), nonMetalLanguages.end(), [](OCIO::GpuLanguage lang){
         OCIO::GpuShaderText ss(lang);
         std::string classWrapperHeader = ss.classWrapperHeader("anyClassName", {});
@@ -75,33 +75,35 @@ OCIO_ADD_TEST(GpuShaderUtils, class_wrapper_header_invalid_languages_empty_strin
 
 OCIO_ADD_TEST(GpuShaderUtils, class_wrapper_header_no_textures)
 {
-    OCIO::GpuShaderText ss(OCIO::GpuLanguage::GPU_LANGUAGE_METAL);
+    OCIO::GpuShaderText ss(OCIO::GpuLanguage::GPU_LANGUAGE_MSL_METAL);
     std::string classWrapper = ss.classWrapperHeader("className", {});
-    std::string expected = "struct className\n{\n\nclassName()\n{\n}";
+    std::string expected = "struct className\n{\nclassName(\n)\n{\n}\n";
     OCIO_CHECK_EQUAL(classWrapper, expected);
 }
 
 OCIO_ADD_TEST(GpuShaderUtils, class_wrapper_header_1_texture)
 {
-    OCIO::GpuShaderText ss(OCIO::GpuLanguage::GPU_LANGUAGE_METAL);
+    OCIO::GpuShaderText ss(OCIO::GpuLanguage::GPU_LANGUAGE_MSL_METAL);
     std::vector<OCIO::TextureInfo> textureInfo {
         OCIO::TextureInfo{"texName", OCIO::TextureDimensions::D2}
     };
     std::string classWrapper = ss.classWrapperHeader("className", textureInfo);
     std::string expected =
-    "struct className\n"
-    "{\n\n"
-    "className(texture2d<float> texName, sampler texNameSampler)\n"
-    "{\n"
-        "\tthis->texName = texName;\n"
-        "\tthis->texNameSampler = texNameSampler;\n"
-    "}";
+        "struct className\n"
+        "{\n"
+        "className(\n"
+        "  texture2d<float> texName, sampler texNameSampler\n"
+        ")\n"
+        "{\n"
+        "  this->texName = texName;\n"
+        "  this->texNameSampler = texNameSampler;\n"
+        "}\n";
     OCIO_CHECK_EQUAL(classWrapper, expected);
 }
     
 OCIO_ADD_TEST(GpuShaderUtils, class_wrapper_header_2_texture)
 {
-    OCIO::GpuShaderText ss(OCIO::GpuLanguage::GPU_LANGUAGE_METAL);
+    OCIO::GpuShaderText ss(OCIO::GpuLanguage::GPU_LANGUAGE_MSL_METAL);
     std::vector<OCIO::TextureInfo> textureInfo {
         OCIO::TextureInfo{"texName1", OCIO::TextureDimensions::D2},
         OCIO::TextureInfo{"texName2", OCIO::TextureDimensions::D2}
@@ -109,20 +111,24 @@ OCIO_ADD_TEST(GpuShaderUtils, class_wrapper_header_2_texture)
     std::string classWrapper = ss.classWrapperHeader("className", textureInfo);
     std::string expected =
         "struct className\n"
-        "{\n\n"
-            "className(texture2d<float> texName1, sampler texName1Sampler, texture2d<float> texName2, sampler texName2Sampler)\n"
-            "{\n"
-                "\tthis->texName1 = texName1;\n"
-                "\tthis->texName1Sampler = texName1Sampler;\n"
-                "\tthis->texName2 = texName2;\n"
-                "\tthis->texName2Sampler = texName2Sampler;\n"
-            "}";
+        "{\n"
+        "className(\n"
+        "  texture2d<float> texName1, sampler texName1Sampler\n"
+        "  , texture2d<float> texName2, sampler texName2Sampler\n"
+        ")\n"
+        "{\n"
+        "  this->texName1 = texName1;\n"
+        "  this->texName1Sampler = texName1Sampler;\n"
+        "  this->texName2 = texName2;\n"
+        "  this->texName2Sampler = texName2Sampler;\n"
+        "}\n";
+    
     OCIO_CHECK_EQUAL(classWrapper, expected);
 }
 
 OCIO_ADD_TEST(GpuShaderUtils, class_wrapper_footer_invalid_languages_empty_string)
 {
-    auto nonMetalLanguages = GetAllLanguagesExcept({OCIO::GPU_LANGUAGE_METAL});
+    auto nonMetalLanguages = GetAllLanguagesExcept({OCIO::GPU_LANGUAGE_MSL_METAL});
     std::for_each(nonMetalLanguages.begin(), nonMetalLanguages.end(), [](OCIO::GpuLanguage lang){
         OCIO::GpuShaderText ss(lang);
         std::string classWrapperFooter = ss.classWrapperFooter("anyClassName", {}, "OCIODisplay");
@@ -131,53 +137,66 @@ OCIO_ADD_TEST(GpuShaderUtils, class_wrapper_footer_invalid_languages_empty_strin
 }
 OCIO_ADD_TEST(GpuShaderUtils, class_footer_header_no_textures)
 {
-    OCIO::GpuShaderText ss(OCIO::GpuLanguage::GPU_LANGUAGE_METAL);
+    OCIO::GpuShaderText ss(OCIO::GpuLanguage::GPU_LANGUAGE_MSL_METAL);
     std::string classWrapper = ss.classWrapperFooter("className", {}, "OCIODisplay");
     std::string expected =
-        "};\n\n"
-        "float4 OCIODisplay(float4 inPixel)\n"
+        "};\n"
+        "float4 OCIODisplay(\n"
+        "  float4 inPixel)\n"
         "{\n"
-            "\treturn className().OCIODisplay(inPixel);\n"
-        "}";
+        "  return className(\n"
+        "  ).OCIODisplay(inPixel);\n"
+        "}\n";
+    
     OCIO_CHECK_EQUAL(classWrapper, expected);
 }
 
 OCIO_ADD_TEST(GpuShaderUtils, class_wrapper_footer_1_texture)
 {
-    OCIO::GpuShaderText ss(OCIO::GpuLanguage::GPU_LANGUAGE_METAL);
+    OCIO::GpuShaderText ss(OCIO::GpuLanguage::GPU_LANGUAGE_MSL_METAL);
     std::vector<OCIO::TextureInfo> textureInfo {
         OCIO::TextureInfo{"texName", OCIO::TextureDimensions::D2}
     };
     std::string classWrapper = ss.classWrapperFooter("className", textureInfo,"OCIODisplay");
     std::string expected =
-        "};\n\n"
-        "float4 OCIODisplay(texture2d<float> texName, sampler texNameSampler, float4 inPixel)\n"
+        "};\n"
+        "float4 OCIODisplay(\n"
+        "  texture2d<float> texName, sampler texNameSampler\n"
+        "  ,float4 inPixel)\n"
         "{\n"
-            "\treturn className(texName, texNameSampler).OCIODisplay(inPixel);\n"
-        "}";
+        "  return className(\n"
+        "    texName, texNameSampler\n"
+        "  ).OCIODisplay(inPixel);\n"
+        "}\n";
     OCIO_CHECK_EQUAL(classWrapper, expected);
 }
 
 OCIO_ADD_TEST(GpuShaderUtils, class_wrapper_footer_2_texture)
 {
-    OCIO::GpuShaderText ss(OCIO::GpuLanguage::GPU_LANGUAGE_METAL);
+    OCIO::GpuShaderText ss(OCIO::GpuLanguage::GPU_LANGUAGE_MSL_METAL);
     std::vector<OCIO::TextureInfo> textureInfo {
         OCIO::TextureInfo{"texName1", OCIO::TextureDimensions::D2},
         OCIO::TextureInfo{"texName2", OCIO::TextureDimensions::D2}
     };
     std::string classWrapper = ss.classWrapperFooter("className", textureInfo, "OCIODisplay");
     std::string expected =
-        "};\n\n"
-        "float4 OCIODisplay(texture2d<float> texName1, sampler texName1Sampler, texture2d<float> texName2, sampler texName2Sampler, float4 inPixel)\n"
-        "{\n"
-            "\treturn className(texName1, texName1Sampler, texName2, texName2Sampler).OCIODisplay(inPixel);\n"
-        "}";
+    "};\n"
+    "float4 OCIODisplay(\n"
+    "  texture2d<float> texName1, sampler texName1Sampler\n"
+    "  , texture2d<float> texName2, sampler texName2Sampler\n"
+    "  ,float4 inPixel)\n"
+    "{\n"
+    "  return className(\n"
+    "    texName1, texName1Sampler\n"
+    "    , texName2, texName2Sampler\n"
+    "  ).OCIODisplay(inPixel);\n"
+    "}\n";
     OCIO_CHECK_EQUAL(classWrapper, expected);
 }
 
 OCIO_ADD_TEST(GpuShaderUtils, get_texture_dimensions_success)
 {
-    OCIO::GpuShaderText ss(OCIO::GpuLanguage::GPU_LANGUAGE_METAL);
+    OCIO::GpuShaderText ss(OCIO::GpuLanguage::GPU_LANGUAGE_MSL_METAL);
     OCIO::TextureDimensions dim1 = ss.getDimensions("texture1d");
     OCIO_CHECK_EQUAL((int)dim1, (int)OCIO::TextureDimensions::D1);
     OCIO::TextureDimensions  dim2 = ss.getDimensions("texture2d");
@@ -188,7 +207,7 @@ OCIO_ADD_TEST(GpuShaderUtils, get_texture_dimensions_success)
 
 OCIO_ADD_TEST(GpuShaderUtils, get_texture_dimensions_failure)
 {
-    OCIO::GpuShaderText ss(OCIO::GpuLanguage::GPU_LANGUAGE_METAL);
+    OCIO::GpuShaderText ss(OCIO::GpuLanguage::GPU_LANGUAGE_MSL_METAL);
     OCIO_CHECK_THROW_WHAT(ss.getDimensions("texture4d<float>"),
                           OCIO::Exception,
                           "Unable to parse dimensions from textureType. Invalid string passed in: texture4d<float>");
@@ -197,29 +216,27 @@ OCIO_ADD_TEST(GpuShaderUtils, get_texture_dimensions_failure)
 
 OCIO_ADD_TEST(GpuShaderUtils, getTexType_success)
 {
-    OCIO::GpuShaderText ss(OCIO::GpuLanguage::GPU_LANGUAGE_METAL);
-    std::string dim1 = ss.getTexType(1, "float");
+    std::string dim1 = OCIO::GpuShaderText::getTexType(OCIO::GpuLanguage::GPU_LANGUAGE_MSL_METAL, 1, "float");
     OCIO_CHECK_EQUAL(dim1, "texture1d<float>");
-    std::string dim2 = ss.getTexType(2, "float");
+    std::string dim2 = OCIO::GpuShaderText::getTexType(OCIO::GpuLanguage::GPU_LANGUAGE_MSL_METAL, 2, "float");
     OCIO_CHECK_EQUAL(dim2, "texture2d<float>");
-    std::string dim3 = ss.getTexType(3, "float");
+    std::string dim3 = OCIO::GpuShaderText::getTexType(OCIO::GpuLanguage::GPU_LANGUAGE_MSL_METAL, 3, "float");
     OCIO_CHECK_EQUAL(dim3, "texture3d<float>");
 }
 
 OCIO_ADD_TEST(GpuShaderUtils, getTexType_failure)
 {
-    OCIO::GpuShaderText ss(OCIO::GpuLanguage::GPU_LANGUAGE_METAL);
-    OCIO_CHECK_THROW_WHAT(ss.getTexType(4, "float"),
+    OCIO_CHECK_THROW_WHAT(OCIO::GpuShaderText::getTexType(OCIO::GpuLanguage::GPU_LANGUAGE_MSL_METAL, 4, "float"),
                           OCIO::Exception,
                           "Texture dimensions must be 3 or less and more than 0. Passed in was dimensions: 4")
-    OCIO_CHECK_THROW_WHAT(ss.getTexType(1, ""),
+    OCIO_CHECK_THROW_WHAT(OCIO::GpuShaderText::getTexType(OCIO::GpuLanguage::GPU_LANGUAGE_MSL_METAL, 1, ""),
                           OCIO::Exception,
                           "Texture format must contain at least one character")
 }
 
 OCIO_ADD_TEST(GpuShaderUtils, getTexPram_success)
 {
-    OCIO::GpuShaderText ss(OCIO::GpuLanguage::GPU_LANGUAGE_METAL);
+    OCIO::GpuShaderText ss(OCIO::GpuLanguage::GPU_LANGUAGE_MSL_METAL);
     std::string textureParam;
     ss.getTexParam("textureName", "float", textureParam, 2);
     OCIO_CHECK_EQUAL("texture2d<float> textureName", textureParam);
@@ -227,7 +244,7 @@ OCIO_ADD_TEST(GpuShaderUtils, getTexPram_success)
 
 OCIO_ADD_TEST(GpuShaderUtils, getTexPram_failure)
 {
-    OCIO::GpuShaderText ss(OCIO::GpuLanguage::GPU_LANGUAGE_METAL);
+    OCIO::GpuShaderText ss(OCIO::GpuLanguage::GPU_LANGUAGE_MSL_METAL);
     std::string textureParam;
     OCIO_CHECK_THROW_WHAT(ss.getTexParam("", "float", textureParam, 2),
                           OCIO::Exception,

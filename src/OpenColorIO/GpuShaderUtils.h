@@ -179,7 +179,7 @@ public:
     static std::string getSamplerName(const std::string& textureName);
     
     void getTexParam(const std::string &textureName, const std::string &textureFormat, std::string &textureParameterOut, unsigned int dimensions) const;
-    std::string getTexType(unsigned int dimensions, const std::string &textureFormat) const;
+    static std::string getTexType(GpuLanguage language, unsigned int dimensions, const std::string &textureFormat);
     TextureDimensions getDimensions(std::string textureType) const;
 
     // Declare the global texture and sampler information for a 1D texture.

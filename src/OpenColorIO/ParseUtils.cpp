@@ -264,7 +264,7 @@ const char * GpuLanguageToString(GpuLanguage language)
         case GPU_LANGUAGE_GLSL_ES_1_0:  return "glsl_es_1.0";
         case GPU_LANGUAGE_GLSL_ES_3_0:  return "glsl_es_3.0";
         case GPU_LANGUAGE_HLSL_DX11:    return "hlsl_dx11";
-        case GPU_LANGUAGE_METAL:        return "metal";
+        case GPU_LANGUAGE_MSL_METAL:    return "msl_metal";
         case LANGUAGE_OSL_1:            return "osl_1";
     }
 
@@ -284,7 +284,7 @@ GpuLanguage GpuLanguageFromString(const char * s)
     else if(str == "glsl_es_3.0") return GPU_LANGUAGE_GLSL_ES_3_0;
     else if(str == "hlsl_dx11")   return GPU_LANGUAGE_HLSL_DX11;
     else if(str == "osl_1")       return LANGUAGE_OSL_1;
-    else if(str == "metal")       return GPU_LANGUAGE_METAL;
+    else if(str == "metal")       return GPU_LANGUAGE_MSL_METAL;
 
     std::ostringstream oss;
     oss << "Unsupported GPU shader language: '" << p << "'.";

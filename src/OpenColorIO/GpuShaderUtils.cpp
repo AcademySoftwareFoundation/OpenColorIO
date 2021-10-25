@@ -62,7 +62,7 @@ std::string getVecKeyword(GpuLanguage lang)
             break;
         }
 
-        case GPU_LANGUAGE_METAL:
+        case GPU_LANGUAGE_MSL_METAL:
         case GPU_LANGUAGE_HLSL_DX11:
         {
             kw << "float" << N;
@@ -120,7 +120,7 @@ void getTexDecl(GpuLanguage lang,
         {
             throw Exception("Unsupported by the Open Shading language (OSL) translation.");
         }
-        case GPU_LANGUAGE_METAL:
+        case GPU_LANGUAGE_MSL_METAL:
         {
             std::ostringstream t;
             t << "texture" << N << "d<float> " << textureName << ";";
@@ -193,7 +193,7 @@ std::string getTexSample(GpuLanguage lang,
             throw Exception("Unsupported by the Open Shading language (OSL) translation.");
         }
 
-        case GPU_LANGUAGE_METAL:
+        case GPU_LANGUAGE_MSL_METAL:
         {
             kw << textureName << ".sample(" << samplerName << ", " << coords << ")";
             break;
@@ -348,7 +348,7 @@ std::string GpuShaderText::floatKeywordConst() const
         case GPU_LANGUAGE_GLSL_ES_1_0:
         case GPU_LANGUAGE_GLSL_ES_3_0:
         case GPU_LANGUAGE_HLSL_DX11:
-        case GPU_LANGUAGE_METAL:
+        case GPU_LANGUAGE_MSL_METAL:
         {
             str += "const";
             str += " ";
@@ -472,7 +472,7 @@ void GpuShaderText::declareFloatArrayConst(const std::string & name, int size, c
         case LANGUAGE_OSL_1:
         case GPU_LANGUAGE_CG:
         case GPU_LANGUAGE_HLSL_DX11:
-        case GPU_LANGUAGE_METAL:
+        case GPU_LANGUAGE_MSL_METAL:
         {
             nl << floatKeywordConst() << " " << name << "[" << size << "] = {";
             for (int i = 0; i < size; ++i)
@@ -524,7 +524,7 @@ void GpuShaderText::declareIntArrayConst(const std::string & name, int size, con
             break;
         }
         case GPU_LANGUAGE_HLSL_DX11:
-        case GPU_LANGUAGE_METAL:
+        case GPU_LANGUAGE_MSL_METAL:
         {
             nl << "const " << intKeyword() << " " << name << "[" << size << "] = {";
             for (int i = 0; i < size; ++i)
@@ -746,9 +746,9 @@ std::string GpuShaderText::getSamplerName(const std::string& textureName)
     return textureName + "Sampler";
 }
 
-std::string GpuShaderText::getTexType(unsigned int dimensions, const std::string &textureFormat) const
+std::string GpuShaderText::getTexType(GpuLanguage language, unsigned int dimensions, const std::string &textureFormat)
 {
-    if (m_lang != GPU_LANGUAGE_METAL)
+    if (language != GPU_LANGUAGE_MSL_METAL)
     {
         throw Exception("Not implemented for GPU shader language");
     }
@@ -772,7 +772,7 @@ void GpuShaderText::getTexParam(const std::string &textureName,
                  unsigned int dimensions
 ) const
 {
-    if (m_lang != GPU_LANGUAGE_METAL)
+    if (m_lang != GPU_LANGUAGE_MSL_METAL)
     {
         throw Exception("Not implemented for GPU shader language");
     }
@@ -781,13 +781,13 @@ void GpuShaderText::getTexParam(const std::string &textureName,
         throw Exception("Name of texture variable must be at least 1 character");
     }
     std::ostringstream t;
-    t << getTexType(dimensions, textureFormat) << " " << textureName;
+    t << getTexType(m_lang, dimensions, textureFormat) << " " << textureName;
     textureParameterOut = t.str();
 }
 
 TextureDimensions GpuShaderText::getDimensions(std::string textureType) const
 {
-    if (m_lang != GPU_LANGUAGE_METAL)
+    if (m_lang != GPU_LANGUAGE_MSL_METAL)
     {
          throw Exception("getDimensions is currently only supported for Metal");
     }
@@ -947,7 +947,7 @@ std::string matrix4Mul(const T * m4x4, const std::string & vecName, GpuLanguage 
                << ")";
             break;
         }
-        case GPU_LANGUAGE_METAL:
+        case GPU_LANGUAGE_MSL_METAL:
         {
             kw << "float4x4(" << getMatrixValues<T, 4>(m4x4, lang, true) << ") * " << vecName;
             break;
@@ -986,7 +986,7 @@ std::string GpuShaderText::lerp(const std::string & x,
         case GPU_LANGUAGE_GLSL_4_0:
         case GPU_LANGUAGE_GLSL_ES_1_0:
         case GPU_LANGUAGE_GLSL_ES_3_0:
-        case GPU_LANGUAGE_METAL:
+        case GPU_LANGUAGE_MSL_METAL:
         {
             kw << "mix(" << x << ", " << y << ", " << a << ")";
             break;
@@ -1023,7 +1023,7 @@ std::string GpuShaderText::float3GreaterThan(const std::string & a,
             break;
         }
         case LANGUAGE_OSL_1:
-        case GPU_LANGUAGE_METAL:
+        case GPU_LANGUAGE_MSL_METAL:
         case GPU_LANGUAGE_HLSL_DX11:
         {
             kw << float3Keyword() << "(" 
@@ -1057,7 +1057,7 @@ std::string GpuShaderText::float4GreaterThan(const std::string & a,
             kw << float4Keyword() << "(greaterThan( " << a << ", " << b << "))";
             break;
         }
-        case GPU_LANGUAGE_METAL:
+        case GPU_LANGUAGE_MSL_METAL:
         case GPU_LANGUAGE_HLSL_DX11:
         {
             kw << float4Keyword() << "(" 
@@ -1110,7 +1110,7 @@ std::string GpuShaderText::atan2(const std::string & y,
             break;
         }
             
-        case GPU_LANGUAGE_METAL:
+        case GPU_LANGUAGE_MSL_METAL:
         {
             kw << "atan2(" << y << ", " << x << ")";
             break;
@@ -1148,7 +1148,7 @@ std::string GpuShaderText::sign(const std::string & v) const
             break;
         }
             
-        case GPU_LANGUAGE_METAL:
+        case GPU_LANGUAGE_MSL_METAL:
         {
             kw << "float4( (" + v + ".x < 0 ? -1 : (" + v + ".x == 0 ? 0 : +1)),"
                <<        " (" + v + ".y < 0 ? -1 : (" + v + ".y == 0 ? 0 : +1)),"
@@ -1227,95 +1227,104 @@ void AddLogToLinShader(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & st
     st.newLine() << "}";
 }
 
-    bool GpuShaderText::hasClassWrapper() const {
-        return m_lang == GPU_LANGUAGE_METAL;
+bool GpuShaderText::hasClassWrapper() const
+{
+    return m_lang == GPU_LANGUAGE_MSL_METAL;
+}
+    
+std::string GpuShaderText::classWrapperHeader(const std::string &className, const std::vector<TextureInfo> &textureInfo) const
+{
+    if (m_lang != GPU_LANGUAGE_MSL_METAL)
+    {
+        return std::string();
     }
     
-    std::string GpuShaderText::classWrapperHeader(const std::string &className, const std::vector<TextureInfo> &textureInfo) const {
-        if (m_lang != GPU_LANGUAGE_METAL)
-        {
-            return std::string();
-        }
-        
-        if(className.length() < 1)
-        {
-            throw Exception("Struct name must include at least 1 character");
-        }
-        if(isdigit(className[0]))
-        {
-            throw Exception(("Struct name must not start with a digit. Invalid className passed in: " + className).c_str());
-        }
-        
-        std::ostringstream kw;
-        kw << "struct " << className << std::endl;
-        kw << "{" << std::endl << std::endl;
-        kw << className <<"(";
-        std::string texParamOut;
-        for(auto it = textureInfo.begin(); it != textureInfo.end(); ++it)
-        {
-            getTexParam(it->textureName, "float", texParamOut, (int)it->textureDimensions);
-            kw << texParamOut;
-            kw << ", sampler " << getSamplerName(it->textureName);
-            if(std::next(it) != textureInfo.end() && textureInfo.size() > 1)
-            {
-                kw << ", ";
-            }
-        }
-        kw << ")" << std::endl << "{" << std::endl;
-        for(const auto & it : textureInfo)
-        {
-            kw << "\tthis->" <<                it.textureName  << " = " <<                it.textureName  << ";" << std::endl;
-            kw << "\tthis->" << getSamplerName(it.textureName) << " = " << getSamplerName(it.textureName) << ";" << std::endl;
-        }
-        kw <<"}";
-        return kw.str();
+    if(className.length() < 1)
+    {
+        throw Exception("Struct name must include at least 1 character");
+    }
+    if(isdigit(className[0]))
+    {
+        throw Exception(("Struct name must not start with a digit. Invalid className passed in: " + className).c_str());
     }
     
-    std::string GpuShaderText::classWrapperFooter(const std::string &className, const std::vector<TextureInfo> &textureInfo,
-                                                  const std::string &ocioFunctionName) const {
-
-        if (m_lang != GPU_LANGUAGE_METAL)
-        {
-            return std::string();
-        }
-        if(className.length() < 1)
-        {
-            throw Exception("Struct name must include at least 1 character");
-        }
-        if(isdigit(className[0]))
-        {
-            throw Exception(("Struct name must not start with a digit. Invalid className passed in: " + className).c_str());
-        }
-
-        std::ostringstream kw;
-        kw << "};" << std::endl << std::endl;
-        
-        kw << float4Keyword() << " " << ocioFunctionName<< "(";
-        std::string texParamOut;
-        for(auto it = textureInfo.begin(); it != textureInfo.end(); ++it)
-        {
-            getTexParam(it->textureName, "float", texParamOut, (int)it->textureDimensions);
-            kw << texParamOut << ", ";
-            kw << "sampler " << getSamplerName(it->textureName) << ", ";
-        }
-        kw << float4Keyword() << " inPixel)" << std::endl;
-        kw << "{" << std::setw(4) << std::endl;
-        kw << "\treturn " << className << "(";
-
-        for(auto it = textureInfo.begin(); it != textureInfo.end(); ++it)
-        {
-            kw << it->textureName;
-            kw << ", " << getSamplerName(it->textureName);
-            if(std::next(it) != textureInfo.end())
-            {
-                kw << ", ";
-            }
-        }
-        
-        kw << ")." << ocioFunctionName << "(inPixel);" << std::endl;
-        kw << "}";
-        
-        return kw.str();
+    GpuShaderText kw(GPU_LANGUAGE_MSL_METAL);
+    kw.newLine() << "struct " << className;
+    kw.newLine() << "{";
+    kw.newLine() << className <<"(";
+    kw.indent();
+    std::string texParamOut;
+    for(auto it = textureInfo.begin(); it != textureInfo.end(); ++it)
+    {
+        getTexParam(it->textureName, "float", texParamOut, (int)it->textureDimensions);
+        kw.newLine() << (it != textureInfo.begin() ? ", " : "") << texParamOut
+                     << ", sampler " << getSamplerName(it->textureName);
     }
+    kw.dedent();
+    kw.newLine() << ")";
+    kw.newLine() << "{";
+    
+    kw.indent();
+    for(const auto & it : textureInfo)
+    {
+        kw.newLine() << "this->" <<                it.textureName  << " = " <<                it.textureName  << ";";
+        kw.newLine() << "this->" << getSamplerName(it.textureName) << " = " << getSamplerName(it.textureName) << ";";
+    }
+    kw.dedent();
+    kw.newLine() <<"}";
+    return kw.string();
+}
+    
+std::string GpuShaderText::classWrapperFooter(const std::string &className,
+                                              const std::vector<TextureInfo> &textureInfo,
+                                              const std::string &ocioFunctionName) const
+{
+    if (m_lang != GPU_LANGUAGE_MSL_METAL)
+    {
+        return std::string();
+    }
+    if(className.length() < 1)
+    {
+        throw Exception("Struct name must include at least 1 character");
+    }
+    if(isdigit(className[0]))
+    {
+        throw Exception(("Struct name must not start with a digit. Invalid className passed in: " + className).c_str());
+    }
+
+    GpuShaderText kw(GPU_LANGUAGE_MSL_METAL);
+    kw.newLine() << "};";
+    
+    kw.newLine() << float4Keyword() << " " << ocioFunctionName<< "(";
+    std::string texParamOut;
+    bool inPixelNeedsComma = false;
+    
+    kw.indent();
+    for(auto it = textureInfo.begin(); it != textureInfo.end(); ++it)
+    {
+        getTexParam(it->textureName, "float", texParamOut, (int)it->textureDimensions);
+        kw.newLine() << (it != textureInfo.begin() ? ", " : "") << texParamOut
+                     << ", sampler " << getSamplerName(it->textureName);
+        inPixelNeedsComma = true;
+    }
+    kw.newLine() << (inPixelNeedsComma ? "," : "") << float4Keyword() << " inPixel)";
+    kw.dedent();
+    kw.newLine() << "{";
+    kw.indent();
+    kw.newLine() << "return " << className << "(";
+
+    kw.indent();
+    for(auto it = textureInfo.begin(); it != textureInfo.end(); ++it)
+    {
+        kw.newLine() << (it != textureInfo.begin() ? ", " : "") << it->textureName
+                     << ", " << getSamplerName(it->textureName);
+    }
+    kw.dedent();
+    
+    kw.newLine() << ")." << ocioFunctionName << "(inPixel);";
+    kw.dedent();
+    kw.newLine() << "}";
+    
+    return kw.string();
+}
 } // namespace OCIO_NAMESPACE
-

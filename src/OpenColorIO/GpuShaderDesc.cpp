@@ -19,16 +19,30 @@
 namespace OCIO_NAMESPACE
 {
 
-class MetalClassWrappingInterface : public ClassWrappingInterface
+class MetalClassWrappingInterface
 {
 public:
-    void addToFunctionParameter(const char * type, const char  * paramName) final;
-    void addToHeaderShaderCode(const char * shaderCode) final;
-    void addToFooterShaderCode(const char * shaderCode) final;
+    void addToFunctionParameter(const char * type, const char  * paramName);
+    void addToHeaderShaderCode(const char * shaderCode);
+    void addToFooterShaderCode(const char * shaderCode);
     
-    virtual const char* getClassWrapHeader() const final { return m_classWrapHeader.c_str(); }
-    virtual const char* getClassWrapFooter() const final { return m_classWrapFooter.c_str(); }
-    std::vector<ClassWrappingInterface::FunctionParam> getFunctionParameters() const final;
+    const char* getClassWrapHeader() const { return m_classWrapHeader.c_str(); }
+    const char* getClassWrapFooter() const { return m_classWrapFooter.c_str(); }
+    
+    struct FunctionParam
+    {
+        FunctionParam(const std::string& type, const std::string& name) :
+            type(type),
+            name(name)
+        {
+        }
+
+        const std::string type;
+        const std::string name;
+    };
+    
+    unsigned int getFunctionParameterCount() const { return static_cast<unsigned int>(m_classWrapFunctionParams.size()); }
+    const FunctionParam* getFunctionParameter(int idx) const { return idx < m_classWrapFunctionParams.size() ? &m_classWrapFunctionParams[idx] : nullptr; }
     
 private:
     std::string m_classWrapHeader;
@@ -59,16 +73,25 @@ public:
     std::string m_shaderCodeID;
 
     std::vector<DynamicPropertyRcPtr> m_dynamicProperties;
+    
+    MetalClassWrappingInterface* m_classWrappingInterface;
 
     Impl()
         :   m_functionName("OCIOMain")
         ,   m_resourcePrefix("ocio")
         ,   m_pixelName("outColor")
+        ,   m_classWrappingInterface(nullptr)
     {
     }
 
     ~Impl()
-    { }
+    {
+        if(m_classWrappingInterface)
+        {
+            delete m_classWrappingInterface;
+            m_classWrappingInterface = nullptr;
+        }
+    }
 
     Impl(const Impl & rhs) = delete;
 
@@ -98,7 +121,7 @@ public:
 };
 
 GpuShaderCreator::GpuShaderCreator()
-    :   m_impl(new GpuShaderDesc::Impl), m_classWrappingInterface(new ClassWrappingInterface)
+    :   m_impl(new GpuShaderDesc::Impl)
 {
 }
 
@@ -106,9 +129,6 @@ GpuShaderCreator::~GpuShaderCreator()
 {
     delete m_impl;
     m_impl = nullptr;
-    
-    delete m_classWrappingInterface;
-    m_classWrappingInterface = nullptr;
 }
 
 void GpuShaderCreator::setUniqueID(const char * uid) noexcept
@@ -127,17 +147,15 @@ void GpuShaderCreator::setLanguage(GpuLanguage lang) noexcept
 {
     AutoMutex lock(getImpl()->m_cacheIDMutex);
     
-    if(m_classWrappingInterface)
-        delete m_classWrappingInterface;
+    if(getImpl()->m_classWrappingInterface)
+        delete getImpl()->m_classWrappingInterface;
     
     getImpl()->m_language = lang;
-    if(lang == GPU_LANGUAGE_METAL)
+    if(lang == GPU_LANGUAGE_MSL_METAL)
     {
         getImpl()->m_functionName = "Display";
-        m_classWrappingInterface = new MetalClassWrappingInterface();
+        getImpl()->m_classWrappingInterface = new MetalClassWrappingInterface();
     }
-    else
-        m_classWrappingInterface = new ClassWrappingInterface();
     getImpl()->m_cacheID.clear();
 }
 
@@ -328,24 +346,23 @@ void GpuShaderCreator::addToFunctionFooterShaderCode(const char * shaderCode)
     getImpl()->m_functionFooter += (shaderCode && *shaderCode) ? shaderCode : "";
 }
 
-std::vector<ClassWrappingInterface::FunctionParam> MetalClassWrappingInterface::getFunctionParameters() const
-{
-    return m_classWrapFunctionParams;
-}
-
 void GpuShaderCreator::createShaderText(const char * shaderDeclarations,
                                         const char * shaderHelperMethods,
                                         const char * shaderFunctionHeader,
                                         const char * shaderFunctionBody,
-                                        const char * shaderFunctionFooter
-                                        )
+                                        const char * shaderFunctionFooter)
 {
     AutoMutex lock(getImpl()->m_cacheIDMutex);
 
     getImpl()->m_shaderCode.clear();
     
-    const char* shaderClassWrapperHeader = getClassWrappingInterface()->getClassWrapHeader();
-    const char* shaderClassWrapperFooter = getClassWrappingInterface()->getClassWrapFooter();
+    const char* shaderClassWrapperHeader = nullptr;
+    const char* shaderClassWrapperFooter = nullptr;
+    if(getLanguage() == GPU_LANGUAGE_MSL_METAL)
+    {
+        shaderClassWrapperHeader = getImpl()->m_classWrappingInterface->getClassWrapHeader();
+        shaderClassWrapperFooter = getImpl()->m_classWrappingInterface->getClassWrapFooter();
+    }
     
     getImpl()->m_shaderCode += (shaderClassWrapperHeader   && *shaderClassWrapperHeader)   ? shaderClassWrapperHeader  : "";
     getImpl()->m_shaderCode += (shaderDeclarations   && *shaderDeclarations)               ? shaderDeclarations        : "";
@@ -360,6 +377,67 @@ void GpuShaderCreator::createShaderText(const char * shaderDeclarations,
                                             unsigned(getImpl()->m_shaderCode.length()));
 
     getImpl()->m_cacheID.clear();
+}
+
+void TextureInfoFromParams(const MetalClassWrappingInterface* classWrappingInterface,
+                           GpuShaderText &shaderText,
+                           std::vector<TextureInfo> &textureInfoses)
+{
+    unsigned int functionParamCount =
+        classWrappingInterface->getFunctionParameterCount();
+    for(unsigned int idx = 0; idx < functionParamCount; ++idx)
+    {
+        const auto* fParam = classWrappingInterface->getFunctionParameter(idx);
+        if(!fParam) continue;
+        
+        if(fParam->type == "sampler")
+            continue;
+        
+        TextureDimensions dimensions = shaderText.getDimensions(fParam->type);
+        textureInfoses.emplace_back(TextureInfo{fParam->name, dimensions});
+    }
+}
+
+void GetClassWrapperName(std::string &name)
+{
+    name = "OCIO";
+}
+
+void WriteShaderClassWrapperHeader(MetalClassWrappingInterface* classWrappingInterface)
+{
+    GpuShaderText ss(GPU_LANGUAGE_MSL_METAL);
+    bool hasClassWrapper = ss.hasClassWrapper();
+    if(!hasClassWrapper)
+    {
+        return;
+    }
+    std::string className;
+    GetClassWrapperName(className);
+    std::vector<TextureInfo> textureInfoses;
+    TextureInfoFromParams(classWrappingInterface, ss, textureInfoses);
+    ss.newLine() << ss.classWrapperHeader(className, textureInfoses);
+    ss.newLine();
+    
+    classWrappingInterface->addToHeaderShaderCode(ss.string().c_str());
+}
+
+void WriteShaderClassWrapperFooter(MetalClassWrappingInterface* classWrappingInterface, const std::string& functionName)
+{
+    GpuShaderText ss(GPU_LANGUAGE_MSL_METAL);
+    bool hasClassWrapper = ss.hasClassWrapper();
+    if(!hasClassWrapper)
+    {
+        return;
+    }
+    ss.newLine();
+    std::string className;
+    GetClassWrapperName(className);
+
+    std::vector<TextureInfo> textureInfoses;
+    TextureInfoFromParams(classWrappingInterface, ss, textureInfoses);
+    ss.newLine() << ss.classWrapperFooter(className, textureInfoses, functionName);
+    
+    classWrappingInterface->addToFooterShaderCode(ss.string().c_str());
 }
 
 void GpuShaderCreator::finalize()
@@ -458,7 +536,49 @@ void GpuShaderCreator::finalize()
 
         getImpl()->m_functionFooter += kw1.string();
     }
-
+    
+    if (getLanguage() == GPU_LANGUAGE_MSL_METAL)
+    {
+        const GpuShaderDesc* pShaderDesc = static_cast<const GpuShaderDesc*>(this);
+        
+        unsigned int num3DTexture = pShaderDesc->getNum3DTextures();
+        for(unsigned int t = 0; t < num3DTexture; ++t)
+        {
+            const char* textureName = nullptr;
+            const char* samplerName = nullptr;
+            unsigned int edgeLen;
+            Interpolation interpolation;
+            
+            pShaderDesc->get3DTexture(t, textureName, samplerName, edgeLen, interpolation);
+            auto texType = GpuShaderText::getTexType(getLanguage(), 3, "float");
+            
+            getImpl()->m_classWrappingInterface->addToFunctionParameter(texType.c_str(), textureName);
+            getImpl()->m_classWrappingInterface->addToFunctionParameter("sampler", GpuShaderText::getSamplerName(textureName).c_str());
+        }
+        
+        unsigned int numTextures = pShaderDesc->getNumTextures();
+        for(unsigned int t = 0; t < numTextures; ++t)
+        {
+            const char* textureName = nullptr;
+            const char* samplerName = nullptr;
+            unsigned int width, height;
+            TextureType channel;
+            Interpolation interpolation;
+            
+            pShaderDesc->getTexture(t, textureName, samplerName, width, height, channel, interpolation);
+            
+            auto texType = GpuShaderText::getTexType(getLanguage(), height > 1 ? 2 : 1, "float");
+            
+            getImpl()->m_classWrappingInterface->addToFunctionParameter(texType.c_str(), textureName);
+            getImpl()->m_classWrappingInterface->addToFunctionParameter("sampler", GpuShaderText::getSamplerName(textureName).c_str());
+            
+        }
+        
+        WriteShaderClassWrapperHeader(getImpl()->m_classWrappingInterface);
+        WriteShaderClassWrapperFooter(getImpl()->m_classWrappingInterface, getImpl()->m_functionName);
+    }
+    
+    
 
     createShaderText(getImpl()->m_declarations.c_str(),
                      getImpl()->m_helperMethods.c_str(),
