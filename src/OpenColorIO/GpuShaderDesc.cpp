@@ -41,8 +41,10 @@ public:
         const std::string name;
     };
     
-    unsigned int getFunctionParameterCount() const { return static_cast<unsigned int>(m_classWrapFunctionParams.size()); }
-    const FunctionParam* getFunctionParameter(int idx) const { return idx < m_classWrapFunctionParams.size() ? &m_classWrapFunctionParams[idx] : nullptr; }
+    std::vector<FunctionParam> getFunctionParameters() const
+    {
+        return m_classWrapFunctionParams;
+    }
     
 private:
     std::string m_classWrapHeader;
@@ -383,18 +385,13 @@ void TextureInfoFromParams(const MetalClassWrappingInterface* classWrappingInter
                            GpuShaderText &shaderText,
                            std::vector<TextureInfo> &textureInfoses)
 {
-    unsigned int functionParamCount =
-        classWrappingInterface->getFunctionParameterCount();
-    for(unsigned int idx = 0; idx < functionParamCount; ++idx)
+    for(const auto& fParam : classWrappingInterface->getFunctionParameters())
     {
-        const auto* fParam = classWrappingInterface->getFunctionParameter(idx);
-        if(!fParam) continue;
-        
-        if(fParam->type == "sampler")
+        if(fParam.type == "sampler")
             continue;
         
-        TextureDimensions dimensions = shaderText.getDimensions(fParam->type);
-        textureInfoses.emplace_back(TextureInfo{fParam->name, dimensions});
+        TextureDimensions dimensions = shaderText.getDimensions(fParam.type);
+        textureInfoses.emplace_back(TextureInfo{fParam.name, dimensions});
     }
 }
 
