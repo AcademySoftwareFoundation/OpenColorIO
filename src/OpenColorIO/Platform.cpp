@@ -4,6 +4,7 @@
 #include <random>
 #include <sstream>
 #include <vector>
+#include <fstream>
 
 #include <OpenColorIO/OpenColorIO.h>
 
@@ -11,9 +12,6 @@
 
 #ifndef _WIN32
 #include <strings.h>
-#else
-#include <cstdlib>
-#include <cerrno>
 #endif
 
 
@@ -154,13 +152,34 @@ void AlignedFree(void* memBlock)
 #endif
 }
 
-std::string CreateTempFile(const std::string & filenameExt)
+namespace
+{
+
+int GenerateRandomNumber()
+{
+    // Note: Read https://isocpp.org/files/papers/n3551.pdf for details.
+
+    static std::mt19937 engine{};
+    static std::uniform_int_distribution<> dist{};
+
+    return dist(engine);
+}
+
+}
+
+std::string CreateTempFilename(const std::string & filenameExt)
 {
     std::string filename;
 
 #ifdef _WIN32
 
     // Note: Because of security issue, tmpnam could not be used.
+
+    // Note 2: MinGW doesn't define L_tmpnam_s, we need to patch it in.
+    // https://www.mail-archive.com/mingw-w64-public@lists.sourceforge.net/msg17360.html
+#if !defined(L_tmpnam_s)
+#define L_tmpnam_s L_tmpnam
+#endif
 
     char tmpFilename[L_tmpnam_s];
     if(tmpnam_s(tmpFilename))
@@ -169,26 +188,38 @@ std::string CreateTempFile(const std::string & filenameExt)
     }
 
     filename = tmpFilename[0] == '\\' ? tmpFilename + 1 : tmpFilename;
-    filename += filenameExt;
 
 #else
 
     // Linux flavors must have a /tmp directory.
-    filename = "/tmp/ocio_XXXXXX" + filenameExt;
-    
-    if(mkstemps(filename.data(), filenameExt.size()) == -1)
-    {
-        throw std::system_error(errno, std::system_category(), "Could not create a temporary file.");
-    }
+    std::stringstream ss;
+    ss << "/tmp/ocio_" << GenerateRandomNumber();
+
+    filename = ss.str();
 
 #endif
+
+    filename += filenameExt;
 
     return filename;
 }
 
 
-
 } // Platform
+
+TempFile::TempFile(const std::string & filenameExt, const std::string & content)
+    : m_filename{ Platform::CreateTempFilename(filenameExt) }
+{
+    std::ofstream ofs(m_filename.c_str(), std::ios_base::out);
+    ofs << content;
+    ofs.close();
+}
+
+TempFile::~TempFile()
+{
+    std::remove(m_filename.c_str());
+    ClearAllCaches();
+}
 
 } // namespace OCIO_NAMESPACE
 

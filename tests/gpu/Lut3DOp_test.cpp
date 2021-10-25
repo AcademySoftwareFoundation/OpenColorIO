@@ -42,12 +42,12 @@ OCIO_ADD_GPU_TEST(Lut3DOp, red_only_using_CSP_file_legacy_shader)
     content << "1.0 0.0 0.0"                                 << "\n";
 
 
-    const std::string filename = createTempFile(".csp", content.str());
+    const OCIO::TempFile guard{".csp", content.str()};
 
     // Create the transform & set the unit test
 
     OCIO::FileTransformRcPtr file = OCIO::FileTransform::Create();
-    file->setSrc(filename.c_str());
+    file->setSrc(guard.getFilename().c_str());
     file->setInterpolation(OCIO::INTERP_LINEAR);
 
     test.setProcessor(file);
@@ -85,12 +85,12 @@ OCIO_ADD_GPU_TEST(Lut3DOp, green_only_using_CSP_file_legacy_shader)
     content << "0.0 1.0 0.0"                                 << "\n";
 
 
-    const std::string filename = createTempFile(".csp", content.str());
+    const OCIO::TempFile guard{".csp", content.str()};
 
     // Create the transform & set the unit test
 
     OCIO::FileTransformRcPtr file = OCIO::FileTransform::Create();
-    file->setSrc(filename.c_str());
+    file->setSrc(guard.getFilename().c_str());
     file->setInterpolation(OCIO::INTERP_LINEAR);
 
     test.setProcessor(file);
@@ -128,12 +128,12 @@ OCIO_ADD_GPU_TEST(Lut3DOp, blue_only_using_CSP_file_legacy_shader)
     content << "0.0 0.0 1.0"                                 << "\n";
 
 
-    const std::string filename = createTempFile(".csp", content.str());
+    const OCIO::TempFile guard{".csp", content.str()};
 
     // Create the transform & set the unit test
 
     OCIO::FileTransformRcPtr file = OCIO::FileTransform::Create();
-    file->setSrc(filename.c_str());
+    file->setSrc(guard.getFilename().c_str());
     file->setInterpolation(OCIO::INTERP_LINEAR);
 
     test.setProcessor(file);
@@ -172,12 +172,12 @@ OCIO_ADD_GPU_TEST(Lut3DOp, arbitrary_using_CSP_file_legacy_shader)
     content << "1.100000 1.100000 1.100000"                  << "\n";
 
 
-    const std::string filename = createTempFile(".csp", content.str());
+    const OCIO::TempFile guard{".csp", content.str()};
 
     // Create the transform & set the unit test
 
     OCIO::FileTransformRcPtr file = OCIO::FileTransform::Create();
-    file->setSrc(filename.c_str());
+    file->setSrc(guard.getFilename().c_str());
     file->setInterpolation(OCIO::INTERP_LINEAR);
 
     test.setProcessor(file);
@@ -214,12 +214,12 @@ OCIO_ADD_GPU_TEST(Lut3DOp, arbitrary_using_CSP_file)
     content << "1.100000 1.100000 1.100000"                  << "\n";
 
 
-    const std::string filename = createTempFile(".csp", content.str());
+    const OCIO::TempFile guard{".csp", content.str()};
 
     // Create the transform & set the unit test
 
     OCIO::FileTransformRcPtr file = OCIO::FileTransform::Create();
-    file->setSrc(filename.c_str());
+    file->setSrc(guard.getFilename().c_str());
     file->setInterpolation(OCIO::INTERP_LINEAR);
 
     test.setProcessor(file);
