@@ -61,11 +61,11 @@ private:
 };
 
 // Convert Python buffer protocol format code to NumPy dtype name
-std::string formatCodeToDtypeName(const std::string & format, ssize_t numBits);
+std::string formatCodeToDtypeName(const std::string & format, py::ssize_t numBits);
 // Convert OCIO BitDepth to NumPy dtype
 py::dtype bitDepthToDtype(BitDepth bitDepth);
 // Convert OCIO BitDepth to data type byte count
-ssize_t bitDepthToBytes(BitDepth bitDepth);
+py::ssize_t bitDepthToBytes(BitDepth bitDepth);
 // Convert OCIO ChannelOrdering to channel count
 long chanOrderToNumChannels(ChannelOrdering chanOrder);
 
@@ -79,9 +79,9 @@ void checkBufferType(const py::buffer_info & info, const py::dtype & dt);
 // Throw if Python buffer format is incompatible with an OCIO BitDepth
 void checkBufferType(const py::buffer_info & info, BitDepth bitDepth);
 // Throw if Python buffer size is not divisible by channel count
-void checkBufferDivisible(const py::buffer_info & info, ssize_t numChannels);
+void checkBufferDivisible(const py::buffer_info & info, py::ssize_t numChannels);
 // Throw if Python buffer does not have an exact count of entries
-void checkBufferSize(const py::buffer_info & info, ssize_t numEntries);
+void checkBufferSize(const py::buffer_info & info, py::ssize_t numEntries);
 
 // Calculate 3D grid size from a packed 3D LUT buffer
 unsigned long getBufferLut3DGridSize(const py::buffer_info & info);

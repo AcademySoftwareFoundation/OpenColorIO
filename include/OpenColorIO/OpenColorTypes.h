@@ -409,7 +409,7 @@ enum BitDepth
     BIT_DEPTH_UINT12,
     BIT_DEPTH_UINT14,
     BIT_DEPTH_UINT16,
-    BIT_DEPTH_UINT32,
+    BIT_DEPTH_UINT32, ///< Here for historical reason but that's not supported.
     BIT_DEPTH_F16,
     BIT_DEPTH_F32
 };
@@ -446,7 +446,9 @@ enum GpuLanguage
     GPU_LANGUAGE_GLSL_1_3,          ///< OpenGL Shading Language
     GPU_LANGUAGE_GLSL_4_0,          ///< OpenGL Shading Language
     GPU_LANGUAGE_HLSL_DX11,         ///< DirectX Shading Language
-    LANGUAGE_OSL_1                  ///< Open Shading Language                
+    LANGUAGE_OSL_1,                 ///< Open Shading Language
+    GPU_LANGUAGE_GLSL_ES_1_0,       ///< OpenGL ES Shading Language
+    GPU_LANGUAGE_GLSL_ES_3_0,       ///< OpenGL ES Shading Language
 };
 
 enum EnvironmentMode
