@@ -6,10 +6,4 @@
 #define OPENCOLORIO_GPU_HELPERS_H
 
 
-#include <string>
-
-
-std::string createTempFile(const std::string& fileExt, const std::string& fileContent);
-
-
 #endif

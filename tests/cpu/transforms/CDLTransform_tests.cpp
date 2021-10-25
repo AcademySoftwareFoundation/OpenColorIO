@@ -203,27 +203,6 @@ OCIO_ADD_TEST(CDLTransform, create_from_cdl_file)
     }
 }
 
-namespace
-{
-
-struct FileGuard
-{
-    explicit FileGuard(unsigned lineNo)
-    {
-        OCIO_CHECK_NO_THROW_FROM(m_filename = OCIO::Platform::CreateTempFilename(""), lineNo);
-    }
-    ~FileGuard()
-    {
-        // Even if not strictly required on most OSes, perform the cleanup.
-        std::remove(m_filename.c_str());
-        OCIO::ClearAllCaches();
-    }
-
-    std::string m_filename;
-};
-
-} //anon.
-
 
 OCIO_ADD_TEST(CDLTransform, escape_xml)
 {
@@ -240,15 +219,15 @@ OCIO_ADD_TEST(CDLTransform, escape_xml)
         "    </SatNode>\n"
         "</ColorCorrection>");
 
-    FileGuard guard(__LINE__);
+    const auto guard = [&]{ OCIO_CHECK_NO_THROW(return OCIO::TempFile{""}); throw "throwanything"; }();
 
-    std::fstream stream(guard.m_filename, std::ios_base::out | std::ios_base::trunc);
+    std::fstream stream(guard.getFilename(), std::ios_base::out | std::ios_base::trunc);
     OCIO_REQUIRE_ASSERT(stream.is_open());
     stream << inputXML;
     stream.close();
 
     OCIO::CDLTransformRcPtr transform;
-    OCIO_CHECK_NO_THROW(transform = OCIO::CDLTransform::CreateFromFile(guard.m_filename.c_str(), ""));
+    OCIO_CHECK_NO_THROW(transform = OCIO::CDLTransform::CreateFromFile(guard.getFilename().c_str(), ""));
     OCIO_REQUIRE_ASSERT(transform);
 
     {
@@ -317,15 +296,15 @@ static const std::string kContentsB = {
 
 OCIO_ADD_TEST(CDLTransform, clear_caches)
 {
-    FileGuard guard(__LINE__);
+    const auto guard = [&]{ OCIO_CHECK_NO_THROW(return OCIO::TempFile{""}); throw "throwanything"; }();
 
-    std::fstream stream(guard.m_filename, std::ios_base::out|std::ios_base::trunc);
+    std::fstream stream(guard.getFilename(), std::ios_base::out|std::ios_base::trunc);
     OCIO_REQUIRE_ASSERT(stream.is_open());
     stream << kContentsA;
     stream.close();
 
     OCIO::CDLTransformRcPtr transform;
-    OCIO_CHECK_NO_THROW(transform = OCIO::CDLTransform::CreateFromFile(guard.m_filename.c_str(),
+    OCIO_CHECK_NO_THROW(transform = OCIO::CDLTransform::CreateFromFile(guard.getFilename().c_str(),
                                                                        "cc03343"));
     OCIO_REQUIRE_ASSERT(transform);
     double slope[3]{};
@@ -335,14 +314,14 @@ OCIO_ADD_TEST(CDLTransform, clear_caches)
     OCIO_CHECK_EQUAL(slope[1], 0.2);
     OCIO_CHECK_EQUAL(slope[2], 0.3);
 
-    stream.open(guard.m_filename, std::ios_base::out|std::ios_base::trunc);
+    stream.open(guard.getFilename(), std::ios_base::out|std::ios_base::trunc);
     OCIO_REQUIRE_ASSERT(stream.is_open());
     stream << kContentsB;
     stream.close();
 
     OCIO_CHECK_NO_THROW(OCIO::ClearAllCaches());
 
-    OCIO_CHECK_NO_THROW(transform = OCIO::CDLTransform::CreateFromFile(guard.m_filename.c_str(),
+    OCIO_CHECK_NO_THROW(transform = OCIO::CDLTransform::CreateFromFile(guard.getFilename().c_str(),
                                                                        "cc03343"));
     OCIO_REQUIRE_ASSERT(transform);
     OCIO_CHECK_NO_THROW(transform->getSlope(slope));
@@ -354,16 +333,16 @@ OCIO_ADD_TEST(CDLTransform, clear_caches)
 
 OCIO_ADD_TEST(CDLTransform, faulty_file_content)
 {
-    FileGuard guard(__LINE__);
+    const auto guard = [&]{ OCIO_CHECK_NO_THROW(return OCIO::TempFile{""}); throw "throwanything"; }();
 
     {
-        std::fstream stream(guard.m_filename, std::ios_base::out|std::ios_base::trunc);
+        std::fstream stream(guard.getFilename(), std::ios_base::out|std::ios_base::trunc);
         OCIO_REQUIRE_ASSERT(stream.is_open());
         stream << kContentsA << "Some Extra faulty information";
         stream.close();
 
         // Detailed parsing error is part of the debug log.
-        OCIO_CHECK_THROW_WHAT(OCIO::CDLTransform::CreateFromFile(guard.m_filename.c_str(), "cc03343"),
+        OCIO_CHECK_THROW_WHAT(OCIO::CDLTransform::CreateFromFile(guard.getFilename().c_str(), "cc03343"),
                               OCIO::Exception, "All formats have been tried");
     }
     OCIO::ClearAllCaches();
@@ -375,14 +354,14 @@ OCIO_ADD_TEST(CDLTransform, faulty_file_content)
         OCIO_CHECK_ASSERT(found!=std::string::npos);
         faultyContent.replace(found, strlen("cc03344"), "cc03343");
 
-        std::fstream stream(guard.m_filename, std::ios_base::out|std::ios_base::trunc);
+        std::fstream stream(guard.getFilename(), std::ios_base::out|std::ios_base::trunc);
         OCIO_REQUIRE_ASSERT(stream.is_open());
         stream << faultyContent;
         stream.close();
 
         // Detailed parsing error is part of the debug log.
         OCIO::LogGuard logGuard;
-        OCIO_CHECK_THROW_WHAT(OCIO::CDLTransform::CreateFromFile(guard.m_filename.c_str(), "cc03343"),
+        OCIO_CHECK_THROW_WHAT(OCIO::CDLTransform::CreateFromFile(guard.getFilename().c_str(), "cc03343"),
                               OCIO::Exception,
                               "All formats have been tried");
         OCIO_CHECK_NE(logGuard.output().find("Error loading ccc xml. Duplicate elements with "

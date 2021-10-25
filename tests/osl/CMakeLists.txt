@@ -36,7 +36,7 @@ target_link_libraries(test_osl_exec
         OpenImageIO::OpenImageIO
 )
 
-add_test(test_osl test_osl_exec)
+add_test(NAME test_osl COMMAND test_osl_exec)
 
 set_tests_properties(test_osl PROPERTIES ENVIRONMENT SHADERS_DIR=${OSL_SHADERS_DIR})
 
