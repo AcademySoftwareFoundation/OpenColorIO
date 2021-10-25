@@ -7,6 +7,7 @@
 
 #include <sstream>
 #include <utility>
+#include <vector>
 
 #include <OpenColorIO/OpenColorIO.h>
 
