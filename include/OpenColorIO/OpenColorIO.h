@@ -2694,6 +2694,7 @@ private:
     PlanarImageDesc& operator= (const PlanarImageDesc &);
 };
 
+
 ///////////////////////////////////////////////////////////////////////////
 // GpuShaderCreator
 /**
@@ -2878,7 +2879,7 @@ public:
                               unsigned edgelen,
                               Interpolation interpolation,
                               const float * values) = 0;
-    
+
     // Methods to specialize parts of a OCIO shader program
     virtual void addToDeclareShaderCode(const char * shaderCode);
     virtual void addToHelperShaderCode(const char * shaderCode);
