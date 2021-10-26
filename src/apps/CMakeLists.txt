@@ -8,7 +8,7 @@ if(OCIO_BUILD_APPS)
 	add_subdirectory(ociomakeclf)
 	add_subdirectory(ociowrite)
 
-	if(TARGET OpenImageIO::OpenImageIO)
+	if(OpenImageIO_FOUND AND TARGET OpenImageIO::OpenImageIO)
 		add_subdirectory(ociolutimage)
 		add_subdirectory(ocioconvert)
 		add_subdirectory(ociodisplay)
