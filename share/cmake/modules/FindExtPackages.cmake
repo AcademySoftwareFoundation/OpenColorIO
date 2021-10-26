@@ -74,19 +74,6 @@ if(OCIO_BUILD_OPENFX)
     find_package(openfx 1.4 REQUIRED)
 endif()
 
-if(OCIO_BUILD_PYTHON)
-
-    # NOTE: Depending of the compiler version pybind11 2.4.3 does not compile 
-    # with C++17 so, if you change the pybind11 version update the code to 
-    # compile pybind11 and dependencies with C++17 or higher i.e. remove the 
-    # cap of C++ version in FindPybind11.cmake and 
-    # src/bindings/python/CMakeLists.txt.
-
-    # pybind11
-    # https://github.com/pybind/pybind11
-    find_package(pybind11 2.6.1 REQUIRED)
-endif()
-
 if (OCIO_PYTHON_VERSION AND NOT OCIO_BUILD_PYTHON)
     message (WARNING "OCIO_PYTHON_VERSION=${OCIO_PYTHON_VERSION} but OCIO_BUILD_PYTHON is off.")
 endif ()
