@@ -141,30 +141,6 @@ if(NOT pybind11_FOUND AND NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL NONE)
     set(_EXT_DIST_ROOT "${CMAKE_BINARY_DIR}/ext/dist")
     set(_EXT_BUILD_ROOT "${CMAKE_BINARY_DIR}/ext/build")
 
-    # Find the latest version if requested
-    if(OCIO_INSTALL_EXT_PACKAGES_LATEST)
-        find_package(Git)
-
-        execute_process(
-            COMMAND
-                ${GIT_EXECUTABLE} -c "versionsort.suffix=b"
-                                  -c "versionsort.suffix=rc"
-                                  ls-remote
-                                  --tags
-                                  --refs
-                                  --sort=v:refname
-                                  https://github.com/pybind/pybind11.git
-                                  "v*.*.*"
-            OUTPUT_VARIABLE REP_TAGS
-            OUTPUT_STRIP_TRAILING_WHITESPACE
-        )
-        string(REGEX MATCH "v([0-9]+).([0-9]+).([0-9]+)$" REP_LATEST "${REP_TAGS}")
-        set(pybind11_FIND_VERSION "${CMAKE_MATCH_1}.${CMAKE_MATCH_2}.${CMAKE_MATCH_3}")
-        set(pybind11_FIND_VERSION_MAJOR "${CMAKE_MATCH_1}")
-        set(pybind11_FIND_VERSION_MINOR "${CMAKE_MATCH_2}")
-        set(pybind11_FIND_VERSION_PATCH "${CMAKE_MATCH_3}")
-    endif()
-
     # Set find_package standard args
     set(pybind11_FOUND TRUE)
     set(pybind11_VERSION ${pybind11_FIND_VERSION})

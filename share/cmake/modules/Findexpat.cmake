@@ -169,28 +169,6 @@ if(NOT expat_FOUND AND NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL NONE)
     set(_EXT_DIST_ROOT "${CMAKE_BINARY_DIR}/ext/dist")
     set(_EXT_BUILD_ROOT "${CMAKE_BINARY_DIR}/ext/build")
 
-    # Find the latest version if requested
-    if(OCIO_INSTALL_EXT_PACKAGES_LATEST)
-        find_package(Git)
-
-        execute_process(
-            COMMAND
-                ${GIT_EXECUTABLE} ls-remote
-                                  --tags
-                                  --refs
-                                  --sort=v:refname
-                                  https://github.com/libexpat/libexpat
-                                  "R_*_*_*"
-            OUTPUT_VARIABLE REP_TAGS
-            OUTPUT_STRIP_TRAILING_WHITESPACE
-        )
-        string(REGEX MATCH "R_([0-9]+)_([0-9]+)_([0-9]+)$" REP_LATEST "${REP_TAGS}")
-        set(expat_FIND_VERSION "${CMAKE_MATCH_1}.${CMAKE_MATCH_2}.${CMAKE_MATCH_3}")
-        set(expat_FIND_VERSION_MAJOR "${CMAKE_MATCH_1}")
-        set(expat_FIND_VERSION_MINOR "${CMAKE_MATCH_2}")
-        set(expat_FIND_VERSION_PATCH "${CMAKE_MATCH_3}")
-    endif()
-
     # Set find_package standard args
     set(expat_FOUND TRUE)
     set(expat_VERSION ${expat_FIND_VERSION})
