@@ -140,13 +140,6 @@ jobs:
     strategy:
       matrix:
         include:
-        # Python 3.10 can be enabled when numpy ship the binary wheel (which
-        # we use during tests). Building it within GH produces the following:
-        # RuntimeError: Polyfit sanity test emitted a warning, most likely due
-        # to using a buggy Accelerate backend. If you compiled yourself, see
-        # site.cfg.example for information. Otherwise report this to the vendor
-        # that provided NumPy.
-
           # -------------------------------------------------------------------
           # CPython 64 bits
           # -------------------------------------------------------------------
@@ -162,9 +155,9 @@ jobs:
           - build: CPython 3.9 64 bits
             python: cp39-*
             arch: x86_64
-          # - build: CPython 3.10 64 bits
-          #   python: cp310-*
-          #   arch: x86_64
+          - build: CPython 3.10 64 bits
+            python: cp310-*
+            arch: x86_64
           # -------------------------------------------------------------------
           # CPython ARM 64 bits
           # -------------------------------------------------------------------
@@ -174,9 +167,9 @@ jobs:
           - build: CPython 3.9 ARM 64 bits
             python: cp39-*
             arch: arm64
-          # - build: CPython 3.10 ARM 64 bits
-          #   python: cp310-*
-          #   arch: arm64
+          - build: CPython 3.10 ARM 64 bits
+            python: cp310-*
+            arch: arm64
 
     steps:
       - uses: actions/checkout@v2
