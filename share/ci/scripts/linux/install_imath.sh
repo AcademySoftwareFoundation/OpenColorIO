@@ -19,7 +19,8 @@ fi
 
 mkdir build
 cd build
-cmake -DBUILD_TESTING=OFF \
+cmake -DCMAKE_BUILD_TYPE=Release \
+      -DBUILD_TESTING=OFF \
       -DPYTHON=OFF \
       -DCMAKE_C_FLAGS="-fPIC" \
       -DCMAKE_CXX_FLAGS="-fPIC" \

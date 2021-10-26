@@ -96,6 +96,7 @@ jobs:
           share/ci/scripts/linux/install_openexr.sh latest
           share/ci/scripts/linux/install_imath.sh latest
           share/ci/scripts/linux/install_oiio.sh latest
+          share/ci/scripts/linux/install_pugixml.sh latest
           share/ci/scripts/linux/install_osl.sh latest
           share/ci/scripts/linux/install_openfx.sh latest
       - name: Create build directories

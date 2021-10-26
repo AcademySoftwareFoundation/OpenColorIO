@@ -18,7 +18,8 @@ fi
 
 mkdir build
 cd build
-cmake -DOIIO_BUILD_TOOLS=OFF \
+cmake -DCMAKE_BUILD_TYPE=Release \
+      -DOIIO_BUILD_TOOLS=OFF \
       -DOIIO_BUILD_TESTS=OFF \
       -DVERBOSE=ON \
       -DSTOP_ON_WARNING=OFF \

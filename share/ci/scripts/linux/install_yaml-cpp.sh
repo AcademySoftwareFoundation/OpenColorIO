@@ -25,7 +25,8 @@ fi
 
 mkdir build
 cd build
-cmake -DBUILD_SHARED_LIBS=ON \
+cmake -DCMAKE_BUILD_TYPE=Release \
+      -DBUILD_SHARED_LIBS=ON \
       -DYAML_CPP_BUILD_TESTS=OFF \
       -DYAML_CPP_BUILD_TOOLS=OFF \
       -DYAML_CPP_BUILD_CONTRIB=OFF \

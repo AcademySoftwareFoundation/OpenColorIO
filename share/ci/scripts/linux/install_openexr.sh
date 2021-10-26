@@ -19,7 +19,8 @@ fi
 
 mkdir build
 cd build
-cmake -DBUILD_TESTING=OFF \
+cmake -DCMAKE_BUILD_TYPE=Release \
+      -DBUILD_TESTING=OFF \
       -DOPENEXR_BUILD_UTILS=OFF \
       -DOPENEXR_VIEWERS_ENABLE=OFF \
       -DINSTALL_OPENEXR_EXAMPLES=OFF \

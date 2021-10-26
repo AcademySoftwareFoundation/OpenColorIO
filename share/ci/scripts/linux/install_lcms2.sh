@@ -20,7 +20,8 @@ cp ../share/cmake/projects/Buildlcms2.cmake CMakeLists.txt
 
 mkdir build
 cd build
-cmake -DBUILD_SHARED_LIBS=ON \
+cmake -DCMAKE_BUILD_TYPE=Release \
+      -DBUILD_SHARED_LIBS=ON \
       -DCMAKE_C_FLAGS="-fPIC" \
       ../.
 make -j4

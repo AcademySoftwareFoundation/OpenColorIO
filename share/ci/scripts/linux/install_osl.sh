@@ -18,7 +18,8 @@ fi
 
 mkdir build
 cd build
-cmake -DOSL_BUILD_TESTS=OFF \
+cmake -DCMAKE_BUILD_TYPE=Release \
+      -DOSL_BUILD_TESTS=OFF \
       -DVERBOSE=ON \
       -DSTOP_ON_WARNING=OFF \
       -DBoost_NO_BOOST_CMAKE=ON \
