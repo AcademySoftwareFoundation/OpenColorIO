@@ -5,39 +5,52 @@
 #ifndef OPENCOLORIO_OSL_UNITTEST_H
 #define OPENCOLORIO_OSL_UNITTEST_H
 
-#include <OSL/wide.h>
+
+#include "UnitTestTypes.h"
 
 #include <OpenColorIO/OpenColorIO.h>
 namespace OCIO = OCIO_NAMESPACE;
 
-#include <string>
+#include <OSL/wide.h>
 
 
 struct OSLData;
 typedef std::shared_ptr<OSLData> OSLDataRcPtr;
 
+// Defined the unit test data.
 struct OSLData
 {
     static OSLDataRcPtr Create();
 
-    // It contains the color to process.
-    OSL::Vec4 m_inValue;
-    // It contains the expected color.
-    OSL::Vec4 m_outValue;
+    OCIO::ConfigRcPtr m_config;
 
     OCIO::ConstTransformRcPtr m_transform;
 
+    // Use these values for the processing instead of the default ones.
+    Image m_inputValues;
+    
+    float m_threshold{ 1e-6f };
+    float m_expectedMinimalValue{ 1e-6f };
+    bool  m_relativeComparison{ false };
+
     std::string m_name;
+
+    OSLData() : m_config(OCIO::Config::CreateRaw()->createEditableCopy()) {}
 };
 
+// Defines the unit test to be executed.
 class UnitTest
 {
 public:
     UnitTest() : m_data(OSLData::Create()) {}
+
+    // Implement the method to define a specific unit test.
     virtual void create() = 0;
 
+    // The data of the unit test.
     OSLDataRcPtr m_data;
 };
+
 
 // Helper macro.
 
@@ -57,7 +70,7 @@ public:
 
 
 #define OCIO_OSL_TEST(group, name)                               \
-class UnitTest_##group##_##name : public UnitTest                \
+class UnitTest_##group##_##name final : public UnitTest          \
 {                                                                \
 public:                                                          \
     UnitTest_##group##_##name() : UnitTest()                     \

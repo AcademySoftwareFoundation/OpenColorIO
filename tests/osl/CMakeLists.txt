@@ -2,11 +2,18 @@
 # Copyright Contributors to the OpenColorIO Project.
 
 set(SOURCES
-    ExponentOp_test.cpp
+    CDLOp_test.cpp
+    ECOp_test.cpp
     FixedFunctionOp_test.cpp
+    GammaOp_test.cpp
+    GradingPrimaryOp_test.cpp
+    GradingRGBCurveOp_test.cpp
+    GradingToneOp_test.cpp
+    LogOp_test.cpp
     MatrixOp_test.cpp
     RangeOp_test.cpp
     UnitTestMain.cpp
+    UnitTestOSL.cpp
 )
 
 add_executable(test_osl_exec ${SOURCES})
@@ -32,13 +39,15 @@ target_link_libraries(test_osl_exec
     PRIVATE
         OpenColorIO
         osl::osl
-        Imath::Imath
         OpenImageIO::OpenImageIO
 )
 
 add_test(test_osl test_osl_exec)
 
-set_tests_properties(test_osl PROPERTIES ENVIRONMENT SHADERS_DIR=${OSL_SHADERS_DIR})
+list(APPEND ENVS "OSL_SHADERS_DIR=${OSL_SHADERS_DIR}")
+list(APPEND ENVS "TMP_SHADERS_DIR=${CMAKE_CURRENT_BINARY_DIR}")
+
+set_tests_properties(test_osl PROPERTIES ENVIRONMENT "${ENVS}")
 
 # Note: To avoid changing PATH from outside the cmake files.
 if(MSVC AND BUILD_SHARED_LIBS)
