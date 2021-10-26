@@ -283,14 +283,14 @@ if(WIN32)
             XML_STATIC
     )
 
-    if (OCIO_USE_UNICODE)
+    if (OCIO_USE_WINDOWS_UNICODE)
         # Add Unicode definitions to use Unicode functions
         target_compile_definitions(OpenColorIO
             PRIVATE
                 UNICODE
                 _UNICODE
         )
-    endif(OCIO_USE_UNICODE)
+    endif()
 endif()
 
 set_target_properties(OpenColorIO PROPERTIES

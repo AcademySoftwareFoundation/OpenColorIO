@@ -131,7 +131,7 @@ void Unsetenv(const char * name)
 
 #ifdef UNICODE
     // Note that the Windows _putenv_s() removes the env. variable if the value is empty.
-    _wputenv_s(Utf8ToUtf16(name).c_str(), TEXT(""));
+    _wputenv_s(Utf8ToUtf16(name).c_str(), L"");
 #else
     _putenv_s(name, "");
 #endif
