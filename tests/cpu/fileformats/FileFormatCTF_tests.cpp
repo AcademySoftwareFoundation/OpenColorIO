@@ -5725,9 +5725,9 @@ OCIO_ADD_TEST(CTFTransform, cdl_clf)
         <SOPNode>
             <Description>SOP description 1</Description>
             <Description>SOP description 2</Description>
-            <Slope>1, 1.1, 1.2</Slope>
-            <Offset>0.2, 0.3, 0.4</Offset>
-            <Power>3.1, 3.2, 3.3</Power>
+            <Slope>1 1.1 1.2</Slope>
+            <Offset>0.2 0.3 0.4</Offset>
+            <Power>3.1 3.2 3.3</Power>
         </SOPNode>
         <SatNode>
             <Description>Sat description 1</Description>
@@ -5740,6 +5740,24 @@ OCIO_ADD_TEST(CTFTransform, cdl_clf)
 
     OCIO_CHECK_EQUAL(expected.size(), outputTransform.str().size());
     OCIO_CHECK_EQUAL(expected, outputTransform.str());
+
+    // Now test if the read is working.
+
+    std::istringstream ctfStream;
+    ctfStream.str(expected);
+
+    std::string emptyString;
+    OCIO::LocalFileFormat tester;
+    OCIO::CachedFileRcPtr file = tester.read(ctfStream, emptyString, OCIO::INTERP_DEFAULT);
+    auto cachedFile = OCIO::DynamicPtrCast<OCIO::LocalCachedFile>(file);
+
+    const OCIO::ConstOpDataVec & opList = cachedFile->m_transform->getOps();
+    OCIO_REQUIRE_EQUAL(opList.size(), 1);
+    auto cdlData = std::dynamic_pointer_cast<const OCIO::CDLOpData>(opList[0]);
+    OCIO_REQUIRE_ASSERT(cdlData);
+    OCIO_CHECK_EQUAL(cdlData->getSlopeParams()[0], 1.);
+    OCIO_CHECK_EQUAL(cdlData->getSlopeParams()[1], 1.1);
+    OCIO_CHECK_EQUAL(cdlData->getSlopeParams()[2], 1.2);
 }
 
 OCIO_ADD_TEST(CTFTransform, cdl_ctf)
@@ -5768,9 +5786,9 @@ OCIO_ADD_TEST(CTFTransform, cdl_ctf)
         "<ProcessList version=\"1.7\" id=\"cdl2\">\n"
         "    <ASC_CDL inBitDepth=\"32f\" outBitDepth=\"32f\" style=\"Fwd\">\n"
         "        <SOPNode>\n"
-        "            <Slope>1, 1.1, 1.2</Slope>\n"
-        "            <Offset>0.2, 0.3, 0.4</Offset>\n"
-        "            <Power>3.1, 3.2, 3.3</Power>\n"
+        "            <Slope>1 1.1 1.2</Slope>\n"
+        "            <Offset>0.2 0.3 0.4</Offset>\n"
+        "            <Power>3.1 3.2 3.3</Power>\n"
         "        </SOPNode>\n"
         "        <SatNode>\n"
         "            <Saturation>2.1</Saturation>\n"
