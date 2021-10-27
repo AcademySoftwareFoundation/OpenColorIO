@@ -3344,29 +3344,6 @@ protected:
     virtual ~SystemMonitors() = default;
 };
 
-
-///////////////////////////////////////////////////////////////////////////
-// TempFile
-
-/**
- * Create a temporary file with the specified extension and content. The file is deleted on destruction.
- * The location of the file is platform specific.
- */
-class OCIOEXPORT TempFile
-{
-private:
-    std::string m_filename;
-    
-public:
-    TempFile(const std::string & filenameExt, const std::string & content = {});
-    ~TempFile();
-    
-    // Disable copying or moving this class.
-    TempFile(const TempFile &) = delete;
-    
-    const std::string & getFilename() const noexcept { return m_filename; }
-};
-
 } // namespace OCIO_NAMESPACE
 
 #endif // INCLUDED_OCIO_OPENCOLORIO_H

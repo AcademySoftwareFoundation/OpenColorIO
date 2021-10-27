@@ -4,7 +4,6 @@
 #include <random>
 #include <sstream>
 #include <vector>
-#include <fstream>
 
 #include <OpenColorIO/OpenColorIO.h>
 
@@ -187,6 +186,8 @@ std::string CreateTempFilename(const std::string & filenameExt)
         throw Exception("Could not create a temporary file.");
     }
 
+    // Note that when a file name is pre-pended with a backslash and no path information, such as \fname21, this 
+    // indicates that the name is valid for the current working directory.
     filename = tmpFilename[0] == '\\' ? tmpFilename + 1 : tmpFilename;
 
 #else
@@ -207,20 +208,6 @@ std::string CreateTempFilename(const std::string & filenameExt)
 
 
 } // Platform
-
-TempFile::TempFile(const std::string & filenameExt, const std::string & content)
-    : m_filename{ Platform::CreateTempFilename(filenameExt) }
-{
-    std::ofstream ofs(m_filename.c_str(), std::ios_base::out);
-    ofs << content;
-    ofs.close();
-}
-
-TempFile::~TempFile()
-{
-    std::remove(m_filename.c_str());
-    ClearAllCaches();
-}
 
 } // namespace OCIO_NAMESPACE
 
