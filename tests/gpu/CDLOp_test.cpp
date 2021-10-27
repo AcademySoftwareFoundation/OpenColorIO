@@ -147,9 +147,9 @@ OCIO_ADD_GPU_TEST(CDLOp, clamp_inv_no_clamp_v2)
 
 namespace CDL_Data_2
 {
-constexpr double slope[3]  = { 1.15, 1.10, 0.90 };
+constexpr double slope[3]  = { 1.15,  1.10, 0.90 };
 constexpr double offset[3] = { 0.05, -0.02, 0.07 };
-constexpr double power[3]  = { 1.20, 0.95, 1.13 };
+constexpr double power[3]  = { 1.20,  0.95, 1.13 };
 constexpr double saturation = 0.9;
 };
 
@@ -167,6 +167,7 @@ OCIO_ADD_GPU_TEST(CDLOp, clamp_fwd_v1_legacy_shader_Data_2)
     config->setMajorVersion(1);
     test.setProcessor(config, cdl);
 
+    test.setLegacyShader(true);
     test.setTestWideRange(true);
     test.setRelativeComparison(false);
     test.setErrorThreshold(1e-6f);
