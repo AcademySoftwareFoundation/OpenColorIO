@@ -720,7 +720,7 @@ void GammaMoncurveMirrorOpCPUFwd::apply(const void * inImg, void * outImg, long 
     for (long idx = 0; idx<numPixels; ++idx)
     {
         const float sign[4] = { std::copysign(1.0f, in[0]), std::copysign(1.0f, in[1]),
-                                std::copysign(1.0f, in[0]), std::copysign(1.0f, in[3]) };
+                                std::copysign(1.0f, in[2]), std::copysign(1.0f, in[3]) };
 
         const float pixel[4] = { std::fabs(in[0]), std::fabs(in[1]),
                                  std::fabs(in[2]), std::fabs(in[3]) };
@@ -817,7 +817,7 @@ void GammaMoncurveMirrorOpCPURev::apply(const void * inImg, void * outImg, long 
     for (long idx = 0; idx<numPixels; ++idx)
     {
         const float sign[4] = { std::copysign(1.0f, in[0]), std::copysign(1.0f, in[1]),
-                                std::copysign(1.0f, in[0]), std::copysign(1.0f, in[3]) };
+                                std::copysign(1.0f, in[2]), std::copysign(1.0f, in[3]) };
 
         const float pixel[4] = { std::fabs(in[0]), std::fabs(in[1]),
                                  std::fabs(in[2]), std::fabs(in[3]) };
