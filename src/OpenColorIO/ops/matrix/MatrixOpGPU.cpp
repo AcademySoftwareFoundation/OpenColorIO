@@ -38,23 +38,26 @@ void GetMatrixGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator, ConstMatri
         if (matrix->isDiagonal())
         {
             ss.newLine() << "res = "
-                            << ss.float4Const((float)values[0],
-                                              (float)values[5],
-                                              (float)values[10],
-                                              (float)values[15])
-                            << " * res;";
+                         << ss.float4Const((float)values[0],
+                                           (float)values[5],
+                                           (float)values[10],
+                                           (float)values[15])
+                         << " * res;";
         }
         else
         {
-            ss.newLine() << "res = " << ss.mat4fMul(&values[0], "res") << ";";
+            // NOTE: The in-place matrix computation is not supported by OSL so,
+            // a temporary variable is needed.
+            ss.newLine() << ss.float4Decl("tmp") << " = res;"; 
+            ss.newLine() << "res = " << ss.mat4fMul(&values[0], "tmp") << ";";
         }
     }
 
     if (matrix->hasOffsets())
     {
         ss.newLine() << "res = "
-                        << ss.float4Const((float)offs[0], (float)offs[1], (float)offs[2], (float)offs[3])
-                        << " + res;";
+                     << ss.float4Const((float)offs[0], (float)offs[1], (float)offs[2], (float)offs[3])
+                     << " + res;";
     }
 
     ss.newLine() << pxl << ".rgb = " << ss.float3Const("res.x", "res.y", "res.z") << ";";

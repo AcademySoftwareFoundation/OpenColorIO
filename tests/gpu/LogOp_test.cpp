@@ -124,7 +124,7 @@ OCIO_ADD_GPU_TEST(LogAffineTransform, base_inverse)
 
     test.setProcessor(log);
 
-    test.setErrorThreshold(g_epsilon);
+    test.setErrorThreshold(g_epsilon);  // Use the tighter tolerance than g_epsilon_inverse
 
     test.setRelativeComparison(true);
 
@@ -157,7 +157,7 @@ OCIO_ADD_GPU_TEST(LogAffineTransform, linSideSlope_inverse)
 
     test.setProcessor(log);
 
-    test.setErrorThreshold(g_epsilon);
+    test.setErrorThreshold(g_epsilon);  // Use the tighter tolerance than g_epsilon_inverse
 
     test.setTestNaN(false);
     test.setTestInfinity(false);
@@ -188,7 +188,7 @@ OCIO_ADD_GPU_TEST(LogAffineTransform, linSideOffset_inverse)
 
     test.setProcessor(log);
 
-    test.setErrorThreshold(g_epsilon);
+    test.setErrorThreshold(g_epsilon);  // Use the tighter tolerance than g_epsilon_inverse
 
     test.setTestNaN(false);
     test.setTestInfinity(false);
@@ -219,7 +219,7 @@ OCIO_ADD_GPU_TEST(LogAffineTransform, logSideSlope_inverse)
 
     test.setProcessor(log);
 
-    test.setErrorThreshold(g_epsilon);
+    test.setErrorThreshold(g_epsilon);  // Use the tighter tolerance than g_epsilon_inverse
 
     test.setTestNaN(false);
     test.setTestInfinity(false);
@@ -250,7 +250,7 @@ OCIO_ADD_GPU_TEST(LogAffineTransform, logSideOffset_inverse)
 
     test.setProcessor(log);
 
-    test.setErrorThreshold(g_epsilon);
+    test.setErrorThreshold(g_epsilon);  // Use the tighter tolerance than g_epsilon_inverse
 
     test.setTestNaN(false);
     test.setTestInfinity(false);

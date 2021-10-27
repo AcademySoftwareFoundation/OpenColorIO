@@ -7,22 +7,59 @@
 # variable to tell CMake where to find it. 
 #
 
-# TODO: OSL: Use "find_package(OSL 1.11 CONFIG)" directly instead of this file!
-
 
 if(NOT TARGET osl::osl)
-    add_library(osl::osl UNKNOWN IMPORTED GLOBAL)
+    add_library(osl::osl INTERFACE IMPORTED GLOBAL)
     set(OSL_FOUND OFF)
 endif()
 
 ###############################################################################
 ### Try to find package ###
 
-if(DEFINED OSL_ROOT)
+if(NOT DEFINED OSL_ROOT)
+
+    find_package(OSL ${OpenShadingLanguage_FIND_VERSION} CONFIG)
+    
+    set(OpenShadingLanguage_VERSION ${OSL_VERSION})
+
+    # TODO: No variable to have the share directory?
+
+    set(OSL_SHADERS_INCLUDE_DIR ${OSL_INCLUDE_DIR}/../share)
+
+    # Variable used by the OSL unit tests. 
+    set(OSL_SHADERS_DIR ${OSL_SHADERS_INCLUDE_DIR}/OSL/shaders)
+
+    include (FindPackageHandleStandardArgs)
+    find_package_handle_standard_args (OpenShadingLanguage
+        FOUND_VAR     OpenShadingLanguage_FOUND
+        REQUIRED_VARS OSL_INCLUDE_DIR OSL_LIB_DIR OpenShadingLanguage_VERSION
+        VERSION_VAR   OpenShadingLanguage_VERSION
+    )
+
+    set(OSL_FOUND ${OpenShadingLanguage_FOUND})
+
+else()
 
     set(OSL_INCLUDE_DIR ${OSL_ROOT}/include)
 
-    if(EXISTS "${OSL_INCLUDE_DIR}/OSL/oslversion.h")
+    set(OSL_VERSION_HEADER "${OSL_INCLUDE_DIR}/OSL/oslversion.h")
+
+    if(EXISTS "${OSL_VERSION_HEADER}")
+
+        # Try to figure out version number
+        file (STRINGS "${OSL_VERSION_HEADER}" TMP REGEX "^#define OSL_LIBRARY_VERSION_MAJOR .*$")
+        string (REGEX MATCHALL "[0-9]+" OSL_VERSION_MAJOR ${TMP})
+        file (STRINGS "${OSL_VERSION_HEADER}" TMP REGEX "^#define OSL_LIBRARY_VERSION_MINOR .*$")
+        string (REGEX MATCHALL "[0-9]+" OSL_VERSION_MINOR ${TMP})
+        file (STRINGS "${OSL_VERSION_HEADER}" TMP REGEX "^#define OSL_LIBRARY_VERSION_PATCH .*$")
+        string (REGEX MATCHALL "[0-9]+" OSL_VERSION_PATCH ${TMP})
+        file (STRINGS "${OSL_VERSION_HEADER}" TMP REGEX "^#define OSL_LIBRARY_VERSION_TWEAK .*$")
+        if (TMP)
+            string (REGEX MATCHALL "[0-9]+" OSL_VERSION_TWEAK ${TMP})
+        else ()
+            set (OSL_VERSION_TWEAK 0)
+        endif ()
+        set (OpenShadingLanguage_VERSION "${OSL_VERSION_MAJOR}.${OSL_VERSION_MINOR}.${OSL_VERSION_PATCH}.${OSL_VERSION_TWEAK}")
 
         # Find the oslcomp library.
         find_library(oslcomp_LIBRARY
@@ -32,6 +69,11 @@ if(DEFINED OSL_ROOT)
                 ${OSL_ROOT}
             PATH_SUFFIXES
                 lib
+        )
+
+        add_library(OSL::oslcomp SHARED IMPORTED)
+        set_target_properties(OSL::oslcomp PROPERTIES 
+            IMPORTED_LOCATION ${oslcomp_LIBRARY}
         )
 
         # Find the oslexec library.
@@ -44,8 +86,15 @@ if(DEFINED OSL_ROOT)
                 lib
         )
 
+        add_library(OSL::oslexec SHARED IMPORTED)
+        set_target_properties(OSL::oslexec PROPERTIES
+            IMPORTED_LOCATION ${oslexec_LIBRARY}
+        )
+
+        set(OSL_SHADERS_INCLUDE_DIR ${OSL_ROOT}/share)
+
         # Variable used by the OSL unit tests. 
-        set(OSL_SHADERS_DIR ${OSL_ROOT}/share/OSL/shaders)
+        set(OSL_SHADERS_DIR ${OSL_SHADERS_INCLUDE_DIR}/OSL/shaders)
 
         if(EXISTS "${OSL_SHADERS_DIR}")
 
@@ -55,6 +104,15 @@ if(DEFINED OSL_ROOT)
         endif()
 
     endif()
+
+    include (FindPackageHandleStandardArgs)
+    find_package_handle_standard_args (OpenShadingLanguage
+        FOUND_VAR     OpenShadingLanguage_FOUND
+        REQUIRED_VARS OSL_INCLUDE_DIR oslcomp_LIBRARY oslexec_LIBRARY OpenShadingLanguage_VERSION
+        VERSION_VAR   OpenShadingLanguage_VERSION
+    )
+
+    set(OSL_FOUND ${OpenShadingLanguage_FOUND})
 
 endif()
 
@@ -74,16 +132,21 @@ endif()
 if(OSL_FOUND)
 
     if (NOT OSL_FIND_QUIETLY)
-        message(STATUS "OpenShadingLanguage includes        = ${OSL_INCLUDE_DIR}")
-        message(STATUS "OpenShadingLanguage oslcomp library = ${oslcomp_LIBRARY}")
-        message(STATUS "OpenShadingLanguage oslexec library = ${oslexec_LIBRARY}")
+        message(STATUS "OpenShadingLanguage includes    = ${OSL_INCLUDE_DIR}")
+        message(STATUS "OpenShadingLanguage shaders     = ${OSL_SHADERS_DIR}")
+        message(STATUS "OpenShadingLanguage library dir = ${OSL_LIB_DIR}")
     endif ()
 
-    set_target_properties(osl::osl PROPERTIES
-        IMPORTED_LOCATION ${oslcomp_LIBRARY}
-        IMPORTED_LOCATION ${oslexec_LIBRARY}
-        INTERFACE_INCLUDE_DIRECTORIES ${OSL_INCLUDE_DIR}
-    )
+    list(APPEND LIB_INCLUDE_DIRS ${OSL_INCLUDE_DIR})
+    list(APPEND LIB_INCLUDE_DIRS ${OSL_SHADERS_INCLUDE_DIR})
+
+    target_include_directories(osl::osl INTERFACE "${LIB_INCLUDE_DIRS}")
+    target_link_libraries(osl::osl INTERFACE OSL::oslcomp OSL::oslexec)
+
+    if (${OpenShadingLanguage_VERSION} VERSION_GREATER_EQUAL "1.12" AND ${CMAKE_CXX_STANDARD} LESS_EQUAL 11)
+        set(OSL_FOUND OFF)
+        message(WARNING "Need C++14 or higher to compile OpenShadingLanguage. Skipping build the OSL unit tests")
+    endif()
 
     mark_as_advanced(OSL_INCLUDE_DIR
         oslcomp_LIBRARY oslcomp_FOUND
