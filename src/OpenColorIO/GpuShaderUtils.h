@@ -85,6 +85,8 @@ public:
     // Basic types.
     //
 
+    std::string constKeyword() const;
+
     std::string floatKeyword() const;
     std::string floatKeywordConst() const;
     std::string floatDecl(const std::string& name) const;
@@ -98,10 +100,14 @@ public:
     //
 
     // Declare a float variable.
+    std::string declareVarStr(const std::string & name, float v);
     void declareVar(const std::string & name, float v);
+    void declareVarConst(const std::string & name, float v);
 
     // Declare a bool variable.
+    std::string declareVarStr(const std::string & name, bool v);
     void declareVar(const std::string & name, bool v);
+    void declareVarConst(const std::string & name, bool v);
 
     // Declare a float array variable.
     void declareFloatArrayConst(const std::string & name, int size, const float * v);
@@ -126,8 +132,7 @@ public:
     std::string float3Const(float x, float y, float z) const;
     std::string float3Const(double x, double y, double z) const;
     // Get the string for creating constant vector with three elements
-    std::string float3Const(const std::string& x, const std::string& y,
-                           const std::string& z) const;
+    std::string float3Const(const std::string& x, const std::string& y, const std::string& z) const;
     // Get the string for creating constant vector with three elements
     std::string float3Const(float v) const;
     std::string float3Const(double v) const;
@@ -137,11 +142,9 @@ public:
     std::string float3Decl(const std::string& name) const;
 
     // Declare and initialize a vector with three elements
-    void declareFloat3(const std::string& name,
-                      float x, float y, float z);
+    void declareFloat3(const std::string& name, float x, float y, float z);
     void declareFloat3(const std::string& name, const Float3 & vec3);
-    void declareFloat3(const std::string& name,
-                      double x, double y, double z);
+    void declareFloat3(const std::string& name, double x, double y, double z);
     // Declare and initialize a vector with three elements
     void declareFloat3(const std::string& name,
                       const std::string& x, const std::string& y, const std::string& z);

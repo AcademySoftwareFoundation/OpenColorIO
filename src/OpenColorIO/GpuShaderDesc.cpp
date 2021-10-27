@@ -451,14 +451,15 @@ void GpuShaderCreator::finalize()
 
         kw.newLine() << "";
         kw.newLine() << "/* All the generic helper methods */";
+
         kw.newLine() << "";
-        kw.newLine() << "vector4 __operator__mul__(vector4 v, matrix m)";
+        kw.newLine() << "vector4 __operator__mul__(matrix m, vector4 v)";
         kw.newLine() << "{";
         kw.indent();
-        kw.newLine() << "return vector4(v.x * m[0][0] + v.y * m[1][0] + v.z * m[2][0] + v.w * m[3][0], "\
-                                       "v.x * m[0][1] + v.y * m[1][1] + v.z * m[2][1] + v.w * m[3][1], "\
-                                       "v.x * m[0][2] + v.y * m[1][2] + v.z * m[2][2] + v.w * m[3][2], "\
-                                       "v.x * m[0][3] + v.y * m[1][3] + v.z * m[2][3] + v.w * m[3][3]);";
+        kw.newLine() << "return vector4(v.x * m[0][0] + v.y * m[0][1] + v.z * m[0][2] + v.w * m[0][3], ";
+        kw.newLine() << "               v.x * m[1][0] + v.y * m[1][1] + v.z * m[1][2] + v.w * m[1][3], ";
+        kw.newLine() << "               v.x * m[2][0] + v.y * m[2][1] + v.z * m[2][2] + v.w * m[2][3], ";
+        kw.newLine() << "               v.x * m[3][0] + v.y * m[3][1] + v.z * m[3][2] + v.w * m[3][3]);";
         kw.dedent();
         kw.newLine() << "}";
 
@@ -487,28 +488,32 @@ void GpuShaderCreator::finalize()
         kw.newLine() << "}";
 
         kw.newLine() << "";
-        kw.newLine() << "vector4 __operator__add__(vector4 v, color4 c) {";
+        kw.newLine() << "vector4 __operator__add__(vector4 v, color4 c)";
+        kw.newLine() << "{";
         kw.indent();
         kw.newLine() << "return v + vector4(c.rgb.r, c.rgb.g, c.rgb.b, c.a);";
         kw.dedent();
         kw.newLine() << "}";
 
         kw.newLine() << "";
-        kw.newLine() << "vector4 __operator__add__(color4 c, vector4 v) {";
+        kw.newLine() << "vector4 __operator__add__(color4 c, vector4 v)";
+        kw.newLine() << "{";
         kw.indent();
         kw.newLine() << "return vector4(c.rgb.r, c.rgb.g, c.rgb.b, c.a) + v;";
         kw.dedent();
         kw.newLine() << "}";
 
         kw.newLine() << "";
-        kw.newLine() << "vector4 pow(color4 c, vector4 v) {";
+        kw.newLine() << "vector4 pow(color4 c, vector4 v)";
+        kw.newLine() << "{";
         kw.indent();
         kw.newLine() << "return pow(vector4(c.rgb.r, c.rgb.g, c.rgb.b, c.a), v);";
         kw.dedent();
         kw.newLine() << "}";
 
         kw.newLine() << "";
-        kw.newLine() << "vector4 max(vector4 v, color4 c) {";
+        kw.newLine() << "vector4 max(vector4 v, color4 c)";
+        kw.newLine() << "{";
         kw.indent();
         kw.newLine() << "return max(v, vector4(c.rgb.r, c.rgb.g, c.rgb.b, c.a));";
         kw.dedent();

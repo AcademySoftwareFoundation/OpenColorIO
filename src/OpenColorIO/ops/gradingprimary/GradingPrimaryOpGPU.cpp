@@ -76,12 +76,14 @@ void AddUniform(GpuShaderCreatorRcPtr & shaderCreator,
 
 static constexpr char opPrefix[] = "grading_primary";
 
-void AddGPLogProperties(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & st,
+void AddGPLogProperties(GpuShaderCreatorRcPtr & shaderCreator,
+                        GpuShaderText & st,
                         ConstGradingPrimaryOpDataRcPtr & gpData,
-                        GPProperties & propNames)
+                        GPProperties & propNames,
+                        bool dyn)
 {
     auto prop = gpData->getDynamicPropertyInternal();
-    if (gpData->isDynamic() && shaderCreator->getLanguage() != LANGUAGE_OSL_1)
+    if (dyn)
     {
         // Build names. No need to add an index to the name to avoid collisions as the dynamic
         // properties are unique.
@@ -142,22 +144,12 @@ void AddGPLogProperties(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & s
         st.declareFloat3(propNames.contrast, comp.getContrast());
         st.declareFloat3(propNames.gamma, comp.getGamma());
 
-        st.declareVar(propNames.pivot, static_cast<float>(comp.getPivot()));
-        st.declareVar(propNames.pivotBlack, static_cast<float>(value.m_pivotBlack));
-        st.declareVar(propNames.pivotWhite, static_cast<float>(value.m_pivotWhite));
-        st.declareVar(propNames.clampBlack, static_cast<float>(value.m_clampBlack));
-        st.declareVar(propNames.clampWhite, static_cast<float>(value.m_clampWhite));
-        st.declareVar(propNames.saturation, static_cast<float>(value.m_saturation));
-
-        if (shaderCreator->getLanguage() == LANGUAGE_OSL_1 && prop->isDynamic())
-        {
-            std::string msg("The dynamic properties are not yet supported by the 'Open Shading language"\
-                            " (OSL)' translation: The '");
-            msg += opPrefix;
-            msg += "' dynamic property is replaced by a local variable.";
-
-            LogWarning(msg);
-        }
+        st.declareVarConst(propNames.pivot, static_cast<float>(comp.getPivot()));
+        st.declareVarConst(propNames.pivotBlack, static_cast<float>(value.m_pivotBlack));
+        st.declareVarConst(propNames.pivotWhite, static_cast<float>(value.m_pivotWhite));
+        st.declareVarConst(propNames.clampBlack, static_cast<float>(value.m_clampBlack));
+        st.declareVarConst(propNames.clampWhite, static_cast<float>(value.m_clampWhite));
+        st.declareVarConst(propNames.saturation, static_cast<float>(value.m_saturation));
     }
 }
 
@@ -235,12 +227,14 @@ void AddGPLogInverseShader(GpuShaderCreatorRcPtr & shaderCreator,
     st.newLine() << pxl << ".rgb += " << props.brightness << ";";
 }
 
-void AddGPLinProperties(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & st,
+void AddGPLinProperties(GpuShaderCreatorRcPtr & shaderCreator,
+                        GpuShaderText & st,
                         ConstGradingPrimaryOpDataRcPtr & gpData,
-                        GPProperties & propNames)
+                        GPProperties & propNames,
+                        bool dyn)
 {
     auto prop = gpData->getDynamicPropertyInternal();
-    if (gpData->isDynamic())
+    if (dyn)
     {
         // Build names. No need to add an index to the name to avoid collisions as the dynamic
         // properties are unique.
@@ -294,10 +288,10 @@ void AddGPLinProperties(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & s
         st.declareFloat3(propNames.exposure, comp.getExposure());
         st.declareFloat3(propNames.contrast, comp.getContrast());
 
-        st.declareVar(propNames.pivot, static_cast<float>(comp.getPivot()));
-        st.declareVar(propNames.clampBlack, static_cast<float>(value.m_clampBlack));
-        st.declareVar(propNames.clampWhite, static_cast<float>(value.m_clampWhite));
-        st.declareVar(propNames.saturation, static_cast<float>(value.m_saturation));
+        st.declareVarConst(propNames.pivot, static_cast<float>(comp.getPivot()));
+        st.declareVarConst(propNames.clampBlack, static_cast<float>(value.m_clampBlack));
+        st.declareVarConst(propNames.clampWhite, static_cast<float>(value.m_clampWhite));
+        st.declareVarConst(propNames.saturation, static_cast<float>(value.m_saturation));
     }
 }
 
@@ -366,12 +360,14 @@ void AddGPLinInverseShader(GpuShaderCreatorRcPtr & shaderCreator,
     st.newLine() << pxl << ".rgb += " << props.offset << ";";
 }
 
-void AddGPVideoProperties(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & st,
+void AddGPVideoProperties(GpuShaderCreatorRcPtr & shaderCreator,
+                          GpuShaderText & st,
                           ConstGradingPrimaryOpDataRcPtr & gpData,
-                          GPProperties & propNames)
+                          GPProperties & propNames,
+                          bool dyn)
 {
     auto prop = gpData->getDynamicPropertyInternal();
-    if (gpData->isDynamic())
+    if (dyn)
     {
         // Build names. No need to add an index to the name to avoid collisions as the dynamic
         // properties are unique.
@@ -431,11 +427,11 @@ void AddGPVideoProperties(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText &
         st.declareFloat3(propNames.offset, comp.getOffset());
         st.declareFloat3(propNames.slope, comp.getSlope());
 
-        st.declareVar(propNames.pivotBlack, static_cast<float>(value.m_pivotBlack));
-        st.declareVar(propNames.pivotWhite, static_cast<float>(value.m_pivotWhite));
-        st.declareVar(propNames.clampBlack, static_cast<float>(value.m_clampBlack));
-        st.declareVar(propNames.clampWhite, static_cast<float>(value.m_clampWhite));
-        st.declareVar(propNames.saturation, static_cast<float>(value.m_saturation));
+        st.declareVarConst(propNames.pivotBlack, static_cast<float>(value.m_pivotBlack));
+        st.declareVarConst(propNames.pivotWhite, static_cast<float>(value.m_pivotWhite));
+        st.declareVarConst(propNames.clampBlack, static_cast<float>(value.m_clampBlack));
+        st.declareVarConst(propNames.clampWhite, static_cast<float>(value.m_clampWhite));
+        st.declareVarConst(propNames.saturation, static_cast<float>(value.m_saturation));
     }
 }
 
@@ -512,7 +508,7 @@ void AddGPVideoInverseShader(GpuShaderCreatorRcPtr & shaderCreator,
 void GetGradingPrimaryGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
                                        ConstGradingPrimaryOpDataRcPtr & gpData)
 {
-    const bool dyn = gpData->isDynamic();
+    const bool dyn = gpData->isDynamic() &&  shaderCreator->getLanguage() != LANGUAGE_OSL_1;
     if (!dyn)
     {
         auto propGP = gpData->getDynamicPropertyInternal();
@@ -520,6 +516,16 @@ void GetGradingPrimaryGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
         {
             return;
         }
+    }
+
+    if (gpData->isDynamic() && shaderCreator->getLanguage() == LANGUAGE_OSL_1)
+    {
+        std::string msg("The dynamic properties are not yet supported by the 'Open Shading language"\
+                        " (OSL)' translation: The '");
+        msg += opPrefix;
+        msg += "' dynamic property is replaced by a local variable.";
+
+        LogWarning(msg);
     }
 
     const GradingStyle style = gpData->getStyle();
@@ -543,7 +549,7 @@ void GetGradingPrimaryGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
     {
     case GRADING_LOG:
     {
-        AddGPLogProperties(shaderCreator, st, gpData, properties);
+        AddGPLogProperties(shaderCreator, st, gpData, properties, dyn);
         if (dyn)
         {
             st.newLine() << "if (!" << properties.localBypass << ")";
@@ -570,7 +576,7 @@ void GetGradingPrimaryGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
     }
     case GRADING_LIN:
     {
-        AddGPLinProperties(shaderCreator, st, gpData, properties);
+        AddGPLinProperties(shaderCreator, st, gpData, properties, dyn);
         if (dyn)
         {
             st.newLine() << "if (!" << properties.localBypass << ")";
@@ -597,7 +603,7 @@ void GetGradingPrimaryGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
     }
     case GRADING_VIDEO:
     {
-        AddGPVideoProperties(shaderCreator, st, gpData, properties);
+        AddGPVideoProperties(shaderCreator, st, gpData, properties, dyn);
         if (dyn)
         {
             st.newLine() << "if (!" << properties.localBypass << ")";
