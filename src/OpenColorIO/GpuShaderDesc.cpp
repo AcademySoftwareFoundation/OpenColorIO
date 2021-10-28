@@ -23,7 +23,7 @@ namespace OCIO_NAMESPACE
 class MetalClassWrappingInterface
 {
 public:
-    void addToFunctionParameter(const char * type, const char  * paramName);
+    void addToFunctionParameter(const std::string& type, const std::string& paramName);
     
     std::string getClassWrapperHeader(const std::string& resourcePrefix,
                                       const std::string& functionName,
@@ -290,9 +290,9 @@ const char * GpuShaderCreator::getCacheID() const noexcept
     return getImpl()->m_cacheID.c_str();
 }
 
-void MetalClassWrappingInterface::addToFunctionParameter(const char * type, const char * paramName)
+void MetalClassWrappingInterface::addToFunctionParameter(const std::string& type, const std::string& paramName)
 {
-    m_classWrapFunctionParams.push_back({{type}, {paramName}});
+    m_classWrapFunctionParams.push_back({type, paramName});
 }
 
 std::string MetalClassWrappingInterface::generateClassWrapperHeader(const std::string &className) const
@@ -577,31 +577,59 @@ void GpuShaderCreator::finalize()
         // We want the caller to always pass 3d luts first with their samplers, and then pass other luts.
         std::vector<std::tuple<std::string, std::string, std::string>> lut3DTextures;
         std::vector<std::tuple<std::string, std::string, std::string>> lutTextures;
+        std::vector<std::pair <std::string, std::string             >> uniforms;
         
+        constexpr int MAX_LINE_LEN         = 2048;
         constexpr int MAX_TEXTURE_NAME_LEN = 255;
-        int  textureDim;
-        char textureName[MAX_TEXTURE_NAME_LEN + 1];
-        char textureType[MAX_TEXTURE_NAME_LEN + 1];
-        char samplerName[MAX_TEXTURE_NAME_LEN + 1];
+
+        char lineBuffer [MAX_LINE_LEN + 1];
         
-        const std::string& declerations = getImpl()->m_declarations;
-        const char* str = declerations.c_str();
-        size_t pos = declerations.find("texture");
-        while(pos != std::string::npos)
+        std::istringstream is(getImpl()->m_declarations);
+        while(!is.eof())
         {
-            int retInt = sscanf(&str[pos], "texture%dd<%[a-zA-Z0-9]> %[a-zA-Z0-9_]", &textureDim, textureType, textureName);
+            is.getline(lineBuffer, 2048);
             
-            auto texType = GpuShaderText::getTextureKeyword(GPU_LANGUAGE_MSL_2_0, textureDim, textureType);
+            if(lineBuffer[0] == '\0')
+                continue;
             
-            pos = declerations.find("sampler", pos+1);
-            retInt = sscanf(&str[pos], "sampler %[a-zA-Z0-9_]", samplerName);
+            int i = 0;
             
-            if(textureDim == 3)
-                lut3DTextures.emplace_back(texType, textureName, samplerName);
+            // Skip spaces
+            while(lineBuffer[i] == ' ' || lineBuffer[i] == '\t') ++i;
+            
+            // is this line a comment?
+            if(lineBuffer[i + 0] == '/' && lineBuffer[i + 1] == '/')
+                continue;
+            
+            if(strncmp(&lineBuffer[i], "texture", 7) == 0)
+            {
+                int  textureDim;
+                char textureName[MAX_TEXTURE_NAME_LEN + 1];
+                char textureType[MAX_TEXTURE_NAME_LEN + 1];
+                char samplerName[MAX_TEXTURE_NAME_LEN + 1];
+                
+                sscanf(&lineBuffer[i], "texture%dd<%[a-zA-Z0-9]> %[a-zA-Z0-9_]", &textureDim, textureType, textureName);
+                
+                auto texType = GpuShaderText::getTextureKeyword(GPU_LANGUAGE_MSL_2_0, textureDim, textureType);
+                
+                is.getline(lineBuffer, 2048);
+                i = 0;
+                // Skip spaces
+                while(lineBuffer[i] == ' ' || lineBuffer[i] == '\t') ++i;
+                sscanf(&lineBuffer[i], "sampler %[a-zA-Z0-9_]", samplerName);
+                
+                if(textureDim == 3)
+                    lut3DTextures.emplace_back(texType, textureName, samplerName);
+                else
+                    lutTextures.emplace_back(texType, textureName, samplerName);
+            }
             else
-                lutTextures.emplace_back(texType, textureName, samplerName);
-            
-            pos = declerations.find("texture", pos+1);
+            {
+                char variableType[MAX_TEXTURE_NAME_LEN + 1];
+                char variableName[MAX_TEXTURE_NAME_LEN + 1];
+                sscanf(&lineBuffer[i], "%[a-zA-Z0-9] %[a-zA-Z0-9_]", variableType, variableName);
+                uniforms.emplace_back(variableType, variableName);
+            }
         }
             
         for(const auto& lut3D : lut3DTextures)
@@ -616,6 +644,11 @@ void GpuShaderCreator::finalize()
             getImpl()->m_classWrappingInterface->addToFunctionParameter("sampler", std::get<2>(lut).c_str());
         }
         
+        for(const auto& uniform : uniforms)
+        {
+            getImpl()->m_classWrappingInterface->addToFunctionParameter(uniform.first, uniform.second);
+        }
+        
         getImpl()->m_declarations   = getImpl()->m_classWrappingInterface->getClassWrapperHeader(getResourcePrefix(),
                                                                                                  getImpl()->m_functionName,
                                                                                                  getImpl()->m_declarations);
@@ -623,8 +656,6 @@ void GpuShaderCreator::finalize()
                                                                                                  getImpl()->m_functionName,
                                                                                                  getImpl()->m_functionFooter);
     }
-    
-    
 
     createShaderText(getImpl()->m_declarations.c_str(),
                      getImpl()->m_helperMethods.c_str(),

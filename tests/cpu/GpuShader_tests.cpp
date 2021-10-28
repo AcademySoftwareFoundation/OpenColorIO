@@ -901,3 +901,264 @@ float4 OCIOMain(
         OCIO_CHECK_EQUAL(expected, text);
     }
 }
+
+OCIO_ADD_TEST(GpuShader, MetalSupport7)
+{
+    // The unit test validates a single E/C which needs a uniform.
+
+    static const std::string CONFIG =
+        "ocio_profile_version: 2\n"
+        "\n"
+        "search_path: " + OCIO::GetTestFilesDir() + "\n"
+        "\n"
+        "roles:\n"
+        "  default: cs1\n"
+        "  reference: cs1\n"
+        "\n"
+        "displays:\n"
+        "  disp1:\n"
+        "    - !<View> {name: view1, colorspace: cs2}\n"
+        "\n"
+        "colorspaces:\n"
+        "  - !<ColorSpace>\n"
+        "    name: cs1\n"
+        "\n"
+        "  - !<ColorSpace>\n"
+        "    name: cs2\n"
+        "    from_scene_reference:\n"
+        "       !<ExposureContrastTransform> {style: video, contrast: 0.5}\n";
+
+    {
+        std::istringstream iss;
+        iss.str(CONFIG);
+
+        OCIO::ConstConfigRcPtr mOCIOCfg;
+        OCIO_CHECK_NO_THROW(mOCIOCfg = OCIO::Config::CreateFromStream(iss));
+        OCIO_CHECK_NO_THROW(mOCIOCfg->validate());
+
+        OCIO::ColorSpaceTransformRcPtr transform = OCIO::ColorSpaceTransform::Create();
+        transform->setSrc("cs1");
+        transform->setDst("cs2");
+        
+        auto processor = mOCIOCfg->getProcessor(transform);
+        auto gpuProcessor = processor->getOptimizedGPUProcessor(OCIO::OPTIMIZATION_NONE);
+    
+        auto shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
+        shaderDesc->setLanguage(OCIO::GPU_LANGUAGE_MSL_2_0);
+
+        gpuProcessor->extractGpuShaderInfo(shaderDesc);
+
+        const std::string text(shaderDesc->getShaderText());
+        static constexpr char expected[] = { R"(
+// Declaration of class wrapper
+
+struct ocioOCIOMain
+{
+ocioOCIOMain(
+  float ocio_exposure_contrast_exposureVal
+  , float ocio_exposure_contrast_gammaVal
+)
+{
+  this->ocio_exposure_contrast_exposureVal = ocio_exposure_contrast_exposureVal;
+  this->ocio_exposure_contrast_gammaVal = ocio_exposure_contrast_gammaVal;
+}
+
+
+
+// Declaration of all variables
+
+float ocio_exposure_contrast_exposureVal;
+float ocio_exposure_contrast_gammaVal;
+
+// Declaration of the OCIO shader function
+
+float4 OCIOMain(float4 inPixel)
+{
+  float4 outColor = inPixel;
+  
+  // Add ExposureContrast 'video' processing
+  
+  {
+    float contrastVal = 0.5;
+    float exposure = pow( pow( 2., ocio_exposure_contrast_exposureVal ), 0.54644808743169393);
+    float contrast = max( 0.001, ( contrastVal * ocio_exposure_contrast_gammaVal ) );
+    outColor.rgb = outColor.rgb * exposure;
+    if (contrast != 1.0)
+    {
+      outColor.rgb = pow( max( float3(0., 0., 0.), outColor.rgb / float3(0.39178254652545397, 0.39178254652545397, 0.39178254652545397) ), float3(contrast, contrast, contrast) ) * float3(0.39178254652545397, 0.39178254652545397, 0.39178254652545397);
+    }
+  }
+
+  return outColor;
+}
+
+// close class wrapper
+
+
+};
+float4 OCIOMain(
+  float ocio_exposure_contrast_exposureVal
+  , float ocio_exposure_contrast_gammaVal
+  ,float4 inPixel)
+{
+  return ocioOCIOMain(
+    ocio_exposure_contrast_exposureVal
+    , ocio_exposure_contrast_gammaVal
+  ).OCIOMain(inPixel);
+}
+
+)"};
+        OCIO_CHECK_EQUAL(expected, text);
+    }
+}
+
+OCIO_ADD_TEST(GpuShader, MetalSupport8)
+{
+    // The unit test validates a single Grading transform.
+
+    static const std::string CONFIG =
+        "ocio_profile_version: 2\n"
+        "\n"
+        "search_path: " + OCIO::GetTestFilesDir() + "\n"
+        "\n"
+        "roles:\n"
+        "  default: cs1\n"
+        "  reference: cs1\n"
+        "\n"
+        "displays:\n"
+        "  disp1:\n"
+        "    - !<View> {name: view1, colorspace: cs2}\n"
+        "\n"
+        "colorspaces:\n"
+        "  - !<ColorSpace>\n"
+        "    name: cs1\n"
+        "\n"
+        "  - !<ColorSpace>\n"
+        "    name: cs2\n"
+        "    from_scene_reference: \n"
+        "       !<GradingRGBCurveTransform>\n"
+        "          style: log\n"
+        "          red: {control_points: [0, 0, 0.5, 0.5, 1, 1.123456]}\n";
+
+    {
+        std::istringstream iss;
+        iss.str(CONFIG);
+
+        OCIO::ConstConfigRcPtr mOCIOCfg;
+        OCIO_CHECK_NO_THROW(mOCIOCfg = OCIO::Config::CreateFromStream(iss));
+        OCIO_CHECK_NO_THROW(mOCIOCfg->validate());
+
+        OCIO::ColorSpaceTransformRcPtr transform = OCIO::ColorSpaceTransform::Create();
+        transform->setSrc("cs1");
+        transform->setDst("cs2");
+        
+        auto processor = mOCIOCfg->getProcessor(transform);
+        auto gpuProcessor = processor->getOptimizedGPUProcessor(OCIO::OPTIMIZATION_NONE);
+    
+        auto shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
+        shaderDesc->setLanguage(OCIO::GPU_LANGUAGE_MSL_2_0);
+
+        gpuProcessor->extractGpuShaderInfo(shaderDesc);
+
+        const std::string text(shaderDesc->getShaderText());
+        static constexpr char expected[] = { R"(
+// Declaration of class wrapper
+
+struct ocioOCIOMain
+{
+ocioOCIOMain(
+)
+{
+}
+
+
+
+// Declaration of all helper methods
+
+
+const int ocio_grading_rgbcurve_knotsOffsets_0[8] = {0, 5, -1, 0, -1, 0, -1, 0};
+const float ocio_grading_rgbcurve_knots_0[5] = {0., 0.333333343, 0.5, 0.666666508, 1.};
+const int ocio_grading_rgbcurve_coefsOffsets_0[8] = {0, 12, -1, 0, -1, 0, -1, 0};
+const float ocio_grading_rgbcurve_coefs_0[12] = {0.0982520878, 0.393008381, 0.347727984, 0.08693178, 0.934498608, 1., 1.13100278, 1.246912, 0., 0.322416425, 0.5, 0.698159397};
+
+float ocio_grading_rgbcurve_evalBSplineCurve_0(int curveIdx, float x)
+{
+  int knotsOffs = ocio_grading_rgbcurve_knotsOffsets_0[curveIdx * 2];
+  int knotsCnt = ocio_grading_rgbcurve_knotsOffsets_0[curveIdx * 2 + 1];
+  int coefsOffs = ocio_grading_rgbcurve_coefsOffsets_0[curveIdx * 2];
+  int coefsCnt = ocio_grading_rgbcurve_coefsOffsets_0[curveIdx * 2 + 1];
+  int coefsSets = coefsCnt / 3;
+  if (coefsSets == 0)
+  {
+    return x;
+  }
+  float knStart = ocio_grading_rgbcurve_knots_0[knotsOffs];
+  float knEnd = ocio_grading_rgbcurve_knots_0[knotsOffs + knotsCnt - 1];
+  if (x <= knStart)
+  {
+    float B = ocio_grading_rgbcurve_coefs_0[coefsOffs + coefsSets];
+    float C = ocio_grading_rgbcurve_coefs_0[coefsOffs + coefsSets * 2];
+    return (x - knStart) * B + C;
+  }
+  else if (x >= knEnd)
+  {
+    float A = ocio_grading_rgbcurve_coefs_0[coefsOffs + coefsSets - 1];
+    float B = ocio_grading_rgbcurve_coefs_0[coefsOffs + coefsSets * 2 - 1];
+    float C = ocio_grading_rgbcurve_coefs_0[coefsOffs + coefsSets * 3 - 1];
+    float kn = ocio_grading_rgbcurve_knots_0[knotsOffs + knotsCnt - 2];
+    float t = knEnd - kn;
+    float slope = 2. * A * t + B;
+    float offs = ( A * t + B ) * t + C;
+    return (x - knEnd) * slope + offs;
+  }
+  int i = 0;
+  for (i = 0; i < knotsCnt - 2; ++i)
+  {
+    if (x < ocio_grading_rgbcurve_knots_0[knotsOffs + i + 1])
+    {
+      break;
+    }
+  }
+  float A = ocio_grading_rgbcurve_coefs_0[coefsOffs + i];
+  float B = ocio_grading_rgbcurve_coefs_0[coefsOffs + coefsSets + i];
+  float C = ocio_grading_rgbcurve_coefs_0[coefsOffs + coefsSets * 2 + i];
+  float kn = ocio_grading_rgbcurve_knots_0[knotsOffs + i];
+  float t = x - kn;
+  return ( A * t + B ) * t + C;
+}
+
+// Declaration of the OCIO shader function
+
+float4 OCIOMain(float4 inPixel)
+{
+  float4 outColor = inPixel;
+  
+  // Add GradingRGBCurve 'log' forward processing
+  
+  {
+    outColor.rgb.r = ocio_grading_rgbcurve_evalBSplineCurve_0(0, outColor.rgb.r);
+    outColor.rgb.g = ocio_grading_rgbcurve_evalBSplineCurve_0(1, outColor.rgb.g);
+    outColor.rgb.b = ocio_grading_rgbcurve_evalBSplineCurve_0(2, outColor.rgb.b);
+    outColor.rgb.r = ocio_grading_rgbcurve_evalBSplineCurve_0(3, outColor.rgb.r);
+    outColor.rgb.g = ocio_grading_rgbcurve_evalBSplineCurve_0(3, outColor.rgb.g);
+    outColor.rgb.b = ocio_grading_rgbcurve_evalBSplineCurve_0(3, outColor.rgb.b);
+  }
+
+  return outColor;
+}
+
+// close class wrapper
+
+
+};
+float4 OCIOMain(
+  float4 inPixel)
+{
+  return ocioOCIOMain(
+  ).OCIOMain(inPixel);
+}
+
+)" };
+        OCIO_CHECK_EQUAL(expected, text);
+    }
+}
