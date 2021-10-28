@@ -618,7 +618,7 @@ OCIO_ADD_TEST(GpuShader, MetalSupport5)
         "\n"
         "  - !<ColorSpace>\n"
         "    name: cs2\n"
-        "    from_scene_reference: !<FileTransform> {src: clf/lut1d_half_domain_raw_half_set.clf}\n";
+        "    from_scene_reference: !<FileTransform> {src: clf/lut1d_long.clf}\n";
 
     {
         std::istringstream iss;
@@ -666,28 +666,12 @@ sampler ocio_lut1d_0Sampler;
 
 float2 ocio_lut1d_0_computePos(float f)
 {
-  float dep;
-  float abs_f = abs(f);
-  if (abs_f > 6.10351562e-05)
-  {
-    float3 fComp = float3(15., 15., 15.);
-    float absarr = min( abs_f, 65504.);
-    fComp.x = floor( log2( absarr ) );
-    float lower = pow( 2.0, fComp.x );
-    fComp.y = ( absarr - lower ) / lower;
-    float3 scale = float3(1024., 1024., 1024.);
-    dep = dot( fComp, scale );
-  }
-  else
-  {
-    dep = abs_f * 1023.0 / 6.09755516e-05;
-  }
-  dep += step(f, 0.0) * 32768.0;
+  float dep = clamp(f, 0.0, 1.0) * 131071.;
   float2 retVal;
-  retVal.y = floor(dep / 4095.);
+  retVal.y = float(int(dep / 4095.));
   retVal.x = dep - retVal.y * 4095.;
   retVal.x = (retVal.x + 0.5) / 4096.;
-  retVal.y = (retVal.y + 0.5) / 17.;
+  retVal.y = (retVal.y + 0.5) / 33.;
   return retVal;
 }
 
@@ -758,7 +742,7 @@ OCIO_ADD_TEST(GpuShader, MetalSupport6)
         "      children:\n"
         "        - !<FileTransform> {src: lut1d_green.ctf}\n"
         "        - !<FileTransform> {src: lut3d_example_Inv.ctf}\n"
-        "        - !<FileTransform> {src: clf/lut1d_half_domain_raw_half_set.clf}\n";
+        "        - !<FileTransform> {src: clf/lut1d_long.clf}\n";
     {
         std::istringstream iss;
         iss.str(CONFIG);
@@ -817,28 +801,12 @@ sampler ocio_lut1d_2Sampler;
 
 float2 ocio_lut1d_2_computePos(float f)
 {
-  float dep;
-  float abs_f = abs(f);
-  if (abs_f > 6.10351562e-05)
-  {
-    float3 fComp = float3(15., 15., 15.);
-    float absarr = min( abs_f, 65504.);
-    fComp.x = floor( log2( absarr ) );
-    float lower = pow( 2.0, fComp.x );
-    fComp.y = ( absarr - lower ) / lower;
-    float3 scale = float3(1024., 1024., 1024.);
-    dep = dot( fComp, scale );
-  }
-  else
-  {
-    dep = abs_f * 1023.0 / 6.09755516e-05;
-  }
-  dep += step(f, 0.0) * 32768.0;
+  float dep = clamp(f, 0.0, 1.0) * 131071.;
   float2 retVal;
-  retVal.y = floor(dep / 4095.);
+  retVal.y = float(int(dep / 4095.));
   retVal.x = dep - retVal.y * 4095.;
   retVal.x = (retVal.x + 0.5) / 4096.;
-  retVal.y = (retVal.y + 0.5) / 17.;
+  retVal.y = (retVal.y + 0.5) / 33.;
   return retVal;
 }
 
@@ -897,7 +865,7 @@ float4 OCIOMain(
 }
 
 )" };
-
+        
         OCIO_CHECK_EQUAL(expected, text);
     }
 }
