@@ -578,56 +578,71 @@ void GpuShaderCreator::finalize()
         std::vector<std::tuple<std::string, std::string, std::string>> lut3DTextures;
         std::vector<std::tuple<std::string, std::string, std::string>> lutTextures;
         std::vector<std::pair <std::string, std::string             >> uniforms;
-        
-        constexpr int MAX_LINE_LEN         = 2048;
-        constexpr int MAX_TEXTURE_NAME_LEN = 255;
 
-        char lineBuffer [MAX_LINE_LEN + 1];
+        auto isSkippableCharacter = [](char c) -> bool
+        {
+            return (c == ' ' || c == '\t');
+                
+        };
+
+        std::string lineBuffer;
         
         std::istringstream is(getImpl()->m_declarations);
         while(!is.eof())
         {
-            is.getline(lineBuffer, 2048);
+            std::getline(is, lineBuffer);
             
             if(lineBuffer[0] == '\0')
                 continue;
             
-            int i = 0;
+            size_t i = 0;
             
             // Skip spaces
-            while(lineBuffer[i] == ' ' || lineBuffer[i] == '\t') ++i;
+            while(isSkippableCharacter(lineBuffer[i])) ++i;
             
-            // is this line a comment?
-            if(lineBuffer[i + 0] == '/' && lineBuffer[i + 1] == '/')
+            // if the line was all skippable characters
+            if(i >= lineBuffer.size())
                 continue;
             
-            if(strncmp(&lineBuffer[i], "texture", 7) == 0)
+            // if the line is a comment
+            if(lineBuffer[i + 0] == '/' && lineBuffer[i + 1] == '/')
+                continue;
+
+            if(lineBuffer.compare(i, 7, "texture") == 0)
             {
-                int  textureDim;
-                char textureName[MAX_TEXTURE_NAME_LEN + 1];
-                char textureType[MAX_TEXTURE_NAME_LEN + 1];
-                char samplerName[MAX_TEXTURE_NAME_LEN + 1];
+                int  textureDim = static_cast<int>(lineBuffer[i+7] - '0');
                 
-                sscanf(&lineBuffer[i], "texture%dd<%[a-zA-Z0-9]> %[a-zA-Z0-9_]", &textureDim, textureType, textureName);
+                size_t endTextureType = lineBuffer.find('>');
+                std::string textureType = lineBuffer.substr(i, (endTextureType - i + 1));
                 
-                auto texType = GpuShaderText::getTextureKeyword(GPU_LANGUAGE_MSL_2_0, textureDim, textureType);
+                i = endTextureType + 1;
+                while(isSkippableCharacter(lineBuffer[i])) ++i;
                 
-                is.getline(lineBuffer, 2048);
-                i = 0;
-                // Skip spaces
-                while(lineBuffer[i] == ' ' || lineBuffer[i] == '\t') ++i;
-                sscanf(&lineBuffer[i], "sampler %[a-zA-Z0-9_]", samplerName);
+                size_t endTextureName = lineBuffer.find_first_of(" \t;", i);
+                std::string textureName = lineBuffer.substr(i, (endTextureName - i));
+
+                std::getline(is, lineBuffer);
+                
+                i = lineBuffer.find("sampler") + 7;
+                while(isSkippableCharacter(lineBuffer[i])) ++i;
+                size_t endSamplerName = lineBuffer.find_first_of(" \t;", i);
+                std::string samplerName = lineBuffer.substr(i, endSamplerName - i);
                 
                 if(textureDim == 3)
-                    lut3DTextures.emplace_back(texType, textureName, samplerName);
+                    lut3DTextures.emplace_back(textureType, textureName, samplerName);
                 else
-                    lutTextures.emplace_back(texType, textureName, samplerName);
+                    lutTextures.emplace_back(textureType, textureName, samplerName);
             }
             else
             {
-                char variableType[MAX_TEXTURE_NAME_LEN + 1];
-                char variableName[MAX_TEXTURE_NAME_LEN + 1];
-                sscanf(&lineBuffer[i], "%[a-zA-Z0-9] %[a-zA-Z0-9_]", variableType, variableName);
+                size_t endTypeName     = lineBuffer.find_first_of(" \t", i);
+                std::string variableType = lineBuffer.substr(i, (endTypeName - i));
+                
+                i = endTypeName + 1;
+                while(isSkippableCharacter(lineBuffer[i])) ++i;
+                
+                size_t endVariableName = lineBuffer.find_first_of(" \t;", i);
+                std::string variableName = lineBuffer.substr(i, (endVariableName - i));
                 uniforms.emplace_back(variableType, variableName);
             }
         }
