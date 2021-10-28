@@ -243,43 +243,44 @@ colorspaces:
     
         auto shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
 
-        shaderDesc->setLanguage(OCIO::GPU_LANGUAGE_MSL_METAL);
+        shaderDesc->setFunctionName("Display");
+        shaderDesc->setLanguage(OCIO::GPU_LANGUAGE_MSL_2_0);
 
         gpuProcessor->extractGpuShaderInfo(shaderDesc);
         const std::string text = shaderDesc->getShaderText();;
-        const std::string expected =
-            "\n"
-            "// Declaration of class wrapper\n"
-            "\n"
-            "struct OCIO\n"
-            "{\n"
-            "OCIO(\n"
-            ")\n"
-            "{\n"
-            "}\n"
-            "\n"
-            "\n"
-            "\n"
-            "// Declaration of the OCIO shader function\n"
-            "\n"
-            "float4 Display(float4 inPixel)\n"
-            "{\n"
-            "  float4 outColor = inPixel;\n"
-            "\n"
-            "  return outColor;\n"
-            "}\n"
-            "\n"
-            "// close class wrapper\n"
-            "\n"
-            "\n"
-            "};\n"
-            "float4 Display(\n"
-            "  float4 inPixel)\n"
-            "{\n"
-            "  return OCIO(\n"
-            "  ).Display(inPixel);\n"
-            "}\n"
-            "\n";
+        static constexpr char expected[] = { R"(
+// Declaration of class wrapper
+
+struct ocioDisplay
+{
+ocioDisplay(
+)
+{
+}
+
+
+
+// Declaration of the OCIO shader function
+
+float4 Display(float4 inPixel)
+{
+  float4 outColor = inPixel;
+
+  return outColor;
+}
+
+// close class wrapper
+
+
+};
+float4 Display(
+  float4 inPixel)
+{
+  return ocioDisplay(
+  ).Display(inPixel);
+}
+
+)" };
 
         OCIO_CHECK_EQUAL(expected, text);
     }
@@ -333,43 +334,44 @@ colorspaces:
     
         auto shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
 
-        shaderDesc->setLanguage(OCIO::GPU_LANGUAGE_MSL_METAL);
+        shaderDesc->setFunctionName("Display");
+        shaderDesc->setLanguage(OCIO::GPU_LANGUAGE_MSL_2_0);
 
         gpuProcessor->extractGpuShaderInfo(shaderDesc);
-        const std::string text = shaderDesc->getShaderText();;
-        const std::string expected =
-            "\n"
-            "// Declaration of class wrapper\n"
-            "\n"
-            "struct OCIO\n"
-            "{\n"
-            "OCIO(\n"
-            ")\n"
-            "{\n"
-            "}\n"
-            "\n"
-            "\n"
-            "\n"
-            "// Declaration of the OCIO shader function\n"
-            "\n"
-            "float4 Display(float4 inPixel)\n"
-            "{\n"
-            "  float4 outColor = inPixel;\n"
-            "\n"
-            "  return outColor;\n"
-            "}\n"
-            "\n"
-            "// close class wrapper\n"
-            "\n"
-            "\n"
-            "};\n"
-            "float4 Display(\n"
-            "  float4 inPixel)\n"
-            "{\n"
-            "  return OCIO(\n"
-            "  ).Display(inPixel);\n"
-            "}\n"
-            "\n";
+        const std::string text = shaderDesc->getShaderText();
+        static constexpr char expected[] = { R"(
+// Declaration of class wrapper
+
+struct ocioDisplay
+{
+ocioDisplay(
+)
+{
+}
+
+
+
+// Declaration of the OCIO shader function
+
+float4 Display(float4 inPixel)
+{
+  float4 outColor = inPixel;
+
+  return outColor;
+}
+
+// close class wrapper
+
+
+};
+float4 Display(
+  float4 inPixel)
+{
+  return ocioDisplay(
+  ).Display(inPixel);
+}
+
+)" };
         
         OCIO_CHECK_EQUAL(expected, text);
     }
@@ -418,65 +420,68 @@ OCIO_ADD_TEST(GpuShader, MetalSupport3)
         auto gpuProcessor = processor->getOptimizedGPUProcessor(OCIO::OPTIMIZATION_NONE);
     
         auto shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
-        shaderDesc->setLanguage(OCIO::GPU_LANGUAGE_MSL_METAL);
+        shaderDesc->setLanguage(OCIO::GPU_LANGUAGE_MSL_2_0);
         shaderDesc->setFunctionName("MyMethodName");
         shaderDesc->setPixelName("myPixelName");
         
         gpuProcessor->extractGpuShaderInfo(shaderDesc);
 
         const std::string text(shaderDesc->getShaderText());
-        const std::string expected =
-            "\n"
-            "// Declaration of class wrapper\n"
-            "\n"
-            "struct OCIO\n"
-            "{\n"
-            "OCIO(\n"
-            "  texture1d<float> ocio_lut1d_0, sampler ocio_lut1d_0Sampler\n"
-            ")\n"
-            "{\n"
-            "  this->ocio_lut1d_0 = ocio_lut1d_0;\n"
-            "  this->ocio_lut1d_0Sampler = ocio_lut1d_0Sampler;\n"
-            "}\n"
-            "\n"
-            "\n"
-            "\n"
-            "// Declaration of all variables\n"
-            "\n"
-            "texture1d<float> ocio_lut1d_0;\n"
-            "sampler ocio_lut1d_0Sampler;\n"
-            "\n"
-            "// Declaration of the OCIO shader function\n"
-            "\n"
-            "float4 MyMethodName(float4 inPixel)\n"
-            "{\n"
-            "  float4 myPixelName = inPixel;\n"
-            "  \n"
-            "  // Add LUT 1D processing for ocio_lut1d_0\n"
-            "  \n"
-            "  {\n"
-            "    float3 ocio_lut1d_0_coords = (myPixelName.rgb * float3(31., 31., 31.) + float3(0.5, 0.5, 0.5) ) / float3(32., 32., 32.);\n"
-            "    myPixelName.r = ocio_lut1d_0.sample(ocio_lut1d_0Sampler, ocio_lut1d_0_coords.r).r;\n"
-            "    myPixelName.g = ocio_lut1d_0.sample(ocio_lut1d_0Sampler, ocio_lut1d_0_coords.g).g;\n"
-            "    myPixelName.b = ocio_lut1d_0.sample(ocio_lut1d_0Sampler, ocio_lut1d_0_coords.b).b;\n"
-            "  }\n"
-            "\n"
-            "  return myPixelName;\n"
-            "}\n"
-            "\n"
-            "// close class wrapper\n"
-            "\n"
-            "\n"
-            "};\n"
-            "float4 MyMethodName(\n"
-            "  texture1d<float> ocio_lut1d_0, sampler ocio_lut1d_0Sampler\n"
-            "  ,float4 inPixel)\n"
-            "{\n"
-            "  return OCIO(\n"
-            "    ocio_lut1d_0, ocio_lut1d_0Sampler\n"
-            "  ).MyMethodName(inPixel);\n"
-            "}\n"
-            "\n";
+        static constexpr char expected[] = { R"(
+// Declaration of class wrapper
+
+struct ocioMyMethodName
+{
+ocioMyMethodName(
+  texture1d<float> ocio_lut1d_0
+  , sampler ocio_lut1d_0Sampler
+)
+{
+  this->ocio_lut1d_0 = ocio_lut1d_0;
+  this->ocio_lut1d_0Sampler = ocio_lut1d_0Sampler;
+}
+
+
+
+// Declaration of all variables
+
+texture1d<float> ocio_lut1d_0;
+sampler ocio_lut1d_0Sampler;
+
+// Declaration of the OCIO shader function
+
+float4 MyMethodName(float4 inPixel)
+{
+  float4 myPixelName = inPixel;
+  
+  // Add LUT 1D processing for ocio_lut1d_0
+  
+  {
+    float3 ocio_lut1d_0_coords = (myPixelName.rgb * float3(31., 31., 31.) + float3(0.5, 0.5, 0.5) ) / float3(32., 32., 32.);
+    myPixelName.r = ocio_lut1d_0.sample(ocio_lut1d_0Sampler, ocio_lut1d_0_coords.r).r;
+    myPixelName.g = ocio_lut1d_0.sample(ocio_lut1d_0Sampler, ocio_lut1d_0_coords.g).g;
+    myPixelName.b = ocio_lut1d_0.sample(ocio_lut1d_0Sampler, ocio_lut1d_0_coords.b).b;
+  }
+
+  return myPixelName;
+}
+
+// close class wrapper
+
+
+};
+float4 MyMethodName(
+  texture1d<float> ocio_lut1d_0
+  , sampler ocio_lut1d_0Sampler
+  ,float4 inPixel)
+{
+  return ocioMyMethodName(
+    ocio_lut1d_0
+    , ocio_lut1d_0Sampler
+  ).MyMethodName(inPixel);
+}
+
+)" };
 
         OCIO_CHECK_EQUAL(expected, text);
     }
@@ -525,62 +530,65 @@ OCIO_ADD_TEST(GpuShader, MetalSupport4)
         auto gpuProcessor = processor->getOptimizedGPUProcessor(OCIO::OPTIMIZATION_NONE);
     
         auto shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
-        shaderDesc->setLanguage(OCIO::GPU_LANGUAGE_MSL_METAL);
+        shaderDesc->setLanguage(OCIO::GPU_LANGUAGE_MSL_2_0);
         shaderDesc->setFunctionName("MyMethodName");
         shaderDesc->setPixelName("myPixelName");
 
         gpuProcessor->extractGpuShaderInfo(shaderDesc);
 
         const std::string text(shaderDesc->getShaderText());
-        const std::string expected =
-            "\n"
-            "// Declaration of class wrapper\n"
-            "\n"
-            "struct OCIO\n"
-            "{\n"
-            "OCIO(\n"
-            "  texture3d<float> ocio_lut3d_0, sampler ocio_lut3d_0Sampler\n"
-            ")\n"
-            "{\n"
-            "  this->ocio_lut3d_0 = ocio_lut3d_0;\n"
-            "  this->ocio_lut3d_0Sampler = ocio_lut3d_0Sampler;\n"
-            "}\n"
-            "\n"
-            "\n"
-            "\n"
-            "// Declaration of all variables\n"
-            "\n"
-            "texture3d<float> ocio_lut3d_0;\n"
-            "sampler ocio_lut3d_0Sampler;\n"
-            "\n"
-            "// Declaration of the OCIO shader function\n"
-            "\n"
-            "float4 MyMethodName(float4 inPixel)\n"
-            "{\n"
-            "  float4 myPixelName = inPixel;\n"
-            "  \n"
-            "  // Add LUT 3D processing for ocio_lut3d_0\n"
-            "  \n"
-            "  float3 ocio_lut3d_0_coords = (myPixelName.zyx * float3(47., 47., 47.) + float3(0.5, 0.5, 0.5)) / float3(48., 48., 48.);\n"
-            "  myPixelName.rgb = ocio_lut3d_0.sample(ocio_lut3d_0Sampler, ocio_lut3d_0_coords).rgb;\n"
-            "\n"
-            "  return myPixelName;\n"
-            "}\n"
-            "\n"
-            "// close class wrapper\n"
-            "\n"
-            "\n"
-            "};\n"
-            "float4 MyMethodName(\n"
-            "  texture3d<float> ocio_lut3d_0, sampler ocio_lut3d_0Sampler\n"
-            "  ,float4 inPixel)\n"
-            "{\n"
-            "  return OCIO(\n"
-            "    ocio_lut3d_0, ocio_lut3d_0Sampler\n"
-            "  ).MyMethodName(inPixel);\n"
-            "}\n"
-            "\n";
+        static constexpr char expected[] = { R"(
+// Declaration of class wrapper
 
+struct ocioMyMethodName
+{
+ocioMyMethodName(
+  texture3d<float> ocio_lut3d_0
+  , sampler ocio_lut3d_0Sampler
+)
+{
+  this->ocio_lut3d_0 = ocio_lut3d_0;
+  this->ocio_lut3d_0Sampler = ocio_lut3d_0Sampler;
+}
+
+
+
+// Declaration of all variables
+
+texture3d<float> ocio_lut3d_0;
+sampler ocio_lut3d_0Sampler;
+
+// Declaration of the OCIO shader function
+
+float4 MyMethodName(float4 inPixel)
+{
+  float4 myPixelName = inPixel;
+  
+  // Add LUT 3D processing for ocio_lut3d_0
+  
+  float3 ocio_lut3d_0_coords = (myPixelName.zyx * float3(47., 47., 47.) + float3(0.5, 0.5, 0.5)) / float3(48., 48., 48.);
+  myPixelName.rgb = ocio_lut3d_0.sample(ocio_lut3d_0Sampler, ocio_lut3d_0_coords).rgb;
+
+  return myPixelName;
+}
+
+// close class wrapper
+
+
+};
+float4 MyMethodName(
+  texture3d<float> ocio_lut3d_0
+  , sampler ocio_lut3d_0Sampler
+  ,float4 inPixel)
+{
+  return ocioMyMethodName(
+    ocio_lut3d_0
+    , ocio_lut3d_0Sampler
+  ).MyMethodName(inPixel);
+}
+
+)" };
+        
         OCIO_CHECK_EQUAL(expected, text);
     }
 }
@@ -628,91 +636,94 @@ OCIO_ADD_TEST(GpuShader, MetalSupport5)
         auto gpuProcessor = processor->getOptimizedGPUProcessor(OCIO::OPTIMIZATION_NONE);
     
         auto shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
-        shaderDesc->setLanguage(OCIO::GPU_LANGUAGE_MSL_METAL);
+        shaderDesc->setLanguage(OCIO::GPU_LANGUAGE_MSL_2_0);
 
         gpuProcessor->extractGpuShaderInfo(shaderDesc);
 
         const std::string text(shaderDesc->getShaderText());
-        const std::string expected =
-            "\n"
-            "// Declaration of class wrapper\n"
-            "\n"
-            "struct OCIO\n"
-            "{\n"
-            "OCIO(\n"
-            "  texture2d<float> ocio_lut1d_0, sampler ocio_lut1d_0Sampler\n"
-            ")\n"
-            "{\n"
-            "  this->ocio_lut1d_0 = ocio_lut1d_0;\n"
-            "  this->ocio_lut1d_0Sampler = ocio_lut1d_0Sampler;\n"
-            "}\n"
-            "\n"
-            "\n"
-            "\n"
-            "// Declaration of all variables\n"
-            "\n"
-            "texture2d<float> ocio_lut1d_0;\n"
-            "sampler ocio_lut1d_0Sampler;\n"
-            "\n"
-            "// Declaration of all helper methods\n"
-            "\n"
-            "float2 ocio_lut1d_0_computePos(float f)\n"
-            "{\n"
-            "  float dep;\n"
-            "  float abs_f = abs(f);\n"
-            "  if (abs_f > 6.10351562e-05)\n"
-            "  {\n"
-            "    float3 fComp = float3(15., 15., 15.);\n"
-            "    float absarr = min( abs_f, 65504.);\n"
-            "    fComp.x = floor( log2( absarr ) );\n"
-            "    float lower = pow( 2.0, fComp.x );\n"
-            "    fComp.y = ( absarr - lower ) / lower;\n"
-            "    float3 scale = float3(1024., 1024., 1024.);\n"
-            "    dep = dot( fComp, scale );\n"
-            "  }\n"
-            "  else\n"
-            "  {\n"
-            "    dep = abs_f * 1023.0 / 6.09755516e-05;\n"
-            "  }\n"
-            "  dep += step(f, 0.0) * 32768.0;\n"
-            "  float2 retVal;\n"
-            "  retVal.y = floor(dep / 4095.);\n"
-            "  retVal.x = dep - retVal.y * 4095.;\n"
-            "  retVal.x = (retVal.x + 0.5) / 4096.;\n"
-            "  retVal.y = (retVal.y + 0.5) / 17.;\n"
-            "  return retVal;\n"
-            "}\n"
-            "\n"
-            "// Declaration of the OCIO shader function\n"
-            "\n"
-            "float4 Display(float4 inPixel)\n"
-            "{\n"
-            "  float4 outColor = inPixel;\n"
-            "  \n"
-            "  // Add LUT 1D processing for ocio_lut1d_0\n"
-            "  \n"
-            "  {\n"
-            "    outColor.r = ocio_lut1d_0.sample(ocio_lut1d_0Sampler, ocio_lut1d_0_computePos(outColor.r)).r;\n"
-            "    outColor.g = ocio_lut1d_0.sample(ocio_lut1d_0Sampler, ocio_lut1d_0_computePos(outColor.g)).r;\n"
-            "    outColor.b = ocio_lut1d_0.sample(ocio_lut1d_0Sampler, ocio_lut1d_0_computePos(outColor.b)).r;\n"
-            "  }\n"
-            "\n"
-            "  return outColor;\n"
-            "}\n"
-            "\n"
-            "// close class wrapper\n"
-            "\n"
-            "\n"
-            "};\n"
-            "float4 Display(\n"
-            "  texture2d<float> ocio_lut1d_0, sampler ocio_lut1d_0Sampler\n"
-            "  ,float4 inPixel)\n"
-            "{\n"
-            "  return OCIO(\n"
-            "    ocio_lut1d_0, ocio_lut1d_0Sampler\n"
-            "  ).Display(inPixel);\n"
-            "}\n"
-            "\n";
+        static constexpr char expected[] = { R"(
+// Declaration of class wrapper
+
+struct ocioOCIOMain
+{
+ocioOCIOMain(
+  texture2d<float> ocio_lut1d_0
+  , sampler ocio_lut1d_0Sampler
+)
+{
+  this->ocio_lut1d_0 = ocio_lut1d_0;
+  this->ocio_lut1d_0Sampler = ocio_lut1d_0Sampler;
+}
+
+
+
+// Declaration of all variables
+
+texture2d<float> ocio_lut1d_0;
+sampler ocio_lut1d_0Sampler;
+
+// Declaration of all helper methods
+
+float2 ocio_lut1d_0_computePos(float f)
+{
+  float dep;
+  float abs_f = abs(f);
+  if (abs_f > 6.10351562e-05)
+  {
+    float3 fComp = float3(15., 15., 15.);
+    float absarr = min( abs_f, 65504.);
+    fComp.x = floor( log2( absarr ) );
+    float lower = pow( 2.0, fComp.x );
+    fComp.y = ( absarr - lower ) / lower;
+    float3 scale = float3(1024., 1024., 1024.);
+    dep = dot( fComp, scale );
+  }
+  else
+  {
+    dep = abs_f * 1023.0 / 6.09755516e-05;
+  }
+  dep += step(f, 0.0) * 32768.0;
+  float2 retVal;
+  retVal.y = floor(dep / 4095.);
+  retVal.x = dep - retVal.y * 4095.;
+  retVal.x = (retVal.x + 0.5) / 4096.;
+  retVal.y = (retVal.y + 0.5) / 17.;
+  return retVal;
+}
+
+// Declaration of the OCIO shader function
+
+float4 OCIOMain(float4 inPixel)
+{
+  float4 outColor = inPixel;
+  
+  // Add LUT 1D processing for ocio_lut1d_0
+  
+  {
+    outColor.r = ocio_lut1d_0.sample(ocio_lut1d_0Sampler, ocio_lut1d_0_computePos(outColor.r)).r;
+    outColor.g = ocio_lut1d_0.sample(ocio_lut1d_0Sampler, ocio_lut1d_0_computePos(outColor.g)).r;
+    outColor.b = ocio_lut1d_0.sample(ocio_lut1d_0Sampler, ocio_lut1d_0_computePos(outColor.b)).r;
+  }
+
+  return outColor;
+}
+
+// close class wrapper
+
+
+};
+float4 OCIOMain(
+  texture2d<float> ocio_lut1d_0
+  , sampler ocio_lut1d_0Sampler
+  ,float4 inPixel)
+{
+  return ocioOCIOMain(
+    ocio_lut1d_0
+    , ocio_lut1d_0Sampler
+  ).OCIOMain(inPixel);
+}
+
+)" };
 
         OCIO_CHECK_EQUAL(expected, text);
     }
@@ -764,119 +775,128 @@ OCIO_ADD_TEST(GpuShader, MetalSupport6)
         auto gpuProcessor = processor->getOptimizedGPUProcessor(OCIO::OPTIMIZATION_NONE);
     
         auto shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
-        shaderDesc->setLanguage(OCIO::GPU_LANGUAGE_MSL_METAL);
+        shaderDesc->setLanguage(OCIO::GPU_LANGUAGE_MSL_2_0);
 
         gpuProcessor->extractGpuShaderInfo(shaderDesc);
 
         const std::string text(shaderDesc->getShaderText());
-        const std::string expected =
-            "\n"
-            "// Declaration of class wrapper\n"
-            "\n"
-            "struct OCIO\n"
-            "{\n"
-            "OCIO(\n"
-            "  texture3d<float> ocio_lut3d_1, sampler ocio_lut3d_1Sampler\n"
-            "  , texture1d<float> ocio_lut1d_0, sampler ocio_lut1d_0Sampler\n"
-            "  , texture2d<float> ocio_lut1d_2, sampler ocio_lut1d_2Sampler\n"
-            ")\n"
-            "{\n"
-            "  this->ocio_lut3d_1 = ocio_lut3d_1;\n"
-            "  this->ocio_lut3d_1Sampler = ocio_lut3d_1Sampler;\n"
-            "  this->ocio_lut1d_0 = ocio_lut1d_0;\n"
-            "  this->ocio_lut1d_0Sampler = ocio_lut1d_0Sampler;\n"
-            "  this->ocio_lut1d_2 = ocio_lut1d_2;\n"
-            "  this->ocio_lut1d_2Sampler = ocio_lut1d_2Sampler;\n"
-            "}\n"
-            "\n"
-            "\n"
-            "\n"
-            "// Declaration of all variables\n"
-            "\n"
-            "texture1d<float> ocio_lut1d_0;\n"
-            "sampler ocio_lut1d_0Sampler;\n"
-            "texture3d<float> ocio_lut3d_1;\n"
-            "sampler ocio_lut3d_1Sampler;\n"
-            "texture2d<float> ocio_lut1d_2;\n"
-            "sampler ocio_lut1d_2Sampler;\n"
-            "\n"
-            "// Declaration of all helper methods\n"
-            "\n"
-            "float2 ocio_lut1d_2_computePos(float f)\n"
-            "{\n"
-            "  float dep;\n"
-            "  float abs_f = abs(f);\n"
-            "  if (abs_f > 6.10351562e-05)\n"
-            "  {\n"
-            "    float3 fComp = float3(15., 15., 15.);\n"
-            "    float absarr = min( abs_f, 65504.);\n"
-            "    fComp.x = floor( log2( absarr ) );\n"
-            "    float lower = pow( 2.0, fComp.x );\n"
-            "    fComp.y = ( absarr - lower ) / lower;\n"
-            "    float3 scale = float3(1024., 1024., 1024.);\n"
-            "    dep = dot( fComp, scale );\n"
-            "  }\n"
-            "  else\n"
-            "  {\n"
-            "    dep = abs_f * 1023.0 / 6.09755516e-05;\n"
-            "  }\n"
-            "  dep += step(f, 0.0) * 32768.0;\n"
-            "  float2 retVal;\n"
-            "  retVal.y = floor(dep / 4095.);\n"
-            "  retVal.x = dep - retVal.y * 4095.;\n"
-            "  retVal.x = (retVal.x + 0.5) / 4096.;\n"
-            "  retVal.y = (retVal.y + 0.5) / 17.;\n"
-            "  return retVal;\n"
-            "}\n"
-            "\n"
-            "// Declaration of the OCIO shader function\n"
-            "\n"
-            "float4 Display(float4 inPixel)\n"
-            "{\n"
-            "  float4 outColor = inPixel;\n"
-            "  \n"
-            "  // Add LUT 1D processing for ocio_lut1d_0\n"
-            "  \n"
-            "  {\n"
-            "    float3 ocio_lut1d_0_coords = (outColor.rgb * float3(31., 31., 31.) + float3(0.5, 0.5, 0.5) ) / float3(32., 32., 32.);\n"
-            "    outColor.r = ocio_lut1d_0.sample(ocio_lut1d_0Sampler, ocio_lut1d_0_coords.r).r;\n"
-            "    outColor.g = ocio_lut1d_0.sample(ocio_lut1d_0Sampler, ocio_lut1d_0_coords.g).g;\n"
-            "    outColor.b = ocio_lut1d_0.sample(ocio_lut1d_0Sampler, ocio_lut1d_0_coords.b).b;\n"
-            "  }\n"
-            "  \n"
-            "  // Add LUT 3D processing for ocio_lut3d_1\n"
-            "  \n"
-            "  float3 ocio_lut3d_1_coords = (outColor.zyx * float3(47., 47., 47.) + float3(0.5, 0.5, 0.5)) / float3(48., 48., 48.);\n"
-            "  outColor.rgb = ocio_lut3d_1.sample(ocio_lut3d_1Sampler, ocio_lut3d_1_coords).rgb;\n"
-            "  \n"
-            "  // Add LUT 1D processing for ocio_lut1d_2\n"
-            "  \n"
-            "  {\n"
-            "    outColor.r = ocio_lut1d_2.sample(ocio_lut1d_2Sampler, ocio_lut1d_2_computePos(outColor.r)).r;\n"
-            "    outColor.g = ocio_lut1d_2.sample(ocio_lut1d_2Sampler, ocio_lut1d_2_computePos(outColor.g)).r;\n"
-            "    outColor.b = ocio_lut1d_2.sample(ocio_lut1d_2Sampler, ocio_lut1d_2_computePos(outColor.b)).r;\n"
-            "  }\n"
-            "\n"
-            "  return outColor;\n"
-            "}\n"
-            "\n"
-            "// close class wrapper\n"
-            "\n"
-            "\n"
-            "};\n"
-            "float4 Display(\n"
-            "  texture3d<float> ocio_lut3d_1, sampler ocio_lut3d_1Sampler\n"
-            "  , texture1d<float> ocio_lut1d_0, sampler ocio_lut1d_0Sampler\n"
-            "  , texture2d<float> ocio_lut1d_2, sampler ocio_lut1d_2Sampler\n"
-            "  ,float4 inPixel)\n"
-            "{\n"
-            "  return OCIO(\n"
-            "    ocio_lut3d_1, ocio_lut3d_1Sampler\n"
-            "    , ocio_lut1d_0, ocio_lut1d_0Sampler\n"
-            "    , ocio_lut1d_2, ocio_lut1d_2Sampler\n"
-            "  ).Display(inPixel);\n"
-            "}\n"
-            "\n";
+        static constexpr char expected[] = { R"(
+// Declaration of class wrapper
+
+struct ocioOCIOMain
+{
+ocioOCIOMain(
+  texture3d<float> ocio_lut3d_1
+  , sampler ocio_lut3d_1Sampler
+  , texture1d<float> ocio_lut1d_0
+  , sampler ocio_lut1d_0Sampler
+  , texture2d<float> ocio_lut1d_2
+  , sampler ocio_lut1d_2Sampler
+)
+{
+  this->ocio_lut3d_1 = ocio_lut3d_1;
+  this->ocio_lut3d_1Sampler = ocio_lut3d_1Sampler;
+  this->ocio_lut1d_0 = ocio_lut1d_0;
+  this->ocio_lut1d_0Sampler = ocio_lut1d_0Sampler;
+  this->ocio_lut1d_2 = ocio_lut1d_2;
+  this->ocio_lut1d_2Sampler = ocio_lut1d_2Sampler;
+}
+
+
+
+// Declaration of all variables
+
+texture1d<float> ocio_lut1d_0;
+sampler ocio_lut1d_0Sampler;
+texture3d<float> ocio_lut3d_1;
+sampler ocio_lut3d_1Sampler;
+texture2d<float> ocio_lut1d_2;
+sampler ocio_lut1d_2Sampler;
+
+// Declaration of all helper methods
+
+float2 ocio_lut1d_2_computePos(float f)
+{
+  float dep;
+  float abs_f = abs(f);
+  if (abs_f > 6.10351562e-05)
+  {
+    float3 fComp = float3(15., 15., 15.);
+    float absarr = min( abs_f, 65504.);
+    fComp.x = floor( log2( absarr ) );
+    float lower = pow( 2.0, fComp.x );
+    fComp.y = ( absarr - lower ) / lower;
+    float3 scale = float3(1024., 1024., 1024.);
+    dep = dot( fComp, scale );
+  }
+  else
+  {
+    dep = abs_f * 1023.0 / 6.09755516e-05;
+  }
+  dep += step(f, 0.0) * 32768.0;
+  float2 retVal;
+  retVal.y = floor(dep / 4095.);
+  retVal.x = dep - retVal.y * 4095.;
+  retVal.x = (retVal.x + 0.5) / 4096.;
+  retVal.y = (retVal.y + 0.5) / 17.;
+  return retVal;
+}
+
+// Declaration of the OCIO shader function
+
+float4 OCIOMain(float4 inPixel)
+{
+  float4 outColor = inPixel;
+  
+  // Add LUT 1D processing for ocio_lut1d_0
+  
+  {
+    float3 ocio_lut1d_0_coords = (outColor.rgb * float3(31., 31., 31.) + float3(0.5, 0.5, 0.5) ) / float3(32., 32., 32.);
+    outColor.r = ocio_lut1d_0.sample(ocio_lut1d_0Sampler, ocio_lut1d_0_coords.r).r;
+    outColor.g = ocio_lut1d_0.sample(ocio_lut1d_0Sampler, ocio_lut1d_0_coords.g).g;
+    outColor.b = ocio_lut1d_0.sample(ocio_lut1d_0Sampler, ocio_lut1d_0_coords.b).b;
+  }
+  
+  // Add LUT 3D processing for ocio_lut3d_1
+  
+  float3 ocio_lut3d_1_coords = (outColor.zyx * float3(47., 47., 47.) + float3(0.5, 0.5, 0.5)) / float3(48., 48., 48.);
+  outColor.rgb = ocio_lut3d_1.sample(ocio_lut3d_1Sampler, ocio_lut3d_1_coords).rgb;
+  
+  // Add LUT 1D processing for ocio_lut1d_2
+  
+  {
+    outColor.r = ocio_lut1d_2.sample(ocio_lut1d_2Sampler, ocio_lut1d_2_computePos(outColor.r)).r;
+    outColor.g = ocio_lut1d_2.sample(ocio_lut1d_2Sampler, ocio_lut1d_2_computePos(outColor.g)).r;
+    outColor.b = ocio_lut1d_2.sample(ocio_lut1d_2Sampler, ocio_lut1d_2_computePos(outColor.b)).r;
+  }
+
+  return outColor;
+}
+
+// close class wrapper
+
+
+};
+float4 OCIOMain(
+  texture3d<float> ocio_lut3d_1
+  , sampler ocio_lut3d_1Sampler
+  , texture1d<float> ocio_lut1d_0
+  , sampler ocio_lut1d_0Sampler
+  , texture2d<float> ocio_lut1d_2
+  , sampler ocio_lut1d_2Sampler
+  ,float4 inPixel)
+{
+  return ocioOCIOMain(
+    ocio_lut3d_1
+    , ocio_lut3d_1Sampler
+    , ocio_lut1d_0
+    , ocio_lut1d_0Sampler
+    , ocio_lut1d_2
+    , ocio_lut1d_2Sampler
+  ).OCIOMain(inPixel);
+}
+
+)" };
 
         OCIO_CHECK_EQUAL(expected, text);
     }

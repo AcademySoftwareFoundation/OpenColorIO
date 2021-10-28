@@ -22,15 +22,6 @@ enum class TextureDimensions: int
     D3 = 3
 };
 
-struct TextureInfo
-{
-    explicit TextureInfo(std::string textureName, const TextureDimensions textureDimensions = TextureDimensions::D2) : textureName(std::move(textureName)),
-                                                                                                               textureDimensions(
-                                                                                                                       textureDimensions) {}
-    const std::string textureName;
-    const TextureDimensions textureDimensions = TextureDimensions::D2;
-};
-
 // Helper class to create shader programs
 class GpuShaderText
 {
@@ -182,8 +173,9 @@ public:
     //
     static std::string getSamplerName(const std::string& textureName);
     
-    void getTexParam(const std::string &textureName, const std::string &textureFormat, std::string &textureParameterOut, unsigned int dimensions) const;
-    static std::string getTexType(GpuLanguage language, unsigned int dimensions, const std::string &textureFormat);
+    static std::string getTextureDeclaration(GpuLanguage language, unsigned int dimensions,
+                                              const std::string &textureFormat, const std::string &textureName);
+    static std::string getTextureKeyword(GpuLanguage language, unsigned int dimensions, const std::string &textureFormat);
     TextureDimensions getDimensions(std::string textureType) const;
 
     // Declare the global texture and sampler information for a 1D texture.
@@ -237,15 +229,6 @@ public:
 
     // Get the string for taking the sign of a vector.
     std::string sign(const std::string & v) const;
-    
-    //Checks if the given language requires us to create a class wrapper
-    bool hasClassWrapper() const;
-
-    std::string classWrapperHeader(const std::string &className, const std::vector<TextureInfo> &textureInfo) const;
-
-    std::string classWrapperFooter(const std::string &className, const std::vector<TextureInfo> &textureInfo,
-                                   const std::string &ocioFunctionName) const;
-
 
     friend class GpuShaderLine;
 

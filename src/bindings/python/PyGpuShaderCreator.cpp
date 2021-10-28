@@ -100,8 +100,8 @@ void bindPyGpuShaderCreator(py::module & m)
              "shaderCode"_a, 
              DOC(GpuShaderCreator, addToFunctionFooterShaderCode))
         .def("createShaderText", &GpuShaderCreator::createShaderText, 
-             "shaderDeclarations"_a, "shaderHelperMethods"_a, "shaderFunctionHeader"_a,
-             "shaderFunctionBody"_a, "shaderFunctionFooter"_a,
+             "shaderDeclarations"_a, "shaderHelperMethods"_a, "shaderFunctionHeader"_a, 
+             "shaderFunctionBody"_a, "shaderFunctionFooter"_a, 
              DOC(GpuShaderCreator, createShaderText))
         .def("finalize", &GpuShaderCreator::finalize, 
              DOC(GpuShaderCreator, finalize));

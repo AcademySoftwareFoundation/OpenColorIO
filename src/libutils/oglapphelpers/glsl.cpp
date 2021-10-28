@@ -460,7 +460,7 @@ std::string OpenGLBuilder::getGLSLVersionString()
     case GPU_LANGUAGE_CG:
     case GPU_LANGUAGE_HLSL_DX11:
     case LANGUAGE_OSL_1:
-    case GPU_LANGUAGE_MSL_METAL:
+    case GPU_LANGUAGE_MSL_2_0:
     default:
         // These are all impossible in OpenGL contexts.
         // The shader will be unusable, so let's throw
