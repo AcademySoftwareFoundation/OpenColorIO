@@ -262,6 +262,7 @@ jobs:
         if: matrix.build-docs == 'ON'
       - name: Install tests env
         run: share/ci/scripts/windows/install_tests_env.sh
+        shell: bash
       # TODO: install OIIO through a package manager or manual install.
       - name: Create build directories
         run: |
