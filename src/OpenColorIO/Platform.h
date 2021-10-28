@@ -71,6 +71,7 @@ void AlignedFree(void * memBlock);
 // Note: Temporary files should be at some point deleted by the OS (depending of the OS
 //       and various platform specific settings). To be safe, add some code to remove
 //       the file if created.
+// FIXME: Implement a function or class for temporary file creation useable by all tests.
 std::string CreateTempFilename(const std::string & filenameExt);
 
 }
