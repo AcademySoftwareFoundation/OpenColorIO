@@ -6,18 +6,16 @@
 #define INCLUDED_OCIO_GPUSHADERUTILS_H
 
 #include <sstream>
-#include <utility>
-#include <vector>
 
 #include <OpenColorIO/OpenColorIO.h>
 
 
 namespace OCIO_NAMESPACE
 {
-
 // Helper class to create shader programs
 class GpuShaderText
 {
+
 public:
 
     // Helper class to create shader lines

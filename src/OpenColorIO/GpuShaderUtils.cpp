@@ -3,8 +3,6 @@
 
 #include <math.h>
 #include <vector>
-#include <iomanip>
-#include <string>
 
 #include <OpenColorIO/OpenColorIO.h>
 
