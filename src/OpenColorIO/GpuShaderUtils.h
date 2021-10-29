@@ -15,13 +15,6 @@
 namespace OCIO_NAMESPACE
 {
 
-enum class TextureDimensions: int
-{
-    D1 = 1,
-    D2 = 2,
-    D3 = 3
-};
-
 // Helper class to create shader programs
 class GpuShaderText
 {
@@ -176,7 +169,6 @@ public:
     static std::string getTextureDeclaration(GpuLanguage language, unsigned int dimensions,
                                               const std::string &textureFormat, const std::string &textureName);
     static std::string getTextureKeyword(GpuLanguage language, unsigned int dimensions, const std::string &textureFormat);
-    TextureDimensions getDimensions(std::string textureType) const;
 
     // Declare the global texture and sampler information for a 1D texture.
     void declareTex1D(const std::string& textureName);

@@ -259,7 +259,6 @@ ocioDisplay(
 }
 
 
-
 // Declaration of the OCIO shader function
 
 float4 Display(float4 inPixel)
@@ -279,7 +278,6 @@ float4 Display(
   return ocioDisplay(
   ).Display(inPixel);
 }
-
 )" };
 
         OCIO_CHECK_EQUAL(expected, text);
@@ -350,7 +348,6 @@ ocioDisplay(
 }
 
 
-
 // Declaration of the OCIO shader function
 
 float4 Display(float4 inPixel)
@@ -370,7 +367,6 @@ float4 Display(
   return ocioDisplay(
   ).Display(inPixel);
 }
-
 )" };
         
         OCIO_CHECK_EQUAL(expected, text);
@@ -442,7 +438,6 @@ ocioMyMethodName(
 }
 
 
-
 // Declaration of all variables
 
 texture1d<float> ocio_lut1d_0;
@@ -480,7 +475,6 @@ float4 MyMethodName(
     , ocio_lut1d_0Sampler
   ).MyMethodName(inPixel);
 }
-
 )" };
 
         OCIO_CHECK_EQUAL(expected, text);
@@ -552,7 +546,6 @@ ocioMyMethodName(
 }
 
 
-
 // Declaration of all variables
 
 texture3d<float> ocio_lut3d_0;
@@ -586,7 +579,6 @@ float4 MyMethodName(
     , ocio_lut3d_0Sampler
   ).MyMethodName(inPixel);
 }
-
 )" };
         
         OCIO_CHECK_EQUAL(expected, text);
@@ -656,7 +648,6 @@ ocioOCIOMain(
 }
 
 
-
 // Declaration of all variables
 
 texture2d<float> ocio_lut1d_0;
@@ -706,7 +697,6 @@ float4 OCIOMain(
     , ocio_lut1d_0Sampler
   ).OCIOMain(inPixel);
 }
-
 )" };
 
         OCIO_CHECK_EQUAL(expected, text);
@@ -787,7 +777,6 @@ ocioOCIOMain(
 }
 
 
-
 // Declaration of all variables
 
 texture1d<float> ocio_lut1d_0;
@@ -863,7 +852,6 @@ float4 OCIOMain(
     , ocio_lut1d_2Sampler
   ).OCIOMain(inPixel);
 }
-
 )" };
         
         OCIO_CHECK_EQUAL(expected, text);
@@ -932,7 +920,6 @@ ocioOCIOMain(
 }
 
 
-
 // Declaration of all variables
 
 float ocio_exposure_contrast_exposureVal;
@@ -974,7 +961,6 @@ float4 OCIOMain(
     , ocio_exposure_contrast_gammaVal
   ).OCIOMain(inPixel);
 }
-
 )"};
         OCIO_CHECK_EQUAL(expected, text);
     }
@@ -1038,7 +1024,6 @@ ocioOCIOMain(
 )
 {
 }
-
 
 
 // Declaration of all helper methods
@@ -1125,7 +1110,6 @@ float4 OCIOMain(
   return ocioOCIOMain(
   ).OCIOMain(inPixel);
 }
-
 )" };
         OCIO_CHECK_EQUAL(expected, text);
     }

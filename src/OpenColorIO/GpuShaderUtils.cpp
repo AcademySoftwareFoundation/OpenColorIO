@@ -814,31 +814,6 @@ std::string GpuShaderText::getTextureDeclaration(GpuLanguage language,
     return t.str();
 }
 
-TextureDimensions GpuShaderText::getDimensions(std::string textureType) const
-{
-    if (m_lang != GPU_LANGUAGE_MSL_2_0)
-    {
-         throw Exception("getDimensions is currently only supported for Metal");
-    }
-
-    // here we assume the keyword textureXD<T> to be the Metal keyword where X=dimensions
-    if(textureType[8] == 'd')
-    {
-        switch (textureType[7])
-         {
-             case '1':
-                 return TextureDimensions::D1;
-             case '2':
-                 return TextureDimensions::D2;
-             case '3':
-                 return TextureDimensions::D3;
-         }
-     }
-    
-    throw Exception(("Unable to parse dimensions from textureType. Invalid string passed in: " + textureType).c_str());
-}
-
-
 void GpuShaderText::declareTex1D(const std::string & textureName)
 {
     std::string textureDecl, samplerDecl;

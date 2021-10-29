@@ -27,26 +27,6 @@ OCIO_ADD_TEST(GpuShaderUtils, float_to_string)
     OCIO_CHECK_EQUAL(OCIO::getFloatString((float)1, OCIO::GPU_LANGUAGE_GLSL_1_3), "1.");
 }
 
-OCIO_ADD_TEST(GpuShaderUtils, get_texture_dimensions_success)
-{
-    OCIO::GpuShaderText ss(OCIO::GpuLanguage::GPU_LANGUAGE_MSL_2_0);
-    OCIO::TextureDimensions dim1 = ss.getDimensions("texture1d");
-    OCIO_CHECK_EQUAL((int)dim1, (int)OCIO::TextureDimensions::D1);
-    OCIO::TextureDimensions  dim2 = ss.getDimensions("texture2d");
-    OCIO_CHECK_EQUAL((int)dim2, (int)OCIO::TextureDimensions::D2);
-    OCIO::TextureDimensions dim3 = ss.getDimensions("texture3d");
-    OCIO_CHECK_EQUAL((int)dim3, (int)OCIO::TextureDimensions::D3);
-}
-
-OCIO_ADD_TEST(GpuShaderUtils, get_texture_dimensions_failure)
-{
-    OCIO::GpuShaderText ss(OCIO::GpuLanguage::GPU_LANGUAGE_MSL_2_0);
-    OCIO_CHECK_THROW_WHAT(ss.getDimensions("texture4d<float>"),
-                          OCIO::Exception,
-                          "Unable to parse dimensions from textureType. Invalid string passed in: texture4d<float>");
-    ;
-}
-
 OCIO_ADD_TEST(GpuShaderUtils, getTexType_success)
 {
     std::string dim1 = OCIO::GpuShaderText::getTextureKeyword(OCIO::GpuLanguage::GPU_LANGUAGE_MSL_2_0, 1, "float");

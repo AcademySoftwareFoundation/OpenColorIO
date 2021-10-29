@@ -23,16 +23,11 @@ namespace OCIO_NAMESPACE
 class MetalClassWrappingInterface
 {
 public:
-    void addToFunctionParameter(const std::string& type, const std::string& paramName);
+    void prepareClassWrapper(const std::string& resourcePrefix, const std::string& functionName, const std::string& originalHeader);
+    std::string getClassWrapperHeader(GpuShaderText& st, const std::string& originalHeader);
+    std::string getClassWrapperFooter(GpuShaderText& st, const std::string& originalFooter);
     
-    std::string getClassWrapperHeader(const std::string& resourcePrefix,
-                                      const std::string& functionName,
-                                      const std::string& originalHeader);
-
-    std::string getClassWrapperFooter(const std::string& resourcePrefix,
-                                      const std::string& functionName,
-                                      const std::string& originalFooter);
-    
+private:
     struct FunctionParam
     {
         FunctionParam(const std::string& type, const std::string& name) :
@@ -45,18 +40,14 @@ public:
         const std::string name;
     };
     
-    const std::vector<FunctionParam>& getFunctionParameters() const
-    {
-        return m_classWrapFunctionParams;
-    }
-
-private:
-    std::vector<FunctionParam> m_classWrapFunctionParams;
-    
     std::string getClassWrapperName(const std::string &resourcePrefix, const std::string& functionName);
-    std::string generateClassWrapperHeader(const std::string &className) const;
-    std::string generateClassWrapperFooter(const std::string &className,
-                                           const std::string &ocioFunctionName) const;
+    void extractFunctionParameters(const std::string& declaration);
+    std::string generateClassWrapperHeader(GpuShaderText& st) const;
+    std::string generateClassWrapperFooter(GpuShaderText& st, const std::string &ocioFunctionName) const;
+    
+    std::string m_className;
+    std::string m_functionName;
+    std::vector<FunctionParam> m_functionParameters;
 };
 
 class GpuShaderCreator::Impl
@@ -89,13 +80,10 @@ public:
         :   m_functionName("OCIOMain")
         ,   m_resourcePrefix("ocio")
         ,   m_pixelName("outColor")
-        ,   m_classWrappingInterface(nullptr)
     {
     }
 
-    ~Impl()
-    {
-    }
+    ~Impl() = default;
 
     Impl(const Impl & rhs) = delete;
 
@@ -290,39 +278,34 @@ const char * GpuShaderCreator::getCacheID() const noexcept
     return getImpl()->m_cacheID.c_str();
 }
 
-void MetalClassWrappingInterface::addToFunctionParameter(const std::string& type, const std::string& paramName)
+std::string MetalClassWrappingInterface::generateClassWrapperHeader(GpuShaderText& kw) const
 {
-    m_classWrapFunctionParams.push_back({type, paramName});
-}
-
-std::string MetalClassWrappingInterface::generateClassWrapperHeader(const std::string &className) const
-{
-    if(className.length() < 1)
+    if(m_className.empty())
     {
         throw Exception("Struct name must include at least 1 character");
     }
-    if(isdigit(className[0]))
+    if(std::isdigit(m_className[0]))
     {
-        throw Exception(("Struct name must not start with a digit. Invalid className passed in: " + className).c_str());
+        throw Exception(("Struct name must not start with a digit. Invalid className passed in: " + m_className).c_str());
     }
-    
-    GpuShaderText kw(GPU_LANGUAGE_MSL_2_0);
-    kw.newLine() << "struct " << className;
+
+    kw.newLine() << "struct " << m_className;
     kw.newLine() << "{";
-    kw.newLine() << className <<"(";
+    kw.newLine() << m_className <<"(";
     kw.indent();
-    
-    const auto& functionParams = getFunctionParameters();
-    for(auto it = functionParams.begin(); it != functionParams.end(); ++it)
+
+    std::string separator = "";
+    for(const auto& param : m_functionParameters)
     {
-        kw.newLine() << (it != functionParams.begin() ? ", " : "") << it->type << " " << it->name;
+        kw.newLine() << separator << param.type << " " << param.name;
+        separator = ", ";
     }
     kw.dedent();
     kw.newLine() << ")";
     kw.newLine() << "{";
     
     kw.indent();
-    for(auto it = functionParams.begin(); it != functionParams.end(); ++it)
+    for(auto it = m_functionParameters.begin(); it != m_functionParameters.end(); ++it)
     {
         kw.newLine()    << "this->" << it->name  << " = " << it->name  << ";";
     }
@@ -331,19 +314,17 @@ std::string MetalClassWrappingInterface::generateClassWrapperHeader(const std::s
     return kw.string();
 }
     
-std::string MetalClassWrappingInterface::generateClassWrapperFooter(const std::string &className,
-                                                                    const std::string &ocioFunctionName) const
+std::string MetalClassWrappingInterface::generateClassWrapperFooter(GpuShaderText& kw, const std::string &ocioFunctionName) const
 {
-    if(className.length() < 1)
+    if(m_className.empty())
     {
         throw Exception("Struct name must include at least 1 character");
     }
-    if(isdigit(className[0]))
+    if(std::isdigit(m_className[0]))
     {
-        throw Exception(("Struct name must not start with a digit. Invalid className passed in: " + className).c_str());
+        throw Exception(("Struct name must not start with a digit. Invalid className passed in: " + m_className).c_str());
     }
 
-    GpuShaderText kw(GPU_LANGUAGE_MSL_2_0);
     kw.newLine() << "};";
     
     kw.newLine() << kw.float4Keyword() << " " << ocioFunctionName<< "(";
@@ -351,23 +332,25 @@ std::string MetalClassWrappingInterface::generateClassWrapperFooter(const std::s
     bool inPixelNeedsComma = false;
     
     kw.indent();
-    
-    const auto& functionParams = getFunctionParameters();
-    for(auto it = functionParams.begin(); it != functionParams.end(); ++it)
+    std::string separator = "";
+    for(const auto& param : m_functionParameters)
     {
-        kw.newLine() << (it != functionParams.begin() ? ", " : "") << it->type << " " << it->name;
+        kw.newLine() << separator << param.type << " " << param.name;
         inPixelNeedsComma = true;
+        separator = ", ";
     }
     kw.newLine() << (inPixelNeedsComma ? "," : "") << kw.float4Keyword() << " inPixel)";
     kw.dedent();
     kw.newLine() << "{";
     kw.indent();
-    kw.newLine() << "return " << className << "(";
+    kw.newLine() << "return " << m_className << "(";
 
     kw.indent();
-    for(auto it = functionParams.begin(); it != functionParams.end(); ++it)
+    separator = "";
+    for(const auto& param : m_functionParameters)
     {
-        kw.newLine() << (it != functionParams.begin() ? ", " : "") << it->name;
+        kw.newLine() << separator << param.name;
+        separator = ", ";
     }
     kw.dedent();
     
@@ -438,34 +421,124 @@ std::string MetalClassWrappingInterface::getClassWrapperName(const std::string &
     return (resourcePrefix.length() == 0 ? "OCIO_" : resourcePrefix) + functionName;
 }
 
-std::string MetalClassWrappingInterface::getClassWrapperHeader(const std::string& resourcePrefix,
-                                                               const std::string& functionName,
-                                                               const std::string& originalHeader)
+void MetalClassWrappingInterface::extractFunctionParameters(const std::string& declaration)
 {
-    GpuShaderText st(GPU_LANGUAGE_MSL_2_0);
+    // We want the caller to always pass 3d luts first with their samplers, and then pass other luts.
+    std::vector<std::tuple<std::string, std::string, std::string>> lut3DTextures;
+    std::vector<std::tuple<std::string, std::string, std::string>> lutTextures;
+    std::vector<std::pair <std::string, std::string             >> uniforms;
+
+    m_functionParameters.clear();
     
-    std::string className = getClassWrapperName(resourcePrefix, functionName);
-    st.newLine() << generateClassWrapperHeader(className);
+    std::string lineBuffer;
+    
+    std::istringstream is(declaration);
+    while(!is.eof())
+    {
+        std::getline(is, lineBuffer);
+        
+        if(lineBuffer.empty())
+            continue;
+        
+        size_t i = 0;
+        
+        // Skip spaces
+        while(std::isspace(lineBuffer[i])) ++i;
+        
+        // if the line was all skippable characters
+        if(i >= lineBuffer.size())
+            continue;
+        
+        // if the line is a comment
+        if(lineBuffer[i + 0] == '/' && lineBuffer[i + 1] == '/')
+            continue;
+
+        if(lineBuffer.compare(i, 7, "texture") == 0)
+        {
+            int  textureDim = static_cast<int>(lineBuffer[i+7] - '0');
+            
+            size_t endTextureType = lineBuffer.find('>');
+            std::string textureType = lineBuffer.substr(i, (endTextureType - i + 1));
+            
+            i = endTextureType + 1;
+            while(std::isspace(lineBuffer[i])) ++i;
+            
+            size_t endTextureName = lineBuffer.find_first_of(" \t;", i);
+            std::string textureName = lineBuffer.substr(i, (endTextureName - i));
+
+            std::getline(is, lineBuffer);
+            
+            i = lineBuffer.find("sampler") + 7;
+            while(std::isspace(lineBuffer[i])) ++i;
+            size_t endSamplerName = lineBuffer.find_first_of(" \t;", i);
+            std::string samplerName = lineBuffer.substr(i, endSamplerName - i);
+            
+            if(textureDim == 3)
+                lut3DTextures.emplace_back(textureType, textureName, samplerName);
+            else
+                lutTextures.emplace_back(textureType, textureName, samplerName);
+        }
+        else
+        {
+            size_t endTypeName     = lineBuffer.find_first_of(" \t", i);
+            std::string variableType = lineBuffer.substr(i, (endTypeName - i));
+            
+            i = endTypeName + 1;
+            while(std::isspace(lineBuffer[i])) ++i;
+            
+            size_t endVariableName = lineBuffer.find_first_of(" \t;", i);
+            std::string variableName = lineBuffer.substr(i, (endVariableName - i));
+            uniforms.emplace_back(variableType, variableName);
+        }
+    }
+        
+    for(const auto& lut3D : lut3DTextures)
+    {
+        m_functionParameters.emplace_back(std::get<0>(lut3D).c_str(), std::get<1>(lut3D).c_str());
+        m_functionParameters.emplace_back("sampler", std::get<2>(lut3D).c_str());
+    }
+    
+    for(const auto& lut : lutTextures)
+    {
+        m_functionParameters.emplace_back(std::get<0>(lut).c_str(), std::get<1>(lut).c_str());
+        m_functionParameters.emplace_back("sampler", std::get<2>(lut).c_str());
+    }
+    
+    for(const auto& uniform : uniforms)
+    {
+        m_functionParameters.emplace_back(uniform.first, uniform.second);
+    }
+}
+
+void MetalClassWrappingInterface::prepareClassWrapper(const std::string& resourcePrefix, const std::string& functionName, const std::string& originalHeader)
+{
+    m_functionName = functionName;
+    m_className = getClassWrapperName(resourcePrefix, functionName);
+    extractFunctionParameters(originalHeader);
+}
+
+std::string MetalClassWrappingInterface::getClassWrapperHeader(GpuShaderText& st, const std::string& originalHeader)
+{
+    size_t begIdx = st.string().length();
+
+    generateClassWrapperHeader(st);
     st.newLine();
     
     std::string classWrapHeader = "\n// Declaration of class wrapper\n\n";
-    classWrapHeader += st.string();
+    classWrapHeader += st.string().substr(begIdx);
     
     return classWrapHeader + originalHeader;
 }
 
-std::string MetalClassWrappingInterface::getClassWrapperFooter(const std::string& resourcePrefix,
-                                                               const std::string& functionName,
-                                                               const std::string& originalFooter)
+std::string MetalClassWrappingInterface::getClassWrapperFooter(GpuShaderText& st, const std::string& originalFooter)
 {
-    GpuShaderText st(GPU_LANGUAGE_MSL_2_0);
+    size_t begIdx = st.string().length();
     
     st.newLine();
-    std::string className = getClassWrapperName(resourcePrefix, functionName);
-    st.newLine() << generateClassWrapperFooter(className, functionName);
+    generateClassWrapperFooter(st, m_functionName);
     
     std::string classWrapFooter = "\n// close class wrapper\n\n";
-    classWrapFooter += st.string();
+    classWrapFooter += st.string().substr(begIdx);
     
     return originalFooter + classWrapFooter;
 }
@@ -574,102 +647,13 @@ void GpuShaderCreator::finalize()
     
     if (getLanguage() == GPU_LANGUAGE_MSL_2_0)
     {
-        // We want the caller to always pass 3d luts first with their samplers, and then pass other luts.
-        std::vector<std::tuple<std::string, std::string, std::string>> lut3DTextures;
-        std::vector<std::tuple<std::string, std::string, std::string>> lutTextures;
-        std::vector<std::pair <std::string, std::string             >> uniforms;
-
-        auto isSkippableCharacter = [](char c) -> bool
-        {
-            return (c == ' ' || c == '\t');
-                
-        };
-
-        std::string lineBuffer;
+        getImpl()->m_classWrappingInterface->prepareClassWrapper(getResourcePrefix(),
+                                                                 getImpl()->m_functionName,
+                                                                 getImpl()->m_declarations);
         
-        std::istringstream is(getImpl()->m_declarations);
-        while(!is.eof())
-        {
-            std::getline(is, lineBuffer);
-            
-            if(lineBuffer[0] == '\0')
-                continue;
-            
-            size_t i = 0;
-            
-            // Skip spaces
-            while(isSkippableCharacter(lineBuffer[i])) ++i;
-            
-            // if the line was all skippable characters
-            if(i >= lineBuffer.size())
-                continue;
-            
-            // if the line is a comment
-            if(lineBuffer[i + 0] == '/' && lineBuffer[i + 1] == '/')
-                continue;
-
-            if(lineBuffer.compare(i, 7, "texture") == 0)
-            {
-                int  textureDim = static_cast<int>(lineBuffer[i+7] - '0');
-                
-                size_t endTextureType = lineBuffer.find('>');
-                std::string textureType = lineBuffer.substr(i, (endTextureType - i + 1));
-                
-                i = endTextureType + 1;
-                while(isSkippableCharacter(lineBuffer[i])) ++i;
-                
-                size_t endTextureName = lineBuffer.find_first_of(" \t;", i);
-                std::string textureName = lineBuffer.substr(i, (endTextureName - i));
-
-                std::getline(is, lineBuffer);
-                
-                i = lineBuffer.find("sampler") + 7;
-                while(isSkippableCharacter(lineBuffer[i])) ++i;
-                size_t endSamplerName = lineBuffer.find_first_of(" \t;", i);
-                std::string samplerName = lineBuffer.substr(i, endSamplerName - i);
-                
-                if(textureDim == 3)
-                    lut3DTextures.emplace_back(textureType, textureName, samplerName);
-                else
-                    lutTextures.emplace_back(textureType, textureName, samplerName);
-            }
-            else
-            {
-                size_t endTypeName     = lineBuffer.find_first_of(" \t", i);
-                std::string variableType = lineBuffer.substr(i, (endTypeName - i));
-                
-                i = endTypeName + 1;
-                while(isSkippableCharacter(lineBuffer[i])) ++i;
-                
-                size_t endVariableName = lineBuffer.find_first_of(" \t;", i);
-                std::string variableName = lineBuffer.substr(i, (endVariableName - i));
-                uniforms.emplace_back(variableType, variableName);
-            }
-        }
-            
-        for(const auto& lut3D : lut3DTextures)
-        {
-            getImpl()->m_classWrappingInterface->addToFunctionParameter(std::get<0>(lut3D).c_str(), std::get<1>(lut3D).c_str());
-            getImpl()->m_classWrappingInterface->addToFunctionParameter("sampler", std::get<2>(lut3D).c_str());
-        }
-        
-        for(const auto& lut : lutTextures)
-        {
-            getImpl()->m_classWrappingInterface->addToFunctionParameter(std::get<0>(lut).c_str(), std::get<1>(lut).c_str());
-            getImpl()->m_classWrappingInterface->addToFunctionParameter("sampler", std::get<2>(lut).c_str());
-        }
-        
-        for(const auto& uniform : uniforms)
-        {
-            getImpl()->m_classWrappingInterface->addToFunctionParameter(uniform.first, uniform.second);
-        }
-        
-        getImpl()->m_declarations   = getImpl()->m_classWrappingInterface->getClassWrapperHeader(getResourcePrefix(),
-                                                                                                 getImpl()->m_functionName,
-                                                                                                 getImpl()->m_declarations);
-        getImpl()->m_functionFooter = getImpl()->m_classWrappingInterface->getClassWrapperFooter(getResourcePrefix(),
-                                                                                                 getImpl()->m_functionName,
-                                                                                                 getImpl()->m_functionFooter);
+        GpuShaderText st(GPU_LANGUAGE_MSL_2_0);
+        getImpl()->m_declarations   = getImpl()->m_classWrappingInterface->getClassWrapperHeader(st, getImpl()->m_declarations);
+        getImpl()->m_functionFooter = getImpl()->m_classWrappingInterface->getClassWrapperFooter(st, getImpl()->m_functionFooter);
     }
 
     createShaderText(getImpl()->m_declarations.c_str(),
