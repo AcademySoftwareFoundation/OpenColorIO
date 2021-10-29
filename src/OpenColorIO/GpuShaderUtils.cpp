@@ -2,7 +2,6 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 #include <math.h>
-#include <vector>
 
 #include <OpenColorIO/OpenColorIO.h>
 
