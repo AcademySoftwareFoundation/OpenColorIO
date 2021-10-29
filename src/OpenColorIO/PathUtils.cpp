@@ -4,12 +4,12 @@
 
 #include <iostream>
 #include <map>
-#include <sys/stat.h>
 
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "Mutex.h"
 #include "PathUtils.h"
+#include "Platform.h"
 #include "pystring/pystring.h"
 #include "utils/StringUtils.h"
 
@@ -26,39 +26,9 @@ namespace OCIO_NAMESPACE
 {
 namespace
 {
-// Here is the explanation of the stat() method:
-// https://pubs.opengroup.org/onlinepubs/009695299/basedefs/sys/stat.h.html
-// "The st_ino and st_dev fields taken together uniquely identify the file within the system."
-//
-// However there are limitations to the stat() support on some Windows file systems:
-// https://docs.microsoft.com/en-us/cpp/c-runtime-library/reference/stat-functions?redirectedfrom=MSDN&view=vs-2019
-// "The inode, and therefore st_ino, has no meaning in the FAT, HPFS, or NTFS file systems."
-
-// That's the default hash method implementation to compute a hash key based on a file content.
-std::string DefaultComputeHash(const std::string &filename)
-{
-    struct stat fileInfo;
-    if (stat(filename.c_str(), &fileInfo) == 0)
-    {
-        // Treat the st_dev (i.e. device) + st_ino (i.e. inode) as a proxy for the contents.
-
-        std::ostringstream fasthash;
-        fasthash << fileInfo.st_dev << ":";
-#ifdef _WIN32
-        // TODO: The hard-linked files are then not correctly supported on Windows platforms.
-        fasthash << std::hash<std::string>{}(filename);
-#else
-        fasthash << fileInfo.st_ino;
-#endif
-        return fasthash.str();
-    }
-
-    return "";
-}
-
 // The global variable holds the hash function to use.
 // It could be changed using SetComputeHashFunction() to customize the implementation.
-ComputeHashFunction g_hashFunction = DefaultComputeHash;
+ComputeHashFunction g_hashFunction = Platform::CreateFileContentHash;
 
 // We mutex both the main map and each item individually, so that
 // the potentially slow stat calls dont block other lookups to already
@@ -86,7 +56,7 @@ void SetComputeHashFunction(ComputeHashFunction hashFunction)
 
 void ResetComputeHashFunction()
 {
-    g_hashFunction = DefaultComputeHash;
+    g_hashFunction = Platform::CreateFileContentHash;
 }
 
 std::string GetFastFileHash(const std::string & filename)
