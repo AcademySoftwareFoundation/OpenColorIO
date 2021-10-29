@@ -173,8 +173,6 @@ if(NOT WIN32)
 
     # Install the pkg-config file.
 
-    include(GNUInstallDirs)
-
     set(prefix ${CMAKE_INSTALL_PREFIX})
     set(exec_prefix "\${prefix}")
     set(libdir "\${exec_prefix}/${CMAKE_INSTALL_LIBDIR}")

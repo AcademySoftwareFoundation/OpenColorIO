@@ -48,6 +48,11 @@ enable_testing()
 
 
 ###############################################################################
+# Provides install directory variables as defined by the GNU Coding Standards.
+include(GNUInstallDirs)
+
+
+###############################################################################
 # Forbid in-source build.
 
 if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})

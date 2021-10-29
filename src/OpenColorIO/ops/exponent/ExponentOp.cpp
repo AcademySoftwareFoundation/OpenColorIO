@@ -265,13 +265,22 @@ void ExponentOp::extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) con
 
     // outColor = pow(max(outColor, 0.), exp);
 
+    const std::string pxl(shaderCreator->getPixelName());
+
+    ss.newLine() << ss.float4Decl("res") 
+                 << " = " << ss.float4Const(pxl + ".rgb.r",
+                                            pxl + ".rgb.g",
+                                            pxl + ".rgb.b",
+                                            pxl + ".a") << ";";
+
     ss.newLine()
-        << shaderCreator->getPixelName()
-        << " = pow( "
-        << "max( " << shaderCreator->getPixelName()
-        << ", " << ss.float4Const(0.0f) << " )"
+        << "res = pow( "
+        << "max( res, " << ss.float4Const(0.0f) << " )"
         << ", " << ss.float4Const(expData()->m_exp4[0], expData()->m_exp4[1],
                                   expData()->m_exp4[2], expData()->m_exp4[3]) << " );";
+
+    ss.newLine() << pxl << ".rgb = " << ss.float3Const("res.x", "res.y", "res.z") << ";";
+    ss.newLine() << pxl << ".a = res.w;";
 
     ss.dedent();
     ss.newLine() << "}";

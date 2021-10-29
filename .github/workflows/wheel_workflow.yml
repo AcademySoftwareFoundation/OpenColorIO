@@ -6,15 +6,11 @@ name: Wheel
 
 on:
   push:
-    # Versioned branches and tags are ignored for OCIO <= 1.x.x
-    branches-ignore:
-      - RB-0.*
-      - RB-1.*
-      - gh-pages
-    tags-ignore:
-      - v0.*
-      - v1.*
+    # Workflow run on tags for v2 only.
+    tags:
+      - v2.*
   pull_request:
+    # Workflow run on pull_request only when related files change.
     branches-ignore:
       - RB-0.*
       - RB-1.*
@@ -22,6 +18,12 @@ on:
     tags-ignore:
       - v0.*
       - v1.*
+    paths:
+      - .github/workflows/wheel_workflow.yml
+      - pyproject.toml
+  schedule:
+    # Nightly build
+    - cron: "0 0 * * *"
 
 jobs:
   # Linux jobs run in Docker containers (manylinux), so the latest OS version
@@ -29,18 +31,8 @@ jobs:
   # environment versions to mitigate issues from OS updates, and will require
   # maintenance as OS versions are retired.
   #
-  # Notes:
-  #
-  # Documentation fails to build on manylinux2010, maybe too old
-  # doxygen ? First fail in PyColorSpaceSet for documentation
-  # referencing PyOpenColorIO (eg. __sub__). Consequence is we don't
-  # support python 2.7, alternatively build without docstrings, or
-  # fix the doxygen issue.
-  #
-  # When installing doc environment, Python package are not used as the wheel
-  # is built in it's own isolated environment, hence package are listed again
-  # in pyproject.toml.
-  #
+  # Due to documentation build failing on manylinux2010 (maybe too old doxygen
+  # version), we build on manylinux2014 image, this requires pip >= 19.3.
 
   # ---------------------------------------------------------------------------
   # Linux
@@ -67,6 +59,9 @@ jobs:
           - build: CPython 3.9 32 bits
             python: cp39-*
             arch: i686
+          - build: CPython 3.10 32 bits
+            python: cp310-*
+            arch: i686
           # -------------------------------------------------------------------
           # CPython 64 bits
           # -------------------------------------------------------------------
@@ -82,6 +77,27 @@ jobs:
           - build: CPython 3.9 64 bits
             python: cp39-*
             arch: x86_64
+          - build: CPython 3.10 64 bits
+            python: cp310-*
+            arch: x86_64
+          # -------------------------------------------------------------------
+          # CPython ARM 64 bits
+          # -------------------------------------------------------------------
+          - build: CPython 3.6 ARM 64 bits
+            python: cp36-*
+            arch: aarch64
+          - build: CPython 3.7 ARM 64 bits
+            python: cp37-*
+            arch: aarch64
+          - build: CPython 3.8 ARM 64 bits
+            python: cp38-*
+            arch: aarch64
+          - build: CPython 3.9 ARM 64 bits
+            python: cp39-*
+            arch: aarch64
+          - build: CPython 3.10 ARM 64 bits
+            python: cp310-*
+            arch: aarch64
 
     steps:
       - uses: actions/checkout@v2
@@ -91,17 +107,16 @@ jobs:
         with:
           python-version: '3.8'
 
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+        with:
+          platforms: all
+
       - name: Build wheels
-        uses: joerick/cibuildwheel@v1.12.0
+        uses: pypa/cibuildwheel@v2.1.2
         env:
-          CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
-          CIBW_MANYLINUX_I686_IMAGE: manylinux2014
-          CIBW_BUILD_VERBOSITY: 1
           CIBW_BUILD: ${{ matrix.python }}
           CIBW_ARCHS: ${{ matrix.arch }}
-          CIBW_BEFORE_BUILD: share/ci/scripts/linux/yum/install_docs_env.sh
-          CIBW_TEST_REQUIRES: numpy
-          CIBW_TEST_COMMAND: python -m PyOpenColorIOTests.OpenColorIOTestSuite
 
       - uses: actions/upload-artifact@v2
         with:
@@ -117,6 +132,13 @@ jobs:
     strategy:
       matrix:
         include:
+        # Python 3.10 can be enabled when numpy ship the binary wheel (which
+        # we use during tests). Building it within GH produces the following:
+        # RuntimeError: Polyfit sanity test emitted a warning, most likely due
+        # to using a buggy Accelerate backend. If you compiled yourself, see
+        # site.cfg.example for information. Otherwise report this to the vendor
+        # that provided NumPy.
+
           # -------------------------------------------------------------------
           # CPython 64 bits
           # -------------------------------------------------------------------
@@ -132,6 +154,9 @@ jobs:
           - build: CPython 3.9 64 bits
             python: cp39-*
             arch: x86_64
+          # - build: CPython 3.10 64 bits
+          #   python: cp310-*
+          #   arch: x86_64
           # -------------------------------------------------------------------
           # CPython ARM 64 bits
           # -------------------------------------------------------------------
@@ -141,6 +166,9 @@ jobs:
           - build: CPython 3.9 ARM 64 bits
             python: cp39-*
             arch: arm64
+          # - build: CPython 3.10 ARM 64 bits
+          #   python: cp310-*
+          #   arch: arm64
 
     steps:
       - uses: actions/checkout@v2
@@ -151,14 +179,10 @@ jobs:
           python-version: '3.8'
 
       - name: Build wheels
-        uses: joerick/cibuildwheel@v1.12.0
+        uses: pypa/cibuildwheel@v2.1.2
         env:
-          CIBW_BUILD_VERBOSITY: 1
           CIBW_BUILD: ${{ matrix.python }}
           CIBW_ARCHS: ${{ matrix.arch }}
-          CIBW_BEFORE_BUILD: share/ci/scripts/macos/install_docs_env.sh
-          CIBW_TEST_REQUIRES: numpy
-          CIBW_TEST_COMMAND: python -m PyOpenColorIOTests.OpenColorIOTestSuite
 
       - uses: actions/upload-artifact@v2
         with:
@@ -189,6 +213,9 @@ jobs:
           - build: CPython 3.9 32 bits
             python: cp39-*
             arch: x86
+          - build: CPython 3.10 32 bits
+            python: cp310-*
+            arch: x86
           # -------------------------------------------------------------------
           # CPython 64 bits
           # -------------------------------------------------------------------
@@ -204,6 +231,9 @@ jobs:
           - build: CPython 3.9 64 bits
             python: cp39-*
             arch: AMD64
+          - build: CPython 3.10 64 bits
+            python: cp310-*
+            arch: AMD64
 
     steps:
       - uses: actions/checkout@v2
@@ -214,14 +244,10 @@ jobs:
           python-version: '3.8'
 
       - name: Build wheels
-        uses: joerick/cibuildwheel@v1.12.0
+        uses: pypa/cibuildwheel@v2.1.2
         env:
-          CIBW_BUILD_VERBOSITY: 1
           CIBW_BUILD: ${{ matrix.python }}
           CIBW_ARCHS: ${{ matrix.arch }}
-          CIBW_BEFORE_BUILD: bash -c share/ci/scripts/windows/install_docs_env.sh
-          CIBW_TEST_REQUIRES: numpy
-          CIBW_TEST_COMMAND: python -m PyOpenColorIOTests.OpenColorIOTestSuite
 
       - uses: actions/upload-artifact@v2
         with:
