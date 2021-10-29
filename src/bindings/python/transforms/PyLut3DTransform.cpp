@@ -128,7 +128,7 @@ void bindPyLut3DTransform(py::module & m)
                 py::gil_scoped_acquire acquire;
 
                 return py::array(py::dtype("float32"), 
-                                 { static_cast<ssize_t>(values.size()) },
+                                 { static_cast<py::ssize_t>(values.size()) },
                                  { sizeof(float) },
                                  values.data());
             })

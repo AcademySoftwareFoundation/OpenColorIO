@@ -28,15 +28,28 @@ endif()
 # Project definition.
 
 project(OpenColorIO 
-    VERSION 2.1.0
+    VERSION 2.2.0
     DESCRIPTION "OpenColorIO (OCIO) is a complete color management solution"
     HOMEPAGE_URL https://github.com/AcademySoftwareFoundation/OpenColorIO
     LANGUAGES CXX C)
 
 # "dev", "beta1", rc1", etc or "" for an official release.
-set(OpenColorIO_VERSION_RELEASE_TYPE "")
+set(OpenColorIO_VERSION_RELEASE_TYPE "dev")
+
+
+###############################################################################
+# ctest
+
+# To correctly generate the DartConfiguration.tcl, include the CTest CMake file.
+# By doing so 'ctest -F memcheck' works.
+include (CTest)
 
 enable_testing()
+
+
+###############################################################################
+# Provides install directory variables as defined by the GNU Coding Standards.
+include(GNUInstallDirs)
 
 
 ###############################################################################
@@ -259,7 +272,6 @@ if(OCIO_BUILD_DOCS)
 endif()
 add_subdirectory(tests)
 add_subdirectory(src)
-add_subdirectory(include)
 add_subdirectory(ext)
 
 
@@ -315,3 +327,4 @@ install(
     FILES "${OCIO_PROJECT_CONFIG}" "${OCIO_VERSION_CONFIG}"
     DESTINATION "${OCIO_CONFIG_INSTALL_DIR}"
 )
+

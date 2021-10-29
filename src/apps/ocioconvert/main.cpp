@@ -13,6 +13,16 @@ namespace OCIO = OCIO_NAMESPACE;
 
 #include <OpenImageIO/imageio.h>
 #include <OpenImageIO/typedesc.h>
+
+// Take the half.h the same way OpenImageIO takes it i.e. do not use the Imath/OpenEXR one from
+// OpenColorIO to avoid version clashes between OpenColorIO & OpenImageIO libraries. For example,
+// OpenColorIO uses Imath 3.1.x but OpenImageIO (from the system) is using Imath 3.0.x which
+// breaks the OpenColorIO compilation.
+#if (OIIO_VERSION >= 20200)
+#   include <OpenImageIO/Imath.h>
+#else
+#   include <OpenEXR/half.h>
+#endif
 #if (OIIO_VERSION < 10100)
 namespace OIIO = OIIO_NAMESPACE;
 #endif
@@ -24,7 +34,6 @@ namespace OIIO = OIIO_NAMESPACE;
 #endif // OCIO_GPU_ENABLED
 
 #include "oiiohelpers.h"
-#include "utils/Half.h"
 
 
 // Array of non OpenColorIO arguments.
@@ -614,6 +623,17 @@ int main(int argc, const char **argv)
         {
             std::cerr << "ERROR: Could not create output input." << std::endl;
             exit(1);
+        }
+
+        if (useDisplayView)
+        {
+            OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
+            outputcolorspace = config->getDisplayViewColorSpaceName(display, view);
+        }
+
+        if (outputcolorspace)
+        {
+            spec.attribute("oiio:ColorSpace", outputcolorspace);
         }
 
         f->open(outputimage, spec);

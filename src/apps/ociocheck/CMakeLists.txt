@@ -28,5 +28,5 @@ target_link_libraries(ociocheck
 )
 
 install(TARGETS ociocheck
-    RUNTIME DESTINATION bin
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
