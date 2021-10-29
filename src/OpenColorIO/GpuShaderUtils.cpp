@@ -119,7 +119,7 @@ void getTexDecl(GpuLanguage lang,
         case GPU_LANGUAGE_MSL_2_0:
         {
             std::ostringstream t;
-            t << GpuShaderText::getTextureDeclaration(GPU_LANGUAGE_MSL_2_0, N, "float", textureName) << ";";
+            t << "texture" << N << "d<float> " << textureName << ";";
             textureDecl = t.str();
 
             t.str("");
@@ -774,44 +774,6 @@ void GpuShaderText::declareFloat4(const std::string & name,
 std::string GpuShaderText::getSamplerName(const std::string& textureName)
 {
     return textureName + "Sampler";
-}
-
-std::string GpuShaderText::getTextureKeyword(GpuLanguage language, unsigned int dimensions, const std::string &textureFormat)
-{
-    if (language != GPU_LANGUAGE_MSL_2_0)
-    {
-        throw Exception("Not implemented for GPU shader language");
-    }
-    if(dimensions > 3 || dimensions == 0)
-    {
-        throw Exception(("Texture dimensions must be 3 or less and more than 0. Passed in was dimensions: " + std::to_string(dimensions)).c_str());
-    }
-    if(textureFormat.empty())
-    {
-        throw Exception("Texture format must contain at least one character");
-    }
-
-    std::ostringstream t;
-    t << "texture" << dimensions << "d<"+textureFormat+">";
-    return t.str();
-}
-
-std::string GpuShaderText::getTextureDeclaration(GpuLanguage language,
-                                                  unsigned int dimensions,
-                                                  const std::string &textureFormat,
-                                                  const std::string &textureName)
-{
-    if (language != GPU_LANGUAGE_MSL_2_0)
-    {
-        throw Exception("Not implemented for GPU shader language");
-    }
-    if (textureName.length() < 1)
-    {
-        throw Exception("Name of texture variable must be at least 1 character");
-    }
-    std::ostringstream t;
-    t << getTextureKeyword(language, dimensions, textureFormat) << " " << textureName;
-    return t.str();
 }
 
 void GpuShaderText::declareTex1D(const std::string & textureName)

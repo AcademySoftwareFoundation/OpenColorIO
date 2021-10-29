@@ -165,10 +165,6 @@ public:
     // Texture helpers
     //
     static std::string getSamplerName(const std::string& textureName);
-    
-    static std::string getTextureDeclaration(GpuLanguage language, unsigned int dimensions,
-                                              const std::string &textureFormat, const std::string &textureName);
-    static std::string getTextureKeyword(GpuLanguage language, unsigned int dimensions, const std::string &textureFormat);
 
     // Declare the global texture and sampler information for a 1D texture.
     void declareTex1D(const std::string& textureName);

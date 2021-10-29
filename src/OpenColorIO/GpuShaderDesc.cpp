@@ -24,8 +24,8 @@ class MetalClassWrappingInterface
 {
 public:
     void prepareClassWrapper(const std::string& resourcePrefix, const std::string& functionName, const std::string& originalHeader);
-    std::string getClassWrapperHeader(GpuShaderText& st, const std::string& originalHeader);
-    std::string getClassWrapperFooter(GpuShaderText& st, const std::string& originalFooter);
+    std::string getClassWrapperHeader(const std::string& originalHeader);
+    std::string getClassWrapperFooter(const std::string& originalFooter);
     
 private:
     struct FunctionParam
@@ -143,6 +143,10 @@ void GpuShaderCreator::setLanguage(GpuLanguage lang) noexcept
     if(lang == GPU_LANGUAGE_MSL_2_0)
     {
         getImpl()->m_classWrappingInterface = std::unique_ptr<MetalClassWrappingInterface>(new MetalClassWrappingInterface);
+    }
+    else
+    {
+        getImpl()->m_classWrappingInterface = nullptr;
     }
     getImpl()->m_cacheID.clear();
 }
@@ -305,9 +309,24 @@ std::string MetalClassWrappingInterface::generateClassWrapperHeader(GpuShaderTex
     kw.newLine() << "{";
     
     kw.indent();
-    for(auto it = m_functionParameters.begin(); it != m_functionParameters.end(); ++it)
+    for(const auto& param : m_functionParameters)
     {
-        kw.newLine()    << "this->" << it->name  << " = " << it->name  << ";";
+        size_t openAngledBracketPos = param.name.find('[');
+        bool isArray = openAngledBracketPos != std::string::npos;
+        if(!isArray)
+            kw.newLine()    << "this->" << param.name  << " = " << param.name  << ";";
+        else
+        {
+            size_t closeAngledBracketPos = param.name.find(']');
+            std::string variableName = param.name.substr(0, openAngledBracketPos);
+            
+            kw.newLine()    << "for(int i = 0; i < "
+                            << param.name.substr(openAngledBracketPos+1, closeAngledBracketPos-openAngledBracketPos-1)
+                            << "; ++i)";
+            kw.indent();
+            kw.newLine()    << "this->" << variableName << "[i] = " << variableName << "[i];";
+            kw.dedent();
+        }
     }
     kw.dedent();
     kw.newLine() <<"}";
@@ -349,7 +368,13 @@ std::string MetalClassWrappingInterface::generateClassWrapperFooter(GpuShaderTex
     separator = "";
     for(const auto& param : m_functionParameters)
     {
-        kw.newLine() << separator << param.name;
+        size_t openAngledBracketPos = param.name.find('[');
+        bool isArray = openAngledBracketPos != std::string::npos;
+        
+        if(!isArray)
+            kw.newLine() << separator << param.name;
+        else
+            kw.newLine() << separator << param.name.substr(0, openAngledBracketPos);
         separator = ", ";
     }
     kw.dedent();
@@ -517,28 +542,28 @@ void MetalClassWrappingInterface::prepareClassWrapper(const std::string& resourc
     extractFunctionParameters(originalHeader);
 }
 
-std::string MetalClassWrappingInterface::getClassWrapperHeader(GpuShaderText& st, const std::string& originalHeader)
+std::string MetalClassWrappingInterface::getClassWrapperHeader(const std::string& originalHeader)
 {
-    size_t begIdx = st.string().length();
+    GpuShaderText st(GPU_LANGUAGE_MSL_2_0);
 
     generateClassWrapperHeader(st);
     st.newLine();
     
     std::string classWrapHeader = "\n// Declaration of class wrapper\n\n";
-    classWrapHeader += st.string().substr(begIdx);
+    classWrapHeader += st.string();
     
     return classWrapHeader + originalHeader;
 }
 
-std::string MetalClassWrappingInterface::getClassWrapperFooter(GpuShaderText& st, const std::string& originalFooter)
+std::string MetalClassWrappingInterface::getClassWrapperFooter(const std::string& originalFooter)
 {
-    size_t begIdx = st.string().length();
+    GpuShaderText st(GPU_LANGUAGE_MSL_2_0);
     
     st.newLine();
     generateClassWrapperFooter(st, m_functionName);
     
     std::string classWrapFooter = "\n// close class wrapper\n\n";
-    classWrapFooter += st.string().substr(begIdx);
+    classWrapFooter += st.string();
     
     return originalFooter + classWrapFooter;
 }
@@ -651,9 +676,8 @@ void GpuShaderCreator::finalize()
                                                                  getImpl()->m_functionName,
                                                                  getImpl()->m_declarations);
         
-        GpuShaderText st(GPU_LANGUAGE_MSL_2_0);
-        getImpl()->m_declarations   = getImpl()->m_classWrappingInterface->getClassWrapperHeader(st, getImpl()->m_declarations);
-        getImpl()->m_functionFooter = getImpl()->m_classWrappingInterface->getClassWrapperFooter(st, getImpl()->m_functionFooter);
+        getImpl()->m_declarations   = getImpl()->m_classWrappingInterface->getClassWrapperHeader(getImpl()->m_declarations);
+        getImpl()->m_functionFooter = getImpl()->m_classWrappingInterface->getClassWrapperFooter(getImpl()->m_functionFooter);
     }
 
     createShaderText(getImpl()->m_declarations.c_str(),
