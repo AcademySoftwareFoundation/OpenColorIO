@@ -153,7 +153,7 @@ bool Path::exists() const
     if(path.empty())
         return false;
     
-    std::ifstream f( path.c_str() );
+    std::ifstream f = Platform::CreateInputFileStream( path.c_str() );
     
     return !!f;
 }
