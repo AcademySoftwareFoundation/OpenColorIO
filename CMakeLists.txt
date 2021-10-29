@@ -139,6 +139,8 @@ option(OCIO_BUILD_JAVA "Specify whether to build java bindings" OFF)
 
 option(OCIO_WARNING_AS_ERROR "Set build error level for CI testing" OFF)
 
+option(OCIO_USE_WINDOWS_UNICODE "On Windows only, compile with Unicode support" WIN32)
+
 
 ###############################################################################
 # Optimization / internal linking preferences
