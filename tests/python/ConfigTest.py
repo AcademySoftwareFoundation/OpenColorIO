@@ -17,9 +17,9 @@ from UnitTestUtils import (SIMPLE_CONFIG_VIRTUAL_DISPLAY,
 #
 #    SIMPLE_PROFILE = """ocio_profile_version: 1
 #
-#search_path: luts
-#strictparsing: false
-#luma: [0.2126, 0.7152, 0.0722]
+# search_path: luts
+# strictparsing: false
+# luma: [0.2126, 0.7152, 0.0722]
 #
 # roles:
 #  default: raw
@@ -30,8 +30,8 @@ from UnitTestUtils import (SIMPLE_CONFIG_VIRTUAL_DISPLAY,
 #    - !<View> {name: Film1D, colorspace: vd8}
 #    - !<View> {name: Raw, colorspace: raw}
 #
-#active_displays: []
-#active_views: []
+# active_displays: []
+# active_views: []
 #
 # colorspaces:
 #  - !<ColorSpace>
@@ -91,10 +91,10 @@ from UnitTestUtils import (SIMPLE_CONFIG_VIRTUAL_DISPLAY,
 #    const sampler3D lut3d)
 # {
 # vec4 out_pixel = inPixel;
-#out_pixel = out_pixel * mat4(1.0874889, -0.079466686, -0.0080222245, 0., -0.023622228, 1.0316445, -0.0080222245, 0., -0.023622226, -0.079466686, 1.1030889, 0., 0., 0., 0., 1.);
-#out_pixel = pow(max(out_pixel, vec4(0., 0., 0., 0.)), vec4(0.90909088, 0.90909088, 0.90909088, 1.));
-#out_pixel = out_pixel * mat4(1.1111112, -2., -3., -4., 0., 1., 0., 0., 0., 0., 1., 0., 0., 0., 0., 1.);
-#out_pixel = vec4(4.688889, -2.3, -0.40000001, -0.) + out_pixel;
+# out_pixel = out_pixel * mat4(1.0874889, -0.079466686, -0.0080222245, 0., -0.023622228, 1.0316445, -0.0080222245, 0., -0.023622226, -0.079466686, 1.1030889, 0., 0., 0., 0., 1.);
+# out_pixel = pow(max(out_pixel, vec4(0., 0., 0., 0.)), vec4(0.90909088, 0.90909088, 0.90909088, 1.));
+# out_pixel = out_pixel * mat4(1.1111112, -2., -3., -4., 0., 1., 0., 0., 0., 0., 1., 0., 0., 0., 0., 1.);
+# out_pixel = vec4(4.688889, -2.3, -0.40000001, -0.) + out_pixel;
 # out_pixel = pow(max(out_pixel, vec4(0., 0., 0., 0.)), vec4(0.45454544, 0.45454544, 0.45454544, 1.));""" \
 # + osx_hack + \
 # """
@@ -339,8 +339,7 @@ class ConfigTest(unittest.TestCase):
         self.assertEqual('', cfg.getDisplayViewDescription('', 'view2'))
         self.assertEqual('', cfg.getDisplayViewDescription('', 'view3'))
         self.assertEqual('', cfg.getDisplayViewDescription('', 'view4'))
-        self.assertEqual(
-            'description 5', cfg.getDisplayViewDescription('', 'view5'))
+        self.assertEqual('description 5', cfg.getDisplayViewDescription('', 'view5'))
         self.assertEqual('desc6', cfg.getDisplayViewDescription('', 'view6'))
 
         # Adding a shared view using an existing name is replacing the existing view.
@@ -551,7 +550,7 @@ colorspaces:
         self.assertEqual('View_c', next(views))
         # View_d rule is Rule_3 that lists c3.
         self.assertEqual('View_d', next(views))
-        # / View_e rule is Rule_4 that lists c3.
+        # View_e rule is Rule_4 that lists c3.
         self.assertEqual('View_e', next(views))
         # View_h has no rule.
         self.assertEqual('View_h', next(views))
