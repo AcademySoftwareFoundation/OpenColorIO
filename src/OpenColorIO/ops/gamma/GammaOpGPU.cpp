@@ -110,7 +110,6 @@ void AddBasicPassThruFwdShader(GpuShaderCreatorRcPtr & shaderCreator,
     const double alphaGamma = gamma->getAlphaParams()[0];
 
     const std::string pxl(shaderCreator->getPixelName());
-    const std::string pxlrgb(pxl + ".rgb");
 
     ss.declareFloat4("gamma", redGamma, grnGamma, bluGamma, alphaGamma);
     ss.declareFloat4("breakPnt", 0.f, 0.f, 0.f, 0.f);
@@ -139,7 +138,6 @@ void AddBasicPassThruRevShader(GpuShaderCreatorRcPtr & shaderCreator,
     const double alphaGamma = 1. / gamma->getAlphaParams()[0];
 
     const std::string pxl(shaderCreator->getPixelName());
-    const std::string pxlrgb(pxl + ".rgb");
 
     ss.declareFloat4("gamma", redGamma, grnGamma, bluGamma, alphaGamma);
     ss.declareFloat4("breakPnt", 0.f, 0.f, 0.f, 0.f);
@@ -171,7 +169,6 @@ void AddMoncurveFwdShader(GpuShaderCreatorRcPtr & shaderCreator,
     ComputeParamsFwd(gamma->getAlphaParams(), alpha);
 
     const std::string pxl(shaderCreator->getPixelName());
-    const std::string pxlrgb(pxl + ".rgb");
 
     // Even if all components are the same, on OS X, a vec4 needs to be
     // declared.  This code will work in both cases.
@@ -210,7 +207,6 @@ void AddMoncurveRevShader(GpuShaderCreatorRcPtr & shaderCreator,
     ComputeParamsRev(gamma->getAlphaParams(), alpha);
 
     const std::string pxl(shaderCreator->getPixelName());
-    const std::string pxlrgb(pxl + ".rgb");
 
     // Even if all components are the same, on OS X, a vec4 needs to be
     // declared.  This code will work in both cases.

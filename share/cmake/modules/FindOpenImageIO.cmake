@@ -21,7 +21,6 @@
 #   OPENIMAGEIO_VERSION_MINOR  Version minor number
 #   OPENIMAGEIO_VERSION_PATCH  Version minor patch
 #   OPENIMAGEIO_VERSION_TWEAK  Version minor tweak
-#   OIIOTOOL_BIN               Path to oiiotool executable
 #
 # Imported targets:
 #   OpenImageIO::OpenImageIO   The libOpenImageIO library.
@@ -66,9 +65,6 @@ find_library ( OPENIMAGEIO_UTIL_LIBRARY
 find_path ( OPENIMAGEIO_INCLUDE_DIR
             NAMES OpenImageIO/imageio.h
             HINTS ${OPENIMAGEIO_ROOT_DIR} )
-find_program ( OIIOTOOL_BIN
-               NAMES oiiotool
-               HINTS ${OPENIMAGEIO_ROOT_DIR} )
 
 # Try to figure out version number
 set (OIIO_VERSION_HEADER "${OPENIMAGEIO_INCLUDE_DIR}/OpenImageIO/oiioversion.h")
