@@ -264,7 +264,7 @@ const char * GpuLanguageToString(GpuLanguage language)
         case GPU_LANGUAGE_GLSL_ES_1_0:  return "glsl_es_1.0";
         case GPU_LANGUAGE_GLSL_ES_3_0:  return "glsl_es_3.0";
         case GPU_LANGUAGE_HLSL_DX11:    return "hlsl_dx11";
-        case GPU_LANGUAGE_MSL_2_0:      return "msl_metal";
+        case GPU_LANGUAGE_MSL_2_0:      return "msl_2";
         case LANGUAGE_OSL_1:            return "osl_1";
     }
 
