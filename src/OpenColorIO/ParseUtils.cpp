@@ -284,7 +284,7 @@ GpuLanguage GpuLanguageFromString(const char * s)
     else if(str == "glsl_es_3.0") return GPU_LANGUAGE_GLSL_ES_3_0;
     else if(str == "hlsl_dx11")   return GPU_LANGUAGE_HLSL_DX11;
     else if(str == "osl_1")       return LANGUAGE_OSL_1;
-    else if(str == "metal")       return GPU_LANGUAGE_MSL_2_0;
+    else if(str == "msl_2")       return GPU_LANGUAGE_MSL_2_0;
 
     std::ostringstream oss;
     oss << "Unsupported GPU shader language: '" << p << "'.";

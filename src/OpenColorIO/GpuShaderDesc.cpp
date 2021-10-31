@@ -348,17 +348,15 @@ std::string MetalClassWrappingInterface::generateClassWrapperFooter(GpuShaderTex
     
     kw.newLine() << kw.float4Keyword() << " " << ocioFunctionName<< "(";
     std::string texParamOut;
-    bool inPixelNeedsComma = false;
     
     kw.indent();
     std::string separator = "";
     for(const auto& param : m_functionParameters)
     {
         kw.newLine() << separator << param.type << " " << param.name;
-        inPixelNeedsComma = true;
         separator = ", ";
     }
-    kw.newLine() << (inPixelNeedsComma ? "," : "") << kw.float4Keyword() << " inPixel)";
+    kw.newLine() << separator << kw.float4Keyword() << " inPixel)";
     kw.dedent();
     kw.newLine() << "{";
     kw.indent();
@@ -562,7 +560,7 @@ std::string MetalClassWrappingInterface::getClassWrapperFooter(const std::string
     st.newLine();
     generateClassWrapperFooter(st, m_functionName);
     
-    std::string classWrapFooter = "\n// close class wrapper\n\n";
+    std::string classWrapFooter = "\n// Close class wrapper\n\n";
     classWrapFooter += st.string();
     
     return originalFooter + classWrapFooter;

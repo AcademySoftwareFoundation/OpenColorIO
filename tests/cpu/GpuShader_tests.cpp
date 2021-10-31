@@ -268,7 +268,7 @@ float4 Display(float4 inPixel)
   return outColor;
 }
 
-// close class wrapper
+// Close class wrapper
 
 
 };
@@ -357,7 +357,7 @@ float4 Display(float4 inPixel)
   return outColor;
 }
 
-// close class wrapper
+// Close class wrapper
 
 
 };
@@ -461,14 +461,14 @@ float4 MyMethodName(float4 inPixel)
   return myPixelName;
 }
 
-// close class wrapper
+// Close class wrapper
 
 
 };
 float4 MyMethodName(
   texture1d<float> ocio_lut1d_0
   , sampler ocio_lut1d_0Sampler
-  ,float4 inPixel)
+  , float4 inPixel)
 {
   return ocioMyMethodName(
     ocio_lut1d_0
@@ -565,14 +565,14 @@ float4 MyMethodName(float4 inPixel)
   return myPixelName;
 }
 
-// close class wrapper
+// Close class wrapper
 
 
 };
 float4 MyMethodName(
   texture3d<float> ocio_lut3d_0
   , sampler ocio_lut3d_0Sampler
-  ,float4 inPixel)
+  , float4 inPixel)
 {
   return ocioMyMethodName(
     ocio_lut3d_0
@@ -683,14 +683,14 @@ float4 OCIOMain(float4 inPixel)
   return outColor;
 }
 
-// close class wrapper
+// Close class wrapper
 
 
 };
 float4 OCIOMain(
   texture2d<float> ocio_lut1d_0
   , sampler ocio_lut1d_0Sampler
-  ,float4 inPixel)
+  , float4 inPixel)
 {
   return ocioOCIOMain(
     ocio_lut1d_0
@@ -830,7 +830,7 @@ float4 OCIOMain(float4 inPixel)
   return outColor;
 }
 
-// close class wrapper
+// Close class wrapper
 
 
 };
@@ -841,7 +841,7 @@ float4 OCIOMain(
   , sampler ocio_lut1d_0Sampler
   , texture2d<float> ocio_lut1d_2
   , sampler ocio_lut1d_2Sampler
-  ,float4 inPixel)
+  , float4 inPixel)
 {
   return ocioOCIOMain(
     ocio_lut3d_1
@@ -947,14 +947,14 @@ float4 OCIOMain(float4 inPixel)
   return outColor;
 }
 
-// close class wrapper
+// Close class wrapper
 
 
 };
 float4 OCIOMain(
   float ocio_exposure_contrast_exposureVal
   , float ocio_exposure_contrast_gammaVal
-  ,float4 inPixel)
+  , float4 inPixel)
 {
   return ocioOCIOMain(
     ocio_exposure_contrast_exposureVal
@@ -1100,7 +1100,7 @@ float4 OCIOMain(float4 inPixel)
   return outColor;
 }
 
-// close class wrapper
+// Close class wrapper
 
 
 };
@@ -1237,7 +1237,7 @@ float4 OCIOMain(float4 inPixel)
   return outColor;
 }
 
-// close class wrapper
+// Close class wrapper
 
 
 };
@@ -1247,7 +1247,7 @@ float4 OCIOMain(
   , int ocio_grading_rgbcurve_coefsOffsets[8]
   , float ocio_grading_rgbcurve_coefs[180]
   , bool ocio_grading_rgbcurve_localBypass
-  ,float4 inPixel)
+  , float4 inPixel)
 {
   return ocioOCIOMain(
     ocio_grading_rgbcurve_knotsOffsets
