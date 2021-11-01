@@ -52,6 +52,7 @@ public:
     std::string getClassWrapperFooter(const std::string& originalFooter) final;
     
     std::unique_ptr<GpuShaderClassWrapper> clone() const final;
+    const MetalShaderClassWrapper& operator=(const MetalShaderClassWrapper& rhs);
     
 private:
     struct FunctionParam

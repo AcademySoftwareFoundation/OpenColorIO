@@ -240,10 +240,16 @@ std::string MetalShaderClassWrapper::getClassWrapperFooter(const std::string& or
 std::unique_ptr<GpuShaderClassWrapper> MetalShaderClassWrapper::clone() const
 {
     std::unique_ptr<MetalShaderClassWrapper> clonedWrapper = std::unique_ptr<MetalShaderClassWrapper>(new MetalShaderClassWrapper);
-    clonedWrapper->m_className          = m_className;
-    clonedWrapper->m_functionName       = m_functionName;
-    clonedWrapper->m_functionParameters = m_functionParameters;
+    *clonedWrapper = *this;
     return clonedWrapper;
+}
+
+const MetalShaderClassWrapper& MetalShaderClassWrapper::operator=(const MetalShaderClassWrapper& rhs)
+{
+    this->m_className          = rhs.m_className;
+    this->m_functionName       = rhs.m_functionName;
+    this->m_functionParameters = rhs.m_functionParameters;
+    return *this;
 }
 
 } // namespace OCIO_NAMESPACE
