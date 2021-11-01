@@ -114,6 +114,10 @@ void GpuShaderCreator::setLanguage(GpuLanguage lang) noexcept
     {
         getImpl()->m_classWrappingInterface = std::unique_ptr<MetalShaderClassWrapper>(new MetalShaderClassWrapper);
     }
+    else
+    {
+        getImpl()->m_classWrappingInterface = std::unique_ptr<NullGpuShaderClassWrapper>(new NullGpuShaderClassWrapper);
+    }
     getImpl()->m_cacheID.clear();
 }
 
