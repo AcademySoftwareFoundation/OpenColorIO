@@ -10,6 +10,14 @@ on:
   schedule:
     # Nightly build
     - cron: "0 0 * * *"
+  pull_request:
+    branches-ignore:
+      - RB-0.*
+      - RB-1.*
+      - gh-pages
+    tags-ignore:
+      - v0.*
+      - v1.*
 
 jobs:
   # ---------------------------------------------------------------------------
@@ -86,19 +94,23 @@ jobs:
         if: matrix.build-docs == 'ON'
       - name: Install tests env
         run: share/ci/scripts/linux/yum/install_tests_env.sh
+      - name: Install indirect dependencies
+        run: |
+          share/ci/scripts/multi/install_pugixml.sh latest
+      - name: Install fixed ext package versions
+        run: |
+          share/ci/scripts/multi/install_expat.sh 2.4.1
+          share/ci/scripts/multi/install_lcms2.sh 2.2
+          share/ci/scripts/multi/install_yaml-cpp.sh 0.7.0
+          share/ci/scripts/multi/install_pystring.sh 1.1.3
+          share/ci/scripts/multi/install_pybind11.sh 2.6.1
       - name: Install latest ext package versions
         run: |
-          share/ci/scripts/linux/install_expat.sh latest
-          share/ci/scripts/linux/install_lcms2.sh latest
-          share/ci/scripts/linux/install_yaml-cpp.sh latest
-          share/ci/scripts/linux/install_pystring.sh latest
-          share/ci/scripts/linux/install_pybind11.sh latest
-          share/ci/scripts/linux/install_openexr.sh latest
-          share/ci/scripts/linux/install_imath.sh latest
-          share/ci/scripts/linux/install_oiio.sh latest
-          share/ci/scripts/linux/install_pugixml.sh latest
-          share/ci/scripts/linux/install_osl.sh latest
-          share/ci/scripts/linux/install_openfx.sh latest
+          share/ci/scripts/multi/install_openexr.sh latest
+          share/ci/scripts/multi/install_imath.sh latest
+          share/ci/scripts/multi/install_oiio.sh latest
+          share/ci/scripts/multi/install_osl.sh latest
+          share/ci/scripts/multi/install_openfx.sh latest
       - name: Create build directories
         run: |
           mkdir _install
@@ -112,10 +124,10 @@ jobs:
                 -DOCIO_BUILD_DOCS=${{ matrix.build-docs }} \
                 -DOCIO_BUILD_OPENFX=${{ matrix.build-openfx }} \
                 -DOCIO_BUILD_GPU_TESTS=OFF \
-                -DOCIO_INSTALL_EXT_PACKAGES=ALL \
-                -DOCIO_INSTALL_EXT_PACKAGES_LATEST=ON \
+                -DOCIO_INSTALL_EXT_PACKAGES=NONE \
                 -DOCIO_WARNING_AS_ERROR=OFF \
-                -DPython_EXECUTABLE=$(which python)
+                -DPython_EXECUTABLE=$(which python) \
+                -DOCIO_USE_OIIO_CMAKE_CONFIG=ON
         working-directory: _build
       - name: Build
         run: |
@@ -178,9 +190,25 @@ jobs:
         if: matrix.build-docs == 'ON'
       - name: Install tests env
         run: share/ci/scripts/macos/install_tests_env.sh
+      - name: Install indirect dependencies
+        run: |
+          share/ci/scripts/macos/install_bison.sh latest
+          share/ci/scripts/macos/install_boost.sh latest
+          share/ci/scripts/multi/install_pugixml.sh latest
+      - name: Install fixed ext package versions
+        run: |
+          share/ci/scripts/multi/install_expat.sh 2.4.1
+          share/ci/scripts/multi/install_lcms2.sh 2.2
+          share/ci/scripts/multi/install_yaml-cpp.sh 0.7.0
+          share/ci/scripts/multi/install_pystring.sh 1.1.3
+          share/ci/scripts/multi/install_pybind11.sh 2.6.1
       - name: Install latest ext package versions
         run: |
-          share/ci/scripts/macos/install_oiio.sh latest
+          share/ci/scripts/multi/install_openexr.sh latest
+          share/ci/scripts/multi/install_imath.sh latest
+          share/ci/scripts/multi/install_oiio.sh latest
+          share/ci/scripts/multi/install_osl.sh latest
+          share/ci/scripts/multi/install_openfx.sh latest
       - name: Create build directories
         run: |
           mkdir _install
@@ -194,10 +222,10 @@ jobs:
                 -DOCIO_BUILD_DOCS=${{ matrix.build-docs }} \
                 -DOCIO_BUILD_OPENFX=${{ matrix.build-openfx }} \
                 -DOCIO_BUILD_GPU_TESTS=OFF \
-                -DOCIO_INSTALL_EXT_PACKAGES=ALL \
-                -DOCIO_INSTALL_EXT_PACKAGES_LATEST=ON \
+                -DOCIO_INSTALL_EXT_PACKAGES=NONE \
                 -DOCIO_WARNING_AS_ERROR=OFF \
-                -DPython_EXECUTABLE=$(which python)
+                -DPython_EXECUTABLE=$(which python) \
+                -DOCIO_USE_OIIO_CMAKE_CONFIG=ON
         working-directory: _build
       - name: Build
         run: |
@@ -207,7 +235,7 @@ jobs:
                 -- -j$(sysctl -n hw.ncpu)
         working-directory: _build
       - name: Test
-        run: ctest -V
+        run: ctest -V -C Release
         working-directory: _build
       - name: Test CMake Consumer
         run: |
@@ -263,7 +291,45 @@ jobs:
       - name: Install tests env
         run: share/ci/scripts/windows/install_tests_env.sh
         shell: bash
-      # TODO: install OIIO through a package manager or manual install.
+      - name: Setup ext environment
+        run: |
+          EXT_PATH=$GITHUB_WORKSPACE/_ext
+          VCPKG_ROOT=$VCPKG_INSTALLATION_ROOT/installed/x64-windows
+          echo "EXT_PATH=$EXT_PATH" >> $GITHUB_ENV
+          echo "CMAKE_PREFIX_PATH=$VCPKG_ROOT;$EXT_PATH" >> $GITHUB_ENV
+          echo "$VCPKG_ROOT/bin" >> $GITHUB_PATH
+          echo "$EXT_PATH/bin" >> $GITHUB_PATH
+          mkdir $EXT_PATH
+        shell: bash
+      - name: Install indirect dependencies
+        run: |
+          vcpkg install zlib:x64-windows
+          vcpkg install tiff:x64-windows
+          vcpkg install boost-asio:x64-windows
+          vcpkg install boost-container:x64-windows
+          vcpkg install boost-filesystem:x64-windows
+          vcpkg install boost-math:x64-windows
+          vcpkg install boost-stacktrace:x64-windows
+          vcpkg install boost-system:x64-windows
+          vcpkg install boost-thread:x64-windows
+          share/ci/scripts/multi/install_pugixml.sh latest $EXT_PATH
+        shell: bash
+      - name: Install fixed ext package versions
+        run: |
+          share/ci/scripts/multi/install_lcms2.sh 2.2 $EXT_PATH
+          share/ci/scripts/multi/install_yaml-cpp.sh 0.7.0 $EXT_PATH
+          share/ci/scripts/multi/install_pystring.sh 1.1.3 $EXT_PATH
+          share/ci/scripts/multi/install_pybind11.sh 2.6.1 $EXT_PATH
+          share/ci/scripts/multi/install_expat.sh 2.4.1 $EXT_PATH
+        shell: bash
+      # OSL not installed due to LLVM compilation time.
+      - name: Install latest ext package versions
+        run: |
+          share/ci/scripts/multi/install_openexr.sh latest $EXT_PATH
+          share/ci/scripts/multi/install_imath.sh latest $EXT_PATH
+          share/ci/scripts/multi/install_oiio.sh latest $EXT_PATH
+          share/ci/scripts/multi/install_openfx.sh latest $EXT_PATH
+        shell: bash
       - name: Create build directories
         run: |
           mkdir _install
@@ -275,13 +341,15 @@ jobs:
                 -DCMAKE_INSTALL_PREFIX=../_install \
                 -DCMAKE_BUILD_TYPE=Release \
                 -DCMAKE_CXX_STANDARD=${{ matrix.cxx-standard }} \
-                -DOCIO_BUILD_DOCS=${{ matrix.build-docs }} \
+                -DCMAKE_GENERATOR_PLATFORM=x64 \
+                -DOCIO_BUILD_DOCS=OFF \
                 -DOCIO_BUILD_OPENFX=${{ matrix.build-openfx }} \
                 -DOCIO_BUILD_GPU_TESTS=OFF \
-                -DOCIO_INSTALL_EXT_PACKAGES=ALL \
-                -DOCIO_INSTALL_EXT_PACKAGES_LATEST=ON \
+                -DOCIO_INSTALL_EXT_PACKAGES=NONE \
                 -DOCIO_WARNING_AS_ERROR=OFF \
-                -DPython_EXECUTABLE=$(which python)
+                -DPython_EXECUTABLE=$(which python) \
+                -DOCIO_BUILD_PYTHON=OFF \
+                -DOCIO_USE_OIIO_CMAKE_CONFIG=ON
         shell: bash
         working-directory: _build
       - name: Build
@@ -293,7 +361,8 @@ jobs:
         shell: bash
         working-directory: _build
       - name: Test
-        run: ctest -V
+        run: |
+          ctest -V -C Release
         shell: bash
         working-directory: _build
       - name: Test CMake Consumer

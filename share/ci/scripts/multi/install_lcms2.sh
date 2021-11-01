@@ -5,6 +5,7 @@
 set -ex
 
 LCMS2_VERSION="$1"
+INSTALL_TARGET="$2"
 
 git clone https://github.com/mm2/Little-CMS.git
 cd Little-CMS
@@ -21,11 +22,14 @@ cp ../share/cmake/projects/Buildlcms2.cmake CMakeLists.txt
 mkdir build
 cd build
 cmake -DCMAKE_BUILD_TYPE=Release \
+      ${INSTALL_TARGET:+"-DCMAKE_INSTALL_PREFIX="${INSTALL_TARGET}""} \
       -DBUILD_SHARED_LIBS=ON \
-      -DCMAKE_C_FLAGS="-fPIC" \
+      -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
       ../.
-make -j4
-sudo make install
+cmake --build . \
+      --target install \
+      --config Release \
+      --parallel 2
 
 cd ../..
 rm -rf Little-CMS

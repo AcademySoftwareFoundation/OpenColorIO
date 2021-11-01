@@ -103,3 +103,14 @@ if(OCIO_BUILD_PYTHON OR OCIO_BUILD_DOCS)
         find_package(pybind11 2.6.1 REQUIRED)
     endif()
 endif()
+
+# The presence of OpenImageIO allows additional ocio apps and the OSL
+# translation unit tests to be built.
+
+# OpenImageIO
+# https://github.com/OpenImageIO/oiio
+if(OCIO_USE_OIIO_CMAKE_CONFIG)
+    find_package(OpenImageIO 2.1.9 CONFIG)
+else()
+    find_package(OpenImageIO 2.1.9)
+endif()

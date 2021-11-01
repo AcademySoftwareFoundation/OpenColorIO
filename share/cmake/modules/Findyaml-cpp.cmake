@@ -61,6 +61,7 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
             PATH_SUFFIXES 
                 include
                 yaml-cpp/include
+                YAML_CPP/include
         )
 
         # Lib names to search for
@@ -93,7 +94,9 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
                 ${_yaml-cpp_ROOT}
                 ${PC_yaml-cpp_LIBRARY_DIRS}
             PATH_SUFFIXES 
-                lib64 lib
+                lib64
+                lib
+                YAML_CPP/lib
         )
 
         # Get version from pkg-config if it was found.

@@ -44,7 +44,9 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
         HINTS
             ${_pystring_SEARCH_DIRS}
         PATH_SUFFIXES
-            lib64 lib 
+            pystring/lib
+            lib64
+            lib
     )
 
     # Override REQUIRED if package can be installed

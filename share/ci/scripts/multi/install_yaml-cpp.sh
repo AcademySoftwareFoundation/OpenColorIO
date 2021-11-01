@@ -5,6 +5,8 @@
 set -ex
 
 YAMLCPP_VERSION="$1"
+INSTALL_TARGET="$2"
+
 YAMLCPP_MAJOR_MINOR=$(echo "${YAMLCPP_VERSION}" | cut -d. -f-2)
 YAMLCPP_MINOR=$(echo "${YAMLCPP_MAJOR_MINOR}" | cut -d. -f2-)
 YAMLCPP_PATCH=$(echo "${YAMLCPP_VERSION}" | cut -d. -f3-)
@@ -26,15 +28,17 @@ fi
 mkdir build
 cd build
 cmake -DCMAKE_BUILD_TYPE=Release \
+      ${INSTALL_TARGET:+"-DCMAKE_INSTALL_PREFIX="${INSTALL_TARGET}""} \
+      -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
       -DBUILD_SHARED_LIBS=ON \
       -DYAML_CPP_BUILD_TESTS=OFF \
       -DYAML_CPP_BUILD_TOOLS=OFF \
       -DYAML_CPP_BUILD_CONTRIB=OFF \
-      -DCMAKE_CXX_FLAGS="-fPIC \
-                         -Wno-deprecated-declarations" \
       ../.
-make -j4
-sudo make install
+cmake --build . \
+      --target install \
+      --config Release \
+      --parallel 2
 
 cd ../..
 rm -rf yaml-cpp
