@@ -280,6 +280,15 @@ if(WIN32)
         PRIVATE
             XML_STATIC
     )
+
+    if (OCIO_USE_WINDOWS_UNICODE)
+        # Add Unicode definitions to use Unicode functions
+        target_compile_definitions(OpenColorIO
+            PRIVATE
+                UNICODE
+                _UNICODE
+        )
+    endif()
 endif()
 
 set_target_properties(OpenColorIO PROPERTIES

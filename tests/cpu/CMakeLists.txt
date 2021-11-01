@@ -53,6 +53,15 @@ function(add_ocio_test NAME SOURCES PRIVATE_INCLUDES)
             PRIVATE
                 XML_STATIC
         )
+
+        if (OCIO_USE_WINDOWS_UNICODE)
+            # Add Unicode definitions to use Unicode functions
+            target_compile_definitions(${TEST_BINARY}
+                PRIVATE
+                    UNICODE
+                    _UNICODE
+            )
+        endif()
     endif(WIN32)
     set_target_properties(${TEST_BINARY} PROPERTIES
         COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS}")

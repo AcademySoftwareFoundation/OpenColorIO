@@ -20,6 +20,7 @@
 #endif // _WIN32
 
 
+#include <fstream>
 #include <string>
 
 
@@ -27,6 +28,20 @@
 #ifdef _WIN32
 
 #define sscanf sscanf_s
+
+// Define std::tstring as a wstring when Unicode is enabled and a regular string otherwise
+namespace std
+{
+#ifdef _UNICODE
+typedef wstring tstring;
+typedef wostringstream tostringstream;
+#define LogDebugT(x) LogDebug(Platform::Utf16ToUtf8(x))
+#else
+typedef string tstring;
+typedef ostringstream tostringstream;
+#define LogDebugT(x) LogDebug(x)
+#endif
+}
 
 #endif // _WIN32
 
@@ -73,6 +88,21 @@ void AlignedFree(void * memBlock);
 //       the file if created.
 // FIXME: Implement a function or class for temporary file creation useable by all tests.
 std::string CreateTempFilename(const std::string & filenameExt);
+
+// Create an input file stream (std::ifstream) using a UTF-8 filename on any platform.
+std::ifstream CreateInputFileStream(const char * filename, std::ios_base::openmode mode);
+
+// Open an input file stream (std::ifstream) using a UTF-8 filename on any platform.
+void OpenInputFileStream(std::ifstream & stream, const char * filename, std::ios_base::openmode mode);
+
+// Create a unique hash of a file provided as a UTF-8 filename on any platform.
+std::string CreateFileContentHash(const std::string &filename);
+
+// Convert UTF-8 string to UTF-16LE.
+std::wstring Utf8ToUtf16(const std::string & str);
+
+// Convert UTF-16LE string to UTF-8.
+std::string Utf16ToUtf8(const std::wstring & str);
 
 }
 
