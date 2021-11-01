@@ -1,15 +1,9 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-#include <sstream>
-#include <utility>
-#include <vector>
-#include <memory>
-
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "GpuShaderClassWrapper.h"
-#include "GpuShaderUtils.h"
 
 namespace OCIO_NAMESPACE
 {

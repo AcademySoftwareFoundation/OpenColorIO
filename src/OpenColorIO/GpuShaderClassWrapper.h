@@ -4,15 +4,10 @@
 #include <sstream>
 #include <utility>
 #include <vector>
-#include <memory>
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "DynamicProperty.h"
-#include "GpuShader.h"
 #include "GpuShaderUtils.h"
-#include "utils/StringUtils.h"
-
 
 namespace OCIO_NAMESPACE
 {
