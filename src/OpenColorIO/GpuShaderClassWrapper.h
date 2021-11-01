@@ -4,6 +4,7 @@
 #include <sstream>
 #include <utility>
 #include <vector>
+#include <memory>
 
 #include <OpenColorIO/OpenColorIO.h>
 
@@ -21,7 +22,7 @@ public:
     virtual std::string getClassWrapperHeader(const std::string& originalHeader) = 0;
     virtual std::string getClassWrapperFooter(const std::string& originalFooter) = 0;
     
-    virtual bool operator=(const GpuShaderClassWrapper& rhs) = 0;
+    virtual std::unique_ptr<GpuShaderClassWrapper> clone() const = 0;
     
     virtual ~GpuShaderClassWrapper() = default;
 };
@@ -35,13 +36,9 @@ public:
     std::string getClassWrapperHeader(const std::string& originalHeader) final { return originalHeader; }
     std::string getClassWrapperFooter(const std::string& originalFooter) final { return originalFooter; }
     
-    bool operator=(const GpuShaderClassWrapper& rhs) final
+    std::unique_ptr<GpuShaderClassWrapper> clone() const final
     {
-        if(auto* nullshader_rhs = dynamic_cast<const NullGpuShaderClassWrapper*>(&rhs))
-        {
-            return true;
-        }
-        return false;
+        return std::unique_ptr<NullGpuShaderClassWrapper>(new NullGpuShaderClassWrapper());
     }
 };
 
@@ -54,8 +51,7 @@ public:
     std::string getClassWrapperHeader(const std::string& originalHeader) final;
     std::string getClassWrapperFooter(const std::string& originalFooter) final;
     
-    bool operator=(const GpuShaderClassWrapper& rhs) final;
-    const MetalShaderClassWrapper& operator=(const MetalShaderClassWrapper& rhs);
+    std::unique_ptr<GpuShaderClassWrapper> clone() const final;
     
 private:
     struct FunctionParam

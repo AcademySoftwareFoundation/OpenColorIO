@@ -75,8 +75,7 @@ public:
             m_functionBody   = rhs.m_functionBody;
             m_functionFooter = rhs.m_functionFooter;
             
-            m_classWrappingInterface = CreateClassWrapper(m_language);
-            *m_classWrappingInterface = *rhs.m_classWrappingInterface;
+            m_classWrappingInterface = rhs.m_classWrappingInterface->clone();
 
             m_shaderCode.clear();
             m_shaderCodeID.clear();
