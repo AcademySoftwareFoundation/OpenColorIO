@@ -237,4 +237,14 @@ std::string MetalShaderClassWrapper::getClassWrapperFooter(const std::string& or
     return originalFooter + classWrapFooter;
 }
 
+bool MetalShaderClassWrapper::operator=(const GpuShaderClassWrapper& rhs)
+{
+    if(auto* metalShader_rhs = dynamic_cast<const MetalShaderClassWrapper*>(&rhs))
+    {
+        *this = *metalShader_rhs;
+        return true;
+    }
+    return false;
+}
+
 } // namespace OCIO_NAMESPACE

@@ -74,11 +74,26 @@ public:
             m_functionHeader = rhs.m_functionHeader;
             m_functionBody   = rhs.m_functionBody;
             m_functionFooter = rhs.m_functionFooter;
+            
+            updateClassWrappingInterface();
+            *m_classWrappingInterface = *rhs.m_classWrappingInterface;
 
             m_shaderCode.clear();
             m_shaderCodeID.clear();
         }
         return *this;
+    }
+    
+    void updateClassWrappingInterface()
+    {
+        if(m_language == GPU_LANGUAGE_MSL_2_0)
+        {
+            m_classWrappingInterface = std::unique_ptr<MetalShaderClassWrapper>(new MetalShaderClassWrapper);
+        }
+        else
+        {
+            m_classWrappingInterface = std::unique_ptr<NullGpuShaderClassWrapper>(new NullGpuShaderClassWrapper);
+        }
     }
 };
 
@@ -110,14 +125,7 @@ void GpuShaderCreator::setLanguage(GpuLanguage lang) noexcept
     AutoMutex lock(getImpl()->m_cacheIDMutex);
        
     getImpl()->m_language = lang;
-    if(lang == GPU_LANGUAGE_MSL_2_0)
-    {
-        getImpl()->m_classWrappingInterface = std::unique_ptr<MetalShaderClassWrapper>(new MetalShaderClassWrapper);
-    }
-    else
-    {
-        getImpl()->m_classWrappingInterface = std::unique_ptr<NullGpuShaderClassWrapper>(new NullGpuShaderClassWrapper);
-    }
+    getImpl()->updateClassWrappingInterface();
     getImpl()->m_cacheID.clear();
 }
 
@@ -409,16 +417,12 @@ void GpuShaderCreator::finalize()
         getImpl()->m_functionFooter += kw1.string();
     }
     
-    // if condition can be removed but since this code path is only taken for MSL2.0, I keep it.
-    if (getLanguage() == GPU_LANGUAGE_MSL_2_0)
-    {
-        getImpl()->m_classWrappingInterface->prepareClassWrapper(getResourcePrefix(),
-                                                                 getImpl()->m_functionName,
-                                                                 getImpl()->m_declarations);
+    getImpl()->m_classWrappingInterface->prepareClassWrapper(getResourcePrefix(),
+                                                             getImpl()->m_functionName,
+                                                             getImpl()->m_declarations);
         
-        getImpl()->m_declarations   = getImpl()->m_classWrappingInterface->getClassWrapperHeader(getImpl()->m_declarations);
-        getImpl()->m_functionFooter = getImpl()->m_classWrappingInterface->getClassWrapperFooter(getImpl()->m_functionFooter);
-    }
+    getImpl()->m_declarations   = getImpl()->m_classWrappingInterface->getClassWrapperHeader(getImpl()->m_declarations);
+    getImpl()->m_functionFooter = getImpl()->m_classWrappingInterface->getClassWrapperFooter(getImpl()->m_functionFooter);
 
     createShaderText(getImpl()->m_declarations.c_str(),
                      getImpl()->m_helperMethods.c_str(),

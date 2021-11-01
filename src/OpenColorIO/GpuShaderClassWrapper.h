@@ -21,6 +21,8 @@ public:
     virtual std::string getClassWrapperHeader(const std::string& originalHeader) = 0;
     virtual std::string getClassWrapperFooter(const std::string& originalFooter) = 0;
     
+    virtual bool operator=(const GpuShaderClassWrapper& rhs) = 0;
+    
     virtual ~GpuShaderClassWrapper() = default;
 };
 
@@ -32,6 +34,15 @@ public:
                              const std::string& /*originalHeader*/) final {}
     std::string getClassWrapperHeader(const std::string& originalHeader) final { return originalHeader; }
     std::string getClassWrapperFooter(const std::string& originalFooter) final { return originalFooter; }
+    
+    bool operator=(const GpuShaderClassWrapper& rhs) final
+    {
+        if(auto* nullshader_rhs = dynamic_cast<const NullGpuShaderClassWrapper*>(&rhs))
+        {
+            return true;
+        }
+        return false;
+    }
 };
 
 class MetalShaderClassWrapper : public GpuShaderClassWrapper
@@ -42,6 +53,8 @@ public:
                              const std::string& originalHeader) final;
     std::string getClassWrapperHeader(const std::string& originalHeader) final;
     std::string getClassWrapperFooter(const std::string& originalFooter) final;
+    
+    bool operator=(const GpuShaderClassWrapper& rhs) final;
     
 private:
     struct FunctionParam
