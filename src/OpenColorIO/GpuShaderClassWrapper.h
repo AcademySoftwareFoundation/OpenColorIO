@@ -55,6 +55,7 @@ public:
     std::string getClassWrapperFooter(const std::string& originalFooter) final;
     
     bool operator=(const GpuShaderClassWrapper& rhs) final;
+    const MetalShaderClassWrapper& operator=(const MetalShaderClassWrapper& rhs);
     
 private:
     struct FunctionParam
@@ -65,8 +66,8 @@ private:
         {
         }
 
-        const std::string type;
-        const std::string name;
+        std::string type;
+        std::string name;
     };
     
     std::string getClassWrapperName(const std::string &resourcePrefix, const std::string& functionName);

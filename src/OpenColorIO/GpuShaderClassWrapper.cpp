@@ -247,4 +247,12 @@ bool MetalShaderClassWrapper::operator=(const GpuShaderClassWrapper& rhs)
     return false;
 }
 
+const MetalShaderClassWrapper& MetalShaderClassWrapper::operator=(const MetalShaderClassWrapper& rhs)
+{
+    this->m_className          = rhs.m_className;
+    this->m_functionName       = rhs.m_functionName;
+    this->m_functionParameters = rhs.m_functionParameters;
+    return *this;
+}
+
 } // namespace OCIO_NAMESPACE

@@ -75,7 +75,7 @@ public:
             m_functionBody   = rhs.m_functionBody;
             m_functionFooter = rhs.m_functionFooter;
             
-            updateClassWrappingInterface();
+            m_classWrappingInterface = CreateClassWrapper(m_language);
             *m_classWrappingInterface = *rhs.m_classWrappingInterface;
 
             m_shaderCode.clear();
@@ -83,17 +83,25 @@ public:
         }
         return *this;
     }
-    
-    void updateClassWrappingInterface()
+
+    static std::unique_ptr<GpuShaderClassWrapper> CreateClassWrapper(GpuLanguage language)
     {
-        if(m_language == GPU_LANGUAGE_MSL_2_0)
-        {
-            m_classWrappingInterface = std::unique_ptr<MetalShaderClassWrapper>(new MetalShaderClassWrapper);
-        }
-        else
-        {
-            m_classWrappingInterface = std::unique_ptr<NullGpuShaderClassWrapper>(new NullGpuShaderClassWrapper);
-        }
+       switch(language)
+       {
+           case GPU_LANGUAGE_MSL_2_0:
+               return std::unique_ptr<MetalShaderClassWrapper>(new MetalShaderClassWrapper);
+            
+           case GPU_LANGUAGE_CG:
+           case GPU_LANGUAGE_GLSL_1_2:
+           case GPU_LANGUAGE_GLSL_1_3:
+           case GPU_LANGUAGE_GLSL_4_0:
+           case GPU_LANGUAGE_HLSL_DX11:
+           case LANGUAGE_OSL_1:
+           case GPU_LANGUAGE_GLSL_ES_1_0:
+           case GPU_LANGUAGE_GLSL_ES_3_0:
+           default:
+               return std::unique_ptr<NullGpuShaderClassWrapper>(new NullGpuShaderClassWrapper);
+       }
     }
 };
 
@@ -125,7 +133,7 @@ void GpuShaderCreator::setLanguage(GpuLanguage lang) noexcept
     AutoMutex lock(getImpl()->m_cacheIDMutex);
        
     getImpl()->m_language = lang;
-    getImpl()->updateClassWrappingInterface();
+    getImpl()->m_classWrappingInterface = Impl::CreateClassWrapper(getImpl()->m_language);
     getImpl()->m_cacheID.clear();
 }
 
