@@ -244,7 +244,7 @@ std::unique_ptr<GpuShaderClassWrapper> MetalShaderClassWrapper::clone() const
     return clonedWrapper;
 }
 
-const MetalShaderClassWrapper& MetalShaderClassWrapper::operator=(const MetalShaderClassWrapper& rhs)
+MetalShaderClassWrapper& MetalShaderClassWrapper::operator=(const MetalShaderClassWrapper& rhs)
 {
     this->m_className          = rhs.m_className;
     this->m_functionName       = rhs.m_functionName;
