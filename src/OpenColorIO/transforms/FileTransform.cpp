@@ -546,7 +546,8 @@ void LoadFileUncached(FileFormat * & returnFormat,
         try
         {
             // Open the filePath
-            filestream.open(
+            Platform::OpenInputFileStream(
+                filestream,
                 filepath.c_str(),
                 tryFormat->isBinary()
                     ? std::ios_base::binary : std::ios_base::in);
@@ -618,7 +619,8 @@ void LoadFileUncached(FileFormat * & returnFormat,
         std::ifstream filestream;
         try
         {
-            filestream.open(filepath.c_str(), altFormat->isBinary()
+            Platform::OpenInputFileStream(
+                filestream, filepath.c_str(), altFormat->isBinary()
                 ? std::ios_base::binary : std::ios_base::in);
             if (!filestream.good())
             {
