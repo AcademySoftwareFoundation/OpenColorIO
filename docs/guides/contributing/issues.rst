@@ -28,4 +28,4 @@ help reproduce code-related defects.
 
 If the issue you are reporting is related to a security vulnerability, please 
 follow the reporting procedures outlined in the `OpenColorIO security policy 
-<https://github.com/AcademySoftwareFoundation/OpenColorIO/blob/master/SECURITY.md>`__.
+<https://github.com/AcademySoftwareFoundation/OpenColorIO/blob/main/SECURITY.md>`__.

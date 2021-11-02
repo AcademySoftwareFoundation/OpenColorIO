@@ -10,12 +10,12 @@ Getting started
 Checking Out The Codebase
 *************************
 
-The master code repository is available on Github:  http://github.com/AcademySoftwareFoundation/OpenColorIO
+The main code repository is available on Github:  http://github.com/AcademySoftwareFoundation/OpenColorIO
 
 For those unfamiliar with git, the wonderful part about it is that even though
-only a limited number people have write access to the master repository, anyone
+only a limited number people have write access to the main repository, anyone
 is free to create, and even check in, changes to their own local git repository. 
-Your local changes will not automatically be pushed back to the master
+Your local changes will not automatically be pushed back to the main
 repository, so everyone feel free to informally play around with the codebase.
 Also - unlike svn - when you download the git repository you have a full copy of
 the project's history (including revision history, logs, etc), so the majority
@@ -47,7 +47,7 @@ To check out a read-write version of the repository (GitHub acct required)::
     Receiving objects: 100% (2220/2220), 2.89 MiB | 2.29 MiB/s, done.
     Resolving deltas: 100% (1434/1434), done.
 
-Both read + read/write users should then add the `AcademySoftwareFoundation/OpenColorIO <https://github.com/AcademySoftwareFoundation/OpenColorIO>`_ master branch
+Both read + read/write users should then add the `AcademySoftwareFoundation/OpenColorIO <https://github.com/AcademySoftwareFoundation/OpenColorIO>`_ main branch
 as a remote. This will allow you to more easily fetch updates as they become
 available::
 
@@ -104,33 +104,33 @@ commits, and in the case of in-progress feature branches, you'll need to merge
 those changes or rebase your commits on top of them regularly to stay up to 
 date. To update your fork from upstream run the::
 
-    git checkout master
-    git pull upstream master && git push origin master
+    git checkout main
+    git pull upstream main && git push origin main
 
-The first command makes sure you have the master branch checked out, and the 
+The first command makes sure you have the main branch checked out, and the 
 second combines an upstream pull (getting all the new commits to bring your
 local clone up to date) and an origin push (updating your fork's remote 
-master). Following these commands the master branch will be identical between
+main). Following these commands the main branch will be identical between
 the OpenColorIO repository and your fork.
 
 To merge these changes into a feature branch (making the branch able to merge 
-with the upstream master), run::
+with the upstream main), run::
 
     git checkout myFeature
-    git merge master
+    git merge main
 
 git will report any merge conflicts encountered and allow you to resolve them 
 locally prior to committing the merge.
 
 Alternatively you can rebase the changes into your branch, which will replay
-your branch commits on top of the latest master branch commits. A rebase should
+your branch commits on top of the latest main branch commits. A rebase should
 only be used if you are the only contributor to a branch. Since rebasing alters
 the branch's commit history, a force push is required to push the changes to
 the remote repository, which can be problematic for others contributing to the
 same branch. To rebase, run::
 
     git checkout myFeature
-    git rebase master
+    git rebase main
 
 Follow the interactive instructions that git provides during the rebase to 
 resolve merge conflicts at each replayed commit. Update your remote branch
