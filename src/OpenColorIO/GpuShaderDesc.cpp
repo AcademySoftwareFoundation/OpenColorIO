@@ -2,12 +2,14 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 #include <sstream>
+#include <memory>
 
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "DynamicProperty.h"
 #include "GpuShader.h"
 #include "GpuShaderUtils.h"
+#include "GpuShaderClassWrapper.h"
 #include "HashUtils.h"
 #include "Logging.h"
 #include "Mutex.h"
@@ -40,16 +42,18 @@ public:
     std::string m_shaderCodeID;
 
     std::vector<DynamicPropertyRcPtr> m_dynamicProperties;
+    
+    std::unique_ptr<GpuShaderClassWrapper> m_classWrappingInterface;
 
     Impl()
         :   m_functionName("OCIOMain")
         ,   m_resourcePrefix("ocio")
         ,   m_pixelName("outColor")
+        ,   m_classWrappingInterface(new NullGpuShaderClassWrapper)
     {
     }
 
-    ~Impl()
-    { }
+    ~Impl() = default;
 
     Impl(const Impl & rhs) = delete;
 
@@ -70,11 +74,33 @@ public:
             m_functionHeader = rhs.m_functionHeader;
             m_functionBody   = rhs.m_functionBody;
             m_functionFooter = rhs.m_functionFooter;
+            
+            m_classWrappingInterface = rhs.m_classWrappingInterface->clone();
 
             m_shaderCode.clear();
             m_shaderCodeID.clear();
         }
         return *this;
+    }
+
+    static std::unique_ptr<GpuShaderClassWrapper> CreateClassWrapper(GpuLanguage language)
+    {
+       switch(language)
+       {
+           case GPU_LANGUAGE_MSL_2_0:
+               return std::unique_ptr<MetalShaderClassWrapper>(new MetalShaderClassWrapper);
+            
+           case GPU_LANGUAGE_CG:
+           case GPU_LANGUAGE_GLSL_1_2:
+           case GPU_LANGUAGE_GLSL_1_3:
+           case GPU_LANGUAGE_GLSL_4_0:
+           case GPU_LANGUAGE_HLSL_DX11:
+           case LANGUAGE_OSL_1:
+           case GPU_LANGUAGE_GLSL_ES_1_0:
+           case GPU_LANGUAGE_GLSL_ES_3_0:
+           default:
+               return std::unique_ptr<NullGpuShaderClassWrapper>(new NullGpuShaderClassWrapper);
+       }
     }
 };
 
@@ -104,7 +130,9 @@ const char * GpuShaderCreator::getUniqueID() const noexcept
 void GpuShaderCreator::setLanguage(GpuLanguage lang) noexcept
 {
     AutoMutex lock(getImpl()->m_cacheIDMutex);
+       
     getImpl()->m_language = lang;
+    getImpl()->m_classWrappingInterface = Impl::CreateClassWrapper(getImpl()->m_language);
     getImpl()->m_cacheID.clear();
 }
 
@@ -281,7 +309,7 @@ void GpuShaderCreator::createShaderText(const char * shaderDeclarations,
     AutoMutex lock(getImpl()->m_cacheIDMutex);
 
     getImpl()->m_shaderCode.clear();
-    
+
     getImpl()->m_shaderCode += (shaderDeclarations   && *shaderDeclarations)   ? shaderDeclarations   : "";
     getImpl()->m_shaderCode += (shaderHelperMethods  && *shaderHelperMethods)  ? shaderHelperMethods  : "";
     getImpl()->m_shaderCode += (shaderFunctionHeader && *shaderFunctionHeader) ? shaderFunctionHeader : "";
@@ -395,7 +423,13 @@ void GpuShaderCreator::finalize()
 
         getImpl()->m_functionFooter += kw1.string();
     }
-
+    
+    getImpl()->m_classWrappingInterface->prepareClassWrapper(getResourcePrefix(),
+                                                             getImpl()->m_functionName,
+                                                             getImpl()->m_declarations);
+        
+    getImpl()->m_declarations   = getImpl()->m_classWrappingInterface->getClassWrapperHeader(getImpl()->m_declarations);
+    getImpl()->m_functionFooter = getImpl()->m_classWrappingInterface->getClassWrapperFooter(getImpl()->m_functionFooter);
 
     createShaderText(getImpl()->m_declarations.c_str(),
                      getImpl()->m_helperMethods.c_str(),
