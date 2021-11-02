@@ -4,7 +4,6 @@
 #include <cmath>
 #include <cstdio>
 #include <sstream>
-#include <fast_float/fast_float.h>
 
 #include <OpenColorIO/OpenColorIO.h>
 
@@ -138,10 +137,11 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
                 }
                 else
                 {
-                    const auto fromMinAnswer = fast_float::from_chars(fromMinS, fromMinS +64, from_min);
-                    const auto fromMaxAnswer = fast_float::from_chars(fromMaxS, fromMaxS + 64, from_max);
+                    const auto fromMinAnswer = ocio_from_chars(fromMinS, fromMinS +64, from_min);
+                    const auto fromMaxAnswer = ocio_from_chars(fromMaxS, fromMaxS + 64, from_max);
 
-                    if (fromMinAnswer.ec != std::errc() || fromMaxAnswer.ec != std::errc()) {
+                    if (!fromMinAnswer || !fromMaxAnswer)
+                    {
                         ThrowErrorMessage("Invalid 'From' Tag", currentLine, headerLine);
                     }
                 }
@@ -234,12 +234,13 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
 
                 values.resize(components);
 
-                for (int i = 0; i < components; i++) {
-                  float v = NAN;
-                  const auto result = fast_float::from_chars(
-                      inputLUT[i], inputLUT[i] + strlen(inputLUT[i]), v);
+                for (int i = 0; i < components; i++)
+                {
+                    float v = NAN;
+                    const auto result
+                        = ocio_from_chars(inputLUT[i], inputLUT[i] + strlen(inputLUT[i]), v);
 
-                    if (result.ec != std::errc())
+                    if (!result)
                     {
                         std::ostringstream os;
                         os << "Malformed LUT line. Could not convert component";

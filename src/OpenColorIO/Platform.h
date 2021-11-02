@@ -7,6 +7,103 @@
 
 // Platform-specific includes.
 
+
+#if defined(_MSC_VER)
+    #define really_inline __forceinline
+#else
+    #define really_inline inline __attribute__((always_inline))
+#endif
+
+#if defined(__has_include) && __has_include(<version>)
+#include <version> // from C++20 all feature macros should be defined here
+#else
+#include <utility>
+#endif
+
+//#define USE_FAST_FLOAT
+
+#ifdef USE_FAST_FLOAT
+    #include <fast_float/fast_float.h>
+
+    template <typename T>
+    really_inline bool ocio_from_chars(const char * first, const char * last, T & value) noexcept
+    {
+        // By design that's not supported by from_chars() so handle it here.
+        if (first && *first == '+') ++first;
+
+        const auto ret = fast_float::from_chars(first, last, value);
+        return ret.ec == std::errc();
+    }
+#elif __cpp_lib_to_chars >= 201611
+    #include <charconv>
+
+    template <typename T>
+    really_inline bool ocio_from_chars(const char * first, const char * last, T & value) noexcept
+    {
+        // By design that's not supported by from_chars() so handle it here.
+        if (first && *first == '+') ++first;
+
+        const auto ret = std::from_chars(first, last, value);
+        return ret.ec == std::errc();
+    }
+#else
+    #include <locale>
+    #include <stdlib.h>
+    #include <type_traits>
+
+    struct Locale
+    {
+#ifdef _WIN32
+        Locale() : local(_create_locale(LC_ALL, "C")) {}
+        ~Locale() { _free_locale(local); }
+        _locale_t local;
+#else
+        Locale() : local(newlocale(LC_ALL_MASK, "C", NULL)) {}
+        ~Locale() { freelocale(local); }
+        locale_t local;
+#endif
+    };
+
+    template<typename T>
+    really_inline bool ocio_from_chars(const char * first, const char * last, T & value) noexcept
+    {
+        errno = 0;
+        if (!first || !last || first == last)
+        {
+            return false;
+        }
+
+        static const Locale loc;
+
+        char * end = nullptr;
+
+        if (std::is_floating_point<T>::value)
+        {
+#ifdef _WIN32
+            value = _strtof_l(first, &end, loc.local);
+#else
+            value = ::strtof_l(first, &end, loc.local);
+#endif
+        }
+        else if(std::is_integral<T>::value)
+        {
+#ifdef _WIN32
+            value = _strtol_l(first, &end, 0, loc.local);
+#else
+            value = ::strtol_l(first, &end, 0, loc.local);
+#endif
+        }
+        else
+        {
+            throw OCIO_NAMESPACE::Exception("The type is not supported.");
+        }
+
+        return errno == 0 && first != end;
+    }
+#endif
+
+
+
 #if defined(_WIN32)
 
 #define NOMINMAX 1

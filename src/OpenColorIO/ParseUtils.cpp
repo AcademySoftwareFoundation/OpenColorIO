@@ -5,7 +5,6 @@
 #include <iostream>
 #include <set>
 #include <sstream>
-#include <fast_float/fast_float.h>
 
 #include <OpenColorIO/OpenColorIO.h>
 
@@ -552,8 +551,8 @@ bool StringToFloat(float * fval, const char * str)
     if(!str) return false;
 
     float x;
-    const auto result = fast_float::from_chars(str, str + strlen(str), x);
-    if (result.ec != std::errc())
+    const bool result = ocio_from_chars(str, str + strlen(str), x);
+    if (!result)
     {
         return false;
     }
@@ -599,7 +598,7 @@ std::string DoubleVecToString(const double * val, unsigned int size)
     return pretty.str();
 }
 
-bool StringVecToFloatVec(std::vector<float> &floatArray, const StringUtils::StringVec &lineParts)
+bool StringVecToFloatVec(std::vector<float> & floatArray, const StringUtils::StringVec & lineParts)
 {
     floatArray.resize(lineParts.size());
 
@@ -607,8 +606,9 @@ bool StringVecToFloatVec(std::vector<float> &floatArray, const StringUtils::Stri
     {
         float x;
         const char *str = lineParts[i].c_str();
-        const auto result = fast_float::from_chars(str, str + strlen(str), x);
-        if (result.ec != std::errc()) {
+        const bool result = ocio_from_chars(str, str + strlen(str), x);
+        if (!result) 
+        {
             return false;
         }
         floatArray[i] = x;
@@ -620,7 +620,7 @@ bool StringVecToFloatVec(std::vector<float> &floatArray, const StringUtils::Stri
 // This will resize intArray to the size of lineParts.
 // Returns true if all lineParts have been recognized as int.
 // Content of intArray will be unknown if function returns false.
-bool StringVecToIntVec(std::vector<int> &intArray, const StringUtils::StringVec &lineParts)
+bool StringVecToIntVec(std::vector<int> & intArray, const StringUtils::StringVec & lineParts)
 {
     intArray.resize(lineParts.size());
 

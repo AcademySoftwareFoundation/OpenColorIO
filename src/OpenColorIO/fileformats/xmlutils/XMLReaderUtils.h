@@ -9,7 +9,6 @@
 #include <string>
 #include <sstream>
 #include <vector>
-#include <fast_float/fast_float.h>
 
 #include <OpenColorIO/OpenColorIO.h>
 
@@ -176,31 +175,9 @@ void ParseNumber(const char * str, size_t startPos, size_t endPos, T & value)
         adjustedParse += 1;
     }
 
-    fast_float::from_chars_result result{};
+    const bool result = ocio_from_chars(adjustedParse, str + endPos, val);
 
-    if (StringUtils::StartsWith(parsedStr, "0x")
-        || StringUtils::StartsWith(parsedStr, "0X"))
-    {
-        // HACK!! fast_float does not support hex values
-        // replace num separator with the locale's on a duplicate string,
-        // then feed it to strtod
-        const auto& numSep = std::use_facet<std::numpunct<char>>(std::locale());
-        const auto testStr = StringUtils::Replace(parsedStr, ".", {numSep.decimal_point()});
-        char * endParse = nullptr;
-        val = strtod(testStr.data(), &endParse);
-
-        result.ptr = endParse - testStr.data() + adjustedParse;
-        if (endParse == testStr.data())
-        {
-            result.ec = std::errc::invalid_argument;
-        }
-    }
-    else
-    {
-        result = fast_float::from_chars(adjustedParse, str + endPos, val);
-    }
-
-    if (result.ec == std::errc::invalid_argument)
+    if (!result)
     {
         std::string fullStr(str, endPos);
         std::string parsedStr(startParse, endPos - startPos);
@@ -208,29 +185,6 @@ void ParseNumber(const char * str, size_t startPos, size_t endPos, T & value)
         oss << "ParserNumber: Characters '"
             << parsedStr
             << "' can not be parsed to numbers in '"
-            << TruncateString(fullStr.c_str(), endPos, 100) << "'.";
-        throw Exception(oss.str().c_str());
-    }
-    else if (result.ec == std::errc::result_out_of_range)
-    {
-        std::string fullStr(str, endPos);
-        std::string parsedStr(startParse, endPos - startPos);
-        std::ostringstream oss;
-        oss << "ParserNumber: Characters '"
-            << parsedStr
-            << "' are illegal in '"
-            << TruncateString(fullStr.c_str(), endPos, 100) << "'.";
-        throw Exception(oss.str().c_str());
-    }
-    else if (result.ptr != str + endPos)
-    {
-        // Number is followed by something.
-        std::string fullStr(str, endPos);
-        std::string parsedStr(startParse, endPos - startPos);
-        std::ostringstream oss;
-        oss << "ParserNumber: '"
-            << parsedStr
-            << "' number is followed by unexpected characters in '"
             << TruncateString(fullStr.c_str(), endPos, 100) << "'.";
         throw Exception(oss.str().c_str());
     }

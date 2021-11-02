@@ -185,7 +185,7 @@ add_library(OpenColorIO ${SOURCES})
 
 # Require at least a C++11 compatible compiler for consumer projects.
 target_compile_features(OpenColorIO
-    PUBLIC cxx_std_11
+    PUBLIC cxx_std_17
 )
 
 if(BUILD_SHARED_LIBS AND WIN32)

@@ -4,7 +4,6 @@
 #include <cstdio>
 #include <sstream>
 #include <vector>
-#include <fast_float/fast_float.h>
 
 #include <OpenColorIO/OpenColorIO.h>
 
@@ -159,13 +158,11 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
             redValueS, greenValueS, blueValueS) == 6)
 #endif
         {
-            const auto redValueAnswer = fast_float::from_chars(redValueS, redValueS + 64, redValue);
-            const auto greenValueAnswer = fast_float::from_chars(greenValueS, greenValueS + 64, greenValue);
-            const auto blueValueAnswer = fast_float::from_chars(blueValueS, blueValueS + 64, blueValue);
+            const auto redValueAnswer = ocio_from_chars(redValueS, redValueS + 64, redValue);
+            const auto greenValueAnswer = ocio_from_chars(greenValueS, greenValueS + 64, greenValue);
+            const auto blueValueAnswer = ocio_from_chars(blueValueS, blueValueS + 64, blueValue);
 
-            if (redValueAnswer.ec != std::errc()
-                || greenValueAnswer.ec != std::errc()
-                || blueValueAnswer.ec != std::errc())
+            if (!redValueAnswer || !greenValueAnswer || !blueValueAnswer)
             {
                 std::ostringstream os;
                 os << "Error parsing .spi3d file (";

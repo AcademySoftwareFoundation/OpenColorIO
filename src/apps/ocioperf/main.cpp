@@ -367,7 +367,13 @@ int main(int argc, const char **argv)
         OCIO::ConstProcessorRcPtr processor;
         if (!transformFile.empty())
         {
-            OCIO::ConstConfigRcPtr config  = OCIO::Config::Create();
+            OCIO::ConfigRcPtr config  = OCIO::Config::Create();
+            if (nocache)
+            {
+                config = config->createEditableCopy();
+                config->setProcessorCacheFlags(nocache ? OCIO::PROCESSOR_CACHE_OFF 
+                                                       : OCIO::PROCESSOR_CACHE_DEFAULT);
+            }
 
             // Get the transform.
             OCIO::FileTransformRcPtr transform = OCIO::FileTransform::Create();
