@@ -153,12 +153,13 @@ void ParseNumber(const char * str, size_t startPos, size_t endPos, T & value)
     {
         throw Exception("ParseNumber: nothing to parse.");
     }
-
+/*
     const char * startParse = str + startPos;
     const char * adjustedParse = startParse;
-
+*/
     double val = 0.0f;
 
+/*
     // charconv's from_chars expects a C string and str might not be null terminated.
     // However, since from_chars also takes a pointer to the last character,
     // the string does not need to be null terminated explicitly.
@@ -174,13 +175,14 @@ void ParseNumber(const char * str, size_t startPos, size_t endPos, T & value)
     if (StringUtils::StartsWith(parsedStr, "+")) {
         adjustedParse += 1;
     }
+*/
 
-    const bool result = ocio_from_chars(adjustedParse, str + endPos, val);
+    const bool result = ocio_from_chars(str + startPos, str + endPos, val);
 
     if (!result)
     {
         std::string fullStr(str, endPos);
-        std::string parsedStr(startParse, endPos - startPos);
+        std::string parsedStr(str + startPos, endPos - startPos);
         std::ostringstream oss;
         oss << "ParserNumber: Characters '"
             << parsedStr
