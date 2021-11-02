@@ -227,7 +227,7 @@ void AddCurveEvalMethodTextToShaderProgram(GpuShaderCreatorRcPtr & shaderCreator
     }
 
     st.newLine() << "";
-    if (shaderCreator->getLanguage() == LANGUAGE_OSL_1)
+    if (shaderCreator->getLanguage() == LANGUAGE_OSL_1 || shaderCreator->getLanguage() == GPU_LANGUAGE_MSL_2_0)
     {
         st.newLine() << st.floatKeyword() << " " << props.m_eval << "(int curveIdx, float x)";
     }

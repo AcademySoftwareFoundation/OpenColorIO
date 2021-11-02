@@ -83,6 +83,7 @@ set(SOURCES
     fileformats/xmlutils/XMLWriterUtils.cpp
     GPUProcessor.cpp
     GpuShaderDesc.cpp
+    GpuShaderClassWrapper.cpp
     HashUtils.cpp
     ImageDesc.cpp
     ImagePacking.cpp
