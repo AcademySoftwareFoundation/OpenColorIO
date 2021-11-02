@@ -64,8 +64,46 @@
 #endif
     };
 
-    template<typename T>
-    really_inline bool ocio_from_chars(const char * first, const char * last, T & value) noexcept
+    static const Locale loc;
+
+    really_inline bool ocio_from_chars(const char * first, const char * last, double & value) noexcept
+    {
+       errno = 0;
+       if (!first || !last || first == last)
+        {
+            return false;
+        }
+
+#ifdef _WIN32
+        value = _strtod_l(first, nullptr, loc.local);
+#else
+        value = ::strtod_l(first, nullptr, loc.local);
+#endif
+
+        return errno == 0;
+    }
+
+    really_inline bool ocio_from_chars(const char * first, const char * last, float & value) noexcept
+    {
+       errno = 0;
+       if (!first || !last || first == last)
+        {
+            return false;
+        }
+
+#ifdef _WIN32
+        value = _strtof_l(first, nullptr, loc.local);
+#elif __APPLE__
+        // On OSX, strtod_l is for some reason drastically faster than strtof_l.
+        value = static_cast<float>(::strtod_l(first, nullptr, loc.local));
+#else
+        value = ::strtof_l(first, nullptr, loc.local);
+#endif
+
+        return errno == 0;
+    }
+
+    really_inline bool ocio_from_chars(const char * first, const char * last, long int & value) noexcept
     {
         errno = 0;
         if (!first || !last || first == last)
@@ -73,32 +111,13 @@
             return false;
         }
 
-        static const Locale loc;
-
-        char * end = nullptr;
-
-        if (std::is_floating_point<T>::value)
-        {
 #ifdef _WIN32
-            value = _strtof_l(first, &end, loc.local);
+        value = _strtol_l(first, nullptr, 0, loc.local);
 #else
-            value = ::strtof_l(first, &end, loc.local);
+        value = ::strtol_l(first, nullptr, 0, loc.local);
 #endif
-        }
-        else if(std::is_integral<T>::value)
-        {
-#ifdef _WIN32
-            value = _strtol_l(first, &end, 0, loc.local);
-#else
-            value = ::strtol_l(first, &end, 0, loc.local);
-#endif
-        }
-        else
-        {
-            throw OCIO_NAMESPACE::Exception("The type is not supported.");
-        }
 
-        return errno == 0 && first != end;
+        return errno == 0;
     }
 #endif
 
