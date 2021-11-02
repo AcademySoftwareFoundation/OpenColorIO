@@ -54,6 +54,7 @@ set(SOURCES
     GPUProcessor.cpp
     GpuShader.cpp
     GpuShaderDesc.cpp
+    GpuShaderClassWrapper.cpp
     GpuShaderUtils.cpp
     HashUtils.cpp
     ImageDesc.cpp
