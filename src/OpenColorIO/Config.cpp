@@ -56,7 +56,6 @@ constexpr double DEFAULT_LUMA_COEFF_R = 0.2126;
 constexpr double DEFAULT_LUMA_COEFF_G = 0.7152;
 constexpr double DEFAULT_LUMA_COEFF_B = 0.0722;
 
-
 constexpr char INTERNAL_RAW_PROFILE[] =
     "ocio_profile_version: 2\n"
     "strictparsing: false\n"
