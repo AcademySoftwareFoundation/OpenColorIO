@@ -616,6 +616,17 @@ int main(int argc, const char **argv)
             exit(1);
         }
 
+        if (useDisplayView)
+        {
+            OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
+            outputcolorspace = config->getDisplayViewColorSpaceName(display, view);
+        }
+
+        if (outputcolorspace)
+        {
+            spec.attribute("oiio:ColorSpace", outputcolorspace);
+        }
+
         f->open(outputimage, spec);
 
         if(!f->write_image(spec.format, img.getBuffer()))
