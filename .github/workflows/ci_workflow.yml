@@ -271,7 +271,7 @@ jobs:
                 -- -j$(nproc)
         working-directory: _build
       - name: Test
-        run: ctest -V
+        run: ctest -V -C ${{ matrix.build-type }}
         working-directory: _build
       - name: Test CMake Consumer
         if: matrix.build-shared == 'ON'
@@ -407,7 +407,7 @@ jobs:
                 -- -j$(sysctl -n hw.ncpu)
         working-directory: _build
       - name: Test
-        run: ctest -V
+        run: ctest -V -C ${{ matrix.build-type }}
         working-directory: _build
       - name: Test CMake Consumer
         if: matrix.build-shared == 'ON'
@@ -549,7 +549,7 @@ jobs:
         shell: bash
         working-directory: _build
       - name: Test
-        run: ctest -V
+        run: ctest -V -C ${{ matrix.build-type }}
         shell: bash
         working-directory: _build
       - name: Test CMake Consumer
