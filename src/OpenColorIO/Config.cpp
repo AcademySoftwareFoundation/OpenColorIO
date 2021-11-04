@@ -1117,7 +1117,7 @@ ConstConfigRcPtr Config::CreateFromFile(const char * filename)
         throw ExceptionMissingFile ("The config filepath is missing.");
     }
 
-    std::ifstream istream(filename);
+    std::ifstream istream = Platform::CreateInputFileStream(filename, std::ios_base::in);
     if (istream.fail())
     {
         std::ostringstream os;

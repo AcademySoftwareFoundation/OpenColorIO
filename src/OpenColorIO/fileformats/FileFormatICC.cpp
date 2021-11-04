@@ -541,7 +541,7 @@ FileFormat * CreateFileFormatICC()
 
 std::string GetProfileDescriptionFromICCProfile(const char * ICCProfileFilepath)
 {
-    std::ifstream filestream(ICCProfileFilepath, std::ios_base::binary);
+    std::ifstream filestream = Platform::CreateInputFileStream(ICCProfileFilepath, std::ios_base::binary);
     if (!filestream.good())
     {
         std::ostringstream os;

@@ -851,17 +851,17 @@ void CDLWriter::writeContent() const
 
         oss.str("");
         params = m_cdl->getSlopeParams();
-        oss << params[0] << ", " << params[1] << ", " << params[2];
+        oss << params[0] << " " << params[1] << " " << params[2];
         m_formatter.writeContentTag(TAG_SLOPE, oss.str());
 
         oss.str("");
         params = m_cdl->getOffsetParams();
-        oss << params[0] << ", " << params[1] << ", " << params[2];
+        oss << params[0] << " " << params[1] << " " << params[2];
         m_formatter.writeContentTag(TAG_OFFSET, oss.str());
 
         oss.str("");
         params = m_cdl->getPowerParams();
-        oss << params[0] << ", " << params[1] << ", " << params[2];
+        oss << params[0] << " " << params[1] << " " << params[2];
         m_formatter.writeContentTag(TAG_POWER, oss.str());
     }
     m_formatter.writeEndTag(TAG_SOPNODE);

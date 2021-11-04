@@ -203,6 +203,10 @@ if(NOT Imath_FOUND)
         )
 
         add_dependencies(Imath::Imath imath_install)
+
+        # Some Imath versions define a second target. 
+        add_library(Imath::ImathConfig ALIAS Imath::Imath)
+
         message(STATUS "Installing Imath: ${Imath_LIBRARY} (version \"${Imath_VERSION}\")")
     endif()
 endif()
