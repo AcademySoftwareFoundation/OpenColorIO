@@ -1737,7 +1737,7 @@ void Config::validate() const
                 if (!path || !*path)
                 {
                     errMsg += "  The search_path is empty.";
-                    break;                      
+                    continue;
                 }
 
                 const std::string resolvedSearchPath = getImpl()->m_context->resolveStringVar(path);
@@ -1755,17 +1755,16 @@ void Config::validate() const
                     }
 
                     oss << ".";
-
                     errMsg += oss.str();
-                    break;
+                    continue;
                 }
 
                 foundOne = true;
             }
 
+            // After looping over all the search paths, none of them can be successfully resolved.
             if (!foundOne)
             {
-                // No valid paths were found.
                 getImpl()->m_validationtext = errMsg;
                 throw Exception(errMsg.c_str());
             }
