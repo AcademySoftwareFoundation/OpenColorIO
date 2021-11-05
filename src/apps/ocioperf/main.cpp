@@ -473,34 +473,60 @@ int main(int argc, const char **argv)
         static constexpr size_t height = 2160;
         static constexpr size_t numChannels = 4;
 
+        static constexpr size_t maxElts = width * height;
+
         std::vector<float> img_f32_ref;
         std::vector<uint16_t> img_ui16_ref;
 
+        // Generate a synthetic image by emulating a LUT3D identity algorithm that steps through
+        // many different colors.  Need to avoid a constant image, simple gradients, or anything
+        // that would result in more cache hits than a typical image.  Also, want to step through a 
+        // wide range of colors, including outside [0,1], in case some algorithms are faster or
+        // slower for certain colors.
+
+        static constexpr size_t length   = 64;
+        static constexpr float stepValue = 1.0f / ((float)length - 1.0f);
+
         if (inBitDepth == OCIO::BIT_DEPTH_F32)
         {
-            static constexpr float min = -1.0f;
-            static constexpr float max =  2.0f;
-            static const float range = std::fabs(max - min);
+            static constexpr float min   = -1.0f;
+            static constexpr float max   =  2.0f;
+            static constexpr float range = max - min;
 
-            img_f32_ref.resize(width * height * numChannels);
+            img_f32_ref.resize(maxElts * numChannels);
 
-            const size_t maxElts = img_f32_ref.size();
-            const float step = range / maxElts;
+            // Retrofit value in the range.
+            auto adjustValue = [](float val) -> float
+            {
+                return val * range + min;
+            };
 
             for (size_t idx = 0; idx < maxElts; ++idx)
             {
-                img_f32_ref[idx] = min + float(idx) * step;
+                img_f32_ref[numChannels * idx + 0] = adjustValue( ((idx / length / length) % length) * stepValue );
+                img_f32_ref[numChannels * idx + 1] = adjustValue( ((idx / length) % length) * stepValue );
+                img_f32_ref[numChannels * idx + 2] = adjustValue( (idx % length) * stepValue );
+
+                img_f32_ref[numChannels * idx + 3] = adjustValue( float(idx) / maxElts );
             }
         }
         else // request an integer image
         {
-            img_ui16_ref.resize(width * height * numChannels);
+            img_ui16_ref.resize(maxElts * numChannels);
 
-            const size_t maxElts = img_ui16_ref.size();
+            // Retrofit value in the range.
+            auto adjustValue = [](float val) -> uint16_t
+            {
+                return static_cast<uint16_t>(val * 65535);
+            };
 
             for (size_t idx = 0; idx < maxElts; ++idx)
             {
-                img_ui16_ref[idx] = idx % 65536;
+                img_ui16_ref[numChannels * idx + 0] = adjustValue( ((idx / length / length) % length) * stepValue );
+                img_ui16_ref[numChannels * idx + 1] = adjustValue( ((idx / length) % length) * stepValue );
+                img_ui16_ref[numChannels * idx + 2] = adjustValue( (idx % length) * stepValue );
+
+                img_ui16_ref[numChannels * idx + 3] = adjustValue( float(idx) / maxElts );
             }
         }
 
