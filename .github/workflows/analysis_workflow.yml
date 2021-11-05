@@ -122,7 +122,7 @@ jobs:
                 -- -j$(nproc)
         working-directory: _build
       - name: Test
-        run: ctest -V
+        run: ctest -V -C Release
         working-directory: _build
 
   # ---------------------------------------------------------------------------
@@ -174,7 +174,7 @@ jobs:
         run: build-wrapper-linux-x86-64 --out-dir bw_output make clean all
         working-directory: _build
       - name: Test
-        run: ctest -V
+        run: ctest -V -C Release
         working-directory: _build
       - name: Generate code coverage report
         run: share/ci/scripts/linux/run_gcov.sh
