@@ -53,11 +53,20 @@ function(add_ocio_test NAME SOURCES PRIVATE_INCLUDES)
             PRIVATE
                 XML_STATIC
         )
+
+        if (OCIO_USE_WINDOWS_UNICODE)
+            # Add Unicode definitions to use Unicode functions
+            target_compile_definitions(${TEST_BINARY}
+                PRIVATE
+                    UNICODE
+                    _UNICODE
+            )
+        endif()
     endif(WIN32)
     set_target_properties(${TEST_BINARY} PROPERTIES
         COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS}")
 
-    add_test(${TEST_NAME} ${TEST_BINARY})
+    add_test(NAME ${TEST_NAME} COMMAND ${TEST_BINARY})
 endfunction(add_ocio_test)
 
 # Eventually we will factor out each test into it's own executable
@@ -74,6 +83,7 @@ set(SOURCES
     fileformats/xmlutils/XMLWriterUtils.cpp
     GPUProcessor.cpp
     GpuShaderDesc.cpp
+    GpuShaderClassWrapper.cpp
     HashUtils.cpp
     ImageDesc.cpp
     ImagePacking.cpp

@@ -12,6 +12,8 @@
 
 #include <Logging.h>
 
+#include "Platform.h"
+
 
 namespace OCIO_NAMESPACE
 {
@@ -33,7 +35,7 @@ void SystemMonitorsImpl::getAllMonitors()
     DWORD dispNum = 0;
     while (EnumDisplayDevices(nullptr, dispNum, &dispDevice, 0))
     {
-        const std::string deviceName = dispDevice.DeviceName;
+        const std::tstring deviceName = dispDevice.DeviceName;
 
         // Only select active monitors.
         if ((dispDevice.StateFlags & DISPLAY_DEVICE_ACTIVE)
@@ -49,37 +51,41 @@ void SystemMonitorsImpl::getAllMonitors()
                 // monitor name for that device.
                 EnumDisplayDevices(deviceName.c_str(), dispNum, &dispDevice, 0);   
 
-                char icmPath[MAX_PATH + 1];
+                TCHAR icmPath[MAX_PATH + 1];
                 DWORD pathLength = MAX_PATH;
 
                 // TODO: Is a monitor without ICM profile possible?
 
                 // TODO: Several ICM profiles could be associated to a single device.
 
-                const std::string displayName 
-                    = deviceName + ", " + dispDevice.DeviceString;
+                const std::tstring displayName
+                    = deviceName + TEXT(", ") + dispDevice.DeviceString;
 
                 // Get the associated ICM profile path.
                 if (GetICMProfile(hDC, &pathLength, icmPath))
                 {
+#ifdef _UNICODE
+                    m_monitors.push_back({Platform::Utf16ToUtf8(displayName), Platform::Utf16ToUtf8(icmPath)});
+#else
                     m_monitors.push_back({displayName, icmPath});
+#endif
                 }
                 else
                 {
-                    std::ostringstream oss;
-                    oss << "Unable to access the ICM profile for the monitor '" 
-                        << displayName << "'.";
+                    std::tostringstream oss;
+                    oss << TEXT("Unable to access the ICM profile for the monitor '")
+                        << displayName << TEXT("'.");
 
-                    LogDebug(oss.str());
+                    LogDebugT(oss.str());
                 }
 
                 DeleteDC(hDC);
             }
             else
             {
-                std::ostringstream oss;
-                oss << "Unable to access the monitor '" << deviceName << "'.";
-                LogDebug(oss.str());
+                std::tostringstream oss;
+                oss << TEXT("Unable to access the monitor '") << deviceName << TEXT("'.");
+                LogDebugT(oss.str());
             }
         }
 

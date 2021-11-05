@@ -42,7 +42,7 @@ target_link_libraries(test_osl_exec
         OpenImageIO::OpenImageIO
 )
 
-add_test(test_osl test_osl_exec)
+add_test(NAME test_osl COMMAND test_osl_exec)
 
 list(APPEND ENVS "OSL_SHADERS_DIR=${OSL_SHADERS_DIR}")
 list(APPEND ENVS "TMP_SHADERS_DIR=${CMAKE_CURRENT_BINARY_DIR}")
