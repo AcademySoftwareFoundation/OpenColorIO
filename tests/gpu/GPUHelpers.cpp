@@ -34,7 +34,9 @@ std::string createTempFile(const std::string& fileExt, const std::string& fileCo
         throw OCIO::Exception("Could not create a temporary file");
     }
 
-    filename = tmpFilename;
+    // Note that when a file name is pre-pended with a backslash and no path information, such as \fname21, this 
+    // indicates that the name is valid for the current working directory.
+    filename = tmpFilename[0] == '\\' ? tmpFilename + 1 : tmpFilename;
     filename += fileExt;
 
 #else
