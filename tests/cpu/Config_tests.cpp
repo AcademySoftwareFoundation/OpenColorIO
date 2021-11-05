@@ -1470,11 +1470,13 @@ OCIO_ADD_TEST(Config, context_variable_with_search_path_v1)
     OCIO_CHECK_NO_THROW(cfg = OCIO::Config::CreateFromStream(iss)->createEditableCopy());
     OCIO_CHECK_THROW_WHAT(cfg->validate(), OCIO::Exception,
                           "The search_path '$ENV1' cannot be resolved.");
+#ifdef _WIN32
     OCIO_CHECK_THROW_WHAT(cfg->getProcessor("cs1", "cs2"), OCIO::Exception,
                           "The specified file reference 'lut1d_green.ctf' could not be located. "
-#ifdef _WIN32
-                          "The following attempts were made: '$ENV1\lut1d_green.ctf'.");
+                          "The following attempts were made: '$ENV1\\lut1d_green.ctf'.");
 #else
+    OCIO_CHECK_THROW_WHAT(cfg->getProcessor("cs1", "cs2"), OCIO::Exception,
+                          "The specified file reference 'lut1d_green.ctf' could not be located. "
                           "The following attempts were made: '$ENV1/lut1d_green.ctf'.");
 #endif
 
@@ -1486,11 +1488,13 @@ OCIO_ADD_TEST(Config, context_variable_with_search_path_v1)
     // $ENV1 is faulty.
     OCIO_CHECK_NO_THROW(cfg->addEnvironmentVar("ENV1", "faulty/path"));
     OCIO_CHECK_NO_THROW(cfg->validate()); // Success because there is at least one resolved path.
+#ifdef _WIN32
     OCIO_CHECK_THROW_WHAT(cfg->getProcessor("cs1", "cs2"), OCIO::Exception,
                           "The specified file reference 'lut1d_green.ctf' could not be located. "
-#ifdef _WIN32
-                          "The following attempts were made: 'faulty\path\lut1d_green.ctf'.");
+                          "The following attempts were made: 'faulty\\path\\lut1d_green.ctf'.");
 #else
+    OCIO_CHECK_THROW_WHAT(cfg->getProcessor("cs1", "cs2"), OCIO::Exception,
+                          "The specified file reference 'lut1d_green.ctf' could not be located. "
                           "The following attempts were made: 'faulty/path/lut1d_green.ctf'.");
 #endif
 
@@ -1559,11 +1563,13 @@ OCIO_ADD_TEST(Config, context_variable_with_search_path_v2)
     OCIO_CHECK_THROW_WHAT(cfg->validate(), OCIO::Exception,
                           "The search_path '$ENV1' cannot be resolved.");
 
+#ifdef _WIN32
     OCIO_CHECK_THROW_WHAT(cfg->getProcessor("cs1", "cs2"), OCIO::Exception,
                           "The specified file reference 'lut1d_green.ctf' could not be located. "
-#ifdef _WIN32
-                          "The following attempts were made: '$ENV1\lut1d_green.ctf'.");
+                          "The following attempts were made: '$ENV1\\lut1d_green.ctf'.");
 #else
+    OCIO_CHECK_THROW_WHAT(cfg->getProcessor("cs1", "cs2"), OCIO::Exception,
+                          "The specified file reference 'lut1d_green.ctf' could not be located. "
                           "The following attempts were made: '$ENV1/lut1d_green.ctf'.");
 #endif
 
@@ -1615,12 +1621,15 @@ OCIO_ADD_TEST(Config, context_variable_with_search_path_v2)
 
         // The first path does not resolve and the second path does resolve but it does not exist
         // so the processor creation fails.
+#ifdef _WIN32
         OCIO_CHECK_THROW_WHAT(cfg->getProcessor("cs1", "cs2"), OCIO::Exception,
                               "The specified file reference 'lut1d_green.ctf' could not be located. "
                               "The following attempts were made: "
-#ifdef _WIN32
-                              "'$ENV1\lut1d_green.ctf' : 'faulty\path\lut1d_green.ctf'.");
+                              "'$ENV1\\lut1d_green.ctf' : 'faulty\\path\\lut1d_green.ctf'.");
 #else
+        OCIO_CHECK_THROW_WHAT(cfg->getProcessor("cs1", "cs2"), OCIO::Exception,
+                              "The specified file reference 'lut1d_green.ctf' could not be located. "
+                              "The following attempts were made: "
                               "'$ENV1/lut1d_green.ctf' : 'faulty/path/lut1d_green.ctf'.");
 #endif
     }
