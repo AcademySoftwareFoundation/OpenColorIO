@@ -225,7 +225,9 @@ std::string CreateTempFilename(const std::string & filenameExt)
         throw Exception("Could not create a temporary file.");
     }
 
-    filename = tmpFilename;
+    // Note that when a file name is pre-pended with a backslash and no path information, such as \fname21, this 
+    // indicates that the name is valid for the current working directory.
+    filename = tmpFilename[0] == '\\' ? tmpFilename + 1 : tmpFilename;
 
 #else
 

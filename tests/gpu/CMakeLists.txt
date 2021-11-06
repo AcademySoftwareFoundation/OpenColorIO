@@ -50,7 +50,7 @@ target_link_libraries(test_gpu_exec
 		unittest_data
 )
 
-add_test(test_gpu test_gpu_exec)
+add_test(NAME test_gpu COMMAND test_gpu_exec)
 
 # Note: To avoid changing PATH from outside the cmake files.
 if(MSVC AND BUILD_SHARED_LIBS)

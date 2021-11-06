@@ -24,4 +24,4 @@ target_link_libraries(test_utils_exec
 set_target_properties(test_utils_exec PROPERTIES
     COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS}")
 
-add_test(test_utils_exec test_utils_exec)
+add_test(NAME test_utils_exec COMMAND test_utils_exec)
