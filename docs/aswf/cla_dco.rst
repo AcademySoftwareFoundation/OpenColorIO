@@ -12,7 +12,7 @@ follows the open source software best practice policies of the ASWF TAC with
 the guidance from the Linux Foundation.
 
 See `CONTRIBUTING.md 
-<https://github.com/AcademySoftwareFoundation/OpenColorIO/blob/master/CONTRIBUTING.md>`__ 
+<https://github.com/AcademySoftwareFoundation/OpenColorIO/blob/main/CONTRIBUTING.md>`__ 
 for more information.
 
 CLA
@@ -35,7 +35,7 @@ then you should use the :ref:`Corporate Contributor Licence Agreement <ccla>`.
 
 The OCIO CLA's are the standard forms used by Linux Foundation projects and 
 `recommended by the ASWF TAC 
-<https://github.com/AcademySoftwareFoundation/tac/blob/master/process/contributing.md#contributor-license-agreement-cla>`__.
+<https://github.com/AcademySoftwareFoundation/tac/blob/main/process/contributing.md#contributor-license-agreement-cla>`__.
 
 .. _ccla:
 
@@ -43,7 +43,7 @@ CLA-corporate
 +++++++++++++
 
 See `CLA-corporate.md 
-<https://github.com/AcademySoftwareFoundation/OpenColorIO/blob/master/ASWF/CLA-corporate.md>`__ 
+<https://github.com/AcademySoftwareFoundation/OpenColorIO/blob/main/ASWF/CLA-corporate.md>`__ 
 on GitHub.
 
 ----
@@ -108,7 +108,7 @@ CLA-individual
 ++++++++++++++
 
 See `CLA-individual.md 
-<https://github.com/AcademySoftwareFoundation/OpenColorIO/blob/master/ASWF/CLA-individual.md>`__ 
+<https://github.com/AcademySoftwareFoundation/OpenColorIO/blob/main/ASWF/CLA-individual.md>`__ 
 on GitHub.
 
 ----

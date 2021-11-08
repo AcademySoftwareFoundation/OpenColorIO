@@ -52,7 +52,7 @@ This charter (the &quot;Charter&quot;) sets forth the responsibilities and proce
 7. Intellectual Property Policy
   * **a.** Participants acknowledge that the copyright in all new contributions shall be retained by the copyright holder as independent works of authorship and that no contributor or copyright holder will be required to assign copyrights to the Project.
   * **b.** Except as described in Section 7.c., all code contributions to the Project are subject to the following:
-    * **i.** All new inbound code contributions to the Project must be made using the **BSD 3-Clause License (available here: [https://github.com/AcademySoftwareFoundation/OpenColorIO/blob/master/LICENSE](https://github.com/AcademySoftwareFoundation/OpenColorIO/blob/master/LICENSE))** (the &quot;Project License&quot;).
+    * **i.** All new inbound code contributions to the Project must be made using the **BSD 3-Clause License (available here: [https://github.com/AcademySoftwareFoundation/OpenColorIO/blob/main/LICENSE](https://github.com/AcademySoftwareFoundation/OpenColorIO/blob/main/LICENSE))** (the &quot;Project License&quot;).
     * **ii.** All new inbound code contributions must:
       1. be made pursuant to a duly executed Project Contribution License Agreement (the &quot;CLA&quot;), available on the Project&#39;s web site; and
       2. be accompanied by a Developer Certificate of Origin ([http://developercertificate.org](http://developercertificate.org)) sign-off in the source code system that is submitted through a TSC-approved contribution process which will bind the authorized contributor and, if not self-employed, their employer to the applicable license;

@@ -12,7 +12,7 @@ library should abide by that license unless otherwised approved by the OCIO
 TSC and ASWF Governing Board.
 
 See `LICENSE 
-<https://github.com/AcademySoftwareFoundation/OpenColorIO/blob/master/LICENSE>`__ 
+<https://github.com/AcademySoftwareFoundation/OpenColorIO/blob/main/LICENSE>`__ 
 on GitHub.
 
 ----

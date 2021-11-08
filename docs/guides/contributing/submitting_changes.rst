@@ -57,8 +57,8 @@ assistance.
 
 * Pull the latest changes from upstream::
 
-    git checkout master
-    git pull upstream master
+    git checkout main
+    git pull upstream main
 
 * Create a branch for your contribution::
 
@@ -88,12 +88,12 @@ assistance.
 * Wait for code review and comments from the community.
 
 * At various points in the review process other pull requests will have been 
-  merged into OpenColorIO master, at which point merging of your PR will be 
+  merged into OpenColorIO main, at which point merging of your PR will be 
   blocked with the message "This branch is out-of-date with the base branch". 
   Clicking the "Update branch" button will automatically merge the updated 
   branch into your feature branch. This step may need to be repeated multiple
   times depending on current commit activity.
 
 See `CONTRIBUTING.md 
-<https://github.com/AcademySoftwareFoundation/OpenColorIO/blob/master/CONTRIBUTING.md#Repository-Structure>`__ 
+<https://github.com/AcademySoftwareFoundation/OpenColorIO/blob/main/CONTRIBUTING.md#Repository-Structure>`__ 
 for more information.
