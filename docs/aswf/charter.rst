@@ -8,7 +8,7 @@ Charter
 =======
 
 See `Charter.md 
-<https://github.com/AcademySoftwareFoundation/OpenColorIO/blob/master/ASWF/Charter.md>`__ 
+<https://github.com/AcademySoftwareFoundation/OpenColorIO/blob/main/ASWF/Charter.md>`__ 
 on GitHub.
 
 Technical Charter (the “Charter”) for OpenColorIO a Series of LF Projects, LLC
@@ -193,7 +193,7 @@ Project must comply with the terms of this Charter.
 
    -  **i.** All new inbound code contributions to the Project must be
       made using the **BSD 3-Clause License (available
-      here: **\ https://github.com/AcademySoftwareFoundation/OpenColorIO/blob/master/LICENSE\ **)**
+      here: **\ https://github.com/AcademySoftwareFoundation/OpenColorIO/blob/main/LICENSE\ **)**
       (the “Project License”).
    -  **ii.** All new inbound code contributions must:
 
