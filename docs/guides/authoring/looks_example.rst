@@ -142,7 +142,7 @@ Example:
 
 
 Note that if the per-shot lut is not found, you can control whether a
-fallback LUT succeeds based on if it's in the master location. You can
+fallback LUT succeeds based on if it's in the main location. You can
 also use this for multiple levels (show, shot, etc).
 
 Advanced option: If some shots use .cc files, and some use 3d-luts

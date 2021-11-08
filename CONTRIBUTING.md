@@ -91,7 +91,7 @@ can be merged.
   [Corporate Contributor Licence Agreement](https://docs.linuxfoundation.org/lfx/easycla/contributors/corporate-contributor).
 
 The OCIO CLA's are the standard forms used by Linux Foundation projects and
-[recommended by the ASWF TAC](https://github.com/AcademySoftwareFoundation/tac/blob/master/process/contributing.md#contributor-license-agreement-cla).
+[recommended by the ASWF TAC](https://github.com/AcademySoftwareFoundation/tac/blob/main/process/contributing.md#contributor-license-agreement-cla).
 
 ### Commit Sign-Off
 
@@ -113,7 +113,7 @@ can be merged. Otherwise the EasyCLA system will provide instructions on
 signing a CLA, or request inclusion in an existing corporate CLA approved list.
 
 See the
-[ASWF TAC CONTRIBUTING.md](https://github.com/AcademySoftwareFoundation/tac/blob/master/process/contributing.md#contribution-sign-off)
+[ASWF TAC CONTRIBUTING.md](https://github.com/AcademySoftwareFoundation/tac/blob/main/process/contributing.md#contribution-sign-off)
 file for more information on this requirement.
 
 ### Copyright Notices
@@ -161,15 +161,15 @@ You are now ready to contribute.
 The OpenColorIO repository has a relatively straight-forward structure, and a
 simple branching and merging strategy.
 
-All development work is done directly on the master branch. This represents the
+All development work is done directly on the main branch. This represents the
 bleeding-edge of the project and any contributions should be done on top of it.
 
-After sufficient work is done on the master branch and OCIO leadership
+After sufficient work is done on the main branch and OCIO leadership
 determines that a release is due, we will bump the relevant internal versioning
 and tag a commit with the corresponding version number, e.g. v2.0.1. Each Minor
 version also has its own “Release Branch”, e.g. RB-1.1. This marks a branch of
 code dedicated to that Major.Minor version, which allows upstream bug fixes to
-be cherry-picked to a given version while still allowing the master branch to
+be cherry-picked to a given version while still allowing the main branch to
 continue forward onto higher versions. This basic repository structure keeps
 maintenance low, while remaining simple to understand.
 
@@ -183,7 +183,7 @@ Please review [PROCESS.md](PROCESS.md) for important procedures related to
 making changes to OpenColorIO. Small bug fixes and documentation changes can be
 more informal, but modifications to core OpenColorIO functionality MUST follow
 the 
-[Core Library Changes](https://github.com/AcademySoftwareFoundation/OpenColorIO/blob/master/PROCESS.md#Core-Library-Changes) process.
+[Core Library Changes](https://github.com/AcademySoftwareFoundation/OpenColorIO/blob/main/PROCESS.md#Core-Library-Changes) process.
 
 The development cycle for a code change should follow this protocol:
 
@@ -210,9 +210,9 @@ who may discuss, offer constructive feedback, request changes, or approve
 the work.
 
 7. Upon receiving the required number of Committer approvals (as outlined in 
-[Required Approvals](https://github.com/AcademySoftwareFoundation/OpenColorIO/blob/master/PROCESS.md#Required-Approvals)), 
+[Required Approvals](https://github.com/AcademySoftwareFoundation/OpenColorIO/blob/main/PROCESS.md#Required-Approvals)), 
 a Committer other than the PR contributor may squash and merge changes into the 
-master branch.
+main branch.
 
 See also (from the OCIO Developer Guide):
 * [Getting started](http://opencolorio.org/developers/getting_started.html)
@@ -254,7 +254,7 @@ version with three numbers: Major.Minor.Patch, where:
 
 ## Creating a Release
 
-To create a new release from the master branch:
+To create a new release from the main branch:
 
 1. Update the release notes in ``CHANGELOG.md`` with a high-level summary of
    the features and improvements. Also include the summary in the Release
