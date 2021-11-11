@@ -13,6 +13,8 @@
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "MathUtils.h"
+#include "utils/StringUtils.h"
+#include "utils/NumberUtils.h"
 #include "Platform.h"
 
 
@@ -156,16 +158,17 @@ void ParseNumber(const char * str, size_t startPos, size_t endPos, T & value)
     const char * startParse = str + startPos;
 
     double val = 0.0f;
-    char * endParse = nullptr;
 
-    // The strtod expects a C string and str might not be null terminated.
-    // However since strtod will stop parsing when it encounters characters
-    // that it cannot convert to a number, in practice it does not need to
-    // be null terminated.
-    // C++11 version of strtod processes NAN & INF ASCII values.
-    val = strtod(startParse, &endParse);
+    size_t adjustedStartPos = startPos;
+    size_t adjustedEndPos = endPos;
+
+    FindSubString(startParse, endPos - startPos, adjustedStartPos, adjustedEndPos);
+
+    const auto result = NumberUtils::from_chars(startParse + adjustedStartPos, startParse + adjustedEndPos, val);
+
     value = (T)val;
-    if (endParse == startParse)
+
+    if (result.ec == std::errc::invalid_argument)
     {
         std::string fullStr(str, endPos);
         std::string parsedStr(startParse, endPos - startPos);
@@ -187,10 +190,10 @@ void ParseNumber(const char * str, size_t startPos, size_t endPos, T & value)
             << TruncateString(fullStr.c_str(), endPos, 100) << "'.";
         throw Exception(oss.str().c_str());
     }
-    else if (endParse != str + endPos)
+    else if (result.ptr != str + endPos)
     {
         // Number is followed by something.
-        std::string fullStr(str, startPos + (endParse - startParse));
+        std::string fullStr(str, endPos);
         std::string parsedStr(startParse, endPos - startPos);
         std::ostringstream oss;
         oss << "ParserNumber: '"

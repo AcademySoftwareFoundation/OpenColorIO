@@ -25,6 +25,10 @@ if(USE_MSVC)
     # Note: Do not use /Wall (i.e. /W4) which adds 'informational' warnings.
     set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} /W3")
 
+    # Do enable C4701 (Potentially uninitialized local variable 'name' used), which is level 4.
+    # This is because strtoX-based from_chars leave the value variable unmodified.
+    set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} /we4701")
+
     if(OCIO_WARNING_AS_ERROR)
         set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} /WX")
     endif()

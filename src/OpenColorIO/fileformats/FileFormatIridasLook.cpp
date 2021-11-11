@@ -16,6 +16,7 @@
 #include "pystring/pystring.h"
 #include "transforms/FileTransform.h"
 #include "utils/StringUtils.h"
+#include "utils/NumberUtils.h"
 
 
 /*
@@ -416,19 +417,18 @@ private:
             std::string size_raw = std::string(s, len);
             std::string size_clean = pystring::strip(size_raw, "'\" "); // strip quotes and space
 
-            char* endptr = 0;
-            int size_3d = static_cast<int>(strtol(size_clean.c_str(), &endptr, 10));
+            long int size_3d{};
+            
+            const auto result = NumberUtils::from_chars(size_clean.c_str(), size_clean.c_str() + size_clean.size(), size_3d);
 
-            if (*endptr)
+            if (result.ec != std::errc())
             {
-                // strtol didn't consume entire string, there was
-                // remaining data, thus did not contain a single integer
                 std::ostringstream os;
                 os << "Invalid LUT size value: '" << size_raw;
                 os << "'. Expected quoted integer";
                 pImpl->Throw(os.str().c_str());
             }
-            pImpl->m_lutSize = size_3d;
+            pImpl->m_lutSize = static_cast<int>(size_3d);
         }
         else if (pImpl->m_data)
         {
