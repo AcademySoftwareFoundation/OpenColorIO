@@ -13,7 +13,7 @@ namespace
 {
 
 // Reference:
-//   https://github.com/python/cpython/blob/master/Objects/memoryobject.c
+//   https://github.com/python/cpython/blob/main/Objects/memoryobject.c
 //   https://docs.python.org/3.7/c-api/arg.html#numbers
 //   https://numpy.org/devdocs/user/basics.types.html
 
