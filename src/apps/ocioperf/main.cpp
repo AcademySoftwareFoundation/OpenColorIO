@@ -181,7 +181,7 @@ int main(int argc, const char **argv)
 
     ArgParse ap;
     ap.options("ocioperf -- apply and measure a color transformation processing\n\n"
-               "usage: ocioperf [options] --image inputimage\n\n",
+               "usage: ocioperf [options] --transform /path/to/file.clf\n\n",
                "--help", &help, "Display the help and exit",
                "--verbose", &verbose, "Display some general information",
                "--test %d", &testType, "Define the type of processing to measure: "\
@@ -484,7 +484,7 @@ int main(int argc, const char **argv)
         // wide range of colors, including outside [0,1], in case some algorithms are faster or
         // slower for certain colors.
 
-        static constexpr size_t length   = 64;
+        static constexpr size_t length   = 201;
         static constexpr float stepValue = 1.0f / ((float)length - 1.0f);
 
         if (inBitDepth == OCIO::BIT_DEPTH_F32)
