@@ -20,9 +20,7 @@ set_target_properties(ocioperf PROPERTIES
 target_link_libraries(ocioperf
     PRIVATE
         apputils
-        oiiohelpers
         OpenColorIO
-        OpenImageIO::OpenImageIO
         utils::strings
 )
 
