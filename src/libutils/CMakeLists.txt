@@ -9,8 +9,6 @@ if(TARGET test_gpu_exec OR
     add_subdirectory(oglapphelpers)
 endif()
 
-if(TARGET ocioconvert OR
-   TARGET ocioperf
-)
+if(TARGET ocioconvert)
     add_subdirectory(oiiohelpers)
 endif()
