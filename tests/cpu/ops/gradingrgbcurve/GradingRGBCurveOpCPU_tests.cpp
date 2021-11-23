@@ -410,14 +410,33 @@ OCIO_ADD_TEST(GradingRGBCurveOpCPU, slopes)
     OCIO_CHECK_NO_THROW(op = OCIO::GetGradingRGBCurveCPURenderer(gcc));
     OCIO_CHECK_ASSERT(op);
 
-    const long num_samples = 1;
+    const long num_samples = 2;
     float input_32f[] = {
-        -3.f, -1.f, 1.f, 0.5f };
+        -3.f, -1.f, 1.f, 0.5f,
+        -7.f,  0.f, 7.f, 1.0f };
 
     // Test that the slopes were used (the values are significantly different without slopes).
     const float expected_32f[] = {
-        -2.92582282f, 0.28069129f, 2.81987724f, 0.5f };
+        -2.92582282f, 0.28069129f, 2.81987724f, 0.5f,
+        -4.0f,        1.73250193f, 4.0f,        1.0f };
 
     OCIO_CHECK_NO_THROW(op->apply(input_32f, input_32f, num_samples));
     ValidateImage(expected_32f, input_32f, num_samples, __LINE__);
+
+    // Test in inverse direction.
+
+    float rev_input_32f[] = {
+        -2.92582282f, 0.28069129f, 2.81987724f, 0.5f,
+        -7.0f,        1.73250193f, 7.0f,        1.0f };
+
+    const float rev_expected_32f[] = {
+        -3.f,        -1.f, 1.f,         0.5f,
+        -5.26017743f, 0.f, 4.67381243f, 1.0f };
+
+    gc->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+
+    OCIO_CHECK_NO_THROW(op = OCIO::GetGradingRGBCurveCPURenderer(gcc));
+    OCIO_CHECK_ASSERT(op);
+    OCIO_CHECK_NO_THROW(op->apply(rev_input_32f, rev_input_32f, num_samples));
+    ValidateImage(rev_expected_32f, rev_input_32f, num_samples, __LINE__);
 }

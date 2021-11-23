@@ -584,7 +584,7 @@ float GradingBSplineCurveImpl::KnotsCoefs::evalCurveRev(int c, float y) const
     {
         const float B = m_coefsArray[coefsOffs + coefsSets];
         const float C = m_coefsArray[coefsOffs + coefsSets * 2];
-        return (y - C) / B + knStart;
+        return fabs(B) < 1e-5f ? knStart : (y - C) / B + knStart;
     }
     else if (y >= knEndY)
     {
@@ -595,7 +595,7 @@ float GradingBSplineCurveImpl::KnotsCoefs::evalCurveRev(int c, float y) const
         const float t = knEnd - kn;
         const float slope = 2.f * A * t + B;
         const float offs = (A * t + B) * t + C;
-        return (y - offs) / slope + knEnd;
+        return fabs(slope) < 1e-5f ? knEnd : (y - offs) / slope + knEnd;
     }
     else
     {
