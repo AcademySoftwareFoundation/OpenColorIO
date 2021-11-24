@@ -7,9 +7,6 @@
 name: Analysis
 
 on:
-  schedule:
-    # Nightly build
-    - cron: "0 0 * * *"
   pull_request:
     branches-ignore:
       - RB-0.*
@@ -18,6 +15,11 @@ on:
     tags-ignore:
       - v0.*
       - v1.*
+    paths:
+      - .github/workflows/analysis_workflow.yml
+  schedule:
+    # Nightly build
+    - cron: "0 0 * * *"
 
 jobs:
   # ---------------------------------------------------------------------------
@@ -385,7 +387,9 @@ jobs:
   linux_sonarcloud:
     name: 'Linux CentOS 7 VFX CY2022 SonarCloud <GCC 9.3.1>'
     # Don't run on OCIO forks
-    if: github.repository == 'AcademySoftwareFoundation/OpenColorIO'
+    if: |
+      github.repository == 'AcademySoftwareFoundation/OpenColorIO' &&
+      github.event.pull_request.head.repo.full_name == github.repository
     # GH-hosted VM. The build runs in CentOS 7 'container' defined below.
     runs-on: ubuntu-latest
     container:
