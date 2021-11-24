@@ -28,7 +28,7 @@ across the project so are treated as core changes.
    [ocio-dev](https://lists.aswf.io/g/ocio-dev), but are ultimately brought to a 
    TSC meeting where consensus can be reached around the proposal's relevance 
    and approach. TSC meetings are public and meeting notes are posted to the 
-   [OCIO repo](https://github.com/AcademySoftwareFoundation/OpenColorIO/tree/master/ASWF/meetings/tsc) 
+   [OCIO repo](https://github.com/AcademySoftwareFoundation/OpenColorIO/tree/main/ASWF/meetings/tsc) 
    within days of a meeting for a permanent record of decisions.
 2. Following acceptance of the proposal by the TSC, an issue is created in 
    GitHub to present a design proposal. A period of further community 

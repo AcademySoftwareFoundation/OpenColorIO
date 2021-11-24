@@ -89,7 +89,7 @@ Some optional components also depend on:
 - OpenImageIO >= 2.1.9 (for apps including ocioconvert)
 
 Example bash scripts are provided in 
-`share/ci/scripts <https://github.com/AcademySoftwareFoundation/OpenColorIO/tree/master/share/ci/scripts>`_ 
+`share/ci/scripts <https://github.com/AcademySoftwareFoundation/OpenColorIO/tree/main/share/ci/scripts>`_ 
 for installing some dependencies. These are used by OpenColorIO CI so are 
 regularly tested on their noted platforms. The ``install_docs_env.sh``
 script will install all dependencies for building OCIO documentation and is 

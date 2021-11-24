@@ -311,7 +311,7 @@ Features exposed for customization by the user include:
 - Selection of shaper function: Log2 or Dolby PQ
 
 **CTL Source**
-The configuration depends on the **ACES 1.0.3** release. The release contains a number of file renames and the new ACEScct color space and a number of minor bug fixes and small additions, but is otherwise very similar as the master **ACES 1.0.2** release. 
+The configuration depends on the **ACES 1.0.3** release. The release contains a number of file renames and the new ACEScct color space and a number of minor bug fixes and small additions, but is otherwise very similar as the main **ACES 1.0.2** release. 
 
 The CTL is available here:
 

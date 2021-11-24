@@ -10,16 +10,16 @@ Repository structure
 The OpenColorIO repository has a relatively straight-forward structure, and a 
 simple branching and merging strategy.
 
-All development work is done directly on the master branch. This represents 
+All development work is done directly on the main branch. This represents 
 the bleeding-edge of the project and any contributions should be done on top of 
 it.
 
-After sufficient work is done on the master branch and OCIO leadership 
+After sufficient work is done on the main branch and OCIO leadership 
 determines that a release is due, we will bump the relevant internal versioning 
 and tag a commit with the corresponding version number, e.g. v2.0.1. Each Minor 
 version also has its own “Release Branch”, e.g. RB-1.1. This marks a branch of 
 code dedicated to that Major.Minor version, which allows upstream bug fixes to 
-be cherry-picked to a given version while still allowing the master branch to 
+be cherry-picked to a given version while still allowing the main branch to 
 continue forward onto higher versions. This basic repository structure keeps 
 maintenance low, while remaining simple to understand.
 
