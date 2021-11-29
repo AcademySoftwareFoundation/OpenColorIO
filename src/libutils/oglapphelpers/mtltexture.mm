@@ -87,7 +87,7 @@ MtlTexture::MtlTexture(id<MTLDevice> device, NSOpenGLContext* glContext, uint32_
 void MtlTexture::createGLTexture()
 {
     CVReturn cvret;
-    // 1. Create an OpenGL CoreVideo texture cache from the pixel buffer.
+    // Create an OpenGL CoreVideo texture cache from the pixel buffer.
     cvret  = CVOpenGLTextureCacheCreate(
                     kCFAllocatorDefault,
                     nil,
@@ -98,7 +98,7 @@ void MtlTexture::createGLTexture()
     
     assert(cvret == kCVReturnSuccess && "Failed to create OpenGL Texture Cache");
     
-    // 2. Create a CVPixelBuffer-backed OpenGL texture image from the texture cache.
+    // Create a CVPixelBuffer-backed OpenGL texture image from the texture cache.
     cvret = CVOpenGLTextureCacheCreateTextureFromImage(
                     kCFAllocatorDefault,
                     m_CVGLTextureCache,
@@ -108,14 +108,14 @@ void MtlTexture::createGLTexture()
     
     assert(cvret == kCVReturnSuccess && "Failed to create OpenGL Texture From Image");
     
-    // 3. Get an OpenGL texture name from the CVPixelBuffer-backed OpenGL texture image.
+    // Get an OpenGL texture name from the CVPixelBuffer-backed OpenGL texture image.
     m_texID = CVOpenGLTextureGetName(m_CVGLTexture);
 }
 
 void MtlTexture::createMetalTexture()
 {
     CVReturn cvret;
-    // 1. Create a Metal Core Video texture cache from the pixel buffer.
+    // Create a Metal Core Video texture cache from the pixel buffer.
     cvret = CVMetalTextureCacheCreate(
                     kCFAllocatorDefault,
                     nil,
@@ -125,8 +125,7 @@ void MtlTexture::createMetalTexture()
 
     assert(cvret == kCVReturnSuccess && "Failed to create Metal texture cache");
     
-    // 2. Create a CoreVideo pixel buffer backed Metal texture image from the texture cache.
-    
+    // Create a CoreVideo pixel buffer backed Metal texture image from the texture cache
     cvret = CVMetalTextureCacheCreateTextureFromImage(
                     kCFAllocatorDefault,
                     m_CVMTLTextureCache,
@@ -138,7 +137,7 @@ void MtlTexture::createMetalTexture()
     
     assert(cvret == kCVReturnSuccess && "Failed to create CoreVideo Metal texture from image");
     
-    // 3. Get a Metal texture using the CoreVideo Metal texture reference.
+    // Get a Metal texture using the CoreVideo Metal texture reference.
     m_metalTexture = CVMetalTextureGetTexture(m_CVMTLTexture);
     
     assert(m_metalTexture && "Failed to create Metal texture CoreVideo Metal Texture");

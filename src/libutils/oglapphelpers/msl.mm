@@ -399,69 +399,11 @@ void MetalBuilder::applyColorCorrection(id<MTLTexture> inputTexture, id<MTLTextu
 
 unsigned MetalBuilder::GetTextureMaxWidth()
 {
-#if 0
-    // Arbitrary huge number only to find the limit.
-    static unsigned maxTextureSize = 256 * 1024;
-
-    //CheckStatus();
-
-    unsigned w = maxTextureSize;
-    unsigned h = 1;
-
-    while(w>1)
-    {
-        glTexImage2D(GL_PROXY_TEXTURE_2D, 0, 
-                     GL_RGB32F_ARB, 
-                     w, h, 0, 
-                     GL_RGB, GL_FLOAT, NULL);
-
-        bool texValid = true;
-        GLenum glErr = GL_NO_ERROR;
-
-        while((glErr=glGetError()) != GL_NO_ERROR)
-        {
-            if(glErr==GL_INVALID_VALUE)
-            {
-                texValid = false;
-            }
-        }
-
-#ifndef __APPLE__
-        //
-        // In case of Linux, if glTexImage2D() succeeds
-        //  glGetTexLevelParameteriv() could fail.
-        //
-        // In case of OSX, glTexImage2D() will provide the right result,
-        //  and glGetTexLevelParameteriv() always fails.
-        //  So do not try glGetTexLevelParameteriv().
-        //
-        if(texValid)
-        {
-            GLint format = 0;
-            glGetTexLevelParameteriv(GL_PROXY_TEXTURE_2D, 0,
-                                     GL_TEXTURE_COMPONENTS, &format);
-
-            texValid = texValid && (GL_RGB32F_ARB==format);
-
-            while((glErr=glGetError()) != GL_NO_ERROR);
-        }
-#endif
-
-        if(texValid) break;
-
-        w = w >> 1;
-        h = h << 1;
+    id<MTLDevice> device = MTLCreateSystemDefaultDevice();
+    if ([device supportsFeatureSet:MTLFeatureSet_macOS_GPUFamily1_v1] || [device supportsFeatureSet:MTLFeatureSet_macOS_GPUFamily1_v2]) {
+        return 8192;
     }
-
-    if(w==1)
-    {
-        throw Exception("Maximum texture size unknown");
-    }
-
-    CheckStatus();
-#endif
-
-    return 16 * 1024;
+    return 16384;
 }
 
 } // namespace OCIO_NAMESPACE
