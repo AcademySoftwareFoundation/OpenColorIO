@@ -33,8 +33,29 @@ const GLMetalTextureFormatInfo* textureFormatInfoFromMetalPixelFormat(MTLPixelFo
     return NULL;
 }
 
+MtlTexture::MtlTexture(id<MTLDevice> device, uint32_t width, uint32_t height, const float* image)
+    : m_width(width), m_height(height)
+{
+    m_device = device;
+    m_openGLContext = nullptr;
+    MTLTextureDescriptor* texDescriptor = [[MTLTextureDescriptor new] autorelease];
+ 
+    const int channelPerPix = 4;
+    MTLPixelFormat pixelFormat = MTLPixelFormatRGBA32Float;
+    
+    [texDescriptor setWidth:width];
+    [texDescriptor setHeight:height];
+    [texDescriptor setDepth:1];
+    [texDescriptor setStorageMode:MTLStorageModeShared];
+    [texDescriptor setPixelFormat:pixelFormat];
+    [texDescriptor setMipmapLevelCount:1];
+    m_metalTexture = [device newTextureWithDescriptor:texDescriptor];
+    
+    if(image)
+        [m_metalTexture replaceRegion:MTLRegionMake3D(0, 0, 0, width, height, 1) mipmapLevel:0 withBytes:image bytesPerRow:channelPerPix * width * sizeof(float)];
+}
 
-MtlTexture::MtlTexture(id<MTLDevice> device, NSOpenGLContext* glContext, uint32_t width, uint32_t height, MTLPixelFormat pixelFormat, const float* image) : m_width(width), m_height(height)
+MtlTexture::MtlTexture(id<MTLDevice> device, NSOpenGLContext* glContext, uint32_t width, uint32_t height, const float* image) : m_width(width), m_height(height)
 {
     NSDictionary* cvBufferProperties = @{
         (__bridge NSString*)kCVPixelBufferOpenGLCompatibilityKey : @YES,
@@ -44,7 +65,7 @@ MtlTexture::MtlTexture(id<MTLDevice> device, NSOpenGLContext* glContext, uint32_
     m_device = device;
     m_openGLContext = glContext;
     
-    m_formatInfo = textureFormatInfoFromMetalPixelFormat(pixelFormat);
+    m_formatInfo = textureFormatInfoFromMetalPixelFormat(MTLPixelFormatRGBA32Float);
     
     CVReturn cvret = CVPixelBufferCreate(kCFAllocatorDefault,
                             m_width, m_height,
@@ -125,8 +146,6 @@ void MtlTexture::createMetalTexture()
 
 void MtlTexture::update(const float* image)
 {
-    std::vector<float> data = RGB_to_RGBA(image, 4 * m_width * m_height);
-    
     [m_metalTexture replaceRegion:MTLRegionMake2D(0, 0, m_width, m_height) mipmapLevel:0 withBytes:image bytesPerRow:m_width * 4 * sizeof(float)];
 }
 

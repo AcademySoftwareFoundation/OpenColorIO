@@ -18,6 +18,8 @@ namespace OCIO_NAMESPACE
 
 std::vector<float> RGB_to_RGBA(const float* lutValues, int valueCount)
 {
+    assert(valueCount % 3 == 0);
+    valueCount = valueCount * 4 / 3;
     std::vector<float> float4AdaptedLutValues;
     if(lutValues != nullptr)
     {
@@ -78,11 +80,8 @@ id<MTLTexture> AllocateTexture3D(id<MTLDevice> device,
         throw Exception("Missing texture data");
     }
     
-    const int channelPerPix = 4;
-    auto valueCount = channelPerPix*edgelen*edgelen*edgelen;
-    
     // MTLPixelFormatRGB32Float not supported on metal. Adapt to MTLPixelFormatRGBA32Float
-    std::vector<float> float4AdaptedLutValues = RGB_to_RGBA(lutValues, valueCount);
+    std::vector<float> float4AdaptedLutValues = RGB_to_RGBA(lutValues, 3*edgelen*edgelen*edgelen);
     
     MTLTextureDescriptor* texDescriptor = [[MTLTextureDescriptor new] autorelease];
     
@@ -118,15 +117,14 @@ id<MTLTexture> AllocateTexture2D(id<MTLDevice> device,
     }
     
     const int channelPerPix = channel == GpuShaderCreator::TEXTURE_RED_CHANNEL ? 1 : 4;
-    auto valueCount = channelPerPix*width*height;
-    std::vector<float> float4AdaptedLutValues;
+    std::vector<float> adaptedLutValues;
     if(channel == GpuShaderDesc::TEXTURE_RED_CHANNEL)
     {
-        float4AdaptedLutValues.resize(width * height);
-        memcpy(float4AdaptedLutValues.data(), values, width * height * sizeof(float));
+        adaptedLutValues.resize(width * height);
+        memcpy(adaptedLutValues.data(), values, width * height * sizeof(float));
     }
     else
-        float4AdaptedLutValues = RGB_to_RGBA(values, valueCount);
+        adaptedLutValues = RGB_to_RGBA(values, 3*width*height);
     
     MTLTextureDescriptor* texDescriptor = [[MTLTextureDescriptor new] autorelease];
     
@@ -140,7 +138,7 @@ id<MTLTexture> AllocateTexture2D(id<MTLDevice> device,
     [texDescriptor setMipmapLevelCount:1];
     id<MTLTexture> tex = [device newTextureWithDescriptor:texDescriptor];
     
-    [tex replaceRegion:MTLRegionMake3D(0, 0, 0, width, height, 1) mipmapLevel:0 withBytes:float4AdaptedLutValues.data() bytesPerRow:channelPerPix * width * sizeof(float)];
+    [tex replaceRegion:MTLRegionMake3D(0, 0, 0, width, height, 1) mipmapLevel:0 withBytes:adaptedLutValues.data() bytesPerRow:channelPerPix * width * sizeof(float)];
     
     return tex;
 }

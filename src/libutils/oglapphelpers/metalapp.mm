@@ -71,9 +71,16 @@ MetalApp::~MetalApp()
 
 void MetalApp::initImage(int imgWidth, int imgHeight, Components comp, const float * image)
 {
+    std::vector<float> imageData;
+    if(comp == Components::COMPONENTS_RGB)
+    {
+        imageData = RGB_to_RGBA(image, 3 * imgWidth * imgHeight);
+        image = imageData.data();
+    }
+    
     setImageDimensions(imgWidth, imgHeight, comp);
-    m_image = std::make_shared<MtlTexture>(m_context->metalDevice, m_context->glContext, imgWidth, imgHeight, MTLPixelFormatRGBA32Float, image);//comp, image);
-    m_outputImage = std::make_shared<MtlTexture>(m_context->metalDevice, m_context->glContext, imgWidth, imgHeight, MTLPixelFormatRGBA32Float, nullptr);
+    m_image = std::make_shared<MtlTexture>(m_context->metalDevice, imgWidth, imgHeight, image);
+    m_outputImage = std::make_shared<MtlTexture>(m_context->metalDevice, m_context->glContext, imgWidth, imgHeight, nullptr);
 }
 
 void MetalApp::updateImage(const float */*image*/)
@@ -81,7 +88,7 @@ void MetalApp::updateImage(const float */*image*/)
   //  m_image->update(image);
 }
 
-void MetalApp::readImage(float * image)
+void MetalApp::readImage(float * /*image*/)
 {
     //glReadBuffer(GL_COLOR_ATTACHMENT0);
     //const GLenum format = m_image->getComponents() == Texture::COMPONENTS_RGB ? GL_RGB : GL_RGBA;
@@ -273,8 +280,6 @@ void MetalApp::setShader(GpuShaderDescRcPtr & shaderDesc)
                                              m_outputImage->getMetalTextureHandle(),
                                              m_outputImage->getWidth(),
                                              m_outputImage->getHeight());
-        m_outputImage->flushGL();
-        m_outputImage->getOpenGLTextureName();
     }
     
     

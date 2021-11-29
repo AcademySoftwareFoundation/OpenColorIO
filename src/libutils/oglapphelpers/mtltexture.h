@@ -32,21 +32,15 @@ public:
     
     int         getWidth()       const { return m_width;  }
     int         getHeight()      const { return m_height; }
-    uint64_t    getGLHandle()    const { return m_texID; }
+    uint64_t    getGLHandle()    const { assert(m_openGLContext); return m_texID; }
     
     ~MtlTexture();
     
-    MtlTexture(id<MTLDevice> device, NSOpenGLContext* glContext, uint32_t width, uint32_t height, MTLPixelFormat pixelFormat, const float* image);
+    MtlTexture(id<MTLDevice> device, uint32_t width, uint32_t height, const float* image);
+    MtlTexture(id<MTLDevice> device, NSOpenGLContext* glContext, uint32_t width, uint32_t height, const float* image);
     void update(const float* image);
-    
-    void flushGL()
-    {
-        CVOpenGLTextureCacheFlush(m_CVGLTextureCache, 0);
-    }
-    
     id<MTLTexture> getMetalTextureHandle() const { return m_metalTexture; }
-    GLuint getOpenGLTextureName() { return (m_texID = CVOpenGLTextureGetName(m_CVGLTexture)); }
-
+    
 private:
     void createGLTexture();
     void createMetalTexture();
@@ -54,11 +48,10 @@ private:
     id<MTLDevice>                   m_device;
     NSOpenGLContext*                m_openGLContext;
     
-    int m_width;
-    int m_height;
+    int                             m_width;
+    int                             m_height;
     
-    unsigned int m_texID;
-    
+    unsigned int                    m_texID;
     id<MTLTexture>                  m_metalTexture;
     
     const GLMetalTextureFormatInfo* m_formatInfo;
