@@ -70,7 +70,6 @@ public:
     // Allocate & upload all the needed textures
     //  (i.e. the index is the first available index for any kind of textures).
     void allocateAllTextures(unsigned startIndex);
-    void bindTextures();
 
     // Update all uniforms.
     void fillUniformBuffer();
@@ -115,9 +114,7 @@ private:
     
     unsigned m_startIndex;                 // Starting index for texture allocations
     TextureIds m_textureIds;               // Texture ids of all needed textures
-    Uniforms m_uniforms;                   // Vector of dynamic parameters
-    unsigned m_fragShader;                 // Fragment shader identifier
-    unsigned m_program;                    // Program identifier
+    std::vector<uint8_t> m_uniformData;    // Uniform buffer Data
     std::string m_shaderCacheID;           // Current shader program key
     bool m_verbose;                        // Print shader code to std::cout for debugging purposes
 };

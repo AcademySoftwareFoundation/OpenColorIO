@@ -76,6 +76,8 @@ public:
     std::string intKeyword() const;
 
     std::string colorDecl(const std::string& name) const;
+    
+    std::string vectorCompareExpression(const std::string& lhs, const std::string& op, const std::string& rhs);
 
     //
     // Scalar & arrays helper functions.

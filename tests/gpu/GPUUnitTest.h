@@ -52,6 +52,11 @@ class OCIOGPUTest
         void setProcessor(OCIO_NAMESPACE::TransformRcPtr transform);
 
         void setProcessor(OCIO_NAMESPACE::ConstProcessorRcPtr processor);
+    
+        void setShadingLanguage(OCIO_NAMESPACE::GpuLanguage gpuShadingLanguage)
+        {
+            m_gpuShadingLanguage = gpuShadingLanguage;
+        }
 
         inline OCIO_NAMESPACE::ConstProcessorRcPtr & getProcessor() { return m_processor; }
         OCIO_NAMESPACE::GpuShaderDescRcPtr & getShaderDesc();
@@ -156,6 +161,7 @@ class OCIOGPUTest
         bool m_legacyShader{ false };
         unsigned m_legacyShaderLutEdge{ 32 };
         CustomValues m_values;
+        OCIO_NAMESPACE::GpuLanguage m_gpuShadingLanguage;
 
         std::vector<RetestSetupCallback> m_retests;
 

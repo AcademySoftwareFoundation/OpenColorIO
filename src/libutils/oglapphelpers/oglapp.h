@@ -132,6 +132,7 @@ protected:
     void setupCommon();
     
     void setImageDimensions(int imgWidth, int imgHeight, Components comp);
+    Components getImageComponents() const { return m_components; }
 
     OpenGLBuilderRcPtr m_oglBuilder;
     

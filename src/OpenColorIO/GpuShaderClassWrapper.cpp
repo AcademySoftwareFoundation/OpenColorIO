@@ -27,7 +27,7 @@ std::string MetalShaderClassWrapper::generateClassWrapperHeader(GpuShaderText& k
     std::string separator = "";
     for(const auto& param : m_functionParameters)
     {
-        kw.newLine() << separator << param.type << " " << param.name;
+        kw.newLine() << separator << (param.isArray ? "constant " : "") << param.type << " " << param.name;
         separator = ", ";
     }
     kw.dedent();
@@ -38,8 +38,7 @@ std::string MetalShaderClassWrapper::generateClassWrapperHeader(GpuShaderText& k
     for(const auto& param : m_functionParameters)
     {
         size_t openAngledBracketPos = param.name.find('[');
-        bool isArray = openAngledBracketPos != std::string::npos;
-        if(!isArray)
+        if(!param.isArray)
             kw.newLine()    << "this->" << param.name  << " = " << param.name  << ";";
         else
         {
@@ -79,7 +78,7 @@ std::string MetalShaderClassWrapper::generateClassWrapperFooter(GpuShaderText& k
     std::string separator = "";
     for(const auto& param : m_functionParameters)
     {
-        kw.newLine() << separator << param.type << " " << param.name;
+        kw.newLine() << separator << (param.isArray ? "constant " : "") << param.type << " " << param.name;
         separator = ", ";
     }
     kw.newLine() << separator << kw.float4Keyword() << " inPixel)";

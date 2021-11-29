@@ -83,16 +83,15 @@ void MetalApp::initImage(int imgWidth, int imgHeight, Components comp, const flo
     m_outputImage = std::make_shared<MtlTexture>(m_context->metalDevice, m_context->glContext, imgWidth, imgHeight, nullptr);
 }
 
-void MetalApp::updateImage(const float */*image*/)
+void MetalApp::updateImage(const float *image)
 {
-  //  m_image->update(image);
-}
-
-void MetalApp::readImage(float * /*image*/)
-{
-    //glReadBuffer(GL_COLOR_ATTACHMENT0);
-    //const GLenum format = m_image->getComponents() == Texture::COMPONENTS_RGB ? GL_RGB : GL_RGBA;
-    //glReadPixels(0, 0, m_image->getWidth(), m_image->getHeight(), format, GL_FLOAT, (GLvoid*)&image[0]);
+    std::vector<float> imageData;
+    if(getImageComponents() == Components::COMPONENTS_RGB)
+    {
+        imageData = RGB_to_RGBA(image, 3 * m_image->getWidth() * m_image->getHeight());
+        image = imageData.data();
+    }
+    m_image->update(image);
 }
 
 void MetalApp::setShader(GpuShaderDescRcPtr & shaderDesc)
@@ -106,6 +105,7 @@ void MetalApp::setShader(GpuShaderDescRcPtr & shaderDesc)
     
     if(shaderDesc->getLanguage() == GPU_LANGUAGE_MSL_2_0)
     {
+        static const char* uniformDataInstanceName = "uniformData";
         std::ostringstream uniformParams;
         std::ostringstream params;
         
@@ -158,9 +158,6 @@ void MetalApp::setShader(GpuShaderDescRcPtr & shaderDesc)
                 switch(data.m_type)
                 {
                     case UNIFORM_DOUBLE:
-                        main << "double " << uniformName << ";\n";
-                        break;
-                        
                     case UNIFORM_BOOL:
                         main << "float "  << uniformName << ";\n";
                         break;
@@ -182,14 +179,19 @@ void MetalApp::setShader(GpuShaderDescRcPtr & shaderDesc)
                         break;
                 }
                 
-                uniformParams << separator << uniformName;
+                uniformParams << separator << uniformDataInstanceName << "." << uniformName;
                 separator = ", ";
             }
-            main << "}\n";
+            main << "};\n";
         }
         
         main << "\n\n\n"
              <<"fragment float4 ColorCorrectionPS(VertexOut in [[stage_in]], texture2d<float> colorIn [[ texture(0) ]]\n";
+        
+        if(uniformCount > 0)
+        {
+            main << ",    constant UniformData& " << uniformDataInstanceName << " [[ buffer(0) ]]";
+        }
         
         std::string separator = "";
         
@@ -256,12 +258,15 @@ void MetalApp::setShader(GpuShaderDescRcPtr & shaderDesc)
             separator = ", ";
         }
         
+        if(uniformCount > 0)
+            separator = ", ";
+        
         main << ")"
                 "{\n"
                 "    constexpr sampler s = sampler(address::clamp_to_edge);\n"
                 "    float4 inPixel = colorIn.sample(s, float2(in.texCoord0.x, in.texCoord0.y));\n"
                 "    return "
-             <<  shaderDesc->getFunctionName() << "(" << params.str() << uniformParams.str() << ", inPixel);\n"
+             <<  shaderDesc->getFunctionName() << "(" << params.str() << uniformParams.str() << separator << "inPixel);\n"
              << "}\n";
         
         main << std::endl;
@@ -274,7 +279,6 @@ void MetalApp::setShader(GpuShaderDescRcPtr & shaderDesc)
     // Build the fragment shader program.
     if(m_metalBuilder->buildPipelineStateObject(main.str().c_str()))
     {
-        m_metalBuilder->bindTextures();
         m_metalBuilder->fillUniformBuffer();
         m_metalBuilder->applyColorCorrection(m_image->getMetalTextureHandle(),
                                              m_outputImage->getMetalTextureHandle(),

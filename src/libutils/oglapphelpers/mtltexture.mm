@@ -148,6 +148,25 @@ void MtlTexture::update(const float* image)
     [m_metalTexture replaceRegion:MTLRegionMake2D(0, 0, m_width, m_height) mipmapLevel:0 withBytes:image bytesPerRow:m_width * 4 * sizeof(float)];
 }
 
+std::vector<float> MtlTexture::readTexture() const
+{
+#if 1
+    CVPixelBufferLockBaseAddress(m_CVPixelBuffer, 0);
+    size_t dataSize = CVPixelBufferGetDataSize(m_CVPixelBuffer);
+    float* data = (float*)CVPixelBufferGetBaseAddress(m_CVPixelBuffer);//(m_CVPixelBuffer, 0);
+    std::vector<float> img(4 * m_width * m_height);
+    assert((img.size()*sizeof(float)) >= dataSize);
+    memcpy(img.data(), data, dataSize);
+    CVPixelBufferUnlockBaseAddress(m_CVPixelBuffer, 0);
+    return img;
+#else
+    CVMetalTextureCacheFlush(m_CVMTLTextureCache, 0);
+    std::vector<float> img(4 * m_width * m_height);
+    [m_metalTexture getBytes:img.data() bytesPerRow:4*m_width*sizeof(float) fromRegion:MTLRegionMake2D(0, 0, m_width, m_height) mipmapLevel:0];
+    return img;
+#endif
+}
+
 MtlTexture::~MtlTexture()
 {
     

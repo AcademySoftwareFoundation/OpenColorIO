@@ -4,6 +4,7 @@
 #ifndef INCLUDED_OCIO_MTLTEXTURE_H
 #define INCLUDED_OCIO_MTLTEXTURE_H
 
+#include <vector>
 #include <OpenGL/gl.h>
 
 #import  <AppKit/AppKit.h>
@@ -40,6 +41,7 @@ public:
     MtlTexture(id<MTLDevice> device, NSOpenGLContext* glContext, uint32_t width, uint32_t height, const float* image);
     void update(const float* image);
     id<MTLTexture> getMetalTextureHandle() const { return m_metalTexture; }
+    std::vector<float> readTexture() const;
     
 private:
     void createGLTexture();

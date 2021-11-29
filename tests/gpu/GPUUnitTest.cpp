@@ -16,6 +16,9 @@
 
 #include "GPUUnitTest.h"
 #include "oglapp.h"
+#if __APPLE__
+#include "metalapp.h"
+#endif
 
 namespace OCIO = OCIO_NAMESPACE;
 
@@ -161,7 +164,7 @@ OCIO::GpuShaderDescRcPtr & OCIOGPUTest::getShaderDesc()
     if (!m_shaderDesc)
     {
         m_shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
-        m_shaderDesc->setLanguage(OCIO::GPU_LANGUAGE_GLSL_1_2);
+        m_shaderDesc->setLanguage(m_gpuShadingLanguage);
         m_shaderDesc->setPixelName("myPixel");
     }
     return m_shaderDesc;
@@ -319,10 +322,10 @@ namespace
     void UpdateOCIOGLState(OCIO::OglAppRcPtr & app, OCIOGPUTestRcPtr & test)
     {
         app->setPrintShader(test->isVerbose());
-
+        
         OCIO::ConstProcessorRcPtr & processor = test->getProcessor();
         OCIO::GpuShaderDescRcPtr & shaderDesc = test->getShaderDesc();
-
+        
         OCIO::ConstGPUProcessorRcPtr gpu;
         if (test->isLegacyShader())
         {
@@ -501,13 +504,37 @@ namespace
     }
 };
 
+#if __APPLE__
+int main(int argc, char ** argv)
+#else
 int main(int, char **)
+#endif
 {
-    // Step 1: Initialize the OpenGL engine.
+    // Step 1: Initialize the graphic library engines.
     OCIO::OglAppRcPtr app;
+    
+#if __APPLE__
+    bool useMetalRenderer = false;
+    for(int i = 0; i < argc; ++i)
+    {
+        if(strcmp(argv[i], "-metal") == 0)
+        {
+            useMetalRenderer = true;
+        }
+    }
+#endif
     try
     {
-        app = OCIO::OglApp::CreateOglApp("GPU tests", 10, 10);
+#if __APPLE__
+        if(useMetalRenderer)
+        {
+            app = OCIO::MetalApp::CreateMetalGlApp("GPU tests - Metal", 10, 10);
+        }
+        else
+#endif
+        {
+            app = OCIO::OglApp::CreateOglApp("GPU tests", 10, 10);
+        }
     }
     catch (const OCIO::Exception & e)
     {
@@ -538,6 +565,13 @@ int main(int, char **)
         const unsigned curr_failures = failures;
 
         OCIOGPUTestRcPtr test = tests[idx];
+        
+        test->setShadingLanguage(
+#if __APPLE__
+            useMetalRenderer ?
+            OCIO::GPU_LANGUAGE_MSL_2_0 :
+#endif
+            OCIO::GPU_LANGUAGE_GLSL_1_2);
 
         bool enabledTest = true;
         try

@@ -64,10 +64,13 @@ private:
             type(type),
             name(name)
         {
+            size_t openAngledBracketPos = name.find('[');
+            isArray = openAngledBracketPos != std::string::npos;
         }
 
         std::string type;
         std::string name;
+        bool isArray;
     };
     
     std::string getClassWrapperName(const std::string &resourcePrefix, const std::string& functionName);

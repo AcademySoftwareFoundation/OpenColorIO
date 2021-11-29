@@ -435,6 +435,14 @@ std::string GpuShaderText::declareVarStr(const std::string & name, float v)
     return floatDecl(name) + " = " + getFloatString(v, m_lang);
 }
 
+std::string GpuShaderText::vectorCompareExpression(const std::string& lhs, const std::string& op, const std::string& rhs)
+{
+    std::string ret = lhs + " " + op + " " + rhs;
+    if(m_lang == GPU_LANGUAGE_MSL_2_0)
+        ret = "any( " + ret + " )";
+    return ret;
+}
+
 void GpuShaderText::declareVarConst(const std::string & name, bool v)
 {
     newLine() << constKeyword() << declareVarStr(name, v) << ";";

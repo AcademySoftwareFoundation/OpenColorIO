@@ -44,18 +44,9 @@ public:
     // Update the image if it changes.
     void updateImage(const float * imageBuffer) override;
     
-    void readImage(float * image) override;
-
     // Set the shader code.
     void setShader(GpuShaderDescRcPtr & shaderDesc) override;
-
-    // Read the image from the rendering buffer. It is not meant to be used by interactive
-    // applications used to display the image.
-    // void readImage(float * imageBuffer) override;
-
-    // Helper to print GL info.
-    //void printGLInfo() const noexcept override;
-
+    
     // Return a pointer of either ScreenApp or HeadlessApp depending on the
     // OCIO_HEADLESS_ENABLED preprocessor.
     static MetalAppRcPtr CreateMetalGlApp(const char * winTitle, int winWidth, int winHeight);

@@ -130,13 +130,14 @@ id<MTLTexture> AllocateTexture2D(id<MTLDevice> device,
     
     MTLPixelFormat pixelFormat = channel == GpuShaderDesc::TEXTURE_RED_CHANNEL ? MTLPixelFormatR32Float : MTLPixelFormatRGBA32Float;
     
+    [texDescriptor setTextureType:height > 1 ? MTLTextureType2D : MTLTextureType1D];
     [texDescriptor setWidth:width];
     [texDescriptor setHeight:height];
     [texDescriptor setDepth:1];
     [texDescriptor setStorageMode:MTLStorageModeShared];
     [texDescriptor setPixelFormat:pixelFormat];
     [texDescriptor setMipmapLevelCount:1];
-    id<MTLTexture> tex = [device newTextureWithDescriptor:texDescriptor];
+    id<MTLTexture> tex = [[device newTextureWithDescriptor:texDescriptor] autorelease];
     
     [tex replaceRegion:MTLRegionMake3D(0, 0, 0, width, height, 1) mipmapLevel:0 withBytes:adaptedLutValues.data() bytesPerRow:channelPerPix * width * sizeof(float)];
     
@@ -162,26 +163,17 @@ MetalBuilderRcPtr MetalBuilder::Create(const GpuShaderDescRcPtr & shaderDesc)
 MetalBuilder::MetalBuilder(const GpuShaderDescRcPtr & shaderDesc)
     :   m_shaderDesc(shaderDesc)
     ,   m_startIndex(0)
-    ,   m_fragShader(0)
+    ,   m_uniformData{}
     ,   m_verbose(false)
 {
     m_device = MTLCreateSystemDefaultDevice();
-    m_cmdQueue = [m_device newCommandQueue];
+    m_cmdQueue = [[m_device newCommandQueue] autorelease];
 }
 
 MetalBuilder::~MetalBuilder()
 {
-    deleteAllTextures();
-
-    if(m_fragShader)
-    {
-        m_fragShader = 0;
-    }
-
-    if(m_program)
-    {
-        m_program = 0;
-    }
+    //deleteAllTextures();
+    m_uniformData.clear();
 }
 
 void MetalBuilder::allocateAllTextures(unsigned startIndex)
@@ -277,34 +269,86 @@ void MetalBuilder::deleteAllTextures()
     m_textureIds.clear();
 }
 
-void MetalBuilder::bindTextures()
-{
-    /*
-    const size_t max = m_textureIds.size();
-    for (size_t idx=0; idx<max; ++idx)
-    {
-        const TextureId& data = m_textureIds[idx];
-        glActiveTexture((GLenum)(GL_TEXTURE0 + m_startIndex + idx));
-        glBindTexture(data.m_type, data.m_uid);
-        glUniform1i(
-            glGetUniformLocation(m_program,
-                                 data.m_samplerName.c_str()),
-                                 GLint(m_startIndex + idx) );
-    }
-     */
-}
-
 void MetalBuilder::deleteAllUniforms()
 {
-    m_uniforms.clear();
+    m_uniformData.clear();
 }
 
 void MetalBuilder::fillUniformBuffer()
 {
-    for (auto uniform : m_uniforms)
+    m_uniformData.clear();
+    m_uniformData.reserve(1024);
+    
+    int alignment = 4;
+    
+    const unsigned maxUniforms = m_shaderDesc->getNumUniforms();
+    for (unsigned idx = 0; idx < maxUniforms; ++idx)
     {
-        //uniform.use();
+        GpuShaderDesc::UniformData data;
+        m_shaderDesc->getUniform(idx, data);
+        switch(data.m_type)
+        {
+            case UNIFORM_BOOL:
+            {
+                float v = data.m_getBool() == false ? 0.0f : 1.0f;
+                size_t offset = m_uniformData.size();
+                size_t dataSize = sizeof(float);
+                m_uniformData.resize(offset + dataSize);
+                memcpy(&m_uniformData[offset], &v, dataSize);
+                alignment = std::max(alignment, 4);
+            }
+            break;
+                
+            case UNIFORM_DOUBLE:
+            {
+                float v = data.m_getDouble();
+                size_t offset = m_uniformData.size();
+                size_t dataSize = sizeof(float);
+                m_uniformData.resize(offset + dataSize);
+                memcpy(&m_uniformData[offset], &v, dataSize);
+                alignment = std::max(alignment, 4);
+            }
+            break;
+                
+            case UNIFORM_FLOAT3:
+            {
+                const float* v = data.m_getFloat3().data();
+                size_t offset = m_uniformData.size();
+                size_t dataSize = 3 * sizeof(float);
+                m_uniformData.resize(offset + 4 * sizeof(float));
+                memcpy(&m_uniformData[offset], v, dataSize);
+                alignment = std::max(alignment, 16);
+            }
+            break;
+                
+            case UNIFORM_VECTOR_INT:
+            {
+                const int* v = data.m_vectorInt.m_getVector();
+                size_t offset = m_uniformData.size();
+                size_t dataSize = data.m_vectorInt.m_getSize() * sizeof(int);
+                m_uniformData.resize(offset + dataSize);
+                memcpy(&m_uniformData[offset], v, dataSize);
+                alignment = std::max(alignment, 4);
+            }
+            break;
+                
+            case UNIFORM_VECTOR_FLOAT:
+            {
+                const float* v = data.m_vectorFloat.m_getVector();
+                size_t offset = m_uniformData.size();
+                size_t dataSize = data.m_vectorFloat.m_getSize() * sizeof(float);
+                m_uniformData.resize(offset + dataSize);
+                memcpy(&m_uniformData[offset], v, dataSize);
+                alignment = std::max(alignment, 4);
+            }
+            break;
+                
+            case UNIFORM_UNKNOWN:
+                throw Exception("Unknown uniform type.");
+        };
     }
+    
+    m_uniformData.resize(((m_uniformData.size() + alignment - 1) / alignment) * alignment);
 }
 
 bool MetalBuilder::buildPipelineStateObject(const std::string & clientShaderProgram)
@@ -315,7 +359,7 @@ bool MetalBuilder::buildPipelineStateObject(const std::string & clientShaderProg
     MTLCompileOptions* options = [MTLCompileOptions new];
     [options setLanguageVersion:MTLLanguageVersion2_0];
     [options setFastMathEnabled:YES];
-    m_library = [m_device newLibraryWithSource:shaderSrc options:options error:&error];
+    m_library = [[m_device newLibraryWithSource:shaderSrc options:options error:&error] autorelease];
     
     id<MTLFunction> vertexShader = [[m_library newFunctionWithName:@"ColorCorrectionVS"] autorelease];
     id<MTLFunction> pixelShader  = [[m_library newFunctionWithName:@"ColorCorrectionPS"] autorelease];
@@ -327,7 +371,7 @@ bool MetalBuilder::buildPipelineStateObject(const std::string & clientShaderProg
     [renderPipelineDesc setRasterizationEnabled:YES];
     [renderPipelineDesc setInputPrimitiveTopology:MTLPrimitiveTopologyClassTriangle];
     [[renderPipelineDesc colorAttachments][0] setPixelFormat:MTLPixelFormatRGBA32Float];
-    m_PSO = [m_device newRenderPipelineStateWithDescriptor:renderPipelineDesc error:&error];
+    m_PSO = [[m_device newRenderPipelineStateWithDescriptor:renderPipelineDesc error:&error] autorelease];
     
     if(error == nil)
         return true;
@@ -337,21 +381,25 @@ bool MetalBuilder::buildPipelineStateObject(const std::string & clientShaderProg
 
 void MetalBuilder::triggerProgrammaticCaptureScope()
 {
-    MTLCaptureManager* captureManager = [MTLCaptureManager sharedCaptureManager];
-    MTLCaptureDescriptor* captureDescriptor = [[MTLCaptureDescriptor alloc] init];
-    captureDescriptor.captureObject = m_device;
+    if (@available(macOS 10.15, *)) {
+        MTLCaptureManager* captureManager = [MTLCaptureManager sharedCaptureManager];
+        MTLCaptureDescriptor* captureDescriptor = [[MTLCaptureDescriptor alloc] init];
+        captureDescriptor.captureObject = m_device;
 
-    NSError *error;
-    if (![captureManager startCaptureWithDescriptor:captureDescriptor error:&error])
-    {
-        NSLog(@"Failed to start capture, error %@", error);
+        NSError *error;
+        if (![captureManager startCaptureWithDescriptor:captureDescriptor error:&error])
+        {
+            NSLog(@"Failed to start capture, error %@", error);
+        }
     }
 }
 
 void MetalBuilder::stopProgrammaticCaptureScope()
 {
-    MTLCaptureManager* captureManager = [MTLCaptureManager sharedCaptureManager];
-    [captureManager stopCapture];
+    if (@available(macOS 10.15, *)) {
+        MTLCaptureManager* captureManager = [MTLCaptureManager sharedCaptureManager];
+        [captureManager stopCapture];
+    }
 }
 
 void MetalBuilder::applyColorCorrection(id<MTLTexture> inputTexture, id<MTLTexture> outputTexture, unsigned int outWidth, unsigned int outHeight)
@@ -368,7 +416,7 @@ void MetalBuilder::applyColorCorrection(id<MTLTexture> inputTexture, id<MTLTextu
         [renderPassDesc setRenderTargetWidth:outWidth];
         [renderPassDesc setRenderTargetHeight:outHeight];
     } else {
-        // Fallback on earlier versions
+        throw Exception("Metal Renderer Only Operates on MacOS 10.15 and above.");
     }
     [[renderPassDesc colorAttachments][0] setTexture:outputTexture];
     [[renderPassDesc colorAttachments][0] setLoadAction:MTLLoadActionClear];
@@ -379,6 +427,8 @@ void MetalBuilder::applyColorCorrection(id<MTLTexture> inputTexture, id<MTLTextu
     [renderCmdEncoder setRenderPipelineState:m_PSO];
     
     [renderCmdEncoder setFragmentTexture:inputTexture atIndex:0];
+    if(m_uniformData.size() > 0)
+        [renderCmdEncoder setFragmentBytes:m_uniformData.data() length:m_uniformData.size() atIndex:0];
     const size_t max = m_textureIds.size();
     for (size_t idx=0; idx<max; ++idx)
     {
