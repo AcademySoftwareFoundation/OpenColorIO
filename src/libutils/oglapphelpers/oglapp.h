@@ -85,18 +85,18 @@ public:
         COMPONENTS_RGB = 0,
         COMPONENTS_RGBA
     };
-
+    
     // Initialize the image.
-    void initImage(int imageWidth, int imageHeight,
+    virtual void initImage(int imageWidth, int imageHeight,
                    Components comp, const float * imageBuffer);
     // Update the image if it changes.
-    void updateImage(const float * imageBuffer);
+    virtual void updateImage(const float * imageBuffer);
 
     // Create GL frame and rendering buffers. Needed if readImage will be used.
     void createGLBuffers();
 
     // Set the shader code.
-    void setShader(GpuShaderDescRcPtr & shaderDesc);
+    virtual void setShader(GpuShaderDescRcPtr & shaderDesc);
 
     // Update the size of the buffer of the OpenGL viewport that will be used to process the image
     // (it does not modify the UI).  To be called at least one time. Use image size if we want to
@@ -110,7 +110,7 @@ public:
 
     // Read the image from the rendering buffer. It is not meant to be used by interactive
     // applications used to display the image.
-    void readImage(float * imageBuffer);
+    virtual void readImage(float * imageBuffer);
 
     // Helper to print GL info.
     void virtual printGLInfo() const noexcept;
@@ -130,7 +130,11 @@ protected:
 
     // Initialize the OpenGL engine, and set up GLEW if needed.
     void setupCommon();
+    
+    void setImageDimensions(int imgWidth, int imgHeight, Components comp);
 
+    OpenGLBuilderRcPtr m_oglBuilder;
+    
 private:
     // Keep track of the original image ratio.
     float m_imageAspect{ 1.0f };
@@ -146,8 +150,6 @@ private:
     int m_imageHeight{ 0 };
     Components m_components{ COMPONENTS_RGBA };
     unsigned int m_imageTexID;
-
-    OpenGLBuilderRcPtr m_oglBuilder;
 };
 
 class ScreenApp: public OglApp

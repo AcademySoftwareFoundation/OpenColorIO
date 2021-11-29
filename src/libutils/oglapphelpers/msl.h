@@ -1,40 +1,44 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-#ifndef INCLUDED_OCIO_GLSL_H
-#define INCLUDED_OCIO_GLSL_H
+#ifndef INCLUDED_OCIO_MSL_H
+#define INCLUDED_OCIO_MSL_H
 
 #include <vector>
 
 #include <OpenColorIO/OpenColorIO.h>
-
+#import  <Metal/Metal.h>
 
 namespace OCIO_NAMESPACE
 {
 
-class OpenGLBuilder;
-typedef OCIO_SHARED_PTR<OpenGLBuilder> OpenGLBuilderRcPtr;
+class MetalBuilder;
+typedef OCIO_SHARED_PTR<MetalBuilder> MetalBuilderRcPtr;
 
+std::vector<float> RGB_to_RGBA(const float* lutValues, int valueCount);
 
 // This is a reference implementation showing how to do the texture upload & allocation,
 // and the program compilation for the GLSL shader language.
 
-class OpenGLBuilder
+class MetalBuilder
 {
     struct TextureId
     {
-        unsigned    m_uid = -1;
-        std::string m_textureName;
-        std::string m_samplerName;
-        unsigned    m_type = -1;
+        std::string         m_textureName;
+        id<MTLTexture>      m_texture;
+        std::string         m_samplerName;
+        id<MTLSamplerState> m_samplerState;
+        MTLTextureType      m_type;
 
-        TextureId(unsigned uid,
+        TextureId(id<MTLTexture>      tex,
                   const std::string & textureName,
+                  id<MTLSamplerState> samplerState,
                   const std::string & samplerName,
-                  unsigned type)
-            :   m_uid(uid)
-            ,   m_textureName(textureName)
+                  MTLTextureType type)
+            :   m_textureName(textureName)
+            ,   m_texture(tex)
             ,   m_samplerName(samplerName)
+            ,   m_samplerState(samplerState)
             ,   m_type(type)
         {}
     };
@@ -47,24 +51,18 @@ class OpenGLBuilder
     public:
         Uniform(const std::string & name, const GpuShaderDesc::UniformData & data);
 
-        void setUp(unsigned program);
-
-        void use();
-
     private:
         Uniform() = delete;
         std::string m_name;
         GpuShaderDesc::UniformData m_data;
-
-        unsigned m_handle;
     };
     typedef std::vector<Uniform> Uniforms;
 
 public:
-    // Create an OpenGL builder using the GPU shader information from a specific processor
-    static OpenGLBuilderRcPtr Create(const GpuShaderDescRcPtr & gpuShader);
+    // Create an MSL builder using the GPU shader information from a specific processor
+    static MetalBuilderRcPtr Create(const GpuShaderDescRcPtr & gpuShader);
 
-    ~OpenGLBuilder();
+    ~MetalBuilder();
 
     inline void setVerbose(bool verbose) { m_verbose = verbose; }
     inline bool isVerbose() const { return m_verbose; }
@@ -72,23 +70,27 @@ public:
     // Allocate & upload all the needed textures
     //  (i.e. the index is the first available index for any kind of textures).
     void allocateAllTextures(unsigned startIndex);
-    void useAllTextures();
+    void bindTextures();
 
     // Update all uniforms.
-    void useAllUniforms();
+    void fillUniformBuffer();
 
-    // Build the complete shader program which includes the OCIO shader program 
-    // and the client shader program.
-    unsigned buildProgram(const std::string & clientShaderProgram, bool standaloneShader = false);
-    void useProgram();
-    unsigned getProgramHandle();
+    bool     buildPipelineStateObject(const std::string & clientShaderProgram);
+    void     applyColorCorrection(id<MTLTexture> inputTexturePtr, id<MTLTexture> outputTexturePtr, unsigned int outWidth, unsigned int outHeight);
 
     // Determine the maximum width value of a texture
     // depending of the graphic card and its driver.
     static unsigned GetTextureMaxWidth();
+    
+    id<MTLDevice> getMetalDevice() { return m_device; }
 
-protected:
-    OpenGLBuilder(const GpuShaderDescRcPtr & gpuShader);
+//protected:
+public:
+    MetalBuilder(const GpuShaderDescRcPtr & gpuShader);
+    
+    // Metal Capturing functions -- used for debugging
+    void triggerProgrammaticCaptureScope();
+    void stopProgrammaticCaptureScope();
 
     // Prepare all the needed uniforms.
     void linkAllUniforms();
@@ -96,16 +98,21 @@ protected:
     void deleteAllTextures();
     void deleteAllUniforms();
 
-    // To add the version to the fragment shader program (so that GLSL does not use the default
-    // of 1.10 when the minimum version for OCIO is 1.20).
-    std::string getGLSLVersionString();
+    // Critical for declaring primitive data types like float2, float3, ...
+    std::string getMSLHeader();
 
 private:
-    OpenGLBuilder();
-    OpenGLBuilder(const OpenGLBuilder &) = delete;
-    OpenGLBuilder& operator=(const OpenGLBuilder &) = delete;
+    MetalBuilder();
+    MetalBuilder(const MetalBuilder &) = delete;
+    MetalBuilder& operator=(const MetalBuilder &) = delete;
 
     const GpuShaderDescRcPtr m_shaderDesc; // Description of the fragment shader to create
+    
+    id<MTLDevice>              m_device;
+    id<MTLCommandQueue>        m_cmdQueue;
+    id<MTLLibrary>             m_library;
+    id<MTLRenderPipelineState> m_PSO;
+    
     unsigned m_startIndex;                 // Starting index for texture allocations
     TextureIds m_textureIds;               // Texture ids of all needed textures
     Uniforms m_uniforms;                   // Vector of dynamic parameters
@@ -117,5 +124,4 @@ private:
 
 } // namespace OCIO_NAMESPACE
 
-#endif // INCLUDED_OCIO_GLSL_H
-
+#endif // INCLUDED_OCIO_MSL_H

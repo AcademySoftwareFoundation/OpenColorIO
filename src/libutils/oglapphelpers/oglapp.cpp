@@ -43,7 +43,7 @@ OglApp::~OglApp()
     m_oglBuilder.reset();
 }
 
-void OglApp::initImage(int imgWidth, int imgHeight, Components comp, const float * image)
+void OglApp::setImageDimensions(int imgWidth, int imgHeight, Components comp)
 {
     m_imageWidth = imgWidth;
     m_imageHeight = imgHeight;
@@ -52,7 +52,12 @@ void OglApp::initImage(int imgWidth, int imgHeight, Components comp, const float
     {
         m_imageAspect = (float)m_imageWidth / (float)m_imageHeight;
     }
+}
 
+void OglApp::initImage(int imgWidth, int imgHeight, Components comp, const float * image)
+{
+    setImageDimensions(imgWidth, imgHeight, comp);
+    
     glGenTextures(1, &m_imageTexID);
     glActiveTexture(GL_TEXTURE0);
     updateImage(image);
