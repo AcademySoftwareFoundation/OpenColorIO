@@ -124,9 +124,9 @@ void GradingRGBSCurve(OCIOGPUTest & test, OCIO::TransformDirection dir, bool dyn
     }
 
     OCIO::ConstGradingBSplineCurveRcPtr m = curve;
-    // Adjust to ensure the test vector for the inverse hits the flat areas.
-    auto identity = OCIO::GradingBSplineCurve::Create({ { -5.f, 0.f }, { 5.f, 1.f } });
-    OCIO::ConstGradingBSplineCurveRcPtr z = identity;
+    // Adjust scaling to ensure the test vector for the inverse hits the flat areas.
+    auto scaling = OCIO::GradingBSplineCurve::Create({ { -5.f, 0.f }, { 5.f, 1.f } });
+    OCIO::ConstGradingBSplineCurveRcPtr z = scaling;
     OCIO::ConstGradingRGBCurveRcPtr curves = OCIO::GradingRGBCurve::Create(m, m, m, z);
 
     auto gc = OCIO::GradingRGBCurveTransform::Create(OCIO::GRADING_LOG);
