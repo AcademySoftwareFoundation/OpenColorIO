@@ -176,14 +176,14 @@ OCIO_ADD_TEST(GradingRGBCurveOpCPU, log)
     OCIO_CHECK_NO_THROW(op = OCIO::GetGradingRGBCurveCPURenderer(gcc));
     OCIO_CHECK_ASSERT(op);
 
-    const long num_samples = 2;
+    constexpr long num_samples = 2;
     float res[4 * num_samples]{ 0.f };
 
-    const float input_32f[] = {
+    constexpr float input_32f[] = {
         -0.2f, 0.2f, 0.5f, 0.0f,
          0.8f, 1.0f, 2.0f, 0.5f };
 
-    const float expected_32f[] = {
+    constexpr float expected_32f[] = {
         0.25306581f, 0.35779659f, 0.98416632f, 0.0f,
         1.09451043f, 1.54596428f, 1.78067802f, 0.5f };
 
@@ -219,14 +219,14 @@ OCIO_ADD_TEST(GradingRGBCurveOpCPU, log_partial_identity)
     OCIO_CHECK_NO_THROW(op = OCIO::GetGradingRGBCurveCPURenderer(gcc));
     OCIO_CHECK_ASSERT(op);
 
-    const long num_samples = 2;
+    constexpr long num_samples = 2;
     float res[4 * num_samples]{ 0.f };
 
     float input_32f[] = {
         -0.2f, 0.2f, 0.5f, 0.0f,
          0.8f, 1.0f, 2.0f, 0.5f };
 
-    const float expected_32f[] = {
+    constexpr float expected_32f[] = {
         -0.2f, 0.15779659f, 0.5f, 0.0f,
          0.8f, 1.34596419f, 2.0f, 0.5f };
 
@@ -264,14 +264,14 @@ OCIO_ADD_TEST(GradingRGBCurveOpCPU, monotonic)
     OCIO_CHECK_NO_THROW(op = OCIO::GetGradingRGBCurveCPURenderer(gcc));
     OCIO_CHECK_ASSERT(op);
 
-    const long num_samples = 2;
+    constexpr long num_samples = 2;
     float res[4 * num_samples]{ 0.f };
 
     float input_32f[] = {
         0.8f, 0.2f, 0.5f, 0.0f,
         0.9f, 1.0f, 2.0f, 0.5f };
 
-    const float expected_32f[] = {
+    constexpr float expected_32f[] = {
         0.52230538f, 0.2f, 0.5f, 0.0f,
         0.68079938f, 1.0f, 2.0f, 0.5f };
 
@@ -311,14 +311,14 @@ OCIO_ADD_TEST(GradingRGBCurveOpCPU, lin_bypass)
     OCIO_CHECK_NO_THROW(op = OCIO::GetGradingRGBCurveCPURenderer(gcc));
     OCIO_CHECK_ASSERT(op);
 
-    const long num_samples = 2;
+    constexpr long num_samples = 2;
     float res[4 * num_samples]{ 0.f };
 
     float input_32f[] = {
         -8.f, -3.f, -1.f,  0.0f,
          1.f,  2.5f, 4.0f, 0.5f };
 
-    const float expected_32f[] = {
+    constexpr float expected_32f[] = {
         -8.50508935f, -6.37181915f, -3.01264257f, 0.0f,
          1.95205522f,  4.76796850f,  5.76796850f, 0.5f };
 
@@ -357,14 +357,14 @@ OCIO_ADD_TEST(GradingRGBCurveOpCPU, lin)
     OCIO_CHECK_NO_THROW(op = OCIO::GetGradingRGBCurveCPURenderer(gcc));
     OCIO_CHECK_ASSERT(op);
 
-    const long num_samples = 2;
+    constexpr long num_samples = 2;
     float res[4 * num_samples]{ 0.f };
 
     float input_32f[] = {
         -0.003f, 0.02f, 0.09f, 0.0f,
          0.360f, 1.00f, 3.00f, 0.5f };
 
-    const float expected_32f[] = {
+    constexpr float expected_32f[] = {
         -4.20784139e-03f, 1.26825221e-03f, 2.23983977e-02f, 0.0f,
          6.96706128e-01f, 4.79411018e+00f, 9.95152432e+00f, 0.5f };
 
@@ -410,13 +410,13 @@ OCIO_ADD_TEST(GradingRGBCurveOpCPU, slopes)
     OCIO_CHECK_NO_THROW(op = OCIO::GetGradingRGBCurveCPURenderer(gcc));
     OCIO_CHECK_ASSERT(op);
 
-    const long num_samples = 2;
+    constexpr long num_samples = 2;
     float input_32f[] = {
         -3.f, -1.f, 1.f, 0.5f,
         -7.f,  0.f, 7.f, 1.0f };
 
     // Test that the slopes were used (the values are significantly different without slopes).
-    const float expected_32f[] = {
+    constexpr float expected_32f[] = {
         -2.92582282f, 0.28069129f, 2.81987724f, 0.5f,
         -4.0f,        1.73250193f, 4.0f,        1.0f };
 
@@ -429,7 +429,7 @@ OCIO_ADD_TEST(GradingRGBCurveOpCPU, slopes)
         -2.92582282f, 0.28069129f, 2.81987724f, 0.5f,
         -7.0f,        1.73250193f, 7.0f,        1.0f };
 
-    const float rev_expected_32f[] = {
+    constexpr float rev_expected_32f[] = {
         -3.f,        -1.f, 1.f,         0.5f,
         -5.26017743f, 0.f, 4.67381243f, 1.0f };
 

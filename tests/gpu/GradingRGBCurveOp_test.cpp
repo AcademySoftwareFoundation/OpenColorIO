@@ -105,6 +105,68 @@ OCIO_ADD_GPU_TEST(GradingRGBCurve, style_lin_rev_dynamic)
     GradingRGBCurveLin(test, OCIO::TRANSFORM_DIR_INVERSE, true);
 }
 
+void GradingRGBSCurve(OCIOGPUTest & test, OCIO::TransformDirection dir, bool dynamic)
+{
+    // Create an S-curve with 0 slope at each end.
+    auto curve = OCIO::GradingBSplineCurve::Create({
+            {-5.26017743f, -4.f},
+            {-3.75502745f, -3.57868829f},
+            {-2.24987747f, -1.82131329f},
+            {-0.74472749f,  0.68124124f},
+            { 1.06145248f,  2.87457742f},
+            { 2.86763245f,  3.83406206f},
+            { 4.67381243f,  4.f}
+        });
+    float slopes[] = { 0.f,  0.55982688f,  1.77532247f,  1.55f,  0.8787017f,  0.18374463f,  0.f };
+    for (size_t i = 0; i < 7; ++i)
+    {
+        curve->setSlope( i, slopes[i] );
+    }
+
+    OCIO::ConstGradingBSplineCurveRcPtr m = curve;
+    // Adjust to ensure the test vector for the inverse hits the flat areas.
+    auto identity = OCIO::GradingBSplineCurve::Create({ { -5.f, 0.f }, { 5.f, 1.f } });
+    OCIO::ConstGradingBSplineCurveRcPtr z = identity;
+    OCIO::ConstGradingRGBCurveRcPtr curves = OCIO::GradingRGBCurve::Create(m, m, m, z);
+
+    auto gc = OCIO::GradingRGBCurveTransform::Create(OCIO::GRADING_LOG);
+    gc->setValue(curves);
+    gc->setDirection(dir);
+    if (dynamic)
+    {
+        gc->makeDynamic();
+    }
+
+    test.setProcessor(gc);
+
+    test.setErrorThreshold(1.5e-4f);
+    test.setExpectedMinimalValue(1.0f);
+    test.setRelativeComparison(true);
+    test.setTestWideRange(true);
+    test.setTestInfinity(false);
+    test.setTestNaN(true);
+}
+
+OCIO_ADD_GPU_TEST(GradingRGBCurve, scurve_fwd)
+{
+    GradingRGBSCurve(test, OCIO::TRANSFORM_DIR_FORWARD, false);
+}
+
+OCIO_ADD_GPU_TEST(GradingRGBCurve, scurve_fwd_dynamic)
+{
+    GradingRGBSCurve(test, OCIO::TRANSFORM_DIR_FORWARD, true);
+}
+
+OCIO_ADD_GPU_TEST(GradingRGBCurve, scurve_rev)
+{
+    GradingRGBSCurve(test, OCIO::TRANSFORM_DIR_INVERSE, false);
+}
+
+OCIO_ADD_GPU_TEST(GradingRGBCurve, scurve_rev_dynamic)
+{
+    GradingRGBSCurve(test, OCIO::TRANSFORM_DIR_INVERSE, true);
+}
+
 namespace
 {
 
