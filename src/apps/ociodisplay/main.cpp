@@ -39,8 +39,10 @@ namespace OCIO = OCIO_NAMESPACE;
 
 bool g_verbose   = false;
 bool g_gpulegacy = false;
-bool g_useMetal  = false;
 bool g_gpuinfo   = false;
+#if __APPLE__
+bool g_useMetal  = false;
+#endif
 
 std::string g_filename;
 
@@ -417,7 +419,12 @@ void UpdateOCIOGLState()
 
     // Set the shader context.
     OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
-    shaderDesc->setLanguage(g_useMetal ? OCIO::GPU_LANGUAGE_MSL_2_0 : OCIO::GPU_LANGUAGE_GLSL_1_2);
+    shaderDesc->setLanguage(
+#if __APPLE__
+                            g_useMetal ?
+                            OCIO::GPU_LANGUAGE_MSL_2_0 :
+#endif
+                            OCIO::GPU_LANGUAGE_GLSL_1_2);
     shaderDesc->setFunctionName("OCIODisplay");
     shaderDesc->setResourcePrefix("ocio_");
 
@@ -652,9 +659,11 @@ int main(int argc, char **argv)
 
     try
     {
+#if __APPLE__
         if(g_useMetal)
             g_oglApp = std::make_shared<OCIO::MetalApp>("ociodisplay", 512, 512);
         else
+#endif
             g_oglApp = std::make_shared<OCIO::ScreenApp>("ociodisplay", 512, 512);
     }
     catch (const OCIO::Exception & e)

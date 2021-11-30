@@ -46,7 +46,7 @@ MtlTexture::MtlTexture(id<MTLDevice> device, uint32_t width, uint32_t height, co
     [texDescriptor setWidth:width];
     [texDescriptor setHeight:height];
     [texDescriptor setDepth:1];
-    [texDescriptor setStorageMode:MTLStorageModeShared];
+    [texDescriptor setStorageMode:MTLStorageModeManaged];
     [texDescriptor setPixelFormat:pixelFormat];
     [texDescriptor setMipmapLevelCount:1];
     m_metalTexture = [device newTextureWithDescriptor:texDescriptor];

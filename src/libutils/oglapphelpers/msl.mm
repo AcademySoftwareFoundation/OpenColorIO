@@ -44,7 +44,7 @@ namespace
 
 id<MTLSamplerState> GetSamplerState(id<MTLDevice> device, Interpolation interpolation)
 {
-    static std::unordered_map<Interpolation, id<MTLSamplerState>> samplerStateCache;
+    static std::unordered_map<int, id<MTLSamplerState>> samplerStateCache;
     
     if(samplerStateCache.find(interpolation) != samplerStateCache.end())
         return samplerStateCache[interpolation];
@@ -89,7 +89,7 @@ id<MTLTexture> AllocateTexture3D(id<MTLDevice> device,
     [texDescriptor setWidth:edgelen];
     [texDescriptor setHeight:edgelen];
     [texDescriptor setDepth:edgelen];
-    [texDescriptor setStorageMode:MTLStorageModeShared];
+    [texDescriptor setStorageMode:MTLStorageModeManaged];
     [texDescriptor setPixelFormat:MTLPixelFormatRGBA32Float];
     [texDescriptor setMipmapLevelCount:1];
     id<MTLTexture> tex = [[device newTextureWithDescriptor:texDescriptor] autorelease];
@@ -134,7 +134,7 @@ id<MTLTexture> AllocateTexture2D(id<MTLDevice> device,
     [texDescriptor setWidth:width];
     [texDescriptor setHeight:height];
     [texDescriptor setDepth:1];
-    [texDescriptor setStorageMode:MTLStorageModeShared];
+    [texDescriptor setStorageMode:MTLStorageModeManaged];
     [texDescriptor setPixelFormat:pixelFormat];
     [texDescriptor setMipmapLevelCount:1];
     id<MTLTexture> tex = [[device newTextureWithDescriptor:texDescriptor] autorelease];

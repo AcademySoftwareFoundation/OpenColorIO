@@ -1138,10 +1138,10 @@ OCIO_ADD_TEST(GpuShader, MetalSupport9)
 struct ocioOCIOMain
 {
 ocioOCIOMain(
-  int ocio_grading_rgbcurve_knotsOffsets[8]
-  , float ocio_grading_rgbcurve_knots[60]
-  , int ocio_grading_rgbcurve_coefsOffsets[8]
-  , float ocio_grading_rgbcurve_coefs[180]
+  constant int ocio_grading_rgbcurve_knotsOffsets[8]
+  , constant float ocio_grading_rgbcurve_knots[60]
+  , constant int ocio_grading_rgbcurve_coefsOffsets[8]
+  , constant float ocio_grading_rgbcurve_coefs[180]
   , bool ocio_grading_rgbcurve_localBypass
 )
 {
@@ -1242,10 +1242,10 @@ float4 OCIOMain(float4 inPixel)
 
 };
 float4 OCIOMain(
-  int ocio_grading_rgbcurve_knotsOffsets[8]
-  , float ocio_grading_rgbcurve_knots[60]
-  , int ocio_grading_rgbcurve_coefsOffsets[8]
-  , float ocio_grading_rgbcurve_coefs[180]
+  constant int ocio_grading_rgbcurve_knotsOffsets[8]
+  , constant float ocio_grading_rgbcurve_knots[60]
+  , constant int ocio_grading_rgbcurve_coefsOffsets[8]
+  , constant float ocio_grading_rgbcurve_coefs[180]
   , bool ocio_grading_rgbcurve_localBypass
   , float4 inPixel)
 {
