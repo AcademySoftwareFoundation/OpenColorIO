@@ -175,7 +175,7 @@ void MetalApp::setShader(GpuShaderDescRcPtr & shaderDesc)
                         break;
                         
                     case UNIFORM_UNKNOWN:
-                        assert(false);
+                        throw Exception("Unknown Uniform type.");
                         break;
                 }
                 
@@ -273,7 +273,7 @@ void MetalApp::setShader(GpuShaderDescRcPtr & shaderDesc)
     }
     else
     {
-        assert(false && "Metal renderer can only consume MSL shaders");
+        throw Exception("Metal renderer can only consume MSL shaders");
     }
     
     // Build the fragment shader program.
@@ -313,6 +313,16 @@ void MetalApp::setShader(GpuShaderDescRcPtr & shaderDesc)
         // The image texture.
         glUniform1i(glGetUniformLocation(m_oglBuilder->getProgramHandle(), "img"), 0);
     }
+}
+
+void MetalApp::redisplay()
+{
+    m_metalBuilder->fillUniformBuffer();
+    m_metalBuilder->applyColorCorrection(m_image->getMetalTextureHandle(),
+                                         m_outputImage->getMetalTextureHandle(),
+                                         m_outputImage->getWidth(),
+                                         m_outputImage->getHeight());
+    ScreenApp::redisplay();
 }
 
 MetalAppRcPtr MetalApp::CreateMetalGlApp(const char * winTitle, int winWidth, int winHeight)

@@ -18,7 +18,9 @@ namespace OCIO_NAMESPACE
 
 std::vector<float> RGB_to_RGBA(const float* lutValues, int valueCount)
 {
-    assert(valueCount % 3 == 0);
+    if(valueCount % 3 != 0)
+        throw Exception("Value count should be divisible by 3.");
+    
     valueCount = valueCount * 4 / 3;
     std::vector<float> float4AdaptedLutValues;
     if(lutValues != nullptr)
@@ -358,7 +360,7 @@ bool MetalBuilder::buildPipelineStateObject(const std::string & clientShaderProg
     NSError* error = nil;
     MTLCompileOptions* options = [MTLCompileOptions new];
     [options setLanguageVersion:MTLLanguageVersion2_0];
-    [options setFastMathEnabled:YES];
+    [options setFastMathEnabled:NO];
     m_library = [[m_device newLibraryWithSource:shaderSrc options:options error:&error] autorelease];
     
     id<MTLFunction> vertexShader = [[m_library newFunctionWithName:@"ColorCorrectionVS"] autorelease];

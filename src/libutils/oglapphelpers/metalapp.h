@@ -47,6 +47,9 @@ public:
     // Set the shader code.
     void setShader(GpuShaderDescRcPtr & shaderDesc) override;
     
+    // Process the image.
+    void redisplay() override;
+    
     // Return a pointer of either ScreenApp or HeadlessApp depending on the
     // OCIO_HEADLESS_ENABLED preprocessor.
     static MetalAppRcPtr CreateMetalGlApp(const char * winTitle, int winWidth, int winHeight);

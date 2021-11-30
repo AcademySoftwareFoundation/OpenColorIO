@@ -73,7 +73,8 @@ MtlTexture::MtlTexture(id<MTLDevice> device, NSOpenGLContext* glContext, uint32_
                             (__bridge CFDictionaryRef)cvBufferProperties,
                             &m_CVPixelBuffer);
     
-    assert(cvret == kCVReturnSuccess);
+    if(cvret != kCVReturnSuccess)
+        throw Exception("Cannot create Pixel Buffer");
     
     m_CGLPixelFormat = m_openGLContext.pixelFormat.CGLPixelFormatObj;
     
@@ -96,7 +97,8 @@ void MtlTexture::createGLTexture()
                     nil,
                     &m_CVGLTextureCache);
     
-    assert(cvret == kCVReturnSuccess && "Failed to create OpenGL Texture Cache");
+    if(cvret != kCVReturnSuccess)
+        throw Exception("Failed to create OpenGL Texture Cache");
     
     // Create a CVPixelBuffer-backed OpenGL texture image from the texture cache.
     cvret = CVOpenGLTextureCacheCreateTextureFromImage(
@@ -106,7 +108,8 @@ void MtlTexture::createGLTexture()
                     nil,
                     &m_CVGLTexture);
     
-    assert(cvret == kCVReturnSuccess && "Failed to create OpenGL Texture From Image");
+    if(cvret != kCVReturnSuccess)
+        throw Exception("Failed to create OpenGL Texture From Image");
     
     // Get an OpenGL texture name from the CVPixelBuffer-backed OpenGL texture image.
     m_texID = CVOpenGLTextureGetName(m_CVGLTexture);
@@ -123,7 +126,8 @@ void MtlTexture::createMetalTexture()
                     nil,
                     &m_CVMTLTextureCache);
 
-    assert(cvret == kCVReturnSuccess && "Failed to create Metal texture cache");
+    if(cvret != kCVReturnSuccess)
+        throw Exception("Failed to create Metal texture cache");
     
     // Create a CoreVideo pixel buffer backed Metal texture image from the texture cache
     cvret = CVMetalTextureCacheCreateTextureFromImage(
@@ -135,12 +139,14 @@ void MtlTexture::createMetalTexture()
                     0,
                     &m_CVMTLTexture);
     
-    assert(cvret == kCVReturnSuccess && "Failed to create CoreVideo Metal texture from image");
+    if(cvret != kCVReturnSuccess)
+        throw Exception("Failed to create CoreVideo Metal texture from image");
     
     // Get a Metal texture using the CoreVideo Metal texture reference.
     m_metalTexture = CVMetalTextureGetTexture(m_CVMTLTexture);
     
-    assert(m_metalTexture && "Failed to create Metal texture CoreVideo Metal Texture");
+    if(!m_metalTexture)
+        throw Exception("Failed to create Metal texture CoreVideo Metal Texture");
 }
 
 void MtlTexture::update(const float* image)
@@ -155,7 +161,10 @@ std::vector<float> MtlTexture::readTexture() const
     size_t dataSize = CVPixelBufferGetDataSize(m_CVPixelBuffer);
     float* data = (float*)CVPixelBufferGetBaseAddress(m_CVPixelBuffer);//(m_CVPixelBuffer, 0);
     std::vector<float> img(4 * m_width * m_height);
-    assert((img.size()*sizeof(float)) >= dataSize);
+    if((img.size()*sizeof(float)) < dataSize)
+    {
+        throw Exception("CPU-side vector is not large enough to read the texture back.");
+    }
     memcpy(img.data(), data, dataSize);
     CVPixelBufferUnlockBaseAddress(m_CVPixelBuffer, 0);
     return img;
