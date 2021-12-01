@@ -37,9 +37,11 @@ public:
     bool addUniform(const char * name, const BoolGetter & getBool) override;
     bool addUniform(const char * name, const Float3Getter & getter) override;
     bool addUniform(const char * name,
+                    const size_t & maxSize,
                     const SizeGetter & getSize,
                     const VectorFloatGetter & getVectorFloat) override;
     bool addUniform(const char * name,
+                    const size_t & maxSize,
                     const SizeGetter & getSize,
                     const VectorIntGetter & getVectorInt) override;
 

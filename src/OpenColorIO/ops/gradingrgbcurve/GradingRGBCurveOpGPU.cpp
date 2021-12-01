@@ -82,11 +82,11 @@ struct GCProperties
 void AddUniform(GpuShaderCreatorRcPtr & shaderCreator,
                 const GpuShaderCreator::SizeGetter & getSize,
                 const GpuShaderCreator::VectorFloatGetter & getVector,
-                unsigned int maxSize,
+                const size_t & maxSize,
                 const std::string & name)
 {
     // Add the uniform if it does not already exist.
-    if (shaderCreator->addUniform(name.c_str(), getSize, getVector))
+    if (shaderCreator->addUniform(name.c_str(), maxSize, getSize, getVector))
     {
         // Declare uniform.
         GpuShaderText stDecl(shaderCreator->getLanguage());
@@ -98,10 +98,11 @@ void AddUniform(GpuShaderCreatorRcPtr & shaderCreator,
 void AddUniform(GpuShaderCreatorRcPtr & shaderCreator,
                 const GpuShaderCreator::SizeGetter & getSize,
                 const GpuShaderCreator::VectorIntGetter & getVector,
+                const size_t & maxSize,
                 const std::string & name)
 {
     // Add the uniform if it does not already exist.
-    if (shaderCreator->addUniform(name.c_str(), getSize, getVector))
+    if (shaderCreator->addUniform(name.c_str(), maxSize, getSize, getVector))
     {
         // Declare uniform.
         GpuShaderText stDecl(shaderCreator->getLanguage());
@@ -193,12 +194,12 @@ void AddGCPropertiesUniforms(GpuShaderCreatorRcPtr & shaderCreator,
     auto getLB = std::bind(&DynamicPropertyGradingRGBCurveImpl::getLocalBypass, curveProp);
     // Uniforms are added if they are not already there (added by another op).
     AddUniform(shaderCreator, DynamicPropertyGradingRGBCurveImpl::GetNumOffsetValues,
-               getKO, propNames.m_knotsOffsets);
+               getKO, DynamicPropertyGradingRGBCurveImpl::GetNumOffsetValues(), propNames.m_knotsOffsets);
     AddUniform(shaderCreator, getNK, getK,
                DynamicPropertyGradingRGBCurveImpl::GetMaxKnots(),
                propNames.m_knots);
     AddUniform(shaderCreator, DynamicPropertyGradingRGBCurveImpl::GetNumOffsetValues,
-               getCO, propNames.m_coefsOffsets);
+               getCO, DynamicPropertyGradingRGBCurveImpl::GetNumOffsetValues(), propNames.m_coefsOffsets);
     AddUniform(shaderCreator, getNC, getC,
                DynamicPropertyGradingRGBCurveImpl::GetMaxCoefs(),
                propNames.m_coefs);

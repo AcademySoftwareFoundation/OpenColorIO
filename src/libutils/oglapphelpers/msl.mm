@@ -328,7 +328,8 @@ void MetalBuilder::fillUniformBuffer()
                 const int* v = data.m_vectorInt.m_getVector();
                 size_t offset = m_uniformData.size();
                 size_t dataSize = data.m_vectorInt.m_getSize() * sizeof(int);
-                m_uniformData.resize(offset + dataSize);
+                size_t maxSize = data.m_vectorInt.m_maxSize * sizeof(int);
+                m_uniformData.resize(offset + maxSize);
                 memcpy(&m_uniformData[offset], v, dataSize);
                 alignment = std::max(alignment, 4);
             }
@@ -339,7 +340,8 @@ void MetalBuilder::fillUniformBuffer()
                 const float* v = data.m_vectorFloat.m_getVector();
                 size_t offset = m_uniformData.size();
                 size_t dataSize = data.m_vectorFloat.m_getSize() * sizeof(float);
-                m_uniformData.resize(offset + dataSize);
+                size_t maxSize = data.m_vectorFloat.m_maxSize * sizeof(float);
+                m_uniformData.resize(offset + maxSize);
                 memcpy(&m_uniformData[offset], v, dataSize);
                 alignment = std::max(alignment, 4);
             }

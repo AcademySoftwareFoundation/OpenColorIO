@@ -2825,10 +2825,12 @@ public:
                             const Float3Getter & getFloat3) = 0;
 
     virtual bool addUniform(const char * name,
+                            const size_t & maxSize,
                             const SizeGetter & getSize,
                             const VectorFloatGetter & getVectorFloat) = 0;
 
     virtual bool addUniform(const char * name,
+                            const size_t & maxSize,
                             const SizeGetter & getSize,
                             const VectorIntGetter & getVectorInt) = 0;
 
@@ -3096,11 +3098,13 @@ public:
         struct VectorFloat
         {
             SizeGetter m_getSize{};
+            size_t     m_maxSize{};
             VectorFloatGetter m_getVector{};
         } m_vectorFloat{};
         struct VectorInt
         {
             SizeGetter m_getSize{};
+            size_t     m_maxSize{};
             VectorIntGetter m_getVector{};
         } m_vectorInt{};
     };
