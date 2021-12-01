@@ -276,6 +276,15 @@ void MetalApp::setShader(GpuShaderDescRcPtr & shaderDesc)
         throw Exception("Metal renderer can only consume MSL shaders");
     }
     
+    if(printShader())
+    {
+        std::cout << std::endl;
+        std::cout << "GPU Shader Program:" << std::endl;
+        std::cout << std::endl;
+        std::cout << main.str() << std::endl;
+        std::cout << std::endl;
+    }
+    
     // Build the fragment shader program.
     if(m_metalBuilder->buildPipelineStateObject(main.str().c_str()))
     {
@@ -317,11 +326,14 @@ void MetalApp::setShader(GpuShaderDescRcPtr & shaderDesc)
 
 void MetalApp::redisplay()
 {
-    m_metalBuilder->fillUniformBuffer();
-    m_metalBuilder->applyColorCorrection(m_image->getMetalTextureHandle(),
-                                         m_outputImage->getMetalTextureHandle(),
-                                         m_outputImage->getWidth(),
-                                         m_outputImage->getHeight());
+    if(m_metalBuilder)
+    {
+        m_metalBuilder->fillUniformBuffer();
+        m_metalBuilder->applyColorCorrection(m_image->getMetalTextureHandle(),
+                                            m_outputImage->getMetalTextureHandle(),
+                                            m_outputImage->getWidth(),
+                                            m_outputImage->getHeight());
+    }
     ScreenApp::redisplay();
 }
 

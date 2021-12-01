@@ -134,6 +134,8 @@ protected:
     void setImageDimensions(int imgWidth, int imgHeight, Components comp);
     Components getImageComponents() const { return m_components; }
 
+    bool printShader() const { return m_printShader; }
+    
     OpenGLBuilderRcPtr m_oglBuilder;
     
 private:
