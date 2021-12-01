@@ -117,6 +117,16 @@ else()
 endif()
 
 ###############################################################################
+### Check the C++ version ###
+
+# TODO: Which version starts to impose C++14?
+
+if(${CMAKE_CXX_STANDARD} LESS_EQUAL 11)
+    set(OSL_FOUND OFF)
+    message(WARNING "Need C++14 or higher to compile OpenShadingLanguage. Skipping build of the OSL unit tests")
+endif()
+
+###############################################################################
 ### Configure target ###
 
 if(OSL_FOUND)
