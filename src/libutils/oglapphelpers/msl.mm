@@ -174,8 +174,6 @@ MetalBuilder::MetalBuilder(const GpuShaderDescRcPtr & shaderDesc)
 
 MetalBuilder::~MetalBuilder()
 {
-    //deleteAllTextures();
-    m_uniformData.clear();
 }
 
 void MetalBuilder::allocateAllTextures(unsigned startIndex)
@@ -271,19 +269,13 @@ void MetalBuilder::deleteAllTextures()
     m_textureIds.clear();
 }
 
-void MetalBuilder::deleteAllUniforms()
-{
-    m_uniformData.clear();
-}
-
-void MetalBuilder::fillUniformBuffer()
+void MetalBuilder::fillUniformBufferData()
 {
     m_uniformData.clear();
     m_uniformData.reserve(1024);
+    const unsigned maxUniforms = m_shaderDesc->getNumUniforms();
     
     int alignment = 4;
-    
-    const unsigned maxUniforms = m_shaderDesc->getNumUniforms();
     for (unsigned idx = 0; idx < maxUniforms; ++idx)
     {
         GpuShaderDesc::UniformData data;
@@ -300,8 +292,8 @@ void MetalBuilder::fillUniformBuffer()
                 alignment = std::max(alignment, 4);
             }
             break;
-                
-            case UNIFORM_DOUBLE:
+
+        case UNIFORM_DOUBLE:
             {
                 float v = data.m_getDouble();
                 size_t offset = m_uniformData.size();
@@ -311,8 +303,8 @@ void MetalBuilder::fillUniformBuffer()
                 alignment = std::max(alignment, 4);
             }
             break;
-                
-            case UNIFORM_FLOAT3:
+
+        case UNIFORM_FLOAT3:
             {
                 const float* v = data.m_getFloat3().data();
                 size_t offset = m_uniformData.size();
@@ -321,6 +313,7 @@ void MetalBuilder::fillUniformBuffer()
                 memcpy(&m_uniformData[offset], v, dataSize);
                 alignment = std::max(alignment, 16);
             }
+                // Part of uniform data buffer
             break;
                 
             case UNIFORM_VECTOR_INT:
@@ -351,6 +344,47 @@ void MetalBuilder::fillUniformBuffer()
     }
     
     m_uniformData.resize(((m_uniformData.size() + alignment - 1) / alignment) * alignment);
+}
+
+void MetalBuilder::setUniforms(id<MTLRenderCommandEncoder> renderCmdEncoder)
+{
+    fillUniformBufferData();
+    if(m_uniformData.size() > 0)
+        [renderCmdEncoder setFragmentBytes:m_uniformData.data() length:m_uniformData.size() atIndex:0];
+    
+    const unsigned maxUniforms = m_shaderDesc->getNumUniforms();
+    
+    int uniformId = 1;
+    for (unsigned idx = 0; idx < maxUniforms; ++idx)
+    {
+        GpuShaderDesc::UniformData data;
+        m_shaderDesc->getUniform(idx, data);
+        switch(data.m_type)
+        {
+            case UNIFORM_BOOL:
+            case UNIFORM_DOUBLE:
+            case UNIFORM_FLOAT3:
+                // Part of uniform data buffer
+            break;
+                
+            case UNIFORM_VECTOR_INT:
+            {
+                const int* v = data.m_vectorInt.m_getVector();
+                [renderCmdEncoder setFragmentBytes:v length:data.m_vectorInt.m_getSize() * sizeof(int) atIndex:uniformId++];
+            }
+            break;
+                
+            case UNIFORM_VECTOR_FLOAT:
+            {
+                const float* v = data.m_vectorFloat.m_getVector();
+                [renderCmdEncoder setFragmentBytes:v length:data.m_vectorFloat.m_getSize() * sizeof(float) atIndex:uniformId++];
+            }
+            break;
+                
+            case UNIFORM_UNKNOWN:
+                throw Exception("Unknown uniform type.");
+        };
+    }
 }
 
 bool MetalBuilder::buildPipelineStateObject(const std::string & clientShaderProgram)
@@ -429,8 +463,9 @@ void MetalBuilder::applyColorCorrection(id<MTLTexture> inputTexture, id<MTLTextu
     [renderCmdEncoder setRenderPipelineState:m_PSO];
     
     [renderCmdEncoder setFragmentTexture:inputTexture atIndex:0];
-    if(m_uniformData.size() > 0)
-        [renderCmdEncoder setFragmentBytes:m_uniformData.data() length:m_uniformData.size() atIndex:0];
+    
+    setUniforms(renderCmdEncoder);
+    
     const size_t max = m_textureIds.size();
     for (size_t idx=0; idx<max; ++idx)
     {

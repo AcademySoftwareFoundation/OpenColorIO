@@ -105,7 +105,6 @@ void MetalApp::setShader(GpuShaderDescRcPtr & shaderDesc)
     
     if(shaderDesc->getLanguage() == GPU_LANGUAGE_MSL_2_0)
     {
-        static const char* uniformDataInstanceName = "uniformData";
         std::ostringstream uniformParams;
         std::ostringstream params;
         
@@ -142,58 +141,95 @@ void MetalApp::setShader(GpuShaderDescRcPtr & shaderDesc)
              << "}\n\n\n";
         
         main << shaderDesc->getShaderText();
+    
+        const std::string uniformDataStructName = "UniformData";
+        const std::string uniformDataInstanceName = "uniformData";
         
-        unsigned int uniformCount = shaderDesc->getNumUniforms();
-        if(uniformCount > 0)
+        auto uniformLenVariableName = [](std::string varName) -> std::string
         {
-            std::string separator = "";
-            
-            main << "struct UniformData\n"
-                 << "{\n";
-            for(unsigned int i = 0; i < shaderDesc->getNumUniforms(); ++i)
+            return varName + "_count";
+        };
+        
+        auto uniformDataAccess = [&uniformDataInstanceName](std::string memberName) -> std::string
+        {
+            return uniformDataInstanceName + "." + memberName;
+        };
+    
+        std::ostringstream uniformData;
+        std::ostringstream uniformBufferBindings;
+        
+        const std::string tab = "    ";
+        std::string separator = "";
+        unsigned int uniformCount = shaderDesc->getNumUniforms();
+        unsigned int uniformIdx = 1;
+        for(unsigned int i = 0; i < uniformCount; ++i)
+        {
+            GpuShaderDesc::UniformData data;
+            const char* uniformName = shaderDesc->getUniform(i, data);
+            std::string spaceSpecifier = ",    constant ";
+            switch(data.m_type)
             {
-                GpuShaderDesc::UniformData data;
-                const char* uniformName = shaderDesc->getUniform(i, data);
-                main << "    ";
-                switch(data.m_type)
-                {
-                    case UNIFORM_DOUBLE:
-                    case UNIFORM_BOOL:
-                        main << "float "  << uniformName << ";\n";
-                        break;
-                        
-                    case UNIFORM_FLOAT3:
-                        main << "float3 "  << uniformName << ";\n";
-                        break;
-                        
-                    case UNIFORM_VECTOR_FLOAT:
-                        main << "float "  << uniformName << "[" << data.m_vectorFloat.m_getSize() << "];\n";
-                        break;
-                        
-                    case UNIFORM_VECTOR_INT:
-                        main << "int "  << uniformName << "[" << data.m_vectorInt.m_getSize() << "];\n";
-                        break;
-                        
-                    case UNIFORM_UNKNOWN:
-                        throw Exception("Unknown Uniform type.");
-                        break;
-                }
-                
-                uniformParams << separator << uniformDataInstanceName << "." << uniformName;
-                separator = ", ";
+                case UNIFORM_DOUBLE:
+                    uniformData << tab << "float "  << uniformName << ";\n";
+                    uniformParams << separator << uniformDataAccess(uniformName);
+                    break;
+                    
+                case UNIFORM_BOOL:
+                    uniformData << tab << "int "  << uniformName << ";\n";
+                    uniformParams << separator << uniformDataAccess(uniformName);
+                    break;
+                    
+                case UNIFORM_FLOAT3:
+                    uniformData << tab << "float3 "  << uniformName << ";\n";
+                    uniformParams << separator << uniformDataAccess(uniformName);
+                    break;
+                    
+                case UNIFORM_VECTOR_FLOAT:
+                    uniformBufferBindings << spaceSpecifier << "float* "  << uniformName << "[[ buffer(" << std::to_string(uniformIdx++)  << ") ]]\n";
+                    uniformData << tab << "int "  << uniformLenVariableName(uniformName) << ";\n";
+                    uniformParams << separator << uniformName << ", " << uniformDataAccess(uniformLenVariableName(uniformName));
+                    break;
+                    
+                case UNIFORM_VECTOR_INT:
+                    uniformBufferBindings << spaceSpecifier << "int* "  << uniformName << "[[ buffer(" << std::to_string(uniformIdx++)  << ") ]]\n";
+                    uniformData << tab << "int "  << uniformLenVariableName(uniformName) << ";\n";
+                    uniformParams << separator << uniformName << ", " << uniformDataAccess(uniformLenVariableName(uniformName));
+                    break;
+                    
+                case UNIFORM_UNKNOWN:
+                    throw Exception("Unknown Uniform type.");
+                    break;
             }
-            main << "};\n";
+            
+            separator = ", ";
+        }
+        
+        bool needsUniformData = false;
+        if(uniformData.str().size() > 0)
+        {
+            main << "\nstruct " << uniformDataStructName << "\n"
+                 << "{\n"
+                 << uniformData.str()
+                << "};\n";
+            
+            needsUniformData = true;
         }
         
         main << "\n\n\n"
              <<"fragment float4 ColorCorrectionPS(VertexOut in [[stage_in]], texture2d<float> colorIn [[ texture(0) ]]\n";
         
-        if(uniformCount > 0)
+        if(needsUniformData)
         {
-            main << ",    constant UniformData& " << uniformDataInstanceName << " [[ buffer(0) ]]";
+            main << ",    constant " << uniformDataStructName << "& " << uniformDataInstanceName
+                 << " [[ buffer(0) ]]\n";
         }
         
-        std::string separator = "";
+        if(uniformBufferBindings.str().size() > 0)
+        {
+            main << uniformBufferBindings.str();
+        }
+        
+        separator = "";
         
         int tex_slot = 1;
         for(unsigned int i = 0; i < shaderDesc->getNum3DTextures(); ++i)
@@ -258,7 +294,7 @@ void MetalApp::setShader(GpuShaderDescRcPtr & shaderDesc)
             separator = ", ";
         }
         
-        if(uniformCount > 0)
+        if(uniformParams.str().size() > 0 || params.str().size() > 0)
             separator = ", ";
         
         main << ")"
@@ -288,7 +324,6 @@ void MetalApp::setShader(GpuShaderDescRcPtr & shaderDesc)
     // Build the fragment shader program.
     if(m_metalBuilder->buildPipelineStateObject(main.str().c_str()))
     {
-        m_metalBuilder->fillUniformBuffer();
         m_metalBuilder->applyColorCorrection(m_image->getMetalTextureHandle(),
                                              m_outputImage->getMetalTextureHandle(),
                                              m_outputImage->getWidth(),
@@ -328,7 +363,6 @@ void MetalApp::redisplay()
 {
     if(m_metalBuilder)
     {
-        m_metalBuilder->fillUniformBuffer();
         m_metalBuilder->applyColorCorrection(m_image->getMetalTextureHandle(),
                                             m_outputImage->getMetalTextureHandle(),
                                             m_outputImage->getWidth(),

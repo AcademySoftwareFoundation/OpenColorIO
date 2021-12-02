@@ -8,6 +8,11 @@
 namespace OCIO_NAMESPACE
 {
 
+std::string GetArrayLengthVariableName(std::string variableName)
+{
+    return variableName + "_count";
+}
+
 std::string MetalShaderClassWrapper::generateClassWrapperHeader(GpuShaderText& kw) const
 {
     if(m_className.empty())
@@ -28,6 +33,8 @@ std::string MetalShaderClassWrapper::generateClassWrapperHeader(GpuShaderText& k
     for(const auto& param : m_functionParameters)
     {
         kw.newLine() << separator << (param.isArray ? "constant " : "") << param.type << " " << param.name;
+        if(param.isArray)
+            kw.newLine() << ", int " << GetArrayLengthVariableName(param.name.substr(0, param.name.find('[')));
         separator = ", ";
     }
     kw.dedent();
@@ -46,10 +53,19 @@ std::string MetalShaderClassWrapper::generateClassWrapperHeader(GpuShaderText& k
             std::string variableName = param.name.substr(0, openAngledBracketPos);
             
             kw.newLine()    << "for(int i = 0; i < "
-                            << param.name.substr(openAngledBracketPos+1, closeAngledBracketPos-openAngledBracketPos-1)
+                            << GetArrayLengthVariableName(variableName)
                             << "; ++i)";
             kw.indent();
             kw.newLine()    << "this->" << variableName << "[i] = " << variableName << "[i];";
+            kw.dedent();
+            
+            kw.newLine()    << "for(int i = "
+                            << GetArrayLengthVariableName(variableName)
+                            << "; i < "
+                            << param.name.substr(openAngledBracketPos+1, closeAngledBracketPos-openAngledBracketPos-1)
+                            << "; ++i)";
+            kw.indent();
+            kw.newLine()    << "this->" << variableName << "[i] = 0;";
             kw.dedent();
         }
     }
@@ -79,6 +95,8 @@ std::string MetalShaderClassWrapper::generateClassWrapperFooter(GpuShaderText& k
     for(const auto& param : m_functionParameters)
     {
         kw.newLine() << separator << (param.isArray ? "constant " : "") << param.type << " " << param.name;
+        if(param.isArray)
+            kw.newLine() << ", int " << GetArrayLengthVariableName(param.name.substr(0, param.name.find('[')));
         separator = ", ";
     }
     kw.newLine() << separator << kw.float4Keyword() << " inPixel)";
@@ -97,7 +115,10 @@ std::string MetalShaderClassWrapper::generateClassWrapperFooter(GpuShaderText& k
         if(!isArray)
             kw.newLine() << separator << param.name;
         else
+        {
             kw.newLine() << separator << param.name.substr(0, openAngledBracketPos);
+            kw.newLine() << ", " << GetArrayLengthVariableName(param.name.substr(0, openAngledBracketPos));
+        }
         separator = ", ";
     }
     kw.dedent();

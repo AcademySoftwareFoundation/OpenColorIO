@@ -72,7 +72,7 @@ public:
     void allocateAllTextures(unsigned startIndex);
 
     // Update all uniforms.
-    void fillUniformBuffer();
+    void setUniforms(id<MTLRenderCommandEncoder> renderCmdEncoder);
 
     bool     buildPipelineStateObject(const std::string & clientShaderProgram);
     void     applyColorCorrection(id<MTLTexture> inputTexturePtr, id<MTLTexture> outputTexturePtr, unsigned int outWidth, unsigned int outHeight);
@@ -83,19 +83,14 @@ public:
     
     id<MTLDevice> getMetalDevice() { return m_device; }
 
-//protected:
-public:
+protected:
     MetalBuilder(const GpuShaderDescRcPtr & gpuShader);
     
     // Metal Capturing functions -- used for debugging
     void triggerProgrammaticCaptureScope();
     void stopProgrammaticCaptureScope();
 
-    // Prepare all the needed uniforms.
-    void linkAllUniforms();
-
     void deleteAllTextures();
-    void deleteAllUniforms();
 
     // Critical for declaring primitive data types like float2, float3, ...
     std::string getMSLHeader();
@@ -104,6 +99,8 @@ private:
     MetalBuilder();
     MetalBuilder(const MetalBuilder &) = delete;
     MetalBuilder& operator=(const MetalBuilder &) = delete;
+    
+    void fillUniformBufferData();
 
     const GpuShaderDescRcPtr m_shaderDesc; // Description of the fragment shader to create
     
