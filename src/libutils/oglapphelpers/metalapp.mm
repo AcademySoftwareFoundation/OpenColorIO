@@ -167,11 +167,11 @@ void MetalApp::setShader(GpuShaderDescRcPtr & shaderDesc)
                         break;
                         
                     case UNIFORM_VECTOR_FLOAT:
-                        main << "float "  << uniformName << "[" << data.m_vectorFloat.m_maxSize << "];\n";
+                        main << "float "  << uniformName << "[" << data.m_vectorFloat.m_getSize() << "];\n";
                         break;
                         
                     case UNIFORM_VECTOR_INT:
-                        main << "int "  << uniformName << "[" << data.m_vectorInt.m_maxSize << "];\n";
+                        main << "int "  << uniformName << "[" << data.m_vectorInt.m_getSize() << "];\n";
                         break;
                         
                     case UNIFORM_UNKNOWN:

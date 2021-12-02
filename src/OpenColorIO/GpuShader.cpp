@@ -122,23 +122,21 @@ public:
             m_data.m_getFloat3 = getFloat3;
         }
 
-        Uniform(const char * name, size_t maxSize, const GpuShaderCreator::SizeGetter & getSize,
+        Uniform(const char * name, const GpuShaderCreator::SizeGetter & getSize,
                 const GpuShaderCreator::VectorFloatGetter & getVectorFloat)
             : Uniform(name)
         {
             m_data.m_type = UNIFORM_VECTOR_FLOAT;
             m_data.m_vectorFloat.m_getSize = getSize;
-            m_data.m_vectorFloat.m_maxSize = maxSize;
             m_data.m_vectorFloat.m_getVector = getVectorFloat;
         }
 
-        Uniform(const char * name, size_t maxSize, const GpuShaderCreator::SizeGetter & getSize,
+        Uniform(const char * name, const GpuShaderCreator::SizeGetter & getSize,
                 const GpuShaderCreator::VectorIntGetter & getVectorInt)
             : Uniform(name)
         {
             m_data.m_type = UNIFORM_VECTOR_INT;
             m_data.m_vectorInt.m_getSize = getSize;
-            m_data.m_vectorInt.m_maxSize = maxSize;
             m_data.m_vectorInt.m_getVector = getVectorInt;
         }
 
@@ -335,7 +333,6 @@ public:
     }
 
     bool addUniform(const char * name,
-                    const size_t maxSize,
                     const GpuShaderCreator::SizeGetter & getSize,
                     const GpuShaderCreator::VectorFloatGetter & getVector)
     {
@@ -344,12 +341,11 @@ public:
             // Uniform is already there.
             return false;
         }
-        m_uniforms.emplace_back(name, maxSize, getSize, getVector);
+        m_uniforms.emplace_back(name, getSize, getVector);
         return true;
     }
 
     bool addUniform(const char * name,
-                    const size_t maxSize,
                     const GpuShaderCreator::SizeGetter & getSize,
                     const GpuShaderCreator::VectorIntGetter & getVectorInt)
     {
@@ -358,7 +354,7 @@ public:
             // Uniform is already there.
             return false;
         }
-        m_uniforms.emplace_back(name, maxSize, getSize, getVectorInt);
+        m_uniforms.emplace_back(name, getSize, getVectorInt);
         return true;
     }
     Textures m_textures;
@@ -432,19 +428,17 @@ bool GenericGpuShaderDesc::addUniform(const char * name, const Float3Getter & ge
 }
 
 bool GenericGpuShaderDesc::addUniform(const char * name,
-                                      const size_t & maxSize,
                                       const SizeGetter & getSize,
                                       const VectorFloatGetter & getFloatArray)
 {
-    return getImplGeneric()->addUniform(name, maxSize, getSize, getFloatArray);
+    return getImplGeneric()->addUniform(name, getSize, getFloatArray);
 }
 
 bool GenericGpuShaderDesc::addUniform(const char * name,
-                                      const size_t & maxSize,
                                       const SizeGetter & getSize,
                                       const VectorIntGetter & getVectorInt)
 {
-    return getImplGeneric()->addUniform(name, maxSize, getSize, getVectorInt);
+    return getImplGeneric()->addUniform(name, getSize, getVectorInt);
 }
 
 
