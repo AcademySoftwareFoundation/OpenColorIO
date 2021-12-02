@@ -318,22 +318,22 @@ void MetalBuilder::fillUniformBufferData()
                 
             case UNIFORM_VECTOR_INT:
             {
-                const int* v = data.m_vectorInt.m_getVector();
+                const int v = data.m_vectorInt.m_getSize();
                 size_t offset = m_uniformData.size();
-                size_t dataSize = data.m_vectorInt.m_getSize() * sizeof(int);
+                size_t dataSize = sizeof(int);
                 m_uniformData.resize(offset + dataSize);
-                memcpy(&m_uniformData[offset], v, dataSize);
+                memcpy(&m_uniformData[offset], &v, dataSize);
                 alignment = std::max(alignment, 4);
             }
             break;
                 
             case UNIFORM_VECTOR_FLOAT:
             {
-                const float* v = data.m_vectorFloat.m_getVector();
+                const int v = data.m_vectorFloat.m_getSize();
                 size_t offset = m_uniformData.size();
-                size_t dataSize = data.m_vectorFloat.m_getSize() * sizeof(float);
+                size_t dataSize = sizeof(int);
                 m_uniformData.resize(offset + dataSize);
-                memcpy(&m_uniformData[offset], v, dataSize);
+                memcpy(&m_uniformData[offset], &v, dataSize);
                 alignment = std::max(alignment, 4);
             }
             break;
@@ -369,15 +369,21 @@ void MetalBuilder::setUniforms(id<MTLRenderCommandEncoder> renderCmdEncoder)
                 
             case UNIFORM_VECTOR_INT:
             {
-                const int* v = data.m_vectorInt.m_getVector();
-                [renderCmdEncoder setFragmentBytes:v length:data.m_vectorInt.m_getSize() * sizeof(int) atIndex:uniformId++];
+                int size = data.m_vectorInt.m_getSize();
+                const int dummyInt = 123456789;
+                const int* v = size == 0 ? &dummyInt : data.m_vectorInt.m_getVector();
+                size = size == 0 ? sizeof(int) : size * sizeof(int);
+                [renderCmdEncoder setFragmentBytes:v length:size * sizeof(int) atIndex:uniformId++];
             }
             break;
                 
             case UNIFORM_VECTOR_FLOAT:
             {
-                const float* v = data.m_vectorFloat.m_getVector();
-                [renderCmdEncoder setFragmentBytes:v length:data.m_vectorFloat.m_getSize() * sizeof(float) atIndex:uniformId++];
+                int size = data.m_vectorFloat.m_getSize();
+                const float dummyFloat = 123456789.0f;
+                const float* v = size == 0 ? &dummyFloat : data.m_vectorFloat.m_getVector();
+                size = size == 0 ? sizeof(float) : size * sizeof(float);
+                [renderCmdEncoder setFragmentBytes:v length:size atIndex:uniformId++];
             }
             break;
                 
