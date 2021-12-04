@@ -3087,8 +3087,6 @@ public:
      */
     struct UniformData
     {
-        UniformData() = default;
-        UniformData(const UniformData & data) = default;
         UniformDataType m_type{ UNIFORM_UNKNOWN };
         DoubleGetter m_getDouble{};
         BoolGetter m_getBool{};
