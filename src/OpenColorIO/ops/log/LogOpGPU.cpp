@@ -245,7 +245,7 @@ void AddCameraLinToLogShader(GpuShaderCreatorRcPtr & shaderCreator,
                              ConstLogOpDataRcPtr & logData)
 {
     // if in <= linBreak
-    //  out = linearSlope × in + linearOffset 
+    //  out = linearSlope * in + linearOffset
     // else
     //  out = ( logSlope * log( base, max( minValue, (in*linSlope + linOffset) ) ) + logOffset )
 
