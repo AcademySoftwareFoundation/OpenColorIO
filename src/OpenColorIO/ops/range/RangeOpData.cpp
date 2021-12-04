@@ -512,10 +512,10 @@ MatrixOpDataRcPtr RangeOpData::convertToMatrix() const
     return mtx;
 }
 
-bool RangeOpData::operator==(const OpData & other) const
+bool RangeOpData::equals(const OpData & other) const
 {
     // NB: FormatMetadata and fileIn/OutDepths are ignored.
-    if (!OpData::operator==(other)) return false;
+    if (!OpData::equals(other)) return false;
 
     const RangeOpData* rop = static_cast<const RangeOpData*>(&other);
 
@@ -620,5 +620,9 @@ void RangeOpData::normalize()
     }
 }
 
-} // namespace OCIO_NAMESPACE
+bool operator==(const RangeOpData & lhs, const RangeOpData & rhs)
+{
+    return lhs.equals(rhs);
+}
 
+} // namespace OCIO_NAMESPACE

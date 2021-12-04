@@ -76,7 +76,7 @@ public:
         return m_value;
     }
 
-    bool operator==(const OpData & other) const override;
+    bool equals(const OpData & other) const override;
 
 private:
     GradingStyle                            m_style;
@@ -85,7 +85,7 @@ private:
     TransformDirection                      m_direction{ TRANSFORM_DIR_FORWARD };
 };
 
-
+bool operator==(const GradingRGBCurveOpData & lhs, const GradingRGBCurveOpData & rhs);
 
 } // namespace OCIO_NAMESPACE
 

@@ -81,7 +81,7 @@ public:
 
     Lut3DOpDataRcPtr inverse() const;
 
-    bool operator==(const OpData& other) const override;
+    bool equals(const OpData& other) const override;
 
     std::string getCacheID() const override;
 
@@ -136,6 +136,8 @@ private:
     BitDepth m_fileOutBitDepth = BIT_DEPTH_UNKNOWN;
 
 };
+
+bool operator==(const Lut3DOpData & lhs, const Lut3DOpData & rhs);
 
 // Make a forward Lut3DOpData that approximates the exact inverse Lut3DOpData
 // to be used for the fast rendering style.

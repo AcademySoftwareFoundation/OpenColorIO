@@ -42,7 +42,7 @@ public:
 
     bool hasChannelCrosstalk() const override;
 
-    bool operator==(const OpData& other) const override;
+    bool equals(const OpData& other) const override;
 
     std::string getCacheID() const override;
 
@@ -92,8 +92,8 @@ private:
     TransformDirection m_direction = TRANSFORM_DIR_FORWARD;
 };
 
+bool operator==(const ReferenceOpData & lhs, const ReferenceOpData & rhs);
 
 } // namespace OCIO_NAMESPACE
-
 
 #endif

@@ -324,9 +324,9 @@ std::string LogOpData::getCacheID() const
     return cacheIDStream.str();
 }
 
-bool LogOpData::operator==(const OpData& other) const
+bool LogOpData::equals(const OpData& other) const
 {
-    if (!OpData::operator==(other)) return false;
+    if (!OpData::equals(other)) return false;
 
     const LogOpData* log = static_cast<const LogOpData*>(&other);
 
@@ -490,5 +490,9 @@ bool LogOpData::isCamera() const
     return m_redParams.size() > 4;
 }
 
-} // namespace OCIO_NAMESPACE
+bool operator==(const LogOpData & lhs, const LogOpData & rhs)
+{
+    return lhs.equals(rhs);
+}
 
+} // namespace OCIO_NAMESPACE

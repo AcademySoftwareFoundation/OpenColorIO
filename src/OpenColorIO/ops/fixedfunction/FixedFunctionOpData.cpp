@@ -640,9 +640,9 @@ void FixedFunctionOpData::setDirection(TransformDirection dir) noexcept
     }
 }
 
-bool FixedFunctionOpData::operator==(const OpData & other) const
+bool FixedFunctionOpData::equals(const OpData & other) const
 {
-    if (!OpData::operator==(other)) return false;
+    if (!OpData::equals(other)) return false;
 
     const FixedFunctionOpData* fop = static_cast<const FixedFunctionOpData*>(&other);
 
@@ -669,6 +669,11 @@ std::string FixedFunctionOpData::getCacheID() const
     }
 
     return cacheIDStream.str();
+}
+
+bool operator==(const FixedFunctionOpData & lhs, const FixedFunctionOpData & rhs)
+{
+    return lhs.equals(rhs);
 }
 
 } // namespace OCIO_NAMESPACE

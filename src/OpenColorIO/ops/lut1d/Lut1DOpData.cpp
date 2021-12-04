@@ -454,9 +454,9 @@ bool Lut1DOpData::haveEqualBasics(const Lut1DOpData & other) const
            m_array     == other.m_array;
 }
 
-bool Lut1DOpData::operator==(const OpData & other) const
+bool Lut1DOpData::equals(const OpData & other) const
 {
-    if (!OpData::operator==(other)) return false;
+    if (!OpData::equals(other)) return false;
 
     const Lut1DOpData* lop = static_cast<const Lut1DOpData*>(&other);
 
@@ -1038,5 +1038,9 @@ void Lut1DOpData::initializeFromForward()
     }
 }
 
-} // namespace OCIO_NAMESPACE
+bool operator==(const Lut1DOpData & lhs, const Lut1DOpData & rhs)
+{
+    return lhs.equals(rhs);
+}
 
+} // namespace OCIO_NAMESPACE

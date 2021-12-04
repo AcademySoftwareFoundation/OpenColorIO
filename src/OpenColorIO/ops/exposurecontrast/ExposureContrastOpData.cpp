@@ -278,9 +278,9 @@ std::string ExposureContrastOpData::getCacheID() const
     return cacheIDStream.str();
 }
 
-bool ExposureContrastOpData::operator==(const OpData & other) const
+bool ExposureContrastOpData::equals(const OpData & other) const
 {
-    if (!OpData::operator==(other)) return false;
+    if (!OpData::equals(other)) return false;
 
     const ExposureContrastOpData * ec = static_cast<const ExposureContrastOpData *>(&other);
 
@@ -455,5 +455,9 @@ void ExposureContrastOpData::setDirection(TransformDirection dir) noexcept
     }
 }
 
-} // namespace OCIO_NAMESPACE
+bool operator==(const ExposureContrastOpData & lhs, const ExposureContrastOpData & rhs)
+{
+    return lhs.equals(rhs);
+}
 
+} // namespace OCIO_NAMESPACE

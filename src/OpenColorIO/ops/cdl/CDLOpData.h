@@ -121,7 +121,7 @@ public:
 
     CDLOpDataRcPtr clone() const;
 
-    bool operator==(const OpData& other) const override;
+    bool equals(const OpData& other) const override;
 
     Type getType() const override { return CDLType; }
 
@@ -183,6 +183,8 @@ private:
     ChannelParams m_powerParams;   // Power parameters for RGB channels
     double        m_saturation;    // Saturation parameter
 };
+
+bool operator==(const CDLOpData & lhs, const CDLOpData & rhs);
 
 } // namespace OCIO_NAMESPACE
 

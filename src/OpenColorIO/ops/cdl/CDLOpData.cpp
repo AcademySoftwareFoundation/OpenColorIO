@@ -158,9 +158,9 @@ CDLOpDataRcPtr CDLOpData::clone() const
     return std::make_shared<CDLOpData>(*this);
 }
 
-bool CDLOpData::operator==(const OpData& other) const
+bool CDLOpData::equals(const OpData& other) const
 {
-    if (!OpData::operator==(other)) return false;
+    if (!OpData::equals(other)) return false;
 
     const CDLOpData* cdl = static_cast<const CDLOpData*>(&other);
 
@@ -510,5 +510,9 @@ std::string CDLOpData::getCacheID() const
     return cacheIDStream.str();
 }
 
-} // namespace OCIO_NAMESPACE
+bool operator==(const CDLOpData & lhs, const CDLOpData & rhs)
+{
+    return lhs.equals(rhs);
+}
 
+} // namespace OCIO_NAMESPACE

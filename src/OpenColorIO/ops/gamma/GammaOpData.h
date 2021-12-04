@@ -141,7 +141,7 @@ public:
 
     virtual void validateParameters() const;
 
-    bool operator==(const OpData& other) const override;
+    bool equals(const OpData& other) const override;
 
     std::string getCacheID() const override;
 
@@ -164,7 +164,8 @@ private:
     Params m_alphaParams;
 };
 
-} // namespace OCIO_NAMESPACE
+bool operator==(const GammaOpData & lhs, const GammaOpData & rhs);
 
+} // namespace OCIO_NAMESPACE
 
 #endif
