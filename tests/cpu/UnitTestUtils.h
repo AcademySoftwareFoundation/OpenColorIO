@@ -85,6 +85,16 @@ inline bool EqualWithSafeRelError(T value,
         / div) <= eps;
 }
 
+// C++20 introduces new strongly typed, UTF-8 based, char8_t and u8string types
+// which are not implicitly convertible to char and std::string respectively.
+// Here we simply choose to ignore these new types for unit tests while the
+// core API is not explicitly compatible with such types.
+// http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1423r2.html
+#if defined(__cpp_lib_char8_t)
+#   define U8(x) reinterpret_cast<const char *>(u8##x)
+#else
+#   define U8(x) u8##x
+#endif
 
 }
 // namespace OCIO_NAMESPACE
