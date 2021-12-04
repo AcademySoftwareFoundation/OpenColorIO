@@ -7,6 +7,12 @@
 
 #include <fstream>
 
+#ifdef __has_include
+# if __has_include(<version>)
+#   include <version>
+# endif
+#endif
+
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "MathUtils.h"
