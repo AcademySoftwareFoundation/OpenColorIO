@@ -5,6 +5,7 @@
 set -ex
 
 IMATH_VERSION="$1"
+INSTALL_TARGET="$2"
 
 git clone https://github.com/AcademySoftwareFoundation/Imath.git
 cd Imath
@@ -19,13 +20,16 @@ fi
 
 mkdir build
 cd build
-cmake -DBUILD_TESTING=OFF \
+cmake -DCMAKE_BUILD_TYPE=Release \
+      ${INSTALL_TARGET:+"-DCMAKE_INSTALL_PREFIX="${INSTALL_TARGET}""} \
+      -DBUILD_TESTING=OFF \
       -DPYTHON=OFF \
-      -DCMAKE_C_FLAGS="-fPIC" \
-      -DCMAKE_CXX_FLAGS="-fPIC" \
+      -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
       ../.
-make -j4
-sudo make install
+cmake --build . \
+      --target install \
+      --config Release \
+      --parallel 2
 
 cd ../..
 rm -rf Imath

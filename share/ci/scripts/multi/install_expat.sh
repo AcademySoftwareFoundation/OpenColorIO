@@ -5,6 +5,8 @@
 set -ex
 
 EXPAT_VERSION="$1"
+INSTALL_TARGET="$2"
+
 EXPAT_MAJOR_MINOR=$(echo "${EXPAT_VERSION}" | cut -d. -f-2)
 EXPAT_MAJOR=$(echo "${EXPAT_VERSION}" | cut -d. -f-1)
 EXPAT_MINOR=$(echo "${EXPAT_MAJOR_MINOR}" | cut -d. -f2-)
@@ -25,16 +27,18 @@ mkdir build
 cd build
 
 cmake -DCMAKE_BUILD_TYPE=Release \
+      ${INSTALL_TARGET:+"-DCMAKE_INSTALL_PREFIX="${INSTALL_TARGET}""} \
       -DEXPAT_BUILD_TOOLS=OFF \
       -DEXPAT_BUILD_EXAMPLES=OFF \
       -DEXPAT_BUILD_TESTS=OFF \
       -DEXPAT_SHARED_LIBS=ON \
       -DEXPAT_BUILD_DOCS=OFF \
-      -DCMAKE_C_FLAGS="-fPIC" \
-      -DCMAKE_CXX_FLAGS="-fPIC" \
+      -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
       ../expat/.
-make -j4
-sudo make install
+cmake --build . \
+      --target install \
+      --config Release \
+      --parallel 2
 
 cd ../..
 rm -rf libexpat

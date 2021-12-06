@@ -53,18 +53,42 @@ if (NOT OPENIMAGEIO_ROOT_DIR AND NOT $ENV{OPENIMAGEIO_ROOT_DIR} STREQUAL "")
     set (OPENIMAGEIO_ROOT_DIR $ENV{OPENIMAGEIO_ROOT_DIR})
 endif ()
 
-
-find_library ( OPENIMAGEIO_LIBRARY
-               NAMES OpenImageIO${OIIO_LIBNAME_SUFFIX}
-               HINTS ${OPENIMAGEIO_ROOT_DIR}
-               PATH_SUFFIXES lib64 lib )
-find_library ( OPENIMAGEIO_UTIL_LIBRARY
-               NAMES OpenImageIO_Util${OIIO_LIBNAME_SUFFIX}
-               HINTS ${OPENIMAGEIO_ROOT_DIR}
-               PATH_SUFFIXES lib64 lib )
-find_path ( OPENIMAGEIO_INCLUDE_DIR
-            NAMES OpenImageIO/imageio.h
-            HINTS ${OPENIMAGEIO_ROOT_DIR} )
+find_library (OPENIMAGEIO_LIBRARY
+    NAMES
+        OpenImageIO${OIIO_LIBNAME_SUFFIX}
+    HINTS
+        ${OPENIMAGEIO_ROOT_DIR}
+    PATH_SUFFIXES
+        lib64
+        lib
+        OpenImageIO/lib
+)
+find_library (OPENIMAGEIO_UTIL_LIBRARY
+    NAMES
+        OpenImageIO_Util${OIIO_LIBNAME_SUFFIX}
+    HINTS
+        ${OPENIMAGEIO_ROOT_DIR}
+    PATH_SUFFIXES
+        lib64
+        lib
+        OpenImageIO/lib
+)
+find_path (OPENIMAGEIO_INCLUDE_DIR
+    NAMES
+        OpenImageIO/imageio.h
+    HINTS
+        ${OPENIMAGEIO_ROOT_DIR}
+    PATH_SUFFIXES
+        OpenImageIO/include
+)
+find_program (OIIOTOOL_BIN
+    NAMES
+        oiiotool
+    HINTS
+        ${OPENIMAGEIO_ROOT_DIR}
+    PATH_SUFFIXES
+        OpenImageIO/bin
+)
 
 # Try to figure out version number
 set (OIIO_VERSION_HEADER "${OPENIMAGEIO_INCLUDE_DIR}/OpenImageIO/oiioversion.h")
@@ -132,4 +156,4 @@ endif ()
 mark_as_advanced (
     OPENIMAGEIO_INCLUDE_DIR
     OPENIMAGEIO_LIBRARY
-    )
+)
