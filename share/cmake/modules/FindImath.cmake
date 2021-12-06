@@ -132,7 +132,7 @@ endif()
 ###############################################################################
 ### Install package from source ###
 
-if(NOT Imath_FOUND)
+if(NOT Imath_FOUND AND NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL NONE)
     include(ExternalProject)
     include(GNUInstallDirs)
 
@@ -200,6 +200,12 @@ if(NOT Imath_FOUND)
             BUILD_BYPRODUCTS ${Imath_LIBRARY}
             CMAKE_ARGS ${Imath_CMAKE_ARGS}
             EXCLUDE_FROM_ALL TRUE
+            BUILD_COMMAND ""
+            INSTALL_COMMAND
+                ${CMAKE_COMMAND} --build .
+                                 --config ${CMAKE_BUILD_TYPE}
+                                 --target install
+                                 --parallel
         )
 
         add_dependencies(Imath::Imath imath_install)

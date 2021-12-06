@@ -37,7 +37,7 @@ The OCIO C++ test framework is based on the `OpenImageIO test framework
 <https://github.com/OpenImageIO/oiio/blob/master/src/include/OpenImageIO/unittest.h>`__.
 
 The macros defined in `UnitTest.h 
-<https://github.com/AcademySoftwareFoundation/OpenColorIO/blob/master/tests/testutils/UnitTest.h>`__
+<https://github.com/AcademySoftwareFoundation/OpenColorIO/blob/main/tests/testutils/UnitTest.h>`__
 are used to define tests and assert expected behavior:
 
 * ``OCIO_ADD_TEST``: Define a test and add it to the named test ``group``. 
@@ -71,7 +71,7 @@ class has a dedicated ``TestCase`` class with a ``test_*`` method per specific
 test.
 
 Test cases must be imported into `OpenColorIOTestSuite.py 
-<https://github.com/AcademySoftwareFoundation/OpenColorIO/blob/master/tests/python/OpenColorIOTestSuite.py>`__
+<https://github.com/AcademySoftwareFoundation/OpenColorIO/blob/main/tests/python/OpenColorIOTestSuite.py>`__
 and added to the ``suite`` method to be included in ``ctest`` execution.
 
 Java

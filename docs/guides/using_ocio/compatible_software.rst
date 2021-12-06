@@ -25,7 +25,7 @@ Website: `<http://www.adobe.com/products/aftereffects.html>`__
 
 Documentation :
 
-- See `src/aftereffects <http://github.com/AcademySoftwareFoundation/OpenColorIO/tree/master/src/aftereffects>`__ if you are interested in building your own OCIO plugins.
+- See `src/aftereffects <http://github.com/AcademySoftwareFoundation/OpenColorIO/tree/main/src/aftereffects>`__ if you are interested in building your own OCIO plugins.
 
 - Pre-built binaries are also available for `download <http://fnordware.blogspot.com/2012/05/opencolorio-for-after-effects.html>`__, courtesy of `fnordware <http://www.fnordware.com>`__.
 
@@ -62,13 +62,13 @@ C++
 
 The core OpenColorIO API is available for use in C++. Minimal code examples are also available in the source code distribution. 
 
-Website: `<http://github.com/AcademySoftwareFoundation/OpenColorIO/tree/master/include/OpenColorIO>`__
+Website: `<http://github.com/AcademySoftwareFoundation/OpenColorIO/tree/main/include/OpenColorIO>`__
 
 Examples:
 
-- `ocioconvert <https://github.com/AcademySoftwareFoundation/OpenColorIO/tree/master/src/apps/ocioconvert>`__
+- `ocioconvert <https://github.com/AcademySoftwareFoundation/OpenColorIO/tree/main/src/apps/ocioconvert>`__
 
-- `ociodisplay <https://github.com/AcademySoftwareFoundation/OpenColorIO/tree/master/src/apps/ociodisplay>`__
+- `ociodisplay <https://github.com/AcademySoftwareFoundation/OpenColorIO/tree/main/src/apps/ociodisplay>`__
 
 Documentation:
 
@@ -167,7 +167,7 @@ Java (Beta)
 
 The OpenColorIO API is available for use in Java. This integration is currently considered a work in progress, and should not be relied upon for critical production work.
 
-Website: `<https://github.com/AcademySoftwareFoundation/OpenColorIO/tree/master/src/bindings/java>`__
+Website: `<https://github.com/AcademySoftwareFoundation/OpenColorIO/tree/main/src/bindings/java>`__
 
 
 Katana (Foundry)
@@ -318,7 +318,7 @@ Python
 
 The OpenColorIO API is available for use in Python.
 
-Website: `<https://github.com/AcademySoftwareFoundation/OpenColorIO/tree/master/src/bindings/python>`__
+Website: `<https://github.com/AcademySoftwareFoundation/OpenColorIO/tree/main/src/bindings/python>`__
 
 Documentation:
 

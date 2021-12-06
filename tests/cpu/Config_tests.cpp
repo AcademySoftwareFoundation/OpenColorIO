@@ -1433,9 +1433,97 @@ OCIO_ADD_TEST(Config, context_variable_with_display_view)
     }
 }
 
-OCIO_ADD_TEST(Config, context_variable_with_search_path)
+OCIO_ADD_TEST(Config, context_variable_with_search_path_v1)
 {
-    // Test a search_path pointing to a context variable.
+    // Test a search_path containing a context variable for a v1 config file.
+
+    // Note: The config validation does not check the path existence, it checks only if the path can
+    // be successfully resolved. But the processor creation needs to have at least one existing path.
+    // That's why the tests below check for the config validation and the processor creation.
+
+    static const std::string CONFIG = 
+        "ocio_profile_version: 1\n"
+        "\n"
+        "search_path: $ENV1\n"
+        "\n"
+        "roles:\n"
+        "  default: cs1\n"
+        "  reference: cs1\n"
+        "\n"
+        "displays:\n"
+        "  disp1:\n"
+        "    - !<View> {name: view1, colorspace: cs2}\n"
+        "\n"
+        "colorspaces:\n"
+        "  - !<ColorSpace>\n"
+        "    name: cs1\n"
+        "\n"
+        "  - !<ColorSpace>\n"
+        "    name: cs2\n"
+        "    from_reference: !<FileTransform> {src: lut1d_green.ctf}\n";
+
+    std::istringstream iss;
+    iss.str(CONFIG);
+
+    // $ENV1 is missing.
+    OCIO::ConfigRcPtr cfg;
+    OCIO_CHECK_NO_THROW(cfg = OCIO::Config::CreateFromStream(iss)->createEditableCopy());
+    OCIO_CHECK_THROW_WHAT(cfg->validate(), OCIO::Exception,
+                          "The search_path '$ENV1' cannot be resolved.");
+#ifdef _WIN32
+    OCIO_CHECK_THROW_WHAT(cfg->getProcessor("cs1", "cs2"), OCIO::Exception,
+                          "The specified file reference 'lut1d_green.ctf' could not be located. "
+                          "The following attempts were made: '$ENV1\\lut1d_green.ctf'.");
+#else
+    OCIO_CHECK_THROW_WHAT(cfg->getProcessor("cs1", "cs2"), OCIO::Exception,
+                          "The specified file reference 'lut1d_green.ctf' could not be located. "
+                          "The following attempts were made: '$ENV1/lut1d_green.ctf'.");
+#endif
+
+    // $ENV1 now exists.
+    OCIO_CHECK_NO_THROW(cfg->addEnvironmentVar("ENV1", OCIO::GetTestFilesDir().c_str()));
+    OCIO_CHECK_NO_THROW(cfg->validate());
+    OCIO_CHECK_NO_THROW(cfg->getProcessor("cs1", "cs2"));
+
+    // $ENV1 is faulty.
+    OCIO_CHECK_NO_THROW(cfg->addEnvironmentVar("ENV1", "faulty/path"));
+    OCIO_CHECK_NO_THROW(cfg->validate()); // Success because there is at least one resolved path.
+#ifdef _WIN32
+    OCIO_CHECK_THROW_WHAT(cfg->getProcessor("cs1", "cs2"), OCIO::Exception,
+                          "The specified file reference 'lut1d_green.ctf' could not be located. "
+                          "The following attempts were made: 'faulty\\path\\lut1d_green.ctf'.");
+#else
+    OCIO_CHECK_THROW_WHAT(cfg->getProcessor("cs1", "cs2"), OCIO::Exception,
+                          "The specified file reference 'lut1d_green.ctf' could not be located. "
+                          "The following attempts were made: 'faulty/path/lut1d_green.ctf'.");
+#endif
+
+    OCIO_CHECK_NO_THROW(cfg->addEnvironmentVar("ENV1", nullptr));
+
+    {
+        // Change the search_path to have at least one successful path i.e. the first one.
+        const std::string searchPath = OCIO::GetTestFilesDir() + ":$ENV1";
+        OCIO_CHECK_NO_THROW(cfg->setSearchPath(searchPath.c_str()));
+        OCIO_CHECK_NO_THROW(cfg->validate());
+        OCIO_CHECK_NO_THROW(cfg->getProcessor("cs1", "cs2"));
+    }
+
+    {
+        // Change the search_path to have at least one successful path i.e. the second one.
+        const std::string searchPath = "$ENV1:" + OCIO::GetTestFilesDir();
+        OCIO_CHECK_NO_THROW(cfg->setSearchPath(searchPath.c_str()));
+        OCIO_CHECK_NO_THROW(cfg->validate());
+        OCIO_CHECK_NO_THROW(cfg->getProcessor("cs1", "cs2"));
+    }
+}
+
+OCIO_ADD_TEST(Config, context_variable_with_search_path_v2)
+{
+    // Test a search_path containing a context variable for a v2 config file.
+
+    // Note: The config validation does not check the path existence, it checks only if the path can
+    // be successfully resolved. But the processor creation needs to have at least one existing path.
+    // That's why the tests below check for the config validation and the processor creation.
 
     static const std::string CONFIG = 
         "ocio_profile_version: 2\n"
@@ -1463,19 +1551,88 @@ OCIO_ADD_TEST(Config, context_variable_with_search_path)
     std::istringstream iss;
     iss.str(CONFIG);
 
+    // $ENV1 exists in the config itself.
     OCIO::ConfigRcPtr cfg;
     OCIO_CHECK_NO_THROW(cfg = OCIO::Config::CreateFromStream(iss)->createEditableCopy());
     OCIO_CHECK_NO_THROW(cfg->validate());
     OCIO_CHECK_NO_THROW(cfg->getProcessor("cs1", "cs2"));
 
-    /// Remove the context variable.
+    /// Remove the context variable so, there is no more successful path.
     OCIO_CHECK_NO_THROW(cfg->addEnvironmentVar("ENV1", nullptr));
 
     OCIO_CHECK_THROW_WHAT(cfg->validate(), OCIO::Exception,
                           "The search_path '$ENV1' cannot be resolved.");
 
+#ifdef _WIN32
     OCIO_CHECK_THROW_WHAT(cfg->getProcessor("cs1", "cs2"), OCIO::Exception,
-                          "The specified file reference 'lut1d_green.ctf' could not be located. ");
+                          "The specified file reference 'lut1d_green.ctf' could not be located. "
+                          "The following attempts were made: '$ENV1\\lut1d_green.ctf'.");
+#else
+    OCIO_CHECK_THROW_WHAT(cfg->getProcessor("cs1", "cs2"), OCIO::Exception,
+                          "The specified file reference 'lut1d_green.ctf' could not be located. "
+                          "The following attempts were made: '$ENV1/lut1d_green.ctf'.");
+#endif
+
+    // The following tests validate that in a list of search paths at least one can be resolved.
+
+    {
+        // Change the search_path to have at least one successful path i.e. the first one.
+        const std::string searchPath = OCIO::GetTestFilesDir() + ":$ENV1";
+        OCIO_CHECK_NO_THROW(cfg->setSearchPath(searchPath.c_str()));
+        OCIO_CHECK_NO_THROW(cfg->validate());
+        OCIO_CHECK_NO_THROW(cfg->getProcessor("cs1", "cs2"));
+    }
+
+    {
+        // Change the search_path to have at least one successful path i.e. the second one.
+        const std::string searchPath = "$ENV1:" + OCIO::GetTestFilesDir();
+        OCIO_CHECK_NO_THROW(cfg->setSearchPath(searchPath.c_str()));
+        OCIO_CHECK_NO_THROW(cfg->validate());
+        OCIO_CHECK_NO_THROW(cfg->getProcessor("cs1", "cs2"));
+    }
+
+    {
+        // Change the search_path to have at least one successful path i.e. the first one.
+        const std::string searchPath = OCIO::GetTestFilesDir() + ":";
+        OCIO_CHECK_NO_THROW(cfg->setSearchPath(searchPath.c_str()));
+        OCIO_CHECK_NO_THROW(cfg->validate());
+        OCIO_CHECK_NO_THROW(cfg->getProcessor("cs1", "cs2"));
+    }
+
+    {
+        // Change the search_path to have at least one successful path i.e. the second one.
+        const std::string searchPath = ":" + OCIO::GetTestFilesDir();
+        OCIO_CHECK_NO_THROW(cfg->setSearchPath(searchPath.c_str()));
+        OCIO_CHECK_NO_THROW(cfg->validate());
+        OCIO_CHECK_NO_THROW(cfg->getProcessor("cs1", "cs2"));
+    }
+
+    // The following test highlights the difference between the validation and the processor
+    // creation related to the search paths i.e. resolved vs. existing search paths.
+
+    {
+        // Change the search_path to have at least one potentially successful path
+        // i.e. the second one.
+        const std::string searchPath = "$ENV1:faulty/path";
+        OCIO_CHECK_NO_THROW(cfg->setSearchPath(searchPath.c_str()));
+
+        // The validation succeeds because the first path does not resolve but the second path does.
+        OCIO_CHECK_NO_THROW(cfg->validate());
+
+        // The first path does not resolve and the second path does resolve but it does not exist
+        // so the processor creation fails.
+#ifdef _WIN32
+        OCIO_CHECK_THROW_WHAT(cfg->getProcessor("cs1", "cs2"), OCIO::Exception,
+                              "The specified file reference 'lut1d_green.ctf' could not be located. "
+                              "The following attempts were made: "
+                              "'$ENV1\\lut1d_green.ctf' : 'faulty\\path\\lut1d_green.ctf'.");
+#else
+        OCIO_CHECK_THROW_WHAT(cfg->getProcessor("cs1", "cs2"), OCIO::Exception,
+                              "The specified file reference 'lut1d_green.ctf' could not be located. "
+                              "The following attempts were made: "
+                              "'$ENV1/lut1d_green.ctf' : 'faulty/path/lut1d_green.ctf'.");
+#endif
+    }
 }
 
 OCIO_ADD_TEST(Config, role_without_colorspace)
@@ -8087,7 +8244,7 @@ strictparsing: false
 luma: [0.2126, 0.7152, 0.0722]
 description: |
   multi line description
-  
+
   other line
 
 roles:

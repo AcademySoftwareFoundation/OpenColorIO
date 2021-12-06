@@ -222,7 +222,7 @@ are loaded, etc.
 CPU CODE PATH
 +++++++++++++
 
-The master list of ops is then optimized, and stored internally in the processor.
+The main list of ops is then optimized, and stored internally in the processor.
 
 .. code-block:: cpp
 
@@ -260,7 +260,7 @@ After all ops have been applied, the results are copied back to the source
 GPU CODE PATH
 +++++++++++++
 
-#. The master list of ops is partitioned into 3 ordered lists:
+#. The main list of ops is partitioned into 3 ordered lists:
 
 - As many ops as possible from the BEGINNING of the op-list that can be done
   analytically in shader text. (called gpu-preops)
@@ -276,7 +276,7 @@ analyze the op-stream metadata and determine the appropriate allocation to use.
 interserting a forward allocation to the end of the pre-ops, and the inverse
 allocation to the start of the lattice ops.
 
-See https://github.com/AcademySoftwareFoundation/OpenColorIO/blob/master/src/core/NoOps.cpp#L183
+See https://github.com/AcademySoftwareFoundation/OpenColorIO/blob/main/src/core/NoOps.cpp#L183
 
 #. The 3 lists of ops are then optimized individually, and stored on the processor.
 The Lut3d is computed by applying the gpu-lattice ops, on the CPU, to a lut3d

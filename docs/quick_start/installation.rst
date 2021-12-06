@@ -63,9 +63,9 @@ default, cmake will try to install all of the items labelled with * and so
 it is not necessary to install those items manually:
 
 - cmake >= 3.12
-- \*Expat >= 2.2.8 (XML parser for CDL/CLF/CTF)
-- \*yaml-cpp >= 0.6.3 (YAML parser for Configs)
-- \*Imath >= 3.0.5 (for half domain LUTs)
+- \*Expat >= 2.4.1 (XML parser for CDL/CLF/CTF)
+- \*yaml-cpp >= 0.7.0 (YAML parser for Configs)
+- \*Imath >= 3.1.2 (for half domain LUTs)
     - \*IlmBase (Half only) >= 2.4.0 (Alternative half implementation when 
       OpenEXR 2 is available. Use ``-DOCIO_USE_OPENEXR_HALF=ON`` CMake option to 
       enable).
@@ -89,7 +89,7 @@ Some optional components also depend on:
 - OpenImageIO >= 2.1.9 (for apps including ocioconvert)
 
 Example bash scripts are provided in 
-`share/ci/scripts <https://github.com/AcademySoftwareFoundation/OpenColorIO/tree/master/share/ci/scripts>`_ 
+`share/ci/scripts <https://github.com/AcademySoftwareFoundation/OpenColorIO/tree/main/share/ci/scripts>`_ 
 for installing some dependencies. These are used by OpenColorIO CI so are 
 regularly tested on their noted platforms. The ``install_docs_env.sh``
 script will install all dependencies for building OCIO documentation and is 
