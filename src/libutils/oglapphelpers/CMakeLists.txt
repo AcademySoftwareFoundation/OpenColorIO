@@ -17,18 +17,19 @@ set(INCLUDES
 
 if(APPLE)
 
-list(APPEND SOURCES
-    msl.mm
-    mtltexture.mm
-    metalapp.mm
-)
+    list(APPEND SOURCES
+        msl.mm
+        mtltexture.mm
+        metalapp.mm
+    )
 
-list(APPEND INCLUDES
-    msl.h
-    mtltexture.h
-    metalapp.h
-)
-endif(APPLE)
+    list(APPEND INCLUDES
+        msl.h
+        mtltexture.h
+        metalapp.h
+    )
+
+endif()
 
 add_library(oglapphelpers STATIC ${SOURCES})
 set_target_properties(oglapphelpers PROPERTIES POSITION_INDEPENDENT_CODE ON)
@@ -98,14 +99,14 @@ else()
 endif()
 
 if(APPLE)
-target_link_libraries(oglapphelpers
-    PRIVATE
-        "-framework Carbon"
-        "-framework IOKit"
-        "-framework Metal"
-        "-framework CoreVideo"
-)
-endif(APPLE)
+    target_link_libraries(oglapphelpers
+        PRIVATE
+            "-framework Carbon"
+            "-framework IOKit"
+            "-framework Metal"
+            "-framework CoreVideo"
+    )
+endif()
 
 if(${OCIO_EGL_HEADLESS})
     target_include_directories(oglapphelpers

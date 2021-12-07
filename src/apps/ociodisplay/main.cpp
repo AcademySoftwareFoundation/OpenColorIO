@@ -661,10 +661,14 @@ int main(int argc, char **argv)
     {
 #if __APPLE__
         if(g_useMetal)
+        {
             g_oglApp = std::make_shared<OCIO::MetalApp>("ociodisplay", 512, 512);
+        }
         else
 #endif
+        {
             g_oglApp = std::make_shared<OCIO::ScreenApp>("ociodisplay", 512, 512);
+        }
     }
     catch (const OCIO::Exception & e)
     {

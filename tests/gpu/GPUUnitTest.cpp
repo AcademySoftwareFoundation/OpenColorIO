@@ -322,7 +322,7 @@ namespace
     void UpdateOCIOGLState(OCIO::OglAppRcPtr & app, OCIOGPUTestRcPtr & test)
     {
         app->setPrintShader(test->isVerbose());
-        
+
         OCIO::ConstProcessorRcPtr & processor = test->getProcessor();
         OCIO::GpuShaderDescRcPtr & shaderDesc = test->getShaderDesc();
         
@@ -504,16 +504,11 @@ namespace
     }
 };
 
-#if __APPLE__
 int main(int argc, char ** argv)
-#else
-int main(int, char **)
-#endif
 {
     // Step 1: Initialize the graphic library engines.
     OCIO::OglAppRcPtr app;
     
-#if __APPLE__
     bool useMetalRenderer = false;
     for(int i = 0; i < argc; ++i)
     {
@@ -522,7 +517,6 @@ int main(int, char **)
             useMetalRenderer = true;
         }
     }
-#endif
     try
     {
 #if __APPLE__

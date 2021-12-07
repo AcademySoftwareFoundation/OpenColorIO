@@ -215,7 +215,7 @@ void OglApp::setShader(GpuShaderDescRcPtr & shaderDesc)
          << "}" << std::endl;
 
     // Build the fragment shader program.
-    m_oglBuilder->buildProgram(main.str().c_str());
+    m_oglBuilder->buildProgram(main.str().c_str(), false);
 
     // Enable the fragment shader program, and all needed resources.
     m_oglBuilder->useProgram();

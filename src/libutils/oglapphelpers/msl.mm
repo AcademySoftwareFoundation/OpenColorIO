@@ -291,9 +291,9 @@ void MetalBuilder::fillUniformBufferData()
                 memcpy(&m_uniformData[offset], &v, dataSize);
                 alignment = std::max(alignment, 4);
             }
-            break;
+                break;
 
-        case UNIFORM_DOUBLE:
+            case UNIFORM_DOUBLE:
             {
                 float v = data.m_getDouble();
                 size_t offset = m_uniformData.size();
@@ -304,7 +304,7 @@ void MetalBuilder::fillUniformBufferData()
             }
             break;
 
-        case UNIFORM_FLOAT3:
+            case UNIFORM_FLOAT3:
             {
                 const float* v = data.m_getFloat3().data();
                 size_t offset = m_uniformData.size();
@@ -313,7 +313,6 @@ void MetalBuilder::fillUniformBufferData()
                 memcpy(&m_uniformData[offset], v, dataSize);
                 alignment = std::max(alignment, 16);
             }
-                // Part of uniform data buffer
             break;
                 
             case UNIFORM_VECTOR_INT:
@@ -415,15 +414,13 @@ bool MetalBuilder::buildPipelineStateObject(const std::string & clientShaderProg
     [[renderPipelineDesc colorAttachments][0] setPixelFormat:MTLPixelFormatRGBA32Float];
     m_PSO = [[m_device newRenderPipelineStateWithDescriptor:renderPipelineDesc error:&error] autorelease];
     
-    if(error == nil)
-        return true;
-    
-    return false;
+    return (error == nil);
 }
 
 void MetalBuilder::triggerProgrammaticCaptureScope()
 {
-    if (@available(macOS 10.15, *)) {
+    if (@available(macOS 10.15, *))
+    {
         MTLCaptureManager* captureManager = [MTLCaptureManager sharedCaptureManager];
         MTLCaptureDescriptor* captureDescriptor = [[MTLCaptureDescriptor alloc] init];
         captureDescriptor.captureObject = m_device;
@@ -434,11 +431,16 @@ void MetalBuilder::triggerProgrammaticCaptureScope()
             NSLog(@"Failed to start capture, error %@", error);
         }
     }
+    else
+    {
+        NSLog(@"Capturing functionality is only available on MacOS 10.15 and above.");
+    }
 }
 
 void MetalBuilder::stopProgrammaticCaptureScope()
 {
-    if (@available(macOS 10.15, *)) {
+    if (@available(macOS 10.15, *))
+    {
         MTLCaptureManager* captureManager = [MTLCaptureManager sharedCaptureManager];
         [captureManager stopCapture];
     }

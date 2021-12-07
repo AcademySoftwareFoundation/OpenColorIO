@@ -85,7 +85,7 @@ public:
         COMPONENTS_RGB = 0,
         COMPONENTS_RGBA
     };
-    
+
     // Initialize the image.
     virtual void initImage(int imageWidth, int imageHeight,
                    Components comp, const float * imageBuffer);

@@ -61,16 +61,16 @@ private:
     struct FunctionParam
     {
         FunctionParam(const std::string& type, const std::string& name) :
-            type(type),
-            name(name)
+            m_type(type),
+            m_name(name)
         {
             size_t openAngledBracketPos = name.find('[');
-            isArray = openAngledBracketPos != std::string::npos;
+            m_isArray = openAngledBracketPos != std::string::npos;
         }
 
-        std::string type;
-        std::string name;
-        bool isArray;
+        std::string m_type;
+        std::string m_name;
+        bool m_isArray;
     };
     
     std::string getClassWrapperName(const std::string &resourcePrefix, const std::string& functionName);
