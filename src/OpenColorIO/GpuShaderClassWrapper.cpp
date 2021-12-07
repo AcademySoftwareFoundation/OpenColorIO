@@ -60,8 +60,8 @@ std::string MetalShaderClassWrapper::generateClassWrapperHeader(GpuShaderText& k
             
             kw.newLine()    << "for(int i = 0; i < "
                             << GetArrayLengthVariableName(variableName)
-                            << "; ++i)"
-                            << "{";
+                            << "; ++i)";
+            kw.newLine()    << "{";
             kw.indent();
             kw.newLine()    << "this->" << variableName << "[i] = " << variableName << "[i];";
             kw.dedent();
@@ -71,8 +71,8 @@ std::string MetalShaderClassWrapper::generateClassWrapperHeader(GpuShaderText& k
                             << GetArrayLengthVariableName(variableName)
                             << "; i < "
                             << param.m_name.substr(openAngledBracketPos+1, closeAngledBracketPos-openAngledBracketPos-1)
-                            << "; ++i)"
-                            << "{";
+                            << "; ++i)";
+            kw.newLine()    << "{";
             kw.indent();
             kw.newLine()    << "this->" << variableName << "[i] = 0;";
             kw.dedent();

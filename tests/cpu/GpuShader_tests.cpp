@@ -1150,21 +1150,37 @@ ocioOCIOMain(
 )
 {
   for(int i = 0; i < ocio_grading_rgbcurve_knotsOffsets_count; ++i)
+  {
     this->ocio_grading_rgbcurve_knotsOffsets[i] = ocio_grading_rgbcurve_knotsOffsets[i];
+  }
   for(int i = ocio_grading_rgbcurve_knotsOffsets_count; i < 8; ++i)
+  {
     this->ocio_grading_rgbcurve_knotsOffsets[i] = 0;
+  }
   for(int i = 0; i < ocio_grading_rgbcurve_knots_count; ++i)
+  {
     this->ocio_grading_rgbcurve_knots[i] = ocio_grading_rgbcurve_knots[i];
+  }
   for(int i = ocio_grading_rgbcurve_knots_count; i < 60; ++i)
+  {
     this->ocio_grading_rgbcurve_knots[i] = 0;
+  }
   for(int i = 0; i < ocio_grading_rgbcurve_coefsOffsets_count; ++i)
+  {
     this->ocio_grading_rgbcurve_coefsOffsets[i] = ocio_grading_rgbcurve_coefsOffsets[i];
+  }
   for(int i = ocio_grading_rgbcurve_coefsOffsets_count; i < 8; ++i)
+  {
     this->ocio_grading_rgbcurve_coefsOffsets[i] = 0;
+  }
   for(int i = 0; i < ocio_grading_rgbcurve_coefs_count; ++i)
+  {
     this->ocio_grading_rgbcurve_coefs[i] = ocio_grading_rgbcurve_coefs[i];
+  }
   for(int i = ocio_grading_rgbcurve_coefs_count; i < 180; ++i)
+  {
     this->ocio_grading_rgbcurve_coefs[i] = 0;
+  }
   this->ocio_grading_rgbcurve_localBypass = ocio_grading_rgbcurve_localBypass;
 }
 
