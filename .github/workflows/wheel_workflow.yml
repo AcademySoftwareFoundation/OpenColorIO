@@ -41,6 +41,10 @@ jobs:
   linux:
     name: Build wheels on Linux
     runs-on: ubuntu-latest
+    # Don't run on OCIO forks
+    if: |
+      github.event_name != 'schedule' ||
+      github.repository == 'AcademySoftwareFoundation/OpenColorIO'
     strategy:
       matrix:
         include:
@@ -129,16 +133,13 @@ jobs:
   macos:
     name: Build wheels on macOS
     runs-on: macos-10.15
+    # Don't run on OCIO forks
+    if: |
+      github.event_name != 'schedule' ||
+      github.repository == 'AcademySoftwareFoundation/OpenColorIO'
     strategy:
       matrix:
         include:
-        # Python 3.10 can be enabled when numpy ship the binary wheel (which
-        # we use during tests). Building it within GH produces the following:
-        # RuntimeError: Polyfit sanity test emitted a warning, most likely due
-        # to using a buggy Accelerate backend. If you compiled yourself, see
-        # site.cfg.example for information. Otherwise report this to the vendor
-        # that provided NumPy.
-
           # -------------------------------------------------------------------
           # CPython 64 bits
           # -------------------------------------------------------------------
@@ -154,9 +155,9 @@ jobs:
           - build: CPython 3.9 64 bits
             python: cp39-*
             arch: x86_64
-          # - build: CPython 3.10 64 bits
-          #   python: cp310-*
-          #   arch: x86_64
+          - build: CPython 3.10 64 bits
+            python: cp310-*
+            arch: x86_64
           # -------------------------------------------------------------------
           # CPython ARM 64 bits
           # -------------------------------------------------------------------
@@ -166,9 +167,9 @@ jobs:
           - build: CPython 3.9 ARM 64 bits
             python: cp39-*
             arch: arm64
-          # - build: CPython 3.10 ARM 64 bits
-          #   python: cp310-*
-          #   arch: arm64
+          - build: CPython 3.10 ARM 64 bits
+            python: cp310-*
+            arch: arm64
 
     steps:
       - uses: actions/checkout@v2
@@ -195,6 +196,10 @@ jobs:
   windows:
     name: Build wheels on Windows
     runs-on: windows-2019
+    # Don't run on OCIO forks
+    if: |
+      github.event_name != 'schedule' ||
+      github.repository == 'AcademySoftwareFoundation/OpenColorIO'
     strategy:
       matrix:
         include:
