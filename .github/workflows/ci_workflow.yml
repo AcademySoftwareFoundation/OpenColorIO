@@ -531,6 +531,7 @@ jobs:
         if: matrix.build-docs == 'ON'
       - name: Install tests env
         run: share/ci/scripts/windows/install_tests_env.sh
+        shell: bash
       - name: Create build directories
         run: |
           mkdir _install

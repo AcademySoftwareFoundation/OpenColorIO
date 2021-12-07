@@ -8244,7 +8244,7 @@ strictparsing: false
 luma: [0.2126, 0.7152, 0.0722]
 description: |
   multi line description
-  
+
   other line
 
 roles:

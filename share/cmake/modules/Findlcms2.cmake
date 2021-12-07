@@ -45,6 +45,7 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
         PATH_SUFFIXES
             include
             lcms2/include
+            lcms2/include/lcms2
             include/lcms2
     )
 
@@ -58,10 +59,12 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
         NAMES
             ${_lcms2_STATIC} lcms2 liblcms2
         HINTS
-            ${_lcms2_ROOT}
+            ${lcms2_ROOT}
             ${PC_lcms2_LIBRARY_DIRS}
         PATH_SUFFIXES
-            lib64 lib 
+            lcms2/lib
+            lib64
+            lib
     )
 
     # Get version from config or header file
@@ -94,7 +97,7 @@ endif()
 ###############################################################################
 ### Install package from source ###
 
-if(NOT lcms2_FOUND)
+if(NOT lcms2_FOUND AND NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL NONE)
     include(ExternalProject)
 
     set(_EXT_DIST_ROOT "${CMAKE_BINARY_DIR}/ext/dist")
@@ -157,12 +160,18 @@ if(NOT lcms2_FOUND)
             GIT_SHALLOW TRUE
             PREFIX "${_EXT_BUILD_ROOT}/Little-CMS"
             BUILD_BYPRODUCTS ${lcms2_LIBRARY}
+            CMAKE_ARGS ${lcms2_CMAKE_ARGS}
+            EXCLUDE_FROM_ALL TRUE
             PATCH_COMMAND
                 ${CMAKE_COMMAND} -E copy
                 "${CMAKE_SOURCE_DIR}/share/cmake/projects/Buildlcms2.cmake"
                 "CMakeLists.txt"
-            CMAKE_ARGS ${lcms2_CMAKE_ARGS}
-            EXCLUDE_FROM_ALL TRUE
+            BUILD_COMMAND ""
+            INSTALL_COMMAND
+                ${CMAKE_COMMAND} --build .
+                                 --config ${CMAKE_BUILD_TYPE}
+                                 --target install
+                                 --parallel
         )
 
         add_dependencies(lcms2::lcms2 lcms2_install)

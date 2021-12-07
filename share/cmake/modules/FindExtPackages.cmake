@@ -26,11 +26,11 @@ set(CMAKE_FIND_PACKAGE_NO_SYSTEM_PACKAGE_REGISTRY ON CACHE BOOL
 
 # expat
 # https://github.com/libexpat/libexpat
-find_package(expat 2.2.8 REQUIRED)
+find_package(expat 2.4.1 REQUIRED)
 
 # yaml-cpp
 # https://github.com/jbeder/yaml-cpp
-find_package(yaml-cpp 0.6.3 REQUIRED)
+find_package(yaml-cpp 0.7.0 REQUIRED)
 
 # pystring
 # https://github.com/imageworks/pystring
@@ -102,4 +102,15 @@ if(OCIO_BUILD_PYTHON OR OCIO_BUILD_DOCS)
         # https://github.com/pybind/pybind11
         find_package(pybind11 2.6.1 REQUIRED)
     endif()
+endif()
+
+# The presence of OpenImageIO allows additional ocio apps and the OSL
+# translation unit tests to be built.
+
+# OpenImageIO
+# https://github.com/OpenImageIO/oiio
+if(OCIO_USE_OIIO_CMAKE_CONFIG)
+    find_package(OpenImageIO 2.1.9 CONFIG)
+else()
+    find_package(OpenImageIO 2.1.9)
 endif()
