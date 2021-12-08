@@ -80,7 +80,7 @@ void MetalApp::initImage(int imgWidth, int imgHeight, Components comp, const flo
     
     setImageDimensions(imgWidth, imgHeight, comp);
     m_image = std::make_shared<MtlTexture>(m_context->metalDevice, imgWidth, imgHeight, image);
-    m_outputImage = std::make_shared<MtlTexture>(m_context->metalDevice, m_context->glContext, imgWidth, imgHeight, nullptr);
+    m_outputImage = std::make_shared<MtlTexture>(m_context->metalDevice, m_context->glContext, imgWidth, imgHeight, image);
 }
 
 void MetalApp::updateImage(const float *image)
@@ -94,13 +94,46 @@ void MetalApp::updateImage(const float *image)
     m_image->update(image);
 }
 
+void MetalApp::prepareAndBindOpenGLState()
+{
+    // A dummyShaderDesc is enough.
+    // The builder will only be used to build GL program
+    GpuShaderDescRcPtr dummyShaderDesc = GpuShaderDesc::CreateShaderDesc();
+    m_oglBuilder = OpenGLBuilder::Create(dummyShaderDesc);
+    
+    std::ostringstream main;
+        
+    main <<    std::endl
+            << "uniform sampler2DRect img;" << std::endl
+            << std::endl
+            << "void main()" << std::endl
+            << "{" << std::endl
+            << "    gl_FragColor = texture2DRect(img, gl_TexCoord[0].st * "
+            << "vec2(" << m_outputImage->getWidth() << ", " << m_outputImage->getHeight() << "));"
+            << std::endl
+            << "}" << std::endl;
+    
+    
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_RECTANGLE_EXT, m_outputImage->getGLHandle());
+    
+    // Build the fragment shader program.
+    m_oglBuilder->buildProgram(main.str().c_str(), true);
+
+    // Enable the fragment shader program, and all needed resources.
+    m_oglBuilder->useProgram();
+    
+    // The image texture.
+    glUniform1i(glGetUniformLocation(m_oglBuilder->getProgramHandle(), "img"), 0);
+    
+    m_glStateBound = true;
+}
+
 void MetalApp::setShader(GpuShaderDescRcPtr & shaderDesc)
 {
     std::ostringstream main;
     
     m_metalBuilder = MetalBuilder::Create(shaderDesc);
-    m_oglBuilder = OpenGLBuilder::Create(shaderDesc);
-    
     m_metalBuilder->allocateAllTextures(1);
     
     if(shaderDesc->getLanguage() == GPU_LANGUAGE_MSL_2_0)
@@ -329,34 +362,6 @@ void MetalApp::setShader(GpuShaderDescRcPtr & shaderDesc)
                                              m_outputImage->getWidth(),
                                              m_outputImage->getHeight());
     }
-    
-    
-    {
-        std::ostringstream main;
-            
-        main <<    std::endl
-                << "uniform sampler2DRect img;" << std::endl
-                << std::endl
-                << "void main()" << std::endl
-                << "{" << std::endl
-                << "    gl_FragColor = texture2DRect(img, gl_TexCoord[0].st * "
-                << "vec2(" << m_outputImage->getWidth() << ", " << m_outputImage->getHeight() << "));"
-                << std::endl
-                << "}" << std::endl;
-        
-        
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_RECTANGLE_EXT, m_outputImage->getGLHandle());
-        
-        // Build the fragment shader program.
-        m_oglBuilder->buildProgram(main.str().c_str(), true);
-
-        // Enable the fragment shader program, and all needed resources.
-        m_oglBuilder->useProgram();
-        
-        // The image texture.
-        glUniform1i(glGetUniformLocation(m_oglBuilder->getProgramHandle(), "img"), 0);
-    }
 }
 
 void MetalApp::redisplay()
@@ -368,6 +373,12 @@ void MetalApp::redisplay()
                                             m_outputImage->getWidth(),
                                             m_outputImage->getHeight());
     }
+    
+    if(!m_glStateBound)
+    {
+        prepareAndBindOpenGLState();
+    }
+    
     ScreenApp::redisplay();
 }
 

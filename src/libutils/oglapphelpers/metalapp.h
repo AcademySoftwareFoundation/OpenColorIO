@@ -47,6 +47,9 @@ public:
     // Set the shader code.
     void setShader(GpuShaderDescRcPtr & shaderDesc) override;
     
+    // Prepares and binds the OpenGL state used to present metal output texture in GLUT window
+    void     prepareAndBindOpenGLState();
+    
     // Process the image.
     void redisplay() override;
     
@@ -61,6 +64,7 @@ protected:
 
 private:
     MetalBuilderRcPtr m_metalBuilder;
+    bool m_glStateBound;   // OpenGL state for outputing the metal output texture contents is bound
 };
 
 }
