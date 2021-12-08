@@ -12,6 +12,7 @@
 #include "Platform.h"
 #include "transforms/FileTransform.h"
 #include "utils/StringUtils.h"
+#include "utils/NumberUtils.h"
 
 
 /*
@@ -131,7 +132,7 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
     // Parse table
     int index = 0;
     int rIndex, gIndex, bIndex;
-    float redValue, greenValue, blueValue;
+    float redValue = NAN, greenValue = NAN, blueValue = NAN;
 
     int entriesRemaining = rSize * gSize * bSize;
     Array & lutArray = lut3d->getArray();
@@ -141,10 +142,42 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
     {
         istream.getline(lineBuffer, MAX_LINE_SIZE);
 
-        if (sscanf(lineBuffer, "%d %d %d %f %f %f",
+        char redValueS[64] = "";
+        char greenValueS[64] = "";
+        char blueValueS[64] = "";
+
+#ifdef _WIN32
+        if (sscanf(lineBuffer,
+            "%d %d %d %s %s %s",
             &rIndex, &gIndex, &bIndex,
-            &redValue, &greenValue, &blueValue) == 6)
+            redValueS, 64,
+            greenValueS, 64,
+            blueValueS, 64) == 6)
+#else
+        if (sscanf(lineBuffer, "%d %d %d %s %s %s",
+            &rIndex, &gIndex, &bIndex,
+            redValueS, greenValueS, blueValueS) == 6)
+#endif
         {
+            const auto redValueAnswer = NumberUtils::from_chars(redValueS, redValueS + 64, redValue);
+            const auto greenValueAnswer = NumberUtils::from_chars(greenValueS, greenValueS + 64, greenValue);
+            const auto blueValueAnswer = NumberUtils::from_chars(blueValueS, blueValueS + 64, blueValue);
+
+            if (redValueAnswer.ec != std::errc()
+                || greenValueAnswer.ec != std::errc()
+                || blueValueAnswer.ec != std::errc())
+            {
+                std::ostringstream os;
+                os << "Error parsing .spi3d file (";
+                os << fileName;
+                os << "). ";
+                os << "Data is invalid. ";
+                os << "A color value is specified (";
+                os << redValueS << " " << greenValueS << " " << blueValueS;
+                os << ") that cannot be parsed as a floating-point triplet.";
+                throw Exception(os.str().c_str());
+            }
+
             bool invalidIndex = false;
             if (rIndex < 0 || rIndex >= rSize
                 || gIndex < 0 || gIndex >= gSize
