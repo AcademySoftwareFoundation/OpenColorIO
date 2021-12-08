@@ -37,6 +37,7 @@
 #include "ParseUtils.h"
 #include "transforms/FileTransform.h"
 #include "utils/StringUtils.h"
+#include "utils/NumberUtils.h"
 
 
 namespace OCIO_NAMESPACE
@@ -182,16 +183,11 @@ readLuts(std::istream& istream,
         }
         else if(inlut)
         {
-            // StringToFloat was far slower, for 787456 values:
-            // - StringToFloat took 3879 (avg nanoseconds per value)
-            // - stdtod took 169 nanoseconds
-            char* endptr = 0;
-            float v = static_cast<float>(strtod(word.c_str(), &endptr));
+            float v{};
+            const auto result = NumberUtils::from_chars(word.c_str(), word.c_str() + word.size(), v);
 
-            if(!*endptr)
+            if (result.ec == std::errc())
             {
-                // Since each word should contain a single
-                // float value, the pointer should be null
                 lutValues[lutname].push_back(v);
             }
             else
