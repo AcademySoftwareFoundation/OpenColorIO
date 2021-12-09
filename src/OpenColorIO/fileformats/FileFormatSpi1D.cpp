@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
+#include <cmath>
 #include <cstdio>
+#include <cstring>
 #include <sstream>
 
 #include <OpenColorIO/OpenColorIO.h>
@@ -13,7 +15,7 @@
 #include "Platform.h"
 #include "transforms/FileTransform.h"
 #include "utils/StringUtils.h"
-
+#include "utils/NumberUtils.h"
 
 /*
 Version 1
@@ -124,9 +126,25 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
             }
             else if(StringUtils::StartsWith(headerLine, "From"))
             {
-                if (sscanf(lineBuffer, "From %f %f", &from_min, &from_max) != 2)
+                char fromMinS[64] = "";
+                char fromMaxS[64] = "";
+#ifdef _WIN32
+                if (sscanf_s(lineBuffer, "From %s %s", fromMinS, 64, fromMaxS, 64) != 2)
+#else
+                if (sscanf(lineBuffer, "From %s %s", fromMinS, fromMaxS) != 2)
+#endif
                 {
                     ThrowErrorMessage("Invalid 'From' Tag", currentLine, headerLine);
+                }
+                else
+                {
+                    const auto fromMinAnswer = NumberUtils::from_chars(fromMinS, fromMinS + 64, from_min);
+                    const auto fromMaxAnswer = NumberUtils::from_chars(fromMaxS, fromMaxS + 64, from_max);
+
+                    if (fromMinAnswer.ec != std::errc() || fromMaxAnswer.ec != std::errc())
+                    {
+                        ThrowErrorMessage("Invalid 'From' Tag", currentLine, headerLine);
+                    }
                 }
             }
             else if(StringUtils::StartsWith(headerLine, "Components"))
@@ -179,7 +197,6 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
 
         int lineCount=0;
 
-        StringUtils::StringVec inputLUT;
         std::vector<float> values;
 
         while (istream.good())
@@ -192,10 +209,17 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
 
             if (line.length() != 0)
             {
-                inputLUT = StringUtils::SplitByWhiteSpaces(StringUtils::Trim(lineBuffer));
                 values.clear();
-                if (!StringVecToFloatVec(values, inputLUT)
-                    || components != (int)values.size())
+
+                char inputLUT[4][64] = {"", "", "", ""};
+#ifdef _WIN32
+                if (sscanf_s(lineBuffer, "%s %s %s %63s", inputLUT[0], 64,
+                           inputLUT[1], 64, inputLUT[2], 64, inputLUT[3],
+                           64) != components)
+#else
+                if (sscanf(lineBuffer, "%s %s %s %63s", inputLUT[0],
+                           inputLUT[1], inputLUT[2], inputLUT[3]) != components)
+#endif
                 {
                     std::ostringstream os;
                     os << "Malformed LUT line. Expecting a ";
@@ -207,6 +231,26 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
                 if (lineCount >= lut_size)
                 {
                     ThrowErrorMessage("Too many entries found", currentLine, "");
+                }
+
+                values.resize(components);
+
+                for (int i = 0; i < components; i++)
+                {
+                    float v = NAN;
+                    const auto result = NumberUtils::from_chars(inputLUT[i], inputLUT[i] + 64, v);
+
+                    if (result.ec != std::errc())
+                    {
+                        std::ostringstream os;
+                        os << "Malformed LUT line. Could not convert component";
+                        os << i << " to a floating point number.";
+
+                        ThrowErrorMessage("Malformed LUT line", currentLine,
+                                            line);
+                    }
+
+                    values[i] = v;
                 }
 
                 // If 1 component is specified, use x1 x1 x1.
