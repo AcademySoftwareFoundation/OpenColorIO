@@ -227,6 +227,7 @@ target_link_libraries(OpenColorIO
         ${OCIO_HALF_LIB}
         pystring::pystring
         sampleicc::sampleicc
+        utils::from_chars
         utils::strings
         yaml-cpp
 )

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
+#include <cmath>
 #include <cstring>
 #include <iostream>
 #include <set>
@@ -11,6 +12,7 @@
 #include "ParseUtils.h"
 #include "Platform.h"
 #include "utils/StringUtils.h"
+#include "utils/NumberUtils.h"
 
 
 namespace OCIO_NAMESPACE
@@ -526,6 +528,7 @@ static constexpr int DOUBLE_DECIMALS = 16;
 std::string FloatToString(float value)
 {
     std::ostringstream pretty;
+    pretty.imbue(std::locale::classic());
     pretty.precision(FLOAT_DECIMALS);
     pretty << value;
     return pretty.str();
@@ -536,6 +539,7 @@ std::string FloatVecToString(const float * fval, unsigned int size)
     if(size<=0) return "";
 
     std::ostringstream pretty;
+    pretty.imbue(std::locale::classic());
     pretty.precision(FLOAT_DECIMALS);
     for(unsigned int i=0; i<size; ++i)
     {
@@ -550,9 +554,9 @@ bool StringToFloat(float * fval, const char * str)
 {
     if(!str) return false;
 
-    std::istringstream inputStringstream(str);
-    float x;
-    if(!(inputStringstream >> x))
+    float x = NAN;
+    const auto result = NumberUtils::from_chars(str, str + strlen(str), x);
+    if (result.ec != std::errc())
     {
         return false;
     }
@@ -567,6 +571,7 @@ bool StringToInt(int * ival, const char * str, bool failIfLeftoverChars)
     if(!ival) return false;
 
     std::istringstream i(str);
+    i.imbue(std::locale::classic());
     char c=0;
     if (!(i >> *ival) || (failIfLeftoverChars && i.get(c))) return false;
     return true;
@@ -575,6 +580,7 @@ bool StringToInt(int * ival, const char * str, bool failIfLeftoverChars)
 std::string DoubleToString(double value)
 {
     std::ostringstream pretty;
+    pretty.imbue(std::locale::classic());
     pretty.precision(DOUBLE_DECIMALS);
     pretty << value;
     return pretty.str();
@@ -585,6 +591,7 @@ std::string DoubleVecToString(const double * val, unsigned int size)
     if (size <= 0) return "";
 
     std::ostringstream pretty;
+    pretty.imbue(std::locale::classic());
     pretty.precision(DOUBLE_DECIMALS);
     for (unsigned int i = 0; i<size; ++i)
     {
@@ -601,9 +608,10 @@ bool StringVecToFloatVec(std::vector<float> &floatArray, const StringUtils::Stri
 
     for(unsigned int i=0; i<lineParts.size(); i++)
     {
-        std::istringstream inputStringstream(lineParts[i]);
-        float x;
-        if(!(inputStringstream >> x))
+        float x = NAN;
+        const char *str = lineParts[i].c_str();
+        const auto result = NumberUtils::from_chars(str, str + lineParts[i].size(), x);
+        if (result.ec != std::errc())
         {
             return false;
         }

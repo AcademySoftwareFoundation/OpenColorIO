@@ -15,3 +15,12 @@ configure_file("Half.h.in" "Half.h" @ONLY)
 set_property(TARGET ${OCIO_HALF_LIB} APPEND PROPERTY
     INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_BINARY_DIR}/.."
 )
+
+# from_chars shim (via strtod_l)
+
+add_library(utils::from_chars INTERFACE IMPORTED GLOBAL)
+
+set_target_properties(utils::from_chars PROPERTIES
+    INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/.."
+)
+
