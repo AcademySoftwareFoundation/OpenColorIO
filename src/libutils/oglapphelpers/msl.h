@@ -41,6 +41,27 @@ class MetalBuilder
             ,   m_samplerState(samplerState)
             ,   m_type(type)
         {}
+        
+        ~TextureId()
+        {
+            m_texture = nil;
+            m_samplerState = nil;
+        }
+        
+        void release()
+        {
+            if(m_texture)
+            {
+                [m_texture      release];
+            }
+            m_texture      = nil;
+            
+            if(m_samplerState)
+            {
+                [m_samplerState      release];
+            }
+            m_samplerState = nil;
+        }
     };
 
     typedef std::vector<TextureId> TextureIds;

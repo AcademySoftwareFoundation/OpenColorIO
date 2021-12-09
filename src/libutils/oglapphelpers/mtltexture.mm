@@ -44,7 +44,7 @@ MtlTexture::MtlTexture(id<MTLDevice> device, uint32_t width, uint32_t height, co
 {
     m_device = device;
     m_openGLContext = nullptr;
-    MTLTextureDescriptor* texDescriptor = [[MTLTextureDescriptor new] autorelease];
+    MTLTextureDescriptor* texDescriptor = [MTLTextureDescriptor new];
  
     const int channelPerPix = 4;
     MTLPixelFormat pixelFormat = MTLPixelFormatRGBA32Float;
@@ -64,6 +64,8 @@ MtlTexture::MtlTexture(id<MTLDevice> device, uint32_t width, uint32_t height, co
                             withBytes:image
                           bytesPerRow:channelPerPix * width * sizeof(float)];
     }
+    
+    [texDescriptor release];
 }
 
 MtlTexture::MtlTexture(id<MTLDevice> device,
@@ -78,7 +80,6 @@ MtlTexture::MtlTexture(id<MTLDevice> device,
 
     m_device = device;
     m_openGLContext = glContext;
-    [m_openGLContext autorelease];
     
     m_formatInfo = textureFormatInfoFromMetalPixelFormat(MTLPixelFormatRGBA32Float);
     
@@ -203,6 +204,8 @@ std::vector<float> MtlTexture::readTexture() const
 
 MtlTexture::~MtlTexture()
 {
+    if(m_openGLContext)
+        [m_openGLContext release];
 }
 
 }

@@ -46,6 +46,12 @@ struct GraphicsContext
         this->glContext = glContext;
         this->metalDevice = metalDevice;
     }
+    ~GraphicsContext()
+    {
+        if(glContext)
+            [glContext release];
+        glContext = nil;
+    }
     
     NSOpenGLContext* glContext;
     id<MTLDevice>    metalDevice;

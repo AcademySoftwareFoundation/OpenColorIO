@@ -13,6 +13,8 @@
 #import  <CoreVideo/CVOpenGLTextureCache.h>
 #import  <CoreVideo/CVMetalTextureCache.h>
 
+#include <OpenColorIO/OpenColorIO.h>
+
 namespace OCIO_NAMESPACE
 {
 
@@ -33,7 +35,14 @@ public:
     
     int         getWidth()       const { return m_width;  }
     int         getHeight()      const { return m_height; }
-    uint64_t    getGLHandle()    const { assert(m_openGLContext); return m_texID; }
+    uint64_t    getGLHandle()    const
+    {
+        if(!m_openGLContext)
+        {
+            throw Exception("There is no valid OpenGL Context for this texture");
+        }
+        return m_texID;
+    }
     
     ~MtlTexture();
     

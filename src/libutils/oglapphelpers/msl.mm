@@ -46,12 +46,7 @@ namespace
 
 id<MTLSamplerState> GetSamplerState(id<MTLDevice> device, Interpolation interpolation)
 {
-    static std::unordered_map<int, id<MTLSamplerState>> samplerStateCache;
-    
-    if(samplerStateCache.find(interpolation) != samplerStateCache.end())
-        return samplerStateCache[interpolation];
-    
-    MTLSamplerDescriptor* samplerDesc = [[MTLSamplerDescriptor new] autorelease];
+    MTLSamplerDescriptor* samplerDesc = [MTLSamplerDescriptor new];
     [samplerDesc setMinFilter:MTLSamplerMinMagFilterNearest];
     
     if(interpolation==INTERP_NEAREST)
@@ -69,9 +64,11 @@ id<MTLSamplerState> GetSamplerState(id<MTLDevice> device, Interpolation interpol
     [samplerDesc setTAddressMode:MTLSamplerAddressModeClampToEdge];
     [samplerDesc setRAddressMode:MTLSamplerAddressModeClampToEdge];
     
-    samplerStateCache[interpolation] = [[device newSamplerStateWithDescriptor:samplerDesc] autorelease];
+    id<MTLSamplerState> samplerState = [device newSamplerStateWithDescriptor:samplerDesc];
     
-    return samplerStateCache[interpolation];
+    [samplerDesc release];
+    
+    return samplerState;
 }
 
 id<MTLTexture> AllocateTexture3D(id<MTLDevice> device,
@@ -85,7 +82,7 @@ id<MTLTexture> AllocateTexture3D(id<MTLDevice> device,
     // MTLPixelFormatRGB32Float not supported on metal. Adapt to MTLPixelFormatRGBA32Float
     std::vector<float> float4AdaptedLutValues = RGB_to_RGBA(lutValues, 3*edgelen*edgelen*edgelen);
     
-    MTLTextureDescriptor* texDescriptor = [[MTLTextureDescriptor new] autorelease];
+    MTLTextureDescriptor* texDescriptor = [MTLTextureDescriptor new];
     
     [texDescriptor setTextureType:MTLTextureType3D];
     [texDescriptor setWidth:edgelen];
@@ -94,7 +91,7 @@ id<MTLTexture> AllocateTexture3D(id<MTLDevice> device,
     [texDescriptor setStorageMode:MTLStorageModeManaged];
     [texDescriptor setPixelFormat:MTLPixelFormatRGBA32Float];
     [texDescriptor setMipmapLevelCount:1];
-    id<MTLTexture> tex = [[device newTextureWithDescriptor:texDescriptor] autorelease];
+    id<MTLTexture> tex = [device newTextureWithDescriptor:texDescriptor];
     
     const void* texData = float4AdaptedLutValues.data();
     
@@ -104,6 +101,8 @@ id<MTLTexture> AllocateTexture3D(id<MTLDevice> device,
              withBytes:texData
            bytesPerRow:edgelen * 4 * sizeof(float)
          bytesPerImage:edgelen * edgelen * 4 * sizeof(float)];
+    
+    [texDescriptor release];
     
     return tex;
 }
@@ -128,7 +127,7 @@ id<MTLTexture> AllocateTexture2D(id<MTLDevice> device,
     else
         adaptedLutValues = RGB_to_RGBA(values, 3*width*height);
     
-    MTLTextureDescriptor* texDescriptor = [[MTLTextureDescriptor new] autorelease];
+    MTLTextureDescriptor* texDescriptor = [MTLTextureDescriptor new];
     
     MTLPixelFormat pixelFormat = channel == GpuShaderDesc::TEXTURE_RED_CHANNEL ? MTLPixelFormatR32Float : MTLPixelFormatRGBA32Float;
     
@@ -139,9 +138,11 @@ id<MTLTexture> AllocateTexture2D(id<MTLDevice> device,
     [texDescriptor setStorageMode:MTLStorageModeManaged];
     [texDescriptor setPixelFormat:pixelFormat];
     [texDescriptor setMipmapLevelCount:1];
-    id<MTLTexture> tex = [[device newTextureWithDescriptor:texDescriptor] autorelease];
+    id<MTLTexture> tex = [device newTextureWithDescriptor:texDescriptor];
     
     [tex replaceRegion:MTLRegionMake3D(0, 0, 0, width, height, 1) mipmapLevel:0 withBytes:adaptedLutValues.data() bytesPerRow:channelPerPix * width * sizeof(float)];
+    
+    [texDescriptor release];
     
     return tex;
 }
@@ -165,15 +166,36 @@ MetalBuilderRcPtr MetalBuilder::Create(const GpuShaderDescRcPtr & shaderDesc)
 MetalBuilder::MetalBuilder(const GpuShaderDescRcPtr & shaderDesc)
     :   m_shaderDesc(shaderDesc)
     ,   m_startIndex(0)
+    ,   m_textureIds{}
     ,   m_uniformData{}
     ,   m_verbose(false)
 {
     m_device = MTLCreateSystemDefaultDevice();
-    m_cmdQueue = [[m_device newCommandQueue] autorelease];
+    m_cmdQueue = [m_device newCommandQueue];
 }
 
 MetalBuilder::~MetalBuilder()
 {
+    if(m_cmdQueue)
+    {
+        [m_cmdQueue release];
+    }
+    m_cmdQueue = nil;
+    
+    if(m_PSO)
+    {
+        [m_PSO release];
+    }
+    m_PSO = nil;
+    
+    for(auto& textureId : m_textureIds)
+    {
+        if(textureId.m_texture)
+        {
+            textureId.release();
+            
+        }
+    }
 }
 
 void MetalBuilder::allocateAllTextures(unsigned startIndex)
@@ -400,19 +422,22 @@ bool MetalBuilder::buildPipelineStateObject(const std::string & clientShaderProg
     MTLCompileOptions* options = [MTLCompileOptions new];
     [options setLanguageVersion:MTLLanguageVersion2_0];
     [options setFastMathEnabled:NO];
-    m_library = [[m_device newLibraryWithSource:shaderSrc options:options error:&error] autorelease];
     
-    id<MTLFunction> vertexShader = [[m_library newFunctionWithName:@"ColorCorrectionVS"] autorelease];
-    id<MTLFunction> pixelShader  = [[m_library newFunctionWithName:@"ColorCorrectionPS"] autorelease];
+    @autoreleasepool {
+        m_library = [[m_device newLibraryWithSource:shaderSrc options:options error:&error] autorelease];
     
-    MTLRenderPipelineDescriptor* renderPipelineDesc = [[MTLRenderPipelineDescriptor new] autorelease];
-    [renderPipelineDesc setVertexFunction:vertexShader];
-    [renderPipelineDesc setFragmentFunction:pixelShader];
-    [renderPipelineDesc setVertexDescriptor:nil];
-    [renderPipelineDesc setRasterizationEnabled:YES];
-    [renderPipelineDesc setInputPrimitiveTopology:MTLPrimitiveTopologyClassTriangle];
-    [[renderPipelineDesc colorAttachments][0] setPixelFormat:MTLPixelFormatRGBA32Float];
-    m_PSO = [[m_device newRenderPipelineStateWithDescriptor:renderPipelineDesc error:&error] autorelease];
+        id<MTLFunction> vertexShader = [[m_library newFunctionWithName:@"ColorCorrectionVS"] autorelease];
+        id<MTLFunction> pixelShader  = [[m_library newFunctionWithName:@"ColorCorrectionPS"] autorelease];
+    
+        MTLRenderPipelineDescriptor* renderPipelineDesc = [[MTLRenderPipelineDescriptor new] autorelease];
+        [renderPipelineDesc setVertexFunction:vertexShader];
+        [renderPipelineDesc setFragmentFunction:pixelShader];
+        [renderPipelineDesc setVertexDescriptor:nil];
+        [renderPipelineDesc setRasterizationEnabled:YES];
+        [renderPipelineDesc setInputPrimitiveTopology:MTLPrimitiveTopologyClassTriangle];
+        [[renderPipelineDesc colorAttachments][0] setPixelFormat:MTLPixelFormatRGBA32Float];
+        m_PSO = [m_device newRenderPipelineStateWithDescriptor:renderPipelineDesc error:&error];
+    }
     
     return (error == nil);
 }
@@ -455,7 +480,7 @@ void MetalBuilder::applyColorCorrection(id<MTLTexture> inputTexture, id<MTLTextu
     
     id<MTLCommandBuffer> cmdBuffer = [m_cmdQueue commandBuffer];
     
-    MTLRenderPassDescriptor* renderPassDesc = [[MTLRenderPassDescriptor new] autorelease];
+    MTLRenderPassDescriptor* renderPassDesc = [MTLRenderPassDescriptor new];
     if (@available(macOS 10.15, *)) {
         [renderPassDesc setRenderTargetWidth:outWidth];
         [renderPassDesc setRenderTargetHeight:outHeight];
@@ -487,6 +512,8 @@ void MetalBuilder::applyColorCorrection(id<MTLTexture> inputTexture, id<MTLTextu
     [renderCmdEncoder endEncoding];
     [cmdBuffer commit];
     [cmdBuffer waitUntilCompleted];
+    
+    [renderPassDesc release];
     
     if(captureThisFrame)
         stopProgrammaticCaptureScope();
