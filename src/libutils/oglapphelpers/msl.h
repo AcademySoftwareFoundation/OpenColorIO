@@ -15,7 +15,7 @@ namespace OCIO_NAMESPACE
 class MetalBuilder;
 typedef OCIO_SHARED_PTR<MetalBuilder> MetalBuilderRcPtr;
 
-std::vector<float> RGB_to_RGBA(const float* lutValues, int valueCount);
+void RGB_to_RGBA(const float* lutValues, int valueCount, std::vector<float>& float4AdaptedLutValues);
 
 // This is a reference implementation showing how to do the texture upload & allocation,
 // and the program compilation for the GLSL shader language.

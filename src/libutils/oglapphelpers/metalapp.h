@@ -64,7 +64,7 @@ protected:
 
 private:
     MetalBuilderRcPtr m_metalBuilder;
-    bool m_glStateBound;   // OpenGL state for outputing the metal output texture contents is bound
+    bool m_glStateBound { false };   // OpenGL state for outputing the metal output texture contents is bound
 };
 
 }

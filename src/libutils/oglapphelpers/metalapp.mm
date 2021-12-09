@@ -73,6 +73,7 @@ void MetalApp::initContext()
 MetalApp::~MetalApp()
 {
     m_metalBuilder.reset();
+    m_glStateBound = false;
 }
 
 void MetalApp::initImage(int imgWidth, int imgHeight, Components comp, const float * image)
@@ -80,13 +81,14 @@ void MetalApp::initImage(int imgWidth, int imgHeight, Components comp, const flo
     std::vector<float> imageData;
     if(comp == Components::COMPONENTS_RGB)
     {
-        imageData = RGB_to_RGBA(image, 3 * imgWidth * imgHeight);
+        RGB_to_RGBA(image, 3 * imgWidth * imgHeight, imageData);
         image = imageData.data();
     }
     
     setImageDimensions(imgWidth, imgHeight, comp);
     m_image = std::make_shared<MtlTexture>(m_context->metalDevice, imgWidth, imgHeight, image);
     m_outputImage = std::make_shared<MtlTexture>(m_context->metalDevice, m_context->glContext, imgWidth, imgHeight, image);
+    m_glStateBound = false;
 }
 
 void MetalApp::updateImage(const float *image)
@@ -94,7 +96,7 @@ void MetalApp::updateImage(const float *image)
     std::vector<float> imageData;
     if(getImageComponents() == Components::COMPONENTS_RGB)
     {
-        imageData = RGB_to_RGBA(image, 3 * m_image->getWidth() * m_image->getHeight());
+        RGB_to_RGBA(image, 3 * m_image->getWidth() * m_image->getHeight(), imageData);
         image = imageData.data();
     }
     m_image->update(image);
@@ -147,7 +149,7 @@ void MetalApp::setShader(GpuShaderDescRcPtr & shaderDesc)
         std::ostringstream uniformParams;
         std::ostringstream params;
         
-        main << "//Metal Shading Language version 2.3\n"
+        main << "//Metal Shading Language version 2.0\n"
              << "#include <metal_stdlib>\n"
              << "#include <simd/simd.h>\n"
              << "using namespace metal;\n"

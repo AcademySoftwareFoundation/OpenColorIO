@@ -16,13 +16,12 @@
 namespace OCIO_NAMESPACE
 {
 
-std::vector<float> RGB_to_RGBA(const float* lutValues, int valueCount)
+void RGB_to_RGBA(const float* lutValues, int valueCount, std::vector<float>& float4AdaptedLutValues)
 {
     if(valueCount % 3 != 0)
         throw Exception("Value count should be divisible by 3.");
     
     valueCount = valueCount * 4 / 3;
-    std::vector<float> float4AdaptedLutValues;
     if(lutValues != nullptr)
     {
         float4AdaptedLutValues.resize(valueCount);
@@ -37,8 +36,6 @@ std::vector<float> RGB_to_RGBA(const float* lutValues, int valueCount)
             *rgbaLutValuesIt++ = 1.0f;
         }
     }
-    
-    return float4AdaptedLutValues;
 }
 
 namespace
@@ -80,7 +77,8 @@ id<MTLTexture> AllocateTexture3D(id<MTLDevice> device,
     }
     
     // MTLPixelFormatRGB32Float not supported on metal. Adapt to MTLPixelFormatRGBA32Float
-    std::vector<float> float4AdaptedLutValues = RGB_to_RGBA(lutValues, 3*edgelen*edgelen*edgelen);
+    std::vector<float> float4AdaptedLutValues;
+    RGB_to_RGBA(lutValues, 3*edgelen*edgelen*edgelen, float4AdaptedLutValues);
     
     MTLTextureDescriptor* texDescriptor = [MTLTextureDescriptor new];
     
@@ -125,7 +123,7 @@ id<MTLTexture> AllocateTexture2D(id<MTLDevice> device,
         memcpy(adaptedLutValues.data(), values, width * height * sizeof(float));
     }
     else
-        adaptedLutValues = RGB_to_RGBA(values, 3*width*height);
+        RGB_to_RGBA(values, 3*width*height, adaptedLutValues);
     
     MTLTextureDescriptor* texDescriptor = [MTLTextureDescriptor new];
     
@@ -439,7 +437,12 @@ bool MetalBuilder::buildPipelineStateObject(const std::string & clientShaderProg
         m_PSO = [m_device newRenderPipelineStateWithDescriptor:renderPipelineDesc error:&error];
     }
     
-    return (error == nil);
+    if(error != nil)
+    {
+        throw Exception("Failed to create pipeline state object. Applying color transformation is not possible.");
+    }
+    
+    return true;
 }
 
 void MetalBuilder::triggerProgrammaticCaptureScope()
