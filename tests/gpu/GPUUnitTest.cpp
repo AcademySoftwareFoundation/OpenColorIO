@@ -228,8 +228,13 @@ namespace
             // It means to generate the input values.
 
             const bool testWideRange = test->getTestWideRange();
+#if __aarch64__
+            const bool testNaN = false;
+            const bool testInfinity = false;
+#else
             const bool testNaN = test->getTestNaN();
             const bool testInfinity = test->getTestInfinity();
+#endif
 
             const float min = testWideRange ? -1.0f : 0.0f;
             const float max = testWideRange ? +2.0f : 1.0f;
