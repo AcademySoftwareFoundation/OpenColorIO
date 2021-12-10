@@ -228,7 +228,7 @@ namespace
             // It means to generate the input values.
 
             const bool testWideRange = test->getTestWideRange();
-#if __aarch64__
+#if __APPLE__ && __aarch64__
             const bool testNaN = false;
             const bool testInfinity = false;
 #else
