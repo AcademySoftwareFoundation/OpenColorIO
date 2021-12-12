@@ -192,7 +192,7 @@ void EstimateSlopes(const std::vector<GradingControlPoint> & ctrlPnts, std::vect
     {
         size_t j = i;
         float DL = secantLen[i];
-        while ((j < numCtrlPnts - 2) && (fabs(secantSlope[j + 1] - secantSlope[j]) < 1e-6f))
+        while ((j < numCtrlPnts - 2) && (std::fabs(secantSlope[j + 1] - secantSlope[j]) < 1e-6f))
         {
             DL += secantLen[j + 1];
             j++;
@@ -255,7 +255,7 @@ void FitSpline(const std::vector<GradingControlPoint> & ctrlPnts,
             }
             else
             {
-                if (fabs(aa) > fabs(bb))
+                if (std::fabs(aa) > std::fabs(bb))
                 {
                     ksi = xi_pl1 + aa * del_x / (slopes[i + 1] - slopes[i]);
                 }
@@ -471,7 +471,7 @@ void GradingBSplineCurveImpl::AddShaderEval(GpuShaderText & st,
         st.newLine() << "{";
         st.newLine() << "  float B = " << coefs << "[coefsOffs + coefsSets];";
         st.newLine() << "  float C = " << coefs << "[coefsOffs + coefsSets * 2];";
-        st.newLine() << "  return (x - C) / B + knStart;";
+        st.newLine() << "  return abs(B) < 1e-5 ? knStart : (x - C) / B + knStart;";
         st.newLine() << "}";
 
         st.newLine() << "else if (x >= knEndY)";
@@ -483,7 +483,7 @@ void GradingBSplineCurveImpl::AddShaderEval(GpuShaderText & st,
         st.newLine() << "  float t = knEnd - kn;";
         st.newLine() << "  float slope = 2. * A * t + B;";
         st.newLine() << "  float offs = ( A * t + B ) * t + C;";
-        st.newLine() << "  return (x - offs) / slope + knEnd;";
+        st.newLine() << "  return abs(slope) < 1e-5 ? knEnd : (x - offs) / slope + knEnd;";
         st.newLine() << "}";
 
         // else
@@ -580,7 +580,7 @@ float GradingBSplineCurveImpl::KnotsCoefs::evalCurveRev(int c, float y) const
     {
         const float B = m_coefsArray[coefsOffs + coefsSets];
         const float C = m_coefsArray[coefsOffs + coefsSets * 2];
-        return (y - C) / B + knStart;
+        return std::fabs(B) < 1e-5f ? knStart : (y - C) / B + knStart;
     }
     else if (y >= knEndY)
     {
@@ -591,7 +591,7 @@ float GradingBSplineCurveImpl::KnotsCoefs::evalCurveRev(int c, float y) const
         const float t = knEnd - kn;
         const float slope = 2.f * A * t + B;
         const float offs = (A * t + B) * t + C;
-        return (y - offs) / slope + knEnd;
+        return std::fabs(slope) < 1e-5f ? knEnd : (y - offs) / slope + knEnd;
     }
     else
     {
