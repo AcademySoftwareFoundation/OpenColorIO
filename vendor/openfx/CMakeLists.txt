@@ -91,7 +91,7 @@ else()
 endif()
 
 # Install to OFX package structure
-set(OFX_INSTALL_PREFIX "lib/OpenColorIO.ofx.bundle/Contents")
+set(OFX_INSTALL_PREFIX "${CMAKE_INSTALL_LIBDIR}/OpenColorIO.ofx.bundle/Contents")
 
 install(DIRECTORY 
     DESTINATION ${OFX_INSTALL_PREFIX}
