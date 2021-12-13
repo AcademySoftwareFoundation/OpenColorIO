@@ -777,9 +777,9 @@ GammaOpDataRcPtr GammaOpData::compose(const GammaOpData & B) const
     return outOp;
 }
 
-bool GammaOpData::operator==(const OpData & other) const
+bool GammaOpData::equals(const OpData & other) const
 {
-    if(!OpData::operator==(other)) return false;
+    if(!OpData::equals(other)) return false;
 
     const GammaOpData* gop = static_cast<const GammaOpData*>(&other);
 
@@ -859,5 +859,9 @@ void GammaOpData::invert() noexcept
     setStyle(invStyle);
 }
 
-} // namespace OCIO_NAMESPACE
+bool operator==(const GammaOpData & lhs, const GammaOpData & rhs)
+{
+    return lhs.equals(rhs);
+}
 
+} // namespace OCIO_NAMESPACE

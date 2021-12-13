@@ -210,9 +210,9 @@ void GradingRGBCurveOpData::removeDynamicProperty() noexcept
     m_value->makeNonDynamic();
 }
 
-bool GradingRGBCurveOpData::operator==(const OpData & other) const
+bool GradingRGBCurveOpData::equals(const OpData & other) const
 {
-    if (!OpData::operator==(other)) return false;
+    if (!OpData::equals(other)) return false;
 
     const GradingRGBCurveOpData* rop = static_cast<const GradingRGBCurveOpData*>(&other);
 
@@ -227,5 +227,9 @@ bool GradingRGBCurveOpData::operator==(const OpData & other) const
     return true;
 }
 
-} // namespace OCIO_NAMESPACE
+bool operator==(const GradingRGBCurveOpData & lhs, const GradingRGBCurveOpData & rhs)
+{
+    return lhs.equals(rhs);
+}
 
+} // namespace OCIO_NAMESPACE

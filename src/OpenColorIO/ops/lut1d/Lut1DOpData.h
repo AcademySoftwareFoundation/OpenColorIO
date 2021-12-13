@@ -175,7 +175,7 @@ public:
     // lookup rather than interpolation.
     bool mayLookup(BitDepth incomingDepth) const;
 
-    bool operator==(const OpData & other) const override;
+    bool equals(const OpData & other) const override;
 
     OpDataRcPtr getIdentityReplacement() const override;
 
@@ -264,6 +264,8 @@ private:
     // Used by MakeFastLut1DFromInverse and for saving to CLF/CTF.
     BitDepth m_fileOutBitDepth = BIT_DEPTH_UNKNOWN;
 };
+
+bool operator==(const Lut1DOpData & lhs, const Lut1DOpData & rhs);
 
 // Make a forward Lut1DOpData that approximates the exact inverse
 // Lut1DOpData to be used for the fast rendering style.

@@ -12,7 +12,7 @@ if(NOT DEFINED CMAKE_CXX_STANDARD)
     message(STATUS "Setting C++ version to '14' as none was specified.")
     set(CMAKE_CXX_STANDARD 14 CACHE STRING "C++ standard to compile against")
 elseif(NOT CMAKE_CXX_STANDARD IN_LIST SUPPORTED_CXX_STANDARDS)
-    message(FATAL_ERROR 
+    message(WARNING
             "CMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD} is unsupported. Supported standards are: ${SUPPORTED_CXX_STANDARDS_STR}.")
 endif()
 

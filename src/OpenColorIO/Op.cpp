@@ -63,7 +63,7 @@ void OpData::getSimplerReplacement(OpDataVec & /* ops */) const
 {
 }
 
-bool OpData::operator==(const OpData & other) const
+bool OpData::equals(const OpData & other) const
 {
     if (this == &other) return true;
 
@@ -89,6 +89,11 @@ const std::string & OpData::getName() const
 void OpData::setName(const std::string & name)
 {
     return m_metadata.setName(name.c_str());
+}
+
+bool operator==(const OpData & lhs, const OpData & rhs)
+{
+    return lhs.equals(rhs);
 }
 
 const char * GetTypeName(OpData::Type type)
@@ -593,4 +598,3 @@ void CreateOpVecFromOpData(OpRcPtrVec & ops,
 }
 
 } // namespace OCIO_NAMESPACE
-

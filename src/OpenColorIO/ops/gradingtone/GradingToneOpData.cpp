@@ -167,9 +167,9 @@ void GradingToneOpData::removeDynamicProperty() noexcept
     m_value->makeNonDynamic();
 }
 
-bool GradingToneOpData::operator==(const OpData & other) const
+bool GradingToneOpData::equals(const OpData & other) const
 {
-    if (!OpData::operator==(other)) return false;
+    if (!OpData::equals(other)) return false;
 
     const GradingToneOpData* rop = static_cast<const GradingToneOpData*>(&other);
 
@@ -183,6 +183,10 @@ bool GradingToneOpData::operator==(const OpData & other) const
     return true;
 }
 
+bool operator==(const GradingToneOpData & lhs, const GradingToneOpData & rhs)
+{
+    return lhs.equals(rhs);
+}
+
 
 } // namespace OCIO_NAMESPACE
-

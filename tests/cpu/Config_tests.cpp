@@ -4939,7 +4939,7 @@ OCIO_ADD_TEST(Config, add_color_space)
 
     const std::string str
         = PROFILE_V2_START
-            + u8"    from_scene_reference: !<MatrixTransform> {offset: [-1, -2, -3, -4]}\n";
+            + U8("    from_scene_reference: !<MatrixTransform> {offset: [-1, -2, -3, -4]}\n");
 
     std::istringstream is;
     is.str(str);
@@ -4951,15 +4951,15 @@ OCIO_ADD_TEST(Config, add_color_space)
 
     OCIO::ColorSpaceRcPtr cs;
     OCIO_CHECK_NO_THROW(cs = OCIO::ColorSpace::Create());
-    cs->setName(u8"astéroïde");                           // Color space name with accents.
-    cs->setDescription(u8"é À Â Ç É È ç -- $ € 円 £ 元"); // Some accents and some money symbols.
+    cs->setName(U8("astéroïde"));                           // Color space name with accents.
+    cs->setDescription(U8("é À Â Ç É È ç -- $ € 円 £ 元")); // Some accents and some money symbols.
 
     OCIO::FixedFunctionTransformRcPtr tr;
     OCIO_CHECK_NO_THROW(tr = OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_ACES_RED_MOD_03));
 
     OCIO_CHECK_NO_THROW(cs->setTransform(tr, OCIO::COLORSPACE_DIR_TO_REFERENCE));
 
-    constexpr char csName[] = u8"astéroïde";
+    const char * csName = U8("astéroïde");
 
     OCIO_CHECK_EQUAL(config->getIndexForColorSpace(csName), -1);
     OCIO_CHECK_NO_THROW(config->addColorSpace(cs));
@@ -4967,16 +4967,16 @@ OCIO_ADD_TEST(Config, add_color_space)
 
     const std::string res 
         = str
-        + u8"\n"
-        + u8"  - !<ColorSpace>\n"
-        + u8"    name: " + csName + u8"\n"
-        + u8"    family: \"\"\n"
-        + u8"    equalitygroup: \"\"\n"
-        + u8"    bitdepth: unknown\n"
-        + u8"    description: é À Â Ç É È ç -- $ € 円 £ 元\n"
-        + u8"    isdata: false\n"
-        + u8"    allocation: uniform\n"
-        + u8"    to_scene_reference: !<FixedFunctionTransform> {style: ACES_RedMod03}\n";
+        + U8("\n")
+        + U8("  - !<ColorSpace>\n")
+        + U8("    name: ") + csName + U8("\n")
+        + U8("    family: \"\"\n")
+        + U8("    equalitygroup: \"\"\n")
+        + U8("    bitdepth: unknown\n")
+        + U8("    description: é À Â Ç É È ç -- $ € 円 £ 元\n")
+        + U8("    isdata: false\n")
+        + U8("    allocation: uniform\n")
+        + U8("    to_scene_reference: !<FixedFunctionTransform> {style: ACES_RedMod03}\n");
 
     std::stringstream ss;
     OCIO_CHECK_NO_THROW(ss << *config.get());

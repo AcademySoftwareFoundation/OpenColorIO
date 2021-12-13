@@ -214,7 +214,7 @@ public:
     // Used by composition to remove small errors.
     void cleanUp(double offsetScale);
 
-    bool operator==(const OpData & other) const override;
+    bool equals(const OpData & other) const override;
 
     TransformDirection getDirection() const noexcept { return m_direction; }
     void setDirection(TransformDirection dir) noexcept;
@@ -241,6 +241,9 @@ private:
 
     TransformDirection m_direction{ TRANSFORM_DIR_FORWARD };
 };
+
+bool operator==(const MatrixOpData & lhs, const MatrixOpData & rhs);
+
 } // namespace OCIO_NAMESPACE
 
 #endif

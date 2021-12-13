@@ -432,11 +432,11 @@ OCIO_ADD_TEST(FileRules, config_rule_u8)
     auto fr = configRaw->getFileRules();
     auto fileRules = fr->createEditableCopy();
     OCIO_REQUIRE_EQUAL(fileRules->getNumEntries(), 1);
-    OCIO_CHECK_NO_THROW(fileRules->insertRule(0, u8"éÀÂÇÉÈç$€", "raw", "*", "a"));
+    OCIO_CHECK_NO_THROW(fileRules->insertRule(0, U8("éÀÂÇÉÈç$€"), "raw", "*", "a"));
     OCIO_REQUIRE_EQUAL(fileRules->getNumEntries(), 2);
-    OCIO_CHECK_NO_THROW(fileRules->setCustomKey(0, u8"key£", u8"val€"));
-    OCIO_CHECK_EQUAL(std::string(fileRules->getCustomKeyName(0, 0)), u8"key£");
-    OCIO_CHECK_EQUAL(std::string(fileRules->getCustomKeyValue(0, 0)), u8"val€");
+    OCIO_CHECK_NO_THROW(fileRules->setCustomKey(0, U8("key£"), U8("val€")));
+    OCIO_CHECK_EQUAL(std::string(fileRules->getCustomKeyName(0, 0)), U8("key£"));
+    OCIO_CHECK_EQUAL(std::string(fileRules->getCustomKeyValue(0, 0)), U8("val€"));
 
     auto config = configRaw->createEditableCopy();
     config->setFileRules(fileRules);
@@ -453,11 +453,11 @@ OCIO_ADD_TEST(FileRules, config_rule_u8)
 
     OCIO_REQUIRE_EQUAL(rules_reloaded->getNumEntries(), 2);
 
-    OCIO_CHECK_EQUAL(std::string(fileRules->getName(0)), u8"éÀÂÇÉÈç$€");
+    OCIO_CHECK_EQUAL(std::string(fileRules->getName(0)), U8("éÀÂÇÉÈç$€"));
 
     OCIO_REQUIRE_EQUAL(rules_reloaded->getNumCustomKeys(0), 1);
-    OCIO_CHECK_EQUAL(std::string(fileRules->getCustomKeyName(0, 0)), u8"key£");
-    OCIO_CHECK_EQUAL(std::string(fileRules->getCustomKeyValue(0, 0)), u8"val€");
+    OCIO_CHECK_EQUAL(std::string(fileRules->getCustomKeyName(0, 0)), U8("key£"));
+    OCIO_CHECK_EQUAL(std::string(fileRules->getCustomKeyValue(0, 0)), U8("val€"));
 }
 
 namespace

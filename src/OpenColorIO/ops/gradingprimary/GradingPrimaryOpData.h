@@ -65,12 +65,14 @@ public:
         return m_value;
     }
 
-    bool operator==(const OpData & other) const override;
+    bool equals(const OpData & other) const override;
 
 private:
     GradingStyle                           m_style;
     DynamicPropertyGradingPrimaryImplRcPtr m_value;
 };
+
+bool operator==(const GradingPrimaryOpData & lhs, const GradingPrimaryOpData & rhs);
 
 } // namespace OCIO_NAMESPACE
 

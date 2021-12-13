@@ -8,6 +8,7 @@
 #include "Platform.cpp"
 
 #include "testutils/UnitTest.h"
+#include "UnitTestUtils.h"
 
 namespace OCIO = OCIO_NAMESPACE;
 
@@ -17,13 +18,13 @@ OCIO_ADD_TEST(Platform, envVariable)
     // Only validates the public API.
     // Complete validations are done below using the private methods.
 
-    const char * path = OCIO::GetEnvVariable(u8"PATH");
+    const char * path = OCIO::GetEnvVariable(U8("PATH"));
     OCIO_CHECK_ASSERT(path && *path);
 
-    OCIO::SetEnvVariable(u8"MY_DUMMY_ENV", u8"SomeValue");
-    const char * value = OCIO::GetEnvVariable(u8"MY_DUMMY_ENV");
+    OCIO::SetEnvVariable(U8("MY_DUMMY_ENV"), U8("SomeValue"));
+    const char * value = OCIO::GetEnvVariable(U8("MY_DUMMY_ENV"));
     OCIO_CHECK_ASSERT(value && *value);
-    OCIO_CHECK_EQUAL(std::string(value), u8"SomeValue");
+    OCIO_CHECK_EQUAL(std::string(value), U8("SomeValue"));
 
 #ifdef _WIN32
     // Assert that we retrieve the correct value from the Windows API too.
@@ -36,8 +37,8 @@ OCIO_ADD_TEST(Platform, envVariable)
     OCIO_CHECK_ASSERT(win_env_value == TEXT("SomeValue"));
 #endif
 
-    OCIO::UnsetEnvVariable(u8"MY_DUMMY_ENV");
-    value = OCIO::GetEnvVariable(u8"MY_DUMMY_ENV");
+    OCIO::UnsetEnvVariable(U8("MY_DUMMY_ENV"));
+    value = OCIO::GetEnvVariable(U8("MY_DUMMY_ENV"));
     OCIO_CHECK_ASSERT(!value || !*value);
 
 #ifdef _WIN32
@@ -106,47 +107,47 @@ OCIO_ADD_TEST(Platform, setenv)
         Guard() = default;
         ~Guard()
         {
-            OCIO::Platform::Unsetenv(u8"MY_DUMMY_ENV");
-            OCIO::Platform::Unsetenv(u8"MY_WINDOWS_DUMMY_ENV");
+            OCIO::Platform::Unsetenv(U8("MY_DUMMY_ENV"));
+            OCIO::Platform::Unsetenv(U8("MY_WINDOWS_DUMMY_ENV"));
         }
     } guard;
 
     {
-        OCIO::Platform::Setenv(u8"MY_DUMMY_ENV", u8"SomeValue");
+        OCIO::Platform::Setenv(U8("MY_DUMMY_ENV"), U8("SomeValue"));
         std::string env;
-        OCIO_CHECK_ASSERT(OCIO::Platform::Getenv(u8"MY_DUMMY_ENV", env));
+        OCIO_CHECK_ASSERT(OCIO::Platform::Getenv(U8("MY_DUMMY_ENV"), env));
         OCIO_CHECK_ASSERT(!env.empty());
 
-        OCIO_CHECK_ASSERT(0==std::strcmp(u8"SomeValue", env.c_str()));
-        OCIO_CHECK_EQUAL(strlen(u8"SomeValue"), env.size());
+        OCIO_CHECK_ASSERT(0==std::strcmp(U8("SomeValue"), env.c_str()));
+        OCIO_CHECK_EQUAL(strlen(U8("SomeValue")), env.size());
     }
     {
-        OCIO::Platform::Setenv(u8"MY_DUMMY_ENV", u8" ");
+        OCIO::Platform::Setenv(U8("MY_DUMMY_ENV"), U8(" "));
         std::string env;
-        OCIO_CHECK_ASSERT(OCIO::Platform::Getenv(u8"MY_DUMMY_ENV", env));
+        OCIO_CHECK_ASSERT(OCIO::Platform::Getenv(U8("MY_DUMMY_ENV"), env));
         OCIO_CHECK_ASSERT(!env.empty());
 
-        OCIO_CHECK_ASSERT(0==std::strcmp(u8" ", env.c_str()));
-        OCIO_CHECK_EQUAL(std::strlen(u8" "), env.size());
+        OCIO_CHECK_ASSERT(0==std::strcmp(U8(" "), env.c_str()));
+        OCIO_CHECK_EQUAL(std::strlen(U8(" ")), env.size());
     }
     {
-        OCIO::Platform::Unsetenv(u8"MY_DUMMY_ENV");
+        OCIO::Platform::Unsetenv(U8("MY_DUMMY_ENV"));
         std::string env;
-        OCIO_CHECK_ASSERT(!OCIO::Platform::Getenv(u8"MY_DUMMY_ENV", env));
+        OCIO_CHECK_ASSERT(!OCIO::Platform::Getenv(U8("MY_DUMMY_ENV"), env));
         OCIO_CHECK_ASSERT(env.empty());
     }
 #ifdef _WIN32
     {
         SetEnvironmentVariable(TEXT("MY_WINDOWS_DUMMY_ENV"), TEXT("1"));
         std::string env;
-        OCIO_CHECK_ASSERT(OCIO::Platform::Getenv(u8"MY_WINDOWS_DUMMY_ENV", env));
-        OCIO_CHECK_EQUAL(env, std::string(u8"1"));
+        OCIO_CHECK_ASSERT(OCIO::Platform::Getenv(U8("MY_WINDOWS_DUMMY_ENV"), env));
+        OCIO_CHECK_EQUAL(env, std::string(U8("1")));
     }
     {
         SetEnvironmentVariable(TEXT("MY_WINDOWS_DUMMY_ENV"), TEXT(" "));
         std::string env;
-        OCIO_CHECK_ASSERT(OCIO::Platform::Getenv(u8"MY_WINDOWS_DUMMY_ENV", env));
-        OCIO_CHECK_EQUAL(env, std::string(u8" "));
+        OCIO_CHECK_ASSERT(OCIO::Platform::Getenv(U8("MY_WINDOWS_DUMMY_ENV"), env));
+        OCIO_CHECK_EQUAL(env, std::string(U8(" ")));
     }
     {
         // Windows SetEnvironmentVariable() sets the env. variable to empty like
@@ -154,13 +155,13 @@ OCIO_ADD_TEST(Platform, setenv)
 
         SetEnvironmentVariable(TEXT("MY_WINDOWS_DUMMY_ENV"), TEXT(""));
         std::string env;
-        OCIO_CHECK_ASSERT(OCIO::Platform::Getenv(u8"MY_WINDOWS_DUMMY_ENV", env));
+        OCIO_CHECK_ASSERT(OCIO::Platform::Getenv(U8("MY_WINDOWS_DUMMY_ENV"), env));
         OCIO_CHECK_ASSERT(env.empty());
     }
     {
         SetEnvironmentVariable(TEXT("MY_WINDOWS_DUMMY_ENV"), nullptr);
         std::string env;
-        OCIO_CHECK_ASSERT(!OCIO::Platform::Getenv(u8"MY_WINDOWS_DUMMY_ENV", env));
+        OCIO_CHECK_ASSERT(!OCIO::Platform::Getenv(U8("MY_WINDOWS_DUMMY_ENV"), env));
         OCIO_CHECK_ASSERT(env.empty());
     }
 #endif

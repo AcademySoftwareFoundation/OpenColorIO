@@ -246,9 +246,9 @@ void GradingPrimaryOpData::removeDynamicProperty() noexcept
     m_value->makeNonDynamic();
 }
 
-bool GradingPrimaryOpData::operator==(const OpData & other) const
+bool GradingPrimaryOpData::equals(const OpData & other) const
 {
-    if (!OpData::operator==(other)) return false;
+    if (!OpData::equals(other)) return false;
 
     const GradingPrimaryOpData* rop = static_cast<const GradingPrimaryOpData*>(&other);
 
@@ -262,5 +262,9 @@ bool GradingPrimaryOpData::operator==(const OpData & other) const
     return true;
 }
 
+bool operator==(const GradingPrimaryOpData & lhs, const GradingPrimaryOpData & rhs)
+{
+    return lhs.equals(rhs);
+}
 
 } // namespace OCIO_NAMESPACE

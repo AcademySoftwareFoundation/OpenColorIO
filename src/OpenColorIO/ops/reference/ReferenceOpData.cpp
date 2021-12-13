@@ -39,9 +39,9 @@ bool ReferenceOpData::hasChannelCrosstalk() const
     return true;
 }
 
-bool ReferenceOpData::operator==(const OpData& other) const
+bool ReferenceOpData::equals(const OpData& other) const
 {
-    if (!OpData::operator==(other)) return false;
+    if (!OpData::equals(other)) return false;
 
     const ReferenceOpData* rop = static_cast<const ReferenceOpData*>(&other);
 
@@ -65,5 +65,9 @@ std::string ReferenceOpData::getCacheID() const
                     "not have a corresponding Op");
 }
 
-} // namespace OCIO_NAMESPACE
+bool operator==(const ReferenceOpData & lhs, const ReferenceOpData & rhs)
+{
+    return lhs.equals(rhs);
+}
 
+} // namespace OCIO_NAMESPACE
