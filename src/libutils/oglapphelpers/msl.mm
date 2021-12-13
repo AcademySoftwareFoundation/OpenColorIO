@@ -44,7 +44,6 @@ namespace
 id<MTLSamplerState> GetSamplerState(id<MTLDevice> device, Interpolation interpolation)
 {
     MTLSamplerDescriptor* samplerDesc = [MTLSamplerDescriptor new];
-    [samplerDesc setMinFilter:MTLSamplerMinMagFilterNearest];
     
     if(interpolation==INTERP_NEAREST)
     {
@@ -71,7 +70,7 @@ id<MTLSamplerState> GetSamplerState(id<MTLDevice> device, Interpolation interpol
 id<MTLTexture> AllocateTexture3D(id<MTLDevice> device,
                        unsigned edgelen, const float * lutValues)
 {
-    if(lutValues==0x0)
+    if(lutValues == nullptr)
     {
         throw Exception("Missing texture data");
     }
@@ -123,7 +122,9 @@ id<MTLTexture> AllocateTexture2D(id<MTLDevice> device,
         memcpy(adaptedLutValues.data(), values, width * height * sizeof(float));
     }
     else
+    {
         RGB_to_RGBA(values, 3*width*height, adaptedLutValues);
+    }
     
     MTLTextureDescriptor* texDescriptor = [MTLTextureDescriptor new];
     
@@ -138,7 +139,10 @@ id<MTLTexture> AllocateTexture2D(id<MTLDevice> device,
     [texDescriptor setMipmapLevelCount:1];
     id<MTLTexture> tex = [device newTextureWithDescriptor:texDescriptor];
     
-    [tex replaceRegion:MTLRegionMake3D(0, 0, 0, width, height, 1) mipmapLevel:0 withBytes:adaptedLutValues.data() bytesPerRow:channelPerPix * width * sizeof(float)];
+    [tex replaceRegion:MTLRegionMake3D(0, 0, 0, width, height, 1)
+           mipmapLevel:0
+             withBytes:adaptedLutValues.data()
+           bytesPerRow:channelPerPix * width * sizeof(float)];
     
     [texDescriptor release];
     
@@ -185,15 +189,8 @@ MetalBuilder::~MetalBuilder()
         [m_PSO release];
     }
     m_PSO = nil;
-    
-    for(auto& textureId : m_textureIds)
-    {
-        if(textureId.m_texture)
-        {
-            textureId.release();
-            
-        }
-    }
+
+    deleteAllTextures();
 }
 
 void MetalBuilder::allocateAllTextures(unsigned startIndex)
@@ -286,6 +283,13 @@ void MetalBuilder::allocateAllTextures(unsigned startIndex)
 
 void MetalBuilder::deleteAllTextures()
 {
+    for(auto& textureId : m_textureIds)
+    {
+        if(textureId.m_texture)
+        {
+            textureId.release();
+        }
+    }
     m_textureIds.clear();
 }
 
@@ -421,7 +425,8 @@ bool MetalBuilder::buildPipelineStateObject(const std::string & clientShaderProg
     [options setLanguageVersion:MTLLanguageVersion2_0];
     [options setFastMathEnabled:NO];
     
-    @autoreleasepool {
+    @autoreleasepool
+    {
         m_library = [[m_device newLibraryWithSource:shaderSrc options:options error:&error] autorelease];
     
         id<MTLFunction> vertexShader = [[m_library newFunctionWithName:@"ColorCorrectionVS"] autorelease];
@@ -479,7 +484,9 @@ void MetalBuilder::applyColorCorrection(id<MTLTexture> inputTexture, id<MTLTextu
     static bool captureThisFrame = false;
     
     if(captureThisFrame)
+    {
         triggerProgrammaticCaptureScope();
+    }
     
     id<MTLCommandBuffer> cmdBuffer = [m_cmdQueue commandBuffer];
     
@@ -487,7 +494,9 @@ void MetalBuilder::applyColorCorrection(id<MTLTexture> inputTexture, id<MTLTextu
     if (@available(macOS 10.15, *)) {
         [renderPassDesc setRenderTargetWidth:outWidth];
         [renderPassDesc setRenderTargetHeight:outHeight];
-    } else {
+    }
+    else
+    {
         throw Exception("Metal Renderer Only Operates on MacOS 10.15 and above.");
     }
     [[renderPassDesc colorAttachments][0] setTexture:outputTexture];
@@ -519,13 +528,17 @@ void MetalBuilder::applyColorCorrection(id<MTLTexture> inputTexture, id<MTLTextu
     [renderPassDesc release];
     
     if(captureThisFrame)
+    {
         stopProgrammaticCaptureScope();
+    }
 }
 
 unsigned MetalBuilder::GetTextureMaxWidth()
 {
     id<MTLDevice> device = MTLCreateSystemDefaultDevice();
-    if ([device supportsFeatureSet:MTLFeatureSet_macOS_GPUFamily1_v1] || [device supportsFeatureSet:MTLFeatureSet_macOS_GPUFamily1_v2]) {
+    if ([device supportsFeatureSet:MTLFeatureSet_macOS_GPUFamily1_v1] ||
+        [device supportsFeatureSet:MTLFeatureSet_macOS_GPUFamily1_v2])
+    {
         return 8192;
     }
     return 16384;

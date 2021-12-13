@@ -10,23 +10,8 @@
 #import <Metal/Metal.h>
 #import <AppKit/AppKit.h>
 
-#ifdef __APPLE__
-
 #include <OpenGL/gl.h>
 #include <GLUT/glut.h>
-
-#elif _WIN32
-
-#include <GL/glew.h>
-#include <GL/glut.h>
-
-#else
-
-#include <GL/glew.h>
-#include <GL/gl.h>
-#include <GL/glut.h>
-
-#endif
 
 #include <OpenColorIO/OpenColorIO.h>
 
@@ -149,38 +134,39 @@ void MetalApp::setShader(GpuShaderDescRcPtr & shaderDesc)
         std::ostringstream uniformParams;
         std::ostringstream params;
         
-        main << "//Metal Shading Language version 2.0\n"
-             << "#include <metal_stdlib>\n"
-             << "#include <simd/simd.h>\n"
-             << "using namespace metal;\n"
-             << "\n"
-             << "struct VertexOut\n"
-             << "{\n"
-             << "    float4 position [[ position ]];\n"
-             << "    float2 texCoord0;\n"
-             << "};\n";
+        static constexpr char shaderheader[] = { R"(//Metal Shading Language version 2.0
+#include <metal_stdlib>
+#include <simd/simd.h>
+using namespace metal;
+
+struct VertexOut
+{
+    float4 position [[ position ]];
+    float2 texCoord0;
+};
         
-        main << "vertex VertexOut ColorCorrectionVS(unsigned int vId [[ vertex_id ]])\n"
-             << "{\n"
-             << "    VertexOut vOut;\n"
-             << "    switch(vId)\n"
-             << "    {\n"
-             << "    case 0:\n"
-             << "        vOut.position  = float4(-1.0f, 3.0f, 1.0f, 1.0f);\n"
-             << "        vOut.texCoord0 = float2(0.0f, -1.0f);\n"
-             << "        break;\n"
-             << "    case 1:\n"
-             << "        vOut.position  = float4(3.0f, -1.0f, 1.0f, 1.0f);\n"
-             << "        vOut.texCoord0 = float2(2.0f, 1.0f);\n"
-             << "        break;\n"
-             << "    case 2:\n"
-             << "        vOut.position  = float4(-1.0f, -1.0f, 1.0f, 1.0f);\n"
-             << "        vOut.texCoord0 = float2(0.0f, 1.0f);\n"
-             << "        break;\n"
-             << "    };\n"
-             << "    return vOut;\n"
-             << "}\n\n\n";
+vertex VertexOut ColorCorrectionVS(unsigned int vId [[ vertex_id ]])
+{
+    VertexOut vOut;
+    switch(vId)
+    {
+    case 0:
+        vOut.position  = float4(-1.0f, 3.0f, 1.0f, 1.0f);
+        vOut.texCoord0 = float2(0.0f, -1.0f);
+        break;
+    case 1:
+        vOut.position  = float4(3.0f, -1.0f, 1.0f, 1.0f);
+        vOut.texCoord0 = float2(2.0f, 1.0f);
+        break;
+    case 2:
+        vOut.position  = float4(-1.0f, -1.0f, 1.0f, 1.0f);
+        vOut.texCoord0 = float2(0.0f, 1.0f);
+        break;
+    };
+    return vOut;
+})" };
         
+        main << shaderheader;
         main << shaderDesc->getShaderText();
     
         const std::string uniformDataStructName = "UniformData";
@@ -313,9 +299,13 @@ void MetalApp::setShader(GpuShaderDescRcPtr & shaderDesc)
             shaderDesc->getTexture(i, textureName, samplerName, width, height, channel, interpolation);
             
             if(height > 1)
+            {
                 main << ",    texture2d<float> ";
+            }
             else
+            {
                 main << ",    texture1d<float> ";
+            }
             main << textureName
                  << " [[ texture("
                  << std::to_string(tex_slot)
@@ -336,7 +326,9 @@ void MetalApp::setShader(GpuShaderDescRcPtr & shaderDesc)
         }
         
         if(uniformParams.str().size() > 0 || params.str().size() > 0)
+        {
             separator = ", ";
+        }
         
         main << ")"
                 "{\n"

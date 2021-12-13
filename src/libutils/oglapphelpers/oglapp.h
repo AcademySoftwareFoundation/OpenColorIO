@@ -88,7 +88,7 @@ public:
 
     // Initialize the image.
     virtual void initImage(int imageWidth, int imageHeight,
-                   Components comp, const float * imageBuffer);
+                           Components comp, const float * imageBuffer);
     // Update the image if it changes.
     virtual void updateImage(const float * imageBuffer);
 

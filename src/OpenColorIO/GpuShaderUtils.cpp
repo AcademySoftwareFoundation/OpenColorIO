@@ -439,7 +439,9 @@ std::string GpuShaderText::vectorCompareExpression(const std::string& lhs, const
 {
     std::string ret = lhs + " " + op + " " + rhs;
     if(m_lang == GPU_LANGUAGE_MSL_2_0)
+    {
         ret = "any( " + ret + " )";
+    }
     return ret;
 }
 
