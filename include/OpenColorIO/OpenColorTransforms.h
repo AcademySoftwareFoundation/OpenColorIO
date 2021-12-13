@@ -433,7 +433,6 @@ extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const DisplayViewTra
 struct OCIOEXPORT GradingRGBM
 {
     GradingRGBM() = default;
-    GradingRGBM(const GradingRGBM &) = default;
     GradingRGBM(double red, double green, double blue, double master)
         : m_red(red)
         , m_green(green)
@@ -460,7 +459,6 @@ extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const GradingRGBM &)
 struct OCIOEXPORT GradingPrimary
 {
     GradingPrimary() = delete;
-    GradingPrimary(const GradingPrimary &) = default;
     explicit GradingPrimary(GradingStyle style)
         : m_pivot(style == GRADING_LOG ? -0.2 : 0.18)
         , m_clampBlack(NoClampBlack())
@@ -496,7 +494,6 @@ extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const GradingPrimary
 struct OCIOEXPORT GradingControlPoint
 {
     GradingControlPoint() = default;
-    GradingControlPoint(const GradingControlPoint &) = default;
     GradingControlPoint(float x, float y) : m_x(x), m_y(y) {}
     float m_x{ 0.f };
     float m_y{ 0.f };
@@ -574,7 +571,6 @@ extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const GradingRGBCurv
 struct OCIOEXPORT GradingRGBMSW
 {
     GradingRGBMSW() = default;
-    GradingRGBMSW(const GradingRGBMSW &) = default;
     GradingRGBMSW(double red, double green, double blue, double master, double start, double width)
         : m_red   (red)
         , m_green (green)
@@ -612,7 +608,6 @@ extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const GradingRGBMSW 
 struct OCIOEXPORT GradingTone
 {
     GradingTone() = delete;
-    GradingTone(const GradingTone &) = default;
     explicit GradingTone(GradingStyle style)
         : m_blacks(style == GRADING_LIN ? GradingRGBMSW(0., 4.) :
                   (style == GRADING_LOG ? GradingRGBMSW(0.4, 0.4) :

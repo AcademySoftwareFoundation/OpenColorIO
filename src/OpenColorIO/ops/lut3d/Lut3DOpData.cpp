@@ -423,9 +423,9 @@ bool Lut3DOpData::haveEqualBasics(const Lut3DOpData & other) const
     return (m_array == other.m_array);
 }
 
-bool Lut3DOpData::operator==(const OpData & other) const
+bool Lut3DOpData::equals(const OpData & other) const
 {
-    if (!OpData::operator==(other)) return false;
+    if (!OpData::equals(other)) return false;
 
     const Lut3DOpData* lop = static_cast<const Lut3DOpData*>(&other);
 
@@ -495,5 +495,9 @@ void Lut3DOpData::scale(float scale)
     getArray().scale(scale);
 }
 
-} // namespace OCIO_NAMESPACE
+bool operator==(const Lut3DOpData & lhs, const Lut3DOpData & rhs)
+{
+    return lhs.equals(rhs);
+}
 
+} // namespace OCIO_NAMESPACE

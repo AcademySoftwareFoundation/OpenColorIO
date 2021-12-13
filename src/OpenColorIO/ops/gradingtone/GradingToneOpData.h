@@ -69,13 +69,15 @@ public:
         return m_value;
     }
 
-    bool operator==(const OpData & other) const override;
+    bool equals(const OpData & other) const override;
 
 private:
     GradingStyle                        m_style;
     DynamicPropertyGradingToneImplRcPtr m_value;
     TransformDirection                  m_direction{ TRANSFORM_DIR_FORWARD };
 };
+
+bool operator==(const GradingToneOpData & lhs, const GradingToneOpData & rhs);
 
 } // namespace OCIO_NAMESPACE
 

@@ -77,7 +77,7 @@ public:
 
     std::string getCacheID() const override;
 
-    bool operator==(const OpData& other) const override;
+    bool equals(const OpData& other) const override;
 
     LogOpDataRcPtr clone() const;
 
@@ -153,6 +153,8 @@ private:
 
     TransformDirection m_direction = TRANSFORM_DIR_FORWARD;
 };
+
+bool operator==(const LogOpData & lhs, const LogOpData & rhs);
 
 } // namespace OCIO_NAMESPACE
 

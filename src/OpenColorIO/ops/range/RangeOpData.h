@@ -140,7 +140,7 @@ public:
     // Create a MatrixOp that is equivalent to the Range except does not clamp.
     MatrixOpDataRcPtr convertToMatrix() const;
 
-    bool operator==(const OpData& other) const override;
+    bool equals(const OpData& other) const override;
 
     RangeOpDataRcPtr getAsForward() const;
 
@@ -176,6 +176,8 @@ private:
 
     TransformDirection m_direction{ TRANSFORM_DIR_FORWARD };
 };
+
+bool operator==(const RangeOpData & lhs, const RangeOpData & rhs);
 
 } // namespace OCIO_NAMESPACE
 

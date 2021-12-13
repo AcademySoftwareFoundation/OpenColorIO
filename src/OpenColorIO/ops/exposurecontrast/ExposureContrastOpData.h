@@ -161,7 +161,7 @@ public:
 
     std::string getCacheID() const override;
 
-    bool operator==(const OpData & other) const override;
+    bool equals(const OpData & other) const override;
 
     bool hasDynamicProperty(DynamicPropertyType type) const;
 
@@ -222,6 +222,8 @@ private:
     double m_logExposureStep = LOGEXPOSURESTEP_DEFAULT;
     double m_logMidGray = LOGMIDGRAY_DEFAULT;
 };
+
+bool operator==(const ExposureContrastOpData & lhs, const ExposureContrastOpData & rhs);
 
 } // namespace OCIO_NAMESPACE
 

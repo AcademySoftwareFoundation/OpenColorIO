@@ -783,9 +783,9 @@ void MatrixOpData::cleanUp(double offsetScale)
     }
 }
 
-bool MatrixOpData::operator==(const OpData & other) const
+bool MatrixOpData::equals(const OpData & other) const
 {
-    if (!OpData::operator==(other)) return false;
+    if (!OpData::equals(other)) return false;
 
     const MatrixOpData* mop = static_cast<const MatrixOpData*>(&other);
 
@@ -873,5 +873,9 @@ void MatrixOpData::scale(double inScale, double outScale)
     m_offsets.scale(outScale);
 }
 
-} // namespace OCIO_NAMESPACE
+bool operator==(const MatrixOpData & lhs, const MatrixOpData & rhs)
+{
+    return lhs.equals(rhs);
+}
 
+} // namespace OCIO_NAMESPACE

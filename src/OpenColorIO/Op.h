@@ -152,8 +152,7 @@ public:
     // returns true if the op's output does not combine input channels
     virtual bool hasChannelCrosstalk() const = 0;
 
-    virtual bool operator==(const OpData & other) const;
-    bool operator!=(const OpData & other) const = delete;
+    virtual bool equals(const OpData & other) const;
 
     // This should yield a string of not unreasonable length.
     virtual std::string getCacheID() const = 0;
@@ -168,6 +167,8 @@ protected:
 private:
     FormatMetadataImpl m_metadata;
 };
+
+bool operator==(const OpData & lhs, const OpData & rhs);
 
 const char * GetTypeName(OpData::Type type);
 
