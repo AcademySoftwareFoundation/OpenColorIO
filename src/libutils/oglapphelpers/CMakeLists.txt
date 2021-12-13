@@ -15,6 +15,22 @@ set(INCLUDES
     oglapp.h
 )
 
+if(APPLE)
+
+    list(APPEND SOURCES
+        msl.mm
+        mtltexture.mm
+        metalapp.mm
+    )
+
+    list(APPEND INCLUDES
+        msl.h
+        mtltexture.h
+        metalapp.h
+    )
+
+endif()
+
 add_library(oglapphelpers STATIC ${SOURCES})
 set_target_properties(oglapphelpers PROPERTIES POSITION_INDEPENDENT_CODE ON)
 set_target_properties(oglapphelpers PROPERTIES OUTPUT_NAME OpenColorIOoglapphelpers)
@@ -80,6 +96,16 @@ else()
             ${GLEW_LIBRARIES}
             ${GLUT_LIBRARIES}
         )
+endif()
+
+if(APPLE)
+    target_link_libraries(oglapphelpers
+        PRIVATE
+            "-framework Carbon"
+            "-framework IOKit"
+            "-framework Metal"
+            "-framework CoreVideo"
+    )
 endif()
 
 if(${OCIO_EGL_HEADLESS})

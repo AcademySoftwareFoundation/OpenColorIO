@@ -1138,21 +1138,49 @@ OCIO_ADD_TEST(GpuShader, MetalSupport9)
 struct ocioOCIOMain
 {
 ocioOCIOMain(
-  int ocio_grading_rgbcurve_knotsOffsets[8]
-  , float ocio_grading_rgbcurve_knots[60]
-  , int ocio_grading_rgbcurve_coefsOffsets[8]
-  , float ocio_grading_rgbcurve_coefs[180]
+  constant int ocio_grading_rgbcurve_knotsOffsets[8]
+  , int ocio_grading_rgbcurve_knotsOffsets_count
+  , constant float ocio_grading_rgbcurve_knots[60]
+  , int ocio_grading_rgbcurve_knots_count
+  , constant int ocio_grading_rgbcurve_coefsOffsets[8]
+  , int ocio_grading_rgbcurve_coefsOffsets_count
+  , constant float ocio_grading_rgbcurve_coefs[180]
+  , int ocio_grading_rgbcurve_coefs_count
   , bool ocio_grading_rgbcurve_localBypass
 )
 {
-  for(int i = 0; i < 8; ++i)
+  for(int i = 0; i < ocio_grading_rgbcurve_knotsOffsets_count; ++i)
+  {
     this->ocio_grading_rgbcurve_knotsOffsets[i] = ocio_grading_rgbcurve_knotsOffsets[i];
-  for(int i = 0; i < 60; ++i)
+  }
+  for(int i = ocio_grading_rgbcurve_knotsOffsets_count; i < 8; ++i)
+  {
+    this->ocio_grading_rgbcurve_knotsOffsets[i] = 0;
+  }
+  for(int i = 0; i < ocio_grading_rgbcurve_knots_count; ++i)
+  {
     this->ocio_grading_rgbcurve_knots[i] = ocio_grading_rgbcurve_knots[i];
-  for(int i = 0; i < 8; ++i)
+  }
+  for(int i = ocio_grading_rgbcurve_knots_count; i < 60; ++i)
+  {
+    this->ocio_grading_rgbcurve_knots[i] = 0;
+  }
+  for(int i = 0; i < ocio_grading_rgbcurve_coefsOffsets_count; ++i)
+  {
     this->ocio_grading_rgbcurve_coefsOffsets[i] = ocio_grading_rgbcurve_coefsOffsets[i];
-  for(int i = 0; i < 180; ++i)
+  }
+  for(int i = ocio_grading_rgbcurve_coefsOffsets_count; i < 8; ++i)
+  {
+    this->ocio_grading_rgbcurve_coefsOffsets[i] = 0;
+  }
+  for(int i = 0; i < ocio_grading_rgbcurve_coefs_count; ++i)
+  {
     this->ocio_grading_rgbcurve_coefs[i] = ocio_grading_rgbcurve_coefs[i];
+  }
+  for(int i = ocio_grading_rgbcurve_coefs_count; i < 180; ++i)
+  {
+    this->ocio_grading_rgbcurve_coefs[i] = 0;
+  }
   this->ocio_grading_rgbcurve_localBypass = ocio_grading_rgbcurve_localBypass;
 }
 
@@ -1242,18 +1270,26 @@ float4 OCIOMain(float4 inPixel)
 
 };
 float4 OCIOMain(
-  int ocio_grading_rgbcurve_knotsOffsets[8]
-  , float ocio_grading_rgbcurve_knots[60]
-  , int ocio_grading_rgbcurve_coefsOffsets[8]
-  , float ocio_grading_rgbcurve_coefs[180]
+  constant int ocio_grading_rgbcurve_knotsOffsets[8]
+  , int ocio_grading_rgbcurve_knotsOffsets_count
+  , constant float ocio_grading_rgbcurve_knots[60]
+  , int ocio_grading_rgbcurve_knots_count
+  , constant int ocio_grading_rgbcurve_coefsOffsets[8]
+  , int ocio_grading_rgbcurve_coefsOffsets_count
+  , constant float ocio_grading_rgbcurve_coefs[180]
+  , int ocio_grading_rgbcurve_coefs_count
   , bool ocio_grading_rgbcurve_localBypass
   , float4 inPixel)
 {
   return ocioOCIOMain(
     ocio_grading_rgbcurve_knotsOffsets
+    , ocio_grading_rgbcurve_knotsOffsets_count
     , ocio_grading_rgbcurve_knots
+    , ocio_grading_rgbcurve_knots_count
     , ocio_grading_rgbcurve_coefsOffsets
+    , ocio_grading_rgbcurve_coefsOffsets_count
     , ocio_grading_rgbcurve_coefs
+    , ocio_grading_rgbcurve_coefs_count
     , ocio_grading_rgbcurve_localBypass
   ).OCIOMain(inPixel);
 }

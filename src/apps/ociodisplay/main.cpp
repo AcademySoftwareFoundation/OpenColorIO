@@ -31,13 +31,18 @@ namespace OCIO = OCIO_NAMESPACE;
 #include <GL/gl.h>
 #include <GL/glut.h>
 #endif
-
+#if __APPLE__
+#include "metalapp.h"
+#endif
 #include "glsl.h"
 #include "oglapp.h"
 
 bool g_verbose   = false;
 bool g_gpulegacy = false;
 bool g_gpuinfo   = false;
+#if __APPLE__
+bool g_useMetal  = false;
+#endif
 
 std::string g_filename;
 
@@ -414,7 +419,12 @@ void UpdateOCIOGLState()
 
     // Set the shader context.
     OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
-    shaderDesc->setLanguage(OCIO::GPU_LANGUAGE_GLSL_1_2);
+    shaderDesc->setLanguage(
+#if __APPLE__
+                            g_useMetal ?
+                            OCIO::GPU_LANGUAGE_MSL_2_0 :
+#endif
+                            OCIO::GPU_LANGUAGE_GLSL_1_2);
     shaderDesc->setFunctionName("OCIODisplay");
     shaderDesc->setResourcePrefix("ocio_");
 
@@ -613,6 +623,12 @@ void parseArguments(int argc, char **argv)
         {
             g_gpuinfo = true;
         }
+#if __APPLE__
+        else if(0==strcmp(argv[i], "-metal"))
+        {
+            g_useMetal = true;
+        }
+#endif
         else if(0==strcmp(argv[i], "-h"))
         {
             std::cout << std::endl;
@@ -624,6 +640,9 @@ void parseArguments(int argc, char **argv)
             std::cout << "     -v         :  displays the color space information" << std::endl;
             std::cout << "     -gpulegacy :  use the legacy (i.e. baked) GPU color processing" << std::endl;
             std::cout << "     -gpuinfo   :  output the OCIO shader program" << std::endl;
+#if __APPLE__
+            std::cout << "     -metal     :  use metal OCIO shader backend " << std::endl;
+#endif
             std::cout << std::endl;
             exit(0);
         }
@@ -640,7 +659,16 @@ int main(int argc, char **argv)
 
     try
     {
-        g_oglApp = std::make_shared<OCIO::ScreenApp>("ociodisplay", 512, 512);
+#if __APPLE__
+        if(g_useMetal)
+        {
+            g_oglApp = std::make_shared<OCIO::MetalApp>("ociodisplay", 512, 512);
+        }
+        else
+#endif
+        {
+            g_oglApp = std::make_shared<OCIO::ScreenApp>("ociodisplay", 512, 512);
+        }
     }
     catch (const OCIO::Exception & e)
     {

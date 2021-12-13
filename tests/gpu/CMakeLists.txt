@@ -51,6 +51,9 @@ target_link_libraries(test_gpu_exec
 )
 
 add_test(NAME test_gpu COMMAND test_gpu_exec)
+if(APPLE)
+	add_test(NAME test_metal COMMAND test_gpu_exec -metal)
+endif()
 
 # Note: To avoid changing PATH from outside the cmake files.
 if(MSVC AND BUILD_SHARED_LIBS)
