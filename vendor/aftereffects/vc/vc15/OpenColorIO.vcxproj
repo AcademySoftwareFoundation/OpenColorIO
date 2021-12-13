@@ -58,6 +58,7 @@
     <ClInclude Include="..\..\..\..\src\OpenColorIO\FileRules.h" />
     <ClInclude Include="..\..\..\..\src\OpenColorIO\GPUProcessor.h" />
     <ClInclude Include="..\..\..\..\src\OpenColorIO\GpuShader.h" />
+    <ClInclude Include="..\..\..\..\src\OpenColorIO\GpuShaderClassWrapper.h" />
     <ClInclude Include="..\..\..\..\src\OpenColorIO\GpuShaderUtils.h" />
     <ClInclude Include="..\..\..\..\src\OpenColorIO\HashUtils.h" />
     <ClInclude Include="..\..\..\..\src\OpenColorIO\ImagePacking.h" />
@@ -218,6 +219,7 @@
     <ClCompile Include="..\..\..\..\src\OpenColorIO\GPUProcessor.cpp" />
     <ClCompile Include="..\..\..\..\src\OpenColorIO\GpuShader.cpp" />
     <ClCompile Include="..\..\..\..\src\OpenColorIO\GpuShaderDesc.cpp" />
+    <ClCompile Include="..\..\..\..\src\OpenColorIO\GpuShaderClassWrapper.cpp" />
     <ClCompile Include="..\..\..\..\src\OpenColorIO\GpuShaderUtils.cpp" />
     <ClCompile Include="..\..\..\..\src\OpenColorIO\HashUtils.cpp" />
     <ClCompile Include="..\..\..\..\src\OpenColorIO\ImageDesc.cpp" />
