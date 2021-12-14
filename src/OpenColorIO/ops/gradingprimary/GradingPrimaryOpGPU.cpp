@@ -165,7 +165,7 @@ void AddGPLogForwardShader(GpuShaderCreatorRcPtr & shaderCreator,
                  << " + " << props.pivot << ";";
 
     // Not sure if the if helps performance, but it does allow out == in at the default values.
-    st.newLine() << "if ( " << props.gamma << " != " << st.float3Const(1.f) << " )";
+    st.newLine() << "if ( " << st.vectorCompareExpression(props.gamma, "!=", st.float3Const(1.f)) << " )";
     st.newLine() << "{";
     st.indent();
     st.newLine() << st.float3Decl("normalizedOut")
@@ -206,7 +206,7 @@ void AddGPLogInverseShader(GpuShaderCreatorRcPtr & shaderCreator,
     st.newLine() << "}";
 
     // Not sure if the if helps performance, but it does allow out == in at the default values.
-    st.newLine() << "if ( " << props.gamma << " != " << st.float3Const(1.f) << " )";
+    st.newLine() << "if ( " << st.vectorCompareExpression(props.gamma, "!=", st.float3Const(1.f)) << " )";
     st.newLine() << "{";
     st.indent();
     st.newLine() << st.float3Decl("normalizedOut")
@@ -307,7 +307,7 @@ void AddGPLinForwardShader(GpuShaderCreatorRcPtr & shaderCreator,
 
     // Not sure if the if helps performance, but it does allow out == in at the default values.
     // Although note that the log-to-lin in Tone Op also prevents out == in.
-    st.newLine() << "if ( " << props.contrast << " != " << st.float3Const(1.f) << " )";
+    st.newLine() << "if ( " << st.vectorCompareExpression(props.contrast, "!=", st.float3Const(1.f)) << " )";
     st.newLine() << "{";
     st.indent();
 
@@ -345,7 +345,7 @@ void AddGPLinInverseShader(GpuShaderCreatorRcPtr & shaderCreator,
 
     // Not sure if the if helps performance, but it does allow out == in at the default values.
     // Although note that the log-to-lin in Tone Op also prevents out == in.
-    st.newLine() << "if ( " << props.contrast << " != " << st.float3Const(1.f) << " )";
+    st.newLine() << "if ( " << st.vectorCompareExpression(props.contrast, "!=", st.float3Const(1.f)) << " )";
     st.newLine() << "{";
     st.indent();
     // NB: The sign(outColor.rgb) is a vec3, preserving the sign of each channel.
@@ -446,7 +446,7 @@ void AddGPVideoForwardShader(GpuShaderCreatorRcPtr & shaderCreator,
                                << " + " << props.pivotBlack << ";";
 
     // Not sure if the if helps performance, but it does allow out == in at the default values.
-    st.newLine() << "if ( " << props.gamma << " != " << st.float3Const(1.f) << " )";
+    st.newLine() << "if ( " << st.vectorCompareExpression(props.gamma, "!=", st.float3Const(1.f)) << " )";
     st.newLine() << "{";
     st.indent();
     st.newLine() << st.float3Decl("normalizedOut")
@@ -486,7 +486,7 @@ void AddGPVideoInverseShader(GpuShaderCreatorRcPtr & shaderCreator,
     st.newLine() << "}";
 
     // Not sure if the if helps performance, but it does allow out == in at the default values.
-    st.newLine() << "if ( " << props.gamma << " != " << st.float3Const(1.f) << " )";
+    st.newLine() << "if ( " << st.vectorCompareExpression(props.gamma, "!=", st.float3Const(1.f)) << " )";
     st.newLine() << "{";
     st.indent();
     st.newLine() << st.float3Decl("normalizedOut")

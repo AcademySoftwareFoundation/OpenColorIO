@@ -8,6 +8,11 @@
 namespace OCIO_NAMESPACE
 {
 
+std::string GetArrayLengthVariableName(const std::string& variableName)
+{
+    return variableName + "_count";
+}
+
 std::string MetalShaderClassWrapper::generateClassWrapperHeader(GpuShaderText& kw) const
 {
     if(m_className.empty())
@@ -27,7 +32,11 @@ std::string MetalShaderClassWrapper::generateClassWrapperHeader(GpuShaderText& k
     std::string separator = "";
     for(const auto& param : m_functionParameters)
     {
-        kw.newLine() << separator << param.type << " " << param.name;
+        kw.newLine() << separator << (param.m_isArray ? "constant " : "") << param.m_type << " " << param.m_name;
+        if(param.m_isArray)
+        {
+            kw.newLine() << ", int " << GetArrayLengthVariableName(param.m_name.substr(0, param.m_name.find('[')));
+        }
         separator = ", ";
     }
     kw.dedent();
@@ -37,21 +46,35 @@ std::string MetalShaderClassWrapper::generateClassWrapperHeader(GpuShaderText& k
     kw.indent();
     for(const auto& param : m_functionParameters)
     {
-        size_t openAngledBracketPos = param.name.find('[');
-        bool isArray = openAngledBracketPos != std::string::npos;
-        if(!isArray)
-            kw.newLine()    << "this->" << param.name  << " = " << param.name  << ";";
+        size_t openAngledBracketPos = param.m_name.find('[');
+        if(!param.m_isArray)
+        {
+            kw.newLine()    << "this->" << param.m_name  << " = " << param.m_name  << ";";
+        }
         else
         {
-            size_t closeAngledBracketPos = param.name.find(']');
-            std::string variableName = param.name.substr(0, openAngledBracketPos);
+            size_t closeAngledBracketPos = param.m_name.find(']');
+            std::string variableName = param.m_name.substr(0, openAngledBracketPos);
             
             kw.newLine()    << "for(int i = 0; i < "
-                            << param.name.substr(openAngledBracketPos+1, closeAngledBracketPos-openAngledBracketPos-1)
+                            << GetArrayLengthVariableName(variableName)
                             << "; ++i)";
+            kw.newLine()    << "{";
             kw.indent();
             kw.newLine()    << "this->" << variableName << "[i] = " << variableName << "[i];";
             kw.dedent();
+            kw.newLine()    << "}";
+            
+            kw.newLine()    << "for(int i = "
+                            << GetArrayLengthVariableName(variableName)
+                            << "; i < "
+                            << param.m_name.substr(openAngledBracketPos+1, closeAngledBracketPos-openAngledBracketPos-1)
+                            << "; ++i)";
+            kw.newLine()    << "{";
+            kw.indent();
+            kw.newLine()    << "this->" << variableName << "[i] = 0;";
+            kw.dedent();
+            kw.newLine()    << "}";
         }
     }
     kw.dedent();
@@ -79,7 +102,11 @@ std::string MetalShaderClassWrapper::generateClassWrapperFooter(GpuShaderText& k
     std::string separator = "";
     for(const auto& param : m_functionParameters)
     {
-        kw.newLine() << separator << param.type << " " << param.name;
+        kw.newLine() << separator << (param.m_isArray ? "constant " : "") << param.m_type << " " << param.m_name;
+        if(param.m_isArray)
+        {
+            kw.newLine() << ", int " << GetArrayLengthVariableName(param.m_name.substr(0, param.m_name.find('[')));
+        }
         separator = ", ";
     }
     kw.newLine() << separator << kw.float4Keyword() << " inPixel)";
@@ -92,13 +119,18 @@ std::string MetalShaderClassWrapper::generateClassWrapperFooter(GpuShaderText& k
     separator = "";
     for(const auto& param : m_functionParameters)
     {
-        size_t openAngledBracketPos = param.name.find('[');
+        size_t openAngledBracketPos = param.m_name.find('[');
         bool isArray = openAngledBracketPos != std::string::npos;
         
         if(!isArray)
-            kw.newLine() << separator << param.name;
+        {
+            kw.newLine() << separator << param.m_name;
+        }
         else
-            kw.newLine() << separator << param.name.substr(0, openAngledBracketPos);
+        {
+            kw.newLine() << separator << param.m_name.substr(0, openAngledBracketPos);
+            kw.newLine() << ", " << GetArrayLengthVariableName(param.m_name.substr(0, openAngledBracketPos));
+        }
         separator = ", ";
     }
     kw.dedent();

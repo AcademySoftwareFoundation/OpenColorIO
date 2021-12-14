@@ -79,7 +79,7 @@ public:
 
     // Build the complete shader program which includes the OCIO shader program 
     // and the client shader program.
-    unsigned buildProgram(const std::string & clientShaderProgram);
+    unsigned buildProgram(const std::string & clientShaderProgram, bool standaloneShader);
     void useProgram();
     unsigned getProgramHandle();
 

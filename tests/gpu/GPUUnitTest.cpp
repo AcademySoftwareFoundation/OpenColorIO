@@ -16,6 +16,9 @@
 
 #include "GPUUnitTest.h"
 #include "oglapp.h"
+#if __APPLE__
+#include "metalapp.h"
+#endif
 
 namespace OCIO = OCIO_NAMESPACE;
 
@@ -161,7 +164,7 @@ OCIO::GpuShaderDescRcPtr & OCIOGPUTest::getShaderDesc()
     if (!m_shaderDesc)
     {
         m_shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
-        m_shaderDesc->setLanguage(OCIO::GPU_LANGUAGE_GLSL_1_2);
+        m_shaderDesc->setLanguage(m_gpuShadingLanguage);
         m_shaderDesc->setPixelName("myPixel");
     }
     return m_shaderDesc;
@@ -225,8 +228,13 @@ namespace
             // It means to generate the input values.
 
             const bool testWideRange = test->getTestWideRange();
+#if __APPLE__ && __aarch64__
+            const bool testNaN = false;
+            const bool testInfinity = false;
+#else
             const bool testNaN = test->getTestNaN();
             const bool testInfinity = test->getTestInfinity();
+#endif
 
             const float min = testWideRange ? -1.0f : 0.0f;
             const float max = testWideRange ? +2.0f : 1.0f;
@@ -322,7 +330,7 @@ namespace
 
         OCIO::ConstProcessorRcPtr & processor = test->getProcessor();
         OCIO::GpuShaderDescRcPtr & shaderDesc = test->getShaderDesc();
-
+        
         OCIO::ConstGPUProcessorRcPtr gpu;
         if (test->isLegacyShader())
         {
@@ -501,13 +509,34 @@ namespace
     }
 };
 
-int main(int, char **)
+int main(int argc, char ** argv)
 {
-    // Step 1: Initialize the OpenGL engine.
+    // Step 1: Initialize the graphic library engines.
     OCIO::OglAppRcPtr app;
+    
+    bool useMetalRenderer = false;
+    for(int i = 0; i < argc; ++i)
+    {
+        if(strcmp(argv[i], "-metal") == 0)
+        {
+            useMetalRenderer = true;
+        }
+    }
     try
     {
-        app = OCIO::OglApp::CreateOglApp("GPU tests", 10, 10);
+        if(useMetalRenderer)
+        {
+#if __APPLE__
+            app = OCIO::MetalApp::CreateMetalGlApp("GPU tests - Metal", 10, 10);
+#else
+            std::cout << std::endl << "'GPU tests - Metal' is not supported" << std::endl;
+            return 1;
+#endif
+        }
+        else
+        {
+            app = OCIO::OglApp::CreateOglApp("GPU tests", 10, 10);
+        }
     }
     catch (const OCIO::Exception & e)
     {
@@ -538,6 +567,13 @@ int main(int, char **)
         const unsigned curr_failures = failures;
 
         OCIOGPUTestRcPtr test = tests[idx];
+        
+        test->setShadingLanguage(
+#if __APPLE__
+            useMetalRenderer ?
+            OCIO::GPU_LANGUAGE_MSL_2_0 :
+#endif
+            OCIO::GPU_LANGUAGE_GLSL_1_2);
 
         bool enabledTest = true;
         try
