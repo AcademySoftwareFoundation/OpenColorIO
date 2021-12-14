@@ -524,13 +524,16 @@ int main(int argc, char ** argv)
     }
     try
     {
-#if __APPLE__
         if(useMetalRenderer)
         {
+#if __APPLE__
             app = OCIO::MetalApp::CreateMetalGlApp("GPU tests - Metal", 10, 10);
+#else
+            std::cout << std::endl << "'GPU tests - Metal' is not supported" << std::endl;
+            return 1;
+#endif
         }
         else
-#endif
         {
             app = OCIO::OglApp::CreateOglApp("GPU tests", 10, 10);
         }
