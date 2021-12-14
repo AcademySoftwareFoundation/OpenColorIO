@@ -15,6 +15,141 @@ std::string GetArrayLengthVariableName(const std::string& variableName)
     return variableName + "_count";
 }
 
+std::unique_ptr<GpuShaderClassWrapper> GpuShaderClassWrapper::CreateClassWrapper(GpuLanguage language)
+{
+    switch(language)
+    {
+        case GPU_LANGUAGE_MSL_2_0:
+            return std::unique_ptr<MetalShaderClassWrapper>(new MetalShaderClassWrapper);
+
+        case LANGUAGE_OSL_1:
+            return std::unique_ptr<OSLShaderClassWrapper>(new OSLShaderClassWrapper);
+
+        // Most of the supported GPU shader languages do not have needs imposing a custom class
+        // wrapper so, the default class wrapper does nothing.
+        case GPU_LANGUAGE_CG:
+        case GPU_LANGUAGE_GLSL_1_2:
+        case GPU_LANGUAGE_GLSL_1_3:
+        case GPU_LANGUAGE_GLSL_4_0:
+        case GPU_LANGUAGE_HLSL_DX11:
+        case GPU_LANGUAGE_GLSL_ES_1_0:
+        case GPU_LANGUAGE_GLSL_ES_3_0:
+        default:
+            return std::unique_ptr<NullGpuShaderClassWrapper>(new NullGpuShaderClassWrapper);
+    }
+}
+
+std::unique_ptr<GpuShaderClassWrapper> NullGpuShaderClassWrapper::clone() const
+{
+    return std::unique_ptr<NullGpuShaderClassWrapper>(new NullGpuShaderClassWrapper());
+}
+
+std::unique_ptr<GpuShaderClassWrapper> OSLShaderClassWrapper::clone() const
+{
+    return std::unique_ptr<OSLShaderClassWrapper>(new OSLShaderClassWrapper());
+}
+
+std::string OSLShaderClassWrapper::getClassWrapperHeader(const std::string& originalHeader)
+{
+    GpuShaderText st(LANGUAGE_OSL_1);
+
+    st.newLine() << "";
+    st.newLine() << "/* All the includes */";
+    st.newLine() << "";
+    st.newLine() << "#include \"vector4.h\"";
+    st.newLine() << "#include \"color4.h\"";
+
+    st.newLine() << "";
+    st.newLine() << "/* All the generic helper methods */";
+
+    st.newLine() << "";
+    st.newLine() << "vector4 __operator__mul__(matrix m, vector4 v)";
+    st.newLine() << "{";
+    st.indent();
+    st.newLine() << "return vector4(v.x * m[0][0] + v.y * m[0][1] + v.z * m[0][2] + v.w * m[0][3], ";
+    st.newLine() << "               v.x * m[1][0] + v.y * m[1][1] + v.z * m[1][2] + v.w * m[1][3], ";
+    st.newLine() << "               v.x * m[2][0] + v.y * m[2][1] + v.z * m[2][2] + v.w * m[2][3], ";
+    st.newLine() << "               v.x * m[3][0] + v.y * m[3][1] + v.z * m[3][2] + v.w * m[3][3]);";
+    st.dedent();
+    st.newLine() << "}";
+
+    st.newLine() << "";
+    st.newLine() << "vector4 __operator__mul__(color4 c, vector4 v)";
+    st.newLine() << "{";
+    st.indent();
+    st.newLine() << "return vector4(c.rgb.r, c.rgb.g, c.rgb.b, c.a) * v;";
+    st.dedent();
+    st.newLine() << "}";
+
+    st.newLine() << "";
+    st.newLine() << "vector4 __operator__mul__(vector4 v, color4 c)";
+    st.newLine() << "{";
+    st.indent();
+    st.newLine() << "return v * vector4(c.rgb.r, c.rgb.g, c.rgb.b, c.a);";
+    st.dedent();
+    st.newLine() << "}";
+
+    st.newLine() << "";
+    st.newLine() << "vector4 __operator__sub__(color4 c, vector4 v)";
+    st.newLine() << "{";
+    st.indent();
+    st.newLine() << "return vector4(c.rgb.r, c.rgb.g, c.rgb.b, c.a) - v;";
+    st.dedent();
+    st.newLine() << "}";
+
+    st.newLine() << "";
+    st.newLine() << "vector4 __operator__add__(vector4 v, color4 c)";
+    st.newLine() << "{";
+    st.indent();
+    st.newLine() << "return v + vector4(c.rgb.r, c.rgb.g, c.rgb.b, c.a);";
+    st.dedent();
+    st.newLine() << "}";
+
+    st.newLine() << "";
+    st.newLine() << "vector4 __operator__add__(color4 c, vector4 v)";
+    st.newLine() << "{";
+    st.indent();
+    st.newLine() << "return vector4(c.rgb.r, c.rgb.g, c.rgb.b, c.a) + v;";
+    st.dedent();
+    st.newLine() << "}";
+
+    st.newLine() << "";
+    st.newLine() << "vector4 pow(color4 c, vector4 v)";
+    st.newLine() << "{";
+    st.indent();
+    st.newLine() << "return pow(vector4(c.rgb.r, c.rgb.g, c.rgb.b, c.a), v);";
+    st.dedent();
+    st.newLine() << "}";
+
+    st.newLine() << "";
+    st.newLine() << "vector4 max(vector4 v, color4 c)";
+    st.newLine() << "{";
+    st.indent();
+    st.newLine() << "return max(v, vector4(c.rgb.r, c.rgb.g, c.rgb.b, c.a));";
+    st.dedent();
+    st.newLine() << "}";
+
+    st.newLine() << "";
+    st.newLine() << "/* The shader implementation */";
+    st.newLine() << "";
+    st.newLine() << "shader " << "OSL_" << m_functionName
+                 << "(color4 inColor = {color(0), 1}, output color4 outColor = {color(0), 1})";
+    st.newLine() << "{";
+
+    return st.string() + originalHeader;
+}
+
+std::string OSLShaderClassWrapper::getClassWrapperFooter(const std::string & originalFooter)
+{
+    GpuShaderText st(LANGUAGE_OSL_1);
+
+    st.newLine() << "";
+    st.newLine() << "outColor = " << m_functionName << "(inColor);";
+    st.newLine() << "}";
+
+    return originalFooter + st.string();
+}
+
 std::string MetalShaderClassWrapper::generateClassWrapperHeader(GpuShaderText& kw) const
 {
     if(m_className.empty())
