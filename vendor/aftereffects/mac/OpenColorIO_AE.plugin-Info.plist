@@ -17,7 +17,7 @@
 	<key>NSAppleScriptEnabled</key>
 	<string>No</string>
 	<key>NSHumanReadableCopyright</key>
-	<string>© 2011 OpenColorIO</string>
+	<string>© 2011-2021 OpenColorIO</string>
 	<key>LSRequiresCarbon</key>
 	<true/>
 </dict>
