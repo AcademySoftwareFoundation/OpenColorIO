@@ -227,7 +227,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "cd $SRCROOT/../../../../../ext\n\nif [ ! -d Little-CMS ]\nthen\n\tgit clone https://github.com/mm2/Little-CMS -b lcms2.2\nfi\n";
+			shellScript = "cd $SRCROOT/../../../../../ext\n\nif [ ! -d Little-CMS ]\nthen\n\tgit clone https://github.com/mm2/Little-CMS -b lcms2.12\nfi\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
