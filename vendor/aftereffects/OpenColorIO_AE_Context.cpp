@@ -869,7 +869,7 @@ void OpenColorIO_AE_Context::UpdateOCIOGLState()
             _oglBuilder->allocateAllTextures(1);
             
             // Step 5: Build the fragment shader program
-            _oglBuilder->buildProgram(g_fragShaderText);
+            _oglBuilder->buildProgram(g_fragShaderText, true);
         }
         catch(...)
         {
