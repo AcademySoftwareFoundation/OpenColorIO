@@ -227,9 +227,11 @@ bool ColorSpacePopUpMenu(OCIO::ConstConfigRcPtr config, std::string &colorSpace,
         
         if(family != NULL && family != std::string(""))
         {
-            assert(config->getFamilySeparator() == '/');
+            char separatorString[2];
+            separatorString[0] = config->getFamilySeparator();
+            separatorString[1] = '\0';
             
-            [pathComponents addObjectsFromArray:[[NSString stringWithUTF8String:family] pathComponents]];
+            [pathComponents addObjectsFromArray:[[NSString stringWithUTF8String:family] componentsSeparatedByString:[NSString stringWithUTF8String:separatorString]]];
         }
         
         [pathComponents addObject:[NSString stringWithUTF8String:colorSpaceName]];

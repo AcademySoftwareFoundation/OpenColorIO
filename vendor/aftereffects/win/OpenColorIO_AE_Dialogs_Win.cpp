@@ -575,8 +575,6 @@ bool ColorSpacePopUpMenu(OCIO::ConstConfigRcPtr config, std::string &colorSpace,
         
         if(family != NULL && family != std::string(""))
         {
-            assert(config->getFamilySeparator() == '/');
-            
             tokenize(pathComponents, family, std::string(1, config->getFamilySeparator()));
         }
         
