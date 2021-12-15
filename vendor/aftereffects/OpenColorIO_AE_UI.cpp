@@ -1078,32 +1078,9 @@ static void DoClickMenus(
                                     -1;
                 }
             }
-            else if(arb_data->action == OCIO_ACTION_CONVERT)
-            {
-                assert(FALSE);
-            
-                menu_items = seq_data->context->getColorSpaces();
-                
-                if(reg == REGION_MENU1)
-                {
-                    selected_item = FindInVec(menu_items, arb_data->input);
-                }
-                else
-                {
-                    selected_item = FindInVec(menu_items, arb_data->output);
-                }
-            }
             else if(arb_data->action == OCIO_ACTION_DISPLAY)
             {
-                if(reg == REGION_MENU1)
-                {
-                    assert(FALSE);
-                
-                    menu_items = seq_data->context->getColorSpaces();
-                    
-                    selected_item = FindInVec(menu_items, arb_data->input);
-                }
-                else if(reg == REGION_MENU2)
+                if(reg == REGION_MENU2)
                 {
                     menu_items = seq_data->context->getDisplays();
                     
@@ -1145,30 +1122,9 @@ static void DoClickMenus(
                         seq_data->context->setupLUT(arb_data->invert, arb_data->interpolation);
                     }
                 }
-                else if(arb_data->action == OCIO_ACTION_CONVERT)
-                {
-                    assert(FALSE);
-                
-                    if(reg == REGION_MENU1)
-                    {
-                        nt_strncpy(arb_data->input, color_space.c_str(), ARB_SPACE_LEN+1);
-                    }
-                    else if(reg == REGION_MENU2)
-                    {
-                        nt_strncpy(arb_data->output, color_space.c_str(), ARB_SPACE_LEN+1);
-                    }
-                    
-                    seq_data->context->setupConvert(arb_data->input, arb_data->output, arb_data->invert);
-                }
                 else if(arb_data->action == OCIO_ACTION_DISPLAY)
                 {
-                    if(reg == REGION_MENU1)
-                    {
-                        assert(FALSE);
-                    
-                        nt_strncpy(arb_data->input, color_space.c_str(), ARB_SPACE_LEN+1);
-                    }
-                    else if(reg == REGION_MENU2)
+                    if(reg == REGION_MENU2)
                     {
                         nt_strncpy(arb_data->display, color_space.c_str(), ARB_SPACE_LEN+1);
                     }
