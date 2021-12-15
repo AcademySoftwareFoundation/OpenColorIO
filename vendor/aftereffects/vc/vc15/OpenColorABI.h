@@ -7,9 +7,9 @@
 // Makefile configuration options
 #define OCIO_NAMESPACE OpenColorIO
 
-#define OCIO_VERSION_STR        "2.0.1"
+#define OCIO_VERSION_STR        "2.0.3"
 #define OCIO_VERSION_STATUS_STR ""
-#define OCIO_VERSION_FULL_STR   "2.0.1"
+#define OCIO_VERSION_FULL_STR   "2.0.3"
 
 /* Version as a single 4-byte hex number, e.g. 0x01050200 == 1.5.2
    Use this for numeric comparisons, e.g. #if OCIO_VERSION_HEX >= ... 
@@ -18,7 +18,7 @@
    */
 #define OCIO_VERSION_HEX ((2 << 24) | \
                           (0 << 16) | \
-                          (1 <<  8))
+                          (3 <<  8))
 
 #define OCIO_VERSION_MAJOR 2
 #define OCIO_VERSION_MINOR 0
