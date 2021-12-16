@@ -230,7 +230,7 @@ namespace
             const bool testWideRange = test->getTestWideRange();
 
 #if __APPLE__ && __aarch64__
-            // The Apple M1 ship handles differently the Nan and Inf processing introducing
+            // The Apple M1 chip handles differently the Nan and Inf processing introducing
             // differences with CPU processing.
             const bool testNaN = false;
             const bool testInfinity = false;
