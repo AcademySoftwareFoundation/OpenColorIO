@@ -13,7 +13,7 @@
 	<key>CFBundlePackageType</key>
 	<string>$(PLUGIN_TYPE)</string>
 	<key>CFBundleGetInfoString</key>
-	<string>©2017 OpenColorIO</string>
+	<string>©2017-2021 OpenColorIO</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>English</string>
 </dict>

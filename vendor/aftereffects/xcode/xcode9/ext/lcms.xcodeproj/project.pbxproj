@@ -34,6 +34,8 @@
 		2A41D874254B873200893EFF /* cmswtpnt.c in Sources */ = {isa = PBXBuildFile; fileRef = 2A41D80B254B873200893EFF /* cmswtpnt.c */; };
 		2A41D875254B873200893EFF /* cmsxform.c in Sources */ = {isa = PBXBuildFile; fileRef = 2A41D80C254B873200893EFF /* cmsxform.c */; };
 		2A41D876254B873200893EFF /* lcms2_internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 2A41D80E254B873200893EFF /* lcms2_internal.h */; };
+		2A5FD44B276A9BA500FAD580 /* cmsalpha.c in Sources */ = {isa = PBXBuildFile; fileRef = 2A5FD449276A9BA400FAD580 /* cmsalpha.c */; };
+		2A5FD44C276A9BA500FAD580 /* cmshalf.c in Sources */ = {isa = PBXBuildFile; fileRef = 2A5FD44A276A9BA400FAD580 /* cmshalf.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -64,6 +66,8 @@
 		2A41D80B254B873200893EFF /* cmswtpnt.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = cmswtpnt.c; sourceTree = "<group>"; };
 		2A41D80C254B873200893EFF /* cmsxform.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = cmsxform.c; sourceTree = "<group>"; };
 		2A41D80E254B873200893EFF /* lcms2_internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = lcms2_internal.h; sourceTree = "<group>"; };
+		2A5FD449276A9BA400FAD580 /* cmsalpha.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = cmsalpha.c; sourceTree = "<group>"; };
+		2A5FD44A276A9BA400FAD580 /* cmshalf.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = cmshalf.c; sourceTree = "<group>"; };
 		2ACF9E56147824F500991ED5 /* liblcms.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = liblcms.a; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -117,12 +121,14 @@
 		2A41D7F4254B873200893EFF /* src */ = {
 			isa = PBXGroup;
 			children = (
+				2A5FD449276A9BA400FAD580 /* cmsalpha.c */,
 				2A41D7F5254B873200893EFF /* cmscam02.c */,
 				2A41D7F6254B873200893EFF /* cmscgats.c */,
 				2A41D7F7254B873200893EFF /* cmscnvrt.c */,
 				2A41D7F8254B873200893EFF /* cmserr.c */,
 				2A41D7F9254B873200893EFF /* cmsgamma.c */,
 				2A41D7FA254B873200893EFF /* cmsgmt.c */,
+				2A5FD44A276A9BA400FAD580 /* cmshalf.c */,
 				2A41D7FB254B873200893EFF /* cmsintrp.c */,
 				2A41D7FC254B873200893EFF /* cmsio0.c */,
 				2A41D7FD254B873200893EFF /* cmsio1.c */,
@@ -221,7 +227,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "cd $SRCROOT/../../../../../ext\n\nif [ ! -d Little-CMS ]\nthen\n\tgit clone https://github.com/mm2/Little-CMS -b lcms2.2\nfi\n";
+			shellScript = "cd $SRCROOT/../../../../../ext\n\nif [ ! -d Little-CMS ]\nthen\n\tgit clone https://github.com/mm2/Little-CMS -b lcms2.12\nfi\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -234,6 +240,7 @@
 				2A41D85F254B873200893EFF /* cmscgats.c in Sources */,
 				2A41D875254B873200893EFF /* cmsxform.c in Sources */,
 				2A41D86D254B873200893EFF /* cmspcs.c in Sources */,
+				2A5FD44C276A9BA500FAD580 /* cmshalf.c in Sources */,
 				2A41D866254B873200893EFF /* cmsio1.c in Sources */,
 				2A41D872254B873200893EFF /* cmstypes.c in Sources */,
 				2A41D861254B873200893EFF /* cmserr.c in Sources */,
@@ -242,6 +249,7 @@
 				2A41D873254B873200893EFF /* cmsvirt.c in Sources */,
 				2A41D86F254B873200893EFF /* cmsps2.c in Sources */,
 				2A41D868254B873200893EFF /* cmsmd5.c in Sources */,
+				2A5FD44B276A9BA500FAD580 /* cmsalpha.c in Sources */,
 				2A41D86A254B873200893EFF /* cmsnamed.c in Sources */,
 				2A41D870254B873200893EFF /* cmssamp.c in Sources */,
 				2A41D874254B873200893EFF /* cmswtpnt.c in Sources */,

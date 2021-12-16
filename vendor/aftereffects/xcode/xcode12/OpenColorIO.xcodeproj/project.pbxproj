@@ -298,6 +298,8 @@
 		2A41D756254B85B400893EFF /* ViewTransform.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2A41D635254B85B400893EFF /* ViewTransform.cpp */; };
 		2A41D77B254B860800893EFF /* glsl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2A41D768254B860800893EFF /* glsl.cpp */; };
 		2A41D77C254B860800893EFF /* glsl.h in Headers */ = {isa = PBXBuildFile; fileRef = 2A41D769254B860800893EFF /* glsl.h */; };
+		2A5E5F3A276ABA9B00CEE8CE /* GpuShaderClassWrapper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2A5E5F36276ABA9B00CEE8CE /* GpuShaderClassWrapper.cpp */; };
+		2A5E5F3B276ABA9B00CEE8CE /* GpuShaderClassWrapper.h in Headers */ = {isa = PBXBuildFile; fileRef = 2A5E5F39276ABA9B00CEE8CE /* GpuShaderClassWrapper.h */; };
 		2AC80FA525A7E2050084CE7D /* CategoryHelpers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2AC80F9C25A7E2050084CE7D /* CategoryHelpers.cpp */; };
 		2AC80FA625A7E2050084CE7D /* CategoryHelpers.h in Headers */ = {isa = PBXBuildFile; fileRef = 2AC80F9D25A7E2050084CE7D /* CategoryHelpers.h */; };
 		2AC80FA725A7E2050084CE7D /* ColorSpaceHelpers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2AC80F9E25A7E2050084CE7D /* ColorSpaceHelpers.cpp */; };
@@ -683,6 +685,8 @@
 		2A41D635254B85B400893EFF /* ViewTransform.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ViewTransform.cpp; sourceTree = "<group>"; };
 		2A41D768254B860800893EFF /* glsl.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = glsl.cpp; sourceTree = "<group>"; };
 		2A41D769254B860800893EFF /* glsl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = glsl.h; sourceTree = "<group>"; };
+		2A5E5F36276ABA9B00CEE8CE /* GpuShaderClassWrapper.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = GpuShaderClassWrapper.cpp; sourceTree = "<group>"; };
+		2A5E5F39276ABA9B00CEE8CE /* GpuShaderClassWrapper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GpuShaderClassWrapper.h; sourceTree = "<group>"; };
 		2AB2C901234D0F6600F62DB3 /* ilmbasehalf.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = ilmbasehalf.xcodeproj; path = ext/ilmbasehalf.xcodeproj; sourceTree = "<group>"; };
 		2AB2C92C234D1A7500F62DB3 /* yaml.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = yaml.xcodeproj; path = ext/yaml.xcodeproj; sourceTree = "<group>"; };
 		2AB2C934234D1A7600F62DB3 /* pystring.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = pystring.xcodeproj; path = ext/pystring.xcodeproj; sourceTree = "<group>"; };
@@ -768,6 +772,8 @@
 				2A41D53C254B85B300893EFF /* GPUProcessor.h */,
 				2A41D53D254B85B300893EFF /* GpuShader.cpp */,
 				2A41D53E254B85B300893EFF /* GpuShader.h */,
+				2A5E5F36276ABA9B00CEE8CE /* GpuShaderClassWrapper.cpp */,
+				2A5E5F39276ABA9B00CEE8CE /* GpuShaderClassWrapper.h */,
 				2A41D53F254B85B300893EFF /* GpuShaderDesc.cpp */,
 				2A41D540254B85B300893EFF /* GpuShaderUtils.cpp */,
 				2A41D541254B85B300893EFF /* GpuShaderUtils.h */,
@@ -1438,6 +1444,7 @@
 				2A41D689254B85B400893EFF /* md5.h in Headers */,
 				2A41D6E0254B85B400893EFF /* LogUtils.h in Headers */,
 				2A41D652254B85B400893EFF /* CTFTransform.h in Headers */,
+				2A5E5F3B276ABA9B00CEE8CE /* GpuShaderClassWrapper.h in Headers */,
 				2A41D712254B85B400893EFF /* ScanlineHelper.h in Headers */,
 				2A41D6BE254B85B400893EFF /* GradingPrimaryOpData.h in Headers */,
 				2A41D753254B85B400893EFF /* RangeTransform.h in Headers */,
@@ -1638,6 +1645,7 @@
 				2A41D711254B85B400893EFF /* ScanlineHelper.cpp in Sources */,
 				2A41D660254B85B400893EFF /* FileFormatIridasItx.cpp in Sources */,
 				2AC80FAA25A7E2050084CE7D /* LegacyViewingPipeline.cpp in Sources */,
+				2A5E5F3A276ABA9B00CEE8CE /* GpuShaderClassWrapper.cpp in Sources */,
 				2A41D726254B85B400893EFF /* OpHelpers.cpp in Sources */,
 				2A41D6A9254B85B400893EFF /* FixedFunctionOpData.cpp in Sources */,
 				2A41D671254B85B400893EFF /* XMLWriterUtils.cpp in Sources */,
