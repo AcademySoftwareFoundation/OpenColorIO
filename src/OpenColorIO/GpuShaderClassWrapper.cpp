@@ -7,8 +7,6 @@
 
 #include "GpuShaderClassWrapper.h"
 
-#include <cctype>
-
 namespace OCIO_NAMESPACE
 {
 
