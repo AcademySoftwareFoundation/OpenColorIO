@@ -7,12 +7,12 @@
 // Makefile configuration options
 #define OCIO_NAMESPACE OpenColorIO
 
-#define OCIO_VERSION_STR        "2.1.0"
+#define OCIO_VERSION_STR        "2.2.0"
 #define OCIO_VERSION_STATUS_STR ""
-#define OCIO_VERSION_FULL_STR   "2.1.0"
+#define OCIO_VERSION_FULL_STR   "2.2.0"
 
 // Deprecated synonym for downstream projects that expect the 1.x name
-#define OCIO_VERSION            "2.1.0"
+#define OCIO_VERSION            "2.2.0"
 
 /* Version as a single 4-byte hex number, e.g. 0x01050200 == 1.5.2
    Use this for numeric comparisons, e.g. #if OCIO_VERSION_HEX >= ... 
@@ -20,11 +20,11 @@
    this will reflect the original API version number.
    */
 #define OCIO_VERSION_HEX ((2 << 24) | \
-                          (1 << 16) | \
+                          (2 << 16) | \
                           (0 <<  8))
 
 #define OCIO_VERSION_MAJOR 2
-#define OCIO_VERSION_MINOR 1
+#define OCIO_VERSION_MINOR 2
 
 
 // Highlight deprecated methods or classes.
