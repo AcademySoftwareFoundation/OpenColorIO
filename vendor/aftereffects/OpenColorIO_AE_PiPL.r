@@ -25,19 +25,17 @@ resource 'PiPL' (16000) {
         },
         
 #ifdef AE_OS_WIN
-    #ifdef AE_PROC_INTELx64
-        CodeWin64X86 {"PluginMain"},
-    #else
-        CodeWin32X86 {"PluginMain"},
-    #endif  
+	#ifdef AE_PROC_INTELx64
+		CodeWin64X86 { "PluginMain" },
+	#endif
 #else
-    #ifdef AE_PROC_INTELx64
-        CodeMacIntel64 {"PluginMain"},
-    #else
-        CodeMachOPowerPC {"PluginMain"},
-        CodeMacIntel32 {"PluginMain"},
-    #endif
-#endif      /* [6] */
+	#ifdef __x86_64__
+		CodeMacIntel64 { "PluginMain" },
+	#endif
+	#ifdef __arm64__
+		CodeMacARM64 { "PluginMain" },
+	#endif
+#endif		/* [6] */
         AE_PiPL_Version {
             2,
             0
