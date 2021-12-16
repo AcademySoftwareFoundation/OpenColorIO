@@ -153,7 +153,7 @@ bool Path::exists() const
     if(path.empty())
         return false;
     
-    std::ifstream f = Platform::CreateInputFileStream( path.c_str() );
+    std::ifstream f( path.c_str() );
     
     return !!f;
 }
@@ -869,7 +869,7 @@ void OpenColorIO_AE_Context::UpdateOCIOGLState()
             _oglBuilder->allocateAllTextures(1);
             
             // Step 5: Build the fragment shader program
-            _oglBuilder->buildProgram(g_fragShaderText);
+            _oglBuilder->buildProgram(g_fragShaderText, true);
         }
         catch(...)
         {
