@@ -104,13 +104,38 @@ if(OCIO_BUILD_PYTHON OR OCIO_BUILD_DOCS)
     endif()
 endif()
 
-# The presence of OpenImageIO allows additional ocio apps and the OSL
+# The presence of OpenImageIO allows additional OCIO apps and the OSL
 # translation unit tests to be built.
 
-# OpenImageIO
-# https://github.com/OpenImageIO/oiio
-if(OCIO_USE_OIIO_CMAKE_CONFIG)
-    find_package(OpenImageIO 2.1.9 CONFIG)
-else()
-    find_package(OpenImageIO 2.1.9)
+if(OCIO_BUILD_APPS OR OCIO_BUILD_TESTS)
+    # OpenImageIO
+    # https://github.com/OpenImageIO/oiio
+
+    set(OIIO_VERSION "2.1.9")
+
+    if(OCIO_USE_OIIO_CMAKE_CONFIG)
+        find_package(OpenImageIO ${OIIO_VERSION} CONFIG)
+    else()
+        find_package(OpenImageIO ${OIIO_VERSION})
+    endif()
+endif()
+
+# Check dependencies for OSL unit test framework (i.e. OpenImageIO and Imath) before looking
+# for the Open Shading Language library.
+
+if(OCIO_BUILD_TESTS)
+    if(TARGET OpenImageIO::OpenImageIO)
+        if(TARGET Imath::Imath)
+            # OpenShadingLanguage
+            # https://github.com/AcademySoftwareFoundation/OpenShadingLanguage
+            find_package(OpenShadingLanguage 1.11)
+            if(NOT OSL_FOUND)
+                message(WARNING "Could NOT find OpenShadingLanguage. Skipping build of the OSL unit tests.")
+            endif()
+        else()
+            message(WARNING "Could NOT find Imath. Skipping build of the OSL unit tests.")
+        endif()
+    else()
+        message(WARNING "Could NOT find OpenImageIO. Skipping build of the OSL unit tests.")
+    endif()
 endif()
