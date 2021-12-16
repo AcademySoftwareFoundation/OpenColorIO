@@ -35,12 +35,14 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\..\..\ext\Little-CMS\src\cmsalpha.c" />
     <ClCompile Include="..\..\..\..\..\ext\Little-CMS\src\cmscam02.c" />
     <ClCompile Include="..\..\..\..\..\ext\Little-CMS\src\cmscgats.c" />
     <ClCompile Include="..\..\..\..\..\ext\Little-CMS\src\cmscnvrt.c" />
     <ClCompile Include="..\..\..\..\..\ext\Little-CMS\src\cmserr.c" />
     <ClCompile Include="..\..\..\..\..\ext\Little-CMS\src\cmsgamma.c" />
     <ClCompile Include="..\..\..\..\..\ext\Little-CMS\src\cmsgmt.c" />
+    <ClCompile Include="..\..\..\..\..\ext\Little-CMS\src\cmshalf.c" />
     <ClCompile Include="..\..\..\..\..\ext\Little-CMS\src\cmsintrp.c" />
     <ClCompile Include="..\..\..\..\..\ext\Little-CMS\src\cmsio0.c" />
     <ClCompile Include="..\..\..\..\..\ext\Little-CMS\src\cmsio1.c" />
@@ -215,7 +217,7 @@
 
 if exist Little-CMS goto dontbother
 
-git clone https://github.com/mm2/Little-CMS -b lcms2.2
+git clone https://github.com/mm2/Little-CMS -b lcms2.12
 
 :dontbother</Command>
       <Message>Download Little-CMS</Message>
@@ -241,7 +243,7 @@ git clone https://github.com/mm2/Little-CMS -b lcms2.2
 
 if exist Little-CMS goto dontbother
 
-git clone https://github.com/mm2/Little-CMS -b lcms2.2
+git clone https://github.com/mm2/Little-CMS -b lcms2.12
 
 :dontbother</Command>
       <Message>Download Little-CMS</Message>
@@ -266,7 +268,7 @@ git clone https://github.com/mm2/Little-CMS -b lcms2.2
 
 if exist Little-CMS goto dontbother
 
-git clone https://github.com/mm2/Little-CMS -b lcms2.2
+git clone https://github.com/mm2/Little-CMS -b lcms2.12
 
 :dontbother</Command>
       <Message>Download Little-CMS</Message>
@@ -291,7 +293,7 @@ git clone https://github.com/mm2/Little-CMS -b lcms2.2
 
 if exist Little-CMS goto dontbother
 
-git clone https://github.com/mm2/Little-CMS -b lcms2.2
+git clone https://github.com/mm2/Little-CMS -b lcms2.12
 
 :dontbother</Command>
       <Message>Download Little-CMS</Message>
@@ -320,7 +322,7 @@ git clone https://github.com/mm2/Little-CMS -b lcms2.2
 
 if exist Little-CMS goto dontbother
 
-git clone https://github.com/mm2/Little-CMS -b lcms2.2
+git clone https://github.com/mm2/Little-CMS -b lcms2.12
 
 :dontbother</Command>
       <Message>Download Little-CMS</Message>
@@ -349,7 +351,7 @@ git clone https://github.com/mm2/Little-CMS -b lcms2.2
 
 if exist Little-CMS goto dontbother
 
-git clone https://github.com/mm2/Little-CMS -b lcms2.2
+git clone https://github.com/mm2/Little-CMS -b lcms2.12
 
 :dontbother</Command>
       <Message>Download Little-CMS</Message>
@@ -378,7 +380,7 @@ git clone https://github.com/mm2/Little-CMS -b lcms2.2
 
 if exist Little-CMS goto dontbother
 
-git clone https://github.com/mm2/Little-CMS -b lcms2.2
+git clone https://github.com/mm2/Little-CMS -b lcms2.12
 
 :dontbother</Command>
       <Message>Download Little-CMS</Message>
@@ -408,7 +410,7 @@ git clone https://github.com/mm2/Little-CMS -b lcms2.2
 
 if exist Little-CMS goto dontbother
 
-git clone https://github.com/mm2/Little-CMS -b lcms2.2
+git clone https://github.com/mm2/Little-CMS -b lcms2.12
 
 :dontbother</Command>
       <Message>Download Little-CMS</Message>
