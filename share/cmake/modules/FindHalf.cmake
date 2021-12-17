@@ -186,8 +186,13 @@ if(NOT Half_FOUND AND NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL NONE)
         endif()
 
         if(APPLE)
+            string(REPLACE ";" "\\\\\\\\\\\\\;" ESCAPED_CMAKE_OSX_ARCHITECTURES "${CMAKE_OSX_ARCHITECTURES}")
+
             set(Half_CMAKE_ARGS
-                ${Half_CMAKE_ARGS} -DCMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET})
+                ${Half_CMAKE_ARGS}
+                -DCMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET}
+                -DCMAKE_OSX_ARCHITECTURES=${ESCAPED_CMAKE_OSX_ARCHITECTURES}
+            )
         endif()
 
         # Hack to let imported target be built from ExternalProject_Add

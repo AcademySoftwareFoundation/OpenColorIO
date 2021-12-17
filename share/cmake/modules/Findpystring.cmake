@@ -105,8 +105,13 @@ if(NOT pystring_FOUND AND NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL NONE)
         endif()
 
         if(APPLE)
+            string(REPLACE ";" "\\\\\\\\\\\\\;" ESCAPED_CMAKE_OSX_ARCHITECTURES "${CMAKE_OSX_ARCHITECTURES}")
+
             set(pystring_CMAKE_ARGS
-                ${pystring_CMAKE_ARGS} -DCMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET})
+                ${pystring_CMAKE_ARGS}
+                -DCMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET}
+                -DCMAKE_OSX_ARCHITECTURES=${ESCAPED_CMAKE_OSX_ARCHITECTURES}
+            )
         endif()
 
         if(NOT BUILD_SHARED_LIBS)
