@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright Contributors to the OpenColorIO Project.
 
+import copy
 import unittest
 import os
 import sys
@@ -10,6 +11,7 @@ from UnitTestUtils import SIMPLE_CONFIG, TEST_NAMES, TEST_DESCS, TEST_CATEGORIES
 
 
 class ColorSpaceTest(unittest.TestCase):
+
     def setUp(self):
         self.colorspace = OCIO.ColorSpace()
         self.log_tr = OCIO.LogTransform(10)
@@ -17,6 +19,42 @@ class ColorSpaceTest(unittest.TestCase):
     def tearDown(self):
         self.colorspace = None
         self.log_tr = None
+
+    def test_copy(self):
+        """
+        Test the deepcopy() and copy() method.
+        """
+        self.colorspace.setName('colorspace1')
+        self.colorspace.setFamily('family')
+        self.colorspace.setEqualityGroup('group')
+        self.colorspace.setDescription('description')
+        self.colorspace.setBitDepth(OCIO.BIT_DEPTH_UINT8)
+        self.colorspace.setEncoding('encoding')
+        self.colorspace.setIsData(False)
+        self.colorspace.setAllocation(OCIO.ALLOCATION_LG2)
+        self.colorspace.setAllocationVars([-8, 5, 0.00390625])
+        mat = OCIO.MatrixTransform()
+        self.colorspace.setTransform(mat, OCIO.COLORSPACE_DIR_TO_REFERENCE)
+        self.colorspace.setTransform(direction=OCIO.COLORSPACE_DIR_FROM_REFERENCE, transform=mat)
+        self.colorspace.addAlias('alias')
+        self.colorspace.addCategory('cat')
+
+        other = copy.deepcopy(self.colorspace)
+        self.assertFalse(other is self.colorspace)
+
+        self.assertEqual(other.getName(), self.colorspace.getName())
+        self.assertEqual(other.getFamily(), self.colorspace.getFamily())
+        self.assertEqual(other.getEqualityGroup(), self.colorspace.getEqualityGroup())
+        self.assertEqual(other.getDescription(), self.colorspace.getDescription())
+        self.assertEqual(other.getBitDepth(), self.colorspace.getBitDepth())
+        self.assertEqual(other.getEncoding(), self.colorspace.getEncoding())
+        self.assertEqual(other.isData(), self.colorspace.isData())
+        self.assertEqual(other.getAllocation(), self.colorspace.getAllocation())
+        self.assertEqual(other.getAllocationVars(), self.colorspace.getAllocationVars())
+        self.assertTrue(other.getTransform(OCIO.COLORSPACE_DIR_TO_REFERENCE).equals(self.colorspace.getTransform(OCIO.COLORSPACE_DIR_TO_REFERENCE)))
+        self.assertTrue(other.getTransform(OCIO.COLORSPACE_DIR_FROM_REFERENCE).equals(self.colorspace.getTransform(OCIO.COLORSPACE_DIR_FROM_REFERENCE)))
+        self.assertEqual(list(other.getAliases()), list(self.colorspace.getAliases()))
+        self.assertEqual(list(other.getCategories()), list(self.colorspace.getCategories()))
 
     def test_allocation(self):
         """

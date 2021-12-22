@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright Contributors to the OpenColorIO Project.
 
+import copy
 import unittest
 import os
 import sys
@@ -244,6 +245,35 @@ from UnitTestUtils import (SIMPLE_CONFIG_VIRTUAL_DISPLAY,
 
 
 class ConfigTest(unittest.TestCase):
+
+    def test_copy(self):
+        """
+        Test the deepcopy() and copy() method.
+        """
+        cfg = OCIO.Config.CreateRaw()
+        cfg.setMajorVersion(2)
+        cfg.setMinorVersion(1)
+        cfg.setName('test config')
+        cfg.setDescription('test description')
+
+        cfg.addColorSpace(
+            OCIO.ColorSpace(OCIO.REFERENCE_SPACE_DISPLAY,
+                            "display_cs",
+                            toReference=OCIO.CDLTransform(sat=1.5)))
+        cfg.addColorSpace(
+            OCIO.ColorSpace(OCIO.REFERENCE_SPACE_SCENE,
+                            "raw",
+                            isData=True))
+
+        other = copy.deepcopy(cfg)
+        self.assertFalse(other is cfg)
+
+        self.assertEqual(other.getMajorVersion(), cfg.getMajorVersion())
+        self.assertEqual(other.getMinorVersion(), cfg.getMinorVersion())
+        self.assertEqual(other.getName(), cfg.getName())
+        self.assertEqual(other.getDescription(), cfg.getDescription())
+        self.assertEqual(list(other.getColorSpaceNames()), list(cfg.getColorSpaceNames()))
+
     def test_shared_views(self):
         # Test these Config functions: addSharedView, getSharedViews, removeSharedView.
 
@@ -863,6 +893,7 @@ colorspaces:
 
 
 class ConfigVirtualWithActiveDisplayTest(unittest.TestCase):
+
     def setUp(self):
         self.cfg_active_display = OCIO.Config.CreateFromStream(
             SIMPLE_CONFIG_VIRTUAL_DISPLAY_ACTIVE_DISPLAY)
@@ -884,6 +915,7 @@ class ConfigVirtualWithActiveDisplayTest(unittest.TestCase):
 
 
 class ConfigVirtualDisplayTest(unittest.TestCase):
+
     def setUp(self):
         self.cfg = OCIO.Config.CreateFromStream(SIMPLE_CONFIG_VIRTUAL_DISPLAY)
 

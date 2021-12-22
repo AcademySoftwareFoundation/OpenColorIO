@@ -13,6 +13,16 @@ void bindPyTransform(py::module & m)
         py::class_<Transform, TransformRcPtr>(
             m.attr("Transform"))
 
+        .def("__copy__", [](const ConstTransformRcPtr & self)
+            {
+                return self->createEditableCopy();
+            })
+        .def("__deepcopy__", [](const ConstTransformRcPtr & self, py::dict)
+            {
+                return self->createEditableCopy();
+            },
+            "memo"_a)
+
         .def("validate", &Transform::validate,
              DOC(Transform, validate))
         .def("getTransformType", &Transform::getTransformType,

@@ -118,6 +118,16 @@ void bindPyNamedTransform(py::module & m)
              "categories"_a = getCategoriesStdVec(DEFAULT),
              DOC(NamedTransform, Create))
 
+        .def("__copy__", [](const ConstNamedTransformRcPtr & self)
+            {
+                return self->createEditableCopy();
+            })
+        .def("__deepcopy__", [](const ConstNamedTransformRcPtr & self, py::dict)
+            {
+                return self->createEditableCopy();
+            },
+            "memo"_a)
+
         .def("getName", &NamedTransform::getName,
              DOC(NamedTransform, getName))
         .def("setName", &NamedTransform::setName, "name"_a.none(false),

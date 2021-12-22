@@ -38,6 +38,16 @@ void bindPyLook(py::module & m)
              "description"_a = DEFAULT->getDescription(), 
              DOC(Look, Create))
 
+        .def("__copy__", [](const ConstLookRcPtr & self)
+            {
+                return self->createEditableCopy();
+            })
+        .def("__deepcopy__", [](const ConstLookRcPtr & self, py::dict)
+            {
+                return self->createEditableCopy();
+            },
+            "memo"_a)
+
         .def("getName", &Look::getName, 
              DOC(Look, getName))
         .def("setName", &Look::setName, "name"_a.none(false), 

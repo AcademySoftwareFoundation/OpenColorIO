@@ -1,10 +1,30 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright Contributors to the OpenColorIO Project.
 
-import unittest, os, sys
+import copy, unittest, os, sys
 import PyOpenColorIO as OCIO
 
 class ContextTest(unittest.TestCase):
+
+    def test_copy(self):
+        """
+        Test the deepcopy() and copy() method.
+        """
+        cont = OCIO.Context()
+        cont.setSearchPath('testing123:testing456')
+        cont.setWorkingDir('/dir/123')
+        cont.setEnvironmentMode(OCIO.ENV_ENVIRONMENT_LOAD_PREDEFINED)
+        cont['TeSt'] = 'foobar'
+        cont['Bar'] = 'Foo'
+
+        other = copy.deepcopy(cont)
+        self.assertFalse(other is cont)
+
+        self.assertEqual(other.getCacheID(), cont.getCacheID())
+        self.assertEqual(other.getSearchPath(), cont.getSearchPath())
+        self.assertEqual(other.getWorkingDir(), cont.getWorkingDir())
+        self.assertEqual(other.getEnvironmentMode(), cont.getEnvironmentMode())
+        self.assertEqual(list(other), list(cont))
 
     def test_interface(self):
         """
