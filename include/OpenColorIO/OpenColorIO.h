@@ -1331,7 +1331,7 @@ extern OCIOEXPORT std::ostream & operator<< (std::ostream &, const FileRules &);
  * ViewingRules
  * 
  * Viewing Rules allow config authors to filter the list of views an application should offer
- * based on the color space of an image.   For example, a config may define a large number of
+ * based on the color space of an image.  For example, a config may define a large number of
  * views but not all of them may be appropriate for use with all color spaces.  E.g., some views
  * may be intended for use with scene-linear color space encodings and others with video color
  * space encodings.

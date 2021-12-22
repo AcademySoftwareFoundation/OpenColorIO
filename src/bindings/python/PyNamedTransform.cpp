@@ -155,7 +155,7 @@ void bindPyNamedTransform(py::module & m)
              DOC(NamedTransform, setDescription))
         .def("getEncoding", &NamedTransform::getEncoding,
              DOC(NamedTransform, getEncoding))
-        .def("setEncoding", &NamedTransform::setEncoding, "encodig"_a.none(false),
+        .def("setEncoding", &NamedTransform::setEncoding, "encoding"_a.none(false),
              DOC(NamedTransform, setEncoding))
 
         // Transform
