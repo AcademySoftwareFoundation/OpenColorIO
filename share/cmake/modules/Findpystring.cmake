@@ -76,6 +76,9 @@ if(NOT pystring_FOUND AND NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL NONE)
     set(pystring_FOUND TRUE)
     set(pystring_VERSION ${pystring_FIND_VERSION})
     set(pystring_INCLUDE_DIR "${_EXT_DIST_ROOT}/include")
+
+    # Note: pystring does not consume the CMAKE install variables 
+    # e.g. it uses lib instead of CMAKE_INSTALL_LIBDIR.
     set(pystring_LIBRARY 
         "${_EXT_DIST_ROOT}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}pystring${CMAKE_STATIC_LIBRARY_SUFFIX}")
 
