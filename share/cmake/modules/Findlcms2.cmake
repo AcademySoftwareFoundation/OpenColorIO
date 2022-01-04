@@ -146,7 +146,7 @@ if(NOT lcms2_FOUND AND NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL NONE)
         endif()
 
         if(APPLE)
-            string(REPLACE ";" "\\\\\\\\\\\\\;" ESCAPED_CMAKE_OSX_ARCHITECTURES "${CMAKE_OSX_ARCHITECTURES}")
+            string(REPLACE ";" "$<SEMICOLON>" ESCAPED_CMAKE_OSX_ARCHITECTURES "${CMAKE_OSX_ARCHITECTURES}")
 
             set(lcms2_CMAKE_ARGS
                 ${lcms2_CMAKE_ARGS}
