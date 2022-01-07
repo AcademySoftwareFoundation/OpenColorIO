@@ -87,10 +87,6 @@ void bindPyViewTransform(py::module & m)
              "categories"_a = getCategoriesStdVec(DEFAULT),
              DOC(ViewTransform, Create))
 
-        .def("__copy__",  [](const ConstViewTransformRcPtr & self)
-            {
-                return self->createEditableCopy();
-            })
         .def("__deepcopy__", [](const ConstViewTransformRcPtr & self, py::dict)
             {
                 return self->createEditableCopy();

@@ -40,10 +40,6 @@ void bindPyColorSpaceSet(py::module & m)
         .def(py::init(&ColorSpaceSet::Create), 
              DOC(ColorSpaceSet, Create))
 
-        .def("__copy__", [](const ConstColorSpaceSetRcPtr & self)
-            {
-                return self->createEditableCopy();
-            })
         .def("__deepcopy__", [](const ConstColorSpaceSetRcPtr & self, py::dict)
             {
                 return self->createEditableCopy();

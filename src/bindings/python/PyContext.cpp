@@ -101,10 +101,6 @@ void bindPyContext(py::module & m)
              "environmentMode"_a = DEFAULT->getEnvironmentMode(), 
              DOC(Context, Create))
 
-        .def("__copy__", [](const ConstContextRcPtr & self)
-            {
-                return self->createEditableCopy();
-            })
         .def("__deepcopy__", [](const ConstContextRcPtr & self, py::dict)
             {
                 return self->createEditableCopy();

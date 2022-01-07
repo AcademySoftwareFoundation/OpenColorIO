@@ -152,10 +152,6 @@ void bindPyColorSpace(py::module & m)
              "categories"_a = getCategoriesStdVec(DEFAULT),
              DOC(ColorSpace, Create, 2))
 
-        .def("__copy__", [](const ConstColorSpaceRcPtr & self)
-            {
-                return self->createEditableCopy();
-            })
         .def("__deepcopy__", [](const ConstColorSpaceRcPtr & self, py::dict)
             {
                 return self->createEditableCopy();

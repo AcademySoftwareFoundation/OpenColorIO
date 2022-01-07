@@ -178,10 +178,6 @@ void bindPyConfig(py::module & m)
         .def(py::init(&Config::Create), 
              DOC(Config, Create))
 
-        .def("__copy__", [](const ConstConfigRcPtr & self)
-            {
-                return self->createEditableCopy();
-            })
         .def("__deepcopy__", [](const ConstConfigRcPtr & self, py::dict)
             {
                 return self->createEditableCopy();

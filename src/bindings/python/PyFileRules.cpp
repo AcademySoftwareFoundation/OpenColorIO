@@ -16,10 +16,6 @@ void bindPyFileRules(py::module & m)
         .def(py::init(&FileRules::Create),
              DOC(FileRules, Create))
 
-        .def("__copy__", [](const ConstFileRulesRcPtr & self)
-            {
-                return self->createEditableCopy();
-            })
         .def("__deepcopy__", [](const ConstFileRulesRcPtr & self, py::dict)
             {
                 return self->createEditableCopy();
