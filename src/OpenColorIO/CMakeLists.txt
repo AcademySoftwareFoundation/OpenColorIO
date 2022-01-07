@@ -301,13 +301,19 @@ set_target_properties(OpenColorIO PROPERTIES
     PUBLIC_HEADER "${INSTALL_HEADERS}"
 )
 
-if (UNIX AND NOT APPLE)
+if(UNIX AND NOT APPLE)
     # Also hide all the symbols of dependent libraries to prevent clashes if
     # an app using this project is linked against other versions of our
     # dependencies.
     set_property (TARGET OpenColorIO
                   APPEND PROPERTY LINK_FLAGS "-Wl,--exclude-libs,ALL")
-endif ()
+endif()
+
+if(APPLE AND USE_CLANG)
+    # Also remove the yaml symbols.
+    set_property (TARGET OpenColorIO
+                  APPEND PROPERTY LINK_FLAGS "-Wl,-unexported_symbol,\"_XML_*\"")
+endif()
 
 if(MSVC AND BUILD_SHARED_LIBS)
     # Install the pdb file if any.
