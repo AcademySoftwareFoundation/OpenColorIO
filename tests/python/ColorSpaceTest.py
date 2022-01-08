@@ -22,7 +22,7 @@ class ColorSpaceTest(unittest.TestCase):
 
     def test_copy(self):
         """
-        Test the deepcopy() and copy() method.
+        Test the deepcopy() method.
         """
         self.colorspace.setName('colorspace1')
         self.colorspace.setFamily('family')

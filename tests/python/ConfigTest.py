@@ -248,7 +248,7 @@ class ConfigTest(unittest.TestCase):
 
     def test_copy(self):
         """
-        Test the deepcopy() and copy() method.
+        Test the deepcopy() method.
         """
         cfg = OCIO.Config.CreateRaw()
         cfg.setMajorVersion(2)
@@ -893,7 +893,6 @@ colorspaces:
 
 
 class ConfigVirtualWithActiveDisplayTest(unittest.TestCase):
-
     def setUp(self):
         self.cfg_active_display = OCIO.Config.CreateFromStream(
             SIMPLE_CONFIG_VIRTUAL_DISPLAY_ACTIVE_DISPLAY)
@@ -915,7 +914,6 @@ class ConfigVirtualWithActiveDisplayTest(unittest.TestCase):
 
 
 class ConfigVirtualDisplayTest(unittest.TestCase):
-
     def setUp(self):
         self.cfg = OCIO.Config.CreateFromStream(SIMPLE_CONFIG_VIRTUAL_DISPLAY)
 

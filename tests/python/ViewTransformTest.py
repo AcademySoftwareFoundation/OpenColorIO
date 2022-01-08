@@ -50,7 +50,7 @@ class ViewTransformTest(unittest.TestCase):
 
     def test_copy(self):
         """
-        Test the deepcopy() and copy() method.
+        Test the deepcopy() method.
         """
         vt = OCIO.ViewTransform()
         vt.setName('test name')

@@ -8,7 +8,7 @@ class FileRulesTest(unittest.TestCase):
 
     def test_copy(self):
         """
-        Test the deepcopy() and copy() method.
+        Test the deepcopy() method.
         """
         rules = OCIO.FileRules()
         rules.insertRule(0, 'test0', 'colorspace', 'pattern', 'ext')

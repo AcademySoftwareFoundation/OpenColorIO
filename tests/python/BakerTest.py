@@ -57,7 +57,7 @@ END METADATA
 
     def test_copy(self):
         """
-        Test the deepcopy() and copy() method.
+        Test the deepcopy() method.
         """
         cfg = OCIO.Config().CreateFromStream(self.SIMPLE_PROFILE)
 

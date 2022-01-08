@@ -19,7 +19,7 @@ class ViewingRulesTest(unittest.TestCase):
 
     def test_copy(self):
         """
-        Test the deepcopy() and copy() method.
+        Test the deepcopy() method.
         """
 
         self.rules.insertRule(0, "rule1")

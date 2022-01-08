@@ -8,7 +8,7 @@ class ContextTest(unittest.TestCase):
 
     def test_copy(self):
         """
-        Test the deepcopy() and copy() method.
+        Test the deepcopy() method.
         """
         cont = OCIO.Context()
         cont.setSearchPath('testing123:testing456')

@@ -42,7 +42,7 @@ class TransformsTest(unittest.TestCase):
 
     def test_copy(self):
         """
-        Test the deepcopy() and copy() method.
+        Test the deepcopy() method.
         """
         for transform in self.all_transforms_as_group():
             other = copy.deepcopy(transform)

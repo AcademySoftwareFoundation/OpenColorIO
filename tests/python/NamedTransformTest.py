@@ -22,7 +22,7 @@ class NamedTransformTest(unittest.TestCase):
 
     def test_copy(self):
         """
-        Test the deepcopy() and copy() method.
+        Test the deepcopy() method.
         """
         self.named_tr.setName('test name')
         self.named_tr.setFamily('test family')

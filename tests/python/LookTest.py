@@ -22,7 +22,7 @@ class LookTest(unittest.TestCase):
 
     def test_copy(self):
         """
-        Test the deepcopy() and copy() method.
+        Test the deepcopy() method.
         """
         self.look.setName('test name')
         self.look.setProcessSpace('test space')
