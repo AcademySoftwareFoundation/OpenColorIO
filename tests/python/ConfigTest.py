@@ -265,6 +265,11 @@ class ConfigTest(unittest.TestCase):
                             "raw",
                             isData=True))
 
+        rules = OCIO.FileRules()
+        rules.insertRule(0, 'A', 'raw', '*', 'exr')
+        rules.insertRule(1, 'B', 'display_cs', '*', 'png')
+        cfg.setFileRules(rules)
+
         other = copy.deepcopy(cfg)
         self.assertFalse(other is cfg)
 
@@ -273,6 +278,11 @@ class ConfigTest(unittest.TestCase):
         self.assertEqual(other.getName(), cfg.getName())
         self.assertEqual(other.getDescription(), cfg.getDescription())
         self.assertEqual(list(other.getColorSpaceNames()), list(cfg.getColorSpaceNames()))
+        self.assertEqual(other.getFileRules().getNumEntries(), cfg.getFileRules().getNumEntries())
+
+        rules.removeRule(0)
+        other.setFileRules(rules)
+        self.assertEqual(other.getFileRules().getNumEntries(), cfg.getFileRules().getNumEntries() - 1)
 
     def test_shared_views(self):
         # Test these Config functions: addSharedView, getSharedViews, removeSharedView.
