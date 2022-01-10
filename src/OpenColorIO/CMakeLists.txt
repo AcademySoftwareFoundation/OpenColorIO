@@ -307,12 +307,10 @@ if(UNIX AND NOT APPLE)
     # dependencies.
     set_property (TARGET OpenColorIO
                   APPEND PROPERTY LINK_FLAGS "-Wl,--exclude-libs,ALL")
-endif()
-
-if(APPLE AND USE_CLANG)
-    # Also remove the yaml symbols.
+elseif(APPLE)
+    # Hide the expat symbols.
     set_property (TARGET OpenColorIO
-                  APPEND PROPERTY LINK_FLAGS "-Wl,-unexported_symbol,\"_XML_*\"")
+                  APPEND PROPERTY LINK_FLAGS "-Wl,-hidden-lexpat")
 endif()
 
 if(MSVC AND BUILD_SHARED_LIBS)
