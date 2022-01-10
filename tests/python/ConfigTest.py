@@ -280,6 +280,7 @@ class ConfigTest(unittest.TestCase):
         self.assertEqual(list(other.getColorSpaceNames()), list(cfg.getColorSpaceNames()))
         self.assertEqual(other.getFileRules().getNumEntries(), cfg.getFileRules().getNumEntries())
 
+        # Check that the file rules are not shared between the two config instances.
         rules.removeRule(0)
         other.setFileRules(rules)
         self.assertEqual(other.getFileRules().getNumEntries(), cfg.getFileRules().getNumEntries() - 1)
