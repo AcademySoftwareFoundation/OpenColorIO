@@ -114,6 +114,15 @@ if(NOT pystring_FOUND AND NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL NONE)
             )
         endif()
 
+
+        if (ANDROID)
+            set(pystring_CMAKE_ARGS
+                ${pystring_CMAKE_ARGS}
+                -DANDROID_PLATFORM=${ANDROID_PLATFORM}
+                -DANDROID_ABI=${ANDROID_ABI}
+                -DANDROID_STL=${ANDROID_STL})
+        endif()
+
         if(NOT BUILD_SHARED_LIBS)
             #TODO: Find a way to merge in the static libs when built with internal pystring
             message(WARNING

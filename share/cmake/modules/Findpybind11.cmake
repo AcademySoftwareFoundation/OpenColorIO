@@ -180,6 +180,14 @@ if(NOT pybind11_FOUND AND NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL NONE)
             )
         endif()
 
+        if (ANDROID)
+            set(pybind11_CMAKE_ARGS
+                ${pybind11_CMAKE_ARGS}
+                -DANDROID_PLATFORM=${ANDROID_PLATFORM}
+                -DANDROID_ABI=${ANDROID_ABI}
+                -DANDROID_STL=${ANDROID_STL})
+        endif()
+
         ExternalProject_Add(pybind11_install
             GIT_REPOSITORY "https://github.com/pybind/pybind11.git"
             GIT_TAG "v${pybind11_FIND_VERSION}"
