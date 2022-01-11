@@ -225,7 +225,10 @@ namespace
             // It means to generate the input values.
 
             const bool testWideRange = test->getTestWideRange();
+
 #if __APPLE__ && __aarch64__
+            // The Apple M1 chip handles differently the Nan and Inf processing introducing
+            // differences with CPU processing.
             const bool testNaN = false;
             const bool testInfinity = false;
 #else
@@ -572,13 +575,16 @@ int main(int argc, const char ** argv)
     
     try
     {
-#if __APPLE__
         if(useMetalRenderer)
         {
+#if __APPLE__
             app = OCIO::MetalApp::CreateMetalGlApp("GPU tests - Metal", 10, 10);
+#else
+            std::cerr << std::endl << "'GPU tests - Metal' is not supported" << std::endl;
+            return 1;
+#endif
         }
         else
-#endif
         {
             app = OCIO::OglApp::CreateOglApp("GPU tests", 10, 10);
         }
