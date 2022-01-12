@@ -52,55 +52,55 @@ jobs:
           # CPython 32 bits
           # -------------------------------------------------------------------
           - build: CPython 3.6 32 bits
-            python: cp36-*
+            python: cp36-manylinux*
             arch: i686
           - build: CPython 3.7 32 bits
-            python: cp37-*
+            python: cp37-manylinux*
             arch: i686
           - build: CPython 3.8 32 bits
-            python: cp38-*
+            python: cp38-manylinux*
             arch: i686
           - build: CPython 3.9 32 bits
-            python: cp39-*
+            python: cp39-manylinux*
             arch: i686
           - build: CPython 3.10 32 bits
-            python: cp310-*
+            python: cp310-manylinux*
             arch: i686
           # -------------------------------------------------------------------
           # CPython 64 bits
           # -------------------------------------------------------------------
           - build: CPython 3.6 64 bits
-            python: cp36-*
+            python: cp36-manylinux*
             arch: x86_64
           - build: CPython 3.7 64 bits
-            python: cp37-*
+            python: cp37-manylinux*
             arch: x86_64
           - build: CPython 3.8 64 bits
-            python: cp38-*
+            python: cp38-manylinux*
             arch: x86_64
           - build: CPython 3.9 64 bits
-            python: cp39-*
+            python: cp39-manylinux*
             arch: x86_64
           - build: CPython 3.10 64 bits
-            python: cp310-*
+            python: cp310-manylinux*
             arch: x86_64
           # -------------------------------------------------------------------
           # CPython ARM 64 bits
           # -------------------------------------------------------------------
           - build: CPython 3.6 ARM 64 bits
-            python: cp36-*
+            python: cp36-manylinux*
             arch: aarch64
           - build: CPython 3.7 ARM 64 bits
-            python: cp37-*
+            python: cp37-manylinux*
             arch: aarch64
           - build: CPython 3.8 ARM 64 bits
-            python: cp38-*
+            python: cp38-manylinux*
             arch: aarch64
           - build: CPython 3.9 ARM 64 bits
-            python: cp39-*
+            python: cp39-manylinux*
             arch: aarch64
           - build: CPython 3.10 ARM 64 bits
-            python: cp310-*
+            python: cp310-manylinux*
             arch: aarch64
 
     steps:
@@ -117,7 +117,7 @@ jobs:
           platforms: all
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.1.2
+        uses: pypa/cibuildwheel@v2.3.1
         env:
           CIBW_BUILD: ${{ matrix.python }}
           CIBW_ARCHS: ${{ matrix.arch }}
@@ -163,13 +163,13 @@ jobs:
           # -------------------------------------------------------------------
           - build: CPython 3.8 ARM 64 bits
             python: cp38-*
-            arch: arm64
+            arch: universal2
           - build: CPython 3.9 ARM 64 bits
             python: cp39-*
-            arch: arm64
+            arch: universal2
           - build: CPython 3.10 ARM 64 bits
             python: cp310-*
-            arch: arm64
+            arch: universal2
 
     steps:
       - uses: actions/checkout@v2
@@ -180,7 +180,7 @@ jobs:
           python-version: '3.8'
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.1.2
+        uses: pypa/cibuildwheel@v2.3.1
         env:
           CIBW_BUILD: ${{ matrix.python }}
           CIBW_ARCHS: ${{ matrix.arch }}
