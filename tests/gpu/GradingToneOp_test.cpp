@@ -389,7 +389,7 @@ class GTRetest
 public:
     GTRetest() = delete;
 
-    GTRetest(OCIOGPUTest & test)
+    explicit GTRetest(OCIOGPUTest & test)
         : m_test(test)
     {
         OCIO::ConstProcessorRcPtr & processor = test.getProcessor();
@@ -437,7 +437,7 @@ OCIO_ADD_GPU_TEST(GradingTone, style_log_dynamic_retests)
     class MyGTRetest : public GTRetest
     {
     public:
-        MyGTRetest(OCIOGPUTest & test) : GTRetest(test)
+        explicit MyGTRetest(OCIOGPUTest & test) : GTRetest(test)
         {
         }
 
@@ -519,7 +519,7 @@ OCIO_ADD_GPU_TEST(GradingTone, two_transforms_retests)
     class MyGTRetest : public GTRetest
     {
     public:
-        MyGTRetest(OCIOGPUTest & test) : GTRetest(test)
+        explicit MyGTRetest(OCIOGPUTest & test) : GTRetest(test)
         {
         }
 
