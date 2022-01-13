@@ -33,7 +33,13 @@ void bindPyViewingRules(py::module & m)
     clsViewingRules
         .def(py::init(&ViewingRules::Create),
              DOC(ViewingRules, Create))
-                    
+
+        .def("__deepcopy__", [](const ConstViewingRulesRcPtr & self, py::dict)
+            {
+                 return self->createEditableCopy();
+            },
+            "memo"_a)
+
         .def("getNumEntries", &ViewingRules::getNumEntries,
              DOC(ViewingRules, getNumEntries))
         .def("getIndexForRule", &ViewingRules::getIndexForRule, "ruleName"_a,

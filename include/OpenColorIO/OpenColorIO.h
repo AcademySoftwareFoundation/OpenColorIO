@@ -1328,30 +1328,28 @@ extern OCIOEXPORT std::ostream & operator<< (std::ostream &, const FileRules &);
 
 
 
-
-// TODO: Move to .rst
-//
-// ViewingRules
-// ************
-// Viewing Rules allow config authors to filter the list of views an application should offer
-// based on the color space of an image.   For example, a config may define a large number of
-// views but not all of them may be appropriate for use with all color spaces.  E.g., some views
-// may be intended for use with scene-linear color space encodings and others with video color
-// space encodings.
-// 
-// Each rule has a name key for applications to refer to the rule.  Name values must be unique
-// (using case insensitive comparison). Viewing Rules may also have the following keys:
-//
-// * colorspaces: Either a single colorspace name or a list of names.
-//
-// * encodings: One or more strings to be found in the colorspace's encoding attribute.
-//   Either this attribute or colorspaces must be present, but not both.
-//
-// * custom : Allows arbitrary key / value string pairs, similar to FileRules.
-//
-// Getters and setters are using the rule position, they will throw if the position is not
-// valid.
-
+/**
+ * ViewingRules
+ * 
+ * Viewing Rules allow config authors to filter the list of views an application should offer
+ * based on the color space of an image.  For example, a config may define a large number of
+ * views but not all of them may be appropriate for use with all color spaces.  E.g., some views
+ * may be intended for use with scene-linear color space encodings and others with video color
+ * space encodings.
+ * 
+ * Each rule has a name key for applications to refer to the rule.  Name values must be unique
+ * (using case insensitive comparison). Viewing Rules may also have the following keys:
+ *
+ * * colorspaces: Either a single colorspace name or a list of names.
+ *
+ * * encodings: One or more strings to be found in the colorspace's encoding attribute.
+ *   Either this attribute or colorspaces must be present, but not both.
+ *
+ * * custom : Allows arbitrary key / value string pairs, similar to FileRules.
+ *
+ * Getters and setters are using the rule position, they will throw if the position is not
+ * valid.
+*/
 class OCIOEXPORT ViewingRules
 {
 public:

@@ -85,7 +85,13 @@ void bindPyViewTransform(py::module & m)
              "toReference"_a = DEFAULT->getTransform(VIEWTRANSFORM_DIR_TO_REFERENCE),
              "fromReference"_a = DEFAULT->getTransform(VIEWTRANSFORM_DIR_FROM_REFERENCE),
              "categories"_a = getCategoriesStdVec(DEFAULT),
-             DOC(ViewTransform, Create))  
+             DOC(ViewTransform, Create))
+
+        .def("__deepcopy__", [](const ConstViewTransformRcPtr & self, py::dict)
+            {
+                return self->createEditableCopy();
+            },
+            "memo"_a)
 
         .def("getName", &ViewTransform::getName,
              DOC(ViewTransform, getName))
