@@ -3,7 +3,7 @@
 
 # TODO: Add getFormatMetadata tests.
 
-import unittest, os, sys
+import copy, unittest, os, sys
 import PyOpenColorIO as OCIO
 
 class BakerTest(unittest.TestCase):
@@ -54,6 +54,32 @@ END METADATA
 6.622026 6.622026 6.622026
 
 """
+
+    def test_copy(self):
+        """
+        Test the deepcopy() method.
+        """
+        cfg = OCIO.Config().CreateFromStream(self.SIMPLE_PROFILE)
+
+        bake = OCIO.Baker()
+        bake.setConfig(cfg)
+        bake.setFormat("cinespace")
+        bake.setInputSpace("lnh")
+        bake.setLooks("foo, +bar")
+        bake.setTargetSpace("test")
+        bake.setShaperSize(4)
+        bake.setCubeSize(2)
+
+        other = copy.deepcopy(bake)
+        self.assertFalse(other is bake)
+
+        self.assertEqual(other.getConfig(), bake.getConfig())
+        self.assertEqual(other.getFormat(), bake.getFormat())
+        self.assertEqual(other.getInputSpace(), bake.getInputSpace())
+        self.assertEqual(other.getLooks(), bake.getLooks())
+        self.assertEqual(other.getTargetSpace(), bake.getTargetSpace())
+        self.assertEqual(other.getShaperSize(), bake.getShaperSize())
+        self.assertEqual(other.getCubeSize(), bake.getCubeSize())
 
     def test_interface(self):
         """

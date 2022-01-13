@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright Contributors to the OpenColorIO Project.
 
+import copy
 import unittest
 import os
 import sys
@@ -244,6 +245,46 @@ from UnitTestUtils import (SIMPLE_CONFIG_VIRTUAL_DISPLAY,
 
 
 class ConfigTest(unittest.TestCase):
+
+    def test_copy(self):
+        """
+        Test the deepcopy() method.
+        """
+        cfg = OCIO.Config.CreateRaw()
+        cfg.setMajorVersion(2)
+        cfg.setMinorVersion(1)
+        cfg.setName('test config')
+        cfg.setDescription('test description')
+
+        cfg.addColorSpace(
+            OCIO.ColorSpace(OCIO.REFERENCE_SPACE_DISPLAY,
+                            "display_cs",
+                            toReference=OCIO.CDLTransform(sat=1.5)))
+        cfg.addColorSpace(
+            OCIO.ColorSpace(OCIO.REFERENCE_SPACE_SCENE,
+                            "raw",
+                            isData=True))
+
+        rules = OCIO.FileRules()
+        rules.insertRule(0, 'A', 'raw', '*', 'exr')
+        rules.insertRule(1, 'B', 'display_cs', '*', 'png')
+        cfg.setFileRules(rules)
+
+        other = copy.deepcopy(cfg)
+        self.assertFalse(other is cfg)
+
+        self.assertEqual(other.getMajorVersion(), cfg.getMajorVersion())
+        self.assertEqual(other.getMinorVersion(), cfg.getMinorVersion())
+        self.assertEqual(other.getName(), cfg.getName())
+        self.assertEqual(other.getDescription(), cfg.getDescription())
+        self.assertEqual(list(other.getColorSpaceNames()), list(cfg.getColorSpaceNames()))
+        self.assertEqual(other.getFileRules().getNumEntries(), cfg.getFileRules().getNumEntries())
+
+        # Check that the file rules are not shared between the two config instances.
+        rules.removeRule(0)
+        other.setFileRules(rules)
+        self.assertEqual(other.getFileRules().getNumEntries(), cfg.getFileRules().getNumEntries() - 1)
+
     def test_shared_views(self):
         # Test these Config functions: addSharedView, getSharedViews, removeSharedView.
 

@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright Contributors to the OpenColorIO Project.
 
+import copy
 import unittest
 import os
 import sys
@@ -15,6 +16,30 @@ class ViewingRulesTest(unittest.TestCase):
 
     def tearDown(self):
         self.rule = None
+
+    def test_copy(self):
+        """
+        Test the deepcopy() method.
+        """
+
+        self.rules.insertRule(0, "rule1")
+        self.rules.insertRule(1, "rule2")
+        self.rules.insertRule(2, "rule3")
+
+        self.rules.addColorSpace(0, "cs1")
+        self.rules.addEncoding(1, "enc1")
+        self.rules.setCustomKey(2, "key1", "value1")
+
+        other = copy.deepcopy(self.rules)
+        self.assertFalse(other is self.rules)
+
+        self.assertEqual(other.getNumEntries(), self.rules.getNumEntries())
+        for idx in range(self.rules.getNumEntries()):
+            self.assertEqual(other.getName(idx), self.rules.getName(idx))
+        self.assertEqual(list(other.getColorSpaces(0)), list(self.rules.getColorSpaces(0)))
+        self.assertEqual(list(other.getEncodings(1)), list(self.rules.getEncodings(1)))
+        self.assertEqual(list(other.getCustomKeyName(2, 0)), list(self.rules.getCustomKeyName(2, 0)))
+        self.assertEqual(list(other.getCustomKeyValue(2, 0)), list(self.rules.getCustomKeyValue(2, 0)))
 
     def test_insert_remove(self):
         """
