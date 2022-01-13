@@ -72,6 +72,12 @@ Each item is a tuple containing format name and format extension.
              "shaperSize"_a = DEFAULT->getShaperSize(),
              DOC(Baker, Create))
 
+        .def("__deepcopy__", [](const ConstBakerRcPtr & self, py::dict)
+            {
+                return self->createEditableCopy();
+            },
+            "memo"_a)
+
         .def_static("getFormats", []()
             { 
                 return FormatIterator(nullptr); 

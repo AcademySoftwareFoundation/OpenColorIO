@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright Contributors to the OpenColorIO Project.
 
+import copy
 import unittest
 import os
 import sys
@@ -18,6 +19,26 @@ class LookTest(unittest.TestCase):
 
     def tearDown(self):
         self.look = None
+
+    def test_copy(self):
+        """
+        Test the deepcopy() method.
+        """
+        self.look.setName('test name')
+        self.look.setProcessSpace('test space')
+        self.look.setDescription('test description')
+        mat = OCIO.MatrixTransform()
+        self.look.setTransform(mat)
+        self.look.setInverseTransform(mat)
+
+        other = copy.deepcopy(self.look)
+        self.assertFalse(other is self.look)
+
+        self.assertEqual(other.getName(), self.look.getName())
+        self.assertEqual(other.getProcessSpace(), self.look.getProcessSpace())
+        self.assertEqual(other.getDescription(), self.look.getDescription())
+        self.assertTrue(other.getTransform().equals(self.look.getTransform()))
+        self.assertTrue(other.getInverseTransform().equals(self.look.getInverseTransform()))
 
     def test_name(self):
         """
