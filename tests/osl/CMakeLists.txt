@@ -35,6 +35,9 @@ endif(OCIO_USE_SSE)
 set_target_properties(test_osl_exec PROPERTIES 
     COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS}")
 
+# Because some OpenImageIO types are present in the OSL public API that dependency is mandatory;
+# however, the unit test framework itself does not have any OpenImageIO dependency.
+
 target_link_libraries(test_osl_exec
     PRIVATE
         OpenColorIO

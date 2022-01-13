@@ -2,19 +2,20 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 
-#include <sstream>
-#include <map>
+#include <algorithm>
+#include <cmath>
+#include <cstring>
 #include <iomanip>
 #include <iostream>
-
-#include <stdlib.h>
-#include <string.h>
-#include <cmath>
-#include <algorithm>
+#include <sstream>
 
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "GPUUnitTest.h"
+
+#include "apputils/argparse.h"
+#include "utils/StringUtils.h"
+
 #include "oglapp.h"
 #if __APPLE__
 #include "metalapp.h"
@@ -26,12 +27,12 @@ namespace OCIO = OCIO_NAMESPACE;
 namespace Shader
 {
     // Default error threshold
-    const float defaultErrorThreshold = 1e-7f;
+    constexpr float defaultErrorThreshold = 1e-7f;
 
     // In some occasions, MAX_FLOAT will be "rounded" to infinity on some GPU renderers.
     // In order to avoid this issue, consider all number over/under a given threshold as
     // equal for testing purposes.
-    const float largeThreshold = std::numeric_limits<float>::max();
+    constexpr float largeThreshold = std::numeric_limits<float>::max();
 
     enum LimitsDiff
     {
@@ -95,7 +96,7 @@ namespace Shader
     inline bool RelativeDifference(float x1, float x2, float min_x1, float & diff)
     {
         const float absx1 = fabs(x1);
-        float div = std::max(absx1, min_x1);
+        const float div = std::max(absx1, min_x1);
         const float thisDiff = fabs(x1 - x2) / div;
         if (thisDiff > diff)
         {
@@ -122,17 +123,13 @@ namespace Shader
 }
 
 
-OCIOGPUTest::OCIOGPUTest(const std::string& testgroup,
-                         const std::string& testname,
+OCIOGPUTest::OCIOGPUTest(const std::string & testgroup,
+                         const std::string & testname,
                          OCIOTestFuncCallback test)
     :   m_group(testgroup)
     ,   m_name(testname)
     ,   m_function(test)
     ,   m_errorThreshold(Shader::defaultErrorThreshold)
-{
-}
-
-OCIOGPUTest::~OCIOGPUTest()
 {
 }
 
@@ -151,7 +148,7 @@ void OCIOGPUTest::setProcessor(OCIO::ConstConfigRcPtr config,
 
 void OCIOGPUTest::setProcessor(OCIO::ConstProcessorRcPtr processor)
 {
-    if(m_processor.get()!=0x0)
+    if (m_processor.get() != nullptr)
     {
         throw OCIO::Exception("GPU Unit test already exists");
     }
@@ -192,9 +189,9 @@ AddTest::AddTest(OCIOGPUTestRcPtr test)
 
 namespace
 {
-    static constexpr unsigned g_winWidth   = 256;
-    static constexpr unsigned g_winHeight  = 256;
-    static constexpr unsigned g_components = 4;
+    constexpr unsigned g_winWidth   = 256;
+    constexpr unsigned g_winHeight  = 256;
+    constexpr unsigned g_components = 4;
 
     void AllocateImageTexture(OCIO::OglAppRcPtr & app)
     {
@@ -228,7 +225,10 @@ namespace
             // It means to generate the input values.
 
             const bool testWideRange = test->getTestWideRange();
+
 #if __APPLE__ && __aarch64__
+            // The Apple M1 chip handles differently the Nan and Inf processing introducing
+            // differences with CPU processing.
             const bool testNaN = false;
             const bool testInfinity = false;
 #else
@@ -378,7 +378,7 @@ namespace
         }
     }
 
-    static constexpr size_t invalidIndex = std::numeric_limits<size_t>::max();
+    constexpr size_t invalidIndex = std::numeric_limits<size_t>::max();
 
     // Validate the GPU processing against the CPU one.
     void ValidateImageTexture(OCIO::OglAppRcPtr & app, OCIOGPUTestRcPtr & test)
@@ -468,8 +468,8 @@ namespace
             }
             if (idxInf != invalidIndex)
             {
-                size_t componentIdx = idxInf % 4;
-                size_t pixelIdx = idxInf / 4;
+                componentIdx = idxInf % 4;
+                pixelIdx = idxInf / 4;
                 err << std::setprecision(10)
                     << "\nLarge number error: " << diff << " at pixel: " << pixelIdx
                     << " on component " << componentIdx
@@ -485,8 +485,8 @@ namespace
             }
             if (idxNan != invalidIndex)
             {
-                size_t componentIdx = idxNan % 4;
-                size_t pixelIdx = idxNan / 4;
+                componentIdx = idxNan % 4;
+                pixelIdx = idxNan / 4;
                 err << std::setprecision(10)
                     << "\nNAN error: " << diff << " at pixel: " << pixelIdx
                     << " on component " << componentIdx
@@ -509,35 +509,89 @@ namespace
     }
 };
 
-int main(int argc, char ** argv)
+int main(int argc, const char ** argv)
 {
+
+#if !defined(NDEBUG) && defined(_WIN32)
+    // Disable the 'assert' dialog box in debug mode.
+    _CrtSetReportMode(_CRT_ASSERT, _CRTDBG_MODE_DEBUG);
+#endif
+
+    bool printHelp = false;
+    bool useMetalRenderer = false;
+    bool verbose = false;
+    bool stopOnFirstError = false;
+
+    // Note that empty strings mean to run all the unit tests.
+    std::string filter, utestGroupAllowed, utestNameAllowed;
+
+    ArgParse ap;
+    ap.options("\nCommand line arguments:\n",
+               "--help",          &printHelp,        "Print help message",
+               "--metal",         &useMetalRenderer, "Run the GPU unit test with Metal",
+               "-v",              &verbose,          "Output the GPU shader program",
+               "--stop_on_error", &stopOnFirstError, "Stop on the first error",
+               "--run_only %s",   &filter,           "Run only some unit tests\n"
+                                                     "\tex: --run_only ExponentOp/forward i.e. run only \"ExponentOp/forward\"\n"
+                                                     "\tex: --run_only ExponentOp         i.e. run \"ExponentOp/*\"\n"
+                                                     "\tex: --run_only /forward           i.e. run \"*/forward\"\n",
+               nullptr);
+
+    if (ap.parse(argc, argv) < 0)
+    {
+        std::cerr << ap.geterror() << std::endl;
+        ap.usage();
+        return 1;
+    }
+
+    if (printHelp)
+    {
+        ap.usage();
+        return 1;
+    }
+
+    if (!filter.empty())
+    {
+        const std::vector<std::string> results = StringUtils::Split(filter, '/');
+        if (!results.empty())
+        {
+            utestGroupAllowed = StringUtils::Lower(StringUtils::Trim(results[0]));
+            if (results.size() >= 2)
+            {
+                utestNameAllowed = StringUtils::Lower(StringUtils::Trim(results[1]));
+
+                if (results.size() >= 3)
+                {
+                    std::cerr << "Invalid value for the argument '--run_only'." << std::endl;
+                    ap.usage();
+                    return 1;
+                }
+            }
+        }
+    }
+
     // Step 1: Initialize the graphic library engines.
     OCIO::OglAppRcPtr app;
     
-    bool useMetalRenderer = false;
-    for(int i = 0; i < argc; ++i)
-    {
-        if(strcmp(argv[i], "-metal") == 0)
-        {
-            useMetalRenderer = true;
-        }
-    }
     try
     {
-#if __APPLE__
         if(useMetalRenderer)
         {
+#if __APPLE__
             app = OCIO::MetalApp::CreateMetalGlApp("GPU tests - Metal", 10, 10);
+#else
+            std::cerr << std::endl << "'GPU tests - Metal' is not supported" << std::endl;
+            return 1;
+#endif
         }
         else
-#endif
         {
             app = OCIO::OglApp::CreateOglApp("GPU tests", 10, 10);
         }
     }
     catch (const OCIO::Exception & e)
     {
-        std::cout << std::endl << e.what() << std::endl;
+        std::cerr << std::endl << e.what() << std::endl;
         return 1;
     }
 
@@ -555,7 +609,7 @@ int main(int argc, char ** argv)
 
     unsigned failures = 0;
 
-    std::cerr << "\n OpenColorIO_Core_GPU_Unit_Tests\n\n";
+    std::cout << "\n OpenColorIO_Core_GPU_Unit_Tests\n\n";
 
     UnitTests & tests = GetUnitTests();
     const size_t numTests = tests.size();
@@ -564,7 +618,32 @@ int main(int argc, char ** argv)
         const unsigned curr_failures = failures;
 
         OCIOGPUTestRcPtr test = tests[idx];
-        
+
+        // Is that a unit test to run ?
+
+        const std::string utestGroup = test->group();
+        const std::string utestName  = test->name();
+
+        bool utestAllowed = true;
+
+        if (!utestGroupAllowed.empty() && StringUtils::Lower(utestGroup)!=utestGroupAllowed)
+        {
+            utestAllowed = false;
+        }
+
+        if (!utestNameAllowed.empty() && StringUtils::Lower(utestName)!=utestNameAllowed)
+        {
+            utestAllowed = false;
+        }
+
+        if (!utestAllowed)
+        {
+            continue;
+        }
+
+        // Prepare the unit test.
+
+        test->setVerbose(verbose);
         test->setShadingLanguage(
 #if __APPLE__
             useMetalRenderer ?
@@ -576,6 +655,7 @@ int main(int argc, char ** argv)
         try
         {
             test->setup();
+
             enabledTest = test->isEnabled();
 
             constexpr size_t maxCharToDisplay = 49;
@@ -588,7 +668,7 @@ int main(int argc, char ** argv)
                 name.resize(maxCharToDisplay);
             }
 
-            std::cerr << "["
+            std::cout << "["
                       << std::right << std::setw(3)
                       << (idx+1) << "/" << numTests << "] ["
                       << std::left << std::setw(maxCharToDisplay+1)
@@ -604,12 +684,12 @@ int main(int argc, char ** argv)
 
                 const size_t numRetest = test->getNumRetests();
                 // Need to run once and for each retest.
-                for (size_t idx = 0; idx <= numRetest; ++idx)
+                for (size_t idxRetest = 0; idxRetest <= numRetest; ++idxRetest)
                 {
-                    if (idx != 0) // Skip first run.
+                    if (idxRetest != 0) // Skip first run.
                     {
                         // Call the retest callback.
-                        test->retestSetup(idx - 1);
+                        test->retestSetup(idxRetest - 1);
                     }
 
                     // Process the image texture into the rendering buffer.
@@ -634,15 +714,15 @@ int main(int argc, char ** argv)
 
         if (!enabledTest)
         {
-            std::cerr << "DISABLED" << std::endl;
+            std::cout << "DISABLED" << std::endl;
         }
         else if(curr_failures==failures && test->isValid())
         {
-            size_t idx = test->getMaxDiffIndex();
-            size_t componentIdx = idx % 4;
-            size_t pixelIdx = idx / 4;
+            const size_t idxMaxDiff = test->getMaxDiffIndex();
+            const size_t componentIdx = idxMaxDiff % 4;
+            const size_t pixelIdx = idxMaxDiff / 4;
 
-            std::cerr << "PASSED - (MaxDiff: " << test->getMaxDiff()
+            std::cout << "PASSED - (MaxDiff: " << test->getMaxDiff()
                       << " at pix[" << pixelIdx
                       << "][" << componentIdx << "])" << std::endl;
         }
@@ -654,9 +734,8 @@ int main(int argc, char ** argv)
 
         // Get rid of the test.
         tests[idx] = nullptr;
-
     }
 
-    std::cerr << std::endl << failures << " tests failed" << std::endl << std::endl;
+    std::cout << std::endl << failures << " tests failed" << std::endl << std::endl;
     return failures;
 }

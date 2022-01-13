@@ -479,21 +479,20 @@ unsigned OpenGLBuilder::buildProgram(const std::string & clientShaderProgram, bo
             glDeleteShader(m_fragShader);
         }
 
-        std::ostringstream os;
-        os  << getGLSLVersionString() << std::endl
-            << (!standaloneShader ? m_shaderDesc->getShaderText() : "") << std::endl
-            << clientShaderProgram << std::endl;
+        std::ostringstream oss;
+        oss  << getGLSLVersionString() << std::endl
+             << (!standaloneShader ? m_shaderDesc->getShaderText() : "") << std::endl
+             << clientShaderProgram << std::endl;
 
         if(m_verbose)
         {
-            std::cout << std::endl;
-            std::cout << "GPU Shader Program:" << std::endl;
-            std::cout << std::endl;
-            std::cout << os.str() << std::endl;
-            std::cout << std::endl;
+            std::cout << "\nGPU Shader Program:\n\n"
+                      << oss.str()
+                      << "\n\n"
+                      << std::flush;
         }
 
-        m_fragShader = CompileShaderText(GL_FRAGMENT_SHADER, os.str().c_str());
+        m_fragShader = CompileShaderText(GL_FRAGMENT_SHADER, oss.str().c_str());
 
         LinkShaders(m_program, m_fragShader);
         m_shaderCacheID = shaderCacheID;

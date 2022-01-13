@@ -1,10 +1,35 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright Contributors to the OpenColorIO Project.
 
-import unittest, os, sys
+import copy, unittest, os, sys
 import PyOpenColorIO as OCIO
 
 class FileRulesTest(unittest.TestCase):
+
+    def test_copy(self):
+        """
+        Test the deepcopy() method.
+        """
+        rules = OCIO.FileRules()
+        rules.insertRule(0, 'test0', 'colorspace', 'pattern', 'ext')
+        rules.setCustomKey(0, 'key1', 'val1')
+        rules.insertRule(1, 'test2', 'colorspace', 'regex')
+        rules.setCustomKey(1, 'key2', 'val2')
+
+        other = copy.deepcopy(rules)
+        self.assertFalse(other is rules)
+
+        self.assertEqual(other.getNumEntries(), rules.getNumEntries())
+        for idx in range(other.getNumEntries()):
+            self.assertEqual(other.getName(idx), rules.getName(idx))
+            self.assertEqual(other.getPattern(idx), rules.getPattern(idx))
+            self.assertEqual(other.getExtension(idx), rules.getExtension(idx))
+            self.assertEqual(other.getRegex(idx), rules.getRegex(idx))
+            self.assertEqual(other.getColorSpace(idx), rules.getColorSpace(idx))
+            self.assertEqual(other.getNumCustomKeys(idx), rules.getNumCustomKeys(idx))
+            for idx_inner in range(other.getNumCustomKeys(idx)):
+                self.assertEqual(other.getCustomKeyName(idx, idx_inner), rules.getCustomKeyName(idx, idx_inner))
+                self.assertEqual(other.getCustomKeyValue(idx, idx_inner), rules.getCustomKeyValue(idx, idx_inner))
 
     def test_default(self):
         """
