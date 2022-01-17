@@ -193,6 +193,14 @@ if(NOT Imath_FOUND)
             )
         endif()
 
+        if (ANDROID)
+            set(Imath_CMAKE_ARGS
+                ${Imath_CMAKE_ARGS}
+                -DANDROID_PLATFORM=${ANDROID_PLATFORM}
+                -DANDROID_ABI=${ANDROID_ABI}
+                -DANDROID_STL=${ANDROID_STL})
+        endif()
+
         # Hack to let imported target be built from ExternalProject_Add
         file(MAKE_DIRECTORY ${Imath_INCLUDE_DIR})
 
