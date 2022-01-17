@@ -147,6 +147,14 @@ if(NOT lcms2_FOUND)
                 ${lcms2_CMAKE_ARGS} -DCMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET})
         endif()
 
+        if (ANDROID)
+            set(lcms2_CMAKE_ARGS
+                ${lcms2_CMAKE_ARGS}
+                -DANDROID_PLATFORM=${ANDROID_PLATFORM}
+                -DANDROID_ABI=${ANDROID_ABI}
+                -DANDROID_STL=${ANDROID_STL})
+        endif()
+
         # Hack to let imported target be built from ExternalProject_Add
         file(MAKE_DIRECTORY ${lcms2_INCLUDE_DIR})
 
