@@ -49,7 +49,7 @@ public:
         :   m_functionName("OCIOMain")
         ,   m_resourcePrefix("ocio")
         ,   m_pixelName("outColor")
-        ,   m_classWrappingInterface(new NullGpuShaderClassWrapper)
+        ,   m_classWrappingInterface(GpuShaderClassWrapper::CreateClassWrapper(m_language))
     {
     }
 
@@ -82,26 +82,6 @@ public:
         }
         return *this;
     }
-
-    static std::unique_ptr<GpuShaderClassWrapper> CreateClassWrapper(GpuLanguage language)
-    {
-       switch(language)
-       {
-           case GPU_LANGUAGE_MSL_2_0:
-               return std::unique_ptr<MetalShaderClassWrapper>(new MetalShaderClassWrapper);
-            
-           case GPU_LANGUAGE_CG:
-           case GPU_LANGUAGE_GLSL_1_2:
-           case GPU_LANGUAGE_GLSL_1_3:
-           case GPU_LANGUAGE_GLSL_4_0:
-           case GPU_LANGUAGE_HLSL_DX11:
-           case LANGUAGE_OSL_1:
-           case GPU_LANGUAGE_GLSL_ES_1_0:
-           case GPU_LANGUAGE_GLSL_ES_3_0:
-           default:
-               return std::unique_ptr<NullGpuShaderClassWrapper>(new NullGpuShaderClassWrapper);
-       }
-    }
 };
 
 GpuShaderCreator::GpuShaderCreator()
@@ -132,7 +112,9 @@ void GpuShaderCreator::setLanguage(GpuLanguage lang) noexcept
     AutoMutex lock(getImpl()->m_cacheIDMutex);
        
     getImpl()->m_language = lang;
-    getImpl()->m_classWrappingInterface = Impl::CreateClassWrapper(getImpl()->m_language);
+    getImpl()->m_classWrappingInterface
+        = GpuShaderClassWrapper::CreateClassWrapper(getImpl()->m_language);
+
     getImpl()->m_cacheID.clear();
 }
 
@@ -187,7 +169,7 @@ unsigned GpuShaderCreator::getNextResourceIndex() noexcept
 
 bool GpuShaderCreator::hasDynamicProperty(DynamicPropertyType type) const
 {
-    for (auto dp : getImpl()->m_dynamicProperties)
+    for (const auto & dp : getImpl()->m_dynamicProperties)
     {
         if (dp->getType() == type)
         {
@@ -324,112 +306,19 @@ void GpuShaderCreator::createShaderText(const char * shaderDeclarations,
 
 void GpuShaderCreator::finalize()
 {
-    if (getLanguage() == LANGUAGE_OSL_1)
-    {
-        GpuShaderText kw(getLanguage());
+    // For some GPU languages, the default header and footer do not fit well so, the class wrapper
+    // encapsulates differences when needed.
 
-        kw.newLine() << "";
-        kw.newLine() << "/* All the includes */";
-        kw.newLine() << "";
-        kw.newLine() << "#include \"vector4.h\"";
-        kw.newLine() << "#include \"color4.h\"";
-
-        kw.newLine() << "";
-        kw.newLine() << "/* All the generic helper methods */";
-
-        kw.newLine() << "";
-        kw.newLine() << "vector4 __operator__mul__(matrix m, vector4 v)";
-        kw.newLine() << "{";
-        kw.indent();
-        kw.newLine() << "return vector4(v.x * m[0][0] + v.y * m[0][1] + v.z * m[0][2] + v.w * m[0][3], ";
-        kw.newLine() << "               v.x * m[1][0] + v.y * m[1][1] + v.z * m[1][2] + v.w * m[1][3], ";
-        kw.newLine() << "               v.x * m[2][0] + v.y * m[2][1] + v.z * m[2][2] + v.w * m[2][3], ";
-        kw.newLine() << "               v.x * m[3][0] + v.y * m[3][1] + v.z * m[3][2] + v.w * m[3][3]);";
-        kw.dedent();
-        kw.newLine() << "}";
-
-        kw.newLine() << "";
-        kw.newLine() << "vector4 __operator__mul__(color4 c, vector4 v)";
-        kw.newLine() << "{";
-        kw.indent();
-        kw.newLine() << "return vector4(c.rgb.r, c.rgb.g, c.rgb.b, c.a) * v;";
-        kw.dedent();
-        kw.newLine() << "}";
-
-        kw.newLine() << "";
-        kw.newLine() << "vector4 __operator__mul__(vector4 v, color4 c)";
-        kw.newLine() << "{";
-        kw.indent();
-        kw.newLine() << "return v * vector4(c.rgb.r, c.rgb.g, c.rgb.b, c.a);";
-        kw.dedent();
-        kw.newLine() << "}";
-
-        kw.newLine() << "";
-        kw.newLine() << "vector4 __operator__sub__(color4 c, vector4 v)";
-        kw.newLine() << "{";
-        kw.indent();
-        kw.newLine() << "return vector4(c.rgb.r, c.rgb.g, c.rgb.b, c.a) - v;";
-        kw.dedent();
-        kw.newLine() << "}";
-
-        kw.newLine() << "";
-        kw.newLine() << "vector4 __operator__add__(vector4 v, color4 c)";
-        kw.newLine() << "{";
-        kw.indent();
-        kw.newLine() << "return v + vector4(c.rgb.r, c.rgb.g, c.rgb.b, c.a);";
-        kw.dedent();
-        kw.newLine() << "}";
-
-        kw.newLine() << "";
-        kw.newLine() << "vector4 __operator__add__(color4 c, vector4 v)";
-        kw.newLine() << "{";
-        kw.indent();
-        kw.newLine() << "return vector4(c.rgb.r, c.rgb.g, c.rgb.b, c.a) + v;";
-        kw.dedent();
-        kw.newLine() << "}";
-
-        kw.newLine() << "";
-        kw.newLine() << "vector4 pow(color4 c, vector4 v)";
-        kw.newLine() << "{";
-        kw.indent();
-        kw.newLine() << "return pow(vector4(c.rgb.r, c.rgb.g, c.rgb.b, c.a), v);";
-        kw.dedent();
-        kw.newLine() << "}";
-
-        kw.newLine() << "";
-        kw.newLine() << "vector4 max(vector4 v, color4 c)";
-        kw.newLine() << "{";
-        kw.indent();
-        kw.newLine() << "return max(v, vector4(c.rgb.r, c.rgb.g, c.rgb.b, c.a));";
-        kw.dedent();
-        kw.newLine() << "}";
-
-        kw.newLine() << "";
-        kw.newLine() << "/* The shader implementation */";
-        kw.newLine() << "";
-        kw.newLine() << "shader " << "OSL_" << getFunctionName() 
-                     << "(color4 inColor = {color(0), 1}, output color4 outColor = {color(0), 1})";
-        kw.newLine() << "{";
-
-        const std::string str = kw.string() + getImpl()->m_declarations;
-        getImpl()->m_declarations = str;
-
-        // Change the footer part.
-
-        GpuShaderText kw1(getLanguage());
-        kw1.newLine() << "";
-        kw1.newLine() << "outColor = " << getFunctionName() << "(inColor);";
-        kw1.newLine() << "}";
-
-        getImpl()->m_functionFooter += kw1.string();
-    }
-    
     getImpl()->m_classWrappingInterface->prepareClassWrapper(getResourcePrefix(),
                                                              getImpl()->m_functionName,
                                                              getImpl()->m_declarations);
-        
-    getImpl()->m_declarations   = getImpl()->m_classWrappingInterface->getClassWrapperHeader(getImpl()->m_declarations);
-    getImpl()->m_functionFooter = getImpl()->m_classWrappingInterface->getClassWrapperFooter(getImpl()->m_functionFooter);
+
+    getImpl()->m_declarations
+        = getImpl()->m_classWrappingInterface->getClassWrapperHeader(getImpl()->m_declarations);
+    getImpl()->m_functionFooter
+        = getImpl()->m_classWrappingInterface->getClassWrapperFooter(getImpl()->m_functionFooter);
+
+    // Build the complete shader program.
 
     createShaderText(getImpl()->m_declarations.c_str(),
                      getImpl()->m_helperMethods.c_str(),
