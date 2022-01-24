@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright Contributors to the OpenColorIO Project.
 
+import copy
 import unittest
 
 import PyOpenColorIO as OCIO
@@ -18,6 +19,32 @@ class NamedTransformTest(unittest.TestCase):
 
     def tearDown(self):
         self.named_tr = None
+
+    def test_copy(self):
+        """
+        Test the deepcopy() method.
+        """
+        self.named_tr.setName('test name')
+        self.named_tr.setFamily('test family')
+        self.named_tr.setDescription('test description')
+        self.named_tr.setEncoding('test encoding')
+        mat = OCIO.MatrixTransform()
+        self.named_tr.setTransform(mat, OCIO.TRANSFORM_DIR_FORWARD)
+        self.named_tr.setTransform(direction=OCIO.TRANSFORM_DIR_INVERSE, transform=mat)
+        self.named_tr.addCategory('cat1')
+        self.named_tr.addAlias("alias1")
+
+        other = copy.deepcopy(self.named_tr)
+        self.assertFalse(other is self.named_tr)
+
+        self.assertEqual(other.getName(), self.named_tr.getName())
+        self.assertEqual(other.getFamily(), self.named_tr.getFamily())
+        self.assertEqual(other.getDescription(), self.named_tr.getDescription())
+        self.assertEqual(other.getEncoding(), self.named_tr.getEncoding())
+        self.assertTrue(other.getTransform(OCIO.TRANSFORM_DIR_FORWARD).equals(self.named_tr.getTransform(OCIO.TRANSFORM_DIR_FORWARD)))
+        self.assertTrue(other.getTransform(OCIO.TRANSFORM_DIR_INVERSE).equals(self.named_tr.getTransform(OCIO.TRANSFORM_DIR_INVERSE)))
+        self.assertEqual(list(other.getCategories()), list(self.named_tr.getCategories()))
+        self.assertEqual(list(other.getAliases()), list(self.named_tr.getAliases()))
 
     def test_name(self):
         """

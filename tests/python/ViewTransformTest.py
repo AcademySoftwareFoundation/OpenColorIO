@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright Contributors to the OpenColorIO Project.
 
-import unittest, os, sys
+import copy, unittest, os, sys
 import PyOpenColorIO as OCIO
 
 class ViewTransformTest(unittest.TestCase):
@@ -47,6 +47,29 @@ class ViewTransformTest(unittest.TestCase):
 
         vt = OCIO.ViewTransform(fromReference=mat)
         self.assertTrue(vt.getTransform(OCIO.VIEWTRANSFORM_DIR_FROM_REFERENCE).equals(mat))
+
+    def test_copy(self):
+        """
+        Test the deepcopy() method.
+        """
+        vt = OCIO.ViewTransform()
+        vt.setName('test name')
+        vt.setFamily('test family')
+        vt.setDescription('test description')
+        mat = OCIO.MatrixTransform()
+        vt.setTransform(mat, OCIO.VIEWTRANSFORM_DIR_TO_REFERENCE)
+        vt.setTransform(direction=OCIO.VIEWTRANSFORM_DIR_FROM_REFERENCE, transform=mat)
+        vt.addCategory('cat1')
+
+        other = copy.deepcopy(vt)
+        self.assertFalse(other is vt)
+
+        self.assertEqual(other.getName(), vt.getName())
+        self.assertEqual(other.getFamily(), vt.getFamily())
+        self.assertEqual(other.getDescription(), vt.getDescription())
+        self.assertTrue(other.getTransform(OCIO.VIEWTRANSFORM_DIR_TO_REFERENCE).equals(vt.getTransform(OCIO.VIEWTRANSFORM_DIR_TO_REFERENCE)))
+        self.assertTrue(other.getTransform(OCIO.VIEWTRANSFORM_DIR_FROM_REFERENCE).equals(vt.getTransform(OCIO.VIEWTRANSFORM_DIR_FROM_REFERENCE)))
+        self.assertEqual(list(other.getCategories()), list(vt.getCategories()))
 
     def test_name(self):
         """
