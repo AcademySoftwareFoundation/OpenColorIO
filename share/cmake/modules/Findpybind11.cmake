@@ -165,6 +165,10 @@ if(NOT pybind11_FOUND)
             -DCMAKE_INSTALL_MESSAGE=${CMAKE_INSTALL_MESSAGE}
             -DCMAKE_INSTALL_PREFIX=${_EXT_DIST_ROOT}
             -DCMAKE_OBJECT_PATH_MAX=${CMAKE_OBJECT_PATH_MAX}
+            # Using FindPython mode (PYBIND11_FINDPYTHON=ON) doesn't seem to
+            # work when building on docker manylinux images where Development
+            # component is not available but is hardcoded in pybind11 script.
+            -DPYTHON_EXECUTABLE=${Python_EXECUTABLE}
             -DPYBIND11_INSTALL=ON
             -DPYBIND11_TEST=OFF
         )
@@ -175,8 +179,13 @@ if(NOT pybind11_FOUND)
         endif()
 
         if(APPLE)
+            string(REPLACE ";" "$<SEMICOLON>" ESCAPED_CMAKE_OSX_ARCHITECTURES "${CMAKE_OSX_ARCHITECTURES}")
+
             set(pybind11_CMAKE_ARGS
-                ${pybind11_CMAKE_ARGS} -DCMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET})
+                ${pybind11_CMAKE_ARGS}
+                -DCMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET}
+                -DCMAKE_OSX_ARCHITECTURES=${ESCAPED_CMAKE_OSX_ARCHITECTURES}
+            )
         endif()
 
         if (ANDROID)
