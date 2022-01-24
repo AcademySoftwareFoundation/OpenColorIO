@@ -64,7 +64,7 @@ jobs:
           # -------------------------------------------------------------------
           # VFX CY2022 (Python 3.9)
           # -------------------------------------------------------------------
-          # Clang, Debug, OpenFX
+          # C++17, Clang, Debug, OpenFX
           - build: 13
             build-type: Debug
             build-shared: 'ON'
@@ -77,7 +77,7 @@ jobs:
             cc-compiler: clang
             compiler-desc: Clang 9
             vfx-cy: 2022
-          # GCC, no SSE, OpenFX
+          # C++17, GCC, no SSE, OpenFX
           - build: 12
             build-type: Release
             build-shared: 'ON'
@@ -119,11 +119,11 @@ jobs:
           # -------------------------------------------------------------------
           # VFX CY2021 (Python 3.7)
           # -------------------------------------------------------------------
-          # Clang, docs
+          # C++17, Clang
           - build: 9
             build-type: Release
             build-shared: 'ON'
-            build-docs: 'ON'
+            build-docs: 'OFF'
             build-openfx: 'OFF'
             use-sse: 'ON'
             use-openexr-half: 'ON'
@@ -187,11 +187,11 @@ jobs:
             cc-compiler: gcc
             compiler-desc: GCC 6.3.1
             vfx-cy: 2020
-          # C++11, GCC, no SSE, docs
+          # C++11, GCC, no SSE
           - build: 4
             build-type: Release
             build-shared: 'ON'
-            build-docs: 'ON'
+            build-docs: 'OFF'
             build-openfx: 'OFF'
             use-sse: 'ON'
             use-openexr-half: 'ON'
@@ -471,7 +471,7 @@ jobs:
           - build: 5
             build-type: Release
             build-shared: 'ON'
-            build-docs: 'ON'
+            build-docs: 'OFF'
             build-openfx: 'OFF'
             use-sse: 'ON'
             use-openexr-half: 'OFF'
