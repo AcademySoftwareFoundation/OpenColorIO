@@ -31,17 +31,13 @@ class OCIOGPUTest
             // Keeping the original input value size allows 
             // to avoid manipulating padded values added to fit
             // the predefined GPU texture size.
-            size_t m_originalInputValueSize;
-
-            CustomValues() 
-                : m_originalInputValueSize(0)
-            {}
+            size_t m_originalInputValueSize{ 0 };
         };
 
     public:
         OCIOGPUTest(const std::string& testgroup, const std::string& testname, OCIOTestFuncCallback test);
 
-        ~OCIOGPUTest();
+        ~OCIOGPUTest() = default;
 
         inline const std::string& group() const  { return m_group; }
         inline const std::string& name() const  { return m_name; }
@@ -161,7 +157,7 @@ class OCIOGPUTest
         bool m_legacyShader{ false };
         unsigned m_legacyShaderLutEdge{ 32 };
         CustomValues m_values;
-        OCIO_NAMESPACE::GpuLanguage m_gpuShadingLanguage;
+        OCIO_NAMESPACE::GpuLanguage m_gpuShadingLanguage {OCIO_NAMESPACE::GPU_LANGUAGE_GLSL_1_2};
 
         std::vector<RetestSetupCallback> m_retests;
 

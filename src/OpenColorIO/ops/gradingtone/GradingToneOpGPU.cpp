@@ -84,7 +84,7 @@ void AddBoolUniform(GpuShaderCreatorRcPtr & shaderCreator,
     }
 }
 
-static const std::string opPrefix{ "grading_tone" };
+const std::string opPrefix{ "grading_tone" };
 
 void AddGTProperties(GpuShaderCreatorRcPtr & shaderCreator,
                      GpuShaderText & st,
@@ -1301,7 +1301,7 @@ void Add_SContrastBottomPre_Shader(GpuShaderText & st, GradingStyle style)
 
     // Bottom end
     st.newLine() << "{";   // establish scope so local variable names won't conflict
-    st.setIndent(4);
+    st.indent();
     st.newLine() << st.floatKeywordConst() << " x0 = " << bottomPoint << ";";
     st.newLine() << st.floatKeywordConst() << " y0 = " << bottomPoint << ";";
     st.newLine() << st.floatKeywordConst() << " y3 = pivot - (pivot - y0) * 0.25;";
@@ -1562,7 +1562,7 @@ void GetGradingToneGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
     st.newLine() << "{";
     st.indent();
 
-    // Properties holds shader variables names and is initialized with undecorated names suitable
+    // Properties hold shader variables names and are initialized with undecorated names suitable
     // for local variables.
     GTProperties properties;
     AddGTProperties(shaderCreator, st, gtData, properties, dyn);
