@@ -68,6 +68,7 @@ public:
 #else
     void setGPU(OCIO::ConstGPUProcessorRcPtr)
     {
+        m_verbose = false; // Avoid a warning.
     }
 #endif // OCIO_GPU_ENABLED
 
