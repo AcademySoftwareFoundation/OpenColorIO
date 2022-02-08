@@ -128,6 +128,6 @@ END METADATA
             for j in range(len(lf)):
                 self.assertAlmostEqual(float(lf[j]), float(elf[j]), delta = 0.00001)
         fmts = bake.getFormats()
-        self.assertEqual(len(fmts), 10)
+        self.assertEqual(len(fmts), 12)
         self.assertEqual("cinespace", fmts[4][0])
         self.assertEqual("3dl", fmts[1][1])

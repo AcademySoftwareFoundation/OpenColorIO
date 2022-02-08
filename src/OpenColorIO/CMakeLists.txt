@@ -8,6 +8,7 @@ set(SOURCES
     apphelpers/LegacyViewingPipeline.cpp
     apphelpers/MixingHelpers.cpp
     Baker.cpp
+    BakingUtils.cpp
     BitDepthUtils.cpp
     Caching.cpp
     ColorSpace.cpp

@@ -12,28 +12,6 @@
 namespace OCIO = OCIO_NAMESPACE;
 
 
-/*
-OCIO_ADD_TEST(Baker_Unit_Tests, test_listlutwriters)
-{
-
-    std::vector<std::string> current_writers;
-    current_writers.push_back("cinespace");
-    current_writers.push_back("houdini");
-
-    OCIO::BakerRcPtr baker = OCIO::Baker::Create();
-
-    OCIO_CHECK_EQUAL(baker->getNumFormats(), (int)current_writers.size());
-
-    std::vector<std::string> test;
-    for(int i = 0; i < baker->getNumFormats(); ++i)
-        test.push_back(baker->getFormatNameByIndex(i));
-
-    for(unsigned int i = 0; i < current_writers.size(); ++i)
-        OCIO_CHECK_EQUAL(current_writers[i], test[i]);
-
-}
-*/
-
 namespace
 {
 void CompareFloats(const std::string& floats1, const std::string& floats2)
@@ -55,7 +33,7 @@ void CompareFloats(const std::string& floats1, const std::string& floats2)
 }
 }
 
-OCIO_ADD_TEST(Baker, bake)
+OCIO_ADD_TEST(Baker, bake_3dlut)
 {
     OCIO::BakerRcPtr bake = OCIO::Baker::Create();
 
@@ -152,17 +130,274 @@ OCIO_ADD_TEST(Baker, bake)
         }
     }
 
-    OCIO_CHECK_EQUAL(10, bake->getNumFormats());
+    OCIO_CHECK_EQUAL(12, bake->getNumFormats());
     OCIO_CHECK_EQUAL("cinespace", std::string(bake->getFormatNameByIndex(4)));
     OCIO_CHECK_EQUAL("3dl", std::string(bake->getFormatExtensionByIndex(1)));
 }
 
-OCIO_ADD_TEST(Baker, empty_config)
+OCIO_ADD_TEST(Baker, baking_config)
 {
-    // Verify that running bake with an empty configuration
-    // throws an exception and does not segfault.
-    OCIO::BakerRcPtr bake = OCIO::Baker::Create();
-    bake->setFormat("cinespace");
+    OCIO::BakerRcPtr bake;
     std::ostringstream os;
-    OCIO_CHECK_THROW_WHAT(bake->bake(os), OCIO::Exception, "No OCIO config has been set");
+
+    constexpr auto myProfile = R"(
+        ocio_profile_version: 2
+
+        strictparsing: false
+
+        roles:
+          scene_linear: Raw
+
+        file_rules:
+          - !<Rule> {name: Default, colorspace: Raw}
+
+        shared_views:
+          - !<View> {name: Raw, colorspace: Raw}
+          - !<View> {name: RawInactive, colorspace: Raw}
+
+        displays:
+          sRGB:
+            - !<Views> [Raw, RawInactive]
+            - !<View> {name: Film, colorspace: sRGB}
+            - !<View> {name: FilmInactive, colorspace: sRGB}
+          sRGBInactive:
+            - !<Views> [Raw, RawInactive]
+            - !<View> {name: Film, colorspace: sRGB}
+            - !<View> {name: FilmInactive, colorspace: sRGB}
+
+        active_displays: [sRGB]
+        active_views: [Film, Raw]
+
+        colorspaces:
+        - !<ColorSpace>
+          name : Raw
+          isdata : false
+
+        - !<ColorSpace>
+          name : RawInactive
+          isdata : false
+
+        - !<ColorSpace>
+          name : Log
+          isdata : false
+          to_reference: !<LogTransform> {}
+
+        - !<ColorSpace>
+          name : Crosstalk
+          isdata : false
+          to_reference: !<CDLTransform> {sat: 0.5}
+
+        - !<ColorSpace>
+          name : sRGB
+          isdata : false
+          from_reference: !<GroupTransform>
+            children:
+              - !<MatrixTransform> {matrix: [3.2409, -1.5373, -0.4986, 0, -0.9692, 1.8759, 0.0415, 0, 0.0556, -0.2039, 1.0569, 0, 0, 0, 0, 1 ]}
+              - !<ExponentWithLinearTransform> {gamma: 2.4, offset: 0.055, direction: inverse}
+
+        - !<ColorSpace>
+          name : Gamma22
+          isdata : false
+          from_reference : !<ExponentTransform> {value: [2.2, 2.2, 2.2, 1], direction: inverse}
+
+        inactive_colorspaces: [RawInactive]
+    )";
+
+    std::istringstream is(myProfile);
+    OCIO::ConstConfigRcPtr config;
+    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+    OCIO_REQUIRE_ASSERT(config);
+    OCIO_CHECK_NO_THROW(config->validate());
+
+    // Missing configuration.
+    bake = OCIO::Baker::Create();
+    bake->setFormat("cinespace");
+
+    os.str("");
+    OCIO_CHECK_THROW_WHAT(bake->bake(os), OCIO::Exception, "No OCIO config has been set.");
+
+    // Missing input space
+    bake = OCIO::Baker::Create();
+    bake->setConfig(config);
+    bake->setTargetSpace("Gamma22");
+    bake->setFormat("cinespace");
+
+    os.str("");
+    OCIO_CHECK_THROW_WHAT(bake->bake(os), OCIO::Exception, "No input space has been set.");
+
+    // Missing target space and display / view.
+    bake = OCIO::Baker::Create();
+    bake->setConfig(config);
+    bake->setInputSpace("Raw");
+    bake->setFormat("cinespace");
+
+    os.str("");
+    OCIO_CHECK_THROW_WHAT(bake->bake(os), OCIO::Exception, "No display / view or target colorspace has been set.");
+
+    // Setting both target space and display / view.
+    bake = OCIO::Baker::Create();
+    bake->setConfig(config);
+    bake->setInputSpace("Raw");
+    bake->setTargetSpace("Gamma22");
+    bake->setDisplayView("sRGB", "Film");
+    bake->setFormat("cinespace");
+
+    os.str("");
+    OCIO_CHECK_THROW_WHAT(bake->bake(os), OCIO::Exception, "Cannot use both display / view and target colorspace.");
+
+    // Setting looks with display / view.
+    bake = OCIO::Baker::Create();
+    bake->setConfig(config);
+    bake->setInputSpace("Raw");
+    bake->setDisplayView("sRGB", "Film");
+    bake->setLooks("foo, +bar");
+    bake->setFormat("cinespace");
+
+    os.str("");
+    OCIO_CHECK_THROW_WHAT(bake->bake(os), OCIO::Exception, "Cannot use looks with display / view.");
+
+    // Invalid input space.
+    bake = OCIO::Baker::Create();
+    bake->setConfig(config);
+    bake->setInputSpace("Invalid");
+    bake->setDisplayView("sRGB", "Film");
+    bake->setFormat("cinespace");
+
+    os.str("");
+    OCIO_CHECK_THROW_WHAT(bake->bake(os), OCIO::Exception, "Could not find input colorspace 'Invalid'.");
+
+    // Inactive input space.
+    bake = OCIO::Baker::Create();
+    bake->setConfig(config);
+    bake->setInputSpace("RawInactive");
+    bake->setDisplayView("sRGB", "Film");
+    bake->setFormat("cinespace");
+
+    os.str("");
+    OCIO_CHECK_NO_THROW(bake->bake(os));
+
+    // Invalid target space.
+    bake = OCIO::Baker::Create();
+    bake->setConfig(config);
+    bake->setInputSpace("Raw");
+    bake->setTargetSpace("Invalid");
+    bake->setFormat("cinespace");
+
+    os.str("");
+    OCIO_CHECK_THROW_WHAT(bake->bake(os), OCIO::Exception, "Could not find target colorspace 'Invalid'.");
+
+    // Invalid display.
+    bake = OCIO::Baker::Create();
+    bake->setConfig(config);
+    bake->setInputSpace("Raw");
+    bake->setDisplayView("Invalid", "Film");
+    bake->setFormat("cinespace");
+
+    os.str("");
+    OCIO_CHECK_THROW_WHAT(bake->bake(os), OCIO::Exception, "Could not find display 'Invalid'.");
+
+    // Invalid view.
+    bake = OCIO::Baker::Create();
+    bake->setConfig(config);
+    bake->setInputSpace("Raw");
+    bake->setDisplayView("sRGB", "Invalid");
+    bake->setFormat("cinespace");
+
+    os.str("");
+    OCIO_CHECK_THROW_WHAT(bake->bake(os), OCIO::Exception, "Could not find view 'Invalid'.");
+
+    // Inactive display.
+    bake = OCIO::Baker::Create();
+    bake->setConfig(config);
+    bake->setInputSpace("Raw");
+    bake->setDisplayView("sRGBInactive", "Film");
+    bake->setFormat("cinespace");
+
+    os.str("");
+    OCIO_CHECK_NO_THROW(bake->bake(os));
+
+    // Shared view.
+    bake = OCIO::Baker::Create();
+    bake->setConfig(config);
+    bake->setInputSpace("Raw");
+    bake->setDisplayView("sRGB", "Raw");
+    bake->setFormat("cinespace");
+
+    os.str("");
+    OCIO_CHECK_NO_THROW(bake->bake(os));
+
+    // Inactive view.
+    bake = OCIO::Baker::Create();
+    bake->setConfig(config);
+    bake->setInputSpace("Raw");
+    bake->setDisplayView("sRGB", "FilmInactive");
+    bake->setFormat("cinespace");
+
+    os.str("");
+    OCIO_CHECK_NO_THROW(bake->bake(os));
+
+    // Inactive shared view.
+    bake = OCIO::Baker::Create();
+    bake->setConfig(config);
+    bake->setInputSpace("Raw");
+    bake->setDisplayView("sRGBInactive", "RawInactive");
+    bake->setFormat("cinespace");
+
+    os.str("");
+    OCIO_CHECK_NO_THROW(bake->bake(os));
+
+    // Baking 1D LUT with Crosstalk.
+    bake = OCIO::Baker::Create();
+    bake->setConfig(config);
+    bake->setInputSpace("Raw");
+    bake->setDisplayView("sRGB", "Film");
+    bake->setFormat("spi1d");
+
+    os.str("");
+    OCIO_CHECK_THROW_WHAT(bake->bake(os), OCIO::Exception, "The format 'spi1d' does not support transformations with channel crosstalk.");
+
+    // Cube Size < 2.
+    bake = OCIO::Baker::Create();
+    bake->setConfig(config);
+    bake->setInputSpace("Raw");
+    bake->setTargetSpace("sRGB");
+    bake->setCubeSize(1);
+    bake->setFormat("cinespace");
+
+    os.str("");
+    OCIO_CHECK_THROW_WHAT(bake->bake(os), OCIO::Exception, "Cube size must be at least 2 if set.");
+
+    // Shaper Size < 2.
+    bake = OCIO::Baker::Create();
+    bake->setConfig(config);
+    bake->setInputSpace("Raw");
+    bake->setTargetSpace("sRGB");
+    bake->setShaperSpace("Log");
+    bake->setShaperSize(1);
+    bake->setFormat("resolve_cube");
+
+    os.str("");
+    OCIO_CHECK_THROW_WHAT(bake->bake(os), OCIO::Exception, "A shaper space 'Log' has been specified, so the shaper size must be 2 or larger.");
+
+    // Using shaper with unsupported format.
+    bake = OCIO::Baker::Create();
+    bake->setConfig(config);
+    bake->setInputSpace("Raw");
+    bake->setTargetSpace("sRGB");
+    bake->setShaperSpace("Log");
+    bake->setFormat("iridas_itx");
+
+    os.str("");
+    OCIO_CHECK_THROW_WHAT(bake->bake(os), OCIO::Exception, "The format 'iridas_itx' does not support shaper space.");
+
+    // Using shaper space with Crosstalk.
+    bake = OCIO::Baker::Create();
+    bake->setConfig(config);
+    bake->setInputSpace("Raw");
+    bake->setTargetSpace("sRGB");
+    bake->setShaperSpace("Crosstalk");
+    bake->setFormat("cinespace");
+
+    os.str("");
+    OCIO_CHECK_THROW_WHAT(bake->bake(os), OCIO::Exception, "The specified shaper space, 'Crosstalk' has channel crosstalk, which is not appropriate for shapers. Please select an alternate shaper space or omit this option.");
 }

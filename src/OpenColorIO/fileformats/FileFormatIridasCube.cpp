@@ -12,6 +12,7 @@
 #include "ops/lut1d/Lut1DOp.h"
 #include "ops/lut3d/Lut3DOp.h"
 #include "ops/matrix/MatrixOp.h"
+#include "BakingUtils.h"
 #include "ParseUtils.h"
 #include "transforms/FileTransform.h"
 #include "utils/StringUtils.h"
@@ -141,6 +142,7 @@ void LocalFileFormat::getFormatInfo(FormatInfoVec & formatInfoVec) const
     info.name = "iridas_cube";
     info.extension = "cube";
     info.capabilities = FORMAT_CAPABILITY_READ | FORMAT_CAPABILITY_BAKE;
+    info.bake_capabilities = FORMAT_BAKE_CAPABILITY_3DLUT;
     formatInfoVec.push_back(info);
 }
 
@@ -354,8 +356,8 @@ LocalFileFormat::read(std::istream & istream,
 }
 
 void LocalFileFormat::bake(const Baker & baker,
-                            const std::string & formatName,
-                            std::ostream & ostream) const
+                           const std::string & formatName,
+                           std::ostream & ostream) const
 {
 
     static const int DEFAULT_CUBE_SIZE = 32;
@@ -378,24 +380,8 @@ void LocalFileFormat::bake(const Baker & baker,
     cubeData.resize(cubeSize*cubeSize*cubeSize*3);
     GenerateIdentityLut3D(&cubeData[0], cubeSize, 3, LUT3DORDER_FAST_RED);
     PackedImageDesc cubeImg(&cubeData[0], cubeSize*cubeSize*cubeSize, 1, 3);
-
-    // Apply our conversion from the input space to the output space.
-    ConstProcessorRcPtr inputToTarget;
-    std::string looks = baker.getLooks();
-    if(!looks.empty())
-    {
-        LookTransformRcPtr transform = LookTransform::Create();
-        transform->setLooks(looks.c_str());
-        transform->setSrc(baker.getInputSpace());
-        transform->setDst(baker.getTargetSpace());
-        inputToTarget = config->getProcessor(transform, TRANSFORM_DIR_FORWARD);
-    }
-    else
-    {
-        inputToTarget = config->getProcessor(baker.getInputSpace(), baker.getTargetSpace());
-    }
-    ConstCPUProcessorRcPtr cpu = inputToTarget->getOptimizedCPUProcessor(OPTIMIZATION_LOSSLESS);
-    cpu->apply(cubeImg);
+    ConstCPUProcessorRcPtr inputToTarget = GetInputToTargetProcessor(baker);
+    inputToTarget->apply(cubeImg);
 
     const auto & metadata = baker.getFormatMetadata();
     const auto nb = metadata.getNumChildrenElements();
@@ -410,10 +396,6 @@ void LocalFileFormat::bake(const Baker & baker,
     }
 
     ostream << "LUT_3D_SIZE " << cubeSize << "\n";
-    if(cubeSize < 2)
-    {
-        throw Exception("Internal cube size exception");
-    }
 
     // Set to a fixed 6 decimal precision
     ostream.setf(std::ios::fixed, std::ios::floatfield);
@@ -498,4 +480,3 @@ FileFormat * CreateFileFormatIridasCube()
 }
 
 } // namespace OCIO_NAMESPACE
-

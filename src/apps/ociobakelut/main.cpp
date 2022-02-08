@@ -42,6 +42,8 @@ int main (int argc, const char* argv[])
     std::string shaperspace;
     std::string looks;
     std::string outputspace;
+    std::string display;
+    std::string view;
     bool usestdout = false;
     bool verbose = false;
 
@@ -74,10 +76,13 @@ int main (int argc, const char* argv[])
                "example:  ociobakelut --cccid 0 --lut cdlgrade.ccc --lut calibration.3dl --format flame graded_display.3dl\n"
                "example:  ociobakelut --lut look.3dl --offset 0.01 -0.02 0.03 --lut display.3dl --format flame display_with_look.3dl\n"
                "example:  ociobakelut --inputspace lg10 --outputspace srgb8 --format icc ~/Library/ColorSync/Profiles/test.icc\n"
+               "example:  ociobakelut --inputspace lin --shaperspace lg10 --outputspace lg10 --format spi1d lintolog.spi1d\n"
+               "example:  ociobakelut --inputspace lg10 --displayview sRGB Film --format spi3d display_view.spi3d\n"
                "example:  ociobakelut --lut filmlut.3dl --lut calibration.3dl --format icc ~/Library/ColorSync/Profiles/test.icc\n\n",
                "%*", parse_end_args, "",
                "<SEPARATOR>", "Using Existing OCIO Configurations",
                "--inputspace %s", &inputspace, "Input OCIO ColorSpace (or Role)",
+               "--displayview %s %s", &display, &view, "Output OCIO Display and View",
                "--outputspace %s", &outputspace, "Output OCIO ColorSpace (or Role)",
                "--shaperspace %s", &shaperspace, "the OCIO ColorSpace or Role, for the shaper",
                "--looks %s", &looks, "the OCIO looks to apply",
@@ -186,6 +191,12 @@ int main (int argc, const char* argv[])
             std::cerr << "See --help for more info." << std::endl;
             return 1;
         }
+        if(!display.empty() || !view.empty())
+        {
+            std::cerr << "\nERROR: --displayview is not allowed when using --lut\n\n";
+            std::cerr << "See --help for more info." << std::endl;
+            return 1;
+        }
 
         OCIO::ConfigRcPtr editableConfig = OCIO::Config::Create();
 
@@ -221,9 +232,16 @@ int main (int argc, const char* argv[])
             return 1;
         }
 
-        if(outputspace.empty())
+        if(outputspace.empty() && (display.empty() && view.empty()))
         {
-            std::cerr << "\nERROR: You must specify the --outputspace.\n\n";
+            std::cerr << "\nERROR: You must specify either --outputspace or --displayview.\n\n";
+            std::cerr << "See --help for more info." << std::endl;
+            return 1;
+        }
+
+        if(display.empty() ^ view.empty())
+        {
+            std::cerr << "\nERROR: You must specify both display and view with --displayview.\n\n";
             std::cerr << "See --help for more info." << std::endl;
             return 1;
         }
@@ -268,6 +286,8 @@ int main (int argc, const char* argv[])
 
     try
     {
+        // This could be moved to OCIO core by adding baking support for ICC
+        // file format, here at the expense of adding the dependency to lcms2.
         if(format == "icc")
         {
             if(description.empty())
@@ -293,25 +313,24 @@ int main (int argc, const char* argv[])
 
             if(cubesize<2) cubesize = 32; // default
 
-            OCIO::ConstCPUProcessorRcPtr processor;
-            if (!looks.empty())
+            OCIO::ConstProcessorRcPtr processor;
+            if (!display.empty() && !view.empty())
             {
-                OCIO::LookTransformRcPtr transform =
-                    OCIO::LookTransform::Create();
-                transform->setLooks(looks.c_str());
-                transform->setSrc(inputspace.c_str());
-                transform->setDst(outputspace.c_str());
-                processor = config->getProcessor(transform,
-                    OCIO::TRANSFORM_DIR_FORWARD)->getDefaultCPUProcessor();
+                processor = config->getProcessor(inputspace.c_str(), display.c_str(), view.c_str(), OCIO::TRANSFORM_DIR_FORWARD);
             }
             else
             {
-                processor = config->getProcessor(inputspace.c_str(),
-                    outputspace.c_str())->getDefaultCPUProcessor();
+                OCIO::LookTransformRcPtr transform = OCIO::LookTransform::Create();
+                transform->setLooks(!looks.empty() ? looks.c_str() : "");
+                transform->setSrc(inputspace.c_str());
+                transform->setDst(outputspace.c_str());
+                processor = config->getProcessor(transform, OCIO::TRANSFORM_DIR_FORWARD);
             }
 
+            OCIO::ConstCPUProcessorRcPtr cpuprocessor = processor->getOptimizedCPUProcessor(OCIO::OPTIMIZATION_LOSSLESS);
+
             SaveICCProfileToFile(outputfile,
-                                 processor,
+                                 cpuprocessor,
                                  cubesize,
                                  whitepointtemp,
                                  displayicc,
@@ -331,6 +350,7 @@ int main (int argc, const char* argv[])
             baker->setShaperSpace(shaperspace.c_str());
             baker->setLooks(looks.c_str());
             baker->setTargetSpace(outputspace.c_str());
+            baker->setDisplayView(display.c_str(), view.c_str());
             if(shapersize!=-1) baker->setShaperSize(shapersize);
             if(cubesize!=-1) baker->setCubeSize(cubesize);
 
@@ -535,4 +555,3 @@ OCIO::GroupTransformRcPtr parse_luts(int argc, const char *argv[])
 
     return groupTransform;
 }
-

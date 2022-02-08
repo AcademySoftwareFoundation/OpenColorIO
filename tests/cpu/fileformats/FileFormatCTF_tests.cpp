@@ -7999,6 +7999,113 @@ R"(<?xml version="1.0" encoding="UTF-8"?>
     OCIO_CHECK_EQUAL(expectedCTF, outputCTF.str());
 }
 
+OCIO_ADD_TEST(FileFormatCTF, bake_1d_shaper)
+{
+    OCIO::BakerRcPtr bake;
+    std::ostringstream os;
+
+    constexpr auto myProfile = R"(
+        ocio_profile_version: 1
+
+        colorspaces:
+        - !<ColorSpace>
+          name : Raw
+          isdata : false
+
+        - !<ColorSpace>
+          name: Log2
+          isdata: false
+          from_reference: !<GroupTransform>
+            children:
+              - !<MatrixTransform> {matrix: [5.55556, 0, 0, 0, 0, 5.55556, 0, 0, 0, 0, 5.55556, 0, 0, 0, 0, 1]}
+              - !<LogTransform> {base: 2}
+              - !<MatrixTransform> {offset: [6.5, 6.5, 6.5, 0]}
+              - !<MatrixTransform> {matrix: [0.076923, 0, 0, 0, 0, 0.076923, 0, 0, 0, 0, 0.076923, 0, 0, 0, 0, 1]}
+    )";
+
+    std::istringstream is(myProfile);
+    OCIO::ConstConfigRcPtr config;
+    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+    OCIO_REQUIRE_ASSERT(config);
+
+    {
+        // Lin to Log
+        OCIO::BakerRcPtr baker = OCIO::Baker::Create();
+        baker->setConfig(config);
+        baker->setFormat(OCIO::FILEFORMAT_CLF);
+        baker->setInputSpace("Raw");
+        baker->setTargetSpace("Log2");
+        baker->setShaperSpace("Log2");
+        baker->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UID42");
+        baker->setCubeSize(10);
+        std::ostringstream outputCTF;
+        baker->bake(outputCTF);
+
+        const std::string expectedCTF{ R"(<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList compCLFversion="3" id="UID42">
+    <Range inBitDepth="32f" outBitDepth="32f">
+        <minInValue> 0.00198873621411622 </minInValue>
+        <maxInValue> 16.291877746582 </maxInValue>
+        <minOutValue> 0 </minOutValue>
+        <maxOutValue> 1 </maxOutValue>
+    </Range>
+    <LUT1D inBitDepth="32f" outBitDepth="32f">
+        <Array dim="10 1">
+          0
+  0.7562682
+ 0.83313024
+ 0.87810701
+  0.9100228
+ 0.93478036
+  0.9550097
+ 0.97211391
+ 0.98693061
+          1
+        </Array>
+    </LUT1D>
+</ProcessList>
+)" };
+
+        OCIO_CHECK_EQUAL(expectedCTF.size(), outputCTF.str().size());
+        OCIO_CHECK_EQUAL(expectedCTF, outputCTF.str());
+    }
+
+    {
+        // Log to Lin
+        OCIO::BakerRcPtr baker = OCIO::Baker::Create();
+        baker->setConfig(config);
+        baker->setFormat(OCIO::FILEFORMAT_CLF);
+        baker->setInputSpace("Log2");
+        baker->setTargetSpace("Raw");
+        baker->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UID42");
+        baker->setCubeSize(10);
+        std::ostringstream outputCTF;
+        baker->bake(outputCTF);
+
+        const std::string expectedCTF{ R"(<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList compCLFversion="3" id="UID42">
+    <LUT1D inBitDepth="32f" outBitDepth="32f">
+        <Array dim="10 1">
+0.0019887362
+0.0054125111
+ 0.014730596
+ 0.040090535
+  0.10910972
+  0.29695117
+  0.80817699
+   2.1995215
+   5.9861789
+   16.291878
+        </Array>
+    </LUT1D>
+</ProcessList>
+)" };
+
+        OCIO_CHECK_EQUAL(expectedCTF.size(), outputCTF.str().size());
+        OCIO_CHECK_EQUAL(expectedCTF, outputCTF.str());
+    }
+}
+
 OCIO_ADD_TEST(FileFormatCTF, bake_3d)
 {
     OCIO::ConfigRcPtr config = OCIO::Config::Create();

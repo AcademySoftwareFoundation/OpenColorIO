@@ -2411,11 +2411,12 @@ public:
     void setInputSpace(const char * inputSpace);
 
     const char * getShaperSpace() const;
+
     /**
-     * Set an *optional* ColorSpace to be used to shape / transfer the input
-     * colorspace. This is mostly used to allocate an HDR luminance range into an LDR one.
-     * If a shaper space is not explicitly specified, and the file format supports one, the
-     * ColorSpace Allocation will be used (not implemented for all formats).
+     * Set an *optional* ColorSpace to shape the incoming values of the LUT.
+     * When baking 3DLUT, this will correspond to the 1D shaper used to
+     * normalise incoming values to the unit range. When baking 1D LUT, this
+     * will be used to determine the input range of the LUT.
      */
     void setShaperSpace(const char * shaperSpace);
 
@@ -2431,6 +2432,13 @@ public:
     const char * getTargetSpace() const;
     /// Set the target device colorspace for the LUT.
     void setTargetSpace(const char * targetSpace);
+
+    const char * getDisplay() const;
+
+    const char * getView() const;
+
+    /// Set the display and view to apply during the baking.
+    void setDisplayView(const char * display, const char * view);
 
     int getShaperSize() const;
     /**
