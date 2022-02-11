@@ -96,23 +96,27 @@ jobs:
         if: matrix.build-docs == 'ON'
       - name: Install tests env
         run: share/ci/scripts/linux/yum/install_tests_env.sh
+      - name: Setup ext environment
+        run: |
+          EXT_PATH=/usr/local
+          echo "EXT_PATH=$EXT_PATH" >> $GITHUB_ENV
       - name: Install indirect dependencies
         run: |
           share/ci/scripts/multi/install_pugixml.sh latest
       - name: Install fixed ext package versions
         run: |
-          share/ci/scripts/multi/install_expat.sh 2.4.1
-          share/ci/scripts/multi/install_lcms2.sh 2.2
-          share/ci/scripts/multi/install_yaml-cpp.sh 0.7.0
-          share/ci/scripts/multi/install_pystring.sh 1.1.3
-          share/ci/scripts/multi/install_pybind11.sh 2.6.1
+          share/ci/scripts/multi/install_expat.sh 2.4.1 $EXT_PATH
+          share/ci/scripts/multi/install_lcms2.sh 2.2 $EXT_PATH
+          share/ci/scripts/multi/install_yaml-cpp.sh 0.7.0 $EXT_PATH
+          share/ci/scripts/multi/install_pystring.sh 1.1.3 $EXT_PATH
+          share/ci/scripts/multi/install_pybind11.sh 2.6.1 $EXT_PATH
       - name: Install latest ext package versions
         run: |
-          share/ci/scripts/multi/install_openexr.sh latest
-          share/ci/scripts/multi/install_imath.sh latest
-          share/ci/scripts/multi/install_oiio.sh latest
-          share/ci/scripts/multi/install_osl.sh latest
-          share/ci/scripts/multi/install_openfx.sh latest
+          share/ci/scripts/multi/install_openexr.sh latest $EXT_PATH
+          share/ci/scripts/multi/install_imath.sh latest $EXT_PATH
+          share/ci/scripts/multi/install_oiio.sh latest $EXT_PATH
+          share/ci/scripts/multi/install_osl.sh latest $EXT_PATH
+          share/ci/scripts/multi/install_openfx.sh latest $EXT_PATH
       - name: Create build directories
         run: |
           mkdir _install
@@ -192,25 +196,29 @@ jobs:
         if: matrix.build-docs == 'ON'
       - name: Install tests env
         run: share/ci/scripts/macos/install_tests_env.sh
+      - name: Setup ext environment
+        run: |
+          EXT_PATH=/usr/local
+          echo "EXT_PATH=$EXT_PATH" >> $GITHUB_ENV
       - name: Install indirect dependencies
         run: |
           share/ci/scripts/macos/install_bison.sh latest
           share/ci/scripts/macos/install_boost.sh latest
-          share/ci/scripts/multi/install_pugixml.sh latest
+          share/ci/scripts/multi/install_pugixml.sh latest $EXT_PATH
       - name: Install fixed ext package versions
         run: |
-          share/ci/scripts/multi/install_expat.sh 2.4.1
-          share/ci/scripts/multi/install_lcms2.sh 2.2
-          share/ci/scripts/multi/install_yaml-cpp.sh 0.7.0
-          share/ci/scripts/multi/install_pystring.sh 1.1.3
-          share/ci/scripts/multi/install_pybind11.sh 2.6.1
+          share/ci/scripts/multi/install_expat.sh 2.4.1 $EXT_PATH
+          share/ci/scripts/multi/install_lcms2.sh 2.2 $EXT_PATH
+          share/ci/scripts/multi/install_yaml-cpp.sh 0.7.0 $EXT_PATH
+          share/ci/scripts/multi/install_pystring.sh 1.1.3 $EXT_PATH
+          share/ci/scripts/multi/install_pybind11.sh 2.6.1 $EXT_PATH
       - name: Install latest ext package versions
         run: |
-          share/ci/scripts/multi/install_openexr.sh latest
-          share/ci/scripts/multi/install_imath.sh latest
-          share/ci/scripts/multi/install_oiio.sh latest
-          share/ci/scripts/multi/install_osl.sh latest
-          share/ci/scripts/multi/install_openfx.sh latest
+          share/ci/scripts/multi/install_openexr.sh latest $EXT_PATH
+          share/ci/scripts/multi/install_imath.sh latest $EXT_PATH
+          share/ci/scripts/multi/install_oiio.sh latest $EXT_PATH
+          share/ci/scripts/multi/install_osl.sh latest $EXT_PATH
+          share/ci/scripts/multi/install_openfx.sh latest $EXT_PATH
       - name: Create build directories
         run: |
           mkdir _install

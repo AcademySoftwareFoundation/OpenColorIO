@@ -5,6 +5,8 @@ project(pystring)
 
 cmake_minimum_required(VERSION 3.10)
 
+include(GNUInstallDirs)
+
 set(HEADERS
     pystring.h
 )
