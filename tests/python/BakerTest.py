@@ -12,6 +12,10 @@ class BakerTest(unittest.TestCase):
 
 strictparsing: false
 
+displays:
+  TestDisplay:
+    - !<View> {name: TestView, colorspace: test}
+
 colorspaces:
 
   - !<ColorSpace>
@@ -55,6 +59,27 @@ END METADATA
 
 """
 
+    def assert_lut_match(self, baked, expected):
+        lines = baked.splitlines()
+        expected_lines = expected.splitlines()
+        self.assertEqual(len(lines), len(expected_lines))
+        # Text compare for the first lines.
+        for i in range(6):
+            self.assertEqual(lines[i], expected_lines[i])
+        # Compare values after (results might be slightly different on some plaforms).
+        for i in range(6, len(lines)):
+            # Skip blank lines.
+            if lines[i] == '':
+                continue
+            # Line 16 is the cube size.
+            if i == 16:
+                self.assertEqual(lines[i], expected_lines[i])
+                continue
+            lf = lines[i].split(' ')
+            elf = expected_lines[i].split(' ')
+            for j in range(len(lf)):
+                self.assertAlmostEqual(float(lf[j]), float(elf[j]), delta = 0.00001)
+
     def test_copy(self):
         """
         Test the deepcopy() method.
@@ -94,6 +119,7 @@ END METADATA
         cs2 = cfg2.getColorSpaces()
         self.assertEqual(len(cs2), 2)
 
+        # Using target space.
         bake.setFormat("cinespace")
         self.assertEqual("cinespace", bake.getFormat())
         bake.setInputSpace("lnh")
@@ -108,25 +134,25 @@ END METADATA
         bake.setCubeSize(2)
         self.assertEqual(2, bake.getCubeSize())
         output = bake.bake()
-        lines = output.splitlines()
-        expected_lines = self.EXPECTED_LUT.splitlines()
-        self.assertEqual(len(lines), len(expected_lines))
-        # Text compare for the first lines.
-        for i in range(6):
-            self.assertEqual(lines[i], expected_lines[i])
-        # Compare values after (results might be slightly different on some plaforms).
-        for i in range(6, len(lines)):
-            # Skip blank lines.
-            if lines[i] == '':
-                continue
-            # Line 16 is the cube size.
-            if i == 16:
-                self.assertEqual(lines[i], expected_lines[i])
-                continue
-            lf = lines[i].split(' ')
-            elf = expected_lines[i].split(' ')
-            for j in range(len(lf)):
-                self.assertAlmostEqual(float(lf[j]), float(elf[j]), delta = 0.00001)
+        self.assert_lut_match(output, self.EXPECTED_LUT)
+
+        # Using display / view.
+        bake = OCIO.Baker()
+        bake.setConfig(cfg)
+        bake.setFormat("cinespace")
+        self.assertEqual("cinespace", bake.getFormat())
+        bake.setInputSpace("lnh")
+        self.assertEqual("lnh", bake.getInputSpace())
+        bake.setDisplayView("TestDisplay", "TestView")
+        self.assertEqual("TestDisplay", bake.getDisplay())
+        self.assertEqual("TestView", bake.getView())
+        bake.setShaperSize(4)
+        self.assertEqual(4, bake.getShaperSize())
+        bake.setCubeSize(2)
+        self.assertEqual(2, bake.getCubeSize())
+        output = bake.bake()
+        self.assert_lut_match(output, self.EXPECTED_LUT)
+
         fmts = bake.getFormats()
         self.assertEqual(len(fmts), 12)
         self.assertEqual("cinespace", fmts[4][0])
