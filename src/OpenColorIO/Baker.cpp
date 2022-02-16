@@ -250,7 +250,6 @@ void Baker::bake(std::ostream & os) const
     const std::string & shaperSpace = getImpl()->m_shaperSpace;
     const std::string & display = getImpl()->m_display;
     const std::string & view = getImpl()->m_view;
-    const std::string & looks = getImpl()->m_looks;
 
     const bool displayViewMode = !display.empty() && !view.empty();
     const bool colorSpaceMode = !targetSpace.empty();
@@ -274,11 +273,6 @@ void Baker::bake(std::ostream & os) const
     if(displayViewMode && colorSpaceMode)
     {
         throw Exception("Cannot use both display / view and target colorspace.");
-    }
-
-    if(displayViewMode && !looks.empty())
-    {
-        throw Exception("Cannot use looks with display / view.");
     }
 
     if(!getConfig()->getColorSpace(inputSpace.c_str()))

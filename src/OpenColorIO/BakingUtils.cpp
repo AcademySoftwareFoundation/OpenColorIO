@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-#include <OpenColorIO/OpenColorIO.h>
-
 #include "BakingUtils.h"
 
 namespace OCIO_NAMESPACE
@@ -21,12 +19,17 @@ namespace
 
         if (!display.empty() && !view.empty())
         {
-            processor = baker.getConfig()->getProcessor(
-                src,
-                display.c_str(),
-                view.c_str(),
-                TRANSFORM_DIR_FORWARD
-            );
+            DisplayViewTransformRcPtr transform = DisplayViewTransform::Create();
+            transform->setSrc(src);
+            transform->setDisplay(display.c_str());
+            transform->setView(view.c_str());
+
+            LegacyViewingPipelineRcPtr vp = LegacyViewingPipeline::Create();
+            vp->setDisplayViewTransform(transform);
+            vp->setLooksOverrideEnabled(!looks.empty());
+            vp->setLooksOverride(looks.c_str());
+
+            processor = vp->getProcessor(baker.getConfig());
         }
         else
         {

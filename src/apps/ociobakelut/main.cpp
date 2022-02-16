@@ -316,7 +316,17 @@ int main (int argc, const char* argv[])
             OCIO::ConstProcessorRcPtr processor;
             if (!display.empty() && !view.empty())
             {
-                processor = config->getProcessor(inputspace.c_str(), display.c_str(), view.c_str(), OCIO::TRANSFORM_DIR_FORWARD);
+                OCIO::DisplayViewTransformRcPtr transform = OCIO::DisplayViewTransform::Create();
+                transform->setSrc(inputspace.c_str());
+                transform->setDisplay(display.c_str());
+                transform->setView(view.c_str());
+
+                OCIO::LegacyViewingPipelineRcPtr vp = OCIO::LegacyViewingPipeline::Create();
+                vp->setDisplayViewTransform(transform);
+                vp->setLooksOverrideEnabled(!looks.empty());
+                vp->setLooksOverride(looks.c_str());
+
+                processor = vp->getProcessor(config);
             }
             else
             {
