@@ -8038,36 +8038,37 @@ OCIO_ADD_TEST(FileFormatCTF, bake_1d_shaper)
         baker->setShaperSpace("Log2");
         baker->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UID42");
         baker->setCubeSize(10);
-        std::ostringstream outputCTF;
+        std::stringstream outputCTF;
         baker->bake(outputCTF);
 
-        const std::string expectedCTF{ R"(<?xml version="1.0" encoding="UTF-8"?>
-<ProcessList compCLFversion="3" id="UID42">
-    <Range inBitDepth="32f" outBitDepth="32f">
-        <minInValue> 0.00198873621411622 </minInValue>
-        <maxInValue> 16.291877746582 </maxInValue>
-        <minOutValue> 0 </minOutValue>
-        <maxOutValue> 1 </maxOutValue>
-    </Range>
-    <LUT1D inBitDepth="32f" outBitDepth="32f">
-        <Array dim="10 1">
-          0
-  0.7562682
- 0.83313024
- 0.87810701
-  0.9100228
- 0.93478036
-  0.9550097
- 0.97211391
- 0.98693061
-          1
-        </Array>
-    </LUT1D>
-</ProcessList>
-)" };
+        std::string emptyString;
+        OCIO::LocalFileFormat tester;
+        OCIO::CachedFileRcPtr file = tester.read(outputCTF, emptyString, OCIO::INTERP_DEFAULT);
+        auto cachedFile = OCIO::DynamicPtrCast<OCIO::LocalCachedFile>(file);
 
-        OCIO_CHECK_EQUAL(expectedCTF.size(), outputCTF.str().size());
-        OCIO_CHECK_EQUAL(expectedCTF, outputCTF.str());
+        const OCIO::ConstOpDataVec & opList = cachedFile->m_transform->getOps();
+        OCIO_REQUIRE_EQUAL(opList.size(), 2);
+
+        auto range = OCIO_DYNAMIC_POINTER_CAST<const OCIO::RangeOpData>(opList[0]);
+        OCIO_REQUIRE_ASSERT(range);
+        OCIO_CHECK_EQUAL(range->getMinInValue(), 0.00198873621411622);
+        OCIO_CHECK_EQUAL(range->getMaxInValue(), 16.291877746582);
+        OCIO_CHECK_EQUAL(range->getMinOutValue(), 0);
+        OCIO_CHECK_EQUAL(range->getMaxOutValue(), 1);
+
+        auto lut = OCIO_DYNAMIC_POINTER_CAST<const OCIO::Lut1DOpData>(opList[1]);
+        OCIO_REQUIRE_ASSERT(lut);
+        OCIO_REQUIRE_EQUAL(lut->getArray().getLength(), 10);
+        OCIO_CHECK_CLOSE(lut->getArray()[0],           0, 1.e-5f);
+        OCIO_CHECK_CLOSE(lut->getArray()[3],   0.7562682, 1.e-5f);
+        OCIO_CHECK_CLOSE(lut->getArray()[6],  0.83313024, 1.e-5f);
+        OCIO_CHECK_CLOSE(lut->getArray()[9],  0.87810701, 1.e-5f);
+        OCIO_CHECK_CLOSE(lut->getArray()[12],  0.9100228, 1.e-5f);
+        OCIO_CHECK_CLOSE(lut->getArray()[15], 0.93478036, 1.e-5f);
+        OCIO_CHECK_CLOSE(lut->getArray()[18],  0.9550097, 1.e-5f);
+        OCIO_CHECK_CLOSE(lut->getArray()[21], 0.97211391, 1.e-5f);
+        OCIO_CHECK_CLOSE(lut->getArray()[24], 0.98693061, 1.e-5f);
+        OCIO_CHECK_CLOSE(lut->getArray()[27],          1, 1.e-5f);
     }
 
     {
@@ -8079,30 +8080,30 @@ OCIO_ADD_TEST(FileFormatCTF, bake_1d_shaper)
         baker->setTargetSpace("Raw");
         baker->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UID42");
         baker->setCubeSize(10);
-        std::ostringstream outputCTF;
+        std::stringstream outputCTF;
         baker->bake(outputCTF);
 
-        const std::string expectedCTF{ R"(<?xml version="1.0" encoding="UTF-8"?>
-<ProcessList compCLFversion="3" id="UID42">
-    <LUT1D inBitDepth="32f" outBitDepth="32f">
-        <Array dim="10 1">
-0.0019887362
-0.0054125111
- 0.014730596
- 0.040090535
-  0.10910972
-  0.29695117
-  0.80817699
-   2.1995215
-   5.9861789
-   16.291878
-        </Array>
-    </LUT1D>
-</ProcessList>
-)" };
+        std::string emptyString;
+        OCIO::LocalFileFormat tester;
+        OCIO::CachedFileRcPtr file = tester.read(outputCTF, emptyString, OCIO::INTERP_DEFAULT);
+        auto cachedFile = OCIO::DynamicPtrCast<OCIO::LocalCachedFile>(file);
 
-        OCIO_CHECK_EQUAL(expectedCTF.size(), outputCTF.str().size());
-        OCIO_CHECK_EQUAL(expectedCTF, outputCTF.str());
+        const OCIO::ConstOpDataVec & opList = cachedFile->m_transform->getOps();
+        OCIO_REQUIRE_EQUAL(opList.size(), 1);
+
+        auto lut = OCIO_DYNAMIC_POINTER_CAST<const OCIO::Lut1DOpData>(opList[0]);
+        OCIO_REQUIRE_ASSERT(lut);
+        OCIO_REQUIRE_EQUAL(lut->getArray().getLength(), 10);
+        OCIO_CHECK_CLOSE(lut->getArray()[0],  0.0019887362, 1.e-5f);
+        OCIO_CHECK_CLOSE(lut->getArray()[3],  0.0054125111, 1.e-5f);
+        OCIO_CHECK_CLOSE(lut->getArray()[6],   0.014730596, 1.e-5f);
+        OCIO_CHECK_CLOSE(lut->getArray()[9],   0.040090535, 1.e-5f);
+        OCIO_CHECK_CLOSE(lut->getArray()[12],   0.10910972, 1.e-5f);
+        OCIO_CHECK_CLOSE(lut->getArray()[15],   0.29695117, 1.e-5f);
+        OCIO_CHECK_CLOSE(lut->getArray()[18],   0.80817699, 1.e-5f);
+        OCIO_CHECK_CLOSE(lut->getArray()[21],    2.1995215, 1.e-5f);
+        OCIO_CHECK_CLOSE(lut->getArray()[24],    5.9861789, 1.e-5f);
+        OCIO_CHECK_CLOSE(lut->getArray()[27],    16.291878, 1.e-5f);
     }
 }
 
