@@ -19,9 +19,9 @@ ConstCPUProcessorRcPtr GetInputToTargetProcessor(const Baker & baker);
 
 ConstCPUProcessorRcPtr GetShaperToTargetProcessor(const Baker & baker);
 
-std::array<float, 2> GetShaperRange(const Baker & baker);
+void GetShaperRange(const Baker & baker, float& start, float& end);
 
-std::array<float, 2> GetTargetRange(const Baker & baker);
+void GetTargetRange(const Baker & baker, float& start, float& end);
 
 
 } // namespace OCIO_NAMESPACE

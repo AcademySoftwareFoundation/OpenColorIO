@@ -1419,9 +1419,7 @@ void LocalFileFormat::bake(const Baker & baker,
         }
         else
         {
-            std::array<float, 2> shaperRange = GetShaperRange(baker);
-            fromInStart = shaperRange[0];
-            fromInEnd = shaperRange[1];
+            GetShaperRange(baker, fromInStart, fromInEnd);
 
             shaperLut = std::make_shared<Lut1DOpData>(shaperSizeRequest);
 
@@ -1474,10 +1472,7 @@ void LocalFileFormat::bake(const Baker & baker,
 
         if (!shaperSpace.empty())
         {
-            std::array<float, 2> targetRange = GetShaperRange(baker);
-            fromInStart = targetRange[0];
-            fromInEnd = targetRange[1];
-
+            GetShaperRange(baker, fromInStart, fromInEnd);
             GenerateLinearScaleLut1D(onedData.data(), onedSize, 3, fromInStart, fromInEnd);
         }
         else

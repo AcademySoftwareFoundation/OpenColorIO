@@ -648,9 +648,7 @@ void LocalFileFormat::bake(const Baker & baker,
 
     if(required_lut == HDL_3D1D)
     {
-        std::array<float, 2> shaperRange = GetShaperRange(baker);
-        fromInStart = shaperRange[0];
-        fromInEnd = shaperRange[1];
+        GetShaperRange(baker, fromInStart, fromInEnd);
 
         // Generate the identity prelut values, then apply the transform.
         // Prelut is linearly sampled from fromInStart to fromInEnd
@@ -698,10 +696,7 @@ void LocalFileFormat::bake(const Baker & baker,
 
         if (!shaperSpace.empty())
         {
-            std::array<float, 2> targetRange = GetShaperRange(baker);
-            fromInStart = targetRange[0];
-            fromInEnd = targetRange[1];
-
+            GetShaperRange(baker, fromInStart, fromInEnd);
             GenerateLinearScaleLut1D(onedData.data(), onedSize, 3, fromInStart, fromInEnd);
         }
         else

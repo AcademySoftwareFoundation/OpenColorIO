@@ -10,7 +10,8 @@ namespace OCIO_NAMESPACE
 
 namespace
 {
-    ConstCPUProcessorRcPtr GetSrcToTargetProcessor(const Baker & baker, const char * src)
+    ConstCPUProcessorRcPtr GetSrcToTargetProcessor(const Baker & baker,
+                                                   const char * src)
     {
         ConstProcessorRcPtr processor;
 
@@ -41,7 +42,10 @@ namespace
         return processor->getOptimizedCPUProcessor(OPTIMIZATION_LOSSLESS);
     }
     
-    std::array<float, 2> GetSrcRange(const Baker & baker, const char * src)
+    void GetSrcRange(const Baker & baker,
+                     const char * src,
+                     float & start,
+                     float & end)
     {
         // Calculate min/max value
         ConstCPUProcessorRcPtr shaperToInput =
@@ -54,10 +58,8 @@ namespace
         shaperToInput->applyRGB(minval);
         shaperToInput->applyRGB(maxval);
 
-        float fromInStart = std::min(std::min(minval[0], minval[1]), minval[2]);
-        float fromInEnd = std::max(std::max(maxval[0], maxval[1]), maxval[2]);
-
-        return { fromInStart, fromInEnd };
+        start = std::min(std::min(minval[0], minval[1]), minval[2]);
+        end = std::max(std::max(maxval[0], maxval[1]), maxval[2]);
     }
 } // Anonymous namespace
 
@@ -86,14 +88,14 @@ ConstCPUProcessorRcPtr GetShaperToTargetProcessor(const Baker & baker)
     return GetSrcToTargetProcessor(baker, baker.getShaperSpace());
 }
 
-std::array<float, 2> GetShaperRange(const Baker & baker)
+void GetShaperRange(const Baker & baker, float& start, float& end)
 {
-    return GetSrcRange(baker, baker.getShaperSpace());
+    return GetSrcRange(baker, baker.getShaperSpace(), start, end);
 }
 
-std::array<float, 2> GetTargetRange(const Baker & baker)
+void GetTargetRange(const Baker & baker, float& start, float& end)
 {
-    return GetSrcRange(baker, baker.getTargetSpace());
+    return GetSrcRange(baker, baker.getTargetSpace(), start, end);
 }
 
 } // namespace OCIO_NAMESPACE

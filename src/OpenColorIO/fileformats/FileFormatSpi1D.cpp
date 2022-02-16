@@ -345,10 +345,7 @@ void LocalFileFormat::bake(const Baker & baker,
 
     if (!shaperSpace.empty())
     {
-        std::array<float, 2> targetRange = GetShaperRange(baker);
-        fromInStart = targetRange[0];
-        fromInEnd = targetRange[1];
-
+        GetShaperRange(baker, fromInStart, fromInEnd);
         GenerateLinearScaleLut1D(onedData.data(), onedSize, 3, fromInStart, fromInEnd);
     }
     else
