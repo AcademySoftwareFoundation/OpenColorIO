@@ -1,0 +1,72 @@
+<?xml version="1.0" ?>
+<aces:acesMetadataFile version="1.0" xmlns:aces="urn:ampas:aces:amf:v1.0" xmlns:cdl="urn:ASC:CDL:v1.01" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="urn:ampas:aces:amf:v1.0 file:acesMetadataFile.xsd">
+    <aces:amfInfo>
+        <aces:description>Example Movie</aces:description>
+        <aces:dateTime>
+           <aces:creationDateTime>2019-09-19T10:20:00</aces:creationDateTime>
+           <aces:modificationDateTime>2019-11-27T10:20:00Z</aces:modificationDateTime>
+        </aces:dateTime>
+    </aces:amfInfo>
+    <aces:clipId>
+        <aces:clipName>A001A020</aces:clipName>
+        <aces:uuid>urn:uuid:797c7cd8-4eb1-4f67-afce-af2b0a1d0285</aces:uuid>
+    </aces:clipId>
+    <aces:pipeline>
+        <aces:pipelineInfo>
+            <aces:systemVersion>
+                <aces:majorVersion>1</aces:majorVersion>
+                <aces:minorVersion>3</aces:minorVersion>
+                <aces:patchVersion>0</aces:patchVersion>
+            </aces:systemVersion>
+        </aces:pipelineInfo>
+
+        <aces:inputTransform applied="false">
+            <aces:description>ARRI.Alexa-v3-logC-EI800.a1.v2</aces:description>
+            <aces:transformId>urn:ampas:aces:transformId:v1.5:IDT.ARRI.Alexa-v3-logC-EI800.a1.v2</aces:transformId>
+        </aces:inputTransform>
+
+        <aces:lookTransform applied="false">
+            <aces:description>ACES 1.3 Look - Reference Gamut Compress</aces:description>
+            <aces:transformId>urn:ampas:aces:transformId:v1.5:LMT.Academy.ReferenceGamutCompress.a1.v1.0</aces:transformId>
+        </aces:lookTransform>
+
+        <aces:lookTransform applied="false">
+            <aces:description>Shot technical grade ASC CDL</aces:description>
+            <aces:cdlWorkingSpace>
+                <aces:toCdlWorkingSpace>
+                    <aces:description>ACES2065-1 to ACEScct</aces:description>
+                    <aces:transformId>urn:ampas:aces:transformId:v1.5:ACEScsc.Academy.ACES_to_ACEScct.a1.0.3</aces:transformId>
+                </aces:toCdlWorkingSpace>
+                <aces:fromCdlWorkingSpace>
+                    <aces:description>ACEScct to ACES2065-1</aces:description>
+                    <aces:transformId>urn:ampas:aces:transformId:v1.5:ACEScsc.Academy.ACEScct_to_ACES.a1.0.3</aces:transformId>
+                </aces:fromCdlWorkingSpace>
+            </aces:cdlWorkingSpace>
+            <cdl:SOPNode>
+                <cdl:Slope>1.1 1.0 0.9</cdl:Slope>
+                <cdl:Offset>-0.01 0.02 0.00</cdl:Offset>
+                <cdl:Power>1.0 1.0 1.0</cdl:Power>
+            </cdl:SOPNode>
+            <cdl:SatNode>
+                <cdl:Saturation>1.1</cdl:Saturation>
+            </cdl:SatNode>
+        </aces:lookTransform>
+
+        <aces:lookTransform applied="false">
+            <aces:description>Scene Look LUT</aces:description>
+            <aces:file>example_referenced_lut.clf</aces:file>
+        </aces:lookTransform>
+
+        <aces:outputTransform applied="false">
+            <aces:referenceRenderingTransform>
+                <aces:description>ACES 1.0 - RRT</aces:description>
+                <aces:transformId>urn:ampas:aces:transformId:v1.5:RRT.a1.0.3</aces:transformId>
+            </aces:referenceRenderingTransform>
+            <aces:outputDeviceTransform>
+                <aces:description>ACES 1.0 Output - Rec709 100 Nits</aces:description>
+                <aces:transformId>urn:ampas:aces:transformId:v1.5:ODT.Academy.Rec709_100nits_dim.a1.0.3</aces:transformId>
+            </aces:outputDeviceTransform>
+        </aces:outputTransform>
+
+    </aces:pipeline>
+</aces:acesMetadataFile>
