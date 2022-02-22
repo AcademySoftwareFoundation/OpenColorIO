@@ -242,7 +242,7 @@ endif()
 
 if(NOT BUILD_SHARED_LIBS)
     target_compile_definitions(OpenColorIO
-        PRIVATE
+        PUBLIC
             OpenColorIO_SKIP_IMPORTS
     )
 else()

@@ -8,10 +8,6 @@ function(add_ocio_test NAME SOURCES PRIVATE_INCLUDES)
     set(TEST_BINARY "test_${NAME}_exec")
     set(TEST_NAME "test_${NAME}")
     add_executable(${TEST_BINARY} ${SOURCES})
-    target_compile_definitions(${TEST_BINARY}
-        PRIVATE
-            OpenColorIO_SKIP_IMPORTS
-    )
     target_link_libraries(${TEST_BINARY}
         PRIVATE
             OpenColorIO

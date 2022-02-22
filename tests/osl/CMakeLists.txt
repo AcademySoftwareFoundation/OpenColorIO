@@ -18,13 +18,6 @@ set(SOURCES
 
 add_executable(test_osl_exec ${SOURCES})
 
-if(NOT BUILD_SHARED_LIBS)
-    target_compile_definitions(test_osl_exec
-        PRIVATE
-            OpenColorIO_SKIP_IMPORTS
-    )
-endif()
-
 if(OCIO_USE_SSE)
     target_compile_definitions(test_osl_exec
         PRIVATE

@@ -10,11 +10,6 @@ set(SOURCES
 
 add_executable(test_utils_exec ${SOURCES})
 
-target_compile_definitions(test_utils_exec
-    PRIVATE
-        OpenColorIO_SKIP_IMPORTS
-)
-
 target_link_libraries(test_utils_exec
     PRIVATE
         utils::strings

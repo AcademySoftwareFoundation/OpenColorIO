@@ -14,13 +14,6 @@ set(SOURCES
 
 add_executable(ocioconvert ${SOURCES})
 
-if(NOT BUILD_SHARED_LIBS)
-    target_compile_definitions(ocioconvert
-        PRIVATE
-            OpenColorIO_SKIP_IMPORTS
-    )
-endif()
-
 set_target_properties(ocioconvert PROPERTIES 
     COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS}")
 
