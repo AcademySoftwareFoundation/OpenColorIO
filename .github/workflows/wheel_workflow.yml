@@ -44,7 +44,7 @@ jobs:
   sdist:
     name: Build SDist
     runs-on: ubuntu-latest
-    Don't run on OCIO forks
+    # Don't run on OCIO forks
     if: |
       github.event_name != 'schedule' ||
       github.repository == 'AcademySoftwareFoundation/OpenColorIO'
