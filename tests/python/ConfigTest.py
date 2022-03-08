@@ -248,7 +248,7 @@ class ConfigTest(unittest.TestCase):
         """
         cfg = OCIO.Config.CreateRaw()
         cfg.setMajorVersion(2)
-        cfg.setMinorVersion(1)
+        cfg.setMinorVersion(0)
         cfg.setName('test config')
         cfg.setDescription('test description')
 
