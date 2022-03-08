@@ -370,10 +370,6 @@ void bindPyConfig(py::module & m)
              (const char * (Config::*)(const char *) const)
              &Config::getDefaultView, "display"_a, 
              DOC(Config, getDefaultView))
-        .def("getDefaultView",
-             (const char * (Config::*)(const char *, const char *) const)
-             &Config::getDefaultView, "display"_a, "colorSpacename"_a,
-             DOC(Config, getDefaultView))
         .def("getViews", [](ConfigRcPtr & self, const std::string & display)
              {
                  return ViewIterator(self, display);
