@@ -8680,6 +8680,10 @@ colorspaces:
 OCIO_ADD_TEST(Config, look_fallback)
 {
     // Test that the look fallback syntax works for look with missing file.
+    // The fallback syntax allow to specify looks to try in order and use the
+    // first valid one. When the syntax "my_look | " is used, the fallback
+    // is empty and there will be no look applied (no-op) if my_look in invalid.
+    // This may happen if my_look rely on a missing environment variable.
 
     {
         static const std::string CONFIG =
