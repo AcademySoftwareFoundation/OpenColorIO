@@ -1,17 +1,13 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright Contributors to the OpenColorIO Project.
 
-import unittest, os, sys
+import copy, unittest, os, sys
 import PyOpenColorIO as OCIO
 import inspect
 
 class TransformsTest(unittest.TestCase):
 
-    def test_binding_group_polymorphism(self):
-        """
-        Tests polymorphism issue where transforms are cast as parent class when using
-        GroupTransforms. Flagged in https://github.com/AcademySoftwareFoundation/OpenColorIO/issues/1211
-        """
+    def all_transforms_as_group(self):
         # Default arguments for Transforms that can't be instantiated without arguments.
         default_args = {
             OCIO.FixedFunctionTransform: {
@@ -42,7 +38,31 @@ class TransformsTest(unittest.TestCase):
                         'Unintended Error Raised: {0}'.format(e)
                     )
 
-        for transform in allTransformsAsGroup:
+        return allTransformsAsGroup
+
+    def test_copy(self):
+        """
+        Test the deepcopy() method.
+        """
+        for transform in self.all_transforms_as_group():
+            other = copy.deepcopy(transform)
+            self.assertFalse(other is transform)
+
+            self.assertEquals(other.getTransformType(), transform.getTransformType())
+            self.assertEquals(other.getDirection(), transform.getDirection())
+            # Not all OCIO.Transform have equals methods
+            if hasattr(transform, 'equals'):
+                self.assertTrue(other.equals(transform))
+
+            other.setDirection(OCIO.TRANSFORM_DIR_INVERSE)
+            self.assertNotEquals(other.getDirection(), transform.getDirection())
+
+    def test_binding_group_polymorphism(self):
+        """
+        Tests polymorphism issue where transforms are cast as parent class when using
+        GroupTransforms. Flagged in https://github.com/AcademySoftwareFoundation/OpenColorIO/issues/1211
+        """
+        for transform in self.all_transforms_as_group():
             # Ensure no transforms have been cast as parent transform
             self.assertNotEqual(
                 type(transform),

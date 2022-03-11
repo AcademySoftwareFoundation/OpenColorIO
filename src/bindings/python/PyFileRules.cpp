@@ -16,6 +16,12 @@ void bindPyFileRules(py::module & m)
         .def(py::init(&FileRules::Create),
              DOC(FileRules, Create))
 
+        .def("__deepcopy__", [](const ConstFileRulesRcPtr & self, py::dict)
+            {
+                return self->createEditableCopy();
+            },
+            "memo"_a)
+
         .def("getNumEntries", &FileRules::getNumEntries,
              DOC(FileRules, getNumEntries))
         .def("getIndexForRule", &FileRules::getIndexForRule, "ruleName"_a,
