@@ -17,5 +17,5 @@ tests/data/files/image_png.clf binary
 tests/data/files/*.icc binary
 tests/data/files/*.icm binary
 
-# Avoid Windows line breaks in shell scripts (bound to fail)
+# Avoid Windows line breaks in shell scripts  (bound to fail)
 *.sh text eol=lf
