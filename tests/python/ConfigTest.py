@@ -791,3 +791,105 @@ colorspaces:
         self.assertEqual(cfg.getCanonicalName('NT1'), 'nt1')
         self.assertEqual(cfg.getCanonicalName('Alias1'), 'nt1')
         self.assertEqual(cfg.getCanonicalName('Test1'), 'nt1')
+
+    def test_virtual_display(self):
+        # Test platform agnostic virtual display interface.
+
+        cfg = OCIO.Config().CreateRaw()
+        cfg.addColorSpace(
+            OCIO.ColorSpace(OCIO.REFERENCE_SPACE_DISPLAY,
+                            "display_cs",
+                            toReference=OCIO.CDLTransform(sat=1.5)))
+        cfg.addColorSpace(
+            OCIO.ColorSpace(OCIO.REFERENCE_SPACE_SCENE,
+                            "raw",
+                            isData=True))
+        cfg.addViewTransform(
+            OCIO.ViewTransform(OCIO.REFERENCE_SPACE_SCENE,
+                               "default_vt",
+                               toReference=OCIO.CDLTransform(sat=1.5)))
+        cfg.addViewTransform(
+            OCIO.ViewTransform(OCIO.REFERENCE_SPACE_DISPLAY,
+                               "display_vt",
+                               toReference=OCIO.CDLTransform(sat=1.5)))
+        cfg.addDisplayView("sRGB", "Raw", "raw")
+        cfg.addDisplayView("sRGB", "view", 
+                           viewTransform="display_vt", 
+                           displayColorSpaceName="display_cs")
+        cfg.addSharedView("sview1", "", "raw")
+        cfg.addSharedView("sview2", "", "raw")
+        cfg.addDisplaySharedView("sRGB", "sview1")
+
+        # Add virtual display and views
+        cfg.addVirtualDisplayView("Raw", "", "raw")
+        cfg.addVirtualDisplayView("Film", "display_vt", 
+                                  OCIO.OCIO_VIEW_USE_DISPLAY_NAME)
+        cfg.addVirtualDisplaySharedView("sview2")
+
+        # Some basic checks
+        self.assertEqual(3, len(cfg.getViews("sRGB")))
+        self.assertEqual(2, len(cfg.getViews(OCIO.VIEW_DISPLAY_DEFINED, 
+                                             "sRGB")))
+        self.assertEqual(1, len(cfg.getViews(OCIO.VIEW_SHARED, "sRGB")))
+
+        # Validate the virtual display information
+        self.assertEqual(
+            2, 
+            len(cfg.getVirtualDisplayViews(OCIO.VIEW_DISPLAY_DEFINED)))
+
+        view_name = cfg.getVirtualDisplayViews(OCIO.VIEW_DISPLAY_DEFINED)[0]
+        self.assertEqual("Raw", view_name)
+        self.assertEqual("", cfg.getVirtualDisplayViewTransformName(view_name))
+        self.assertEqual("raw", 
+                         cfg.getVirtualDisplayViewColorSpaceName(view_name))
+        self.assertEqual("", cfg.getVirtualDisplayViewLooks(view_name))
+        self.assertEqual("", cfg.getVirtualDisplayViewRule(view_name))
+        self.assertEqual("", cfg.getVirtualDisplayViewDescription(view_name))
+
+        view_name = cfg.getVirtualDisplayViews(OCIO.VIEW_DISPLAY_DEFINED)[1]
+        self.assertEqual("Film", view_name)
+        self.assertEqual("display_vt", 
+                         cfg.getVirtualDisplayViewTransformName(view_name))
+        self.assertEqual(OCIO.OCIO_VIEW_USE_DISPLAY_NAME, 
+                         cfg.getVirtualDisplayViewColorSpaceName(view_name))
+        self.assertEqual("", cfg.getVirtualDisplayViewLooks(view_name))
+        self.assertEqual("", cfg.getVirtualDisplayViewRule(view_name))
+        self.assertEqual("", cfg.getVirtualDisplayViewDescription(view_name))
+
+        self.assertEqual(1, len(cfg.getVirtualDisplayViews(OCIO.VIEW_SHARED)))
+        self.assertEqual("sview2", 
+                         cfg.getVirtualDisplayViews(OCIO.VIEW_SHARED)[0])
+
+        # Remove a view from the virtual display
+        cfg.removeVirtualDisplayView("Raw")
+
+        self.assertEqual(
+            1, 
+            len(cfg.getVirtualDisplayViews(OCIO.VIEW_DISPLAY_DEFINED)))
+        self.assertEqual(
+            "Film", 
+            cfg.getVirtualDisplayViews(OCIO.VIEW_DISPLAY_DEFINED)[0])
+
+        self.assertEqual(1, len(cfg.getVirtualDisplayViews(OCIO.VIEW_SHARED)))
+        self.assertEqual("sview2", 
+                         cfg.getVirtualDisplayViews(OCIO.VIEW_SHARED)[0])
+
+        # Remove a shared view from the virtual display
+        cfg.removeVirtualDisplayView("sview2")
+        self.assertEqual(
+            1, 
+            len(cfg.getVirtualDisplayViews(OCIO.VIEW_DISPLAY_DEFINED)))
+        self.assertEqual(0, len(cfg.getVirtualDisplayViews(OCIO.VIEW_SHARED)))
+
+        cfg.addVirtualDisplaySharedView("sview2")
+        self.assertEqual(
+            1, 
+            len(cfg.getVirtualDisplayViews(OCIO.VIEW_DISPLAY_DEFINED)))
+        self.assertEqual(1, len(cfg.getVirtualDisplayViews(OCIO.VIEW_SHARED)))
+
+        # Remove the virtual display
+        cfg.clearVirtualDisplay()
+        self.assertEqual(
+            0, 
+            len(cfg.getVirtualDisplayViews(OCIO.VIEW_DISPLAY_DEFINED)))
+        self.assertEqual(0, len(cfg.getVirtualDisplayViews(OCIO.VIEW_SHARED)))
