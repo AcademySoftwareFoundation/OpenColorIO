@@ -240,7 +240,7 @@ std::ostream & operator<< (std::ostream & os, const NamedTransform & t)
 {
     os << "<NamedTransform ";
     const std::string strName{ t.getName() };
-    os << "name=" << strName;
+    os << "name=" << strName << ", ";
     const auto numAliases = t.getNumAliases();
     if (numAliases == 1)
     {
