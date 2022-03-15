@@ -147,6 +147,7 @@ option(OCIO_USE_WINDOWS_UNICODE "On Windows only, compile with Unicode support" 
 
 option(OCIO_USE_SSE "Specify whether to enable SSE CPU performance optimizations" ON)
 option(OCIO_USE_OPENEXR_HALF "Specify whether to use an OpenEXR/IlmBase install of the Half library (<=v2.5) instead of the newer Imath library (>=v3.0)" OFF)
+option(OCIO_USE_OIIO_CMAKE_CONFIG "Specify whether to look for OIIO using the generated CMake Config script instead of the custom FindOpenImageIO.cmake script" OFF)
 
 
 ###############################################################################
@@ -260,13 +261,6 @@ include(FindExtPackages)
 
 ###############################################################################
 # Progress to other sources
-
-# The presence of OpenImageIO allows additional ocio apps and the OSL translation unit tests
-# to be built.
-
-# OpenImageIO
-# https://github.com/OpenImageIO/oiio
-find_package(OpenImageIO 2.1.9)
 
 add_subdirectory(vendor)
 if(OCIO_BUILD_DOCS)
