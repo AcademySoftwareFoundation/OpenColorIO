@@ -1266,8 +1266,7 @@ OCIO_ADD_TEST(Lut1DRenderer, lut_1d_hd_above_half_max)
     OCIO::PackedImageDesc dstImgDesc((void*)&outImage[0], 2, 1, 4);
     cpuFwd->apply(srcImgDesc, dstImgDesc);
 
-    const float rtol = 1e-5f;
-
+    static const float rtol = 1e-5f;
     OCIO_CHECK_CLOSE(outImage[0], 0.7785763f, rtol);
     OCIO_CHECK_CLOSE(outImage[1], 0.7785763f, rtol);
     OCIO_CHECK_CLOSE(outImage[2], 0.7785763f, rtol);
