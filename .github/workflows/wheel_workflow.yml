@@ -20,7 +20,10 @@ on:
       - v1.*
     paths:
       - .github/workflows/wheel_workflow.yml
+      - MANIFEST.in
       - pyproject.toml
+      - setup.cfg
+      - setup.py
   schedule:
     # Nightly build
     - cron: "0 0 * * *"
@@ -35,7 +38,33 @@ jobs:
   # version), we build on manylinux2014 image, this requires pip >= 19.3.
 
   # ---------------------------------------------------------------------------
-  # Linux
+  # Source Distribution
+  # ---------------------------------------------------------------------------
+
+  sdist:
+    name: Build SDist
+    runs-on: ubuntu-latest
+    # Don't run on OCIO forks
+    if: |
+      github.event_name != 'schedule' ||
+      github.repository == 'AcademySoftwareFoundation/OpenColorIO'
+
+    steps:
+
+    - uses: actions/checkout@v2
+
+    - name: Build SDist
+      run: pipx run build --sdist
+
+    - name: Check metadata
+      run: pipx run twine check dist/*
+
+    - uses: actions/upload-artifact@v2
+      with:
+        path: dist/*.tar.gz
+
+  # ---------------------------------------------------------------------------
+  # Linux Wheels
   # ---------------------------------------------------------------------------
 
   linux:
@@ -127,7 +156,7 @@ jobs:
           path: ./wheelhouse/*.whl
 
   # ---------------------------------------------------------------------------
-  # macOS
+  # macOS Wheels
   # ---------------------------------------------------------------------------
 
   macos:
@@ -190,7 +219,7 @@ jobs:
           path: ./wheelhouse/*.whl
 
   # ---------------------------------------------------------------------------
-  # Windows
+  # Windows Wheels
   # ---------------------------------------------------------------------------
 
   windows:
@@ -260,7 +289,7 @@ jobs:
 
 
   upload_pypi:
-    needs: [linux, macos, windows]
+    needs: [sdist, linux, macos, windows]
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v')
     steps:
