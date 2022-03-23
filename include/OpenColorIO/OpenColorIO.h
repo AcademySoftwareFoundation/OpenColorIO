@@ -2411,7 +2411,6 @@ public:
     void setInputSpace(const char * inputSpace);
 
     const char * getShaperSpace() const;
-
     /**
      * Set an *optional* ColorSpace to shape the incoming values of the LUT.
      * When baking 3DLUT, this will correspond to the 1D shaper used to
@@ -2430,14 +2429,12 @@ public:
     void setLooks(const char * looks);
 
     const char * getTargetSpace() const;
-    /// Set the target device colorspace for the LUT.
+    /// Set the target (i.e., output) color space for the LUT. Must not be used if setDisplayView is used.
     void setTargetSpace(const char * targetSpace);
 
     const char * getDisplay() const;
-
     const char * getView() const;
-
-    /// Set the display and view to apply during the baking.
+    /// Set the display and view to apply during the baking. Must not be used if setTargetSpace is used.
     void setDisplayView(const char * display, const char * view);
 
     int getShaperSize() const;
@@ -2450,7 +2447,7 @@ public:
 
     int getCubeSize() const;
     /**
-     * Override the default cube sample size.
+     * Override the main LUT (3d or 1d) sample size.
      * default: <format specific>
      */
     void setCubeSize(int cubesize);

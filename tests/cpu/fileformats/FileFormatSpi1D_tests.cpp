@@ -429,6 +429,9 @@ OCIO_ADD_TEST(FileFormatSpi1D, bake_1d_shaper)
         baker->setFormat("spi1d");
         baker->setInputSpace("Raw");
         baker->setTargetSpace("Log2");
+        // The ShaperSpace is used here to derive the range of the LUT.
+        // This is needed because the range [0, 1] will not cover the full
+        // extent of the log space.
         baker->setShaperSpace("Log2");
         baker->setCubeSize(10);
         std::ostringstream output;
