@@ -11,7 +11,7 @@ set_target_properties(oiiohelpers PROPERTIES OUTPUT_NAME OpenColorIOoiiohelpers)
 
 if(NOT BUILD_SHARED_LIBS)
     target_compile_definitions(oiiohelpers
-        PRIVATE
+        PUBLIC
             OpenColorIO_SKIP_IMPORTS
     )
 endif()

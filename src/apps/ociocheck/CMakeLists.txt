@@ -7,13 +7,6 @@ set(SOURCES
 
 add_executable(ociocheck ${SOURCES})
 
-if(NOT BUILD_SHARED_LIBS)
-    target_compile_definitions(ociocheck
-        PRIVATE
-        OpenColorIO_SKIP_IMPORTS
-    )
-endif()
-
 if(MSVC)
     set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} /wd4996")
 endif()

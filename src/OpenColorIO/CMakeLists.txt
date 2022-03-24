@@ -226,9 +226,9 @@ target_link_libraries(OpenColorIO
         expat::expat
         ${OCIO_HALF_LIB}
         pystring::pystring
-        sampleicc::sampleicc
-        utils::from_chars
-        utils::strings
+        "$<BUILD_INTERFACE:sampleicc::sampleicc>"
+        "$<BUILD_INTERFACE:utils::from_chars>"
+        "$<BUILD_INTERFACE:utils::strings>"
         yaml-cpp
 )
 
@@ -242,7 +242,7 @@ endif()
 
 if(NOT BUILD_SHARED_LIBS)
     target_compile_definitions(OpenColorIO
-        PRIVATE
+        PUBLIC
             OpenColorIO_SKIP_IMPORTS
     )
 else()

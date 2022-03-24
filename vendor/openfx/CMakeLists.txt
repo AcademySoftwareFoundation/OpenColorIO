@@ -30,13 +30,6 @@ set(RESOURCES
 
 add_library(ofxplugin MODULE ${SOURCES} ${OFXS_SOURCES})
 
-if(NOT BUILD_SHARED_LIBS)
-    target_compile_definitions(ofxplugin
-        PRIVATE
-            OpenColorIO_SKIP_IMPORTS
-    )
-endif()
-
 # Disable known compiler warnings from OpenFX Support Library
 if(MSVC)
     set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} /wd4996 /wd4101")

@@ -26,13 +26,6 @@ set(SOURCES
 
 add_executable(test_gpu_exec ${SOURCES})
 
-if(NOT BUILD_SHARED_LIBS)
-	target_compile_definitions(test_gpu_exec
-		PRIVATE
-			OpenColorIO_SKIP_IMPORTS
-	)
-endif()
-
 if(OCIO_USE_SSE)
 	target_compile_definitions(test_gpu_exec
 		PRIVATE

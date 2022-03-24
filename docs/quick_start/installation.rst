@@ -435,5 +435,13 @@ Note: For other user facing environment variables, see :ref:`using_env_vars`.
 
     When building the OCIO OpenFX plugins, include the installed 
     ``OpenColorIO/lib`` directory (where ``OpenColorIO.ofx.bundle`` is located) 
-    in this path. The path to a shared OpenColorIO lib (*.so, *.dll, *.dylib) 
-    should also be present on ``PATH``.
+    in this path.
+
+    It is recommended to build OFX plugins in static mode 
+    (``BUILD_SHARED_LIBS=OFF``) to avoid any issue loading the OpenColorIO
+    library from the plugin once it has been moved. Otherwise, please make sure
+    the shared OpenColorIO lib (*.so, *.dll, *.dylib) is visible from the
+    plugin by mean of ``PATH``, ``LD_LIBRARY_PATH`` or ``DYLD_LIBRARY_PATH``
+    for Windows, Linux and macOS respectively. For systems that supports it,
+    it is also possible to edit the RPATH of the plugin to add the location of
+    the shared OpenColorIO lib.
