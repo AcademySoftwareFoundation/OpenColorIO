@@ -84,8 +84,8 @@ void LocalFileFormat::getFormatInfo(FormatInfoVec & formatInfoVec) const
     FormatInfo info;
     info.name = "spi1d";
     info.extension = "spi1d";
-    info.capabilities = FORMAT_CAPABILITY_READ | FORMAT_CAPABILITY_BAKE;
-    info.bake_capabilities = FORMAT_BAKE_CAPABILITY_1DLUT;
+    info.capabilities = FormatCapabilityFlags(FORMAT_CAPABILITY_READ | FORMAT_CAPABILITY_BAKE);
+    info.bake_capabilities = FormatBakeFlags(FORMAT_BAKE_CAPABILITY_1DLUT);
     formatInfoVec.push_back(info);
 }
 

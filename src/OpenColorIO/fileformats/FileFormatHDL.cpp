@@ -290,10 +290,10 @@ void LocalFileFormat::getFormatInfo(FormatInfoVec & formatInfoVec) const
     FormatInfo info;
     info.name = "houdini";
     info.extension = "lut";
-    info.capabilities = FORMAT_CAPABILITY_READ | FORMAT_CAPABILITY_BAKE;
-    info.bake_capabilities = FORMAT_BAKE_CAPABILITY_3DLUT |
-                             FORMAT_BAKE_CAPABILITY_1DLUT |
-                             FORMAT_BAKE_CAPABILITY_1D_3D_LUT;
+    info.capabilities = FormatCapabilityFlags(FORMAT_CAPABILITY_READ | FORMAT_CAPABILITY_BAKE);
+    info.bake_capabilities = FormatBakeFlags(FORMAT_BAKE_CAPABILITY_3DLUT |
+                                             FORMAT_BAKE_CAPABILITY_1DLUT |
+                                             FORMAT_BAKE_CAPABILITY_1D_3D_LUT);
     formatInfoVec.push_back(info);
 }
 
@@ -593,10 +593,9 @@ void LocalFileFormat::bake(const Baker & baker,
 
     // Check defaults and cube size
     if(cubeSize == -1) cubeSize = DEFAULT_CUBE_SIZE;
-    if(cubeSize < 0) cubeSize = DEFAULT_CUBE_SIZE;
 
     // ..and same for shaper size
-    if(shaperSize<0) shaperSize = DEFAULT_SHAPER_SIZE;
+    if(shaperSize == -1) shaperSize = DEFAULT_SHAPER_SIZE;
 
     // ..and finally, for the 1D LUT size
     if(onedSize == -1) onedSize = DEFAULT_1D_SIZE;

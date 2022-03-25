@@ -2447,8 +2447,8 @@ public:
 
     int getCubeSize() const;
     /**
-     * Override the main LUT (3d or 1d) sample size.
-     * default: <format specific>
+     * Override the main LUT (3d or 1d) sample size. Default value is -1, which allows
+     * each format to use its own most appropriate size.
      */
     void setCubeSize(int cubesize);
 

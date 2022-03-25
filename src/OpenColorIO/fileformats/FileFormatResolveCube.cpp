@@ -249,10 +249,10 @@ void LocalFileFormat::getFormatInfo(FormatInfoVec & formatInfoVec) const
     FormatInfo info;
     info.name = "resolve_cube";
     info.extension = "cube";
-    info.capabilities = FORMAT_CAPABILITY_READ | FORMAT_CAPABILITY_BAKE;
-    info.bake_capabilities = FORMAT_BAKE_CAPABILITY_3DLUT |
-                             FORMAT_BAKE_CAPABILITY_1DLUT |
-                             FORMAT_BAKE_CAPABILITY_1D_3D_LUT;
+    info.capabilities = FormatCapabilityFlags(FORMAT_CAPABILITY_READ | FORMAT_CAPABILITY_BAKE);
+    info.bake_capabilities = FormatBakeFlags(FORMAT_BAKE_CAPABILITY_3DLUT |
+                                             FORMAT_BAKE_CAPABILITY_1DLUT |
+                                             FORMAT_BAKE_CAPABILITY_1D_3D_LUT);
     formatInfoVec.push_back(info);
 }
 
@@ -523,7 +523,7 @@ void LocalFileFormat::bake(const Baker & baker,
     cubeSize = std::max(2, cubeSize); // smallest cube is 2x2x2
 
     int shaperSize = baker.getShaperSize();
-    if(shaperSize<0) shaperSize = DEFAULT_SHAPER_SIZE;
+    if(shaperSize==-1) shaperSize = DEFAULT_SHAPER_SIZE;
 
     // Get spaces from baker
     const std::string shaperSpace = baker.getShaperSpace();

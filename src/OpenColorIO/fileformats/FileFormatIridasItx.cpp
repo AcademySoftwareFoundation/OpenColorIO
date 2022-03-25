@@ -115,8 +115,8 @@ void LocalFileFormat::getFormatInfo(FormatInfoVec & formatInfoVec) const
     FormatInfo info;
     info.name = "iridas_itx";
     info.extension = "itx";
-    info.capabilities = (FORMAT_CAPABILITY_READ | FORMAT_CAPABILITY_BAKE);
-    info.bake_capabilities = FORMAT_BAKE_CAPABILITY_3DLUT;
+    info.capabilities = FormatCapabilityFlags(FORMAT_CAPABILITY_READ | FORMAT_CAPABILITY_BAKE);
+    info.bake_capabilities = FormatBakeFlags(FORMAT_BAKE_CAPABILITY_3DLUT);
     formatInfoVec.push_back(info);
 }
 

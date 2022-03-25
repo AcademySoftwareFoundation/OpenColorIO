@@ -281,7 +281,8 @@ OCIO_ADD_TEST(Baker, baking_config)
     bake->setFormat("cinespace");
 
     os.str("");
-    OCIO_CHECK_THROW_WHAT(bake->bake(os), OCIO::Exception, "No display / view or target colorspace has been set.");
+    OCIO_CHECK_THROW_WHAT(bake->bake(os), OCIO::Exception,
+        "No display / view or target colorspace has been set.");
 
     // Setting both target space and display / view.
     bake = OCIO::Baker::Create();
@@ -313,7 +314,8 @@ OCIO_ADD_TEST(Baker, baking_config)
     bake->setFormat("cinespace");
 
     os.str("");
-    OCIO_CHECK_THROW_WHAT(bake->bake(os), OCIO::Exception, "Could not find input colorspace 'Invalid'.");
+    OCIO_CHECK_THROW_WHAT(bake->bake(os), OCIO::Exception,
+        "Could not find input colorspace 'Invalid'.");
 
     // Inactive input space.
     bake = OCIO::Baker::Create();
@@ -333,7 +335,8 @@ OCIO_ADD_TEST(Baker, baking_config)
     bake->setFormat("cinespace");
 
     os.str("");
-    OCIO_CHECK_THROW_WHAT(bake->bake(os), OCIO::Exception, "Could not find target colorspace 'Invalid'.");
+    OCIO_CHECK_THROW_WHAT(bake->bake(os), OCIO::Exception,
+        "Could not find target colorspace 'Invalid'.");
 
     // Invalid display.
     bake = OCIO::Baker::Create();
@@ -403,7 +406,8 @@ OCIO_ADD_TEST(Baker, baking_config)
     bake->setFormat("spi1d");
 
     os.str("");
-    OCIO_CHECK_THROW_WHAT(bake->bake(os), OCIO::Exception, "The format 'spi1d' does not support transformations with channel crosstalk.");
+    OCIO_CHECK_THROW_WHAT(bake->bake(os), OCIO::Exception,
+        "The format 'spi1d' does not support transformations with channel crosstalk.");
 
     // Cube Size < 2.
     bake = OCIO::Baker::Create();
@@ -426,7 +430,8 @@ OCIO_ADD_TEST(Baker, baking_config)
     bake->setFormat("resolve_cube");
 
     os.str("");
-    OCIO_CHECK_THROW_WHAT(bake->bake(os), OCIO::Exception, "A shaper space 'Log' has been specified, so the shaper size must be 2 or larger.");
+    OCIO_CHECK_THROW_WHAT(bake->bake(os), OCIO::Exception,
+        "A shaper space 'Log' has been specified, so the shaper size must be 2 or larger.");
 
     // Using shaper with unsupported format.
     bake = OCIO::Baker::Create();
@@ -437,7 +442,8 @@ OCIO_ADD_TEST(Baker, baking_config)
     bake->setFormat("iridas_itx");
 
     os.str("");
-    OCIO_CHECK_THROW_WHAT(bake->bake(os), OCIO::Exception, "The format 'iridas_itx' does not support shaper space.");
+    OCIO_CHECK_THROW_WHAT(bake->bake(os), OCIO::Exception,
+        "The format 'iridas_itx' does not support shaper space.");
 
     // Using shaper space with Crosstalk.
     bake = OCIO::Baker::Create();
@@ -448,5 +454,8 @@ OCIO_ADD_TEST(Baker, baking_config)
     bake->setFormat("cinespace");
 
     os.str("");
-    OCIO_CHECK_THROW_WHAT(bake->bake(os), OCIO::Exception, "The specified shaper space, 'Crosstalk' has channel crosstalk, which is not appropriate for shapers. Please select an alternate shaper space or omit this option.");
+    OCIO_CHECK_THROW_WHAT(bake->bake(os), OCIO::Exception,
+        "The specified shaper space, 'Crosstalk' has channel crosstalk, which "
+        "is not appropriate for shapers. Please select an alternate shaper "
+        "space or omit this option.");
 }

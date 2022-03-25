@@ -71,7 +71,7 @@ void LocalFileFormat::getFormatInfo(FormatInfoVec & formatInfoVec) const
     FormatInfo info;
     info.name = FILEFORMAT_COLOR_CORRECTION;
     info.extension = "cc";
-    info.capabilities = FORMAT_CAPABILITY_READ | FORMAT_CAPABILITY_WRITE;
+    info.capabilities = FormatCapabilityFlags(FORMAT_CAPABILITY_READ | FORMAT_CAPABILITY_WRITE);
     formatInfoVec.push_back(info);
 }
 
@@ -166,4 +166,3 @@ FileFormat * CreateFileFormatCC()
 }
 
 } // namespace OCIO_NAMESPACE
-

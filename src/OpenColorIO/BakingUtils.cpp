@@ -51,15 +51,16 @@ namespace
                      float & end)
     {
         // Calculate min/max value
-        ConstCPUProcessorRcPtr shaperToInput =
-            baker.getConfig()->getProcessor(src, baker.getInputSpace()
-        )->getOptimizedCPUProcessor(OPTIMIZATION_LOSSLESS);
+        ConstProcessorRcPtr proc = baker.getConfig()->getProcessor(
+            src, baker.getInputSpace());
+        ConstCPUProcessorRcPtr cpu = proc->getOptimizedCPUProcessor(
+            OPTIMIZATION_LOSSLESS);
 
         float minval[3] = {0.0f, 0.0f, 0.0f};
         float maxval[3] = {1.0f, 1.0f, 1.0f};
 
-        shaperToInput->applyRGB(minval);
-        shaperToInput->applyRGB(maxval);
+        cpu->applyRGB(minval);
+        cpu->applyRGB(maxval);
 
         start = std::min(std::min(minval[0], minval[1]), minval[2]);
         end = std::max(std::max(maxval[0], maxval[1]), maxval[2]);
@@ -83,12 +84,22 @@ ConstCPUProcessorRcPtr GetShaperToInputProcessor(const Baker & baker)
 
 ConstCPUProcessorRcPtr GetInputToTargetProcessor(const Baker & baker)
 {
-    return GetSrcToTargetProcessor(baker, baker.getInputSpace());
+    if (baker.getInputSpace() && *baker.getInputSpace())
+    {
+        return GetSrcToTargetProcessor(baker, baker.getInputSpace());
+    }
+
+    throw Exception("Input space is empty.");
 }
 
 ConstCPUProcessorRcPtr GetShaperToTargetProcessor(const Baker & baker)
 {
-    return GetSrcToTargetProcessor(baker, baker.getShaperSpace());
+    if (baker.getShaperSpace() && *baker.getShaperSpace())
+    {
+        return GetSrcToTargetProcessor(baker, baker.getShaperSpace());
+    }
+
+    throw Exception("Shaper space is empty.");
 }
 
 void GetShaperRange(const Baker & baker, float& start, float& end)

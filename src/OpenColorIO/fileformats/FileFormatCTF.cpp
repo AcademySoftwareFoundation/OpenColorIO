@@ -148,23 +148,23 @@ void LocalFileFormat::getFormatInfo(FormatInfoVec & formatInfoVec) const
     FormatInfo info;
     info.name = FILEFORMAT_CLF;
     info.extension = "clf";
-    info.capabilities = FORMAT_CAPABILITY_READ |
-                        FORMAT_CAPABILITY_BAKE |
-                        FORMAT_CAPABILITY_WRITE;
-    info.bake_capabilities = FORMAT_BAKE_CAPABILITY_3DLUT |
-                             FORMAT_BAKE_CAPABILITY_1DLUT |
-                             FORMAT_BAKE_CAPABILITY_1D_3D_LUT;
+    info.capabilities = FormatCapabilityFlags(FORMAT_CAPABILITY_READ |
+                                              FORMAT_CAPABILITY_BAKE |
+                                              FORMAT_CAPABILITY_WRITE);
+    info.bake_capabilities = FormatBakeFlags(FORMAT_BAKE_CAPABILITY_3DLUT |
+                                             FORMAT_BAKE_CAPABILITY_1DLUT |
+                                             FORMAT_BAKE_CAPABILITY_1D_3D_LUT);
     formatInfoVec.push_back(info);
 
     FormatInfo info2;
     info2.name = FILEFORMAT_CTF;
     info2.extension = "ctf";
-    info2.capabilities = FORMAT_CAPABILITY_READ |
-                         FORMAT_CAPABILITY_BAKE |
-                         FORMAT_CAPABILITY_WRITE;
-    info.bake_capabilities = FORMAT_BAKE_CAPABILITY_3DLUT |
-                             FORMAT_BAKE_CAPABILITY_1DLUT |
-                             FORMAT_BAKE_CAPABILITY_1D_3D_LUT;
+    info2.capabilities = FormatCapabilityFlags(FORMAT_CAPABILITY_READ |
+                                               FORMAT_CAPABILITY_BAKE |
+                                               FORMAT_CAPABILITY_WRITE);
+    info.bake_capabilities = FormatBakeFlags(FORMAT_BAKE_CAPABILITY_3DLUT |
+                                             FORMAT_BAKE_CAPABILITY_1DLUT |
+                                             FORMAT_BAKE_CAPABILITY_1D_3D_LUT);
     formatInfoVec.push_back(info2);
 }
 

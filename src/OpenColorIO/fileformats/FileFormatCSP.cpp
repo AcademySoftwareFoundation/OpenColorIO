@@ -353,8 +353,8 @@ void LocalFileFormat::getFormatInfo(FormatInfoVec & formatInfoVec) const
     FormatInfo info;
     info.name = "cinespace";
     info.extension = "csp";
-    info.capabilities = (FORMAT_CAPABILITY_READ | FORMAT_CAPABILITY_BAKE);
-    info.bake_capabilities = (FORMAT_BAKE_CAPABILITY_3DLUT | FORMAT_BAKE_CAPABILITY_1D_3D_LUT);
+    info.capabilities = FormatCapabilityFlags(FORMAT_CAPABILITY_READ | FORMAT_CAPABILITY_BAKE);
+    info.bake_capabilities = FormatBakeFlags(FORMAT_BAKE_CAPABILITY_3DLUT | FORMAT_BAKE_CAPABILITY_1D_3D_LUT);
     formatInfoVec.push_back(info);
 }
 
@@ -720,7 +720,7 @@ void LocalFileFormat::bake(const Baker & baker,
     if(!shaperSpace.empty())
     {
         int shaperSize = baker.getShaperSize();
-        if(shaperSize<0) shaperSize = DEFAULT_SHAPER_SIZE;
+        if(shaperSize==-1) shaperSize = DEFAULT_SHAPER_SIZE;
 
         shaperOutData.resize(shaperSize*3);
         shaperInData.resize(shaperSize*3);
@@ -760,7 +760,7 @@ void LocalFileFormat::bake(const Baker & baker,
 
         // What size shaper should we make?
         int shaperSize = baker.getShaperSize();
-        if(shaperSize<0) shaperSize = DEFAULT_SHAPER_SIZE;
+        if(shaperSize==-1) shaperSize = DEFAULT_SHAPER_SIZE;
         shaperSize = std::max(2, shaperSize);
         if(inputColorSpace->getAllocation() == ALLOCATION_UNIFORM)
         {

@@ -104,7 +104,7 @@ void LocalFileFormat::getFormatInfo(FormatInfoVec & formatInfoVec) const
     FormatInfo info;
     info.name = FILEFORMAT_COLOR_DECISION_LIST;
     info.extension = "cdl";
-    info.capabilities = FORMAT_CAPABILITY_READ | FORMAT_CAPABILITY_WRITE;
+    info.capabilities = FormatCapabilityFlags(FORMAT_CAPABILITY_READ | FORMAT_CAPABILITY_WRITE);
     formatInfoVec.push_back(info);
 }
 
@@ -290,4 +290,3 @@ FileFormat * CreateFileFormatCDL()
 
 
 } // namespace OCIO_NAMESPACE
-

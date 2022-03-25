@@ -205,6 +205,11 @@ const char * Baker::getView() const
 
 void Baker::setDisplayView(const char * display, const char * view)
 {
+    if (!display ^ !view)
+    {
+        throw Exception("Both display and view must be set.");
+    }
+
     getImpl()->m_display = display;
     getImpl()->m_view = view;
 }
@@ -346,7 +351,7 @@ void Baker::bake(std::ostream & os) const
         throw Exception(os.str().c_str());
     }
 
-    if(getCubeSize() >= 0 && getCubeSize() < 2)
+    if(getCubeSize() != -1 && getCubeSize() < 2)
     {
         throw Exception("Cube size must be at least 2 if set.");
     }
@@ -361,7 +366,7 @@ void Baker::bake(std::ostream & os) const
         throw Exception(os.str().c_str());
     }
 
-    if(!shaperSpace.empty() && getShaperSize() >= 0 && getShaperSize() < 2)
+    if(!shaperSpace.empty() && getShaperSize() != -1 && getShaperSize() < 2)
     {
         std::ostringstream os;
         os << "A shaper space '" << getShaperSpace() << "' has";
