@@ -154,7 +154,7 @@ set_target_properties(PyOpenColorIO
 
 if(NOT BUILD_SHARED_LIBS)
 	target_compile_definitions(PyOpenColorIO
-		PRIVATE
+		PUBLIC
 			OpenColorIO_SKIP_IMPORTS
 	)
 endif()

@@ -37,7 +37,7 @@ set_target_properties(oglapphelpers PROPERTIES OUTPUT_NAME OpenColorIOoglapphelp
 
 if(NOT BUILD_SHARED_LIBS)
     target_compile_definitions(oglapphelpers
-        PRIVATE
+        PUBLIC
             OpenColorIO_SKIP_IMPORTS
     )
 endif()
