@@ -10,6 +10,7 @@
 #include "fileformats/FileFormatUtils.h"
 #include "ops/lut3d/Lut3DOp.h"
 #include "Platform.h"
+#include "BakingUtils.h"
 #include "transforms/FileTransform.h"
 #include "utils/StringUtils.h"
 #include "utils/NumberUtils.h"
@@ -56,6 +57,10 @@ public:
                          const std::string & fileName,
                          Interpolation interp) const override;
 
+    void bake(const Baker & baker,
+              const std::string & formatName,
+              std::ostream & ostream) const override;
+
     void buildFileOps(OpRcPtrVec & ops,
                         const Config & config,
                         const ConstContextRcPtr & context,
@@ -69,7 +74,8 @@ void LocalFileFormat::getFormatInfo(FormatInfoVec & formatInfoVec) const
     FormatInfo info;
     info.name = "spi3d";
     info.extension = "spi3d";
-    info.capabilities = FORMAT_CAPABILITY_READ;
+    info.capabilities = FormatCapabilityFlags(FORMAT_CAPABILITY_READ | FORMAT_CAPABILITY_BAKE);
+    info.bake_capabilities = FormatBakeFlags(FORMAT_BAKE_CAPABILITY_3DLUT);
     formatInfoVec.push_back(info);
 }
 
@@ -246,6 +252,52 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
     LocalCachedFileRcPtr cachedFile = LocalCachedFileRcPtr(new LocalCachedFile());
     cachedFile->lut = lut3d;
     return cachedFile;
+}
+
+void LocalFileFormat::bake(const Baker & baker,
+                           const std::string & formatName,
+                           std::ostream & ostream) const
+{
+
+    static const int DEFAULT_CUBE_SIZE = 32;
+
+    if(formatName != "spi3d")
+    {
+        std::ostringstream os;
+        os << "Unknown spi format name, '";
+        os << formatName << "'.";
+        throw Exception(os.str().c_str());
+    }
+
+    ConstConfigRcPtr config = baker.getConfig();
+
+    int cubeSize = baker.getCubeSize();
+    if(cubeSize==-1) cubeSize = DEFAULT_CUBE_SIZE;
+    cubeSize = std::max(2, cubeSize); // smallest cube is 2x2x2
+
+    std::vector<float> cubeData;
+    cubeData.resize(cubeSize*cubeSize*cubeSize*3);
+    GenerateIdentityLut3D(&cubeData[0], cubeSize, 3, LUT3DORDER_FAST_BLUE);
+    PackedImageDesc cubeImg(&cubeData[0], cubeSize*cubeSize*cubeSize, 1, 3);
+    ConstCPUProcessorRcPtr inputToTarget = GetInputToTargetProcessor(baker);
+    inputToTarget->apply(cubeImg);
+
+    ostream << "SPILUT 1.0\n";
+    ostream << "3 3\n";
+    ostream << cubeSize << " " << cubeSize << " " << cubeSize << "\n";
+
+    // Set to a fixed 6 decimal precision
+    ostream.setf(std::ios::fixed, std::ios::floatfield);
+    ostream.precision(6);
+    for(int i=0; i<cubeSize*cubeSize*cubeSize; ++i)
+    {
+        ostream << ((i / cubeSize) / cubeSize) % cubeSize << " "
+                << (i / cubeSize) % cubeSize << " "
+                << i % cubeSize << " "
+                << cubeData[3*i+0] << " "
+                << cubeData[3*i+1] << " "
+                << cubeData[3*i+2] << "\n";
+    }
 }
 
 void LocalFileFormat::buildFileOps(OpRcPtrVec & ops,

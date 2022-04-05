@@ -174,6 +174,162 @@ OCIO_ADD_TEST(FileFormatHDL, bake_1d)
     }
 }
 
+
+OCIO_ADD_TEST(FileFormatHDL, bake_1d_shaper)
+{
+    OCIO::BakerRcPtr bake;
+    std::ostringstream os;
+
+    constexpr auto myProfile = R"(
+        ocio_profile_version: 1
+
+        colorspaces:
+        - !<ColorSpace>
+          name : Raw
+          isdata : false
+
+        - !<ColorSpace>
+          name: Log2
+          isdata: false
+          from_reference: !<GroupTransform>
+            children:
+              - !<MatrixTransform> {matrix: [5.55556, 0, 0, 0, 0, 5.55556, 0, 0, 0, 0, 5.55556, 0, 0, 0, 0, 1]}
+              - !<LogTransform> {base: 2}
+              - !<MatrixTransform> {offset: [6.5, 6.5, 6.5, 0]}
+              - !<MatrixTransform> {matrix: [0.076923, 0, 0, 0, 0, 0.076923, 0, 0, 0, 0, 0.076923, 0, 0, 0, 0, 1]}
+    )";
+
+    std::istringstream is(myProfile);
+    OCIO::ConstConfigRcPtr config;
+    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+    OCIO_REQUIRE_ASSERT(config);
+
+    {
+        // Lin to Log
+        OCIO::BakerRcPtr baker = OCIO::Baker::Create();
+        baker->setConfig(config);
+        baker->setFormat("houdini");
+        baker->setInputSpace("Raw");
+        baker->setTargetSpace("Log2");
+        baker->setShaperSpace("Log2");
+        baker->setCubeSize(10);
+        std::ostringstream outputHDL;
+        baker->bake(outputHDL);
+
+        const std::string expectedHDL =
+        "Version\t\t1\n"
+        "Format\t\tany\n"
+        "Type\t\tRGB\n"
+        "From\t\t0.001989 16.291878\n"
+        "To\t\t0.000000 1.000000\n"
+        "Black\t\t0.000000\n"
+        "White\t\t1.000000\n"
+        "Length\t\t10\n"
+        "LUT:\n"
+        "R {\n"
+        "\t0.000000\n"
+        "\t0.756268\n"
+        "\t0.833130\n"
+        "\t0.878107\n"
+        "\t0.910023\n"
+        "\t0.934780\n"
+        "\t0.955010\n"
+        "\t0.972114\n"
+        "\t0.986931\n"
+        "\t1.000000\n"
+        "}\n"
+        "G {\n"
+        "\t0.000000\n"
+        "\t0.756268\n"
+        "\t0.833130\n"
+        "\t0.878107\n"
+        "\t0.910023\n"
+        "\t0.934780\n"
+        "\t0.955010\n"
+        "\t0.972114\n"
+        "\t0.986931\n"
+        "\t1.000000\n"
+        "}\n"
+        "B {\n"
+        "\t0.000000\n"
+        "\t0.756268\n"
+        "\t0.833130\n"
+        "\t0.878107\n"
+        "\t0.910023\n"
+        "\t0.934780\n"
+        "\t0.955010\n"
+        "\t0.972114\n"
+        "\t0.986931\n"
+        "\t1.000000\n"
+        "}\n";
+
+        OCIO_CHECK_EQUAL(expectedHDL.size(), outputHDL.str().size());
+        OCIO_CHECK_EQUAL(expectedHDL, outputHDL.str());
+    }
+
+    {
+        // Log to Lin
+        OCIO::BakerRcPtr baker = OCIO::Baker::Create();
+        baker->setConfig(config);
+        baker->setFormat("houdini");
+        baker->setInputSpace("Log2");
+        baker->setTargetSpace("Raw");
+        baker->setCubeSize(10);
+        std::ostringstream outputHDL;
+        baker->bake(outputHDL);
+
+        const std::string expectedHDL =
+        "Version\t\t1\n"
+        "Format\t\tany\n"
+        "Type\t\tRGB\n"
+        "From\t\t0.000000 1.000000\n"
+        "To\t\t0.000000 1.000000\n"
+        "Black\t\t0.000000\n"
+        "White\t\t1.000000\n"
+        "Length\t\t10\n"
+        "LUT:\n"
+        "R {\n"
+        "\t0.001989\n"
+        "\t0.005413\n"
+        "\t0.014731\n"
+        "\t0.040091\n"
+        "\t0.109110\n"
+        "\t0.296951\n"
+        "\t0.808177\n"
+        "\t2.199522\n"
+        "\t5.986179\n"
+        "\t16.291878\n"
+        "}\n"
+        "G {\n"
+        "\t0.001989\n"
+        "\t0.005413\n"
+        "\t0.014731\n"
+        "\t0.040091\n"
+        "\t0.109110\n"
+        "\t0.296951\n"
+        "\t0.808177\n"
+        "\t2.199522\n"
+        "\t5.986179\n"
+        "\t16.291878\n"
+        "}\n"
+        "B {\n"
+        "\t0.001989\n"
+        "\t0.005413\n"
+        "\t0.014731\n"
+        "\t0.040091\n"
+        "\t0.109110\n"
+        "\t0.296951\n"
+        "\t0.808177\n"
+        "\t2.199522\n"
+        "\t5.986179\n"
+        "\t16.291878\n"
+        "}\n";
+
+        OCIO_CHECK_EQUAL(expectedHDL.size(), outputHDL.str().size());
+        OCIO_CHECK_EQUAL(expectedHDL, outputHDL.str());
+    }
+}
+
 OCIO_ADD_TEST(FileFormatHDL, read_3d)
 {
     std::ostringstream strebuf;
@@ -685,4 +841,3 @@ OCIO_ADD_TEST(FileFormatHDL, look_test)
         OCIO_CHECK_EQUAL(StringUtils::Trim(osvec[i]), StringUtils::Trim(resvec[i]));
     }
 }
-

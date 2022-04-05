@@ -7,6 +7,7 @@
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "transforms/FileTransform.h"
+#include "BakingUtils.h"
 #include "MathUtils.h"
 
 
@@ -34,6 +35,8 @@ public:
     std::string m_shaperSpace;
     std::string m_looks;
     std::string m_targetSpace;
+    std::string m_display;
+    std::string m_view;
     int m_shapersize;
     int m_cubesize;
 
@@ -60,6 +63,8 @@ public:
             m_shaperSpace = rhs.m_shaperSpace;
             m_looks = rhs.m_looks;
             m_targetSpace = rhs.m_targetSpace;
+            m_display = rhs.m_display;
+            m_view = rhs.m_view;
             m_shapersize = rhs.m_shapersize;
             m_cubesize = rhs.m_cubesize;
         }
@@ -188,6 +193,27 @@ const char * Baker::getTargetSpace() const
     return getImpl()->m_targetSpace.c_str();
 }
 
+const char * Baker::getDisplay() const
+{
+    return getImpl()->m_display.c_str();
+}
+
+const char * Baker::getView() const
+{
+    return getImpl()->m_view.c_str();
+}
+
+void Baker::setDisplayView(const char * display, const char * view)
+{
+    if (!display ^ !view)
+    {
+        throw Exception("Both display and view must be set.");
+    }
+
+    getImpl()->m_display = display;
+    getImpl()->m_view = view;
+}
+
 void Baker::setShaperSize(int shapersize)
 {
     getImpl()->m_shapersize = shapersize;
@@ -220,9 +246,150 @@ void Baker::bake(std::ostream & os) const
         throw Exception(err.str().c_str());
     }
 
+    FormatInfoVec fmtInfoVec;
+    fmt->getFormatInfo(fmtInfoVec);
+    FormatInfo fmtInfo = fmtInfoVec[0];
+
+    const std::string & inputSpace = getImpl()->m_inputSpace;
+    const std::string & targetSpace = getImpl()->m_targetSpace;
+    const std::string & shaperSpace = getImpl()->m_shaperSpace;
+    const std::string & display = getImpl()->m_display;
+    const std::string & view = getImpl()->m_view;
+
+    const bool displayViewMode = !display.empty() && !view.empty();
+    const bool colorSpaceMode = !targetSpace.empty();
+
+    // Settings validation.
     if(!getConfig())
     {
-        throw Exception("No OCIO config has been set");
+        throw Exception("No OCIO config has been set.");
+    }
+
+    if(inputSpace.empty())
+    {
+        throw Exception("No input space has been set.");
+    }
+
+    if(!displayViewMode && !colorSpaceMode)
+    {
+        throw Exception("No display / view or target colorspace has been set.");
+    }
+
+    if(displayViewMode && colorSpaceMode)
+    {
+        throw Exception("Cannot use both display / view and target colorspace.");
+    }
+
+    if(!getConfig()->getColorSpace(inputSpace.c_str()))
+    {
+        std::ostringstream os;
+        os << "Could not find input colorspace '" << inputSpace << "'.";
+        throw Exception(os.str().c_str());
+    }
+
+    if(colorSpaceMode && !getConfig()->getColorSpace(targetSpace.c_str()))
+    {
+        std::ostringstream os;
+        os << "Could not find target colorspace '" << targetSpace << "'.";
+        throw Exception(os.str().c_str());
+    }
+
+    if(displayViewMode)
+    {
+        bool foundDisplay = false;
+        bool foundView = false;
+
+        // Make sure we also search through inactive views.
+        auto hasViewByType = [this](ViewType type, const char * display, const char * view)
+        {
+            for (int i = 0; i < getConfig()->getNumViews(type, display); ++i)
+            {
+                if (std::string(getConfig()->getView(type, display, i)) == std::string(view))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        };
+
+        for (int i = 0; i < getConfig()->getNumDisplaysAll(); ++i)
+        {
+            const char * currDisplay = getConfig()->getDisplayAll(i);
+            if (std::string(currDisplay) == display)
+            {
+                foundDisplay = true;
+                foundView |= hasViewByType(VIEW_DISPLAY_DEFINED, currDisplay, view.c_str());
+                foundView |= hasViewByType(VIEW_SHARED, currDisplay, view.c_str());
+            }
+            if (foundDisplay && foundView)
+            {
+                break;
+            }
+        }
+
+        if (!foundDisplay)
+        {
+            std::ostringstream os;
+            os << "Could not find display '" << display << "'.";
+            throw Exception(os.str().c_str());
+        }
+        else if (!foundView)
+        {
+            std::ostringstream os;
+            os << "Could not find view '" << view << "'.";
+            throw Exception(os.str().c_str());
+        }
+    }
+
+    const bool bake_1D = fmtInfo.bake_capabilities == FORMAT_BAKE_CAPABILITY_1DLUT;
+    if(bake_1D && GetInputToTargetProcessor(*this)->hasChannelCrosstalk())
+    {
+        std::ostringstream os;
+        os << "The format '" << getImpl()->m_formatName << "' does not support";
+        os << " transformations with channel crosstalk.";
+        throw Exception(os.str().c_str());
+    }
+
+    if(getCubeSize() != -1 && getCubeSize() < 2)
+    {
+        throw Exception("Cube size must be at least 2 if set.");
+    }
+
+    const bool supportShaper =
+        fmtInfo.bake_capabilities & FORMAT_BAKE_CAPABILITY_1D_3D_LUT ||
+        fmtInfo.bake_capabilities & FORMAT_BAKE_CAPABILITY_1DLUT;
+    if(!shaperSpace.empty() && !supportShaper)
+    {
+        std::ostringstream os;
+        os << "The format '" << getImpl()->m_formatName << "' does not support shaper space.";
+        throw Exception(os.str().c_str());
+    }
+
+    if(!shaperSpace.empty() && getShaperSize() != -1 && getShaperSize() < 2)
+    {
+        std::ostringstream os;
+        os << "A shaper space '" << getShaperSpace() << "' has";
+        os << " been specified, so the shaper size must be 2 or larger.";
+        throw Exception(os.str().c_str());
+    }
+
+    if(!shaperSpace.empty())
+    {
+        ConstProcessorRcPtr inputToShaper = getConfig()->getProcessor(
+            inputSpace.c_str(), shaperSpace.c_str());
+        ConstProcessorRcPtr shaperToInput = getConfig()->getProcessor(
+            shaperSpace.c_str(), inputSpace.c_str());
+
+        if(inputToShaper->hasChannelCrosstalk() || shaperToInput->hasChannelCrosstalk())
+        {
+            std::ostringstream os;
+            os << "The specified shaper space, '" << getShaperSpace();
+            os << "' has channel crosstalk, which is not appropriate for";
+            os << " shapers. Please select an alternate shaper space or";
+            os << " omit this option.";
+            throw Exception(os.str().c_str());
+        }
     }
 
     try
@@ -240,14 +407,9 @@ void Baker::bake(std::ostream & os) const
     // 
     // TODO:
     // 
-    // - throw exception when we don't have inputSpace and targetSpace
-    //   at least set
     // - check limits of shaper and target, throw exception if we can't
     //   write that much data in x format
-    // - check that the shaper is 1D transform only, throw exception
-    // - check the file format supports shapers, 1D and 3D
     // - add some checks to make sure we are monotonic
-    // - deal with the case of writing out non cube formats (1D only)
     // - do a compare between OCIO transform and output LUT transform
     //   throw error if we going beyond tolerance
     //

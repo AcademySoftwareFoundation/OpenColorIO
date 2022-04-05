@@ -289,6 +289,106 @@ OCIO_ADD_TEST(FileFormatResolveCube, bake_1d)
     }
 }
 
+OCIO_ADD_TEST(FileFormatResolveCube, bake_1d_shaper)
+{
+    OCIO::BakerRcPtr bake;
+    std::ostringstream os;
+
+    constexpr auto myProfile = R"(
+        ocio_profile_version: 1
+
+        colorspaces:
+        - !<ColorSpace>
+          name : Raw
+          isdata : false
+
+        - !<ColorSpace>
+          name: Log2
+          isdata: false
+          from_reference: !<GroupTransform>
+            children:
+              - !<MatrixTransform> {matrix: [5.55556, 0, 0, 0, 0, 5.55556, 0, 0, 0, 0, 5.55556, 0, 0, 0, 0, 1]}
+              - !<LogTransform> {base: 2}
+              - !<MatrixTransform> {offset: [6.5, 6.5, 6.5, 0]}
+              - !<MatrixTransform> {matrix: [0.076923, 0, 0, 0, 0, 0.076923, 0, 0, 0, 0, 0.076923, 0, 0, 0, 0, 1]}
+    )";
+
+    std::istringstream is(myProfile);
+    OCIO::ConstConfigRcPtr config;
+    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+    OCIO_REQUIRE_ASSERT(config);
+
+    {
+        // Lin to Log
+        std::ostringstream bout;
+        bout << "LUT_1D_SIZE 10"                                        << "\n";
+        bout << "LUT_1D_INPUT_RANGE 0.001989 16.291878"                 << "\n";
+        bout << "0.000000 0.000000 0.000000"                            << "\n";
+        bout << "0.756268 0.756268 0.756268"                            << "\n";
+        bout << "0.833130 0.833130 0.833130"                            << "\n";
+        bout << "0.878107 0.878107 0.878107"                            << "\n";
+        bout << "0.910023 0.910023 0.910023"                            << "\n";
+        bout << "0.934780 0.934780 0.934780"                            << "\n";
+        bout << "0.955010 0.955010 0.955010"                            << "\n";
+        bout << "0.972114 0.972114 0.972114"                            << "\n";
+        bout << "0.986931 0.986931 0.986931"                            << "\n";
+        bout << "1.000000 1.000000 1.000000"                            << "\n";
+
+        OCIO::BakerRcPtr baker = OCIO::Baker::Create();
+        baker->setConfig(config);
+        baker->setFormat("resolve_cube");
+        baker->setInputSpace("Raw");
+        baker->setTargetSpace("Log2");
+        baker->setShaperSpace("Log2");
+        baker->setCubeSize(10);
+        std::ostringstream output;
+        baker->bake(output);
+
+        //
+        const StringUtils::StringVec osvec  = StringUtils::SplitByLines(output.str());
+        const StringUtils::StringVec resvec = StringUtils::SplitByLines(bout.str());
+        OCIO_CHECK_EQUAL(osvec.size(), resvec.size());
+        for(unsigned int i = 0; i < resvec.size(); ++i)
+        {
+            OCIO_CHECK_EQUAL(osvec[i], resvec[i]);
+        }
+    }
+
+    {
+        // Log to Lin
+        std::ostringstream bout;
+        bout << "LUT_1D_SIZE 10"                                        << "\n";
+        bout << "0.001989 0.001989 0.001989"                            << "\n";
+        bout << "0.005413 0.005413 0.005413"                            << "\n";
+        bout << "0.014731 0.014731 0.014731"                            << "\n";
+        bout << "0.040091 0.040091 0.040091"                            << "\n";
+        bout << "0.109110 0.109110 0.109110"                            << "\n";
+        bout << "0.296951 0.296951 0.296951"                            << "\n";
+        bout << "0.808177 0.808177 0.808177"                            << "\n";
+        bout << "2.199522 2.199522 2.199522"                            << "\n";
+        bout << "5.986179 5.986179 5.986179"                            << "\n";
+        bout << "16.291878 16.291878 16.291878"                         << "\n";
+
+        OCIO::BakerRcPtr baker = OCIO::Baker::Create();
+        baker->setConfig(config);
+        baker->setFormat("resolve_cube");
+        baker->setInputSpace("Log2");
+        baker->setTargetSpace("Raw");
+        baker->setCubeSize(10);
+        std::ostringstream output;
+        baker->bake(output);
+
+        //
+        const StringUtils::StringVec osvec  = StringUtils::SplitByLines(output.str());
+        const StringUtils::StringVec resvec = StringUtils::SplitByLines(bout.str());
+        OCIO_CHECK_EQUAL(osvec.size(), resvec.size());
+        for(unsigned int i = 0; i < resvec.size(); ++i)
+        {
+            OCIO_CHECK_EQUAL(osvec[i], resvec[i]);
+        }
+    }
+}
+
 OCIO_ADD_TEST(FileFormatResolveCube, bake_3d)
 {
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
@@ -550,4 +650,3 @@ OCIO_ADD_TEST(FileFormatResolveCube, load_ops)
     OCIO_CHECK_EQUAL(lut4Array[62], 0.0f);
 
 }
-

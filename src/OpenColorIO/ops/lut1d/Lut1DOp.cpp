@@ -206,6 +206,24 @@ void GenerateIdentityLut1D(float* img, int numElements, int numChannels)
     }
 }
 
+void GenerateLinearScaleLut1D(float* img, int numElements, int numChannels,
+                              float start, float end)
+{
+    if(!img) return;
+    int numChannelsToFill = std::min(3, numChannels);
+
+    for (int i = 0; i < numElements; ++i)
+    {
+        const float x = (float)(double(i) / double(numElements - 1));
+        const float val = lerpf(start, end, x);
+
+        for(int c=0; c<numChannelsToFill; ++c)
+        {
+            img[numChannels*i+c] = val;
+        }
+    }
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 
 void CreateLut1DTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op)
@@ -235,4 +253,3 @@ void BuildLut1DOp(OpRcPtrVec & ops,
 }
 
 } // namespace OCIO_NAMESPACE
-

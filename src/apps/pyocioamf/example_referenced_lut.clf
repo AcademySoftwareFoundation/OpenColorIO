@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList compCLFversion="3" id="$dc4c5600d5d6169d2b007ed2798559f2">
+    <Description>Very small example LMT, converts to ACEScct to apply a small amount of brightening</Description>
+    <InputDescriptor>ACES2065-1</InputDescriptor>
+    <OutputDescriptor>ACES2065-1</OutputDescriptor>
+    <Matrix inBitDepth="32f" outBitDepth="32f">
+        <Array dim="3 3">
+   1.45143931614567   -0.23651074689374  -0.214928569251925
+-0.0765537733960206    1.17622969983357 -0.0996759264375522
+0.00831614842569772 -0.00603244979102103    0.997716301365323
+        </Array>
+    </Matrix>
+    <Log inBitDepth="32f" outBitDepth="32f" style="cameraLinToLog">
+        <LogParams base="2" linSideSlope="1" linSideOffset="0" logSideSlope="0.0570776255707763" logSideOffset="0.554794520547945" linSideBreak="0.0078125" />
+    </Log>
+    <LUT3D inBitDepth="32f" outBitDepth="32f" interpolation="tetrahedral">
+        <Array dim="3 3 3 3">
+ 0.   0.   0. 
+ 0.   0.   0.5125
+ 0.   0.   1. 
+ 0.   0.5125  0. 
+ 0.   0.5125  0.5125
+ 0.   0.5125  1. 
+ 0.   1.   0. 
+ 0.   1.   0.5125
+ 0.   1.   1. 
+ 0.5125  0.   0. 
+ 0.5125  0.   0.5125
+ 0.5125  0.   1. 
+ 0.5125  0.5125  0. 
+ 0.5125  0.5125  0.5125
+ 0.5125  0.5125  1. 
+ 0.5125  1.   0. 
+ 0.5125  1.   0.5125
+ 0.5125  1.   1. 
+ 1.   0.   0. 
+ 1.   0.   0.5125
+ 1.   0.   1. 
+ 1.   0.5125  0. 
+ 1.   0.5125  0.5125
+ 1.   0.5125  1. 
+ 1.   1.   0. 
+ 1.   1.   0.5125
+ 1.   1.   1. 
+        </Array>
+    </LUT3D>
+    <Log inBitDepth="32f" outBitDepth="32f" style="cameraLogToLin">
+        <LogParams base="2" linSideSlope="1" linSideOffset="0" logSideSlope="0.0570776255707763" logSideOffset="0.554794520547945" linSideBreak="0.0078125" />
+    </Log>
+    <Matrix inBitDepth="32f" outBitDepth="32f">
+        <Array dim="3 3">
+  0.695452241357452   0.140678696470294   0.163869062172254
+ 0.0447945633720377   0.859671118456422  0.0955343181715404
+-0.00552588255811354  0.00402521030597866     1.00150067225213
+        </Array>
+    </Matrix>
+</ProcessList>
