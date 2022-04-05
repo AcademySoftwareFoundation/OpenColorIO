@@ -8676,3 +8676,67 @@ colorspaces:
         OCIO_CHECK_ASSERT(proc->isNoOp());
     }
 }
+
+OCIO_ADD_TEST(Config, look_fallback)
+{
+    // Test that the look fallback syntax works for look with missing file.
+    // The fallback syntax allow to specify looks to try in order and use the
+    // first valid one. When the syntax "my_look | " is used, the fallback
+    // is empty and there will be no look applied (no-op) if my_look is invalid.
+    // This may happen if my_look relies on a missing environment variable.
+
+    {
+        static const std::string CONFIG =
+            "ocio_profile_version: 1\n"
+            "\n"
+            "search_path: " + OCIO::GetTestFilesDir() + "\n"
+            "\n"
+            "roles:\n"
+            "  scene_linear: cs\n"
+            "\n"
+            "displays:\n"
+            "  disp1:\n"
+            "    - !<View>\n"
+            "      name: view1\n"
+            "      colorspace: cs\n"
+            "      looks: missing_file_look | \n"
+            "\n"
+            "looks:\n"
+            "  - !<Look>\n"
+            "    name: missing_file_look\n"
+            "    process_space: cs\n"
+            "    transform: !<FileTransform> {src: \"${LOOK_CDL}.cc\"}\n"
+            "\n"
+            "colorspaces:\n"
+            "  - !<ColorSpace>\n"
+            "    name: cs\n"
+            "\n";
+
+        // Check that the look is correctly used when file is present.
+
+        OCIO::Platform::Setenv("LOOK_CDL", "cdl_test1");
+
+        std::istringstream iss;
+        iss.str(CONFIG);
+
+        OCIO::ConstConfigRcPtr config;
+
+        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(iss));
+        OCIO_CHECK_NO_THROW(config->validate());
+
+        OCIO::ConstProcessorRcPtr proc;
+        OCIO_CHECK_NO_THROW(proc = config->getProcessor("cs", "disp1", "view1", OCIO::TRANSFORM_DIR_FORWARD));
+        OCIO_CHECK_ASSERT(!proc->isNoOp());
+
+        // Now remove the variable pointing to the look file and check that we fallback to a no-op.
+
+        OCIO::Platform::Unsetenv("LOOK_CDL");
+
+        iss.str(CONFIG);
+
+        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(iss));
+
+        OCIO_CHECK_NO_THROW(proc = config->getProcessor("cs", "disp1", "view1", OCIO::TRANSFORM_DIR_FORWARD));
+        OCIO_CHECK_ASSERT(proc->isNoOp());
+    }
+}

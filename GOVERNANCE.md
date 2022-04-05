@@ -107,7 +107,7 @@ project at all ASWF TAC meetings.
 
 ### TSC Leaders
 
-* Chair: Michael Dolan
+* Chair: Carol Payne
 * Chief Architect: Doug Walker
 * ACES TAC Rep: Sean Cooper
 

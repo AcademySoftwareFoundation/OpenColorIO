@@ -35,19 +35,32 @@ public:
 
 typedef OCIO_SHARED_PTR<CachedFile> CachedFileRcPtr;
 
-const int FORMAT_CAPABILITY_NONE = 0;
-const int FORMAT_CAPABILITY_READ = 1;
-const int FORMAT_CAPABILITY_BAKE = 2;
-const int FORMAT_CAPABILITY_WRITE = 4;
+enum FormatCapabilityFlags : unsigned int
+{
+    FORMAT_CAPABILITY_NONE  = 0,
+    FORMAT_CAPABILITY_READ  = 1,
+    FORMAT_CAPABILITY_BAKE  = 2,
+    FORMAT_CAPABILITY_WRITE = 4
+};
+
+enum FormatBakeFlags : unsigned int
+{
+    FORMAT_BAKE_CAPABILITY_NONE      = 0,
+    FORMAT_BAKE_CAPABILITY_3DLUT     = 1,
+    FORMAT_BAKE_CAPABILITY_1DLUT     = 2,
+    FORMAT_BAKE_CAPABILITY_1D_3D_LUT = 4
+};
 
 struct FormatInfo
 {
     std::string name;       // Name must be globally unique
     std::string extension;  // Extension has to be lower case and does not need to be unique
-    int capabilities;
+    FormatCapabilityFlags capabilities;
+    FormatBakeFlags bake_capabilities;
 
     FormatInfo():
-        capabilities(FORMAT_CAPABILITY_NONE)
+        capabilities(FORMAT_CAPABILITY_NONE),
+        bake_capabilities(FORMAT_BAKE_CAPABILITY_NONE)
     { }
 };
 

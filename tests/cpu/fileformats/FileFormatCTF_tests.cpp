@@ -7999,6 +7999,114 @@ R"(<?xml version="1.0" encoding="UTF-8"?>
     OCIO_CHECK_EQUAL(expectedCTF, outputCTF.str());
 }
 
+OCIO_ADD_TEST(FileFormatCTF, bake_1d_shaper)
+{
+    OCIO::BakerRcPtr bake;
+    std::ostringstream os;
+
+    constexpr auto myProfile = R"(
+        ocio_profile_version: 1
+
+        colorspaces:
+        - !<ColorSpace>
+          name : Raw
+          isdata : false
+
+        - !<ColorSpace>
+          name: Log2
+          isdata: false
+          from_reference: !<GroupTransform>
+            children:
+              - !<MatrixTransform> {matrix: [5.55556, 0, 0, 0, 0, 5.55556, 0, 0, 0, 0, 5.55556, 0, 0, 0, 0, 1]}
+              - !<LogTransform> {base: 2}
+              - !<MatrixTransform> {offset: [6.5, 6.5, 6.5, 0]}
+              - !<MatrixTransform> {matrix: [0.076923, 0, 0, 0, 0, 0.076923, 0, 0, 0, 0, 0.076923, 0, 0, 0, 0, 1]}
+    )";
+
+    std::istringstream is(myProfile);
+    OCIO::ConstConfigRcPtr config;
+    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+    OCIO_REQUIRE_ASSERT(config);
+
+    {
+        // Lin to Log
+        OCIO::BakerRcPtr baker = OCIO::Baker::Create();
+        baker->setConfig(config);
+        baker->setFormat(OCIO::FILEFORMAT_CLF);
+        baker->setInputSpace("Raw");
+        baker->setTargetSpace("Log2");
+        baker->setShaperSpace("Log2");
+        baker->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UID42");
+        baker->setCubeSize(10);
+        std::stringstream outputCTF;
+        baker->bake(outputCTF);
+
+        std::string emptyString;
+        OCIO::LocalFileFormat tester;
+        OCIO::CachedFileRcPtr file = tester.read(outputCTF, emptyString, OCIO::INTERP_DEFAULT);
+        auto cachedFile = OCIO::DynamicPtrCast<OCIO::LocalCachedFile>(file);
+
+        const OCIO::ConstOpDataVec & opList = cachedFile->m_transform->getOps();
+        OCIO_REQUIRE_EQUAL(opList.size(), 2);
+
+        auto range = OCIO_DYNAMIC_POINTER_CAST<const OCIO::RangeOpData>(opList[0]);
+        OCIO_REQUIRE_ASSERT(range);
+        OCIO_CHECK_EQUAL(range->getMinInValue(), 0.00198873621411622);
+        OCIO_CHECK_EQUAL(range->getMaxInValue(), 16.291877746582);
+        OCIO_CHECK_EQUAL(range->getMinOutValue(), 0);
+        OCIO_CHECK_EQUAL(range->getMaxOutValue(), 1);
+
+        auto lut = OCIO_DYNAMIC_POINTER_CAST<const OCIO::Lut1DOpData>(opList[1]);
+        OCIO_REQUIRE_ASSERT(lut);
+        OCIO_REQUIRE_EQUAL(lut->getArray().getLength(), 10);
+        OCIO_CHECK_CLOSE(lut->getArray()[0],           0, 1.e-5f);
+        OCIO_CHECK_CLOSE(lut->getArray()[3],   0.7562682, 1.e-5f);
+        OCIO_CHECK_CLOSE(lut->getArray()[6],  0.83313024, 1.e-5f);
+        OCIO_CHECK_CLOSE(lut->getArray()[9],  0.87810701, 1.e-5f);
+        OCIO_CHECK_CLOSE(lut->getArray()[12],  0.9100228, 1.e-5f);
+        OCIO_CHECK_CLOSE(lut->getArray()[15], 0.93478036, 1.e-5f);
+        OCIO_CHECK_CLOSE(lut->getArray()[18],  0.9550097, 1.e-5f);
+        OCIO_CHECK_CLOSE(lut->getArray()[21], 0.97211391, 1.e-5f);
+        OCIO_CHECK_CLOSE(lut->getArray()[24], 0.98693061, 1.e-5f);
+        OCIO_CHECK_CLOSE(lut->getArray()[27],          1, 1.e-5f);
+    }
+
+    {
+        // Log to Lin
+        OCIO::BakerRcPtr baker = OCIO::Baker::Create();
+        baker->setConfig(config);
+        baker->setFormat(OCIO::FILEFORMAT_CLF);
+        baker->setInputSpace("Log2");
+        baker->setTargetSpace("Raw");
+        baker->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UID42");
+        baker->setCubeSize(10);
+        std::stringstream outputCTF;
+        baker->bake(outputCTF);
+
+        std::string emptyString;
+        OCIO::LocalFileFormat tester;
+        OCIO::CachedFileRcPtr file = tester.read(outputCTF, emptyString, OCIO::INTERP_DEFAULT);
+        auto cachedFile = OCIO::DynamicPtrCast<OCIO::LocalCachedFile>(file);
+
+        const OCIO::ConstOpDataVec & opList = cachedFile->m_transform->getOps();
+        OCIO_REQUIRE_EQUAL(opList.size(), 1);
+
+        auto lut = OCIO_DYNAMIC_POINTER_CAST<const OCIO::Lut1DOpData>(opList[0]);
+        OCIO_REQUIRE_ASSERT(lut);
+        OCIO_REQUIRE_EQUAL(lut->getArray().getLength(), 10);
+        OCIO_CHECK_CLOSE(lut->getArray()[0],  0.0019887362, 1.e-5f);
+        OCIO_CHECK_CLOSE(lut->getArray()[3],  0.0054125111, 1.e-5f);
+        OCIO_CHECK_CLOSE(lut->getArray()[6],   0.014730596, 1.e-5f);
+        OCIO_CHECK_CLOSE(lut->getArray()[9],   0.040090535, 1.e-5f);
+        OCIO_CHECK_CLOSE(lut->getArray()[12],   0.10910972, 1.e-5f);
+        OCIO_CHECK_CLOSE(lut->getArray()[15],   0.29695117, 1.e-5f);
+        OCIO_CHECK_CLOSE(lut->getArray()[18],   0.80817699, 1.e-5f);
+        OCIO_CHECK_CLOSE(lut->getArray()[21],    2.1995215, 1.e-5f);
+        OCIO_CHECK_CLOSE(lut->getArray()[24],    5.9861789, 1.e-5f);
+        OCIO_CHECK_CLOSE(lut->getArray()[27],    16.291878, 1.e-5f);
+    }
+}
+
 OCIO_ADD_TEST(FileFormatCTF, bake_3d)
 {
     OCIO::ConfigRcPtr config = OCIO::Config::Create();

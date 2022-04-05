@@ -13,6 +13,7 @@
 #include "MathUtils.h"
 #include "ops/lut1d/Lut1DOp.h"
 #include "ops/lut3d/Lut3DOp.h"
+#include "BakingUtils.h"
 #include "ParseUtils.h"
 #include "transforms/FileTransform.h"
 #include "utils/StringUtils.h"
@@ -197,7 +198,8 @@ void LocalFileFormat::getFormatInfo(FormatInfoVec & formatInfoVec) const
     FormatInfo info;
     info.name = "flame";
     info.extension = "3dl";
-    info.capabilities = (FORMAT_CAPABILITY_READ | FORMAT_CAPABILITY_BAKE);
+    info.capabilities = FormatCapabilityFlags(FORMAT_CAPABILITY_READ | FORMAT_CAPABILITY_BAKE);
+    info.bake_capabilities = FORMAT_BAKE_CAPABILITY_3DLUT;
     formatInfoVec.push_back(info);
 
     FormatInfo info2 = info;
@@ -486,8 +488,8 @@ int CubeDimensionLenToLustreBitDepth(int size)
 }
 
 void LocalFileFormat::bake(const Baker & baker,
-                            const std::string & formatName,
-                            std::ostream & ostream) const
+                           const std::string & formatName,
+                           std::ostream & ostream) const
 {
     int DEFAULT_CUBE_SIZE = 0;
     int SHAPER_BIT_DEPTH = 10;
@@ -526,25 +528,8 @@ void LocalFileFormat::bake(const Baker & baker,
     cubeData.resize(cubeSize*cubeSize*cubeSize*3);
     GenerateIdentityLut3D(&cubeData[0], cubeSize, 3, LUT3DORDER_FAST_BLUE);
     PackedImageDesc cubeImg(&cubeData[0], cubeSize*cubeSize*cubeSize, 1, 3);
-
-    // Apply our conversion from the input space to the output space.
-    ConstProcessorRcPtr inputToTarget;
-    std::string looks = baker.getLooks();
-    if (!looks.empty())
-    {
-        LookTransformRcPtr transform = LookTransform::Create();
-        transform->setLooks(looks.c_str());
-        transform->setSrc(baker.getInputSpace());
-        transform->setDst(baker.getTargetSpace());
-        inputToTarget = config->getProcessor(transform, TRANSFORM_DIR_FORWARD);
-    }
-    else
-    {
-        inputToTarget = config->getProcessor(baker.getInputSpace(),
-            baker.getTargetSpace());
-    }
-    ConstCPUProcessorRcPtr cpu = inputToTarget->getOptimizedCPUProcessor(OPTIMIZATION_LOSSLESS);
-    cpu->apply(cubeImg);
+    ConstCPUProcessorRcPtr inputToTarget = GetInputToTargetProcessor(baker);
+    inputToTarget->apply(cubeImg);
 
     // Write out the file.
     // For for maximum compatibility with other apps, we will
@@ -574,10 +559,7 @@ void LocalFileFormat::bake(const Baker & baker,
     // Write out the 3D Cube.
     float cubeScale = static_cast<float>(
         GetMaxValueFromIntegerBitDepth(CUBE_BIT_DEPTH));
-    if(cubeSize < 2)
-    {
-        throw Exception("Internal cube size exception.");
-    }
+
     for(int i=0; i<cubeSize*cubeSize*cubeSize; ++i)
     {
         int r = GetClampedIntFromNormFloat(cubeData[3*i+0], cubeScale);

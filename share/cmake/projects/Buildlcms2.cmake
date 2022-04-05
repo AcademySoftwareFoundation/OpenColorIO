@@ -5,6 +5,8 @@ project(lcms2)
 
 cmake_minimum_required(VERSION 3.10)
 
+include(GNUInstallDirs)
+
 include_directories(include)
 
 file(GLOB HEADERS "include/*.h")

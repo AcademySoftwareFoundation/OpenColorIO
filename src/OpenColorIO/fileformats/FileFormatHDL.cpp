@@ -34,6 +34,7 @@
 #include "ops/lut1d/Lut1DOp.h"
 #include "ops/lut3d/Lut3DOp.h"
 #include "ops/matrix/MatrixOp.h"
+#include "BakingUtils.h"
 #include "ParseUtils.h"
 #include "transforms/FileTransform.h"
 #include "utils/StringUtils.h"
@@ -289,7 +290,10 @@ void LocalFileFormat::getFormatInfo(FormatInfoVec & formatInfoVec) const
     FormatInfo info;
     info.name = "houdini";
     info.extension = "lut";
-    info.capabilities = FORMAT_CAPABILITY_READ | FORMAT_CAPABILITY_BAKE;
+    info.capabilities = FormatCapabilityFlags(FORMAT_CAPABILITY_READ | FORMAT_CAPABILITY_BAKE);
+    info.bake_capabilities = FormatBakeFlags(FORMAT_BAKE_CAPABILITY_3DLUT |
+                                             FORMAT_BAKE_CAPABILITY_1DLUT |
+                                             FORMAT_BAKE_CAPABILITY_1D_3D_LUT);
     formatInfoVec.push_back(info);
 }
 
@@ -558,8 +562,8 @@ LocalFileFormat::read(std::istream & istream,
 }
 
 void LocalFileFormat::bake(const Baker & baker,
-                            const std::string & formatName,
-                            std::ostream & ostream) const
+                           const std::string & formatName,
+                           std::ostream & ostream) const
 {
 
     if(formatName != "houdini")
@@ -569,9 +573,6 @@ void LocalFileFormat::bake(const Baker & baker,
         os << formatName << "'.";
         throw Exception(os.str().c_str());
     }
-
-    // Get config
-    ConstConfigRcPtr config = baker.getConfig();
 
     // setup the floating point precision
     ostream.setf(std::ios::fixed, std::ios::floatfield);
@@ -588,38 +589,16 @@ void LocalFileFormat::bake(const Baker & baker,
     // Get configured sizes
     int cubeSize = baker.getCubeSize();
     int shaperSize = baker.getShaperSize();
-    // FIXME: Misusing cube size to set 1D LUT size, as it seemed
-    // slightly less confusing than using the shaper LUT size
     int onedSize = baker.getCubeSize();
 
     // Check defaults and cube size
     if(cubeSize == -1) cubeSize = DEFAULT_CUBE_SIZE;
-    if(cubeSize < 0) cubeSize = DEFAULT_CUBE_SIZE;
-    if(cubeSize<2)
-    {
-        std::ostringstream os;
-        os << "Cube size must be 2 or larger (was " << cubeSize << ")";
-        throw Exception(os.str().c_str());
-    }
 
     // ..and same for shaper size
-    if(shaperSize<0) shaperSize = DEFAULT_SHAPER_SIZE;
-    if(shaperSize<2)
-    {
-        std::ostringstream os;
-        os << "A shaper space ('" << baker.getShaperSpace() << "') has";
-        os << " been specified, so the shaper size must be 2 or larger";
-        throw Exception(os.str().c_str());
-    }
+    if(shaperSize == -1) shaperSize = DEFAULT_SHAPER_SIZE;
 
     // ..and finally, for the 1D LUT size
     if(onedSize == -1) onedSize = DEFAULT_1D_SIZE;
-    if(onedSize < 2)
-    {
-        std::ostringstream os;
-        os << "1D LUT size must be higher than 2 (was " << onedSize << ")";
-        throw Exception(os.str().c_str());
-    }
 
     // Version numbers
     const int HDL_1D = 1; // 1D LUT version number
@@ -628,30 +607,13 @@ void LocalFileFormat::bake(const Baker & baker,
 
     // Get spaces from baker
     const std::string shaperSpace = baker.getShaperSpace();
-    const std::string inputSpace = baker.getInputSpace();
-    const std::string targetSpace = baker.getTargetSpace();
-    const std::string looks = baker.getLooks();
 
     // Determine required LUT type
-    ConstProcessorRcPtr inputToTargetProc;
-    if (!looks.empty())
-    {
-        LookTransformRcPtr transform = LookTransform::Create();
-        transform->setLooks(looks.c_str());
-        transform->setSrc(inputSpace.c_str());
-        transform->setDst(targetSpace.c_str());
-        inputToTargetProc = config->getProcessor(transform, TRANSFORM_DIR_FORWARD);
-    }
-    else
-    {
-        inputToTargetProc = config->getProcessor(
-            inputSpace.c_str(),
-            targetSpace.c_str());
-    }
-
     int required_lut = -1;
 
-    if(inputToTargetProc->hasChannelCrosstalk())
+    ConstCPUProcessorRcPtr inputToTarget = GetInputToTargetProcessor(baker);
+
+    if(inputToTarget->hasChannelCrosstalk())
     {
         if(shaperSpace.empty())
         {
@@ -680,69 +642,22 @@ void LocalFileFormat::bake(const Baker & baker,
     // Make prelut
     std::vector<float> prelutData;
 
-    float fromInStart = 0; // for "From:" part of header
-    float fromInEnd = 1;
+    float fromInStart = 0.0f;
+    float fromInEnd = 1.0f;
 
     if(required_lut == HDL_3D1D)
     {
-        // TODO: Later we only grab the green channel for the prelut,
-        // should ensure the prelut is monochromatic somehow?
-
-        ConstProcessorRcPtr inputToShaperProc = config->getProcessor(
-            inputSpace.c_str(),
-            shaperSpace.c_str());
-
-        if(inputToShaperProc->hasChannelCrosstalk())
-        {
-            // TODO: Automatically turn shaper into
-            // non-crosstalked version?
-            std::ostringstream os;
-            os << "The specified shaperSpace, '" << baker.getShaperSpace();
-            os << "' has channel crosstalk, which is not appropriate for";
-            os << " shapers. Please select an alternate shaper space or";
-            os << " omit this option.";
-            throw Exception(os.str().c_str());
-        }
-
-        // Calculate min/max value
-        {
-            // Get input value of 1.0 in shaper space, as this
-            // is the highest value that is transformed by the
-            // cube (e.g for a generic lin-to-log transform,
-            // what the log value 1.0 is in linear).
-            ConstCPUProcessorRcPtr shaperToInputProc = config->getProcessor(
-                shaperSpace.c_str(),
-                inputSpace.c_str())->getOptimizedCPUProcessor(OPTIMIZATION_LOSSLESS);
-
-            float minval[3] = {0.0f, 0.0f, 0.0f};
-            float maxval[3] = {1.0f, 1.0f, 1.0f};
-
-            shaperToInputProc->applyRGB(minval);
-            shaperToInputProc->applyRGB(maxval);
-
-            // Grab green channel, as this is the one used later
-            fromInStart = minval[1];
-            fromInEnd = maxval[1];
-        }
+        GetShaperRange(baker, fromInStart, fromInEnd);
 
         // Generate the identity prelut values, then apply the transform.
         // Prelut is linearly sampled from fromInStart to fromInEnd
         prelutData.resize(shaperSize*3);
-
-        for (int i = 0; i < shaperSize; ++i)
-        {
-            const float x = (float)(double(i) / double(shaperSize - 1));
-            float cur_value = lerpf(fromInStart, fromInEnd, x);
-
-            prelutData[3*i+0] = cur_value;
-            prelutData[3*i+1] = cur_value;
-            prelutData[3*i+2] = cur_value;
-        }
+        GenerateLinearScaleLut1D(
+            prelutData.data(), shaperSize, 3, fromInStart, fromInEnd);
 
         PackedImageDesc prelutImg(&prelutData[0], shaperSize, 1, 3);
-
-        ConstCPUProcessorRcPtr cpu = inputToShaperProc->getOptimizedCPUProcessor(OPTIMIZATION_LOSSLESS);
-        cpu->apply(prelutImg);
+        ConstCPUProcessorRcPtr inputToShaper = GetInputToShaperProcessor(baker);
+        inputToShaper->apply(prelutImg);
     }
 
     // TODO: Do same "auto prelut" input-space allocation as FileFormatCSP?
@@ -756,44 +671,40 @@ void LocalFileFormat::bake(const Baker & baker,
         GenerateIdentityLut3D(&cubeData[0], cubeSize, 3, LUT3DORDER_FAST_RED);
         PackedImageDesc cubeImg(&cubeData[0], cubeSize*cubeSize*cubeSize, 1, 3);
 
-        ConstProcessorRcPtr cubeProc;
+        ConstCPUProcessorRcPtr cubeProc;
         if(required_lut == HDL_3D1D)
         {
-            // Prelut goes from input-to-shaper, so cube goes from shaper-to-target
-            if (!looks.empty())
-            {
-                LookTransformRcPtr transform = LookTransform::Create();
-                transform->setLooks(looks.c_str());
-                transform->setSrc(shaperSpace.c_str());
-                transform->setDst(targetSpace.c_str());
-                cubeProc = config->getProcessor(transform, TRANSFORM_DIR_FORWARD);
-            }
-            else
-            {
-                cubeProc = config->getProcessor(shaperSpace.c_str(), targetSpace.c_str());
-            }
+            cubeProc = GetShaperToTargetProcessor(baker);
         }
         else
         {
             // No prelut, so cube goes from input-to-target
-            cubeProc = inputToTargetProc;
+            cubeProc = inputToTarget;
         }
 
-        ConstCPUProcessorRcPtr cpu = cubeProc->getOptimizedCPUProcessor(OPTIMIZATION_LOSSLESS);
-        cpu->apply(cubeImg);
+        cubeProc->apply(cubeImg);
     }
 
 
     // Make 1D LUT
     std::vector<float> onedData;
+
     if(required_lut == HDL_1D)
     {
         onedData.resize(onedSize * 3);
 
-        GenerateIdentityLut1D(&onedData[0], onedSize, 3);
+        if (!shaperSpace.empty())
+        {
+            GetShaperRange(baker, fromInStart, fromInEnd);
+            GenerateLinearScaleLut1D(onedData.data(), onedSize, 3, fromInStart, fromInEnd);
+        }
+        else
+        {
+            GenerateIdentityLut1D(&onedData[0], onedSize, 3);
+        }
+
         PackedImageDesc onedImg(&onedData[0], onedSize, 1, 3);
-        ConstCPUProcessorRcPtr cpu = inputToTargetProc->getOptimizedCPUProcessor(OPTIMIZATION_LOSSLESS);
-        cpu->apply(onedImg);
+        inputToTarget->apply(onedImg);
     }
 
 
@@ -975,4 +886,3 @@ FileFormat * CreateFileFormatHDL()
 }
 
 } // namespace OCIO_NAMESPACE
-

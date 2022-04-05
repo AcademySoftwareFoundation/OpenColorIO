@@ -11,6 +11,7 @@
 #include "fileformats/FileFormatUtils.h"
 #include "ops/lut1d/Lut1DOp.h"
 #include "ops/matrix/MatrixOp.h"
+#include "BakingUtils.h"
 #include "ParseUtils.h"
 #include "Platform.h"
 #include "transforms/FileTransform.h"
@@ -61,6 +62,10 @@ public:
                          const std::string & fileName,
                          Interpolation interp) const override;
 
+    void bake(const Baker & baker,
+              const std::string & formatName,
+              std::ostream & ostream) const override;
+
     void buildFileOps(OpRcPtrVec & ops,
                         const Config & config,
                         const ConstContextRcPtr & context,
@@ -79,7 +84,8 @@ void LocalFileFormat::getFormatInfo(FormatInfoVec & formatInfoVec) const
     FormatInfo info;
     info.name = "spi1d";
     info.extension = "spi1d";
-    info.capabilities = FORMAT_CAPABILITY_READ;
+    info.capabilities = FormatCapabilityFlags(FORMAT_CAPABILITY_READ | FORMAT_CAPABILITY_BAKE);
+    info.bake_capabilities = FormatBakeFlags(FORMAT_BAKE_CAPABILITY_1DLUT);
     formatInfoVec.push_back(info);
 }
 
@@ -301,6 +307,84 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
     return cachedFile;
 }
 
+void LocalFileFormat::bake(const Baker & baker,
+                           const std::string & formatName,
+                           std::ostream & ostream) const
+{
+
+    const int DEFAULT_1D_SIZE = 4096;
+
+    if(formatName != "spi1d")
+    {
+        std::ostringstream os;
+        os << "Unknown spi format name, '";
+        os << formatName << "'.";
+        throw Exception(os.str().c_str());
+    }
+
+    //
+    // Initialize config and data
+    //
+
+    ConstConfigRcPtr config = baker.getConfig();
+
+    int onedSize = baker.getCubeSize();
+    if(onedSize==-1) onedSize = DEFAULT_1D_SIZE;
+
+    const std::string shaperSpace = baker.getShaperSpace();
+
+    float fromInStart = 0.0f;
+    float fromInEnd = 1.0f;
+
+    //
+    // Generate 1DLUT
+    //
+
+    std::vector<float> onedData;
+    onedData.resize(onedSize * 3);
+
+    if (!shaperSpace.empty())
+    {
+        GetShaperRange(baker, fromInStart, fromInEnd);
+        GenerateLinearScaleLut1D(onedData.data(), onedSize, 3, fromInStart, fromInEnd);
+    }
+    else
+    {
+        GenerateIdentityLut1D(&onedData[0], onedSize, 3);
+    }
+
+    PackedImageDesc onedImg(&onedData[0], onedSize, 1, 3);
+    ConstCPUProcessorRcPtr inputToTarget = GetInputToTargetProcessor(baker);
+    inputToTarget->apply(onedImg);
+
+    //
+    // Write LUT
+    //
+
+    // Set to a fixed 6 decimal precision
+    ostream.setf(std::ios::fixed, std::ios::floatfield);
+    ostream.precision(6);
+
+    // Header
+    ostream << "Version 1" << "\n";
+    ostream << "From " << fromInStart << " " << fromInEnd << "\n";
+    ostream << "Length " << onedSize << "\n";
+    ostream << "Components 3" << "\n";
+    ostream << "{" << "\n";
+
+    // Write 1D data
+    for(int i=0; i<onedSize; ++i)
+    {
+        ostream << "    "
+                << onedData[3*i+0] << " "
+                << onedData[3*i+1] << " "
+                << onedData[3*i+2] << "\n";
+    }
+
+    // Footer
+    ostream << "}" << "\n";
+}
+
 void LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
                                     const Config & /*config*/,
                                     const ConstContextRcPtr & /*context*/,
@@ -375,4 +459,3 @@ FileFormat * CreateFileFormatSpi1D()
 }
 
 } // namespace OCIO_NAMESPACE
-

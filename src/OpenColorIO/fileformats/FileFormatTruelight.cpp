@@ -12,6 +12,7 @@
 #include "fileformats/FileFormatUtils.h"
 #include "ops/lut1d/Lut1DOp.h"
 #include "ops/lut3d/Lut3DOp.h"
+#include "BakingUtils.h"
 #include "ParseUtils.h"
 #include "transforms/FileTransform.h"
 #include "utils/StringUtils.h"
@@ -80,7 +81,8 @@ void LocalFileFormat::getFormatInfo(FormatInfoVec & formatInfoVec) const
     FormatInfo info;
     info.name = "truelight";
     info.extension = "cub";
-    info.capabilities = (FORMAT_CAPABILITY_READ | FORMAT_CAPABILITY_BAKE);
+    info.capabilities = FormatCapabilityFlags(FORMAT_CAPABILITY_READ | FORMAT_CAPABILITY_BAKE);
+    info.bake_capabilities = FormatBakeFlags(FORMAT_BAKE_CAPABILITY_3DLUT);
     formatInfoVec.push_back(info);
 }
 
@@ -291,10 +293,7 @@ LocalFileFormat::bake(const Baker & baker,
     PackedImageDesc cubeImg(&cubeData[0], cubeSize*cubeSize*cubeSize, 1, 3);
 
     // Apply processor to LUT data
-    ConstCPUProcessorRcPtr inputToTarget;
-    inputToTarget
-        = config->getProcessor(baker.getInputSpace(), 
-                                baker.getTargetSpace())->getOptimizedCPUProcessor(OPTIMIZATION_LOSSLESS);
+    ConstCPUProcessorRcPtr inputToTarget = GetInputToTargetProcessor(baker);
     inputToTarget->apply(cubeImg);
 
     int shaperSize = baker.getShaperSize();
@@ -400,4 +399,3 @@ FileFormat * CreateFileFormatTruelight()
 }
 
 } // namespace OCIO_NAMESPACE
-

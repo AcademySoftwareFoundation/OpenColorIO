@@ -1,2 +1,8 @@
-graft tests/data
-exclude tests/data/CMakeLists.txt
+include LICENSE
+graft docs
+graft ext
+graft include
+graft share
+graft src
+graft tests
+global-include CMakeLists.txt *.cmake *.md
