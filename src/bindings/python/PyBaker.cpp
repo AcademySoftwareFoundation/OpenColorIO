@@ -107,6 +107,12 @@ Each item is a tuple containing format name and format extension.
              DOC(Baker, getLooks))
         .def("setLooks", &Baker::setLooks, "looks"_a, 
              DOC(Baker, setLooks))
+        .def("getDisplay", &Baker::getDisplay, 
+             DOC(Baker, getDisplay))
+        .def("getView", &Baker::getView, 
+             DOC(Baker, getView))
+        .def("setDisplayView", &Baker::setDisplayView, "display"_a, "view"_a, 
+             DOC(Baker, setDisplayView))
         .def("getTargetSpace", &Baker::getTargetSpace, 
              DOC(Baker, getTargetSpace))
         .def("setTargetSpace", &Baker::setTargetSpace, "targetSpace"_a, 

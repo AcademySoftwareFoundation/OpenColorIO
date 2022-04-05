@@ -16,6 +16,10 @@ namespace OCIO_NAMESPACE
 // This generates an identity 1D LUT, from 0.0 to 1.0
 void GenerateIdentityLut1D(float* img, int numElements, int numChannels);
 
+// This generates a linear scaled 1D LUT, from start to end.
+void GenerateLinearScaleLut1D(float* img, int numElements, int numChannels,
+                              float start, float end);
+
 void CreateLut1DOp(OpRcPtrVec & ops,
                     Lut1DOpDataRcPtr & lut,
                     TransformDirection direction);
