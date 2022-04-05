@@ -1238,6 +1238,46 @@ OCIO_ADD_TEST(Lut1DRenderer, lut_1d_special_values)
     OCIO_CHECK_EQUAL(outImage[7], 1.0f);
 }
 
+OCIO_ADD_TEST(Lut1DRenderer, lut_1d_hd_above_half_max)
+{
+    // Test the processing of half-domain Lut1D for float input values that are greater than
+    // HALF_MAX but round down to HALF_MAX.  These are the values 65504 < x < 65520.
+    // In other words, half(65519) rounds down to 65504 and half(65520) rounds up to Inf.
+    // There was a bug where these values were not processed correctly.
+
+    OCIO::ConfigRcPtr config = OCIO::Config::Create();
+
+    const std::string ctfLUT("lut1d_hd_16f_16i_1chan.ctf");
+    OCIO::FileTransformRcPtr fileTransform = OCIO::CreateFileTransform(ctfLUT);
+
+    OCIO::ConstProcessorRcPtr proc;
+    OCIO_CHECK_NO_THROW(proc = config->getProcessor(fileTransform));
+
+    OCIO::ConstCPUProcessorRcPtr cpuFwd;
+    OCIO_CHECK_NO_THROW(cpuFwd = proc->getDefaultCPUProcessor());
+
+    float inImage[] = {
+        65505.0f,  65519.0f,  65520.0f, 0.0f,
+       -65505.0f, -65519.0f, -65520.0f, 1.0f
+    };
+
+    std::vector<float> outImage(2 * 4, -12.345f);
+    OCIO::PackedImageDesc srcImgDesc((void*)&inImage[0], 2, 1, 4);
+    OCIO::PackedImageDesc dstImgDesc((void*)&outImage[0], 2, 1, 4);
+    cpuFwd->apply(srcImgDesc, dstImgDesc);
+
+    static const float rtol = 1e-5f;
+    OCIO_CHECK_CLOSE(outImage[0], 0.7785763f, rtol);
+    OCIO_CHECK_CLOSE(outImage[1], 0.7785763f, rtol);
+    OCIO_CHECK_CLOSE(outImage[2], 0.7785763f, rtol);
+    OCIO_CHECK_EQUAL(outImage[3], 0.0f);
+
+    OCIO_CHECK_CLOSE(outImage[4], 0.f, rtol);
+    OCIO_CHECK_CLOSE(outImage[5], 0.f, rtol);
+    OCIO_CHECK_CLOSE(outImage[6], 0.f, rtol);
+    OCIO_CHECK_EQUAL(outImage[7], 1.0f);
+}
+
 namespace
 {
 constexpr OCIO::OptimizationFlags DefaultNoLutInvFast =
