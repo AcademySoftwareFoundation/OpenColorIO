@@ -7,13 +7,6 @@ set(SOURCES
 
 add_executable(ociolutimage ${SOURCES})
 
-if(NOT BUILD_SHARED_LIBS)
-	target_compile_definitions(ociolutimage
-		PRIVATE
-			OpenColorIO_SKIP_IMPORTS
-	)
-endif()
-
 set_target_properties(ociolutimage PROPERTIES
 	COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS}")
 

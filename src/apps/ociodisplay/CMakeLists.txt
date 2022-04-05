@@ -12,13 +12,6 @@ set(SOURCES
 
 add_executable(ociodisplay ${SOURCES})
 
-if(NOT BUILD_SHARED_LIBS)
-    target_compile_definitions(ociodisplay
-        PRIVATE
-            OpenColorIO_SKIP_IMPORTS
-    )
-endif()
-
 set(CUSTOM_COMPILE_FLAGS ${PLATFORM_COMPILE_FLAGS})
 if(APPLE)
     # Mute the deprecated warning for some GLUT methods.
