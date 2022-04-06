@@ -527,7 +527,7 @@ IndexPair IndexPair::GetEdgeFloatValues(float fIn)
     const float floatTemp = (float) halfVal;
 
     // Strict comparison required otherwise negative fractions will occur.
-    if (fabs(floatTemp)> fabs(fIn)) 
+    if (fabs(floatTemp) > fabs(fIn)) 
     {
         idxPair.valB = halfVal.bits();
         idxPair.valA = idxPair.valB;
@@ -544,6 +544,8 @@ IndexPair IndexPair::GetEdgeFloatValues(float fIn)
         {
             halfVal =  halfVal.isNegative () ? -HALF_MAX : HALF_MAX;
             idxPair.valB = halfVal.bits();
+            // Necessary to reset fIn too (consider fIn = 65519, it's > HALF_MAX but not Inf).
+            fIn = halfVal;
         }
     }
 
