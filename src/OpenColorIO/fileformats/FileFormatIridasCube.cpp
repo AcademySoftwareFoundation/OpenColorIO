@@ -312,6 +312,9 @@ LocalFileFormat::read(std::istream & istream,
         {
             line = StringUtils::Trim(line);
 
+            // All lines starting with '#' are comments
+            if (StringUtils::StartsWith(line,"#")) continue;
+
             if (line.empty()) continue;
 
             char valR[64] = "";
