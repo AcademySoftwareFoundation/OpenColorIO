@@ -75,7 +75,7 @@ OCIO_ADD_TEST(FileFormatIridasCube, read_failure)
 
         OCIO_CHECK_THROW_WHAT(ReadIridasCube(SAMPLE_ERROR),
                               OCIO::Exception,
-                              "Malformed LUT_3D_SIZE tag");
+                              "Malformed 'LUT_3D_SIZE' tag");
     }
     {
         // Wrong DOMAIN_MIN tag
@@ -95,7 +95,7 @@ OCIO_ADD_TEST(FileFormatIridasCube, read_failure)
 
         OCIO_CHECK_THROW_WHAT(ReadIridasCube(SAMPLE_ERROR),
                               OCIO::Exception,
-                              "Malformed DOMAIN_MIN tag");
+                              "Malformed 'DOMAIN_MIN' tag");
     }
     {
         // Wrong DOMAIN_MAX tag
@@ -115,7 +115,7 @@ OCIO_ADD_TEST(FileFormatIridasCube, read_failure)
 
         OCIO_CHECK_THROW_WHAT(ReadIridasCube(SAMPLE_ERROR),
                               OCIO::Exception,
-                              "Malformed DOMAIN_MAX tag");
+                              "Malformed 'DOMAIN_MAX' tag");
     }
     {
         // Unexpected tag
