@@ -192,7 +192,11 @@ LocalFileFormat::read(std::istream & istream,
             }
             else if (StringUtils::StartsWith(line, "lut_1d_size"))
             {
+#ifdef _WIN32
+                if (sscanf_s(line.c_str(), "lut_1d_size %d %c", &size1d, &endTok, 1) != 1)
+#else
                 if (sscanf(line.c_str(), "lut_1d_size %d %c", &size1d, &endTok) != 1)
+#endif
                 {
                     ThrowErrorMessage(
                         "Malformed 'LUT_1D_SIZE' tag.",
@@ -214,7 +218,11 @@ LocalFileFormat::read(std::istream & istream,
             }
             else if (StringUtils::StartsWith(line, "lut_3d_size"))
             {
+#ifdef _WIN32
+                if (sscanf_s(line.c_str(), "lut_3d_size %d %c", &size3d, &endTok, 1) != 1)
+#else
                 if (sscanf(line.c_str(), "lut_3d_size %d %c", &size3d, &endTok) != 1)
+#endif
                 {
                     ThrowErrorMessage(
                         "Malformed 'LUT_3D_SIZE' tag.",
@@ -233,7 +241,7 @@ LocalFileFormat::read(std::istream & istream,
                 char domainMinB[64] = "";
 
 #ifdef _WIN32
-                if (sscanf_s(line.c_str(), "domain_min %s %s %s %c", domainMinR, 64, domainMinG, 64, domainMinB, 64, &endTok) != 3)
+                if (sscanf_s(line.c_str(), "domain_min %s %s %s %c", domainMinR, 64, domainMinG, 64, domainMinB, 64, &endTok, 1) != 3)
 #else
                 if (sscanf(line.c_str(), "domain_min %s %s %s %c", domainMinR, domainMinG, domainMinB, &endTok) != 3)
 #endif
@@ -267,7 +275,7 @@ LocalFileFormat::read(std::istream & istream,
                 char domainMaxB[64] = "";
 
 #ifdef _WIN32
-                if (sscanf_s(line.c_str(), "domain_max %s %s %s %c", domainMaxR, 64, domainMaxG, 64, domainMaxB, 64, &endTok) != 3)
+                if (sscanf_s(line.c_str(), "domain_max %s %s %s %c", domainMaxR, 64, domainMaxG, 64, domainMaxB, 64, &endTok, 1) != 3)
 #else
                 if (sscanf(line.c_str(), "domain_max %s %s %s %c", domainMaxR, domainMaxG, domainMaxB, &endTok) != 3)
 #endif
@@ -311,7 +319,7 @@ LocalFileFormat::read(std::istream & istream,
             char valB[64] = "";
 
 #ifdef _WIN32
-            if (sscanf_s(line.c_str(), "%s %s %s %c", valR, 64, valG, 64, valB, 64, &endTok) != 3)
+            if (sscanf_s(line.c_str(), "%s %s %s %c", valR, 64, valG, 64, valB, 64, &endTok, 1) != 3)
 #else
             if (sscanf(line.c_str(), "%s %s %s %c", valR, valG, valB, &endTok) != 3)
 #endif
