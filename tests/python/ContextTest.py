@@ -33,7 +33,7 @@ class ContextTest(unittest.TestCase):
         cont = OCIO.Context()
         cont.setSearchPath('testing123')
         cont.setWorkingDir('/dir/123')
-        self.assertEqual('$4c2d66a612fc25ddd509591e1dead57b', cont.getCacheID())
+        self.assertEqual('e9cd8517c707e3a3', cont.getCacheID())
         self.assertEqual('testing123', cont.getSearchPath())
         self.assertEqual('/dir/123', cont.getWorkingDir())
         cont['TeSt'] = 'foobar'

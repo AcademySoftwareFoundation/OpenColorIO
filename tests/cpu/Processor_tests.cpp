@@ -22,13 +22,38 @@ OCIO_ADD_TEST(Processor, basic)
     OCIO_CHECK_EQUAL(std::string(processorEmptyGroup->getCacheID()), "<NOOP>");
 
     auto mat = OCIO::MatrixTransform::Create();
+    double matrix[16]{
+        1.0, 0.0, 0.0, 0.0,
+        0.0, 1.0, 0.0, 0.0,
+        0.0, 0.0, 1.0, 0.0,
+        0.0, 0.0, 0.0, 1.0
+    };
     double offset[4]{ 0.1, 0.2, 0.3, 0.4 };
+    mat->setMatrix(matrix);
     mat->setOffset(offset);
 
     auto processorMat = config->getProcessor(mat);
     OCIO_CHECK_EQUAL(processorMat->getNumTransforms(), 1);
+    OCIO_CHECK_EQUAL(std::string(processorMat->getCacheID()), "114fb1976eddad94");
 
-    OCIO_CHECK_EQUAL(std::string(processorMat->getCacheID()), "$096c01a0daf07446874bd91f7c2abdea");
+    // Check behaviour of the cacheID
+
+    offset[0] = 0.0;
+    mat->setOffset(offset);
+    processorMat = config->getProcessor(mat);
+    OCIO_CHECK_EQUAL(std::string(processorMat->getCacheID()), "ca8560913f24e213");
+
+    matrix[0] = 2.0;
+    mat->setMatrix(matrix);
+    processorMat = config->getProcessor(mat);
+    OCIO_CHECK_EQUAL(std::string(processorMat->getCacheID()), "2980ea5d15e74d82");
+
+    offset[0] = 0.1;
+    matrix[0] = 1.0;
+    mat->setOffset(offset);
+    mat->setMatrix(matrix);
+    processorMat = config->getProcessor(mat);
+    OCIO_CHECK_EQUAL(std::string(processorMat->getCacheID()), "114fb1976eddad94");
 }
 
 OCIO_ADD_TEST(Processor, unique_dynamic_properties)

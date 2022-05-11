@@ -2391,7 +2391,7 @@ void TransformWriter::write() const
             id += op->getCacheID();
         }
 
-        id = CacheIDHash(id.c_str(), (int)id.size());
+        id = CacheIDHash(id.c_str(), id.size());
     }
     attributes.push_back(XmlFormatter::Attribute(ATTR_ID, id));
 
