@@ -6,6 +6,7 @@
 # Define variables around the GL support.
 
 include(PackageUtils)
+include(SelectLibraryConfigurations)
 
 if((OCIO_BUILD_TESTS AND OCIO_BUILD_GPU_TESTS) OR OCIO_BUILD_APPS)
     set(OCIO_GL_ENABLED ON)
@@ -34,6 +35,35 @@ if((OCIO_BUILD_TESTS AND OCIO_BUILD_GPU_TESTS) OR OCIO_BUILD_APPS)
             if(NOT GLEW_LIBRARIES)
                 set(GLEW_LIBRARIES GLEW::GLEW)
             endif()
+        endif()
+
+        # Cmake has a bug with FindGLEW. It fails to defined GLEW_INCLUDE_DIRS in some situation.
+        # See https://gitlab.kitware.com/cmake/cmake/-/issues/19662
+        # See a closed duplicate of 19662: https://gitlab.kitware.com/cmake/cmake/-/issues/20699
+        # Ported from vcpkg Glew package - https://github.com/microsoft/vcpkg/blob/master/ports/glew/vcpkg-cmake-wrapper.cmake
+        # The following code make sure that GLEW_INCLUDE_DIRS is set correctly.
+        if(GLEW_FOUND AND TARGET GLEW::GLEW AND NOT DEFINED GLEW_INCLUDE_DIRS)
+            get_target_property(GLEW_INCLUDE_DIRS GLEW::GLEW INTERFACE_INCLUDE_DIRECTORIES)
+            set(GLEW_INCLUDE_DIR ${GLEW_INCLUDE_DIRS})
+            get_target_property(_GLEW_DEFS GLEW::GLEW INTERFACE_COMPILE_DEFINITIONS)
+            if("${_GLEW_DEFS}" MATCHES "GLEW_STATIC")
+                get_target_property(GLEW_LIBRARY_DEBUG GLEW::GLEW IMPORTED_LOCATION_DEBUG)
+                get_target_property(GLEW_LIBRARY_RELEASE GLEW::GLEW IMPORTED_LOCATION_RELEASE)
+            else()
+                get_target_property(GLEW_LIBRARY_DEBUG GLEW::GLEW IMPORTED_IMPLIB_DEBUG)
+                get_target_property(GLEW_LIBRARY_RELEASE GLEW::GLEW IMPORTED_IMPLIB_RELEASE)
+            endif()
+            get_target_property(_GLEW_LINK_INTERFACE GLEW::GLEW IMPORTED_LINK_INTERFACE_LIBRARIES_RELEASE) # same for debug and release
+            list(APPEND GLEW_LIBRARIES ${_GLEW_LINK_INTERFACE})
+            list(APPEND GLEW_LIBRARY ${_GLEW_LINK_INTERFACE})
+            select_library_configurations(GLEW)
+            if("${_GLEW_DEFS}" MATCHES "GLEW_STATIC")
+                set(GLEW_STATIC_LIBRARIES ${GLEW_LIBRARIES})
+            else()
+                set(GLEW_SHARED_LIBRARIES ${GLEW_LIBRARIES})
+            endif()
+            unset(_GLEW_DEFS)
+            unset(_GLEW_LINK_INTERFACE)
         endif()
     endif()
 
