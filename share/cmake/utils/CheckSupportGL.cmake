@@ -42,7 +42,7 @@ if((OCIO_BUILD_TESTS AND OCIO_BUILD_GPU_TESTS) OR OCIO_BUILD_APPS)
         # See a closed duplicate of 19662: https://gitlab.kitware.com/cmake/cmake/-/issues/20699
         # Ported from vcpkg Glew package - https://github.com/microsoft/vcpkg/blob/master/ports/glew/vcpkg-cmake-wrapper.cmake
         # The following code make sure that GLEW_INCLUDE_DIRS is set correctly.
-        if(GLEW_FOUND AND TARGET GLEW::GLEW AND NOT DEFINED GLEW_INCLUDE_DIRS)
+        if(MSVC AND GLEW_FOUND AND TARGET GLEW::GLEW AND NOT DEFINED GLEW_INCLUDE_DIRS)
             get_target_property(GLEW_INCLUDE_DIRS GLEW::GLEW INTERFACE_INCLUDE_DIRECTORIES)
             set(GLEW_INCLUDE_DIR ${GLEW_INCLUDE_DIRS})
             get_target_property(_GLEW_DEFS GLEW::GLEW INTERFACE_COMPILE_DEFINITIONS)
@@ -55,6 +55,7 @@ if((OCIO_BUILD_TESTS AND OCIO_BUILD_GPU_TESTS) OR OCIO_BUILD_APPS)
             endif()
             get_target_property(_GLEW_LINK_INTERFACE GLEW::GLEW IMPORTED_LINK_INTERFACE_LIBRARIES_RELEASE) # same for debug and release
             list(APPEND GLEW_LIBRARIES ${_GLEW_LINK_INTERFACE})
+            list(APPEND GLEW_LIBRARY ${_GLEW_LINK_INTERFACE})
             select_library_configurations(GLEW)
             if("${_GLEW_DEFS}" MATCHES "GLEW_STATIC")
                 set(GLEW_STATIC_LIBRARIES ${GLEW_LIBRARIES})
