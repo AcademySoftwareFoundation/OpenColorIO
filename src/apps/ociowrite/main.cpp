@@ -145,7 +145,7 @@ int main(int argc, const char **argv)
         OCIO::ConstProcessorRcPtr processor;
 
         // Checking for an input colorspace or input (display, view) pair.
-        if (!inputColorSpace.empty() || !display.empty() && !view.empty())
+        if (!inputColorSpace.empty() || (!display.empty() && !view.empty()))
         {
             const char * env = OCIO::GetEnvVariable("OCIO");
             if(env && *env)

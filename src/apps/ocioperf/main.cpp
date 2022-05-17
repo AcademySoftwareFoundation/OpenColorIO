@@ -294,7 +294,7 @@ int main(int argc, const char **argv)
             }
         }
         // Checking for an input colorspace or input (display, view) pair.
-        else if (!inColorSpace.empty() || !display.empty() && !view.empty())
+        else if (!inColorSpace.empty() || (!display.empty() && !view.empty()))
         {
             if (verbose)
             {
