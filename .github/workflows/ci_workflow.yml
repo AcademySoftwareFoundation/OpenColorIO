@@ -440,8 +440,8 @@ jobs:
   #       Debug build testing with Python bindings and docs enabled.
 
   windows:
-    name: 'Windows 2019 
-      <MSVC 16.4 
+    name: 'Windows 2022 
+      <MSVC 19.31 
        config=${{ matrix.build-type }}, 
        shared=${{ matrix.build-shared }}, 
        sse=${{ matrix.use-sse }}, 
@@ -452,7 +452,7 @@ jobs:
     if: |
       github.event_name == 'push' ||
       github.event.pull_request.head.repo.full_name != github.repository
-    runs-on: windows-2019
+    runs-on: windows-2022
     strategy:
       matrix:
         build: [1, 2, 3, 4, 5, 6]
