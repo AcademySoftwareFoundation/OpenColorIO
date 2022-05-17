@@ -31,7 +31,7 @@ if((OCIO_BUILD_TESTS AND OCIO_BUILD_GPU_TESTS) OR OCIO_BUILD_APPS)
             endif()
         else()
             # Expected variables GLEW_LIBRARIES and GLEW_INCLUDE_DIRS are missing so create
-            # the mandatory one. Note that the cmake bug is now fixed (issue 19662).
+            # the mandatory one.
             if(NOT GLEW_LIBRARIES)
                 set(GLEW_LIBRARIES GLEW::GLEW)
             endif()
@@ -55,7 +55,6 @@ if((OCIO_BUILD_TESTS AND OCIO_BUILD_GPU_TESTS) OR OCIO_BUILD_APPS)
             endif()
             get_target_property(_GLEW_LINK_INTERFACE GLEW::GLEW IMPORTED_LINK_INTERFACE_LIBRARIES_RELEASE) # same for debug and release
             list(APPEND GLEW_LIBRARIES ${_GLEW_LINK_INTERFACE})
-            list(APPEND GLEW_LIBRARY ${_GLEW_LINK_INTERFACE})
             select_library_configurations(GLEW)
             if("${_GLEW_DEFS}" MATCHES "GLEW_STATIC")
                 set(GLEW_STATIC_LIBRARIES ${GLEW_LIBRARIES})
