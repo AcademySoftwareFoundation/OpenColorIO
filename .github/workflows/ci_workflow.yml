@@ -441,7 +441,7 @@ jobs:
 
   windows:
     name: 'Windows 2019 
-      <MSVC 16.14 
+      <MSVC 16.4
        config=${{ matrix.build-type }}, 
        shared=${{ matrix.build-shared }}, 
        sse=${{ matrix.use-sse }}, 
