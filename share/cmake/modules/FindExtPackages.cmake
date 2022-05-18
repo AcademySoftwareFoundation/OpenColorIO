@@ -100,7 +100,8 @@ if(OCIO_BUILD_PYTHON OR OCIO_BUILD_DOCS)
     if(OCIO_BUILD_PYTHON)
         # pybind11
         # https://github.com/pybind/pybind11
-        find_package(pybind11 2.6.1 REQUIRED)
+        # pybind11 2.9 fixes issues with MS Visual Studio 2022 (Debug).
+        find_package(pybind11 2.9.2 REQUIRED)
     endif()
 endif()
 
