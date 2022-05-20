@@ -1457,10 +1457,6 @@ extern OCIOEXPORT std::ostream & operator<< (std::ostream &, const ViewingRules 
  * header documentation, traditional uses would be to have *ColorSpaces*
  * corresponding to: physical capture devices (known cameras, scanners),
  * and internal 'convenience' spaces (such as scene linear, logarithmic).
- *
- * *ColorSpaces* are specific to a particular image precision (float32,
- * uint8, etc.), and the set of ColorSpaces that provide equivalent mappings
- * (at different precisions) are referred to as a 'family'.
  */
 class OCIOEXPORT ColorSpace
 {
@@ -1504,8 +1500,7 @@ public:
      * This allows no-op transforms between different colorspaces.
      * If an equalityGroup is not defined (an empty string), it will be considered
      * unique (i.e., it will not compare as equal to other ColorSpaces with an
-     * empty equality group).  This is often, though not always, set to the
-     * same value as 'family'.
+     * empty equality group).
      */
     const char * getEqualityGroup() const noexcept;
     void setEqualityGroup(const char * equalityGroup);
@@ -2155,7 +2150,7 @@ public:
      * \note
      *    This may provide higher fidelity than anticipated due to internal
      *    optimizations. For example, if the inputColorSpace and the
-     *    outputColorSpace are members of the same family, no conversion
+     *    outputColorSpace are members of the same equalitygroup, no conversion
      *    will be applied, even though strictly speaking quantization
      *    should be added.
      *

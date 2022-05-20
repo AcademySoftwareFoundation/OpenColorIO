@@ -8,6 +8,7 @@
 #include <chrono>
 #include <string>
 #include <stdexcept>
+#include <iostream>
 
 
 // Utility to measure time in ms.
