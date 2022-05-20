@@ -16,6 +16,7 @@
 #include "ParseUtils.h"
 #include "transforms/FileTransform.h"
 #include "utils/StringUtils.h"
+#include "utils/NumberUtils.h"
 
 
 /*
@@ -171,31 +172,34 @@ LocalFileFormat::read(std::istream & istream,
 
     {
         std::string line;
-        StringUtils::StringVec parts;
-        std::vector<float> tmpfloats;
         int lineNumber = 0;
+        char endTok;
+        bool entriesStarted = false;
 
-        while(nextline(istream, line))
+        while(!entriesStarted && nextline(istream, line))
         {
             ++lineNumber;
             // All lines starting with '#' are comments
-            if(StringUtils::StartsWith(line,"#")) continue;
+            if (StringUtils::StartsWith(line,"#")) continue;
 
-            // Strip, lowercase, and split the line
-            parts = StringUtils::SplitByWhiteSpaces(StringUtils::Lower(StringUtils::Trim(line)));
-            if(parts.empty()) continue;
+            line = StringUtils::Lower(StringUtils::Trim(line));
 
-            if(StringUtils::Lower(parts[0]) == "title")
+            if (line.empty()) continue;
+
+            if (StringUtils::StartsWith(line, "title"))
             {
                 // Optional, and currently unhandled
             }
-            else if(StringUtils::Lower(parts[0]) == "lut_1d_size")
+            else if (StringUtils::StartsWith(line, "lut_1d_size"))
             {
-                if(parts.size() != 2
-                    || !StringToInt( &size1d, parts[1].c_str()))
+#ifdef _WIN32
+                if (sscanf_s(line.c_str(), "lut_1d_size %d %c", &size1d, &endTok, 1) != 1)
+#else
+                if (sscanf(line.c_str(), "lut_1d_size %d %c", &size1d, &endTok) != 1)
+#endif
                 {
                     ThrowErrorMessage(
-                        "Malformed LUT_1D_SIZE tag.",
+                        "Malformed 'LUT_1D_SIZE' tag.",
                         fileName,
                         lineNumber,
                         line);
@@ -204,7 +208,7 @@ LocalFileFormat::read(std::istream & istream,
                 raw.reserve(3*size1d);
                 in1d = true;
             }
-            else if(StringUtils::Lower(parts[0]) == "lut_2d_size")
+            else if (StringUtils::StartsWith(line, "lut_2d_size"))
             {
                 ThrowErrorMessage(
                     "Unsupported tag: 'LUT_2D_SIZE'.",
@@ -212,71 +216,151 @@ LocalFileFormat::read(std::istream & istream,
                     lineNumber,
                     line);
             }
-            else if(StringUtils::Lower(parts[0]) == "lut_3d_size")
+            else if (StringUtils::StartsWith(line, "lut_3d_size"))
             {
-                int size = 0;
-
-                if(parts.size() != 2
-                    || !StringToInt( &size, parts[1].c_str()))
+#ifdef _WIN32
+                if (sscanf_s(line.c_str(), "lut_3d_size %d %c", &size3d, &endTok, 1) != 1)
+#else
+                if (sscanf(line.c_str(), "lut_3d_size %d %c", &size3d, &endTok) != 1)
+#endif
                 {
                     ThrowErrorMessage(
-                        "Malformed LUT_3D_SIZE tag.",
+                        "Malformed 'LUT_3D_SIZE' tag.",
                         fileName,
                         lineNumber,
                         line);
                 }
-                size3d = size;
 
                 raw.reserve(3*size3d*size3d*size3d);
                 in3d = true;
             }
-            else if(StringUtils::Lower(parts[0]) == "domain_min")
+            else if (StringUtils::StartsWith(line, "domain_min"))
             {
-                if(parts.size() != 4 ||
-                    !StringToFloat( &domain_min[0], parts[1].c_str()) ||
-                    !StringToFloat( &domain_min[1], parts[2].c_str()) ||
-                    !StringToFloat( &domain_min[2], parts[3].c_str()))
+                char domainMinR[64] = "";
+                char domainMinG[64] = "";
+                char domainMinB[64] = "";
+
+#ifdef _WIN32
+                if (sscanf_s(line.c_str(), "domain_min %s %s %s %c", domainMinR, 64, domainMinG, 64, domainMinB, 64, &endTok, 1) != 3)
+#else
+                if (sscanf(line.c_str(), "domain_min %s %s %s %c", domainMinR, domainMinG, domainMinB, &endTok) != 3)
+#endif
                 {
                     ThrowErrorMessage(
-                        "Malformed DOMAIN_MIN tag.",
+                        "Malformed 'DOMAIN_MIN' tag.",
                         fileName,
                         lineNumber,
                         line);
                 }
+                else
+                {
+                    const auto fromMinRAnswer = NumberUtils::from_chars(domainMinR, domainMinR + 64, domain_min[0]);
+                    const auto fromMinGAnswer = NumberUtils::from_chars(domainMinG, domainMinG + 64, domain_min[1]);
+                    const auto fromMinBAnswer = NumberUtils::from_chars(domainMinB, domainMinB + 64, domain_min[2]);
+
+                    if (fromMinRAnswer.ec != std::errc() || fromMinGAnswer.ec != std::errc() || fromMinBAnswer.ec != std::errc())
+                    {
+                        ThrowErrorMessage(
+                            "Invalid 'DOMAIN_MIN' Tag",
+                            fileName,
+                            lineNumber,
+                            line);
+                    }
+                }
             }
-            else if(StringUtils::Lower(parts[0]) == "domain_max")
+            else if (StringUtils::StartsWith(line, "domain_max"))
             {
-                if(parts.size() != 4 ||
-                    !StringToFloat( &domain_max[0], parts[1].c_str()) ||
-                    !StringToFloat( &domain_max[1], parts[2].c_str()) ||
-                    !StringToFloat( &domain_max[2], parts[3].c_str()))
+                char domainMaxR[64] = "";
+                char domainMaxG[64] = "";
+                char domainMaxB[64] = "";
+
+#ifdef _WIN32
+                if (sscanf_s(line.c_str(), "domain_max %s %s %s %c", domainMaxR, 64, domainMaxG, 64, domainMaxB, 64, &endTok, 1) != 3)
+#else
+                if (sscanf(line.c_str(), "domain_max %s %s %s %c", domainMaxR, domainMaxG, domainMaxB, &endTok) != 3)
+#endif
                 {
                     ThrowErrorMessage(
-                        "Malformed DOMAIN_MAX tag.",
+                        "Malformed 'DOMAIN_MAX' tag.",
                         fileName,
                         lineNumber,
                         line);
+                }
+                else
+                {
+                    const auto fromMaxRAnswer = NumberUtils::from_chars(domainMaxR, domainMaxR + 64, domain_max[0]);
+                    const auto fromMaxGAnswer = NumberUtils::from_chars(domainMaxG, domainMaxG + 64, domain_max[1]);
+                    const auto fromMaxBAnswer = NumberUtils::from_chars(domainMaxB, domainMaxB + 64, domain_max[2]);
+
+                    if (fromMaxRAnswer.ec != std::errc() || fromMaxGAnswer.ec != std::errc() || fromMaxBAnswer.ec != std::errc())
+                    {
+                        ThrowErrorMessage(
+                            "Invalid 'DOMAIN_MAX' Tag",
+                            fileName,
+                            lineNumber,
+                            line);
+                    }
                 }
             }
             else
             {
-                // It must be a float triple!
+                entriesStarted = true;
+            }
+        }
 
-                if(!StringVecToFloatVec(tmpfloats, parts) || tmpfloats.size() != 3)
+        do
+        {
+            line = StringUtils::Trim(line);
+
+            // All lines starting with '#' are comments
+            if (StringUtils::StartsWith(line,"#")) continue;
+
+            if (line.empty()) continue;
+
+            char valR[64] = "";
+            char valG[64] = "";
+            char valB[64] = "";
+
+#ifdef _WIN32
+            if (sscanf_s(line.c_str(), "%s %s %s %c", valR, 64, valG, 64, valB, 64, &endTok, 1) != 3)
+#else
+            if (sscanf(line.c_str(), "%s %s %s %c", valR, valG, valB, &endTok) != 3)
+#endif
+            {
+                // It must be a float triple!
+                ThrowErrorMessage(
+                    "Malformed color triples specified.",
+                    fileName,
+                    lineNumber,
+                    line);
+            }
+            else
+            {
+                float r = NAN;
+                float g = NAN;
+                float b = NAN;
+
+                const auto rAnswer = NumberUtils::from_chars(valR, valR + 64, r);
+                const auto gAnswer = NumberUtils::from_chars(valG, valG + 64, g);
+                const auto bAnswer = NumberUtils::from_chars(valB, valB + 64, b);
+
+                if (rAnswer.ec != std::errc() || gAnswer.ec != std::errc() || bAnswer.ec != std::errc())
                 {
                     ThrowErrorMessage(
-                        "Malformed color triples specified.",
+                        "Invalid color triples",
                         fileName,
                         lineNumber,
                         line);
                 }
 
-                for(int i=0; i<3; ++i)
-                {
-                    raw.push_back(tmpfloats[i]);
-                }
+                raw.push_back(r);
+                raw.push_back(g);
+                raw.push_back(b);
             }
+
+            ++lineNumber;
         }
+        while (nextline(istream, line));
     }
 
     // Interpret the parsed data, validate LUT sizes.
