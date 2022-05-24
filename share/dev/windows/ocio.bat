@@ -91,15 +91,17 @@ IF NOT EXIST "%OCIO_PATH%" (
     exit /b
 )
 
-where /q python
-if not ErrorLevel 1 (
-    for /f %%p in ('python -c "import os, sys; print(os.path.dirname(sys.executable))"') do SET PYTHON_PATH=%%p
-)
-IF NOT EXIST "%PYTHON_PATH%" ( 
-    echo Could not find Python. Please provide the location for python or modify PYTHON_PATH in this script.
-    rem The double dash are in quote here because otherwise the echo command thow an error.
-    echo "--python <path>"
-    exit /b
+if NOT EXIST "!PYTHON_PATH!\python.exe" ( 
+    where /q python
+    if not ErrorLevel 1 (
+        for /f "tokens=* USEBACKQ" %%p in (`python -c "import os, sys; print(os.path.dirname(sys.executable))"`) do SET PYTHON_PATH=%%p
+    )
+    if NOT EXIST "!PYTHON_PATH!\python.exe" ( 
+        echo Could not find Python. Please provide the location for python or modify PYTHON_PATH in this script.
+        rem The double dash are in quote here because otherwise the echo command thow an error.
+        echo "--python <path>"
+        exit /b
+    )
 )
 
 IF NOT EXIST "%MSVS_PATH%" ( 
