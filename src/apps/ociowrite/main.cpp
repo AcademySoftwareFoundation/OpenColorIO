@@ -183,11 +183,11 @@ int main(int argc, const char **argv)
             }
 
             // --colorspaces
-            useColorspaces = !inputColorSpace.empty() & !outputColorSpace.empty();
+            useColorspaces = !inputColorSpace.empty() && !outputColorSpace.empty();
             // --view
-            useDisplayview = !inputColorSpace.empty() & !display.empty() & !view.empty();
+            useDisplayview = !inputColorSpace.empty() && !display.empty() && !view.empty();
             // --invertview
-            useInvertview = !display.empty() & !view.empty() & !outputColorSpace.empty();
+            useInvertview = !display.empty() && !view.empty() && !outputColorSpace.empty();
 
             // Errors validation
             std::string msg; 
@@ -226,9 +226,9 @@ int main(int argc, const char **argv)
                 if (!display.empty() && !view.empty())
                 {
                     processor = config->getProcessor(inputColorSpace.c_str(), 
-                                                        display.c_str(),
-                                                        view.c_str(),
-                                                        OCIO::TRANSFORM_DIR_FORWARD);
+                                                     display.c_str(),
+                                                     view.c_str(),
+                                                     OCIO::TRANSFORM_DIR_FORWARD);
                 }
                 else
                 {
@@ -246,9 +246,9 @@ int main(int argc, const char **argv)
                 if (!outputColorSpace.empty())
                 {
                     processor = config->getProcessor(outputColorSpace.c_str(), 
-                                                        display.c_str(),
-                                                        view.c_str(),
-                                                        OCIO::TRANSFORM_DIR_INVERSE);
+                                                     display.c_str(),
+                                                     view.c_str(),
+                                                     OCIO::TRANSFORM_DIR_INVERSE);
                 }
                 else
                 {

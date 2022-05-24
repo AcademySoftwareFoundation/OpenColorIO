@@ -206,7 +206,7 @@ int main(int argc, const char **argv)
                                             "(Deprecated) Provide the input and (display, view) pair to apply on the image",
                "--invertview %s %s %s",     &display, &view, &outColorSpace,
                                             "Provide the (display, view) pair and output color space to apply on the image",
-               "--iter %d",                 &iterations, "Provide the number of iterations on the processing. Default is 10",
+               "--iter %d",                 &iterations, "Provide the number of iterations on the processing. Default is 50",
                "--bitdepths %s %s",         &inBitDepthStr, &outBitDepthStr,
                                             "Provide input and output bit-depths (i.e. ui16, f32). Default is f32",
                "--nocache",                 &nocache, 
@@ -340,11 +340,11 @@ int main(int argc, const char **argv)
 
             {
                 // --colorspaces
-                useColorspaces = !inColorSpace.empty() & !outColorSpace.empty();
+                useColorspaces = !inColorSpace.empty() && !outColorSpace.empty();
                 // --view
-                useDisplayview = !inColorSpace.empty() & !display.empty() & !view.empty();
+                useDisplayview = !inColorSpace.empty() && !display.empty() && !view.empty();
                 // --invertview
-                useInvertview = !display.empty() & !view.empty() & !outColorSpace.empty();
+                useInvertview = !display.empty() && !view.empty() && !outColorSpace.empty();
 
                 // Errors validation
                 std::string msg; 

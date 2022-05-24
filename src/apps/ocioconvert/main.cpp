@@ -558,6 +558,19 @@ int main(int argc, const char **argv)
         {
             // Copy specInput into specOutput.
             specOutput = specInput;
+
+            /*
+                Set the bit-depth of the output buffer to be used by OIIO.
+
+                OIIO may change the bit-depth when writing to a file (e.g. if the output image ends in "jpg" it will be converted to 8-bit integer), 
+                and OCIO is not trying to analyze the filename to emulate OIIO's decision making process.
+                
+                Additionally, the color space conversion may require more bits than the source image.
+                For example, converting a log image to linear requires at least a half-float output format.
+                
+                For most cases, half-float strikes a good balance between precision and storage space.
+                But if the input depth would lose precision when converted to half-float, use full float for the output depth instead.
+            */
             if (specInput.format == OIIO::TypeDesc::UINT16 || specInput.format == OIIO::TypeDesc::FLOAT) 
             {
                 specOutput.set_format(OIIO::TypeDesc::FLOAT);
