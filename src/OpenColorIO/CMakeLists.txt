@@ -14,6 +14,8 @@ set(SOURCES
     ColorSpace.cpp
     ColorSpaceSet.cpp
     Config.cpp
+    builtinconfigs/BuiltinConfigRegistry.cpp
+    builtinconfigs/CGConfig.cpp
     Context.cpp
     ContextVariableUtils.cpp
     CPUProcessor.cpp
@@ -209,11 +211,39 @@ set(ABI_HEADER_LOCATION "${CMAKE_BINARY_DIR}/include/OpenColorIO")
 list(APPEND INSTALL_HEADERS ${ABI_HEADER_LOCATION}/OpenColorABI.h)
 configure_file("${HEADER_LOCATION}/OpenColorABI.h.in" "${ABI_HEADER_LOCATION}/OpenColorABI.h" @ONLY)
 
+# Default config
+set(CONFIGS_HEADER_LOCATION "${CMAKE_BINARY_DIR}/include/OpenColorIO")
+list(APPEND INSTALL_HEADERS ${CONFIGS_HEADER_LOCATION}/CG.h)
+file(GLOB CONFIGS_PATHS "builtinconfigs/configs/*.ocio")
+foreach(C ${CONFIGS_PATHS})
+    get_filename_component(CONFIG_FULLNAME "${C}" NAME)
+    get_filename_component(CONFIG_NAME "${C}" NAME_WLE)
+    get_filename_component(CONFIG_EXT  "${C}" LAST_EXT)
+    list(APPEND CONFIGS_ALL ${CONFIG_NAME})
+
+    file(READ builtinconfigs/configs/${CONFIG_FULLNAME} HEX_CONTENTS HEX)
+    # Separate into individual bytes.
+    string(REGEX MATCHALL "([A-Za-z0-9][A-Za-z0-9])" SEPARATED_HEX "${HEX_CONTENTS}")
+
+    # Append the "0x" to each byte.
+    list(JOIN SEPARATED_HEX ",0x" FORMATTED_HEX)
+
+    # Append "0x" to the first byte.
+    string(PREPEND FORMATTED_HEX "0x")
+
+    set(tmp_config ${FORMATTED_HEX})
+
+    # Escape double quotes in config file
+    string(REPLACE "\"" "\\\"" ${CONFIG_NAME} ${tmp_config})
+    configure_file(builtinconfigs/CG.h.in ${CONFIGS_HEADER_LOCATION}/CG.h @ONLY)
+endforeach()
+
 set(BUILD_INCLUDES
     ${HEADER_LOCATION}/..
     ${HEADER_LOCATION}
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${ABI_HEADER_LOCATION}
+    ${CONFIGS_HEADER_LOCATION}
 )
 
 target_include_directories(OpenColorIO

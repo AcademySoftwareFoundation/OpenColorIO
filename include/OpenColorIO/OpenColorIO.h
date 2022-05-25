@@ -266,6 +266,8 @@ public:
     /// Create a configuration using a stream.
     static ConstConfigRcPtr CreateFromStream(std::istream & istream);
 
+    static ConstConfigRcPtr CreateFromBuiltinConfig(const char * configName);
+
     ConfigRcPtr createEditableCopy() const;
 
     /// Get the configuration major version.
@@ -3340,6 +3342,45 @@ public:
 protected:
     SystemMonitors() = default;
     virtual ~SystemMonitors() = default;
+};
+
+
+///////////////////////////////////////////////////////////////////////////
+// BuiltinConfigRegistry
+
+/**
+ * The built-in configs registry contains all the existing built-in configs.
+ */
+class OCIOEXPORT BuiltinConfigRegistry
+{
+    public:
+        BuiltinConfigRegistry(const BuiltinConfigRegistry &) = delete;
+        BuiltinConfigRegistry & operator= (const BuiltinConfigRegistry &) = delete;
+
+        // Get the current built-in configs registry.
+        static ConstBuiltinConfigRegistryRcPtr Get() noexcept;
+
+        // Get the number of built-in configs available.
+        virtual size_t getNumConfigs() const noexcept = 0;
+
+        // Get built-in config name at specified index.
+        virtual const char * getConfigName(size_t configIndex) const = 0;
+        // Get built-in config at specified index as text.
+        virtual const char * getConfig(size_t configIndex) const = 0;
+        // Get built-in config by name.
+        virtual const char * getConfigByName(const char * configName) const noexcept = 0;
+
+        // Check if built-in config at specified index is still recommended.
+        virtual bool isConfigRecommended(size_t configIndex) const = 0;
+        // Check if built-in config at specified index is deprecated.
+        virtual bool isConfigDepecrated(size_t configIndex) const = 0;
+
+        // Get default built-in config.
+        virtual const char * getDefaultConfigName() const = 0;
+
+    protected:
+        BuiltinConfigRegistry() = default;
+        virtual ~BuiltinConfigRegistry() = default;
 };
 
 } // namespace OCIO_NAMESPACE

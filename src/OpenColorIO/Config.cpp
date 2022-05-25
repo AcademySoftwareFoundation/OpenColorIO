@@ -9,6 +9,9 @@
 #include <fstream>
 #include <utility>
 #include <vector>
+#include <regex>
+// TODO CED: remove
+#include <iostream>
 
 #include <OpenColorIO/OpenColorIO.h>
 
@@ -32,6 +35,8 @@
 #include "utils/StringUtils.h"
 #include "ViewingRules.h"
 #include "SystemMonitor.h"
+
+#include "builtinconfigs/BuiltinConfigRegistry.h"
 
 
 namespace OCIO_NAMESPACE
@@ -1096,10 +1101,13 @@ ConstConfigRcPtr Config::CreateRaw()
     return CreateFromStream(istream);
 }
 
+// TODO CED: CreateFromEnv should allow the use of ocio:// URI to specify a default config name (not a path)
 ConstConfigRcPtr Config::CreateFromEnv()
 {
     std::string file;
     Platform::Getenv(OCIO_CONFIG_ENVVAR, file);
+
+    // File can be a filename/path or an URI to a default configuration (ocio://<config name>).
     if(!file.empty()) return CreateFromFile(file.c_str());
 
     static const char err[] =
@@ -1117,6 +1125,18 @@ ConstConfigRcPtr Config::CreateFromFile(const char * filename)
         throw ExceptionMissingFile ("The config filepath is missing.");
     }
 
+    // Check for URI (ocio://<config name>)
+    const std::regex uriPattern("ocio:\\/?\\/?([^\\s]+)");
+    std::smatch match;
+    const std::string uri = filename;
+    if (std::regex_search(uri, match, uriPattern) == true)
+    {
+        // URI Pattern ocio://<config name>.
+        // First group is ocio://<config name>.
+        // Second group is <config name>.
+        return CreateFromBuiltinConfig(match.str(1).c_str());
+    }
+
     std::ifstream istream = Platform::CreateInputFileStream(filename, std::ios_base::in);
     if (istream.fail())
     {
@@ -1132,6 +1152,28 @@ ConstConfigRcPtr Config::CreateFromFile(const char * filename)
 ConstConfigRcPtr Config::CreateFromStream(std::istream & istream)
 {
     return Config::Impl::Read(istream, nullptr);
+}
+
+ConstConfigRcPtr Config::CreateFromBuiltinConfig(const char * configName)
+{
+    ConstConfigRcPtr builtinConfig;
+    ConstBuiltinConfigRegistryRcPtr reg = BuiltinConfigRegistry::Get();
+
+    const char * builtinConfigStr = reg->getConfigByName(configName);
+    if (Platform::Strcasecmp(builtinConfigStr, "") == 0)
+    {
+        // Config string is empty
+        std::ostringstream os;
+        os << "Could not find '" << configName;
+        os << "' in default configurations.";
+        throw Exception (os.str().c_str());
+    }
+
+    std::istringstream iss;
+    iss.str(builtinConfigStr);
+    
+    builtinConfig = Config::CreateFromStream(iss);
+    return builtinConfig;
 }
 
 ///////////////////////////////////////////////////////////////////////////

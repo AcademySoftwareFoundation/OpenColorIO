@@ -114,6 +114,10 @@ class OCIOEXPORT GradingRGBCurve;
 typedef OCIO_SHARED_PTR<const GradingRGBCurve> ConstGradingRGBCurveRcPtr;
 typedef OCIO_SHARED_PTR<GradingRGBCurve> GradingRGBCurveRcPtr;
 
+class OCIOEXPORT BuiltinConfigRegistry;
+typedef OCIO_SHARED_PTR<BuiltinConfigRegistry> BuiltinConfigRegistryRcPtr;
+typedef OCIO_SHARED_PTR<const BuiltinConfigRegistry> ConstBuiltinConfigRegistryRcPtr;
+
 typedef std::array<float, 3> Float3;
 
 

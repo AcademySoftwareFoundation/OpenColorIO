@@ -73,6 +73,7 @@ endfunction(add_ocio_test)
 # but for now, we will maintain the status quo and copy all from the
 # OpenColorIO target
 set(SOURCES
+    builtinconfigs/CGConfig.cpp
     fileformats/cdl/CDLParser.cpp
     fileformats/cdl/CDLReaderHelper.cpp
     fileformats/cdl/CDLWriter.cpp
@@ -126,6 +127,7 @@ set(TESTS
     apphelpers/MixingHelpers_tests.cpp
     Baker_tests.cpp
     BitDepthUtils_tests.cpp
+    builtinconfigs/BuiltinConfigRegistry_tests.cpp
     Caching_tests.cpp
     ColorSpace_tests.cpp
     ColorSpaceSet_tests.cpp

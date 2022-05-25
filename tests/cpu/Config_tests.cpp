@@ -8740,3 +8740,55 @@ OCIO_ADD_TEST(Config, look_fallback)
         OCIO_CHECK_ASSERT(proc->isNoOp());
     }
 }
+
+OCIO_ADD_TEST(Config, create_default_config)
+{
+    {
+        // Testing with an known built-in config name using CreateFromBuiltinConfig.
+
+        OCIO::ConstConfigRcPtr config;
+        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromBuiltinConfig("cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1"));
+        OCIO_CHECK_NO_THROW(config->validate());
+        OCIO_CHECK_EQUAL(
+            std::string(config->getName()), 
+            std::string("cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1")
+        );
+        OCIO_CHECK_EQUAL(config->getNumColorSpaces(), 19);
+    }
+
+    {
+        // Testing with an known built-in config name using URI Syntax.
+
+        // Using CreateFromFile directly to simulate an OCIO environment variable
+        // that would be set like this: OCIO=ocio://cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1
+        OCIO::ConstConfigRcPtr config;
+        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromFile("ocio://cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1"));
+        OCIO_CHECK_NO_THROW(config->validate());
+        OCIO_CHECK_EQUAL(
+            std::string(config->getName()), 
+            std::string("cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1")
+        );
+        OCIO_CHECK_EQUAL(config->getNumColorSpaces(), 19);
+    }
+
+
+    // ********************************
+    // Testing some expected failures.
+    // ********************************
+
+    // Testing with an unknown built-in config id using CreateFromBuiltinConfig directly.
+    OCIO_CHECK_THROW_WHAT(
+        OCIO::Config::CreateFromBuiltinConfig("I-do-not-exist"),
+        OCIO::Exception,
+        "Could not find 'I-do-not-exist' in default configurations."
+    );
+
+    // Testing with an unknown built-in config id using URI syntax
+    // Using CreateFromFile directly to simulate an OCIO environment variable
+    // that would be set like this: OCIO=ocio://i-do-not-exist
+    OCIO_CHECK_THROW_WHAT(
+        OCIO::Config::CreateFromFile("ocio://I-do-not-exist"),
+        OCIO::Exception,
+        "Could not find 'I-do-not-exist' in default configurations."
+    );
+}
