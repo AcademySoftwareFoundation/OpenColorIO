@@ -211,9 +211,8 @@ set(ABI_HEADER_LOCATION "${CMAKE_BINARY_DIR}/include/OpenColorIO")
 list(APPEND INSTALL_HEADERS ${ABI_HEADER_LOCATION}/OpenColorABI.h)
 configure_file("${HEADER_LOCATION}/OpenColorABI.h.in" "${ABI_HEADER_LOCATION}/OpenColorABI.h" @ONLY)
 
-# Default config
-set(CONFIGS_HEADER_LOCATION "${CMAKE_BINARY_DIR}/include/OpenColorIO")
-list(APPEND INSTALL_HEADERS ${CONFIGS_HEADER_LOCATION}/CG.h)
+# Built-in configs
+set(CONFIGS_HEADER_LOCATION "${CMAKE_BINARY_DIR}/generated_include")
 file(GLOB CONFIGS_PATHS "builtinconfigs/configs/*.ocio")
 foreach(C ${CONFIGS_PATHS})
     get_filename_component(CONFIG_FULLNAME "${C}" NAME)
@@ -243,13 +242,14 @@ set(BUILD_INCLUDES
     ${HEADER_LOCATION}
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${ABI_HEADER_LOCATION}
-    ${CONFIGS_HEADER_LOCATION}
 )
 
 target_include_directories(OpenColorIO
     PUBLIC
         "$<BUILD_INTERFACE:${BUILD_INCLUDES}>"
         "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
+    PRIVATE
+        "${CONFIGS_HEADER_LOCATION}"
 )
 
 target_link_libraries(OpenColorIO
