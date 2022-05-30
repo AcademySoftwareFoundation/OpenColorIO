@@ -10,8 +10,6 @@
 #include <utility>
 #include <vector>
 #include <regex>
-// TODO CED: remove
-#include <iostream>
 
 #include <OpenColorIO/OpenColorIO.h>
 
@@ -1125,15 +1123,12 @@ ConstConfigRcPtr Config::CreateFromFile(const char * filename)
         throw ExceptionMissingFile ("The config filepath is missing.");
     }
 
-    // Check for URI (ocio://<config name>)
+    // Check for URI Pattern: ocio://<config name>
     const std::regex uriPattern("ocio:\\/?\\/?([^\\s]+)");
     std::smatch match;
     const std::string uri = filename;
     if (std::regex_search(uri, match, uriPattern) == true)
     {
-        // URI Pattern ocio://<config name>.
-        // First group is ocio://<config name>.
-        // Second group is <config name>.
         return CreateFromBuiltinConfig(match.str(1).c_str());
     }
 
@@ -1165,7 +1160,7 @@ ConstConfigRcPtr Config::CreateFromBuiltinConfig(const char * configName)
         // Config string is empty
         std::ostringstream os;
         os << "Could not find '" << configName;
-        os << "' in default configurations.";
+        os << "' in built-in configurations.";
         throw Exception (os.str().c_str());
     }
 

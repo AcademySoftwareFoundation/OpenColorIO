@@ -38,6 +38,7 @@ function(add_ocio_test NAME SOURCES PRIVATE_INCLUDES)
         target_include_directories(${TEST_BINARY}
             PRIVATE
                 "${CMAKE_SOURCE_DIR}/tests/cpu"
+                "${CMAKE_BINARY_DIR}/generated_include"
         )
     endif(PRIVATE_INCLUDES)
     if(OCIO_USE_SSE)

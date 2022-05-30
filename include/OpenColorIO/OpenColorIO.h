@@ -266,6 +266,19 @@ public:
     /// Create a configuration using a stream.
     static ConstConfigRcPtr CreateFromStream(std::istream & istream);
 
+    /**
+     * @brief Create a configuration using OCIO built-in config.
+     * 
+     * @param configName Built-in config name
+     * 
+     * The available configNames are:
+     * "cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1" -- ACES CG config, basic color spaces for computer graphics apps.
+     * More information is available at: https://github.com/AcademySoftwareFoundation/OpenColorIO-Config-ACES
+     * 
+     * @throw Exception If the configName is not recognized.
+     * 
+     * @return one of the configs built into OCIO library
+     */
     static ConstConfigRcPtr CreateFromBuiltinConfig(const char * configName);
 
     ConfigRcPtr createEditableCopy() const;
@@ -3296,6 +3309,83 @@ protected:
     virtual ~BuiltinTransformRegistry() = default;
 };
 
+///////////////////////////////////////////////////////////////////////////
+// BuiltinConfigRegistry
+
+/**
+ * The built-in configs registry contains all the existing built-in configs.
+ */
+class OCIOEXPORT BuiltinConfigRegistry
+{
+    public:
+        BuiltinConfigRegistry(const BuiltinConfigRegistry &) = delete;
+        BuiltinConfigRegistry & operator= (const BuiltinConfigRegistry &) = delete;
+
+        /// Get the current built-in configs registry.
+        static ConstBuiltinConfigRegistryRcPtr Get() noexcept;
+
+        /**
+         * @brief Get the number of built-in configs available.
+         * 
+         * @return Number of configs
+         */
+        virtual size_t getNumConfigs() const noexcept = 0;
+
+        /**
+         * @brief Get built-in config name at specified index.
+         * 
+         * @param configIndex Index of built-in config.
+         * @return Name of the cnonfig at specified index. 
+         */
+        virtual const char * getConfigName(size_t configIndex) const = 0;
+
+        /**
+         * @brief Get built-in config at specified index.
+         * 
+         * @param configIndex Index of built-in config.
+         * @return Config at specified index. 
+         */
+        virtual const char * getConfig(size_t configIndex) const = 0;
+        /**
+         * @brief Get built-in config of specified name.
+         * 
+         * @param configName Name of the built-in config to get.
+         * @return Config of specified name.
+         */
+        virtual const char * getConfigByName(const char * configName) const noexcept = 0;
+
+        /**
+         * @brief Check if a specific built-in config is recommended.
+         * 
+         * For backwards compatibility reasons, configs will remain in the registry
+         * even if they have been superseded. If an app is presenting a list of configs to users,
+         * it should not include configs that are no longer recommended.
+         * 
+         * @param configIndex Index of built-in config.
+         * @return true Config is recommended.
+         * @return false Config is not recommended.
+         */
+        virtual bool isConfigRecommended(size_t configIndex) const = 0;
+
+        /**
+         * @brief Get the default recommended built-in config.
+         * 
+         * Get the name of the built-in config that is currently recommended as the default config 
+         * to use for applications looking for basic color management. 
+         * 
+         * As the built-in config collection evolves, 
+         * the default's config name will change in future releases. For backwards compatibility, 
+         * the name provided here will always work as an argument to other methods so that 
+         * any previous default config may be recovered.
+         * 
+         * @return Default's built-in config name.
+         */
+        virtual const char * getDefaultConfigName() const = 0;
+    protected:
+        BuiltinConfigRegistry() = default;
+        virtual ~BuiltinConfigRegistry() = default;
+};
+
 
 ///////////////////////////////////////////////////////////////////////////
 // SystemMonitors
@@ -3342,45 +3432,6 @@ public:
 protected:
     SystemMonitors() = default;
     virtual ~SystemMonitors() = default;
-};
-
-
-///////////////////////////////////////////////////////////////////////////
-// BuiltinConfigRegistry
-
-/**
- * The built-in configs registry contains all the existing built-in configs.
- */
-class OCIOEXPORT BuiltinConfigRegistry
-{
-    public:
-        BuiltinConfigRegistry(const BuiltinConfigRegistry &) = delete;
-        BuiltinConfigRegistry & operator= (const BuiltinConfigRegistry &) = delete;
-
-        // Get the current built-in configs registry.
-        static ConstBuiltinConfigRegistryRcPtr Get() noexcept;
-
-        // Get the number of built-in configs available.
-        virtual size_t getNumConfigs() const noexcept = 0;
-
-        // Get built-in config name at specified index.
-        virtual const char * getConfigName(size_t configIndex) const = 0;
-        // Get built-in config at specified index as text.
-        virtual const char * getConfig(size_t configIndex) const = 0;
-        // Get built-in config by name.
-        virtual const char * getConfigByName(const char * configName) const noexcept = 0;
-
-        // Check if built-in config at specified index is still recommended.
-        virtual bool isConfigRecommended(size_t configIndex) const = 0;
-        // Check if built-in config at specified index is deprecated.
-        virtual bool isConfigDepecrated(size_t configIndex) const = 0;
-
-        // Get default built-in config.
-        virtual const char * getDefaultConfigName() const = 0;
-
-    protected:
-        BuiltinConfigRegistry() = default;
-        virtual ~BuiltinConfigRegistry() = default;
 };
 
 } // namespace OCIO_NAMESPACE

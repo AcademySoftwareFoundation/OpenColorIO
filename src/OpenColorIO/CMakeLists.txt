@@ -214,28 +214,38 @@ configure_file("${HEADER_LOCATION}/OpenColorABI.h.in" "${ABI_HEADER_LOCATION}/Op
 # Built-in configs
 set(CONFIGS_HEADER_LOCATION "${CMAKE_BINARY_DIR}/generated_include")
 file(GLOB CONFIGS_PATHS "builtinconfigs/configs/*.ocio")
+# Looping throuhg .ocio config files.
 foreach(C ${CONFIGS_PATHS})
     get_filename_component(CONFIG_FULLNAME "${C}" NAME)
     get_filename_component(CONFIG_NAME "${C}" NAME_WLE)
-    get_filename_component(CONFIG_EXT  "${C}" LAST_EXT)
     list(APPEND CONFIGS_ALL ${CONFIG_NAME})
 
     file(READ builtinconfigs/configs/${CONFIG_FULLNAME} HEX_CONTENTS HEX)
     # Separate into individual bytes.
     string(REGEX MATCHALL "([A-Za-z0-9][A-Za-z0-9])" SEPARATED_HEX "${HEX_CONTENTS}")
 
-    # Append the "0x" to each byte.
+    # Prepend the "0x" to each byte.
     list(JOIN SEPARATED_HEX ",0x" FORMATTED_HEX)
 
-    # Append "0x" to the first byte.
+    # Prepend "0x" to the first byte.
     string(PREPEND FORMATTED_HEX "0x")
 
-    set(tmp_config ${FORMATTED_HEX})
-
-    # Escape double quotes in config file
-    string(REPLACE "\"" "\\\"" ${CONFIG_NAME} ${tmp_config})
-    configure_file(builtinconfigs/CG.h.in ${CONFIGS_HEADER_LOCATION}/CG.h @ONLY)
+    # Set the dynamically named variable "${CONFIG_NAME}" to the config in HEX.
+    set(${CONFIG_NAME} ${FORMATTED_HEX})
 endforeach()
+
+file(GLOB TEMPLATE_HEADER_CONFIG_FILES "builtinconfigs/*.h.in")
+foreach(C ${TEMPLATE_HEADER_CONFIG_FILES})
+    get_filename_component(TEMPLATE_HEADER_FULLNAME "${C}" NAME)
+
+    string(LENGTH ${TEMPLATE_HEADER_FULLNAME} TEMPLATE_HEADER_LENGTH)
+    MATH(EXPR TEMPLATE_HEADER_LENGTH "${TEMPLATE_HEADER_LENGTH}-3")
+    # Get TEMPLATE_HEADER_FULLNAME without .in extension.
+    string(SUBSTRING ${TEMPLATE_HEADER_FULLNAME} 0 ${TEMPLATE_HEADER_LENGTH} TEMPLATE_HEADER_FULLNAME_H)
+
+    configure_file(builtinconfigs/${TEMPLATE_HEADER_FULLNAME} ${CONFIGS_HEADER_LOCATION}/${TEMPLATE_HEADER_FULLNAME_H} @ONLY)
+endforeach()
+
 
 set(BUILD_INCLUDES
     ${HEADER_LOCATION}/..

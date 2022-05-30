@@ -15,13 +15,15 @@ namespace OCIO_NAMESPACE
 class BuiltinConfigRegistryImpl : public BuiltinConfigRegistry
 {
     using BuiltinConfigName = std::string;
+    // Structure size
+    // 32 bytes (std::string), 32 bytes (std::string), 1 byte (bool) + 7 bytes of padding.
+    // Total of 72 bytes of memory per config
     struct BuiltinConfigData
     {
-        BuiltinConfigData(const char * name, const char * config, bool isDeprecated = false, bool isDefault = false)
+        BuiltinConfigData(const char * name, const char * config, bool isRecommended = false)
             : m_config(config ? config : "")
             , m_name(name ? name : "")
-            , m_isDeprecated(isDeprecated ? true : false)
-            , m_isDefault(isDefault ? true : false)
+            , m_isRecommended(isRecommended ? true : false)
         {
         }
         BuiltinConfigData() = delete;
@@ -29,25 +31,22 @@ class BuiltinConfigRegistryImpl : public BuiltinConfigRegistry
         BuiltinConfigData(BuiltinConfigData && o) noexcept
             : m_config(std::move(o.m_config))
             , m_name(std::move(o.m_name))
-            , m_isDeprecated(std::move(o.m_isDeprecated))
-            , m_isDefault(std::move(o.m_isDefault))
+            , m_isRecommended(std::move(o.m_isRecommended))
         {
         }
         BuiltinConfigData & operator= (const BuiltinConfigData & o)
         {
             m_config        = o.m_config;
             m_name          = o.m_name;
-            m_isDeprecated  = o.m_isDeprecated;
-            m_isDefault     = o.m_isDefault;
+            m_isRecommended  = o.m_isRecommended;
             return *this;
         }
 
         std::string m_config;
-        std::string m_name;
-        bool m_isDefault;
-        bool m_isDeprecated;
+        BuiltinConfigName m_name;
+        bool m_isRecommended;
     };
-    using BuiltinConfig = std::vector<BuiltinConfigData>;
+    using BuiltinConfigs = std::vector<BuiltinConfigData>;
 
     public:
         BuiltinConfigRegistryImpl() = default;
@@ -55,31 +54,54 @@ class BuiltinConfigRegistryImpl : public BuiltinConfigRegistry
         BuiltinConfigRegistryImpl & operator=(const BuiltinConfigRegistryImpl &) = delete;
         ~BuiltinConfigRegistryImpl() = default;
 
-        // config working group: Based on ACES: 
-        // cg (simple basic one, minimum set), studio, 
+        /**
+         * @brief Loads built-in configs into the registry.
+         * 
+         * Loads the built-in configs from various config header file
+         * that were generated from templated header file with cmake.
+         * 
+         * Note that it only initialize the registry.
+         * It does not create Config object nor parsed the config.
+         */
         void init() noexcept;
 
-        void addBuiltin(const char * name, const char * config, bool isDefault = false, bool isDeprecated = false);
+        /**
+         * @brief Add a built-in config into the registry.
+         * 
+         * Add a built-in config into the registry keyed by name.
+         * 
+         * Adding a built-in config using an existing name will overwrite the current built-in
+         * config associated with that name.
+         * 
+         * For backward compatibility, built-in configs can be set as NOT recommended. They will
+         * still be available, but not recommended for the current version of OCIO.
+         * 
+         * @param name Name for the built-in config.
+         * @param config Config as string
+         * @param isRecommended Is the built-in config recommended or not.
+         */
+        void addBuiltin(const char * name, const char * config, bool isRecommended);
 
-        // Get the number of built-in configs available.
+        /// Get the number of built-in configs available.
         size_t getNumConfigs() const noexcept override;
 
-        // Get built-in config name at specified index.
+        /// Get built-in config name at specified index..
         const char * getConfigName(size_t configIndex) const override;
-        // Get built-in config at specified index as text.
+        /// Get built-in config at specified index.
         const char * getConfig(size_t configIndex) const override;
-        // Get built-in config by name.
+        /// Get built-in config of specified name.
         const char * getConfigByName(const char * configName) const noexcept override;
 
-        // Check if built-in config at specified index is still recommended.
+        /// Check if a specific built-in config is recommended.
         bool isConfigRecommended(size_t configIndex) const override;
-        // Check if built-in config at specified index is deprecated.
-        bool isConfigDepecrated(size_t configIndex) const override;
 
-        // Get default built-in config name.
+        /// Get the default recommended built-in config.
         const char * getDefaultConfigName() const override;
+        /// Set the default Built-in Config
+        void setDefaultBuiltinConfig(const char * configName);
     private:
-        BuiltinConfig m_builtinConfig;
+        BuiltinConfigs m_builtinConfigs;
+        BuiltinConfigName m_defaultBuiltinConfigName;
 };
 
 } // namespace OCIO_NAMESPACE

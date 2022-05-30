@@ -18,9 +18,8 @@ namespace OCIO_NAMESPACE
         void Register(BuiltinConfigRegistryImpl & registry) noexcept
         {
             registry.addBuiltin(
-                "cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1", 
+                "cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1",
                 CG_CONFIG_V010_ACES_V130_OCIO_V211,
-                false,
                 true
             );
         }

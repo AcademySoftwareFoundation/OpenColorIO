@@ -8741,10 +8741,10 @@ OCIO_ADD_TEST(Config, look_fallback)
     }
 }
 
-OCIO_ADD_TEST(Config, create_default_config)
+OCIO_ADD_TEST(Config, create_builtin_config)
 {
     {
-        // Testing with an known built-in config name using CreateFromBuiltinConfig.
+        // Testing with a known built-in config name using CreateFromBuiltinConfig.
 
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromBuiltinConfig("cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1"));
@@ -8780,7 +8780,7 @@ OCIO_ADD_TEST(Config, create_default_config)
     OCIO_CHECK_THROW_WHAT(
         OCIO::Config::CreateFromBuiltinConfig("I-do-not-exist"),
         OCIO::Exception,
-        "Could not find 'I-do-not-exist' in default configurations."
+        "Could not find 'I-do-not-exist' in built-in configurations."
     );
 
     // Testing with an unknown built-in config id using URI syntax
@@ -8789,6 +8789,6 @@ OCIO_ADD_TEST(Config, create_default_config)
     OCIO_CHECK_THROW_WHAT(
         OCIO::Config::CreateFromFile("ocio://I-do-not-exist"),
         OCIO::Exception,
-        "Could not find 'I-do-not-exist' in default configurations."
+        "Could not find 'I-do-not-exist' in built-in configurations."
     );
 }

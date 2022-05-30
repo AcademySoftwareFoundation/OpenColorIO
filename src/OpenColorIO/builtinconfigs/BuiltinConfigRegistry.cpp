@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-// TODO CED: remove
-#include <iostream>
 #include <memory>
 #include <algorithm>
 #include <sstream>
@@ -49,15 +47,17 @@ ConstBuiltinConfigRegistryRcPtr BuiltinConfigRegistry::Get() noexcept
 ////////////////////////////////
 void BuiltinConfigRegistryImpl::init() noexcept
 {
-    m_builtinConfig.clear();
+    m_builtinConfigs.clear();
     CGCONFIG::Register(*this);
+
+    this->setDefaultBuiltinConfig("cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1");
 }
 
-void BuiltinConfigRegistryImpl::addBuiltin(const char * name, const char * config, bool isDeprecated, bool isDefault)
+void BuiltinConfigRegistryImpl::addBuiltin(const char * name, const char * config, bool isRecommended)
 {
-    BuiltinConfigData data { name, config, isDeprecated, isDefault };
+    BuiltinConfigData data { name, config, isRecommended };
 
-    for (auto & builtin : m_builtinConfig)
+    for (auto & builtin : m_builtinConfigs)
     {
         // Overwrite data if the config name is the same.
         if (Platform::Strcasecmp(data.m_name.c_str(), builtin.m_name.c_str()) == 0)
@@ -67,38 +67,38 @@ void BuiltinConfigRegistryImpl::addBuiltin(const char * name, const char * confi
         }
     }
 
-    m_builtinConfig.push_back(data);
+    m_builtinConfigs.push_back(data);
 }
 
 size_t BuiltinConfigRegistryImpl::getNumConfigs() const noexcept
 {
-    return m_builtinConfig.size();
+    return m_builtinConfigs.size();
 }
 
 const char * BuiltinConfigRegistryImpl::getConfigName(size_t configIndex) const
 {
-    if (configIndex >= m_builtinConfig.size())
+    if (configIndex >= m_builtinConfigs.size())
     {
         throw Exception(OUT_OF_RANGE_EXCEPTION_TEXT);
     }
 
-    return m_builtinConfig[configIndex].m_name.c_str();
+    return m_builtinConfigs[configIndex].m_name.c_str();
 }
 
 const char * BuiltinConfigRegistryImpl::getConfig(size_t configIndex) const
 {
-    if (configIndex >= m_builtinConfig.size())
+    if (configIndex >= m_builtinConfigs.size())
     {
         throw Exception(OUT_OF_RANGE_EXCEPTION_TEXT);
     }
 
-    return m_builtinConfig[configIndex].m_config.c_str();
+    return m_builtinConfigs[configIndex].m_config.c_str();
 }
 
 const char * BuiltinConfigRegistryImpl::getConfigByName(const char * configName) const noexcept
 {
     // Search for config name.
-    for (auto & builtin : m_builtinConfig)
+    for (auto & builtin : m_builtinConfigs)
     {
         if (Platform::Strcasecmp(configName, builtin.m_name.c_str()) == 0)
         {
@@ -111,46 +111,43 @@ const char * BuiltinConfigRegistryImpl::getConfigByName(const char * configName)
 
 bool BuiltinConfigRegistryImpl::isConfigRecommended(size_t configIndex) const
 {
-    if (configIndex >= m_builtinConfig.size())
+    if (configIndex >= m_builtinConfigs.size())
     {
         throw Exception(OUT_OF_RANGE_EXCEPTION_TEXT);
     }
 
-    return !m_builtinConfig[configIndex].m_isDeprecated;
-}
-
-bool BuiltinConfigRegistryImpl::isConfigDepecrated(size_t configIndex) const
-{
-    if (configIndex >= m_builtinConfig.size())
-    {
-        throw Exception(OUT_OF_RANGE_EXCEPTION_TEXT);
-    }
-
-    return m_builtinConfig[configIndex].m_isDeprecated;
+    return m_builtinConfigs[configIndex].m_isRecommended;
 }
 
 const char * BuiltinConfigRegistryImpl::getDefaultConfigName() const
 {
-    std::string configName = "";
-
-    // Search for the default config.
-    for (auto & builtin : m_builtinConfig)
-    {
-        if (builtin.m_isDefault)
-        {
-            // Return after the first config found.
-            // Only one default config out of all built-ins.
-            configName = builtin.m_name;
-        }
-    }
-
-    if (configName.empty())
+    if (m_defaultBuiltinConfigName.empty())
     {
         // Make sure that at least one default built-ins config is present.
         throw Exception("Internal error - There is no default built-ins config.");
     }
 
-    return configName.c_str();
+    return m_defaultBuiltinConfigName.c_str();
+}
+
+void BuiltinConfigRegistryImpl::setDefaultBuiltinConfig(const char * configName)
+{
+    BuiltinConfigName builtinConfigName = "";
+    // Search for config name.
+    for (auto & builtin : m_builtinConfigs)
+    {
+        if (Platform::Strcasecmp(configName, builtin.m_name.c_str()) == 0)
+        {
+            builtinConfigName = builtin.m_name;
+        }
+    }
+
+    if (builtinConfigName.empty())
+    {
+        throw Exception("Internal error - Config name do not exist.");
+    }
+
+    m_defaultBuiltinConfigName = builtinConfigName;
 }
 
 } // namespace OCIO_NAMESPACE
