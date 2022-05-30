@@ -536,6 +536,37 @@ int main(int argc, const char **argv)
             exit(1);
         }
 
+        // Copy specInput into specOutput.
+        specOutput = specInput;
+
+        /*
+            Set the bit-depth of the output buffer to be used by OIIO.
+
+            OIIO may change the bit-depth when writing to a file (e.g. if the output image ends in "jpg" it will be converted to 8-bit integer), 
+            and OCIO is not trying to analyze the filename to emulate OIIO's decision making process.
+            
+            Additionally, the color space conversion may require more bits than the source image.
+            For example, converting a log image to linear requires at least a half-float output format.
+            
+            For most cases, half-float strikes a good balance between precision and storage space.
+            But if the input depth would lose precision when converted to half-float, use full float for the output depth instead.
+        */
+        if (specInput.format == OIIO::TypeDesc::UINT16 || specInput.format == OIIO::TypeDesc::FLOAT) 
+        {
+            specOutput.set_format(OIIO::TypeDesc::FLOAT);
+        }
+        else if (specInput.format == OIIO::TypeDesc::UINT8 || specInput.format == OIIO::TypeDesc::HALF) 
+        {
+            specOutput.set_format(OIIO::TypeDesc::HALF);
+        }
+        else
+        {
+            throw OCIO::Exception("The OIIO:TypeDesc of the input image pixels must be UINT8, UINT16, HALF or FLOAT.");
+        }
+
+        // Allocate imgOutput buffer using specOutput.
+        imgOutput.allocate(specOutput);
+
 #ifdef OCIO_GPU_ENABLED
         if (usegpu || usegpuLegacy)
         {
@@ -551,42 +582,11 @@ int main(int argc, const char **argv)
             oglApp->setShader(shaderDesc);
             oglApp->reshape(imgwidth, imgheight);
             oglApp->redisplay();
-            oglApp->readImage((float *)imgInput.getBuffer());
+            oglApp->readImage((float *)imgOutput.getBuffer());
         }
         else
 #endif // OCIO_GPU_ENABLED
         {
-            // Copy specInput into specOutput.
-            specOutput = specInput;
-
-            /*
-                Set the bit-depth of the output buffer to be used by OIIO.
-
-                OIIO may change the bit-depth when writing to a file (e.g. if the output image ends in "jpg" it will be converted to 8-bit integer), 
-                and OCIO is not trying to analyze the filename to emulate OIIO's decision making process.
-                
-                Additionally, the color space conversion may require more bits than the source image.
-                For example, converting a log image to linear requires at least a half-float output format.
-                
-                For most cases, half-float strikes a good balance between precision and storage space.
-                But if the input depth would lose precision when converted to half-float, use full float for the output depth instead.
-            */
-            if (specInput.format == OIIO::TypeDesc::UINT16 || specInput.format == OIIO::TypeDesc::FLOAT) 
-            {
-                specOutput.set_format(OIIO::TypeDesc::FLOAT);
-            }
-            else if (specInput.format == OIIO::TypeDesc::UINT8 || specInput.format == OIIO::TypeDesc::HALF) 
-            {
-                specOutput.set_format(OIIO::TypeDesc::HALF);
-            }
-            else
-            {
-                throw OCIO::Exception("The OIIO:TypeDesc of the input image pixels must be UINT8, UINT16, HALF or FLOAT.");
-            }
-
-            // Allocate imgOutput buffer using specOutput.
-            imgOutput.allocate(specOutput);
-            
             OCIO::ConstCPUProcessorRcPtr cpuProcessor 
                 = processor->getOptimizedCPUProcessor(OCIO::GetBitDepth(specInput), 
                                                       OCIO::GetBitDepth(specOutput),
@@ -704,6 +704,8 @@ int main(int argc, const char **argv)
         {
             specOutput.attribute("oiio:ColorSpace", outputcolorspace);
         }
+
+        OCIO::PrintImageSpec(specOutput, verbose);
 
         f->open(outputimage, specOutput);
 
