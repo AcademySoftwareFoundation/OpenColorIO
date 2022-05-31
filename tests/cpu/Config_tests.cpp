@@ -8771,6 +8771,20 @@ OCIO_ADD_TEST(Config, create_builtin_config)
         OCIO_CHECK_EQUAL(config->getNumColorSpaces(), 19);
     }
 
+    {
+        // Testing with the default config using URI Syntax.
+
+        // Using CreateFromFile directly to simulate an OCIO environment variable
+        // that would be set like this: OCIO=ocio://default
+        OCIO::ConstConfigRcPtr config;
+        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromFile("ocio://default"));
+        OCIO_CHECK_NO_THROW(config->validate());
+        OCIO_CHECK_EQUAL(
+            std::string(config->getName()), 
+            std::string("cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1")
+        );
+    }
+
 
     // ********************************
     // Testing some expected failures.

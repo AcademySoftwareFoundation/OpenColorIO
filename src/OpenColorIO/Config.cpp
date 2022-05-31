@@ -1129,6 +1129,12 @@ ConstConfigRcPtr Config::CreateFromFile(const char * filename)
     const std::string uri = filename;
     if (std::regex_search(uri, match, uriPattern) == true)
     {
+        if (Platform::Strcasecmp(match.str(1).c_str(), "default") == 0)
+        {
+            // Processing ocio://default
+            ConstBuiltinConfigRegistryRcPtr reg = BuiltinConfigRegistry::Get();
+            return CreateFromBuiltinConfig(reg->getDefaultConfigName());
+        }
         return CreateFromBuiltinConfig(match.str(1).c_str());
     }
 
