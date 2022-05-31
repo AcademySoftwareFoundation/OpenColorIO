@@ -12,24 +12,24 @@ OCIO_ADD_TEST(BuiltinConfigs, basic)
 {
     OCIO::ConstBuiltinConfigRegistryRcPtr registry = OCIO::BuiltinConfigRegistry::Get();
     
-    OCIO_CHECK_EQUAL(registry->getNumConfigs(), 1);
+    OCIO_CHECK_EQUAL(registry->getNumBuiltInConfigs(), 1);
 
-    OCIO_CHECK_EQUAL(std::string(registry->getConfigName(0)), std::string("cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1"));
+    OCIO_CHECK_EQUAL(std::string(registry->getBuiltinConfigName(0)), std::string("cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1"));
 
-    OCIO_CHECK_EQUAL(std::string(registry->getConfig(0)), std::string(CG_CONFIG_V010_ACES_V130_OCIO_V211));
+    OCIO_CHECK_EQUAL(std::string(registry->getBuiltinConfig(0)), std::string(CG_CONFIG_V010_ACES_V130_OCIO_V211));
 
-    OCIO_CHECK_EQUAL(std::string(registry->getConfigByName("cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1")), std::string(CG_CONFIG_V010_ACES_V130_OCIO_V211));
+    OCIO_CHECK_EQUAL(std::string(registry->getBuiltinConfigByName("cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1")), std::string(CG_CONFIG_V010_ACES_V130_OCIO_V211));
 
-    OCIO_CHECK_EQUAL(std::string(registry->getDefaultConfigName()), std::string("cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1"));
+    OCIO_CHECK_EQUAL(std::string(registry->getDefaultBuiltinConfigName()), std::string("cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1"));
 
-    OCIO_CHECK_EQUAL(registry->isConfigRecommended(0), true);
+    OCIO_CHECK_EQUAL(registry->isBuiltinConfigRecommended(0), true);
 }
 
 OCIO_ADD_TEST(BuiltinConfigs, basic_impl)
 {
     // Create a empty registry and check the number of configs
     OCIO::BuiltinConfigRegistryImpl registry;
-    OCIO_CHECK_EQUAL(registry.getNumConfigs(), 0);
+    OCIO_CHECK_EQUAL(registry.getNumBuiltInConfigs(), 0);
 
     // Add configs into the built-ins config registry
     std::string SIMPLE_CONFIG =
@@ -65,29 +65,29 @@ OCIO_ADD_TEST(BuiltinConfigs, basic_impl)
     // Testing some expected failures.
     // ********************************
 
-    // Test isConfigRecommended using an invalid config index.
+    // Test isBuiltinConfigRecommended using an invalid config index.
     OCIO_CHECK_THROW_WHAT(
-        registry.isConfigRecommended(999),
+        registry.isBuiltinConfigRecommended(999),
         OCIO::Exception,
         "Config index is out of range."
     );
 
-    // Test getConfigName using an invalid config index.
+    // Test getBuiltinConfigName using an invalid config index.
     OCIO_CHECK_THROW_WHAT(
-        registry.getConfigName(999),
+        registry.getBuiltinConfigName(999),
         OCIO::Exception,
         "Config index is out of range."
     );
 
-    // Test getConfig using an invalid config index.
+    // Test getBuiltinConfig using an invalid config index.
     OCIO_CHECK_THROW_WHAT(
-        registry.getConfig(999),
+        registry.getBuiltinConfig(999),
         OCIO::Exception,
         "Config index is out of range."
     );
 
-    // Test getConfigByName using an unknown config name.
-    OCIO_CHECK_EQUAL(registry.getConfigByName("I do not exist"), "");
+    // Test getBuiltinConfigByName using an unknown config name.
+    OCIO_CHECK_EQUAL(registry.getBuiltinConfigByName("I do not exist"), "");
 
     {
         // Create a empty registry.
@@ -95,7 +95,7 @@ OCIO_ADD_TEST(BuiltinConfigs, basic_impl)
 
         // Test the default built-in config name without any built-in config.
         OCIO_CHECK_THROW_WHAT(
-            registry.getDefaultConfigName(),
+            registry.getDefaultBuiltinConfigName(),
             OCIO::Exception,
             "Internal error - There is no default built-ins config."
         );
@@ -107,7 +107,7 @@ OCIO_ADD_TEST(BuiltinConfigs, basic_impl)
 
         // Test the default built-in config name without any built-in config.
         OCIO_CHECK_THROW_WHAT(
-            registry.getDefaultConfigName(),
+            registry.getDefaultBuiltinConfigName(),
             OCIO::Exception,
             "Internal error - There is no default built-ins config."
         );
@@ -137,7 +137,7 @@ OCIO_ADD_TEST(BuiltinConfigs, basic_impl)
 
         // Test the default built-in config name without any built-in config.
         OCIO_CHECK_THROW_WHAT(
-            registry.getDefaultConfigName(),
+            registry.getDefaultBuiltinConfigName(),
             OCIO::Exception,
             "Internal error - There is no default built-ins config."
         );

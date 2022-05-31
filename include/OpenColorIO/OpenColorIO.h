@@ -3329,7 +3329,7 @@ class OCIOEXPORT BuiltinConfigRegistry
          * 
          * @return Number of configs
          */
-        virtual size_t getNumConfigs() const noexcept = 0;
+        virtual size_t getNumBuiltInConfigs() const noexcept = 0;
 
         /**
          * @brief Get built-in config name at specified index.
@@ -3337,7 +3337,7 @@ class OCIOEXPORT BuiltinConfigRegistry
          * @param configIndex Index of built-in config.
          * @return Name of the cnonfig at specified index. 
          */
-        virtual const char * getConfigName(size_t configIndex) const = 0;
+        virtual const char * getBuiltinConfigName(size_t configIndex) const = 0;
 
         /**
          * @brief Get built-in config at specified index.
@@ -3345,14 +3345,14 @@ class OCIOEXPORT BuiltinConfigRegistry
          * @param configIndex Index of built-in config.
          * @return Config at specified index. 
          */
-        virtual const char * getConfig(size_t configIndex) const = 0;
+        virtual const char * getBuiltinConfig(size_t configIndex) const = 0;
         /**
          * @brief Get built-in config of specified name.
          * 
          * @param configName Name of the built-in config to get.
          * @return Config of specified name.
          */
-        virtual const char * getConfigByName(const char * configName) const noexcept = 0;
+        virtual const char * getBuiltinConfigByName(const char * configName) const noexcept = 0;
 
         /**
          * @brief Check if a specific built-in config is recommended.
@@ -3365,7 +3365,7 @@ class OCIOEXPORT BuiltinConfigRegistry
          * @return true Config is recommended.
          * @return false Config is not recommended.
          */
-        virtual bool isConfigRecommended(size_t configIndex) const = 0;
+        virtual bool isBuiltinConfigRecommended(size_t configIndex) const = 0;
 
         /**
          * @brief Get the default recommended built-in config.
@@ -3380,7 +3380,7 @@ class OCIOEXPORT BuiltinConfigRegistry
          * 
          * @return Default's built-in config name.
          */
-        virtual const char * getDefaultConfigName() const = 0;
+        virtual const char * getDefaultBuiltinConfigName() const = 0;
     protected:
         BuiltinConfigRegistry() = default;
         virtual ~BuiltinConfigRegistry() = default;

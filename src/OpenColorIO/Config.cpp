@@ -1133,7 +1133,7 @@ ConstConfigRcPtr Config::CreateFromFile(const char * filename)
         {
             // Processing ocio://default
             ConstBuiltinConfigRegistryRcPtr reg = BuiltinConfigRegistry::Get();
-            return CreateFromBuiltinConfig(reg->getDefaultConfigName());
+            return CreateFromBuiltinConfig(reg->getDefaultBuiltinConfigName());
         }
         return CreateFromBuiltinConfig(match.str(1).c_str());
     }
@@ -1160,7 +1160,7 @@ ConstConfigRcPtr Config::CreateFromBuiltinConfig(const char * configName)
     ConstConfigRcPtr builtinConfig;
     ConstBuiltinConfigRegistryRcPtr reg = BuiltinConfigRegistry::Get();
 
-    const char * builtinConfigStr = reg->getConfigByName(configName);
+    const char * builtinConfigStr = reg->getBuiltinConfigByName(configName);
     if (Platform::Strcasecmp(builtinConfigStr, "") == 0)
     {
         // Config string is empty

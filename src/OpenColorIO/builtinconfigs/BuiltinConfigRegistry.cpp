@@ -70,12 +70,12 @@ void BuiltinConfigRegistryImpl::addBuiltin(const char * name, const char * confi
     m_builtinConfigs.push_back(data);
 }
 
-size_t BuiltinConfigRegistryImpl::getNumConfigs() const noexcept
+size_t BuiltinConfigRegistryImpl::getNumBuiltInConfigs() const noexcept
 {
     return m_builtinConfigs.size();
 }
 
-const char * BuiltinConfigRegistryImpl::getConfigName(size_t configIndex) const
+const char * BuiltinConfigRegistryImpl::getBuiltinConfigName(size_t configIndex) const
 {
     if (configIndex >= m_builtinConfigs.size())
     {
@@ -85,7 +85,7 @@ const char * BuiltinConfigRegistryImpl::getConfigName(size_t configIndex) const
     return m_builtinConfigs[configIndex].m_name.c_str();
 }
 
-const char * BuiltinConfigRegistryImpl::getConfig(size_t configIndex) const
+const char * BuiltinConfigRegistryImpl::getBuiltinConfig(size_t configIndex) const
 {
     if (configIndex >= m_builtinConfigs.size())
     {
@@ -95,7 +95,7 @@ const char * BuiltinConfigRegistryImpl::getConfig(size_t configIndex) const
     return m_builtinConfigs[configIndex].m_config.c_str();
 }
 
-const char * BuiltinConfigRegistryImpl::getConfigByName(const char * configName) const noexcept
+const char * BuiltinConfigRegistryImpl::getBuiltinConfigByName(const char * configName) const noexcept
 {
     // Search for config name.
     for (auto & builtin : m_builtinConfigs)
@@ -109,7 +109,7 @@ const char * BuiltinConfigRegistryImpl::getConfigByName(const char * configName)
     return "";
 }
 
-bool BuiltinConfigRegistryImpl::isConfigRecommended(size_t configIndex) const
+bool BuiltinConfigRegistryImpl::isBuiltinConfigRecommended(size_t configIndex) const
 {
     if (configIndex >= m_builtinConfigs.size())
     {
@@ -119,7 +119,7 @@ bool BuiltinConfigRegistryImpl::isConfigRecommended(size_t configIndex) const
     return m_builtinConfigs[configIndex].m_isRecommended;
 }
 
-const char * BuiltinConfigRegistryImpl::getDefaultConfigName() const
+const char * BuiltinConfigRegistryImpl::getDefaultBuiltinConfigName() const
 {
     if (m_defaultBuiltinConfigName.empty())
     {

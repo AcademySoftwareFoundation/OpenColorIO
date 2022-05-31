@@ -83,20 +83,20 @@ class BuiltinConfigRegistryImpl : public BuiltinConfigRegistry
         void addBuiltin(const char * name, const char * config, bool isRecommended);
 
         /// Get the number of built-in configs available.
-        size_t getNumConfigs() const noexcept override;
+        size_t getNumBuiltInConfigs() const noexcept override;
 
         /// Get built-in config name at specified index..
-        const char * getConfigName(size_t configIndex) const override;
+        const char * getBuiltinConfigName(size_t configIndex) const override;
         /// Get built-in config at specified index.
-        const char * getConfig(size_t configIndex) const override;
+        const char * getBuiltinConfig(size_t configIndex) const override;
         /// Get built-in config of specified name.
-        const char * getConfigByName(const char * configName) const noexcept override;
+        const char * getBuiltinConfigByName(const char * configName) const noexcept override;
 
         /// Check if a specific built-in config is recommended.
-        bool isConfigRecommended(size_t configIndex) const override;
+        bool isBuiltinConfigRecommended(size_t configIndex) const override;
 
         /// Get the default recommended built-in config.
-        const char * getDefaultConfigName() const override;
+        const char * getDefaultBuiltinConfigName() const override;
         /// Set the default Built-in Config
         void setDefaultBuiltinConfig(const char * configName);
     private:
