@@ -23,7 +23,6 @@ rem Python location
 set PYTHON_PATH=
 
 rem Microsoft Visual Studio path
-rem %programfiles%\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat
 set MSVS_PATH=%programfiles%\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build
 
 set DO_CONFIGURE=0
@@ -77,14 +76,14 @@ if NOT "%~1"=="" (
 )
 
 rem Testing the path before cmake
-IF NOT EXIST "%VCPKG_PATH%" ( 
+IF NOT EXIST "!VCPKG_PATH!" ( 
     echo Could not find Vcpkg. Please provide the location for vcpkg or modify VCPKG_PATH in this script.
     rem The double dash are in quote here because otherwise the echo command thow an error.
     echo "--vcpkg <path>"
     exit /b
 )
 
-IF NOT EXIST "%OCIO_PATH%" ( 
+IF NOT EXIST "!OCIO_PATH!" ( 
     echo Could not find OCIO source. Please provide the location for ocio or modify OCIO_PATH in this script.
     rem The double dash are in quote here because otherwise the echo command thow an error.
     echo "--ocio <path>"
@@ -104,7 +103,7 @@ if NOT EXIST "!PYTHON_PATH!\python.exe" (
     )
 )
 
-IF NOT EXIST "%MSVS_PATH%" ( 
+IF NOT EXIST "!MSVS_PATH!" ( 
     echo Could not find MS Visual Studio. Please provide the location for Microsoft Visual Studio vcvars64.bat or modify MSVS_PATH in the script.
     rem The double dash are in quote here because otherwise the echo command thow an error.
     echo "--msvs <path>"
@@ -112,9 +111,9 @@ IF NOT EXIST "%MSVS_PATH%" (
     exit /b
 )
 
-if %CUSTOM_BUILD_PATH%==0 (
+if !CUSTOM_BUILD_PATH!==0 (
     echo.
-    set /p BUILD_PATH_OK=Default build path [%BUILD_PATH%] is used. Is it ok? [y/n]:
+    set /p BUILD_PATH_OK=Default build path [!BUILD_PATH!] is used. Is it ok? [y/n]:
     if !BUILD_PATH_OK!==n (
         echo Please provide the build location.
         rem The double dash are in quote here because otherwise the echo command thow an error.
@@ -123,9 +122,9 @@ if %CUSTOM_BUILD_PATH%==0 (
     )
 )
 
-if %CUSTOM_INSTALL_PATH%==0 (
+if !CUSTOM_INSTALL_PATH!==0 (
     echo.
-    set /p INSTALL_PATH_OK=Default install path [%INSTALL_PATH%] is used. Is it ok? [y/n]:
+    set /p INSTALL_PATH_OK=Default install path [!INSTALL_PATH!] is used. Is it ok? [y/n]:
     if !INSTALL_PATH_OK!==n (
         echo Please provide the install location.
         rem The double dash are in quote here because otherwise the echo command thow an error.
@@ -135,39 +134,39 @@ if %CUSTOM_INSTALL_PATH%==0 (
 )
 
 rem Update build and install variables
-set BUILD_PATH=%BUILD_PATH%\%CMAKE_BUILD_TYPE%
-set INSTALL_PATH=%INSTALL_PATH%\%CMAKE_BUILD_TYPE%
+set BUILD_PATH=!BUILD_PATH!\!CMAKE_BUILD_TYPE!
+set INSTALL_PATH=!INSTALL_PATH!\!CMAKE_BUILD_TYPE!
 
 rem ****************************************************************************************************************
 rem Setting up the environment using MS Visual Studio batch script
-set VCVARS64_PATH="%MSVS_PATH%\vcvars64.bat"
-IF NOT EXIST %VCVARS64_PATH% (
+set VCVARS64_PATH="!MSVS_PATH!\vcvars64.bat"
+IF NOT EXIST !VCVARS64_PATH! (
     rem Checking for vcvars64.bat script.
-    rem %MSVS_PATH% is checked earlier in the script
-    echo VCVARS64_PATH=%VCVARS64_PATH% does not exist
+    rem !MSVS_PATH! is checked earlier in the script
+    echo VCVARS64_PATH=!VCVARS64_PATH! does not exist
     echo Make sure that Microsoft Visual Studio is installed.
     exit /b
 )
 
 rem Checking if it was already previously ran. Some issues might happend when ran multiple time.
 if not defined DevEnvDir (
-    call %VCVARS64_PATH% x64
+    call !VCVARS64_PATH! x64
 )
 
 echo *** Important: Note that the build path should be as small as possible. ***
 echo *** Important: Python documentation generation could failed because of Maximum Path Length Limitation of Windows. ***
 
 rem Freeglut root directory
-set GLUT_ROOT=%VCPKG_PATH%\packages\freeglut_x64-windows
+set GLUT_ROOT=!VCPKG_PATH!\packages\freeglut_x64-windows
 rem Glew root directory
-set GLEW_ROOT=%VCPKG_PATH%\packages\glew_x64-windows
+set GLEW_ROOT=!VCPKG_PATH!\packages\glew_x64-windows
 rem OpenImageIO root directory
-set OPENIMAGEIO_DIR=%VCPKG_PATH%\packages\openimageio_x64-windows
+set OPENIMAGEIO_DIR=!VCPKG_PATH!\packages\openimageio_x64-windows
 
 rem Testing the path before cmake
-echo Checking OCIO_PATH=%OCIO_PATH%...
-IF NOT EXIST "%OCIO_PATH%" ( 
-    echo OCIO_PATH=%OCIO_PATH% does not exist
+echo Checking OCIO_PATH=!OCIO_PATH!...
+IF NOT EXIST "!OCIO_PATH!" ( 
+    echo OCIO_PATH=!OCIO_PATH! does not exist
     exit /b
 )
 echo Checking GLUT_ROOT=%GLUT_ROOT%...
@@ -185,22 +184,22 @@ IF NOT EXIST "%OPENIMAGEIO_DIR%" (
     echo OPENIMAGEIO_DIR=%OPENIMAGEIO_DIR% does not exist
     exit /b
 )
-echo Checking PYTHON_PATH=%PYTHON_PATH%...
-IF NOT EXIST "%PYTHON_PATH%" ( 
-    echo PYTHON_PATH=%PYTHON_PATH% does not exist
+echo Checking PYTHON_PATH="!PYTHON_PATH!"...
+IF NOT EXIST "!PYTHON_PATH!" ( 
+    echo PYTHON_PATH=!PYTHON_PATH! does not exist
     exit /b
 )
 
-if %DO_CONFIGURE%==1 (
+if !DO_CONFIGURE!==1 (
     echo Running CMake...
-    cmake -B "%BUILD_PATH%"^
+    cmake -B "!BUILD_PATH!"^
         -DOCIO_INSTALL_EXT_PACKAGES=ALL^
-        -DCMAKE_BUILD_TYPE=%CMAKE_BUILD_TYPE%^
-        -DGLEW_ROOT=%GLEW_ROOT%^
-        -DGLUT_ROOT=%GLUT_ROOT%^
-        -DOpenImageIO_ROOT=%OPENIMAGEIO_DIR%^
+        -DCMAKE_BUILD_TYPE=!CMAKE_BUILD_TYPE!^
+        -DGLEW_ROOT="!GLEW_ROOT!"^
+        -DGLUT_ROOT="!GLUT_ROOT!"^
+        -DOpenImageIO_ROOT="!OPENIMAGEIO_DIR!"^
         -DOCIO_BUILD_PYTHON=ON^
-        -DPython_ROOT=%PYTHON_PATH%^
+        -DPython_ROOT="!PYTHON_PATH!"^
         -DBUILD_SHARED_LIBS=ON^
         -DOCIO_BUILD_APPS=ON^
         -DOCIO_BUILD_TESTS=ON^
@@ -209,7 +208,7 @@ if %DO_CONFIGURE%==1 (
         -DOCIO_USE_SSE=ON^
         -DOCIO_WARNING_AS_ERROR=ON^
         -DOCIO_BUILD_JAVA=OFF^
-        %OCIO_PATH%
+        "!OCIO_PATH!"
 
     if not ErrorLevel 1 (
         set CMAKE_CONFIGURE_STATUS=Ok
@@ -221,7 +220,7 @@ if %DO_CONFIGURE%==1 (
 rem Run cmake --build.
 if Not "%CMAKE_CONFIGURE_STATUS%"=="Failed" (
     rem Build OCIO
-    cmake --build %BUILD_PATH% --config %CMAKE_BUILD_TYPE% --parallel %NUMBER_OF_PROCESSORS%)
+    cmake --build !BUILD_PATH! --config !CMAKE_BUILD_TYPE! --parallel %NUMBER_OF_PROCESSORS%)
     if not ErrorLevel 1 (
         set CMAKE_BUILD_STATUS=Ok
     ) else (
@@ -232,7 +231,7 @@ if Not "%CMAKE_CONFIGURE_STATUS%"=="Failed" (
 rem Run cmake --install only if cmake --build was successful.
 if Not "%CMAKE_BUILD_STATUS%"=="Failed" (
     rem Install OCIO
-    cmake --install %BUILD_PATH% --config %CMAKE_BUILD_TYPE% --prefix %INSTALL_PATH%
+    cmake --install !BUILD_PATH! --config !CMAKE_BUILD_TYPE! --prefix !INSTALL_PATH!
     if not ErrorLevel 1 (
         set CMAKE_INSTALL_STATUS=Ok
     ) else (
@@ -244,8 +243,8 @@ rem Run ctest only if cmake --build was successful.
 if Not "%CMAKE_BUILD_STATUS%"=="Failed" (
     rem Run Tests
     rem Need cmake version >= 3.20 for --test-dir argument
-    rem if <= 3.20 --> cd %BUILD_PATH%; ctest -V -C %CMAKE_BUILD_TYPE%
-    ctest -V --test-dir "%BUILD_PATH%" -C %CMAKE_BUILD_TYPE%
+    rem if <= 3.20 --> cd !BUILD_PATH!; ctest -V -C !CMAKE_BUILD_TYPE!
+    ctest -V --test-dir "!BUILD_PATH!" -C !CMAKE_BUILD_TYPE!
     rem Not testing %errorlevel% because ctest returns is not reliable (e.g. returns 0 even when a test fails)
 )
 
@@ -255,7 +254,7 @@ echo **                                                                         
 echo ** Summary                                                                                                  **
 echo **                                                                                                          **
 echo **************************************************************************************************************
-echo.** Source location: %OCIO_PATH%
+echo.** Source location: !OCIO_PATH!
 echo.**
 echo.** Statuses:                                                                                                
 echo.**    Configure: %CMAKE_CONFIGURE_STATUS%                                                                   
@@ -263,9 +262,9 @@ echo.**    Build:     %CMAKE_BUILD_STATUS%
 echo.**    CTest:     See output above summary                                                                          
 echo.**    Install:   %CMAKE_INSTALL_STATUS%                                                                     
 echo.**                                                                                                          
-echo.** Build type:         %CMAKE_BUILD_TYPE%                                                                           
-echo.** Build location:     %BUILD_PATH%                                                                             
-echo.** Install location:   %INSTALL_PATH%                                                                         
+echo.** Build type:         !CMAKE_BUILD_TYPE!                                                                           
+echo.** Build location:     !BUILD_PATH!                                                                             
+echo.** Install location:   !INSTALL_PATH!                                                                         
 echo.**                                                                                                          
 echo **************************************************************************************************************
 
