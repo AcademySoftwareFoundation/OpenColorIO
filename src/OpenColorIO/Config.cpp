@@ -1099,7 +1099,6 @@ ConstConfigRcPtr Config::CreateRaw()
     return CreateFromStream(istream);
 }
 
-// TODO CED: CreateFromEnv should allow the use of ocio:// URI to specify a default config name (not a path)
 ConstConfigRcPtr Config::CreateFromEnv()
 {
     std::string file;
@@ -1172,7 +1171,6 @@ ConstConfigRcPtr Config::CreateFromBuiltinConfig(const char * configName)
 
     std::istringstream iss;
     iss.str(builtinConfigStr);
-    
     builtinConfig = Config::CreateFromStream(iss);
     return builtinConfig;
 }

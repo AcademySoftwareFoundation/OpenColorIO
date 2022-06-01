@@ -124,7 +124,7 @@ const char * BuiltinConfigRegistryImpl::getDefaultBuiltinConfigName() const
     if (m_defaultBuiltinConfigName.empty())
     {
         // Make sure that at least one default built-ins config is present.
-        throw Exception("Internal error - There is no default built-ins config.");
+        throw Exception("Internal error - The default built-in config name has not been set yet.");
     }
 
     return m_defaultBuiltinConfigName.c_str();
@@ -132,7 +132,7 @@ const char * BuiltinConfigRegistryImpl::getDefaultBuiltinConfigName() const
 
 void BuiltinConfigRegistryImpl::setDefaultBuiltinConfig(const char * configName)
 {
-    BuiltinConfigName builtinConfigName = "";
+    std::string builtinConfigName = "";
     // Search for config name.
     for (auto & builtin : m_builtinConfigs)
     {
@@ -144,7 +144,7 @@ void BuiltinConfigRegistryImpl::setDefaultBuiltinConfig(const char * configName)
 
     if (builtinConfigName.empty())
     {
-        throw Exception("Internal error - Config name do not exist.");
+        throw Exception("Internal error - Config name does not exist.");
     }
 
     m_defaultBuiltinConfigName = builtinConfigName;

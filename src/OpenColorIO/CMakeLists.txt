@@ -10,12 +10,12 @@ set(SOURCES
     Baker.cpp
     BakingUtils.cpp
     BitDepthUtils.cpp
+    builtinconfigs/BuiltinConfigRegistry.cpp
+    builtinconfigs/CGConfig.cpp
     Caching.cpp
     ColorSpace.cpp
     ColorSpaceSet.cpp
     Config.cpp
-    builtinconfigs/BuiltinConfigRegistry.cpp
-    builtinconfigs/CGConfig.cpp
     Context.cpp
     ContextVariableUtils.cpp
     CPUProcessor.cpp
@@ -214,7 +214,7 @@ configure_file("${HEADER_LOCATION}/OpenColorABI.h.in" "${ABI_HEADER_LOCATION}/Op
 # Built-in configs
 set(CONFIGS_HEADER_LOCATION "${CMAKE_BINARY_DIR}/generated_include")
 file(GLOB CONFIGS_PATHS "builtinconfigs/configs/*.ocio")
-# Looping throuhg .ocio config files.
+# Loop through the .ocio config files.
 foreach(C ${CONFIGS_PATHS})
     get_filename_component(CONFIG_FULLNAME "${C}" NAME)
     get_filename_component(CONFIG_NAME "${C}" NAME_WLE)

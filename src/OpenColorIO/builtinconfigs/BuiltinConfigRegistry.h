@@ -14,7 +14,6 @@ namespace OCIO_NAMESPACE
 
 class BuiltinConfigRegistryImpl : public BuiltinConfigRegistry
 {
-    using BuiltinConfigName = std::string;
     // Structure size
     // 32 bytes (std::string), 32 bytes (std::string), 1 byte (bool) + 7 bytes of padding.
     // Total of 72 bytes of memory per config
@@ -43,7 +42,7 @@ class BuiltinConfigRegistryImpl : public BuiltinConfigRegistry
         }
 
         std::string m_config;
-        BuiltinConfigName m_name;
+        std::string m_name;
         bool m_isRecommended;
     };
     using BuiltinConfigs = std::vector<BuiltinConfigData>;
@@ -58,17 +57,15 @@ class BuiltinConfigRegistryImpl : public BuiltinConfigRegistry
          * @brief Loads built-in configs into the registry.
          * 
          * Loads the built-in configs from various config header file
-         * that were generated from templated header file with cmake.
+         * that were generated from a template header file with cmake.
          * 
-         * Note that it only initialize the registry.
-         * It does not create Config object nor parsed the config.
+         * The init method is light-weight. 
+         * It does not contain a copy of the config data strings or parse them into config objects.
          */
         void init() noexcept;
 
         /**
          * @brief Add a built-in config into the registry.
-         * 
-         * Add a built-in config into the registry keyed by name.
          * 
          * Adding a built-in config using an existing name will overwrite the current built-in
          * config associated with that name.
@@ -82,14 +79,18 @@ class BuiltinConfigRegistryImpl : public BuiltinConfigRegistry
          */
         void addBuiltin(const char * name, const char * config, bool isRecommended);
 
-        /// Get the number of built-in configs available.
+        /// Get the current built-in configs registry.
         size_t getNumBuiltInConfigs() const noexcept override;
 
-        /// Get built-in config name at specified index..
+        /// Get the name of the config at the specified (zero-based) index. 
+        /// Throws for illegal index.
         const char * getBuiltinConfigName(size_t configIndex) const override;
-        /// Get built-in config at specified index.
+
+        /// Get Yaml text of the built-in config at the specified index.
         const char * getBuiltinConfig(size_t configIndex) const override;
-        /// Get built-in config of specified name.
+
+        /// Get the Yaml text of the built-in config with the specified name. 
+        /// Throws if the name is not found.
         const char * getBuiltinConfigByName(const char * configName) const noexcept override;
 
         /// Check if a specific built-in config is recommended.
@@ -97,11 +98,12 @@ class BuiltinConfigRegistryImpl : public BuiltinConfigRegistry
 
         /// Get the default recommended built-in config.
         const char * getDefaultBuiltinConfigName() const override;
-        /// Set the default Built-in Config
+
+        /// Set the default built-in config.
         void setDefaultBuiltinConfig(const char * configName);
     private:
         BuiltinConfigs m_builtinConfigs;
-        BuiltinConfigName m_defaultBuiltinConfigName;
+        std::string m_defaultBuiltinConfigName;
 };
 
 } // namespace OCIO_NAMESPACE

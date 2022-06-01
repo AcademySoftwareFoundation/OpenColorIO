@@ -12,7 +12,7 @@
 #include "UnitTestLogUtils.h"
 #include "UnitTestUtils.h"
 #include "utils/StringUtils.h"
-
+#include "Platform.h"
 
 namespace OCIO = OCIO_NAMESPACE;
 
@@ -8744,7 +8744,7 @@ OCIO_ADD_TEST(Config, look_fallback)
 OCIO_ADD_TEST(Config, create_builtin_config)
 {
     {
-        // Testing with a known built-in config name using CreateFromBuiltinConfig.
+        // Testing CreateFromBuiltinConfig with a known built-in config name.
 
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromBuiltinConfig("cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1"));
@@ -8757,10 +8757,23 @@ OCIO_ADD_TEST(Config, create_builtin_config)
     }
 
     {
-        // Testing with an known built-in config name using URI Syntax.
+        // Testing CreateFromEnv with an known built-in config name using URI Syntax. 
 
-        // Using CreateFromFile directly to simulate an OCIO environment variable
-        // that would be set like this: OCIO=ocio://cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1
+        OCIO::Platform::Setenv("OCIO", "ocio://cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1");
+        OCIO::ConstConfigRcPtr config;
+
+        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromEnv());
+        OCIO_CHECK_NO_THROW(config->validate());
+        OCIO_CHECK_EQUAL(
+            std::string(config->getName()), 
+            std::string("cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1")
+        );
+        OCIO_CHECK_EQUAL(config->getNumColorSpaces(), 19);
+    }
+
+    {
+        // Testing CreateFromFile with an known built-in config name using URI Syntax.
+
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromFile("ocio://cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1"));
         OCIO_CHECK_NO_THROW(config->validate());
@@ -8771,11 +8784,24 @@ OCIO_ADD_TEST(Config, create_builtin_config)
         OCIO_CHECK_EQUAL(config->getNumColorSpaces(), 19);
     }
 
-    {
-        // Testing with the default config using URI Syntax.
 
-        // Using CreateFromFile directly to simulate an OCIO environment variable
-        // that would be set like this: OCIO=ocio://default
+    {
+        // Testing CreateFromEnv with the default config using URI Syntax.
+
+        OCIO::Platform::Setenv("OCIO", "ocio://default");
+        OCIO::ConstConfigRcPtr config;
+
+        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromEnv());
+        OCIO_CHECK_NO_THROW(config->validate());
+        OCIO_CHECK_EQUAL(
+            std::string(config->getName()), 
+            std::string("cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1")
+        );
+    }
+
+    {
+        // Testing CreateFromFile with the default config using URI Syntax.
+
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromFile("ocio://default"));
         OCIO_CHECK_NO_THROW(config->validate());
@@ -8785,24 +8811,34 @@ OCIO_ADD_TEST(Config, create_builtin_config)
         );
     }
 
-
     // ********************************
     // Testing some expected failures.
     // ********************************
 
-    // Testing with an unknown built-in config id using CreateFromBuiltinConfig directly.
+    // Testing CreateFromBuiltinConfig with an unknown built-in config name.
     OCIO_CHECK_THROW_WHAT(
         OCIO::Config::CreateFromBuiltinConfig("I-do-not-exist"),
         OCIO::Exception,
         "Could not find 'I-do-not-exist' in built-in configurations."
     );
 
-    // Testing with an unknown built-in config id using URI syntax
-    // Using CreateFromFile directly to simulate an OCIO environment variable
-    // that would be set like this: OCIO=ocio://i-do-not-exist
+    // Testing CreateFromFile with an unknown built-in config name using URI syntax.
     OCIO_CHECK_THROW_WHAT(
         OCIO::Config::CreateFromFile("ocio://I-do-not-exist"),
         OCIO::Exception,
         "Could not find 'I-do-not-exist' in built-in configurations."
     );
+
+    {
+        // Testing CreateFromEnv with an unknown built-in config.
+
+        OCIO::Platform::Setenv("OCIO", "ocio://thedefault");
+        OCIO::ConstConfigRcPtr config;
+
+        OCIO_CHECK_THROW_WHAT(
+            OCIO::Config::CreateFromEnv(),
+            OCIO::Exception,
+            "Could not find 'thedefault' in built-in configurations."
+        );
+    }
 }
