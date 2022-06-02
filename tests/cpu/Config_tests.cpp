@@ -8759,7 +8759,18 @@ OCIO_ADD_TEST(Config, create_builtin_config)
     {
         // Testing CreateFromEnv with an known built-in config name using URI Syntax. 
 
-        OCIO::Platform::Setenv("OCIO", "ocio://cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1");
+        struct Guard
+        {
+            Guard()
+            {
+                OCIO::Platform::Setenv("OCIO", "ocio://cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1");
+            }
+            ~Guard()
+            {
+                OCIO::Platform::Unsetenv("OCIO");
+            }
+        } guard;
+
         OCIO::ConstConfigRcPtr config;
 
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromEnv());
@@ -8788,7 +8799,18 @@ OCIO_ADD_TEST(Config, create_builtin_config)
     {
         // Testing CreateFromEnv with the default config using URI Syntax.
 
-        OCIO::Platform::Setenv("OCIO", "ocio://default");
+        struct Guard
+        {
+            Guard()
+            {
+                OCIO::Platform::Setenv("OCIO", "ocio://default");
+            }
+            ~Guard()
+            {
+                OCIO::Platform::Unsetenv("OCIO");
+            }
+        } guard;
+
         OCIO::ConstConfigRcPtr config;
 
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromEnv());
@@ -8832,7 +8854,18 @@ OCIO_ADD_TEST(Config, create_builtin_config)
     {
         // Testing CreateFromEnv with an unknown built-in config.
 
-        OCIO::Platform::Setenv("OCIO", "ocio://thedefault");
+        struct Guard
+        {
+            Guard()
+            {
+                OCIO::Platform::Setenv("OCIO", "ocio://thedefault");
+            }
+            ~Guard()
+            {
+                OCIO::Platform::Unsetenv("OCIO");
+            }
+        } guard;
+
         OCIO::ConstConfigRcPtr config;
 
         OCIO_CHECK_THROW_WHAT(

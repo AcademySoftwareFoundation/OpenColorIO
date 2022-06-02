@@ -13,13 +13,25 @@ OCIO_ADD_TEST(BuiltinConfigs, basic)
     
     OCIO_CHECK_EQUAL(registry->getNumBuiltInConfigs(), 1);
 
-    OCIO_CHECK_EQUAL(std::string(registry->getBuiltinConfigName(0)), std::string("cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1"));
+    OCIO_CHECK_EQUAL(
+        std::string(registry->getBuiltinConfigName(0)), 
+        std::string("cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1")
+    );
 
-    OCIO_CHECK_EQUAL(std::string(registry->getBuiltinConfig(0)), std::string(CG_CONFIG_V010_ACES_V130_OCIO_V211));
+    OCIO_CHECK_EQUAL(
+        std::string(registry->getBuiltinConfig(0)), 
+        std::string(CG_CONFIG_V010_ACES_V130_OCIO_V211)
+    );
 
-    OCIO_CHECK_EQUAL(std::string(registry->getBuiltinConfigByName("cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1")), std::string(CG_CONFIG_V010_ACES_V130_OCIO_V211));
+    OCIO_CHECK_EQUAL(
+        std::string(registry->getBuiltinConfigByName("cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1")), 
+        std::string(CG_CONFIG_V010_ACES_V130_OCIO_V211)
+    );
 
-    OCIO_CHECK_EQUAL(std::string(registry->getDefaultBuiltinConfigName()), std::string("cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1"));
+    OCIO_CHECK_EQUAL(
+        std::string(registry->getDefaultBuiltinConfigName()), 
+        std::string("cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1")
+        );
 
     OCIO_CHECK_EQUAL(registry->isBuiltinConfigRecommended(0), true);
 
@@ -87,7 +99,20 @@ OCIO_ADD_TEST(BuiltinConfigs, basic_impl)
             SIMPLE_CONFIG.c_str(),
             true
         ));
-        
+
         OCIO_CHECK_EQUAL(registry.getNumBuiltInConfigs(), 2);
+
+
+        // Test to check if the config #1 was added correctly.
+        OCIO_CHECK_EQUAL(
+            std::string(registry.getBuiltinConfigName(0)), 
+            std::string("My simple config name #1")
+        );
+
+        // Test to check if the config #2 was added correctly.
+        OCIO_CHECK_EQUAL(
+            std::string(registry.getBuiltinConfigName(1)), 
+            std::string("My simple config name #2")
+        );
     }
 }
