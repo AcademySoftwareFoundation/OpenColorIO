@@ -234,7 +234,7 @@ foreach(C ${CONFIGS_PATHS})
     set(${CONFIG_NAME} ${FORMATTED_HEX})
 endforeach()
 
-file(GLOB TEMPLATE_HEADER_CONFIG_FILES "builtinconfigs/*.h.in")
+file(GLOB TEMPLATE_HEADER_CONFIG_FILES "builtinconfigs/*.cpp.in")
 foreach(C ${TEMPLATE_HEADER_CONFIG_FILES})
     get_filename_component(TEMPLATE_HEADER_FULLNAME "${C}" NAME)
 

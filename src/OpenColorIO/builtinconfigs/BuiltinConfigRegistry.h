@@ -14,33 +14,21 @@ namespace OCIO_NAMESPACE
 
 class BuiltinConfigRegistryImpl : public BuiltinConfigRegistry
 {
-    // Structure size
-    // 32 bytes (std::string), 32 bytes (std::string), 1 byte (bool) + 7 bytes of padding.
-    // Total of 72 bytes of memory per config
     struct BuiltinConfigData
     {
         BuiltinConfigData(const char * name, const char * config, bool isRecommended = false)
             : m_config(config ? config : "")
             , m_name(name ? name : "")
-            , m_isRecommended(isRecommended ? true : false)
+            , m_isRecommended(isRecommended)
         {
         }
+        
         BuiltinConfigData() = delete;
         BuiltinConfigData(const BuiltinConfigData & o) = default;
-        BuiltinConfigData(BuiltinConfigData && o) noexcept
-            : m_config(std::move(o.m_config))
-            , m_name(std::move(o.m_name))
-            , m_isRecommended(std::move(o.m_isRecommended))
-        {
-        }
-        BuiltinConfigData & operator= (const BuiltinConfigData & o)
-        {
-            m_config        = o.m_config;
-            m_name          = o.m_name;
-            m_isRecommended  = o.m_isRecommended;
-            return *this;
-        }
+        BuiltinConfigData(BuiltinConfigData &&) = default;
+        BuiltinConfigData & operator= (const BuiltinConfigData &) = default;
 
+        // m_config is accessing a global static pointer so there is not need to manage it.
         const char * m_config;
         std::string m_name;
         bool m_isRecommended;
@@ -91,7 +79,7 @@ class BuiltinConfigRegistryImpl : public BuiltinConfigRegistry
 
         /// Get the Yaml text of the built-in config with the specified name. 
         /// Throws if the name is not found.
-        const char * getBuiltinConfigByName(const char * configName) const noexcept override;
+        const char * getBuiltinConfigByName(const char * configName) const override;
 
         /// Check if a specific built-in config is recommended.
         bool isBuiltinConfigRecommended(size_t configIndex) const override;

@@ -11,26 +11,20 @@
 
 #include "Platform.h"
 
-#include "CG.h"
 #include "builtinconfigs/BuiltinConfigRegistry.h"
 #include "builtinconfigs/CGConfig.h"
 
 #define OUT_OF_RANGE_EXCEPTION_TEXT         "Config index is out of range."
-#define INVALID_CONFIG_NAME_EXCEPTION_TEXT  "Config name is invalid."
 
 namespace OCIO_NAMESPACE
 {
 
-namespace
-{
-
-static BuiltinConfigRegistryRcPtr globalRegistry;
-static Mutex globalRegistryMutex;
-
-} // anon.
-
 ConstBuiltinConfigRegistryRcPtr BuiltinConfigRegistry::Get() noexcept
 {
+    // std::shared_ptr<BuiltinConfigRegistry>
+    static BuiltinConfigRegistryRcPtr globalRegistry;
+    static Mutex globalRegistryMutex;
+    
     AutoMutex guard(globalRegistryMutex);
 
     if (!globalRegistry)
@@ -95,7 +89,7 @@ const char * BuiltinConfigRegistryImpl::getBuiltinConfig(size_t configIndex) con
     return m_builtinConfigs[configIndex].m_config;
 }
 
-const char * BuiltinConfigRegistryImpl::getBuiltinConfigByName(const char * configName) const noexcept
+const char * BuiltinConfigRegistryImpl::getBuiltinConfigByName(const char * configName) const
 {
     // Search for config name.
     for (auto & builtin : m_builtinConfigs)
@@ -106,7 +100,9 @@ const char * BuiltinConfigRegistryImpl::getBuiltinConfigByName(const char * conf
         }
     }
 
-    return "";
+    std::ostringstream os;
+    os << "Could not find '" << configName << "' in built-in configurations.";
+    throw Exception (os.str().c_str());
 }
 
 bool BuiltinConfigRegistryImpl::isBuiltinConfigRecommended(size_t configIndex) const
@@ -132,22 +128,17 @@ const char * BuiltinConfigRegistryImpl::getDefaultBuiltinConfigName() const
 
 void BuiltinConfigRegistryImpl::setDefaultBuiltinConfig(const char * configName)
 {
-    std::string builtinConfigName = "";
     // Search for config name.
     for (auto & builtin : m_builtinConfigs)
     {
         if (Platform::Strcasecmp(configName, builtin.m_name.c_str()) == 0)
         {
-            builtinConfigName = builtin.m_name;
+            m_defaultBuiltinConfigName = configName;
+            return;
         }
     }
 
-    if (builtinConfigName.empty())
-    {
-        throw Exception("Internal error - Config name does not exist.");
-    }
-
-    m_defaultBuiltinConfigName = builtinConfigName;
+    throw Exception("Internal error - Config name does not exist."); 
 }
 
 } // namespace OCIO_NAMESPACE

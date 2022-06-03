@@ -2,9 +2,10 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 #include <OpenColorIO/OpenColorIO.h>
-#include "CG.h"
 #include "builtinconfigs/BuiltinConfigRegistry.h"
 #include "builtinconfigs/CGConfig.h"
+
+#include "CG.cpp"
 
 namespace OCIO_NAMESPACE
 {

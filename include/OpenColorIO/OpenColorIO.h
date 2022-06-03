@@ -3334,8 +3334,9 @@ public:
     /// Get Yaml text of the built-in config at the specified index.
     virtual const char * getBuiltinConfig(size_t configIndex) const = 0;
     
-    /// Get the Yaml text of the built-in config with the specified name.
-    virtual const char * getBuiltinConfigByName(const char * configName) const noexcept = 0;
+    /// Get the Yaml text of the built-in config with the specified name. 
+    /// Throws if the name is not found.
+    virtual const char * getBuiltinConfigByName(const char * configName) const = 0;
 
     /**
      * @brief Check if a specific built-in config is recommended.

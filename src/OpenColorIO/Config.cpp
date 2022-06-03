@@ -1123,10 +1123,10 @@ ConstConfigRcPtr Config::CreateFromFile(const char * filename)
     }
 
     // Check for URI Pattern: ocio://<config name>
-    const std::regex uriPattern("ocio:\\/?\\/?([^\\s]+)");
+    static const std::regex uriPattern("ocio:\\/?\\/?([^\\s]+)");
     std::smatch match;
     const std::string uri = filename;
-    if (std::regex_search(uri, match, uriPattern) == true)
+    if (std::regex_search(uri, match, uriPattern))
     {
         if (Platform::Strcasecmp(match.str(1).c_str(), "default") == 0)
         {
@@ -1159,20 +1159,20 @@ ConstConfigRcPtr Config::CreateFromBuiltinConfig(const char * configName)
     ConstConfigRcPtr builtinConfig;
     ConstBuiltinConfigRegistryRcPtr reg = BuiltinConfigRegistry::Get();
 
-    const char * builtinConfigStr = reg->getBuiltinConfigByName(configName);
-    if (Platform::Strcasecmp(builtinConfigStr, "") == 0)
+    try 
     {
-        // Config string is empty
-        std::ostringstream os;
-        os << "Could not find '" << configName;
-        os << "' in built-in configurations.";
-        throw Exception (os.str().c_str());
-    }
+        // getBuiltinConfigByName will throw if config name not found.
+        const char * builtinConfigStr = reg->getBuiltinConfigByName(configName);
+        std::istringstream iss;
+        iss.str(builtinConfigStr);
+        builtinConfig = Config::CreateFromStream(iss);
 
-    std::istringstream iss;
-    iss.str(builtinConfigStr);
-    builtinConfig = Config::CreateFromStream(iss);
-    return builtinConfig;
+        return builtinConfig;
+    } catch (const Exception & e)
+    {
+        // Pass the Exception.
+        throw e;
+    }
 }
 
 ///////////////////////////////////////////////////////////////////////////

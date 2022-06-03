@@ -8747,78 +8747,76 @@ OCIO_ADD_TEST(Config, create_builtin_config)
         // Testing CreateFromBuiltinConfig with a known built-in config name.
 
         OCIO::ConstConfigRcPtr config;
-        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromBuiltinConfig("cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1"));
-        OCIO_CHECK_NO_THROW(config->validate());
-        OCIO_CHECK_EQUAL(
-            std::string(config->getName()), 
-            std::string("cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1")
+        OCIO_CHECK_NO_THROW(
+            config = OCIO::Config::CreateFromBuiltinConfig("cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1")
         );
-        OCIO_CHECK_EQUAL(config->getNumColorSpaces(), 19);
+
+        if (config)
+        {
+            OCIO_CHECK_NO_THROW(config->validate());
+            OCIO_CHECK_EQUAL(
+                std::string(config->getName()), 
+                std::string("cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1")
+            );
+            OCIO_CHECK_EQUAL(config->getNumColorSpaces(), 19);
+        }
     }
 
     {
         // Testing CreateFromEnv with an known built-in config name using URI Syntax. 
 
-        struct Guard
-        {
-            Guard()
-            {
-                OCIO::Platform::Setenv("OCIO", "ocio://cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1");
-            }
-            ~Guard()
-            {
-                OCIO::Platform::Unsetenv("OCIO");
-            }
-        } guard;
+        OCIO::EnvironmentVariableGuard guard("OCIO", "ocio://cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1");
 
         OCIO::ConstConfigRcPtr config;
-
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromEnv());
-        OCIO_CHECK_NO_THROW(config->validate());
-        OCIO_CHECK_EQUAL(
-            std::string(config->getName()), 
-            std::string("cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1")
-        );
-        OCIO_CHECK_EQUAL(config->getNumColorSpaces(), 19);
+
+        if (config)
+        {
+            OCIO_CHECK_NO_THROW(config->validate());
+            OCIO_CHECK_EQUAL(
+                std::string(config->getName()), 
+                std::string("cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1")
+            );
+            OCIO_CHECK_EQUAL(config->getNumColorSpaces(), 19);
+        }
     }
 
     {
         // Testing CreateFromFile with an known built-in config name using URI Syntax.
 
         OCIO::ConstConfigRcPtr config;
-        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromFile("ocio://cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1"));
-        OCIO_CHECK_NO_THROW(config->validate());
-        OCIO_CHECK_EQUAL(
-            std::string(config->getName()), 
-            std::string("cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1")
+        OCIO_CHECK_NO_THROW(
+            config = OCIO::Config::CreateFromFile("ocio://cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1")
         );
-        OCIO_CHECK_EQUAL(config->getNumColorSpaces(), 19);
+
+        if (config)
+        {
+            OCIO_CHECK_NO_THROW(config->validate());
+            OCIO_CHECK_EQUAL(
+                std::string(config->getName()), 
+                std::string("cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1")
+            );
+            OCIO_CHECK_EQUAL(config->getNumColorSpaces(), 19);
+        }
     }
 
 
     {
         // Testing CreateFromEnv with the default config using URI Syntax.
 
-        struct Guard
-        {
-            Guard()
-            {
-                OCIO::Platform::Setenv("OCIO", "ocio://default");
-            }
-            ~Guard()
-            {
-                OCIO::Platform::Unsetenv("OCIO");
-            }
-        } guard;
+        OCIO::EnvironmentVariableGuard guard("OCIO", "ocio://default");
 
         OCIO::ConstConfigRcPtr config;
-
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromEnv());
-        OCIO_CHECK_NO_THROW(config->validate());
-        OCIO_CHECK_EQUAL(
-            std::string(config->getName()), 
-            std::string("cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1")
-        );
+
+        if (config)
+        {
+            OCIO_CHECK_NO_THROW(config->validate());
+            OCIO_CHECK_EQUAL(
+                std::string(config->getName()), 
+                std::string("cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1")
+            );
+        }
     }
 
     {
@@ -8826,11 +8824,15 @@ OCIO_ADD_TEST(Config, create_builtin_config)
 
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromFile("ocio://default"));
-        OCIO_CHECK_NO_THROW(config->validate());
-        OCIO_CHECK_EQUAL(
-            std::string(config->getName()), 
-            std::string("cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1")
-        );
+
+        if (config)
+        {
+            OCIO_CHECK_NO_THROW(config->validate());
+            OCIO_CHECK_EQUAL(
+                std::string(config->getName()), 
+                std::string("cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1")
+            );
+        }
     }
 
     // ********************************
@@ -8854,19 +8856,7 @@ OCIO_ADD_TEST(Config, create_builtin_config)
     {
         // Testing CreateFromEnv with an unknown built-in config.
 
-        struct Guard
-        {
-            Guard()
-            {
-                OCIO::Platform::Setenv("OCIO", "ocio://thedefault");
-            }
-            ~Guard()
-            {
-                OCIO::Platform::Unsetenv("OCIO");
-            }
-        } guard;
-
-        OCIO::ConstConfigRcPtr config;
+        OCIO::EnvironmentVariableGuard guard("OCIO", "ocio://thedefault");
 
         OCIO_CHECK_THROW_WHAT(
             OCIO::Config::CreateFromEnv(),

@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-#include "CG.h"
 #include "builtinconfigs/BuiltinConfigRegistry.cpp"
 #include "testutils/UnitTest.h"
+
+#include "CG.cpp"
 
 namespace OCIO = OCIO_NAMESPACE;
 
@@ -62,7 +63,11 @@ OCIO_ADD_TEST(BuiltinConfigs, basic)
     );
 
     // Test getBuiltinConfigByName using an unknown config name.
-    OCIO_CHECK_EQUAL(registry->getBuiltinConfigByName("I do not exist"), "");
+    OCIO_CHECK_THROW_WHAT(
+        registry->getBuiltinConfigByName("I do not exist"), 
+        OCIO::Exception,
+        "Could not find 'I do not exist' in built-in configurations."
+    );
 }
 
 OCIO_ADD_TEST(BuiltinConfigs, basic_impl)
