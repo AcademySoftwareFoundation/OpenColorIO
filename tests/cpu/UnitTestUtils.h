@@ -104,12 +104,16 @@ inline bool EqualWithSafeRelError(T value,
 
 struct EnvironmentVariableGuard
 {
-    EnvironmentVariableGuard(std::string name, std::string value) : m_name(name)
+    EnvironmentVariableGuard(const std::string name, const std::string value) : m_name(name)
     {
         if (!name.empty() && !value.empty())
         {
             Platform::Setenv(name.c_str(), value);
         }
+    }
+
+    EnvironmentVariableGuard(std::string name) : m_name(name)
+    {
     }
 
     ~EnvironmentVariableGuard()
@@ -120,7 +124,7 @@ struct EnvironmentVariableGuard
         }
     }
 
-    std::string m_name;
+    const std::string m_name;
 };
 
 }
