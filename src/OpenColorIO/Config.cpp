@@ -1159,20 +1159,13 @@ ConstConfigRcPtr Config::CreateFromBuiltinConfig(const char * configName)
     ConstConfigRcPtr builtinConfig;
     ConstBuiltinConfigRegistryRcPtr reg = BuiltinConfigRegistry::Get();
 
-    try 
-    {
-        // getBuiltinConfigByName will throw if config name not found.
-        const char * builtinConfigStr = reg->getBuiltinConfigByName(configName);
-        std::istringstream iss;
-        iss.str(builtinConfigStr);
-        builtinConfig = Config::CreateFromStream(iss);
+    // getBuiltinConfigByName will throw if config name not found.
+    const char * builtinConfigStr = reg->getBuiltinConfigByName(configName);
+    std::istringstream iss;
+    iss.str(builtinConfigStr);
+    builtinConfig = Config::CreateFromStream(iss);
 
-        return builtinConfig;
-    } catch (const Exception & e)
-    {
-        // Pass the Exception.
-        throw e;
-    }
+    return builtinConfig;
 }
 
 ///////////////////////////////////////////////////////////////////////////

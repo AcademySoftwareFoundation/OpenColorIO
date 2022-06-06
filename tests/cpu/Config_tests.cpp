@@ -8843,14 +8843,14 @@ OCIO_ADD_TEST(Config, create_builtin_config)
     OCIO_CHECK_THROW_WHAT(
         OCIO::Config::CreateFromBuiltinConfig("I-do-not-exist"),
         OCIO::Exception,
-        "Could not find 'I-do-not-exist' in built-in configurations."
+        "Could not find 'I-do-not-exist' in the built-in configurations."
     );
 
     // Testing CreateFromFile with an unknown built-in config name using URI syntax.
     OCIO_CHECK_THROW_WHAT(
         OCIO::Config::CreateFromFile("ocio://I-do-not-exist"),
         OCIO::Exception,
-        "Could not find 'I-do-not-exist' in built-in configurations."
+        "Could not find 'I-do-not-exist' in the built-in configurations."
     );
 
     {
@@ -8861,7 +8861,7 @@ OCIO_ADD_TEST(Config, create_builtin_config)
         OCIO_CHECK_THROW_WHAT(
             OCIO::Config::CreateFromEnv(),
             OCIO::Exception,
-            "Could not find 'thedefault' in built-in configurations."
+            "Could not find 'thedefault' in the built-in configurations."
         );
     }
 }

@@ -44,11 +44,11 @@ class BuiltinConfigRegistryImpl : public BuiltinConfigRegistry
         /**
          * @brief Loads built-in configs into the registry.
          * 
-         * Loads the built-in configs from various config header file
-         * that were generated from a template header file with cmake.
+         * Loads the built-in configs from various config header file that were generated from 
+         * a template header file with cmake.
          * 
-         * The init method is light-weight. 
-         * It does not contain a copy of the config data strings or parse them into config objects.
+         * The init method is light-weight. It does not contain a copy of the config data strings 
+         * or parse them into config objects.
          */
         void init() noexcept;
 

@@ -66,7 +66,7 @@ OCIO_ADD_TEST(BuiltinConfigs, basic)
     OCIO_CHECK_THROW_WHAT(
         registry->getBuiltinConfigByName("I do not exist"), 
         OCIO::Exception,
-        "Could not find 'I do not exist' in built-in configurations."
+        "Could not find 'I do not exist' in the built-in configurations."
     );
 }
 

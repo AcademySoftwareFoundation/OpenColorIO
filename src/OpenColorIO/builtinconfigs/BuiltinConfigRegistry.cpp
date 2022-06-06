@@ -101,8 +101,8 @@ const char * BuiltinConfigRegistryImpl::getBuiltinConfigByName(const char * conf
     }
 
     std::ostringstream os;
-    os << "Could not find '" << configName << "' in built-in configurations.";
-    throw Exception (os.str().c_str());
+    os << "Could not find '" << configName << "' in the built-in configurations.";
+    throw Exception(os.str().c_str());
 }
 
 bool BuiltinConfigRegistryImpl::isBuiltinConfigRecommended(size_t configIndex) const

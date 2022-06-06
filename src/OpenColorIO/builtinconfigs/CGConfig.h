@@ -12,12 +12,12 @@
 namespace OCIO_NAMESPACE
 {
 
-    class BuiltinConfigRegistryImpl;
+class BuiltinConfigRegistryImpl;
 
-    namespace CGCONFIG
-    {
-        void Register(BuiltinConfigRegistryImpl & registry) noexcept;
-    } // namespace CGCONFIG
+namespace CGCONFIG
+{
+    void Register(BuiltinConfigRegistryImpl & registry) noexcept;
+} // namespace CGCONFIG
 
 } // namespace OCIO_NAMESPACE
 
