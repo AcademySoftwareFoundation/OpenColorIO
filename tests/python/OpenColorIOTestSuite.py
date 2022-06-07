@@ -48,6 +48,7 @@ import PyOpenColorIO as OCIO
 
 import AllocationTransformTest
 import BakerTest
+import BuiltinConfigRegistryTest
 import BuiltinTransformRegistryTest
 import BuiltinTransformTest
 import CDLTransformTest
@@ -103,6 +104,7 @@ def suite():
 
     suite.addTest(loader.loadTestsFromModule(AllocationTransformTest))
     suite.addTest(loader.loadTestsFromModule(BakerTest))
+    suite.addTest(loader.loadTestsFromModule(BuiltinConfigRegistryTest))
     suite.addTest(loader.loadTestsFromModule(BuiltinTransformRegistryTest))
     suite.addTest(loader.loadTestsFromModule(BuiltinTransformTest))
     suite.addTest(loader.loadTestsFromModule(CDLTransformTest))

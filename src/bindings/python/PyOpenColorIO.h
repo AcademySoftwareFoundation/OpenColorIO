@@ -46,6 +46,7 @@ void bindPyViewingRules(py::module & m);
 void bindPyViewTransform(py::module & m);
 
 // OpenColorIOTransforms
+void bindPyBuiltinConfigRegistry(py::module & m);
 void bindPyBuiltinTransformRegistry(py::module & m);
 void bindPyDynamicProperty(py::module & m);
 void bindPyFormatMetadata(py::module & m);

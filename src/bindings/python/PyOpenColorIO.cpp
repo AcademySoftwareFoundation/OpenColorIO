@@ -87,6 +87,7 @@ PYBIND11_MODULE(PyOpenColorIO, m)
     bindPyViewTransform(m);
 
     // OpenColorIOTransforms
+    bindPyBuiltinConfigRegistry(m);
     bindPyBuiltinTransformRegistry(m);
     bindPyDynamicProperty(m);
     bindPyFormatMetadata(m);

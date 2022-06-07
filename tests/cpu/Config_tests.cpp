@@ -8765,6 +8765,7 @@ OCIO_ADD_TEST(Config, create_builtin_config)
                 std::string(config->getName()), 
                 std::string("cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1")
             );
+            OCIO_CHECK_EQUAL(config->getNumColorSpaces(), 19);
         }
     }
 
@@ -8781,6 +8782,7 @@ OCIO_ADD_TEST(Config, create_builtin_config)
                 std::string(config->getName()), 
                 std::string("cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1")
             );
+            OCIO_CHECK_EQUAL(config->getNumColorSpaces(), 19);
         }
     }
 

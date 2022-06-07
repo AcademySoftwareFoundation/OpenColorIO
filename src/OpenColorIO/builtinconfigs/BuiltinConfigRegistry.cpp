@@ -64,7 +64,7 @@ void BuiltinConfigRegistryImpl::addBuiltin(const char * name, const char * const
     m_builtinConfigs.push_back(data);
 }
 
-size_t BuiltinConfigRegistryImpl::getNumBuiltInConfigs() const noexcept
+size_t BuiltinConfigRegistryImpl::getNumBuiltinConfigs() const noexcept
 {
     return m_builtinConfigs.size();
 }

@@ -4,6 +4,7 @@
 #include "PyOpenColorIO.h"
 #include "PyImageDesc.h"
 #include "PySystemMonitors.h"
+#include "PyBuiltinConfigRegistry.h"
 #include "PyBuiltinTransformRegistry.h"
 #include "PyDynamicProperty.h"
 
@@ -92,6 +93,11 @@ void bindPyTypes(py::module & m)
     py::class_<ViewTransform, ViewTransformRcPtr /* holder */>(
         m, "ViewTransform", 
         DOC(ViewTransform));
+
+    // OpenColorIO Builtin Configs
+    py::class_<PyBuiltinConfigRegistry>(
+        m, "BuiltinConfigRegistry", 
+        DOC(BuiltinConfigRegistry));
 
     // OpenColorIOTransforms
     py::class_<PyBuiltinTransformRegistry>(

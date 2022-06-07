@@ -3325,7 +3325,7 @@ public:
     static ConstBuiltinConfigRegistryRcPtr Get() noexcept;
 
     /// Get the number of built-in configs available.
-    virtual size_t getNumBuiltInConfigs() const noexcept = 0;
+    virtual size_t getNumBuiltinConfigs() const noexcept = 0;
 
     /// Get the name of the config at the specified (zero-based) index. 
     /// Throws for illegal index.

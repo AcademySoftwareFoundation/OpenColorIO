@@ -12,7 +12,7 @@ OCIO_ADD_TEST(BuiltinConfigs, basic)
 {
     OCIO::ConstBuiltinConfigRegistryRcPtr registry = OCIO::BuiltinConfigRegistry::Get();
     
-    OCIO_CHECK_EQUAL(registry->getNumBuiltInConfigs(), 1);
+    OCIO_CHECK_EQUAL(registry->getNumBuiltinConfigs(), 1);
 
     OCIO_CHECK_EQUAL(
         std::string(registry->getBuiltinConfigName(0)), 
@@ -105,7 +105,7 @@ OCIO_ADD_TEST(BuiltinConfigs, basic_impl)
             true
         ));
 
-        OCIO_CHECK_EQUAL(registry.getNumBuiltInConfigs(), 2);
+        OCIO_CHECK_EQUAL(registry.getNumBuiltinConfigs(), 2);
 
 
         // Test to check if the config #1 was added correctly.

@@ -22,7 +22,7 @@ class BuiltinConfigRegistryImpl : public BuiltinConfigRegistry
             , m_isRecommended(isRecommended)
         {
         }
-        
+
         BuiltinConfigData() = delete;
         BuiltinConfigData(const BuiltinConfigData & o) = default;
         BuiltinConfigData(BuiltinConfigData &&) = default;
@@ -68,7 +68,7 @@ class BuiltinConfigRegistryImpl : public BuiltinConfigRegistry
         void addBuiltin(const char * name, const char * const config, bool isRecommended);
 
         /// Get the number of built-in configs available.
-        size_t getNumBuiltInConfigs() const noexcept override;
+        size_t getNumBuiltinConfigs() const noexcept override;
 
         /// Get the name of the config at the specified (zero-based) index. 
         /// Throws for illegal index.
