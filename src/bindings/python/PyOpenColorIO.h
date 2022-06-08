@@ -28,6 +28,7 @@ void bindPyTypes(py::module & m);
 
 // OpenColorIO
 void bindPyBaker(py::module & m);
+void bindPyBuiltinConfigRegistry(py::module & m);
 void bindPyColorSpace(py::module & m);
 void bindPyColorSpaceSet(py::module & m);
 void bindPyConfig(py::module & m);
@@ -46,7 +47,6 @@ void bindPyViewingRules(py::module & m);
 void bindPyViewTransform(py::module & m);
 
 // OpenColorIOTransforms
-void bindPyBuiltinConfigRegistry(py::module & m);
 void bindPyBuiltinTransformRegistry(py::module & m);
 void bindPyDynamicProperty(py::module & m);
 void bindPyFormatMetadata(py::module & m);

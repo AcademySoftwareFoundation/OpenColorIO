@@ -18,6 +18,10 @@ void bindPyTypes(py::module & m)
         m, "Baker", 
         DOC(Baker));
 
+    py::class_<PyBuiltinConfigRegistry>(
+        m, "BuiltinConfigRegistry", 
+        DOC(BuiltinConfigRegistry));
+
     py::class_<ColorSpace, ColorSpaceRcPtr /* holder */>(
         m, "ColorSpace", 
         DOC(ColorSpace));
@@ -93,11 +97,6 @@ void bindPyTypes(py::module & m)
     py::class_<ViewTransform, ViewTransformRcPtr /* holder */>(
         m, "ViewTransform", 
         DOC(ViewTransform));
-
-    // OpenColorIO Builtin Configs
-    py::class_<PyBuiltinConfigRegistry>(
-        m, "BuiltinConfigRegistry", 
-        DOC(BuiltinConfigRegistry));
 
     // OpenColorIOTransforms
     py::class_<PyBuiltinTransformRegistry>(
