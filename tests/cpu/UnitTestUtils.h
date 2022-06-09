@@ -106,7 +106,7 @@ struct EnvironmentVariableGuard
 {
     EnvironmentVariableGuard(const std::string name, const std::string value) : m_name(name)
     {
-        if (!name.empty() && !value.empty())
+        if (!name.empty())
         {
             Platform::Setenv(name.c_str(), value);
         }
