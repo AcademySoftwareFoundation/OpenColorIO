@@ -273,7 +273,7 @@ public:
      * 
      * The available configNames are:
      * "cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1" -- ACES CG config, basic color spaces for computer
-     * graphics apps.More information is available at: 
+     * graphics apps. More information is available at: 
      * https://github.com/AcademySoftwareFoundation/OpenColorIO-Config-ACES
      * 
      * @throw Exception If the configName is not recognized.
