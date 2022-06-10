@@ -36,7 +36,6 @@ OCIO_ADD_TEST(BuiltinConfigs, basic)
 
     OCIO_CHECK_EQUAL(registry->isBuiltinConfigRecommended(0), true);
 
-
     // ********************************
     // Testing some expected failures.
     // ********************************
@@ -106,7 +105,6 @@ OCIO_ADD_TEST(BuiltinConfigs, basic_impl)
         ));
 
         OCIO_CHECK_EQUAL(registry.getNumBuiltinConfigs(), 2);
-
 
         // Test to check if the config #1 was added correctly.
         OCIO_CHECK_EQUAL(

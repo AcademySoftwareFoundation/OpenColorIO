@@ -16,7 +16,7 @@ class BuiltinConfigRegistryImpl : public BuiltinConfigRegistry
 {
     struct BuiltinConfigData
     {
-        BuiltinConfigData(const char * name, const char * config, bool isRecommended = false)
+        BuiltinConfigData(const char * name, const char * config, bool isRecommended)
             : m_config(config ? config : "")
             , m_name(name ? name : "")
             , m_isRecommended(isRecommended)

@@ -41,22 +41,19 @@ class BuiltinConfigRegistryTest(unittest.TestCase):
 
         # ********************************
         # Testing some expected failures.
+        # ********************************
         
-
         # Test isBuiltinConfigRecommended using an invalid config index.
         with self.assertRaisesRegex(OCIO.Exception, "Config index is out of range."):
             self.REGISTRY.isBuiltinConfigRecommended(999)
-
 
         # Test getBuiltinConfigName using an invalid config index.
         with self.assertRaisesRegex(OCIO.Exception, "Config index is out of range."):
             self.REGISTRY.getBuiltinConfigName(999)
 
-
         # Test getBuiltinConfig using an invalid config index.
         with self.assertRaisesRegex(OCIO.Exception, "Config index is out of range."):
             self.REGISTRY.getBuiltinConfig(999)
-
 
         # Test getBuiltinConfigByName using an unknown config name.
         with self.assertRaisesRegex(

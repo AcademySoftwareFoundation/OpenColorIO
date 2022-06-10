@@ -9,9 +9,9 @@
 
 namespace OCIO_NAMESPACE
 {
-    //
-    // Create the built-in transforms.
-    //
+    // Create the built-in configs for all versions of the OCIO CG config for ACES.
+    // For backwards compatibility, previous versions are kept in the registry but the
+    // isRecommended flag should be set to false.
 
     namespace CGCONFIG
     {

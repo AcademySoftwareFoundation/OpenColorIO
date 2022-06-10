@@ -272,8 +272,9 @@ public:
      * @param configName Built-in config name
      * 
      * The available configNames are:
-     * "cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1" -- ACES CG config, basic color spaces for computer graphics apps.
-     * More information is available at: https://github.com/AcademySoftwareFoundation/OpenColorIO-Config-ACES
+     * "cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1" -- ACES CG config, basic color spaces for computer
+     * graphics apps.More information is available at: 
+     * https://github.com/AcademySoftwareFoundation/OpenColorIO-Config-ACES
      * 
      * @throw Exception If the configName is not recognized.
      * 
@@ -3341,8 +3342,9 @@ public:
     /**
      * @brief Check if a specific built-in config is recommended.
      * 
-     * For backwards compatibility reasons, configs will remain in the registry even if they have been superseded. 
-     * If an app is presenting a list of configs to users, it should not include configs that are no longer recommended.
+     * For backwards compatibility reasons, configs will remain in the registry even if they have
+     * been superseded. If an app is presenting a list of configs to users, it should not include 
+     * configs that are no longer recommended.
      * 
      * @param configIndex Index of built-in config.
      * @return true if the config is recommended.
@@ -3355,7 +3357,8 @@ public:
      * Get the name of the built-in config that is currently recommended as the default config 
      * to use for applications looking for basic color management. 
      * 
-     * As the built-in config collection evolves, the default config name will change in future releases. 
+     * As the built-in config collection evolves, the default config name will change in future
+     * releases. 
      * 
      * For backwards compatibility, the name provided here will always work as an argument 
      * to other methods so that any previous default config may be recovered.

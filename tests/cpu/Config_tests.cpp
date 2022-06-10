@@ -3035,8 +3035,7 @@ OCIO_ADD_TEST(Config, display)
 
     {
         // No value, but misleading space.
-
-        OCIO::EnvironmentVariableGuard guard(OCIO::OCIO_ACTIVE_DISPLAYS_ENVVAR, "");
+        OCIO::EnvironmentVariableGuard guard(OCIO::OCIO_ACTIVE_DISPLAYS_ENVVAR, " ");
 
         const std::string myProfile = 
             SIMPLE_PROFILE_HEADER
@@ -3145,8 +3144,7 @@ OCIO_ADD_TEST(Config, display)
 OCIO_ADD_TEST(Config, view)
 {
     // Unset the env. variable to make sure the test start in the right environment.
-    OCIO::Platform::Unsetenv(OCIO::OCIO_ACTIVE_DISPLAYS_ENVVAR);
-
+    OCIO::Platform::Unsetenv(OCIO::OCIO_ACTIVE_VIEWS_ENVVAR);
 
     static const std::string SIMPLE_PROFILE_HEADER =
         "ocio_profile_version: 1\n"
@@ -5099,6 +5097,8 @@ OCIO_ADD_TEST(Config, inactive_color_space)
 {
     // The unit test validates the inactive color space behavior.
 
+    OCIO::Platform::Unsetenv(OCIO::OCIO_INACTIVE_COLORSPACES_ENVVAR);
+
     std::string configStr;
     configStr += InactiveCSConfigStart;
     configStr += InactiveCSConfigEnd;
@@ -5450,6 +5450,8 @@ OCIO_ADD_TEST(Config, inactive_color_space_precedence)
     // The test demonstrates that an API request supersedes the env. variable and the
     // config file contents.
 
+    OCIO::Platform::Unsetenv(OCIO::OCIO_INACTIVE_COLORSPACES_ENVVAR);
+
     std::string configStr;
     configStr += InactiveCSConfigStart;
     configStr += "inactive_colorspaces: [cs2]\n";
@@ -5512,6 +5514,8 @@ OCIO_ADD_TEST(Config, inactive_color_space_read_write)
 {
     // The unit tests validate the read/write.
 
+    OCIO::Platform::Unsetenv(OCIO::OCIO_INACTIVE_COLORSPACES_ENVVAR);
+
     {
         std::string configStr;
         configStr += InactiveCSConfigStart;
@@ -5535,7 +5539,6 @@ OCIO_ADD_TEST(Config, inactive_color_space_read_write)
     }
 
     {
-        // Where inactive color spaces are "cs3, cs1, lnh".
         OCIO::EnvironmentVariableGuard guard(
             OCIO::OCIO_INACTIVE_COLORSPACES_ENVVAR, 
             "cs3, cs1, lnh"
@@ -8771,7 +8774,7 @@ OCIO_ADD_TEST(Config, create_builtin_config)
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromFile("ocio://default"));
         OCIO_REQUIRE_ASSERT(config);
-        
+
         OCIO_CHECK_NO_THROW(config->validate());
         OCIO_CHECK_EQUAL(
             std::string(config->getName()), 
