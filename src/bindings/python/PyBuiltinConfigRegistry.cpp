@@ -25,6 +25,11 @@ void bindPyBuiltinConfigRegistry(py::module & m)
                 return self.getBuiltinConfigName(configIndex); 
             },
             DOC(BuiltinConfigRegistry, getBuiltinConfigName))
+        .def("getBuiltinConfigUIName", [](PyBuiltinConfigRegistry & self, size_t configIndex) 
+            { 
+                return self.getBuiltinConfigUIName(configIndex); 
+            },
+            DOC(BuiltinConfigRegistry, getBuiltinConfigUIName))
         .def("getBuiltinConfig", [](PyBuiltinConfigRegistry & self, size_t configIndex) 
             { 
                 return self.getBuiltinConfig(configIndex); 

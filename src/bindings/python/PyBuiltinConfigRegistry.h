@@ -26,6 +26,11 @@ public:
         return BuiltinConfigRegistry::Get()->getBuiltinConfigName(configIndex);
     }
 
+    const char * getBuiltinConfigUIName(size_t configIndex) const
+    {
+        return BuiltinConfigRegistry::Get()->getBuiltinConfigUIName(configIndex);
+    }
+
     const char * getBuiltinConfig(size_t configIndex) const
     {
         return BuiltinConfigRegistry::Get()->getBuiltinConfig(configIndex);

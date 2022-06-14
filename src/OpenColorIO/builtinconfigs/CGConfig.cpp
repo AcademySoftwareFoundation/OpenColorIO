@@ -9,22 +9,22 @@
 
 namespace OCIO_NAMESPACE
 {
-    // Create the built-in configs for all versions of the OCIO CG config for ACES.
-    // For backwards compatibility, previous versions are kept in the registry but the
-    // isRecommended flag should be set to false.
+// Create the built-in configs for all versions of the OCIO CG config for ACES.
+// For backwards compatibility, previous versions are kept in the registry but the
+// isRecommended flag should be set to false.
 
-    namespace CGCONFIG
-    {
-        // Register CG configs.
-        void Register(BuiltinConfigRegistryImpl & registry) noexcept
-        {
-            registry.addBuiltin(
-                "cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1",
-                CG_CONFIG_V010_ACES_V130_OCIO_V211,
-                true
-            );
-        }
+namespace CGCONFIG
+{
+// Register CG configs.
+void Register(BuiltinConfigRegistryImpl & registry) noexcept
+{
+    registry.addBuiltin(
+        "cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1",
+        "Academy Color Encoding System - CG Config [COLORSPACES v0.1.0] [ACES v1.3] [OCIO v2.1.1]",
+        CG_CONFIG_V010_ACES_V130_OCIO_V211,
+        true
+    );
+}
 
-    } // namespace CGCONFIG
-
+} // namespace CGCONFIG
 } // namespace OCIO_NAMESPACE

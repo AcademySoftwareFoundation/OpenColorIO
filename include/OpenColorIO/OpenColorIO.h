@@ -3332,6 +3332,10 @@ public:
     /// Throws for illegal index.
     virtual const char * getBuiltinConfigName(size_t configIndex) const = 0;
 
+    // Get a user-friendly name for a built-in config, appropriate for displaying in a user interface.
+    /// Throws for illegal index.
+    virtual const char * getBuiltinConfigUIName(size_t configIndex) const = 0;
+
     /// Get Yaml text of the built-in config at the specified index.
     virtual const char * getBuiltinConfig(size_t configIndex) const = 0;
     

@@ -26,6 +26,11 @@ class BuiltinConfigRegistryTest(unittest.TestCase):
             "cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1"
         )
 
+        self.assertEqual(
+            self.REGISTRY.getBuiltinConfigUIName(0), 
+            "Academy Color Encoding System - CG Config [COLORSPACES v0.1.0] [ACES v1.3] [OCIO v2.1.1]"
+        )
+
         # Test that both methods returns the same config since CG.h cannot be included here.
         self.assertEqual(
             self.REGISTRY.getBuiltinConfig(0), 
@@ -50,6 +55,10 @@ class BuiltinConfigRegistryTest(unittest.TestCase):
         # Test getBuiltinConfigName using an invalid config index.
         with self.assertRaisesRegex(OCIO.Exception, "Config index is out of range."):
             self.REGISTRY.getBuiltinConfigName(999)
+
+        # Test getBuiltinConfigUIName using an invalid config index.
+        with self.assertRaisesRegex(OCIO.Exception, "Config index is out of range."):
+            self.REGISTRY.getBuiltinConfigUIName(999)
 
         # Test getBuiltinConfig using an invalid config index.
         with self.assertRaisesRegex(OCIO.Exception, "Config index is out of range."):
