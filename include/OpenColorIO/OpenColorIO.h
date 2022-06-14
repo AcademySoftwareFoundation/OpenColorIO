@@ -267,18 +267,18 @@ public:
     static ConstConfigRcPtr CreateFromStream(std::istream & istream);
 
     /**
-     * @brief Create a configuration using an OCIO built-in config.
+     * \brief Create a configuration using an OCIO built-in config.
      * 
-     * @param configName Built-in config name
+     * \param configName Built-in config name
      * 
      * The available configNames are:
      * "cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1" -- ACES CG config, basic color spaces for computer
      * graphics apps. More information is available at: 
-     * https://github.com/AcademySoftwareFoundation/OpenColorIO-Config-ACES
+     * %https://github.com/AcademySoftwareFoundation/OpenColorIO-Config-ACES
      * 
-     * @throw Exception If the configName is not recognized.
+     * \throw Exception If the configName is not recognized.
      * 
-     * @return one of the configs built into OCIO library
+     * \return one of the configs built into OCIO library
      */
     static ConstConfigRcPtr CreateFromBuiltinConfig(const char * configName);
 

@@ -217,7 +217,8 @@ file(GLOB CONFIGS_PATHS "builtinconfigs/configs/*.ocio")
 # Loop through the .ocio config files.
 foreach(C ${CONFIGS_PATHS})
     get_filename_component(CONFIG_FULLNAME "${C}" NAME)
-    get_filename_component(CONFIG_NAME "${C}" NAME_WLE)
+    string(REGEX MATCH "^(.*)\\.ocio$" tempvar ${CONFIG_FULLNAME})
+    set(CONFIG_NAME ${CMAKE_MATCH_1})
     list(APPEND CONFIGS_ALL ${CONFIG_NAME})
 
     file(READ builtinconfigs/configs/${CONFIG_FULLNAME} HEX_CONTENTS HEX)

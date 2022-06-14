@@ -946,27 +946,33 @@ colorspaces:
         # ********************************
 
         # Testing CreateFromBuiltinConfig with an unknown built-in config name.
-        with self.assertRaisesRegex(
-            OCIO.Exception, 
-            "Could not find 'I-do-not-exist' in the built-in configurations."
-        ):
+        with self.assertRaises(OCIO.Exception) as cm:
             OCIO.Config.CreateFromBuiltinConfig("I-do-not-exist")
+
+        self.assertEqual(
+            str(cm.exception), 
+            "Could not find 'I-do-not-exist' in the built-in configurations."
+        )
         
         # Testing CreateFromFile with an unknown built-in config name using URI syntax.
-        with self.assertRaisesRegex(
-            OCIO.Exception, 
-            "Could not find 'I-do-not-exist' in the built-in configurations."
-        ):
+        with self.assertRaises(OCIO.Exception) as cm:
             OCIO.Config.CreateFromFile("ocio://I-do-not-exist")
+
+        self.assertEqual(
+            str(cm.exception), 
+            "Could not find 'I-do-not-exist' in the built-in configurations."
+        )
 
         # Testing CreateFromEnv with an unknown built-in config.
         try:
             OCIO.SetEnvVariable('OCIO', 'ocio://thedefault')
-            with self.assertRaisesRegex(
-                OCIO.Exception, 
-                "Could not find 'thedefault' in the built-in configurations."
-            ):  
+            with self.assertRaises(OCIO.Exception) as cm:  
                 OCIO.Config.CreateFromEnv()
+
+            self.assertEqual(
+                str(cm.exception), 
+                "Could not find 'thedefault' in the built-in configurations."
+            )
         finally:
             OCIO.UnsetEnvVariable('OCIO')
 

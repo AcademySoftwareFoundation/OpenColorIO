@@ -49,23 +49,29 @@ class BuiltinConfigRegistryTest(unittest.TestCase):
         # ********************************
         
         # Test isBuiltinConfigRecommended using an invalid config index.
-        with self.assertRaisesRegex(OCIO.Exception, "Config index is out of range."):
+        with self.assertRaises(OCIO.Exception) as cm:
             self.REGISTRY.isBuiltinConfigRecommended(999)
+            self.assertEqual(str(cm.exception), "Config index is out of range.")
 
         # Test getBuiltinConfigName using an invalid config index.
-        with self.assertRaisesRegex(OCIO.Exception, "Config index is out of range."):
+        with self.assertRaises(OCIO.Exception) as cm:
             self.REGISTRY.getBuiltinConfigName(999)
+            self.assertEqual(str(cm.exception), "Config index is out of range.")
 
         # Test getBuiltinConfigUIName using an invalid config index.
-        with self.assertRaisesRegex(OCIO.Exception, "Config index is out of range."):
+        with self.assertRaises(OCIO.Exception) as cm:
             self.REGISTRY.getBuiltinConfigUIName(999)
+            self.assertEqual(str(cm.exception), "Config index is out of range.")
 
         # Test getBuiltinConfig using an invalid config index.
-        with self.assertRaisesRegex(OCIO.Exception, "Config index is out of range."):
+        with self.assertRaises(OCIO.Exception) as cm:
             self.REGISTRY.getBuiltinConfig(999)
+            self.assertEqual(str(cm.exception), "Config index is out of range.")
 
         # Test getBuiltinConfigByName using an unknown config name.
-        with self.assertRaisesRegex(
-            OCIO.Exception, "Could not find 'I do not exist' in the built-in configurations."
-        ):
+        with self.assertRaises(OCIO.Exception) as cm:
             self.REGISTRY.getBuiltinConfigByName("I do not exist")
+        self.assertEqual(
+            str(cm.exception), 
+            "Could not find 'I do not exist' in the built-in configurations."
+        )
