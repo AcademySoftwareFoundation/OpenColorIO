@@ -16,10 +16,10 @@ class BuiltinConfigRegistryImpl : public BuiltinConfigRegistry
 {
 struct BuiltinConfigData
 {
-    BuiltinConfigData(const char * name, const char * displayName, const char * config, bool isRecommended)
+    BuiltinConfigData(const char * name, const char * uiName, const char * config, bool isRecommended)
         : m_config(config ? config : "")
         , m_name(name ? name : "")
-        , m_displayName(displayName ? displayName : "")
+        , m_uiName(uiName ? uiName : "")
         , m_isRecommended(isRecommended)
     {
     }
@@ -32,7 +32,7 @@ struct BuiltinConfigData
     // m_config is accessing a global static pointer so there is not need to manage it.
     const char * m_config;
     std::string m_name;
-    std::string m_displayName;
+    std::string m_uiName;
     bool m_isRecommended;
 };
 using BuiltinConfigs = std::vector<BuiltinConfigData>;
@@ -67,7 +67,7 @@ public:
      * @param config Config as string
      * @param isRecommended Is the built-in config recommended or not.
      */
-    void addBuiltin(const char * name, const char * displayName, const char * const config, bool isRecommended);
+    void addBuiltin(const char * name, const char * uiName, const char * const config, bool isRecommended);
 
     /// Get the number of built-in configs available.
     size_t getNumBuiltinConfigs() const noexcept override;

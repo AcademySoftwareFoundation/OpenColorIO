@@ -3337,6 +3337,7 @@ public:
     virtual const char * getBuiltinConfigUIName(size_t configIndex) const = 0;
 
     /// Get Yaml text of the built-in config at the specified index.
+    /// Throws for illegal index.
     virtual const char * getBuiltinConfig(size_t configIndex) const = 0;
     
     /// Get the Yaml text of the built-in config with the specified name. 

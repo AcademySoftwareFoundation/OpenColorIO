@@ -47,9 +47,9 @@ void BuiltinConfigRegistryImpl::init() noexcept
     this->setDefaultBuiltinConfig("cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1");
 }
 
-void BuiltinConfigRegistryImpl::addBuiltin(const char * name, const char * displayName, const char * const config, bool isRecommended)
+void BuiltinConfigRegistryImpl::addBuiltin(const char * name, const char * uiName, const char * const config, bool isRecommended)
 {
-    BuiltinConfigData data { name, displayName, config, isRecommended };
+    BuiltinConfigData data { name, uiName, config, isRecommended };
 
     for (auto & builtin : m_builtinConfigs)
     {
@@ -86,7 +86,7 @@ const char * BuiltinConfigRegistryImpl::getBuiltinConfigUIName(size_t configInde
         throw Exception(OUT_OF_RANGE_EXCEPTION_TEXT);
     }
 
-    return m_builtinConfigs[configIndex].m_displayName.c_str();
+    return m_builtinConfigs[configIndex].m_uiName.c_str();
 }
 
 const char * BuiltinConfigRegistryImpl::getBuiltinConfig(size_t configIndex) const
