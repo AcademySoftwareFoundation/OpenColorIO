@@ -24,14 +24,19 @@ int main(int argc, const char **argv)
 
     bool help = false;
 
+    bool useColorspaces = false;
+    bool useDisplayview = false;
+    bool useInvertview  = false;
+
     // What are the allowed writing output formats?
     std::ostringstream formats;
-    formats << "Formats to write to: ";
+    formats << "\n                            "
+               "Formats to write to:\n                             ";
     for (int i = 0; i<OCIO::GroupTransform::GetNumWriteFormats(); ++i)
     {
-        if (i != 0) formats << ", ";
         formats << OCIO::GroupTransform::GetFormatNameByIndex(i);
-        formats << " (." << OCIO::GroupTransform::GetFormatExtensionByIndex(i) << ")";
+        formats << " (." << OCIO::GroupTransform::GetFormatExtensionByIndex(i) 
+                << ")\n                             ";
     }
 
     std::string pathDesc = "Transform file path. Format is implied by extension. ";
@@ -40,13 +45,22 @@ int main(int argc, const char **argv)
     ArgParse ap;
     ap.options("ociowrite -- write a color transformation to a file\n\n"
                "usage: ociowrite [options] --file outputfile\n\n",
-               "--h", &help, "Display the help and exit",
-               "--v", &verbose, "Display some general information",
-               "--colorspaces %s %s", &inputColorSpace, &outputColorSpace, 
-                                      "Provide the input and output color spaces",
-               "--displayview %s %s %s", &inputColorSpace, &display, &view,
-                                      "Provide the input and (display, view) pair",
-               "--file %s", &filepath, pathDesc.c_str(),
+               "--h",                       &help, 
+                                            "Display the help and exit",
+               "--help",                    &help, 
+                                            "Display the help and exit",
+               "--v",                       &verbose, 
+                                            "Display some general information",
+               "--colorspaces %s %s",       &inputColorSpace, &outputColorSpace,
+                                            "Provide the input and output color spaces to apply on the image",
+               "--view %s %s %s",           &inputColorSpace, &display, &view,
+                                            "Provide the input color space and (display, view) pair to apply on the image",
+               "--displayview %s %s %s",    &inputColorSpace, &display, &view,
+                                            "(Deprecated) Provide the input color space and (display, view) pair to apply on the image",
+               "--invertview %s %s %s",     &display, &view, &outputColorSpace,
+                                            "Provide the (display, view) pair and output color space to apply on the image",
+               "--file %s",                 &filepath, 
+                                            pathDesc.c_str(),
                NULL);
 
     if (argc <= 1 || ap.parse(argc, argv) < 0)
@@ -129,7 +143,9 @@ int main(int argc, const char **argv)
         // Load the current config.
 
         OCIO::ConstProcessorRcPtr processor;
-        if (!inputColorSpace.empty())
+
+        // Checking for an input colorspace or input (display, view) pair.
+        if (!inputColorSpace.empty() || (!display.empty() && !view.empty()))
         {
             const char * env = OCIO::GetEnvVariable("OCIO");
             if(env && *env)
@@ -137,8 +153,11 @@ int main(int argc, const char **argv)
                 if (verbose)
                 {
                     std::cout << std::endl;
-                    std::cout << "Processing from '" << inputColorSpace << "' to '"
-                              << outputColorSpace << "'" << std::endl;
+                    std::string inputStr = !inputColorSpace.empty() ?  inputColorSpace : "(" + display + ", " + view + ")";
+                    std::string outputStr = !outputColorSpace.empty() ?  outputColorSpace : "(" + display + ", " + view + ")";
+                    std::cout << "Processing from '" 
+                              << inputStr << "' to '"
+                              << outputStr << "'" << std::endl;
                 }
             }
             else
@@ -163,29 +182,80 @@ int main(int argc, const char **argv)
                 std::cout << std::endl;
             }
 
-            if (!outputColorSpace.empty())
-            {
-                if (!display.empty() || !view.empty())
-                {
-                    std::cerr << std::endl;
-                    std::cerr << "Both --colorspaces and --displayview may not be used at the same time.";
-                    exit(1);
-                }
+            // --colorspaces
+            useColorspaces = !inputColorSpace.empty() && !outputColorSpace.empty();
+            // --view
+            useDisplayview = !inputColorSpace.empty() && !display.empty() && !view.empty();
+            // --invertview
+            useInvertview = !display.empty() && !view.empty() && !outputColorSpace.empty();
 
-                processor = config->getProcessor(inputColorSpace.c_str(), outputColorSpace.c_str());
-            }
-            else if (!display.empty() && !view.empty())
-            {
-                processor = config->getProcessor(inputColorSpace.c_str(), 
-                                                 display.c_str(),
-                                                 view.c_str(),
-                                                 OCIO::TRANSFORM_DIR_FORWARD);
-            }
-            else
+            // Errors validation
+            std::string msg; 
+            if (!((useColorspaces && !useDisplayview && !useInvertview) ||
+                    (useDisplayview && !useColorspaces && !useInvertview) ||
+                    (useInvertview && !useColorspaces && !useDisplayview)))
             {
                 std::cerr << std::endl;
-                std::cerr << "Missing color spaces for --displayview." << std::endl;
+                std::cerr << "Any combinations of --colorspaces, --view or --invertview is invalid." << std::endl;
                 exit(1);
+            } 
+
+            // Processing colorspaces option         
+            if (useColorspaces)
+            {
+                // colorspaces to colorspaces
+
+                // validate output arguments
+                if (!outputColorSpace.empty())
+                {
+                    processor = config->getProcessor(inputColorSpace.c_str(), outputColorSpace.c_str());
+                }
+                else
+                {
+                    std::cerr << std::endl;
+                    std::cerr << "Missing output color spaces for --colorspaces." << std::endl;
+                    exit(1);
+                }
+            } 
+            // Processing view option
+            else if (useDisplayview)
+            {
+                // colorspaces to (display,view) pair
+
+                // validate output arguments
+                if (!display.empty() && !view.empty())
+                {
+                    processor = config->getProcessor(inputColorSpace.c_str(), 
+                                                     display.c_str(),
+                                                     view.c_str(),
+                                                     OCIO::TRANSFORM_DIR_FORWARD);
+                }
+                else
+                {
+                    std::cerr << std::endl;
+                    std::cerr << "Missing output (display,view) pair for --view." << std::endl;
+                    exit(1);
+                }
+            }
+            // Processing invertview option
+            else if (useInvertview)
+            {
+                // (display,view) pair to colorspaces
+
+                // validate output arguments
+                if (!outputColorSpace.empty())
+                {
+                    processor = config->getProcessor(outputColorSpace.c_str(), 
+                                                     display.c_str(),
+                                                     view.c_str(),
+                                                     OCIO::TRANSFORM_DIR_INVERSE);
+                }
+                else
+                {
+                    std::cerr << std::endl;
+                    std::cerr << "Missing output colorspaces for --invertview." << std::endl;
+                    exit(1);
+                }
             }
 
             std::ofstream outfs(filepath.c_str(), std::ios::out | std::ios::trunc);
@@ -205,7 +275,7 @@ int main(int argc, const char **argv)
         else
         {
             std::cerr << std::endl;
-            std::cerr << "Source and destination color space must be specified." << std::endl;
+            std::cerr << "Colorspaces or (display,view) pair must be specified as source." << std::endl;
             exit(1);
         }
     }

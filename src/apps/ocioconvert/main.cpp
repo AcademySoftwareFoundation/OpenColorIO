@@ -79,22 +79,27 @@ int main(int argc, const char **argv)
     bool help           = false;
     bool useLut         = false;
     bool useDisplayView = false;
+    bool useInvertView  = false;
 
     ap.options("ocioconvert -- apply colorspace transform to an image \n\n"
                "usage: ocioconvert [options]  inputimage inputcolorspace outputimage outputcolorspace\n"
                "   or: ocioconvert [options] --lut lutfile inputimage outputimage\n"
-               "   or: ocioconvert [options] --view inputimage inputcolorspace outputimage displayname viewname\n\n",
+               "   or: ocioconvert [options] --view inputimage inputcolorspace outputimage displayname viewname\n"
+               "   or: ocioconvert [options] --invertview inputimage displayname viewname outputimage outputcolorspace\n\n",
                "%*", parse_end_args, "",
                "<SEPARATOR>", "Options:",
-               "--lut",       &useLut,         "Convert using a LUT rather than a config file",
-               "--view",      &useDisplayView, "Convert to a (display,view) pair rather than to "
-                                               "an output color space",
-               "--gpu",       &usegpu,         "Use GPU color processing instead of CPU (CPU is the default)",
-               "--gpulegacy", &usegpuLegacy,   "Use the legacy (i.e. baked) GPU color processing "
-                                               "instead of the CPU one (--gpu is ignored)",
-               "--gpuinfo",  &outputgpuInfo,   "Output the OCIO shader program",
-               "--help",     &help,            "Print help message",
-               "-v" ,        &verbose,         "Display general information",
+               "--lut",         &useLut,            "Convert using a LUT rather than a config file",
+               "--view",        &useDisplayView,    "Convert to a (display,view) pair rather than to "
+                                                    "an output color space",
+               "--invertview",  &useInvertView,     "Convert from a (display,view) pair rather than "
+                                                    "from a color space",
+               "--gpu",         &usegpu,            "Use GPU color processing instead of CPU (CPU is the default)",
+               "--gpulegacy",   &usegpuLegacy,      "Use the legacy (i.e. baked) GPU color processing "
+                                                    "instead of the CPU one (--gpu is ignored)",
+               "--gpuinfo",     &outputgpuInfo,     "Output the OCIO shader program",
+               "--h",           &help,              "Display the help and exit",
+               "--help",        &help,              "Display the help and exit",
+               "-v" ,           &verbose,           "Display general information",
                "<SEPARATOR>", "\nOpenImageIO options:",
                "--float-attribute %L",  &floatAttrs,   "\"name=float\" pair defining OIIO float attribute "
                                                        "for outputimage",
@@ -138,7 +143,7 @@ int main(int argc, const char **argv)
     const char * display          = nullptr;
     const char * view             = nullptr;
 
-    if (!useLut && !useDisplayView)
+    if (!useLut && !useDisplayView && !useInvertView)
     {
         if (args.size() != 4)
         {
@@ -186,6 +191,27 @@ int main(int argc, const char **argv)
         display         = args[3].c_str();
         view            = args[4].c_str();
     }
+    else if (useDisplayView && useInvertView)
+    {
+        std::cerr << "ERROR: Options view & invertview can't be used at the same time." << std::endl;
+        ap.usage();
+        exit(1);
+    }
+    else if (useInvertView) 
+    {
+        if (args.size() != 5)
+        {
+            std::cerr << "ERROR: Expecting 5 arguments for --invertview option, found "
+                      << args.size() << "." << std::endl;
+            ap.usage();
+            exit(1);
+        }
+        inputimage          = args[0].c_str();
+        display             = args[1].c_str();
+        view                = args[2].c_str();
+        outputimage         = args[3].c_str();
+        outputcolorspace    = args[4].c_str();
+    }
 
     if(verbose)
     {
@@ -229,8 +255,12 @@ int main(int argc, const char **argv)
         std::cout << "Using GPU color processing." << std::endl;
     }
 
-    OIIO::ImageSpec spec;
-    OCIO::ImgBuffer img;
+    OIIO::ImageSpec specInput;
+    OIIO::ImageSpec specOutput;
+    // Create an input image buffer.
+    OCIO::ImgBuffer imgInput;
+    // Create an output image buffer.
+    OCIO::ImgBuffer imgOutput;
     int imgwidth = 0;
     int imgheight = 0;
     int components = 0;
@@ -251,7 +281,7 @@ int main(int argc, const char **argv)
             exit(1);
         }
 
-        f->open(inputimage, spec);
+        f->open(inputimage, specInput);
 
         std::string error = f->geterror();
         if(!error.empty())
@@ -260,18 +290,18 @@ int main(int argc, const char **argv)
             exit(1);
         }
 
-        OCIO::PrintImageSpec(spec, verbose);
+        OCIO::PrintImageSpec(specInput, verbose);
 
-        imgwidth = spec.width;
-        imgheight = spec.height;
-        components = spec.nchannels;
+        imgwidth = specInput.width;
+        imgheight = specInput.height;
+        components = specInput.nchannels;
 
         if (usegpu || usegpuLegacy)
         {
-            spec.format = OIIO::TypeDesc::FLOAT;
-            img.allocate(spec);
+            specInput.format = OIIO::TypeDesc::FLOAT;
+            imgInput.allocate(specInput);
 
-            const bool ok = f->read_image(spec.format, img.getBuffer());
+            const bool ok = f->read_image(specInput.format, imgInput.getBuffer());
             if(!ok)
             {
                 std::cerr << "ERROR: Reading \"" << inputimage << "\" failed with: "
@@ -287,9 +317,9 @@ int main(int argc, const char **argv)
         }
         else
         {
-            img.allocate(spec);
+            imgInput.allocate(specInput);
 
-            const bool ok = f->read_image(spec.format, img.getBuffer());
+            const bool ok = f->read_image(specInput.format, imgInput.getBuffer());
             if(!ok)
             {
                 std::cerr << "ERROR: Reading \"" << inputimage << "\" failed with: "
@@ -323,17 +353,17 @@ int main(int argc, const char **argv)
 
         if (croptofull)
         {
-            imgwidth = spec.full_width;
-            imgheight = spec.full_height;
+            imgwidth = specInput.full_width;
+            imgheight = specInput.full_height;
 
             std::cout << "cropping to " << imgwidth
                       << "x" << imgheight << std::endl;
         }
 
-        if (croptofull || (int)kchannels.size() < spec.nchannels)
+        if (croptofull || (int)kchannels.size() < specInput.nchannels)
         {
             // Redefine the spec so it matches the new bounding box.
-            OIIO::ImageSpec croppedSpec = spec;
+            OIIO::ImageSpec croppedSpec = specInput;
 
             croppedSpec.x = 0;
             croppedSpec.y = 0;
@@ -344,53 +374,53 @@ int main(int argc, const char **argv)
             OCIO::ImgBuffer croppedImg(croppedSpec);
 
             void * croppedBuf = croppedImg.getBuffer();
-            void * imgBuf     = img.getBuffer();
+            void * imgBuf     = imgInput.getBuffer();
 
             // crop down bounding box and ditch all but n channels.
             // img is a flattened 3 dimensional matrix heightxwidthxchannels.
             // fill croppedimg with only the needed pixels.
-            for (int y=0 ; y < spec.height ; y++)
+            for (int y=0 ; y < specInput.height ; y++)
             {
-                for (int x=0 ; x < spec.width; x++)
+                for (int x=0 ; x < specInput.width; x++)
                 {
                     for (int k=0; k < (int)kchannels.size(); k++)
                     {
                         int channel = kchannels[k];
-                        int current_pixel_y = y + spec.y;
-                        int current_pixel_x = x + spec.x;
+                        int current_pixel_y = y + specInput.y;
+                        int current_pixel_x = x + specInput.x;
 
                         if (current_pixel_y >= 0 &&
                             current_pixel_x >= 0 &&
                             current_pixel_y < imgheight &&
                             current_pixel_x < imgwidth)
                         {
-                            const size_t imgIdx = (y * spec.width * components) 
+                            const size_t imgIdx = (y * specInput.width * components) 
                                                     + (x * components) + channel;
 
                             const size_t cropIdx = (current_pixel_y * imgwidth * kchannels.size())
                                                     + (current_pixel_x * kchannels.size())
                                                     + channel;
 
-                            if(spec.format==OIIO::TypeDesc::FLOAT)
+                            if(specInput.format==OIIO::TypeDesc::FLOAT)
                             {
                                 ((float*)croppedBuf)[cropIdx] = ((float*)imgBuf)[imgIdx];
                             }
-                            else if(spec.format==OIIO::TypeDesc::HALF)
+                            else if(specInput.format==OIIO::TypeDesc::HALF)
                             {
                                 ((half*)croppedBuf)[cropIdx] = ((half*)imgBuf)[imgIdx];
                             }
-                            else if(spec.format==OIIO::TypeDesc::UINT16)
+                            else if(specInput.format==OIIO::TypeDesc::UINT16)
                             {
                                 ((uint16_t*)croppedBuf)[cropIdx] = ((uint16_t*)imgBuf)[imgIdx];
                             }
-                            else if(spec.format==OIIO::TypeDesc::UINT8)
+                            else if(specInput.format==OIIO::TypeDesc::UINT8)
                             {
                                 ((uint8_t*)croppedBuf)[cropIdx] = ((uint8_t*)imgBuf)[imgIdx];
                             }
                             else
                             {
                                 std::cerr << "ERROR: Unsupported image type: " 
-                                          << spec.format << "." << std::endl;
+                                          << specInput.format << "." << std::endl;
                                 exit(1);
                             }
                         }
@@ -400,7 +430,7 @@ int main(int argc, const char **argv)
 
             components = (int)(kchannels.size());
 
-            img = std::move(croppedImg);
+            imgInput = std::move(croppedImg);
         }
     }
     catch(...)
@@ -447,7 +477,7 @@ int main(int argc, const char **argv)
 
         oglApp->setPrintShader(outputgpuInfo);
 
-        oglApp->initImage(imgwidth, imgheight, comp, (float *)img.getBuffer());
+        oglApp->initImage(imgwidth, imgheight, comp, (float *)imgInput.getBuffer());
         
         oglApp->createGLBuffers();
     }
@@ -482,6 +512,14 @@ int main(int argc, const char **argv)
                 t->setView(view);
                 processor = config->getProcessor(t);
             }
+            else if (useInvertView)
+            {
+                OCIO::DisplayViewTransformRcPtr t = OCIO::DisplayViewTransform::Create();
+                t->setSrc(outputcolorspace);
+                t->setDisplay(display);
+                t->setView(view);
+                processor = config->getProcessor(t, OCIO::TRANSFORM_DIR_INVERSE);
+            }
             else
             {
                 processor = config->getProcessor(inputcolorspace, outputcolorspace);
@@ -498,6 +536,37 @@ int main(int argc, const char **argv)
             exit(1);
         }
 
+        // Copy specInput into specOutput.
+        specOutput = specInput;
+
+        /*
+            Set the bit-depth of the output buffer to be used by OIIO.
+
+            OIIO may change the bit-depth when writing to a file (e.g. if the output image ends in "jpg" it will be converted to 8-bit integer), 
+            and OCIO is not trying to analyze the filename to emulate OIIO's decision making process.
+            
+            Additionally, the color space conversion may require more bits than the source image.
+            For example, converting a log image to linear requires at least a half-float output format.
+            
+            For most cases, half-float strikes a good balance between precision and storage space.
+            But if the input depth would lose precision when converted to half-float, use full float for the output depth instead.
+        */
+        if (specInput.format == OIIO::TypeDesc::UINT16 || specInput.format == OIIO::TypeDesc::FLOAT) 
+        {
+            specOutput.set_format(OIIO::TypeDesc::FLOAT);
+        }
+        else if (specInput.format == OIIO::TypeDesc::UINT8 || specInput.format == OIIO::TypeDesc::HALF) 
+        {
+            specOutput.set_format(OIIO::TypeDesc::HALF);
+        }
+        else
+        {
+            throw OCIO::Exception("The OIIO:TypeDesc of the input image pixels must be UINT8, UINT16, HALF or FLOAT.");
+        }
+
+        // Allocate imgOutput buffer using specOutput.
+        imgOutput.allocate(specOutput);
+
 #ifdef OCIO_GPU_ENABLED
         if (usegpu || usegpuLegacy)
         {
@@ -513,22 +582,22 @@ int main(int argc, const char **argv)
             oglApp->setShader(shaderDesc);
             oglApp->reshape(imgwidth, imgheight);
             oglApp->redisplay();
-            oglApp->readImage((float *)img.getBuffer());
+            oglApp->readImage((float *)imgOutput.getBuffer());
         }
         else
 #endif // OCIO_GPU_ENABLED
         {
-            const OCIO::BitDepth bitDepth = OCIO::GetBitDepth(spec);
-
             OCIO::ConstCPUProcessorRcPtr cpuProcessor 
-                = processor->getOptimizedCPUProcessor(bitDepth, bitDepth,
+                = processor->getOptimizedCPUProcessor(OCIO::GetBitDepth(specInput), 
+                                                      OCIO::GetBitDepth(specOutput),
                                                       OCIO::OPTIMIZATION_DEFAULT);
 
             const std::chrono::high_resolution_clock::time_point start
                 = std::chrono::high_resolution_clock::now();
 
-            OCIO::ImageDescRcPtr imgDesc = OCIO::CreateImageDesc(spec, img);
-            cpuProcessor->apply(*imgDesc);
+            OCIO::ImageDescRcPtr srcImgDesc = OCIO::CreateImageDesc(specInput, imgInput);
+            OCIO::ImageDescRcPtr dstImgDesc = OCIO::CreateImageDesc(specOutput, imgOutput);
+            cpuProcessor->apply(*srcImgDesc, *dstImgDesc);
 
             if(verbose)
             {
@@ -573,7 +642,7 @@ int main(int argc, const char **argv)
             continue;
         }
 
-        spec.attribute(name, fval);
+        specOutput.attribute(name, fval);
     }
 
     for(unsigned int i=0; i<intAttrs.size(); ++i)
@@ -589,7 +658,7 @@ int main(int argc, const char **argv)
             continue;
         }
 
-        spec.attribute(name, ival);
+        specOutput.attribute(name, ival);
     }
 
     for(unsigned int i=0; i<stringAttrs.size(); ++i)
@@ -603,7 +672,7 @@ int main(int argc, const char **argv)
             continue;
         }
 
-        spec.attribute(name, value);
+        specOutput.attribute(name, value);
     }
 
     if(parseerror)
@@ -633,12 +702,14 @@ int main(int argc, const char **argv)
 
         if (outputcolorspace)
         {
-            spec.attribute("oiio:ColorSpace", outputcolorspace);
+            specOutput.attribute("oiio:ColorSpace", outputcolorspace);
         }
 
-        f->open(outputimage, spec);
+        OCIO::PrintImageSpec(specOutput, verbose);
 
-        if(!f->write_image(spec.format, img.getBuffer()))
+        f->open(outputimage, specOutput);
+
+        if(!f->write_image(specOutput.format, imgOutput.getBuffer()))
         {
             std::cerr << "ERROR: Writing \"" << outputimage << "\" failed with: "
                       << f->geterror() << "." << std::endl;
