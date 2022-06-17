@@ -231,6 +231,9 @@ foreach(C ${CONFIGS_PATHS})
     # Prepend "0x" to the first byte.
     string(PREPEND FORMATTED_HEX "0x")
 
+    # Append 0x00 to null-terminated the string.
+    string(APPEND FORMATTED_HEX ",0x00")
+    
     # Set the dynamically named variable "${CONFIG_NAME}" to the config in HEX.
     set(${CONFIG_NAME} ${FORMATTED_HEX})
 endforeach()
