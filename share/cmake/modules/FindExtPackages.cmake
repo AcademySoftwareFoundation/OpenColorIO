@@ -115,7 +115,7 @@ if(OCIO_BUILD_APPS)
         set(_OpenEXR_ExternalProject_VERSION "3.1.5")
         find_package(OpenEXR 3.0)
 
-        if(TARGET OpenEXR::OpenEXR)
+        if(OpenEXR_FOUND AND TARGET OpenEXR::OpenEXR)
             add_library(OpenColorIO::ImageIOBackend ALIAS OpenEXR::OpenEXR)
             set(OCIO_IMAGE_BACKEND OpenEXR)
         endif()

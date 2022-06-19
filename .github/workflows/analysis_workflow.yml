@@ -112,8 +112,8 @@ jobs:
           share/ci/scripts/multi/install_pybind11.sh 2.9.2 $EXT_PATH
       - name: Install latest ext package versions
         run: |
-          share/ci/scripts/multi/install_openexr.sh latest $EXT_PATH
           share/ci/scripts/multi/install_imath.sh latest $EXT_PATH
+          share/ci/scripts/multi/install_openexr.sh latest $EXT_PATH
           share/ci/scripts/multi/install_oiio.sh latest $EXT_PATH
           share/ci/scripts/multi/install_osl.sh latest $EXT_PATH
           share/ci/scripts/multi/install_openfx.sh latest $EXT_PATH
@@ -214,8 +214,8 @@ jobs:
           share/ci/scripts/multi/install_pybind11.sh 2.9.2 $EXT_PATH
       - name: Install latest ext package versions
         run: |
-          share/ci/scripts/multi/install_openexr.sh latest $EXT_PATH
           share/ci/scripts/multi/install_imath.sh latest $EXT_PATH
+          share/ci/scripts/multi/install_openexr.sh latest $EXT_PATH
           share/ci/scripts/multi/install_oiio.sh latest $EXT_PATH
           share/ci/scripts/multi/install_osl.sh latest $EXT_PATH
           share/ci/scripts/multi/install_openfx.sh latest $EXT_PATH
@@ -335,8 +335,8 @@ jobs:
       # OSL not installed due to LLVM compilation time.
       - name: Install latest ext package versions
         run: |
-          share/ci/scripts/multi/install_openexr.sh latest $EXT_PATH
           share/ci/scripts/multi/install_imath.sh latest $EXT_PATH
+          share/ci/scripts/multi/install_openexr.sh latest $EXT_PATH
           share/ci/scripts/multi/install_oiio.sh latest $EXT_PATH
           share/ci/scripts/multi/install_openfx.sh latest $EXT_PATH
         shell: bash

@@ -65,7 +65,7 @@ it is not necessary to install those items manually:
 - cmake >= 3.12
 - \*Expat >= 2.4.1 (XML parser for CDL/CLF/CTF)
 - \*yaml-cpp >= 0.7.0 (YAML parser for Configs)
-- \*Imath >= 3.1.2 (for half domain LUTs)
+- \*Imath >= 3.0 (for half domain LUTs)
 - \*pystring >= 1.1.3
 
 Some optional components also depend on:
@@ -83,7 +83,7 @@ Some optional components also depend on:
     - breathe
 - NumPy (for complete Python test suite)
 - Doxygen (for the docs)
-- OpenImageIO >= 2.1.9 or OpenEXR >= 3.1.0(for apps including ocioconvert)
+- OpenImageIO >= 2.1.9 or OpenEXR >= 3.0(for apps including ocioconvert)
 
 Example bash scripts are provided in 
 `share/ci/scripts <https://github.com/AcademySoftwareFoundation/OpenColorIO/tree/main/share/ci/scripts>`_ 
