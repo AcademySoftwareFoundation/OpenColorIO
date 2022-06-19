@@ -229,8 +229,10 @@ int main(int argc, const char **argv)
         std::cout << "Using GPU color processing." << std::endl;
     }
 
-    OCIO::ImageIO img;
-    OCIO::BitDepth outputBitDepth = OCIO::BIT_DEPTH_UNKNOWN;
+    OCIO::ImageIO imgInput;
+    OCIO::ImageIO imgOutputCPU;
+    // Default is to perform in-place conversion.
+    OCIO::ImageIO *imgOutput = &imgInput;
 
     // Load the image.
     std::cout << std::endl;
@@ -239,14 +241,14 @@ int main(int argc, const char **argv)
     {
         if (usegpu || usegpuLegacy)
         {
-            img.read(inputimage, OCIO::BIT_DEPTH_F32);
+            imgInput.read(inputimage, OCIO::BIT_DEPTH_F32);
         }
         else
         {
-            img.read(inputimage);
+            imgInput.read(inputimage);
         }
 
-        std::cout << img.getImageDescStr() << std::endl;
+        std::cout << imgInput.getImageDescStr() << std::endl;
     }
     catch (const std::exception & e)
     {
@@ -266,17 +268,17 @@ int main(int argc, const char **argv)
     if (usegpu || usegpuLegacy)
     {
         OCIO::OglApp::Components comp = OCIO::OglApp::COMPONENTS_RGBA;
-        if (img.getNumChannels() == 4)
+        if (imgInput.getNumChannels() == 4)
         {
             comp = OCIO::OglApp::COMPONENTS_RGBA;
         }
-        else if (img.getNumChannels() == 3)
+        else if (imgInput.getNumChannels() == 3)
         {
             comp = OCIO::OglApp::COMPONENTS_RGB;
         }
         else
         {
-            std::cerr << "Cannot convert image with " << img.getNumChannels()
+            std::cerr << "Cannot convert image with " << imgInput.getNumChannels()
                       << " components." << std::endl;
             exit(1);
         }
@@ -298,7 +300,7 @@ int main(int argc, const char **argv)
 
         oglApp->setPrintShader(outputgpuInfo);
 
-        oglApp->initImage(img.getWidth(), img.getHeight(), comp, (float *)img.getData());
+        oglApp->initImage(imgInput.getWidth(), imgInput.getHeight(), comp, (float *)imgInput.getData());
         
         oglApp->createGLBuffers();
     }
@@ -357,36 +359,6 @@ int main(int argc, const char **argv)
             exit(1);
         }
 
-        /*
-            Set the bit-depth of the output buffer.
-
-            Note that when using OpenImageIO, the actual output bit-depth may be updated
-            if the file format doesn't support it. OCIO is not trying to analyze the filename
-            to emulate OpenImageIO's decision making process.
-
-            Additionally, the converted image may require more bits than the source image.
-            For example, converting a log image to linear requires at least a half-float
-            output format.
-
-            For most cases, half-float strikes a good balance between precision and storage space.
-            But if the input depth would lose precision when converted to half-float, use
-            single-precision float for the output depth instead.
-        */
-        const OCIO::BitDepth inputBitDepth = img.getBitDepth();
-
-        if (inputBitDepth == OCIO::BIT_DEPTH_UINT16 || inputBitDepth == OCIO::BIT_DEPTH_F32)
-        {
-            outputBitDepth = OCIO::BIT_DEPTH_F32;
-        }
-        else if (inputBitDepth == OCIO::BIT_DEPTH_UINT8 || inputBitDepth == OCIO::BIT_DEPTH_F16)
-        {
-            outputBitDepth = OCIO::BIT_DEPTH_F16;
-        }
-        else
-        {
-            throw OCIO::Exception("Unsupported input bitdepth, must be uint8, uint16, half or float.");
-        }
-
 #ifdef OCIO_GPU_ENABLED
         if (usegpu || usegpuLegacy)
         {
@@ -400,24 +372,72 @@ int main(int argc, const char **argv)
             gpu->extractGpuShaderInfo(shaderDesc);
 
             oglApp->setShader(shaderDesc);
-            oglApp->reshape(img.getWidth(), img.getHeight());
+            oglApp->reshape(imgInput.getWidth(), imgInput.getHeight());
             oglApp->redisplay();
-            oglApp->readImage((float *)img.getData());
+            oglApp->readImage((float *)imgInput.getData());
         }
         else
 #endif // OCIO_GPU_ENABLED
         {
+            /*
+                Set the bit-depth of the output buffer.
+
+                Whereas the GPU processor always work on float data, the CPU processor
+                can be optimised for a specific input and output bit-depth.
+
+                The converted image may require more bits than the source image.
+                For example, converting a log image to linear requires at least a half-float
+                output format. For most cases, half-float strikes a good balance between
+                precision and storage space. But if the input depth would lose precision
+                when converted to half-float, use float for the output depth instead.
+
+                Note that when using OpenImageIO, the actual output bit-depth may be overrided
+                if the file format doesn't support it. OCIO is not trying to analyze the filename
+                to emulate OpenImageIO's decision making process.
+            */
+            const OCIO::BitDepth inputBitDepth = imgInput.getBitDepth();
+            OCIO::BitDepth outputBitDepth;
+
+            if (inputBitDepth == OCIO::BIT_DEPTH_UINT16 || inputBitDepth == OCIO::BIT_DEPTH_F32)
+            {
+                outputBitDepth = OCIO::BIT_DEPTH_F32;
+            }
+            else if (inputBitDepth == OCIO::BIT_DEPTH_UINT8 || inputBitDepth == OCIO::BIT_DEPTH_F16)
+            {
+                outputBitDepth = OCIO::BIT_DEPTH_F16;
+            }
+            else
+            {
+                throw OCIO::Exception("Unsupported input bitdepth, must be uint8, uint16, half or float.");
+            }
+
             OCIO::ConstCPUProcessorRcPtr cpuProcessor
                 = processor->getOptimizedCPUProcessor(inputBitDepth,
                                                       outputBitDepth,
                                                       OCIO::OPTIMIZATION_DEFAULT);
 
+            const bool useOutputBuffer = inputBitDepth != outputBitDepth;
+
+            if (useOutputBuffer)
+            {
+                imgOutputCPU.init(imgInput, outputBitDepth);
+                imgOutput = &imgOutputCPU;
+            }
+
             const std::chrono::high_resolution_clock::time_point start
                 = std::chrono::high_resolution_clock::now();
 
-            OCIO::ImageDescRcPtr srcImgDesc = img.getImageDesc();
-            OCIO::ImageDescRcPtr dstImgDesc = img.getImageDesc(outputBitDepth);
-            cpuProcessor->apply(*srcImgDesc, *dstImgDesc);
+            if (useOutputBuffer)
+            {
+                OCIO::ImageDescRcPtr srcImgDesc = imgInput.getImageDesc();
+                OCIO::ImageDescRcPtr dstImgDesc = imgOutputCPU.getImageDesc();
+                cpuProcessor->apply(*srcImgDesc, *dstImgDesc);
+            }
+            else
+            {
+                OCIO::ImageDescRcPtr imgDesc = imgInput.getImageDesc();
+                cpuProcessor->apply(*imgDesc);
+            }
 
             if (verbose)
             {
@@ -460,7 +480,7 @@ int main(int argc, const char **argv)
             continue;
         }
 
-        img.attribute(name, fval);
+        imgOutput->attribute(name, fval);
     }
 
     for (unsigned int i=0; i<intAttrs.size(); ++i)
@@ -476,7 +496,7 @@ int main(int argc, const char **argv)
             continue;
         }
 
-        img.attribute(name, ival);
+        imgOutput->attribute(name, ival);
     }
 
     for (unsigned int i=0; i<stringAttrs.size(); ++i)
@@ -490,7 +510,7 @@ int main(int argc, const char **argv)
             continue;
         }
 
-        img.attribute(name, value);
+        imgOutput->attribute(name, value);
     }
 
     if (parseError)
@@ -509,10 +529,10 @@ int main(int argc, const char **argv)
 
         if (outputcolorspace)
         {
-            img.attribute("oiio:ColorSpace", outputcolorspace);
+            imgOutput->attribute("oiio:ColorSpace", outputcolorspace);
         }
 
-        img.write(outputimage);
+        imgOutput->write(outputimage);
     }
     catch (...)
     {
@@ -520,8 +540,8 @@ int main(int argc, const char **argv)
         exit(1);
     }
 
-    std::cout << std::endl;
     std::cout << "Wrote " << outputimage << std::endl;
+    std::cout << imgOutput->getImageDescStr() << std::endl;
 
     return 0;
 }

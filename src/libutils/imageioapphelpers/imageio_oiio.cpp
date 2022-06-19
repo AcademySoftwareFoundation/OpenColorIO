@@ -118,14 +118,14 @@ public:
         return ss.str();
     }
 
-    ImageDescRcPtr getImageDesc(BitDepth bitdepth) const
+    ImageDescRcPtr getImageDesc() const
     {
         return std::make_shared<PackedImageDesc>(
             (void*) getData(),
             getWidth(),
             getHeight(),
             getChannelOrder(),
-            bitdepth == BIT_DEPTH_UNKNOWN ? getBitDepth() : bitdepth,
+            getBitDepth(),
             getChanStrideBytes(),
             getXStrideBytes(),
             getYStrideBytes()
@@ -212,6 +212,16 @@ public:
     void attribute(const std::string & name, int value)
     {
         m_buffer.specmod().attribute(name, value);
+    }
+
+    void init(const ImageIO::Impl & img, BitDepth bitDepth)
+    {
+        bitDepth = bitDepth == BIT_DEPTH_UNKNOWN ? img.getBitDepth() : bitDepth;
+
+        OIIO::ImageSpec spec = img.m_buffer.spec();
+        spec.format = BitDepthToTypeDesc(bitDepth);
+
+        m_buffer = OIIO::ImageBuf(spec);
     }
 
     void init(long width, long height, ChannelOrdering chanOrder, BitDepth bitDepth)

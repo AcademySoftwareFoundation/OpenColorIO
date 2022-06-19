@@ -116,14 +116,14 @@ public:
         return ss.str();
     }
 
-    ImageDescRcPtr getImageDesc(BitDepth bitdepth) const
+    ImageDescRcPtr getImageDesc() const
     {
         return std::make_shared<PackedImageDesc>(
             (void*) getData(),
             getWidth(),
             getHeight(),
             getChannelOrder(),
-            bitdepth == BIT_DEPTH_UNKNOWN ? getBitDepth() : bitdepth,
+            getBitDepth(),
             getChanStrideBytes(),
             getXStrideBytes(),
             getYStrideBytes()
@@ -226,6 +226,28 @@ public:
     void attribute(const std::string & name, int value)
     {
         m_header.insert(name, Imf::IntAttribute(value));
+    }
+
+    void init(const ImageIO::Impl & img, BitDepth bitDepth)
+    {
+        bitDepth = bitDepth == BIT_DEPTH_UNKNOWN ? img.getBitDepth() : bitDepth;
+
+        const size_t numChans = img.getNumChannels();
+        const size_t bitDepthBytes = GetChannelSizeInBytes(bitDepth);
+        const size_t imgSizeInBytes =
+            bitDepthBytes * numChans * (size_t)(img.getWidth() * img.getHeight());
+
+        m_data.resize(imgSizeInBytes, 0);
+
+        m_header = img.m_header;
+
+        m_header.channels() = Imf::ChannelList();
+
+        Imf::PixelType pixelType = BitDepthToPixelType(bitDepth);
+        for (auto name : GetChannelNames(img.getChannelOrder()))
+        {
+            m_header.channels().insert(name, Imf::Channel(pixelType));
+        }
     }
 
     void init(long width, long height, ChannelOrdering chanOrder, BitDepth bitDepth)

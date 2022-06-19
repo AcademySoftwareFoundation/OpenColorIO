@@ -124,9 +124,9 @@ std::string ImageIO::getImageDescStr() const
     return m_impl->getImageDescStr();
 }
 
-ImageDescRcPtr ImageIO::getImageDesc(BitDepth bitDepth) const
+ImageDescRcPtr ImageIO::getImageDesc() const
 {
-    return m_impl->getImageDesc(bitDepth);
+    return m_impl->getImageDesc();
 }
 
 uint8_t * ImageIO::getData()
@@ -187,6 +187,11 @@ ptrdiff_t ImageIO::getYStrideBytes() const
 ptrdiff_t ImageIO::getImageBytes() const
 {
     return m_impl->getImageBytes();
+}
+
+void ImageIO::init(const ImageIO & img, BitDepth bitDepth)
+{
+    m_impl->init(*img.m_impl, bitDepth);
 }
 
 void ImageIO::init(long width, long height, ChannelOrdering chanOrder, BitDepth bitDepth)
