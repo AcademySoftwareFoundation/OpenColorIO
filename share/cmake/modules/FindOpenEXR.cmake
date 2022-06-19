@@ -99,7 +99,11 @@ if(NOT OpenEXR_FOUND AND NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL NONE)
 
     # Set find_package standard args
     set(OpenEXR_FOUND TRUE)
-    set(OpenEXR_VERSION ${_OpenEXR_ExternalProject_VERSION})
+    if(_OpenEXR_ExternalProject_VERSION)
+        set(OpenEXR_VERSION ${_OpenEXR_ExternalProject_VERSION})
+    else()
+        set(OpenEXR_VERSION ${OpenEXR_FIND_VERSION})
+    endif()
     set(OpenEXR_INCLUDE_DIR "${_EXT_DIST_ROOT}/${CMAKE_INSTALL_INCLUDEDIR}")
 
     # Set the expected library name

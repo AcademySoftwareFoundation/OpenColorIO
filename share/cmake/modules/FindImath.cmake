@@ -140,7 +140,11 @@ if(NOT Imath_FOUND AND NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL NONE)
 
     # Set find_package standard args
     set(Imath_FOUND TRUE)
-    set(Imath_VERSION ${_Imath_ExternalProject_VERSION})
+    if(_Imath_ExternalProject_VERSION)
+        set(Imath_VERSION ${_Imath_ExternalProject_VERSION})
+    else()
+        set(Imath_VERSION ${Imath_FIND_VERSION})
+    endif()
     set(Imath_INCLUDE_DIR "${_EXT_DIST_ROOT}/${CMAKE_INSTALL_INCLUDEDIR}")
 
     # Set the expected library name
