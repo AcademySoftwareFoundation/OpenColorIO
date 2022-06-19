@@ -95,9 +95,11 @@ if((OCIO_BUILD_APPS AND OCIO_USE_OIIO_FOR_APPS) OR OCIO_BUILD_TESTS)
 
     # OpenImageIO
     # https://github.com/OpenImageIO/oiio
-    set(OIIO_VERSION "2.1.9")
+    set(OIIO_VERSION "2.2.14")
 
     if(OCIO_USE_OIIO_CMAKE_CONFIG)
+        # TODO: Try when OIIO 2.4 is released (https://github.com/OpenImageIO/oiio/pull/3322).
+        # set(OPENIMAGEIO_CONFIG_DO_NOT_FIND_IMATH 1)
         find_package(OpenImageIO ${OIIO_VERSION} CONFIG)
     else()
         find_package(OpenImageIO ${OIIO_VERSION})

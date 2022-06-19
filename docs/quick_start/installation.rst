@@ -83,7 +83,7 @@ Some optional components also depend on:
     - breathe
 - NumPy (for complete Python test suite)
 - Doxygen (for the docs)
-- OpenImageIO >= 2.1.9 or OpenEXR >= 3.0(for apps including ocioconvert)
+- OpenImageIO >= 2.1.9 or OpenEXR >= 3.0 (for apps including ocioconvert)
 
 Example bash scripts are provided in 
 `share/ci/scripts <https://github.com/AcademySoftwareFoundation/OpenColorIO/tree/main/share/ci/scripts>`_ 
