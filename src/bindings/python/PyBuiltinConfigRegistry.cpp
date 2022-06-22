@@ -6,40 +6,63 @@
 
 namespace OCIO_NAMESPACE
 {
+
+enum BuiltinConfigRegistryIterator
+{
+    IT_BUILTIN_CONFIG_NAME = 0,
+    IT_BUILTIN_CONFIG
+};
+using BuiltinConfigNameIterator = PyIterator<PyBuiltinConfigRegistry, IT_BUILTIN_CONFIG_NAME>;
+using BuiltinConfigIterator = PyIterator<PyBuiltinConfigRegistry, IT_BUILTIN_CONFIG>;
+
 void bindPyBuiltinConfigRegistry(py::module & m)
 {
     auto clsBuiltinConfigRegistry =
         py::class_<PyBuiltinConfigRegistry>(m.attr("BuiltinConfigRegistry"));
 
+    auto clsBuiltinConfigNameIterator = 
+        py::class_<BuiltinConfigNameIterator>(
+            clsBuiltinConfigRegistry, "BuiltinConfigNameIterator");
+
+    auto clsBuiltinConfigIterator= 
+        py::class_<BuiltinConfigIterator>(
+            clsBuiltinConfigRegistry, "BuiltinConfigIterator");
+
     clsBuiltinConfigRegistry
         .def(py::init<>(), DOC(BuiltinConfigRegistry, Get))
-        .def("__len__", [](PyBuiltinConfigRegistry & self) { return self.getNumBuiltinConfigs(); },
-             DOC(BuiltinConfigRegistry, getNumBuiltinConfigs))
+        .def("__iter__", [](PyBuiltinConfigRegistry & self)
+            { 
+                return BuiltinConfigNameIterator(self); 
+            },
+             DOC(BuiltinConfigRegistry, getBuiltinConfigName))
+        .def("__len__", [](PyBuiltinConfigRegistry & self) 
+            { 
+                return self.getNumBuiltinConfigs(); 
+            },
+            DOC(BuiltinConfigRegistry, getNumBuiltinConfigs))
+        .def("__getitem__", [](PyBuiltinConfigRegistry & self, const std::string & name) 
+            { 
+                return self.getBuiltinConfigByName(name.c_str());
+            },
+            DOC(BuiltinConfigRegistry, getBuiltinConfigByName))
+        .def("__contains__", [](PyBuiltinConfigRegistry & self, const std::string & name) 
+            {
+                const char * config = self.getBuiltinConfigByName(name.c_str());
+                if ((config != NULL) && (config[0] == '\0'))
+                {
+                    return false;
+                }
+                return true;
+            })
+        .def("getBuiltinConfigs", [](PyBuiltinConfigRegistry & self) 
+            {
+                return BuiltinConfigIterator(self);
+            })
         .def("getNumBuiltinConfigs", [](PyBuiltinConfigRegistry & self) 
             { 
                 return self.getNumBuiltinConfigs(); 
             },
             DOC(BuiltinConfigRegistry, getNumBuiltinConfigs))
-        .def("getBuiltinConfigName", [](PyBuiltinConfigRegistry & self, size_t configIndex) 
-            { 
-                return self.getBuiltinConfigName(configIndex); 
-            },
-            DOC(BuiltinConfigRegistry, getBuiltinConfigName))
-        .def("getBuiltinConfigUIName", [](PyBuiltinConfigRegistry & self, size_t configIndex) 
-            { 
-                return self.getBuiltinConfigUIName(configIndex); 
-            },
-            DOC(BuiltinConfigRegistry, getBuiltinConfigUIName))
-        .def("getBuiltinConfig", [](PyBuiltinConfigRegistry & self, size_t configIndex) 
-            { 
-                return self.getBuiltinConfig(configIndex); 
-            },
-            DOC(BuiltinConfigRegistry, getBuiltinConfig))
-        .def("getBuiltinConfigByName", [](PyBuiltinConfigRegistry & self, const char * configName) 
-            { 
-                return self.getBuiltinConfigByName(configName); 
-            },
-            DOC(BuiltinConfigRegistry, getBuiltinConfigByName))
         .def("isBuiltinConfigRecommended", [](PyBuiltinConfigRegistry & self, size_t configIndex) 
             { 
                 return self.isBuiltinConfigRecommended(configIndex); 
@@ -50,5 +73,36 @@ void bindPyBuiltinConfigRegistry(py::module & m)
                 return self.getDefaultBuiltinConfigName(); 
             },
             DOC(BuiltinConfigRegistry, getDefaultBuiltinConfigName));
+
+
+    clsBuiltinConfigIterator
+        .def("__len__", [](BuiltinConfigIterator & it) { return it.m_obj.getNumBuiltinConfigs(); })
+        .def("__getitem__", [](BuiltinConfigIterator & it, int i) 
+            { 
+                return py::make_tuple(it.m_obj.getBuiltinConfigName(i),
+                                      it.m_obj.getBuiltinConfigUIName(i),
+                                      it.m_obj.getBuiltinConfig(i));
+            })
+        .def("__iter__", [](BuiltinConfigIterator & it) -> BuiltinConfigIterator & { return it; })
+        .def("__next__", [](BuiltinConfigIterator & it)
+            {
+                int i = it.nextIndex((int)it.m_obj.getNumBuiltinConfigs());
+                return py::make_tuple(it.m_obj.getBuiltinConfigName(i),
+                                      it.m_obj.getBuiltinConfigUIName(i),
+                                      it.m_obj.getBuiltinConfig(i));
+            });
+
+    clsBuiltinConfigNameIterator
+        .def("__len__", [](BuiltinConfigNameIterator & it) { return it.m_obj.getNumBuiltinConfigs(); })
+        .def("__getitem__", [](BuiltinConfigNameIterator & it, int i) 
+            { 
+                return it.m_obj.getBuiltinConfigName(i);
+            })
+        .def("__iter__", [](BuiltinConfigNameIterator & it) -> BuiltinConfigNameIterator & { return it; })
+        .def("__next__", [](BuiltinConfigNameIterator & it)
+            {
+                int i = it.nextIndex((int)it.m_obj.getNumBuiltinConfigs());
+                return it.m_obj.getBuiltinConfigName(i);
+            });
 }
 }

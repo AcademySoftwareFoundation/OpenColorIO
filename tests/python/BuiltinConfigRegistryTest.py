@@ -1,8 +1,15 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright Contributors to the OpenColorIO Project.
 
+try:
+    from collections.abc import Iterable
+except ImportError:
+    # Python 2
+    from collections import Iterable
+
 from re import S
 import unittest
+from UnitTestUtils import STRING_TYPES
 
 import PyOpenColorIO as OCIO
 
@@ -14,64 +21,125 @@ class BuiltinConfigRegistryTest(unittest.TestCase):
     def setUpClass(cls):
         cls.REGISTRY = OCIO.BuiltinConfigRegistry()
 
-    def test_builtin_configs(self):
-        """
-        Test the built-in configurations
-        """
+    def test_builtin_config_iterable(self):
+        all_names = []
+        for name in self.REGISTRY:
+            self.assertIsInstance(name, STRING_TYPES)
+            self.assertIsInstance(self.REGISTRY[name], STRING_TYPES)
+            all_names.append(name)
+        
+        # All names were iterated over, and __len__ and list() behave
+        self.assertEqual(len(all_names), len(self.REGISTRY))
+        self.assertListEqual(all_names, list(self.REGISTRY))
 
+        # Test iterator instance
+        iterator = iter(self.REGISTRY)
+        self.assertIsInstance(iterator, Iterable)
+
+        # Iterator size is available
+        self.assertEqual(len(iterator), len(self.REGISTRY))
+        
+        # Iterator supports range-based loop and indexing
+        values = list(iterator)
+        for i in range(len(iterator)):
+            # Item at index matches list result
+            self.assertEqual(iterator[i], values[i])
+            self.assertIsInstance(iterator[i], STRING_TYPES)
+
+    def test_contains(self):
+        # Valid __contains__ for all names
+        for name in self.REGISTRY:
+            self.assertTrue(name in self.REGISTRY)
+            self.assertFalse(name not in self.REGISTRY)
+
+        # Invalid __contains__ for non-name
+        with self.assertRaises(OCIO.Exception) as cm:
+            "I do not exist" not in self.REGISTRY
+        self.assertEqual(
+            str(cm.exception), 
+            "Could not find 'I do not exist' in the built-in configurations."
+        )
+
+    def test_get_builtin_configs(self):
+        # tuple iterator (like dict.items())
+        for item in self.REGISTRY.getBuiltinConfigs():
+            self.assertIsInstance(item, tuple)
+            # check if there are three items per tuple.
+            self.assertEqual(len(item), 3)
+            # name
+            self.assertIsInstance(item[0], STRING_TYPES)
+            # uiname
+            self.assertIsInstance(item[1], STRING_TYPES)
+            # config
+            self.assertIsInstance(item[2], STRING_TYPES)
+
+        # tuple unpacking support
+        for name, uiname, config in self.REGISTRY.getBuiltinConfigs():
+            # __getitem__ has correct result
+            self.assertEqual(self.REGISTRY[name], config)
+            self.assertIsInstance(name, STRING_TYPES)
+            self.assertIsInstance(uiname, STRING_TYPES)
+            self.assertIsInstance(config, STRING_TYPES)
+
+        # Test iterator instance
+        iterator = self.REGISTRY.getBuiltinConfigs()
+        self.assertIsInstance(iterator, Iterable)
+
+        # Iterator size is available
+        self.assertEqual(len(iterator), len(self.REGISTRY))
+        
+        # Iterator supports range-based loop and indexing
+        values = list(iterator)
+        for i in range(len(iterator)):
+            # Item at index matches list result
+            self.assertEqual(iterator[i], values[i])
+            self.assertIsInstance(iterator[i], tuple)
+            self.assertEqual(len(iterator[i]), 3)
+            # name
+            self.assertIsInstance(iterator[i][0], STRING_TYPES)
+            # uiname
+            self.assertIsInstance(iterator[i][1], STRING_TYPES)
+            # config
+            self.assertIsInstance(iterator[i][2], STRING_TYPES)
+
+
+        # Config specific tests
+
+        # Test number of configs.
         self.assertEqual(self.REGISTRY.getNumBuiltinConfigs(), 1)
 
+        # Test the first config.
+        self.assertEqual(values[0][0], "cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1")
         self.assertEqual(
-            self.REGISTRY.getBuiltinConfigName(0), 
-            "cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1"
-        )
-
-        self.assertEqual(
-            self.REGISTRY.getBuiltinConfigUIName(0), 
-            "Academy Color Encoding System - CG Config [COLORSPACES v0.1.0] [ACES v1.3] [OCIO v2.1.1]"
-        )
-
-        # Test that both methods returns the same config since CG.h cannot be included here.
-        self.assertEqual(
-            self.REGISTRY.getBuiltinConfig(0), 
-            self.REGISTRY.getBuiltinConfigByName("cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1")
-        )
+            values[0][1], 
+            ("Academy Color Encoding System - CG Config [COLORSPACES v0.1.0] [ACES v1.3] "
+            "[OCIO v2.1.1]"))
+        self.assertTrue(self.REGISTRY.isBuiltinConfigRecommended(0))
 
         self.assertEqual(
             self.REGISTRY.getDefaultBuiltinConfigName(),
             "cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1"
         )
 
-        self.assertTrue(self.REGISTRY.isBuiltinConfigRecommended(0))
+    def test_multi_reference(self):
+        # Registry is a singleton. Make sure multiple Python 
+        # instances can be held.
+        instances = []
+        for i in range(10):
+            instances.append(OCIO.BuiltinConfigRegistry())
 
-        # ********************************
-        # Testing some expected failures.
-        # ********************************
-        
-        # Test isBuiltinConfigRecommended using an invalid config index.
-        with self.assertRaises(OCIO.Exception) as cm:
-            self.REGISTRY.isBuiltinConfigRecommended(999)
-            self.assertEqual(str(cm.exception), "Config index is out of range.")
+        # Other instances should still function after deleting one. The 
+        # underlying C++ object is not deleted.
+        instance_0 = instances.pop(0)
+        self.assertEqual(len(instances), 9)
+        del instance_0
 
-        # Test getBuiltinConfigName using an invalid config index.
-        with self.assertRaises(OCIO.Exception) as cm:
-            self.REGISTRY.getBuiltinConfigName(999)
-            self.assertEqual(str(cm.exception), "Config index is out of range.")
+        # Variable is no longer defined
+        with self.assertRaises(NameError):
+            len(instance_0)
 
-        # Test getBuiltinConfigUIName using an invalid config index.
-        with self.assertRaises(OCIO.Exception) as cm:
-            self.REGISTRY.getBuiltinConfigUIName(999)
-            self.assertEqual(str(cm.exception), "Config index is out of range.")
-
-        # Test getBuiltinConfig using an invalid config index.
-        with self.assertRaises(OCIO.Exception) as cm:
-            self.REGISTRY.getBuiltinConfig(999)
-            self.assertEqual(str(cm.exception), "Config index is out of range.")
-
-        # Test getBuiltinConfigByName using an unknown config name.
-        with self.assertRaises(OCIO.Exception) as cm:
-            self.REGISTRY.getBuiltinConfigByName("I do not exist")
-        self.assertEqual(
-            str(cm.exception), 
-            "Could not find 'I do not exist' in the built-in configurations."
-        )
+        # Test underlying C++ reference validity by accessing registry 
+        # data for each instance.
+        for instance in instances:
+            self.assertGreaterEqual(len(instance), 1)
+            self.assertEqual(len(instance), len(self.REGISTRY))
