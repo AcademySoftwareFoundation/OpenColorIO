@@ -64,10 +64,11 @@ public:
      * still be available, but not recommended for the current version of OCIO.
      * 
      * @param name Name for the built-in config.
+     * @param uiName User-friendly config name.
      * @param config Config as string
      * @param isRecommended Is the built-in config recommended or not.
      */
-    void addBuiltin(const char * name, const char * uiName, const char * const config, bool isRecommended);
+    void addBuiltin(const char * name, const char * uiName, const char * config, bool isRecommended);
 
     /// Get the number of built-in configs available.
     size_t getNumBuiltinConfigs() const noexcept override;
@@ -82,6 +83,7 @@ public:
     const char * getBuiltinConfigUIName(size_t configIndex) const override;
 
     /// Get Yaml text of the built-in config at the specified index.
+    /// Throws for illegal index.
     const char * getBuiltinConfig(size_t configIndex) const override;
 
     /// Get the Yaml text of the built-in config with the specified name. 
@@ -89,9 +91,11 @@ public:
     const char * getBuiltinConfigByName(const char * configName) const override;
 
     /// Check if a specific built-in config is recommended.
+    /// Throws for illegal index.
     bool isBuiltinConfigRecommended(size_t configIndex) const override;
 
     /// Get the default recommended built-in config.
+    /// Throws for illegal index.
     const char * getDefaultBuiltinConfigName() const override;
 
     /// Set the default built-in config.

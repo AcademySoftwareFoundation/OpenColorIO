@@ -104,7 +104,7 @@ inline bool EqualWithSafeRelError(T value,
 
 struct EnvironmentVariableGuard
 {
-    EnvironmentVariableGuard(const std::string name, const std::string value) : m_name(name)
+    EnvironmentVariableGuard(const std::string & name, const std::string & value) : m_name(name)
     {
         if (!name.empty())
         {
@@ -112,7 +112,7 @@ struct EnvironmentVariableGuard
         }
     }
 
-    EnvironmentVariableGuard(std::string name) : m_name(name)
+    EnvironmentVariableGuard(const std::string & name) : m_name(name)
     {
     }
 

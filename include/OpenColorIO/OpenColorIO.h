@@ -257,11 +257,20 @@ public:
     /**
      * \brief Create a configuration using the OCIO environment variable.
      * 
+     * Also support OCIO URI format. See CreateFromFile.
+     * 
      * If the variable is missing or empty, returns the same result as 
      * \ref Config::CreateRaw .
      */
     static ConstConfigRcPtr CreateFromEnv();
-    /// Create a configuration using a specific config file.
+    /**
+     * \brief Create a configuration using a specific config file.
+     * 
+     * Also support the following OCIO URI format :
+     *  "ocio://default"    - Default Built-in config.
+     *  "ocio://configName" - Built-in config named configName
+     * 
+     */
     static ConstConfigRcPtr CreateFromFile(const char * filename);
     /// Create a configuration using a stream.
     static ConstConfigRcPtr CreateFromStream(std::istream & istream);
@@ -3351,6 +3360,8 @@ public:
      * been superseded. If an app is presenting a list of configs to users, it should not include 
      * configs that are no longer recommended.
      * 
+     * Throws if the name is not found.
+     * 
      * @param configIndex Index of built-in config.
      * @return true if the config is recommended.
      */
@@ -3367,6 +3378,8 @@ public:
      * 
      * For backwards compatibility, the name provided here will always work as an argument 
      * to other methods so that any previous default config may be recovered.
+     * 
+     * Throws if the name is not found.
      * 
      * @return Default's built-in config name.
      */

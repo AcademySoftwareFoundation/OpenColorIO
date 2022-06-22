@@ -1123,7 +1123,7 @@ ConstConfigRcPtr Config::CreateFromFile(const char * filename)
     }
 
     // Check for URI Pattern: ocio://<config name>
-    static const std::regex uriPattern("ocio:\\/?\\/?([^\\s]+)");
+    static const std::regex uriPattern(R"(ocio:\/\/([^\s]+))");
     std::smatch match;
     const std::string uri = filename;
     if (std::regex_search(uri, match, uriPattern))
