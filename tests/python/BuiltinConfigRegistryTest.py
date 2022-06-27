@@ -14,7 +14,7 @@ from UnitTestUtils import STRING_TYPES
 import PyOpenColorIO as OCIO
 
 class BuiltinConfigRegistryTest(unittest.TestCase):
-    # BuiltinRegistry singleton
+    # BuiltinRegistry singleton.
     REGISTRY = None
 
     @classmethod
@@ -28,18 +28,18 @@ class BuiltinConfigRegistryTest(unittest.TestCase):
             self.assertIsInstance(self.REGISTRY[name], STRING_TYPES)
             all_names.append(name)
         
-        # All names were iterated over, and __len__ and list() behave
+        # All names were iterated over, and __len__ and list() behave.
         self.assertEqual(len(all_names), len(self.REGISTRY))
         self.assertListEqual(all_names, list(self.REGISTRY))
 
-        # Test iterator instance
+        # Test iterator instance.
         iterator = iter(self.REGISTRY)
         self.assertIsInstance(iterator, Iterable)
 
-        # Iterator size is available
+        # Iterator size is available.
         self.assertEqual(len(iterator), len(self.REGISTRY))
         
-        # Iterator supports range-based loop and indexing
+        # Iterator supports range-based loop and indexing.
         values = list(iterator)
         for i in range(len(iterator)):
             # Item at index matches list result
@@ -47,12 +47,12 @@ class BuiltinConfigRegistryTest(unittest.TestCase):
             self.assertIsInstance(iterator[i], STRING_TYPES)
 
     def test_contains(self):
-        # Valid __contains__ for all names
+        # Valid __contains__ for all names.
         for name in self.REGISTRY:
             self.assertTrue(name in self.REGISTRY)
             self.assertFalse(name not in self.REGISTRY)
 
-        # Invalid __contains__ for non-name
+        # Invalid __contains__ for non-name.
         with self.assertRaises(OCIO.Exception) as cm:
             "I do not exist" not in self.REGISTRY
         self.assertEqual(
@@ -65,42 +65,45 @@ class BuiltinConfigRegistryTest(unittest.TestCase):
         for item in self.REGISTRY.getBuiltinConfigs():
             self.assertIsInstance(item, tuple)
             # check if there are three items per tuple.
-            self.assertEqual(len(item), 3)
+            self.assertEqual(len(item), 4)
             # name
             self.assertIsInstance(item[0], STRING_TYPES)
             # uiname
             self.assertIsInstance(item[1], STRING_TYPES)
-            # config
-            self.assertIsInstance(item[2], STRING_TYPES)
+            # isRecommended
+            self.assertIsInstance(item[2], bool)
+            # isDefault
+            self.assertIsInstance(item[3], bool)
 
-        # tuple unpacking support
-        for name, uiname, config in self.REGISTRY.getBuiltinConfigs():
-            # __getitem__ has correct result
-            self.assertEqual(self.REGISTRY[name], config)
+        # tuple unpacking support.
+        for name, uiname, isRecommended, isDefault in self.REGISTRY.getBuiltinConfigs():
             self.assertIsInstance(name, STRING_TYPES)
             self.assertIsInstance(uiname, STRING_TYPES)
-            self.assertIsInstance(config, STRING_TYPES)
+            self.assertIsInstance(isRecommended, bool)
+            self.assertIsInstance(isDefault, bool)
 
-        # Test iterator instance
+        # Test iterator instance.
         iterator = self.REGISTRY.getBuiltinConfigs()
         self.assertIsInstance(iterator, Iterable)
 
-        # Iterator size is available
+        # Iterator size is available.
         self.assertEqual(len(iterator), len(self.REGISTRY))
         
-        # Iterator supports range-based loop and indexing
+        # Iterator supports range-based loop and indexing.
         values = list(iterator)
         for i in range(len(iterator)):
             # Item at index matches list result
             self.assertEqual(iterator[i], values[i])
             self.assertIsInstance(iterator[i], tuple)
-            self.assertEqual(len(iterator[i]), 3)
+            self.assertEqual(len(iterator[i]), 4)
             # name
             self.assertIsInstance(iterator[i][0], STRING_TYPES)
             # uiname
             self.assertIsInstance(iterator[i][1], STRING_TYPES)
-            # config
-            self.assertIsInstance(iterator[i][2], STRING_TYPES)
+            # isRecommended
+            self.assertIsInstance(iterator[i][2], bool)
+            # isDefault
+            self.assertIsInstance(iterator[i][3], bool)
 
 
         # Config specific tests
@@ -109,13 +112,17 @@ class BuiltinConfigRegistryTest(unittest.TestCase):
         self.assertEqual(self.REGISTRY.getNumBuiltinConfigs(), 1)
 
         # Test the first config.
+        # Name
         self.assertEqual(values[0][0], "cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1")
+        # UI name
         self.assertEqual(
             values[0][1], 
             ("Academy Color Encoding System - CG Config [COLORSPACES v0.1.0] [ACES v1.3] "
             "[OCIO v2.1.1]"))
-        self.assertTrue(self.REGISTRY.isBuiltinConfigRecommended(0))
+        # isRecommended
+        self.assertEqual(values[0][2], True)
 
+        # Test for the default built-in config.
         self.assertEqual(
             self.REGISTRY.getDefaultBuiltinConfigName(),
             "cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1"

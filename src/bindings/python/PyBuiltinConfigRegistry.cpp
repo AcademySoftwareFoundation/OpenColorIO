@@ -63,11 +63,6 @@ void bindPyBuiltinConfigRegistry(py::module & m)
                 return self.getNumBuiltinConfigs(); 
             },
             DOC(BuiltinConfigRegistry, getNumBuiltinConfigs))
-        .def("isBuiltinConfigRecommended", [](PyBuiltinConfigRegistry & self, size_t configIndex) 
-            { 
-                return self.isBuiltinConfigRecommended(configIndex); 
-            },
-            DOC(BuiltinConfigRegistry, isBuiltinConfigRecommended))
         .def("getDefaultBuiltinConfigName", [](PyBuiltinConfigRegistry & self) 
             { 
                 return self.getDefaultBuiltinConfigName(); 
@@ -81,7 +76,10 @@ void bindPyBuiltinConfigRegistry(py::module & m)
             { 
                 return py::make_tuple(it.m_obj.getBuiltinConfigName(i),
                                       it.m_obj.getBuiltinConfigUIName(i),
-                                      it.m_obj.getBuiltinConfig(i));
+                                      it.m_obj.isBuiltinConfigRecommended(i),
+                                      StringUtils::Compare(
+                                          std::string(it.m_obj.getBuiltinConfigName(i)), 
+                                          std::string(it.m_obj.getDefaultBuiltinConfigName())));
             })
         .def("__iter__", [](BuiltinConfigIterator & it) -> BuiltinConfigIterator & { return it; })
         .def("__next__", [](BuiltinConfigIterator & it)
@@ -89,7 +87,10 @@ void bindPyBuiltinConfigRegistry(py::module & m)
                 int i = it.nextIndex((int)it.m_obj.getNumBuiltinConfigs());
                 return py::make_tuple(it.m_obj.getBuiltinConfigName(i),
                                       it.m_obj.getBuiltinConfigUIName(i),
-                                      it.m_obj.getBuiltinConfig(i));
+                                      it.m_obj.isBuiltinConfigRecommended(i),
+                                      StringUtils::Compare(
+                                          std::string(it.m_obj.getBuiltinConfigName(i)), 
+                                          std::string(it.m_obj.getDefaultBuiltinConfigName())));
             });
 
     clsBuiltinConfigNameIterator
