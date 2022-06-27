@@ -5,7 +5,6 @@
 #ifndef INCLUDED_OCIO_BUILTIN_CONFIGS_REGISTRY_H
 #define INCLUDED_OCIO_BUILTIN_CONFIGS_REGISTRY_H
 
-#include <map>
 #include <vector>
 #include <OpenColorIO/OpenColorIO.h>
 

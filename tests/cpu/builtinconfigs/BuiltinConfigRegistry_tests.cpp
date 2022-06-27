@@ -10,36 +10,36 @@ namespace OCIO = OCIO_NAMESPACE;
 
 OCIO_ADD_TEST(BuiltinConfigs, basic)
 {
-    OCIO::ConstBuiltinConfigRegistryRcPtr registry = OCIO::BuiltinConfigRegistry::Get();
+    const OCIO::BuiltinConfigRegistry & registry = OCIO::BuiltinConfigRegistry::Get();
     
-    OCIO_CHECK_EQUAL(registry->getNumBuiltinConfigs(), 1);
+    OCIO_CHECK_EQUAL(registry.getNumBuiltinConfigs(), 1);
 
     OCIO_CHECK_EQUAL(
-        std::string(registry->getBuiltinConfigName(0)), 
+        std::string(registry.getBuiltinConfigName(0)), 
         std::string("cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1")
     );
 
     OCIO_CHECK_EQUAL(
-        std::string(registry->getBuiltinConfigUIName(0)), 
+        std::string(registry.getBuiltinConfigUIName(0)), 
         std::string("Academy Color Encoding System - CG Config [COLORSPACES v0.1.0] [ACES v1.3] [OCIO v2.1.1]")
     );
 
     OCIO_CHECK_EQUAL(
-        std::string(registry->getBuiltinConfig(0)), 
+        std::string(registry.getBuiltinConfig(0)), 
         std::string(CG_CONFIG_V010_ACES_V130_OCIO_V211)
     );
 
     OCIO_CHECK_EQUAL(
-        std::string(registry->getBuiltinConfigByName("cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1")), 
+        std::string(registry.getBuiltinConfigByName("cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1")), 
         std::string(CG_CONFIG_V010_ACES_V130_OCIO_V211)
     );
 
     OCIO_CHECK_EQUAL(
-        std::string(registry->getDefaultBuiltinConfigName()), 
+        std::string(registry.getDefaultBuiltinConfigName()), 
         std::string("cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1")
         );
 
-    OCIO_CHECK_EQUAL(registry->isBuiltinConfigRecommended(0), true);
+    OCIO_CHECK_EQUAL(registry.isBuiltinConfigRecommended(0), true);
 
     // ********************************
     // Testing some expected failures.
@@ -47,35 +47,35 @@ OCIO_ADD_TEST(BuiltinConfigs, basic)
 
     // Test isBuiltinConfigRecommended using an invalid config index.
     OCIO_CHECK_THROW_WHAT(
-        registry->isBuiltinConfigRecommended(999),
+        registry.isBuiltinConfigRecommended(999),
         OCIO::Exception,
         "Config index is out of range."
     );
 
     // Test getBuiltinConfigName using an invalid config index.
     OCIO_CHECK_THROW_WHAT(
-        registry->getBuiltinConfigName(999),
+        registry.getBuiltinConfigName(999),
         OCIO::Exception,
         "Config index is out of range."
     );
 
     // Test getBuiltinConfigUIName using an invalid config index.
     OCIO_CHECK_THROW_WHAT(
-        registry->getBuiltinConfigUIName(999),
+        registry.getBuiltinConfigUIName(999),
         OCIO::Exception,
         "Config index is out of range."
     );
 
     // Test getBuiltinConfig using an invalid config index.
     OCIO_CHECK_THROW_WHAT(
-        registry->getBuiltinConfig(999),
+        registry.getBuiltinConfig(999),
         OCIO::Exception,
         "Config index is out of range."
     );
 
     // Test getBuiltinConfigByName using an unknown config name.
     OCIO_CHECK_THROW_WHAT(
-        registry->getBuiltinConfigByName("I do not exist"), 
+        registry.getBuiltinConfigByName("I do not exist"), 
         OCIO::Exception,
         "Could not find 'I do not exist' in the built-in configurations."
     );

@@ -19,19 +19,16 @@
 namespace OCIO_NAMESPACE
 {
 
-ConstBuiltinConfigRegistryRcPtr BuiltinConfigRegistry::Get() noexcept
+const BuiltinConfigRegistry & BuiltinConfigRegistry::Get() noexcept
 {
-    // std::shared_ptr<BuiltinConfigRegistry>
-    static BuiltinConfigRegistryRcPtr globalRegistry;
+    // Meyer's Singleton pattern.
+
+    static BuiltinConfigRegistryImpl globalRegistry;
     static Mutex globalRegistryMutex;
     
     AutoMutex guard(globalRegistryMutex);
 
-    if (!globalRegistry)
-    {
-        globalRegistry = std::make_shared<BuiltinConfigRegistryImpl>();
-        DynamicPtrCast<BuiltinConfigRegistryImpl>(globalRegistry)->init();
-    }
+    globalRegistry.init();
 
     return globalRegistry;
 }
@@ -39,12 +36,16 @@ ConstBuiltinConfigRegistryRcPtr BuiltinConfigRegistry::Get() noexcept
 ////////////////////////////////
 ////BuiltinConfigRegistryImpl
 ////////////////////////////////
+
 void BuiltinConfigRegistryImpl::init() noexcept
 {
-    m_builtinConfigs.clear();
-    CGCONFIG::Register(*this);
+    if (m_builtinConfigs.empty())
+    {
+        m_builtinConfigs.clear();
+        CGCONFIG::Register(*this);
 
-    this->setDefaultBuiltinConfig("cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1");
+        this->setDefaultBuiltinConfig("cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1");
+    }
 }
 
 void BuiltinConfigRegistryImpl::addBuiltin(const char * name, const char * uiName, const char * const config, bool isRecommended)

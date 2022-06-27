@@ -1131,8 +1131,8 @@ ConstConfigRcPtr Config::CreateFromFile(const char * filename)
         if (Platform::Strcasecmp(match.str(1).c_str(), "default") == 0)
         {
             // Processing ocio://default
-            ConstBuiltinConfigRegistryRcPtr reg = BuiltinConfigRegistry::Get();
-            return CreateFromBuiltinConfig(reg->getDefaultBuiltinConfigName());
+            const BuiltinConfigRegistry & reg = BuiltinConfigRegistry::Get();
+            return CreateFromBuiltinConfig(reg.getDefaultBuiltinConfigName());
         }
         return CreateFromBuiltinConfig(match.str(1).c_str());
     }
@@ -1157,10 +1157,10 @@ ConstConfigRcPtr Config::CreateFromStream(std::istream & istream)
 ConstConfigRcPtr Config::CreateFromBuiltinConfig(const char * configName)
 {
     ConstConfigRcPtr builtinConfig;
-    ConstBuiltinConfigRegistryRcPtr reg = BuiltinConfigRegistry::Get();
+    const BuiltinConfigRegistry & reg = BuiltinConfigRegistry::Get();
 
     // getBuiltinConfigByName will throw if config name not found.
-    const char * builtinConfigStr = reg->getBuiltinConfigByName(configName);
+    const char * builtinConfigStr = reg.getBuiltinConfigByName(configName);
     std::istringstream iss;
     iss.str(builtinConfigStr);
     builtinConfig = Config::CreateFromStream(iss);

@@ -18,37 +18,37 @@ public:
 
     size_t getNumBuiltinConfigs() const noexcept
     {
-        return BuiltinConfigRegistry::Get()->getNumBuiltinConfigs();
+        return BuiltinConfigRegistry::Get().getNumBuiltinConfigs();
     }
 
     const char * getBuiltinConfigName(size_t configIndex) const
     {
-        return BuiltinConfigRegistry::Get()->getBuiltinConfigName(configIndex);
+        return BuiltinConfigRegistry::Get().getBuiltinConfigName(configIndex);
     }
 
     const char * getBuiltinConfigUIName(size_t configIndex) const
     {
-        return BuiltinConfigRegistry::Get()->getBuiltinConfigUIName(configIndex);
+        return BuiltinConfigRegistry::Get().getBuiltinConfigUIName(configIndex);
     }
 
     const char * getBuiltinConfig(size_t configIndex) const
     {
-        return BuiltinConfigRegistry::Get()->getBuiltinConfig(configIndex);
+        return BuiltinConfigRegistry::Get().getBuiltinConfig(configIndex);
     }
 
     const char * getBuiltinConfigByName(const char * configName) const
     {
-        return BuiltinConfigRegistry::Get()->getBuiltinConfigByName(configName);
+        return BuiltinConfigRegistry::Get().getBuiltinConfigByName(configName);
     }
 
     bool isBuiltinConfigRecommended(size_t configIndex) const
     {
-        return BuiltinConfigRegistry::Get()->isBuiltinConfigRecommended(configIndex);
+        return BuiltinConfigRegistry::Get().isBuiltinConfigRecommended(configIndex);
     }
 
     const char * getDefaultBuiltinConfigName() const
     {
-        return BuiltinConfigRegistry::Get()->getDefaultBuiltinConfigName();
+        return BuiltinConfigRegistry::Get().getDefaultBuiltinConfigName();
     }
 };
 

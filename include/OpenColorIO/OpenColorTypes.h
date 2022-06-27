@@ -32,10 +32,6 @@ class OCIOEXPORT Config;
 typedef OCIO_SHARED_PTR<const Config> ConstConfigRcPtr;
 typedef OCIO_SHARED_PTR<Config> ConfigRcPtr;
 
-class OCIOEXPORT BuiltinConfigRegistry;
-typedef OCIO_SHARED_PTR<BuiltinConfigRegistry> BuiltinConfigRegistryRcPtr;
-typedef OCIO_SHARED_PTR<const BuiltinConfigRegistry> ConstBuiltinConfigRegistryRcPtr;
-
 class OCIOEXPORT FileRules;
 typedef OCIO_SHARED_PTR<const FileRules> ConstFileRulesRcPtr;
 typedef OCIO_SHARED_PTR<FileRules> FileRulesRcPtr;

@@ -3332,7 +3332,7 @@ public:
     BuiltinConfigRegistry & operator= (const BuiltinConfigRegistry &) = delete;
 
     /// Get the current built-in configs registry.
-    static ConstBuiltinConfigRegistryRcPtr Get() noexcept;
+    static const BuiltinConfigRegistry & Get() noexcept;
 
     /// Get the number of built-in configs available.
     virtual size_t getNumBuiltinConfigs() const noexcept = 0;
