@@ -47,7 +47,7 @@ void bindPyBuiltinConfigRegistry(py::module & m)
             DOC(BuiltinConfigRegistry, getBuiltinConfigByName))
         .def("__contains__", [](PyBuiltinConfigRegistry & self, const std::string & name) 
             {
-                for (int i = 0; i < self.getNumBuiltinConfigs(); i++)
+                for (size_t i = 0; i < self.getNumBuiltinConfigs(); i++)
                 {
                     if (StringUtils::Compare(
                             std::string(self.getBuiltinConfigName(i)), 
