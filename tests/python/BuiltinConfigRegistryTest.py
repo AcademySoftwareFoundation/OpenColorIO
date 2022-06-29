@@ -53,12 +53,7 @@ class BuiltinConfigRegistryTest(unittest.TestCase):
             self.assertFalse(name not in self.REGISTRY)
 
         # Invalid __contains__ for non-name.
-        with self.assertRaises(OCIO.Exception) as cm:
-            "I do not exist" not in self.REGISTRY
-        self.assertEqual(
-            str(cm.exception), 
-            "Could not find 'I do not exist' in the built-in configurations."
-        )
+        self.assertTrue("I do not exist" not in self.REGISTRY)
 
     def test_get_builtin_configs(self):
         # tuple iterator (like dict.items())
@@ -109,7 +104,7 @@ class BuiltinConfigRegistryTest(unittest.TestCase):
         # Config specific tests
 
         # Test number of configs.
-        self.assertEqual(self.REGISTRY.getNumBuiltinConfigs(), 1)
+        self.assertEqual(len(self.REGISTRY), 1)
 
         # Test the first config.
         # Name

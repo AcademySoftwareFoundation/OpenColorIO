@@ -47,22 +47,21 @@ void bindPyBuiltinConfigRegistry(py::module & m)
             DOC(BuiltinConfigRegistry, getBuiltinConfigByName))
         .def("__contains__", [](PyBuiltinConfigRegistry & self, const std::string & name) 
             {
-                const char * config = self.getBuiltinConfigByName(name.c_str());
-                if ((config != NULL) && (config[0] == '\0'))
+                for (int i = 0; i < self.getNumBuiltinConfigs(); i++)
                 {
-                    return false;
+                    if (StringUtils::Compare(
+                            std::string(self.getBuiltinConfigName(i)), 
+                            std::string(name)))
+                    {
+                        return true;
+                    }
                 }
-                return true;
+                return false;
             })
         .def("getBuiltinConfigs", [](PyBuiltinConfigRegistry & self) 
             {
                 return BuiltinConfigIterator(self);
             })
-        .def("getNumBuiltinConfigs", [](PyBuiltinConfigRegistry & self) 
-            { 
-                return self.getNumBuiltinConfigs(); 
-            },
-            DOC(BuiltinConfigRegistry, getNumBuiltinConfigs))
         .def("getDefaultBuiltinConfigName", [](PyBuiltinConfigRegistry & self) 
             { 
                 return self.getDefaultBuiltinConfigName(); 
