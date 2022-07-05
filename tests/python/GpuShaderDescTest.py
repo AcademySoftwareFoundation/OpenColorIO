@@ -29,7 +29,7 @@ class GpuShaderDescTest(unittest.TestCase):
         desc.setFunctionName("foo123")
         self.assertEqual("foo123", desc.getFunctionName())
         desc.finalize()
-        self.assertEqual("glsl_1.3 foo123 ocio outColor 0 2d06800538d394c2",
+        self.assertEqual("glsl_1.3 foo123 ocio outColor 0 6001c324468d497f99aa06d3014798d8",
                          desc.getCacheID())
 
     def test_uniform(self):
