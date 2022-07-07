@@ -179,24 +179,40 @@ int main(int argc, const char **argv)
     unsigned iterations = 50;
     bool nocache = false, nooptim = false;
 
+    bool useColorspaces = false;
+    bool useDisplayview = false;
+    bool useInvertview  = false;
+
     ArgParse ap;
     ap.options("ocioperf -- apply and measure a color transformation processing\n\n"
                "usage: ocioperf [options] --transform /path/to/file.clf\n\n",
-               "--help", &help, "Display the help and exit",
-               "--verbose", &verbose, "Display some general information",
-               "--test %d", &testType, "Define the type of processing to measure: "\
-                                       "0 means on the complete image (the default), 1 is line-by-line, "\
-                                       "2 is pixel-per-pixel and -1 performs all the test types",
-               "--transform %s", &transformFile, "Provide the transform file to apply on the image",
-               "--colorspaces %s %s", &inColorSpace, &outColorSpace,
-                                      "Provide the input and output color spaces to apply on the image",
-               "--displayview %s %s %s", &inColorSpace, &display, &view,
-                                      "Provide the input and (display, view) pair to apply on the image",
-               "--iter %d", &iterations, "Provide the number of iterations on the processing. Default is 10",
-               "--bitdepths %s %s", &inBitDepthStr, &outBitDepthStr,
-                                    "Provide input and output bit-depths (i.e. ui16, f32). Default is f32",
-               "--nocache", &nocache, "Bypass all caches. Default is false",
-               "--nooptim", &nooptim, "Disable the processor optimizations. Default is false",
+               "--h",                       &help,              
+                                            "Display the help and exit",
+               "--help",                    &help,              
+                                            "Display the help and exit",
+               "--verbose",                 &verbose,           
+                                            "Display some general information",
+               "--test %d",                 &testType,          
+                                            "Define the type of processing to measure: "\
+                                            "0 means on the complete image (the default), 1 is line-by-line, "\
+                                            "2 is pixel-per-pixel and -1 performs all the test types",
+               "--transform %s",            &transformFile, 
+                                            "Provide the transform file to apply on the image",
+               "--colorspaces %s %s",       &inColorSpace, &outColorSpace,
+                                            "Provide the input and output color spaces to apply on the image",
+               "--view %s %s %s",           &inColorSpace, &display, &view,
+                                            "Provide the input color space and (display, view) pair to apply on the image",
+               "--displayview %s %s %s",    &inColorSpace, &display, &view,
+                                            "(Deprecated) Provide the input and (display, view) pair to apply on the image",
+               "--invertview %s %s %s",     &display, &view, &outColorSpace,
+                                            "Provide the (display, view) pair and output color space to apply on the image",
+               "--iter %d",                 &iterations, "Provide the number of iterations on the processing. Default is 50",
+               "--bitdepths %s %s",         &inBitDepthStr, &outBitDepthStr,
+                                            "Provide input and output bit-depths (i.e. ui16, f32). Default is f32",
+               "--nocache",                 &nocache, 
+                                            "Bypass all caches. Default is false",
+               "--nooptim",                 &nooptim, 
+                                            "Disable the processor optimizations. Default is false",
                NULL);
 
     if (ap.parse (argc, argv) < 0)
@@ -277,7 +293,8 @@ int main(int argc, const char **argv)
                 }
             }
         }
-        else if (!inColorSpace.empty())
+        // Checking for an input colorspace or input (display, view) pair.
+        else if (!inColorSpace.empty() || (!display.empty() && !view.empty()))
         {
             if (verbose)
             {
@@ -285,8 +302,11 @@ int main(int argc, const char **argv)
                 if (env && *env)
                 {
                     std::cout << std::endl;
-                    std::cout << "Processing from '" << inColorSpace << "' to '"
-                              << outColorSpace << "'" << std::endl << std::endl;
+                    const std::string inputStr = !inColorSpace.empty() ?  inColorSpace : "(" + display + ", " + view + ")";
+                    const std::string outputStr = !outColorSpace.empty() ?  outColorSpace : "(" + display + ", " + view + ")";
+                    std::cout << "Processing from '" 
+                              << inputStr << "' to '"
+                              << outputStr << "'" << std::endl;
                 }
                 else
                 {
@@ -319,22 +339,34 @@ int main(int argc, const char **argv)
             }
 
             {
-                std::string msg;
-                if (!outColorSpace.empty())
+                // --colorspaces
+                useColorspaces = !inColorSpace.empty() && !outColorSpace.empty();
+                // --view
+                useDisplayview = !inColorSpace.empty() && !display.empty() && !view.empty();
+                // --invertview
+                useInvertview = !display.empty() && !view.empty() && !outColorSpace.empty();
+
+                // Errors validation
+                std::string msg; 
+                if ((useColorspaces && !useDisplayview && !useInvertview) ||
+                     (useDisplayview && !useColorspaces && !useInvertview) ||
+                     (useInvertview && !useColorspaces && !useDisplayview))
                 {
-                    if (!display.empty() || !view.empty())
+                    if (useColorspaces || useInvertview)
                     {
-                        static constexpr char err[]
-                            {"Both --colorspaces and --displayview may not be used at the same time."};
-
-                        throw OCIO::Exception(err);
+                        msg = "Create the colorspaces processor:\t";
                     }
-
-                    msg = "Create the processor:\t\t\t";
-                }
+                    else if (useDisplayview)
+                    {
+                        msg = "Create the (display, view) processor:\t";
+                    }
+                } 
                 else
                 {
-                    msg = "Create the (display, view) processor:\t";
+                    static constexpr char err[]
+                        {"Any combinations of --colorspaces, --view or --invertview is invalid."};
+
+                    throw OCIO::Exception(err);
                 }
 
                 CustomMeasure m(msg.c_str(), iterations);
@@ -346,13 +378,15 @@ int main(int argc, const char **argv)
                         OCIO::ClearAllCaches();
                     }
 
-                    if (!outColorSpace.empty())
+                    // Processing colorspaces option 
+                    if (useColorspaces)
                     {
                         m.resume();
                         processor = config->getProcessor(inColorSpace.c_str(), outColorSpace.c_str());
                         m.pause();
                     }
-                    else
+                    // Processing view option
+                    else if (useDisplayview)
                     {
                         OCIO::ConstMatrixTransformRcPtr noChannelView;
 
@@ -363,6 +397,20 @@ int main(int argc, const char **argv)
                                                                            view.c_str(),
                                                                            noChannelView,
                                                                            OCIO::TRANSFORM_DIR_FORWARD);
+                        m.pause();
+                    }
+                    // Processing invertview option
+                    else if (useInvertview)
+                    {
+                        OCIO::ConstMatrixTransformRcPtr noChannelView;
+
+                        m.resume();
+                        processor = OCIO::DisplayViewHelpers::GetProcessor(config,
+                                                                           outColorSpace.c_str(),
+                                                                           display.c_str(),
+                                                                           view.c_str(),
+                                                                           noChannelView,
+                                                                           OCIO::TRANSFORM_DIR_INVERSE);
                         m.pause();
                     }
                 }
