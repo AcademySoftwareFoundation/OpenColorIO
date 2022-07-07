@@ -257,14 +257,39 @@ public:
     /**
      * \brief Create a configuration using the OCIO environment variable.
      * 
+     * Also support OCIO URI format. See CreateFromFile.
+     * 
      * If the variable is missing or empty, returns the same result as 
      * \ref Config::CreateRaw .
      */
     static ConstConfigRcPtr CreateFromEnv();
-    /// Create a configuration using a specific config file.
+    /**
+     * \brief Create a configuration using a specific config file.
+     * 
+     * Also support the following OCIO URI format :
+     *  "ocio://default"    - Default Built-in config.
+     *  "ocio://configName" - Built-in config named configName
+     * 
+     */
     static ConstConfigRcPtr CreateFromFile(const char * filename);
     /// Create a configuration using a stream.
     static ConstConfigRcPtr CreateFromStream(std::istream & istream);
+
+    /**
+     * \brief Create a configuration using an OCIO built-in config.
+     * 
+     * \param configName Built-in config name
+     * 
+     * The available configNames are:
+     * "cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1" -- ACES CG config, basic color spaces for computer
+     * graphics apps. More information is available at: 
+     * %https://github.com/AcademySoftwareFoundation/OpenColorIO-Config-ACES
+     * 
+     * \throw Exception If the configName is not recognized.
+     * 
+     * \return one of the configs built into OCIO library
+     */
+    static ConstConfigRcPtr CreateFromBuiltinConfig(const char * configName);
 
     ConfigRcPtr createEditableCopy() const;
 
@@ -3292,6 +3317,76 @@ public:
 protected:
     BuiltinTransformRegistry() = default;
     virtual ~BuiltinTransformRegistry() = default;
+};
+
+///////////////////////////////////////////////////////////////////////////
+// BuiltinConfigRegistry
+
+/**
+ * The built-in configs registry contains information about all the existing built-in configs.
+ */
+class OCIOEXPORT BuiltinConfigRegistry
+{
+public:
+    BuiltinConfigRegistry(const BuiltinConfigRegistry &) = delete;
+    BuiltinConfigRegistry & operator= (const BuiltinConfigRegistry &) = delete;
+
+    /// Get the current built-in configs registry.
+    static const BuiltinConfigRegistry & Get() noexcept;
+
+    /// Get the number of built-in configs available.
+    virtual size_t getNumBuiltinConfigs() const noexcept = 0;
+
+    /// Get the name of the config at the specified (zero-based) index. 
+    /// Throws for illegal index.
+    virtual const char * getBuiltinConfigName(size_t configIndex) const = 0;
+
+    // Get a user-friendly name for a built-in config, appropriate for displaying in a user interface.
+    /// Throws for illegal index.
+    virtual const char * getBuiltinConfigUIName(size_t configIndex) const = 0;
+
+    /// Get Yaml text of the built-in config at the specified index.
+    /// Throws for illegal index.
+    virtual const char * getBuiltinConfig(size_t configIndex) const = 0;
+    
+    /// Get the Yaml text of the built-in config with the specified name. 
+    /// Throws if the name is not found.
+    virtual const char * getBuiltinConfigByName(const char * configName) const = 0;
+
+    /**
+     * @brief Check if a specific built-in config is recommended.
+     * 
+     * For backwards compatibility reasons, configs will remain in the registry even if they have
+     * been superseded. If an app is presenting a list of configs to users, it should not include 
+     * configs that are no longer recommended.
+     * 
+     * Throws if the name is not found.
+     * 
+     * @param configIndex Index of built-in config.
+     * @return true if the config is recommended.
+     */
+    virtual bool isBuiltinConfigRecommended(size_t configIndex) const = 0;
+
+    /**
+     * @brief Get the default recommended built-in config.
+     * 
+     * Get the name of the built-in config that is currently recommended as the default config 
+     * to use for applications looking for basic color management. 
+     * 
+     * As the built-in config collection evolves, the default config name will change in future
+     * releases. 
+     * 
+     * For backwards compatibility, the name provided here will always work as an argument 
+     * to other methods so that any previous default config may be recovered.
+     * 
+     * Throws if the name is not found.
+     * 
+     * @return Default's built-in config name.
+     */
+    virtual const char * getDefaultBuiltinConfigName() const = 0;
+protected:
+    BuiltinConfigRegistry() = default;
+    virtual ~BuiltinConfigRegistry() = default;
 };
 
 

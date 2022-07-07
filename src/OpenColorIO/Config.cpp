@@ -9,6 +9,7 @@
 #include <fstream>
 #include <utility>
 #include <vector>
+#include <regex>
 
 #include <OpenColorIO/OpenColorIO.h>
 
@@ -32,6 +33,8 @@
 #include "utils/StringUtils.h"
 #include "ViewingRules.h"
 #include "SystemMonitor.h"
+
+#include "builtinconfigs/BuiltinConfigRegistry.h"
 
 
 namespace OCIO_NAMESPACE
@@ -1100,6 +1103,8 @@ ConstConfigRcPtr Config::CreateFromEnv()
 {
     std::string file;
     Platform::Getenv(OCIO_CONFIG_ENVVAR, file);
+
+    // File can be a filename/path or an URI to a default configuration (ocio://<config name>).
     if(!file.empty()) return CreateFromFile(file.c_str());
 
     static const char err[] =
@@ -1117,6 +1122,21 @@ ConstConfigRcPtr Config::CreateFromFile(const char * filename)
         throw ExceptionMissingFile ("The config filepath is missing.");
     }
 
+    // Check for URI Pattern: ocio://<config name>
+    static const std::regex uriPattern(R"(ocio:\/\/([^\s]+))");
+    std::smatch match;
+    const std::string uri = filename;
+    if (std::regex_search(uri, match, uriPattern))
+    {
+        if (Platform::Strcasecmp(match.str(1).c_str(), "default") == 0)
+        {
+            // Processing ocio://default
+            const BuiltinConfigRegistry & reg = BuiltinConfigRegistry::Get();
+            return CreateFromBuiltinConfig(reg.getDefaultBuiltinConfigName());
+        }
+        return CreateFromBuiltinConfig(match.str(1).c_str());
+    }
+
     std::ifstream istream = Platform::CreateInputFileStream(filename, std::ios_base::in);
     if (istream.fail())
     {
@@ -1132,6 +1152,20 @@ ConstConfigRcPtr Config::CreateFromFile(const char * filename)
 ConstConfigRcPtr Config::CreateFromStream(std::istream & istream)
 {
     return Config::Impl::Read(istream, nullptr);
+}
+
+ConstConfigRcPtr Config::CreateFromBuiltinConfig(const char * configName)
+{
+    ConstConfigRcPtr builtinConfig;
+    const BuiltinConfigRegistry & reg = BuiltinConfigRegistry::Get();
+
+    // getBuiltinConfigByName will throw if config name not found.
+    const char * builtinConfigStr = reg.getBuiltinConfigByName(configName);
+    std::istringstream iss;
+    iss.str(builtinConfigStr);
+    builtinConfig = Config::CreateFromStream(iss);
+
+    return builtinConfig;
 }
 
 ///////////////////////////////////////////////////////////////////////////

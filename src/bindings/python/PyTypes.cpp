@@ -4,6 +4,7 @@
 #include "PyOpenColorIO.h"
 #include "PyImageDesc.h"
 #include "PySystemMonitors.h"
+#include "PyBuiltinConfigRegistry.h"
 #include "PyBuiltinTransformRegistry.h"
 #include "PyDynamicProperty.h"
 
@@ -16,6 +17,10 @@ void bindPyTypes(py::module & m)
     py::class_<Baker, BakerRcPtr /* holder */>(
         m, "Baker", 
         DOC(Baker));
+
+    py::class_<PyBuiltinConfigRegistry>(
+        m, "BuiltinConfigRegistry", 
+        DOC(BuiltinConfigRegistry));
 
     py::class_<ColorSpace, ColorSpaceRcPtr /* holder */>(
         m, "ColorSpace", 
