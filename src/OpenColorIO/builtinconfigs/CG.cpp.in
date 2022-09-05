@@ -1,0 +1,11 @@
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright Contributors to the OpenColorIO Project.
+
+// The file extension cpp (instead of an header .h) was used here to highlight the fact that 
+// this file should not be included more then ONCE in OCIO.
+
+// It is included in the following places:
+// - CGConfig.cpp for the Built-in config feature.
+// - BuiltinConfigRegistry_tests.cpp for the unit tests
+
+constexpr char CG_CONFIG_V010_ACES_V130_OCIO_V211[] = { @cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1@ };

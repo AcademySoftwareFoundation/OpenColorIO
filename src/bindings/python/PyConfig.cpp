@@ -197,7 +197,9 @@ void bindPyConfig(py::module & m)
             }, 
              "str"_a, 
              DOC(Config, CreateFromStream))
-                    
+
+        .def_static("CreateFromBuiltinConfig", &Config::CreateFromBuiltinConfig, 
+                    DOC(Config, CreateFromBuiltinConfig))
         .def("getMajorVersion", &Config::getMajorVersion, 
              DOC(Config, getMajorVersion))
         .def("setMajorVersion", &Config::setMajorVersion, "major"_a, 

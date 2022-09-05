@@ -10,6 +10,8 @@ set(SOURCES
     Baker.cpp
     BakingUtils.cpp
     BitDepthUtils.cpp
+    builtinconfigs/BuiltinConfigRegistry.cpp
+    builtinconfigs/CGConfig.cpp
     Caching.cpp
     ColorSpace.cpp
     ColorSpaceSet.cpp
@@ -209,6 +211,46 @@ set(ABI_HEADER_LOCATION "${CMAKE_BINARY_DIR}/include/OpenColorIO")
 list(APPEND INSTALL_HEADERS ${ABI_HEADER_LOCATION}/OpenColorABI.h)
 configure_file("${HEADER_LOCATION}/OpenColorABI.h.in" "${ABI_HEADER_LOCATION}/OpenColorABI.h" @ONLY)
 
+# Built-in configs
+set(CONFIGS_HEADER_LOCATION "${CMAKE_BINARY_DIR}/generated_include")
+file(GLOB CONFIGS_PATHS "builtinconfigs/configs/*.ocio")
+# Loop through the .ocio config files.
+foreach(C ${CONFIGS_PATHS})
+    get_filename_component(CONFIG_FULLNAME "${C}" NAME)
+    string(REGEX MATCH "^(.*)\\.ocio$" tempvar ${CONFIG_FULLNAME})
+    set(CONFIG_NAME ${CMAKE_MATCH_1})
+    list(APPEND CONFIGS_ALL ${CONFIG_NAME})
+
+    file(READ builtinconfigs/configs/${CONFIG_FULLNAME} HEX_CONTENTS HEX)
+    # Separate into individual bytes.
+    string(REGEX MATCHALL "([A-Za-z0-9][A-Za-z0-9])" SEPARATED_HEX "${HEX_CONTENTS}")
+
+    # Prepend the "0x" to each byte.
+    list(JOIN SEPARATED_HEX ",0x" FORMATTED_HEX)
+
+    # Prepend "0x" to the first byte.
+    string(PREPEND FORMATTED_HEX "0x")
+
+    # Append 0x00 to null-terminated the string.
+    string(APPEND FORMATTED_HEX ",0x00")
+    
+    # Set the dynamically named variable "${CONFIG_NAME}" to the config in HEX.
+    set(${CONFIG_NAME} ${FORMATTED_HEX})
+endforeach()
+
+file(GLOB TEMPLATE_HEADER_CONFIG_FILES "builtinconfigs/*.cpp.in")
+foreach(C ${TEMPLATE_HEADER_CONFIG_FILES})
+    get_filename_component(TEMPLATE_HEADER_FULLNAME "${C}" NAME)
+
+    string(LENGTH ${TEMPLATE_HEADER_FULLNAME} TEMPLATE_HEADER_LENGTH)
+    MATH(EXPR TEMPLATE_HEADER_LENGTH "${TEMPLATE_HEADER_LENGTH}-3")
+    # Get TEMPLATE_HEADER_FULLNAME without .in extension.
+    string(SUBSTRING ${TEMPLATE_HEADER_FULLNAME} 0 ${TEMPLATE_HEADER_LENGTH} TEMPLATE_HEADER_FULLNAME_H)
+
+    configure_file(builtinconfigs/${TEMPLATE_HEADER_FULLNAME} ${CONFIGS_HEADER_LOCATION}/${TEMPLATE_HEADER_FULLNAME_H} @ONLY)
+endforeach()
+
+
 set(BUILD_INCLUDES
     ${HEADER_LOCATION}/..
     ${HEADER_LOCATION}
@@ -220,6 +262,8 @@ target_include_directories(OpenColorIO
     PUBLIC
         "$<BUILD_INTERFACE:${BUILD_INCLUDES}>"
         "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
+    PRIVATE
+        "${CONFIGS_HEADER_LOCATION}"
 )
 
 target_link_libraries(OpenColorIO

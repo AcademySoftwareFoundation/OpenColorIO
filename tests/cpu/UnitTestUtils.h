@@ -102,6 +102,31 @@ inline bool EqualWithSafeRelError(T value,
 #   define U8(x) u8##x
 #endif
 
+struct EnvironmentVariableGuard
+{
+    EnvironmentVariableGuard(const std::string & name, const std::string & value) : m_name(name)
+    {
+        if (!name.empty())
+        {
+            Platform::Setenv(name.c_str(), value);
+        }
+    }
+
+    EnvironmentVariableGuard(const std::string & name) : m_name(name)
+    {
+    }
+
+    ~EnvironmentVariableGuard()
+    {
+        if (!m_name.empty())
+        {
+            Platform::Unsetenv(m_name.c_str());
+        }
+    }
+
+    const std::string m_name;
+};
+
 }
 // namespace OCIO_NAMESPACE
 

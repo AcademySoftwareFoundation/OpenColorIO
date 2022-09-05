@@ -5,31 +5,70 @@
 .. _installation:
 
 Installation
-============
-
-The easy way
 ************
 
-While prebuilt binaries are not yet available for all platforms, OCIO
-is available via several platform's package managers.
+Although OpenColorIO is available through a variety of package managers, please note that the 
+version available through a given package manager may be significantly outdated when compared to 
+the current official OCIO release. Even two years after the introduction of OpenColorIO v2, several 
+package managers continue to install OCIO 1.1.1.
 
-Please note that the package managers are still installing the previous 
-stable release, 1.1.1.  If you want OCIO v2, you currently must build from source.
-See :ref:`building-from-source`.
+.. _Python:
 
+Python
+^^^^^^
 
-Fedora and RHEL
-^^^^^^^^^^^^^^^
+If you only need the Python bindings, the simplest solution is to take advantage of the pre-built 
+wheels in the Python Package Installer (PyPi) `here <https://pypi.org/project/opencolorio>`__. It 
+can be installed by using this command:: 
 
-In Fedora Core 15 and above, the following command will install OpenColorIO::
+    pip install opencolorio
 
-    yum install OpenColorIO
+OpenImageIO
+^^^^^^^^^^^
 
-Providing you are using the `Fedora EPEL repository
-<http://fedoraproject.org/wiki/EPEL>`__ (see the `FAQ for instructions
-<http://fedoraproject.org/wiki/EPEL/FAQ#Using_EPEL>`__), this same
-command will work for RedHat Enterprise Linux 6 and higher (including
-RHEL derivatives such as CentOS 6 and Scientific Linux 6)
+If you only need to apply color conversions to images, please note that OpenImageIO's oiiotool has 
+most of the functionality of the ocioconvert command-line tool (although not everything, such as 
+GPU processing). OpenImageIO is available via several package managers (including brew and vcpkg).
+
+**Homebrew**::
+
+    brew install openimageio
+
+**Vcpkg**::
+
+    vcpkg install openimageio[opencolorio,tools]:x64-windows --recurse
+
+Installing OpenColorIO using existing packages
+**********************************************
+
+Linux
+^^^^^
+
+When it comes to Linux distributions, relatively few of the Linux distribution repositories have been 
+updated to OCIO v2. The **latest Fedora** is one good option as it offers the most 
+recent release of OpenColorIO v2. Information about the package can be found on 
+`fedoraproject website <https://packages.fedoraproject.org/pkgs/OpenColorIO/OpenColorIO/index.html>`__.
+
+For the other distributions, information about which release of OpenColorIO is available can be 
+verified on `pkgs.org <https://pkgs.org/search/?q=OpenColorIO>`__.
+
+**The recommendation is to build OpenColorIO from source**. You may build from source using the 
+instructions below. See :ref:`building-from-source`.
+
+Windows 7 or newer using vcpkg
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Vcpkg can be used to install OpenColorIO on Windows. In order to do that, Vcpkg must be installed 
+by following the `official instructions <https://vcpkg.io/en/getting-started.html>`__. Once Vcpkg 
+is installed, OpenColorIO and some of the tools can be installed with the following command::
+
+    vcpkg install opencolorio[tools]:x64-windows
+
+Note that this package **does not** install ocioconvert, ociodisplay, ociolutimage and the Python 
+bindings.
+
+The three missing tools can be built from source by following the steps in the :ref:`Windows 7 or newer` 
+section while the Python bindings can be install using the pip command in the :ref:`Python` section.
 
 OS X using Homebrew
 ^^^^^^^^^^^^^^^^^^^
@@ -45,10 +84,8 @@ Then simply run the following command to install::
 
     brew install opencolorio
 
-To build with the Python library use this command::
-
-    brew install opencolorio --with-python
-
+Homebrew does not install the Python binding or the command-line tools that depend on OpenImageIO 
+such as ocioconvert, ociodisplay and ociolutimage.
 
 .. _building-from-source:
 
@@ -56,7 +93,7 @@ Building from source
 ********************
 
 Dependencies
-************
+^^^^^^^^^^^^
 
 The basic requirements for building OCIO are the following.  Note that, by
 default, cmake will try to install all of the items labelled with * and so
@@ -71,7 +108,7 @@ it is not necessary to install those items manually:
 Some optional components also depend on:
 
 - \*Little CMS >= 2.2 (for ociobakelut ICC profile baking)
-- \*pybind11 >= 2.6.1 (for the Python bindings)
+- \*pybind11 >= 2.9.2 (for the Python bindings)
 - Python >= 2.7 (for the Python bindings)
 - Python 3.7 or 3.8 (for the docs, with the following PyPi packages)
     - Sphinx
@@ -95,7 +132,7 @@ available for all supported platforms. Use GitBash
 this script on Windows.
 
 Automated Installation
-^^^^^^^^^^^^^^^^^^^^^^
+----------------------
 
 Listed dependencies with a preceeding * can be automatically installed at 
 build time using the ``OCIO_INSTALL_EXT_PACKAGES`` option in your cmake 
@@ -116,7 +153,7 @@ Three ``OCIO_INSTALL_EXT_PACKAGES`` options are available::
   current system.
 
 Existing Install Hints
-^^^^^^^^^^^^^^^^^^^^^^
+----------------------
 
 When using existing system libraries, the following CMake variables can be 
 defined to hint at non-standard install locations and preference of shared
@@ -206,133 +243,44 @@ this::
     $ ls lib/
     libOpenColorIO.a      libOpenColorIO.dylib
 
-.. _windows-build:
+.. _Windows 7 or newer:
 
-Windows Build
-^^^^^^^^^^^^^
+Windows 7 or newer
+^^^^^^^^^^^^^^^^^^
 
-While build environments may vary between user, here is an example batch file
-for compiling on Windows as provided by `@hodoulp <https://github.com/hodoulp>`__::
+While build environments may vary between users, the recommended way to build OCIO from source on 
+Windows is to use the scripts provided in the Windows 
+`share <https://github.com/AcademySoftwareFoundation/OpenColorIO/tree/main/share/dev/windows>`_ 
+section of the OCIO repository. There are two scripts currently available. 
 
-    @echo off
+The first script is called 
+`ocio_deps.bat <https://github.com/AcademySoftwareFoundation/OpenColorIO/tree/main/share/dev/windows/ocio_deps.bat>`_ 
+and it provides some automation to install the most difficult dependencies. Those dependencies are:
 
+- `Vcpkg <https://vcpkg.io/en/index.html>`_
+- OpenImageIO
+- Freeglut
+- Glew
+- Python dependencies for documentation
 
-    REM Grab the repo name, default is ocio
-    set repo_name=ocio
-    if not %1.==. set repo_name=%1
+Run this command to execute the ocio_deps.bat script::
 
+    ocio_deps.bat --vcpkg <path to current vcpkg installation or where it should be installed>
 
-    REM Using cygwin to have Linux cool command line tools
-    set CYGWIN=nodosfilewarning
+The second script is called 
+`ocio.bat <https://github.com/AcademySoftwareFoundation/OpenColorIO/tree/main/share/dev/windows/ocio.bat>`_ 
+and it provide a way to configure and build OCIO from source. Moreover, this script executes the 
+install step of cmake as well as the unit tests. The main use case is the following::
 
-    set CMAKE_PATH=D:\OpenSource\3rdParty\cmake-3.12.2
-    set GLUT_PATH=D:\OpenSource\3rdParty\freeglut-3.0.0-2
-    set GLEW_PATH=D:\OpenSource\3rdParty\glew-1.9.0
-    set PYTHON_PATH=C:\Python27
-
-    REM Add glut & glew dependencies to have GPU unit tests
-    set PATH=%GLEW_PATH%\bin;%GLUT_PATH%\bin;D:\Tools\cygwin64\bin;%CMAKE_PATH%\bin;%PATH%
-
-    REM Add Ninja & jom to speed-up command line build i.e. one is enough
-    set PATH=D:\OpenSource\3rdParty\ninja;D:\OpenSource\3rdParty\jom;%PYTHONPATH%;%PATH%
-
-    call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" x64
-    REM call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Professional\VC\Auxiliary\Build\vcvarsall.bat" x64
-
-    set OCIO_PATH=D:\OpenSource\%repo_name%
-
-    D:
-
-    IF NOT EXIST %OCIO_PATH% ( 
-    echo %OCIO_PATH% does not exist
-    exit /b
-    )
-    cd %OCIO_PATH%
+    ocio.bat --b <path to build folder> --i <path to install folder> 
+    --vcpkg <path to vcpkg installation> --ocio <path to ocio repository> --type Release
 
 
-    set CMAKE_BUILD_TYPE=Release
+For more information, please look at each script's documentation::
 
-    echo *******
-    echo *********************************************
-    echo ******* Building %OCIO_PATH%
-    echo **
-    echo **
-    set are_you_sure = Y
-    set /P are_you_sure=Build in %CMAKE_BUILD_TYPE% ([Y]/N)?  
-    if not %are_you_sure%==Y set CMAKE_BUILD_TYPE=Debug
+    ocio.bat --help
 
-
-    set BUILD_PATH=%OCIO_PATH%\build_rls
-    set COMPILED_THIRD_PARTY_HOME=D:/OpenSource/3rdParty/compiled-dist_rls
-    set OCIO_BUILD_PYTHON=1
-
-    if not %CMAKE_BUILD_TYPE%==Release (
-    set BUILD_PATH=%OCIO_PATH%\build_dbg
-    set COMPILED_THIRD_PARTY_HOME=D:/OpenSource/3rdParty/compiled-dist_dbg
-    set OCIO_BUILD_PYTHON=0
-    )
-
-    set INSTALL_PATH=%COMPILED_THIRD_PARTY_HOME%/OpenColorIO-2.0.0
-
-    IF NOT EXIST %BUILD_PATH% ( mkdir %BUILD_PATH% )
-    cd %BUILD_PATH%
-
-    echo **
-    echo **
-
-    REM cmake -G "Visual Studio 14 2015 Win64"
-    REM cmake -G "Visual Studio 15 2017 Win64"
-    REM cmake -G "Ninja"
-    cmake -G "NMake Makefiles JOM" ^
-        -DCMAKE_BUILD_TYPE=%CMAKE_BUILD_TYPE% ^
-        -DCMAKE_INSTALL_PREFIX=%INSTALL_PATH% ^
-        -DBUILD_SHARED_LIBS=ON ^
-        -DOCIO_BUILD_APPS=ON ^
-        -DOCIO_BUILD_TESTS=ON ^
-        -DOCIO_BUILD_GPU_TESTS=ON ^
-        -DOCIO_BUILD_DOCS=OFF ^
-        -DOCIO_USE_SSE=ON ^
-        -DOCIO_WARNING_AS_ERROR=ON ^
-        -DOCIO_BUILD_PYTHON=%OCIO_BUILD_PYTHON% ^
-        -DPython_LIBRARY=%PYTHON_PATH%\libs\python27.lib ^
-        -DPython_INCLUDE_DIR=%PYTHON_PATH%\include ^
-        -DPython_EXECUTABLE=%PYTHON_PATH%\python.exe ^
-        -DOCIO_BUILD_JAVA=OFF ^
-        -DCMAKE_PREFIX_PATH=%COMPILED_THIRD_PARTY_HOME%\OpenImageIO-1.9.0;%COMPILED_THIRD_PARTY_HOME%/ilmbase-2.2.0 ^
-        %OCIO_PATH%
-
-    REM Add OCIO & OIIO
-    set PATH=%BUILD_PATH%\src\OpenColorIO;%INSTALL_PATH%\bin;%COMPILED_THIRD_PARTY_HOME%\OpenImageIO-1.9.0\bin;%PATH%
-
-
-    REM Find the current branch
-    set GITBRANCH=
-    for /f %%I in ('git.exe rev-parse --abbrev-ref HEAD 2^> NUL') do set GITBRANCH=%%I
-
-    if not "%GITBRANCH%" == ""  prompt $C%GITBRANCH%$F $P$G
-
-    TITLE %repo_name% (%GITBRANCH%)
-
-    echo *******
-    echo *********************************************
-    if not "%GITBRANCH%" == "" echo branch  = %GITBRANCH%
-    echo *
-    echo Mode         = %CMAKE_BUILD_TYPE%
-    echo Build path   = %BUILD_PATH%
-    echo Install path = %INSTALL_PATH%
-    echo *
-    echo compile = jom all
-    echo test    = ctest -V
-    echo doc     = jom doc
-    echo install = jom install
-    echo *********************************************
-    echo *******
-
-You could create a desktop shortcut with the following command:
-    ``%comspec% /k "C:\Users\hodoulp\ocio.bat" ocio``
-
-Also look to the Appveyor config script at the root of repository for an example
-build sequence.
+    ocio_deps.bat --help
 
 .. _enabling-optional-components:
 
