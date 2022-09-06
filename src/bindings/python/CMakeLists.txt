@@ -79,6 +79,7 @@ set(SOURCES
 	transforms/PyMatrixTransform.cpp
 	transforms/PyRangeTransform.cpp
 	PyBaker.cpp
+	PyBuiltinConfigRegistry.cpp
 	PyBuiltinTransformRegistry.cpp
 	PyColorSpace.cpp
 	PyColorSpaceSet.cpp

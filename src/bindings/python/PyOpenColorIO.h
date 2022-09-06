@@ -28,6 +28,7 @@ void bindPyTypes(py::module & m);
 
 // OpenColorIO
 void bindPyBaker(py::module & m);
+void bindPyBuiltinConfigRegistry(py::module & m);
 void bindPyColorSpace(py::module & m);
 void bindPyColorSpaceSet(py::module & m);
 void bindPyConfig(py::module & m);

@@ -38,6 +38,7 @@ function(add_ocio_test NAME SOURCES PRIVATE_INCLUDES)
         target_include_directories(${TEST_BINARY}
             PRIVATE
                 "${CMAKE_SOURCE_DIR}/tests/cpu"
+                "${CMAKE_BINARY_DIR}/generated_include"
         )
     endif(PRIVATE_INCLUDES)
     if(OCIO_USE_SSE)
@@ -73,6 +74,7 @@ endfunction(add_ocio_test)
 # but for now, we will maintain the status quo and copy all from the
 # OpenColorIO target
 set(SOURCES
+    builtinconfigs/CGConfig.cpp
     fileformats/cdl/CDLParser.cpp
     fileformats/cdl/CDLReaderHelper.cpp
     fileformats/cdl/CDLWriter.cpp
@@ -126,6 +128,7 @@ set(TESTS
     apphelpers/MixingHelpers_tests.cpp
     Baker_tests.cpp
     BitDepthUtils_tests.cpp
+    builtinconfigs/BuiltinConfigRegistry_tests.cpp
     Caching_tests.cpp
     ColorSpace_tests.cpp
     ColorSpaceSet_tests.cpp
