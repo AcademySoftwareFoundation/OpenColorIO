@@ -146,9 +146,9 @@ Three ``OCIO_INSTALL_EXT_PACKAGES`` options are available::
     cmake -DOCIO_INSTALL_EXT_PACKAGES=<NONE|MISSING|ALL>
 
 - ``NONE``: Use system installed packages. Fail if any are missing or 
-  don't meet minimum version requireements.
+  don't meet minimum version requirements.
 - ``MISSING`` (default): Prefer system installed packages. Install any that 
-  are not found or don't meet minimum version requireements.
+  are not found or don't meet minimum version requirements.
 - ``ALL``: Install all required packages, regardless of availability on the 
   current system.
 
