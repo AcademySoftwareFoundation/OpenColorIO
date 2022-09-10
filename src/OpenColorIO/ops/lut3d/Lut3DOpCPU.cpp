@@ -14,11 +14,17 @@
 #include "ops/OpTools.h"
 #include "Platform.h"
 #include "SSE.h"
+#include "CPUInfo.h"
+#include "Lut3DOpCPU_SSE2.h"
+#include "Lut3DOpCPU_AVX.h"
+#include "Lut3DOpCPU_AVX2.h"
 
 namespace OCIO_NAMESPACE
 {
 namespace
 {
+
+typedef void (apply_lut_func)(const float *lut3d, int dim, const float *src, float *dst, int total_pixel_count);
 
 class BaseLut3DRenderer : public OpCPU
 {
@@ -37,9 +43,11 @@ protected:
     // Keep all these values because they are invariant during the
     // processing. So to slim the processing code, these variables
     // are computed in the constructor.
-    float*        m_optLut;
-    unsigned long m_dim;
-    float         m_step;
+    float*         m_optLut;
+    unsigned long  m_dim;
+    float          m_step;
+    int            m_components;
+    apply_lut_func *m_applyLutFunc;
 
 private:
     BaseLut3DRenderer() = delete;
@@ -256,10 +264,11 @@ inline void LookupNearest4(float* optLut,
 
 #else
 
-int GetLut3DIndexBlueFast(int indexR, int indexG, int indexB, long dim)
+inline int GetLut3DIndexBlueFast(int indexR, int indexG, int indexB, long dim, int components=3)
 {
-    return 3 * (indexB + (int)dim * (indexG + (int)dim * indexR));
+    return components * (indexB + (int)dim * (indexG + (int)dim * indexR));
 }
+
 
 // Linear
 inline void lerp_rgb(float* out, float* a, float* b, float* z)
@@ -300,6 +309,8 @@ BaseLut3DRenderer::BaseLut3DRenderer(ConstLut3DOpDataRcPtr & lut)
     , m_optLut(0x0)
     , m_dim(0)
     , m_step(0.0f)
+    , m_components(0)
+    , m_applyLutFunc(nullptr)
 {
     updateData(lut);
 }
@@ -321,7 +332,9 @@ void BaseLut3DRenderer::updateData(ConstLut3DOpDataRcPtr & lut)
 
 #ifdef USE_SSE
     Platform::AlignedFree(m_optLut);
+    m_components = 4;
 #else
+    m_components = 3;
     free(m_optLut);
 #endif
     m_optLut = createOptLut(lut->getArray().getValues());
@@ -335,7 +348,7 @@ float* BaseLut3DRenderer::createOptLut(const Array::Values& lut) const
     const long maxEntries = m_dim * m_dim * m_dim;
 
     float *optLut =
-        (float*)Platform::AlignedMalloc(maxEntries * 4 * sizeof(float), 16);
+        (float*)Platform::AlignedMalloc(maxEntries * m_components * sizeof(float), 16);
 
     float* currentValue = optLut;
     for (long idx = 0; idx<maxEntries; idx++)
@@ -355,7 +368,7 @@ float* BaseLut3DRenderer::createOptLut(const Array::Values& lut) const
     const long maxEntries = m_dim * m_dim * m_dim;
 
     float *optLut =
-        (float*)malloc(maxEntries * 3 * sizeof(float));
+        (float*)malloc(maxEntries * m_components * sizeof(float));
 
     float* currentValue = optLut;
     for (long idx = 0; idx<maxEntries; idx++)
@@ -373,6 +386,26 @@ float* BaseLut3DRenderer::createOptLut(const Array::Values& lut) const
 Lut3DTetrahedralRenderer::Lut3DTetrahedralRenderer(ConstLut3DOpDataRcPtr & lut)
     : BaseLut3DRenderer(lut)
 {
+    #if OCIO_USE_SSE2
+    if (CPUInfo::instance().hasSSE2())
+    {
+        m_applyLutFunc = applyTetrahedralSSE2;
+    }
+    #endif
+
+    #if OCIO_USE_AVX
+    if (CPUInfo::instance().hasAVX() && !CPUInfo::instance().AVXSlow())
+    {
+        m_applyLutFunc = applyTetrahedralAVX;
+    }
+    #endif
+
+    #if OCIO_USE_AVX2
+    if (CPUInfo::instance().hasAVX2() && !CPUInfo::instance().AVX2SlowGather())
+    {
+        m_applyLutFunc = applyTetrahedralAVX2;
+    }
+    #endif
 }
 
 Lut3DTetrahedralRenderer::~Lut3DTetrahedralRenderer()
@@ -384,405 +417,412 @@ void Lut3DTetrahedralRenderer::apply(const void * inImg, void * outImg, long num
     const float * in = (const float *)inImg;
     float * out = (float *)outImg;
 
-#ifdef USE_SSE
-
-    __m128 step = _mm_set1_ps(m_step);
-    __m128 maxIdx = _mm_set1_ps((float)(m_dim - 1));
-    __m128i dim = _mm_set1_epi32(m_dim);
-
-    __m128 v[4];
-    OCIO_ALIGN(float cmpDelta[4]);
-
-    for (long i = 0; i < numPixels; ++i)
+    if (m_applyLutFunc)
     {
-        float newAlpha = (float)in[3];
-
-        __m128 data = _mm_set_ps(in[3], in[2], in[1], in[0]);
-
-        __m128 idx = _mm_mul_ps(data, step);
-
-        idx = _mm_max_ps(idx, EZERO);  // NaNs become 0
-        idx = _mm_min_ps(idx, maxIdx);
-
-        // lowIdxInt32 = floor(idx), with lowIdx in [0, maxIdx]
-        __m128i lowIdxInt32 = _mm_cvttps_epi32(idx);
-        __m128 lowIdx = _mm_cvtepi32_ps(lowIdxInt32);
-
-        // highIdxInt32 = ceil(idx), with highIdx in [1, maxIdx]
-        __m128i highIdxInt32 = _mm_sub_epi32(lowIdxInt32,
-            _mm_castps_si128(_mm_cmplt_ps(lowIdx, maxIdx)));
-
-        __m128 delta = _mm_sub_ps(idx, lowIdx);
-        __m128 delta0 = _mm_shuffle_ps(delta, delta, _MM_SHUFFLE(0, 0, 0, 0));
-        __m128 delta1 = _mm_shuffle_ps(delta, delta, _MM_SHUFFLE(1, 1, 1, 1));
-        __m128 delta2 = _mm_shuffle_ps(delta, delta, _MM_SHUFFLE(2, 2, 2, 2));
-
-        // lh01 = {L0, H0, L1, H1}
-        // lh23 = {L2, H2, L3, H3}, L3 and H3 are not used
-        __m128i lh01 = _mm_unpacklo_epi32(lowIdxInt32, highIdxInt32);
-        __m128i lh23 = _mm_unpackhi_epi32(lowIdxInt32, highIdxInt32);
-
-        // Since the cube is split along the main diagonal, the lowest corner
-        // and highest corner are always used.
-        // v[0] = { L0, L1, L2 }
-        // v[3] = { H0, H1, H2 }
-
-        __m128i idxR, idxG, idxB;
-        // Store vertices transposed on idxR, idxG and idxB:
-        // idxR = { v0r, v1r, v2r, v3r }
-        // idxG = { v0g, v1g, v2g, v3g }
-        // idxB = { v0b, v1b, v2b, v3b }
-
-        // Vertices differences (vi-vj) to be multiplied by the delta factors
-        __m128 dv0, dv1, dv2;
-
-        // In tetrahedral interpolation, the cube is divided along the main
-        // diagonal into 6 tetrahedra.  We compare the relative fractional 
-        // position within the cube (deltaArray) to know which tetrahedron
-        // we are in and therefore which four vertices of the cube we need.
-
-        // cmpDelta = { delta[0] >= delta[1], delta[1] >= delta[2], delta[2] >= delta[0], - }
-        _mm_store_ps(cmpDelta,
-                     _mm_cmpge_ps(delta,
-                                  _mm_shuffle_ps(delta,
-                                                 delta,
-                                                 _MM_SHUFFLE(0, 0, 2, 1))));
-
-        if (cmpDelta[0])  // delta[0] > delta[1]
-        {
-            if (cmpDelta[1])  // delta[1] > delta[2]
-            {
-                // R > G > B
-
-                // v[1] = { H0, L1, L2 }
-                // v[2] = { H0, H1, L2 }
-
-                // idxR = { L0, H0, H0, H0 }
-                // idxG = { L1, L1, H1, H1 }
-                // idxB = { L2, L2, L2, H2 }
-                idxR = _mm_shuffle_epi32(lh01, _MM_SHUFFLE(1, 1, 1, 0));
-                idxG = _mm_shuffle_epi32(lh01, _MM_SHUFFLE(3, 3, 2, 2));
-                idxB = _mm_shuffle_epi32(lh23, _MM_SHUFFLE(1, 0, 0, 0));
-
-                LookupNearest4(m_optLut, idxR, idxG, idxB, dim, v);
-
-                // Order: R G B => 0 1 2
-                dv0 = _mm_sub_ps(v[1], v[0]);
-                dv1 = _mm_sub_ps(v[2], v[1]);
-                dv2 = _mm_sub_ps(v[3], v[2]);
-            }
-            else if (!cmpDelta[2])  // delta[0] > delta[2]
-            {
-                // R > B > G
-
-                // v[1] = { H0, L1, L2 }
-                // v[2] = { H0, L1, H2 }
-
-                // idxR = { L0, H0, H0, H0 }
-                // idxG = { L1, L1, L1, H1 }
-                // idxB = { L2, L2, H2, H2 }
-                idxR = _mm_shuffle_epi32(lh01, _MM_SHUFFLE(1, 1, 1, 0));
-                idxG = _mm_shuffle_epi32(lh01, _MM_SHUFFLE(3, 2, 2, 2));
-                idxB = _mm_shuffle_epi32(lh23, _MM_SHUFFLE(1, 1, 0, 0));
-
-                LookupNearest4(m_optLut, idxR, idxG, idxB, dim, v);
-
-                // Order: R B G => 0 2 1
-                dv0 = _mm_sub_ps(v[1], v[0]);
-                dv2 = _mm_sub_ps(v[2], v[1]);
-                dv1 = _mm_sub_ps(v[3], v[2]);
-            }
-            else
-            {
-                // B > R > G
-
-                // v[1] = { L0, L1, H2 }
-                // v[2] = { H0, L1, H2 }
-
-                // idxR = { L0, L0, H0, H0 }
-                // idxG = { L1, L1, L1, H1 }
-                // idxB = { L2, H2, H2, H2 }
-                idxR = _mm_shuffle_epi32(lh01, _MM_SHUFFLE(1, 1, 0, 0));
-                idxG = _mm_shuffle_epi32(lh01, _MM_SHUFFLE(3, 2, 2, 2));
-                idxB = _mm_shuffle_epi32(lh23, _MM_SHUFFLE(1, 1, 1, 0));
-
-                LookupNearest4(m_optLut, idxR, idxG, idxB, dim, v);
-
-                // Order: B R G => 2 0 1
-                dv2 = _mm_sub_ps(v[1], v[0]);
-                dv0 = _mm_sub_ps(v[2], v[1]);
-                dv1 = _mm_sub_ps(v[3], v[2]);
-            }
-        }
-        else
-        {
-            if (!cmpDelta[1])  // delta[2] > delta[1]
-            {
-                // B > G > R
-
-                // v[1] = { L0, L1, H2 }
-                // v[2] = { L0, H1, H2 }
-
-                // idxR = { L0, L0, L0, H0 }
-                // idxG = { L1, L1, H1, H1 }
-                // idxB = { L2, H2, H2, H2 }
-                idxR = _mm_shuffle_epi32(lh01, _MM_SHUFFLE(1, 0, 0, 0));
-                idxG = _mm_shuffle_epi32(lh01, _MM_SHUFFLE(3, 3, 2, 2));
-                idxB = _mm_shuffle_epi32(lh23, _MM_SHUFFLE(1, 1, 1, 0));
-
-                LookupNearest4(m_optLut, idxR, idxG, idxB, dim, v);
-
-                // Order: B G R => 2 1 0
-                dv2 = _mm_sub_ps(v[1], v[0]);
-                dv1 = _mm_sub_ps(v[2], v[1]);
-                dv0 = _mm_sub_ps(v[3], v[2]);
-            }
-            else if (!cmpDelta[2])  // delta[0] > delta[2]
-            {
-                // G > R > B
-
-                // v[1] = { L0, H1, L2 }
-                // v[2] = { H0, H1, L2 }
-
-                // idxR = { L0, L0, H0, H0 }
-                // idxG = { L1, H1, H1, H1 }
-                // idxB = { L2, L2, L2, H2 }
-                idxR = _mm_shuffle_epi32(lh01, _MM_SHUFFLE(1, 1, 0, 0));
-                idxG = _mm_shuffle_epi32(lh01, _MM_SHUFFLE(3, 3, 3, 2));
-                idxB = _mm_shuffle_epi32(lh23, _MM_SHUFFLE(1, 0, 0, 0));
-
-                LookupNearest4(m_optLut, idxR, idxG, idxB, dim, v);
-
-                // Order: G R B => 1 0 2
-                dv1 = _mm_sub_ps(v[1], v[0]);
-                dv0 = _mm_sub_ps(v[2], v[1]);
-                dv2 = _mm_sub_ps(v[3], v[2]);
-            }
-            else
-            {
-                // G > B > R
-
-                // v[1] = { L0, H1, L2 }
-                // v[2] = { L0, H1, H2 }
-
-                // idxR = { L0, L0, L0, H0 }
-                // idxG = { L1, H1, H1, H1 }
-                // idxB = { L2, L2, H2, H2 }
-                idxR = _mm_shuffle_epi32(lh01, _MM_SHUFFLE(1, 0, 0, 0));
-                idxG = _mm_shuffle_epi32(lh01, _MM_SHUFFLE(3, 3, 3, 2));
-                idxB = _mm_shuffle_epi32(lh23, _MM_SHUFFLE(1, 1, 0, 0));
-
-                LookupNearest4(m_optLut, idxR, idxG, idxB, dim, v);
-
-                // Order: G B R => 1 2 0
-                dv1 = _mm_sub_ps(v[1], v[0]);
-                dv2 = _mm_sub_ps(v[2], v[1]);
-                dv0 = _mm_sub_ps(v[3], v[2]);
-            }
-        }
-
-        __m128 result = _mm_add_ps(_mm_add_ps(v[0], _mm_mul_ps(delta0, dv0)),
-            _mm_add_ps(_mm_mul_ps(delta1, dv1), _mm_mul_ps(delta2, dv2)));
-
-        _mm_storeu_ps(out, result);
-
-        out[3] = newAlpha;
-
-        in  += 4;
-        out += 4;
+        m_applyLutFunc(m_optLut, m_dim, in, out, numPixels);
     }
+    else
+    {
+  #ifdef USE_SSE
+
+        __m128 step = _mm_set1_ps(m_step);
+        __m128 maxIdx = _mm_set1_ps((float)(m_dim - 1));
+        __m128i dim = _mm_set1_epi32(m_dim);
+
+        __m128 v[4];
+        OCIO_ALIGN(float cmpDelta[4]);
+
+        for (long i = 0; i < numPixels; ++i)
+        {
+            float newAlpha = (float)in[3];
+
+            __m128 data = _mm_set_ps(in[3], in[2], in[1], in[0]);
+
+            __m128 idx = _mm_mul_ps(data, step);
+
+            idx = _mm_max_ps(idx, EZERO);  // NaNs become 0
+            idx = _mm_min_ps(idx, maxIdx);
+
+            // lowIdxInt32 = floor(idx), with lowIdx in [0, maxIdx]
+            __m128i lowIdxInt32 = _mm_cvttps_epi32(idx);
+            __m128 lowIdx = _mm_cvtepi32_ps(lowIdxInt32);
+
+            // highIdxInt32 = ceil(idx), with highIdx in [1, maxIdx]
+            __m128i highIdxInt32 = _mm_sub_epi32(lowIdxInt32,
+                _mm_castps_si128(_mm_cmplt_ps(lowIdx, maxIdx)));
+
+            __m128 delta = _mm_sub_ps(idx, lowIdx);
+            __m128 delta0 = _mm_shuffle_ps(delta, delta, _MM_SHUFFLE(0, 0, 0, 0));
+            __m128 delta1 = _mm_shuffle_ps(delta, delta, _MM_SHUFFLE(1, 1, 1, 1));
+            __m128 delta2 = _mm_shuffle_ps(delta, delta, _MM_SHUFFLE(2, 2, 2, 2));
+
+            // lh01 = {L0, H0, L1, H1}
+            // lh23 = {L2, H2, L3, H3}, L3 and H3 are not used
+            __m128i lh01 = _mm_unpacklo_epi32(lowIdxInt32, highIdxInt32);
+            __m128i lh23 = _mm_unpackhi_epi32(lowIdxInt32, highIdxInt32);
+
+            // Since the cube is split along the main diagonal, the lowest corner
+            // and highest corner are always used.
+            // v[0] = { L0, L1, L2 }
+            // v[3] = { H0, H1, H2 }
+
+            __m128i idxR, idxG, idxB;
+            // Store vertices transposed on idxR, idxG and idxB:
+            // idxR = { v0r, v1r, v2r, v3r }
+            // idxG = { v0g, v1g, v2g, v3g }
+            // idxB = { v0b, v1b, v2b, v3b }
+
+            // Vertices differences (vi-vj) to be multiplied by the delta factors
+            __m128 dv0, dv1, dv2;
+
+            // In tetrahedral interpolation, the cube is divided along the main
+            // diagonal into 6 tetrahedra.  We compare the relative fractional
+            // position within the cube (deltaArray) to know which tetrahedron
+            // we are in and therefore which four vertices of the cube we need.
+
+            // cmpDelta = { delta[0] >= delta[1], delta[1] >= delta[2], delta[2] >= delta[0], - }
+            _mm_store_ps(cmpDelta,
+                        _mm_cmpge_ps(delta,
+                                    _mm_shuffle_ps(delta,
+                                                    delta,
+                                                    _MM_SHUFFLE(0, 0, 2, 1))));
+
+            if (cmpDelta[0])  // delta[0] > delta[1]
+            {
+                if (cmpDelta[1])  // delta[1] > delta[2]
+                {
+                    // R > G > B
+
+                    // v[1] = { H0, L1, L2 }
+                    // v[2] = { H0, H1, L2 }
+
+                    // idxR = { L0, H0, H0, H0 }
+                    // idxG = { L1, L1, H1, H1 }
+                    // idxB = { L2, L2, L2, H2 }
+                    idxR = _mm_shuffle_epi32(lh01, _MM_SHUFFLE(1, 1, 1, 0));
+                    idxG = _mm_shuffle_epi32(lh01, _MM_SHUFFLE(3, 3, 2, 2));
+                    idxB = _mm_shuffle_epi32(lh23, _MM_SHUFFLE(1, 0, 0, 0));
+
+                    LookupNearest4(m_optLut, idxR, idxG, idxB, dim, v);
+
+                    // Order: R G B => 0 1 2
+                    dv0 = _mm_sub_ps(v[1], v[0]);
+                    dv1 = _mm_sub_ps(v[2], v[1]);
+                    dv2 = _mm_sub_ps(v[3], v[2]);
+                }
+                else if (!cmpDelta[2])  // delta[0] > delta[2]
+                {
+                    // R > B > G
+
+                    // v[1] = { H0, L1, L2 }
+                    // v[2] = { H0, L1, H2 }
+
+                    // idxR = { L0, H0, H0, H0 }
+                    // idxG = { L1, L1, L1, H1 }
+                    // idxB = { L2, L2, H2, H2 }
+                    idxR = _mm_shuffle_epi32(lh01, _MM_SHUFFLE(1, 1, 1, 0));
+                    idxG = _mm_shuffle_epi32(lh01, _MM_SHUFFLE(3, 2, 2, 2));
+                    idxB = _mm_shuffle_epi32(lh23, _MM_SHUFFLE(1, 1, 0, 0));
+
+                    LookupNearest4(m_optLut, idxR, idxG, idxB, dim, v);
+
+                    // Order: R B G => 0 2 1
+                    dv0 = _mm_sub_ps(v[1], v[0]);
+                    dv2 = _mm_sub_ps(v[2], v[1]);
+                    dv1 = _mm_sub_ps(v[3], v[2]);
+                }
+                else
+                {
+                    // B > R > G
+
+                    // v[1] = { L0, L1, H2 }
+                    // v[2] = { H0, L1, H2 }
+
+                    // idxR = { L0, L0, H0, H0 }
+                    // idxG = { L1, L1, L1, H1 }
+                    // idxB = { L2, H2, H2, H2 }
+                    idxR = _mm_shuffle_epi32(lh01, _MM_SHUFFLE(1, 1, 0, 0));
+                    idxG = _mm_shuffle_epi32(lh01, _MM_SHUFFLE(3, 2, 2, 2));
+                    idxB = _mm_shuffle_epi32(lh23, _MM_SHUFFLE(1, 1, 1, 0));
+
+                    LookupNearest4(m_optLut, idxR, idxG, idxB, dim, v);
+
+                    // Order: B R G => 2 0 1
+                    dv2 = _mm_sub_ps(v[1], v[0]);
+                    dv0 = _mm_sub_ps(v[2], v[1]);
+                    dv1 = _mm_sub_ps(v[3], v[2]);
+                }
+            }
+            else
+            {
+                if (!cmpDelta[1])  // delta[2] > delta[1]
+                {
+                    // B > G > R
+
+                    // v[1] = { L0, L1, H2 }
+                    // v[2] = { L0, H1, H2 }
+
+                    // idxR = { L0, L0, L0, H0 }
+                    // idxG = { L1, L1, H1, H1 }
+                    // idxB = { L2, H2, H2, H2 }
+                    idxR = _mm_shuffle_epi32(lh01, _MM_SHUFFLE(1, 0, 0, 0));
+                    idxG = _mm_shuffle_epi32(lh01, _MM_SHUFFLE(3, 3, 2, 2));
+                    idxB = _mm_shuffle_epi32(lh23, _MM_SHUFFLE(1, 1, 1, 0));
+
+                    LookupNearest4(m_optLut, idxR, idxG, idxB, dim, v);
+
+                    // Order: B G R => 2 1 0
+                    dv2 = _mm_sub_ps(v[1], v[0]);
+                    dv1 = _mm_sub_ps(v[2], v[1]);
+                    dv0 = _mm_sub_ps(v[3], v[2]);
+                }
+                else if (!cmpDelta[2])  // delta[0] > delta[2]
+                {
+                    // G > R > B
+
+                    // v[1] = { L0, H1, L2 }
+                    // v[2] = { H0, H1, L2 }
+
+                    // idxR = { L0, L0, H0, H0 }
+                    // idxG = { L1, H1, H1, H1 }
+                    // idxB = { L2, L2, L2, H2 }
+                    idxR = _mm_shuffle_epi32(lh01, _MM_SHUFFLE(1, 1, 0, 0));
+                    idxG = _mm_shuffle_epi32(lh01, _MM_SHUFFLE(3, 3, 3, 2));
+                    idxB = _mm_shuffle_epi32(lh23, _MM_SHUFFLE(1, 0, 0, 0));
+
+                    LookupNearest4(m_optLut, idxR, idxG, idxB, dim, v);
+
+                    // Order: G R B => 1 0 2
+                    dv1 = _mm_sub_ps(v[1], v[0]);
+                    dv0 = _mm_sub_ps(v[2], v[1]);
+                    dv2 = _mm_sub_ps(v[3], v[2]);
+                }
+                else
+                {
+                    // G > B > R
+
+                    // v[1] = { L0, H1, L2 }
+                    // v[2] = { L0, H1, H2 }
+
+                    // idxR = { L0, L0, L0, H0 }
+                    // idxG = { L1, H1, H1, H1 }
+                    // idxB = { L2, L2, H2, H2 }
+                    idxR = _mm_shuffle_epi32(lh01, _MM_SHUFFLE(1, 0, 0, 0));
+                    idxG = _mm_shuffle_epi32(lh01, _MM_SHUFFLE(3, 3, 3, 2));
+                    idxB = _mm_shuffle_epi32(lh23, _MM_SHUFFLE(1, 1, 0, 0));
+
+                    LookupNearest4(m_optLut, idxR, idxG, idxB, dim, v);
+
+                    // Order: G B R => 1 2 0
+                    dv1 = _mm_sub_ps(v[1], v[0]);
+                    dv2 = _mm_sub_ps(v[2], v[1]);
+                    dv0 = _mm_sub_ps(v[3], v[2]);
+                }
+            }
+
+            __m128 result = _mm_add_ps(_mm_add_ps(v[0], _mm_mul_ps(delta0, dv0)),
+                _mm_add_ps(_mm_mul_ps(delta1, dv1), _mm_mul_ps(delta2, dv2)));
+
+            _mm_storeu_ps(out, result);
+
+            out[3] = newAlpha;
+
+            in  += 4;
+            out += 4;
+        }
 #else
-    const float dimMinusOne = float(m_dim) - 1.f;
+        const float dimMinusOne = float(m_dim) - 1.f;
 
-    for (long i = 0; i < numPixels; ++i)
-    {
-        float newAlpha = (float)in[3];
-
-        float idx[3];
-        idx[0] = in[0] * m_step;
-        idx[1] = in[1] * m_step;
-        idx[2] = in[2] * m_step;
-
-        // NaNs become 0.
-        idx[0] = Clamp(idx[0], 0.f, dimMinusOne);
-        idx[1] = Clamp(idx[1], 0.f, dimMinusOne);
-        idx[2] = Clamp(idx[2], 0.f, dimMinusOne);
-
-        int indexLow[3];
-        indexLow[0] = static_cast<int>(std::floor(idx[0]));
-        indexLow[1] = static_cast<int>(std::floor(idx[1]));
-        indexLow[2] = static_cast<int>(std::floor(idx[2]));
-
-        int indexHigh[3];
-        // When the idx is exactly equal to an index (e.g. 0,1,2...)
-        // then the computation of highIdx is wrong. However,
-        // the delta is then equal to zero (e.g. idx-lowIdx),
-        // so the highIdx has no impact.
-        indexHigh[0] = static_cast<int>(std::ceil(idx[0]));
-        indexHigh[1] = static_cast<int>(std::ceil(idx[1]));
-        indexHigh[2] = static_cast<int>(std::ceil(idx[2]));
-
-        float fx = idx[0] - static_cast<float>(indexLow[0]);
-        float fy = idx[1] - static_cast<float>(indexLow[1]);
-        float fz = idx[2] - static_cast<float>(indexLow[2]);
-
-        // Compute index into LUT for surrounding corners
-        const int n000 =
-            GetLut3DIndexBlueFast(indexLow[0], indexLow[1], indexLow[2],
-                                  m_dim);
-        const int n100 =
-            GetLut3DIndexBlueFast(indexHigh[0], indexLow[1], indexLow[2],
-                                  m_dim);
-        const int n010 =
-            GetLut3DIndexBlueFast(indexLow[0], indexHigh[1], indexLow[2],
-                                  m_dim);
-        const int n001 =
-            GetLut3DIndexBlueFast(indexLow[0], indexLow[1], indexHigh[2],
-                                  m_dim);
-        const int n110 =
-            GetLut3DIndexBlueFast(indexHigh[0], indexHigh[1], indexLow[2],
-                                  m_dim);
-        const int n101 =
-            GetLut3DIndexBlueFast(indexHigh[0], indexLow[1], indexHigh[2],
-                                  m_dim);
-        const int n011 =
-            GetLut3DIndexBlueFast(indexLow[0], indexHigh[1], indexHigh[2],
-                                  m_dim);
-        const int n111 =
-            GetLut3DIndexBlueFast(indexHigh[0], indexHigh[1], indexHigh[2],
-                                  m_dim);
-
-        if (fx > fy) {
-            if (fy > fz) {
-                out[0] =
-                    (1 - fx)  * m_optLut[n000] +
-                    (fx - fy) * m_optLut[n100] +
-                    (fy - fz) * m_optLut[n110] +
-                    (fz)      * m_optLut[n111];
-
-                out[1] =
-                    (1 - fx)  * m_optLut[n000 + 1] +
-                    (fx - fy) * m_optLut[n100 + 1] +
-                    (fy - fz) * m_optLut[n110 + 1] +
-                    (fz)      * m_optLut[n111 + 1];
-
-                out[2] =
-                    (1 - fx)  * m_optLut[n000 + 2] +
-                    (fx - fy) * m_optLut[n100 + 2] +
-                    (fy - fz) * m_optLut[n110 + 2] +
-                    (fz)      * m_optLut[n111 + 2];
-            }
-            else if (fx > fz)
-            {
-                out[0] =
-                    (1 - fx)  * m_optLut[n000] +
-                    (fx - fz) * m_optLut[n100] +
-                    (fz - fy) * m_optLut[n101] +
-                    (fy)      * m_optLut[n111];
-
-                out[1] =
-                    (1 - fx)  * m_optLut[n000 + 1] +
-                    (fx - fz) * m_optLut[n100 + 1] +
-                    (fz - fy) * m_optLut[n101 + 1] +
-                    (fy)      * m_optLut[n111 + 1];
-
-                out[2] =
-                    (1 - fx)  * m_optLut[n000 + 2] +
-                    (fx - fz) * m_optLut[n100 + 2] +
-                    (fz - fy) * m_optLut[n101 + 2] +
-                    (fy)      * m_optLut[n111 + 2];
-            }
-            else
-            {
-                out[0] =
-                    (1 - fz)  * m_optLut[n000] +
-                    (fz - fx) * m_optLut[n001] +
-                    (fx - fy) * m_optLut[n101] +
-                    (fy)      * m_optLut[n111];
-
-                out[1] =
-                    (1 - fz)  * m_optLut[n000 + 1] +
-                    (fz - fx) * m_optLut[n001 + 1] +
-                    (fx - fy) * m_optLut[n101 + 1] +
-                    (fy)      * m_optLut[n111 + 1];
-
-                out[2] =
-                    (1 - fz)  * m_optLut[n000 + 2] +
-                    (fz - fx) * m_optLut[n001 + 2] +
-                    (fx - fy) * m_optLut[n101 + 2] +
-                    (fy)      * m_optLut[n111 + 2];
-            }
-        }
-        else
+        for (long i = 0; i < numPixels; ++i)
         {
-            if (fz > fy)
-            {
-                out[0] =
-                    (1 - fz)  * m_optLut[n000] +
-                    (fz - fy) * m_optLut[n001] +
-                    (fy - fx) * m_optLut[n011] +
-                    (fx)      * m_optLut[n111];
+            float newAlpha = (float)in[3];
 
-                out[1] =
-                    (1 - fz)  * m_optLut[n000 + 1] +
-                    (fz - fy) * m_optLut[n001 + 1] +
-                    (fy - fx) * m_optLut[n011 + 1] +
-                    (fx)      * m_optLut[n111 + 1];
+            float idx[3];
+            idx[0] = in[0] * m_step;
+            idx[1] = in[1] * m_step;
+            idx[2] = in[2] * m_step;
 
-                out[2] =
-                    (1 - fz)  * m_optLut[n000 + 2] +
-                    (fz - fy) * m_optLut[n001 + 2] +
-                    (fy - fx) * m_optLut[n011 + 2] +
-                    (fx)      * m_optLut[n111 + 2];
-            }
-            else if (fz > fx)
-            {
-                out[0] =
-                    (1 - fy)  * m_optLut[n000] +
-                    (fy - fz) * m_optLut[n010] +
-                    (fz - fx) * m_optLut[n011] +
-                    (fx)      * m_optLut[n111];
+            // NaNs become 0.
+            idx[0] = Clamp(idx[0], 0.f, dimMinusOne);
+            idx[1] = Clamp(idx[1], 0.f, dimMinusOne);
+            idx[2] = Clamp(idx[2], 0.f, dimMinusOne);
 
-                out[1] =
-                    (1 - fy)  * m_optLut[n000 + 1] +
-                    (fy - fz) * m_optLut[n010 + 1] +
-                    (fz - fx) * m_optLut[n011 + 1] +
-                    (fx)      * m_optLut[n111 + 1];
+            int indexLow[3];
+            indexLow[0] = static_cast<int>(std::floor(idx[0]));
+            indexLow[1] = static_cast<int>(std::floor(idx[1]));
+            indexLow[2] = static_cast<int>(std::floor(idx[2]));
 
-                out[2] =
-                    (1 - fy)  * m_optLut[n000 + 2] +
-                    (fy - fz) * m_optLut[n010 + 2] +
-                    (fz - fx) * m_optLut[n011 + 2] +
-                    (fx)      * m_optLut[n111 + 2];
+            int indexHigh[3];
+            // When the idx is exactly equal to an index (e.g. 0,1,2...)
+            // then the computation of highIdx is wrong. However,
+            // the delta is then equal to zero (e.g. idx-lowIdx),
+            // so the highIdx has no impact.
+            indexHigh[0] = static_cast<int>(std::ceil(idx[0]));
+            indexHigh[1] = static_cast<int>(std::ceil(idx[1]));
+            indexHigh[2] = static_cast<int>(std::ceil(idx[2]));
+
+            float fx = idx[0] - static_cast<float>(indexLow[0]);
+            float fy = idx[1] - static_cast<float>(indexLow[1]);
+            float fz = idx[2] - static_cast<float>(indexLow[2]);
+
+            // Compute index into LUT for surrounding corners
+            const int n000 =
+                GetLut3DIndexBlueFast(indexLow[0], indexLow[1], indexLow[2],
+                                    m_dim, m_components);
+            const int n100 =
+                GetLut3DIndexBlueFast(indexHigh[0], indexLow[1], indexLow[2],
+                                    m_dim, m_components);
+            const int n010 =
+                GetLut3DIndexBlueFast(indexLow[0], indexHigh[1], indexLow[2],
+                                    m_dim, m_components);
+            const int n001 =
+                GetLut3DIndexBlueFast(indexLow[0], indexLow[1], indexHigh[2],
+                                    m_dim, m_components);
+            const int n110 =
+                GetLut3DIndexBlueFast(indexHigh[0], indexHigh[1], indexLow[2],
+                                    m_dim, m_components);
+            const int n101 =
+                GetLut3DIndexBlueFast(indexHigh[0], indexLow[1], indexHigh[2],
+                                    m_dim, m_components);
+            const int n011 =
+                GetLut3DIndexBlueFast(indexLow[0], indexHigh[1], indexHigh[2],
+                                    m_dim, m_components);
+            const int n111 =
+                GetLut3DIndexBlueFast(indexHigh[0], indexHigh[1], indexHigh[2],
+                                    m_dim, m_components);
+
+            if (fx > fy) {
+                if (fy > fz) {
+                    out[0] =
+                        (1 - fx)  * m_optLut[n000] +
+                        (fx - fy) * m_optLut[n100] +
+                        (fy - fz) * m_optLut[n110] +
+                        (fz)      * m_optLut[n111];
+
+                    out[1] =
+                        (1 - fx)  * m_optLut[n000 + 1] +
+                        (fx - fy) * m_optLut[n100 + 1] +
+                        (fy - fz) * m_optLut[n110 + 1] +
+                        (fz)      * m_optLut[n111 + 1];
+
+                    out[2] =
+                        (1 - fx)  * m_optLut[n000 + 2] +
+                        (fx - fy) * m_optLut[n100 + 2] +
+                        (fy - fz) * m_optLut[n110 + 2] +
+                        (fz)      * m_optLut[n111 + 2];
+                }
+                else if (fx > fz)
+                {
+                    out[0] =
+                        (1 - fx)  * m_optLut[n000] +
+                        (fx - fz) * m_optLut[n100] +
+                        (fz - fy) * m_optLut[n101] +
+                        (fy)      * m_optLut[n111];
+
+                    out[1] =
+                        (1 - fx)  * m_optLut[n000 + 1] +
+                        (fx - fz) * m_optLut[n100 + 1] +
+                        (fz - fy) * m_optLut[n101 + 1] +
+                        (fy)      * m_optLut[n111 + 1];
+
+                    out[2] =
+                        (1 - fx)  * m_optLut[n000 + 2] +
+                        (fx - fz) * m_optLut[n100 + 2] +
+                        (fz - fy) * m_optLut[n101 + 2] +
+                        (fy)      * m_optLut[n111 + 2];
+                }
+                else
+                {
+                    out[0] =
+                        (1 - fz)  * m_optLut[n000] +
+                        (fz - fx) * m_optLut[n001] +
+                        (fx - fy) * m_optLut[n101] +
+                        (fy)      * m_optLut[n111];
+
+                    out[1] =
+                        (1 - fz)  * m_optLut[n000 + 1] +
+                        (fz - fx) * m_optLut[n001 + 1] +
+                        (fx - fy) * m_optLut[n101 + 1] +
+                        (fy)      * m_optLut[n111 + 1];
+
+                    out[2] =
+                        (1 - fz)  * m_optLut[n000 + 2] +
+                        (fz - fx) * m_optLut[n001 + 2] +
+                        (fx - fy) * m_optLut[n101 + 2] +
+                        (fy)      * m_optLut[n111 + 2];
+                }
             }
             else
             {
-                out[0] =
-                    (1 - fy)  * m_optLut[n000] +
-                    (fy - fx) * m_optLut[n010] +
-                    (fx - fz) * m_optLut[n110] +
-                    (fz)      * m_optLut[n111];
+                if (fz > fy)
+                {
+                    out[0] =
+                        (1 - fz)  * m_optLut[n000] +
+                        (fz - fy) * m_optLut[n001] +
+                        (fy - fx) * m_optLut[n011] +
+                        (fx)      * m_optLut[n111];
 
-                out[1] =
-                    (1 - fy)  * m_optLut[n000 + 1] +
-                    (fy - fx) * m_optLut[n010 + 1] +
-                    (fx - fz) * m_optLut[n110 + 1] +
-                    (fz)      * m_optLut[n111 + 1];
+                    out[1] =
+                        (1 - fz)  * m_optLut[n000 + 1] +
+                        (fz - fy) * m_optLut[n001 + 1] +
+                        (fy - fx) * m_optLut[n011 + 1] +
+                        (fx)      * m_optLut[n111 + 1];
 
-                out[2] =
-                    (1 - fy)  * m_optLut[n000 + 2] +
-                    (fy - fx) * m_optLut[n010 + 2] +
-                    (fx - fz) * m_optLut[n110 + 2] +
-                    (fz)      * m_optLut[n111 + 2];
+                    out[2] =
+                        (1 - fz)  * m_optLut[n000 + 2] +
+                        (fz - fy) * m_optLut[n001 + 2] +
+                        (fy - fx) * m_optLut[n011 + 2] +
+                        (fx)      * m_optLut[n111 + 2];
+                }
+                else if (fz > fx)
+                {
+                    out[0] =
+                        (1 - fy)  * m_optLut[n000] +
+                        (fy - fz) * m_optLut[n010] +
+                        (fz - fx) * m_optLut[n011] +
+                        (fx)      * m_optLut[n111];
+
+                    out[1] =
+                        (1 - fy)  * m_optLut[n000 + 1] +
+                        (fy - fz) * m_optLut[n010 + 1] +
+                        (fz - fx) * m_optLut[n011 + 1] +
+                        (fx)      * m_optLut[n111 + 1];
+
+                    out[2] =
+                        (1 - fy)  * m_optLut[n000 + 2] +
+                        (fy - fz) * m_optLut[n010 + 2] +
+                        (fz - fx) * m_optLut[n011 + 2] +
+                        (fx)      * m_optLut[n111 + 2];
+                }
+                else
+                {
+                    out[0] =
+                        (1 - fy)  * m_optLut[n000] +
+                        (fy - fx) * m_optLut[n010] +
+                        (fx - fz) * m_optLut[n110] +
+                        (fz)      * m_optLut[n111];
+
+                    out[1] =
+                        (1 - fy)  * m_optLut[n000 + 1] +
+                        (fy - fx) * m_optLut[n010 + 1] +
+                        (fx - fz) * m_optLut[n110 + 1] +
+                        (fz)      * m_optLut[n111 + 1];
+
+                    out[2] =
+                        (1 - fy)  * m_optLut[n000 + 2] +
+                        (fy - fx) * m_optLut[n010 + 2] +
+                        (fx - fz) * m_optLut[n110 + 2] +
+                        (fz)      * m_optLut[n111 + 2];
+                }
             }
+
+            out[3] = newAlpha;
+
+            in  += 4;
+            out += 4;
         }
-
-        out[3] = newAlpha;
-
-        in  += 4;
-        out += 4;
-    }
 #endif
+    }
 }
 
 Lut3DRenderer::Lut3DRenderer(ConstLut3DOpDataRcPtr & lut)

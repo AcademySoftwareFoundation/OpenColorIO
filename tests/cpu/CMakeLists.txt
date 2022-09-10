@@ -143,6 +143,9 @@ set(SOURCES
     ops/gradingtone/GradingToneOpGPU.cpp
     ops/log/LogOpGPU.cpp
     ops/lut3d/Lut3DOpGPU.cpp
+    ops/lut3d/Lut3DOpCPU_SSE2.cpp
+    ops/lut3d/Lut3DOpCPU_AVX.cpp
+    ops/lut3d/Lut3DOpCPU_AVX2.cpp
     ops/matrix/MatrixOpGPU.cpp
     ops/OpTools.cpp
     ops/range/RangeOpGPU.cpp
@@ -310,6 +313,9 @@ prepend(SOURCES "${PROJECT_SOURCE_DIR}/src/OpenColorIO/" ${SOURCES})
 list(APPEND SOURCES ${TESTS})
 
 if(OCIO_ARCH_X86)
+    set_property(SOURCE "${CMAKE_SOURCE_DIR}/src/OpenColorIO/ops/lut3d/Lut3DOpCPU_SSE2.cpp" APPEND PROPERTY COMPILE_OPTIONS ${OCIO_SSE2_ARGS})
+    set_property(SOURCE "${CMAKE_SOURCE_DIR}/src/OpenColorIO/ops/lut3d/Lut3DOpCPU_AVX.cpp" APPEND PROPERTY COMPILE_OPTIONS ${OCIO_AVX_ARGS})
+    set_property(SOURCE "${CMAKE_SOURCE_DIR}/src/OpenColorIO/ops/lut3d/Lut3DOpCPU_AVX2.cpp" APPEND PROPERTY COMPILE_OPTIONS ${OCIO_AVX2_ARGS})
     set_property(SOURCE "SSE2_tests.cpp" APPEND PROPERTY COMPILE_OPTIONS ${OCIO_SSE2_ARGS})
     set_property(SOURCE "AVX_tests.cpp" APPEND PROPERTY COMPILE_OPTIONS ${OCIO_AVX_ARGS})
     set_property(SOURCE "AVX2_tests.cpp" APPEND PROPERTY COMPILE_OPTIONS ${OCIO_AVX2_ARGS})
