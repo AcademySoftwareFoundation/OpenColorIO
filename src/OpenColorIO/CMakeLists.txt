@@ -116,6 +116,9 @@ set(SOURCES
     ops/log/LogUtils.cpp
     ops/lut1d/Lut1DOp.cpp
     ops/lut1d/Lut1DOpCPU.cpp
+    ops/lut1d/Lut1DOpCPU_SSE2.cpp
+    ops/lut1d/Lut1DOpCPU_AVX.cpp
+    ops/lut1d/Lut1DOpCPU_AVX2.cpp
     ops/lut1d/Lut1DOpData.cpp
     ops/lut1d/Lut1DOpGPU.cpp
     ops/lut3d/Lut3DOp.cpp
@@ -203,6 +206,9 @@ endif()
 configure_file(res/OpenColorIO.pc.in ${CMAKE_CURRENT_BINARY_DIR}/OpenColorIO.pc @ONLY)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/OpenColorIO.pc DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
 if(OCIO_ARCH_X86)
+    set_property(SOURCE ops/lut1d/Lut1DOpCPU_SSE2.cpp APPEND PROPERTY COMPILE_OPTIONS ${OCIO_SSE2_ARGS})
+    set_property(SOURCE ops/lut1d/Lut1DOpCPU_AVX.cpp APPEND PROPERTY COMPILE_OPTIONS ${OCIO_AVX_ARGS})
+    set_property(SOURCE ops/lut1d/Lut1DOpCPU_AVX2.cpp APPEND PROPERTY COMPILE_OPTIONS ${OCIO_AVX2_ARGS})
     set_property(SOURCE ops/lut3d/Lut3DOpCPU_SSE2.cpp APPEND PROPERTY COMPILE_OPTIONS ${OCIO_SSE2_ARGS})
     set_property(SOURCE ops/lut3d/Lut3DOpCPU_AVX.cpp APPEND PROPERTY COMPILE_OPTIONS ${OCIO_AVX_ARGS})
     set_property(SOURCE ops/lut3d/Lut3DOpCPU_AVX2.cpp APPEND PROPERTY COMPILE_OPTIONS ${OCIO_AVX2_ARGS})

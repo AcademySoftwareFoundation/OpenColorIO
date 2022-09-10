@@ -15,6 +15,11 @@
 #include "Platform.h"
 #include "SSE.h"
 
+#include "CPUInfo.h"
+#include "Lut1DOpCPU_SSE2.h"
+#include "Lut1DOpCPU_AVX.h"
+#include "Lut1DOpCPU_AVX2.h"
+
 
 #define L_ADJUST(val) \
     (T)((isOutInteger) ? Clamp((val)+0.5f, outMin,  outMax) : SanitizeFloat(val))
@@ -96,6 +101,8 @@ protected:
 
     float m_step = 1.0f;
     float m_dimMinusOne = 0.0f;
+
+    Lut1DOpCPUApplyFunc *m_applyLutFunc = nullptr;
 
 private:
     BaseLut1DRenderer() = delete;
@@ -270,6 +277,27 @@ BaseLut1DRenderer<inBD, outBD>::BaseLut1DRenderer(ConstLut1DOpDataRcPtr & lut)
 {
     static_assert(inBD!=BIT_DEPTH_UINT32 && inBD!=BIT_DEPTH_UINT14, "Unsupported bit depth.");
     update(lut);
+
+#if OCIO_USE_SSE2
+    if (CPUInfo::instance().hasSSE2())
+    {
+        m_applyLutFunc = SSE2GetLut1DApplyFunc(inBD, m_outBitDepth);
+    }
+#endif
+
+#if OCIO_USE_AVX
+    if (CPUInfo::instance().hasAVX())
+    {
+        m_applyLutFunc = AVXGetLut1DApplyFunc(inBD, outBD);
+    }
+#endif
+
+#if OCIO_USE_AVX2
+    if (CPUInfo::instance().hasAVX2() && !CPUInfo::instance().AVX2SlowGather())
+    {
+        m_applyLutFunc = AVX2GetLut1DApplyFunc(inBD, outBD);
+    }
+#endif
 }
 
 template<BitDepth inBD, BitDepth outBD>
@@ -280,6 +308,27 @@ BaseLut1DRenderer<inBD, outBD>::BaseLut1DRenderer(ConstLut1DOpDataRcPtr & lut, B
 {
     static_assert(inBD!=BIT_DEPTH_UINT32 && inBD!=BIT_DEPTH_UINT14, "Unsupported bit depth.");
     update(lut);
+
+#if OCIO_USE_SSE2
+    if (CPUInfo::instance().hasSSE2())
+    {
+        m_applyLutFunc = SSE2GetLut1DApplyFunc(inBD, m_outBitDepth);
+    }
+#endif
+
+#if OCIO_USE_AVX
+    if (CPUInfo::instance().hasAVX() && !CPUInfo::instance().AVXSlow())
+    {
+        m_applyLutFunc = AVXGetLut1DApplyFunc(inBD, m_outBitDepth);
+    }
+#endif
+
+#if OCIO_USE_AVX2
+    if (CPUInfo::instance().hasAVX2() && !CPUInfo::instance().AVX2SlowGather())
+    {
+        m_applyLutFunc = AVX2GetLut1DApplyFunc(inBD, m_outBitDepth);
+    }
+#endif
 }
 
 template<BitDepth inBD, BitDepth outBD>
@@ -591,6 +640,13 @@ void Lut1DRenderer<inBD, outBD>::apply(const void * inImg, void * outImg, long n
             in  += 4;
             out += 4;
         }
+    }
+    else if (this->m_applyLutFunc)
+    {
+        const float * lutR = (const float *)this->m_tmpLutR;
+        const float * lutG = (const float *)this->m_tmpLutG;
+        const float * lutB = (const float *)this->m_tmpLutB;
+        this->m_applyLutFunc(lutR, lutG, lutB, this->m_dim, inImg, outImg, numPixels);
     }
     else  // Need to interpolate rather than simply lookup.
     {
