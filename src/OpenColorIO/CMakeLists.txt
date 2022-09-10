@@ -20,6 +20,7 @@ set(SOURCES
     ConfigUtils.cpp
     Context.cpp
     ContextVariableUtils.cpp
+    CPUInfo.cpp
     CPUProcessor.cpp
     Display.cpp
     DynamicProperty.cpp
@@ -198,6 +199,7 @@ endif()
 
 configure_file(res/OpenColorIO.pc.in ${CMAKE_CURRENT_BINARY_DIR}/OpenColorIO.pc @ONLY)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/OpenColorIO.pc DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
+configure_file(CPUInfoConfig.h.in CPUInfoConfig.h)
 
 add_library(OpenColorIO ${SOURCES})
 
@@ -247,7 +249,7 @@ foreach(C ${CONFIGS_PATHS})
 
     # Append 0x00 to null-terminated the string.
     string(APPEND FORMATTED_HEX ",0x00")
-    
+
     # Set the dynamically named variable "${CONFIG_NAME}" to the config in HEX.
     set(${CONFIG_NAME} ${FORMATTED_HEX})
 endforeach()
@@ -270,6 +272,7 @@ set(BUILD_INCLUDES
     ${HEADER_LOCATION}
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${ABI_HEADER_LOCATION}
+    ${CMAKE_CURRENT_BINARY_DIR}
 )
 
 target_include_directories(OpenColorIO
@@ -377,20 +380,20 @@ elseif(APPLE)
         set(_minizip-ng_NAME "minizip")
     elseif(minizip-ng_LIBRARY)
         get_filename_component(_minizip-ng_LIBDIR "${minizip-ng_LIBRARY}" DIRECTORY)
-        set(_minizip-ng_NAME "minizip-ng")        
+        set(_minizip-ng_NAME "minizip-ng")
     endif()
 
     if (_minizip-ng_LIBDIR)
         # Add the path to CMake list of search paths for libraries.
         list(APPEND _OCIO_LINK_FLAGS_LIST_ "-Wl,-L${_minizip-ng_LIBDIR}")
         # Hide the minizip-ng symbols.
-        list(APPEND _OCIO_LINK_FLAGS_LIST_ "-Wl,-hidden-l${_minizip-ng_NAME}") 
-    endif()   
+        list(APPEND _OCIO_LINK_FLAGS_LIST_ "-Wl,-hidden-l${_minizip-ng_NAME}")
+    endif()
 
     if (_OCIO_LINK_FLAGS_LIST_)
         list(JOIN _OCIO_LINK_FLAGS_LIST_ ";" _OCIO_LINK_FLAGS_LIST_)
         set(CUSTOM_LINK_FLAGS "${CUSTOM_LINK_FLAGS};${_OCIO_LINK_FLAGS_LIST_}")
-    endif()              
+    endif()
 endif()
 
 set_target_properties(OpenColorIO PROPERTIES
