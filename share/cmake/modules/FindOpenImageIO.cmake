@@ -108,14 +108,29 @@ if (EXISTS "${OIIO_VERSION_HEADER}")
     set (OPENIMAGEIO_VERSION "${OPENIMAGEIO_VERSION_MAJOR}.${OPENIMAGEIO_VERSION_MINOR}.${OPENIMAGEIO_VERSION_PATCH}.${OPENIMAGEIO_VERSION_TWEAK}")
 endif ()
 
+set (OIIO_IMATH_HEADER "${OPENIMAGEIO_INCLUDE_DIR}/OpenImageIO/Imath.h")
+if (EXISTS "${OIIO_IMATH_HEADER}")
+    file (STRINGS "${OIIO_IMATH_HEADER}" TMP REGEX "^#define OIIO_USING_IMATH .*$")
+    string (REGEX MATCHALL "[0-9]" OIIO_IMATH_VERSION ${TMP})
+    if (OIIO_IMATH_VERSION LESS 3)
+        message(STATUS "Skipping OpenImageIO built against OpenEXR 2, please use version 3 or greater.")
+        return ()
+    endif ()
+endif ()
 
 include (FindPackageHandleStandardArgs)
-find_package_handle_standard_args (OpenImageIO
-    FOUND_VAR     OpenImageIO_FOUND
-    REQUIRED_VARS OPENIMAGEIO_INCLUDE_DIR OPENIMAGEIO_LIBRARY
-                  OPENIMAGEIO_VERSION
-    VERSION_VAR   OPENIMAGEIO_VERSION
-    )
+find_package_handle_standard_args (
+    OpenImageIO
+    FOUND_VAR
+        OpenImageIO_FOUND
+    REQUIRED_VARS
+        OPENIMAGEIO_INCLUDE_DIR
+        OPENIMAGEIO_LIBRARY
+        OPENIMAGEIO_VERSION
+    VERSION_VAR
+        OPENIMAGEIO_VERSION
+)
+
 set (OPENIMAGEIO_FOUND ${OpenImageIO_FOUND})  # Old name
 
 if (OpenImageIO_FOUND)

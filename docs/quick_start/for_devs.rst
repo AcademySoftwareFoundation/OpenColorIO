@@ -7,10 +7,11 @@
 Quick Start for Developers
 ==========================
 
-Get started by following the :ref:`installation` instructions to build OCIO from 
+Get started by following the :ref:`installation` instructions to build OCIO from
 source.  You will want to make sure to build the command-line tools as well as the
-library itself, so you should install OpenImageIO before building.  Note that 
-active development of OCIO v2 is happening in the main branch.
+library itself, so you should install OpenImageIO or OpenEXR before building
+(OCIO is now able to build the latter itself).  Note that active development of
+OCIO v2 is happening in the main branch.
 
 Grab the available configuration files (and the sample images, if you want) from
 :ref:`downloads`.

@@ -330,7 +330,7 @@ void CPUProcessor::Impl::finalize(const OpRcPtrVec & rawOps,
     m_cacheID = ss.str();
 }
 
-void CPUProcessor::Impl::apply(ImageDesc & imgDesc) const
+void CPUProcessor::Impl::apply(const ImageDesc & imgDesc) const
 {   
     // Get the ScanlineHelper for this thread (no significant performance impact).
     std::unique_ptr<ScanlineHelper> 
@@ -477,7 +477,7 @@ DynamicPropertyRcPtr CPUProcessor::getDynamicProperty(DynamicPropertyType type) 
     return getImpl()->getDynamicProperty(type);
 }
 
-void CPUProcessor::apply(ImageDesc & imgDesc) const
+void CPUProcessor::apply(const ImageDesc & imgDesc) const
 {
     getImpl()->apply(imgDesc);
 }
@@ -498,4 +498,3 @@ void CPUProcessor::applyRGBA(float * pixel) const
 }
 
 } // namespace OCIO_NAMESPACE
-

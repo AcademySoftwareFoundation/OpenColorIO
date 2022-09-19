@@ -15,10 +15,10 @@ tools use the -v argument for more verbose output.
 Many of the tools require you to first set the OCIO environment variable to
 point to the config file you want to use.
 
-Note that some tools depend on OpenImageIO and other libraries:
- * ociolutimage: OpenImageIO
- * ociodisplay: OpenImageIO, OpenGL, GLEW, GLUT
- * ocioconvert: OpenImageIO
+Note that some tools depend on OpenEXR or OpenImageIO and other libraries:
+ * ociolutimage: (OpenEXR or OpenImageIO)
+ * ociodisplay: (OpenEXR or OpenImageIO), OpenGL, GLEW, GLUT
+ * ocioconvert: (OpenEXR or OpenImageIO)
 
 .. TODO: link to build instructions
 .. TODO: check app lib dependencies
@@ -162,9 +162,9 @@ output color space or a (display,view) pair.
 Both CPU (default) and GPU renderers are supported. The --gpuinfo argument 
 may be used to output the shader program used by the GPU renderer.
 
-OpenImageIO is used for opening and saving files and modifying metadata, so a 
-wide range of formats are supported. Use the --help argument for more 
-information on to the available OpenImageIO options.
+Uses OpenImageIO or OpenEXR for opening and saving files and modifying
+metadata. Supported formats will vary depending on the use of OpenImageIO.
+Use the --help argument for more information on to the available options.
 
 .. TODO: Examples
 
@@ -176,9 +176,9 @@ ociodisplay
 
 An example image viewer demonstrating the OCIO C++ API. 
 
-Uses OpenImageIO to load images, and displays them using OCIO and 
+Uses OpenImageIO or OpenEXR to load images, and displays them using OCIO and
 typical viewer controls (scene-linear exposure control and a
-post-display gamma control). 
+post-display gamma control).
 
 May be useful to users to quickly check a color space configuration.
 
