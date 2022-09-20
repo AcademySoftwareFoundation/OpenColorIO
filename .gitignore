@@ -11,3 +11,4 @@ mastercopy
 *.pyc
 !*.yml
 .vscode
+.envrc
