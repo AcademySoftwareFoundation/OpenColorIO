@@ -237,6 +237,14 @@ OCIO_ADD_TEST(Baker, baking_config)
           to_reference: !<CDLTransform> {sat: 0.5}
 
         - !<ColorSpace>
+          name : Shaper_sRGB
+          isdata : false
+          to_reference: !<GroupTransform>
+            children:
+              - !<LogTransform> {base: 2, direction: inverse}
+              - !<MatrixTransform> {matrix: [3.2409, -1.5373, -0.4986, 0, -0.9692, 1.8759, 0.0415, 0, 0.0556, -0.2039, 1.0569, 0, 0, 0, 0, 1 ], direction: inverse}
+
+        - !<ColorSpace>
           name : sRGB
           isdata : false
           from_reference: !<GroupTransform>
@@ -458,4 +466,15 @@ OCIO_ADD_TEST(Baker, baking_config)
         "The specified shaper space, 'Crosstalk' has channel crosstalk, which "
         "is not appropriate for shapers. Please select an alternate shaper "
         "space or omit this option.");
+
+    // Using shaper space without Crosstalk (after optimization).
+    bake = OCIO::Baker::Create();
+    bake->setConfig(config);
+    bake->setInputSpace("sRGB");
+    bake->setTargetSpace("Raw");
+    bake->setShaperSpace("Shaper_sRGB");
+    bake->setFormat("cinespace");
+
+    os.str("");
+    OCIO_CHECK_NO_THROW(bake->bake(os))
 }

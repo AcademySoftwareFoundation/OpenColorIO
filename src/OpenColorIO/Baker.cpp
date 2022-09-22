@@ -376,10 +376,10 @@ void Baker::bake(std::ostream & os) const
 
     if(!shaperSpace.empty())
     {
-        ConstProcessorRcPtr inputToShaper = getConfig()->getProcessor(
-            inputSpace.c_str(), shaperSpace.c_str());
-        ConstProcessorRcPtr shaperToInput = getConfig()->getProcessor(
-            shaperSpace.c_str(), inputSpace.c_str());
+        ConstCPUProcessorRcPtr inputToShaper = getConfig()->getProcessor(
+            inputSpace.c_str(), shaperSpace.c_str())->getDefaultCPUProcessor();
+        ConstCPUProcessorRcPtr shaperToInput = getConfig()->getProcessor(
+            shaperSpace.c_str(), inputSpace.c_str())->getDefaultCPUProcessor();
 
         if(inputToShaper->hasChannelCrosstalk() || shaperToInput->hasChannelCrosstalk())
         {
