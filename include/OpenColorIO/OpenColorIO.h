@@ -1097,6 +1097,19 @@ public:
                                      const char * view,
                                      TransformDirection direction) const;
 
+    /// Get the processor to apply a NamedTransform in the specified direction.
+    ConstProcessorRcPtr getProcessor(const ConstNamedTransformRcPtr & namedTransform,
+                                     TransformDirection direction) const;
+    ConstProcessorRcPtr getProcessor(const ConstContextRcPtr & context,
+                                     const ConstNamedTransformRcPtr & namedTransform,
+                                     TransformDirection direction) const;
+
+    ConstProcessorRcPtr getProcessor(const char * namedTransformName,
+                                     TransformDirection direction) const;
+    ConstProcessorRcPtr getProcessor(const ConstContextRcPtr & context,
+                                     const char * namedTransformName,
+                                     TransformDirection direction) const;
+
     /**
      * \brief Get the processor for the specified transform.
      * 
