@@ -10,8 +10,6 @@
    .. py:method:: CPUProcessor.__init__(*args, **kwargs)
       :module: PyOpenColorIO
 
-      Initialize self.  See help(type(self)) for accurate signature.
-
 
    .. py:method:: CPUProcessor.apply(*args, **kwargs)
       :module: PyOpenColorIO

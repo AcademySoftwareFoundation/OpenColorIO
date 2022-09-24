@@ -19,8 +19,6 @@
       .. py:method:: NamedTransform.NamedTransformAliasIterator.__init__(*args, **kwargs)
          :module: PyOpenColorIO
 
-         Initialize self.  See help(type(self)) for accurate signature.
-
 
    .. py:method:: NamedTransform.__init__(*args, **kwargs)
       :module: PyOpenColorIO
@@ -113,7 +111,7 @@
       :module: PyOpenColorIO
 
 
-   .. py:method:: NamedTransform.setEncoding(self: PyOpenColorIO.NamedTransform, encodig: str) -> None
+   .. py:method:: NamedTransform.setEncoding(self: PyOpenColorIO.NamedTransform, encoding: str) -> None
       :module: PyOpenColorIO
 
 

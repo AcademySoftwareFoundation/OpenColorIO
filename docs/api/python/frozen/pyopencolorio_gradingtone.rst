@@ -13,29 +13,24 @@
       :module: PyOpenColorIO
 
 
-   .. py:method:: GradingTone.blacks
+   .. py:property:: GradingTone.blacks
       :module: PyOpenColorIO
-      :property:
 
 
-   .. py:method:: GradingTone.highlights
+   .. py:property:: GradingTone.highlights
       :module: PyOpenColorIO
-      :property:
 
 
-   .. py:method:: GradingTone.midtones
+   .. py:property:: GradingTone.midtones
       :module: PyOpenColorIO
-      :property:
 
 
-   .. py:method:: GradingTone.scontrast
+   .. py:property:: GradingTone.scontrast
       :module: PyOpenColorIO
-      :property:
 
 
-   .. py:method:: GradingTone.shadows
+   .. py:property:: GradingTone.shadows
       :module: PyOpenColorIO
-      :property:
 
 
    .. py:method:: GradingTone.validate(self: PyOpenColorIO.GradingTone) -> None
@@ -44,7 +39,6 @@
       The valid range for each parameter varies. The client is expected to enforce these bounds in the UI.
 
 
-   .. py:method:: GradingTone.whites
+   .. py:property:: GradingTone.whites
       :module: PyOpenColorIO
-      :property:
 

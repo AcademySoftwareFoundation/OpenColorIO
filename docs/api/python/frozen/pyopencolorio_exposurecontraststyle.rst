@@ -33,3 +33,7 @@
       :module: PyOpenColorIO
       :value: <ExposureContrastStyle.EXPOSURE_CONTRAST_VIDEO: 1>
 
+
+   .. py:property:: ExposureContrastStyle.value
+      :module: PyOpenColorIO
+

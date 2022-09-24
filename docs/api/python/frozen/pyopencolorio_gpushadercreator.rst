@@ -8,9 +8,10 @@
 
    Inherit from the class to fully customize the implementation of a GPU shader program from a color transformation.
 
-   When no customizations are needed then the :ref:`GpuShaderDesc` is a better choice.
+   When no customizations are needed and the intermediate in-memory step is acceptable then the :ref:`GpuShaderDesc` is a better choice.
 
-   To better decouple the DynamicProperties from their GPU implementation, the code provides several addUniform() methods i.e. one per access function types. For example, an :ref:`ExposureContrastTransform` instance owns three DynamicProperties and they are all implemented by a double. When creating the GPU fragment shader program, the addUniform() with :ref:`GpuShaderCreator::DoubleGetter` is called when property is dynamic, up to three times.
+   .. note::
+      To better decouple the DynamicProperties from their GPU implementation, the code provides several addUniform() methods i.e. one per access function types. For example, an :ref:`ExposureContrastTransform` instance owns three DynamicProperties and they are all implemented by a double. When creating the GPU fragment shader program, the addUniform() with :ref:`GpuShaderCreator::DoubleGetter` is called when property is dynamic, up to three times.
 
    **An OCIO shader program could contain:**
 
@@ -121,7 +122,7 @@
    .. py:method:: GpuShaderCreator.getNextResourceIndex(self: PyOpenColorIO.GpuShaderCreator) -> int
       :module: PyOpenColorIO
 
-      To avoid texture/unform name clashes always append an increasing number to the resource name.
+      To avoid global texture sampler and uniform name clashes always append an increasing index to the resource name.
 
 
    .. py:method:: GpuShaderCreator.getPixelName(self: PyOpenColorIO.GpuShaderCreator) -> str
@@ -199,6 +200,10 @@
    .. py:attribute:: TextureType.TEXTURE_RGB_CHANNEL
       :module: PyOpenColorIO.GpuShaderCreator
       :value: <TextureType.TEXTURE_RGB_CHANNEL: 1>
+
+
+   .. py:property:: TextureType.value
+      :module: PyOpenColorIO.GpuShaderCreator
 
 
 .. py:class:: DynamicPropertyIterator
