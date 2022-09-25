@@ -12,6 +12,7 @@
 #include "ops/gamma/GammaOp.h"
 #include "ops/lut1d/Lut1DOp.h"
 #include "ops/matrix/MatrixOp.h"
+#include "ops/range/RangeOp.h"
 #include "pystring/pystring.h"
 #include "transforms/FileTransform.h"
 
@@ -82,6 +83,14 @@ public:
 
 private:
     static void ThrowErrorMessage(const std::string & error, const std::string & fileName);
+
+    static void ValidateParametricCurve(icUInt16Number type,
+                                        icUInt16Number numParams,
+                                        const icS15Fixed16Number * params,
+                                        const std::string & fileName);
+    static float ApplyParametricCurve(float v,
+                                      icUInt16Number type,
+                                      const icS15Fixed16Number * params);
 };
 
 void LocalFileFormat::getFormatInfo(FormatInfoVec & formatInfoVec) const
@@ -235,6 +244,197 @@ LocalCachedFileRcPtr LocalFileFormat::ReadInfo(std::istream & istream,
     return cachedFile;
 }
 
+// Parametric curve must have correct numbers of arguments and the curve must
+// be monotically non-decreasing (flat segments allowed).
+// More information can be found in:
+// https://www.color.org/whitepapers/ICC_White_Paper35-Use_of_the_parametricCurveType.pdf
+void LocalFileFormat::ValidateParametricCurve(icUInt16Number type,
+                                              icUInt16Number numParams,
+                                              const icS15Fixed16Number * params,
+                                              const std::string & fileName)
+{
+    auto ThrowParaError = [=](const std::string & msg)
+    {
+        std::ostringstream oss;
+        oss << "Error parsing ICC Parametric Curve (with arguments ";
+        for (int i = 0; i < numParams; ++i)
+        {
+            if (i != 0)
+            {
+                oss << " ";
+            }
+            oss << SampleICC::icFtoD(params[i]);
+        }
+        oss << "): " << msg;
+        ThrowErrorMessage(oss.str(), fileName);
+    };
+
+    auto QuantizeF = [](float v) -> float
+    {
+        return std::lround(v * 1023) / 1023.0f;
+    };
+
+    // Expected number of arguments
+    const std::map<icUInt16Number, icUInt16Number> NParamsPerType = {
+        {0 , 1},
+        {1 , 3},
+        {2 , 4},
+        {3 , 5},
+        {4 , 7},
+    };
+
+    if (NParamsPerType.count(type) == 0)
+    {
+        ThrowParaError("Unknown parametric curve type.");
+    }
+
+    if (numParams != NParamsPerType.at(type))
+    {
+        std::ostringstream oss;
+        oss << "Expecting " << NParamsPerType.at(type) << "param(s).";
+        ThrowParaError(oss.str());
+    }
+
+    // Monotically non-decreasing (flat segments permitted)
+    const float g = SampleICC::icFtoD(params[0]);
+
+    // Forces the power law to be monotically non-decreasing.
+    if (g <= 0.0)
+    {
+        ThrowParaError("Expecting monotically non-decreasing power-law.");
+    }
+
+    // Forces the argument to the power law to be an increasing function.
+    if (type != 0)
+    {
+        const float a = SampleICC::icFtoD(params[1]);
+        if (a <= 0.0)
+        {
+            ThrowParaError("Expecting strictly increasing argument to power-law.");
+        }
+    }
+
+    // Forces the linear segment to be flat or increasing.
+    if (type == 3 || type == 4)
+    {
+        const float c = SampleICC::icFtoD(params[3]);
+        if (c < 0.0)
+        {
+            ThrowParaError("Expecting flat or increasing linear segment.");
+        }
+    }
+
+    // Look for negative discontinuity at the linear segment / power law boundary.
+    if (type == 3)
+    {
+        const float a = SampleICC::icFtoD(params[1]);
+        const float b = SampleICC::icFtoD(params[2]);
+        const float c = SampleICC::icFtoD(params[3]);
+        const float d = SampleICC::icFtoD(params[4]);
+
+        float lin_segment_break = QuantizeF(c * d);
+        float power_law_break = QuantizeF(std::pow(a * d + b, g));
+
+        if (lin_segment_break > power_law_break)
+        {
+            ThrowParaError( "Expecting no negative discontinuity at linear segment boundary.");
+        }
+    }
+    else if (type == 4)
+    {
+        const float a = SampleICC::icFtoD(params[1]);
+        const float b = SampleICC::icFtoD(params[2]);
+        const float c = SampleICC::icFtoD(params[3]);
+        const float d = SampleICC::icFtoD(params[4]);
+        const float e = SampleICC::icFtoD(params[5]);
+        const float f = SampleICC::icFtoD(params[6]);
+
+        float lin_segment_break = QuantizeF(c * d + f);
+        float power_law_break = QuantizeF(std::pow(a * d + b, g) + e);
+
+        if (lin_segment_break > power_law_break)
+        {
+            ThrowParaError("Expecting no negative discontinuity at linear segment boundary.");
+        }
+    }
+
+    // No complex / imaginary numbers
+    if (type == 3 || type == 4)
+    {
+        const float a = SampleICC::icFtoD(params[1]);
+        const float b = SampleICC::icFtoD(params[2]);
+        const float d = SampleICC::icFtoD(params[4]);
+
+        if ((a * d + b) < 0)
+        {
+            ThrowParaError("Expecting no negative arguments to the power law.");
+        }
+    }
+}
+
+// Apply Parametric curve to a single float value.
+// ICC specify these functions shall clip any values outside [0.0, 1.0] range.
+float LocalFileFormat::ApplyParametricCurve(float v,
+                                            icUInt16Number type,
+                                            const icS15Fixed16Number * params)
+{
+    v = std::min(std::max(0.0f, v), 1.0f);
+
+    // Type 1:
+    // y = (ax+b)^g  (x >= -b/a)
+    // y = 0         (x < -b/a)
+    if (type == 1)
+    {
+        const float g = SampleICC::icFtoD(params[0]);
+        const float a = SampleICC::icFtoD(params[1]);
+        const float b = SampleICC::icFtoD(params[2]);
+
+        v = v >= (-b / a) ? std::pow(a * v + b, g) : 0.0f;
+    }
+    // Type 2:
+    // y = (ax+b)^g + c  (x >= -b/a)
+    // y = c             (x < -b/a)
+    else if (type == 2)
+    {
+        const float g = SampleICC::icFtoD(params[0]);
+        const float a = SampleICC::icFtoD(params[1]);
+        const float b = SampleICC::icFtoD(params[2]);
+        const float c = SampleICC::icFtoD(params[3]);
+
+        v = v >= (-b / a) ? std::pow(a * v + b, g) + c : c;
+    }
+    // Type 3:
+    // y = (ax+b)^g  (x >= d)
+    // y = cx        (x < d)
+    else if (type == 3)
+    {
+        const float g = SampleICC::icFtoD(params[0]);
+        const float a = SampleICC::icFtoD(params[1]);
+        const float b = SampleICC::icFtoD(params[2]);
+        const float c = SampleICC::icFtoD(params[3]);
+        const float d = SampleICC::icFtoD(params[4]);
+
+        v = v >= d ? std::pow(a * v + b, g) : c * v;
+    }
+    // Type 4:
+    // y = (ax+b)^g + e  (x >= d)
+    // y = cx+f          (x < d)
+    else if (type == 4)
+    {
+        const float g = SampleICC::icFtoD(params[0]);
+        const float a = SampleICC::icFtoD(params[1]);
+        const float b = SampleICC::icFtoD(params[2]);
+        const float c = SampleICC::icFtoD(params[3]);
+        const float d = SampleICC::icFtoD(params[4]);
+        const float e = SampleICC::icFtoD(params[5]);
+        const float f = SampleICC::icFtoD(params[6]);
+
+        v = v >= d ? std::pow(a * v + b, g) + e : c * v + f;
+    }
+
+    return std::min(std::max(0.0f, v), 1.0f);
+}
+
 // Try and load the format
 // Raise an exception if it can't be loaded.
 CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
@@ -313,19 +513,55 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
             ThrowErrorMessage(strSameType, fileName);
         }
 
-        if (red->GetNumParam() != 1
-            || green->GetNumParam() != 1
-            || blue->GetNumParam() != 1)
+        // Red, Green and blue curves must be of the same function type.
+        if (red->GetFunctionType() != green->GetFunctionType()
+            || red->GetFunctionType() != blue->GetFunctionType())
         {
-            ThrowErrorMessage(
-                "Expecting 1 param in parametric curve tag of ICC profile.",
-                fileName);
+            ThrowErrorMessage(strSameType, fileName);
         }
 
-        cachedFile->mGammaRGB[0] = SampleICC::icFtoD(red->GetParam()[0]);
-        cachedFile->mGammaRGB[1] = SampleICC::icFtoD(green->GetParam()[0]);
-        cachedFile->mGammaRGB[2] = SampleICC::icFtoD(blue->GetParam()[0]);
-        cachedFile->mGammaRGB[3] = 1.0f;
+        ValidateParametricCurve(
+            red->GetFunctionType(), red->GetNumParam(), red->GetParam(), fileName);
+        ValidateParametricCurve(
+            green->GetFunctionType(), green->GetNumParam(), green->GetParam(), fileName);
+        ValidateParametricCurve(
+            blue->GetFunctionType(), blue->GetNumParam(), blue->GetParam(), fileName);
+
+        // Handle type 0 with a GammaOp.
+        if (red->GetFunctionType() == 0)
+        {
+            if (red->GetNumParam() != 1
+                || green->GetNumParam() != 1
+                || blue->GetNumParam() != 1)
+            {
+                ThrowErrorMessage(
+                    "Expecting 1 param in parametric curve tag (type 0) of ICC profile.",
+                    fileName);
+            }
+
+            cachedFile->mGammaRGB[0] = SampleICC::icFtoD(red->GetParam()[0]);
+            cachedFile->mGammaRGB[1] = SampleICC::icFtoD(green->GetParam()[0]);
+            cachedFile->mGammaRGB[2] = SampleICC::icFtoD(blue->GetParam()[0]);
+            cachedFile->mGammaRGB[3] = 1.0f;
+        }
+        // Handle type 1-4 with a 1DLUTOp.
+        else
+        {
+            const auto lutLength = 1024;
+            cachedFile->lut = std::make_shared<Lut1DOpData>(lutLength);
+            cachedFile->lut->setFileOutputBitDepth(BIT_DEPTH_F32);
+
+            auto & lutData = cachedFile->lut->getArray();
+
+            for (unsigned long i = 0; i < lutLength; ++i)
+            {
+                float v = i / (lutLength - 1.f);
+
+                lutData[i * 3 + 0] = ApplyParametricCurve(v, red->GetFunctionType(), red->GetParam());
+                lutData[i * 3 + 1] = ApplyParametricCurve(v, green->GetFunctionType(), green->GetParam());
+                lutData[i * 3 + 2] = ApplyParametricCurve(v, blue->GetFunctionType(), blue->GetParam());
+            }
+        }
     }
     else
     {
@@ -494,6 +730,9 @@ LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
             CreateGammaOp(ops, gamma, TRANSFORM_DIR_FORWARD);
         }
 
+        // Curves / ParaCurves operates in the range 0.0 to 1.0 as per ICC specifications.
+        CreateRangeOp(ops, 0, 1, 0, 1, TRANSFORM_DIR_FORWARD);
+
         CreateMatrixOp(ops, cachedFile->mMatrix44, TRANSFORM_DIR_FORWARD);
 
         CreateMatrixOp(ops, D50_to_D65_m44, TRANSFORM_DIR_FORWARD);
@@ -526,6 +765,8 @@ LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
                                                        greenParams,
                                                        blueParams,
                                                        alphaParams);
+
+            CreateRangeOp(ops, 0, 1, 0, 1, TRANSFORM_DIR_FORWARD);
 
             CreateGammaOp(ops, gamma, TRANSFORM_DIR_FORWARD);
         }
@@ -567,4 +808,3 @@ std::string GetProfileDescriptionFromICCProfile(const char * ICCProfileFilepath)
 }
 
 } // namespace OCIO_NAMESPACE
-
