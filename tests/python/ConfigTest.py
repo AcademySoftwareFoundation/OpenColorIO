@@ -10,7 +10,8 @@ import PyOpenColorIO as OCIO
 from UnitTestUtils import (SIMPLE_CONFIG_VIRTUAL_DISPLAY,
                            SIMPLE_CONFIG_VIRTUAL_DISPLAY_ACTIVE_DISPLAY,
                            SIMPLE_CONFIG_VIRTUAL_DISPLAY_V1,
-                           SIMPLE_CONFIG_VIRTUAL_DISPLAY_EXCEPTION)
+                           SIMPLE_CONFIG_VIRTUAL_DISPLAY_EXCEPTION,
+                           TEST_DATAFILES_DIR)
 
 # Legacy tests kept for reference.
 #
@@ -975,6 +976,183 @@ colorspaces:
             )
         finally:
             OCIO.UnsetEnvVariable('OCIO')
+
+    def test_create_from_archive(self):
+        # CreateFromFile using an archive built on Windows.
+        ocioz_file = os.path.normpath(
+            os.path.join(
+                TEST_DATAFILES_DIR, 'configs', 'context_test1', 'context_test1_windows.ocioz'
+            )
+        )
+        config = OCIO.Config.CreateFromFile(ocioz_file)
+        config.validate()
+        
+        # Simple check on the number of color spaces in the test config.
+        self.assertEqual(len(config.getColorSpaceNames()), 13)
+
+        # Simple test to exercice ConfigIOProxy.
+        processor = config.getProcessor("plain_lut1_cs", "shot1_lut1_cs")
+        processor.getDefaultCPUProcessor()
+
+        # CreateFromFile using an archive built with Unix-style path.
+        ocioz_file = os.path.normpath(
+            os.path.join(
+                TEST_DATAFILES_DIR, 'configs', 'context_test1', 'context_test1_linux.ocioz'
+            )
+        )
+        config = OCIO.Config.CreateFromFile(ocioz_file)
+        config.validate()
+        
+        # Simple check on the number of color spaces in the test config.
+        self.assertEqual(len(config.getColorSpaceNames()), 13)
+
+        # Simple test to exercice ConfigIOProxy.
+        processor = config.getProcessor("plain_lut1_cs", "shot1_lut1_cs")
+        processor.getDefaultCPUProcessor()
+
+        # Empty OCIOZ archive.
+        ocioz_file = os.path.normpath(
+            os.path.join(
+                TEST_DATAFILES_DIR, 'configs', 'ocioz_archive_configs', 'empty.ocioz'
+            )
+        )
+        with self.assertRaises(OCIO.Exception):
+            OCIO.Config.CreateFromFile(ocioz_file)
+
+        # Missing config file but contains LUTs files.
+        ocioz_file = os.path.normpath(
+            os.path.join(
+                TEST_DATAFILES_DIR, 'configs', 'ocioz_archive_configs', 'missing_config.ocioz'
+            )
+        )
+        with self.assertRaises(OCIO.Exception):
+            OCIO.Config.CreateFromFile(ocioz_file)
+
+        # Missing config file but contains LUTs files.
+        ocioz_file = os.path.normpath(
+            os.path.join(
+                TEST_DATAFILES_DIR, 'configs', 'ocioz_archive_configs', 'config_missing_luts.ocioz'
+            )
+        )
+
+        config = OCIO.Config.CreateFromFile(ocioz_file)
+        # The following validation will succeed because validate() does not try to fetch the LUT
+        # files. It resolves the context variables in the paths string.
+        config.validate()
+
+        with self.assertRaises(OCIO.Exception):
+            config.getProcessor("plain_lut1_cs", "shot1_lut1_cs")
+
+    def test_create_from_config_io_proxy(self):
+        
+        # Simulate that the config and LUT are in memory by initializing three variables
+        # simple_config is the config
+
+        SIMPLE_CONFIG = """ocio_profile_version: 2
+search_path: "my_unique_luts"
+strictparsing: true
+luma: [0.2126, 0.7152, 0.0722]
+
+roles:
+  default: raw
+  scene_linear: c1
+
+displays:
+  sRGB:
+    - !<View> {name: Raw, colorspace: raw}
+
+active_displays: []
+active_views: []
+
+colorspaces:
+
+  - !<ColorSpace>
+    name: raw
+    isdata: true
+
+  - !<ColorSpace>
+    name: c1
+    to_reference: !<FileTransform> {src: my_unique_lut1.clf}
+
+  - !<ColorSpace>
+    name: c2
+    to_reference: !<FileTransform> {src: my_unique_lut2.clf}
+"""
+
+        C1_LUT = """<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList id="none" compCLFversion="3.0">
+    <Matrix inBitDepth="32f" outBitDepth="32f">
+        <Array dim="3 3">
+1 0 0
+0 1 0
+0 0 1
+        </Array>
+    </Matrix>
+</ProcessList>
+"""
+
+        C2_LUT = """<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList id="none" compCLFversion="3.0">
+    <Matrix inBitDepth="32f" outBitDepth="32f">
+        <Array dim="3 3">
+2 0 0
+0 2 0
+0 0 2
+        </Array>
+    </Matrix>
+</ProcessList>
+"""
+
+        class CIOPTest(OCIO.PyConfigIOProxy):
+            def getConfigData(self):
+                # This implementation is only to demonstrate the functionality.
+
+                # Simulate that the config is coming from some kind of in-memory location.
+                return SIMPLE_CONFIG
+
+            def getLutData(self, buffer, filepath):
+                # This implementation is only to demonstrate the functionality.
+
+                # Simulate that the LUT are coming from some kind of in-memory location.
+
+                if filepath == os.path.join('my_unique_luts', 'my_unique_lut1.clf'):
+                    encoded_c1_lut = C1_LUT.encode('utf-8')
+                    lst = list(encoded_c1_lut)
+                    for c in lst:
+                        buffer.append(c)
+                elif filepath == os.path.join('my_unique_luts', 'my_unique_lut2.clf'):
+                    encoded_c2_lut = C2_LUT.encode('utf-8')
+                    lst = list(encoded_c2_lut)
+                    for c in lst:
+                        buffer.append(c)
+
+            def getFastLutFileHash(self, filepath):
+                # This implementation is only to demonstrate the functionality.
+
+                def lutExists(filepath):
+                    if filepath == os.path.join('my_unique_luts', 'my_unique_lut1.clf'):
+                        return True
+                    elif filepath == os.path.join('my_unique_luts', 'my_unique_lut2.clf'):
+                        return True
+                    return False
+
+                # Check if the file exists.
+                if lutExists(filepath):
+                    # This is a bad hash, but using the filename as hash for simplicity and 
+                    # demonstration purpose.
+                    hash = filepath
+                return hash
+
+        ciop = CIOPTest()
+        config = OCIO.Config.CreateFromConfigIOProxy(ciop)
+        config.validate()
+
+        # Simple check on the number of color spaces in the test config.
+        self.assertEqual(len(config.getColorSpaceNames()), 3)
+
+        # Simple test to exercice ConfigIOProxy.
+        processor = config.getProcessor("c1", "c2")
+        processor.getDefaultCPUProcessor()
 
 class ConfigVirtualWithActiveDisplayTest(unittest.TestCase):
     def setUp(self):

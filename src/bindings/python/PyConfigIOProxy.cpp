@@ -1,0 +1,64 @@
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright Contributors to the OpenColorIO Project.
+
+#include <iostream>
+#include <memory>
+
+#include "PyOpenColorIO.h"
+#include "PyUtils.h"
+
+#include <pybind11/stl.h>
+#include <pybind11/stl_bind.h>
+
+PYBIND11_MAKE_OPAQUE(std::vector<uint8_t>);
+
+namespace OCIO_NAMESPACE
+{
+struct PyConfigIOProxy : ConfigIOProxy
+{
+    using ConfigIOProxy::ConfigIOProxy;
+
+    void getLutData(std::vector<uint8_t> & buffer, const char * filepath) const override
+    {
+        py::object dummy = py::cast(&buffer);
+        PYBIND11_OVERRIDE_PURE(
+            void,
+            ConfigIOProxy,                  // Parent class
+            getLutData,                     // Name of function in C++ (must match Python name)
+            buffer,
+            filepath                        // Argument(s)
+        );
+    }
+
+    const std::string getConfigData() const override
+    {
+        PYBIND11_OVERRIDE_PURE(
+            std::string,
+            ConfigIOProxy,                  // Parent class
+            getConfigData,                  // Name of function in C++ (must match Python name)
+        );
+    }
+
+    const std::string getFastLutFileHash(const char * filepath) const override
+    {
+        PYBIND11_OVERRIDE_PURE(
+            std::string,                    // Return type
+            ConfigIOProxy,                  // Parent class
+            getFastLutFileHash,             // Name of function in C++ (must match Python name)
+            filepath                        // Argument(s)
+        );
+    }
+};
+
+void bindPyConfigIOProxy(py::module & m)
+{
+    py::bind_vector<std::vector<uint8_t>>(m, "vector_of_uint8_t");
+
+    py::class_<ConfigIOProxy, std::shared_ptr<ConfigIOProxy>, PyConfigIOProxy>(m, "PyConfigIOProxy")
+        .def(py::init())
+        .def("getLutData", &ConfigIOProxy::getLutData)
+        .def("getConfigData", &ConfigIOProxy::getConfigData)
+        .def("getFastLutFileHash", &ConfigIOProxy::getFastLutFileHash);
+}
+
+}

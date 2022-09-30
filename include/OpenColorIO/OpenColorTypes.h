@@ -114,6 +114,10 @@ class OCIOEXPORT GradingRGBCurve;
 typedef OCIO_SHARED_PTR<const GradingRGBCurve> ConstGradingRGBCurveRcPtr;
 typedef OCIO_SHARED_PTR<GradingRGBCurve> GradingRGBCurveRcPtr;
 
+class OCIOEXPORT ConfigIOProxy;
+typedef OCIO_SHARED_PTR<const ConfigIOProxy> ConstConfigIOProxyRcPtr;
+typedef OCIO_SHARED_PTR<ConfigIOProxy> ConfigIOProxyRcPtr;
+
 typedef std::array<float, 3> Float3;
 
 
@@ -959,6 +963,13 @@ extern OCIOEXPORT const char * OCIO_DISABLE_PROCESSOR_CACHES;
 extern OCIOEXPORT const char * OCIO_DISABLE_CACHE_FALLBACK;
 
 /** @}*/
+
+
+// Archive config feature
+// Default filename (with extension) of an config.
+extern OCIOEXPORT const char * OCIO_CONFIG_DEFAULT_NAME;
+extern OCIOEXPORT const char * OCIO_CONFIG_DEFAULT_FILE_EXT;
+extern OCIOEXPORT const char * OCIO_CONFIG_ARCHIVE_FILE_EXT;
 
 } // namespace OCIO_NAMESPACE
 

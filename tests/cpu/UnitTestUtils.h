@@ -127,6 +127,21 @@ struct EnvironmentVariableGuard
     const std::string m_name;
 };
 
+/**
+ * @brief Create a Temporary Directory
+ * 
+ * @param name Name of the directory
+ * @return std::string Full path to the directory
+ */
+std::string CreateTemporaryDirectory(const std::string & name);
+
+/**
+ * @brief Remove the directory specified in the path.
+ * 
+ * @param directoryPath Path to the directory
+ */
+void RemoveTemporaryDirectory(const std::string & directoryPath);
+
 }
 // namespace OCIO_NAMESPACE
 

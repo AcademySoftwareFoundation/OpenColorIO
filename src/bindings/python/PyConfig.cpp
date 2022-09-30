@@ -200,6 +200,8 @@ void bindPyConfig(py::module & m)
 
         .def_static("CreateFromBuiltinConfig", &Config::CreateFromBuiltinConfig, 
                     DOC(Config, CreateFromBuiltinConfig))
+        .def_static("CreateFromConfigIOProxy", &Config::CreateFromConfigIOProxy,
+                    DOC(Config, CreateFromConfigIOProxy))
         .def("getMajorVersion", &Config::getMajorVersion, 
              DOC(Config, getMajorVersion))
         .def("setMajorVersion", &Config::setMajorVersion, "major"_a, 
@@ -555,7 +557,7 @@ void bindPyConfig(py::module & m)
         .def("clearViewTransforms", &Config::clearViewTransforms, 
              DOC(Config, clearViewTransforms))
 
-        // Named Transforms.
+        // Named Transforms
         .def("getNamedTransform", &Config::getNamedTransform, "name"_a)
 
         .def("getNamedTransformNames", [](ConfigRcPtr & self,
@@ -729,7 +731,18 @@ void bindPyConfig(py::module & m)
 
         .def("setProcessorCacheFlags", &Config::setProcessorCacheFlags, "flags"_a, 
              DOC(Config, setProcessorCacheFlags))
-                
+
+        // Archiving
+        .def("isArchivable", &Config::isArchivable, DOC(Config, isArchivable))
+        .def("archive", [](ConfigRcPtr & self, const std::string filepath) 
+            {
+                std::ofstream f(filepath.c_str(), std::ofstream::out | std::ofstream::binary);
+                self->archive(f);
+                f.close(); 
+            }, 
+            DOC(Config, isArchivable))
+
+        // Conversion to string
         .def("__str__", [](ConfigRcPtr & self)
             {
                 std::ostringstream os;
@@ -1207,6 +1220,9 @@ void bindPyConfig(py::module & m)
           DOC(PyOpenColorIO, GetCurrentConfig));
     m.def("SetCurrentConfig", &SetCurrentConfig, "config"_a, 
           DOC(PyOpenColorIO, SetCurrentConfig));
+
+    m.def("ExtractOCIOZArchive", &ExtractOCIOZArchive, 
+          DOC(PyOpenColorIO, ExtractOCIOZArchive));
 }
 
 } // namespace OCIO_NAMESPACE

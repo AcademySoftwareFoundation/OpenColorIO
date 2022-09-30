@@ -8813,3 +8813,268 @@ OCIO_ADD_TEST(Config, create_builtin_config)
         );
     }
 }
+
+OCIO_ADD_TEST(Config, create_from_archive)
+{
+    {
+        // CreateFromFile using an archive built on Windows.
+        std::vector<std::string> paths = { 
+            std::string(OCIO::GetTestFilesDir()),
+            std::string("configs"),
+            std::string("context_test1"),
+            std::string("context_test1_windows.ocioz")
+        }; 
+
+        const std::string archivePath = pystring::os::path::normpath(
+            pystring::os::path::join(paths)
+        );
+
+        OCIO::ConstConfigRcPtr config;
+
+        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromFile(archivePath.c_str()));
+        OCIO_REQUIRE_ASSERT(config);
+        OCIO_CHECK_NO_THROW(config->validate());
+
+        // Simple check on the number of color spaces in the test config.
+        OCIO_CHECK_EQUAL(config->getNumColorSpaces(), 13);
+
+        // Simple test to exercise ConfigIOProxy.
+        OCIO::ConstProcessorRcPtr proc;
+        OCIO_CHECK_NO_THROW(proc = config->getProcessor("plain_lut1_cs", "shot1_lut1_cs"));
+        OCIO_REQUIRE_ASSERT(proc);
+        OCIO_CHECK_NO_THROW(proc->getDefaultCPUProcessor());
+    }
+
+    {
+        // CreateFromFile using an archive built with Unix-style path.
+        std::vector<std::string> paths = { 
+            std::string(OCIO::GetTestFilesDir()),
+            std::string("configs"),
+            std::string("context_test1"),
+            std::string("context_test1_linux.ocioz")
+        }; 
+
+        const std::string archivePath = pystring::os::path::normpath(
+            pystring::os::path::join(paths)
+        );
+
+        OCIO::ConstConfigRcPtr config;
+
+        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromFile(archivePath.c_str()));
+        OCIO_REQUIRE_ASSERT(config);
+        OCIO_CHECK_NO_THROW(config->validate());
+
+        // Simple check on the number of color spaces in the test config.
+        OCIO_CHECK_EQUAL(config->getNumColorSpaces(), 13);
+
+        // Simple test to exercise ConfigIOProxy.
+        OCIO::ConstProcessorRcPtr proc;
+        OCIO_CHECK_NO_THROW(proc = config->getProcessor("plain_lut1_cs", "shot1_lut1_cs"));
+        OCIO_REQUIRE_ASSERT(proc);
+        OCIO_CHECK_NO_THROW(proc->getDefaultCPUProcessor());
+    }
+
+    // Scenario with incomplete OCIOZ archive.
+    {
+        // Empty OCIOZ archive.
+        std::vector<std::string> paths = { 
+            std::string(OCIO::GetTestFilesDir()),
+            std::string("configs"),
+            std::string("ocioz_archive_configs"),
+            std::string("empty.ocioz")
+        }; 
+
+        const std::string archivePath = pystring::os::path::normpath(
+            pystring::os::path::join(paths)
+        );
+
+        OCIO_CHECK_THROW_WHAT(
+            OCIO::Config::CreateFromFile(archivePath.c_str()),
+            OCIO::Exception,
+            "Loading the OCIO profile failed. At line 0, '' parsing failed: The specified OCIO "\
+            "configuration file from Archive/ConfigIOProxy does not appear to have a valid version"\
+            " <null>"
+        );
+    }
+
+    {
+        // Missing config file but contains LUT files.
+        std::vector<std::string> paths = { 
+            std::string(OCIO::GetTestFilesDir()),
+            std::string("configs"),
+            std::string("ocioz_archive_configs"),
+            std::string("missing_config.ocioz")
+        }; 
+
+        const std::string archivePath = pystring::os::path::normpath(
+            pystring::os::path::join(paths)
+        );
+
+        OCIO_CHECK_THROW_WHAT(
+            OCIO::Config::CreateFromFile(archivePath.c_str()),
+            OCIO::Exception,
+            "Loading the OCIO profile failed. At line 0, '' parsing failed: The specified OCIO "\
+            "configuration file from Archive/ConfigIOProxy does not appear to have a valid version"\
+            " <null>"
+        );
+    }
+
+    {
+        // Missing LUT files but contains config file.
+        // FileTransform will requests a file that is not in the archive.
+
+        std::vector<std::string> paths = { 
+            std::string(OCIO::GetTestFilesDir()),
+            std::string("configs"),
+            std::string("ocioz_archive_configs"),
+            std::string("config_missing_luts.ocioz")
+        }; 
+
+        const std::string archivePath = pystring::os::path::normpath(
+            pystring::os::path::join(paths)
+        );
+
+        OCIO::ConstConfigRcPtr config;
+        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromFile(archivePath.c_str()));
+        OCIO_REQUIRE_ASSERT(config);
+        // The following validation will succeed because validate() does not try to fetch the LUT
+        // files. It resolves the context variables in the paths string.
+        OCIO_CHECK_NO_THROW(config->validate());
+
+
+        // Trying to getProcessor from ocioz archive without any LUT files but the config needs them.
+        // Will throw in resolveFileLocation.
+#ifdef _WIN32
+        OCIO_CHECK_THROW_WHAT(
+            config->getProcessor("plain_lut11_cs", "shot1_lut11_cs"),
+            OCIO::Exception,
+            "The specified file reference 'lut11.clf' could not be located. The following "\
+            "attempts were made: 'shot4\\lut11.clf' : 'shot1\\lut11.clf' : 'shot2\\lut11.clf' : "\
+            "'shot3\\lut11.clf' : 'shot3\\subdir\\lut11.clf' : '.\\lut11.clf'."
+        );
+#else
+        OCIO_CHECK_THROW_WHAT(
+            config->getProcessor("plain_lut11_cs", "shot1_lut11_cs"),
+            OCIO::Exception,
+            "The specified file reference 'lut11.clf' could not be located. The following "\
+            "attempts were made: 'shot4/lut11.clf' : 'shot1/lut11.clf' : 'shot2/lut11.clf' : "\
+            "'shot3/lut11.clf' : 'shot3/subdir/lut11.clf' : './lut11.clf'."
+        );
+#endif
+    }
+}
+
+OCIO_ADD_TEST(Config, create_from_config_io_proxy)
+{
+    std::vector<std::string> paths = { 
+        std::string(OCIO::GetTestFilesDir()),
+        std::string("configs"),
+        std::string("context_test1"),
+        std::string("config.ocio"),
+    };                    
+    static const std::string configPath = pystring::os::path::normpath(
+        pystring::os::path::join(paths)
+    );
+
+    {
+        // Provide a very minimal implementation of the ConfigIOProxy.
+        // (It's primitive but meets the needs of this test.)
+        class CIOPTest : public OCIO::ConfigIOProxy
+        {
+        public:
+            inline const std::string getConfigData() const override
+            {
+                // Get config data from filesystem, database, memory, etc.
+                // In this example, the config is simply coming from the filesystem.
+                // Return a stream to the config.
+                std::ifstream fstream(
+                    OCIO::Platform::filenameToUTF(configPath).c_str(), std::ios_base::in);
+                if (fstream.fail())
+                {
+                    std::ostringstream os;
+                    os << "Error could not read config file : " << configPath;
+                    throw OCIO::Exception (os.str().c_str());
+                }
+
+                std::stringstream buffer;
+                buffer << fstream.rdbuf();
+                return buffer.str();
+            }
+
+            inline void getLutData(
+                std::vector<uint8_t> & buffer, 
+                const char * filepath) const override
+            {
+                std::vector<std::string> paths = { 
+                    std::string(OCIO::GetTestFilesDir()),
+                    std::string("configs"),
+                    std::string("context_test1"),
+                    std::string(filepath),
+                };                    
+                const std::string lutPath = pystring::os::path::normpath(
+                    pystring::os::path::join(paths)
+                );
+
+                std::ifstream fstream(
+                    OCIO::Platform::filenameToUTF(lutPath).c_str(), 
+                    std::ios_base::in | std::ios_base::binary | std::ios::ate
+                );
+                if (fstream.fail())
+                {
+                    std::ostringstream os;
+                    os << "Error could not read LUT file : " << lutPath;
+                    throw OCIO::Exception (os.str().c_str());
+                }
+
+                const auto eofPosition = static_cast<std::streamoff>(fstream.tellg());
+                buffer.resize(eofPosition);
+                fstream.seekg(0, std::ios::beg);
+                fstream.read(reinterpret_cast<char*>(buffer.data()), eofPosition);
+            }
+
+            const std::string getFastLutFileHash(const char * filename) const override
+            {
+                std::vector<std::string> paths = { 
+                    std::string(OCIO::GetTestFilesDir()),
+                    std::string("configs"),
+                    std::string("context_test1"),
+                    std::string(filename),
+                };                    
+                const std::string lutPath = pystring::os::path::normpath(
+                    pystring::os::path::join(paths)
+                );
+
+                // Check if the file is present.
+                std::ifstream f(OCIO::Platform::filenameToUTF(lutPath).c_str(), std::ios_base::in);
+                if (f.good())
+                {
+                    // This is a bad hash, simply using the filename as the hash for simplicity and 
+                    // demonstration purposes.
+                    return lutPath;
+                }
+
+                // The ifstream above is closed at the end of the scope by its destructor.
+                // Return empty since the file couldn't be found.
+                return "";
+            }
+        };
+
+        std::shared_ptr<CIOPTest> ciop = std::shared_ptr<CIOPTest>(
+            new CIOPTest()
+        );
+        
+        OCIO::ConstConfigRcPtr config;
+        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromConfigIOProxy(ciop));
+        OCIO_REQUIRE_ASSERT(config);
+        OCIO_CHECK_NO_THROW(config->validate());
+
+        // Simple check on the number of color spaces in the test config.
+        OCIO_CHECK_EQUAL(config->getNumColorSpaces(), 13);
+
+        // Simple test to exercise ConfigIOProxy.
+        OCIO::ConstProcessorRcPtr proc;
+        OCIO_CHECK_NO_THROW(proc = config->getProcessor("plain_lut1_cs", "shot1_lut1_cs"));
+        OCIO_REQUIRE_ASSERT(proc);
+        OCIO_CHECK_NO_THROW(proc->getDefaultCPUProcessor());
+    }
+}
