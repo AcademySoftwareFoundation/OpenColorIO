@@ -243,7 +243,7 @@ static constexpr unsigned LastSupportedMajorVersion = OCIO_VERSION_MAJOR;
 
 // For each major version keep the most recent minor.
 static const unsigned int LastSupportedMinorVersion[] = {0, // Version 1
-                                                         1  // Version 2
+                                                         2  // Version 2
                                                          };
 
 } // namespace
@@ -4859,6 +4859,90 @@ void Config::Impl::checkVersionConsistency() const
         throw Exception("Only version 2 (or higher) can have NamedTransforms.");
     }
 
+    // Check for interchange roles feature
+
+    if (m_majorVersion < 2.0)
+    {
+        for (auto const& role : m_roles)
+        {
+            if (Platform::Strcasecmp(role.first.c_str(), ROLE_INTERCHANGE_SCENE) == 0 || 
+                Platform::Strcasecmp(role.first.c_str(), ROLE_INTERCHANGE_DISPLAY) == 0)
+            {
+                throw Exception("Only version 2 (or higher) can have interchanges roles feature.");
+            }
+        }
+    }
+
+    // Check for interchange roles requirements - scene-referred and display-referred.
+    if (m_majorVersion >= 2 && m_minorVersion >= 2)
+    {
+        const int nbCS = m_allColorSpaces->getNumColorSpaces();
+        bool containsDisplayReferredColorSpaces = false;
+        bool containsSceneReferredColorSpaces = false;
+        for (int i = 0; i < nbCS; ++i)
+        {
+            const auto & cs = m_allColorSpaces->getColorSpaceByIndex(i);
+            if (!MatchReferenceType(SEARCH_REFERENCE_SPACE_DISPLAY, cs->getReferenceSpaceType()))
+            {
+                // display referred colorspace.
+                containsDisplayReferredColorSpaces |= true;
+            }
+
+            if (!MatchReferenceType(SEARCH_REFERENCE_SPACE_SCENE, cs->getReferenceSpaceType()))
+            {
+                // display referred colorspace.
+                containsSceneReferredColorSpaces |= true;
+            }
+        }
+
+        // Check if there are no display referred colorspace.
+        if (!containsDisplayReferredColorSpaces)
+        {
+            // aces_interchange role is required.
+            bool containsAcesInterchange = false;
+            for (auto const& role : m_roles)
+            {
+                if (Platform::Strcasecmp(role.first.c_str(), ROLE_INTERCHANGE_SCENE) == 0)
+                {
+                    // found aces_interchange
+                    containsAcesInterchange = true;
+                    break;
+                }
+            }
+
+            if (!containsAcesInterchange)
+            {
+                std::ostringstream os;
+                os << "The aces_interchange role is required when there are no display-referred";
+                os << " colorspaces";
+                throw Exception(os.str().c_str());
+            }
+        }
+
+        // Check if there are no scene referred colorspace.
+        if (!containsSceneReferredColorSpaces)
+        {
+            // aces_interchange role is required.
+            bool containsCieXyzD65Interchange = false;
+            for (auto const& role : m_roles)
+            {
+                if (Platform::Strcasecmp(role.first.c_str(), ROLE_INTERCHANGE_DISPLAY) == 0)
+                {
+                    // found aces_interchange
+                    containsCieXyzD65Interchange = true;
+                    break;
+                }
+            }
+
+            if (!containsCieXyzD65Interchange)
+            {
+                std::ostringstream os;
+                os << "The cie_xyz_d65_interchange role is required when there are no";
+                os << " display-referred colorspaces";
+                throw Exception(os.str().c_str());
+            }
+        }
+    }
 }
 
 void Config::setConfigIOProxy(ConfigIOProxyRcPtr ciop)
