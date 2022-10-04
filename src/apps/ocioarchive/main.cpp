@@ -6,6 +6,8 @@
 #include <vector>
 
 #include <OpenColorIO/OpenColorIO.h>
+#include "utils/StringUtils.h"
+
 namespace OCIO = OCIO_NAMESPACE;
 
 #include "apputils/argparse.h"
@@ -144,14 +146,14 @@ int main(int argc, const char **argv)
             {
                 // The ocioz extension is added by the archive method. The assumption is that
                 // archiveName is the filename without extension.
+        
+                // Do not add ocioz extension if already present.
+                if (!StringUtils::EndsWith(archiveName, ".ocioz"))
+                {
+                    archiveName += std::string(OCIO::OCIO_CONFIG_ARCHIVE_FILE_EXT);
+                }
 
-                // Remove extension, if present.
-                char * archiveNameTmp = const_cast<char*>(archiveName.c_str());
-                mz_path_remove_extension(archiveNameTmp);
-                archiveName = archiveNameTmp;
-
-                std::ofstream ofstream(archiveName + std::string(OCIO::OCIO_CONFIG_ARCHIVE_FILE_EXT), 
-                                       std::ofstream::out | std::ofstream::binary);
+                std::ofstream ofstream(archiveName, std::ofstream::out | std::ofstream::binary);
                 if (ofstream.good())
                 {
                     config->archive(ofstream);
