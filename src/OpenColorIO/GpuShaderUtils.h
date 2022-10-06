@@ -74,6 +74,7 @@ public:
     std::string floatDecl(const std::string& name) const;
 
     std::string intKeyword() const;
+    std::string intKeywordConst() const;
 
     std::string colorDecl(const std::string& name) const;
     
