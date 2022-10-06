@@ -102,10 +102,7 @@ it is not necessary to install those items manually:
 - cmake >= 3.12
 - \*Expat >= 2.4.1 (XML parser for CDL/CLF/CTF)
 - \*yaml-cpp >= 0.7.0 (YAML parser for Configs)
-- \*Imath >= 3.1.2 (for half domain LUTs)
-    - \*IlmBase (Half only) >= 2.4.0 (Alternative half implementation when 
-      OpenEXR 2 is available. Use ``-DOCIO_USE_OPENEXR_HALF=ON`` CMake option to 
-      enable).
+- \*Imath >= 3.0 (for half domain LUTs)
 - \*pystring >= 1.1.3
 
 Some optional components also depend on:
@@ -123,7 +120,7 @@ Some optional components also depend on:
     - breathe
 - NumPy (for complete Python test suite)
 - Doxygen (for the docs)
-- OpenImageIO >= 2.1.9 (for apps including ocioconvert)
+- OpenImageIO >= 2.1.9 or OpenEXR >= 3.0 (for apps including ocioconvert)
 
 Example bash scripts are provided in 
 `share/ci/scripts <https://github.com/AcademySoftwareFoundation/OpenColorIO/tree/main/share/ci/scripts>`_ 
@@ -149,9 +146,9 @@ Three ``OCIO_INSTALL_EXT_PACKAGES`` options are available::
     cmake -DOCIO_INSTALL_EXT_PACKAGES=<NONE|MISSING|ALL>
 
 - ``NONE``: Use system installed packages. Fail if any are missing or 
-  don't meet minimum version requireements.
+  don't meet minimum version requirements.
 - ``MISSING`` (default): Prefer system installed packages. Install any that 
-  are not found or don't meet minimum version requireements.
+  are not found or don't meet minimum version requirements.
 - ``ALL``: Install all required packages, regardless of availability on the 
   current system.
 
