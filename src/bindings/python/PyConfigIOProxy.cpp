@@ -9,6 +9,7 @@
 
 #include <pybind11/stl.h>
 #include <pybind11/stl_bind.h>
+#include <pybind11/pytypes.h>
 
 PYBIND11_MAKE_OPAQUE(std::vector<uint8_t>);
 
@@ -18,14 +19,12 @@ struct PyConfigIOProxy : ConfigIOProxy
 {
     using ConfigIOProxy::ConfigIOProxy;
 
-    void getLutData(std::vector<uint8_t> & buffer, const char * filepath) const override
+    std::vector<uint8_t> getLutData(const char * filepath) const override
     {
-        py::object dummy = py::cast(&buffer);
         PYBIND11_OVERRIDE_PURE(
-            void,
+            std::vector<uint8_t>,
             ConfigIOProxy,                  // Parent class
             getLutData,                     // Name of function in C++ (must match Python name)
-            buffer,
             filepath                        // Argument(s)
         );
     }

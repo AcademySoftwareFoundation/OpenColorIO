@@ -186,8 +186,7 @@ std::unique_ptr<std::istream> getLutData(
 {
     if (config.getConfigIOProxy())
     {
-        std::vector<uint8_t> buffer;
-        config.getConfigIOProxy()->getLutData(buffer, filepath.c_str());
+        std::vector<uint8_t> buffer = config.getConfigIOProxy()->getLutData(filepath.c_str());
         std::stringstream ss;
         ss.write(reinterpret_cast<const char*>(buffer.data()), buffer.size());
 

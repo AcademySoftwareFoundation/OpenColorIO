@@ -38,8 +38,7 @@ void archiveConfig(
  * @param filepath Path to find.
  * @param archivePath Path to archive
  */
-void getFileBufferFromArchive(
-    std::vector<uint8_t> & buffer, 
+std::vector<uint8_t> getFileBufferFromArchive(
     const std::string & filepath, 
     const std::string & archivePath);
 
@@ -52,8 +51,7 @@ void getFileBufferFromArchive(
  * @param extension Extension to find
  * @param archivePath Path to archive
  */
-void getFileBufferFromArchiveByExtension(
-    std::vector<uint8_t> & buffer,
+std::vector<uint8_t> getFileBufferFromArchiveByExtension(
     const std::string & extension, 
     const std::string & archivePath);
 
@@ -80,7 +78,7 @@ public:
     CIOPOciozArchive() = default;
 
     // See OpenColorIO.h for informations on these five methods.
-    void getLutData(std::vector<uint8_t> & buffer, const char * filepath) const override;
+    std::vector<uint8_t> getLutData(const char * filepath) const override;
     const std::string getConfigData() const override;
     // Currently using the filepath of the file + the CRC32.
     const std::string getFastLutFileHash(const char * filepath) const override;

@@ -15,12 +15,6 @@
 ###############################################################################
 ### Try to find package ###
 
-# Search for ZLIB using FindZLIB from cmake.
-# If ZLIB is not found, it will be downloaded and built.
-include(GetZLIB)
-
-# Once ZLIB is sorted out, continue with minizip-ng.
-
 if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
     if(NOT DEFINED minizip-ng_ROOT)
         # Search for minizip-ng-config.cmake
@@ -193,6 +187,8 @@ if(NOT minizip-ng_FOUND AND NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL NONE)
         GIT_TAG "${minizip-ng_VERSION}"
         GIT_CONFIG advice.detachedHead=false
         GIT_SHALLOW TRUE
+        PATCH_COMMAND 
+            ${CMAKE_COMMAND} -P "${CMAKE_SOURCE_DIR}/share/cmake/patches/PatchMinizip-ngCMakelists.cmake"
         PREFIX "${_EXT_BUILD_ROOT}/libminizip-ng"
         BUILD_BYPRODUCTS ${minizip-ng_LIBRARY}
         CMAKE_ARGS ${MINIZIP-NG_CMAKE_ARGS}
@@ -220,7 +216,5 @@ if(_minizip-ng_TARGET_CREATE)
 
     mark_as_advanced(minizip-ng_INCLUDE_DIR minizip-ng_LIBRARY minizip-ng_VERSION)
 
-    if (NOT MSVC)
-        target_link_libraries(minizip-ng::minizip-ng INTERFACE ZLIB::ZLIB)
-    endif()
+    target_link_libraries(minizip-ng::minizip-ng INTERFACE ZLIB::ZLIB)
 endif()

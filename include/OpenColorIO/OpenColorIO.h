@@ -3586,7 +3586,7 @@ public:
      * The file path is based on the Config's current working directory and is the same absolute
      * path that would have been provided to the file system.
      */
-    virtual void getLutData(std::vector<uint8_t> & buffer, const char * filepath) const = 0;
+    virtual std::vector<uint8_t> getLutData(const char * filepath) const = 0;
 
     /**
      * \brief Provide the config file Yaml to be parsed.

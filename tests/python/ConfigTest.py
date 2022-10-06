@@ -1110,21 +1110,22 @@ colorspaces:
                 # Simulate that the config is coming from some kind of in-memory location.
                 return SIMPLE_CONFIG
 
-            def getLutData(self, buffer, filepath):
+            def getLutData(self, filepath):
                 # This implementation is only to demonstrate the functionality.
 
                 # Simulate that the LUT are coming from some kind of in-memory location.
-
+                buffer = OCIO.vector_of_uint8_t()
                 if filepath == os.path.join('my_unique_luts', 'my_unique_lut1.clf'):
                     encoded_c1_lut = C1_LUT.encode('utf-8')
-                    lst = list(encoded_c1_lut)
-                    for c in lst:
+                    data = bytearray(encoded_c1_lut)
+                    for c in data:
                         buffer.append(c)
                 elif filepath == os.path.join('my_unique_luts', 'my_unique_lut2.clf'):
                     encoded_c2_lut = C2_LUT.encode('utf-8')
-                    lst = list(encoded_c2_lut)
-                    for c in lst:
+                    data = bytearray(encoded_c2_lut)
+                    for c in data:
                         buffer.append(c)
+                return buffer
 
             def getFastLutFileHash(self, filepath):
                 # This implementation is only to demonstrate the functionality.

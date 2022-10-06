@@ -387,13 +387,11 @@ void ExtractOCIOZArchive(const char * archivePath, const char * destination)
  * @param info File information.
  * @param filepath Path to find.
  */
-void getFileBufferByPath(std::vector<uint8_t> & buffer, 
-                         void * reader, 
-                         mz_zip_file & info, 
-                         std::string filepath)
+std::vector<uint8_t> getFileBufferByPath(void * reader, mz_zip_file & info, std::string filepath)
 {
     // Verify that the file information and the current file matches while ignoring the slashes
     // differences in platforms.
+    std::vector<uint8_t> buffer;
     if (mz_path_compare_wc(filepath.c_str(), info.filename, 1) == MZ_OK)
     {
         // Initialize the buffer for the file.
@@ -402,6 +400,7 @@ void getFileBufferByPath(std::vector<uint8_t> & buffer,
         // Read the content of the file and return it as buffer.
         mz_zip_reader_entry_save_buffer(reader, &buffer[0], buf_size);
     }
+    return buffer;
 }
 
 /**
@@ -415,12 +414,10 @@ void getFileBufferByPath(std::vector<uint8_t> & buffer,
  * @param info File information
  * @param extension Extension to find
  */
-void getFileBufferByExtension(std::vector<uint8_t> & buffer, 
-                              void * reader, 
-                              mz_zip_file & info, 
-                              std::string extension)
+std::vector<uint8_t> getFileBufferByExtension(void * reader, mz_zip_file & info, std::string extension)
 {
     std::string root, ext;
+    std::vector<uint8_t> buffer;
     pystring::os::path::splitext(root, ext, info.filename);
     if (Platform::Strcasecmp(extension.c_str(), ext.c_str()) == 0)
     {
@@ -428,6 +425,7 @@ void getFileBufferByExtension(std::vector<uint8_t> & buffer,
         buffer.resize(buf_size);
         mz_zip_reader_entry_save_buffer(reader, &buffer[0], buf_size);
     }
+    return buffer;
 }
 
 /**
@@ -441,14 +439,14 @@ void getFileBufferByExtension(std::vector<uint8_t> & buffer,
  * @param archivePath Path to the archive.
  * @param fn Callback function to get the (file) buffer by path or by extension.
  */
-void getFileStringFromArchiveFile(std::vector<uint8_t> & buffer,
-                    const std::string & filepath, 
+std::vector<uint8_t> getFileStringFromArchiveFile(const std::string & filepath, 
                     const std::string & archivePath, 
-                    void (*fn)(std::vector<uint8_t> & buffer, void*, mz_zip_file&, std::string))
+                    std::vector<uint8_t> (*fn)(void*, mz_zip_file&, std::string))
 {
     mz_zip_file *file_info = NULL;
     int32_t err = MZ_OK;
     void *reader = NULL;
+    std::vector<uint8_t> buffer;
 
     // Create the reader object.
     mz_zip_reader_create(&reader);
@@ -474,7 +472,7 @@ void getFileStringFromArchiveFile(std::vector<uint8_t> & buffer,
                 // Get the current entry information.
                 if (mz_zip_reader_entry_get_info(reader, &file_info) == MZ_OK)
                 {
-                    fn(buffer, reader, *file_info, filepath);
+                    buffer = fn(reader, *file_info, filepath);
                     if (!buffer.empty()) 
                     {
                         break;
@@ -483,6 +481,8 @@ void getFileStringFromArchiveFile(std::vector<uint8_t> & buffer,
             } while (mz_zip_reader_goto_next_entry(reader) == MZ_OK);  
         }
     }
+
+    return buffer;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////
@@ -492,19 +492,15 @@ void getFileStringFromArchiveFile(std::vector<uint8_t> & buffer,
 //////////////////////////////////////////////////////////////////////////////////////
 
 // See header file for information.
-void getFileBufferFromArchive(std::vector<uint8_t> & buffer, 
-                              const std::string & filepath, 
-                              const std::string & archivePath)
+std::vector<uint8_t> getFileBufferFromArchive(const std::string & filepath, const std::string & archivePath)
 {
-    return getFileStringFromArchiveFile(buffer, filepath, archivePath, &getFileBufferByPath);
+    return getFileStringFromArchiveFile(filepath, archivePath, &getFileBufferByPath);
 }
 
 // See header file for information.
-void getFileBufferFromArchiveByExtension(std::vector<uint8_t> & buffer,
-                                         const std::string & extension, 
-                                         const std::string & archivePath)
+std::vector<uint8_t> getFileBufferFromArchiveByExtension(const std::string & extension, const std::string & archivePath)
 {
-    return getFileStringFromArchiveFile(buffer, extension, archivePath, &getFileBufferByExtension);
+    return getFileStringFromArchiveFile(extension, archivePath, &getFileBufferByExtension);
 }
 
 // See header file for information.
@@ -559,7 +555,7 @@ void getEntriesMappingFromArchiveFile(const std::string & archivePath,
 // Implementation of CIOPOciozArchive class.
 //////////////////////////////////////////////////////////////////////////////////////
 
-void CIOPOciozArchive::getLutData(std::vector<uint8_t> & buffer, const char * filepath) const
+std::vector<uint8_t> CIOPOciozArchive::getLutData(const char * filepath) const
 {
     // In order to ease the implementation and to facilitate a future Python binding, this method
     // uses std::vector<uint8_t> buffer instead of a std::istream.
@@ -588,11 +584,14 @@ void CIOPOciozArchive::getLutData(std::vector<uint8_t> & buffer, const char * fi
     ociozStream.seekg(0, std::ios::beg);
 
     std::vector<char> archiveBuffer(size);
+    std::vector<uint8_t> buffer;
     if (ociozStream.read(archiveBuffer.data(), size))
     {
         std::string fpath = pystring::os::path::normpath(filepath);
-        getFileBufferFromArchive(buffer, fpath, m_archiveAbsPath);
+        buffer = getFileBufferFromArchive(fpath, m_archiveAbsPath);
     }
+
+    return buffer;
 }
 
 const std::string CIOPOciozArchive::getConfigData() const
@@ -617,13 +616,7 @@ const std::string CIOPOciozArchive::getConfigData() const
 
     std::string configFilename = std::string(OCIO_CONFIG_DEFAULT_NAME) +
                                  std::string(OCIO_CONFIG_DEFAULT_FILE_EXT);
-    std::vector<uint8_t> configBuffer;
-    getFileBufferFromArchive(
-        configBuffer,
-        configFilename, 
-        m_archiveAbsPath
-    );
-
+    std::vector<uint8_t> configBuffer = getFileBufferFromArchive(configFilename, m_archiveAbsPath);
     if (configBuffer.size() > 0)
     {
         // Create an string stream from the config array of chars.

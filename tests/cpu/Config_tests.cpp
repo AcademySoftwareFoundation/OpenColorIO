@@ -9001,8 +9001,7 @@ OCIO_ADD_TEST(Config, create_from_config_io_proxy)
                 return buffer.str();
             }
 
-            inline void getLutData(
-                std::vector<uint8_t> & buffer, 
+            inline std::vector<uint8_t> getLutData(
                 const char * filepath) const override
             {
                 std::vector<std::string> paths = { 
@@ -9027,9 +9026,12 @@ OCIO_ADD_TEST(Config, create_from_config_io_proxy)
                 }
 
                 const auto eofPosition = static_cast<std::streamoff>(fstream.tellg());
+                std::vector<uint8_t> buffer;
                 buffer.resize(eofPosition);
                 fstream.seekg(0, std::ios::beg);
                 fstream.read(reinterpret_cast<char*>(buffer.data()), eofPosition);
+
+                return buffer;
             }
 
             const std::string getFastLutFileHash(const char * filename) const override

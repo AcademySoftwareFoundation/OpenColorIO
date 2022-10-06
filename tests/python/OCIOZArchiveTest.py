@@ -4,7 +4,11 @@
 import unittest
 import os
 import platform
+import sys
+
 import tempfile
+if sys.version_info.major < 3:
+    import shutil
 
 import PyOpenColorIO as OCIO
 from UnitTestUtils import (SIMPLE_CONFIG, TEST_DATAFILES_DIR)
@@ -366,15 +370,22 @@ class ArchiveAndExtractComparison(unittest.TestCase):
         """
         # Testing CreateFromFile and ExtractOCIOZArchive on a successful path.
 
+        temp_dir_name = ""
         try:
-            temp_ocioz_directory = tempfile.TemporaryDirectory()
+            if sys.version_info.major >= 3:
+                # Python 3.
+                self.temp_ocioz_directory = tempfile.TemporaryDirectory()
+                temp_dir_name = self.temp_ocioz_directory.name
+            else:
+                # Python 2.
+                temp_dir_name = tempfile.mkdtemp() 
 
             # 1 - Extract the OCIOZ archive to temporary directory.
-            OCIO.ExtractOCIOZArchive(self.ORIGNAL_ARCHIVED_CONFIG_PATH, temp_ocioz_directory.name)
+            OCIO.ExtractOCIOZArchive(self.ORIGNAL_ARCHIVED_CONFIG_PATH, temp_dir_name)
 
             # 2 - Create config from extracted OCIOZ archive.
             new_config = OCIO.Config().CreateFromFile(
-                os.path.join(temp_ocioz_directory.name, "config.ocio")
+                os.path.join(temp_dir_name, "config.ocio")
             )
             new_config.validate()
 
@@ -396,4 +407,10 @@ class ArchiveAndExtractComparison(unittest.TestCase):
             # 5 - Compare serialization
             self.assertEqual(self.ORIGNAL_ARCHIVED_CONFIG.serialize(), new_config.serialize())
         finally:
-            temp_ocioz_directory.cleanup()
+            if sys.version_info.major >= 3:
+                # Python 3.
+                self.temp_ocioz_directory.cleanup()
+            else:
+                # Python 2.
+                if not temp_dir_name:
+                    shutil.rmtree(temp_dir_name)
