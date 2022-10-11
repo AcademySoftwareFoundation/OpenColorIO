@@ -361,7 +361,7 @@ OCIO_ADD_TEST(Config, serialize_group_transform)
     config->serialize(os);
 
     std::string PROFILE_OUT =
-    "ocio_profile_version: 2.1\n"
+    "ocio_profile_version: 2.2\n"
     "\n"
     "environment:\n"
     "  {}\n"
@@ -434,7 +434,7 @@ OCIO_ADD_TEST(Config, serialize_searchpath)
         config->serialize(os);
 
         std::string PROFILE_OUT =
-            "ocio_profile_version: 2.1\n"
+            "ocio_profile_version: 2.2\n"
             "\n"
             "environment:\n"
             "  {}\n"
@@ -1803,14 +1803,14 @@ OCIO_ADD_TEST(Config, version)
     }
 
     {
-        OCIO_CHECK_THROW_WHAT(config->setVersion(2, 2), OCIO::Exception,
-                              "The minor version 2 is not supported for major version 2. "
-                              "Maximum minor version is 1");
+        OCIO_CHECK_THROW_WHAT(config->setVersion(2, 3), OCIO::Exception,
+                              "The minor version 3 is not supported for major version 2. "
+                              "Maximum minor version is 2");
 
         OCIO_CHECK_NO_THROW(config->setMajorVersion(2));
-        OCIO_CHECK_THROW_WHAT(config->setMinorVersion(2), OCIO::Exception,
-                              "The minor version 2 is not supported for major version 2. "
-                              "Maximum minor version is 1");
+        OCIO_CHECK_THROW_WHAT(config->setMinorVersion(3), OCIO::Exception,
+                              "The minor version 3 is not supported for major version 2. "
+                              "Maximum minor version is 2");
     }
 
     {
@@ -1842,9 +1842,9 @@ OCIO_ADD_TEST(Config, version_validation)
 
     {
         std::istringstream is;
-        is.str("ocio_profile_version: 2.2\n" + SIMPLE_PROFILE_END);
+        is.str("ocio_profile_version: 2.3\n" + SIMPLE_PROFILE_END);
         OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is), OCIO::Exception,
-                              "The minor version 2 is not supported for major version 2");
+                              "The minor version 3 is not supported for major version 2");
     }
 
     {
@@ -6141,7 +6141,7 @@ OCIO_ADD_TEST(Config, display_view)
 
     std::stringstream os;
     os << *config.get();
-    constexpr char expected[]{ R"(ocio_profile_version: 2.1
+    constexpr char expected[]{ R"(ocio_profile_version: 2.2
 
 environment:
   {}

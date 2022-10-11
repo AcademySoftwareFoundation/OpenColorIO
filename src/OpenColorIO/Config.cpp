@@ -4859,20 +4859,6 @@ void Config::Impl::checkVersionConsistency() const
         throw Exception("Only version 2 (or higher) can have NamedTransforms.");
     }
 
-    // Check for interchange roles feature
-
-    if (m_majorVersion < 2.0)
-    {
-        for (auto const& role : m_roles)
-        {
-            if (Platform::Strcasecmp(role.first.c_str(), ROLE_INTERCHANGE_SCENE) == 0 || 
-                Platform::Strcasecmp(role.first.c_str(), ROLE_INTERCHANGE_DISPLAY) == 0)
-            {
-                throw Exception("Only version 2 (or higher) can have interchanges roles feature.");
-            }
-        }
-    }
-
     // Check for interchange roles requirements - scene-referred and display-referred.
     if (m_majorVersion >= 2 && m_minorVersion >= 2)
     {
@@ -4895,8 +4881,8 @@ void Config::Impl::checkVersionConsistency() const
             }
         }
 
-        // Check if there are no display referred colorspace.
-        if (!containsDisplayReferredColorSpaces)
+        // Check if there are scene referred colorspace.
+        if (containsSceneReferredColorSpaces)
         {
             // aces_interchange role is required.
             bool containsAcesInterchange = false;
@@ -4913,22 +4899,22 @@ void Config::Impl::checkVersionConsistency() const
             if (!containsAcesInterchange)
             {
                 std::ostringstream os;
-                os << "The aces_interchange role is required when there are no display-referred";
+                os << "The aces_interchange role is required when there are scene-referred";
                 os << " colorspaces";
-                throw Exception(os.str().c_str());
+                LogWarning(os.str());
             }
         }
 
-        // Check if there are no scene referred colorspace.
-        if (!containsSceneReferredColorSpaces)
+        // Check if there are display referred colorspace.
+        if (containsDisplayReferredColorSpaces)
         {
-            // aces_interchange role is required.
+            // cie_xyz_d65_interchange role is required.
             bool containsCieXyzD65Interchange = false;
             for (auto const& role : m_roles)
             {
                 if (Platform::Strcasecmp(role.first.c_str(), ROLE_INTERCHANGE_DISPLAY) == 0)
                 {
-                    // found aces_interchange
+                    // found cie_xyz_d65_interchange
                     containsCieXyzD65Interchange = true;
                     break;
                 }
@@ -4937,9 +4923,9 @@ void Config::Impl::checkVersionConsistency() const
             if (!containsCieXyzD65Interchange)
             {
                 std::ostringstream os;
-                os << "The cie_xyz_d65_interchange role is required when there are no";
+                os << "The cie_xyz_d65_interchange role is required when there are";
                 os << " display-referred colorspaces";
-                throw Exception(os.str().c_str());
+                LogWarning(os.str());
             }
         }
     }
