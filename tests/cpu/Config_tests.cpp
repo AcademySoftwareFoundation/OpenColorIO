@@ -314,6 +314,108 @@ OCIO_ADD_TEST(Config, roles)
     OCIO_CHECK_EQUAL(std::string(config->getRoleColorSpace(-4)), "");
 }
 
+OCIO_ADD_TEST(Config, interchange_roles_warnings)
+{
+    // Test Setup
+
+    OCIO::ConfigRcPtr config = OCIO::Config::Create();
+
+    // scene-referred color space.
+    auto cs = OCIO::ColorSpace::Create(OCIO::REFERENCE_SPACE_SCENE);
+    cs->setName("default");
+    config->addColorSpace(cs);
+
+    // Add a simple view.
+    const std::string display{ "display" };
+    OCIO_CHECK_NO_THROW(config->addDisplayView(display.c_str(), "view1", "default", ""));
+
+    // Add a scene-referred and a display-referred color space.
+    auto scs = OCIO::ColorSpace::Create(OCIO::REFERENCE_SPACE_SCENE);
+    scs->setName("scs");
+    config->addColorSpace(scs);
+
+    auto dcs = OCIO::ColorSpace::Create(OCIO::REFERENCE_SPACE_DISPLAY);
+    dcs->setName("dcs");
+    config->addColorSpace(dcs);
+
+    // Add a scene-referred and a display-referred view transform.
+    auto vt = OCIO::ViewTransform::Create(OCIO::REFERENCE_SPACE_DISPLAY);
+    vt->setName("display");
+    OCIO_CHECK_NO_THROW(vt->setTransform(OCIO::MatrixTransform::Create(),
+                                        OCIO::VIEWTRANSFORM_DIR_FROM_REFERENCE));
+    OCIO_CHECK_NO_THROW(config->addViewTransform(vt));
+    vt = OCIO::ViewTransform::Create(OCIO::REFERENCE_SPACE_SCENE);
+    vt->setName("view_transform");
+    OCIO_CHECK_NO_THROW(vt->setTransform(OCIO::MatrixTransform::Create(),
+                                        OCIO::VIEWTRANSFORM_DIR_FROM_REFERENCE));
+    OCIO_CHECK_NO_THROW(config->addViewTransform(vt));
+
+    // End of setup.
+
+    // Interchange roles tests
+    
+    {
+        // Test that both warnings appears when both interchange roles are missing.
+
+        OCIO::LogGuard logGuard;
+        OCIO_CHECK_NO_THROW(config->validate());
+        OCIO_CHECK_ASSERT(
+            StringUtils::StartsWith(logGuard.output(), 
+            "[OpenColorIO Warning]: The aces_interchange role is required when there are scene-referred colorspaces.")
+        );
+
+        OCIO_CHECK_ASSERT(
+            StringUtils::EndsWith(logGuard.output(), 
+            "[OpenColorIO Warning]: The cie_xyz_d65_interchange role is required when there are display-referred colorspaces.\n")
+        );
+    }
+    
+    {
+        // Test that aces_interchange role is missing.
+
+        // Set cie_xyz_d65_interchange role.
+        config->setRole(OCIO::ROLE_INTERCHANGE_DISPLAY, dcs->getName());
+
+        // aces_interchange is still missing.
+        OCIO::LogGuard logGuard;
+        OCIO_CHECK_NO_THROW(config->validate());
+        OCIO_CHECK_ASSERT(
+        StringUtils::StartsWith(logGuard.output(), 
+            "[OpenColorIO Warning]: The aces_interchange role is required when there are scene-referred colorspaces.")
+        );
+    }
+
+    {
+        // Test that cie_xyz_d65_interchange role is missing.
+
+        // Unset cie_xyz_d65_interchange role.
+        config->setRole(OCIO::ROLE_INTERCHANGE_DISPLAY, nullptr);
+        // Set aces_interchange role.
+        config->setRole(OCIO::ROLE_INTERCHANGE_SCENE, scs->getName());
+
+        OCIO::LogGuard logGuard;
+        OCIO_CHECK_NO_THROW(config->validate());
+        OCIO_CHECK_ASSERT(
+        StringUtils::StartsWith(logGuard.output(), 
+            "[OpenColorIO Warning]: The cie_xyz_d65_interchange role is required when there are display-referred colorspaces.")
+        );
+    }
+
+    {
+        // Test that there is no warning when both interchange roles are set.
+
+        // Set cie_xyz_d65_interchange role.
+        config->setRole(OCIO::ROLE_INTERCHANGE_DISPLAY, dcs->getName());
+        // Set aces_interchange role.
+        config->setRole(OCIO::ROLE_INTERCHANGE_SCENE, scs->getName());
+
+        OCIO::LogGuard logGuard;
+        OCIO_CHECK_NO_THROW(config->validate());
+        OCIO_CHECK_ASSERT(
+        StringUtils::StartsWith(logGuard.output(), ""));
+    }
+}
+
 OCIO_ADD_TEST(Config, serialize_group_transform)
 {
     // The unit test validates that a group transform is correctly serialized.

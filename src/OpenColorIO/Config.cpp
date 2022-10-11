@@ -4900,7 +4900,7 @@ void Config::Impl::checkVersionConsistency() const
             {
                 std::ostringstream os;
                 os << "The aces_interchange role is required when there are scene-referred";
-                os << " colorspaces";
+                os << " colorspaces.";
                 LogWarning(os.str());
             }
         }
@@ -4924,7 +4924,7 @@ void Config::Impl::checkVersionConsistency() const
             {
                 std::ostringstream os;
                 os << "The cie_xyz_d65_interchange role is required when there are";
-                os << " display-referred colorspaces";
+                os << " display-referred colorspaces.";
                 LogWarning(os.str());
             }
         }
