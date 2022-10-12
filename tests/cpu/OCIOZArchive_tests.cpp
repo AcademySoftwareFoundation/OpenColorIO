@@ -76,7 +76,7 @@ OCIO_ADD_TEST(OCIOZArchive, is_config_archivable)
 
     OCIO::ConfigRcPtr cfg;
     OCIO_CHECK_NO_THROW(cfg = OCIO::Config::CreateFromStream(iss)->createEditableCopy());
-    // Since a working directory is needed to archive a config, settting a fake working directory 
+    // Since a working directory is needed to archive a config, setting a fake working directory 
     // in order to test the search paths and FileTransform source logic.
 #ifdef _WIN32
     cfg->setWorkingDir(R"(C:\fake_working_dir)");
@@ -92,10 +92,7 @@ OCIO_ADD_TEST(OCIOZArchive, is_config_archivable)
         /*
          * Legal scenarios
          */
-
-        // No search path.
-        OCIO_CHECK_EQUAL(true, cfg->isArchivable());
-
+        
         // Valid search path.
         cfg->setSearchPath("luts");
         OCIO_CHECK_EQUAL(true, cfg->isArchivable());
@@ -499,8 +496,8 @@ OCIO_ADD_TEST(OCIOZArchive, extract_config_and_compare_to_original)
      * This test is doing the following :
      * 
      * 1 - Create a config object from context_test1_windows.ocioz.
-     * 1 - Extract the config context_test1_windows.ocioz.
-     * 2 - Create a config object using the extracted config in step 1.
+     * 2 - Extract the config context_test1_windows.ocioz.
+     * 3 - Create a config object using the extracted config in step 1.
      * 4 - Compare different elements between the two configs.
      * 
      * Testing CreateFromFile and ExtractOCIOZArchive on a successful path.
@@ -537,7 +534,7 @@ OCIO_ADD_TEST(OCIOZArchive, extract_config_and_compare_to_original)
             pystring::os::path::join(dGuard.m_directoryPath, "config.ocio").c_str()
         ));
         OCIO_REQUIRE_ASSERT(configFromExtractedArchive);
-        OCIO_CHECK_NO_THROW(configFromArchive->validate());
+        OCIO_CHECK_NO_THROW(configFromExtractedArchive->validate());
 
         // 4 - Compare config cacheID - configFromArchive vs configFromExtractedArchive.
         OCIO::ConstContextRcPtr context;

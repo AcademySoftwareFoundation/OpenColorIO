@@ -1028,7 +1028,7 @@ colorspaces:
         with self.assertRaises(OCIO.Exception):
             OCIO.Config.CreateFromFile(ocioz_file)
 
-        # Missing config file but contains LUTs files.
+        # Missing LUT files but contains LUTs files.
         ocioz_file = os.path.normpath(
             os.path.join(
                 TEST_DATAFILES_DIR, 'configs', 'ocioz_archive_configs', 'config_missing_luts.ocioz'
@@ -1114,18 +1114,13 @@ colorspaces:
                 # This implementation is only to demonstrate the functionality.
 
                 # Simulate that the LUT are coming from some kind of in-memory location.
-                buffer = OCIO.vector_of_uint8_t()
+                # Create an empty list
+                data = list()
                 if filepath == os.path.join('my_unique_luts', 'my_unique_lut1.clf'):
-                    encoded_c1_lut = C1_LUT.encode('utf-8')
-                    data = bytearray(encoded_c1_lut)
-                    for c in data:
-                        buffer.append(c)
+                    data = list(C1_LUT.encode('utf-8'))
                 elif filepath == os.path.join('my_unique_luts', 'my_unique_lut2.clf'):
-                    encoded_c2_lut = C2_LUT.encode('utf-8')
-                    data = bytearray(encoded_c2_lut)
-                    for c in data:
-                        buffer.append(c)
-                return buffer
+                    data = list(C2_LUT.encode('utf-8'))
+                return data
 
             def getFastLutFileHash(self, filepath):
                 # This implementation is only to demonstrate the functionality.

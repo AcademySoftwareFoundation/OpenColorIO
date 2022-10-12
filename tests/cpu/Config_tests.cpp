@@ -8982,7 +8982,7 @@ OCIO_ADD_TEST(Config, create_from_config_io_proxy)
         class CIOPTest : public OCIO::ConfigIOProxy
         {
         public:
-            inline const std::string getConfigData() const override
+            inline std::string getConfigData() const override
             {
                 // Get config data from filesystem, database, memory, etc.
                 // In this example, the config is simply coming from the filesystem.
@@ -9034,7 +9034,7 @@ OCIO_ADD_TEST(Config, create_from_config_io_proxy)
                 return buffer;
             }
 
-            const std::string getFastLutFileHash(const char * filename) const override
+            inline std::string getFastLutFileHash(const char * filename) const override
             {
                 std::vector<std::string> paths = { 
                     std::string(OCIO::GetTestFilesDir()),

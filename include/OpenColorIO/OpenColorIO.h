@@ -175,7 +175,7 @@ extern OCIOEXPORT void LogMessage(LoggingLevel level, const char * message);
 /**
  * \brief Set the Compute Hash Function to use; otherwise, use the default.
  * 
- * This is not used when using CreateFromFile with an OCIOZ archive or CreateFromConfigProxyIO.
+ * This is not used when using CreateFromFile with an OCIOZ archive or CreateFromConfigIOProxy.
  * 
  * \param ComputeHashFunction
  */
@@ -3593,7 +3593,7 @@ public:
      * 
      * \return String with the config Yaml.
      */
-    virtual const std::string getConfigData() const = 0;
+    virtual std::string getConfigData() const = 0;
 
     /**
      * \brief Provide a fast unique ID for a LUT file.
@@ -3612,7 +3612,7 @@ public:
      *
      * \return The file hash string.
      */
-    virtual const std::string getFastLutFileHash(const char * filepath) const = 0;
+    virtual std::string getFastLutFileHash(const char * filepath) const = 0;
 };
 
 } // namespace OCIO_NAMESPACE

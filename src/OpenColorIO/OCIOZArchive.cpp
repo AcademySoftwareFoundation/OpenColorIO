@@ -179,11 +179,9 @@ void addSupportedFiles(void * archiver, const char * path, const char * configWo
                 FormatRegistry & formatRegistry = FormatRegistry::GetInstance();
                 FileFormatVector possibleFormats;
                 formatRegistry.getFileFormatForExtension(ext, possibleFormats);
-                FileFormatVector::const_iterator endFormat = possibleFormats.end();
-                FileFormatVector::const_iterator itFormat = possibleFormats.begin();
-                while(itFormat != endFormat)
+                if (!possibleFormats.empty())
                 {
-                    // Valid format. Archive current file.
+                    // The extension is supported. Add the current file to the OCIOZ archive.
                     if (mz_zip_writer_add_path(
                         archiver, absPath.c_str(), 
                         configWorkingDirectory, 0, 1) != MZ_OK)
@@ -195,7 +193,6 @@ void addSupportedFiles(void * archiver, const char * path, const char * configWo
                         os << "Could not write LUT file " << absPath << " to in-memory archive.";
                         throw Exception(os.str().c_str());
                     }
-                    ++itFormat;
                 }
             }
         }
@@ -431,7 +428,7 @@ std::vector<uint8_t> getFileBufferByExtension(void * reader, mz_zip_file & info,
 /**
  * @brief Get the content of a file inside an OCIOZ archive as a buffer. 
  * 
- * The two possbiles callbacks are defined above:
+ * The two possibles callbacks are defined above:
  * getFileBufferByPath and getFileBufferByExtension.
  * 
  * @param buffer Buffer of uint8_t
@@ -567,68 +564,31 @@ std::vector<uint8_t> CIOPOciozArchive::getLutData(const char * filepath) const
     // instead of a std::istream (max 5%). But the following iterations are just as fast due to
     // the FileTransform cache.
 
-    std::ifstream ociozStream = Platform::CreateInputFileStream(
-        m_archiveAbsPath.c_str(), 
-        std::ios_base::in | std::ios_base::binary
-    );
-
-    if (ociozStream.fail())
-    {
-        std::ostringstream os;
-        os << "Error could not open OCIOZ archive: " << m_archiveAbsPath;
-        throw Exception (os.str().c_str());
-    }
-
-    ociozStream.seekg(0, std::ios::end);
-    std::streamsize size = ociozStream.tellg();
-    ociozStream.seekg(0, std::ios::beg);
-
-    std::vector<char> archiveBuffer(size);
     std::vector<uint8_t> buffer;
-    if (ociozStream.read(archiveBuffer.data(), size))
-    {
-        std::string fpath = pystring::os::path::normpath(filepath);
-        buffer = getFileBufferFromArchive(fpath, m_archiveAbsPath);
-    }
-
+    buffer = getFileBufferFromArchive(pystring::os::path::normpath(filepath), m_archiveAbsPath);
     return buffer;
 }
 
-const std::string CIOPOciozArchive::getConfigData() const
+std::string CIOPOciozArchive::getConfigData() const
 {
     // In order to ease the implementation and to facilitate a future Python binding, this method
     // returns a std::string instead of a std::istream.
     // 
     // It is expected that in most cases, the compiler will be able to avoid copying the buffer
     // (RVO/NRVO).
-
-    std::ifstream ociozStream = Platform::CreateInputFileStream(
-        m_archiveAbsPath.c_str(), 
-        std::ios_base::in | std::ios_base::binary
-    );
-
-    if (ociozStream.fail())
-    {
-        std::ostringstream os;
-        os << "Error could not read OCIOZ archive: " << m_archiveAbsPath;
-        throw Exception (os.str().c_str());
-    }
-
+    std::string configData = "";
     std::string configFilename = std::string(OCIO_CONFIG_DEFAULT_NAME) +
                                  std::string(OCIO_CONFIG_DEFAULT_FILE_EXT);
     std::vector<uint8_t> configBuffer = getFileBufferFromArchive(configFilename, m_archiveAbsPath);
     if (configBuffer.size() > 0)
     {
-        // Create an string stream from the config array of chars.
-        // Specifiy the size of the string since the char * returned by minizip-ng function 
-        // (mz_zip_reader_entry_save_buffer) is not null-terminated.
-        return std::string(reinterpret_cast<const char *>(configBuffer.data()), configBuffer.size());
+        configData = std::string(configBuffer.begin(), configBuffer.end());
     }
 
-    return "";
+    return configData;
 }
 
-const std::string CIOPOciozArchive::getFastLutFileHash(const char * filepath) const
+std::string CIOPOciozArchive::getFastLutFileHash(const char * filepath) const
 {
     std::string hash = "";
     // Check into the map to check if the file exists in the archive.
@@ -647,7 +607,7 @@ const std::string CIOPOciozArchive::getFastLutFileHash(const char * filepath) co
     return hash;
 }
 
-void CIOPOciozArchive::setArchiveAbsPath(std::string absPath)
+void CIOPOciozArchive::setArchiveAbsPath(const std::string & absPath)
 {
     m_archiveAbsPath = absPath;
 }

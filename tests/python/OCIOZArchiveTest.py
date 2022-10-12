@@ -20,7 +20,7 @@ class ArchiveIsConfigArchivableTest(unittest.TestCase):
         Initialize the CONFIG
         """
         self.CONFIG = OCIO.Config().CreateFromStream(SIMPLE_CONFIG)
-        # Since a working directory is needed to archive a config, settting a fake working directory 
+        # Since a working directory is needed to archive a config, setting a fake working directory 
         # in order to test the search paths and FileTransform source logic.
         if platform.system() == 'Windows':
             self.CONFIG.setWorkingDir('C:\\fake_working_dir')
@@ -38,9 +38,6 @@ class ArchiveIsConfigArchivableTest(unittest.TestCase):
         ###############################
         # Testing search paths
         ###############################
-
-        # No search path.
-        self.assertEqual(True, self.CONFIG.isArchivable())
 
         # Valid search path.
         self.CONFIG.setSearchPath('luts')
@@ -123,7 +120,7 @@ class ArchiveIsConfigArchivableTest(unittest.TestCase):
 
         # Function to facilitate adding a new FileTransform to a config.
         def addFTAndTestIsArchivable(cfg, path, isArchivable):
-            fullPath = os.path.join(path, "fake_lut.cls")
+            fullPath = os.path.join(path, "fake_lut.clf")
             ft = OCIO.FileTransform()
             ft.setSrc(fullPath)
 
@@ -326,7 +323,7 @@ class ArchiveAndExtractComparison(unittest.TestCase):
         self.ORIGNAL_ARCHIVED_CONFIG = OCIO.Config().CreateFromFile(
             self.ORIGNAL_ARCHIVED_CONFIG_PATH
         )
-        self.ORIGINAL_CONFIG.validate()
+        self.ORIGNAL_ARCHIVED_CONFIG.validate()
     
     def tearDown(self):
         self.CONFIG = None

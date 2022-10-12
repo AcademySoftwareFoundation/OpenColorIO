@@ -187,8 +187,6 @@ if(NOT minizip-ng_FOUND AND NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL NONE)
         GIT_TAG "${minizip-ng_VERSION}"
         GIT_CONFIG advice.detachedHead=false
         GIT_SHALLOW TRUE
-        PATCH_COMMAND 
-            ${CMAKE_COMMAND} -P "${CMAKE_SOURCE_DIR}/share/cmake/patches/PatchMinizip-ngCMakelists.cmake"
         PREFIX "${_EXT_BUILD_ROOT}/libminizip-ng"
         BUILD_BYPRODUCTS ${minizip-ng_LIBRARY}
         CMAKE_ARGS ${MINIZIP-NG_CMAKE_ARGS}

@@ -79,9 +79,9 @@ public:
 
     // See OpenColorIO.h for informations on these five methods.
     std::vector<uint8_t> getLutData(const char * filepath) const override;
-    const std::string getConfigData() const override;
+    std::string getConfigData() const override;
     // Currently using the filepath of the file + the CRC32.
-    const std::string getFastLutFileHash(const char * filepath) const override;
+    std::string getFastLutFileHash(const char * filepath) const override;
 
     // Following methods are specific to CIOPOciozArchive.
     /**
@@ -89,7 +89,7 @@ public:
      * 
      * @param absPath Absolute path to OCIOZ archive.
      */
-    void setArchiveAbsPath(std::string absPath);
+    void setArchiveAbsPath(const std::string & absPath);
 
     /**
      * @brief Build a map of the zip file table of contents for the files in the archive.

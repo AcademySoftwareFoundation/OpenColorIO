@@ -1171,18 +1171,14 @@ ConstConfigRcPtr Config::CreateFromFile(const char * filename)
 
             // The file should be an OCIOZ archive file.
 
-            // Using new because OCIO doesn't have access to make_unique since OCIO still supports 
-            // C++11.
-            std::shared_ptr<CIOPOciozArchive> ciop = std::shared_ptr<CIOPOciozArchive>(
-                new CIOPOciozArchive()
-            );
+            auto ciop = std::make_shared<CIOPOciozArchive>();
             // Store archive absolute path.
             ciop->setArchiveAbsPath(filename);
             // Build the entries map.
             ciop->buildEntries();
             return CreateFromConfigIOProxy(ciop);
         }
-    }
+    } 
 
     // Not an OCIOZ archive. Continue as usual.
     ifstream.clear();
@@ -4941,7 +4937,7 @@ bool Config::isArchivable() const
 
     // Check that FileTransform sources are not absolute nor have context variables outside of 
     // config working directory.
-    for (auto path : files)
+    for (const auto & path : files)
     {
         if (!validatePathForArchiving(path))
         {

@@ -75,15 +75,15 @@ std::string CreateTemporaryDirectory(const std::string & name)
 {
     int nError = 0;
 
-    #if defined(_WIN32)
+#if defined(_WIN32)
     std::string sPath = GetEnvVariable("TEMP");
     static const std::string directory = pystring::os::path::join(sPath, name);
     nError = _mkdir(directory.c_str());
-    #else 
+#else 
     std::string sPath = "/tmp";
     const std::string directory = pystring::os::path::join(sPath, name);
     nError = mkdir(directory.c_str(), 0777);
-    #endif
+#endif
 
     if (nError != 0)
     {

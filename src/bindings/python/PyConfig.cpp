@@ -734,13 +734,13 @@ void bindPyConfig(py::module & m)
 
         // Archiving
         .def("isArchivable", &Config::isArchivable, DOC(Config, isArchivable))
-        .def("archive", [](ConfigRcPtr & self, const std::string filepath) 
+        .def("archive", [](ConfigRcPtr & self, const char * filepath) 
             {
-                std::ofstream f(filepath.c_str(), std::ofstream::out | std::ofstream::binary);
+                std::ofstream f(filepath, std::ofstream::out | std::ofstream::binary);
                 self->archive(f);
                 f.close(); 
             }, 
-            DOC(Config, isArchivable))
+            DOC(Config, archive))
 
         // Conversion to string
         .def("__str__", [](ConfigRcPtr & self)

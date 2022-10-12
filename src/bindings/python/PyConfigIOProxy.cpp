@@ -29,7 +29,7 @@ struct PyConfigIOProxy : ConfigIOProxy
         );
     }
 
-    const std::string getConfigData() const override
+    std::string getConfigData() const override
     {
         PYBIND11_OVERRIDE_PURE(
             std::string,
@@ -38,7 +38,7 @@ struct PyConfigIOProxy : ConfigIOProxy
         );
     }
 
-    const std::string getFastLutFileHash(const char * filepath) const override
+    std::string getFastLutFileHash(const char * filepath) const override
     {
         PYBIND11_OVERRIDE_PURE(
             std::string,                    // Return type
@@ -52,6 +52,7 @@ struct PyConfigIOProxy : ConfigIOProxy
 void bindPyConfigIOProxy(py::module & m)
 {
     py::bind_vector<std::vector<uint8_t>>(m, "vector_of_uint8_t");
+    py::implicitly_convertible<py::list, std::vector<uint8_t>>();
 
     py::class_<ConfigIOProxy, std::shared_ptr<ConfigIOProxy>, PyConfigIOProxy>(m, "PyConfigIOProxy")
         .def(py::init())
