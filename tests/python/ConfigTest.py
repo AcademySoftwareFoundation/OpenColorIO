@@ -1114,12 +1114,12 @@ colorspaces:
                 # This implementation is only to demonstrate the functionality.
 
                 # Simulate that the LUT are coming from some kind of in-memory location.
-                # Create an empty list
-                data = list()
+                # Create an empty bytearray.
+                data = bytearray()
                 if filepath == os.path.join('my_unique_luts', 'my_unique_lut1.clf'):
-                    data = list(C1_LUT.encode('utf-8'))
+                    data = bytearray(C1_LUT.encode('utf-8'))
                 elif filepath == os.path.join('my_unique_luts', 'my_unique_lut2.clf'):
-                    data = list(C2_LUT.encode('utf-8'))
+                    data = bytearray(C2_LUT.encode('utf-8'))
                 return data
 
             def getFastLutFileHash(self, filepath):

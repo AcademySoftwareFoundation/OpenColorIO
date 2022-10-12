@@ -53,6 +53,7 @@ void bindPyConfigIOProxy(py::module & m)
 {
     py::bind_vector<std::vector<uint8_t>>(m, "vector_of_uint8_t");
     py::implicitly_convertible<py::list, std::vector<uint8_t>>();
+    py::implicitly_convertible<py::bytearray, std::vector<uint8_t>>();
 
     py::class_<ConfigIOProxy, std::shared_ptr<ConfigIOProxy>, PyConfigIOProxy>(m, "PyConfigIOProxy")
         .def(py::init())
