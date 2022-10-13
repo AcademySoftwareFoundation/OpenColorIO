@@ -126,6 +126,11 @@ void LogMessage(LoggingLevel level, const char * message)
 {
     switch(level)
     {
+        case LOGGING_LEVEL_ERROR:
+        {
+            LogError(message);
+            break;
+        }
         case LOGGING_LEVEL_WARNING:
         {
             LogWarning(message);
@@ -151,6 +156,16 @@ void LogMessage(LoggingLevel level, const char * message)
             throw Exception("Unsupported logging level.");
         }
     }
+}
+
+void LogError(const std::string & text)
+{
+    AutoMutex lock(g_logmutex);
+    InitLogging();
+
+    if(g_logginglevel<LOGGING_LEVEL_ERROR) return;
+
+    LogMessage("[OpenColorIO Error]: ", text);
 }
 
 void LogWarning(const std::string & text)

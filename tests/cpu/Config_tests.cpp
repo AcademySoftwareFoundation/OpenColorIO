@@ -314,13 +314,13 @@ OCIO_ADD_TEST(Config, roles)
     OCIO_CHECK_EQUAL(std::string(config->getRoleColorSpace(-4)), "");
 }
 
-OCIO_ADD_TEST(Config, interchange_roles_warnings)
+OCIO_ADD_TEST(Config, interchange_roles_errors)
 {
     // Test Setup
 
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
 
-    // scene-referred color space.
+    // Add default color space for file rules.
     auto cs = OCIO::ColorSpace::Create(OCIO::REFERENCE_SPACE_SCENE);
     cs->setName("default");
     config->addColorSpace(cs);
@@ -338,13 +338,7 @@ OCIO_ADD_TEST(Config, interchange_roles_warnings)
     dcs->setName("dcs");
     config->addColorSpace(dcs);
 
-    // Add a scene-referred and a display-referred view transform.
-    auto vt = OCIO::ViewTransform::Create(OCIO::REFERENCE_SPACE_DISPLAY);
-    vt->setName("display");
-    OCIO_CHECK_NO_THROW(vt->setTransform(OCIO::MatrixTransform::Create(),
-                                        OCIO::VIEWTRANSFORM_DIR_FROM_REFERENCE));
-    OCIO_CHECK_NO_THROW(config->addViewTransform(vt));
-    vt = OCIO::ViewTransform::Create(OCIO::REFERENCE_SPACE_SCENE);
+    auto vt = OCIO::ViewTransform::Create(OCIO::REFERENCE_SPACE_SCENE);
     vt->setName("view_transform");
     OCIO_CHECK_NO_THROW(vt->setTransform(OCIO::MatrixTransform::Create(),
                                         OCIO::VIEWTRANSFORM_DIR_FROM_REFERENCE));
@@ -353,6 +347,13 @@ OCIO_ADD_TEST(Config, interchange_roles_warnings)
     // End of setup.
 
     // Interchange roles tests
+
+    {
+        // Test that the config version is >= 2.2.
+
+        OCIO_CHECK_GE(config->getMajorVersion(), 2);
+        OCIO_CHECK_GE(config->getMinorVersion(), 2);
+    }
     
     {
         // Test that both warnings appears when both interchange roles are missing.
@@ -361,12 +362,12 @@ OCIO_ADD_TEST(Config, interchange_roles_warnings)
         OCIO_CHECK_NO_THROW(config->validate());
         OCIO_CHECK_ASSERT(
             StringUtils::StartsWith(logGuard.output(), 
-            "[OpenColorIO Warning]: The aces_interchange role is required when there are scene-referred colorspaces.")
+            "[OpenColorIO Error]: The aces_interchange role is required when there are scene-referred colorspaces and the config version is 2.2 or higher.")
         );
 
         OCIO_CHECK_ASSERT(
             StringUtils::EndsWith(logGuard.output(), 
-            "[OpenColorIO Warning]: The cie_xyz_d65_interchange role is required when there are display-referred colorspaces.\n")
+            "[OpenColorIO Error]: The cie_xyz_d65_interchange role is required when there are display-referred colorspaces and the config version is 2.2 or higher.\n")
         );
     }
     
@@ -376,12 +377,11 @@ OCIO_ADD_TEST(Config, interchange_roles_warnings)
         // Set cie_xyz_d65_interchange role.
         config->setRole(OCIO::ROLE_INTERCHANGE_DISPLAY, dcs->getName());
 
-        // aces_interchange is still missing.
         OCIO::LogGuard logGuard;
         OCIO_CHECK_NO_THROW(config->validate());
         OCIO_CHECK_ASSERT(
         StringUtils::StartsWith(logGuard.output(), 
-            "[OpenColorIO Warning]: The aces_interchange role is required when there are scene-referred colorspaces.")
+            "[OpenColorIO Error]: The aces_interchange role is required when there are scene-referred colorspaces and the config version is 2.2 or higher.")
         );
     }
 
@@ -397,17 +397,34 @@ OCIO_ADD_TEST(Config, interchange_roles_warnings)
         OCIO_CHECK_NO_THROW(config->validate());
         OCIO_CHECK_ASSERT(
         StringUtils::StartsWith(logGuard.output(), 
-            "[OpenColorIO Warning]: The cie_xyz_d65_interchange role is required when there are display-referred colorspaces.")
+            "[OpenColorIO Error]: The cie_xyz_d65_interchange role is required when there are display-referred colorspaces and the config version is 2.2 or higher.")
         );
     }
 
     {
-        // Test that there is no warning when both interchange roles are set.
+        // Set both interchange roles and check that no warning is logged.
 
         // Set cie_xyz_d65_interchange role.
         config->setRole(OCIO::ROLE_INTERCHANGE_DISPLAY, dcs->getName());
         // Set aces_interchange role.
         config->setRole(OCIO::ROLE_INTERCHANGE_SCENE, scs->getName());
+
+        OCIO::LogGuard logGuard;
+        OCIO_CHECK_NO_THROW(config->validate());
+        OCIO_CHECK_ASSERT(
+        StringUtils::StartsWith(logGuard.output(), ""));
+    }
+
+    {
+        // Set the config to 2.1, delete the roles and check that no warning is logged.
+
+        OCIO_CHECK_NO_THROW(config->setMajorVersion(2));
+        OCIO_CHECK_NO_THROW(config->setMinorVersion(1));
+
+        // Unset cie_xyz_d65_interchange role.
+        config->setRole(OCIO::ROLE_INTERCHANGE_DISPLAY, nullptr);
+        // Set aces_interchange role.
+        config->setRole(OCIO::ROLE_INTERCHANGE_SCENE, nullptr);
 
         OCIO::LogGuard logGuard;
         OCIO_CHECK_NO_THROW(config->validate());

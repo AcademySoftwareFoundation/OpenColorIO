@@ -4,6 +4,7 @@
 set(SOURCES
     argparse.cpp
     strutil.cpp
+    logGuard.cpp
 )
 
 add_library(apputils STATIC ${SOURCES})
