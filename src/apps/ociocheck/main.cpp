@@ -11,6 +11,9 @@
 namespace OCIO = OCIO_NAMESPACE;
 
 #include "apputils/argparse.h"
+#include "apputils/logGuard.h"
+#include "utils/StringUtils.h"
+
 
 
 const char * DESC_STRING = "\n\n"
@@ -327,8 +330,19 @@ int main(int argc, const char **argv)
 
         try
         {
+            LogGuard logGuard;
             config->validate();
-            std::cout << "passed" << std::endl;
+            // Passed if there are no Error level logs.
+            if (!StringUtils::StartsWith(logGuard.output(), "[OpenColorIO Error]"))
+            {
+                std::cout << "passed" << std::endl;
+            }
+            else
+            {
+                std::cout << logGuard.output();
+                std::cout << "failed" << std::endl;
+            }
+            
         }
         catch(OCIO::Exception & exception)
         {

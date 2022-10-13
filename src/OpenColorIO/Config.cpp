@@ -1312,7 +1312,8 @@ void Config::validate() const
 
     StringSet existingColorSpaces;
 
-    bool hasDisplayReferredColorspace = false;
+    bool hasDisplayReferredColorspace   = false;
+    bool hasSceneReferredColorspace     = false;
 
     // Confirm all ColorSpaces are valid.
     for(int i=0; i<getImpl()->m_allColorSpaces->getNumColorSpaces(); ++i)
@@ -1359,9 +1360,14 @@ void Config::validate() const
 
         const std::string namelower = StringUtils::Lower(name);
         existingColorSpaces.insert(namelower);
+
         if (cs->getReferenceSpaceType() == REFERENCE_SPACE_DISPLAY)
         {
             hasDisplayReferredColorspace = true;
+        }
+        else if (cs->getReferenceSpaceType() == REFERENCE_SPACE_SCENE)
+        {
+            hasSceneReferredColorspace = true;
         }
     }
 
@@ -1394,6 +1400,60 @@ void Config::validate() const
             }
 
             // AddColorSpace, addNamedTransform & setRole already check there is no name conflict.
+        }
+
+        // Check for interchange roles requirements - scene-referred and display-referred.
+        if (getMajorVersion() >= 2 && getMinorVersion() >= 2)
+        {
+            // The aces_interchange role is required for config version >= 2.2.
+            if (hasSceneReferredColorspace)
+            {
+                bool containsAcesInterchange = false;
+                for (auto const& role : getImpl()->m_roles)
+                {
+                    if (Platform::Strcasecmp(role.first.c_str(), ROLE_INTERCHANGE_SCENE) == 0)
+                    {
+                        containsAcesInterchange = true;
+                        break;
+                    }
+                }
+
+                if (!containsAcesInterchange)
+                {
+                    // This is technically a validation failure, but only logging a message rather
+                    // than throwing (for now). This is to make it possible for upgradeToLatestVersion
+                    // to always result in a config that does not fail validation.
+                    std::ostringstream os;
+                    os << "The aces_interchange role is required when there are scene-referred";
+                    os << " colorspaces and the config version is 2.2 or higher.";
+                    LogError(os.str());
+                }
+            }
+
+            // The cie_xyz_d65_interchange role is required for config version >= 2.2.
+            if (hasDisplayReferredColorspace)
+            {
+                bool containsCieXyzD65Interchange = false;
+                for (auto const& role : getImpl()->m_roles)
+                {
+                    if (Platform::Strcasecmp(role.first.c_str(), ROLE_INTERCHANGE_DISPLAY) == 0)
+                    {
+                        containsCieXyzD65Interchange = true;
+                        break;
+                    }
+                }
+
+                if (!containsCieXyzD65Interchange)
+                {
+                    // This is technically a validation failure, but only logging a message rather
+                    // than throwing (for now). This is to make it possible for upgradeToLatestVersion
+                    // to always result in a config that does not fail validation.
+                    std::ostringstream os;
+                    os << "The cie_xyz_d65_interchange role is required when there are";
+                    os << " display-referred colorspaces and the config version is 2.2 or higher.";
+                    LogError(os.str());
+                }
+            }
         }
     }
 
@@ -4778,77 +4838,6 @@ void Config::Impl::checkVersionConsistency() const
     if (m_majorVersion < 2 && m_allNamedTransforms.size() != 0)
     {
         throw Exception("Only version 2 (or higher) can have NamedTransforms.");
-    }
-
-    // Check for interchange roles requirements - scene-referred and display-referred.
-    if (m_majorVersion >= 2 && m_minorVersion >= 2)
-    {
-        const int nbCS = m_allColorSpaces->getNumColorSpaces();
-        bool containsDisplayReferredColorSpaces = false;
-        bool containsSceneReferredColorSpaces = false;
-        for (int i = 0; i < nbCS; ++i)
-        {
-            const auto & cs = m_allColorSpaces->getColorSpaceByIndex(i);
-            if (!MatchReferenceType(SEARCH_REFERENCE_SPACE_DISPLAY, cs->getReferenceSpaceType()))
-            {
-                // display referred colorspace.
-                containsDisplayReferredColorSpaces |= true;
-            }
-
-            if (!MatchReferenceType(SEARCH_REFERENCE_SPACE_SCENE, cs->getReferenceSpaceType()))
-            {
-                // display referred colorspace.
-                containsSceneReferredColorSpaces |= true;
-            }
-        }
-
-        // Check if there are scene referred colorspace.
-        if (containsSceneReferredColorSpaces)
-        {
-            // aces_interchange role is required.
-            bool containsAcesInterchange = false;
-            for (auto const& role : m_roles)
-            {
-                if (Platform::Strcasecmp(role.first.c_str(), ROLE_INTERCHANGE_SCENE) == 0)
-                {
-                    // found aces_interchange
-                    containsAcesInterchange = true;
-                    break;
-                }
-            }
-
-            if (!containsAcesInterchange)
-            {
-                std::ostringstream os;
-                os << "The aces_interchange role is required when there are scene-referred";
-                os << " colorspaces.";
-                LogWarning(os.str());
-            }
-        }
-
-        // Check if there are display referred colorspace.
-        if (containsDisplayReferredColorSpaces)
-        {
-            // cie_xyz_d65_interchange role is required.
-            bool containsCieXyzD65Interchange = false;
-            for (auto const& role : m_roles)
-            {
-                if (Platform::Strcasecmp(role.first.c_str(), ROLE_INTERCHANGE_DISPLAY) == 0)
-                {
-                    // found cie_xyz_d65_interchange
-                    containsCieXyzD65Interchange = true;
-                    break;
-                }
-            }
-
-            if (!containsCieXyzD65Interchange)
-            {
-                std::ostringstream os;
-                os << "The cie_xyz_d65_interchange role is required when there are";
-                os << " display-referred colorspaces.";
-                LogWarning(os.str());
-            }
-        }
     }
 }
 
