@@ -99,7 +99,7 @@ void OpenInputFileStream(std::ifstream & stream, const char * filename, std::ios
     // Returns the specified filename string as a UTF16 wstring for Windows.
     const std::wstring filenameToUTF(const std::string & str);
 #else
-    // Return the specified filename string as is for Unix-like OS.
+    // Returns the specified filename string as is for Unix-like OS.
     const std::string filenameToUTF(const std::string & str);
 #endif
 

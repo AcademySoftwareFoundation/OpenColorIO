@@ -22,29 +22,29 @@ struct PyConfigIOProxy : ConfigIOProxy
     std::vector<uint8_t> getLutData(const char * filepath) const override
     {
         PYBIND11_OVERRIDE_PURE(
-            std::vector<uint8_t>,
-            ConfigIOProxy,                  // Parent class
-            getLutData,                     // Name of function in C++ (must match Python name)
-            filepath                        // Argument(s)
+            std::vector<uint8_t>,           // Return type.
+            ConfigIOProxy,                  // Parent class.
+            getLutData,                     // Name of function in C++ (must match Python name).
+            filepath                        // Argument.
         );
     }
 
     std::string getConfigData() const override
     {
         PYBIND11_OVERRIDE_PURE(
-            std::string,
-            ConfigIOProxy,                  // Parent class
-            getConfigData,                  // Name of function in C++ (must match Python name)
+            std::string,                    // Return type.
+            ConfigIOProxy,                  // Parent class.
+            getConfigData,                  // Name of function in C++ (must match Python name).
         );
     }
 
     std::string getFastLutFileHash(const char * filepath) const override
     {
         PYBIND11_OVERRIDE_PURE(
-            std::string,                    // Return type
-            ConfigIOProxy,                  // Parent class
-            getFastLutFileHash,             // Name of function in C++ (must match Python name)
-            filepath                        // Argument(s)
+            std::string,                    // Return type.
+            ConfigIOProxy,                  // Parent class.
+            getFastLutFileHash,             // Name of function in C++ (must match Python name).
+            filepath                        // Argument.
         );
     }
 };

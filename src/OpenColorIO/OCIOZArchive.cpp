@@ -64,7 +64,7 @@ struct ArchiveOptions {
 };
 
 /**
- * @brief Guard against early throws with Minizip-ng objects. 
+ * \brief Guard against early throws with Minizip-ng objects. 
  * 
  */
 struct MinizipNgHandlerGuard
@@ -141,9 +141,9 @@ struct MinizipNgMemStreamGuard
 /**
  * Utility function for archived Configs.
  * 
- * @param archiver Minizip-ng handle object.
- * @param path Path of the file or the folder to add inside the OCIOZ archive.
- * @param configWorkingDirectory Working directory of the current config.
+ * \param archiver Minizip-ng handle object.
+ * \param path Path of the file or the folder to add inside the OCIOZ archive.
+ * \param configWorkingDirectory Working directory of the current config.
  */
 void addSupportedFiles(void * archiver, const char * path, const char * configWorkingDirectory)
 {
@@ -199,6 +199,7 @@ void addSupportedFiles(void * archiver, const char * path, const char * configWo
         mz_os_close_dir(dir);
     }
 }
+//////////////////////////////////////////////////////////////////////////////////////
 
 void archiveConfig(std::ostream & ostream, const Config & config, const char * configWorkingDirectory)
 {
@@ -316,7 +317,7 @@ void archiveConfig(std::ostream & ostream, const Config & config, const char * c
 }
 
 /**
- * @brief Extract the specified OCIOZ archive.
+ * \brief Extract the specified OCIOZ archive.
  * 
  * This function can only be used with the OCIOZ archive format (not arbitrary zip files).
  * 
@@ -374,15 +375,16 @@ void ExtractOCIOZArchive(const char * archivePath, const char * destination)
 }
 
 /**
- * @brief Callback function for getFileStringFromArchiveStream in order to get the contents of a
+ * \brief Callback function for getFileStringFromArchiveStream in order to get the contents of a
  *        file inside an OCIOZ archive as a buffer. 
  * 
  * The file is retrieved by comparing the paths.
  * 
- * @param buffer Buffer of uint8_t
- * @param reader Minizip-ng handle object.
- * @param info File information.
- * @param filepath Path to find.
+ * \param reader Minizip-ng handle object.
+ * \param info File information.
+ * \param filepath Path to find.
+ * 
+ * \return Vector of uint8 with the content of the specified file from an OCIOZ archive.
  */
 std::vector<uint8_t> getFileBufferByPath(void * reader, mz_zip_file & info, std::string filepath)
 {
@@ -401,15 +403,16 @@ std::vector<uint8_t> getFileBufferByPath(void * reader, mz_zip_file & info, std:
 }
 
 /**
- * @brief Callback function for getFileStringFromArchiveStream in order to Get the content of a 
+ * \brief Callback function for getFileStringFromArchiveStream in order to Get the content of a 
  *        file inside an OCIOZ archive as a buffer. 
  * 
  * The file is retrieved by comparing only the extension.  (Used for the .ocio file.)
  * 
- * @param buffer Buffer of uint8_t
- * @param reader Minizip-ng reader object.
- * @param info File information
- * @param extension Extension to find
+ * \param reader Minizip-ng reader object.
+ * \param info File information
+ * \param extension Extension to find
+ * 
+ * \return Vector of uint8 with the content of the file from an OCIOZ archive.
  */
 std::vector<uint8_t> getFileBufferByExtension(void * reader, mz_zip_file & info, std::string extension)
 {
@@ -426,15 +429,16 @@ std::vector<uint8_t> getFileBufferByExtension(void * reader, mz_zip_file & info,
 }
 
 /**
- * @brief Get the content of a file inside an OCIOZ archive as a buffer. 
+ * \brief Get the content of a file inside an OCIOZ archive as a buffer. 
  * 
- * The two possibles callbacks are defined above:
+ * The two possible callbacks are defined above:
  * getFileBufferByPath and getFileBufferByExtension.
  * 
- * @param buffer Buffer of uint8_t
- * @param filepath File to retrieve from the OCIOZ archive.
- * @param archivePath Path to the archive.
- * @param fn Callback function to get the (file) buffer by path or by extension.
+ * \param filepath File to retrieve from the OCIOZ archive.
+ * \param archivePath Path to the archive.
+ * \param fn Callback function to get the (file) buffer by path or by extension.
+ * 
+ * \return Vector of uint8 with the content of the specified file from an OCIOZ archive.
  */
 std::vector<uint8_t> getFileStringFromArchiveFile(const std::string & filepath, 
                     const std::string & archivePath, 
@@ -450,7 +454,7 @@ std::vector<uint8_t> getFileStringFromArchiveFile(const std::string & filepath,
 
     MinizipNgHandlerGuard extracterGuard(reader, false, true);
 
-    // Open the zip in memory.
+    // Open the OCIOZ archive from the filesystem.
     err = mz_zip_reader_open_file(reader, archivePath.c_str());
     if (err != MZ_OK)
     {
@@ -488,19 +492,16 @@ std::vector<uint8_t> getFileStringFromArchiveFile(const std::string & filepath,
 // API section
 //////////////////////////////////////////////////////////////////////////////////////
 
-// See header file for information.
 std::vector<uint8_t> getFileBufferFromArchive(const std::string & filepath, const std::string & archivePath)
 {
     return getFileStringFromArchiveFile(filepath, archivePath, &getFileBufferByPath);
 }
 
-// See header file for information.
 std::vector<uint8_t> getFileBufferFromArchiveByExtension(const std::string & extension, const std::string & archivePath)
 {
     return getFileStringFromArchiveFile(extension, archivePath, &getFileBufferByExtension);
 }
 
-// See header file for information.
 void getEntriesMappingFromArchiveFile(const std::string & archivePath, 
                                       std::map<std::string, std::string> & map)
 {

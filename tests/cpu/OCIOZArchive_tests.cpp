@@ -45,7 +45,7 @@ struct DirectoryCreationGuard
 
 OCIO_ADD_TEST(OCIOZArchive, is_config_archivable)
 {
-    // This test primarly tests the isArchivable method from the Config object
+    // This test primarily tests the isArchivable method from the Config object
 
     const std::string CONFIG = 
         "ocio_profile_version: 2\n"
@@ -192,7 +192,7 @@ OCIO_ADD_TEST(OCIOZArchive, is_config_archivable)
          * Legal scenarios
          */
 
-        // Valid FileTransfrom path.
+        // Valid FileTransform path.
         addFTAndTestIsArchivable("luts", true);
         addFTAndTestIsArchivable(R"(luts/myluts1)", true);
         addFTAndTestIsArchivable(R"(luts\myluts1)", true);

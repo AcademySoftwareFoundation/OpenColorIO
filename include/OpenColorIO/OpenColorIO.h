@@ -3580,11 +3580,12 @@ public:
     /**
      * \brief Provide the contents of a LUT file as a buffer of uint8_t data.
      * 
-     * \param buffer Contents of the LUT file.
      * \param filepath Fully resolved path to the "file."
      * 
      * The file path is based on the Config's current working directory and is the same absolute
      * path that would have been provided to the file system.
+     * 
+     * \return Vector of uint8 with the content of the LUT.
      */
     virtual std::vector<uint8_t> getLutData(const char * filepath) const = 0;
 
@@ -3605,7 +3606,7 @@ public:
      * If the "file" does not exist, in other words, if the proxy is unable to supply the requested
      * file contents, the function must return an empty string.
      * 
-     * \param filepath Fully resolve path to the "file."
+     * \param filepath Fully resolve the path to the "file."
      * 
      * The file path is based on the Config's current working directory and is the same absolute
      * path that would have been provided to the file system.

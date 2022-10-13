@@ -64,14 +64,14 @@ int main(int argc, const char **argv)
                "    # Extract myarchive.ocioz into new directory named myarchive\n"
                "    ocioarchive --extract myarchive.ocioz\n\n"
                "    # Extract myarchive.ocioz into new directory named ocio_config\n"
-               "    ocioarchive --extract myarchive.ocioz --newdir ocio_config\n\n"
+               "    ocioarchive --extract myarchive.ocioz --dir ocio_config\n\n"
                "    # List the files inside myarchive.ocioz\n"
                "    ocioarchive --list myarchive.ocioz\n",
                "%*", parse_end_args, "",
                "<SEPARATOR>", "Options:",
                "--iconfig %s",  &configFilename,        "Config to archive (takes precedence over $OCIO)",
                "--extract",     &extract,               "Extract an OCIOZ config archive",
-               "--dir %s",      &extractDestination,    "Path where to extract the files (folder are created if missing)",
+               "--dir %s",      &extractDestination,    "Path where to extract the files (folders are created if missing)",
                "--list",        &list,                  "List the files inside an archive without extracting it",
                "--help",        &help,                  "Display the help and exit",
                "-h",            &help,                  "Display the help and exit",

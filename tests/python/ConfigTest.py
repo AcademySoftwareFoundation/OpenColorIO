@@ -990,7 +990,7 @@ colorspaces:
         # Simple check on the number of color spaces in the test config.
         self.assertEqual(len(config.getColorSpaceNames()), 13)
 
-        # Simple test to exercice ConfigIOProxy.
+        # Simple test to exercise ConfigIOProxy.
         processor = config.getProcessor("plain_lut1_cs", "shot1_lut1_cs")
         processor.getDefaultCPUProcessor()
 
@@ -1006,7 +1006,7 @@ colorspaces:
         # Simple check on the number of color spaces in the test config.
         self.assertEqual(len(config.getColorSpaceNames()), 13)
 
-        # Simple test to exercice ConfigIOProxy.
+        # Simple test to exercise ConfigIOProxy.
         processor = config.getProcessor("plain_lut1_cs", "shot1_lut1_cs")
         processor.getDefaultCPUProcessor()
 
@@ -1028,7 +1028,7 @@ colorspaces:
         with self.assertRaises(OCIO.Exception):
             OCIO.Config.CreateFromFile(ocioz_file)
 
-        # Missing LUT files but contains LUTs files.
+        # Missing LUT files but contains config file.
         ocioz_file = os.path.normpath(
             os.path.join(
                 TEST_DATAFILES_DIR, 'configs', 'ocioz_archive_configs', 'config_missing_luts.ocioz'
@@ -1146,7 +1146,7 @@ colorspaces:
         # Simple check on the number of color spaces in the test config.
         self.assertEqual(len(config.getColorSpaceNames()), 3)
 
-        # Simple test to exercice ConfigIOProxy.
+        # Simple test to exercise ConfigIOProxy.
         processor = config.getProcessor("c1", "c2")
         processor.getDefaultCPUProcessor()
 
