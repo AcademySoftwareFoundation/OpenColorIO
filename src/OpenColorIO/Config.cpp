@@ -1427,7 +1427,7 @@ void Config::validate() const
         }
     }
 
-    // Confirm all roles are valid.
+    // Confirm all roles used by the config are valid and that essential roles are present.
     {
         for(StringMap::const_iterator iter = getImpl()->m_roles.begin(),
             end = getImpl()->m_roles.end(); iter!=end; ++iter)
@@ -1458,57 +1458,115 @@ void Config::validate() const
             // AddColorSpace, addNamedTransform & setRole already check there is no name conflict.
         }
 
+
         // Check for interchange roles requirements - scene-referred and display-referred.
         if (getMajorVersion() >= 2 && getMinorVersion() >= 2)
         {
-            // The aces_interchange role is required for config version >= 2.2.
-            if (hasSceneReferredColorspace)
-            {
-                bool containsAcesInterchange = false;
-                for (auto const& role : getImpl()->m_roles)
-                {
-                    if (Platform::Strcasecmp(role.first.c_str(), ROLE_INTERCHANGE_SCENE) == 0)
-                    {
-                        containsAcesInterchange = true;
-                        break;
-                    }
-                }
+            bool hasRoleSceneLinear                 = false;
+            bool hasRoleCompositingLog              = false;
+            bool hasRoleColorTiming                 = false;
 
-                if (!containsAcesInterchange)
+            bool hasRoleAcesInterchange             = false;
+            bool acesInterHasSceneRefColorspace     = false;
+            bool hasRoleCieXyzD65Interchange        = false;
+            bool cieInterHasDisplayRefColorspace    = false;
+
+            for (auto const& role : getImpl()->m_roles)
+            {
+                if (Platform::Strcasecmp(role.first.c_str(), ROLE_SCENE_LINEAR) == 0)
                 {
-                    // This is technically a validation failure, but only logging a message rather
-                    // than throwing (for now). This is to make it possible for upgradeToLatestVersion
-                    // to always result in a config that does not fail validation.
-                    std::ostringstream os;
-                    os << "The aces_interchange role is required when there are scene-referred";
-                    os << " colorspaces and the config version is 2.2 or higher.";
-                    LogError(os.str());
+                    hasRoleSceneLinear = true;
+                }
+                else if (Platform::Strcasecmp(role.first.c_str(), ROLE_COMPOSITING_LOG ) == 0)
+                {
+                    hasRoleCompositingLog = true;
+                }
+                else if (Platform::Strcasecmp(role.first.c_str(), ROLE_COLOR_TIMING) == 0)
+                {
+                    hasRoleColorTiming = true;
+                }
+                else if (Platform::Strcasecmp(role.first.c_str(), ROLE_INTERCHANGE_SCENE) == 0)
+                {
+                    hasRoleAcesInterchange = true;
+
+                    ConstColorSpaceRcPtr cs = getColorSpace(role.second.c_str());
+                    acesInterHasSceneRefColorspace = 
+                        cs->getReferenceSpaceType() == REFERENCE_SPACE_SCENE;
+                }
+                else if (Platform::Strcasecmp(role.first.c_str(), ROLE_INTERCHANGE_DISPLAY) == 0)
+                {
+                    hasRoleCieXyzD65Interchange = true;
+                    ConstColorSpaceRcPtr cs = getColorSpace(role.second.c_str());
+                    cieInterHasDisplayRefColorspace = 
+                        cs->getReferenceSpaceType() == REFERENCE_SPACE_DISPLAY;
                 }
             }
 
-            // The cie_xyz_d65_interchange role is required for config version >= 2.2.
-            if (hasDisplayReferredColorspace)
-            {
-                bool containsCieXyzD65Interchange = false;
-                for (auto const& role : getImpl()->m_roles)
-                {
-                    if (Platform::Strcasecmp(role.first.c_str(), ROLE_INTERCHANGE_DISPLAY) == 0)
-                    {
-                        containsCieXyzD65Interchange = true;
-                        break;
-                    }
-                }
+            // All LogError below are technically a validation failure, but only logging a message 
+            // rather than throwing (for now). This is to make it possible for upgradeToLatestVersion
+            // to always result in a config that does not fail validation.
 
-                if (!containsCieXyzD65Interchange)
-                {
-                    // This is technically a validation failure, but only logging a message rather
-                    // than throwing (for now). This is to make it possible for upgradeToLatestVersion
-                    // to always result in a config that does not fail validation.
-                    std::ostringstream os;
-                    os << "The cie_xyz_d65_interchange role is required when there are";
-                    os << " display-referred colorspaces and the config version is 2.2 or higher.";
-                    LogError(os.str());
-                }
+            // The scene_linear role is required for config version >= 2.2.
+            if (!hasRoleSceneLinear)
+            {
+                std::ostringstream os;
+                os << "The scene_linear role is required for a config version 2.2 or higher.";
+                LogError(os.str());
+            }
+
+            // The compositing_log role is required for config version >= 2.2.
+            if (!hasRoleCompositingLog)
+            {
+                std::ostringstream os;
+                os << "The compositing_log role is required for a config version 2.2 or higher.";
+                LogError(os.str());
+            }
+
+            // The color_timing role is required for config version >= 2.2.
+            if (!hasRoleColorTiming)
+            {
+                std::ostringstream os;
+                os << "The color_timing role is required for a config version 2.2 or higher.";
+                LogError(os.str());
+            }
+
+            // The aces_interchange role is required for config version >= 2.2 when there is
+            // at least one scene-referred colorspace.
+            if (hasSceneReferredColorspace && !hasRoleAcesInterchange)
+            {
+                std::ostringstream os;
+                os << "The aces_interchange role is required when there are scene-referred";
+                os << " color spaces and the config version is 2.2 or higher.";
+                LogError(os.str());
+            }
+            else if (hasSceneReferredColorspace && 
+                     hasRoleAcesInterchange && 
+                     !acesInterHasSceneRefColorspace)
+            {
+                std::ostringstream os;
+                os << "The aces_interchange role must be a scene-referred color space.";
+                LogError(os.str());
+            }
+
+            // The cie_xyz_d65_interchange role is required for config version >= 2.2 when
+            // there is at least one display-referred colorspace.
+            if (hasDisplayReferredColorspace && !hasRoleCieXyzD65Interchange)
+            {
+                // This is technically a validation failure, but only logging a message rather
+                // than throwing (for now). This is to make it possible for upgradeToLatestVersion
+                // to always result in a config that does not fail validation.
+                std::ostringstream os;
+                os << "The cie_xyz_d65_interchange role is required when there are";
+                os << " display-referred color spaces and the config version is 2.2 or higher.";
+                LogError(os.str());
+            }
+            else if (hasDisplayReferredColorspace && 
+                     hasRoleCieXyzD65Interchange && 
+                     !cieInterHasDisplayRefColorspace)
+            {
+                std::ostringstream os;
+                os << "The cie_xyz_d65_interchange role must be a display-referred color space.";
+                LogError(os.str());
             }
         }
     }

@@ -126,11 +126,6 @@ void LogMessage(LoggingLevel level, const char * message)
 {
     switch(level)
     {
-        case LOGGING_LEVEL_ERROR:
-        {
-            LogError(message);
-            break;
-        }
         case LOGGING_LEVEL_WARNING:
         {
             LogWarning(message);
@@ -163,7 +158,11 @@ void LogError(const std::string & text)
     AutoMutex lock(g_logmutex);
     InitLogging();
 
-    if(g_logginglevel<LOGGING_LEVEL_ERROR) return;
+    // Did not add a LOGGING_LEVEL_ERROR since the enum values are part of the user-facing 
+    // documentation and it is therefore difficult to insert an ERROR value since it would 
+    // naturally need to fall between 0 and 1. But there is no need since presumably users 
+    // that want to see warnings would also want to see errors.
+    if(g_logginglevel<LOGGING_LEVEL_WARNING) return;
 
     LogMessage("[OpenColorIO Error]: ", text);
 }
