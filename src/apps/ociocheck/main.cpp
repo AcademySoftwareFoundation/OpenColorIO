@@ -506,7 +506,8 @@ int main(int argc, const char **argv)
             //isArchivable = config->isArchivable();
 
             // Passed if there are no Error level logs.
-            if (!StringUtils::StartsWith(logGuard.output(), "[OpenColorIO Error]"))
+            StringUtils::StringVec svec = StringUtils::SplitByLines(logGuard.output());
+            if (!StringUtils::Contain(svec, "[OpenColorIO Error]"))
             {
                 std::cout << "passed" << std::endl;
             }

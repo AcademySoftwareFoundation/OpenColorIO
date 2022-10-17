@@ -329,7 +329,7 @@ OCIO_ADD_TEST(Config, required_roles_for_version_2_2)
     const std::string display{ "display" };
     OCIO_CHECK_NO_THROW(config->addDisplayView(display.c_str(), "view1", "default", ""));
 
-    // Add a scene-referred.
+    // Add a scene-referred color space.
     auto scs = OCIO::ColorSpace::Create(OCIO::REFERENCE_SPACE_SCENE);
     scs->setName("scs");
     config->addColorSpace(scs);
@@ -405,7 +405,7 @@ OCIO_ADD_TEST(Config, required_roles_for_version_2_2)
     }
     
     // Set colorspace for all required roles.
-    config->setRole(OCIO::ROLE_SCENE_LINEAR, dcs->getName());
+    config->setRole(OCIO::ROLE_SCENE_LINEAR, scs->getName());
     config->setRole(OCIO::ROLE_COMPOSITING_LOG, dcs->getName());
     config->setRole(OCIO::ROLE_COLOR_TIMING, dcs->getName());
     config->setRole(OCIO::ROLE_INTERCHANGE_SCENE, scs->getName());

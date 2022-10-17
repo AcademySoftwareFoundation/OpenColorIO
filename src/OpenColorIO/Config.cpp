@@ -1440,6 +1440,7 @@ void Config::validate() const
                 else if (Platform::Strcasecmp(role.first.c_str(), ROLE_INTERCHANGE_DISPLAY) == 0)
                 {
                     hasRoleCieXyzD65Interchange = true;
+
                     ConstColorSpaceRcPtr cs = getColorSpace(role.second.c_str());
                     cieInterHasDisplayRefColorspace = 
                         cs->getReferenceSpaceType() == REFERENCE_SPACE_DISPLAY;
@@ -1450,7 +1451,6 @@ void Config::validate() const
             // rather than throwing (for now). This is to make it possible for upgradeToLatestVersion
             // to always result in a config that does not fail validation.
 
-            // The scene_linear role is required for config version >= 2.2.
             if (!hasRoleSceneLinear)
             {
                 std::ostringstream os;
@@ -1458,7 +1458,6 @@ void Config::validate() const
                 LogError(os.str());
             }
 
-            // The compositing_log role is required for config version >= 2.2.
             if (!hasRoleCompositingLog)
             {
                 std::ostringstream os;
@@ -1466,7 +1465,6 @@ void Config::validate() const
                 LogError(os.str());
             }
 
-            // The color_timing role is required for config version >= 2.2.
             if (!hasRoleColorTiming)
             {
                 std::ostringstream os;
@@ -1474,8 +1472,6 @@ void Config::validate() const
                 LogError(os.str());
             }
 
-            // The aces_interchange role is required for config version >= 2.2 when there is
-            // at least one scene-referred colorspace.
             if (hasSceneReferredColorspace && !hasRoleAcesInterchange)
             {
                 std::ostringstream os;
@@ -1483,8 +1479,7 @@ void Config::validate() const
                 os << " color spaces and the config version is 2.2 or higher.";
                 LogError(os.str());
             }
-            else if (hasSceneReferredColorspace && 
-                     hasRoleAcesInterchange && 
+            else if (hasRoleAcesInterchange && 
                      !acesInterHasSceneRefColorspace)
             {
                 std::ostringstream os;
@@ -1492,20 +1487,14 @@ void Config::validate() const
                 LogError(os.str());
             }
 
-            // The cie_xyz_d65_interchange role is required for config version >= 2.2 when
-            // there is at least one display-referred colorspace.
             if (hasDisplayReferredColorspace && !hasRoleCieXyzD65Interchange)
             {
-                // This is technically a validation failure, but only logging a message rather
-                // than throwing (for now). This is to make it possible for upgradeToLatestVersion
-                // to always result in a config that does not fail validation.
                 std::ostringstream os;
                 os << "The cie_xyz_d65_interchange role is required when there are";
                 os << " display-referred color spaces and the config version is 2.2 or higher.";
                 LogError(os.str());
             }
-            else if (hasDisplayReferredColorspace && 
-                     hasRoleCieXyzD65Interchange && 
+            else if (hasRoleCieXyzD65Interchange && 
                      !cieInterHasDisplayRefColorspace)
             {
                 std::ostringstream os;
