@@ -495,7 +495,7 @@ int main(int argc, const char **argv)
         std::cout << "** Validation **" << std::endl;
 
         std::string cacheID;
-        bool isArchivable = false;
+        //bool isArchivable = false;
         try
         {
             LogGuard logGuard;
