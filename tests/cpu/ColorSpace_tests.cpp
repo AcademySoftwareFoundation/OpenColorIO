@@ -716,3 +716,28 @@ colorspaces:
     OCIO_CHECK_EQUAL(std::string(cfg->getColorSpaceFromFilepath("test_aces_test")),
                      "colorspace");
 }
+
+OCIO_ADD_TEST(Config, is_colorspaces_linear)
+{
+    // Load config.
+    OCIO::ConstConfigRcPtr config;
+    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromFile("ocio://default"));
+    OCIO_REQUIRE_ASSERT(config);
+    OCIO_CHECK_NO_THROW(config->validate());
+
+    auto numberOfColorspaces = config->getNumColorSpaces();
+    for (int i = 0; i < numberOfColorspaces; i++)
+    {
+        auto cs = config->getColorSpace(config->getColorSpaceNameByIndex(i));
+        bool isLinearToSceneReference = config->isColorSpaceLinear(config->getColorSpaceNameByIndex(i), OCIO::REFERENCE_SPACE_SCENE);
+        bool isLinearToDisplayReference = config->isColorSpaceLinear(config->getColorSpaceNameByIndex(i), OCIO::REFERENCE_SPACE_DISPLAY);
+        std::cout   << "[" << cs->getName() << "] "
+                    << "Scene-ref. [" 
+                    << (isLinearToSceneReference ? "Linear" : "Non-linear")
+                    << "]"
+                    << ", Display-ref. ["
+                    << (isLinearToSceneReference ? "Linear" : "Non-linear")
+                    << "]"
+                    << std::endl;
+    }
+}

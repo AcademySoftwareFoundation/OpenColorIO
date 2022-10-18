@@ -572,6 +572,24 @@ public:
      */
     void setInactiveColorSpaces(const char * inactiveColorSpaces);
     const char * getInactiveColorSpaces() const;
+    
+    /**
+     * /brief Return true if the specified color space is linear.
+     * 
+     * The color space is evaluated against multiple criteria in order to determine if its 
+     * linearity.
+     * 
+     * - Encoding type and the reference space type.
+     * - Returned value of isData()
+     * - Color space's reference space type and the specified argument.
+     * - Some heuristic that tries to calculate if the color space is linear.
+     * 
+     * \param colorSpace Color space to evaluate.
+     * \param referenceSpaceType Evaluate the color space to this reference space type.
+
+     * \return  
+     */
+    bool isColorSpaceLinear(const char * colorSpace, ReferenceSpaceType referenceSpaceType) const;
 
     //
     // Roles

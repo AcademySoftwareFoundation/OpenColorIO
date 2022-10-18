@@ -2536,6 +2536,85 @@ void Config::clearColorSpaces()
     getImpl()->refreshActiveColorSpaces();
 }
 
+bool Config::isColorSpaceLinear(const char * colorSpace, ReferenceSpaceType referenceSpaceType) const
+{
+    auto cs = getColorSpace(colorSpace);
+
+    std::string encoding = cs->getEncoding();
+    if (!encoding.empty())
+    {
+        // Check the encoding value if it is set.        
+        if ((StringUtils::Compare(cs->getEncoding(), "scene-linear") && 
+            referenceSpaceType == REFERENCE_SPACE_DISPLAY) || 
+            (StringUtils::Compare(cs->getEncoding(), "display-linear") && 
+            referenceSpaceType == REFERENCE_SPACE_SCENE))
+        {
+            // Mismatch between Encoding and Reference Type.
+            return false;
+        }
+    }
+
+    if (cs->isData())
+    {
+        return false;
+    }
+
+    // Colorspace is not linear if the types are opposite.
+    if (cs->getReferenceSpaceType() != referenceSpaceType)
+    {
+        return false;
+    }
+
+    // Can not set anything since this method is const (which makes sense)
+    // Two options:
+    //    1 - isColorSpaceLinear is const, the user can use a normal config object, but he will 
+    //        have to disable the cache himself if he don't want to processor caches to polluted
+    //        by the getProcessors below.
+    //    2 - The const can be removed but the user will have to create an editable
+    //        config in order to use isColorspaceLinear. 
+    //        We can setProcessorCacheFlags with this option.
+    //setProcessorCacheFlags(OCIO::PROCESSOR_CACHE_OFF);
+
+    auto evaluate = [this](ConstTransformRcPtr &t) -> bool
+    {
+        std::vector<float> img = { 0.0625f, 0.0625f, 0.0625f, 4.f, 4.f, 4.f };
+        std::vector<float> dst = { 0.f, 0.f, 0.f, 0.f, 0.f, 0.f };
+        PackedImageDesc desc(&img[0], 2, 1, CHANNEL_ORDERING_RGB);
+        PackedImageDesc descDst(&dst[0], 2, 1, CHANNEL_ORDERING_RGB);
+
+        auto procToReference = getProcessor(t);
+        auto optCPUProc = procToReference->getOptimizedCPUProcessor(OPTIMIZATION_LOSSLESS);
+
+        // TODOCED: Offset?
+        
+        // Based on the issue description. Is this still needed?
+        // TODOCED The CDL op would return true if the power values are 1 ?
+        // TODOCED Other ops (excluding Matrix, Range, CDL) would return true if their isIdentity is true ?
+        optCPUProc->apply(desc, descDst);
+
+        bool ret = true;
+        for (auto i = 0; i < dst.size()/2; i++ )
+        {
+            ret &= EqualWithAbsError(dst[i]*64.f, dst[i+3], 1e-5f);
+        }
+        return ret;
+    };
+    
+    ConstTransformRcPtr transformToReference = cs->getTransform(COLORSPACE_DIR_TO_REFERENCE);
+    ConstTransformRcPtr transformFromReference = cs->getTransform(COLORSPACE_DIR_FROM_REFERENCE);
+    if (transformToReference && transformFromReference || transformToReference)
+    {
+        // Color space has transforms for to-reference direction.
+        return evaluate(transformToReference);
+    }
+    else if (transformFromReference)
+    {
+        // Color space has transforms for from-reference direction.
+        return evaluate(transformFromReference);
+    }
+
+    return true;
+}
 
 ///////////////////////////////////////////////////////////////////////////
 
