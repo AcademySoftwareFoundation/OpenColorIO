@@ -924,20 +924,11 @@ public:
         {
             throw Exception("Config::GetProcessor failed. Transform is null.");
         }
-
-        // Create helper method.
-        auto CreateProcessor = [](const Config & config, 
-                                const ConstContextRcPtr & context,
-                                const ConstTransformRcPtr & transform,
-                                TransformDirection direction) -> ProcessorRcPtr
-        {
-            ProcessorRcPtr processor = Processor::Create();
-            processor->getImpl()->setProcessorCacheFlags(PROCESSOR_CACHE_OFF);
-            processor->getImpl()->setTransform(config, context, transform, direction);
-            return processor;
-        };
         
-        return CreateProcessor(config, m_context, transform, direction); 
+        ProcessorRcPtr processor = Processor::Create();
+        processor->getImpl()->setProcessorCacheFlags(PROCESSOR_CACHE_OFF);
+        processor->getImpl()->setTransform(config, m_context, transform, direction);
+        return processor;
     }
  
     int instantiateDisplay(const std::string & monitorName,
@@ -2625,8 +2616,6 @@ bool Config::isColorSpaceLinear(const char * colorSpace, ReferenceSpaceType refe
         float absError      = 1e-5f;
         float multiplier    = 64.f;
         bool ret            = true;
-
-        // Not using loop for readability.
 
         // Test the first RGB pair.
         ret &= EqualWithAbsError(dst[0]*multiplier, dst[3], absError);

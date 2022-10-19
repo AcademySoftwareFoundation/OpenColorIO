@@ -588,7 +588,6 @@ public:
      * 
      * The algorithm proceeds as follows:
      * -- If the color space isdata attribute is true, return false.
-     * 
      * -- If the reference space type of the color space differs from the requested reference 
      *    space type, return false.
      * -- If the color space's encoding attribute is present, return true if it matches the 
