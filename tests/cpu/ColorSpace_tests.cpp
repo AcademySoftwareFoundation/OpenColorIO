@@ -6,7 +6,9 @@
 
 #include "ColorSpace.cpp"
 
+#include <pystring/pystring.h>
 #include "testutils/UnitTest.h"
+#include "UnitTestUtils.h"
 
 namespace OCIO = OCIO_NAMESPACE;
 
@@ -719,25 +721,211 @@ colorspaces:
 
 OCIO_ADD_TEST(Config, is_colorspaces_linear)
 {
+
+    constexpr const char * TEST_CONFIG { R"(ocio_profile_version: 2
+
+description: Test config for the isColorSpaceLinear method.
+
+environment:
+  {}
+search_path: "non_existing_path"
+roles:
+  aces_interchange: scene_linear-trans
+  cie_xyz_d65_interchange: display_linear-enc
+  color_timing: scene_linear-trans
+  compositing_log: scene_log-enc
+  default: display_data
+  scene_linear: scene_linear-trans
+
+displays:
+  generic display:
+    - !<View> {name: Raw, colorspace: scene_data}
+
+# Make a few of the color spaces inactive, this should not affect the result.
+inactive_colorspaces: [display_linear-trans, scene_linear-trans]
+
+view_transforms:
+  - !<ViewTransform>
+    name: view_transform
+    from_scene_reference: !<MatrixTransform> {}
+
+# Display-referred color spaces.
+
+display_colorspaces:
+  - !<ColorSpace>
+    name: display_data
+    description: |
+      Data space.
+      Has a linear transform, which should never happen, but this will be ignored since 
+      isdata is true.
+    isdata: true
+    encoding: data
+    from_display_reference: !<MatrixTransform> {matrix: [ 3.240969941905, -1.537383177570, -0.498610760293, 0, -0.969243636281, 1.875967501508, 0.041555057407, 0, 0.055630079697, -0.203976958889, 1.056971514243, 0, 0, 0, 0, 1 ]}
+
+  - !<ColorSpace>
+    name: display_linear-enc
+    description: |
+      Encoding set to display-linear.
+      Has a non-existent transform, but this should be ignored since the encoding takes precedence.
+    isdata: false
+    encoding: display-linear
+    from_display_reference: !<FileTransform> {src: does-not-exist.lut}
+
+  - !<ColorSpace>
+    name: display_wrong-linear-enc
+    description: |
+      Encoding set to scene-linear.  This should never happen for a display space, but test it.
+    isdata: false
+    encoding: scene-linear
+
+  - !<ColorSpace>
+    name: display_video-enc
+    description: |
+      Encoding set to sdr-video.
+      Has a linear transform, but this should be ignored since the encoding takes precedence.
+    isdata: false
+    encoding: sdr-video
+    from_display_reference: !<MatrixTransform> {matrix: [ 3.240969941905, -1.537383177570, -0.498610760293, 0, -0.969243636281, 1.875967501508, 0.041555057407, 0, 0.055630079697, -0.203976958889, 1.056971514243, 0, 0, 0, 0, 1 ]}
+
+  - !<ColorSpace>
+    name: display_linear-trans
+    description: |
+      No encoding.  Transform is linear.
+    isdata: false
+    from_display_reference: !<GroupTransform>
+      children:
+        - !<MatrixTransform> {matrix: [ 3.240969941905, -1.537383177570, -0.498610760293, 0, -0.969243636281, 1.875967501508, 0.041555057407, 0, 0.055630079697, -0.203976958889, 1.056971514243, 0, 0, 0, 0, 1 ]}
+        - !<CDLTransform> {slope: [0.1, 2, 3], style: noclamp}
+
+  - !<ColorSpace>
+    name: display_video-trans
+    description: |
+      No encoding.  Transform is non-linear.
+    isdata: false
+    from_display_reference: !<BuiltinTransform> {style: DISPLAY - CIE-XYZ-D65_to_sRGB}
+
+# Scene-referred color spaces.
+
+colorspaces:
+  - !<ColorSpace>
+    name: scene_data
+    description: |
+      Data space.
+      Has a linear transform, which should never happen, but this will be ignored 
+      since isdata is true.
+    isdata: true
+    encoding: data
+    from_scene_reference: !<MatrixTransform> {matrix: [ 3.240969941905, -1.537383177570, -0.498610760293, 0, -0.969243636281, 1.875967501508, 0.041555057407, 0, 0.055630079697, -0.203976958889, 1.056971514243, 0, 0, 0, 0, 1 ]}
+
+  - !<ColorSpace>
+    name: scene_linear-enc
+    description: |
+      Encoding set to scene-linear.
+      Has a non-linear transform, but this will be ignored since the encoding takes precedence.
+    isdata: false
+    encoding: scene-linear
+    from_scene_reference: !<BuiltinTransform> {style: DISPLAY - CIE-XYZ-D65_to_sRGB}
+
+  - !<ColorSpace>
+    name: scene_wrong-linear-enc
+    description: |
+      Encoding set to display-linear.  This should never happen for a scene space, but test it.
+    isdata: false
+    encoding: display-linear
+
+  - !<ColorSpace>
+    name: scene_log-enc
+    description: |
+      Encoding set to log.
+      Has a linear transform, but this will be ignored since the encoding takes precedence.
+    isdata: false
+    encoding: log
+    from_scene_reference: !<MatrixTransform> {matrix: [ 3.240969941905, -1.537383177570, -0.498610760293, 0, -0.969243636281, 1.875967501508, 0.041555057407, 0, 0.055630079697, -0.203976958889, 1.056971514243, 0, 0, 0, 0, 1 ]}
+
+  - !<ColorSpace>
+    name: scene_linear-trans
+    aliases: [scene_linear-trans-alias]
+    description: |
+      No encoding.  Transform is linear.
+    isdata: false
+    to_scene_reference: !<GroupTransform>
+      children:
+        - !<BuiltinTransform> {style: UTILITY - ACES-AP0_to_CIE-XYZ-D65_BFD}
+        - !<MatrixTransform> {matrix: [ 3.240969941905, -1.537383177570, -0.498610760293, 0, -0.969243636281, 1.875967501508, 0.041555057407, 0, 0.055630079697, -0.203976958889, 1.056971514243, 0, 0, 0, 0, 1 ]}
+        - !<MatrixTransform> {matrix: [ 3.240969941905, -1.537383177570, -0.498610760293, 0, -0.969243636281, 1.875967501508, 0.041555057407, 0, 0.055630079697, -0.203976958889, 1.056971514243, 0, 0, 0, 0, 1 ]}
+
+  - !<ColorSpace>
+    name: scene_nonlin-trans
+    description: |
+      No encoding.  Transform is non-linear because it clamps values outside [0,1].
+    isdata: false
+    to_scene_reference: !<GroupTransform>
+      children:
+        - !<MatrixTransform> {matrix: [ 3.240969941905, -1.537383177570, -0.498610760293, 0, -0.969243636281, 1.875967501508, 0.041555057407, 0, 0.055630079697, -0.203976958889, 1.056971514243, 0, 0, 0, 0, 1 ]}
+        - !<RangeTransform> {min_in_value: 0., min_out_value: 0., max_in_value: 1., max_out_value: 1.}
+)" };
+
     // Load config.
+    std::istringstream is;
+    is.str(TEST_CONFIG);
     OCIO::ConstConfigRcPtr config;
-    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromFile("ocio://default"));
+    
+    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
     OCIO_REQUIRE_ASSERT(config);
     OCIO_CHECK_NO_THROW(config->validate());
 
-    auto numberOfColorspaces = config->getNumColorSpaces();
-    for (int i = 0; i < numberOfColorspaces; i++)
+    auto testSceneReferred = [&config](const char * csName, bool bSceneExpected, int line)
     {
-        auto cs = config->getColorSpace(config->getColorSpaceNameByIndex(i));
-        bool isLinearToSceneReference = config->isColorSpaceLinear(config->getColorSpaceNameByIndex(i), OCIO::REFERENCE_SPACE_SCENE);
-        bool isLinearToDisplayReference = config->isColorSpaceLinear(config->getColorSpaceNameByIndex(i), OCIO::REFERENCE_SPACE_DISPLAY);
-        std::cout   << "[" << cs->getName() << "] "
-                    << "Scene-ref. [" 
-                    << (isLinearToSceneReference ? "Linear" : "Non-linear")
-                    << "]"
-                    << ", Display-ref. ["
-                    << (isLinearToSceneReference ? "Linear" : "Non-linear")
-                    << "]"
-                    << std::endl;
+        auto cs = config->getColorSpace(csName);
+        OCIO_REQUIRE_ASSERT(cs);
+
+        bool isLinearToSceneReference = config->isColorSpaceLinear(csName, OCIO::REFERENCE_SPACE_SCENE);
+        bool isLinearToDisplayReference = config->isColorSpaceLinear(csName, OCIO::REFERENCE_SPACE_DISPLAY);
+        OCIO_CHECK_EQUAL_FROM(isLinearToSceneReference, bSceneExpected, line);
+    };
+
+    auto testDisplayReferred = [&config](const char * csName, bool bDisplayExpected, int line)
+    {
+        auto cs = config->getColorSpace(csName);
+        OCIO_REQUIRE_ASSERT(cs);
+
+        bool isLinearToDisplayReference = config->isColorSpaceLinear(csName, OCIO::REFERENCE_SPACE_DISPLAY);
+        OCIO_CHECK_EQUAL_FROM(isLinearToDisplayReference, bDisplayExpected, line);
+    };
+
+    {
+        testSceneReferred("display_data", false, __LINE__);
+        testSceneReferred("display_linear-enc", false, __LINE__);
+        testSceneReferred("display_wrong-linear-enc", false, __LINE__);
+        testSceneReferred("display_video-enc", false, __LINE__);
+        testSceneReferred("display_linear-trans", false, __LINE__);
+        //("display_video-trans", false, __LINE__);
+
+        testSceneReferred("scene_data", false, __LINE__);
+        testSceneReferred("scene_linear-enc", true, __LINE__);
+        testSceneReferred("scene_wrong-linear-enc", false, __LINE__);
+        testSceneReferred("scene_log-enc", false, __LINE__);
+        testSceneReferred("scene_linear-trans", true, __LINE__);
+        testSceneReferred("scene_nonlin-trans", false, __LINE__);
+        testSceneReferred("scene_linear-trans-alias", true, __LINE__);
     }
+    
+    {
+        testDisplayReferred("display_data", false, __LINE__);
+        testDisplayReferred("display_linear-enc", true, __LINE__);
+        testDisplayReferred("display_wrong-linear-enc", false, __LINE__);
+        testDisplayReferred("display_video-enc", false, __LINE__);
+        testDisplayReferred("display_linear-trans", true, __LINE__);
+        testDisplayReferred("display_video-trans", false, __LINE__);
+
+        testDisplayReferred("scene_data", false, __LINE__);
+        testDisplayReferred("scene_linear-enc", false, __LINE__);
+        testDisplayReferred("scene_wrong-linear-enc", false, __LINE__);
+        testDisplayReferred("scene_log-enc", false, __LINE__);
+        testDisplayReferred("scene_linear-trans", false, __LINE__);
+        testDisplayReferred("scene_nonlin-trans", false, __LINE__);
+        testDisplayReferred("scene_linear-trans-alias", false, __LINE__);
+    }
+
+
 }
