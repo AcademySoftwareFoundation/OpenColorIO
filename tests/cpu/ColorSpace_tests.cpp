@@ -719,7 +719,7 @@ colorspaces:
                      "colorspace");
 }
 
-OCIO_ADD_TEST(Config, is_colorspaces_linear)
+OCIO_ADD_TEST(Config, is_colorspace_linear)
 {
 
     constexpr const char * TEST_CONFIG { R"(ocio_profile_version: 2
@@ -880,7 +880,6 @@ colorspaces:
         OCIO_REQUIRE_ASSERT(cs);
 
         bool isLinearToSceneReference = config->isColorSpaceLinear(csName, OCIO::REFERENCE_SPACE_SCENE);
-        bool isLinearToDisplayReference = config->isColorSpaceLinear(csName, OCIO::REFERENCE_SPACE_DISPLAY);
         OCIO_CHECK_EQUAL_FROM(isLinearToSceneReference, bSceneExpected, line);
     };
 
@@ -899,7 +898,7 @@ colorspaces:
         testSceneReferred("display_wrong-linear-enc", false, __LINE__);
         testSceneReferred("display_video-enc", false, __LINE__);
         testSceneReferred("display_linear-trans", false, __LINE__);
-        //("display_video-trans", false, __LINE__);
+        testSceneReferred("display_video-trans", false, __LINE__);
 
         testSceneReferred("scene_data", false, __LINE__);
         testSceneReferred("scene_linear-enc", true, __LINE__);
