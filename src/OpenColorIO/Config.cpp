@@ -2653,7 +2653,9 @@ bool Config::isColorSpaceLinear(const char * colorSpace, ReferenceSpaceType refe
         return evaluate(*this, transformFromReference);
     }
 
-    return false;
+    // Color space matches the desired reference space type, is not a data space, and has no 
+    // transforms, so it is equivalent to the reference space and hence linear.
+    return true;
 }
 
 ///////////////////////////////////////////////////////////////////////////

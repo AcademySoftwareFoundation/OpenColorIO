@@ -863,6 +863,12 @@ colorspaces:
       children:
         - !<MatrixTransform> {matrix: [ 3.240969941905, -1.537383177570, -0.498610760293, 0, -0.969243636281, 1.875967501508, 0.041555057407, 0, 0.055630079697, -0.203976958889, 1.056971514243, 0, 0, 0, 0, 1 ]}
         - !<RangeTransform> {min_in_value: 0., min_out_value: 0., max_in_value: 1., max_out_value: 1.}
+
+  - !<ColorSpace>
+    name: scene_ref
+    description: |
+      No encoding.  Considered linear since it is equivalent to the reference space.
+    isdata: false
 )" };
 
     // Load config.
@@ -907,6 +913,7 @@ colorspaces:
         testSceneReferred("scene_linear-trans", true, __LINE__);
         testSceneReferred("scene_nonlin-trans", false, __LINE__);
         testSceneReferred("scene_linear-trans-alias", true, __LINE__);
+        testSceneReferred("scene_ref", true, __LINE__);
     }
     
     {
@@ -924,6 +931,7 @@ colorspaces:
         testDisplayReferred("scene_linear-trans", false, __LINE__);
         testDisplayReferred("scene_nonlin-trans", false, __LINE__);
         testDisplayReferred("scene_linear-trans-alias", false, __LINE__);
+        testDisplayReferred("scene_ref", false, __LINE__);
     }
 
 
