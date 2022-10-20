@@ -4,7 +4,8 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "utils/Half.h"
+#include <Imath/half.h>
+
 #include "ops/lut1d/Lut1DOp.h"
 #include "transforms/builtins/OpHelpers.h"
 

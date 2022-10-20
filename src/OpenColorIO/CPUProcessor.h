@@ -41,7 +41,7 @@ public:
 
     DynamicPropertyRcPtr getDynamicProperty(DynamicPropertyType type) const;
 
-    void apply(ImageDesc & imgDesc) const;
+    void apply(const ImageDesc & imgDesc) const;
     void apply(const ImageDesc & srcImgDesc, ImageDesc & dstImgDesc) const;
 
     // Note that the method only accepts one packed RGB and 32-bit float pixel.
