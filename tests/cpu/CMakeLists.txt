@@ -75,6 +75,7 @@ endfunction(add_ocio_test)
 # OpenColorIO target
 set(SOURCES
     builtinconfigs/CGConfig.cpp
+    builtinconfigs/StudioConfig.cpp
     fileformats/cdl/CDLParser.cpp
     fileformats/cdl/CDLReaderHelper.cpp
     fileformats/cdl/CDLWriter.cpp

@@ -8699,6 +8699,10 @@ OCIO_ADD_TEST(Config, look_fallback)
 
 OCIO_ADD_TEST(Config, create_builtin_config)
 {
+    // ********************************
+    // Testing CG config.
+    // ********************************
+    int numberOfExpectedColorspaces = 14;
     {
         // Testing CreateFromBuiltinConfig with a known built-in config name.
 
@@ -8713,7 +8717,7 @@ OCIO_ADD_TEST(Config, create_builtin_config)
             std::string(config->getName()), 
             std::string("cg-config-v1.0.0_aces-v1.3_ocio-v2.1")
         );
-        OCIO_CHECK_EQUAL(config->getNumColorSpaces(), 14);
+        OCIO_CHECK_EQUAL(config->getNumColorSpaces(), numberOfExpectedColorspaces);
     }
 
     {
@@ -8730,7 +8734,7 @@ OCIO_ADD_TEST(Config, create_builtin_config)
             std::string(config->getName()), 
             std::string("cg-config-v1.0.0_aces-v1.3_ocio-v2.1")
         );
-        OCIO_CHECK_EQUAL(config->getNumColorSpaces(), 14);
+        OCIO_CHECK_EQUAL(config->getNumColorSpaces(), numberOfExpectedColorspaces);
     }
 
     {
@@ -8747,9 +8751,67 @@ OCIO_ADD_TEST(Config, create_builtin_config)
             std::string(config->getName()), 
             std::string("cg-config-v1.0.0_aces-v1.3_ocio-v2.1")
         );
-        OCIO_CHECK_EQUAL(config->getNumColorSpaces(), 14);
+        OCIO_CHECK_EQUAL(config->getNumColorSpaces(), numberOfExpectedColorspaces);
     }
 
+    // ********************************
+    // Testing STUDIO config.
+    // ********************************
+    numberOfExpectedColorspaces = 39;
+    {
+        // Testing CreateFromBuiltinConfig with a known built-in config name.
+
+        OCIO::ConstConfigRcPtr config;
+        OCIO_CHECK_NO_THROW(
+            config = OCIO::Config::CreateFromBuiltinConfig("studio-config-v1.0.0_aces-v1.3_ocio-v2.1")
+        );
+        OCIO_REQUIRE_ASSERT(config);
+
+        OCIO_CHECK_NO_THROW(config->validate());
+        OCIO_CHECK_EQUAL(
+            std::string(config->getName()), 
+            std::string("studio-config-v1.0.0_aces-v1.3_ocio-v2.1")
+        );
+        OCIO_CHECK_EQUAL(config->getNumColorSpaces(), numberOfExpectedColorspaces);
+    }
+
+    {
+        // Testing CreateFromEnv with an known built-in config name using URI Syntax. 
+
+        OCIO::EnvironmentVariableGuard guard("OCIO", "ocio://studio-config-v1.0.0_aces-v1.3_ocio-v2.1");
+
+        OCIO::ConstConfigRcPtr config;
+        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromEnv());
+        OCIO_REQUIRE_ASSERT(config);
+
+        OCIO_CHECK_NO_THROW(config->validate());
+        OCIO_CHECK_EQUAL(
+            std::string(config->getName()), 
+            std::string("studio-config-v1.0.0_aces-v1.3_ocio-v2.1")
+        );
+        OCIO_CHECK_EQUAL(config->getNumColorSpaces(), numberOfExpectedColorspaces);
+    }
+
+    {
+        // Testing CreateFromFile with an known built-in config name using URI Syntax.
+
+        OCIO::ConstConfigRcPtr config;
+        OCIO_CHECK_NO_THROW(
+            config = OCIO::Config::CreateFromFile("ocio://studio-config-v1.0.0_aces-v1.3_ocio-v2.1")
+        );
+        OCIO_REQUIRE_ASSERT(config);
+
+        OCIO_CHECK_NO_THROW(config->validate());
+        OCIO_CHECK_EQUAL(
+            std::string(config->getName()), 
+            std::string("studio-config-v1.0.0_aces-v1.3_ocio-v2.1")
+        );
+        OCIO_CHECK_EQUAL(config->getNumColorSpaces(), numberOfExpectedColorspaces);
+    }
+
+    // ********************************
+    // Testing default config.
+    // ********************************
 
     {
         // Testing CreateFromEnv with the default config using URI Syntax.
@@ -8812,4 +8874,9 @@ OCIO_ADD_TEST(Config, create_builtin_config)
             "Could not find 'thedefault' in the built-in configurations."
         );
     }
+}
+
+OCIO_ADD_TEST(Config, create_builtin_studio_config)
+{
+
 }

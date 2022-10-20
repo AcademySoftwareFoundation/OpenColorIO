@@ -7,7 +7,7 @@ strictparsing: true
 luma: [0.2126, 0.7152, 0.0722]
 name: cg-config-v1.0.0_aces-v1.3_ocio-v2.1
 description: |
-  Academy Color Encoding System - CG Config [COLORSPACES v1.0.0-rc2] [ACES v1.3] [OCIO v2.1]
+  Academy Color Encoding System - CG Config [COLORSPACES v1.0.0] [ACES v1.3] [OCIO v2.1]
   ------------------------------------------------------------------------------------------
   
   This minimalistic "OpenColorIO" config is geared toward computer graphics artists requiring a lean config that does not include camera colorspaces and the less common displays and looks.

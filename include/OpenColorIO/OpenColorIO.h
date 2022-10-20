@@ -282,6 +282,7 @@ public:
      * 
      * The available configNames are:
      * "cg-config-v1.0.0_aces-v1.3_ocio-v2.1" -- ACES CG config, basic color spaces for computer
+     * "studio-config-v1.0.0_aces-v1.3_ocio-v2.1" -- ACES Studio config
      * graphics apps. More information is available at: 
      * %https://github.com/AcademySoftwareFoundation/OpenColorIO-Config-ACES
      * 
