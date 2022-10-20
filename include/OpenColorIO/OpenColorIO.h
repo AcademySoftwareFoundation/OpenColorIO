@@ -593,6 +593,7 @@ public:
      * -- If the color space's encoding attribute is present, return true if it matches the 
      *    expected reference space type (i.e., "scene-linear" for REFERENCE_SPACE_SCENE or 
      *    "display-linear" for REFERENCE_SPACE_DISPLAY) and false otherwise.
+     * -- If the color space has no to_reference or from_reference transform, return true.
      * -- Evaluate several points through the color space's transform and check if the output only 
      *    differs by a scale factor (which may be different per channel, e.g. allowing an arbitrary
      *    matrix transform, with no offset).
