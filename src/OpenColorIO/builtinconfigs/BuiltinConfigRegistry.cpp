@@ -44,7 +44,7 @@ void BuiltinConfigRegistryImpl::init() noexcept
         m_builtinConfigs.clear();
         CGCONFIG::Register(*this);
 
-        this->setDefaultBuiltinConfig("cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1");
+        this->setDefaultBuiltinConfig("cg-config-v1.0.0_aces-v1.3_ocio-v2.1");
     }
 }
 

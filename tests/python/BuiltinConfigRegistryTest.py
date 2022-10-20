@@ -108,19 +108,19 @@ class BuiltinConfigRegistryTest(unittest.TestCase):
 
         # Test the first config.
         # Name
-        self.assertEqual(values[0][0], "cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1")
+        self.assertEqual(values[0][0], "cg-config-v1.0.0_aces-v1.3_ocio-v2.1")
         # UI name
         self.assertEqual(
             values[0][1], 
-            ("Academy Color Encoding System - CG Config [COLORSPACES v0.1.0] [ACES v1.3] "
-            "[OCIO v2.1.1]"))
+            ("Academy Color Encoding System - CG Config [COLORSPACES v1.0.0-rc2] [ACES v1.3] "
+            "[OCIO v2.1]"))
         # isRecommended
         self.assertEqual(values[0][2], True)
 
         # Test for the default built-in config.
         self.assertEqual(
             self.REGISTRY.getDefaultBuiltinConfigName(),
-            "cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1"
+            "cg-config-v1.0.0_aces-v1.3_ocio-v2.1"
         )
 
     def test_multi_reference(self):

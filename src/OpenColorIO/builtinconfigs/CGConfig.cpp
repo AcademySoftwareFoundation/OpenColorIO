@@ -19,9 +19,9 @@ namespace CGCONFIG
 void Register(BuiltinConfigRegistryImpl & registry) noexcept
 {
     registry.addBuiltin(
-        "cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1",
-        "Academy Color Encoding System - CG Config [COLORSPACES v0.1.0] [ACES v1.3] [OCIO v2.1.1]",
-        CG_CONFIG_V010_ACES_V130_OCIO_V211,
+        "cg-config-v1.0.0_aces-v1.3_ocio-v2.1",
+        "Academy Color Encoding System - CG Config [COLORSPACES v1.0.0-rc2] [ACES v1.3] [OCIO v2.1]",
+        CG_CONFIG_V100_ACES_V130_OCIO_V21,
         true
     );
 }

@@ -8,4 +8,4 @@
 // - CGConfig.cpp for the Built-in config feature.
 // - BuiltinConfigRegistry_tests.cpp for the unit tests
 
-constexpr char CG_CONFIG_V010_ACES_V130_OCIO_V211[] = { @cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1@ };
+constexpr char CG_CONFIG_V100_ACES_V130_OCIO_V21[] = { @cg-config-v1.0.0_aces-v1.3_ocio-v2.1@ };

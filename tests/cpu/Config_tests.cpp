@@ -8704,22 +8704,22 @@ OCIO_ADD_TEST(Config, create_builtin_config)
 
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(
-            config = OCIO::Config::CreateFromBuiltinConfig("cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1")
+            config = OCIO::Config::CreateFromBuiltinConfig("cg-config-v1.0.0_aces-v1.3_ocio-v2.1")
         );
         OCIO_REQUIRE_ASSERT(config);
 
         OCIO_CHECK_NO_THROW(config->validate());
         OCIO_CHECK_EQUAL(
             std::string(config->getName()), 
-            std::string("cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1")
+            std::string("cg-config-v1.0.0_aces-v1.3_ocio-v2.1")
         );
-        OCIO_CHECK_EQUAL(config->getNumColorSpaces(), 19);
+        OCIO_CHECK_EQUAL(config->getNumColorSpaces(), 14);
     }
 
     {
         // Testing CreateFromEnv with an known built-in config name using URI Syntax. 
 
-        OCIO::EnvironmentVariableGuard guard("OCIO", "ocio://cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1");
+        OCIO::EnvironmentVariableGuard guard("OCIO", "ocio://cg-config-v1.0.0_aces-v1.3_ocio-v2.1");
 
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromEnv());
@@ -8728,9 +8728,9 @@ OCIO_ADD_TEST(Config, create_builtin_config)
         OCIO_CHECK_NO_THROW(config->validate());
         OCIO_CHECK_EQUAL(
             std::string(config->getName()), 
-            std::string("cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1")
+            std::string("cg-config-v1.0.0_aces-v1.3_ocio-v2.1")
         );
-        OCIO_CHECK_EQUAL(config->getNumColorSpaces(), 19);
+        OCIO_CHECK_EQUAL(config->getNumColorSpaces(), 14);
     }
 
     {
@@ -8738,16 +8738,16 @@ OCIO_ADD_TEST(Config, create_builtin_config)
 
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(
-            config = OCIO::Config::CreateFromFile("ocio://cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1")
+            config = OCIO::Config::CreateFromFile("ocio://cg-config-v1.0.0_aces-v1.3_ocio-v2.1")
         );
         OCIO_REQUIRE_ASSERT(config);
 
         OCIO_CHECK_NO_THROW(config->validate());
         OCIO_CHECK_EQUAL(
             std::string(config->getName()), 
-            std::string("cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1")
+            std::string("cg-config-v1.0.0_aces-v1.3_ocio-v2.1")
         );
-        OCIO_CHECK_EQUAL(config->getNumColorSpaces(), 19);
+        OCIO_CHECK_EQUAL(config->getNumColorSpaces(), 14);
     }
 
 
@@ -8763,9 +8763,9 @@ OCIO_ADD_TEST(Config, create_builtin_config)
         OCIO_CHECK_NO_THROW(config->validate());
         OCIO_CHECK_EQUAL(
             std::string(config->getName()), 
-            std::string("cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1")
+            std::string("cg-config-v1.0.0_aces-v1.3_ocio-v2.1")
         );
-        OCIO_CHECK_EQUAL(config->getNumColorSpaces(), 19);
+        OCIO_CHECK_EQUAL(config->getNumColorSpaces(), 14);
     }
 
     {
@@ -8778,9 +8778,9 @@ OCIO_ADD_TEST(Config, create_builtin_config)
         OCIO_CHECK_NO_THROW(config->validate());
         OCIO_CHECK_EQUAL(
             std::string(config->getName()), 
-            std::string("cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1")
+            std::string("cg-config-v1.0.0_aces-v1.3_ocio-v2.1")
         );
-        OCIO_CHECK_EQUAL(config->getNumColorSpaces(), 19);
+        OCIO_CHECK_EQUAL(config->getNumColorSpaces(), 14);
     }
 
     // ********************************

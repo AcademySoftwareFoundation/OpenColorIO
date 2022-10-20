@@ -904,42 +904,42 @@ colorspaces:
 
     def test_create_builtin_config(self):
         # Testing CreateFromBuiltinConfig with a known built-in config name.
-        builtinCfgA = OCIO.Config.CreateFromBuiltinConfig("cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1")
+        builtinCfgA = OCIO.Config.CreateFromBuiltinConfig("cg-config-v1.0.0_aces-v1.3_ocio-v2.1")
         builtinCfgA.validate()
-        self.assertEqual(builtinCfgA.getName(), "cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1")
-        self.assertEqual(len(builtinCfgA.getColorSpaceNames()), 19)
+        self.assertEqual(builtinCfgA.getName(), "cg-config-v1.0.0_aces-v1.3_ocio-v2.1")
+        self.assertEqual(len(builtinCfgA.getColorSpaceNames()), 14)
 
         # Testing CreateFromEnv with an known built-in config name using URI Syntax.
         try:
-            OCIO.SetEnvVariable('OCIO', 'ocio://cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1')
+            OCIO.SetEnvVariable('OCIO', 'ocio://cg-config-v1.0.0_aces-v1.3_ocio-v2.1')
             builtinCfgB = OCIO.Config.CreateFromEnv()
             builtinCfgB.validate()
-            self.assertEqual(builtinCfgB.getName(), "cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1")
-            self.assertEqual(len(builtinCfgB.getColorSpaceNames()), 19)
+            self.assertEqual(builtinCfgB.getName(), "cg-config-v1.0.0_aces-v1.3_ocio-v2.1")
+            self.assertEqual(len(builtinCfgB.getColorSpaceNames()), 14)
         finally:
             OCIO.UnsetEnvVariable('OCIO')
 
         # Testing CreateFromFile with an known built-in config name using URI Syntax.
-        builtinCfgC = OCIO.Config.CreateFromFile("ocio://cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1")
+        builtinCfgC = OCIO.Config.CreateFromFile("ocio://cg-config-v1.0.0_aces-v1.3_ocio-v2.1")
         builtinCfgC.validate()
-        self.assertEqual(builtinCfgC.getName(), "cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1")
-        self.assertEqual(len(builtinCfgC.getColorSpaceNames()), 19)
+        self.assertEqual(builtinCfgC.getName(), "cg-config-v1.0.0_aces-v1.3_ocio-v2.1")
+        self.assertEqual(len(builtinCfgC.getColorSpaceNames()), 14)
 
         # Testing CreateFromEnv with the default config using URI Syntax.
         try:
             OCIO.SetEnvVariable('OCIO', 'ocio://default')
             builtinCfgD = OCIO.Config.CreateFromEnv()
             builtinCfgD.validate()
-            self.assertEqual(builtinCfgD.getName(), "cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1")
-            self.assertEqual(len(builtinCfgD.getColorSpaceNames()), 19)
+            self.assertEqual(builtinCfgD.getName(), "cg-config-v1.0.0_aces-v1.3_ocio-v2.1")
+            self.assertEqual(len(builtinCfgD.getColorSpaceNames()), 14)
         finally:
             OCIO.UnsetEnvVariable('OCIO')
 
         # Testing CreateFromFile with the default config using URI Syntax.
         builtinCfgE = OCIO.Config.CreateFromFile("ocio://default")
         builtinCfgE.validate()
-        self.assertEqual(builtinCfgE.getName(), "cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1")
-        self.assertEqual(len(builtinCfgE.getColorSpaceNames()), 19)
+        self.assertEqual(builtinCfgE.getName(), "cg-config-v1.0.0_aces-v1.3_ocio-v2.1")
+        self.assertEqual(len(builtinCfgE.getColorSpaceNames()), 14)
 
         # ********************************
         # Testing some expected failures.
