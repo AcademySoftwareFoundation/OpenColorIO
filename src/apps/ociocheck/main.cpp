@@ -216,14 +216,19 @@ int main(int argc, const char **argv)
 
             // All roles defined in OpenColorTypes.h.
             std::set<std::string> allRolesSet = { 
-                                            OCIO::ROLE_DEFAULT, OCIO::ROLE_SCENE_LINEAR,
-                                            OCIO::ROLE_DATA, OCIO::ROLE_REFERENCE,
-                                            OCIO::ROLE_COMPOSITING_LOG, OCIO::ROLE_COLOR_TIMING,
-                                            OCIO::ROLE_COLOR_PICKING,
-                                            OCIO::ROLE_TEXTURE_PAINT, OCIO::ROLE_MATTE_PAINT,
-                                            OCIO::ROLE_RENDERING,
-                                            OCIO::ROLE_INTERCHANGE_SCENE,
-                                            OCIO::ROLE_INTERCHANGE_DISPLAY};
+                                                    OCIO::ROLE_DEFAULT, 
+                                                    OCIO::ROLE_SCENE_LINEAR,
+                                                    OCIO::ROLE_DATA, 
+                                                    OCIO::ROLE_REFERENCE,
+                                                    OCIO::ROLE_COMPOSITING_LOG, 
+                                                    OCIO::ROLE_COLOR_TIMING,
+                                                    OCIO::ROLE_COLOR_PICKING,
+                                                    OCIO::ROLE_TEXTURE_PAINT, 
+                                                    OCIO::ROLE_MATTE_PAINT,
+                                                    OCIO::ROLE_RENDERING,
+                                                    OCIO::ROLE_INTERCHANGE_SCENE,
+                                                    OCIO::ROLE_INTERCHANGE_DISPLAY
+                                                };
 
             // Print a list of the config's roles, appending ": user" if they are not one
             // of the "standard" roles defined in the library.
