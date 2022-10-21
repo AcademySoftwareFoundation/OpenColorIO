@@ -27,6 +27,48 @@ static const Chromaticities wht_xy(0.3127,  0.3290);
 const Primaries primaries(red_xy, grn_xy, blu_xy, wht_xy);
 }
 
+namespace CANON_CLOG2
+{
+auto GenerateLutValues = [](double in) -> float
+{
+    double out = 0.;
+
+    if (in < 0.092864125)
+    {
+        out = -(std::pow(10, (0.092864125 - in) / 0.24136077) - 1) / 87.099375;
+    }
+    else
+    {
+        out = (std::pow(10, (in - 0.092864125) / 0.24136077) - 1) / 87.099375;
+    }
+
+    return float(out * 0.9);
+};
+}
+
+namespace CANON_CLOG3
+{
+auto GenerateLutValues = [](double in) -> float
+{
+    double out = 0.;
+
+    if (in < 0.097465473)
+    {
+        out = -(std::pow(10, (0.12783901 - in) / 0.36726845) - 1) / 14.98325;
+    }
+    else if (in <= 0.15277891)
+    {
+        out = (in - 0.12512219) / 1.9754798;
+    }
+    else
+    {
+        out = (std::pow(10, (in - 0.12240537) / 0.36726845) - 1) / 14.98325;
+    }
+
+    return float(out * 0.9);
+};
+}
+
 
 namespace CAMERA
 {
@@ -39,23 +81,7 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
     {
         auto CANON_CLOG2_CGAMUT_to_ACES2065_1_Functor = [](OpRcPtrVec & ops)
         {
-            auto GenerateLutValues = [](double in) -> float
-            {
-                double out = 0.;
-
-                if (in < 0.092864125)
-                {
-                    out = -(std::pow(10, (0.092864125 - in) / 0.24136077) - 1) / 87.099375;
-                }
-                else
-                {
-                    out = (std::pow(10, (in - 0.092864125) / 0.24136077) - 1) / 87.099375;
-                }
-
-                return float(out * 0.9);
-            };
-
-            CreateLut(ops, 4096, GenerateLutValues);
+            CreateLut(ops, 4096, CANON_CLOG2::GenerateLutValues);
 
             MatrixOpData::MatrixArrayPtr matrix
                 = build_conversion_matrix(CANON_CGAMUT::primaries, ACES_AP0::primaries, ADAPTATION_CAT02);
@@ -69,23 +95,7 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
     {
         auto CANON_CLOG2_to_Linear_Functor = [](OpRcPtrVec & ops)
         {
-            auto GenerateLutValues = [](double in) -> float
-            {
-                double out = 0.;
-
-                if (in < 0.092864125)
-                {
-                    out = -(std::pow(10, (0.092864125 - in) / 0.24136077) - 1) / 87.099375;
-                }
-                else
-                {
-                    out = (std::pow(10, (in - 0.092864125) / 0.24136077) - 1) / 87.099375;
-                }
-
-                return float(out * 0.9);
-            };
-
-            CreateLut(ops, 4096, GenerateLutValues);
+            CreateLut(ops, 4096, CANON_CLOG2::GenerateLutValues);
         };
 
         registry.addBuiltin("CURVE - CANON_CLOG2_to_LINEAR",
@@ -96,27 +106,7 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
     {
         auto CANON_CLOG3_CGAMUT_to_ACES2065_1_Functor = [](OpRcPtrVec & ops)
         {
-            auto GenerateLutValues = [](double in) -> float
-            {
-                double out = 0.;
-
-                if (in < 0.097465473)
-                {
-                    out = -(std::pow(10, (0.12783901 - in) / 0.36726845) - 1) / 14.98325;
-                }
-                else if (in <= 0.15277891)
-                {
-                    out = (in - 0.12512219) / 1.9754798;
-                }
-                else
-                {
-                    out = (std::pow(10, (in - 0.12240537) / 0.36726845) - 1) / 14.98325;
-                }
-
-                return float(out * 0.9);
-            };
-
-            CreateLut(ops, 4096, GenerateLutValues);
+            CreateLut(ops, 4096, CANON_CLOG3::GenerateLutValues);
 
             MatrixOpData::MatrixArrayPtr matrix
                 = build_conversion_matrix(CANON_CGAMUT::primaries, ACES_AP0::primaries, ADAPTATION_CAT02);
@@ -130,27 +120,7 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
     {
         auto CANON_CLOG3_to_Linear_Functor = [](OpRcPtrVec & ops)
         {
-            auto GenerateLutValues = [](double in) -> float
-            {
-                double out = 0.;
-
-                if (in < 0.097465473)
-                {
-                    out = -(std::pow(10, (0.12783901 - in) / 0.36726845) - 1) / 14.98325;
-                }
-                else if (in <= 0.15277891)
-                {
-                    out = (in - 0.12512219) / 1.9754798;
-                }
-                else
-                {
-                    out = (std::pow(10, (in - 0.12240537) / 0.36726845) - 1) / 14.98325;
-                }
-
-                return float(out * 0.9);
-            };
-
-            CreateLut(ops, 4096, GenerateLutValues);
+            CreateLut(ops, 4096, CANON_CLOG3::GenerateLutValues);
         };
 
         registry.addBuiltin("CURVE - CANON_CLOG3_to_LINEAR",
