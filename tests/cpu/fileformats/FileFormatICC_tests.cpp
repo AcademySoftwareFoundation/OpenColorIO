@@ -230,8 +230,6 @@ OCIO_ADD_TEST(FileFormatICC, test_file)
             OCIO_CHECK_NO_THROW(iccFile = LoadICCFile(iccFileName));
 
             OCIO_CHECK_ASSERT(iccFile);
-            OCIO_CHECK_ASSERT(iccFile->lut);
-
             OCIO_REQUIRE_ASSERT(iccFile->lut);
 
             OCIO_CHECK_EQUAL(iccFile->lut->getFileOutputBitDepth(), OCIO::BIT_DEPTH_F32);
@@ -369,6 +367,7 @@ void ValidateRoundtripProfile(const std::string & iccFileName,
                               float * srcImage,
                               const float * dstImage,
                               const float * bckImage,
+                              unsigned lineNo,
                               int fwd_op_idx=-1,
                               int bck_op_idx=-1,
                               float error=2e-5f,
@@ -425,28 +424,31 @@ void ValidateRoundtripProfile(const std::string & iccFileName,
     // Compare results
     for (unsigned int i = 0; i < numPixels * 4; ++i)
     {
-        OCIO_CHECK_CLOSE(srcImage[i], bckImage[i], error_bck);
+        OCIO_CHECK_CLOSE_FROM(srcImage[i], bckImage[i], error_bck, lineNo);
     }
 }
 
 OCIO_ADD_TEST(FileFormatICC, test_apply_para_t1)
 {
     // Check processing of ParaCurve type 1.
+    // g = 2.4, a = 1.1, b = -0.1
     {
         static const std::string iccFileName("icc-test-pc1.icc");
 
         float srcImage[] = {
-            -1.0f,  -1.0f,  -1.0f,  1.0f,
-             0.0f,   0.0f,   0.0f,  1.0f,
-             0.18f,  0.18f,  0.18f, 1.0f,
-             0.5f,   0.5f,   0.5f,  1.0f,
-             0.75f,  0.75f,  0.75f, 1.0f,
-             1.0f,   1.0f,   1.0f,  1.0f,
-             2.0f,   2.0f,   2.0f,  1.0f };
+           -1.0f,  -1.0f,  -1.0f,  1.0f,
+            0.0f,   0.0f,   0.0f,  1.0f,
+            0.02f,  0.02f,  0.02f, 1.0f,
+            0.18f,  0.18f,  0.18f, 1.0f,
+            0.5f,   0.5f,   0.5f,  1.0f,
+            0.75f,  0.75f,  0.75f, 1.0f,
+            1.0f,   1.0f,   1.0f,  1.0f,
+            2.0f,   2.0f,   2.0f,  1.0f };
 
         const float dstImage[] = {
             0.09090909f, 0.09090909f, 0.09090909f, 1.0f,
             0.09090909f, 0.09090909f, 0.09090909f, 1.0f,
+            0.26902518f, 0.26902518f, 0.26902518f, 1.0f,
             0.53586119f, 0.53586119f, 0.53586119f, 1.0f,
             0.77196938f, 0.77196938f, 0.77196938f, 1.0f,
             0.89732236f, 0.89732236f, 0.89732236f, 1.0f,
@@ -457,32 +459,36 @@ OCIO_ADD_TEST(FileFormatICC, test_apply_para_t1)
         const float bckImage[] = {
             0.0f,  0.0f,  0.0f,  1.0f,
             0.0f,  0.0f,  0.0f,  1.0f,
+            0.02f, 0.02f, 0.02f, 1.0f,
             0.18f, 0.18f, 0.18f, 1.0f,
             0.5f,  0.5f,  0.5f,  1.0f,
             0.75f, 0.75f, 0.75f, 1.0f,
             1.0f,  1.0f,  1.0f,  1.0f,
             1.0f,  1.0f,  1.0f,  1.0f };
 
-        ValidateRoundtripProfile(iccFileName, 7, srcImage, dstImage, bckImage, 1, 0);
+        ValidateRoundtripProfile(iccFileName, 7, srcImage, dstImage, bckImage, __LINE__, 1, 0);
     }
 }
 
 OCIO_ADD_TEST(FileFormatICC, test_apply_para_t2)
 {
     // Check processing of ParaCurve type 2.
+    // g = 2.4, a = 1.057, b = -0.1, c = 0.1
     {
         static const std::string iccFileName("icc-test-pc2.icc");
 
         float srcImage[] = {
-            -1.0f,  -1.0f,  -1.0f,  1.0f,
-             0.0f,   0.0f,   0.0f,  1.0f,
-             0.18f,  0.18f,  0.18f, 1.0f,
-             0.5f,   0.5f,   0.5f,  1.0f,
-             0.75f,  0.75f,  0.75f, 1.0f,
-             1.0f,   1.0f,   1.0f,  1.0f,
-             2.0f,   2.0f,   2.0f,  1.0f };
+           -1.0f,  -1.0f,  -1.0f,  1.0f,
+            0.0f,   0.0f,   0.0f,  1.0f,
+            0.02f,  0.02f,  0.02f, 1.0f,
+            0.18f,  0.18f,  0.18f, 1.0f,
+            0.5f,   0.5f,   0.5f,  1.0f,
+            0.75f,  0.75f,  0.75f, 1.0f,
+            1.0f,   1.0f,   1.0f,  1.0f,
+            2.0f,   2.0f,   2.0f,  1.0f };
 
         const float dstImage[] = {
+            0.09481915f, 0.09481915f, 0.09481915f, 1.0f,
             0.09481915f, 0.09481915f, 0.09481915f, 1.0f,
             0.09481915f, 0.09481915f, 0.09481915f, 1.0f,
             0.42486829f, 0.42486829f, 0.42486829f, 1.0f,
@@ -493,36 +499,40 @@ OCIO_ADD_TEST(FileFormatICC, test_apply_para_t2)
 
         // Values below the curve flat segment and above 1.0 are clamped by the LUT and won't round-trip.
         const float bckImage[] = {
-            0.10000412f, 0.10000412f, 0.10000412f, 1.0f,
-            0.10000412f, 0.10000412f, 0.10000412f, 1.0f,
+            0.1f,  0.1f,  0.1f,  1.0f,
+            0.1f,  0.1f,  0.1f,  1.0f,
+            0.1f,  0.1f,  0.1f,  1.0f,
             0.18f, 0.18f, 0.18f, 1.0f,
             0.5f,  0.5f,  0.5f,  1.0f,
             0.75f, 0.75f, 0.75f, 1.0f,
             1.0f,  1.0f,  1.0f,  1.0f,
             1.0f,  1.0f,  1.0f,  1.0f };
 
-        ValidateRoundtripProfile(iccFileName, 7, srcImage, dstImage, bckImage, 1, 0);
+        ValidateRoundtripProfile(iccFileName, 7, srcImage, dstImage, bckImage, __LINE__, 1, 0);
     }
 }
 
 OCIO_ADD_TEST(FileFormatICC, test_apply_para_t3)
 {
     // Check processing of ParaCurve type 3.
+    // g = 2.4, a = 1/1.055, b = 0.055/1.055, c = 1/12.92, d = 0.04045
     {
         static const std::string iccFileName("icc-test-pc3.icc");
 
         float srcImage[] = {
-            -1.0f,  -1.0f,  -1.0f,  1.0f,
-             0.0f,   0.0f,   0.0f,  1.0f,
-             0.18f,  0.18f,  0.18f, 1.0f,
-             0.5f,   0.5f,   0.5f,  1.0f,
-             0.75f,  0.75f,  0.75f, 1.0f,
-             1.0f,   1.0f,   1.0f,  1.0f,
-             2.0f,   2.0f,   2.0f,  1.0f };
+           -1.0f,  -1.0f,  -1.0f,  1.0f,
+            0.0f,   0.0f,   0.0f,  1.0f,
+            0.02f,  0.02f,  0.02f, 1.0f,
+            0.18f,  0.18f,  0.18f, 1.0f,
+            0.5f,   0.5f,   0.5f,  1.0f,
+            0.75f,  0.75f,  0.75f, 1.0f,
+            1.0f,   1.0f,   1.0f,  1.0f,
+            2.0f,   2.0f,   2.0f,  1.0f };
 
         const float dstImage[] = {
             0.0f, 0.0f, 0.0f, 1.0f,
             0.0f, 0.0f, 0.0f, 1.0f,
+            0.15170372f, 0.15170372f, 0.15170372f, 1.0f,
             0.46136194f, 0.46136194f, 0.46136194f, 1.0f,
             0.73536557f, 0.73536557f, 0.73536557f, 1.0f,
             0.88083965f, 0.88083965f, 0.88083965f, 1.0f,
@@ -533,32 +543,36 @@ OCIO_ADD_TEST(FileFormatICC, test_apply_para_t3)
         const float bckImage[] = {
             0.0f,  0.0f,  0.0f,  1.0f,
             0.0f,  0.0f,  0.0f,  1.0f,
+            0.02f, 0.02f, 0.02f, 1.0f,
             0.18f, 0.18f, 0.18f, 1.0f,
             0.5f,  0.5f,  0.5f,  1.0f,
             0.75f, 0.75f, 0.75f, 1.0f,
             1.0f,  1.0f,  1.0f,  1.0f,
             1.0f,  1.0f,  1.0f,  1.0f };
 
-        ValidateRoundtripProfile(iccFileName, 7, srcImage, dstImage, bckImage, 1, 0);
+        ValidateRoundtripProfile(iccFileName, 7, srcImage, dstImage, bckImage, __LINE__, 1, 0);
     }
 }
 
 OCIO_ADD_TEST(FileFormatICC, test_apply_para_t4)
 {
     // Check processing of ParaCurve type 4.
+    // g = 2.4, a = 0.905, b = 0.052, c = 0.073, d = 0.04, e = 0.1, f = 0.1
     {
         static const std::string iccFileName("icc-test-pc4.icc");
 
         float srcImage[] = {
-            -1.0f,  -1.0f,  -1.0f,  1.0f,
-             0.0f,   0.0f,   0.0f,  1.0f,
-             0.18f,  0.18f,  0.18f, 1.0f,
-             0.5f,   0.5f,   0.5f,  1.0f,
-             0.75f,  0.75f,  0.75f, 1.0f,
-             1.0f,   1.0f,   1.0f,  1.0f,
-             2.0f,   2.0f,   2.0f,  1.0f };
+           -1.0f,  -1.0f,  -1.0f,  1.0f,
+            0.0f,   0.0f,   0.0f,  1.0f,
+            0.02f,  0.02f,  0.02f, 1.0f,
+            0.18f,  0.18f,  0.18f, 1.0f,
+            0.5f,   0.5f,   0.5f,  1.0f,
+            0.75f,  0.75f,  0.75f, 1.0f,
+            1.0f,   1.0f,   1.0f,  1.0f,
+            2.0f,   2.0f,   2.0f,  1.0f };
 
         const float dstImage[] = {
+            0.0f, 0.0f, 0.0f, 1.0f,
             0.0f, 0.0f, 0.0f, 1.0f,
             0.0f, 0.0f, 0.0f, 1.0f,
             0.32816601f, 0.32816601f, 0.32816601f, 1.0f,
@@ -569,15 +583,16 @@ OCIO_ADD_TEST(FileFormatICC, test_apply_para_t4)
 
         // Values below the forward minimum and above 1.0 are clamped by the LUT and won't round-trip.
         const float bckImage[] = {
-            0.10002988f,  0.10002988f,  0.10002988f,  1.0f,
-            0.10002988f,  0.10002988f,  0.10002988f,  1.0f,
+            0.1f,  0.1f,  0.1f,  1.0f,
+            0.1f,  0.1f,  0.1f,  1.0f,
+            0.1f,  0.1f,  0.1f,  1.0f,
             0.18f, 0.18f, 0.18f, 1.0f,
             0.5f,  0.5f,  0.5f,  1.0f,
             0.75f, 0.75f, 0.75f, 1.0f,
             1.0f,  1.0f,  1.0f,  1.0f,
             1.0f,  1.0f,  1.0f,  1.0f };
 
-        ValidateRoundtripProfile(iccFileName, 7, srcImage, dstImage, bckImage, 1, 0, 3e-5f, 3e-5f);
+        ValidateRoundtripProfile(iccFileName, 7, srcImage, dstImage, bckImage, __LINE__, 1, 0, 4e-5f, 4e-5f);
     }
 }
 

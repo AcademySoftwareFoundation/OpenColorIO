@@ -7,6 +7,7 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "Logging.h"
 #include "fileformats/FileFormatUtils.h"
 #include "iccProfileReader.h"
 #include "ops/gamma/GammaOp.h"
@@ -245,7 +246,7 @@ LocalCachedFileRcPtr LocalFileFormat::ReadInfo(std::istream & istream,
 }
 
 // Parametric curve must have correct numbers of arguments and the curve must
-// be monotically non-decreasing (flat segments allowed).
+// be monotonically non-decreasing (flat segments allowed).
 // More information can be found in:
 // https://www.color.org/whitepapers/ICC_White_Paper35-Use_of_the_parametricCurveType.pdf
 void LocalFileFormat::ValidateParametricCurve(icUInt16Number type,
@@ -269,9 +270,29 @@ void LocalFileFormat::ValidateParametricCurve(icUInt16Number type,
         ThrowErrorMessage(oss.str(), fileName);
     };
 
-    auto QuantizeF = [](float v) -> float
+    auto LogParaWarning = [=](const std::string & msg)
     {
-        return std::lround(v * 1023) / 1023.0f;
+        std::ostringstream oss;
+        oss << "Parsing .icc file (";
+        oss << fileName;
+        oss << ").  ";
+        oss << "ICC Parametric Curve (with arguments ";
+        for (int i = 0; i < numParams; ++i)
+        {
+            if (i != 0)
+            {
+                oss << " ";
+            }
+            oss << SampleICC::icFtoD(params[i]);
+        }
+        oss << "): " << msg;
+        LogWarning(oss.str());
+    };
+
+    auto QuantizeF = [](float v, uint8_t bitdepth = 10) -> float
+    {
+        float maxVal = std::pow(2, bitdepth) - 1.f;
+        return std::lround(v * maxVal) / maxVal;
     };
 
     // Expected number of arguments
@@ -295,13 +316,13 @@ void LocalFileFormat::ValidateParametricCurve(icUInt16Number type,
         ThrowParaError(oss.str());
     }
 
-    // Monotically non-decreasing (flat segments permitted)
+    // Monotonically non-decreasing (flat segments permitted)
     const float g = SampleICC::icFtoD(params[0]);
 
-    // Forces the power law to be monotically non-decreasing.
+    // Forces the power law to be monotonically non-decreasing.
     if (g <= 0.0)
     {
-        ThrowParaError("Expecting monotically non-decreasing power-law.");
+        ThrowParaError("Expecting monotonically non-decreasing power-law.");
     }
 
     // Forces the argument to the power law to be an increasing function.
@@ -368,6 +389,76 @@ void LocalFileFormat::ValidateParametricCurve(icUInt16Number type,
         if ((a * d + b) < 0)
         {
             ThrowParaError("Expecting no negative arguments to the power law.");
+        }
+    }
+
+    // Boundary warnings
+    if (type == 1 || type == 2)
+    {
+        const float a = SampleICC::icFtoD(params[1]);
+        const float b = SampleICC::icFtoD(params[2]);
+        const float c = type == 2 ? SampleICC::icFtoD(params[3]) : 0;
+
+        // Breakpoint is at x = -b/a, assuming a > 0, b should be negative so
+        // that the breakpoint occurs at positive x values.
+        if (b >= 0.0)
+        {
+            LogParaWarning("Expecting b < 0 for linear segment to occur at positive x values.");
+        }
+
+        if (type == 1 && QuantizeF(a + b, 8) != 1)
+        {
+            LogParaWarning("Curve does not reach maximum at (1,1).");
+        }
+        else if (type == 2 && QuantizeF(std::pow(a + b, g) + c, 8) != 1)
+        {
+            LogParaWarning("Curve does not reach maximum at (1,1).");
+        }
+    }
+
+    // Continuity warnings
+    // Note that type 0, 1, 2 are continuous by definition.
+    if (type == 3 || type == 4)
+    {
+        const float a = SampleICC::icFtoD(params[1]);
+        const float b = SampleICC::icFtoD(params[2]);
+        const float c = SampleICC::icFtoD(params[3]);
+        const float d = SampleICC::icFtoD(params[4]);
+        const float e = type == 4 ? SampleICC::icFtoD(params[5]) : 0;
+        const float f = type == 4 ? SampleICC::icFtoD(params[6]) : 0;
+
+        if (type == 3 && QuantizeF(c * d, 8) != QuantizeF(std::pow(a * d + b, g), 8))
+        {
+            LogParaWarning("Curve is not continuous.");
+        }
+        else if (type == 4 && QuantizeF(c * d + f, 8) != QuantizeF(std::pow(a * d + b, g) + e, 8))
+        {
+            LogParaWarning("Curve is not continuous.");
+        }
+    }
+
+    // Smoothness warnings
+    // Note that type 0 is smooth by definition.
+    if (type == 1 || type == 2)
+    {
+        const float a = SampleICC::icFtoD(params[1]);
+        const float b = SampleICC::icFtoD(params[2]);
+
+        if (g <= 1 && -b / a > 0)
+        {
+            LogParaWarning("Curve is not smooth (first derivative).");
+        }
+    }
+    else if (type == 3 or type == 4)
+    {
+        const float a = SampleICC::icFtoD(params[1]);
+        const float b = SampleICC::icFtoD(params[2]);
+        const float c = SampleICC::icFtoD(params[3]);
+        const float d = SampleICC::icFtoD(params[4]);
+
+        if (QuantizeF(c, 8) != QuantizeF(a * g * std::pow(a * d + b, g - 1), 8))
+        {
+            LogParaWarning("Curve is not smooth (first derivative).");
         }
     }
 }
@@ -707,6 +798,8 @@ LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
     // and in that usage it is more natural for the XYZ to display code value transform to be called
     // the forward direction.
 
+    // Curves / ParaCurves operates in the range 0.0 to 1.0 as per ICC specifications.
+
     switch (newDir)
     {
     case TRANSFORM_DIR_INVERSE:
@@ -727,11 +820,15 @@ LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
                                                        greenParams,
                                                        blueParams,
                                                        alphaParams);
+
+            // GammaOp will clamp at 0 so we don't do it in the RangeOp.
+            CreateRangeOp(ops,
+                          RangeOpData::EmptyValue(), 1,
+                          RangeOpData::EmptyValue(), 1,
+                          TRANSFORM_DIR_FORWARD);
+
             CreateGammaOp(ops, gamma, TRANSFORM_DIR_FORWARD);
         }
-
-        // Curves / ParaCurves operates in the range 0.0 to 1.0 as per ICC specifications.
-        CreateRangeOp(ops, 0, 1, 0, 1, TRANSFORM_DIR_FORWARD);
 
         CreateMatrixOp(ops, cachedFile->mMatrix44, TRANSFORM_DIR_FORWARD);
 
@@ -766,9 +863,12 @@ LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
                                                        blueParams,
                                                        alphaParams);
 
-            CreateRangeOp(ops, 0, 1, 0, 1, TRANSFORM_DIR_FORWARD);
-
             CreateGammaOp(ops, gamma, TRANSFORM_DIR_FORWARD);
+
+            CreateRangeOp(ops,
+                          RangeOpData::EmptyValue(), 1,
+                          RangeOpData::EmptyValue(), 1,
+                          TRANSFORM_DIR_FORWARD);
         }
         break;
     }
