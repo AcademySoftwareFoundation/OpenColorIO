@@ -416,8 +416,11 @@ OCIO_ADD_TEST(Config, required_roles_for_version_2_2)
 
         OCIO::LogGuard logGuard;
         OCIO_CHECK_NO_THROW(config->validate());
+
+        StringUtils::StringVec svec = StringUtils::SplitByLines(logGuard.output());
         OCIO_CHECK_ASSERT(
-        StringUtils::StartsWith(logGuard.output(), ""));
+            !StringUtils::Contain(svec, "[OpenColorIO Error]")
+        );
     }
     
     {
@@ -533,7 +536,6 @@ OCIO_ADD_TEST(Config, required_roles_for_version_2_2)
 
         OCIO::LogGuard logGuard;
         OCIO_CHECK_NO_THROW(config->validate());
-        std::cout << "Log => [" << logGuard.output() << "]" << std::endl;
         OCIO_CHECK_ASSERT(
             StringUtils::StartsWith(
                 logGuard.output(), 
@@ -550,7 +552,6 @@ OCIO_ADD_TEST(Config, required_roles_for_version_2_2)
 
         OCIO::LogGuard logGuard;
         OCIO_CHECK_NO_THROW(config->validate());
-        std::cout << "Log2 => [" << logGuard.output() << "]" << std::endl;
         OCIO_CHECK_ASSERT(
             StringUtils::StartsWith(
                 logGuard.output(), 
