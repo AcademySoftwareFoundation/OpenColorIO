@@ -464,3 +464,20 @@ OCIO_ADD_TEST(Processor, cache_gpu_processors)
     OCIO_CHECK_EQUAL(proc1->getOptimizedGPUProcessor(OCIO::OPTIMIZATION_DEFAULT).get(),
                      proc1->getOptimizedGPUProcessor(OCIO::OPTIMIZATION_DEFAULT).get());
 }
+
+OCIO_ADD_TEST(Processor, processor_to_known_colorspace)
+{
+    OCIO::ConstConfigRcPtr config = OCIO::Config::CreateFromFile("ocio://default");
+    {
+        OCIO_CHECK_THROW_WHAT(
+            config->getProcessorToBuiltinColorSpace(config, 
+                                                    "ST2084-P3-D65 - Display", 
+                                                    "INVALID-COLORSPACE", 
+                                                    OCIO::TRANSFORM_DIR_FORWARD),
+            OCIO::Exception, "Built-in config does not contain the requested color space: INVALID-COLORSPACE."
+        );
+
+    }
+}
+
+

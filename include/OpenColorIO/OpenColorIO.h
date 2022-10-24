@@ -1143,9 +1143,15 @@ public:
     ConstProcessorRcPtr getProcessor(const ConstTransformRcPtr & transform) const;
     ConstProcessorRcPtr getProcessor(const ConstTransformRcPtr & transform,
                                      TransformDirection direction) const;
-    ConstProcessorRcPtr getProcessor(const ConstContextRcPtr & context,
-                                     const ConstTransformRcPtr & transform,
-                                     TransformDirection direction) const;
+
+    /**
+     * \brief TBD
+     * 
+     */
+    ConstProcessorRcPtr Config::getProcessorToBuiltinColorSpace(ConstConfigRcPtr srcConfig,
+                                                                const char * srcColorSpaceName, 
+                                                                const char * biColorSpaceName,
+                                                                TransformDirection direction) const;
 
     /**
      * \brief Get a processor to convert between color spaces in two separate
@@ -1185,6 +1191,10 @@ public:
                                                        const ConstConfigRcPtr & dstConfig,
                                                        const char * dstColorSpaceName,
                                                        const char * dstInterchangeName);
+
+    ConstProcessorRcPtr getProcessor(const ConstContextRcPtr & context,
+                                     const ConstTransformRcPtr & transform,
+                                     TransformDirection direction) const;
 
     Config(const Config &) = delete;
     Config& operator= (const Config &) = delete;
