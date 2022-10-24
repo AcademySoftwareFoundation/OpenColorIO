@@ -291,7 +291,7 @@ void LocalFileFormat::ValidateParametricCurve(icUInt16Number type,
 
     auto QuantizeF = [](float v, uint8_t bitdepth = 10) -> float
     {
-        float maxVal = std::pow(2, bitdepth) - 1.f;
+        float maxVal = std::pow(2.f, static_cast<float>(bitdepth)) - 1.f;
         return std::lround(v * maxVal) / maxVal;
     };
 
@@ -449,7 +449,7 @@ void LocalFileFormat::ValidateParametricCurve(icUInt16Number type,
             LogParaWarning("Curve is not smooth (first derivative).");
         }
     }
-    else if (type == 3 or type == 4)
+    else if (type == 3 || type == 4)
     {
         const float a = SampleICC::icFtoD(params[1]);
         const float b = SampleICC::icFtoD(params[2]);
