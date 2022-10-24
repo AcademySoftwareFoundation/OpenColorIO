@@ -6,8 +6,9 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include <Imath/half.h>
+
 #include "GpuShaderUtils.h"
-#include "utils/Half.h"
 #include "HashUtils.h"
 #include "MathUtils.h"
 #include "ops/lut1d/Lut1DOpData.h"
@@ -280,4 +281,3 @@ void BuildRangeOp(OpRcPtrVec & ops,
 }
 
 } // namespace OCIO_NAMESPACE
-
