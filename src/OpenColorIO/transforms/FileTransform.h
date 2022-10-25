@@ -112,7 +112,8 @@ private:
 void GetCachedFileAndFormat(FileFormat * & format,
                             CachedFileRcPtr & cachedFile,
                             const std::string & filepath,
-                            Interpolation interp);
+                            Interpolation interp,
+                            const Config& config);
 
 typedef std::map<std::string, FileFormat*> FileFormatMap;
 typedef std::vector<FileFormat*> FileFormatVector;

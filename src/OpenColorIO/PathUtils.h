@@ -18,11 +18,11 @@ namespace OCIO_NAMESPACE
 std::string AbsPath(const std::string & path);
 
 // Check if a file exists
-bool FileExists(const std::string & filename);
+bool FileExists(const std::string & filename, const Context & context);
 
 // Get a fast hash for a file, without reading all the contents.
 // Currently, this checks the mtime and the inode number.
-std::string GetFastFileHash(const std::string & filename);
+std::string GetFastFileHash(const std::string & filename, const Context & context);
 
 void ClearPathCaches();
 
