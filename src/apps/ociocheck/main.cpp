@@ -92,11 +92,6 @@ int main(int argc, const char **argv)
         config->setProcessorCacheFlags(OCIO::PROCESSOR_CACHE_OFF);
 
         std::cout << std::endl;
-        std::cout << "** Miscellaneous **" << std::endl;
-        std::cout << "CacheID: " << config->getCacheID() << std::endl;
-        std::cout << "Archivable: " << (config->isArchivable() ? "yes" : "no") << std::endl;
-
-        std::cout << std::endl;
         std::cout << "** General **" << std::endl;
 
         if (config->getNumEnvironmentVars() > 0)
@@ -505,15 +500,14 @@ int main(int argc, const char **argv)
         std::cout << "** Validation **" << std::endl;
 
         std::string cacheID;
-        //bool isArchivable = false;
+        bool isArchivable = false;
         try
         {
             LogGuard logGuard;
 
             config->validate();
             cacheID = config->getCacheID();
-            // todo : Waiting for the merge of OCIOZ archive feature.
-            //isArchivable = config->isArchivable();
+            isArchivable = config->isArchivable();
 
             // Passed if there are no Error level logs.
             StringUtils::StringVec svec = StringUtils::SplitByLines(logGuard.output());
@@ -539,8 +533,7 @@ int main(int argc, const char **argv)
         std::cout << std::endl;
         std::cout << "** Miscellaneous **" << std::endl;
         std::cout << "CacheID: " << cacheID << std::endl;
-        // todo : Waiting for the merge of OCIOZ archive feature.
-        //std::cout << "Archivable: " << (isArchivable ? "yes" : "no") << std::endl;
+        std::cout << "Archivable: " << (isArchivable ? "yes" : "no") << std::endl;
 
         if(!outputconfig.empty())
         {
