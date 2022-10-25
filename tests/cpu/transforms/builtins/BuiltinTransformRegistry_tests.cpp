@@ -263,8 +263,8 @@ colorspaces:
 
 OCIO_ADD_TEST(Builtins, version_2_1_validation)
 {
-    // The unit test validates that the config reader throws for version 2 configs containing
-    // a builtin transform with the style 'ACES-LMT - ACES 1.3 Reference Gamut Compression'.
+    // The unit test validates that the config reader checkVersionConsistency check throws for
+    // version 2.1 configs containing a Builtin Transform with the 2.2 style for ARRI LogC4.
 
     static constexpr char CONFIG[] {
 R"(ocio_profile_version: 2.1
