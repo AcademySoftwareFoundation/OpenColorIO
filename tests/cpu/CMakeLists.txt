@@ -83,6 +83,7 @@ set(SOURCES
     fileformats/FileFormatUtils.cpp
     fileformats/xmlutils/XMLReaderHelper.cpp
     fileformats/xmlutils/XMLWriterUtils.cpp
+    ColorSpaceUtils.cpp
     BakingUtils.cpp
     GPUProcessor.cpp
     GpuShaderDesc.cpp

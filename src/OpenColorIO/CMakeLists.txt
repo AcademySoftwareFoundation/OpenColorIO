@@ -15,6 +15,7 @@ set(SOURCES
     Caching.cpp
     ColorSpace.cpp
     ColorSpaceSet.cpp
+    ColorSpaceUtils.cpp
     Config.cpp
     Context.cpp
     ContextVariableUtils.cpp
