@@ -6730,6 +6730,9 @@ colorspaces:
     OCIO_CHECK_THROW_WHAT(cfg = OCIO::Config::CreateFromStream(is),
                           OCIO::Exception,
                           "Only config version 2 (or higher) can have RangeTransform.");
+
+    // NOTE: For more tests of Config::Impl::checkVersionConsistency(ConstTransformRcPtr & transform)
+    // for Builtin Transform styles, please see BuiltinTransformRegistry_tests.cpp.
 }
 
 OCIO_ADD_TEST(Config, dynamic_properties)
