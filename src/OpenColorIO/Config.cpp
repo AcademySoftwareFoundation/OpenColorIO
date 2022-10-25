@@ -4389,15 +4389,16 @@ bool rgbWithinAbsTolerance(std::vector<float> & rgb0,
             return false;
         }
     }
-    return false;
+    return true;
 }
 
-GroupTransformRcPtr getRefToSRGBTransform(ConstConfigRcPtr & biConfig, 
+GroupTransformRcPtr getRefToSRGBTransform(ConstConfigRcPtr & builtinConfig, 
                                           std::string refColorSpaceName)
 {
     // Build reference space of the given prims to sRGB transform.
     std::string srgbColorSpaceName = "Input - Generic - sRGB - Texture";
-    ConstProcessorRcPtr proc = biConfig->getProcessor(refColorSpaceName.c_str(), srgbColorSpaceName.c_str());
+    ConstProcessorRcPtr proc = builtinConfig->getProcessor( refColorSpaceName.c_str(), 
+                                                            srgbColorSpaceName.c_str());
     return proc->createGroupTransform();
 }
 
@@ -4429,8 +4430,8 @@ bool isIdentityTransform(ConstConfigRcPtr & config,
 
 std::string checkForLinearColorSpace(ConstConfigRcPtr & config, 
                                      ConstColorSpaceRcPtr & cs,
-                                     ConstConfigRcPtr & biConfig,
-                                     std::vector<std::string> & biLinearSpaces)
+                                     ConstConfigRcPtr & builtinConfig,
+                                     std::vector<std::string> & builtinLinearSpaces)
 {
     // If the color space is a recognized linear space, return the reference space used by 
     // the config.
@@ -4451,31 +4452,34 @@ std::string checkForLinearColorSpace(ConstConfigRcPtr & config,
     }
 
     std::vector<std::vector<float>> vals = { {  0.7f,  0.4f,  0.02f },
-                                            { 0.02f,  0.6f,   0.2f },
-                                            {  0.3f, 0.02f,   0.5f },
-                                            {   0.f,   0.f,    0.f },
-                                            {   1.f,   1.f,    1.f } };
-    for (size_t i = 0; i < biLinearSpaces.size(); i++)
+                                             { 0.02f,  0.6f,   0.2f },
+                                             {  0.3f, 0.02f,   0.5f },
+                                             {   0.f,   0.f,    0.f },
+                                             {   1.f,   1.f,    1.f } };
+    for (size_t i = 0; i < builtinLinearSpaces.size(); i++)
     {
-        for (size_t j = 0; j < biLinearSpaces.size(); j++)
+        for (size_t j = 0; j < builtinLinearSpaces.size(); j++)
         {
             if (i != j)
             {
                 ConstGroupTransformRcPtr gt;
                 ConstTransformRcPtr transform;
-                ConstProcessorRcPtr proc  = biConfig->getProcessor(biLinearSpaces[j].c_str(),
-                                                                    biLinearSpaces[i].c_str());
+                ConstProcessorRcPtr proc  = builtinConfig->getProcessor(
+                    builtinLinearSpaces[j].c_str(),
+                    builtinLinearSpaces[i].c_str()
+                );
+
                 transform = proc->createGroupTransform();
                 gt = combineGroupTransforms(srcTransform, transform);
 
                 if (isIdentityTransform(config, gt, vals))
                 {
-                    if (toRefDirection) refSpace = biLinearSpaces[i];
-                    else refSpace = biLinearSpaces[j];
+                    if (toRefDirection) refSpace = builtinLinearSpaces[j];
+                    else refSpace = builtinLinearSpaces[i];
 
                     std::cout << "--> Found reference space: " << refSpace << std::endl;
-                    std::cout << "   src: " << biLinearSpaces[j] + " dst: " 
-                                << biLinearSpaces[i] << " to_ref: " 
+                    std::cout << "   src: " << builtinLinearSpaces[j] + " dst: " 
+                                << builtinLinearSpaces[i] << " to_ref: " 
                                 << toRefDirection << std::endl;
                     return refSpace;
                 }
@@ -4488,8 +4492,8 @@ std::string checkForLinearColorSpace(ConstConfigRcPtr & config,
 
 std::string checkForSRGBTextureColorSpace(ConstConfigRcPtr & config, 
                                           ConstColorSpaceRcPtr cs,
-                                          ConstConfigRcPtr & biConfig,
-                                          std::vector<std::string> & biLinearSpaces)
+                                          ConstConfigRcPtr & builtinConfig,
+                                          std::vector<std::string> & builtinLinearSpaces)
 {
     // If the color space is an sRGB texture space, return the reference space used by the config.
 
@@ -4508,6 +4512,11 @@ std::string checkForSRGBTextureColorSpace(ConstConfigRcPtr & config,
             TransformRcPtr transform = ctransform->createEditableCopy();
             transform->setDirection(TRANSFORM_DIR_INVERSE);
             toRefTransform = transform;
+        }
+        else
+        {
+            // Both directions missing.
+            return "";
         }
     }
 
@@ -4538,6 +4547,7 @@ std::string checkForSRGBTextureColorSpace(ConstConfigRcPtr & config,
             }
         }
 
+        //std::cout << "RGB0 = " << vals[i][0] << " OUT0 = " << out[i][0] << std::endl;
         if (!rgbWithinAbsTolerance(vals[i], out[i], 1.f, 1e-4f))
         {
             std::cout << "--> Wrong transfer function" << std::endl;
@@ -4547,22 +4557,22 @@ std::string checkForSRGBTextureColorSpace(ConstConfigRcPtr & config,
 
     // Then try the various primaries for the reference space.
     vals = { {  0.7f,  0.4f,  0.02f },
-                { 0.02f,  0.6f,   0.2f },
-                {  0.3f, 0.02f,   0.5f },
-                {   0.f,   0.f,    0.f },
-                {   1.f,   1.f,    1.f } };
-    std::string refSpace;
+             { 0.02f,  0.6f,   0.2f },
+             {  0.3f, 0.02f,   0.5f },
+             {   0.f,   0.f,    0.f },
+             {   1.f,   1.f,    1.f } };
+    std::string refSpace = "";
     ConstTransformRcPtr fromRefTransform;
     if (toRefTransform)
     {
-        for (size_t i = 0; i < biLinearSpaces.size(); i++)
+        for (size_t i = 0; i < builtinLinearSpaces.size(); i++)
         {
-            fromRefTransform = getRefToSRGBTransform(biConfig, biLinearSpaces[i]);
+            fromRefTransform = getRefToSRGBTransform(builtinConfig, builtinLinearSpaces[i]);
             auto gt = combineGroupTransforms(toRefTransform, fromRefTransform);
             if (isIdentityTransform(config, gt, vals))
             {
-                std::cout << "--> Found sRGB to reference space: " << biLinearSpaces[i] << std::endl;
-                refSpace = biLinearSpaces[i];
+                std::cout << "--> Found sRGB to reference space: " << builtinLinearSpaces[i] << std::endl;
+                refSpace = builtinLinearSpaces[i];
             }
         }
     }
@@ -4570,40 +4580,49 @@ std::string checkForSRGBTextureColorSpace(ConstConfigRcPtr & config,
     return refSpace;
 }
 
-ConstProcessorRcPtr Config::getProcessorToBuiltinColorSpace(ConstConfigRcPtr srcConfig,
-                                                            const char * srcColorSpaceName, 
-                                                            const char * biColorSpaceName,
-                                                            TransformDirection direction) const
+ConstProcessorRcPtr getProcessorToOrFromBuiltinColorSpace(ConstConfigRcPtr srcConfig,
+                                                    const char * srcColorSpaceName, 
+                                                    const char * builtinColorSpaceName,
+                                                    TransformDirection direction)
 {
     // Use the Default config as the Built-in config to interpret the known color space name.        
-    ConstConfigRcPtr biConfig = CreateFromFile("ocio://default");
+    ConstConfigRcPtr builtinConfig = Config::CreateFromFile("ocio://default");
 
-    std::vector<std::string> biLinearSpaces = { "ACES - ACES2065-1", 
-                                                "ACES - ACEScg", 
-                                                "Utility - Linear - Rec.709", 
-                                                "Utility - Linear - P3-D65" };
+    std::vector<std::string> builtinLinearSpaces = {    "ACES - ACES2065-1", 
+                                                        "ACES - ACEScg", 
+                                                        "Utility - Linear - Rec.709", 
+                                                        "Utility - Linear - P3-D65" };
 
-    if (biConfig->getColorSpace(biColorSpaceName) == nullptr)
+    if (builtinConfig->getColorSpace(builtinColorSpaceName) == nullptr)
     {
         std::ostringstream os;
         os  << "Built-in config does not contain the requested color space: " 
-            << biColorSpaceName << ".";
+            << builtinColorSpaceName << ".";
         throw Exception(os.str().c_str());
     }
 
     // If both configs have the interchange roles set, then it's easy.
     try
     {
-        ConstProcessorRcPtr proc = GetProcessorFromConfigs(srcConfig, 
-                                            srcColorSpaceName, 
-                                            biConfig, 
-                                            biColorSpaceName);
+        ConstProcessorRcPtr proc = Config::GetProcessorFromConfigs(srcConfig, 
+                                                                   srcColorSpaceName, 
+                                                                   builtinConfig, 
+                                                                   builtinColorSpaceName);
         std::cout << "Using the interchange roles." << std::endl;
         return proc;
     }
-    catch(...) { /* no nothing */ }
+    catch(const Exception & e) 
+    { 
+        std::string str1 = "The role 'aces_interchange' is missing in the source config";
+        std::string str2 = "The role 'cie_xyz_d65_interchange' is missing in the source config";
 
-    std::cout << "No interchange roles... continue..." << std::endl;
+        // Re-throw when the error is not about interchange roles.
+        if (!StringUtils::StartsWith(e.what(), str1) && !StringUtils::StartsWith(e.what(), str2))
+        {
+            throw Exception(e.what());
+        }
+        // otherwise, do nothing and continue.
+    }
     
     // Use heuristics to try and find a color space in the source config that matches 
     // a color space in the Built-in config.
@@ -4630,23 +4649,38 @@ ConstProcessorRcPtr Config::getProcessorToBuiltinColorSpace(ConstConfigRcPtr src
             std::cout << "--> Check if sRGB texture" << std::endl;
             refColorSpacePrims = checkForSRGBTextureColorSpace(srcConfig, 
                                                                cs, 
-                                                               biConfig, 
-                                                               biLinearSpaces);
+                                                               builtinConfig, 
+                                                               builtinLinearSpaces);
+            // Break out when a match is found.
+            if (!refColorSpacePrims.empty()) break; 
         }
     }
     
     if (!refColorSpacePrims.empty())
     {
         // Use the interchange spaces to get the processor.
-        std::string srcInterchange = refColorSpaceName;
-        std::string biInterchange  = refColorSpacePrims;
-        std::cout << "src: " << srcInterchange << " bi: " << biInterchange << std::endl;
-        ConstProcessorRcPtr proc = GetProcessorFromConfigs(srcConfig,
-                                                           srcColorSpaceName,
-                                                           srcInterchange.c_str(),
-                                                           biConfig,
-                                                           biColorSpaceName,
-                                                           biInterchange.c_str());
+        std::string srcInterchange      = refColorSpaceName;
+        std::string builtinInterchange  = refColorSpacePrims;
+        std::cout << "src: " << srcInterchange << " bi: " << builtinInterchange << std::endl;
+        ConstProcessorRcPtr proc;
+        if (direction == TRANSFORM_DIR_FORWARD)
+        {
+            proc = Config::GetProcessorFromConfigs( srcConfig,
+                                                    srcColorSpaceName,
+                                                    srcInterchange.c_str(),
+                                                    builtinConfig,
+                                                    builtinColorSpaceName,
+                                                    builtinInterchange.c_str());
+        }
+        else if (direction == TRANSFORM_DIR_INVERSE)
+        {
+            proc = Config::GetProcessorFromConfigs( builtinConfig,
+                                                    builtinColorSpaceName,
+                                                    builtinInterchange.c_str(),
+                                                    srcConfig,
+                                                    srcColorSpaceName,
+                                                    srcInterchange.c_str());
+        }
         return proc;
     }
 
@@ -4659,8 +4693,10 @@ ConstProcessorRcPtr Config::getProcessorToBuiltinColorSpace(ConstConfigRcPtr src
         {
             refColorSpacePrims = checkForLinearColorSpace(srcConfig, 
                                                           cs, 
-                                                          biConfig, 
-                                                          biLinearSpaces);
+                                                          builtinConfig, 
+                                                          builtinLinearSpaces);
+            // Break out when a match is found.
+            if (!refColorSpacePrims.empty()) break; 
         }
     }
 
@@ -4668,14 +4704,27 @@ ConstProcessorRcPtr Config::getProcessorToBuiltinColorSpace(ConstConfigRcPtr src
     {
         // Use the interchange spaces to get the processor.
         std::string srcInterchange = refColorSpaceName;
-        std::string biInterchange  = refColorSpacePrims;
-        std::cout << "src: " << srcInterchange << " bi: " << biInterchange << std::endl;
-        ConstProcessorRcPtr proc = GetProcessorFromConfigs(srcConfig,
-                                                           srcColorSpaceName,
-                                                           srcInterchange.c_str(),
-                                                           biConfig,
-                                                           biColorSpaceName,
-                                                           biInterchange.c_str());
+        std::string builtinInterchange  = refColorSpacePrims;
+        std::cout << "src: " << srcInterchange << " bi: " << builtinInterchange << std::endl;
+        ConstProcessorRcPtr proc;
+        if (direction == TRANSFORM_DIR_FORWARD)
+        {
+            proc = Config::GetProcessorFromConfigs( srcConfig,
+                                                    srcColorSpaceName,
+                                                    srcInterchange.c_str(),
+                                                    builtinConfig,
+                                                    builtinColorSpaceName,
+                                                    builtinInterchange.c_str());
+        }
+        else if (direction == TRANSFORM_DIR_INVERSE)
+        {
+            proc = Config::GetProcessorFromConfigs( builtinConfig,
+                                                    builtinColorSpaceName,
+                                                    builtinInterchange.c_str(),
+                                                    srcConfig,
+                                                    srcColorSpaceName,
+                                                    srcInterchange.c_str());
+        }
         return proc;
     }
 
@@ -4683,6 +4732,26 @@ ConstProcessorRcPtr Config::getProcessorToBuiltinColorSpace(ConstConfigRcPtr src
     os  << "Heuristics were not able to find a known color space in the provided config.\n"
         << "Please set the interchange roles.";
     throw Exception(os.str().c_str());
+}
+
+ConstProcessorRcPtr Config::getProcessorToBuiltinColorSpace(ConstConfigRcPtr srcConfig,
+                                                            const char * srcColorSpaceName, 
+                                                            const char * builtinColorSpaceName)
+{
+    return getProcessorToOrFromBuiltinColorSpace(srcConfig,
+                                                 srcColorSpaceName, 
+                                                 builtinColorSpaceName,
+                                                 TRANSFORM_DIR_FORWARD);
+}
+
+ConstProcessorRcPtr Config::getProcessorFromBuiltinColorSpace(ConstConfigRcPtr srcConfig,
+                                                            const char * srcColorSpaceName, 
+                                                            const char * builtinColorSpaceName)
+{
+    return getProcessorToOrFromBuiltinColorSpace(srcConfig,
+                                                 srcColorSpaceName, 
+                                                 builtinColorSpaceName,
+                                                 TRANSFORM_DIR_INVERSE);
 }
 
 std::ostream& operator<< (std::ostream& os, const Config& config)

@@ -1148,10 +1148,13 @@ public:
      * \brief TBD
      * 
      */
-    ConstProcessorRcPtr Config::getProcessorToBuiltinColorSpace(ConstConfigRcPtr srcConfig,
+    static ConstProcessorRcPtr Config::getProcessorToBuiltinColorSpace(ConstConfigRcPtr srcConfig,
                                                                 const char * srcColorSpaceName, 
-                                                                const char * biColorSpaceName,
-                                                                TransformDirection direction) const;
+                                                                const char * biColorSpaceName);
+
+    static ConstProcessorRcPtr Config::getProcessorFromBuiltinColorSpace(ConstConfigRcPtr srcConfig,
+                                                                const char * srcColorSpaceName, 
+                                                                const char * biColorSpaceName);
 
     /**
      * \brief Get a processor to convert between color spaces in two separate
