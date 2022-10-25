@@ -117,9 +117,6 @@ if(NOT OpenEXR_FOUND AND NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL NONE)
 
     set(_OpenEXR_LIB_VER "${_OpenEXR_ExternalProject_VERSION_MAJOR}_${_OpenEXR_ExternalProject_VERSION_MINOR}")
 
-    set(OpenEXR_LIBRARY
-        "${_EXT_DIST_ROOT}/${CMAKE_INSTALL_LIBDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}OpenEXR-${_OpenEXR_LIB_VER}${_OpenEXR_LIB_SUFFIX}${CMAKE_STATIC_LIBRARY_SUFFIX}")
-
     set_target_location(Iex)
     set_target_location(IlmThread)
     set_target_location(OpenEXR)
@@ -188,7 +185,12 @@ if(NOT OpenEXR_FOUND AND NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL NONE)
             GIT_CONFIG advice.detachedHead=false
             GIT_SHALLOW TRUE
             PREFIX "${_EXT_BUILD_ROOT}/openexr"
-            BUILD_BYPRODUCTS ${OpenEXR_LIBRARY}
+            BUILD_BYPRODUCTS
+                ${Iex_LIBRARY}
+                ${IlmThread_LIBRARY}
+                ${OpenEXR_LIBRARY}
+                ${OpenEXRCore_LIBRARY}
+                ${OpenEXRUtil_LIBRARY}
             CMAKE_ARGS ${OpenEXR_CMAKE_ARGS}
             EXCLUDE_FROM_ALL TRUE
             BUILD_COMMAND ""

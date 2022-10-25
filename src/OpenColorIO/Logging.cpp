@@ -53,6 +53,12 @@ void InitLogging()
     {
         g_logginglevel = LOGGING_LEVEL_DEFAULT;
     }
+
+    if (g_logginglevel == LOGGING_LEVEL_DEBUG)
+    {
+        std::cerr << "[OpenColorIO Debug]: Using OpenColorIO version: "
+                  << GetVersion() << "\n";
+    }
 }
 
 // That's the default logging function.
