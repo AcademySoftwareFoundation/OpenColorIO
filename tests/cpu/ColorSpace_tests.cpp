@@ -1107,7 +1107,7 @@ colorspaces:
     {
         // Test throw if no suitable spaces are present.
 
-        OCIO_CHECK_THROW(auto proc = OCIO::Config::getProcessorToBuiltinColorSpace(
+        OCIO_CHECK_THROW(auto proc = OCIO::Config::GetProcessorToBuiltinColorSpace(
             editableCfg,
             srcColorSpaceName.c_str(),
             builtinColorSpaceName.c_str()),
@@ -1120,7 +1120,7 @@ colorspaces:
         // Test sRGB Texture space.
 
         editableCfg->setInactiveColorSpaces("ACES cg, Linear ITU-R BT.709");
-        auto proc = OCIO::Config::getProcessorToBuiltinColorSpace(editableCfg,
+        auto proc = OCIO::Config::GetProcessorToBuiltinColorSpace(editableCfg,
                                                                   srcColorSpaceName.c_str(),
                                                                   builtinColorSpaceName.c_str());
         checkProcessor(proc);
@@ -1130,7 +1130,7 @@ colorspaces:
         // Test linear color space from_ref direction.
 
         editableCfg->setInactiveColorSpaces("ACES cg, Texture -- sRGB");
-        auto proc = OCIO::Config::getProcessorToBuiltinColorSpace(editableCfg,
+        auto proc = OCIO::Config::GetProcessorToBuiltinColorSpace(editableCfg,
                                                                   srcColorSpaceName.c_str(),
                                                                   builtinColorSpaceName.c_str());
         checkProcessor(proc);
@@ -1140,7 +1140,7 @@ colorspaces:
         // Test linear color space to_ref direction.
 
         editableCfg->setInactiveColorSpaces("Linear ITU-R BT.709, Texture -- sRGB");
-        auto proc = OCIO::Config::getProcessorToBuiltinColorSpace(editableCfg,
+        auto proc = OCIO::Config::GetProcessorToBuiltinColorSpace(editableCfg,
                                                                   srcColorSpaceName.c_str(),
                                                                   builtinColorSpaceName.c_str());
         checkProcessor(proc);
@@ -1150,7 +1150,7 @@ colorspaces:
         // Test linear color space to_ref direction.
 
         editableCfg->setInactiveColorSpaces("ACES cg, Linear ITU-R BT.709");
-        auto proc = OCIO::Config::getProcessorFromBuiltinColorSpace(builtinColorSpaceName.c_str(),
+        auto proc = OCIO::Config::GetProcessorFromBuiltinColorSpace(builtinColorSpaceName.c_str(),
                                                                     editableCfg,
                                                                     srcColorSpaceName.c_str());
         checkProcessorInverse(proc);
@@ -1160,7 +1160,7 @@ colorspaces:
         // Test linear color space from_ref direction.
 
         editableCfg->setInactiveColorSpaces("ACES cg, Texture -- sRGB");
-        auto proc = OCIO::Config::getProcessorFromBuiltinColorSpace(builtinColorSpaceName.c_str(),
+        auto proc = OCIO::Config::GetProcessorFromBuiltinColorSpace(builtinColorSpaceName.c_str(),
                                                                     editableCfg,
                                                                     srcColorSpaceName.c_str());
         checkProcessorInverse(proc);        
@@ -1170,7 +1170,7 @@ colorspaces:
         // Test linear color space to_ref direction.
 
         editableCfg->setInactiveColorSpaces("Linear ITU-R BT.709, Texture -- sRGB");
-        auto proc = OCIO::Config::getProcessorFromBuiltinColorSpace(builtinColorSpaceName.c_str(),
+        auto proc = OCIO::Config::GetProcessorFromBuiltinColorSpace(builtinColorSpaceName.c_str(),
                                                                     editableCfg,
                                                                     srcColorSpaceName.c_str());
         checkProcessorInverse(proc);
