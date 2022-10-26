@@ -84,6 +84,7 @@ import Lut3DTransformTest
 import MatrixTransformTest
 import MixingHelpersTest
 import NamedTransformTest
+import OCIOZArchiveTest
 import OpenColorIOTest
 import ProcessorTest
 import RangeTransformTest
@@ -140,6 +141,7 @@ def suite():
     suite.addTest(loader.loadTestsFromModule(MatrixTransformTest))
     suite.addTest(loader.loadTestsFromModule(MixingHelpersTest))
     suite.addTest(loader.loadTestsFromModule(NamedTransformTest))
+    suite.addTest(loader.loadTestsFromModule(OCIOZArchiveTest))
     suite.addTest(loader.loadTestsFromModule(OpenColorIOTest))
     suite.addTest(loader.loadTestsFromModule(ProcessorTest))
     suite.addTest(loader.loadTestsFromModule(RangeTransformTest))

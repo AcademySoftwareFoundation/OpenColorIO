@@ -23,6 +23,7 @@ function(add_ocio_test NAME SOURCES PRIVATE_INCLUDES)
             utils::strings
             yaml-cpp
             testutils
+            minizip-ng::minizip-ng
     )
 
     if(APPLE)
@@ -93,6 +94,7 @@ set(SOURCES
     Look.cpp
     md5/md5.cpp
     OCIOYaml.cpp
+    OCIOZArchive.cpp
     ops/cdl/CDLOpCPU.cpp
     ops/cdl/CDLOpGPU.cpp
     ops/exposurecontrast/ExposureContrastOpGPU.cpp
@@ -169,6 +171,7 @@ set(TESTS
     LookParse_tests.cpp
     MathUtils_tests.cpp
     NamedTransform_tests.cpp
+    OCIOZArchive_tests.cpp
     Op_tests.cpp
     OpOptimizers_tests.cpp
     ops/allocation/AllocationOp_tests.cpp

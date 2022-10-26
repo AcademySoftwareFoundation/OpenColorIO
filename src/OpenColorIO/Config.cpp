@@ -10,9 +10,11 @@
 #include <utility>
 #include <vector>
 #include <regex>
+#include <functional>
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "builtinconfigs/BuiltinConfigRegistry.h"
 #include "ContextVariableUtils.h"
 #include "Display.h"
 #include "fileformats/FileFormatICC.h"
@@ -24,18 +26,18 @@
 #include "Mutex.h"
 #include "NamedTransform.h"
 #include "OCIOYaml.h"
+#include "OCIOZArchive.h"
 #include "OpBuilders.h"
 #include "ParseUtils.h"
 #include "PathUtils.h"
 #include "Platform.h"
 #include "PrivateTypes.h"
 #include "Processor.h"
+#include "pystring/pystring.h"
+#include "transforms/FileTransform.h"
 #include "utils/StringUtils.h"
 #include "ViewingRules.h"
 #include "SystemMonitor.h"
-
-#include "builtinconfigs/BuiltinConfigRegistry.h"
-
 
 namespace OCIO_NAMESPACE
 {
@@ -46,6 +48,11 @@ const char * OCIO_ACTIVE_VIEWS_ENVVAR         = "OCIO_ACTIVE_VIEWS";
 const char * OCIO_INACTIVE_COLORSPACES_ENVVAR = "OCIO_INACTIVE_COLORSPACES";
 const char * OCIO_OPTIMIZATION_FLAGS_ENVVAR   = "OCIO_OPTIMIZATION_FLAGS";
 const char * OCIO_USER_CATEGORIES_ENVVAR      = "OCIO_USER_CATEGORIES";
+
+// Default filename (with extension) of a config and archived config.
+const char * OCIO_CONFIG_DEFAULT_NAME         = "config";
+const char * OCIO_CONFIG_DEFAULT_FILE_EXT     = ".ocio";
+const char * OCIO_CONFIG_ARCHIVE_FILE_EXT     = ".ocioz";
 
 // A shared view using this for the color space name will use a display color space that
 // has the same name as the display the shared view is used by.
@@ -575,6 +582,7 @@ public:
     void getAllInternalTransforms(ConstTransformVec & transformVec) const;
 
     static ConstConfigRcPtr Read(std::istream & istream, const char * filename);
+    static ConstConfigRcPtr Read(std::istream & istream, ConfigIOProxyRcPtr ciop);
 
     // Validate view object that can be a config defined shared view or a display-defined view.
     void validateView(const std::string & display, const View & view, bool checkUseDisplayName) const
@@ -1548,7 +1556,10 @@ ConstConfigRcPtr Config::CreateFromEnv()
     std::string file;
     Platform::Getenv(OCIO_CONFIG_ENVVAR, file);
 
-    // File can be a filename/path or an URI to a default configuration (ocio://<config name>).
+    // File may be one of the following:
+    //   1) Path to a config file (e.g. /home/user/ocio/config.ocio)
+    //   2) Path to an archived config file (e.g. /home/user/ocio/archived_config.ocioz)
+    //   3) URI to a built-in config (e.g. ocio://cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1)
     if(!file.empty()) return CreateFromFile(file.c_str());
 
     static const char err[] =
@@ -1581,8 +1592,12 @@ ConstConfigRcPtr Config::CreateFromFile(const char * filename)
         return CreateFromBuiltinConfig(match.str(1).c_str());
     }
 
-    std::ifstream istream = Platform::CreateInputFileStream(filename, std::ios_base::in);
-    if (istream.fail())
+    std::ifstream ifstream = Platform::CreateInputFileStream(
+        filename, 
+        std::ios_base::in | std::ios_base::binary
+    );
+
+    if (ifstream.fail())
     {
         std::ostringstream os;
         os << "Error could not read '" << filename;
@@ -1590,12 +1605,54 @@ ConstConfigRcPtr Config::CreateFromFile(const char * filename)
         throw Exception (os.str().c_str());
     }
 
-    return Config::Impl::Read(istream, filename);
+    char magicNumber[2] = { 0 };
+    if (ifstream.read(magicNumber, 2))
+    {
+        // Check if it is an OCIOZ archive.
+        if (magicNumber[0] == 'P' && magicNumber[1] == 'K')
+        {
+            // Closing ifstream even though it should be close by ifstream deconstructor (RAII).
+            ifstream.close();
+
+            // The file should be an OCIOZ archive file.
+
+            auto ciop = std::make_shared<CIOPOciozArchive>();
+            // Store archive absolute path.
+            ciop->setArchiveAbsPath(filename);
+            // Build the entries map.
+            ciop->buildEntries();
+            return CreateFromConfigIOProxy(ciop);
+        }
+    } 
+
+    // Not an OCIOZ archive. Continue as usual.
+    ifstream.clear();
+    ifstream.seekg(0);
+    return Config::Impl::Read(ifstream, filename);
 }
 
 ConstConfigRcPtr Config::CreateFromStream(std::istream & istream)
 {
     return Config::Impl::Read(istream, nullptr);
+}
+
+ConstConfigRcPtr Config::CreateFromConfigIOProxy(ConfigIOProxyRcPtr ciop)
+{
+    ConstConfigRcPtr config = nullptr;
+
+    // Get a stream of the config.
+    std::string configStr = ciop->getConfigData();
+    std::stringstream configStream(configStr);
+    config = Config::Impl::Read(configStream, ciop);
+
+    if (config == nullptr)
+    {
+        std::ostringstream os;
+        os << "Could not create config using ConfigIOProxy.";
+        throw Exception (os.str().c_str());
+    }
+    
+    return config;
 }
 
 ConstConfigRcPtr Config::CreateFromBuiltinConfig(const char * configName)
@@ -4555,6 +4612,7 @@ ConstProcessorRcPtr Config::getProcessor(const ConstContextRcPtr & context,
     ContextRcPtr usedContext = Context::Create();
     usedContext->setSearchPath(context->getSearchPath());
     usedContext->setWorkingDir(context->getWorkingDir());
+    usedContext->setConfigIOProxy(context->getConfigIOProxy());
 
     const bool needContextVariables = CollectContextVariables(*this, *context, transform, usedContext);
 
@@ -4845,7 +4903,7 @@ const char * Config::getCacheID(const ConstContextRcPtr & context) const
             try
             {
                 const std::string resolvedLocation = context->resolveFileLocation(iter.c_str());
-                filehash << GetFastFileHash(resolvedLocation) << " ";
+                filehash << GetFastFileHash(resolvedLocation, *context) << " ";
             }
             catch(...)
             {
@@ -5103,6 +5161,28 @@ ConstConfigRcPtr Config::Impl::Read(std::istream & istream, const char * filenam
     return config;
 }
 
+ConstConfigRcPtr Config::Impl::Read(std::istream & istream, ConfigIOProxyRcPtr ciop)
+{
+    ConfigRcPtr config = Config::Create();
+    // Passing special string for the file path to enable the parser to provide a more
+    // meaningful error message if a problem is encountered.  (The working directory is not
+    // set to this string.)
+    OCIOYaml::Read(istream, config, "from Archive/ConfigIOProxy");
+
+    config->getImpl()->checkVersionConsistency();
+
+    // An API request always supersedes the env. variable. As the OCIOYaml helper methods
+    // use the Config public API, the variable reset highlights that only the
+    // env. variable and the config contents are valid after a config file read.
+    config->getImpl()->m_inactiveColorSpaceNamesAPI.clear();
+    config->getImpl()->refreshActiveColorSpaces();
+
+    // Set the ConfigIOProxy object.
+    config->setConfigIOProxy(ciop);
+
+    return config;
+}
+
 void Config::Impl::checkVersionConsistency(ConstTransformRcPtr & transform) const
 {
     if (transform)
@@ -5350,6 +5430,100 @@ void Config::Impl::checkVersionConsistency() const
         throw Exception("Only version 2 (or higher) can have NamedTransforms.");
     }
 
+}
+
+void Config::setConfigIOProxy(ConfigIOProxyRcPtr ciop)
+{
+    getImpl()->m_context->setConfigIOProxy(ciop);
+
+    AutoMutex lock(getImpl()->m_cacheidMutex);
+    getImpl()->resetCacheIDs();
+}
+
+ConfigIOProxyRcPtr Config::getConfigIOProxy() const
+{
+    return getImpl()->m_context->getConfigIOProxy();
+}
+
+bool Config::isArchivable() const
+{
+    ConstContextRcPtr context = getCurrentContext();
+
+    // Current archive implementation needs a working directory to look for LUT files and 
+    // working directory must be an absolute path.
+    const char * workingDirectory = getWorkingDir();
+    if ((workingDirectory && !workingDirectory[0]) || !pystring::os::path::isabs(workingDirectory))
+    {
+        return false;
+    }
+
+    // Utility lambda to check the following criteria.
+    auto validatePathForArchiving = [](const std::string & path) 
+    {
+        // Using the normalized path.
+        const std::string normPath = pystring::os::path::normpath(path);
+        if (    
+                // 1) Path may not be absolute.
+                pystring::os::path::isabs(normPath)  || 
+                // 2) Path may not start with double dot ".." (going above working directory).
+                pystring::startswith(normPath, "..") ||
+                // 3) A context variable may not be located at the start of the path.
+                (ContainsContextVariables(path) && 
+                (StringUtils::Find(path, "$") == 0 || 
+                 StringUtils::Find(path, "%") == 0)))
+        {
+            return false;
+        }
+
+        return true;
+    };
+
+    ///////////////////////////////
+    // Search path verification. //
+    ///////////////////////////////
+    // Check that search paths are not absolute nor have context variables outside of config 
+    // working directory.
+    int numSearchPaths = getNumSearchPaths();
+    for (int i = 0; i < numSearchPaths; i++)
+    {
+        std::string currentPath = getSearchPath(i);
+        if (!validatePathForArchiving(currentPath))
+        {
+            // Exit and return false.
+            return false;
+        }
+    }
+
+    /////////////////////////////////
+    // FileTransform verification. //
+    /////////////////////////////////
+    ConstTransformVec allTransforms;
+    getImpl()->getAllInternalTransforms(allTransforms);
+
+    std::set<std::string> files;
+    for(const auto & transform : allTransforms)
+    {
+        GetFileReferences(files, transform);
+    }
+
+    // Check that FileTransform sources are not absolute nor have context variables outside of 
+    // config working directory.
+    for (const auto & path : files)
+    {
+        if (!validatePathForArchiving(path))
+        {
+            // Exit and return false.
+            return false;
+        }
+    }
+
+    return true;
+}
+
+void Config::archive(std::ostream & ostream) const
+{
+    // Using utility functions in OCIOZArchive.cpp.
+    archiveConfig(ostream, *this, getCurrentContext()->getWorkingDir());
 }
 
 } // namespace OCIO_NAMESPACE

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList id="none" compCLFversion="3.0">
+    <Matrix inBitDepth="32f" outBitDepth="32f">
+        <Array dim="3 3">
+4 0 0
+0 4 0
+0 0 4
+        </Array>
+    </Matrix>
+</ProcessList>

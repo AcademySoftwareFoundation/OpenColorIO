@@ -30,6 +30,18 @@ Documentation :
 - Pre-built binaries are also available for `download <http://fnordware.blogspot.com/2012/05/opencolorio-for-after-effects.html>`__, courtesy of `fnordware <http://www.fnordware.com>`__.
 
 
+Anchorpoint
+***********
+
+Anchorpoint is a file browser and asset manager for VFX, animation and real-time projects. It supports OCIO configs to display OpenEXR with the correct color profile.
+
+Website: `<https://www.anchorpoint.app>`__
+
+Documentation :
+
+- `Display OpenEXR with OpenColorIO <https://www.anchorpoint.app/features/color-management>`__
+
+
 Arnold (Autodesk)
 *****************
 

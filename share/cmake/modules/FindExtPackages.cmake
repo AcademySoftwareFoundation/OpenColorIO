@@ -41,6 +41,15 @@ find_package(pystring 1.1.3 REQUIRED)
 set(_Imath_ExternalProject_VERSION "3.1.5")
 find_package(Imath 3.0 REQUIRED)
 
+# ZLIB
+# https://github.com/madler/zlib
+set(_zlib_ExternalProject_VERSION "1.2.12")
+find_package(zlib REQUIRED)
+
+# minizip-ng
+# https://github.com/zlib-ng/minizip-ng
+find_package(minizip-ng 3.0.6 REQUIRED)
+
 if(OCIO_BUILD_APPS)
 
     # NOTE: Depending of the compiler version lcms2 2.2 does not compile with 
