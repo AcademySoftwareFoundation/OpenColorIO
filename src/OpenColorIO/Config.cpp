@@ -1087,7 +1087,7 @@ public:
         return -1;
     }
 
-    std::string getRefSpace(ConstConfigRcPtr & cfg)
+    std::string getRefSpace(ConstConfigRcPtr & cfg) const
     {
         // Find a color space where isData is false and it has neither a to_ref or from_ref 
         // transform.
@@ -1117,7 +1117,7 @@ public:
         return "";
     }
 
-    bool containsSRGB(ConstColorSpaceRcPtr & cs)
+    bool containsSRGB(ConstColorSpaceRcPtr & cs) const
     {
         std::string name = StringUtils::Lower(cs->getName());
         if (StringUtils::Find(name, "srgb") != std::string::npos)
@@ -1138,7 +1138,7 @@ public:
     }
 
     ConstProcessorRcPtr getRefToSRGBTransform(ConstConfigRcPtr & builtinConfig, 
-                                            std::string refColorSpaceName)
+                                            std::string refColorSpaceName) const
     {
         // Build reference space of the given prims to sRGB transform.
         std::string srgbColorSpaceName = "Input - Generic - sRGB - Texture";
@@ -1155,7 +1155,7 @@ public:
 
     bool isIdentityTransform(ConstConfigRcPtr & config, 
                             ProcessorRcPtr & proc, 
-                            std::vector<float> & vals)
+                            std::vector<float> & vals) const
     {
         std::vector<float> out = vals;
 
@@ -1179,7 +1179,7 @@ public:
     std::string checkForLinearColorSpace(ConstConfigRcPtr & config, 
                                         ConstColorSpaceRcPtr & cs,
                                         ConstConfigRcPtr & builtinConfig,
-                                        std::vector<std::string> & builtinLinearSpaces)
+                                        std::vector<std::string> & builtinLinearSpaces) const
     {
         // If the color space is a recognized linear space, return the reference space used by 
         // the config.
@@ -1254,7 +1254,7 @@ public:
     std::string checkForSRGBTextureColorSpace(ConstConfigRcPtr & config, 
                                             ConstColorSpaceRcPtr cs,
                                             ConstConfigRcPtr & builtinConfig,
-                                            std::vector<std::string> & builtinLinearSpaces)
+                                            std::vector<std::string> & builtinLinearSpaces) const
     {
         // If the color space is an sRGB texture space, return the reference space used by the config.
 
@@ -1329,7 +1329,6 @@ public:
         // Then try the various primaries for the reference space.
         //
 
-
         // Define a (somewhat arbitrary) set of RGB values to test whether the transform is in fact 
         // converting sRGB texture values to the candidate reference space. It includes 0.02 which is 
         // on the sRGB linear segment, color values, and neutral values.
@@ -1351,8 +1350,8 @@ public:
                 fromRefProc = getRefToSRGBTransform(builtinConfig, builtinLinearSpaces[i]);
 
                 ConstProcessorRcPtr toRefProc = getProcessorWithoutCaching(*config,
-                                                                    toRefTransform,
-                                                                    TRANSFORM_DIR_FORWARD);
+                                                                           toRefTransform,
+                                                                           TRANSFORM_DIR_FORWARD);
 
                 ProcessorRcPtr proc = Processor::Create();
                 proc->getImpl()->concatenate(toRefProc, fromRefProc);
@@ -1370,7 +1369,7 @@ public:
     ConstProcessorRcPtr getProcessorToBuiltinCS(ConstConfigRcPtr srcConfig,
                                                 const char * srcColorSpaceName, 
                                                 const char * builtinColorSpaceName,
-                                                TransformDirection direction)
+                                                TransformDirection direction) const
     {
         // Use the Default config as the Built-in config to interpret the known color space name.        
         ConstConfigRcPtr builtinConfig = Config::CreateFromFile("ocio://default");
@@ -1379,10 +1378,10 @@ public:
         // will be used when searching through the source config. If the source config scene-referred 
         // reference space is the equivalent of one of these spaces, it should be possible to identify 
         // it with the following heuristics.
-        std::vector<std::string> builtinLinearSpaces = {    "ACES - ACES2065-1", 
-                                                            "ACES - ACEScg", 
-                                                            "Utility - Linear - Rec.709", 
-                                                            "Utility - Linear - P3-D65" };
+        std::vector<std::string> builtinLinearSpaces = { "ACES - ACES2065-1", 
+                                                         "ACES - ACEScg", 
+                                                         "Utility - Linear - Rec.709", 
+                                                         "Utility - Linear - P3-D65" };
 
         if (builtinConfig->getColorSpace(builtinColorSpaceName) == nullptr)
         {
@@ -1396,9 +1395,9 @@ public:
         try
         {
             ConstProcessorRcPtr proc = Config::GetProcessorFromConfigs(srcConfig, 
-                                                                    srcColorSpaceName, 
-                                                                    builtinConfig, 
-                                                                    builtinColorSpaceName);
+                                                                       srcColorSpaceName, 
+                                                                       builtinConfig, 
+                                                                       builtinColorSpaceName);
             return proc;
         }
         catch(const Exception & e) 
@@ -1435,9 +1434,9 @@ public:
             if (containsSRGB(cs))
             {
                 refColorSpacePrims = checkForSRGBTextureColorSpace(srcConfig, 
-                                                                cs, 
-                                                                builtinConfig, 
-                                                                builtinLinearSpaces);
+                                                                   cs, 
+                                                                   builtinConfig, 
+                                                                   builtinLinearSpaces);
                 // Break out when a match is found.
                 if (!refColorSpacePrims.empty()) break; 
             }
@@ -1452,21 +1451,21 @@ public:
             ConstProcessorRcPtr proc;
             if (direction == TRANSFORM_DIR_FORWARD)
             {
-                proc = Config::GetProcessorFromConfigs( srcConfig,
-                                                        srcColorSpaceName,
-                                                        srcInterchange.c_str(),
-                                                        builtinConfig,
-                                                        builtinColorSpaceName,
-                                                        builtinInterchange.c_str());
+                proc = Config::GetProcessorFromConfigs(srcConfig,
+                                                       srcColorSpaceName,
+                                                       srcInterchange.c_str(),
+                                                       builtinConfig,
+                                                       builtinColorSpaceName,
+                                                       builtinInterchange.c_str());
             }
             else if (direction == TRANSFORM_DIR_INVERSE)
             {
-                proc = Config::GetProcessorFromConfigs( builtinConfig,
-                                                        builtinColorSpaceName,
-                                                        builtinInterchange.c_str(),
-                                                        srcConfig,
-                                                        srcColorSpaceName,
-                                                        srcInterchange.c_str());
+                proc = Config::GetProcessorFromConfigs(builtinConfig,
+                                                       builtinColorSpaceName,
+                                                       builtinInterchange.c_str(),
+                                                       srcConfig,
+                                                       srcColorSpaceName,
+                                                       srcInterchange.c_str());
             }
             return proc;
         }
@@ -1496,21 +1495,21 @@ public:
             ConstProcessorRcPtr proc;
             if (direction == TRANSFORM_DIR_FORWARD)
             {
-                proc = Config::GetProcessorFromConfigs( srcConfig,
-                                                        srcColorSpaceName,
-                                                        srcInterchange.c_str(),
-                                                        builtinConfig,
-                                                        builtinColorSpaceName,
-                                                        builtinInterchange.c_str());
+                proc = Config::GetProcessorFromConfigs(srcConfig,
+                                                       srcColorSpaceName,
+                                                       srcInterchange.c_str(),
+                                                       builtinConfig,
+                                                       builtinColorSpaceName,
+                                                       builtinInterchange.c_str());
             }
             else if (direction == TRANSFORM_DIR_INVERSE)
             {
-                proc = Config::GetProcessorFromConfigs( builtinConfig,
-                                                        builtinColorSpaceName,
-                                                        builtinInterchange.c_str(),
-                                                        srcConfig,
-                                                        srcColorSpaceName,
-                                                        srcInterchange.c_str());
+                proc = Config::GetProcessorFromConfigs(builtinConfig,
+                                                       builtinColorSpaceName,
+                                                       builtinInterchange.c_str(),
+                                                       srcConfig,
+                                                       srcColorSpaceName,
+                                                       srcInterchange.c_str());
             }
             return proc;
         }
@@ -4773,24 +4772,20 @@ ConstProcessorRcPtr Config::GetProcessorToBuiltinColorSpace(ConstConfigRcPtr src
                                                             const char * srcColorSpaceName, 
                                                             const char * builtinColorSpaceName)
 {
-    // Creates temporary Config object and call getProcessorToBuiltinCS.
-    ConfigRcPtr config = Config::Create();
-    return config->getImpl()->getProcessorToBuiltinCS(srcConfig,
-                                                      srcColorSpaceName, 
-                                                      builtinColorSpaceName,
-                                                      TRANSFORM_DIR_FORWARD);
+    return srcConfig->getImpl()->getProcessorToBuiltinCS(srcConfig,
+                                                         srcColorSpaceName, 
+                                                         builtinColorSpaceName,
+                                                         TRANSFORM_DIR_FORWARD);
 }
 
 ConstProcessorRcPtr Config::GetProcessorFromBuiltinColorSpace(const char * builtinColorSpaceName,
                                                               ConstConfigRcPtr srcConfig,
                                                               const char * srcColorSpaceName)
 {
-    // Creates temporary Config object and call getProcessorToBuiltinCS.
-    ConfigRcPtr config = Config::Create();
-    return config->getImpl()->getProcessorToBuiltinCS(srcConfig,
-                                                      srcColorSpaceName, 
-                                                      builtinColorSpaceName,
-                                                      TRANSFORM_DIR_INVERSE);
+    return srcConfig->getImpl()->getProcessorToBuiltinCS(srcConfig,
+                                                         srcColorSpaceName, 
+                                                         builtinColorSpaceName,
+                                                         TRANSFORM_DIR_INVERSE);
 }
 
 std::ostream& operator<< (std::ostream& os, const Config& config)
