@@ -1137,7 +1137,7 @@ public:
         return false;
     }
 
-    GroupTransformRcPtr getRefToSRGBTransform(ConstConfigRcPtr & builtinConfig, 
+    ConstProcessorRcPtr getRefToSRGBTransform(ConstConfigRcPtr & builtinConfig, 
                                             std::string refColorSpaceName)
     {
         // Build reference space of the given prims to sRGB transform.
@@ -1150,15 +1150,7 @@ public:
         ConstProcessorRcPtr proc  = getProcessorWithoutCaching(*builtinConfig,
                                                                csTransform,
                                                                TRANSFORM_DIR_FORWARD);
-        return proc->createGroupTransform();
-    }
-
-    ConstGroupTransformRcPtr combineGroupTransforms(ConstTransformRcPtr tf1, ConstTransformRcPtr tf2)
-    {
-        GroupTransformRcPtr newGT = GroupTransform::Create();
-        newGT->appendTransform(tf1->createEditableCopy());
-        newGT->appendTransform(tf2->createEditableCopy());
-        return newGT;
+        return proc;
     }
 
     bool isIdentityTransform(ConstConfigRcPtr & config, 
@@ -1175,7 +1167,7 @@ public:
 
         for (size_t i = 0; i < out.size(); i++)
         {
-            if (!EqualWithAbsError(vals[i] * 1.f, out[i], 1e-3f))
+            if (!EqualWithAbsError(vals[i], out[i], 1e-3f))
             {
                 return false;
             }
@@ -1296,12 +1288,12 @@ public:
         // Break point is at 0.039286, so include at least one value below this.
         std::vector<float> vals =
         {
-            0.5f, 0.5f, 0.5f, 
+            0.5f,  0.5f,  0.5f, 
             0.03f, 0.03f, 0.03f, 
             0.25f, 0.25f, 0.25f, 
             0.75f, 0.75f, 0.75f, 
-            0.f, 0.f, 0.f, 
-            1.f, 1.f , 1.f
+            0.f,   0.f,   0.f, 
+            1.f,   1.f ,  1.f
         };
         std::vector<float> out = vals;
 
@@ -1327,7 +1319,7 @@ public:
                 out[i] = 1.055f * pow(out[i], 1/2.4f) - 0.055f;
             }
 
-            if (!EqualWithAbsError(vals[i] * 1.f, out[i], 1e-3f))
+            if (!EqualWithAbsError(vals[i], out[i], 1e-3f))
             {
                 return "";
             }
@@ -1347,7 +1339,7 @@ public:
                  0.f,   0.f,   0.f,
                  1.f,   1.f,   1.f };
         std::string refSpace = "";
-        ConstTransformRcPtr fromRefTransform;
+        ConstProcessorRcPtr fromRefProc;
         if (toRefTransform)
         {
             // The color space has the sRGB non-linearity. Now try combining the transform with a 
@@ -1356,17 +1348,14 @@ public:
             // reference space is.
             for (size_t i = 0; i < builtinLinearSpaces.size(); i++)
             {
-                fromRefTransform = getRefToSRGBTransform(builtinConfig, builtinLinearSpaces[i]);
+                fromRefProc = getRefToSRGBTransform(builtinConfig, builtinLinearSpaces[i]);
 
-                ConstProcessorRcPtr p1  = getProcessorWithoutCaching(*config,
+                ConstProcessorRcPtr toRefProc = getProcessorWithoutCaching(*config,
                                                                     toRefTransform,
-                                                                    TRANSFORM_DIR_FORWARD);
-                ConstProcessorRcPtr p2  = getProcessorWithoutCaching(*config,
-                                                                    fromRefTransform,
                                                                     TRANSFORM_DIR_FORWARD);
 
                 ProcessorRcPtr proc = Processor::Create();
-                proc->getImpl()->concatenate(p1, p2);
+                proc->getImpl()->concatenate(toRefProc, fromRefProc);
 
                 if (isIdentityTransform(config, proc, vals))
                 {
@@ -4787,9 +4776,9 @@ ConstProcessorRcPtr Config::GetProcessorToBuiltinColorSpace(ConstConfigRcPtr src
     // Creates temporary Config object and call getProcessorToBuiltinCS.
     ConfigRcPtr config = Config::Create();
     return config->getImpl()->getProcessorToBuiltinCS(srcConfig,
-                                                 srcColorSpaceName, 
-                                                 builtinColorSpaceName,
-                                                 TRANSFORM_DIR_FORWARD);
+                                                      srcColorSpaceName, 
+                                                      builtinColorSpaceName,
+                                                      TRANSFORM_DIR_FORWARD);
 }
 
 ConstProcessorRcPtr Config::GetProcessorFromBuiltinColorSpace(const char * builtinColorSpaceName,
