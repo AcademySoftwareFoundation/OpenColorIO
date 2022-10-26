@@ -1138,7 +1138,7 @@ public:
     }
 
     ConstProcessorRcPtr getRefToSRGBTransform(ConstConfigRcPtr & builtinConfig, 
-                                            std::string refColorSpaceName) const
+                                              std::string refColorSpaceName) const
     {
         // Build reference space of the given prims to sRGB transform.
         std::string srgbColorSpaceName = "Input - Generic - sRGB - Texture";
@@ -1154,8 +1154,8 @@ public:
     }
 
     bool isIdentityTransform(ConstConfigRcPtr & config, 
-                            ProcessorRcPtr & proc, 
-                            std::vector<float> & vals) const
+                             ProcessorRcPtr & proc, 
+                             std::vector<float> & vals) const
     {
         std::vector<float> out = vals;
 
@@ -1177,9 +1177,9 @@ public:
     }
 
     std::string checkForLinearColorSpace(ConstConfigRcPtr & config, 
-                                        ConstColorSpaceRcPtr & cs,
-                                        ConstConfigRcPtr & builtinConfig,
-                                        std::vector<std::string> & builtinLinearSpaces) const
+                                         ConstColorSpaceRcPtr & cs,
+                                         ConstConfigRcPtr & builtinConfig,
+                                         std::vector<std::string> & builtinLinearSpaces) const
     {
         // If the color space is a recognized linear space, return the reference space used by 
         // the config.
@@ -1252,9 +1252,9 @@ public:
     }
 
     std::string checkForSRGBTextureColorSpace(ConstConfigRcPtr & config, 
-                                            ConstColorSpaceRcPtr cs,
-                                            ConstConfigRcPtr & builtinConfig,
-                                            std::vector<std::string> & builtinLinearSpaces) const
+                                             ConstColorSpaceRcPtr cs,
+                                             ConstConfigRcPtr & builtinConfig,
+                                             std::vector<std::string> & builtinLinearSpaces) const
     {
         // If the color space is an sRGB texture space, return the reference space used by the config.
 
