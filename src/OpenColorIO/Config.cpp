@@ -1125,8 +1125,8 @@ public:
             return true;
         }
 
-        auto nbOfAliases = cs->getNumAliases();
-        for (auto i = 0; i < nbOfAliases; i++)
+        size_t nbOfAliases = cs->getNumAliases();
+        for (size_t i = 0; i < nbOfAliases; i++)
         {
             if (StringUtils::Find(cs->getAlias(i), "srgb") != std::string::npos)
             {
@@ -1153,9 +1153,7 @@ public:
         return proc;
     }
 
-    bool isIdentityTransform(ConstConfigRcPtr & config, 
-                             ProcessorRcPtr & proc, 
-                             std::vector<float> & vals) const
+    bool isIdentityTransform(ProcessorRcPtr & proc, std::vector<float> & vals) const
     {
         std::vector<float> out = vals;
 
@@ -1176,8 +1174,7 @@ public:
         return true;
     }
 
-    std::string checkForLinearColorSpace(ConstConfigRcPtr & config, 
-                                         ConstColorSpaceRcPtr & cs,
+    std::string checkForLinearColorSpace(ConstColorSpaceRcPtr & cs,
                                          ConstConfigRcPtr & builtinConfig,
                                          std::vector<std::string> & builtinLinearSpaces) const
     {
@@ -1231,7 +1228,7 @@ public:
                     ProcessorRcPtr proc = Processor::Create();
                     proc->getImpl()->concatenate(p1, p2);
 
-                    if (isIdentityTransform(config, proc, vals))
+                    if (isIdentityTransform(proc, vals))
                     {
                         if (toRefDirection) 
                         {
@@ -1356,7 +1353,7 @@ public:
                 ProcessorRcPtr proc = Processor::Create();
                 proc->getImpl()->concatenate(toRefProc, fromRefProc);
 
-                if (isIdentityTransform(config, proc, vals))
+                if (isIdentityTransform(proc, vals))
                 {
                     refSpace = builtinLinearSpaces[i];
                 }
@@ -1477,8 +1474,7 @@ public:
             auto cs = srcConfig->getColorSpace(srcConfig->getColorSpaceNameByIndex(i));
             if (srcConfig->isColorSpaceLinear(cs->getName(), REFERENCE_SPACE_SCENE))
             {
-                refColorSpacePrims = checkForLinearColorSpace(srcConfig, 
-                                                              cs, 
+                refColorSpacePrims = checkForLinearColorSpace(cs, 
                                                               builtinConfig, 
                                                               builtinLinearSpaces);
                 // Break out when a match is found.

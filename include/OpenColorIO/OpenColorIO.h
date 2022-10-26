@@ -1171,7 +1171,7 @@ public:
      * \param srcColorSpaceName The name of the color space in the source config.
      * \param builtinColorSpaceName The name of the color space in the current default Built-in config.
      */
-    static ConstProcessorRcPtr Config::GetProcessorToBuiltinColorSpace(
+    static ConstProcessorRcPtr GetProcessorToBuiltinColorSpace(
                                                                 ConstConfigRcPtr srcConfig,
                                                                 const char * srcColorSpaceName, 
                                                                 const char * builtinColorSpaceName);
@@ -1182,7 +1182,7 @@ public:
      * \param srcConfig The user's source config.
      * \param srcColorSpaceName The name of the color space in the source config. 
      */
-    static ConstProcessorRcPtr Config::GetProcessorFromBuiltinColorSpace(
+    static ConstProcessorRcPtr GetProcessorFromBuiltinColorSpace(
                                                                 const char * builtinColorSpaceName,
                                                                 ConstConfigRcPtr srcConfig,
                                                                 const char * srcColorSpaceName);
