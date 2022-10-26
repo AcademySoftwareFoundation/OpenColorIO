@@ -1148,8 +1148,8 @@ public:
                                      TransformDirection direction) const;
 
     /**
-     * \brief Get a Processor to or from the color space in the source config to a known external 
-     *        color space.
+     * \brief Get a Processor to or from a known external color space.
+     * 
      * These methods provide a way to interface color spaces in a config with known standard 
      * external color spaces. The set of external color space are those contained in the current 
      * default Built-in config. This includes common spaces such as "Linear Rec.709 (sRGB)", 
@@ -1171,7 +1171,8 @@ public:
      * \param srcColorSpaceName The name of the color space in the source config.
      * \param builtinColorSpaceName The name of the color space in the current default Built-in config.
      */
-    static ConstProcessorRcPtr Config::GetProcessorToBuiltinColorSpace(ConstConfigRcPtr srcConfig,
+    static ConstProcessorRcPtr Config::GetProcessorToBuiltinColorSpace(
+                                                                ConstConfigRcPtr srcConfig,
                                                                 const char * srcColorSpaceName, 
                                                                 const char * builtinColorSpaceName);
     /**
