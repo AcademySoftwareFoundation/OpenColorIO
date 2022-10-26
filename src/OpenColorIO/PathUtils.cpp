@@ -12,6 +12,7 @@
 #include "Platform.h"
 #include "pystring/pystring.h"
 #include "utils/StringUtils.h"
+#include "OCIOZArchive.h"
 
 #if !defined(_WIN32)
 #include <sys/param.h>
@@ -59,7 +60,7 @@ void ResetComputeHashFunction()
     g_hashFunction = Platform::CreateFileContentHash;
 }
 
-std::string GetFastFileHash(const std::string & filename)
+std::string GetFastFileHash(const std::string & filename, const Context & context)
 {
     FileHashResultPtr fileHashResultPtr;
     {
@@ -84,18 +85,31 @@ std::string GetFastFileHash(const std::string & filename)
             // NB: OCIO does not attempt to detect if files have changed and caused the cache to
             // become stale.
             fileHashResultPtr->ready = true;
-            fileHashResultPtr->hash = g_hashFunction(filename);
-        }
 
+            std::string h = "";
+            if (!context.getConfigIOProxy())
+            {
+                // Default case.
+                h = g_hashFunction(filename);
+            }
+            else
+            {
+                // Case for when ConfigIOProxy is used (callbacks mechanism).
+                h = context.getConfigIOProxy()->getFastLutFileHash(filename.c_str());
+            }
+
+            fileHashResultPtr->hash = h;
+        }
+    
         hash = fileHashResultPtr->hash;
     }
 
     return hash;
 }
 
-bool FileExists(const std::string & filename)
+bool FileExists(const std::string & filename, const Context & context)
 {
-    std::string hash = GetFastFileHash(filename);
+    std::string hash = GetFastFileHash(filename, context);
     return (!hash.empty());
 }
 

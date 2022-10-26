@@ -37,7 +37,9 @@ void SystemMonitorsImpl::getAllMonitors()
     {
         const std::tstring deviceName = dispDevice.DeviceName;
 
-        // Only select active monitors.
+        // Only select active monitors. 
+        // NOTE: Currently the two DISPLAY enums are equivalent, but we check both in case one may 
+        // change in the future.
         if ((dispDevice.StateFlags & DISPLAY_DEVICE_ACTIVE)
             && (dispDevice.StateFlags & DISPLAY_DEVICE_ATTACHED_TO_DESKTOP))
         {

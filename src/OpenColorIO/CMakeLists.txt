@@ -69,6 +69,7 @@ set(SOURCES
     md5/md5.cpp
     NamedTransform.cpp
     OCIOYaml.cpp
+    OCIOZArchive.cpp
     Op.cpp
     OpOptimizers.cpp
     ops/allocation/AllocationOp.cpp
@@ -275,6 +276,7 @@ target_link_libraries(OpenColorIO
         "$<BUILD_INTERFACE:utils::from_chars>"
         "$<BUILD_INTERFACE:utils::strings>"
         yaml-cpp
+        minizip-ng::minizip-ng
 )
 
 if(APPLE)
