@@ -933,6 +933,4 @@ colorspaces:
         testDisplayReferred("scene_linear-trans-alias", false, __LINE__);
         testDisplayReferred("scene_ref", false, __LINE__);
     }
-
-
 }
