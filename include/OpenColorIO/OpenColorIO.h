@@ -1143,18 +1143,50 @@ public:
     ConstProcessorRcPtr getProcessor(const ConstTransformRcPtr & transform) const;
     ConstProcessorRcPtr getProcessor(const ConstTransformRcPtr & transform,
                                      TransformDirection direction) const;
+    ConstProcessorRcPtr getProcessor(const ConstContextRcPtr & context,
+                                     const ConstTransformRcPtr & transform,
+                                     TransformDirection direction) const;
 
     /**
-     * \brief TBD
+     * \brief Get a Processor to or from the color space in the source config to a known external 
+     *        color space.
+     * These methods provide a way to interface color spaces in a config with known standard 
+     * external color spaces. The set of external color space are those contained in the current 
+     * default Built-in config. This includes common spaces such as "Linear Rec.709 (sRGB)", 
+     * "sRGB - Texture", "ACEScg", and "ACES2065-1".
      * 
+     * If the source config defines the necessary Interchange Role (typically "aces_interchange"), 
+     * then the conversion will be well-defined and equivalent to calling GetProcessorFromConfigs
+     * with the source config and the Built-in config
+     * 
+     * However, if the Interchange Roles are not present, heuristics will be used to try and 
+     * identify a common color space in the source config that may be used to allow the conversion 
+     * to proceed. If the heuristics fail to find a suitable space, an exception is thrown. 
+     * The heuristics may evolve, so the results returned by this function for a given source config 
+     * and color space may change in future releases of the library. However, the Interchange Roles 
+     * are required in config versions 2.2 and higher, so it is hoped that the need for the heuristics 
+     * will decrease over time.
+     * 
+     * \param srcConfig The user's source config.
+     * \param srcColorSpaceName The name of the color space in the source config.
+     * @param biColorSpaceName 
+     * \param builtinColorSpaceName The name of the color space in the current default Built-in config.
      */
     static ConstProcessorRcPtr Config::getProcessorToBuiltinColorSpace(ConstConfigRcPtr srcConfig,
                                                                 const char * srcColorSpaceName, 
-                                                                const char * biColorSpaceName);
-
-    static ConstProcessorRcPtr Config::getProcessorFromBuiltinColorSpace(ConstConfigRcPtr srcConfig,
-                                                                const char * srcColorSpaceName, 
-                                                                const char * biColorSpaceName);
+                                                                const char * builtinColorSpaceName);
+    /**
+     * \brief See description of getProcessorToBuiltinColorSpace.
+     * 
+     * @param srcConfig 
+     * @param srcColorSpaceName 
+     * @param biColorSpaceName 
+     * @return ConstProcessorRcPtr 
+     */
+    static ConstProcessorRcPtr Config::getProcessorFromBuiltinColorSpace(
+                                                                const char * builtinColorSpaceName,
+                                                                ConstConfigRcPtr srcConfig,
+                                                                const char * srcColorSpaceName);
 
     /**
      * \brief Get a processor to convert between color spaces in two separate
@@ -1194,10 +1226,6 @@ public:
                                                        const ConstConfigRcPtr & dstConfig,
                                                        const char * dstColorSpaceName,
                                                        const char * dstInterchangeName);
-
-    ConstProcessorRcPtr getProcessor(const ConstContextRcPtr & context,
-                                     const ConstTransformRcPtr & transform,
-                                     TransformDirection direction) const;
 
     Config(const Config &) = delete;
     Config& operator= (const Config &) = delete;
