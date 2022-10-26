@@ -15,13 +15,21 @@ OCIO_ADD_TEST(BuiltinConfigs, basic)
     
     OCIO_CHECK_EQUAL(registry.getNumBuiltinConfigs(), 2);
 
+    // Test default builtin config.
+    const std::string cgConfigName = "cg-config-v1.0.0_aces-v1.3_ocio-v2.1";
+
+    OCIO_CHECK_EQUAL(
+        std::string(registry.getDefaultBuiltinConfigName()), 
+        cgConfigName
+    );
+
     // *******************************************
     // Testing the first config. (ACES CG config)
     // *******************************************
-
+    
     OCIO_CHECK_EQUAL(
         std::string(registry.getBuiltinConfigName(0)), 
-        std::string("cg-config-v1.0.0_aces-v1.3_ocio-v2.1")
+        cgConfigName
     );
 
     OCIO_CHECK_EQUAL(
@@ -32,12 +40,12 @@ OCIO_ADD_TEST(BuiltinConfigs, basic)
 
     OCIO_CHECK_EQUAL(
         std::string(registry.getBuiltinConfig(0)), 
-        std::string(CG_CONFIG_V100_ACES_V130_OCIO_V21)
+        std::string(CG_CONFIG_V100_ACES_V13_OCIO_V21)
     );
 
     OCIO_CHECK_EQUAL(
-        std::string(registry.getBuiltinConfigByName("cg-config-v1.0.0_aces-v1.3_ocio-v2.1")), 
-        std::string(CG_CONFIG_V100_ACES_V130_OCIO_V21)
+        std::string(registry.getBuiltinConfigByName(cgConfigName.c_str())), 
+        std::string(CG_CONFIG_V100_ACES_V13_OCIO_V21)
     );
 
     OCIO_CHECK_EQUAL(registry.isBuiltinConfigRecommended(0), true);
@@ -45,10 +53,11 @@ OCIO_ADD_TEST(BuiltinConfigs, basic)
     // ************************************************
     // Testing the second config. (ACES Studio config)
     // ************************************************
-
+    const std::string studioConfigName = "studio-config-v1.0.0_aces-v1.3_ocio-v2.1";
+    
     OCIO_CHECK_EQUAL(
         std::string(registry.getBuiltinConfigName(1)), 
-        std::string("studio-config-v1.0.0_aces-v1.3_ocio-v2.1")
+        studioConfigName
     );
 
     OCIO_CHECK_EQUAL(
@@ -59,21 +68,15 @@ OCIO_ADD_TEST(BuiltinConfigs, basic)
 
     OCIO_CHECK_EQUAL(
         std::string(registry.getBuiltinConfig(1)), 
-        std::string(STUDIO_CONFIG_V100_ACES_V130_OCIO_V21)
+        std::string(STUDIO_CONFIG_V100_ACES_V13_OCIO_V21)
     );
 
     OCIO_CHECK_EQUAL(
-        std::string(registry.getBuiltinConfigByName("studio-config-v1.0.0_aces-v1.3_ocio-v2.1")), 
-        std::string(STUDIO_CONFIG_V100_ACES_V130_OCIO_V21)
+        std::string(registry.getBuiltinConfigByName(studioConfigName.c_str())), 
+        std::string(STUDIO_CONFIG_V100_ACES_V13_OCIO_V21)
     );
 
     OCIO_CHECK_EQUAL(registry.isBuiltinConfigRecommended(1), true);
-
-    // Test default builtin config.
-    OCIO_CHECK_EQUAL(
-        std::string(registry.getDefaultBuiltinConfigName()), 
-        std::string("cg-config-v1.0.0_aces-v1.3_ocio-v2.1")
-    );
 
     // ********************************
     // Testing some expected failures.

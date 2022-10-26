@@ -4,6 +4,6 @@
 // The file extension cpp (instead of an header .h) was used here to highlight the fact that 
 // this file should not be included more then ONCE in OCIO.
 
-constexpr char STUDIO_CONFIG_V100_ACES_V130_OCIO_V21[] = {
+constexpr char STUDIO_CONFIG_V100_ACES_V13_OCIO_V21[] = {
      @studio-config-v1.0.0_aces-v1.3_ocio-v2.1@ 
 };

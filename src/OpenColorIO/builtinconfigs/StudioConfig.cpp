@@ -15,13 +15,12 @@ namespace OCIO_NAMESPACE
 
 namespace STUDIOCONFIG
 {
-// Register CG configs.
 void Register(BuiltinConfigRegistryImpl & registry) noexcept
 {
     registry.addBuiltin(
         "studio-config-v1.0.0_aces-v1.3_ocio-v2.1",
         "Academy Color Encoding System - Studio Config [COLORSPACES v1.0.0] [ACES v1.3] [OCIO v2.1]",
-        STUDIO_CONFIG_V100_ACES_V130_OCIO_V21,
+        STUDIO_CONFIG_V100_ACES_V13_OCIO_V21,
         true
     );
 }

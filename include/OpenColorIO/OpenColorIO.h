@@ -281,9 +281,14 @@ public:
      * \param configName Built-in config name
      * 
      * The available configNames are:
-     * "cg-config-v1.0.0_aces-v1.3_ocio-v2.1" -- ACES CG config, basic color spaces for computer
-     * "studio-config-v1.0.0_aces-v1.3_ocio-v2.1" -- ACES Studio config
-     * graphics apps. More information is available at: 
+     * 
+     * ACES Studio config, contains a more complete collection of color spaces and displays:
+     * "studio-config-v1.0.0_aces-v1.3_ocio-v2.1"
+     * 
+     * ACES CG config, basic color spaces for computer graphics apps:
+     * "cg-config-v1.0.0_aces-v1.3_ocio-v2.1"
+     * 
+     * More information is available at: 
      * %https://github.com/AcademySoftwareFoundation/OpenColorIO-Config-ACES
      * 
      * \throw Exception If the configName is not recognized.

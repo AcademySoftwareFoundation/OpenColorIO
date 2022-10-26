@@ -8,11 +8,11 @@ luma: [0.2126, 0.7152, 0.0722]
 name: cg-config-v1.0.0_aces-v1.3_ocio-v2.1
 description: |
   Academy Color Encoding System - CG Config [COLORSPACES v1.0.0] [ACES v1.3] [OCIO v2.1]
-  ------------------------------------------------------------------------------------------
+  --------------------------------------------------------------------------------------
   
   This minimalistic "OpenColorIO" config is geared toward computer graphics artists requiring a lean config that does not include camera colorspaces and the less common displays and looks.
   
-  Generated with "OpenColorIO-Config-ACES" v1.0.0-rc1-17-g5796cbe on the 2022/10/19 at 15:33.
+  Generated with "OpenColorIO-Config-ACES" v1.0.0 on the 2022/10/26 at 05:59.
 
 roles:
   aces_interchange: ACES2065-1
@@ -21,9 +21,9 @@ roles:
   color_timing: ACEScct
   compositing_log: ACEScct
   data: Raw
-  matte_paint: ACEScct
+  matte_paint: sRGB - Texture
   scene_linear: ACEScg
-  texture_paint: sRGB - Texture
+  texture_paint: ACEScct
 
 file_rules:
   - !<Rule> {name: Default, colorspace: ACES2065-1}
@@ -445,7 +445,7 @@ named_transforms:
     family: Utility
     categories: [file-io]
     encoding: sdr-video
-    transform: !<GroupTransform>
+    inverse_transform: !<GroupTransform>
       name: Linear to Rec.1886
       children:
         - !<ExponentTransform> {value: 2.4, style: pass_thru, direction: inverse}
@@ -460,7 +460,7 @@ named_transforms:
     family: Utility
     categories: [file-io]
     encoding: sdr-video
-    transform: !<GroupTransform>
+    inverse_transform: !<GroupTransform>
       name: Linear to sRGB
       children:
         - !<ExponentWithLinearTransform> {gamma: 2.4, offset: 0.055, direction: inverse}

@@ -8,11 +8,11 @@ luma: [0.2126, 0.7152, 0.0722]
 name: studio-config-v1.0.0_aces-v1.3_ocio-v2.1
 description: |
   Academy Color Encoding System - Studio Config [COLORSPACES v1.0.0] [ACES v1.3] [OCIO v2.1]
-  ----------------------------------------------------------------------------------------------
+  ------------------------------------------------------------------------------------------
   
   This "OpenColorIO" config is geared toward studios requiring a config that includes a wide variety of camera colorspaces, displays and looks.
   
-  Generated with "OpenColorIO-Config-ACES" v1.0.0-rc1-17-g5796cbe on the 2022/10/19 at 15:35.
+  Generated with "OpenColorIO-Config-ACES" v1.0.0 on the 2022/10/26 at 05:59.
 
 roles:
   aces_interchange: ACES2065-1
@@ -21,9 +21,9 @@ roles:
   color_timing: ACEScct
   compositing_log: ACEScct
   data: Raw
-  matte_paint: ACEScct
+  matte_paint: sRGB - Texture
   scene_linear: ACEScg
-  texture_paint: sRGB - Texture
+  texture_paint: ACEScct
 
 file_rules:
   - !<Rule> {name: Default, colorspace: ACES2065-1}
@@ -773,7 +773,7 @@ colorspaces:
     to_scene_reference: !<GroupTransform>
       name: Linear Venice S-Gamut3 to ACES2065-1
       children:
-        - !<MatrixTransform> {matrix: [0.674257092126512, 0.220571735923397, 0.10517117195009, 0, -0.00931360607857167, 1.10595886142466, -0.0966452553460855, 0, -0.0382090673002312, -0.017938376600236, 1.05614744390047, 0, 0, 0, 0, 1]}
+        - !<MatrixTransform> {matrix: [0.793329741146434, 0.0890786256206771, 0.117591633232888, 0, 0.0155810585252582, 1.03271230692988, -0.0482933654551394, 0, -0.0188647477991488, 0.0127694120973433, 1.0060953357018, 0, 0, 0, 0, 1]}
 
   - !<ColorSpace>
     name: Linear Venice S-Gamut3.Cine
@@ -1092,7 +1092,7 @@ named_transforms:
     family: Input/ARRI
     categories: [file-io]
     encoding: log
-    inverse_transform: !<GroupTransform>
+    transform: !<GroupTransform>
       name: ARRI LogC3 Curve (EI800) to Relative Scene Linear
       children:
         - !<LogCameraTransform> {base: 10, log_side_slope: 0.247189638318671, log_side_offset: 0.385536998692443, lin_side_slope: 5.55555555555556, lin_side_offset: 0.0522722750251688, lin_side_break: 0.0105909904954696, direction: inverse}
@@ -1107,7 +1107,7 @@ named_transforms:
     family: Input/ARRI
     categories: [file-io]
     encoding: log
-    inverse_transform: !<GroupTransform>
+    transform: !<GroupTransform>
       name: ARRI LogC4 Curve to Relative Scene Linear
       children:
         - !<LogCameraTransform> {log_side_slope: 0.0647954196341293, log_side_offset: -0.295908392682586, lin_side_slope: 2231.82630906769, lin_side_offset: 64, lin_side_break: -0.0180569961199113, direction: inverse}
@@ -1122,7 +1122,7 @@ named_transforms:
     family: Input/BlackmagicDesign
     categories: [file-io]
     encoding: log
-    inverse_transform: !<GroupTransform>
+    transform: !<GroupTransform>
       name: Blackmagic Film (Gen 5) Log to Linear Curve
       children:
         - !<LogCameraTransform> {base: 2.71828182845905, log_side_slope: 0.0869287606549122, log_side_offset: 0.530013339229194, lin_side_offset: 0.00549407243225781, lin_side_break: 0.005, direction: inverse}
@@ -1137,7 +1137,7 @@ named_transforms:
     family: Input/BlackmagicDesign
     categories: [file-io]
     encoding: log
-    inverse_transform: !<GroupTransform>
+    transform: !<GroupTransform>
       name: DaVinci Intermediate Log to Linear Curve
       children:
         - !<LogCameraTransform> {log_side_slope: 0.07329248, log_side_offset: 0.51304736, lin_side_offset: 0.0075, lin_side_break: 0.00262409, linear_slope: 10.44426855, direction: inverse}
@@ -1152,7 +1152,7 @@ named_transforms:
     family: Input/Panasonic
     categories: [file-io]
     encoding: log
-    inverse_transform: !<GroupTransform>
+    transform: !<GroupTransform>
       name: Panasonic V-Log Log to Linear Curve
       children:
         - !<LogCameraTransform> {base: 10, log_side_slope: 0.241514, log_side_offset: 0.598206, lin_side_offset: 0.00873, lin_side_break: 0.01, direction: inverse}
@@ -1167,7 +1167,7 @@ named_transforms:
     family: Input/RED
     categories: [file-io]
     encoding: log
-    inverse_transform: !<GroupTransform>
+    transform: !<GroupTransform>
       name: RED Log3G10 Log to Linear Curve
       children:
         - !<LogCameraTransform> {base: 10, log_side_slope: 0.224282, lin_side_slope: 155.975327, lin_side_offset: 2.55975327, lin_side_break: -0.01, direction: inverse}
@@ -1182,7 +1182,7 @@ named_transforms:
     family: Input/Sony
     categories: [file-io]
     encoding: log
-    inverse_transform: !<GroupTransform>
+    transform: !<GroupTransform>
       name: S-Log3 Log to Linear Curve
       children:
         - !<LogCameraTransform> {base: 10, log_side_slope: 0.255620723362659, log_side_offset: 0.410557184750733, lin_side_slope: 5.26315789473684, lin_side_offset: 0.0526315789473684, lin_side_break: 0.01125, linear_slope: 6.62194371177582, direction: inverse}
@@ -1197,7 +1197,7 @@ named_transforms:
     family: Utility
     categories: [file-io]
     encoding: sdr-video
-    transform: !<GroupTransform>
+    inverse_transform: !<GroupTransform>
       name: Linear to Rec.1886
       children:
         - !<ExponentTransform> {value: 2.4, style: pass_thru, direction: inverse}
@@ -1212,7 +1212,7 @@ named_transforms:
     family: Utility/ITU
     categories: [file-io]
     encoding: sdr-video
-    transform: !<GroupTransform>
+    inverse_transform: !<GroupTransform>
       name: Linear to Rec.709
       children:
         - !<ExponentWithLinearTransform> {gamma: 2.22222222222222, offset: 0.099, direction: inverse}
@@ -1227,16 +1227,16 @@ named_transforms:
     family: Utility
     categories: [file-io]
     encoding: sdr-video
-    transform: !<GroupTransform>
+    inverse_transform: !<GroupTransform>
       name: Linear to sRGB
       children:
         - !<ExponentWithLinearTransform> {gamma: 2.4, offset: 0.055, direction: inverse}
 
   - !<NamedTransform>
     name: ST-2084 - Curve
-    aliases: [st_2084_crv, crv_dolbypq_10000]
+    aliases: [st_2084_crv]
     description: Convert linear nits/100 to SMPTE ST-2084 (PQ) full-range
     family: Utility
     categories: [file-io]
     encoding: hdr-video
-    transform: !<BuiltinTransform> {style: CURVE - LINEAR_to_ST-2084}
+    inverse_transform: !<BuiltinTransform> {style: CURVE - LINEAR_to_ST-2084}

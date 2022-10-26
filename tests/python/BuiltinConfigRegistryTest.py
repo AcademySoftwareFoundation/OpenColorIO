@@ -106,6 +106,12 @@ class BuiltinConfigRegistryTest(unittest.TestCase):
         # Test number of configs.
         self.assertEqual(len(self.REGISTRY), 2)
 
+        # Test for the default built-in config.
+        self.assertEqual(
+            self.REGISTRY.getDefaultBuiltinConfigName(),
+            "cg-config-v1.0.0_aces-v1.3_ocio-v2.1"
+        )
+
         # Test the CG config.
         # Name
         self.assertEqual(values[0][0], "cg-config-v1.0.0_aces-v1.3_ocio-v2.1")
@@ -127,12 +133,6 @@ class BuiltinConfigRegistryTest(unittest.TestCase):
             "[OCIO v2.1]"))
         # isRecommended
         self.assertEqual(values[1][2], True)
-
-        # Test for the default built-in config.
-        self.assertEqual(
-            self.REGISTRY.getDefaultBuiltinConfigName(),
-            "cg-config-v1.0.0_aces-v1.3_ocio-v2.1"
-        )
 
     def test_multi_reference(self):
         # Registry is a singleton. Make sure multiple Python 
