@@ -1257,10 +1257,10 @@ public:
         return "";
     }
 
-    std::string checkForSRGBTextureColorSpace(ConstConfigRcPtr & config, 
-                                             ConstColorSpaceRcPtr cs,
-                                             ConstConfigRcPtr & builtinConfig,
-                                             std::vector<std::string> & builtinLinearSpaces) const
+    std::string getReferenceSpaceFromSRGBSpace(ConstConfigRcPtr & config, 
+                                               ConstColorSpaceRcPtr cs,
+                                               ConstConfigRcPtr & builtinConfig,
+                                               std::vector<std::string> & builtinLinearSpaces) const
     {
         // If the color space is an sRGB texture space, return the reference space used by the config.
 
@@ -1388,7 +1388,8 @@ public:
         std::vector<std::string> builtinLinearSpaces = { "ACES - ACES2065-1", 
                                                          "ACES - ACEScg", 
                                                          "Utility - Linear - Rec.709", 
-                                                         "Utility - Linear - P3-D65" };
+                                                         "Utility - Linear - P3-D65",
+                                                         "Utility - Linear - Rec.2020" };
 
         if (builtinConfig->getColorSpace(builtinColorSpaceName) == nullptr)
         {
@@ -1440,10 +1441,10 @@ public:
             ConstColorSpaceRcPtr cs = srcConfig->getColorSpace(srcConfig->getColorSpaceNameByIndex(i));
             if (containsSRGB(cs))
             {
-                refColorSpacePrims = checkForSRGBTextureColorSpace(srcConfig, 
-                                                                   cs, 
-                                                                   builtinConfig, 
-                                                                   builtinLinearSpaces);
+                refColorSpacePrims = getReferenceSpaceFromSRGBSpace(srcConfig, 
+                                                                    cs, 
+                                                                    builtinConfig, 
+                                                                    builtinLinearSpaces);
                 // Break out when a match is found.
                 if (!refColorSpacePrims.empty()) break; 
             }
