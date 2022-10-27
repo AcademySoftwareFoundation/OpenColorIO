@@ -922,6 +922,22 @@ public:
         m_cacheFlags = flags;
         m_processorCache.enable((m_cacheFlags & PROCESSOR_CACHE_ENABLED) == PROCESSOR_CACHE_ENABLED);
     }
+
+    ConstProcessorRcPtr getProcessorWithoutCaching(
+        const Config & config,
+        const ConstTransformRcPtr & transform, 
+        TransformDirection direction) const
+    {
+        if (!transform)
+        {
+            throw Exception("Config::GetProcessor failed. Transform is null.");
+        }
+        
+        ProcessorRcPtr processor = Processor::Create();
+        processor->getImpl()->setProcessorCacheFlags(PROCESSOR_CACHE_OFF);
+        processor->getImpl()->setTransform(config, m_context, transform, direction);
+        return processor;
+    }
  
     int instantiateDisplay(const std::string & monitorName,
                            const std::string & monitorDescription,
@@ -2699,6 +2715,112 @@ void Config::clearColorSpaces()
     getImpl()->refreshActiveColorSpaces();
 }
 
+bool Config::isColorSpaceLinear(const char * colorSpace, ReferenceSpaceType referenceSpaceType) const
+{
+    auto cs = getColorSpace(colorSpace);
+
+    if (cs->isData())
+    {
+        return false;
+    }
+
+    // Colorspace is not linear if the types are opposite.
+    if (cs->getReferenceSpaceType() != referenceSpaceType)
+    {
+        return false;
+    }
+
+    std::string encoding = cs->getEncoding();
+    if (!encoding.empty())
+    {
+        // Check the encoding value if it is set.        
+        if ((StringUtils::Compare(cs->getEncoding(), "scene-linear") && 
+            referenceSpaceType == REFERENCE_SPACE_SCENE) || 
+            (StringUtils::Compare(cs->getEncoding(), "display-linear") && 
+            referenceSpaceType == REFERENCE_SPACE_DISPLAY))
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    // We want to assess linearity over at least a reasonable range of values, so use a very dark 
+    // value and a very bright value. Test neutral, red, green, and blue points to detect situations 
+    // where the neutral may be linear but there is non-linearity off the neutral axis.
+    auto evaluate = [](const Config & config, ConstTransformRcPtr &t) -> bool
+    {
+        std::vector<float> img = 
+        { 
+            0.0625f, 0.0625f, 0.0625f, 4.f, 4.f, 4.f,
+            0.0625f, 0.f, 0.f, 4.f, 0.f, 0.f,
+            0.f, 0.0625f, 0.f, 0.f, 4.f, 0.f,
+            0.f, 0.f, 0.0625f, 0.f, 0.f, 4.f
+        };
+        std::vector<float> dst = 
+        { 
+            0.f, 0.f, 0.f, 0.f, 0.f, 0.f,
+            0.f, 0.f, 0.f, 0.f, 0.f, 0.f,
+            0.f, 0.f, 0.f, 0.f, 0.f, 0.f,
+            0.f, 0.f, 0.f, 0.f, 0.f, 0.f
+        };
+
+        PackedImageDesc desc(&img[0], 8, 1, CHANNEL_ORDERING_RGB);
+        PackedImageDesc descDst(&dst[0], 8, 1, CHANNEL_ORDERING_RGB);
+
+        auto procToReference = config.getImpl()->getProcessorWithoutCaching(
+            config, t, TRANSFORM_DIR_FORWARD
+        );
+        auto optCPUProc = procToReference->getOptimizedCPUProcessor(OPTIMIZATION_LOSSLESS);
+        optCPUProc->apply(desc, descDst);
+
+
+        float absError      = 1e-5f;
+        float multiplier    = 64.f;
+        bool ret            = true;
+
+        // Test the first RGB pair.
+        ret &= EqualWithAbsError(dst[0]*multiplier, dst[3], absError);
+        ret &= EqualWithAbsError(dst[1]*multiplier, dst[4], absError);
+        ret &= EqualWithAbsError(dst[2]*multiplier, dst[5], absError);
+
+        // Test the second RGB pair.
+        ret &= EqualWithAbsError(dst[6]*multiplier, dst[9], absError);
+        ret &= EqualWithAbsError(dst[7]*multiplier, dst[10], absError);
+        ret &= EqualWithAbsError(dst[8]*multiplier, dst[11], absError);
+
+        // Test the third RGB pair.
+        ret &= EqualWithAbsError(dst[12]*multiplier, dst[15], absError);
+        ret &= EqualWithAbsError(dst[13]*multiplier, dst[16], absError);
+        ret &= EqualWithAbsError(dst[14]*multiplier, dst[17], absError);
+
+        // Test the fourth RGB pair.
+        ret &= EqualWithAbsError(dst[18]*multiplier, dst[21], absError);
+        ret &= EqualWithAbsError(dst[19]*multiplier, dst[22], absError);
+        ret &= EqualWithAbsError(dst[20]*multiplier, dst[23], absError);
+
+        return ret;
+    };
+    
+    ConstTransformRcPtr transformToReference = cs->getTransform(COLORSPACE_DIR_TO_REFERENCE);
+    ConstTransformRcPtr transformFromReference = cs->getTransform(COLORSPACE_DIR_FROM_REFERENCE);
+    if ((transformToReference && transformFromReference) || transformToReference)
+    {
+        // Color space has a transform for the to-reference direction, or both directions.
+        return evaluate(*this, transformToReference);
+    }
+    else if (transformFromReference)
+    {
+        // Color space only has a transform for the from-reference direction.
+        return evaluate(*this, transformFromReference);
+    }
+
+    // Color space matches the desired reference space type, is not a data space, and has no 
+    // transforms, so it is equivalent to the reference space and hence linear.
+    return true;
+}
 
 ///////////////////////////////////////////////////////////////////////////
 
