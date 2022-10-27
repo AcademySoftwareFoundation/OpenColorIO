@@ -243,7 +243,7 @@ static constexpr unsigned LastSupportedMajorVersion = OCIO_VERSION_MAJOR;
 
 // For each major version keep the most recent minor.
 static const unsigned int LastSupportedMinorVersion[] = {0, // Version 1
-                                                         1  // Version 2
+                                                         2  // Version 2
                                                          };
 
 } // namespace
@@ -922,6 +922,22 @@ public:
         m_cacheFlags = flags;
         m_processorCache.enable((m_cacheFlags & PROCESSOR_CACHE_ENABLED) == PROCESSOR_CACHE_ENABLED);
     }
+
+    ConstProcessorRcPtr getProcessorWithoutCaching(
+        const Config & config,
+        const ConstTransformRcPtr & transform, 
+        TransformDirection direction) const
+    {
+        if (!transform)
+        {
+            throw Exception("Config::GetProcessor failed. Transform is null.");
+        }
+        
+        ProcessorRcPtr processor = Processor::Create();
+        processor->getImpl()->setProcessorCacheFlags(PROCESSOR_CACHE_OFF);
+        processor->getImpl()->setTransform(config, m_context, transform, direction);
+        return processor;
+    }
  
     int instantiateDisplay(const std::string & monitorName,
                            const std::string & monitorDescription,
@@ -1368,7 +1384,8 @@ void Config::validate() const
 
     StringSet existingColorSpaces;
 
-    bool hasDisplayReferredColorspace = false;
+    bool hasDisplayReferredColorspace   = false;
+    bool hasSceneReferredColorspace     = false;
 
     // Confirm all ColorSpaces are valid.
     for(int i=0; i<getImpl()->m_allColorSpaces->getNumColorSpaces(); ++i)
@@ -1415,13 +1432,18 @@ void Config::validate() const
 
         const std::string namelower = StringUtils::Lower(name);
         existingColorSpaces.insert(namelower);
+
         if (cs->getReferenceSpaceType() == REFERENCE_SPACE_DISPLAY)
         {
             hasDisplayReferredColorspace = true;
         }
+        else if (cs->getReferenceSpaceType() == REFERENCE_SPACE_SCENE)
+        {
+            hasSceneReferredColorspace = true;
+        }
     }
 
-    // Confirm all roles are valid.
+    // Confirm all roles used by the config are valid and that essential roles are present.
     {
         for(StringMap::const_iterator iter = getImpl()->m_roles.begin(),
             end = getImpl()->m_roles.end(); iter!=end; ++iter)
@@ -1450,6 +1472,107 @@ void Config::validate() const
             }
 
             // AddColorSpace, addNamedTransform & setRole already check there is no name conflict.
+        }
+
+
+        // Check for interchange roles requirements - scene-referred and display-referred.
+        if (getMajorVersion() >= 2 && getMinorVersion() >= 2)
+        {
+            bool hasRoleSceneLinear                 = false;
+            bool hasRoleCompositingLog              = false;
+            bool hasRoleColorTiming                 = false;
+
+            bool hasRoleAcesInterchange             = false;
+            bool acesInterHasSceneRefColorspace     = false;
+            bool hasRoleCieXyzD65Interchange        = false;
+            bool cieInterHasDisplayRefColorspace    = false;
+
+            for (auto const& role : getImpl()->m_roles)
+            {
+                if (Platform::Strcasecmp(role.first.c_str(), ROLE_SCENE_LINEAR) == 0)
+                {
+                    hasRoleSceneLinear = true;
+                }
+                else if (Platform::Strcasecmp(role.first.c_str(), ROLE_COMPOSITING_LOG ) == 0)
+                {
+                    hasRoleCompositingLog = true;
+                }
+                else if (Platform::Strcasecmp(role.first.c_str(), ROLE_COLOR_TIMING) == 0)
+                {
+                    hasRoleColorTiming = true;
+                }
+                else if (Platform::Strcasecmp(role.first.c_str(), ROLE_INTERCHANGE_SCENE) == 0)
+                {
+                    hasRoleAcesInterchange = true;
+
+                    ConstColorSpaceRcPtr cs = getColorSpace(role.second.c_str());
+                    acesInterHasSceneRefColorspace = 
+                        cs->getReferenceSpaceType() == REFERENCE_SPACE_SCENE;
+                }
+                else if (Platform::Strcasecmp(role.first.c_str(), ROLE_INTERCHANGE_DISPLAY) == 0)
+                {
+                    hasRoleCieXyzD65Interchange = true;
+
+                    ConstColorSpaceRcPtr cs = getColorSpace(role.second.c_str());
+                    cieInterHasDisplayRefColorspace = 
+                        cs->getReferenceSpaceType() == REFERENCE_SPACE_DISPLAY;
+                }
+            }
+
+            // All LogError below are technically a validation failure, but only logging a message 
+            // rather than throwing (for now). This is to make it possible for upgradeToLatestVersion
+            // to always result in a config that does not fail validation.
+
+            if (!hasRoleSceneLinear)
+            {
+                std::ostringstream os;
+                os << "The scene_linear role is required for a config version 2.2 or higher.";
+                LogError(os.str());
+            }
+
+            if (!hasRoleCompositingLog)
+            {
+                std::ostringstream os;
+                os << "The compositing_log role is required for a config version 2.2 or higher.";
+                LogError(os.str());
+            }
+
+            if (!hasRoleColorTiming)
+            {
+                std::ostringstream os;
+                os << "The color_timing role is required for a config version 2.2 or higher.";
+                LogError(os.str());
+            }
+
+            if (hasSceneReferredColorspace && !hasRoleAcesInterchange)
+            {
+                std::ostringstream os;
+                os << "The aces_interchange role is required when there are scene-referred";
+                os << " color spaces and the config version is 2.2 or higher.";
+                LogError(os.str());
+            }
+            else if (hasRoleAcesInterchange && 
+                     !acesInterHasSceneRefColorspace)
+            {
+                std::ostringstream os;
+                os << "The aces_interchange role must be a scene-referred color space.";
+                LogError(os.str());
+            }
+
+            if (hasDisplayReferredColorspace && !hasRoleCieXyzD65Interchange)
+            {
+                std::ostringstream os;
+                os << "The cie_xyz_d65_interchange role is required when there are";
+                os << " display-referred color spaces and the config version is 2.2 or higher.";
+                LogError(os.str());
+            }
+            else if (hasRoleCieXyzD65Interchange && 
+                     !cieInterHasDisplayRefColorspace)
+            {
+                std::ostringstream os;
+                os << "The cie_xyz_d65_interchange role must be a display-referred color space.";
+                LogError(os.str());
+            }
         }
     }
 
@@ -2592,6 +2715,112 @@ void Config::clearColorSpaces()
     getImpl()->refreshActiveColorSpaces();
 }
 
+bool Config::isColorSpaceLinear(const char * colorSpace, ReferenceSpaceType referenceSpaceType) const
+{
+    auto cs = getColorSpace(colorSpace);
+
+    if (cs->isData())
+    {
+        return false;
+    }
+
+    // Colorspace is not linear if the types are opposite.
+    if (cs->getReferenceSpaceType() != referenceSpaceType)
+    {
+        return false;
+    }
+
+    std::string encoding = cs->getEncoding();
+    if (!encoding.empty())
+    {
+        // Check the encoding value if it is set.        
+        if ((StringUtils::Compare(cs->getEncoding(), "scene-linear") && 
+            referenceSpaceType == REFERENCE_SPACE_SCENE) || 
+            (StringUtils::Compare(cs->getEncoding(), "display-linear") && 
+            referenceSpaceType == REFERENCE_SPACE_DISPLAY))
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    // We want to assess linearity over at least a reasonable range of values, so use a very dark 
+    // value and a very bright value. Test neutral, red, green, and blue points to detect situations 
+    // where the neutral may be linear but there is non-linearity off the neutral axis.
+    auto evaluate = [](const Config & config, ConstTransformRcPtr &t) -> bool
+    {
+        std::vector<float> img = 
+        { 
+            0.0625f, 0.0625f, 0.0625f, 4.f, 4.f, 4.f,
+            0.0625f, 0.f, 0.f, 4.f, 0.f, 0.f,
+            0.f, 0.0625f, 0.f, 0.f, 4.f, 0.f,
+            0.f, 0.f, 0.0625f, 0.f, 0.f, 4.f
+        };
+        std::vector<float> dst = 
+        { 
+            0.f, 0.f, 0.f, 0.f, 0.f, 0.f,
+            0.f, 0.f, 0.f, 0.f, 0.f, 0.f,
+            0.f, 0.f, 0.f, 0.f, 0.f, 0.f,
+            0.f, 0.f, 0.f, 0.f, 0.f, 0.f
+        };
+
+        PackedImageDesc desc(&img[0], 8, 1, CHANNEL_ORDERING_RGB);
+        PackedImageDesc descDst(&dst[0], 8, 1, CHANNEL_ORDERING_RGB);
+
+        auto procToReference = config.getImpl()->getProcessorWithoutCaching(
+            config, t, TRANSFORM_DIR_FORWARD
+        );
+        auto optCPUProc = procToReference->getOptimizedCPUProcessor(OPTIMIZATION_LOSSLESS);
+        optCPUProc->apply(desc, descDst);
+
+
+        float absError      = 1e-5f;
+        float multiplier    = 64.f;
+        bool ret            = true;
+
+        // Test the first RGB pair.
+        ret &= EqualWithAbsError(dst[0]*multiplier, dst[3], absError);
+        ret &= EqualWithAbsError(dst[1]*multiplier, dst[4], absError);
+        ret &= EqualWithAbsError(dst[2]*multiplier, dst[5], absError);
+
+        // Test the second RGB pair.
+        ret &= EqualWithAbsError(dst[6]*multiplier, dst[9], absError);
+        ret &= EqualWithAbsError(dst[7]*multiplier, dst[10], absError);
+        ret &= EqualWithAbsError(dst[8]*multiplier, dst[11], absError);
+
+        // Test the third RGB pair.
+        ret &= EqualWithAbsError(dst[12]*multiplier, dst[15], absError);
+        ret &= EqualWithAbsError(dst[13]*multiplier, dst[16], absError);
+        ret &= EqualWithAbsError(dst[14]*multiplier, dst[17], absError);
+
+        // Test the fourth RGB pair.
+        ret &= EqualWithAbsError(dst[18]*multiplier, dst[21], absError);
+        ret &= EqualWithAbsError(dst[19]*multiplier, dst[22], absError);
+        ret &= EqualWithAbsError(dst[20]*multiplier, dst[23], absError);
+
+        return ret;
+    };
+    
+    ConstTransformRcPtr transformToReference = cs->getTransform(COLORSPACE_DIR_TO_REFERENCE);
+    ConstTransformRcPtr transformFromReference = cs->getTransform(COLORSPACE_DIR_FROM_REFERENCE);
+    if ((transformToReference && transformFromReference) || transformToReference)
+    {
+        // Color space has a transform for the to-reference direction, or both directions.
+        return evaluate(*this, transformToReference);
+    }
+    else if (transformFromReference)
+    {
+        // Color space only has a transform for the from-reference direction.
+        return evaluate(*this, transformFromReference);
+    }
+
+    // Color space matches the desired reference space type, is not a data space, and has no 
+    // transforms, so it is equivalent to the reference space and hence linear.
+    return true;
+}
 
 ///////////////////////////////////////////////////////////////////////////
 
@@ -4629,6 +4858,17 @@ void Config::Impl::checkVersionConsistency(ConstTransformRcPtr & transform) cons
                 throw Exception("Only config version 2.1 (or higher) can have "
                                 "BuiltinTransform style 'ACES-LMT - ACES 1.3 Reference Gamut Compression'.");
             }
+            if (m_majorVersion == 2 && m_minorVersion < 2 
+                    && (   0 == Platform::Strcasecmp(blt->getStyle(), "ARRI_LOGC4_to_ACES2065-1")
+                        || 0 == Platform::Strcasecmp(blt->getStyle(), "CURVE - CANON_CLOG2_to_LINEAR")
+                        || 0 == Platform::Strcasecmp(blt->getStyle(), "CURVE - CANON_CLOG3_to_LINEAR") )
+                )
+            {
+                std::ostringstream os;
+                os << "Only config version 2.2 (or higher) can have BuiltinTransform style '"
+                   << blt->getStyle() << "'.";
+                throw Exception(os.str().c_str());
+            }
         }
         else if (ConstCDLTransformRcPtr cdl = DynamicPtrCast<const CDLTransform>(transform))
         {
@@ -4678,13 +4918,11 @@ void Config::Impl::checkVersionConsistency(ConstTransformRcPtr & transform) cons
                 {
                     throw Exception("Only config version 2 (or higher) can use 'cubic' "
                                     "interpolation with FileTransform.");
-
                 }
                 if (ft->getCDLStyle() != CDL_TRANSFORM_DEFAULT)
                 {
                     throw Exception("Only config version 2 (or higher) can use CDL style' "
                                     "for FileTransform.");
-
                 }
             }
         }
@@ -4858,7 +5096,6 @@ void Config::Impl::checkVersionConsistency() const
     {
         throw Exception("Only version 2 (or higher) can have NamedTransforms.");
     }
-
 }
 
 void Config::setConfigIOProxy(ConfigIOProxyRcPtr ciop)

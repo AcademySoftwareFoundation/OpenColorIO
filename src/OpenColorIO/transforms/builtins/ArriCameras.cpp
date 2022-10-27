@@ -25,6 +25,16 @@ static const Chromaticities wht_xy(0.31270,  0.32900);
 const Primaries primaries(red_xy, grn_xy, blu_xy, wht_xy);
 }
 
+namespace ARRI_WIDE_GAMUT_4
+{
+static const Chromaticities red_xy(0.73470,  0.26530);
+static const Chromaticities grn_xy(0.14240,  0.85760);
+static const Chromaticities blu_xy(0.09910, -0.03080);
+static const Chromaticities wht_xy(0.31270,  0.32900);
+
+const Primaries primaries(red_xy, grn_xy, blu_xy, wht_xy);
+}
+
 namespace ARRI_ALEXA_LOGC_EI800_to_LINEAR
 {
 static constexpr double linSideSlope  = 1. / (0.18 * 0.005 * (800. / 400.) / 0.01);
@@ -33,6 +43,21 @@ static constexpr double logSideSlope  = 0.2471896383;
 static constexpr double logSideOffset = 0.3855369987;
 static constexpr double linSideBreak  = ((1. / 9.) - linSideOffset) / linSideSlope;
 static constexpr double base          = 10.;
+
+static const LogOpData::Params 
+    params { logSideSlope, logSideOffset, linSideSlope, linSideOffset, linSideBreak };
+
+static const LogOpData log(base, params, params, params, TRANSFORM_DIR_INVERSE);
+}
+
+namespace ARRI_LOGC4_to_LINEAR
+{
+static constexpr double linSideSlope  =  2231.82630906769;
+static constexpr double linSideOffset =  64.0;
+static constexpr double logSideSlope  =  0.0647954196341293;
+static constexpr double logSideOffset = -0.295908392682586;
+static constexpr double linSideBreak  = -0.0180569961199113;
+static constexpr double base          =  2.;
 
 static const LogOpData::Params 
     params { logSideSlope, logSideOffset, linSideSlope, linSideOffset, linSideBreak };
@@ -63,6 +88,22 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
         registry.addBuiltin("ARRI_ALEXA-LOGC-EI800-AWG_to_ACES2065-1",
                             "Convert ARRI ALEXA LogC (EI800) ALEXA Wide Gamut to ACES2065-1",
                             ARRI_ALEXA_LOGC_EI800_AWG_to_ACES2065_1_Functor);
+    }
+
+    {
+        auto ARRI_LOGC4_AWG4_to_ACES2065_1_Functor = [](OpRcPtrVec & ops)
+        {
+            LogOpDataRcPtr log = ARRI_LOGC4_to_LINEAR::log.clone();
+            CreateLogOp(ops, log, TRANSFORM_DIR_FORWARD);
+
+            MatrixOpData::MatrixArrayPtr matrix
+                = build_conversion_matrix(ARRI_WIDE_GAMUT_4::primaries, ACES_AP0::primaries, ADAPTATION_CAT02);
+            CreateMatrixOp(ops, matrix, TRANSFORM_DIR_FORWARD);
+        };
+
+        registry.addBuiltin("ARRI_LOGC4_to_ACES2065-1",
+                            "Convert ARRI LogC4 to ACES2065-1",
+                            ARRI_LOGC4_AWG4_to_ACES2065_1_Functor);
     }
 }
 
