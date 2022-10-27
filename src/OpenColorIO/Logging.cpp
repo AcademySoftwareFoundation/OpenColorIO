@@ -53,6 +53,12 @@ void InitLogging()
     {
         g_logginglevel = LOGGING_LEVEL_DEFAULT;
     }
+
+    if (g_logginglevel == LOGGING_LEVEL_DEBUG)
+    {
+        std::cerr << "[OpenColorIO Debug]: Using OpenColorIO version: "
+                  << GetVersion() << "\n";
+    }
 }
 
 // That's the default logging function.
@@ -145,6 +151,20 @@ void LogMessage(LoggingLevel level, const char * message)
             throw Exception("Unsupported logging level.");
         }
     }
+}
+
+void LogError(const std::string & text)
+{
+    AutoMutex lock(g_logmutex);
+    InitLogging();
+
+    // Did not add a LOGGING_LEVEL_ERROR since the enum values are part of the user-facing 
+    // documentation and it is therefore difficult to insert an ERROR value since it would 
+    // naturally need to fall between 0 and 1. But there is no need since presumably users 
+    // that want to see warnings would also want to see errors.
+    if(g_logginglevel<LOGGING_LEVEL_WARNING) return;
+
+    LogMessage("[OpenColorIO Error]: ", text);
 }
 
 void LogWarning(const std::string & text)
