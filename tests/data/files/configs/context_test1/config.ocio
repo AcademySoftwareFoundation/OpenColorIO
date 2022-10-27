@@ -1,0 +1,113 @@
+# Context variable test.
+#
+# Directory layout for this test config is as follows.  Each CLF file is a matrix that
+# multiplies by the indicated factor.
+#
+# config_test1/
+#   config.ocio
+#   lut1.clf        x5
+#   shot1/
+#     lut1.clf      x10
+#   shot2/
+#     lut1.clf      x20
+#     lut2.clf      x2
+#   shot3/
+#     lut1.clf      x30
+#     subdir/
+#       lut3.clf    x3
+#   shot4/
+#     lut1.clf      x40
+#     lut4.clf      x4
+
+ocio_profile_version: 2
+
+# Test the four places a context variable may be used are:
+#   1) Search path
+#   2) FileTransform src
+#   3) FileTransform cccid
+#   4) ColorSpaceTransform src or dst
+
+environment: 
+  SHOT: shot4
+  LUT_PATH: shot3/lut1.clf
+  CCCID: look-02
+  CAMERA: arri
+
+search_path: 
+  - ./$SHOT         # Use a leading "./" to suggest that it _should_ be a local path.
+  - shot1
+  - shot2
+  - shot3
+  - shot3/subdir
+  - .               # Include the working directory itself.
+
+roles:
+  default: raw
+  scene_linear: reference
+
+displays:
+  sRGB:
+    - !<View> {name: Raw, colorspace: raw}
+
+looks:
+
+  - !<Look>
+    name: shot_look
+    process_space: reference
+    transform: !<FileTransform> {src: "looks.cdl", cccid: $CCCID}
+
+colorspaces:
+
+  - !<ColorSpace>
+    name: reference
+    isdata: false
+
+  - !<ColorSpace>
+    name: raw
+    isdata: true
+
+  - !<ColorSpace>
+    name: plain_lut1_cs
+    to_reference: !<FileTransform> {src: lut1.clf}
+
+  - !<ColorSpace>
+    name: shot1_lut1_cs
+    to_reference: !<FileTransform> {src: shot1/lut1.clf}
+
+  - !<ColorSpace>
+    name: shot2_lut1_cs
+    to_reference: !<FileTransform> {src: shot2/lut1.clf}
+
+  - !<ColorSpace>
+    name: shot2_lut2_cs
+    to_reference: !<FileTransform> {src: shot2/lut2.clf}
+
+  - !<ColorSpace>
+    name: lut3_cs
+    to_reference: !<FileTransform> {src: lut3.clf}
+
+  - !<ColorSpace>
+    name: lut4_cs
+    to_reference: !<FileTransform> {src: lut4.clf}
+
+  - !<ColorSpace>
+    name: SHOT_lut1_cs
+    to_reference: !<FileTransform> {src: ./$SHOT/lut1.clf}
+
+  - !<ColorSpace>
+    name: lut_path_cs
+    to_reference: !<FileTransform> {src: ./$LUT_PATH}
+
+
+  - !<ColorSpace>
+    name: context_camera
+    to_reference: !<ColorSpaceTransform> {src: $CAMERA, dst: reference}
+
+  - !<ColorSpace>
+    name: arri
+    to_reference: !<FileTransform> {src: lut3.clf}
+
+  - !<ColorSpace>
+    name: sony
+    to_reference: !<FileTransform> {src: lut4.clf}
+
