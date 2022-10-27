@@ -93,7 +93,8 @@ CDLTransformRcPtr CDLTransform::CreateFromFile(const char * src, const char * cd
     FileFormat * format = nullptr;
     CachedFileRcPtr cachedFile;
 
-    GetCachedFileAndFormat(format, cachedFile, src, INTERP_DEFAULT);
+    // The config object won't be used in this use-case. Empty config.
+    GetCachedFileAndFormat(format, cachedFile, src, INTERP_DEFAULT, *(Config::Create()));
     GroupTransformRcPtr group = cachedFile->getCDLGroup();
 
     const std::string cdlId{ cdlId_ ? cdlId_ : "" };
@@ -110,7 +111,8 @@ GroupTransformRcPtr CDLTransform::CreateGroupFromFile(const char * src)
     FileFormat * format = nullptr;
     CachedFileRcPtr cachedFile;
 
-    GetCachedFileAndFormat(format, cachedFile, src, INTERP_DEFAULT);
+    // The config object won't be used in this use-case. Empty config.
+    GetCachedFileAndFormat(format, cachedFile, src, INTERP_DEFAULT, *(Config::Create()));
 
     return cachedFile->getCDLGroup();
 }

@@ -314,6 +314,271 @@ OCIO_ADD_TEST(Config, roles)
     OCIO_CHECK_EQUAL(std::string(config->getRoleColorSpace(-4)), "");
 }
 
+OCIO_ADD_TEST(Config, required_roles_for_version_2_2)
+{
+    // Test Setup
+
+    OCIO::ConfigRcPtr config = OCIO::Config::Create();
+
+    // Add default color space for file rules.
+    auto cs = OCIO::ColorSpace::Create(OCIO::REFERENCE_SPACE_SCENE);
+    cs->setName("default");
+    config->addColorSpace(cs);
+
+    // Add a simple view.
+    const std::string display{ "display" };
+    OCIO_CHECK_NO_THROW(config->addDisplayView(display.c_str(), "view1", "default", ""));
+
+    // Add a scene-referred color space.
+    auto scs = OCIO::ColorSpace::Create(OCIO::REFERENCE_SPACE_SCENE);
+    scs->setName("scs");
+    config->addColorSpace(scs);
+
+    // Add a display-referred color space.
+    auto dcs = OCIO::ColorSpace::Create(OCIO::REFERENCE_SPACE_DISPLAY);
+    dcs->setName("dcs");
+    config->addColorSpace(dcs);
+
+    auto vt = OCIO::ViewTransform::Create(OCIO::REFERENCE_SPACE_SCENE);
+    vt->setName("view_transform");
+    OCIO_CHECK_NO_THROW(vt->setTransform(OCIO::MatrixTransform::Create(),
+                                        OCIO::VIEWTRANSFORM_DIR_FROM_REFERENCE));
+    OCIO_CHECK_NO_THROW(config->addViewTransform(vt));
+
+    // End of setup.
+    
+    // Interchange roles tests
+
+    {
+        // Test that the config version is >= 2.2.
+
+        OCIO_CHECK_GE(config->getMajorVersion(), 2);
+        OCIO_CHECK_GE(config->getMinorVersion(), 2);
+    }
+    
+    {
+        // Test that all errors appears when all required roles are missing.
+
+        OCIO::LogGuard logGuard;
+        OCIO_CHECK_NO_THROW(config->validate());
+
+        StringUtils::StringVec svec = StringUtils::SplitByLines(logGuard.output());
+        OCIO_CHECK_ASSERT(
+            StringUtils::Contain(
+                svec, 
+                "[OpenColorIO Error]: The scene_linear role is required for a config version 2.2 "\
+                "or higher."
+            )
+        );
+
+        OCIO_CHECK_ASSERT(
+            StringUtils::Contain(
+                svec, 
+                "[OpenColorIO Error]: The compositing_log role is required for a config version "\
+                "2.2 or higher."
+            )
+        );
+
+        OCIO_CHECK_ASSERT(
+            StringUtils::Contain(
+                svec, 
+                "[OpenColorIO Error]: The color_timing role is required for a config version 2.2 "\
+                "or higher."
+            )
+        );
+
+        OCIO_CHECK_ASSERT(
+            StringUtils::Contain(
+                svec, 
+                "[OpenColorIO Error]: The aces_interchange role is required when there are "\
+                "scene-referred color spaces and the config version is 2.2 or higher."
+            )
+        );
+
+        OCIO_CHECK_ASSERT(
+            StringUtils::Contain(
+                svec, 
+                "[OpenColorIO Error]: The cie_xyz_d65_interchange role is required when there are"\
+                " display-referred color spaces and the config version is 2.2 or higher."
+            )
+        );
+    }
+    
+    // Set colorspace for all required roles.
+    config->setRole(OCIO::ROLE_SCENE_LINEAR, scs->getName());
+    config->setRole(OCIO::ROLE_COMPOSITING_LOG, dcs->getName());
+    config->setRole(OCIO::ROLE_COLOR_TIMING, dcs->getName());
+    config->setRole(OCIO::ROLE_INTERCHANGE_SCENE, scs->getName());
+    config->setRole(OCIO::ROLE_INTERCHANGE_DISPLAY, dcs->getName());
+
+    {
+        // Check that no warning is logged when all required roles are set.
+
+        OCIO::LogGuard logGuard;
+        OCIO_CHECK_NO_THROW(config->validate());
+
+        StringUtils::StringVec svec = StringUtils::SplitByLines(logGuard.output());
+        OCIO_CHECK_ASSERT(
+            !StringUtils::Contain(svec, "[OpenColorIO Error]")
+        );
+    }
+    
+    {
+        // Test that scene_linear role is missing.
+
+        // Unset scene_linear role.
+        config->setRole(OCIO::ROLE_SCENE_LINEAR, nullptr);
+
+        OCIO::LogGuard logGuard;
+        OCIO_CHECK_NO_THROW(config->validate());
+
+        StringUtils::StringVec svec = StringUtils::SplitByLines(logGuard.output());
+        OCIO_CHECK_ASSERT(
+            StringUtils::Contain(
+            svec, 
+            "[OpenColorIO Error]: The scene_linear role is required for a config version 2.2 or"\
+            " higher.")
+        );
+
+        // Set scene_linear for next test.
+        config->setRole(OCIO::ROLE_SCENE_LINEAR, dcs->getName());
+    }
+    
+    {
+        // Test that compositing_log role is missing.
+
+        // Unset compositing_log role.
+        config->setRole(OCIO::ROLE_COMPOSITING_LOG, nullptr);
+
+        OCIO::LogGuard logGuard;
+        OCIO_CHECK_NO_THROW(config->validate());
+
+        StringUtils::StringVec svec = StringUtils::SplitByLines(logGuard.output());
+        OCIO_CHECK_ASSERT(
+            StringUtils::Contain(
+            svec, 
+            "[OpenColorIO Error]: The compositing_log role is required for a config version 2.2 "\
+            "or higher.")
+        );
+
+        // Set compositing_log for next test.
+        config->setRole(OCIO::ROLE_COMPOSITING_LOG, dcs->getName());
+    }
+
+    {
+        // Test that color_timing role is missing.
+
+        // Unset color_timing role.
+        config->setRole(OCIO::ROLE_COLOR_TIMING, nullptr);
+
+        OCIO::LogGuard logGuard;
+        OCIO_CHECK_NO_THROW(config->validate());
+
+        StringUtils::StringVec svec = StringUtils::SplitByLines(logGuard.output());
+        OCIO_CHECK_ASSERT(
+            StringUtils::Contain(
+            svec, 
+            "[OpenColorIO Error]: The color_timing role is required for a config version 2.2 or "\
+            "higher.")
+        );
+
+        // Set color_timing for next test.
+        config->setRole(OCIO::ROLE_COLOR_TIMING, dcs->getName());
+    }
+
+    {
+        // Test that aces_interchange role is missing.
+
+        // Unset aces_interchange role.
+        config->setRole(OCIO::ROLE_INTERCHANGE_SCENE, nullptr);
+
+        OCIO::LogGuard logGuard;
+        OCIO_CHECK_NO_THROW(config->validate());
+        OCIO_CHECK_ASSERT(
+            StringUtils::StartsWith(
+                logGuard.output(), 
+                "[OpenColorIO Error]: The aces_interchange role is required when there are "\
+                "scene-referred color spaces and the config version is 2.2 or higher."
+            )
+        );
+
+        // Set aces_interchange for next test.
+        config->setRole(OCIO::ROLE_INTERCHANGE_SCENE, scs->getName());
+    }
+
+    {
+        // Test that cie_xyz_d65_interchange role is missing.
+
+        // Unset cie_xyz_d65_interchange role.
+        config->setRole(OCIO::ROLE_INTERCHANGE_DISPLAY, nullptr);
+
+        OCIO::LogGuard logGuard;
+        OCIO_CHECK_NO_THROW(config->validate());
+
+        StringUtils::StringVec svec = StringUtils::SplitByLines(logGuard.output());
+        OCIO_CHECK_ASSERT(
+            StringUtils::Contain(
+            svec, 
+            "[OpenColorIO Error]: The cie_xyz_d65_interchange role is required when there are "\
+            "display-referred color spaces and the config version is 2.2 or higher.")
+        );
+
+        // Set cie_xyz_d65_interchange for next test.
+        config->setRole(OCIO::ROLE_INTERCHANGE_DISPLAY, dcs->getName());
+    }
+
+    {
+        // Test that aces_interchange role has the wrong colorspace type.
+
+        // Set a display-referred colorspace to both interchange roles.
+        config->setRole(OCIO::ROLE_INTERCHANGE_SCENE, dcs->getName());
+        config->setRole(OCIO::ROLE_INTERCHANGE_DISPLAY, dcs->getName());
+
+        OCIO::LogGuard logGuard;
+        OCIO_CHECK_NO_THROW(config->validate());
+        OCIO_CHECK_ASSERT(
+            StringUtils::StartsWith(
+                logGuard.output(), 
+                "[OpenColorIO Error]: The aces_interchange role must be a scene-referred color space.")
+        );
+    }
+
+    {
+        // Test that cie_xyz_d65_interchange role has the wrong colorspace type.
+
+        // Set a scene-referred colorspace to both interchange roles.
+        config->setRole(OCIO::ROLE_INTERCHANGE_SCENE, scs->getName());
+        config->setRole(OCIO::ROLE_INTERCHANGE_DISPLAY, scs->getName());
+
+        OCIO::LogGuard logGuard;
+        OCIO_CHECK_NO_THROW(config->validate());
+        OCIO_CHECK_ASSERT(
+            StringUtils::StartsWith(
+                logGuard.output(), 
+                "[OpenColorIO Error]: The cie_xyz_d65_interchange role must be a display-referred color space.")
+        );
+    }
+
+    {
+        // Set the config to 2.1, delete the roles and check that no warning is logged.
+
+        OCIO_CHECK_NO_THROW(config->setMajorVersion(2));
+        OCIO_CHECK_NO_THROW(config->setMinorVersion(1));
+
+        // Unset all required roles
+        config->setRole(OCIO::ROLE_SCENE_LINEAR, nullptr);
+        config->setRole(OCIO::ROLE_COMPOSITING_LOG, nullptr);
+        config->setRole(OCIO::ROLE_COLOR_TIMING, nullptr);
+        config->setRole(OCIO::ROLE_INTERCHANGE_SCENE, nullptr);
+        config->setRole(OCIO::ROLE_INTERCHANGE_DISPLAY, nullptr);
+
+        OCIO::LogGuard logGuard;
+        OCIO_CHECK_NO_THROW(config->validate());
+        OCIO_CHECK_ASSERT(
+        StringUtils::StartsWith(logGuard.output(), ""));
+    }
+}
+
 OCIO_ADD_TEST(Config, serialize_group_transform)
 {
     // The unit test validates that a group transform is correctly serialized.
@@ -361,7 +626,7 @@ OCIO_ADD_TEST(Config, serialize_group_transform)
     config->serialize(os);
 
     std::string PROFILE_OUT =
-    "ocio_profile_version: 2.1\n"
+    "ocio_profile_version: 2.2\n"
     "\n"
     "environment:\n"
     "  {}\n"
@@ -434,7 +699,7 @@ OCIO_ADD_TEST(Config, serialize_searchpath)
         config->serialize(os);
 
         std::string PROFILE_OUT =
-            "ocio_profile_version: 2.1\n"
+            "ocio_profile_version: 2.2\n"
             "\n"
             "environment:\n"
             "  {}\n"
@@ -1803,14 +2068,14 @@ OCIO_ADD_TEST(Config, version)
     }
 
     {
-        OCIO_CHECK_THROW_WHAT(config->setVersion(2, 2), OCIO::Exception,
-                              "The minor version 2 is not supported for major version 2. "
-                              "Maximum minor version is 1");
+        OCIO_CHECK_THROW_WHAT(config->setVersion(2, 3), OCIO::Exception,
+                              "The minor version 3 is not supported for major version 2. "
+                              "Maximum minor version is 2");
 
         OCIO_CHECK_NO_THROW(config->setMajorVersion(2));
-        OCIO_CHECK_THROW_WHAT(config->setMinorVersion(2), OCIO::Exception,
-                              "The minor version 2 is not supported for major version 2. "
-                              "Maximum minor version is 1");
+        OCIO_CHECK_THROW_WHAT(config->setMinorVersion(3), OCIO::Exception,
+                              "The minor version 3 is not supported for major version 2. "
+                              "Maximum minor version is 2");
     }
 
     {
@@ -1842,9 +2107,9 @@ OCIO_ADD_TEST(Config, version_validation)
 
     {
         std::istringstream is;
-        is.str("ocio_profile_version: 2.2\n" + SIMPLE_PROFILE_END);
+        is.str("ocio_profile_version: 2.3\n" + SIMPLE_PROFILE_END);
         OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is), OCIO::Exception,
-                              "The minor version 2 is not supported for major version 2");
+                              "The minor version 3 is not supported for major version 2");
     }
 
     {
@@ -6141,7 +6406,7 @@ OCIO_ADD_TEST(Config, display_view)
 
     std::stringstream os;
     os << *config.get();
-    constexpr char expected[]{ R"(ocio_profile_version: 2.1
+    constexpr char expected[]{ R"(ocio_profile_version: 2.2
 
 environment:
   {}
@@ -8879,5 +9144,272 @@ OCIO_ADD_TEST(Config, create_builtin_config)
             OCIO::Exception,
             "Could not find 'thedefault' in the built-in configurations."
         );
+    }
+}
+
+OCIO_ADD_TEST(Config, create_from_archive)
+{
+    {
+        // CreateFromFile using an archive built on Windows.
+        std::vector<std::string> paths = { 
+            std::string(OCIO::GetTestFilesDir()),
+            std::string("configs"),
+            std::string("context_test1"),
+            std::string("context_test1_windows.ocioz")
+        }; 
+
+        const std::string archivePath = pystring::os::path::normpath(
+            pystring::os::path::join(paths)
+        );
+
+        OCIO::ConstConfigRcPtr config;
+
+        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromFile(archivePath.c_str()));
+        OCIO_REQUIRE_ASSERT(config);
+        OCIO_CHECK_NO_THROW(config->validate());
+
+        // Simple check on the number of color spaces in the test config.
+        OCIO_CHECK_EQUAL(config->getNumColorSpaces(), 13);
+
+        // Simple test to exercise ConfigIOProxy.
+        OCIO::ConstProcessorRcPtr proc;
+        OCIO_CHECK_NO_THROW(proc = config->getProcessor("plain_lut1_cs", "shot1_lut1_cs"));
+        OCIO_REQUIRE_ASSERT(proc);
+        OCIO_CHECK_NO_THROW(proc->getDefaultCPUProcessor());
+    }
+
+    {
+        // CreateFromFile using an archive built with Unix-style path.
+        std::vector<std::string> paths = { 
+            std::string(OCIO::GetTestFilesDir()),
+            std::string("configs"),
+            std::string("context_test1"),
+            std::string("context_test1_linux.ocioz")
+        }; 
+
+        const std::string archivePath = pystring::os::path::normpath(
+            pystring::os::path::join(paths)
+        );
+
+        OCIO::ConstConfigRcPtr config;
+
+        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromFile(archivePath.c_str()));
+        OCIO_REQUIRE_ASSERT(config);
+        OCIO_CHECK_NO_THROW(config->validate());
+
+        // Simple check on the number of color spaces in the test config.
+        OCIO_CHECK_EQUAL(config->getNumColorSpaces(), 13);
+
+        // Simple test to exercise ConfigIOProxy.
+        OCIO::ConstProcessorRcPtr proc;
+        OCIO_CHECK_NO_THROW(proc = config->getProcessor("plain_lut1_cs", "shot1_lut1_cs"));
+        OCIO_REQUIRE_ASSERT(proc);
+        OCIO_CHECK_NO_THROW(proc->getDefaultCPUProcessor());
+    }
+
+    // Scenario with incomplete OCIOZ archive.
+    {
+        // Empty OCIOZ archive.
+        std::vector<std::string> paths = { 
+            std::string(OCIO::GetTestFilesDir()),
+            std::string("configs"),
+            std::string("ocioz_archive_configs"),
+            std::string("empty.ocioz")
+        }; 
+
+        const std::string archivePath = pystring::os::path::normpath(
+            pystring::os::path::join(paths)
+        );
+
+        OCIO_CHECK_THROW_WHAT(
+            OCIO::Config::CreateFromFile(archivePath.c_str()),
+            OCIO::Exception,
+            "Loading the OCIO profile failed. At line 0, '' parsing failed: The specified OCIO "\
+            "configuration file from Archive/ConfigIOProxy does not appear to have a valid version"\
+            " <null>"
+        );
+    }
+
+    {
+        // Missing config file but contains LUT files.
+        std::vector<std::string> paths = { 
+            std::string(OCIO::GetTestFilesDir()),
+            std::string("configs"),
+            std::string("ocioz_archive_configs"),
+            std::string("missing_config.ocioz")
+        }; 
+
+        const std::string archivePath = pystring::os::path::normpath(
+            pystring::os::path::join(paths)
+        );
+
+        OCIO_CHECK_THROW_WHAT(
+            OCIO::Config::CreateFromFile(archivePath.c_str()),
+            OCIO::Exception,
+            "Loading the OCIO profile failed. At line 0, '' parsing failed: The specified OCIO "\
+            "configuration file from Archive/ConfigIOProxy does not appear to have a valid version"\
+            " <null>"
+        );
+    }
+
+    {
+        // Missing LUT files but contains config file.
+        // FileTransform will requests a file that is not in the archive.
+
+        std::vector<std::string> paths = { 
+            std::string(OCIO::GetTestFilesDir()),
+            std::string("configs"),
+            std::string("ocioz_archive_configs"),
+            std::string("config_missing_luts.ocioz")
+        }; 
+
+        const std::string archivePath = pystring::os::path::normpath(
+            pystring::os::path::join(paths)
+        );
+
+        OCIO::ConstConfigRcPtr config;
+        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromFile(archivePath.c_str()));
+        OCIO_REQUIRE_ASSERT(config);
+        // The following validation will succeed because validate() does not try to fetch the LUT
+        // files. It resolves the context variables in the paths string.
+        OCIO_CHECK_NO_THROW(config->validate());
+
+
+        // Trying to getProcessor from ocioz archive without any LUT files but the config needs them.
+        // Will throw in resolveFileLocation.
+#ifdef _WIN32
+        OCIO_CHECK_THROW_WHAT(
+            config->getProcessor("plain_lut11_cs", "shot1_lut11_cs"),
+            OCIO::Exception,
+            "The specified file reference 'lut11.clf' could not be located. The following "\
+            "attempts were made: 'shot4\\lut11.clf' : 'shot1\\lut11.clf' : 'shot2\\lut11.clf' : "\
+            "'shot3\\lut11.clf' : 'shot3\\subdir\\lut11.clf' : '.\\lut11.clf'."
+        );
+#else
+        OCIO_CHECK_THROW_WHAT(
+            config->getProcessor("plain_lut11_cs", "shot1_lut11_cs"),
+            OCIO::Exception,
+            "The specified file reference 'lut11.clf' could not be located. The following "\
+            "attempts were made: 'shot4/lut11.clf' : 'shot1/lut11.clf' : 'shot2/lut11.clf' : "\
+            "'shot3/lut11.clf' : 'shot3/subdir/lut11.clf' : './lut11.clf'."
+        );
+#endif
+    }
+}
+
+OCIO_ADD_TEST(Config, create_from_config_io_proxy)
+{
+    std::vector<std::string> paths = { 
+        std::string(OCIO::GetTestFilesDir()),
+        std::string("configs"),
+        std::string("context_test1"),
+        std::string("config.ocio"),
+    };                    
+    static const std::string configPath = pystring::os::path::normpath(
+        pystring::os::path::join(paths)
+    );
+
+    {
+        // Provide a very minimal implementation of the ConfigIOProxy.
+        // (It's primitive but meets the needs of this test.)
+        class CIOPTest : public OCIO::ConfigIOProxy
+        {
+        public:
+            inline std::string getConfigData() const override
+            {
+                // Get config data from filesystem, database, memory, etc.
+                // In this example, the config is simply coming from the filesystem.
+                // Return a stream to the config.
+                std::ifstream fstream(
+                    OCIO::Platform::filenameToUTF(configPath).c_str(), std::ios_base::in);
+                if (fstream.fail())
+                {
+                    std::ostringstream os;
+                    os << "Error could not read config file : " << configPath;
+                    throw OCIO::Exception (os.str().c_str());
+                }
+
+                std::stringstream buffer;
+                buffer << fstream.rdbuf();
+                return buffer.str();
+            }
+
+            inline std::vector<uint8_t> getLutData(
+                const char * filepath) const override
+            {
+                std::vector<std::string> paths = { 
+                    std::string(OCIO::GetTestFilesDir()),
+                    std::string("configs"),
+                    std::string("context_test1"),
+                    std::string(filepath),
+                };                    
+                const std::string lutPath = pystring::os::path::normpath(
+                    pystring::os::path::join(paths)
+                );
+
+                std::ifstream fstream(
+                    OCIO::Platform::filenameToUTF(lutPath).c_str(), 
+                    std::ios_base::in | std::ios_base::binary | std::ios::ate
+                );
+                if (fstream.fail())
+                {
+                    std::ostringstream os;
+                    os << "Error could not read LUT file : " << lutPath;
+                    throw OCIO::Exception (os.str().c_str());
+                }
+
+                const auto eofPosition = static_cast<std::streamoff>(fstream.tellg());
+                std::vector<uint8_t> buffer;
+                buffer.resize(eofPosition);
+                fstream.seekg(0, std::ios::beg);
+                fstream.read(reinterpret_cast<char*>(buffer.data()), eofPosition);
+
+                return buffer;
+            }
+
+            inline std::string getFastLutFileHash(const char * filename) const override
+            {
+                std::vector<std::string> paths = { 
+                    std::string(OCIO::GetTestFilesDir()),
+                    std::string("configs"),
+                    std::string("context_test1"),
+                    std::string(filename),
+                };                    
+                const std::string lutPath = pystring::os::path::normpath(
+                    pystring::os::path::join(paths)
+                );
+
+                // Check if the file is present.
+                std::ifstream f(OCIO::Platform::filenameToUTF(lutPath).c_str(), std::ios_base::in);
+                if (f.good())
+                {
+                    // This is a bad hash, simply using the filename as the hash for simplicity and 
+                    // demonstration purposes.
+                    return lutPath;
+                }
+
+                // The ifstream above is closed at the end of the scope by its destructor.
+                // Return empty since the file couldn't be found.
+                return "";
+            }
+        };
+
+        std::shared_ptr<CIOPTest> ciop = std::shared_ptr<CIOPTest>(
+            new CIOPTest()
+        );
+        
+        OCIO::ConstConfigRcPtr config;
+        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromConfigIOProxy(ciop));
+        OCIO_REQUIRE_ASSERT(config);
+        OCIO_CHECK_NO_THROW(config->validate());
+
+        // Simple check on the number of color spaces in the test config.
+        OCIO_CHECK_EQUAL(config->getNumColorSpaces(), 13);
+
+        // Simple test to exercise ConfigIOProxy.
+        OCIO::ConstProcessorRcPtr proc;
+        OCIO_CHECK_NO_THROW(proc = config->getProcessor("plain_lut1_cs", "shot1_lut1_cs"));
+        OCIO_REQUIRE_ASSERT(proc);
+        OCIO_CHECK_NO_THROW(proc->getDefaultCPUProcessor());
     }
 }

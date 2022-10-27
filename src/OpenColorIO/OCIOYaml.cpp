@@ -4135,8 +4135,8 @@ inline void load(const YAML::Node& node, ConfigRcPtr & config, const char* filen
         std::ostringstream os;
 
         os << "The specified OCIO configuration file "
-            << ((filename && *filename) ? filename : "<null> ")
-            << "does not appear to have a valid version "
+            << ((filename && *filename) ? filename : "<null>")
+            << " does not appear to have a valid version "
             << (version.empty() ? "<null>" : version)
             << ".";
 
@@ -4647,7 +4647,10 @@ inline void load(const YAML::Node& node, ConfigRcPtr & config, const char* filen
         }
     }
 
-    if (filename)
+    // Do not set the working dir when the filename is empty or contains the special string 
+    // "from Archive/ConfigIOProxy".
+    if (filename && filename[0] && 
+        Platform::Strcasecmp(filename, "from Archive/ConfigIOProxy") != 0)
     {
         std::string realfilename = AbsPath(filename);
         std::string configrootdir = pystring::os::path::dirname(realfilename);
@@ -5108,7 +5111,11 @@ void OCIOYaml::Read(std::istream & istream, ConfigRcPtr & config, const char * f
     {
         std::ostringstream os;
         os << "Error: Loading the OCIO profile ";
-        if(filename) os << "'" << filename << "' ";
+        if (filename && filename[0] && 
+            Platform::Strcasecmp(filename, "from Archive/ConfigIOProxy") != 0)
+        {
+            os << "'" << filename << "' ";
+        }
         os << "failed. " << e.what();
         throw Exception(os.str().c_str());
     }
