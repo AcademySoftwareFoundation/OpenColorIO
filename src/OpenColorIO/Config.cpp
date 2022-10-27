@@ -4736,6 +4736,17 @@ void Config::Impl::checkVersionConsistency(ConstTransformRcPtr & transform) cons
                 throw Exception("Only config version 2.1 (or higher) can have "
                                 "BuiltinTransform style 'ACES-LMT - ACES 1.3 Reference Gamut Compression'.");
             }
+            if (m_majorVersion == 2 && m_minorVersion < 2 
+                    && (   0 == Platform::Strcasecmp(blt->getStyle(), "ARRI_LOGC4_to_ACES2065-1")
+                        || 0 == Platform::Strcasecmp(blt->getStyle(), "CURVE - CANON_CLOG2_to_LINEAR")
+                        || 0 == Platform::Strcasecmp(blt->getStyle(), "CURVE - CANON_CLOG3_to_LINEAR") )
+                )
+            {
+                std::ostringstream os;
+                os << "Only config version 2.2 (or higher) can have BuiltinTransform style '"
+                   << blt->getStyle() << "'.";
+                throw Exception(os.str().c_str());
+            }
         }
         else if (ConstCDLTransformRcPtr cdl = DynamicPtrCast<const CDLTransform>(transform))
         {
@@ -4785,13 +4796,11 @@ void Config::Impl::checkVersionConsistency(ConstTransformRcPtr & transform) cons
                 {
                     throw Exception("Only config version 2 (or higher) can use 'cubic' "
                                     "interpolation with FileTransform.");
-
                 }
                 if (ft->getCDLStyle() != CDL_TRANSFORM_DEFAULT)
                 {
                     throw Exception("Only config version 2 (or higher) can use CDL style' "
                                     "for FileTransform.");
-
                 }
             }
         }
