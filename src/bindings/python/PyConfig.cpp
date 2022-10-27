@@ -676,7 +676,7 @@ void bindPyConfig(py::module & m)
                                                                builtinColorSpaceName);
             },
                     "srcConfig"_a, "srcColorSpaceName"_a, "builtinColorSpaceName"_a,
-                    DOC(config, GetProcessorToBuiltinColorSpace))
+                    DOC(Config, GetProcessorToBuiltinColorSpace))
         .def_static("GetProcessorFromBuiltinColorSpace", [](const char * builtinColorSpaceName,
                                                           ConstConfigRcPtr srcConfig,
                                                           const char * srcColorSpaceName)
@@ -686,7 +686,7 @@ void bindPyConfig(py::module & m)
                                                                  srcColorSpaceName);
             },
                     "builtinColorSpaceName"_a, "srcConfig"_a, "srcColorSpaceName"_a,
-                    DOC(config, GetProcessorFromBuiltinColorSpace))
+                    DOC(Config, GetProcessorFromBuiltinColorSpace))
         .def_static("GetProcessorFromConfigs", [](const ConstConfigRcPtr & srcConfig,
                                                   const char * srcColorSpaceName,
                                                   const ConstConfigRcPtr & dstConfig,
