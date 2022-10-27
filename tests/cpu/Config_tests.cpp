@@ -314,6 +314,271 @@ OCIO_ADD_TEST(Config, roles)
     OCIO_CHECK_EQUAL(std::string(config->getRoleColorSpace(-4)), "");
 }
 
+OCIO_ADD_TEST(Config, required_roles_for_version_2_2)
+{
+    // Test Setup
+
+    OCIO::ConfigRcPtr config = OCIO::Config::Create();
+
+    // Add default color space for file rules.
+    auto cs = OCIO::ColorSpace::Create(OCIO::REFERENCE_SPACE_SCENE);
+    cs->setName("default");
+    config->addColorSpace(cs);
+
+    // Add a simple view.
+    const std::string display{ "display" };
+    OCIO_CHECK_NO_THROW(config->addDisplayView(display.c_str(), "view1", "default", ""));
+
+    // Add a scene-referred color space.
+    auto scs = OCIO::ColorSpace::Create(OCIO::REFERENCE_SPACE_SCENE);
+    scs->setName("scs");
+    config->addColorSpace(scs);
+
+    // Add a display-referred color space.
+    auto dcs = OCIO::ColorSpace::Create(OCIO::REFERENCE_SPACE_DISPLAY);
+    dcs->setName("dcs");
+    config->addColorSpace(dcs);
+
+    auto vt = OCIO::ViewTransform::Create(OCIO::REFERENCE_SPACE_SCENE);
+    vt->setName("view_transform");
+    OCIO_CHECK_NO_THROW(vt->setTransform(OCIO::MatrixTransform::Create(),
+                                        OCIO::VIEWTRANSFORM_DIR_FROM_REFERENCE));
+    OCIO_CHECK_NO_THROW(config->addViewTransform(vt));
+
+    // End of setup.
+    
+    // Interchange roles tests
+
+    {
+        // Test that the config version is >= 2.2.
+
+        OCIO_CHECK_GE(config->getMajorVersion(), 2);
+        OCIO_CHECK_GE(config->getMinorVersion(), 2);
+    }
+    
+    {
+        // Test that all errors appears when all required roles are missing.
+
+        OCIO::LogGuard logGuard;
+        OCIO_CHECK_NO_THROW(config->validate());
+
+        StringUtils::StringVec svec = StringUtils::SplitByLines(logGuard.output());
+        OCIO_CHECK_ASSERT(
+            StringUtils::Contain(
+                svec, 
+                "[OpenColorIO Error]: The scene_linear role is required for a config version 2.2 "\
+                "or higher."
+            )
+        );
+
+        OCIO_CHECK_ASSERT(
+            StringUtils::Contain(
+                svec, 
+                "[OpenColorIO Error]: The compositing_log role is required for a config version "\
+                "2.2 or higher."
+            )
+        );
+
+        OCIO_CHECK_ASSERT(
+            StringUtils::Contain(
+                svec, 
+                "[OpenColorIO Error]: The color_timing role is required for a config version 2.2 "\
+                "or higher."
+            )
+        );
+
+        OCIO_CHECK_ASSERT(
+            StringUtils::Contain(
+                svec, 
+                "[OpenColorIO Error]: The aces_interchange role is required when there are "\
+                "scene-referred color spaces and the config version is 2.2 or higher."
+            )
+        );
+
+        OCIO_CHECK_ASSERT(
+            StringUtils::Contain(
+                svec, 
+                "[OpenColorIO Error]: The cie_xyz_d65_interchange role is required when there are"\
+                " display-referred color spaces and the config version is 2.2 or higher."
+            )
+        );
+    }
+    
+    // Set colorspace for all required roles.
+    config->setRole(OCIO::ROLE_SCENE_LINEAR, scs->getName());
+    config->setRole(OCIO::ROLE_COMPOSITING_LOG, dcs->getName());
+    config->setRole(OCIO::ROLE_COLOR_TIMING, dcs->getName());
+    config->setRole(OCIO::ROLE_INTERCHANGE_SCENE, scs->getName());
+    config->setRole(OCIO::ROLE_INTERCHANGE_DISPLAY, dcs->getName());
+
+    {
+        // Check that no warning is logged when all required roles are set.
+
+        OCIO::LogGuard logGuard;
+        OCIO_CHECK_NO_THROW(config->validate());
+
+        StringUtils::StringVec svec = StringUtils::SplitByLines(logGuard.output());
+        OCIO_CHECK_ASSERT(
+            !StringUtils::Contain(svec, "[OpenColorIO Error]")
+        );
+    }
+    
+    {
+        // Test that scene_linear role is missing.
+
+        // Unset scene_linear role.
+        config->setRole(OCIO::ROLE_SCENE_LINEAR, nullptr);
+
+        OCIO::LogGuard logGuard;
+        OCIO_CHECK_NO_THROW(config->validate());
+
+        StringUtils::StringVec svec = StringUtils::SplitByLines(logGuard.output());
+        OCIO_CHECK_ASSERT(
+            StringUtils::Contain(
+            svec, 
+            "[OpenColorIO Error]: The scene_linear role is required for a config version 2.2 or"\
+            " higher.")
+        );
+
+        // Set scene_linear for next test.
+        config->setRole(OCIO::ROLE_SCENE_LINEAR, dcs->getName());
+    }
+    
+    {
+        // Test that compositing_log role is missing.
+
+        // Unset compositing_log role.
+        config->setRole(OCIO::ROLE_COMPOSITING_LOG, nullptr);
+
+        OCIO::LogGuard logGuard;
+        OCIO_CHECK_NO_THROW(config->validate());
+
+        StringUtils::StringVec svec = StringUtils::SplitByLines(logGuard.output());
+        OCIO_CHECK_ASSERT(
+            StringUtils::Contain(
+            svec, 
+            "[OpenColorIO Error]: The compositing_log role is required for a config version 2.2 "\
+            "or higher.")
+        );
+
+        // Set compositing_log for next test.
+        config->setRole(OCIO::ROLE_COMPOSITING_LOG, dcs->getName());
+    }
+
+    {
+        // Test that color_timing role is missing.
+
+        // Unset color_timing role.
+        config->setRole(OCIO::ROLE_COLOR_TIMING, nullptr);
+
+        OCIO::LogGuard logGuard;
+        OCIO_CHECK_NO_THROW(config->validate());
+
+        StringUtils::StringVec svec = StringUtils::SplitByLines(logGuard.output());
+        OCIO_CHECK_ASSERT(
+            StringUtils::Contain(
+            svec, 
+            "[OpenColorIO Error]: The color_timing role is required for a config version 2.2 or "\
+            "higher.")
+        );
+
+        // Set color_timing for next test.
+        config->setRole(OCIO::ROLE_COLOR_TIMING, dcs->getName());
+    }
+
+    {
+        // Test that aces_interchange role is missing.
+
+        // Unset aces_interchange role.
+        config->setRole(OCIO::ROLE_INTERCHANGE_SCENE, nullptr);
+
+        OCIO::LogGuard logGuard;
+        OCIO_CHECK_NO_THROW(config->validate());
+        OCIO_CHECK_ASSERT(
+            StringUtils::StartsWith(
+                logGuard.output(), 
+                "[OpenColorIO Error]: The aces_interchange role is required when there are "\
+                "scene-referred color spaces and the config version is 2.2 or higher."
+            )
+        );
+
+        // Set aces_interchange for next test.
+        config->setRole(OCIO::ROLE_INTERCHANGE_SCENE, scs->getName());
+    }
+
+    {
+        // Test that cie_xyz_d65_interchange role is missing.
+
+        // Unset cie_xyz_d65_interchange role.
+        config->setRole(OCIO::ROLE_INTERCHANGE_DISPLAY, nullptr);
+
+        OCIO::LogGuard logGuard;
+        OCIO_CHECK_NO_THROW(config->validate());
+
+        StringUtils::StringVec svec = StringUtils::SplitByLines(logGuard.output());
+        OCIO_CHECK_ASSERT(
+            StringUtils::Contain(
+            svec, 
+            "[OpenColorIO Error]: The cie_xyz_d65_interchange role is required when there are "\
+            "display-referred color spaces and the config version is 2.2 or higher.")
+        );
+
+        // Set cie_xyz_d65_interchange for next test.
+        config->setRole(OCIO::ROLE_INTERCHANGE_DISPLAY, dcs->getName());
+    }
+
+    {
+        // Test that aces_interchange role has the wrong colorspace type.
+
+        // Set a display-referred colorspace to both interchange roles.
+        config->setRole(OCIO::ROLE_INTERCHANGE_SCENE, dcs->getName());
+        config->setRole(OCIO::ROLE_INTERCHANGE_DISPLAY, dcs->getName());
+
+        OCIO::LogGuard logGuard;
+        OCIO_CHECK_NO_THROW(config->validate());
+        OCIO_CHECK_ASSERT(
+            StringUtils::StartsWith(
+                logGuard.output(), 
+                "[OpenColorIO Error]: The aces_interchange role must be a scene-referred color space.")
+        );
+    }
+
+    {
+        // Test that cie_xyz_d65_interchange role has the wrong colorspace type.
+
+        // Set a scene-referred colorspace to both interchange roles.
+        config->setRole(OCIO::ROLE_INTERCHANGE_SCENE, scs->getName());
+        config->setRole(OCIO::ROLE_INTERCHANGE_DISPLAY, scs->getName());
+
+        OCIO::LogGuard logGuard;
+        OCIO_CHECK_NO_THROW(config->validate());
+        OCIO_CHECK_ASSERT(
+            StringUtils::StartsWith(
+                logGuard.output(), 
+                "[OpenColorIO Error]: The cie_xyz_d65_interchange role must be a display-referred color space.")
+        );
+    }
+
+    {
+        // Set the config to 2.1, delete the roles and check that no warning is logged.
+
+        OCIO_CHECK_NO_THROW(config->setMajorVersion(2));
+        OCIO_CHECK_NO_THROW(config->setMinorVersion(1));
+
+        // Unset all required roles
+        config->setRole(OCIO::ROLE_SCENE_LINEAR, nullptr);
+        config->setRole(OCIO::ROLE_COMPOSITING_LOG, nullptr);
+        config->setRole(OCIO::ROLE_COLOR_TIMING, nullptr);
+        config->setRole(OCIO::ROLE_INTERCHANGE_SCENE, nullptr);
+        config->setRole(OCIO::ROLE_INTERCHANGE_DISPLAY, nullptr);
+
+        OCIO::LogGuard logGuard;
+        OCIO_CHECK_NO_THROW(config->validate());
+        OCIO_CHECK_ASSERT(
+        StringUtils::StartsWith(logGuard.output(), ""));
+    }
+}
+
 OCIO_ADD_TEST(Config, serialize_group_transform)
 {
     // The unit test validates that a group transform is correctly serialized.
@@ -361,7 +626,7 @@ OCIO_ADD_TEST(Config, serialize_group_transform)
     config->serialize(os);
 
     std::string PROFILE_OUT =
-    "ocio_profile_version: 2.1\n"
+    "ocio_profile_version: 2.2\n"
     "\n"
     "environment:\n"
     "  {}\n"
@@ -434,7 +699,7 @@ OCIO_ADD_TEST(Config, serialize_searchpath)
         config->serialize(os);
 
         std::string PROFILE_OUT =
-            "ocio_profile_version: 2.1\n"
+            "ocio_profile_version: 2.2\n"
             "\n"
             "environment:\n"
             "  {}\n"
@@ -1803,14 +2068,14 @@ OCIO_ADD_TEST(Config, version)
     }
 
     {
-        OCIO_CHECK_THROW_WHAT(config->setVersion(2, 2), OCIO::Exception,
-                              "The minor version 2 is not supported for major version 2. "
-                              "Maximum minor version is 1");
+        OCIO_CHECK_THROW_WHAT(config->setVersion(2, 3), OCIO::Exception,
+                              "The minor version 3 is not supported for major version 2. "
+                              "Maximum minor version is 2");
 
         OCIO_CHECK_NO_THROW(config->setMajorVersion(2));
-        OCIO_CHECK_THROW_WHAT(config->setMinorVersion(2), OCIO::Exception,
-                              "The minor version 2 is not supported for major version 2. "
-                              "Maximum minor version is 1");
+        OCIO_CHECK_THROW_WHAT(config->setMinorVersion(3), OCIO::Exception,
+                              "The minor version 3 is not supported for major version 2. "
+                              "Maximum minor version is 2");
     }
 
     {
@@ -1842,9 +2107,9 @@ OCIO_ADD_TEST(Config, version_validation)
 
     {
         std::istringstream is;
-        is.str("ocio_profile_version: 2.2\n" + SIMPLE_PROFILE_END);
+        is.str("ocio_profile_version: 2.3\n" + SIMPLE_PROFILE_END);
         OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is), OCIO::Exception,
-                              "The minor version 2 is not supported for major version 2");
+                              "The minor version 3 is not supported for major version 2");
     }
 
     {
@@ -6141,7 +6406,7 @@ OCIO_ADD_TEST(Config, display_view)
 
     std::stringstream os;
     os << *config.get();
-    constexpr char expected[]{ R"(ocio_profile_version: 2.1
+    constexpr char expected[]{ R"(ocio_profile_version: 2.2
 
 environment:
   {}
