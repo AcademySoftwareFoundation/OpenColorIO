@@ -1182,9 +1182,10 @@ public:
         return true;
     }
 
-    std::string checkForLinearColorSpace(ConstColorSpaceRcPtr & cs,
-                                         ConstConfigRcPtr & builtinConfig,
-                                         std::vector<std::string> & builtinLinearSpaces) const
+    std::string getReferenceSpaceFromLinearSpace(ConstConfigRcPtr & srcConfig,
+                                                 ConstColorSpaceRcPtr & cs,
+                                                 ConstConfigRcPtr & builtinConfig,
+                                                 std::vector<std::string> & builtinLinearSpaces) const
     {
         // If the color space is a recognized linear space, return the reference space used by 
         // the config.
@@ -1221,7 +1222,7 @@ public:
             {
                 if (i != j)
                 {
-                    ConstProcessorRcPtr p1  = getProcessorWithoutCaching(*builtinConfig,
+                    ConstProcessorRcPtr p1  = getProcessorWithoutCaching(*srcConfig,
                                                                          srcTransform,
                                                                          TRANSFORM_DIR_FORWARD);
 
@@ -1315,13 +1316,14 @@ public:
         for (size_t i = 0; i < out.size(); i++)
         {
             // Apply the sRGB function (linear to non-lin).
+            // Please see GammaOpUtils.cpp. This value provides continuity at the breakpoint.
             if (out[i] <= 0.0030399346397784323f)
             {
                 out[i] *= 12.923210180787857f;
             }
             else
             {
-                out[i] = 1.055f * pow(out[i], 1/2.4f) - 0.055f;
+                out[i] = 1.055f * std::pow(out[i], 1/2.4f) - 0.055f;
             }
 
             if (!EqualWithAbsError(vals[i], out[i], 1e-3f))
@@ -1446,50 +1448,26 @@ public:
                 if (!refColorSpacePrims.empty()) break; 
             }
         }
+
+        if (refColorSpacePrims.empty())
+        {
+            // Check for a linear space with known primaries.
+            nbCs = srcConfig->getNumColorSpaces();
+            for (int i = 0; i < nbCs; i++)
+            {
+                auto cs = srcConfig->getColorSpace(srcConfig->getColorSpaceNameByIndex(i));
+                if (srcConfig->isColorSpaceLinear(cs->getName(), REFERENCE_SPACE_SCENE))
+                {
+                    refColorSpacePrims = getReferenceSpaceFromLinearSpace(srcConfig,
+                                                                          cs, 
+                                                                          builtinConfig, 
+                                                                          builtinLinearSpaces);
+                    // Break out when a match is found.
+                    if (!refColorSpacePrims.empty()) break; 
+                }
+            }
+        }
         
-        if (!refColorSpacePrims.empty())
-        {
-            // Use the interchange spaces to get the processor.
-            std::string srcInterchange = refColorSpaceName;
-            std::string builtinInterchange = refColorSpacePrims;
-
-            ConstProcessorRcPtr proc;
-            if (direction == TRANSFORM_DIR_FORWARD)
-            {
-                proc = Config::GetProcessorFromConfigs(srcConfig,
-                                                       srcColorSpaceName,
-                                                       srcInterchange.c_str(),
-                                                       builtinConfig,
-                                                       builtinColorSpaceName,
-                                                       builtinInterchange.c_str());
-            }
-            else if (direction == TRANSFORM_DIR_INVERSE)
-            {
-                proc = Config::GetProcessorFromConfigs(builtinConfig,
-                                                       builtinColorSpaceName,
-                                                       builtinInterchange.c_str(),
-                                                       srcConfig,
-                                                       srcColorSpaceName,
-                                                       srcInterchange.c_str());
-            }
-            return proc;
-        }
-
-        // Check for a linear space with known primaries.
-        nbCs = srcConfig->getNumColorSpaces();
-        for (int i = 0; i < nbCs; i++)
-        {
-            auto cs = srcConfig->getColorSpace(srcConfig->getColorSpaceNameByIndex(i));
-            if (srcConfig->isColorSpaceLinear(cs->getName(), REFERENCE_SPACE_SCENE))
-            {
-                refColorSpacePrims = checkForLinearColorSpace(cs, 
-                                                              builtinConfig, 
-                                                              builtinLinearSpaces);
-                // Break out when a match is found.
-                if (!refColorSpacePrims.empty()) break; 
-            }
-        }
-
         if (!refColorSpacePrims.empty())
         {
             // Use the interchange spaces to get the processor.

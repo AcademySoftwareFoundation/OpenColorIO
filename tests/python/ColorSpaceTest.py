@@ -530,8 +530,7 @@ colorspaces:
         p = OCIO.Config.GetProcessorToBuiltinColorSpace(cfg, src_csname, builtin_csname)
         check_processor(self, p)
 
-
-        # Test linear color space to_ref direction.
+        # Test sRGB Texture space.
         cfg.setInactiveColorSpaces("ACES cg, Linear ITU-R BT.709")
         p = OCIO.Config.GetProcessorFromBuiltinColorSpace(builtin_csname, cfg, src_csname)
         check_processor_inv(self, p)
