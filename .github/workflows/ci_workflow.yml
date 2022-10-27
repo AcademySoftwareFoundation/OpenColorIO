@@ -252,6 +252,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+      # minizip-ng requires CMake 3.13+ but VFX2019 image ships with 3.12
+      - name: Upgrade VFX2019 CMake
+        run: pip install cmake==3.13.3
+        if: matrix.vfx-cy == '2019'
       - name: Install docs env
         run: share/ci/scripts/linux/yum/install_docs_env.sh
         if: matrix.build-docs == 'ON'

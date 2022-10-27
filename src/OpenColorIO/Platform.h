@@ -95,6 +95,14 @@ std::ifstream CreateInputFileStream(const char * filename, std::ios_base::openmo
 // Open an input file stream (std::ifstream) using a UTF-8 filename on any platform.
 void OpenInputFileStream(std::ifstream & stream, const char * filename, std::ios_base::openmode mode);
 
+#if defined(_WIN32) && defined(UNICODE)
+    // Returns the specified filename string as a UTF16 wstring for Windows.
+    const std::wstring filenameToUTF(const std::string & str);
+#else
+    // Returns the specified filename string as is for Unix-like OS.
+    const std::string filenameToUTF(const std::string & str);
+#endif
+
 // Create a unique hash of a file provided as a UTF-8 filename on any platform.
 std::string CreateFileContentHash(const std::string &filename);
 

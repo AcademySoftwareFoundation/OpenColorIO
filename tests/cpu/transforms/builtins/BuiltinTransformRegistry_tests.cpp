@@ -96,7 +96,7 @@ OCIO_ADD_TEST(Builtins, read_write)
     // builtin transforms.
 
     static constexpr char CONFIG_BUILTIN_TRANSFORMS[] {
-R"(ocio_profile_version: 2.1
+R"(ocio_profile_version: 2.2
 
 environment:
   {}
@@ -144,7 +144,7 @@ colorspaces:
     std::string configStr;
     configStr += CONFIG_BUILTIN_TRANSFORMS;
 
-    // Add all the existing builtin transforms.
+    // Add all the existing builtin transforms to one big GroupTransform.
 
     const size_t numBuiltins = reg->getNumBuiltins();
     for (size_t idx = 0; idx < numBuiltins; ++idx)
@@ -261,3 +261,46 @@ colorspaces:
                           "'ACES-LMT - ACES 1.3 Reference Gamut Compression'.");
 }
 
+OCIO_ADD_TEST(Builtins, version_2_1_validation)
+{
+    // The unit test validates that the config reader checkVersionConsistency check throws for
+    // version 2.1 configs containing a Builtin Transform with the 2.2 style for ARRI LogC4.
+
+    static constexpr char CONFIG[] {
+R"(ocio_profile_version: 2.1
+
+environment:
+  {}
+search_path: ""
+strictparsing: true
+luma: [0.2126, 0.7152, 0.0722]
+
+roles:
+  default: ref
+
+file_rules:
+  - !<Rule> {name: Default, colorspace: default}
+
+displays:
+  Disp1:
+    - !<View> {name: View1, colorspace: test}
+
+active_displays: []
+active_views: []
+
+colorspaces:
+  - !<ColorSpace>
+    name: ref
+
+  - !<ColorSpace>
+    name: test
+    from_scene_reference: !<BuiltinTransform> {style: ARRI_LOGC4_to_ACES2065-1})" };
+
+    std::istringstream iss;
+    iss.str(CONFIG);
+
+    OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(iss),
+                          OCIO::Exception,
+                          "Only config version 2.2 (or higher) can have BuiltinTransform style "\
+                          "'ARRI_LOGC4_to_ACES2065-1'.");
+}

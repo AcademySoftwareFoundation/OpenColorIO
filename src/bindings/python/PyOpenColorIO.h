@@ -33,6 +33,7 @@ void bindPyColorSpace(py::module & m);
 void bindPyColorSpaceSet(py::module & m);
 void bindPyConfig(py::module & m);
 void bindPyContext(py::module & m);
+void bindPyConfigIOProxy(py::module & m);
 void bindPyCPUProcessor(py::module & m);
 void bindPyFileRules(py::module & m);
 void bindPyGPUProcessor(py::module & m);

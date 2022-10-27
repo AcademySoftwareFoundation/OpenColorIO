@@ -262,6 +262,19 @@ void OpenInputFileStream(std::ifstream & stream, const char * filename, std::ios
 #endif
 }
 
+#if defined(_WIN32) && defined(UNICODE)
+const std::wstring filenameToUTF(const std::string & filename)
+{
+    // Can not return by reference since it could return std::wstring() or std::string().
+    return Utf8ToUtf16(filename);
+}
+#else
+const std::string filenameToUTF(const std::string & filename)
+{
+    return filename;
+}
+#endif
+
 std::wstring Utf8ToUtf16(const std::string & str)
 {
     if (str.empty()) {
@@ -328,8 +341,6 @@ std::string CreateFileContentHash(const std::string &filename)
 
     return "";
 }
-
-
 
 } // Platform
 

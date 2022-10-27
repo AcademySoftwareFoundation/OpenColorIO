@@ -11,6 +11,13 @@ supported_apps:
       link : "http://fnordware.blogspot.com/2012/05/opencolorio-for-after-effects.html"
     
     # portfolio item loop
+    - name : Anchorpoint
+      image : images/supported_apps/anchorpoint.png
+      categories : ["Playback", "Review"]
+      content : Native support.
+      link : "https://www.anchorpoint.app"
+
+    # portfolio item loop
     - name : Autodesk Arnold
       image : images/supported_apps/arnold.png
       categories : ["3D", "Render"]

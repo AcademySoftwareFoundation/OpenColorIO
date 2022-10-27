@@ -486,7 +486,7 @@ namespace SampleICC
     class IccParametricCurveTypeReader : public IccTypeReader
     {
     public:
-        IccParametricCurveTypeReader() : mnNumParam(0), mParam(NULL) {}
+        IccParametricCurveTypeReader() : mFunctionType(0), mnNumParam(0), mParam(NULL) {}
         ~IccParametricCurveTypeReader()
         {
             if (mParam)
@@ -498,7 +498,6 @@ namespace SampleICC
         virtual bool Read(std::istream & istream, icUInt32Number size)
         {
             // Tag size include sig that has already been read.
-            icUInt16Number functionType;
             icUInt16Number res16;
             icUInt32Number res32;
 
@@ -517,14 +516,9 @@ namespace SampleICC
                 return false;
 
             if (!Read32(istream, &res32, 1)
-                || !Read16(istream, &functionType, 1)
+                || !Read16(istream, &mFunctionType, 1)
                 || !Read16(istream, &res16, 1))
                 return false;
-
-            if (0 != functionType) {
-                // unsupported function type
-                return false;
-            }
 
             if (!mnNumParam) {
                 mnNumParam = (icUInt16Number)((size - nHdrSize) / sizeof(icS15Fixed16Number));
@@ -535,12 +529,19 @@ namespace SampleICC
                 if (nHdrSize + mnNumParam * sizeof(icS15Fixed16Number) > size)
                     return false;
 
-                if (!Read32(istream, mParam, 1)) {
-                    return false;
+                for (int i = 0; i < mnNumParam; ++i) {
+                    if (!Read32(istream, mParam + i, 1)) {
+                        return false;
+                    }
                 }
             }
 
             return true;
+        }
+
+        const icUInt16Number GetFunctionType() const
+        {
+            return mFunctionType;
         }
 
         const icS15Fixed16Number * GetParam() const
@@ -554,6 +555,7 @@ namespace SampleICC
         }
 
     private:
+        icUInt16Number      mFunctionType;
         icUInt16Number      mnNumParam;
         icS15Fixed16Number *mParam;
 
@@ -802,4 +804,3 @@ namespace SampleICC
 }
 
 #endif
-
