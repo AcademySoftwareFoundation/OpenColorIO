@@ -90,7 +90,7 @@ jobs:
       CC: ${{ matrix.cc-compiler }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Install docs env
         run: share/ci/scripts/linux/yum/install_docs_env.sh
         if: matrix.build-docs == 'ON'
@@ -186,11 +186,11 @@ jobs:
             python-version: 3.9
     steps:
       - name: Setup Python
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Install docs env
         run: share/ci/scripts/macos/install_docs_env.sh
         if: matrix.build-docs == 'ON'
@@ -289,11 +289,11 @@ jobs:
             python-version: 3.9
     steps:
       - name: Setup Python
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Install docs env
         run: share/ci/scripts/windows/install_docs_env.sh
         shell: bash
@@ -409,7 +409,7 @@ jobs:
       CC: gcc
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           fetch-depth: 50
       - name: Install docs env
