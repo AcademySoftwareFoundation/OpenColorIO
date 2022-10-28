@@ -37,7 +37,7 @@ OCIO_ADD_TEST(GpuShader, generic_shader)
         OCIO_CHECK_NO_THROW(shaderDesc->finalize());
         const std::string id(shaderDesc->getCacheID());
         OCIO_CHECK_EQUAL(id, std::string("glsl_1.3 1sd234_ res_1sd234_ pxl_1sd234_ 0 "
-                                         "$4dd1c89df8002b409e089089ce8f24e7"));
+                                         "6001c324468d497f99aa06d3014798d8"));
         OCIO_CHECK_NO_THROW(shaderDesc->setResourcePrefix("res_1"));
         OCIO_CHECK_NO_THROW(shaderDesc->finalize());
         OCIO_CHECK_NE(std::string(shaderDesc->getCacheID()), id);

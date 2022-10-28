@@ -4534,7 +4534,7 @@ const char * Config::getCacheID(const ConstContextRcPtr & context) const
         std::ostringstream cacheid;
         serialize(cacheid);
         const std::string fullstr = cacheid.str();
-        getImpl()->m_cacheidnocontext = CacheIDHash(fullstr.c_str(), (int)fullstr.size());
+        getImpl()->m_cacheidnocontext = CacheIDHash(fullstr.c_str(), fullstr.size());
     }
 
     // Also include all file references, using the context (if specified)
@@ -4571,7 +4571,7 @@ const char * Config::getCacheID(const ConstContextRcPtr & context) const
         }
 
         const std::string fullstr = filehash.str();
-        fileReferencesFastHash = CacheIDHash(fullstr.c_str(), (int)fullstr.size());
+        fileReferencesFastHash = CacheIDHash(fullstr.c_str(), fullstr.size());
     }
 
     getImpl()->m_cacheids[contextcacheid] = getImpl()->m_cacheidnocontext + ":" + fileReferencesFastHash;
@@ -5193,4 +5193,3 @@ void Config::archive(std::ostream & ostream) const
 }
 
 } // namespace OCIO_NAMESPACE
-
