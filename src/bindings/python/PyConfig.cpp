@@ -200,6 +200,8 @@ void bindPyConfig(py::module & m)
 
         .def_static("CreateFromBuiltinConfig", &Config::CreateFromBuiltinConfig, 
                     DOC(Config, CreateFromBuiltinConfig))
+        .def_static("CreateFromConfigIOProxy", &Config::CreateFromConfigIOProxy,
+                    DOC(Config, CreateFromConfigIOProxy))
         .def("getMajorVersion", &Config::getMajorVersion, 
              DOC(Config, getMajorVersion))
         .def("setMajorVersion", &Config::setMajorVersion, "major"_a, 
@@ -316,6 +318,8 @@ void bindPyConfig(py::module & m)
              DOC(Config, addColorSpace))
         .def("removeColorSpace", &Config::removeColorSpace, "name"_a, 
              DOC(Config, removeColorSpace))
+        .def("isColorSpaceLinear", &Config::isColorSpaceLinear, "colorSpace"_a, "referenceSpaceType"_a, 
+             DOC(Config, isColorSpaceLinear))
         .def("isColorSpaceUsed", &Config::isColorSpaceUsed, "name"_a, 
              DOC(Config, isColorSpaceUsed))
         .def("clearColorSpaces", &Config::clearColorSpaces, 
@@ -555,7 +559,7 @@ void bindPyConfig(py::module & m)
         .def("clearViewTransforms", &Config::clearViewTransforms, 
              DOC(Config, clearViewTransforms))
 
-        // Named Transforms.
+        // Named Transforms
         .def("getNamedTransform", &Config::getNamedTransform, "name"_a)
 
         .def("getNamedTransformNames", [](ConfigRcPtr & self,
@@ -755,7 +759,18 @@ void bindPyConfig(py::module & m)
 
         .def("setProcessorCacheFlags", &Config::setProcessorCacheFlags, "flags"_a, 
              DOC(Config, setProcessorCacheFlags))
-                
+
+        // Archiving
+        .def("isArchivable", &Config::isArchivable, DOC(Config, isArchivable))
+        .def("archive", [](ConfigRcPtr & self, const char * filepath) 
+            {
+                std::ofstream f(filepath, std::ofstream::out | std::ofstream::binary);
+                self->archive(f);
+                f.close(); 
+            }, 
+            DOC(Config, archive))
+
+        // Conversion to string
         .def("__str__", [](ConfigRcPtr & self)
             {
                 std::ostringstream os;
@@ -1233,6 +1248,9 @@ void bindPyConfig(py::module & m)
           DOC(PyOpenColorIO, GetCurrentConfig));
     m.def("SetCurrentConfig", &SetCurrentConfig, "config"_a, 
           DOC(PyOpenColorIO, SetCurrentConfig));
+
+    m.def("ExtractOCIOZArchive", &ExtractOCIOZArchive, 
+          DOC(PyOpenColorIO, ExtractOCIOZArchive));
 }
 
 } // namespace OCIO_NAMESPACE

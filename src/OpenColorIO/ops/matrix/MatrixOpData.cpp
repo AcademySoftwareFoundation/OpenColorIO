@@ -847,20 +847,15 @@ std::string MatrixOpData::getCacheID() const
 
     cacheIDStream << TransformDirectionToString(m_direction) << " ";
 
-    md5_state_t state;
-    md5_byte_t digest[16];
+    std::string hash;
+    hash += CacheIDHash(
+        (const char *) &(getArray().getValues()[0]),
+        16 * sizeof(double));
+    hash += CacheIDHash(
+        (const char *) getOffsets().getValues(),
+        4 * sizeof(double));
 
-    // TODO: array and offset do not require double precision in cache.
-    md5_init(&state);
-    md5_append(&state,
-        (const md5_byte_t *)&(getArray().getValues()[0]),
-        (int)(16 * sizeof(double)));
-    md5_append(&state,
-        (const md5_byte_t *)getOffsets().getValues(),
-        (int)(4 * sizeof(double)));
-    md5_finish(&state, digest);
-
-    cacheIDStream << GetPrintableHash(digest);
+    cacheIDStream << CacheIDHash(hash.c_str(), hash.size());
 
     return cacheIDStream.str();
 }

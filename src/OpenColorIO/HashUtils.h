@@ -7,17 +7,13 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "md5/md5.h"
 #include <string>
 
 namespace OCIO_NAMESPACE
 {
-std::string CacheIDHash(const char * array, int size);
 
-// TODO: get rid of md5.h include, make this a generic byte array
-std::string GetPrintableHash(const md5_byte_t * digest);
+std::string CacheIDHash(const char * array, std::size_t size);
 
 } // namespace OCIO_NAMESPACE
 
 #endif
-
