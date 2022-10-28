@@ -3984,7 +3984,7 @@ ConstProcessorRcPtr Config::getProcessor(const ConstContextRcPtr & context,
 {
     // This gets or calculates the named transform in the requested direction. The result
     // is always applied in the forward direction.
-    auto transform = NamedTransformImpl::GetTransform(namedTransform, direction);
+    auto transform = NamedTransform::GetTransform(namedTransform, direction);
     return getProcessor(context, transform, TRANSFORM_DIR_FORWARD);
 }
 

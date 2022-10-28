@@ -269,7 +269,7 @@ void BuildNamedTransformToDisplay(OpRcPtrVec & ops,
                                   bool dataBypass)
 {
     // Apply view named transform.
-    auto transform = NamedTransformImpl::GetTransform(viewNamedTransform, TRANSFORM_DIR_FORWARD);
+    auto transform = NamedTransform::GetTransform(viewNamedTransform, TRANSFORM_DIR_FORWARD);
     BuildOps(ops, config, context, transform, TRANSFORM_DIR_FORWARD);
 
     // Convert from the display-referred reference space to the displayCS.
@@ -287,7 +287,7 @@ void BuildDisplayToNamedTransform(OpRcPtrVec & ops,
     BuildColorSpaceToReferenceOps(ops, config, context, displayCS, dataBypass);
 
     // Apply view named transform.
-    auto transform = NamedTransformImpl::GetTransform(viewNamedTransform, TRANSFORM_DIR_INVERSE);
+    auto transform = NamedTransform::GetTransform(viewNamedTransform, TRANSFORM_DIR_INVERSE);
     BuildOps(ops, config, context, transform, TRANSFORM_DIR_FORWARD);
 }
 
@@ -430,8 +430,8 @@ void BuildDisplayOps(OpRcPtrVec & ops,
         {
             // Ignore currentCS.  The forward direction NamedTransform is used for the forward
             // direction DisplayViewTransform.
-            auto transform = NamedTransformImpl::GetTransform(displayNamedTransform,
-                                                              TRANSFORM_DIR_FORWARD);
+            auto transform = NamedTransform::GetTransform(displayNamedTransform,
+                                                          TRANSFORM_DIR_FORWARD);
             BuildOps(ops, config, context, transform, TRANSFORM_DIR_FORWARD);
         }
         else if (viewNamedTransform)
@@ -468,8 +468,8 @@ void BuildDisplayOps(OpRcPtrVec & ops,
         if (displayNamedTransform)
         {
             // Ignore currentCS.
-            auto transform = NamedTransformImpl::GetTransform(displayNamedTransform,
-                                                              TRANSFORM_DIR_INVERSE);
+            auto transform = NamedTransform::GetTransform(displayNamedTransform,
+                                                          TRANSFORM_DIR_INVERSE);
             BuildOps(ops, config, context, transform, TRANSFORM_DIR_FORWARD);
         }
         else if (viewNamedTransform)
