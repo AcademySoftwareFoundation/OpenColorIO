@@ -160,6 +160,9 @@ void bindPyNamedTransform(py::module & m)
         .def("setTransform", &NamedTransform::setTransform, "transform"_a, "direction"_a,
              DOC(NamedTransform, setTransform))
 
+        .def_static("GetTransform", &NamedTransform::GetTransform, "transform"_a, "direction"_a,
+                    DOC(NamedTransform, GetTransform))
+
         // Categories
         .def("hasCategory", &NamedTransform::hasCategory, "category"_a,
              DOC(NamedTransform, hasCategory))

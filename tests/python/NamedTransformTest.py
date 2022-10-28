@@ -256,6 +256,48 @@ class NamedTransformTest(unittest.TestCase):
             with self.assertRaises(TypeError):
                 named_tr = OCIO.NamedTransform(invalid)
 
+    def test_static_get_transform(self):
+        """
+        Test NamedTransform.GetTransform() static method.
+        """
+
+        offsetF = [0.1, 0.2, 0.3, 0.4]
+        offsetI = [-offsetF[0], -offsetF[1], -offsetF[2], -offsetF[3]]
+
+        matF = OCIO.MatrixTransform()
+        matF.setOffset(offsetF)
+        ntF = OCIO.NamedTransform()
+        ntF.setTransform(matF, OCIO.TRANSFORM_DIR_FORWARD)
+
+        matI = OCIO.MatrixTransform()
+        matI.setOffset(offsetI)
+        ntI = OCIO.NamedTransform()
+        ntI.setTransform(matI, OCIO.TRANSFORM_DIR_INVERSE);
+
+        # Forward transform from forward-only named transform
+        tf = OCIO.NamedTransform.GetTransform(ntF, OCIO.TRANSFORM_DIR_FORWARD)
+        self.assertIsNotNone(tf)
+        offset = tf.getOffset()
+        self.assertEqual(offset, offsetF)
+
+        # Inverse transform from forward-only named transform
+        tf = OCIO.NamedTransform.GetTransform(ntF, OCIO.TRANSFORM_DIR_INVERSE)
+        self.assertIsNotNone(tf)
+        offset = tf.getOffset()
+        self.assertEqual(offset, offsetI)
+
+        # Forward transform from inverse-only named transform
+        tf = OCIO.NamedTransform.GetTransform(ntI, OCIO.TRANSFORM_DIR_FORWARD)
+        self.assertIsNotNone(tf)
+        offset = tf.getOffset()
+        self.assertEqual(offset, offsetF)
+
+        # Inverse transform from inverse-only named transform
+        tf = OCIO.NamedTransform.GetTransform(ntI, OCIO.TRANSFORM_DIR_INVERSE)
+        self.assertIsNotNone(tf)
+        offset = tf.getOffset()
+        self.assertEqual(offset, offsetI)
+
     def test_processor_from_nt(self):
 
         cfg = OCIO.Config().CreateFromStream(SIMPLE_PROFILE)

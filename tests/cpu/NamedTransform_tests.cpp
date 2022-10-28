@@ -196,6 +196,82 @@ OCIO_ADD_TEST(NamedTransform, alias)
     }
 }
 
+OCIO_ADD_TEST(NamedTransform, static_get_transform)
+{
+    const double offsetF[4]{ 0.1, 0.2, 0.3, 0.4 };
+    const double offsetI[4]{ -offsetF[0], -offsetF[1], -offsetF[2], -offsetF[3] };
+
+    auto matF = OCIO::MatrixTransform::Create();
+    matF->setOffset(offsetF);
+    OCIO::NamedTransformRcPtr ntF = OCIO::NamedTransform::Create();
+    ntF->setTransform(matF, OCIO::TRANSFORM_DIR_FORWARD);
+
+    auto matI = OCIO::MatrixTransform::Create();
+    matI->setOffset(offsetI);
+    OCIO::NamedTransformRcPtr ntI = OCIO::NamedTransform::Create();
+    ntI->setTransform(matI, OCIO::TRANSFORM_DIR_INVERSE);
+
+    // Forward transform from forward-only named transform
+    {
+        auto tf = OCIO::NamedTransform::GetTransform(ntF,
+                                                     OCIO::TRANSFORM_DIR_FORWARD);
+        OCIO_CHECK_ASSERT(tf);
+        auto mat = OCIO_DYNAMIC_POINTER_CAST<const OCIO::MatrixTransform>(tf);
+        OCIO_CHECK_ASSERT(mat);
+        double offset[4];
+        mat->getOffset(offset);
+        OCIO_CHECK_EQUAL(offset[0], offsetF[0]);
+        OCIO_CHECK_EQUAL(offset[1], offsetF[1]);
+        OCIO_CHECK_EQUAL(offset[2], offsetF[2]);
+        OCIO_CHECK_EQUAL(offset[3], offsetF[3]);
+    }
+
+    // Inverse transform from forward-only named transform
+    {
+        auto tf = OCIO::NamedTransform::GetTransform(ntF,
+                                                     OCIO::TRANSFORM_DIR_INVERSE);
+        OCIO_CHECK_ASSERT(tf);
+        auto mat = OCIO_DYNAMIC_POINTER_CAST<const OCIO::MatrixTransform>(tf);
+        OCIO_CHECK_ASSERT(mat);
+        double offset[4];
+        mat->getOffset(offset);
+        OCIO_CHECK_NE(offset[0], offsetI[0]);
+        OCIO_CHECK_NE(offset[1], offsetI[1]);
+        OCIO_CHECK_NE(offset[2], offsetI[2]);
+        OCIO_CHECK_NE(offset[3], offsetI[3]);
+    }
+
+    // Forward transform from inverse-only named transform
+    {
+        auto tf = OCIO::NamedTransform::GetTransform(ntI,
+                                                     OCIO::TRANSFORM_DIR_FORWARD);
+        OCIO_CHECK_ASSERT(tf);
+        auto mat = OCIO_DYNAMIC_POINTER_CAST<const OCIO::MatrixTransform>(tf);
+        OCIO_CHECK_ASSERT(mat);
+        double offset[4];
+        matF->getOffset(offset);
+        OCIO_CHECK_EQUAL(offset[0], offsetF[0]);
+        OCIO_CHECK_EQUAL(offset[1], offsetF[1]);
+        OCIO_CHECK_EQUAL(offset[2], offsetF[2]);
+        OCIO_CHECK_EQUAL(offset[3], offsetF[3]);
+    }
+
+    // Inverse transform from inverse-only named transform
+    {
+        auto tf = OCIO::NamedTransform::GetTransform(ntI,
+                                                     OCIO::TRANSFORM_DIR_INVERSE);
+        OCIO_CHECK_ASSERT(tf);
+        auto mat = OCIO_DYNAMIC_POINTER_CAST<const OCIO::MatrixTransform>(tf);
+        OCIO_CHECK_ASSERT(mat);
+        double offset[4];
+        mat->getOffset(offset);
+        OCIO_CHECK_NE(offset[0], offsetI[0]);
+        OCIO_CHECK_NE(offset[1], offsetI[1]);
+        OCIO_CHECK_NE(offset[2], offsetI[2]);
+        OCIO_CHECK_NE(offset[3], offsetI[3]);
+    }
+}
+
 OCIO_ADD_TEST(Config, named_transform_processor)
 {
     // Create a config with color spaces and named transforms.

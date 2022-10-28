@@ -1978,6 +1978,13 @@ public:
     virtual ConstTransformRcPtr getTransform(TransformDirection dir) const = 0;
     virtual void setTransform(const ConstTransformRcPtr & transform, TransformDirection dir) = 0;
 
+    /**
+     * Get the requested transform, creating the transform from the inverse direction if the 
+     * transform for the requested direction is missing.
+     */
+    static ConstTransformRcPtr GetTransform(const ConstNamedTransformRcPtr & nt,
+                                            TransformDirection dir);
+
     NamedTransform(const NamedTransform &) = delete;
     NamedTransform & operator= (const NamedTransform &) = delete;
     // Do not use (needed only for pybind11).
