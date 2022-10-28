@@ -1176,4 +1176,3 @@ colorspaces:
         checkProcessorInverse(proc);
     }
 }
-

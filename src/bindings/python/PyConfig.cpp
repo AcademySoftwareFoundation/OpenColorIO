@@ -318,6 +318,8 @@ void bindPyConfig(py::module & m)
              DOC(Config, addColorSpace))
         .def("removeColorSpace", &Config::removeColorSpace, "name"_a, 
              DOC(Config, removeColorSpace))
+        .def("isColorSpaceLinear", &Config::isColorSpaceLinear, "colorSpace"_a, "referenceSpaceType"_a, 
+             DOC(Config, isColorSpaceLinear))
         .def("isColorSpaceUsed", &Config::isColorSpaceUsed, "name"_a, 
              DOC(Config, isColorSpaceUsed))
         .def("clearColorSpaces", &Config::clearColorSpaces, 

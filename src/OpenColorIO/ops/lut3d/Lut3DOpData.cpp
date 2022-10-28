@@ -8,7 +8,6 @@
 #include "BitDepthUtils.h"
 #include "HashUtils.h"
 #include "MathUtils.h"
-#include "md5/md5.h"
 #include "ops/lut3d/Lut3DOp.h"
 #include "ops/lut3d/Lut3DOpData.h"
 #include "ops/OpTools.h"
@@ -481,7 +480,7 @@ std::string Lut3DOpData::getCacheID() const
     }
 
     cacheIDStream << CacheIDHash(reinterpret_cast<const char*>(&values[0]),
-                                 int(values.size() * sizeof(values[0])))
+                                 values.size() * sizeof(values[0]))
                   << " ";
 
     cacheIDStream << InterpolationToString(m_interpolation)  << " ";

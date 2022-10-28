@@ -9,7 +9,6 @@
 #include "BitDepthUtils.h"
 #include "HashUtils.h"
 #include "MathUtils.h"
-#include "md5/md5.h"
 #include "ops/lut1d/Lut1DOp.h"
 #include "ops/lut1d/Lut1DOpData.h"
 #include "ops/matrix/MatrixOp.h"
@@ -559,7 +558,7 @@ std::string Lut1DOpData::getCacheID() const
     }
 
     cacheIDStream << CacheIDHash(reinterpret_cast<const char*>(&values[0]), 
-                                 int(values.size() * sizeof(values[0])))
+                                 values.size() * sizeof(values[0]))
                   << " ";
 
     cacheIDStream << TransformDirectionToString(m_direction)                   << " ";

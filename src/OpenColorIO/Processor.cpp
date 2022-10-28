@@ -337,7 +337,7 @@ const char * Processor::Impl::getCacheID() const
     else
     {
         const std::string fullstr = m_ops.getCacheID();
-        m_cacheID = CacheIDHash(fullstr.c_str(), (int)fullstr.size());
+        m_cacheID = CacheIDHash(fullstr.c_str(), fullstr.size());
     }
 
     return m_cacheID.c_str();

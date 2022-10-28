@@ -243,7 +243,7 @@ static constexpr unsigned LastSupportedMajorVersion = OCIO_VERSION_MAJOR;
 
 // For each major version keep the most recent minor.
 static const unsigned int LastSupportedMinorVersion[] = {0, // Version 1
-                                                         1  // Version 2
+                                                         2  // Version 2
                                                          };
 
 } // namespace
@@ -1792,7 +1792,8 @@ void Config::validate() const
 
     StringSet existingColorSpaces;
 
-    bool hasDisplayReferredColorspace = false;
+    bool hasDisplayReferredColorspace   = false;
+    bool hasSceneReferredColorspace     = false;
 
     // Confirm all ColorSpaces are valid.
     for(int i=0; i<getImpl()->m_allColorSpaces->getNumColorSpaces(); ++i)
@@ -1839,13 +1840,18 @@ void Config::validate() const
 
         const std::string namelower = StringUtils::Lower(name);
         existingColorSpaces.insert(namelower);
+
         if (cs->getReferenceSpaceType() == REFERENCE_SPACE_DISPLAY)
         {
             hasDisplayReferredColorspace = true;
         }
+        else if (cs->getReferenceSpaceType() == REFERENCE_SPACE_SCENE)
+        {
+            hasSceneReferredColorspace = true;
+        }
     }
 
-    // Confirm all roles are valid.
+    // Confirm all roles used by the config are valid and that essential roles are present.
     {
         for(StringMap::const_iterator iter = getImpl()->m_roles.begin(),
             end = getImpl()->m_roles.end(); iter!=end; ++iter)
@@ -1874,6 +1880,107 @@ void Config::validate() const
             }
 
             // AddColorSpace, addNamedTransform & setRole already check there is no name conflict.
+        }
+
+
+        // Check for interchange roles requirements - scene-referred and display-referred.
+        if (getMajorVersion() >= 2 && getMinorVersion() >= 2)
+        {
+            bool hasRoleSceneLinear                 = false;
+            bool hasRoleCompositingLog              = false;
+            bool hasRoleColorTiming                 = false;
+
+            bool hasRoleAcesInterchange             = false;
+            bool acesInterHasSceneRefColorspace     = false;
+            bool hasRoleCieXyzD65Interchange        = false;
+            bool cieInterHasDisplayRefColorspace    = false;
+
+            for (auto const& role : getImpl()->m_roles)
+            {
+                if (Platform::Strcasecmp(role.first.c_str(), ROLE_SCENE_LINEAR) == 0)
+                {
+                    hasRoleSceneLinear = true;
+                }
+                else if (Platform::Strcasecmp(role.first.c_str(), ROLE_COMPOSITING_LOG ) == 0)
+                {
+                    hasRoleCompositingLog = true;
+                }
+                else if (Platform::Strcasecmp(role.first.c_str(), ROLE_COLOR_TIMING) == 0)
+                {
+                    hasRoleColorTiming = true;
+                }
+                else if (Platform::Strcasecmp(role.first.c_str(), ROLE_INTERCHANGE_SCENE) == 0)
+                {
+                    hasRoleAcesInterchange = true;
+
+                    ConstColorSpaceRcPtr cs = getColorSpace(role.second.c_str());
+                    acesInterHasSceneRefColorspace = 
+                        cs->getReferenceSpaceType() == REFERENCE_SPACE_SCENE;
+                }
+                else if (Platform::Strcasecmp(role.first.c_str(), ROLE_INTERCHANGE_DISPLAY) == 0)
+                {
+                    hasRoleCieXyzD65Interchange = true;
+
+                    ConstColorSpaceRcPtr cs = getColorSpace(role.second.c_str());
+                    cieInterHasDisplayRefColorspace = 
+                        cs->getReferenceSpaceType() == REFERENCE_SPACE_DISPLAY;
+                }
+            }
+
+            // All LogError below are technically a validation failure, but only logging a message 
+            // rather than throwing (for now). This is to make it possible for upgradeToLatestVersion
+            // to always result in a config that does not fail validation.
+
+            if (!hasRoleSceneLinear)
+            {
+                std::ostringstream os;
+                os << "The scene_linear role is required for a config version 2.2 or higher.";
+                LogError(os.str());
+            }
+
+            if (!hasRoleCompositingLog)
+            {
+                std::ostringstream os;
+                os << "The compositing_log role is required for a config version 2.2 or higher.";
+                LogError(os.str());
+            }
+
+            if (!hasRoleColorTiming)
+            {
+                std::ostringstream os;
+                os << "The color_timing role is required for a config version 2.2 or higher.";
+                LogError(os.str());
+            }
+
+            if (hasSceneReferredColorspace && !hasRoleAcesInterchange)
+            {
+                std::ostringstream os;
+                os << "The aces_interchange role is required when there are scene-referred";
+                os << " color spaces and the config version is 2.2 or higher.";
+                LogError(os.str());
+            }
+            else if (hasRoleAcesInterchange && 
+                     !acesInterHasSceneRefColorspace)
+            {
+                std::ostringstream os;
+                os << "The aces_interchange role must be a scene-referred color space.";
+                LogError(os.str());
+            }
+
+            if (hasDisplayReferredColorspace && !hasRoleCieXyzD65Interchange)
+            {
+                std::ostringstream os;
+                os << "The cie_xyz_d65_interchange role is required when there are";
+                os << " display-referred color spaces and the config version is 2.2 or higher.";
+                LogError(os.str());
+            }
+            else if (hasRoleCieXyzD65Interchange && 
+                     !cieInterHasDisplayRefColorspace)
+            {
+                std::ostringstream os;
+                os << "The cie_xyz_d65_interchange role must be a display-referred color space.";
+                LogError(os.str());
+            }
         }
     }
 
@@ -4855,7 +4962,7 @@ const char * Config::getCacheID(const ConstContextRcPtr & context) const
         std::ostringstream cacheid;
         serialize(cacheid);
         const std::string fullstr = cacheid.str();
-        getImpl()->m_cacheidnocontext = CacheIDHash(fullstr.c_str(), (int)fullstr.size());
+        getImpl()->m_cacheidnocontext = CacheIDHash(fullstr.c_str(), fullstr.size());
     }
 
     // Also include all file references, using the context (if specified)
@@ -4892,7 +4999,7 @@ const char * Config::getCacheID(const ConstContextRcPtr & context) const
         }
 
         const std::string fullstr = filehash.str();
-        fileReferencesFastHash = CacheIDHash(fullstr.c_str(), (int)fullstr.size());
+        fileReferencesFastHash = CacheIDHash(fullstr.c_str(), fullstr.size());
     }
 
     getImpl()->m_cacheids[contextcacheid] = getImpl()->m_cacheidnocontext + ":" + fileReferencesFastHash;
@@ -5179,6 +5286,17 @@ void Config::Impl::checkVersionConsistency(ConstTransformRcPtr & transform) cons
                 throw Exception("Only config version 2.1 (or higher) can have "
                                 "BuiltinTransform style 'ACES-LMT - ACES 1.3 Reference Gamut Compression'.");
             }
+            if (m_majorVersion == 2 && m_minorVersion < 2 
+                    && (   0 == Platform::Strcasecmp(blt->getStyle(), "ARRI_LOGC4_to_ACES2065-1")
+                        || 0 == Platform::Strcasecmp(blt->getStyle(), "CURVE - CANON_CLOG2_to_LINEAR")
+                        || 0 == Platform::Strcasecmp(blt->getStyle(), "CURVE - CANON_CLOG3_to_LINEAR") )
+                )
+            {
+                std::ostringstream os;
+                os << "Only config version 2.2 (or higher) can have BuiltinTransform style '"
+                   << blt->getStyle() << "'.";
+                throw Exception(os.str().c_str());
+            }
         }
         else if (ConstCDLTransformRcPtr cdl = DynamicPtrCast<const CDLTransform>(transform))
         {
@@ -5228,13 +5346,11 @@ void Config::Impl::checkVersionConsistency(ConstTransformRcPtr & transform) cons
                 {
                     throw Exception("Only config version 2 (or higher) can use 'cubic' "
                                     "interpolation with FileTransform.");
-
                 }
                 if (ft->getCDLStyle() != CDL_TRANSFORM_DEFAULT)
                 {
                     throw Exception("Only config version 2 (or higher) can use CDL style' "
                                     "for FileTransform.");
-
                 }
             }
         }
@@ -5408,7 +5524,6 @@ void Config::Impl::checkVersionConsistency() const
     {
         throw Exception("Only version 2 (or higher) can have NamedTransforms.");
     }
-
 }
 
 void Config::setConfigIOProxy(ConfigIOProxyRcPtr ciop)
@@ -5506,4 +5621,3 @@ void Config::archive(std::ostream & ostream) const
 }
 
 } // namespace OCIO_NAMESPACE
-

@@ -50,7 +50,7 @@ class MixingHelpersTest(unittest.TestCase):
 
         # Print the MixingColorSpaceManager.
         self.assertEqual(str(mix),
-            ('config: $0f5cce49d82e023765b1d657191c3417:$4dd1c89df8002b409e089089ce8f24e7, '
+            ('config: 667ca4dc5b3779e570229fb7fd9cffe1:6001c324468d497f99aa06d3014798d8, '
             'slider: [minEdge: 0, maxEdge: 0.833864], mixingSpaces: [Rendering Space, '
             'Display Space], selectedMixingSpaceIdx: 0, selectedMixingEncodingIdx: 0'))
 
@@ -226,7 +226,7 @@ class MixingHelpersTest(unittest.TestCase):
 
         # Print the MixingColorSpaceManager.
         self.assertEqual(str(mix),
-            ('config: $470958575eb3f906f985d31be8279e0d:$4dd1c89df8002b409e089089ce8f24e7, '
+            ('config: 779ee109137ff44de9afbf320685f4a2:6001c324468d497f99aa06d3014798d8, '
             'slider: [minEdge: 0, maxEdge: 1], mixingSpaces: [color_picking (log_1)], '
             'selectedMixingSpaceIdx: 0, selectedMixingEncodingIdx: 1, colorPicking'))
 
