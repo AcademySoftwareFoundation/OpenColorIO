@@ -868,8 +868,10 @@ std::string GpuShaderText::atan2(const std::string & y,
         }
         case GPU_LANGUAGE_HLSL_DX11:
         {
-            // note: operand order is swapped in HLSL
-            kw << "atan2(" << x << ", " << y << ")";
+            // note: Various internet sources claim that the x & y arguments need to be
+            // swapped for HLSL (relative to GLSL).  However, recent testing on Windows
+            // has revealed that the argument order needs to be the same as GLSL.
+            kw << "atan2(" << y << ", " << x << ")";
             break;
         }
 
