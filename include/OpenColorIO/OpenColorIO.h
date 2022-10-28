@@ -635,6 +635,43 @@ public:
      */
     void setInactiveColorSpaces(const char * inactiveColorSpaces);
     const char * getInactiveColorSpaces() const;
+    
+    /**
+     * \brief Return true if the specified color space is linear.
+     * 
+     * The determination of linearity is made with respect to one of the two reference spaces 
+     * (i.e., either the scene-referred one or the display-referred one). If the reference space 
+     * type of the color space is the opposite of the requested reference space type, false is 
+     * returned immediately rather than trying to invoke the default view transform to convert 
+     * between the reference spaces.
+     * 
+     * Note: This function relies on heuristics that may sometimes give an incorrect result. 
+     * For example, if the encoding attribute is not set appropriately or the sampled values fail 
+     * to detect non-linearity.
+     * 
+     * The algorithm proceeds as follows:
+     * -- If the color space isdata attribute is true, return false.
+     * -- If the reference space type of the color space differs from the requested reference 
+     *    space type, return false.
+     * -- If the color space's encoding attribute is present, return true if it matches the 
+     *    expected reference space type (i.e., "scene-linear" for REFERENCE_SPACE_SCENE or 
+     *    "display-linear" for REFERENCE_SPACE_DISPLAY) and false otherwise.
+     * -- If the color space has no to_reference or from_reference transform, return true.
+     * -- Evaluate several points through the color space's transform and check if the output only 
+     *    differs by a scale factor (which may be different per channel, e.g. allowing an arbitrary
+     *    matrix transform, with no offset).
+     * 
+     * Note that the encoding test happens before the sampled value test to give config authors 
+     * ultimate control over the linearity determination. For example, they could set the encoding 
+     * attribute to indicate linearity if they want to ignore some areas of non-linearity 
+     * (e.g., at extreme values). Or they could set it to indicate that a color space should not 
+     * be considered linear, even if it is, in a mathematical sense.
+     * 
+     * \param colorSpace Color space to evaluate.
+     * \param referenceSpaceType Evaluate linearity with respect to the specified reference space 
+     *                           (either scene-referred or display-referred).
+     */
+    bool isColorSpaceLinear(const char * colorSpace, ReferenceSpaceType referenceSpaceType) const;
 
     //
     // Roles
