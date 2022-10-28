@@ -169,7 +169,7 @@ void GPUProcessor::extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) c
     tmpKey += getImpl()->getCacheID();
 
     // Way too long uid for a resource name so shorten it.
-    std::string key(CacheIDHash(tmpKey.c_str(), (int)tmpKey.size()));
+    std::string key(CacheIDHash(tmpKey.c_str(), tmpKey.size()));
 
     // Prepend a user defined uid if any.
     if (std::strlen(shaderCreator->getUniqueID())!=0)
@@ -207,4 +207,3 @@ void GPUProcessor::extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) c
 
 
 } // namespace OCIO_NAMESPACE
-

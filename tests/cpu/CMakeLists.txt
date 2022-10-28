@@ -24,6 +24,7 @@ function(add_ocio_test NAME SOURCES PRIVATE_INCLUDES)
             yaml-cpp
             testutils
             minizip-ng::minizip-ng
+            xxHash
     )
 
     if(APPLE)
@@ -93,7 +94,6 @@ set(SOURCES
     ImageDesc.cpp
     ImagePacking.cpp
     Look.cpp
-    md5/md5.cpp
     OCIOYaml.cpp
     OCIOZArchive.cpp
     ops/cdl/CDLOpCPU.cpp

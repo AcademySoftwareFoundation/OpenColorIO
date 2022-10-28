@@ -6,3 +6,6 @@
 
 # Sample ICC (modified)
 add_subdirectory(sampleicc)
+
+# xxHash
+add_subdirectory(xxHash)

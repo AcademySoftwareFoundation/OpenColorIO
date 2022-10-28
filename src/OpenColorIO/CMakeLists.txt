@@ -67,7 +67,6 @@ set(SOURCES
     Look.cpp
     LookParse.cpp
     MathUtils.cpp
-    md5/md5.cpp
     NamedTransform.cpp
     OCIOYaml.cpp
     OCIOZArchive.cpp
@@ -276,6 +275,7 @@ target_link_libraries(OpenColorIO
         "$<BUILD_INTERFACE:sampleicc::sampleicc>"
         "$<BUILD_INTERFACE:utils::from_chars>"
         "$<BUILD_INTERFACE:utils::strings>"
+        "$<BUILD_INTERFACE:xxHash>"
         yaml-cpp
         minizip-ng::minizip-ng
 )
