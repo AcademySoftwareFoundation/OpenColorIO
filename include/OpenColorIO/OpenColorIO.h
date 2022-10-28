@@ -1211,6 +1211,46 @@ public:
                                      TransformDirection direction) const;
 
     /**
+     * \brief Get a Processor to or from a known external color space.
+     * 
+     * These methods provide a way to interface color spaces in a config with known standard 
+     * external color spaces. The set of external color space are those contained in the current 
+     * default Built-in config. This includes common spaces such as "Linear Rec.709 (sRGB)", 
+     * "sRGB - Texture", "ACEScg", and "ACES2065-1".
+     * 
+     * If the source config defines the necessary Interchange Role (typically "aces_interchange"), 
+     * then the conversion will be well-defined and equivalent to calling GetProcessorFromConfigs
+     * with the source config and the Built-in config
+     * 
+     * However, if the Interchange Roles are not present, heuristics will be used to try and 
+     * identify a common color space in the source config that may be used to allow the conversion 
+     * to proceed. If the heuristics fail to find a suitable space, an exception is thrown. 
+     * The heuristics may evolve, so the results returned by this function for a given source config 
+     * and color space may change in future releases of the library. However, the Interchange Roles 
+     * are required in config versions 2.2 and higher, so it is hoped that the need for the heuristics 
+     * will decrease over time.
+     * 
+     * \param srcConfig The user's source config.
+     * \param srcColorSpaceName The name of the color space in the source config.
+     * \param builtinColorSpaceName The name of the color space in the current default Built-in config.
+     */
+    static ConstProcessorRcPtr GetProcessorToBuiltinColorSpace(
+                                                                ConstConfigRcPtr srcConfig,
+                                                                const char * srcColorSpaceName, 
+                                                                const char * builtinColorSpaceName);
+    /**
+     * \brief See description of GetProcessorToBuiltinColorSpace.
+     * 
+     * \param builtinColorSpaceName The name of the color space in the current default Built-in config.
+     * \param srcConfig The user's source config.
+     * \param srcColorSpaceName The name of the color space in the source config. 
+     */
+    static ConstProcessorRcPtr GetProcessorFromBuiltinColorSpace(
+                                                                const char * builtinColorSpaceName,
+                                                                ConstConfigRcPtr srcConfig,
+                                                                const char * srcColorSpaceName);
+
+    /**
      * \brief Get a processor to convert between color spaces in two separate
      *      configs.
      * 

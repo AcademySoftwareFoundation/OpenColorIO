@@ -612,3 +612,140 @@ colorspaces:
         test_display_referred(self, cfg, "scene_nonlin-trans", False)
         test_display_referred(self, cfg, "scene_linear-trans-alias", False)
         test_display_referred(self, cfg, "scene_ref", False)
+        
+    def test_processor_to_known_colorspace(self):
+        
+        CONFIG = """ocio_profile_version: 2
+
+roles:
+  default: raw
+  scene_linear: ref_cs
+
+colorspaces:
+  - !<ColorSpace>
+    name: raw
+    description: A data colorspace (should not be used).
+    isdata: true
+
+  - !<ColorSpace>
+    name: ref_cs
+    description: The reference colorspace.
+    isdata: false
+
+  - !<ColorSpace>
+    name: not sRGB
+    description: A color space that misleadingly has sRGB in the name, even though it's not.
+    isdata: false
+    to_scene_reference: !<BuiltinTransform> {style: ACEScct_to_ACES2065-1}
+
+  - !<ColorSpace>
+    name: ACES cg
+    description: An ACEScg space with an unusual spelling.
+    isdata: false
+    to_scene_reference: !<BuiltinTransform> {style: ACEScg_to_ACES2065-1}
+
+  - !<ColorSpace>
+    name: Linear ITU-R BT.709
+    description: A linear Rec.709 space with an unusual spelling.
+    isdata: false
+    from_scene_reference: !<GroupTransform>
+      name: AP0 to Linear Rec.709 (sRGB)
+      children:
+        - !<MatrixTransform> {matrix: [2.52168618674388, -1.13413098823972, -0.387555198504164, 0, -0.276479914229922, 1.37271908766826, -0.096239173438334, 0, -0.0153780649660342, -0.152975335867399, 1.16835340083343, 0, 0, 0, 0, 1]}
+
+  - !<ColorSpace>
+    name: Texture -- sRGB
+    description: An sRGB Texture space, spelled differently than in the built-in config.
+    isdata: false
+    from_scene_reference: !<GroupTransform>
+      name: AP0 to sRGB Rec.709
+      children:
+        - !<MatrixTransform> {matrix: [2.52168618674388, -1.13413098823972, -0.387555198504164, 0, -0.276479914229922, 1.37271908766826, -0.096239173438334, 0, -0.0153780649660342, -0.152975335867399, 1.16835340083343, 0, 0, 0, 0, 1]}
+        - !<ExponentWithLinearTransform> {gamma: 2.4, offset: 0.055, direction: inverse}
+
+  - !<ColorSpace>
+    name: sRGB Encoded AP1 - Texture
+    description: Another space with "sRGB" in the name that is not actually an sRGB texture space.
+    isdata: false
+    from_scene_reference: !<GroupTransform>
+      name: AP0 to sRGB Encoded AP1 - Texture
+      children:
+        - !<MatrixTransform> {matrix: [1.45143931614567, -0.23651074689374, -0.214928569251925, 0, -0.0765537733960206, 1.17622969983357, -0.0996759264375522, 0, 0.00831614842569772, -0.00603244979102102, 0.997716301365323, 0, 0, 0, 0, 1]}
+        - !<ExponentWithLinearTransform> {gamma: 2.4, offset: 0.055, direction: inverse}
+
+"""
+        def check_processor(self, p):
+            gt = p.createGroupTransform()
+            self.assertEqual(len(gt), 4)
+
+            self.assertAlmostEqual(gt[0].getLogSideSlopeValue()[0], 0.0570776, places=6)
+            self.assertEqual(gt[0].getDirection(), OCIO.TRANSFORM_DIR_INVERSE)
+
+            self.assertAlmostEqual(gt[1].getMatrix()[0], 0.6954522413574519, places=6)
+            self.assertEqual(gt[1].getDirection(), OCIO.TRANSFORM_DIR_FORWARD)
+
+            self.assertAlmostEqual(gt[2].getMatrix()[0], 1.45143931607166, places=6)
+            self.assertEqual(gt[2].getDirection(), OCIO.TRANSFORM_DIR_FORWARD)
+
+            self.assertAlmostEqual(gt[3].getValue()[0], 2.2, places=6)
+            self.assertEqual(gt[3].getDirection(), OCIO.TRANSFORM_DIR_INVERSE)
+
+        def check_processor_inv(self, p):
+            gt = p.createGroupTransform()
+            self.assertEqual(len(gt), 4)
+
+            self.assertAlmostEqual(gt[0].getValue()[0], 2.2, places=6)
+            self.assertEqual(gt[0].getDirection(), OCIO.TRANSFORM_DIR_FORWARD)
+
+            self.assertAlmostEqual(gt[1].getMatrix()[0], 0.6954522413574519, places=6)
+            self.assertEqual(gt[1].getDirection(), OCIO.TRANSFORM_DIR_FORWARD)
+
+            self.assertAlmostEqual(gt[2].getMatrix()[0], 1.45143931607166, places=6)
+            self.assertEqual(gt[2].getDirection(), OCIO.TRANSFORM_DIR_FORWARD)
+
+            self.assertAlmostEqual(gt[3].getLogSideSlopeValue()[0], 0.0570776, places=6)
+            self.assertEqual(gt[3].getDirection(), OCIO.TRANSFORM_DIR_FORWARD)
+            cfg = OCIO.Config.CreateFromStream(CONFIG)
+
+        cfg = OCIO.Config.CreateFromStream(CONFIG)
+
+        # Make all color spaces suitable for the heuristics inactive.
+        # The heuristics don't look at inactive color spaces.
+        cfg.setInactiveColorSpaces("ACES cg, Linear ITU-R BT.709, Texture -- sRGB")
+
+        src_csname = "not sRGB"
+        builtin_csname = "Utility - Gamma 2.2 - AP1 - Texture"
+
+        # Test throw if no suitable spaces are present.
+        with self.assertRaises(OCIO.Exception):
+            p = OCIO.Config.GetProcessorToBuiltinColorSpace(cfg, src_csname, builtin_csname)
+
+        # Test sRGB Texture space.
+        cfg.setInactiveColorSpaces("ACES cg, Linear ITU-R BT.709")
+        p = OCIO.Config.GetProcessorToBuiltinColorSpace(cfg, src_csname, builtin_csname)
+        check_processor(self, p)
+
+        # Test linear color space from_ref direction.
+        cfg.setInactiveColorSpaces("ACES cg, Texture -- sRGB")
+        p = OCIO.Config.GetProcessorToBuiltinColorSpace(cfg, src_csname, builtin_csname)
+        check_processor(self, p)
+
+        # Test linear color space to_ref direction.
+        cfg.setInactiveColorSpaces("Linear ITU-R BT.709, Texture -- sRGB")
+        p = OCIO.Config.GetProcessorToBuiltinColorSpace(cfg, src_csname, builtin_csname)
+        check_processor(self, p)
+
+        # Test sRGB Texture space.
+        cfg.setInactiveColorSpaces("ACES cg, Linear ITU-R BT.709")
+        p = OCIO.Config.GetProcessorFromBuiltinColorSpace(builtin_csname, cfg, src_csname)
+        check_processor_inv(self, p)
+
+        # Test linear color space from_ref direction.
+        cfg.setInactiveColorSpaces("ACES cg, Texture -- sRGB")
+        p = OCIO.Config.GetProcessorFromBuiltinColorSpace(builtin_csname, cfg, src_csname)
+        check_processor_inv(self, p)
+
+        # Test linear color space to_ref direction.
+        cfg.setInactiveColorSpaces("Linear ITU-R BT.709, Texture -- sRGB")
+        p = OCIO.Config.GetProcessorFromBuiltinColorSpace(builtin_csname, cfg, src_csname)
+        check_processor_inv(self, p)
