@@ -694,7 +694,26 @@ void bindPyConfig(py::module & m)
              &Config::getProcessor, 
              "context"_a, "transform"_a, "direction"_a, 
              DOC(Config, getProcessor, 13))
-
+        .def_static("GetProcessorToBuiltinColorSpace", [](const ConstConfigRcPtr & srcConfig,
+                                                          const char * srcColorSpaceName,
+                                                          const char * builtinColorSpaceName)
+            {
+                return Config::GetProcessorToBuiltinColorSpace(srcConfig,
+                                                               srcColorSpaceName,
+                                                               builtinColorSpaceName);
+            },
+                    "srcConfig"_a, "srcColorSpaceName"_a, "builtinColorSpaceName"_a,
+                    DOC(Config, GetProcessorToBuiltinColorSpace))
+        .def_static("GetProcessorFromBuiltinColorSpace", [](const char * builtinColorSpaceName,
+                                                          ConstConfigRcPtr srcConfig,
+                                                          const char * srcColorSpaceName)
+            {
+                return Config::GetProcessorFromBuiltinColorSpace(builtinColorSpaceName,
+                                                                 srcConfig,
+                                                                 srcColorSpaceName);
+            },
+                    "builtinColorSpaceName"_a, "srcConfig"_a, "srcColorSpaceName"_a,
+                    DOC(Config, GetProcessorFromBuiltinColorSpace))
         .def_static("GetProcessorFromConfigs", [](const ConstConfigRcPtr & srcConfig,
                                                   const char * srcColorSpaceName,
                                                   const ConstConfigRcPtr & dstConfig,
@@ -756,7 +775,6 @@ void bindPyConfig(py::module & m)
                     "srcContext"_a, "srcConfig"_a, "srcColorSpaceName"_a, "srcInterchangeName"_a, 
                     "dstContext"_a, "dstConfig"_a, "dstColorSpaceName"_a, "dstInterchangeName"_a, 
                     DOC(Config, GetProcessorFromConfigs, 4))
-
         .def("setProcessorCacheFlags", &Config::setProcessorCacheFlags, "flags"_a, 
              DOC(Config, setProcessorCacheFlags))
 
