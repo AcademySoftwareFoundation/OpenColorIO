@@ -2175,8 +2175,8 @@ public:
     virtual void setTransform(const ConstTransformRcPtr & transform, TransformDirection dir) = 0;
 
     /**
-     * Get the requested transform, creating the transform from the inverse direction if the 
-     * transform for the requested direction is missing.
+     * Will create the transform from the inverse direction if the transform for requested
+     * direction is missing.
      */
     static ConstTransformRcPtr GetTransform(const ConstNamedTransformRcPtr & nt,
                                             TransformDirection dir);
