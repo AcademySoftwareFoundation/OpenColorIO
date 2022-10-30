@@ -28,8 +28,6 @@
    .. py:method:: FormatMetadata.__init__(*args, **kwargs)
       :module: PyOpenColorIO
 
-      Initialize self.  See help(type(self)) for accurate signature.
-
 
    .. py:method:: FormatMetadata.__iter__(self: PyOpenColorIO.FormatMetadata) -> PyOpenColorIO.FormatMetadata.AttributeNameIterator
       :module: PyOpenColorIO

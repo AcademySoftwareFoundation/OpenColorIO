@@ -12,8 +12,6 @@
    .. py:method:: Processor.__init__(*args, **kwargs)
       :module: PyOpenColorIO
 
-      Initialize self.  See help(type(self)) for accurate signature.
-
 
    .. py:method:: Processor.createGroupTransform(self: PyOpenColorIO.Processor) -> PyOpenColorIO.GroupTransform
       :module: PyOpenColorIO
@@ -31,7 +29,7 @@
       Get an optimized :ref:`CPUProcessor` instance.
 
       .. note::
-         This may provide higher fidelity than anticipated due to internal optimizations. For example, if the inputColorSpace and the outputColorSpace are members of the same family, no conversion will be applied, even though strictly speaking quantization should be added.
+         This may provide higher fidelity than anticipated due to internal optimizations. For example, if the inputColorSpace and the outputColorSpace are members of the same equalitygroup, no conversion will be applied, even though strictly speaking quantization should be added.
 
       .. note::
          The typical use case to apply color processing to an image is:

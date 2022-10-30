@@ -31,3 +31,7 @@
       :module: PyOpenColorIO
       :value: <CDLStyle.CDL_NO_CLAMP: 1>
 
+
+   .. py:property:: CDLStyle.value
+      :module: PyOpenColorIO
+

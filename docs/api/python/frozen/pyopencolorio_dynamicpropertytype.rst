@@ -54,3 +54,7 @@
       :module: PyOpenColorIO
       :value: <DynamicPropertyType.DYNAMIC_PROPERTY_GRADING_TONE: 5>
 
+
+   .. py:property:: DynamicPropertyType.value
+      :module: PyOpenColorIO
+
