@@ -21,32 +21,26 @@
       3. __init__(self: PyOpenColorIO.GradingRGBMSW, start: float, width: float) -> None
 
 
-   .. py:method:: GradingRGBMSW.blue
+   .. py:property:: GradingRGBMSW.blue
       :module: PyOpenColorIO
-      :property:
 
 
-   .. py:method:: GradingRGBMSW.green
+   .. py:property:: GradingRGBMSW.green
       :module: PyOpenColorIO
-      :property:
 
 
-   .. py:method:: GradingRGBMSW.master
+   .. py:property:: GradingRGBMSW.master
       :module: PyOpenColorIO
-      :property:
 
 
-   .. py:method:: GradingRGBMSW.red
+   .. py:property:: GradingRGBMSW.red
       :module: PyOpenColorIO
-      :property:
 
 
-   .. py:method:: GradingRGBMSW.start
+   .. py:property:: GradingRGBMSW.start
       :module: PyOpenColorIO
-      :property:
 
 
-   .. py:method:: GradingRGBMSW.width
+   .. py:property:: GradingRGBMSW.width
       :module: PyOpenColorIO
-      :property:
 

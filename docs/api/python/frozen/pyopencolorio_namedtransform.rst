@@ -12,14 +12,19 @@
    curve" transform where there is no need to convert to or from a reference space.
 
 
+   .. py:method:: NamedTransform.GetTransform(transform: PyOpenColorIO.NamedTransform, direction: PyOpenColorIO.TransformDirection) -> PyOpenColorIO.Transform
+      :module: PyOpenColorIO
+      :staticmethod:
+
+      Get the requested transform, creating the transform from the inverse direction if the transform for the requested direction is missing.
+
+
    .. py:class:: NamedTransform.NamedTransformAliasIterator
       :module: PyOpenColorIO
 
 
       .. py:method:: NamedTransform.NamedTransformAliasIterator.__init__(*args, **kwargs)
          :module: PyOpenColorIO
-
-         Initialize self.  See help(type(self)) for accurate signature.
 
 
    .. py:method:: NamedTransform.__init__(*args, **kwargs)
@@ -113,7 +118,7 @@
       :module: PyOpenColorIO
 
 
-   .. py:method:: NamedTransform.setEncoding(self: PyOpenColorIO.NamedTransform, encodig: str) -> None
+   .. py:method:: NamedTransform.setEncoding(self: PyOpenColorIO.NamedTransform, encoding: str) -> None
       :module: PyOpenColorIO
 
 

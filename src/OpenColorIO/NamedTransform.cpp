@@ -165,8 +165,8 @@ ConstTransformRcPtr NamedTransformImpl::getTransform(TransformDirection dir) con
     throw Exception("Named transform: Unspecified TransformDirection.");
 }
 
-ConstTransformRcPtr NamedTransformImpl::GetTransform(const ConstNamedTransformRcPtr & nt,
-                                                     TransformDirection dir)
+ConstTransformRcPtr NamedTransform::GetTransform(const ConstNamedTransformRcPtr & nt,
+                                                 TransformDirection dir)
 {
     if (nt)
     {
@@ -300,21 +300,21 @@ ConstTransformRcPtr GetTransform(const ConstNamedTransformRcPtr & src,
     {
         // Both are named transforms.
         auto group = GroupTransform::Create();
-        auto srcTransform = NamedTransformImpl::GetTransform(src, TRANSFORM_DIR_FORWARD);
+        auto srcTransform = NamedTransform::GetTransform(src, TRANSFORM_DIR_FORWARD);
         group->appendTransform(srcTransform->createEditableCopy());
-        auto dstTransform = NamedTransformImpl::GetTransform(dst, TRANSFORM_DIR_INVERSE);
+        auto dstTransform = NamedTransform::GetTransform(dst, TRANSFORM_DIR_INVERSE);
         group->appendTransform(dstTransform->createEditableCopy());
         return group;
     }
     else if (src)
     {
         // Src is a named transform, ignore dst color space.
-        return NamedTransformImpl::GetTransform(src, TRANSFORM_DIR_FORWARD);
+        return NamedTransform::GetTransform(src, TRANSFORM_DIR_FORWARD);
     }
     else if (dst)
     {
         // Dst is a named transform, ignore src color space.
-        return NamedTransformImpl::GetTransform(dst, TRANSFORM_DIR_INVERSE);
+        return NamedTransform::GetTransform(dst, TRANSFORM_DIR_INVERSE);
     }
     throw Exception("GetTransform: one of the parameters has to be not null.");
 }

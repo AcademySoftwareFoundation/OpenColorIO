@@ -30,6 +30,8 @@
 
    Getters and setters are using the rule position, they will throw if the position is not valid. If the rule at the specified position does not implement the requested property getter will return NULL and setter will throw.
 
+   When loading a v1 config, a set of :ref:`FileRules` are created with ColorSpaceNamePathSearch followed by the Default rule pointing to the default role. This allows getColorSpaceFromFilepath to emulate OCIO v1 code that used parseColorSpaceFromString with strictparsing set to false.
+
 
    .. py:method:: FileRules.__init__(self: PyOpenColorIO.FileRules) -> None
       :module: PyOpenColorIO

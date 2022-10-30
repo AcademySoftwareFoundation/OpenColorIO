@@ -8,5 +8,7 @@
 
    Set the Compute Hash Function to use; otherwise, use the default.
 
+   This is not used when using CreateFromFile with an OCIOZ archive or CreateFromConfigIOProxy.
+
    :param ComputeHashFunction:
 

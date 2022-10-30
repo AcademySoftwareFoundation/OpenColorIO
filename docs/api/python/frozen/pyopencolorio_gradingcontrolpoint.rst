@@ -19,12 +19,10 @@
       2. __init__(self: PyOpenColorIO.GradingControlPoint, x: float = 0.0, y: float = 0.0) -> None
 
 
-   .. py:method:: GradingControlPoint.x
+   .. py:property:: GradingControlPoint.x
       :module: PyOpenColorIO
-      :property:
 
 
-   .. py:method:: GradingControlPoint.y
+   .. py:property:: GradingControlPoint.y
       :module: PyOpenColorIO
-      :property:
 

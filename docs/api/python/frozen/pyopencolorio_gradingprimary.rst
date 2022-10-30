@@ -23,69 +23,56 @@
       :module: PyOpenColorIO
 
 
-   .. py:method:: GradingPrimary.brightness
+   .. py:property:: GradingPrimary.brightness
       :module: PyOpenColorIO
-      :property:
 
 
-   .. py:method:: GradingPrimary.clampBlack
+   .. py:property:: GradingPrimary.clampBlack
       :module: PyOpenColorIO
-      :property:
 
 
-   .. py:method:: GradingPrimary.clampWhite
+   .. py:property:: GradingPrimary.clampWhite
       :module: PyOpenColorIO
-      :property:
 
 
-   .. py:method:: GradingPrimary.contrast
+   .. py:property:: GradingPrimary.contrast
       :module: PyOpenColorIO
-      :property:
 
 
-   .. py:method:: GradingPrimary.exposure
+   .. py:property:: GradingPrimary.exposure
       :module: PyOpenColorIO
-      :property:
 
 
-   .. py:method:: GradingPrimary.gain
+   .. py:property:: GradingPrimary.gain
       :module: PyOpenColorIO
-      :property:
 
 
-   .. py:method:: GradingPrimary.gamma
+   .. py:property:: GradingPrimary.gamma
       :module: PyOpenColorIO
-      :property:
 
 
-   .. py:method:: GradingPrimary.lift
+   .. py:property:: GradingPrimary.lift
       :module: PyOpenColorIO
-      :property:
 
 
-   .. py:method:: GradingPrimary.offset
+   .. py:property:: GradingPrimary.offset
       :module: PyOpenColorIO
-      :property:
 
 
-   .. py:method:: GradingPrimary.pivot
+   .. py:property:: GradingPrimary.pivot
       :module: PyOpenColorIO
-      :property:
 
 
-   .. py:method:: GradingPrimary.pivotBlack
+   .. py:property:: GradingPrimary.pivotBlack
       :module: PyOpenColorIO
-      :property:
 
 
-   .. py:method:: GradingPrimary.pivotWhite
+   .. py:property:: GradingPrimary.pivotWhite
       :module: PyOpenColorIO
-      :property:
 
 
-   .. py:method:: GradingPrimary.saturation
+   .. py:property:: GradingPrimary.saturation
       :module: PyOpenColorIO
-      :property:
 
 
    .. py:method:: GradingPrimary.validate(self: PyOpenColorIO.GradingPrimary, arg0: PyOpenColorIO.GradingStyle) -> None

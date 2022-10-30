@@ -71,3 +71,7 @@
       :module: PyOpenColorIO
       :value: <Interpolation.INTERP_UNKNOWN: 0>
 
+
+   .. py:property:: Interpolation.value
+      :module: PyOpenColorIO
+
