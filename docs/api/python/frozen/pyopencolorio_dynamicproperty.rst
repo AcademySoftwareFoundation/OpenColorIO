@@ -51,8 +51,6 @@
    .. py:method:: DynamicProperty.__init__(*args, **kwargs)
       :module: PyOpenColorIO
 
-      Initialize self.  See help(type(self)) for accurate signature.
-
 
    .. py:method:: DynamicProperty.getDouble(self: PyOpenColorIO.DynamicProperty) -> float
       :module: PyOpenColorIO

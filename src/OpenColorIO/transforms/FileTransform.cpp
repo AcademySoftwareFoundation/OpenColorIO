@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
 #include <algorithm>
 #include <fstream>
 #include <map>
 #include <sstream>
 #include <string.h>
+#include <iostream>
+#include <iterator>
 
 #include <OpenColorIO/OpenColorIO.h>
 
@@ -14,12 +15,12 @@
 #include "FileTransform.h"
 #include "Logging.h"
 #include "Mutex.h"
+#include "OCIOZArchive.h"
 #include "ops/noop/NoOps.h"
 #include "PathUtils.h"
 #include "Platform.h"
 #include "pystring/pystring.h"
 #include "utils/StringUtils.h"
-
 
 namespace OCIO_NAMESPACE
 {
@@ -177,6 +178,45 @@ std::ostream& operator<< (std::ostream& os, const FileTransform& t)
     return os;
 }
 
+// Wrapper around ConfigIOProxy getLutData implementation.
+std::unique_ptr<std::istream> getLutData(
+    const Config & config, 
+    const std::string & filepath, 
+    std::ios_base::openmode mode)
+{
+    if (config.getConfigIOProxy())
+    {
+        std::vector<uint8_t> buffer = config.getConfigIOProxy()->getLutData(filepath.c_str());
+        std::stringstream ss;
+        ss.write(reinterpret_cast<const char*>(buffer.data()), buffer.size());
+
+        return std::unique_ptr<std::stringstream>(
+            new std::stringstream(std::move(ss))
+        );
+    }
+
+    // Default behavior. Return file stream.
+    return std::unique_ptr<std::ifstream>(
+        new std::ifstream(Platform::filenameToUTF(filepath).c_str(), mode)
+    );
+}
+
+// Close stream returned by getLutData
+void closeLutStream(const Config & config, const std::istream & istream)
+{
+    // No-op when it is using ConfigIOProxy since getLutData returns a vector<uint8_t>.
+    if (config.getConfigIOProxy() == nullptr)
+    {
+        // The std::istream is coming from a std::ifstream.
+        // Pointer cast to ifstream and then close it.
+        std::ifstream * pIfStream = (std::ifstream *) &istream;
+        if (pIfStream->is_open())
+        {
+            pIfStream->close();
+        }
+    }
+}
+
 bool CollectContextVariables(const Config &, 
                              const Context & context,
                              const FileTransform & tr,
@@ -193,6 +233,7 @@ bool CollectContextVariables(const Config &,
     ContextRcPtr ctxFilename = Context::Create();
     ctxFilename->setSearchPath(context.getSearchPath());
     ctxFilename->setWorkingDir(context.getWorkingDir());
+    ctxFilename->setConfigIOProxy(context.getConfigIOProxy());
 
     const std::string resolvedString = context.resolveStringVar(src, ctxFilename);
     if (0 != strcmp(resolvedString.c_str(), src))
@@ -210,18 +251,19 @@ bool CollectContextVariables(const Config &,
     ContextRcPtr emptyContext = Context::Create();
     emptyContext->setSearchPath(context.getSearchPath());
     emptyContext->setWorkingDir(context.getWorkingDir());
+    emptyContext->setConfigIOProxy(context.getConfigIOProxy());
 
     // Used to collect the context variables needed to resolve the search_path. Note that this may
     // contain some variables that are not actually used.
     ContextRcPtr ctxFilepath = Context::Create();
     ctxFilepath->setSearchPath(context.getSearchPath());
     ctxFilepath->setWorkingDir(context.getWorkingDir());
+    ctxFilepath->setConfigIOProxy(context.getConfigIOProxy());
 
     try
     {
         // TODO: resolveFileLocation() tests the file existence (i.e. uses FileExists()) which is
         // useless here, and it could potentially add some performance penalty.
-
         const std::string resolvedFilename
             = context.resolveFileLocation(resolvedString.c_str(), ctxFilepath);
 
@@ -513,7 +555,8 @@ namespace
 void LoadFileUncached(FileFormat * & returnFormat,
                       CachedFileRcPtr & returnCachedFile,
                       const std::string & filepath,
-                      Interpolation interp)
+                      Interpolation interp,
+                      const Config& config)
 {
     returnFormat = NULL;
 
@@ -542,15 +585,16 @@ void LoadFileUncached(FileFormat * & returnFormat,
     {
 
         FileFormat * tryFormat = *itFormat;
-        std::ifstream filestream;
+        std::unique_ptr<std::istream> pStream = nullptr;
         try
         {
-            // Open the filePath
-            Platform::OpenInputFileStream(
-                filestream,
-                filepath.c_str(),
-                tryFormat->isBinary()
-                    ? std::ios_base::binary : std::ios_base::in);
+            pStream = getLutData(
+                config,
+                filepath, 
+                tryFormat->isBinary() ? std::ios_base::binary : std::ios_base::in 
+            );
+            auto & filestream = *pStream;
+            
             if (!filestream.good())
             {
                 std::ostringstream os;
@@ -573,14 +617,16 @@ void LoadFileUncached(FileFormat * & returnFormat,
 
             returnFormat = tryFormat;
             returnCachedFile = cachedFile;
-            filestream.close();
+
+            closeLutStream(config, filestream);
+
             return;
         }
         catch(std::exception & e)
         {
-            if (filestream.is_open())
+            if (pStream)
             {
-                filestream.close();
+                closeLutStream(config, *pStream); 
             }
 
             primaryErrorText += "    '";
@@ -616,12 +662,16 @@ void LoadFileUncached(FileFormat * & returnFormat,
         if(itAlt != endFormat)
             continue;
 
-        std::ifstream filestream;
+        std::unique_ptr<std::istream> pStream = nullptr;
         try
         {
-            Platform::OpenInputFileStream(
-                filestream, filepath.c_str(), altFormat->isBinary()
-                ? std::ios_base::binary : std::ios_base::in);
+            pStream = getLutData(
+                config,
+                filepath, 
+                altFormat->isBinary() ? std::ios_base::binary : std::ios_base::in 
+            );
+            auto& filestream = *pStream;
+            
             if (!filestream.good())
             {
                 std::ostringstream os;
@@ -645,16 +695,18 @@ void LoadFileUncached(FileFormat * & returnFormat,
 
             returnFormat = altFormat;
             returnCachedFile = cachedFile;
-            filestream.close();
+
+            closeLutStream(config, filestream);
+
             return;
         }
         catch(std::exception & e)
         {
-            if (filestream.is_open())
+            if (pStream)
             {
-                filestream.close();
+                closeLutStream(config, *pStream); 
             }
-
+            
             if(IsDebugLoggingEnabled())
             {
                 std::ostringstream os;
@@ -722,11 +774,11 @@ typedef OCIO_SHARED_PTR<FileCacheResult> FileCacheResultPtr;
 template class GenericCache<std::string, FileCacheResultPtr>;
 GenericCache<std::string, FileCacheResultPtr> g_fileCache;
 
-
 void GetCachedFileAndFormat(FileFormat * & format,
                             CachedFileRcPtr & cachedFile,
                             const std::string & filepath,
-                            Interpolation interp)
+                            Interpolation interp,
+                            const Config& config)
 {
     // Have a two-mutex approach to decouple the cache entry creation from
     // the data creation. It was originally done to improve the multi-threaded
@@ -765,7 +817,7 @@ void GetCachedFileAndFormat(FileFormat * & format,
 
         try
         {
-            LoadFileUncached(result->format, result->cachedFile, filepath, interp);
+            LoadFileUncached(result->format, result->cachedFile, filepath, interp, config);
         }
         catch (std::exception & e)
         {
@@ -857,7 +909,11 @@ void BuildFileTransformOps(OpRcPtrVec & ops,
     FileFormat* format = NULL;
     CachedFileRcPtr cachedFile;
 
-    GetCachedFileAndFormat(format, cachedFile, filepath, fileTransform.getInterpolation());
+    GetCachedFileAndFormat(format, 
+                           cachedFile, 
+                           filepath, 
+                           fileTransform.getInterpolation(),
+                           config);
 
     try
     {
@@ -888,4 +944,5 @@ void BuildFileTransformOps(OpRcPtrVec & ops,
         throw Exception(err.str().c_str());
     }
 }
+
 } // namespace OCIO_NAMESPACE

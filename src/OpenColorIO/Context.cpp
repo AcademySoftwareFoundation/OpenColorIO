@@ -12,11 +12,11 @@
 #include "ContextVariableUtils.h"
 #include "HashUtils.h"
 #include "Mutex.h"
+#include "OCIOZArchive.h"
 #include "PathUtils.h"
 #include "PrivateTypes.h"
 #include "pystring/pystring.h"
 #include "utils/StringUtils.h"
-
 
 namespace OCIO_NAMESPACE
 {
@@ -51,6 +51,8 @@ public:
     mutable ResolvedStringCache m_resultsFilepathCache;
     mutable Mutex m_resultsCacheMutex;
 
+    ConfigIOProxyRcPtr m_configIOProxy;
+
     Impl() = default;
     ~Impl() = default;
 
@@ -70,6 +72,8 @@ public:
             m_resultsFilepathCache = rhs.m_resultsFilepathCache;
 
             m_cacheID = rhs.m_cacheID;
+
+            m_configIOProxy = rhs.m_configIOProxy;
         }
         return *this;
     }
@@ -181,7 +185,7 @@ const char * Context::getCacheID() const
         }
 
         std::string fullstr = cacheid.str();
-        getImpl()->m_cacheID = CacheIDHash(fullstr.c_str(), (int)fullstr.size());
+        getImpl()->m_cacheID = CacheIDHash(fullstr.c_str(), fullstr.size());
     }
 
     return getImpl()->m_cacheID.c_str();
@@ -436,7 +440,7 @@ const char * Context::resolveFileLocation(const char * filename, ContextRcPtr & 
     // If the file reference is absolute, check if the file exists (independent of the search paths).
     if(pystring::os::path::isabs(resolvedFilename))
     {
-        if(FileExists(resolvedFilename))
+        if(FileExists(resolvedFilename, *this))
         {
             // That's already an absolute path so no extra context variables are present.
             UsedEnvs envs;
@@ -484,8 +488,7 @@ const char * Context::resolveFileLocation(const char * filename, ContextRcPtr & 
     {
         // Make an attempt to find the LUT in one of the search paths.
         const std::string resolvedfullpath = pystring::os::path::join(searchpaths[i], resolvedFilename);
-
-        if (!ContainsContextVariables(resolvedfullpath) && FileExists(resolvedfullpath))
+        if (!ContainsContextVariables(resolvedfullpath) && FileExists(resolvedfullpath, *this))
         {
             // Collect all the used context variables.
             if (usedContextVars)
@@ -509,6 +512,16 @@ const char * Context::resolveFileLocation(const char * filename, ContextRcPtr & 
     errortext << ".";
 
     throw ExceptionMissingFile(errortext.str().c_str());
+}
+
+void Context::setConfigIOProxy(ConfigIOProxyRcPtr ciop)
+{
+    getImpl()->m_configIOProxy = ciop;
+}
+
+ConfigIOProxyRcPtr Context::getConfigIOProxy() const
+{
+    return getImpl()->m_configIOProxy;
 }
 
 std::ostream& operator<< (std::ostream& os, const Context& context)
@@ -571,4 +584,3 @@ void GetAbsoluteSearchPaths(StringUtils::StringVec & searchpaths,
 } // anon.
 
 } // namespace OCIO_NAMESPACE
-

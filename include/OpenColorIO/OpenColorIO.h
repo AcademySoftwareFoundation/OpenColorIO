@@ -10,12 +10,13 @@
 #include <limits>
 #include <stdexcept>
 #include <string>
+#include <fstream>
+#include <vector>
 
 #include "OpenColorABI.h"
 #include "OpenColorTypes.h"
 #include "OpenColorTransforms.h"
 #include "OpenColorAppHelpers.h"
-
 
 /*
 
@@ -174,6 +175,8 @@ extern OCIOEXPORT void LogMessage(LoggingLevel level, const char * message);
 /**
  * \brief Set the Compute Hash Function to use; otherwise, use the default.
  * 
+ * This is not used when using CreateFromFile with an OCIOZ archive or CreateFromConfigIOProxy.
+ * 
  * \param ComputeHashFunction
  */
 extern OCIOEXPORT void SetComputeHashFunction(ComputeHashFunction hashFunction);
@@ -200,6 +203,26 @@ extern OCIOEXPORT ConstConfigRcPtr GetCurrentConfig();
 
 /// Set the current configuration. This will then store a copy of the specified config.
 extern OCIOEXPORT void SetCurrentConfig(const ConstConfigRcPtr & config);
+
+/**
+ * \brief Extract an OCIO Config archive.
+ * 
+ * Converts an archived config file (.ocioz file) back to its original form as a config file
+ * and associated LUT files.  This creates destinationDir and then creates a config.ocio file
+ * at the root of that working directory and then unpacks the LUT files into their relative
+ * locations relative to that working directory, creating any necessary sub-directories in the
+ * process.  Note that configs which contain LUT files outside the working directory are not
+ * archivable, and so this function will not create directories outside the working directory.
+ * 
+ * \param archivePath Absolute path to the .ocioz file.
+ * \param destinationDir Absolute path of the directory you want to be created to contain the
+ * contents of the unarchived config.
+ * \throw Exception If the archive is not found or there is a problem extracting it.
+ */
+extern OCIOEXPORT void ExtractOCIOZArchive(
+    const char * archivePath, 
+    const char * destinationDir
+);
 
 /**
  * \brief
@@ -245,49 +268,89 @@ public:
      * \brief Create an empty config of the current version.
      *
      * Note that an empty config will not pass validation since required elements will be missing.
+     * \return The Config object.
      */
     static ConfigRcPtr Create();
+
     /**
      * \brief Create a fall-back config.
      * 
      * This may be useful to allow client apps to launch in cases when the
      * supplied config path is not loadable.
+     * \return The Config object.
      */
     static ConstConfigRcPtr CreateRaw();
+
     /**
      * \brief Create a configuration using the OCIO environment variable.
      * 
-     * Also support OCIO URI format. See CreateFromFile.
+     * Also supports the OCIO URI format for Built-in configs and supports archived configs.
+     * See \ref Config::CreateFromFile.
      * 
      * If the variable is missing or empty, returns the same result as 
-     * \ref Config::CreateRaw .
+     * \ref Config::CreateRaw.
+     * \return The Config object.
      */
     static ConstConfigRcPtr CreateFromEnv();
+
     /**
      * \brief Create a configuration using a specific config file.
      * 
-     * Also support the following OCIO URI format :
+     * Also supports the following OCIO URI format for Built-in configs:
      *  "ocio://default"    - Default Built-in config.
-     *  "ocio://configName" - Built-in config named configName
-     * 
+     *  "ocio://<CONFIG NAME>" - A specific Built-in config.  For the list of available
+     *  <CONFIG NAME> strings, see \ref Config::CreateFromBuiltinConfig.
+     *
+     * Also supports archived configs (.ocioz files).
+     *
+     * \throw Exception If the file may not be read or does not parse.
+     * \return The Config object.
      */
     static ConstConfigRcPtr CreateFromFile(const char * filename);
-    /// Create a configuration using a stream.
+
+    /**
+     * \brief Create a configuration using a stream.
+     * 
+     * Note that CreateFromStream does not set the working directory so the caller would need to
+     * set that separately in order to resolve FileTransforms.  This function is typically only
+     * used for self-contained configs (no LUTs).
+     *
+     * Configs created from CreateFromStream can not be archived unless the working directory is 
+     * set and contains any necessary LUT files.
+     * 
+     * \param istream Stream to the config.
+     * \throw Exception If the stream does not parse.
+     * \return The Config object.
+     */
     static ConstConfigRcPtr CreateFromStream(std::istream & istream);
 
     /**
+     * \brief Create a config from the supplied ConfigIOProxy object. This allows the calling
+     * program to directly provide the config and associated LUTs rather than reading them from
+     * the standard file system.
+     * 
+     * See the \ref ConfigIOProxy class documentation for more info.
+     * 
+     * \param ciop ConfigIOProxy object providing access to the config's files.
+     * \throw Exception If the config may not be read from the proxy, or does not parse.
+     * \return The Config object.
+     */
+    static ConstConfigRcPtr CreateFromConfigIOProxy(ConfigIOProxyRcPtr ciop);
+    
+    /**
      * \brief Create a configuration using an OCIO built-in config.
      * 
-     * \param configName Built-in config name
+     * \param configName Built-in config name.
      * 
      * The available configNames are:
      * "cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1" -- ACES CG config, basic color spaces for computer
-     * graphics apps. More information is available at: 
+     * graphics apps. More information about these configs is available at: 
      * %https://github.com/AcademySoftwareFoundation/OpenColorIO-Config-ACES
      * 
-     * \throw Exception If the configName is not recognized.
+     * Information about the available configs is available from the \ref BuiltinConfigRegistry.
      * 
-     * \return one of the configs built into OCIO library
+     * \throw Exception If the configName is not recognized.
+     * \return One of the configs built into the OCIO library.
      */
     static ConstConfigRcPtr CreateFromBuiltinConfig(const char * configName);
 
@@ -572,6 +635,43 @@ public:
      */
     void setInactiveColorSpaces(const char * inactiveColorSpaces);
     const char * getInactiveColorSpaces() const;
+    
+    /**
+     * \brief Return true if the specified color space is linear.
+     * 
+     * The determination of linearity is made with respect to one of the two reference spaces 
+     * (i.e., either the scene-referred one or the display-referred one). If the reference space 
+     * type of the color space is the opposite of the requested reference space type, false is 
+     * returned immediately rather than trying to invoke the default view transform to convert 
+     * between the reference spaces.
+     * 
+     * Note: This function relies on heuristics that may sometimes give an incorrect result. 
+     * For example, if the encoding attribute is not set appropriately or the sampled values fail 
+     * to detect non-linearity.
+     * 
+     * The algorithm proceeds as follows:
+     * -- If the color space isdata attribute is true, return false.
+     * -- If the reference space type of the color space differs from the requested reference 
+     *    space type, return false.
+     * -- If the color space's encoding attribute is present, return true if it matches the 
+     *    expected reference space type (i.e., "scene-linear" for REFERENCE_SPACE_SCENE or 
+     *    "display-linear" for REFERENCE_SPACE_DISPLAY) and false otherwise.
+     * -- If the color space has no to_reference or from_reference transform, return true.
+     * -- Evaluate several points through the color space's transform and check if the output only 
+     *    differs by a scale factor (which may be different per channel, e.g. allowing an arbitrary
+     *    matrix transform, with no offset).
+     * 
+     * Note that the encoding test happens before the sampled value test to give config authors 
+     * ultimate control over the linearity determination. For example, they could set the encoding 
+     * attribute to indicate linearity if they want to ignore some areas of non-linearity 
+     * (e.g., at extreme values). Or they could set it to indicate that a color space should not 
+     * be considered linear, even if it is, in a mathematical sense.
+     * 
+     * \param colorSpace Color space to evaluate.
+     * \param referenceSpaceType Evaluate linearity with respect to the specified reference space 
+     *                           (either scene-referred or display-referred).
+     */
+    bool isColorSpaceLinear(const char * colorSpace, ReferenceSpaceType referenceSpaceType) const;
 
     //
     // Roles
@@ -1097,6 +1197,19 @@ public:
                                      const char * view,
                                      TransformDirection direction) const;
 
+    /// Get the processor to apply a NamedTransform in the specified direction.
+    ConstProcessorRcPtr getProcessor(const ConstNamedTransformRcPtr & namedTransform,
+                                     TransformDirection direction) const;
+    ConstProcessorRcPtr getProcessor(const ConstContextRcPtr & context,
+                                     const ConstNamedTransformRcPtr & namedTransform,
+                                     TransformDirection direction) const;
+
+    ConstProcessorRcPtr getProcessor(const char * namedTransformName,
+                                     TransformDirection direction) const;
+    ConstProcessorRcPtr getProcessor(const ConstContextRcPtr & context,
+                                     const char * namedTransformName,
+                                     TransformDirection direction) const;
+
     /**
      * \brief Get the processor for the specified transform.
      * 
@@ -1109,6 +1222,46 @@ public:
     ConstProcessorRcPtr getProcessor(const ConstContextRcPtr & context,
                                      const ConstTransformRcPtr & transform,
                                      TransformDirection direction) const;
+
+    /**
+     * \brief Get a Processor to or from a known external color space.
+     * 
+     * These methods provide a way to interface color spaces in a config with known standard 
+     * external color spaces. The set of external color space are those contained in the current 
+     * default Built-in config. This includes common spaces such as "Linear Rec.709 (sRGB)", 
+     * "sRGB - Texture", "ACEScg", and "ACES2065-1".
+     * 
+     * If the source config defines the necessary Interchange Role (typically "aces_interchange"), 
+     * then the conversion will be well-defined and equivalent to calling GetProcessorFromConfigs
+     * with the source config and the Built-in config
+     * 
+     * However, if the Interchange Roles are not present, heuristics will be used to try and 
+     * identify a common color space in the source config that may be used to allow the conversion 
+     * to proceed. If the heuristics fail to find a suitable space, an exception is thrown. 
+     * The heuristics may evolve, so the results returned by this function for a given source config 
+     * and color space may change in future releases of the library. However, the Interchange Roles 
+     * are required in config versions 2.2 and higher, so it is hoped that the need for the heuristics 
+     * will decrease over time.
+     * 
+     * \param srcConfig The user's source config.
+     * \param srcColorSpaceName The name of the color space in the source config.
+     * \param builtinColorSpaceName The name of the color space in the current default Built-in config.
+     */
+    static ConstProcessorRcPtr GetProcessorToBuiltinColorSpace(
+                                                                ConstConfigRcPtr srcConfig,
+                                                                const char * srcColorSpaceName, 
+                                                                const char * builtinColorSpaceName);
+    /**
+     * \brief See description of GetProcessorToBuiltinColorSpace.
+     * 
+     * \param builtinColorSpaceName The name of the color space in the current default Built-in config.
+     * \param srcConfig The user's source config.
+     * \param srcColorSpaceName The name of the color space in the source config. 
+     */
+    static ConstProcessorRcPtr GetProcessorFromBuiltinColorSpace(
+                                                                const char * builtinColorSpaceName,
+                                                                ConstConfigRcPtr srcConfig,
+                                                                const char * srcColorSpaceName);
 
     /**
      * \brief Get a processor to convert between color spaces in two separate
@@ -1148,6 +1301,62 @@ public:
                                                        const ConstConfigRcPtr & dstConfig,
                                                        const char * dstColorSpaceName,
                                                        const char * dstInterchangeName);
+
+    /// Set the ConfigIOProxy object used to provision the config and LUTs from somewhere other
+    /// than the file system.  (This is set on the config's embedded Context object.)
+    void setConfigIOProxy(ConfigIOProxyRcPtr ciop);
+    ConfigIOProxyRcPtr getConfigIOProxy() const;
+
+    /**
+     * \brief Verify if the config is archivable.
+     *
+     * A config is not archivable if any of the following are true:
+     * -- The working directory is not set
+     * -- It contains FileTransforms with a src outside the working directory
+     * -- The search path contains paths outside the working directory
+     * -- The search path contains paths that start with a context variable
+     * 
+     * Context variables are allowed but the intent is that they may only resolve to paths that
+     * are within or below the working directory.  This is because the archiving function will
+     * only archive files that are within the working directory in order to ensure that if it is
+     * later expanded, that it will not create any files outside this directory.
+     *
+     * For example, a context variable on the search path intended to contain the name of a 
+     * sub-directory under the working directory must have the form "./$DIR_NAME" rather than just
+     * "$DIR_NAME" to be considered archivable.  This is imperfect since there is no way to
+     * prevent the context variable from creating a path outside the working dir, but it should
+     * at least draw attention to the fact that the archive would fail if used with context vars
+     * that try to abuse the intended functionality.
+     * 
+     * \return bool Archivable if true.
+     */
+    bool isArchivable() const;
+
+    /**
+     * \brief Archive the config and its LUTs into the specified output stream.
+     * 
+     * The config is archived by serializing the Config object into a file named "config.ocio" and
+     * then walking through the current working directory and any sub-directories.  Any files that
+     * have an extension matching a supported LUT file format are added to the archive.  Any files
+     * that do not have an extension (or have some unsupported LUT extension, including .ocio),
+     * will not be added to the archive. To reiterate, it is the in-memory Config object that is
+     * archived, and not any .ocio file in the current working directory.  The directory structure
+     * relative to the working directory is preserved.  No files outside the working directory are
+     * archived so that if it is later expanded, no files will be created outside the working dir.
+     *
+     * The reason the archive is created using all supported LUT file extensions rather than by
+     * trying to resolve all the FileTransforms in the Config to specific files is because of the
+     * goal to allow context variables to continue to work.
+     * 
+     * If a Config is created with CreateFromStream, CreateFromFile with an OCIOZ archive, or 
+     * CreateFromConfigIOProxy, it cannot be archived unless the working directory is manually set 
+     * to a directory that contains any necessary LUT files. 
+     * 
+     * The provided output stream must be closed by the caller, if necessary (e.g., an ofstream).
+     *
+     * \param ostream The output stream to write to.
+     */
+    void archive(std::ostream & ostream) const;
 
     Config(const Config &) = delete;
     Config& operator= (const Config &) = delete;
@@ -1964,6 +2173,13 @@ public:
 
     virtual ConstTransformRcPtr getTransform(TransformDirection dir) const = 0;
     virtual void setTransform(const ConstTransformRcPtr & transform, TransformDirection dir) = 0;
+
+    /**
+     * Will create the transform from the inverse direction if the transform for requested
+     * direction is missing.
+     */
+    static ConstTransformRcPtr GetTransform(const ConstNamedTransformRcPtr & nt,
+                                            TransformDirection dir);
 
     NamedTransform(const NamedTransform &) = delete;
     NamedTransform & operator= (const NamedTransform &) = delete;
@@ -3269,6 +3485,11 @@ public:
     /// used to resolve the filename (empty if no context variables were used).
     const char * resolveFileLocation(const char * filename, ContextRcPtr & usedContextVars) const;
 
+    /// Set the ConfigIOProxy object used to provision the config and LUTs from somewhere other
+    /// than the file system.
+    void setConfigIOProxy(ConfigIOProxyRcPtr ciop);
+    ConfigIOProxyRcPtr getConfigIOProxy() const;
+
     Context(const Context &) = delete;
     Context& operator= (const Context &) = delete;
     /// Do not use (needed only for pybind11).
@@ -3435,6 +3656,61 @@ public:
 protected:
     SystemMonitors() = default;
     virtual ~SystemMonitors() = default;
+};
+
+
+///////////////////////////////////////////////////////////////////////////
+// ConfigIOProxy
+
+/**
+ * ConfigIOProxy is a proxy class to allow the calling program to supply the config and any
+ * associated LUT files directly, without relying on the standard file system. 
+ * 
+ * The OCIOZ archive feature is implemented using this mechanism.
+ */
+class OCIOEXPORT ConfigIOProxy
+{
+public:
+    ConfigIOProxy() = default;
+    virtual ~ConfigIOProxy() = default;
+
+    /**
+     * \brief Provide the contents of a LUT file as a buffer of uint8_t data.
+     * 
+     * \param filepath Fully resolved path to the "file."
+     * 
+     * The file path is based on the Config's current working directory and is the same absolute
+     * path that would have been provided to the file system.
+     * 
+     * \return Vector of uint8 with the content of the LUT.
+     */
+    virtual std::vector<uint8_t> getLutData(const char * filepath) const = 0;
+
+    /**
+     * \brief Provide the config file Yaml to be parsed.
+     * 
+     * \return String with the config Yaml.
+     */
+    virtual std::string getConfigData() const = 0;
+
+    /**
+     * \brief Provide a fast unique ID for a LUT file.
+     * 
+     * This is intended to supply the string that will be used in OCIO's FileCacheMap.
+     * This should be highly performant and typically should not require extensive
+     * computation such as calculating the md5 hash of the file, unless it is pre-computed.
+     * 
+     * If the "file" does not exist, in other words, if the proxy is unable to supply the requested
+     * file contents, the function must return an empty string.
+     * 
+     * \param filepath Fully resolve the path to the "file."
+     * 
+     * The file path is based on the Config's current working directory and is the same absolute
+     * path that would have been provided to the file system.
+     *
+     * \return The file hash string.
+     */
+    virtual std::string getFastLutFileHash(const char * filepath) const = 0;
 };
 
 } // namespace OCIO_NAMESPACE

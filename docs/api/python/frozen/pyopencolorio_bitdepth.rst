@@ -22,7 +22,7 @@
 
      BIT_DEPTH_UINT16 :
 
-     BIT_DEPTH_UINT32 :
+     BIT_DEPTH_UINT32 : Here for historical reason but that's not supported.
 
      BIT_DEPTH_F16 :
 
@@ -74,4 +74,8 @@
    .. py:attribute:: BitDepth.BIT_DEPTH_UNKNOWN
       :module: PyOpenColorIO
       :value: <BitDepth.BIT_DEPTH_UNKNOWN: 0>
+
+
+   .. py:property:: BitDepth.value
+      :module: PyOpenColorIO
 

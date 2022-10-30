@@ -12,8 +12,6 @@
    .. py:method:: Transform.__init__(*args, **kwargs)
       :module: PyOpenColorIO
 
-      Initialize self.  See help(type(self)) for accurate signature.
-
 
    .. py:method:: Transform.getDirection(self: PyOpenColorIO.Transform) -> PyOpenColorIO.TransformDirection
       :module: PyOpenColorIO

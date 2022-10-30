@@ -6,7 +6,9 @@
 
 #include "ColorSpace.cpp"
 
+#include <pystring/pystring.h>
 #include "testutils/UnitTest.h"
+#include "UnitTestUtils.h"
 
 namespace OCIO = OCIO_NAMESPACE;
 
@@ -715,4 +717,462 @@ colorspaces:
 
     OCIO_CHECK_EQUAL(std::string(cfg->getColorSpaceFromFilepath("test_aces_test")),
                      "colorspace");
+}
+
+OCIO_ADD_TEST(Config, is_colorspace_linear)
+{
+
+    constexpr const char * TEST_CONFIG { R"(ocio_profile_version: 2
+
+description: Test config for the isColorSpaceLinear method.
+
+environment:
+  {}
+search_path: "non_existing_path"
+roles:
+  aces_interchange: scene_linear-trans
+  cie_xyz_d65_interchange: display_linear-enc
+  color_timing: scene_linear-trans
+  compositing_log: scene_log-enc
+  default: display_data
+  scene_linear: scene_linear-trans
+
+displays:
+  generic display:
+    - !<View> {name: Raw, colorspace: scene_data}
+
+# Make a few of the color spaces inactive, this should not affect the result.
+inactive_colorspaces: [display_linear-trans, scene_linear-trans]
+
+view_transforms:
+  - !<ViewTransform>
+    name: view_transform
+    from_scene_reference: !<MatrixTransform> {}
+
+# Display-referred color spaces.
+
+display_colorspaces:
+  - !<ColorSpace>
+    name: display_data
+    description: |
+      Data space.
+      Has a linear transform, which should never happen, but this will be ignored since 
+      isdata is true.
+    isdata: true
+    encoding: data
+    from_display_reference: !<MatrixTransform> {matrix: [ 3.240969941905, -1.537383177570, -0.498610760293, 0, -0.969243636281, 1.875967501508, 0.041555057407, 0, 0.055630079697, -0.203976958889, 1.056971514243, 0, 0, 0, 0, 1 ]}
+
+  - !<ColorSpace>
+    name: display_linear-enc
+    description: |
+      Encoding set to display-linear.
+      Has a non-existent transform, but this should be ignored since the encoding takes precedence.
+    isdata: false
+    encoding: display-linear
+    from_display_reference: !<FileTransform> {src: does-not-exist.lut}
+
+  - !<ColorSpace>
+    name: display_wrong-linear-enc
+    description: |
+      Encoding set to scene-linear.  This should never happen for a display space, but test it.
+    isdata: false
+    encoding: scene-linear
+
+  - !<ColorSpace>
+    name: display_video-enc
+    description: |
+      Encoding set to sdr-video.
+      Has a linear transform, but this should be ignored since the encoding takes precedence.
+    isdata: false
+    encoding: sdr-video
+    from_display_reference: !<MatrixTransform> {matrix: [ 3.240969941905, -1.537383177570, -0.498610760293, 0, -0.969243636281, 1.875967501508, 0.041555057407, 0, 0.055630079697, -0.203976958889, 1.056971514243, 0, 0, 0, 0, 1 ]}
+
+  - !<ColorSpace>
+    name: display_linear-trans
+    description: |
+      No encoding.  Transform is linear.
+    isdata: false
+    from_display_reference: !<GroupTransform>
+      children:
+        - !<MatrixTransform> {matrix: [ 3.240969941905, -1.537383177570, -0.498610760293, 0, -0.969243636281, 1.875967501508, 0.041555057407, 0, 0.055630079697, -0.203976958889, 1.056971514243, 0, 0, 0, 0, 1 ]}
+        - !<CDLTransform> {slope: [0.1, 2, 3], style: noclamp}
+
+  - !<ColorSpace>
+    name: display_video-trans
+    description: |
+      No encoding.  Transform is non-linear.
+    isdata: false
+    from_display_reference: !<BuiltinTransform> {style: DISPLAY - CIE-XYZ-D65_to_sRGB}
+
+# Scene-referred color spaces.
+
+colorspaces:
+  - !<ColorSpace>
+    name: scene_data
+    description: |
+      Data space.
+      Has a linear transform, which should never happen, but this will be ignored 
+      since isdata is true.
+    isdata: true
+    encoding: data
+    from_scene_reference: !<MatrixTransform> {matrix: [ 3.240969941905, -1.537383177570, -0.498610760293, 0, -0.969243636281, 1.875967501508, 0.041555057407, 0, 0.055630079697, -0.203976958889, 1.056971514243, 0, 0, 0, 0, 1 ]}
+
+  - !<ColorSpace>
+    name: scene_linear-enc
+    description: |
+      Encoding set to scene-linear.
+      Has a non-linear transform, but this will be ignored since the encoding takes precedence.
+    isdata: false
+    encoding: scene-linear
+    from_scene_reference: !<BuiltinTransform> {style: DISPLAY - CIE-XYZ-D65_to_sRGB}
+
+  - !<ColorSpace>
+    name: scene_wrong-linear-enc
+    description: |
+      Encoding set to display-linear.  This should never happen for a scene space, but test it.
+    isdata: false
+    encoding: display-linear
+
+  - !<ColorSpace>
+    name: scene_log-enc
+    description: |
+      Encoding set to log.
+      Has a linear transform, but this will be ignored since the encoding takes precedence.
+    isdata: false
+    encoding: log
+    from_scene_reference: !<MatrixTransform> {matrix: [ 3.240969941905, -1.537383177570, -0.498610760293, 0, -0.969243636281, 1.875967501508, 0.041555057407, 0, 0.055630079697, -0.203976958889, 1.056971514243, 0, 0, 0, 0, 1 ]}
+
+  - !<ColorSpace>
+    name: scene_linear-trans
+    aliases: [scene_linear-trans-alias]
+    description: |
+      No encoding.  Transform is linear.
+    isdata: false
+    to_scene_reference: !<GroupTransform>
+      children:
+        - !<BuiltinTransform> {style: UTILITY - ACES-AP0_to_CIE-XYZ-D65_BFD}
+        - !<MatrixTransform> {matrix: [ 3.240969941905, -1.537383177570, -0.498610760293, 0, -0.969243636281, 1.875967501508, 0.041555057407, 0, 0.055630079697, -0.203976958889, 1.056971514243, 0, 0, 0, 0, 1 ]}
+        - !<MatrixTransform> {matrix: [ 3.240969941905, -1.537383177570, -0.498610760293, 0, -0.969243636281, 1.875967501508, 0.041555057407, 0, 0.055630079697, -0.203976958889, 1.056971514243, 0, 0, 0, 0, 1 ]}
+
+  - !<ColorSpace>
+    name: scene_nonlin-trans
+    description: |
+      No encoding.  Transform is non-linear because it clamps values outside [0,1].
+    isdata: false
+    to_scene_reference: !<GroupTransform>
+      children:
+        - !<MatrixTransform> {matrix: [ 3.240969941905, -1.537383177570, -0.498610760293, 0, -0.969243636281, 1.875967501508, 0.041555057407, 0, 0.055630079697, -0.203976958889, 1.056971514243, 0, 0, 0, 0, 1 ]}
+        - !<RangeTransform> {min_in_value: 0., min_out_value: 0., max_in_value: 1., max_out_value: 1.}
+
+  - !<ColorSpace>
+    name: scene_ref
+    description: |
+      No encoding.  Considered linear since it is equivalent to the reference space.
+    isdata: false
+)" };
+
+    // Load config.
+    std::istringstream is;
+    is.str(TEST_CONFIG);
+    OCIO::ConstConfigRcPtr config;
+    
+    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+    OCIO_REQUIRE_ASSERT(config);
+    OCIO_CHECK_NO_THROW(config->validate());
+
+    auto testSceneReferred = [&config](const char * csName, bool bSceneExpected, int line)
+    {
+        auto cs = config->getColorSpace(csName);
+        OCIO_REQUIRE_ASSERT(cs);
+
+        bool isLinearToSceneReference = config->isColorSpaceLinear(csName, OCIO::REFERENCE_SPACE_SCENE);
+        OCIO_CHECK_EQUAL_FROM(isLinearToSceneReference, bSceneExpected, line);
+    };
+
+    auto testDisplayReferred = [&config](const char * csName, bool bDisplayExpected, int line)
+    {
+        auto cs = config->getColorSpace(csName);
+        OCIO_REQUIRE_ASSERT(cs);
+
+        bool isLinearToDisplayReference = config->isColorSpaceLinear(csName, OCIO::REFERENCE_SPACE_DISPLAY);
+        OCIO_CHECK_EQUAL_FROM(isLinearToDisplayReference, bDisplayExpected, line);
+    };
+
+    {
+        testSceneReferred("display_data", false, __LINE__);
+        testSceneReferred("display_linear-enc", false, __LINE__);
+        testSceneReferred("display_wrong-linear-enc", false, __LINE__);
+        testSceneReferred("display_video-enc", false, __LINE__);
+        testSceneReferred("display_linear-trans", false, __LINE__);
+        testSceneReferred("display_video-trans", false, __LINE__);
+
+        testSceneReferred("scene_data", false, __LINE__);
+        testSceneReferred("scene_linear-enc", true, __LINE__);
+        testSceneReferred("scene_wrong-linear-enc", false, __LINE__);
+        testSceneReferred("scene_log-enc", false, __LINE__);
+        testSceneReferred("scene_linear-trans", true, __LINE__);
+        testSceneReferred("scene_nonlin-trans", false, __LINE__);
+        testSceneReferred("scene_linear-trans-alias", true, __LINE__);
+        testSceneReferred("scene_ref", true, __LINE__);
+    }
+    
+    {
+        testDisplayReferred("display_data", false, __LINE__);
+        testDisplayReferred("display_linear-enc", true, __LINE__);
+        testDisplayReferred("display_wrong-linear-enc", false, __LINE__);
+        testDisplayReferred("display_video-enc", false, __LINE__);
+        testDisplayReferred("display_linear-trans", true, __LINE__);
+        testDisplayReferred("display_video-trans", false, __LINE__);
+
+        testDisplayReferred("scene_data", false, __LINE__);
+        testDisplayReferred("scene_linear-enc", false, __LINE__);
+        testDisplayReferred("scene_wrong-linear-enc", false, __LINE__);
+        testDisplayReferred("scene_log-enc", false, __LINE__);
+        testDisplayReferred("scene_linear-trans", false, __LINE__);
+        testDisplayReferred("scene_nonlin-trans", false, __LINE__);
+        testDisplayReferred("scene_linear-trans-alias", false, __LINE__);
+        testDisplayReferred("scene_ref", false, __LINE__);
+    }
+}
+
+OCIO_ADD_TEST(Processor, processor_to_known_colorspace)
+{
+    constexpr const char * CONFIG { R"(
+ocio_profile_version: 2
+
+roles:
+  default: raw
+  scene_linear: ref_cs
+
+colorspaces:
+  - !<ColorSpace>
+    name: raw
+    description: A data colorspace (should not be used).
+    isdata: true
+
+  - !<ColorSpace>
+    name: ref_cs
+    description: The reference colorspace.
+    isdata: false
+
+  - !<ColorSpace>
+    name: not sRGB
+    description: A color space that misleadingly has sRGB in the name, even though it's not.
+    isdata: false
+    to_scene_reference: !<BuiltinTransform> {style: ACEScct_to_ACES2065-1}
+
+  - !<ColorSpace>
+    name: ACES cg
+    description: An ACEScg space with an unusual spelling.
+    isdata: false
+    to_scene_reference: !<BuiltinTransform> {style: ACEScg_to_ACES2065-1}
+
+  - !<ColorSpace>
+    name: Linear ITU-R BT.709
+    description: A linear Rec.709 space with an unusual spelling.
+    isdata: false
+    from_scene_reference: !<GroupTransform>
+      name: AP0 to Linear Rec.709 (sRGB)
+      children:
+        - !<MatrixTransform> {matrix: [2.52168618674388, -1.13413098823972, -0.387555198504164, 0, -0.276479914229922, 1.37271908766826, -0.096239173438334, 0, -0.0153780649660342, -0.152975335867399, 1.16835340083343, 0, 0, 0, 0, 1]}
+
+  - !<ColorSpace>
+    name: Texture -- sRGB
+    description: An sRGB Texture space, spelled differently than in the built-in config.
+    isdata: false
+    from_scene_reference: !<GroupTransform>
+      name: AP0 to sRGB Rec.709
+      children:
+        - !<MatrixTransform> {matrix: [2.52168618674388, -1.13413098823972, -0.387555198504164, 0, -0.276479914229922, 1.37271908766826, -0.096239173438334, 0, -0.0153780649660342, -0.152975335867399, 1.16835340083343, 0, 0, 0, 0, 1]}
+        - !<ExponentWithLinearTransform> {gamma: 2.4, offset: 0.055, direction: inverse}
+
+  - !<ColorSpace>
+    name: sRGB Encoded AP1 - Texture
+    description: Another space with "sRGB" in the name that is not actually an sRGB texture space.
+    isdata: false
+    from_scene_reference: !<GroupTransform>
+      name: AP0 to sRGB Encoded AP1 - Texture
+      children:
+        - !<MatrixTransform> {matrix: [1.45143931614567, -0.23651074689374, -0.214928569251925, 0, -0.0765537733960206, 1.17622969983357, -0.0996759264375522, 0, 0.00831614842569772, -0.00603244979102102, 0.997716301365323, 0, 0, 0, 0, 1]}
+        - !<ExponentWithLinearTransform> {gamma: 2.4, offset: 0.055, direction: inverse}
+
+)" };
+
+    auto checkProcessor = [](OCIO::ConstProcessorRcPtr & proc)
+    {
+        OCIO::GroupTransformRcPtr gt = proc->createGroupTransform();
+        OCIO_CHECK_EQUAL(gt->getNumTransforms(), 4);
+
+        {
+            OCIO::ConstLogCameraTransformRcPtr logAfTf0 = 
+            OCIO::DynamicPtrCast<const OCIO::LogCameraTransform>(gt->getTransform(0));
+
+            double values[3];
+            logAfTf0->getLogSideSlopeValue(values);
+            OCIO_CHECK_CLOSE(values[0], 0.0570776, 0.000001);
+            OCIO_CHECK_EQUAL(logAfTf0->getDirection(), OCIO::TRANSFORM_DIR_INVERSE);
+        }
+
+        {
+            auto mt1 = OCIO::DynamicPtrCast<const OCIO::MatrixTransform>(gt->getTransform(1));
+            double mat[16] = { 0.0, 0.0, 0.0, 0.0,
+                               0.0, 0.0, 0.0, 0.0, 
+                               0.0, 0.0, 0.0, 0.0, 
+                               0.0, 0.0, 0.0, 0.0 };
+            mt1->getMatrix(mat);
+            OCIO_CHECK_CLOSE(mat[0], 0.6954522413574519, 0.000001);
+            OCIO_CHECK_EQUAL(mt1->getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
+        }
+
+        {
+            auto mt2 = OCIO::DynamicPtrCast<const OCIO::MatrixTransform>(gt->getTransform(2));
+            double mat[16] = { 0.0, 0.0, 0.0, 0.0,
+                               0.0, 0.0, 0.0, 0.0, 
+                               0.0, 0.0, 0.0, 0.0, 
+                               0.0, 0.0, 0.0, 0.0 };
+            mt2->getMatrix(mat);
+            OCIO_CHECK_CLOSE(mat[0], 1.45143931607166, 0.000001);
+            OCIO_CHECK_EQUAL(mt2->getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
+        }
+
+        {
+            double vals[4];
+            auto mt3 = OCIO::DynamicPtrCast<const OCIO::ExponentTransform>(gt->getTransform(3));
+            mt3->getValue(vals);
+            OCIO_CHECK_CLOSE(vals[0], 2.2, 0.000001);
+            OCIO_CHECK_EQUAL(mt3->getDirection(), OCIO::TRANSFORM_DIR_INVERSE);
+        }
+    };
+
+    auto checkProcessorInverse = [](OCIO::ConstProcessorRcPtr & proc)
+    {
+        OCIO::GroupTransformRcPtr gt = proc->createGroupTransform();
+        OCIO_CHECK_EQUAL(gt->getNumTransforms(), 4);
+
+        {
+            double vals[4];
+            auto mt0 = OCIO::DynamicPtrCast<const OCIO::ExponentTransform>(gt->getTransform(0));
+            mt0->getValue(vals);
+            OCIO_CHECK_CLOSE(vals[0], 2.2, 0.000001);
+            OCIO_CHECK_EQUAL(mt0->getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
+        }
+
+        {
+            auto mt1 = OCIO::DynamicPtrCast<const OCIO::MatrixTransform>(gt->getTransform(1));
+            double mat[16] = { 0.0, 0.0, 0.0, 0.0,
+                               0.0, 0.0, 0.0, 0.0, 
+                               0.0, 0.0, 0.0, 0.0, 
+                               0.0, 0.0, 0.0, 0.0 };
+            mt1->getMatrix(mat);
+            OCIO_CHECK_CLOSE(mat[0], 0.6954522413574519, 0.000001);
+            OCIO_CHECK_EQUAL(mt1->getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
+        }
+
+        {
+            auto mt2 = OCIO::DynamicPtrCast<const OCIO::MatrixTransform>(gt->getTransform(2));
+            double mat[16] = { 0.0, 0.0, 0.0, 0.0,
+                               0.0, 0.0, 0.0, 0.0, 
+                               0.0, 0.0, 0.0, 0.0, 
+                               0.0, 0.0, 0.0, 0.0 };
+            mt2->getMatrix(mat);
+            OCIO_CHECK_CLOSE(mat[0], 1.45143931607166, 0.000001);
+            OCIO_CHECK_EQUAL(mt2->getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
+        }
+
+        {
+            OCIO::ConstLogCameraTransformRcPtr logAfTf0 = 
+            OCIO::DynamicPtrCast<const OCIO::LogCameraTransform>(gt->getTransform(3));
+
+            double values[3];
+            logAfTf0->getLogSideSlopeValue(values);
+            OCIO_CHECK_CLOSE(values[0], 0.0570776, 0.000001);
+            OCIO_CHECK_EQUAL(logAfTf0->getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
+        }
+    };
+
+    std::istringstream is;
+    is.str(CONFIG);
+    OCIO::ConstConfigRcPtr cfg;
+    OCIO_CHECK_NO_THROW(cfg = OCIO::Config::CreateFromStream(is));
+
+    OCIO::ConfigRcPtr editableCfg = cfg->createEditableCopy();
+
+    // Make all color spaces suitable for the heuristics inactive.
+    // The heuristics don't look at inactive color spaces.
+    editableCfg->setInactiveColorSpaces("ACES cg, Linear ITU-R BT.709, Texture -- sRGB");
+
+    std::string srcColorSpaceName = "not sRGB";
+    std::string builtinColorSpaceName  = "Utility - Gamma 2.2 - AP1 - Texture";
+
+    {
+        // Test throw if no suitable spaces are present.
+
+        OCIO_CHECK_THROW(auto proc = OCIO::Config::GetProcessorToBuiltinColorSpace(
+            editableCfg,
+            srcColorSpaceName.c_str(),
+            builtinColorSpaceName.c_str()),
+
+            OCIO::Exception
+        );
+    }
+
+    {
+        // Test sRGB Texture space.
+
+        editableCfg->setInactiveColorSpaces("ACES cg, Linear ITU-R BT.709");
+        auto proc = OCIO::Config::GetProcessorToBuiltinColorSpace(editableCfg,
+                                                                  srcColorSpaceName.c_str(),
+                                                                  builtinColorSpaceName.c_str());
+        checkProcessor(proc);
+    }
+
+    {
+        // Test linear color space from_ref direction.
+
+        editableCfg->setInactiveColorSpaces("ACES cg, Texture -- sRGB");
+        auto proc = OCIO::Config::GetProcessorToBuiltinColorSpace(editableCfg,
+                                                                  srcColorSpaceName.c_str(),
+                                                                  builtinColorSpaceName.c_str());
+        checkProcessor(proc);
+    }
+
+    {
+        // Test linear color space to_ref direction.
+
+        editableCfg->setInactiveColorSpaces("Linear ITU-R BT.709, Texture -- sRGB");
+        auto proc = OCIO::Config::GetProcessorToBuiltinColorSpace(editableCfg,
+                                                                  srcColorSpaceName.c_str(),
+                                                                  builtinColorSpaceName.c_str());
+        checkProcessor(proc);
+    }
+
+    {
+        // Test linear color space to_ref direction.
+
+        editableCfg->setInactiveColorSpaces("ACES cg, Linear ITU-R BT.709");
+        auto proc = OCIO::Config::GetProcessorFromBuiltinColorSpace(builtinColorSpaceName.c_str(),
+                                                                    editableCfg,
+                                                                    srcColorSpaceName.c_str());
+        checkProcessorInverse(proc);
+    }
+
+    {
+        // Test linear color space from_ref direction.
+
+        editableCfg->setInactiveColorSpaces("ACES cg, Texture -- sRGB");
+        auto proc = OCIO::Config::GetProcessorFromBuiltinColorSpace(builtinColorSpaceName.c_str(),
+                                                                    editableCfg,
+                                                                    srcColorSpaceName.c_str());
+        checkProcessorInverse(proc);        
+    }
+
+    {
+        // Test linear color space to_ref direction.
+
+        editableCfg->setInactiveColorSpaces("Linear ITU-R BT.709, Texture -- sRGB");
+        auto proc = OCIO::Config::GetProcessorFromBuiltinColorSpace(builtinColorSpaceName.c_str(),
+                                                                    editableCfg,
+                                                                    srcColorSpaceName.c_str());
+        checkProcessorInverse(proc);
+    }
 }
