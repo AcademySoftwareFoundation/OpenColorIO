@@ -2648,10 +2648,10 @@ public:
 
     const char * getShaperSpace() const;
     /**
-     * Set an *optional* ColorSpace to shape the incoming values of the LUT.
-     * When baking 3DLUT, this will correspond to the 1D shaper used to
-     * normalise incoming values to the unit range. When baking 1D LUT, this
-     * will be used to determine the input range of the LUT.
+     * Set an *optional* ColorSpace or NamedTransform to shape the incoming
+     * values of the LUT.  When baking 3DLUT, this will correspond to the 1D
+     * shaper used to normalise incoming values to the unit range.  When baking
+     * 1D LUT, this will be used to determine the input range of the LUT.
      */
     void setShaperSpace(const char * shaperSpace);
 
