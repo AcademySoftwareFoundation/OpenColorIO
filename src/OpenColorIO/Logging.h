@@ -11,6 +11,7 @@
 
 namespace OCIO_NAMESPACE
 {
+void LogError(const std::string & text);
 void LogWarning(const std::string & text);
 void LogInfo(const std::string & text);
 void LogDebug(const std::string & text);

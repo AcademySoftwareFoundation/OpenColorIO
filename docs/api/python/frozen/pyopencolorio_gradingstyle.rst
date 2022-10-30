@@ -33,3 +33,7 @@
       :module: PyOpenColorIO
       :value: <GradingStyle.GRADING_VIDEO: 2>
 
+
+   .. py:property:: GradingStyle.value
+      :module: PyOpenColorIO
+

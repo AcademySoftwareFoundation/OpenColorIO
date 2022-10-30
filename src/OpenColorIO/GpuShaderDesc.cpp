@@ -299,7 +299,7 @@ void GpuShaderCreator::createShaderText(const char * shaderDeclarations,
     getImpl()->m_shaderCode += (shaderFunctionFooter && *shaderFunctionFooter) ? shaderFunctionFooter : "";
 
     getImpl()->m_shaderCodeID = CacheIDHash(getImpl()->m_shaderCode.c_str(),
-                                            unsigned(getImpl()->m_shaderCode.length()));
+                                            getImpl()->m_shaderCode.length());
 
     getImpl()->m_cacheID.clear();
 }

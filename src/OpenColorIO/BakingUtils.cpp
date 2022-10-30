@@ -8,41 +8,46 @@ namespace OCIO_NAMESPACE
 
 namespace
 {
-    ConstCPUProcessorRcPtr GetSrcToTargetProcessor(const Baker & baker,
-                                                   const char * src)
+    GroupTransformRcPtr GetInputToTargetTransform(const Baker & baker)
     {
-        ConstProcessorRcPtr processor;
-
+        const std::string input = baker.getInputSpace();
         const std::string looks = baker.getLooks();
         const std::string display = baker.getDisplay();
         const std::string view = baker.getView();
 
+        GroupTransformRcPtr group = GroupTransform::Create();
+
         if (!display.empty() && !view.empty())
         {
-            DisplayViewTransformRcPtr transform = DisplayViewTransform::Create();
-            transform->setSrc(src);
-            transform->setDisplay(display.c_str());
-            transform->setView(view.c_str());
+            if (!looks.empty())
+            {
+                LookTransformRcPtr look = LookTransform::Create();
+                look->setLooks(looks.c_str());
+                look->setSrc(input.c_str());
+                look->setDst(input.c_str());
 
-            LegacyViewingPipelineRcPtr vp = LegacyViewingPipeline::Create();
-            vp->setDisplayViewTransform(transform);
-            vp->setLooksOverrideEnabled(!looks.empty());
-            vp->setLooksOverride(looks.c_str());
+                group->appendTransform(look);
+            }
 
-            processor = vp->getProcessor(baker.getConfig());
+            DisplayViewTransformRcPtr disp = DisplayViewTransform::Create();
+            disp->setSrc(input.c_str());
+            disp->setDisplay(display.c_str());
+            disp->setView(view.c_str());
+            disp->setLooksBypass(!looks.empty());
+
+            group->appendTransform(disp);
         }
         else
         {
-            LookTransformRcPtr transform = LookTransform::Create();
-            transform->setLooks(!looks.empty() ? looks.c_str() : "");
-            transform->setSrc(src);
-            transform->setDst(baker.getTargetSpace());
-            processor = baker.getConfig()->getProcessor(
-                transform, TRANSFORM_DIR_FORWARD
-            );
+            LookTransformRcPtr look = LookTransform::Create();
+            look->setLooks(!looks.empty() ? looks.c_str() : "");
+            look->setSrc(input.c_str());
+            look->setDst(baker.getTargetSpace());
+
+            group->appendTransform(look);
         }
 
-        return processor->getOptimizedCPUProcessor(OPTIMIZATION_LOSSLESS);
+        return group;
     }
     
     void GetSrcRange(const Baker & baker,
@@ -86,7 +91,10 @@ ConstCPUProcessorRcPtr GetInputToTargetProcessor(const Baker & baker)
 {
     if (baker.getInputSpace() && *baker.getInputSpace())
     {
-        return GetSrcToTargetProcessor(baker, baker.getInputSpace());
+        ConstProcessorRcPtr processor = baker.getConfig()->getProcessor(
+            GetInputToTargetTransform(baker), TRANSFORM_DIR_FORWARD
+        );
+        return processor->getOptimizedCPUProcessor(OPTIMIZATION_LOSSLESS);
     }
 
     throw Exception("Input space is empty.");
@@ -96,7 +104,17 @@ ConstCPUProcessorRcPtr GetShaperToTargetProcessor(const Baker & baker)
 {
     if (baker.getShaperSpace() && *baker.getShaperSpace())
     {
-        return GetSrcToTargetProcessor(baker, baker.getShaperSpace());
+        ColorSpaceTransformRcPtr csc = ColorSpaceTransform::Create();
+        csc->setSrc(baker.getShaperSpace());
+        csc->setDst(baker.getInputSpace());
+
+        GroupTransformRcPtr group = GetInputToTargetTransform(baker);
+        group->prependTransform(csc);
+
+        ConstProcessorRcPtr processor = baker.getConfig()->getProcessor(
+            group, TRANSFORM_DIR_FORWARD
+        );
+        return processor->getOptimizedCPUProcessor(OPTIMIZATION_LOSSLESS);
     }
 
     throw Exception("Shaper space is empty.");

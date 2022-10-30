@@ -164,3 +164,7 @@
       :module: PyOpenColorIO
       :value: <TransformType.TRANSFORM_TYPE_RANGE: 21>
 
+
+   .. py:property:: TransformType.value
+      :module: PyOpenColorIO
+

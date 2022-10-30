@@ -635,6 +635,43 @@ public:
      */
     void setInactiveColorSpaces(const char * inactiveColorSpaces);
     const char * getInactiveColorSpaces() const;
+    
+    /**
+     * \brief Return true if the specified color space is linear.
+     * 
+     * The determination of linearity is made with respect to one of the two reference spaces 
+     * (i.e., either the scene-referred one or the display-referred one). If the reference space 
+     * type of the color space is the opposite of the requested reference space type, false is 
+     * returned immediately rather than trying to invoke the default view transform to convert 
+     * between the reference spaces.
+     * 
+     * Note: This function relies on heuristics that may sometimes give an incorrect result. 
+     * For example, if the encoding attribute is not set appropriately or the sampled values fail 
+     * to detect non-linearity.
+     * 
+     * The algorithm proceeds as follows:
+     * -- If the color space isdata attribute is true, return false.
+     * -- If the reference space type of the color space differs from the requested reference 
+     *    space type, return false.
+     * -- If the color space's encoding attribute is present, return true if it matches the 
+     *    expected reference space type (i.e., "scene-linear" for REFERENCE_SPACE_SCENE or 
+     *    "display-linear" for REFERENCE_SPACE_DISPLAY) and false otherwise.
+     * -- If the color space has no to_reference or from_reference transform, return true.
+     * -- Evaluate several points through the color space's transform and check if the output only 
+     *    differs by a scale factor (which may be different per channel, e.g. allowing an arbitrary
+     *    matrix transform, with no offset).
+     * 
+     * Note that the encoding test happens before the sampled value test to give config authors 
+     * ultimate control over the linearity determination. For example, they could set the encoding 
+     * attribute to indicate linearity if they want to ignore some areas of non-linearity 
+     * (e.g., at extreme values). Or they could set it to indicate that a color space should not 
+     * be considered linear, even if it is, in a mathematical sense.
+     * 
+     * \param colorSpace Color space to evaluate.
+     * \param referenceSpaceType Evaluate linearity with respect to the specified reference space 
+     *                           (either scene-referred or display-referred).
+     */
+    bool isColorSpaceLinear(const char * colorSpace, ReferenceSpaceType referenceSpaceType) const;
 
     //
     // Roles
@@ -1160,6 +1197,19 @@ public:
                                      const char * view,
                                      TransformDirection direction) const;
 
+    /// Get the processor to apply a NamedTransform in the specified direction.
+    ConstProcessorRcPtr getProcessor(const ConstNamedTransformRcPtr & namedTransform,
+                                     TransformDirection direction) const;
+    ConstProcessorRcPtr getProcessor(const ConstContextRcPtr & context,
+                                     const ConstNamedTransformRcPtr & namedTransform,
+                                     TransformDirection direction) const;
+
+    ConstProcessorRcPtr getProcessor(const char * namedTransformName,
+                                     TransformDirection direction) const;
+    ConstProcessorRcPtr getProcessor(const ConstContextRcPtr & context,
+                                     const char * namedTransformName,
+                                     TransformDirection direction) const;
+
     /**
      * \brief Get the processor for the specified transform.
      * 
@@ -1172,6 +1222,46 @@ public:
     ConstProcessorRcPtr getProcessor(const ConstContextRcPtr & context,
                                      const ConstTransformRcPtr & transform,
                                      TransformDirection direction) const;
+
+    /**
+     * \brief Get a Processor to or from a known external color space.
+     * 
+     * These methods provide a way to interface color spaces in a config with known standard 
+     * external color spaces. The set of external color space are those contained in the current 
+     * default Built-in config. This includes common spaces such as "Linear Rec.709 (sRGB)", 
+     * "sRGB - Texture", "ACEScg", and "ACES2065-1".
+     * 
+     * If the source config defines the necessary Interchange Role (typically "aces_interchange"), 
+     * then the conversion will be well-defined and equivalent to calling GetProcessorFromConfigs
+     * with the source config and the Built-in config
+     * 
+     * However, if the Interchange Roles are not present, heuristics will be used to try and 
+     * identify a common color space in the source config that may be used to allow the conversion 
+     * to proceed. If the heuristics fail to find a suitable space, an exception is thrown. 
+     * The heuristics may evolve, so the results returned by this function for a given source config 
+     * and color space may change in future releases of the library. However, the Interchange Roles 
+     * are required in config versions 2.2 and higher, so it is hoped that the need for the heuristics 
+     * will decrease over time.
+     * 
+     * \param srcConfig The user's source config.
+     * \param srcColorSpaceName The name of the color space in the source config.
+     * \param builtinColorSpaceName The name of the color space in the current default Built-in config.
+     */
+    static ConstProcessorRcPtr GetProcessorToBuiltinColorSpace(
+                                                                ConstConfigRcPtr srcConfig,
+                                                                const char * srcColorSpaceName, 
+                                                                const char * builtinColorSpaceName);
+    /**
+     * \brief See description of GetProcessorToBuiltinColorSpace.
+     * 
+     * \param builtinColorSpaceName The name of the color space in the current default Built-in config.
+     * \param srcConfig The user's source config.
+     * \param srcColorSpaceName The name of the color space in the source config. 
+     */
+    static ConstProcessorRcPtr GetProcessorFromBuiltinColorSpace(
+                                                                const char * builtinColorSpaceName,
+                                                                ConstConfigRcPtr srcConfig,
+                                                                const char * srcColorSpaceName);
 
     /**
      * \brief Get a processor to convert between color spaces in two separate
@@ -2084,6 +2174,13 @@ public:
     virtual ConstTransformRcPtr getTransform(TransformDirection dir) const = 0;
     virtual void setTransform(const ConstTransformRcPtr & transform, TransformDirection dir) = 0;
 
+    /**
+     * Will create the transform from the inverse direction if the transform for requested
+     * direction is missing.
+     */
+    static ConstTransformRcPtr GetTransform(const ConstNamedTransformRcPtr & nt,
+                                            TransformDirection dir);
+
     NamedTransform(const NamedTransform &) = delete;
     NamedTransform & operator= (const NamedTransform &) = delete;
     // Do not use (needed only for pybind11).
@@ -2551,10 +2648,10 @@ public:
 
     const char * getShaperSpace() const;
     /**
-     * Set an *optional* ColorSpace to shape the incoming values of the LUT.
-     * When baking 3DLUT, this will correspond to the 1D shaper used to
-     * normalise incoming values to the unit range. When baking 1D LUT, this
-     * will be used to determine the input range of the LUT.
+     * Set an *optional* ColorSpace or NamedTransform to shape the incoming
+     * values of the LUT.  When baking 3DLUT, this will correspond to the 1D
+     * shaper used to normalise incoming values to the unit range.  When baking
+     * 1D LUT, this will be used to determine the input range of the LUT.
      */
     void setShaperSpace(const char * shaperSpace);
 

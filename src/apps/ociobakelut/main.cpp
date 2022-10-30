@@ -312,6 +312,11 @@ int main (int argc, const char* argv[])
                 return 1;
             }
 
+            if(!shaperspace.empty())
+            {
+                std::cerr << "WARNING: shaperspace is ignored when generating ICC profiles.\n";
+            }
+
             if(cubesize<2) cubesize = 32; // default
 
             OCIO::ConstProcessorRcPtr processor;

@@ -34,7 +34,7 @@
 
      FIXED_FUNCTION_ACES_GAMUTMAP_07 : ACES 0.7 Gamut clamping algorithm -- NOT IMPLEMENTED YET.
 
-     FIXED_FUNCTION_ACES_GAMUTMAP_13 : ACES 1.3 Gamut mapping algorithm.
+     FIXED_FUNCTION_ACES_GAMUT_COMP_13 : ACES 1.3 Parametric Gamut Compression (expects ACEScg values)
 
    .. py:method:: name() -> str
       :property:
@@ -54,9 +54,9 @@
       :value: <FixedFunctionStyle.FIXED_FUNCTION_ACES_GAMUTMAP_07: 11>
 
 
-   .. py:attribute:: FixedFunctionStyle.FIXED_FUNCTION_ACES_GAMUTMAP_13
+   .. py:attribute:: FixedFunctionStyle.FIXED_FUNCTION_ACES_GAMUT_COMP_13
       :module: PyOpenColorIO
-      :value: <FixedFunctionStyle.FIXED_FUNCTION_ACES_GAMUTMAP_13: 12>
+      :value: <FixedFunctionStyle.FIXED_FUNCTION_ACES_GAMUT_COMP_13: 12>
 
 
    .. py:attribute:: FixedFunctionStyle.FIXED_FUNCTION_ACES_GLOW_03
@@ -102,4 +102,8 @@
    .. py:attribute:: FixedFunctionStyle.FIXED_FUNCTION_XYZ_TO_xyY
       :module: PyOpenColorIO
       :value: <FixedFunctionStyle.FIXED_FUNCTION_XYZ_TO_xyY: 7>
+
+
+   .. py:property:: FixedFunctionStyle.value
+      :module: PyOpenColorIO
 

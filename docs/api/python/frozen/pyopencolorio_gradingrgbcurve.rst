@@ -21,22 +21,18 @@
       2. __init__(self: PyOpenColorIO.GradingRGBCurve, red: PyOpenColorIO.GradingBSplineCurve = <control_points=[<x=0, y=0><x=0.5, y=0.5><x=1, y=1>]>, green: PyOpenColorIO.GradingBSplineCurve = <control_points=[<x=0, y=0><x=0.5, y=0.5><x=1, y=1>]>, blue: PyOpenColorIO.GradingBSplineCurve = <control_points=[<x=0, y=0><x=0.5, y=0.5><x=1, y=1>]>, master: PyOpenColorIO.GradingBSplineCurve = <control_points=[<x=0, y=0><x=0.5, y=0.5><x=1, y=1>]>) -> None
 
 
-   .. py:method:: GradingRGBCurve.blue
+   .. py:property:: GradingRGBCurve.blue
       :module: PyOpenColorIO
-      :property:
 
 
-   .. py:method:: GradingRGBCurve.green
+   .. py:property:: GradingRGBCurve.green
       :module: PyOpenColorIO
-      :property:
 
 
-   .. py:method:: GradingRGBCurve.master
+   .. py:property:: GradingRGBCurve.master
       :module: PyOpenColorIO
-      :property:
 
 
-   .. py:method:: GradingRGBCurve.red
+   .. py:property:: GradingRGBCurve.red
       :module: PyOpenColorIO
-      :property:
 

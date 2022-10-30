@@ -24,3 +24,7 @@
       :module: PyOpenColorIO
       :value: <ColorSpaceDirection.COLORSPACE_DIR_TO_REFERENCE: 0>
 
+
+   .. py:property:: ColorSpaceDirection.value
+      :module: PyOpenColorIO
+
