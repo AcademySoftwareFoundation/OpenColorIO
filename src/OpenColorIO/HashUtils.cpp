@@ -1,46 +1,28 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
+#include <sstream>
+
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "HashUtils.h"
-#include "md5/md5.h"
 
-#include <sstream>
-#include <iostream>
+#define XXH_INLINE_ALL
+#define XXH_STATIC_LINKING_ONLY   /* access advanced declarations */
+#define XXH_IMPLEMENTATION   /* access definitions */
+#include "xxhash.h"
+
 
 namespace OCIO_NAMESPACE
 {
-std::string CacheIDHash(const char * array, int size)
+
+std::string CacheIDHash(const char * array, std::size_t size)
 {
-    md5_state_t state;
-    md5_byte_t digest[16];
+    XXH128_hash_t hash = XXH3_128bits(array, size);
 
-    md5_init(&state);
-    md5_append(&state, (const md5_byte_t *)array, size);
-    md5_finish(&state, digest);
-
-    return GetPrintableHash(digest);
-}
-
-std::string GetPrintableHash(const md5_byte_t * digest)
-{
-    static char charmap[] = "0123456789abcdef";
-
-    char printableResult[34];
-    char *ptr = printableResult;
-
-    // build a printable string from unprintable chars.  first character
-    // of hashed cache IDs is '$', to later check if it's already been hashed
-    *ptr++ = '$';
-    for (int i=0;i<16;++i)
-    {
-        *ptr++ = charmap[(digest[i] & 0x0F)];
-        *ptr++ = charmap[(digest[i] >> 4)];
-    }
-    *ptr++ = 0;
-
-    return std::string(printableResult);
+    std::stringstream oss;
+    oss << std::hex << hash.low64 << hash.high64;
+    return oss.str();
 }
 
 } // namespace OCIO_NAMESPACE

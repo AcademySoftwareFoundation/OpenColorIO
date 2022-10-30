@@ -7,12 +7,58 @@ import unittest
 import PyOpenColorIO as OCIO
 
 
+SIMPLE_PROFILE = """ocio_profile_version: 2
+
+roles:
+  default: raw
+
+file_rules:
+  - !<Rule> {name: ColorSpaceNamePathSearch}
+  - !<Rule> {name: Default, colorspace: default}
+
+displays:
+  sRGB:
+    - !<View> {name: Raw, colorspace: raw}
+
+active_displays: []
+active_views: []
+
+display_colorspaces:
+  - !<ColorSpace>
+    name: dcs
+
+colorspaces:
+  - !<ColorSpace>
+    name: raw
+
+named_transforms:
+  - !<NamedTransform>
+    name: forward
+    transform: !<MatrixTransform> {name: forward, offset: [0.1, 0.2, 0.3, 0.4]}
+
+  - !<NamedTransform>
+    name: inverse
+    inverse_transform: !<MatrixTransform> {name: inverse, offset: [-0.2, -0.1, -0.1, 0]}
+
+  - !<NamedTransform>
+    name: both
+    aliases: [nt3, ntb]
+    transform: !<MatrixTransform> {name: forward_both, offset: [0.1, 0.2, 0.3, 0.4]}
+    inverse_transform: !<MatrixTransform> {name: inverse_both, offset: [-0.2, -0.1, -0.1, 0]}
+"""
+
+
 class NamedTransformTest(unittest.TestCase):
     TEST_NAME = 'namedTransform'
     TEST_FAMILY = 'myFamily'
     TEST_DESCRIPTION = 'used for tests'
     TEST_CATEGORIES = ['good', 'not so good', 'bad']
     TEST_INVALIDS = (OCIO.TRANSFORM_DIR_INVERSE, 42, [1, 2, 3])
+
+    OFFSET_FWD = [0.1, 0.2, 0.3, 0.4]
+    OFFSET_FWD_INV = [x * -1. for x in OFFSET_FWD]
+    OFFSET_INV = [-0.2, -0.1, -0.1, 0.]
+    OFFSET_INV_INV = [x * -1. for x in OFFSET_INV]
 
     def setUp(self):
         self.named_tr = OCIO.NamedTransform()
@@ -210,115 +256,220 @@ class NamedTransformTest(unittest.TestCase):
             with self.assertRaises(TypeError):
                 named_tr = OCIO.NamedTransform(invalid)
 
-    def test_processor(self):
+    def test_static_get_transform(self):
         """
-        Test creating a processor from named transforms and color spaces.
+        Test NamedTransform.GetTransform() static method.
         """
-        SIMPLE_PROFILE = """ocio_profile_version: 2
 
-roles:
-  default: raw
+        cfg = OCIO.Config.CreateRaw()
 
-file_rules:
-  - !<Rule> {name: ColorSpaceNamePathSearch}
-  - !<Rule> {name: Default, colorspace: default}
+        mat_fwd = OCIO.MatrixTransform()
+        mat_fwd.setOffset(self.OFFSET_FWD)
+        named_tr_fwd = OCIO.NamedTransform()
+        named_tr_fwd.setTransform(mat_fwd, OCIO.TRANSFORM_DIR_FORWARD)
 
-displays:
-  sRGB:
-    - !<View> {name: Raw, colorspace: raw}
+        mat_inv = OCIO.MatrixTransform()
+        mat_inv.setOffset(self.OFFSET_INV)
+        named_tr_inv = OCIO.NamedTransform()
+        named_tr_inv.setTransform(mat_inv, OCIO.TRANSFORM_DIR_INVERSE);
 
-active_displays: []
-active_views: []
+        # Forward transform from forward-only named transform
+        tf = OCIO.NamedTransform.GetTransform(named_tr_fwd, OCIO.TRANSFORM_DIR_FORWARD)
+        self.assertIsNotNone(tf)
+        proc = cfg.getProcessor(tf, OCIO.TRANSFORM_DIR_FORWARD)
+        group = proc.createGroupTransform()
+        self.assertEqual(len(group), 1)
+        self.assertIsInstance(group[0], OCIO.MatrixTransform)
+        self.assertEqual(group[0].getOffset(), self.OFFSET_FWD)
 
-display_colorspaces:
-  - !<ColorSpace>
-    name: dcs
+        # Inverse transform from forward-only named transform
+        tf = OCIO.NamedTransform.GetTransform(named_tr_fwd, OCIO.TRANSFORM_DIR_INVERSE)
+        self.assertIsNotNone(tf)
+        proc = cfg.getProcessor(tf, OCIO.TRANSFORM_DIR_FORWARD)
+        group = proc.createGroupTransform()
+        self.assertEqual(len(group), 1)
+        self.assertIsInstance(group[0], OCIO.MatrixTransform)
+        self.assertEqual(group[0].getOffset(), self.OFFSET_FWD_INV)
 
-colorspaces:
-  - !<ColorSpace>
-    name: raw
+        # Forward transform from inverse-only named transform
+        tf = OCIO.NamedTransform.GetTransform(named_tr_inv, OCIO.TRANSFORM_DIR_FORWARD)
+        self.assertIsNotNone(tf)
+        proc = cfg.getProcessor(tf, OCIO.TRANSFORM_DIR_FORWARD)
+        group = proc.createGroupTransform()
+        self.assertEqual(len(group), 1)
+        self.assertIsInstance(group[0], OCIO.MatrixTransform)
+        self.assertEqual(group[0].getOffset(), self.OFFSET_INV_INV)
 
-named_transforms:
-  - !<NamedTransform>
-    name: forward
-    transform: !<MatrixTransform> {name: forward, offset: [0.1, 0.2, 0.3, 0.4]}
+        # Inverse transform from inverse-only named transform
+        tf = OCIO.NamedTransform.GetTransform(named_tr_inv, OCIO.TRANSFORM_DIR_INVERSE)
+        self.assertIsNotNone(tf)
+        proc = cfg.getProcessor(tf, OCIO.TRANSFORM_DIR_FORWARD)
+        group = proc.createGroupTransform()
+        self.assertEqual(len(group), 1)
+        self.assertIsInstance(group[0], OCIO.MatrixTransform)
+        self.assertEqual(group[0].getOffset(), self.OFFSET_INV)
 
-  - !<NamedTransform>
-    name: inverse
-    inverse_transform: !<MatrixTransform> {name: inverse, offset: [-0.2, -0.1, -0.1, 0]}
+    def test_processor_from_nt(self):
 
-  - !<NamedTransform>
-    name: both
-    transform: !<MatrixTransform> {name: forward_both, offset: [0.1, 0.2, 0.3, 0.4]}
-    inverse_transform: !<MatrixTransform> {name: inverse_both, offset: [-0.2, -0.1, -0.1, 0]}
-"""
+        cfg = OCIO.Config().CreateFromStream(SIMPLE_PROFILE)
+        nt = cfg.getNamedTransform("forward")
 
-        # Create a config.
+        # Named transform from NamedTransform object and forward direction.
+        proc = cfg.getProcessor(nt, OCIO.TRANSFORM_DIR_FORWARD)
+        group = proc.createGroupTransform()
+
+        self.assertEqual(len(group), 1)
+        self.assertIsInstance(group[0], OCIO.MatrixTransform)
+        self.assertEqual("forward", next(group[0].getFormatMetadata().getAttributes())[1])
+        self.assertEqual(group[0].getOffset(), self.OFFSET_FWD)
+
+        # Named transform from NamedTransform object and inverse direction.
+        proc = cfg.getProcessor(nt, OCIO.TRANSFORM_DIR_INVERSE)
+        group = proc.createGroupTransform()
+
+        self.assertEqual(len(group), 1)
+        self.assertIsInstance(group[0], OCIO.MatrixTransform)
+        self.assertEqual("forward", next(group[0].getFormatMetadata().getAttributes())[1])
+        self.assertEqual(group[0].getOffset(), self.OFFSET_FWD_INV)
+
+    def test_processor_from_nt_and_context(self):
+
+        cfg = OCIO.Config().CreateFromStream(SIMPLE_PROFILE)
+        context = cfg.getCurrentContext()
+        nt = cfg.getNamedTransform("inverse")
+
+        # Named transform from NamedTransform object and forward direction with context.
+        proc = cfg.getProcessor(context, nt, OCIO.TRANSFORM_DIR_FORWARD)
+        group = proc.createGroupTransform()
+
+        self.assertEqual(len(group), 1)
+        self.assertIsInstance(group[0], OCIO.MatrixTransform)
+        self.assertEqual("inverse", next(group[0].getFormatMetadata().getAttributes())[1])
+        self.assertEqual(group[0].getOffset(), self.OFFSET_INV_INV)
+
+        # Named transform from NamedTransform object and inverse direction with context.
+        proc = cfg.getProcessor(context, nt, OCIO.TRANSFORM_DIR_INVERSE)
+        group = proc.createGroupTransform()
+
+        self.assertEqual(len(group), 1)
+        self.assertIsInstance(group[0], OCIO.MatrixTransform)
+        self.assertEqual("inverse", next(group[0].getFormatMetadata().getAttributes())[1])
+        self.assertEqual(group[0].getOffset(), self.OFFSET_INV)
+
+    def test_processor_from_name(self):
+
         cfg = OCIO.Config().CreateFromStream(SIMPLE_PROFILE)
 
-        offsetF = [0.1, 0.2, 0.3, 0.4]
-        offsetFInv = [x * -1. for x in offsetF]
-        offsetI = [-0.2, -0.1, -0.1, 0.]
-        offsetIInv = [x * -1. for x in offsetI]
+        # Named transform from name and forward direction.
+        proc = cfg.getProcessor("inverse", OCIO.TRANSFORM_DIR_FORWARD)
+        group = proc.createGroupTransform()
+
+        self.assertEqual(len(group), 1)
+        self.assertIsInstance(group[0], OCIO.MatrixTransform)
+        self.assertEqual("inverse", next(group[0].getFormatMetadata().getAttributes())[1])
+        self.assertEqual(group[0].getOffset(), self.OFFSET_INV_INV)
+
+        # Named transform from name and inverse direction.
+        proc = cfg.getProcessor("inverse", OCIO.TRANSFORM_DIR_INVERSE)
+        group = proc.createGroupTransform()
+
+        self.assertEqual(len(group), 1)
+        self.assertIsInstance(group[0], OCIO.MatrixTransform)
+        self.assertEqual("inverse", next(group[0].getFormatMetadata().getAttributes())[1])
+        self.assertEqual(group[0].getOffset(), self.OFFSET_INV)
+
+    def test_processor_from_name_and_context(self):
+
+        cfg = OCIO.Config().CreateFromStream(SIMPLE_PROFILE)
+        context = cfg.getCurrentContext()
+
+        # Named transform from name and forward direction with context.
+        proc = cfg.getProcessor(context, "forward", OCIO.TRANSFORM_DIR_FORWARD)
+        group = proc.createGroupTransform()
+
+        self.assertEqual(len(group), 1)
+        self.assertIsInstance(group[0], OCIO.MatrixTransform)
+        self.assertEqual("forward", next(group[0].getFormatMetadata().getAttributes())[1])
+        self.assertEqual(group[0].getOffset(), self.OFFSET_FWD)
+
+        # Named transform from name and inverse direction with context.
+        proc = cfg.getProcessor(context, "forward", OCIO.TRANSFORM_DIR_INVERSE)
+        group = proc.createGroupTransform()
+
+        self.assertEqual(len(group), 1)
+        self.assertIsInstance(group[0], OCIO.MatrixTransform)
+        self.assertEqual("forward", next(group[0].getFormatMetadata().getAttributes())[1])
+        self.assertEqual(group[0].getOffset(), self.OFFSET_FWD_INV)
+
+    def test_processor_from_alias(self):
+
+        cfg = OCIO.Config().CreateFromStream(SIMPLE_PROFILE)
+
+        # Named transform from alias and forward direction.
+        proc = cfg.getProcessor("ntb", OCIO.TRANSFORM_DIR_FORWARD)
+        group = proc.createGroupTransform()
+
+        self.assertEqual(len(group), 1)
+        self.assertIsInstance(group[0], OCIO.MatrixTransform)
+        self.assertEqual("forward_both", next(group[0].getFormatMetadata().getAttributes())[1])
+        self.assertEqual(group[0].getOffset(), self.OFFSET_FWD)
+
+        # Named transform from alias and inverse direction.
+        proc = cfg.getProcessor("nt3", OCIO.TRANSFORM_DIR_INVERSE)
+        group = proc.createGroupTransform()
+
+        self.assertEqual(len(group), 1)
+        self.assertIsInstance(group[0], OCIO.MatrixTransform)
+        self.assertEqual("inverse_both", next(group[0].getFormatMetadata().getAttributes())[1])
+        self.assertEqual(group[0].getOffset(), self.OFFSET_INV)
+
+    def test_processor_from_alias_and_context(self):
+
+        cfg = OCIO.Config().CreateFromStream(SIMPLE_PROFILE)
 
         # Display color space to forward named transform.
-
-        proc = cfg.getProcessor('dcs', 'forward')
+        proc = cfg.getProcessor("dcs", "forward")
         group = proc.createGroupTransform()
-        groupTransformsList = list(group)
-        self.assertEqual(len(groupTransformsList), 1);
-        self.assertIsInstance(groupTransformsList[0], OCIO.MatrixTransform)
-        metadata = groupTransformsList[0].getFormatMetadata()
-        atts = metadata.getAttributes()
-        
-        self.assertEqual('forward', next(atts)[1] )
-        self.assertEqual(groupTransformsList[0].getOffset(), offsetFInv)
+
+        self.assertEqual(len(group), 1)
+        self.assertIsInstance(group[0], OCIO.MatrixTransform)
+        self.assertEqual("forward", next(group[0].getFormatMetadata().getAttributes())[1])
+        self.assertEqual(group[0].getOffset(), self.OFFSET_FWD_INV)
 
         # Display color space to inverse named transform.
-
-        proc = cfg.getProcessor('dcs', 'inverse')
+        proc = cfg.getProcessor("dcs", "inverse")
         group = proc.createGroupTransform()
-        groupTransformsList = list(group)
-        self.assertEqual(len(groupTransformsList), 1);
-        self.assertIsInstance(groupTransformsList[0], OCIO.MatrixTransform)
-        metadata = groupTransformsList[0].getFormatMetadata()
-        atts = metadata.getAttributes()
+
+        self.assertEqual(len(group), 1)
+        self.assertIsInstance(group[0], OCIO.MatrixTransform)
+        self.assertEqual("inverse", next(group[0].getFormatMetadata().getAttributes())[1])
+        self.assertEqual(group[0].getOffset(), self.OFFSET_INV)
+
+    def test_processor_from_src_dst_name(self):
         
-        self.assertEqual('inverse', next(atts)[1] )
-        self.assertEqual(groupTransformsList[0].getOffset(), offsetI)
+        cfg = OCIO.Config().CreateFromStream(SIMPLE_PROFILE)
 
         # Both named transform to display color space.
-
-        proc = cfg.getProcessor('both', 'dcs')
+        proc = cfg.getProcessor("both", "dcs")
         group = proc.createGroupTransform()
-        groupTransformsList = list(group)
-        self.assertEqual(len(groupTransformsList), 1);
-        self.assertIsInstance(groupTransformsList[0], OCIO.MatrixTransform)
-        metadata = groupTransformsList[0].getFormatMetadata()
-        atts = metadata.getAttributes()
-        
-        self.assertEqual('forward_both', next(atts)[1] )
-        self.assertEqual(groupTransformsList[0].getOffset(), offsetF)
+
+        self.assertEqual(len(group), 1)
+        self.assertIsInstance(group[0], OCIO.MatrixTransform)
+        self.assertEqual("forward_both", next(group[0].getFormatMetadata().getAttributes())[1])
+        self.assertEqual(group[0].getOffset(), self.OFFSET_FWD)
 
         # Forward named transforn to both named transform.
-
-        proc = cfg.getProcessor('forward', 'both')
+        proc = cfg.getProcessor("forward", "both")
         group = proc.createGroupTransform()
-        groupTransformsList = list(group)
-        self.assertEqual(len(groupTransformsList), 2);
-        self.assertIsInstance(groupTransformsList[0], OCIO.MatrixTransform)
-        metadata = groupTransformsList[0].getFormatMetadata()
-        atts = metadata.getAttributes()
+        self.assertEqual(len(group), 2)
 
-        self.assertEqual('forward', next(atts)[1] )
-        self.assertEqual(groupTransformsList[0].getOffset(), offsetF)
+        self.assertIsInstance(group[0], OCIO.MatrixTransform)
+        self.assertEqual("forward", next(group[0].getFormatMetadata().getAttributes())[1])
+        self.assertEqual(group[0].getOffset(), self.OFFSET_FWD)
 
-        self.assertIsInstance(groupTransformsList[1], OCIO.MatrixTransform)
-        metadata = groupTransformsList[1].getFormatMetadata()
-        atts = metadata.getAttributes()
-
-        self.assertEqual('inverse_both', next(atts)[1] )
-        self.assertEqual(groupTransformsList[1].getOffset(), offsetI)
+        self.assertIsInstance(group[1], OCIO.MatrixTransform)
+        self.assertEqual("inverse_both", next(group[1].getFormatMetadata().getAttributes())[1])
+        self.assertEqual(group[1].getOffset(), self.OFFSET_INV)
 
     def test_aliases(self):
         """

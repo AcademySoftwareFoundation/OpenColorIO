@@ -31,3 +31,7 @@
       :module: PyOpenColorIO
       :value: <NamedTransformVisibility.NAMEDTRANSFORM_INACTIVE: 1>
 
+
+   .. py:property:: NamedTransformVisibility.value
+      :module: PyOpenColorIO
+

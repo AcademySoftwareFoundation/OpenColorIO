@@ -84,6 +84,7 @@ set(SOURCES
 	PyColorSpace.cpp
 	PyColorSpaceSet.cpp
 	PyConfig.cpp
+	PyConfigIOProxy.cpp
 	PyContext.cpp
 	PyCPUProcessor.cpp
 	PyDynamicProperty.cpp

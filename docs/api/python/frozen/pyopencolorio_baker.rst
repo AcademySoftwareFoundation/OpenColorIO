@@ -61,6 +61,10 @@
       :module: PyOpenColorIO
 
 
+   .. py:method:: Baker.getDisplay(self: PyOpenColorIO.Baker) -> str
+      :module: PyOpenColorIO
+
+
    .. py:method:: Baker.getFormat(self: PyOpenColorIO.Baker) -> str
       :module: PyOpenColorIO
 
@@ -94,6 +98,10 @@
       :module: PyOpenColorIO
 
 
+   .. py:method:: Baker.getView(self: PyOpenColorIO.Baker) -> str
+      :module: PyOpenColorIO
+
+
    .. py:method:: Baker.setConfig(self: PyOpenColorIO.Baker, config: PyOpenColorIO.Config) -> None
       :module: PyOpenColorIO
 
@@ -103,7 +111,13 @@
    .. py:method:: Baker.setCubeSize(self: PyOpenColorIO.Baker, cubeSize: int) -> None
       :module: PyOpenColorIO
 
-      Override the default cube sample size. default: <format specific>
+      Override the main LUT (3d or 1d) sample size. Default value is -1, which allows each format to use its own most appropriate size.
+
+
+   .. py:method:: Baker.setDisplayView(self: PyOpenColorIO.Baker, display: str, view: str) -> None
+      :module: PyOpenColorIO
+
+      Set the display and view to apply during the baking. Must not be used if setTargetSpace is used.
 
 
    .. py:method:: Baker.setFormat(self: PyOpenColorIO.Baker, formatName: str) -> None
@@ -133,13 +147,13 @@
    .. py:method:: Baker.setShaperSpace(self: PyOpenColorIO.Baker, shaperSpace: str) -> None
       :module: PyOpenColorIO
 
-      Set an *optional* :ref:`ColorSpace` to be used to shape / transfer the input colorspace. This is mostly used to allocate an HDR luminance range into an LDR one. If a shaper space is not explicitly specified, and the file format supports one, the :ref:`ColorSpace` Allocation will be used (not implemented for all formats).
+      Set an *optional* :ref:`ColorSpace` to shape the incoming values of the LUT. When baking 3DLUT, this will correspond to the 1D shaper used to normalise incoming values to the unit range. When baking 1D LUT, this will be used to determine the input range of the LUT.
 
 
    .. py:method:: Baker.setTargetSpace(self: PyOpenColorIO.Baker, targetSpace: str) -> None
       :module: PyOpenColorIO
 
-      Set the target device colorspace for the LUT.
+      Set the target (i.e., output) color space for the LUT. Must not be used if setDisplayView is used.
 
 
 .. py:class:: FormatIterator

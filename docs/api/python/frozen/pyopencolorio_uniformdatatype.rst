@@ -54,3 +54,7 @@
       :module: PyOpenColorIO
       :value: <UniformDataType.UNIFORM_VECTOR_INT: 4>
 
+
+   .. py:property:: UniformDataType.value
+      :module: PyOpenColorIO
+

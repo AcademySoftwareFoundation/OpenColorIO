@@ -129,7 +129,7 @@ class ColorSpaceHelpersTest(unittest.TestCase):
         self.assertEqual(len(hlevels), 0)
 
         self.assertEqual(str(menu),
-            'config: $0f5cce49d82e023765b1d657191c3417:$4dd1c89df8002b409e089089ce8f24e7, '
+            'config: 667ca4dc5b3779e570229fb7fd9cffe1:6001c324468d497f99aa06d3014798d8, '
             'includeColorSpaces: true, includeRoles: false, includeNamedTransforms: false, '
             'color spaces = [raw, lin_1, lin_2, log_1, in_1, in_2, in_3, view_1, view_2, view_3, '
             'lut_input_1, lut_input_2, lut_input_3, display_lin_1, display_lin_2, display_log_1]')

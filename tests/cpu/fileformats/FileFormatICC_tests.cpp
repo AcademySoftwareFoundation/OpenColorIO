@@ -214,6 +214,30 @@ OCIO_ADD_TEST(FileFormatICC, test_file)
         OCIO_CHECK_EQUAL(2.17384338f, iccFile->mGammaRGB[2]);
         OCIO_CHECK_EQUAL(1.0f,        iccFile->mGammaRGB[3]);
     }
+
+    {
+        // This test uses profiles where the TRC is a parametric curve of type 1-4.
+
+        static const std::vector<std::string> iccFileNames {
+            "icc-test-pc1.icc",
+            "icc-test-pc2.icc",
+            "icc-test-pc3.icc",
+            "icc-test-pc4.icc"
+        };
+
+        for (const auto & iccFileName: iccFileNames)
+        {
+            OCIO_CHECK_NO_THROW(iccFile = LoadICCFile(iccFileName));
+
+            OCIO_CHECK_ASSERT(iccFile);
+            OCIO_REQUIRE_ASSERT(iccFile->lut);
+
+            OCIO_CHECK_EQUAL(iccFile->lut->getFileOutputBitDepth(), OCIO::BIT_DEPTH_F32);
+
+            const auto & lutArray = iccFile->lut->getArray();
+            OCIO_CHECK_EQUAL(1024, lutArray.getLength());
+        }
+    }
 }
 
 OCIO_ADD_TEST(FileFormatICC, test_apply)
@@ -263,11 +287,10 @@ OCIO_ADD_TEST(FileFormatICC, test_apply)
             op->apply(srcImage, 3);
         }
 
+        // Values outside [0.0, 1.0] are clamped and won't round-trip.
         static constexpr float bckImage[] = {
-            // neg values are clamped by the LUT and won't round-trip
             0.0f, 0.0f, 0.3f, 0.0f,
             0.4f, 0.5f, 0.6f, 0.5f,
-            // >1 values are clamped by the LUT and won't round-trip
             0.7f, 1.0f, 1.0f, 1.0f };
 
         // compare results
@@ -293,7 +316,7 @@ OCIO_ADD_TEST(FileFormatICC, test_apply)
         const float dstImage[] = {
             0.012437f, 0.004702f, 0.070333f, 0.0f,
             0.188392f, 0.206965f, 0.343595f, 0.5f,
-            1.210462f, 1.058761f, 4.003706f, 1.0f };
+            0.693246f, 0.863199f, 1.07867f , 1.0f };
 
         for (const auto & op : ops)
         {
@@ -320,11 +343,11 @@ OCIO_ADD_TEST(FileFormatICC, test_apply)
             op->apply(srcImage, 3);
         }
 
-        // Negative values are clamped by the LUT and won't round-trip.
+        // Values outside [0.0, 1.0] are clamped and won't round-trip.
         const float bckImage[] = {
             0.0f, 0.0f, 0.3f, 0.0f,
             0.4f, 0.5f, 0.6f, 0.5f,
-            0.7f, 1.0f, 1.9f, 1.0f };
+            0.7f, 1.0f, 1.0f, 1.0f };
 
         // Compare results
         const float error2 = 2e-4f;
@@ -335,6 +358,242 @@ OCIO_ADD_TEST(FileFormatICC, test_apply)
         }
     }
 
+}
+
+// Apply the ICC profile in forward then inverse direction (OCIO inverted interpretation)
+// and compare against expected values at each steps. Expects RGBA pixel layout.
+void ValidateRoundtripProfile(const std::string & iccFileName,
+                              unsigned int numPixels,
+                              float * srcImage,
+                              const float * dstImage,
+                              const float * bckImage,
+                              unsigned lineNo,
+                              int fwd_op_idx=-1,
+                              int bck_op_idx=-1,
+                              float error=2e-5f,
+                              float error_bck=2e-5f)
+{
+    OCIO::ContextRcPtr context = OCIO::Context::Create();
+
+    // PCS to Device direction
+    OCIO::OpRcPtrVec ops;
+    OCIO_CHECK_NO_THROW(BuildOpsTest(ops, iccFileName, context, OCIO::TRANSFORM_DIR_FORWARD));
+    OCIO_CHECK_NO_THROW(ops.finalize());
+    OCIO_CHECK_NO_THROW(ops.optimize(OCIO::OPTIMIZATION_LOSSLESS));
+
+    // Apply ops
+    if (fwd_op_idx >= 0)
+    {
+        ops[fwd_op_idx]->apply(srcImage, numPixels);
+    }
+    else
+    {
+        for (const auto & op : ops)
+        {
+            op->apply(srcImage, numPixels);
+        }
+    }
+
+    // Compare results
+    for (unsigned int i = 0; i < numPixels * 4; ++i)
+    {
+        OCIO_CHECK_CLOSE(srcImage[i], dstImage[i], error);
+    }
+
+    // Invert the processing.
+
+    // Device to PCS direction
+    OCIO::OpRcPtrVec opsInv;
+    OCIO_CHECK_NO_THROW(BuildOpsTest(opsInv, iccFileName, context, OCIO::TRANSFORM_DIR_INVERSE));
+    OCIO_CHECK_NO_THROW(opsInv.finalize());
+    OCIO_CHECK_NO_THROW(opsInv.optimize(OCIO::OPTIMIZATION_LOSSLESS));
+
+    // apply ops
+    if (bck_op_idx >= 0)
+    {
+        opsInv[bck_op_idx]->apply(srcImage, numPixels);
+    }
+    else
+    {
+        for (const auto & op : opsInv)
+        {
+            op->apply(srcImage, numPixels);
+        }
+    }
+
+    // Compare results
+    for (unsigned int i = 0; i < numPixels * 4; ++i)
+    {
+        OCIO_CHECK_CLOSE_FROM(srcImage[i], bckImage[i], error_bck, lineNo);
+    }
+}
+
+OCIO_ADD_TEST(FileFormatICC, test_apply_para_t1)
+{
+    // Check processing of ParaCurve type 1.
+    // g = 2.4, a = 1.1, b = -0.1
+    {
+        static const std::string iccFileName("icc-test-pc1.icc");
+
+        float srcImage[] = {
+           -1.0f,  -1.0f,  -1.0f,  1.0f,
+            0.0f,   0.0f,   0.0f,  1.0f,
+            0.02f,  0.02f,  0.02f, 1.0f,
+            0.18f,  0.18f,  0.18f, 1.0f,
+            0.5f,   0.5f,   0.5f,  1.0f,
+            0.75f,  0.75f,  0.75f, 1.0f,
+            1.0f,   1.0f,   1.0f,  1.0f,
+            2.0f,   2.0f,   2.0f,  1.0f };
+
+        const float dstImage[] = {
+            0.09090909f, 0.09090909f, 0.09090909f, 1.0f,
+            0.09090909f, 0.09090909f, 0.09090909f, 1.0f,
+            0.26902518f, 0.26902518f, 0.26902518f, 1.0f,
+            0.53586119f, 0.53586119f, 0.53586119f, 1.0f,
+            0.77196938f, 0.77196938f, 0.77196938f, 1.0f,
+            0.89732236f, 0.89732236f, 0.89732236f, 1.0f,
+            1.0f, 1.0f, 1.0f, 1.0f,
+            1.0f, 1.0f, 1.0f, 1.0f };
+
+        // Negative and values above 1.0 are clamped by the LUT and won't round-trip.
+        const float bckImage[] = {
+            0.0f,  0.0f,  0.0f,  1.0f,
+            0.0f,  0.0f,  0.0f,  1.0f,
+            0.02f, 0.02f, 0.02f, 1.0f,
+            0.18f, 0.18f, 0.18f, 1.0f,
+            0.5f,  0.5f,  0.5f,  1.0f,
+            0.75f, 0.75f, 0.75f, 1.0f,
+            1.0f,  1.0f,  1.0f,  1.0f,
+            1.0f,  1.0f,  1.0f,  1.0f };
+
+        ValidateRoundtripProfile(iccFileName, 7, srcImage, dstImage, bckImage, __LINE__, 1, 0);
+    }
+}
+
+OCIO_ADD_TEST(FileFormatICC, test_apply_para_t2)
+{
+    // Check processing of ParaCurve type 2.
+    // g = 2.4, a = 1.057, b = -0.1, c = 0.1
+    {
+        static const std::string iccFileName("icc-test-pc2.icc");
+
+        float srcImage[] = {
+           -1.0f,  -1.0f,  -1.0f,  1.0f,
+            0.0f,   0.0f,   0.0f,  1.0f,
+            0.02f,  0.02f,  0.02f, 1.0f,
+            0.18f,  0.18f,  0.18f, 1.0f,
+            0.5f,   0.5f,   0.5f,  1.0f,
+            0.75f,  0.75f,  0.75f, 1.0f,
+            1.0f,   1.0f,   1.0f,  1.0f,
+            2.0f,   2.0f,   2.0f,  1.0f };
+
+        const float dstImage[] = {
+            0.09481915f, 0.09481915f, 0.09481915f, 1.0f,
+            0.09481915f, 0.09481915f, 0.09481915f, 1.0f,
+            0.09481915f, 0.09481915f, 0.09481915f, 1.0f,
+            0.42486829f, 0.42486829f, 0.42486829f, 1.0f,
+            0.74041277f, 0.74041277f, 0.74041277f, 1.0f,
+            0.88520885f, 0.88520885f, 0.88520885f, 1.0f,
+            1.0f, 1.0f, 1.0f, 1.0f,
+            1.0f, 1.0f, 1.0f, 1.0f };
+
+        // Values below the curve flat segment and above 1.0 are clamped by the LUT and won't round-trip.
+        const float bckImage[] = {
+            0.1f,  0.1f,  0.1f,  1.0f,
+            0.1f,  0.1f,  0.1f,  1.0f,
+            0.1f,  0.1f,  0.1f,  1.0f,
+            0.18f, 0.18f, 0.18f, 1.0f,
+            0.5f,  0.5f,  0.5f,  1.0f,
+            0.75f, 0.75f, 0.75f, 1.0f,
+            1.0f,  1.0f,  1.0f,  1.0f,
+            1.0f,  1.0f,  1.0f,  1.0f };
+
+        ValidateRoundtripProfile(iccFileName, 7, srcImage, dstImage, bckImage, __LINE__, 1, 0);
+    }
+}
+
+OCIO_ADD_TEST(FileFormatICC, test_apply_para_t3)
+{
+    // Check processing of ParaCurve type 3.
+    // g = 2.4, a = 1/1.055, b = 0.055/1.055, c = 1/12.92, d = 0.04045
+    {
+        static const std::string iccFileName("icc-test-pc3.icc");
+
+        float srcImage[] = {
+           -1.0f,  -1.0f,  -1.0f,  1.0f,
+            0.0f,   0.0f,   0.0f,  1.0f,
+            0.02f,  0.02f,  0.02f, 1.0f,
+            0.18f,  0.18f,  0.18f, 1.0f,
+            0.5f,   0.5f,   0.5f,  1.0f,
+            0.75f,  0.75f,  0.75f, 1.0f,
+            1.0f,   1.0f,   1.0f,  1.0f,
+            2.0f,   2.0f,   2.0f,  1.0f };
+
+        const float dstImage[] = {
+            0.0f, 0.0f, 0.0f, 1.0f,
+            0.0f, 0.0f, 0.0f, 1.0f,
+            0.15170372f, 0.15170372f, 0.15170372f, 1.0f,
+            0.46136194f, 0.46136194f, 0.46136194f, 1.0f,
+            0.73536557f, 0.73536557f, 0.73536557f, 1.0f,
+            0.88083965f, 0.88083965f, 0.88083965f, 1.0f,
+            1.0f, 1.0f, 1.0f, 1.0f,
+            1.0f, 1.0f, 1.0f, 1.0f };
+
+        // Negative and values above 1.0 are clamped by the LUT and won't round-trip.
+        const float bckImage[] = {
+            0.0f,  0.0f,  0.0f,  1.0f,
+            0.0f,  0.0f,  0.0f,  1.0f,
+            0.02f, 0.02f, 0.02f, 1.0f,
+            0.18f, 0.18f, 0.18f, 1.0f,
+            0.5f,  0.5f,  0.5f,  1.0f,
+            0.75f, 0.75f, 0.75f, 1.0f,
+            1.0f,  1.0f,  1.0f,  1.0f,
+            1.0f,  1.0f,  1.0f,  1.0f };
+
+        ValidateRoundtripProfile(iccFileName, 7, srcImage, dstImage, bckImage, __LINE__, 1, 0);
+    }
+}
+
+OCIO_ADD_TEST(FileFormatICC, test_apply_para_t4)
+{
+    // Check processing of ParaCurve type 4.
+    // g = 2.4, a = 0.905, b = 0.052, c = 0.073, d = 0.04, e = 0.1, f = 0.1
+    {
+        static const std::string iccFileName("icc-test-pc4.icc");
+
+        float srcImage[] = {
+           -1.0f,  -1.0f,  -1.0f,  1.0f,
+            0.0f,   0.0f,   0.0f,  1.0f,
+            0.02f,  0.02f,  0.02f, 1.0f,
+            0.18f,  0.18f,  0.18f, 1.0f,
+            0.5f,   0.5f,   0.5f,  1.0f,
+            0.75f,  0.75f,  0.75f, 1.0f,
+            1.0f,   1.0f,   1.0f,  1.0f,
+            2.0f,   2.0f,   2.0f,  1.0f };
+
+        const float dstImage[] = {
+            0.0f, 0.0f, 0.0f, 1.0f,
+            0.0f, 0.0f, 0.0f, 1.0f,
+            0.0f, 0.0f, 0.0f, 1.0f,
+            0.32816601f, 0.32816601f, 0.32816601f, 1.0f,
+            0.69675589f, 0.69675589f, 0.69675589f, 1.0f,
+            0.86589807f, 0.86589807f, 0.86589807f, 1.0f,
+            1.0f, 1.0f, 1.0f, 1.0f,
+            1.0f, 1.0f, 1.0f, 1.0f };
+
+        // Values below the forward minimum and above 1.0 are clamped by the LUT and won't round-trip.
+        const float bckImage[] = {
+            0.1f,  0.1f,  0.1f,  1.0f,
+            0.1f,  0.1f,  0.1f,  1.0f,
+            0.1f,  0.1f,  0.1f,  1.0f,
+            0.18f, 0.18f, 0.18f, 1.0f,
+            0.5f,  0.5f,  0.5f,  1.0f,
+            0.75f, 0.75f, 0.75f, 1.0f,
+            1.0f,  1.0f,  1.0f,  1.0f,
+            1.0f,  1.0f,  1.0f,  1.0f };
+
+        ValidateRoundtripProfile(iccFileName, 7, srcImage, dstImage, bckImage, __LINE__, 1, 0, 4e-5f, 4e-5f);
+    }
 }
 
 OCIO_ADD_TEST(FileFormatICC, endian)
@@ -387,4 +646,3 @@ OCIO_ADD_TEST(FileFormatICC, endian)
     OCIO_CHECK_EQUAL(test[0], 0x66);
 
 }
-

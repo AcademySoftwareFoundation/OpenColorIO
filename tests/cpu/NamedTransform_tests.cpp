@@ -29,11 +29,11 @@ OCIO_ADD_TEST(NamedTransform, basic)
     OCIO_CHECK_NE(namedTransform->getTransform(OCIO::TRANSFORM_DIR_FORWARD), mat);
     OCIO_CHECK_ASSERT(!namedTransform->getTransform(OCIO::TRANSFORM_DIR_INVERSE));
 
-    auto actualFwdTransform = OCIO::NamedTransformImpl::GetTransform(namedTransform,
-                                                                     OCIO::TRANSFORM_DIR_FORWARD);
+    auto actualFwdTransform = OCIO::NamedTransform::GetTransform(namedTransform,
+                                                                 OCIO::TRANSFORM_DIR_FORWARD);
     OCIO_CHECK_ASSERT(OCIO_DYNAMIC_POINTER_CAST<const OCIO::MatrixTransform>(actualFwdTransform));
-    auto actualInvTransform = OCIO::NamedTransformImpl::GetTransform(namedTransform,
-                                                                     OCIO::TRANSFORM_DIR_INVERSE);
+    auto actualInvTransform = OCIO::NamedTransform::GetTransform(namedTransform,
+                                                                 OCIO::TRANSFORM_DIR_INVERSE);
     OCIO_CHECK_ASSERT(OCIO_DYNAMIC_POINTER_CAST<const OCIO::MatrixTransform>(actualInvTransform));
 
     std::ostringstream oss;
@@ -196,6 +196,120 @@ OCIO_ADD_TEST(NamedTransform, alias)
     }
 }
 
+OCIO_ADD_TEST(NamedTransform, static_get_transform)
+{
+    auto config = OCIO::Config::CreateRaw();
+
+    const double offsetF[4]{ 0.1, 0.2, 0.3, 0.4 };
+    const double offsetI[4]{ -offsetF[0], -offsetF[1], -offsetF[2], -offsetF[3] };
+
+    auto mat1 = OCIO::MatrixTransform::Create();
+    mat1->setOffset(offsetF);
+    OCIO::NamedTransformRcPtr nt1 = OCIO::NamedTransform::Create();
+    nt1->setTransform(mat1, OCIO::TRANSFORM_DIR_FORWARD);
+
+    auto mat2 = OCIO::MatrixTransform::Create();
+    mat2->setOffset(offsetI);
+    OCIO::NamedTransformRcPtr nt2 = OCIO::NamedTransform::Create();
+    nt2->setTransform(mat2, OCIO::TRANSFORM_DIR_INVERSE);
+
+    // Forward transform from forward-only named transform
+    {
+        auto src_tf = OCIO::NamedTransform::GetTransform(nt1,
+                                                         OCIO::TRANSFORM_DIR_FORWARD);
+        OCIO_CHECK_ASSERT(src_tf);
+        OCIO::ConstProcessorRcPtr proc;
+        OCIO_CHECK_NO_THROW(proc = config->getProcessor(src_tf));
+        OCIO_REQUIRE_ASSERT(proc);
+        OCIO::GroupTransformRcPtr group;
+        OCIO_CHECK_NO_THROW(group = proc->createGroupTransform());
+        OCIO_REQUIRE_ASSERT(group);
+        OCIO_REQUIRE_EQUAL(group->getNumTransforms(), 1);
+        OCIO::TransformRcPtr dst_tf;
+        OCIO_CHECK_NO_THROW(dst_tf = group->getTransform(0));
+        auto mat = OCIO_DYNAMIC_POINTER_CAST<OCIO::MatrixTransform>(dst_tf);
+        OCIO_REQUIRE_ASSERT(mat);
+        double offset[4];
+        mat->getOffset(offset);
+        OCIO_CHECK_EQUAL(offset[0], offsetF[0]);
+        OCIO_CHECK_EQUAL(offset[1], offsetF[1]);
+        OCIO_CHECK_EQUAL(offset[2], offsetF[2]);
+        OCIO_CHECK_EQUAL(offset[3], offsetF[3]);
+    }
+
+    // Inverse transform from forward-only named transform
+    {
+        auto src_tf = OCIO::NamedTransform::GetTransform(nt1,
+                                                         OCIO::TRANSFORM_DIR_INVERSE);
+        OCIO_CHECK_ASSERT(src_tf);
+        OCIO::ConstProcessorRcPtr proc;
+        OCIO_CHECK_NO_THROW(proc = config->getProcessor(src_tf));
+        OCIO_REQUIRE_ASSERT(proc);
+        OCIO::GroupTransformRcPtr group;
+        OCIO_CHECK_NO_THROW(group = proc->createGroupTransform());
+        OCIO_REQUIRE_ASSERT(group);
+        OCIO_REQUIRE_EQUAL(group->getNumTransforms(), 1);
+        OCIO::TransformRcPtr dst_tf;
+        OCIO_CHECK_NO_THROW(dst_tf = group->getTransform(0));
+        auto mat = OCIO_DYNAMIC_POINTER_CAST<OCIO::MatrixTransform>(dst_tf);
+        OCIO_REQUIRE_ASSERT(mat);
+        double offset[4];
+        mat->getOffset(offset);
+        OCIO_CHECK_EQUAL(offset[0], offsetI[0]);
+        OCIO_CHECK_EQUAL(offset[1], offsetI[1]);
+        OCIO_CHECK_EQUAL(offset[2], offsetI[2]);
+        OCIO_CHECK_EQUAL(offset[3], offsetI[3]);
+    }
+
+    // Forward transform from inverse-only named transform
+    {
+        auto src_tf = OCIO::NamedTransform::GetTransform(nt2,
+                                                         OCIO::TRANSFORM_DIR_FORWARD);
+        OCIO_CHECK_ASSERT(src_tf);
+        OCIO::ConstProcessorRcPtr proc;
+        OCIO_CHECK_NO_THROW(proc = config->getProcessor(src_tf));
+        OCIO_REQUIRE_ASSERT(proc);
+        OCIO::GroupTransformRcPtr group;
+        OCIO_CHECK_NO_THROW(group = proc->createGroupTransform());
+        OCIO_REQUIRE_ASSERT(group);
+        OCIO_REQUIRE_EQUAL(group->getNumTransforms(), 1);
+        OCIO::TransformRcPtr dst_tf;
+        OCIO_CHECK_NO_THROW(dst_tf = group->getTransform(0));
+        auto mat = OCIO_DYNAMIC_POINTER_CAST<OCIO::MatrixTransform>(dst_tf);
+        OCIO_REQUIRE_ASSERT(mat);
+        double offset[4];
+        mat->getOffset(offset);
+        OCIO_CHECK_EQUAL(offset[0], offsetF[0]);
+        OCIO_CHECK_EQUAL(offset[1], offsetF[1]);
+        OCIO_CHECK_EQUAL(offset[2], offsetF[2]);
+        OCIO_CHECK_EQUAL(offset[3], offsetF[3]);
+    }
+
+    // Inverse transform from inverse-only named transform
+    {
+        auto src_tf = OCIO::NamedTransform::GetTransform(nt2,
+                                                         OCIO::TRANSFORM_DIR_INVERSE);
+        OCIO_CHECK_ASSERT(src_tf);
+        OCIO::ConstProcessorRcPtr proc;
+        OCIO_CHECK_NO_THROW(proc = config->getProcessor(src_tf));
+        OCIO_REQUIRE_ASSERT(proc);
+        OCIO::GroupTransformRcPtr group;
+        OCIO_CHECK_NO_THROW(group = proc->createGroupTransform());
+        OCIO_REQUIRE_ASSERT(group);
+        OCIO_REQUIRE_EQUAL(group->getNumTransforms(), 1);
+        OCIO::TransformRcPtr dst_tf;
+        OCIO_CHECK_NO_THROW(dst_tf = group->getTransform(0));
+        auto mat = OCIO_DYNAMIC_POINTER_CAST<OCIO::MatrixTransform>(dst_tf);
+        OCIO_REQUIRE_ASSERT(mat);
+        double offset[4];
+        mat->getOffset(offset);
+        OCIO_CHECK_EQUAL(offset[0], offsetI[0]);
+        OCIO_CHECK_EQUAL(offset[1], offsetI[1]);
+        OCIO_CHECK_EQUAL(offset[2], offsetI[2]);
+        OCIO_CHECK_EQUAL(offset[3], offsetI[3]);
+    }
+}
+
 OCIO_ADD_TEST(Config, named_transform_processor)
 {
     // Create a config with color spaces and named transforms.
@@ -271,6 +385,10 @@ named_transforms:
     OCIO::ConstConfigRcPtr config;
     OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(iss));
 
+    OCIO::ConstContextRcPtr context;
+    OCIO_CHECK_NO_THROW(context = config->getCurrentContext());
+    OCIO_REQUIRE_ASSERT(context);
+
     const std::string forward{ "forward" };
     static constexpr double offsetF[4]{ 0.1, 0.2, 0.3, 0.4 };
     const std::string inverse{ "inverse" };
@@ -334,6 +452,248 @@ named_transforms:
         OCIO_CHECK_EQUAL(offset[0], offsetF[0]);
         OCIO_CHECK_EQUAL(offset[1], offsetF[1]);
         OCIO_CHECK_EQUAL(offset[2], offsetF[2]);
+    }
+
+    // Named transform from NamedTransform object and forward direction.
+    {
+        auto nt = config->getNamedTransform("forward");
+        OCIO_REQUIRE_ASSERT(nt);
+
+        OCIO::ConstProcessorRcPtr proc;
+        OCIO_CHECK_NO_THROW(proc = config->getProcessor(nt, OCIO::TRANSFORM_DIR_FORWARD));
+        OCIO_REQUIRE_ASSERT(proc);
+        OCIO::GroupTransformRcPtr group;
+        OCIO_CHECK_NO_THROW(group = proc->createGroupTransform());
+        OCIO_REQUIRE_ASSERT(group);
+        OCIO_REQUIRE_EQUAL(group->getNumTransforms(), 1);
+        OCIO::TransformRcPtr transform;
+        OCIO_CHECK_NO_THROW(transform = group->getTransform(0));
+        auto matrix = OCIO_DYNAMIC_POINTER_CAST<OCIO::MatrixTransform>(transform);
+        OCIO_REQUIRE_ASSERT(matrix);
+        // Named transform forward transform.
+        OCIO_CHECK_EQUAL(forward, proc->getTransformFormatMetadata(0).getAttributeValue(0));
+        double offset[]{ 0., 0., 0., 0. };
+        matrix->getOffset(offset);
+        OCIO_CHECK_EQUAL(offset[0], offsetF[0]);
+        OCIO_CHECK_EQUAL(offset[1], offsetF[1]);
+        OCIO_CHECK_EQUAL(offset[2], offsetF[2]);
+    }
+
+    // Named transform from NamedTransform object and inverse direction.
+    {
+        auto nt = config->getNamedTransform("forward");
+        OCIO_REQUIRE_ASSERT(nt);
+
+        OCIO::ConstProcessorRcPtr proc;
+        OCIO_CHECK_NO_THROW(proc = config->getProcessor(nt, OCIO::TRANSFORM_DIR_INVERSE));
+        OCIO_REQUIRE_ASSERT(proc);
+        OCIO::GroupTransformRcPtr group;
+        OCIO_CHECK_NO_THROW(group = proc->createGroupTransform());
+        OCIO_REQUIRE_ASSERT(group);
+        OCIO_REQUIRE_EQUAL(group->getNumTransforms(), 1);
+        OCIO::TransformRcPtr transform;
+        OCIO_CHECK_NO_THROW(transform = group->getTransform(0));
+        auto matrix = OCIO_DYNAMIC_POINTER_CAST<OCIO::MatrixTransform>(transform);
+        OCIO_REQUIRE_ASSERT(matrix);
+        // Named transform inverse transform not available, use forward transform inverted.
+        OCIO_CHECK_EQUAL(forward, proc->getTransformFormatMetadata(0).getAttributeValue(0));
+        double offset[]{ 0., 0., 0., 0. };
+        matrix->getOffset(offset);
+        OCIO_CHECK_EQUAL(offset[0], -offsetF[0]);
+        OCIO_CHECK_EQUAL(offset[1], -offsetF[1]);
+        OCIO_CHECK_EQUAL(offset[2], -offsetF[2]);
+    }
+
+    // Named transform from NamedTransform object and forward direction with context.
+    {
+        auto nt = config->getNamedTransform("inverse");
+        OCIO_REQUIRE_ASSERT(nt);
+
+        OCIO::ConstProcessorRcPtr proc;
+        OCIO_CHECK_NO_THROW(proc = config->getProcessor(context, 
+                                                        nt, 
+                                                        OCIO::TRANSFORM_DIR_FORWARD));
+        OCIO_REQUIRE_ASSERT(proc);
+        OCIO::GroupTransformRcPtr group;
+        OCIO_CHECK_NO_THROW(group = proc->createGroupTransform());
+        OCIO_REQUIRE_ASSERT(group);
+        OCIO_REQUIRE_EQUAL(group->getNumTransforms(), 1);
+        OCIO::TransformRcPtr transform;
+        OCIO_CHECK_NO_THROW(transform = group->getTransform(0));
+        auto matrix = OCIO_DYNAMIC_POINTER_CAST<OCIO::MatrixTransform>(transform);
+        OCIO_REQUIRE_ASSERT(matrix);
+        // Named transform forward transform not available, use inverse transform inverted.
+        OCIO_CHECK_EQUAL(inverse, proc->getTransformFormatMetadata(0).getAttributeValue(0));
+        double offset[]{ 0., 0., 0., 0. };
+        matrix->getOffset(offset);
+        OCIO_CHECK_EQUAL(offset[0], -offsetI[0]);
+        OCIO_CHECK_EQUAL(offset[1], -offsetI[1]);
+        OCIO_CHECK_EQUAL(offset[2], -offsetI[2]);
+    }
+
+    // Named transform from NamedTransform object and inverse direction with context.
+    {
+        auto nt = config->getNamedTransform("inverse");
+        OCIO_REQUIRE_ASSERT(nt);
+
+        OCIO::ConstProcessorRcPtr proc;
+        OCIO_CHECK_NO_THROW(proc = config->getProcessor(context, 
+                                                        nt, 
+                                                        OCIO::TRANSFORM_DIR_INVERSE));
+        OCIO_REQUIRE_ASSERT(proc);
+        OCIO::GroupTransformRcPtr group;
+        OCIO_CHECK_NO_THROW(group = proc->createGroupTransform());
+        OCIO_REQUIRE_ASSERT(group);
+        OCIO_REQUIRE_EQUAL(group->getNumTransforms(), 1);
+        OCIO::TransformRcPtr transform;
+        OCIO_CHECK_NO_THROW(transform = group->getTransform(0));
+        auto matrix = OCIO_DYNAMIC_POINTER_CAST<OCIO::MatrixTransform>(transform);
+        OCIO_REQUIRE_ASSERT(matrix);
+        // Named transform inverse transform.
+        OCIO_CHECK_EQUAL(inverse, proc->getTransformFormatMetadata(0).getAttributeValue(0));
+        double offset[]{ 0., 0., 0., 0. };
+        matrix->getOffset(offset);
+        OCIO_CHECK_EQUAL(offset[0], offsetI[0]);
+        OCIO_CHECK_EQUAL(offset[1], offsetI[1]);
+        OCIO_CHECK_EQUAL(offset[2], offsetI[2]);
+    }
+
+    // Named transform from name and forward direction.
+    {
+        OCIO::ConstProcessorRcPtr proc;
+        OCIO_CHECK_NO_THROW(proc = config->getProcessor("inverse", 
+                                                        OCIO::TRANSFORM_DIR_FORWARD));
+        OCIO_REQUIRE_ASSERT(proc);
+        OCIO::GroupTransformRcPtr group;
+        OCIO_CHECK_NO_THROW(group = proc->createGroupTransform());
+        OCIO_REQUIRE_ASSERT(group);
+        OCIO_REQUIRE_EQUAL(group->getNumTransforms(), 1);
+        OCIO::TransformRcPtr transform;
+        OCIO_CHECK_NO_THROW(transform = group->getTransform(0));
+        auto matrix = OCIO_DYNAMIC_POINTER_CAST<OCIO::MatrixTransform>(transform);
+        OCIO_REQUIRE_ASSERT(matrix);
+        // Named transform forward transform not available, use inverse transform inverted.
+        OCIO_CHECK_EQUAL(inverse, proc->getTransformFormatMetadata(0).getAttributeValue(0));
+        double offset[]{ 0., 0., 0., 0. };
+        matrix->getOffset(offset);
+        OCIO_CHECK_EQUAL(offset[0], -offsetI[0]);
+        OCIO_CHECK_EQUAL(offset[1], -offsetI[1]);
+        OCIO_CHECK_EQUAL(offset[2], -offsetI[2]);
+    }
+
+    // Named transform from name and inverse direction.
+    {
+        OCIO::ConstProcessorRcPtr proc;
+        OCIO_CHECK_NO_THROW(proc = config->getProcessor("inverse", 
+                                                        OCIO::TRANSFORM_DIR_INVERSE));
+        OCIO_REQUIRE_ASSERT(proc);
+        OCIO::GroupTransformRcPtr group;
+        OCIO_CHECK_NO_THROW(group = proc->createGroupTransform());
+        OCIO_REQUIRE_ASSERT(group);
+        OCIO_REQUIRE_EQUAL(group->getNumTransforms(), 1);
+        OCIO::TransformRcPtr transform;
+        OCIO_CHECK_NO_THROW(transform = group->getTransform(0));
+        auto matrix = OCIO_DYNAMIC_POINTER_CAST<OCIO::MatrixTransform>(transform);
+        OCIO_REQUIRE_ASSERT(matrix);
+        // Named transform inverse transform.
+        OCIO_CHECK_EQUAL(inverse, proc->getTransformFormatMetadata(0).getAttributeValue(0));
+        double offset[]{ 0., 0., 0., 0. };
+        matrix->getOffset(offset);
+        OCIO_CHECK_EQUAL(offset[0], offsetI[0]);
+        OCIO_CHECK_EQUAL(offset[1], offsetI[1]);
+        OCIO_CHECK_EQUAL(offset[2], offsetI[2]);
+    }
+
+    // Named transform from name and forward direction with context.
+    {
+        OCIO::ConstProcessorRcPtr proc;
+        OCIO_CHECK_NO_THROW(proc = config->getProcessor(context, 
+                                                        "forward", 
+                                                        OCIO::TRANSFORM_DIR_FORWARD));
+        OCIO_REQUIRE_ASSERT(proc);
+        OCIO::GroupTransformRcPtr group;
+        OCIO_CHECK_NO_THROW(group = proc->createGroupTransform());
+        OCIO_REQUIRE_ASSERT(group);
+        OCIO_REQUIRE_EQUAL(group->getNumTransforms(), 1);
+        OCIO::TransformRcPtr transform;
+        OCIO_CHECK_NO_THROW(transform = group->getTransform(0));
+        auto matrix = OCIO_DYNAMIC_POINTER_CAST<OCIO::MatrixTransform>(transform);
+        OCIO_REQUIRE_ASSERT(matrix);
+        // Named transform forward transform.
+        OCIO_CHECK_EQUAL(forward, proc->getTransformFormatMetadata(0).getAttributeValue(0));
+        double offset[]{ 0., 0., 0., 0. };
+        matrix->getOffset(offset);
+        OCIO_CHECK_EQUAL(offset[0], offsetF[0]);
+        OCIO_CHECK_EQUAL(offset[1], offsetF[1]);
+        OCIO_CHECK_EQUAL(offset[2], offsetF[2]);
+    }
+
+    // Named transform from name and inverse direction with context.
+    {
+        OCIO::ConstProcessorRcPtr proc;
+        OCIO_CHECK_NO_THROW(proc = config->getProcessor(context, 
+                                                        "forward", 
+                                                        OCIO::TRANSFORM_DIR_INVERSE));
+        OCIO_REQUIRE_ASSERT(proc);
+        OCIO::GroupTransformRcPtr group;
+        OCIO_CHECK_NO_THROW(group = proc->createGroupTransform());
+        OCIO_REQUIRE_ASSERT(group);
+        OCIO_REQUIRE_EQUAL(group->getNumTransforms(), 1);
+        OCIO::TransformRcPtr transform;
+        OCIO_CHECK_NO_THROW(transform = group->getTransform(0));
+        auto matrix = OCIO_DYNAMIC_POINTER_CAST<OCIO::MatrixTransform>(transform);
+        OCIO_REQUIRE_ASSERT(matrix);
+        // Named transform inverse transform not available, use forward transform inverted.
+        OCIO_CHECK_EQUAL(forward, proc->getTransformFormatMetadata(0).getAttributeValue(0));
+        double offset[]{ 0., 0., 0., 0. };
+        matrix->getOffset(offset);
+        OCIO_CHECK_EQUAL(offset[0], -offsetF[0]);
+        OCIO_CHECK_EQUAL(offset[1], -offsetF[1]);
+        OCIO_CHECK_EQUAL(offset[2], -offsetF[2]);
+    }
+
+    // Named transform from alias and forward direction.
+    {
+        OCIO::ConstProcessorRcPtr proc;
+        OCIO_CHECK_NO_THROW(proc = config->getProcessor("ntb", OCIO::TRANSFORM_DIR_FORWARD));
+        OCIO_REQUIRE_ASSERT(proc);
+        OCIO::GroupTransformRcPtr group;
+        OCIO_CHECK_NO_THROW(group = proc->createGroupTransform());
+        OCIO_REQUIRE_ASSERT(group);
+        OCIO_REQUIRE_EQUAL(group->getNumTransforms(), 1);
+        OCIO::TransformRcPtr transform;
+        OCIO_CHECK_NO_THROW(transform = group->getTransform(0));
+        auto matrix = OCIO_DYNAMIC_POINTER_CAST<OCIO::MatrixTransform>(transform);
+        OCIO_REQUIRE_ASSERT(matrix);
+        // Named transform has both transforms, use forward transform.
+        OCIO_CHECK_EQUAL(forward, proc->getTransformFormatMetadata(0).getAttributeValue(0));
+        double offset[]{ 0., 0., 0., 0. };
+        matrix->getOffset(offset);
+        OCIO_CHECK_EQUAL(offset[0], offsetF[0]);
+        OCIO_CHECK_EQUAL(offset[1], offsetF[1]);
+        OCIO_CHECK_EQUAL(offset[2], offsetF[2]);
+    }
+
+    // Named transform from alias and inverse direction.
+    {
+        OCIO::ConstProcessorRcPtr proc;
+        OCIO_CHECK_NO_THROW(proc = config->getProcessor("nt3", OCIO::TRANSFORM_DIR_INVERSE));
+        OCIO_REQUIRE_ASSERT(proc);
+        OCIO::GroupTransformRcPtr group;
+        OCIO_CHECK_NO_THROW(group = proc->createGroupTransform());
+        OCIO_REQUIRE_ASSERT(group);
+        OCIO_REQUIRE_EQUAL(group->getNumTransforms(), 1);
+        OCIO::TransformRcPtr transform;
+        OCIO_CHECK_NO_THROW(transform = group->getTransform(0));
+        auto matrix = OCIO_DYNAMIC_POINTER_CAST<OCIO::MatrixTransform>(transform);
+        OCIO_REQUIRE_ASSERT(matrix);
+        // Named transform has both transforms, use inverse transform.
+        OCIO_CHECK_EQUAL(inverse, proc->getTransformFormatMetadata(0).getAttributeValue(0));
+        double offset[]{ 0., 0., 0., 0. };
+        matrix->getOffset(offset);
+        OCIO_CHECK_EQUAL(offset[0], offsetI[0]);
+        OCIO_CHECK_EQUAL(offset[1], offsetI[1]);
+        OCIO_CHECK_EQUAL(offset[2], offsetI[2]);
     }
 
     // Diplay color space to named transform.

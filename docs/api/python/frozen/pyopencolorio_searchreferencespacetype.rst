@@ -31,3 +31,7 @@
       :module: PyOpenColorIO
       :value: <SearchReferenceSpaceType.SEARCH_REFERENCE_SPACE_SCENE: 0>
 
+
+   .. py:property:: SearchReferenceSpaceType.value
+      :module: PyOpenColorIO
+
