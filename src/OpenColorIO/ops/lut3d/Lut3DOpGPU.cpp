@@ -32,11 +32,17 @@ void GetLut3DGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator, ConstLut3DO
     std::string name(resName.str());
     StringUtils::ReplaceInPlace(name, "__", "_");
 
+    Interpolation samplerInterpolation = lutData->getConcreteInterpolation();
+    // Enforce GL_NEAREST with shader-generated tetrahedral interpolation.
+    if (samplerInterpolation == INTERP_TETRAHEDRAL)
+    {
+        samplerInterpolation = INTERP_NEAREST;
+    }
     // (Using CacheID here to potentially allow reuse of existing textures.)
     shaderCreator->add3DTexture(name.c_str(),
                                 GpuShaderText::getSamplerName(name).c_str(),
                                 lutData->getGridSize(),
-                                lutData->getConcreteInterpolation(),
+                                samplerInterpolation,
                                 &lutData->getArray()[0]);
 
     {
