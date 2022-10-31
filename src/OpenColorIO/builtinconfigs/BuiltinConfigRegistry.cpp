@@ -13,6 +13,7 @@
 
 #include "builtinconfigs/BuiltinConfigRegistry.h"
 #include "builtinconfigs/CGConfig.h"
+#include "builtinconfigs/StudioConfig.h"
 
 #define OUT_OF_RANGE_EXCEPTION_TEXT         "Config index is out of range."
 
@@ -42,9 +43,11 @@ void BuiltinConfigRegistryImpl::init() noexcept
     if (m_builtinConfigs.empty())
     {
         m_builtinConfigs.clear();
+        
         CGCONFIG::Register(*this);
+        STUDIOCONFIG::Register(*this);
 
-        this->setDefaultBuiltinConfig("cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1");
+        this->setDefaultBuiltinConfig("cg-config-v1.0.0_aces-v1.3_ocio-v2.1");
     }
 }
 

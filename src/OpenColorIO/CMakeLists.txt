@@ -12,6 +12,7 @@ set(SOURCES
     BitDepthUtils.cpp
     builtinconfigs/BuiltinConfigRegistry.cpp
     builtinconfigs/CGConfig.cpp
+    builtinconfigs/StudioConfig.cpp
     Caching.cpp
     ColorSpace.cpp
     ColorSpaceSet.cpp
