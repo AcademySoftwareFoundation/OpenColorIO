@@ -651,24 +651,49 @@ void bindPyConfig(py::module & m)
              "context"_a, "srcColorSpaceName"_a, "display"_a, "view"_a, "direction"_a, 
              DOC(Config, getProcessor, 6))
         .def("getProcessor", 
+             (ConstProcessorRcPtr (Config::*)(const ConstNamedTransformRcPtr &, 
+                                              TransformDirection) const) 
+             &Config::getProcessor, 
+             "namedTransform"_a, "direction"_a, 
+             DOC(Config, getProcessor, 7))
+        .def("getProcessor", 
+             (ConstProcessorRcPtr (Config::*)(const ConstContextRcPtr &, 
+                                              const ConstNamedTransformRcPtr &, 
+                                              TransformDirection) const) 
+             &Config::getProcessor, 
+             "context"_a, "namedTransform"_a, "direction"_a, 
+             DOC(Config, getProcessor, 8))
+        .def("getProcessor", 
+             (ConstProcessorRcPtr (Config::*)(const char *, 
+                                              TransformDirection) const) 
+             &Config::getProcessor, 
+             "namedTransformName"_a, "direction"_a,
+             DOC(Config, getProcessor, 9))
+        .def("getProcessor", 
+             (ConstProcessorRcPtr (Config::*)(const ConstContextRcPtr &, 
+                                              const char *,
+                                              TransformDirection) const)
+             &Config::getProcessor, 
+             "context"_a, "namedTransformName"_a, "direction"_a,
+             DOC(Config, getProcessor, 10))
+        .def("getProcessor", 
              (ConstProcessorRcPtr (Config::*)(const ConstTransformRcPtr &) const) 
              &Config::getProcessor, 
              "transform"_a, 
-             DOC(Config, getProcessor, 7))
+             DOC(Config, getProcessor, 11))
         .def("getProcessor", 
              (ConstProcessorRcPtr (Config::*)(const ConstTransformRcPtr &, 
                                               TransformDirection) const) 
              &Config::getProcessor, 
              "transform"_a, "direction"_a, 
-             DOC(Config, getProcessor, 8))
+             DOC(Config, getProcessor, 12))
         .def("getProcessor", 
              (ConstProcessorRcPtr (Config::*)(const ConstContextRcPtr &, 
                                               const ConstTransformRcPtr &, 
                                               TransformDirection) const) 
              &Config::getProcessor, 
              "context"_a, "transform"_a, "direction"_a, 
-             DOC(Config, getProcessor, 9))
-        
+             DOC(Config, getProcessor, 13))
         .def_static("GetProcessorToBuiltinColorSpace", [](const ConstConfigRcPtr & srcConfig,
                                                           const char * srcColorSpaceName,
                                                           const char * builtinColorSpaceName)
@@ -750,7 +775,6 @@ void bindPyConfig(py::module & m)
                     "srcContext"_a, "srcConfig"_a, "srcColorSpaceName"_a, "srcInterchangeName"_a, 
                     "dstContext"_a, "dstConfig"_a, "dstColorSpaceName"_a, "dstInterchangeName"_a, 
                     DOC(Config, GetProcessorFromConfigs, 4))
-
         .def("setProcessorCacheFlags", &Config::setProcessorCacheFlags, "flags"_a, 
              DOC(Config, setProcessorCacheFlags))
 

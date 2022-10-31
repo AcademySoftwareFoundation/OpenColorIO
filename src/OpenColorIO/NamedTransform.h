@@ -50,11 +50,6 @@ public:
     ConstTransformRcPtr getTransform(TransformDirection dir) const override;
     void setTransform(const ConstTransformRcPtr & transform, TransformDirection dir) override;
 
-    // Will create the transform from the inverse direction if the transform for requested
-    // direction is missing.
-    static ConstTransformRcPtr GetTransform(const ConstNamedTransformRcPtr & nt,
-                                            TransformDirection dir);
-
     static void Deleter(NamedTransform * nt);
 
 private:

@@ -26,3 +26,7 @@
       :module: PyOpenColorIO
       :value: <RangeStyle.RANGE_NO_CLAMP: 0>
 
+
+   .. py:property:: RangeStyle.value
+      :module: PyOpenColorIO
+

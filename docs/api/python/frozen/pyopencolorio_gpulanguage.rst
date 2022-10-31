@@ -18,7 +18,13 @@
 
      GPU_LANGUAGE_GLSL_4_0 : OpenGL Shading Language.
 
+     GPU_LANGUAGE_GLSL_ES_1_0 : OpenGL ES Shading Language.
+
+     GPU_LANGUAGE_GLSL_ES_3_0 : OpenGL ES Shading Language.
+
      GPU_LANGUAGE_HLSL_DX11 : DirectX Shading Language.
+
+     GPU_LANGUAGE_MSL_2_0 : Metal Shading Language.
 
    .. py:method:: name() -> str
       :property:
@@ -43,7 +49,26 @@
       :value: <GpuLanguage.GPU_LANGUAGE_GLSL_4_0: 3>
 
 
+   .. py:attribute:: GpuLanguage.GPU_LANGUAGE_GLSL_ES_1_0
+      :module: PyOpenColorIO
+      :value: <GpuLanguage.GPU_LANGUAGE_GLSL_ES_1_0: 6>
+
+
+   .. py:attribute:: GpuLanguage.GPU_LANGUAGE_GLSL_ES_3_0
+      :module: PyOpenColorIO
+      :value: <GpuLanguage.GPU_LANGUAGE_GLSL_ES_3_0: 7>
+
+
    .. py:attribute:: GpuLanguage.GPU_LANGUAGE_HLSL_DX11
       :module: PyOpenColorIO
       :value: <GpuLanguage.GPU_LANGUAGE_HLSL_DX11: 4>
+
+
+   .. py:attribute:: GpuLanguage.GPU_LANGUAGE_MSL_2_0
+      :module: PyOpenColorIO
+      :value: <GpuLanguage.GPU_LANGUAGE_MSL_2_0: 8>
+
+
+   .. py:property:: GpuLanguage.value
+      :module: PyOpenColorIO
 

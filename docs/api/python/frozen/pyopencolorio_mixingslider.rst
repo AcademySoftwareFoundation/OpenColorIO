@@ -20,8 +20,6 @@
    .. py:method:: MixingSlider.__init__(*args, **kwargs)
       :module: PyOpenColorIO
 
-      Initialize self.  See help(type(self)) for accurate signature.
-
 
    .. py:method:: MixingSlider.getSliderMaxEdge(self: PyOpenColorIO.MixingSlider) -> float
       :module: PyOpenColorIO

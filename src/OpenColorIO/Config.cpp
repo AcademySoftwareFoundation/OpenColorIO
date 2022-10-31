@@ -4664,6 +4664,38 @@ ConstProcessorRcPtr Config::getProcessor(const ConstContextRcPtr & context,
     return getProcessor(context, dt, direction);
 }
 
+ConstProcessorRcPtr Config::getProcessor(const ConstNamedTransformRcPtr & namedTransform,
+                                         TransformDirection direction) const
+{
+    ConstContextRcPtr context = getCurrentContext();
+    return getProcessor(context, namedTransform, direction);
+}
+
+ConstProcessorRcPtr Config::getProcessor(const ConstContextRcPtr & context,
+                                         const ConstNamedTransformRcPtr & namedTransform,
+                                         TransformDirection direction) const
+{
+    // This gets or calculates the named transform in the requested direction. The result
+    // is always applied in the forward direction.
+    auto transform = NamedTransform::GetTransform(namedTransform, direction);
+    return getProcessor(context, transform, TRANSFORM_DIR_FORWARD);
+}
+
+ConstProcessorRcPtr Config::getProcessor(const char * namedTransformName,
+                                         TransformDirection direction) const
+{
+    ConstContextRcPtr context = getCurrentContext();
+    return getProcessor(context, namedTransformName, direction);
+}
+
+ConstProcessorRcPtr Config::getProcessor(const ConstContextRcPtr & context,
+                                         const char * namedTransformName,
+                                         TransformDirection direction) const
+{
+    ConstNamedTransformRcPtr namedTransform = getNamedTransform(namedTransformName);
+    return getProcessor(context, namedTransform, direction);
+}
+
 ConstProcessorRcPtr Config::getProcessor(const ConstTransformRcPtr & transform) const
 {
     return getProcessor(transform, TRANSFORM_DIR_FORWARD);

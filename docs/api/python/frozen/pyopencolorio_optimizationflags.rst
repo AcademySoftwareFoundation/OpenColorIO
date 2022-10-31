@@ -208,3 +208,7 @@
       :module: PyOpenColorIO
       :value: <OptimizationFlags.OPTIMIZATION_VERY_GOOD: 263995331>
 
+
+   .. py:property:: OptimizationFlags.value
+      :module: PyOpenColorIO
+

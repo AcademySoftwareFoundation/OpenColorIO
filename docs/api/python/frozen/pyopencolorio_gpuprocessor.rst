@@ -10,8 +10,6 @@
    .. py:method:: GPUProcessor.__init__(*args, **kwargs)
       :module: PyOpenColorIO
 
-      Initialize self.  See help(type(self)) for accurate signature.
-
 
    .. py:method:: GPUProcessor.extractGpuShaderInfo(self: PyOpenColorIO.GPUProcessor, shaderDesc: PyOpenColorIO.GpuShaderDesc) -> None
       :module: PyOpenColorIO

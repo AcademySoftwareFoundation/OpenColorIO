@@ -36,21 +36,27 @@ void CompareFloats(const std::string& floats1, const std::string& floats2)
 OCIO_ADD_TEST(Baker, bake_3dlut)
 {
     constexpr const char * myProfile =
-        "ocio_profile_version: 1\n"
+        "ocio_profile_version: 2\n"
         "\n"
-        "strictparsing: false\n"
+        "file_rules:\n"
+        "  - !<Rule> {name: Default, colorspace: lnh}\n"
         "\n"
         "displays:\n"
         "  display1:\n"
-        "    - !<View> {name: view1, colorspace: test}\n"
+        "    - !<View> {name: view1, colorspace: gamma22}\n"
+        "    - !<View> {name: view2, looks: satlook, colorspace: gamma22}\n"
         "\n"
         "looks:\n"
         "  - !<Look>\n"
-        "    name : mylook\n"
+        "    name : contrastlook\n"
         "    process_space : lnh\n"
         "    transform : !<ExponentTransform> {value: [2.2, 2.2, 2.2, 1]}\n"
+        "  - !<Look>\n"
+        "    name : satlook\n"
+        "    process_space : lnh\n"
+        "    transform : !<CDLTransform> {sat: 2}\n"
         "\n"
-        "colorspaces :\n"
+        "colorspaces:\n"
         "  - !<ColorSpace>\n"
         "    name : lnh\n"
         "    bitdepth : 16f\n"
@@ -58,11 +64,24 @@ OCIO_ADD_TEST(Baker, bake_3dlut)
         "    allocation : lg2\n"
         "\n"
         "  - !<ColorSpace>\n"
-        "    name : test\n"
+        "    name : gamma22\n"
         "    bitdepth : 8ui\n"
         "    isdata : false\n"
         "    allocation : uniform\n"
-        "    to_reference : !<ExponentTransform> {value: [2.2, 2.2, 2.2, 1]}\n";
+        "    to_reference : !<ExponentTransform> {value: [2.2, 2.2, 2.2, 1]}\n"
+        "\n"
+        "named_transforms:\n"
+        "- !<NamedTransform>\n"
+        "  name: logcnt\n"
+        "  transform: !<LogCameraTransform>\n"
+        "    log_side_slope:  0.247189638318671\n"
+        "    log_side_offset: 0.385536998692443\n"
+        "    lin_side_slope:  5.55555555555556\n"
+        "    lin_side_offset: 0.0522722750251688\n"
+        "    lin_side_break:  0.0105909904954696\n"
+        "    base: 10\n"
+        "    direction: inverse\n"
+        "\n";
 
     constexpr const char * expectedLut =
         "CSPLUTV100\n"
@@ -96,7 +115,9 @@ OCIO_ADD_TEST(Baker, bake_3dlut)
     std::istringstream is(myProfile);
     OCIO::ConstConfigRcPtr config;
     OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+    OCIO_CHECK_NO_THROW(config->validate());
     OCIO_REQUIRE_EQUAL(config->getNumColorSpaces(), 2);
+    OCIO_REQUIRE_EQUAL(config->getNumNamedTransforms(), 1);
 
     {
         OCIO::BakerRcPtr bake = OCIO::Baker::Create();
@@ -117,8 +138,8 @@ OCIO_ADD_TEST(Baker, bake_3dlut)
         bake->setLooks("foo, +bar");
         OCIO_CHECK_EQUAL("foo, +bar", std::string(bake->getLooks()));
         bake->setLooks("");
-        bake->setTargetSpace("test");
-        OCIO_CHECK_EQUAL("test", std::string(bake->getTargetSpace()));
+        bake->setTargetSpace("gamma22");
+        OCIO_CHECK_EQUAL("gamma22", std::string(bake->getTargetSpace()));
         bake->setShaperSize(4);
         OCIO_CHECK_EQUAL(4, bake->getShaperSize());
         bake->setCubeSize(2);
@@ -153,7 +174,7 @@ OCIO_ADD_TEST(Baker, bake_3dlut)
         bake->setConfig(config);
         bake->setFormat("resolve_cube");
         bake->setInputSpace("lnh");
-        bake->setLooks("mylook");
+        bake->setLooks("contrastlook");
         bake->setDisplayView("display1", "view1");
         bake->setCubeSize(10);
         std::ostringstream os;
@@ -176,9 +197,49 @@ R"(LUT_1D_SIZE 10
         OCIO_CHECK_EQUAL(expectedCube.size(), os.str().size());
         OCIO_CHECK_EQUAL(expectedCube, os.str());
     }
+
+    {
+        OCIO::BakerRcPtr bake = OCIO::Baker::Create();
+        bake->setConfig(config);
+        bake->setFormat("resolve_cube");
+        bake->setInputSpace("lnh");
+        bake->setShaperSpace("logcnt");
+        bake->setDisplayView("display1", "view2");
+        bake->setShaperSize(10);
+        bake->setCubeSize(2);
+        std::ostringstream os;
+        OCIO_CHECK_NO_THROW(bake->bake(os));
+
+        const std::string expectedCube{
+R"(LUT_1D_SIZE 10
+LUT_1D_INPUT_RANGE -0.017290 55.080036
+LUT_3D_SIZE 2
+0.000000 0.000000 0.000000
+0.763998 0.763998 0.763998
+0.838479 0.838479 0.838479
+0.882030 0.882030 0.882030
+0.912925 0.912925 0.912925
+0.936887 0.936887 0.936887
+0.956464 0.956464 0.956464
+0.973016 0.973016 0.973016
+0.987354 0.987354 0.987354
+1.000000 1.000000 1.000000
+0.000000 0.000000 0.000000
+8.054426 0.000000 0.000000
+0.000000 6.931791 0.000000
+6.384501 6.384501 0.000000
+0.000000 0.000000 8.336130
+7.904850 0.000000 7.904850
+0.000000 6.751890 6.751890
+6.185304 6.185304 6.185304
+)"};
+
+        OCIO_CHECK_EQUAL(expectedCube.size(), os.str().size());
+        OCIO_CHECK_EQUAL(expectedCube, os.str());
+    }
 }
 
-OCIO_ADD_TEST(Baker, baking_config)
+OCIO_ADD_TEST(Baker, baking_validation)
 {
     OCIO::BakerRcPtr bake;
     std::ostringstream os;
@@ -232,9 +293,17 @@ OCIO_ADD_TEST(Baker, baking_config)
           to_reference: !<LogTransform> {}
 
         - !<ColorSpace>
-          name : Crosstalk
+          name : Saturation
           isdata : false
           to_reference: !<CDLTransform> {sat: 0.5}
+
+        - !<ColorSpace>
+          name : Log2sRGB
+          isdata : false
+          to_reference: !<GroupTransform>
+            children:
+              - !<LogTransform> {base: 2, direction: inverse}
+              - !<MatrixTransform> {matrix: [3.2409, -1.5373, -0.4986, 0, -0.9692, 1.8759, 0.0415, 0, 0.0556, -0.2039, 1.0569, 0, 0, 0, 0, 1 ], direction: inverse}
 
         - !<ColorSpace>
           name : sRGB
@@ -248,6 +317,12 @@ OCIO_ADD_TEST(Baker, baking_config)
           name : Gamma22
           isdata : false
           from_reference : !<ExponentTransform> {value: [2.2, 2.2, 2.2, 1], direction: inverse}
+
+        named_transforms:
+
+        - !<NamedTransform>
+          name: Log2NT
+          transform: !<LogTransform> {base: 2}
 
         inactive_colorspaces: [RawInactive]
     )";
@@ -450,12 +525,56 @@ OCIO_ADD_TEST(Baker, baking_config)
     bake->setConfig(config);
     bake->setInputSpace("Raw");
     bake->setTargetSpace("sRGB");
-    bake->setShaperSpace("Crosstalk");
+    bake->setShaperSpace("Saturation");
     bake->setFormat("cinespace");
 
     os.str("");
     OCIO_CHECK_THROW_WHAT(bake->bake(os), OCIO::Exception,
-        "The specified shaper space, 'Crosstalk' has channel crosstalk, which "
+        "The specified shaper space, 'Saturation' has channel crosstalk, which "
         "is not appropriate for shapers. Please select an alternate shaper "
         "space or omit this option.");
+
+    // Using shaper space without Crosstalk (after optimization).
+    bake = OCIO::Baker::Create();
+    bake->setConfig(config);
+    bake->setInputSpace("sRGB");
+    bake->setTargetSpace("Raw");
+    bake->setShaperSpace("Log2sRGB");
+    bake->setFormat("cinespace");
+
+    os.str("");
+    OCIO_CHECK_NO_THROW(bake->bake(os));
+
+    // Using NamedTransform as shaper space.
+    bake = OCIO::Baker::Create();
+    bake->setConfig(config);
+    bake->setInputSpace("sRGB");
+    bake->setTargetSpace("Raw");
+    bake->setShaperSpace("Log2NT");
+    bake->setFormat("cinespace");
+
+    os.str("");
+    OCIO_CHECK_NO_THROW(bake->bake(os));
+
+    // Using NamedTransform as input space is not supported.
+    bake = OCIO::Baker::Create();
+    bake->setConfig(config);
+    bake->setInputSpace("Log2NT");
+    bake->setTargetSpace("sRGB");
+    bake->setFormat("cinespace");
+
+    os.str("");
+    OCIO_CHECK_THROW_WHAT(bake->bake(os), OCIO::Exception,
+        "Could not find input colorspace 'Log2NT'.");
+
+    // Using NamedTransform as target space is not supported.
+    bake = OCIO::Baker::Create();
+    bake->setConfig(config);
+    bake->setInputSpace("sRGB");
+    bake->setTargetSpace("Log2NT");
+    bake->setFormat("cinespace");
+
+    os.str("");
+    OCIO_CHECK_THROW_WHAT(bake->bake(os), OCIO::Exception,
+        "Could not find target colorspace 'Log2NT'.");
 }

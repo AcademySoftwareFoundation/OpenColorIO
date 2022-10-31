@@ -1203,6 +1203,19 @@ public:
                                      const char * view,
                                      TransformDirection direction) const;
 
+    /// Get the processor to apply a NamedTransform in the specified direction.
+    ConstProcessorRcPtr getProcessor(const ConstNamedTransformRcPtr & namedTransform,
+                                     TransformDirection direction) const;
+    ConstProcessorRcPtr getProcessor(const ConstContextRcPtr & context,
+                                     const ConstNamedTransformRcPtr & namedTransform,
+                                     TransformDirection direction) const;
+
+    ConstProcessorRcPtr getProcessor(const char * namedTransformName,
+                                     TransformDirection direction) const;
+    ConstProcessorRcPtr getProcessor(const ConstContextRcPtr & context,
+                                     const char * namedTransformName,
+                                     TransformDirection direction) const;
+
     /**
      * \brief Get the processor for the specified transform.
      * 
@@ -2167,6 +2180,13 @@ public:
     virtual ConstTransformRcPtr getTransform(TransformDirection dir) const = 0;
     virtual void setTransform(const ConstTransformRcPtr & transform, TransformDirection dir) = 0;
 
+    /**
+     * Will create the transform from the inverse direction if the transform for requested
+     * direction is missing.
+     */
+    static ConstTransformRcPtr GetTransform(const ConstNamedTransformRcPtr & nt,
+                                            TransformDirection dir);
+
     NamedTransform(const NamedTransform &) = delete;
     NamedTransform & operator= (const NamedTransform &) = delete;
     // Do not use (needed only for pybind11).
@@ -2634,10 +2654,10 @@ public:
 
     const char * getShaperSpace() const;
     /**
-     * Set an *optional* ColorSpace to shape the incoming values of the LUT.
-     * When baking 3DLUT, this will correspond to the 1D shaper used to
-     * normalise incoming values to the unit range. When baking 1D LUT, this
-     * will be used to determine the input range of the LUT.
+     * Set an *optional* ColorSpace or NamedTransform to shape the incoming
+     * values of the LUT.  When baking 3DLUT, this will correspond to the 1D
+     * shaper used to normalise incoming values to the unit range.  When baking
+     * 1D LUT, this will be used to determine the input range of the LUT.
      */
     void setShaperSpace(const char * shaperSpace);
 
