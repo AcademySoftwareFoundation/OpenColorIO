@@ -99,7 +99,12 @@ really_inline from_chars_result from_chars(const char *first, const char *last, 
 
     float
 #ifdef _WIN32
+#if defined(__MINGW32__) || defined(__MINGW64__)
+    // MinGW doesn't define strtof_l (clang/gcc) nor strtod_l (gcc)...
+    tempval = static_cast<float>(_strtod_l (first, &endptr, loc.local));
+#else
     tempval = _strtof_l(first, &endptr, loc.local);
+#endif
 #elif __APPLE__
     // On OSX, strtod_l is for some reason drastically faster than strtof_l.
     tempval = static_cast<float>(::strtod_l(first, &endptr, loc.local));
