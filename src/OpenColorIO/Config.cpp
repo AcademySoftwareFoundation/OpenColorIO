@@ -4758,6 +4758,41 @@ ConstProcessorRcPtr Config::getProcessor(const ConstContextRcPtr & context,
             << *transform
             << direction;
 
+        if (transform->getTransformType() == TRANSFORM_TYPE_FILE)
+        {
+            // Since the CCCID could change between getProcessor's call, the CCCID must 
+            // included in the key string for the processor cache when the transform is a 
+            // File Transform.
+            ConstFileTransformRcPtr fileTransform = DynamicPtrCast<const FileTransform>(transform);
+            if (fileTransform)
+            {
+                // Add the CCCID to the processor cache key.
+                oss << context->resolveStringVar(fileTransform->getCCCId(), usedContext);
+            }
+        }
+        else if (transform->getTransformType() == TRANSFORM_TYPE_LOOK)
+        {
+            // Check if the look's transform is a File Transform. If that's the case, add the 
+            // CCCID to the processor cache key for that transform.
+            ConstLookTransformRcPtr lookTransform = DynamicPtrCast<const LookTransform>(transform);
+            if (lookTransform)
+            {
+                ConstTransformRcPtr transform = getLook(lookTransform->getLooks())->getTransform();
+                if (transform)
+                {
+                    // Since the CCCID could change between getProcessor's call, the CCCID must 
+                    // included in the key string for the processor cache when the transform is a 
+                    // File Transform.
+                    ConstFileTransformRcPtr fileTransform = DynamicPtrCast<const FileTransform>(transform);
+                    if (fileTransform)
+                    {
+                        // Add the CCCID to the processor cache key.
+                        oss << context->resolveStringVar(fileTransform->getCCCId(), usedContext);
+                    }
+                }
+            }
+        }
+
         const std::size_t key = std::hash<std::string>{}(oss.str());
 
         // As the entry is a shared pointer instance, having an empty one means that the entry does
