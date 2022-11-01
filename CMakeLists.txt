@@ -28,7 +28,7 @@ endif()
 # Project definition.
 
 project(OpenColorIO 
-    VERSION 2.2.0
+    VERSION 2.3.0
     DESCRIPTION "OpenColorIO (OCIO) is a complete color management solution"
     HOMEPAGE_URL https://github.com/AcademySoftwareFoundation/OpenColorIO
     LANGUAGES CXX C)
