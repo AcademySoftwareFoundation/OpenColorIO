@@ -282,6 +282,15 @@ bool CollectContextVariables(const Config &,
         usedContextVars->addStringVars(ctxFilepath);
     }
 
+    // Check if the CCCID is using a context variable and add it to the context if that's the case.
+    const char * cccid = tr.getCCCId();
+    std::string resolvedCCCID = context.resolveStringVar(cccid, ctxFilename);
+    if (!resolvedCCCID.empty() && Platform::Strcasecmp(cccid, resolvedCCCID.c_str()) != 0)
+    {
+        foundContextVars = true;
+        usedContextVars->setStringVar(tr.getCCCId(), resolvedCCCID.c_str());
+    }
+
     return foundContextVars;
 }
 
