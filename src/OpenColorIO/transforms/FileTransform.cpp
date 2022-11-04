@@ -284,8 +284,9 @@ bool CollectContextVariables(const Config &,
 
     // Check if the CCCID is using a context variable and add it to the context if that's the case.
     ContextRcPtr ctxCCCID = Context::Create();
-    std::string resolvedCCCID = context.resolveStringVar(tr.getCCCId(), ctxCCCID);
-    if (!resolvedCCCID.empty())
+    const char * cccid = tr.getCCCId();
+    std::string resolvedCCCID = context.resolveStringVar(cccid, ctxCCCID);
+    if (0 != strcmp(resolvedCCCID.c_str(), cccid))
     {
         foundContextVars = true;
         usedContextVars->addStringVars(ctxCCCID);
