@@ -7833,6 +7833,67 @@ OCIO_ADD_TEST(Config, context_variables_typical_use_cases)
                           cfg->getProcessor(ctx2, "cs1", "cs2").get());
         }
     }
+
+
+    // Case 7 - Context variables in the FileTransform's CCCID.
+    {
+        static const std::string CONFIG = 
+            "ocio_profile_version: 2\n"
+            "\n"
+            "environment:\n"
+            "  FILE: cdl_test1.ccc\n"
+            "  SHOT: cc0002\n"
+            "  CCPREFIX: cc\n"
+            "  CCNUM: 03\n"
+            "\n"
+            "search_path: " + OCIO::GetTestFilesDir() + "\n"
+            "\n"
+            "roles:\n"
+            "  default: cs1\n"
+            "\n"
+            "displays:\n"
+            "  disp1:\n"
+            "    - !<View> {name: view1, colorspace: cs2}\n"
+            "\n"
+            "colorspaces:\n"
+            "  - !<ColorSpace>\n"
+            "    name: cs1\n"
+            "\n"
+            "  - !<ColorSpace>\n"
+            "    name: cs2\n"
+            "    from_scene_reference: !<FileTransform> {src: $FILE, cccid: cc0001}\n";
+
+        std::istringstream iss;
+        iss.str(CONFIG);
+
+        OCIO::ConfigRcPtr cfg;
+        OCIO_CHECK_NO_THROW(cfg = OCIO::Config::CreateFromStream(iss)->createEditableCopy());
+        OCIO_CHECK_NO_THROW(cfg->validate());
+
+        OCIO::ConstTransformRcPtr ctf = cfg->getColorSpace("cs2")->getTransform(
+            OCIO::COLORSPACE_DIR_FROM_REFERENCE
+        );
+        OCIO::TransformRcPtr tf = ctf->createEditableCopy();
+        OCIO::FileTransformRcPtr fileTf = OCIO::DynamicPtrCast<OCIO::FileTransform>(tf);
+        OCIO_CHECK_ASSERT(fileTf);
+        
+        // String literal as cccid
+        OCIO::ConstProcessorRcPtr p1 = cfg->getProcessor(fileTf);
+        
+        // Context variable as cccid
+        fileTf->setCCCId("$SHOT");
+        OCIO::ConstProcessorRcPtr p2 = cfg->getProcessor(fileTf);
+
+        // Combinaisons of context variables and string literals.
+        fileTf->setCCCId("$CCPREFIX00$CCNUM");
+        OCIO::ConstProcessorRcPtr p3 = cfg->getProcessor(fileTf);
+
+        // All three processors should be different.
+        OCIO_CHECK_NE(p1.get(), p2.get());
+        OCIO_CHECK_NE(p1.get(), p3.get());
+        OCIO_CHECK_NE(p2.get(), p3.get());
+
+    }
 }
 
 OCIO_ADD_TEST(Config, virtual_display)
