@@ -7841,10 +7841,8 @@ OCIO_ADD_TEST(Config, context_variables_typical_use_cases)
             "ocio_profile_version: 2\n"
             "\n"
             "environment:\n"
-            "  FILE: cdl_test1.ccc\n"
             "  SHOT: cc0002\n"
             "  CCPREFIX: cc\n"
-            "  CCNUM: 03\n"
             "\n"
             "search_path: " + OCIO::GetTestFilesDir() + "\n"
             "\n"
@@ -7861,7 +7859,7 @@ OCIO_ADD_TEST(Config, context_variables_typical_use_cases)
             "\n"
             "  - !<ColorSpace>\n"
             "    name: cs2\n"
-            "    from_scene_reference: !<FileTransform> {src: $FILE, cccid: cc0001}\n";
+            "    from_scene_reference: !<FileTransform> {src: cdl_test1.ccc, cccid: $CCPREFIX00$CCNUM}\n";
 
         std::istringstream iss;
         iss.str(CONFIG);
@@ -7873,20 +7871,21 @@ OCIO_ADD_TEST(Config, context_variables_typical_use_cases)
         OCIO::ConstTransformRcPtr ctf = cfg->getColorSpace("cs2")->getTransform(
             OCIO::COLORSPACE_DIR_FROM_REFERENCE
         );
-        OCIO::TransformRcPtr tf = ctf->createEditableCopy();
-        OCIO::FileTransformRcPtr fileTf = OCIO::DynamicPtrCast<OCIO::FileTransform>(tf);
-        OCIO_CHECK_ASSERT(fileTf);
+        OCIO_REQUIRE_ASSERT(ctf);
+
+        auto ctx = cfg->getCurrentContext()->createEditableCopy();
         
         // String literal as cccid
-        OCIO::ConstProcessorRcPtr p1 = cfg->getProcessor(fileTf);
+        ctx->setStringVar("CCNUM", "01");
+        OCIO::ConstProcessorRcPtr p1 = cfg->getProcessor(ctx, ctf, OCIO::TRANSFORM_DIR_FORWARD);
         
         // Context variable as cccid
-        fileTf->setCCCId("$SHOT");
-        OCIO::ConstProcessorRcPtr p2 = cfg->getProcessor(fileTf);
+        ctx->setStringVar("CCNUM", "02");
+        OCIO::ConstProcessorRcPtr p2 = cfg->getProcessor(ctx, ctf, OCIO::TRANSFORM_DIR_FORWARD);
 
-        // Combinaisons of context variables and string literals.
-        fileTf->setCCCId("$CCPREFIX00$CCNUM");
-        OCIO::ConstProcessorRcPtr p3 = cfg->getProcessor(fileTf);
+        // Combination of context variables and string literals.
+        ctx->setStringVar("CCNUM", "03");
+        OCIO::ConstProcessorRcPtr p3 = cfg->getProcessor(ctx, ctf, OCIO::TRANSFORM_DIR_FORWARD);
 
         // All three processors should be different.
         OCIO_CHECK_NE(p1.get(), p2.get());
