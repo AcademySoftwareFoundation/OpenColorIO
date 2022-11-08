@@ -5,8 +5,8 @@
 # 
 # This module DOES NOT install minizip-ng with MZ_COMPAT=ON if it is not found.
 #
-# Note: That options changes the name for the library file to "libminizip", but is it still
-#       minizip-ng. OCIO uses the API from minizip-ng.
+# Note: This option changes the name for the library file to "libminizip", but it is still
+#       actually minizip-ng. OCIO uses the API from minizip-ng.
 #
 # Variables defined by this module:
 #   minizip_FOUND        - If FALSE, do not try to link to minizip

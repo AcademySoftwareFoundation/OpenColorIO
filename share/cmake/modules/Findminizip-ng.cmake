@@ -140,7 +140,7 @@ if(NOT minizip_FOUND AND NOT TARGET minizip::minizip)
                 -DCMAKE_INSTALL_BINDIR=${CMAKE_INSTALL_BINDIR}
                 -DCMAKE_INSTALL_DATADIR=${CMAKE_INSTALL_DATADIR}
                 -DCMAKE_INSTALL_LIBDIR=${CMAKE_INSTALL_LIBDIR}
-                # Since the other modules creates a subfolder for the includes by default and since
+                # Since the other modules create a subfolder for the includes by default and since
                 # minizip-ng does not, a suffix is added to CMAKE_INSTALL_INCLUDEDIR in order to
                 # install the headers under a subdirectory named "minizip-ng".
                 # Note that this does not affect external builds for minizip-ng.
