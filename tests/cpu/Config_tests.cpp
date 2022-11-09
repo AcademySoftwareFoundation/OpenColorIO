@@ -7841,7 +7841,6 @@ OCIO_ADD_TEST(Config, context_variables_typical_use_cases)
             "ocio_profile_version: 2\n"
             "\n"
             "environment:\n"
-            "  SHOT: cc0002\n"
             "  CCPREFIX: cc\n"
             "\n"
             "search_path: " + OCIO::GetTestFilesDir() + "\n"
@@ -7873,17 +7872,14 @@ OCIO_ADD_TEST(Config, context_variables_typical_use_cases)
         );
         OCIO_REQUIRE_ASSERT(ctf);
 
-        auto ctx = cfg->getCurrentContext()->createEditableCopy();
+        OCIO::ContextRcPtr ctx = cfg->getCurrentContext()->createEditableCopy();
         
-        // String literal as cccid
         ctx->setStringVar("CCNUM", "01");
         OCIO::ConstProcessorRcPtr p1 = cfg->getProcessor(ctx, ctf, OCIO::TRANSFORM_DIR_FORWARD);
         
-        // Context variable as cccid
         ctx->setStringVar("CCNUM", "02");
         OCIO::ConstProcessorRcPtr p2 = cfg->getProcessor(ctx, ctf, OCIO::TRANSFORM_DIR_FORWARD);
 
-        // Combination of context variables and string literals.
         ctx->setStringVar("CCNUM", "03");
         OCIO::ConstProcessorRcPtr p3 = cfg->getProcessor(ctx, ctf, OCIO::TRANSFORM_DIR_FORWARD);
 
@@ -7891,7 +7887,6 @@ OCIO_ADD_TEST(Config, context_variables_typical_use_cases)
         OCIO_CHECK_NE(p1.get(), p2.get());
         OCIO_CHECK_NE(p1.get(), p3.get());
         OCIO_CHECK_NE(p2.get(), p3.get());
-
     }
 }
 
