@@ -433,50 +433,54 @@ OCIO_ADD_TEST(FileTransform, context_variables)
     OCIO_CHECK_NO_THROW(cfg->getProcessor(ctx, file, OCIO::TRANSFORM_DIR_FORWARD));
 
 
-    // Case 4 - The 'cccid' now contain a context variable
-    static const std::string CONFIG = 
-        "ocio_profile_version: 2\n"
-        "\n"
-        "environment:\n"
-        "  CCPREFIX: cc\n"
-        "\n"
-        "search_path: " + OCIO::GetTestFilesDir() + "\n"
-        "\n"
-        "roles:\n"
-        "  default: cs1\n"
-        "\n"
-        "displays:\n"
-        "  disp1:\n"
-        "    - !<View> {name: view1, colorspace: cs2}\n"
-        "\n"
-        "colorspaces:\n"
-        "  - !<ColorSpace>\n"
-        "    name: cs1\n"
-        "\n"
-        "  - !<ColorSpace>\n"
-        "    name: cs2\n"
-        "    from_scene_reference: !<FileTransform> {src: cdl_test1.ccc, cccid: $CCPREFIX00$CCNUM}\n";
+    {
+        // Case 4 - The 'cccid' now contains a context variable
+        static const std::string CONFIG = 
+            "ocio_profile_version: 2\n"
+            "\n"
+            "environment:\n"
+            "  CCPREFIX: cc\n"
+            "  CCNUM: 02\n"
+            "\n"
+            "search_path: " + OCIO::GetTestFilesDir() + "\n"
+            "\n"
+            "roles:\n"
+            "  default: cs1\n"
+            "\n"
+            "displays:\n"
+            "  disp1:\n"
+            "    - !<View> {name: view1, colorspace: cs2}\n"
+            "\n"
+            "colorspaces:\n"
+            "  - !<ColorSpace>\n"
+            "    name: cs1\n"
+            "\n"
+            "  - !<ColorSpace>\n"
+            "    name: cs2\n"
+            "    from_scene_reference: !<FileTransform> {src: cdl_test1.ccc, cccid: $CCPREFIX00$CCNUM}\n";
 
-        std::istringstream iss;
-        iss.str(CONFIG);
+            std::istringstream iss;
+            iss.str(CONFIG);
 
-        OCIO_CHECK_NO_THROW(cfg = OCIO::Config::CreateFromStream(iss)->createEditableCopy());
-        OCIO_CHECK_NO_THROW(cfg->validate());
+            OCIO::ConstConfigRcPtr cfg;
+            OCIO_CHECK_NO_THROW(cfg = OCIO::Config::CreateFromStream(iss));
+            OCIO_CHECK_NO_THROW(cfg->validate());
 
-        ctx = cfg->getCurrentContext()->createEditableCopy();
-        OCIO_CHECK_NO_THROW(ctx->setStringVar("CCNUM", "01"));
+            ctx = cfg->getCurrentContext()->createEditableCopy();
+            OCIO_CHECK_NO_THROW(ctx->setStringVar("CCNUM", "01"));
 
-        usedContextVars = OCIO::Context::Create(); // New & empty instance.
-        OCIO::ConstTransformRcPtr tr1 = cfg->getColorSpace("cs2")->getTransform(
-            OCIO::COLORSPACE_DIR_FROM_REFERENCE
-        );
-        OCIO::ConstFileTransformRcPtr fTr1 = OCIO::DynamicPtrCast<const OCIO::FileTransform>(tr1);
-        OCIO_CHECK_ASSERT(fTr1);
-        
-        OCIO_CHECK_ASSERT(CollectContextVariables(*cfg, *ctx, *fTr1, usedContextVars));
-        OCIO_CHECK_EQUAL(2, usedContextVars->getNumStringVars());
-        OCIO_CHECK_EQUAL(std::string("CCPREFIX"), usedContextVars->getStringVarNameByIndex(0));
-        OCIO_CHECK_EQUAL(std::string("cc"), usedContextVars->getStringVarByIndex(0));
-        OCIO_CHECK_EQUAL(std::string("CCNUM"), usedContextVars->getStringVarNameByIndex(1));
-        OCIO_CHECK_EQUAL(std::string("01"), usedContextVars->getStringVarByIndex(1));
+            usedContextVars = OCIO::Context::Create(); // New & empty instance.
+            OCIO::ConstTransformRcPtr tr1 = cfg->getColorSpace("cs2")->getTransform(
+                OCIO::COLORSPACE_DIR_FROM_REFERENCE
+            );
+            OCIO::ConstFileTransformRcPtr fTr1 = OCIO::DynamicPtrCast<const OCIO::FileTransform>(tr1);
+            OCIO_CHECK_ASSERT(fTr1);
+            
+            OCIO_CHECK_ASSERT(CollectContextVariables(*cfg, *ctx, *fTr1, usedContextVars));
+            OCIO_CHECK_EQUAL(2, usedContextVars->getNumStringVars());
+            OCIO_CHECK_EQUAL(std::string("CCPREFIX"), usedContextVars->getStringVarNameByIndex(0));
+            OCIO_CHECK_EQUAL(std::string("cc"), usedContextVars->getStringVarByIndex(0));
+            OCIO_CHECK_EQUAL(std::string("CCNUM"), usedContextVars->getStringVarNameByIndex(1));
+            OCIO_CHECK_EQUAL(std::string("01"), usedContextVars->getStringVarByIndex(1));
+    }
 }
