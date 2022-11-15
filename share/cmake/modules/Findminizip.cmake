@@ -29,58 +29,102 @@
 ### Try to find package ###
 
 if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
-    list(APPEND _minizip_REQUIRED_VARS minizip_INCLUDE_DIR)
 
-    # Search for minizip.pc
-    find_package(PkgConfig QUIET)
-    pkg_check_modules(PC_minizip QUIET "minizip>=${minizip_FIND_VERSION}")
-
-    # Find include directory
-    find_path(minizip_INCLUDE_DIR
-        NAMES
-            mz.h
-        HINTS
-            ${minizip_ROOT}
-            ${PC_minizip_INCLUDE_DIRS}
-        PATH_SUFFIXES
-            include
-            minizip/include
-    )
-
-    # Lib names to search for
-    set(_minizip_LIB_NAMES minizip)
-
-    if(BUILD_TYPE_DEBUG)
-        # Prefer Debug lib names (Windows only)
-        list(INSERT _minizip_LIB_NAMES 0 minizipd)
+    if(NOT DEFINED minizip_ROOT)
+        # Search for minizip-config.cmake
+        find_package(minizip ${minizip_FIND_VERSION} CONFIG QUIET)
     endif()
 
-    if(minizip_STATIC_LIBRARY)
-        # Prefer static lib names
-        set(_minizip_STATIC_LIB_NAMES 
-            "${CMAKE_STATIC_LIBRARY_PREFIX}minizip${CMAKE_STATIC_LIBRARY_SUFFIX}")
-        if(WIN32 AND BUILD_TYPE_DEBUG)
-            # Prefer static Debug lib names (Windows only)
-            list(INSERT _minizip_STATIC_LIB_NAMES 0
-                "${CMAKE_STATIC_LIBRARY_PREFIX}minizipd${CMAKE_STATIC_LIBRARY_SUFFIX}")
+    if (minizip_FOUND)
+        get_target_property(minizip_INCLUDE_DIR MINIZIP::minizip INTERFACE_INCLUDE_DIRECTORIES)
+        get_target_property(minizip_LIBRARY MINIZIP::minizip LOCATION)
+
+        if (not minizip_LIBRARY)
+            # Lib names to search for
+            set(_minizip_LIB_NAMES minizip)
+
+            if(BUILD_TYPE_DEBUG)
+                # Prefer Debug lib names (Windows only)
+                list(INSERT _minizip_LIB_NAMES 0 minizipd)
+            endif()
+
+            if(minizip_STATIC_LIBRARY)
+                # Prefer static lib names
+                set(_minizip_STATIC_LIB_NAMES 
+                    "${CMAKE_STATIC_LIBRARY_PREFIX}minizip${CMAKE_STATIC_LIBRARY_SUFFIX}")
+                if(WIN32 AND BUILD_TYPE_DEBUG)
+                    # Prefer static Debug lib names (Windows only)
+                    list(INSERT _minizip_STATIC_LIB_NAMES 0
+                        "${CMAKE_STATIC_LIBRARY_PREFIX}minizipd${CMAKE_STATIC_LIBRARY_SUFFIX}")
+                endif()
+            endif()
+
+            # Find library
+            find_library(minizip_LIBRARY
+                NAMES
+                    ${_minizip_STATIC_LIB_NAMES}
+                    ${_minizip_LIB_NAMES}
+                HINTS
+                    ${minizip_ROOT}
+                    ${PC_minizip_LIBRARY_DIRS}
+                PATH_SUFFIXES
+                    lib64 lib 
+            )
         endif()
+    else()
+        list(APPEND _minizip_REQUIRED_VARS minizip_INCLUDE_DIR)
+
+        # Search for minizip.pc
+        find_package(PkgConfig QUIET)
+        pkg_check_modules(PC_minizip QUIET "minizip>=${minizip_FIND_VERSION}")
+
+        # Find include directory
+        find_path(minizip_INCLUDE_DIR
+            NAMES
+                mz.h
+            HINTS
+                ${minizip_ROOT}
+                ${PC_minizip_INCLUDE_DIRS}
+            PATH_SUFFIXES
+                include
+                minizip/include
+        )
+
+        # Lib names to search for
+        set(_minizip_LIB_NAMES minizip)
+
+        if(BUILD_TYPE_DEBUG)
+            # Prefer Debug lib names (Windows only)
+            list(INSERT _minizip_LIB_NAMES 0 minizipd)
+        endif()
+
+        if(minizip_STATIC_LIBRARY)
+            # Prefer static lib names
+            set(_minizip_STATIC_LIB_NAMES 
+                "${CMAKE_STATIC_LIBRARY_PREFIX}minizip${CMAKE_STATIC_LIBRARY_SUFFIX}")
+            if(WIN32 AND BUILD_TYPE_DEBUG)
+                # Prefer static Debug lib names (Windows only)
+                list(INSERT _minizip_STATIC_LIB_NAMES 0
+                    "${CMAKE_STATIC_LIBRARY_PREFIX}minizipd${CMAKE_STATIC_LIBRARY_SUFFIX}")
+            endif()
+        endif()
+
+        # Find library
+        find_library(minizip_LIBRARY
+            NAMES
+                ${_minizip_STATIC_LIB_NAMES}
+                ${_minizip_LIB_NAMES}
+            HINTS
+                ${minizip_ROOT}
+                ${PC_minizip_LIBRARY_DIRS}
+            PATH_SUFFIXES
+                lib64
+                lib 
+        )
+
+        # Get version from header or pkg-config
+        set(minizip_VERSION "${minizip_FIND_VERSION}")
     endif()
-
-    # Find library
-    find_library(minizip_LIBRARY
-        NAMES
-            ${_minizip_STATIC_LIB_NAMES}
-            ${_minizip_LIB_NAMES}
-        HINTS
-            ${minizip_ROOT}
-            ${PC_minizip_LIBRARY_DIRS}
-        PATH_SUFFIXES
-            lib64
-            lib 
-    )
-
-    # Get version from header or pkg-config
-    set(minizip_VERSION "${minizip_FIND_VERSION}")
 
     # Override REQUIRED if package can be installed
     if(OCIO_INSTALL_EXT_PACKAGES STREQUAL MISSING)
