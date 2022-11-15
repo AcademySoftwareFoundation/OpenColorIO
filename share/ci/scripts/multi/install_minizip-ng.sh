@@ -45,8 +45,8 @@ cmake -DCMAKE_BUILD_TYPE=Release \
       -DMZ_ICONV=OFF \
       -DMZ_FETCH_LIBS=OFF \
       -DMZ_FORCE_FETCH_LIBS=OFF \
-      -DZLIB_LIBRARY=/opt/aswf/zlib/build/ext/lib \
-      -DZLIB_INCLUDE_DIR=/opt/aswf/zlib/build/ext/include \
+      -DZLIB_LIBRARY=${INSTALL_TARGET}/${CMAKE_INSTALL_LIBDIR} \
+      -DZLIB_INCLUDE_DIR=${INSTALL_TARGET}/include \
       ../.
 cmake --build . \
       --target install \
