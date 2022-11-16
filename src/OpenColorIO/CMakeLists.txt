@@ -357,8 +357,26 @@ if(UNIX AND NOT APPLE)
                   APPEND PROPERTY LINK_FLAGS "-Wl,--exclude-libs,ALL")
 elseif(APPLE)
     # Hide the expat symbols.
+    list(APPEND _OCIO_LINK_FLAGS_LIST_ "-Wl,-hidden-lexpat")
+
+    # Checking for minizip first since our Findminizip module also sets minizip-ng_LIBRARY.
+    if (minizip_LIBRARY)
+        get_filename_component(_minizip-ng_LIBDIR "${minizip_LIBRARY}" DIRECTORY)
+        set(_minizip-ng_NAME "minizip")
+    elseif(minizip-ng_LIBRARY)
+        get_filename_component(_minizip-ng_LIBDIR "${minizip-ng_LIBRARY}" DIRECTORY)
+        set(_minizip-ng_NAME "minizip-ng")        
+    endif()
+    
+    # Add the path to CMake list of search paths for libraries.
+    list(APPEND _OCIO_LINK_FLAGS_LIST_ "-Wl,-L${_minizip-ng_LIBDIR}")
+
+    # Hide the minizip-ng symbols.
+    list(APPEND _OCIO_LINK_FLAGS_LIST_ "-Wl,-hidden-l${_minizip-ng_NAME}")    
+
+    list(JOIN _OCIO_LINK_FLAGS_LIST_ " " _OCIO_LINK_FLAGS_LIST_)
     set_property (TARGET OpenColorIO
-                  APPEND PROPERTY LINK_FLAGS "-Wl,-hidden-lexpat")
+                  APPEND PROPERTY LINK_FLAGS "${_OCIO_LINK_FLAGS_LIST_}")               
 endif()
 
 if(MSVC AND BUILD_SHARED_LIBS)
