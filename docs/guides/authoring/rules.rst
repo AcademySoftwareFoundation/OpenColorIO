@@ -107,12 +107,21 @@ Optional. Valid values are ``true`` and ``false``. Default is ``true``
 
     strictparsing: true
 
-OCIO provides a mechanism for applications to extract the colorspace
-from a filename (the ``parseColorSpaceFromString`` API method)
+.. warning::
+    This attribute is from OCIO v1.  In OCIO v2, the FileRules system was
+    introduced and so the ``strictparsing`` attribute is less relevant now.
+    The ``parseColorSpaceFromString`` API call is now deprecated and the
+    proper way to obtain this information is ``getColorSpaceFromFilepath``.
+    The FileRules always return a default color space but the API
+    ``filepathOnlyMatchesDefaultRule`` may be used by applications that
+    want to take some special action if ``strictparsing`` is true.
+
+OCIO v1 provided a mechanism for applications to extract the colorspace
+from a filename (the ``parseColorSpaceFromString`` API method).
 
 So for a file like ``example_render_v001_lnf.0001.exr`` it will
 determine the colorspace ``lnf`` (it being the right-most substring
-containing a colorspace name)
+containing a colorspace name).
 
 However, if the colorspace cannot be determined and ``strictparsing:
 true``, it will return an empty string.

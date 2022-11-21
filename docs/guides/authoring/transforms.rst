@@ -344,6 +344,7 @@ Keys:
     must also be present and the result is clamped at the high end.
 
 
+.. _config-named-transforms:
 
 Named Transforms
 ****************
