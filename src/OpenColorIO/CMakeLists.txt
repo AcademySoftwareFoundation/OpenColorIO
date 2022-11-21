@@ -356,10 +356,16 @@ if(UNIX AND NOT APPLE)
     set_property (TARGET OpenColorIO
                   APPEND PROPERTY LINK_FLAGS "-Wl,--exclude-libs,ALL")
 elseif(APPLE)
-    # Hide the expat symbols.
-    list(APPEND _OCIO_LINK_FLAGS_LIST_ "-Wl,-hidden-lexpat")
+    if (expat_LIBRARY)
+        get_filename_component(_expat_LIBDIR "${expat_LIBRARY}" DIRECTORY)
+        # Add the path to CMake list of search paths for libraries.
+        list(APPEND _OCIO_LINK_FLAGS_LIST_ "-Wl,-L${_expat_LIBDIR}")
+        # Hide the expat symbols.
+        list(APPEND _OCIO_LINK_FLAGS_LIST_ "-Wl,-hidden-lexpat")
+    endif()
 
-    # Checking for minizip first since our Findminizip module also sets minizip-ng_LIBRARY.
+
+    # Check for minizip first since our Findminizip module sets minizip-ng_LIBRARY.
     if (minizip_LIBRARY)
         get_filename_component(_minizip-ng_LIBDIR "${minizip_LIBRARY}" DIRECTORY)
         set(_minizip-ng_NAME "minizip")
@@ -367,16 +373,19 @@ elseif(APPLE)
         get_filename_component(_minizip-ng_LIBDIR "${minizip-ng_LIBRARY}" DIRECTORY)
         set(_minizip-ng_NAME "minizip-ng")        
     endif()
-    
-    # Add the path to CMake list of search paths for libraries.
-    list(APPEND _OCIO_LINK_FLAGS_LIST_ "-Wl,-L${_minizip-ng_LIBDIR}")
 
-    # Hide the minizip-ng symbols.
-    list(APPEND _OCIO_LINK_FLAGS_LIST_ "-Wl,-hidden-l${_minizip-ng_NAME}")    
+    if (_minizip-ng_LIBDIR)
+        # Add the path to CMake list of search paths for libraries.
+        list(APPEND _OCIO_LINK_FLAGS_LIST_ "-Wl,-L${_minizip-ng_LIBDIR}")
+        # Hide the minizip-ng symbols.
+        list(APPEND _OCIO_LINK_FLAGS_LIST_ "-Wl,-hidden-l${_minizip-ng_NAME}") 
+    endif()   
 
-    list(JOIN _OCIO_LINK_FLAGS_LIST_ " " _OCIO_LINK_FLAGS_LIST_)
-    set_property (TARGET OpenColorIO
-                  APPEND PROPERTY LINK_FLAGS "${_OCIO_LINK_FLAGS_LIST_}")               
+    if (_OCIO_LINK_FLAGS_LIST_)
+        list(JOIN _OCIO_LINK_FLAGS_LIST_ " " _OCIO_LINK_FLAGS_LIST_)
+        set_property (TARGET OpenColorIO
+                    APPEND PROPERTY LINK_FLAGS "${_OCIO_LINK_FLAGS_LIST_}")   
+    endif()              
 endif()
 
 if(MSVC AND BUILD_SHARED_LIBS)
