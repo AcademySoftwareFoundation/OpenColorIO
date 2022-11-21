@@ -16,7 +16,7 @@
 #   minizip-ng_VERSION      - The version of the library
 #
 # Targets defined by this module:
-#   minizip-ng::minizip-ng - IMPORTED target, if found
+#   MINIZIP::minizip-ng - IMPORTED target, if found
 #
 # If minizip-ng is not installed in a standard path, you can use the minizip-ng_ROOT 
 # variable to tell CMake where to find it. If it is not found and 
@@ -41,6 +41,11 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
     if (minizip-ng_FOUND)
         get_target_property(minizip-ng_INCLUDE_DIR MINIZIP::minizip-ng INTERFACE_INCLUDE_DIRECTORIES)
         get_target_property(minizip-ng_LIBRARY MINIZIP::minizip-ng LOCATION)
+        
+        # Depending on the options used when minizip-ng was built, it could have multiple libraries
+        # listed in INTERFACE_LINK_LIBRARIES. OCIO only needs ZLIB.
+        # Only add custom zlib target ZLIB::ZLIB to INTERFACE_LINK_LIBRARIES.
+        set_target_properties(MINIZIP::minizip-ng PROPERTIES INTERFACE_LINK_LIBRARIES "ZLIB::ZLIB")
 
         if (NOT minizip-ng_LIBRARY)
             # Lib names to search for
@@ -73,6 +78,13 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
                 PATH_SUFFIXES
                     lib64 lib 
             )
+
+            # Set IMPORTED_LOCATION property for MINIZIP::minizip-ng target.
+            if (TARGET MINIZIP::minizip-ng)
+                set_target_properties(MINIZIP::minizip-ng PROPERTIES
+                    IMPORTED_LOCATION "${minizip-ng_LIBRARY}"
+                )
+            endif()
         endif()
     else()
         list(APPEND _minizip-ng_REQUIRED_VARS minizip-ng_INCLUDE_DIR)
@@ -150,12 +162,12 @@ if(NOT minizip-ng_FOUND)
     find_package(minizip ${minizip-ng_FIND_VERSION} REQUIRED)
 endif()
 
-if(NOT minizip_FOUND AND NOT TARGET minizip::minizip)
+if(NOT minizip_FOUND AND NOT TARGET MINIZIP::minizip)
     ###############################################################################
     ### Create target
 
-    if(NOT TARGET minizip-ng::minizip-ng)
-        add_library(minizip-ng::minizip-ng UNKNOWN IMPORTED GLOBAL)
+    if(NOT TARGET MINIZIP::minizip-ng)
+        add_library(MINIZIP::minizip-ng UNKNOWN IMPORTED GLOBAL)
         set(_minizip-ng_TARGET_CREATE TRUE)
     endif()
 
@@ -263,7 +275,7 @@ if(NOT minizip_FOUND AND NOT TARGET minizip::minizip)
                                 --parallel
         )
 
-        add_dependencies(minizip-ng::minizip-ng minizip-ng_install)
+        add_dependencies(MINIZIP::minizip-ng minizip-ng_install)
         message(STATUS "Installing minizip-ng: ${minizip-ng_LIBRARY} (version \"${minizip-ng_VERSION}\")")
     endif()
 endif()
@@ -272,12 +284,12 @@ endif()
 ### Configure target ###
 
 if(_minizip-ng_TARGET_CREATE)
-    set_target_properties(minizip-ng::minizip-ng PROPERTIES
+    set_target_properties(MINIZIP::minizip-ng PROPERTIES
         IMPORTED_LOCATION "${minizip-ng_LIBRARY}"
         INTERFACE_INCLUDE_DIRECTORIES "${minizip-ng_INCLUDE_DIR}"
     )
 
     mark_as_advanced(minizip-ng_INCLUDE_DIR minizip-ng_LIBRARY minizip-ng_VERSION)
 
-    target_link_libraries(minizip-ng::minizip-ng INTERFACE ZLIB::ZLIB)
+    target_link_libraries(MINIZIP::minizip-ng INTERFACE ZLIB::ZLIB)
 endif()

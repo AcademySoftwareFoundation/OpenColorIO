@@ -23,7 +23,7 @@
 #   minizip-ng_VERSION      - The version of the library
 #
 # Targets defined by this module:
-#   minizip-ng::minizip-ng - IMPORTED target, if found
+#   MINIZIP::minizip-ng - IMPORTED target, if found
 #
 ###############################################################################
 ### Try to find package ###
@@ -39,7 +39,7 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
         get_target_property(minizip_INCLUDE_DIR MINIZIP::minizip INTERFACE_INCLUDE_DIRECTORIES)
         get_target_property(minizip_LIBRARY MINIZIP::minizip LOCATION)
 
-        if (not minizip_LIBRARY)
+        if (NOT minizip_LIBRARY)
             # Lib names to search for
             set(_minizip_LIB_NAMES minizip)
 
@@ -144,8 +144,8 @@ endif()
 ###############################################################################
 ### Create target
 
-if(minizip_FOUND AND NOT TARGET minizip::minizip)
-    add_library(minizip-ng::minizip-ng UNKNOWN IMPORTED GLOBAL)
+if(minizip_FOUND AND NOT TARGET MINIZIP::minizip-ng)
+    add_library(MINIZIP::minizip-ng UNKNOWN IMPORTED GLOBAL)
     set(_minizip_TARGET_CREATE TRUE)
 endif()
 
@@ -155,7 +155,7 @@ endif()
 ### Configure target ###
 
 if(minizip_FOUND AND _minizip_TARGET_CREATE)
-    set_target_properties(minizip-ng::minizip-ng PROPERTIES
+    set_target_properties(MINIZIP::minizip-ng PROPERTIES
         IMPORTED_LOCATION "${minizip_LIBRARY}"
         INTERFACE_INCLUDE_DIRECTORIES "${minizip_INCLUDE_DIR}"
     )
@@ -168,5 +168,5 @@ if(minizip_FOUND AND _minizip_TARGET_CREATE)
 
     mark_as_advanced(minizip_INCLUDE_DIR minizip_LIBRARY minizip_VERSION)
 
-    target_link_libraries(minizip-ng::minizip-ng INTERFACE ZLIB::ZLIB)
+    target_link_libraries(MINIZIP::minizip-ng INTERFACE ZLIB::ZLIB)
 endif()
