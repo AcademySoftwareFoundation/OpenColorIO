@@ -198,10 +198,9 @@ by OCIO are as follows (note these are case-sensitive):
 - ``GLUT``
 - ``Python``
 
-There are a few other custom variables to specify the path of an existing install:
+This custom variable is also available:
 
 - ``-DPython_EXECUTABLE=<path>`` (Python executable for pybind11)
-- ``-DOPENIMAGEIO_ROOT_DIR=<path>``
 
 There are scenarios in which some of the dependencies may not be compiled into the 
 OCIO dynamic library.  This is more likely when OCIO does not download the packages

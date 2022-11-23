@@ -19,16 +19,26 @@ comments in the public header files in ``include/``
 Installation of requirements
 ****************************
 
-The ``install_docs_env.sh`` script will install the requirements for
-building the documentation, please see the 
-:ref:`Installation instructions <building-from-source>`.
+Scripts are available, for each platform, to install the documentation 
+requirements.
+
+The ``install_docs_env.sh`` script in the share/ci/scripts/<Platform> directory
+will install the Python-related requirements for building the documentation
+(Sphinx, six, testresources, recommonmark, sphinx-press-theme, sphinx-tabs,
+and breathe) and Doxygen.  
+
+Use GitBash (`provided with Git for Windows <https://gitforwindows.org/>`_) to 
+execute the script on Windows.
 
 Python 3 is required to build the documentation. If you have multiple Python
 installs you'll need to make sure pip and CMake find the correct version. You 
-can manually inform cmake of which to use by adding this option to the below 
+can manually inform CMake of which to use by adding this option to the below 
 `cmake` command, which configures the documentation build:
 
     -DPython_ROOT=<Path to Python 3 root directory>
+
+For the Python packages, ensure their locations are in your ``PYTHONPATH`` 
+environment variable prior to configuring the build.
 
 Building the docs
 *****************
@@ -80,8 +90,8 @@ be easily exposed another way if needed.
 These features required several custom Sphinx extensions tuned for our project which are
 located under share/docs.
 
-Building the docs (excluding the API)
-*************************************
+Building the docs -- Excluding the API docs
+*******************************************
 
 If you don't need to build the API documentation, there is a quick and dirty way to 
 do a docs build.  This approach does not need to compile the C++ code but is not ideal
