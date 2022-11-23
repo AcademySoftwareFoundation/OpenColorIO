@@ -18,8 +18,8 @@ New Features
 Built-in Configs
 ****************
 
-The OCIO Configs Working Group has put a lot of effort building new ACES configs that take 
-advantage of the features of OCIO v2 and that are informed by the learnings from the 
+The OCIO Configs Working Group has put a lot of effort into building new ACES configs that
+take advantage of the features of OCIO v2 and that are informed by the learnings from the 
 previous ACES configs.  The new configs are available from the project's GitHub repo: 
 `OpenColorIO-Config-ACES 
 <https://github.com/AcademySoftwareFoundation/OpenColorIO-Config-ACES/releases/tag/v1.0.0>`_
@@ -87,7 +87,7 @@ the Python code::
 Config Archiving
 ****************
 
-An OCIO config, including it's external LUT files, may now be packaged into a single file.  
+An OCIO config, including its external LUT files, may now be packaged into a single file.  
 This makes it easier to distribute configs and may slightly discourage tampering with the 
 contents.  An archived config may be created with the new ``ocioarchive`` command-line 
 tool and is stored in a file with the extension ``.ocioz``.  It is basically a compressed 
@@ -126,7 +126,7 @@ For Users
 +++++++++
 
 Wherever you are able to provide a file path to a config, you may now provide a path to a 
-.ocioz file. For example you may use this for the OCIO environment variable.
+.ocioz file. For example, you may use this for the OCIO environment variable.
 
 The ``ocioarchive`` command-line tool will allow you to archive a config or to expand an 
 existing archive.  It will also allow you to list the contents of an archived config.  Run 

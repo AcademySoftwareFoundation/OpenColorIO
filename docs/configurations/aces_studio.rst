@@ -10,11 +10,11 @@ ACES Studio Config
 The ACES Studio Config is the successor to the widely used :ref:`ACES config <aces_1.0.3>`
 for OCIO v1.
 
-It contains the complete set of ACES color spaces, displays, and views.  In addition it
+It contains the complete set of ACES color spaces, displays, and views.  In addition, it
 contains some extra color spaces that are widely used in the VFX and post-production 
 industries.
 
-Users who need a simpler config that just contain the basics needed to use ACES color
+Users who need a simpler config that contains just the basics needed to use ACES color
 management in common DCC tools are encouraged to check out the :ref:`aces_cg`.
 
 The latest version of this config may be downloaded from the Releases page of its GitHub

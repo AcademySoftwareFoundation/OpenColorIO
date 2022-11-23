@@ -16,18 +16,18 @@ Colorspaces
 Required.
 
 This section is a list of the scene-referred colorspaces in the config.
-A colorspace can be referred to elsewhere within the config (including
+A colorspace may be referred to elsewhere within the config (including
 other colorspace definitions), and are used within OCIO-supporting
 applications.
 
-A color space may use the following keys:
+A colorspace may use the following keys:
 
 
 ``to_scene_reference`` and ``from_scene_reference``
 ---------------------------------------------------
 
 These keys specify the transforms that define the relationship between
-the color space and the scene-referred reference space.
+the colorspace and the scene-referred reference space.
 
 Note: In OCIO v1, the keys ``to_reference`` and ``from_reference`` were
 used (since there was only one reference space).  These are still supported

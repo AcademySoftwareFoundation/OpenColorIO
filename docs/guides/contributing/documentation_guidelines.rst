@@ -59,14 +59,14 @@ do a local build with the new CMake option -DOCIO_BUILD_FROZEN_DOCS=ON, and add 
 modified rST files under docs/api/python/frozen to their PR.
 
 Note: If you run the scripts on Linux, the freezing process should work well.  On other 
-platforms the process may sometimes make spurious deltas to rST files unrelated to your 
+platforms, the process may sometimes make spurious deltas to rST files unrelated to your 
 changes.  Please don't add these files to your PR.
 
 The OCIO conf.py module has a switch that detects when docs are being built on GH Actions 
 (CI env var == true) it will backup the frozen folder to a sibling backup folder on Sphinx 
 init, and following Sphinx build completion will do a file-by-file comparison of the new 
 frozen and the backup folders. If there are differences, the CI job may fail with an error 
-explaining where the differences where found and with instructions on how to fix it.
+explaining where the differences were found and with instructions on how to fix them.
 
 The conf.py also has a switch that detects when it is being run on RTD, and in that case 
 will itself run Doxygen to generate the XML needed by breathe prior to building the docs, 
@@ -137,7 +137,7 @@ Quirks
 ******
 
 The vuepress theme that we've migrated to has some quirks to its design. For
-example it only allows two nested table of contents (TOC). So things have to be
+example, it only allows two nested table of contents (TOC). So things have to be
 organized in a slightly different way than other sphinx projects.
 
 The root-level `toc_redirect.rst` points to where to find the different section
@@ -145,7 +145,7 @@ TOCs. The name and contents of each sections TOC is defined in that
 sub-directory's `_index.rst` file.
 
 In this TOC the `:caption:` directive determines what the name of the section
-will be in the side-bar, and in the header of the website. The *H1* header
+will be in the sidebar, and in the header of the website. The *H1* header
 determines the name of the page in the right/left arrows navigation bar. In a
 lot of cases this ends up doubling up the name on the page, but this seems
 unavoidable at the present time. If additional explanatory text is put in the
@@ -154,7 +154,7 @@ unavoidable at the present time. If additional explanatory text is put in the
 The site will show all *H1* headers in the side panel by default, these then
 expand when selected to show all *H2* headers.
 
-Due to the limited TOC and side-bar depth, we shouldn't be afraid of looong
+Due to the limited TOC and sidebar depth, we shouldn't be afraid of looong
 pages with many *H2* headings to break down the page into logical quadrants.
 
 Emacs rST mode

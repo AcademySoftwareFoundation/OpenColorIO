@@ -177,7 +177,7 @@ Existing Install Hints
 ++++++++++++++++++++++
 
 When using libraries already on your system, the CMake variable 
-``-D <Package Name>_ROOT=<Path>`` may be used to specify the path to the include and/or 
+``-D <Package Name>_ROOT=<Path>`` may be used to specify the path to the include and 
 library root directory rather than have CMake try to find it.  The package names used 
 by OCIO are as follows (note these are case-sensitive):
 
