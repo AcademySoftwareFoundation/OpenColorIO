@@ -12,6 +12,7 @@ Timeline
 OpenColorIO 2.2 was delivered in October 2022 and is in the VFX Reference Platform for
 calendar year 2023.
 
+
 New Features
 ============
 
@@ -24,7 +25,8 @@ previous ACES configs.  The new configs are available from the project's GitHub 
 `OpenColorIO-Config-ACES 
 <https://github.com/AcademySoftwareFoundation/OpenColorIO-Config-ACES/releases/tag/v1.0.0>`_
 
-To make them easily accessible, they are built in to the library itself and may be accessed directly from within applications that incorporate the OCIO 2.2 library. 
+To make them easily accessible, they are built in to the library itself and may be
+accessed directly from within applications that incorporate the OCIO 2.2 library. 
 
 For Users
 +++++++++
@@ -33,13 +35,13 @@ Wherever you are able to provide a file path to a config, you may now provide a 
 string to instead use one of the built-in configs. For example, you may use these strings 
 for the OCIO environment variable.
 
-To use the ACES CG config, use this string for the config path::
+To use the :ref:`aces_cg`, use this string for the config path::
     ocio://cg-config-v1.0.0_aces-v1.3_ocio-v2.1
 
-To use the ACES Studio config, use this string for the config path::
+To use the :ref:`aces_studio`, use this string for the config path::
     ocio://studio-config-v1.0.0_aces-v1.3_ocio-v2.1
 
-This string will give you the current default config, which is currently the CG config::
+This string will give you the current default config, which is currently the ACES CG Config::
     ocio://default
 
 In future releases, it is expected that updated versions of these configs will be added, 
@@ -154,7 +156,6 @@ The new ConfigIOProxy class allows the calling program to supply the config and 
 associated LUT files directly, without relying on the standard file system.  This opens 
 the door to expanded ways in which OCIO may be used.
 
-
 The new config archiving feature was implemented using this mechanism.
 
 For Developers
@@ -222,7 +223,6 @@ that has "sRGB" (case-insensitive) in its color space name or one of its aliases
 Note that the heuristics create a Processor and evaluate color values that must match 
 within a certain tolerance.  No color space is selected purely based on its name alone.  
 If the heuristics fail to find a recognized color space, an exception is thrown.
-
 
 
 Making the interchange roles required for config versions 2.2 or higher
@@ -311,8 +311,12 @@ developers to start supporting this type of config object.  The preferred method
 so is to add a new tool, similar to FileTransform that applies a Named Transform.  
 
 What is new in OCIO 2.2 is that the code for applying these is now simpler with the 
-introduction of several new getProcessor calls that will return a Processor directly from 
-a NamedTransform object.
+introduction of several new getProcessor methods on the Config class that will return a 
+Processor directly from a NamedTransform object.  
+
+In addition, the NamedTransform class has a GetTransform method that returns a (regular) 
+Transform object for a given direction.  It will create the transform from the inverse 
+direction if the transform for the requested direction is missing.
 
 
 Circular OCIO / OIIO Build Dependency Solution
@@ -321,10 +325,13 @@ Circular OCIO / OIIO Build Dependency Solution
 A long-standing complaint has been regarding the circular build dependency between OCIO 
 and OpenImageIO.  This is due to the fact that OIIO wants to use OCIO for color management 
 and OCIO wants to use OIIO in its command-line tools ``ocioconvert``, ``ociolutimage``, 
-and ``ociodisplay`` for reading and writing image files.
+and ``ociodisplay`` for reading and writing image files.  These tools will not be built if
+OIIO is not available when configuring the build.
 
-Furthermore, some package installers will not install the command-line tools that process 
-images.
+Furthermore, some package installers will not install these command-line tools due to the
+dependency on OIIO.
+
+By default, OCIO will now build these tools with OpenEXR rather than relying on OIIO.
 
 For Users
 +++++++++
@@ -347,7 +354,7 @@ In OCIO 2.2, by default, the build will now use OpenEXR rather than OpenImageIO 
 command-line tools that read or write images.  This will limit the functionality of the 
 aforementioned command-line tools to only working with OpenEXR files.  If you want support 
 for more file formats in these tools, you will still need to have OIIO available when 
-building OCIO and set the cmake variable OCIO_USE_OIIO_FOR_APPS=1.
+building OCIO and set the CMake variable ``-D OCIO_USE_OIIO_FOR_APPS=ON``.
 
 
 Miscellaneous Improvements
