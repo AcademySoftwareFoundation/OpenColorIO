@@ -44,7 +44,7 @@ find_package(Imath 3.0 REQUIRED)
 # ZLIB
 # https://github.com/madler/zlib
 set(_zlib_ExternalProject_VERSION "1.2.12")
-find_package(zlib REQUIRED)
+find_package(zlib 1.2.11 REQUIRED)
 
 # minizip-ng
 # https://github.com/zlib-ng/minizip-ng

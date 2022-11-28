@@ -45,6 +45,10 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
     if(OpenEXR_FOUND)
         get_target_property(OpenEXR_LIBRARY OpenEXR::OpenEXR LOCATION)
         get_target_property(OpenEXR_INCLUDE_DIR OpenEXR::OpenEXR INTERFACE_INCLUDE_DIRECTORIES)
+        
+        # IMPORTED_GLOBAL property must be set to TRUE since alisasing a non-global imported target
+        # is not possible until CMake 3.18+.
+        set_target_properties(OpenEXR::OpenEXR PROPERTIES IMPORTED_GLOBAL TRUE)
     endif()
 
     # Override REQUIRED if package can be installed
