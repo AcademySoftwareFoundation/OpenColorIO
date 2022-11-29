@@ -178,8 +178,23 @@ set(SOURCES
 
 set(prefix ${CMAKE_INSTALL_PREFIX})
 set(exec_prefix "\${prefix}")
-set(libdir "\${exec_prefix}/${CMAKE_INSTALL_LIBDIR}")
-set(includedir "\${exec_prefix}/${CMAKE_INSTALL_INCLUDEDIR}")
+
+# CMAKE_INSTALL_LIBDIR is not guaranteed to be relative.
+# Not using cmake_path function since it is only available from CMake ≥ 3.20.
+if(IS_ABSOLUTE "${CMAKE_INSTALL_LIBDIR}")
+    set(libdir "${CMAKE_INSTALL_LIBDIR}")
+else()
+    set(libdir "\${exec_prefix}/${CMAKE_INSTALL_LIBDIR}")
+endif()
+
+# CMAKE_INSTALL_INCLUDEDIR is not guaranteed to be relative.
+# Not using cmake_path function since it is only available from CMake ≥ 3.20.
+if(IS_ABSOLUTE "${CMAKE_INSTALL_INCLUDEDIR}")
+    set(includedir "${CMAKE_INSTALL_INCLUDEDIR}")
+else()
+    set(includedir "\${exec_prefix}/${CMAKE_INSTALL_INCLUDEDIR}")
+endif()
+
 configure_file(res/OpenColorIO.pc.in ${CMAKE_CURRENT_BINARY_DIR}/OpenColorIO.pc @ONLY)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/OpenColorIO.pc DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
 
