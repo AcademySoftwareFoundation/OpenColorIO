@@ -213,14 +213,6 @@ if(NOT yaml-cpp_FOUND AND NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL NONE)
                 -DANDROID_STL=${ANDROID_STL})
         endif()
 
-        if(NOT BUILD_SHARED_LIBS)
-            #TODO: Find a way to merge in the static libs when built with internal yamlcpp
-            message(WARNING
-                "Building STATIC libOpenColorIO using the in-built yaml-cpp. "
-                "yaml-cpp symbols are NOT included in the output binary!"
-            )
-        endif()
-
         set(yaml-cpp_GIT_TAG "yaml-cpp-${yaml-cpp_VERSION}")
 
         # Hack to let imported target be built from ExternalProject_Add
