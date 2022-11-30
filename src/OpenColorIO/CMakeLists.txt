@@ -192,7 +192,7 @@ endif()
 if(IS_ABSOLUTE "${CMAKE_INSTALL_INCLUDEDIR}")
     set(includedir "${CMAKE_INSTALL_INCLUDEDIR}")
 else()
-    set(includedir "\${exec_prefix}/${CMAKE_INSTALL_INCLUDEDIR}")
+    set(includedir "\${prefix}/${CMAKE_INSTALL_INCLUDEDIR}")
 endif()
 
 configure_file(res/OpenColorIO.pc.in ${CMAKE_CURRENT_BINARY_DIR}/OpenColorIO.pc @ONLY)
