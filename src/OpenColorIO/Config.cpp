@@ -3130,7 +3130,7 @@ bool Config::isColorSpaceLinear(const char * colorSpace, ReferenceSpaceType refe
     if (cs == nullptr)
     {
         std::ostringstream os;
-        os << "Could not test colorspace linearity. Colorspace " << colorSpace << " does not exist";
+        os << "Could not test colorspace linearity. Colorspace " << colorSpace << " does not exist.";
         throw Exception(os.str().c_str()); 
     }
 
