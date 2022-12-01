@@ -251,13 +251,13 @@ if(OCIO_BUILD_STATIC)
 	endif()
 endif()
 
-if (BUILD_SHARED_LIBS AND NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL NONE)
-    message(STATUS "Note that building the static version of OpenColorIO does not embed the dependencies\  
+if (NOT BUILD_SHARED_LIBS AND NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL NONE)
+   message(STATUS "Note that building the static version of OpenColorIO does not embed the dependencies\  
    into the library file. The needed dependencies must be linked to the consumer
    application or shared library that uses static OpenColorIO.
 
    The following mandatory dependencies MUST be linked to the consumer application or shared library:
-   Expat, yaml-cpp, Imath, pystring, minizip-ng and ZLIB")
+   expat, yaml-cpp, Imath, pystring, minizip-ng and ZLIB")
 endif()
 
 
