@@ -291,18 +291,8 @@ jobs:
       - name: Test
         run: ctest -V -C ${{ matrix.build-type }}
         working-directory: _build
-      - name: Test CMake Consumer with dynamic version of OpenColorIO
-        if: matrix.build-shared == 'ON'
-        run: |
-          cmake . \
-                -DCMAKE_PREFIX_PATH=../../../_install \
-                -DCMAKE_BUILD_TYPE=${{ matrix.build-type }}
-          cmake --build . \
-                --config ${{ matrix.build-type }}
-          ./consumer
-        working-directory: _build/tests/cmake-consumer-dist
-      - name: Test CMake Consumer with static version of OpenColorIO
-        if: matrix.build-shared == 'OFF'
+      # The test is valid for both build-shared=ON and build-shared=OFF.
+      - name: Test CMake Consumer
         run: |
           cmake . \
                 -DCMAKE_PREFIX_PATH=../../../_install \
@@ -438,18 +428,8 @@ jobs:
       - name: Test
         run: ctest -V -C ${{ matrix.build-type }}
         working-directory: _build
-      - name: Test CMake Consumer with dynamic version of OpenColorIO
-        if: matrix.build-shared == 'ON'
-        run: |
-          cmake . \
-                -DCMAKE_PREFIX_PATH=../../../_install \
-                -DCMAKE_BUILD_TYPE=${{ matrix.build-type }}
-          cmake --build . \
-                --config ${{ matrix.build-type }}
-          ./consumer
-        working-directory: _build/tests/cmake-consumer-dist
-      - name: Test CMake Consumer with static version of OpenColorIO
-        if: matrix.build-shared == 'OFF'
+      # The test is valid for both build-shared=ON and build-shared=OFF.
+      - name: Test CMake Consumer
         run: |
           cmake . \
                 -DCMAKE_PREFIX_PATH=../../../_install \
@@ -593,8 +573,8 @@ jobs:
         run: ctest -V -C ${{ matrix.build-type }}
         shell: bash
         working-directory: _build
-      - name: Test CMake Consumer with dynamic version of OpenColorIO
-        if: matrix.build-shared == 'ON'
+      # The test is valid for both build-shared=ON and build-shared=OFF.
+      - name: Test CMake Consumer
         run: |
           cmake . \
                 -DCMAKE_PREFIX_PATH=../../../_install \
@@ -604,14 +584,4 @@ jobs:
           export PATH=../../../_install/bin:$PATH
           ./${{ matrix.build-type }}/consumer
         shell: bash
-        working-directory: _build/tests/cmake-consumer-dist
-      - name: Test CMake Consumer with static version of OpenColorIO
-        if: matrix.build-shared == 'OFF'
-        run: |
-          cmake . \
-                -DCMAKE_PREFIX_PATH=../../../_install \
-                -DCMAKE_BUILD_TYPE=${{ matrix.build-type }}
-          cmake --build . \
-                --config ${{ matrix.build-type }}
-          ./consumer
         working-directory: _build/tests/cmake-consumer-dist
