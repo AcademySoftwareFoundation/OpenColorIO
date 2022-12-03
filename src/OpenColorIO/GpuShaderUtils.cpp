@@ -118,9 +118,13 @@ std::string getTexSample(GpuLanguage lang,
     switch (lang)
     {
         case GPU_LANGUAGE_GLSL_1_2:
-        case GPU_LANGUAGE_GLSL_1_3:
         {
             kw << "texture" << N << "D(" << samplerName << ", " << coords << ")";
+            break;
+        }
+        case GPU_LANGUAGE_GLSL_1_3:
+        {
+            kw << "texture(" << samplerName << ", " << coords << ")";
             break;
         }
         case GPU_LANGUAGE_CG:
