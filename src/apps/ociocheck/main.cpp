@@ -506,6 +506,8 @@ int main(int argc, const char **argv)
             LogGuard logGuard;
 
             config->validate();
+            std::cout << logGuard.output();
+            
             cacheID = config->getCacheID();
             isArchivable = config->isArchivable();
 
@@ -517,7 +519,6 @@ int main(int argc, const char **argv)
             }
             else
             {
-                std::cout << logGuard.output();
                 std::cout << "failed" << std::endl;
                 errorcount += 1;
             }

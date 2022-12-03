@@ -4,8 +4,6 @@
 // The file extension cpp (instead of an header .h) was used here to highlight the fact that 
 // this file should not be included more then ONCE in OCIO.
 
-// It is included in the following places:
-// - CGConfig.cpp for the Built-in config feature.
-// - BuiltinConfigRegistry_tests.cpp for the unit tests
-
-constexpr char CG_CONFIG_V100_ACES_V13_OCIO_V21[] = { @cg-config-v1.0.0_aces-v1.3_ocio-v2.1@ };
+constexpr char STUDIO_CONFIG_V100_ACES_V13_OCIO_V21[] = {
+     @studio-config-v1.0.0_aces-v1.3_ocio-v2.1@ 
+};

@@ -714,7 +714,7 @@ colorspaces:
         cfg.setInactiveColorSpaces("ACES cg, Linear ITU-R BT.709, Texture -- sRGB")
 
         src_csname = "not sRGB"
-        builtin_csname = "Utility - Gamma 2.2 - AP1 - Texture"
+        builtin_csname = "Gamma 2.2 AP1 - Texture"
 
         # Test throw if no suitable spaces are present.
         with self.assertRaises(OCIO.Exception):
