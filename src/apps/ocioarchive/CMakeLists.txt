@@ -19,7 +19,7 @@ target_link_libraries(ocioarchive
     PRIVATE
         apputils
         OpenColorIO
-        minizip-ng::minizip-ng
+        MINIZIP::minizip-ng
 )
 
 install(TARGETS ocioarchive
