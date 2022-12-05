@@ -13,7 +13,9 @@
 #include <Logging.h>
 
 #include "Platform.h"
+#include "utils/StringUtils.h"
 
+#include <iostream>
 
 namespace OCIO_NAMESPACE
 {
@@ -21,10 +23,64 @@ namespace OCIO_NAMESPACE
 
 static constexpr char ErrorMsg[] { "Problem obtaining monitor profile information from operating system." };
 
+void getAllMonitorsWithQueryDisplayConfig(std::vector<std::tstring> & monitorsName)
+{
+    std::vector<DISPLAYCONFIG_PATH_INFO> paths;
+    std::vector<DISPLAYCONFIG_MODE_INFO> modes;
+    UINT32 flags = QDC_ONLY_ACTIVE_PATHS | QDC_VIRTUAL_MODE_AWARE;
+    LONG result = ERROR_SUCCESS;
+
+    do
+    {
+        // Determine how many path and mode structures to allocate
+        UINT32 pathCount, modeCount;
+        result = GetDisplayConfigBufferSizes(flags, &pathCount, &modeCount);
+        
+        // Allocate the path and mode arrays
+        paths.resize(pathCount);
+        modes.resize(modeCount);
+
+        // Get all active paths and their modes
+        result = QueryDisplayConfig(flags, &pathCount, paths.data(), &modeCount, modes.data(), nullptr);
+
+        // The function may have returned fewer paths/modes than estimated
+        paths.resize(pathCount);
+        modes.resize(modeCount);
+
+        // It's possible that between the call to GetDisplayConfigBufferSizes and QueryDisplayConfig
+        // that the display state changed, so loop on the case of ERROR_INSUFFICIENT_BUFFER.
+    } while (result == ERROR_INSUFFICIENT_BUFFER);
+
+    if (result == ERROR_SUCCESS)
+    {
+        // For each active path
+        for (auto& path : paths)
+        {
+            // Find the target (monitor) friendly name
+            DISPLAYCONFIG_TARGET_DEVICE_NAME targetName = {};
+            targetName.header.adapterId = path.targetInfo.adapterId;
+            targetName.header.id = path.targetInfo.id;
+            targetName.header.type = DISPLAYCONFIG_DEVICE_INFO_GET_TARGET_NAME;
+            targetName.header.size = sizeof(targetName);
+            result = DisplayConfigGetDeviceInfo(&targetName.header);
+
+            if (result == ERROR_SUCCESS)
+            {
+                monitorsName.push_back(
+                    (result == ERROR_SUCCESS && targetName.flags.friendlyNameFromEdid) ? 
+                    targetName.monitorFriendlyDeviceName : L""
+                );
+            }
+        }
+    }
+}
 
 void SystemMonitorsImpl::getAllMonitors()
 {
     m_monitors.clear();
+
+    std::vector<std::tstring> friendlyMonitorNames;
+    getAllMonitorsWithQueryDisplayConfig(friendlyMonitorNames);
 
     // Initialize the structure.
     DISPLAY_DEVICE dispDevice;
@@ -60,8 +116,12 @@ void SystemMonitorsImpl::getAllMonitors()
 
                 // TODO: Several ICM profiles could be associated to a single device.
 
-                const std::tstring displayName
-                    = deviceName + TEXT(", ") + dispDevice.DeviceString;
+                const std::tstring extra = 
+                    (friendlyMonitorNames.size() >= dispNum+1 && 
+                    !friendlyMonitorNames.at(dispNum).empty()) ? 
+                        friendlyMonitorNames.at(dispNum) : std::tstring(dispDevice.DeviceString);
+                        
+                const std::tstring displayName = deviceName + TEXT(", ") + extra;
 
                 // Get the associated ICM profile path.
                 if (GetICMProfile(hDC, &pathLength, icmPath))
@@ -97,6 +157,5 @@ void SystemMonitorsImpl::getAllMonitors()
         ++dispNum;
     }
 }
-
 
 } // namespace OCIO_NAMESPACE
