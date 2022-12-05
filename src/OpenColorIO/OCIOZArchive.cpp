@@ -17,16 +17,16 @@
 
 #include "OCIOZArchive.h"
 
-#include "minizip-ng/mz.h"
-#include "minizip-ng/mz_os.h"
-#include "minizip-ng/mz_strm.h"
-#include "minizip-ng/mz_strm_buf.h"
-#include "minizip-ng/mz_strm_mem.h"
-#include "minizip-ng/mz_strm_os.h"
-#include "minizip-ng/mz_strm_split.h"
-#include "minizip-ng/mz_strm_zlib.h"
-#include "minizip-ng/mz_zip.h"
-#include "minizip-ng/mz_zip_rw.h"
+#include "mz.h"
+#include "mz_os.h"
+#include "mz_strm.h"
+#include "mz_strm_buf.h"
+#include "mz_strm_mem.h"
+#include "mz_strm_os.h"
+#include "mz_strm_split.h"
+#include "mz_strm_zlib.h"
+#include "mz_zip.h"
+#include "mz_zip_rw.h"
 
 namespace OCIO_NAMESPACE
 {

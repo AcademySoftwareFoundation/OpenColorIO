@@ -277,7 +277,7 @@ target_link_libraries(OpenColorIO
         "$<BUILD_INTERFACE:utils::strings>"
         "$<BUILD_INTERFACE:xxHash>"
         yaml-cpp
-        minizip-ng::minizip-ng
+        MINIZIP::minizip-ng
 )
 
 if(APPLE)
