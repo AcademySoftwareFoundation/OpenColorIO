@@ -1102,7 +1102,7 @@ colorspaces:
     editableCfg->setInactiveColorSpaces("ACES cg, Linear ITU-R BT.709, Texture -- sRGB");
 
     std::string srcColorSpaceName = "not sRGB";
-    std::string builtinColorSpaceName  = "Utility - Gamma 2.2 - AP1 - Texture";
+    std::string builtinColorSpaceName  = "Gamma 2.2 AP1 - Texture";
 
     {
         // Test throw if no suitable spaces are present.

@@ -23,7 +23,7 @@ function(add_ocio_test NAME SOURCES PRIVATE_INCLUDES)
             utils::strings
             yaml-cpp
             testutils
-            minizip-ng::minizip-ng
+            MINIZIP::minizip-ng
             xxHash
     )
 
@@ -77,6 +77,7 @@ endfunction(add_ocio_test)
 # OpenColorIO target
 set(SOURCES
     builtinconfigs/CGConfig.cpp
+    builtinconfigs/StudioConfig.cpp
     fileformats/cdl/CDLParser.cpp
     fileformats/cdl/CDLReaderHelper.cpp
     fileformats/cdl/CDLWriter.cpp
