@@ -127,14 +127,6 @@ if(NOT pystring_FOUND AND NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL NONE)
                 -DANDROID_STL=${ANDROID_STL})
         endif()
 
-        if(NOT BUILD_SHARED_LIBS)
-            #TODO: Find a way to merge in the static libs when built with internal pystring
-            message(WARNING
-                "Building STATIC libOpenColorIO using the in-built pystring. "
-                "pystring symbols are NOT included in the output binary!"
-            )
-        endif()
-
         # Hack to let imported target be built from ExternalProject_Add
         file(MAKE_DIRECTORY ${pystring_INCLUDE_DIR})
 

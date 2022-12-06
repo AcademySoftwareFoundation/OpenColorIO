@@ -138,7 +138,23 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
         )
 
         # Get version from header or pkg-config
-        set(minizip-ng_VERSION "${minizip-ng_FIND_VERSION}")
+        if(minizip-ng_INCLUDE_DIR)
+            list(GET minizip-ng_INCLUDE_DIR 0 _minizip-ng_INCLUDE_DIR)
+            if(EXISTS "${_minizip-ng_INCLUDE_DIR}/mz.h")
+                set(_minizip-ng_CONFIG "${_minizip-ng_INCLUDE_DIR}/mz.h")
+            endif()
+        endif()
+
+        if(_minizip-ng_CONFIG)
+            file(STRINGS "${_minizip-ng_CONFIG}" _minizip-ng_VER_SEARCH 
+                REGEX "^[ \t]*#define[ \t]+MZ_VERSION[ \t]+\\(\"[.0-9]+\"\\).*$")
+            if(_minizip-ng_VER_SEARCH)
+                string(REGEX REPLACE ".*#define[ \t]+MZ_VERSION[ \t]+\\(\"([.0-9]+)\"\\).*" 
+                    "\\1" minizip-ng_VERSION "${_minizip-ng_VER_SEARCH}")
+            endif()
+        elseif(PC_minizip-ng_FOUND)
+            set(minizip-ng_VERSION "${PC_minizip-ng_VERSION}")
+        endif()
     endif()
 
     # Override REQUIRED if package can be installed

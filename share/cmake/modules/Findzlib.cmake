@@ -1,7 +1,13 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright Contributors to the OpenColorIO Project.
 #
-# Locate or install minizip-ng
+# Locate or install zlib
+# 
+# **********************************************************************
+# Note that this is a wrapper around the CMake ZLIB find module.
+# This find module DOES NOT output any variables with lowercase "zlib".
+# Treat this module as if it was FindZLIB.cmake.
+# **********************************************************************
 #
 # Variables defined by this module:
 #   ZLIB_FOUND          - If FALSE, do not try to link to minizip-ng
@@ -12,16 +18,9 @@
 # Targets defined by this module:
 #   ZLIB::ZLIB - IMPORTED target, if found
 #
-# This module is named GetZLIB because it is not used with find_package().
-# It must be included using include(). 
-#
-# The reason is that CMake provide a FindZLIB already and the current file is
-# using it.
-#
 ###############################################################################
 ### Try to find package ###
 
-# Assign the rigtt name for ZLIB depending on the OS.
 if(WIN32)
     set(_ZLIB_LIB_NAME "zlib")
     set(_ZLIB_STATIC_LIB_NAME "zlibstatic")
@@ -31,7 +30,7 @@ else()
 endif()
 
 if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
-    set(_ZLIB_REQUIRED_VARS ZLIB_LIBRARIES)
+    set(_ZLIB_REQUIRED_VARS ZLIB_LIBRARIES ZLIB_INCLUDE_DIRS)
 
     if(NOT DEFINED ZLIB_ROOT)
         # Save old value of CMAKE_MODULE_PATH 
@@ -40,11 +39,40 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
         set(CMAKE_MODULE_PATH "${CMAKE_ROOT}/Modules") 
 
         # Use CMake FindZLIB module
-        find_package(ZLIB ${zlib_FIND_VERSION})
+        find_package(ZLIB ${zlib_FIND_VERSION} QUIET)
 
         # Restore CMAKE_MODULE_PATH
         set(CMAKE_MODULE_PATH ${_ZLIB__CMAKE_MODULE_PATH_OLD_})
     endif()
+
+    if (ZLIB_FOUND)
+        # CMake find modules sets ZLIB_LIBRARIES and ZLIB_INCLUDE_DIRS.
+
+        if(ZLIB_LIBRARIES)
+            # Set ZLIB_LIBRARY to match the other custom find modules that OCIO has.
+            set(ZLIB_LIBRARY ${ZLIB_LIBRARIES})
+        endif()
+
+        if(ZLIB_INCLUDE_DIRS)
+            # Set ZLIB_INCLUDE_DIR to match the other custom find modules that OCIO has.
+            set(ZLIB_INCLUDE_DIR ${ZLIB_INCLUDE_DIRS})
+        endif()
+
+        set(ZLIB_VERSION ${zlib_FIND_VERSION})
+    endif()
+
+    # Override REQUIRED if package can be installed
+    if(OCIO_INSTALL_EXT_PACKAGES STREQUAL MISSING)
+        set(ZLIB_FIND_REQUIRED FALSE)
+    endif()
+
+    include(FindPackageHandleStandardArgs)
+    find_package_handle_standard_args(zlib
+        REQUIRED_VARS
+            ${_ZLIB_REQUIRED_VARS}
+        VERSION_VAR
+            ZLIB_VERSION
+    )
 endif()
 
 ###############################################################################
@@ -65,8 +93,8 @@ if(NOT ZLIB_FOUND AND NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL NONE)
 
     # Set find_package standard args
     set(ZLIB_FOUND TRUE)
-    if(_zlib_ExternalProject_VERSION)
-        set(ZLIB_VERSION ${_zlib_ExternalProject_VERSION})
+    if(_ZLIB_ExternalProject_VERSION)
+        set(ZLIB_VERSION ${_ZLIB_ExternalProject_VERSION})
     else()
         set(ZLIB_VERSION ${zlib_FIND_VERSION})
     endif()

@@ -123,7 +123,23 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
         )
 
         # Get version from header or pkg-config
-        set(minizip_VERSION "${minizip_FIND_VERSION}")
+        if(minizip_INCLUDE_DIR)
+            list(GET minizip_INCLUDE_DIR 0 _minizip_INCLUDE_DIR)
+            if(EXISTS "${_minizip_INCLUDE_DIR}/mz.h")
+                set(_minizip_CONFIG "${_minizip_INCLUDE_DIR}/mz.h")
+            endif()
+        endif()
+
+        if(_minizip_CONFIG)
+            file(STRINGS "${_minizip_CONFIG}" _minizip_VER_SEARCH 
+                REGEX "^[ \t]*#define[ \t]+MZ_VERSION[ \t]+\\(\"[.0-9]+\"\\).*$")
+            if(_minizip_VER_SEARCH)
+                string(REGEX REPLACE ".*#define[ \t]+MZ_VERSION[ \t]+\\(\"([.0-9]+)\"\\).*" 
+                    "\\1" minizip_VERSION "${_minizip_VER_SEARCH}")
+            endif()
+        elseif(PC_minizip_FOUND)
+            set(minizip_VERSION "${PC_minizip_VERSION}")
+        endif()
     endif()
 
     # Override REQUIRED if package can be installed

@@ -291,8 +291,8 @@ jobs:
       - name: Test
         run: ctest -V -C ${{ matrix.build-type }}
         working-directory: _build
+      # The test is valid for both build-shared=ON and build-shared=OFF.
       - name: Test CMake Consumer
-        if: matrix.build-shared == 'ON'
         run: |
           cmake . \
                 -DCMAKE_PREFIX_PATH=../../../_install \
@@ -428,8 +428,8 @@ jobs:
       - name: Test
         run: ctest -V -C ${{ matrix.build-type }}
         working-directory: _build
+      # The test is valid for both build-shared=ON and build-shared=OFF.
       - name: Test CMake Consumer
-        if: matrix.build-shared == 'ON'
         run: |
           cmake . \
                 -DCMAKE_PREFIX_PATH=../../../_install \
@@ -573,8 +573,8 @@ jobs:
         run: ctest -V -C ${{ matrix.build-type }}
         shell: bash
         working-directory: _build
+      # The test is valid for both build-shared=ON and build-shared=OFF.
       - name: Test CMake Consumer
-        if: matrix.build-shared == 'ON'
         run: |
           cmake . \
                 -DCMAKE_PREFIX_PATH=../../../_install \
