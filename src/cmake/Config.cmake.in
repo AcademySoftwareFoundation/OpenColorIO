@@ -2,52 +2,55 @@
 
 include(CMakeFindDependencyMacro)
 
-# Get the install directory.
-set(_IMPORT_PREFIX "${CMAKE_CURRENT_LIST_DIR}")
-# Get the install directory. Since the current file is under 
-# <install directory>/lib/cmake/OpenColorIO going back three directory.
-foreach(i RANGE 1 3)
-    get_filename_component(_IMPORT_PREFIX "${_IMPORT_PREFIX}" PATH)
-    if(_IMPORT_PREFIX STREQUAL "/")
-      set(_IMPORT_PREFIX "")
-      break()
+if (NOT @BUILD_SHARED_LIBS@)
+    # Get the install directory.
+    set(_IMPORT_PREFIX "${CMAKE_CURRENT_LIST_DIR}")
+    # Get the install directory. Since the current file is under 
+    # <install directory>/lib/cmake/OpenColorIO going back three directory.
+    foreach(i RANGE 1 3)
+        get_filename_component(_IMPORT_PREFIX "${_IMPORT_PREFIX}" PATH)
+        if(_IMPORT_PREFIX STREQUAL "/")
+        set(_IMPORT_PREFIX "")
+        break()
+        endif()
+    endforeach()
+
+    # Append OCIO custom find module path.
+    list(APPEND CMAKE_MODULE_PATH "${_IMPORT_PREFIX}/share/cmake/modules")
+    list(APPEND CMAKE_MODULE_PATH "${_IMPORT_PREFIX}/share/cmake/macros")
+
+    ########################
+    # Required dependencies 
+    ########################
+
+    if (NOT expat::expat)
+        find_dependency(expat @expat_VERSION@)
     endif()
-endforeach()
 
-# Append OCIO custom find module path.
-list(APPEND CMAKE_MODULE_PATH "${_IMPORT_PREFIX}/cmake")
+    if (NOT Imath::Imath)
+        find_dependency(Imath @Imath_VERSION@)
+    endif()
 
-########################
-# Required dependencies 
-########################
+    if (NOT pystring::pystring)
+        find_dependency(pystring @pystring_VERSION@)
+    endif()
 
-if (NOT expat::expat)
-    find_dependency(expat @expat_VERSION@)
+    if (NOT yaml-cpp)
+        find_dependency(yaml-cpp @yaml-cpp_VERSION@)
+    endif()
+
+    # CMake has a zlib find module, but OCIO is using its own find module for zlib. (Findzlib.cmake)
+    if (NOT ZLIB::ZLIB)
+        find_dependency(zlib @ZLIB_VERSION@)
+    endif()
+
+    if (NOT MINIZIP::minizip-ng)
+        find_dependency(minizip-ng @minizip-ng_VERSION@)
+    endif()
+
+    # Remove OCIO custom find module path.
+    list(REMOVE_AT CMAKE_MODULE_PATH -1)
 endif()
-
-if (NOT Imath::Imath)
-    find_dependency(Imath @Imath_VERSION@)
-endif()
-
-if (NOT pystring::pystring)
-    find_dependency(pystring @pystring_VERSION@)
-endif()
-
-if (NOT yaml-cpp)
-    find_dependency(yaml-cpp @yaml-cpp_VERSION@)
-endif()
-
-# CMake has a zlib find module, but OCIO is using its own find module for zlib. (Findzlib.cmake)
-if (NOT ZLIB::ZLIB)
-    find_dependency(zlib @ZLIB_VERSION@)
-endif()
-
-if (NOT MINIZIP::minizip-ng)
-    find_dependency(minizip-ng @minizip-ng_VERSION@)
-endif()
-
-# Remove OCIO custom find module path.
-list(REMOVE_AT CMAKE_MODULE_PATH -1)
 
 include(${CMAKE_CURRENT_LIST_DIR}/@PROJECT_NAME@Targets.cmake)
 

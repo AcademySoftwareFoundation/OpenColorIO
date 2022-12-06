@@ -308,7 +308,8 @@ set(OCIO_TARGETS_EXPORT_NAME "${PROJECT_NAME}Targets.cmake")
 set(OCIO_VERSION_CONFIG "${CMAKE_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake")
 set(OCIO_PROJECT_CONFIG "${CMAKE_BINARY_DIR}/${PROJECT_NAME}Config.cmake")
 set(OCIO_CONFIG_INSTALL_DIR "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}")
-set(OCIO_CUSTOM_FIND_MODULE_DIR "${CMAKE_INSTALL_PREFIX}/cmake")
+set(OCIO_CUSTOM_FIND_MODULE_DIR "${CMAKE_INSTALL_PREFIX}/share/cmake/modules")
+set(OCIO_CUSTOM_MACROS_MODULE_DIR "${CMAKE_INSTALL_PREFIX}/share/cmake/macros")
 
 # Version fetched from the top level project()
 write_basic_package_version_file(
@@ -331,17 +332,25 @@ install(
     FILE ${OCIO_TARGETS_EXPORT_NAME}
 )
 
-# Install custom Find modules.
-install(FILES
-    ${CMAKE_CURRENT_LIST_DIR}/share/cmake/modules/Findexpat.cmake
-    ${CMAKE_CURRENT_LIST_DIR}/share/cmake/modules/FindImath.cmake
-    ${CMAKE_CURRENT_LIST_DIR}/share/cmake/modules/Findpystring.cmake
-    ${CMAKE_CURRENT_LIST_DIR}/share/cmake/modules/Findminizip.cmake
-    ${CMAKE_CURRENT_LIST_DIR}/share/cmake/modules/Findminizip-ng.cmake
-    ${CMAKE_CURRENT_LIST_DIR}/share/cmake/modules/Findzlib.cmake
-    ${CMAKE_CURRENT_LIST_DIR}/share/cmake/modules/Findyaml-cpp.cmake
-    DESTINATION ${OCIO_CUSTOM_FIND_MODULE_DIR}
-)
+if (NOT BUILD_SHARED_LIBS)
+    # Install custom macros used in the find modules.
+    install(FILES
+        ${CMAKE_CURRENT_LIST_DIR}/share/cmake/macros/VersionUtils.cmake
+        DESTINATION ${OCIO_CUSTOM_MACROS_MODULE_DIR}
+    )
+
+    # Install custom Find modules.
+    install(FILES
+        ${CMAKE_CURRENT_LIST_DIR}/share/cmake/modules/Findexpat.cmake
+        ${CMAKE_CURRENT_LIST_DIR}/share/cmake/modules/FindImath.cmake
+        ${CMAKE_CURRENT_LIST_DIR}/share/cmake/modules/Findpystring.cmake
+        ${CMAKE_CURRENT_LIST_DIR}/share/cmake/modules/Findminizip.cmake
+        ${CMAKE_CURRENT_LIST_DIR}/share/cmake/modules/Findminizip-ng.cmake
+        ${CMAKE_CURRENT_LIST_DIR}/share/cmake/modules/Findzlib.cmake
+        ${CMAKE_CURRENT_LIST_DIR}/share/cmake/modules/Findyaml-cpp.cmake
+        DESTINATION ${OCIO_CUSTOM_FIND_MODULE_DIR}
+    )
+endif()
 
 install(
     FILES "${OCIO_PROJECT_CONFIG}" "${OCIO_VERSION_CONFIG}"

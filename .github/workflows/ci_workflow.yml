@@ -291,12 +291,35 @@ jobs:
       - name: Test
         run: ctest -V -C ${{ matrix.build-type }}
         working-directory: _build
-      # The test is valid for both build-shared=ON and build-shared=OFF.
-      - name: Test CMake Consumer
+      - name: Store absolute build path
+        run: |
+          echo "ocio_build_path=$(pwd)" >> $GITHUB_ENV
+      - name: Test CMake Consumer with shared OCIO
+        if: matrix.build-shared == 'ON'
         run: |
           cmake . \
                 -DCMAKE_PREFIX_PATH=../../../_install \
                 -DCMAKE_BUILD_TYPE=${{ matrix.build-type }}
+          cmake --build . \
+                --config ${{ matrix.build-type }}
+          ./consumer
+        working-directory: _build/tests/cmake-consumer-dist
+      - name: Test CMake Consumer with static OCIO
+        if: matrix.build-shared == 'OFF'
+        # yaml-cpp_VERSION need to be provided since there is no way to find the version in the
+        # header files. 
+        # Pystring is different because Findpystring does not require pystring_VERSION to be present.
+        run: |
+          cmake . \
+                -DCMAKE_PREFIX_PATH=../../../_install \
+                -DCMAKE_BUILD_TYPE=${{ matrix.build-type }}
+                -Dexpat_ROOT=${{ env.ocio_build_path }}/ext/dist
+                -DImath_ROOT=${{ env.ocio_build_path }}/ext/dist
+                -Dpystring_ROOT=${{ env.ocio_build_path }}/ext/dist
+                -Dyaml-cpp_ROOT=${{ env.ocio_build_path }}/ext/dist
+                -Dyaml-cpp_VERSION=0.7.0
+                -DZLIB_ROOT=${{ env.ocio_build_path }}/ext/dist
+                -Dminizip-ng_ROOT=${{ env.ocio_build_path }}/ext/dist
           cmake --build . \
                 --config ${{ matrix.build-type }}
           ./consumer
@@ -428,12 +451,35 @@ jobs:
       - name: Test
         run: ctest -V -C ${{ matrix.build-type }}
         working-directory: _build
-      # The test is valid for both build-shared=ON and build-shared=OFF.
-      - name: Test CMake Consumer
+      - name: Store absolute build path
+        run: |
+          echo "ocio_build_path=$(pwd)" >> $GITHUB_ENV
+      - name: Test CMake Consumer with shared OCIO
+        if: matrix.build-shared == 'ON'
         run: |
           cmake . \
                 -DCMAKE_PREFIX_PATH=../../../_install \
                 -DCMAKE_BUILD_TYPE=${{ matrix.build-type }}
+          cmake --build . \
+                --config ${{ matrix.build-type }}
+          ./consumer
+        working-directory: _build/tests/cmake-consumer-dist
+      - name: Test CMake Consumer with static OCIO
+        if: matrix.build-shared == 'OFF'
+        # yaml-cpp_VERSION need to be provided since there is no way to find the version in the
+        # header files. 
+        # Pystring is different because Findpystring does not require pystring_VERSION to be present.        
+        run: |
+          cmake . \
+                -DCMAKE_PREFIX_PATH=../../../_install \
+                -DCMAKE_BUILD_TYPE=${{ matrix.build-type }}
+                -Dexpat_ROOT=${{ env.ocio_build_path }}/ext/dist
+                -DImath_ROOT=${{ env.ocio_build_path }}/ext/dist
+                -Dpystring_ROOT=${{ env.ocio_build_path }}/ext/dist
+                -Dyaml-cpp_ROOT=${{ env.ocio_build_path }}/ext/dist
+                -Dyaml-cpp_VERSION=0.7.0
+                -DZLIB_ROOT=${{ env.ocio_build_path }}/ext/dist
+                -Dminizip-ng_ROOT=${{ env.ocio_build_path }}/ext/dist
           cmake --build . \
                 --config ${{ matrix.build-type }}
           ./consumer
@@ -573,12 +619,38 @@ jobs:
         run: ctest -V -C ${{ matrix.build-type }}
         shell: bash
         working-directory: _build
-      # The test is valid for both build-shared=ON and build-shared=OFF.
-      - name: Test CMake Consumer
+      - name: Store absolute build path
+        run: |
+          echo "ocio_build_path=$(pwd)" >> $GITHUB_ENV
+        shell: bash
+      - name: Test CMake Consumer with shared OCIO
+        if: matrix.build-shared == 'ON'
         run: |
           cmake . \
                 -DCMAKE_PREFIX_PATH=../../../_install \
                 -DCMAKE_BUILD_TYPE=${{ matrix.build-type }}
+          cmake --build . \
+                --config ${{ matrix.build-type }}
+          export PATH=../../../_install/bin:$PATH
+          ./${{ matrix.build-type }}/consumer
+        shell: bash
+        working-directory: _build/tests/cmake-consumer-dist
+      - name: Test CMake Consumer with static OCIO
+        if: matrix.build-shared == 'OFF'
+        # yaml-cpp_VERSION need to be provided since there is no way to find the version in the
+        # header files. 
+        # Pystring is different because Findpystring does not require pystring_VERSION to be present.
+        run: |
+          cmake . \
+                -DCMAKE_PREFIX_PATH=../../../_install \
+                -DCMAKE_BUILD_TYPE=${{ matrix.build-type }}
+                -Dexpat_ROOT=${{ env.ocio_build_path }}/ext/dist
+                -DImath_ROOT=${{ env.ocio_build_path }}/ext/dist
+                -Dpystring_ROOT=${{ env.ocio_build_path }}/ext/dist
+                -Dyaml-cpp_ROOT=${{ env.ocio_build_path }}/ext/dist
+                -Dyaml-cpp_VERSION=0.7.0
+                -DZLIB_ROOT=${{ env.ocio_build_path }}/ext/dist
+                -Dminizip-ng_ROOT=${{ env.ocio_build_path }}/ext/dist
           cmake --build . \
                 --config ${{ matrix.build-type }}
           export PATH=../../../_install/bin:$PATH
