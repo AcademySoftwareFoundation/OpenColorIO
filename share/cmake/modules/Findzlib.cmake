@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright Contributors to the OpenColorIO Project.
 #
-# Locate or install zlib
+# Locate or install ZLIB
 # 
 # **********************************************************************
 # Note that this is a wrapper around the CMake ZLIB find module.
@@ -39,10 +39,12 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
     endif()
 
     # ZLIB_USE_STATIC_LIBS is supported only from CMake 3.24+.
-    if (ZLIB_STATIC_LIBRARY)
-        set(ZLIB_USE_STATIC_LIBS "${ZLIB_STATIC_LIBRARY}")
-    elseif(zlib_STATIC_LIBRARY)
-        set(ZLIB_USE_STATIC_LIBS "${zlib_STATIC_LIBRARY}")
+    if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.24.0") 
+        if (ZLIB_STATIC_LIBRARY)
+            set(ZLIB_USE_STATIC_LIBS "${ZLIB_STATIC_LIBRARY}")
+        elseif(zlib_STATIC_LIBRARY)
+            set(ZLIB_USE_STATIC_LIBS "${zlib_STATIC_LIBRARY}")
+        endif()
     endif()
 
     # Forcing CMake to use its own find module called FindZLIB.cmake.
@@ -59,20 +61,21 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
     set(CMAKE_MODULE_PATH ${_ZLIB__CMAKE_MODULE_PATH_OLD_})
 
     if (ZLIB_FOUND)
-        # CMake find modules sets ZLIB_LIBRARIES and ZLIB_INCLUDE_DIRS.
-        
+        # Right now, OCIO custom find modules uses the following standard: 
+        # <pkg_name>_LIBRARY and <pkg_name>_INCLUDE_DIR
+        # But CMake's FindZLIB sets ZLIB_LIBRARIES and ZLIB_INCLUDE_DIRS.
+
+        # Set ZLIB_LIBRARY if it is not set already.
         if(ZLIB_LIBRARIES AND NOT ZLIB_LIBRARY)
-            # Set ZLIB_LIBRARY to match the others OCIO's custom find modules.
             set(ZLIB_LIBRARY "${ZLIB_LIBRARIES}")
         endif()
 
+        # Set ZLIB_INCLUDE_DIR if it is not set already.
         if(ZLIB_INCLUDE_DIRS AND NOT ZLIB_INCLUDE_DIR)
-            # Set ZLIB_LIBRARY to match the others OCIO's custom find modules.
             set(ZLIB_INCLUDE_DIR "${ZLIB_INCLUDE_DIRS}")
         endif()
         
         # CMake FindZLIB uses ZLIB_VERSION_STRING for CMake < 3.26. 
-        # CMake 3.26 will update that variable to ZLIB_VERSION.
         if (ZLIB_VERSION_STRING)
             set(ZLIB_VERSION "${ZLIB_VERSION_STRING}")
         endif()
