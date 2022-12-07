@@ -189,7 +189,7 @@ if(NOT minizip_FOUND AND NOT TARGET MINIZIP::minizip)
 
     ###############################################################################
     ### Install package from source ###
-    if(NOT minizip-ng_FOUND AND NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL NONE)
+    if(NOT minizip-ng_FOUND AND OCIO_INSTALL_EXT_PACKAGES AND NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL NONE)
         include(ExternalProject)
         include(GNUInstallDirs)
 
