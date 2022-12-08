@@ -1,14 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright Contributors to the OpenColorIO Project.
 #
-# Locate or install ZLIB
-# 
-# **********************************************************************
-# Note that this is a wrapper around the CMake ZLIB find module.
-# This find module DOES NOT output any variables with lowercase "zlib".
-# 
-# Treat this module as if it was FindZLIB.cmake. 
-# **********************************************************************
+# Install ZLIB
 #
 # Variables defined by this module:
 #   ZLIB_FOUND          - If FALSE, do not try to link to zlib
@@ -17,96 +10,23 @@
 #   ZLIB_VERSION        - The version of the library
 #
 # Targets defined by this module:
-#   ZLIB::ZLIB - IMPORTED target, if found
+#   ZLIB::ZLIB          - Properties:
+#                         IMPORTED_LOCATION ${ZLIB_LIBRARIES}
+#                         INTERFACE_INCLUDE_DIRECTORIES ${ZLIB_INCLUDE_DIRS}
 #
 ###############################################################################
-### Try to find package ###
-
-if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
-    # Update ZLIB_ROOT if zlib_ROOT was set.
-    if (zlib_ROOT)
-        set(ZLIB_ROOT "${zlib_ROOT}")
-    endif()
-
-    # Update ZLIB_LIBRARY if zlib_LIBRARY was set. 
-    if (zlib_LIBRARY)
-        set(ZLIB_LIBRARY "${zlib_LIBRARY}")
-    endif()
-
-    # Update ZLIB_INCLUDE_DIR if zlib_INCLUDE_DIR was set. 
-    if (zlib_INCLUDE_DIR)
-        set(ZLIB_INCLUDE_DIR "${zlib_INCLUDE_DIR}")
-    endif()
-
-    # ZLIB_USE_STATIC_LIBS is supported only from CMake 3.24+.
-    if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.24.0") 
-        if (ZLIB_STATIC_LIBRARY)
-            set(ZLIB_USE_STATIC_LIBS "${ZLIB_STATIC_LIBRARY}")
-        elseif(zlib_STATIC_LIBRARY)
-            set(ZLIB_USE_STATIC_LIBS "${zlib_STATIC_LIBRARY}")
-        endif()
-    endif()
-
-    # Forcing CMake to use its own find module called FindZLIB.cmake.
-    # Save old value of CMAKE_MODULE_PATH 
-    set(_ZLIB__CMAKE_MODULE_PATH_OLD_ ${CMAKE_MODULE_PATH})
-    # Force find_package to use CMAKE module and not custom modules.
-    set(CMAKE_MODULE_PATH "${CMAKE_ROOT}/Modules") 
-
-    # Use CMake FindZLIB module. (ZLIB in capital letters is important)
-    # FindZLIB supports ZLIB_ROOT, ZLIB_LIBRARIES and ZLIB_INCLUDE_DIRS.
-    find_package(ZLIB ${zlib_FIND_VERSION} QUIET)
-
-    # Restore CMAKE_MODULE_PATH
-    set(CMAKE_MODULE_PATH ${_ZLIB__CMAKE_MODULE_PATH_OLD_})
-
-    if (ZLIB_FOUND)
-        # Right now, OCIO custom find modules uses the following standard: 
-        # <pkg_name>_LIBRARY and <pkg_name>_INCLUDE_DIR
-        # But CMake's FindZLIB sets ZLIB_LIBRARIES and ZLIB_INCLUDE_DIRS.
-
-        # Set ZLIB_LIBRARY if it is not set already.
-        if(ZLIB_LIBRARIES AND NOT ZLIB_LIBRARY)
-            set(ZLIB_LIBRARY "${ZLIB_LIBRARIES}")
-        endif()
-
-        # Set ZLIB_INCLUDE_DIR if it is not set already.
-        if(ZLIB_INCLUDE_DIRS AND NOT ZLIB_INCLUDE_DIR)
-            set(ZLIB_INCLUDE_DIR "${ZLIB_INCLUDE_DIRS}")
-        endif()
-        
-        # CMake FindZLIB uses ZLIB_VERSION_STRING for CMake < 3.26. 
-        if (ZLIB_VERSION_STRING)
-            set(ZLIB_VERSION "${ZLIB_VERSION_STRING}")
-        endif()
-    endif()
-
-    # Override REQUIRED if package can be installed
-    if(OCIO_INSTALL_EXT_PACKAGES STREQUAL MISSING)
-        set(zlib_FIND_REQUIRED FALSE)
-        set(ZLIB_FIND_REQUIRED FALSE)
-    endif()
-
-    include(FindPackageHandleStandardArgs)
-    find_package_handle_standard_args(zlib
-        REQUIRED_VARS
-            ZLIB_LIBRARY
-            ZLIB_INCLUDE_DIR
-        VERSION_VAR
-            ZLIB_VERSION
-    )
-endif()
 
 ###############################################################################
 ### Create target
-
+###############################################################################
 if(NOT TARGET ZLIB::ZLIB)
     add_library(ZLIB::ZLIB UNKNOWN IMPORTED GLOBAL)
     set(_ZLIB_TARGET_CREATE TRUE)
 endif()
 
 ###############################################################################
-### Install package from source ###
+### Install package from source
+###############################################################################
 if(NOT ZLIB_FOUND AND OCIO_INSTALL_EXT_PACKAGES AND NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL NONE)
     include(ExternalProject)
     include(GNUInstallDirs)
@@ -127,8 +47,9 @@ if(NOT ZLIB_FOUND AND OCIO_INSTALL_EXT_PACKAGES AND NOT OCIO_INSTALL_EXT_PACKAGE
     if(_ZLIB_ExternalProject_VERSION)
         set(ZLIB_VERSION ${_ZLIB_ExternalProject_VERSION})
     else()
-        set(ZLIB_VERSION ${zlib_FIND_VERSION})
+        set(ZLIB_VERSION ${ZLIB_FIND_VERSION})
     endif()
+
     set(ZLIB_INCLUDE_DIRS "${_EXT_DIST_ROOT}/${CMAKE_INSTALL_INCLUDEDIR}")
 
     # Windows need the "d" suffix at the end.
@@ -217,9 +138,10 @@ if(NOT ZLIB_FOUND AND OCIO_INSTALL_EXT_PACKAGES AND NOT OCIO_INSTALL_EXT_PACKAGE
     message(STATUS "Installing ZLIB: ${ZLIB_LIBRARIES} (version \"${ZLIB_VERSION}\")")
 endif()
 
+
 ###############################################################################
 ### Configure target ###
-
+###############################################################################
 if(_ZLIB_TARGET_CREATE)
     set_target_properties(ZLIB::ZLIB PROPERTIES
         IMPORTED_LOCATION ${ZLIB_LIBRARIES}

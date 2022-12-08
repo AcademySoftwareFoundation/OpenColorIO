@@ -41,10 +41,33 @@ find_package(pystring 1.1.3 REQUIRED)
 set(_Imath_ExternalProject_VERSION "3.1.5")
 find_package(Imath 3.0 REQUIRED)
 
-# ZLIB
-# https://github.com/madler/zlib
-set(_zlib_ExternalProject_VERSION "1.2.12")
-find_package(zlib 1.2.11 REQUIRED)
+###############################################################################
+### ZLIB (https://github.com/madler/zlib)
+###############################################################################
+set(_ZLIB_FIND_VERSION "1.2.11")
+set(_ZLIB_ExternalProject_VERSION ${_ZLIB_FIND_VERSION})
+
+if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
+    # ZLIB_USE_STATIC_LIBS is supported only from CMake 3.24+.
+    if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.24.0") 
+        if (ZLIB_STATIC_LIBRARY)
+            set(ZLIB_USE_STATIC_LIBS "${ZLIB_STATIC_LIBRARY}")
+        endif()
+    endif()
+
+    set(_ZLIB_REQUIRED REQUIRED)
+    # Override REQUIRED if package can be installed
+    if(OCIO_INSTALL_EXT_PACKAGES STREQUAL MISSING)
+        set(_ZLIB_REQUIRED "")
+    endif()
+
+    find_package(ZLIB ${_ZLIB_FIND_VERSION} ${_ZLIB_REQUIRED})
+endif()
+
+if(NOT ZLIB_FOUND AND OCIO_INSTALL_EXT_PACKAGES AND NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL NONE)
+    include(InstallZLIB)
+endif()
+###############################################################################
 
 # minizip-ng
 # https://github.com/zlib-ng/minizip-ng

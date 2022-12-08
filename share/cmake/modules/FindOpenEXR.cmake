@@ -89,13 +89,14 @@ if(NOT OpenEXR_FOUND AND OCIO_INSTALL_EXT_PACKAGES AND NOT OCIO_INSTALL_EXT_PACK
     set(_EXT_BUILD_ROOT "${CMAKE_BINARY_DIR}/ext/build")
 
     # Required dependency
-    # OCIO custom module to find ZLIB. (Findzlib)
-    find_package(zlib)
     if(NOT ZLIB_FOUND)
-        message(STATUS "ZLib is required to build OpenEXR.")
-        return()
+        find_package(ZLIB)
+        if(NOT ZLIB_FOUND)
+            message(STATUS "ZLib is required to build OpenEXR.")
+            return()
+        endif()
     endif()
-
+    
     find_package(Threads)
     if(NOT Threads_FOUND)
         message(STATUS "Threads is required to build OpenEXR.")
