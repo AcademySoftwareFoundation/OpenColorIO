@@ -614,7 +614,6 @@ jobs:
         run: ctest -V -C ${{ matrix.build-type }}
         shell: bash
         working-directory: _build
-        shell: bash
       - name: Test CMake Consumer with shared OCIO
         if: matrix.build-shared == 'ON'
         run: |
