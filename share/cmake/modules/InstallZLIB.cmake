@@ -3,6 +3,9 @@
 #
 # Install ZLIB
 #
+# Except for the variable ZLIB_VERSION_STRING, OCIO sets the same variables as the 
+# CMake's FindZLIB when installing ZLIB manually.
+#
 # Variables defined by this module:
 #   ZLIB_FOUND          - If FALSE, do not try to link to zlib
 #   ZLIB_LIBRARIES      - ZLIB library to link to

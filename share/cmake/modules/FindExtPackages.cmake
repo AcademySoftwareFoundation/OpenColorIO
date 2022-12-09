@@ -43,6 +43,11 @@ find_package(Imath 3.0 REQUIRED)
 
 ###############################################################################
 ### ZLIB (https://github.com/madler/zlib)
+###
+### Since OCIO is using CMake's FindZLIB, it supports the same output variables
+### and the same variables that can be overridden.
+###
+### See https://cmake.org/cmake/help/latest/module/FindZLIB.html
 ###############################################################################
 set(_ZLIB_FIND_VERSION "1.2.11")
 set(_ZLIB_ExternalProject_VERSION ${_ZLIB_FIND_VERSION})
