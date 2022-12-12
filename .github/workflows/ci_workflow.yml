@@ -306,17 +306,27 @@ jobs:
         if: matrix.build-shared == 'OFF'
         # The yaml-cpp_VERSION is set below because Findyaml-cpp.cmake needs it but is unable to 
         # extract it from the headers, like the other modules.
+        #
+        # Prefer the static version of each dependencies by using <pkg>_STATIC_LIBRARY. 
+        # Alternatively, this can be done by setting <pkg>_LIBRARY and <pkg>_INCLUDE_DIR to 
+        # the static version of the package.
         run: |
           cmake . \
                 -DCMAKE_PREFIX_PATH=../../../_install \
                 -DCMAKE_BUILD_TYPE=${{ matrix.build-type }} \
                 -Dexpat_ROOT=${{ env.ocio_build_path }}/ext/dist \
+                -Dexpat_STATIC_LIBRARY=ON \
                 -DImath_ROOT=${{ env.ocio_build_path }}/ext/dist \
+                -DImath_STATIC_LIBRARY=ON \
                 -Dpystring_ROOT=${{ env.ocio_build_path }}/ext/dist \
+                -Dpystring_STATIC_LIBRARY=ON \
                 -Dyaml-cpp_ROOT=${{ env.ocio_build_path }}/ext/dist \
+                -Dyaml-cpp_STATIC_LIBRARY=ON \
                 -Dyaml-cpp_VERSION=0.7.0 \
                 -DZLIB_ROOT=${{ env.ocio_build_path }}/ext/dist \
-                -Dminizip-ng_ROOT=${{ env.ocio_build_path }}/ext/dist
+                -DZLIB_STATIC_LIBRARY=ON \
+                -Dminizip-ng_ROOT=${{ env.ocio_build_path }}/ext/dist \
+                -Dminizip-ng_STATIC_LIBRARY=ON
           cmake --build . \
                 --config ${{ matrix.build-type }}
           ./consumer
@@ -462,18 +472,28 @@ jobs:
       - name: Test CMake Consumer with static OCIO
         if: matrix.build-shared == 'OFF'
         # The yaml-cpp_VERSION is set below because Findyaml-cpp.cmake needs it but is unable to 
-        # extract it from the headers, like the other modules.       
+        # extract it from the headers, like the other modules.
+        #
+        # Prefer the static version of each dependencies by using <pkg>_STATIC_LIBRARY. 
+        # Alternatively, this can be done by setting <pkg>_LIBRARY and <pkg>_INCLUDE_DIR to 
+        # the static version of the package.       
         run: |
           cmake . \
                 -DCMAKE_PREFIX_PATH=../../../_install \
                 -DCMAKE_BUILD_TYPE=${{ matrix.build-type }} \
                 -Dexpat_ROOT=${{ env.ocio_build_path }}/ext/dist \
+                -Dexpat_STATIC_LIBRARY=ON \
                 -DImath_ROOT=${{ env.ocio_build_path }}/ext/dist \
+                -DImath_STATIC_LIBRARY=ON \
                 -Dpystring_ROOT=${{ env.ocio_build_path }}/ext/dist \
+                -Dpystring_STATIC_LIBRARY=ON \
                 -Dyaml-cpp_ROOT=${{ env.ocio_build_path }}/ext/dist \
+                -Dyaml-cpp_STATIC_LIBRARY=ON \
                 -Dyaml-cpp_VERSION=0.7.0 \
                 -DZLIB_ROOT=${{ env.ocio_build_path }}/ext/dist \
-                -Dminizip-ng_ROOT=${{ env.ocio_build_path }}/ext/dist
+                -DZLIB_STATIC_LIBRARY=ON \
+                -Dminizip-ng_ROOT=${{ env.ocio_build_path }}/ext/dist \
+                -Dminizip-ng_STATIC_LIBRARY=ON
           cmake --build . \
                 --config ${{ matrix.build-type }}
           ./consumer
@@ -630,17 +650,27 @@ jobs:
         if: matrix.build-shared == 'OFF'
         # The yaml-cpp_VERSION is set below because Findyaml-cpp.cmake needs it but is unable to 
         # extract it from the headers, like the other modules.
+        #
+        # Prefer the static version of each dependencies by using <pkg>_STATIC_LIBRARY. 
+        # Alternatively, this can be done by setting <pkg>_LIBRARY and <pkg>_INCLUDE_DIR to 
+        # the static version of the package.
         run: |
           cmake . \
                 -DCMAKE_PREFIX_PATH=../../../_install \
                 -DCMAKE_BUILD_TYPE=${{ matrix.build-type }} \
                 -Dexpat_ROOT=${{ env.ocio_build_path }}/ext/dist \
+                -Dexpat_STATIC_LIBRARY=ON \
                 -DImath_ROOT=${{ env.ocio_build_path }}/ext/dist \
+                -DImath_STATIC_LIBRARY=ON \
                 -Dpystring_ROOT=${{ env.ocio_build_path }}/ext/dist \
+                -Dpystring_STATIC_LIBRARY=ON \
                 -Dyaml-cpp_ROOT=${{ env.ocio_build_path }}/ext/dist \
+                -Dyaml-cpp_STATIC_LIBRARY=ON \
                 -Dyaml-cpp_VERSION=0.7.0 \
                 -DZLIB_ROOT=${{ env.ocio_build_path }}/ext/dist \
-                -Dminizip-ng_ROOT=${{ env.ocio_build_path }}/ext/dist
+                -DZLIB_STATIC_LIBRARY=ON \
+                -Dminizip-ng_ROOT=${{ env.ocio_build_path }}/ext/dist \
+                -Dminizip-ng_STATIC_LIBRARY=ON
           cmake --build . \
                 --config ${{ matrix.build-type }}
           export PATH=../../../_install/bin:$PATH

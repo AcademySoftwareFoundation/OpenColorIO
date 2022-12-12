@@ -58,6 +58,35 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
         if (ZLIB_STATIC_LIBRARY)
             set(ZLIB_USE_STATIC_LIBS "${ZLIB_STATIC_LIBRARY}")
         endif()
+    else() # For CMake < 3.24 since ZLIB_USE_STATIC_LIBS is not available.
+        if(NOT ZLIB_LIBRARY)
+            if(DEFINED CMAKE_FIND_LIBRARY_PREFIXES)
+                set(_ZLIB_ORIG_CMAKE_FIND_LIBRARY_PREFIXES "${CMAKE_FIND_LIBRARY_PREFIXES}")
+            else()
+                set(_ZLIB_ORIG_CMAKE_FIND_LIBRARY_PREFIXES)
+            endif()
+
+            if(DEFINED CMAKE_FIND_LIBRARY_SUFFIXES)
+                set(_ZLIB_ORIG_CMAKE_FIND_LIBRARY_SUFFIXES "${CMAKE_FIND_LIBRARY_SUFFIXES}")
+            else()
+                set(_ZLIB_ORIG_CMAKE_FIND_LIBRARY_SUFFIXES)
+            endif()
+
+            # Prefix/suffix for windows.
+            if(WIN32)
+                list(APPEND CMAKE_FIND_LIBRARY_PREFIXES "" "lib")
+                list(APPEND CMAKE_FIND_LIBRARY_SUFFIXES ".dll.a")
+            endif()
+
+            # Check if static lib is preferred.
+            if(ZLIB_STATIC_LIBRARY OR ZLIB_USE_STATIC_LIBS)
+                if(WIN32)
+                    set(CMAKE_FIND_LIBRARY_SUFFIXES .lib .a ${CMAKE_FIND_LIBRARY_SUFFIXES})
+                else()
+                    set(CMAKE_FIND_LIBRARY_SUFFIXES .a)
+                endif()
+            endif()
+        endif()
     endif()
 
     set(_ZLIB_REQUIRED REQUIRED)
@@ -67,6 +96,19 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
     endif()
 
     find_package(ZLIB ${_ZLIB_FIND_VERSION} ${_ZLIB_REQUIRED})
+
+    # Restore the original find library ordering
+    if(DEFINED _ZLIB_ORIG_CMAKE_FIND_LIBRARY_SUFFIXES)
+        set(CMAKE_FIND_LIBRARY_SUFFIXES "${_ZLIB_ORIG_CMAKE_FIND_LIBRARY_SUFFIXES}")
+    else()
+        set(CMAKE_FIND_LIBRARY_SUFFIXES)
+    endif()
+
+    if(DEFINED _ZLIB_ORIG_CMAKE_FIND_LIBRARY_PREFIXES)
+        set(CMAKE_FIND_LIBRARY_PREFIXES "${_ZLIB_ORIG_CMAKE_FIND_LIBRARY_PREFIXES}")
+    else()
+        set(CMAKE_FIND_LIBRARY_PREFIXES)
+    endif()
 endif()
 
 if(NOT ZLIB_FOUND AND OCIO_INSTALL_EXT_PACKAGES AND NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL NONE)

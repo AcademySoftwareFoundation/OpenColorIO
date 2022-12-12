@@ -96,11 +96,20 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
 
         if(expat_STATIC_LIBRARY)
             # Prefer static lib names
-            set(_expat_STATIC_LIB_NAMES 
+            set(_expat_STATIC_LIB_NAMES
                 "${CMAKE_STATIC_LIBRARY_PREFIX}expat${CMAKE_STATIC_LIBRARY_SUFFIX}")
+
+            # See https://github.com/libexpat/libexpat/blob/R_2_2_8/expat/win32/README.txt
+            if (WIN32)
+                list(INSERT _expat_STATIC_LIB_NAMES 0
+                    "${CMAKE_STATIC_LIBRARY_PREFIX}expatMD${CMAKE_STATIC_LIBRARY_SUFFIX}" 
+                    "${CMAKE_STATIC_LIBRARY_PREFIX}expatMT${CMAKE_STATIC_LIBRARY_SUFFIX}")
+            endif()
             if(WIN32 AND BUILD_TYPE_DEBUG)
                 # Prefer static Debug lib names (Windows only)
                 list(INSERT _expat_STATIC_LIB_NAMES 0
+                    "${CMAKE_STATIC_LIBRARY_PREFIX}expatdMD${CMAKE_STATIC_LIBRARY_SUFFIX}" 
+                    "${CMAKE_STATIC_LIBRARY_PREFIX}expatdMT${CMAKE_STATIC_LIBRARY_SUFFIX}" 
                     "${CMAKE_STATIC_LIBRARY_PREFIX}expatd${CMAKE_STATIC_LIBRARY_SUFFIX}")
             endif()
         endif()

@@ -91,7 +91,7 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
                 ${_yaml-cpp_STATIC_LIB_NAMES}
                 ${_yaml-cpp_LIB_NAMES}
             HINTS 
-                ${_yaml-cpp_ROOT}
+                ${yaml-cpp_ROOT}
                 ${PC_yaml-cpp_LIBRARY_DIRS}
             PATH_SUFFIXES 
                 lib64
