@@ -28,6 +28,15 @@
 ###############################################################################
 ### Try to find package ###
 
+# BUILD_TYPE_DEBUG variable is currently set in one of the OCIO's CMake files. 
+# Now that some OCIO's find module are installed with the library itself (with static build), 
+# a consumer app don't have access to the variables set by an OCIO's CMake files. Therefore, some 
+# OCIO's find modules must detect the build type by itselves. 
+set(BUILD_TYPE_DEBUG OFF)
+if(CMAKE_BUILD_TYPE MATCHES "[Dd][Ee][Bb][Uu][Gg]")
+   set(BUILD_TYPE_DEBUG ON)
+endif()
+
 if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
 
     if(NOT DEFINED minizip_ROOT)

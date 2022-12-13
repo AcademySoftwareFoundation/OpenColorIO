@@ -25,6 +25,15 @@
 ###############################################################################
 ### Try to find package ###
 
+# BUILD_TYPE_DEBUG variable is currently set in one of the OCIO's CMake files. 
+# Now that some OCIO's find module are installed with the library itself (with static build), 
+# a consumer app don't have access to the variables set by an OCIO's CMake files. Therefore, some 
+# OCIO's find modules must detect the build type by itselves.  
+set(BUILD_TYPE_DEBUG OFF)
+if(CMAKE_BUILD_TYPE MATCHES "[Dd][Ee][Bb][Uu][Gg]")
+   set(BUILD_TYPE_DEBUG ON)
+endif()
+
 if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
     set(_yaml-cpp_REQUIRED_VARS yaml-cpp_LIBRARY)
 
@@ -66,22 +75,21 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
 
         # Lib names to search for
         set(_yaml-cpp_LIB_NAMES yaml-cpp)
-        if(WIN32 AND BUILD_TYPE_DEBUG AND NOT MINGW)
-            # Prefer Debug lib names (Windows only)
+        if(BUILD_TYPE_DEBUG)
+            # Prefer Debug lib names.
             list(INSERT _yaml-cpp_LIB_NAMES 0 yaml-cppd)
         endif()
 
         if(yaml-cpp_STATIC_LIBRARY)
             # Prefer static lib names
-            if(WIN32 AND NOT MINGW)
-                set(_yaml-cpp_LIB_SUFFIX "md")
-            endif()
             set(_yaml-cpp_STATIC_LIB_NAMES 
-                "libyaml-cpp${_yaml-cpp_LIB_SUFFIX}${CMAKE_STATIC_LIBRARY_SUFFIX}")
-            if(WIN32 AND BUILD_TYPE_DEBUG AND NOT MINGW)
-                # Prefer static Debug lib names (Windows only)
+                "${CMAKE_STATIC_LIBRARY_PREFIX}yaml-cpp${CMAKE_STATIC_LIBRARY_SUFFIX}")
+            
+            # Starting from 0.7.0, all platforms uses the suffix "d" for debug.
+            # See https://github.com/jbeder/yaml-cpp/blob/master/CMakeLists.txt#L141
+            if(BUILD_TYPE_DEBUG)
                 list(INSERT _yaml-cpp_STATIC_LIB_NAMES 0
-                    "libyaml-cpp${_yaml-cpp_LIB_SUFFIX}d${CMAKE_STATIC_LIBRARY_SUFFIX}")
+                    "${CMAKE_STATIC_LIBRARY_PREFIX}yaml-cppd${CMAKE_STATIC_LIBRARY_SUFFIX}")
             endif()
         endif()
 

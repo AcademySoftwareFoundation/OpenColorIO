@@ -25,6 +25,15 @@
 ###############################################################################
 ### Try to find package ###
 
+# BUILD_TYPE_DEBUG variable is currently set in one of the OCIO's CMake files. 
+# Now that some OCIO's find module are installed with the library itself (with static build), 
+# a consumer app don't have access to the variables set by an OCIO's CMake files. Therefore, some 
+# OCIO's find modules must detect the build type by itselves. 
+set(BUILD_TYPE_DEBUG OFF)
+if(CMAKE_BUILD_TYPE MATCHES "[Dd][Ee][Bb][Uu][Gg]")
+   set(BUILD_TYPE_DEBUG ON)
+endif()
+
 if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
     set(_Imath_REQUIRED_VARS Imath_LIBRARY)
     set(_Imath_LIB_VER "${Imath_FIND_VERSION_MAJOR}_${Imath_FIND_VERSION_MINOR}")
