@@ -99,23 +99,18 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
                 minizip/include
         )
 
-        # Lib names to search for
-        set(_minizip_LIB_NAMES minizip)
-
-        if(BUILD_TYPE_DEBUG)
-            # Prefer Debug lib names (Windows only)
-            list(INSERT _minizip_LIB_NAMES 0 minizipd)
-        endif()
+        # Minizip uses prefix "lib" on all platform by default.
+        # Library name doesn't change in debug.
+        
+        # Lib names to search for.
+        set(_minizip_LIB_NAMES libminizip minizip)
 
         if(minizip_STATIC_LIBRARY)
-            # Prefer static lib names
+            # Looking for both "lib" prefix and CMAKE_STATIC_LIBRARY_PREFIX.
+            # Prefer static lib names.
             set(_minizip_STATIC_LIB_NAMES 
+                "libminizip${CMAKE_STATIC_LIBRARY_SUFFIX}"
                 "${CMAKE_STATIC_LIBRARY_PREFIX}minizip${CMAKE_STATIC_LIBRARY_SUFFIX}")
-            if(WIN32 AND BUILD_TYPE_DEBUG)
-                # Prefer static Debug lib names (Windows only)
-                list(INSERT _minizip_STATIC_LIB_NAMES 0
-                    "${CMAKE_STATIC_LIBRARY_PREFIX}minizipd${CMAKE_STATIC_LIBRARY_SUFFIX}")
-            endif()
         endif()
 
         # Find library

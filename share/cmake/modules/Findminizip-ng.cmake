@@ -115,23 +115,18 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
                 minizip-ng/include
         )
 
-        # Lib names to search for
-        set(_minizip-ng_LIB_NAMES minizip-ng)
+        # Minizip-ng uses prefix "lib" on all platform by default.
+        # Library name doesn't change in debug.
 
-        if(BUILD_TYPE_DEBUG)
-            # Prefer Debug lib names (Windows only)
-            list(INSERT _minizip-ng_LIB_NAMES 0 minizip-ngd)
-        endif()
+        # Lib names to search for.
+        set(_minizip-ng_LIB_NAMES libminizip-ng minizip-ng)
 
         if(minizip-ng_STATIC_LIBRARY)
-            # Prefer static lib names
+            # Looking for both "lib" prefix and CMAKE_STATIC_LIBRARY_PREFIX.
+            # Prefer static lib names.
             set(_minizip-ng_STATIC_LIB_NAMES 
+                "libminizip-ng${CMAKE_STATIC_LIBRARY_SUFFIX}"
                 "${CMAKE_STATIC_LIBRARY_PREFIX}minizip-ng${CMAKE_STATIC_LIBRARY_SUFFIX}")
-            if(WIN32 AND BUILD_TYPE_DEBUG)
-                # Prefer static Debug lib names (Windows only)
-                list(INSERT _minizip-ng_STATIC_LIB_NAMES 0
-                    "${CMAKE_STATIC_LIBRARY_PREFIX}minizip-ngd${CMAKE_STATIC_LIBRARY_SUFFIX}")
-            endif()
         endif()
 
         # Find library
