@@ -21,6 +21,17 @@ set(CMAKE_FIND_PACKAGE_NO_PACKAGE_REGISTRY ON CACHE BOOL
 set(CMAKE_FIND_PACKAGE_NO_SYSTEM_PACKAGE_REGISTRY ON CACHE BOOL
     "Disable CMake System Package Registry when finding packages")
 
+if (APPLE)
+    # Store the previous value of CMAKE_FIND_FRAMEWORK and CMAKE_FIND_APPBUNDLE.
+    set(_PREVIOUS_CMAKE_FIND_FRAMEWORK ${CMAKE_FIND_FRAMEWORK})
+    set(_PREVIOUS_CMAKE_FIND_APPBUNDLE ${CMAKE_FIND_APPBUNDLE})
+
+    # Prioritize other paths before Frameworks and Appbundle for find_path, find_library and 
+    # find_package.
+    set(CMAKE_FIND_FRAMEWORK LAST)
+    set(CMAKE_FIND_APPBUNDLE LAST)
+endif()
+
 ###############################################################################
 ### Packages and versions ###
 
@@ -44,12 +55,21 @@ find_package(Imath 3.0 REQUIRED)
 ###############################################################################
 ### ZLIB (https://github.com/madler/zlib)
 ###
-### Since OCIO is using CMake's FindZLIB, it supports the same output variables
-### and the same variables that can be overridden.
+### The following variables can be set:
+### ZLIB_ROOT               Location of ZLIB library file and includes folder.
+###                         Alternatively, ZLIB_LIBRARY and ZLIB_INCLUDE_DIR can be used.
 ###
-### See https://cmake.org/cmake/help/latest/module/FindZLIB.html
+### ZLIB_LIBRARY            Location of ZLIB library file.
+### ZLIB_INCLUDE_DIR        Location of ZLIB includes folder.
+###
+### ZLIB_VERSION            ZLIB Version (CMake 3.26+)
+### ZLIB_VERSION_STRING     ZLIB Version (CMake < 3.26)
+###
 ###############################################################################
-set(_ZLIB_FIND_VERSION "1.2.11")
+# ZLIB 1.2.13 is used since it fixes a critical vulnerability.
+# See https://nvd.nist.gov/vuln/detail/CVE-2022-37434
+# See https://github.com/madler/zlib/releases/tag/v1.2.13
+set(_ZLIB_FIND_VERSION "1.2.13")
 set(_ZLIB_ExternalProject_VERSION ${_ZLIB_FIND_VERSION})
 
 if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
@@ -118,7 +138,7 @@ endif()
 
 # minizip-ng
 # https://github.com/zlib-ng/minizip-ng
-find_package(minizip-ng 3.0.6 REQUIRED)
+find_package(minizip-ng 3.0.7 REQUIRED)
 
 if(OCIO_BUILD_APPS)
 
@@ -226,4 +246,10 @@ if(OCIO_BUILD_TESTS)
     else()
         message(WARNING "Could NOT find OpenImageIO. Skipping build of the OSL unit tests.")
     endif()
+endif()
+
+if (APPLE)
+    # Restore CMAKE_FIND_FRAMEWORK and CMAKE_FIND_APPBUNDLE values.
+    set(CMAKE_FIND_FRAMEWORK ${_PREVIOUS_CMAKE_FIND_FRAMEWORK})
+    set(CMAKE_FIND_APPBUNDLE ${_PREVIOUS_CMAKE_FIND_APPBUNDLE})
 endif()

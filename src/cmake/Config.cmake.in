@@ -3,6 +3,17 @@
 include(CMakeFindDependencyMacro)
 
 if (NOT @BUILD_SHARED_LIBS@) # NOT @BUILD_SHARED_LIBS@
+    if (APPLE)
+        # Store the previous value of CMAKE_FIND_FRAMEWORK and CMAKE_FIND_APPBUNDLE.
+        set(_PREVIOUS_CMAKE_FIND_FRAMEWORK ${CMAKE_FIND_FRAMEWORK})
+        set(_PREVIOUS_CMAKE_FIND_APPBUNDLE ${CMAKE_FIND_APPBUNDLE})
+
+        # Prioritize other paths before Frameworks and Appbundle for find_path, find_library and 
+        # find_package.
+        set(CMAKE_FIND_FRAMEWORK LAST)
+        set(CMAKE_FIND_APPBUNDLE LAST)
+    endif()
+
     # Get the install directory.
     set(_IMPORT_PREFIX "${CMAKE_CURRENT_LIST_DIR}")
     # Get the install directory. Since the current file is under 
@@ -106,6 +117,12 @@ if (NOT @BUILD_SHARED_LIBS@) # NOT @BUILD_SHARED_LIBS@
 
     # Remove OCIO custom find module path.
     list(REMOVE_AT CMAKE_MODULE_PATH -1)
+
+    if (APPLE)
+        # Restore CMAKE_FIND_FRAMEWORK and CMAKE_FIND_APPBUNDLE values.
+        set(CMAKE_FIND_FRAMEWORK ${_PREVIOUS_CMAKE_FIND_FRAMEWORK})
+        set(CMAKE_FIND_APPBUNDLE ${_PREVIOUS_CMAKE_FIND_APPBUNDLE})
+    endif()
 endif()
 
 include(${CMAKE_CURRENT_LIST_DIR}/@PROJECT_NAME@Targets.cmake)
