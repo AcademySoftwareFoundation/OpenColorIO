@@ -491,7 +491,8 @@ jobs:
                 -DZLIB_ROOT=${{ env.ocio_build_path }}/ext/dist \
                 -DZLIB_STATIC_LIBRARY=ON \
                 -Dminizip-ng_ROOT=${{ env.ocio_build_path }}/ext/dist \
-                -Dminizip-ng_STATIC_LIBRARY=ON
+                -Dminizip-ng_STATIC_LIBRARY=ON \
+                --trace-source=Findexpat.cmake --trace-expand
           cmake --build . \
                 --config ${{ matrix.build-type }}
           ./consumer
