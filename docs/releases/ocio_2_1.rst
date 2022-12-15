@@ -71,7 +71,7 @@ compile these yourself.
 Support for PyPI (pip install)
 ******************************
 
-Python wheel generation has been added and support for the `Python Package Installer (PyPI). 
+Python wheel generation has been added and support for the `Python Package Index (PyPI). 
 <https://pypi.org/project/opencolorio/>`_
 This allows you to easily install the OCIO Python bindings without needing to build from
 source or use one of the OS-specific package managers.  The command is simply::
