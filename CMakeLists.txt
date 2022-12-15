@@ -344,7 +344,6 @@ if (NOT BUILD_SHARED_LIBS)
         ${CMAKE_CURRENT_LIST_DIR}/share/cmake/modules/Findexpat.cmake
         ${CMAKE_CURRENT_LIST_DIR}/share/cmake/modules/FindImath.cmake
         ${CMAKE_CURRENT_LIST_DIR}/share/cmake/modules/Findpystring.cmake
-        ${CMAKE_CURRENT_LIST_DIR}/share/cmake/modules/Findminizip.cmake
         ${CMAKE_CURRENT_LIST_DIR}/share/cmake/modules/Findminizip-ng.cmake
         ${CMAKE_CURRENT_LIST_DIR}/share/cmake/modules/Findyaml-cpp.cmake
         DESTINATION ${OCIO_CUSTOM_FIND_MODULE_DIR}
