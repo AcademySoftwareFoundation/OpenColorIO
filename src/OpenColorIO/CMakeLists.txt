@@ -174,17 +174,29 @@ set(SOURCES
     SystemMonitor.cpp
 )
 
-if(NOT WIN32)
+# Install the pkg-config file.
 
-    # Install the pkg-config file.
+set(prefix ${CMAKE_INSTALL_PREFIX})
+set(exec_prefix "\${prefix}")
 
-    set(prefix ${CMAKE_INSTALL_PREFIX})
-    set(exec_prefix "\${prefix}")
+# CMAKE_INSTALL_LIBDIR is not guaranteed to be relative.
+# Not using cmake_path function since it is only available from CMake ≥ 3.20.
+if(IS_ABSOLUTE "${CMAKE_INSTALL_LIBDIR}")
+    set(libdir "${CMAKE_INSTALL_LIBDIR}")
+else()
     set(libdir "\${exec_prefix}/${CMAKE_INSTALL_LIBDIR}")
-    set(includedir "\${exec_prefix}/${CMAKE_INSTALL_INCLUDEDIR}")
-    configure_file(res/OpenColorIO.pc.in ${CMAKE_CURRENT_BINARY_DIR}/OpenColorIO.pc @ONLY)
-    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/OpenColorIO.pc DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
 endif()
+
+# CMAKE_INSTALL_INCLUDEDIR is not guaranteed to be relative.
+# Not using cmake_path function since it is only available from CMake ≥ 3.20.
+if(IS_ABSOLUTE "${CMAKE_INSTALL_INCLUDEDIR}")
+    set(includedir "${CMAKE_INSTALL_INCLUDEDIR}")
+else()
+    set(includedir "\${prefix}/${CMAKE_INSTALL_INCLUDEDIR}")
+endif()
+
+configure_file(res/OpenColorIO.pc.in ${CMAKE_CURRENT_BINARY_DIR}/OpenColorIO.pc @ONLY)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/OpenColorIO.pc DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
 
 add_library(OpenColorIO ${SOURCES})
 
@@ -277,7 +289,7 @@ target_link_libraries(OpenColorIO
         "$<BUILD_INTERFACE:utils::strings>"
         "$<BUILD_INTERFACE:xxHash>"
         yaml-cpp
-        minizip-ng::minizip-ng
+        MINIZIP::minizip-ng
 )
 
 if(APPLE)
@@ -356,9 +368,36 @@ if(UNIX AND NOT APPLE)
     set_property (TARGET OpenColorIO
                   APPEND PROPERTY LINK_FLAGS "-Wl,--exclude-libs,ALL")
 elseif(APPLE)
-    # Hide the expat symbols.
-    set_property (TARGET OpenColorIO
-                  APPEND PROPERTY LINK_FLAGS "-Wl,-hidden-lexpat")
+    if (expat_LIBRARY)
+        get_filename_component(_expat_LIBDIR "${expat_LIBRARY}" DIRECTORY)
+        # Add the path to CMake list of search paths for libraries.
+        list(APPEND _OCIO_LINK_FLAGS_LIST_ "-Wl,-L${_expat_LIBDIR}")
+        # Hide the expat symbols.
+        list(APPEND _OCIO_LINK_FLAGS_LIST_ "-Wl,-hidden-lexpat")
+    endif()
+
+
+    # Check for minizip first since our Findminizip module sets minizip-ng_LIBRARY.
+    if (minizip_LIBRARY)
+        get_filename_component(_minizip-ng_LIBDIR "${minizip_LIBRARY}" DIRECTORY)
+        set(_minizip-ng_NAME "minizip")
+    elseif(minizip-ng_LIBRARY)
+        get_filename_component(_minizip-ng_LIBDIR "${minizip-ng_LIBRARY}" DIRECTORY)
+        set(_minizip-ng_NAME "minizip-ng")        
+    endif()
+
+    if (_minizip-ng_LIBDIR)
+        # Add the path to CMake list of search paths for libraries.
+        list(APPEND _OCIO_LINK_FLAGS_LIST_ "-Wl,-L${_minizip-ng_LIBDIR}")
+        # Hide the minizip-ng symbols.
+        list(APPEND _OCIO_LINK_FLAGS_LIST_ "-Wl,-hidden-l${_minizip-ng_NAME}") 
+    endif()   
+
+    if (_OCIO_LINK_FLAGS_LIST_)
+        list(JOIN _OCIO_LINK_FLAGS_LIST_ " " _OCIO_LINK_FLAGS_LIST_)
+        set_property (TARGET OpenColorIO
+                    APPEND PROPERTY LINK_FLAGS "${_OCIO_LINK_FLAGS_LIST_}")   
+    endif()              
 endif()
 
 if(MSVC AND BUILD_SHARED_LIBS)
