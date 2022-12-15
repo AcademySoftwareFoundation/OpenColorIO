@@ -89,6 +89,7 @@ void SystemMonitorsImpl::getAllMonitors()
 
     // Iterate over all the monitors.
     DWORD dispNum = 0;
+    // After the first call to EnumDisplayDevices, dispDevice.DeviceString is the adapter name.
     while (EnumDisplayDevices(nullptr, dispNum, &dispDevice, 0))
     {
         const std::tstring deviceName = dispDevice.DeviceName;
@@ -105,9 +106,10 @@ void SystemMonitorsImpl::getAllMonitors()
                 ZeroMemory(&dispDevice, sizeof(dispDevice));
                 dispDevice.cb = sizeof(dispDevice);
 
-                // After a second call, dispDev.DeviceString contains the  
-                // monitor name for that device.
-                EnumDisplayDevices(deviceName.c_str(), dispNum, &dispDevice, 0);   
+                // After second call, dispDevice.DeviceString is the monitor name for that device.
+                // Second parameters must be 0 to get the monitor name.
+                // See https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-enumdisplaydevicesw
+                EnumDisplayDevices(deviceName.c_str(), 0, &dispDevice, 0);   
 
                 TCHAR icmPath[MAX_PATH + 1];
                 DWORD pathLength = MAX_PATH;
@@ -120,8 +122,16 @@ void SystemMonitorsImpl::getAllMonitors()
                     (friendlyMonitorNames.size() >= dispNum+1 && 
                     !friendlyMonitorNames.at(dispNum).empty()) ? 
                         friendlyMonitorNames.at(dispNum) : std::tstring(dispDevice.DeviceString);
+
+                std::tstring strippedDeviceName = deviceName;
+                if(StringUtils::StartsWith(Platform::Utf16ToUtf8(deviceName), "\\\\.\\DISPLAY"))
+                {
+                    // Remove the slashes.
+                    std::string prefix = "\\\\.\\";
+                    strippedDeviceName = deviceName.substr(prefix.length());
+                }
                         
-                const std::tstring displayName = deviceName + TEXT(", ") + extra;
+                const std::tstring displayName = strippedDeviceName + TEXT(", ") + extra;
 
                 // Get the associated ICM profile path.
                 if (GetICMProfile(hDC, &pathLength, icmPath))
