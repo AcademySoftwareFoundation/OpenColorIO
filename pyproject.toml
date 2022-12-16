@@ -18,7 +18,7 @@ build-backend = "setuptools.build_meta"
 build-verbosity = "1"
 
 test-command = "python -m PyOpenColorIOTests.OpenColorIOTestSuite"
-test-requires = ["numpy"]
+test-requires = ["numpy", "pytest"]
 
 manylinux-x86_64-image = "manylinux2014"
 manylinux-i686-image = "manylinux2014"
