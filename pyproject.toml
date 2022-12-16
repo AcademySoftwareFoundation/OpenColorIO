@@ -18,7 +18,7 @@ build-backend = "setuptools.build_meta"
 build-verbosity = "1"
 
 test-command = "python -m PyOpenColorIOTests.OpenColorIOTestSuite"
-test-requires = ["numpy"]
+test-requires = ["numpy", "pytest"]
 
 manylinux-x86_64-image = "manylinux2014"
 manylinux-i686-image = "manylinux2014"
@@ -37,3 +37,5 @@ before-build = "bash -c share/ci/scripts/windows/install_docs_env.sh"
 python_files = "*Test.py"
 python_classes = "Test"
 python_functions = "test_*"
+addopts = ["--disable-warnings"]
+testpaths = ["tests/python"]
