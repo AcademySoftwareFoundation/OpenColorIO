@@ -348,7 +348,7 @@ class ColorSpaceTest(unittest.TestCase):
             self.colorspace.setTransform(self.log_tr, direction)
             log_transform = self.colorspace.getTransform(direction)
             self.assertIsInstance(log_transform, OCIO.LogTransform)
-            self.assertEquals(self.log_tr.getBase(), log_transform.getBase())
+            self.assertEqual(self.log_tr.getBase(), log_transform.getBase())
 
     def test_aliases(self):
         """
@@ -446,7 +446,7 @@ display_colorspaces:
     name: display_data
     description: |
       Data space.
-      Has a linear transform, which should never happen, but this will be ignored since 
+      Has a linear transform, which should never happen, but this will be ignored since
       isdata is true.
     isdata: true
     encoding: data
@@ -501,7 +501,7 @@ colorspaces:
     name: scene_data
     description: |
       Data space.
-      Has a linear transform, which should never happen, but this will be ignored 
+      Has a linear transform, which should never happen, but this will be ignored
       since isdata is true.
     isdata: true
     encoding: data
@@ -559,14 +559,14 @@ colorspaces:
     description: |
       No encoding.  Considered linear since it is equivalent to the reference space.
     isdata: false
-"""  
+"""
         # Create a config.
         cfg = OCIO.Config.CreateFromStream(SIMPLE_PROFILE)
 
         def test_scene_referred(self, cfg, cs_name, expected_value):
             cs = cfg.getColorSpace(cs_name)
             is_linear_to_scene_reference = cfg.isColorSpaceLinear(
-                cs_name, 
+                cs_name,
                 OCIO.REFERENCE_SPACE_SCENE
             )
             self.assertEqual(is_linear_to_scene_reference, expected_value)
@@ -574,7 +574,7 @@ colorspaces:
         def test_display_referred(self, cfg, cs_name, expected_value):
             cs = cfg.getColorSpace(cs_name)
             is_linear_to_display_reference = cfg.isColorSpaceLinear(
-                cs_name, 
+                cs_name,
                 OCIO.REFERENCE_SPACE_DISPLAY
             )
             self.assertEqual(is_linear_to_display_reference, expected_value)
@@ -618,9 +618,9 @@ colorspaces:
         test_display_referred(self, cfg, "scene_nonlin-trans", False)
         test_display_referred(self, cfg, "scene_linear-trans-alias", False)
         test_display_referred(self, cfg, "scene_ref", False)
-        
+
     def test_processor_to_known_colorspace(self):
-        
+
         CONFIG = """ocio_profile_version: 2
 
 roles:

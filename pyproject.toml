@@ -32,3 +32,8 @@ before-build = "share/ci/scripts/macos/install_docs_env.sh"
 
 [tool.cibuildwheel.windows]
 before-build = "bash -c share/ci/scripts/windows/install_docs_env.sh"
+
+[tool.pytest.ini_options]
+python_files = "*Test.py"
+python_classes = "Test"
+python_functions = "test_*"

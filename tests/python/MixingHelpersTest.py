@@ -8,7 +8,7 @@ import sys
 import PyOpenColorIO as OCIO
 from UnitTestUtils import SAMPLE_CONFIG
 
-def test_percent_1000(a, b):
+def helper_test_percent_1000(a, b):
     # Helper function to test sliders.
     return abs(a - int(100000 * b)) <= 1
 
@@ -187,7 +187,7 @@ class MixingHelpersTest(unittest.TestCase):
 
     def test_color_picking(self):
         """
-        Test getProcessor() function with ROLE_COLOR_PICKING role. 
+        Test getProcessor() function with ROLE_COLOR_PICKING role.
         """
         mix = OCIO.MixingColorSpaceManager(self.cfg)
         mixSpaces = mix.getMixingSpaces()
@@ -254,27 +254,27 @@ class MixingHelpersTest(unittest.TestCase):
         slider.setSliderMinEdge(0.0)
         slider.setSliderMaxEdge(1.0)
 
-        self.assertTrue(test_percent_1000(    0, slider.getSliderMinEdge()))
-        self.assertTrue(test_percent_1000(83386, slider.getSliderMaxEdge()))
+        self.assertTrue(helper_test_percent_1000(    0, slider.getSliderMinEdge()))
+        self.assertTrue(helper_test_percent_1000(83386, slider.getSliderMaxEdge()))
 
-        self.assertTrue(test_percent_1000(37923, slider.mixingToSlider(mixingUnits=0.1)))
-        self.assertTrue(test_percent_1000(80144, slider.mixingToSlider(0.5)))
+        self.assertTrue(helper_test_percent_1000(37923, slider.mixingToSlider(mixingUnits=0.1)))
+        self.assertTrue(helper_test_percent_1000(80144, slider.mixingToSlider(0.5)))
 
-        self.assertTrue(test_percent_1000(10000, slider.sliderToMixing(sliderUnits=0.379232)))
-        self.assertTrue(test_percent_1000(50000, slider.sliderToMixing(0.801448)))
+        self.assertTrue(helper_test_percent_1000(10000, slider.sliderToMixing(sliderUnits=0.379232)))
+        self.assertTrue(helper_test_percent_1000(50000, slider.sliderToMixing(0.801448)))
 
         slider.setSliderMinEdge(-0.2)
         slider.setSliderMaxEdge(5.)
 
-        self.assertTrue(test_percent_1000( 3792, slider.mixingToSlider(-0.1)))
-        self.assertTrue(test_percent_1000(31573, slider.mixingToSlider( 0.1)))
-        self.assertTrue(test_percent_1000(58279, slider.mixingToSlider( 0.5)))
-        self.assertTrue(test_percent_1000(90744, slider.mixingToSlider( 3.0)))
+        self.assertTrue(helper_test_percent_1000( 3792, slider.mixingToSlider(-0.1)))
+        self.assertTrue(helper_test_percent_1000(31573, slider.mixingToSlider( 0.1)))
+        self.assertTrue(helper_test_percent_1000(58279, slider.mixingToSlider( 0.5)))
+        self.assertTrue(helper_test_percent_1000(90744, slider.mixingToSlider( 3.0)))
 
-        self.assertTrue(test_percent_1000(-10000, slider.sliderToMixing(0.037927)))
-        self.assertTrue(test_percent_1000( 10000, slider.sliderToMixing(0.315733)))
-        self.assertTrue(test_percent_1000( 50000, slider.sliderToMixing(0.582797)))
-        self.assertTrue(test_percent_1000(300000, slider.sliderToMixing(0.907444)))
+        self.assertTrue(helper_test_percent_1000(-10000, slider.sliderToMixing(0.037927)))
+        self.assertTrue(helper_test_percent_1000( 10000, slider.sliderToMixing(0.315733)))
+        self.assertTrue(helper_test_percent_1000( 50000, slider.sliderToMixing(0.582797)))
+        self.assertTrue(helper_test_percent_1000(300000, slider.sliderToMixing(0.907444)))
 
         # Does not need any linear to perceptually linear adjustment.
 
@@ -286,63 +286,63 @@ class MixingHelpersTest(unittest.TestCase):
         slider.setSliderMinEdge(0.0)
         slider.setSliderMaxEdge(1.0)
 
-        self.assertTrue(test_percent_1000(     0, slider.getSliderMinEdge()))
-        self.assertTrue(test_percent_1000(100000, slider.getSliderMaxEdge()))
+        self.assertTrue(helper_test_percent_1000(     0, slider.getSliderMinEdge()))
+        self.assertTrue(helper_test_percent_1000(100000, slider.getSliderMaxEdge()))
 
-        self.assertTrue(test_percent_1000(10000, slider.mixingToSlider(0.1)))
-        self.assertTrue(test_percent_1000(50000, slider.mixingToSlider(0.5)))
+        self.assertTrue(helper_test_percent_1000(10000, slider.mixingToSlider(0.1)))
+        self.assertTrue(helper_test_percent_1000(50000, slider.mixingToSlider(0.5)))
 
-        self.assertTrue(test_percent_1000(37923, slider.sliderToMixing(0.379232)))
-        self.assertTrue(test_percent_1000(80144, slider.sliderToMixing(0.801448)))
+        self.assertTrue(helper_test_percent_1000(37923, slider.sliderToMixing(0.379232)))
+        self.assertTrue(helper_test_percent_1000(80144, slider.sliderToMixing(0.801448)))
 
         slider.setSliderMinEdge(-0.2)
         slider.setSliderMaxEdge(5.)
 
-        self.assertTrue(test_percent_1000(     0, slider.mixingToSlider(slider.getSliderMinEdge())))
-        self.assertTrue(test_percent_1000(100000, slider.mixingToSlider(slider.getSliderMaxEdge())))
+        self.assertTrue(helper_test_percent_1000(     0, slider.mixingToSlider(slider.getSliderMinEdge())))
+        self.assertTrue(helper_test_percent_1000(100000, slider.mixingToSlider(slider.getSliderMaxEdge())))
 
-        self.assertTrue(test_percent_1000( 1923, slider.mixingToSlider(-0.1)))
-        self.assertTrue(test_percent_1000( 5769, slider.mixingToSlider( 0.1)))
-        self.assertTrue(test_percent_1000(13461, slider.mixingToSlider( 0.5)))
-        self.assertTrue(test_percent_1000(61538, slider.mixingToSlider( 3.0)))
+        self.assertTrue(helper_test_percent_1000( 1923, slider.mixingToSlider(-0.1)))
+        self.assertTrue(helper_test_percent_1000( 5769, slider.mixingToSlider( 0.1)))
+        self.assertTrue(helper_test_percent_1000(13461, slider.mixingToSlider( 0.5)))
+        self.assertTrue(helper_test_percent_1000(61538, slider.mixingToSlider( 3.0)))
 
-        self.assertTrue(test_percent_1000( -277,  slider.sliderToMixing(0.037927)))
-        self.assertTrue(test_percent_1000(144181, slider.sliderToMixing(0.315733)))
-        self.assertTrue(test_percent_1000(283054, slider.sliderToMixing(0.582797)))
-        self.assertTrue(test_percent_1000(451870, slider.sliderToMixing(0.907444)))
+        self.assertTrue(helper_test_percent_1000( -277,  slider.sliderToMixing(0.037927)))
+        self.assertTrue(helper_test_percent_1000(144181, slider.sliderToMixing(0.315733)))
+        self.assertTrue(helper_test_percent_1000(283054, slider.sliderToMixing(0.582797)))
+        self.assertTrue(helper_test_percent_1000(451870, slider.sliderToMixing(0.907444)))
 
         # Change encoding.
 
         mix.setSelectedMixingEncodingIdx(0) # i.e. RGB
 
         # Needs linear to perceptually linear adjustment.
-    
+
         mix.setSelectedMixingSpaceIdx(0) # i.e. Rendering Space
 
         slider.setSliderMinEdge(0.0)
         slider.setSliderMaxEdge(1.0)
 
-        self.assertTrue(test_percent_1000(    0, slider.getSliderMinEdge()))
-        self.assertTrue(test_percent_1000(83386, slider.getSliderMaxEdge()))
+        self.assertTrue(helper_test_percent_1000(    0, slider.getSliderMinEdge()))
+        self.assertTrue(helper_test_percent_1000(83386, slider.getSliderMaxEdge()))
 
-        self.assertTrue(test_percent_1000(37923, slider.mixingToSlider(0.1)))
-        self.assertTrue(test_percent_1000(80144, slider.mixingToSlider(0.5)))
+        self.assertTrue(helper_test_percent_1000(37923, slider.mixingToSlider(0.1)))
+        self.assertTrue(helper_test_percent_1000(80144, slider.mixingToSlider(0.5)))
 
-        self.assertTrue(test_percent_1000(10000, slider.sliderToMixing(0.379232)))
-        self.assertTrue(test_percent_1000(50000, slider.sliderToMixing(0.801448)))
+        self.assertTrue(helper_test_percent_1000(10000, slider.sliderToMixing(0.379232)))
+        self.assertTrue(helper_test_percent_1000(50000, slider.sliderToMixing(0.801448)))
 
         slider.setSliderMinEdge(-0.2)
         slider.setSliderMaxEdge(5.)
 
-        self.assertTrue(test_percent_1000( 3792, slider.mixingToSlider(-0.1)))
-        self.assertTrue(test_percent_1000(31573, slider.mixingToSlider( 0.1)))
-        self.assertTrue(test_percent_1000(58279, slider.mixingToSlider( 0.5)))
-        self.assertTrue(test_percent_1000(90744, slider.mixingToSlider( 3.0)))
+        self.assertTrue(helper_test_percent_1000( 3792, slider.mixingToSlider(-0.1)))
+        self.assertTrue(helper_test_percent_1000(31573, slider.mixingToSlider( 0.1)))
+        self.assertTrue(helper_test_percent_1000(58279, slider.mixingToSlider( 0.5)))
+        self.assertTrue(helper_test_percent_1000(90744, slider.mixingToSlider( 3.0)))
 
-        self.assertTrue(test_percent_1000(-10000, slider.sliderToMixing(0.037927)))
-        self.assertTrue(test_percent_1000( 10000, slider.sliderToMixing(0.315733)))
-        self.assertTrue(test_percent_1000( 50000, slider.sliderToMixing(0.582797)))
-        self.assertTrue(test_percent_1000(300000, slider.sliderToMixing(0.907444)))
+        self.assertTrue(helper_test_percent_1000(-10000, slider.sliderToMixing(0.037927)))
+        self.assertTrue(helper_test_percent_1000( 10000, slider.sliderToMixing(0.315733)))
+        self.assertTrue(helper_test_percent_1000( 50000, slider.sliderToMixing(0.582797)))
+        self.assertTrue(helper_test_percent_1000(300000, slider.sliderToMixing(0.907444)))
 
         # Does not need any linear to perceptually linear adjustment.
 
@@ -351,30 +351,30 @@ class MixingHelpersTest(unittest.TestCase):
         slider.setSliderMinEdge(0.0)
         slider.setSliderMaxEdge(1.0)
 
-        self.assertTrue(test_percent_1000(     0, slider.getSliderMinEdge()))
-        self.assertTrue(test_percent_1000(100000, slider.getSliderMaxEdge()))
+        self.assertTrue(helper_test_percent_1000(     0, slider.getSliderMinEdge()))
+        self.assertTrue(helper_test_percent_1000(100000, slider.getSliderMaxEdge()))
 
-        self.assertTrue(test_percent_1000(10000, slider.mixingToSlider(0.1)))
-        self.assertTrue(test_percent_1000(50000, slider.mixingToSlider(0.5)))
+        self.assertTrue(helper_test_percent_1000(10000, slider.mixingToSlider(0.1)))
+        self.assertTrue(helper_test_percent_1000(50000, slider.mixingToSlider(0.5)))
 
-        self.assertTrue(test_percent_1000(37923, slider.sliderToMixing(0.379232)))
-        self.assertTrue(test_percent_1000(80144, slider.sliderToMixing(0.801448)))
+        self.assertTrue(helper_test_percent_1000(37923, slider.sliderToMixing(0.379232)))
+        self.assertTrue(helper_test_percent_1000(80144, slider.sliderToMixing(0.801448)))
 
         slider.setSliderMinEdge(-0.2)
         slider.setSliderMaxEdge(5.)
 
-        self.assertTrue(test_percent_1000(     0, slider.mixingToSlider(slider.getSliderMinEdge())))
-        self.assertTrue(test_percent_1000(100000, slider.mixingToSlider(slider.getSliderMaxEdge())))
+        self.assertTrue(helper_test_percent_1000(     0, slider.mixingToSlider(slider.getSliderMinEdge())))
+        self.assertTrue(helper_test_percent_1000(100000, slider.mixingToSlider(slider.getSliderMaxEdge())))
 
-        self.assertTrue(test_percent_1000( 1923, slider.mixingToSlider(-0.1)))
-        self.assertTrue(test_percent_1000( 5769, slider.mixingToSlider( 0.1)))
-        self.assertTrue(test_percent_1000(13461, slider.mixingToSlider( 0.5)))
-        self.assertTrue(test_percent_1000(61538, slider.mixingToSlider( 3.0)))
+        self.assertTrue(helper_test_percent_1000( 1923, slider.mixingToSlider(-0.1)))
+        self.assertTrue(helper_test_percent_1000( 5769, slider.mixingToSlider( 0.1)))
+        self.assertTrue(helper_test_percent_1000(13461, slider.mixingToSlider( 0.5)))
+        self.assertTrue(helper_test_percent_1000(61538, slider.mixingToSlider( 3.0)))
 
-        self.assertTrue(test_percent_1000( -277,  slider.sliderToMixing(0.037927)))
-        self.assertTrue(test_percent_1000(144181, slider.sliderToMixing(0.315733)))
-        self.assertTrue(test_percent_1000(283054, slider.sliderToMixing(0.582797)))
-        self.assertTrue(test_percent_1000(451870, slider.sliderToMixing(0.907444)))
+        self.assertTrue(helper_test_percent_1000( -277,  slider.sliderToMixing(0.037927)))
+        self.assertTrue(helper_test_percent_1000(144181, slider.sliderToMixing(0.315733)))
+        self.assertTrue(helper_test_percent_1000(283054, slider.sliderToMixing(0.582797)))
+        self.assertTrue(helper_test_percent_1000(451870, slider.sliderToMixing(0.907444)))
 
         # Update with ROLE_COLOR_PICKING role.
 
@@ -385,14 +385,14 @@ class MixingHelpersTest(unittest.TestCase):
         mix.setSelectedMixingSpaceIdx(0) # i.e. Color Picker role
 
         slider = mix.getSlider(0.0, 1.0)
-        self.assertTrue(test_percent_1000(50501, slider.mixingToSlider(0.50501)))
-        self.assertTrue(test_percent_1000(50501, slider.sliderToMixing(0.50501)))
+        self.assertTrue(helper_test_percent_1000(50501, slider.mixingToSlider(0.50501)))
+        self.assertTrue(helper_test_percent_1000(50501, slider.sliderToMixing(0.50501)))
 
         mix.setSelectedMixingEncodingIdx(0) # i.e. RGB
         mix.setSelectedMixingSpaceIdx(0) # i.e. Color Picker role
 
-        self.assertTrue(test_percent_1000(50501, slider.mixingToSlider(0.50501)))
-        self.assertTrue(test_percent_1000(50501, slider.sliderToMixing(0.50501)))
+        self.assertTrue(helper_test_percent_1000(50501, slider.mixingToSlider(0.50501)))
+        self.assertTrue(helper_test_percent_1000(50501, slider.sliderToMixing(0.50501)))
 
 
         mix = None
