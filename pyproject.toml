@@ -34,7 +34,6 @@ before-build = "share/ci/scripts/macos/install_docs_env.sh"
 before-build = "bash -c share/ci/scripts/windows/install_docs_env.sh"
 
 [tool.pytest.ini_options]
-minversion = "6.0"
 python_files = "*Test.py"
 python_classes = "Test"
 python_functions = "test_*"
