@@ -73,8 +73,20 @@ void getAllMonitorsWithQueryDisplayConfig(std::vector<std::tstring> & monitorsNa
             }
         }
     }
-}
 
+}
+/**
+ * Populate the internal structure with monitors name and ICC profiles name if available.
+ * 
+ * Expected monitor display name: 
+ * 
+ * DISPLAYn, <monitorFriendlyDeviceName | DeviceString>
+ * 
+ * where n is a positive integer starting at 1.
+ * where monitorFriendlyDeviceName comes from DISPLAYCONFIG_TARGET_DEVICE_NAME structure.
+ * where DeviceString comes from DISPLAY_DEVICE structure.
+ * 
+ */
 void SystemMonitorsImpl::getAllMonitors()
 {
     m_monitors.clear();
@@ -118,9 +130,12 @@ void SystemMonitorsImpl::getAllMonitors()
 
                 // TODO: Several ICM profiles could be associated to a single device.
 
-                const std::tstring extra = 
-                    (friendlyMonitorNames.size() >= dispNum+1 && 
-                    !friendlyMonitorNames.at(dispNum).empty()) ? 
+                bool idxExists = friendlyMonitorNames.size() >= dispNum+1;
+                bool friendlyNameExists = !friendlyMonitorNames.at(dispNum).empty();
+
+                // Check if the distNum index exists in friendlyMonitorNames vector and check if
+                // there is a corresponding friendly name.
+                const std::tstring extra = (idxExists && friendlyNameExists) ? 
                         friendlyMonitorNames.at(dispNum) : std::tstring(dispDevice.DeviceString);
 
                 std::tstring strippedDeviceName = deviceName;
