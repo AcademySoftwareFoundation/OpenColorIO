@@ -15,35 +15,41 @@
 #include "Platform.h"
 #include "utils/StringUtils.h"
 
-#include <iostream>
-
 namespace OCIO_NAMESPACE
 {
 
 
 static constexpr char ErrorMsg[] { "Problem obtaining monitor profile information from operating system." };
 
+// List all active display paths using QueryDisplayConfig and GetDisplayConfigBufferSizes.
+// Get the data from each path using DisplayConfigGetDeviceInfo.
 void getAllMonitorsWithQueryDisplayConfig(std::vector<std::tstring> & monitorsName)
 {
+    // https://learn.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-displayconfig_path_info
     std::vector<DISPLAYCONFIG_PATH_INFO> paths;
+    // https://learn.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-displayconfig_mode_info
     std::vector<DISPLAYCONFIG_MODE_INFO> modes;
+
     UINT32 flags = QDC_ONLY_ACTIVE_PATHS | QDC_VIRTUAL_MODE_AWARE;
     LONG result = ERROR_SUCCESS;
 
     do
     {
-        // Determine how many path and mode structures to allocate
+        // Determine how many path and mode structures to allocate.
         UINT32 pathCount, modeCount;
+        // The GetDisplayConfigBufferSizes function retrieves the size of the buffers that are 
+        // required to call the QueryDisplayConfig function.
         result = GetDisplayConfigBufferSizes(flags, &pathCount, &modeCount);
         
-        // Allocate the path and mode arrays
+        // Allocate the path and mode arrays.
         paths.resize(pathCount);
         modes.resize(modeCount);
 
-        // Get all active paths and their modes
+        // The QueryDisplayConfig function retrieves information about all possible display paths 
+        // for all display devices, or views, in the current setting.
         result = QueryDisplayConfig(flags, &pathCount, paths.data(), &modeCount, modes.data(), nullptr);
 
-        // The function may have returned fewer paths/modes than estimated
+        // The function may have returned fewer paths/modes than estimated.
         paths.resize(pathCount);
         modes.resize(modeCount);
 
@@ -56,6 +62,7 @@ void getAllMonitorsWithQueryDisplayConfig(std::vector<std::tstring> & monitorsNa
         // For each active path
         for (auto& path : paths)
         {
+            // The DISPLAYCONFIG_TARGET_DEVICE_NAME structure contains information about the target.
             // Find the target (monitor) friendly name
             DISPLAYCONFIG_TARGET_DEVICE_NAME targetName = {};
             targetName.header.adapterId = path.targetInfo.adapterId;
@@ -75,8 +82,9 @@ void getAllMonitorsWithQueryDisplayConfig(std::vector<std::tstring> & monitorsNa
     }
 
 }
+
 /**
- * Populate the internal structure with monitors name and ICC profiles name if available.
+ * Populate the internal structure with monitors name and ICC profiles name.
  * 
  * Expected monitor display name: 
  * 
@@ -131,11 +139,11 @@ void SystemMonitorsImpl::getAllMonitors()
                 // TODO: Several ICM profiles could be associated to a single device.
 
                 bool idxExists = friendlyMonitorNames.size() >= dispNum+1;
-                bool friendlyNameExists = !friendlyMonitorNames.at(dispNum).empty();
+                bool friendlyNameExists = idxExists && !friendlyMonitorNames.at(dispNum).empty();
 
                 // Check if the distNum index exists in friendlyMonitorNames vector and check if
                 // there is a corresponding friendly name.
-                const std::tstring extra = (idxExists && friendlyNameExists) ? 
+                const std::tstring extra = friendlyNameExists ? 
                         friendlyMonitorNames.at(dispNum) : std::tstring(dispDevice.DeviceString);
 
                 std::tstring strippedDeviceName = deviceName;
