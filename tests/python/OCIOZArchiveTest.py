@@ -282,18 +282,12 @@ class ArchiveContextTest(unittest.TestCase):
         cdl = processor.createGroupTransform()[0]
         self.assertEqual(cdl.getSlope()[0], 0.9)
 
-        # FIXME: There is a bug with the Processor cache, this clears it.
-        self.CONFIG.setStrictParsingEnabled(False)
-
         self.CONTEXT['CCCID'] = 'look-03'
         processor = self.CONFIG.getProcessor(self.CONTEXT, 
             look_transform, 
             OCIO.TRANSFORM_DIR_FORWARD)
         cdl = processor.createGroupTransform()[0]
         self.assertEqual(cdl.getSlope()[0], 1.2)
-
-        # FIXME: There is a bug with the Processor cache, this clears it.
-        self.CONFIG.setStrictParsingEnabled(False)
 
         self.CONTEXT['CCCID'] = 'look-01'
         processor = self.CONFIG.getProcessor(self.CONTEXT, 
