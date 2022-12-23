@@ -90,6 +90,7 @@ endfunction(add_ocio_test)
 set(SOURCES
     builtinconfigs/CGConfig.cpp
     builtinconfigs/StudioConfig.cpp
+    ConfigUtils.cpp
     fileformats/cdl/CDLParser.cpp
     fileformats/cdl/CDLReaderHelper.cpp
     fileformats/cdl/CDLWriter.cpp

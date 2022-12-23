@@ -1188,4 +1188,106 @@ colorspaces:
                                                                     srcColorSpaceName.c_str());
         checkProcessorInverse(proc);
     }
+
+    OCIO::ConstConfigRcPtr builtinConfig = OCIO::Config::CreateFromFile("ocio://default");
+    {
+      const char * csname = cfg->identifyBuiltinColorSpace("ACEScg");
+      OCIO_CHECK_EQUAL(std::string(csname), std::string("ACES cg"));
+
+    }
+
+    {
+      // Texture -- sRGB
+      const char * csname = cfg->identifyBuiltinColorSpace("sRGB - Texture");
+      OCIO_CHECK_EQUAL(std::string(csname), std::string("Texture -- sRGB"));
+    }
+}
+
+OCIO_ADD_TEST(Processor, identify_colorspace)
+{
+    constexpr const char * CONFIG { R"(
+ocio_profile_version: 2
+
+roles:
+  default: raw
+  scene_linear: ref_cs
+
+colorspaces:
+  - !<ColorSpace>
+    name: raw
+    description: A data colorspace (should not be used).
+    isdata: true
+
+  - !<ColorSpace>
+    name: ref_cs
+    description: The reference colorspace.
+    isdata: false
+
+  - !<ColorSpace>
+    name: not sRGB
+    description: A color space that misleadingly has sRGB in the name, even though it's not.
+    isdata: false
+    to_scene_reference: !<BuiltinTransform> {style: ACEScct_to_ACES2065-1}
+
+  - !<ColorSpace>
+    name: ACES cg
+    description: An ACEScg space with an unusual spelling.
+    isdata: false
+    to_scene_reference: !<BuiltinTransform> {style: ACEScg_to_ACES2065-1}
+
+  - !<ColorSpace>
+    name: Linear ITU-R BT.709
+    description: A linear Rec.709 space with an unusual spelling.
+    isdata: false
+    from_scene_reference: !<GroupTransform>
+      name: AP0 to Linear Rec.709 (sRGB)
+      children:
+        - !<MatrixTransform> {matrix: [2.52168618674388, -1.13413098823972, -0.387555198504164, 0, -0.276479914229922, 1.37271908766826, -0.096239173438334, 0, -0.0153780649660342, -0.152975335867399, 1.16835340083343, 0, 0, 0, 0, 1]}
+
+  - !<ColorSpace>
+    name: Texture -- sRGB
+    description: An sRGB Texture space, spelled differently than in the built-in config.
+    isdata: false
+    from_scene_reference: !<GroupTransform>
+      name: AP0 to sRGB Rec.709
+      children:
+        - !<MatrixTransform> {matrix: [2.52168618674388, -1.13413098823972, -0.387555198504164, 0, -0.276479914229922, 1.37271908766826, -0.096239173438334, 0, -0.0153780649660342, -0.152975335867399, 1.16835340083343, 0, 0, 0, 0, 1]}
+        - !<ExponentWithLinearTransform> {gamma: 2.4, offset: 0.055, direction: inverse}
+
+  - !<ColorSpace>
+    name: sRGB Encoded AP1 - Texture
+    description: Another space with "sRGB" in the name that is not actually an sRGB texture space.
+    isdata: false
+    from_scene_reference: !<GroupTransform>
+      name: AP0 to sRGB Encoded AP1 - Texture
+      children:
+        - !<MatrixTransform> {matrix: [1.45143931614567, -0.23651074689374, -0.214928569251925, 0, -0.0765537733960206, 1.17622969983357, -0.0996759264375522, 0, 0.00831614842569772, -0.00603244979102102, 0.997716301365323, 0, 0, 0, 0, 1]}
+        - !<ExponentWithLinearTransform> {gamma: 2.4, offset: 0.055, direction: inverse}
+
+)" };
+
+    std::istringstream is;
+    is.str(CONFIG);
+    OCIO::ConstConfigRcPtr cfg;
+    OCIO_CHECK_NO_THROW(cfg = OCIO::Config::CreateFromStream(is));
+
+    {
+      const char * csname = cfg->identifyBuiltinColorSpace("ACEScg");
+      OCIO_CHECK_EQUAL(std::string(csname), std::string("ACES cg"));
+
+    }
+
+    {
+      const char * csname = cfg->identifyBuiltinColorSpace("sRGB - Texture");
+      OCIO_CHECK_EQUAL(std::string(csname), std::string("Texture -- sRGB"));
+    }
+
+    {
+        char srcInterchange[255];
+        char builtinInterchange[255];
+
+        cfg->identifyInterchangeSpace(srcInterchange, builtinInterchange);
+        OCIO_CHECK_EQUAL(std::string(srcInterchange), std::string("ref_cs"));
+        OCIO_CHECK_EQUAL(std::string(builtinInterchange), std::string("ACES - ACES2065-1"));
+    }
 }

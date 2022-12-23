@@ -15,6 +15,7 @@
 #include "OpBuilders.h"
 #include "ops/noop/NoOps.h"
 #include "Processor.h"
+#include "MathUtils.h"
 #include "TransformBuilder.h"
 #include "utils/StringUtils.h"
 
@@ -217,6 +218,15 @@ ConstCPUProcessorRcPtr Processor::getOptimizedCPUProcessor(BitDepth inBitDepth,
 {
     return getImpl()->getOptimizedCPUProcessor(inBitDepth, outBitDepth, oFlags);
 }
+
+bool Processor::AreProcessorsEquivalent(ConstProcessorRcPtr & p1, 
+                                        ConstProcessorRcPtr & p2,
+                                        float * rgbaValues, 
+                                        size_t numValues, 
+                                        float tolerance)
+{ 
+    return Processor::Impl::AreProcessorsEquivalent(p1, p2, rgbaValues, numValues, tolerance);
+} 
 
 
 // Instantiate the cache with the right types.
@@ -646,6 +656,36 @@ void Processor::Impl::computeMetadata()
     {
         op->dumpMetadata(m_metadata);
     }
+}
+
+bool Processor::Impl::AreProcessorsEquivalent(ConstProcessorRcPtr & p1, 
+                                            ConstProcessorRcPtr & p2,
+                                            float * rgbaValues, 
+                                            size_t numValues, 
+                                            float tolerance)
+{
+    ProcessorRcPtr proc = Processor::Create();
+
+    proc->getImpl()->concatenate(p1, p2);
+
+    // RGBA values.
+    std::vector<float> out(numValues*4);
+
+    PackedImageDesc desc(rgbaValues, (long) numValues, 1, CHANNEL_ORDERING_RGBA);
+    PackedImageDesc descDst(&out[0], (long) numValues, 1, CHANNEL_ORDERING_RGBA);
+
+    ConstCPUProcessorRcPtr cpu  = proc->getOptimizedCPUProcessor(OPTIMIZATION_LOSSLESS);
+    cpu->apply(desc, descDst);
+
+    for (size_t i = 0; i < out.size(); i++)
+    {
+        if (!EqualWithAbsError(rgbaValues[i], out[i], tolerance))
+        {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 } // namespace OCIO_NAMESPACE

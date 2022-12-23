@@ -14,6 +14,7 @@
 #include "ops/lut1d/Lut1DOp.h"
 #include "ops/matrix/MatrixOp.h"
 #include "ops/range/RangeOp.h"
+#include "Platform.h"
 #include "pystring/pystring.h"
 #include "transforms/FileTransform.h"
 

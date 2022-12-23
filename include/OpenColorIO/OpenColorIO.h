@@ -695,6 +695,24 @@ public:
      */
     bool isColorSpaceLinear(const char * colorSpace, ReferenceSpaceType referenceSpaceType) const;
 
+    /**
+     * \brief Identify the interchange space of the source config and the default built-in config.
+     * 
+     * \param srcInterchange Interchange space from the source config (output).
+     * \param builtinInterchange Interchange space from the default built-in config (output).
+     * 
+     * \throw Exception if either one of srcInterchange or builtinInterchange cannot be identified.
+     */
+    void identifyInterchangeSpace(char * srcInterchange, char * builtinInterchange) const;
+    /**
+     * \brief Find the name of the color space in the source config that is the same as 
+     *        a color space in the default built-in config.
+     * 
+     * \param builtinColorSpaceName Color space name in the built-in config.
+     * \return const char* Matching color space from the source config. Empty if not found.
+     */
+    const char * identifyBuiltinColorSpace(const char * builtinColorSpaceName) const;
+
     //
     // Roles
     //
@@ -2455,6 +2473,21 @@ public:
     ConstCPUProcessorRcPtr getOptimizedCPUProcessor(BitDepth inBitDepth,
                                                     BitDepth outBitDepth,
                                                     OptimizationFlags oFlags) const;
+    /**
+     * \brief Returns whether the two processors are equivalent.
+     * 
+     * \param p1 First processor to compare.
+     * \param p2 Second processor to compare.
+     * \param rgbaValues RGBA values to use to test the processors.
+     * \param numValues Number of RGBA values.
+     * \param tolerance Tolerance of the comparaison.
+     * \return True or false depending on whether the two processors are equivalent.
+     */
+    static bool AreProcessorsEquivalent(ConstProcessorRcPtr & p1,
+                                        ConstProcessorRcPtr & p2, 
+                                        float * rgbaValues, 
+                                        size_t numValues, 
+                                        float tolerance);                                              
 
     Processor(const Processor &) = delete;
     Processor & operator= (const Processor &) = delete;
