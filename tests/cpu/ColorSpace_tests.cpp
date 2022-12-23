@@ -898,6 +898,19 @@ colorspaces:
         OCIO_CHECK_EQUAL_FROM(isLinearToDisplayReference, bDisplayExpected, line);
     };
 
+    // Test undefined color spaces.
+    {
+      OCIO_CHECK_THROW_WHAT(
+        config->isColorSpaceLinear("colorspace_abc", OCIO::REFERENCE_SPACE_SCENE), OCIO::Exception,
+        "Could not test colorspace linearity. Colorspace colorspace_abc does not exist"
+      );
+
+      OCIO_CHECK_THROW_WHAT(
+        config->isColorSpaceLinear("colorspace_abc", OCIO::REFERENCE_SPACE_DISPLAY), OCIO::Exception,
+        "Could not test colorspace linearity. Colorspace colorspace_abc does not exist"
+      );
+    }
+
     {
         testSceneReferred("display_data", false, __LINE__);
         testSceneReferred("display_linear-enc", false, __LINE__);
