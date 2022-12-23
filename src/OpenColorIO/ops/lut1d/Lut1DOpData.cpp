@@ -279,6 +279,86 @@ OpDataRcPtr Lut1DOpData::getIdentityReplacement() const
     return res;
 }
 
+OpDataRcPtr Lut1DOpData::getPairIdentityReplacement(ConstLut1DOpDataRcPtr & lut2) const
+{
+    OpDataRcPtr res;
+    if (isInputHalfDomain())
+    {
+        // TODO: If a half-domain LUT has a flat spot, it would be more appropriate
+        // to use a Range, since some areas would be clamped in a round-trip.
+        // Currently leaving this a Matrix since it is a potential work-around
+        // for situations where you want a pair identity of LUTs to be totally
+        // removed, even if it omits some clamping at extreme values.
+        res = std::make_shared<MatrixOpData>();
+    }
+    else
+    {
+        // Note that the ops have been finalized by the time this is called,
+        // Therefore, for an inverse Lut1D, it means initializeFromForward() has
+        // been called and so any reversals have been converted to flat regions.
+        // Therefore, the first and last LUT entries are the extreme values and
+        // the ComponentProperties has been initialized, but only for the op
+        // whose direction is INVERSE.
+        const Lut1DOpData * invLut = (m_direction == TRANSFORM_DIR_INVERSE)
+            ? this: lut2.get();
+        const ComponentProperties & redProperties = invLut->getRedProperties();
+        const unsigned long length = invLut->getArray().getLength();
+
+        // If the start or end of the LUT contains a flat region, that will cause
+        // a round-trip to be limited.
+
+        double minValue = 0.;
+        double maxValue = 1.;
+        switch (m_direction)
+        {
+        case TRANSFORM_DIR_FORWARD: // Fwd Lut1D -> Inv Lut1D
+        {
+            // A round-trip in this order will impose at least a clamp to [0,1]
+            // based on what happens entering the first Fwd Lut1D.  However, the
+            // clamping may be to an even narrower range if there are flat regions.
+            //
+            // The flat region limitation is imposed based on the where it falls
+            // relative to the [0,1] input domain.
+
+            // TODO: A RangeOp has one min & max for all channels, whereas a Lut1D may 
+            // have three independent channels.  Potentially could look at all chans
+            // and take the extrema of each?  For now, just using the first channel.
+            const unsigned long minIndex = redProperties.startDomain;
+            const unsigned long maxIndex = redProperties.endDomain;
+
+            minValue = (double)minIndex / (length - 1);
+            maxValue = (double)maxIndex / (length - 1);
+            break;
+        }
+        case TRANSFORM_DIR_INVERSE: // Inv Lut1D -> Fwd Lut1D
+        {
+            // A round-trip in this order will impose a clamp, but it may be to
+            // bounds outside of [0,1] since the Fwd LUT may contain values outside
+            // [0,1] and so the Inv LUT will accept inputs on that extended range.
+            //
+            // The flat region limitation is imposed based on the output range.
+
+            const bool isIncreasing = redProperties.isIncreasing;
+            const unsigned long maxChannels = invLut->getArray().getMaxColorComponents();
+            const unsigned long lastValIndex = (length - 1) * maxChannels;
+            // Note that the array for the invLut has had initializeFromForward()
+            // done and so any reversals have been converted to flat regions and
+            // the extrema are at the beginning & end of the LUT.
+            const Array::Values & lutValues = invLut->getArray().getValues();
+
+            // TODO: Currently only basing this on the red channel.
+            minValue = isIncreasing ? lutValues[0] : lutValues[lastValIndex];
+            maxValue = isIncreasing ? lutValues[lastValIndex] : lutValues[0];
+            break;
+        }
+        }
+
+        res = std::make_shared<RangeOpData>(minValue, maxValue,
+                                            minValue, maxValue);
+    }
+    return res;
+}
+
 void Lut1DOpData::setInputHalfDomain(bool isHalfDomain) noexcept
 {
     m_halfFlags = (isHalfDomain) ?
