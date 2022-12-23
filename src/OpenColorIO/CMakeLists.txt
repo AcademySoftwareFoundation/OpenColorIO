@@ -17,6 +17,7 @@ set(SOURCES
     ColorSpace.cpp
     ColorSpaceSet.cpp
     Config.cpp
+    ConfigUtils.cpp
     Context.cpp
     ContextVariableUtils.cpp
     CPUProcessor.cpp

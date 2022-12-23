@@ -105,6 +105,13 @@ public:
 
     void computeMetadata();
 
+    // Returns whether the specified processors are equivalents.
+    static bool AreProcessorsEquivalent(ConstProcessorRcPtr & p1, 
+                                        ConstProcessorRcPtr & p2,
+                                        float * rgbaValues, 
+                                        size_t numValues, 
+                                        float tolerance);
+
 protected:
     ConstGPUProcessorRcPtr getGPUProcessor(const OpRcPtrVec & gpuOps,
                                            OptimizationFlags oFlags) const;
