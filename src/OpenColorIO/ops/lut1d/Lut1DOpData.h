@@ -179,6 +179,8 @@ public:
 
     OpDataRcPtr getIdentityReplacement() const override;
 
+    OpDataRcPtr getPairIdentityReplacement(ConstLut1DOpDataRcPtr & lut2) const;
+
     inline const ComponentProperties & getRedProperties() const
     {
         return m_componentProperties[0];
