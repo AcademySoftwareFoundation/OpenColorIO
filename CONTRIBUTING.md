@@ -19,7 +19,7 @@ explains our contribution process and procedures, so please review it first:
 For a description of the roles and responsibilities of the various
 members of the OpenColorIO community, see [GOVERNANCE](GOVERNANCE.md), and
 for further details, see the project's
-[Technical Charter](docs/aswf/Charter.md). Briefly, Contributors are anyone
+[Technical Charter](ASWF/Charter.md). Briefly, Contributors are anyone
 who submits content to the project, Committers review and approve such
 submissions, and the Technical Steering Committee provides general project
 oversight.
@@ -214,18 +214,20 @@ the work.
 a Committer other than the PR contributor may squash and merge changes into the 
 main branch.
 
-See also (from the OCIO Developer Guide):
-* [Getting started](http://opencolorio.org/developers/getting_started.html)
-* [Submitting Changes](http://opencolorio.org/developers/submitting_changes.html)
+For a more detailed description of the contribution process, please see the 
+Contributing Guide in the main OCIO documentation:
+
+* [Getting Started](https://opencolorio.readthedocs.io/en/latest/guides/contributing/contributing.html#getting-started)
+* [Submitting Changes](https://opencolorio.readthedocs.io/en/latest/guides/contributing/contributing.html#submitting-changes)
 
 ## Coding Standards
 
 Please see the OpenColorIO
-[Coding guidelines](http://opencolorio.org/developers/coding_guidelines.html)
+[Coding guidelines](https://opencolorio.readthedocs.io/en/latest/guides/contributing/contributing.html#coding-style-guide)
 for a reference on project code style and best practices.
 
 For standards on contributing to documentation, see the
-[Documentation guidelines](http://opencolorio.org/developers/documentation_guidelines.html).
+[Documentation guidelines](https://opencolorio.readthedocs.io/en/latest/guides/contributing/contributing.html#documentation-guidelines).
 
 ## Test Policy
 
@@ -245,27 +247,8 @@ The test should should be run, via ``ctest``, before submitting a pull request.
 
 ## Versioning Policy
 
-OpenColorIO uses [semantic versioning](https://semver.org), which labels each
-version with three numbers: Major.Minor.Patch, where:
+OpenColorIO labels each version with three numbers: Major.Minor.Patch, where:
 
-* **MAJOR** indicates incompatible API changes
-* **MINOR** indicates functionality added in a backwards-compatible manner
-* **PATCH** indicates backwards-compatible bug fixes
-
-## Creating a Release
-
-To create a new release from the main branch:
-
-1. Update the release notes in ``CHANGELOG.md`` with a high-level summary of
-   the features and improvements. Also include the summary in the Release
-   comments.
-
-2. Create a new release on the GitHub Releases page.
-
-3. Tag the release with name beginning with '``v``', e.g. '``v2.1.0``'.
-
-4. Download and sign the release tarball, as described
-   [here](https://wiki.debian.org/Creating%20signed%20GitHub%20releases),
-
-5. Attach the detached ``.asc`` signature file to the GitHub release as a
-   binary file.
+* **MAJOR** indicates major architectural changes
+* **MINOR** indicates an introduction of significant new features
+* **PATCH** indicates ABI-compatible bug fixes and minor enhancements

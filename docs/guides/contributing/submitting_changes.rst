@@ -13,8 +13,8 @@ Code Review
 Ask early, and ask often!
 
 All new contributors are highly encouraged to post development ideas, questions,
-or any other thoughts to the :ref:`mailing_lists` before starting to code. This
-greatly improves the process and quality of the resulting library. Code
+or any other thoughts to :ref:`slack` or the :ref:`mailing_lists` before starting to
+code. This greatly improves the process and quality of the resulting library. Code
 reviews (particularly for non-trivial changes) are typically far simpler if the
 reviewers are aware of a development task beforehand. (And, who knows? Maybe they
 will have implementation suggestions as well!)
@@ -72,6 +72,12 @@ assistance.
 
     git add .
     git commit -s -m 'Implement my feature'
+
+* If your PR changes anything that appears in the public API documentation,
+  you should follow the directions below in "Updating the Python docs".
+  If this proves problematic for you, please reach out for help on Slack.
+  One of the other developers will probably be able to make the updates
+  for you in another PR.
 
 * Push your changes back to origin (your fork)::
 

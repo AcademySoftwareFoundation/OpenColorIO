@@ -20,31 +20,30 @@ OCIO v1 represented the culmination of years of production experience earned on 
 films as SpiderMan 2 (2004), Surf's Up (2007), Cloudy with a Chance of Meatballs
 (2009), Alice in Wonderland (2010), and many more.  
 
-OpenColorIO v2 has been in development since 2017 and was feature complete as of
+OpenColorIO v2 was in development from 2017 to 2020 and was feature complete as of
 SIGGRAPH 2020.  After a stabilization and bug-fixing period, an official 2.0.0 
-release was made in January 2021.  OCIO v2 is in the VFX Reference Platform for
-calendar year 2021.  The OCIO v2 code is in the RB-2.0 branch on 
-`GitHub <https://github.com/AcademySoftwareFoundation/OpenColorIO>`_
-and we encourage developers to start integrating and providing feedback.
-See :ref:`upgrading_to_v2` for more.
+release was made in January 2021.  Development has continued to be active since
+then with the 2.1 release in 2021 and the 2.2 release in 2022 adding even more
+capabilities.  Here is more information about our :ref:`upgrading_to_v2`.
 
 
 About the Documentation
 =======================
 
-The documentation is a work-in-progress and we would love to have your help to 
-improve it!  An easy way to get involved is to join the #docs channel on 
-:ref:`slack`.
-
-The documentation has been updated to include most of the new OCIO v2 features
+The documentation has been updated to include basic coverage of the new OCIO v2 features
 but additional work is needed to provide more detail and tutorials about how to
-best leverage them.  We will be working on that over the coming weeks.
+best leverage them.  We have an OCIO User Experience (UX) working group that is
+gradually working on more coverage.
+
+The documentation is a work-in-progress and we would love to have your help to 
+improve it!  An easy way to get involved is to join the #docs or #ux channel on 
+:ref:`slack`.
 
 Accessing Other Versions
 ************************
 
-You are reading the documentation for OCIO v2.  The documentation for the the previous
-stable release (1.1.1) is available `here <https://opencolorio.org/old/index.html>`_.
+You are reading the documentation for OCIO v2.  The documentation for the earlier
+1.x series of releases is available `here <https://opencolorio.org/old/index.html>`_.
 
 
 Community

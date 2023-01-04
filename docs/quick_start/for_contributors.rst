@@ -15,9 +15,10 @@ testing, example configs, and documentation as well as actual coding.
   issues with the ``good first issue`` label.
 
 * If you want to help develop config files, start by looking at :ref:`quick_start_config_authors`
-  and join the #configs channel on :ref:`slack`.
+  and join the #configs channel on :ref:`slack`.  From there, you may want to join the
+  OCIO Configs working group.
 
-* If you want to help with documentation, join the #docs channel on :ref:`slack`.
+* If you want to help with documentation, join the #docs and #ux channel on :ref:`slack`.
 
 * If you want to help test, join the #general channel on :ref:`slack` and
   let us know you want to help test.

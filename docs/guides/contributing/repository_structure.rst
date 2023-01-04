@@ -45,16 +45,22 @@ continuous integration (CI) workflows for all supported platforms. Each .yml
 file defines one GHA workflow, which can contain one or more jobs and the 
 repository events that trigger the workflow.
 
+ASWF
+****
+
+This subdirectory contains important ASWF governance documents like the 
+OpenColorIO charter, CLAs and DCO reference.
+
+The ``meetings`` subdirectory contains historical meeting minutes for 
+TSC (Technical Steering Committee) and working group meetings.  More 
+recent TSC and working group meeting notes are stored on the 
+`ASWF Wiki. <https://wiki.aswf.io/display/OCIO/Meetings>`_
+
 docs
 ****
 
 This directory contains the OpenColorIO documentation source and build 
 configuration. 
-
-The ``guides/contributing/tsc`` subdirectory contains meeting minutes for all 
-recorded TSC (Technical Steering Committee) and working group meetings. The 
-``guides/contributing/aswf`` subdirectory contains important ASWF governance 
-documents like the OpenColorIO charter, CLAs and DCO reference.
 
 See :ref:`documentation-guidelines` for information on contributing to OCIO
 documentation.
@@ -62,15 +68,9 @@ documentation.
 ext
 ***
 
-This directory serves two purposes:
-
-1. House modified external dependencies which are permissible to store within 
-   the OpenColorIO repository. Permissible dependencies have compatible FOSS
-   licenses which have documented approval by the ASWF governing board.
-
-2. Location for external dependencies temporarily installed and statically 
-   linked by OpenColorIO when using the CMake ``OCIO_INSTALL_EXT_PACKAGES`` 
-   option with the value ``MISSING`` or ``ALL``.
+Houses modified external dependencies which are permissible to store within 
+the OpenColorIO repository. Permissible dependencies have compatible FOSS
+licenses which have documented approval by the ASWF governing board.
 
 include
 *******
