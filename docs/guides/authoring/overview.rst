@@ -18,6 +18,12 @@ This page alone will not help you to write a useful config file! See
 the :ref:`configurations` section for examples of complete, practical
 configs, and discussion of how they fit within a facilities workflow.
 
+Please note that you should use the OCIO Python or C++ API to generate
+the config.ocio file rather than writing the YAML by hand in a text editor.
+However, if you do ever modify YAML by hand rather than via the API, you
+should run :ref:`overview-ociocheck` on it to ensure that the syntax is
+correct.
+
 YAML basics
 ***********
 
@@ -29,7 +35,7 @@ has a good overview.
 
 OCIO configs typically use a small subset of YAML, so looking at
 existing configs is probably the quickest way to familiarise yourself
-(just remember the indentation is important!)
+(just remember the indentation is important!).
 
 Checking for errors
 *******************
@@ -59,8 +65,12 @@ An OCIO config has the following sections:
 * :ref:`config-displays-views` -- This section defines how color spaces should be viewed.
 * :ref:`config-looks` -- Looks are transforms used to adjust colors, such as to apply a
   creative effect.
-* :ref:`config-colorspaces` -- This section defines the universe of color space encodings
+* :ref:`config-colorspaces` -- This section defines the scene-referred color space encodings
   available within the config.
+* :ref:`config-display-colorspaces` -- This section defines the display-referred color space
+  encodings available within the config.
+* :ref:`config-named-transforms` -- Named Transforms are a way to provide transforms that
+  do not have a fixed relationship to a specific reference space, such as a utility curve.
 
 A collection of :ref:`config-transforms` is provided for use in the various sections
 of the config file.
@@ -99,11 +109,12 @@ Optional. A brief description of the configuration.
 ``name``
 ^^^^^^^^
 
-Optional. A unique name for the config.
+Optional. A unique name for the config.  Future versions of OCIO might use this as a
+sort of "namespace" for the color spaces defined in the rest of the config.
 
 .. code-block:: yaml
 
-    name: foo_2021-02-01
+    name: studio-config-v1.0.0_aces-v1.3_ocio-v2.1
 
 
 ``search_path``

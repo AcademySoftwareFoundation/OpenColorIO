@@ -5,30 +5,45 @@
 .. _installation:
 
 Installation
-************
+============
 
-Although OpenColorIO is available through a variety of package managers, please note that the 
-version available through a given package manager may be significantly outdated when compared to 
-the current official OCIO release. Even two years after the introduction of OpenColorIO v2, several 
-package managers continue to install OCIO 1.1.1.
+Installation may be done either by installing pre-built binaries from various package 
+managers or by building from source.  (The OCIO project currently does not provide
+pre-built libraries as downloadable artifacts other than through package managers.)
+
+Please note that the version available through a given package manager may be significantly 
+outdated when compared to the current official OCIO release, so please verify the version 
+you install is current.  (Unfortunately, even two years after the introduction of 
+OpenColorIO v2, several package managers continue to install OCIO 1.1.1.)
+
+Alternatives
+************
 
 .. _Python:
 
 Python
-^^^^^^
+++++++
 
-If you only need the Python bindings, the simplest solution is to take advantage of the pre-built 
-wheels in the Python Package Installer (PyPi) `here <https://pypi.org/project/opencolorio>`__. It 
-can be installed by using this command:: 
+If you only need the Python binding, the simplest solution is to take advantage of the pre-built 
+wheels in the Python Package Index (PyPI) `here <https://pypi.org/project/opencolorio>`_. It 
+can be installed as follows, once you have Python installed.
+
+**PyPI**::
 
     pip install opencolorio
 
-OpenImageIO
-^^^^^^^^^^^
+The pre-built wheels are listed `here <https://pypi.org/project/opencolorio/#files>`_.  Note that
+source code is provided, so it may be possible for ``pip`` to compile the binding on your machine if
+the matrix of Python version and platform version does not have the combination you need.  More
+detailed instructions are available for how to use 
+`pip. <https://packaging.python.org/en/latest/tutorials/installing-packages/>`_
 
-If you only need to apply color conversions to images, please note that OpenImageIO's oiiotool has 
-most of the functionality of the ocioconvert command-line tool (although not everything, such as 
-GPU processing). OpenImageIO is available via several package managers (including brew and vcpkg).
+OpenImageIO
++++++++++++
+
+If you only need to apply color conversions to images, please note that OpenImageIO's ``oiiotool`` has 
+most of the functionality of the ``ocioconvert`` command-line tool (although not everything, such as 
+GPU processing). OpenImageIO is available via several package managers (including Homebrew and Vcpkg).
 
 **Homebrew**::
 
@@ -38,16 +53,17 @@ GPU processing). OpenImageIO is available via several package managers (includin
 
     vcpkg install openimageio[opencolorio,tools]:x64-windows --recurse
 
-Installing OpenColorIO using existing packages
-**********************************************
+
+Installing OpenColorIO using Package Managers
+=============================================
 
 Linux
-^^^^^
+*****
 
-When it comes to Linux distributions, relatively few of the Linux distribution repositories have been 
-updated to OCIO v2. The **latest Fedora** is one good option as it offers the most 
-recent release of OpenColorIO v2. Information about the package can be found on 
-`fedoraproject website <https://packages.fedoraproject.org/pkgs/OpenColorIO/OpenColorIO/index.html>`__.
+When it comes to Linux distributions, relatively few of the Linux distribution repositories 
+have been updated to OCIO v2. The **latest Fedora** is one good option as it offers a 
+recent release of OpenColorIO v2. Information about the package can be found on the
+`Fedora project website <https://packages.fedoraproject.org/pkgs/OpenColorIO/OpenColorIO/index.html>`__.
 
 For the other distributions, information about which release of OpenColorIO is available can be 
 verified on `pkgs.org <https://pkgs.org/search/?q=OpenColorIO>`__.
@@ -55,72 +71,88 @@ verified on `pkgs.org <https://pkgs.org/search/?q=OpenColorIO>`__.
 **The recommendation is to build OpenColorIO from source**. You may build from source using the 
 instructions below. See :ref:`building-from-source`.
 
-Windows 7 or newer using vcpkg
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Windows using Vcpkg
+*******************
 
-Vcpkg can be used to install OpenColorIO on Windows. In order to do that, Vcpkg must be installed 
+Vcpkg can be used to install OpenColorIO on Windows 7 or higher. To do that, Vcpkg must be installed 
 by following the `official instructions <https://vcpkg.io/en/getting-started.html>`__. Once Vcpkg 
 is installed, OpenColorIO and some of the tools can be installed with the following command::
 
     vcpkg install opencolorio[tools]:x64-windows
 
-Note that this package **does not** install ocioconvert, ociodisplay, ociolutimage and the Python 
-bindings.
+Note that this package **does not** install ``ocioconvert``, ``ociodisplay``, ``ociolutimage``, 
+and the Python binding.
 
-The three missing tools can be built from source by following the steps in the :ref:`Windows 7 or newer` 
-section while the Python bindings can be install using the pip command in the :ref:`Python` section.
+If you need the extra command-line tools, you'll need to install :ref:`from source. <Windows>` 
+However, the Python binding can be installed as described in the :ref:`Python` section.
 
-OS X using Homebrew
-^^^^^^^^^^^^^^^^^^^
+MacOS using Homebrew
+*******************
 
-You can use the Homebrew package manager to install OpenColorIO on OS X.
+You can use the Homebrew package manager to install OpenColorIO on macOS.
 
 First install Homebrew as per the instructions on the `Homebrew
-homepage <http://mxcl.github.com/homebrew/>`__ (or see the `Homebrew wiki
-<https://github.com/mxcl/homebrew/wiki/Installation>`__ for more
-detailed instructions)
+homepage <https://brew.sh/>`__ (or see the `Homebrew documentation
+<https://docs.brew.sh/>`__ for more detailed instructions).
 
 Then simply run the following command to install::
 
     brew install opencolorio
 
-Homebrew does not install the Python binding or the command-line tools that depend on OpenImageIO 
-such as ocioconvert, ociodisplay and ociolutimage.
+Homebrew does not install the Python binding or the command-line tools that depend on either
+OpenImageIO or OpenEXR such as ``ocioconvert``, ``ociodisplay``, and ``ociolutimage``.
 
 .. _building-from-source:
 
-Building from source
-********************
+Building from Source
+====================
+
+The basic requirements to build OCIO from source on Linux, macOS, and Windows are a
+supported C++ compiler, CMake, and an internet connection.  The OCIO Cmake scripts are
+able to download, build, and install all other required components.  However, more 
+advanced users are also able to have the build use their own version of dependencies.
 
 Dependencies
-^^^^^^^^^^^^
+************
 
-The basic requirements for building OCIO are the following.  Note that, by
-default, cmake will try to install all of the items labelled with * and so
-it is not necessary to install those items manually:
+OCIO depends on the following components.  By default, the OCIO CMake scripts will 
+download and build the items labelled with a \*, so it is not necessary to install those 
+items manually:
 
-- cmake >= 3.12
+Required components:
+
+- C++ 11-17 compiler (gcc, clang, msvc)
+- CMake >= 3.13
 - \*Expat >= 2.4.1 (XML parser for CDL/CLF/CTF)
 - \*yaml-cpp >= 0.7.0 (YAML parser for Configs)
 - \*Imath >= 3.0 (for half domain LUTs)
 - \*pystring >= 1.1.3
+- \*minizip-ng >= 3.0.7 (for config archiving)
+- \*ZLIB >= 1.2.13 (for config archiving)
 
-Some optional components also depend on:
+Optional OCIO functionality also depends on:
 
 - \*Little CMS >= 2.2 (for ociobakelut ICC profile baking)
-- \*pybind11 >= 2.9.2 (for the Python bindings)
-- Python >= 2.7 (for the Python bindings)
-- Python 3.7 or 3.8 (for the docs, with the following PyPi packages)
-    - Sphinx
-    - six
-    - testresources
-    - recommonmark
-    - sphinx-press-theme
-    - sphinx-tabs
-    - breathe
-- NumPy (for complete Python test suite)
+- \*OpenGL GLUT & GLEW (for ociodisplay)
+- \*OpenEXR >= 3.0 (for apps including ocioconvert)
+- OpenImageIO >= 2.1.9 (for apps including ocioconvert)
+- \*OpenFX >= 1.4 (for the OpenFX plug-ins)
+- OpenShadingLanguage >= 1.11 (for the OSL unit tests)
 - Doxygen (for the docs)
-- OpenImageIO >= 2.1.9 or OpenEXR >= 3.0 (for apps including ocioconvert)
+- NumPy (optionally used in the Python test suite)
+- \*pybind11 >= 2.9.2 (for the Python binding)
+- Python >= 2.7 (for the Python binding only)
+- Python 3.7 - 3.9 (for building the documentation)
+
+Building the documentation requires the following packages, available via PyPI:
+
+- Sphinx
+- six
+- testresources
+- recommonmark
+- sphinx-press-theme
+- sphinx-tabs
+- breathe
 
 Example bash scripts are provided in 
 `share/ci/scripts <https://github.com/AcademySoftwareFoundation/OpenColorIO/tree/main/share/ci/scripts>`_ 
@@ -132,14 +164,14 @@ available for all supported platforms. Use GitBash
 this script on Windows.
 
 Automated Installation
-----------------------
+++++++++++++++++++++++
 
-Listed dependencies with a preceeding * can be automatically installed at 
-build time using the ``OCIO_INSTALL_EXT_PACKAGES`` option in your cmake 
-command (requires an internet connection).  This is the default.  C/C++ 
-libraries are pulled from external repositories, built, and statically-linked 
-into libOpenColorIO. Python packages are installed with ``pip``. All installs 
-of these components are fully contained within your build directory.
+Dependencies listed above with a preceeding * can be automatically installed at 
+build time using the ``OCIO_INSTALL_EXT_PACKAGES`` option in your ``cmake`` 
+command (requires an internet connection).  The C/C++ libraries are pulled from 
+external repositories, built, and are (typically) statically-linked into an OCIO
+dynamic library.  All installs of these components are fully contained within your 
+build directory.
 
 Three ``OCIO_INSTALL_EXT_PACKAGES`` options are available::
 
@@ -153,37 +185,130 @@ Three ``OCIO_INSTALL_EXT_PACKAGES`` options are available::
   current system.
 
 Existing Install Hints
-----------------------
+++++++++++++++++++++++
 
-When using existing system libraries, the following CMake variables can be 
-defined to hint at non-standard install locations and preference of shared
-or static linking:
+When using libraries already on your system, the CMake variable 
+``-D <Package Name>_ROOT=<Path>`` may be used to specify the path to the include and 
+library root directory rather than have CMake try to find it.  The package names used 
+by OCIO are as follows (note that these are case-sensitive):
 
-- ``-Dexpat_ROOT=<path>`` (include and/or library root dir)
-- ``-Dexpat_STATIC_LIBRARY=ON`` (prefer static lib)
-- ``-Dyaml-cpp_ROOT=<path>`` (include and/or library root dir)
-- ``-Dyaml-cpp_STATIC_LIBRARY=ON`` (prefer static lib)
-- ``-DImath_ROOT=<path>`` (include and/or library root dir)
-- ``-DImath_STATIC_LIBRARY=ON`` (prefer static lib)
-- ``-DHalf_ROOT=<path>`` (include and/or library root dir)
-- ``-DHalf_STATIC_LIBRARY=ON`` (prefer static lib)
-- ``-Dpystring_ROOT=<path>`` (include and/or library root dir)
-- ``-Dpystring_STATIC_LIBRARY=ON`` (prefer static lib)
-- ``-Dlcms2_ROOT=<path>`` (include and/or library root dir)
-- ``-Dlcms2_STATIC_LIBRARY=ON`` (prefer static lib)
-- ``-Dpybind11_ROOT=<path>`` (include and/or library root dir)
-- ``-DPython_EXECUTABLE=<path>`` (Python executable)
+Required:
 
-To hint at Python package locations, add paths to the ``PYTHONPATH`` 
-environment variable prior to configuring the build.
+- ``expat``
+- ``yaml-cpp``
+- ``Imath``
+- ``pystring``
+- ``ZLIB``
+- ``minizip-ng``
+
+Optional:
+
+- ``OpenEXR``
+- ``OpenImageIO``
+- ``lcms2``
+- ``pybind11``
+- ``openfx``
+- ``OSL``
+- ``Sphinx``
+- ``GLEW``
+- ``GLUT``
+- ``Python``
+
+There are scenarios in which some of the dependencies may not be compiled into an 
+OCIO dynamic library.  This is more likely when OCIO does not download the packages
+itself.  In these cases, it may be helpful to additionally specify the CMake variable
+``-D <Package Name>_STATIC_LIBRARY=ON``. The following package names support this hint:
+``expat``, ``yaml-cpp``, ``Imath``, ``lcms2``, ``ZLIB``, and ``minizip-ng``.
+
+Rather than using ``_ROOT``, and possibly ``_STATIC_LIBRARY``, you may instead use
+``-D <Package Name>_LIBRARY=<Path>`` and ``-D <Package Name>_INCLUDE_DIR=<Path>``.
+In this case, the library path will control whether a static or dynamic library is used.
+It may also be used to handle situations where the library and/or include files are not
+in the typical location relative to the root directory.
+
+The OCIO `CMake find modules <https://github.com/AcademySoftwareFoundation/OpenColorIO/tree/main/share/cmake/modules>`_ 
+may be consulted for more detail on the handling of a given package and the CMake
+variables it uses.
+
+Please note that if you provide your own ``minizip-ng``, rather than having OCIO's CMake
+download and build it, you will likely need to set its CMake variables the same way
+that OCIO does (e.g., enable ZLib and turn off most other options).  Using a ``minizip-ng``
+from various package managers (e.g., Homebrew) probably won't work.  Please see the
+settings that begin with ``-DMZ_`` that are used in the OCIO 
+`minizip-ng find module. <https://github.com/AcademySoftwareFoundation/OpenColorIO/tree/main/share/cmake/modules/Findminizip-ng.cmake>`_ 
+
+Please note that if you build a static OCIO library, it will not contain the libraries 
+for the external packages and so you will need to list those separately when linking your
+client application.  If you had OCIO download and build these packages, you will
+find them under your build directory in ``ext/dist/lib``.  The libraries that are
+needed are: ``expat``, ``yaml-cpp``, ``Imath``, ``pystring``, ``ZLIB``, and ``minizip-ng``.
+
+The OCIO ``make install`` step will install CMake configuration files that may be used
+by applications that consume OCIO to find and utilize OCIO during their own build process.
+
+For the Python packages required for the documentation, ensure that their locations
+are in your ``PYTHONPATH`` environment variable prior to configuring the build.
+
+This custom variable is also available:
+
+- ``-DPython_EXECUTABLE=<path>`` (Python executable for pybind11)
+
+
+.. _enabling-optional-components:
+
+Enabling optional components
+****************************
+
+CMake Options
++++++++++++++
+
+There are many options available in `CMake. 
+<https://cmake.org/cmake/help/latest/guide/user-interaction/index.html#guide:User%20Interaction%20Guide>`_
+
+Several of the most common ones are:
+
+- ``-DCMAKE_BUILD_TYPE=Release`` (Set to Debug, if necessary)
+- ``-DBUILD_SHARED_LIBS=ON`` (Set to OFF to build OCIO as a static library)
+
+Here are the most common OCIO-specific CMake options (the default values are shown):
+
+- ``-DOCIO_BUILD_APPS=ON`` (Set to OFF to not build command-line tools)
+- ``-DOCIO_USE_OIIO_FOR_APPS=OFF`` (Set ON to build tools with OpenImageIO rather than OpenEXR)
+- ``-DOCIO_BUILD_PYTHON=ON`` (Set to OFF to not build the Python binding)
+- ``-DOCIO_BUILD_OPENFX=OFF`` (Set to ON to build the OpenFX plug-ins)
+- ``-DOCIO_USE_SSE=ON`` (Set to OFF to turn off SSE CPU performance optimizations)
+- ``-DOCIO_BUILD_TESTS=ON`` (Set to OFF to not build the unit tests)
+- ``-DOCIO_BUILD_GPU_TESTS=ON`` (Set to OFF to not build the GPU unit tests)
+- ``-DOCIO_USE_HEADLESS=OFF`` (Set to ON to do headless GPU reendering)
+- ``-DOCIO_WARNING_AS_ERROR=ON`` (Set to OFF to turn off warnings as errors)
+- ``-DOCIO_BUILD_DOCS=OFF`` (Set to ON to build the documentation)
+- ``-DOCIO_BUILD_FROZEN_DOCS=OFF`` (Set to ON to update the Python documentation)
+
+Several command-line tools (such as ``ocioconvert``) require reading or writing image files.
+If ``OCIO_USE_OIIO_FOR_APPS=OFF``, these will be built using OpenEXR rather than OpenImageIO
+and therefore you will be limited to using OpenEXR files with these tools rather than the
+wider range of image file formats supported by OIIO.  (Using OpenEXR for these tools works
+around the issue of a circular dependency between OCIO and OIIO that can complicate some
+build chains.)
+
+The CMake output prints information regarding which image library will be used for the
+command-line tools (as well as a lot of other info about the build configuration).
+
+
+Documentation
++++++++++++++
+
+Instructions for installing the documentation pre-requisites and building the docs 
+are in the section on :ref:`contributing documentation. <documentation-guidelines>`
+
 
 .. _osx-and-linux:
 
-OS X and Linux
-^^^^^^^^^^^^^^
+MacOS and Linux
+***************
 
 While there is a huge range of possible setups, the following steps
-should work on OS X and most Linux distros. To keep things simple, this guide 
+should work on macOS and most Linux distros. To keep things simple, this guide 
 will use the following example paths - these will almost definitely be 
 different for you:
 
@@ -196,12 +321,12 @@ First make the build directory and cd to it::
     $ mkdir /tmp/ociobuild
     $ cd /tmp/ociobuild
 
-Next step is to run cmake, which looks for things such as the
+Next step is to run ``cmake``, which looks for things such as the
 compiler's required arguments, optional requirements like Python,
 OpenImageIO etc
 
 For this example we will show how to install OCIO to a custom location 
-(instead of the default ``/usr/local``), we will thus run cmake with
+(instead of the default ``/usr/local``), we will thus run ``cmake`` with
 ``CMAKE_INSTALL_PREFIX``.
 
 Still in ``/tmp/ociobuild``, run::
@@ -209,8 +334,8 @@ Still in ``/tmp/ociobuild``, run::
     $ cmake -DCMAKE_INSTALL_PREFIX=/software/ocio /source/ocio
 
 The last argument is the location of the OCIO source code (containing
-the main CMakeLists.txt file). You should see something along the
-lines of::
+the main CMakeLists.txt file). You should see it conclude with something
+along the lines of::
 
     -- Configuring done
     -- Generating done
@@ -231,25 +356,33 @@ the specified location::
     $ make install
 
 If nothing went wrong, ``/software/ocio`` should look something like
-this::
+this (on Linux or macOS)::
 
     $ cd /software/ocio
     $ ls
-    bin/     include/ lib/
+    bin/  include/  lib/  share/
     $ ls bin/
     ociobakelut ociocheck  (and others ...)
     $ ls include/
-    OpenColorIO/   PyOpenColorIO/ pkgconfig/
+    OpenColorIO/
     $ ls lib/
-    libOpenColorIO.a      libOpenColorIO.dylib
+    cmake/  libOpenColorIO.dylib  (and some more specific versions ...) 
+    libOpenColorIOimageioapphelpers.a  libOpenColorIOoglapphelpers.a
+    pkgconfig/  python<version>/
+    $ ls lib/pkgconfig
+    OpenColorIO.pc
+    $ ls lib/python<version>/site-packages
+    PyOpenColorIO.so
+    $ ls share/ocio
+    setup_ocio.sh
 
-.. _Windows 7 or newer:
+.. _Windows:
 
-Windows 7 or newer
-^^^^^^^^^^^^^^^^^^
+Windows
+*******
 
 While build environments may vary between users, the recommended way to build OCIO from source on 
-Windows is to use the scripts provided in the Windows 
+Windows 7 or newer is to use the scripts provided in the Windows 
 `share <https://github.com/AcademySoftwareFoundation/OpenColorIO/tree/main/share/dev/windows>`_ 
 section of the OCIO repository. There are two scripts currently available. 
 
@@ -270,7 +403,7 @@ Run this command to execute the ocio_deps.bat script::
 The second script is called 
 `ocio.bat <https://github.com/AcademySoftwareFoundation/OpenColorIO/tree/main/share/dev/windows/ocio.bat>`_ 
 and it provide a way to configure and build OCIO from source. Moreover, this script executes the 
-install step of cmake as well as the unit tests. The main use case is the following::
+install step of ``cmake`` as well as the unit tests. The main use case is the following::
 
     ocio.bat --b <path to build folder> --i <path to install folder> 
     --vcpkg <path to vcpkg installation> --ocio <path to ocio repository> --type Release
@@ -282,39 +415,14 @@ For more information, please look at each script's documentation::
 
     ocio_deps.bat --help
 
-.. _enabling-optional-components:
-
-Enabling optional components
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-The OpenColorIO library is probably not all you want - the Python
-libraries bindings, the Nuke nodes and several applications are only
-built if their dependencies are found.
-
-In the case of the Python bindings, the dependencies are the Python
-headers for the version you wish to use. These may be picked up by
-default - if so, when you run cmake you would see::
-
-    -- Python 2.6 okay, will build the Python bindings against .../include/python2.6
-
-If not, you can point cmake to correct Python executable using the
-``-D PYTHON=...`` cmake flag::
-
-    $ cmake -D PYTHON=/my/custom/python2.6 /source/ocio
-
-The applications included with OCIO have various dependencies - to
-determine these, look at the CMake output when first run::
-
-    -- Not building ocioconvert. Requirement(s) found: OIIO:FALSE
-
-
 .. _quick-env-config:
 
 Quick environment configuration
-*******************************
+===============================
 
 The quickest way to set the required :ref:`environment-setup` is to
 source the ``share/ocio/setup_ocio.sh`` script installed with OCIO.
+On Windows, use the corresponding setup_ocio.bat file.
 
 For a simple single-user setup, add the following to ``~/.bashrc``
 (assuming you are using bash, and the example install directory of
@@ -336,7 +444,7 @@ configuration script etc), for example::
 .. _environment-setup:
 
 Environment variables
-*********************
+=====================
 
 Note: For other user facing environment variables, see :ref:`using_env_vars`.
 
@@ -345,7 +453,7 @@ Note: For other user facing environment variables, see :ref:`using_env_vars`.
    This variable needs to point to the global OCIO config file, e.g
    ``config.ocio``
 
-.. envvar:: DYLD_LIBRARY_PATH
+.. envvar:: DYLD_LIBRARY_PATH (macOS)
 
     The ``lib/`` folder (containing ``libOpenColorIO.dylib``) must be
     on the ``DYLD_LIBRARY_PATH`` search path, or you will get an error
@@ -356,11 +464,11 @@ Note: For other user facing environment variables, see :ref:`using_env_vars`.
         Reason: image not found
 
     This applies to anything that links against OCIO, including the
-    ``PyOpenColorIO`` Python bindings.
+    ``PyOpenColorIO`` Python binding.
 
-.. envvar:: LD_LIBRARY_PATH
+.. envvar:: LD_LIBRARY_PATH (Linux)
 
-    Equivalent to the ``DYLD_LIBRARY_PATH`` on Linux
+    The Linux equivalent of the macOS ``DYLD_LIBRARY_PATH``.
 
 .. envvar:: PYTHONPATH
 
