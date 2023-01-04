@@ -24,7 +24,7 @@ Here is example showing the various types of rules that may be defined:
 
 .. code-block:: yaml
 
-  files_rules:
+  file_rules:
     - !<Rule> {name: LogC, extension: "*", pattern: "*LogC*", colorspace: ARRI LogC}
     - !<Rule> {name: OpenEXR, extension: "exr", pattern: "*", colorspace: ACEScg}
     - !<Rule> {name: TIFF, regex: ".*\.TIF?F$", colorspace: sRGB}

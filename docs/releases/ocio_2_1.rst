@@ -86,8 +86,8 @@ The OCIO GPU Renderer may now emit shaders in `Open Shading Language
 <https://github.com/AcademySoftwareFoundation/OpenShadingLanguage>`_ format.  There is a 
 new GpuLanguage enum: ``LANGUAGE_OSL_1``.  
 
-Note tha OCIO library does not need to be compiled against the OSL library but running the 
-OSL unit tests does require OSL and OIIO.  These will be built automatically if CMake is 
+Note that the OCIO library does not need to be compiled against the OSL library but running 
+the OSL unit tests does require OSL and OIIO.  These will be built automatically if CMake is 
 able to find them or you set ``-D OSL_ROOT`` to indicate the installed location.
 
 Currently, Lut1D and Lut3D Transforms are not supported and will throw an exception if used.
