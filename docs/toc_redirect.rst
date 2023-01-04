@@ -30,7 +30,7 @@
 .. toctree::
    :hidden:
 
-   upgrading_v2/_index
+   releases/_index
 
 .. toctree::
    :hidden:
