@@ -193,6 +193,7 @@ IF NOT EXIST "!PYTHON_PATH!" (
 if !DO_CONFIGURE!==1 (
     echo Running CMake...
     cmake -B "!BUILD_PATH!"^
+        -DCMAKE_INSTALL_PREFIX=!INSTALL_PATH!^
         -DOCIO_INSTALL_EXT_PACKAGES=ALL^
         -DCMAKE_BUILD_TYPE=!CMAKE_BUILD_TYPE!^
         -DGLEW_ROOT="!GLEW_ROOT!"^
@@ -231,7 +232,7 @@ if Not "%CMAKE_CONFIGURE_STATUS%"=="Failed" (
 rem Run cmake --install only if cmake --build was successful.
 if Not "%CMAKE_BUILD_STATUS%"=="Failed" (
     rem Install OCIO
-    cmake --install !BUILD_PATH! --config !CMAKE_BUILD_TYPE! --prefix !INSTALL_PATH!
+    cmake --install !BUILD_PATH! --config !CMAKE_BUILD_TYPE!
     if not ErrorLevel 1 (
         set CMAKE_INSTALL_STATUS=Ok
     ) else (

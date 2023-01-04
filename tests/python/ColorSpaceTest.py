@@ -579,6 +579,12 @@ colorspaces:
             )
             self.assertEqual(is_linear_to_display_reference, expected_value)
 
+        # Test undefined color spaces.
+        with self.assertRaises(OCIO.Exception):
+            cfg.isColorSpaceLinear('colorspace_abc', OCIO.REFERENCE_SPACE_SCENE)
+        with self.assertRaises(OCIO.Exception):
+            cfg.isColorSpaceLinear('colorspace_abc', OCIO.REFERENCE_SPACE_DISPLAY)
+
         # Test the scene referred color spaces.
         test_scene_referred(self, cfg, "display_data", False)
         test_scene_referred(self, cfg, "display_linear-enc", False)
