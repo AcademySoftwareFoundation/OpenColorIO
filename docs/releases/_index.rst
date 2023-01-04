@@ -4,10 +4,12 @@
 
 .. _upgrading_to_v2:
 
-Upgrading to v2
-===============
+Releases
+========
 
 .. toctree::
    :caption: Upgrading to v2
 
-   how_to
+   ocio_2_2
+   ocio_2_1
+   ocio_2_0
