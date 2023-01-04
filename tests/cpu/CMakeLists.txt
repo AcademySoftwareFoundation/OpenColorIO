@@ -23,7 +23,7 @@ function(add_ocio_test NAME SOURCES PRIVATE_INCLUDES)
             utils::strings
             yaml-cpp
             testutils
-            minizip-ng::minizip-ng
+            MINIZIP::minizip-ng
             xxHash
     )
 
