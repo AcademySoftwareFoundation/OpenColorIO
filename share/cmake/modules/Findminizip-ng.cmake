@@ -193,8 +193,8 @@ if(NOT minizip_FOUND AND NOT TARGET MINIZIP::minizip)
             "${_EXT_DIST_ROOT}/${CMAKE_INSTALL_LIBDIR}/${_minizip-ng_LIB_PREFIX}minizip-ng${_minizip-ng_LIB_SUFFIX}${CMAKE_STATIC_LIBRARY_SUFFIX}")
 
         if(_minizip-ng_TARGET_CREATE)
-            set(MINIZIP-NG_CMAKE_ARGS
-                ${MINIZIP-NG_CMAKE_ARGS}
+            set(minizip-ng_CMAKE_ARGS
+                ${minizip-ng_CMAKE_ARGS}
                 -DCMAKE_CXX_VISIBILITY_PRESET=${CMAKE_CXX_VISIBILITY_PRESET}
                 -DCMAKE_VISIBILITY_INLINES_HIDDEN=${CMAKE_VISIBILITY_INLINES_HIDDEN}
                 -DCMAKE_POSITION_INDEPENDENT_CODE=ON
@@ -265,7 +265,7 @@ if(NOT minizip_FOUND AND NOT TARGET MINIZIP::minizip)
             GIT_SHALLOW TRUE
             PREFIX "${_EXT_BUILD_ROOT}/libminizip-ng"
             BUILD_BYPRODUCTS ${minizip-ng_LIBRARY}
-            CMAKE_ARGS ${MINIZIP-NG_CMAKE_ARGS}
+            CMAKE_ARGS ${minizip-ng_CMAKE_ARGS}
             EXCLUDE_FROM_ALL TRUE
             BUILD_COMMAND ""
             INSTALL_COMMAND
