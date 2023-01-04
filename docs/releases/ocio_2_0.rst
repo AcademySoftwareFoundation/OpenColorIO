@@ -3,15 +3,15 @@
   Copyright Contributors to the OpenColorIO Project.
 
 
-Introduction
-============
+OCIO 2.0 Release
+================
 
 OpenColorIO v2 is a major update, three years in development, and contains a
 large number of new features.  This section describes the new features and 
 their relevance for both config authors and application developers.
 
 Timeline
-========
+********
 
 OpenColorIO v2 was proposed to the community at SIGGRAPH 2017 and reached 
 "feature complete" at SIGGRAPH 2020.  The official 2.0.0 release was made in 
@@ -19,7 +19,7 @@ January 2021 after a period of stabilization and refinement.  OCIO v2 is in
 the VFX Reference Platform for calendar year 2021.
 
 Demo Config
-===========
+***********
 There is a config file that illustrates many of the new OCIO v2 features
 described below.  This is available in the configs section of the documentation
 as :ref:`ocio-v2_demo`.
@@ -641,3 +641,19 @@ processed.
 
 **Developers**: This may be useful, for example, when displaying data color spaces on
 an HDR monitor.
+
+
+Release Notes
+=============
+
+For more detail, please see the GitHub release pages:
+
+`OCIO 2.0.0 <https://github.com/AcademySoftwareFoundation/OpenColorIO/releases/tag/v2.0.0>`_
+
+`OCIO 2.0.1 <https://github.com/AcademySoftwareFoundation/OpenColorIO/releases/tag/v2.0.1>`_
+
+`OCIO 2.0.2 <https://github.com/AcademySoftwareFoundation/OpenColorIO/releases/tag/v2.0.2>`_
+
+`OCIO 2.0.3 <https://github.com/AcademySoftwareFoundation/OpenColorIO/releases/tag/v2.0.3>`_
+
+`OCIO 2.0.4 <https://github.com/AcademySoftwareFoundation/OpenColorIO/releases/tag/v2.0.4>`_

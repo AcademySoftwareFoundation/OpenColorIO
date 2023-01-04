@@ -24,6 +24,26 @@ Note that some tools depend on OpenEXR or OpenImageIO and other libraries:
 .. TODO: check app lib dependencies
 .. TODO: make a pretty table in RST.
 
+.. _overview-ocioarchive:
+
+ocioarchive
+***********
+
+This command-line tool allows you to convert a config and its external LUT files
+into an OCIOZ archive file.  A .ocioz file may be supplied to any command that
+takes the path to a config or set as the OCIO environment variable.
+
+This example creates a file called myarchive.ocioz::
+
+    $ ocioarchive myarchive --iconfig myconfig/config.ocio
+
+This command will expand it back out::
+
+    $ ocioarchive --extract myarchive.ocioz
+
+The --list option may be used to see the contents of a .ocioz file.
+
+
 .. _overview-ociocheck:
 
 ociocheck
@@ -33,7 +53,7 @@ This is a command-line tool which shows an overview of an OCIO config
 file, and checks for obvious errors.
 
 For example, the following shows the output of a config with a typo -
-the colorspace used for ``compositing_log`` is not incorrect::
+the colorspace used for ``compositing_log`` is incorrect::
 
     $ ociocheck --iconfig example.ocio
 
@@ -189,6 +209,17 @@ not the case.  Also, it does not leverage any of the new OCIO v2 features.
 .. TODO: Link to discussion of OpenImageIO source?
 
 
+.. _overview-pyociodisplay:
+
+pyociodisplay
+*************
+
+The pyociodisplay tool is a minimal image viewer implementation demonstrating use of 
+the OCIO GPU renderer in a Python application.  It requires downloading a few dependencies
+before use.  For more information, please see the 
+`README. <https://github.com/AcademySoftwareFoundation/OpenColorIO/tree/main/src/apps/pyociodisplay>`_ 
+
+
 .. _overview-ociolutimage:
 
 ociolutimage
@@ -240,6 +271,7 @@ ACES2065-1::
 The --list argument will print out all of the standard ACES color spaces that are 
 supported as --csc arguments.
 
+
 .. _overview-ocioperf:
 
 ocioperf
@@ -272,6 +304,7 @@ Examples::
 
 .. TODO: examples formatting
 
+
 .. _overview-ociowrite:
 
 ociowrite
@@ -298,3 +331,16 @@ Here is an example::
 
     $ export OCIO=/path/to/the/config.ocio
     $ ociowrite --colorspaces acescct aces2065-1 --file mytransform.ctf
+
+
+.. _overview-pyocioamf:
+
+pyocioamf
+*********
+
+The pyocioamf tool is an initial attempt to support the ACES Metadata File (AMF)
+`format. <https://docs.acescentral.com/guides/amf/>`_
+This Python script will take an AMF file and produce an OCIO CTF file that implements its color
+pipeline.  The CTF file may be applied to images using tools such as :ref:`overview-ocioconvert`.
+For more information, please see the 
+`README. <https://github.com/AcademySoftwareFoundation/OpenColorIO/tree/main/src/apps/pyocioamf>`_ 
