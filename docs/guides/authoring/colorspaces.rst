@@ -15,19 +15,19 @@ Colorspaces
 
 Required.
 
-This section is a list of all the colorspaces known to OCIO. A
-colorspace can be referred to elsewhere within the config (including
+This section is a list of the scene-referred colorspaces in the config.
+A colorspace may be referred to elsewhere within the config (including
 other colorspace definitions), and are used within OCIO-supporting
 applications.
 
-A color space may use the following keys:
+A colorspace may use the following keys:
 
 
 ``to_scene_reference`` and ``from_scene_reference``
 ---------------------------------------------------
 
 These keys specify the transforms that define the relationship between
-the color space and the scene-referred reference space.
+the colorspace and the scene-referred reference space.
 
 Note: In OCIO v1, the keys ``to_reference`` and ``from_reference`` were
 used (since there was only one reference space).  These are still supported
@@ -404,10 +404,10 @@ compatibility.
 
 Optional.
 
-These two options are used when OCIO transforms are applied on the
-GPU.
+These two options were used in OCIO v1 when transforms were applied on the
+GPU.  However, the new GPU renderer in OCIO v2 does not need these.
 
-It is also used to automatically generate a "shaper LUT" when
+However, they may still be used to automatically generate a "shaper LUT" when
 :ref:`baking LUT's <userguide-bakelut>` unless one is explicitly
 specified (not all output formats utilise this)
 
@@ -469,6 +469,8 @@ It's common to use literal ``|`` block syntax to preserve all newlines:
         This is the second.
 
 
+.. _config-display-colorspaces:
+
 Display Colorspaces
 *******************
 
@@ -477,7 +479,7 @@ Display Colorspaces
 
 Optional.
 
-This section is a list of all the display colorspaces known to OCIO. 
+This section is a list of all the display-referred colorspaces in the config. 
 A display colorspace is very similar to a colorspace except its transforms
 go from or to the display-referred reference space rather than the
 scene-referred reference space.
