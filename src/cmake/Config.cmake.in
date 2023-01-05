@@ -2,6 +2,129 @@
 
 include(CMakeFindDependencyMacro)
 
+if (NOT @BUILD_SHARED_LIBS@) # NOT @BUILD_SHARED_LIBS@
+    if (APPLE)
+        # Store the previous value of CMAKE_FIND_FRAMEWORK and CMAKE_FIND_APPBUNDLE.
+        set(_PREVIOUS_CMAKE_FIND_FRAMEWORK ${CMAKE_FIND_FRAMEWORK})
+        set(_PREVIOUS_CMAKE_FIND_APPBUNDLE ${CMAKE_FIND_APPBUNDLE})
+
+        # Prioritize other paths before Frameworks and Appbundle for find_path, find_library and 
+        # find_package.
+        set(CMAKE_FIND_FRAMEWORK LAST)
+        set(CMAKE_FIND_APPBUNDLE LAST)
+    endif()
+
+    # Get the install directory.
+    set(_IMPORT_PREFIX "${CMAKE_CURRENT_LIST_DIR}")
+    # Get the install directory. Since the current file is under 
+    # <install directory>/lib/cmake/OpenColorIO going back three directory.
+    foreach(i RANGE 1 3)
+        get_filename_component(_IMPORT_PREFIX "${_IMPORT_PREFIX}" PATH)
+        if(_IMPORT_PREFIX STREQUAL "/")
+        set(_IMPORT_PREFIX "")
+        break()
+        endif()
+    endforeach()
+
+    # Append OCIO custom find module path.
+    list(APPEND CMAKE_MODULE_PATH "${_IMPORT_PREFIX}/share/OpenColorIO/cmake/modules")
+    list(APPEND CMAKE_MODULE_PATH "${_IMPORT_PREFIX}/share/OpenColorIO/cmake/macros")
+
+    ########################
+    # Required dependencies 
+    ########################
+
+    if (NOT expat::expat)
+        find_dependency(expat @expat_VERSION@)
+    endif()
+
+    if (NOT Imath::Imath)
+        find_dependency(Imath @Imath_VERSION@)
+    endif()
+
+    if (NOT pystring::pystring)
+        find_dependency(pystring @pystring_VERSION@)
+    endif()
+
+    if (NOT yaml-cpp)
+        find_dependency(yaml-cpp @yaml-cpp_VERSION@)
+    endif()
+
+    if (NOT ZLIB::ZLIB)
+        # ZLIB_VERSION is available starting CMake 3.26+.
+        # ZLIB_VERSION_STRING is still available for backward compatibility.
+        # See https://cmake.org/cmake/help/git-stage/module/FindZLIB.html
+
+        # ZLIB_USE_STATIC_LIBS is supported only from CMake 3.24+.
+        if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.24.0") 
+            if (ZLIB_STATIC_LIBRARY)
+                set(ZLIB_USE_STATIC_LIBS "${ZLIB_STATIC_LIBRARY}")
+            endif()
+        else() # For CMake < 3.24 since ZLIB_USE_STATIC_LIBS is not available.
+            if(NOT ZLIB_LIBRARY)
+                if(DEFINED CMAKE_FIND_LIBRARY_PREFIXES)
+                    set(_ZLIB_ORIG_CMAKE_FIND_LIBRARY_PREFIXES "${CMAKE_FIND_LIBRARY_PREFIXES}")
+                else()
+                    set(_ZLIB_ORIG_CMAKE_FIND_LIBRARY_PREFIXES)
+                endif()
+
+                if(DEFINED CMAKE_FIND_LIBRARY_SUFFIXES)
+                    set(_ZLIB_ORIG_CMAKE_FIND_LIBRARY_SUFFIXES "${CMAKE_FIND_LIBRARY_SUFFIXES}")
+                else()
+                    set(_ZLIB_ORIG_CMAKE_FIND_LIBRARY_SUFFIXES)
+                endif()
+
+                # Prefix/suffix for windows.
+                if(WIN32)
+                    list(APPEND CMAKE_FIND_LIBRARY_PREFIXES "" "lib")
+                    list(APPEND CMAKE_FIND_LIBRARY_SUFFIXES ".dll.a")
+                endif()
+
+                # Check if static lib is preferred.
+                if(ZLIB_STATIC_LIBRARY OR ZLIB_USE_STATIC_LIBS)
+                    if(WIN32)
+                        set(CMAKE_FIND_LIBRARY_SUFFIXES .lib .a ${CMAKE_FIND_LIBRARY_SUFFIXES})
+                    else()
+                        set(CMAKE_FIND_LIBRARY_SUFFIXES .a)
+                    endif()
+                endif()
+            endif()
+        endif()
+
+        if (@ZLIB_VERSION@) # @ZLIB_VERSION@
+            find_dependency(ZLIB @ZLIB_VERSION@)
+        else()
+            find_dependency(ZLIB @ZLIB_VERSION_STRING@)
+        endif()
+
+        # Restore the original find library ordering
+        if(DEFINED _ZLIB_ORIG_CMAKE_FIND_LIBRARY_SUFFIXES)
+            set(CMAKE_FIND_LIBRARY_SUFFIXES "${_ZLIB_ORIG_CMAKE_FIND_LIBRARY_SUFFIXES}")
+        else()
+            set(CMAKE_FIND_LIBRARY_SUFFIXES)
+        endif()
+
+        if(DEFINED _ZLIB_ORIG_CMAKE_FIND_LIBRARY_PREFIXES)
+            set(CMAKE_FIND_LIBRARY_PREFIXES "${_ZLIB_ORIG_CMAKE_FIND_LIBRARY_PREFIXES}")
+        else()
+            set(CMAKE_FIND_LIBRARY_PREFIXES)
+        endif()
+    endif()
+
+    if (NOT MINIZIP::minizip-ng)
+        find_dependency(minizip-ng @minizip-ng_VERSION@)
+    endif()
+
+    # Remove OCIO custom find module path.
+    list(REMOVE_AT CMAKE_MODULE_PATH -1)
+
+    if (APPLE)
+        # Restore CMAKE_FIND_FRAMEWORK and CMAKE_FIND_APPBUNDLE values.
+        set(CMAKE_FIND_FRAMEWORK ${_PREVIOUS_CMAKE_FIND_FRAMEWORK})
+        set(CMAKE_FIND_APPBUNDLE ${_PREVIOUS_CMAKE_FIND_APPBUNDLE})
+    endif()
+endif()
+
 include(${CMAKE_CURRENT_LIST_DIR}/@PROJECT_NAME@Targets.cmake)
 
 include(FindPackageHandleStandardArgs)
