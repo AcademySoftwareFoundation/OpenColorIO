@@ -456,11 +456,12 @@ enum GpuLanguage
     GPU_LANGUAGE_MSL_2_0            ///< Metal Shading Language
 };
 
+/// Controls which environment variables are loaded into a Context object.
 enum EnvironmentMode
 {
     ENV_ENVIRONMENT_UNKNOWN = 0,
-    ENV_ENVIRONMENT_LOAD_PREDEFINED,
-    ENV_ENVIRONMENT_LOAD_ALL
+    ENV_ENVIRONMENT_LOAD_PREDEFINED, ///< Only load vars in the config's environment section
+    ENV_ENVIRONMENT_LOAD_ALL         ///< Load all env. vars (note: may reduce performance)
 };
 
 /// A RangeTransform may be set to clamp the values, or not.

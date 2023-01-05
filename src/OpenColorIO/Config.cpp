@@ -3127,6 +3127,13 @@ bool Config::isColorSpaceLinear(const char * colorSpace, ReferenceSpaceType refe
 {
     auto cs = getColorSpace(colorSpace);
 
+    if (cs == nullptr)
+    {
+        std::ostringstream os;
+        os << "Could not test colorspace linearity. Colorspace " << colorSpace << " does not exist.";
+        throw Exception(os.str().c_str()); 
+    }
+
     if (cs->isData())
     {
         return false;
