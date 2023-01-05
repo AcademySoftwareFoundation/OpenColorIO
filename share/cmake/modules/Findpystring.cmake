@@ -66,7 +66,7 @@ endif()
 ###############################################################################
 ### Install package from source ###
 
-if(NOT pystring_FOUND AND NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL NONE)
+if(NOT pystring_FOUND AND OCIO_INSTALL_EXT_PACKAGES AND NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL NONE)
     include(ExternalProject)
 
     set(_EXT_DIST_ROOT "${CMAKE_BINARY_DIR}/ext/dist")
@@ -125,14 +125,6 @@ if(NOT pystring_FOUND AND NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL NONE)
                 -DANDROID_PLATFORM=${ANDROID_PLATFORM}
                 -DANDROID_ABI=${ANDROID_ABI}
                 -DANDROID_STL=${ANDROID_STL})
-        endif()
-
-        if(NOT BUILD_SHARED_LIBS)
-            #TODO: Find a way to merge in the static libs when built with internal pystring
-            message(WARNING
-                "Building STATIC libOpenColorIO using the in-built pystring. "
-                "pystring symbols are NOT included in the output binary!"
-            )
         endif()
 
         # Hack to let imported target be built from ExternalProject_Add
