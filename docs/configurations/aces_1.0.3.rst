@@ -2,17 +2,21 @@
   SPDX-License-Identifier: CC-BY-4.0
   Copyright Contributors to the OpenColorIO Project.
 
+.. _aces_1.0.3:
+
 aces_1.0.3
 ==========
 
 This section describes the ACES 1.0.3 OpenColorIO configuration.
 
 .. note::
-    There is a more recent version of the ACES config for ACES 1.2 available here:
+    There is a more recent version of the ACES 1.0.3 config for ACES 1.2 available here:
 
     - https://github.com/colour-science/OpenColorIO-Configs/tree/feature/aces-1.2-config
 
-    An ACES config that takes advantage of the new OCIO v2 features is under development.
+.. note::
+    Please note that both of these configurations have been supplanted by the new 
+    :ref:`aces_studio` for OCIO v2.
 
 
 Information about ACES
