@@ -118,9 +118,13 @@ std::string getTexSample(GpuLanguage lang,
     switch (lang)
     {
         case GPU_LANGUAGE_GLSL_1_2:
-        case GPU_LANGUAGE_GLSL_1_3:
         {
             kw << "texture" << N << "D(" << samplerName << ", " << coords << ")";
+            break;
+        }
+        case GPU_LANGUAGE_GLSL_1_3:
+        {
+            kw << "texture(" << samplerName << ", " << coords << ")";
             break;
         }
         case GPU_LANGUAGE_CG:
@@ -868,8 +872,10 @@ std::string GpuShaderText::atan2(const std::string & y,
         }
         case GPU_LANGUAGE_HLSL_DX11:
         {
-            // note: operand order is swapped in HLSL
-            kw << "atan2(" << x << ", " << y << ")";
+            // note: Various internet sources claim that the x & y arguments need to be
+            // swapped for HLSL (relative to GLSL).  However, recent testing on Windows
+            // has revealed that the argument order needs to be the same as GLSL.
+            kw << "atan2(" << y << ", " << x << ")";
             break;
         }
 

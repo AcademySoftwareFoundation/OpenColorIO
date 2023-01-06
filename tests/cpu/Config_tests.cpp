@@ -7528,6 +7528,61 @@ OCIO_ADD_TEST(Config, context_variables_typical_use_cases)
                           cfg->getProcessor(ctx2, "cs1", "cs2").get());
         }
     }
+
+
+    // Case 7 - Context variables in the FileTransform's CCCID.
+    {
+        static const std::string CONFIG = 
+            "ocio_profile_version: 2\n"
+            "\n"
+            "environment:\n"
+            "  CCPREFIX: cc\n"
+            "\n"
+            "search_path: " + OCIO::GetTestFilesDir() + "\n"
+            "\n"
+            "roles:\n"
+            "  default: cs1\n"
+            "\n"
+            "displays:\n"
+            "  disp1:\n"
+            "    - !<View> {name: view1, colorspace: cs2}\n"
+            "\n"
+            "colorspaces:\n"
+            "  - !<ColorSpace>\n"
+            "    name: cs1\n"
+            "\n"
+            "  - !<ColorSpace>\n"
+            "    name: cs2\n"
+            "    from_scene_reference: !<FileTransform> {src: cdl_test1.ccc, cccid: $CCPREFIX00$CCNUM}\n";
+
+        std::istringstream iss;
+        iss.str(CONFIG);
+
+        OCIO::ConfigRcPtr cfg;
+        OCIO_CHECK_NO_THROW(cfg = OCIO::Config::CreateFromStream(iss)->createEditableCopy());
+        OCIO_CHECK_NO_THROW(cfg->validate());
+
+        OCIO::ConstTransformRcPtr ctf = cfg->getColorSpace("cs2")->getTransform(
+            OCIO::COLORSPACE_DIR_FROM_REFERENCE
+        );
+        OCIO_REQUIRE_ASSERT(ctf);
+
+        OCIO::ContextRcPtr ctx = cfg->getCurrentContext()->createEditableCopy();
+        
+        ctx->setStringVar("CCNUM", "01");
+        OCIO::ConstProcessorRcPtr p1 = cfg->getProcessor(ctx, ctf, OCIO::TRANSFORM_DIR_FORWARD);
+        
+        ctx->setStringVar("CCNUM", "02");
+        OCIO::ConstProcessorRcPtr p2 = cfg->getProcessor(ctx, ctf, OCIO::TRANSFORM_DIR_FORWARD);
+
+        ctx->setStringVar("CCNUM", "03");
+        OCIO::ConstProcessorRcPtr p3 = cfg->getProcessor(ctx, ctf, OCIO::TRANSFORM_DIR_FORWARD);
+
+        // All three processors should be different.
+        OCIO_CHECK_NE(p1.get(), p2.get());
+        OCIO_CHECK_NE(p1.get(), p3.get());
+        OCIO_CHECK_NE(p2.get(), p3.get());
+    }
 }
 
 OCIO_ADD_TEST(Config, virtual_display)
