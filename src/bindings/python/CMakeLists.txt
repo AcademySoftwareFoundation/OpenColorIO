@@ -235,7 +235,7 @@ else()
 endif()
 
 # Create an internal global variable to access it in another scope but not publicly visible.
-# The site-package location is needed in in setup_ocio.bat.in and setup_ocio.sh.in.
+# The site-package location is needed in setup_ocio.bat.in and setup_ocio.sh.in.
 set(PYTHON_VARIANT_PATH ${_Python_VARIANT_PATH} CACHE INTERNAL "")
 
 # Set to PyOpenColorIO site-package location.

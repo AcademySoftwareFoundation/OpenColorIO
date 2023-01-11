@@ -11,9 +11,9 @@ import os, sys, platform
 # 2 - Checking that the directories exist and are not "."
 # 3 - Add them to the DLL load path.
 #
-# The behavior describe above is opt-out which means that it is activated by default. 
-# A user can use the default behavior of Python 3.8+ by setting OCIO_PYTHON_LOAD_DLLS_FROM_PATH 
-# environment variable to 1.
+# The behavior described above is opt-out which means that it is activated by default. 
+# A user can opt-out and use the default behavior of Python 3.8+ by setting OCIO_PYTHON_LOAD_DLLS_FROM_PATH 
+# environment variable to 0.
 #
 
 if sys.version_info >= (3, 8) and platform.system() == "Windows" and os.getenv("OCIO_PYTHON_LOAD_DLLS_FROM_PATH", "1") == "1":
