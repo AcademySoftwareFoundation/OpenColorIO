@@ -1,14 +1,17 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-#ifndef INCLUDED_OCIO_COLORSPACE_UTILS_H
-#define INCLUDED_OCIO_COLORSPACE_UTILS_H
+#ifndef INCLUDED_OCIO_CONFIG_UTILS_H
+#define INCLUDED_OCIO_CONFIG_UTILS_H
 
 #include <OpenColorIO/OpenColorIO.h>
 
 #include <vector>
 
 namespace OCIO_NAMESPACE
+{
+
+namespace ConfigUtils
 {
     // Return whether the color space contains SRGB or not.
     bool containsSRGB(ConstColorSpaceRcPtr & cs);
@@ -31,7 +34,21 @@ namespace OCIO_NAMESPACE
                                                const ConstColorSpaceRcPtr cs,
                                                const ConstConfigRcPtr & builtinConfig,
                                                std::vector<std::string> & builtinLinearSpaces);
+    // Returns true if the specified color space is linear.                                          
+    bool isColorSpaceLinear(const char * colorSpace, 
+                            ReferenceSpaceType referenceSpaceType, 
+                            const Config & cfg);
+
+    // Identify the interchange space of the source config and the default built-in config.                  
+    void identifyInterchangeSpace(char * srcInterchange, 
+                                  char * builtinInterchange, 
+                                  const Config & cfg);
+
+    // Find the name of the color space in the source config that is the same as 
+    // a color space in the default built-in config.
+    const char * identifyBuiltinColorSpace(const char * builtinColorSpaceName, const Config & cfg);
+}
 
 } // namespace OCIO_NAMESPACE
 
-#endif // INCLUDED_OCIO_BAKING_UTILS_H
+#endif // INCLUDED_OCIO_CONFIG_UTILS_H

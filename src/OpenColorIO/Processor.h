@@ -110,7 +110,7 @@ public:
                                         ConstProcessorRcPtr & p2,
                                         float * rgbaValues, 
                                         size_t numValues, 
-                                        float tolerance);
+                                        float absTolerance);
 
 protected:
     ConstGPUProcessorRcPtr getGPUProcessor(const OpRcPtrVec & gpuOps,
