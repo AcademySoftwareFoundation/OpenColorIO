@@ -659,10 +659,10 @@ void Processor::Impl::computeMetadata()
 }
 
 bool Processor::Impl::AreProcessorsEquivalent(ConstProcessorRcPtr & p1, 
-                                            ConstProcessorRcPtr & p2,
-                                            float * rgbaValues, 
-                                            size_t numValues, 
-                                            float tolerance)
+                                              ConstProcessorRcPtr & p2,
+                                              float * rgbaValues, 
+                                              size_t numValues, 
+                                              float absTolerance)
 {
     ProcessorRcPtr proc = Processor::Create();
 
@@ -679,7 +679,7 @@ bool Processor::Impl::AreProcessorsEquivalent(ConstProcessorRcPtr & p1,
 
     for (size_t i = 0; i < out.size(); i++)
     {
-        if (!EqualWithAbsError(rgbaValues[i], out[i], tolerance))
+        if (!EqualWithAbsError(rgbaValues[i], out[i], absTolerance))
         {
             return false;
         }
