@@ -645,6 +645,63 @@ OCIO_ADD_TEST(OpOptimizers, lut1d_identity_replacement)
     }
 }
 
+OCIO_ADD_TEST(OpOptimizers, lut1d_identity_replacement_order)
+{
+    // See issue #1737, https://github.com/AcademySoftwareFoundation/OpenColorIO/issues/1737.
+
+    // This CTF contains a single LUT1D, inverse direction, normal (not half) domain.
+    // It contains values from -6 to +3.4.
+    const std::string fileName("lut1d_inverse_gpu.ctf");
+    OCIO::ContextRcPtr context = OCIO::Context::Create();
+
+    OCIO::OpRcPtrVec inv_ops;
+    OCIO_CHECK_NO_THROW(OCIO::BuildOpsTest(inv_ops, fileName, context,
+                                        // FWD direction simply means don't swap the direction, the
+                                        // file contains an inverse LUT1D and leave it that way.
+                                           OCIO::TRANSFORM_DIR_FORWARD));
+    OCIO::OpRcPtrVec fwd_ops;
+    OCIO_CHECK_NO_THROW(OCIO::BuildOpsTest(fwd_ops, fileName, context,
+                                           OCIO::TRANSFORM_DIR_INVERSE));
+
+    // Check forward LUT1D followed by inverse LUT1D.
+    {
+        OCIO::OpRcPtrVec fwd_inv_ops = fwd_ops;
+        fwd_inv_ops += inv_ops;
+
+        OCIO_CHECK_NO_THROW(fwd_inv_ops.finalize());
+        OCIO_CHECK_NO_THROW(fwd_inv_ops.optimize(OCIO::OPTIMIZATION_NONE));
+        OCIO_CHECK_EQUAL(fwd_inv_ops.size(), 2);  // no optmization was done
+
+        OCIO::OpRcPtrVec optOps = fwd_inv_ops.clone();
+        OCIO_CHECK_NO_THROW(optOps.finalize());
+        OCIO_CHECK_NO_THROW(optOps.optimize(OCIO::OPTIMIZATION_DEFAULT));
+        OCIO_CHECK_EQUAL(optOps.size(), 1);
+        OCIO_CHECK_EQUAL(optOps[0]->getInfo(), "<RangeOp>");
+
+        // Compare renders.
+        CompareRender(fwd_inv_ops, optOps, __LINE__, 1e-6f);
+    }
+
+    // Check inverse LUT1D followed by forward LUT1D.
+    {
+        OCIO::OpRcPtrVec inv_fwd_ops = inv_ops;
+        inv_fwd_ops += fwd_ops;
+
+        OCIO_CHECK_NO_THROW(inv_fwd_ops.finalize());
+        OCIO_CHECK_NO_THROW(inv_fwd_ops.optimize(OCIO::OPTIMIZATION_NONE));
+        OCIO_CHECK_EQUAL(inv_fwd_ops.size(), 2);  // no optmization was done
+
+        OCIO::OpRcPtrVec optOps = inv_fwd_ops.clone();
+        OCIO_CHECK_NO_THROW(optOps.finalize());
+        OCIO_CHECK_NO_THROW(optOps.optimize(OCIO::OPTIMIZATION_DEFAULT));
+        OCIO_CHECK_EQUAL(optOps.size(), 1);
+        OCIO_CHECK_EQUAL(optOps[0]->getInfo(), "<RangeOp>");
+
+        // Compare renders.
+        CompareRender(inv_fwd_ops, optOps, __LINE__, 1e-6f);
+    }
+}
+
 OCIO_ADD_TEST(OpOptimizers, lut1d_half_domain_keep_prior_range)
 {
     // A half-domain LUT should not allow removal of a prior range op.

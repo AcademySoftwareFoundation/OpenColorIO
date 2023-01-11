@@ -16,7 +16,9 @@ File & Viewing rules
 ``file_rules``
 ^^^^^^^^^^^^^^
 
-Either file_rules or the default role are Required.
+.. warning::
+    Either the file_rules section or the default role are Required for configs of
+    version 2 or higher.
 
 Use the File Rules to assign a default color space to files based on their path.
 
@@ -24,10 +26,10 @@ Here is example showing the various types of rules that may be defined:
 
 .. code-block:: yaml
 
-  files_rules:
+  file_rules:
     - !<Rule> {name: LogC, extension: "*", pattern: "*LogC*", colorspace: ARRI LogC}
     - !<Rule> {name: OpenEXR, extension: "exr", pattern: "*", colorspace: ACEScg}
-    - !<Rule> {name: TIFF, regex: ".*\.TIF?F$", colorspace: sRGB}
+    - !<Rule> {name: TIFF, regex: ".*\\.TIF?F", colorspace: sRGB}
     - !<Rule> {name: ColorSpaceNamePathSearch}
     - !<Rule> {name: Default, colorspace: default}
 
@@ -42,22 +44,27 @@ other keys depend on the rule type.
 This is the basic rule type that uses Unix glob style pattern matching and is 
 thus very easy to use. It contains the keys:
 
-* ``name``: Name of the rule
+* ``name``: Name of the rule.
 * ``pattern``: Glob pattern to be used for the main part of the name/path.
-  This is case-sensitive.
+  This is case-sensitive.  It must be in double-quotes.  Set it to "*" if you only 
+  want the rule to consider the extension.
 * ``extension``: Glob pattern or string to be used for the file extension. Note that
   if glob tokens are not used, the extension will be used in a non-case-sensitive 
   way by default.  For example the simple string "exr" would match "exr" and "EXR".  
-  If you only want to match "exr", use the glob pattern "[e][x][r]".
+  If you only want to match "exr", use the glob pattern "[e][x][r]".  It must be 
+  in double-quotes.  Set it to "*" if you only want the rule to consider the pattern.
 * ``colorspace``: ColorSpace name to be returned.
 
-2. Regex Rules -- 
+2. RegEx Rules -- 
 This is similar to the basic rule but allows additional capabilities for 
 power-users. It contains the keys:
 
-* ``name``: Name of the rule
-* ``regex``: Regular expression to be evaluated.
+* ``name``: Name of the rule.
+* ``regex``: Regular expression to be evaluated.  It must be in double-quotes.
 * ``colorspace``: ColorSpace name to be returned.
+
+Note that a backslash character in a RegEx expression needs to be doubled up as ``\\``
+(as shown in the example above for the TIFF rule) to make it through the Yaml parsing.
 
 3. OCIO v1 style Rule -- 
 This rule allows the use of the OCIO v1 style, where the string is searched for 
@@ -65,13 +72,13 @@ ColorSpace names from the config. This rule may occur 0 or 1 times in the list.
 The position in the list prioritizes it with respect to the other rules. It has 
 the key:
 
-* ``name``: Must be "ColorSpaceNamePathSearch".
+* ``name``: Must be ``ColorSpaceNamePathSearch``.
 
 4. Default Rule -- 
-The file_rules must always end with this rule. If no prior rules match, this 
+The file_rules section must always end with this rule. If no prior rules match, this 
 rule specifies the ColorSpace applications will use. It has the keys:
 
-* ``name``: must be "Default".
+* ``name``: must be ``Default``.
 * ``colorspace``: ColorSpace name to be returned.
 
 Note: OCIO v1 defined a ``default`` role intended to specify a default color space
@@ -84,18 +91,23 @@ missing, an exception will be thrown when loading the config.
 
 Note that the strictparsing token does not affect the behavior of the File Rules 
 API. In other words, evaluating the rules will always result in a ColorSpace being 
-available to an application. However, the API alsos allow the application to know 
+available to an application. However, the API also allows the application to know 
 which rule was the matching one. So apps that want to work in "strict" mode should 
 first check if strictparsing is true and if so check to see if the matching rule 
 was the Default Rule. If so, it could then notify the user and take whatever action 
-is appropriate.
+is appropriate.  (As an alternative to checking which rule number was matched, the 
+API call ``filepathOnlyMatchesDefaultRule`` may be used instead.)
 
 Roles may be used rather than ColorSpace names in the rules.
 
-It is also legal for rules  to have additional key:value pairs where the value 
+It is also legal for rules to have additional key:value pairs where the value 
 may be an arbitrary string. The API provides access to getting/setting these 
 additional pairs and will preserve them on a Config read/write.  These may be
 used to define application-specific behavior.
+
+Note to developers: The older ``parseColorSpaceFromString`` API call is now deprecated
+and should be replaced with ``getColorSpaceFromFilepath``.
+
 
 ``strictparsing``
 ^^^^^^^^^^^^^^^^^
@@ -107,12 +119,21 @@ Optional. Valid values are ``true`` and ``false``. Default is ``true``
 
     strictparsing: true
 
-OCIO provides a mechanism for applications to extract the colorspace
-from a filename (the ``parseColorSpaceFromString`` API method)
+.. warning::
+    This attribute is from OCIO v1.  In OCIO v2, the FileRules system was
+    introduced and so the ``strictparsing`` attribute is less relevant now.
+    The ``parseColorSpaceFromString`` API call is now deprecated and the
+    proper way to obtain this information is ``getColorSpaceFromFilepath``.
+    The FileRules always return a default color space but the API
+    ``filepathOnlyMatchesDefaultRule`` may be used by applications that
+    want to take some special action if ``strictparsing`` is true.
+
+OCIO v1 provided a mechanism for applications to extract the colorspace
+from a filename (the ``parseColorSpaceFromString`` API method).
 
 So for a file like ``example_render_v001_lnf.0001.exr`` it will
 determine the colorspace ``lnf`` (it being the right-most substring
-containing a colorspace name)
+containing a colorspace name).
 
 However, if the colorspace cannot be determined and ``strictparsing:
 true``, it will return an empty string.

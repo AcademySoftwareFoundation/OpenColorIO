@@ -12,6 +12,7 @@
 #include "Op.h"
 #include "ops/lut1d/Lut1DOp.h"
 #include "ops/lut3d/Lut3DOp.h"
+#include "ops/range/RangeOp.h"
 
 namespace OCIO_NAMESPACE
 {
@@ -241,7 +242,38 @@ int RemoveInverseOps(OpRcPtrVec & opVec, OptimizationFlags oFlags)
             // When a pair of inverse ops is removed, we want the optimized ops to give the
             // same result as the original.  For certain ops such as Lut1D or Log this may
             // mean inserting a Range to emulate the clamping done by the original ops.
-            auto replacedBy = op1->getIdentityReplacement();
+
+            OpRcPtr replacedBy;
+            if (type1 == OpData::Lut1DType)
+            {
+                // Lut1D gets special handling so that both halfs of the pair are available.
+                // Only the inverse LUT has the values needed to generate the replacement.
+
+                ConstLut1DOpDataRcPtr lut1 = OCIO_DYNAMIC_POINTER_CAST<const Lut1DOpData>(op1->data());
+                ConstLut1DOpDataRcPtr lut2 = OCIO_DYNAMIC_POINTER_CAST<const Lut1DOpData>(op2->data());
+
+                OpDataRcPtr opData = lut1->getPairIdentityReplacement(lut2);
+
+                OpRcPtrVec ops;
+                if (opData->getType() == OpData::MatrixType)
+                {
+                    // No-op that will be optimized.
+                    auto mat = OCIO_DYNAMIC_POINTER_CAST<MatrixOpData>(opData);
+                    CreateMatrixOp(ops, mat, TRANSFORM_DIR_FORWARD);
+                }
+                else if (opData->getType() == OpData::RangeType)
+                {
+                    // Clamping op.
+                    auto range = OCIO_DYNAMIC_POINTER_CAST<RangeOpData>(opData);
+                    CreateRangeOp(ops, range, TRANSFORM_DIR_FORWARD);
+                }
+                replacedBy = ops[0];
+            }
+            else
+            {
+                replacedBy = op1->getIdentityReplacement();
+            }
+
             replacedBy->finalize();
             if (replacedBy->isNoOp())
             {

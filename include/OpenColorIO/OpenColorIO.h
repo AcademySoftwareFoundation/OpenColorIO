@@ -459,14 +459,25 @@ public:
     const char * getEnvironmentVarDefault(const char * name) const;
     void clearEnvironmentVars();
 
+    /**
+     * \brief The EnvironmentMode controls the behavior of loadEnvironment.
+     *  * ENV_ENVIRONMENT_LOAD_PREDEFINED - Only update vars already added to the Context.
+     *  * ENV_ENVIRONMENT_LOAD_ALL        - Load all env. vars into the Context.
+     *
+     * \note Loading ALL the env. vars may reduce performance and reduce cache efficiency.
+     *
+     * Client programs generally will not use these methods because the EnvironmentMode is
+     * set automatically when a Config is loaded.  If the Config has an "environment"
+     * section, the mode is set to LOAD_PREDEFINED, and otherwise set to LOAD_ALL.
+     */
     void setEnvironmentMode(EnvironmentMode mode) noexcept;
     EnvironmentMode getEnvironmentMode() const noexcept;
+    /// Initialize the environment/context variables in the Config's Context.
     void loadEnvironment() noexcept;
 
     const char * getSearchPath() const;
     /**
-     * \brief Set all search paths as a concatenated string, ':' to separate the
-     *     paths. 
+     * \brief Set all search paths as a concatenated string, use ':' to separate the paths. 
      * 
      * See \ref addSearchPath for a more robust and platform-agnostic method of
      * setting the search paths.
@@ -3475,8 +3486,9 @@ public:
     void setWorkingDir(const char * dirname);
     const char * getWorkingDir() const;
 
-    /// Add (or update) a context variable. But it removes it if the value argument
-    /// is null.
+    /// Add (or update) a context variable. But it removes it if the value argument is null.
+    /// Note that a Context StringVar is the same thing as a Config EnvironmentVar and these
+    /// are both often referred to as a "context var".
     void setStringVar(const char * name, const char * value) noexcept;
     /// Get the context variable value. It returns an empty string if the context 
     /// variable is null or does not exist.
@@ -3492,13 +3504,11 @@ public:
     /// Add to the instance all the context variables from ctx.
     void addStringVars(const ConstContextRcPtr & ctx) noexcept;
 
-    
+    /// See \ref Config::setEnvironmentMode.
     void setEnvironmentMode(EnvironmentMode mode) noexcept;
-
-    
     EnvironmentMode getEnvironmentMode() const noexcept;
 
-    /// Seed all string vars with the current environment.
+    /// Seed string vars with the current environment, based on the EnvironmentMode setting.
     void loadEnvironment() noexcept;
 
     /// Resolve all the context variables from the string. It could be color space

@@ -2793,7 +2793,7 @@ bool Config::isColorSpaceLinear(const char * colorSpace, ReferenceSpaceType refe
 {
     return ConfigUtils::isColorSpaceLinear(colorSpace, referenceSpaceType, *this);
 }
-
+  
 void Config::identifyInterchangeSpace(char * srcInterchange, char * builtinInterchange) const
 {
     ConfigUtils::identifyInterchangeSpace(srcInterchange, builtinInterchange, *this);
