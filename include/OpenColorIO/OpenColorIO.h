@@ -693,8 +693,8 @@ public:
     /**
      * \brief Identify the interchange space of the source config and the default built-in config.
      * 
-     * \param srcInterchange Interchange space from the source config (output).
-     * \param builtinInterchange Interchange space from the default built-in config (output).
+     * \param[out] srcInterchange Interchange space from the source config (output).
+     * \param[out] builtinInterchange Interchange space from the default built-in config (output).
      * 
      * \throw Exception if either one of srcInterchange or builtinInterchange cannot be identified.
      */
@@ -704,7 +704,7 @@ public:
      *        a color space in the default built-in config.
      * 
      * \param builtinColorSpaceName Color space name in the built-in config.
-     * \return const char* Matching color space from the source config. Empty if not found.
+     * \return Matching color space from the source config. Empty if not found.
      */
     const char * identifyBuiltinColorSpace(const char * builtinColorSpaceName) const;
 

@@ -253,9 +253,9 @@ namespace ConfigUtils
 
     bool isColorSpaceLinear(const char * colorSpace, 
                             ReferenceSpaceType referenceSpaceType, 
-                            const Config & cfg)
+                            Config & editableCfg
     {
-        auto cs = cfg.getColorSpace(colorSpace);
+        auto cs = editableCfg.getColorSpace(colorSpace);
 
         if (cs->isData())
         {
@@ -307,12 +307,8 @@ namespace ConfigUtils
 
             PackedImageDesc desc(&img[0], 8, 1, CHANNEL_ORDERING_RGB);
             PackedImageDesc descDst(&dst[0], 8, 1, CHANNEL_ORDERING_RGB);
-            
-            // Create an editable copy to avoir filling the processor cache.
-            ConfigRcPtr eConfig = config.createEditableCopy();
-            eConfig->setProcessorCacheFlags(PROCESSOR_CACHE_OFF);
 
-            auto procToReference = eConfig->getProcessor(t, TRANSFORM_DIR_FORWARD);
+            auto procToReference = config.getProcessor(t, TRANSFORM_DIR_FORWARD);
             auto optCPUProc = procToReference->getOptimizedCPUProcessor(OPTIMIZATION_LOSSLESS);
             optCPUProc->apply(desc, descDst);
 
@@ -348,12 +344,12 @@ namespace ConfigUtils
         if ((transformToReference && transformFromReference) || transformToReference)
         {
             // Color space has a transform for the to-reference direction, or both directions.
-            return evaluate(cfg, transformToReference);
+            return evaluate(editableCfg, transformToReference);
         }
         else if (transformFromReference)
         {
             // Color space only has a transform for the from-reference direction.
-            return evaluate(cfg, transformFromReference);
+            return evaluate(editableCfg, transformFromReference);
         }
 
         // Color space matches the desired reference space type, is not a data space, and has no 
@@ -421,9 +417,9 @@ namespace ConfigUtils
                 if (eSrcConfig->isColorSpaceLinear(cs->getName(), REFERENCE_SPACE_SCENE))
                 {
                     refColorSpacePrims = getReferenceSpaceFromLinearSpace(*eSrcConfig,
-                                                                        cs, 
-                                                                        builtinConfig, 
-                                                                        builtinLinearSpaces);
+                                                                          cs, 
+                                                                          builtinConfig, 
+                                                                          builtinLinearSpaces);
                     // Break out when a match is found.
                     if (!refColorSpacePrims.empty()) break; 
                 }
@@ -432,10 +428,34 @@ namespace ConfigUtils
 
         if (!refColorSpaceName.empty() && !refColorSpacePrims.empty())
         {
-            // Copy interchange role from source config.
-            snprintf(srcInterchange, refColorSpaceName.size()+1, "%s", refColorSpaceName.c_str());
-            // Copy interchange role from built-in config.
-            snprintf(builtinInterchange, refColorSpacePrims.size()+1, "%s", refColorSpacePrims.c_str());
+            // Checking if the size of the role name + null terminated characters is small enough
+            // to fix into the char array.
+
+            if (refColorSpaceName.size()+1 > 255)
+            {
+                // Copy interchange space from source config.
+                snprintf(srcInterchange, refColorSpaceName.size()+1, "%s", refColorSpaceName.c_str());
+            }
+            else
+            {
+                std::ostringstream os;
+                os  << "The interchange space was found, but the name is too big: "
+                    << refColorSpaceName;
+                throw Exception(os.str().c_str());
+            }
+
+            if (refColorSpacePrims.size()+1 > 255)
+            {
+                // Copy interchange space from built-in config.
+                snprintf(builtinInterchange, refColorSpacePrims.size()+1, "%s", refColorSpacePrims.c_str());
+            }
+            else
+            {
+                std::ostringstream os;
+                os  << "The interchange space from the built-in config was found, but the name is "
+                    << "too big: " << refColorSpacePrims;
+                throw Exception(os.str().c_str());
+            }
         }
         else
         {

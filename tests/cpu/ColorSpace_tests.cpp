@@ -1189,18 +1189,7 @@ colorspaces:
         checkProcessorInverse(proc);
     }
 
-    {
-      const char * csname = cfg->identifyBuiltinColorSpace("ACEScg");
-      OCIO_CHECK_EQUAL(std::string(csname), std::string("ACES cg"));
-    }
-
-    {
-      // Texture -- sRGB
-      const char * csname = cfg->identifyBuiltinColorSpace("sRGB - Texture");
-      OCIO_CHECK_EQUAL(std::string(csname), std::string("Texture -- sRGB"));
-    }
-
-    // identify_colorspace tests
+    // identifyBuiltinColorSpace tests.
     {
       const char * csname = cfg->identifyBuiltinColorSpace("ACEScg");
       OCIO_CHECK_EQUAL(std::string(csname), std::string("ACES cg"));
@@ -1212,6 +1201,17 @@ colorspaces:
       OCIO_CHECK_EQUAL(std::string(csname), std::string("Texture -- sRGB"));
     }
 
+    {
+      const char * csname = cfg->identifyBuiltinColorSpace("ACEScg");
+      OCIO_CHECK_EQUAL(std::string(csname), std::string("ACES cg"));
+    }
+
+    {
+      const char * csname = cfg->identifyBuiltinColorSpace("sRGB - Texture");
+      OCIO_CHECK_EQUAL(std::string(csname), std::string("Texture -- sRGB"));
+    }
+
+    // identifyInterchangeSpace tests.
     {
         char srcInterchange[255];
         char builtinInterchange[255];

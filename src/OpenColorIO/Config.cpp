@@ -2791,7 +2791,11 @@ void Config::clearColorSpaces()
 
 bool Config::isColorSpaceLinear(const char * colorSpace, ReferenceSpaceType referenceSpaceType) const
 {
-    return ConfigUtils::isColorSpaceLinear(colorSpace, referenceSpaceType, *this);
+    // Create an editable copy to avoir filling the processor cache.
+    ConfigRcPtr eConfig = createEditableCopy();
+    eConfig->setProcessorCacheFlags(PROCESSOR_CACHE_OFF);
+
+    return ConfigUtils::isColorSpaceLinear(colorSpace, referenceSpaceType, *eConfig);
 }
   
 void Config::identifyInterchangeSpace(char * srcInterchange, char * builtinInterchange) const

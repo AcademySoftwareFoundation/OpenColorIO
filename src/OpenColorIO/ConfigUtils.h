@@ -37,7 +37,7 @@ namespace ConfigUtils
     // Returns true if the specified color space is linear.                                          
     bool isColorSpaceLinear(const char * colorSpace, 
                             ReferenceSpaceType referenceSpaceType, 
-                            const Config & cfg);
+                            Config & cfg);
 
     // Identify the interchange space of the source config and the default built-in config.                  
     void identifyInterchangeSpace(char * srcInterchange, 
