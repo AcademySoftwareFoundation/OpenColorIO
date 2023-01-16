@@ -21,9 +21,11 @@ namespace ConfigUtils
     // Get color space where isData is false and it has neither a to_ref or from_ref transform.
     int getRefSpace(const Config & cfg);
 
-    // Get processor to a sRGB transform.
-    ConstProcessorRcPtr getRefToSRGBTransform(const ConstConfigRcPtr & builtinConfig, 
-                                              std::string refColorSpaceName);
+    bool isIdentityTransform(const Config & srcConfig, GroupTransformRcPtr & tf, std::vector<float> & vals, float absTolerance);
+
+    // Get reference to a sRGB transform.
+    TransformRcPtr getTransformToSRGBSpace(const ConstConfigRcPtr & builtinConfig, 
+                                           std::string refColorSpaceName);
 
     // Get reference space if the specified color space is a recognized linear space.
     int getReferenceSpaceFromLinearSpace(const Config & srcConfig,

@@ -75,8 +75,33 @@ namespace ConfigUtils
         return -1;
     }
 
-    ConstProcessorRcPtr getRefToSRGBTransform(const ConstConfigRcPtr & builtinConfig, 
-                                              std::string refColorSpaceName)
+    bool isIdentityTransform(const Config & srcConfig, 
+                             GroupTransformRcPtr & tf, 
+                             std::vector<float> & vals, 
+                             float absTolerance)
+    {
+        std::vector<float> out = vals;
+        
+        PackedImageDesc desc(&vals[0], (long) vals.size()/4, 1, CHANNEL_ORDERING_RGB);
+        PackedImageDesc descDst(&out[0], (long) vals.size()/4, 1, CHANNEL_ORDERING_RGB);
+
+        ConstProcessorRcPtr proc = srcConfig.getProcessor(tf, TRANSFORM_DIR_FORWARD);
+        ConstCPUProcessorRcPtr cpu  = proc->getOptimizedCPUProcessor(OPTIMIZATION_LOSSLESS);
+        cpu->apply(desc, descDst);
+
+        for (size_t i = 0; i < out.size(); i++)
+        {
+            if (!EqualWithAbsError(vals[i], out[i], absTolerance))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    TransformRcPtr getTransformToSRGBSpace(const ConstConfigRcPtr & builtinConfig, 
+                                           std::string refColorSpaceName)
     {
         // Build reference space of the given prims to sRGB transform.
         std::string srgbColorSpaceName = "Input - Generic - sRGB - Texture";
@@ -85,14 +110,15 @@ namespace ConfigUtils
         csTransform->setSrc(refColorSpaceName.c_str());
         csTransform->setDst(srgbColorSpaceName.c_str());
         
-        ConstProcessorRcPtr proc  = builtinConfig->getProcessor(csTransform, TRANSFORM_DIR_FORWARD);
-        return proc;
+        //ConstProcessorRcPtr proc  = builtinConfig->getProcessor(csTransform, TRANSFORM_DIR_FORWARD);
+        //return proc;
+        return csTransform;
     }
 
     int getReferenceSpaceFromLinearSpace(const Config & srcConfig,
-                                                 const ConstColorSpaceRcPtr & cs,
-                                                 const ConstConfigRcPtr & builtinConfig,
-                                                 const char * const * builtinLinearSpaces)
+                                         const ConstColorSpaceRcPtr & cs,
+                                         const ConstConfigRcPtr & builtinConfig,
+                                         const char * const * builtinLinearSpaces)
     {
         // If the color space is a recognized linear space, return the reference space used by 
         // the config.
@@ -123,7 +149,7 @@ namespace ConfigUtils
         // Generate matrices between all combinations of the Built-in linear color spaces. 
         // Then combine these with the transform from the current color space to see if the result is 
         // an identity. If so, then it identifies the reference space being used by the source config.
-        ConstProcessorRcPtr p1 = srcConfig.getProcessor(srcTransform, TRANSFORM_DIR_FORWARD);
+        TransformRcPtr eSrcTransform = srcTransform->createEditableCopy();
         for (size_t i = 0; i < numberOfbuiltinLinearSpaces; i++)
         {
             for (size_t j = 0; j < numberOfbuiltinLinearSpaces; j++)
@@ -133,11 +159,12 @@ namespace ConfigUtils
                     ColorSpaceTransformRcPtr csTransform = ColorSpaceTransform::Create();
                     csTransform->setSrc(builtinLinearSpaces[j]);
                     csTransform->setDst(builtinLinearSpaces[i]);
+  
+                    GroupTransformRcPtr grptf = GroupTransform::Create();
+                    grptf->appendTransform(eSrcTransform);
+                    grptf->appendTransform(csTransform);
 
-                    ConstProcessorRcPtr p2 = builtinConfig->getProcessor(csTransform, 
-                                                                         TRANSFORM_DIR_FORWARD);   
-
-                    if (Processor::AreProcessorsEquivalent(p1, p2, &vals[0], 5, 1e-3f))
+                    if (isIdentityTransform(*builtinConfig, grptf, vals, 1e-3f))
                     {
                         if (toRefDirection) 
                         {
@@ -243,7 +270,8 @@ namespace ConfigUtils
                  0.f,   0.f,   0.f,   0.f,
                  1.f,   1.f,   1.f,   0.f, };
         int refSpaceIndex = -1;
-        ConstProcessorRcPtr fromRefProc;
+        TransformRcPtr fromRefTransform;
+        TransformRcPtr eToRefTransform = toRefTransform->createEditableCopy();
         if (toRefTransform)
         {
             // The color space has the sRGB non-linearity. Now try combining the transform with a 
@@ -252,12 +280,13 @@ namespace ConfigUtils
             // reference space is.
             for (size_t i = 0; i < numberOfbuiltinLinearSpaces; i++)
             {
-                fromRefProc = getRefToSRGBTransform(builtinConfig, builtinLinearSpaces[i]);
+                fromRefTransform = getTransformToSRGBSpace(builtinConfig, builtinLinearSpaces[i]);
 
-                ConstProcessorRcPtr toRefProc = config.getProcessor(toRefTransform, 
-                                                                    TRANSFORM_DIR_FORWARD);
-                
-                if (Processor::AreProcessorsEquivalent(toRefProc, fromRefProc, &vals[0], 5, 1e-3f))
+                GroupTransformRcPtr grptf = GroupTransform::Create();
+                grptf->appendTransform(eToRefTransform);
+                grptf->appendTransform(fromRefTransform);
+
+                if (isIdentityTransform(*builtinConfig, grptf, vals, 1e-3f))
                 {
                     refSpaceIndex = (int) i;
                     break;
@@ -410,7 +439,9 @@ namespace ConfigUtils
                                                                    csName,
                                                                    eSrcConfig.getColorSpaceNameByIndex(srcInterchangeIndex));
 
-                if (Processor::AreProcessorsEquivalent(builtinProc, proc, &vals[0], 5, 1e-3f))
+                auto grptf = builtinProc->createGroupTransform();
+                grptf->appendTransform(proc->createGroupTransform());
+                if (isIdentityTransform(eSrcConfig, grptf, vals, 1e-3f))
                 {
                     return i;
                 }
