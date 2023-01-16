@@ -1095,79 +1095,6 @@ public:
         // That should never happen.
         return -1;
     }
-
-    static ConstProcessorRcPtr GetProcessorToBuiltinCS(ConstConfigRcPtr srcConfig,
-                                                       const char * srcColorSpaceName, 
-                                                       const char * builtinColorSpaceName,
-                                                       TransformDirection direction)
-    {
-        // Use the Default config as the Built-in config to interpret the known color space name.        
-        ConstConfigRcPtr builtinConfig = Config::CreateFromFile("ocio://default");
-
-        if (builtinConfig->getColorSpace(builtinColorSpaceName) == nullptr)
-        {
-            std::ostringstream os;
-            os  << "Built-in config does not contain the requested color space: " 
-                << builtinColorSpaceName << ".";
-            throw Exception(os.str().c_str());
-        }
-
-        // If both configs have the interchange roles set, then it's easy.
-        try
-        {
-            ConstProcessorRcPtr proc = Config::GetProcessorFromConfigs(srcConfig, 
-                                                                       srcColorSpaceName, 
-                                                                       builtinConfig, 
-                                                                       builtinColorSpaceName);
-            return proc;
-        }
-        catch(const Exception & e) 
-        { 
-            std::string str1 = "The role 'aces_interchange' is missing in the source config";
-            std::string str2 = "The role 'cie_xyz_d65_interchange' is missing in the source config";
-
-            // Re-throw when the error is not about interchange roles.
-            if (!StringUtils::StartsWith(e.what(), str1) && !StringUtils::StartsWith(e.what(), str2))
-            {
-                throw Exception(e.what());
-            }
-            // otherwise, do nothing and continue.
-        }
-
-        char srcInterchange[255];
-        char builtinInterchange[255];
-
-        srcConfig->identifyInterchangeSpace(srcInterchange, builtinInterchange);
-
-        if (builtinInterchange && builtinInterchange[0])
-        {
-            ConstProcessorRcPtr proc;
-            if (direction == TRANSFORM_DIR_FORWARD)
-            {
-                proc = Config::GetProcessorFromConfigs(srcConfig,
-                                                       srcColorSpaceName,
-                                                       srcInterchange,
-                                                       builtinConfig,
-                                                       builtinColorSpaceName,
-                                                       builtinInterchange);
-            }
-            else if (direction == TRANSFORM_DIR_INVERSE)
-            {
-                proc = Config::GetProcessorFromConfigs(builtinConfig,
-                                                       builtinColorSpaceName,
-                                                       builtinInterchange,
-                                                       srcConfig,
-                                                       srcColorSpaceName,
-                                                       srcInterchange);
-            }
-            return proc;
-        }
-
-        std::ostringstream os;
-        os  << "Heuristics were not able to find a known color space in the provided config.\n"
-            << "Please set the interchange roles.";
-        throw Exception(os.str().c_str());
-    }
 };
 
 
@@ -2918,15 +2845,39 @@ bool Config::isColorSpaceLinear(const char * colorSpace, ReferenceSpaceType refe
     // transforms, so it is equivalent to the reference space and hence linear.
     return true;
 }
-
-void Config::identifyInterchangeSpace(char * srcInterchange, char * builtinInterchange) const
+  
+const char * Config::identifyInterchangeSpace() const
 {
-    ConfigUtils::identifyInterchangeSpace(srcInterchange, builtinInterchange, *this);
+    // Using createEditableCopy to avoid filling the processor cache in the Config object.
+    ConfigRcPtr eSrcConfig = createEditableCopy();
+    eSrcConfig->setProcessorCacheFlags(PROCESSOR_CACHE_OFF);
+
+    int srcInterchangeIndex = -1;
+    ConfigUtils::identifyInterchangeSpace(srcInterchangeIndex, *eSrcConfig);
+
+    return getColorSpaceNameByIndex(srcInterchangeIndex);
+}
+
+const char * Config::identifyBuiltinInterchangeSpace() const
+{
+    // Using createEditableCopy to avoid filling the processor cache in the Config object.
+    ConfigRcPtr eSrcConfig = createEditableCopy();
+    eSrcConfig->setProcessorCacheFlags(PROCESSOR_CACHE_OFF);
+
+    int builtinInterchangeIndex = -1;
+    ConfigUtils::identifyBuiltinInterchangeSpace(builtinInterchangeIndex, *eSrcConfig);
+
+    return ConfigUtils::getBuiltinLinearSpaces(builtinInterchangeIndex);
 }
 
 const char * Config::identifyBuiltinColorSpace(const char * builtinColorSpaceName) const
 {
-    return ConfigUtils::identifyBuiltinColorSpace(builtinColorSpaceName, *this);
+    // Using createEditableCopy to avoid filling the processor cache in the Config object.
+    ConfigRcPtr eSrcConfig = createEditableCopy();
+    eSrcConfig->setProcessorCacheFlags(PROCESSOR_CACHE_OFF);
+
+    int csIndex = ConfigUtils::identifyBuiltinColorSpace(builtinColorSpaceName, *eSrcConfig);
+    return getColorSpaceNameByIndex(csIndex);
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -4645,24 +4596,95 @@ ConstProcessorRcPtr Config::GetProcessorFromConfigs(const ConstContextRcPtr & sr
     return processor;
 }
 
+static ConstProcessorRcPtr GetProcessorToBuiltinCS(ConstConfigRcPtr srcConfig,
+                                                   const char * srcColorSpaceName, 
+                                                   const char * builtinColorSpaceName,
+                                                   TransformDirection direction)
+{
+    // Use the Default config as the Built-in config to interpret the known color space name.        
+    ConstConfigRcPtr builtinConfig = Config::CreateFromFile("ocio://default");
+
+    if (builtinConfig->getColorSpace(builtinColorSpaceName) == nullptr)
+    {
+        std::ostringstream os;
+        os  << "Built-in config does not contain the requested color space: " 
+            << builtinColorSpaceName << ".";
+        throw Exception(os.str().c_str());
+    }
+
+    // If both configs have the interchange roles set, then it's easy.
+    try
+    {
+        ConstProcessorRcPtr proc = Config::GetProcessorFromConfigs(srcConfig, 
+                                                                   srcColorSpaceName, 
+                                                                   builtinConfig, 
+                                                                   builtinColorSpaceName);
+        return proc;
+    }
+    catch(const Exception & e) 
+    { 
+        std::string str1 = "The role 'aces_interchange' is missing in the source config";
+        std::string str2 = "The role 'cie_xyz_d65_interchange' is missing in the source config";
+
+        // Re-throw when the error is not about interchange roles.
+        if (!StringUtils::StartsWith(e.what(), str1) && !StringUtils::StartsWith(e.what(), str2))
+        {
+            throw Exception(e.what());
+        }
+        // otherwise, do nothing and continue.
+    }
+
+    const char * srcInterchange = srcConfig->identifyInterchangeSpace();
+    const char * builtinInterchange = srcConfig->identifyBuiltinInterchangeSpace();
+
+    if (builtinInterchange && builtinInterchange[0])
+    {
+        ConstProcessorRcPtr proc;
+        if (direction == TRANSFORM_DIR_FORWARD)
+        {
+            proc = Config::GetProcessorFromConfigs(srcConfig,
+                                                    srcColorSpaceName,
+                                                    srcInterchange,
+                                                    builtinConfig,
+                                                    builtinColorSpaceName,
+                                                    builtinInterchange);
+        }
+        else if (direction == TRANSFORM_DIR_INVERSE)
+        {
+            proc = Config::GetProcessorFromConfigs(builtinConfig,
+                                                    builtinColorSpaceName,
+                                                    builtinInterchange,
+                                                    srcConfig,
+                                                    srcColorSpaceName,
+                                                    srcInterchange);
+        }
+        return proc;
+    }
+
+    std::ostringstream os;
+    os  << "Heuristics were not able to find a known color space in the provided config.\n"
+        << "Please set the interchange roles.";
+    throw Exception(os.str().c_str());
+}
+
 ConstProcessorRcPtr Config::GetProcessorToBuiltinColorSpace(ConstConfigRcPtr srcConfig,
                                                             const char * srcColorSpaceName, 
                                                             const char * builtinColorSpaceName)
 {
-    return Config::Impl::GetProcessorToBuiltinCS(srcConfig,
-                                                 srcColorSpaceName, 
-                                                 builtinColorSpaceName,
-                                                 TRANSFORM_DIR_FORWARD);
+    return GetProcessorToBuiltinCS(srcConfig,
+                                   srcColorSpaceName, 
+                                   builtinColorSpaceName,
+                                   TRANSFORM_DIR_FORWARD);
 }
 
 ConstProcessorRcPtr Config::GetProcessorFromBuiltinColorSpace(const char * builtinColorSpaceName,
                                                               ConstConfigRcPtr srcConfig,
                                                               const char * srcColorSpaceName)
 {
-    return Config::Impl::GetProcessorToBuiltinCS(srcConfig,
-                                                 srcColorSpaceName, 
-                                                 builtinColorSpaceName,
-                                                 TRANSFORM_DIR_INVERSE);
+    return GetProcessorToBuiltinCS(srcConfig,
+                                   srcColorSpaceName, 
+                                   builtinColorSpaceName,
+                                   TRANSFORM_DIR_INVERSE);
 }
 
 std::ostream& operator<< (std::ostream& os, const Config& config)

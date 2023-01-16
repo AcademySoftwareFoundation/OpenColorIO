@@ -703,7 +703,9 @@ public:
      * 
      * \throw Exception if either one of srcInterchange or builtinInterchange cannot be identified.
      */
-    void identifyInterchangeSpace(char * srcInterchange, char * builtinInterchange) const;
+    const char * identifyInterchangeSpace() const;
+    const char * identifyBuiltinInterchangeSpace() const;
+
     /**
      * \brief Find the name of the color space in the source config that is the same as 
      *        a color space in the default built-in config.

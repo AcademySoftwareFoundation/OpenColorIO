@@ -1213,10 +1213,8 @@ colorspaces:
 
     // identifyInterchangeSpace tests.
     {
-        char srcInterchange[255];
-        char builtinInterchange[255];
-
-        cfg->identifyInterchangeSpace(srcInterchange, builtinInterchange);
+        const char * srcInterchange = cfg->identifyInterchangeSpace();
+        const char * builtinInterchange = cfg->identifyBuiltinInterchangeSpace();
         OCIO_CHECK_EQUAL(std::string(srcInterchange), std::string("ref_cs"));
         OCIO_CHECK_EQUAL(std::string(builtinInterchange), std::string("ACES - ACES2065-1"));
     }
