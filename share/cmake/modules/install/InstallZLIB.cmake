@@ -47,8 +47,8 @@ if(NOT ZLIB_FOUND AND OCIO_INSTALL_EXT_PACKAGES AND NOT OCIO_INSTALL_EXT_PACKAGE
 
     # Set find_package standard args
     set(ZLIB_FOUND TRUE)
-    if(_ZLIB_ExternalProject_VERSION)
-        set(ZLIB_VERSION ${_ZLIB_ExternalProject_VERSION})
+    if(OCIO_ZLIB_RECOMMENDED_VERSION)
+        set(ZLIB_VERSION ${OCIO_ZLIB_RECOMMENDED_VERSION})
     else()
         set(ZLIB_VERSION ${ZLIB_FIND_VERSION})
     endif()
@@ -138,7 +138,7 @@ if(NOT ZLIB_FOUND AND OCIO_INSTALL_EXT_PACKAGES AND NOT OCIO_INSTALL_EXT_PACKAGE
     set(ZLIB_LIBRARY ${ZLIB_LIBRARIES})
     set(ZLIB_INCLUDE_DIR ${ZLIB_INCLUDE_DIRS})
 
-    message(STATUS "Installing ZLIB: ${ZLIB_LIBRARIES} (version \"${ZLIB_VERSION}\")")
+    message(STATUS "Installing ZLIB: ${ZLIB_LIBRARIES} (version \"${ZLIB_VERSION}\") ")
 endif()
 
 
