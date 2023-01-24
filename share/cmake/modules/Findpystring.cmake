@@ -17,11 +17,6 @@
 # downloaded, built, and statically-linked into libOpenColorIO at build time.
 #
 
-if(NOT TARGET pystring::pystring)
-    add_library(pystring::pystring UNKNOWN IMPORTED GLOBAL)
-    set(_pystring_TARGET_CREATE TRUE)
-endif()
-
 ###############################################################################
 ### Try to find package ###
 
@@ -64,96 +59,11 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
 endif()
 
 ###############################################################################
-### Install package from source ###
+### Configure target ###
 
-if(NOT pystring_FOUND AND OCIO_INSTALL_EXT_PACKAGES AND NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL NONE)
-    include(ExternalProject)
-
-    set(_EXT_DIST_ROOT "${CMAKE_BINARY_DIR}/ext/dist")
-    set(_EXT_BUILD_ROOT "${CMAKE_BINARY_DIR}/ext/build")
-
-    # Set find_package standard args
-    set(pystring_FOUND TRUE)
-    set(pystring_VERSION ${pystring_FIND_VERSION})
-    set(pystring_INCLUDE_DIR "${_EXT_DIST_ROOT}/${CMAKE_INSTALL_INCLUDEDIR}")
-
-    set(pystring_LIBRARY 
-        "${_EXT_DIST_ROOT}/${CMAKE_INSTALL_LIBDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}pystring${CMAKE_STATIC_LIBRARY_SUFFIX}")
-
-    if(_pystring_TARGET_CREATE)
-        if(MSVC)
-            set(pystring_CXX_FLAGS "${pystring_CXX_FLAGS} /EHsc")
-        endif()
-
-        string(STRIP "${pystring_CXX_FLAGS}" pystring_CXX_FLAGS)
-
-        set(pystring_CMAKE_ARGS
-            ${pystring_CMAKE_ARGS}
-            -DCMAKE_CXX_VISIBILITY_PRESET=${CMAKE_CXX_VISIBILITY_PRESET}
-            -DCMAKE_VISIBILITY_INLINES_HIDDEN=${CMAKE_VISIBILITY_INLINES_HIDDEN}
-            -DCMAKE_POSITION_INDEPENDENT_CODE=ON
-            -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-            -DCMAKE_CXX_FLAGS=${pystring_CXX_FLAGS}
-            -DCMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD}
-            -DCMAKE_INSTALL_MESSAGE=${CMAKE_INSTALL_MESSAGE}
-            -DCMAKE_INSTALL_PREFIX=${_EXT_DIST_ROOT}
-            -DCMAKE_INSTALL_BINDIR=${CMAKE_INSTALL_BINDIR}
-            -DCMAKE_INSTALL_LIBDIR=${CMAKE_INSTALL_LIBDIR}
-            -DCMAKE_INSTALL_INCLUDEDIR=${CMAKE_INSTALL_INCLUDEDIR}
-            -DCMAKE_OBJECT_PATH_MAX=${CMAKE_OBJECT_PATH_MAX}
-        )
-
-        if(CMAKE_TOOLCHAIN_FILE)
-            set(pystring_CMAKE_ARGS
-                ${pystring_CMAKE_ARGS} -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE})
-        endif()
-
-        if(APPLE)
-            string(REPLACE ";" "$<SEMICOLON>" ESCAPED_CMAKE_OSX_ARCHITECTURES "${CMAKE_OSX_ARCHITECTURES}")
-
-            set(pystring_CMAKE_ARGS
-                ${pystring_CMAKE_ARGS}
-                -DCMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET}
-                -DCMAKE_OSX_ARCHITECTURES=${ESCAPED_CMAKE_OSX_ARCHITECTURES}
-            )
-        endif()
-
-
-        if (ANDROID)
-            set(pystring_CMAKE_ARGS
-                ${pystring_CMAKE_ARGS}
-                -DANDROID_PLATFORM=${ANDROID_PLATFORM}
-                -DANDROID_ABI=${ANDROID_ABI}
-                -DANDROID_STL=${ANDROID_STL})
-        endif()
-
-        # Hack to let imported target be built from ExternalProject_Add
-        file(MAKE_DIRECTORY ${pystring_INCLUDE_DIR})
-
-        ExternalProject_Add(pystring_install
-            GIT_REPOSITORY "https://github.com/imageworks/pystring.git"
-            GIT_TAG "v${pystring_FIND_VERSION}"
-            GIT_CONFIG advice.detachedHead=false
-            GIT_SHALLOW TRUE
-            PREFIX "${_EXT_BUILD_ROOT}/pystring"
-            BUILD_BYPRODUCTS ${pystring_LIBRARY}
-            CMAKE_ARGS ${pystring_CMAKE_ARGS}
-            EXCLUDE_FROM_ALL TRUE
-            PATCH_COMMAND
-                ${CMAKE_COMMAND} -E copy
-                "${CMAKE_SOURCE_DIR}/share/cmake/projects/Buildpystring.cmake"
-                "CMakeLists.txt"
-            BUILD_COMMAND ""
-            INSTALL_COMMAND
-                ${CMAKE_COMMAND} --build .
-                                 --config ${CMAKE_BUILD_TYPE}
-                                 --target install
-                                 --parallel
-        )
-
-        add_dependencies(pystring::pystring pystring_install)
-        message(STATUS "Installing pystring: ${pystring_LIBRARY} (version \"${pystring_VERSION}\")")
-    endif()
+if(pystring_FOUND AND NOT TARGET pystring::pystring)
+    add_library(pystring::pystring UNKNOWN IMPORTED GLOBAL)
+    set(_pystring_TARGET_CREATE TRUE)
 endif()
 
 ###############################################################################
