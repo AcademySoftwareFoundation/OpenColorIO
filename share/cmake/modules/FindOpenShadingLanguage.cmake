@@ -18,7 +18,7 @@ endif()
 
 if(NOT DEFINED OSL_ROOT)
 
-    find_package(OSL ${OpenShadingLanguage_FIND_VERSION} CONFIG)
+    find_package(OSL ${OpenShadingLanguage_FIND_VERSION} CONFIG QUIET)
     
     set(OpenShadingLanguage_VERSION ${OSL_VERSION})
 

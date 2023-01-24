@@ -6,6 +6,9 @@
 # by the OCIO_INSTALL_EXT_PACKAGES option.
 #
 
+include(Colors)
+include(ocio_find_package)
+
 ###############################################################################
 ### Global package options ###
 
@@ -32,25 +35,50 @@ if (APPLE)
     set(CMAKE_FIND_APPBUNDLE LAST)
 endif()
 
+
+message(STATUS "")
+message(STATUS "Missing a dependency? Try the following possibilities:")
+message(STATUS "If the package provides a configuration file, use -D<pkg>_DIR=<path to folder>.")
+message(STATUS "If it doesn't provide it, try -D<pkg>_ROOT=<path to folder with lib and includes>.")
+message(STATUS "Alternatively, try -D<pkg>_LIBRARY=<path to lib file> and -D<pkg>_INCLUDE_DIR=<path to folder>.")
+message(STATUS "")
+message(STATUS "Please refer to the find module under share/cmake/modules for extra information.")
+
 ###############################################################################
-### Packages and versions ###
+##
+## Required dependencies
+##
+###############################################################################
+message(STATUS "")
+message(STATUS "Checking for mandatory dependencies...")
 
 # expat
 # https://github.com/libexpat/libexpat
-find_package(expat 2.4.1 REQUIRED)
+ocio_find_package(  expat REQUIRED ALLOW_INSTALL
+                    MIN_VERSION 2.4.1
+                    RECOMMENDED_MIN_VERSION 2.5.0
+                    RECOMMENDED_MIN_VERSION_REASON "CVE fixes and fix issue with symbol leakage when built as a static library")
 
 # yaml-cpp
 # https://github.com/jbeder/yaml-cpp
-find_package(yaml-cpp 0.7.0 REQUIRED)
+ocio_find_package(  yaml-cpp REQUIRED ALLOW_INSTALL
+                    MIN_VERSION 0.6.3
+                    RECOMMENDED_MIN_VERSION 0.7.0
+                    RECOMMENDED_MIN_VERSION_REASON "Latest version tested with OCIO")
 
 # pystring
 # https://github.com/imageworks/pystring
-find_package(pystring 1.1.3 REQUIRED)
+ocio_find_package(  pystring REQUIRED ALLOW_INSTALL
+                    MIN_VERSION 1.1.3
+                    RECOMMENDED_MIN_VERSION 1.1.3
+                    RECOMMENDED_MIN_VERSION_REASON "Latest version tested with OCIO")
 
 # Imath (>=3.1)
 # https://github.com/AcademySoftwareFoundation/Imath
-set(_Imath_ExternalProject_VERSION "3.1.6")
-find_package(Imath 3.0 REQUIRED)
+ocio_find_package(  Imath REQUIRED ALLOW_INSTALL
+                    MIN_VERSION 3.1.1
+                    RECOMMENDED_MIN_VERSION 3.1.6
+                    RECOMMENDED_MIN_VERSION_REASON "Latest version tested with OCIO")
 
 ###############################################################################
 ### ZLIB (https://github.com/madler/zlib)
@@ -69,8 +97,6 @@ find_package(Imath 3.0 REQUIRED)
 # ZLIB 1.2.13 is used since it fixes a critical vulnerability.
 # See https://nvd.nist.gov/vuln/detail/CVE-2022-37434
 # See https://github.com/madler/zlib/releases/tag/v1.2.13
-set(_ZLIB_FIND_VERSION "1.2.13")
-set(_ZLIB_ExternalProject_VERSION ${_ZLIB_FIND_VERSION})
 
 if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
     # ZLIB_USE_STATIC_LIBS is supported only from CMake 3.24+.
@@ -80,6 +106,7 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
         endif()
     else() # For CMake < 3.24 since ZLIB_USE_STATIC_LIBS is not available.
         if(NOT ZLIB_LIBRARY)
+            set(_cmake_find_library_x_changed true)
             if(DEFINED CMAKE_FIND_LIBRARY_PREFIXES)
                 set(_ZLIB_ORIG_CMAKE_FIND_LIBRARY_PREFIXES "${CMAKE_FIND_LIBRARY_PREFIXES}")
             else()
@@ -115,33 +142,49 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
         set(_ZLIB_REQUIRED "")
     endif()
 
-    find_package(ZLIB ${_ZLIB_FIND_VERSION} ${_ZLIB_REQUIRED})
+    ocio_find_package(  ZLIB REQUIRED ALLOW_INSTALL
+                        MIN_VERSION 1.2.10
+                        RECOMMENDED_MIN_VERSION 1.2.13
+                        RECOMMENDED_MIN_VERSION_REASON "CVE fixes"
+                        VERSION_VARS ZLIB_VERSION_STRING ZLIB_VERSION )
 
     # Restore the original find library ordering
-    if(DEFINED _ZLIB_ORIG_CMAKE_FIND_LIBRARY_SUFFIXES)
-        set(CMAKE_FIND_LIBRARY_SUFFIXES "${_ZLIB_ORIG_CMAKE_FIND_LIBRARY_SUFFIXES}")
-    else()
-        set(CMAKE_FIND_LIBRARY_SUFFIXES)
-    endif()
+    if(_cmake_find_library_x_changed)
+        if(DEFINED _ZLIB_ORIG_CMAKE_FIND_LIBRARY_SUFFIXES)
+            set(CMAKE_FIND_LIBRARY_SUFFIXES "${_ZLIB_ORIG_CMAKE_FIND_LIBRARY_SUFFIXES}")
+        else()
+            set(CMAKE_FIND_LIBRARY_SUFFIXES)
+        endif()
 
-    if(DEFINED _ZLIB_ORIG_CMAKE_FIND_LIBRARY_PREFIXES)
-        set(CMAKE_FIND_LIBRARY_PREFIXES "${_ZLIB_ORIG_CMAKE_FIND_LIBRARY_PREFIXES}")
-    else()
-        set(CMAKE_FIND_LIBRARY_PREFIXES)
+        if(DEFINED _ZLIB_ORIG_CMAKE_FIND_LIBRARY_PREFIXES)
+            set(CMAKE_FIND_LIBRARY_PREFIXES "${_ZLIB_ORIG_CMAKE_FIND_LIBRARY_PREFIXES}")
+        else()
+            set(CMAKE_FIND_LIBRARY_PREFIXES)
+        endif()
     endif()
 endif()
 
-if(NOT ZLIB_FOUND AND OCIO_INSTALL_EXT_PACKAGES AND NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL NONE)
-    include(InstallZLIB)
+if(NOT ZLIB_FOUND)
+    ocio_install_package(ZLIB VERSION 1.2.13)
 endif()
 ###############################################################################
 
 # minizip-ng
 # https://github.com/zlib-ng/minizip-ng
-find_package(minizip-ng 3.0.7 REQUIRED)
+ocio_find_package(  minizip-ng REQUIRED ALLOW_INSTALL
+                    MIN_VERSION 3.0.6
+                    RECOMMENDED_MIN_VERSION 3.0.7
+                    RECOMMENDED_MIN_VERSION_REASON "Latest version tested with OCIO")
+
+###############################################################################
+##
+## Optional dependencies
+##
+###############################################################################
+message(STATUS "")
+message(STATUS "Checking for optional dependencies...")
 
 if(OCIO_BUILD_APPS)
-
     # NOTE: Depending of the compiler version lcms2 2.2 does not compile with 
     # C++17 so, if you change the lcms2 version update the code to compile 
     # lcms2 and dependencies with C++17 or higher i.e. remove the cap of C++ 
@@ -149,13 +192,19 @@ if(OCIO_BUILD_APPS)
 
     # lcms2
     # https://github.com/mm2/Little-CMS
-    find_package(lcms2 2.2 REQUIRED)
+    ocio_find_package(  lcms2 REQUIRED ALLOW_INSTALL
+                        MIN_VERSION 2.2
+                        RECOMMENDED_MIN_VERSION 2.2
+                        RECOMMENDED_MIN_VERSION_REASON "Latest version tested with OCIO")
 endif()
 
 if(OCIO_BUILD_OPENFX)
     # openfx
     # https://github.com/ofxa/openfx
-    find_package(openfx 1.4 REQUIRED)
+    ocio_find_package(  openfx REQUIRED ALLOW_INSTALL
+                        MIN_VERSION 1.4.0
+                        RECOMMENDED_MIN_VERSION 1.4.0
+                        RECOMMENDED_MIN_VERSION_REASON "Latest version tested with OCIO")
 endif()
 
 if (OCIO_PYTHON_VERSION AND NOT OCIO_BUILD_PYTHON)
@@ -177,15 +226,22 @@ if(OCIO_BUILD_PYTHON OR OCIO_BUILD_DOCS)
         list(APPEND _Python_COMPONENTS Development)
     endif()
 
+
     # Python
-    find_package(Python ${OCIO_PYTHON_VERSION} REQUIRED
-                 COMPONENTS ${_Python_COMPONENTS})
+    ocio_find_package(  Python REQUIRED
+                        COMPONENTS ${_Python_COMPONENTS}
+                        MIN_VERSION ${OCIO_PYTHON_VERSION}
+                        RECOMMENDED_MIN_VERSION ${OCIO_PYTHON_VERSION}
+                        RECOMMENDED_MIN_VERSION_REASON "Latest version tested with OCIO")
 
     if(OCIO_BUILD_PYTHON)
         # pybind11
         # https://github.com/pybind/pybind11
         # pybind11 2.9 fixes issues with MS Visual Studio 2022 (Debug).
-        find_package(pybind11 2.9.2 REQUIRED)
+        ocio_find_package(  pybind11 REQUIRED ALLOW_INSTALL
+                            MIN_VERSION 2.9.2
+                            RECOMMENDED_MIN_VERSION 2.9.2
+                            RECOMMENDED_MIN_VERSION_REASON "Pybind 2.10.0+ does not work with Python 2.7 anymore")
     endif()
 endif()
 
@@ -195,14 +251,14 @@ if((OCIO_BUILD_APPS AND OCIO_USE_OIIO_FOR_APPS) OR OCIO_BUILD_TESTS)
     # OpenImageIO
     # https://github.com/OpenImageIO/oiio
     set(OIIO_VERSION "2.2.14")
+    set(OIIO_RECOMMENDED_VERSION "2.4")
 
-    if(OCIO_USE_OIIO_CMAKE_CONFIG)
-        # TODO: Try when OIIO 2.4 is released (https://github.com/OpenImageIO/oiio/pull/3322).
-        # set(OPENIMAGEIO_CONFIG_DO_NOT_FIND_IMATH 1)
-        find_package(OpenImageIO ${OIIO_VERSION} CONFIG)
-    else()
-        find_package(OpenImageIO ${OIIO_VERSION})
-    endif()
+    # TODO: Try when OIIO 2.4 is released (https://github.com/OpenImageIO/oiio/pull/3322).
+    # Supported from OIIO 2.4+. Setting this for lower versions doesn't affect anything.
+    set(OPENIMAGEIO_CONFIG_DO_NOT_FIND_IMATH 1)
+    ocio_find_package(  OpenImageIO 
+                        MIN_VERSION ${OIIO_VERSION}
+                        RECOMMENDED_MIN_VERSION ${OIIO_RECOMMENDED_VERSION})
 endif()
 
 if(OCIO_BUILD_APPS)
@@ -213,8 +269,10 @@ if(OCIO_BUILD_APPS)
     else()
         # OpenEXR
         # https://github.com/AcademySoftwareFoundation/openexr
-        set(_OpenEXR_ExternalProject_VERSION "3.1.5")
-        find_package(OpenEXR 3.0)
+        ocio_find_package(  OpenEXR REQUIRED ALLOW_INSTALL
+                            MIN_VERSION 3.0.4
+                            RECOMMENDED_MIN_VERSION 3.1.5
+                            RECOMMENDED_MIN_VERSION_REASON "Latest version tested with OCIO")
 
         if(OpenEXR_FOUND AND TARGET OpenEXR::OpenEXR)
             add_library(OpenColorIO::ImageIOBackend ALIAS OpenEXR::OpenEXR)
@@ -236,15 +294,18 @@ if(OCIO_BUILD_TESTS)
         if(TARGET Imath::Imath)
             # OpenShadingLanguage
             # https://github.com/AcademySoftwareFoundation/OpenShadingLanguage
-            find_package(OpenShadingLanguage 1.11)
+            ocio_find_package(  OpenShadingLanguage
+                                MIN_VERSION 1.11
+                                RECOMMENDED_MIN_VERSION 1.11
+                                RECOMMENDED_MIN_VERSION_REASON "Latest version tested with OCIO")
             if(NOT OSL_FOUND)
-                message(WARNING "Could NOT find OpenShadingLanguage. Skipping build of the OSL unit tests.")
+                message(WARNING "Skipping build of the OpenShadingLanguage unit tests (OpenShadingLanguage missing)")
             endif()
         else()
-            message(WARNING "Could NOT find Imath. Skipping build of the OSL unit tests.")
+            message(WARNING "Skipping build of the OpenShadingLanguage unit tests (Imath missing)")
         endif()
     else()
-        message(WARNING "Could NOT find OpenImageIO. Skipping build of the OSL unit tests.")
+        message(WARNING "Skipping build of the OpenShadingLanguage unit tests (OpenImageIO missing)")
     endif()
 endif()
 

@@ -33,38 +33,6 @@
 ###############################################################################
 ### Try to find package ###
 
-if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
-    set(_OpenEXR_REQUIRED_VARS OpenEXR_LIBRARY)
-    set(_OpenEXR_LIB_VER "${OpenEXR_FIND_VERSION_MAJOR}_${OpenEXR_FIND_VERSION_MINOR}")
-
-    if(NOT DEFINED OpenEXR_ROOT)
-        # Search for OpenEXRConfig.cmake
-        find_package(OpenEXR ${OpenEXR_FIND_VERSION} CONFIG QUIET)
-    endif()
-
-    if(OpenEXR_FOUND)
-        get_target_property(OpenEXR_LIBRARY OpenEXR::OpenEXR LOCATION)
-        get_target_property(OpenEXR_INCLUDE_DIR OpenEXR::OpenEXR INTERFACE_INCLUDE_DIRECTORIES)
-        
-        # IMPORTED_GLOBAL property must be set to TRUE since alisasing a non-global imported target
-        # is not possible until CMake 3.18+.
-        set_target_properties(OpenEXR::OpenEXR PROPERTIES IMPORTED_GLOBAL TRUE)
-    endif()
-
-    # Override REQUIRED if package can be installed
-    if(OCIO_INSTALL_EXT_PACKAGES STREQUAL MISSING)
-        set(OpenEXR_FIND_REQUIRED FALSE)
-    endif()
-
-    include(FindPackageHandleStandardArgs)
-    find_package_handle_standard_args(OpenEXR
-        REQUIRED_VARS
-            ${_OpenEXR_REQUIRED_VARS}
-        VERSION_VAR
-            OpenEXR_VERSION
-    )
-endif()
-
 ###############################################################################
 ### Create target
 
@@ -90,14 +58,17 @@ if(NOT OpenEXR_FOUND AND OCIO_INSTALL_EXT_PACKAGES AND NOT OCIO_INSTALL_EXT_PACK
 
     # Required dependency
     if(NOT ZLIB_FOUND)
-        find_package(ZLIB)
+        # ZLIB is required for OCIO too.
+        # Try to find ZLIB without specifying a version since at this point in the dependencies 
+        # check, ZLIB should already be found. If not, the configure step will fail either way.
+        ocio_find_package(ZLIB VERSION_VARS ZLIB_VERSION_STRING ZLIB_VERSION)
         if(NOT ZLIB_FOUND)
-            message(STATUS "ZLib is required to build OpenEXR.")
+            message(STATUS "ZLIB is required to build OpenEXR.")
             return()
         endif()
     endif()
     
-    find_package(Threads)
+    ocio_find_package(Threads)
     if(NOT Threads_FOUND)
         message(STATUS "Threads is required to build OpenEXR.")
         return()
@@ -105,8 +76,8 @@ if(NOT OpenEXR_FOUND AND OCIO_INSTALL_EXT_PACKAGES AND NOT OCIO_INSTALL_EXT_PACK
 
     # Set find_package standard args
     set(OpenEXR_FOUND TRUE)
-    if(_OpenEXR_ExternalProject_VERSION)
-        set(OpenEXR_VERSION ${_OpenEXR_ExternalProject_VERSION})
+    if(OCIO_OpenEXR_RECOMMENDED_VERSION)
+        set(OpenEXR_VERSION ${OCIO_OpenEXR_RECOMMENDED_VERSION})
     else()
         set(OpenEXR_VERSION ${OpenEXR_FIND_VERSION})
     endif()
@@ -118,9 +89,9 @@ if(NOT OpenEXR_FOUND AND OCIO_INSTALL_EXT_PACKAGES AND NOT OCIO_INSTALL_EXT_PACK
     endif()
 
     include(VersionUtils)
-    split_version_string(${OpenEXR_VERSION} _OpenEXR_ExternalProject)
+    split_version_string(${OpenEXR_VERSION} _OpenEXR)
 
-    set(_OpenEXR_LIB_VER "${_OpenEXR_ExternalProject_VERSION_MAJOR}_${_OpenEXR_ExternalProject_VERSION_MINOR}")
+    set(_OpenEXR_LIB_VER "${_OpenEXR_VERSION_MAJOR}_${_OpenEXR_VERSION_MINOR}")
 
     set_target_location(Iex)
     set_target_location(IlmThread)
@@ -203,8 +174,8 @@ if(NOT OpenEXR_FOUND AND OCIO_INSTALL_EXT_PACKAGES AND NOT OCIO_INSTALL_EXT_PACK
                 ${CMAKE_COMMAND} --build .
                                  --config ${CMAKE_BUILD_TYPE}
                                  --target install
-                                # Prevent some CI jobs to fail when building.
-                                #  --parallel
+                                 # Prevent some CI jobs to fail when building.
+                                 #  --parallel
         )
 
         # Additional targets. ALIAS to UNKNOWN imported target is only possible

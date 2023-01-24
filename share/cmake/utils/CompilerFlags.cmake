@@ -93,6 +93,8 @@ set_unless_defined(CMAKE_VISIBILITY_INLINES_HIDDEN YES)
 ###############################################################################
 # Define if SSE2 can be used.
 
+message(STATUS "")
+message(STATUS "Checking for SSE2 support...")
 include(CheckSupportSSE2)
 
 if(NOT HAVE_SSE2)

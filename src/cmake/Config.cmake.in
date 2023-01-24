@@ -62,6 +62,7 @@ if (NOT @BUILD_SHARED_LIBS@) # NOT @BUILD_SHARED_LIBS@
             endif()
         else() # For CMake < 3.24 since ZLIB_USE_STATIC_LIBS is not available.
             if(NOT ZLIB_LIBRARY)
+                set(_cmake_find_library_x_changed true)
                 if(DEFINED CMAKE_FIND_LIBRARY_PREFIXES)
                     set(_ZLIB_ORIG_CMAKE_FIND_LIBRARY_PREFIXES "${CMAKE_FIND_LIBRARY_PREFIXES}")
                 else()
@@ -91,23 +92,26 @@ if (NOT @BUILD_SHARED_LIBS@) # NOT @BUILD_SHARED_LIBS@
             endif()
         endif()
 
+        
         if (@ZLIB_VERSION@) # @ZLIB_VERSION@
             find_dependency(ZLIB @ZLIB_VERSION@)
         else()
             find_dependency(ZLIB @ZLIB_VERSION_STRING@)
         endif()
 
-        # Restore the original find library ordering
-        if(DEFINED _ZLIB_ORIG_CMAKE_FIND_LIBRARY_SUFFIXES)
-            set(CMAKE_FIND_LIBRARY_SUFFIXES "${_ZLIB_ORIG_CMAKE_FIND_LIBRARY_SUFFIXES}")
-        else()
-            set(CMAKE_FIND_LIBRARY_SUFFIXES)
-        endif()
+        if(_cmake_find_library_x_changed)
+            # Restore the original find library ordering
+            if(DEFINED _ZLIB_ORIG_CMAKE_FIND_LIBRARY_SUFFIXES)
+                set(CMAKE_FIND_LIBRARY_SUFFIXES "${_ZLIB_ORIG_CMAKE_FIND_LIBRARY_SUFFIXES}")
+            else()
+                set(CMAKE_FIND_LIBRARY_SUFFIXES)
+            endif()
 
-        if(DEFINED _ZLIB_ORIG_CMAKE_FIND_LIBRARY_PREFIXES)
-            set(CMAKE_FIND_LIBRARY_PREFIXES "${_ZLIB_ORIG_CMAKE_FIND_LIBRARY_PREFIXES}")
-        else()
-            set(CMAKE_FIND_LIBRARY_PREFIXES)
+            if(DEFINED _ZLIB_ORIG_CMAKE_FIND_LIBRARY_PREFIXES)
+                set(CMAKE_FIND_LIBRARY_PREFIXES "${_ZLIB_ORIG_CMAKE_FIND_LIBRARY_PREFIXES}")
+            else()
+                set(CMAKE_FIND_LIBRARY_PREFIXES)
+            endif()
         endif()
     endif()
 

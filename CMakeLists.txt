@@ -12,6 +12,7 @@ set(CMAKE_MODULE_PATH
     ${CMAKE_SOURCE_DIR}/share/cmake/utils
     ${CMAKE_SOURCE_DIR}/share/cmake/macros
     ${CMAKE_SOURCE_DIR}/share/cmake/modules
+    ${CMAKE_SOURCE_DIR}/share/cmake/modules/install
 )
 
 set(CMAKE_WARN_DEPRECATED ON)
@@ -156,6 +157,9 @@ if (WIN32)
     option(OCIO_USE_WINDOWS_UNICODE "Compile with Windows Unicode support" ON)
 endif()
 
+###############################################################################
+# Other preferences
+option(OCIO_VERBOSE "Display more information when searching or installing dependencies" OFF)
 
 ###############################################################################
 # Warnings / debugging settings
@@ -177,7 +181,8 @@ option(OCIO_USE_OIIO_FOR_APPS "Request OIIO to build apps (ociolutimage, ociocon
 
 ###############################################################################
 # GPU configuration
-
+message(STATUS "")
+message(STATUS "Checking for GPU configuration...")
 include(CheckSupportGL)
 
 
