@@ -165,9 +165,6 @@ if (OpenImageIO_FOUND AND NOT TARGET OpenImageIO::OpenImageIO)
         IMPORTED_LOCATION "${OpenImageIO_LIBRARY}"
         INTERFACE_INCLUDE_DIRECTORIES "${OpenImageIO_INCLUDE_DIR}")
 
-    set_property(TARGET OpenImageIO::OpenImageIO APPEND PROPERTY
-        IMPORTED_LOCATION "${OpenImageIO_LIBRARY}")
-
     # Starting with OIIO v2.3, some utility classes are now only declared in OpenImageIO_Util
     # (and not in both libraries like in older versions).
     if (${OpenImageIO_VERSION} VERSION_GREATER_EQUAL "2.3" AND NOT TARGET OpenImageIO::OpenImageIO_Util)
