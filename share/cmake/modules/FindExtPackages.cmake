@@ -202,8 +202,8 @@ if(OCIO_BUILD_OPENFX)
     # openfx
     # https://github.com/ofxa/openfx
     ocio_find_package(  openfx REQUIRED ALLOW_INSTALL
-                        MIN_VERSION 1.4.0
-                        RECOMMENDED_MIN_VERSION 1.4.0
+                        MIN_VERSION 1.4
+                        RECOMMENDED_MIN_VERSION 1.4
                         RECOMMENDED_MIN_VERSION_REASON "Latest version tested with OCIO")
 endif()
 
