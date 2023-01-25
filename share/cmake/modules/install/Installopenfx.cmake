@@ -33,13 +33,13 @@ if(NOT openfx_FOUND AND OCIO_INSTALL_EXT_PACKAGES AND NOT OCIO_INSTALL_EXT_PACKA
         # Hack to let imported target be built from ExternalProject_Add
         file(MAKE_DIRECTORY ${openfx_INCLUDE_DIR})
 
-        string(REPLACE "." ";" VERSION_LIST ${openfx_VERSION})
-        list(GET VERSION_LIST 0 openfx_VERSION_MAJOR)
-        list(GET VERSION_LIST 1 openfx_VERSION_MINOR)
-        list(GET VERSION_LIST 2 openfx_VERSION_PATCH)
+        include(VersionUtils)
+        split_version_string(${openfx_VERSION} openfx)
 
         ExternalProject_Add(openfx_install
             GIT_REPOSITORY "https://github.com/ofxa/openfx.git"
+            # The latest version from 2015 is OFX_Release_1_4_TAG. 
+            # Need to be careful since older version might have the patch number in the tag.
             GIT_TAG "OFX_Release_${openfx_VERSION_MAJOR}_${openfx_VERSION_MINOR}_TAG"
             GIT_CONFIG advice.detachedHead=false
             GIT_SHALLOW TRUE
