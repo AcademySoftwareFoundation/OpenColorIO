@@ -1,25 +1,27 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright Contributors to the OpenColorIO Project.
 #
-# Locate or install yaml-cpp
+# Locate yaml-cpp
 #
 # Variables defined by this module:
-#   yaml-cpp_FOUND - If FALSE, do not try to link to yamlcpp
-#   yaml-cpp_LIBRARY - yaml-cpp library to link to
-#   yaml-cpp_INCLUDE_DIR - Where to find yaml.h
-#   yaml-cpp_VERSION - The version of the library
+#   yaml-cpp_FOUND          - Indicate whether the library was found or not
+#   yaml-cpp_LIBRARY        - Path to the library file
+#   yaml-cpp_INCLUDE_DIR    - Location of the header files
+#   yaml-cpp_VERSION        - Library's version
 #
-# Targets defined by this module:
-#   yaml-cpp - IMPORTED target, if found
+# Global targets defined by this module:
+#   yaml-cpp
 #
-# By default, the dynamic libraries of yaml-cpp will be found. To find the 
-# static ones instead, you must set the yaml-cpp_STATIC_LIBRARY variable to 
-# TRUE before calling find_package(yaml-cpp ...).
+# The dynamic libraries will be located by default.
+# By setting yaml-cpp_STATIC_LIBRARY variable to TRUE, the search for static libraries will
+# be initiated, however it's not a guarentee that they will be located.
 #
-# If yaml-cpp is not installed in a standard path, you can use the 
-# yaml-cpp_ROOT variable to tell CMake where to find it. If it is not found 
-# and OCIO_INSTALL_EXT_PACKAGES is set to MISSING or ALL, yaml-cpp will be 
-# downloaded, built, and statically-linked into libOpenColorIO at build time.
+# If the library is not installed in a standard path, you can do the following the help
+# the find module:
+#
+# If the package provides a configuration file, use -Dyamp-cppDIR=<path to folder>.
+# If it doesn't provide it, try -Dyamp-cppROOT=<path to folder with lib and includes>.
+# Alternatively, try -Dyamp-cppLIBRARY=<path to lib file> and -Dyamp-cppINCLUDE_DIR=<path to folder>.
 #
 
 ###############################################################################

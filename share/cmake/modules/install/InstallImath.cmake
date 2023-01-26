@@ -1,7 +1,19 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright Contributors to the OpenColorIO Project.
+#
+# Install Imath
+#
+# Variables defined by this module:
+#   Imath_FOUND          - Indicate whether the library was found or not
+#   Imath_LIBRARY        - Path to the library file
+#   Imath_INCLUDE_DIR    - Location of the header files
+#   Imath_VERSION        - Library's version
+#
+# Global targets defined by this module:
+#   Imath::Imath
+#   Imath::ImathConfig     
+#
 
-# TODOCED Header
 
 ###############################################################################
 ### Create target

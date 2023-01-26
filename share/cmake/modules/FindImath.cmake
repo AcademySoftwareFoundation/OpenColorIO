@@ -1,25 +1,27 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright Contributors to the OpenColorIO Project.
 #
-# Locate or install Imath
+# Locate Imath
 #
 # Variables defined by this module:
-#   Imath_FOUND - If FALSE, do not try to link to ilmbase
-#   Imath_LIBRARY - Imath library to link to
-#   Imath_INCLUDE_DIR - Where to find ImathConfig.h
-#   Imath_VERSION - The version of the library
+#   Imath_FOUND          - Indicate whether the library was found or not
+#   Imath_LIBRARY        - Path to the library file
+#   Imath_INCLUDE_DIR    - Location of the header files
+#   Imath_VERSION        - Library's version
 #
-# Targets defined by this module:
-#   Imath::Imath - IMPORTED target, if found
+# Global targets defined by this module:
+#   Imath::Imath
 #
-# By default, the dynamic libraries of Imath will be found. To find the 
-# static ones instead, you must set the Imath_STATIC_LIBRARY variable to 
-# TRUE before calling find_package(Imath ...).
+# The dynamic libraries will be located by default.
+# By setting Imath_STATIC_LIBRARY variable to TRUE, the search for static libraries will
+# be initiated, however it's not a guarentee that they will be located.
 #
-# If Imath is not installed in a standard path, you can use the 
-# Imath_ROOT variable to tell CMake where to find it. If it is not found 
-# and OCIO_INSTALL_EXT_PACKAGES is set to MISSING or ALL, Imath will be 
-# downloaded, built, and statically-linked into libOpenColorIO at build time.
+# If the library is not installed in a standard path, you can do the following the help
+# the find module:
+#
+# If the package provides a configuration file, use -DImath_DIR=<path to folder>.
+# If it doesn't provide it, try -DImath_ROOT=<path to folder with lib and includes>.
+# Alternatively, try -DImath_LIBRARY=<path to lib file> and -DImath_INCLUDE_DIR=<path to folder>.
 #
 
 ###############################################################################

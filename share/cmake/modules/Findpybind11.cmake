@@ -1,20 +1,24 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright Contributors to the OpenColorIO Project.
 #
-# Locate or install pybind11
+# Locate pybind11
 #
 # Variables defined by this module:
 #   pybind11_FOUND - If FALSE, do not try to link to pybind11
 #   pybind11_INCLUDE_DIR - Where to find pybind11.h
 #   pybind11_VERSION - The version of the library
 #
-# Targets defined by this module:
-#   pybind11::module - IMPORTED target, if found
+# Global targets defined by this module:
+#   pybind11::module
 #
-# If pybind11 is not installed in a standard path, you can use the 
-# pybind11_ROOT variable to tell CMake where to find it. If it is not found 
-# and OCIO_INSTALL_EXT_PACKAGES is set to MISSING or ALL, pybind11 will be 
-# downloaded at build time.
+# The dynamic libraries will be located by default.
+#
+# If the library is not installed in a standard path, you can do the following the help
+# the find module:
+#
+# If the package provides a configuration file, use -Dpybind11_DIR=<path to folder>.
+# If it doesn't provide it, try -Dpybind11_ROOT=<path to folder with lib and includes>.
+# Alternatively, try -Dpybind11_INCLUDE_DIR=<path to folder>.
 #
 
 ###############################################################################

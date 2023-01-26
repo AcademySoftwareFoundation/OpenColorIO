@@ -1,13 +1,13 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright Contributors to the OpenColorIO Project.
 #
-# Locate or install OpenEXR.
+# Install OpenEXR
 #
 # Variables defined by this module:
-#   OpenEXR_FOUND - If FALSE, do not try to link to OpenEXR
-#   OpenEXR_LIBRARY - OpenEXR library to link to
-#   OpenEXR_INCLUDE_DIR - Where to find OpenEXR headers
-#   OpenEXR_VERSION - The version of the library
+#   OpenEXR_FOUND          - Indicate whether the library was found or not
+#   OpenEXR_LIBRARY        - Path to the library file
+#   OpenEXR_INCLUDE_DIR    - Location of the header files
+#   OpenEXR_VERSION        - Library's version
 #
 # Imported targets defined by this module, if found:
 #   OpenEXR::Iex
@@ -19,19 +19,10 @@
 #   OpenEXR::OpenEXRCore
 #   OpenEXR::OpenEXRUtil
 #
-# By default, the dynamic libraries of OpenEXR will be found. To find the
-# static ones instead, you must set the OpenEXR_STATIC_LIBRARY variable to
-# TRUE before calling find_package(OpenEXR ...).
-#
-# If OpenEXR is not installed in a standard path, you can use the
-# OpenEXR_ROOT variable to tell CMake where to find it. If it is not found
-# and OCIO_INSTALL_EXT_PACKAGES is set to MISSING or ALL, OpenEXR will be
-# downloaded, statically-built, and used to generate
-# libOpenColorIOimageioapphelpers.
+# Depending on user options when configuring OCIO, OpenEXR can be used to
+# build libOpenColorIOimageioapphelpers.
 #
 
-###############################################################################
-### Try to find package ###
 
 ###############################################################################
 ### Create target

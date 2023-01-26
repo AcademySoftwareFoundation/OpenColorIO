@@ -1,25 +1,27 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright Contributors to the OpenColorIO Project.
 #
-# Locate or install expat
+# Locate expat
 #
 # Variables defined by this module:
-#   expat_FOUND - If FALSE, do not try to link to expat
-#   expat_LIBRARY - expat library to link to
-#   expat_INCLUDE_DIR - Where to find expat.h
-#   expat_VERSION - The version of the library
+#   expat_FOUND          - Indicate whether the library was found or not
+#   expat_LIBRARY        - Path to the library file
+#   expat_INCLUDE_DIR    - Location of the header files
+#   expat_VERSION        - Library's version
 #
-# Targets defined by this module:
-#   expat::expat - IMPORTED target, if found
+# Global targets defined by this module:
+#   expat::expat
 #
-# By default, the dynamic libraries of expat will be found. To find the static 
-# ones instead, you must set the expat_STATIC_LIBRARY variable to TRUE 
-# before calling find_package(expat ...).
+# The dynamic libraries will be located by default.
+# By setting expat_STATIC_LIBRARY variable to TRUE, the search for static libraries will
+# be initiated, however it's not a guarentee that they will be located.
 #
-# If expat is not installed in a standard path, you can use the expat_ROOT 
-# variable to tell CMake where to find it. If it is not found and 
-# OCIO_INSTALL_EXT_PACKAGES is set to MISSING or ALL, expat will be downloaded, 
-# built, and statically-linked into libOpenColorIO at build time.
+# If the library is not installed in a standard path, you can do the following the help
+# the find module:
+#
+# If the package provides a configuration file, use -Dexpat_DIR=<path to folder>.
+# If it doesn't provide it, try -Dexpat_ROOT=<path to folder with lib and includes>.
+# Alternatively, try -Dexpat_LIBRARY=<path to lib file> and -Dexpat_INCLUDE_DIR=<path to folder>.
 #
 
 ###############################################################################
