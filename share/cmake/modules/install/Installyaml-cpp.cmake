@@ -1,7 +1,17 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright Contributors to the OpenColorIO Project.
-
-# TODOCED Header
+#
+# Install yaml-cpp
+#
+# Variables defined by this module:
+#   yaml-cpp_FOUND          - Indicate whether the library was found or not
+#   yaml-cpp_LIBRARY        - Path to the library file
+#   yaml-cpp_INCLUDE_DIR    - Location of the header files
+#   yaml-cpp_VERSION        - Library's version
+#
+# Global targets defined by this module:
+#   yaml-cpp::yaml-cpp         
+#
 
 ###############################################################################
 ### Create target (if previous 'find_package' call hasn't) ###

@@ -1,5 +1,18 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright Contributors to the OpenColorIO Project.
+#
+# Install pystring
+#
+# Variables defined by this module:
+#   pystring_FOUND          - Indicate whether the library was found or not
+#   pystring_LIBRARY        - Path to the library file
+#   pystring_INCLUDE_DIR    - Location of the header files
+#   pystring_VERSION        - Library's version
+#
+# Global targets defined by this module:
+#   pystring::pystring         
+#
+
 
 ###############################################################################
 ### Configure target ###

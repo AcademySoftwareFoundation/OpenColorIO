@@ -40,7 +40,7 @@ message(STATUS "")
 message(STATUS "Missing a dependency? Try the following possibilities:")
 message(STATUS "If the package provides a configuration file, use -D<pkg>_DIR=<path to folder>.")
 message(STATUS "If it doesn't provide it, try -D<pkg>_ROOT=<path to folder with lib and includes>.")
-message(STATUS "Alternatively, try -D<pkg>_LIBRARY=<path to lib file> and -D<pkg>_INCLUDE_DIR=<path to folder>.")
+message(STATUS "Alternatively, try -D<pkg>_LIBRARY=<path to lib file> and/or -D<pkg>_INCLUDE_DIR=<path to folder>.")
 message(STATUS "")
 message(STATUS "Please refer to the find module under share/cmake/modules for extra information.")
 
@@ -294,12 +294,12 @@ if(OCIO_BUILD_TESTS)
         if(TARGET Imath::Imath)
             # OpenShadingLanguage
             # https://github.com/AcademySoftwareFoundation/OpenShadingLanguage
-            ocio_find_package(  OpenShadingLanguage
+            ocio_find_package(  OSL
                                 MIN_VERSION 1.11
                                 RECOMMENDED_MIN_VERSION 1.11
                                 RECOMMENDED_MIN_VERSION_REASON "Latest version tested with OCIO")
             if(NOT OSL_FOUND)
-                message(WARNING "Skipping build of the OpenShadingLanguage unit tests (OpenShadingLanguage missing)")
+                message(WARNING "Skipping build of the OpenShadingLanguage unit tests (OSL missing)")
             endif()
         else()
             message(WARNING "Skipping build of the OpenShadingLanguage unit tests (Imath missing)")

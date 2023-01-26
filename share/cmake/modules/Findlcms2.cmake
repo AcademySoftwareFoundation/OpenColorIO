@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright Contributors to the OpenColorIO Project.
 #
-# Locate or install lcms2
+# Locate lcms2
 #
 # Variables defined by this module:
 #   lcms2_FOUND - If FALSE, do not try to link to lcms
@@ -9,17 +9,19 @@
 #   lcms2_INCLUDE_DIR - Where to find lcms2.h
 #   lcms2_VERSION - The version of the library
 #
-# Targets defined by this module:
+# Global targets defined by this module:
 #   lcms2::lcms2 - IMPORTED target, if found
 #
-# By default, the dynamic libraries of lcms2 will be found. To find the static 
-# ones instead, you must set the lcms2_STATIC_LIBRARY variable to TRUE 
-# before calling find_package(lcms2 ...).
+# The dynamic libraries will be located by default.
+# By setting lcms2_STATIC_LIBRARY variable to TRUE, the search for static libraries will
+# be initiated, however it's not a guarentee that they will be located.
 #
-# If lcms2 is not installed in a standard path, you can use the lcms2_ROOT 
-# variable to tell CMake where to find it. If it is not found and 
-# OCIO_INSTALL_EXT_PACKAGES is set to MISSING or ALL, lcms2 will be 
-# downloaded, built, and statically-linked into libOpenColorIO at build time.
+# If the library is not installed in a standard path, you can do the following the help
+# the find module:
+#
+# If the package provides a configuration file, use -Dlcms2_DIR=<path to folder>.
+# If it doesn't provide it, try -Dlcms2_ROOT=<path to folder with lib and includes>.
+# Alternatively, try -Dlcms2_LIBRARY=<path to lib file> and -Dlcms2_INCLUDE_DIR=<path to folder>.
 #
 
 ###############################################################################

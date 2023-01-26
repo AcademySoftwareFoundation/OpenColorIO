@@ -1,5 +1,17 @@
 # SPDX-License-Identifier: BSD-3-Clause
-# Copyright Contributors to the OpenColorIO Proj
+# Copyright Contributors to the OpenColorIO Project.
+#
+# Install pybind11
+#
+# Variables defined by this module:
+#   pybind11_FOUND          - Indicate whether the library was found or not
+#   pybind11_INCLUDE_DIR    - Location of the header files
+#   pybind11_VERSION        - Library's version
+#
+# Global targets defined by this module:
+#   pybind11::module         
+#
+
 
 ###############################################################################
 ### Create target ###

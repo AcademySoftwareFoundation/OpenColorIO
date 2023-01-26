@@ -1,20 +1,24 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright Contributors to the OpenColorIO Project.
 #
-# Locate or install openfx
+# Locate openfx
 #
 # Variables defined by this module:
-#   openfx_FOUND - If FALSE, do not try to include openfx
-#   openfx_INCLUDE_DIR - Where to find ofxCore.h
-#   openfx_VERSION - The version of the library
+#   openfx_FOUND          - Indicate whether the library was found or not
+#   openfx_INCLUDE_DIR    - Location of the header files
+#   openfx_VERSION        - Library's version
 #
-# Targets defined by this module:
-#   openfx::module - IMPORTED target, if found
+# Global targets defined by this module:
+#   openfx::module
 #
-# If openfx is not installed in a standard path, you can use the 
-# openfx_ROOT variable to tell CMake where to find it. If it is not found 
-# and OCIO_INSTALL_EXT_PACKAGES is set to MISSING or ALL, openfx will be 
-# downloaded at build time.
+# The dynamic libraries will be located by default.
+#
+# If the library is not installed in a standard path, you can do the following the help
+# the find module:
+#
+# If the package provides a configuration file, use -Dopenfx_DIR=<path to folder>.
+# If it doesn't provide it, try -Dopenfx_ROOT=<path to folder with lib and includes>.
+# Alternatively, try -Dopenfx_LIBRARY=<path to lib file> and -Dopenfx_INCLUDE_DIR=<path to folder>.
 #
 
 ###############################################################################

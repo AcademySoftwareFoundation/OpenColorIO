@@ -1,5 +1,17 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright Contributors to the OpenColorIO Project.
+#
+# Install openfx
+#
+# Variables defined by this module:
+#   openfx_FOUND          - Indicate whether the library was found or not
+#   openfx_INCLUDE_DIR    - Location of the header files
+#   openfx_VERSION        - Library's version
+#
+# Global targets defined by this module:
+#   openfx::module         
+#
+
 
 ###############################################################################
 ### Create target
