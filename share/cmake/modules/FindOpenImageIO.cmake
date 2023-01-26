@@ -4,15 +4,24 @@
 # Locate OpenImageIO
 #
 # Variables defined by this module:
-#   OpenImageIO_FOUND       - If FALSE, do not try to link to OpenImageIO
-#   OpenImageIO_LIBRARY     - OpenImageIO library to link to
-#   OpenImageIO_LIB_DIR     - Libray directory
-#   OpenImageIO_INCLUDE_DIR - Where to find OpenImageIO.h
-#   OpenImageIO_VERSION     - The version of the library
+#   OpenImageIO_FOUND          - Indicate whether the library was found or not
+#   OpenImageIO_LIBRARY        - Path to the library file
+#   OpenImageIO_LIB_DIR        - Library's directory
+#   OpenImageIO_INCLUDE_DIR    - Location of the header files
+#   OpenImageIO_VERSION        - Library's version
 #
-# Targets defined by this module:
+# Global targets defined by this module:
 #   OpenImageIO::OpenImageIO       - The libOpenImageIO library
 #   OpenImageIO::OpenImageIO_Util  - Utility classes (v2.3+)
+#
+# The dynamic libraries will be located by default.
+#
+# If the library is not installed in a standard path, you can do the following the help
+# the find module:
+#
+# If the package provides a configuration file, use -DOpenImageIO_DIR=<path to folder>.
+# If it doesn't provide it, try -DOpenImageIO_ROOT=<path to folder with lib and includes>.
+# Alternatively, try -DOpenImageIO_LIBRARY=<path to lib file> and -DOpenImageIO_INCLUDE_DIR=<path to folder>.
 #
 
 if(NOT DEFINED OpenImageIO_ROOT)
@@ -60,16 +69,13 @@ else()
     pkg_check_modules(PC_OpenImageIO QUIET "OpenImageIO>=${OpenImageIO_FIND_VERSION}")
 
     # Find include directory
-    # Since CMake 3.12, find_path search through <pkg>_ROOT before everything else.
+    # Since CMake 3.12, find_path search through OpenImageIO_ROOT before everything else.
     find_path(OpenImageIO_INCLUDE_DIR
         NAMES
-            oiioversion.h
+            OpenImageIO/oiioversion.h
         HINTS
             ${PC_OpenImageIO_INCLUDE_DIRS}
         PATH_SUFFIXES
-            include/OpenImageIO
-            OpenImageIO
-            include
             OpenImageIO/include
     )
 
@@ -77,7 +83,7 @@ else()
     set(OpenImageIO_INCLUDES ${OpenImageIO_INCLUDE_DIR})
 
     # Find library
-    # Since CMake 3.12, find_library search through <pkg>_ROOT before everything else.
+    # Since CMake 3.12, find_library search through OpenImageIO_ROOT before everything else.
     find_library (OpenImageIO_LIBRARY
         NAMES
             OpenImageIO

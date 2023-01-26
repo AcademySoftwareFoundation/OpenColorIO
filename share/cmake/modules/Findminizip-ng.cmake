@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright Contributors to the OpenColorIO Project.
 #
-# Locate or install minizip-ng
+# Locate minizip-ng
 #
 # Variables defined by this module:
 #   minizip-ng_FOUND        - If FALSE, do not try to link to minizip-ng
@@ -9,13 +9,19 @@
 #   minizip-ng_INCLUDE_DIR  - Where to find mz.h and other headers
 #   minizip-ng_VERSION      - The version of the library
 #
-# Targets defined by this module:
+# Global targets defined by this module:
 #   MINIZIP::minizip-ng - IMPORTED target, if found
 #
-# If minizip-ng is not installed in a standard path, you can use the minizip-ng_ROOT 
-# variable to tell CMake where to find it. If it is not found and 
-# OCIO_INSTALL_EXT_PACKAGES is set to MISSING or ALL, minizip-ng will be downloaded, 
-# built, and statically-linked into libOpenColorIO at build time.
+# The dynamic libraries will be located by default.
+# By setting minizip-ng_STATIC_LIBRARY variable to TRUE, the search for static libraries will
+# be initiated, however it's not a guarentee that they will be located.
+#
+# If the library is not installed in a standard path, you can do the following the help
+# the find module:
+#
+# If the package provides a configuration file, use -Dminizip-ng_DIR=<path to folder>.
+# If it doesn't provide it, try -Dminizip-ng_ROOT=<path to folder with lib and includes>.
+# Alternatively, try -Dminizip-ng_LIBRARY=<path to lib file> and -Dminizip-ng_INCLUDE_DIR=<path to folder>.
 #
 # For external builds of minizip-ng, please note that the same build options should be used.
 # Using more options, such as enabling other compression methods, will provoke linking issue
@@ -23,6 +29,7 @@
 #
 # e.g. Setting MZ_BZIP2=ON will cause linking issue since OCIO will not be linked against BZIP2.
 #
+
 ###############################################################################
 ### Try to find package ###
 

@@ -1,7 +1,18 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright Contributors to the OpenColorIO Project.
+#
+# Install expat
+#
+# Variables defined by this module:
+#   expat_FOUND          - Indicate whether the library was found or not
+#   expat_LIBRARY        - Path to the library file
+#   expat_INCLUDE_DIR    - Location of the header files
+#   expat_VERSION        - Library's version
+#
+# Global targets defined by this module:
+#   expat::expat         
+#
 
-# TODOCED Header
 
 ###############################################################################
 ### Create target
@@ -23,7 +34,6 @@ if(NOT expat_FOUND AND OCIO_INSTALL_EXT_PACKAGES AND NOT OCIO_INSTALL_EXT_PACKAG
 
     # Set find_package standard args
     set(expat_FOUND TRUE)
-    set(expat_VERSION ${expat_FIND_VERSION})
     if(OCIO_expat_RECOMMENDED_VERSION)
         set(expat_VERSION ${OCIO_expat_RECOMMENDED_VERSION})
     else()

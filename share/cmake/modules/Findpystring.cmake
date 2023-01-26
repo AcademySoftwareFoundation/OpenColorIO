@@ -1,20 +1,25 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright Contributors to the OpenColorIO Project.
 #
-# Locate or install pystring
+# Locate pystring
 #
 # Variables defined by this module:
-#   pystring_FOUND - If FALSE, do not try to link to pystring
-#   pystring_LIBRARY - Where to find pystring
-#   pystring_INCLUDE_DIR - Where to find pystring.h
+#   pystring_FOUND          - Indicate whether the library was found or not
+#   pystring_LIBRARY        - Path to the library file
+#   pystring_INCLUDE_DIR    - Location of the header files
+#   pystring_VERSION        - Library's version
 #
-# Targets defined by this module:
+# Global targets defined by this module:
 #   pystring::pystring - IMPORTED target, if found
 #
-# If pystring is not installed in a standard path, you can use the 
-# pystring_ROOT variable to tell CMake where to find it. If it is not found 
-# and OCIO_INSTALL_EXT_PACKAGES is set to MISSING or ALL, pystring will be 
-# downloaded, built, and statically-linked into libOpenColorIO at build time.
+# The dynamic libraries will be located by default.
+#
+# If the library is not installed in a standard path, you can do the following the help
+# the find module:
+#
+# If the package provides a configuration file, use -Dpystring_DIR=<path to folder>.
+# If it doesn't provide it, try -Dpystring_ROOT=<path to folder with lib and includes>.
+# Alternatively, try -Dpystring_LIBRARY=<path to lib file> and -Dpystring_INCLUDE_DIR=<path to folder>.
 #
 
 ###############################################################################

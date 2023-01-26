@@ -7,17 +7,15 @@
 # CMake's FindZLIB when installing ZLIB manually.
 #
 # Variables defined by this module:
-#   ZLIB_FOUND          - If FALSE, do not try to link to zlib
-#   ZLIB_LIBRARIES      - ZLIB library to link to
-#   ZLIB_INCLUDE_DIRS   - Where to find zlib.h and other headers
-#   ZLIB_VERSION        - The version of the library
+#   ZLIB_FOUND          - Indicate whether the library was found or not
+#   ZLIB_LIBRARY        - Path to the library file
+#   ZLIB_INCLUDE_DIR    - Location of the header files
+#   ZLIB_VERSION        - Library's version
 #
-# Targets defined by this module:
-#   ZLIB::ZLIB          - Properties:
-#                         IMPORTED_LOCATION ${ZLIB_LIBRARIES}
-#                         INTERFACE_INCLUDE_DIRECTORIES ${ZLIB_INCLUDE_DIRS}
+# Global targets defined by this module:
+#   ZLIB::ZLIB
 #
-###############################################################################
+
 
 ###############################################################################
 ### Create target

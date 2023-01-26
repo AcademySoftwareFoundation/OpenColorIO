@@ -1,5 +1,21 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright Contributors to the OpenColorIO Project.
+#
+# Install minizip-ng
+#
+# Variables defined by this module:
+#   minizip-ng_FOUND          - Indicate whether the library was found or not
+#   minizip-ng_LIBRARY        - Path to the library file
+#   minizip-ng_INCLUDE_DIR    - Location of the header files
+#   minizip-ng_VERSION        - Library's version
+#
+# Global targets defined by this module:
+#   minizip-ng::minizip-ng
+#
+# Link against the following target:
+#   ZLIB::ZLIB
+#
+
 
 ###############################################################################
 ### Create target

@@ -1,5 +1,18 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright Contributors to the OpenColorIO Project.
+#
+# Install lcms2
+#
+# Variables defined by this module:
+#   lcms2_FOUND          - Indicate whether the library was found or not
+#   lcms2_LIBRARY        - Path to the library file
+#   lcms2_INCLUDE_DIR    - Location of the header files
+#   lcms2_VERSION        - Library's version
+#
+# Global targets defined by this module:
+#   lcms2::lcms2  
+#
+
 
 ###############################################################################
 ### Configure target ###
