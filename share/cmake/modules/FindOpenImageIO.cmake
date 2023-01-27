@@ -30,7 +30,7 @@ if(NOT DEFINED OpenImageIO_ROOT)
 endif()
 
 if (OpenImageIO_FOUND)
-    # IMPORTED_GLOBAL property must be set to TRUE since alisasing a non-global imported target
+    # IMPORTED_GLOBAL property must be set to TRUE since aliasing a non-global imported target
     # is not possible until CMake 3.18+.
     set_target_properties(OpenImageIO::OpenImageIO PROPERTIES IMPORTED_GLOBAL TRUE)
 

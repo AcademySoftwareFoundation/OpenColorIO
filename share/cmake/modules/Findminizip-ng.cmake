@@ -14,7 +14,7 @@
 #
 # The dynamic libraries will be located by default.
 # By setting minizip-ng_STATIC_LIBRARY variable to TRUE, the search for static libraries will
-# be initiated, however it's not a guarentee that they will be located.
+# be initiated, however it's not guaranteed that they will be located.
 #
 # If the library is not installed in a standard path, you can do the following the help
 # the find module:
