@@ -251,7 +251,7 @@ jobs:
       CC: ${{ matrix.cc-compiler }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       # minizip-ng requires CMake 3.13+ but VFX2019 image ships with 3.12
       - name: Upgrade VFX2019 CMake
         run: pip install cmake==3.13.3
@@ -336,7 +336,7 @@ jobs:
   # ---------------------------------------------------------------------------
 
   macos:
-    name: 'macOS 10.15 
+    name: 'macOS 11
       <AppleClang 11.0 
        config=${{ matrix.build-type }}, 
        shared=${{ matrix.build-shared }}, 
@@ -349,7 +349,7 @@ jobs:
     if: |
       github.event_name == 'push' ||
       github.event.pull_request.head.repo.full_name != github.repository
-    runs-on: macos-10.15
+    runs-on: macos-11
     strategy:
       matrix:
         build: [1, 2, 3, 4, 5, 6]
@@ -417,11 +417,11 @@ jobs:
             python-version: 2.7
     steps:
       - name: Setup Python
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Install docs env
         run: share/ci/scripts/macos/install_docs_env.sh
         if: matrix.build-docs == 'ON'
@@ -585,11 +585,11 @@ jobs:
             python-version: 2.7
     steps:
       - name: Setup Python
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Install docs env
         run: share/ci/scripts/windows/install_docs_env.sh
         shell: bash
