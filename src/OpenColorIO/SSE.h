@@ -8,10 +8,12 @@
 
 #ifdef USE_SSE
 
-
-#include <emmintrin.h>
+#ifndef USE_SSE2NEON
+    #include <emmintrin.h>
+#else
+    #include <sse2neon.h>
+#endif
 #include <stdio.h>
-
 
 #include <OpenColorIO/OpenColorIO.h>
 

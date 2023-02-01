@@ -292,6 +292,13 @@ target_link_libraries(OpenColorIO
         MINIZIP::minizip-ng
 )
 
+if(OCIO_USE_SSE AND HAVE_NEON)
+    target_link_libraries(OpenColorIO
+        PRIVATE
+            "$<BUILD_INTERFACE:sse2neon>"
+    )
+endif()
+
 if(APPLE)
     target_link_libraries(OpenColorIO
         PRIVATE
@@ -327,6 +334,13 @@ if(OCIO_USE_SSE)
         PRIVATE
             USE_SSE
     )
+
+    if(HAVE_NEON)
+        target_compile_definitions(OpenColorIO
+            PRIVATE
+                USE_SSE2NEON
+        )
+    endif()
 endif()
 
 if(MSVC AND BUILD_TYPE_DEBUG AND BUILD_SHARED_LIBS)

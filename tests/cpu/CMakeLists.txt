@@ -26,6 +26,13 @@ function(add_ocio_test NAME SOURCES PRIVATE_INCLUDES)
             xxHash
     )
 
+    if(OCIO_USE_SSE AND HAVE_NEON)
+        target_link_libraries(${TEST_BINARY}
+            PRIVATE
+                sse2neon
+        )
+    endif()
+
     if(APPLE)
         # Frameworks needed to access the ICC monitor profile. 
         target_link_libraries(${TEST_BINARY}
@@ -43,12 +50,21 @@ function(add_ocio_test NAME SOURCES PRIVATE_INCLUDES)
                 "${CMAKE_BINARY_DIR}/generated_include"
         )
     endif(PRIVATE_INCLUDES)
+
     if(OCIO_USE_SSE)
         target_compile_definitions(${TEST_BINARY}
             PRIVATE
                 USE_SSE
         )
+
+        if(HAVE_NEON)
+            target_compile_definitions(${TEST_BINARY}
+                PRIVATE
+                    USE_SSE2NEON
+            )
+        endif()
     endif(OCIO_USE_SSE)
+
     if(WIN32)
         # A windows application linking to eXpat static libraries must
         # have the global macro XML_STATIC defined
@@ -66,6 +82,7 @@ function(add_ocio_test NAME SOURCES PRIVATE_INCLUDES)
             )
         endif()
     endif(WIN32)
+
     set_target_properties(${TEST_BINARY} PROPERTIES
         COMPILE_OPTIONS "${PLATFORM_COMPILE_OPTIONS}"
         LINK_OPTIONS "${PLATFORM_LINK_OPTIONS}"
