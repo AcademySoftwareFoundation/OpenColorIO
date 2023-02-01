@@ -159,6 +159,20 @@ include(CheckSupportGL)
 
 
 ###############################################################################
+# Check for ARM neon intrinsics (armv8)
+
+include(CheckSupportARMNeon)
+
+
+###############################################################################
+# Add sse2neon to the build since CompilerFlags needs to know if SSE2 is supported.
+
+if(HAVE_NEON)
+    add_subdirectory(ext/sse2neon)
+endif()
+
+
+###############################################################################
 # Define compilation and link flags
 
 include(CompilerFlags)

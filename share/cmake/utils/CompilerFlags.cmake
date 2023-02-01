@@ -7,6 +7,20 @@
 
 set(PLATFORM_COMPILE_FLAGS "")
 
+###############################################################################
+# Define if SSE2 can be used.
+# Check for SSE2 first since some compile flags need to be set on Apple ARM.
+
+include(CheckSupportSSE2)
+
+if(NOT HAVE_SSE2)
+    message(STATUS "Disabling SSE optimizations, as the target doesn't support them")
+    set(OCIO_USE_SSE OFF)
+endif(NOT HAVE_SSE2)
+
+###############################################################################
+# Compile flags
+
 if(USE_MSVC)
 
     set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} /DUSE_MSVC")
@@ -39,7 +53,9 @@ elseif(USE_CLANG)
 
     # Use of 'register' specifier must be removed for C++17 support.
     set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} -Wno-deprecated-register")
-
+    if (HAVE_SSE2 AND HAVE_NEON)
+        set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} -march=armv8-a+fp+simd+crypto+crc")
+    endif()
 elseif(USE_GCC)
 
     set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} -DUSE_GCC")
@@ -81,18 +97,6 @@ include(VariableUtils)
 set_unless_defined(CMAKE_C_VISIBILITY_PRESET hidden)
 set_unless_defined(CMAKE_CXX_VISIBILITY_PRESET hidden)
 set_unless_defined(CMAKE_VISIBILITY_INLINES_HIDDEN YES)
-
-
-###############################################################################
-# Define if SSE2 can be used.
-
-include(CheckSupportSSE2)
-
-if(NOT HAVE_SSE2)
-    message(STATUS "Disabling SSE optimizations, as the target doesn't support them")
-    set(OCIO_USE_SSE OFF)
-endif(NOT HAVE_SSE2)
-
 
 ###############################################################################
 # Define RPATH.
