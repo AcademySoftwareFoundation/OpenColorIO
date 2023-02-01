@@ -123,7 +123,9 @@ if(NOT lcms2_FOUND AND OCIO_INSTALL_EXT_PACKAGES AND NOT OCIO_INSTALL_EXT_PACKAG
         )
 
         add_dependencies(lcms2::lcms2 lcms2_install)
-        message(STATUS "Installing lcms2: ${lcms2_LIBRARY} (version \"${lcms2_VERSION}\")")
+        if(OCIO_VERBOSE)
+            message(STATUS "Installing lcms2: ${lcms2_LIBRARY} (version \"${lcms2_VERSION}\")")
+        endif()
     endif()
 endif()
 

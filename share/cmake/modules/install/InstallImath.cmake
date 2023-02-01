@@ -130,7 +130,9 @@ if(NOT Imath_FOUND AND OCIO_INSTALL_EXT_PACKAGES AND NOT OCIO_INSTALL_EXT_PACKAG
 
         add_dependencies(Imath::Imath imath_install)
 
-        message(STATUS "Installing Imath: ${Imath_LIBRARY} (version \"${Imath_VERSION}\")")
+        if(OCIO_VERBOSE)
+            message(STATUS "Installing Imath: ${Imath_LIBRARY} (version \"${Imath_VERSION}\")")
+        endif()
     endif()
 endif()
 

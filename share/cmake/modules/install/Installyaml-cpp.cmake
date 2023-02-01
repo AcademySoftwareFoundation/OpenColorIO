@@ -134,9 +134,9 @@ if(NOT yaml-cpp_FOUND AND OCIO_INSTALL_EXT_PACKAGES AND NOT OCIO_INSTALL_EXT_PAC
         )
 
         add_dependencies(yaml-cpp yaml-cpp_install)
-        message(STATUS
-            "Installing yaml-cpp: ${yaml-cpp_LIBRARY} (version \"${yaml-cpp_VERSION}\") "
-        )
+        if(OCIO_VERBOSE)
+            message(STATUS "Installing yaml-cpp: ${yaml-cpp_LIBRARY} (version \"${yaml-cpp_VERSION}\")")
+        endif()
     endif()
 endif()
 

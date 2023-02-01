@@ -52,14 +52,14 @@ if(NOT OpenEXR_FOUND AND OCIO_INSTALL_EXT_PACKAGES AND NOT OCIO_INSTALL_EXT_PACK
         # ZLIB is required for OCIO too.
         # Try to find ZLIB without specifying a version since at this point in the dependencies 
         # check, ZLIB should already be found. If not, the configure step will fail either way.
-        ocio_find_package(ZLIB VERSION_VARS ZLIB_VERSION_STRING ZLIB_VERSION)
+        ocio_handle_dependency(ZLIB VERSION_VARS ZLIB_VERSION_STRING ZLIB_VERSION)
         if(NOT ZLIB_FOUND)
             message(STATUS "ZLIB is required to build OpenEXR.")
             return()
         endif()
     endif()
     
-    ocio_find_package(Threads)
+    ocio_handle_dependency(Threads)
     if(NOT Threads_FOUND)
         message(STATUS "Threads is required to build OpenEXR.")
         return()
@@ -181,7 +181,9 @@ if(NOT OpenEXR_FOUND AND OCIO_INSTALL_EXT_PACKAGES AND NOT OCIO_INSTALL_EXT_PACK
 
         add_dependencies(OpenEXR::OpenEXR openexr_install)
 
-        message(STATUS "Installing OpenEXR: ${OpenEXR_LIBRARY} (version \"${OpenEXR_VERSION}\")")
+        if(OCIO_VERBOSE)
+            message(STATUS "Installing OpenEXR: ${OpenEXR_LIBRARY} (version \"${OpenEXR_VERSION}\")")
+        endif()
     endif()
 endif()
 
