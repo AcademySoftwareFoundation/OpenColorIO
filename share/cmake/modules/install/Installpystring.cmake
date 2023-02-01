@@ -115,7 +115,9 @@ if(NOT pystring_FOUND AND OCIO_INSTALL_EXT_PACKAGES AND NOT OCIO_INSTALL_EXT_PAC
         )
 
         add_dependencies(pystring::pystring pystring_install)
-        message(STATUS "Installing pystring: ${pystring_LIBRARY} (version \"${pystring_VERSION}\")")
+        if(OCIO_VERBOSE)
+            message(STATUS "Installing pystring: ${pystring_LIBRARY} (version \"${pystring_VERSION}\")")
+        endif()
     endif()
 endif()
 

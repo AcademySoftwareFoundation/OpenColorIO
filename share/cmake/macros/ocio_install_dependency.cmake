@@ -3,7 +3,7 @@
 
 # Install the specific dependency using OCIO's custom installXYZ module 
 # where XYZ is the name of the dependency.
-macro (ocio_install_package dep_name)
+macro (ocio_install_dependency dep_name)
     cmake_parse_arguments(
         # prefix
         ocio_dep
@@ -18,5 +18,9 @@ macro (ocio_install_package dep_name)
     if(NOT ${dep_name}_FOUND AND OCIO_INSTALL_EXT_PACKAGES AND NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL NONE)
         set(OCIO_${dep_name}_RECOMMENDED_VERSION ${ocio_dep_VERSION})
         include(Install${dep_name})
+    endif()
+
+    if(${dep_name}_FOUND)
+        message(STATUS "${ColorSuccess}Installed ${dep_name} (version \"${ocio_dep_VERSION}\")${ColorReset}")
     endif()
 endmacro()

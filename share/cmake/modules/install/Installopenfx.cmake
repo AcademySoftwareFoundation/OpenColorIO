@@ -68,7 +68,9 @@ if(NOT openfx_FOUND AND OCIO_INSTALL_EXT_PACKAGES AND NOT OCIO_INSTALL_EXT_PACKA
         )
 
         add_dependencies(openfx::module openfx_install)
-        message(STATUS "Installing openfx: ${openfx_INCLUDE_DIR} (version \"${openfx_VERSION}\")")
+        if(OCIO_VERBOSE)
+            message(STATUS "Installing openfx: ${openfx_INCLUDE_DIR} (version \"${openfx_VERSION}\")")
+        endif()
     endif()
 endif()
 
