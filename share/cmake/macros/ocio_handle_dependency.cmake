@@ -1,32 +1,32 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright Contributors to the OpenColorIO Project.
 
-include(ocio_install_package)
+include(ocio_install_dependency)
 
-macro (ocio_print_versions_error dep_name)
+macro (ocio_print_versions_error dep_name message_color)
     if(NOT ocio_dep_MIN_VERSION AND NOT ocio_dep_MAX_VERSION AND NOT ocio_dep_RECOMMENDED_MIN_VERSION)
-        message(STATUS "${ColorError}Could not find ${dep_name} (no version specified)${ColorReset}")
+        message(STATUS "${message_color}Could NOT find ${dep_name} (no version specified)${ColorReset}")
     elseif(NOT ocio_dep_MIN_VERSION AND NOT ocio_dep_RECOMMENDED_MIN_VERSION)
-        message(STATUS "${ColorError}Could not find ${dep_name} (maximum version: \"${ocio_dep_MAX_VERSION)\"${ColorReset}")
+        message(STATUS "${message_color}Could NOT find ${dep_name} (maximum version: \"${ocio_dep_MAX_VERSION)\"${ColorReset}")
     elseif(NOT ocio_dep_MIN_VERSION AND NOT ocio_dep_MAX_VERSION)
-        message(STATUS "${ColorError}Could not find ${dep_name} (recommended version: \"${ocio_dep_RECOMMENDED_MIN_VERSION}\")\"${ColorReset}")
+        message(STATUS "${message_color}Could NOT find ${dep_name} (recommended version: \"${ocio_dep_RECOMMENDED_MIN_VERSION}\")\"${ColorReset}")
     elseif(NOT ocio_dep_RECOMMENDED_MIN_VERSION AND NOT ocio_dep_MAX_VERSION)
-        message(STATUS "${ColorError}Could not find ${dep_name} (minimum version: \"${ocio_dep_MIN_VERSION})\"${ColorReset}")
+        message(STATUS "${message_color}Could NOT find ${dep_name} (minimum version: \"${ocio_dep_MIN_VERSION})\"${ColorReset}")
     elseif(NOT ocio_dep_MIN_VERSION)
-        message(STATUS "${ColorError}Could not find ${dep_name} (recommended version: \"${ocio_dep_RECOMMENDED_MIN_VERSION}\", maximum version: \"${ocio_dep_MAX_VERSION}\")${ColorReset}")
+        message(STATUS "${message_color}Could NOT find ${dep_name} (recommended version: \"${ocio_dep_RECOMMENDED_MIN_VERSION}\", maximum version: \"${ocio_dep_MAX_VERSION}\")${ColorReset}")
     elseif(NOT ocio_dep_RECOMMENDED_MIN_VERSION)
-        message(STATUS "${ColorError}Could not find ${dep_name} (minimum version: \"${ocio_dep_MIN_VERSION}\",  maximum version: \"${ocio_dep_MAX_VERSION}\")${ColorReset}")
+        message(STATUS "${message_color}Could NOT find ${dep_name} (minimum version: \"${ocio_dep_MIN_VERSION}\",  maximum version: \"${ocio_dep_MAX_VERSION}\")${ColorReset}")
     elseif(NOT ocio_dep_MAX_VERSION)
-        message(STATUS "${ColorError}Could not find ${dep_name} (minimum version: \"${ocio_dep_MIN_VERSION}\", recommended version: \"${ocio_dep_RECOMMENDED_MIN_VERSION}\")${ColorReset}")
+        message(STATUS "${message_color}Could NOT find ${dep_name} (minimum version: \"${ocio_dep_MIN_VERSION}\", recommended version: \"${ocio_dep_RECOMMENDED_MIN_VERSION}\")${ColorReset}")
     else()
-        message(STATUS "${ColorError}Could not find ${dep_name} (minimum version: \"${ocio_dep_MIN_VERSION}\", recommended version: \"${ocio_dep_RECOMMENDED_MIN_VERSION}\", max: \"${ocio_dep_MAX_VERSION}\")${ColorReset}")
+        message(STATUS "${message_color}Could NOT find ${dep_name} (minimum version: \"${ocio_dep_MIN_VERSION}\", recommended version: \"${ocio_dep_RECOMMENDED_MIN_VERSION}\", max: \"${ocio_dep_MAX_VERSION}\")${ColorReset}")
     endif()
 endmacro()
 
 # Using a macro because OCIO wants the scope to be the same as the caller scope.
 # Find modules will set variables via the PARENT_SCOPE option and OCIO needs those 
 # variables in the caller scope.
-macro (ocio_find_package dep_name)
+macro (ocio_handle_dependency dep_name)
     cmake_parse_arguments(
         # prefix
         ocio_dep
@@ -60,6 +60,7 @@ macro (ocio_find_package dep_name)
         # Nothing to do. Already found.
     else()
         # Try to find the recommended version.
+        # Note that the recommended version should always be specified.
         find_package(${dep_name}
                      ${ocio_dep_RECOMMENDED_MIN_VERSION}
                      ${ocio_dep_CONFIG_string}
@@ -78,36 +79,9 @@ macro (ocio_find_package dep_name)
                 ${ocio_dep_UNPARSED_ARGUMENTS})
         endif()
         
-        if(NOT ${dep_name}_FOUND AND ocio_dep_MAX_VERSION 
-           AND NOT ocio_dep_MAX_VERSION VERSION_EQUAL ocio_dep_RECOMMENDED_MIN_VERSION)
-            # if the recommended version is not found, try to find dependency with the maximum version.
-            find_package(${dep_name} 
-                         ${ocio_dep_MAX_VERSION} EXACT 
-                         ${ocio_dep_CONFIG_string}
-                         ${ocio_dep_COMPONENTS_string} 
-                         ${ocio_dep_COMPONENTS}
-                         ${ocio_dep_QUIET_string}
-                         ${ocio_dep_UNPARSED_ARGUMENTS})
-
-            if (NOT ${dep_name}_FOUND AND ocio_dep_PREFER_CONFIG)
-                # Try find_package in module mode instead of config mode.
-                find_package(${dep_name} 
-                    ${ocio_dep_MAX_VERSION} EXACT 
-                    ${ocio_dep_COMPONENTS_string} 
-                    ${ocio_dep_COMPONENTS}
-                    ${ocio_dep_QUIET_string}
-                    ${ocio_dep_UNPARSED_ARGUMENTS})
-            endif()
-        endif()
-
         if(NOT ${dep_name}_FOUND AND ocio_dep_MIN_VERSION
            AND NOT ocio_dep_MIN_VERSION VERSION_EQUAL ocio_dep_MAX_VERSION
            AND NOT ocio_dep_MIN_VERSION VERSION_EQUAL ocio_dep_RECOMMENDED_MIN_VERSION)
-
-            if (DEFINED ocio_dep_MAX_VERSION
-                AND ocio_dep_MIN_VERSION VERSION_LESS ocio_dep_MAX_VERSION)
-
-            endif()
 
             # if the maximum version is not found, try to find dependency with the minimum version.
             find_package(${dep_name} 
@@ -154,7 +128,7 @@ macro (ocio_find_package dep_name)
                     set(_${dep_name}_found_displayed true)
                 endif()
             endif()
-
+            
             if(DEFINED ocio_dep_RECOMMENDED_MIN_VERSION)
                 if (ocio_dep_VERSION VERSION_LESS ocio_dep_RECOMMENDED_MIN_VERSION)
                     message(STATUS "${ColorSuccess}Found ${dep_name} (version \"${ocio_dep_VERSION}\") (recommended version: \"${ocio_dep_RECOMMENDED_MIN_VERSION}\")${ColorReset}")
@@ -169,21 +143,27 @@ macro (ocio_find_package dep_name)
             message(STATUS "${ColorSuccess}Found ${dep_name} (no version information)${ColorReset}")
         endif()
     else()
-        ocio_print_versions_error(${dep_name})
+        if(ocio_dep_REQUIRED AND NOT ocio_dep_ALLOW_INSTALL)
+            set(message_color "${ColorError}")
+        else()
+            set(message_color "${ColorReset}")
+        endif()
+
+        ocio_print_versions_error(${dep_name} ${message_color})
 
         if(${dep_name}_ROOT)
-            message(STATUS "${ColorError}   ${dep_name}_ROOT was: ${${dep_name}_ROOT} ${ColorReset}")
+            message(STATUS "${message_color}   ${dep_name}_ROOT was: ${${dep_name}_ROOT} ${ColorReset}")
         elseif($ENV{${dep_name}_ROOT})
-            message(STATUS "${ColorError}   ENV ${dep_name}_ROOT was: ${${dep_name}_ROOT} ${ColorReset}")
+            message(STATUS "${message_color}   ENV ${dep_name}_ROOT was: ${${dep_name}_ROOT} ${ColorReset}")
         endif()
 
         if(ocio_dep_ALLOW_INSTALL)
-            ocio_install_package(${dep_name} VERSION ${ocio_dep_RECOMMENDED_MIN_VERSION})
+            ocio_install_dependency(${dep_name} VERSION ${ocio_dep_RECOMMENDED_MIN_VERSION})
         endif()
 
         if(ocio_dep_REQUIRED)
-            if(NOT ${dep_name}_FOUND AND NOT ${ocio_dep_VERSION})
-                message(FATAL_ERROR "${ColorError}${dep_name} is required, aborting.${ColorReset}")
+            if(NOT ${dep_name}_FOUND AND NOT ocio_dep_VERSION)
+                message(SEND_ERROR "${ColorError}${dep_name} is required, will abort at the end.${ColorReset}")
             endif()
         endif()
     endif()

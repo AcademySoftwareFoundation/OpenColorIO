@@ -134,7 +134,9 @@ if(NOT minizip-ng_FOUND AND OCIO_INSTALL_EXT_PACKAGES AND NOT OCIO_INSTALL_EXT_P
     )
 
     add_dependencies(MINIZIP::minizip-ng minizip-ng_install)
-    message(STATUS "Installing minizip-ng: ${minizip-ng_LIBRARY} (version \"${minizip-ng_VERSION}\")")
+    if(OCIO_VERBOSE)
+        message(STATUS "Installing minizip-ng: ${minizip-ng_LIBRARY} (version \"${minizip-ng_VERSION}\")")
+    endif()
 endif()
 
 ###############################################################################

@@ -142,7 +142,9 @@ if(NOT expat_FOUND AND OCIO_INSTALL_EXT_PACKAGES AND NOT OCIO_INSTALL_EXT_PACKAG
         )
 
         add_dependencies(expat::expat expat_install)
-        message(STATUS "Installing expat: ${expat_LIBRARY} (version \"${expat_VERSION}\")")
+        if(OCIO_VERBOSE)
+            message(STATUS "Installing expat: ${expat_LIBRARY} (version \"${expat_VERSION}\")")
+        endif()
     endif()
 endif()
 

@@ -104,7 +104,9 @@ if(NOT pybind11_FOUND AND OCIO_INSTALL_EXT_PACKAGES AND NOT OCIO_INSTALL_EXT_PAC
         )
 
         add_dependencies(pybind11::module pybind11_install)
-        message(STATUS "Installing pybind11: ${pybind11_INCLUDE_DIR} (version \"${pybind11_VERSION}\")")
+        if(OCIO_VERBOSE)
+            message(STATUS "Installing pybind11: ${pybind11_INCLUDE_DIR} (version \"${pybind11_VERSION}\")")
+        endif()
     endif()
 endif()
 
