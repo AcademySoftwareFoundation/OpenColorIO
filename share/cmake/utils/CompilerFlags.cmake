@@ -23,6 +23,20 @@ endif()
 ###############################################################################
 # Compile flags
 
+###############################################################################
+# Define if SSE2 can be used.
+# Check for SSE2 first since some compile flags need to be set on Apple ARM.
+
+include(CheckSupportSSE2)
+
+if(NOT HAVE_SSE2)
+    message(STATUS "Disabling SSE optimizations, as the target doesn't support them")
+    set(OCIO_USE_SSE OFF)
+endif(NOT HAVE_SSE2)
+
+###############################################################################
+# Compile flags
+
 if(USE_MSVC)
 
     set(PLATFORM_COMPILE_OPTIONS "${PLATFORM_COMPILE_OPTIONS};/DUSE_MSVC")
