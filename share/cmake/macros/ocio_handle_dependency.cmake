@@ -33,7 +33,7 @@ macro (ocio_handle_dependency dep_name)
         # options
         "REQUIRED;PREFER_CONFIG;ALLOW_INSTALL;VERBOSE"
         # one value keywords
-        "MIN_VERSION;MAX_VERSION;RECOMMENDED_MIN_VERSION;RECOMMENDED_MIN_VERSION_REASON"
+        "MIN_VERSION;MAX_VERSION;RECOMMENDED_MIN_VERSION;RECOMMENDED_MIN_VERSION_REASON;PROMOTE_TARGET"
         # multi value keywords
         "VERSION_VARS;COMPONENTS"
         # args
@@ -166,5 +166,9 @@ macro (ocio_handle_dependency dep_name)
                 message(SEND_ERROR "${ColorError}${dep_name} is required, will abort at the end.${ColorReset}")
             endif()
         endif()
+    endif()
+
+    if(${dep_name}_FOUND AND ocio_dep_PROMOTE_TARGET)
+        set_target_properties(${ocio_dep_PROMOTE_TARGET} PROPERTIES IMPORTED_GLOBAL TRUE)
     endif()
 endmacro()
