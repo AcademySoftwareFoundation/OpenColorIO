@@ -94,11 +94,26 @@ set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeR
 
 # Is that a valid build type?
 
-if(NOT "${CMAKE_BUILD_TYPE}" IN_LIST CMAKE_CONFIGURATION_TYPES)
+set(_build_type_valid_ false)
+foreach (_build_type_ ${CMAKE_CONFIGURATION_TYPES})
+    string(TOLOWER ${_build_type_} _lowercase_build_type_)
+    string(TOLOWER ${CMAKE_BUILD_TYPE} _lowercase_cmake_build_type_)
+
+    if (_lowercase_cmake_build_type_ STREQUAL _lowercase_build_type_)
+        # Build type is supported.
+        set(_build_type_valid_ true)
+        break()
+    endif()
+endforeach()
+unset(_lowercase_build_type_)
+unset(_lowercase_cmake_build_type_)
+
+if (NOT _build_type_valid_)
     string(REPLACE ";" ", " _CMAKE_CONFIGURATION_TYPES_STR "${CMAKE_CONFIGURATION_TYPES}")
     message(FATAL_ERROR 
             "CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} is unsupported. Supported values are: ${_CMAKE_CONFIGURATION_TYPES_STR}.")
 endif()
+unset(_build_type_valid_)
 
 # Is that in debug mode?
 
