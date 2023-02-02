@@ -3,6 +3,17 @@
 
 # Install the specific dependency using OCIO's custom installXYZ module 
 # where XYZ is the name of the dependency.
+
+###################################################################################################
+# ocio_install_dependency installs a dependency by calling the corresponding Install module.
+# e.g. Install<dep_name>.cmake
+#
+# Argument:
+#   dep_name is the name of the dependency (package). Please note that dep_name is case sensitive.
+#
+# Options (one value):
+#   VERSION                     - Version to install.
+###################################################################################################
 macro (ocio_install_dependency dep_name)
     cmake_parse_arguments(
         # prefix - Must be different than the one used in ocio_handle_dependency.cmake.

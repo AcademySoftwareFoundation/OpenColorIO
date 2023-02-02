@@ -3,6 +3,15 @@
 
 include(ocio_install_dependency)
 
+###################################################################################################
+# ocio_print_versions_error is a wrapper for messages when the dependency is not found.
+#
+# Arguments:
+#   dep_name is the name of the dependency (package). Please note that dep_name is case sensitive.
+#   message_color is the color of the message.
+#
+# Note that this marco is used in ocio_handle_dependency and should be there only.
+###################################################################################################
 macro (ocio_print_versions_error dep_name message_color)
     if(NOT ocio_dep_MIN_VERSION AND NOT ocio_dep_MAX_VERSION AND NOT ocio_dep_RECOMMENDED_MIN_VERSION)
         message(STATUS "${message_color}Could NOT find ${dep_name} (no version specified)${ColorReset}")
@@ -26,6 +35,41 @@ endmacro()
 # Using a macro because OCIO wants the scope to be the same as the caller scope.
 # Find modules will set variables via the PARENT_SCOPE option and OCIO needs those 
 # variables in the caller scope.
+
+###################################################################################################
+# ocio_handle_dependency is a wrapper for find_package with extra options (features).
+#
+# Argument:
+#   dep_name is the name of the dependency (package). Please note that dep_name is case sensitive.
+#
+# Options (no value): 
+#   REQUIRED                        - Whether the dependency is required or not. Fails if missing.
+#   PREFER_CONFIG                   - Call find_package in CONFIG mode internally. 
+#                                     Note that it tries to find <dep_name>Config.cmake or 
+#                                     <dep_name>-Config.cmake directly.
+#   ALLOW_INSTALL                   - Try to install the dependency if not found. Note that a 
+#                                     corresponding Install<dep_name>.cmake file must exist.
+#   VERBOSE                         - Enable extra logging.
+#
+# Options (one value):
+#   MIN_VERSION                     - Minimum version for the dependency.
+#   MAX_VERSION                     - Maximum version for the dependency.
+#   RECOMMENDED_MIN_VERSION         - Recommended version for the dependency.
+#   RECOMMENDED_MIN_VERSION_REASON  - Reason for the recommended version.
+#
+# Options (multiple values):
+#   VERSION_VARS                    - List of version variables. Default to <dep_name>_VERSION.
+#   COMPONENTS                      - List of components to find. Just like find_package option.
+#   PROMOTE_TARGET                  - List of targets that needs to be globally visible by setting 
+#                                     the targets property IMPORTED_GLOBAL to true. Note that the
+#                                     targets must be created by the dependency.
+#
+# This is a macro because OCIO wants the scope to be the same as the caller scope.
+# Find modules will set variables via the PARENT_SCOPE option and OCIO needs those 
+# variables in the caller scope.
+#
+###################################################################################################
+
 macro (ocio_handle_dependency dep_name)
     cmake_parse_arguments(
         # prefix
@@ -124,7 +168,7 @@ macro (ocio_handle_dependency dep_name)
             if(DEFINED ocio_dep_MAX_VERSION)
                 if(ocio_dep_VERSION VERSION_GREATER ocio_dep_MAX_VERSION)
                     # Display it as an error, but do not abort right now.
-                    message(SEND_ERROR "${ColorError}Found ${dep_name} ${ocio_dep_VERSION}, but is it over the recommended maximum version \"${ocio_dep_MAX_VERSION}\" ${ColorReset}")
+                    message(SEND_ERROR "${ColorError}Found ${dep_name} ${ocio_dep_VERSION}, but it is over the maximum version \"${ocio_dep_MAX_VERSION}\" ${ColorReset}")
                     set(_${dep_name}_found_displayed true)
                 endif()
             endif()
@@ -132,6 +176,9 @@ macro (ocio_handle_dependency dep_name)
             if(DEFINED ocio_dep_RECOMMENDED_MIN_VERSION)
                 if (ocio_dep_VERSION VERSION_LESS ocio_dep_RECOMMENDED_MIN_VERSION)
                     message(STATUS "${ColorSuccess}Found ${dep_name} (version \"${ocio_dep_VERSION}\") (recommended version: \"${ocio_dep_RECOMMENDED_MIN_VERSION}\")${ColorReset}")
+                    if (ocio_dep_RECOMMENDED_MIN_VERSION_REASON)
+                        message(STATUS "   Reason: ${ocio_dep_RECOMMENDED_MIN_VERSION_REASON}")
+                    endif()
                     set(_${dep_name}_found_displayed true)
                 endif()
             endif()
@@ -169,6 +216,8 @@ macro (ocio_handle_dependency dep_name)
     endif()
 
     if(${dep_name}_FOUND AND ocio_dep_PROMOTE_TARGET)
-        set_target_properties(${ocio_dep_PROMOTE_TARGET} PROPERTIES IMPORTED_GLOBAL TRUE)
+        foreach (_target_to_be_promoted_ ${ocio_dep_PROMOTE_TARGET})
+            set_target_properties(${_target_to_be_promoted_} PROPERTIES IMPORTED_GLOBAL TRUE)
+        endforeach()
     endif()
 endmacro()
