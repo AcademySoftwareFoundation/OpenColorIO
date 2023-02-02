@@ -253,12 +253,15 @@ if((OCIO_BUILD_APPS AND OCIO_USE_OIIO_FOR_APPS) OR OCIO_BUILD_TESTS)
     set(OIIO_VERSION "2.2.14")
     set(OIIO_RECOMMENDED_VERSION "2.4")
 
-    # TODO: Try when OIIO 2.4 is released (https://github.com/OpenImageIO/oiio/pull/3322).
     # Supported from OIIO 2.4+. Setting this for lower versions doesn't affect anything.
     set(OPENIMAGEIO_CONFIG_DO_NOT_FIND_IMATH 1)
-    ocio_handle_dependency(  OpenImageIO 
+
+    # Only using find_package in CONFIG mode using PREFER_CONFIG option as OIIO support
+    # config file since 2.1+ and OCIO minimum version is over that.
+    ocio_handle_dependency(  OpenImageIO PREFER_CONFIG
                              MIN_VERSION ${OIIO_VERSION}
-                             RECOMMENDED_MIN_VERSION ${OIIO_RECOMMENDED_VERSION})
+                             RECOMMENDED_MIN_VERSION ${OIIO_RECOMMENDED_VERSION}
+                             PROMOTE_TARGET OpenImageIO::OpenImageIO)
 endif()
 
 if(OCIO_BUILD_APPS)
@@ -269,10 +272,11 @@ if(OCIO_BUILD_APPS)
     else()
         # OpenEXR
         # https://github.com/AcademySoftwareFoundation/openexr
-        ocio_handle_dependency(  OpenEXR REQUIRED ALLOW_INSTALL
+        ocio_handle_dependency(  OpenEXR REQUIRED PREFER_CONFIG ALLOW_INSTALL
                                  MIN_VERSION 3.0.4
                                  RECOMMENDED_MIN_VERSION 3.1.5
-                                 RECOMMENDED_MIN_VERSION_REASON "Latest version tested with OCIO")
+                                 RECOMMENDED_MIN_VERSION_REASON "Latest version tested with OCIO"
+                                 PROMOTE_TARGET OpenEXR::OpenEXR)
 
         if(OpenEXR_FOUND AND TARGET OpenEXR::OpenEXR)
             add_library(OpenColorIO::ImageIOBackend ALIAS OpenEXR::OpenEXR)
