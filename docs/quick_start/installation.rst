@@ -187,10 +187,42 @@ Three ``OCIO_INSTALL_EXT_PACKAGES`` options are available::
 Existing Install Hints
 ++++++++++++++++++++++
 
-When using libraries already on your system, the CMake variable 
-``-D <Package Name>_ROOT=<Path>`` may be used to specify the path to the include and 
-library root directory rather than have CMake try to find it.  The package names used 
-by OCIO are as follows (note that these are case-sensitive):
+The recommended way to find a dependency is by using their configuration file. Most dependencies 
+provides those files. These configuration files sets all the necessary targets and variables. 
+CMake needs to know where to find these configuration files. If CMake doesn't find them in any of 
+the default locations, you may use the variable ``-D<Package Name>_DIR=<path to configuration files folder>``.
+
+Note that ``lcms2``, ``openfx``, ``pystring`` and ``sphinx`` does **not** support ``<Package Name>_DIR``.
+
+Alternative methods exist to aid CMake in locating dependencies, but they should only be used in specific 
+situations, such as when attempting to help CMake find dependencies that do not have configuration 
+files available or when the static version of a dependency is needed.
+
+An alternative method is using the CMake variable ``-D<Package Name>_ROOT=<path to folder>``. That 
+variable may be used to specify the path to the include and library root directory.
+
+Note that ``OpenImageIO`` and ``OpenEXR`` does **not** support ``<Package Name>_ROOT``.
+
+There are scenarios in which some of the dependencies may not be compiled into an 
+OCIO dynamic library.  This is more likely when OCIO does not download the packages
+itself.  In these cases, it may be helpful to specify an additional CMake variable. While using 
+``<Package Name>_ROOT``, some dependencies allows the usage of ``-D<Package Name>_STATIC_LIBRARY=ON``. 
+If ``<Package Name>_STATIC_LIBRARY`` is set, CMake will try to find static version of the dependency.
+
+The following package **support** ``-D<Package Name>_STATIC_LIBRARY=ON``:
+``expat``, ``yaml-cpp``, ``Imath``, ``lcms2``, ``ZLIB``, and ``minizip-ng``.
+
+Rather than using ``<Package Name>_ROOT``, and possibly ``<Package Name>_STATIC_LIBRARY``, you may 
+instead use ``-D<Package Name>_LIBRARY=<path to library file>`` 
+and ``-D<Package Name>_INCLUDE_DIR=<path to headers folder>``. In this case, the library path will 
+control whether a static or dynamic library is used. It may also be used to handle situations where 
+the library and/or include files are not in the typical location relative to the root directory.
+
+The following package **support** ``<Package Name>_LIBRARY`` and ``<Package Name>_INCLUDE_DIR``:
+``expat``, ``yaml-cpp``, ``Imath``, ``lcms2``, ``openfx``, ``OSL``, ``pybind11``, ``pystring``, 
+``yaml-cpp``, ``ZLIB``, and ``minizip-ng``.
+
+The package names used by OCIO are as follows (note that these are case-sensitive):
 
 Required:
 
@@ -214,21 +246,6 @@ Optional:
 - ``GLUT``
 - ``Python``
 
-There are scenarios in which some of the dependencies may not be compiled into an 
-OCIO dynamic library.  This is more likely when OCIO does not download the packages
-itself.  In these cases, it may be helpful to additionally specify the CMake variable
-``-D <Package Name>_STATIC_LIBRARY=ON``. The following package names support this hint:
-``expat``, ``yaml-cpp``, ``Imath``, ``lcms2``, ``ZLIB``, and ``minizip-ng``.
-
-Rather than using ``_ROOT``, and possibly ``_STATIC_LIBRARY``, you may instead use
-``-D <Package Name>_LIBRARY=<Path>`` and ``-D <Package Name>_INCLUDE_DIR=<Path>``.
-In this case, the library path will control whether a static or dynamic library is used.
-It may also be used to handle situations where the library and/or include files are not
-in the typical location relative to the root directory.
-
-The OCIO `CMake find modules <https://github.com/AcademySoftwareFoundation/OpenColorIO/tree/main/share/cmake/modules>`_ 
-may be consulted for more detail on the handling of a given package and the CMake
-variables it uses.
 
 Please note that if you provide your own ``minizip-ng``, rather than having OCIO's CMake
 download and build it, you will likely need to set its CMake variables the same way
@@ -236,6 +253,10 @@ that OCIO does (e.g., enable ZLib and turn off most other options).  Using a ``m
 from various package managers (e.g., Homebrew) probably won't work.  Please see the
 settings that begin with ``-DMZ_`` that are used in the OCIO 
 `minizip-ng find module. <https://github.com/AcademySoftwareFoundation/OpenColorIO/tree/main/share/cmake/modules/Findminizip-ng.cmake>`_ 
+
+The OCIO `CMake find modules <https://github.com/AcademySoftwareFoundation/OpenColorIO/tree/main/share/cmake/modules>`_ 
+may be consulted for more detail on the handling of a given package and the CMake
+variables it uses.
 
 Please note that if you build a static OCIO library, it will not contain the libraries 
 for the external packages and so you will need to list those separately when linking your
@@ -384,7 +405,7 @@ Windows
 While build environments may vary between users, the recommended way to build OCIO from source on 
 Windows 7 or newer is to use the scripts provided in the Windows 
 `share <https://github.com/AcademySoftwareFoundation/OpenColorIO/tree/main/share/dev/windows>`_ 
-section of the OCIO repository. There are two scripts currently available. 
+section of the OCIO repository. There are two scripts currently available.
 
 The first script is called 
 `ocio_deps.bat <https://github.com/AcademySoftwareFoundation/OpenColorIO/tree/main/share/dev/windows/ocio_deps.bat>`_ 
@@ -396,14 +417,18 @@ and it provides some automation to install the most difficult dependencies. Thos
 - Glew
 - Python dependencies for documentation
 
-Run this command to execute the ocio_deps.bat script::
+Run this command to execute the ocio_deps.bat script:
 
+.. code-block:: bash
+    
     ocio_deps.bat --vcpkg <path to current vcpkg installation or where it should be installed>
 
 The second script is called 
 `ocio.bat <https://github.com/AcademySoftwareFoundation/OpenColorIO/tree/main/share/dev/windows/ocio.bat>`_ 
 and it provide a way to configure and build OCIO from source. Moreover, this script executes the 
-install step of ``cmake`` as well as the unit tests. The main use case is the following::
+install step of ``cmake`` as well as the unit tests. The main use case is the following:
+
+.. code-block:: bash
 
     ocio.bat --b <path to build folder> --i <path to install folder> 
     --vcpkg <path to vcpkg installation> --ocio <path to ocio repository> --type Release
@@ -422,14 +447,26 @@ Quick environment configuration
 
 The quickest way to set the required :ref:`environment-setup` is to
 source the ``share/ocio/setup_ocio.sh`` script installed with OCIO.
-On Windows, use the corresponding setup_ocio.bat file.
+On Windows, use the corresponding setup_ocio.bat file. See OCIO's install directory under 
+share/ocio.
 
-For a simple single-user setup, add the following to ``~/.bashrc``
+For a temporary configuration of your terminal, you can run the following script:
+
+.. code-block:: bash
+
+   # Windows - Execute setup_ocio.bat
+   [... path to OCIO install directory]/share/ocio/setup_ocio.bat
+   # Unix - Execute setup_ocio.sh
+   [... path to OCIO install directory]\share\ocio\setup_ocio.sh
+
+For a more permanent option, add the following to ``~/.bashrc``
 (assuming you are using bash, and the example install directory of
-``/software/ocio``)::
+``/software/ocio``):
 
-    source /software/ocio/share/ocio/setup_ocio.sh
+.. code-block:: bash
 
+   source /software/ocio/share/ocio/setup_ocio.sh
+    
 The only environment variable you must configure manually is
 :envvar:`OCIO`, which points to the configuration file you wish to
 use. For prebuilt config files, see the
