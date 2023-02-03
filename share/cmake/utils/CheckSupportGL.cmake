@@ -26,8 +26,8 @@ if((OCIO_BUILD_TESTS AND OCIO_BUILD_GPU_TESTS) OR OCIO_BUILD_APPS)
         # PREFER_CONFIG assure that config mode will be used first and fallback to module mode.
         ocio_handle_dependency(  GLEW PREFER_CONFIG
                                  MIN_VERSION 2.1.0
-                                 RECOMMENDED_MIN_VERSION 2.1.0
-                                 RECOMMENDED_MIN_VERSION_REASON "Latest version tested with OCIO")
+                                 RECOMMENDED_VERSION 2.1.0
+                                 RECOMMENDED_VERSION_REASON "Latest version tested with OCIO")
         if(NOT GLEW_FOUND)
             package_root_message(GLEW)
             set(OCIO_GL_ENABLED OFF)
@@ -71,8 +71,8 @@ if((OCIO_BUILD_TESTS AND OCIO_BUILD_GPU_TESTS) OR OCIO_BUILD_APPS)
 
     ocio_handle_dependency(  GLUT
                              MIN_VERSION 3.2.1
-                             RECOMMENDED_MIN_VERSION 3.2.1
-                             RECOMMENDED_MIN_VERSION_REASON "Latest version tested with OCIO")
+                             RECOMMENDED_VERSION 3.2.1
+                             RECOMMENDED_VERSION_REASON "Latest version tested with OCIO")
     if(NOT GLUT_FOUND)
         package_root_message(GLUT)
         set(OCIO_GL_ENABLED OFF)
