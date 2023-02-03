@@ -83,137 +83,147 @@ macro (ocio_handle_dependency dep_name)
         # args
         ${ARGN})
 
-    set(ocio_dep_QUIET_string "")
-    # Do not set to QUIET when OCIO_VERBOSE is ON.
-    if(NOT ocio_dep_VERBOSE AND NOT OCIO_VERBOSE)
-        set(${dep_name}_FIND_QUIETLY true)
-        set(ocio_dep_QUIET_string "QUIET")
+    set(ocio_dep_FORCE_INSTALLATION OFF)
+    if(ocio_dep_ALLOW_INSTALL AND OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
+        set(ocio_dep_FORCE_INSTALLATION ON)
     endif()
-
-    set(ocio_dep_CONFIG_string "")
-    if(ocio_dep_PREFER_CONFIG)
-        set(ocio_dep_CONFIG_string "CONFIG")
-    endif()
-
-    set(ocio_dep_COMPONENTS_string "")
-    if(ocio_dep_COMPONENTS)
-        set(ocio_dep_COMPONENTS_string "COMPONENTS")
-    endif()
-
-    if (${dep_name}_FOUND)
-        # Nothing to do. Already found.
-    else()
-        # Try to find the recommended, or higher, version.
-        # Note that the recommended version should always be specified.
-        find_package(${dep_name}
-                     ${ocio_dep_RECOMMENDED_VERSION}
-                     ${ocio_dep_CONFIG_string}
-                     ${ocio_dep_COMPONENTS_string} 
-                     ${ocio_dep_COMPONENTS}
-                     ${ocio_dep_QUIET_string}
-                     ${ocio_dep_UNPARSED_ARGUMENTS})
-
-        if (NOT ${dep_name}_FOUND AND ocio_dep_PREFER_CONFIG)
-            # Try find_package in module mode instead of config mode.
-            find_package(${dep_name}
-                ${ocio_dep_RECOMMENDED_VERSION}
-                ${ocio_dep_COMPONENTS_string} 
-                ${ocio_dep_COMPONENTS}
-                ${ocio_dep_QUIET_string}
-                ${ocio_dep_UNPARSED_ARGUMENTS})
+    
+    if(NOT ocio_dep_FORCE_INSTALLATION)
+        set(ocio_dep_QUIET_string "")
+        # Do not set to QUIET when OCIO_VERBOSE is ON.
+        if(NOT ocio_dep_VERBOSE AND NOT OCIO_VERBOSE)
+            set(${dep_name}_FIND_QUIETLY true)
+            set(ocio_dep_QUIET_string "QUIET")
         endif()
-        
-        if(NOT ${dep_name}_FOUND AND ocio_dep_MIN_VERSION
-           AND NOT ocio_dep_MIN_VERSION VERSION_EQUAL ocio_dep_MAX_VERSION
-           AND NOT ocio_dep_MIN_VERSION VERSION_EQUAL ocio_dep_RECOMMENDED_VERSION)
 
-            # if the recommended, or higher, version is not found, try to find dependency with 
-            # the minimum version.
-            find_package(${dep_name} 
-                         ${ocio_dep_MIN_VERSION} 
-                         ${ocio_dep_CONFIG_string}
-                         ${ocio_dep_COMPONENTS_string} 
-                         ${ocio_dep_COMPONENTS}
-                         ${ocio_dep_QUIET_string}
-                         ${ocio_dep_UNPARSED_ARGUMENTS})
+        set(ocio_dep_CONFIG_string "")
+        if(ocio_dep_PREFER_CONFIG)
+            set(ocio_dep_CONFIG_string "CONFIG")
+        endif()
+
+        set(ocio_dep_COMPONENTS_string "")
+        if(ocio_dep_COMPONENTS)
+            set(ocio_dep_COMPONENTS_string "COMPONENTS")
+        endif()
+
+        if (${dep_name}_FOUND)
+            # Nothing to do. Already found.
+        else()
+            # Try to find the recommended, or higher, version.
+            # Note that the recommended version should always be specified.
+            find_package(${dep_name}
+                        ${ocio_dep_RECOMMENDED_VERSION}
+                        ${ocio_dep_CONFIG_string}
+                        ${ocio_dep_COMPONENTS_string} 
+                        ${ocio_dep_COMPONENTS}
+                        ${ocio_dep_QUIET_string}
+                        ${ocio_dep_UNPARSED_ARGUMENTS})
+
             if (NOT ${dep_name}_FOUND AND ocio_dep_PREFER_CONFIG)
                 # Try find_package in module mode instead of config mode.
-                find_package(${dep_name} 
-                    ${ocio_dep_MIN_VERSION}
+                find_package(${dep_name}
+                    ${ocio_dep_RECOMMENDED_VERSION}
                     ${ocio_dep_COMPONENTS_string} 
                     ${ocio_dep_COMPONENTS}
                     ${ocio_dep_QUIET_string}
                     ${ocio_dep_UNPARSED_ARGUMENTS})
             endif()
-        endif()
-    endif()
-    
-    # Check which VERSION_VARS was set by find_package.
-    set(_VERSION_VAR "${dep_name}_VERSION")
-    foreach (_vervar ${ocio_dep_VERSION_VARS})
-        if(${_vervar})
-            set(_VERSION_VAR ${_vervar})
-            break()
-        endif()
-    endforeach()
+            
+            if(NOT ${dep_name}_FOUND AND ocio_dep_MIN_VERSION
+            AND NOT ocio_dep_MIN_VERSION VERSION_EQUAL ocio_dep_MAX_VERSION
+            AND NOT ocio_dep_MIN_VERSION VERSION_EQUAL ocio_dep_RECOMMENDED_VERSION)
 
-    if(_VERSION_VAR)
-        set(ocio_dep_VERSION ${${_VERSION_VAR}})
-    endif()
-
-    # Expecting that the minimum and recommended version are always provided.
-    # Make sure that the version is within the valid range.
-    if(${dep_name}_FOUND)
-        if (ocio_dep_VERSION)
-            # Make sure that the version found is not greater than the maximum version.
-            if(DEFINED ocio_dep_MAX_VERSION)
-                if(ocio_dep_VERSION VERSION_GREATER ocio_dep_MAX_VERSION)
-                    # Display it as an error, but do not abort right now.
-                    message(SEND_ERROR "${ColorError}Found ${dep_name} ${ocio_dep_VERSION}, but it is over the maximum version \"${ocio_dep_MAX_VERSION}\" ${ColorReset}")
-                    set(_${dep_name}_found_displayed true)
+                # if the recommended, or higher, version is not found, try to find dependency with 
+                # the minimum version.
+                find_package(${dep_name} 
+                            ${ocio_dep_MIN_VERSION} 
+                            ${ocio_dep_CONFIG_string}
+                            ${ocio_dep_COMPONENTS_string} 
+                            ${ocio_dep_COMPONENTS}
+                            ${ocio_dep_QUIET_string}
+                            ${ocio_dep_UNPARSED_ARGUMENTS})
+                if (NOT ${dep_name}_FOUND AND ocio_dep_PREFER_CONFIG)
+                    # Try find_package in module mode instead of config mode.
+                    find_package(${dep_name} 
+                        ${ocio_dep_MIN_VERSION}
+                        ${ocio_dep_COMPONENTS_string} 
+                        ${ocio_dep_COMPONENTS}
+                        ${ocio_dep_QUIET_string}
+                        ${ocio_dep_UNPARSED_ARGUMENTS})
                 endif()
             endif()
-            
-            if(DEFINED ocio_dep_RECOMMENDED_VERSION)
-                if (ocio_dep_VERSION VERSION_LESS ocio_dep_RECOMMENDED_VERSION)
-                    message(STATUS "${ColorSuccess}Found ${dep_name} (version \"${ocio_dep_VERSION}\") (recommended version: \"${ocio_dep_RECOMMENDED_VERSION}\")${ColorReset}")
-                    if (ocio_dep_RECOMMENDED_VERSION_REASON)
-                        message(STATUS "   Reason: ${ocio_dep_RECOMMENDED_VERSION_REASON}")
+        endif()
+        
+        # Check which VERSION_VARS was set by find_package.
+        set(_VERSION_VAR "${dep_name}_VERSION")
+        foreach (_vervar ${ocio_dep_VERSION_VARS})
+            if(${_vervar})
+                set(_VERSION_VAR ${_vervar})
+                break()
+            endif()
+        endforeach()
+
+        if(_VERSION_VAR)
+            set(ocio_dep_VERSION ${${_VERSION_VAR}})
+        endif()
+
+        # Expecting that the minimum and recommended version are always provided.
+        # Make sure that the version is within the valid range.
+        if(${dep_name}_FOUND)
+            if (ocio_dep_VERSION)
+                # Make sure that the version found is not greater than the maximum version.
+                if(DEFINED ocio_dep_MAX_VERSION)
+                    if(ocio_dep_VERSION VERSION_GREATER ocio_dep_MAX_VERSION)
+                        # Display it as an error, but do not abort right now.
+                        message(SEND_ERROR "${ColorError}Found ${dep_name} ${ocio_dep_VERSION}, but it is over the maximum version \"${ocio_dep_MAX_VERSION}\" ${ColorReset}")
+                        set(_${dep_name}_found_displayed true)
                     endif()
-                    set(_${dep_name}_found_displayed true)
+                endif()
+                
+                if(DEFINED ocio_dep_RECOMMENDED_VERSION)
+                    if (ocio_dep_VERSION VERSION_LESS ocio_dep_RECOMMENDED_VERSION)
+                        message(STATUS "${ColorSuccess}Found ${dep_name} (version \"${ocio_dep_VERSION}\") (recommended version: \"${ocio_dep_RECOMMENDED_VERSION}\")${ColorReset}")
+                        if (ocio_dep_RECOMMENDED_VERSION_REASON)
+                            message(STATUS "   Reason: ${ocio_dep_RECOMMENDED_VERSION_REASON}")
+                        endif()
+                        set(_${dep_name}_found_displayed true)
+                    endif()
+                endif()
+                
+                if(NOT _${dep_name}_found_displayed)
+                    message(STATUS "${ColorSuccess}Found ${dep_name} (version \"${ocio_dep_VERSION}\")${ColorReset}")
+                endif()
+            else()
+                message(STATUS "${ColorSuccess}Found ${dep_name} (no version information)${ColorReset}")
+            endif()
+        else()
+            if(ocio_dep_REQUIRED AND NOT ocio_dep_ALLOW_INSTALL)
+                set(message_color "${ColorError}")
+            else()
+                set(message_color "${ColorReset}")
+            endif()
+
+            ocio_print_versions_error(${dep_name} ${message_color})
+
+            if(${dep_name}_ROOT)
+                message(STATUS "${message_color}   ${dep_name}_ROOT was: ${${dep_name}_ROOT} ${ColorReset}")
+            elseif($ENV{${dep_name}_ROOT})
+                message(STATUS "${message_color}   ENV ${dep_name}_ROOT was: ${${dep_name}_ROOT} ${ColorReset}")
+            endif()
+
+            if(ocio_dep_ALLOW_INSTALL)
+                ocio_install_dependency(${dep_name} VERSION ${ocio_dep_RECOMMENDED_VERSION})
+            endif()
+
+            if(ocio_dep_REQUIRED)
+                if(NOT ${dep_name}_FOUND AND NOT ocio_dep_VERSION)
+                    message(SEND_ERROR "${ColorError}${dep_name} is required, will abort at the end.${ColorReset}")
                 endif()
             endif()
-            
-            if(NOT _${dep_name}_found_displayed)
-                message(STATUS "${ColorSuccess}Found ${dep_name} (version \"${ocio_dep_VERSION}\")${ColorReset}")
-            endif()
-        else()
-            message(STATUS "${ColorSuccess}Found ${dep_name} (no version information)${ColorReset}")
         endif()
-    else()
-        if(ocio_dep_REQUIRED AND NOT ocio_dep_ALLOW_INSTALL)
-            set(message_color "${ColorError}")
-        else()
-            set(message_color "${ColorReset}")
-        endif()
-
-        ocio_print_versions_error(${dep_name} ${message_color})
-
-        if(${dep_name}_ROOT)
-            message(STATUS "${message_color}   ${dep_name}_ROOT was: ${${dep_name}_ROOT} ${ColorReset}")
-        elseif($ENV{${dep_name}_ROOT})
-            message(STATUS "${message_color}   ENV ${dep_name}_ROOT was: ${${dep_name}_ROOT} ${ColorReset}")
-        endif()
-
-        if(ocio_dep_ALLOW_INSTALL)
-            ocio_install_dependency(${dep_name} VERSION ${ocio_dep_RECOMMENDED_VERSION})
-        endif()
-
-        if(ocio_dep_REQUIRED)
-            if(NOT ${dep_name}_FOUND AND NOT ocio_dep_VERSION)
-                message(SEND_ERROR "${ColorError}${dep_name} is required, will abort at the end.${ColorReset}")
-            endif()
-        endif()
+    elseif(ocio_dep_FORCE_INSTALLATION)
+        # Skip the search and install dependency right away.
+        ocio_install_dependency(${dep_name} VERSION ${ocio_dep_RECOMMENDED_VERSION})
     endif()
 
     if(${dep_name}_FOUND AND ocio_dep_PROMOTE_TARGET)
