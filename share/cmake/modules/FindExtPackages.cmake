@@ -56,29 +56,29 @@ message(STATUS "Checking for mandatory dependencies...")
 # https://github.com/libexpat/libexpat
 ocio_handle_dependency(  expat REQUIRED ALLOW_INSTALL
                          MIN_VERSION 2.4.1
-                         RECOMMENDED_MIN_VERSION 2.5.0
-                         RECOMMENDED_MIN_VERSION_REASON "CVE fixes and fix issue with symbol leakage when built as a static library")
+                         RECOMMENDED_VERSION 2.5.0
+                         RECOMMENDED_VERSION_REASON "CVE fixes and fix issue with symbol leakage when built as a static library")
 
 # yaml-cpp
 # https://github.com/jbeder/yaml-cpp
 ocio_handle_dependency(  yaml-cpp REQUIRED ALLOW_INSTALL
                          MIN_VERSION 0.6.3
-                         RECOMMENDED_MIN_VERSION 0.7.0
-                         RECOMMENDED_MIN_VERSION_REASON "Latest version tested with OCIO")
+                         RECOMMENDED_VERSION 0.7.0
+                         RECOMMENDED_VERSION_REASON "Latest version tested with OCIO")
 
 # pystring
 # https://github.com/imageworks/pystring
 ocio_handle_dependency(  pystring REQUIRED ALLOW_INSTALL
                          MIN_VERSION 1.1.3
-                         RECOMMENDED_MIN_VERSION 1.1.3
-                         RECOMMENDED_MIN_VERSION_REASON "Latest version tested with OCIO")
+                         RECOMMENDED_VERSION 1.1.3
+                         RECOMMENDED_VERSION_REASON "Latest version tested with OCIO")
 
 # Imath (>=3.1)
 # https://github.com/AcademySoftwareFoundation/Imath
 ocio_handle_dependency(  Imath REQUIRED ALLOW_INSTALL
                          MIN_VERSION 3.1.1
-                         RECOMMENDED_MIN_VERSION 3.1.5
-                         RECOMMENDED_MIN_VERSION_REASON "Latest version tested with OCIO")
+                         RECOMMENDED_VERSION 3.1.5
+                         RECOMMENDED_VERSION_REASON "Latest version tested with OCIO")
 
 ###############################################################################
 ### ZLIB (https://github.com/madler/zlib)
@@ -144,8 +144,8 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
 
     ocio_handle_dependency(  ZLIB REQUIRED ALLOW_INSTALL
                              MIN_VERSION 1.2.10
-                             RECOMMENDED_MIN_VERSION 1.2.13
-                             RECOMMENDED_MIN_VERSION_REASON "CVE fixes"
+                             RECOMMENDED_VERSION 1.2.13
+                             RECOMMENDED_VERSION_REASON "CVE fixes"
                              VERSION_VARS ZLIB_VERSION_STRING ZLIB_VERSION )
 
     # Restore the original find library ordering
@@ -173,8 +173,8 @@ endif()
 # https://github.com/zlib-ng/minizip-ng
 ocio_handle_dependency(  minizip-ng REQUIRED ALLOW_INSTALL
                          MIN_VERSION 3.0.6
-                         RECOMMENDED_MIN_VERSION 3.0.7
-                         RECOMMENDED_MIN_VERSION_REASON "Latest version tested with OCIO")
+                         RECOMMENDED_VERSION 3.0.7
+                         RECOMMENDED_VERSION_REASON "Latest version tested with OCIO")
 
 ###############################################################################
 ##
@@ -194,8 +194,8 @@ if(OCIO_BUILD_APPS)
     # https://github.com/mm2/Little-CMS
     ocio_handle_dependency(  lcms2 REQUIRED ALLOW_INSTALL
                              MIN_VERSION 2.2
-                             RECOMMENDED_MIN_VERSION 2.2
-                             RECOMMENDED_MIN_VERSION_REASON "Latest version tested with OCIO")
+                             RECOMMENDED_VERSION 2.2
+                             RECOMMENDED_VERSION_REASON "Latest version tested with OCIO")
 endif()
 
 if(OCIO_BUILD_OPENFX)
@@ -203,8 +203,8 @@ if(OCIO_BUILD_OPENFX)
     # https://github.com/ofxa/openfx
     ocio_handle_dependency(  openfx REQUIRED ALLOW_INSTALL
                              MIN_VERSION 1.4
-                             RECOMMENDED_MIN_VERSION 1.4
-                             RECOMMENDED_MIN_VERSION_REASON "Latest version tested with OCIO")
+                             RECOMMENDED_VERSION 1.4
+                             RECOMMENDED_VERSION_REASON "Latest version tested with OCIO")
 endif()
 
 if (OCIO_PYTHON_VERSION AND NOT OCIO_BUILD_PYTHON)
@@ -231,8 +231,8 @@ if(OCIO_BUILD_PYTHON OR OCIO_BUILD_DOCS)
     ocio_handle_dependency(  Python REQUIRED
                              COMPONENTS ${_Python_COMPONENTS}
                              MIN_VERSION ${OCIO_PYTHON_VERSION}
-                             RECOMMENDED_MIN_VERSION ${OCIO_PYTHON_VERSION}
-                             RECOMMENDED_MIN_VERSION_REASON "Latest version tested with OCIO")
+                             RECOMMENDED_VERSION ${OCIO_PYTHON_VERSION}
+                             RECOMMENDED_VERSION_REASON "Latest version tested with OCIO")
 
     if(OCIO_BUILD_PYTHON)
         # pybind11
@@ -240,8 +240,8 @@ if(OCIO_BUILD_PYTHON OR OCIO_BUILD_DOCS)
         # pybind11 2.9 fixes issues with MS Visual Studio 2022 (Debug).
         ocio_handle_dependency(  pybind11 REQUIRED ALLOW_INSTALL
                                  MIN_VERSION 2.9.2
-                                 RECOMMENDED_MIN_VERSION 2.9.2
-                                 RECOMMENDED_MIN_VERSION_REASON "Pybind 2.10.0+ does not work with Python 2.7 anymore")
+                                 RECOMMENDED_VERSION 2.9.2
+                                 RECOMMENDED_VERSION_REASON "Pybind 2.10.0+ does not work with Python 2.7 anymore")
     endif()
 endif()
 
@@ -260,7 +260,7 @@ if((OCIO_BUILD_APPS AND OCIO_USE_OIIO_FOR_APPS) OR OCIO_BUILD_TESTS)
     # config file since 2.1+ and OCIO minimum version is over that.
     ocio_handle_dependency(  OpenImageIO PREFER_CONFIG
                              MIN_VERSION ${OIIO_VERSION}
-                             RECOMMENDED_MIN_VERSION ${OIIO_RECOMMENDED_VERSION}
+                             RECOMMENDED_VERSION ${OIIO_RECOMMENDED_VERSION}
                              PROMOTE_TARGET OpenImageIO::OpenImageIO)
 endif()
 
@@ -274,8 +274,8 @@ if(OCIO_BUILD_APPS)
         # https://github.com/AcademySoftwareFoundation/openexr
         ocio_handle_dependency(  OpenEXR REQUIRED PREFER_CONFIG ALLOW_INSTALL
                                  MIN_VERSION 3.0.4
-                                 RECOMMENDED_MIN_VERSION 3.1.5
-                                 RECOMMENDED_MIN_VERSION_REASON "Latest version tested with OCIO"
+                                 RECOMMENDED_VERSION 3.1.5
+                                 RECOMMENDED_VERSION_REASON "Latest version tested with OCIO"
                                  PROMOTE_TARGET OpenEXR::OpenEXR)
 
         if(OpenEXR_FOUND AND TARGET OpenEXR::OpenEXR)
@@ -300,8 +300,8 @@ if(OCIO_BUILD_TESTS)
             # https://github.com/AcademySoftwareFoundation/OpenShadingLanguage
             ocio_handle_dependency(  OSL
                                      MIN_VERSION 1.11
-                                     RECOMMENDED_MIN_VERSION 1.11
-                                     RECOMMENDED_MIN_VERSION_REASON "Latest version tested with OCIO")
+                                     RECOMMENDED_VERSION 1.11
+                                     RECOMMENDED_VERSION_REASON "Latest version tested with OCIO")
             if(NOT OSL_FOUND)
                 message(WARNING "Skipping build of the OpenShadingLanguage unit tests (OSL missing)")
             endif()

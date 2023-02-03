@@ -12,9 +12,14 @@
 # Global targets defined by this module:
 #   expat::expat
 #
-# The dynamic libraries will be located by default.
-# By setting expat_STATIC_LIBRARY variable to TRUE, the search for static libraries will
-# be initiated, however it's not guaranteed that they will be located.
+# The libraries files are search based on the CMake variable CMAKE_FIND_LIBRARY_SUFFIXES. On the 
+# majority of operating systems, the dynamic libaries are prefered first, and then static libraries.
+#
+# If your installation has both static and dynamic libraries present, the dynamic one will be used 
+# by default. You may set expat_STATIC_LIBRARY to TRUE to use the static one. If the static one is 
+# missing, CMake won't find anything even if the variable is set. If only the static one is present, 
+# that variable is unnecessary. It is ignored if OCIO is installing the library since OCIO builds
+# the dependency as static library.
 #
 # If the library is not installed in a standard path, you can do the following the help
 # the find module:

@@ -1,9 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright Contributors to the OpenColorIO Project.
 
-# Install the specific dependency using OCIO's custom installXYZ module 
-# where XYZ is the name of the dependency.
-
 ###################################################################################################
 # ocio_install_dependency installs a dependency by calling the corresponding Install module.
 # e.g. Install<dep_name>.cmake

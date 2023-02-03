@@ -10,25 +10,25 @@ include(ocio_install_dependency)
 #   dep_name is the name of the dependency (package). Please note that dep_name is case sensitive.
 #   message_color is the color of the message.
 #
-# Note that this marco is used in ocio_handle_dependency and should be there only.
+# Note that this macro is used in ocio_handle_dependency and should be there only.
 ###################################################################################################
 macro (ocio_print_versions_error dep_name message_color)
-    if(NOT ocio_dep_MIN_VERSION AND NOT ocio_dep_MAX_VERSION AND NOT ocio_dep_RECOMMENDED_MIN_VERSION)
+    if(NOT ocio_dep_MIN_VERSION AND NOT ocio_dep_MAX_VERSION AND NOT ocio_dep_RECOMMENDED_VERSION)
         message(STATUS "${message_color}Could NOT find ${dep_name} (no version specified)${ColorReset}")
-    elseif(NOT ocio_dep_MIN_VERSION AND NOT ocio_dep_RECOMMENDED_MIN_VERSION)
+    elseif(NOT ocio_dep_MIN_VERSION AND NOT ocio_dep_RECOMMENDED_VERSION)
         message(STATUS "${message_color}Could NOT find ${dep_name} (maximum version: \"${ocio_dep_MAX_VERSION)\"${ColorReset}")
     elseif(NOT ocio_dep_MIN_VERSION AND NOT ocio_dep_MAX_VERSION)
-        message(STATUS "${message_color}Could NOT find ${dep_name} (recommended version: \"${ocio_dep_RECOMMENDED_MIN_VERSION}\")\"${ColorReset}")
-    elseif(NOT ocio_dep_RECOMMENDED_MIN_VERSION AND NOT ocio_dep_MAX_VERSION)
+        message(STATUS "${message_color}Could NOT find ${dep_name} (recommended version: \"${ocio_dep_RECOMMENDED_VERSION}\")\"${ColorReset}")
+    elseif(NOT ocio_dep_RECOMMENDED_VERSION AND NOT ocio_dep_MAX_VERSION)
         message(STATUS "${message_color}Could NOT find ${dep_name} (minimum version: \"${ocio_dep_MIN_VERSION})\"${ColorReset}")
     elseif(NOT ocio_dep_MIN_VERSION)
-        message(STATUS "${message_color}Could NOT find ${dep_name} (recommended version: \"${ocio_dep_RECOMMENDED_MIN_VERSION}\", maximum version: \"${ocio_dep_MAX_VERSION}\")${ColorReset}")
-    elseif(NOT ocio_dep_RECOMMENDED_MIN_VERSION)
+        message(STATUS "${message_color}Could NOT find ${dep_name} (recommended version: \"${ocio_dep_RECOMMENDED_VERSION}\", maximum version: \"${ocio_dep_MAX_VERSION}\")${ColorReset}")
+    elseif(NOT ocio_dep_RECOMMENDED_VERSION)
         message(STATUS "${message_color}Could NOT find ${dep_name} (minimum version: \"${ocio_dep_MIN_VERSION}\",  maximum version: \"${ocio_dep_MAX_VERSION}\")${ColorReset}")
     elseif(NOT ocio_dep_MAX_VERSION)
-        message(STATUS "${message_color}Could NOT find ${dep_name} (minimum version: \"${ocio_dep_MIN_VERSION}\", recommended version: \"${ocio_dep_RECOMMENDED_MIN_VERSION}\")${ColorReset}")
+        message(STATUS "${message_color}Could NOT find ${dep_name} (minimum version: \"${ocio_dep_MIN_VERSION}\", recommended version: \"${ocio_dep_RECOMMENDED_VERSION}\")${ColorReset}")
     else()
-        message(STATUS "${message_color}Could NOT find ${dep_name} (minimum version: \"${ocio_dep_MIN_VERSION}\", recommended version: \"${ocio_dep_RECOMMENDED_MIN_VERSION}\", max: \"${ocio_dep_MAX_VERSION}\")${ColorReset}")
+        message(STATUS "${message_color}Could NOT find ${dep_name} (minimum version: \"${ocio_dep_MIN_VERSION}\", recommended version: \"${ocio_dep_RECOMMENDED_VERSION}\", max: \"${ocio_dep_MAX_VERSION}\")${ColorReset}")
     endif()
 endmacro()
 
@@ -54,8 +54,8 @@ endmacro()
 # Options (one value):
 #   MIN_VERSION                     - Minimum version for the dependency.
 #   MAX_VERSION                     - Maximum version for the dependency.
-#   RECOMMENDED_MIN_VERSION         - Recommended version for the dependency.
-#   RECOMMENDED_MIN_VERSION_REASON  - Reason for the recommended version.
+#   RECOMMENDED_VERSION         - Recommended version for the dependency.
+#   RECOMMENDED_VERSION_REASON  - Reason for the recommended version.
 #
 # Options (multiple values):
 #   VERSION_VARS                    - List of version variables. Default to <dep_name>_VERSION.
@@ -77,7 +77,7 @@ macro (ocio_handle_dependency dep_name)
         # options
         "REQUIRED;PREFER_CONFIG;ALLOW_INSTALL;VERBOSE"
         # one value keywords
-        "MIN_VERSION;MAX_VERSION;RECOMMENDED_MIN_VERSION;RECOMMENDED_MIN_VERSION_REASON;PROMOTE_TARGET"
+        "MIN_VERSION;MAX_VERSION;RECOMMENDED_VERSION;RECOMMENDED_VERSION_REASON;PROMOTE_TARGET"
         # multi value keywords
         "VERSION_VARS;COMPONENTS"
         # args
@@ -103,10 +103,10 @@ macro (ocio_handle_dependency dep_name)
     if (${dep_name}_FOUND)
         # Nothing to do. Already found.
     else()
-        # Try to find the recommended version.
+        # Try to find the recommended, or higher, version.
         # Note that the recommended version should always be specified.
         find_package(${dep_name}
-                     ${ocio_dep_RECOMMENDED_MIN_VERSION}
+                     ${ocio_dep_RECOMMENDED_VERSION}
                      ${ocio_dep_CONFIG_string}
                      ${ocio_dep_COMPONENTS_string} 
                      ${ocio_dep_COMPONENTS}
@@ -116,7 +116,7 @@ macro (ocio_handle_dependency dep_name)
         if (NOT ${dep_name}_FOUND AND ocio_dep_PREFER_CONFIG)
             # Try find_package in module mode instead of config mode.
             find_package(${dep_name}
-                ${ocio_dep_RECOMMENDED_MIN_VERSION}
+                ${ocio_dep_RECOMMENDED_VERSION}
                 ${ocio_dep_COMPONENTS_string} 
                 ${ocio_dep_COMPONENTS}
                 ${ocio_dep_QUIET_string}
@@ -125,9 +125,10 @@ macro (ocio_handle_dependency dep_name)
         
         if(NOT ${dep_name}_FOUND AND ocio_dep_MIN_VERSION
            AND NOT ocio_dep_MIN_VERSION VERSION_EQUAL ocio_dep_MAX_VERSION
-           AND NOT ocio_dep_MIN_VERSION VERSION_EQUAL ocio_dep_RECOMMENDED_MIN_VERSION)
+           AND NOT ocio_dep_MIN_VERSION VERSION_EQUAL ocio_dep_RECOMMENDED_VERSION)
 
-            # if the maximum version is not found, try to find dependency with the minimum version.
+            # if the recommended, or higher, version is not found, try to find dependency with 
+            # the minimum version.
             find_package(${dep_name} 
                          ${ocio_dep_MIN_VERSION} 
                          ${ocio_dep_CONFIG_string}
@@ -173,11 +174,11 @@ macro (ocio_handle_dependency dep_name)
                 endif()
             endif()
             
-            if(DEFINED ocio_dep_RECOMMENDED_MIN_VERSION)
-                if (ocio_dep_VERSION VERSION_LESS ocio_dep_RECOMMENDED_MIN_VERSION)
-                    message(STATUS "${ColorSuccess}Found ${dep_name} (version \"${ocio_dep_VERSION}\") (recommended version: \"${ocio_dep_RECOMMENDED_MIN_VERSION}\")${ColorReset}")
-                    if (ocio_dep_RECOMMENDED_MIN_VERSION_REASON)
-                        message(STATUS "   Reason: ${ocio_dep_RECOMMENDED_MIN_VERSION_REASON}")
+            if(DEFINED ocio_dep_RECOMMENDED_VERSION)
+                if (ocio_dep_VERSION VERSION_LESS ocio_dep_RECOMMENDED_VERSION)
+                    message(STATUS "${ColorSuccess}Found ${dep_name} (version \"${ocio_dep_VERSION}\") (recommended version: \"${ocio_dep_RECOMMENDED_VERSION}\")${ColorReset}")
+                    if (ocio_dep_RECOMMENDED_VERSION_REASON)
+                        message(STATUS "   Reason: ${ocio_dep_RECOMMENDED_VERSION_REASON}")
                     endif()
                     set(_${dep_name}_found_displayed true)
                 endif()
@@ -205,7 +206,7 @@ macro (ocio_handle_dependency dep_name)
         endif()
 
         if(ocio_dep_ALLOW_INSTALL)
-            ocio_install_dependency(${dep_name} VERSION ${ocio_dep_RECOMMENDED_MIN_VERSION})
+            ocio_install_dependency(${dep_name} VERSION ${ocio_dep_RECOMMENDED_VERSION})
         endif()
 
         if(ocio_dep_REQUIRED)
