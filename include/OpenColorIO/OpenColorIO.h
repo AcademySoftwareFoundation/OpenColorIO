@@ -3054,6 +3054,10 @@ public:
     virtual void setTextureMaxWidth(unsigned maxWidth) = 0;
     virtual unsigned getTextureMaxWidth() const noexcept = 0;
 
+    /// Allow 1D GPU resource type, otherwise always using 2D resources for 1D LUTs.
+    virtual void setAllowTexture1D(bool allowed) = 0;
+    virtual bool getAllowTexture1D() const = 0;
+
     /**
      * To avoid global texture sampler and uniform name clashes always append an increasing index
      * to the resource name.

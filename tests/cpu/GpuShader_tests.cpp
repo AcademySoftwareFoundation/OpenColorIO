@@ -659,7 +659,7 @@ float2 ocio_lut1d_0_computePos(float f)
 {
   float dep = clamp(f, 0.0, 1.0) * 131071.;
   float2 retVal;
-  retVal.y = float(int(dep / 4095.));
+  retVal.y = floor(dep / 4095.);
   retVal.x = dep - retVal.y * 4095.;
   retVal.x = (retVal.x + 0.5) / 4096.;
   retVal.y = (retVal.y + 0.5) / 33.;
@@ -792,7 +792,7 @@ float2 ocio_lut1d_2_computePos(float f)
 {
   float dep = clamp(f, 0.0, 1.0) * 131071.;
   float2 retVal;
-  retVal.y = float(int(dep / 4095.));
+  retVal.y = floor(dep / 4095.);
   retVal.x = dep - retVal.y * 4095.;
   retVal.x = (retVal.x + 0.5) / 4096.;
   retVal.y = (retVal.y + 0.5) / 33.;

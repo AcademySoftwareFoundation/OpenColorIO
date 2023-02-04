@@ -203,7 +203,8 @@ void GetLut1DGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
 
     if (height > 1 || lutData->isInputHalfDomain()
         || shaderCreator->getLanguage() == GPU_LANGUAGE_GLSL_ES_1_0
-        || shaderCreator->getLanguage() == GPU_LANGUAGE_GLSL_ES_3_0)
+        || shaderCreator->getLanguage() == GPU_LANGUAGE_GLSL_ES_3_0
+        || !shaderCreator->getAllowTexture1D())
     {
         // In case the 1D LUT length exceeds the 1D texture maximum length,
         // or the language doesn't support 1D textures,
@@ -261,29 +262,28 @@ void GetLut1DGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
                 // At this point 'dep' contains the raw half
                 // Note: Raw halfs for NaN floats cannot be computed using
                 //       floating-point operations.
-                ss.newLine() << ss.float2Decl("retVal") << ";";
-                ss.newLine() << "retVal.y = floor(dep / " << float(width - 1) << ");";       // floor( dep / (width-1) ))
-                ss.newLine() << "retVal.x = dep - retVal.y * " << float(width - 1) << ";";   // dep - retVal.y * (width-1)
-
-                ss.newLine() << "retVal.x = (retVal.x + 0.5) / " << float(width) << ";";   // (retVal.x + 0.5) / width;
-                ss.newLine() << "retVal.y = (retVal.y + 0.5) / " << float(height) << ";";  // (retVal.x + 0.5) / height;
             }
             else
             {
                 // Need clamp() to protect against f outside [0,1] causing a bogus x value.
                 // clamp( f, 0., 1.) * (dim - 1)
                 ss.newLine() << "float dep = clamp(f, 0.0, 1.0) * " << float(length - 1) << ";";
+            }
 
-                ss.newLine() << ss.float2Decl("retVal") << ";";
-                // float(int( dep / (width-1) ))
-                ss.newLine() << "retVal.y = float(int(dep / " << float(width - 1) << "));";
-                // dep - retVal.y * (width-1)
-                ss.newLine() << "retVal.x = dep - retVal.y * " << float(width - 1) << ";";
+            ss.newLine() << ss.float2Decl("retVal") << ";";
 
-                // (retVal.x + 0.5) / width;
-                ss.newLine() << "retVal.x = (retVal.x + 0.5) / " << float(width) << ";";
-                // (retVal.x + 0.5) / height;
-                ss.newLine() << "retVal.y = (retVal.y + 0.5) / " << float(height) << ";";
+            if (height == 1)
+            {
+                ss.newLine() << "retVal.x = (dep + 0.5) / " << float(width) << ";"; // (dep + 0.5) / width;
+                ss.newLine() << "retVal.y = 0.5;";
+            }
+            else
+            {
+                ss.newLine() << "retVal.y = floor(dep / " << float(width - 1) << ");";       // floor( dep / (width-1) ))
+                ss.newLine() << "retVal.x = dep - retVal.y * " << float(width - 1) << ";";   // dep - retVal.y * (width-1)
+
+                ss.newLine() << "retVal.x = (retVal.x + 0.5) / " << float(width) << ";";   // (retVal.x + 0.5) / width;
+                ss.newLine() << "retVal.y = (retVal.y + 0.5) / " << float(height) << ";";  // (retVal.x + 0.5) / height;
             }
 
             ss.newLine() << "return retVal;";
@@ -326,7 +326,8 @@ void GetLut1DGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
 
     if (height > 1 || lutData->isInputHalfDomain()
         || shaderCreator->getLanguage() == GPU_LANGUAGE_GLSL_ES_1_0
-        || shaderCreator->getLanguage() == GPU_LANGUAGE_GLSL_ES_3_0)
+        || shaderCreator->getLanguage() == GPU_LANGUAGE_GLSL_ES_3_0
+        || !shaderCreator->getAllowTexture1D())
     {
         const std::string str = name + "_computePos(" + shaderCreator->getPixelName();
 

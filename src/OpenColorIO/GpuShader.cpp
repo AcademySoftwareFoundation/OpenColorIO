@@ -158,7 +158,7 @@ public:
     typedef std::vector<Uniform> Uniforms;
 
 public:
-    PrivateImpl() : m_max1DLUTWidth(4 * 1024) {}
+    PrivateImpl() : m_max1DLUTWidth(4 * 1024), m_allowTexture1D(true) {}
     PrivateImpl(const PrivateImpl & rhs) = delete;
     PrivateImpl& operator= (const PrivateImpl & rhs) = delete;
 
@@ -168,6 +168,9 @@ public:
 
     inline unsigned get1dLutMaxWidth() const { return m_max1DLUTWidth; }
     inline void set1dLutMaxWidth(unsigned maxWidth) { m_max1DLUTWidth = maxWidth; }
+
+    inline bool getAllowTexture1D() const { return m_allowTexture1D; }
+    inline void setAllowTexture1D(bool allowed) { m_allowTexture1D = allowed; }
 
     void addTexture(const char * textureName,
                     const char * samplerName,
@@ -374,6 +377,7 @@ private:
         return false;
     }
     unsigned m_max1DLUTWidth;
+    bool m_allowTexture1D;
 };
 
 } // namespace GPUShaderImpl
@@ -450,6 +454,16 @@ unsigned GenericGpuShaderDesc::getTextureMaxWidth() const noexcept
 void GenericGpuShaderDesc::setTextureMaxWidth(unsigned maxWidth)
 {
     getImplGeneric()->set1dLutMaxWidth(maxWidth);
+}
+
+bool GenericGpuShaderDesc::getAllowTexture1D() const noexcept
+{
+    return getImplGeneric()->getAllowTexture1D();
+}
+
+void GenericGpuShaderDesc::setAllowTexture1D(bool allowed)
+{
+    return getImplGeneric()->setAllowTexture1D(allowed);
 }
 
 unsigned GenericGpuShaderDesc::getNumTextures() const noexcept

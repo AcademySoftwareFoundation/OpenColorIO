@@ -99,7 +99,9 @@ void AllocateTexture3D(unsigned index, unsigned & texId,
 void AllocateTexture2D(unsigned index, unsigned & texId, 
                        unsigned width, unsigned height,
                        GpuShaderDesc::TextureType channel,
-                       Interpolation interpolation, const float * values)
+                       Interpolation interpolation,
+                       bool allowTexture1D,
+                       const float * values)
 {
     if (values == nullptr)
     {
@@ -119,21 +121,21 @@ void AllocateTexture2D(unsigned index, unsigned & texId,
 
     glActiveTexture(GL_TEXTURE0 + index);
 
-    if (height > 1)
-    {
-        glBindTexture(GL_TEXTURE_2D, texId);
-
-        SetTextureParameters(GL_TEXTURE_2D, interpolation);
-
-        glTexImage2D(GL_TEXTURE_2D, 0, internalformat, width, height, 0, format, GL_FLOAT, values);
-    }
-    else
+    if (height == 1 && allowTexture1D)
     {
         glBindTexture(GL_TEXTURE_1D, texId);
 
         SetTextureParameters(GL_TEXTURE_1D, interpolation);
 
         glTexImage1D(GL_TEXTURE_1D, 0, internalformat, width, 0, format, GL_FLOAT, values);
+    }
+    else
+    {
+        glBindTexture(GL_TEXTURE_2D, texId);
+
+        SetTextureParameters(GL_TEXTURE_2D, interpolation);
+
+        glTexImage2D(GL_TEXTURE_2D, 0, internalformat, width, height, 0, format, GL_FLOAT, values);
     }
 }
 
@@ -351,6 +353,7 @@ void OpenGLBuilder::allocateAllTextures(unsigned startIndex)
         const char * samplerName = nullptr;
         unsigned width = 0;
         unsigned height = 0;
+        bool allowTexture1D = m_shaderDesc->getAllowTexture1D();
         GpuShaderDesc::TextureType channel = GpuShaderDesc::TEXTURE_RGB_CHANNEL;
         Interpolation interpolation = INTERP_LINEAR;
         m_shaderDesc->getTexture(idx, textureName, samplerName, width, height, channel, interpolation);
@@ -372,11 +375,11 @@ void OpenGLBuilder::allocateAllTextures(unsigned startIndex)
         // 2. Allocate the 1D LUT (a 2D texture is needed to hold large LUTs).
 
         unsigned texId = 0;
-        AllocateTexture2D(currIndex, texId, width, height, channel, interpolation, values);
+        AllocateTexture2D(currIndex, texId, width, height, channel, interpolation, allowTexture1D, values);
 
         // 3. Keep the texture id & name for the later enabling.
 
-        unsigned type = (height > 1) ? GL_TEXTURE_2D : GL_TEXTURE_1D;
+        unsigned type = (height == 1 && allowTexture1D) ? GL_TEXTURE_1D : GL_TEXTURE_2D;
         m_textureIds.push_back(TextureId(texId, textureName, samplerName, type));
         currIndex++;
     }

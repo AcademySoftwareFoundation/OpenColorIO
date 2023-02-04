@@ -29,6 +29,9 @@ public:
     unsigned getTextureMaxWidth() const noexcept override;
     void setTextureMaxWidth(unsigned maxWidth) override;
 
+    bool getAllowTexture1D() const noexcept override;
+    void setAllowTexture1D(bool allowed) override;
+
     // Accessors to the uniforms
     //
     unsigned getNumUniforms() const noexcept override;

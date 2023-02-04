@@ -67,8 +67,12 @@ void bindPyGpuShaderCreator(py::module & m)
              DOC(GpuShaderCreator, getTextureMaxWidth))
         .def("setTextureMaxWidth", &GpuShaderCreator::setTextureMaxWidth, "maxWidth"_a, 
              DOC(GpuShaderCreator, setTextureMaxWidth))
-        .def("getNextResourceIndex", &GpuShaderCreator::getNextResourceIndex, 
-             DOC(GpuShaderCreator, getNextResourceIndex))
+        .def("setAllowTexture1D", &GpuShaderCreator::setAllowTexture1D, "allowed"_a,
+            DOC(GpuShaderCreator, setAllowTexture1D))
+        .def("getAllowTexture1D", &GpuShaderCreator::getAllowTexture1D,
+             DOC(GpuShaderCreator, getAllowTexture1D))
+        .def("getNextResourceIndex", &GpuShaderCreator::getNextResourceIndex,
+            DOC(GpuShaderCreator, getNextResourceIndex))
 
         // Dynamic properties.
         .def("hasDynamicProperty", &GpuShaderCreator::hasDynamicProperty, "type"_a, 
