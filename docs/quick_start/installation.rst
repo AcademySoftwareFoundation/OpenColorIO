@@ -210,7 +210,8 @@ itself.  In these cases, it may be helpful to specify an additional CMake variab
 If ``<Package Name>_STATIC_LIBRARY`` is set, CMake will try to find static version of the dependency.
 
 The following package **support** ``-D<Package Name>_STATIC_LIBRARY=ON``:
-``expat``, ``yaml-cpp``, ``Imath``, ``lcms2``, ``ZLIB``, and ``minizip-ng``.
+``expat``, ``yaml-cpp``, ``Imath``, ``lcms2``, and ``minizip-ng``. Using CMake 3.24+, it is
+possible to prefer the static version of ZLIB with ``-DZLIB_USE_STATIC_LIBS=ON``.
 
 Rather than using ``<Package Name>_ROOT``, and possibly ``<Package Name>_STATIC_LIBRARY``, you may 
 instead use ``-D<Package Name>_LIBRARY=<path to library file>`` 

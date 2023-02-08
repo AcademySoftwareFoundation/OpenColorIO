@@ -24,7 +24,7 @@
 # If the library is not installed in a standard path, you can do the following the help
 # the find module:
 #
-# If the package provides a configuration file, use -Dminizip-ng_DIR=<path to folder>.
+# If the package provides CMake's configuration file, use -Dminizip-ng_DIR=<path to folder>.
 # If it doesn't provide it, try -Dminizip-ng_ROOT=<path to folder with lib and includes>.
 # Alternatively, try -Dminizip-ng_LIBRARY=<path to lib file> and -Dminizip-ng_INCLUDE_DIR=<path to folder>.
 #
