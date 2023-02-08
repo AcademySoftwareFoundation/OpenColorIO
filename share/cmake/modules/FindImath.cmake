@@ -24,7 +24,7 @@
 # If the library is not installed in a standard path, you can do the following the help
 # the find module:
 #
-# If the package provides a configuration file, use -DImath_DIR=<path to folder>.
+# If the package provides CMake's configuration file, use -DImath_DIR=<path to folder>.
 # If it doesn't provide it, try -DImath_ROOT=<path to folder with lib and includes>.
 # Alternatively, try -DImath_LIBRARY=<path to lib file> and -DImath_INCLUDE_DIR=<path to folder>.
 #

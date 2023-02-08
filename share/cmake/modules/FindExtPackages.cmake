@@ -38,7 +38,7 @@ endif()
 
 message(STATUS "")
 message(STATUS "Missing a dependency? Try the following possibilities:")
-message(STATUS "If the package provides a configuration file, use -D<pkg>_DIR=<path to folder>.")
+message(STATUS "If the package provides CMake's configuration file, use -D<pkg>_DIR=<path to folder>.")
 message(STATUS "If it doesn't provide it, try -D<pkg>_ROOT=<path to folder with lib and includes>.")
 message(STATUS "Alternatively, try -D<pkg>_LIBRARY=<path to lib file> and/or -D<pkg>_INCLUDE_DIR=<path to folder>.")
 message(STATUS "")
@@ -81,92 +81,31 @@ ocio_handle_dependency(  Imath REQUIRED ALLOW_INSTALL
                          RECOMMENDED_VERSION_REASON "Latest version tested with OCIO")
 
 ###############################################################################
-### ZLIB (https://github.com/madler/zlib)
-###
-### The following variables can be set:
-### ZLIB_ROOT               Location of ZLIB library file and includes folder.
-###                         Alternatively, ZLIB_LIBRARY and ZLIB_INCLUDE_DIR can be used.
-###
-### ZLIB_LIBRARY            Location of ZLIB library file.
-### ZLIB_INCLUDE_DIR        Location of ZLIB includes folder.
-###
-### ZLIB_VERSION            ZLIB Version (CMake 3.26+)
-### ZLIB_VERSION_STRING     ZLIB Version (CMake < 3.26)
-###
+# ZLIB (https://github.com/madler/zlib)
+#
+# The following variables can be set:
+# ZLIB_ROOT               Location of ZLIB library file and includes folder.
+#                         Alternatively, ZLIB_LIBRARY and ZLIB_INCLUDE_DIR can be used.
+#
+# ZLIB_LIBRARY            Location of ZLIB library file.
+# ZLIB_INCLUDE_DIR        Location of ZLIB includes folder.
+#
+# ZLIB_VERSION            ZLIB Version (CMake 3.26+)
+# ZLIB_VERSION_STRING     ZLIB Version (CMake < 3.26)
+#
+#
+# ZLIB_USE_STATIC_LIBS    Set to ON if static library is prefered (CMake 3.24+)
+#
 ###############################################################################
 # ZLIB 1.2.13 is used since it fixes a critical vulnerability.
 # See https://nvd.nist.gov/vuln/detail/CVE-2022-37434
 # See https://github.com/madler/zlib/releases/tag/v1.2.13
+ocio_handle_dependency(  ZLIB REQUIRED ALLOW_INSTALL
+                         MIN_VERSION 1.2.10
+                         RECOMMENDED_VERSION 1.2.13
+                         RECOMMENDED_VERSION_REASON "CVE fixes"
+                         VERSION_VARS ZLIB_VERSION_STRING ZLIB_VERSION )
 
-if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
-    # ZLIB_USE_STATIC_LIBS is supported only from CMake 3.24+.
-    if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.24.0") 
-        if (ZLIB_STATIC_LIBRARY)
-            set(ZLIB_USE_STATIC_LIBS "${ZLIB_STATIC_LIBRARY}")
-        endif()
-    else() # For CMake < 3.24 since ZLIB_USE_STATIC_LIBS is not available.
-        if(NOT ZLIB_LIBRARY)
-            set(_cmake_find_library_x_changed true)
-            if(DEFINED CMAKE_FIND_LIBRARY_PREFIXES)
-                set(_ZLIB_ORIG_CMAKE_FIND_LIBRARY_PREFIXES "${CMAKE_FIND_LIBRARY_PREFIXES}")
-            else()
-                set(_ZLIB_ORIG_CMAKE_FIND_LIBRARY_PREFIXES)
-            endif()
-
-            if(DEFINED CMAKE_FIND_LIBRARY_SUFFIXES)
-                set(_ZLIB_ORIG_CMAKE_FIND_LIBRARY_SUFFIXES "${CMAKE_FIND_LIBRARY_SUFFIXES}")
-            else()
-                set(_ZLIB_ORIG_CMAKE_FIND_LIBRARY_SUFFIXES)
-            endif()
-
-            # Prefix/suffix for windows.
-            if(WIN32)
-                list(APPEND CMAKE_FIND_LIBRARY_PREFIXES "" "lib")
-                list(APPEND CMAKE_FIND_LIBRARY_SUFFIXES ".dll.a")
-            endif()
-
-            # Check if static lib is preferred.
-            if(ZLIB_STATIC_LIBRARY OR ZLIB_USE_STATIC_LIBS)
-                if(WIN32)
-                    set(CMAKE_FIND_LIBRARY_SUFFIXES .lib .a ${CMAKE_FIND_LIBRARY_SUFFIXES})
-                else()
-                    set(CMAKE_FIND_LIBRARY_SUFFIXES .a)
-                endif()
-            endif()
-        endif()
-    endif()
-
-    set(_ZLIB_REQUIRED REQUIRED)
-    # Override REQUIRED if package can be installed
-    if(OCIO_INSTALL_EXT_PACKAGES STREQUAL MISSING)
-        set(_ZLIB_REQUIRED "")
-    endif()
-
-    ocio_handle_dependency(  ZLIB REQUIRED ALLOW_INSTALL
-                             MIN_VERSION 1.2.10
-                             RECOMMENDED_VERSION 1.2.13
-                             RECOMMENDED_VERSION_REASON "CVE fixes"
-                             VERSION_VARS ZLIB_VERSION_STRING ZLIB_VERSION )
-
-    # Restore the original find library ordering
-    if(_cmake_find_library_x_changed)
-        if(DEFINED _ZLIB_ORIG_CMAKE_FIND_LIBRARY_SUFFIXES)
-            set(CMAKE_FIND_LIBRARY_SUFFIXES "${_ZLIB_ORIG_CMAKE_FIND_LIBRARY_SUFFIXES}")
-        else()
-            set(CMAKE_FIND_LIBRARY_SUFFIXES)
-        endif()
-
-        if(DEFINED _ZLIB_ORIG_CMAKE_FIND_LIBRARY_PREFIXES)
-            set(CMAKE_FIND_LIBRARY_PREFIXES "${_ZLIB_ORIG_CMAKE_FIND_LIBRARY_PREFIXES}")
-        else()
-            set(CMAKE_FIND_LIBRARY_PREFIXES)
-        endif()
-    endif()
-endif()
-
-if(NOT ZLIB_FOUND)
-    ocio_install_dependency(ZLIB VERSION 1.2.13)
-endif()
 ###############################################################################
 
 # minizip-ng
@@ -256,7 +195,21 @@ if((OCIO_BUILD_APPS AND OCIO_USE_OIIO_FOR_APPS) OR OCIO_BUILD_TESTS)
     # Supported from OIIO 2.4+. Setting this for lower versions doesn't affect anything.
     set(OPENIMAGEIO_CONFIG_DO_NOT_FIND_IMATH 1)
 
-    # Only using find_package in CONFIG mode using PREFER_CONFIG option as OIIO support
+    ###############################################################################
+    # OpenEXR (https://github.com/AcademySoftwareFoundation/openexr)
+    #
+    # Variables defined by OpemImageIO CMake's configuration files:
+    #   OpenImageIO_FOUND          - Indicate whether the library was found or not
+    #   OpenImageIO_LIB_DIR        - Library's directory
+    #   OpenImageIO_INCLUDE_DIR    - Location of the header files
+    #   OpenImageIO_VERSION        - Library's version
+    #
+    # Imported targets defined by this module, if found:
+    #   OpenImageIO::OpenImageIO
+    #   OpenImageIO::OpenImageIO_Util
+    #
+    ###############################################################################
+    # Calling find_package in CONFIG mode using PREFER_CONFIG option as OIIO support
     # config file since 2.1+ and OCIO minimum version is over that.
     ocio_handle_dependency(  OpenImageIO PREFER_CONFIG
                              MIN_VERSION ${OIIO_VERSION}
@@ -270,8 +223,25 @@ if(OCIO_BUILD_APPS)
         add_library(OpenColorIO::ImageIOBackend ALIAS OpenImageIO::OpenImageIO)
         set(OCIO_IMAGE_BACKEND OpenImageIO)
     else()
-        # OpenEXR
-        # https://github.com/AcademySoftwareFoundation/openexr
+        ###############################################################################
+        # OpenEXR (https://github.com/AcademySoftwareFoundation/openexr)
+        #
+        # Variables defined by OpenEXR CMake's configuration files:
+        #   OpenEXR_FOUND          - Indicate whether the library was found or not
+        #   OpenEXR_VERSION        - Library's version
+        #
+        # Imported targets defined by this module, if found:
+        #   OpenEXR::Iex
+        #   OpenEXR::IexConfig
+        #   OpenEXR::IlmThread
+        #   OpenEXR::IlmThreadConfig
+        #   OpenEXR::OpenEXR
+        #   OpenEXR::OpenEXRConfig
+        #   OpenEXR::OpenEXRCore
+        #   OpenEXR::OpenEXRUtil
+        #
+        ###############################################################################
+        # Calling find_package in CONFIG mode using PREFER_CONFIG option.
         ocio_handle_dependency(  OpenEXR REQUIRED PREFER_CONFIG ALLOW_INSTALL
                                  MIN_VERSION 3.0.4
                                  RECOMMENDED_VERSION 3.1.5

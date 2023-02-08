@@ -54,64 +54,11 @@ if (NOT @BUILD_SHARED_LIBS@) # NOT @BUILD_SHARED_LIBS@
         # ZLIB_VERSION is available starting CMake 3.26+.
         # ZLIB_VERSION_STRING is still available for backward compatibility.
         # See https://cmake.org/cmake/help/git-stage/module/FindZLIB.html
-
-        # ZLIB_USE_STATIC_LIBS is supported only from CMake 3.24+.
-        if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.24.0") 
-            if (ZLIB_STATIC_LIBRARY)
-                set(ZLIB_USE_STATIC_LIBS "${ZLIB_STATIC_LIBRARY}")
-            endif()
-        else() # For CMake < 3.24 since ZLIB_USE_STATIC_LIBS is not available.
-            if(NOT ZLIB_LIBRARY)
-                set(_cmake_find_library_x_changed true)
-                if(DEFINED CMAKE_FIND_LIBRARY_PREFIXES)
-                    set(_ZLIB_ORIG_CMAKE_FIND_LIBRARY_PREFIXES "${CMAKE_FIND_LIBRARY_PREFIXES}")
-                else()
-                    set(_ZLIB_ORIG_CMAKE_FIND_LIBRARY_PREFIXES)
-                endif()
-
-                if(DEFINED CMAKE_FIND_LIBRARY_SUFFIXES)
-                    set(_ZLIB_ORIG_CMAKE_FIND_LIBRARY_SUFFIXES "${CMAKE_FIND_LIBRARY_SUFFIXES}")
-                else()
-                    set(_ZLIB_ORIG_CMAKE_FIND_LIBRARY_SUFFIXES)
-                endif()
-
-                # Prefix/suffix for windows.
-                if(WIN32)
-                    list(APPEND CMAKE_FIND_LIBRARY_PREFIXES "" "lib")
-                    list(APPEND CMAKE_FIND_LIBRARY_SUFFIXES ".dll.a")
-                endif()
-
-                # Check if static lib is preferred.
-                if(ZLIB_STATIC_LIBRARY OR ZLIB_USE_STATIC_LIBS)
-                    if(WIN32)
-                        set(CMAKE_FIND_LIBRARY_SUFFIXES .lib .a ${CMAKE_FIND_LIBRARY_SUFFIXES})
-                    else()
-                        set(CMAKE_FIND_LIBRARY_SUFFIXES .a)
-                    endif()
-                endif()
-            endif()
-        endif()
-
         
         if (@ZLIB_VERSION@) # @ZLIB_VERSION@
             find_dependency(ZLIB @ZLIB_VERSION@)
         else()
             find_dependency(ZLIB @ZLIB_VERSION_STRING@)
-        endif()
-
-        if(_cmake_find_library_x_changed)
-            # Restore the original find library ordering
-            if(DEFINED _ZLIB_ORIG_CMAKE_FIND_LIBRARY_SUFFIXES)
-                set(CMAKE_FIND_LIBRARY_SUFFIXES "${_ZLIB_ORIG_CMAKE_FIND_LIBRARY_SUFFIXES}")
-            else()
-                set(CMAKE_FIND_LIBRARY_SUFFIXES)
-            endif()
-
-            if(DEFINED _ZLIB_ORIG_CMAKE_FIND_LIBRARY_PREFIXES)
-                set(CMAKE_FIND_LIBRARY_PREFIXES "${_ZLIB_ORIG_CMAKE_FIND_LIBRARY_PREFIXES}")
-            else()
-                set(CMAKE_FIND_LIBRARY_PREFIXES)
-            endif()
         endif()
     endif()
 
