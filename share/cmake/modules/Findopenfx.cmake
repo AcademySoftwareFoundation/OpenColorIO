@@ -17,7 +17,7 @@
 # If the library is not installed in a standard path, you can do the following the help
 # the find module:
 #
-# If the package provides a configuration file, use -Dopenfx_DIR=<path to folder>.
+# If the package provides CMake's configuration file, use -Dopenfx_DIR=<path to folder>.
 # If it doesn't provide it, try -Dopenfx_ROOT=<path to folder with lib and includes>.
 # Alternatively, try -Dopenfx_LIBRARY=<path to lib file> and -Dopenfx_INCLUDE_DIR=<path to folder>.
 #

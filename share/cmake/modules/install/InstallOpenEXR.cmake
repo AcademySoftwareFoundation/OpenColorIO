@@ -48,15 +48,10 @@ if(NOT OpenEXR_FOUND AND OCIO_INSTALL_EXT_PACKAGES AND NOT OCIO_INSTALL_EXT_PACK
     set(_EXT_BUILD_ROOT "${CMAKE_BINARY_DIR}/ext/build")
 
     # Required dependency
+    # Not trying to find ZLIB here since it is a required dependency of OCIO.
     if(NOT ZLIB_FOUND)
-        # ZLIB is required for OCIO too.
-        # Try to find ZLIB without specifying a version since at this point in the dependencies 
-        # check, ZLIB should already be found. If not, the configure step will fail either way.
-        ocio_handle_dependency(ZLIB VERSION_VARS ZLIB_VERSION_STRING ZLIB_VERSION)
-        if(NOT ZLIB_FOUND)
-            message(STATUS "ZLIB is required to build OpenEXR.")
-            return()
-        endif()
+        message(STATUS "ZLIB is required to build OpenEXR.")
+        return()
     endif()
     
     ocio_handle_dependency(Threads)
