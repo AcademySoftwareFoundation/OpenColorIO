@@ -22,6 +22,35 @@
 namespace OCIO_NAMESPACE
 {
 
+// Note that it is important for the code below this ifdef stays in the OCIO_NAMESPACE since
+// it is redefining two of the functions from sse2neon.
+#ifdef USE_SSE2NEON
+    // Overwrite the translation of _mm_max_ps and _mm_min_ps.
+    // Using vmaxnmq_f32 and vminnmq_f32 instead.
+
+    // Compare packed single-precision (32-bit) floating-point elements in a and b,
+    // and store packed maximum values in dst. dst does not follow the IEEE Standard
+    // for Floating-Point Arithmetic (IEEE 754) maximum value when inputs are NaN or
+    // signed-zero values.
+    // https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_max_ps
+    static inline __m128 _mm_max_ps(__m128 a, __m128 b)
+    {
+        return vreinterpretq_m128_f32(
+            vmaxnmq_f32(vreinterpretq_f32_m128(a), vreinterpretq_f32_m128(b)));
+    }
+
+    // Compare packed single-precision (32-bit) floating-point elements in a and b,
+    // and store packed minimum values in dst. dst does not follow the IEEE Standard
+    // for Floating-Point Arithmetic (IEEE 754) minimum value when inputs are NaN or
+    // signed-zero values.
+    // https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_min_ps
+    static inline __m128 _mm_min_ps(__m128 a, __m128 b)
+    {
+        return vreinterpretq_m128_f32(
+            vminnmq_f32(vreinterpretq_f32_m128(a), vreinterpretq_f32_m128(b)));
+    }
+#endif
+
 // Macros for alignment declarations
 #define OCIO_SIMD_BYTES 16
 #if defined( _MSC_VER )

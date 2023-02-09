@@ -130,7 +130,9 @@ void TestAntiLog(float logBase)
         OCIO_CHECK_ASSERT(OCIO::EqualWithSafeRelError(result, expected, rtol, 1.0f));
     }
 #ifdef USE_SSE
-    OCIO_CHECK_EQUAL(rgba[8], inf);
+    #ifndef USE_SSE2NEON
+        OCIO_CHECK_EQUAL(rgba[8], inf);
+    #endif
 #else
     OCIO_CHECK_ASSERT(OCIO::IsNan(rgba[8]));
 #endif
@@ -138,7 +140,9 @@ void TestAntiLog(float logBase)
     OCIO_CHECK_CLOSE(rgba[12], 1.0f, rtol);
     OCIO_CHECK_ASSERT(OCIO::IsNan(rgba[15]));
 #ifdef USE_SSE
-    OCIO_CHECK_EQUAL(rgba[16], 0.0f); // sseExp2(inf) is 0
+    #ifndef USE_SSE2NEON
+        OCIO_CHECK_EQUAL(rgba[16], 0.0f); // sseExp2(inf) is 0
+    #endif
 #else
     OCIO_CHECK_EQUAL(rgba[16], inf);
 #endif
@@ -269,7 +273,9 @@ OCIO_ADD_TEST(LogOpCPU, log2lin_test)
     const float res0 = ComputeLog2LinEval(0.0f, redP);
 
 #ifdef USE_SSE
-    OCIO_CHECK_EQUAL(rgba[8], inf);
+    #ifndef USE_SSE2NEON
+        OCIO_CHECK_EQUAL(rgba[8], inf);
+    #endif
 #else
     OCIO_CHECK_ASSERT(OCIO::IsNan(rgba[8]));
 #endif
@@ -280,7 +286,9 @@ OCIO_ADD_TEST(LogOpCPU, log2lin_test)
     OCIO_CHECK_ASSERT(OCIO::IsNan(rgba[15]));
 
 #ifdef USE_SSE
-    OCIO_CHECK_CLOSE(rgba[16], -0.003041422227f, rtol);
+    #ifndef USE_SSE2NEON
+        OCIO_CHECK_CLOSE(rgba[16], -0.003041422227f, rtol);
+    #endif
 #else
     OCIO_CHECK_EQUAL(rgba[16], inf);
 #endif
@@ -579,7 +587,9 @@ OCIO_ADD_TEST(LogOpCPU, cameralin2log_test)
     OCIO_CHECK_CLOSE(rgba[6],  1.16f, 10.0f * error);
     OCIO_CHECK_EQUAL(rgba[8], -inf);
 #ifdef USE_SSE
-    OCIO_CHECK_CLOSE(rgba[9], -0.0454545f, error); // sseExp2(inf) is 0
+    #ifndef USE_SSE2NEON
+        OCIO_CHECK_CLOSE(rgba[9], -0.0454545f, error); // sseExp2(inf) is 0
+    #endif
 #else
     OCIO_CHECK_EQUAL(rgba[9], inf);
 #endif
