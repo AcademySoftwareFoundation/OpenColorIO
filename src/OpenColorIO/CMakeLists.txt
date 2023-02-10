@@ -295,7 +295,7 @@ target_link_libraries(OpenColorIO
 if(OCIO_USE_SSE AND HAVE_NEON)
     target_link_libraries(OpenColorIO
         PRIVATE
-            "$<BUILD_INTERFACE:sse2neon>"
+            sse2neon
     )
 endif()
 

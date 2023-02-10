@@ -12,6 +12,7 @@ set(CMAKE_MODULE_PATH
     ${CMAKE_SOURCE_DIR}/share/cmake/utils
     ${CMAKE_SOURCE_DIR}/share/cmake/macros
     ${CMAKE_SOURCE_DIR}/share/cmake/modules
+    ${CMAKE_SOURCE_DIR}/share/cmake/modules/install
 )
 
 set(CMAKE_WARN_DEPRECATED ON)
@@ -168,7 +169,15 @@ include(CheckSupportARMNeon)
 # Add sse2neon to the build since CompilerFlags needs to know if SSE2 is supported.
 
 if(HAVE_NEON)
-    add_subdirectory(ext/sse2neon)
+    # Install sse2nenon. Please note that sse2neon is downloaded during the configure step as it is
+    # needed for CompilerFlags.cmake and CheckSupportSSE2.cmake.
+
+    # Could use ocio_handle_dependency once this is rebased from main (once the CMake min and 
+    # recommended version branch is merged).
+    find_package(sse2neon QUIET)
+    if (NOT sse2neon_FOUND)
+        include(Installsse2neon)
+    endif()
 endif()
 
 
