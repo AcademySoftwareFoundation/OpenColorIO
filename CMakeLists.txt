@@ -166,7 +166,7 @@ include(CheckSupportARMNeon)
 
 
 ###############################################################################
-# Add sse2neon to the build since CompilerFlags needs to know if SSE2 is supported.
+# Add sse2neon to the build if ARM NEON intrinsics are supported.
 
 if(HAVE_NEON)
     # Install sse2nenon. Please note that sse2neon is downloaded during the configure step as it is
