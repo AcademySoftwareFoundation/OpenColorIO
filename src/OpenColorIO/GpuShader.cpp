@@ -49,6 +49,7 @@ public:
                 const char * samplerName,
                 unsigned w, unsigned h, unsigned d,
                 GpuShaderDesc::TextureType channel,
+                unsigned dimensions,
                 Interpolation interpolation,
                 const float * v)
             :   m_textureName(textureName)
@@ -57,6 +58,7 @@ public:
             ,   m_height(h)
             ,   m_depth(d)
             ,   m_type(channel)
+            ,   m_dimensions(dimensions)
             ,   m_interp(interpolation)
         {
             if (!textureName || !*textureName)
@@ -90,6 +92,7 @@ public:
         unsigned m_height;
         unsigned m_depth;
         GpuShaderDesc::TextureType m_type;
+        unsigned m_dimensions;
         Interpolation m_interp;
 
         std::vector<float> m_values;
@@ -176,6 +179,7 @@ public:
                     const char * samplerName,
                     unsigned width, unsigned height,
                     GpuShaderDesc::TextureType channel,
+                    GpuShaderDesc::TextureDimensions dimensions,
                     Interpolation interpolation,
                     const float * values)
     {
@@ -187,7 +191,8 @@ public:
             throw Exception(ss.str().c_str());
         }
 
-        Texture t(textureName, samplerName, width, height, 1, channel, interpolation, values);
+        unsigned numDimensions = static_cast<unsigned>(dimensions);
+        Texture t(textureName, samplerName, width, height, 1, channel, numDimensions, interpolation, values);
         m_textures.push_back(t);
     }
 
@@ -196,6 +201,7 @@ public:
                     const char *& samplerName,
                     unsigned & width, unsigned & height,
                     GpuShaderDesc::TextureType & channel,
+                    GpuShaderDesc::TextureDimensions& dimensions,
                     Interpolation & interpolation) const
     {
         if(index >= m_textures.size())
@@ -212,6 +218,8 @@ public:
         width         = t.m_width;
         height        = t.m_height;
         channel       = t.m_type;
+        assert(t.m_dimensions < 3);
+        dimensions = static_cast<GpuShaderDesc::TextureDimensions>(t.m_dimensions);
         interpolation = t.m_interp;
     }
 
@@ -244,7 +252,7 @@ public:
         }
 
         Texture t(textureName, samplerName, dimension, dimension, dimension,
-                  GpuShaderDesc::TEXTURE_RGB_CHANNEL,
+                  GpuShaderDesc::TEXTURE_RGB_CHANNEL, 3,
                   interpolation, values);
         m_textures3D.push_back(t);
     }
@@ -478,7 +486,21 @@ void GenericGpuShaderDesc::addTexture(const char * textureName,
                                       Interpolation interpolation,
                                       const float * values)
 {
-    getImplGeneric()->addTexture(textureName, samplerName, width, height, channel, interpolation, values);
+    const TextureDimensions dimensions = height > 1 ? TextureDimensions::TEXTURE_2D : TextureDimensions::TEXTURE_1D;
+
+    getImplGeneric()->addTexture(textureName, samplerName, width, height, channel, dimensions, interpolation, values);
+}
+
+void GenericGpuShaderDesc::addTexture(const char* textureName,
+    const char* samplerName,
+    unsigned width,
+    unsigned height,
+    TextureType channel,
+    TextureDimensions dimensions,
+    Interpolation interpolation,
+    const float* values)
+{
+    getImplGeneric()->addTexture(textureName, samplerName, width, height, channel, dimensions, interpolation, values);
 }
 
 void GenericGpuShaderDesc::getTexture(unsigned index,
@@ -488,7 +510,20 @@ void GenericGpuShaderDesc::getTexture(unsigned index,
                                       TextureType & channel,
                                       Interpolation & interpolation) const
 {
-    getImplGeneric()->getTexture(index, textureName, samplerName, width, height, channel, interpolation);
+    TextureDimensions dimensions;
+    getImplGeneric()->getTexture(index, textureName, samplerName, width, height, channel, dimensions, interpolation);
+}
+
+void GenericGpuShaderDesc::getTexture(unsigned index,
+                                      const char*& textureName,
+                                      const char*& samplerName,
+                                      unsigned& width,
+                                      unsigned& height,
+                                      TextureType& channel,
+                                      TextureDimensions& dimensions,
+                                      Interpolation& interpolation) const
+{
+    getImplGeneric()->getTexture(index, textureName, samplerName, width, height, channel, dimensions, interpolation);
 }
 
 void GenericGpuShaderDesc::getTextureValues(unsigned index, const float *& values) const

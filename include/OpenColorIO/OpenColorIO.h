@@ -3115,18 +3115,42 @@ public:
     };
 
     /**
+     * Dimension enum used to differentiate between 1D and 2D object/resource types.
+     */
+    enum TextureDimensions : uint8_t {
+        TEXTURE_1D = 1,
+        TEXTURE_2D = 2,
+    };
+
+    /**
      *  Add a 2D texture (1D texture if height equals 1).
      * 
      * \note 
      *   The 'values' parameter contains the LUT data which must be used as-is as the dimensions and
      *   origin are hard-coded in the fragment shader program. So, it means one GPU texture per entry.
      **/
+    OCIO_DEPRECATED("This was marked as deprecated starting in v2.3, please use addTexture() with dimensions.")
     virtual void addTexture(const char * textureName,
                             const char * samplerName,
                             unsigned width, unsigned height,
                             TextureType channel,
                             Interpolation interpolation,
                             const float * values) = 0;
+
+    /**
+     *  Add a 1D or 2D texture
+     *
+     * \note
+     *   The 'values' parameter contains the LUT data which must be used as-is as the dimensions and
+     *   origin are hard-coded in the fragment shader program. So, it means one GPU texture per entry.
+     **/
+    virtual void addTexture(const char* textureName,
+                            const char* samplerNName,
+                            unsigned width, unsigned height,
+                            TextureType channel,
+                            TextureDimensions dimensions,
+                            Interpolation interpolation,
+                            const float* values) = 0;
 
     /**
      *  Add a 3D texture with RGB channel type.
@@ -3370,6 +3394,7 @@ public:
 
     // 1D lut related methods
     virtual unsigned getNumTextures() const noexcept = 0;
+    OCIO_DEPRECATED("This was marked as deprecated starting in v2.3, please use getTexture() with dimensions.")
     virtual void getTexture(unsigned index,
                             const char *& textureName,
                             const char *& samplerName,
@@ -3377,6 +3402,14 @@ public:
                             unsigned & height,
                             TextureType & channel,
                             Interpolation & interpolation) const = 0;
+    virtual void getTexture(unsigned index,
+                            const char*& textureName,
+                            const char*& samplerName,
+                            unsigned& width,
+                            unsigned& height,
+                            TextureType& channel,
+                            TextureDimensions& dimensions,
+                            Interpolation& interpolation) const = 0;
     virtual void getTextureValues(unsigned index, const float *& values) const = 0;
 
     // 3D lut related methods

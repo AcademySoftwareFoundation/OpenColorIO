@@ -189,6 +189,15 @@ void GetLut1DGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
     std::string name(resName.str());
     StringUtils::ReplaceInPlace(name, "__", "_");
 
+    GpuShaderDesc::TextureDimensions dimensions = GpuShaderDesc::TEXTURE_1D;
+    if (height > 1 || lutData->isInputHalfDomain()
+        || shaderCreator->getLanguage() == GPU_LANGUAGE_GLSL_ES_1_0
+        || shaderCreator->getLanguage() == GPU_LANGUAGE_GLSL_ES_3_0
+        || !shaderCreator->getAllowTexture1D())
+    {
+        dimensions = GpuShaderDesc::TEXTURE_2D;
+    }
+
     // (Using CacheID here to potentially allow reuse of existing textures.)
     shaderCreator->addTexture(name.c_str(),
                               GpuShaderText::getSamplerName(name).c_str(),
@@ -196,15 +205,13 @@ void GetLut1DGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
                               height,
                               singleChannel ? GpuShaderCreator::TEXTURE_RED_CHANNEL
                                             : GpuShaderCreator::TEXTURE_RGB_CHANNEL,
+                              dimensions,
                               lutData->getConcreteInterpolation(),
                               &values[0]);
 
     // Add the LUT code to the OCIO shader program.
 
-    if (height > 1 || lutData->isInputHalfDomain()
-        || shaderCreator->getLanguage() == GPU_LANGUAGE_GLSL_ES_1_0
-        || shaderCreator->getLanguage() == GPU_LANGUAGE_GLSL_ES_3_0
-        || !shaderCreator->getAllowTexture1D())
+    if (dimensions == GpuShaderDesc::TEXTURE_2D)
     {
         // In case the 1D LUT length exceeds the 1D texture maximum length,
         // or the language doesn't support 1D textures,
@@ -272,18 +279,18 @@ void GetLut1DGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
 
             ss.newLine() << ss.float2Decl("retVal") << ";";
 
-            if (height == 1)
-            {
-                ss.newLine() << "retVal.x = (dep + 0.5) / " << float(width) << ";"; // (dep + 0.5) / width;
-                ss.newLine() << "retVal.y = 0.5;";
-            }
-            else
+            if (height > 1)
             {
                 ss.newLine() << "retVal.y = floor(dep / " << float(width - 1) << ");";       // floor( dep / (width-1) ))
                 ss.newLine() << "retVal.x = dep - retVal.y * " << float(width - 1) << ";";   // dep - retVal.y * (width-1)
 
                 ss.newLine() << "retVal.x = (retVal.x + 0.5) / " << float(width) << ";";   // (retVal.x + 0.5) / width;
                 ss.newLine() << "retVal.y = (retVal.y + 0.5) / " << float(height) << ";";  // (retVal.x + 0.5) / height;
+            }
+            else
+            {
+                ss.newLine() << "retVal.x = (dep + 0.5) / " << float(width) << ";"; // (dep + 0.5) / width;
+                ss.newLine() << "retVal.y = 0.5;";
             }
 
             ss.newLine() << "return retVal;";
