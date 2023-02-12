@@ -3135,7 +3135,7 @@ public:
                             unsigned width, unsigned height,
                             TextureType channel,
                             Interpolation interpolation,
-                            const float * values) = 0;
+                            const float * values) {}
 
     /**
      *  Add a 1D or 2D texture
@@ -3401,7 +3401,7 @@ public:
                             unsigned & width,
                             unsigned & height,
                             TextureType & channel,
-                            Interpolation & interpolation) const = 0;
+                            Interpolation & interpolation) const {}
     virtual void getTexture(unsigned index,
                             const char*& textureName,
                             const char*& samplerName,
