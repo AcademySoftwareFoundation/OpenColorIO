@@ -3130,12 +3130,12 @@ public:
      *   origin are hard-coded in the fragment shader program. So, it means one GPU texture per entry.
      **/
     OCIO_DEPRECATED("This was marked as deprecated starting in v2.3, please use addTexture() with dimensions.")
-    virtual void addTexture(const char * textureName,
-                            const char * samplerName,
-                            unsigned width, unsigned height,
-                            TextureType channel,
-                            Interpolation interpolation,
-                            const float * values) {}
+    virtual void addTexture(const char* /*textureName*/,
+                            const char* /*samplerName*/,
+                            unsigned /*width*/, unsigned /*height*/,
+                            TextureType /*channel*/,
+                            Interpolation /*interpolation*/,
+                            const float* /*values*/) {}
 
     /**
      *  Add a 1D or 2D texture
@@ -3395,13 +3395,13 @@ public:
     // 1D lut related methods
     virtual unsigned getNumTextures() const noexcept = 0;
     OCIO_DEPRECATED("This was marked as deprecated starting in v2.3, please use getTexture() with dimensions.")
-    virtual void getTexture(unsigned index,
-                            const char *& textureName,
-                            const char *& samplerName,
-                            unsigned & width,
-                            unsigned & height,
-                            TextureType & channel,
-                            Interpolation & interpolation) const {}
+    virtual void getTexture(unsigned /*index*/,
+                            const char *& /*textureName*/,
+                            const char *& /*samplerName*/ ,
+                            unsigned & /*width*/,
+                            unsigned & /*height*/,
+                            TextureType & /*channel*/,
+                            Interpolation & /*interpolation*/) const {}
     virtual void getTexture(unsigned index,
                             const char*& textureName,
                             const char*& samplerName,
