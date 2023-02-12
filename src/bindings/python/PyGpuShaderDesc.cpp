@@ -349,7 +349,7 @@ void bindPyGpuShaderDesc(py::module & m)
                 GpuShaderDesc::TextureType channel;
                 GpuShaderDesc::TextureDimensions dimensions;
                 Interpolation interpolation;
-                it.m_obj->getTexture(i, textureName, samplerName, width, height, channel, 
+                it.m_obj->getTexture(i, textureName, samplerName, width, height, channel, dimensions,
                                      interpolation);
 
                 return { textureName, samplerName, width, height, channel, dimensions, interpolation,
