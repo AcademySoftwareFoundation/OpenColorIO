@@ -24,26 +24,23 @@ namespace OCIO_NAMESPACE
 
 // Note that it is important for the code below this ifdef stays in the OCIO_NAMESPACE since
 // it is redefining two of the functions from sse2neon.
-#ifdef USE_SSE2NEON
-    // Overwrite the translation of _mm_max_ps and _mm_min_ps.
-    // Using vmaxnmq_f32 and vminnmq_f32 instead.
 
-    // Compare packed single-precision (32-bit) floating-point elements in a and b,
-    // and store packed maximum values in dst. dst does not follow the IEEE Standard
-    // for Floating-Point Arithmetic (IEEE 754) maximum value when inputs are NaN or
-    // signed-zero values.
-    // https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_max_ps
+#ifdef USE_SSE2NEON
+    // Using vmaxnmq_f32 and vminnmq_f32 rather than sse2neon's vmaxq_f32 and vminq_f32 due to 
+    // NaN handling.
+
+    // With the Intel intrinsics, if one value is a NaN, the second argument is output, as if it were 
+    // a simple (a>b) ? a:b. OCIO sometimes uses this behavior to filter out a possible NaN in the 
+    // first argument. The vmaxq/vminq will return a NaN if either input is a NaN, which omits the 
+    // filtering behavior. The vmaxnmq/vminnmq (similar to std::fmax/fmin) are not quite the same as 
+    // the Intel _mm_max_ps / _mm_min_ps since they always returns the non-NaN argument 
+    // (for quiet NaNs, signaling NaNs always get returned), but that's fine for OCIO since a NaN in 
+    // the first argument continues to be filtered out.
     static inline __m128 _mm_max_ps(__m128 a, __m128 b)
     {
         return vreinterpretq_m128_f32(
             vmaxnmq_f32(vreinterpretq_f32_m128(a), vreinterpretq_f32_m128(b)));
     }
-
-    // Compare packed single-precision (32-bit) floating-point elements in a and b,
-    // and store packed minimum values in dst. dst does not follow the IEEE Standard
-    // for Floating-Point Arithmetic (IEEE 754) minimum value when inputs are NaN or
-    // signed-zero values.
-    // https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_min_ps
     static inline __m128 _mm_min_ps(__m128 a, __m128 b)
     {
         return vreinterpretq_m128_f32(
