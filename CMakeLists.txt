@@ -194,7 +194,7 @@ include(CheckSupportARMNeon)
 ###############################################################################
 # Add sse2neon to the build if ARM NEON intrinsics are supported.
 
-if(HAVE_NEON)
+if(HAVE_NEON AND OCIO_USE_SSE)
     # Install sse2nenon. Please note that sse2neon is downloaded during the configure step as it is
     # needed for CompilerFlags.cmake and CheckSupportSSE2.cmake.
 
