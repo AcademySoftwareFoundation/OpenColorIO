@@ -35,7 +35,7 @@ void TestLog(float logBase)
 
     // LogOpCPU implementation uses optimized logarithm approximation
     // cannot use strict comparison.
-#ifdef USE_SSE
+#if USING_INTEL_SSE2 || USING_INTEL_SSE2_WITH_SSE2NEON
     const float error = 5e-5f;
 #else
     const float error = 1e-5f;
@@ -477,7 +477,7 @@ OCIO_ADD_TEST(LogOpCPU, cameralin2log_test)
     OCIO::ConstOpCPURcPtr pRenderer = OCIO::GetLogRenderer(logOp, true);
     pRenderer->apply(rgbaImage, rgba, numPixels);
 
-#ifdef USE_SSE
+#if USING_INTEL_SSE2 || USING_INTEL_SSE2_WITH_SSE2NEON
     const float error = 1e-6f;
 #else
     const float error = 1e-7f;
@@ -490,7 +490,7 @@ OCIO_ADD_TEST(LogOpCPU, cameralin2log_test)
 
     // Evaluating output for input rgbaImage[4-6] = { 0.08f, 0.16f, 1.16f, ... }.
     OCIO_CHECK_CLOSE(rgba[4], 0.047228762045f, error);
-#ifdef USE_SSE
+#if USING_INTEL_SSE2 || USING_INTEL_SSE2_WITH_SSE2NEON
     OCIO_CHECK_CLOSE(rgba[5], 0.170878935551f, 10.0f * error);
 #else
     OCIO_CHECK_CLOSE(rgba[5], 0.170878935551f, error);
@@ -525,7 +525,7 @@ OCIO_ADD_TEST(LogOpCPU, cameralin2log_test)
     
     // Evaluating output for input rgbaImage[4-6] = { 0.08f, 0.16f, 1.16f, ... }.
     OCIO_CHECK_CLOSE(rgba_nols[4], 0.031554648421f, error);
-#ifdef USE_SSE
+#if USING_INTEL_SSE2 || USING_INTEL_SSE2_WITH_SSE2NEON
     OCIO_CHECK_CLOSE(rgba_nols[5], 0.170878935551f, 10.0f * error);
 #else
     OCIO_CHECK_CLOSE(rgba_nols[5], 0.170878935551f, error);
@@ -552,7 +552,7 @@ OCIO_ADD_TEST(LogOpCPU, cameralin2log_test)
     OCIO::ConstOpCPURcPtr pRendererNoBreak = OCIO::GetLogRenderer(lognobreak, true);
     pRendererNoBreak->apply(rgbaImage, rgba_nobreak, numPixels);
 
-#ifdef USE_SSE
+#if USING_INTEL_SSE2 || USING_INTEL_SSE2_WITH_SSE2NEON
     const float error2 = 1e-5f;
 #else
     const float error2 = 1e-7f;
@@ -570,7 +570,7 @@ OCIO_ADD_TEST(LogOpCPU, cameralin2log_test)
 
     // Evaluating output for input rgbaImage[8-10] = { -inf, inf, qnan, ... }.
     OCIO_CHECK_CLOSE(rgba_nobreak[8], -24.6f, error2);
-#ifdef USE_SSE
+#if USING_INTEL_SSE2 || USING_INTEL_SSE2_WITH_SSE2NEON
     OCIO_CHECK_CLOSE(rgba_nobreak[9], 26.2f, error2);
 #else
     OCIO_CHECK_EQUAL(rgba_nobreak[9], inf);
@@ -596,7 +596,7 @@ OCIO_ADD_TEST(LogOpCPU, cameralog2lin_test)
     OCIO::ConstOpCPURcPtr pRenderer = OCIO::GetLogRenderer(logOp, true);
     pRenderer->apply(rgbaImage, rgba, 3);
 
-#ifdef USE_SSE
+#if USING_INTEL_SSE2 || USING_INTEL_SSE2_WITH_SSE2NEON
     const float error = 1e-6f;
 #else
     const float error = 1e-7f;
