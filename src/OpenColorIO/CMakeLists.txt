@@ -292,7 +292,7 @@ target_link_libraries(OpenColorIO
         MINIZIP::minizip-ng
 )
 
-if(OCIO_USE_SSE AND HAVE_NEON)
+if(OCIO_USE_SSE AND HAVE_SSE2_WITH_SSE2NEON)
     target_link_libraries(OpenColorIO
         PRIVATE
             sse2neon
@@ -330,15 +330,17 @@ if(BUILD_SHARED_LIBS OR (OCIO_BUILD_PYTHON AND UNIX))
 endif()
 
 if(OCIO_USE_SSE)
-    target_compile_definitions(OpenColorIO
-        PRIVATE
-            USE_SSE
-    )
-
-    if(HAVE_NEON)
+    if(HAVE_SSE2)
         target_compile_definitions(OpenColorIO
             PRIVATE
-                USE_SSE2NEON
+                USE_SSE
+        )
+    endif()
+
+    if(HAVE_SSE2_WITH_SSE2NEON)
+        target_compile_definitions(OpenColorIO
+            PRIVATE
+                USE_SSE2_WITH_SSE2NEON
         )
     endif()
 endif()
