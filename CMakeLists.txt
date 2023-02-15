@@ -186,9 +186,11 @@ include(CheckSupportGL)
 
 
 ###############################################################################
-# Check for ARM neon intrinsics (armv8)
+# Check for ARM neon (if the user asked for it)
 
-include(CheckSupportARMNeon)
+if(OCIO_USE_SSE)
+    include(CheckSupportARMNeon)
+endif()
 
 
 ###############################################################################

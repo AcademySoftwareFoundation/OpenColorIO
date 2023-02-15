@@ -6,14 +6,23 @@
 #define INCLUDED_OCIO_SSE_H
 
 
+#if !defined(USE_SSE)
+    #define USING_CPP 1
+#endif
+
 #ifdef USE_SSE
 
-#ifndef USE_SSE2NEON
+// If it is not arm64, same behavior as before.
+#if !defined(__aarch64__)
     #include <emmintrin.h>
-#else
-    #include <sse2neon.h>
+    #define USING_INTEL_SSE2 1
+#elif defined(__aarch64__)
+    // ARM architecture A64 (ARM64)
+    #if defined(USE_SSE2_WITH_SSE2NEON)
+        #include <sse2neon.h>
+        #define USING_INTEL_SSE2_WITH_SSE2NEON 1
+    #endif
 #endif
-#include <stdio.h>
 
 #include <OpenColorIO/OpenColorIO.h>
 
@@ -25,27 +34,29 @@ namespace OCIO_NAMESPACE
 // Note that it is important for the code below this ifdef stays in the OCIO_NAMESPACE since
 // it is redefining two of the functions from sse2neon.
 
-#ifdef USE_SSE2NEON
-    // Using vmaxnmq_f32 and vminnmq_f32 rather than sse2neon's vmaxq_f32 and vminq_f32 due to 
-    // NaN handling.
+#if defined(__aarch64__)
+    #if defined(USE_SSE2_WITH_SSE2NEON)
+        // Using vmaxnmq_f32 and vminnmq_f32 rather than sse2neon's vmaxq_f32 and vminq_f32 due to 
+        // NaN handling.
 
-    // With the Intel intrinsics, if one value is a NaN, the second argument is output, as if it were 
-    // a simple (a>b) ? a:b. OCIO sometimes uses this behavior to filter out a possible NaN in the 
-    // first argument. The vmaxq/vminq will return a NaN if either input is a NaN, which omits the 
-    // filtering behavior. The vmaxnmq/vminnmq (similar to std::fmax/fmin) are not quite the same as 
-    // the Intel _mm_max_ps / _mm_min_ps since they always returns the non-NaN argument 
-    // (for quiet NaNs, signaling NaNs always get returned), but that's fine for OCIO since a NaN in 
-    // the first argument continues to be filtered out.
-    static inline __m128 _mm_max_ps(__m128 a, __m128 b)
-    {
-        return vreinterpretq_m128_f32(
-            vmaxnmq_f32(vreinterpretq_f32_m128(a), vreinterpretq_f32_m128(b)));
-    }
-    static inline __m128 _mm_min_ps(__m128 a, __m128 b)
-    {
-        return vreinterpretq_m128_f32(
-            vminnmq_f32(vreinterpretq_f32_m128(a), vreinterpretq_f32_m128(b)));
-    }
+        // With the Intel intrinsics, if one value is a NaN, the second argument is output, as if it were 
+        // a simple (a>b) ? a:b. OCIO sometimes uses this behavior to filter out a possible NaN in the 
+        // first argument. The vmaxq/vminq will return a NaN if either input is a NaN, which omits the 
+        // filtering behavior. The vmaxnmq/vminnmq (similar to std::fmax/fmin) are not quite the same as 
+        // the Intel _mm_max_ps / _mm_min_ps since they always returns the non-NaN argument 
+        // (for quiet NaNs, signaling NaNs always get returned), but that's fine for OCIO since a NaN in 
+        // the first argument continues to be filtered out.
+        static inline __m128 _mm_max_ps(__m128 a, __m128 b)
+        {
+            return vreinterpretq_m128_f32(
+                vmaxnmq_f32(vreinterpretq_f32_m128(a), vreinterpretq_f32_m128(b)));
+        }
+        static inline __m128 _mm_min_ps(__m128 a, __m128 b)
+        {
+            return vreinterpretq_m128_f32(
+                vminnmq_f32(vreinterpretq_f32_m128(a), vreinterpretq_f32_m128(b)));
+        }
+    #endif
 #endif
 
 // Macros for alignment declarations

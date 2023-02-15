@@ -10,14 +10,16 @@ set(PLATFORM_LINK_OPTIONS "")
 
 ###############################################################################
 # Define if SSE2 can be used.
-# Check for SSE2 first since some compile flags need to be set on Apple ARM.
 
-include(CheckSupportSSE2)
+# Check for SSE2 only if the user asked for it.
+if(OCIO_USE_SSE)
+    include(CheckSupportSSE2)
+endif()
 
-if(NOT HAVE_SSE2)
+if(NOT HAVE_SSE2 AND NOT HAVE_SSE2_WITH_SSE2NEON)
     message(STATUS "Disabling SSE optimizations, as the target doesn't support them")
     set(OCIO_USE_SSE OFF)
-endif(NOT HAVE_SSE2)
+endif()
 
 ###############################################################################
 # Compile flags
