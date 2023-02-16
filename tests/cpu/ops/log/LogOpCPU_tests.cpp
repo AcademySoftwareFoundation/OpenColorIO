@@ -60,17 +60,17 @@ void TestLog(float logBase)
 
     const float resMin = logf(minValue) / logf(logBase);
 
-    // Evaluating output for input rgbaImage[8] = qnan and rgbaImage[11] = 0.f.
+    // Evaluating output for input rgbaImage[8-11] = {qnan, qnan, qnan, 0.}.
     OCIO_CHECK_CLOSE(rgba[8], resMin, error);
     OCIO_CHECK_EQUAL(rgba[11], 0.0f);
 
-    // Evaluating output for input rgbaImage[12] = 0.f and rgbaImage[15] = qnan.
+    // Evaluating output for input rgbaImage[12-15] = {0., 0., 0., qnan.}.
     OCIO_CHECK_CLOSE(rgba[12], resMin, error);
     OCIO_CHECK_ASSERT(OCIO::IsNan(rgba[15]));
 
     // SSE implementation of sseLog2 & sseExp2 do not behave like CPU.
     // TODO: Address issues with Inf/NaN handling demonstrated by many of the test results below.
-    // Evaluating output for input rgbaImage[16] = inf and rgbaImage[19] = 0.f.
+    // Evaluating output for input rgbaImage[16-19] = {inf, inf, inf, 0.}.
 #if USING_INTEL_SSE2 || USING_INTEL_SSE2_WITH_SSE2NEON
     if (logBase == 10.0f)
     {
@@ -85,15 +85,15 @@ void TestLog(float logBase)
 #endif
     OCIO_CHECK_EQUAL(rgba[19], 0.0f);
 
-    // Evaluating output for input rgbaImage[20] = 0.f  and rgbaImage[23] = inf.
+    // Evaluating output for input rgbaImage[20-23] =  {0., 0., 0., inf}.
     OCIO_CHECK_CLOSE(rgba[20], resMin, error);
     OCIO_CHECK_EQUAL(rgba[23], inf);
 
-    // Evaluating output for input rgbaImage[24] = -inf and rgbaImage[27] = 0.f.
+    // Evaluating output for input rgbaImage[24-27] = {-inf, -inf, -inf, 0.}.
     OCIO_CHECK_CLOSE(rgba[24], resMin, error);
     OCIO_CHECK_EQUAL(rgba[27], 0.0f);
 
-    // Evaluating output for input rgbaImage[28] = 0.f and rgbaImage[31] = -inf.
+    // Evaluating output for input rgbaImage[28-31] = {0., 0.,  0., -inf}.
     OCIO_CHECK_CLOSE(rgba[28], resMin, error);
     OCIO_CHECK_EQUAL(rgba[31], -inf);
 }
@@ -148,7 +148,7 @@ void TestAntiLog(float logBase)
         OCIO_CHECK_ASSERT(OCIO::EqualWithSafeRelError(result, expected, rtol, 1.0f));
     }
 
-    // Evaluating output for input rgbaImage[8] = qnan and rgbaImage[11] = 0.f.
+    // Evaluating output for input rgbaImage[8-11] = {qnan, qnan, qnan, 0.}.
 #ifdef USING_INTEL_SSE2
     OCIO_CHECK_EQUAL(rgba[8], inf);
 #elif USING_CPP || USING_INTEL_SSE2_WITH_SSE2NEON
@@ -156,11 +156,11 @@ void TestAntiLog(float logBase)
 #endif
     OCIO_CHECK_EQUAL(rgba[11], 0.0f);
 
-    // Evaluating output for input rgbaImage[12] = 0.f and rgbaImage[15] = qnan.
+    // Evaluating output for input rgbaImage[12-15] = {0., 0., 0., qnan.}.
     OCIO_CHECK_CLOSE(rgba[12], 1.0f, rtol);
     OCIO_CHECK_ASSERT(OCIO::IsNan(rgba[15]));
 
-    // Evaluating output for input rgbaImage[16] = inf and rgbaImage[19] = 0.f.
+    // Evaluating output for input rgbaImage[16-19] = {inf, inf, inf, 0.}.
 #ifdef USING_INTEL_SSE2
     OCIO_CHECK_EQUAL(rgba[16], 0.0f); // sseExp2(inf) is 0
 #elif USING_CPP || USING_INTEL_SSE2_WITH_SSE2NEON
@@ -168,11 +168,11 @@ void TestAntiLog(float logBase)
 #endif
     OCIO_CHECK_EQUAL(rgba[19], 0.0f);
 
-    // Evaluating output for input rgbaImage[20] = 0.f  and rgbaImage[23] = inf.
+    // Evaluating output for input rgbaImage[20-23] =  {0., 0., 0., inf}.
     OCIO_CHECK_CLOSE(rgba[20], 1.0f, rtol);
     OCIO_CHECK_EQUAL(rgba[23], inf);
 
-    // Evaluating output for input rgbaImage[24] = -inf and rgbaImage[27] = 0.f.
+    // Evaluating output for input rgbaImage[24-27] = {-inf, -inf, -inf, 0.}.
 #if USING_INTEL_SSE2 || USING_INTEL_SSE2_WITH_SSE2NEON
     OCIO_CHECK_EQUAL(rgba[24], inf);
 #else
@@ -180,7 +180,7 @@ void TestAntiLog(float logBase)
 #endif
     OCIO_CHECK_EQUAL(rgba[27], 0.0f);
 
-    // Evaluating output for input rgbaImage[28] = 0.f and rgbaImage[31] = -inf.
+    // Evaluating output for input rgbaImage[28-31] = {0., 0.,  0., -inf}.
     OCIO_CHECK_CLOSE(rgba[28], 1.0f, rtol);
     OCIO_CHECK_EQUAL(rgba[31], -inf);
 }
@@ -301,7 +301,7 @@ OCIO_ADD_TEST(LogOpCPU, log2lin_test)
 
     const float res0 = ComputeLog2LinEval(0.0f, redP);
 
-    // Evaluating output for input rgbaImage[8] = qnan and rgbaImage[11] = 0.f.
+    // Evaluating output for input rgbaImage[8-11] = {qnan, qnan, qnan, 0.}.
 #ifdef USING_INTEL_SSE2
     OCIO_CHECK_EQUAL(rgba[8], inf);
 #elif USING_CPP || USING_INTEL_SSE2_WITH_SSE2NEON
@@ -310,11 +310,11 @@ OCIO_ADD_TEST(LogOpCPU, log2lin_test)
 
     OCIO_CHECK_EQUAL(rgba[11], 0.0f);
 
-    // Evaluating output for input rgbaImage[12] = 0.f and rgbaImage[15] = qnan.
+    // Evaluating output for input rgbaImage[12-15] = {0., 0., 0., qnan.}.
     OCIO_CHECK_CLOSE(rgba[12], res0, rtol);
     OCIO_CHECK_ASSERT(OCIO::IsNan(rgba[15]));
 
-    // Evaluating output for input rgbaImage[16] = inf and rgbaImage[19] = 0.f.
+    // Evaluating output for input rgbaImage[16-19] = {inf, inf, inf, 0.}.
 #ifdef USING_INTEL_SSE2
     OCIO_CHECK_CLOSE(rgba[16], -0.003041422227f, rtol);
 #elif USING_CPP || USING_INTEL_SSE2_WITH_SSE2NEON
@@ -322,11 +322,11 @@ OCIO_ADD_TEST(LogOpCPU, log2lin_test)
 #endif
     OCIO_CHECK_EQUAL(rgba[19], 0.0f);
 
-    // Evaluating output for input rgbaImage[20] = 0.f  and rgbaImage[23] = inf.
+    // Evaluating output for input rgbaImage[20-23] =  {0., 0., 0., inf}.
     OCIO_CHECK_CLOSE(rgba[20], res0, rtol);
     OCIO_CHECK_EQUAL(rgba[23], inf);
 
-    // Evaluating output for input rgbaImage[24] = -inf and rgbaImage[27] = 0.f.
+    // Evaluating output for input rgbaImage[24-27] = {-inf, -inf, -inf, 0.}.
 #if USING_INTEL_SSE2 || USING_INTEL_SSE2_WITH_SSE2NEON
     OCIO_CHECK_EQUAL(rgba[24], inf);
 #else
@@ -334,7 +334,7 @@ OCIO_ADD_TEST(LogOpCPU, log2lin_test)
 #endif
     OCIO_CHECK_EQUAL(rgba[27], 0.0f);
 
-    // Evaluating output for input rgbaImage[28] = 0.f and rgbaImage[31] = -inf.
+    // Evaluating output for input rgbaImage[28-31] = {0., 0.,  0., -inf}.
     OCIO_CHECK_CLOSE(rgba[28], res0, rtol);
     OCIO_CHECK_EQUAL(rgba[31], -inf);
 }
@@ -447,15 +447,15 @@ OCIO_ADD_TEST(LogOpCPU, lin2log_test)
     const float res0 = ComputeLin2LogEval(0.0f, redP);
     const float resMin = ComputeLin2LogEval(-100.0f, redP);
 
-    // Evaluating output for input rgbaImage[8] = qnan and rgbaImage[11] = 0.f.
+    // Evaluating output for input rgbaImage[8-11] = {qnan, qnan, qnan, 0.}.
     OCIO_CHECK_CLOSE(rgba[8], resMin, error);
     OCIO_CHECK_EQUAL(rgba[11], 0.0f);
 
-    // Evaluating output for input rgbaImage[12] = 0.f and rgbaImage[15] = qnan.
+    // Evaluating output for input rgbaImage[12-15] = {0., 0., 0., qnan.}.
     OCIO_CHECK_CLOSE(rgba[12], res0, error);
     OCIO_CHECK_ASSERT(OCIO::IsNan(rgba[15]));
 
-    // Evaluating output for input rgbaImage[16] = inf and rgbaImage[19] = 0.f.
+    // Evaluating output for input rgbaImage[16-19] = {inf, inf, inf, 0.}.
 #if USING_INTEL_SSE2 || USING_INTEL_SSE2_WITH_SSE2NEON
     OCIO_CHECK_CLOSE(rgba[16], 10.08598328f, error);
 #else
@@ -463,20 +463,20 @@ OCIO_ADD_TEST(LogOpCPU, lin2log_test)
 #endif
     OCIO_CHECK_EQUAL(rgba[19], 0.0f);
 
-    // Evaluating output for input rgbaImage[20] = 0.f  and rgbaImage[23] = inf.
+    // Evaluating output for input rgbaImage[20-23] =  {0., 0., 0., inf}.
     OCIO_CHECK_CLOSE(rgba[20], res0, error);
     OCIO_CHECK_EQUAL(rgba[23], inf);
 
-    // Evaluating output for input rgbaImage[24] = -inf and rgbaImage[27] = 0.f.
+    // Evaluating output for input rgbaImage[24-27] = {-inf, -inf, -inf, 0.}.
     OCIO_CHECK_CLOSE(rgba[24], resMin, error);
     OCIO_CHECK_EQUAL(rgba[27], 0.0f);
 
-    // Evaluating output for input rgbaImage[28] = 0.f and rgbaImage[31] = -inf.
+    // Evaluating output for input rgbaImage[28-31] = {0., 0.,  0., -inf}.
     OCIO_CHECK_CLOSE(rgba[28], res0, error);
     OCIO_CHECK_EQUAL(rgba[31], -inf);
 }
 
-OCIO_ADD_TEST(LogOpCPU, cameralog2lin_test)
+OCIO_ADD_TEST(LogOpCPU, cameralin2log_test)
 {
     constexpr int numPixels = 3;
     constexpr int numValues = 4 * numPixels;
@@ -603,7 +603,7 @@ OCIO_ADD_TEST(LogOpCPU, cameralog2lin_test)
     OCIO_CHECK_CLOSE(rgba_nobreak[10], -24.6f, error2);
 }
 
-OCIO_ADD_TEST(LogOpCPU, cameralin2log_test)
+OCIO_ADD_TEST(LogOpCPU, cameralog2lin_test)
 {
     // Inverse of previous test.
     const float rgbaImage[12] = { -0.168771237955f, -0.048771237955f, -0.036771237955f, 0.f,

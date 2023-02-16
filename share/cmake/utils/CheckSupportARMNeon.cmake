@@ -5,7 +5,7 @@
 
 include(CheckCXXSourceCompiles)
 
-set(_cmake_osx_architectures_old "${CMAKE_OSX_ARCHITECTURES}")
+set(_cmake_osx_architectures_orig "${CMAKE_OSX_ARCHITECTURES}")
 
 if(APPLE)
     set(CMAKE_OSX_ARCHITECTURES "arm64")
@@ -21,7 +21,7 @@ int main()
 
 check_cxx_source_compiles ("${source_code}" HAVE_NEON)
 
-set(CMAKE_OSX_ARCHITECTURES "${_cmake_osx_architectures_old}")
+set(CMAKE_OSX_ARCHITECTURES "${_cmake_osx_architectures_orig}")
 
-unset(_cmake_osx_architectures_old)
+unset(_cmake_osx_architectures_orig)
 mark_as_advanced(HAVE_NEON)
