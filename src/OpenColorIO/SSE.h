@@ -109,10 +109,10 @@ inline __m128 isNegativeSpecial(const __m128 x)
   return _mm_castsi128_ps(_mm_srai_epi32(_mm_castps_si128(x), SIGN_SHIFT));
 }
 
-// Select function in SSE version 2
+// Bit-wise select function in SSE version 2
 //
-// Return the parameter arg_false when the parameter mask is 0x0,
-// or the parameter arg_true when the mask is 0xffffffff.
+// Return the parameter arg_false bit where the parameter mask is 0x0,
+// return the parameter arg_true bit where the mask is 0x1.
 //
 // Algorithm Explanation:
 //
@@ -142,7 +142,11 @@ inline __m128 isNegativeSpecial(const __m128 x)
 //
 inline __m128 sseSelect(const __m128& mask, const __m128& arg_true, const __m128& arg_false)
 {
-    return _mm_xor_ps( arg_false, _mm_and_ps( mask, _mm_xor_ps( arg_true, arg_false ) ) );
+    return _mm_xor_ps(                                  // bit-wise XOR of arg_false, (...)
+        arg_false, 
+        _mm_and_ps(                                     // bit-wise AND of mask, (...)
+            mask, 
+            _mm_xor_ps( arg_true, arg_false ) ) );      // bit-wise XOR of arg_true, arg_false
 }
 
 // Coefficients of Chebyshev (minimax) degree 5 polynomial
@@ -162,6 +166,10 @@ static const __m128 PNEXP2 = _mm_set1_ps((float)2.414427569091865207710e-1);
 static const __m128 PNEXP1 = _mm_set1_ps((float)6.930038344665415134202e-1);
 static const __m128 PNEXP0 = _mm_set1_ps((float)1.000002593370603213644);
 
+// Note: The above polynomials have been chosen to acheive a precision of
+// approximately 15 bits of mantissa.
+
+
 // log2 function in SSE version 2
 //
 // The function log2() is evaluated by performing argument
@@ -169,12 +177,14 @@ static const __m128 PNEXP0 = _mm_set1_ps((float)1.000002593370603213644);
 // over a restricted range.
 inline __m128 sseLog2(__m128 x)
 {
-    // y = log2( x ) = log2( 2^exposant * mantissa ) 
-    //               = exposant + log2( mantissa )
+    // y = log2( x ) = log2( 2^exponant * mantissa ) 
+    //               = exponant + log2( mantissa )
 
     __m128 mantissa
-        = _mm_or_ps(
-            _mm_andnot_ps(_mm_castsi128_ps(EMASK), x), EONE);
+        = _mm_or_ps(                                    // OR with EONE
+            _mm_andnot_ps(                              // NOT(EMASK) AND x
+                _mm_castsi128_ps(EMASK), x),            // reinterpret cast int to float
+            EONE);
 
     __m128 log2
         = _mm_add_ps(
@@ -198,14 +208,15 @@ inline __m128 sseLog2(__m128 x)
             PNLOG0);
 
     __m128i exponent
-        = _mm_sub_epi32(
-            _mm_srli_epi32(
-                _mm_and_si128(_mm_castps_si128(x),
+        = _mm_sub_epi32(                                // subtract EBIAS
+            _mm_srli_epi32(                             // right-shift by EXP_SHIFT
+                _mm_and_si128(_mm_castps_si128(x),      // bit-wise AND with EMASK
                     EMASK),
                 EXP_SHIFT),
             EBIAS);
 
-    log2 = _mm_add_ps(log2, _mm_cvtepi32_ps(exponent));
+    log2 = _mm_add_ps(log2, 
+                      _mm_cvtepi32_ps(exponent));       // convert exponent to float
 
     return log2;
 }
@@ -224,24 +235,30 @@ inline __m128 sseExp2(__m128 x)
     // Compute the largest integer not greater than x, i.e., floor(x)
     // Note: cvttps_epi32 simply cast the float value to int. That means cvttps_epi32(-2.7) = -2
     // rather than -3, hence for negative numbers we need to add -1. This ensures that "fraction"
-    // is always in the range [0, 1).
+    // is always in the range [0, 1).  Note that _mm_castps_si128(0xFFFFFFFF) is -1.
+    // If x is outside the INT_MIN to INT_MAX range, _mm_cvttps_epi32 will return 0x80000000
+    // (i.e. INT_MIN, just the sign bit set), which Intel calls the "integer indefinite" value. 
+    // When 1 is subtracted from INT_MIN, it gives INT_MAX.  So floor_x is wrong for values
+    // outside [INT_MIN, INT_MAX] but it's ignored thanks to the checks at the bottom.
+    // It's also wrong for x=NaN, but again it's ok since the polynomial returns NaN and
+    // hence the output is NaN, regardless of floor_x.
     __m128i floor_x
-        = _mm_add_epi32(
-            _mm_cvttps_epi32(x),
-            _mm_castps_si128(
-                _mm_cmpnle_ps(EZERO, x)));
+        = _mm_add_epi32(                                // add a pair of integer arguments
+            _mm_cvttps_epi32(x),                        // convert float to int via truncation
+            _mm_castps_si128(                           // reinterpret cast float to int
+                _mm_cmpnle_ps(EZERO, x)));              // NOT( EZERO <= x ) ? 0xFFFFFFFF : 0
 
     // Compute exp2(floor_x) by moving floor_x to the exponent bits of the floating-point number.
     __m128 zf
-        = _mm_castsi128_ps(
-            _mm_slli_epi32(
-                _mm_add_epi32(floor_x, EBIAS),
+        = _mm_castsi128_ps(                             // reinterpret cast int to float
+            _mm_slli_epi32(                             // left shift by EXP_SHIFT
+                _mm_add_epi32(floor_x, EBIAS),          // add a pair of integer arguments
                 EXP_SHIFT));
 
-    __m128 iexp = _mm_cvtepi32_ps(floor_x);
-    __m128 fraction = _mm_sub_ps(x, iexp);
+    __m128 iexp = _mm_cvtepi32_ps(floor_x);             // convert floor_x to float
+    __m128 fraction = _mm_sub_ps(x, iexp);              // x - iexp
 
-    // Compute exp2(fraction) using a polynomial approximation
+    // Compute exp2(fraction) using a polynomial approximation.
     __m128 mexp
         = _mm_add_ps(
             _mm_mul_ps(
@@ -259,19 +276,26 @@ inline __m128 sseExp2(__m128 x)
                 fraction),
             PNEXP0);
 
-    __m128 exp2 = _mm_mul_ps(zf, mexp);
+    __m128 exp2 = _mm_mul_ps(zf, mexp);                 // zf * mexp
 
     // Handle underflow:
     // If the (unbiased) exponent of zf is less than -126, the result is smaller than
     // the smallest representable floating-point number and an underflow computation is
     // potentially happening. When this happens, force the result to zero.
-    exp2 = _mm_andnot_ps(_mm_cmplt_ps(iexp, ENEG126), exp2);
+    // Note that as described above, floor_x is inaccurate, so the test here uses x.
+    exp2 = _mm_andnot_ps(                               // NOT(...) AND exp2
+        _mm_cmplt_ps(x, ENEG126),                       // iexp < ENEG126 ? 0xFFFFFFFF : 0
+        exp2);
 
     // Handle overflow:
     // If the (unbiased) exponent of zf is greater than 127, the result is larger than
     // the largest representable floating-point number and an overflow computation is
     // potentially happening. When this happens, force the result to positive infinity.
-    exp2 = sseSelect(_mm_cmpgt_ps(iexp, EPOS127), EPOSINF, exp2);
+    // Note that as described above, floor_x is inaccurate, so the test here uses x.
+    exp2 = sseSelect(                                   // (...) is a mask to select EPOSINF, exp2
+        _mm_cmpgt_ps(x, EPOS127),                       // iexp > EPOS127 ? 0xFFFFFFFF : 0
+        EPOSINF, 
+        exp2);
 
     return exp2;
 }
@@ -630,7 +654,7 @@ inline void sseSinCos(const float x, float& sin_x, float& cos_x)
 } // namespace OCIO_NAMESPACE
 
 
-#endif
+#endif  // USE_SSE
 
 
-#endif
+#endif  // INCLUDED_OCIO_SSE_H
