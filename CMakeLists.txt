@@ -160,7 +160,7 @@ include(CheckSupportGL)
 
 
 ###############################################################################
-# Check for ARM neon (if the user asked for it)
+# Check for ARM neon
 
 if(OCIO_USE_SSE)
     include(CheckSupportARMNeon)
@@ -171,7 +171,7 @@ endif()
 # Add sse2neon to the build if ARM NEON intrinsics are supported.
 
 if(HAVE_NEON AND OCIO_USE_SSE)
-    # Install sse2nenon. Please note that sse2neon is downloaded during the configure step as it is
+    # Install sse2neon. Please note that sse2neon is downloaded during the configure step as it is
     # needed for CompilerFlags.cmake and CheckSupportSSE2.cmake.
 
     # Could use ocio_handle_dependency once this is rebased from main (once the CMake min and 

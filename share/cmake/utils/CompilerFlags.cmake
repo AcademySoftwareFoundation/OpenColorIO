@@ -10,7 +10,6 @@ set(PLATFORM_COMPILE_FLAGS "")
 ###############################################################################
 # Define if SSE2 can be used.
 
-# Check for SSE2 only if the user asked for it.
 if(OCIO_USE_SSE)
     include(CheckSupportSSE2)
 endif()

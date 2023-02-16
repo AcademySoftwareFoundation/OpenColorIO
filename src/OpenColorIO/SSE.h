@@ -6,11 +6,9 @@
 #define INCLUDED_OCIO_SSE_H
 
 
-#if !defined(USE_SSE)
+#ifndef USE_SSE
     #define USING_CPP 1
-#endif
-
-#ifdef USE_SSE
+#else
 
 // If it is not arm64, same behavior as before.
 #if !defined(__aarch64__)
