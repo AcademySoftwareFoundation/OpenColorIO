@@ -149,11 +149,7 @@ void TestAntiLog(float logBase)
     }
 
     // Evaluating output for input rgbaImage[8-11] = {qnan, qnan, qnan, 0.}.
-#ifdef USING_INTEL_SSE2
-    OCIO_CHECK_EQUAL(rgba[8], inf);
-#elif USING_CPP || USING_INTEL_SSE2_WITH_SSE2NEON
     OCIO_CHECK_ASSERT(OCIO::IsNan(rgba[8]));
-#endif
     OCIO_CHECK_EQUAL(rgba[11], 0.0f);
 
     // Evaluating output for input rgbaImage[12-15] = {0., 0., 0., qnan.}.
@@ -161,11 +157,7 @@ void TestAntiLog(float logBase)
     OCIO_CHECK_ASSERT(OCIO::IsNan(rgba[15]));
 
     // Evaluating output for input rgbaImage[16-19] = {inf, inf, inf, 0.}.
-#ifdef USING_INTEL_SSE2
-    OCIO_CHECK_EQUAL(rgba[16], 0.0f); // sseExp2(inf) is 0
-#elif USING_CPP || USING_INTEL_SSE2_WITH_SSE2NEON
     OCIO_CHECK_EQUAL(rgba[16], inf);
-#endif
     OCIO_CHECK_EQUAL(rgba[19], 0.0f);
 
     // Evaluating output for input rgbaImage[20-23] =  {0., 0., 0., inf}.
@@ -173,11 +165,7 @@ void TestAntiLog(float logBase)
     OCIO_CHECK_EQUAL(rgba[23], inf);
 
     // Evaluating output for input rgbaImage[24-27] = {-inf, -inf, -inf, 0.}.
-#if USING_INTEL_SSE2 || USING_INTEL_SSE2_WITH_SSE2NEON
-    OCIO_CHECK_EQUAL(rgba[24], inf);
-#else
     OCIO_CHECK_EQUAL(rgba[24], 0.0f);
-#endif
     OCIO_CHECK_EQUAL(rgba[27], 0.0f);
 
     // Evaluating output for input rgbaImage[28-31] = {0., 0.,  0., -inf}.
@@ -302,12 +290,7 @@ OCIO_ADD_TEST(LogOpCPU, log2lin_test)
     const float res0 = ComputeLog2LinEval(0.0f, redP);
 
     // Evaluating output for input rgbaImage[8-11] = {qnan, qnan, qnan, 0.}.
-#ifdef USING_INTEL_SSE2
-    OCIO_CHECK_EQUAL(rgba[8], inf);
-#elif USING_CPP || USING_INTEL_SSE2_WITH_SSE2NEON
     OCIO_CHECK_ASSERT(OCIO::IsNan(rgba[8]));
-#endif
-
     OCIO_CHECK_EQUAL(rgba[11], 0.0f);
 
     // Evaluating output for input rgbaImage[12-15] = {0., 0., 0., qnan.}.
@@ -315,11 +298,7 @@ OCIO_ADD_TEST(LogOpCPU, log2lin_test)
     OCIO_CHECK_ASSERT(OCIO::IsNan(rgba[15]));
 
     // Evaluating output for input rgbaImage[16-19] = {inf, inf, inf, 0.}.
-#ifdef USING_INTEL_SSE2
-    OCIO_CHECK_CLOSE(rgba[16], -0.003041422227f, rtol);
-#elif USING_CPP || USING_INTEL_SSE2_WITH_SSE2NEON
     OCIO_CHECK_EQUAL(rgba[16], inf);
-#endif
     OCIO_CHECK_EQUAL(rgba[19], 0.0f);
 
     // Evaluating output for input rgbaImage[20-23] =  {0., 0., 0., inf}.
@@ -327,11 +306,7 @@ OCIO_ADD_TEST(LogOpCPU, log2lin_test)
     OCIO_CHECK_EQUAL(rgba[23], inf);
 
     // Evaluating output for input rgbaImage[24-27] = {-inf, -inf, -inf, 0.}.
-#if USING_INTEL_SSE2 || USING_INTEL_SSE2_WITH_SSE2NEON
-    OCIO_CHECK_EQUAL(rgba[24], inf);
-#else
     OCIO_CHECK_CLOSE(rgba[24], ComputeLog2LinEval(-inf, redP), rtol);
-#endif
     OCIO_CHECK_EQUAL(rgba[27], 0.0f);
 
     // Evaluating output for input rgbaImage[28-31] = {0., 0.,  0., -inf}.
@@ -641,11 +616,7 @@ OCIO_ADD_TEST(LogOpCPU, cameralog2lin_test)
 
     // Evaluating output for input rgbaImage[8-10] = { -inf, inf, qnan, ... }.
     OCIO_CHECK_EQUAL(rgba[8], -inf);
-#ifdef USING_INTEL_SSE2
-    OCIO_CHECK_CLOSE(rgba[9], -0.0454545f, error); // sseExp2(inf) is 0
-#elif USING_CPP || USING_INTEL_SSE2_WITH_SSE2NEON
     OCIO_CHECK_EQUAL(rgba[9], inf);
-#endif
     OCIO_CHECK_ASSERT(OCIO::IsNan(rgba[10]));
 }
 
