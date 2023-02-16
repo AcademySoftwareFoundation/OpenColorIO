@@ -26,12 +26,12 @@ set(SOURCES
 
 add_executable(test_gpu_exec ${SOURCES})
 
-if(OCIO_USE_SSE)
+if(OCIO_USE_SIMD)
 	target_compile_definitions(test_gpu_exec
 		PRIVATE
 			USE_SSE
 	)
-endif(OCIO_USE_SSE)
+endif(OCIO_USE_SIMD)
 
 set_target_properties(test_gpu_exec PROPERTIES 
 	COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS}")

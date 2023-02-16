@@ -277,6 +277,8 @@ Here are the most common OCIO-specific CMake options (the default values are sho
 - ``-DOCIO_BUILD_PYTHON=ON`` (Set to OFF to not build the Python binding)
 - ``-DOCIO_BUILD_OPENFX=OFF`` (Set to ON to build the OpenFX plug-ins)
 - ``-DOCIO_USE_SSE=ON`` (Set to OFF to turn off SSE CPU performance optimizations)
+  - ``OCIO_USE_SSE`` will be deprecated in favor of ``OCIO_USE_SIMD`` at some point in the future.
+- ``-DOCIO_USE_SIMD=ON`` (Set to OFF to turn off SIMD CPU performance optimizations)
 - ``-DOCIO_BUILD_TESTS=ON`` (Set to OFF to not build the unit tests)
 - ``-DOCIO_BUILD_GPU_TESTS=ON`` (Set to OFF to not build the GPU unit tests)
 - ``-DOCIO_USE_HEADLESS=OFF`` (Set to ON to do headless GPU reendering)
