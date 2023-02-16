@@ -173,10 +173,12 @@ endif()
 
 ###############################################################################
 # Optimization / internal linking preferences
-
+# SIMD refers to either SIMD or Advanced SIMD terminology.
 option(OCIO_USE_SSE "Specify whether to enable SSE CPU performance optimizations" ON)
+mark_as_advanced(OCIO_USE_SSE)
+option(OCIO_USE_SIMD "Specify whether to enable SIMD CPU performance optimizations (Will replace OCIO_USE_SSE)" ${OCIO_USE_SSE})
+option(OCIO_USE_OIIO_CMAKE_CONFIG "Specify whether to look for OIIO using the generated CMake Config script instead of the custom FindOpenImageIO.cmake script" OFF)
 option(OCIO_USE_OIIO_FOR_APPS "Request OIIO to build apps (ociolutimage, ocioconvert and ociodisplay), the default uses OpenEXR." OFF)
-
 
 ###############################################################################
 # GPU configuration
@@ -188,7 +190,7 @@ include(CheckSupportGL)
 ###############################################################################
 # Check for ARM neon
 
-if(OCIO_USE_SSE)
+if(OCIO_USE_SIMD)
     include(CheckSupportARMNeon)
 endif()
 
@@ -196,7 +198,7 @@ endif()
 ###############################################################################
 # Add sse2neon to the build if ARM NEON intrinsics are supported.
 
-if(HAVE_NEON AND OCIO_USE_SSE)
+if(HAVE_NEON AND OCIO_USE_SIMD)
     # Install sse2neon. Please note that sse2neon is downloaded during the configure step as it is
     # needed for CompilerFlags.cmake and CheckSupportSSE2.cmake.
 
