@@ -26,13 +26,13 @@ endif()
 ###############################################################################
 # Define if SSE2 can be used.
 
-if(OCIO_USE_SSE)
+if(OCIO_USE_SIMD)
     include(CheckSupportSSE2)
 endif()
 
 if(NOT HAVE_SSE2 AND NOT HAVE_SSE2_WITH_SSE2NEON)
     message(STATUS "Disabling SSE optimizations, as the target doesn't support them")
-    set(OCIO_USE_SSE OFF)
+    set(OCIO_USE_SIMD OFF)
 endif()
 
 ###############################################################################
