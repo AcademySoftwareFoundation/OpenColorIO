@@ -204,7 +204,7 @@ jobs:
                 -DOCIO_BUILD_DOCS=${{ matrix.build-docs }} \
                 -DOCIO_BUILD_OPENFX=${{ matrix.build-openfx }} \
                 -DOCIO_BUILD_GPU_TESTS=OFF \
-                -DOCIO_USE_SSE=${{ matrix.use-sse }} \
+                -DOCIO_USE_SIMD=${{ matrix.use-sse }} \
                 -DOCIO_USE_OIIO_FOR_APPS=${{ matrix.use-oiio }} \
                 -DOCIO_INSTALL_EXT_PACKAGES=ALL \
                 -DOCIO_WARNING_AS_ERROR=ON \
@@ -345,7 +345,7 @@ jobs:
                 -DOCIO_BUILD_DOCS=${{ matrix.build-docs }} \
                 -DOCIO_BUILD_OPENFX=${{ matrix.build-openfx }} \
                 -DOCIO_BUILD_GPU_TESTS=OFF \
-                -DOCIO_USE_SSE=${{ matrix.use-sse }} \
+                -DOCIO_USE_SIMD=${{ matrix.use-sse }} \
                 -DOCIO_USE_OIIO_FOR_APPS=${{ matrix.use-oiio }} \
                 -DOCIO_INSTALL_EXT_PACKAGES=ALL \
                 -DOCIO_WARNING_AS_ERROR=ON \
@@ -493,7 +493,7 @@ jobs:
                 -DOCIO_BUILD_DOCS=${{ matrix.build-docs }} \
                 -DOCIO_BUILD_OPENFX=${{ matrix.build-openfx }} \
                 -DOCIO_BUILD_GPU_TESTS=OFF \
-                -DOCIO_USE_SSE=${{ matrix.use-sse }} \
+                -DOCIO_USE_SIMD=${{ matrix.use-sse }} \
                 -DOCIO_USE_OIIO_FOR_APPS=${{ matrix.use-oiio }} \
                 -DOCIO_INSTALL_EXT_PACKAGES=ALL \
                 -DOCIO_WARNING_AS_ERROR=ON \

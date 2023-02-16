@@ -201,6 +201,7 @@ if(_OpenEXR_TARGET_CREATE)
         IMPORTED_LOCATION ${IlmThread_LIBRARY}
         INTERFACE_INCLUDE_DIRECTORIES "${OpenEXR_INCLUDE_DIR}"
         INTERFACE_LINK_LIBRARIES "OpenEXR::IlmThreadConfig;OpenEXR::IlmThreadConfig;OpenEXR::Iex;Threads::Threads"
+        STATIC_LIBRARY_OPTIONS "-no_warning_for_no_symbols"
     )
     set_target_properties(OpenEXR::IlmThreadConfig PROPERTIES
         INTERFACE_INCLUDE_DIRECTORIES "${OpenEXR_INCLUDE_DIR};${OpenEXR_INCLUDE_DIR}/OpenEXR"
@@ -217,6 +218,7 @@ if(_OpenEXR_TARGET_CREATE)
         IMPORTED_LOCATION ${OpenEXRCore_LIBRARY}
         INTERFACE_INCLUDE_DIRECTORIES "${OpenEXR_INCLUDE_DIR}"
         INTERFACE_LINK_LIBRARIES "OpenEXR::IlmThreadConfig;ZLIB::ZLIB;\$<LINK_ONLY:Imath::ImathConfig>"
+        STATIC_LIBRARY_OPTIONS "-no_warning_for_no_symbols"
     )
     set_target_properties(OpenEXR::OpenEXRUtil PROPERTIES
         IMPORTED_LOCATION ${OpenEXRUtil_LIBRARY}
