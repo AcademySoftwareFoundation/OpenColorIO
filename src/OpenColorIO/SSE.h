@@ -6,19 +6,17 @@
 #define INCLUDED_OCIO_SSE_H
 
 
-#ifndef USE_SSE
-    #define USING_CPP 1
-#else
+#if defined(USE_SSE) || defined(USE_SSE2_WITH_SSE2NEON)
 
 // If it is not arm64, same behavior as before.
 #if !defined(__aarch64__)
-    #include <emmintrin.h>
-    #define USING_INTEL_SSE2 1
+    #if defined(USE_SSE)
+        #include <emmintrin.h>
+    #endif
 #elif defined(__aarch64__)
     // ARM architecture A64 (ARM64)
     #if defined(USE_SSE2_WITH_SSE2NEON)
         #include <sse2neon.h>
-        #define USING_INTEL_SSE2_WITH_SSE2NEON 1
     #endif
 #endif
 
@@ -82,7 +80,7 @@ static const __m128i EBIAS = _mm_set1_epi32(EXP_BIAS);
 static const __m128 EONE    = _mm_set1_ps(1.0f);
 static const __m128 EZERO   = _mm_set1_ps(0.0f);
 static const __m128 ENEG126 = _mm_set1_ps(-126.0f);
-static const __m128 EPOS127 = _mm_set1_ps(127.0f);
+static const __m128 EPOS128 = _mm_set1_ps(128.0f);
 
 static const __m128 EPOSINF = _mm_set1_ps(std::numeric_limits<float>::infinity());
 
@@ -293,7 +291,7 @@ inline __m128 sseExp2(__m128 x)
     // potentially happening. When this happens, force the result to positive infinity.
     // Note that as described above, floor_x is inaccurate, so the test here uses x.
     exp2 = sseSelect(                                   // (...) is a mask to select EPOSINF, exp2
-        _mm_cmpgt_ps(x, EPOS127),                       // iexp > EPOS127 ? 0xFFFFFFFF : 0
+        _mm_cmpge_ps(x, EPOS128),                       // iexp > EPOS128 ? 0xFFFFFFFF : 0
         EPOSINF, 
         exp2);
 

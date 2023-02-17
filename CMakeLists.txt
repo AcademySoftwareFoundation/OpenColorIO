@@ -147,7 +147,6 @@ endif()
 
 ###############################################################################
 # Optimization / internal linking preferences
-# SIMD refers to either SIMD or Advanced SIMD terminology.
 option(OCIO_USE_SSE "Specify whether to enable SSE CPU performance optimizations" ON)
 mark_as_advanced(OCIO_USE_SSE)
 option(OCIO_USE_SIMD "Specify whether to enable SIMD CPU performance optimizations (Will replace OCIO_USE_SSE)" ${OCIO_USE_SSE})
