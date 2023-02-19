@@ -76,10 +76,10 @@ OCIO_ADD_TEST(XMLReaderHelper, get_numbers)
     // Same test without a null terminated string:
     // Copy the string into a buffer that will not be null terminated.
     // Add a delimiter at the end of the buffer.
-    char * buffer = new char[len+1];
-    std::memcpy(buffer, str, len * sizeof(char));
+    std::vector<char> buffer(len+1);
+    std::memcpy(buffer.data(), str, len * sizeof(char));
     buffer[len] = '\n';
-    OCIO_CHECK_NO_THROW(values = OCIO::GetNumbers<float>(buffer, len));
+    OCIO_CHECK_NO_THROW(values = OCIO::GetNumbers<float>(buffer.data(), len));
     OCIO_REQUIRE_EQUAL(values.size(), 4);
     OCIO_CHECK_EQUAL(values[0], 1.0f);
     OCIO_CHECK_EQUAL(values[1], 2.0f);
@@ -498,4 +498,3 @@ OCIO_ADD_TEST(XMLReaderHelper, find_sub_string)
         OCIO_CHECK_EQUAL(end, 0);
     }
 }
-

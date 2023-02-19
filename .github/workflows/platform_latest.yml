@@ -4,18 +4,9 @@
 # GitHub Actions workflow file
 # https://help.github.com/en/actions/reference/workflow-syntax-for-github-actions
 
-name: CI
+name: Platform latest
 
 on:
-  push:
-    # Versioned branches and tags are ignored for OCIO <= 1.x.x
-    branches-ignore:
-      - RB-0.*
-      - RB-1.*
-      - gh-pages
-    tags-ignore:
-      - v0.*
-      - v1.*
   pull_request:
     branches-ignore:
       - RB-0.*
@@ -24,179 +15,82 @@ on:
     tags-ignore:
       - v0.*
       - v1.*
+    paths:
+      - .github/workflows/platform_latest.yml
+  schedule:
+    # Nightly build
+    - cron: "0 0 * * *"
 
 jobs:
-  # Linux jobs run in Docker containers, so the latest OS version is OK. macOS 
-  # and Windows jobs need to be locked to specific virtual environment 
-  # versions to mitigate issues from OS updates, and will require maintenance 
-  # as OS versions are retired.
-  #
-  # GH Actions (Free plan) supports 20 concurrent jobs, with 5 concurrent macOS 
-  # jobs. This workflow tries to utilize (but not exceed) that budget to 
-  # promote timely CI.
-
   # ---------------------------------------------------------------------------
-  # Linux
+  # Linux latest ext packages
   # ---------------------------------------------------------------------------
 
-  linux:
-    name: 'Linux CentOS 7 VFX CY${{ matrix.vfx-cy }} 
+  linux_latest:
+    name: 'Linux Ubuntu latest 
       <${{ matrix.compiler-desc }} 
        config=${{ matrix.build-type }}, 
        shared=${{ matrix.build-shared }}, 
-       sse=${{ matrix.use-sse }}, 
-       cxx=${{ matrix.cxx-standard }}, 
-       docs=${{ matrix.build-docs }}, 
-       oiio=${{ matrix.use-oiio }}>'
-    # Avoid duplicated checks when a pull_request is opened from a local branch.
-    if: |
-      github.event_name == 'push' ||
-      github.event.pull_request.head.repo.full_name != github.repository
-    # GH-hosted VM. The build runs in CentOS 7 'container' defined below.
+       cxx=${{ matrix.cxx-standard }}>'
+    # Don't run on OCIO forks
+    if: github.repository == 'AcademySoftwareFoundation/OpenColorIO'
     runs-on: ubuntu-latest
-    container:
-      # DockerHub: https://hub.docker.com/u/aswf
-      # Source: https://github.com/AcademySoftwareFoundation/aswf-docker
-      image: aswf/ci-ocio:${{ matrix.vfx-cy }}
     strategy:
       matrix:
-        build: [1, 2, 3, 4, 5, 6, 7, 8, 9]
+        build: [1, 2, 3, 4]
         include:
           # -------------------------------------------------------------------
-          # VFX CY2022 (Python 3.9)
+          # GCC
           # -------------------------------------------------------------------
-          # C++17, Clang, Debug, OpenFX
-          - build: 9
-            build-type: Debug
-            build-shared: 'ON'
-            build-docs: 'OFF'
-            build-openfx: 'ON'
-            use-sse: 'ON'
-            use-oiio: 'ON'
-            cxx-standard: 17
-            cxx-compiler: clang++
-            cc-compiler: clang
-            compiler-desc: Clang
-            vfx-cy: 2022
-          # C++17, GCC, no SSE, OpenFX
-          - build: 8
-            build-type: Release
-            build-shared: 'ON'
-            build-docs: 'ON'
-            build-openfx: 'ON'
-            use-sse: 'OFF'
-            use-oiio: 'OFF'
-            cxx-standard: 17
-            cxx-compiler: g++
-            cc-compiler: gcc
-            compiler-desc: GCC
-            vfx-cy: 2022
-          # C++11, GCC, static
-          - build: 7
-            build-type: Release
-            build-shared: 'OFF'
-            build-docs: 'OFF'
-            build-openfx: 'OFF'
-            use-sse: 'ON'
-            use-oiio: 'OFF'
-            cxx-standard: 11
-            cxx-compiler: g++
-            cc-compiler: gcc
-            compiler-desc: GCC
-            vfx-cy: 2022
-          # -------------------------------------------------------------------
-          # VFX CY2021 (Python 3.7)
-          # -------------------------------------------------------------------
-          # C++17, Clang
-          - build: 6
-            build-type: Release
-            build-shared: 'ON'
-            build-docs: 'OFF'
-            build-openfx: 'OFF'
-            use-sse: 'ON'
-            use-oiio: 'ON'
-            cxx-standard: 17
-            cxx-compiler: clang++
-            cc-compiler: clang
-            compiler-desc: Clang
-            vfx-cy: 2021
-          # C++14, Clang, static, no SSE, OpenFX
-          - build: 5
-            build-type: Release
-            build-shared: 'OFF'
-            build-docs: 'OFF'
-            build-openfx: 'ON'
-            use-sse: 'OFF'
-            use-oiio: 'OFF'
-            cxx-standard: 14
-            cxx-compiler: clang++
-            cc-compiler: clang
-            compiler-desc: Clang
-            vfx-cy: 2021
-          # C++11, GCC, Debug
-          - build: 4
-            build-type: Debug
-            build-shared: 'ON'
-            build-docs: 'OFF'
-            build-openfx: 'OFF'
-            use-sse: 'ON'
-            use-oiio: 'OFF'
-            cxx-standard: 11
-            cxx-compiler: g++
-            cc-compiler: gcc
-            compiler-desc: GCC
-            vfx-cy: 2021
-          # -------------------------------------------------------------------
-          # VFX CY2020 (Python 3.7)
-          # -------------------------------------------------------------------
-          # C++14, Clang, OpenFX
-          - build: 3
-            build-type: Release
-            build-shared: 'ON'
-            build-docs: 'OFF'
-            build-openfx: 'ON'
-            use-sse: 'OFF'
-            use-oiio: 'OFF'
-            cxx-standard: 14
-            cxx-compiler: clang++
-            cc-compiler: clang
-            compiler-desc: Clang
-            vfx-cy: 2020
-          # C++14, GCC, static, Debug, OpenFX
-          - build: 2
-            build-type: Debug
-            build-shared: 'OFF'
-            build-docs: 'OFF'
-            build-openfx: 'ON'
-            use-sse: 'ON'
-            use-oiio: 'ON'
-            cxx-standard: 14
-            cxx-compiler: g++
-            cc-compiler: gcc
-            compiler-desc: GCC
-            vfx-cy: 2020
-          # C++11, GCC, no SSE
+          # Release
           - build: 1
+            build-python: ON
             build-type: Release
-            build-shared: 'ON'
-            build-docs: 'OFF'
-            build-openfx: 'OFF'
-            use-sse: 'ON'
-            use-oiio: 'OFF'
-            cxx-standard: 11
+            build-shared: ON
+            cxx-standard: 20
             cxx-compiler: g++
             cc-compiler: gcc
             compiler-desc: GCC
-            vfx-cy: 2020
+            enable-sanitizer: OFF
+          # Debug sanitizer
+          - build: 2
+            build-python: OFF
+            build-type: Debug
+            build-shared: ON
+            cxx-standard: 20
+            cxx-compiler: g++
+            cc-compiler: gcc
+            compiler-desc: GCC
+            enable-sanitizer: ON
+          # -------------------------------------------------------------------
+          # Clang
+          # -------------------------------------------------------------------
+          # Release
+          - build: 3
+            build-python: ON
+            build-type: Release
+            build-shared: ON
+            cxx-standard: 20
+            cxx-compiler: clang++
+            cc-compiler: clang
+            compiler-desc: Clang
+            enable-sanitizer: OFF
+          # Debug sanitizer
+          - build: 4
+            build-python: OFF
+            build-type: Debug
+            build-shared: ON
+            cxx-standard: 20
+            cxx-compiler: clang++
+            cc-compiler: clang
+            compiler-desc: Clang
+            enable-sanitizer: ON
     env:
       CXX: ${{ matrix.cxx-compiler }}
       CC: ${{ matrix.cc-compiler }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-      - name: Install docs env
-        run: share/ci/scripts/linux/yum/install_docs_env.sh
-        if: matrix.build-docs == 'ON'
       - name: Install tests env
         run: share/ci/scripts/linux/yum/install_tests_env.sh
       - name: Create build directories
@@ -210,13 +104,15 @@ jobs:
                 -DCMAKE_BUILD_TYPE=${{ matrix.build-type }} \
                 -DCMAKE_CXX_STANDARD=${{ matrix.cxx-standard }} \
                 -DBUILD_SHARED_LIBS=${{ matrix.build-shared }} \
-                -DOCIO_BUILD_DOCS=${{ matrix.build-docs }} \
-                -DOCIO_BUILD_OPENFX=${{ matrix.build-openfx }} \
+                -DOCIO_BUILD_DOCS=OFF \
+                -DOCIO_BUILD_OPENFX=ON \
                 -DOCIO_BUILD_GPU_TESTS=OFF \
-                -DOCIO_USE_SSE=${{ matrix.use-sse }} \
-                -DOCIO_USE_OIIO_FOR_APPS=${{ matrix.use-oiio }} \
+                -DOCIO_BUILD_PYTHON=${{ matrix.build-python}} \
+                -DOCIO_USE_SSE=ON \
+                -DOCIO_USE_OIIO_FOR_APPS=OFF \
                 -DOCIO_INSTALL_EXT_PACKAGES=ALL \
                 -DOCIO_WARNING_AS_ERROR=ON \
+                -DOCIO_ENABLE_SANITIZER=${{ matrix.enable-sanitizer }} \
                 -DPython_EXECUTABLE=$(which python)
         working-directory: _build
       - name: Build
@@ -224,6 +120,7 @@ jobs:
           cmake --build . \
                 --target install \
                 --config ${{ matrix.build-type }} \
+                -v \
                 -- -j$(nproc)
           echo "ocio_build_path=$(pwd)" >> $GITHUB_ENV
         working-directory: _build
@@ -235,7 +132,8 @@ jobs:
         run: |
           cmake . \
                 -DCMAKE_PREFIX_PATH=../../../_install \
-                -DCMAKE_BUILD_TYPE=${{ matrix.build-type }}
+                -DCMAKE_BUILD_TYPE=${{ matrix.build-type }} \
+                -DOCIO_ENABLE_SANITIZER=${{ matrix.enable-sanitizer }}
           cmake --build . \
                 --config ${{ matrix.build-type }}
           ./consumer
@@ -270,68 +168,39 @@ jobs:
         working-directory: _build/tests/cmake-consumer-dist
 
   # ---------------------------------------------------------------------------
-  # macOS
+  # MacOS latest ext packages
   # ---------------------------------------------------------------------------
 
-  macos:
-    name: 'macOS 11
+  macos-latest:
+    name: 'macOS latest 
       <AppleClang 
        config=${{ matrix.build-type }}, 
        shared=${{ matrix.build-shared }}, 
-       sse=${{ matrix.use-sse }}, 
        cxx=${{ matrix.cxx-standard }}, 
-       python=${{ matrix.python-version }}, 
-       docs=${{ matrix.build-docs }}, 
-       oiio=${{ matrix.use-oiio}}>'
-    # Avoid duplicated checks when a pull_request is opened from a local branch.
-    if: |
-      github.event_name == 'push' ||
-      github.event.pull_request.head.repo.full_name != github.repository
-    runs-on: macos-11
+       python=${{ matrix.python-version }}>'
+    # Don't run on OCIO forks
+    if: github.repository == 'AcademySoftwareFoundation/OpenColorIO'
+    runs-on: macos-latest
     strategy:
       matrix:
-        build: [1, 2, 3, 4]
+        build: [1, 2]
         include:
-          # C++17, OpenFX
-          - build: 4
-            build-type: Release
-            build-shared: 'ON'
-            build-docs: 'OFF'
-            build-openfx: 'ON'
-            use-sse: 'ON'
-            use-oiio: 'ON'
-            cxx-standard: 17
-            python-version: '3.11'
-          # C++11, no SSE
-          - build: 3
-            build-type: Release
-            build-shared: 'ON'
-            build-docs: 'ON'
-            build-openfx: 'OFF'
-            use-sse: 'OFF'
-            use-oiio: 'OFF'
-            cxx-standard: 11
-            python-version: '3.10'
-          # Debug, OpenFX
-          - build: 2
-            build-type: Debug
-            build-shared: 'ON'
-            build-docs: 'OFF'
-            build-openfx: 'ON'
-            use-sse: 'ON'
-            use-oiio: 'OFF'
-            cxx-standard: 11
-            python-version: '3.9'
-          # Static, C++14, OpenEXR, OpenFX
+          # Release
           - build: 1
+            build-python: ON
             build-type: Release
-            build-shared: 'OFF'
-            build-docs: 'OFF'
-            build-openfx: 'ON'
-            use-sse: 'ON'
-            use-oiio: 'OFF'
-            cxx-standard: 14
-            python-version: '3.7'
+            build-shared: ON
+            cxx-standard: 20
+            enable-sanitizer: OFF
+            python-version: '3.11'
+          # Debug sanitizer
+          - build: 2
+            build-python: OFF
+            build-type: Debug
+            build-shared: ON
+            cxx-standard: 20
+            enable-sanitizer: ON
+            python-version: '3.11'
     steps:
       - name: Setup Python
         uses: actions/setup-python@v4
@@ -339,9 +208,6 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Checkout
         uses: actions/checkout@v3
-      - name: Install docs env
-        run: share/ci/scripts/macos/install_docs_env.sh
-        if: matrix.build-docs == 'ON'
       - name: Install tests env
         run: share/ci/scripts/macos/install_tests_env.sh
       - name: Create build directories
@@ -355,13 +221,15 @@ jobs:
                 -DCMAKE_BUILD_TYPE=${{ matrix.build-type }} \
                 -DCMAKE_CXX_STANDARD=${{ matrix.cxx-standard }} \
                 -DBUILD_SHARED_LIBS=${{ matrix.build-shared }} \
-                -DOCIO_BUILD_DOCS=${{ matrix.build-docs }} \
-                -DOCIO_BUILD_OPENFX=${{ matrix.build-openfx }} \
+                -DOCIO_BUILD_DOCS=OFF \
+                -DOCIO_BUILD_OPENFX=ON \
                 -DOCIO_BUILD_GPU_TESTS=OFF \
-                -DOCIO_USE_SSE=${{ matrix.use-sse }} \
-                -DOCIO_USE_OIIO_FOR_APPS=${{ matrix.use-oiio }} \
+                -DOCIO_BUILD_PYTHON=${{ matrix.build-python}} \
+                -DOCIO_USE_SSE=ON \
+                -DOCIO_USE_OIIO_FOR_APPS=OFF \
                 -DOCIO_INSTALL_EXT_PACKAGES=ALL \
                 -DOCIO_WARNING_AS_ERROR=ON \
+                -DOCIO_ENABLE_SANITIZER=${{ matrix.enable-sanitizer }} \
                 -DPython_EXECUTABLE=$(which python)
         working-directory: _build
       - name: Build
@@ -415,70 +283,37 @@ jobs:
         working-directory: _build/tests/cmake-consumer-dist
 
   # ---------------------------------------------------------------------------
-  # Windows
+  # Windows latest ext packages
   # ---------------------------------------------------------------------------
-  # TODO: Install pythonXX_d.lib (or work around it being needed) to support 
-  #       Debug build testing with Python bindings and docs enabled.
 
-  windows:
-    name: 'Windows 2019 
+  windows-latest:
+    name: 'Windows latest 
       <MSVC 
        config=${{ matrix.build-type }}, 
        shared=${{ matrix.build-shared }}, 
-       sse=${{ matrix.use-sse }}, 
        cxx=${{ matrix.cxx-standard }}, 
-       python=${{ matrix.python-version }}, 
-       docs=${{ matrix.build-docs }}, 
-       oiio=${{ matrix.use-oiio }}>'
-    # Avoid duplicated checks when a pull_request is opened from a local branch.
-    if: |
-      github.event_name == 'push' ||
-      github.event.pull_request.head.repo.full_name != github.repository
-    runs-on: windows-2019
+       python=${{ matrix.python-version }}>'
+    # Don't run on OCIO forks
+    if: github.repository == 'AcademySoftwareFoundation/OpenColorIO'
+    runs-on: windows-latest
     strategy:
       matrix:
-        build: [1, 2, 3, 4]
+        build: [1, 2]
         include:
-          # C++17, OpenFX, no SSE
-          - build: 4
+          # Release
+          - build: 1
+            build-python: ON
             build-type: Release
-            build-shared: 'ON'
-            build-docs: 'OFF'
-            build-openfx: 'ON'
-            use-sse: 'OFF'
-            use-oiio: 'ON'
-            cxx-standard: 17
+            build-shared: ON
+            cxx-standard: 20
             python-version: '3.11'
-          # Static, C++11
-          - build: 3
-            build-type: Release
-            build-shared: 'OFF'
-            build-docs: 'OFF'
-            build-openfx: 'OFF'
-            use-sse: 'ON'
-            use-oiio: 'OFF'
-            cxx-standard: 11
-            python-version: '3.9'
           # Debug
           - build: 2
+            build-python: ON
             build-type: Debug
-            build-shared: 'ON'
-            build-docs: 'OFF'
-            build-openfx: 'OFF'
-            use-sse: 'ON'
-            use-oiio: 'OFF'
-            cxx-standard: 11
-            python-version: '3.8'
-          # C++14, OpenEXR, OpenFX
-          - build: 1
-            build-type: Release
-            build-shared: 'ON'
-            build-docs: 'OFF'
-            build-openfx: 'ON'
-            use-sse: 'ON'
-            use-oiio: 'OFF'
-            cxx-standard: 14
-            python-version: '3.7'
+            build-shared: ON
+            cxx-standard: 20
+            python-version: '3.11'
     steps:
       - name: Setup Python
         uses: actions/setup-python@v4
@@ -486,10 +321,6 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Checkout
         uses: actions/checkout@v3
-      - name: Install docs env
-        run: share/ci/scripts/windows/install_docs_env.sh
-        shell: bash
-        if: matrix.build-docs == 'ON'
       - name: Install tests env
         run: share/ci/scripts/windows/install_tests_env.sh
         shell: bash
@@ -506,11 +337,12 @@ jobs:
                 -DCMAKE_CXX_STANDARD=${{ matrix.cxx-standard }} \
                 -DCMAKE_GENERATOR_PLATFORM=x64 \
                 -DBUILD_SHARED_LIBS=${{ matrix.build-shared }} \
-                -DOCIO_BUILD_DOCS=${{ matrix.build-docs }} \
-                -DOCIO_BUILD_OPENFX=${{ matrix.build-openfx }} \
+                -DOCIO_BUILD_DOCS=OFF \
+                -DOCIO_BUILD_OPENFX=ON \
                 -DOCIO_BUILD_GPU_TESTS=OFF \
-                -DOCIO_USE_SSE=${{ matrix.use-sse }} \
-                -DOCIO_USE_OIIO_FOR_APPS=${{ matrix.use-oiio }} \
+                -DOCIO_BUILD_PYTHON=${{ matrix.build-python}} \
+                -DOCIO_USE_SSE=ON \
+                -DOCIO_USE_OIIO_FOR_APPS=OFF \
                 -DOCIO_INSTALL_EXT_PACKAGES=ALL \
                 -DOCIO_WARNING_AS_ERROR=ON \
                 -DPython_EXECUTABLE=$(which python)
