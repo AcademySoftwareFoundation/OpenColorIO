@@ -11,8 +11,7 @@
 # Global targets defined by this module:
 #   pybind11::module
 #
-# The libraries files are search based on the CMake variable CMAKE_FIND_LIBRARY_SUFFIXES. On the 
-# majority of operating systems, the dynamic libaries are prefered first, and then static libraries.
+# By default, dynamic libraries are given priority over static libraries
 #
 # If the library is not installed in a standard path, you can do the following the help
 # the find module:
