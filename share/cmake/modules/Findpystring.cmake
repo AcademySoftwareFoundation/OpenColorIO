@@ -12,14 +12,12 @@
 # Global targets defined by this module:
 #   pystring::pystring - IMPORTED target, if found
 #
-# The libraries files are search based on the CMake variable CMAKE_FIND_LIBRARY_SUFFIXES. On the 
-# majority of operating systems, the dynamic libaries are prefered first, and then static libraries.
+# By default, dynamic libraries are given priority over static libraries
 #
 # If the library is not installed in a standard path, you can do the following the help
 # the find module:
 #
-# If the package provides CMake's configuration file, use -Dpystring_DIR=<path to folder>.
-# If it doesn't provide it, try -Dpystring_ROOT=<path to folder with lib and includes>.
+# Try -Dpystring_ROOT=<path to folder with lib and includes>.
 # Alternatively, try -Dpystring_LIBRARY=<path to lib file> and -Dpystring_INCLUDE_DIR=<path to folder>.
 #
 
