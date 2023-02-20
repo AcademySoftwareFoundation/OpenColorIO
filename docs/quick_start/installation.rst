@@ -187,41 +187,29 @@ Three ``OCIO_INSTALL_EXT_PACKAGES`` options are available::
 Existing Install Hints
 ++++++++++++++++++++++
 
-The recommended way to find a dependency is by using their configuration file. Most dependencies 
-provides those files. These configuration files sets all the necessary targets and variables. 
-CMake needs to know where to find these configuration files. If CMake doesn't find them in any of 
-the default locations, you may use the variable ``-D<Package Name>_DIR=<path to configuration files folder>``.
-
-Note that ``lcms2``, ``openfx``, ``pystring`` and ``sphinx`` does **not** support ``<Package Name>_DIR``.
-
-Alternative methods exist to aid CMake in locating dependencies, but they should only be used in specific 
-situations, such as when attempting to help CMake find dependencies that do not have configuration 
-files available or when the static version of a dependency is needed.
-
-An alternative method is using the CMake variable ``-D<Package Name>_ROOT=<path to folder>``. That 
-variable may be used to specify the path to the include and library root directory.
-
-Note that ``OpenImageIO`` and ``OpenEXR`` does **not** support ``<Package Name>_ROOT``.
-
-There are scenarios in which some of the dependencies may not be compiled into an 
-OCIO dynamic library.  This is more likely when OCIO does not download the packages
-itself.  In these cases, it may be helpful to specify an additional CMake variable. While using 
-``<Package Name>_ROOT``, some dependencies allows the usage of ``-D<Package Name>_STATIC_LIBRARY=ON``. 
-If ``<Package Name>_STATIC_LIBRARY`` is set, CMake will try to find static version of the dependency.
-
-The following package **support** ``-D<Package Name>_STATIC_LIBRARY=ON``:
-``expat``, ``yaml-cpp``, ``Imath``, ``lcms2``, and ``minizip-ng``. Using CMake 3.24+, it is
+By default, dynamic libraries are given priority over static libraries. You may set ``<package_name>_STATIC_LIBRARY``
+to ``ON`` to prefer the use static library for the following
+packages: ``expat``, ``yaml-cpp``, ``Imath``, ``lcms2``, and ``minizip-ng``. Using CMake 3.24+, it is
 possible to prefer the static version of ZLIB with ``-DZLIB_USE_STATIC_LIBS=ON``.
 
-Rather than using ``<Package Name>_ROOT``, and possibly ``<Package Name>_STATIC_LIBRARY``, you may 
-instead use ``-D<Package Name>_LIBRARY=<path to library file>`` 
-and ``-D<Package Name>_INCLUDE_DIR=<path to headers folder>``. In this case, the library path will 
-control whether a static or dynamic library is used. It may also be used to handle situations where 
-the library and/or include files are not in the typical location relative to the root directory.
+If the static library the only one available, that variable does not need to be specified.
+It is ignored if OCIO is installing the library since OCIO builds the dependency as static library.
 
-The following package **support** ``<Package Name>_LIBRARY`` and ``<Package Name>_INCLUDE_DIR``:
-``expat``, ``yaml-cpp``, ``Imath``, ``lcms2``, ``openfx``, ``OSL``, ``pybind11``, ``pystring``, 
-``yaml-cpp``, ``ZLIB``, and ``minizip-ng``.
+If the library is not installed in a standard path, you can do the following the help
+the find module:
+
+The recommended way is to specify the CMake's configurations files by using ``-D<package_name>_DIR=<path to folder>``.
+This method is supported by ``expat``, ``Imath``, ``lcms2``, ``ZLIB``, ``minizip-ng``, ``openfx``, 
+``OSL``, ``pybind11``, ``pystring``, ``yaml-cpp``, ``OpenEXR`` and ``OpenImageIO``.
+
+If the package does not provide a configuration file, you can try to specify the folder where the 
+libraries and includes files are. This can be done by using ``-D<package_name>_ROOT=<path to folder with lib and includes>`` 
+or by specifying the libraries and includes paths individually by using 
+``-D<package_name>_LIBRARY=<path to lib file>`` and ``-D<package_name>_INCLUDE_DIR=<path to folder>``.
+
+These two methods are supported by ``expat``, ``Imath``, ``lcms2``, ``ZLIB``, ``minizip-ng``, ``openfx``, 
+``OSL``, ``pybind11``, ``pystring`` and ``yaml-cpp``.
+
 
 The package names used by OCIO are as follows (note that these are case-sensitive):
 
