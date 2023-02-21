@@ -203,6 +203,8 @@ if(NOT OpenEXR_FOUND AND OCIO_INSTALL_EXT_PACKAGES AND NOT OCIO_INSTALL_EXT_PACK
                 ${CMAKE_COMMAND} --build .
                                  --config ${CMAKE_BUILD_TYPE}
                                  --target install
+                                # Prevent some CI jobs to fail when building.
+                                #  --parallel
         )
 
         # Additional targets. ALIAS to UNKNOWN imported target is only possible
