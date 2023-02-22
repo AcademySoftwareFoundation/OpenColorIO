@@ -187,29 +187,24 @@ Three ``OCIO_INSTALL_EXT_PACKAGES`` options are available::
 Existing Install Hints
 ++++++++++++++++++++++
 
-By default, dynamic libraries are given priority over static libraries. You may set ``<package_name>_STATIC_LIBRARY``
-to ``ON`` to prefer the use static library for the following
-packages: ``expat``, ``yaml-cpp``, ``Imath``, ``lcms2``, and ``minizip-ng``. Using CMake 3.24+, it is
-possible to prefer the static version of ZLIB with ``-DZLIB_USE_STATIC_LIBS=ON``.
+If the library is not installed in a typical location where CMake will find it, 
+you may specify the location using one of the following methods:
 
-If the static library the only one available, that variable does not need to be specified.
-It is ignored if OCIO is installing the library since OCIO builds the dependency as static library.
+- Set ``-D<package_name>_DIR`` to point to the directory containing the CMake configuration file for the package.
 
-If the library is not installed in a standard path, you can do the following the help
-the find module:
+- Set ``-D<package_name>_ROOT`` to point to the directory containing the lib and include directories.
 
-The recommended way is to specify the CMake's configurations files by using ``-D<package_name>_DIR=<path to folder>``.
-This method is supported by ``expat``, ``Imath``, ``lcms2``, ``ZLIB``, ``minizip-ng``, ``openfx``, 
-``OSL``, ``pybind11``, ``pystring``, ``yaml-cpp``, ``OpenEXR`` and ``OpenImageIO``.
+- Set ``-D<package_name>_LIBRARY`` and ``-D<package_name>_INCLUDE_DIR`` to point to the lib and include directories.
 
-If the package does not provide a configuration file, you can try to specify the folder where the 
-libraries and includes files are. This can be done by using ``-D<package_name>_ROOT=<path to folder with lib and includes>`` 
-or by specifying the libraries and includes paths individually by using 
-``-D<package_name>_LIBRARY=<path to lib file>`` and ``-D<package_name>_INCLUDE_DIR=<path to folder>``.
+Not all packages support all of the above options. Please refer the 
+OCIO CMake `find modules <https://github.com/AcademySoftwareFoundation/OpenColorIO/tree/main/share/cmake/modules>`_  for the package that you are having trouble with to see the options it supports.
 
-These two methods are supported by ``expat``, ``Imath``, ``lcms2``, ``ZLIB``, ``minizip-ng``, ``openfx``, 
-``OSL``, ``pybind11``, ``pystring`` and ``yaml-cpp``.
-
+Usually CMake will use the dynamic library rather than static, if both are present. In this case, 
+you may set <package_name>_STATIC_LIBRARY to ON to request use of the static one. If only the 
+static library is present (such as when OCIO builds the dependency), then the option is not needed.
+The following packages support this option:
+``expat``, ``yaml-cpp``, ``Imath``, ``lcms2``, and ``minizip-ng``. Using CMake 3.24+, it is
+possible to prefer the static version of ``ZLIB`` with ``-DZLIB_USE_STATIC_LIBS=ON``.
 
 The package names used by OCIO are as follows (note that these are case-sensitive):
 
@@ -242,10 +237,6 @@ that OCIO does (e.g., enable ZLib and turn off most other options).  Using a ``m
 from various package managers (e.g., Homebrew) probably won't work.  Please see the
 settings that begin with ``-DMZ_`` that are used in the OCIO 
 `minizip-ng find module. <https://github.com/AcademySoftwareFoundation/OpenColorIO/tree/main/share/cmake/modules/Findminizip-ng.cmake>`_ 
-
-The OCIO `CMake find modules <https://github.com/AcademySoftwareFoundation/OpenColorIO/tree/main/share/cmake/modules>`_ 
-may be consulted for more detail on the handling of a given package and the CMake
-variables it uses.
 
 Please note that if you build a static OCIO library, it will not contain the libraries 
 for the external packages and so you will need to list those separately when linking your
