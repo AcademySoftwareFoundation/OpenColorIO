@@ -18,13 +18,12 @@
 # Global targets defined by this module:
 #   osl::osl
 #
-# By default, dynamic libraries are given priority over static libraries
+# Usually CMake will use the dynamic library rather than static, if both are present. 
 #
-# If the library is not installed in a standard path, you can do the following the help
-# the find module:
-#
-# If the package provides CMake's configuration file, use -DOpenShadingLanguage_DIR=<path to folder>.
-# If it doesn't provide it, try -DOpenShadingLanguage_ROOT=<path to folder with lib and includes>.
+# If the library is not installed in a typical location where CMake will find it, you may specify 
+# the location using one of the following methods:
+# -- Set -DOpenShadingLanguage_DIR to point to the directory containing the CMake configuration file for the package.
+# -- Set -DOpenShadingLanguage_ROOT to point to the directory containing the lib and include directories.
 #
 
 ###############################################################################

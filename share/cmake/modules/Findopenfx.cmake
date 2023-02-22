@@ -11,12 +11,11 @@
 # Global targets defined by this module:
 #   openfx::module
 #
-# By default, dynamic libraries are given priority over static libraries
+# Usually CMake will use the dynamic library rather than static, if both are present. 
 #
-# If the library is not installed in a standard path, you can do the following the help
-# the find module:
-#
-# If it doesn't provide it, try -Dopenfx_ROOT=<path to folder>.
+# If the library is not installed in a typical location where CMake will find it, you may specify 
+# the location using the following method:
+# -- Set -Dopenfx_ROOT to point to the directory containing the lib and include directories.
 #
 
 ###############################################################################
