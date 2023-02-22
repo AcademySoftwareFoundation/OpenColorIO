@@ -12,18 +12,17 @@
 # Global targets defined by this module:
 #   MINIZIP::minizip-ng - IMPORTED target, if found
 #
-# By default, dynamic libraries are given priority over static libraries
+# Usually CMake will use the dynamic library rather than static, if both are present. 
+# In this case, you may set minizip-ng_STATIC_LIBRARY to ON to request use of the static one. 
+# If only the static library is present (such as when OCIO builds the dependency), then the option 
+# is not needed.
 #
-# You may set minizip-ng_STATIC_LIBRARY to TRUE to prefer the use static library.
-# If the static library the only one available, that variable does not need to be specified.
-# It is ignored if OCIO is installing the library since OCIO builds the dependency as static library.
+# If the library is not installed in a typical location where CMake will find it, you may specify 
+# the location using one of the following methods:
+# -- Set -Dminizip-ng_DIR to point to the directory containing the CMake configuration file for the package.
+# -- Set -Dminizip-ng_ROOT to point to the directory containing the lib and include directories.
+# -- Set -Dminizip-ng_LIBRARY and -Dminizip-ng_INCLUDE_DIR to point to the lib and include directories.
 #
-# If the library is not installed in a standard path, you can do the following the help
-# the find module:
-#
-# If the package provides CMake's configuration file, use -Dminizip-ng_DIR=<path to folder>.
-# If it doesn't provide it, try -Dminizip-ng_ROOT=<path to folder with lib and includes>.
-# Alternatively, try -Dminizip-ng_LIBRARY=<path to lib file> and -Dminizip-ng_INCLUDE_DIR=<path to folder>.
 #
 # For external builds of minizip-ng, please note that the same build options should be used.
 # Using more options, such as enabling other compression methods, will provoke linking issue

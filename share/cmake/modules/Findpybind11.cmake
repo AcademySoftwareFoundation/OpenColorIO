@@ -11,14 +11,13 @@
 # Global targets defined by this module:
 #   pybind11::module
 #
-# By default, dynamic libraries are given priority over static libraries
+# Usually CMake will use the dynamic library rather than static, if both are present. 
 #
-# If the library is not installed in a standard path, you can do the following the help
-# the find module:
-#
-# If the package provides CMake's configuration file, use -Dpybind11_DIR=<path to folder>.
-# If it doesn't provide it, try -Dpybind11_ROOT=<path to folder with lib and includes>.
-# Alternatively, try -Dpybind11_INCLUDE_DIR=<path to folder>.
+# If the library is not installed in a typical location where CMake will find it, you may specify 
+# the location using one of the following methods:
+# -- Set -Dpybind11_DIR to point to the directory containing the CMake configuration file for the package.
+# -- Set -Dpybind11_ROOT to point to the directory containing the lib and include directories.
+# -- Set -Dpybind11_LIBRARY and -Dpybind11_INCLUDE_DIR to point to the lib and include directories.
 #
 
 ###############################################################################

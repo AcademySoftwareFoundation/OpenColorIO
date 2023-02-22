@@ -4,15 +4,14 @@
 # Locate Sphinx (Python documentation generator)
 #
 # Variables defined by this module:
-#   Sphinx_FOUND             - Indicate whether the library was found or not
+#   Sphinx_FOUND             - Indicate whether the executable was found or not
 #   Sphinx_EXECUTABLE        - Path to the executable file
 #
 #
-# If the executable is not installed in a standard path, you can do the following the help
-# the find module:
-#
-# Try -DSphinx_ROOT=<path to executable folder>.
-# Alternatively, try -DSphinx_EXECUTABLE=<path to executable file>.
+# If the executable is not installed in a typical location where CMake will find it, you may specify 
+# the location using one of the following methods:
+# -- Set -Dlcms2_ROOT to point to the directory containing the executable.
+# -- Set -DSphinx_EXECUTABLE to point to executable file.
 #
 
 find_package(Python QUIET COMPONENTS Interpreter)
