@@ -10,7 +10,7 @@
 #
 # If the executable is not installed in a typical location where CMake will find it, you may specify 
 # the location using one of the following methods:
-# -- Set -Dlcms2_ROOT to point to the directory containing the executable.
+# -- Set -DSphinx_ROOT to point to the directory containing the executable.
 # -- Set -DSphinx_EXECUTABLE to point to executable file.
 #
 
