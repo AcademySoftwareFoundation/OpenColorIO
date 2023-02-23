@@ -285,6 +285,10 @@ Here are the most common OCIO-specific CMake options (the default values are sho
 - ``-DOCIO_BUILD_DOCS=OFF`` (Set to ON to build the documentation)
 - ``-DOCIO_BUILD_FROZEN_DOCS=OFF`` (Set to ON to update the Python documentation)
 
+On the newest Apple chipset (M1+), a universal build can be done with the following option:
+
+- ``-DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"``
+
 Several command-line tools (such as ``ocioconvert``) require reading or writing image files.
 If ``OCIO_USE_OIIO_FOR_APPS=OFF``, these will be built using OpenEXR rather than OpenImageIO
 and therefore you will be limited to using OpenEXR files with these tools rather than the
