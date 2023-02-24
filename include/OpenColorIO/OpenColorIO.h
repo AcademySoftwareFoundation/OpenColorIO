@@ -225,6 +225,23 @@ extern OCIOEXPORT void ExtractOCIOZArchive(
 );
 
 /**
+ * \brief Resolve config path
+ * 
+ * If the config path points to a built-in config, it will be resolved into the built-in config's
+ * real name (if possible).
+ * 
+ * Some fictive examples:
+ *      "ocio://default"              -> "ocio://cg-config-v1.0.0_aces-v1.3_ocio-v2.1"
+ *      "ocio://cg-config-latest"     -> "ocio:/cg-config-v1.0.0_aces-v1.3_ocio-v2.1"
+ *      "ocio://studio-config-latest" -> "ocio:/studio-config-v1.0.0_aces-v1.3_ocio-v2.1"
+ * 
+ * Note that no validation checks are done on the original path.
+ * 
+ * \return Resolved path if possible. Otherwise, original path is returned.
+ */
+extern OCIOEXPORT const char * ResolveConfigPath(const char * originalPath);
+
+/**
  * \brief
  * A config defines all the color spaces to be available at runtime.
  *
@@ -3616,7 +3633,6 @@ public:
      * For backwards compatibility, the name provided here will always work as an argument 
      * to other methods so that any previous default config may be recovered.
      * 
-     * Throws if the name is not found.
      * 
      * @return Default's built-in config name.
      */

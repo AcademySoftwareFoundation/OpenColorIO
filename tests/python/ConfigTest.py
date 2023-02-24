@@ -1186,6 +1186,27 @@ colorspaces:
         processor = config.getProcessor("c1", "c2")
         processor.getDefaultCPUProcessor()
 
+    def test_resolve_config(self):
+        defaultBuiltinConfig = "ocio://cg-config-v1.0.0_aces-v1.3_ocio-v2.1"
+        cgLatestBuiltinConfig = "ocio://cg-config-v1.0.0_aces-v1.3_ocio-v2.1"
+        studioLatestBuiltinConfig = "ocio://studio-config-v1.0.0_aces-v1.3_ocio-v2.1"
+
+        # Testing just a few built-in config path.
+        self.assertEqual(
+            OCIO.ResolveConfigPath("ocio://default"), 
+            defaultBuiltinConfig
+        )
+
+        self.assertEqual(
+            OCIO.ResolveConfigPath("ocio://cg-config-latest"), 
+            cgLatestBuiltinConfig
+        )
+
+        self.assertEqual(
+            OCIO.ResolveConfigPath("ocio://studio-config-latest"), 
+            studioLatestBuiltinConfig
+        )
+
 class ConfigVirtualWithActiveDisplayTest(unittest.TestCase):
     def setUp(self):
         self.cfg_active_display = OCIO.Config.CreateFromStream(

@@ -142,14 +142,14 @@ OCIO_ADD_TEST(BuiltinConfigs, basic_impl)
     
         // Add first config.
         OCIO_CHECK_NO_THROW(registry.addBuiltin(
-            "My simple config name #1",
+            "simple_config_1",
             "My simple config display name #1",
             SIMPLE_CONFIG.c_str(),
             false
         ));
         // Add second config.
         OCIO_CHECK_NO_THROW(registry.addBuiltin(
-            "My simple config name #2",
+            "simple_config_2",
             "My simple config display name #2",
             SIMPLE_CONFIG.c_str(),
             true
@@ -160,7 +160,7 @@ OCIO_ADD_TEST(BuiltinConfigs, basic_impl)
         // Tests to check if the config #1 was added correctly.
         OCIO_CHECK_EQUAL(
             std::string(registry.getBuiltinConfigName(0)), 
-            std::string("My simple config name #1")
+            std::string("simple_config_1")
         );
         OCIO_CHECK_EQUAL(
             std::string(registry.getBuiltinConfigUIName(0)), 
@@ -170,7 +170,7 @@ OCIO_ADD_TEST(BuiltinConfigs, basic_impl)
         // Tests to check if the config #2 was added correctly.
         OCIO_CHECK_EQUAL(
             std::string(registry.getBuiltinConfigName(1)), 
-            std::string("My simple config name #2")
+            std::string("simple_config_2")
         );
         OCIO_CHECK_EQUAL(
             std::string(registry.getBuiltinConfigUIName(1)), 

@@ -9471,3 +9471,64 @@ OCIO_ADD_TEST(Config, create_from_config_io_proxy)
         OCIO_CHECK_NO_THROW(proc->getDefaultCPUProcessor());
     }
 }
+
+OCIO_ADD_TEST(Config, resolve_config)
+{
+    const char * defaultBuiltinConfig = "ocio://cg-config-v1.0.0_aces-v1.3_ocio-v2.1";
+    const char * cgLatestBuiltinConfig = "ocio://cg-config-v1.0.0_aces-v1.3_ocio-v2.1";
+    const char * studioLatestBuiltinConfig = "ocio://studio-config-v1.0.0_aces-v1.3_ocio-v2.1";
+
+    OCIO_CHECK_EQUAL(
+        OCIO::ResolveConfigPath("ocio://default"), 
+        std::string(defaultBuiltinConfig)
+    );
+
+    OCIO_CHECK_EQUAL(
+        OCIO::ResolveConfigPath("ocio://cg-config-latest"), 
+        std::string(cgLatestBuiltinConfig)
+    );
+
+    OCIO_CHECK_EQUAL(
+        OCIO::ResolveConfigPath("ocio://studio-config-latest"), 
+        std::string(studioLatestBuiltinConfig)
+    ); 
+
+    // ************************************************
+    // Paths that are not starting with "ocio://".
+    // ************************************************
+
+    OCIO_CHECK_EQUAL(
+        OCIO::ResolveConfigPath("my_config.ocio"), 
+        std::string("my_config.ocio")
+    );
+
+    OCIO_CHECK_EQUAL(
+        OCIO::ResolveConfigPath("/usr/local/share/aces.ocio"), 
+        std::string("/usr/local/share/aces.ocio")
+    );
+
+    OCIO_CHECK_EQUAL(
+        OCIO::ResolveConfigPath("C:\\myconfig\\config.ocio"), 
+        std::string("C:\\myconfig\\config.ocio")
+    );
+
+    OCIO_CHECK_EQUAL(
+        OCIO::ResolveConfigPath(""), 
+        std::string("")
+    );
+
+    // ************************************************            
+    // Test expected failure
+    // ************************************************
+
+    // Unknown built-in config.
+    OCIO_CHECK_EQUAL(
+        OCIO::ResolveConfigPath("ocio://not-a-builtin"), 
+        std::string("ocio://not-a-builtin")
+    );
+    
+    OCIO_CHECK_EQUAL(
+        OCIO::ResolveConfigPath("ocio:default"), 
+        std::string("ocio:default")
+    );  
+}

@@ -4,6 +4,7 @@
 #include <memory>
 #include <algorithm>
 #include <sstream>
+#include <regex>
 
 // OpenColorIO must be first - order is important.
 #include <OpenColorIO/OpenColorIO.h>
@@ -19,6 +20,32 @@
 
 namespace OCIO_NAMESPACE
 {
+
+const char * ResolveConfigPath(const char * originalPath)
+{
+    static const std::regex uriPattern(R"(ocio:\/\/([^\s]+))");
+    std::smatch match;
+    const std::string uri = originalPath;
+    // Check if original path start with "ocio://".
+    if (std::regex_search(uri, match, uriPattern))
+    {
+        if (Platform::Strcasecmp(match.str(1).c_str(), BUILTIN_REGISTRY_DEFAULT_CONFIG) == 0)
+        {
+            return defaultBuiltinConfigURI;
+        }
+        else if (Platform::Strcasecmp(match.str(1).c_str(), BUILTIN_REGISTRY_LATEST_CG_CONFIG) == 0)
+        {
+            return latestCGBuiltinConfigURI;
+        }
+        else if (Platform::Strcasecmp(match.str(1).c_str(), BUILTIN_REGISTRY_LATEST_STUDIO_CONFIG) == 0)
+        {
+            return latestStudioBuiltinConfigURI;
+        }
+    }
+
+    // Return originalPath if no special path was used.
+    return originalPath;
+}
 
 const BuiltinConfigRegistry & BuiltinConfigRegistry::Get() noexcept
 {
@@ -46,8 +73,6 @@ void BuiltinConfigRegistryImpl::init() noexcept
         
         CGCONFIG::Register(*this);
         STUDIOCONFIG::Register(*this);
-
-        this->setDefaultBuiltinConfig("cg-config-v1.0.0_aces-v1.3_ocio-v2.1");
     }
 }
 
@@ -131,28 +156,7 @@ bool BuiltinConfigRegistryImpl::isBuiltinConfigRecommended(size_t configIndex) c
 
 const char * BuiltinConfigRegistryImpl::getDefaultBuiltinConfigName() const
 {
-    if (m_defaultBuiltinConfigName.empty())
-    {
-        // Make sure that at least one default built-ins config is present.
-        throw Exception("Internal error - The default built-in config name has not been set yet.");
-    }
-
-    return m_defaultBuiltinConfigName.c_str();
-}
-
-void BuiltinConfigRegistryImpl::setDefaultBuiltinConfig(const char * configName)
-{
-    // Search for config name.
-    for (auto & builtin : m_builtinConfigs)
-    {
-        if (Platform::Strcasecmp(configName, builtin.m_name.c_str()) == 0)
-        {
-            m_defaultBuiltinConfigName = configName;
-            return;
-        }
-    }
-
-    throw Exception("Internal error - Config name does not exist."); 
+    return defaultBuiltinConfig;
 }
 
 } // namespace OCIO_NAMESPACE
