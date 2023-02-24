@@ -17,7 +17,8 @@ namespace CGCONFIG
 {
 void Register(BuiltinConfigRegistryImpl & registry) noexcept
 {
-    // If new built-in config are added, do not forget to update the latestCGBuiltinConfig variable.
+    // If new built-in config are added, do not forget to update the latestCGBuiltinConfigURI 
+    // variable. (in BuiltinConfigRegistry.h)
     // If the default built-in config changed, do not forget to update defaultBuiltinConfig and 
     // defaultBuiltinConfigURI variable.
 

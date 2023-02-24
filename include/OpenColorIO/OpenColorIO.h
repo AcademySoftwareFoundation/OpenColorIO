@@ -313,13 +313,11 @@ public:
     /**
      * \brief Create a configuration using a specific config file.
      * 
-     * Also supports the following OCIO URI format for Built-in configs:
-     *  "ocio://default"    - Default Built-in config.
-     *  "ocio://<CONFIG NAME>" - A specific Built-in config.  For the list of available
-     *  <CONFIG NAME> strings, see \ref Config::CreateFromBuiltinConfig.
+     * Supports the OCIO URI format for Built-in configs.
+     * See \ref Config::CreateFromBuiltinConfig.
      *
-     * Also supports archived configs (.ocioz files).
-     *
+     * Supports archived configs (.ocioz files).
+     * 
      * \throw Exception If the file may not be read or does not parse.
      * \return The Config object.
      */
@@ -358,6 +356,12 @@ public:
      * \brief Create a configuration using an OCIO built-in config.
      * 
      * \param configName Built-in config name.
+     * 
+     * Also supports the following OCIO URI format for Built-in configs:
+     *  "ocio://default"                - Default Built-in config.
+     *  "ocio://cg-config-latest"       - Latest Built-in CG config.
+     *  "ocio://studio-config-latest"   - Latest Built-in Studio config.
+     *  "ocio://<CONFIG NAME>"          - A specific Built-in config.
      * 
      * The available configNames are:
      * 

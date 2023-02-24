@@ -17,8 +17,8 @@ namespace OCIO_NAMESPACE
 // names without initializing the built-in config registry.
 
 // ************************************************************************************************
-// IMPORTANT: Update both variables when the default changes 
-//            (defaultBuiltinConfig and defaultBuiltinConfigURI)
+// IMPORTANT: Update defaultBuiltinConfig and defaultBuiltinConfigURI when the default built-in 
+//            config changed.
 //
 // Compile-time string concatenation is possible but it adds a lot of overhead for something that
 // can be resolved by creating duplicated variables.
@@ -27,9 +27,10 @@ namespace OCIO_NAMESPACE
 // once the function finishes since we are returning a const char *.
 // ************************************************************************************************
 
-// Used for getDefaultBuiltinConfigName and ResolveConfigPath.
+// Used by getDefaultBuiltinConfigName and ResolveConfigPath.
 static constexpr char * defaultBuiltinConfig = "cg-config-v1.0.0_aces-v1.3_ocio-v2.1";
-// Used for ResolveConfigPath.
+
+// Used by ResolveConfigPath.
 static constexpr char * defaultBuiltinConfigURI = "ocio://cg-config-v1.0.0_aces-v1.3_ocio-v2.1";
 static constexpr char * latestCGBuiltinConfigURI = "ocio://cg-config-v1.0.0_aces-v1.3_ocio-v2.1";
 static constexpr char * latestStudioBuiltinConfigURI = "ocio://studio-config-v1.0.0_aces-v1.3_ocio-v2.1";
