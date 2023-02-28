@@ -17,7 +17,7 @@ namespace STUDIOCONFIG
 {
 void Register(BuiltinConfigRegistryImpl & registry) noexcept
 {
-    // If a new built-in config are added, do not forget to update the latestStudioBuiltinConfigURI 
+    // If a new built-in config is added, do not forget to update the latestStudioBuiltinConfigURI 
     // variable (in BuiltinConfigRegistry.h).
 
     registry.addBuiltin(

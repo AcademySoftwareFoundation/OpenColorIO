@@ -205,8 +205,8 @@ extern OCIOEXPORT ConstConfigRcPtr GetCurrentConfig();
 extern OCIOEXPORT void SetCurrentConfig(const ConstConfigRcPtr & config);
 
 /**
- * \brief Make a config path forward-compatible by replacing special built-in config names with the 
- *        current name.
+ * \brief Make a config path forward-compatible by replacing special built-in config names 
+ *        with the current name.
  * 
  * Application developers should call this function on any config path they intend to persist 
  * (e.g., to include in a file saved from a DCC).
@@ -216,12 +216,11 @@ extern OCIOEXPORT void SetCurrentConfig(const ConstConfigRcPtr & config);
  * recommended that application developers not save those strings and instead save the string that 
  * refers to the current version of that config. That way, it's guaranteed that there will be no 
  * change of behavior in the future. For example, as of OCIO 2.2, "ocio://default" should be saved
- *  as "ocio://cg-config-v1.0.0_aces-v1.3_ocio-v2.1".
+ * as "ocio://cg-config-v1.0.0_aces-v1.3_ocio-v2.1".
  * 
- * 
- * Note that there is no validation done on the path (e.g. to catch a badly formed URI such as "ocio:default"). 
- * That is left to the application since typically the application will load the config before 
- * attempting to save its path.
+ * Note that there is no validation done on the path. That is left to the application since 
+ * typically the application will load the config before attempting to save its path.
+ * (e.g. to catch a badly formed URI such as "ocio:default")
  * 
  * \return Resolved path if possible. Otherwise, the original path is returned unmodified.
  */
