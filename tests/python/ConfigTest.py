@@ -905,14 +905,14 @@ colorspaces:
 
     def test_create_builtin_config(self):
 
-        def testFromBuiltinConfig(name, numberOfExpectedColorspaces, expectedConfigName = ""):
+        def testFromBuiltinConfig(name, numberOfExpectedColorspaces, expectedConfigName):
             # Testing CreateFromBuiltinConfig with a known built-in config name.
             builtinCfgA = OCIO.Config.CreateFromBuiltinConfig(name)
             builtinCfgA.validate()
             self.assertEqual(builtinCfgA.getName(), expectedConfigName if expectedConfigName else name)
             self.assertEqual(len(builtinCfgA.getColorSpaceNames()), numberOfExpectedColorspaces)
 
-        def testFromEnvAndFromFile(uri, numberOfExpectedColorspaces, expectedConfigName = ""):
+        def testFromEnvAndFromFile(uri, numberOfExpectedColorspaces, expectedConfigName):
             # Testing CreateFromEnv using URI Syntax.
             try:
                 OCIO.SetEnvVariable('OCIO', uri)
@@ -929,45 +929,46 @@ colorspaces:
             self.assertEqual(builtinCfgC.getName(), expectedConfigName)
             self.assertEqual(len(builtinCfgC.getColorSpaceNames()), numberOfExpectedColorspaces)
 
-        def testBuiltinConfig(name, numberOfExpectedColorspaces):
-            testFromBuiltinConfig(name, numberOfExpectedColorspaces)
-            testFromEnvAndFromFile(
-                "ocio://" + name, 
-                numberOfExpectedColorspaces, 
-                name
-            )
-
-        def testSpecialNames(uri, numberOfExpectedColorspaces, expectedConfigName):
-            testFromBuiltinConfig(uri, numberOfExpectedColorspaces, expectedConfigName)
-            testFromEnvAndFromFile(
-                uri, 
-                numberOfExpectedColorspaces, 
-                expectedConfigName
-            )
-
+        uriPrefix = "ocio://"
         cgConfigName = "cg-config-v1.0.0_aces-v1.3_ocio-v2.1"
         studioConfigName = "studio-config-v1.0.0_aces-v1.3_ocio-v2.1"
+        defaultName = "default"
+        latestCGName = "cg-config-latest"
+        latestStudioName = "studio-config-latest"
+
         nbOfColorspacesForCGConfig = 14
         nbOfColorspacesForStudioConfig = 39
 
-        # Testing CG config.
-        testBuiltinConfig(cgConfigName, nbOfColorspacesForCGConfig)
+        # Test that CreateFromFile does not work without ocio:// prefix for built-in config.
+        with self.assertRaises(OCIO.Exception) as cm:
+            OCIO.Config.CreateFromFile(cgConfigName)
 
-        # Testing STUDIO config.
-        testFromBuiltinConfig(studioConfigName, nbOfColorspacesForStudioConfig)
-        testBuiltinConfig(studioConfigName, nbOfColorspacesForStudioConfig)
+        # Test CG config.
+        testFromBuiltinConfig(cgConfigName, nbOfColorspacesForCGConfig, "")
+        testFromEnvAndFromFile(uriPrefix + cgConfigName, nbOfColorspacesForCGConfig, cgConfigName)
 
-        # Testing default config.
-        testSpecialNames("ocio://default", nbOfColorspacesForCGConfig, cgConfigName)
+        # Test STUDIO config.
+        testFromBuiltinConfig(studioConfigName, nbOfColorspacesForStudioConfig, "")
+        testFromEnvAndFromFile(uriPrefix + studioConfigName, nbOfColorspacesForStudioConfig, studioConfigName)
 
-        # Testing cg-config-latest.
-        testSpecialNames("ocio://cg-config-latest", nbOfColorspacesForCGConfig, cgConfigName)
+        # Test default config.
+        testFromBuiltinConfig(defaultName, nbOfColorspacesForCGConfig, cgConfigName)
+        testFromBuiltinConfig(uriPrefix + defaultName, nbOfColorspacesForCGConfig, cgConfigName)
+        testFromEnvAndFromFile(uriPrefix + defaultName, nbOfColorspacesForCGConfig, cgConfigName)
 
-        # Testing studio-config-latest.
-        testSpecialNames("ocio://studio-config-latest", nbOfColorspacesForStudioConfig, studioConfigName)
+        # Test cg-config-latest.
+        testFromBuiltinConfig(latestCGName, nbOfColorspacesForCGConfig, cgConfigName)
+        testFromBuiltinConfig(uriPrefix + latestCGName, nbOfColorspacesForCGConfig, cgConfigName)
+        testFromEnvAndFromFile(uriPrefix + latestCGName, nbOfColorspacesForCGConfig, cgConfigName)
+
+        # Test studio-config-latest.
+        testFromBuiltinConfig(latestStudioName, nbOfColorspacesForStudioConfig, studioConfigName)
+        testFromBuiltinConfig(uriPrefix + latestStudioName, nbOfColorspacesForStudioConfig, studioConfigName)
+        testFromEnvAndFromFile(uriPrefix + latestStudioName, nbOfColorspacesForStudioConfig, studioConfigName)
+
 
         # ********************************
-        # Testing some expected failures.
+        # Test some expected failures.
         # ********************************
 
         # Testing CreateFromBuiltinConfig with an unknown built-in config name.
@@ -1193,6 +1194,11 @@ colorspaces:
         self.assertEqual(
             OCIO.ResolveConfigPath("ocio://studio-config-latest"), 
             studioLatestBuiltinConfig
+        )
+
+        self.assertEqual(
+            OCIO.ResolveConfigPath("studio-config-latest.ocio"), 
+            "studio-config-latest.ocio"
         )
 
 class ConfigVirtualWithActiveDisplayTest(unittest.TestCase):

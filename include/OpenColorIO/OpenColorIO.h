@@ -205,6 +205,29 @@ extern OCIOEXPORT ConstConfigRcPtr GetCurrentConfig();
 extern OCIOEXPORT void SetCurrentConfig(const ConstConfigRcPtr & config);
 
 /**
+ * \brief Make a config path forward-compatible by replacing special built-in config names with the 
+ *        current name.
+ * 
+ * Application developers should call this function on any config path they intend to persist 
+ * (e.g., to include in a file saved from a DCC).
+ * 
+ * As the built-in config collection evolves, special names such as "ocio://default" and 
+ * "ocio://studio-config-latest" will point to newer versions of those configs. Therefore, it is 
+ * recommended that application developers not save those strings and instead save the string that 
+ * refers to the current version of that config. That way, it's guaranteed that there will be no 
+ * change of behavior in the future. For example, as of OCIO 2.2, "ocio://default" should be saved
+ *  as "ocio://cg-config-v1.0.0_aces-v1.3_ocio-v2.1".
+ * 
+ * 
+ * Note that there is no validation done on the path (e.g. to catch a badly formed URI such as "ocio:default"). 
+ * That is left to the application since typically the application will load the config before 
+ * attempting to save its path.
+ * 
+ * \return Resolved path if possible. Otherwise, the original path is returned unmodified.
+ */
+extern OCIOEXPORT const char * ResolveConfigPath(const char * originalPath) noexcept;
+
+/**
  * \brief Extract an OCIO Config archive.
  * 
  * Converts an archived config file (.ocioz file) back to its original form as a config file
@@ -223,23 +246,6 @@ extern OCIOEXPORT void ExtractOCIOZArchive(
     const char * archivePath, 
     const char * destinationDir
 );
-
-/**
- * \brief Resolve config path
- * 
- * If the config path points to a built-in config, it will be resolved into the built-in config's
- * real name (if possible).
- * 
- * Some fictive examples:
- *      "ocio://default"              -> "ocio://cg-config-v1.0.0_aces-v1.3_ocio-v2.1"
- *      "ocio://cg-config-latest"     -> "ocio:/cg-config-v1.0.0_aces-v1.3_ocio-v2.1"
- *      "ocio://studio-config-latest" -> "ocio:/studio-config-v1.0.0_aces-v1.3_ocio-v2.1"
- * 
- * Note that no validation checks are done on the original path.
- * 
- * \return Resolved path if possible. Otherwise, original path is returned.
- */
-extern OCIOEXPORT const char * ResolveConfigPath(const char * originalPath);
 
 /**
  * \brief
@@ -3625,21 +3631,8 @@ public:
      */
     virtual bool isBuiltinConfigRecommended(size_t configIndex) const = 0;
 
-    /**
-     * @brief Get the default recommended built-in config.
-     * 
-     * Get the name of the built-in config that is currently recommended as the default config 
-     * to use for applications looking for basic color management. 
-     * 
-     * As the built-in config collection evolves, the default config name will change in future
-     * releases. 
-     * 
-     * For backwards compatibility, the name provided here will always work as an argument 
-     * to other methods so that any previous default config may be recovered.
-     * 
-     * 
-     * @return Default's built-in config name.
-     */
+    // Return the full forward-compatible name of the default built-in config.
+    OCIO_DEPRECATED("This was marked as deprecated starting in v2.2.2, please use ResolveConfigPath(\"ocio://default\").")
     virtual const char * getDefaultBuiltinConfigName() const = 0;
 protected:
     BuiltinConfigRegistry() = default;

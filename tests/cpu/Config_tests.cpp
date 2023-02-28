@@ -9023,8 +9023,8 @@ OCIO_ADD_TEST(Config, look_fallback)
 OCIO_ADD_TEST(Config, create_builtin_config)
 {
     auto testFromBuiltinConfig = [](const std::string name,
-                                       int numberOfExpectedColorspaces,
-                                       const std::string expectedConfigName = "") 
+                                    int numberOfExpectedColorspaces,
+                                    const std::string expectedConfigName) 
     {
         {
             // Testing CreateFromBuiltinConfig with a known built-in config name.
@@ -9091,65 +9091,58 @@ OCIO_ADD_TEST(Config, create_builtin_config)
         }
     };
 
-    auto testBuiltinConfig = [&testFromBuiltinConfig, &testFromEnvAndFromFile]
-                            (const std::string name,
-                             int numberOfExpectedColorspaces)
-    {
-        testFromBuiltinConfig(name, numberOfExpectedColorspaces);
-        testFromEnvAndFromFile(
-            std::string("ocio://") + name, 
-            numberOfExpectedColorspaces, 
-            name
-        );
-    };
-
-    auto testSpecialNames = [&testFromBuiltinConfig, &testFromEnvAndFromFile]
-                            (const std::string uri,
-                             int numberOfExpectedColorspaces,
-                             const std::string expectedConfigName)
-    {
-        testFromBuiltinConfig(uri, numberOfExpectedColorspaces, expectedConfigName);
-        testFromEnvAndFromFile(
-            uri, 
-            numberOfExpectedColorspaces, 
-            expectedConfigName
-        );
-    };
-
+    const std::string uriPrefix = "ocio://";
     const std::string cgConfigName = "cg-config-v1.0.0_aces-v1.3_ocio-v2.1";
     const std::string studioConfigName = "studio-config-v1.0.0_aces-v1.3_ocio-v2.1";
+    const std::string defaultName = "default";
+    const std::string latestCGName = "cg-config-latest";
+    const std::string latestStudioName = "studio-config-latest";
 
     int nbOfColorspacesForCGConfig = 14;
     int nbOfColorspacesForStudioConfig = 39;
 
-    // Testing CG config.
-    testBuiltinConfig(cgConfigName, nbOfColorspacesForCGConfig);
+    // Test that CreateFromFile does not work without ocio:// prefix for built-in config.
+    OCIO_CHECK_THROW_WHAT(
+        OCIO::Config::CreateFromFile(cgConfigName.c_str()),
+        OCIO::Exception,
+        "Error could not read 'cg-config-v1.0.0_aces-v1.3_ocio-v2.1' OCIO profile."
+    );    
 
-    // Testing STUDIO config.
-    testFromBuiltinConfig(studioConfigName, nbOfColorspacesForStudioConfig);
-    testBuiltinConfig(studioConfigName, nbOfColorspacesForStudioConfig);
+    // Test CG config.
+    testFromBuiltinConfig(cgConfigName, nbOfColorspacesForCGConfig, "");
+    testFromEnvAndFromFile(uriPrefix + cgConfigName, nbOfColorspacesForCGConfig, cgConfigName);
 
-    // Testing default config.
-    testSpecialNames("ocio://default", nbOfColorspacesForCGConfig, cgConfigName);
+    // Test STUDIO config.
+    testFromBuiltinConfig(studioConfigName, nbOfColorspacesForStudioConfig, "");
+    testFromEnvAndFromFile(uriPrefix + studioConfigName, nbOfColorspacesForStudioConfig, studioConfigName);
 
-    // Testing cg-config-latest.
-    testSpecialNames("ocio://cg-config-latest", nbOfColorspacesForCGConfig, cgConfigName);
+    // Test default config.
+    testFromBuiltinConfig(defaultName, nbOfColorspacesForCGConfig, cgConfigName);
+    testFromBuiltinConfig(uriPrefix + defaultName, nbOfColorspacesForCGConfig, cgConfigName);
+    testFromEnvAndFromFile(uriPrefix + defaultName, nbOfColorspacesForCGConfig, cgConfigName);
 
-    // Testing studio-config-latest.
-    testSpecialNames("ocio://studio-config-latest", nbOfColorspacesForStudioConfig, studioConfigName);
+    // Test cg-config-latest.
+    testFromBuiltinConfig(latestCGName, nbOfColorspacesForCGConfig, cgConfigName);
+    testFromBuiltinConfig(uriPrefix + latestCGName, nbOfColorspacesForCGConfig, cgConfigName);
+    testFromEnvAndFromFile(uriPrefix + latestCGName, nbOfColorspacesForCGConfig, cgConfigName);
+
+    // Test studio-config-latest.
+    testFromBuiltinConfig(latestStudioName, nbOfColorspacesForStudioConfig, studioConfigName);
+    testFromBuiltinConfig(uriPrefix + latestStudioName, nbOfColorspacesForStudioConfig, studioConfigName);
+    testFromEnvAndFromFile(uriPrefix + latestStudioName, nbOfColorspacesForStudioConfig, studioConfigName);
 
     // ********************************
-    // Testing some expected failures.
+    // Test some expected failures.
     // ********************************
 
-    // Testing CreateFromBuiltinConfig with an unknown built-in config name.
+    // Test CreateFromBuiltinConfig with an unknown built-in config name.
     OCIO_CHECK_THROW_WHAT(
         OCIO::Config::CreateFromBuiltinConfig("I-do-not-exist"),
         OCIO::Exception,
         "Could not find 'I-do-not-exist' in the built-in configurations."
     );
 
-    // Testing CreateFromFile with an unknown built-in config name using URI syntax.
+    // Test CreateFromFile with an unknown built-in config name using URI syntax.
     OCIO_CHECK_THROW_WHAT(
         OCIO::Config::CreateFromFile("ocio://I-do-not-exist"),
         OCIO::Exception,
@@ -9436,7 +9429,7 @@ OCIO_ADD_TEST(Config, create_from_config_io_proxy)
     }
 }
 
-OCIO_ADD_TEST(Config, resolve_config)
+OCIO_ADD_TEST(Config, resolve_config_path)
 {
     const char * defaultBuiltinConfig = "ocio://cg-config-v1.0.0_aces-v1.3_ocio-v2.1";
     const char * cgLatestBuiltinConfig = "ocio://cg-config-v1.0.0_aces-v1.3_ocio-v2.1";
@@ -9457,13 +9450,19 @@ OCIO_ADD_TEST(Config, resolve_config)
         std::string(studioLatestBuiltinConfig)
     ); 
 
-    // ************************************************
-    // Paths that are not starting with "ocio://".
-    // ************************************************
+
+    // ******************************************************************************
+    // Paths that are not starting with "ocio://" are simply returned unmodified.
+    // ******************************************************************************
 
     OCIO_CHECK_EQUAL(
-        OCIO::ResolveConfigPath("my_config.ocio"), 
-        std::string("my_config.ocio")
+        OCIO::ResolveConfigPath("studio-config-latest"), 
+        std::string("studio-config-latest")
+    ); 
+
+    OCIO_CHECK_EQUAL(
+        OCIO::ResolveConfigPath("studio-config-latest.ocio"), 
+        std::string("studio-config-latest.ocio")
     );
 
     OCIO_CHECK_EQUAL(
@@ -9481,9 +9480,10 @@ OCIO_ADD_TEST(Config, resolve_config)
         std::string("")
     );
 
-    // ************************************************            
-    // Test expected failure
-    // ************************************************
+    // *****************************************************            
+    // The function does not try to validate to catch 
+    // mistakes in URI usage. That's up to the application.
+    // *****************************************************
 
     // Unknown built-in config.
     OCIO_CHECK_EQUAL(
@@ -9491,6 +9491,7 @@ OCIO_ADD_TEST(Config, resolve_config)
         std::string("ocio://not-a-builtin")
     );
     
+    // Missing "//".
     OCIO_CHECK_EQUAL(
         OCIO::ResolveConfigPath("ocio:default"), 
         std::string("ocio:default")

@@ -11,33 +11,18 @@
 namespace OCIO_NAMESPACE
 {
 
-// Using variable to reference special built-in config names such as :
-// default, cg-config-latest and studio-config-latest.
-// By doing this, the standalone function resolveConfigPath can resolve special built-in config
-// names without initializing the built-in config registry.
-
-// ************************************************************************************************
-// IMPORTANT: Update defaultBuiltinConfig and defaultBuiltinConfigURI when the default built-in 
-//            config changed.
-//
-// Compile-time string concatenation is possible but it adds a lot of overhead for something that
-// can be resolved by creating duplicated variables.
-//
-// These are used for ResolveConfigPath function and we need to return a variable that still exists
-// once the function finishes since we are returning a const char *.
-// ************************************************************************************************
-
-// Used by getDefaultBuiltinConfigName and ResolveConfigPath.
+// TODO: Remove once getDefaultBuiltinConfigName is removed.
 static constexpr char * defaultBuiltinConfig = "cg-config-v1.0.0_aces-v1.3_ocio-v2.1";
 
-// Used by ResolveConfigPath.
+// These are used for ResolveConfigPath function and we need to return a variable that still exists
+// once the function finishes since we are returning a const char *.
 static constexpr char * defaultBuiltinConfigURI = "ocio://cg-config-v1.0.0_aces-v1.3_ocio-v2.1";
 static constexpr char * latestCGBuiltinConfigURI = "ocio://cg-config-v1.0.0_aces-v1.3_ocio-v2.1";
 static constexpr char * latestStudioBuiltinConfigURI = "ocio://studio-config-v1.0.0_aces-v1.3_ocio-v2.1";
 
-#define BUILTIN_REGISTRY_DEFAULT_CONFIG         "default"
-#define BUILTIN_REGISTRY_LATEST_CG_CONFIG       "cg-config-latest"
-#define BUILTIN_REGISTRY_LATEST_STUDIO_CONFIG   "studio-config-latest"
+static constexpr char * builtinRegistryDefaultConfig = "default";
+static constexpr char * builtinRegistryLatestCGConfig = "cg-config-latest";
+static constexpr char * builtinRegistryLatestStudioConfig = "studio-config-latest";
 
 class BuiltinConfigRegistryImpl : public BuiltinConfigRegistry
 {
@@ -125,7 +110,6 @@ public:
     const char * getDefaultBuiltinConfigName() const override;
 private:
     BuiltinConfigs m_builtinConfigs;
-    std::string m_defaultBuiltinConfigName;
 };
 
 } // namespace OCIO_NAMESPACE

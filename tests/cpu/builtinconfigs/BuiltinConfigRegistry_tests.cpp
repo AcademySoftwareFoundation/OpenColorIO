@@ -19,8 +19,8 @@ OCIO_ADD_TEST(BuiltinConfigs, basic)
     const std::string cgConfigName = "cg-config-v1.0.0_aces-v1.3_ocio-v2.1";
 
     OCIO_CHECK_EQUAL(
-        std::string(registry.getDefaultBuiltinConfigName()), 
-        cgConfigName
+        std::string(OCIO::ResolveConfigPath("ocio://default")), 
+        std::string("ocio://") + cgConfigName
     );
 
     // *******************************************

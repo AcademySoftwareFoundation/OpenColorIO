@@ -1559,7 +1559,7 @@ ConstConfigRcPtr Config::CreateFromFile(const char * filename)
     // Check for URI Pattern: ocio://<config name>
     static const std::regex uriPattern(R"(ocio:\/\/([^\s]+))");
     std::smatch match;
-    const std::string uri = ResolveConfigPath(filename);
+    const std::string uri = filename;
     if (std::regex_search(uri, match, uriPattern))
     {
         return CreateFromBuiltinConfig(uri.c_str());
@@ -1631,14 +1631,21 @@ ConstConfigRcPtr Config::CreateFromConfigIOProxy(ConfigIOProxyRcPtr ciop)
 ConstConfigRcPtr Config::CreateFromBuiltinConfig(const char * configName)
 {
     std::string builtinConfigName = configName;
+    
+    // Normalize the input to the URI format.
+    if (!StringUtils::StartsWith(builtinConfigName, "ocio://"))
+    {
+        builtinConfigName = std::string("ocio://") + builtinConfigName;
+    }
 
     // Check if the config path starts with ocio://
     static const std::regex uriPattern(R"(ocio:\/\/([^\s]+))");
     std::smatch match;
     // Resolve the URI if needed.
-    const std::string uri = ResolveConfigPath(configName);
+    const std::string uri = ResolveConfigPath(builtinConfigName.c_str());
     if (std::regex_search(uri, match, uriPattern))
     {
+        // Store config path without the "ocio://" prefix, if present.
         builtinConfigName = match.str(1).c_str();
     }
 

@@ -17,10 +17,8 @@ namespace CGCONFIG
 {
 void Register(BuiltinConfigRegistryImpl & registry) noexcept
 {
-    // If new built-in config are added, do not forget to update the latestCGBuiltinConfigURI 
-    // variable. (in BuiltinConfigRegistry.h)
-    // If the default built-in config changed, do not forget to update defaultBuiltinConfig and 
-    // defaultBuiltinConfigURI variable.
+    // If a new built-in config are added, do not forget to update the latestCGBuiltinConfigURI 
+    // variable (in BuiltinConfigRegistry.h).
 
     registry.addBuiltin(
         "cg-config-v1.0.0_aces-v1.3_ocio-v2.1",

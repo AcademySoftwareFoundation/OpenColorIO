@@ -21,23 +21,24 @@
 namespace OCIO_NAMESPACE
 {
 
-const char * ResolveConfigPath(const char * originalPath)
+// Note that this function does not require initializing the built-in config registry.
+const char * ResolveConfigPath(const char * originalPath) noexcept
 {
     static const std::regex uriPattern(R"(ocio:\/\/([^\s]+))");
     std::smatch match;
     const std::string uri = originalPath;
-    // Check if original path start with "ocio://".
+    // Check if original path starts with "ocio://".
     if (std::regex_search(uri, match, uriPattern))
     {
-        if (Platform::Strcasecmp(match.str(1).c_str(), BUILTIN_REGISTRY_DEFAULT_CONFIG) == 0)
+        if (Platform::Strcasecmp(match.str(1).c_str(), builtinRegistryDefaultConfig) == 0)
         {
             return defaultBuiltinConfigURI;
         }
-        else if (Platform::Strcasecmp(match.str(1).c_str(), BUILTIN_REGISTRY_LATEST_CG_CONFIG) == 0)
+        else if (Platform::Strcasecmp(match.str(1).c_str(), builtinRegistryLatestCGConfig) == 0)
         {
             return latestCGBuiltinConfigURI;
         }
-        else if (Platform::Strcasecmp(match.str(1).c_str(), BUILTIN_REGISTRY_LATEST_STUDIO_CONFIG) == 0)
+        else if (Platform::Strcasecmp(match.str(1).c_str(), builtinRegistryLatestStudioConfig) == 0)
         {
             return latestStudioBuiltinConfigURI;
         }
