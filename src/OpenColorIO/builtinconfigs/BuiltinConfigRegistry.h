@@ -11,19 +11,6 @@
 namespace OCIO_NAMESPACE
 {
 
-// TODO: Remove once getDefaultBuiltinConfigName is removed.
-static constexpr char * defaultBuiltinConfig = "cg-config-v1.0.0_aces-v1.3_ocio-v2.1";
-
-// These are used for ResolveConfigPath function and we need to return a variable that still exists
-// once the function finishes since we are returning a const char *.
-static constexpr char * defaultBuiltinConfigURI = "ocio://cg-config-v1.0.0_aces-v1.3_ocio-v2.1";
-static constexpr char * latestCGBuiltinConfigURI = "ocio://cg-config-v1.0.0_aces-v1.3_ocio-v2.1";
-static constexpr char * latestStudioBuiltinConfigURI = "ocio://studio-config-v1.0.0_aces-v1.3_ocio-v2.1";
-
-static constexpr char * builtinRegistryDefaultConfig = "default";
-static constexpr char * builtinRegistryLatestCGConfig = "cg-config-latest";
-static constexpr char * builtinRegistryLatestStudioConfig = "studio-config-latest";
-
 class BuiltinConfigRegistryImpl : public BuiltinConfigRegistry
 {
 struct BuiltinConfigData

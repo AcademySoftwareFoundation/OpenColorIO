@@ -16,7 +16,20 @@
 #include "builtinconfigs/CGConfig.h"
 #include "builtinconfigs/StudioConfig.h"
 
-#define OUT_OF_RANGE_EXCEPTION_TEXT         "Config index is out of range."
+static constexpr char * OUT_OF_RANGE_EXCEPTION_TEXT = "Config index is out of range.";
+
+// TODO: Remove once getDefaultBuiltinConfigName is removed.
+static constexpr char * DEFAULT_BUILTIN_CONFIG = "cg-config-v1.0.0_aces-v1.3_ocio-v2.1";
+
+// These are used for ResolveConfigPath function and we need to return a variable that still exists
+// once the function finishes since we are returning a const char *.
+static constexpr char * DEFAULT_BUILTIN_CONFIG_URI = "ocio://cg-config-v1.0.0_aces-v1.3_ocio-v2.1";
+static constexpr char * LATEST_CG_BUILTIN_CONFIG_URI = "ocio://cg-config-v1.0.0_aces-v1.3_ocio-v2.1";
+static constexpr char * LATEST_STUDIO_BUILTIN_CONFIG_URI = "ocio://studio-config-v1.0.0_aces-v1.3_ocio-v2.1";
+
+static constexpr char * BUILTIN_DEFAULT_NAME = "default";
+static constexpr char * BUILTIN_LATEST_CG_NAME = "cg-config-latest";
+static constexpr char * BUILTIN_LATEST_STUDIO_NAME = "studio-config-latest";
 
 namespace OCIO_NAMESPACE
 {
@@ -30,17 +43,17 @@ const char * ResolveConfigPath(const char * originalPath) noexcept
     // Check if original path starts with "ocio://".
     if (std::regex_search(uri, match, uriPattern))
     {
-        if (Platform::Strcasecmp(match.str(1).c_str(), builtinRegistryDefaultConfig) == 0)
+        if (Platform::Strcasecmp(match.str(1).c_str(), BUILTIN_DEFAULT_NAME) == 0)
         {
-            return defaultBuiltinConfigURI;
+            return DEFAULT_BUILTIN_CONFIG_URI;
         }
-        else if (Platform::Strcasecmp(match.str(1).c_str(), builtinRegistryLatestCGConfig) == 0)
+        else if (Platform::Strcasecmp(match.str(1).c_str(), BUILTIN_LATEST_CG_NAME) == 0)
         {
-            return latestCGBuiltinConfigURI;
+            return LATEST_CG_BUILTIN_CONFIG_URI;
         }
-        else if (Platform::Strcasecmp(match.str(1).c_str(), builtinRegistryLatestStudioConfig) == 0)
+        else if (Platform::Strcasecmp(match.str(1).c_str(), BUILTIN_LATEST_STUDIO_NAME) == 0)
         {
-            return latestStudioBuiltinConfigURI;
+            return LATEST_STUDIO_BUILTIN_CONFIG_URI;
         }
     }
 
@@ -157,7 +170,7 @@ bool BuiltinConfigRegistryImpl::isBuiltinConfigRecommended(size_t configIndex) c
 
 const char * BuiltinConfigRegistryImpl::getDefaultBuiltinConfigName() const
 {
-    return defaultBuiltinConfig;
+    return DEFAULT_BUILTIN_CONFIG;
 }
 
 } // namespace OCIO_NAMESPACE

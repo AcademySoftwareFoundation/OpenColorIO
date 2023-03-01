@@ -58,6 +58,8 @@ const char * OCIO_CONFIG_ARCHIVE_FILE_EXT     = ".ocioz";
 // has the same name as the display the shared view is used by.
 const char * OCIO_VIEW_USE_DISPLAY_NAME       = "<USE_DISPLAY_NAME>";
 
+const char * OCIO_BUILTIN_URI_PREFIX          = "ocio://";
+
 namespace
 {
 
@@ -1378,8 +1380,9 @@ public:
                                                 const char * builtinColorSpaceName,
                                                 TransformDirection direction) const
     {
-        // Use the Default config as the Built-in config to interpret the known color space name.        
-        ConstConfigRcPtr builtinConfig = Config::CreateFromFile("ocio://default");
+        // Use the Default config as the Built-in config to interpret the known color space name.
+        std::string defaultBuiltin = std::string(OCIO_BUILTIN_URI_PREFIX) + std::string("default");
+        ConstConfigRcPtr builtinConfig = Config::CreateFromFile(defaultBuiltin.c_str());
 
         // Define the set of candidate reference linear color spaces (aka, reference primaries) that 
         // will be used when searching through the source config. If the source config scene-referred 
@@ -1633,16 +1636,17 @@ ConstConfigRcPtr Config::CreateFromBuiltinConfig(const char * configName)
     std::string builtinConfigName = configName;
     
     // Normalize the input to the URI format.
-    if (!StringUtils::StartsWith(builtinConfigName, "ocio://"))
+    if (!StringUtils::StartsWith(builtinConfigName, OCIO_BUILTIN_URI_PREFIX))
     {
-        builtinConfigName = std::string("ocio://") + builtinConfigName;
+        builtinConfigName = std::string(OCIO_BUILTIN_URI_PREFIX) + builtinConfigName;
     }
+
+    // Resolve the URI if needed.
+    const std::string uri = ResolveConfigPath(builtinConfigName.c_str());
 
     // Check if the config path starts with ocio://
     static const std::regex uriPattern(R"(ocio:\/\/([^\s]+))");
     std::smatch match;
-    // Resolve the URI if needed.
-    const std::string uri = ResolveConfigPath(builtinConfigName.c_str());
     if (std::regex_search(uri, match, uriPattern))
     {
         // Store config path without the "ocio://" prefix, if present.

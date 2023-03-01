@@ -360,7 +360,8 @@ public:
     /**
      * \brief Create a configuration using an OCIO built-in config.
      * 
-     * \param configName Built-in config name.
+     * \param configName configName Built-in config name 
+     *                   (with or without the "ocio://" URI prefix).
      * 
      * Also supports the following OCIO URI format for Built-in configs:
      *  "ocio://default"                - Default Built-in config.

@@ -131,7 +131,7 @@ set(TESTS
     apphelpers/MixingHelpers_tests.cpp
     Baker_tests.cpp
     BitDepthUtils_tests.cpp
-    builtinconfigs/BuiltinConfigRegistry_tests.cpp
+    builtinconfigs/BuiltinConfig_tests.cpp
     Caching_tests.cpp
     ColorSpace_tests.cpp
     ColorSpaceSet_tests.cpp

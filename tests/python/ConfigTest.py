@@ -929,7 +929,7 @@ colorspaces:
             self.assertEqual(builtinCfgC.getName(), expectedConfigName)
             self.assertEqual(len(builtinCfgC.getColorSpaceNames()), numberOfExpectedColorspaces)
 
-        uriPrefix = "ocio://"
+        uriPrefix = OCIO.OCIO_BUILTIN_URI_PREFIX;
         cgConfigName = "cg-config-v1.0.0_aces-v1.3_ocio-v2.1"
         studioConfigName = "studio-config-v1.0.0_aces-v1.3_ocio-v2.1"
         defaultName = "default"
