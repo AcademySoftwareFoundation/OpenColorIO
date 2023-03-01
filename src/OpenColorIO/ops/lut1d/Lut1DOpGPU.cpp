@@ -331,10 +331,7 @@ void GetLut1DGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
         ss.newLine() << "";
     }
 
-    if (height > 1 || lutData->isInputHalfDomain()
-        || shaderCreator->getLanguage() == GPU_LANGUAGE_GLSL_ES_1_0
-        || shaderCreator->getLanguage() == GPU_LANGUAGE_GLSL_ES_3_0
-        || !shaderCreator->getAllowTexture1D())
+    if (dimensions == GpuShaderDesc::TEXTURE_2D)
     {
         const std::string str = name + "_computePos(" + shaderCreator->getPixelName();
 

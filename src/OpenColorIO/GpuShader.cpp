@@ -471,7 +471,7 @@ bool GenericGpuShaderDesc::getAllowTexture1D() const noexcept
 
 void GenericGpuShaderDesc::setAllowTexture1D(bool allowed)
 {
-    return getImplGeneric()->setAllowTexture1D(allowed);
+    getImplGeneric()->setAllowTexture1D(allowed);
 }
 
 unsigned GenericGpuShaderDesc::getNumTextures() const noexcept

@@ -155,38 +155,38 @@ void bindPyGpuShaderDesc(py::module & m)
                     GpuShaderDesc::TextureDimensions dimensions,
                     Interpolation interpolation,
                     const py::buffer& values)
-                    {
-                        py::buffer_info info = values.request();
-            py::ssize_t numChannels;
-
-            switch (channel)
             {
-            case GpuShaderDesc::TEXTURE_RED_CHANNEL:
-                numChannels = 1;
-                break;
-            case GpuShaderDesc::TEXTURE_RGB_CHANNEL:
-                numChannels = 3;
-                break;
-            default:
-                throw Exception("Error: Unsupported texture type");
-            }
+                py::buffer_info info = values.request();
+                py::ssize_t numChannels;
 
-            checkBufferType(info, py::dtype("float32"));
-            checkBufferSize(info, width * height * numChannels);
+                switch (channel)
+                {
+                case GpuShaderDesc::TEXTURE_RED_CHANNEL:
+                    numChannels = 1;
+                    break;
+                case GpuShaderDesc::TEXTURE_RGB_CHANNEL:
+                    numChannels = 3;
+                    break;
+                default:
+                    throw Exception("Error: Unsupported texture type");
+                }
 
-            py::gil_scoped_release release;
+                checkBufferType(info, py::dtype("float32"));
+                checkBufferSize(info, width * height * numChannels);
 
-            self->addTexture(textureName.c_str(),
-                samplerName.c_str(),
-                width, height,
-                channel,
-                dimensions,
-                interpolation,
-                static_cast<float*>(info.ptr));
-                    },
-                    "textureName"_a, "samplerName"_a, "width"_a, "height"_a, "channel"_a, "dimensions"_a,
-                        "interpolation"_a, "values"_a,
-                        DOC(GpuShaderCreator, addTexture))
+                py::gil_scoped_release release;
+
+                self->addTexture(textureName.c_str(),
+                    samplerName.c_str(),
+                    width, height,
+                    channel,
+                    dimensions,
+                    interpolation,
+                    static_cast<float*>(info.ptr));
+            },
+            "textureName"_a, "samplerName"_a, "width"_a, "height"_a, "channel"_a, "dimensions"_a,
+                "interpolation"_a, "values"_a,
+                DOC(GpuShaderCreator, addTexture))
 
         .def("getTextures", [](GpuShaderDescRcPtr & self) 
             {
@@ -286,6 +286,7 @@ void bindPyGpuShaderDesc(py::module & m)
         .def_readonly("width", &Texture::m_width)
         .def_readonly("height", &Texture::m_height)
         .def_readonly("channel", &Texture::m_channel)
+        .def_readonly("dimensions", &Texture::m_dimensions)
         .def_readonly("interpolation", &Texture::m_interpolation)
         .def("getValues", [](Texture & self)
             {

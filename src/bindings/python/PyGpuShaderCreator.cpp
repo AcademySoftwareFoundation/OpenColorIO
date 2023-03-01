@@ -30,6 +30,11 @@ void bindPyGpuShaderCreator(py::module & m)
             clsGpuShaderCreator, "TextureType", 
             DOC(GpuShaderCreator, TextureType));
 
+    auto enumTextureDimensions =
+        py::enum_<GpuShaderCreator::TextureDimensions>(
+            clsGpuShaderCreator, "TextureDimensions",
+            DOC(GpuShaderCreator, TextureDimensions));
+
     auto clsDynamicPropertyIterator = 
         py::class_<DynamicPropertyIterator>(
             clsGpuShaderCreator, "DynamicPropertyIterator");
@@ -113,6 +118,11 @@ void bindPyGpuShaderCreator(py::module & m)
     enumTextureType
         .value("TEXTURE_RED_CHANNEL", GpuShaderCreator::TEXTURE_RED_CHANNEL)
         .value("TEXTURE_RGB_CHANNEL", GpuShaderCreator::TEXTURE_RGB_CHANNEL)
+        .export_values();
+
+    enumTextureDimensions
+        .value("TEXTURE_1D", GpuShaderCreator::TEXTURE_1D)
+        .value("TEXTURE_2D", GpuShaderCreator::TEXTURE_2D)
         .export_values();
 
     clsDynamicPropertyIterator
