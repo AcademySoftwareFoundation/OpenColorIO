@@ -219,8 +219,8 @@ extern OCIOEXPORT void SetCurrentConfig(const ConstConfigRcPtr & config);
  * as "ocio://cg-config-v1.0.0_aces-v1.3_ocio-v2.1".
  * 
  * Note that there is no validation done on the path. That is left to the application since 
- * typically the application will load the config before attempting to save its path.
- * (e.g. to catch a badly formed URI such as "ocio:default")
+ * typically the application will load the config before attempting to save its path
+ * and therefore catch, for example, a badly formed URI such as "ocio:default".
  * 
  * \return Resolved path if possible. Otherwise, the original path is returned unmodified.
  */
@@ -360,8 +360,7 @@ public:
     /**
      * \brief Create a configuration using an OCIO built-in config.
      * 
-     * \param configName configName Built-in config name 
-     *                   (with or without the "ocio://" URI prefix).
+     * \param configName Built-in config name (with or without the "ocio://" URI prefix).
      * 
      * Also supports the following OCIO URI format for Built-in configs:
      *  "ocio://default"                - Default Built-in config.
