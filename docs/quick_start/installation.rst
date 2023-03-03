@@ -296,6 +296,9 @@ any of your installed libraries are not universal. The easiest way to address th
 OCIO_INSTALL_EXT_PACKAGES=ALL in order to let OCIO build everything. Alternatively, you may set 
 CMAKE_OSX_ARCHITECTURES to just the platform you are targeting.
 
+Please note that OCIO dependencies must be built as universal libraries as well. If you can't build all the 
+dependencies as universal libraries, you can set ``OCIO_INSTAL_EXT_PACKAGES=ALL`` and OCIO will handle it.
+
 Several command-line tools (such as ``ocioconvert``) require reading or writing image files.
 If ``OCIO_USE_OIIO_FOR_APPS=OFF``, these will be built using OpenEXR rather than OpenImageIO
 and therefore you will be limited to using OpenEXR files with these tools rather than the
