@@ -8,7 +8,7 @@
 
 #if defined(USE_SSE) || defined(USE_SSE2_WITH_SSE2NEON)
 
-// If it is not arm64, same behavior as before.
+// Include the appropriate SIMD intrinsics header based on the architecture (Intel vs. ARM).
 #if !defined(__aarch64__)
     #if defined(USE_SSE)
         #include <emmintrin.h>
@@ -110,7 +110,7 @@ inline __m128 isNegativeSpecial(const __m128 x)
 // Bit-wise select function in SSE version 2
 //
 // Return the parameter arg_false bit where the parameter mask is 0x0,
-// return the parameter arg_true bit where the mask is 0x1.
+// return the parameter arg_true bit where the mask is 1.
 //
 // Algorithm Explanation:
 //
