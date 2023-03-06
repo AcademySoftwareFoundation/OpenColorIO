@@ -26,6 +26,14 @@ endif()
 
 
 ###############################################################################
+# Universal library is the default for ARM architecture under MacOS.
+
+if(APPLE AND (NOT DEFINED CMAKE_OSX_ARCHITECTURES OR CMAKE_OSX_ARCHITECTURES STREQUAL ""))
+    set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64" CACHE STRING "Default OS X architectures" FORCE)
+endif()
+
+
+###############################################################################
 # Project definition.
 
 project(OpenColorIO 
@@ -148,7 +156,7 @@ endif()
 ###############################################################################
 # Optimization / internal linking preferences
 # TODO Remove OCIO_USE_SSE once it is fully deprecated.
-option(OCIO_USE_SSE "Specify whether to enable SSE CPU performance optimizations" ON)
+option(OCIO_USE_SSE "Specify whether to enable SSE (supplanted by OCIO_USE_SIMD)" ON)
 # TODO Remove mark_as_advanced once OCIO_USE_SSE is fully deprecated.
 mark_as_advanced(OCIO_USE_SSE)
 option(OCIO_USE_SIMD "Specify whether to enable SIMD CPU performance optimizations" ${OCIO_USE_SSE})

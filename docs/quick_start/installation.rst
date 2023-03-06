@@ -285,12 +285,15 @@ Here are the most common OCIO-specific CMake options (the default values are sho
 - ``-DOCIO_BUILD_DOCS=OFF`` (Set to ON to build the documentation)
 - ``-DOCIO_BUILD_FROZEN_DOCS=OFF`` (Set to ON to update the Python documentation)
 
-On the newest Apple chipset (M1+), a universal build can be done with the following option:
+On the MacOS under the ARM architecture, the default is to make a universal build 
+(natively supporting both the Intel and ARM processors). The ``-DCMAKE_OSX_ARCHITECTURES`` option 
+may be set to just arm64 or x86_64 to override the default value, which is ``arm64;x86_64``.
 
-- ``-DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"``
-
-Please note that OCIO dependencies must be built as universal libraries as well. If you can't build all the 
-dependencies as universal libraries, you can set ``OCIO_INSTAL_EXT_PACKAGES=ALL`` and OCIO will handle it.
+When doing a universal build, note that the OCIO dependencies must be built as universal libraries 
+too. If you are running in OCIO_INSTALL_EXT_PACKAGES=MISSING or NONE mode, your build will fail if 
+any of your installed libraries are not universal. The easiest way to address this is to set 
+OCIO_INSTALL_EXT_PACKAGES=ALL in order to let OCIO build everything. Alternatively, you may set 
+CMAKE_OSX_ARCHITECTURES to just the platform you are targeting.
 
 Several command-line tools (such as ``ocioconvert``) require reading or writing image files.
 If ``OCIO_USE_OIIO_FOR_APPS=OFF``, these will be built using OpenEXR rather than OpenImageIO
