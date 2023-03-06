@@ -33,7 +33,7 @@ namespace OCIO_NAMESPACE
 #if defined(__aarch64__)
     #if defined(USE_SSE2_WITH_SSE2NEON)
         // Using vmaxnmq_f32 and vminnmq_f32 rather than sse2neon's vmaxq_f32 and vminq_f32 due to 
-        // NaN handling.
+        // NaN handling. This doesn't seem to be significantly slower than the default sse2neon behavior.
 
         // With the Intel intrinsics, if one value is a NaN, the second argument is output, as if it were 
         // a simple (a>b) ? a:b. OCIO sometimes uses this behavior to filter out a possible NaN in the 
