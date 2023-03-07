@@ -136,10 +136,14 @@ if(NOT ZLIB_FOUND AND OCIO_INSTALL_EXT_PACKAGES AND NOT OCIO_INSTALL_EXT_PACKAGE
 
     add_dependencies(ZLIB::ZLIB ZLIB_install)
     
-    # Setting those variables to follow the same naming as the other OCIO custom find modules.
-    set(ZLIB_LIBRARY ${ZLIB_LIBRARIES})
-    set(ZLIB_INCLUDE_DIR ${ZLIB_INCLUDE_DIRS})
-
+    # FindZLIB from CMake needs ZLIB_LIBRARY and ZLIB_INCLUDE_DIR.
+    # Starting CMake 3.17+, The mark_as_advanced() command no longer creates a cache entry if one 
+    # does not already exist. (See policy CMP0102) 
+    # For that reasons, ZLIB_LIBRARY and ZLIB_INCLUDE_DIR are set in the CMake's Cache since ZLIB 
+    # is needed by other OCIO dependencies.
+    set(ZLIB_LIBRARY ${ZLIB_LIBRARIES} CACHE STRING "ZLIB library file")
+    set(ZLIB_INCLUDE_DIR ${ZLIB_INCLUDE_DIRS} CACHE STRING "ZLIB includes directory")
+    
     if(OCIO_VERBOSE)
         message(STATUS "Installing ZLIB: ${ZLIB_LIBRARIES} (version \"${ZLIB_VERSION}\") ")
     endif()
