@@ -42,7 +42,6 @@ jobs:
           # -------------------------------------------------------------------
           # GCC
           # -------------------------------------------------------------------
-          # Release
           - build: 1
             build-python: ON
             build-type: Release
@@ -52,7 +51,6 @@ jobs:
             cc-compiler: gcc
             compiler-desc: GCC
             enable-sanitizer: OFF
-          # Debug sanitizer
           - build: 2
             build-python: OFF
             build-type: Debug
@@ -65,7 +63,6 @@ jobs:
           # -------------------------------------------------------------------
           # Clang
           # -------------------------------------------------------------------
-          # Release
           - build: 3
             build-python: ON
             build-type: Release
@@ -75,7 +72,6 @@ jobs:
             cc-compiler: clang
             compiler-desc: Clang
             enable-sanitizer: OFF
-          # Debug sanitizer
           - build: 4
             build-python: OFF
             build-type: Debug
@@ -185,7 +181,6 @@ jobs:
       matrix:
         build: [1, 2]
         include:
-          # Release
           - build: 1
             build-python: ON
             build-type: Release
@@ -193,7 +188,6 @@ jobs:
             cxx-standard: 20
             enable-sanitizer: OFF
             python-version: '3.11'
-          # Debug sanitizer
           - build: 2
             build-python: OFF
             build-type: Debug
@@ -300,14 +294,12 @@ jobs:
       matrix:
         build: [1, 2]
         include:
-          # Release
           - build: 1
             build-python: ON
             build-type: Release
             build-shared: ON
             cxx-standard: 20
             python-version: '3.11'
-          # Debug
           - build: 2
             build-python: ON
             build-type: Debug

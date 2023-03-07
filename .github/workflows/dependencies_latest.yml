@@ -46,7 +46,6 @@ jobs:
           # -------------------------------------------------------------------
           # GCC
           # -------------------------------------------------------------------
-          # VFX CY2022, C++17, docs, OpenFX
           - build: 1
             build-docs: 'ON'
             build-openfx: 'ON'
@@ -55,7 +54,6 @@ jobs:
             cc-compiler: gcc
             compiler-desc: GCC
             vfx-cy: 2022
-          # VFX CY2021, C++14
           - build: 2
             build-docs: 'OFF'
             build-openfx: 'OFF'
@@ -67,7 +65,6 @@ jobs:
           # -------------------------------------------------------------------
           # Clang
           # -------------------------------------------------------------------
-          # VFX CY2022, C++17
           - build: 3
             build-docs: 'OFF'
             build-openfx: 'OFF'
@@ -76,7 +73,6 @@ jobs:
             cc-compiler: clang
             compiler-desc: Clang
             vfx-cy: 2022
-          # VFX CY2021, C++14, docs, OpenFX
           - build: 4
             build-docs: 'ON'
             build-openfx: 'ON'
@@ -175,13 +171,11 @@ jobs:
       matrix:
         build: [1, 2]
         include:
-          # C++17
           - build: 1
             build-docs: 'ON'
             build-openfx: 'ON'
             cxx-standard: 17
             python-version: '3.11'
-          # C++14
           - build: 2
             build-docs: 'ON'
             build-openfx: 'ON'
@@ -280,13 +274,11 @@ jobs:
       matrix:
         build: [1, 2]
         include:
-          # C++17
           - build: 1
             build-docs: 'ON'
             build-openfx: 'ON'
             cxx-standard: 17
             python-version: '3.11'
-          # C++14
           - build: 2
             build-docs: 'ON'
             build-openfx: 'ON'

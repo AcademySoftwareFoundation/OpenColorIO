@@ -65,7 +65,6 @@ jobs:
           # -------------------------------------------------------------------
           # VFX CY2022 (Python 3.9)
           # -------------------------------------------------------------------
-          # C++17, Clang, Debug, OpenFX
           - build: 9
             build-type: Debug
             build-shared: 'ON'
@@ -78,7 +77,6 @@ jobs:
             cc-compiler: clang
             compiler-desc: Clang
             vfx-cy: 2022
-          # C++17, GCC, no SSE, OpenFX
           - build: 8
             build-type: Release
             build-shared: 'ON'
@@ -91,7 +89,6 @@ jobs:
             cc-compiler: gcc
             compiler-desc: GCC
             vfx-cy: 2022
-          # C++11, GCC, static
           - build: 7
             build-type: Release
             build-shared: 'OFF'
@@ -107,7 +104,6 @@ jobs:
           # -------------------------------------------------------------------
           # VFX CY2021 (Python 3.7)
           # -------------------------------------------------------------------
-          # C++17, Clang
           - build: 6
             build-type: Release
             build-shared: 'ON'
@@ -120,7 +116,6 @@ jobs:
             cc-compiler: clang
             compiler-desc: Clang
             vfx-cy: 2021
-          # C++14, Clang, static, no SSE, OpenFX
           - build: 5
             build-type: Release
             build-shared: 'OFF'
@@ -133,7 +128,6 @@ jobs:
             cc-compiler: clang
             compiler-desc: Clang
             vfx-cy: 2021
-          # C++11, GCC, Debug
           - build: 4
             build-type: Debug
             build-shared: 'ON'
@@ -149,7 +143,6 @@ jobs:
           # -------------------------------------------------------------------
           # VFX CY2020 (Python 3.7)
           # -------------------------------------------------------------------
-          # C++14, Clang, OpenFX
           - build: 3
             build-type: Release
             build-shared: 'ON'
@@ -162,7 +155,6 @@ jobs:
             cc-compiler: clang
             compiler-desc: Clang
             vfx-cy: 2020
-          # C++14, GCC, static, Debug, OpenFX
           - build: 2
             build-type: Debug
             build-shared: 'OFF'
@@ -175,7 +167,6 @@ jobs:
             cc-compiler: gcc
             compiler-desc: GCC
             vfx-cy: 2020
-          # C++11, GCC, no SSE
           - build: 1
             build-type: Release
             build-shared: 'ON'
@@ -292,7 +283,6 @@ jobs:
       matrix:
         build: [1, 2, 3, 4]
         include:
-          # C++17, OpenFX
           - build: 4
             build-type: Release
             build-shared: 'ON'
@@ -302,7 +292,6 @@ jobs:
             use-oiio: 'ON'
             cxx-standard: 17
             python-version: '3.11'
-          # C++11, no SSE
           - build: 3
             build-type: Release
             build-shared: 'ON'
@@ -312,7 +301,6 @@ jobs:
             use-oiio: 'OFF'
             cxx-standard: 11
             python-version: '3.10'
-          # Debug, OpenFX
           - build: 2
             build-type: Debug
             build-shared: 'ON'
@@ -322,7 +310,6 @@ jobs:
             use-oiio: 'OFF'
             cxx-standard: 11
             python-version: '3.9'
-          # Static, C++14, OpenEXR, OpenFX
           - build: 1
             build-type: Release
             build-shared: 'OFF'
@@ -439,7 +426,6 @@ jobs:
       matrix:
         build: [1, 2, 3, 4]
         include:
-          # C++17, OpenFX, no SSE
           - build: 4
             build-type: Release
             build-shared: 'ON'
@@ -449,7 +435,6 @@ jobs:
             use-oiio: 'ON'
             cxx-standard: 17
             python-version: '3.11'
-          # Static, C++11
           - build: 3
             build-type: Release
             build-shared: 'OFF'
@@ -459,7 +444,6 @@ jobs:
             use-oiio: 'OFF'
             cxx-standard: 11
             python-version: '3.9'
-          # Debug
           - build: 2
             build-type: Debug
             build-shared: 'ON'
