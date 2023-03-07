@@ -16,20 +16,20 @@
 #include "builtinconfigs/CGConfig.h"
 #include "builtinconfigs/StudioConfig.h"
 
-static constexpr char * OUT_OF_RANGE_EXCEPTION_TEXT = "Config index is out of range.";
+static constexpr char OUT_OF_RANGE_EXCEPTION_TEXT[] = "Config index is out of range.";
 
 // TODO: Remove once getDefaultBuiltinConfigName is removed.
-static constexpr char * DEFAULT_BUILTIN_CONFIG = "cg-config-v1.0.0_aces-v1.3_ocio-v2.1";
+static constexpr char DEFAULT_BUILTIN_CONFIG[] = "cg-config-v1.0.0_aces-v1.3_ocio-v2.1";
 
 // These are used for ResolveConfigPath function and we need to return a variable that still exists
 // once the function finishes since we are returning a const char *.
-static constexpr char * DEFAULT_BUILTIN_CONFIG_URI = "ocio://cg-config-v1.0.0_aces-v1.3_ocio-v2.1";
-static constexpr char * LATEST_CG_BUILTIN_CONFIG_URI = "ocio://cg-config-v1.0.0_aces-v1.3_ocio-v2.1";
-static constexpr char * LATEST_STUDIO_BUILTIN_CONFIG_URI = "ocio://studio-config-v1.0.0_aces-v1.3_ocio-v2.1";
+static constexpr char DEFAULT_BUILTIN_CONFIG_URI[] = "ocio://cg-config-v1.0.0_aces-v1.3_ocio-v2.1";
+static constexpr char LATEST_CG_BUILTIN_CONFIG_URI[] = "ocio://cg-config-v1.0.0_aces-v1.3_ocio-v2.1";
+static constexpr char LATEST_STUDIO_BUILTIN_CONFIG_URI[] = "ocio://studio-config-v1.0.0_aces-v1.3_ocio-v2.1";
 
-static constexpr char * BUILTIN_DEFAULT_NAME = "default";
-static constexpr char * BUILTIN_LATEST_CG_NAME = "cg-config-latest";
-static constexpr char * BUILTIN_LATEST_STUDIO_NAME = "studio-config-latest";
+static constexpr char BUILTIN_DEFAULT_NAME[] = "default";
+static constexpr char BUILTIN_LATEST_CG_NAME[] = "cg-config-latest";
+static constexpr char BUILTIN_LATEST_STUDIO_NAME[] = "studio-config-latest";
 
 namespace OCIO_NAMESPACE
 {
