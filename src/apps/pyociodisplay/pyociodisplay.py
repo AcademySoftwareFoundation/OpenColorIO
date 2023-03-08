@@ -806,7 +806,7 @@ class ImagePlane(QtOpenGL.QGLWidget):
             tex = GL.glGenTextures(1)
             GL.glActiveTexture(GL.GL_TEXTURE0 + tex_index)
 
-            if tex_info.height > 1:
+            if tex_info.dimensions == self._ocio_shader_desc.TEXTURE_2D:
                 tex_type = GL.GL_TEXTURE_2D
                 GL.glBindTexture(tex_type, tex)
                 self._set_ocio_tex_params(tex_type, tex_info.interpolation)
