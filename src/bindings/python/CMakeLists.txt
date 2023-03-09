@@ -227,16 +227,22 @@ target_compile_definitions(PyOpenColorIO
 		PY_VERSION_PATCH=${Python_VERSION_PATCH}
 )
 
+# Set to site-package location.
 if(WIN32)
     set(_Python_VARIANT_PATH "${CMAKE_INSTALL_LIBDIR}/site-packages")
 else()
     set(_Python_VARIANT_PATH "${CMAKE_INSTALL_LIBDIR}/python${Python_VERSION_MAJOR}.${Python_VERSION_MINOR}/site-packages")
 endif()
 
-# Create an internal global variable to access it in another scope but not publicly visible
-# using ccmake.
+# Create an internal global variable to access it in another scope but not publicly visible.
+# The site-package location is needed in setup_ocio.bat.in and setup_ocio.sh.in.
 set(PYTHON_VARIANT_PATH ${_Python_VARIANT_PATH} CACHE INTERNAL "")
 
+# Set to PyOpenColorIO site-package location.
+set(_PyOpenColorIO_SITE_PACKAGE_DIR "${PYTHON_VARIANT_PATH}/PyOpenColorIO")
+
 install(TARGETS PyOpenColorIO
-    LIBRARY DESTINATION ${_Python_VARIANT_PATH}
+    LIBRARY DESTINATION ${_PyOpenColorIO_SITE_PACKAGE_DIR}
 )
+
+install(FILES __init__.py DESTINATION ${_PyOpenColorIO_SITE_PACKAGE_DIR})
