@@ -26,7 +26,9 @@ if(OCIO_USE_SIMD)
 endif(OCIO_USE_SIMD)
 
 set_target_properties(test_osl_exec PROPERTIES 
-    COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS}")
+    COMPILE_OPTIONS "${PLATFORM_COMPILE_OPTIONS}"
+    LINK_OPTIONS "${PLATFORM_LINK_OPTIONS}"
+)
 
 # Because some OpenImageIO types are present in the OSL public API that dependency is mandatory;
 # however, the unit test framework itself does not have any OpenImageIO dependency.

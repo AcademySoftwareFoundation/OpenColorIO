@@ -17,7 +17,8 @@ if(NOT BUILD_SHARED_LIBS)
 endif()
 
 set_target_properties(imageioapphelpers PROPERTIES
-    COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS}"
+    COMPILE_OPTIONS "${PLATFORM_COMPILE_OPTIONS}"
+    LINK_OPTIONS "${PLATFORM_LINK_OPTIONS}"
 )
 
 target_compile_definitions(imageioapphelpers

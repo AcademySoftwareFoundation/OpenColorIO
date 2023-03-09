@@ -138,20 +138,28 @@ if(${CMAKE_CXX_STANDARD} GREATER_EQUAL 17)
 	set(APP_CXX_STANDARD 11)
 endif()
 
-set(CUSTOM_COMPILE_FLAGS ${PLATFORM_COMPILE_FLAGS})
+set(CUSTOM_COMPILE_FLAGS ${PLATFORM_COMPILE_OPTIONS})
+set(CUSTOM_LINK_FLAGS ${PLATFORM_LINK_OPTIONS})
 
 # The Python binding contains deprecated methods for backward compatibility reason,
 # so disable the warning.
 if(USE_GCC OR USE_CLANG)
-    set(CUSTOM_COMPILE_FLAGS "${CUSTOM_COMPILE_FLAGS} -Wno-deprecated-declarations")
+    set(CUSTOM_COMPILE_FLAGS "${CUSTOM_COMPILE_FLAGS};-Wno-deprecated-declarations")
 elseif(USE_MSVC)
-    set(CUSTOM_COMPILE_FLAGS "${CUSTOM_COMPILE_FLAGS} /wd4996")
+    set(CUSTOM_COMPILE_FLAGS "${CUSTOM_COMPILE_FLAGS};/wd4996")
+endif()
+
+# OSX demands that the linker resolve all symbols at build time
+# we pass this flag to allow dynamic linking
+if(APPLE)
+    set(CUSTOM_LINK_FLAGS "${CUSTOM_LINK_FLAGS};-undefined;dynamic_lookup")
 endif()
 
 set_target_properties(PyOpenColorIO
 	PROPERTIES
-		COMPILE_FLAGS ${CUSTOM_COMPILE_FLAGS}
-		CXX_STANDARD  ${APP_CXX_STANDARD}
+		COMPILE_OPTIONS "${CUSTOM_COMPILE_FLAGS}"
+		LINK_OPTIONS "${CUSTOM_LINK_FLAGS}"
+		CXX_STANDARD ${APP_CXX_STANDARD}
 )
 
 if(NOT BUILD_SHARED_LIBS)
@@ -180,14 +188,6 @@ if (UNIX AND NOT CMAKE_SKIP_RPATH)
         set_target_properties(PyOpenColorIO PROPERTIES
             INSTALL_RPATH "$ORIGIN/../..;${CMAKE_INSTALL_RPATH}")
     endif()
-endif()
-
-# OSX demands that the linker resolve all symbols at build time
-# we pass this flag to allow dynamic linking
-if(APPLE)
-	set_target_properties(PyOpenColorIO PROPERTIES
-		LINK_FLAGS "-undefined dynamic_lookup"
-	)
 endif()
 
 target_include_directories(PyOpenColorIO
@@ -227,16 +227,22 @@ target_compile_definitions(PyOpenColorIO
 		PY_VERSION_PATCH=${Python_VERSION_PATCH}
 )
 
+# Set to site-package location.
 if(WIN32)
     set(_Python_VARIANT_PATH "${CMAKE_INSTALL_LIBDIR}/site-packages")
 else()
     set(_Python_VARIANT_PATH "${CMAKE_INSTALL_LIBDIR}/python${Python_VERSION_MAJOR}.${Python_VERSION_MINOR}/site-packages")
 endif()
 
-# Create an internal global variable to access it in another scope but not publicly visible
-# using ccmake.
+# Create an internal global variable to access it in another scope but not publicly visible.
+# The site-package location is needed in setup_ocio.bat.in and setup_ocio.sh.in.
 set(PYTHON_VARIANT_PATH ${_Python_VARIANT_PATH} CACHE INTERNAL "")
 
+# Set to PyOpenColorIO site-package location.
+set(_PyOpenColorIO_SITE_PACKAGE_DIR "${PYTHON_VARIANT_PATH}/PyOpenColorIO")
+
 install(TARGETS PyOpenColorIO
-    LIBRARY DESTINATION ${_Python_VARIANT_PATH}
+    LIBRARY DESTINATION ${_PyOpenColorIO_SITE_PACKAGE_DIR}
 )
+
+install(FILES __init__.py DESTINATION ${_PyOpenColorIO_SITE_PACKAGE_DIR})

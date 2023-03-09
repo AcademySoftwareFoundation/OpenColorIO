@@ -34,7 +34,9 @@ if(OCIO_USE_SIMD)
 endif(OCIO_USE_SIMD)
 
 set_target_properties(test_gpu_exec PROPERTIES 
-	COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS}")
+	COMPILE_OPTIONS "${PLATFORM_COMPILE_OPTIONS}"
+	LINK_OPTIONS "${PLATFORM_LINK_OPTIONS}"
+)
 
 target_link_libraries(test_gpu_exec
 	PRIVATE
