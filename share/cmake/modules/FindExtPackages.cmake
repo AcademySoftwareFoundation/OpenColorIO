@@ -21,6 +21,17 @@ set(CMAKE_FIND_PACKAGE_NO_PACKAGE_REGISTRY ON CACHE BOOL
 set(CMAKE_FIND_PACKAGE_NO_SYSTEM_PACKAGE_REGISTRY ON CACHE BOOL
     "Disable CMake System Package Registry when finding packages")
 
+if (APPLE)
+    # Store the previous value of CMAKE_FIND_FRAMEWORK and CMAKE_FIND_APPBUNDLE.
+    set(_PREVIOUS_CMAKE_FIND_FRAMEWORK ${CMAKE_FIND_FRAMEWORK})
+    set(_PREVIOUS_CMAKE_FIND_APPBUNDLE ${CMAKE_FIND_APPBUNDLE})
+
+    # Prioritize other paths before Frameworks and Appbundle for find_path, find_library and 
+    # find_package.
+    set(CMAKE_FIND_FRAMEWORK LAST)
+    set(CMAKE_FIND_APPBUNDLE LAST)
+endif()
+
 ###############################################################################
 ### Packages and versions ###
 
@@ -38,17 +49,96 @@ find_package(pystring 1.1.3 REQUIRED)
 
 # Imath (>=3.1)
 # https://github.com/AcademySoftwareFoundation/Imath
-set(_Imath_ExternalProject_VERSION "3.1.5")
+set(_Imath_ExternalProject_VERSION "3.1.6")
 find_package(Imath 3.0 REQUIRED)
 
-# ZLIB
-# https://github.com/madler/zlib
-set(_zlib_ExternalProject_VERSION "1.2.12")
-find_package(zlib REQUIRED)
+###############################################################################
+### ZLIB (https://github.com/madler/zlib)
+###
+### The following variables can be set:
+### ZLIB_ROOT               Location of ZLIB library file and includes folder.
+###                         Alternatively, ZLIB_LIBRARY and ZLIB_INCLUDE_DIR can be used.
+###
+### ZLIB_LIBRARY            Location of ZLIB library file.
+### ZLIB_INCLUDE_DIR        Location of ZLIB includes folder.
+###
+### ZLIB_VERSION            ZLIB Version (CMake 3.26+)
+### ZLIB_VERSION_STRING     ZLIB Version (CMake < 3.26)
+###
+###############################################################################
+# ZLIB 1.2.13 is used since it fixes a critical vulnerability.
+# See https://nvd.nist.gov/vuln/detail/CVE-2022-37434
+# See https://github.com/madler/zlib/releases/tag/v1.2.13
+set(_ZLIB_FIND_VERSION "1.2.13")
+set(_ZLIB_ExternalProject_VERSION ${_ZLIB_FIND_VERSION})
+
+if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
+    # ZLIB_USE_STATIC_LIBS is supported only from CMake 3.24+.
+    if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.24.0") 
+        if (ZLIB_STATIC_LIBRARY)
+            set(ZLIB_USE_STATIC_LIBS "${ZLIB_STATIC_LIBRARY}")
+        endif()
+    else() # For CMake < 3.24 since ZLIB_USE_STATIC_LIBS is not available.
+        if(NOT ZLIB_LIBRARY)
+            if(DEFINED CMAKE_FIND_LIBRARY_PREFIXES)
+                set(_ZLIB_ORIG_CMAKE_FIND_LIBRARY_PREFIXES "${CMAKE_FIND_LIBRARY_PREFIXES}")
+            else()
+                set(_ZLIB_ORIG_CMAKE_FIND_LIBRARY_PREFIXES)
+            endif()
+
+            if(DEFINED CMAKE_FIND_LIBRARY_SUFFIXES)
+                set(_ZLIB_ORIG_CMAKE_FIND_LIBRARY_SUFFIXES "${CMAKE_FIND_LIBRARY_SUFFIXES}")
+            else()
+                set(_ZLIB_ORIG_CMAKE_FIND_LIBRARY_SUFFIXES)
+            endif()
+
+            # Prefix/suffix for windows.
+            if(WIN32)
+                list(APPEND CMAKE_FIND_LIBRARY_PREFIXES "" "lib")
+                list(APPEND CMAKE_FIND_LIBRARY_SUFFIXES ".dll.a")
+            endif()
+
+            # Check if static lib is preferred.
+            if(ZLIB_STATIC_LIBRARY OR ZLIB_USE_STATIC_LIBS)
+                if(WIN32)
+                    set(CMAKE_FIND_LIBRARY_SUFFIXES .lib .a ${CMAKE_FIND_LIBRARY_SUFFIXES})
+                else()
+                    set(CMAKE_FIND_LIBRARY_SUFFIXES .a)
+                endif()
+            endif()
+        endif()
+    endif()
+
+    set(_ZLIB_REQUIRED REQUIRED)
+    # Override REQUIRED if package can be installed
+    if(OCIO_INSTALL_EXT_PACKAGES STREQUAL MISSING)
+        set(_ZLIB_REQUIRED "")
+    endif()
+
+    find_package(ZLIB ${_ZLIB_FIND_VERSION} ${_ZLIB_REQUIRED})
+
+    # Restore the original find library ordering
+    if(DEFINED _ZLIB_ORIG_CMAKE_FIND_LIBRARY_SUFFIXES)
+        set(CMAKE_FIND_LIBRARY_SUFFIXES "${_ZLIB_ORIG_CMAKE_FIND_LIBRARY_SUFFIXES}")
+    else()
+        set(CMAKE_FIND_LIBRARY_SUFFIXES)
+    endif()
+
+    if(DEFINED _ZLIB_ORIG_CMAKE_FIND_LIBRARY_PREFIXES)
+        set(CMAKE_FIND_LIBRARY_PREFIXES "${_ZLIB_ORIG_CMAKE_FIND_LIBRARY_PREFIXES}")
+    else()
+        set(CMAKE_FIND_LIBRARY_PREFIXES)
+    endif()
+endif()
+
+if(NOT ZLIB_FOUND AND OCIO_INSTALL_EXT_PACKAGES AND NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL NONE)
+    include(InstallZLIB)
+endif()
+###############################################################################
 
 # minizip-ng
 # https://github.com/zlib-ng/minizip-ng
-find_package(minizip-ng 3.0.6 REQUIRED)
+find_package(minizip-ng 3.0.7 REQUIRED)
 
 if(OCIO_BUILD_APPS)
 
@@ -156,4 +246,10 @@ if(OCIO_BUILD_TESTS)
     else()
         message(WARNING "Could NOT find OpenImageIO. Skipping build of the OSL unit tests.")
     endif()
+endif()
+
+if (APPLE)
+    # Restore CMAKE_FIND_FRAMEWORK and CMAKE_FIND_APPBUNDLE values.
+    set(CMAKE_FIND_FRAMEWORK ${_PREVIOUS_CMAKE_FIND_FRAMEWORK})
+    set(CMAKE_FIND_APPBUNDLE ${_PREVIOUS_CMAKE_FIND_APPBUNDLE})
 endif()

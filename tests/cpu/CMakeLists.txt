@@ -14,7 +14,6 @@ function(add_ocio_test NAME SOURCES PRIVATE_INCLUDES)
     )
     target_link_libraries(${TEST_BINARY}
         PRIVATE
-            OpenColorIO
             expat::expat
             Imath::Imath
             pystring::pystring
@@ -39,6 +38,7 @@ function(add_ocio_test NAME SOURCES PRIVATE_INCLUDES)
     if(PRIVATE_INCLUDES)
         target_include_directories(${TEST_BINARY}
             PRIVATE
+                "$<TARGET_PROPERTY:OpenColorIO,INCLUDE_DIRECTORIES>"
                 "${CMAKE_SOURCE_DIR}/tests/cpu"
                 "${CMAKE_BINARY_DIR}/generated_include"
         )
@@ -67,9 +67,21 @@ function(add_ocio_test NAME SOURCES PRIVATE_INCLUDES)
         endif()
     endif(WIN32)
     set_target_properties(${TEST_BINARY} PROPERTIES
-        COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS}")
+        COMPILE_OPTIONS "${PLATFORM_COMPILE_OPTIONS}"
+        LINK_OPTIONS "${PLATFORM_LINK_OPTIONS}"
+    )
 
     add_test(NAME ${TEST_NAME} COMMAND ${TEST_BINARY})
+
+    if(OCIO_ENABLE_SANITIZER)
+        # Ignore odr-violation warning coming supposeddly from compiling OCIO
+        # sources within the test target as well as linking to the library.
+        # Provide better stack traces for malloc related leaks.
+        set_tests_properties(${TEST_NAME} PROPERTIES
+            ENVIRONMENT
+                "ASAN_OPTIONS=detect_odr_violation=0:fast_unwind_on_malloc=0"
+        )
+    endif()
 endfunction(add_ocio_test)
 
 # Eventually we will factor out each test into it's own executable

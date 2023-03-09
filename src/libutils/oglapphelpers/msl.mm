@@ -396,7 +396,7 @@ void MetalBuilder::setUniforms(id<MTLRenderCommandEncoder> renderCmdEncoder)
                 const int dummyInt = 123456789;
                 const int* v = size == 0 ? &dummyInt : data.m_vectorInt.m_getVector();
                 size = size == 0 ? sizeof(int) : size * sizeof(int);
-                [renderCmdEncoder setFragmentBytes:v length:size * sizeof(int) atIndex:uniformId++];
+                [renderCmdEncoder setFragmentBytes:v length:size atIndex:uniformId++];
             }
             break;
                 

@@ -5,72 +5,79 @@
 ###############################################################################
 # Define the global compilation and link flags.
 
-set(PLATFORM_COMPILE_FLAGS "")
+set(PLATFORM_COMPILE_OPTIONS "")
+set(PLATFORM_LINK_OPTIONS "")
 
 if(USE_MSVC)
 
-    set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} /DUSE_MSVC")
+    set(PLATFORM_COMPILE_OPTIONS "${PLATFORM_COMPILE_OPTIONS};/DUSE_MSVC")
 
     # /we4062 Enables warning in switch when an enumeration value is not explicitly handled.
-    set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} /EHsc /DWIN32 /we4062")
+    set(PLATFORM_COMPILE_OPTIONS "${PLATFORM_COMPILE_OPTIONS};/EHsc;/DWIN32;/we4062")
 
     if(${CMAKE_CXX_STANDARD} GREATER_EQUAL 17)
         # Inheriting from std::iterator is deprecated starting with C++17 and Yaml 0.6.3 does that.
-        set(PLATFORM_COMPILE_FLAGS 
-            "${PLATFORM_COMPILE_FLAGS} /D_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING"
+        set(PLATFORM_COMPILE_OPTIONS
+            "${PLATFORM_COMPILE_OPTIONS};/D_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING"
         )
     endif()
 
     # Explicitely specify the default warning level i.e. /W3.
     # Note: Do not use /Wall (i.e. /W4) which adds 'informational' warnings.
-    set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} /W3")
+    set(PLATFORM_COMPILE_OPTIONS "${PLATFORM_COMPILE_OPTIONS};/W3")
 
     # Do enable C4701 (Potentially uninitialized local variable 'name' used), which is level 4.
     # This is because strtoX-based from_chars leave the value variable unmodified.
-    set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} /we4701")
+    set(PLATFORM_COMPILE_OPTIONS "${PLATFORM_COMPILE_OPTIONS};/we4701")
 
     if(OCIO_WARNING_AS_ERROR)
-        set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} /WX")
+        set(PLATFORM_COMPILE_OPTIONS "${PLATFORM_COMPILE_OPTIONS};/WX")
     endif()
 
 elseif(USE_CLANG)
 
-    set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} -DUSE_CLANG")
+    set(PLATFORM_COMPILE_OPTIONS "${PLATFORM_COMPILE_OPTIONS};-DUSE_CLANG")
 
     # Use of 'register' specifier must be removed for C++17 support.
-    set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} -Wno-deprecated-register")
+    set(PLATFORM_COMPILE_OPTIONS "${PLATFORM_COMPILE_OPTIONS};-Wno-deprecated-register")
 
 elseif(USE_GCC)
 
-    set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} -DUSE_GCC")
+    set(PLATFORM_COMPILE_OPTIONS "${PLATFORM_COMPILE_OPTIONS};-DUSE_GCC")
 
 endif()
 
 
 if(USE_GCC OR USE_CLANG)
 
-    set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} -Wall")
+    set(PLATFORM_COMPILE_OPTIONS "${PLATFORM_COMPILE_OPTIONS};-Wall")
 
     # Add more warning detection.
-    set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} -Wextra")
+    set(PLATFORM_COMPILE_OPTIONS "${PLATFORM_COMPILE_OPTIONS};-Wextra")
 
     # -Wswitch-enum Enables warning in switch when an enumeration value is not explicitly handled.
-    set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} -Wswitch-enum")
+    set(PLATFORM_COMPILE_OPTIONS "${PLATFORM_COMPILE_OPTIONS};-Wswitch-enum")
 
     if(OCIO_WARNING_AS_ERROR)
-        set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} -Werror")
+        set(PLATFORM_COMPILE_OPTIONS "${PLATFORM_COMPILE_OPTIONS};-Werror")
     endif()
 
     if(APPLE)
         # TODO: There are still some deprecated methods.
-        set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} -Wno-deprecated-declarations")
+        set(PLATFORM_COMPILE_OPTIONS "${PLATFORM_COMPILE_OPTIONS};-Wno-deprecated-declarations")
+    endif()
+
+    if(OCIO_ENABLE_SANITIZER)
+        set(PLATFORM_COMPILE_OPTIONS "${PLATFORM_COMPILE_OPTIONS};-fno-omit-frame-pointer;-fsanitize=address")
+        set(PLATFORM_LINK_OPTIONS "${PLATFORM_LINK_OPTIONS};-fsanitize=address")
     endif()
 
 endif()
 
 # An advanced variable will not be displayed in any of the cmake GUIs
 
-mark_as_advanced(PLATFORM_COMPILE_FLAGS)
+mark_as_advanced(PLATFORM_COMPILE_OPTIONS)
+mark_as_advanced(PLATFORM_LINK_OPTIONS)
 
 
 ###############################################################################

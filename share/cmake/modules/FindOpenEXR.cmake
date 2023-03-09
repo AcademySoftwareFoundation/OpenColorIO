@@ -45,6 +45,10 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
     if(OpenEXR_FOUND)
         get_target_property(OpenEXR_LIBRARY OpenEXR::OpenEXR LOCATION)
         get_target_property(OpenEXR_INCLUDE_DIR OpenEXR::OpenEXR INTERFACE_INCLUDE_DIRECTORIES)
+        
+        # IMPORTED_GLOBAL property must be set to TRUE since alisasing a non-global imported target
+        # is not possible until CMake 3.18+.
+        set_target_properties(OpenEXR::OpenEXR PROPERTIES IMPORTED_GLOBAL TRUE)
     endif()
 
     # Override REQUIRED if package can be installed
@@ -77,7 +81,7 @@ macro(set_target_location target_name)
     endif()
 endmacro()
 
-if(NOT OpenEXR_FOUND AND NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL NONE)
+if(NOT OpenEXR_FOUND AND OCIO_INSTALL_EXT_PACKAGES AND NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL NONE)
     include(ExternalProject)
     include(GNUInstallDirs)
 
@@ -85,13 +89,14 @@ if(NOT OpenEXR_FOUND AND NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL NONE)
     set(_EXT_BUILD_ROOT "${CMAKE_BINARY_DIR}/ext/build")
 
     # Required dependency
-    # OCIO custom module to find ZLIB. (Findzlib)
-    find_package(zlib)
     if(NOT ZLIB_FOUND)
-        message(STATUS "ZLib is required to build OpenEXR.")
-        return()
+        find_package(ZLIB)
+        if(NOT ZLIB_FOUND)
+            message(STATUS "ZLib is required to build OpenEXR.")
+            return()
+        endif()
     endif()
-
+    
     find_package(Threads)
     if(NOT Threads_FOUND)
         message(STATUS "Threads is required to build OpenEXR.")
@@ -198,7 +203,8 @@ if(NOT OpenEXR_FOUND AND NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL NONE)
                 ${CMAKE_COMMAND} --build .
                                  --config ${CMAKE_BUILD_TYPE}
                                  --target install
-                                 --parallel
+                                # Prevent some CI jobs to fail when building.
+                                #  --parallel
         )
 
         # Additional targets. ALIAS to UNKNOWN imported target is only possible

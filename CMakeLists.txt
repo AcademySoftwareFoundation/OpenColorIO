@@ -5,7 +5,7 @@
 ###############################################################################
 # CMake definition.
 
-cmake_minimum_required(VERSION 3.12)
+cmake_minimum_required(VERSION 3.13)
 
 set(CMAKE_MODULE_PATH
     ${CMAKE_MODULE_PATH}
@@ -137,10 +137,18 @@ set (OCIO_PYTHON_VERSION "" CACHE STRING
 
 option(OCIO_BUILD_JAVA "Specify whether to build java bindings" OFF)
 
-option(OCIO_WARNING_AS_ERROR "Set build error level for CI testing" OFF)
-
 if (WIN32)
     option(OCIO_USE_WINDOWS_UNICODE "Compile with Windows Unicode support" ON)
+endif()
+
+
+###############################################################################
+# Warnings / debugging settings
+
+option(OCIO_WARNING_AS_ERROR "Set build error level for CI testing" OFF)
+
+if (NOT WIN32)
+    option(OCIO_ENABLE_SANITIZER "Specify whether to enable compiler sanitizers (address)" OFF)
 endif()
 
 
@@ -251,6 +259,15 @@ if(OCIO_BUILD_STATIC)
 	endif()
 endif()
 
+if (NOT BUILD_SHARED_LIBS AND NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL NONE)
+   message(STATUS "Note that building the static version of OpenColorIO does not embed the dependencies\  
+   into the library file. The needed dependencies must be linked to the consumer
+   application or shared library that uses static OpenColorIO.
+
+   The following mandatory dependencies MUST be linked to the consumer application or shared library:
+   expat, yaml-cpp, Imath, pystring, minizip-ng and ZLIB")
+endif()
+
 
 ###############################################################################
 # Find or install external dependencies
@@ -299,6 +316,8 @@ set(OCIO_TARGETS_EXPORT_NAME "${PROJECT_NAME}Targets.cmake")
 set(OCIO_VERSION_CONFIG "${CMAKE_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake")
 set(OCIO_PROJECT_CONFIG "${CMAKE_BINARY_DIR}/${PROJECT_NAME}Config.cmake")
 set(OCIO_CONFIG_INSTALL_DIR "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}")
+set(OCIO_CUSTOM_FIND_MODULE_DIR "${CMAKE_INSTALL_PREFIX}/share/OpenColorIO/cmake/modules")
+set(OCIO_CUSTOM_MACROS_MODULE_DIR "${CMAKE_INSTALL_PREFIX}/share/OpenColorIO/cmake/macros")
 
 # Version fetched from the top level project()
 write_basic_package_version_file(
@@ -320,6 +339,24 @@ install(
     NAMESPACE ${PROJECT_NAME}::
     FILE ${OCIO_TARGETS_EXPORT_NAME}
 )
+
+if (NOT BUILD_SHARED_LIBS)
+    # Install custom macros used in the find modules.
+    install(FILES
+        ${CMAKE_CURRENT_LIST_DIR}/share/cmake/macros/VersionUtils.cmake
+        DESTINATION ${OCIO_CUSTOM_MACROS_MODULE_DIR}
+    )
+
+    # Install custom Find modules.
+    install(FILES
+        ${CMAKE_CURRENT_LIST_DIR}/share/cmake/modules/Findexpat.cmake
+        ${CMAKE_CURRENT_LIST_DIR}/share/cmake/modules/FindImath.cmake
+        ${CMAKE_CURRENT_LIST_DIR}/share/cmake/modules/Findpystring.cmake
+        ${CMAKE_CURRENT_LIST_DIR}/share/cmake/modules/Findminizip-ng.cmake
+        ${CMAKE_CURRENT_LIST_DIR}/share/cmake/modules/Findyaml-cpp.cmake
+        DESTINATION ${OCIO_CUSTOM_FIND_MODULE_DIR}
+    )
+endif()
 
 install(
     FILES "${OCIO_PROJECT_CONFIG}" "${OCIO_VERSION_CONFIG}"
