@@ -8,7 +8,9 @@ set(SOURCES
 add_library(testutils STATIC ${SOURCES})
 
 set_target_properties(testutils PROPERTIES
-    COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS}")
+    COMPILE_OPTIONS "${PLATFORM_COMPILE_OPTIONS}"
+    LINK_OPTIONS "${PLATFORM_LINK_OPTIONS}"
+)
 
 target_include_directories(testutils
     PUBLIC
@@ -20,4 +22,3 @@ target_link_libraries(testutils
         apputils
         utils::strings
 )
-

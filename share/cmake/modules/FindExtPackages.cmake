@@ -49,7 +49,7 @@ find_package(pystring 1.1.3 REQUIRED)
 
 # Imath (>=3.1)
 # https://github.com/AcademySoftwareFoundation/Imath
-set(_Imath_ExternalProject_VERSION "3.1.5")
+set(_Imath_ExternalProject_VERSION "3.1.6")
 find_package(Imath 3.0 REQUIRED)
 
 ###############################################################################

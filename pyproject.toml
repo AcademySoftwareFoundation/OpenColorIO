@@ -2,7 +2,7 @@
 requires = [
     "setuptools>=42",
     "wheel",
-    "cmake>=3.12",
+    "cmake>=3.13",
     "ninja; sys_platform != 'win32' and platform_machine != 'arm64'",
     # Documentation requirements
     "six",
