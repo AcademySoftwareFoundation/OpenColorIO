@@ -196,7 +196,7 @@ if((OCIO_BUILD_APPS AND OCIO_USE_OIIO_FOR_APPS) OR OCIO_BUILD_TESTS)
     set(OPENIMAGEIO_CONFIG_DO_NOT_FIND_IMATH 1)
 
     ###############################################################################
-    # OpenEXR (https://github.com/AcademySoftwareFoundation/openexr)
+    # OpenImageIO (https://github.com/OpenImageIO/oiio)
     #
     # Variables defined by OpemImageIO CMake's configuration files:
     #   OpenImageIO_FOUND          - Indicate whether the library was found or not
