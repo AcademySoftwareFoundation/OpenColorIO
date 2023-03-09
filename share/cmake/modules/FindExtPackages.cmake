@@ -184,6 +184,8 @@ if(OCIO_BUILD_PYTHON OR OCIO_BUILD_DOCS)
     endif()
 endif()
 
+# Set OpenEXR Minimum version as a variable since it it used at multiple places.
+set(OpenEXR_MININUM_VERSION "3.0.5")
 if((OCIO_BUILD_APPS AND OCIO_USE_OIIO_FOR_APPS) OR OCIO_BUILD_TESTS)
     # OpenImageIO is required for OSL unit test and optional for apps.
 
@@ -195,26 +197,39 @@ if((OCIO_BUILD_APPS AND OCIO_USE_OIIO_FOR_APPS) OR OCIO_BUILD_TESTS)
     # Supported from OIIO 2.4+. Setting this for lower versions doesn't affect anything.
     set(OPENIMAGEIO_CONFIG_DO_NOT_FIND_IMATH 1)
 
-    ###############################################################################
-    # OpenImageIO (https://github.com/OpenImageIO/oiio)
-    #
-    # Variables defined by OpemImageIO CMake's configuration files:
-    #   OpenImageIO_FOUND          - Indicate whether the library was found or not
-    #   OpenImageIO_LIB_DIR        - Library's directory
-    #   OpenImageIO_INCLUDE_DIR    - Location of the header files
-    #   OpenImageIO_VERSION        - Library's version
-    #
-    # Imported targets defined by this module, if found:
-    #   OpenImageIO::OpenImageIO
-    #   OpenImageIO::OpenImageIO_Util
-    #
-    ###############################################################################
-    # Calling find_package in CONFIG mode using PREFER_CONFIG option as OIIO support
-    # config file since 2.1+ and OCIO minimum version is over that.
-    ocio_handle_dependency(  OpenImageIO PREFER_CONFIG
-                             MIN_VERSION ${OIIO_VERSION}
-                             RECOMMENDED_VERSION ${OIIO_RECOMMENDED_VERSION}
-                             PROMOTE_TARGET OpenImageIO::OpenImageIO)
+    include(ocio_check_dependency_version)
+    # Since OpenImageIO will try to find OpenEXR through its OpenImageIOConfig.cmake file,
+    # let's try to find OpenEXR first and if the version is too old, OCIO will not try to find
+    # OpenImageIO.
+    ocio_check_dependency_version(  OpenEXR "is_OpenEXR_VERSION_valid" 
+                                    MIN_VERSION ${OpenEXR_MININUM_VERSION} 
+                                    CONFIG)
+
+    # Do not try to find OpenImageIO if the version of OpenEXR is too old.                                    
+    if (is_OpenEXR_VERSION_valid)
+        ###############################################################################
+        # OpenImageIO (https://github.com/OpenImageIO/oiio)
+        #
+        # Variables defined by OpemImageIO CMake's configuration files:
+        #   OpenImageIO_FOUND          - Indicate whether the library was found or not
+        #   OpenImageIO_LIB_DIR        - Library's directory
+        #   OpenImageIO_INCLUDE_DIR    - Location of the header files
+        #   OpenImageIO_VERSION        - Library's version
+        #
+        # Imported targets defined by this module, if found:
+        #   OpenImageIO::OpenImageIO
+        #   OpenImageIO::OpenImageIO_Util
+        #
+        ###############################################################################
+        # Calling find_package in CONFIG mode using PREFER_CONFIG option as OIIO support
+        # config file since 2.1+ and OCIO minimum version is over that.
+        ocio_handle_dependency(  OpenImageIO PREFER_CONFIG
+                                 MIN_VERSION ${OIIO_VERSION}
+                                 RECOMMENDED_VERSION ${OIIO_RECOMMENDED_VERSION}
+                                 PROMOTE_TARGET OpenImageIO::OpenImageIO)
+    else()
+        message(WARNING "Skipping OpenImageIO because the OpenEXR found by OpenImageIO is too old (under ${OpenEXR_MININUM_VERSION})")
+    endif()
 endif()
 
 if(OCIO_BUILD_APPS)
@@ -242,8 +257,8 @@ if(OCIO_BUILD_APPS)
         #
         ###############################################################################
         # Calling find_package in CONFIG mode using PREFER_CONFIG option.
-        ocio_handle_dependency(  OpenEXR REQUIRED PREFER_CONFIG ALLOW_INSTALL
-                                 MIN_VERSION 3.0.4
+        ocio_handle_dependency(  OpenEXR PREFER_CONFIG ALLOW_INSTALL
+                                 MIN_VERSION ${OpenEXR_MININUM_VERSION}
                                  RECOMMENDED_VERSION 3.1.5
                                  RECOMMENDED_VERSION_REASON "Latest version tested with OCIO"
                                  PROMOTE_TARGET OpenEXR::OpenEXR)
