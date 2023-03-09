@@ -159,8 +159,9 @@ void removeDirectory(const char * directoryPath)
                 }   
             }   
         }
-    }   
+    }
     remove(directoryPath);
+    closedir(dir);
 }
 #endif
 
@@ -174,5 +175,3 @@ void RemoveTemporaryDirectory(const std::string & directoryPath)
 }
 
 } // namespace OCIO_NAMESPACE
-
-

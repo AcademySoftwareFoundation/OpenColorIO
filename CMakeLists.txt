@@ -5,7 +5,7 @@
 ###############################################################################
 # CMake definition.
 
-cmake_minimum_required(VERSION 3.12)
+cmake_minimum_required(VERSION 3.13)
 
 set(CMAKE_MODULE_PATH
     ${CMAKE_MODULE_PATH}
@@ -137,10 +137,18 @@ set (OCIO_PYTHON_VERSION "" CACHE STRING
 
 option(OCIO_BUILD_JAVA "Specify whether to build java bindings" OFF)
 
-option(OCIO_WARNING_AS_ERROR "Set build error level for CI testing" OFF)
-
 if (WIN32)
     option(OCIO_USE_WINDOWS_UNICODE "Compile with Windows Unicode support" ON)
+endif()
+
+
+###############################################################################
+# Warnings / debugging settings
+
+option(OCIO_WARNING_AS_ERROR "Set build error level for CI testing" OFF)
+
+if (NOT WIN32)
+    option(OCIO_ENABLE_SANITIZER "Specify whether to enable compiler sanitizers (address)" OFF)
 endif()
 
 

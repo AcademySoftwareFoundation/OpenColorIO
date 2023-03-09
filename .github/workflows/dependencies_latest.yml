@@ -1,0 +1,388 @@
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright Contributors to the OpenColorIO Project.
+#
+# GitHub Actions workflow file
+# https://help.github.com/en/actions/reference/workflow-syntax-for-github-actions
+
+name: Dependencies latest
+
+on:
+  pull_request:
+    branches-ignore:
+      - RB-0.*
+      - RB-1.*
+      - gh-pages
+    tags-ignore:
+      - v0.*
+      - v1.*
+    paths:
+      - .github/workflows/dependencies_latest.yml
+  schedule:
+    # Nightly build
+    - cron: "0 0 * * *"
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Linux latest ext packages
+  # ---------------------------------------------------------------------------
+
+  linux_latest:
+    name: 'Linux CentOS 7 VFX CY${{ matrix.vfx-cy }} latest 
+      <${{ matrix.compiler-desc }} 
+       cxx=${{ matrix.cxx-standard }}, 
+       docs=${{ matrix.build-docs }}>'
+    # Don't run on OCIO forks
+    if: github.repository == 'AcademySoftwareFoundation/OpenColorIO'
+    # GH-hosted VM. The build runs in CentOS 7 'container' defined below.
+    runs-on: ubuntu-latest
+    container:
+      # DockerHub: https://hub.docker.com/u/aswf
+      # Source: https://github.com/AcademySoftwareFoundation/aswf-docker
+      image: aswf/ci-base:${{ matrix.vfx-cy }}
+    strategy:
+      matrix:
+        build: [1, 2, 3, 4]
+        include:
+          # -------------------------------------------------------------------
+          # GCC
+          # -------------------------------------------------------------------
+          - build: 1
+            build-docs: 'ON'
+            build-openfx: 'ON'
+            cxx-standard: 17
+            cxx-compiler: g++
+            cc-compiler: gcc
+            compiler-desc: GCC
+            vfx-cy: 2022
+          - build: 2
+            build-docs: 'OFF'
+            build-openfx: 'OFF'
+            cxx-standard: 14
+            cxx-compiler: g++
+            cc-compiler: gcc
+            compiler-desc: GCC
+            vfx-cy: 2021
+          # -------------------------------------------------------------------
+          # Clang
+          # -------------------------------------------------------------------
+          - build: 3
+            build-docs: 'OFF'
+            build-openfx: 'OFF'
+            cxx-standard: 17
+            cxx-compiler: clang++
+            cc-compiler: clang
+            compiler-desc: Clang
+            vfx-cy: 2022
+          - build: 4
+            build-docs: 'ON'
+            build-openfx: 'ON'
+            cxx-standard: 14
+            cxx-compiler: clang++
+            cc-compiler: clang
+            compiler-desc: Clang
+            vfx-cy: 2021
+    env:
+      CXX: ${{ matrix.cxx-compiler }}
+      CC: ${{ matrix.cc-compiler }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Install docs env
+        run: share/ci/scripts/linux/yum/install_docs_env.sh
+        if: matrix.build-docs == 'ON'
+      - name: Install tests env
+        run: share/ci/scripts/linux/yum/install_tests_env.sh
+      - name: Setup ext environment
+        run: |
+          EXT_PATH=/usr/local
+          echo "EXT_PATH=$EXT_PATH" >> $GITHUB_ENV
+      - name: Install indirect dependencies
+        run: |
+          share/ci/scripts/multi/install_pugixml.sh latest
+      - name: Install fixed ext package versions
+        # Minizip-ng depends on ZLIB. ZLIB must be installed first.
+        run: |
+          share/ci/scripts/multi/install_expat.sh 2.4.1 $EXT_PATH
+          share/ci/scripts/multi/install_lcms2.sh 2.2 $EXT_PATH
+          share/ci/scripts/multi/install_yaml-cpp.sh 0.7.0 $EXT_PATH
+          share/ci/scripts/multi/install_pystring.sh 1.1.3 $EXT_PATH
+          share/ci/scripts/multi/install_pybind11.sh 2.9.2 $EXT_PATH
+          share/ci/scripts/multi/install_zlib.sh 1.2.12 $EXT_PATH
+          share/ci/scripts/multi/install_minizip-ng.sh 3.0.6 $EXT_PATH
+      - name: Install latest ext package versions
+        run: |
+          share/ci/scripts/multi/install_imath.sh latest $EXT_PATH
+          share/ci/scripts/multi/install_openexr.sh latest $EXT_PATH
+          share/ci/scripts/multi/install_oiio.sh latest $EXT_PATH
+          share/ci/scripts/multi/install_osl.sh latest $EXT_PATH
+          share/ci/scripts/multi/install_openfx.sh latest $EXT_PATH
+      - name: Create build directories
+        run: |
+          mkdir _install
+          mkdir _build
+      - name: Configure
+        run: |
+          cmake ../. \
+                -DCMAKE_INSTALL_PREFIX=../_install \
+                -DCMAKE_BUILD_TYPE=Release \
+                -DCMAKE_CXX_STANDARD=${{ matrix.cxx-standard }} \
+                -DOCIO_BUILD_DOCS=${{ matrix.build-docs }} \
+                -DOCIO_BUILD_OPENFX=${{ matrix.build-openfx }} \
+                -DOCIO_BUILD_GPU_TESTS=OFF \
+                -DOCIO_INSTALL_EXT_PACKAGES=NONE \
+                -DOCIO_WARNING_AS_ERROR=OFF \
+                -DPython_EXECUTABLE=$(which python) \
+                -DOCIO_USE_OIIO_CMAKE_CONFIG=ON
+        working-directory: _build
+      - name: Build
+        run: |
+          cmake --build . \
+                --target install \
+                --config Release \
+                -- -j$(nproc)
+        working-directory: _build
+      - name: Test
+        run: ctest -V -C Release
+        working-directory: _build
+      - name: Test CMake Consumer
+        run: |
+          cmake . \
+                -DCMAKE_PREFIX_PATH=../../../_install \
+                -DCMAKE_BUILD_TYPE=Release
+          cmake --build . \
+                --config Release
+          ./consumer
+        working-directory: _build/tests/cmake-consumer-dist
+
+  # ---------------------------------------------------------------------------
+  # MacOS latest ext packages
+  # ---------------------------------------------------------------------------
+
+  macos-latest:
+    name: 'macOS latest 
+      <AppleClang 
+       cxx=${{ matrix.cxx-standard }}, 
+       docs=${{ matrix.build-docs }}, 
+       python=${{ matrix.python-version }}>'
+    # Don't run on OCIO forks
+    if: github.repository == 'AcademySoftwareFoundation/OpenColorIO'
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        build: [1, 2]
+        include:
+          - build: 1
+            build-docs: 'ON'
+            build-openfx: 'ON'
+            cxx-standard: 17
+            python-version: '3.11'
+          - build: 2
+            build-docs: 'ON'
+            build-openfx: 'ON'
+            cxx-standard: 14
+            python-version: '3.9'
+    steps:
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Install docs env
+        run: share/ci/scripts/macos/install_docs_env.sh
+        if: matrix.build-docs == 'ON'
+      - name: Install tests env
+        run: share/ci/scripts/macos/install_tests_env.sh
+      - name: Setup ext environment
+        run: |
+          EXT_PATH=/usr/local
+          echo "EXT_PATH=$EXT_PATH" >> $GITHUB_ENV
+      - name: Install indirect dependencies
+        run: |
+          share/ci/scripts/macos/install_bison.sh latest
+          share/ci/scripts/macos/install_boost.sh latest
+          share/ci/scripts/multi/install_pugixml.sh latest $EXT_PATH
+      - name: Install fixed ext package versions
+        # Minizip-ng depends on ZLIB. ZLIB must be installed first.
+        run: |
+          share/ci/scripts/multi/install_expat.sh 2.4.1 $EXT_PATH
+          share/ci/scripts/multi/install_lcms2.sh 2.2 $EXT_PATH
+          share/ci/scripts/multi/install_yaml-cpp.sh 0.7.0 $EXT_PATH
+          share/ci/scripts/multi/install_pystring.sh 1.1.3 $EXT_PATH
+          share/ci/scripts/multi/install_pybind11.sh 2.9.2 $EXT_PATH
+          share/ci/scripts/multi/install_zlib.sh 1.2.12 $EXT_PATH
+          share/ci/scripts/multi/install_minizip-ng.sh 3.0.6 $EXT_PATH
+      - name: Install latest ext package versions
+        run: |
+          share/ci/scripts/multi/install_imath.sh latest $EXT_PATH
+          share/ci/scripts/multi/install_openexr.sh latest $EXT_PATH
+          share/ci/scripts/multi/install_oiio.sh latest $EXT_PATH
+          share/ci/scripts/multi/install_osl.sh latest $EXT_PATH
+          share/ci/scripts/multi/install_openfx.sh latest $EXT_PATH
+      - name: Create build directories
+        run: |
+          mkdir _install
+          mkdir _build
+      - name: Configure
+        run: |
+          cmake ../. \
+                -DCMAKE_INSTALL_PREFIX=../_install \
+                -DCMAKE_BUILD_TYPE=Release \
+                -DCMAKE_CXX_STANDARD=${{ matrix.cxx-standard }} \
+                -DOCIO_BUILD_DOCS=${{ matrix.build-docs }} \
+                -DOCIO_BUILD_OPENFX=${{ matrix.build-openfx }} \
+                -DOCIO_BUILD_GPU_TESTS=OFF \
+                -DOCIO_INSTALL_EXT_PACKAGES=NONE \
+                -DOCIO_WARNING_AS_ERROR=OFF \
+                -DPython_EXECUTABLE=$(which python) \
+                -DOCIO_USE_OIIO_CMAKE_CONFIG=ON
+        working-directory: _build
+      - name: Build
+        run: |
+          cmake --build . \
+                --target install \
+                --config Release \
+                -- -j$(sysctl -n hw.ncpu)
+        working-directory: _build
+      - name: Test
+        run: ctest -V -C Release
+        working-directory: _build
+      - name: Test CMake Consumer
+        run: |
+          cmake . \
+                -DCMAKE_PREFIX_PATH=../../../_install \
+                -DCMAKE_BUILD_TYPE=Release
+          cmake --build . \
+                --config Release
+          ./consumer
+        working-directory: _build/tests/cmake-consumer-dist
+
+  # ---------------------------------------------------------------------------
+  # Windows latest ext packages
+  # ---------------------------------------------------------------------------
+
+  windows-latest:
+    name: 'Windows latest 
+      <MSVC 
+       cxx=${{ matrix.cxx-standard }}, 
+       docs=${{ matrix.build-docs }}, 
+       python=${{ matrix.python-version }}>'
+    # Don't run on OCIO forks
+    if: github.repository == 'AcademySoftwareFoundation/OpenColorIO'
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        build: [1, 2]
+        include:
+          - build: 1
+            build-docs: 'ON'
+            build-openfx: 'ON'
+            cxx-standard: 17
+            python-version: '3.11'
+          - build: 2
+            build-docs: 'ON'
+            build-openfx: 'ON'
+            cxx-standard: 14
+            python-version: '3.9'
+    steps:
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Install docs env
+        run: share/ci/scripts/windows/install_docs_env.sh
+        shell: bash
+        if: matrix.build-docs == 'ON'
+      - name: Install tests env
+        run: share/ci/scripts/windows/install_tests_env.sh
+        shell: bash
+      - name: Setup ext environment
+        run: |
+          EXT_PATH=$GITHUB_WORKSPACE/_ext
+          VCPKG_ROOT=$VCPKG_INSTALLATION_ROOT/installed/x64-windows
+          echo "EXT_PATH=$EXT_PATH" >> $GITHUB_ENV
+          echo "CMAKE_PREFIX_PATH=$VCPKG_ROOT;$EXT_PATH" >> $GITHUB_ENV
+          echo "$VCPKG_ROOT/bin" >> $GITHUB_PATH
+          echo "$EXT_PATH/bin" >> $GITHUB_PATH
+          mkdir $EXT_PATH
+        shell: bash
+      - name: Install indirect dependencies
+        run: |
+          vcpkg install zlib:x64-windows
+          vcpkg install tiff:x64-windows
+          vcpkg install boost-asio:x64-windows
+          vcpkg install boost-container:x64-windows
+          vcpkg install boost-filesystem:x64-windows
+          vcpkg install boost-math:x64-windows
+          vcpkg install boost-stacktrace:x64-windows
+          vcpkg install boost-system:x64-windows
+          vcpkg install boost-thread:x64-windows
+          share/ci/scripts/multi/install_pugixml.sh latest $EXT_PATH
+        shell: bash
+      - name: Install fixed ext package versions
+        # Minizip-ng depends on ZLIB. ZLIB must be installed first.
+        run: |
+          share/ci/scripts/multi/install_lcms2.sh 2.2 $EXT_PATH
+          share/ci/scripts/multi/install_yaml-cpp.sh 0.7.0 $EXT_PATH
+          share/ci/scripts/multi/install_pystring.sh 1.1.3 $EXT_PATH
+          share/ci/scripts/multi/install_pybind11.sh 2.9.2 $EXT_PATH
+          share/ci/scripts/multi/install_expat.sh 2.4.1 $EXT_PATH
+          share/ci/scripts/multi/install_zlib.sh 1.2.12 $EXT_PATH
+          share/ci/scripts/multi/install_minizip-ng.sh 3.0.6 $EXT_PATH
+        shell: bash
+      # OSL not installed due to LLVM compilation time.
+      - name: Install latest ext package versions
+        run: |
+          share/ci/scripts/multi/install_imath.sh latest $EXT_PATH
+          share/ci/scripts/multi/install_openexr.sh latest $EXT_PATH
+          share/ci/scripts/multi/install_oiio.sh latest $EXT_PATH
+          share/ci/scripts/multi/install_openfx.sh latest $EXT_PATH
+        shell: bash
+      - name: Create build directories
+        run: |
+          mkdir _install
+          mkdir _build
+        shell: bash
+      - name: Configure
+        run: |
+          cmake ../. \
+                -DCMAKE_INSTALL_PREFIX=../_install \
+                -DCMAKE_BUILD_TYPE=Release \
+                -DCMAKE_CXX_STANDARD=${{ matrix.cxx-standard }} \
+                -DCMAKE_GENERATOR_PLATFORM=x64 \
+                -DOCIO_BUILD_DOCS=OFF \
+                -DOCIO_BUILD_OPENFX=${{ matrix.build-openfx }} \
+                -DOCIO_BUILD_GPU_TESTS=OFF \
+                -DOCIO_INSTALL_EXT_PACKAGES=NONE \
+                -DOCIO_WARNING_AS_ERROR=OFF \
+                -DPython_EXECUTABLE=$(which python) \
+                -DOCIO_BUILD_PYTHON=OFF \
+                -DOCIO_USE_OIIO_CMAKE_CONFIG=ON
+        shell: bash
+        working-directory: _build
+      - name: Build
+        run: |
+          cmake --build . \
+                --target install \
+                --config Release \
+                --parallel
+        shell: bash
+        working-directory: _build
+      - name: Test
+        run: |
+          ctest -V -C Release
+        shell: bash
+        working-directory: _build
+      - name: Test CMake Consumer
+        run: |
+          cmake . \
+                -DCMAKE_PREFIX_PATH=../../../_install \
+                -DCMAKE_BUILD_TYPE=Release
+          cmake --build . \
+                --config Release
+          export PATH=../../../_install/bin:$PATH
+          ./Release/consumer
+        shell: bash
+        working-directory: _build/tests/cmake-consumer-dist
