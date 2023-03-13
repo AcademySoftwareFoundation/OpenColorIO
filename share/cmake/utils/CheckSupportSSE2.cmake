@@ -4,7 +4,7 @@
 include(CheckCXXSourceCompiles)
 
 set(_cmake_required_flags_orig "${CMAKE_REQUIRED_FLAGS}")
-set(_cmake_required_libraries_orig "${CMAKE_REQUIRED_LIBRARIES}")
+set(_cmake_required_includes_orig "${CMAKE_REQUIRED_INCLUDES}")
 set(_cmake_osx_architectures_orig "${CMAKE_OSX_ARCHITECTURES}")
 
 if(NOT CMAKE_SIZE_OF_VOID_P EQUAL 8)
@@ -49,7 +49,7 @@ elseif(APPLE AND HAVE_NEON)
         set (CMAKE_OSX_ARCHITECTURES "${current_arch}")
         
         if(current_arch STREQUAL arm64)
-            set(CMAKE_REQUIRED_LIBRARIES sse2neon)
+            set(CMAKE_REQUIRED_INCLUDES ${sse2neon_INCLUDE_DIR})
             set(_sse2_header_ "#include <sse2neon.h>")
             set(_output_var_name_ "HAVE_SSE2_WITH_SSE2NEON")
         elseif(current_arch STREQUAL x86_64)
@@ -63,11 +63,11 @@ elseif(APPLE AND HAVE_NEON)
 endif()
 
 set(CMAKE_REQUIRED_FLAGS "${_cmake_required_flags_orig}")
-set(CMAKE_REQUIRED_LIBRARIES "${_cmake_required_libraries_orig}")
+set(CMAKE_REQUIRED_INCLUDES "${_cmake_required_includes_orig}")
 set(CMAKE_OSX_ARCHITECTURES "${_cmake_osx_architectures_orig}")
 
 unset(_cmake_required_flags_orig)
-unset(_cmake_required_libraries_orig)
+unset(_cmake_required_includes_orig)
 unset(_cmake_osx_architectures_orig)
 
 

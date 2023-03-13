@@ -29,8 +29,15 @@ if(NOT sse2neon_POPULATED)
   set(_EXT_DIST_INCLUDE "${CMAKE_BINARY_DIR}/ext/dist/${CMAKE_INSTALL_INCLUDEDIR}")
   file(COPY "${sse2neon_SOURCE_DIR}/sse2neon.h" DESTINATION "${_EXT_DIST_INCLUDE}/sse2neon")
 
-  add_library(sse2neon INTERFACE IMPORTED GLOBAL)
-  set_target_properties(sse2neon PROPERTIES
-      INTERFACE_INCLUDE_DIRECTORIES "${_EXT_DIST_INCLUDE}/sse2neon"
-  )
+  # sse2neon_INCLUDE_DIR is used internally for CheckSupportSSE2.cmake and to create sse2neon
+  # target for OCIO.
+  set(sse2neon_INCLUDE_DIR "${sse2neon_SOURCE_DIR}")
+
+  # Any changes to the following lines must be replicated in ./CMakeLists.txt as well.
+  # Create a target for sse2neon (non-imported)
+  add_library(sse2neon INTERFACE)
+  # Add the include directories to the target.
+  target_include_directories(sse2neon INTERFACE "${sse2neon_INCLUDE_DIR}")
+  # Ignore the warnings coming from sse2neon.h as they are false positives.
+  target_compile_options(sse2neon INTERFACE -Wno-unused-parameter)
 endif()

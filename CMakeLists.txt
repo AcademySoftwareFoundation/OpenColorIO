@@ -207,11 +207,29 @@ if(HAVE_NEON AND OCIO_USE_SIMD)
     # Install sse2neon. Please note that sse2neon is downloaded during the configure step as it is
     # needed for CompilerFlags.cmake and CheckSupportSSE2.cmake.
 
-    # Could use ocio_handle_dependency once this is rebased from main (once the CMake min and 
-    # recommended version branch is merged).
-    find_package(sse2neon QUIET)
-    if (NOT sse2neon_FOUND)
+    # Sse2neon is not treated like an imported target. The logic to find sse2neon is here because 
+    # a find module is not suitable for sse2neon's use case.
+    find_path(sse2neon_INCLUDE_DIR
+        NAMES
+            sse2neon.h
+        HINTS
+            ${sse2neon_ROOT}
+        PATH_SUFFIXES
+            sse2neon
+            include
+            sse2neon/include
+    )
+
+    if (NOT sse2neon_INCLUDE_DIR)
         include(Installsse2neon)
+    else()
+        # Any changes to the following lines must be replicated in Installsse2neon.cmake as well.
+        # Create a target for sse2neon (non-imported)
+        add_library(sse2neon INTERFACE)
+        # Add the include directories to the target.
+        target_include_directories(sse2neon INTERFACE "${sse2neon_INCLUDE_DIR}")
+        # Ignore the warnings coming from sse2neon.h as they are false positives.
+        target_compile_options(sse2neon INTERFACE -Wno-unused-parameter)
     endif()
 endif()
 
