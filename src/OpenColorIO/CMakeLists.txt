@@ -293,10 +293,7 @@ target_link_libraries(OpenColorIO
 )
 
 if(OCIO_USE_SIMD AND HAVE_SSE2_WITH_SSE2NEON)
-    target_link_libraries(OpenColorIO
-        PRIVATE
-            sse2neon
-    )
+    target_link_libraries(OpenColorIO PRIVATE $<BUILD_INTERFACE:sse2neon>)
 endif()
 
 if(APPLE)

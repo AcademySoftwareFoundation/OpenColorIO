@@ -27,10 +27,7 @@ function(add_ocio_test NAME SOURCES PRIVATE_INCLUDES)
     )
 
     if(OCIO_USE_SIMD AND HAVE_SSE2_WITH_SSE2NEON)
-        target_link_libraries(${TEST_BINARY}
-            PRIVATE
-                sse2neon
-        )
+        target_link_libraries(${TEST_BINARY} PRIVATE sse2neon)
     endif()
 
     if(APPLE)
