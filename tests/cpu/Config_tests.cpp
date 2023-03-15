@@ -361,47 +361,8 @@ OCIO_ADD_TEST(Config, required_roles_for_version_2_2)
 
         OCIO::LogGuard logGuard;
         OCIO_CHECK_NO_THROW(config->validate());
-
-        StringUtils::StringVec svec = StringUtils::SplitByLines(logGuard.output());
-        OCIO_CHECK_ASSERT(
-            StringUtils::Contain(
-                svec, 
-                "[OpenColorIO Error]: The scene_linear role is required for a config version 2.2 "\
-                "or higher."
-            )
-        );
-
-        OCIO_CHECK_ASSERT(
-            StringUtils::Contain(
-                svec, 
-                "[OpenColorIO Error]: The compositing_log role is required for a config version "\
-                "2.2 or higher."
-            )
-        );
-
-        OCIO_CHECK_ASSERT(
-            StringUtils::Contain(
-                svec, 
-                "[OpenColorIO Error]: The color_timing role is required for a config version 2.2 "\
-                "or higher."
-            )
-        );
-
-        OCIO_CHECK_ASSERT(
-            StringUtils::Contain(
-                svec, 
-                "[OpenColorIO Error]: The aces_interchange role is required when there are "\
-                "scene-referred color spaces and the config version is 2.2 or higher."
-            )
-        );
-
-        OCIO_CHECK_ASSERT(
-            StringUtils::Contain(
-                svec, 
-                "[OpenColorIO Error]: The cie_xyz_d65_interchange role is required when there are"\
-                " display-referred color spaces and the config version is 2.2 or higher."
-            )
-        );
+        // Expecting error since the major version was changed to version 2 without any modifications.
+        OCIO::checkAllRequiredRolesErrors(logGuard);
     }
     
     // Set colorspace for all required roles.
@@ -6369,9 +6330,19 @@ OCIO_ADD_TEST(Config, display_view)
     auto cs = OCIO::ColorSpace::Create(OCIO::REFERENCE_SPACE_SCENE);
     cs->setName("scs");
     config->addColorSpace(cs);
+
+    // Set colorspace for required roles.
+    config->setRole(OCIO::ROLE_SCENE_LINEAR, cs->getName());
+    config->setRole(OCIO::ROLE_INTERCHANGE_SCENE, cs->getName());
+
     cs = OCIO::ColorSpace::Create(OCIO::REFERENCE_SPACE_DISPLAY);
     cs->setName("dcs");
     config->addColorSpace(cs);
+
+    // Set colorspace for required roles.
+    config->setRole(OCIO::ROLE_COMPOSITING_LOG, cs->getName());
+    config->setRole(OCIO::ROLE_COLOR_TIMING, cs->getName());
+    config->setRole(OCIO::ROLE_INTERCHANGE_DISPLAY, cs->getName());
 
     // Add a scene-referred and a display-referred view transform.
     auto vt = OCIO::ViewTransform::Create(OCIO::REFERENCE_SPACE_DISPLAY);
@@ -6415,7 +6386,11 @@ strictparsing: true
 luma: [0.2126, 0.7152, 0.0722]
 
 roles:
-  {}
+  aces_interchange: scs
+  cie_xyz_d65_interchange: dcs
+  color_timing: dcs
+  compositing_log: dcs
+  scene_linear: scs
 
 file_rules:
   - !<Rule> {name: Default, colorspace: default}

@@ -105,7 +105,12 @@ strictparsing: true
 luma: [0.2126, 0.7152, 0.0722]
 
 roles:
+  aces_interchange: test
+  cie_xyz_d65_interchange: dcs
+  color_timing: test
+  compositing_log: test
   default: ref
+  scene_linear: test
 
 file_rules:
   - !<Rule> {name: Default, colorspace: default}
@@ -116,6 +121,24 @@ displays:
 
 active_displays: []
 active_views: []
+
+view_transforms:
+  - !<ViewTransform>
+    name: display
+    from_display_reference: !<MatrixTransform> {}
+
+  - !<ViewTransform>
+    name: view_transform
+    from_scene_reference: !<MatrixTransform> {}
+
+display_colorspaces:
+  - !<ColorSpace>
+    name: dcs
+    family: ""
+    equalitygroup: ""
+    bitdepth: unknown
+    isdata: false
+    allocation: uniform
 
 colorspaces:
   - !<ColorSpace>

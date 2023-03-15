@@ -1372,7 +1372,13 @@ colorspaces:
         // Upgrading is making sure to build a valid v2 config.
 
         config->upgradeToLatestVersion();
-        OCIO_CHECK_NO_THROW(config->validate());
+        
+        {
+          OCIO::LogGuard logGuard;
+          OCIO_CHECK_NO_THROW(config->validate());
+          // Expecting error since the major version was changed to version 2 without any modifications.
+          OCIO::checkRequiredRolesErrors(logGuard);
+        }
 
         // Check the new version.
 
@@ -1439,7 +1445,13 @@ colorspaces:
         // Upgrading is making sure to build a valid v2 config.
 
         config->upgradeToLatestVersion();
-        OCIO_CHECK_NO_THROW(config->validate());
+
+        {
+          OCIO::LogGuard logGuard;
+          OCIO_CHECK_NO_THROW(config->validate());
+          // Expecting error since the major version was changed to version 2 without any modifications.
+          OCIO::checkRequiredRolesErrors(logGuard);
+        }
 
         // Check the new version.
 
@@ -1514,7 +1526,13 @@ colorspaces:
 
             cfg->setInactiveColorSpaces("cs1");
             cfg->upgradeToLatestVersion();
-            OCIO_CHECK_NO_THROW(cfg->validate());
+
+            {
+              OCIO::LogGuard logGuard;
+              OCIO_CHECK_NO_THROW(cfg->validate());
+              // Expecting error since the major version was changed to version 2 without any modifications.
+              OCIO::checkRequiredRolesErrors(logGuard);
+            }
 
             // Check the new version.
 
@@ -1554,7 +1572,12 @@ colorspaces:
                     l.output());
             }
 
-            OCIO_CHECK_NO_THROW(cfg->validate());
+            {
+              OCIO::LogGuard logGuard;
+              OCIO_CHECK_NO_THROW(cfg->validate());
+              // Expecting error since the major version was changed to version 2 without any modifications.
+              OCIO::checkRequiredRolesErrors(logGuard);
+            }
 
             // Check the new version.
 
@@ -1602,14 +1625,26 @@ OCIO_ADD_TEST(FileRules, config_v1_to_v2_from_memory)
 
         // Default rule is using 'Default' role that does not exist.
         config->setMajorVersion(2);
-        OCIO_CHECK_THROW_WHAT(config->validate(), OCIO::Exception, "rule named 'Default' is "
-                              "referencing 'default' that is neither a color space nor a named "
-                              "transform");
+
+        {
+          OCIO::LogGuard logGuard;
+          OCIO_CHECK_THROW_WHAT(config->validate(), OCIO::Exception, "rule named 'Default' is "
+                                "referencing 'default' that is neither a color space nor a named "
+                                "transform");
+          // Expecting error since the major version was changed to version 2 without any modifications.
+          OCIO::checkRequiredRolesErrors(logGuard);
+        }
 
         // Upgrading is making sure to build a valid v2 config.
         config->setMajorVersion(1);
         config->upgradeToLatestVersion();
-        OCIO_CHECK_NO_THROW(config->validate());
+
+        {
+          OCIO::LogGuard logGuard;
+          OCIO_CHECK_NO_THROW(config->validate());
+          // Expecting error since the major version was changed to version 2 without any modifications.
+          OCIO::checkRequiredRolesErrors(logGuard);
+        }
 
         // Check the new version.
 
@@ -1640,14 +1675,26 @@ OCIO_ADD_TEST(FileRules, config_v1_to_v2_from_memory)
 
         // Default rule is using 'Default' role but the associated color space does not exist.
         config->setMajorVersion(2);
-        OCIO_CHECK_THROW_WHAT(config->validate(), OCIO::Exception, "rule named 'Default' is "
-                              "referencing 'default' that is neither a color space nor a named "
-                              "transform");
+        
+        {
+          OCIO::LogGuard logGuard;
+          OCIO_CHECK_THROW_WHAT(config->validate(), OCIO::Exception, "rule named 'Default' is "
+                                "referencing 'default' that is neither a color space nor a named "
+                                "transform");
+          // Expecting error since the major version was changed to version 2 without any modifications.
+          OCIO::checkRequiredRolesErrors(logGuard);
+        }
 
         // Upgrading is making sure to build a valid v2 config.
         config->setMajorVersion(1);
         config->upgradeToLatestVersion();
-        OCIO_CHECK_NO_THROW(config->validate());
+
+        {
+          OCIO::LogGuard logGuard;
+          OCIO_CHECK_NO_THROW(config->validate());
+          // Expecting error since the major version was changed to version 2 without any modifications.
+          OCIO::checkRequiredRolesErrors(logGuard);
+        }
 
         // Check the new version.
 
@@ -1678,27 +1725,39 @@ OCIO_ADD_TEST(FileRules, config_v1_to_v2_from_memory)
         // Default rule is using 'Default' role but the associated color space does not exist.
         config->setInactiveColorSpaces("cs1");
         config->setMajorVersion(2);
-        OCIO_CHECK_THROW_WHAT(config->validate(), OCIO::Exception, "rule named 'Default' is "
-                              "referencing 'default' that is neither a color space nor a named "
-                              "transform");
 
-        config->setMajorVersion(1);
-        
         {
-            OCIO::LogGuard l;      
-    
-            config->upgradeToLatestVersion();
-            
-            OCIO_CHECK_EQUAL(
-                std::string("[OpenColorIO Warning]: The default rule creation falls back to the"\
-                            " first color space because no suitable color space exists.\n"), 
-                l.output());
+          OCIO::LogGuard logGuard;
+          OCIO_CHECK_THROW_WHAT(config->validate(), OCIO::Exception, "rule named 'Default' is "
+                                "referencing 'default' that is neither a color space nor a named "
+                                "transform");
+          // Expecting error since the major version was changed to version 2 without any modifications.
+          OCIO::checkRequiredRolesErrors(logGuard);
         }
 
-        OCIO_CHECK_NO_THROW(config->validate());
+        config->setMajorVersion(1);
+
+        {
+            OCIO::LogGuard logGuard;
+            config->upgradeToLatestVersion();
+            StringUtils::StringVec svec = StringUtils::SplitByLines(logGuard.output());
+            OCIO_CHECK_ASSERT(
+                StringUtils::Contain(
+                    svec, 
+                    "[OpenColorIO Warning]: The default rule creation falls back to the"\
+                    " first color space because no suitable color space exists."
+                )
+            );
+        }
+        
+        {
+          OCIO::LogGuard logGuard; 
+          OCIO_CHECK_NO_THROW(config->validate());
+          // Expecting error since the major version was changed to version 2 without any modifications.
+          OCIO::checkRequiredRolesErrors(logGuard);
+        }
 
         // Check the new version.
-
         OCIO_CHECK_EQUAL(config->getMajorVersion(), 2);
 
         // Check the 'default' rule. As there is not 'data' or active color space, the default

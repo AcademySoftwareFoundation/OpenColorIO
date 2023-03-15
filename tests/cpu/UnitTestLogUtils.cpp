@@ -64,5 +64,55 @@ MuteLogging::~MuteLogging()
     ResetToDefaultLoggingFunction();
 }
 
+void checkAllRequiredRolesErrors(LogGuard & logGuard)
+{
+    checkRequiredRolesErrors(logGuard);
+    
+    StringUtils::StringVec svec = StringUtils::SplitByLines(logGuard.output());
+    OCIO_CHECK_ASSERT(
+        StringUtils::Contain(
+            svec, 
+            "[OpenColorIO Error]: The aces_interchange role is required when there are "\
+            "scene-referred color spaces and the config version is 2.2 or higher."
+        )
+    );
+}
+
+void checkRequiredRolesErrors(LogGuard & logGuard)
+{
+    StringUtils::StringVec svec = StringUtils::SplitByLines(logGuard.output());
+    OCIO_CHECK_ASSERT(
+        StringUtils::Contain(
+            svec, 
+            "[OpenColorIO Error]: The scene_linear role is required for a config version 2.2 "\
+            "or higher."
+        )
+    );
+
+    OCIO_CHECK_ASSERT(
+        StringUtils::Contain(
+            svec, 
+            "[OpenColorIO Error]: The compositing_log role is required for a config version "\
+            "2.2 or higher."
+        )
+    );
+
+    OCIO_CHECK_ASSERT(
+        StringUtils::Contain(
+            svec, 
+            "[OpenColorIO Error]: The color_timing role is required for a config version 2.2 "\
+            "or higher."
+        )
+    );
+
+    OCIO_CHECK_ASSERT(
+        StringUtils::Contain(
+            svec, 
+            "[OpenColorIO Error]: The aces_interchange role is required when there are "\
+            "scene-referred color spaces and the config version is 2.2 or higher."
+        )
+    );
+}
+
 } // namespace OCIO_NAMESPACE
 

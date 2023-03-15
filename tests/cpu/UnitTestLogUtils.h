@@ -5,6 +5,8 @@
 #define INCLUDED_OCIO_UNITTEST_LOGUTILS_H
 
 #include <OpenColorIO/OpenColorIO.h>
+#include "testutils/UnitTest.h"
+#include "utils/StringUtils.h"
 
 namespace OCIO_NAMESPACE
 {
@@ -36,6 +38,9 @@ public:
     MuteLogging();
     ~MuteLogging();
 };
+
+void checkAllRequiredRolesErrors(LogGuard & logGuard);
+void checkRequiredRolesErrors(LogGuard & logGuard);
 
 } // namespace OCIO_NAMESPACE
 
