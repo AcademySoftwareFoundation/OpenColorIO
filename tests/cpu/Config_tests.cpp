@@ -1672,7 +1672,7 @@ OCIO_ADD_TEST(Config, context_variable_with_display_view)
         OCIO_CHECK_THROW_WHAT(config->getProcessor("cs1", "disp1", "view1", OCIO::TRANSFORM_DIR_FORWARD),
                               OCIO::Exception,
                               "DisplayViewTransform error. Cannot find color space or "
-                              "named transform, named '$ENV1'.");
+                              "named transform with name '$ENV1'.");
     }
 }
 
