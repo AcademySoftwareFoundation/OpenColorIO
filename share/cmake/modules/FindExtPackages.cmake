@@ -235,6 +235,13 @@ endif()
 if(OCIO_BUILD_APPS)
 
     if(OCIO_USE_OIIO_FOR_APPS AND OpenImageIO_FOUND AND TARGET OpenImageIO::OpenImageIO)
+        if (USE_MSVC AND OCIO_IMAGE_BACKEND STREQUAL "OpenImageIO")
+            # Temporary until fixed in OpenImageIO: Mute some warnings from OpenImageIO farmhash.h
+            # C4267 (level 3)	    'var' : conversion from 'size_t' to 'type', possible loss of data
+            # C4244	(level 3 & 4)	'conversion' conversion from 'type1' to 'type2', possible loss of data
+            target_compile_options(OpenImageIO::OpenImageIO PRIVATE /wd4267 /wd4244)
+        endif()
+        
         add_library(OpenColorIO::ImageIOBackend ALIAS OpenImageIO::OpenImageIO)
         set(OCIO_IMAGE_BACKEND OpenImageIO)
     else()
