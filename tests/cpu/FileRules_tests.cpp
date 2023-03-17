@@ -1377,7 +1377,7 @@ colorspaces:
           OCIO::LogGuard logGuard;
           OCIO_CHECK_NO_THROW(config->validate());
           // Expecting error since the major version was changed to version 2 without any modifications.
-          OCIO::checkRequiredRolesErrors(logGuard);
+          OCIO::checkRequiredRolesErrors(logGuard, true);
         }
 
         // Check the new version.
@@ -1449,8 +1449,9 @@ colorspaces:
         {
           OCIO::LogGuard logGuard;
           OCIO_CHECK_NO_THROW(config->validate());
-          // Expecting error since the major version was changed to version 2 without any modifications.
-          OCIO::checkRequiredRolesErrors(logGuard);
+          // Ignore (only) the errors logged regarding the missing roles that are required in 
+          // configs with version >= 2.2.
+          OCIO::checkRequiredRolesErrors(logGuard, true);
         }
 
         // Check the new version.
@@ -1530,8 +1531,9 @@ colorspaces:
             {
               OCIO::LogGuard logGuard;
               OCIO_CHECK_NO_THROW(cfg->validate());
-              // Expecting error since the major version was changed to version 2 without any modifications.
-              OCIO::checkRequiredRolesErrors(logGuard);
+              // Ignore (only) the errors logged regarding the missing roles that are required in 
+              // configs with version >= 2.2.
+              OCIO::checkRequiredRolesErrors(logGuard, true);
             }
 
             // Check the new version.
@@ -1575,8 +1577,9 @@ colorspaces:
             {
               OCIO::LogGuard logGuard;
               OCIO_CHECK_NO_THROW(cfg->validate());
-              // Expecting error since the major version was changed to version 2 without any modifications.
-              OCIO::checkRequiredRolesErrors(logGuard);
+              // Ignore (only) the errors logged regarding the missing roles that are required in 
+              // configs with version >= 2.2.
+              OCIO::checkRequiredRolesErrors(logGuard, true);
             }
 
             // Check the new version.
@@ -1621,7 +1624,7 @@ OCIO_ADD_TEST(FileRules, config_v1_to_v2_from_memory)
         OCIO::ColorSpaceRcPtr raw = OCIO::ColorSpace::Create();
         raw->setName("rAw");
         config->addColorSpace(raw);
-        OCIO_CHECK_NO_THROW(config->validate());  // because file rules are not validated.
+        OCIO_CHECK_NO_THROW(config->validate());  // (does not fail since the major version is 1)
 
         // Default rule is using 'Default' role that does not exist.
         config->setMajorVersion(2);
@@ -1632,7 +1635,7 @@ OCIO_ADD_TEST(FileRules, config_v1_to_v2_from_memory)
                                 "referencing 'default' that is neither a color space nor a named "
                                 "transform");
           // Expecting error since the major version was changed to version 2 without any modifications.
-          OCIO::checkRequiredRolesErrors(logGuard);
+          OCIO::checkRequiredRolesErrors(logGuard, true);
         }
 
         // Upgrading is making sure to build a valid v2 config.
@@ -1643,7 +1646,7 @@ OCIO_ADD_TEST(FileRules, config_v1_to_v2_from_memory)
           OCIO::LogGuard logGuard;
           OCIO_CHECK_NO_THROW(config->validate());
           // Expecting error since the major version was changed to version 2 without any modifications.
-          OCIO::checkRequiredRolesErrors(logGuard);
+          OCIO::checkRequiredRolesErrors(logGuard, true);
         }
 
         // Check the new version.
@@ -1671,7 +1674,7 @@ OCIO_ADD_TEST(FileRules, config_v1_to_v2_from_memory)
         OCIO::ColorSpaceRcPtr raw = OCIO::ColorSpace::Create();
         raw->setName("rAw");
         config->addColorSpace(raw);
-        OCIO_CHECK_NO_THROW(config->validate());  // because file rules are not validated.
+        OCIO_CHECK_NO_THROW(config->validate());  // (does not fail since the major version is 1)
 
         // Default rule is using 'Default' role but the associated color space does not exist.
         config->setMajorVersion(2);
@@ -1682,7 +1685,7 @@ OCIO_ADD_TEST(FileRules, config_v1_to_v2_from_memory)
                                 "referencing 'default' that is neither a color space nor a named "
                                 "transform");
           // Expecting error since the major version was changed to version 2 without any modifications.
-          OCIO::checkRequiredRolesErrors(logGuard);
+          OCIO::checkRequiredRolesErrors(logGuard, true);
         }
 
         // Upgrading is making sure to build a valid v2 config.
@@ -1693,7 +1696,7 @@ OCIO_ADD_TEST(FileRules, config_v1_to_v2_from_memory)
           OCIO::LogGuard logGuard;
           OCIO_CHECK_NO_THROW(config->validate());
           // Expecting error since the major version was changed to version 2 without any modifications.
-          OCIO::checkRequiredRolesErrors(logGuard);
+          OCIO::checkRequiredRolesErrors(logGuard, true);
         }
 
         // Check the new version.
@@ -1720,7 +1723,7 @@ OCIO_ADD_TEST(FileRules, config_v1_to_v2_from_memory)
         OCIO::ColorSpaceRcPtr cs1 = OCIO::ColorSpace::Create();
         cs1->setName("cs1");
         config->addColorSpace(cs1);
-        OCIO_CHECK_NO_THROW(config->validate());  // because file rules are not validated.
+        OCIO_CHECK_NO_THROW(config->validate());  // (does not fail since the major version is 1)
 
         // Default rule is using 'Default' role but the associated color space does not exist.
         config->setInactiveColorSpaces("cs1");
@@ -1732,7 +1735,7 @@ OCIO_ADD_TEST(FileRules, config_v1_to_v2_from_memory)
                                 "referencing 'default' that is neither a color space nor a named "
                                 "transform");
           // Expecting error since the major version was changed to version 2 without any modifications.
-          OCIO::checkRequiredRolesErrors(logGuard);
+          OCIO::checkRequiredRolesErrors(logGuard, true);
         }
 
         config->setMajorVersion(1);
@@ -1754,7 +1757,7 @@ OCIO_ADD_TEST(FileRules, config_v1_to_v2_from_memory)
           OCIO::LogGuard logGuard; 
           OCIO_CHECK_NO_THROW(config->validate());
           // Expecting error since the major version was changed to version 2 without any modifications.
-          OCIO::checkRequiredRolesErrors(logGuard);
+          OCIO::checkRequiredRolesErrors(logGuard, true);
         }
 
         // Check the new version.

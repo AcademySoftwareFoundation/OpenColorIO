@@ -4,6 +4,8 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include <iostream>
+#include "Platform.h"
 #include "UnitTestLogUtils.h"
 
 namespace OCIO_NAMESPACE
@@ -64,54 +66,67 @@ MuteLogging::~MuteLogging()
     ResetToDefaultLoggingFunction();
 }
 
-void checkAllRequiredRolesErrors(LogGuard & logGuard)
+
+void checkAndRemove(std::vector<std::string> & svec, const std::string & str)
 {
-    checkRequiredRolesErrors(logGuard);
-    
-    StringUtils::StringVec svec = StringUtils::SplitByLines(logGuard.output());
-    OCIO_CHECK_ASSERT(
-        StringUtils::Contain(
-            svec, 
-            "[OpenColorIO Error]: The aces_interchange role is required when there are "\
-            "scene-referred color spaces and the config version is 2.2 or higher."
-        )
-    );
+    size_t index = -1;
+    size_t i = -1;
+    for (size_t i = 0; i < svec.size(); i++)
+    {
+        if (Platform::Strcasecmp(svec[i].c_str(), str.c_str()) == 0)
+        {
+            index = i;
+            break;
+        }
+    }
+
+    OCIO_CHECK_GT(-1, index);
+    svec.erase(svec.begin() + index);
 }
 
-void checkRequiredRolesErrors(LogGuard & logGuard)
+void checkRequiredRolesErrors(StringUtils::StringVec & svec, bool printLog)
+{
+    const std::string interchange_scene = "[OpenColorIO Error]: The scene_linear role is "\
+                                          "required for a config version 2.2 or higher.";
+    const std::string compositing_log = "[OpenColorIO Error]: The compositing_log role is "\
+                                        "required for a config version 2.2 or higher.";
+
+    const std::string color_timing = "[OpenColorIO Error]: The color_timing role is required "\
+                                     "for a config version 2.2 or higher.";
+
+    const std::string aces_interchange = "[OpenColorIO Error]: The aces_interchange role is "\
+                                         "required when there are scene-referred color spaces and "\
+                                         "the config version is 2.2 or higher.";
+    
+    checkAndRemove(svec, interchange_scene);
+    checkAndRemove(svec, compositing_log);
+    checkAndRemove(svec, color_timing);
+    checkAndRemove(svec, aces_interchange);
+    if (printLog)
+    {
+        StringUtils::StringVec::iterator iter = svec.begin();
+        for(iter; iter < svec.end(); iter++)
+        {
+            std::cout << *iter << std::endl;
+        }
+    }
+}
+
+void checkRequiredRolesErrors(LogGuard & logGuard, bool printLog)
 {
     StringUtils::StringVec svec = StringUtils::SplitByLines(logGuard.output());
-    OCIO_CHECK_ASSERT(
-        StringUtils::Contain(
-            svec, 
-            "[OpenColorIO Error]: The scene_linear role is required for a config version 2.2 "\
-            "or higher."
-        )
-    );
+    checkRequiredRolesErrors(svec, printLog);
+}
 
-    OCIO_CHECK_ASSERT(
-        StringUtils::Contain(
-            svec, 
-            "[OpenColorIO Error]: The compositing_log role is required for a config version "\
-            "2.2 or higher."
-        )
-    );
-
-    OCIO_CHECK_ASSERT(
-        StringUtils::Contain(
-            svec, 
-            "[OpenColorIO Error]: The color_timing role is required for a config version 2.2 "\
-            "or higher."
-        )
-    );
-
-    OCIO_CHECK_ASSERT(
-        StringUtils::Contain(
-            svec, 
-            "[OpenColorIO Error]: The aces_interchange role is required when there are "\
-            "scene-referred color spaces and the config version is 2.2 or higher."
-        )
-    );
+void checkAllRequiredRolesErrors(LogGuard & logGuard, bool printLog)
+{
+    StringUtils::StringVec svec = StringUtils::SplitByLines(logGuard.output());
+    const std::string interchange_display = "[OpenColorIO Error]: The cie_xyz_d65_interchange "\
+                                            "role is required when there are display-referred "\
+                                            "color spaces and the config version is 2.2 or higher.";
+    
+    checkAndRemove(svec, interchange_display);
+    checkRequiredRolesErrors(svec, true);
 }
 
 } // namespace OCIO_NAMESPACE

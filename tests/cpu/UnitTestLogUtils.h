@@ -39,8 +39,8 @@ public:
     ~MuteLogging();
 };
 
-void checkAllRequiredRolesErrors(LogGuard & logGuard);
-void checkRequiredRolesErrors(LogGuard & logGuard);
+void checkAllRequiredRolesErrors(LogGuard & logGuard, bool printLog);
+void checkRequiredRolesErrors(LogGuard & logGuard, bool printLog);
 
 } // namespace OCIO_NAMESPACE
 
