@@ -2,6 +2,7 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 #include <sstream>
+
 #include "PyOpenColorIO.h"
 #include "PyUtils.h"
 
@@ -74,6 +75,15 @@ void bindPyGradingData(py::module & m)
              "red"_a, "green"_a, "blue"_a, "master"_a,
              DOC(GradingRGBM, GradingRGBM, 2))
 
+        .def("__eq__", [](const GradingRGBM &self, const GradingRGBM &other)
+            {
+                return self == other;
+            }, py::is_operator())
+        .def("__ne__", [](const GradingRGBM &self, const GradingRGBM &other)
+            {
+                return self != other;
+            }, py::is_operator())
+
         .def_readwrite("red", &GradingRGBM::m_red, 
                        DOC(GradingRGBM, m_red))
         .def_readwrite("green", &GradingRGBM::m_green, 
@@ -88,6 +98,15 @@ void bindPyGradingData(py::module & m)
     clsGradingPrimary
         .def(py::init<GradingStyle>(), 
              DOC(GradingPrimary, GradingPrimary))
+
+        .def("__eq__", [](const GradingPrimary &self, const GradingPrimary &other)
+            {
+                return self == other;
+            }, py::is_operator())
+        .def("__ne__", [](const GradingPrimary &self, const GradingPrimary &other)
+            {
+                return self != other;
+            }, py::is_operator())
 
         .def("validate", &GradingPrimary::validate, 
              DOC(GradingPrimary, validate))
@@ -142,6 +161,15 @@ void bindPyGradingData(py::module & m)
              "start"_a, "width"_a,
              DOC(GradingRGBMSW, GradingRGBMSW, 3))
 
+        .def("__eq__", [](const GradingRGBMSW &self, const GradingRGBMSW &other)
+            {
+                return self == other;
+            }, py::is_operator())
+        .def("__ne__", [](const GradingRGBMSW &self, const GradingRGBMSW &other)
+            {
+                return self != other;
+            }, py::is_operator())
+
         .def_readwrite("red", &GradingRGBMSW::m_red, 
                        DOC(GradingRGBMSW, m_red))
         .def_readwrite("green", &GradingRGBMSW::m_green, 
@@ -163,6 +191,15 @@ void bindPyGradingData(py::module & m)
 
         .def("validate", &GradingTone::validate, 
              DOC(GradingTone, validate))
+
+        .def("__eq__", [](const GradingTone &self, const GradingTone &other)
+            {
+                return self == other;
+            }, py::is_operator())
+        .def("__ne__", [](const GradingTone &self, const GradingTone &other)
+            {
+                return self != other;
+            }, py::is_operator())
 
         .def_readwrite("blacks", &GradingTone::m_blacks, 
                        DOC(GradingTone, m_blacks))
@@ -186,6 +223,15 @@ void bindPyGradingData(py::module & m)
              "x"_a = DEFAULT_CONTROL_POINT.m_x, 
              "y"_a = DEFAULT_CONTROL_POINT.m_y,
              DOC(GradingControlPoint, GradingControlPoint, 2))
+
+        .def("__eq__", [](const GradingControlPoint &self, const GradingControlPoint &other)
+            {
+                return self == other;
+            }, py::is_operator())
+        .def("__ne__", [](const GradingControlPoint &self, const GradingControlPoint &other)
+            {
+                return self != other;
+            }, py::is_operator())
 
         .def_readwrite("x", &GradingControlPoint::m_x, 
                        DOC(GradingControlPoint, m_x))
@@ -223,6 +269,15 @@ void bindPyGradingData(py::module & m)
                 return c;
             }),
              DOC(GradingBSplineCurve, Create, 2))
+
+        .def("__eq__", [](const GradingBSplineCurve &self, const GradingBSplineCurve &other)
+            {
+                return self == other;
+            }, py::is_operator())
+        .def("__ne__", [](const GradingBSplineCurve &self, const GradingBSplineCurve &other)
+            {
+                return self != other;
+            }, py::is_operator())
 
         .def("validate", &GradingBSplineCurve::validate, 
              DOC(GradingBSplineCurve, validate))
@@ -280,6 +335,15 @@ void bindPyGradingData(py::module & m)
                          "blue"_a = DEFAULT_RGB_CURVE->getCurve(RGB_BLUE),
                          "master"_a = DEFAULT_RGB_CURVE->getCurve(RGB_MASTER),
                          DOC(GradingRGBCurve, GradingRGBCurve, 2))
+
+        .def("__eq__", [](const GradingRGBCurve &self, const GradingRGBCurve &other)
+            {
+                return self == other;
+            }, py::is_operator())
+        .def("__ne__", [](const GradingRGBCurve &self, const GradingRGBCurve &other)
+            {
+                return self != other;
+            }, py::is_operator())
 
        .def_property("red", 
                      [](const GradingRGBCurveRcPtr & rgbCurve)
