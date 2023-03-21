@@ -175,7 +175,6 @@ endif()
 # Optimization / internal linking preferences
 
 option(OCIO_USE_SSE "Specify whether to enable SSE CPU performance optimizations" ON)
-option(OCIO_USE_OIIO_CMAKE_CONFIG "Specify whether to look for OIIO using the generated CMake Config script instead of the custom FindOpenImageIO.cmake script" OFF)
 option(OCIO_USE_OIIO_FOR_APPS "Request OIIO to build apps (ociolutimage, ocioconvert and ociodisplay), the default uses OpenEXR." OFF)
 
 
