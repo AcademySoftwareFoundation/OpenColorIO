@@ -56,6 +56,9 @@ int main(int argc, const char **argv)
         return 1;
     }
 
+    // Set the logging level to INFO.
+    OCIO::SetLoggingLevel(OCIO::LOGGING_LEVEL_INFO);
+
     try
     {
         OCIO::ConstConfigRcPtr srcConfig;

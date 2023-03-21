@@ -6,7 +6,9 @@
 
 #include <iostream>
 #include "Platform.h"
+#include "testutils/UnitTest.h"
 #include "UnitTestLogUtils.h"
+#include "utils/StringUtils.h"
 
 namespace OCIO_NAMESPACE
 {
@@ -66,8 +68,9 @@ MuteLogging::~MuteLogging()
     ResetToDefaultLoggingFunction();
 }
 
-
-void checkAndRemove(std::vector<std::string> & svec, const std::string & str)
+// Check and remove str from vector of string if the str is found.
+// Return true if found, otherwise, false.
+bool checkAndRemove(std::vector<std::string> & svec, const std::string & str)
 {
     size_t index = -1;
     size_t i = -1;
@@ -80,53 +83,61 @@ void checkAndRemove(std::vector<std::string> & svec, const std::string & str)
         }
     }
 
-    OCIO_CHECK_GT(-1, index);
-    svec.erase(svec.begin() + index);
+    // Expecting a 0 since the str is expected to be found.
+    if (index != -1)
+    {
+        // found the string in the vector.
+        svec.erase(svec.begin() + index);
+        return true;
+    }
+
+    return false;
 }
 
-void checkRequiredRolesErrors(StringUtils::StringVec & svec, bool printLog)
+bool checkAndMuteInterchangeSceneRoleWarning(StringUtils::StringVec & svec)
 {
     const std::string interchange_scene = "[OpenColorIO Error]: The scene_linear role is "\
                                           "required for a config version 2.2 or higher.";
+    return checkAndRemove(svec, interchange_scene);
+}
+
+bool checkAndMuteCompositingLogRoleWarning(StringUtils::StringVec & svec)
+{
     const std::string compositing_log = "[OpenColorIO Error]: The compositing_log role is "\
                                         "required for a config version 2.2 or higher.";
+    return checkAndRemove(svec, compositing_log);
+}
 
+bool checkAndMuteColorTimingRoleWarning(StringUtils::StringVec & svec)
+{
     const std::string color_timing = "[OpenColorIO Error]: The color_timing role is required "\
                                      "for a config version 2.2 or higher.";
+    return checkAndRemove(svec, color_timing);
+}
 
+bool checkAndMuteAcesInterchangeRoleWarning(StringUtils::StringVec & svec)
+{
     const std::string aces_interchange = "[OpenColorIO Error]: The aces_interchange role is "\
                                          "required when there are scene-referred color spaces and "\
                                          "the config version is 2.2 or higher.";
-    
-    checkAndRemove(svec, interchange_scene);
-    checkAndRemove(svec, compositing_log);
-    checkAndRemove(svec, color_timing);
-    checkAndRemove(svec, aces_interchange);
-    if (printLog)
-    {
-        StringUtils::StringVec::iterator iter = svec.begin();
-        for(iter; iter < svec.end(); iter++)
-        {
-            std::cout << *iter << std::endl;
-        }
-    }
+    return checkAndRemove(svec, aces_interchange);
 }
 
-void checkRequiredRolesErrors(LogGuard & logGuard, bool printLog)
+bool checkAndMuteInterchangeDisplayRoleWarning(StringUtils::StringVec & svec)
 {
-    StringUtils::StringVec svec = StringUtils::SplitByLines(logGuard.output());
-    checkRequiredRolesErrors(svec, printLog);
-}
-
-void checkAllRequiredRolesErrors(LogGuard & logGuard, bool printLog)
-{
-    StringUtils::StringVec svec = StringUtils::SplitByLines(logGuard.output());
     const std::string interchange_display = "[OpenColorIO Error]: The cie_xyz_d65_interchange "\
                                             "role is required when there are display-referred "\
                                             "color spaces and the config version is 2.2 or higher.";
-    
-    checkAndRemove(svec, interchange_display);
-    checkRequiredRolesErrors(svec, true);
+    return checkAndRemove(svec, interchange_display);
+}
+
+void printVectorOfLog(StringUtils::StringVec & svec)
+{
+    StringUtils::StringVec::iterator iter = svec.begin();
+    for(iter; iter < svec.end(); iter++)
+    {
+        std::cout << *iter << std::endl;
+    }
 }
 
 } // namespace OCIO_NAMESPACE

@@ -1376,8 +1376,14 @@ colorspaces:
         {
           OCIO::LogGuard logGuard;
           OCIO_CHECK_NO_THROW(config->validate());
-          // Expecting error since the major version was changed to version 2 without any modifications.
-          OCIO::checkRequiredRolesErrors(logGuard, true);
+          // Check that the log contains the expected error messages for the missing roles and mute 
+          // them so that (only) those messages don't appear in the test output.
+          StringUtils::StringVec svec = StringUtils::SplitByLines(logGuard.output());
+          OCIO_CHECK_ASSERT(OCIO::checkAndMuteInterchangeSceneRoleWarning(svec));
+          OCIO_CHECK_ASSERT(OCIO::checkAndMuteCompositingLogRoleWarning(svec));
+          OCIO_CHECK_ASSERT(OCIO::checkAndMuteColorTimingRoleWarning(svec));
+          OCIO_CHECK_ASSERT(OCIO::checkAndMuteAcesInterchangeRoleWarning(svec));
+          OCIO::printVectorOfLog(svec);
         }
 
         // Check the new version.
@@ -1451,7 +1457,12 @@ colorspaces:
           OCIO_CHECK_NO_THROW(config->validate());
           // Ignore (only) the errors logged regarding the missing roles that are required in 
           // configs with version >= 2.2.
-          OCIO::checkRequiredRolesErrors(logGuard, true);
+          StringUtils::StringVec svec = StringUtils::SplitByLines(logGuard.output());
+          OCIO_CHECK_ASSERT(OCIO::checkAndMuteInterchangeSceneRoleWarning(svec));
+          OCIO_CHECK_ASSERT(OCIO::checkAndMuteCompositingLogRoleWarning(svec));
+          OCIO_CHECK_ASSERT(OCIO::checkAndMuteColorTimingRoleWarning(svec));
+          OCIO_CHECK_ASSERT(OCIO::checkAndMuteAcesInterchangeRoleWarning(svec));
+          OCIO::printVectorOfLog(svec);
         }
 
         // Check the new version.
@@ -1533,7 +1544,12 @@ colorspaces:
               OCIO_CHECK_NO_THROW(cfg->validate());
               // Ignore (only) the errors logged regarding the missing roles that are required in 
               // configs with version >= 2.2.
-              OCIO::checkRequiredRolesErrors(logGuard, true);
+              StringUtils::StringVec svec = StringUtils::SplitByLines(logGuard.output());
+              OCIO_CHECK_ASSERT(OCIO::checkAndMuteInterchangeSceneRoleWarning(svec));
+              OCIO_CHECK_ASSERT(OCIO::checkAndMuteCompositingLogRoleWarning(svec));
+              OCIO_CHECK_ASSERT(OCIO::checkAndMuteColorTimingRoleWarning(svec));
+              OCIO_CHECK_ASSERT(OCIO::checkAndMuteAcesInterchangeRoleWarning(svec));
+              OCIO::printVectorOfLog(svec);
             }
 
             // Check the new version.
@@ -1579,7 +1595,12 @@ colorspaces:
               OCIO_CHECK_NO_THROW(cfg->validate());
               // Ignore (only) the errors logged regarding the missing roles that are required in 
               // configs with version >= 2.2.
-              OCIO::checkRequiredRolesErrors(logGuard, true);
+              StringUtils::StringVec svec = StringUtils::SplitByLines(logGuard.output());
+              OCIO_CHECK_ASSERT(OCIO::checkAndMuteInterchangeSceneRoleWarning(svec));
+              OCIO_CHECK_ASSERT(OCIO::checkAndMuteCompositingLogRoleWarning(svec));
+              OCIO_CHECK_ASSERT(OCIO::checkAndMuteColorTimingRoleWarning(svec));
+              OCIO_CHECK_ASSERT(OCIO::checkAndMuteAcesInterchangeRoleWarning(svec));
+              OCIO::printVectorOfLog(svec);
             }
 
             // Check the new version.
@@ -1635,7 +1656,12 @@ OCIO_ADD_TEST(FileRules, config_v1_to_v2_from_memory)
                                 "referencing 'default' that is neither a color space nor a named "
                                 "transform");
           // Expecting error since the major version was changed to version 2 without any modifications.
-          OCIO::checkRequiredRolesErrors(logGuard, true);
+          StringUtils::StringVec svec = StringUtils::SplitByLines(logGuard.output());
+          OCIO_CHECK_ASSERT(OCIO::checkAndMuteInterchangeSceneRoleWarning(svec));
+          OCIO_CHECK_ASSERT(OCIO::checkAndMuteCompositingLogRoleWarning(svec));
+          OCIO_CHECK_ASSERT(OCIO::checkAndMuteColorTimingRoleWarning(svec));
+          OCIO_CHECK_ASSERT(OCIO::checkAndMuteAcesInterchangeRoleWarning(svec));
+          OCIO::printVectorOfLog(svec);
         }
 
         // Upgrading is making sure to build a valid v2 config.
@@ -1646,7 +1672,12 @@ OCIO_ADD_TEST(FileRules, config_v1_to_v2_from_memory)
           OCIO::LogGuard logGuard;
           OCIO_CHECK_NO_THROW(config->validate());
           // Expecting error since the major version was changed to version 2 without any modifications.
-          OCIO::checkRequiredRolesErrors(logGuard, true);
+          StringUtils::StringVec svec = StringUtils::SplitByLines(logGuard.output());
+          OCIO_CHECK_ASSERT(OCIO::checkAndMuteInterchangeSceneRoleWarning(svec));
+          OCIO_CHECK_ASSERT(OCIO::checkAndMuteCompositingLogRoleWarning(svec));
+          OCIO_CHECK_ASSERT(OCIO::checkAndMuteColorTimingRoleWarning(svec));
+          OCIO_CHECK_ASSERT(OCIO::checkAndMuteAcesInterchangeRoleWarning(svec));
+          OCIO::printVectorOfLog(svec);
         }
 
         // Check the new version.
@@ -1685,7 +1716,12 @@ OCIO_ADD_TEST(FileRules, config_v1_to_v2_from_memory)
                                 "referencing 'default' that is neither a color space nor a named "
                                 "transform");
           // Expecting error since the major version was changed to version 2 without any modifications.
-          OCIO::checkRequiredRolesErrors(logGuard, true);
+          StringUtils::StringVec svec = StringUtils::SplitByLines(logGuard.output());
+          OCIO_CHECK_ASSERT(OCIO::checkAndMuteInterchangeSceneRoleWarning(svec));
+          OCIO_CHECK_ASSERT(OCIO::checkAndMuteCompositingLogRoleWarning(svec));
+          OCIO_CHECK_ASSERT(OCIO::checkAndMuteColorTimingRoleWarning(svec));
+          OCIO_CHECK_ASSERT(OCIO::checkAndMuteAcesInterchangeRoleWarning(svec));
+          OCIO::printVectorOfLog(svec);
         }
 
         // Upgrading is making sure to build a valid v2 config.
@@ -1696,7 +1732,12 @@ OCIO_ADD_TEST(FileRules, config_v1_to_v2_from_memory)
           OCIO::LogGuard logGuard;
           OCIO_CHECK_NO_THROW(config->validate());
           // Expecting error since the major version was changed to version 2 without any modifications.
-          OCIO::checkRequiredRolesErrors(logGuard, true);
+          StringUtils::StringVec svec = StringUtils::SplitByLines(logGuard.output());
+          OCIO_CHECK_ASSERT(OCIO::checkAndMuteInterchangeSceneRoleWarning(svec));
+          OCIO_CHECK_ASSERT(OCIO::checkAndMuteCompositingLogRoleWarning(svec));
+          OCIO_CHECK_ASSERT(OCIO::checkAndMuteColorTimingRoleWarning(svec));
+          OCIO_CHECK_ASSERT(OCIO::checkAndMuteAcesInterchangeRoleWarning(svec));
+          OCIO::printVectorOfLog(svec);
         }
 
         // Check the new version.
@@ -1735,7 +1776,12 @@ OCIO_ADD_TEST(FileRules, config_v1_to_v2_from_memory)
                                 "referencing 'default' that is neither a color space nor a named "
                                 "transform");
           // Expecting error since the major version was changed to version 2 without any modifications.
-          OCIO::checkRequiredRolesErrors(logGuard, true);
+          StringUtils::StringVec svec = StringUtils::SplitByLines(logGuard.output());
+          OCIO_CHECK_ASSERT(OCIO::checkAndMuteInterchangeSceneRoleWarning(svec));
+          OCIO_CHECK_ASSERT(OCIO::checkAndMuteCompositingLogRoleWarning(svec));
+          OCIO_CHECK_ASSERT(OCIO::checkAndMuteColorTimingRoleWarning(svec));
+          OCIO_CHECK_ASSERT(OCIO::checkAndMuteAcesInterchangeRoleWarning(svec));
+          OCIO::printVectorOfLog(svec);
         }
 
         config->setMajorVersion(1);
@@ -1757,7 +1803,12 @@ OCIO_ADD_TEST(FileRules, config_v1_to_v2_from_memory)
           OCIO::LogGuard logGuard; 
           OCIO_CHECK_NO_THROW(config->validate());
           // Expecting error since the major version was changed to version 2 without any modifications.
-          OCIO::checkRequiredRolesErrors(logGuard, true);
+          StringUtils::StringVec svec = StringUtils::SplitByLines(logGuard.output());
+          OCIO_CHECK_ASSERT(OCIO::checkAndMuteInterchangeSceneRoleWarning(svec));
+          OCIO_CHECK_ASSERT(OCIO::checkAndMuteCompositingLogRoleWarning(svec));
+          OCIO_CHECK_ASSERT(OCIO::checkAndMuteColorTimingRoleWarning(svec));
+          OCIO_CHECK_ASSERT(OCIO::checkAndMuteAcesInterchangeRoleWarning(svec));
+          OCIO::printVectorOfLog(svec);
         }
 
         // Check the new version.

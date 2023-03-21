@@ -363,7 +363,13 @@ OCIO_ADD_TEST(Config, required_roles_for_version_2_2)
         OCIO_CHECK_NO_THROW(config->validate());
         // Check that the log contains the expected error messages for the missing roles and mute 
         // them so that (only) those messages don't appear in the test output.
-        OCIO::checkAllRequiredRolesErrors(logGuard, true);
+        StringUtils::StringVec svec = StringUtils::SplitByLines(logGuard.output());
+        OCIO_CHECK_ASSERT(OCIO::checkAndMuteInterchangeSceneRoleWarning(svec));
+        OCIO_CHECK_ASSERT(OCIO::checkAndMuteCompositingLogRoleWarning(svec));
+        OCIO_CHECK_ASSERT(OCIO::checkAndMuteColorTimingRoleWarning(svec));
+        OCIO_CHECK_ASSERT(OCIO::checkAndMuteAcesInterchangeRoleWarning(svec));
+        OCIO_CHECK_ASSERT(OCIO::checkAndMuteInterchangeDisplayRoleWarning(svec));
+        OCIO::printVectorOfLog(svec);
     }
     
     // Set colorspace for all required roles.
@@ -378,9 +384,7 @@ OCIO_ADD_TEST(Config, required_roles_for_version_2_2)
 
         OCIO::LogGuard logGuard;
         OCIO_CHECK_NO_THROW(config->validate());
-
-        StringUtils::StringVec svec = StringUtils::SplitByLines(logGuard.output());
-        OCIO_CHECK_ASSERT(StringUtils::Contain(svec, ""));
+        OCIO_CHECK_ASSERT(StringUtils::StartsWith(logGuard.output(), ""));
     }
     
     {
@@ -5866,7 +5870,7 @@ OCIO_ADD_TEST(Config, inactive_color_space_read_write)
             OCIO::LogGuard log;
             OCIO_CHECK_NO_THROW(config->validate());
             OCIO_CHECK_EQUAL(log.output(), 
-                             "[OpenColorIO Warning]: Inactive 'unknown' is neither a color "
+                             "[OpenColorIO Info]: Inactive 'unknown' is neither a color "
                              "space nor a named transform.\n");
         }
 

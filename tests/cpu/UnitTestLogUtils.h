@@ -5,7 +5,6 @@
 #define INCLUDED_OCIO_UNITTEST_LOGUTILS_H
 
 #include <OpenColorIO/OpenColorIO.h>
-#include "testutils/UnitTest.h"
 #include "utils/StringUtils.h"
 
 namespace OCIO_NAMESPACE
@@ -39,8 +38,13 @@ public:
     ~MuteLogging();
 };
 
-void checkAllRequiredRolesErrors(LogGuard & logGuard, bool printLog);
-void checkRequiredRolesErrors(LogGuard & logGuard, bool printLog);
+bool checkAndMuteInterchangeSceneRoleWarning(StringUtils::StringVec & svec);
+bool checkAndMuteCompositingLogRoleWarning(StringUtils::StringVec & svec);
+bool checkAndMuteColorTimingRoleWarning(StringUtils::StringVec & svec);
+bool checkAndMuteAcesInterchangeRoleWarning(StringUtils::StringVec & svec);
+bool checkAndMuteInterchangeDisplayRoleWarning(StringUtils::StringVec & svec);
+
+void printVectorOfLog(StringUtils::StringVec & svec);
 
 } // namespace OCIO_NAMESPACE
 
