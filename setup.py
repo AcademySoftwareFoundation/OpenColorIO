@@ -155,11 +155,12 @@ class CMakeBuild(build_ext):
 setup(
     version=get_version(),
     package_dir={
-        'PyOpenColorIOTests': 'tests/python',
-        'PyOpenColorIOTests.data': 'tests/data',
+        'PyOpenColorIO': 'src/bindings/python/package',
+        'PyOpenColorIO.tests': 'tests/python',
+        'PyOpenColorIO.data': 'tests/data',
     },
-    packages=['PyOpenColorIOTests', 'PyOpenColorIOTests.data'],
-    ext_modules=[CMakeExtension("PyOpenColorIO")],
+    packages=['PyOpenColorIO', 'PyOpenColorIO.tests', 'PyOpenColorIO.data'],
+    ext_modules=[CMakeExtension("PyOpenColorIO.PyOpenColorIO")],
     cmdclass={"build_ext": CMakeBuild},
     include_package_data=True
 )
