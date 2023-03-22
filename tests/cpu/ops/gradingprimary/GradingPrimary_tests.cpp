@@ -122,9 +122,9 @@ OCIO_ADD_TEST(GradingPrimary, precompute)
     OCIO_CHECK_ASSERT(comp.getContrast() == OCIO::Float3({ 1.f, 0.8f, 1.f }));
     OCIO_CHECK_ASSERT(comp.getGamma() == OCIO::Float3({ 1.f, 1.f, 0.8f }));
 
-    // Test isGammaIdentity() / isContrastIdentity()
     gp = OCIO::GradingPrimary{ OCIO::GRADING_LOG };
 
+    // Test identity checks for GRADING_LOG
     gp.m_gamma.m_red = 0.8;
     comp.update(OCIO::GRADING_LOG, OCIO::TRANSFORM_DIR_FORWARD, gp);
     OCIO_CHECK_ASSERT(!comp.isGammaIdentity());
@@ -134,6 +134,7 @@ OCIO_ADD_TEST(GradingPrimary, precompute)
     OCIO_CHECK_ASSERT(comp.isGammaIdentity());
     OCIO_CHECK_ASSERT(comp.getLocalBypass());
 
+    // Test identity checks for GRADING_LIN
     gp.m_contrast.m_red = 0.8;
     comp.update(OCIO::GRADING_LIN, OCIO::TRANSFORM_DIR_FORWARD, gp);
     OCIO_CHECK_ASSERT(!comp.isContrastIdentity());
@@ -143,6 +144,7 @@ OCIO_ADD_TEST(GradingPrimary, precompute)
     OCIO_CHECK_ASSERT(comp.isContrastIdentity());
     OCIO_CHECK_ASSERT(comp.getLocalBypass());
 
+    // Test identity checks for GRADING_VIDEO
     gp.m_gamma.m_red = 0.8;
     comp.update(OCIO::GRADING_VIDEO, OCIO::TRANSFORM_DIR_FORWARD, gp);
     OCIO_CHECK_ASSERT(!comp.isGammaIdentity());
