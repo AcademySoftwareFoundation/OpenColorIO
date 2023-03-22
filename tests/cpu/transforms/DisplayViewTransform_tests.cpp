@@ -1233,24 +1233,24 @@ colorspaces:
     // Display name is empty.
     dt->setDisplay("");
     OCIO_CHECK_THROW_WHAT(config->getProcessor(dt),
-            OCIO::Exception,
-            "DisplayViewTransform: empty display name."
+                          OCIO::Exception,
+                          "DisplayViewTransform: empty display name."
     );
     dt->setDisplay("display");
 
     // View name is empty.
     dt->setView("");
     OCIO_CHECK_THROW_WHAT(config->getProcessor(dt),
-            OCIO::Exception,
-            "DisplayViewTransform: empty view name."
+                          OCIO::Exception,
+                          "DisplayViewTransform: empty view name."
     );
     dt->setView("view");
 
     // Source CS is empty.
     dt->setSrc("");
     OCIO_CHECK_THROW_WHAT(config->getProcessor(dt),
-            OCIO::Exception,
-            "DisplayViewTransform: empty source color space name."
+                          OCIO::Exception,
+                          "DisplayViewTransform: empty source color space name."
     );
 
     // More detailed error handling is in DisplayViewTransform::BuildDisplayOps.
@@ -1258,16 +1258,16 @@ colorspaces:
     // Source CS doesn't exist in the config.
     dt->setSrc("missing cs");
     OCIO_CHECK_THROW_WHAT(config->getProcessor(dt),
-            OCIO::Exception,
-            "DisplayViewTransform error. Cannot find source color space named 'missing cs'."
+                          OCIO::Exception,
+                          "DisplayViewTransform error. Cannot find source color space named 'missing cs'."
     );
     dt->setSrc("displayCSIn");
 
     // Display doesn't exist in the config.
     dt->setDisplay("missing display");
     OCIO_CHECK_THROW_WHAT(config->getProcessor(dt),
-            OCIO::Exception,
-            "DisplayViewTransform error. Display 'missing display' not found."
+                          OCIO::Exception,
+                          "DisplayViewTransform error. Display 'missing display' not found."
     );
     dt->setDisplay("display");
 
@@ -1278,15 +1278,17 @@ colorspaces:
                                                  "displayCSOut", "", "", ""));
     dt->setView("bad_view");
     OCIO_CHECK_THROW_WHAT(e_config->getProcessor(dt),
-            OCIO::Exception,
-            "DisplayViewTransform error. The view transform 'missing vt' is neither a view transform nor a named transform."
+                          OCIO::Exception,
+                          "DisplayViewTransform error. The view transform 'missing vt' is neither "
+                          "a view transform nor a named transform."
     );
 
     // View doesn't exist in the config.
     dt->setView("missing view");
     OCIO_CHECK_THROW_WHAT(config->getProcessor(dt),
-            OCIO::Exception,
-            "DisplayViewTransform error. The display 'display' does not have view 'missing view'."
+                          OCIO::Exception,
+                          "DisplayViewTransform error. The display 'display' does not have "
+                          "view 'missing view'."
     );
 
     // View references a "display_colorspace" that doesn't exist in the config.
@@ -1294,21 +1296,24 @@ colorspaces:
                                                  "missing cs", "", "", ""));
     dt->setView("bad_view");
     OCIO_CHECK_THROW_WHAT(e_config->getProcessor(dt),
-            OCIO::Exception,
-            "DisplayViewTransform error. The view 'bad_view' refers to a display color space 'missing cs' that can't be found."
+                          OCIO::Exception,
+                          "DisplayViewTransform error. The view 'bad_view' refers to a display "
+                          "color space 'missing cs' that can't be found."
     );
     // As with most of these, validation also fails.
     OCIO_CHECK_THROW_WHAT(e_config->validate(),
-            OCIO::Exception,
-            "Config failed validation. Display 'display' has a view 'bad_view' that refers to a color space or a named transform, 'missing cs', which is not defined."
+                          OCIO::Exception,
+                          "Config failed validation. Display 'display' has a view 'bad_view' that "
+                          "refers to a color space or a named transform, 'missing cs', which is not defined."
     );
 
     // View references a "colorspace" that doesn't exist in the config.
     OCIO_CHECK_NO_THROW(e_config->addDisplayView("display", "bad_view", "missing cs", ""));
     dt->setView("bad_view");
     OCIO_CHECK_THROW_WHAT(e_config->getProcessor(dt),
-            OCIO::Exception,
-            "DisplayViewTransform error. Cannot find color space or named transform with name 'missing cs'."
+                          OCIO::Exception,
+                          "DisplayViewTransform error. Cannot find color space or named transform "
+                          "with name 'missing cs'."
     );
 
     // Check a few more scenarios.
@@ -1318,8 +1323,9 @@ colorspaces:
                                                  "displayCSOut", "missing look", "", ""));
     dt->setView("bad_view");
     OCIO_CHECK_THROW_WHAT(e_config->getProcessor(dt),
-            OCIO::Exception,
-            "RunLookTokens error. The specified look, 'missing look', cannot be found.  (looks: look)."
+                          OCIO::Exception,
+                          "RunLookTokens error. The specified look, 'missing look', cannot be "
+                          "found.  (looks: look)."
     );
     dt->setView("view");
 
@@ -1329,8 +1335,9 @@ colorspaces:
     OCIO_CHECK_NO_THROW(e_config->getProcessor(dt));
     // But validation fails.
     OCIO_CHECK_THROW_WHAT(e_config->validate(),
-            OCIO::Exception,
-            "Config failed validation. Display 'display' has a view 'bad_view' refers to a viewing rule, 'missing rule', which is not defined."
+                          OCIO::Exception,
+                          "Config failed validation. Display 'display' has a view 'bad_view' refers "
+                          "to a viewing rule, 'missing rule', which is not defined."
     );
 }
 
