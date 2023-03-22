@@ -1,25 +1,27 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright Contributors to the OpenColorIO Project.
 #
-# Locate or install expat
+# Locate expat
 #
 # Variables defined by this module:
-#   expat_FOUND - If FALSE, do not try to link to expat
-#   expat_LIBRARY - expat library to link to
-#   expat_INCLUDE_DIR - Where to find expat.h
-#   expat_VERSION - The version of the library
+#   expat_FOUND          - Indicate whether the library was found or not
+#   expat_LIBRARY        - Path to the library file
+#   expat_INCLUDE_DIR    - Location of the header files
+#   expat_VERSION        - Library's version
 #
-# Targets defined by this module:
-#   expat::expat - IMPORTED target, if found
+# Global targets defined by this module:
+#   expat::expat
 #
-# By default, the dynamic libraries of expat will be found. To find the static 
-# ones instead, you must set the expat_STATIC_LIBRARY variable to TRUE 
-# before calling find_package(expat ...).
+# Usually CMake will use the dynamic library rather than static, if both are present. 
+# In this case, you may set expat_STATIC_LIBRARY to ON to request use of the static one. 
+# If only the static library is present (such as when OCIO builds the dependency), then the option 
+# is not needed.
 #
-# If expat is not installed in a standard path, you can use the expat_ROOT 
-# variable to tell CMake where to find it. If it is not found and 
-# OCIO_INSTALL_EXT_PACKAGES is set to MISSING or ALL, expat will be downloaded, 
-# built, and statically-linked into libOpenColorIO at build time.
+# If the library is not installed in a typical location where CMake will find it, you may specify 
+# the location using one of the following methods:
+# -- Set -Dexpat_DIR to point to the directory containing the CMake configuration file for the package.
+# -- Set -Dexpat_ROOT to point to the directory containing the lib and include directories.
+# -- Set -Dexpat_LIBRARY and -Dexpat_INCLUDE_DIR to point to the lib and include directories.
 #
 
 ###############################################################################
@@ -95,7 +97,6 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
                 include
                 expat/include
         )
-
 
         # Expat uses prefix "lib" on all platform by default.
         # Library name doesn't change in debug.
@@ -200,124 +201,9 @@ endif()
 ###############################################################################
 ### Create target
 
-if(NOT TARGET expat::expat)
+if(expat_FOUND AND NOT TARGET expat::expat)
     add_library(expat::expat UNKNOWN IMPORTED GLOBAL)
     set(_expat_TARGET_CREATE TRUE)
-endif()
-
-###############################################################################
-### Install package from source ###
-
-if(NOT expat_FOUND AND OCIO_INSTALL_EXT_PACKAGES AND NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL NONE)
-    include(ExternalProject)
-    include(GNUInstallDirs)
-
-    set(_EXT_DIST_ROOT "${CMAKE_BINARY_DIR}/ext/dist")
-    set(_EXT_BUILD_ROOT "${CMAKE_BINARY_DIR}/ext/build")
-
-    # Set find_package standard args
-    set(expat_FOUND TRUE)
-    set(expat_VERSION ${expat_FIND_VERSION})
-    set(expat_INCLUDE_DIR "${_EXT_DIST_ROOT}/${CMAKE_INSTALL_INCLUDEDIR}")
-
-    # Set the expected library name
-    if(WIN32)
-        if(BUILD_TYPE_DEBUG)
-            set(_expat_LIB_SUFFIX "d")
-        endif()
-        # Static Linking, Multi-threaded Dll naming (>=2.2.8):
-        #   https://github.com/libexpat/libexpat/blob/R_2_2_8/expat/win32/README.txt
-        set(_expat_LIB_SUFFIX "${_expat_LIB_SUFFIX}MD")
-    endif()
-
-    # Expat use a hardcoded lib prefix instead of CMAKE_STATIC_LIBRARY_PREFIX
-    # https://github.com/libexpat/libexpat/blob/R_2_4_1/expat/CMakeLists.txt#L374
-    set(_expat_LIB_PREFIX "lib")
-
-    set(expat_LIBRARY
-        "${_EXT_DIST_ROOT}/${CMAKE_INSTALL_LIBDIR}/${_expat_LIB_PREFIX}expat${_expat_LIB_SUFFIX}${CMAKE_STATIC_LIBRARY_SUFFIX}")
-
-    if(_expat_TARGET_CREATE)
-        if(MSVC)
-            set(EXPAT_C_FLAGS "${EXPAT_C_FLAGS} /EHsc")
-            set(EXPAT_CXX_FLAGS "${EXPAT_CXX_FLAGS} /EHsc")
-        endif()
-
-        string(STRIP "${EXPAT_C_FLAGS}" EXPAT_C_FLAGS)
-        string(STRIP "${EXPAT_CXX_FLAGS}" EXPAT_CXX_FLAGS)
-
-        set(EXPAT_CMAKE_ARGS
-            ${EXPAT_CMAKE_ARGS}
-            -DCMAKE_POLICY_DEFAULT_CMP0063=NEW
-            -DCMAKE_C_VISIBILITY_PRESET=${CMAKE_C_VISIBILITY_PRESET}
-            -DCMAKE_CXX_VISIBILITY_PRESET=${CMAKE_CXX_VISIBILITY_PRESET}
-            -DCMAKE_VISIBILITY_INLINES_HIDDEN=${CMAKE_VISIBILITY_INLINES_HIDDEN}
-            -DCMAKE_POSITION_INDEPENDENT_CODE=ON
-            -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-            -DCMAKE_C_FLAGS=${EXPAT_C_FLAGS}
-            -DCMAKE_CXX_FLAGS=${EXPAT_CXX_FLAGS}
-            -DCMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD}
-            -DCMAKE_INSTALL_MESSAGE=${CMAKE_INSTALL_MESSAGE}
-            -DCMAKE_INSTALL_PREFIX=${_EXT_DIST_ROOT}
-            -DCMAKE_INSTALL_BINDIR=${CMAKE_INSTALL_BINDIR}
-            -DCMAKE_INSTALL_DATADIR=${CMAKE_INSTALL_DATADIR}
-            -DCMAKE_INSTALL_LIBDIR=${CMAKE_INSTALL_LIBDIR}
-            -DCMAKE_INSTALL_INCLUDEDIR=${CMAKE_INSTALL_INCLUDEDIR}
-            -DCMAKE_OBJECT_PATH_MAX=${CMAKE_OBJECT_PATH_MAX}
-            -DEXPAT_BUILD_DOCS=OFF
-            -DEXPAT_BUILD_EXAMPLES=OFF
-            -DEXPAT_BUILD_TESTS=OFF
-            -DEXPAT_BUILD_TOOLS=OFF
-            -DEXPAT_SHARED_LIBS=OFF
-        )
-
-        if(CMAKE_TOOLCHAIN_FILE)
-            set(EXPAT_CMAKE_ARGS
-                ${EXPAT_CMAKE_ARGS} -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE})
-        endif()
-
-        if(APPLE)
-            string(REPLACE ";" "$<SEMICOLON>" ESCAPED_CMAKE_OSX_ARCHITECTURES "${CMAKE_OSX_ARCHITECTURES}")
-
-            set(EXPAT_CMAKE_ARGS
-                ${EXPAT_CMAKE_ARGS}
-                -DCMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET}
-                -DCMAKE_OSX_ARCHITECTURES=${ESCAPED_CMAKE_OSX_ARCHITECTURES}
-            )
-        endif()
-
-        if (ANDROID)
-            set(EXPAT_CMAKE_ARGS
-                ${EXPAT_CMAKE_ARGS}
-                -DANDROID_PLATFORM=${ANDROID_PLATFORM}
-                -DANDROID_ABI=${ANDROID_ABI}
-                -DANDROID_STL=${ANDROID_STL})
-        endif()
-
-        # Hack to let imported target be built from ExternalProject_Add
-        file(MAKE_DIRECTORY ${expat_INCLUDE_DIR})
-
-        ExternalProject_Add(expat_install
-            GIT_REPOSITORY "https://github.com/libexpat/libexpat.git"
-            GIT_TAG "R_${expat_FIND_VERSION_MAJOR}_${expat_FIND_VERSION_MINOR}_${expat_FIND_VERSION_PATCH}"
-            GIT_CONFIG advice.detachedHead=false
-            GIT_SHALLOW TRUE
-            PREFIX "${_EXT_BUILD_ROOT}/libexpat"
-            BUILD_BYPRODUCTS ${expat_LIBRARY}
-            SOURCE_SUBDIR expat
-            CMAKE_ARGS ${EXPAT_CMAKE_ARGS}
-            EXCLUDE_FROM_ALL TRUE
-            BUILD_COMMAND ""
-            INSTALL_COMMAND
-                ${CMAKE_COMMAND} --build .
-                                 --config ${CMAKE_BUILD_TYPE}
-                                 --target install
-                                 --parallel
-        )
-
-        add_dependencies(expat::expat expat_install)
-        message(STATUS "Installing expat: ${expat_LIBRARY} (version \"${expat_VERSION}\")")
-    endif()
 endif()
 
 ###############################################################################
