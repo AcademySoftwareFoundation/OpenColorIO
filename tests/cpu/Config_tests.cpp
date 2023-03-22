@@ -363,13 +363,12 @@ OCIO_ADD_TEST(Config, required_roles_for_version_2_2)
         OCIO_CHECK_NO_THROW(config->validate());
         // Check that the log contains the expected error messages for the missing roles and mute 
         // them so that (only) those messages don't appear in the test output.
-        StringUtils::StringVec svec = StringUtils::SplitByLines(logGuard.output());
-        OCIO_CHECK_ASSERT(OCIO::checkAndMuteInterchangeSceneRoleWarning(svec));
-        OCIO_CHECK_ASSERT(OCIO::checkAndMuteCompositingLogRoleWarning(svec));
-        OCIO_CHECK_ASSERT(OCIO::checkAndMuteColorTimingRoleWarning(svec));
-        OCIO_CHECK_ASSERT(OCIO::checkAndMuteAcesInterchangeRoleWarning(svec));
-        OCIO_CHECK_ASSERT(OCIO::checkAndMuteInterchangeDisplayRoleWarning(svec));
-        OCIO::printVectorOfLog(svec);
+        OCIO_CHECK_ASSERT(OCIO::checkAndMuteSceneLinearRoleError(logGuard));
+        OCIO_CHECK_ASSERT(OCIO::checkAndMuteCompositingLogRoleError(logGuard));
+        OCIO_CHECK_ASSERT(OCIO::checkAndMuteColorTimingRoleError(logGuard));
+        OCIO_CHECK_ASSERT(OCIO::checkAndMuteAcesInterchangeRoleError(logGuard));
+        OCIO_CHECK_ASSERT(OCIO::checkAndMuteInterchangeDisplayRoleError(logGuard));
+        logGuard.print();
     }
     
     // Set colorspace for all required roles.
@@ -384,7 +383,7 @@ OCIO_ADD_TEST(Config, required_roles_for_version_2_2)
 
         OCIO::LogGuard logGuard;
         OCIO_CHECK_NO_THROW(config->validate());
-        OCIO_CHECK_ASSERT(StringUtils::StartsWith(logGuard.output(), ""));
+        OCIO_CHECK_ASSERT(logGuard.empty());
     }
     
     {
@@ -458,12 +457,9 @@ OCIO_ADD_TEST(Config, required_roles_for_version_2_2)
 
         OCIO::LogGuard logGuard;
         OCIO_CHECK_NO_THROW(config->validate());
-        OCIO_CHECK_ASSERT(
-            StringUtils::StartsWith(
-                logGuard.output(), 
-                "[OpenColorIO Error]: The aces_interchange role is required when there are "\
-                "scene-referred color spaces and the config version is 2.2 or higher."
-            )
+        OCIO_CHECK_ASSERT(logGuard.findAndRemove(
+            "[OpenColorIO Error]: The aces_interchange role is required when there are "\
+            "scene-referred color spaces and the config version is 2.2 or higher.")
         );
 
         // Set aces_interchange for next test.
@@ -501,9 +497,8 @@ OCIO_ADD_TEST(Config, required_roles_for_version_2_2)
         OCIO::LogGuard logGuard;
         OCIO_CHECK_NO_THROW(config->validate());
         OCIO_CHECK_ASSERT(
-            StringUtils::StartsWith(
-                logGuard.output(), 
-                "[OpenColorIO Error]: The aces_interchange role must be a scene-referred color space.")
+            logGuard.findAndRemove("[OpenColorIO Error]: The aces_interchange role must be a "\
+                                   "scene-referred color space.")
         );
     }
 
@@ -517,9 +512,8 @@ OCIO_ADD_TEST(Config, required_roles_for_version_2_2)
         OCIO::LogGuard logGuard;
         OCIO_CHECK_NO_THROW(config->validate());
         OCIO_CHECK_ASSERT(
-            StringUtils::StartsWith(
-                logGuard.output(), 
-                "[OpenColorIO Error]: The cie_xyz_d65_interchange role must be a display-referred color space.")
+            logGuard.findAndRemove("[OpenColorIO Error]: The cie_xyz_d65_interchange role must "\
+                                   "be a display-referred color space.")
         );
     }
 
@@ -538,8 +532,7 @@ OCIO_ADD_TEST(Config, required_roles_for_version_2_2)
 
         OCIO::LogGuard logGuard;
         OCIO_CHECK_NO_THROW(config->validate());
-        OCIO_CHECK_ASSERT(
-        StringUtils::StartsWith(logGuard.output(), ""));
+        OCIO_CHECK_ASSERT(logGuard.empty());
     }
 }
 

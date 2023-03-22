@@ -5,10 +5,11 @@
 #include <OpenColorIO/OpenColorIO.h>
 
 #include <iostream>
+#include <regex>
+
 #include "Platform.h"
 #include "testutils/UnitTest.h"
 #include "UnitTestLogUtils.h"
-#include "utils/StringUtils.h"
 
 namespace OCIO_NAMESPACE
 {
@@ -58,6 +59,29 @@ bool LogGuard::empty() const
     return g_output.empty();
 }
 
+// Find and remove specified line from g_output.
+// Return true if found, otherwise, false.
+bool LogGuard::findAndRemove(const std::string & line) const
+{
+    // Escape the line to prevent error in regex if the line contains regex character.
+    std::string escaped_line = std::regex_replace(line, std::regex("[\\[\\](){}*+?.^$|\\\\]"), "\\$&");
+    std::regex pattern(escaped_line + R"([\r\n]+)");
+    std::smatch match;
+    if (std::regex_search(g_output, match, pattern)) {
+        // If the line is found, remove it.
+        auto pos = std::next(g_output.begin(), match.position());
+        auto end = std::next(pos, match.length());
+        g_output.erase(pos, end);
+        return true;
+    }
+    return false;
+}
+
+void LogGuard::print()
+{
+    std::cout << g_output;
+}
+
 MuteLogging::MuteLogging()
 {
     SetLoggingFunction(&MuteLoggingFunction);
@@ -73,7 +97,6 @@ MuteLogging::~MuteLogging()
 bool checkAndRemove(std::vector<std::string> & svec, const std::string & str)
 {
     size_t index = -1;
-    size_t i = -1;
     for (size_t i = 0; i < svec.size(); i++)
     {
         if (Platform::Strcasecmp(svec[i].c_str(), str.c_str()) == 0)
@@ -83,10 +106,8 @@ bool checkAndRemove(std::vector<std::string> & svec, const std::string & str)
         }
     }
 
-    // Expecting a 0 since the str is expected to be found.
     if (index != -1)
     {
-        // found the string in the vector.
         svec.erase(svec.begin() + index);
         return true;
     }
@@ -94,50 +115,41 @@ bool checkAndRemove(std::vector<std::string> & svec, const std::string & str)
     return false;
 }
 
-bool checkAndMuteInterchangeSceneRoleWarning(StringUtils::StringVec & svec)
+bool checkAndMuteSceneLinearRoleError(LogGuard & logGuard)
 {
     const std::string interchange_scene = "[OpenColorIO Error]: The scene_linear role is "\
                                           "required for a config version 2.2 or higher.";
-    return checkAndRemove(svec, interchange_scene);
+    return logGuard.findAndRemove(interchange_scene);
 }
 
-bool checkAndMuteCompositingLogRoleWarning(StringUtils::StringVec & svec)
+bool checkAndMuteCompositingLogRoleError(LogGuard & logGuard)
 {
     const std::string compositing_log = "[OpenColorIO Error]: The compositing_log role is "\
                                         "required for a config version 2.2 or higher.";
-    return checkAndRemove(svec, compositing_log);
+    return logGuard.findAndRemove(compositing_log);
 }
 
-bool checkAndMuteColorTimingRoleWarning(StringUtils::StringVec & svec)
+bool checkAndMuteColorTimingRoleError(LogGuard & logGuard)
 {
     const std::string color_timing = "[OpenColorIO Error]: The color_timing role is required "\
                                      "for a config version 2.2 or higher.";
-    return checkAndRemove(svec, color_timing);
+    return logGuard.findAndRemove(color_timing);
 }
 
-bool checkAndMuteAcesInterchangeRoleWarning(StringUtils::StringVec & svec)
+bool checkAndMuteAcesInterchangeRoleError(LogGuard & logGuard)
 {
     const std::string aces_interchange = "[OpenColorIO Error]: The aces_interchange role is "\
                                          "required when there are scene-referred color spaces and "\
                                          "the config version is 2.2 or higher.";
-    return checkAndRemove(svec, aces_interchange);
+    return logGuard.findAndRemove(aces_interchange);
 }
 
-bool checkAndMuteInterchangeDisplayRoleWarning(StringUtils::StringVec & svec)
+bool checkAndMuteInterchangeDisplayRoleError(LogGuard & logGuard)
 {
     const std::string interchange_display = "[OpenColorIO Error]: The cie_xyz_d65_interchange "\
                                             "role is required when there are display-referred "\
                                             "color spaces and the config version is 2.2 or higher.";
-    return checkAndRemove(svec, interchange_display);
-}
-
-void printVectorOfLog(StringUtils::StringVec & svec)
-{
-    StringUtils::StringVec::iterator iter = svec.begin();
-    for(iter; iter < svec.end(); iter++)
-    {
-        std::cout << *iter << std::endl;
-    }
+    return logGuard.findAndRemove(interchange_display);
 }
 
 } // namespace OCIO_NAMESPACE

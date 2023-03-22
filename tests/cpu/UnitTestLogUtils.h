@@ -26,6 +26,8 @@ public:
     void clear();
     bool empty() const;
 
+    bool findAndRemove(const std::string & str) const;
+    void print();
 private:
     LoggingLevel m_logLevel;
 };
@@ -38,13 +40,11 @@ public:
     ~MuteLogging();
 };
 
-bool checkAndMuteInterchangeSceneRoleWarning(StringUtils::StringVec & svec);
-bool checkAndMuteCompositingLogRoleWarning(StringUtils::StringVec & svec);
-bool checkAndMuteColorTimingRoleWarning(StringUtils::StringVec & svec);
-bool checkAndMuteAcesInterchangeRoleWarning(StringUtils::StringVec & svec);
-bool checkAndMuteInterchangeDisplayRoleWarning(StringUtils::StringVec & svec);
-
-void printVectorOfLog(StringUtils::StringVec & svec);
+bool checkAndMuteSceneLinearRoleError(LogGuard & logGuard);
+bool checkAndMuteCompositingLogRoleError(LogGuard & logGuard);
+bool checkAndMuteColorTimingRoleError(LogGuard & logGuard);
+bool checkAndMuteAcesInterchangeRoleError(LogGuard & logGuard);
+bool checkAndMuteInterchangeDisplayRoleError(LogGuard & logGuard);
 
 } // namespace OCIO_NAMESPACE
 
