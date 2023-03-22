@@ -7,17 +7,15 @@
 # CMake's FindZLIB when installing ZLIB manually.
 #
 # Variables defined by this module:
-#   ZLIB_FOUND          - If FALSE, do not try to link to zlib
-#   ZLIB_LIBRARIES      - ZLIB library to link to
-#   ZLIB_INCLUDE_DIRS   - Where to find zlib.h and other headers
-#   ZLIB_VERSION        - The version of the library
+#   ZLIB_FOUND          - Indicate whether the library was found or not
+#   ZLIB_LIBRARY        - Path to the library file
+#   ZLIB_INCLUDE_DIR    - Location of the header files
+#   ZLIB_VERSION        - Library's version
 #
-# Targets defined by this module:
-#   ZLIB::ZLIB          - Properties:
-#                         IMPORTED_LOCATION ${ZLIB_LIBRARIES}
-#                         INTERFACE_INCLUDE_DIRECTORIES ${ZLIB_INCLUDE_DIRS}
+# Global targets defined by this module:
+#   ZLIB::ZLIB
 #
-###############################################################################
+
 
 ###############################################################################
 ### Create target
@@ -47,8 +45,8 @@ if(NOT ZLIB_FOUND AND OCIO_INSTALL_EXT_PACKAGES AND NOT OCIO_INSTALL_EXT_PACKAGE
 
     # Set find_package standard args
     set(ZLIB_FOUND TRUE)
-    if(_ZLIB_ExternalProject_VERSION)
-        set(ZLIB_VERSION ${_ZLIB_ExternalProject_VERSION})
+    if(OCIO_ZLIB_RECOMMENDED_VERSION)
+        set(ZLIB_VERSION ${OCIO_ZLIB_RECOMMENDED_VERSION})
     else()
         set(ZLIB_VERSION ${ZLIB_FIND_VERSION})
     endif()
@@ -70,6 +68,10 @@ if(NOT ZLIB_FOUND AND OCIO_INSTALL_EXT_PACKAGES AND NOT OCIO_INSTALL_EXT_PACKAGE
     if(_ZLIB_TARGET_CREATE)
         set(ZLIB_CMAKE_ARGS
             ${ZLIB_CMAKE_ARGS}
+            # Setting policy CMP0042 when building ZLIB since that project is using an old CMake 
+            # version as the cmake_minimum_required and that version has no knowledge of the policy.
+            # Since that policy gets unset, it causes a warning with CMake 3.25+.
+            -DCMAKE_POLICY_DEFAULT_CMP0042=NEW
             -DCMAKE_CXX_VISIBILITY_PRESET=${CMAKE_CXX_VISIBILITY_PRESET}
             -DCMAKE_VISIBILITY_INLINES_HIDDEN=${CMAKE_VISIBILITY_INLINES_HIDDEN}
             -DCMAKE_POSITION_INDEPENDENT_CODE=ON
@@ -134,11 +136,17 @@ if(NOT ZLIB_FOUND AND OCIO_INSTALL_EXT_PACKAGES AND NOT OCIO_INSTALL_EXT_PACKAGE
 
     add_dependencies(ZLIB::ZLIB ZLIB_install)
     
-    # Setting those variables to follow the same naming as the other OCIO custom find modules.
-    set(ZLIB_LIBRARY ${ZLIB_LIBRARIES})
-    set(ZLIB_INCLUDE_DIR ${ZLIB_INCLUDE_DIRS})
-
-    message(STATUS "Installing ZLIB: ${ZLIB_LIBRARIES} (version \"${ZLIB_VERSION}\")")
+    # FindZLIB from CMake needs ZLIB_LIBRARY and ZLIB_INCLUDE_DIR.
+    # Starting CMake 3.17+, The mark_as_advanced() command no longer creates a cache entry if one 
+    # does not already exist. (See policy CMP0102) 
+    # For that reasons, ZLIB_LIBRARY and ZLIB_INCLUDE_DIR are set in the CMake's Cache since ZLIB 
+    # is needed by other OCIO dependencies.
+    set(ZLIB_LIBRARY ${ZLIB_LIBRARIES} CACHE STRING "ZLIB library file")
+    set(ZLIB_INCLUDE_DIR ${ZLIB_INCLUDE_DIRS} CACHE STRING "ZLIB includes directory")
+    
+    if(OCIO_VERBOSE)
+        message(STATUS "Installing ZLIB: ${ZLIB_LIBRARIES} (version \"${ZLIB_VERSION}\") ")
+    endif()
 endif()
 
 

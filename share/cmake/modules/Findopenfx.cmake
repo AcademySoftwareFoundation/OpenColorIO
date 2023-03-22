@@ -1,26 +1,22 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright Contributors to the OpenColorIO Project.
 #
-# Locate or install openfx
+# Locate openfx
 #
 # Variables defined by this module:
-#   openfx_FOUND - If FALSE, do not try to include openfx
-#   openfx_INCLUDE_DIR - Where to find ofxCore.h
-#   openfx_VERSION - The version of the library
+#   openfx_FOUND          - Indicate whether the library was found or not
+#   openfx_INCLUDE_DIR    - Location of the header files
+#   openfx_VERSION        - Library's version
 #
-# Targets defined by this module:
-#   openfx::module - IMPORTED target, if found
+# Global targets defined by this module:
+#   openfx::module
 #
-# If openfx is not installed in a standard path, you can use the 
-# openfx_ROOT variable to tell CMake where to find it. If it is not found 
-# and OCIO_INSTALL_EXT_PACKAGES is set to MISSING or ALL, openfx will be 
-# downloaded at build time.
+# Usually CMake will use the dynamic library rather than static, if both are present. 
 #
-
-if(NOT TARGET openfx::module)
-    add_library(openfx::module INTERFACE IMPORTED GLOBAL)
-    set(_openfx_TARGET_CREATE TRUE)
-endif()
+# If the library is not installed in a typical location where CMake will find it, you may specify 
+# the location using the following method:
+# -- Set -Dopenfx_ROOT to point to the directory containing the lib and include directories.
+#
 
 ###############################################################################
 ### Try to find package ###
@@ -56,45 +52,11 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
 endif()
 
 ###############################################################################
-### Install package from source ###
+### Create target
 
-if(NOT openfx_FOUND AND OCIO_INSTALL_EXT_PACKAGES AND NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL NONE)
-    include(ExternalProject)
-    include(GNUInstallDirs)
-
-    set(_EXT_DIST_ROOT "${CMAKE_BINARY_DIR}/ext/dist")
-    set(_EXT_BUILD_ROOT "${CMAKE_BINARY_DIR}/ext/build")
-    set(_openfx_INSTALL_DIR "${_EXT_BUILD_ROOT}/openfx/src/openfx_install")
-
-    # Set find_package standard args
-    set(openfx_FOUND TRUE)
-    set(openfx_VERSION ${openfx_FIND_VERSION})
-    set(openfx_INCLUDE_DIR "${_EXT_DIST_ROOT}/${CMAKE_INSTALL_INCLUDEDIR}/openfx")
-
-    if(_openfx_TARGET_CREATE)
-        # Hack to let imported target be built from ExternalProject_Add
-        file(MAKE_DIRECTORY ${openfx_INCLUDE_DIR})
-
-        ExternalProject_Add(openfx_install
-            GIT_REPOSITORY "https://github.com/ofxa/openfx.git"
-            GIT_TAG "OFX_Release_${openfx_FIND_VERSION_MAJOR}_${openfx_FIND_VERSION_MINOR}_TAG"
-            GIT_CONFIG advice.detachedHead=false
-            GIT_SHALLOW TRUE
-            PREFIX "${_EXT_BUILD_ROOT}/openfx"
-            BUILD_BYPRODUCTS ${openfx_INCLUDE_DIR}
-            CONFIGURE_COMMAND ""
-            BUILD_COMMAND
-                ${CMAKE_COMMAND} -E copy_directory
-                "${_EXT_BUILD_ROOT}/openfx/src/openfx_install/include"
-                "${openfx_INCLUDE_DIR}"
-            INSTALL_COMMAND ""
-            CMAKE_ARGS ${openfx_CMAKE_ARGS}
-            EXCLUDE_FROM_ALL TRUE
-        )
-
-        add_dependencies(openfx::module openfx_install)
-        message(STATUS "Installing openfx: ${openfx_INCLUDE_DIR} (version \"${openfx_VERSION}\")")
-    endif()
+if(openfx_FOUND AND NOT TARGET openfx::module)
+    add_library(openfx::module INTERFACE IMPORTED GLOBAL)
+    set(_openfx_TARGET_CREATE TRUE)
 endif()
 
 ###############################################################################

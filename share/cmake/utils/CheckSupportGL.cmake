@@ -7,28 +7,30 @@
 
 include(PackageUtils)
 include(SelectLibraryConfigurations)
+include(Colors)
+include(ocio_handle_dependency)
 
 if((OCIO_BUILD_TESTS AND OCIO_BUILD_GPU_TESTS) OR OCIO_BUILD_APPS)
     set(OCIO_GL_ENABLED ON)
     set(OCIO_USE_GLVND OFF)
     set(OCIO_EGL_HEADLESS OFF)
 
-    find_package(OpenGL COMPONENTS OpenGL)
+    ocio_handle_dependency(OpenGL COMPONENTS OpenGL)
     if(NOT OpenGL_OpenGL_FOUND AND NOT OPENGL_GLU_FOUND)
         package_root_message(OpenGL)
         set(OCIO_GL_ENABLED OFF)
     endif()
 
     if(NOT APPLE)
-        # On some Linux platform, the glew-config.cmake is found first so make it explicit
-        # to fall back on the regular search if not found.
-        find_package(GLEW CONFIG QUIET)
+        # On some Linux platform, the glew-config.cmake is found first.
+        # PREFER_CONFIG assure that config mode will be used first and fallback to module mode.
+        ocio_handle_dependency(  GLEW PREFER_CONFIG
+                                 MIN_VERSION 2.1.0
+                                 RECOMMENDED_VERSION 2.1.0
+                                 RECOMMENDED_VERSION_REASON "Latest version tested with OCIO")
         if(NOT GLEW_FOUND)
-            find_package(GLEW)
-            if(NOT GLEW_FOUND)
-                package_root_message(GLEW)
-                set(OCIO_GL_ENABLED OFF)
-            endif()
+            package_root_message(GLEW)
+            set(OCIO_GL_ENABLED OFF)
         else()
             # Expected variables GLEW_LIBRARIES and GLEW_INCLUDE_DIRS are missing so create
             # the mandatory one.
@@ -67,7 +69,10 @@ if((OCIO_BUILD_TESTS AND OCIO_BUILD_GPU_TESTS) OR OCIO_BUILD_APPS)
         endif()
     endif()
 
-    find_package(GLUT)
+    ocio_handle_dependency(  GLUT
+                             MIN_VERSION 3.2.1
+                             RECOMMENDED_VERSION 3.2.1
+                             RECOMMENDED_VERSION_REASON "Latest version tested with OCIO")
     if(NOT GLUT_FOUND)
         package_root_message(GLUT)
         set(OCIO_GL_ENABLED OFF)
@@ -90,7 +95,7 @@ if((OCIO_BUILD_TESTS AND OCIO_BUILD_GPU_TESTS) OR OCIO_BUILD_APPS)
                     message(STATUS "Can't find EGL without GLVND support; can't render headlessly")
                     set(OCIO_USE_HEADLESS OFF)
                 else()
-                    find_package(OpenGL COMPONENTS EGL)
+                    ocio_handle_dependency(OpenGL COMPONENTS EGL)
                     if(NOT OpenGL_EGL_FOUND)
                         message(WARNING "EGL component missing; can't render headlessly")
                         set(OCIO_USE_HEADLESS OFF)
