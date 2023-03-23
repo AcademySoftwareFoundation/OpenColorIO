@@ -105,7 +105,8 @@ void GradingPrimaryPreRender::update(GradingStyle style,
                                      TransformDirection dir,
                                      const GradingPrimary & v) noexcept
 {
-    m_localBypass = v.m_clampBlack == GradingPrimary::NoClampBlack() &&
+    m_localBypass = v.m_saturation == 1. &&
+                    v.m_clampBlack == GradingPrimary::NoClampBlack() &&
                     v.m_clampWhite == GradingPrimary::NoClampWhite();
 
     switch (style)
@@ -189,7 +190,7 @@ void GradingPrimaryPreRender::update(GradingStyle style,
             break;
         }
         }
-        m_isPowerIdentity = m_contrast[0] == 1.0f || m_contrast[1] == 1.0f ||
+        m_isPowerIdentity = m_contrast[0] == 1.0f && m_contrast[1] == 1.0f &&
                             m_contrast[2] == 1.0f;
         m_pivot = 0.18 * std::pow(2., v.m_pivot);
         m_localBypass = m_localBypass && m_isPowerIdentity &&
@@ -249,7 +250,7 @@ void GradingPrimaryPreRender::update(GradingStyle style,
             break;
         }
         }
-        m_isPowerIdentity = m_gamma[0] == 1.0f || m_gamma[1] == 1.0f || m_gamma[2] == 1.0f;
+        m_isPowerIdentity = m_gamma[0] == 1.0f && m_gamma[1] == 1.0f && m_gamma[2] == 1.0f;
         m_localBypass = m_localBypass && m_isPowerIdentity &&
                         m_slope[0] == 1.f && m_slope[1] == 1.f && m_slope[2] == 1.f &&
                         m_offset[0] == 0.f && m_offset[1] == 0.f && m_offset[2] == 0.f;
