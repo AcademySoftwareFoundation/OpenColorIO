@@ -11,7 +11,8 @@ from UnitTestUtils import (SIMPLE_CONFIG_VIRTUAL_DISPLAY,
                            SIMPLE_CONFIG_VIRTUAL_DISPLAY_ACTIVE_DISPLAY,
                            SIMPLE_CONFIG_VIRTUAL_DISPLAY_V1,
                            SIMPLE_CONFIG_VIRTUAL_DISPLAY_EXCEPTION,
-                           TEST_DATAFILES_DIR)
+                           TEST_DATAFILES_DIR,
+                           MuteLogging)
 
 # Legacy tests kept for reference.
 #
@@ -911,7 +912,11 @@ colorspaces:
         numberOfExpectedColorspaces = 14
         # Testing CreateFromBuiltinConfig with a known built-in config name.
         builtinCfgA = OCIO.Config.CreateFromBuiltinConfig("cg-config-v1.0.0_aces-v1.3_ocio-v2.1")
-        builtinCfgA.validate()
+
+        log = MuteLogging()
+        with log:
+            builtinCfgA.validate()
+
         self.assertEqual(builtinCfgA.getName(), "cg-config-v1.0.0_aces-v1.3_ocio-v2.1")
         self.assertEqual(len(builtinCfgA.getColorSpaceNames()), numberOfExpectedColorspaces)
 
@@ -919,7 +924,11 @@ colorspaces:
         try:
             OCIO.SetEnvVariable('OCIO', 'ocio://cg-config-v1.0.0_aces-v1.3_ocio-v2.1')
             builtinCfgB = OCIO.Config.CreateFromEnv()
-            builtinCfgB.validate()
+
+            log = MuteLogging()
+            with log:
+                builtinCfgB.validate()
+
             self.assertEqual(builtinCfgB.getName(), "cg-config-v1.0.0_aces-v1.3_ocio-v2.1")
             self.assertEqual(len(builtinCfgB.getColorSpaceNames()), numberOfExpectedColorspaces)
         finally:
@@ -927,7 +936,11 @@ colorspaces:
 
         # Testing CreateFromFile with an known built-in config name using URI Syntax.
         builtinCfgC = OCIO.Config.CreateFromFile("ocio://cg-config-v1.0.0_aces-v1.3_ocio-v2.1")
-        builtinCfgC.validate()
+
+        log = MuteLogging()
+        with log:
+            builtinCfgC.validate()
+
         self.assertEqual(builtinCfgC.getName(), "cg-config-v1.0.0_aces-v1.3_ocio-v2.1")
         self.assertEqual(len(builtinCfgC.getColorSpaceNames()), numberOfExpectedColorspaces)
 
@@ -935,7 +948,7 @@ colorspaces:
         # Testing STUDIO config.
         # ********************************
 
-        numberOfExpectedColorspaces = 39;
+        numberOfExpectedColorspaces = 39
         # Testing CreateFromBuiltinConfig with a known built-in config name.
         builtinCfgA = OCIO.Config.CreateFromBuiltinConfig("studio-config-v1.0.0_aces-v1.3_ocio-v2.1")
         builtinCfgA.validate()
@@ -966,7 +979,11 @@ colorspaces:
         try:
             OCIO.SetEnvVariable('OCIO', 'ocio://default')
             builtinCfgD = OCIO.Config.CreateFromEnv()
-            builtinCfgD.validate()
+
+            log = MuteLogging()
+            with log:
+                builtinCfgD.validate()
+
             self.assertEqual(builtinCfgD.getName(), "cg-config-v1.0.0_aces-v1.3_ocio-v2.1")
             self.assertEqual(len(builtinCfgD.getColorSpaceNames()), 14)
         finally:
@@ -974,7 +991,11 @@ colorspaces:
 
         # Testing CreateFromFile with the default config using URI Syntax.
         builtinCfgE = OCIO.Config.CreateFromFile("ocio://default")
-        builtinCfgE.validate()
+
+        log = MuteLogging()
+        with log:
+            builtinCfgE.validate()
+        
         self.assertEqual(builtinCfgE.getName(), "cg-config-v1.0.0_aces-v1.3_ocio-v2.1")
         self.assertEqual(len(builtinCfgE.getColorSpaceNames()), 14)
 

@@ -92,29 +92,6 @@ MuteLogging::~MuteLogging()
     ResetToDefaultLoggingFunction();
 }
 
-// Check and remove str from vector of string if the str is found.
-// Return true if found, otherwise, false.
-bool checkAndRemove(std::vector<std::string> & svec, const std::string & str)
-{
-    size_t index = -1;
-    for (size_t i = 0; i < svec.size(); i++)
-    {
-        if (Platform::Strcasecmp(svec[i].c_str(), str.c_str()) == 0)
-        {
-            index = i;
-            break;
-        }
-    }
-
-    if (index != -1)
-    {
-        svec.erase(svec.begin() + index);
-        return true;
-    }
-
-    return false;
-}
-
 bool checkAndMuteSceneLinearRoleError(LogGuard & logGuard)
 {
     const std::string interchange_scene = "[OpenColorIO Error]: The scene_linear role is "\
@@ -144,7 +121,7 @@ bool checkAndMuteAcesInterchangeRoleError(LogGuard & logGuard)
     return logGuard.findAndRemove(aces_interchange);
 }
 
-bool checkAndMuteInterchangeDisplayRoleError(LogGuard & logGuard)
+bool checkAndMuteDisplayInterchangeRoleError(LogGuard & logGuard)
 {
     const std::string interchange_display = "[OpenColorIO Error]: The cie_xyz_d65_interchange "\
                                             "role is required when there are display-referred "\

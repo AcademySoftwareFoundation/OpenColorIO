@@ -44,7 +44,7 @@ bool checkAndMuteSceneLinearRoleError(LogGuard & logGuard);
 bool checkAndMuteCompositingLogRoleError(LogGuard & logGuard);
 bool checkAndMuteColorTimingRoleError(LogGuard & logGuard);
 bool checkAndMuteAcesInterchangeRoleError(LogGuard & logGuard);
-bool checkAndMuteInterchangeDisplayRoleError(LogGuard & logGuard);
+bool checkAndMuteDisplayInterchangeRoleError(LogGuard & logGuard);
 
 } // namespace OCIO_NAMESPACE
 

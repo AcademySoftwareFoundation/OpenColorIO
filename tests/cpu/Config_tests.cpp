@@ -367,7 +367,8 @@ OCIO_ADD_TEST(Config, required_roles_for_version_2_2)
         OCIO_CHECK_ASSERT(OCIO::checkAndMuteCompositingLogRoleError(logGuard));
         OCIO_CHECK_ASSERT(OCIO::checkAndMuteColorTimingRoleError(logGuard));
         OCIO_CHECK_ASSERT(OCIO::checkAndMuteAcesInterchangeRoleError(logGuard));
-        OCIO_CHECK_ASSERT(OCIO::checkAndMuteInterchangeDisplayRoleError(logGuard));
+        OCIO_CHECK_ASSERT(OCIO::checkAndMuteDisplayInterchangeRoleError(logGuard));
+        // If there are any unexpected log messages, print them to the shell.
         logGuard.print();
     }
     
@@ -417,12 +418,7 @@ OCIO_ADD_TEST(Config, required_roles_for_version_2_2)
         OCIO_CHECK_NO_THROW(config->validate());
 
         StringUtils::StringVec svec = StringUtils::SplitByLines(logGuard.output());
-        OCIO_CHECK_ASSERT(
-            StringUtils::Contain(
-            svec, 
-            "[OpenColorIO Error]: The compositing_log role is required for a config version 2.2 "\
-            "or higher.")
-        );
+        checkAndMuteCompositingLogRoleError(logGuard);
 
         // Set compositing_log for next test.
         config->setRole(OCIO::ROLE_COMPOSITING_LOG, dcs->getName());
@@ -438,12 +434,7 @@ OCIO_ADD_TEST(Config, required_roles_for_version_2_2)
         OCIO_CHECK_NO_THROW(config->validate());
 
         StringUtils::StringVec svec = StringUtils::SplitByLines(logGuard.output());
-        OCIO_CHECK_ASSERT(
-            StringUtils::Contain(
-            svec, 
-            "[OpenColorIO Error]: The color_timing role is required for a config version 2.2 or "\
-            "higher.")
-        );
+        checkAndMuteColorTimingRoleError(logGuard);
 
         // Set color_timing for next test.
         config->setRole(OCIO::ROLE_COLOR_TIMING, dcs->getName());
@@ -457,10 +448,7 @@ OCIO_ADD_TEST(Config, required_roles_for_version_2_2)
 
         OCIO::LogGuard logGuard;
         OCIO_CHECK_NO_THROW(config->validate());
-        OCIO_CHECK_ASSERT(logGuard.findAndRemove(
-            "[OpenColorIO Error]: The aces_interchange role is required when there are "\
-            "scene-referred color spaces and the config version is 2.2 or higher.")
-        );
+        OCIO::checkAndMuteAcesInterchangeRoleError(logGuard);
 
         // Set aces_interchange for next test.
         config->setRole(OCIO::ROLE_INTERCHANGE_SCENE, scs->getName());
@@ -474,14 +462,7 @@ OCIO_ADD_TEST(Config, required_roles_for_version_2_2)
 
         OCIO::LogGuard logGuard;
         OCIO_CHECK_NO_THROW(config->validate());
-
-        StringUtils::StringVec svec = StringUtils::SplitByLines(logGuard.output());
-        OCIO_CHECK_ASSERT(
-            StringUtils::Contain(
-            svec, 
-            "[OpenColorIO Error]: The cie_xyz_d65_interchange role is required when there are "\
-            "display-referred color spaces and the config version is 2.2 or higher.")
-        );
+        OCIO::checkAndMuteDisplayInterchangeRoleError(logGuard);
 
         // Set cie_xyz_d65_interchange for next test.
         config->setRole(OCIO::ROLE_INTERCHANGE_DISPLAY, dcs->getName());
@@ -496,10 +477,7 @@ OCIO_ADD_TEST(Config, required_roles_for_version_2_2)
 
         OCIO::LogGuard logGuard;
         OCIO_CHECK_NO_THROW(config->validate());
-        OCIO_CHECK_ASSERT(
-            logGuard.findAndRemove("[OpenColorIO Error]: The aces_interchange role must be a "\
-                                   "scene-referred color space.")
-        );
+        checkAndMuteAcesInterchangeRoleError(logGuard);
     }
 
     {
@@ -511,10 +489,7 @@ OCIO_ADD_TEST(Config, required_roles_for_version_2_2)
 
         OCIO::LogGuard logGuard;
         OCIO_CHECK_NO_THROW(config->validate());
-        OCIO_CHECK_ASSERT(
-            logGuard.findAndRemove("[OpenColorIO Error]: The cie_xyz_d65_interchange role must "\
-                                   "be a display-referred color space.")
-        );
+        checkAndMuteDisplayInterchangeRoleError(logGuard);
     }
 
     {
@@ -8997,6 +8972,10 @@ OCIO_ADD_TEST(Config, create_builtin_config)
         );
         OCIO_REQUIRE_ASSERT(config);
 
+        // Mute the logs about inactive colorspace as it is expected.
+        // No other warnings are expected.
+        OCIO::MuteLogging mute;
+
         OCIO_CHECK_NO_THROW(config->validate());
         OCIO_CHECK_EQUAL(
             std::string(config->getName()), 
@@ -9013,6 +8992,10 @@ OCIO_ADD_TEST(Config, create_builtin_config)
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromEnv());
         OCIO_REQUIRE_ASSERT(config);
+
+        // Mute the logs about inactive colorspace as it is expected.
+        // No other warnings are expected.
+        OCIO::MuteLogging mute;
 
         OCIO_CHECK_NO_THROW(config->validate());
         OCIO_CHECK_EQUAL(
@@ -9031,6 +9014,10 @@ OCIO_ADD_TEST(Config, create_builtin_config)
         );
         OCIO_REQUIRE_ASSERT(config);
 
+        // Mute the logs about inactive colorspace as it is expected.
+        // No other warnings are expected.
+        OCIO::MuteLogging mute;
+        
         OCIO_CHECK_NO_THROW(config->validate());
         OCIO_CHECK_EQUAL(
             std::string(config->getName()), 
@@ -9110,6 +9097,10 @@ OCIO_ADD_TEST(Config, create_builtin_config)
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromEnv());
         OCIO_REQUIRE_ASSERT(config);
 
+        // Mute the logs about inactive colorspace as it is expected.
+        // No other warnings are expected.
+        OCIO::MuteLogging mute;
+
         OCIO_CHECK_NO_THROW(config->validate());
         OCIO_CHECK_EQUAL(
             std::string(config->getName()), 
@@ -9124,6 +9115,10 @@ OCIO_ADD_TEST(Config, create_builtin_config)
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromFile("ocio://default"));
         OCIO_REQUIRE_ASSERT(config);
+        
+        // Mute the logs about inactive colorspace as it is expected.
+        // No other warnings are expected.
+        OCIO::MuteLogging mute;
 
         OCIO_CHECK_NO_THROW(config->validate());
         OCIO_CHECK_EQUAL(

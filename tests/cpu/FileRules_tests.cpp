@@ -1382,6 +1382,7 @@ colorspaces:
           OCIO_CHECK_ASSERT(OCIO::checkAndMuteCompositingLogRoleError(logGuard));
           OCIO_CHECK_ASSERT(OCIO::checkAndMuteColorTimingRoleError(logGuard));
           OCIO_CHECK_ASSERT(OCIO::checkAndMuteAcesInterchangeRoleError(logGuard));
+          // If there are any unexpected log messages, print them to the shell.
           logGuard.print();
         }
 
@@ -1460,6 +1461,7 @@ colorspaces:
           OCIO_CHECK_ASSERT(OCIO::checkAndMuteCompositingLogRoleError(logGuard));
           OCIO_CHECK_ASSERT(OCIO::checkAndMuteColorTimingRoleError(logGuard));
           OCIO_CHECK_ASSERT(OCIO::checkAndMuteAcesInterchangeRoleError(logGuard));
+          // If there are any unexpected log messages, print them to the shell.
           logGuard.print();
         }
 
@@ -1546,6 +1548,7 @@ colorspaces:
               OCIO_CHECK_ASSERT(OCIO::checkAndMuteCompositingLogRoleError(logGuard));
               OCIO_CHECK_ASSERT(OCIO::checkAndMuteColorTimingRoleError(logGuard));
               OCIO_CHECK_ASSERT(OCIO::checkAndMuteAcesInterchangeRoleError(logGuard));
+              // If there are any unexpected log messages, print them to the shell.
               logGuard.print();
             }
 
@@ -1596,6 +1599,7 @@ colorspaces:
               OCIO_CHECK_ASSERT(OCIO::checkAndMuteCompositingLogRoleError(logGuard));
               OCIO_CHECK_ASSERT(OCIO::checkAndMuteColorTimingRoleError(logGuard));
               OCIO_CHECK_ASSERT(OCIO::checkAndMuteAcesInterchangeRoleError(logGuard));
+              // If there are any unexpected log messages, print them to the shell.
               logGuard.print();
             }
 
@@ -1657,6 +1661,7 @@ OCIO_ADD_TEST(FileRules, config_v1_to_v2_from_memory)
           OCIO_CHECK_ASSERT(OCIO::checkAndMuteCompositingLogRoleError(logGuard));
           OCIO_CHECK_ASSERT(OCIO::checkAndMuteColorTimingRoleError(logGuard));
           OCIO_CHECK_ASSERT(OCIO::checkAndMuteAcesInterchangeRoleError(logGuard));
+          // If there are any unexpected log messages, print them to the shell.
           logGuard.print();
         }
 
@@ -1673,6 +1678,7 @@ OCIO_ADD_TEST(FileRules, config_v1_to_v2_from_memory)
           OCIO_CHECK_ASSERT(OCIO::checkAndMuteCompositingLogRoleError(logGuard));
           OCIO_CHECK_ASSERT(OCIO::checkAndMuteColorTimingRoleError(logGuard));
           OCIO_CHECK_ASSERT(OCIO::checkAndMuteAcesInterchangeRoleError(logGuard));
+          // If there are any unexpected log messages, print them to the shell.
           logGuard.print();
         }
 
@@ -1717,6 +1723,7 @@ OCIO_ADD_TEST(FileRules, config_v1_to_v2_from_memory)
           OCIO_CHECK_ASSERT(OCIO::checkAndMuteCompositingLogRoleError(logGuard));
           OCIO_CHECK_ASSERT(OCIO::checkAndMuteColorTimingRoleError(logGuard));
           OCIO_CHECK_ASSERT(OCIO::checkAndMuteAcesInterchangeRoleError(logGuard));
+          // If there are any unexpected log messages, print them to the shell.
           logGuard.print();
         }
 
@@ -1733,6 +1740,7 @@ OCIO_ADD_TEST(FileRules, config_v1_to_v2_from_memory)
           OCIO_CHECK_ASSERT(OCIO::checkAndMuteCompositingLogRoleError(logGuard));
           OCIO_CHECK_ASSERT(OCIO::checkAndMuteColorTimingRoleError(logGuard));
           OCIO_CHECK_ASSERT(OCIO::checkAndMuteAcesInterchangeRoleError(logGuard));
+          // If there are any unexpected log messages, print them to the shell.
           logGuard.print();
         }
 
@@ -1777,6 +1785,7 @@ OCIO_ADD_TEST(FileRules, config_v1_to_v2_from_memory)
           OCIO_CHECK_ASSERT(OCIO::checkAndMuteCompositingLogRoleError(logGuard));
           OCIO_CHECK_ASSERT(OCIO::checkAndMuteColorTimingRoleError(logGuard));
           OCIO_CHECK_ASSERT(OCIO::checkAndMuteAcesInterchangeRoleError(logGuard));
+          // If there are any unexpected log messages, print them to the shell.
           logGuard.print();
         }
 
@@ -1804,6 +1813,7 @@ OCIO_ADD_TEST(FileRules, config_v1_to_v2_from_memory)
           OCIO_CHECK_ASSERT(OCIO::checkAndMuteCompositingLogRoleError(logGuard));
           OCIO_CHECK_ASSERT(OCIO::checkAndMuteColorTimingRoleError(logGuard));
           OCIO_CHECK_ASSERT(OCIO::checkAndMuteAcesInterchangeRoleError(logGuard));
+          // If there are any unexpected log messages, print them to the shell.
           logGuard.print();
         }
 
