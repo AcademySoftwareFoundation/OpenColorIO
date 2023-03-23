@@ -11,6 +11,18 @@ import PyOpenColorIO as OCIO
 
 class OpenColorIOTest(unittest.TestCase):
 
+    def test_attributes(self):
+        """
+        Test Global attributes.
+        """
+        self.assertTrue(hasattr(OCIO, "__author__"))
+        self.assertTrue(hasattr(OCIO, "__email__"))
+        self.assertTrue(hasattr(OCIO, "__license__"))
+        self.assertTrue(hasattr(OCIO, "__copyright__"))
+        self.assertTrue(hasattr(OCIO, "__version__"))
+        self.assertTrue(hasattr(OCIO, "__status__"))
+        self.assertTrue(hasattr(OCIO, "__doc__"))
+
     def test_env_variable(self):
         """
         Test Get/SetEnvVariable().
