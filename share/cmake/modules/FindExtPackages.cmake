@@ -197,13 +197,10 @@ if((OCIO_BUILD_APPS AND OCIO_USE_OIIO_FOR_APPS) OR OCIO_BUILD_TESTS)
     # Supported from OIIO 2.4+. Setting this for lower versions doesn't affect anything.
     set(OPENIMAGEIO_CONFIG_DO_NOT_FIND_IMATH 1)
 
-    include(ocio_check_dependency_version)
-    # Since OpenImageIO will try to find OpenEXR through its OpenImageIOConfig.cmake file,
-    # let's try to find OpenEXR first and if the version is too old, OCIO will not try to find
-    # OpenImageIO.
-    ocio_check_dependency_version(  OpenEXR "is_OpenEXR_VERSION_valid" 
-                                    MIN_VERSION ${OpenEXR_MININUM_VERSION} 
-                                    CONFIG)
+    set(is_OpenEXR_VERSION_valid FALSE)
+    # Check for compatibility between OpenEXR and OpenImageIO.
+    # Will set is_OpenEXR_VERSION_valid to TRUE if valid.
+    include(CheckForOpenEXRCompatibility)
 
     # Do not try to find OpenImageIO if the version of OpenEXR is too old.                                    
     if (is_OpenEXR_VERSION_valid)
@@ -227,8 +224,6 @@ if((OCIO_BUILD_APPS AND OCIO_USE_OIIO_FOR_APPS) OR OCIO_BUILD_TESTS)
                                  MIN_VERSION ${OIIO_VERSION}
                                  RECOMMENDED_VERSION ${OIIO_RECOMMENDED_VERSION}
                                  PROMOTE_TARGET OpenImageIO::OpenImageIO)
-    else()
-        message(WARNING "Skipping OpenImageIO because the OpenEXR found by OpenImageIO is too old (under ${OpenEXR_MININUM_VERSION})")
     endif()
 endif()
 

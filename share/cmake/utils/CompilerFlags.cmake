@@ -106,7 +106,6 @@ set_unless_defined(CMAKE_C_VISIBILITY_PRESET hidden)
 set_unless_defined(CMAKE_CXX_VISIBILITY_PRESET hidden)
 set_unless_defined(CMAKE_VISIBILITY_INLINES_HIDDEN YES)
 
-<<<<<<< HEAD
 
 ###############################################################################
 # Define if SSE2 can be used.
@@ -121,8 +120,6 @@ if(NOT HAVE_SSE2)
 endif(NOT HAVE_SSE2)
 
 
-=======
->>>>>>> 5585483c9f407d03923cd44f3d802a6111ec62fe
 ###############################################################################
 # Define RPATH.
 
