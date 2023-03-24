@@ -7,8 +7,6 @@ set(_cmake_required_flags_orig "${CMAKE_REQUIRED_FLAGS}")
 set(_cmake_required_includes_orig "${CMAKE_REQUIRED_INCLUDES}")
 set(_cmake_osx_architectures_orig "${CMAKE_OSX_ARCHITECTURES}")
 
-set(_cmake_osx_architectures_old "${CMAKE_OSX_ARCHITECTURES}")
-
 if(NOT CMAKE_SIZE_OF_VOID_P EQUAL 8)
     # As CheckCXXCompilerFlag implicitly uses CMAKE_CXX_FLAGS some custom flags could trigger
     # unrelated warnings causing a detection failure. So, the code disables all warnings to focus

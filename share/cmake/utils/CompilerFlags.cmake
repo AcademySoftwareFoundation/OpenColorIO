@@ -23,21 +23,6 @@ endif()
 ###############################################################################
 # Compile flags
 
-###############################################################################
-# Define if SSE2 can be used.
-
-if(OCIO_USE_SIMD)
-    include(CheckSupportSSE2)
-endif()
-
-if(NOT HAVE_SSE2 AND NOT HAVE_SSE2_WITH_SSE2NEON)
-    message(STATUS "Disabling SSE optimizations, as the target doesn't support them")
-    set(OCIO_USE_SIMD OFF)
-endif()
-
-###############################################################################
-# Compile flags
-
 if(USE_MSVC)
 
     set(PLATFORM_COMPILE_OPTIONS "${PLATFORM_COMPILE_OPTIONS};/DUSE_MSVC")
@@ -120,19 +105,6 @@ include(VariableUtils)
 set_unless_defined(CMAKE_C_VISIBILITY_PRESET hidden)
 set_unless_defined(CMAKE_CXX_VISIBILITY_PRESET hidden)
 set_unless_defined(CMAKE_VISIBILITY_INLINES_HIDDEN YES)
-
-
-###############################################################################
-# Define if SSE2 can be used.
-
-message(STATUS "")
-message(STATUS "Checking for SSE2 support...")
-include(CheckSupportSSE2)
-
-if(NOT HAVE_SSE2)
-    message(STATUS "Disabling SSE optimizations, as the target doesn't support them")
-    set(OCIO_USE_SSE OFF)
-endif(NOT HAVE_SSE2)
 
 
 ###############################################################################
