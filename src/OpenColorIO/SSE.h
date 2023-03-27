@@ -164,7 +164,7 @@ static const __m128 PNEXP2 = _mm_set1_ps((float)2.414427569091865207710e-1);
 static const __m128 PNEXP1 = _mm_set1_ps((float)6.930038344665415134202e-1);
 static const __m128 PNEXP0 = _mm_set1_ps((float)1.000002593370603213644);
 
-// Note: The above polynomials have been chosen to acheive a precision of
+// Note: The above polynomials have been chosen to achieve a precision of
 // approximately 15 bits of mantissa.
 
 
@@ -175,8 +175,8 @@ static const __m128 PNEXP0 = _mm_set1_ps((float)1.000002593370603213644);
 // over a restricted range.
 inline __m128 sseLog2(__m128 x)
 {
-    // y = log2( x ) = log2( 2^exponant * mantissa ) 
-    //               = exponant + log2( mantissa )
+    // y = log2( x ) = log2( 2^exponent * mantissa ) 
+    //               = exponent + log2( mantissa )
 
     __m128 mantissa
         = _mm_or_ps(                                    // OR with EONE

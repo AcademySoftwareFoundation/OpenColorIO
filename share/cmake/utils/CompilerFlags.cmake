@@ -55,9 +55,6 @@ elseif(USE_CLANG)
 
     # Use of 'register' specifier must be removed for C++17 support.
     set(PLATFORM_COMPILE_OPTIONS "${PLATFORM_COMPILE_OPTIONS};-Wno-deprecated-register")
-    if (HAVE_SSE2 AND HAVE_NEON)
-        set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS};-march=armv8-a+fp+simd+crypto+crc")
-    endif()
 elseif(USE_GCC)
 
     set(PLATFORM_COMPILE_OPTIONS "${PLATFORM_COMPILE_OPTIONS};-DUSE_GCC")
