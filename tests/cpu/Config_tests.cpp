@@ -477,7 +477,11 @@ OCIO_ADD_TEST(Config, required_roles_for_version_2_2)
 
         OCIO::LogGuard logGuard;
         OCIO_CHECK_NO_THROW(config->validate());
-        checkAndMuteAcesInterchangeRoleError(logGuard);
+        OCIO_CHECK_ASSERT(
+            StringUtils::StartsWith(
+                logGuard.output(), 
+                "[OpenColorIO Error]: The aces_interchange role must be a scene-referred color space.")
+        );
     }
 
     {
@@ -489,7 +493,11 @@ OCIO_ADD_TEST(Config, required_roles_for_version_2_2)
 
         OCIO::LogGuard logGuard;
         OCIO_CHECK_NO_THROW(config->validate());
-        checkAndMuteDisplayInterchangeRoleError(logGuard);
+        OCIO_CHECK_ASSERT(
+            StringUtils::StartsWith(
+                logGuard.output(), 
+                "[OpenColorIO Error]: The cie_xyz_d65_interchange role must be a display-referred color space.")
+        );
     }
 
     {
@@ -8972,11 +8980,13 @@ OCIO_ADD_TEST(Config, create_builtin_config)
         );
         OCIO_REQUIRE_ASSERT(config);
 
-        // Mute the logs about inactive colorspace as it is expected.
-        // No other warnings are expected.
-        OCIO::MuteLogging mute;
-
+        OCIO::LogGuard logGuard;
         OCIO_CHECK_NO_THROW(config->validate());
+        // Mute output related to a bug in the initial CG config where the inactive_colorspaces 
+        // list has color spaces that don't exist.
+        OCIO::muteInactiveColorspaceInfo(logGuard);
+        logGuard.print();
+
         OCIO_CHECK_EQUAL(
             std::string(config->getName()), 
             cgConfigName
@@ -8993,11 +9003,11 @@ OCIO_ADD_TEST(Config, create_builtin_config)
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromEnv());
         OCIO_REQUIRE_ASSERT(config);
 
-        // Mute the logs about inactive colorspace as it is expected.
-        // No other warnings are expected.
-        OCIO::MuteLogging mute;
-
+        OCIO::LogGuard logGuard;
         OCIO_CHECK_NO_THROW(config->validate());
+        OCIO::muteInactiveColorspaceInfo(logGuard);
+        logGuard.print();
+        
         OCIO_CHECK_EQUAL(
             std::string(config->getName()), 
             cgConfigName
@@ -9014,11 +9024,11 @@ OCIO_ADD_TEST(Config, create_builtin_config)
         );
         OCIO_REQUIRE_ASSERT(config);
 
-        // Mute the logs about inactive colorspace as it is expected.
-        // No other warnings are expected.
-        OCIO::MuteLogging mute;
-        
+        OCIO::LogGuard logGuard;
         OCIO_CHECK_NO_THROW(config->validate());
+        OCIO::muteInactiveColorspaceInfo(logGuard);
+        logGuard.print();
+
         OCIO_CHECK_EQUAL(
             std::string(config->getName()), 
             cgConfigName
@@ -9097,11 +9107,11 @@ OCIO_ADD_TEST(Config, create_builtin_config)
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromEnv());
         OCIO_REQUIRE_ASSERT(config);
 
-        // Mute the logs about inactive colorspace as it is expected.
-        // No other warnings are expected.
-        OCIO::MuteLogging mute;
-
+        OCIO::LogGuard logGuard;
         OCIO_CHECK_NO_THROW(config->validate());
+        OCIO::muteInactiveColorspaceInfo(logGuard);
+        logGuard.print();
+
         OCIO_CHECK_EQUAL(
             std::string(config->getName()), 
             std::string("cg-config-v1.0.0_aces-v1.3_ocio-v2.1")
@@ -9116,11 +9126,11 @@ OCIO_ADD_TEST(Config, create_builtin_config)
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromFile("ocio://default"));
         OCIO_REQUIRE_ASSERT(config);
         
-        // Mute the logs about inactive colorspace as it is expected.
-        // No other warnings are expected.
-        OCIO::MuteLogging mute;
-
+        OCIO::LogGuard logGuard;
         OCIO_CHECK_NO_THROW(config->validate());
+        OCIO::muteInactiveColorspaceInfo(logGuard);
+        logGuard.print();
+
         OCIO_CHECK_EQUAL(
             std::string(config->getName()), 
             std::string("cg-config-v1.0.0_aces-v1.3_ocio-v2.1")

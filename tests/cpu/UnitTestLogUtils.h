@@ -27,6 +27,7 @@ public:
     bool empty() const;
 
     bool findAndRemove(const std::string & str) const;
+    bool findAllAndRemove(const std::string & str) const;
     void print();
 private:
     LoggingLevel m_logLevel;
@@ -45,6 +46,8 @@ bool checkAndMuteCompositingLogRoleError(LogGuard & logGuard);
 bool checkAndMuteColorTimingRoleError(LogGuard & logGuard);
 bool checkAndMuteAcesInterchangeRoleError(LogGuard & logGuard);
 bool checkAndMuteDisplayInterchangeRoleError(LogGuard & logGuard);
+
+void muteInactiveColorspaceInfo(LogGuard & logGuard);
 
 } // namespace OCIO_NAMESPACE
 

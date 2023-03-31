@@ -67,7 +67,8 @@ bool LogGuard::findAndRemove(const std::string & line) const
     std::string escaped_line = std::regex_replace(line, std::regex("[\\[\\](){}*+?.^$|\\\\]"), "\\$&");
     std::regex pattern(escaped_line + R"([\r\n]+)");
     std::smatch match;
-    if (std::regex_search(g_output, match, pattern)) {
+    if (std::regex_search(g_output, match, pattern)) 
+    {
         // If the line is found, remove it.
         auto pos = std::next(g_output.begin(), match.position());
         auto end = std::next(pos, match.length());
@@ -75,6 +76,23 @@ bool LogGuard::findAndRemove(const std::string & line) const
         return true;
     }
     return false;
+}
+
+bool LogGuard::findAllAndRemove(const std::string & line) const
+{
+    // Escape the line to prevent error in regex if the line contains regex character.
+    bool found = false;
+    std::string escaped_line = std::regex_replace(line, std::regex("[\\[\\](){}*+?.^$|\\\\]"), "\\$&");
+    std::regex pattern(R"(^\[OpenColorIO Info\]: Inactive.*)" + escaped_line + R"([\r\n]+)");
+    std::smatch match;
+    while (std::regex_search(g_output, match, pattern)) 
+    {
+        found = true;
+        auto pos = std::next(g_output.begin(), match.position());
+        auto end = std::next(pos, match.length());
+        g_output.erase(pos, end);
+    }
+    return found;
 }
 
 void LogGuard::print()
@@ -127,6 +145,12 @@ bool checkAndMuteDisplayInterchangeRoleError(LogGuard & logGuard)
                                             "role is required when there are display-referred "\
                                             "color spaces and the config version is 2.2 or higher.";
     return logGuard.findAndRemove(interchange_display);
+}
+
+void muteInactiveColorspaceInfo(LogGuard & logGuard)
+{
+    const std::string str = "- Display' is neither a color space nor a named transform.";
+    logGuard.findAllAndRemove(str);
 }
 
 } // namespace OCIO_NAMESPACE

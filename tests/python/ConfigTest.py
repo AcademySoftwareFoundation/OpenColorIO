@@ -913,6 +913,8 @@ colorspaces:
         # Testing CreateFromBuiltinConfig with a known built-in config name.
         builtinCfgA = OCIO.Config.CreateFromBuiltinConfig("cg-config-v1.0.0_aces-v1.3_ocio-v2.1")
 
+        # Mute output related to a bug in the initial CG config where the inactive_colorspaces
+        # list has color spaces that don't exist.
         log = MuteLogging()
         with log:
             builtinCfgA.validate()
