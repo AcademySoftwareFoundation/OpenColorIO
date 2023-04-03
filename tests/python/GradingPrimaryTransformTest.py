@@ -122,8 +122,8 @@ class GradingPrimaryTransformTest(unittest.TestCase):
         gpt1.makeDynamic()
         gpt2 = OCIO.GradingPrimaryTransform(OCIO.GRADING_LOG)
         val2 = OCIO.GradingPrimary(OCIO.GRADING_LOG)
-        val2.gamma = OCIO.GradingRGBM(1.2, 1.4, 1.1, 1.0);
-        val2.saturation = 1.5;
+        val2.gamma = OCIO.GradingRGBM(1.2, 1.4, 1.1, 1.0)
+        val2.saturation = 1.5
         gpt2.setValue(val2)
 
         group = OCIO.GroupTransform()
@@ -159,8 +159,8 @@ class GradingPrimaryTransformTest(unittest.TestCase):
 
         gpt = OCIO.GradingPrimaryTransform(OCIO.GRADING_LOG)
         val = OCIO.GradingPrimary(OCIO.GRADING_LOG)
-        val.gamma = OCIO.GradingRGBM(1.2, 1.4, 1.1, 0.7);
-        val.saturation = 1.5;
+        val.gamma = OCIO.GradingRGBM(1.2, 1.4, 1.1, 0.7)
+        val.saturation = 1.5
         gpt.setValue(val)
 
         cfg = OCIO.Config().CreateRaw()

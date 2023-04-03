@@ -12,11 +12,6 @@
 namespace OCIO_NAMESPACE
 {
 
-bool operator==(const GradingRGBMSW & lhs, const GradingRGBMSW & rhs);
-bool operator!=(const GradingRGBMSW & lhs, const GradingRGBMSW & rhs);
-bool operator==(const GradingTone & lhs, const GradingTone & rhs);
-bool operator!=(const GradingTone & lhs, const GradingTone & rhs);
-
 enum RGBMChannel
 {
     R = 0,

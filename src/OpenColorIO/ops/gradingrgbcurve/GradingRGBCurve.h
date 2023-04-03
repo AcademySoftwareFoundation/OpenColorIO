@@ -43,8 +43,6 @@ private:
 typedef OCIO_SHARED_PTR<const GradingRGBCurveImpl> ConstGradingRGBCurveImplRcPtr;
 typedef OCIO_SHARED_PTR<GradingRGBCurveImpl> GradingRGBCurveImplRcPtr;
 
-bool operator==(const GradingRGBCurve & lhs, const GradingRGBCurve & rhs);
-bool operator!=(const GradingRGBCurve & lhs, const GradingRGBCurve & rhs);
 }
 
 #endif //INCLUDED_OCIO_GRADINGRGBCURVE_H

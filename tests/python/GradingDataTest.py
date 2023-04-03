@@ -74,6 +74,13 @@ class GradingDataTest(unittest.TestCase):
         with self.assertRaises(TypeError):
             OCIO.GradingRGBM(master=.3, red=.4)
 
+        # Check comparison operators
+        rgbm1 = OCIO.GradingRGBM()
+        rgbm2 = OCIO.GradingRGBM()
+        self.assertEqual(rgbm1, rgbm2)
+        rgbm1.red = 2
+        self.assertNotEqual(rgbm1, rgbm2)
+
     def test_primary(self):
         """
         Test the GradingPrimary struct.
@@ -120,6 +127,13 @@ class GradingDataTest(unittest.TestCase):
         newGamma = OCIO.GradingRGBM(1.1, 1.2, 1.3, 1)
         primaryLog.gamma = newGamma
         assertEqualRGBM(self, newGamma, primaryLog.gamma)
+
+        # Check comparison operators
+        primaryLog1 = OCIO.GradingPrimary(OCIO.GRADING_LOG)
+        primaryLog2 = OCIO.GradingPrimary(OCIO.GRADING_LOG)
+        self.assertEqual(primaryLog1, primaryLog2)
+        primaryLog1.saturation = 0.5
+        self.assertNotEqual(primaryLog1, primaryLog2)
 
     def test_bspline(self):
         """
@@ -188,6 +202,19 @@ class GradingDataTest(unittest.TestCase):
         cpts5[2] = OCIO.GradingControlPoint(y=0.6, x=0.4)
         assertEqualBSpline(self, bs, bs5)
 
+        # Check comparison operators
+        cpts1 = OCIO.GradingControlPoint(1, 1)
+        cpts2 = OCIO.GradingControlPoint(1, 1)
+        self.assertEqual(cpts1, cpts2)
+        cpts1.x = 0.5
+        self.assertNotEqual(cpts1, cpts2)
+
+        bs1 = OCIO.GradingBSplineCurve([0, 0, 0.1, 0.5, 0.4, 0.6, 0.6, 0.7, 1, 1])
+        bs2 = OCIO.GradingBSplineCurve([0, 0, 0.1, 0.5, 0.4, 0.6, 0.6, 0.7, 1, 1])
+        self.assertEqual(bs1, bs2)
+        bs1.getControlPoints()[2] = OCIO.GradingControlPoint(0.1, 0.4)
+        self.assertNotEqual(cpts1, cpts2)
+
     def test_rgbcurve(self):
         """
         Test the GradingRGBCurve, creation, default value, modification.
@@ -222,6 +249,13 @@ class GradingDataTest(unittest.TestCase):
         rgbVideo = OCIO.GradingRGBCurve(OCIO.GRADING_LOG)
         assertEqualRGBCurve(self, rgbLog, rgbVideo)
         
+        # Check comparison operators
+        rgbc1 = OCIO.GradingRGBCurve(OCIO.GRADING_LIN)
+        rgbc2 = OCIO.GradingRGBCurve(OCIO.GRADING_LIN)
+        self.assertEqual(rgbc1, rgbc2)
+        rgbc1.red.getControlPoints()[1] = OCIO.GradingControlPoint(0.4, 0.4)
+        self.assertNotEqual(rgbc1, rgbc2)
+
     def test_rgbmsw(self):
         """
         Test the GradingRGBMSW struct.
@@ -315,6 +349,13 @@ class GradingDataTest(unittest.TestCase):
         with self.assertRaises(TypeError):
             OCIO.GradingRGBMSW(green=3, start=4)
 
+        # Check comparison operators
+        rgbm1 = OCIO.GradingRGBMSW(1, 2, 3, 4, 5, 6)
+        rgbm2 = OCIO.GradingRGBMSW(1, 2, 3, 4, 5, 6)
+        self.assertEqual(rgbm1, rgbm2)
+        rgbm1.red = 2
+        self.assertNotEqual(rgbm1, rgbm2)
+
     def test_tone(self):
         """
         Test the GradingTone struct creation.
@@ -343,3 +384,10 @@ class GradingDataTest(unittest.TestCase):
         newMidtones = OCIO.GradingRGBMSW(1.1, 1.2, 1.3, 1, 0.2, 1.1)
         tone.midtones = newMidtones
         assertEqualRGBM(self, newMidtones, tone.midtones)
+
+        # Check comparison operators
+        tone1 = OCIO.GradingTone(OCIO.GRADING_LOG)
+        tone2 = OCIO.GradingTone(OCIO.GRADING_LOG)
+        self.assertEqual(tone1, tone2)
+        tone1.midtones = newMidtones
+        self.assertNotEqual(tone1, tone2)
