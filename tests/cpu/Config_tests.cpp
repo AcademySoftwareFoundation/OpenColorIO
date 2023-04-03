@@ -469,7 +469,7 @@ OCIO_ADD_TEST(Config, required_roles_for_version_2_2)
     }
 
     {
-        // Test that aces_interchange role has the wrong colorspace type.
+        // Test detection of the aces_interchange role having the wrong colorspace type.
 
         // Set a display-referred colorspace to both interchange roles.
         config->setRole(OCIO::ROLE_INTERCHANGE_SCENE, dcs->getName());
@@ -485,7 +485,7 @@ OCIO_ADD_TEST(Config, required_roles_for_version_2_2)
     }
 
     {
-        // Test that cie_xyz_d65_interchange role has the wrong colorspace type.
+        // Test detection of the cie_xyz_d65_interchange role having the wrong colorspace type.
 
         // Set a scene-referred colorspace to both interchange roles.
         config->setRole(OCIO::ROLE_INTERCHANGE_SCENE, scs->getName());

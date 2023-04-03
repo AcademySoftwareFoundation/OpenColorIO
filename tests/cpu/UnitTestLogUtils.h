@@ -5,7 +5,6 @@
 #define INCLUDED_OCIO_UNITTEST_LOGUTILS_H
 
 #include <OpenColorIO/OpenColorIO.h>
-#include "utils/StringUtils.h"
 
 namespace OCIO_NAMESPACE
 {
@@ -27,7 +26,7 @@ public:
     bool empty() const;
 
     bool findAndRemove(const std::string & str) const;
-    bool findAllAndRemove(const std::string & str) const;
+    bool findAllAndRemove(const std::string & sPattern) const;
     void print();
 private:
     LoggingLevel m_logLevel;

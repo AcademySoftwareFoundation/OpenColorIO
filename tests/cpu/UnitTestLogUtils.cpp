@@ -78,12 +78,10 @@ bool LogGuard::findAndRemove(const std::string & line) const
     return false;
 }
 
-bool LogGuard::findAllAndRemove(const std::string & line) const
+bool LogGuard::findAllAndRemove(const std::string & sPattern) const
 {
-    // Escape the line to prevent error in regex if the line contains regex character.
     bool found = false;
-    std::string escaped_line = std::regex_replace(line, std::regex("[\\[\\](){}*+?.^$|\\\\]"), "\\$&");
-    std::regex pattern(R"(^\[OpenColorIO Info\]: Inactive.*)" + escaped_line + R"([\r\n]+)");
+    std::regex pattern(sPattern);
     std::smatch match;
     while (std::regex_search(g_output, match, pattern)) 
     {
@@ -150,7 +148,8 @@ bool checkAndMuteDisplayInterchangeRoleError(LogGuard & logGuard)
 void muteInactiveColorspaceInfo(LogGuard & logGuard)
 {
     const std::string str = "- Display' is neither a color space nor a named transform.";
-    logGuard.findAllAndRemove(str);
+    const std::string pattern = R"(^\[OpenColorIO Info\]: Inactive.*)" + str + R"([\r\n]+)";
+    logGuard.findAllAndRemove(pattern);
 }
 
 } // namespace OCIO_NAMESPACE
