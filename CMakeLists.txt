@@ -223,6 +223,11 @@ if(HAVE_NEON AND OCIO_USE_SIMD)
             sse2neon/include
     )
 
+    # As per instructions on sse2neon's GitHub page, the following compiler flags should be used:
+    # "-march=armv8-a+fp+simd+crypto+crc". These flags are required for some ARM platforms that do
+    # not enable floating point calculations or SIMD instructions by default. However, for ARM64
+    # (Apple ARM platform) and x86_64 platforms, these features are already enabled by default.
+    # Therefore, no additional compiler flags are needed.
     if (NOT sse2neon_INCLUDE_DIR)
         include(Installsse2neon)
     else()
