@@ -13,8 +13,8 @@ OpenColorIO 2.2 was delivered in October 2022 and is in the VFX Reference Platfo
 calendar year 2023.
 
 
-New Features
-============
+New Feature Guide
+=================
 
 Built-in Configs
 ****************
