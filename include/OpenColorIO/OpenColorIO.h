@@ -2523,21 +2523,6 @@ public:
     ConstCPUProcessorRcPtr getOptimizedCPUProcessor(BitDepth inBitDepth,
                                                     BitDepth outBitDepth,
                                                     OptimizationFlags oFlags) const;
-    /**
-     * \brief Returns whether the two processors are equivalent.
-     * 
-     * \param p1 First processor to compare.
-     * \param p2 Second processor to compare.
-     * \param rgbaValues RGBA values to use to test the processors.
-     * \param numValues Number of RGBA values.
-     * \param tolerance Tolerance of the comparaison.
-     * \return True or false depending on whether the two processors are equivalent.
-     */
-//     static bool AreProcessorsEquivalent(ConstProcessorRcPtr & p1,
-//                                         ConstProcessorRcPtr & p2, 
-//                                         float * rgbaValues, 
-//                                         size_t numValues, 
-//                                         float tolerance);                                              
 
     Processor(const Processor &) = delete;
     Processor & operator= (const Processor &) = delete;
