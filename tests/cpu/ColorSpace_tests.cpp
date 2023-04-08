@@ -948,7 +948,7 @@ colorspaces:
     }
 }
 
-OCIO_ADD_TEST(Processor, processor_to_known_colorspace)
+OCIO_ADD_TEST(ConfigUtils, processor_to_known_colorspace)
 {
     constexpr const char * CONFIG { R"(
 ocio_profile_version: 2
@@ -957,7 +957,37 @@ roles:
   default: raw
   scene_linear: ref_cs
 
+display_colorspaces:
+  - !<ColorSpace>
+    name: CIE-XYZ-D65
+    description: The CIE XYZ (D65) display connection colorspace.
+    isdata: false
+
+  - !<ColorSpace>
+    name: sRGB - Display CS
+    description: Convert CIE XYZ (D65 white) to sRGB (piecewise EOTF)
+    isdata: false
+    from_display_reference: !<BuiltinTransform> {style: DISPLAY - CIE-XYZ-D65_to_sRGB}
+
 colorspaces:
+  # Put a couple of test color space first in the config since the heuristics stop upon success.
+
+  - !<ColorSpace>
+    name: File color space
+    description: Verify that that FileTransforms load correctly when running the heuristics.
+    isdata: false
+    from_scene_reference: !<GroupTransform>
+      children:
+        - !<FileTransform> {src: lut1d_green.ctf}
+
+  - !<ColorSpace>
+    name: CS Transform color space
+    description: Verify that that ColorSpaceTransforms load correctly when running the heuristics.
+    isdata: false
+    from_scene_reference: !<GroupTransform>
+      children:
+        - !<ColorSpaceTransform> {src: ref_cs, dst: not sRGB}
+
   - !<ColorSpace>
     name: raw
     description: A data colorspace (should not be used).
@@ -965,7 +995,7 @@ colorspaces:
 
   - !<ColorSpace>
     name: ref_cs
-    description: The reference colorspace.
+    description: The reference colorspace, ACES2065-1.
     isdata: false
 
   - !<ColorSpace>
@@ -990,16 +1020,6 @@ colorspaces:
         - !<MatrixTransform> {matrix: [2.52168618674388, -1.13413098823972, -0.387555198504164, 0, -0.276479914229922, 1.37271908766826, -0.096239173438334, 0, -0.0153780649660342, -0.152975335867399, 1.16835340083343, 0, 0, 0, 0, 1]}
 
   - !<ColorSpace>
-    name: Texture -- sRGB
-    description: An sRGB Texture space, spelled differently than in the built-in config.
-    isdata: false
-    from_scene_reference: !<GroupTransform>
-      name: AP0 to sRGB Rec.709
-      children:
-        - !<MatrixTransform> {matrix: [2.52168618674388, -1.13413098823972, -0.387555198504164, 0, -0.276479914229922, 1.37271908766826, -0.096239173438334, 0, -0.0153780649660342, -0.152975335867399, 1.16835340083343, 0, 0, 0, 0, 1]}
-        - !<ExponentWithLinearTransform> {gamma: 2.4, offset: 0.055, direction: inverse}
-
-  - !<ColorSpace>
     name: sRGB Encoded AP1 - Texture
     description: Another space with "sRGB" in the name that is not actually an sRGB texture space.
     isdata: false
@@ -1009,99 +1029,16 @@ colorspaces:
         - !<MatrixTransform> {matrix: [1.45143931614567, -0.23651074689374, -0.214928569251925, 0, -0.0765537733960206, 1.17622969983357, -0.0996759264375522, 0, 0.00831614842569772, -0.00603244979102102, 0.997716301365323, 0, 0, 0, 0, 1]}
         - !<ExponentWithLinearTransform> {gamma: 2.4, offset: 0.055, direction: inverse}
 
+  - !<ColorSpace>
+    name: Texture -- sRGB
+    description: An sRGB Texture space, spelled differently than in the built-in config.
+    isdata: false
+    from_scene_reference: !<GroupTransform>
+      name: AP0 to sRGB Rec.709
+      children:
+        - !<MatrixTransform> {matrix: [2.52168618674388, -1.13413098823972, -0.387555198504164, 0, -0.276479914229922, 1.37271908766826, -0.096239173438334, 0, -0.0153780649660342, -0.152975335867399, 1.16835340083343, 0, 0, 0, 0, 1]}
+        - !<ExponentWithLinearTransform> {gamma: 2.4, offset: 0.055, direction: inverse}
 )" };
-
-    auto checkProcessor = [](OCIO::ConstProcessorRcPtr & proc)
-    {
-        OCIO::GroupTransformRcPtr gt = proc->createGroupTransform();
-        OCIO_CHECK_EQUAL(gt->getNumTransforms(), 4);
-
-        {
-            OCIO::ConstLogCameraTransformRcPtr logAfTf0 = 
-            OCIO::DynamicPtrCast<const OCIO::LogCameraTransform>(gt->getTransform(0));
-
-            double values[3];
-            logAfTf0->getLogSideSlopeValue(values);
-            OCIO_CHECK_CLOSE(values[0], 0.0570776, 0.000001);
-            OCIO_CHECK_EQUAL(logAfTf0->getDirection(), OCIO::TRANSFORM_DIR_INVERSE);
-        }
-
-        {
-            auto mt1 = OCIO::DynamicPtrCast<const OCIO::MatrixTransform>(gt->getTransform(1));
-            double mat[16] = { 0.0, 0.0, 0.0, 0.0,
-                               0.0, 0.0, 0.0, 0.0, 
-                               0.0, 0.0, 0.0, 0.0, 
-                               0.0, 0.0, 0.0, 0.0 };
-            mt1->getMatrix(mat);
-            OCIO_CHECK_CLOSE(mat[0], 0.6954522413574519, 0.000001);
-            OCIO_CHECK_EQUAL(mt1->getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
-        }
-
-        {
-            auto mt2 = OCIO::DynamicPtrCast<const OCIO::MatrixTransform>(gt->getTransform(2));
-            double mat[16] = { 0.0, 0.0, 0.0, 0.0,
-                               0.0, 0.0, 0.0, 0.0, 
-                               0.0, 0.0, 0.0, 0.0, 
-                               0.0, 0.0, 0.0, 0.0 };
-            mt2->getMatrix(mat);
-            OCIO_CHECK_CLOSE(mat[0], 1.45143931607166, 0.000001);
-            OCIO_CHECK_EQUAL(mt2->getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
-        }
-
-        {
-            double vals[4];
-            auto mt3 = OCIO::DynamicPtrCast<const OCIO::ExponentTransform>(gt->getTransform(3));
-            mt3->getValue(vals);
-            OCIO_CHECK_CLOSE(vals[0], 2.2, 0.000001);
-            OCIO_CHECK_EQUAL(mt3->getDirection(), OCIO::TRANSFORM_DIR_INVERSE);
-        }
-    };
-
-    auto checkProcessorInverse = [](OCIO::ConstProcessorRcPtr & proc)
-    {
-        OCIO::GroupTransformRcPtr gt = proc->createGroupTransform();
-        OCIO_CHECK_EQUAL(gt->getNumTransforms(), 4);
-
-        {
-            double vals[4];
-            auto mt0 = OCIO::DynamicPtrCast<const OCIO::ExponentTransform>(gt->getTransform(0));
-            mt0->getValue(vals);
-            OCIO_CHECK_CLOSE(vals[0], 2.2, 0.000001);
-            OCIO_CHECK_EQUAL(mt0->getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
-        }
-
-        {
-            auto mt1 = OCIO::DynamicPtrCast<const OCIO::MatrixTransform>(gt->getTransform(1));
-            double mat[16] = { 0.0, 0.0, 0.0, 0.0,
-                               0.0, 0.0, 0.0, 0.0, 
-                               0.0, 0.0, 0.0, 0.0, 
-                               0.0, 0.0, 0.0, 0.0 };
-            mt1->getMatrix(mat);
-            OCIO_CHECK_CLOSE(mat[0], 0.6954522413574519, 0.000001);
-            OCIO_CHECK_EQUAL(mt1->getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
-        }
-
-        {
-            auto mt2 = OCIO::DynamicPtrCast<const OCIO::MatrixTransform>(gt->getTransform(2));
-            double mat[16] = { 0.0, 0.0, 0.0, 0.0,
-                               0.0, 0.0, 0.0, 0.0, 
-                               0.0, 0.0, 0.0, 0.0, 
-                               0.0, 0.0, 0.0, 0.0 };
-            mt2->getMatrix(mat);
-            OCIO_CHECK_CLOSE(mat[0], 1.45143931607166, 0.000001);
-            OCIO_CHECK_EQUAL(mt2->getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
-        }
-
-        {
-            OCIO::ConstLogCameraTransformRcPtr logAfTf0 = 
-            OCIO::DynamicPtrCast<const OCIO::LogCameraTransform>(gt->getTransform(3));
-
-            double values[3];
-            logAfTf0->getLogSideSlopeValue(values);
-            OCIO_CHECK_CLOSE(values[0], 0.0570776, 0.000001);
-            OCIO_CHECK_EQUAL(logAfTf0->getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
-        }
-    };
 
     std::istringstream is;
     is.str(CONFIG);
@@ -1110,6 +1047,10 @@ colorspaces:
 
     OCIO::ConfigRcPtr editableCfg = cfg->createEditableCopy();
 
+    editableCfg->setSearchPath(OCIO::GetTestFilesDir().c_str());
+
+    OCIO::ConstConfigRcPtr builtinConfig = OCIO::Config::CreateFromFile("ocio://default");
+
     // Make all color spaces suitable for the heuristics inactive.
     // The heuristics don't look at inactive color spaces.
     editableCfg->setInactiveColorSpaces("ACES cg, Linear ITU-R BT.709, Texture -- sRGB");
@@ -1117,105 +1058,524 @@ colorspaces:
     std::string srcColorSpaceName = "not sRGB";
     std::string builtinColorSpaceName  = "Gamma 2.2 AP1 - Texture";
 
+    // Test throw if no suitable spaces are present.
     {
-        // Test throw if no suitable spaces are present.
-
-        OCIO_CHECK_THROW(auto proc = OCIO::Config::GetProcessorToBuiltinColorSpace(
-            editableCfg,
-            srcColorSpaceName.c_str(),
-            builtinColorSpaceName.c_str()),
-
+        OCIO_CHECK_THROW(
+            auto proc = OCIO::Config::GetProcessorToBuiltinColorSpace(editableCfg,
+                                                                      srcColorSpaceName.c_str(),
+                                                                      builtinColorSpaceName.c_str()),
             OCIO::Exception
         );
     }
 
-    {
-        // Test sRGB Texture space.
+    // Generate a reference Processor for the correct result.
+    OCIO::ConstProcessorRcPtr refProc = OCIO::Config::GetProcessorFromConfigs(
+        editableCfg,
+        srcColorSpaceName.c_str(),
+        "ref_cs",
+        builtinConfig,
+        builtinColorSpaceName.c_str(),
+        "ACES2065-1");
 
-        editableCfg->setInactiveColorSpaces("ACES cg, Linear ITU-R BT.709");
+    // Now make various spaces active and test that they enable the heuristics to find
+    // the appropriate interchange spaces.
+
+    editableCfg->setInactiveColorSpaces("ACES cg, Linear ITU-R BT.709");
+    {
+        // Uses "sRGB Texture" to find the reference.
         auto proc = OCIO::Config::GetProcessorToBuiltinColorSpace(editableCfg,
                                                                   srcColorSpaceName.c_str(),
                                                                   builtinColorSpaceName.c_str());
-        checkProcessor(proc);
+        OCIO_CHECK_EQUAL(std::string(refProc->getCacheID()), std::string(proc->getCacheID()));
     }
 
+    // Test using linear color space from_ref direction.
+    editableCfg->setInactiveColorSpaces("ACES cg, Texture -- sRGB");
     {
-        // Test linear color space from_ref direction.
-
-        editableCfg->setInactiveColorSpaces("ACES cg, Texture -- sRGB");
+        // Uses "Linear Rec.709 (sRGB)" to find the reference.
         auto proc = OCIO::Config::GetProcessorToBuiltinColorSpace(editableCfg,
                                                                   srcColorSpaceName.c_str(),
                                                                   builtinColorSpaceName.c_str());
-        checkProcessor(proc);
+        OCIO_CHECK_EQUAL(std::string(refProc->getCacheID()), std::string(proc->getCacheID()));
     }
 
+    // Test linear color space to_ref direction.
+    editableCfg->setInactiveColorSpaces("Linear ITU-R BT.709, Texture -- sRGB");
     {
-        // Test linear color space to_ref direction.
-
-        editableCfg->setInactiveColorSpaces("Linear ITU-R BT.709, Texture -- sRGB");
+        // Uses "ACEScg" to find the reference.
         auto proc = OCIO::Config::GetProcessorToBuiltinColorSpace(editableCfg,
                                                                   srcColorSpaceName.c_str(),
                                                                   builtinColorSpaceName.c_str());
-        checkProcessor(proc);
+        OCIO_CHECK_EQUAL(std::string(refProc->getCacheID()), std::string(proc->getCacheID()));
     }
 
-    {
-        // Test linear color space to_ref direction.
+    // Generate a reference Processor for the correct result.
+    OCIO::ConstProcessorRcPtr invRefProc = OCIO::Config::GetProcessorFromConfigs(
+        builtinConfig,
+        builtinColorSpaceName.c_str(),
+        "ACES2065-1",
+        editableCfg,
+        srcColorSpaceName.c_str(),
+        "ref_cs");
 
-        editableCfg->setInactiveColorSpaces("ACES cg, Linear ITU-R BT.709");
+    // Make the reference space inactive too.
+    editableCfg->setInactiveColorSpaces("ACES cg, Linear ITU-R BT.709, ref_cs");
+    {
+        // Uses "sRGB Texture" to find the reference.
         auto proc = OCIO::Config::GetProcessorFromBuiltinColorSpace(builtinColorSpaceName.c_str(),
                                                                     editableCfg,
                                                                     srcColorSpaceName.c_str());
-        checkProcessorInverse(proc);
+        OCIO_CHECK_EQUAL(std::string(invRefProc->getCacheID()), std::string(proc->getCacheID()));
     }
 
+    // Test using linear color space from_ref direction.
+    editableCfg->setInactiveColorSpaces("ACES cg, Texture -- sRGB, ref_cs");
     {
-        // Test linear color space from_ref direction.
-
-        editableCfg->setInactiveColorSpaces("ACES cg, Texture -- sRGB");
+        // Uses "Linear Rec.709 (sRGB)" to find the reference.
         auto proc = OCIO::Config::GetProcessorFromBuiltinColorSpace(builtinColorSpaceName.c_str(),
                                                                     editableCfg,
                                                                     srcColorSpaceName.c_str());
-        checkProcessorInverse(proc);        
+        OCIO_CHECK_EQUAL(std::string(invRefProc->getCacheID()), std::string(proc->getCacheID()));
     }
 
+    // Test linear color space to_ref direction.
+    editableCfg->setInactiveColorSpaces("Linear ITU-R BT.709, Texture -- sRGB, ref_cs");
     {
-        // Test linear color space to_ref direction.
-
-        editableCfg->setInactiveColorSpaces("Linear ITU-R BT.709, Texture -- sRGB");
+        // Uses "ACEScg" to find the reference.
         auto proc = OCIO::Config::GetProcessorFromBuiltinColorSpace(builtinColorSpaceName.c_str(),
                                                                     editableCfg,
                                                                     srcColorSpaceName.c_str());
-        checkProcessorInverse(proc);
+        OCIO_CHECK_EQUAL(std::string(invRefProc->getCacheID()), std::string(proc->getCacheID()));
     }
 
-    // identifyBuiltinColorSpace tests.
-    {
-      const char * csname = cfg->identifyBuiltinColorSpace("ACEScg");
-      OCIO_CHECK_EQUAL(std::string(csname), std::string("ACES cg"));
-
-    }
+    //
+    // Test IdentifyInterchangeSpace.
+    //
 
     {
-      const char * csname = cfg->identifyBuiltinColorSpace("sRGB - Texture");
-      OCIO_CHECK_EQUAL(std::string(csname), std::string("Texture -- sRGB"));
-    }
-
-    {
-      const char * csname = cfg->identifyBuiltinColorSpace("ACEScg");
-      OCIO_CHECK_EQUAL(std::string(csname), std::string("ACES cg"));
-    }
-
-    {
-      const char * csname = cfg->identifyBuiltinColorSpace("sRGB - Texture");
-      OCIO_CHECK_EQUAL(std::string(csname), std::string("Texture -- sRGB"));
-    }
-
-    // identifyInterchangeSpace tests.
-    {
-        const char * srcInterchange = cfg->identifyInterchangeSpace();
-        const char * builtinInterchange = cfg->identifyBuiltinInterchangeSpace();
+        // Uses "ACEScg" to find the reference.
+        const char * srcInterchange = nullptr;
+        const char * builtinInterchange = nullptr;
+        OCIO::Config::IdentifyInterchangeSpace(&srcInterchange, &builtinInterchange,
+                                               editableCfg, "Linear ITU-R BT.709", 
+                                               builtinConfig, "lin_rec709_srgb");
         OCIO_CHECK_EQUAL(std::string(srcInterchange), std::string("ref_cs"));
-        OCIO_CHECK_EQUAL(std::string(builtinInterchange), std::string("ACES - ACES2065-1"));
+        OCIO_CHECK_EQUAL(std::string(builtinInterchange), std::string("ACES2065-1"));
+    }
+
+    // Set the interchange role.  In order to prove that it is being used rather than
+    // the heuristics, set it to something wrong and check that it gets returned anyway.
+    editableCfg->setRole("aces_interchange", "Texture -- sRGB");
+    {
+        const char * srcInterchange = nullptr;
+        const char * builtinInterchange = nullptr;
+        OCIO::Config::IdentifyInterchangeSpace(&srcInterchange, &builtinInterchange,
+                                               editableCfg, "Linear ITU-R BT.709", 
+                                               builtinConfig, "lin_rec709_srgb");
+        OCIO_CHECK_EQUAL(std::string(srcInterchange), std::string("Texture -- sRGB"));
+        OCIO_CHECK_EQUAL(std::string(builtinInterchange), std::string("ACES2065-1"));
+    }
+
+    // Unset the interchange role, so the heuristics will be used for the other tests.
+    editableCfg->setRole("aces_interchange", "");
+
+    // Check what happens if a totally bogus config is passed for the built-in config.
+    // (It fails in the first heuristic that tries to use one of the known built-in spaces.)
+    OCIO::ConstConfigRcPtr rawCfg = OCIO::Config::CreateRaw();
+    {
+        const char * srcInterchange = nullptr;
+        const char * builtinInterchange = nullptr;
+        OCIO_CHECK_THROW_WHAT(
+            OCIO::Config::IdentifyInterchangeSpace(&srcInterchange, &builtinInterchange,
+                                                   editableCfg, "Raw", 
+                                                   rawCfg, "raw"),
+            OCIO::Exception,
+            "Could not find destination color space 'sRGB - Texture'"
+        );
+    }
+    // Check what happens if the source color space doesn't exist.
+    {
+        const char * srcInterchange = nullptr;
+        const char * builtinInterchange = nullptr;
+        OCIO_CHECK_THROW_WHAT(
+            OCIO::Config::IdentifyInterchangeSpace(&srcInterchange, &builtinInterchange,
+                                                   editableCfg, "Foo", 
+                                                   rawCfg, "raw"),
+            OCIO::Exception,
+            "Could not find source color space 'Foo'."
+        );
+    }
+    // Check what happens if the destination color space doesn't exist.
+    {
+        const char * srcInterchange = nullptr;
+        const char * builtinInterchange = nullptr;
+        OCIO_CHECK_THROW_WHAT(
+            OCIO::Config::IdentifyInterchangeSpace(&srcInterchange, &builtinInterchange,
+                                                   editableCfg, "Foo", 
+                                                   rawCfg, ""),
+            OCIO::Exception,
+            "Could not find destination color space ''."
+        );
+    }
+
+    //
+    // Test IdentifyBuiltinColorSpace.
+    //
+
+    editableCfg->setInactiveColorSpaces("");
+
+    {
+        // Uses "Texture -- sRGB" to find the reference.
+        const char * csname = OCIO::Config::IdentifyBuiltinColorSpace(editableCfg, builtinConfig, "ACEScg");
+        OCIO_CHECK_EQUAL(std::string(csname), std::string("ACES cg"));
+    }
+
+    {
+        // Uses "Texture -- sRGB" to find the reference.
+        const char * csname = OCIO::Config::IdentifyBuiltinColorSpace(editableCfg, builtinConfig, "sRGB - Texture");
+        OCIO_CHECK_EQUAL(std::string(csname), std::string("Texture -- sRGB"));
+    }
+
+    {
+        // Uses "Texture -- sRGB" to find the reference.
+        const char * csname = OCIO::Config::IdentifyBuiltinColorSpace(editableCfg, builtinConfig, "ACES2065-1");
+        OCIO_CHECK_EQUAL(std::string(csname), std::string("ref_cs"));
+    }
+
+    editableCfg->setInactiveColorSpaces("Texture -- sRGB, ref_cs");
+
+    {
+        // Uses "ACEScg" to find the reference.
+        const char * csname = OCIO::Config::IdentifyBuiltinColorSpace(editableCfg, builtinConfig, "Linear Rec.709 (sRGB)");
+        OCIO_CHECK_EQUAL(std::string(csname), std::string("Linear ITU-R BT.709"));
+    }
+
+    {
+        // Uses "ACEScg" to find the reference.
+        const char * csname = OCIO::Config::IdentifyBuiltinColorSpace(editableCfg, builtinConfig, "ACEScct");
+        OCIO_CHECK_EQUAL(std::string(csname), std::string("CS Transform color space"));
+    }
+
+    // Aliases for built-in color spaces must work.
+    {
+        // Uses "ACEScg" to find the reference.
+        const char * csname = OCIO::Config::IdentifyBuiltinColorSpace(editableCfg, builtinConfig, "lin_ap1");
+        OCIO_CHECK_EQUAL(std::string(csname), std::string("ACES cg"));
+    }
+
+    // Display-referred spaces are not supported unless the display-referred interchange
+    // role is present.
+    {
+        OCIO_CHECK_THROW_WHAT(
+            OCIO::Config::IdentifyBuiltinColorSpace(editableCfg, builtinConfig, "sRGB - Display"),
+            OCIO::Exception,
+            "The heuristics currently only support scene-referred color spaces. Please set the interchange roles."
+        );
+    }
+
+    // The next three cases directly use the interchange roles rather than heuristics.
+
+    // With the required role, it then works.
+    editableCfg->setRole("cie_xyz_d65_interchange", "CIE-XYZ-D65");
+    {
+        const char * csname = OCIO::Config::IdentifyBuiltinColorSpace(editableCfg, builtinConfig, "sRGB - Display");
+        OCIO_CHECK_EQUAL(std::string(csname), std::string("sRGB - Display CS"));
+    }
+
+    // Must continue to work if the color space for the interchange role is inactive.
+    editableCfg->setInactiveColorSpaces("CIE-XYZ-D65");
+    {
+        const char * csname = OCIO::Config::IdentifyBuiltinColorSpace(editableCfg, builtinConfig, "sRGB - Display");
+        OCIO_CHECK_EQUAL(std::string(csname), std::string("sRGB - Display CS"));
+    }
+
+    // Test the scene-referred interchange role (and even make it inactive).
+    editableCfg->setRole("aces_interchange", "ref_cs");
+    editableCfg->setInactiveColorSpaces("ref_cs");
+    {
+        const char * csname = OCIO::Config::IdentifyBuiltinColorSpace(editableCfg, builtinConfig, "ACEScg");
+        OCIO_CHECK_EQUAL(std::string(csname), std::string("ACES cg"));
+    }
+}
+
+OCIO_ADD_TEST(ConfigUtils, processor_to_known_colorspace_alt_config)
+{
+    // This test uses a config that has a different reference space than the built-in config.
+
+    constexpr const char * CONFIG { R"(
+ocio_profile_version: 2
+
+environment: {}
+
+roles:
+  default: sRGB
+  scene_linear: scene-linear Rec.709-sRGB
+  rendering: scene-linear Rec.709-sRGB
+
+file_rules:
+  - !<Rule> {name: Default, colorspace: default}
+
+shared_views:
+  - !<View> {name: Un-tone-mapped, view_transform: Un-tone-mapped, display_colorspace: <USE_DISPLAY_NAME>}
+  - !<View> {name: Raw, colorspace: Raw}
+
+displays:
+  sRGB:
+    - !<Views> [Un-tone-mapped, Raw]
+  Gamma 2.2 / Rec.709:
+    - !<Views> [ Un-tone-mapped, Raw]
+
+view_transforms:
+  - !<ViewTransform>
+    name: Un-tone-mapped
+    from_scene_reference: !<MatrixTransform> {matrix: [ 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 ]}
+
+inactive_colorspaces: [scene-linear Rec.709-sRGB, ACES2065-1]
+
+display_colorspaces:
+  - !<ColorSpace>
+    name: CIE-XYZ D65
+    encoding: display-linear
+    isdata: false
+    to_display_reference: !<MatrixTransform> {matrix: [ 3.240969941905, -1.537383177570, -0.498610760293, 0, -0.969243636281, 1.875967501508, 0.041555057407, 0, 0.055630079697, -0.203976958889, 1.056971514243, 0, 0, 0, 0, 1 ]}
+
+  - !<ColorSpace>
+    name: display-linear Rec.709-sRGB
+    description: |
+      Display reference space
+    isdata: false
+    encoding: display-linear
+
+  - !<ColorSpace>
+    name: sRGB
+    isdata: false
+    categories: [ file-io ]
+    encoding: sdr-video
+    from_display_reference: !<GroupTransform>
+      children:
+        - !<ExponentWithLinearTransform> {gamma: 2.4, offset: 0.055, direction: inverse}
+        - !<RangeTransform> {min_in_value: 0., min_out_value: 0., max_in_value: 1., max_out_value: 1.}
+
+colorspaces:
+  - !<ColorSpace>
+    name: Raw
+    isdata: true
+    categories: [ file-io ]
+    encoding: data
+
+  - !<ColorSpace>
+    name: ACES2065-1
+    isdata: false
+    encoding: scene-linear
+    to_scene_reference: !<MatrixTransform> {matrix: [ 2.521686186744, -1.134130988240, -0.387555198504, 0, -0.276479914230, 1.372719087668, -0.096239173438, 0, -0.015378064966, -0.152975335867, 1.168353400833, 0, 0, 0, 0, 1 ]}
+
+  - !<ColorSpace>
+    name: scene-linear Rec.709-sRGB
+    description: |
+      Scene-linear Rec.709 or sRGB primaries -- ** This is the scene reference space **
+    isdata: false
+    categories: [ file-io, working-space ]
+    encoding: scene-linear
+
+  - !<ColorSpace>
+    name: scene-linear P3-D65
+    aliases: [lin_p3d65, Utility - Linear - P3-D65]
+    isdata: false
+    encoding: scene-linear
+    to_scene_reference: !<MatrixTransform> {matrix: [ 1.224940176281e+00, -2.249401762806e-01, 0, 0, -4.205695470969e-02,  1.042056954710e+00, 0, 0, -1.963755459033e-02, -7.863604555063e-02,  1.098273600141e+00, 0, 0, 0, 0, 1 ]}
+
+  - !<ColorSpace>
+    name: scene-linear Rec.2020
+    isdata: false
+    encoding: scene-linear
+    from_scene_reference: !<MatrixTransform> {matrix: [ 0.627403895935, 0.329283038378, 0.043313065687, 0 , 0.069097289358, 0.919540395075, 0.011362315566, 0, 0.016391438875, 0.088013307877, 0.895595253248, 0, 0, 0, 0, 1 ]}
+
+  - !<ColorSpace>
+    name: texture sRGB
+    isdata: false
+    categories: [ file-io ]
+    encoding: sdr-video
+    from_scene_reference: !<GroupTransform>
+      children:
+        - !<ExponentWithLinearTransform> {gamma: 2.4, offset: 0.055, direction: inverse}
+        - !<RangeTransform> {min_in_value: 0., min_out_value: 0., max_in_value: 1., max_out_value: 1.}
+)" };
+
+    std::istringstream is;
+    is.str(CONFIG);
+    OCIO::ConstConfigRcPtr cfg;
+    OCIO_CHECK_NO_THROW(cfg = OCIO::Config::CreateFromStream(is));
+
+    OCIO::ConfigRcPtr editableCfg = cfg->createEditableCopy();
+
+    OCIO::ConfigRcPtr builtinConfig = OCIO::Config::CreateFromFile("ocio://default")->createEditableCopy();
+
+    // Make all of the supported linear color spaces in the built-in config inactive.
+    // These spaces are referenced by name in the heuristics, so it should all still work.
+    // This is different than the inactive color spaces in the user's config, which the
+    // heuristics generally ignore (unless it's the reference space).  (This should not
+    // affect the tests below, it simply confirms that inactive spaces are working as
+    // expected.)
+    builtinConfig->setInactiveColorSpaces(
+        "ACES2065-1, ACEScg, Linear Rec.709 (sRGB), Linear P3-D65, Linear Rec.2020, CIE-XYZ-D65, sRGB - Display"
+    );
+
+    //
+    // Test IdentifyBuiltinColorSpace.
+    //
+
+    // The initial editableCfg inactive color spaces are: "scene-linear Rec.709-sRGB, ACES2065-1".
+
+    {
+        // Uses "texture sRGB" to find the reference.
+        const char * csname = OCIO::Config::IdentifyBuiltinColorSpace(editableCfg, builtinConfig, "Linear Rec.2020");
+        OCIO_CHECK_EQUAL(std::string(csname), std::string("scene-linear Rec.2020"));
+    }
+
+    {
+        // Uses "texture sRGB" to find the reference.
+        const char * csname = OCIO::Config::IdentifyBuiltinColorSpace(editableCfg, builtinConfig, "Linear P3-D65");
+        OCIO_CHECK_EQUAL(std::string(csname), std::string("scene-linear P3-D65"));
+    }
+
+    editableCfg->setInactiveColorSpaces("ACES2065-1");
+    {
+        // Uses "texture sRGB" to find the reference.
+        const char * csname = OCIO::Config::IdentifyBuiltinColorSpace(editableCfg, builtinConfig, "Linear Rec.709 (sRGB)");
+        OCIO_CHECK_EQUAL(std::string(csname), std::string("scene-linear Rec.709-sRGB"));
+    }
+
+    editableCfg->setInactiveColorSpaces("ACES2065-1, texture sRGB");
+    {
+        // Uses "Linear P3-D65" to find the reference.
+        const char * csname = OCIO::Config::IdentifyBuiltinColorSpace(editableCfg, builtinConfig, "Linear Rec.709 (sRGB)");
+        OCIO_CHECK_EQUAL(std::string(csname), std::string("scene-linear Rec.709-sRGB"));
+    }
+
+    editableCfg->setInactiveColorSpaces("ACES2065-1");
+    {
+        // Uses "texture sRGB" to find the reference.
+        const char * csname = OCIO::Config::IdentifyBuiltinColorSpace(editableCfg, builtinConfig, "sRGB - Texture");
+        OCIO_CHECK_EQUAL(std::string(csname), std::string("texture sRGB"));
+    }
+
+    // The color space is present in editableCfg but it's inactive, so not found.
+    {
+        OCIO_CHECK_THROW_WHAT(
+            OCIO::Config::IdentifyBuiltinColorSpace(editableCfg, builtinConfig, "ACES2065-1"),
+            OCIO::Exception,
+            "Heuristics were not able to find an equivalent to the requested color space: ACES2065-1."
+        );
+    }
+
+    // Use interchange role rather than heuristics.
+
+    editableCfg->setRole("aces_interchange", "ACES2065-1");
+    {
+        const char * csname = OCIO::Config::IdentifyBuiltinColorSpace(editableCfg, builtinConfig, "sRGB - Texture");
+        OCIO_CHECK_EQUAL(std::string(csname), std::string("texture sRGB"));
+    }
+
+    {
+        const char * csname = OCIO::Config::IdentifyBuiltinColorSpace(editableCfg, builtinConfig, "Linear Rec.709 (sRGB)");
+        OCIO_CHECK_EQUAL(std::string(csname), std::string("scene-linear Rec.709-sRGB"));
+    }
+
+    editableCfg->setInactiveColorSpaces("");
+    {
+        const char * csname = OCIO::Config::IdentifyBuiltinColorSpace(editableCfg, builtinConfig, "lin_ap0");
+        OCIO_CHECK_EQUAL(std::string(csname), std::string("ACES2065-1"));
+    }
+    editableCfg->setRole("aces_interchange", "");
+
+    // Display-referred spaces won't work via heuristics, need the interchange role.
+    {
+        OCIO_CHECK_THROW_WHAT(
+            OCIO::Config::IdentifyBuiltinColorSpace(editableCfg, builtinConfig, "sRGB - Display"),
+            OCIO::Exception,
+            "The heuristics currently only support scene-referred color spaces. Please set the interchange roles."
+        );
+    }
+    editableCfg->setRole("cie_xyz_d65_interchange", "CIE-XYZ D65");
+    {
+        // Note that it still works even if the built-in color space is inactive (though not for the source).
+        const std::string inactives{builtinConfig->getInactiveColorSpaces()};
+        OCIO_CHECK_EQUAL(StringUtils::Find(inactives, "sRGB - Display"), 88);
+        const char * csname = OCIO::Config::IdentifyBuiltinColorSpace(editableCfg, builtinConfig, "sRGB - Display");
+        OCIO_CHECK_EQUAL(std::string(csname), std::string("sRGB"));
+    }
+    editableCfg->setRole("cie_xyz_d65_interchange", "");
+
+    // Check handling of color space that isn't in the built-in config.
+    {
+        OCIO_CHECK_THROW_WHAT(
+            OCIO::Config::IdentifyBuiltinColorSpace(editableCfg, builtinConfig, "does not exist"),
+            OCIO::Exception,
+            "Built-in config does not contain the requested color space: does not exist."
+        );
+    }
+
+    //
+    // Test IdentifyInterchangeSpace.
+    //
+
+    editableCfg->setInactiveColorSpaces("scene-linear Rec.709-sRGB, ACES2065-1");
+    {
+        // Uses "texture sRGB" to find the reference.
+        const char * srcInterchange = nullptr;
+        const char * builtinInterchange = nullptr;
+        OCIO::Config::IdentifyInterchangeSpace(&srcInterchange, &builtinInterchange,
+                                               editableCfg, "scene-linear Rec.709-sRGB", 
+                                               builtinConfig, "lin_rec709_srgb");   // Aliases work.
+        OCIO_CHECK_EQUAL(std::string(srcInterchange), std::string("scene-linear Rec.709-sRGB"));
+        OCIO_CHECK_EQUAL(std::string(builtinInterchange), std::string("Linear Rec.709 (sRGB)"));
+    }
+
+    editableCfg->setInactiveColorSpaces("texture sRGB, scene-linear Rec.709-sRGB, ACES2065-1");
+    {
+        // Uses "Linear P3-D65" to find the reference.
+        const char * srcInterchange = nullptr;
+        const char * builtinInterchange = nullptr;
+        OCIO::Config::IdentifyInterchangeSpace(&srcInterchange, &builtinInterchange,
+                                               editableCfg, "lin_p3d65", 
+                                               builtinConfig, "lin_rec709_srgb");
+        OCIO_CHECK_EQUAL(std::string(srcInterchange), std::string("scene-linear Rec.709-sRGB"));
+        OCIO_CHECK_EQUAL(std::string(builtinInterchange), std::string("Linear Rec.709 (sRGB)"));
+    }
+
+    editableCfg->setInactiveColorSpaces("scene-linear P3-D65, texture sRGB, scene-linear Rec.709-sRGB, ACES2065-1");
+    {
+        // Uses "Linear Rec.2020" to find the reference.
+        const char * srcInterchange = nullptr;
+        const char * builtinInterchange = nullptr;
+        OCIO::Config::IdentifyInterchangeSpace(&srcInterchange, &builtinInterchange,
+                                               editableCfg, "Raw",   // A data space, but it works.
+                                               builtinConfig, "lin_rec709_srgb");
+        OCIO_CHECK_EQUAL(std::string(srcInterchange), std::string("scene-linear Rec.709-sRGB"));
+        OCIO_CHECK_EQUAL(std::string(builtinInterchange), std::string("Linear Rec.709 (sRGB)"));
+    }
+
+    editableCfg->setInactiveColorSpaces("scene-linear P3-D65, texture sRGB, scene-linear Rec.709-sRGB");
+    {
+        // Uses "ACES2065-1" to find the reference.
+        const char * srcInterchange = nullptr;
+        const char * builtinInterchange = nullptr;
+        OCIO::Config::IdentifyInterchangeSpace(&srcInterchange, &builtinInterchange,
+                                               editableCfg, "Raw", 
+                                               builtinConfig, "Raw");
+        OCIO_CHECK_EQUAL(std::string(srcInterchange), std::string("scene-linear Rec.709-sRGB"));
+        OCIO_CHECK_EQUAL(std::string(builtinInterchange), std::string("Linear Rec.709 (sRGB)"));
+    }
+
+    {
+        const char * srcInterchange = nullptr;
+        const char * builtinInterchange = nullptr;
+        OCIO_CHECK_THROW_WHAT(
+            OCIO::Config::IdentifyInterchangeSpace(&srcInterchange, &builtinInterchange,
+                                                   editableCfg, "CIE-XYZ D65", 
+                                                   builtinConfig, "CIE-XYZ-D65"),
+            OCIO::Exception,
+            "The heuristics currently only support scene-referred color spaces. Please set the interchange roles."
+        );
     }
 }

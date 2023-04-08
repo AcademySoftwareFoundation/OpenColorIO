@@ -5920,7 +5920,7 @@ OCIO_ADD_TEST(Config, inactive_color_space_read_write)
     }
 }
 
-OCIO_ADD_TEST(Config, two_configs)
+OCIO_ADD_TEST(Config, get_processor_from_two_configs)
 {
     constexpr const char * SIMPLE_CONFIG1{ R"(
 ocio_profile_version: 2
@@ -5932,6 +5932,11 @@ roles:
   default: raw1
   aces_interchange: aces1
   cie_xyz_d65_interchange: display1
+
+view_transforms:
+  - !<ViewTransform>
+    name: vt1
+    from_scene_reference: !<RangeTransform> {min_in_value: 0., min_out_value: 0.}
 
 colorspaces:
   - !<ColorSpace>
@@ -5947,6 +5952,10 @@ colorspaces:
     name: aces1
     allocation: uniform
     from_scene_reference: !<ExponentTransform> {value: [1.101, 1.202, 1.303, 1.404]}
+
+  - !<ColorSpace>
+    name: data_space
+    isdata: true
 
 display_colorspaces:
   - !<ColorSpace>
@@ -6008,8 +6017,8 @@ display_colorspaces:
     is.str(SIMPLE_CONFIG2);
     OCIO_CHECK_NO_THROW(config2 = OCIO::Config::CreateFromStream(is));
 
+    // Just specify color spaces and have OCIO use the interchange roles.
     OCIO::ConstProcessorRcPtr p;
-    // NB: Although they have the same name, they are in different configs and are different ColorSpaces.
     OCIO_CHECK_NO_THROW(p = OCIO::Config::GetProcessorFromConfigs(config1, "test1", config2, "test2"));
     OCIO_REQUIRE_ASSERT(p);
     auto group = p->createGroupTransform();
@@ -6069,7 +6078,35 @@ display_colorspaces:
     auto l3 = OCIO_DYNAMIC_POINTER_CAST<OCIO::LogTransform>(t3);
     OCIO_CHECK_ASSERT(l3);
 
-    OCIO_CHECK_THROW_WHAT(OCIO::Config::GetProcessorFromConfigs(config1, "display2", config2, "test2"),
+    // If one of the spaces is a data space, the whole result must be a no-op.
+    OCIO_CHECK_NO_THROW(p = OCIO::Config::GetProcessorFromConfigs(config1, "data_space", config2, "test2"));
+    OCIO_REQUIRE_ASSERT(p);
+    group = p->createGroupTransform();
+    OCIO_REQUIRE_EQUAL(group->getNumTransforms(), 0);
+
+    // Mixed Scene- and Display-referred interchange spaces.
+    OCIO_CHECK_NO_THROW(p = OCIO::Config::GetProcessorFromConfigs(config1, "display2", config2, "test2"));
+    OCIO_REQUIRE_ASSERT(p);
+    group = p->createGroupTransform();
+    OCIO_REQUIRE_EQUAL(group->getNumTransforms(), 5);
+    t0 = group->getTransform(0);
+    f0 = OCIO_DYNAMIC_POINTER_CAST<OCIO::FixedFunctionTransform>(t0);
+    OCIO_CHECK_ASSERT(f0);
+    t1 = group->getTransform(1);
+    auto r1 = OCIO_DYNAMIC_POINTER_CAST<OCIO::RangeTransform>(t1);
+    OCIO_CHECK_ASSERT(c1);
+    t2 = group->getTransform(2);
+    e2 = OCIO_DYNAMIC_POINTER_CAST<OCIO::ExponentTransform>(t2);
+    OCIO_CHECK_ASSERT(e2);
+    t3 = group->getTransform(3);
+    auto r3 = OCIO_DYNAMIC_POINTER_CAST<OCIO::RangeTransform>(t3);
+    OCIO_CHECK_ASSERT(r3);
+    auto t4 = group->getTransform(4);
+    auto m4 = OCIO_DYNAMIC_POINTER_CAST<OCIO::MatrixTransform>(t4);
+    OCIO_CHECK_ASSERT(m4);
+
+    // Second config has no view transform but is asked to connect a display color space to aces_interchange.
+    OCIO_CHECK_THROW_WHAT(OCIO::Config::GetProcessorFromConfigs(config1, "test1", config2, "display3"),
                           OCIO::Exception,
                           "There is no view transform between the main scene-referred space "
                           "and the display-referred space");
@@ -6092,6 +6129,12 @@ colorspaces:
     name: test
     allocation: uniform
     from_scene_reference: !<MatrixTransform> {offset: [0.11, 0.12, 0.13, 0]}
+
+display_colorspaces:
+  - !<ColorSpace>
+    name: display5
+    allocation: uniform
+    from_display_reference: !<ExponentTransform> {value: 2.4}
 )" };
 
     is.clear();
@@ -6101,11 +6144,15 @@ colorspaces:
 
     OCIO_CHECK_THROW_WHAT(OCIO::Config::GetProcessorFromConfigs(config1, "test1", config3, "test"),
                           OCIO::Exception,
-                          "The role 'aces_interchange' is missing in the destination config");
+                          "The required role 'aces_interchange' is missing from the source and/or destination config.");
 
     OCIO_CHECK_THROW_WHAT(OCIO::Config::GetProcessorFromConfigs(config1, "display1", config3, "test"),
                           OCIO::Exception,
-                          "The role 'cie_xyz_d65_interchange' is missing in the destination config");
+                          "The required role 'aces_interchange' is missing from the source and/or destination config.");
+
+    OCIO_CHECK_THROW_WHAT(OCIO::Config::GetProcessorFromConfigs(config1, "display1", config3, "display5"),
+                          OCIO::Exception,
+                          "The required role 'cie_xyz_d65_interchange' is missing from the source and/or destination config.");
 }
 
 
