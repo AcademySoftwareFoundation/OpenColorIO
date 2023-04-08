@@ -13,39 +13,53 @@ namespace OCIO_NAMESPACE
 
 namespace ConfigUtils
 {
-    const char * getBuiltinLinearSpaces(int index);
-    
-    // Return whether the color space contains SRGB or not.
-    bool containsSRGB(ConstColorSpaceRcPtr & cs);
 
-    // Get color space where isData is false and it has neither a to_ref or from_ref transform.
-    int getRefSpace(const Config & cfg);
+bool GetInterchangeRolesForColorSpaceConversion(const char ** srcInterchangeCSName,
+                                                const char ** dstInterchangeCSName,
+                                                ReferenceSpaceType & interchangeType,
+                                                const ConstConfigRcPtr & srcConfig,
+                                                const char * srcName,
+                                                const ConstConfigRcPtr & dstConfig,
+                                                const char * dstName);
 
-    bool isIdentityTransform(const Config & srcConfig, GroupTransformRcPtr & tf, std::vector<float> & vals, float absTolerance);
+void IdentifyInterchangeSpace(const char ** srcInterchange, 
+                              const char ** builtinInterchange,
+                              const ConstConfigRcPtr & srcConfig,
+                              const char * srcColorSpaceName, 
+                              const ConstConfigRcPtr & builtinConfig, 
+                              const char * builtinColorSpaceName);
 
-    // Get reference to a sRGB transform.
-    TransformRcPtr getTransformToSRGBSpace(const ConstConfigRcPtr & builtinConfig, 
-                                           std::string refColorSpaceName);
+const char * IdentifyBuiltinColorSpace(const ConstConfigRcPtr & srcConfig,
+                                       const ConstConfigRcPtr & builtinConfig, 
+                                       const char * builtinColorSpaceName);
 
-    // Get reference space if the specified color space is a recognized linear space.
-    int getReferenceSpaceFromLinearSpace(const Config & srcConfig,
-                                         const ConstColorSpaceRcPtr & cs,
-                                         const ConstConfigRcPtr & builtinConfig);
+// Temporarily deactivate the Processor cache on a Config object.
+// Currently, this also clears the cache.
+//
+class SuspendCacheGuard
+{
+public:
+    SuspendCacheGuard();
+    SuspendCacheGuard(const SuspendCacheGuard &) = delete;
+    SuspendCacheGuard & operator=(const SuspendCacheGuard &) = delete;
 
-    // Get reference space if the specified color space is an sRGB texture space.
-    int getReferenceSpaceFromSRGBSpace(const Config & config, 
-                                       const ConstColorSpaceRcPtr cs,
-                                       const ConstConfigRcPtr & builtinConfig);
+    SuspendCacheGuard(const ConstConfigRcPtr & config)
+        : m_config(config), m_origCacheFlags(config->getProcessorCacheFlags())
+    {
+        m_config->setProcessorCacheFlags(PROCESSOR_CACHE_OFF);
+    }
 
-    // Identify the interchange space of the source config and the default built-in config.                  
-    void identifyInterchangeSpace(int & srcInterchange, Config & eSrcConfig);
-    // Identify the interchange space the default built-in config.
-    void identifyBuiltinInterchangeSpace(int & builtinInterchangeIndex, Config & eSrcConfig);
+    ~SuspendCacheGuard()
+    {
+        m_config->setProcessorCacheFlags(m_origCacheFlags);
+    }
 
-    // Find the name of the color space in the source config that is the same as 
-    // a color space in the default built-in config.
-    int identifyBuiltinColorSpace(const char * builtinColorSpaceName, Config & eSrcConfig);
-}
+private:
+    ConstConfigRcPtr m_config = nullptr;
+    ProcessorCacheFlags m_origCacheFlags;
+};
+
+} // namespace ConfigUtils
 
 } // namespace OCIO_NAMESPACE
 

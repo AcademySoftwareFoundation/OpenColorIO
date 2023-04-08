@@ -326,7 +326,7 @@ public:
     mutable std::string m_cacheidnocontext;
     FileRulesRcPtr m_fileRules;
 
-    ProcessorCacheFlags m_cacheFlags { PROCESSOR_CACHE_DEFAULT };
+    mutable ProcessorCacheFlags m_cacheFlags { PROCESSOR_CACHE_DEFAULT };
     mutable ProcessorCache<std::size_t, ProcessorRcPtr> m_processorCache;
 
     Impl() :
@@ -918,7 +918,12 @@ public:
 
     }
 
-    void setProcessorCacheFlags(ProcessorCacheFlags flags) noexcept
+    ProcessorCacheFlags getProcessorCacheFlags() const noexcept
+    {
+        return m_cacheFlags;
+    }
+
+    void setProcessorCacheFlags(ProcessorCacheFlags flags) const noexcept
     {
         m_cacheFlags = flags;
         m_processorCache.enable((m_cacheFlags & PROCESSOR_CACHE_ENABLED) == PROCESSOR_CACHE_ENABLED);
@@ -2732,6 +2737,8 @@ void Config::clearColorSpaces()
     getImpl()->refreshActiveColorSpaces();
 }
 
+///////////////////////////////////////////////////////////////////////////
+
 bool Config::isColorSpaceLinear(const char * colorSpace, ReferenceSpaceType referenceSpaceType) const
 {
     auto cs = getColorSpace(colorSpace);
@@ -2783,13 +2790,7 @@ bool Config::isColorSpaceLinear(const char * colorSpace, ReferenceSpaceType refe
             0.f, 0.0625f, 0.f, 0.f, 4.f, 0.f,
             0.f, 0.f, 0.0625f, 0.f, 0.f, 4.f
         };
-        std::vector<float> dst = 
-        { 
-            0.f, 0.f, 0.f, 0.f, 0.f, 0.f,
-            0.f, 0.f, 0.f, 0.f, 0.f, 0.f,
-            0.f, 0.f, 0.f, 0.f, 0.f, 0.f,
-            0.f, 0.f, 0.f, 0.f, 0.f, 0.f
-        };
+        std::vector<float> dst(img.size(), 0.f);
 
         PackedImageDesc desc(&img[0], 8, 1, CHANNEL_ORDERING_RGB);
         PackedImageDesc descDst(&dst[0], 8, 1, CHANNEL_ORDERING_RGB);
@@ -2797,7 +2798,7 @@ bool Config::isColorSpaceLinear(const char * colorSpace, ReferenceSpaceType refe
         auto procToReference = config.getImpl()->getProcessorWithoutCaching(
             config, t, TRANSFORM_DIR_FORWARD
         );
-        auto optCPUProc = procToReference->getOptimizedCPUProcessor(OPTIMIZATION_LOSSLESS);
+        auto optCPUProc = procToReference->getOptimizedCPUProcessor(OPTIMIZATION_NONE);
         optCPUProc->apply(desc, descDst);
 
 
@@ -2845,39 +2846,31 @@ bool Config::isColorSpaceLinear(const char * colorSpace, ReferenceSpaceType refe
     // transforms, so it is equivalent to the reference space and hence linear.
     return true;
 }
-  
-const char * Config::identifyInterchangeSpace() const
+
+void Config::IdentifyInterchangeSpace(const char ** srcInterchange,
+                                      const char ** builtinInterchange,
+                                      const ConstConfigRcPtr & srcConfig,
+                                      const char * srcColorSpaceName,
+                                      const ConstConfigRcPtr & builtinConfig,
+                                      const char * builtinColorSpaceName)
 {
-    // Using createEditableCopy to avoid filling the processor cache in the Config object.
-    ConfigRcPtr eSrcConfig = createEditableCopy();
-    eSrcConfig->setProcessorCacheFlags(PROCESSOR_CACHE_OFF);
-
-    int srcInterchangeIndex = -1;
-    ConfigUtils::identifyInterchangeSpace(srcInterchangeIndex, *eSrcConfig);
-
-    return getColorSpaceNameByIndex(srcInterchangeIndex);
+    // This will throw if it is unable to identify the interchange spaces.
+    ConfigUtils::IdentifyInterchangeSpace(srcInterchange, 
+                                          builtinInterchange, 
+                                          srcConfig, 
+                                          srcColorSpaceName, 
+                                          builtinConfig,
+                                          builtinColorSpaceName);
 }
 
-const char * Config::identifyBuiltinInterchangeSpace() const
+const char * Config::IdentifyBuiltinColorSpace(const ConstConfigRcPtr & srcConfig,
+                                               const ConstConfigRcPtr & builtinConfig,
+                                               const char * builtinColorSpaceName)
 {
-    // Using createEditableCopy to avoid filling the processor cache in the Config object.
-    ConfigRcPtr eSrcConfig = createEditableCopy();
-    eSrcConfig->setProcessorCacheFlags(PROCESSOR_CACHE_OFF);
-
-    int builtinInterchangeIndex = -1;
-    ConfigUtils::identifyBuiltinInterchangeSpace(builtinInterchangeIndex, *eSrcConfig);
-
-    return ConfigUtils::getBuiltinLinearSpaces(builtinInterchangeIndex);
-}
-
-const char * Config::identifyBuiltinColorSpace(const char * builtinColorSpaceName) const
-{
-    // Using createEditableCopy to avoid filling the processor cache in the Config object.
-    ConfigRcPtr eSrcConfig = createEditableCopy();
-    eSrcConfig->setProcessorCacheFlags(PROCESSOR_CACHE_OFF);
-
-    int csIndex = ConfigUtils::identifyBuiltinColorSpace(builtinColorSpaceName, *eSrcConfig);
-    return getColorSpaceNameByIndex(csIndex);
+    // This will throw if it is unable to identify the interchange spaces.
+    return ConfigUtils::IdentifyBuiltinColorSpace(srcConfig,
+                                                  builtinConfig,
+                                                  builtinColorSpaceName);
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -4251,6 +4244,7 @@ bool Config::filepathOnlyMatchesDefaultRule(const char * filePath) const
 
 
 ///////////////////////////////////////////////////////////////////////////
+//  GetProcessor
 
 ConstProcessorRcPtr Config::getProcessor(const ConstColorSpaceRcPtr & src,
                                          const ConstColorSpaceRcPtr & dst) const
@@ -4478,50 +4472,29 @@ ConstProcessorRcPtr Config::GetProcessorFromConfigs(const ConstContextRcPtr & sr
                                                     const ConstConfigRcPtr & dstConfig,
                                                     const char * dstName)
 {
-    ConstColorSpaceRcPtr srcColorSpace = srcConfig->getColorSpace(srcName);
-    if (!srcColorSpace)
+    // Extract the appropriate interchange roles based on the reference space type of the
+    // source and destination color spaces.  Note that no heuristics are attempted.  If these
+    // roles are missing, an exception is raised.  (Note that the names of the returned color
+    // spaces should not depend on the context arguments above.)
+    const char * srcInterchangeName = nullptr;
+    const char * dstInterchangeName = nullptr;
+    ReferenceSpaceType interchangeType;
+    if( !ConfigUtils::GetInterchangeRolesForColorSpaceConversion(&srcInterchangeName, 
+                                                                 &dstInterchangeName, 
+                                                                 interchangeType,
+                                                                 srcConfig, srcName, 
+                                                                 dstConfig, dstName) )
     {
+        const char * interchangeRoleName = (interchangeType == REFERENCE_SPACE_SCENE)
+                                           ? ROLE_INTERCHANGE_SCENE : ROLE_INTERCHANGE_DISPLAY;
         std::ostringstream os;
-        os << "Could not find source color space '" << srcName << "'.";
+        os << "The required role '" << interchangeRoleName << "' is missing from the source and/or "
+           << "destination config.";
         throw Exception(os.str().c_str());
     }
 
-    const bool sceneReferred = (srcColorSpace->getReferenceSpaceType() == REFERENCE_SPACE_SCENE);
-    const char * exchangeRoleName = sceneReferred ? ROLE_INTERCHANGE_SCENE : ROLE_INTERCHANGE_DISPLAY;
-    const char * srcExName = LookupRole(srcConfig->getImpl()->m_roles, exchangeRoleName);
-    if (!srcExName || !*srcExName)
-    {
-        std::ostringstream os;
-        os << "The role '" << exchangeRoleName << "' is missing in the source config.";
-        throw Exception(os.str().c_str());
-    }
-    ConstColorSpaceRcPtr srcExCs = srcConfig->getColorSpace(srcExName);
-    if (!srcExCs)
-    {
-        std::ostringstream os;
-        os << "The role '" << exchangeRoleName << "' refers to color space '" << srcExName;
-        os << "' that is missing in the source config.";
-        throw Exception(os.str().c_str());
-    }
-
-    const char * dstExName = LookupRole(dstConfig->getImpl()->m_roles, exchangeRoleName);
-    if (!dstExName || !*dstExName)
-    {
-        std::ostringstream os;
-        os << "The role '" << exchangeRoleName << "' is missing in the destination config.";
-        throw Exception(os.str().c_str());
-    }
-    ConstColorSpaceRcPtr dstExCs = dstConfig->getColorSpace(dstExName);
-    if (!dstExCs)
-    {
-        std::ostringstream os;
-        os << "The role '" << exchangeRoleName << "' refers to color space '" << dstExName;
-        os << "' that is missing in the destination config.";
-        throw Exception(os.str().c_str());
-    }
-
-    return GetProcessorFromConfigs(srcContext, srcConfig, srcName, srcExName,
-                                   dstContext, dstConfig, dstName, dstExName);
+    return GetProcessorFromConfigs(srcContext, srcConfig, srcName, srcInterchangeName,
+                                   dstContext, dstConfig, dstName, dstInterchangeName);
 }
 
 ConstProcessorRcPtr Config::GetProcessorFromConfigs(const ConstConfigRcPtr & srcConfig,
@@ -4592,7 +4565,14 @@ ConstProcessorRcPtr Config::GetProcessorFromConfigs(const ConstContextRcPtr & sr
 
     ProcessorRcPtr processor = Processor::Create();
     processor->getImpl()->setProcessorCacheFlags(srcConfig->getImpl()->m_cacheFlags);
-    processor->getImpl()->concatenate(p1, p2);
+
+    // If either of the color spaces are data spaces, its corresponding processor
+    // will be empty, but need to make sure the entire result is also empty to
+    // better match the semantics of how data spaces are handled.
+    if (!srcColorSpace->isData() && !dstColorSpace->isData())
+    {
+        processor->getImpl()->concatenate(p1, p2);
+    }
     return processor;
 }
 
@@ -4612,30 +4592,14 @@ static ConstProcessorRcPtr GetProcessorToBuiltinCS(ConstConfigRcPtr srcConfig,
         throw Exception(os.str().c_str());
     }
 
-    // If both configs have the interchange roles set, then it's easy.
-    try
-    {
-        ConstProcessorRcPtr proc = Config::GetProcessorFromConfigs(srcConfig, 
-                                                                   srcColorSpaceName, 
-                                                                   builtinConfig, 
-                                                                   builtinColorSpaceName);
-        return proc;
-    }
-    catch(const Exception & e) 
-    { 
-        std::string str1 = "The role 'aces_interchange' is missing in the source config";
-        std::string str2 = "The role 'cie_xyz_d65_interchange' is missing in the source config";
-
-        // Re-throw when the error is not about interchange roles.
-        if (!StringUtils::StartsWith(e.what(), str1) && !StringUtils::StartsWith(e.what(), str2))
-        {
-            throw Exception(e.what());
-        }
-        // otherwise, do nothing and continue.
-    }
-
-    const char * srcInterchange = srcConfig->identifyInterchangeSpace();
-    const char * builtinInterchange = srcConfig->identifyBuiltinInterchangeSpace();
+    const char * srcInterchange = nullptr;
+    const char * builtinInterchange = nullptr;
+    Config::IdentifyInterchangeSpace(&srcInterchange, 
+                                     &builtinInterchange,
+                                     srcConfig,
+                                     srcColorSpaceName, 
+                                     builtinConfig,
+                                     builtinColorSpaceName);
 
     if (builtinInterchange && builtinInterchange[0])
     {
@@ -4643,27 +4607,27 @@ static ConstProcessorRcPtr GetProcessorToBuiltinCS(ConstConfigRcPtr srcConfig,
         if (direction == TRANSFORM_DIR_FORWARD)
         {
             proc = Config::GetProcessorFromConfigs(srcConfig,
-                                                    srcColorSpaceName,
-                                                    srcInterchange,
-                                                    builtinConfig,
-                                                    builtinColorSpaceName,
-                                                    builtinInterchange);
+                                                   srcColorSpaceName,
+                                                   srcInterchange,
+                                                   builtinConfig,
+                                                   builtinColorSpaceName,
+                                                   builtinInterchange);
         }
         else if (direction == TRANSFORM_DIR_INVERSE)
         {
             proc = Config::GetProcessorFromConfigs(builtinConfig,
-                                                    builtinColorSpaceName,
-                                                    builtinInterchange,
-                                                    srcConfig,
-                                                    srcColorSpaceName,
-                                                    srcInterchange);
+                                                   builtinColorSpaceName,
+                                                   builtinInterchange,
+                                                   srcConfig,
+                                                   srcColorSpaceName,
+                                                   srcInterchange);
         }
         return proc;
     }
 
     std::ostringstream os;
     os  << "Heuristics were not able to find a known color space in the provided config.\n"
-        << "Please set the interchange roles.";
+        << "Please set the interchange roles in the config.";
     throw Exception(os.str().c_str());
 }
 
@@ -4686,6 +4650,8 @@ ConstProcessorRcPtr Config::GetProcessorFromBuiltinColorSpace(const char * built
                                    builtinColorSpaceName,
                                    TRANSFORM_DIR_INVERSE);
 }
+
+///////////////////////////////////////////////////////////////////////////
 
 std::ostream& operator<< (std::ostream& os, const Config& config)
 {
@@ -4784,7 +4750,12 @@ void Config::serialize(std::ostream& os) const
     }
 }
 
-void Config::setProcessorCacheFlags(ProcessorCacheFlags flags) noexcept
+ProcessorCacheFlags Config::getProcessorCacheFlags() const noexcept
+{
+    return getImpl()->getProcessorCacheFlags();
+}
+
+void Config::setProcessorCacheFlags(ProcessorCacheFlags flags) const noexcept
 {
     getImpl()->setProcessorCacheFlags(flags);
 }

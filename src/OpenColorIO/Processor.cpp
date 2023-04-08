@@ -219,15 +219,6 @@ ConstCPUProcessorRcPtr Processor::getOptimizedCPUProcessor(BitDepth inBitDepth,
     return getImpl()->getOptimizedCPUProcessor(inBitDepth, outBitDepth, oFlags);
 }
 
-bool Processor::AreProcessorsEquivalent(ConstProcessorRcPtr & p1, 
-                                        ConstProcessorRcPtr & p2,
-                                        float * rgbaValues, 
-                                        size_t numValues, 
-                                        float tolerance)
-{ 
-    return Processor::Impl::AreProcessorsEquivalent(p1, p2, rgbaValues, numValues, tolerance);
-} 
-
 
 // Instantiate the cache with the right types.
 template class ProcessorCache<std::size_t, ProcessorRcPtr>;
