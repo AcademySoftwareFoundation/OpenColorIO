@@ -654,39 +654,8 @@ void Lut1DRenderer<inBD, outBD>::apply(const void * inImg, void * outImg, long n
         const float * lutG = (const float *)this->m_tmpLutG;
         const float * lutB = (const float *)this->m_tmpLutB;
 
-#ifdef USE_SSE
-        __m128 step = _mm_set_ps(1.0f, this->m_step, this->m_step, this->m_step);
-        __m128 dimMinusOne = _mm_set1_ps(this->m_dimMinusOne);
-#endif
-
         for(long i=0; i<numPixels; ++i)
         {
-#ifdef USE_SSE
-            __m128 idx
-                = _mm_mul_ps(_mm_set_ps(in[3], in[2], in[1], in[0]), step);
-
-            // _mm_max_ps => NaNs become 0
-            idx = _mm_min_ps(_mm_max_ps(idx, EZERO), dimMinusOne);
-
-            // zero < std::floor(idx) < maxIdx
-            // SSE => zero < truncate(idx) < maxIdx
-            //
-            __m128 lIdx = _mm_cvtepi32_ps(_mm_cvttps_epi32(idx));
-
-            // zero < std::ceil(idx) < maxIdx
-            // SSE => (lowIdx (already truncated) + 1) < maxIdx
-            // then clamp to prevent hIdx from falling off the end
-            // of the LUT
-            __m128 hIdx = _mm_min_ps(_mm_add_ps(lIdx, EONE), dimMinusOne);
-
-            // Computing delta relative to high rather than lowIdx
-            // to save computing (1-delta) below.
-            __m128 d = _mm_sub_ps(hIdx, idx);
-
-            OCIO_ALIGN(float delta[4]);   _mm_store_ps(delta, d);
-            OCIO_ALIGN(float lowIdx[4]);  _mm_store_ps(lowIdx, lIdx);
-            OCIO_ALIGN(float highIdx[4]); _mm_store_ps(highIdx, hIdx);
-#else
             float idx[3];
             idx[0] = this->m_step * in[0];
             idx[1] = this->m_step * in[1];
@@ -718,7 +687,6 @@ void Lut1DRenderer<inBD, outBD>::apply(const void * inImg, void * outImg, long n
             delta[1] = (float)highIdx[1] - idx[1];
             delta[2] = (float)highIdx[2] - idx[2];
 
-#endif
             // Since fraction is in the domain [0, 1), interpolate using 1-fraction
             // in order to avoid cases like -/+Inf * 0. Therefore we never multiply by 0 and
             // thus handle the case where A or B is infinity and return infinity rather than
