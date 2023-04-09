@@ -47,8 +47,8 @@ static inline void sse2RGBATranspose_4x4(__m128 row0, __m128 row1, __m128 row2, 
     out_a = _mm_movehl_ps(tmp3, tmp1);
 }
 
-// Note Packing functions preform no 0.0 - 1.0 normalization
-// but preform 0 - max value clamping for integer formats
+// Note Packing functions perform no 0.0 - 1.0 normalization
+// but perform 0 - max value clamping for integer formats
 template<BitDepth BD> struct SSE2RGBAPack {};
 template <>
 struct SSE2RGBAPack<BIT_DEPTH_UINT8>

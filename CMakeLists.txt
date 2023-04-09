@@ -201,7 +201,7 @@ if (OCIO_USE_SSE)
         option(OCIO_USE_AVX "Specify whether to enable AVX CPU performance optimizations" ON)
         option(OCIO_USE_AVX2 "Specify whether to enable AVX2 CPU performance optimizations" ON)
         option(OCIO_USE_AVX512 "Specify whether to enable AVX512 CPU performance optimizations" ON)
-        option(OCIO_USE_F16C  "Specify whether to enable AVX512 CPU performance optimizations" ON)
+        option(OCIO_USE_F16C  "Specify whether to enable F16C CPU performance optimizations" ON)
         if(MSVC)
             # x86_64 always has SSE2
             if("${CMAKE_SIZEOF_VOID_P}" STREQUAL "8")
@@ -213,7 +213,7 @@ if (OCIO_USE_SSE)
             check_cxx_compiler_flag("/arch:AVX" COMPILER_SUPPORTS_AVX)
             check_cxx_compiler_flag("/arch:AVX2" COMPILER_SUPPORTS_AVX2)
             check_cxx_compiler_flag("/arch:AVX512" COMPILER_SUPPORTS_AVX512)
-            # MSVC doesn't have flags for these, if AVX avaible assume they are too
+            # MSVC doesn't have flags for these, if AVX available assume they are too
             set(COMPILER_SUPPORTS_SSE42 ${COMPILER_SUPPORTS_AVX})
             set(COMPILER_SUPPORTS_SSE4  ${COMPILER_SUPPORTS_AVX})
             set(COMPILER_SUPPORTS_SSSE3 ${COMPILER_SUPPORTS_AVX})

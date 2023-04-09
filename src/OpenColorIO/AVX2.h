@@ -72,8 +72,8 @@ inline void avx2RGBATranspose_4x4_4x4(__m256 row0, __m256 row1, __m256 row2, __m
 
 }
 
-// Note Packing functions preform no 0.0 - 1.0 normalization
-// but preform 0 - max value clamping for integer formats
+// Note Packing functions perform no 0.0 - 1.0 normalization
+// but perform 0 - max value clamping for integer formats
 template<BitDepth BD> struct AVX2RGBAPack {};
 
 template <>

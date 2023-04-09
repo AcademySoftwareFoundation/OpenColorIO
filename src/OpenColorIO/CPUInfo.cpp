@@ -176,7 +176,6 @@ CPUInfo::CPUInfo()
     }
 }
 
-// NOTE this is only thread safe after first call
 CPUInfo& CPUInfo::instance()
 {
     static CPUInfo singleton = CPUInfo();

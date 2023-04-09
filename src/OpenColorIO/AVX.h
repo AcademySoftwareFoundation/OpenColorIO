@@ -97,8 +97,8 @@ inline __m128i avx_pack_u8(__m256i a, __m256i b)
     return _mm_or_si128(_mm_or_si128(_mm_or_si128(lo0, lo1), hi0), hi1);
 }
 
-// Note Packing functions preform no 0.0 - 1.0 normalization
-// but preform 0 - max value clamping for integer formats
+// Note Packing functions perform no 0.0 - 1.0 normalization
+// but perform 0 - max value clamping for integer formats
 template<BitDepth BD> struct AVXRGBAPack {};
 
 template <>
