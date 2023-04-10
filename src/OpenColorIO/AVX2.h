@@ -16,14 +16,7 @@
 
 // Macros for alignment declarations
 #define AVX2_SIMD_BYTES 32
-#if defined( _MSC_VER )
-#define AVX2_ALIGN(decl) __declspec(align(AVX2_SIMD_BYTES)) decl
-#elif ( __APPLE__ )
-
-#define AVX2_ALIGN(decl) decl
-#else
-#define AVX2_ALIGN(decl) decl __attribute__((aligned(AVX2_SIMD_BYTES)))
-#endif
+#define AVX2_ALIGN(decl) alignas(AVX2_SIMD_BYTES) decl
 
 namespace OCIO_NAMESPACE
 {

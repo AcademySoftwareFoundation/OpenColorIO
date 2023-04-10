@@ -16,14 +16,7 @@
 
 // Macros for alignment declarations
 #define SSE2_SIMD_BYTES 16
-#if defined( _MSC_VER )
-#define SSE2_ALIGN(decl) __declspec(align(SSE2_SIMD_BYTES)) decl
-#elif ( __APPLE__ )
-
-#define SSE2_ALIGN(decl) decl
-#else
-#define SSE2_ALIGN(decl) decl __attribute__((aligned(SSE2_SIMD_BYTES)))
-#endif
+#define SSE2_ALIGN(decl) alignas(SSE2_SIMD_BYTES) decl
 
 namespace OCIO_NAMESPACE
 {
