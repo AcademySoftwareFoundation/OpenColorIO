@@ -814,9 +814,8 @@ OCIO_ADD_TEST(CPUProcessor, with_several_ops)
                                                         &resImg[0],  OCIO::CHANNEL_ORDERING_RGBA,
                                                         NB_PIXELS, 1e-7f);
 
-#if 0
-            // SSE2/AVX/AVX2 generating slightly different LUT1D
-            // floating error below the absErrorThreshold, but checksum will be different
+            // SSE2/AVX/AVX2 generate a slightly different LUT1D
+            // floating error below the absErrorThreshold, but cacheID hash will be different
 
             const std::string cacheID{ cpuProcessor->getCacheID() };
 
@@ -825,8 +824,26 @@ OCIO_ADD_TEST(CPUProcessor, with_several_ops)
 
             // Test integer optimization. The ops should be optimized into a single LUT
             // when finalizing with an integer input bit-depth.
-            OCIO_CHECK_EQUAL(cacheID, expectedID);
-#endif
+            OCIO_CHECK_EQUAL(cacheID.length(), expectedID.length());
+
+            // check everything but the cacheID hash
+            const std::vector<std::string> toCheck = {
+                "CPU Processor: from 16ui to 32f oFlags 263995331 ops:",
+                "<Lut1D",
+                "forward default standard domain none>" };
+
+            for (unsigned int i = 0; i < toCheck.size(); ++i)
+            {
+                size_t count = 0;
+                size_t nPos = cacheID.find(toCheck[i], 0);
+                while (nPos != std::string::npos)
+                {
+                    count++;
+                    nPos = cacheID.find(toCheck[i], nPos + 1);
+                }
+
+                OCIO_CHECK_EQUAL(count, 1);
+            }
         }
 
         {
