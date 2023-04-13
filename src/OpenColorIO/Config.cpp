@@ -4967,6 +4967,11 @@ ConstProcessorRcPtr Config::GetProcessorFromBuiltinColorSpace(const char * built
                                                          TRANSFORM_DIR_INVERSE);
 }
 
+void Config::clearProcessorCache()
+{
+    getImpl()->resetCacheIDs();
+}
+
 std::ostream& operator<< (std::ostream& os, const Config& config)
 {
     config.serialize(os);

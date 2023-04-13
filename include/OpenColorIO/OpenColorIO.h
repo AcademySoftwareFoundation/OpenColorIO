@@ -1318,6 +1318,9 @@ public:
                                                        const ConstConfigRcPtr & dstConfig,
                                                        const char * dstColorSpaceName,
                                                        const char * dstInterchangeName);
+                                                       
+    /// \brief Clears the caches ids and processor cache.
+    void clearProcessorCache();
 
     /// Set the ConfigIOProxy object used to provision the config and LUTs from somewhere other
     /// than the file system.  (This is set on the config's embedded Context object.)
