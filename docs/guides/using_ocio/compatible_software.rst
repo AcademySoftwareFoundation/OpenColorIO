@@ -16,6 +16,18 @@ If you are a developer and would like assistance integrating OCIO into your
 application, please contact ocio-dev as well.
 
 
+3ds Max (Autodesk)
+******************
+
+Website : `<https://www.autodesk.com/products/3ds-max/overview>`__
+
+Supported Version: >= 2024
+
+Documentation :
+
+- `Color Management <https://help.autodesk.com/view/3DSMAX/2024/ENU/?guid=GUID-AF6FB34D-5453-4AE2-A987-388A4BB5AAFD>`__
+
+
 After Effects
 *************
 
@@ -231,9 +243,17 @@ Supported Version: >= 2016
 
 Documentation:
 
-- `Use an OCIO configuration file for color management <https://knowledge.autodesk.com/support/maya-lt/learn-explore/caas/CloudHelp/cloudhelp/2016/ENU/MayaLT/files/GUID-4AE9AABC-A900-4276-AFE4-F9DCD96BA03D-htm.html>`__
+- `Get Started with Color Management <https://help.autodesk.com/view/MAYAUL/2024/ENU/?guid=GUID-B260195C-A0FE-4F51-9EA2-099B61B7725A>`__
 
-- `What's New in Rendering <https://knowledge.autodesk.com/support/maya/learn-explore/caas/CloudHelp/cloudhelp/2016/ENU/Maya/files/GUID-C22F815A-8390-405B-BA50-74FEC42C75E0-htm.html>`__
+- `Color Management in Maya: Setting up a scene <https://youtu.be/bVYg8ZyljLs>`__
+
+- `Color Management in Maya: Input Spaces <https://youtu.be/biGWwdqaimY>`__
+
+- `Color Management in Maya: Previewing and Rendering <https://youtu.be/Pvxqc5NC_b4>`__
+
+- `Color Management in Maya: Color Picking <https://youtu.be/mgKHMrJ8DIY>`__
+
+- `Color Management in Maya: ACES default <https://youtu.be/FODVxXOIrvM>`__
 
 
 Mocha Pro (Boris FX)

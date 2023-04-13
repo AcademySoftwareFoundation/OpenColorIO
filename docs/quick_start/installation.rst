@@ -187,10 +187,26 @@ Three ``OCIO_INSTALL_EXT_PACKAGES`` options are available::
 Existing Install Hints
 ++++++++++++++++++++++
 
-When using libraries already on your system, the CMake variable 
-``-D <Package Name>_ROOT=<Path>`` may be used to specify the path to the include and 
-library root directory rather than have CMake try to find it.  The package names used 
-by OCIO are as follows (note that these are case-sensitive):
+If the library is not installed in a typical location where CMake will find it, 
+you may specify the location using one of the following methods:
+
+- Set ``-D<package_name>_DIR`` to point to the directory containing the CMake configuration file for the package.
+
+- Set ``-D<package_name>_ROOT`` to point to the directory containing the lib and include directories.
+
+- Set ``-D<package_name>_LIBRARY`` and ``-D<package_name>_INCLUDE_DIR`` to point to the lib and include directories.
+
+Not all packages support all of the above options. Please refer the 
+OCIO CMake `find modules <https://github.com/AcademySoftwareFoundation/OpenColorIO/tree/main/share/cmake/modules>`_  for the package that you are having trouble with to see the options it supports.
+
+Usually CMake will use the dynamic library rather than static, if both are present. In this case, 
+you may set <package_name>_STATIC_LIBRARY to ON to request use of the static one. If only the 
+static library is present (such as when OCIO builds the dependency), then the option is not needed.
+The following packages support this option:
+``expat``, ``yaml-cpp``, ``Imath``, ``lcms2``, and ``minizip-ng``. Using CMake 3.24+, it is
+possible to prefer the static version of ``ZLIB`` with ``-DZLIB_USE_STATIC_LIBS=ON``.
+
+The package names used by OCIO are as follows (note that these are case-sensitive):
 
 Required:
 
@@ -214,21 +230,6 @@ Optional:
 - ``GLUT``
 - ``Python``
 
-There are scenarios in which some of the dependencies may not be compiled into an 
-OCIO dynamic library.  This is more likely when OCIO does not download the packages
-itself.  In these cases, it may be helpful to additionally specify the CMake variable
-``-D <Package Name>_STATIC_LIBRARY=ON``. The following package names support this hint:
-``expat``, ``yaml-cpp``, ``Imath``, ``lcms2``, ``ZLIB``, and ``minizip-ng``.
-
-Rather than using ``_ROOT``, and possibly ``_STATIC_LIBRARY``, you may instead use
-``-D <Package Name>_LIBRARY=<Path>`` and ``-D <Package Name>_INCLUDE_DIR=<Path>``.
-In this case, the library path will control whether a static or dynamic library is used.
-It may also be used to handle situations where the library and/or include files are not
-in the typical location relative to the root directory.
-
-The OCIO `CMake find modules <https://github.com/AcademySoftwareFoundation/OpenColorIO/tree/main/share/cmake/modules>`_ 
-may be consulted for more detail on the handling of a given package and the CMake
-variables it uses.
 
 Please note that if you provide your own ``minizip-ng``, rather than having OCIO's CMake
 download and build it, you will likely need to set its CMake variables the same way
@@ -384,7 +385,7 @@ Windows
 While build environments may vary between users, the recommended way to build OCIO from source on 
 Windows 7 or newer is to use the scripts provided in the Windows 
 `share <https://github.com/AcademySoftwareFoundation/OpenColorIO/tree/main/share/dev/windows>`_ 
-section of the OCIO repository. There are two scripts currently available. 
+section of the OCIO repository. There are two scripts currently available.
 
 The first script is called 
 `ocio_deps.bat <https://github.com/AcademySoftwareFoundation/OpenColorIO/tree/main/share/dev/windows/ocio_deps.bat>`_ 
@@ -396,14 +397,18 @@ and it provides some automation to install the most difficult dependencies. Thos
 - Glew
 - Python dependencies for documentation
 
-Run this command to execute the ocio_deps.bat script::
+Run this command to execute the ocio_deps.bat script:
 
+.. code-block:: bash
+    
     ocio_deps.bat --vcpkg <path to current vcpkg installation or where it should be installed>
 
 The second script is called 
 `ocio.bat <https://github.com/AcademySoftwareFoundation/OpenColorIO/tree/main/share/dev/windows/ocio.bat>`_ 
 and it provide a way to configure and build OCIO from source. Moreover, this script executes the 
-install step of ``cmake`` as well as the unit tests. The main use case is the following::
+install step of ``cmake`` as well as the unit tests. The main use case is the following:
+
+.. code-block:: bash
 
     ocio.bat --b <path to build folder> --i <path to install folder> 
     --vcpkg <path to vcpkg installation> --ocio <path to ocio repository> --type Release
@@ -422,14 +427,26 @@ Quick environment configuration
 
 The quickest way to set the required :ref:`environment-setup` is to
 source the ``share/ocio/setup_ocio.sh`` script installed with OCIO.
-On Windows, use the corresponding setup_ocio.bat file.
+On Windows, use the corresponding setup_ocio.bat file. See OCIO's install directory under 
+share/ocio.
 
-For a simple single-user setup, add the following to ``~/.bashrc``
+For a temporary configuration of your terminal, you can run the following script:
+
+.. code-block:: bash
+
+   # Windows - Execute setup_ocio.bat
+   [... path to OCIO install directory]/share/ocio/setup_ocio.bat
+   # Unix - Execute setup_ocio.sh
+   [... path to OCIO install directory]\share\ocio\setup_ocio.sh
+
+For a more permanent option, add the following to ``~/.bashrc``
 (assuming you are using bash, and the example install directory of
-``/software/ocio``)::
+``/software/ocio``):
 
-    source /software/ocio/share/ocio/setup_ocio.sh
+.. code-block:: bash
 
+   source /software/ocio/share/ocio/setup_ocio.sh
+    
 The only environment variable you must configure manually is
 :envvar:`OCIO`, which points to the configuration file you wish to
 use. For prebuilt config files, see the

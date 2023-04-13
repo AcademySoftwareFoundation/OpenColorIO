@@ -3,7 +3,7 @@
 
 # Check the OCIO CMake config find module
 
-cmake_minimum_required(VERSION 3.12)
+cmake_minimum_required(VERSION 3.13)
 project(consumer LANGUAGES CXX)
 
 if(NOT CMAKE_BUILD_TYPE)
@@ -17,9 +17,15 @@ find_package(OpenColorIO CONFIG REQUIRED)
 
 add_executable(consumer consumer.cpp)
 
+if(OCIO_ENABLE_SANITIZER)
+    set(PLATFORM_COMPILE_OPTIONS "${PLATFORM_COMPILE_OPTIONS};-fno-omit-frame-pointer;-fsanitize=address")
+    set(PLATFORM_LINK_OPTIONS "${PLATFORM_LINK_OPTIONS};-fsanitize=address")
+endif()
+
 set_target_properties(consumer
     PROPERTIES
-        COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS}"
+        COMPILE_OPTIONS "${PLATFORM_COMPILE_OPTIONS}"
+        LINK_OPTIONS "${PLATFORM_LINK_OPTIONS}"
         CXX_STANDARD 11
         CXX_STANDARD_REQUIRED ON
         CXX_EXTENSIONS OFF

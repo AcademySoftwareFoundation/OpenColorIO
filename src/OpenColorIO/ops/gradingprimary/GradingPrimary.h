@@ -62,11 +62,6 @@ private:
     bool m_localBypass{ false };
 };
 
-bool operator==(const GradingRGBM & lhs, const GradingRGBM & rhs);
-bool operator!=(const GradingRGBM & lhs, const GradingRGBM & rhs);
-bool operator==(const GradingPrimary & lhs, const GradingPrimary & rhs);
-bool operator!=(const GradingPrimary & lhs, const GradingPrimary & rhs);
-
 } // namespace OCIO_NAMESPACE
 
 #endif

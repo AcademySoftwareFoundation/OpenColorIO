@@ -9,7 +9,7 @@ set(SOURCES
 add_executable(ociobakelut ${SOURCES})
 
 if(MSVC)
-    set(PLATFORM_COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS} /wd4996")
+    set(PLATFORM_COMPILE_OPTIONS "${PLATFORM_COMPILE_OPTIONS};/wd4996")
 endif()
 
 # NOTE: Depending of the compiler version lcm2 2.2 does not compile with C++17 so revert to c++11
@@ -21,7 +21,8 @@ endif()
 
 set_target_properties(ociobakelut
     PROPERTIES 
-        COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS}"
+        COMPILE_OPTIONS "${PLATFORM_COMPILE_OPTIONS}"
+        LINK_OPTIONS "${PLATFORM_LINK_OPTIONS}"
         CXX_STANDARD ${APP_CXX_STANDARD}
 )
 

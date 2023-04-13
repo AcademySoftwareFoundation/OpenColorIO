@@ -1,3 +1,4 @@
+docutils>=0.18.1
 six
 testresources
 recommonmark

@@ -453,6 +453,8 @@ struct OCIOEXPORT GradingRGBM
     double m_master{ 0. };
 };
 
+extern OCIOEXPORT bool operator==(const GradingRGBM & lhs, const GradingRGBM & rhs);
+extern OCIOEXPORT bool operator!=(const GradingRGBM & lhs, const GradingRGBM & rhs);
 extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const GradingRGBM &);
 
 /// Grading primary values.
@@ -488,6 +490,8 @@ struct OCIOEXPORT GradingPrimary
     static double NoClampWhite();
 };
 
+extern OCIOEXPORT bool operator==(const GradingPrimary & lhs, const GradingPrimary & rhs);
+extern OCIOEXPORT bool operator!=(const GradingPrimary & lhs, const GradingPrimary & rhs);
 extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const GradingPrimary &);
 
 /// 2D control point used by \ref GradingBSplineCurve.
@@ -499,6 +503,8 @@ struct OCIOEXPORT GradingControlPoint
     float m_y{ 0.f };
 };
 
+extern OCIOEXPORT bool operator==(const GradingControlPoint & lhs, const GradingControlPoint & rhs);
+extern OCIOEXPORT bool operator!=(const GradingControlPoint & lhs, const GradingControlPoint & rhs);
 extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const GradingControlPoint &);
 
 /// A BSpline curve defined with \ref GradingControlPoint.
@@ -530,6 +536,8 @@ protected:
     GradingBSplineCurve() = default;
 };
 
+extern OCIOEXPORT bool operator==(const GradingBSplineCurve & lhs, const GradingBSplineCurve & rhs);
+extern OCIOEXPORT bool operator!=(const GradingBSplineCurve & lhs, const GradingBSplineCurve & rhs);
 extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const GradingBSplineCurve &);
 
 /**
@@ -559,6 +567,8 @@ protected:
     GradingRGBCurve() = default;
 };
 
+extern OCIOEXPORT bool operator==(const GradingRGBCurve & lhs, const GradingRGBCurve & rhs);
+extern OCIOEXPORT bool operator!=(const GradingRGBCurve & lhs, const GradingRGBCurve & rhs);
 extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const GradingRGBCurve &);
 
 /**
@@ -602,6 +612,8 @@ struct OCIOEXPORT GradingRGBMSW
     double m_width { 1. }; // Or pivot for shadows and highlights.
 };
 
+extern OCIOEXPORT bool operator==(const GradingRGBMSW & lhs, const GradingRGBMSW & rhs);
+extern OCIOEXPORT bool operator!=(const GradingRGBMSW & lhs, const GradingRGBMSW & rhs);
 extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const GradingRGBMSW &);
 
 /// Grading tone values.
@@ -641,6 +653,8 @@ struct OCIOEXPORT GradingTone
     double m_scontrast{ 1.0 };
 };
 
+extern OCIOEXPORT bool operator==(const GradingTone & lhs, const GradingTone & rhs);
+extern OCIOEXPORT bool operator!=(const GradingTone & lhs, const GradingTone & rhs);
 extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const GradingTone &);
 
 /**
