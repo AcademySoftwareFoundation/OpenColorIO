@@ -5,6 +5,7 @@
 #include "Caching.cpp"
 
 #include "testutils/UnitTest.h"
+#include "UnitTestUtils.h"
 
 namespace OCIO = OCIO_NAMESPACE;
 
@@ -115,6 +116,29 @@ OCIO_ADD_TEST(Caching, processor_cache)
         OCIO_CHECK_ASSERT(cache.isEnabled());
     }
 
+    // Test that the content of the cache stays the same after disabling and enabling the cache.
+    {
+        OCIO::ProcessorCache<std::string, DataRcPtr> cache;
+        OCIO_CHECK_ASSERT(cache.isEnabled());
+
+        // The lock control is useless here but useful as a good example to copy & paste.
+        {
+            OCIO::AutoMutex m(cache.lock());
+            DataRcPtr entry1 = std::make_shared<Data>();
+            cache["entry1"] = entry1;
+        }
+
+        cache.enable(false);
+
+        // Expecting failure because the cache is disabled.
+        OCIO_CHECK_ASSERT(!cache.exists("entry1"));
+
+        cache.enable(true);
+
+        // The data with the key "entry1" still exists after enabling the cache.
+        OCIO_CHECK_ASSERT(cache.exists("entry1"));
+    }
+
     {
         // Disable all the caches.
         Guard guard;
@@ -137,5 +161,72 @@ OCIO_ADD_TEST(Caching, processor_cache)
         OCIO::GenericCache<std::string, DataRcPtr> cache2;
         OCIO_CHECK_ASSERT(cache2.isEnabled());
     }
-}
 
+    // Test the processor cache reset.
+    {
+    static const std::string CONFIG = 
+        "ocio_profile_version: 2\n"
+        "\n"
+        "search_path: " + OCIO::GetTestFilesDir() + "\n"
+        "\n"
+        "environment: {CS3: lut1d_green.ctf}\n"
+        "\n"
+        "roles:\n"
+        "  default: cs1\n"
+        "\n"
+        "displays:\n"
+        "  disp1:\n"
+        "    - !<View> {name: view1, colorspace: cs3}\n"
+        "    - !<View> {name: view2, colorspace: cs3, looks: look1}\n"
+        "\n"
+        "looks:\n"
+        "  - !<Look>\n"
+        "    name: look1\n"
+        "    process_space: cs2\n"
+        "    transform: !<FileTransform> {src: $LOOK1}\n"
+        "\n"
+        "\n"
+        "colorspaces:\n"
+        "  - !<ColorSpace>\n"
+        "    name: cs1\n"
+        "\n"
+        "  - !<ColorSpace>\n"
+        "    name: cs2\n"
+        "    from_scene_reference: !<MatrixTransform> {offset: [0.11, 0.12, 0.13, 0]}\n"
+        "\n"
+        "  - !<ColorSpace>\n"
+        "    name: cs3\n"
+        "    from_scene_reference: !<FileTransform> {src: $CS3}\n";
+
+        std::istringstream iss;
+        iss.str(CONFIG);
+
+        OCIO::ConstConfigRcPtr config;
+        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(iss));
+
+        // Creating a editable config to clear the processor cache later in the test.
+        OCIO::ConfigRcPtr cfg = config->createEditableCopy();
+
+        // Create two processors and confirm that it is the same object as expected.
+        OCIO::ConstProcessorRcPtr procA = cfg->getProcessor("cs3", 
+                                                            "disp1", 
+                                                            "view1", 
+                                                            OCIO::TRANSFORM_DIR_FORWARD);
+        OCIO::ConstProcessorRcPtr procB = cfg->getProcessor("cs3", 
+                                                            "disp1", 
+                                                            "view1", 
+                                                            OCIO::TRANSFORM_DIR_FORWARD);
+        OCIO_CHECK_EQUAL(procA, procB);                                                          
+
+        // Clear the processor cache.
+        cfg->clearProcessorCache();
+
+        // Create a third processor and confirm that it is different from the previous two as the
+        // the processor cache was cleared.
+        OCIO::ConstProcessorRcPtr procC = cfg->getProcessor("cs3", 
+                                                            "disp1", 
+                                                            "view1", 
+                                                            OCIO::TRANSFORM_DIR_FORWARD);
+        OCIO_CHECK_NE(procC, procA); 
+    }
+}
