@@ -2918,6 +2918,22 @@ const char * Config::getInactiveColorSpaces() const
     return getImpl()->m_inactiveColorSpaceNamesConf.c_str();
 }
 
+bool Config::isInactiveColorSpace(const char * colorspace) const
+{
+    StringUtils::StringVec svec;
+    pystring::split(getImpl()->m_inactiveColorSpaceNamesConf.c_str(), svec, ", ");
+
+    for (int i = 0; i < svec.size(); i++)
+    {
+        if (StringUtils::Compare(colorspace, svec.at(i)))
+        {
+            // Colorspace is inactive.
+            return true;
+        }
+    }
+    return false;
+}
+
 void Config::addColorSpace(const ConstColorSpaceRcPtr & original)
 {
     const std::string name(original->getName());
@@ -3355,6 +3371,29 @@ const char * Config::getRoleName(int index) const
 const char * Config::getRoleColorSpace(int index) const
 {
     return LookupRole(getImpl()->m_roles, getRoleName(index));
+}
+
+const char * Config::getRoleColorSpace(const char * roleName) const
+{
+    if (roleName && !roleName[0])
+    {
+        std::ostringstream os;
+        os << "Could not find an empty role. Empty name for a role is invalid.";
+        throw Exception(os.str().c_str());
+    }
+
+    for (int i = 0; i < getImpl()->m_roles.size(); i++)
+    {
+        if (StringUtils::Compare(roleName, getRoleName(i)))
+        {
+            // Found the specified role.
+            return LookupRole(getImpl()->m_roles, getRoleName(i));
+        }
+    }
+
+    std::ostringstream os;
+    os << "Could not find a color space assigned to role '" << roleName << "'.";
+    throw Exception(os.str().c_str());
 }
 
 ///////////////////////////////////////////////////////////////////////////

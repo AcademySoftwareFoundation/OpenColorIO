@@ -652,6 +652,8 @@ public:
      */
     void setInactiveColorSpaces(const char * inactiveColorSpaces);
     const char * getInactiveColorSpaces() const;
+
+    bool isInactiveColorSpace(const char * colorspace) const;
     
     /**
      * \brief Return true if the specified color space is linear.
@@ -720,6 +722,7 @@ public:
      * Return empty string if index is out of range.
      */
     const char * getRoleColorSpace(int index) const;
+    const char * getRoleColorSpace(const char * roleName) const;
 
     /**
      * \defgroup Methods related to displays and views.

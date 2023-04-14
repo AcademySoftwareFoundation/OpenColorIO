@@ -1189,3 +1189,45 @@ colorspaces:
         checkProcessorInverse(proc);
     }
 }
+
+OCIO_ADD_TEST(Config, inactive_colorspaces)
+{
+    // Using Built-in config to test the getInactiveColorSpace method.
+    const std::string cgConfigName = "cg-config-v1.0.0_aces-v1.3_ocio-v2.1";
+    OCIO::ConstConfigRcPtr config;
+
+    OCIO_CHECK_NO_THROW(
+        config = OCIO::Config::CreateFromBuiltinConfig(cgConfigName.c_str())
+    );
+    OCIO_REQUIRE_ASSERT(config);
+
+    OCIO_CHECK_NO_THROW(config->validate());
+
+    {
+        OCIO_CHECK_EQUAL(config->isInactiveColorSpace(""), false);
+        OCIO_CHECK_EQUAL(config->isInactiveColorSpace("joe"), false);
+        OCIO_CHECK_EQUAL(config->isInactiveColorSpace("Linear P3-D65"), false);
+        OCIO_CHECK_EQUAL(config->isInactiveColorSpace("Rec.1886 Rec.2020 - Display"), true);
+
+
+        OCIO_CHECK_EQUAL(std::string(config->getRoleColorSpace("data")), std::string("Raw"));
+        OCIO_CHECK_EQUAL(std::string(config->getRoleColorSpace("cie_xyz_d65_interchange")), std::string("CIE-XYZ-D65"));
+
+        OCIO_CHECK_THROW_WHAT(
+            config->getRoleColorSpace("wrong_role"),
+            OCIO::Exception,
+            "Could not find a color space assigned to role 'wrong_role'."
+        );
+
+        OCIO_CHECK_THROW_WHAT(
+            config->getRoleColorSpace(""),
+            OCIO::Exception,
+            "Could not find an empty role. Empty name for a role is invalid."
+        );
+    }
+}
+
+OCIO_ADD_TEST(Config, role_resolutions)
+{
+
+}
