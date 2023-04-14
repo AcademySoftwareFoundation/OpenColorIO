@@ -40,6 +40,9 @@ const char * getBuiltinLinearSpaceName(int index)
     return builtinLinearSpaces[Clamp(index, 0, 4)];
 }
 
+// The number of items available from getBuiltinLinearSpaceName.  (Obviously, update this
+// integer if that list changes.)
+//
 inline int getNumberOfbuiltinLinearSpaces()
 {
     return 5;
@@ -59,14 +62,15 @@ inline int getNumberOfbuiltinLinearSpaces()
 //
 // This function does NOT use any heuristics.
 //
-// \param[out] srcInterchangeCSName -- Name of the interchange color space from the src config.
-// \param[out] dstInterchangeCSName -- Name of the interchange color space from the dst config.
-// \param srcConfig -- Source config object.
-// \param srcName -- Name of the color space to be converted from the source config.
-//    May be empty if the source color space is unknown.
-// \param dstConfig -- Destination config object.
-// \param dstName -- Name of the color space to be converted from the destination config.
-// \return True if the necessary interchange roles were found.
+// [out] srcInterchangeCSName -- Name of the interchange color space from the src config.
+// [out] dstInterchangeCSName -- Name of the interchange color space from the dst config.
+// [out] interchangeType -- The ReferenceSpaceType of the interchange color space.
+// srcConfig -- Source config object.
+// srcName -- Name of the color space to be converted from the source config.
+//      May be empty if the source color space is unknown.
+// dstConfig -- Destination config object.
+// dstName -- Name of the color space to be converted from the destination config.
+// Returns True if the necessary interchange roles were found.
 //
 bool GetInterchangeRolesForColorSpaceConversion(const char ** srcInterchangeCSName,
                                                 const char ** dstInterchangeCSName,
@@ -273,11 +277,11 @@ bool hasNoTransform(const ConstColorSpaceRcPtr & cs)
 // If a match is found, it indicates what reference space is used by the config.
 // Return the index into the list of built-in linear spaces, or -1 if not found.
 //
-// \param srcConfig -- Source config object.
-// \param srcRefName -- Name of a scene-referred reference color space in the src config.
-// \param cs -- Color space from the source config to test.
-// \param builtinConfig -- The built-in config object.
-// \return The index into the list of built-in linear spaces.
+// srcConfig -- Source config object.
+// srcRefName -- Name of a scene-referred reference color space in the src config.
+// cs -- Color space from the source config to test.
+// builtinConfig -- The built-in config object.
+// Returns the index into the list of built-in linear spaces.
 //
 int getReferenceSpaceFromLinearSpace(const ConstConfigRcPtr & srcConfig, 
                                      const char * srcRefName,
@@ -341,11 +345,11 @@ int getReferenceSpaceFromLinearSpace(const ConstConfigRcPtr & srcConfig,
 // is used by the config.  Return the index into the list of built-in linear spaces, 
 // or -1 if not found.
 //
-// \param srcConfig -- Source config object.
-// \param srcRefName -- Name of a scene-referred reference color space in the src config.
-// \param cs -- Color space from the source config to test.
-// \param builtinConfig -- The built-in config object.
-// \return The index into the list of built-in linear spaces.
+// srcConfig -- Source config object.
+// srcRefName -- Name of a scene-referred reference color space in the src config.
+// cs -- Color space from the source config to test.
+// builtinConfig -- The built-in config object.
+// Returns the index into the list of built-in linear spaces.
 //
 int getReferenceSpaceFromSRGBSpace(const ConstConfigRcPtr & srcConfig, 
                                    const char * srcRefName,
@@ -459,14 +463,14 @@ int getReferenceSpaceFromSRGBSpace(const ConstConfigRcPtr & srcConfig,
 // that should be used to convert from the src color space to the built-in color space,
 // or vice-versa.  Throws if no suitable spaces are found.
 //
-// \param[out] srcInterchange -- Name of the interchange color space from the source config.
-// \param[out] builtinInterchange -- Name of the interchange color space from the built-in config.
-// \param srcConfig -- Source config object.
-// \param srcColorSpaceName -- Name of the color space to be converted from the source config.
-// \param builtinConfig -- Built-in config object.
-// \param builtinColorSpaceName -- Name of the color space to be converted from the built-in config.
+// [out] srcInterchange -- Name of the interchange color space from the source config.
+// [out] builtinInterchange -- Name of the interchange color space from the built-in config.
+// srcConfig -- Source config object.
+// srcColorSpaceName -- Name of the color space to be converted from the source config.
+// builtinConfig -- Built-in config object.
+// builtinColorSpaceName -- Name of the color space to be converted from the built-in config.
 //
-// \throw Exception if an interchange space cannot be found.
+// Throws an exception if an interchange space cannot be found.
 //
 void IdentifyInterchangeSpace(const char ** srcInterchange, 
                               const char ** builtinInterchange,
@@ -574,10 +578,10 @@ void IdentifyInterchangeSpace(const char ** srcInterchange,
 // specified color space from the provided built-in config.  Only active color spaces 
 // are searched.
 //
-// \param srcConfig -- The source config object to search.
-// \param builtinConfig -- The built-in config object containing the desired color space.
-// \param builtinColorSpaceName -- Name of the desired color space from the built-in config.
-// \return The name of the color space in the source config.
+// srcConfig -- The source config object to search.
+// builtinConfig -- The built-in config object containing the desired color space.
+// builtinColorSpaceName -- Name of the desired color space from the built-in config.
+// Returns the name of the color space in the source config.
 //
 // \throw Exception if an interchange space cannot be found or the equivalent space cannot be found.
 //
