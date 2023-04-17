@@ -334,6 +334,12 @@ void bindPyConfig(py::module & m)
              DOC(Config, setInactiveColorSpaces))
         .def("getInactiveColorSpaces", &Config::getInactiveColorSpaces, 
              DOC(Config, getInactiveColorSpaces))
+        .def("isInactiveColorSpace", &Config::isInactiveColorSpace, "colorspace"_a,
+             DOC(Config, isInactiveColorSpace))     
+        .def("getRoleColorSpace", 
+             (const char * (Config::*)(const char *) const) &Config::getRoleColorSpace, 
+             "roleName"_a,
+             DOC(Config, getRoleColorSpace))  
 
         // Roles
         .def("setRole", &Config::setRole, "role"_a, "colorSpaceName"_a, 

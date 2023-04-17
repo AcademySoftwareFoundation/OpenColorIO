@@ -653,6 +653,11 @@ public:
     void setInactiveColorSpaces(const char * inactiveColorSpaces);
     const char * getInactiveColorSpaces() const;
 
+    /**
+     * \brief Return true if the specified color space is inactive.
+     * 
+     * \param colorspace Color space name
+     */
     bool isInactiveColorSpace(const char * colorspace) const;
     
     /**
@@ -722,6 +727,12 @@ public:
      * Return empty string if index is out of range.
      */
     const char * getRoleColorSpace(int index) const;
+    /**
+     * \brief Get the role color space based on the specified role name.
+     * 
+     * \param roleName Role name to resolve
+     * \return Color space name
+     */
     const char * getRoleColorSpace(const char * roleName) const;
 
     /**
