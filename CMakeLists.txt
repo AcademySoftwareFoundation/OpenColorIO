@@ -9,10 +9,10 @@ cmake_minimum_required(VERSION 3.13)
 
 set(CMAKE_MODULE_PATH
     ${CMAKE_MODULE_PATH}
-    ${CMAKE_SOURCE_DIR}/share/cmake/utils
-    ${CMAKE_SOURCE_DIR}/share/cmake/macros
-    ${CMAKE_SOURCE_DIR}/share/cmake/modules
-    ${CMAKE_SOURCE_DIR}/share/cmake/modules/install
+    ${CMAKE_CURRENT_SOURCE_DIR}/share/cmake/utils
+    ${CMAKE_CURRENT_SOURCE_DIR}/share/cmake/macros
+    ${CMAKE_CURRENT_SOURCE_DIR}/share/cmake/modules
+    ${CMAKE_CURRENT_SOURCE_DIR}/share/cmake/modules/install
 )
 
 set(CMAKE_WARN_DEPRECATED ON)
@@ -56,7 +56,7 @@ include(GNUInstallDirs)
 ###############################################################################
 # Forbid in-source build.
 
-if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
+if(${PROJECT_SOURCE_DIR} STREQUAL ${PROJECT_BINARY_DIR})
     message(FATAL_ERROR 
             "In-source build not allowed. Please make a new sub-directory and run cmake from there.")
 endif()
@@ -318,7 +318,7 @@ else()
     set(OCIO_SETUP_NAME setup_ocio.sh)
 endif()
 
-configure_file(${CMAKE_SOURCE_DIR}/share/ocio/${OCIO_SETUP_NAME}.in
+configure_file(${PROJECT_SOURCE_DIR}/share/ocio/${OCIO_SETUP_NAME}.in
     ${CMAKE_CURRENT_BINARY_DIR}/share/ocio/${OCIO_SETUP_NAME} @ONLY)
 
 INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/share/ocio/${OCIO_SETUP_NAME} DESTINATION ${CMAKE_INSTALL_DATADIR}/ocio/)
@@ -332,8 +332,8 @@ INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/share/ocio/${OCIO_SETUP_NAME} DESTINAT
 include(CMakePackageConfigHelpers)
 
 set(OCIO_TARGETS_EXPORT_NAME "${PROJECT_NAME}Targets.cmake")
-set(OCIO_VERSION_CONFIG "${CMAKE_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake")
-set(OCIO_PROJECT_CONFIG "${CMAKE_BINARY_DIR}/${PROJECT_NAME}Config.cmake")
+set(OCIO_VERSION_CONFIG "${PROJECT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake")
+set(OCIO_PROJECT_CONFIG "${PROJECT_BINARY_DIR}/${PROJECT_NAME}Config.cmake")
 set(OCIO_CONFIG_INSTALL_DIR "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}")
 set(OCIO_CUSTOM_FIND_MODULE_DIR "${CMAKE_INSTALL_PREFIX}/share/OpenColorIO/cmake/modules")
 set(OCIO_CUSTOM_MACROS_MODULE_DIR "${CMAKE_INSTALL_PREFIX}/share/OpenColorIO/cmake/macros")
