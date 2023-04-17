@@ -32,8 +32,8 @@ if(NOT ZLIB_FOUND AND OCIO_INSTALL_EXT_PACKAGES AND NOT OCIO_INSTALL_EXT_PACKAGE
     include(ExternalProject)
     include(GNUInstallDirs)
 
-    set(_EXT_DIST_ROOT "${CMAKE_BINARY_DIR}/ext/dist")
-    set(_EXT_BUILD_ROOT "${CMAKE_BINARY_DIR}/ext/build")
+    set(_EXT_DIST_ROOT "${PROJECT_BINARY_DIR}/ext/dist")
+    set(_EXT_BUILD_ROOT "${PROJECT_BINARY_DIR}/ext/build")
 
     if(WIN32)
         set(_ZLIB_LIB_NAME "zlib")

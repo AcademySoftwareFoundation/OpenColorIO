@@ -19,13 +19,13 @@ set(OFXS_SOURCES
     Support/Library/ofxsPropertyValidation.cpp
 )
 set(PLIST
-    ${CMAKE_SOURCE_DIR}/share/openfx/Info.plist
+    ${PROJECT_SOURCE_DIR}/share/openfx/Info.plist
 )
 set(RESOURCES
-    ${CMAKE_SOURCE_DIR}/share/openfx/resources/OpenColorIO.OCIOColorSpace.png
-    ${CMAKE_SOURCE_DIR}/share/openfx/resources/OpenColorIO.OCIOColorSpace.svg
-    ${CMAKE_SOURCE_DIR}/share/openfx/resources/OpenColorIO.OCIODisplayView.png
-    ${CMAKE_SOURCE_DIR}/share/openfx/resources/OpenColorIO.OCIODisplayView.svg
+    ${PROJECT_SOURCE_DIR}/share/openfx/resources/OpenColorIO.OCIOColorSpace.png
+    ${PROJECT_SOURCE_DIR}/share/openfx/resources/OpenColorIO.OCIOColorSpace.svg
+    ${PROJECT_SOURCE_DIR}/share/openfx/resources/OpenColorIO.OCIODisplayView.png
+    ${PROJECT_SOURCE_DIR}/share/openfx/resources/OpenColorIO.OCIODisplayView.svg
 )
 
 add_library(ofxplugin MODULE ${SOURCES} ${OFXS_SOURCES})
@@ -52,8 +52,8 @@ target_include_directories(ofxplugin
         ${CMAKE_CURRENT_SOURCE_DIR}
         Support/include
         ${openfx_INCLUDE_DIR}
-        ${CMAKE_SOURCE_DIR}/include/
-        ${CMAKE_BINARY_DIR}/include/
+        ${PROJECT_SOURCE_DIR}/include/
+        ${PROJECT_BINARY_DIR}/include/
 )
 
 target_link_libraries(ofxplugin

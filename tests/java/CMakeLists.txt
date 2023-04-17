@@ -16,7 +16,7 @@ set(SOURCES
 	org/OpenColorIO/PlanarImageDescTest.java
 	org/OpenColorIO/TransformsTest.java
 )
-set(_JCLASS_PATH "${CMAKE_CURRENT_BINARY_DIR}:${CMAKE_CURRENT_BINARY_DIR}/../../src/bindings/java:${CMAKE_SOURCE_DIR}/ext/junit-4.9b4.jar")
+set(_JCLASS_PATH "${CMAKE_CURRENT_BINARY_DIR}:${CMAKE_CURRENT_BINARY_DIR}/../../src/bindings/java:${PROJECT_SOURCE_DIR}/ext/junit-4.9b4.jar")
 set(_JLIB_PATH "${CMAKE_CURRENT_BINARY_DIR}/../../src/bindings/java")
 
 set(JAVA_TEST_OUTPUT "bla")

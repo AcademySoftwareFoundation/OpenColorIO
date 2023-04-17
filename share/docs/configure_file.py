@@ -114,8 +114,8 @@ def configure_file(src_filename, dst_filename):
     """
     logger.info("Configuring file: {} -> {}".format(src_filename, dst_filename))
 
-    # CMAKE_SOURCE_DIR
-    # CMAKE_BINARY_DIR
+    # PROJECT_SOURCE_DIR
+    # PROJECT_BINARY_DIR
     source_dir = binary_dir = ROOT
 
     # CMAKE_PROJECT_NAME
@@ -145,8 +145,8 @@ def configure_file(src_filename, dst_filename):
         data = f.read()
 
     data = data\
-        .replace("@CMAKE_SOURCE_DIR@", source_dir)\
-        .replace("@CMAKE_BINARY_DIR@", binary_dir)\
+        .replace("@PROJECT_SOURCE_DIR@", source_dir)\
+        .replace("@PROJECT_BINARY_DIR@", binary_dir)\
         .replace("@CMAKE_PROJECT_NAME@", name)\
         .replace("@CMAKE_PROJECT_VERSION@", version)\
         .replace("@CMAKE_PROJECT_DESCRIPTION@", desc)\
