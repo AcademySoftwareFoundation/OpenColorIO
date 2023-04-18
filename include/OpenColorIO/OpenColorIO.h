@@ -126,8 +126,9 @@ public:
  * such as designing OCIO profiles, and wanting to re-read luts without restarting.
  *
  * \note The method does not apply to instance specific caches such as the processor cache in a
- * config instance or the GPU and CPU processor caches in a processor instance. Here deleting the
- * instance flushes the cache.
+ * config instance or the GPU and CPU processor caches in a processor instance. 
+ * Calling clearProcessorCache on the Config instance is helpful in that case. Note that this must 
+ * be done if any LUT files have been changed after the Processors were created.
  */
 extern OCIOEXPORT void ClearAllCaches();
 
@@ -1319,7 +1320,14 @@ public:
                                                        const char * dstColorSpaceName,
                                                        const char * dstInterchangeName);
                                                        
-    /// \brief Clears the caches ids and processor cache.
+    /**
+     * \brief Clears this config's cache of Processor, CPUProcessor, and GPUProcessor instances. 
+     * 
+     * This must be done if any of the LUT files used by these Processors have been modified. 
+     * Note that setProcessorCacheFlags(PROCESSOR_CACHE_OFF) turns off caching but does not clear 
+     * any existing cache.
+     * 
+     */
     void clearProcessorCache();
 
     /// Set the ConfigIOProxy object used to provision the config and LUTs from somewhere other

@@ -121,12 +121,8 @@ OCIO_ADD_TEST(Caching, processor_cache)
         OCIO::ProcessorCache<std::string, DataRcPtr> cache;
         OCIO_CHECK_ASSERT(cache.isEnabled());
 
-        // The lock control is useless here but useful as a good example to copy & paste.
-        {
-            OCIO::AutoMutex m(cache.lock());
-            DataRcPtr entry1 = std::make_shared<Data>();
-            cache["entry1"] = entry1;
-        }
+        DataRcPtr entry1 = std::make_shared<Data>();
+        cache["entry1"] = entry1;
 
         cache.enable(false);
 
@@ -177,14 +173,6 @@ OCIO_ADD_TEST(Caching, processor_cache)
         "displays:\n"
         "  disp1:\n"
         "    - !<View> {name: view1, colorspace: cs3}\n"
-        "    - !<View> {name: view2, colorspace: cs3, looks: look1}\n"
-        "\n"
-        "looks:\n"
-        "  - !<Look>\n"
-        "    name: look1\n"
-        "    process_space: cs2\n"
-        "    transform: !<FileTransform> {src: $LOOK1}\n"
-        "\n"
         "\n"
         "colorspaces:\n"
         "  - !<ColorSpace>\n"
@@ -207,26 +195,54 @@ OCIO_ADD_TEST(Caching, processor_cache)
         // Creating a editable config to clear the processor cache later in the test.
         OCIO::ConfigRcPtr cfg = config->createEditableCopy();
 
-        // Create two processors and confirm that it is the same object as expected.
-        OCIO::ConstProcessorRcPtr procA = cfg->getProcessor("cs3", 
-                                                            "disp1", 
-                                                            "view1", 
-                                                            OCIO::TRANSFORM_DIR_FORWARD);
-        OCIO::ConstProcessorRcPtr procB = cfg->getProcessor("cs3", 
-                                                            "disp1", 
-                                                            "view1", 
-                                                            OCIO::TRANSFORM_DIR_FORWARD);
-        OCIO_CHECK_EQUAL(procA, procB);                                                          
+        {
+            // Test that clearProcessorCache clears the Processor cache.
 
-        // Clear the processor cache.
-        cfg->clearProcessorCache();
+            // Create two processors and confirm that it is the same object as expected.
+            OCIO::ConstProcessorRcPtr procA = cfg->getProcessor("cs3", 
+                                                                "disp1", 
+                                                                "view1", 
+                                                                OCIO::TRANSFORM_DIR_FORWARD);
+            OCIO::ConstProcessorRcPtr procB = cfg->getProcessor("cs3", 
+                                                                "disp1", 
+                                                                "view1", 
+                                                                OCIO::TRANSFORM_DIR_FORWARD);
 
-        // Create a third processor and confirm that it is different from the previous two as the
-        // the processor cache was cleared.
-        OCIO::ConstProcessorRcPtr procC = cfg->getProcessor("cs3", 
-                                                            "disp1", 
-                                                            "view1", 
-                                                            OCIO::TRANSFORM_DIR_FORWARD);
-        OCIO_CHECK_NE(procC, procA); 
+            // Comparing the address of both Processor objects to confirm if they are the same or not.
+            OCIO_CHECK_EQUAL(procA, procB);                                                          
+
+            // Clear the processor cache.
+            cfg->clearProcessorCache();
+
+            // Create a third processor and confirm that it is different from the previous two as the
+            // the processor cache was cleared.
+            OCIO::ConstProcessorRcPtr procC = cfg->getProcessor("cs3", 
+                                                                "disp1", 
+                                                                "view1", 
+                                                                OCIO::TRANSFORM_DIR_FORWARD);
+
+            OCIO_CHECK_NE(procC, procA); 
+        }
+
+        {
+            // Test that disable and re-enable the cache, using setProcessorCacheFlags, does not
+            // clear the Processor cache.
+
+            OCIO::ConstProcessorRcPtr procA = cfg->getProcessor("cs3", 
+                                                                "disp1", 
+                                                                "view1", 
+                                                                OCIO::TRANSFORM_DIR_FORWARD);                                                      
+            
+            // Disable and re-enable the processor cache.
+            cfg->setProcessorCacheFlags(OCIO::PROCESSOR_CACHE_OFF);
+            cfg->setProcessorCacheFlags(OCIO::PROCESSOR_CACHE_ENABLED);
+            
+            // Confirm that the processor is the same.
+            OCIO::ConstProcessorRcPtr procB = cfg->getProcessor("cs3", 
+                                                                "disp1", 
+                                                                "view1", 
+                                                                OCIO::TRANSFORM_DIR_FORWARD);
+            OCIO_CHECK_EQUAL(procA, procB); 
+        }
     }
 }
