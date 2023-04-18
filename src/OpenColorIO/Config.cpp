@@ -3384,10 +3384,11 @@ const char * Config::getRoleColorSpace(const char * roleName) const
 
     for (int i = 0; i < getImpl()->m_roles.size(); i++)
     {
-        if (StringUtils::Compare(roleName, getRoleName(i)))
+        const char * name = getRoleName(i);
+        if (StringUtils::Compare(roleName, name))
         {
             // Found the specified role.
-            return LookupRole(getImpl()->m_roles, getRoleName(i));
+            return LookupRole(getImpl()->m_roles, name);
         }
     }
 
