@@ -755,37 +755,3 @@ colorspaces:
         cfg.setInactiveColorSpaces("Linear ITU-R BT.709, Texture -- sRGB")
         p = OCIO.Config.GetProcessorFromBuiltinColorSpace(builtin_csname, cfg, src_csname)
         check_processor_inv(self, p)
-
-    def test_inactive_colorspaces(self):
-      config = OCIO.Config.CreateFromBuiltinConfig("cg-config-v1.0.0_aces-v1.3_ocio-v2.1")
-      config.validate()
-
-      # Test various combinations of input.
-
-      self.assertFalse(config.isInactiveColorSpace(""))
-      self.assertFalse(config.isInactiveColorSpace("fake-colorspace-name"))
-
-      # Test existing colorspaces from cg-config-v1.0.0_aces-v1.3_ocio-v2.1. 
-
-      # Colorspace exists and is inactive.
-      self.assertFalse(config.isInactiveColorSpace("Linear P3-D65"))
-
-      # Colorspace exists and is active.
-      self.assertTrue(config.isInactiveColorSpace("Rec.1886 Rec.2020 - Display"))
-
-    def test_role_resolutions(self):
-      config = OCIO.Config.CreateFromBuiltinConfig("cg-config-v1.0.0_aces-v1.3_ocio-v2.1")
-      config.validate()
-
-      self.assertEqual(config.getRoleColorSpace("data"), "Raw")
-      self.assertEqual(config.getRoleColorSpace("cie_xyz_d65_interchange"), "CIE-XYZ-D65")
-
-      with self.assertRaises(OCIO.Exception) as cm:
-          config.getRoleColorSpace("wrong_role")
-      self.assertEqual(str(cm.exception),
-                       "Could not find a color space assigned to role 'wrong_role'.")
-
-      with self.assertRaises(OCIO.Exception) as cm:
-          config.getRoleColorSpace("")
-      self.assertEqual(str(cm.exception),
-                       "Could not find an empty role. Empty name for a role is invalid.")

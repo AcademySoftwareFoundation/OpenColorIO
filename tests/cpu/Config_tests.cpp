@@ -314,6 +314,33 @@ OCIO_ADD_TEST(Config, roles)
     OCIO_CHECK_EQUAL(std::string(config->getRoleColorSpace(-4)), "");
 }
 
+OCIO_ADD_TEST(Config, role_resolutions)
+{
+    // Using Built-in config to test the getInactiveColorSpace method.
+    const std::string cgConfigName = "cg-config-v1.0.0_aces-v1.3_ocio-v2.1";
+    OCIO::ConstConfigRcPtr config;
+
+    OCIO_CHECK_NO_THROW(
+        config = OCIO::Config::CreateFromBuiltinConfig(cgConfigName.c_str())
+    );
+    OCIO_REQUIRE_ASSERT(config);
+
+    OCIO_CHECK_NO_THROW(config->validate());
+
+    {
+        // Test existing roles in cg-config-v1.0.0_aces-v1.3_ocio-v2.1.
+        OCIO_CHECK_EQUAL(std::string(config->getRoleColorSpace("data")), std::string("Raw"));
+        OCIO_CHECK_EQUAL(std::string(config->getRoleColorSpace("cie_xyz_d65_interchange")), 
+                         std::string("CIE-XYZ-D65"));
+
+        // Test a unknown role.
+        OCIO_CHECK_EQUAL(std::string(config->getRoleColorSpace("wrong_role")), std::string(""));
+
+        // Test an empty input.
+        OCIO_CHECK_EQUAL(std::string(config->getRoleColorSpace("")), std::string(""));
+    } 
+}
+
 OCIO_ADD_TEST(Config, required_roles_for_version_2_2)
 {
     // Test Setup
@@ -5708,6 +5735,35 @@ OCIO_ADD_TEST(Config, inactive_color_space)
     OCIO_CHECK_EQUAL(std::string("display1"),
                      config->getColorSpaceNameByIndex(OCIO::SEARCH_REFERENCE_SPACE_DISPLAY,
                                                       OCIO::COLORSPACE_ALL, 1));
+}
+
+OCIO_ADD_TEST(Config, inactive_colorspaces)
+{
+    // Using Built-in config to test the getInactiveColorSpace method.
+    const std::string cgConfigName = "cg-config-v1.0.0_aces-v1.3_ocio-v2.1";
+    OCIO::ConstConfigRcPtr config;
+
+    OCIO_CHECK_NO_THROW(
+        config = OCIO::Config::CreateFromBuiltinConfig(cgConfigName.c_str())
+    );
+    OCIO_REQUIRE_ASSERT(config);
+
+    OCIO_CHECK_NO_THROW(config->validate());
+
+    {
+        // Test various combinations of input.
+
+        OCIO_CHECK_EQUAL(config->isInactiveColorSpace(""), false);
+        OCIO_CHECK_EQUAL(config->isInactiveColorSpace("fake-colorspace-name"), false);
+
+        // Test existing colorspaces from cg-config-v1.0.0_aces-v1.3_ocio-v2.1. 
+
+        // Colorspace exists and is active.
+        OCIO_CHECK_EQUAL(config->isInactiveColorSpace("Linear P3-D65"), false);
+
+        // Colorspace exists and is inactive.
+        OCIO_CHECK_EQUAL(config->isInactiveColorSpace("Rec.1886 Rec.2020 - Display"), true);
+    }
 }
 
 OCIO_ADD_TEST(Config, inactive_color_space_precedence)

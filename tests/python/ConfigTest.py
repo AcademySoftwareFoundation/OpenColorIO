@@ -1186,6 +1186,87 @@ colorspaces:
         processor = config.getProcessor("c1", "c2")
         processor.getDefaultCPUProcessor()
 
+
+    def test_inactive_colorspaces(self):
+      config = OCIO.Config.CreateFromBuiltinConfig("cg-config-v1.0.0_aces-v1.3_ocio-v2.1")
+      config.validate()
+
+      # Test various combinations of input.
+
+      self.assertFalse(config.isInactiveColorSpace(""))
+      self.assertFalse(config.isInactiveColorSpace("fake-colorspace-name"))
+
+      # Test existing colorspaces from cg-config-v1.0.0_aces-v1.3_ocio-v2.1. 
+
+      # Colorspace exists and is active.
+      self.assertFalse(config.isInactiveColorSpace("Linear P3-D65"))
+
+      # Colorspace exists and is inactive.
+      self.assertTrue(config.isInactiveColorSpace("Rec.1886 Rec.2020 - Display"))
+
+    def test_roles(self):
+      config = OCIO.Config.CreateFromBuiltinConfig("cg-config-v1.0.0_aces-v1.3_ocio-v2.1")
+      config.validate()
+
+      # *****************************
+      # Test getRoleNames interface. 
+      # *****************************
+
+      rolesNames = config.getRoleNames()
+
+      # Test the numbers of elements.
+      self.assertEqual(len(rolesNames), 9)
+
+      # Test that the first element is an actual role.
+      self.assertTrue(config.hasRole(rolesNames[0]))
+
+      # *************************
+      # Test getRoles interface. 
+      # *************************
+      rolesAndColorspaces = config.getRoles()
+
+      # Test the numbers of elements
+      self.assertEqual(len(rolesAndColorspaces), 9)
+
+      # Test the first element.
+      colorspaces = config.getColorSpaces(None)
+      
+      # Test that the first element has an existing role and an existing colorspace.
+      self.assertTrue(config.hasRole(rolesAndColorspaces[0][0]))
+      self.assertTrue(colorspaces.hasColorSpace(rolesAndColorspaces[0][1]))
+
+    def test_role_resolutions(self):
+      config = OCIO.Config.CreateFromBuiltinConfig("cg-config-v1.0.0_aces-v1.3_ocio-v2.1")
+      config.validate()
+
+      self.assertEqual(config.getRoleColorSpace("data"), "Raw")
+      self.assertEqual(config.getRoleColorSpace("cie_xyz_d65_interchange"), "CIE-XYZ-D65")
+      
+      # Test a unknown role.
+      self.assertEqual(config.getRoleColorSpace("wrong_role"), "")
+      
+      # Test an empty input.
+      self.assertEqual(config.getRoleColorSpace(""), "")
+
+    def test_role_assignation(self):
+      config = OCIO.Config.CreateFromBuiltinConfig("cg-config-v1.0.0_aces-v1.3_ocio-v2.1")
+      config.validate()
+
+      # Test that empty role name returns false.
+      self.assertFalse(config.hasRole(""))
+
+      # Test if color_picking role is present.
+      self.assertTrue(config.hasRole("color_picking"))
+      
+      # Test the original value of the role color_picking.
+      self.assertEqual(config.getRoleColorSpace("color_picking"), "sRGB - Texture")
+
+      # Change the color space assigned to the role color_picking.
+      config.setRole(OCIO.ROLE_COLOR_PICKING, "ACEScct")
+
+      # Test the new value of the role color_picking.
+      self.assertEqual(config.getRoleColorSpace("color_picking"), "ACEScct")
+
 class ConfigVirtualWithActiveDisplayTest(unittest.TestCase):
     def setUp(self):
         self.cfg_active_display = OCIO.Config.CreateFromStream(

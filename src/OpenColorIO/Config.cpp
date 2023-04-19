@@ -3373,28 +3373,10 @@ const char * Config::getRoleColorSpace(int index) const
     return LookupRole(getImpl()->m_roles, getRoleName(index));
 }
 
-const char * Config::getRoleColorSpace(const char * roleName) const
+const char * Config::getRoleColorSpace(const char * roleName) const noexcept
 {
-    if (roleName && !roleName[0])
-    {
-        std::ostringstream os;
-        os << "Could not find an empty role. Empty name for a role is invalid.";
-        throw Exception(os.str().c_str());
-    }
-
-    for (int i = 0; i < getImpl()->m_roles.size(); i++)
-    {
-        const char * name = getRoleName(i);
-        if (StringUtils::Compare(roleName, name))
-        {
-            // Found the specified role.
-            return LookupRole(getImpl()->m_roles, name);
-        }
-    }
-
-    std::ostringstream os;
-    os << "Could not find a color space assigned to role '" << roleName << "'.";
-    throw Exception(os.str().c_str());
+    if (!roleName || !roleName[0]) return "";
+    return LookupRole(getImpl()->m_roles, roleName);
 }
 
 ///////////////////////////////////////////////////////////////////////////
