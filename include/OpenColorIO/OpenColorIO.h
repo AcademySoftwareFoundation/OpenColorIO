@@ -127,7 +127,7 @@ public:
  *
  * \note 
  *   This method does not apply to instance-specific caches such as the Processor cache in
- *   a Config instance or the GPU and CPU Processor caches in a Processor instance. So in case
+ *   a Config instance or the GPU and CPU Processor caches in a Processor instance. So in cases
  *   where you still have a Config instance after calling ClearAllCaches, you should also call 
  *   the Config's clearProcessorCache method.
  */
@@ -1332,7 +1332,6 @@ public:
      * This must be done if any of the LUT files used by these Processors have been modified. 
      * Note that setProcessorCacheFlags(PROCESSOR_CACHE_OFF) turns off caching but does not clear 
      * any existing cache.
-     * 
      */
     void clearProcessorCache() noexcept;
 
