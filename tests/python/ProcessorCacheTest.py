@@ -6,7 +6,7 @@ import PyOpenColorIO as OCIO
 
 from UnitTestUtils import (TEST_DATAFILES_DIR)
 
-class CacheTest(unittest.TestCase):
+class ProcessorCacheTest(unittest.TestCase):
     def test_processor_cache(self):
       CONFIG = """ocio_profile_version: 2
 
