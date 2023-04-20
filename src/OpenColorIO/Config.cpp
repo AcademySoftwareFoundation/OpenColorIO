@@ -5069,7 +5069,7 @@ void Config::setProcessorCacheFlags(ProcessorCacheFlags flags) noexcept
     getImpl()->setProcessorCacheFlags(flags);
 }
 
-void Config::clearProcessorCache()
+void Config::clearProcessorCache() noexcept
 {
     getImpl()->m_processorCache.clear();
 }

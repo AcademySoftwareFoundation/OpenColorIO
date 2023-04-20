@@ -211,7 +211,6 @@ OCIO_ADD_TEST(Caching, processor_cache)
             // Comparing the address of both Processor objects to confirm if they are the same or not.
             OCIO_CHECK_EQUAL(procA, procB);                                                          
 
-            // Clear the processor cache.
             cfg->clearProcessorCache();
 
             // Create a third processor and confirm that it is different from the previous two as the
