@@ -654,7 +654,7 @@ public:
     const char * getInactiveColorSpaces() const;
 
     /// Return true if the color space name is present in the inactive_colorspaces list.
-    bool isInactiveColorSpace(const char * colorspace) const;
+    bool isInactiveColorSpace(const char * colorspace) const noexcept;
     
     /**
      * \brief Return true if the specified color space is linear.

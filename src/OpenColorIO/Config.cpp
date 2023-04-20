@@ -2918,7 +2918,7 @@ const char * Config::getInactiveColorSpaces() const
     return getImpl()->m_inactiveColorSpaceNamesConf.c_str();
 }
 
-bool Config::isInactiveColorSpace(const char * colorspace) const
+bool Config::isInactiveColorSpace(const char * colorspace) const noexcept
 {
     StringUtils::StringVec svec;
     pystring::split(getImpl()->m_inactiveColorSpaceNamesConf.c_str(), svec, ", ");

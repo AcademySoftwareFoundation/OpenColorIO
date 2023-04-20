@@ -1235,9 +1235,9 @@ colorspaces:
       self.assertTrue(config.hasRole(rolesAndColorspaces[0][0]))
       self.assertTrue(colorspaces.hasColorSpace(rolesAndColorspaces[0][1]))
 
-    def test_role_resolutions(self):
-      config = OCIO.Config.CreateFromBuiltinConfig("cg-config-v1.0.0_aces-v1.3_ocio-v2.1")
-      config.validate()
+      # **********************
+      # Test role resolutions
+      # **********************
 
       self.assertEqual(config.getRoleColorSpace("data"), "Raw")
       self.assertEqual(config.getRoleColorSpace("cie_xyz_d65_interchange"), "CIE-XYZ-D65")
@@ -1248,9 +1248,9 @@ colorspaces:
       # Test an empty input.
       self.assertEqual(config.getRoleColorSpace(""), "")
 
-    def test_role_assignation(self):
-      config = OCIO.Config.CreateFromBuiltinConfig("cg-config-v1.0.0_aces-v1.3_ocio-v2.1")
-      config.validate()
+      # **********************
+      # Test role assignation
+      # **********************
 
       # Test that empty role name returns false.
       self.assertFalse(config.hasRole(""))
