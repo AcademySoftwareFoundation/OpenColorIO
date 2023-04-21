@@ -2923,7 +2923,7 @@ bool Config::isInactiveColorSpace(const char * colorspace) const noexcept
     StringUtils::StringVec svec;
     pystring::split(getImpl()->m_inactiveColorSpaceNamesConf.c_str(), svec, ", ");
 
-    for (int i = 0; i < svec.size(); i++)
+    for (size_t i = 0; i < svec.size(); i++)
     {
         if (StringUtils::Compare(colorspace, svec.at(i)))
         {
