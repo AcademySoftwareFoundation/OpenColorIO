@@ -150,7 +150,7 @@ public:
 
     ConstOpCPURcPtr getCPUOp(bool fastLogExpPow) const override;
 
-    void extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const override;
+    void extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator, OptimizationFlags /*oFlags*/) const override;
 
 protected:
     ConstExponentOpDataRcPtr expData() const { return DynamicPtrCast<const ExponentOpData>(data()); }
@@ -251,7 +251,7 @@ ConstOpCPURcPtr ExponentOp::getCPUOp(bool /*fastLogExpPow*/) const
     return std::make_shared<ExponentOpCPU>(expData());
 }
 
-void ExponentOp::extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const
+void ExponentOp::extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator, OptimizationFlags /*oFlags*/) const
 {
     GpuShaderText ss(shaderCreator->getLanguage());
     ss.indent();

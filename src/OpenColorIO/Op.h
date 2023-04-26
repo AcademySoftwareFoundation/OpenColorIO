@@ -246,7 +246,7 @@ public:
     virtual bool supportedByLegacyShader() const { return true; }
 
     // Create & add the gpu shader information needed by the op. Op has to be finalized.
-    virtual void extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const = 0;
+    virtual void extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator, OptimizationFlags oFlags = OPTIMIZATION_DEFAULT) const = 0;
 
     virtual bool isDynamic() const;
     virtual bool hasDynamicProperty(DynamicPropertyType type) const;

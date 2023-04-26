@@ -14,7 +14,7 @@
 namespace OCIO_NAMESPACE
 {
 
-void GetLut3DGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator, ConstLut3DOpDataRcPtr & lutData)
+void GetLut3DGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator, ConstLut3DOpDataRcPtr & lutData, OptimizationFlags oFlags)
 {
 
     if (shaderCreator->getLanguage() == LANGUAGE_OSL_1)
@@ -32,9 +32,11 @@ void GetLut3DGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator, ConstLut3DO
     std::string name(resName.str());
     StringUtils::ReplaceInPlace(name, "__", "_");
 
+    const bool use_high_precision = !HasFlag(oFlags, OPTIMIZATION_NATIVE_GPU_TRILINEAR);
     Interpolation samplerInterpolation = lutData->getConcreteInterpolation();
-    // Enforce GL_NEAREST with shader-generated tetrahedral interpolation.
-    if (samplerInterpolation == INTERP_TETRAHEDRAL)
+    // Enforce GL_NEAREST with shader-generated tetrahedral interpolation
+    // or hand-rolled trilinear interpolation.
+    if (samplerInterpolation == INTERP_TETRAHEDRAL || use_high_precision)
     {
         samplerInterpolation = INTERP_NEAREST;
     }
@@ -225,18 +227,72 @@ void GetLut3DGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator, ConstLut3DO
         else
         {
             // Trilinear interpolation
-            // Use texture3d and GL_LINEAR and the GPU's built-in trilinear algorithm.
-            // Note that the fractional components are quantized to 8-bits on some
-            // hardware, which introduces significant error with small grid sizes.
+            if (use_high_precision)
+            {
+                // Use GL_NEAREST and do interpolation by hand to avoid the precision
+                // issues of native trilinear interpolation on many popular GPUs.
 
-            ss.newLine() << ss.float3Decl(name + "_coords")
-                         << " = (" << shaderCreator->getPixelName() << ".zyx * "
-                         << ss.float3Const(dim - 1) << " + "
-                         << ss.float3Const(0.5f) + ") / "
-                         << ss.float3Const(dim) << ";";
+                ss.newLine() << ss.float3Decl("coords") << " = "
+                             << shaderCreator->getPixelName() << ".rgb * "
+                             << ss.float3Const(dim - 1) << "; ";
 
-            ss.newLine() << shaderCreator->getPixelName() << ".rgb = "
-                         << ss.sampleTex3D(name, name + "_coords") << ".rgb;";
+                // baseInd is on [0,dim-1]
+                ss.newLine() << ss.float3Decl("baseInd") << " = floor(coords);";
+
+                // frac is on [0,1]
+                ss.newLine() << ss.float3Decl("frac") << " = coords - baseInd;";
+
+                // Scale/offset baseInd onto [0,1] as usual for doing texture lookups.
+                // We use zyx to flip the order since blue varies most rapidly
+                // in the grid array ordering.
+                ss.newLine() << "baseInd = ( baseInd.zyx + " << ss.float3Const(0.5f) << " ) / " << ss.float3Const(dim) << ";";
+
+                // Fetch the 8 corners of the 3D texture cell.
+                ss.newLine() << ss.float3Decl("nextInd") << " = baseInd;";
+                ss.newLine() << ss.float3Decl("v1") << " = " << ss.sampleTex3D(name, "nextInd") << ".rgb;";
+                ss.newLine() << "nextInd = baseInd + " << ss.float3Const(incr, 0.0f, 0.0f) << ";";
+                ss.newLine() << ss.float3Decl("v2") << " = " << ss.sampleTex3D(name, "nextInd") << ".rgb;";
+                ss.newLine() << "nextInd = baseInd + " << ss.float3Const(0.0f, incr, 0.0f) << ";";
+                ss.newLine() << ss.float3Decl("v3") << " = " << ss.sampleTex3D(name, "nextInd") << ".rgb;";
+                ss.newLine() << "nextInd = baseInd + " << ss.float3Const(incr, incr, 0.0f) << ";";
+                ss.newLine() << ss.float3Decl("v4") << " = " << ss.sampleTex3D(name, "nextInd") << ".rgb;";
+                ss.newLine() << "nextInd = baseInd + " << ss.float3Const(0.0f, 0.0f, incr) << ";";
+                ss.newLine() << ss.float3Decl("v5") << " = " << ss.sampleTex3D(name, "nextInd") << ".rgb;";
+                ss.newLine() << "nextInd = baseInd + " << ss.float3Const(incr, 0.0f, incr) << ";";
+                ss.newLine() << ss.float3Decl("v6") << " = " << ss.sampleTex3D(name, "nextInd") << ".rgb;";
+                ss.newLine() << "nextInd = baseInd + " << ss.float3Const(0.0f, incr, incr) << ";";
+                ss.newLine() << ss.float3Decl("v7") << " = " << ss.sampleTex3D(name, "nextInd") << ".rgb;";
+                ss.newLine() << "nextInd = baseInd + " << ss.float3Const(incr, incr, incr) << ";";
+                ss.newLine() << ss.float3Decl("v8") << " = " << ss.sampleTex3D(name, "nextInd") << ".rgb;";
+
+                // Lerp on Z.
+                ss.newLine() << ss.float3Decl("v1_2") << " = " << ss.lerp("v1", "v2", "frac.z") << ";";
+                ss.newLine() << ss.float3Decl("v3_4") << " = " << ss.lerp("v3", "v4", "frac.z") << ";";
+                ss.newLine() << ss.float3Decl("v5_6") << " = " << ss.lerp("v5", "v6", "frac.z") << ";";
+                ss.newLine() << ss.float3Decl("v7_8") << " = " << ss.lerp("v7", "v8", "frac.z") << ";";
+
+                // Lerp on Y.
+                ss.newLine() << ss.float3Decl("v1_2_3_4") << " = " << ss.lerp("v1_2", "v3_4", "frac.y") << ";";
+                ss.newLine() << ss.float3Decl("v5_6_7_8") << " = " << ss.lerp("v5_6", "v7_8", "frac.y") << ";";
+
+                // Lerp on X.
+                ss.newLine() << shaderCreator->getPixelName() << ".rgb = " << ss.lerp("v1_2_3_4", "v5_6_7_8", "frac.x") << ";";
+            }
+            else
+            {
+                // Use texture3d and GL_LINEAR and the GPU's built-in trilinear algorithm.
+                // Note that the fractional components are quantized to 8-bits on some
+                // hardware, which introduces significant error with small grid sizes.
+
+                ss.newLine() << ss.float3Decl(name + "_coords")
+                             << " = (" << shaderCreator->getPixelName() << ".zyx * "
+                             << ss.float3Const(dim - 1) << " + "
+                             << ss.float3Const(0.5f) + ") / "
+                             << ss.float3Const(dim) << ";";
+
+                ss.newLine() << shaderCreator->getPixelName() << ".rgb = "
+                             << ss.sampleTex3D(name, name + "_coords") << ".rgb;";
+            }
         }
 
         shaderCreator->addToFunctionShaderCode(ss.string().c_str());
