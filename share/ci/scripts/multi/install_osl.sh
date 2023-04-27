@@ -29,7 +29,7 @@ cmake -DCMAKE_BUILD_TYPE=Release \
       -DVERBOSE=ON \
       -DSTOP_ON_WARNING=OFF \
       -DBoost_NO_BOOST_CMAKE=ON \
-      -DLLVM_ROOT=$(brew --prefix llvm) \
+      -DLLVM_ROOT=$(brew --prefix llvm@15) \
       ../.
 cmake --build . \
       --target install \
