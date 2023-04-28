@@ -219,6 +219,9 @@ jobs:
           share/ci/scripts/multi/install_oiio.sh latest $EXT_PATH
           share/ci/scripts/multi/install_osl.sh latest $EXT_PATH
           share/ci/scripts/multi/install_openfx.sh latest $EXT_PATH
+      - name: Print some variables
+        run: |
+          brew --prefix llvm@15
       - name: Create build directories
         run: |
           mkdir _install
