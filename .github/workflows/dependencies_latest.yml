@@ -221,7 +221,7 @@ jobs:
           share/ci/scripts/multi/install_openfx.sh latest $EXT_PATH
       - name: Print some variables
         run: |
-          ls -alH $(brew --prefix llvm)
+          brew --prefix llvm@15
       - name: Create build directories
         run: |
           mkdir _install
