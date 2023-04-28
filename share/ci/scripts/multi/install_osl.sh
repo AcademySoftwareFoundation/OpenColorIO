@@ -25,6 +25,8 @@ cd build
 cmake -DCMAKE_BUILD_TYPE=Release \
       ${INSTALL_TARGET:+"-DCMAKE_INSTALL_PREFIX="${INSTALL_TARGET}""} \
       -DCMAKE_CXX_STANDARD=14 \
+      -DCMAKE_C_COMPILER=$(brew --prefix llvm@15)/bin/clang \
+      -DCMAKE_CXX_COMPILER=$(brew --prefix llvm@15)/bin/clang++ \
       -DOSL_BUILD_TESTS=ON \
       -DVERBOSE=ON \
       -DSTOP_ON_WARNING=OFF \
