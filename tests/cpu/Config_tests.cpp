@@ -313,7 +313,7 @@ OCIO_ADD_TEST(Config, roles)
     OCIO_CHECK_EQUAL(std::string(config->getRoleName(-4)), "");
     OCIO_CHECK_EQUAL(std::string(config->getRoleColorSpace(-4)), "");
 
-    // Test existing roles in cg-config-v1.0.0_aces-v1.3_ocio-v2.1.
+    // Test existing roles.
     OCIO_CHECK_EQUAL(std::string(config->getRoleColorSpace("scene_linear")), std::string("lnh"));
     OCIO_CHECK_EQUAL(std::string(config->getRoleColorSpace("compositing_log")), std::string("lgh"));
 
