@@ -126,12 +126,6 @@ private:
 
 bool IsGradingCurveIdentity(const ConstGradingBSplineCurveRcPtr & curve);
 
-bool operator==(const GradingControlPoint & lhs, const GradingControlPoint & rhs);
-bool operator!=(const GradingControlPoint & lhs, const GradingControlPoint & rhs);
-bool operator==(const GradingBSplineCurve & lhs, const GradingBSplineCurve & rhs);
-bool operator!=(const GradingBSplineCurve & lhs, const GradingBSplineCurve & rhs);
-
-
 } // namespace OCIO_NAMESPACE
 
 #endif // INCLUDED_OCIO_GRADINGBSPLINECURVE_H

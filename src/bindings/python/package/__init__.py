@@ -21,4 +21,12 @@ if sys.version_info >= (3, 8) and platform.system() == "Windows" and os.getenv("
         if os.path.exists(path) and path != ".":
             os.add_dll_directory(path)
 
+del os, sys, platform
+
+#
+# Import compiled module.
+#
+
+from .PyOpenColorIO import __author__, __email__, __license__, __copyright__, __version__, __status__, __doc__
+
 from .PyOpenColorIO import *
