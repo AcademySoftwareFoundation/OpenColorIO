@@ -6,8 +6,8 @@ if(APPLE)
 endif()
 
 include_directories(
-    ${CMAKE_SOURCE_DIR}/export/
-    ${CMAKE_BINARY_DIR}/export/
+    ${PROJECT_SOURCE_DIR}/export/
+    ${PROJECT_BINARY_DIR}/export/
     ${Nuke_INCLUDE_DIR}
 )
 
@@ -124,6 +124,6 @@ install(TARGETS NukeOCIOLookTransform EXPORT OpenColorIO
 install(TARGETS NukeOCIOCDLTransform EXPORT OpenColorIO 
         DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/lib/nuke${Nuke_API_VERSION})
 
-install(DIRECTORY ${CMAKE_SOURCE_DIR}/share/nuke
+install(DIRECTORY ${PROJECT_SOURCE_DIR}/share/nuke
         DESTINATION ${CMAKE_INSTALL_PREFIX}/share/
         PATTERN .svn EXCLUDE)

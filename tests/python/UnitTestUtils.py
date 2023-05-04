@@ -2,6 +2,8 @@ import os
 import sys
 from random import randint
 
+import PyOpenColorIO as OCIO
+
 def assertEqualRGBM(testCase, first, second):
     testCase.assertEqual(first.red, second.red)
     testCase.assertEqual(first.green, second.green)
@@ -64,6 +66,17 @@ def assertEqualRGBCurve(testCase, first, second):
     assertEqualBSpline(testCase, first.green, second.green)
     assertEqualBSpline(testCase, first.blue, second.blue)
     assertEqualBSpline(testCase, first.master, second.master)
+
+class MuteLogging:
+  def __init__(self):
+    self.previous_function = None
+  
+  def __enter__(self):
+    self.previous_function = OCIO.SetLoggingFunction(lambda message: None)
+    return self
+
+  def __exit__(self, exc_type, exc_val, exc_tb):
+    OCIO.ResetToDefaultLoggingFunction()
 
 # -----------------------------------------------------------------------------
 # Python 2/3 compatibility

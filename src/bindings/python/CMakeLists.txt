@@ -14,10 +14,10 @@ if(OCIO_BUILD_DOCS)
 	###########################################################################
 	### Extract docstrings from C++ headers for Python bindings ###
 
-	set(PYOCIO_DOCSTRINGS_DIR "${CMAKE_BINARY_DIR}/docs/_doxygen")
+	set(PYOCIO_DOCSTRINGS_DIR "${PROJECT_BINARY_DIR}/docs/_doxygen")
 	set(PYOCIO_DOCSTRINGS_H "${PYOCIO_DOCSTRINGS_DIR}/docstrings.h")
     set(DOXYGEN_INDEX_XML "${PYOCIO_DOCSTRINGS_DIR}/xml/index.xml")
-	set(EXTRACT_DOCSTRINGS_PY "${CMAKE_SOURCE_DIR}/share/docs/extract_docstrings.py")
+	set(EXTRACT_DOCSTRINGS_PY "${PROJECT_SOURCE_DIR}/share/docs/extract_docstrings.py")
 
 	# Run docstring extraction if docstrings.h is behind doxygen XML
 	add_custom_command(OUTPUT ${PYOCIO_DOCSTRINGS_H}
@@ -39,7 +39,7 @@ if(OCIO_BUILD_DOCS)
 else()
 
 	# Use stand-in docstrings.h file when docs are not built
-	set(PYOCIO_DOCSTRINGS_DIR "${CMAKE_SOURCE_DIR}/share/docs")
+	set(PYOCIO_DOCSTRINGS_DIR "${PROJECT_SOURCE_DIR}/share/docs")
 
 	message(WARNING 
 		"Building PyOpenColorIO with OCIO_BUILD_DOCS disabled will result in "

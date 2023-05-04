@@ -1996,7 +1996,7 @@ void Config::validate() const
             {
                 std::ostringstream os;
                 os << "Inactive '" << name << "' is neither a color space nor a named transform.";
-                LogWarning(os.str());
+                LogInfo(os.str());
             }
         }
     }
@@ -5069,6 +5069,10 @@ void Config::setProcessorCacheFlags(ProcessorCacheFlags flags) noexcept
     getImpl()->setProcessorCacheFlags(flags);
 }
 
+void Config::clearProcessorCache() noexcept
+{
+    getImpl()->m_processorCache.clear();
+}
 
 ///////////////////////////////////////////////////////////////////////////
 //  Config::Impl

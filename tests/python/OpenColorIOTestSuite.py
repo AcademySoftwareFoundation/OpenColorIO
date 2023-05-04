@@ -80,6 +80,7 @@ import MixingHelpersTest
 import NamedTransformTest
 import OCIOZArchiveTest
 import OpenColorIOTest
+import ProcessorCacheTest
 import ProcessorTest
 import RangeTransformTest
 import TransformsTest
@@ -137,6 +138,7 @@ def suite():
     suite.addTest(loader.loadTestsFromModule(NamedTransformTest))
     suite.addTest(loader.loadTestsFromModule(OCIOZArchiveTest))
     suite.addTest(loader.loadTestsFromModule(OpenColorIOTest))
+    suite.addTest(loader.loadTestsFromModule(ProcessorCacheTest))
     suite.addTest(loader.loadTestsFromModule(ProcessorTest))
     suite.addTest(loader.loadTestsFromModule(RangeTransformTest))
     suite.addTest(loader.loadTestsFromModule(TransformsTest))

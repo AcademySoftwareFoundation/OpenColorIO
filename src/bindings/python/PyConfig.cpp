@@ -777,6 +777,8 @@ void bindPyConfig(py::module & m)
                     DOC(Config, GetProcessorFromConfigs, 4))
         .def("setProcessorCacheFlags", &Config::setProcessorCacheFlags, "flags"_a, 
              DOC(Config, setProcessorCacheFlags))
+        .def("clearProcessorCache", &Config::clearProcessorCache, 
+             DOC(Config, setProcessorCacheFlags))
 
         // Archiving
         .def("isArchivable", &Config::isArchivable, DOC(Config, isArchivable))
