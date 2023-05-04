@@ -215,17 +215,17 @@ if(BUILD_SHARED_LIBS AND WIN32)
 endif()
 
 
-set(HEADER_LOCATION "${CMAKE_SOURCE_DIR}/include/OpenColorIO")
+set(HEADER_LOCATION "${PROJECT_SOURCE_DIR}/include/OpenColorIO")
 file(GLOB_RECURSE INSTALL_HEADERS "${HEADER_LOCATION}/*.h")
 
 # Some part of the build process expect to find the ABI header here,
 # notably the documentation.
-set(ABI_HEADER_LOCATION "${CMAKE_BINARY_DIR}/include/OpenColorIO")
+set(ABI_HEADER_LOCATION "${PROJECT_BINARY_DIR}/include/OpenColorIO")
 list(APPEND INSTALL_HEADERS ${ABI_HEADER_LOCATION}/OpenColorABI.h)
 configure_file("${HEADER_LOCATION}/OpenColorABI.h.in" "${ABI_HEADER_LOCATION}/OpenColorABI.h" @ONLY)
 
 # Built-in configs
-set(CONFIGS_HEADER_LOCATION "${CMAKE_BINARY_DIR}/generated_include")
+set(CONFIGS_HEADER_LOCATION "${PROJECT_BINARY_DIR}/generated_include")
 file(GLOB CONFIGS_PATHS "builtinconfigs/configs/*.ocio")
 # Loop through the .ocio config files.
 foreach(C ${CONFIGS_PATHS})

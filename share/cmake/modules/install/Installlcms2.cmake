@@ -28,8 +28,8 @@ endif()
 if(NOT lcms2_FOUND AND OCIO_INSTALL_EXT_PACKAGES AND NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL NONE)
     include(ExternalProject)
 
-    set(_EXT_DIST_ROOT "${CMAKE_BINARY_DIR}/ext/dist")
-    set(_EXT_BUILD_ROOT "${CMAKE_BINARY_DIR}/ext/build")
+    set(_EXT_DIST_ROOT "${PROJECT_BINARY_DIR}/ext/dist")
+    set(_EXT_BUILD_ROOT "${PROJECT_BINARY_DIR}/ext/build")
 
     # Set find_package standard args
     set(lcms2_FOUND TRUE)
@@ -112,7 +112,7 @@ if(NOT lcms2_FOUND AND OCIO_INSTALL_EXT_PACKAGES AND NOT OCIO_INSTALL_EXT_PACKAG
             EXCLUDE_FROM_ALL TRUE
             PATCH_COMMAND
                 ${CMAKE_COMMAND} -E copy
-                "${CMAKE_SOURCE_DIR}/share/cmake/projects/Buildlcms2.cmake"
+                "${PROJECT_SOURCE_DIR}/share/cmake/projects/Buildlcms2.cmake"
                 "CMakeLists.txt"
             BUILD_COMMAND ""
             INSTALL_COMMAND
