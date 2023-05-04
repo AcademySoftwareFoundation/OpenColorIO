@@ -25,34 +25,10 @@ struct rgbavec_avx2 {
     __m256 r, g, b, a;
 };
 
-#define USE_M128_LOAD_GATHER_AVX2 0
-
-# if USE_M128_LOAD_GATHER_AVX2
-
-static inline __m256 load2_m128_avx2(const float *hi, const float *low)
-{
-    return _mm256_insertf128_ps(_mm256_castps128_ps256(_mm_loadu_ps(low)), _mm_loadu_ps(hi), 1);
-}
-
-#define gather_rgb_avx2(src, idx)                               \
-    _mm256_store_si256((__m256i *)indices, idx);                \
-    row0 = load2_m128_avx2(src + indices[4], src + indices[0]); \
-    row1 = load2_m128_avx2(src + indices[5], src + indices[1]); \
-    row2 = load2_m128_avx2(src + indices[6], src + indices[2]); \
-    row3 = load2_m128_avx2(src + indices[7], src + indices[3]); \
-    tmp0 = _mm256_unpacklo_ps(row0, row1);                      \
-    tmp2 = _mm256_unpacklo_ps(row2, row3);                      \
-    tmp1 = _mm256_unpackhi_ps(row0, row1);                      \
-    tmp3 = _mm256_unpackhi_ps(row2, row3);                      \
-    sample_r = avx2_movelh_ps(tmp0, tmp2);                      \
-    sample_g = avx2_movehl_ps(tmp2, tmp0);                      \
-    sample_b = avx2_movelh_ps(tmp1, tmp3)
-#else
 #define gather_rgb_avx2(src, idx)                               \
     sample_r = _mm256_i32gather_ps(src+0, idx, 4);              \
     sample_g = _mm256_i32gather_ps(src+1, idx, 4);              \
     sample_b = _mm256_i32gather_ps(src+2, idx, 4)
-#endif
 
 static inline rgbavec_avx2 interp_tetrahedral_avx2(const Lut3DContextAVX2 &ctx, __m256& r, __m256& g, __m256& b, __m256& a)
 {
@@ -60,12 +36,6 @@ static inline rgbavec_avx2 interp_tetrahedral_avx2(const Lut3DContextAVX2 &ctx, 
     __m256 cxxxa;
     __m256 cxxxb;
     __m256 mask;
-
-#if USE_M128_LOAD_GATHER_AVX2
-    AVX2_ALIGN(uint32_t indices[8]);
-    __m256 tmp0, tmp1, tmp2, tmp3;
-    __m256 row0, row1, row2, row3;
-#endif
     __m256 sample_r, sample_g, sample_b;
 
     rgbavec_avx2 result;
