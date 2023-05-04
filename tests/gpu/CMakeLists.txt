@@ -61,7 +61,7 @@ if(MSVC AND BUILD_SHARED_LIBS)
         set(BUILD_TYPE ${CMAKE_BUILD_TYPE})
     endif()
 
-    set(NEW_PATH "${CMAKE_BINARY_DIR}/src/OpenColorIO/${BUILD_TYPE}")
+    set(NEW_PATH "${PROJECT_BINARY_DIR}/src/OpenColorIO/${BUILD_TYPE}")
     set(NEW_PATH "${NEW_PATH}\\\;${GLUT_INCLUDE_DIR}/../bin")
     set(NEW_PATH "${NEW_PATH}\\\;${GLEW_INCLUDE_DIRS}/../bin")
 

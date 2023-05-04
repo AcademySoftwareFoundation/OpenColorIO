@@ -14,7 +14,7 @@
 
 #include "utils/StringUtils.h"
 
-// Generated at build time: '${CMAKE_BINARY_DIR}/docs/_doxygen/docstrings.h'
+// Generated at build time: '${PROJECT_BINARY_DIR}/docs/_doxygen/docstrings.h'
 #include "docstrings.h"
 
 namespace py = pybind11;

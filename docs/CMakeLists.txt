@@ -61,11 +61,11 @@ if(${Python_VERSION_MAJOR} GREATER_EQUAL 3)
     # configuration, but omits *.in to work in RTD builds.
     message(STATUS "Substitute documentation variables")
     file(GLOB_RECURSE DOC_IN_FILES 
-        "${CMAKE_SOURCE_DIR}/docs/**.in"
-        "${CMAKE_SOURCE_DIR}/docs/conf.py"
+        "${PROJECT_SOURCE_DIR}/docs/**.in"
+        "${PROJECT_SOURCE_DIR}/docs/conf.py"
     )
     foreach(in_file ${DOC_IN_FILES})
-        string(REPLACE "${CMAKE_SOURCE_DIR}/" "${CMAKE_BINARY_DIR}/" 
+        string(REPLACE "${PROJECT_SOURCE_DIR}/" "${PROJECT_BINARY_DIR}/"
             out_file ${in_file})
         string(REPLACE ".in" "" 
             out_file ${out_file})
@@ -73,15 +73,15 @@ if(${Python_VERSION_MAJOR} GREATER_EQUAL 3)
     endforeach()
 
     # Copy documentation source to build location
-    file(GLOB_RECURSE DOC_SOURCES "${CMAKE_SOURCE_DIR}/docs/*")
+    file(GLOB_RECURSE DOC_SOURCES "${PROJECT_SOURCE_DIR}/docs/*")
     list(APPEND DOC_SOURCES
-        ${CMAKE_SOURCE_DIR}/README.md
-        ${CMAKE_SOURCE_DIR}/INSTALL.md
-        ${CMAKE_SOURCE_DIR}/CHANGELOG.md
-        ${CMAKE_SOURCE_DIR}/LICENSE
+        ${PROJECT_SOURCE_DIR}/README.md
+        ${PROJECT_SOURCE_DIR}/INSTALL.md
+        ${PROJECT_SOURCE_DIR}/CHANGELOG.md
+        ${PROJECT_SOURCE_DIR}/LICENSE
     )
     if(OCIO_BUILD_NUKE)
-        list(APPEND DOC_SOURCES ${CMAKE_SOURCE_DIR}/share/nuke/ocionuke/viewer.py)
+        list(APPEND DOC_SOURCES ${PROJECT_SOURCE_DIR}/share/nuke/ocionuke/viewer.py)
     endif()
 
     # Don't copy configured files. In particular this prevents overwriting conf.py,
@@ -93,15 +93,15 @@ if(${Python_VERSION_MAJOR} GREATER_EQUAL 3)
     )
 
     foreach(f ${DOC_SOURCES})
-        string(REGEX REPLACE "^${CMAKE_SOURCE_DIR}/" "" relpath ${f})
+        string(REGEX REPLACE "^${PROJECT_SOURCE_DIR}/" "" relpath ${f})
         string(REGEX REPLACE "[/. ]" "_" tgtname ${relpath})
         string(REGEX MATCH "^docs" IN_DOCS ${relpath})
 
-        set(SRC_PATH ${CMAKE_SOURCE_DIR}/${relpath})
-        set(DST_PATH ${CMAKE_BINARY_DIR}/${relpath})
+        set(SRC_PATH ${PROJECT_SOURCE_DIR}/${relpath})
+        set(DST_PATH ${PROJECT_BINARY_DIR}/${relpath})
         if(NOT IN_DOCS)
             get_filename_component(F_NAME ${relpath} NAME)
-            set(DST_PATH "${CMAKE_BINARY_DIR}/docs/${F_NAME}")
+            set(DST_PATH "${PROJECT_BINARY_DIR}/docs/${F_NAME}")
         endif()
 
         add_custom_command(OUTPUT ${DST_PATH}
@@ -118,16 +118,16 @@ if(${Python_VERSION_MAJOR} GREATER_EQUAL 3)
     get_target_property(DOXYGEN_EXECUTABLE Doxygen::doxygen IMPORTED_LOCATION)
 
     file(GLOB_RECURSE DOXYGEN_SOURCES 
-        "${CMAKE_SOURCE_DIR}/include/*.h"
-        "${CMAKE_BINARY_DIR}/include/*.h"
+        "${PROJECT_SOURCE_DIR}/include/*.h"
+        "${PROJECT_BINARY_DIR}/include/*.h"
     )
-    set(DOXYGEN_INDEX_XML "${CMAKE_BINARY_DIR}/docs/_doxygen/xml/index.xml")
+    set(DOXYGEN_INDEX_XML "${PROJECT_BINARY_DIR}/docs/_doxygen/xml/index.xml")
 
     # Run doxygen if index.xml is behind OCIO headers or doxygen config
     add_custom_command(OUTPUT ${DOXYGEN_INDEX_XML}
-        COMMAND "${DOXYGEN_EXECUTABLE}" "${CMAKE_BINARY_DIR}/docs/Doxyfile"
+        COMMAND "${DOXYGEN_EXECUTABLE}" "${PROJECT_BINARY_DIR}/docs/Doxyfile"
         DEPENDS
-            ${CMAKE_BINARY_DIR}/docs/Doxyfile
+            ${PROJECT_BINARY_DIR}/docs/Doxyfile
             ${DOXYGEN_SOURCES}
         COMMENT "Extracting XML files from C++ headers"
     )
@@ -140,7 +140,7 @@ if(${Python_VERSION_MAJOR} GREATER_EQUAL 3)
     ### HTML doc target ###
 
     file(GLOB_RECURSE SPHINX_EXTENSIONS
-        "${CMAKE_SOURCE_DIR}/share/docs/*.py"
+        "${PROJECT_SOURCE_DIR}/share/docs/*.py"
     )
 
     # Run Sphinx
@@ -148,7 +148,7 @@ if(${Python_VERSION_MAJOR} GREATER_EQUAL 3)
         COMMAND
             ${Python_PRE_CMD} "${Sphinx_EXECUTABLE}" -b html . "${CMAKE_CURRENT_BINARY_DIR}/build-html"
         DEPENDS
-            ${CMAKE_BINARY_DIR}/docs/conf.py
+            ${PROJECT_BINARY_DIR}/docs/conf.py
             ${SPHINX_EXTENSIONS}
             ${DOXYGEN_INDEX_XML}
         COMMENT "Building html docs"

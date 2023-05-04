@@ -21,7 +21,7 @@ macro(get_python_pre_command)
     # available.
     if(WIN32)
         # Use Windows path separators since this is being passed through to cmd
-        file(TO_NATIVE_PATH ${CMAKE_BINARY_DIR} _WIN_BINARY_DIR)
+        file(TO_NATIVE_PATH ${PROJECT_BINARY_DIR} _WIN_BINARY_DIR)
 
         set(_DLL_PATH "${_WIN_BINARY_DIR}\\src\\OpenColorIO")
         if(MSVC_IDE)
@@ -43,7 +43,7 @@ macro(get_python_pre_command)
         # Build path list
         set(_WIN_PATHS 
             ${_PYD_PATH} 
-            "${CMAKE_SOURCE_DIR}\\share\\docs"
+            "${PROJECT_SOURCE_DIR}\\share\\docs"
         )
         # Include optional paths from macro arguments
         foreach(_PATH ${ARGN})
@@ -65,8 +65,8 @@ macro(get_python_pre_command)
     else()
         # Build path list
         set(_PATHS 
-            "${CMAKE_BINARY_DIR}/src/bindings/python" 
-            "${CMAKE_SOURCE_DIR}/share/docs"
+            "${PROJECT_BINARY_DIR}/src/bindings/python"
+            "${PROJECT_SOURCE_DIR}/share/docs"
         )
         foreach(_PATH ${ARGN})
             list(APPEND _PATHS ${_PATH})
