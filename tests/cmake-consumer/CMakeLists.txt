@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright Contributors to the OpenColorIO Project.
 
-set(TEST_DEST_DIR "${CMAKE_BINARY_DIR}/tests/cmake-consumer-dist")
+set(TEST_DEST_DIR "${PROJECT_BINARY_DIR}/tests/cmake-consumer-dist")
 
 file(MAKE_DIRECTORY ${TEST_DEST_DIR})
 

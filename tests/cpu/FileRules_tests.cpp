@@ -1372,7 +1372,19 @@ colorspaces:
         // Upgrading is making sure to build a valid v2 config.
 
         config->upgradeToLatestVersion();
-        OCIO_CHECK_NO_THROW(config->validate());
+        
+        {
+          OCIO::LogGuard logGuard;
+          OCIO_CHECK_NO_THROW(config->validate());
+          // Check that the log contains the expected error messages for the missing roles and mute 
+          // them so that (only) those messages don't appear in the test output.
+          OCIO_CHECK_ASSERT(OCIO::checkAndMuteSceneLinearRoleError(logGuard));
+          OCIO_CHECK_ASSERT(OCIO::checkAndMuteCompositingLogRoleError(logGuard));
+          OCIO_CHECK_ASSERT(OCIO::checkAndMuteColorTimingRoleError(logGuard));
+          OCIO_CHECK_ASSERT(OCIO::checkAndMuteAcesInterchangeRoleError(logGuard));
+          // If there are any unexpected log messages, print them to the shell.
+          logGuard.print();
+        }
 
         // Check the new version.
 
@@ -1439,7 +1451,19 @@ colorspaces:
         // Upgrading is making sure to build a valid v2 config.
 
         config->upgradeToLatestVersion();
-        OCIO_CHECK_NO_THROW(config->validate());
+
+        {
+          OCIO::LogGuard logGuard;
+          OCIO_CHECK_NO_THROW(config->validate());
+          // Ignore (only) the errors logged regarding the missing roles that are required in 
+          // configs with version >= 2.2.
+          OCIO_CHECK_ASSERT(OCIO::checkAndMuteSceneLinearRoleError(logGuard));
+          OCIO_CHECK_ASSERT(OCIO::checkAndMuteCompositingLogRoleError(logGuard));
+          OCIO_CHECK_ASSERT(OCIO::checkAndMuteColorTimingRoleError(logGuard));
+          OCIO_CHECK_ASSERT(OCIO::checkAndMuteAcesInterchangeRoleError(logGuard));
+          // If there are any unexpected log messages, print them to the shell.
+          logGuard.print();
+        }
 
         // Check the new version.
 
@@ -1514,7 +1538,19 @@ colorspaces:
 
             cfg->setInactiveColorSpaces("cs1");
             cfg->upgradeToLatestVersion();
-            OCIO_CHECK_NO_THROW(cfg->validate());
+
+            {
+              OCIO::LogGuard logGuard;
+              OCIO_CHECK_NO_THROW(cfg->validate());
+              // Ignore (only) the errors logged regarding the missing roles that are required in 
+              // configs with version >= 2.2.
+              OCIO_CHECK_ASSERT(OCIO::checkAndMuteSceneLinearRoleError(logGuard));
+              OCIO_CHECK_ASSERT(OCIO::checkAndMuteCompositingLogRoleError(logGuard));
+              OCIO_CHECK_ASSERT(OCIO::checkAndMuteColorTimingRoleError(logGuard));
+              OCIO_CHECK_ASSERT(OCIO::checkAndMuteAcesInterchangeRoleError(logGuard));
+              // If there are any unexpected log messages, print them to the shell.
+              logGuard.print();
+            }
 
             // Check the new version.
 
@@ -1554,7 +1590,18 @@ colorspaces:
                     l.output());
             }
 
-            OCIO_CHECK_NO_THROW(cfg->validate());
+            {
+              OCIO::LogGuard logGuard;
+              OCIO_CHECK_NO_THROW(cfg->validate());
+              // Ignore (only) the errors logged regarding the missing roles that are required in 
+              // configs with version >= 2.2.
+              OCIO_CHECK_ASSERT(OCIO::checkAndMuteSceneLinearRoleError(logGuard));
+              OCIO_CHECK_ASSERT(OCIO::checkAndMuteCompositingLogRoleError(logGuard));
+              OCIO_CHECK_ASSERT(OCIO::checkAndMuteColorTimingRoleError(logGuard));
+              OCIO_CHECK_ASSERT(OCIO::checkAndMuteAcesInterchangeRoleError(logGuard));
+              // If there are any unexpected log messages, print them to the shell.
+              logGuard.print();
+            }
 
             // Check the new version.
 
@@ -1598,18 +1645,42 @@ OCIO_ADD_TEST(FileRules, config_v1_to_v2_from_memory)
         OCIO::ColorSpaceRcPtr raw = OCIO::ColorSpace::Create();
         raw->setName("rAw");
         config->addColorSpace(raw);
-        OCIO_CHECK_NO_THROW(config->validate());  // because file rules are not validated.
+        OCIO_CHECK_NO_THROW(config->validate());  // (does not fail since the major version is 1)
 
         // Default rule is using 'Default' role that does not exist.
         config->setMajorVersion(2);
-        OCIO_CHECK_THROW_WHAT(config->validate(), OCIO::Exception, "rule named 'Default' is "
-                              "referencing 'default' that is neither a color space nor a named "
-                              "transform");
+
+        {
+          OCIO::LogGuard logGuard;
+          OCIO_CHECK_THROW_WHAT(config->validate(), OCIO::Exception, "rule named 'Default' is "
+                                "referencing 'default' that is neither a color space nor a named "
+                                "transform");
+          // Ignore (only) the errors logged regarding the missing roles that are required in 
+          // configs with version >= 2.2.
+          OCIO_CHECK_ASSERT(OCIO::checkAndMuteSceneLinearRoleError(logGuard));
+          OCIO_CHECK_ASSERT(OCIO::checkAndMuteCompositingLogRoleError(logGuard));
+          OCIO_CHECK_ASSERT(OCIO::checkAndMuteColorTimingRoleError(logGuard));
+          OCIO_CHECK_ASSERT(OCIO::checkAndMuteAcesInterchangeRoleError(logGuard));
+          // If there are any unexpected log messages, print them to the shell.
+          logGuard.print();
+        }
 
         // Upgrading is making sure to build a valid v2 config.
         config->setMajorVersion(1);
         config->upgradeToLatestVersion();
-        OCIO_CHECK_NO_THROW(config->validate());
+
+        {
+          OCIO::LogGuard logGuard;
+          OCIO_CHECK_NO_THROW(config->validate());
+          // Ignore (only) the errors logged regarding the missing roles that are required in 
+          // configs with version >= 2.2.
+          OCIO_CHECK_ASSERT(OCIO::checkAndMuteSceneLinearRoleError(logGuard));
+          OCIO_CHECK_ASSERT(OCIO::checkAndMuteCompositingLogRoleError(logGuard));
+          OCIO_CHECK_ASSERT(OCIO::checkAndMuteColorTimingRoleError(logGuard));
+          OCIO_CHECK_ASSERT(OCIO::checkAndMuteAcesInterchangeRoleError(logGuard));
+          // If there are any unexpected log messages, print them to the shell.
+          logGuard.print();
+        }
 
         // Check the new version.
 
@@ -1636,18 +1707,42 @@ OCIO_ADD_TEST(FileRules, config_v1_to_v2_from_memory)
         OCIO::ColorSpaceRcPtr raw = OCIO::ColorSpace::Create();
         raw->setName("rAw");
         config->addColorSpace(raw);
-        OCIO_CHECK_NO_THROW(config->validate());  // because file rules are not validated.
+        OCIO_CHECK_NO_THROW(config->validate());  // (does not fail since the major version is 1)
 
         // Default rule is using 'Default' role but the associated color space does not exist.
         config->setMajorVersion(2);
-        OCIO_CHECK_THROW_WHAT(config->validate(), OCIO::Exception, "rule named 'Default' is "
-                              "referencing 'default' that is neither a color space nor a named "
-                              "transform");
+        
+        {
+          OCIO::LogGuard logGuard;
+          OCIO_CHECK_THROW_WHAT(config->validate(), OCIO::Exception, "rule named 'Default' is "
+                                "referencing 'default' that is neither a color space nor a named "
+                                "transform");
+          // Ignore (only) the errors logged regarding the missing roles that are required in 
+          // configs with version >= 2.2.
+          OCIO_CHECK_ASSERT(OCIO::checkAndMuteSceneLinearRoleError(logGuard));
+          OCIO_CHECK_ASSERT(OCIO::checkAndMuteCompositingLogRoleError(logGuard));
+          OCIO_CHECK_ASSERT(OCIO::checkAndMuteColorTimingRoleError(logGuard));
+          OCIO_CHECK_ASSERT(OCIO::checkAndMuteAcesInterchangeRoleError(logGuard));
+          // If there are any unexpected log messages, print them to the shell.
+          logGuard.print();
+        }
 
         // Upgrading is making sure to build a valid v2 config.
         config->setMajorVersion(1);
         config->upgradeToLatestVersion();
-        OCIO_CHECK_NO_THROW(config->validate());
+
+        {
+          OCIO::LogGuard logGuard;
+          OCIO_CHECK_NO_THROW(config->validate());
+          // Ignore (only) the errors logged regarding the missing roles that are required in 
+          // configs with version >= 2.2.
+          OCIO_CHECK_ASSERT(OCIO::checkAndMuteSceneLinearRoleError(logGuard));
+          OCIO_CHECK_ASSERT(OCIO::checkAndMuteCompositingLogRoleError(logGuard));
+          OCIO_CHECK_ASSERT(OCIO::checkAndMuteColorTimingRoleError(logGuard));
+          OCIO_CHECK_ASSERT(OCIO::checkAndMuteAcesInterchangeRoleError(logGuard));
+          // If there are any unexpected log messages, print them to the shell.
+          logGuard.print();
+        }
 
         // Check the new version.
 
@@ -1673,32 +1768,56 @@ OCIO_ADD_TEST(FileRules, config_v1_to_v2_from_memory)
         OCIO::ColorSpaceRcPtr cs1 = OCIO::ColorSpace::Create();
         cs1->setName("cs1");
         config->addColorSpace(cs1);
-        OCIO_CHECK_NO_THROW(config->validate());  // because file rules are not validated.
+        OCIO_CHECK_NO_THROW(config->validate());  // (does not fail since the major version is 1)
 
         // Default rule is using 'Default' role but the associated color space does not exist.
         config->setInactiveColorSpaces("cs1");
         config->setMajorVersion(2);
-        OCIO_CHECK_THROW_WHAT(config->validate(), OCIO::Exception, "rule named 'Default' is "
-                              "referencing 'default' that is neither a color space nor a named "
-                              "transform");
 
-        config->setMajorVersion(1);
-        
         {
-            OCIO::LogGuard l;      
-    
-            config->upgradeToLatestVersion();
-            
-            OCIO_CHECK_EQUAL(
-                std::string("[OpenColorIO Warning]: The default rule creation falls back to the"\
-                            " first color space because no suitable color space exists.\n"), 
-                l.output());
+          OCIO::LogGuard logGuard;
+          OCIO_CHECK_THROW_WHAT(config->validate(), OCIO::Exception, "rule named 'Default' is "
+                                "referencing 'default' that is neither a color space nor a named "
+                                "transform");
+          // Ignore (only) the errors logged regarding the missing roles that are required in 
+          // configs with version >= 2.2.
+          OCIO_CHECK_ASSERT(OCIO::checkAndMuteSceneLinearRoleError(logGuard));
+          OCIO_CHECK_ASSERT(OCIO::checkAndMuteCompositingLogRoleError(logGuard));
+          OCIO_CHECK_ASSERT(OCIO::checkAndMuteColorTimingRoleError(logGuard));
+          OCIO_CHECK_ASSERT(OCIO::checkAndMuteAcesInterchangeRoleError(logGuard));
+          // If there are any unexpected log messages, print them to the shell.
+          logGuard.print();
         }
 
-        OCIO_CHECK_NO_THROW(config->validate());
+        config->setMajorVersion(1);
+
+        {
+            OCIO::LogGuard logGuard;
+            config->upgradeToLatestVersion();
+            StringUtils::StringVec svec = StringUtils::SplitByLines(logGuard.output());
+            OCIO_CHECK_ASSERT(
+                StringUtils::Contain(
+                    svec, 
+                    "[OpenColorIO Warning]: The default rule creation falls back to the"\
+                    " first color space because no suitable color space exists."
+                )
+            );
+        }
+        
+        {
+          OCIO::LogGuard logGuard; 
+          OCIO_CHECK_NO_THROW(config->validate());
+          // Ignore (only) the errors logged regarding the missing roles that are required in 
+          // configs with version >= 2.2.
+          OCIO_CHECK_ASSERT(OCIO::checkAndMuteSceneLinearRoleError(logGuard));
+          OCIO_CHECK_ASSERT(OCIO::checkAndMuteCompositingLogRoleError(logGuard));
+          OCIO_CHECK_ASSERT(OCIO::checkAndMuteColorTimingRoleError(logGuard));
+          OCIO_CHECK_ASSERT(OCIO::checkAndMuteAcesInterchangeRoleError(logGuard));
+          // If there are any unexpected log messages, print them to the shell.
+          logGuard.print();
+        }
 
         // Check the new version.
-
         OCIO_CHECK_EQUAL(config->getMajorVersion(), 2);
 
         // Check the 'default' rule. As there is not 'data' or active color space, the default

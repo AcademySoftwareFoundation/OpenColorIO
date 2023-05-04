@@ -105,7 +105,11 @@ strictparsing: true
 luma: [0.2126, 0.7152, 0.0722]
 
 roles:
+  aces_interchange: test
+  color_timing: test
+  compositing_log: test
   default: ref
+  scene_linear: test
 
 file_rules:
   - !<Rule> {name: Default, colorspace: default}

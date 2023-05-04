@@ -125,9 +125,11 @@ public:
  * Under normal usage, this is not necessary, but it can be helpful in particular instances,
  * such as designing OCIO profiles, and wanting to re-read luts without restarting.
  *
- * \note The method does not apply to instance specific caches such as the processor cache in a
- * config instance or the GPU and CPU processor caches in a processor instance. Here deleting the
- * instance flushes the cache.
+ * \note 
+ *   This method does not apply to instance-specific caches such as the Processor cache in
+ *   a Config instance or the GPU and CPU Processor caches in a Processor instance. So in cases
+ *   where you still have a Config instance after calling ClearAllCaches, you should also call 
+ *   the Config's clearProcessorCache method.
  */
 extern OCIOEXPORT void ClearAllCaches();
 
@@ -1328,6 +1330,20 @@ public:
                                                        const char * dstColorSpaceName,
                                                        const char * dstInterchangeName);
 
+    /// Control the caching of processors in the config instance.  By default, caching is on.  
+    /// The flags allow turning caching off entirely or only turning it off if dynamic
+    /// properties are being used by the processor.
+    void setProcessorCacheFlags(ProcessorCacheFlags flags) noexcept;
+
+    /**
+     * \brief Clears this config's cache of Processor, CPUProcessor, and GPUProcessor instances. 
+     * 
+     * This must be done if any of the LUT files used by these Processors have been modified. 
+     * Note that setProcessorCacheFlags(PROCESSOR_CACHE_OFF) turns off caching but does not clear 
+     * any existing cache.
+     */
+    void clearProcessorCache() noexcept;
+
     /// Set the ConfigIOProxy object used to provision the config and LUTs from somewhere other
     /// than the file system.  (This is set on the config's embedded Context object.)
     void setConfigIOProxy(ConfigIOProxyRcPtr ciop);
@@ -1389,11 +1405,6 @@ public:
 
     /// Do not use (needed only for pybind11).
     ~Config();
-
-    /// Control the caching of processors in the config instance.  By default, caching is on.  
-    /// The flags allow turning caching off entirely or only turning it off if dynamic
-    /// properties are being used by the processor.
-    void setProcessorCacheFlags(ProcessorCacheFlags flags) noexcept;
 
 private:
     Config();

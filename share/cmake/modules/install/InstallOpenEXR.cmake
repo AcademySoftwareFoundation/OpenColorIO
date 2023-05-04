@@ -44,8 +44,8 @@ if(NOT OpenEXR_FOUND AND OCIO_INSTALL_EXT_PACKAGES AND NOT OCIO_INSTALL_EXT_PACK
     include(ExternalProject)
     include(GNUInstallDirs)
 
-    set(_EXT_DIST_ROOT "${CMAKE_BINARY_DIR}/ext/dist")
-    set(_EXT_BUILD_ROOT "${CMAKE_BINARY_DIR}/ext/build")
+    set(_EXT_DIST_ROOT "${PROJECT_BINARY_DIR}/ext/dist")
+    set(_EXT_BUILD_ROOT "${PROJECT_BINARY_DIR}/ext/build")
 
     # Required dependency
     # Not trying to find ZLIB here since it is a required dependency of OCIO.

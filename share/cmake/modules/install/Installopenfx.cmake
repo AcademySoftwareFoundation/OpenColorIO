@@ -28,8 +28,8 @@ if(NOT openfx_FOUND AND OCIO_INSTALL_EXT_PACKAGES AND NOT OCIO_INSTALL_EXT_PACKA
     include(ExternalProject)
     include(GNUInstallDirs)
 
-    set(_EXT_DIST_ROOT "${CMAKE_BINARY_DIR}/ext/dist")
-    set(_EXT_BUILD_ROOT "${CMAKE_BINARY_DIR}/ext/build")
+    set(_EXT_DIST_ROOT "${PROJECT_BINARY_DIR}/ext/dist")
+    set(_EXT_BUILD_ROOT "${PROJECT_BINARY_DIR}/ext/build")
     set(_openfx_INSTALL_DIR "${_EXT_BUILD_ROOT}/openfx/src/openfx_install")
 
     # Set find_package standard args
