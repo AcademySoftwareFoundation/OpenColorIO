@@ -2,7 +2,7 @@
 requires = [
     "setuptools>=42",
     "wheel",
-    "cmake>=3.12",
+    "cmake>=3.13",
     "ninja; sys_platform != 'win32' and platform_machine != 'arm64'",
     # Documentation requirements
     "six",
@@ -17,7 +17,7 @@ build-backend = "setuptools.build_meta"
 [tool.cibuildwheel]
 build-verbosity = "1"
 
-test-command = "python -m PyOpenColorIOTests.OpenColorIOTestSuite"
+test-command = "python -m PyOpenColorIO.tests.OpenColorIOTestSuite"
 test-requires = ["numpy"]
 
 manylinux-x86_64-image = "manylinux2014"

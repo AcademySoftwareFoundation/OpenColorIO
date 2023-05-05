@@ -26,7 +26,9 @@ if(OCIO_USE_SSE)
 endif(OCIO_USE_SSE)
 
 set_target_properties(test_osl_exec PROPERTIES 
-    COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS}")
+    COMPILE_OPTIONS "${PLATFORM_COMPILE_OPTIONS}"
+    LINK_OPTIONS "${PLATFORM_LINK_OPTIONS}"
+)
 
 # Because some OpenImageIO types are present in the OSL public API that dependency is mandatory;
 # however, the unit test framework itself does not have any OpenImageIO dependency.
@@ -53,7 +55,7 @@ if(MSVC AND BUILD_SHARED_LIBS)
         set(BUILD_TYPE ${CMAKE_BUILD_TYPE})
     endif()
 
-    set(NEW_PATH "${CMAKE_BINARY_DIR}/src/OpenColorIO/${BUILD_TYPE}")
+    set(NEW_PATH "${PROJECT_BINARY_DIR}/src/OpenColorIO/${BUILD_TYPE}")
     set(NEW_PATH "${NEW_PATH}\\\;${GLUT_INCLUDE_DIR}/../bin")
     set(NEW_PATH "${NEW_PATH}\\\;${GLEW_INCLUDE_DIRS}/../bin")
 

@@ -1594,7 +1594,7 @@ void Config::validate() const
             {
                 std::ostringstream os;
                 os << "Inactive '" << name << "' is neither a color space nor a named transform.";
-                LogWarning(os.str());
+                LogInfo(os.str());
             }
         }
     }
@@ -2516,6 +2516,22 @@ const char * Config::getInactiveColorSpaces() const
     return getImpl()->m_inactiveColorSpaceNamesConf.c_str();
 }
 
+bool Config::isInactiveColorSpace(const char * colorspace) const noexcept
+{
+    StringUtils::StringVec svec;
+    pystring::split(getImpl()->m_inactiveColorSpaceNamesConf.c_str(), svec, ", ");
+
+    for (size_t i = 0; i < svec.size(); i++)
+    {
+        if (StringUtils::Compare(colorspace, svec.at(i)))
+        {
+            // Colorspace is inactive.
+            return true;
+        }
+    }
+    return false;
+}
+
 void Config::addColorSpace(const ConstColorSpaceRcPtr & original)
 {
     const std::string name(original->getName());
@@ -2974,6 +2990,12 @@ const char * Config::getRoleName(int index) const
 const char * Config::getRoleColorSpace(int index) const
 {
     return LookupRole(getImpl()->m_roles, getRoleName(index));
+}
+
+const char * Config::getRoleColorSpace(const char * roleName) const noexcept
+{
+    if (!roleName || !roleName[0]) return "";
+    return LookupRole(getImpl()->m_roles, roleName);
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -4737,101 +4759,9 @@ void Config::setProcessorCacheFlags(ProcessorCacheFlags flags) const noexcept
     getImpl()->setProcessorCacheFlags(flags);
 }
 
-//////////////////////////////////////////////////////////////////
-// ConfigIOProxy and Archiving
-
-void Config::setConfigIOProxy(ConfigIOProxyRcPtr ciop)
+void Config::clearProcessorCache() noexcept
 {
-    getImpl()->m_context->setConfigIOProxy(ciop);
-
-    AutoMutex lock(getImpl()->m_cacheidMutex);
-    getImpl()->resetCacheIDs();
-}
-
-ConfigIOProxyRcPtr Config::getConfigIOProxy() const
-{
-    return getImpl()->m_context->getConfigIOProxy();
-}
-
-bool Config::isArchivable() const
-{
-    ConstContextRcPtr context = getCurrentContext();
-
-    // Current archive implementation needs a working directory to look for LUT files and 
-    // working directory must be an absolute path.
-    const char * workingDirectory = getWorkingDir();
-    if ((workingDirectory && !workingDirectory[0]) || !pystring::os::path::isabs(workingDirectory))
-    {
-        return false;
-    }
-
-    // Utility lambda to check the following criteria.
-    auto validatePathForArchiving = [](const std::string & path) 
-    {
-        // Using the normalized path.
-        const std::string normPath = pystring::os::path::normpath(path);
-        if (    
-                // 1) Path may not be absolute.
-                pystring::os::path::isabs(normPath)  || 
-                // 2) Path may not start with double dot ".." (going above working directory).
-                pystring::startswith(normPath, "..") ||
-                // 3) A context variable may not be located at the start of the path.
-                (ContainsContextVariables(path) && 
-                (StringUtils::Find(path, "$") == 0 || 
-                 StringUtils::Find(path, "%") == 0)))
-        {
-            return false;
-        }
-
-        return true;
-    };
-
-    ///////////////////////////////
-    // Search path verification. //
-    ///////////////////////////////
-    // Check that search paths are not absolute nor have context variables outside of config 
-    // working directory.
-    int numSearchPaths = getNumSearchPaths();
-    for (int i = 0; i < numSearchPaths; i++)
-    {
-        std::string currentPath = getSearchPath(i);
-        if (!validatePathForArchiving(currentPath))
-        {
-            // Exit and return false.
-            return false;
-        }
-    }
-
-    /////////////////////////////////
-    // FileTransform verification. //
-    /////////////////////////////////
-    ConstTransformVec allTransforms;
-    getImpl()->getAllInternalTransforms(allTransforms);
-
-    std::set<std::string> files;
-    for(const auto & transform : allTransforms)
-    {
-        GetFileReferences(files, transform);
-    }
-
-    // Check that FileTransform sources are not absolute nor have context variables outside of 
-    // config working directory.
-    for (const auto & path : files)
-    {
-        if (!validatePathForArchiving(path))
-        {
-            // Exit and return false.
-            return false;
-        }
-    }
-
-    return true;
-}
-
-void Config::archive(std::ostream & ostream) const
-{
-    // Using utility functions in OCIOZArchive.cpp.
-    archiveConfig(ostream, *this, getCurrentContext()->getWorkingDir());
+    getImpl()->m_processorCache.clear();
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -5327,6 +5257,100 @@ void Config::Impl::checkVersionConsistency() const
     {
         throw Exception("Only version 2 (or higher) can have NamedTransforms.");
     }
+}
+
+void Config::setConfigIOProxy(ConfigIOProxyRcPtr ciop)
+{
+    getImpl()->m_context->setConfigIOProxy(ciop);
+
+    AutoMutex lock(getImpl()->m_cacheidMutex);
+    getImpl()->resetCacheIDs();
+}
+
+ConfigIOProxyRcPtr Config::getConfigIOProxy() const
+{
+    return getImpl()->m_context->getConfigIOProxy();
+}
+
+bool Config::isArchivable() const
+{
+    ConstContextRcPtr context = getCurrentContext();
+
+    // Current archive implementation needs a working directory to look for LUT files and 
+    // working directory must be an absolute path.
+    const char * workingDirectory = getWorkingDir();
+    if ((workingDirectory && !workingDirectory[0]) || !pystring::os::path::isabs(workingDirectory))
+    {
+        return false;
+    }
+
+    // Utility lambda to check the following criteria.
+    auto validatePathForArchiving = [](const std::string & path) 
+    {
+        // Using the normalized path.
+        const std::string normPath = pystring::os::path::normpath(path);
+        if (    
+                // 1) Path may not be absolute.
+                pystring::os::path::isabs(normPath)  || 
+                // 2) Path may not start with double dot ".." (going above working directory).
+                pystring::startswith(normPath, "..") ||
+                // 3) A context variable may not be located at the start of the path.
+                (ContainsContextVariables(path) && 
+                (StringUtils::Find(path, "$") == 0 || 
+                 StringUtils::Find(path, "%") == 0)))
+        {
+            return false;
+        }
+
+        return true;
+    };
+
+    ///////////////////////////////
+    // Search path verification. //
+    ///////////////////////////////
+    // Check that search paths are not absolute nor have context variables outside of config 
+    // working directory.
+    int numSearchPaths = getNumSearchPaths();
+    for (int i = 0; i < numSearchPaths; i++)
+    {
+        std::string currentPath = getSearchPath(i);
+        if (!validatePathForArchiving(currentPath))
+        {
+            // Exit and return false.
+            return false;
+        }
+    }
+
+    /////////////////////////////////
+    // FileTransform verification. //
+    /////////////////////////////////
+    ConstTransformVec allTransforms;
+    getImpl()->getAllInternalTransforms(allTransforms);
+
+    std::set<std::string> files;
+    for(const auto & transform : allTransforms)
+    {
+        GetFileReferences(files, transform);
+    }
+
+    // Check that FileTransform sources are not absolute nor have context variables outside of 
+    // config working directory.
+    for (const auto & path : files)
+    {
+        if (!validatePathForArchiving(path))
+        {
+            // Exit and return false.
+            return false;
+        }
+    }
+
+    return true;
+}
+
+void Config::archive(std::ostream & ostream) const
+{
+    // Using utility functions in OCIOZArchive.cpp.
+    archiveConfig(ostream, *this, getCurrentContext()->getWorkingDir());
 }
 
 } // namespace OCIO_NAMESPACE

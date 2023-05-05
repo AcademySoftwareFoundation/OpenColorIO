@@ -60,13 +60,12 @@ jobs:
       image: aswf/ci-ocio:${{ matrix.vfx-cy }}
     strategy:
       matrix:
-        build: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
+        build: [1, 2, 3, 4, 5, 6, 7, 8, 9]
         include:
           # -------------------------------------------------------------------
           # VFX CY2022 (Python 3.9)
           # -------------------------------------------------------------------
-          # C++17, Clang, Debug, OpenFX
-          - build: 13
+          - build: 9
             build-type: Debug
             build-shared: 'ON'
             build-docs: 'OFF'
@@ -76,36 +75,21 @@ jobs:
             cxx-standard: 17
             cxx-compiler: clang++
             cc-compiler: clang
-            compiler-desc: Clang 9
+            compiler-desc: Clang
             vfx-cy: 2022
-          # C++17, GCC, no SSE, OpenFX
-          - build: 12
+          - build: 8
             build-type: Release
             build-shared: 'ON'
-            build-docs: 'OFF'
+            build-docs: 'ON'
             build-openfx: 'ON'
             use-sse: 'OFF'
             use-oiio: 'OFF'
             cxx-standard: 17
             cxx-compiler: g++
             cc-compiler: gcc
-            compiler-desc: GCC 9.3.1
+            compiler-desc: GCC
             vfx-cy: 2022
-          # C++14, GCC, static, docs
-          - build: 11
-            build-type: Release
-            build-shared: 'OFF'
-            build-docs: 'ON'
-            build-openfx: 'OFF'
-            use-sse: 'ON'
-            use-oiio: 'OFF'
-            cxx-standard: 14
-            cxx-compiler: g++
-            cc-compiler: gcc
-            compiler-desc: GCC 9.3.1
-            vfx-cy: 2022
-          # C++11, GCC, static
-          - build: 10
+          - build: 7
             build-type: Release
             build-shared: 'OFF'
             build-docs: 'OFF'
@@ -115,13 +99,12 @@ jobs:
             cxx-standard: 11
             cxx-compiler: g++
             cc-compiler: gcc
-            compiler-desc: GCC 9.3.1
+            compiler-desc: GCC
             vfx-cy: 2022
           # -------------------------------------------------------------------
           # VFX CY2021 (Python 3.7)
           # -------------------------------------------------------------------
-          # C++17, Clang
-          - build: 9
+          - build: 6
             build-type: Release
             build-shared: 'ON'
             build-docs: 'OFF'
@@ -131,10 +114,9 @@ jobs:
             cxx-standard: 17
             cxx-compiler: clang++
             cc-compiler: clang
-            compiler-desc: Clang 9
+            compiler-desc: Clang
             vfx-cy: 2021
-          # C++14, Clang, static, no SSE, OpenFX
-          - build: 8
+          - build: 5
             build-type: Release
             build-shared: 'OFF'
             build-docs: 'OFF'
@@ -144,10 +126,9 @@ jobs:
             cxx-standard: 14
             cxx-compiler: clang++
             cc-compiler: clang
-            compiler-desc: Clang 9
+            compiler-desc: Clang
             vfx-cy: 2021
-          # C++11, GCC, Debug
-          - build: 7
+          - build: 4
             build-type: Debug
             build-shared: 'ON'
             build-docs: 'OFF'
@@ -157,105 +138,53 @@ jobs:
             cxx-standard: 11
             cxx-compiler: g++
             cc-compiler: gcc
-            compiler-desc: GCC 9.3.1
+            compiler-desc: GCC
             vfx-cy: 2021
           # -------------------------------------------------------------------
           # VFX CY2020 (Python 3.7)
           # -------------------------------------------------------------------
-          # C++14, Clang, OpenFX
-          - build: 6
-            build-type: Release
-            build-shared: 'ON'
-            build-docs: 'OFF'
-            build-openfx: 'ON'
-            use-sse: 'OFF'
-            use-oiio: 'OFF'
-            cxx-standard: 14
-            cxx-compiler: clang++
-            cc-compiler: clang
-            compiler-desc: Clang 7
-            vfx-cy: 2020
-          # C++14, GCC, static, Debug, OpenFX
-          - build: 5
-            build-type: Debug
-            build-shared: 'OFF'
-            build-docs: 'OFF'
-            build-openfx: 'ON'
-            use-sse: 'ON'
-            use-oiio: 'ON'
-            cxx-standard: 14
-            cxx-compiler: g++
-            cc-compiler: gcc
-            compiler-desc: GCC 6.3.1
-            vfx-cy: 2020
-          # C++11, GCC, no SSE
-          - build: 4
-            build-type: Release
-            build-shared: 'ON'
-            build-docs: 'OFF'
-            build-openfx: 'OFF'
-            use-sse: 'ON'
-            use-oiio: 'OFF'
-            cxx-standard: 11
-            cxx-compiler: g++
-            cc-compiler: gcc
-            compiler-desc: GCC 6.3.1
-            vfx-cy: 2020
-          # -------------------------------------------------------------------
-          # VFX CY2019 (Python 2.7)
-          # -------------------------------------------------------------------
-          # C++11, Clang, static
           - build: 3
             build-type: Release
-            build-shared: 'OFF'
-            # Doc build requires Python 3
-            build-docs: 'OFF'
-            build-openfx: 'OFF'
-            use-sse: 'ON'
-            use-oiio: 'ON'
-            cxx-standard: 11
-            cxx-compiler: clang++
-            cc-compiler: clang
-            compiler-desc: Clang 7
-            vfx-cy: 2019
-          # C++11, Clang, Debug, no SSE
-          - build: 2
-            build-type: Debug
             build-shared: 'ON'
-            # Doc build requires Python 3
             build-docs: 'OFF'
-            build-openfx: 'OFF'
+            build-openfx: 'ON'
             use-sse: 'OFF'
             use-oiio: 'OFF'
-            cxx-standard: 11
+            cxx-standard: 14
             cxx-compiler: clang++
             cc-compiler: clang
-            compiler-desc: Clang 7
-            vfx-cy: 2019
-          # C++11, GCC, OpenFX
+            compiler-desc: Clang
+            vfx-cy: 2020
+          - build: 2
+            build-type: Debug
+            build-shared: 'OFF'
+            build-docs: 'OFF'
+            build-openfx: 'ON'
+            use-sse: 'ON'
+            use-oiio: 'ON'
+            cxx-standard: 14
+            cxx-compiler: g++
+            cc-compiler: gcc
+            compiler-desc: GCC
+            vfx-cy: 2020
           - build: 1
             build-type: Release
             build-shared: 'ON'
-            # Doc build requires Python 3
             build-docs: 'OFF'
-            build-openfx: 'ON'
+            build-openfx: 'OFF'
             use-sse: 'ON'
             use-oiio: 'OFF'
             cxx-standard: 11
             cxx-compiler: g++
             cc-compiler: gcc
-            compiler-desc: GCC 6.3.1
-            vfx-cy: 2019
+            compiler-desc: GCC
+            vfx-cy: 2020
     env:
       CXX: ${{ matrix.cxx-compiler }}
       CC: ${{ matrix.cc-compiler }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
-      # minizip-ng requires CMake 3.13+ but VFX2019 image ships with 3.12
-      - name: Upgrade VFX2019 CMake
-        run: pip install cmake==3.13.3
-        if: matrix.vfx-cy == '2019'
+        uses: actions/checkout@v3
       - name: Install docs env
         run: share/ci/scripts/linux/yum/install_docs_env.sh
         if: matrix.build-docs == 'ON'
@@ -336,8 +265,8 @@ jobs:
   # ---------------------------------------------------------------------------
 
   macos:
-    name: 'macOS 10.15 
-      <AppleClang 11.0 
+    name: 'macOS 11
+      <AppleClang 
        config=${{ matrix.build-type }}, 
        shared=${{ matrix.build-shared }}, 
        sse=${{ matrix.use-sse }}, 
@@ -349,13 +278,12 @@ jobs:
     if: |
       github.event_name == 'push' ||
       github.event.pull_request.head.repo.full_name != github.repository
-    runs-on: macos-10.15
+    runs-on: macos-11
     strategy:
       matrix:
-        build: [1, 2, 3, 4, 5, 6]
+        build: [1, 2, 3, 4]
         include:
-          # C++17, OpenFX
-          - build: 6
+          - build: 4
             build-type: Release
             build-shared: 'ON'
             build-docs: 'OFF'
@@ -363,19 +291,17 @@ jobs:
             use-sse: 'ON'
             use-oiio: 'ON'
             cxx-standard: 17
-            python-version: 3.9
-          # C++11, Python 3.7
-          - build: 5
+            python-version: '3.11'
+          - build: 3
             build-type: Release
             build-shared: 'ON'
             build-docs: 'ON'
             build-openfx: 'OFF'
-            use-sse: 'ON'
+            use-sse: 'OFF'
             use-oiio: 'OFF'
             cxx-standard: 11
-            python-version: 3.7
-          # Debug, OpenFX
-          - build: 4
+            python-version: '3.10'
+          - build: 2
             build-type: Debug
             build-shared: 'ON'
             build-docs: 'OFF'
@@ -383,45 +309,23 @@ jobs:
             use-sse: 'ON'
             use-oiio: 'OFF'
             cxx-standard: 11
-            python-version: 3.7
-          # C++14, OpenEXR, OpenFX
-          - build: 3
+            python-version: '3.9'
+          - build: 1
             build-type: Release
-            build-shared: 'ON'
+            build-shared: 'OFF'
             build-docs: 'OFF'
             build-openfx: 'ON'
             use-sse: 'ON'
             use-oiio: 'OFF'
             cxx-standard: 14
-            python-version: 3.7
-          # Static, no SSE
-          - build: 2
-            build-type: Release
-            build-shared: 'OFF'
-            build-docs: 'OFF'
-            build-openfx: 'OFF'
-            use-sse: 'OFF'
-            use-oiio: 'OFF'
-            cxx-standard: 11
-            python-version: 3.7
-          # Python 2.7
-          - build: 1
-            build-type: Release
-            build-shared: 'ON'
-            # Doc build requires Python 3
-            build-docs: 'OFF'
-            build-openfx: 'OFF'
-            use-sse: 'ON'
-            use-oiio: 'ON'
-            cxx-standard: 11
-            python-version: 2.7
+            python-version: '3.7'
     steps:
       - name: Setup Python
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Install docs env
         run: share/ci/scripts/macos/install_docs_env.sh
         if: matrix.build-docs == 'ON'
@@ -505,7 +409,7 @@ jobs:
 
   windows:
     name: 'Windows 2019 
-      <MSVC 16.4 
+      <MSVC 
        config=${{ matrix.build-type }}, 
        shared=${{ matrix.build-shared }}, 
        sse=${{ matrix.use-sse }}, 
@@ -520,30 +424,27 @@ jobs:
     runs-on: windows-2019
     strategy:
       matrix:
-        build: [1, 2, 3, 4, 5, 6]
+        build: [1, 2, 3, 4]
         include:
-          # C++17, OpenFX
-          - build: 6
+          - build: 4
             build-type: Release
             build-shared: 'ON'
             build-docs: 'OFF'
             build-openfx: 'ON'
-            use-sse: 'ON'
+            use-sse: 'OFF'
             use-oiio: 'ON'
             cxx-standard: 17
-            python-version: 3.9
-          # C++11, Python 3.7
-          - build: 5
+            python-version: '3.11'
+          - build: 3
             build-type: Release
-            build-shared: 'ON'
+            build-shared: 'OFF'
             build-docs: 'OFF'
             build-openfx: 'OFF'
             use-sse: 'ON'
             use-oiio: 'OFF'
             cxx-standard: 11
-            python-version: 3.7
-          # Debug
-          - build: 4
+            python-version: '3.9'
+          - build: 2
             build-type: Debug
             build-shared: 'ON'
             build-docs: 'OFF'
@@ -551,9 +452,9 @@ jobs:
             use-sse: 'ON'
             use-oiio: 'OFF'
             cxx-standard: 11
-            python-version: 3.7
+            python-version: '3.8'
           # C++14, OpenEXR, OpenFX
-          - build: 3
+          - build: 1
             build-type: Release
             build-shared: 'ON'
             build-docs: 'OFF'
@@ -561,35 +462,14 @@ jobs:
             use-sse: 'ON'
             use-oiio: 'OFF'
             cxx-standard: 14
-            python-version: 3.7
-          # Static, no SSE, OpenFX
-          - build: 2
-            build-type: Release
-            build-shared: 'OFF'
-            build-docs: 'OFF'
-            build-openfx: 'ON'
-            use-sse: 'OFF'
-            use-oiio: 'OFF'
-            cxx-standard: 11
-            python-version: 3.7
-          # Python 2.7
-          - build: 1
-            build-type: Release
-            build-shared: 'ON'
-            # Doc build requires Python 3
-            build-docs: 'OFF'
-            build-openfx: 'OFF'
-            use-sse: 'ON'
-            use-oiio: 'ON'
-            cxx-standard: 11
-            python-version: 2.7
+            python-version: '3.7'
     steps:
       - name: Setup Python
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Install docs env
         run: share/ci/scripts/windows/install_docs_env.sh
         shell: bash

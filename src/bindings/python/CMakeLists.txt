@@ -14,10 +14,10 @@ if(OCIO_BUILD_DOCS)
 	###########################################################################
 	### Extract docstrings from C++ headers for Python bindings ###
 
-	set(PYOCIO_DOCSTRINGS_DIR "${CMAKE_BINARY_DIR}/docs/_doxygen")
+	set(PYOCIO_DOCSTRINGS_DIR "${PROJECT_BINARY_DIR}/docs/_doxygen")
 	set(PYOCIO_DOCSTRINGS_H "${PYOCIO_DOCSTRINGS_DIR}/docstrings.h")
     set(DOXYGEN_INDEX_XML "${PYOCIO_DOCSTRINGS_DIR}/xml/index.xml")
-	set(EXTRACT_DOCSTRINGS_PY "${CMAKE_SOURCE_DIR}/share/docs/extract_docstrings.py")
+	set(EXTRACT_DOCSTRINGS_PY "${PROJECT_SOURCE_DIR}/share/docs/extract_docstrings.py")
 
 	# Run docstring extraction if docstrings.h is behind doxygen XML
 	add_custom_command(OUTPUT ${PYOCIO_DOCSTRINGS_H}
@@ -39,7 +39,7 @@ if(OCIO_BUILD_DOCS)
 else()
 
 	# Use stand-in docstrings.h file when docs are not built
-	set(PYOCIO_DOCSTRINGS_DIR "${CMAKE_SOURCE_DIR}/share/docs")
+	set(PYOCIO_DOCSTRINGS_DIR "${PROJECT_SOURCE_DIR}/share/docs")
 
 	message(WARNING 
 		"Building PyOpenColorIO with OCIO_BUILD_DOCS disabled will result in "
@@ -131,27 +131,27 @@ if(WIN32)
 	)
 endif()
 
-# NOTE: Depending of the compiler version pybind11 2.4.3 does not compile with C++17 so revert to c++11
-
-set(APP_CXX_STANDARD ${CMAKE_CXX_STANDARD})
-if(${CMAKE_CXX_STANDARD} GREATER_EQUAL 17)
-	set(APP_CXX_STANDARD 11)
-endif()
-
-set(CUSTOM_COMPILE_FLAGS ${PLATFORM_COMPILE_FLAGS})
+set(CUSTOM_COMPILE_FLAGS ${PLATFORM_COMPILE_OPTIONS})
+set(CUSTOM_LINK_FLAGS ${PLATFORM_LINK_OPTIONS})
 
 # The Python binding contains deprecated methods for backward compatibility reason,
 # so disable the warning.
 if(USE_GCC OR USE_CLANG)
-    set(CUSTOM_COMPILE_FLAGS "${CUSTOM_COMPILE_FLAGS} -Wno-deprecated-declarations")
+    set(CUSTOM_COMPILE_FLAGS "${CUSTOM_COMPILE_FLAGS};-Wno-deprecated-declarations")
 elseif(USE_MSVC)
-    set(CUSTOM_COMPILE_FLAGS "${CUSTOM_COMPILE_FLAGS} /wd4996")
+    set(CUSTOM_COMPILE_FLAGS "${CUSTOM_COMPILE_FLAGS};/wd4996")
+endif()
+
+# OSX demands that the linker resolve all symbols at build time
+# we pass this flag to allow dynamic linking
+if(APPLE)
+    set(CUSTOM_LINK_FLAGS "${CUSTOM_LINK_FLAGS};-undefined;dynamic_lookup")
 endif()
 
 set_target_properties(PyOpenColorIO
 	PROPERTIES
-		COMPILE_FLAGS ${CUSTOM_COMPILE_FLAGS}
-		CXX_STANDARD  ${APP_CXX_STANDARD}
+		COMPILE_OPTIONS "${CUSTOM_COMPILE_FLAGS}"
+		LINK_OPTIONS "${CUSTOM_LINK_FLAGS}"
 )
 
 if(NOT BUILD_SHARED_LIBS)
@@ -175,19 +175,11 @@ if (UNIX AND NOT CMAKE_SKIP_RPATH)
     # dynamic library based on the default installation directory structure.
     if (APPLE)
         set_target_properties(PyOpenColorIO PROPERTIES
-            INSTALL_RPATH "@loader_path/../..;${CMAKE_INSTALL_RPATH}")
+            INSTALL_RPATH "@loader_path/../../..;${CMAKE_INSTALL_RPATH}")
     else()
         set_target_properties(PyOpenColorIO PROPERTIES
-            INSTALL_RPATH "$ORIGIN/../..;${CMAKE_INSTALL_RPATH}")
+            INSTALL_RPATH "$ORIGIN/../../..;${CMAKE_INSTALL_RPATH}")
     endif()
-endif()
-
-# OSX demands that the linker resolve all symbols at build time
-# we pass this flag to allow dynamic linking
-if(APPLE)
-	set_target_properties(PyOpenColorIO PROPERTIES
-		LINK_FLAGS "-undefined dynamic_lookup"
-	)
 endif()
 
 target_include_directories(PyOpenColorIO
@@ -227,16 +219,40 @@ target_compile_definitions(PyOpenColorIO
 		PY_VERSION_PATCH=${Python_VERSION_PATCH}
 )
 
+###############################################################################
+# Build layout
+# Mirrors the installation, using PyOpenColorIO folder and __init__.py file.
+# When building the Python wheel, do not override the target directory.
+set(_PyOpenColorIO_BUILD_PACKAGE_DIR  "${CMAKE_CURRENT_BINARY_DIR}/PyOpenColorIO")
+if(NOT CMAKE_LIBRARY_OUTPUT_DIRECTORY)
+	set_target_properties(PyOpenColorIO PROPERTIES
+		LIBRARY_OUTPUT_DIRECTORY "${_PyOpenColorIO_BUILD_PACKAGE_DIR}"
+		# For Windows compatibility
+		LIBRARY_OUTPUT_DIRECTORY_DEBUG "${_PyOpenColorIO_BUILD_PACKAGE_DIR}"
+		LIBRARY_OUTPUT_DIRECTORY_RELEASE "${_PyOpenColorIO_BUILD_PACKAGE_DIR}"
+	)
+endif()
+
+file(COPY package/__init__.py DESTINATION "${_PyOpenColorIO_BUILD_PACKAGE_DIR}")
+
+###############################################################################
+# Install layout
+# Set to site-package location.
 if(WIN32)
     set(_Python_VARIANT_PATH "${CMAKE_INSTALL_LIBDIR}/site-packages")
 else()
     set(_Python_VARIANT_PATH "${CMAKE_INSTALL_LIBDIR}/python${Python_VERSION_MAJOR}.${Python_VERSION_MINOR}/site-packages")
 endif()
 
-# Create an internal global variable to access it in another scope but not publicly visible
-# using ccmake.
+# Create an internal global variable to access it in another scope but not publicly visible.
+# The site-package location is needed in setup_ocio.bat.in and setup_ocio.sh.in.
 set(PYTHON_VARIANT_PATH ${_Python_VARIANT_PATH} CACHE INTERNAL "")
 
+# Set to PyOpenColorIO site-package location.
+set(_PyOpenColorIO_SITE_PACKAGE_DIR "${PYTHON_VARIANT_PATH}/PyOpenColorIO")
+
 install(TARGETS PyOpenColorIO
-    LIBRARY DESTINATION ${_Python_VARIANT_PATH}
+    LIBRARY DESTINATION ${_PyOpenColorIO_SITE_PACKAGE_DIR}
 )
+
+install(FILES package/__init__.py DESTINATION ${_PyOpenColorIO_SITE_PACKAGE_DIR})
