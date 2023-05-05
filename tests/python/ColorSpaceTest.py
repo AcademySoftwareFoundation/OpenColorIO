@@ -7,7 +7,11 @@ import os
 import sys
 
 import PyOpenColorIO as OCIO
-from UnitTestUtils import SIMPLE_CONFIG, TEST_NAMES, TEST_DESCS, TEST_CATEGORIES
+from UnitTestUtils import (SIMPLE_CONFIG, 
+                           TEST_NAMES, 
+                           TEST_DESCS, 
+                           TEST_CATEGORIES, 
+                           TEST_DATAFILES_DIR)
 
 
 class ColorSpaceTest(unittest.TestCase):
@@ -627,7 +631,37 @@ roles:
   default: raw
   scene_linear: ref_cs
 
+display_colorspaces:
+  - !<ColorSpace>
+    name: CIE-XYZ-D65
+    description: The CIE XYZ (D65) display connection colorspace.
+    isdata: false
+
+  - !<ColorSpace>
+    name: sRGB - Display CS
+    description: Convert CIE XYZ (D65 white) to sRGB (piecewise EOTF)
+    isdata: false
+    from_display_reference: !<BuiltinTransform> {style: DISPLAY - CIE-XYZ-D65_to_sRGB}
+
 colorspaces:
+  # Put a couple of test color space first in the config since the heuristics stop upon success.
+
+  - !<ColorSpace>
+    name: File color space
+    description: Verify that that FileTransforms load correctly when running the heuristics.
+    isdata: false
+    from_scene_reference: !<GroupTransform>
+      children:
+        - !<FileTransform> {src: lut1d_green.ctf}
+
+  - !<ColorSpace>
+    name: CS Transform color space
+    description: Verify that that ColorSpaceTransforms load correctly when running the heuristics.
+    isdata: false
+    from_scene_reference: !<GroupTransform>
+      children:
+        - !<ColorSpaceTransform> {src: ref_cs, dst: not sRGB}
+
   - !<ColorSpace>
     name: raw
     description: A data colorspace (should not be used).
@@ -635,7 +669,7 @@ colorspaces:
 
   - !<ColorSpace>
     name: ref_cs
-    description: The reference colorspace.
+    description: The reference colorspace, ACES2065-1.
     isdata: false
 
   - !<ColorSpace>
@@ -660,16 +694,6 @@ colorspaces:
         - !<MatrixTransform> {matrix: [2.52168618674388, -1.13413098823972, -0.387555198504164, 0, -0.276479914229922, 1.37271908766826, -0.096239173438334, 0, -0.0153780649660342, -0.152975335867399, 1.16835340083343, 0, 0, 0, 0, 1]}
 
   - !<ColorSpace>
-    name: Texture -- sRGB
-    description: An sRGB Texture space, spelled differently than in the built-in config.
-    isdata: false
-    from_scene_reference: !<GroupTransform>
-      name: AP0 to sRGB Rec.709
-      children:
-        - !<MatrixTransform> {matrix: [2.52168618674388, -1.13413098823972, -0.387555198504164, 0, -0.276479914229922, 1.37271908766826, -0.096239173438334, 0, -0.0153780649660342, -0.152975335867399, 1.16835340083343, 0, 0, 0, 0, 1]}
-        - !<ExponentWithLinearTransform> {gamma: 2.4, offset: 0.055, direction: inverse}
-
-  - !<ColorSpace>
     name: sRGB Encoded AP1 - Texture
     description: Another space with "sRGB" in the name that is not actually an sRGB texture space.
     isdata: false
@@ -677,6 +701,16 @@ colorspaces:
       name: AP0 to sRGB Encoded AP1 - Texture
       children:
         - !<MatrixTransform> {matrix: [1.45143931614567, -0.23651074689374, -0.214928569251925, 0, -0.0765537733960206, 1.17622969983357, -0.0996759264375522, 0, 0.00831614842569772, -0.00603244979102102, 0.997716301365323, 0, 0, 0, 0, 1]}
+        - !<ExponentWithLinearTransform> {gamma: 2.4, offset: 0.055, direction: inverse}
+
+  - !<ColorSpace>
+    name: Texture -- sRGB
+    description: An sRGB Texture space, spelled differently than in the built-in config.
+    isdata: false
+    from_scene_reference: !<GroupTransform>
+      name: AP0 to sRGB Rec.709
+      children:
+        - !<MatrixTransform> {matrix: [2.52168618674388, -1.13413098823972, -0.387555198504164, 0, -0.276479914229922, 1.37271908766826, -0.096239173438334, 0, -0.0153780649660342, -0.152975335867399, 1.16835340083343, 0, 0, 0, 0, 1]}
         - !<ExponentWithLinearTransform> {gamma: 2.4, offset: 0.055, direction: inverse}
 
 """
@@ -714,6 +748,8 @@ colorspaces:
             cfg = OCIO.Config.CreateFromStream(CONFIG)
 
         cfg = OCIO.Config.CreateFromStream(CONFIG)
+
+        cfg.setSearchPath(TEST_DATAFILES_DIR)
 
         # Make all color spaces suitable for the heuristics inactive.
         # The heuristics don't look at inactive color spaces.
@@ -755,3 +791,111 @@ colorspaces:
         cfg.setInactiveColorSpaces("Linear ITU-R BT.709, Texture -- sRGB")
         p = OCIO.Config.GetProcessorFromBuiltinColorSpace(builtin_csname, cfg, src_csname)
         check_processor_inv(self, p)
+
+
+        editableCfg = copy.deepcopy(cfg)
+        builtinConfig = OCIO.Config.CreateFromFile("ocio://default")
+
+        #
+        # Test IdentifyBuiltinColorSpace.
+        #
+
+        editableCfg.setInactiveColorSpaces("")
+
+        csname = cfg.IdentifyBuiltinColorSpace(editableCfg, builtinConfig, "ACEScg")
+        self.assertEqual(csname, "ACES cg")
+
+        csname = cfg.IdentifyBuiltinColorSpace(editableCfg, builtinConfig, "sRGB - Texture")
+        self.assertEqual(csname, "Texture -- sRGB")
+
+        csname = cfg.IdentifyBuiltinColorSpace(editableCfg, builtinConfig, "ACES2065-1")
+        self.assertEqual(csname, "ref_cs")
+
+        editableCfg.setInactiveColorSpaces("Texture -- sRGB, ref_cs")
+
+        csname = cfg.IdentifyBuiltinColorSpace(editableCfg, builtinConfig, "Linear Rec.709 (sRGB)")
+        self.assertEqual(csname, "Linear ITU-R BT.709")
+
+        csname = cfg.IdentifyBuiltinColorSpace(editableCfg, builtinConfig, "ACEScct")
+        self.assertEqual(csname, "CS Transform color space")
+
+        csname = cfg.IdentifyBuiltinColorSpace(editableCfg, builtinConfig, "lin_ap1")
+        self.assertEqual(csname, "ACES cg")
+
+        # Display-referred spaces are not supported unless the display-referred interchange
+        # role is present.
+
+        with self.assertRaises(OCIO.Exception) as cm:
+            cfg.IdentifyBuiltinColorSpace(editableCfg, builtinConfig, "sRGB - Display")
+        self.assertEqual(
+          str(cm.exception), 
+          "The heuristics currently only support scene-referred color spaces. Please set the interchange roles."
+        )
+
+        # The next three cases directly use the interchange roles rather than heuristics.
+
+        # With the required role, it then works.
+        editableCfg.setRole("cie_xyz_d65_interchange", "CIE-XYZ-D65")
+        csname = cfg.IdentifyBuiltinColorSpace(editableCfg, builtinConfig, "sRGB - Display")
+        self.assertEqual(csname, "sRGB - Display CS")
+
+        # Must continue to work if the color space for the interchange role is inactive.
+        editableCfg.setInactiveColorSpaces("CIE-XYZ-D65")
+        csname = cfg.IdentifyBuiltinColorSpace(editableCfg, builtinConfig, "sRGB - Display")
+        self.assertEqual(csname, "sRGB - Display CS")
+
+        # Test the scene-referred interchange role (and even make it inactive).
+        editableCfg.setRole("aces_interchange", "ref_cs")
+        editableCfg.setInactiveColorSpaces("ref_cs")
+        csname = cfg.IdentifyBuiltinColorSpace(editableCfg, builtinConfig, "ACEScg")
+        self.assertEqual(csname, "ACES cg")
+
+
+        #
+        # Test IdentifyInterchangeSpace.
+        #
+
+        # Uses "ACEScg" to find the reference.
+        spaces = cfg.IdentifyInterchangeSpace(editableCfg, "Linear ITU-R BT.709", 
+                                              builtinConfig, "lin_rec709_srgb")   # Aliases work.
+        self.assertEqual(spaces[0], "ref_cs")
+        self.assertEqual(spaces[1], "ACES2065-1")
+
+        # Set the interchange role.  In order to prove that it is being used rather than
+        # the heuristics, set it to something wrong and check that it gets returned anyway.
+        editableCfg.setRole("aces_interchange", "Texture -- sRGB")
+
+        spaces = cfg.IdentifyInterchangeSpace(editableCfg, "Linear ITU-R BT.709", 
+                                              builtinConfig, "lin_rec709_srgb")
+        self.assertEqual(spaces[0], "Texture -- sRGB")
+        self.assertEqual(spaces[1], "ACES2065-1")
+
+        # Unset the interchange role, so the heuristics will be used for the other tests.
+        editableCfg.setRole("aces_interchange", "")
+
+        # Check what happens if a totally bogus config is passed for the built-in config.
+        # (It fails in the first heuristic that tries to use one of the known built-in spaces.)
+        rawCfg = OCIO.Config.CreateRaw()
+
+        with self.assertRaises(OCIO.Exception) as cm:
+          spaces = cfg.IdentifyInterchangeSpace(editableCfg, "Raw", rawCfg, "raw")
+        self.assertEqual(
+          str(cm.exception), 
+          "Could not find destination color space 'sRGB - Texture'."
+        )
+
+        # Check what happens if the source color space doesn't exist.
+        with self.assertRaises(OCIO.Exception) as cm:
+          spaces = cfg.IdentifyInterchangeSpace(editableCfg, "Foo", rawCfg, "raw")
+        self.assertEqual(
+          str(cm.exception), 
+          "Could not find source color space 'Foo'."
+        )
+
+        # Check what happens if the destination color space doesn't exist.
+        with self.assertRaises(OCIO.Exception) as cm:
+          spaces = cfg.IdentifyInterchangeSpace(editableCfg, "Foo", rawCfg, "")
+        self.assertEqual(
+          str(cm.exception), 
+          "Could not find destination color space ''."
+        )
