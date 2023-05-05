@@ -2801,7 +2801,6 @@ bool Config::isColorSpaceLinear(const char * colorSpace, ReferenceSpaceType refe
         auto optCPUProc = procToReference->getOptimizedCPUProcessor(OPTIMIZATION_NONE);
         optCPUProc->apply(desc, descDst);
 
-
         float absError      = 1e-5f;
         float multiplier    = 64.f;
         bool ret            = true;
