@@ -4754,7 +4754,7 @@ ProcessorCacheFlags Config::getProcessorCacheFlags() const noexcept
     return getImpl()->getProcessorCacheFlags();
 }
 
-void Config::setProcessorCacheFlags(ProcessorCacheFlags flags) noexcept
+void Config::setProcessorCacheFlags(ProcessorCacheFlags flags) const noexcept
 {
     getImpl()->setProcessorCacheFlags(flags);
 }

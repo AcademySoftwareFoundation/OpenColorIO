@@ -1398,10 +1398,13 @@ public:
                                                        const char * dstColorSpaceName,
                                                        const char * dstInterchangeName);
 
+    /// Get the Processor Cache flags.
+    ProcessorCacheFlags getProcessorCacheFlags() const noexcept;
+
     /// Control the caching of processors in the config instance.  By default, caching is on.  
     /// The flags allow turning caching off entirely or only turning it off if dynamic
     /// properties are being used by the processor.
-    void setProcessorCacheFlags(ProcessorCacheFlags flags) noexcept;
+    void setProcessorCacheFlags(ProcessorCacheFlags flags) const noexcept;
 
     /**
      * \brief Clears this config's cache of Processor, CPUProcessor, and GPUProcessor instances. 
