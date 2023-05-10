@@ -24,7 +24,6 @@
 #include "mz_strm_mem.h"
 #include "mz_strm_os.h"
 #include "mz_strm_split.h"
-#include "mz_strm_zlib.h"
 #include "mz_zip.h"
 #include "mz_zip_rw.h"
 
