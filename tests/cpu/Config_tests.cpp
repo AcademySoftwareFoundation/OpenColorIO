@@ -5670,8 +5670,12 @@ OCIO_ADD_TEST(Config, inactive_colorspaces)
         config = OCIO::Config::CreateFromBuiltinConfig(cgConfigName.c_str())
     );
     OCIO_REQUIRE_ASSERT(config);
-
+    
+    OCIO::LogGuard logGuard;
     OCIO_CHECK_NO_THROW(config->validate());
+    // Mute expected logs about inactive colorspaces.
+    OCIO::muteInactiveColorspaceInfo(logGuard);
+    logGuard.print();
 
     {
         // Test various combinations of input.

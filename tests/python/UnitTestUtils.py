@@ -180,6 +180,11 @@ colorspaces:
   - !<ColorSpace>
     name: c3
     categories: [sample]
+
+  - !<ColorSpace>
+    name: c4
+    encoding: log
+    categories: [sample]
 """
 
 SAMPLE_CONFIG = """ocio_profile_version: 2

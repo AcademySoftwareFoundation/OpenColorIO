@@ -1212,7 +1212,9 @@ colorspaces:
 
     def test_inactive_colorspaces(self):
       config = OCIO.Config.CreateFromBuiltinConfig("cg-config-v1.0.0_aces-v1.3_ocio-v2.1")
-      config.validate()
+      log = MuteLogging()
+      with log:
+        config.validate()
 
       # Test various combinations of input.
 
@@ -1229,7 +1231,9 @@ colorspaces:
 
     def test_roles(self):
       config = OCIO.Config.CreateFromBuiltinConfig("cg-config-v1.0.0_aces-v1.3_ocio-v2.1")
-      config.validate()
+      log = MuteLogging()
+      with log:
+        config.validate()
 
       # *****************************
       # Test getRoleNames interface. 
