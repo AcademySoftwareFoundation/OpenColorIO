@@ -24,14 +24,8 @@ if len(sys.argv) > 1:
         # Note: Only when compiling within Microsoft Visual Studio editor i.e. not on command line.
         if len(sys.argv) == 3:
             opencolorio_dir = os.path.join(opencolorio_dir, sys.argv[2])
-            pyopencolorio_dir = os.path.join(pyopencolorio_dir, sys.argv[2])
-
-        # Python 3.8+ does no longer look for DLLs in PATH environment variable
-        if hasattr(os, 'add_dll_directory'):
-            os.add_dll_directory(opencolorio_dir)
-        else:
-            os.environ['PATH'] = '{0};{1}'.format(
-                opencolorio_dir, os.getenv('PATH', ''))
+        # PyOpenColorIO __init__.py file handle os.add_dll_directory()
+        os.environ['PATH'] = '{0};{1}'.format(opencolorio_dir, os.getenv('PATH', ''))
     elif sys.platform == 'darwin':
         # On OSX we must add the main library location to DYLD_LIBRARY_PATH
         os.environ['DYLD_LIBRARY_PATH'] = '{0}:{1}'.format(
@@ -41,7 +35,7 @@ if len(sys.argv) > 1:
 # Else it probably means direct invocation from installed package
 else:
     here = os.path.dirname(__file__)
-    os.environ["TEST_DATAFILES_DIR"] = os.path.join(here, 'data', 'files')
+    os.environ["TEST_DATAFILES_DIR"] = os.path.join(os.path.dirname(here), 'data', 'files')
     sys.path.insert(0, here)
 
 import PyOpenColorIO as OCIO
@@ -86,6 +80,7 @@ import MixingHelpersTest
 import NamedTransformTest
 import OCIOZArchiveTest
 import OpenColorIOTest
+import ProcessorCacheTest
 import ProcessorTest
 import RangeTransformTest
 import TransformsTest
@@ -143,6 +138,7 @@ def suite():
     suite.addTest(loader.loadTestsFromModule(NamedTransformTest))
     suite.addTest(loader.loadTestsFromModule(OCIOZArchiveTest))
     suite.addTest(loader.loadTestsFromModule(OpenColorIOTest))
+    suite.addTest(loader.loadTestsFromModule(ProcessorCacheTest))
     suite.addTest(loader.loadTestsFromModule(ProcessorTest))
     suite.addTest(loader.loadTestsFromModule(RangeTransformTest))
     suite.addTest(loader.loadTestsFromModule(TransformsTest))

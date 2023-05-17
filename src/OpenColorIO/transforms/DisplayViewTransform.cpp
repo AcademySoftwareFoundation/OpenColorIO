@@ -302,6 +302,9 @@ void BuildDisplayOps(OpRcPtrVec & ops,
     // a view_transform plus display_colorspace.  It is permitted to substitute a named_transform
     // for either the colorspace or the view_transform.
 
+    // Most of the error checking below is also done in Config::validate(), but it's useful to
+    // do here since there is no guarantee that validate will be called.
+
     // Validate src color space.
     const std::string srcColorSpaceName = displayViewTransform.getSrc();
     ConstColorSpaceRcPtr srcColorSpace = config.getColorSpace(srcColorSpaceName.c_str());
@@ -353,39 +356,59 @@ void BuildDisplayOps(OpRcPtrVec & ops,
     }
 
     // Get the color space associated to the (display, view) pair.
+    // (Returns an empty string if the view does not exist.  This is trapped below.)
     const char * csName = config.getDisplayViewColorSpaceName(display.c_str(), view.c_str());
 
-    // A shared view containing a view transform may set the color space to USE_DISPLAY_NAME,
+    // A shared view containing a view transform may set the color space to <USE_DISPLAY_NAME>,
     // in which case we look for a display color space with the same name as the display.
     const std::string displayColorSpaceName = View::UseDisplayName(csName) ? display : csName;
+
+    // At this point, displayColorSpaceName is typically one of the following strings:
+    //   1. The "colorspace" attribute of the View, if there is no "view_transform".
+    //   2. The name of the View's display, if it's a shared_view and the "display_colorspace"
+    //      is "<USE_DISPLAY_NAME>".  It is expected this will also be the name of a display
+    //      color space in the config.
+    //   3. Else, the "display_colorspace" string if it's a View with a "view_transform".
+    //
+    //   (Though, in the implementation, both the "colorspace" and "display_colorspace" of 
+    //    a View are stored in the same variable and there is currently no validation to ensure
+    //    for example that "display_colorspace" is not used if there is no view transform.
+    //    So it's really the presence or absence of the "view_transform" that determines how
+    //    the View's color space variable is interpreted.)
+
     ConstColorSpaceRcPtr displayColorSpace = config.getColorSpace(displayColorSpaceName.c_str());
-    ConstNamedTransformRcPtr displayNamedTransform;
+    ConstNamedTransformRcPtr csNamedTransform;
     if (!displayColorSpace)
     {
         if (displayColorSpaceName.empty())
         {
             std::ostringstream os;
-            os << "DisplayViewTransform error.";
-            os << " Display color space name is unspecified.";
+            os << "DisplayViewTransform error." << " The display '";
+            os << display << "' does not have view '" << view << "'.";
             throw Exception(os.str().c_str());
         }
 
-        // If there is a view transform, the display color space can't be a named transform.
+        // Note: If there is a view transform, the display color space isn't allowed to be a 
+        // named transform, hence the error message only says "color space".
         if (viewTransform || viewNamedTransform)
         {
-            // Config::validate catch this.
             std::ostringstream os;
             os << "DisplayViewTransform error." << " The view '";
-            os << viewTransformName << "' refers to a display color space '";
+            os << view << "' refers to a display color space '";
             os << displayColorSpaceName << "' that can't be found.";
             throw Exception(os.str().c_str());
         }
-        displayNamedTransform = config.getNamedTransform(displayColorSpaceName.c_str());
-        if (!displayNamedTransform)
+
+        // At this point, there is no view transform, so displayColorSpaceName is typically
+        // from the "colorspace" attribute of the View, not the "display_colorspace". The 
+        // former may be a named transform but the latter may not (since a view transform
+        // is present.)
+        csNamedTransform = config.getNamedTransform(displayColorSpaceName.c_str());
+        if (!csNamedTransform)
         {
             std::ostringstream os;
             os << "DisplayViewTransform error.";
-            os << " Cannot find color space or named transform, named '";
+            os << " Cannot find color space or named transform with name '";
             os << displayColorSpaceName << "'.";
             throw Exception(os.str().c_str());
         }
@@ -426,11 +449,11 @@ void BuildDisplayOps(OpRcPtrVec & ops,
             BuildLookOps(ops, currentCS, false, config, context, looks);
         }
 
-        if (displayNamedTransform)
+        if (csNamedTransform)
         {
             // Ignore currentCS.  The forward direction NamedTransform is used for the forward
             // direction DisplayViewTransform.
-            auto transform = NamedTransform::GetTransform(displayNamedTransform,
+            auto transform = NamedTransform::GetTransform(csNamedTransform,
                                                           TRANSFORM_DIR_FORWARD);
             BuildOps(ops, config, context, transform, TRANSFORM_DIR_FORWARD);
         }
@@ -446,7 +469,9 @@ void BuildDisplayOps(OpRcPtrVec & ops,
         }
         else
         {
-            // Apply the conversion from the current color space to the display color space.
+            // This is the simple case where the View only had the "colorspace" attribute,
+            // which is referred to here as displayColorSpace.  Apply the conversion to there
+            // from the current color space (which may vary if a look was applied).
             BuildColorSpaceOps(ops, config, context, currentCS, displayColorSpace, dataBypass);
         }
         break;
@@ -465,10 +490,10 @@ void BuildDisplayOps(OpRcPtrVec & ops,
             vtSourceCS = config.getColorSpace(csRes);
         }
 
-        if (displayNamedTransform)
+        if (csNamedTransform)
         {
             // Ignore currentCS.
-            auto transform = NamedTransform::GetTransform(displayNamedTransform,
+            auto transform = NamedTransform::GetTransform(csNamedTransform,
                                                           TRANSFORM_DIR_INVERSE);
             BuildOps(ops, config, context, transform, TRANSFORM_DIR_FORWARD);
         }

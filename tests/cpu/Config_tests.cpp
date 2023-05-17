@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: BSD-3-Clause
+// SPDX-License-Identifer: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
 
@@ -312,6 +312,16 @@ OCIO_ADD_TEST(Config, roles)
 
     OCIO_CHECK_EQUAL(std::string(config->getRoleName(-4)), "");
     OCIO_CHECK_EQUAL(std::string(config->getRoleColorSpace(-4)), "");
+
+    // Test existing roles.
+    OCIO_CHECK_EQUAL(std::string(config->getRoleColorSpace("scene_linear")), std::string("lnh"));
+    OCIO_CHECK_EQUAL(std::string(config->getRoleColorSpace("compositing_log")), std::string("lgh"));
+
+    // Test a unknown role.
+    OCIO_CHECK_EQUAL(std::string(config->getRoleColorSpace("wrong_role")), std::string(""));
+
+    // Test an empty input.
+    OCIO_CHECK_EQUAL(std::string(config->getRoleColorSpace("")), std::string(""));
 }
 
 OCIO_ADD_TEST(Config, required_roles_for_version_2_2)
@@ -357,51 +367,19 @@ OCIO_ADD_TEST(Config, required_roles_for_version_2_2)
     }
     
     {
-        // Test that all errors appears when all required roles are missing.
+        // Test that all errors appear when all required roles are missing.
 
         OCIO::LogGuard logGuard;
         OCIO_CHECK_NO_THROW(config->validate());
-
-        StringUtils::StringVec svec = StringUtils::SplitByLines(logGuard.output());
-        OCIO_CHECK_ASSERT(
-            StringUtils::Contain(
-                svec, 
-                "[OpenColorIO Error]: The scene_linear role is required for a config version 2.2 "\
-                "or higher."
-            )
-        );
-
-        OCIO_CHECK_ASSERT(
-            StringUtils::Contain(
-                svec, 
-                "[OpenColorIO Error]: The compositing_log role is required for a config version "\
-                "2.2 or higher."
-            )
-        );
-
-        OCIO_CHECK_ASSERT(
-            StringUtils::Contain(
-                svec, 
-                "[OpenColorIO Error]: The color_timing role is required for a config version 2.2 "\
-                "or higher."
-            )
-        );
-
-        OCIO_CHECK_ASSERT(
-            StringUtils::Contain(
-                svec, 
-                "[OpenColorIO Error]: The aces_interchange role is required when there are "\
-                "scene-referred color spaces and the config version is 2.2 or higher."
-            )
-        );
-
-        OCIO_CHECK_ASSERT(
-            StringUtils::Contain(
-                svec, 
-                "[OpenColorIO Error]: The cie_xyz_d65_interchange role is required when there are"\
-                " display-referred color spaces and the config version is 2.2 or higher."
-            )
-        );
+        // Check that the log contains the expected error messages for the missing roles and mute 
+        // them so that (only) those messages don't appear in the test output.
+        OCIO_CHECK_ASSERT(OCIO::checkAndMuteSceneLinearRoleError(logGuard));
+        OCIO_CHECK_ASSERT(OCIO::checkAndMuteCompositingLogRoleError(logGuard));
+        OCIO_CHECK_ASSERT(OCIO::checkAndMuteColorTimingRoleError(logGuard));
+        OCIO_CHECK_ASSERT(OCIO::checkAndMuteAcesInterchangeRoleError(logGuard));
+        OCIO_CHECK_ASSERT(OCIO::checkAndMuteDisplayInterchangeRoleError(logGuard));
+        // If there are any unexpected log messages, print them to the shell.
+        logGuard.print();
     }
     
     // Set colorspace for all required roles.
@@ -416,11 +394,7 @@ OCIO_ADD_TEST(Config, required_roles_for_version_2_2)
 
         OCIO::LogGuard logGuard;
         OCIO_CHECK_NO_THROW(config->validate());
-
-        StringUtils::StringVec svec = StringUtils::SplitByLines(logGuard.output());
-        OCIO_CHECK_ASSERT(
-            !StringUtils::Contain(svec, "[OpenColorIO Error]")
-        );
+        OCIO_CHECK_ASSERT(logGuard.empty());
     }
     
     {
@@ -454,12 +428,7 @@ OCIO_ADD_TEST(Config, required_roles_for_version_2_2)
         OCIO_CHECK_NO_THROW(config->validate());
 
         StringUtils::StringVec svec = StringUtils::SplitByLines(logGuard.output());
-        OCIO_CHECK_ASSERT(
-            StringUtils::Contain(
-            svec, 
-            "[OpenColorIO Error]: The compositing_log role is required for a config version 2.2 "\
-            "or higher.")
-        );
+        checkAndMuteCompositingLogRoleError(logGuard);
 
         // Set compositing_log for next test.
         config->setRole(OCIO::ROLE_COMPOSITING_LOG, dcs->getName());
@@ -475,12 +444,7 @@ OCIO_ADD_TEST(Config, required_roles_for_version_2_2)
         OCIO_CHECK_NO_THROW(config->validate());
 
         StringUtils::StringVec svec = StringUtils::SplitByLines(logGuard.output());
-        OCIO_CHECK_ASSERT(
-            StringUtils::Contain(
-            svec, 
-            "[OpenColorIO Error]: The color_timing role is required for a config version 2.2 or "\
-            "higher.")
-        );
+        checkAndMuteColorTimingRoleError(logGuard);
 
         // Set color_timing for next test.
         config->setRole(OCIO::ROLE_COLOR_TIMING, dcs->getName());
@@ -494,13 +458,7 @@ OCIO_ADD_TEST(Config, required_roles_for_version_2_2)
 
         OCIO::LogGuard logGuard;
         OCIO_CHECK_NO_THROW(config->validate());
-        OCIO_CHECK_ASSERT(
-            StringUtils::StartsWith(
-                logGuard.output(), 
-                "[OpenColorIO Error]: The aces_interchange role is required when there are "\
-                "scene-referred color spaces and the config version is 2.2 or higher."
-            )
-        );
+        OCIO::checkAndMuteAcesInterchangeRoleError(logGuard);
 
         // Set aces_interchange for next test.
         config->setRole(OCIO::ROLE_INTERCHANGE_SCENE, scs->getName());
@@ -514,21 +472,14 @@ OCIO_ADD_TEST(Config, required_roles_for_version_2_2)
 
         OCIO::LogGuard logGuard;
         OCIO_CHECK_NO_THROW(config->validate());
-
-        StringUtils::StringVec svec = StringUtils::SplitByLines(logGuard.output());
-        OCIO_CHECK_ASSERT(
-            StringUtils::Contain(
-            svec, 
-            "[OpenColorIO Error]: The cie_xyz_d65_interchange role is required when there are "\
-            "display-referred color spaces and the config version is 2.2 or higher.")
-        );
+        OCIO::checkAndMuteDisplayInterchangeRoleError(logGuard);
 
         // Set cie_xyz_d65_interchange for next test.
         config->setRole(OCIO::ROLE_INTERCHANGE_DISPLAY, dcs->getName());
     }
 
     {
-        // Test that aces_interchange role has the wrong colorspace type.
+        // Test detection of the aces_interchange role having the wrong colorspace type.
 
         // Set a display-referred colorspace to both interchange roles.
         config->setRole(OCIO::ROLE_INTERCHANGE_SCENE, dcs->getName());
@@ -544,7 +495,7 @@ OCIO_ADD_TEST(Config, required_roles_for_version_2_2)
     }
 
     {
-        // Test that cie_xyz_d65_interchange role has the wrong colorspace type.
+        // Test detection of the cie_xyz_d65_interchange role having the wrong colorspace type.
 
         // Set a scene-referred colorspace to both interchange roles.
         config->setRole(OCIO::ROLE_INTERCHANGE_SCENE, scs->getName());
@@ -574,8 +525,7 @@ OCIO_ADD_TEST(Config, required_roles_for_version_2_2)
 
         OCIO::LogGuard logGuard;
         OCIO_CHECK_NO_THROW(config->validate());
-        OCIO_CHECK_ASSERT(
-        StringUtils::StartsWith(logGuard.output(), ""));
+        OCIO_CHECK_ASSERT(logGuard.empty());
     }
 }
 
@@ -1672,7 +1622,7 @@ OCIO_ADD_TEST(Config, context_variable_with_display_view)
         OCIO_CHECK_THROW_WHAT(config->getProcessor("cs1", "disp1", "view1", OCIO::TRANSFORM_DIR_FORWARD),
                               OCIO::Exception,
                               "DisplayViewTransform error. Cannot find color space or "
-                              "named transform, named '$ENV1'.");
+                              "named transform with name '$ENV1'.");
     }
 }
 
@@ -5710,6 +5660,35 @@ OCIO_ADD_TEST(Config, inactive_color_space)
                                                       OCIO::COLORSPACE_ALL, 1));
 }
 
+OCIO_ADD_TEST(Config, inactive_colorspaces)
+{
+    // Using Built-in config to test the getInactiveColorSpace method.
+    const std::string cgConfigName = "cg-config-v1.0.0_aces-v1.3_ocio-v2.1";
+    OCIO::ConstConfigRcPtr config;
+
+    OCIO_CHECK_NO_THROW(
+        config = OCIO::Config::CreateFromBuiltinConfig(cgConfigName.c_str())
+    );
+    OCIO_REQUIRE_ASSERT(config);
+
+    OCIO_CHECK_NO_THROW(config->validate());
+
+    {
+        // Test various combinations of input.
+
+        OCIO_CHECK_EQUAL(config->isInactiveColorSpace(""), false);
+        OCIO_CHECK_EQUAL(config->isInactiveColorSpace("fake-colorspace-name"), false);
+
+        // Test existing colorspaces from cg-config-v1.0.0_aces-v1.3_ocio-v2.1. 
+
+        // Colorspace exists and is active.
+        OCIO_CHECK_EQUAL(config->isInactiveColorSpace("Linear P3-D65"), false);
+
+        // Colorspace exists and is inactive.
+        OCIO_CHECK_EQUAL(config->isInactiveColorSpace("Rec.1886 Rec.2020 - Display"), true);
+    }
+}
+
 OCIO_ADD_TEST(Config, inactive_color_space_precedence)
 {
     // The test demonstrates that an API request supersedes the env. variable and the
@@ -5906,7 +5885,7 @@ OCIO_ADD_TEST(Config, inactive_color_space_read_write)
             OCIO::LogGuard log;
             OCIO_CHECK_NO_THROW(config->validate());
             OCIO_CHECK_EQUAL(log.output(), 
-                             "[OpenColorIO Warning]: Inactive 'unknown' is neither a color "
+                             "[OpenColorIO Info]: Inactive 'unknown' is neither a color "
                              "space nor a named transform.\n");
         }
 
@@ -6365,6 +6344,8 @@ OCIO_ADD_TEST(Config, display_view)
         config->addColorSpace(cs);
     }
 
+    config->setVersion(2, 1);
+
     // Add a scene-referred and a display-referred color space.
     auto cs = OCIO::ColorSpace::Create(OCIO::REFERENCE_SPACE_SCENE);
     cs->setName("scs");
@@ -6406,7 +6387,7 @@ OCIO_ADD_TEST(Config, display_view)
 
     std::stringstream os;
     os << *config.get();
-    constexpr char expected[]{ R"(ocio_profile_version: 2.2
+    constexpr char expected[]{ R"(ocio_profile_version: 2.1
 
 environment:
   {}

@@ -84,7 +84,7 @@ OCIO_ADD_TEST(Platform, getenv)
     OCIO_CHECK_NE(GetEnvironmentVariable(TEXT("PATH"), NULL, 0), 0);
 
     // Create a variable and test that it's retrievable through the Windows API.
-    OCIO::Platform::Setenv(u8"MY_WINDOWS_DUMMY_ENV", u8"SomeValue");
+    OCIO::Platform::Setenv(U8("MY_WINDOWS_DUMMY_ENV"), U8("SomeValue"));
     uint32_t win_env_sz = GetEnvironmentVariable(TEXT("MY_WINDOWS_DUMMY_ENV"), NULL, 0);
     OCIO_CHECK_NE(win_env_sz, 0);
 
@@ -93,7 +93,7 @@ OCIO_ADD_TEST(Platform, getenv)
     win_env_value.pop_back(); // Remove null terminator that interferes with comparison
     OCIO_CHECK_ASSERT(win_env_value == TEXT("SomeValue"));
 
-    OCIO::Platform::Unsetenv(u8"MY_WINDOWS_DUMMY_ENV");
+    OCIO::Platform::Unsetenv(U8("MY_WINDOWS_DUMMY_ENV"));
     OCIO_CHECK_EQUAL(GetEnvironmentVariable(TEXT("MY_WINDOWS_DUMMY_ENV"), NULL, 0), 0);
     OCIO_CHECK_EQUAL(GetLastError(), ERROR_ENVVAR_NOT_FOUND);
 #endif

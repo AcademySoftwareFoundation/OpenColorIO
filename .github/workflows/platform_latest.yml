@@ -1,0 +1,396 @@
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright Contributors to the OpenColorIO Project.
+#
+# GitHub Actions workflow file
+# https://help.github.com/en/actions/reference/workflow-syntax-for-github-actions
+
+name: Platform latest
+
+on:
+  pull_request:
+    branches-ignore:
+      - RB-0.*
+      - RB-1.*
+      - gh-pages
+    tags-ignore:
+      - v0.*
+      - v1.*
+    paths:
+      - .github/workflows/platform_latest.yml
+  schedule:
+    # Nightly build
+    - cron: "0 0 * * *"
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Linux latest ext packages
+  # ---------------------------------------------------------------------------
+
+  linux_latest:
+    name: 'Linux Ubuntu latest 
+      <${{ matrix.compiler-desc }} 
+       config=${{ matrix.build-type }}, 
+       shared=${{ matrix.build-shared }}, 
+       cxx=${{ matrix.cxx-standard }}>'
+    # Don't run on OCIO forks
+    if: github.repository == 'AcademySoftwareFoundation/OpenColorIO'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        build: [1, 2, 3, 4]
+        include:
+          # -------------------------------------------------------------------
+          # GCC
+          # -------------------------------------------------------------------
+          - build: 1
+            build-python: ON
+            build-type: Release
+            build-shared: ON
+            cxx-standard: 20
+            cxx-compiler: g++
+            cc-compiler: gcc
+            compiler-desc: GCC
+            enable-sanitizer: OFF
+          - build: 2
+            build-python: OFF
+            build-type: Debug
+            build-shared: ON
+            cxx-standard: 20
+            cxx-compiler: g++
+            cc-compiler: gcc
+            compiler-desc: GCC
+            enable-sanitizer: ON
+          # -------------------------------------------------------------------
+          # Clang
+          # -------------------------------------------------------------------
+          - build: 3
+            build-python: ON
+            build-type: Release
+            build-shared: ON
+            cxx-standard: 20
+            cxx-compiler: clang++
+            cc-compiler: clang
+            compiler-desc: Clang
+            enable-sanitizer: OFF
+          - build: 4
+            build-python: OFF
+            build-type: Debug
+            build-shared: ON
+            cxx-standard: 20
+            cxx-compiler: clang++
+            cc-compiler: clang
+            compiler-desc: Clang
+            enable-sanitizer: ON
+    env:
+      CXX: ${{ matrix.cxx-compiler }}
+      CC: ${{ matrix.cc-compiler }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Install tests env
+        run: share/ci/scripts/linux/yum/install_tests_env.sh
+      - name: Create build directories
+        run: |
+          mkdir _install
+          mkdir _build
+      - name: Configure
+        run: |
+          cmake ../. \
+                -DCMAKE_INSTALL_PREFIX=../_install \
+                -DCMAKE_BUILD_TYPE=${{ matrix.build-type }} \
+                -DCMAKE_CXX_STANDARD=${{ matrix.cxx-standard }} \
+                -DBUILD_SHARED_LIBS=${{ matrix.build-shared }} \
+                -DOCIO_BUILD_DOCS=OFF \
+                -DOCIO_BUILD_OPENFX=ON \
+                -DOCIO_BUILD_GPU_TESTS=OFF \
+                -DOCIO_BUILD_PYTHON=${{ matrix.build-python}} \
+                -DOCIO_USE_SSE=ON \
+                -DOCIO_USE_OIIO_FOR_APPS=OFF \
+                -DOCIO_INSTALL_EXT_PACKAGES=ALL \
+                -DOCIO_WARNING_AS_ERROR=ON \
+                -DOCIO_ENABLE_SANITIZER=${{ matrix.enable-sanitizer }} \
+                -DPython_EXECUTABLE=$(which python)
+        working-directory: _build
+      - name: Build
+        run: |
+          cmake --build . \
+                --target install \
+                --config ${{ matrix.build-type }} \
+                -v \
+                -- -j$(nproc)
+          echo "ocio_build_path=$(pwd)" >> $GITHUB_ENV
+        working-directory: _build
+      - name: Test
+        run: ctest -V -C ${{ matrix.build-type }}
+        working-directory: _build
+      - name: Test CMake Consumer with shared OCIO
+        if: matrix.build-shared == 'ON'
+        run: |
+          cmake . \
+                -DCMAKE_PREFIX_PATH=../../../_install \
+                -DCMAKE_BUILD_TYPE=${{ matrix.build-type }} \
+                -DOCIO_ENABLE_SANITIZER=${{ matrix.enable-sanitizer }}
+          cmake --build . \
+                --config ${{ matrix.build-type }}
+          ./consumer
+        working-directory: _build/tests/cmake-consumer-dist
+      - name: Test CMake Consumer with static OCIO
+        if: matrix.build-shared == 'OFF'
+        # The yaml-cpp_VERSION is set below because Findyaml-cpp.cmake needs it but is unable to 
+        # extract it from the headers, like the other modules.
+        #
+        # Prefer the static version of each dependencies by using <pkg>_STATIC_LIBRARY. 
+        # Alternatively, this can be done by setting <pkg>_LIBRARY and <pkg>_INCLUDE_DIR to 
+        # the static version of the package.
+        run: |
+          cmake . \
+                -DCMAKE_PREFIX_PATH=../../../_install \
+                -DCMAKE_BUILD_TYPE=${{ matrix.build-type }} \
+                -Dexpat_ROOT=${{ env.ocio_build_path }}/ext/dist \
+                -Dexpat_STATIC_LIBRARY=ON \
+                -DImath_ROOT=${{ env.ocio_build_path }}/ext/dist \
+                -DImath_STATIC_LIBRARY=ON \
+                -Dpystring_ROOT=${{ env.ocio_build_path }}/ext/dist \
+                -Dyaml-cpp_ROOT=${{ env.ocio_build_path }}/ext/dist \
+                -Dyaml-cpp_STATIC_LIBRARY=ON \
+                -Dyaml-cpp_VERSION=0.7.0 \
+                -DZLIB_ROOT=${{ env.ocio_build_path }}/ext/dist \
+                -DZLIB_STATIC_LIBRARY=ON \
+                -Dminizip-ng_ROOT=${{ env.ocio_build_path }}/ext/dist \
+                -Dminizip-ng_STATIC_LIBRARY=ON
+          cmake --build . \
+                --config ${{ matrix.build-type }}
+          ./consumer
+        working-directory: _build/tests/cmake-consumer-dist
+
+  # ---------------------------------------------------------------------------
+  # MacOS latest ext packages
+  # ---------------------------------------------------------------------------
+
+  macos-latest:
+    name: 'macOS latest 
+      <AppleClang 
+       config=${{ matrix.build-type }}, 
+       shared=${{ matrix.build-shared }}, 
+       cxx=${{ matrix.cxx-standard }}, 
+       python=${{ matrix.python-version }}>'
+    # Don't run on OCIO forks
+    if: github.repository == 'AcademySoftwareFoundation/OpenColorIO'
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        build: [1, 2]
+        include:
+          - build: 1
+            build-python: ON
+            build-type: Release
+            build-shared: ON
+            cxx-standard: 20
+            enable-sanitizer: OFF
+            python-version: '3.11'
+          - build: 2
+            build-python: OFF
+            build-type: Debug
+            build-shared: ON
+            cxx-standard: 20
+            enable-sanitizer: ON
+            python-version: '3.11'
+    steps:
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Install tests env
+        run: share/ci/scripts/macos/install_tests_env.sh
+      - name: Create build directories
+        run: |
+          mkdir _install
+          mkdir _build
+      - name: Configure
+        run: |
+          cmake ../. \
+                -DCMAKE_INSTALL_PREFIX=../_install \
+                -DCMAKE_BUILD_TYPE=${{ matrix.build-type }} \
+                -DCMAKE_CXX_STANDARD=${{ matrix.cxx-standard }} \
+                -DBUILD_SHARED_LIBS=${{ matrix.build-shared }} \
+                -DOCIO_BUILD_DOCS=OFF \
+                -DOCIO_BUILD_OPENFX=ON \
+                -DOCIO_BUILD_GPU_TESTS=OFF \
+                -DOCIO_BUILD_PYTHON=${{ matrix.build-python}} \
+                -DOCIO_USE_SSE=ON \
+                -DOCIO_USE_OIIO_FOR_APPS=OFF \
+                -DOCIO_INSTALL_EXT_PACKAGES=ALL \
+                -DOCIO_WARNING_AS_ERROR=ON \
+                -DOCIO_ENABLE_SANITIZER=${{ matrix.enable-sanitizer }} \
+                -DPython_EXECUTABLE=$(which python)
+        working-directory: _build
+      - name: Build
+        run: |
+          cmake --build . \
+                --target install \
+                --config ${{ matrix.build-type }} \
+                -- -j$(sysctl -n hw.ncpu)
+          echo "ocio_build_path=$(pwd)" >> $GITHUB_ENV
+        working-directory: _build
+      - name: Test
+        run: ctest -V -C ${{ matrix.build-type }}
+        working-directory: _build
+      - name: Test CMake Consumer with shared OCIO
+        if: matrix.build-shared == 'ON'
+        run: |
+          cmake . \
+                -DCMAKE_PREFIX_PATH=../../../_install \
+                -DCMAKE_BUILD_TYPE=${{ matrix.build-type }}
+          cmake --build . \
+                --config ${{ matrix.build-type }}
+          ./consumer
+        working-directory: _build/tests/cmake-consumer-dist
+      - name: Test CMake Consumer with static OCIO
+        if: matrix.build-shared == 'OFF'
+        # The yaml-cpp_VERSION is set below because Findyaml-cpp.cmake needs it but is unable to 
+        # extract it from the headers, like the other modules.
+        #
+        # Prefer the static version of each dependencies by using <pkg>_STATIC_LIBRARY. 
+        # Alternatively, this can be done by setting <pkg>_LIBRARY and <pkg>_INCLUDE_DIR to 
+        # the static version of the package.       
+        run: |
+          cmake . \
+                -DCMAKE_PREFIX_PATH=../../../_install \
+                -DCMAKE_BUILD_TYPE=${{ matrix.build-type }} \
+                -Dexpat_ROOT=${{ env.ocio_build_path }}/ext/dist \
+                -Dexpat_STATIC_LIBRARY=ON \
+                -DImath_ROOT=${{ env.ocio_build_path }}/ext/dist \
+                -DImath_STATIC_LIBRARY=ON \
+                -Dpystring_ROOT=${{ env.ocio_build_path }}/ext/dist \
+                -Dyaml-cpp_ROOT=${{ env.ocio_build_path }}/ext/dist \
+                -Dyaml-cpp_STATIC_LIBRARY=ON \
+                -Dyaml-cpp_VERSION=0.7.0 \
+                -DZLIB_ROOT=${{ env.ocio_build_path }}/ext/dist \
+                -DZLIB_STATIC_LIBRARY=ON \
+                -Dminizip-ng_ROOT=${{ env.ocio_build_path }}/ext/dist \
+                -Dminizip-ng_STATIC_LIBRARY=ON
+          cmake --build . \
+                --config ${{ matrix.build-type }}
+          ./consumer
+        working-directory: _build/tests/cmake-consumer-dist
+
+  # ---------------------------------------------------------------------------
+  # Windows latest ext packages
+  # ---------------------------------------------------------------------------
+
+  windows-latest:
+    name: 'Windows latest 
+      <MSVC 
+       config=${{ matrix.build-type }}, 
+       shared=${{ matrix.build-shared }}, 
+       cxx=${{ matrix.cxx-standard }}, 
+       python=${{ matrix.python-version }}>'
+    # Don't run on OCIO forks
+    if: github.repository == 'AcademySoftwareFoundation/OpenColorIO'
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        build: [1, 2]
+        include:
+          - build: 1
+            build-python: ON
+            build-type: Release
+            build-shared: ON
+            cxx-standard: 20
+            python-version: '3.11'
+          - build: 2
+            build-python: ON
+            build-type: Debug
+            build-shared: ON
+            cxx-standard: 20
+            python-version: '3.11'
+    steps:
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Install tests env
+        run: share/ci/scripts/windows/install_tests_env.sh
+        shell: bash
+      - name: Create build directories
+        run: |
+          mkdir _install
+          mkdir _build
+        shell: bash
+      - name: Configure
+        run: |
+          cmake ../. \
+                -DCMAKE_INSTALL_PREFIX=../_install \
+                -DCMAKE_BUILD_TYPE=${{ matrix.build-type }} \
+                -DCMAKE_CXX_STANDARD=${{ matrix.cxx-standard }} \
+                -DCMAKE_GENERATOR_PLATFORM=x64 \
+                -DBUILD_SHARED_LIBS=${{ matrix.build-shared }} \
+                -DOCIO_BUILD_DOCS=OFF \
+                -DOCIO_BUILD_OPENFX=ON \
+                -DOCIO_BUILD_GPU_TESTS=OFF \
+                -DOCIO_BUILD_PYTHON=${{ matrix.build-python}} \
+                -DOCIO_USE_SSE=ON \
+                -DOCIO_USE_OIIO_FOR_APPS=OFF \
+                -DOCIO_INSTALL_EXT_PACKAGES=ALL \
+                -DOCIO_WARNING_AS_ERROR=ON \
+                -DPython_EXECUTABLE=$(which python)
+        shell: bash
+        working-directory: _build
+      - name: Build
+        run: |
+          cmake --build . \
+                --target install \
+                --config ${{ matrix.build-type }}
+          echo "ocio_build_path=$(pwd)" >> $GITHUB_ENV
+        shell: bash
+        working-directory: _build
+      - name: Test
+        run: ctest -V -C ${{ matrix.build-type }}
+        shell: bash
+        working-directory: _build
+      - name: Test CMake Consumer with shared OCIO
+        if: matrix.build-shared == 'ON'
+        run: |
+          cmake . \
+                -DCMAKE_PREFIX_PATH=../../../_install \
+                -DCMAKE_BUILD_TYPE=${{ matrix.build-type }}
+          cmake --build . \
+                --config ${{ matrix.build-type }}
+          export PATH=../../../_install/bin:$PATH
+          ./${{ matrix.build-type }}/consumer
+        shell: bash
+        working-directory: _build/tests/cmake-consumer-dist
+      - name: Test CMake Consumer with static OCIO
+        if: matrix.build-shared == 'OFF'
+        # The yaml-cpp_VERSION is set below because Findyaml-cpp.cmake needs it but is unable to 
+        # extract it from the headers, like the other modules.
+        #
+        # Prefer the static version of each dependencies by using <pkg>_STATIC_LIBRARY. 
+        # Alternatively, this can be done by setting <pkg>_LIBRARY and <pkg>_INCLUDE_DIR to 
+        # the static version of the package.
+        run: |
+          cmake . \
+                -DCMAKE_PREFIX_PATH=../../../_install \
+                -DCMAKE_BUILD_TYPE=${{ matrix.build-type }} \
+                -Dexpat_ROOT=${{ env.ocio_build_path }}/ext/dist \
+                -Dexpat_STATIC_LIBRARY=ON \
+                -DImath_ROOT=${{ env.ocio_build_path }}/ext/dist \
+                -DImath_STATIC_LIBRARY=ON \
+                -Dpystring_ROOT=${{ env.ocio_build_path }}/ext/dist \
+                -Dyaml-cpp_ROOT=${{ env.ocio_build_path }}/ext/dist \
+                -Dyaml-cpp_STATIC_LIBRARY=ON \
+                -Dyaml-cpp_VERSION=0.7.0 \
+                -DZLIB_ROOT=${{ env.ocio_build_path }}/ext/dist \
+                -DZLIB_STATIC_LIBRARY=ON \
+                -Dminizip-ng_ROOT=${{ env.ocio_build_path }}/ext/dist \
+                -Dminizip-ng_STATIC_LIBRARY=ON
+          cmake --build . \
+                --config ${{ matrix.build-type }}
+          export PATH=../../../_install/bin:$PATH
+          ./${{ matrix.build-type }}/consumer
+        shell: bash
+        working-directory: _build/tests/cmake-consumer-dist

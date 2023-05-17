@@ -6,3 +6,6 @@ graft share
 graft src
 graft tests
 global-include CMakeLists.txt *.cmake *.md
+global-exclude */__pycache__/*
+global-exclude *.pyc
+global-exclude .DS_Store

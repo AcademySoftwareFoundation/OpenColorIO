@@ -34,7 +34,7 @@ class TransformsTest(unittest.TestCase):
                     # Ensure we only catch and filter for this specific error
                     self.assertEqual(
                         str(e),
-                        'PyOpenColorIO.Transform: No constructor defined!',
+                        'PyOpenColorIO.PyOpenColorIO.Transform: No constructor defined!',
                         'Unintended Error Raised: {0}'.format(e)
                     )
 

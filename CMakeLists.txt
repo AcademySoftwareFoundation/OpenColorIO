@@ -5,13 +5,14 @@
 ###############################################################################
 # CMake definition.
 
-cmake_minimum_required(VERSION 3.12)
+cmake_minimum_required(VERSION 3.13)
 
 set(CMAKE_MODULE_PATH
     ${CMAKE_MODULE_PATH}
-    ${CMAKE_SOURCE_DIR}/share/cmake/utils
-    ${CMAKE_SOURCE_DIR}/share/cmake/macros
-    ${CMAKE_SOURCE_DIR}/share/cmake/modules
+    ${CMAKE_CURRENT_SOURCE_DIR}/share/cmake/utils
+    ${CMAKE_CURRENT_SOURCE_DIR}/share/cmake/macros
+    ${CMAKE_CURRENT_SOURCE_DIR}/share/cmake/modules
+    ${CMAKE_CURRENT_SOURCE_DIR}/share/cmake/modules/install
 )
 
 set(CMAKE_WARN_DEPRECATED ON)
@@ -55,7 +56,7 @@ include(GNUInstallDirs)
 ###############################################################################
 # Forbid in-source build.
 
-if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
+if(${PROJECT_SOURCE_DIR} STREQUAL ${PROJECT_BINARY_DIR})
     message(FATAL_ERROR 
             "In-source build not allowed. Please make a new sub-directory and run cmake from there.")
 endif()
@@ -94,11 +95,26 @@ set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeR
 
 # Is that a valid build type?
 
-if(NOT "${CMAKE_BUILD_TYPE}" IN_LIST CMAKE_CONFIGURATION_TYPES)
+set(_build_type_valid_ false)
+foreach (_build_type_ ${CMAKE_CONFIGURATION_TYPES})
+    string(TOLOWER ${_build_type_} _lowercase_build_type_)
+    string(TOLOWER ${CMAKE_BUILD_TYPE} _lowercase_cmake_build_type_)
+
+    if (_lowercase_cmake_build_type_ STREQUAL _lowercase_build_type_)
+        # Build type is supported.
+        set(_build_type_valid_ true)
+        break()
+    endif()
+endforeach()
+unset(_lowercase_build_type_)
+unset(_lowercase_cmake_build_type_)
+
+if (NOT _build_type_valid_)
     string(REPLACE ";" ", " _CMAKE_CONFIGURATION_TYPES_STR "${CMAKE_CONFIGURATION_TYPES}")
     message(FATAL_ERROR 
             "CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} is unsupported. Supported values are: ${_CMAKE_CONFIGURATION_TYPES_STR}.")
 endif()
+unset(_build_type_valid_)
 
 # Is that in debug mode?
 
@@ -137,10 +153,21 @@ set (OCIO_PYTHON_VERSION "" CACHE STRING
 
 option(OCIO_BUILD_JAVA "Specify whether to build java bindings" OFF)
 
-option(OCIO_WARNING_AS_ERROR "Set build error level for CI testing" OFF)
-
 if (WIN32)
     option(OCIO_USE_WINDOWS_UNICODE "Compile with Windows Unicode support" ON)
+endif()
+
+###############################################################################
+# Other preferences
+option(OCIO_VERBOSE "Display more information when searching or installing dependencies" OFF)
+
+###############################################################################
+# Warnings / debugging settings
+
+option(OCIO_WARNING_AS_ERROR "Set build error level for CI testing" OFF)
+
+if (NOT WIN32)
+    option(OCIO_ENABLE_SANITIZER "Specify whether to enable compiler sanitizers (address)" OFF)
 endif()
 
 
@@ -148,13 +175,13 @@ endif()
 # Optimization / internal linking preferences
 
 option(OCIO_USE_SSE "Specify whether to enable SSE CPU performance optimizations" ON)
-option(OCIO_USE_OIIO_CMAKE_CONFIG "Specify whether to look for OIIO using the generated CMake Config script instead of the custom FindOpenImageIO.cmake script" OFF)
 option(OCIO_USE_OIIO_FOR_APPS "Request OIIO to build apps (ociolutimage, ocioconvert and ociodisplay), the default uses OpenEXR." OFF)
 
 
 ###############################################################################
 # GPU configuration
-
+message(STATUS "")
+message(STATUS "Checking for GPU configuration...")
 include(CheckSupportGL)
 
 
@@ -291,7 +318,7 @@ else()
     set(OCIO_SETUP_NAME setup_ocio.sh)
 endif()
 
-configure_file(${CMAKE_SOURCE_DIR}/share/ocio/${OCIO_SETUP_NAME}.in
+configure_file(${PROJECT_SOURCE_DIR}/share/ocio/${OCIO_SETUP_NAME}.in
     ${CMAKE_CURRENT_BINARY_DIR}/share/ocio/${OCIO_SETUP_NAME} @ONLY)
 
 INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/share/ocio/${OCIO_SETUP_NAME} DESTINATION ${CMAKE_INSTALL_DATADIR}/ocio/)
@@ -305,8 +332,8 @@ INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/share/ocio/${OCIO_SETUP_NAME} DESTINAT
 include(CMakePackageConfigHelpers)
 
 set(OCIO_TARGETS_EXPORT_NAME "${PROJECT_NAME}Targets.cmake")
-set(OCIO_VERSION_CONFIG "${CMAKE_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake")
-set(OCIO_PROJECT_CONFIG "${CMAKE_BINARY_DIR}/${PROJECT_NAME}Config.cmake")
+set(OCIO_VERSION_CONFIG "${PROJECT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake")
+set(OCIO_PROJECT_CONFIG "${PROJECT_BINARY_DIR}/${PROJECT_NAME}Config.cmake")
 set(OCIO_CONFIG_INSTALL_DIR "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}")
 set(OCIO_CUSTOM_FIND_MODULE_DIR "${CMAKE_INSTALL_PREFIX}/share/OpenColorIO/cmake/modules")
 set(OCIO_CUSTOM_MACROS_MODULE_DIR "${CMAKE_INSTALL_PREFIX}/share/OpenColorIO/cmake/macros")

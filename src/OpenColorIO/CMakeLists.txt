@@ -215,17 +215,17 @@ if(BUILD_SHARED_LIBS AND WIN32)
 endif()
 
 
-set(HEADER_LOCATION "${CMAKE_SOURCE_DIR}/include/OpenColorIO")
+set(HEADER_LOCATION "${PROJECT_SOURCE_DIR}/include/OpenColorIO")
 file(GLOB_RECURSE INSTALL_HEADERS "${HEADER_LOCATION}/*.h")
 
 # Some part of the build process expect to find the ABI header here,
 # notably the documentation.
-set(ABI_HEADER_LOCATION "${CMAKE_BINARY_DIR}/include/OpenColorIO")
+set(ABI_HEADER_LOCATION "${PROJECT_BINARY_DIR}/include/OpenColorIO")
 list(APPEND INSTALL_HEADERS ${ABI_HEADER_LOCATION}/OpenColorABI.h)
 configure_file("${HEADER_LOCATION}/OpenColorABI.h.in" "${ABI_HEADER_LOCATION}/OpenColorABI.h" @ONLY)
 
 # Built-in configs
-set(CONFIGS_HEADER_LOCATION "${CMAKE_BINARY_DIR}/generated_include")
+set(CONFIGS_HEADER_LOCATION "${PROJECT_BINARY_DIR}/generated_include")
 file(GLOB CONFIGS_PATHS "builtinconfigs/configs/*.ocio")
 # Loop through the .ocio config files.
 foreach(C ${CONFIGS_PATHS})
@@ -353,20 +353,13 @@ if(WIN32)
     endif()
 endif()
 
-set_target_properties(OpenColorIO PROPERTIES
-    OUTPUT_NAME   ${PROJECT_NAME}${OCIO_LIBNAME_SUFFIX}
-    COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS}"
-    VERSION       ${OpenColorIO_VERSION}
-    SOVERSION     ${SOVERSION}
-    PUBLIC_HEADER "${INSTALL_HEADERS}"
-)
+set(CUSTOM_LINK_FLAGS ${PLATFORM_LINK_OPTIONS})
 
 if(UNIX AND NOT APPLE)
     # Also hide all the symbols of dependent libraries to prevent clashes if
     # an app using this project is linked against other versions of our
     # dependencies.
-    set_property (TARGET OpenColorIO
-                  APPEND PROPERTY LINK_FLAGS "-Wl,--exclude-libs,ALL")
+    set(CUSTOM_LINK_FLAGS "${CUSTOM_LINK_FLAGS};-Wl,--exclude-libs,ALL")
 elseif(APPLE)
     if (expat_LIBRARY)
         get_filename_component(_expat_LIBDIR "${expat_LIBRARY}" DIRECTORY)
@@ -394,11 +387,19 @@ elseif(APPLE)
     endif()   
 
     if (_OCIO_LINK_FLAGS_LIST_)
-        list(JOIN _OCIO_LINK_FLAGS_LIST_ " " _OCIO_LINK_FLAGS_LIST_)
-        set_property (TARGET OpenColorIO
-                    APPEND PROPERTY LINK_FLAGS "${_OCIO_LINK_FLAGS_LIST_}")   
+        list(JOIN _OCIO_LINK_FLAGS_LIST_ ";" _OCIO_LINK_FLAGS_LIST_)
+        set(CUSTOM_LINK_FLAGS "${CUSTOM_LINK_FLAGS};${_OCIO_LINK_FLAGS_LIST_}")
     endif()              
 endif()
+
+set_target_properties(OpenColorIO PROPERTIES
+    OUTPUT_NAME   ${PROJECT_NAME}${OCIO_LIBNAME_SUFFIX}
+    COMPILE_OPTIONS "${PLATFORM_COMPILE_OPTIONS}"
+    LINK_OPTIONS "${CUSTOM_LINK_FLAGS}"
+    VERSION       ${OpenColorIO_VERSION}
+    SOVERSION     ${SOVERSION}
+    PUBLIC_HEADER "${INSTALL_HEADERS}"
+)
 
 if(MSVC AND BUILD_SHARED_LIBS)
     # Install the pdb file if any.

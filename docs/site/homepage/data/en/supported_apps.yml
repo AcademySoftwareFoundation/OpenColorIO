@@ -4,6 +4,13 @@ supported_apps:
   title : Supported Applications
   portfolio_item :
     # portfolio item loop
+    - name : Autodesk 3ds Max
+      image : images/supported_apps/3ds_max.png
+      categories : ["3D", "Animation", "Modeling", "Lighting", "Look Dev", "Texture"]
+      content : 3ds Max 2024 and up.
+      link : "https://www.autodesk.com/products/3ds-max/overview"
+    
+    # portfolio item loop
     - name : Adobe After Effects
       image : images/supported_apps/ae.png
       categories : ["2D", "Compositing", "Animation"]
@@ -109,9 +116,9 @@ supported_apps:
       link : "http://www.thefoundry.co.uk/products/mari"
 
     # portfolio item loop
-    - name : Maya
+    - name : Autodesk Maya
       image : images/supported_apps/maya.png
-      categories : ["3D", "Animation", "Modeling", "Lighting", "Texture"]
+      categories : ["3D", "Animation", "Modeling", "Lighting", "Look Dev", "Simulation", "Texture"]
       content : Maya 2016 and up.
       link : "https://www.autodesk.com/products/maya/overview"
 

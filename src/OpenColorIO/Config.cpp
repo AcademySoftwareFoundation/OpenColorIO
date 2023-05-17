@@ -2013,7 +2013,7 @@ void Config::validate() const
             {
                 std::ostringstream os;
                 os << "Inactive '" << name << "' is neither a color space nor a named transform.";
-                LogWarning(os.str());
+                LogInfo(os.str());
             }
         }
     }
@@ -2935,6 +2935,22 @@ const char * Config::getInactiveColorSpaces() const
     return getImpl()->m_inactiveColorSpaceNamesConf.c_str();
 }
 
+bool Config::isInactiveColorSpace(const char * colorspace) const noexcept
+{
+    StringUtils::StringVec svec;
+    pystring::split(getImpl()->m_inactiveColorSpaceNamesConf.c_str(), svec, ", ");
+
+    for (size_t i = 0; i < svec.size(); i++)
+    {
+        if (StringUtils::Compare(colorspace, svec.at(i)))
+        {
+            // Colorspace is inactive.
+            return true;
+        }
+    }
+    return false;
+}
+
 void Config::addColorSpace(const ConstColorSpaceRcPtr & original)
 {
     const std::string name(original->getName());
@@ -3372,6 +3388,12 @@ const char * Config::getRoleName(int index) const
 const char * Config::getRoleColorSpace(int index) const
 {
     return LookupRole(getImpl()->m_roles, getRoleName(index));
+}
+
+const char * Config::getRoleColorSpace(const char * roleName) const noexcept
+{
+    if (!roleName || !roleName[0]) return "";
+    return LookupRole(getImpl()->m_roles, roleName);
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -5086,6 +5108,10 @@ void Config::setProcessorCacheFlags(ProcessorCacheFlags flags) noexcept
     getImpl()->setProcessorCacheFlags(flags);
 }
 
+void Config::clearProcessorCache() noexcept
+{
+    getImpl()->m_processorCache.clear();
+}
 
 ///////////////////////////////////////////////////////////////////////////
 //  Config::Impl
