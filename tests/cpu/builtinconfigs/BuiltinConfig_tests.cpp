@@ -4,6 +4,7 @@
 #include "builtinconfigs/BuiltinConfigRegistry.cpp"
 #include "testutils/UnitTest.h"
 #include "UnitTestUtils.h"
+#include "UnitTestLogUtils.h"
 
 #include "CG.cpp"
 #include "Studio.cpp"
@@ -192,7 +193,13 @@ OCIO_ADD_TEST(BuiltinConfigs, create_builtin_config)
             );
             OCIO_REQUIRE_ASSERT(config);
 
+            OCIO::LogGuard logGuard;
             OCIO_CHECK_NO_THROW(config->validate());
+            // Mute output related to a bug in the initial CG config where the inactive_colorspaces 
+            // list has color spaces that don't exist.
+            OCIO::muteInactiveColorspaceInfo(logGuard);
+            logGuard.print();
+
             OCIO_CHECK_EQUAL(
                 std::string(config->getName()), 
                 expectedConfigName.empty() ? name : expectedConfigName
@@ -214,7 +221,10 @@ OCIO_ADD_TEST(BuiltinConfigs, create_builtin_config)
             OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromEnv());
             OCIO_REQUIRE_ASSERT(config);
 
+            OCIO::LogGuard logGuard;
             OCIO_CHECK_NO_THROW(config->validate());
+            OCIO::muteInactiveColorspaceInfo(logGuard);
+            logGuard.print();
 
             if (!expectedConfigName.empty())
             {
@@ -235,7 +245,9 @@ OCIO_ADD_TEST(BuiltinConfigs, create_builtin_config)
             );
             OCIO_REQUIRE_ASSERT(config);
 
+            OCIO::LogGuard logGuard;
             OCIO_CHECK_NO_THROW(config->validate());
+            OCIO::muteInactiveColorspaceInfo(logGuard);
 
             if (!expectedConfigName.empty())
             {

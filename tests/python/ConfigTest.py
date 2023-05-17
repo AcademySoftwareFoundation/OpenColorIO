@@ -909,7 +909,13 @@ colorspaces:
         def testFromBuiltinConfig(name, numberOfExpectedColorspaces, expectedConfigName):
             # Testing CreateFromBuiltinConfig with a known built-in config name.
             builtinCfgA = OCIO.Config.CreateFromBuiltinConfig(name)
-            builtinCfgA.validate()
+
+            # Mute output related to a bug in the initial CG config where the inactive_colorspaces
+            # list has color spaces that don't exist.
+            log = MuteLogging()
+            with log:
+                builtinCfgA.validate()
+
             self.assertEqual(builtinCfgA.getName(), expectedConfigName if expectedConfigName else name)
             self.assertEqual(len(builtinCfgA.getColorSpaceNames()), numberOfExpectedColorspaces)
 
@@ -918,7 +924,11 @@ colorspaces:
             try:
                 OCIO.SetEnvVariable('OCIO', uri)
                 builtinCfgB = OCIO.Config.CreateFromEnv()
-                builtinCfgB.validate()
+
+                log = MuteLogging()
+                with log:
+                    builtinCfgB.validate()
+
                 self.assertEqual(builtinCfgB.getName(), expectedConfigName)
                 self.assertEqual(len(builtinCfgB.getColorSpaceNames()), numberOfExpectedColorspaces)
             finally:
@@ -926,7 +936,11 @@ colorspaces:
 
             # Testing CreateFromFile using URI Syntax.
             builtinCfgC = OCIO.Config.CreateFromFile(uri)
-            builtinCfgC.validate()
+
+            log = MuteLogging()
+            with log:
+                builtinCfgC.validate()
+
             self.assertEqual(builtinCfgC.getName(), expectedConfigName)
             self.assertEqual(len(builtinCfgC.getColorSpaceNames()), numberOfExpectedColorspaces)
 
