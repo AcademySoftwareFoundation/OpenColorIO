@@ -726,8 +726,7 @@ extern OCIOEXPORT ExposureContrastStyle ExposureContrastStyleFromString(const ch
 extern OCIOEXPORT const char * NegativeStyleToString(NegativeStyle style);
 extern OCIOEXPORT NegativeStyle NegativeStyleFromString(const char * style);
 
-/** \defgroup Env. variables.
- *  @{
+/** Env. variables.
  *
  * These environmental variables are used by the OpenColorIO library.
  * For variables that allow specifying more than one token, they should be separated by commas.
@@ -776,10 +775,7 @@ extern OCIOEXPORT const char * OCIO_OPTIMIZATION_FLAGS_ENVVAR;
  */
 extern OCIOEXPORT const char * OCIO_USER_CATEGORIES_ENVVAR;
 
-/** @}*/
-
-/** \defgroup VarsRoles
- *  @{
+/** VarsRoles
  */
 
 // TODO: Move to .rst
@@ -852,10 +848,7 @@ extern OCIOEXPORT const char * ROLE_INTERCHANGE_SCENE;
  */
 extern OCIOEXPORT const char * ROLE_INTERCHANGE_DISPLAY;
 
-/** @}*/
-
-/** \defgroup VarsSharedView
- *  @{
+/** VarsSharedView
  */
 
 /*!rst::
@@ -870,10 +863,7 @@ Shared View
  */
 extern OCIOEXPORT const char * OCIO_VIEW_USE_DISPLAY_NAME;
 
-/** @}*/
-
-/** \defgroup VarsFormatMetadata
- *  @{
+/** VarsFormatMetadata
  */
 
 // TODO: Move to .rst
@@ -929,10 +919,7 @@ extern OCIOEXPORT const char * METADATA_NAME;
  */
 extern OCIOEXPORT const char * METADATA_ID;
 
-/** @}*/
-
-/** \defgroup VarsCaches
- *  @{
+/** VarsCaches
  */
 
 /*!rst::
@@ -962,8 +949,6 @@ extern OCIOEXPORT const char * OCIO_DISABLE_PROCESSOR_CACHES;
 // not match. That fallback introduces a major performance hit in some cases so there is an env.
 // variable to disable the fallback.
 extern OCIOEXPORT const char * OCIO_DISABLE_CACHE_FALLBACK;
-
-/** @}*/
 
 
 // Archive config feature
