@@ -17,7 +17,7 @@ build-backend = "setuptools.build_meta"
 [tool.cibuildwheel]
 build-verbosity = "1"
 
-test-command = "python -m PyOpenColorIO.tests.OpenColorIOTestSuite"
+test-command = "python {project}/tests/python/OpenColorIOTestSuite.py"
 test-requires = ["numpy"]
 
 manylinux-x86_64-image = "manylinux2014"

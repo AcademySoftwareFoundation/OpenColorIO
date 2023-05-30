@@ -59,6 +59,7 @@ class CMakeExtension(Extension):
 class CMakeBuild(build_ext):
     def build_extension(self, ext):
         extdir = os.path.abspath(os.path.dirname(self.get_ext_fullpath(ext.name)))
+        bindir = os.path.join(extdir, "bin")
 
         # required for auto-detection & inclusion of auxiliary "native" libs
         if not extdir.endswith(os.path.sep):
@@ -73,12 +74,13 @@ class CMakeBuild(build_ext):
 
         cmake_args = [
             "-DCMAKE_LIBRARY_OUTPUT_DIRECTORY={}".format(extdir),
+            "-DCMAKE_RUNTIME_OUTPUT_DIRECTORY={}".format(bindir),
             "-DPython_EXECUTABLE={}".format(sys.executable),
             # Not used on MSVC, but no harm
             "-DCMAKE_BUILD_TYPE={}".format(cfg),
             "-DBUILD_SHARED_LIBS=OFF",
             "-DOCIO_BUILD_DOCS=ON",
-            "-DOCIO_BUILD_APPS=OFF",
+            "-DOCIO_BUILD_APPS=ON",
             "-DOCIO_BUILD_TESTS=OFF",
             "-DOCIO_BUILD_GPU_TESTS=OFF",
             # Make sure we build everything for the requested architecture(s)
@@ -121,7 +123,8 @@ class CMakeBuild(build_ext):
             # Multi-config generators have a different way to specify configs
             if not single_config:
                 cmake_args += [
-                    "-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_{}={}".format(cfg.upper(), extdir)
+                    "-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_{}={}".format(cfg.upper(), extdir),
+                    "-DCMAKE_RUNTIME_OUTPUT_DIRECTORY_{}={}".format(cfg.upper(), bindir),
                 ]
                 build_args += ["--config", cfg]
 
@@ -156,11 +159,33 @@ setup(
     version=get_version(),
     package_dir={
         'PyOpenColorIO': 'src/bindings/python/package',
-        'PyOpenColorIO.tests': 'tests/python',
-        'PyOpenColorIO.data': 'tests/data',
+        'PyOpenColorIO.bin.pyocioamf': 'src/apps/pyocioamf',
+        'PyOpenColorIO.bin.pyociodisplay': 'src/apps/pyociodisplay',
     },
-    packages=['PyOpenColorIO', 'PyOpenColorIO.tests', 'PyOpenColorIO.data'],
+    packages=[
+        'PyOpenColorIO',
+        'PyOpenColorIO.bin.pyocioamf',
+        'PyOpenColorIO.bin.pyociodisplay',
+    ],
     ext_modules=[CMakeExtension("PyOpenColorIO.PyOpenColorIO")],
     cmdclass={"build_ext": CMakeBuild},
-    include_package_data=True
+    include_package_data=True,
+    entry_points={
+        'console_scripts': [
+            # Native applications
+            'ocioarchive=PyOpenColorIO.command_line:main',
+            'ociobakelut=PyOpenColorIO.command_line:main',
+            'ociocheck=PyOpenColorIO.command_line:main',
+            'ociochecklut=PyOpenColorIO.command_line:main',
+            'ocioconvert=PyOpenColorIO.command_line:main',
+            'ociodisplay=PyOpenColorIO.command_line:main',
+            'ociolutimage=PyOpenColorIO.command_line:main',
+            'ociomakeclf=PyOpenColorIO.command_line:main',
+            'ocioperf=PyOpenColorIO.command_line:main',
+            'ociowrite=PyOpenColorIO.command_line:main',
+            # Python applications
+            'pyocioamf=PyOpenColorIO.bin.pyocioamf.pyocioamf:main',
+            'pyociodisplay=PyOpenColorIO.bin.pyociodisplay.pyociodisplay:main',
+        ]
+    },
 )

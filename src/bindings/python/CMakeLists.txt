@@ -251,6 +251,9 @@ set(PYTHON_VARIANT_PATH ${_Python_VARIANT_PATH} CACHE INTERNAL "")
 # Set to PyOpenColorIO site-package location.
 set(_PyOpenColorIO_SITE_PACKAGE_DIR "${PYTHON_VARIANT_PATH}/PyOpenColorIO")
 
+include(StripUtils)
+ocio_strip_binary(PyOpenColorIO)
+
 install(TARGETS PyOpenColorIO
     LIBRARY DESTINATION ${_PyOpenColorIO_SITE_PACKAGE_DIR}
 )

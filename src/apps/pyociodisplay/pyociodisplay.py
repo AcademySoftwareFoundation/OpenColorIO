@@ -1337,7 +1337,7 @@ class ImageView(QtWidgets.QWidget):
         self.image_plane.update_gamma(value)
 
 
-if __name__ == "__main__":
+def main():
     # OpenGL core profile needed on macOS to access programmatic pipeline
     gl_format = QtOpenGL.QGLFormat()
     gl_format.setProfile(QtOpenGL.QGLFormat.CoreProfile)
@@ -1350,3 +1350,7 @@ if __name__ == "__main__":
     viewer = ImageView()
     viewer.show()
     app.exec_()
+
+
+if __name__ == "__main__":
+    main()
