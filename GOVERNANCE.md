@@ -119,6 +119,8 @@ project at all ASWF TAC meetings.
 * Sean Cooper - ARRI
 * Michael Dolan - Epic Games
 * Patrick Hodoul - Autodesk
+* Zach Lewis - Method Studios
+* Thomas Mansencal - WetaFX
 * Carol Payne - Netflix
 * Carl Rand - Weta Digital
 * Mark Titchener - Foundry
