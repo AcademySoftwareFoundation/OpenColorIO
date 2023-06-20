@@ -1,3 +1,8 @@
+# Fix an issue with the OCIO's Linux container images that have OpenSSL under 1.1.1.
+# If the container images are updated with OpenSSL 1.1.1+, the restriction on
+# urllib3 version <2 can be removed.
+urllib3<2
+# The builds for documentation fails with <0.18.0
 docutils>=0.18.1
 six
 testresources
