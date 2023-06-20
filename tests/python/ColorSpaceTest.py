@@ -802,31 +802,31 @@ colorspaces:
 
         editableCfg.setInactiveColorSpaces("")
 
-        csname = cfg.IdentifyBuiltinColorSpace(editableCfg, builtinConfig, "ACEScg")
+        csname = OCIO.Config.IdentifyBuiltinColorSpace(editableCfg, builtinConfig, "ACEScg")
         self.assertEqual(csname, "ACES cg")
 
-        csname = cfg.IdentifyBuiltinColorSpace(editableCfg, builtinConfig, "sRGB - Texture")
+        csname = OCIO.Config.IdentifyBuiltinColorSpace(editableCfg, builtinConfig, "sRGB - Texture")
         self.assertEqual(csname, "Texture -- sRGB")
 
-        csname = cfg.IdentifyBuiltinColorSpace(editableCfg, builtinConfig, "ACES2065-1")
+        csname = OCIO.Config.IdentifyBuiltinColorSpace(editableCfg, builtinConfig, "ACES2065-1")
         self.assertEqual(csname, "ref_cs")
 
         editableCfg.setInactiveColorSpaces("Texture -- sRGB, ref_cs")
 
-        csname = cfg.IdentifyBuiltinColorSpace(editableCfg, builtinConfig, "Linear Rec.709 (sRGB)")
+        csname = OCIO.Config.IdentifyBuiltinColorSpace(editableCfg, builtinConfig, "Linear Rec.709 (sRGB)")
         self.assertEqual(csname, "Linear ITU-R BT.709")
 
-        csname = cfg.IdentifyBuiltinColorSpace(editableCfg, builtinConfig, "ACEScct")
+        csname = OCIO.Config.IdentifyBuiltinColorSpace(editableCfg, builtinConfig, "ACEScct")
         self.assertEqual(csname, "CS Transform color space")
 
-        csname = cfg.IdentifyBuiltinColorSpace(editableCfg, builtinConfig, "lin_ap1")
+        csname = OCIO.Config.IdentifyBuiltinColorSpace(editableCfg, builtinConfig, "lin_ap1")
         self.assertEqual(csname, "ACES cg")
 
         # Display-referred spaces are not supported unless the display-referred interchange
         # role is present.
 
         with self.assertRaises(OCIO.Exception) as cm:
-            cfg.IdentifyBuiltinColorSpace(editableCfg, builtinConfig, "sRGB - Display")
+            OCIO.Config.IdentifyBuiltinColorSpace(editableCfg, builtinConfig, "sRGB - Display")
         self.assertEqual(
           str(cm.exception), 
           "The heuristics currently only support scene-referred color spaces. Please set the interchange roles."
@@ -836,18 +836,18 @@ colorspaces:
 
         # With the required role, it then works.
         editableCfg.setRole("cie_xyz_d65_interchange", "CIE-XYZ-D65")
-        csname = cfg.IdentifyBuiltinColorSpace(editableCfg, builtinConfig, "sRGB - Display")
+        csname = OCIO.Config.IdentifyBuiltinColorSpace(editableCfg, builtinConfig, "sRGB - Display")
         self.assertEqual(csname, "sRGB - Display CS")
 
         # Must continue to work if the color space for the interchange role is inactive.
         editableCfg.setInactiveColorSpaces("CIE-XYZ-D65")
-        csname = cfg.IdentifyBuiltinColorSpace(editableCfg, builtinConfig, "sRGB - Display")
+        csname = OCIO.Config.IdentifyBuiltinColorSpace(editableCfg, builtinConfig, "sRGB - Display")
         self.assertEqual(csname, "sRGB - Display CS")
 
         # Test the scene-referred interchange role (and even make it inactive).
         editableCfg.setRole("aces_interchange", "ref_cs")
         editableCfg.setInactiveColorSpaces("ref_cs")
-        csname = cfg.IdentifyBuiltinColorSpace(editableCfg, builtinConfig, "ACEScg")
+        csname = OCIO.Config.IdentifyBuiltinColorSpace(editableCfg, builtinConfig, "ACEScg")
         self.assertEqual(csname, "ACES cg")
 
 
@@ -856,8 +856,8 @@ colorspaces:
         #
 
         # Uses "ACEScg" to find the reference.
-        spaces = cfg.IdentifyInterchangeSpace(editableCfg, "Linear ITU-R BT.709", 
-                                              builtinConfig, "lin_rec709_srgb")   # Aliases work.
+        spaces = OCIO.Config.IdentifyInterchangeSpace(editableCfg, "Linear ITU-R BT.709",
+                                                      builtinConfig, "lin_rec709_srgb") # Aliases work.
         self.assertEqual(spaces[0], "ref_cs")
         self.assertEqual(spaces[1], "ACES2065-1")
 
@@ -865,7 +865,7 @@ colorspaces:
         # the heuristics, set it to something wrong and check that it gets returned anyway.
         editableCfg.setRole("aces_interchange", "Texture -- sRGB")
 
-        spaces = cfg.IdentifyInterchangeSpace(editableCfg, "Linear ITU-R BT.709", 
+        spaces = OCIO.Config.IdentifyInterchangeSpace(editableCfg, "Linear ITU-R BT.709", 
                                               builtinConfig, "lin_rec709_srgb")
         self.assertEqual(spaces[0], "Texture -- sRGB")
         self.assertEqual(spaces[1], "ACES2065-1")
@@ -878,7 +878,7 @@ colorspaces:
         rawCfg = OCIO.Config.CreateRaw()
 
         with self.assertRaises(OCIO.Exception) as cm:
-          spaces = cfg.IdentifyInterchangeSpace(editableCfg, "Raw", rawCfg, "raw")
+          spaces = OCIO.Config.IdentifyInterchangeSpace(editableCfg, "Raw", rawCfg, "raw")
         self.assertEqual(
           str(cm.exception), 
           "Could not find destination color space 'sRGB - Texture'."
@@ -886,7 +886,7 @@ colorspaces:
 
         # Check what happens if the source color space doesn't exist.
         with self.assertRaises(OCIO.Exception) as cm:
-          spaces = cfg.IdentifyInterchangeSpace(editableCfg, "Foo", rawCfg, "raw")
+          spaces = OCIO.Config.IdentifyInterchangeSpace(editableCfg, "Foo", rawCfg, "raw")
         self.assertEqual(
           str(cm.exception), 
           "Could not find source color space 'Foo'."
@@ -894,7 +894,7 @@ colorspaces:
 
         # Check what happens if the destination color space doesn't exist.
         with self.assertRaises(OCIO.Exception) as cm:
-          spaces = cfg.IdentifyInterchangeSpace(editableCfg, "Foo", rawCfg, "")
+          spaces = OCIO.Config.IdentifyInterchangeSpace(editableCfg, "Foo", rawCfg, "")
         self.assertEqual(
           str(cm.exception), 
           "Could not find destination color space ''."
