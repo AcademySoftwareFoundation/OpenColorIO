@@ -222,12 +222,12 @@ DynamicPropertyRcPtr GpuShaderCreator::getDynamicProperty(DynamicPropertyType ty
     throw Exception("Dynamic property not found.");
 }
 
-void GpuShaderCreator::addTexture(const char* textureName,
-                                  const char* samplerName,
+void GpuShaderCreator::addTexture(const char * textureName,
+                                  const char * samplerName,
                                   unsigned width, unsigned height,
                                   TextureType channel,
                                   Interpolation interpolation,
-                                  const float* values)
+                                  const float * values)
 {
     const TextureDimensions dimensions = height > 1 ? TextureDimensions::TEXTURE_2D : TextureDimensions::TEXTURE_1D;
 
@@ -376,12 +376,12 @@ GpuShaderCreatorRcPtr GpuShaderDesc::clone() const
 }
 
 void GpuShaderDesc::getTexture(unsigned index,
-                               const char*& textureName,
-                               const char*& samplerName,
-                               unsigned& width,
-                               unsigned& height,
-                               TextureType& channel,
-                               Interpolation& interpolation) const
+                               const char *& textureName,
+                               const char *& samplerName,
+                               unsigned & width,
+                               unsigned & height,
+                               TextureType & channel,
+                               Interpolation & interpolation) const
 {
     TextureDimensions dimensions;
 

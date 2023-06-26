@@ -3130,12 +3130,12 @@ public:
      *   origin are hard-coded in the fragment shader program. So, it means one GPU texture per entry.
      **/
     OCIO_DEPRECATED("This was marked as deprecated starting in v2.3, please use addTexture() with dimensions.")
-    virtual void addTexture(const char* textureName,
-                            const char* samplerName,
+    virtual void addTexture(const char * textureName,
+                            const char * samplerName,
                             unsigned width, unsigned height,
                             TextureType channel,
                             Interpolation interpolation,
-                            const float* values);
+                            const float * values);
 
     /**
      *  Add a 1D or 2D texture
@@ -3144,13 +3144,13 @@ public:
      *   The 'values' parameter contains the LUT data which must be used as-is as the dimensions and
      *   origin are hard-coded in the fragment shader program. So, it means one GPU texture per entry.
      **/
-    virtual void addTexture(const char* textureName,
-                            const char* samplerName,
+    virtual void addTexture(const char * textureName,
+                            const char * samplerName,
                             unsigned width, unsigned height,
                             TextureType channel,
                             TextureDimensions dimensions,
                             Interpolation interpolation,
-                            const float* values) = 0;
+                            const float * values) = 0;
 
     /**
      *  Add a 3D texture with RGB channel type.
@@ -3403,13 +3403,13 @@ public:
                             TextureType & channel,
                             Interpolation & interpolation) const;
     virtual void getTexture(unsigned index,
-                            const char*& textureName,
-                            const char*& samplerName,
-                            unsigned& width,
-                            unsigned& height,
-                            TextureType& channel,
-                            TextureDimensions& dimensions,
-                            Interpolation& interpolation) const = 0;
+                            const char *& textureName,
+                            const char *& samplerName,
+                            unsigned & width,
+                            unsigned & height,
+                            TextureType & channel,
+                            TextureDimensions & dimensions,
+                            Interpolation & interpolation) const = 0;
     virtual void getTextureValues(unsigned index, const float *& values) const = 0;
 
     // 3D lut related methods
