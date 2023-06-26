@@ -20,7 +20,6 @@
 
 #include <sstream>
 #include <iostream>
-#include <cassert>
 
 #include <OpenColorIO/OpenColorIO.h>
 
@@ -141,7 +140,7 @@ void AllocateTexture(unsigned index, unsigned & texId,
         break;
 
     default:
-        assert(false);
+        throw Exception("Invalid 1D LUT texture dimensions");
         break;
     }
 }

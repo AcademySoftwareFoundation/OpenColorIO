@@ -49,12 +49,6 @@ public:
     // Accessors to the 1D & 2D textures built from 1D LUT
     //
     unsigned getNumTextures() const noexcept override;
-    void addTexture(const char * textureName,
-                    const char * samplerNName,
-                    unsigned width, unsigned height,
-                    TextureType channel,
-                    Interpolation interpolation,
-                    const float * values) override;
     void addTexture(const char* textureName,
                     const char* samplerName,
                     unsigned width, unsigned height,
@@ -62,12 +56,6 @@ public:
                     TextureDimensions dimensions,
                     Interpolation interpolation,
                     const float* values) override;
-    void getTexture(unsigned index,
-                    const char *& textureName,
-                    const char *& samplerName,
-                    unsigned & width, unsigned & height,
-                    TextureType & channel,
-                    Interpolation & interpolation) const override;
     void getTexture(unsigned index,
                     const char*& textureName,
                     const char*& samplerName,

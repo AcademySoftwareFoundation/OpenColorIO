@@ -167,7 +167,7 @@ public:
 
     virtual ~PrivateImpl() {}
 
-    inline unsigned get3dLutMaxDimension() const { return Lut3DOpData::maxSupportedLength; }
+    inline unsigned get3dLutMaxLength() const { return Lut3DOpData::maxSupportedLength; }
 
     inline unsigned get1dLutMaxWidth() const { return m_max1DLUTWidth; }
     inline void set1dLutMaxWidth(unsigned maxWidth) { m_max1DLUTWidth = maxWidth; }
@@ -218,7 +218,13 @@ public:
         width         = t.m_width;
         height        = t.m_height;
         channel       = t.m_type;
-        assert(t.m_dimensions < 3);
+        if (t.m_dimensions > 2)
+        {
+            std::stringstream ss;
+            ss << "1D LUT cannot have more than two dimensions: "
+                << t.m_dimensions << " > 2";
+            throw Exception(ss.str().c_str());
+        }
         dimensions = static_cast<GpuShaderDesc::TextureDimensions>(t.m_dimensions);
         interpolation = t.m_interp;
     }
@@ -239,19 +245,19 @@ public:
 
     void add3DTexture(const char * textureName,
                       const char * samplerName,
-                      unsigned dimension,
+                      unsigned edgelen,
                       Interpolation interpolation,
                       const float * values)
     {
-        if(dimension > get3dLutMaxDimension())
+        if(edgelen > get3dLutMaxLength())
         {
             std::stringstream ss;
-            ss  << "3D LUT dimension exceeds the maximum: "
-                << dimension << " > " << get3dLutMaxDimension();
+            ss  << "3D LUT edge length exceeds the maximum: "
+                << edgelen << " > " << get3dLutMaxLength();
             throw Exception(ss.str().c_str());
         }
 
-        Texture t(textureName, samplerName, dimension, dimension, dimension,
+        Texture t(textureName, samplerName, edgelen, edgelen, edgelen,
                   GpuShaderDesc::TEXTURE_RGB_CHANNEL, 3,
                   interpolation, values);
         m_textures3D.push_back(t);
@@ -479,18 +485,6 @@ unsigned GenericGpuShaderDesc::getNumTextures() const noexcept
     return unsigned(getImplGeneric()->m_textures.size());
 }
 
-void GenericGpuShaderDesc::addTexture(const char * textureName,
-                                      const char * samplerName,
-                                      unsigned width, unsigned height,
-                                      TextureType channel,
-                                      Interpolation interpolation,
-                                      const float * values)
-{
-    const TextureDimensions dimensions = height > 1 ? TextureDimensions::TEXTURE_2D : TextureDimensions::TEXTURE_1D;
-
-    getImplGeneric()->addTexture(textureName, samplerName, width, height, channel, dimensions, interpolation, values);
-}
-
 void GenericGpuShaderDesc::addTexture(const char* textureName,
     const char* samplerName,
     unsigned width,
@@ -501,17 +495,6 @@ void GenericGpuShaderDesc::addTexture(const char* textureName,
     const float* values)
 {
     getImplGeneric()->addTexture(textureName, samplerName, width, height, channel, dimensions, interpolation, values);
-}
-
-void GenericGpuShaderDesc::getTexture(unsigned index,
-                                      const char *& textureName,
-                                      const char *& samplerName,
-                                      unsigned & width, unsigned & height,
-                                      TextureType & channel,
-                                      Interpolation & interpolation) const
-{
-    TextureDimensions dimensions;
-    getImplGeneric()->getTexture(index, textureName, samplerName, width, height, channel, dimensions, interpolation);
 }
 
 void GenericGpuShaderDesc::getTexture(unsigned index,
