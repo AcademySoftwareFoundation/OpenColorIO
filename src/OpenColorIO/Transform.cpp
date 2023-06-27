@@ -21,7 +21,6 @@
 #include "ops/lut3d/Lut3DOp.h"
 #include "ops/matrix/MatrixOp.h"
 #include "ops/range/RangeOp.h"
-#include "Processor.h"
 #include "TransformBuilder.h"
 
 
