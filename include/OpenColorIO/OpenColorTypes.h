@@ -775,9 +775,6 @@ extern OCIOEXPORT const char * OCIO_OPTIMIZATION_FLAGS_ENVVAR;
  */
 extern OCIOEXPORT const char * OCIO_USER_CATEGORIES_ENVVAR;
 
-/** VarsRoles
- */
-
 // TODO: Move to .rst
 /*!rst::
 Roles
@@ -848,9 +845,6 @@ extern OCIOEXPORT const char * ROLE_INTERCHANGE_SCENE;
  */
 extern OCIOEXPORT const char * ROLE_INTERCHANGE_DISPLAY;
 
-/** VarsSharedView
- */
-
 /*!rst::
 Shared View
 ***********
@@ -862,9 +856,6 @@ Shared View
  * has the same name as the display the shared view is used by.
  */
 extern OCIOEXPORT const char * OCIO_VIEW_USE_DISPLAY_NAME;
-
-/** VarsFormatMetadata
- */
 
 // TODO: Move to .rst
 /*!rst::
@@ -918,9 +909,6 @@ extern OCIOEXPORT const char * METADATA_NAME;
  * (i.e. MatrixTransform, etc.) to get/set the id of the corresponding process node.
  */
 extern OCIOEXPORT const char * METADATA_ID;
-
-/** VarsCaches
- */
 
 /*!rst::
 Caches
