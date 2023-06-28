@@ -756,9 +756,8 @@ public:
                                          const char * builtinColorSpaceName);
 
     /**
-     * \defgroup Methods related to Roles.
-     * @{
-     *    
+     * Methods related to Roles.
+     *
      * A role allows a config author to indicate that a given color space should be used
      * for a particular purpose.  
      *
