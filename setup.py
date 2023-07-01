@@ -78,7 +78,9 @@ class CMakeBuild(build_ext):
             "-DPython_EXECUTABLE={}".format(sys.executable),
             # Not used on MSVC, but no harm
             "-DCMAKE_BUILD_TYPE={}".format(cfg),
-            "-DBUILD_SHARED_LIBS=OFF",
+            "-DBUILD_SHARED_LIBS=ON",
+            # Wheels do not support symlinks resulting in OCIO lib duplicated 3 times otherwise
+            "-DOCIO_NO_SONAME=ON",
             "-DOCIO_BUILD_DOCS=ON",
             "-DOCIO_BUILD_APPS=ON",
             "-DOCIO_BUILD_TESTS=OFF",
@@ -133,6 +135,17 @@ class CMakeBuild(build_ext):
             archs = re.findall(r"-arch (\S+)", os.environ.get("ARCHFLAGS", ""))
             if archs:
                 cmake_args += ["-DCMAKE_OSX_ARCHITECTURES={}".format(";".join(archs))]
+
+        # When building the wheel, the install step is not executed so we need
+        # to have the correct RPATH directly from the build tree output.
+        cmake_args += ["-DCMAKE_BUILD_WITH_INSTALL_RPATH=ON"]
+        # Install custom RPATH matching the wheel layout
+        if sys.platform.startswith("linux"):
+            cmake_args += ["-DCMAKE_INSTALL_RPATH={}".format("$ORIGIN")]
+            cmake_args += ["-DOCIO_PYTHON_INSTALL_RPATH={}".format("$ORIGIN/..")]
+        elif sys.platform.startswith("darwin"):
+            cmake_args += ["-DCMAKE_INSTALL_RPATH={}".format("@loader_path")]
+            cmake_args += ["-DOCIO_PYTHON_INSTALL_RPATH={}".format("@loader_path/..")]
 
         # Set CMAKE_BUILD_PARALLEL_LEVEL to control the parallel build level
         # across all generators.

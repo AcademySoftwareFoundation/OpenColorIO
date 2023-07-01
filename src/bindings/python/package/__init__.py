@@ -16,10 +16,15 @@ import os, sys, platform
 # environment variable to 0.
 #
 
-if sys.version_info >= (3, 8) and platform.system() == "Windows" and os.getenv("OCIO_PYTHON_LOAD_DLLS_FROM_PATH", "1") == "1":
-    for path in os.getenv("PATH", "").split(os.pathsep):
-        if os.path.exists(path) and path != ".":
-            os.add_dll_directory(path)
+if sys.version_info >= (3, 8) and platform.system() == "Windows":
+    # Python wheel module is dynamically linked to the OCIO lib present in the same folder.
+    here = os.path.abspath(os.path.dirname(__file__))
+    os.add_dll_directory(here)
+
+    if os.getenv("OCIO_PYTHON_LOAD_DLLS_FROM_PATH", "1") == "1":
+        for path in os.getenv("PATH", "").split(os.pathsep):
+            if os.path.exists(path) and path != ".":
+                os.add_dll_directory(path)
 
 del os, sys, platform
 

@@ -10,7 +10,7 @@ BIN_DIR = os.path.join(os.path.dirname(__file__), 'bin')
 
 
 def call_program(name, args):
-    return subprocess.call([os.path.join(BIN_DIR, name)] + args, close_fds=False)
+    return subprocess.call([os.path.join(BIN_DIR, name)] + args)
 
 
 def main():
