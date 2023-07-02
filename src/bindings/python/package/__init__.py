@@ -4,6 +4,19 @@
 import os, sys, platform
 
 #
+# Python wheel module is dynamically linked to the OCIO DLL present in the bin folder.
+#
+
+if platform.system() == "Windows":
+    here = os.path.abspath(os.path.dirname(__file__))
+    bin_dir = os.path.join(here, "bin")
+    if os.path.exists(bin_dir):
+        if sys.version_info >= (3, 8):
+            os.add_dll_directory(bin_dir)
+        else:
+            os.environ['PATH'] = '{0};{1}'.format(bin_dir, os.getenv('PATH', ''))
+
+#
 # Python 3.8+ has stopped loading DLLs from PATH environment variable on Windows.
 #
 # This code reproduce the old behavior (loading DLLs from PATH) by doing the following:
@@ -17,12 +30,6 @@ import os, sys, platform
 #
 
 if sys.version_info >= (3, 8) and platform.system() == "Windows":
-    # Python wheel module is dynamically linked to the OCIO lib present in the same folder.
-    here = os.path.abspath(os.path.dirname(__file__))
-    bin_dir = os.path.join(here, "bin")
-    if os.path.exists(bin_dir):
-        os.add_dll_directory(bin_dir)
-
     if os.getenv("OCIO_PYTHON_LOAD_DLLS_FROM_PATH", "1") == "1":
         for path in os.getenv("PATH", "").split(os.pathsep):
             if os.path.exists(path) and path != ".":
