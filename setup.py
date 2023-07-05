@@ -39,6 +39,39 @@ def get_version():
         shutil.rmtree(dirpath)
 
 
+# Remove symlinks as Python wheels do not support them at the moment.
+# Rename the remaining dylib to the expected install name (major.minor).
+def patch_symlink(folder):
+    if sys.platform.startswith("darwin"):
+        VERSION_REGEX = re.compile(
+            r"^libOpenColorIO.(?P<major>\d+).(?P<minor>\d+).\d+.dylib$")
+        NAME_PATTERN = "libOpenColorIO.{major}.{minor}.dylib"
+    elif sys.platform.startswith("linux"):
+        VERSION_REGEX = re.compile(
+            r"^libOpenColorIO.so.(?P<major>\d+).(?P<minor>\d+).\d+$")
+        NAME_PATTERN = "libOpenColorIO.so.{major}.{minor}"
+    else:
+        return
+
+    # First remove all symlinks in the folder
+    for f in os.listdir(folder):
+        filepath = os.path.join(folder, f)
+        if os.path.islink(filepath):
+            os.remove(filepath)
+
+    # Then match the remaining OCIO dynamic lib and rename it
+    for f in os.listdir(folder):
+        filepath = os.path.join(folder, f)
+        match = VERSION_REGEX.search(f)
+        if match:
+            res = match.groupdict()
+            new_filename = NAME_PATTERN.format(
+                major=res["major"], minor=res["minor"])
+            new_filepath = os.path.join(folder, new_filename)
+            os.rename(filepath, new_filepath)
+            break
+
+
 # Convert distutils Windows platform specifiers to CMake -A arguments
 PLAT_TO_CMAKE = {
     "win32": "Win32",
@@ -79,8 +112,6 @@ class CMakeBuild(build_ext):
             # Not used on MSVC, but no harm
             "-DCMAKE_BUILD_TYPE={}".format(cfg),
             "-DBUILD_SHARED_LIBS=ON",
-            # Wheels do not support symlinks resulting in OCIO lib duplicated 3 times otherwise
-            "-DOCIO_NO_SONAME=ON",
             "-DOCIO_BUILD_DOCS=ON",
             "-DOCIO_BUILD_APPS=ON",
             "-DOCIO_BUILD_TESTS=OFF",
@@ -139,13 +170,10 @@ class CMakeBuild(build_ext):
         # When building the wheel, the install step is not executed so we need
         # to have the correct RPATH directly from the build tree output.
         cmake_args += ["-DCMAKE_BUILD_WITH_INSTALL_RPATH=ON"]
-        # Install custom RPATH matching the wheel layout
         if sys.platform.startswith("linux"):
-            cmake_args += ["-DCMAKE_INSTALL_RPATH={}".format("$ORIGIN")]
-            cmake_args += ["-DOCIO_PYTHON_INSTALL_RPATH={}".format("$ORIGIN/..")]
-        elif sys.platform.startswith("darwin"):
-            cmake_args += ["-DCMAKE_INSTALL_RPATH={}".format("@loader_path")]
-            cmake_args += ["-DOCIO_PYTHON_INSTALL_RPATH={}".format("@loader_path/..")]
+            cmake_args += ["-DCMAKE_INSTALL_RPATH={}".format("$ORIGIN;$ORIGIN/..")]
+        if sys.platform.startswith("darwin"):
+            cmake_args += ["-DCMAKE_INSTALL_RPATH={}".format("@loader_path;@loader_path/..")]
 
         # Set CMAKE_BUILD_PARALLEL_LEVEL to control the parallel build level
         # across all generators.
@@ -165,6 +193,8 @@ class CMakeBuild(build_ext):
         subprocess.check_call(
             ["cmake", "--build", "."] + build_args, cwd=self.build_temp
         )
+
+        patch_symlink(extdir)
 
 
 # For historical reason, we use PyOpenColorIO as the import name

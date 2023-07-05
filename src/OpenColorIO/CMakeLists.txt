@@ -417,7 +417,6 @@ set_target_properties(OpenColorIO PROPERTIES
     LINK_OPTIONS "${CUSTOM_LINK_FLAGS}"
     VERSION       ${OpenColorIO_VERSION}
     SOVERSION     ${SOVERSION}
-    NO_SONAME     ${OCIO_NO_SONAME}
     PUBLIC_HEADER "${INSTALL_HEADERS}"
 )
 
