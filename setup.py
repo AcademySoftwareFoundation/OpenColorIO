@@ -6,7 +6,6 @@
 
 import os
 import re
-import shutil
 import subprocess
 import sys
 import tempfile
@@ -16,60 +15,49 @@ from setuptools.command.build_ext import build_ext
 
 
 # Extract the project version from CMake generated ABI header.
-# NOTE: When droping support for Python2 we can use
-# tempfile.TemporaryDirectory() context manager instead of try...finally.
 def get_version():
     VERSION_REGEX = re.compile(
         r"^\s*#\s*define\s+OCIO_VERSION_FULL_STR\s+\"(.*)\"\s*$", re.MULTILINE)
 
     here = os.path.abspath(os.path.dirname(__file__))
-    dirpath = tempfile.mkdtemp()
 
-    try:
-        stdout = subprocess.check_output(["cmake", here], cwd=dirpath)
-        path = os.path.join(dirpath, "include", "OpenColorIO", "OpenColorABI.h")
-        with open(path) as f:
-            match = VERSION_REGEX.search(f.read())
-            return match.group(1)
-    except Exception as e:
-        raise RuntimeError(
-            "Unable to find OpenColorIO version: {}".format(str(e))
-        )
-    finally:
-        shutil.rmtree(dirpath)
+    with tempfile.TemporaryDirectory() as tmpdir:
+        try:
+            subprocess.check_call(["cmake", here], cwd=tmpdir)
+            path = os.path.join(tmpdir, "include", "OpenColorIO", "OpenColorABI.h")
+            with open(path) as f:
+                match = VERSION_REGEX.search(f.read())
+                return match.group(1)
+        except Exception as e:
+            raise RuntimeError(
+                "Unable to find OpenColorIO version: {}".format(str(e))
+            )
 
 
-# Remove symlinks as Python wheels do not support them at the moment.
-# Rename the remaining dylib to the expected install name (major.minor).
-def patch_symlink(folder):
-    if sys.platform.startswith("darwin"):
-        VERSION_REGEX = re.compile(
-            r"^libOpenColorIO.(?P<major>\d+).(?P<minor>\d+).\d+.dylib$")
-        NAME_PATTERN = "libOpenColorIO.{major}.{minor}.dylib"
-    elif sys.platform.startswith("linux"):
-        VERSION_REGEX = re.compile(
-            r"^libOpenColorIO.so.(?P<major>\d+).(?P<minor>\d+).\d+$")
-        NAME_PATTERN = "libOpenColorIO.so.{major}.{minor}"
-    else:
-        return
+# Call CMake find_package from a dummy script and return whether the package
+# has been found or not.
+def cmake_find_package(package_name):
+    with tempfile.TemporaryDirectory() as tmpdir:
+        try:
+            cmakelist_path = os.path.join(tmpdir, "CMakeLists.txt")
+            with open(cmakelist_path, "w") as f:
+                f.write("""
+cmake_minimum_required(VERSION 3.13)
+project(test LANGUAGES CXX)
 
-    # First remove all symlinks in the folder
-    for f in os.listdir(folder):
-        filepath = os.path.join(folder, f)
-        if os.path.islink(filepath):
-            os.remove(filepath)
+find_package({} REQUIRED)
+""".format(package_name)
+                )
 
-    # Then match the remaining OCIO dynamic lib and rename it
-    for f in os.listdir(folder):
-        filepath = os.path.join(folder, f)
-        match = VERSION_REGEX.search(f)
-        if match:
-            res = match.groupdict()
-            new_filename = NAME_PATTERN.format(
-                major=res["major"], minor=res["minor"])
-            new_filepath = os.path.join(folder, new_filename)
-            os.rename(filepath, new_filepath)
-            break
+            subprocess.check_call(
+                ["cmake", tmpdir],
+                cwd=tmpdir,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL
+            )
+            return True
+        except Exception as e:
+            return False
 
 
 # Convert distutils Windows platform specifiers to CMake -A arguments
@@ -112,7 +100,7 @@ class CMakeBuild(build_ext):
             # Not used on MSVC, but no harm
             "-DCMAKE_BUILD_TYPE={}".format(cfg),
             "-DBUILD_SHARED_LIBS=ON",
-            "-DOCIO_BUILD_DOCS=ON",
+            "-DOCIO_USE_SOVERSION=OFF",
             "-DOCIO_BUILD_APPS=ON",
             "-DOCIO_BUILD_TESTS=OFF",
             "-DOCIO_BUILD_GPU_TESTS=OFF",
@@ -175,6 +163,11 @@ class CMakeBuild(build_ext):
         if sys.platform.startswith("darwin"):
             cmake_args += ["-DCMAKE_INSTALL_RPATH={}".format("@loader_path;@loader_path/..")]
 
+        # Documentation is used for Python docstrings but we allow to build
+        # the wheel without docs to remove a hard dependency on doxygen.
+        if cmake_find_package("Doxygen"):
+            cmake_args += ["-DOCIO_BUILD_DOCS=ON"]
+
         # Set CMAKE_BUILD_PARALLEL_LEVEL to control the parallel build level
         # across all generators.
         if "CMAKE_BUILD_PARALLEL_LEVEL" not in os.environ:
@@ -193,8 +186,6 @@ class CMakeBuild(build_ext):
         subprocess.check_call(
             ["cmake", "--build", "."] + build_args, cwd=self.build_temp
         )
-
-        patch_symlink(extdir)
 
 
 # For historical reason, we use PyOpenColorIO as the import name

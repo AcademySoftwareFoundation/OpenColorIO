@@ -161,6 +161,7 @@ endif()
 # Other preferences
 
 option(OCIO_VERBOSE "Display more information when searching or installing dependencies" OFF)
+option(OCIO_USE_SOVERSION "Enable versioning in OCIO shared library name" ON)
 
 ###############################################################################
 # Warnings / debugging settings
