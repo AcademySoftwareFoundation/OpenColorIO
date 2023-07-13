@@ -334,6 +334,38 @@ void bindPyConfig(py::module & m)
              DOC(Config, setInactiveColorSpaces))
         .def("getInactiveColorSpaces", &Config::getInactiveColorSpaces, 
              DOC(Config, getInactiveColorSpaces))
+        .def("isInactiveColorSpace", &Config::isInactiveColorSpace, "colorspace"_a,
+             DOC(Config, isInactiveColorSpace))      
+        .def_static("IdentifyBuiltinColorSpace", [](const ConstConfigRcPtr & srcConfig,
+                                                    const ConstConfigRcPtr & builtinConfig,
+                                                    const char * builtinColorSpaceName)
+            {
+                return Config::IdentifyBuiltinColorSpace(srcConfig,
+                                                         builtinConfig,
+                                                         builtinColorSpaceName);
+            },
+                    "srcConfig"_a, "builtinConfig"_a, "builtinColorSpaceName"_a,
+                    DOC(Config, IdentifyBuiltinColorSpace))
+
+        .def_static("IdentifyInterchangeSpace", [](const ConstConfigRcPtr & srcConfig,
+                                                   const char * srcColorSpaceName,
+                                                   const ConstConfigRcPtr & builtinConfig,
+                                                   const char * builtinColorSpaceName)
+            {
+                const char * srcInterchangePtr = nullptr;
+                const char * builtinInterchangePtr = nullptr;
+
+                Config::IdentifyInterchangeSpace(&srcInterchangePtr,
+                                                 &builtinInterchangePtr,
+                                                 srcConfig,
+                                                 srcColorSpaceName,
+                                                 builtinConfig,
+                                                 builtinColorSpaceName);
+                // Return the tuple by value which copies the strings values.
+                return std::make_tuple(std::string(srcInterchangePtr), std::string(builtinInterchangePtr));
+            },
+                "srcConfig"_a, "srcColorSpaceName"_a, "builtinConfig"_a, "builtinColorSpaceName"_a,
+                DOC(Config, IdentifyInterchangeSpace))
 
         // Roles
         .def("setRole", &Config::setRole, "role"_a, "colorSpaceName"_a, 
@@ -348,6 +380,10 @@ void bindPyConfig(py::module & m)
             { 
                 return RoleColorSpaceIterator(self); 
             })
+        .def("getRoleColorSpace", 
+             (const char * (Config::*)(const char *) const) &Config::getRoleColorSpace, 
+             "roleName"_a,
+             DOC(Config, getRoleColorSpace)) 
 
         // Display/View Registration
         .def("addSharedView",
@@ -776,6 +812,8 @@ void bindPyConfig(py::module & m)
                     "dstContext"_a, "dstConfig"_a, "dstColorSpaceName"_a, "dstInterchangeName"_a, 
                     DOC(Config, GetProcessorFromConfigs, 4))
         .def("setProcessorCacheFlags", &Config::setProcessorCacheFlags, "flags"_a, 
+             DOC(Config, setProcessorCacheFlags))
+        .def("clearProcessorCache", &Config::clearProcessorCache, 
              DOC(Config, setProcessorCacheFlags))
 
         // Archiving

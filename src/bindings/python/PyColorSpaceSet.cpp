@@ -80,6 +80,8 @@ void bindPyColorSpaceSet(py::module & m)
             })
         .def("getColorSpace", &ColorSpaceSet::getColorSpace, "name"_a, 
              DOC(ColorSpaceSet, getColorSpace))
+        .def("hasColorSpace", &ColorSpaceSet::hasColorSpace, "name"_a, 
+             DOC(ColorSpaceSet, hasColorSpace))
         .def("addColorSpace", &ColorSpaceSet::addColorSpace, "colorSpace"_a, 
              DOC(ColorSpaceSet, addColorSpace))
         .def("addColorSpaces", &ColorSpaceSet::addColorSpaces, "colorSpaces"_a, 

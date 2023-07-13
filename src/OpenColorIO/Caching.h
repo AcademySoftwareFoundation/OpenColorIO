@@ -54,11 +54,6 @@ public:
         AutoMutex lock(m_mutex);
 
         m_enabled = enable;
-        
-        if (!isEnabled())
-        {
-            m_entries.clear();
-        }
     }
 
     inline bool isEnabled() const noexcept { return !m_envDisableAllCaches && m_enabled; }

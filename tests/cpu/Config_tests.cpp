@@ -312,6 +312,16 @@ OCIO_ADD_TEST(Config, roles)
 
     OCIO_CHECK_EQUAL(std::string(config->getRoleName(-4)), "");
     OCIO_CHECK_EQUAL(std::string(config->getRoleColorSpace(-4)), "");
+
+    // Test existing roles.
+    OCIO_CHECK_EQUAL(std::string(config->getRoleColorSpace("scene_linear")), std::string("lnh"));
+    OCIO_CHECK_EQUAL(std::string(config->getRoleColorSpace("compositing_log")), std::string("lgh"));
+
+    // Test a unknown role.
+    OCIO_CHECK_EQUAL(std::string(config->getRoleColorSpace("wrong_role")), std::string(""));
+
+    // Test an empty input.
+    OCIO_CHECK_EQUAL(std::string(config->getRoleColorSpace("")), std::string(""));
 }
 
 OCIO_ADD_TEST(Config, required_roles_for_version_2_2)
@@ -357,51 +367,19 @@ OCIO_ADD_TEST(Config, required_roles_for_version_2_2)
     }
     
     {
-        // Test that all errors appears when all required roles are missing.
+        // Test that all errors appear when all required roles are missing.
 
         OCIO::LogGuard logGuard;
         OCIO_CHECK_NO_THROW(config->validate());
-
-        StringUtils::StringVec svec = StringUtils::SplitByLines(logGuard.output());
-        OCIO_CHECK_ASSERT(
-            StringUtils::Contain(
-                svec, 
-                "[OpenColorIO Error]: The scene_linear role is required for a config version 2.2 "\
-                "or higher."
-            )
-        );
-
-        OCIO_CHECK_ASSERT(
-            StringUtils::Contain(
-                svec, 
-                "[OpenColorIO Error]: The compositing_log role is required for a config version "\
-                "2.2 or higher."
-            )
-        );
-
-        OCIO_CHECK_ASSERT(
-            StringUtils::Contain(
-                svec, 
-                "[OpenColorIO Error]: The color_timing role is required for a config version 2.2 "\
-                "or higher."
-            )
-        );
-
-        OCIO_CHECK_ASSERT(
-            StringUtils::Contain(
-                svec, 
-                "[OpenColorIO Error]: The aces_interchange role is required when there are "\
-                "scene-referred color spaces and the config version is 2.2 or higher."
-            )
-        );
-
-        OCIO_CHECK_ASSERT(
-            StringUtils::Contain(
-                svec, 
-                "[OpenColorIO Error]: The cie_xyz_d65_interchange role is required when there are"\
-                " display-referred color spaces and the config version is 2.2 or higher."
-            )
-        );
+        // Check that the log contains the expected error messages for the missing roles and mute 
+        // them so that (only) those messages don't appear in the test output.
+        OCIO_CHECK_ASSERT(OCIO::checkAndMuteSceneLinearRoleError(logGuard));
+        OCIO_CHECK_ASSERT(OCIO::checkAndMuteCompositingLogRoleError(logGuard));
+        OCIO_CHECK_ASSERT(OCIO::checkAndMuteColorTimingRoleError(logGuard));
+        OCIO_CHECK_ASSERT(OCIO::checkAndMuteAcesInterchangeRoleError(logGuard));
+        OCIO_CHECK_ASSERT(OCIO::checkAndMuteDisplayInterchangeRoleError(logGuard));
+        // If there are any unexpected log messages, print them to the shell.
+        logGuard.print();
     }
     
     // Set colorspace for all required roles.
@@ -416,11 +394,7 @@ OCIO_ADD_TEST(Config, required_roles_for_version_2_2)
 
         OCIO::LogGuard logGuard;
         OCIO_CHECK_NO_THROW(config->validate());
-
-        StringUtils::StringVec svec = StringUtils::SplitByLines(logGuard.output());
-        OCIO_CHECK_ASSERT(
-            !StringUtils::Contain(svec, "[OpenColorIO Error]")
-        );
+        OCIO_CHECK_ASSERT(logGuard.empty());
     }
     
     {
@@ -454,12 +428,7 @@ OCIO_ADD_TEST(Config, required_roles_for_version_2_2)
         OCIO_CHECK_NO_THROW(config->validate());
 
         StringUtils::StringVec svec = StringUtils::SplitByLines(logGuard.output());
-        OCIO_CHECK_ASSERT(
-            StringUtils::Contain(
-            svec, 
-            "[OpenColorIO Error]: The compositing_log role is required for a config version 2.2 "\
-            "or higher.")
-        );
+        checkAndMuteCompositingLogRoleError(logGuard);
 
         // Set compositing_log for next test.
         config->setRole(OCIO::ROLE_COMPOSITING_LOG, dcs->getName());
@@ -475,12 +444,7 @@ OCIO_ADD_TEST(Config, required_roles_for_version_2_2)
         OCIO_CHECK_NO_THROW(config->validate());
 
         StringUtils::StringVec svec = StringUtils::SplitByLines(logGuard.output());
-        OCIO_CHECK_ASSERT(
-            StringUtils::Contain(
-            svec, 
-            "[OpenColorIO Error]: The color_timing role is required for a config version 2.2 or "\
-            "higher.")
-        );
+        checkAndMuteColorTimingRoleError(logGuard);
 
         // Set color_timing for next test.
         config->setRole(OCIO::ROLE_COLOR_TIMING, dcs->getName());
@@ -494,13 +458,7 @@ OCIO_ADD_TEST(Config, required_roles_for_version_2_2)
 
         OCIO::LogGuard logGuard;
         OCIO_CHECK_NO_THROW(config->validate());
-        OCIO_CHECK_ASSERT(
-            StringUtils::StartsWith(
-                logGuard.output(), 
-                "[OpenColorIO Error]: The aces_interchange role is required when there are "\
-                "scene-referred color spaces and the config version is 2.2 or higher."
-            )
-        );
+        OCIO::checkAndMuteAcesInterchangeRoleError(logGuard);
 
         // Set aces_interchange for next test.
         config->setRole(OCIO::ROLE_INTERCHANGE_SCENE, scs->getName());
@@ -514,21 +472,14 @@ OCIO_ADD_TEST(Config, required_roles_for_version_2_2)
 
         OCIO::LogGuard logGuard;
         OCIO_CHECK_NO_THROW(config->validate());
-
-        StringUtils::StringVec svec = StringUtils::SplitByLines(logGuard.output());
-        OCIO_CHECK_ASSERT(
-            StringUtils::Contain(
-            svec, 
-            "[OpenColorIO Error]: The cie_xyz_d65_interchange role is required when there are "\
-            "display-referred color spaces and the config version is 2.2 or higher.")
-        );
+        OCIO::checkAndMuteDisplayInterchangeRoleError(logGuard);
 
         // Set cie_xyz_d65_interchange for next test.
         config->setRole(OCIO::ROLE_INTERCHANGE_DISPLAY, dcs->getName());
     }
 
     {
-        // Test that aces_interchange role has the wrong colorspace type.
+        // Test detection of the aces_interchange role having the wrong colorspace type.
 
         // Set a display-referred colorspace to both interchange roles.
         config->setRole(OCIO::ROLE_INTERCHANGE_SCENE, dcs->getName());
@@ -544,7 +495,7 @@ OCIO_ADD_TEST(Config, required_roles_for_version_2_2)
     }
 
     {
-        // Test that cie_xyz_d65_interchange role has the wrong colorspace type.
+        // Test detection of the cie_xyz_d65_interchange role having the wrong colorspace type.
 
         // Set a scene-referred colorspace to both interchange roles.
         config->setRole(OCIO::ROLE_INTERCHANGE_SCENE, scs->getName());
@@ -574,8 +525,7 @@ OCIO_ADD_TEST(Config, required_roles_for_version_2_2)
 
         OCIO::LogGuard logGuard;
         OCIO_CHECK_NO_THROW(config->validate());
-        OCIO_CHECK_ASSERT(
-        StringUtils::StartsWith(logGuard.output(), ""));
+        OCIO_CHECK_ASSERT(logGuard.empty());
     }
 }
 
@@ -1672,7 +1622,7 @@ OCIO_ADD_TEST(Config, context_variable_with_display_view)
         OCIO_CHECK_THROW_WHAT(config->getProcessor("cs1", "disp1", "view1", OCIO::TRANSFORM_DIR_FORWARD),
                               OCIO::Exception,
                               "DisplayViewTransform error. Cannot find color space or "
-                              "named transform, named '$ENV1'.");
+                              "named transform with name '$ENV1'.");
     }
 }
 
@@ -5710,6 +5660,35 @@ OCIO_ADD_TEST(Config, inactive_color_space)
                                                       OCIO::COLORSPACE_ALL, 1));
 }
 
+OCIO_ADD_TEST(Config, inactive_colorspaces)
+{
+    // Using Built-in config to test the getInactiveColorSpace method.
+    const std::string cgConfigName = "cg-config-v1.0.0_aces-v1.3_ocio-v2.1";
+    OCIO::ConstConfigRcPtr config;
+
+    OCIO_CHECK_NO_THROW(
+        config = OCIO::Config::CreateFromBuiltinConfig(cgConfigName.c_str())
+    );
+    OCIO_REQUIRE_ASSERT(config);
+
+    OCIO_CHECK_NO_THROW(config->validate());
+
+    {
+        // Test various combinations of input.
+
+        OCIO_CHECK_EQUAL(config->isInactiveColorSpace(""), false);
+        OCIO_CHECK_EQUAL(config->isInactiveColorSpace("fake-colorspace-name"), false);
+
+        // Test existing colorspaces from cg-config-v1.0.0_aces-v1.3_ocio-v2.1. 
+
+        // Colorspace exists and is active.
+        OCIO_CHECK_EQUAL(config->isInactiveColorSpace("Linear P3-D65"), false);
+
+        // Colorspace exists and is inactive.
+        OCIO_CHECK_EQUAL(config->isInactiveColorSpace("Rec.1886 Rec.2020 - Display"), true);
+    }
+}
+
 OCIO_ADD_TEST(Config, inactive_color_space_precedence)
 {
     // The test demonstrates that an API request supersedes the env. variable and the
@@ -5906,7 +5885,7 @@ OCIO_ADD_TEST(Config, inactive_color_space_read_write)
             OCIO::LogGuard log;
             OCIO_CHECK_NO_THROW(config->validate());
             OCIO_CHECK_EQUAL(log.output(), 
-                             "[OpenColorIO Warning]: Inactive 'unknown' is neither a color "
+                             "[OpenColorIO Info]: Inactive 'unknown' is neither a color "
                              "space nor a named transform.\n");
         }
 
@@ -5920,7 +5899,7 @@ OCIO_ADD_TEST(Config, inactive_color_space_read_write)
     }
 }
 
-OCIO_ADD_TEST(Config, two_configs)
+OCIO_ADD_TEST(Config, get_processor_from_two_configs)
 {
     constexpr const char * SIMPLE_CONFIG1{ R"(
 ocio_profile_version: 2
@@ -5932,6 +5911,11 @@ roles:
   default: raw1
   aces_interchange: aces1
   cie_xyz_d65_interchange: display1
+
+view_transforms:
+  - !<ViewTransform>
+    name: vt1
+    from_scene_reference: !<RangeTransform> {min_in_value: 0., min_out_value: 0.}
 
 colorspaces:
   - !<ColorSpace>
@@ -5947,6 +5931,10 @@ colorspaces:
     name: aces1
     allocation: uniform
     from_scene_reference: !<ExponentTransform> {value: [1.101, 1.202, 1.303, 1.404]}
+
+  - !<ColorSpace>
+    name: data_space
+    isdata: true
 
 display_colorspaces:
   - !<ColorSpace>
@@ -6008,8 +5996,8 @@ display_colorspaces:
     is.str(SIMPLE_CONFIG2);
     OCIO_CHECK_NO_THROW(config2 = OCIO::Config::CreateFromStream(is));
 
+    // Just specify color spaces and have OCIO use the interchange roles.
     OCIO::ConstProcessorRcPtr p;
-    // NB: Although they have the same name, they are in different configs and are different ColorSpaces.
     OCIO_CHECK_NO_THROW(p = OCIO::Config::GetProcessorFromConfigs(config1, "test1", config2, "test2"));
     OCIO_REQUIRE_ASSERT(p);
     auto group = p->createGroupTransform();
@@ -6069,7 +6057,35 @@ display_colorspaces:
     auto l3 = OCIO_DYNAMIC_POINTER_CAST<OCIO::LogTransform>(t3);
     OCIO_CHECK_ASSERT(l3);
 
-    OCIO_CHECK_THROW_WHAT(OCIO::Config::GetProcessorFromConfigs(config1, "display2", config2, "test2"),
+    // If one of the spaces is a data space, the whole result must be a no-op.
+    OCIO_CHECK_NO_THROW(p = OCIO::Config::GetProcessorFromConfigs(config1, "data_space", config2, "test2"));
+    OCIO_REQUIRE_ASSERT(p);
+    group = p->createGroupTransform();
+    OCIO_REQUIRE_EQUAL(group->getNumTransforms(), 0);
+
+    // Mixed Scene- and Display-referred interchange spaces.
+    OCIO_CHECK_NO_THROW(p = OCIO::Config::GetProcessorFromConfigs(config1, "display2", config2, "test2"));
+    OCIO_REQUIRE_ASSERT(p);
+    group = p->createGroupTransform();
+    OCIO_REQUIRE_EQUAL(group->getNumTransforms(), 5);
+    t0 = group->getTransform(0);
+    f0 = OCIO_DYNAMIC_POINTER_CAST<OCIO::FixedFunctionTransform>(t0);
+    OCIO_CHECK_ASSERT(f0);
+    t1 = group->getTransform(1);
+    auto r1 = OCIO_DYNAMIC_POINTER_CAST<OCIO::RangeTransform>(t1);
+    OCIO_CHECK_ASSERT(c1);
+    t2 = group->getTransform(2);
+    e2 = OCIO_DYNAMIC_POINTER_CAST<OCIO::ExponentTransform>(t2);
+    OCIO_CHECK_ASSERT(e2);
+    t3 = group->getTransform(3);
+    auto r3 = OCIO_DYNAMIC_POINTER_CAST<OCIO::RangeTransform>(t3);
+    OCIO_CHECK_ASSERT(r3);
+    auto t4 = group->getTransform(4);
+    auto m4 = OCIO_DYNAMIC_POINTER_CAST<OCIO::MatrixTransform>(t4);
+    OCIO_CHECK_ASSERT(m4);
+
+    // Second config has no view transform but is asked to connect a display color space to aces_interchange.
+    OCIO_CHECK_THROW_WHAT(OCIO::Config::GetProcessorFromConfigs(config1, "test1", config2, "display3"),
                           OCIO::Exception,
                           "There is no view transform between the main scene-referred space "
                           "and the display-referred space");
@@ -6092,6 +6108,12 @@ colorspaces:
     name: test
     allocation: uniform
     from_scene_reference: !<MatrixTransform> {offset: [0.11, 0.12, 0.13, 0]}
+
+display_colorspaces:
+  - !<ColorSpace>
+    name: display5
+    allocation: uniform
+    from_display_reference: !<ExponentTransform> {value: 2.4}
 )" };
 
     is.clear();
@@ -6101,11 +6123,15 @@ colorspaces:
 
     OCIO_CHECK_THROW_WHAT(OCIO::Config::GetProcessorFromConfigs(config1, "test1", config3, "test"),
                           OCIO::Exception,
-                          "The role 'aces_interchange' is missing in the destination config");
+                          "The required role 'aces_interchange' is missing from the source and/or destination config.");
 
     OCIO_CHECK_THROW_WHAT(OCIO::Config::GetProcessorFromConfigs(config1, "display1", config3, "test"),
                           OCIO::Exception,
-                          "The role 'cie_xyz_d65_interchange' is missing in the destination config");
+                          "The required role 'aces_interchange' is missing from the source and/or destination config.");
+
+    OCIO_CHECK_THROW_WHAT(OCIO::Config::GetProcessorFromConfigs(config1, "display1", config3, "display5"),
+                          OCIO::Exception,
+                          "The required role 'cie_xyz_d65_interchange' is missing from the source and/or destination config.");
 }
 
 
@@ -6365,6 +6391,8 @@ OCIO_ADD_TEST(Config, display_view)
         config->addColorSpace(cs);
     }
 
+    config->setVersion(2, 1);
+
     // Add a scene-referred and a display-referred color space.
     auto cs = OCIO::ColorSpace::Create(OCIO::REFERENCE_SPACE_SCENE);
     cs->setName("scs");
@@ -6406,7 +6434,7 @@ OCIO_ADD_TEST(Config, display_view)
 
     std::stringstream os;
     os << *config.get();
-    constexpr char expected[]{ R"(ocio_profile_version: 2.2
+    constexpr char expected[]{ R"(ocio_profile_version: 2.1
 
 environment:
   {}
@@ -9038,7 +9066,13 @@ OCIO_ADD_TEST(Config, create_builtin_config)
         );
         OCIO_REQUIRE_ASSERT(config);
 
+        OCIO::LogGuard logGuard;
         OCIO_CHECK_NO_THROW(config->validate());
+        // Mute output related to a bug in the initial CG config where the inactive_colorspaces 
+        // list has color spaces that don't exist.
+        OCIO::muteInactiveColorspaceInfo(logGuard);
+        logGuard.print();
+
         OCIO_CHECK_EQUAL(
             std::string(config->getName()), 
             cgConfigName
@@ -9055,7 +9089,11 @@ OCIO_ADD_TEST(Config, create_builtin_config)
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromEnv());
         OCIO_REQUIRE_ASSERT(config);
 
+        OCIO::LogGuard logGuard;
         OCIO_CHECK_NO_THROW(config->validate());
+        OCIO::muteInactiveColorspaceInfo(logGuard);
+        logGuard.print();
+        
         OCIO_CHECK_EQUAL(
             std::string(config->getName()), 
             cgConfigName
@@ -9072,7 +9110,11 @@ OCIO_ADD_TEST(Config, create_builtin_config)
         );
         OCIO_REQUIRE_ASSERT(config);
 
+        OCIO::LogGuard logGuard;
         OCIO_CHECK_NO_THROW(config->validate());
+        OCIO::muteInactiveColorspaceInfo(logGuard);
+        logGuard.print();
+
         OCIO_CHECK_EQUAL(
             std::string(config->getName()), 
             cgConfigName
@@ -9151,7 +9193,11 @@ OCIO_ADD_TEST(Config, create_builtin_config)
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromEnv());
         OCIO_REQUIRE_ASSERT(config);
 
+        OCIO::LogGuard logGuard;
         OCIO_CHECK_NO_THROW(config->validate());
+        OCIO::muteInactiveColorspaceInfo(logGuard);
+        logGuard.print();
+
         OCIO_CHECK_EQUAL(
             std::string(config->getName()), 
             std::string("cg-config-v1.0.0_aces-v1.3_ocio-v2.1")
@@ -9165,8 +9211,12 @@ OCIO_ADD_TEST(Config, create_builtin_config)
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromFile("ocio://default"));
         OCIO_REQUIRE_ASSERT(config);
-
+        
+        OCIO::LogGuard logGuard;
         OCIO_CHECK_NO_THROW(config->validate());
+        OCIO::muteInactiveColorspaceInfo(logGuard);
+        logGuard.print();
+
         OCIO_CHECK_EQUAL(
             std::string(config->getName()), 
             std::string("cg-config-v1.0.0_aces-v1.3_ocio-v2.1")

@@ -2,7 +2,7 @@
 # Copyright Contributors to the OpenColorIO Project.
 
 # Define used for tests in tests/cpu/Context_tests.cpp
-add_definitions("-DOCIO_SOURCE_DIR=${CMAKE_SOURCE_DIR}")
+add_definitions("-DOCIO_SOURCE_DIR=${PROJECT_SOURCE_DIR}")
 
 function(add_ocio_test NAME SOURCES PRIVATE_INCLUDES)
     set(TEST_BINARY "test_${NAME}_exec")
@@ -39,8 +39,8 @@ function(add_ocio_test NAME SOURCES PRIVATE_INCLUDES)
         target_include_directories(${TEST_BINARY}
             PRIVATE
                 "$<TARGET_PROPERTY:OpenColorIO,INCLUDE_DIRECTORIES>"
-                "${CMAKE_SOURCE_DIR}/tests/cpu"
-                "${CMAKE_BINARY_DIR}/generated_include"
+                "${PROJECT_SOURCE_DIR}/tests/cpu"
+                "${PROJECT_BINARY_DIR}/generated_include"
         )
     endif(PRIVATE_INCLUDES)
     if(OCIO_USE_SSE)
@@ -90,6 +90,7 @@ endfunction(add_ocio_test)
 set(SOURCES
     builtinconfigs/CGConfig.cpp
     builtinconfigs/StudioConfig.cpp
+    ConfigUtils.cpp
     fileformats/cdl/CDLParser.cpp
     fileformats/cdl/CDLReaderHelper.cpp
     fileformats/cdl/CDLWriter.cpp
@@ -277,7 +278,7 @@ function(prepend var prefix)
     set(${var} "${new}" PARENT_SCOPE)
 endfunction(prepend)
 
-prepend(SOURCES "${CMAKE_SOURCE_DIR}/src/OpenColorIO/" ${SOURCES})
+prepend(SOURCES "${PROJECT_SOURCE_DIR}/src/OpenColorIO/" ${SOURCES})
 
 list(APPEND SOURCES ${TESTS})
 

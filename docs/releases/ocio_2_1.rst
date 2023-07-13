@@ -12,8 +12,9 @@ Timeline
 OpenColorIO 2.1 was delivered in August 2021 and is in the VFX Reference Platform for
 calendar year 2022.
 
-New Features
-============
+
+New Feature Guide
+=================
 
 ACES 1.3 Gamut Compression
 **************************
