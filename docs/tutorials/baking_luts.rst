@@ -150,11 +150,10 @@ this to a Flame compatible 3dl file, simply run::
     ociobakelut --format flame --lut log_to_display.lut for_flame.3dl
 
 
-Reversing a 1D LUT
+Reversing a LUT
 ++++++++++++++++++
 
-You can apply a LUT in reverse, and write this to a new LUT (this does
-not work for 3D LUT's, but will for 1D LUT's)::
+You can apply a LUT in reverse, and write this to a new LUT::
 
     bash$ ociobakelut --format flame --invlut logtosrgb.3dl srgbtolog.3dl
 
