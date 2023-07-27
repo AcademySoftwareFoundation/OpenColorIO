@@ -811,6 +811,79 @@ void bindPyConfig(py::module & m)
                     "srcContext"_a, "srcConfig"_a, "srcColorSpaceName"_a, "srcInterchangeName"_a, 
                     "dstContext"_a, "dstConfig"_a, "dstColorSpaceName"_a, "dstInterchangeName"_a, 
                     DOC(Config, GetProcessorFromConfigs, 4))
+        .def_static("GetProcessorFromConfigs", [](const ConstConfigRcPtr & srcConfig,
+                                                  const char * srcColorSpaceName,
+                                                  const ConstConfigRcPtr & dstConfig,
+                                                  const char * dstDisplay,
+                                                  const char * dstView,
+                                                  TransformDirection direction)
+            {
+                return Config::GetProcessorFromConfigs(srcConfig, srcColorSpaceName,
+                                                       dstConfig, dstDisplay, dstView, direction);
+            },
+                    "srcConfig"_a, "srcColorSpaceName"_a, "dstConfig"_a, "dstDisplay"_a, "dstView"_a, "direction"_a,
+                    DOC(Config, GetProcessorFromConfigs, 5))
+        .def_static("GetProcessorFromConfigs", [](const ConstContextRcPtr & srcContext,
+                                                  const ConstConfigRcPtr & srcConfig,
+                                                  const char * srcColorSpaceName,
+                                                  const ConstContextRcPtr & dstContext,
+                                                  const ConstConfigRcPtr & dstConfig,
+                                                  const char * dstDisplay,
+                                                  const char * dstView,
+                                                  TransformDirection direction)
+            {
+                return Config::GetProcessorFromConfigs(srcContext, srcConfig, srcColorSpaceName,
+                                                       dstContext, dstConfig, dstDisplay, dstView, direction);
+            },
+                    "srcContext"_a, "srcConfig"_a, "srcColorSpaceName"_a,
+                    "dstContext"_a, "dstConfig"_a, "dstView"_a, "dstDisplay"_a, "direction"_a,
+                    DOC(Config, GetProcessorFromConfigs, 6))
+        .def_static("GetProcessorFromConfigs", [](const ConstConfigRcPtr & srcConfig,
+                                                  const char * srcColorSpaceName,
+                                                  const char * srcInterchangeName,
+                                                  const ConstConfigRcPtr & dstConfig,
+                                                  const char * dstDisplay,
+                                                  const char * dstView,
+                                                  TransformDirection direction,
+                                                  const char * dstInterchangeName)
+            {
+                return Config::GetProcessorFromConfigs(srcConfig,
+                                                       srcColorSpaceName,
+                                                       srcInterchangeName,
+                                                       dstConfig,
+                                                       dstDisplay,
+                                                       dstView,
+                                                       direction,
+                                                       dstInterchangeName);
+            },
+                    "srcConfig"_a, "srcColorSpaceName"_a, "srcInterchangeName"_a,
+                    "dstConfig"_a, "dstDisplay"_a, "dstView"_a, "direction"_a, "dstInterchangeName"_a,
+                    DOC(Config, GetProcessorFromConfigs, 7))
+        .def_static("GetProcessorFromConfigs", [](const ConstContextRcPtr & srcContext,
+                                                  const ConstConfigRcPtr & srcConfig,
+                                                  const char * srcColorSpaceName,
+                                                  const char * srcInterchangeName,
+                                                  const ConstContextRcPtr & dstContext,
+                                                  const ConstConfigRcPtr & dstConfig,
+                                                  const char * dstDisplay,
+                                                  const char * dstView,
+                                                  TransformDirection direction,
+                                                  const char * dstInterchangeName)
+            {
+                return Config::GetProcessorFromConfigs(srcContext,
+                                                       srcConfig,
+                                                       srcColorSpaceName,
+                                                       srcInterchangeName,
+                                                       dstContext,
+                                                       dstConfig,
+                                                       dstDisplay,
+                                                       dstView,
+                                                       direction,
+                                                       dstInterchangeName);
+            },
+                    "srcContext"_a, "srcConfig"_a, "srcColorSpaceName"_a, "srcInterchangeName"_a,
+                    "dstContext"_a, "dstConfig"_a, "dstDisplay"_a, "dstView"_a, "direction"_a, "dstInterchangeName"_a,
+                    DOC(Config, GetProcessorFromConfigs, 8))
         .def("setProcessorCacheFlags", &Config::setProcessorCacheFlags, "flags"_a, 
              DOC(Config, setProcessorCacheFlags))
         .def("clearProcessorCache", &Config::clearProcessorCache, 
