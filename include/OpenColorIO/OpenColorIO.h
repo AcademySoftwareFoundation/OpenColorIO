@@ -1410,14 +1410,14 @@ public:
      * The srcInterchangeName and dstInterchangeName must refer to a pair of
      * color spaces in the two configs that are the same.  A role name may also be used.
      */
-    static ConstProcessorRcPtr GetProcessorFromConfigs(const ConstConfigRcPtr& srcConfig,
-                                                       const char* srcColorSpaceName,
-                                                       const char* srcInterchangeName,
-                                                       const ConstConfigRcPtr& dstConfig,
-                                                       const char* dstDisplay,
-                                                       const char* dstView,
-                                                       TransformDirection direction,
-                                                       const char* dstInterchangeName);
+    static ConstProcessorRcPtr GetProcessorFromConfigs(const ConstConfigRcPtr & srcConfig,
+                                                       const char * srcColorSpaceName,
+                                                       const char * srcInterchangeName,
+                                                       const ConstConfigRcPtr & dstConfig,
+                                                       const char * dstDisplay,
+                                                       const char * dstView,
+                                                       const char * dstInterchangeName,
+                                                       TransformDirection direction);
 
     static ConstProcessorRcPtr GetProcessorFromConfigs(const ConstContextRcPtr & srcContext,
                                                        const ConstConfigRcPtr & srcConfig,
@@ -1427,8 +1427,8 @@ public:
                                                        const ConstConfigRcPtr & dstConfig,
                                                        const char * dstDisplay,
                                                        const char * dstView,
-                                                       TransformDirection direction,
-                                                       const char * dstInterchangeName);
+                                                       const char * dstInterchangeName,
+                                                       TransformDirection direction);
 
     /// Get the Processor Cache flags.
     ProcessorCacheFlags getProcessorCacheFlags() const noexcept;

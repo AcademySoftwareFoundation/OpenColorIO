@@ -4638,7 +4638,7 @@ ConstProcessorRcPtr Config::GetProcessorFromConfigs(const ConstContextRcPtr & sr
     }
 
     return GetProcessorFromConfigs(srcContext, srcConfig, srcName, srcExName,
-                                   dstContext, dstConfig, dstDisplay, dstView, direction, dstExName);
+                                   dstContext, dstConfig, dstDisplay, dstView, dstExName, direction);
 }
 
 ConstProcessorRcPtr Config::GetProcessorFromConfigs(const ConstConfigRcPtr& srcConfig,
@@ -4647,11 +4647,11 @@ ConstProcessorRcPtr Config::GetProcessorFromConfigs(const ConstConfigRcPtr& srcC
                                                     const ConstConfigRcPtr & dstConfig,
                                                     const char * dstDisplay,
                                                     const char * dstView,
-                                                    TransformDirection direction,
-                                                    const char * dstInterchangeName)
+                                                    const char* dstInterchangeName,
+                                                    TransformDirection direction)
 {
     return GetProcessorFromConfigs(srcConfig->getCurrentContext(), srcConfig, srcName, srcInterchangeName,
-                                   dstConfig->getCurrentContext(), dstConfig, dstDisplay, dstView, direction, dstInterchangeName);
+                                   dstConfig->getCurrentContext(), dstConfig, dstDisplay, dstView, dstInterchangeName, direction);
 }
 
 ConstProcessorRcPtr Config::GetProcessorFromConfigs(const ConstContextRcPtr & srcContext,
@@ -4662,8 +4662,8 @@ ConstProcessorRcPtr Config::GetProcessorFromConfigs(const ConstContextRcPtr & sr
                                                     const ConstConfigRcPtr & dstConfig,
                                                     const char * dstDisplay,
                                                     const char * dstView,
-                                                    TransformDirection direction,
-                                                    const char * dstInterchangeName)
+                                                    const char * dstInterchangeName,
+                                                    TransformDirection direction)
 {
     ConstColorSpaceRcPtr srcColorSpace = srcConfig->getColorSpace(srcName);
     if (!srcColorSpace)

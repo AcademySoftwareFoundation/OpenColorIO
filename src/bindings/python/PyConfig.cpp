@@ -844,8 +844,8 @@ void bindPyConfig(py::module & m)
                                                   const ConstConfigRcPtr & dstConfig,
                                                   const char * dstDisplay,
                                                   const char * dstView,
-                                                  TransformDirection direction,
-                                                  const char * dstInterchangeName)
+                                                  const char * dstInterchangeName,
+                                                  TransformDirection direction)
             {
                 return Config::GetProcessorFromConfigs(srcConfig,
                                                        srcColorSpaceName,
@@ -853,11 +853,11 @@ void bindPyConfig(py::module & m)
                                                        dstConfig,
                                                        dstDisplay,
                                                        dstView,
-                                                       direction,
-                                                       dstInterchangeName);
+                                                       dstInterchangeName,
+                                                       direction);
             },
                     "srcConfig"_a, "srcColorSpaceName"_a, "srcInterchangeName"_a,
-                    "dstConfig"_a, "dstDisplay"_a, "dstView"_a, "direction"_a, "dstInterchangeName"_a,
+                    "dstConfig"_a, "dstDisplay"_a, "dstView"_a, "dstInterchangeName"_a, "direction"_a,
                     DOC(Config, GetProcessorFromConfigs, 7))
         .def_static("GetProcessorFromConfigs", [](const ConstContextRcPtr & srcContext,
                                                   const ConstConfigRcPtr & srcConfig,
@@ -867,8 +867,8 @@ void bindPyConfig(py::module & m)
                                                   const ConstConfigRcPtr & dstConfig,
                                                   const char * dstDisplay,
                                                   const char * dstView,
-                                                  TransformDirection direction,
-                                                  const char * dstInterchangeName)
+                                                  const char * dstInterchangeName,
+                                                  TransformDirection direction)
             {
                 return Config::GetProcessorFromConfigs(srcContext,
                                                        srcConfig,
@@ -878,11 +878,11 @@ void bindPyConfig(py::module & m)
                                                        dstConfig,
                                                        dstDisplay,
                                                        dstView,
-                                                       direction,
-                                                       dstInterchangeName);
+                                                       dstInterchangeName,
+                                                       direction);
             },
                     "srcContext"_a, "srcConfig"_a, "srcColorSpaceName"_a, "srcInterchangeName"_a,
-                    "dstContext"_a, "dstConfig"_a, "dstDisplay"_a, "dstView"_a, "direction"_a, "dstInterchangeName"_a,
+                    "dstContext"_a, "dstConfig"_a, "dstDisplay"_a, "dstView"_a, "dstInterchangeName"_a, "direction"_a,
                     DOC(Config, GetProcessorFromConfigs, 8))
         .def("setProcessorCacheFlags", &Config::setProcessorCacheFlags, "flags"_a, 
              DOC(Config, setProcessorCacheFlags))
