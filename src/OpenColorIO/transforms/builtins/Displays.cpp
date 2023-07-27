@@ -217,6 +217,10 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
             // the curve around 0.  Hence the use here of MONCURVE_MIRROR_REV.
             // As with the other displays here, this built-in should be used
             // with a RangeTransform to limit the results to [0,1], if necessary.
+            //
+            // https://developer.apple.com/documentation/coregraphics/kcgcolorspacedisplayp3
+            // https://developer.apple.com/documentation/appkit/nscolorspace/1644175-extendedsrgbcolorspace
+
             const GammaOpData::Params rgbParams   = { 2.4, 0.055 };
             const GammaOpData::Params alphaParams = { 1.0, 0.0 };
             auto gammaData = std::make_shared<GammaOpData>(GammaOpData::MONCURVE_MIRROR_REV,
