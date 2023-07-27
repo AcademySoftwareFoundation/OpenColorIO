@@ -244,7 +244,7 @@ static constexpr unsigned LastSupportedMajorVersion = OCIO_VERSION_MAJOR;
 
 // For each major version keep the most recent minor.
 static const unsigned int LastSupportedMinorVersion[] = {0, // Version 1
-                                                         2  // Version 2
+                                                         3  // Version 2
                                                          };
 
 } // namespace
@@ -5029,6 +5029,12 @@ void Config::Impl::checkVersionConsistency(ConstTransformRcPtr & transform) cons
                 os << "Only config version 2.2 (or higher) can have BuiltinTransform style '"
                    << blt->getStyle() << "'.";
                 throw Exception(os.str().c_str());
+            }
+            if (m_majorVersion == 2 && m_minorVersion < 3
+                    && 0 == Platform::Strcasecmp(blt->getStyle(), "DISPLAY - CIE-XYZ-D65_to_DisplayP3"))
+            {
+                throw Exception("Only config version 2.3 (or higher) can have "
+                                "BuiltinTransform style 'DISPLAY - CIE-XYZ-D65_to_DisplayP3'.");
             }
         }
         else if (ConstCDLTransformRcPtr cdl = DynamicPtrCast<const CDLTransform>(transform))
