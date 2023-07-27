@@ -9,9 +9,9 @@ from PySide2 import QtWidgets
 
 from ..constants import RGB
 from ..widgets import (
+    ComboBox,
     LineEdit,
     PathEdit,
-    FloatEdit,
     FloatEditArray,
     TextEdit,
     StringListWidget,
@@ -35,7 +35,8 @@ class ConfigPropertiesParamEdit(BaseConfigItemParamEdit):
         super().__init__(parent=parent)
 
         # Widgets
-        self.version_edit = FloatEdit(int_reduction=False)
+        self.version_edit = ComboBox()
+        self.version_edit.addItems(self.model.supported_versions())
         self.description_edit = TextEdit()
         self.env_vars_table = StringMapTableWidget(
             ("Name", "Default Value"),
@@ -130,7 +131,7 @@ class ConfigPropertiesEdit(BaseConfigItemEdit):
         self.param_edit.search_path_list.items_changed.connect(self._mapper.submit)
 
         # Reload sole item on reset
-        model.modelAboutToBeReset.connect(lambda: self._mapper.setCurrentIndex(0))
+        model.modelReset.connect(lambda: self._mapper.setCurrentIndex(0))
 
         # Initialize
         self._mapper.setCurrentIndex(0)

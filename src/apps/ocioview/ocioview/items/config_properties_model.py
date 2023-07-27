@@ -20,7 +20,7 @@ class ConfigPropertiesModel(BaseConfigItemModel):
     """
 
     NAME = ColumnDesc(0, "Name", str)
-    VERSION = ColumnDesc(1, "Version", float)
+    VERSION = ColumnDesc(1, "Version", str)
     DESCRIPTION = ColumnDesc(2, "Description", str)
     ENVIRONMENT_VARS = ColumnDesc(3, "Environment Vars", list)
     SEARCH_PATH = ColumnDesc(4, "Search Path", list)
@@ -42,6 +42,38 @@ class ConfigPropertiesModel(BaseConfigItemModel):
     def item_type_label(cls, plural: bool = False) -> str:
         return "Properties"
 
+    def supported_versions(self) -> list[str]:
+        """
+        Infer all supported config versions from a test config.
+        """
+        versions = []
+        test_config = ocio.Config()
+
+        major_version = 1
+        while True:
+            try:
+                # Setting the major version will set the minor version to the most
+                # recent value.
+                test_config.setMajorVersion(major_version)
+                max_minor_version = test_config.getMinorVersion()
+
+                # Iterate minor versions at and below the inferred maximum to test
+                # which are valid.
+                for minor_version in range(max_minor_version + 1):
+                    try:
+                        # Test the validity of this major/minor pair, adding it to the
+                        # output if no exception is raised.
+                        test_config.setVersion(major_version, minor_version)
+                        versions.append(f"{major_version}.{minor_version}")
+                    except ocio.Exception:
+                        continue
+
+            except ocio.Exception:
+                break
+            major_version += 1
+
+        return versions
+
     def get_item_names(self) -> list[str]:
         return []
 
@@ -55,7 +87,7 @@ class ConfigPropertiesModel(BaseConfigItemModel):
         if column_desc == self.NAME:
             return item.getName()
         elif column_desc == self.VERSION:
-            return float(f"{item.getMajorVersion():d}.{item.getMinorVersion():d}")
+            return f"{item.getMajorVersion()}.{item.getMinorVersion()}"
         elif column_desc == self.DESCRIPTION:
             return item.getDescription()
         elif column_desc == self.ENVIRONMENT_VARS:
@@ -86,7 +118,7 @@ class ConfigPropertiesModel(BaseConfigItemModel):
         if column_desc == self.NAME:
             item.setName(value)
         elif column_desc == self.VERSION:
-            major, minor = tuple(map(int, str(value).split(".")))
+            major, minor = tuple(map(int, value.split(".")))
             try:
                 item.setVersion(major, minor)
             except ocio.Exception as e:

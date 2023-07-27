@@ -244,7 +244,6 @@ class LogRouter(QtCore.QThread):
             yaml_html_data = self._increase_html_lineno_padding(
                 highlight(yaml_data, YamlLexer(), HtmlFormatter(linenos="inline"))
             )
-            print(yaml_html_data)
             self.config_logged.emit(yaml_html_data)
 
             # End logging

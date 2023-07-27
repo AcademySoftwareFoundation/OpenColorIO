@@ -137,6 +137,7 @@ class ConfigDock(TabbedDockWidget):
 
         self.log_view.reset()
         self.code_view.reset()
+        self.update_config_view()
 
     def update_config_view(self) -> None:
         """
