@@ -202,6 +202,38 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
     }
 
     {
+        auto CIE_XYZ_D65_to_DisplayP3_Functor = [](OpRcPtrVec & ops)
+        {
+            MatrixOpData::MatrixArrayPtr matrix
+                = build_conversion_matrix_from_XYZ_D65(P3_D65::primaries, ADAPTATION_NONE);
+            CreateMatrixOp(ops, matrix, TRANSFORM_DIR_FORWARD);
+
+            // This color space is intended to be useful for macOS color spaces
+            // kCGColorSpaceDisplayP3 and kCGColorSpaceExtendedDisplayP3.
+            // The developer documentation does not seem to detail how the
+            // transfer function is extended below 0 for the "extended" version.
+            // However it does say that it uses the sRGB transfer function and
+            // the kCGColorSpaceExtendedSRGB color space extends by reflecting
+            // the curve around 0.  Hence the use here of MONCURVE_MIRROR_REV.
+            // As with the other displays here, this built-in should be used
+            // with a RangeTransform to limit the results to [0,1], if necessary.
+            //
+            // https://developer.apple.com/documentation/coregraphics/kcgcolorspacedisplayp3
+            // https://developer.apple.com/documentation/appkit/nscolorspace/1644175-extendedsrgbcolorspace
+
+            const GammaOpData::Params rgbParams   = { 2.4, 0.055 };
+            const GammaOpData::Params alphaParams = { 1.0, 0.0 };
+            auto gammaData = std::make_shared<GammaOpData>(GammaOpData::MONCURVE_MIRROR_REV,
+                                                           rgbParams, rgbParams, rgbParams, alphaParams);
+            CreateGammaOp(ops, gammaData, TRANSFORM_DIR_FORWARD);
+        };
+
+        registry.addBuiltin("DISPLAY - CIE-XYZ-D65_to_DisplayP3", 
+                            "Convert CIE XYZ (D65 white) to Apple Display P3",
+                            CIE_XYZ_D65_to_DisplayP3_Functor);
+    }
+
+    {
         auto ST2084_to_Linear_Functor = [](OpRcPtrVec & ops)
         {
             ST_2084::GeneratePQToLinearOps(ops);
