@@ -235,7 +235,11 @@ int main(int argc, const char **argv)
         }
 
         std::string path = args[0];
+#if MZ_VERSION_BUILD >= 040000
+        reader = mz_zip_reader_create();
+#else
         mz_zip_reader_create(&reader);
+#endif
         struct tm tmu_date;
         
         err = mz_zip_reader_open_file(reader, path.c_str());
