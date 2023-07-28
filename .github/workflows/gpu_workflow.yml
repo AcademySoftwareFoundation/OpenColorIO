@@ -16,6 +16,8 @@ on:
     tags-ignore:
       - v0.*
       - v1.*
+    paths:
+      - .github/workflows/gpu_workflow.yml
 
 jobs:
   # ---------------------------------------------------------------------------
@@ -33,13 +35,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1
+        uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.CODEBUILD_ID }}
           aws-secret-access-key: ${{ secrets.CODEBUILD_SECRET }}
           aws-region: us-west-2
       - name: Run CodeBuild
-        uses: aws-actions/aws-codebuild-run-project@v1.0.0
+        uses: aws-actions/aws-codebuild-run-build@v1
         with:
           project-name: OpenColorIO
           buildspec-override: buildspec.yml
