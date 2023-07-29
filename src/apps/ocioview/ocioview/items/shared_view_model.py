@@ -119,15 +119,25 @@ class SharedViewModel(BaseConfigItemModel):
 
     def _new_item(self, name: str) -> None:
         view_transform = ConfigCache.get_default_view_transform_name()
-        if view_transform:
-            self._add_item(
-                SharedView(
-                    ViewType.VIEW_SHARED,
-                    name,
-                    ocio.OCIO_VIEW_USE_DISPLAY_NAME,
-                    view_transform,
-                )
+        if not view_transform:
+            view_transforms = ConfigCache.get_view_transforms()
+            if view_transforms:
+                view_transform = view_transforms[0]
+        if not view_transform:
+            self.warning_raised.emit(
+                f"Could not create {self.item_type_label().lower()} because no view "
+                f"transforms are defined."
             )
+            return
+
+        self._add_item(
+            SharedView(
+                ViewType.VIEW_SHARED,
+                name,
+                ocio.OCIO_VIEW_USE_DISPLAY_NAME,
+                view_transform,
+            )
+        )
 
     def _get_value(self, item: SharedView, column_desc: ColumnDesc) -> Any:
         # Get parameters

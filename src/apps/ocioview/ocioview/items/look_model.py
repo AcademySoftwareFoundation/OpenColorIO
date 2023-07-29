@@ -70,11 +70,16 @@ class LookModel(BaseConfigItemModel):
             return None
 
     def _get_items(self, preserve: bool = False) -> list[ocio.Look]:
+        # TODO: Revert to using ConfigCache following fix of issue:
+        #       https://github.com/AcademySoftwareFoundation/OpenColorIO/issues/1817
+        config = ocio.GetCurrentConfig()
         if preserve:
-            self._items = [copy.deepcopy(item) for item in ConfigCache.get_looks()]
+            # self._items = [copy.deepcopy(item) for item in ConfigCache.get_looks()]
+            self._items = [copy.deepcopy(item) for item in config.getLooks()]
             return self._items
         else:
-            return ConfigCache.get_looks()
+            # return ConfigCache.get_looks()
+            return config.getLooks()
 
     def _clear_items(self) -> None:
         ocio.GetCurrentConfig().clearLooks()

@@ -31,9 +31,12 @@ class ViewingRuleParamEdit(BaseConfigItemParamEdit):
         # Widgets
         self.name_edit_a = LineEdit()
         self.color_space_list = StringListWidget(
+            item_basename="color space",
+            item_flags=QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable,
             item_icon=ViewingRuleModel.get_rule_type_icon(
                 ViewingRuleType.RULE_COLOR_SPACE
             ),
+            allow_empty=False,
             get_presets=ConfigCache.get_color_space_names,
             presets_only=True,
         )
@@ -47,9 +50,12 @@ class ViewingRuleParamEdit(BaseConfigItemParamEdit):
 
         self.name_edit_b = LineEdit()
         self.encoding_list = StringListWidget(
+            item_basename="encoding",
+            item_flags=QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable,
             item_icon=ViewingRuleModel.get_rule_type_icon(
                 ViewingRuleType.RULE_ENCODING
             ),
+            allow_empty=False,
             get_presets=ConfigCache.get_encodings,
             presets_only=True,
         )
@@ -88,6 +94,10 @@ class ViewingRuleParamEdit(BaseConfigItemParamEdit):
         self._param_layout.addRow(self._param_stack)
 
         self.model.item_removed.connect(self._on_item_removed)
+
+    def reset(self) -> None:
+        super().reset()
+        self._param_stack.setCurrentIndex(0)
 
     def update_available_params(
         self, mapper: QtWidgets.QDataWidgetMapper, viewing_rule_type: ViewingRuleType

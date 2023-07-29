@@ -11,8 +11,8 @@ class ViewType(str, enum.Enum):
     """Enum of view types."""
 
     VIEW_SHARED = "Shared View"
-    VIEW_DISPLAY = "View (Display Referred)"
-    VIEW_SCENE = "View (Scene Referred)"
+    VIEW_DISPLAY = "View (Display Reference Space)"
+    VIEW_SCENE = "View (Scene Reference Space)"
 
 
 def get_view_type(display: str, view: str) -> ViewType:

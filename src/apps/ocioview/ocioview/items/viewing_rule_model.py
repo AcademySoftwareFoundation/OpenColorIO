@@ -98,36 +98,50 @@ class ViewingRuleModel(BaseConfigItemModel):
     def add_preset(self, preset_name: str) -> int:
         viewing_rules = self._get_editable_viewing_rules()
         all_names = self.get_item_names()
+        item = None
 
         if preset_name == ViewingRuleType.RULE_COLOR_SPACE.value:
-            item = ViewingRule(
-                ViewingRuleType.RULE_COLOR_SPACE,
-                next_name("ColorSpaceRule_", all_names),
-                color_spaces=[
-                    ConfigCache.get_default_color_space_name() or "Choose color space"
-                ],
-            )
+            color_space = ConfigCache.get_default_color_space_name()
+            if not color_space:
+                color_spaces = ConfigCache.get_color_spaces()
+                if color_spaces:
+                    color_space = color_spaces[0]
+            if color_space:
+                item = ViewingRule(
+                    ViewingRuleType.RULE_COLOR_SPACE,
+                    next_name("ColorSpaceRule_", all_names),
+                    color_spaces=[color_space],
+                )
+            else:
+                self.warning_raised.emit(
+                    f"Could not create "
+                    f"{ViewingRuleType.RULE_COLOR_SPACE.value.lower()} because no "
+                    f"color spaces are defined."
+                )
+
         else:  # ViewingRuleType.RULE_ENCODING.value:
             encodings = ConfigCache.get_encodings()
             item = ViewingRule(
                 ViewingRuleType.RULE_ENCODING,
                 next_name("EncodingRule_", all_names),
-                encodings=["encoding" if not encodings else encodings[0]],
+                encodings=[encodings[0]],
             )
 
         # Put new rule at top
-        row = 0
+        row = -1
+        if item is not None:
+            row = 0
 
-        with ConfigSnapshotUndoCommand(
-            f"Add {self.item_type_label()}", model=self, item_name=item.name
-        ):
-            self.beginInsertRows(self.NULL_INDEX, row, row)
-            self._insert_rule(row, viewing_rules, item)
+            with ConfigSnapshotUndoCommand(
+                f"Add {self.item_type_label()}", model=self, item_name=item.name
+            ):
+                self.beginInsertRows(self.NULL_INDEX, row, row)
+                self._insert_rule(row, viewing_rules, item)
 
-            ocio.GetCurrentConfig().setViewingRules(viewing_rules)
+                ocio.GetCurrentConfig().setViewingRules(viewing_rules)
 
-            self.endInsertRows()
-            self.item_added.emit(item.name)
+                self.endInsertRows()
+                self.item_added.emit(item.name)
 
         return row
 

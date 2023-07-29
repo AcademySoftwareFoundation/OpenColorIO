@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright Contributors to the OpenColorIO Project.
 
+import logging
 from dataclasses import dataclass
 from typing import Any, Optional, Type, Union
 
@@ -180,6 +181,8 @@ class BaseConfigItemModel(QtCore.QAbstractTableModel):
         :param name: Optional item name
         :return: Item row
         """
+        row = -1
+
         if not name:
             item_names = self.get_item_names() + ConfigCache.get_all_names()
             name = next_name(self._item_prefix, item_names)
@@ -188,12 +191,15 @@ class BaseConfigItemModel(QtCore.QAbstractTableModel):
             f"Create {self.item_type_label()}", model=self, item_name=name
         ):
             self._new_item(name)
-            self.item_added.emit(name)
             index = self.get_index_from_item_name(name)
-            row = index.row()
 
-            self.beginInsertRows(self.NULL_INDEX, row, row)
-            self.endInsertRows()
+            # Was an item created?
+            if index is not None:
+                row = index.row()
+
+                self.beginInsertRows(self.NULL_INDEX, row, row)
+                self.endInsertRows()
+                self.item_added.emit(name)
 
         return row
 
@@ -485,8 +491,8 @@ class BaseConfigItemModel(QtCore.QAbstractTableModel):
 
             self.warning_raised.emit(
                 f"{len(do_not_remove)} "
-                f"{self.item_type_label(plural=len(do_not_remove) != 1)} could not be "
-                f"removed:<br><br>{item_warnings}"
+                f"{self.item_type_label(plural=len(do_not_remove) != 1).lower()} could "
+                f"not be removed:<br><br>{item_warnings}"
             )
 
         return True
@@ -558,9 +564,12 @@ class BaseConfigItemModel(QtCore.QAbstractTableModel):
     ) -> tuple[Optional[__item_type__], Optional[ColumnDesc]]:
         items = self._get_items()
         if items:
-            return items[index.row()], self.COLUMNS[index.column()]
-        else:
-            return None, None
+            try:
+                return items[index.row()], self.COLUMNS[index.column()]
+            except IndexError:
+                # Item may have been removed
+                logging.warning(f"{self} index {index} is invalid")
+        return None, None
 
     def _get_undo_command_type(
         self, column_desc: ColumnDesc

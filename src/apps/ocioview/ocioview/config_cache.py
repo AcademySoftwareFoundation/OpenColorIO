@@ -332,8 +332,15 @@ class ConfigCache:
             config.
         """
         if not cls.validate() or cls._encodings is None:
-            encodings = set()
-
+            # Pre-defined standard encodings from the OCIO docs
+            encodings = {
+                "scene-linear",
+                "display-linear",
+                "log",
+                "sdr-video",
+                "hdr-video",
+                "data",
+            }
             for color_space in cls.get_color_spaces():
                 encodings.add(color_space.getEncoding())
             for named_tf in cls.get_named_transforms():

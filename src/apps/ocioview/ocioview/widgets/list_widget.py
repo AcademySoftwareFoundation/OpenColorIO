@@ -21,6 +21,7 @@ class StringListWidget(BaseItemView):
         item_basename: Optional[str] = None,
         item_flags: QtCore.Qt.ItemFlags = BaseItemView.DEFAULT_ITEM_FLAGS,
         item_icon: Optional[QtGui.QIcon] = None,
+        allow_empty: bool = True,
         get_presets: Optional[Callable] = None,
         presets_only: bool = False,
         get_item: Optional[Callable] = None,
@@ -32,6 +33,8 @@ class StringListWidget(BaseItemView):
             suffix is incremented so that all names are unique.
         :param item_flags: list item flags
         :param item_icon: Optional item icon
+        :param allow_empty: If set to False, the remove button will do
+            nothing when there is only one item.
         :param get_presets: Optional callback which returns either a
             list of string presets, or a dictionary of string presets
             and corresponding item icons, that can be selected from an
@@ -58,6 +61,7 @@ class StringListWidget(BaseItemView):
         )
 
         self._item_basename = item_basename or ""
+        self._allow_empty = allow_empty
         self._get_item = get_item
 
     # DataWidgetMapper user property interface
@@ -162,21 +166,38 @@ class StringListWidget(BaseItemView):
         for item in sorted(
             self.view.selectedItems(), key=lambda i: self.view.row(i), reverse=True
         ):
+            if not self._allow_empty and self.view.count() == 1:
+                QtWidgets.QMessageBox.warning(
+                    self,
+                    "Warning",
+                    f"At least one {self._item_basename or 'item'} is required.",
+                )
+                continue
             self.remove_item(item)
 
     def _on_move_up_button_released(self) -> None:
-        src_row = self.view.currentRow()
-        dst_row = max(0, src_row - 1)
-        self.view.insertItem(dst_row, self.view.takeItem(src_row))
-        self.view.setCurrentRow(dst_row)
-        self.items_changed.emit()
+        if self.view.selectedItems():
+            src_row = self.view.currentRow()
+            dst_row = max(0, src_row - 1)
+            self._move_item(src_row, dst_row)
 
     def _on_move_down_button_released(self) -> None:
-        src_row = self.view.currentRow()
-        dst_row = min(self.view.count() - 1, src_row + 1)
-        self.view.insertItem(dst_row, self.view.takeItem(src_row))
-        self.view.setCurrentRow(dst_row)
+        if self.view.selectedItems():
+            src_row = self.view.currentRow()
+            dst_row = min(self.view.count() - 1, src_row + 1)
+            self._move_item(src_row, dst_row)
+
+    def _move_item(self, src_row: int, dst_row: int) -> None:
+        src_item = self.view.takeItem(src_row)
+        src_item_text = src_item.text()
+
+        self.view.insertItem(dst_row, src_item)
         self.items_changed.emit()
+
+        for dst_item in self.view.findItems(src_item_text, QtCore.Qt.MatchExactly):
+            self.view.setItemSelected(dst_item, True)
+            self.view.setCurrentRow(self.view.row(dst_item))
+            break
 
 
 class ListView(QtWidgets.QListView):
@@ -294,7 +315,8 @@ class ItemModelListWidget(BaseItemView):
         if item_row == -1:
             item_row = self._model.create_item(text)
 
-        self.set_current_row(item_row)
+        if item_row != -1:
+            self.set_current_row(item_row)
 
     def remove_item(self, text: str) -> None:
         indices = self._find_indices(text)

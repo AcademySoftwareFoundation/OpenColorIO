@@ -70,6 +70,19 @@ class DisplayViewEdit(QtWidgets.QWidget):
             self._on_shared_view_selection_requested
         )
 
+        # Update active display and view lists when display or view lists change
+        for signal_name in ("item_added", "item_removed", "item_renamed"):
+            # fmt: off
+            getattr(self.view_edit.display_model, signal_name).connect(
+                lambda *args, **kwargs:
+                self.active_display_view_edit.active_display_edit.reset()
+            )
+            getattr(self.view_edit.model, signal_name).connect(
+                lambda *args, **kwargs:
+                self.active_display_view_edit.active_view_edit.reset()
+            )
+            # fmt: on
+
     @property
     def splitter(self) -> QtWidgets.QSplitter:
         return self.tabs.currentWidget().splitter

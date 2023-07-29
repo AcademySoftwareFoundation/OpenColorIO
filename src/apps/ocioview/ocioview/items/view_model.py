@@ -107,6 +107,11 @@ class ViewModel(BaseConfigItemModel):
                 item = View(
                     ViewType.VIEW_SCENE, next_name("View_", views), color_space, ""
                 )
+            else:
+                self.warning_raised.emit(
+                    f"Could not create {ViewType.VIEW_SCENE.value.lower()} because no "
+                    f"color spaces with a scene reference type are defined."
+                )
 
         # Display-referred view
         elif preset_name == ViewType.VIEW_DISPLAY.value:
@@ -130,6 +135,17 @@ class ViewModel(BaseConfigItemModel):
                         color_space,
                         view_transform,
                     )
+                else:
+                    self.warning_raised.emit(
+                        f"Could not create {ViewType.VIEW_DISPLAY.value.lower()} "
+                        f"because no color spaces with a display reference type are "
+                        f"defined."
+                    )
+            else:
+                self.warning_raised.emit(
+                    f"Could not create {ViewType.VIEW_DISPLAY.value.lower()} because "
+                    f"no view transforms are defined."
+                )
 
         # Shared view, which always follow display-defined views, as stored in the
         # config YAML data.
@@ -268,7 +284,7 @@ class ViewModel(BaseConfigItemModel):
             # Insert display name before view
             item_name = self.get_item_name(index)
             text = text.replace(
-                f"({item_name})", f"({self.get_subscription_name(item_name)})"
+                f"({item_name})", f"({self.get_subscription_item_name(item_name)})"
             )
         return text
 
@@ -378,23 +394,25 @@ class ViewModel(BaseConfigItemModel):
     def _add_item(self, item: View) -> None:
         if self._display:
             config = ocio.GetCurrentConfig()
-
-            if item.type == ViewType.VIEW_SHARED:
-                config.addDisplaySharedView(self._display, item.name)
-            elif item.type == ViewType.VIEW_DISPLAY:
-                config.addDisplayView(
-                    self._display,
-                    item.name,
-                    item.view_transform,
-                    item.color_space,
-                    item.looks,
-                    item.rule,
-                    item.description,
-                )
-            else:  # ViewType.VIEW_SCENE
-                config.addDisplayView(
-                    self._display, item.name, item.color_space, item.looks
-                )
+            try:
+                if item.type == ViewType.VIEW_SHARED:
+                    config.addDisplaySharedView(self._display, item.name)
+                elif item.type == ViewType.VIEW_DISPLAY:
+                    config.addDisplayView(
+                        self._display,
+                        item.name,
+                        item.view_transform,
+                        item.color_space,
+                        item.looks,
+                        item.rule,
+                        item.description,
+                    )
+                else:  # ViewType.VIEW_SCENE
+                    config.addDisplayView(
+                        self._display, item.name, item.color_space, item.looks
+                    )
+            except ocio.Exception as e:
+                self.warning_raised.emit(str(e))
 
             # Remove placeholder view, if present
             placeholder_view = self._get_placeholder_view()
