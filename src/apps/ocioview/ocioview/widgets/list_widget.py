@@ -3,7 +3,7 @@
 
 from typing import Callable, Optional, Union
 
-from PySide2 import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets
 
 from ..items.config_item_model import BaseConfigItemModel
 from ..utils import SignalsBlocked, next_name

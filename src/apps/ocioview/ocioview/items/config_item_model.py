@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from typing import Any, Optional, Type, Union
 
 import PyOpenColorIO as ocio
-from PySide2 import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets
 
 from ..config_cache import ConfigCache
 from ..transform_manager import TransformManager, TransformAgent
@@ -587,7 +587,7 @@ class BaseConfigItemModel(QtCore.QAbstractTableModel):
 
     def _get_undo_command_type(
         self, column_desc: ColumnDesc
-    ) -> Type[QtWidgets.QUndoCommand]:
+    ) -> Type[QtGui.QUndoCommand]:
         """
         Support overriding the undo command type used to
         track data changes, per column.

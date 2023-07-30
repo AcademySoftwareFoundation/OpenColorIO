@@ -3,7 +3,7 @@
 
 from typing import Callable, Optional
 
-from PySide2 import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets
 
 from ..constants import ICON_SIZE_BUTTON, ICON_SIZE_ITEM
 from ..style import apply_top_tool_bar_style, apply_widget_with_top_tool_bar_style
@@ -241,6 +241,6 @@ class BaseItemView(QtWidgets.QFrame):
                 else:
                     self.preset_menu.addAction(preset)
 
-    def _on_preset_triggered(self, action: QtWidgets.QAction) -> None:
+    def _on_preset_triggered(self, action: QtGui.QAction) -> None:
         """Add a new item from the triggered preset."""
         self.add_item(action.text())

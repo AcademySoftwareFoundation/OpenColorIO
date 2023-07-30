@@ -4,7 +4,7 @@
 from typing import Optional
 
 import PyOpenColorIO as ocio
-from PySide2 import QtCore
+from PySide6 import QtCore
 
 from ..constants import RGB
 from ..widgets import FloatEdit, FloatEditArray
