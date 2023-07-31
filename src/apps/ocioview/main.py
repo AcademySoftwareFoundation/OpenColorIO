@@ -9,7 +9,7 @@ from pathlib import Path
 import PyOpenColorIO as ocio
 from PySide2 import QtCore, QtWidgets, QtOpenGL
 
-import ocioview.logging  # Import to initialize logging
+import ocioview.log_handlers  # Import to initialize logging
 from ocioview.main_window import OCIOView
 from ocioview.style import QSS, DarkPalette
 

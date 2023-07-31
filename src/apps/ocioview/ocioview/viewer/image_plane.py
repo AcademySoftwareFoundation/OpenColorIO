@@ -19,7 +19,7 @@ import OpenImageIO as oiio
 import PyOpenColorIO as ocio
 from PySide2 import QtCore, QtGui, QtWidgets, QtOpenGL
 
-from ..logging import log_queue
+from ..log_handlers import log_queue
 from ..ref_space_manager import ReferenceSpaceManager
 
 

@@ -12,7 +12,7 @@ from PySide2 import QtCore, QtGui, QtWidgets
 from .config_cache import ConfigCache
 from .config_dock import ConfigDock
 from .constants import ICON_PATH_OCIO
-from .logging import LogRouter
+from .log import LogRouter
 from .undo import undo_stack
 from .viewer_dock import ViewerDock
 
@@ -117,7 +117,7 @@ class OCIOView(QtWidgets.QMainWindow):
         self._update_window_title()
 
         # Start log processing
-        LogRouter.get_instance().start()
+        LogRouter.get_instance().start_routing()
 
     def reset(self) -> None:
         """

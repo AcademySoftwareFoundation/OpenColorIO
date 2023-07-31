@@ -16,9 +16,10 @@ from .items import (
     RuleEdit,
     ViewTransformEdit,
 )
-from .logging import log_queue
+from .log_handlers import log_queue
 from .utils import get_glyph_icon
-from .widgets import CodeView, LogView, TabbedDockWidget
+from .log import CodeWidget, LogWidget
+from .widgets import TabbedDockWidget
 
 
 class ConfigDock(TabbedDockWidget):
@@ -72,8 +73,8 @@ class ConfigDock(TabbedDockWidget):
         self.named_transform_edit = NamedTransformEdit()
         self._connect_config_item_model(self.named_transform_edit.model)
 
-        self.code_view = CodeView()
-        self.log_view = LogView()
+        self.code_view = CodeWidget()
+        self.log_view = LogWidget()
 
         # Layout
         self.add_tab(

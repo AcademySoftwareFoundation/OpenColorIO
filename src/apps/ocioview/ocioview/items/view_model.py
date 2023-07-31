@@ -243,8 +243,8 @@ class ViewModel(BaseConfigItemModel):
 
         if self._display is not None:
             # Get view name from subscription item name
-            if "/" in item_name:
-                item_name = item_name.split("/", 1)[-1]
+            if item_name.startswith(self._display + "/"):
+                item_name = item_name[len(self._display) + 1 :]
 
             scene_ref_name = ReferenceSpaceManager.scene_reference_space().getName()
             return (
