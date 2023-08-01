@@ -276,8 +276,8 @@ class ViewEdit(BaseConfigItemEdit):
         """
         for i in range(self.model.rowCount()):
             view_index = self.model.index(i, self.model.NAME.column)
-            item_name = self.model.get_subscription_item_name(view_index)
-            prev_item_name = self.model.get_subscription_item_name(
+            item_name = self.model.format_subscription_item_name(view_index)
+            prev_item_name = self.model.format_subscription_item_name(
                 view_index, display=prev_display
             )
             slot = TransformManager.get_subscription_slot(self.model, prev_item_name)

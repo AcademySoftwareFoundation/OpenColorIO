@@ -770,7 +770,7 @@ class ImagePlane(QtOpenGL.QGLWidget):
             scale = h / self._image_size.y
 
         self.zoom(QtCore.QPoint(), scale, update=False, absolute=True)
-        self.pan(0.0, update=update, absolute=True)
+        self.pan(imath.V2f(), update=update, absolute=True)
 
     def _install_shortcuts(self) -> None:
         """

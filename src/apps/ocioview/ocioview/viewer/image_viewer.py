@@ -11,7 +11,7 @@ from PySide2 import QtCore, QtGui, QtWidgets
 from ..transform_manager import TransformManager
 from ..config_cache import ConfigCache
 from ..utils import get_glyph_icon, SignalsBlocked
-from ..widgets import ComboBox, CallbackComboBox, CheckBox
+from ..widgets import ComboBox, CallbackComboBox
 from .image_plane import ImagePlane
 
 
@@ -30,7 +30,9 @@ class ImageViewer(QtWidgets.QWidget):
     32-bit float precision.
     """
 
-    FMT_GRAY_LABEL = '<span style="color:dimgray;">{v}</span>'
+    GRAY_COLOR = QtGui.QColor("dimgray")
+
+    FMT_GRAY_LABEL = f'<span style="color:{GRAY_COLOR.name()};">{{v}}</span>'
     FMT_R_LABEL = (
         f'<span style="color:{QtGui.QColor.fromHsvF(0.0, 0.5, 1.0).name()};">'
         f"{{v}}</span>"
@@ -48,6 +50,8 @@ class ImageViewer(QtWidgets.QWidget):
 
     PASSTHROUGH = "passthrough"
     PASSTHROUGH_LABEL = FMT_GRAY_LABEL.format(v=f"{PASSTHROUGH}:")
+
+    WIDGET_HEIGHT_IO = 32
 
     @classmethod
     def viewer_type_icon(cls) -> QtGui.QIcon:
@@ -80,18 +84,27 @@ class ImageViewer(QtWidgets.QWidget):
         )
 
         self.input_color_space_label = get_glyph_icon("mdi6.import", as_widget=True)
-        self.input_color_space_label.setToolTip("Input Color Space")
+        self.input_color_space_label.setToolTip("Input color space")
         self.input_color_space_box = CallbackComboBox(
             lambda: ConfigCache.get_color_space_names(ocio.SEARCH_REFERENCE_SPACE_SCENE)
         )
+        self.input_color_space_box.setFixedHeight(self.WIDGET_HEIGHT_IO)
         self.input_color_space_box.setToolTip(self.input_color_space_label.toolTip())
 
-        self.transform_label = get_glyph_icon("mdi6.export", as_widget=True)
-        self.transform_box = ComboBox()
-        self.transform_box.setToolTip("Select transform to apply")
+        self.tf_label = get_glyph_icon("mdi6.export", as_widget=True)
+        self.tf_box = ComboBox()
+        self.tf_box.setFixedHeight(self.WIDGET_HEIGHT_IO)
+        self.tf_box.setToolTip("Output transform")
 
-        self.inverse_check = CheckBox("Inverse")
-        self.inverse_check.setToolTip("Apply the inverse of the selected transform")
+        self._tf_direction_forward_icon = get_glyph_icon("mdi6.layers-plus")
+        self._tf_direction_inverse_icon = get_glyph_icon("mdi6.layers-minus")
+
+        self.tf_direction_button = QtWidgets.QPushButton()
+        self.tf_direction_button.setFixedHeight(self.WIDGET_HEIGHT_IO)
+        self.tf_direction_button.setCheckable(True)
+        self.tf_direction_button.setChecked(False)
+        self.tf_direction_button.setIcon(self._tf_direction_forward_icon)
+        self.tf_direction_button.setToolTip("Transform direction: Forward")
 
         self.exposure_label = get_glyph_icon("ph.aperture", as_widget=True)
         self.exposure_label.setToolTip("Exposure")
@@ -130,10 +143,8 @@ class ImageViewer(QtWidgets.QWidget):
         self.input_y_label = QtWidgets.QLabel(self.FMT_GRAY_LABEL.format(v="Y:"))
         self.image_y_value_label = QtWidgets.QLabel("0")
 
-        self.input_sample_label = QtWidgets.QLabel(
-            self.FMT_GRAY_LABEL.format(
-                v=f"{self.input_color_space() or self.PASSTHROUGH}:"
-            )
+        self.input_sample_label = get_glyph_icon(
+            "mdi6.import", color=self.GRAY_COLOR, as_widget=True
         )
         self.input_r_sample_label = QtWidgets.QLabel()
         self.input_g_sample_label = QtWidgets.QLabel()
@@ -143,7 +154,11 @@ class ImageViewer(QtWidgets.QWidget):
         self.input_sample_swatch.setStyleSheet(
             self.FMT_SWATCH_CSS.format(r=0, g=0, b=0)
         )
-        self.output_sample_label = QtWidgets.QLabel(self.PASSTHROUGH_LABEL)
+
+        self.output_tf_direction_label = QtWidgets.QLabel("+")
+        self.output_sample_label = get_glyph_icon(
+            "mdi6.export", color=self.GRAY_COLOR, as_widget=True
+        )
         self.output_r_sample_label = QtWidgets.QLabel()
         self.output_g_sample_label = QtWidgets.QLabel()
         self.output_b_sample_label = QtWidgets.QLabel()
@@ -175,11 +190,11 @@ class ImageViewer(QtWidgets.QWidget):
         inspect_layout.addWidget(self.input_h_label, 0, 2, QtCore.Qt.AlignRight)
         inspect_layout.addWidget(self.image_h_value_label, 0, 3, QtCore.Qt.AlignRight)
         inspect_layout.addWidget(QtWidgets.QLabel(), 0, 4)
-        inspect_layout.addWidget(self.input_sample_label, 0, 5, QtCore.Qt.AlignRight)
-        inspect_layout.addWidget(self.input_r_sample_label, 0, 6, QtCore.Qt.AlignRight)
-        inspect_layout.addWidget(self.input_g_sample_label, 0, 7, QtCore.Qt.AlignRight)
-        inspect_layout.addWidget(self.input_b_sample_label, 0, 8, QtCore.Qt.AlignRight)
-        inspect_layout.addWidget(self.input_sample_swatch, 0, 9, QtCore.Qt.AlignLeft)
+        inspect_layout.addWidget(self.input_sample_label, 0, 6, QtCore.Qt.AlignRight)
+        inspect_layout.addWidget(self.input_r_sample_label, 0, 7, QtCore.Qt.AlignRight)
+        inspect_layout.addWidget(self.input_g_sample_label, 0, 8, QtCore.Qt.AlignRight)
+        inspect_layout.addWidget(self.input_b_sample_label, 0, 9, QtCore.Qt.AlignRight)
+        inspect_layout.addWidget(self.input_sample_swatch, 0, 10, QtCore.Qt.AlignLeft)
 
         inspect_layout.addWidget(self.input_x_label, 1, 0, QtCore.Qt.AlignRight)
         inspect_layout.addWidget(self.image_x_value_label, 1, 1, QtCore.Qt.AlignRight)
@@ -187,11 +202,14 @@ class ImageViewer(QtWidgets.QWidget):
         inspect_layout.addWidget(self.image_y_value_label, 1, 3, QtCore.Qt.AlignRight)
         inspect_layout.addWidget(QtWidgets.QLabel(), 1, 4)
         inspect_layout.setColumnStretch(4, 1)
-        inspect_layout.addWidget(self.output_sample_label, 1, 5, QtCore.Qt.AlignRight)
-        inspect_layout.addWidget(self.output_r_sample_label, 1, 6, QtCore.Qt.AlignRight)
-        inspect_layout.addWidget(self.output_g_sample_label, 1, 7, QtCore.Qt.AlignRight)
-        inspect_layout.addWidget(self.output_b_sample_label, 1, 8, QtCore.Qt.AlignRight)
-        inspect_layout.addWidget(self.output_sample_swatch, 1, 9, QtCore.Qt.AlignLeft)
+        inspect_layout.addWidget(
+            self.output_tf_direction_label, 1, 5, QtCore.Qt.AlignRight
+        )
+        inspect_layout.addWidget(self.output_sample_label, 1, 6, QtCore.Qt.AlignRight)
+        inspect_layout.addWidget(self.output_r_sample_label, 1, 7, QtCore.Qt.AlignRight)
+        inspect_layout.addWidget(self.output_g_sample_label, 1, 8, QtCore.Qt.AlignRight)
+        inspect_layout.addWidget(self.output_b_sample_label, 1, 9, QtCore.Qt.AlignRight)
+        inspect_layout.addWidget(self.output_sample_swatch, 1, 10, QtCore.Qt.AlignLeft)
 
         self.inspect_bar = QtWidgets.QFrame()
         self.inspect_bar.setObjectName("image_viewer__status_bar")
@@ -200,14 +218,20 @@ class ImageViewer(QtWidgets.QWidget):
         )
         self.inspect_bar.setLayout(inspect_layout)
 
-        transform_layout = QtWidgets.QHBoxLayout()
-        transform_layout.addWidget(self.input_color_space_label)
-        transform_layout.addWidget(self.input_color_space_box)
-        transform_layout.setStretch(1, 1)
-        transform_layout.addWidget(self.transform_label)
-        transform_layout.addWidget(self.transform_box)
-        transform_layout.setStretch(3, 1)
-        transform_layout.addWidget(self.inverse_check)
+        tf_layout = QtWidgets.QHBoxLayout()
+        tf_layout.setContentsMargins(0, 0, 0, 0)
+        tf_layout.setSpacing(0)
+        tf_layout.addWidget(self.tf_box)
+        tf_layout.setStretch(0, 1)
+        tf_layout.addWidget(self.tf_direction_button)
+
+        io_layout = QtWidgets.QHBoxLayout()
+        io_layout.addWidget(self.input_color_space_label)
+        io_layout.addWidget(self.input_color_space_box)
+        io_layout.setStretch(1, 1)
+        io_layout.addWidget(self.tf_label)
+        io_layout.addLayout(tf_layout)
+        io_layout.setStretch(3, 1)
 
         adjust_layout = QtWidgets.QHBoxLayout()
         adjust_layout.addWidget(self.exposure_label)
@@ -227,7 +251,7 @@ class ImageViewer(QtWidgets.QWidget):
         image_plane_layout.addWidget(self.inspect_bar)
 
         layout = QtWidgets.QVBoxLayout()
-        layout.addLayout(transform_layout)
+        layout.addLayout(io_layout)
         layout.addLayout(adjust_layout)
         layout.addLayout(image_plane_layout)
         self.setLayout(layout)
@@ -242,8 +266,8 @@ class ImageViewer(QtWidgets.QWidget):
         self.input_color_space_box.currentIndexChanged[str].connect(
             self._on_input_color_space_changed
         )
-        self.transform_box.currentIndexChanged[int].connect(self._on_transform_changed)
-        self.inverse_check.stateChanged.connect(self._on_inverse_changed)
+        self.tf_box.currentIndexChanged[int].connect(self._on_transform_changed)
+        self.tf_direction_button.clicked[bool].connect(self._on_inverse_check_clicked)
         self.exposure_box.valueChanged.connect(self._on_exposure_changed)
         self.gamma_box.valueChanged.connect(self._on_gamma_changed)
         self.sample_precision_box.valueChanged.connect(
@@ -274,15 +298,14 @@ class ImageViewer(QtWidgets.QWidget):
 
         # Update widgets to match image plane
         with SignalsBlocked(self):
-            self.set_inverse(False)
+            self.set_transform_direction(False)
             self.set_exposure(self.image_plane.exposure())
             self.set_gamma(self.image_plane.gamma())
 
         # Update input color spaces and redraw viewport
         self.update()
-        self._update_io_labels()
 
-    def load_image(self, image_path: Optional[Path] = None) -> None:
+    def load_image(self, image_path: Path) -> None:
         """
         Load an image into the viewer.
 
@@ -291,16 +314,6 @@ class ImageViewer(QtWidgets.QWidget):
 
         :param image_path: Absolute path to image file
         """
-        if image_path is None:
-            # Prompt user to choose an image
-            image_path_str, sel_filter = QtWidgets.QFileDialog.getOpenFileName(
-                self, "Load image"
-            )
-            if not image_path_str:
-                return
-
-            image_path = Path(image_path_str)
-
         self.image_plane.load_image(image_path)
 
         # Input color space could be changed by file rules on image
@@ -356,12 +369,12 @@ class ImageViewer(QtWidgets.QWidget):
         :param transform_fwd: Forward transform
         :param transform_inv: Inverse transform
         """
-        inverse = self.inverse()
+        tf_direction = self.transform_direction()
 
         if (
             not desc
-            or (transform_fwd is None and not inverse)
-            or (transform_inv is None and inverse)
+            or (transform_fwd is None and tf_direction == ocio.TRANSFORM_DIR_FORWARD)
+            or (transform_inv is None and tf_direction == ocio.TRANSFORM_DIR_INVERSE)
         ):
             return
 
@@ -370,9 +383,10 @@ class ImageViewer(QtWidgets.QWidget):
         self._tf_inv = transform_inv
 
         self.image_plane.update_ocio_proc(
-            transform=self._tf_inv if inverse else self._tf_fwd
+            transform=self._tf_inv
+            if tf_direction == ocio.TRANSFORM_DIR_INVERSE
+            else self._tf_fwd
         )
-        self._update_io_labels(update_input=False)
 
     def clear_transform(self) -> None:
         """
@@ -382,24 +396,27 @@ class ImageViewer(QtWidgets.QWidget):
         self._tf_fwd = None
         self._tf_inv = None
 
-        if self.transform_box.currentIndex() != 0:
-            with SignalsBlocked(self.transform_box):
-                self.transform_box.setCurrentIndex(0)
+        if self.tf_box.currentIndex() != 0:
+            with SignalsBlocked(self.tf_box):
+                self.tf_box.setCurrentIndex(0)
 
         self.image_plane.clear_transform()
-        self._update_io_labels(update_input=False)
 
-    def inverse(self) -> bool:
+    def transform_direction(self) -> ocio.TransformDirection:
         """
-        :return: Whether the inverse transform is being viewed
+        :return: Transform direction being viewed
         """
-        return self.inverse_check.value()
+        return (
+            ocio.TRANSFORM_DIR_INVERSE
+            if self.tf_direction_button.isChecked()
+            else ocio.TRANSFORM_DIR_FORWARD
+        )
 
-    def set_inverse(self, inverse: bool) -> None:
+    def set_transform_direction(self, direction: ocio.TransformDirection) -> None:
         """
-        :param inverse: Whether the inverse transform should be viewed
+        :param direction: Set the transform direction to be viewed
         """
-        self.inverse_check.set_value(inverse)
+        self.tf_direction_button.setChecked(direction == ocio.TRANSFORM_DIR_INVERSE)
 
     def exposure(self) -> float:
         """
@@ -468,15 +485,6 @@ class ImageViewer(QtWidgets.QWidget):
 
         if update:
             self._on_input_color_space_changed(self.input_color_space())
-        else:
-            self._update_io_labels(update_output=False)
-
-    def _float_to_uint8(self, value: float) -> int:
-        """
-        :param value: Float value
-        :return: 8-bit clamped unsigned integer value
-        """
-        return max(0, min(255, int(value * 255)))
 
     def _on_transform_menu_changed(
         self, menu_items: list[tuple[int, str, QtGui.QIcon]]
@@ -487,62 +495,38 @@ class ImageViewer(QtWidgets.QWidget):
         """
         target_index = -1
         current_slot = -1
-        if self.transform_box.count():
-            current_slot = self.transform_box.currentData()
+        if self.tf_box.count():
+            current_slot = self.tf_box.currentData()
 
-        with SignalsBlocked(self.transform_box):
-            self.transform_box.clear()
+        with SignalsBlocked(self.tf_box):
+            self.tf_box.clear()
 
             # The first item is always no transform
-            self.transform_box.addItem(self.PASSTHROUGH, userData=-1)
+            self.tf_box.addItem(self.PASSTHROUGH, userData=-1)
 
             for i, (slot, item_name, item_type_icon) in enumerate(menu_items):
-                self.transform_box.addItem(item_type_icon, item_name, userData=slot)
+                self.tf_box.addItem(item_type_icon, item_name, userData=slot)
                 if slot == current_slot:
                     target_index = i + 1  # Offset for "Passthrough" item
 
             # Restore previous item?
             if target_index != -1:
-                self.transform_box.setCurrentIndex(target_index)
+                self.tf_box.setCurrentIndex(target_index)
 
         # Switch to "Passthrough" if previous slot not found
-        if target_index == -1 and self.transform_box.count():
-            with SignalsBlocked(self.transform_box):
-                self.transform_box.setCurrentIndex(0)
+        if target_index == -1 and self.tf_box.count():
+            with SignalsBlocked(self.tf_box):
+                self.tf_box.setCurrentIndex(0)
 
             # Force update transform
             self._on_transform_changed(0)
 
-    def _update_io_labels(
-        self, update_input: bool = True, update_output: bool = True
-    ) -> None:
+    def _float_to_uint8(self, value: float) -> int:
         """
-        Update sample labels for the current input color space and
-        output transform.
-
-        :param update_input: Whether to update input label
-        :param update_output: Whether to update output label
+        :param value: Float value
+        :return: 8-bit clamped unsigned integer value
         """
-        # Input label
-        if update_input:
-            input_color_space = self.input_color_space()
-            if input_color_space:
-                self.input_sample_label.setText(
-                    self.FMT_GRAY_LABEL.format(v=input_color_space)
-                )
-            else:
-                self.input_sample_label.setText(self.PASSTHROUGH_LABEL)
-
-        # Output label
-        if update_output:
-            if self._tf_desc:
-                self.output_sample_label.setText(
-                    self.FMT_GRAY_LABEL.format(
-                        v=f"{self._tf_desc}{' (inverse)' if self.inverse() else ''}:"
-                    )
-                )
-            else:
-                self.output_sample_label.setText(self.PASSTHROUGH_LABEL)
+        return max(0, min(255, int(value * 255)))
 
     @QtCore.Slot(int)
     def _on_transform_changed(self, index: int) -> None:
@@ -551,18 +535,27 @@ class ImageViewer(QtWidgets.QWidget):
             self.clear_transform()
         else:
             TransformManager.subscribe_to_transforms(
-                self.transform_box.currentData(), self.set_transform
+                self.tf_box.currentData(), self.set_transform
             )
 
     @QtCore.Slot(int)
     def _on_tf_subscription_requested(self, slot: int) -> None:
         # If the requested slot does not have a subscription, "Passthrough" will
         # be selected.
-        self.transform_box.setCurrentIndex(max(0, self.transform_box.findData(slot)))
+        self.tf_box.setCurrentIndex(max(0, self.tf_box.findData(slot)))
 
-    @QtCore.Slot(int)
-    def _on_inverse_changed(self, state: int) -> None:
+    @QtCore.Slot(bool)
+    def _on_inverse_check_clicked(self, checked: bool) -> None:
         self.set_transform(self._tf_desc, self._tf_fwd, self._tf_inv)
+        if self.tf_direction_button.isChecked():
+            self.tf_direction_button.setIcon(self._tf_direction_inverse_icon)
+            self.tf_direction_button.setToolTip("Transform direction: Inverse")
+            # Use 'minus' character to match the width of "+"
+            self.output_tf_direction_label.setText("\u2212")
+        else:
+            self.tf_direction_button.setIcon(self._tf_direction_forward_icon)
+            self.tf_direction_button.setToolTip("Transform direction: Forward")
+            self.output_tf_direction_label.setText("+")
 
     @QtCore.Slot(Path, int, int)
     def _on_image_loaded(self, image_path: Path, width: int, height: int) -> None:
@@ -633,7 +626,6 @@ class ImageViewer(QtWidgets.QWidget):
     @QtCore.Slot(str)
     def _on_input_color_space_changed(self, input_color_space: str) -> None:
         self.image_plane.update_ocio_proc(input_color_space=input_color_space)
-        self._update_io_labels(update_output=False)
 
     @QtCore.Slot(float)
     def _on_exposure_changed(self, value: float) -> None:

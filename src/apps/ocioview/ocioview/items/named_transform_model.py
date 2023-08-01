@@ -47,6 +47,8 @@ class NamedTransformModel(BaseConfigItemModel):
     def get_item_transforms(
         self, item_name: str
     ) -> tuple[Optional[ocio.Transform], Optional[ocio.Transform]]:
+        # Get view name from subscription item name
+        item_name = self.extract_subscription_item_name(item_name)
 
         config = ocio.GetCurrentConfig()
         named_transform = config.getNamedTransform(item_name)

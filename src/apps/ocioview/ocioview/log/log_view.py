@@ -7,7 +7,7 @@ import PyOpenColorIO as ocio
 from PySide2 import QtCore, QtGui, QtWidgets
 
 from ..constants import (
-    ICON_SIZE_ITEM,
+    ICON_SIZE_BUTTON,
     TOOL_BAR_BG_COLOR_ROLE,
     TOOL_BAR_BORDER_COLOR_ROLE,
 )
@@ -40,7 +40,7 @@ class LogView(QtWidgets.QFrame):
 
         self.tool_bar = QtWidgets.QToolBar()
         self.tool_bar.setContentsMargins(0, 0, 0, 0)
-        self.tool_bar.setIconSize(ICON_SIZE_ITEM)
+        self.tool_bar.setIconSize(ICON_SIZE_BUTTON)
         self.tool_bar.addWidget(tool_bar_stretch)
 
         tool_bar_layout = QtWidgets.QVBoxLayout()

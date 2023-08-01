@@ -78,7 +78,7 @@ class CodeWidget(QtWidgets.QWidget):
             self.ctf_view, get_glyph_icon("mdi6.code-tags"), "Processor (CTF)"
         )
         self.tabs.addTab(
-            self.shader_view, get_glyph_icon("mdi6.dots-grid"), "Processor (GLSL)"
+            self.shader_view, get_glyph_icon("mdi6.dots-grid"), "Processor (Shader)"
         )
 
         layout = QtWidgets.QVBoxLayout()

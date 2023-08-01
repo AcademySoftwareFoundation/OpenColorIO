@@ -100,10 +100,7 @@ class TransformManager:
         cls._tf_subscriptions[slot] = tf_subscription
 
         # Trigger immediate update to subscribers
-        menu_items = cls.get_subscription_menu_items()
-        for callback in cls._tf_menu_subscribers:
-            callback(menu_items)
-
+        cls._update_menu_items()
         cls._on_item_tf_changed(
             slot,
             *item_model.get_item_transforms(item_name),
@@ -256,6 +253,11 @@ class TransformManager:
             tf_agent.disconnect_all()
 
         # Trigger immediate update to subscribers
+        cls._update_menu_items()
+
+    @classmethod
+    def _update_menu_items(cls) -> None:
+        """Tell all menu subscribers to update their item names."""
         menu_items = cls.get_subscription_menu_items()
         for callback in cls._tf_menu_subscribers:
             callback(menu_items)
@@ -272,6 +274,7 @@ class TransformManager:
             cls._on_item_tf_changed(
                 slot, *tf_subscription.item_model.get_item_transforms(item_name)
             )
+            cls._update_menu_items()
 
     @classmethod
     def _on_item_tf_changed(

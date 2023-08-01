@@ -510,21 +510,35 @@ class BaseConfigItemModel(QtCore.QAbstractTableModel):
         """
         return self.data(self.index(index.row(), self.NAME.column))
 
-    def get_subscription_item_name(
+    def format_subscription_item_name(
         self, item_name_or_index: Union[str, QtCore.QModelIndex], **kwargs
     ) -> Optional[str]:
         """
-        Mutate item name into a per-model unique name for tracking
-        transform subscriptions. By default, this returns the name
-        unchanged.
+        Format item name into a per-model unique name for tracking
+        transform subscriptions.
 
         :param item_name_or_index: Item name or model index for item
-        :return: Subscription unique item name, if available
+        :return: Subscription unique item name
         """
         if isinstance(item_name_or_index, QtCore.QModelIndex):
-            return self.get_item_name(item_name_or_index)
+            item_name = self.get_item_name(item_name_or_index)
         else:
-            return item_name_or_index
+            item_name = item_name_or_index
+        return f"{item_name} [{self.item_type_label().lower()}]"
+
+    def extract_subscription_item_name(self, subscription_item_name: str) -> str:
+        """
+        Unformat item name from its per-model unique name for tracking
+        transform subscriptions.
+
+        :param subscription_item_name: Subscription unique item name
+        :return: Extracted item name
+        """
+        suffix = f" [{self.item_type_label().lower()}]"
+        if subscription_item_name.endswith(suffix):
+            return subscription_item_name[: -len(suffix)]
+        else:
+            return subscription_item_name
 
     def get_item_transforms(
         self, item_name: str
@@ -647,7 +661,7 @@ class BaseConfigItemModel(QtCore.QAbstractTableModel):
         """
         slot = TransformManager.get_subscription_slot(
             self,
-            self.get_subscription_item_name(self._get_value(item, column_desc)),
+            self.format_subscription_item_name(self._get_value(item, column_desc)),
         )
         return TransformManager.get_subscription_slot_color(
             slot, saturation=0.25, value=0.25
@@ -662,7 +676,7 @@ class BaseConfigItemModel(QtCore.QAbstractTableModel):
         """
         slot = TransformManager.get_subscription_slot(
             self,
-            self.get_subscription_item_name(self._get_value(item, column_desc)),
+            self.format_subscription_item_name(self._get_value(item, column_desc)),
         )
         return TransformManager.get_subscription_slot_icon(slot)
 
@@ -736,9 +750,9 @@ class BaseConfigItemModel(QtCore.QAbstractTableModel):
         """
         # Name adjustment may be needed for unique item/transform identifiers within
         # the model.
-        item_name = self.get_subscription_item_name(item_name)
+        item_name = self.format_subscription_item_name(item_name)
         if prev_item_name:
-            prev_item_name = self.get_subscription_item_name(prev_item_name)
+            prev_item_name = self.format_subscription_item_name(prev_item_name)
 
         # Is item set as a subscription?
         slot = TransformManager.get_subscription_slot(self, prev_item_name or item_name)

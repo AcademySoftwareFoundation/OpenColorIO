@@ -48,10 +48,14 @@ class BaseConfigItemParamEdit(QtWidgets.QWidget):
         if self.__has_transforms__:
             self.__has_tabs__ = True
             no_tf_color = palette.color(palette.Disabled, palette.Text)
-            self._from_ref_icon = get_glyph_icon("ph.sign-in")
-            self._no_from_ref_icon = get_glyph_icon("ph.sign-in", color=no_tf_color)
-            self._to_ref_icon = get_glyph_icon("ph.sign-out")
-            self._no_to_ref_icon = get_glyph_icon("ph.sign-out", color=no_tf_color)
+            self._from_ref_icon = get_glyph_icon("mdi6.layers-plus")
+            self._no_from_ref_icon = get_glyph_icon(
+                "mdi6.layers-plus", color=no_tf_color
+            )
+            self._to_ref_icon = get_glyph_icon("mdi6.layers-minus")
+            self._no_to_ref_icon = get_glyph_icon(
+                "mdi6.layers-minus", color=no_tf_color
+            )
 
         # Widgets
         self.name_edit = LineEdit()
@@ -310,7 +314,7 @@ class BaseConfigItemEdit(QtWidgets.QWidget):
             )
         ):
             current_index = self.list.current_index()
-            item_name = self.model.get_subscription_item_name(current_index)
+            item_name = self.model.format_subscription_item_name(current_index)
             if item_name:
                 TransformManager.set_subscription(
                     int(event.text()), self.model, item_name

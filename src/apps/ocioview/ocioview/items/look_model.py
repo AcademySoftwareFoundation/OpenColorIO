@@ -37,6 +37,8 @@ class LookModel(BaseConfigItemModel):
     def get_item_transforms(
         self, item_name: str
     ) -> tuple[Optional[ocio.Transform], Optional[ocio.Transform]]:
+        # Get view name from subscription item name
+        item_name = self.extract_subscription_item_name(item_name)
 
         scene_ref_name = ReferenceSpaceManager.scene_reference_space().getName()
         return (
@@ -101,7 +103,16 @@ class LookModel(BaseConfigItemModel):
             config.addLook(other_item)
 
     def _new_item(self, name: str) -> None:
-        ocio.GetCurrentConfig().addLook(ocio.Look(name=name))
+        config = ocio.GetCurrentConfig()
+        color_space = ConfigCache.get_default_color_space_name()
+        if not color_space:
+            color_spaces = ConfigCache.get_color_space_names()
+            if color_spaces:
+                color_space = color_spaces[0]
+        if color_space:
+            config.addLook(ocio.Look(name=name, processSpace=color_space))
+        else:
+            config.addLook(ocio.Look(name=name))
 
     def _get_value(self, item: ocio.Look, column_desc: ColumnDesc) -> Any:
         config = ocio.GetCurrentConfig()
