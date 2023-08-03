@@ -115,7 +115,8 @@ class ImagePlane(QtOpenGL.QGLWidget):
         self._ocio_exposure = 0.0
         self._ocio_gamma = 1.0
         self._ocio_channel_hot = [1, 1, 1, 1]
-        self._ocio_proc_cpu = None
+        self._ocio_tf_proc = None
+        self._ocio_tf_proc_cpu = None
         self._ocio_proc_cache_id = None
         self._ocio_shader_cache_id = None
         self._ocio_shader_desc = None
@@ -534,7 +535,8 @@ class ImagePlane(QtOpenGL.QGLWidget):
             cpu_proc = config.getProcessor(
                 cpu_viewing_pipeline, ocio.TRANSFORM_DIR_FORWARD
             )
-            self._ocio_proc_cpu = cpu_proc.getDefaultCPUProcessor()
+            self._ocio_tf_proc = cpu_proc
+            self._ocio_tf_proc_cpu = cpu_proc.getDefaultCPUProcessor()
 
             # Update GPU processor shaders and textures
             self._ocio_shader_desc = ocio.GpuShaderDesc.CreateShaderDesc(
@@ -560,6 +562,12 @@ class ImagePlane(QtOpenGL.QGLWidget):
 
         elif force_update:
             self.update()
+
+            # The transform and processor has not changed, but other app components
+            # which view it may have dropped tje reference. Log processor to update
+            # them as needed.
+            if self._ocio_tf_proc is not None:
+                log_queue.put_nowait(self._ocio_tf_proc)
 
     def exposure(self) -> float:
         """
@@ -659,8 +667,8 @@ class ImagePlane(QtOpenGL.QGLWidget):
                     pixel_input = pixel_input[:3]
 
                 # Sample output pixel with CPU processor
-                if self._ocio_proc_cpu is not None:
-                    pixel_output = self._ocio_proc_cpu.applyRGB(pixel_input)
+                if self._ocio_tf_proc_cpu is not None:
+                    pixel_output = self._ocio_tf_proc_cpu.applyRGB(pixel_input)
                 else:
                     pixel_output = pixel_input.copy()
 

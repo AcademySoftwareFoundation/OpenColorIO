@@ -70,7 +70,7 @@ class ImageViewer(QtWidgets.QWidget):
     def __init__(self, parent: Optional[QtWidgets.QWidget] = None):
         super().__init__(parent)
 
-        self._tf_desc = ""
+        self._tf_subscription_slot = -1
         self._tf_fwd = None
         self._tf_inv = None
         self._sample_format = ""
@@ -280,15 +280,20 @@ class ImageViewer(QtWidgets.QWidget):
         self._on_sample_precision_changed(self.sample_precision_box.value())
         self._on_sample_changed(-1, -1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
 
-    def update(self) -> None:
+    def update(self, force: bool = False) -> None:
         """
         Make this image viewer the current OpenGL rendering context and
         ask it to redraw.
+
+        :param force: Whether to force the image to redraw, regardless
+            of OCIO processor changes.
         """
         self._update_input_color_spaces(update=False)
 
         self.image_plane.makeCurrent()
-        self.image_plane.update_ocio_proc(input_color_space=self.input_color_space())
+        self.image_plane.update_ocio_proc(
+            input_color_space=self.input_color_space(), force_update=force
+        )
 
         super().update()
 
@@ -357,7 +362,7 @@ class ImageViewer(QtWidgets.QWidget):
 
     def set_transform(
         self,
-        desc: str,
+        slot: int,
         transform_fwd: Optional[ocio.Transform],
         transform_inv: Optional[ocio.Transform],
     ) -> None:
@@ -365,20 +370,19 @@ class ImageViewer(QtWidgets.QWidget):
         Update main OCIO transform for the viewing pipeline, to be
         applied from the current config's scene reference space.
 
-        :param desc: Transform description
+        :param slot: Transform subscription slot
         :param transform_fwd: Forward transform
         :param transform_inv: Inverse transform
         """
         tf_direction = self.transform_direction()
 
         if (
-            not desc
+            slot != self._tf_subscription_slot
             or (transform_fwd is None and tf_direction == ocio.TRANSFORM_DIR_FORWARD)
             or (transform_inv is None and tf_direction == ocio.TRANSFORM_DIR_INVERSE)
         ):
             return
 
-        self._tf_desc = desc
         self._tf_fwd = transform_fwd
         self._tf_inv = transform_inv
 
@@ -392,7 +396,7 @@ class ImageViewer(QtWidgets.QWidget):
         """
         Clear current OCIO transform, passing through the input image.
         """
-        self._tf_desc = ""
+        self._tf_subscription_slot = -1
         self._tf_fwd = None
         self._tf_inv = None
 
@@ -534,8 +538,9 @@ class ImageViewer(QtWidgets.QWidget):
             TransformManager.unsubscribe_from_all_transforms(self.set_transform)
             self.clear_transform()
         else:
+            self._tf_subscription_slot = self.tf_box.currentData()
             TransformManager.subscribe_to_transforms(
-                self.tf_box.currentData(), self.set_transform
+                self._tf_subscription_slot, self.set_transform
             )
 
     @QtCore.Slot(int)
@@ -546,7 +551,7 @@ class ImageViewer(QtWidgets.QWidget):
 
     @QtCore.Slot(bool)
     def _on_inverse_check_clicked(self, checked: bool) -> None:
-        self.set_transform(self._tf_desc, self._tf_fwd, self._tf_inv)
+        self.set_transform(self._tf_subscription_slot, self._tf_fwd, self._tf_inv)
         if self.tf_direction_button.isChecked():
             self.tf_direction_button.setIcon(self._tf_direction_inverse_icon)
             self.tf_direction_button.setToolTip("Transform direction: Inverse")

@@ -213,7 +213,7 @@ class TransformManager:
 
         :param slot: Subscription slot number
         :param tf_callback: Transform callback, which will be called
-            with an updated item name and forward and inverse
+            with the subscription slot number, and forward and inverse
             transforms when either change. All transforms assume a
             scene reference space input.
         """
@@ -223,7 +223,7 @@ class TransformManager:
         # Trigger immediate update to new subscriber
         if tf_subscription is not None:
             tf_callback(
-                tf_subscription.item_name,
+                slot,
                 *tf_subscription.item_model.get_item_transforms(
                     tf_subscription.item_name
                 ),
@@ -291,4 +291,4 @@ class TransformManager:
         tf_subscribers = cls._tf_subscribers.get(slot)
         if tf_subscription is not None and tf_subscribers:
             for callback in tf_subscribers:
-                callback(tf_subscription.item_name, item_tf_fwd, item_tf_inv)
+                callback(slot, item_tf_fwd, item_tf_inv)

@@ -152,7 +152,9 @@ class ViewerDock(TabbedDockWidget):
         """
         viewer = self.tabs.widget(index)
         if viewer is not None:
-            viewer.update()
+            # Force an update to trigger side effects of a processor change in the
+            # wider application.
+            viewer.update(force=True)
 
     def _on_tab_close_requested(self, index: int) -> None:
         """
