@@ -34,7 +34,7 @@ if (NOT @BUILD_SHARED_LIBS@) # NOT @BUILD_SHARED_LIBS@
         find_dependency(pystring @pystring_VERSION@)
     endif()
 
-    if (NOT TARGET yaml-cpp)
+    if (NOT TARGET yaml-cpp AND NOT TARGET yaml-cpp::yaml-cpp)
         find_dependency(yaml-cpp @yaml-cpp_VERSION@)
     endif()
 

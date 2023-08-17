@@ -20,7 +20,7 @@ function(add_ocio_test NAME SOURCES PRIVATE_INCLUDES)
             sampleicc::sampleicc
             unittest_data
             utils::strings
-            yaml-cpp
+            ${YAML_CPP_LIBRARIES}
             testutils
             MINIZIP::minizip-ng
             xxHash
