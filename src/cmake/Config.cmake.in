@@ -34,23 +34,23 @@ if (NOT @BUILD_SHARED_LIBS@) # NOT @BUILD_SHARED_LIBS@
     # Required dependencies 
     ########################
 
-    if (NOT expat::expat)
+    if (NOT TARGET expat::expat)
         find_dependency(expat @expat_VERSION@)
     endif()
 
-    if (NOT Imath::Imath)
+    if (NOT TARGET Imath::Imath)
         find_dependency(Imath @Imath_VERSION@)
     endif()
 
-    if (NOT pystring::pystring)
+    if (NOT TARGET pystring::pystring)
         find_dependency(pystring @pystring_VERSION@)
     endif()
 
-    if (NOT yaml-cpp)
+    if (NOT TARGET yaml-cpp)
         find_dependency(yaml-cpp @yaml-cpp_VERSION@)
     endif()
 
-    if (NOT ZLIB::ZLIB)
+    if (NOT TARGET ZLIB::ZLIB)
         # ZLIB_VERSION is available starting CMake 3.26+.
         # ZLIB_VERSION_STRING is still available for backward compatibility.
         # See https://cmake.org/cmake/help/git-stage/module/FindZLIB.html
@@ -62,7 +62,7 @@ if (NOT @BUILD_SHARED_LIBS@) # NOT @BUILD_SHARED_LIBS@
         endif()
     endif()
 
-    if (NOT MINIZIP::minizip-ng)
+    if (NOT TARGET MINIZIP::minizip-ng)
         find_dependency(minizip-ng @minizip-ng_VERSION@)
     endif()
 
