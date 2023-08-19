@@ -281,7 +281,7 @@ BaseLut1DRenderer<inBD, outBD>::BaseLut1DRenderer(ConstLut1DOpDataRcPtr & lut)
 #if OCIO_USE_SSE2
     if (CPUInfo::instance().hasSSE2())
     {
-        m_applyLutFunc = SSE2GetLut1DApplyFunc(inBD, m_outBitDepth);
+        m_applyLutFunc = SSE2GetLut1DApplyFunc(inBD, outBD);
     }
 #endif
 
