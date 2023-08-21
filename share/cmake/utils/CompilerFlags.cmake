@@ -9,16 +9,37 @@ set(PLATFORM_COMPILE_OPTIONS "")
 set(PLATFORM_LINK_OPTIONS "")
 
 ###############################################################################
-# Define if SSE2 can be used.
+# Verify SIMD compatibility
 
 if(OCIO_USE_SIMD)
-    include(CheckSupportSSE2)
+    if (OCIO_USE_SSE2NEON AND COMPILER_SUPPORTS_ARM_NEON)
+        include(CheckSupportSSEUsingSSE2NEON)
+
+        if(NOT COMPILER_SUPPORTS_SSE_WITH_SSE2NEON)
+            set(OCIO_USE_SSE2NEON OFF)
+        endif()
+    endif()
+
+    include(CheckSupportX86SIMD)
+else()
+    set(OCIO_USE_SSE2 OFF)
+    set(OCIO_USE_SSE3 OFF)
+    set(OCIO_USE_SSSE3 OFF)
+    set(OCIO_USE_SSE4 OFF)
+    set(OCIO_USE_SSE42 OFF)
+    set(OCIO_USE_AVX OFF)
+    set(OCIO_USE_AVX2 OFF)
+    set(OCIO_USE_AVX512 OFF)
+    set(OCIO_USE_F16C OFF)
+
+    set(OCIO_USE_SSE2NEON OFF)
 endif()
 
-if(NOT HAVE_SSE2 AND NOT HAVE_SSE2_WITH_SSE2NEON)
-    message(STATUS "Disabling SSE optimizations, as the target doesn't support them")
-    set(OCIO_USE_SIMD OFF)
-endif()
+#TODOCED Does not make sense anymore as we have AVX and AVX2 support now.
+# if(NOT COMPILER_SUPPORTS_SSE2 AND NOT COMPILER_SUPPORTS_SSE_WITH_SSE2NEON)
+#     message(STATUS "Disabling SSE optimizations, as the target doesn't support them")
+#     set(OCIO_USE_SIMD OFF)
+# endif()
 
 ###############################################################################
 # Compile flags
@@ -103,33 +124,6 @@ set_unless_defined(CMAKE_C_VISIBILITY_PRESET hidden)
 set_unless_defined(CMAKE_CXX_VISIBILITY_PRESET hidden)
 set_unless_defined(CMAKE_VISIBILITY_INLINES_HIDDEN YES)
 
-
-###############################################################################
-# Define if SSE2 can be used.
-
-
-message(STATUS "")
-message(STATUS "Checking for SSE2 support...")
-include(CheckSupportSSE2)
-
-if(NOT HAVE_SSE2)
-    message(STATUS "Disabling SSE optimizations, as the target doesn't support them")
-    set(OCIO_USE_SSE OFF)
-endif(NOT HAVE_SSE2)
-
-if(OCIO_USE_SSE)
-    include(CheckSupportX86SIMD)
-else()
-    set(OCIO_USE_SSE2 OFF)
-    set(OCIO_USE_SSE3 OFF)
-    set(OCIO_USE_SSSE3 OFF)
-    set(OCIO_USE_SSE4 OFF)
-    set(OCIO_USE_SSE42 OFF)
-    set(OCIO_USE_AVX OFF)
-    set(OCIO_USE_AVX2 OFF)
-    set(OCIO_USE_AVX512 OFF)
-    set(OCIO_USE_F16C OFF)
-endif()
 
 ###############################################################################
 # Define RPATH.

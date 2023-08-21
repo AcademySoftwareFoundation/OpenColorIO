@@ -12,17 +12,9 @@ if(APPLE AND "${CMAKE_OSX_ARCHITECTURES}" MATCHES "arm64;x86_64"
 endif()
 
 if(MSVC)
-    # x86_64 always has SSE2
-    if("${CMAKE_SIZEOF_VOID_P}" STREQUAL "8")
-        # Simulate the same message we would get by using check_cxx_source_compiles. 
-        message(STATUS "x86_64 always support SSE2 - COMPILER_SUPPORTS_SSE2 - Success")
-        # By setting the variable to 1, tuhe check_cxx_source_compiles will be skipped automatically.
-        set(COMPILER_SUPPORTS_SSE2 1)
-    else()
-        check_cxx_compiler_flag("/arch:SSE2" COMPILER_SUPPORTS_SSE2)
-    endif()
+    set(CMAKE_REQUIRED_FLAGS "/w /arch:AVX2")
 elseif(USE_GCC OR USE_CLANG)
-    set(CMAKE_REQUIRED_FLAGS "-w -msse2")
+    set(CMAKE_REQUIRED_FLAGS "-w -mavx2 -mfma -mf16c")
 endif()
 
 if (APPLE AND __universal_build)
@@ -31,20 +23,27 @@ if (APPLE AND __universal_build)
     # Apple has an automatic translation layer from SSE/AVX to ARM Neon.
 endif()
 
-set(SSE2_CODE "
-    #include <emmintrin.h>
+set(AVX2_CODE "
+    #include <immintrin.h>
 
     int main() 
-    { 
-        __m128d a, b;
-        double vals[2] = {0};
-        a = _mm_loadu_pd (vals);
-        b = _mm_add_pd (a,a);
-        _mm_storeu_pd (vals,b);
-        return (0);
+    {
+        __m256i a = _mm256_set_epi32(1, 2, 3, 4, 5, 6, 7, 8);
+        __m256i b = _mm256_set_epi32(8, 7, 6, 5, 4, 3, 2, 1);
+        __m256i result = _mm256_add_epi32(a, b);
+
+        __m256 result_f16c = _mm256_cvtph_ps(_mm_set_epi16(1, 2, 3, 4, 5, 6, 7, 8));
+
+        __m256 result_fma = _mm256_fmadd_ps(
+            _mm256_set_ps(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0),
+            _mm256_set_ps(8.0, 7.0, 6.0, 5.0, 4.0, 3.0, 2.0, 1.0),
+            _mm256_set_ps(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0)
+        );
+
+        return 0;
     }
 ")
-check_cxx_source_compiles("${SSE2_CODE}" COMPILER_SUPPORTS_SSE2)
+check_cxx_source_compiles("${AVX2_CODE}" COMPILER_SUPPORTS_AVX2)
 
 set(CMAKE_REQUIRED_FLAGS "${_cmake_required_flags_orig}")
 unset(_cmake_required_flags_orig)

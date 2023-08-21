@@ -12,17 +12,9 @@ if(APPLE AND "${CMAKE_OSX_ARCHITECTURES}" MATCHES "arm64;x86_64"
 endif()
 
 if(MSVC)
-    # x86_64 always has SSE2
-    if("${CMAKE_SIZEOF_VOID_P}" STREQUAL "8")
-        # Simulate the same message we would get by using check_cxx_source_compiles. 
-        message(STATUS "x86_64 always support SSE2 - COMPILER_SUPPORTS_SSE2 - Success")
-        # By setting the variable to 1, tuhe check_cxx_source_compiles will be skipped automatically.
-        set(COMPILER_SUPPORTS_SSE2 1)
-    else()
-        check_cxx_compiler_flag("/arch:SSE2" COMPILER_SUPPORTS_SSE2)
-    endif()
+    set(CMAKE_REQUIRED_FLAGS "/w /arch:AVX512")
 elseif(USE_GCC OR USE_CLANG)
-    set(CMAKE_REQUIRED_FLAGS "-w -msse2")
+    set(CMAKE_REQUIRED_FLAGS "-w -mavx512f")
 endif()
 
 if (APPLE AND __universal_build)
@@ -31,20 +23,15 @@ if (APPLE AND __universal_build)
     # Apple has an automatic translation layer from SSE/AVX to ARM Neon.
 endif()
 
-set(SSE2_CODE "
-    #include <emmintrin.h>
+set(AVX512_CODE "
+    #include <immintrin.h>
 
-    int main() 
-    { 
-        __m128d a, b;
-        double vals[2] = {0};
-        a = _mm_loadu_pd (vals);
-        b = _mm_add_pd (a,a);
-        _mm_storeu_pd (vals,b);
-        return (0);
+    int main() {
+        __m512i vec = _mm512_set1_epi32(42);
+        return 0;
     }
 ")
-check_cxx_source_compiles("${SSE2_CODE}" COMPILER_SUPPORTS_SSE2)
+check_cxx_source_compiles("${AVX512_CODE}" COMPILER_SUPPORTS_AVX512)
 
 set(CMAKE_REQUIRED_FLAGS "${_cmake_required_flags_orig}")
 unset(_cmake_required_flags_orig)

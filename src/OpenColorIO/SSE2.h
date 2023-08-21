@@ -8,7 +8,18 @@
 #include "CPUInfo.h"
 #ifdef OCIO_USE_SSE2
 
-#include <immintrin.h>
+// Include the appropriate SIMD intrinsics header based on the architecture (Intel vs. ARM).
+#if !defined(__aarch64__)
+    #if defined(USE_SSE)
+        #include <immintrin.h>
+    #endif
+#elif defined(__aarch64__) && defined(USE_SSE2_WITH_SSE2NEON)
+    // ARM architecture A64 (ARM64)
+    #if defined(USE_SSE2_WITH_SSE2NEON)
+        #include <sse2neon.h>
+    #endif
+#endif
+
 #include <stdio.h>
 
 #include <OpenColorIO/OpenColorIO.h>

@@ -12,16 +12,16 @@ if(APPLE)
 endif()
 
 set(source_code "
-#include <arm_neon.h>
-int main()
-{
-    float32x4_t v = vdupq_n_f32(0);
-    return 0;
+    #include <arm_neon.h>
+    int main()
+    {
+        float32x4_t v = vdupq_n_f32(0);
+        return 0;
 }")
 
-check_cxx_source_compiles ("${source_code}" HAVE_NEON)
+check_cxx_source_compiles ("${source_code}" COMPILER_SUPPORTS_ARM_NEON)
 
 set(CMAKE_OSX_ARCHITECTURES "${_cmake_osx_architectures_orig}")
 
 unset(_cmake_osx_architectures_orig)
-mark_as_advanced(HAVE_NEON)
+mark_as_advanced(COMPILER_SUPPORTS_ARM_NEON)

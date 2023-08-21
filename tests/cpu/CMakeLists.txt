@@ -26,7 +26,7 @@ function(add_ocio_test NAME SOURCES PRIVATE_INCLUDES)
             xxHash
     )
 
-    if(OCIO_USE_SIMD AND HAVE_SSE2_WITH_SSE2NEON)
+    if(OCIO_USE_SIMD AND OCIO_USE_SSE2NEON AND COMPILER_SUPPORTS_SSE_WITH_SSE2NEON)
         target_link_libraries(${TEST_BINARY} PRIVATE sse2neon)
     endif()
 
@@ -49,17 +49,10 @@ function(add_ocio_test NAME SOURCES PRIVATE_INCLUDES)
     endif(PRIVATE_INCLUDES)
 
     if(OCIO_USE_SIMD)
-        if (HAVE_SSE2)
+        if (COMPILER_SUPPORTS_SSE2)
             target_compile_definitions(${TEST_BINARY}
                 PRIVATE
                     USE_SSE
-            )
-        endif()
-
-        if(HAVE_SSE2_WITH_SSE2NEON)
-            target_compile_definitions(${TEST_BINARY}
-                PRIVATE
-                    USE_SSE2_WITH_SSE2NEON
             )
         endif()
     endif(OCIO_USE_SIMD)

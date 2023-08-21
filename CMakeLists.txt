@@ -181,24 +181,29 @@ endif()
 
 ###############################################################################
 # Optimization / internal linking preferences
-# TODO Remove OCIO_USE_SSE once it is fully deprecated.
-option(OCIO_USE_SSE "Specify whether to enable SSE (supplanted by OCIO_USE_SIMD)" ON)
-# TODO Remove mark_as_advanced once OCIO_USE_SSE is fully deprecated.
-mark_as_advanced(OCIO_USE_SSE)
-option(OCIO_USE_SIMD "Specify whether to enable SIMD CPU performance optimizations" ${OCIO_USE_SSE})
+option(OCIO_USE_SIMD "Specify whether to enable SIMD CPU performance optimizations" ON)
 option(OCIO_USE_OIIO_FOR_APPS "Request OIIO to build apps (ociolutimage, ocioconvert and ociodisplay), the default uses OpenEXR." OFF)
 
 if ("${CMAKE_SYSTEM_PROCESSOR}" MATCHES "(AMD64|IA64|EM64T|X86|x86_64|i386|i686)")
-    option(OCIO_USE_SSE2 "Specify whether to enable SSE2 CPU performance optimizations" ON)
-    option(OCIO_USE_SSE3 "Specify whether to enable SSE3 CPU performance optimizations" ON)
-    option(OCIO_USE_SSSE3 "Specify whether to enable SSSE3 CPU performance optimizations" ON)
-    option(OCIO_USE_SSE4 "Specify whether to enable SSE4 CPU performance optimizations" ON)
-    option(OCIO_USE_SSE42 "Specify whether to enable SSE4.2 CPU performance optimizations" ON)
-    option(OCIO_USE_AVX "Specify whether to enable AVX CPU performance optimizations" ON)
-    option(OCIO_USE_AVX2 "Specify whether to enable AVX2 CPU performance optimizations" ON)
-    option(OCIO_USE_AVX512 "Specify whether to enable AVX512 CPU performance optimizations" ON)
-    option(OCIO_USE_F16C  "Specify whether to enable F16C CPU performance optimizations" ON)
+    set(OCIO_BUILD_ENABLE_OPTIMIZATIONS ON)
     set(OCIO_ARCH_X86 1)
+else()
+    set(OCIO_BUILD_ENABLE_OPTIMIZATIONS OFF)
+    set(OCIO_ARCH_X86 0)
+endif()
+
+option(OCIO_USE_SSE2 "Specify whether to enable SSE2 CPU performance optimizations" ${OCIO_BUILD_ENABLE_OPTIMIZATIONS})
+option(OCIO_USE_SSE3 "Specify whether to enable SSE3 CPU performance optimizations" ${OCIO_BUILD_ENABLE_OPTIMIZATIONS})
+option(OCIO_USE_SSSE3 "Specify whether to enable SSSE3 CPU performance optimizations" ${OCIO_BUILD_ENABLE_OPTIMIZATIONS})
+option(OCIO_USE_SSE4 "Specify whether to enable SSE4 CPU performance optimizations" ${OCIO_BUILD_ENABLE_OPTIMIZATIONS})
+option(OCIO_USE_SSE42 "Specify whether to enable SSE4.2 CPU performance optimizations" ${OCIO_BUILD_ENABLE_OPTIMIZATIONS})
+option(OCIO_USE_AVX "Specify whether to enable AVX CPU performance optimizations" ${OCIO_BUILD_ENABLE_OPTIMIZATIONS})
+option(OCIO_USE_AVX2 "Specify whether to enable AVX2 CPU performance optimizations" ${OCIO_BUILD_ENABLE_OPTIMIZATIONS})
+option(OCIO_USE_AVX512 "Specify whether to enable AVX512 CPU performance optimizations" ${OCIO_BUILD_ENABLE_OPTIMIZATIONS})
+option(OCIO_USE_F16C  "Specify whether to enable F16C CPU performance optimizations" ${OCIO_BUILD_ENABLE_OPTIMIZATIONS})
+
+if (APPLE)
+    option(OCIO_USE_SSE2NEON "Specify whether to enable SSE CPU performance optimizations on Apple ARM using SSE2NEON" ON)
 endif()
 
 ###############################################################################
@@ -209,17 +214,24 @@ include(CheckSupportGL)
 
 
 ###############################################################################
-# Check for ARM neon
+# Check for ARM neon here because we need to know if ARM NEON is supported
+# quickly. Once we know that ARM NEON is supported, we can add sse2neon library
+# to the build.
 
 if(OCIO_USE_SIMD)
     include(CheckSupportARMNeon)
+
+    if (NOT COMPILER_SUPPORTS_ARM_NEON)
+        # Force it to OFF since ARM Neon is not supported.
+        set(OCIO_USE_SSE2NEON OFF)
+    endif()
 endif()
 
 
 ###############################################################################
 # Add sse2neon to the build if ARM NEON intrinsics are supported.
 
-if(HAVE_NEON AND OCIO_USE_SIMD)
+if(OCIO_USE_SIMD AND OCIO_USE_SSE2NEON AND COMPILER_SUPPORTS_ARM_NEON)
     # Install sse2neon. Please note that sse2neon is downloaded during the configure step as it is
     # needed for CompilerFlags.cmake and CheckSupportSSE2.cmake.
 
