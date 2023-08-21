@@ -345,15 +345,6 @@ if(BUILD_SHARED_LIBS OR (OCIO_BUILD_PYTHON AND UNIX))
     set_property(TARGET OpenColorIO PROPERTY POSITION_INDEPENDENT_CODE ON)
 endif()
 
-if(OCIO_USE_SIMD)
-    if(COMPILER_SUPPORTS_SSE2)
-        target_compile_definitions(OpenColorIO
-            PRIVATE
-                USE_SSE
-        )
-    endif()
-endif()
-
 if(MSVC AND BUILD_TYPE_DEBUG AND BUILD_SHARED_LIBS)
     set_target_properties(OpenColorIO PROPERTIES
         PDB_NAME ${PROJECT_NAME}${OCIO_LIBNAME_SUFFIX}_${OpenColorIO_VERSION_MAJOR}_${OpenColorIO_VERSION_MINOR}

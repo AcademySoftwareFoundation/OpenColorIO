@@ -5,17 +5,17 @@
 #ifndef INCLUDED_OCIO_SSE_H
 #define INCLUDED_OCIO_SSE_H
 
-
-#if defined(USE_SSE) || defined(OCIO_USE_SSE2NEON)
+#include "CPUInfoConfig.h"
+#if OCIO_USE_SSE2 || OCIO_USE_SSE2NEON
 
 // Include the appropriate SIMD intrinsics header based on the architecture (Intel vs. ARM).
 #if !defined(__aarch64__)
-    #if defined(USE_SSE)
+    #if OCIO_USE_SSE2
         #include <emmintrin.h>
     #endif
 #elif defined(__aarch64__)
     // ARM architecture A64 (ARM64)
-    #if defined(OCIO_USE_SSE2NEON)
+    #if OCIO_USE_SSE2NEON
         #include <sse2neon.h>
     #endif
 #endif
@@ -645,7 +645,7 @@ inline void sseSinCos(const float x, float& sin_x, float& cos_x)
 } // namespace OCIO_NAMESPACE
 
 
-#endif  // USE_SSE
+#endif  // OCIO_USE_SSE2
 
 
 #endif  // INCLUDED_OCIO_SSE_H

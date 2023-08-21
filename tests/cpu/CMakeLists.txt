@@ -48,15 +48,6 @@ function(add_ocio_test NAME SOURCES PRIVATE_INCLUDES)
         )
     endif(PRIVATE_INCLUDES)
 
-    if(OCIO_USE_SIMD)
-        if (COMPILER_SUPPORTS_SSE2)
-            target_compile_definitions(${TEST_BINARY}
-                PRIVATE
-                    USE_SSE
-            )
-        endif()
-    endif(OCIO_USE_SIMD)
-
     if(WIN32)
         # A windows application linking to eXpat static libraries must
         # have the global macro XML_STATIC defined

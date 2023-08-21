@@ -9,6 +9,8 @@
 #include <string>
 #include <vector>
 
+#include "CPUInfoConfig.h"
+
 class OCIOGPUTest;
 
 using OCIOTestFuncCallback = std::function<void(OCIOGPUTest & test)>;

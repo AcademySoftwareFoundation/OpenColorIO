@@ -193,7 +193,7 @@ private:
 };
 
 
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
 
 //----------------------------------------------------------------------------
 // RGB channel ordering.
@@ -316,7 +316,7 @@ BaseLut3DRenderer::BaseLut3DRenderer(ConstLut3DOpDataRcPtr & lut)
 
 BaseLut3DRenderer::~BaseLut3DRenderer()
 {
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
     Platform::AlignedFree(m_optLut);
 #else
     free(m_optLut);
@@ -329,7 +329,7 @@ void BaseLut3DRenderer::updateData(ConstLut3DOpDataRcPtr & lut)
 
     m_step = ((float)m_dim - 1.0f);
 
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
     Platform::AlignedFree(m_optLut);
     m_components = 4;
 #else
@@ -339,7 +339,7 @@ void BaseLut3DRenderer::updateData(ConstLut3DOpDataRcPtr & lut)
     m_optLut = createOptLut(lut->getArray().getValues());
 }
 
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
 // Creates a LUT aligned to a 16 byte boundary with RGB and 0 for alpha
 // in order to be able to load the LUT using _mm_load_ps.
 float* BaseLut3DRenderer::createOptLut(const Array::Values& lut) const
@@ -629,7 +629,7 @@ void Lut3DRenderer::apply(const void * inImg, void * outImg, long numPixels) con
     const float * in = (const float *)inImg;
     float * out = (float *)outImg;
 
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
 
     __m128 step = _mm_set1_ps(m_step);
     __m128 maxIdx = _mm_set1_ps((float)(m_dim - 1));

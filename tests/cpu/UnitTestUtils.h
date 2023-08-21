@@ -19,6 +19,7 @@
 #include "Op.h"
 #include "Platform.h"
 #include "pystring/pystring.h"
+#include "CPUInfoConfig.h"
 
 namespace OCIO_NAMESPACE
 {

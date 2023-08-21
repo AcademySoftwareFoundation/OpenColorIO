@@ -4,7 +4,7 @@
 #include <algorithm>
 #include <cstring>
 #include <cmath>
-#ifndef USE_SSE
+#if OCIO_USE_SSE2 == 0
 #include <tuple>
 #endif
 
@@ -66,7 +66,7 @@ protected:
     float m_minv[3];
 };
 
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
 class Log2LinRendererSSE : public Log2LinRenderer
 {
 public:
@@ -93,7 +93,7 @@ protected:
     float m_kb[3];
 };
 
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
 class Lin2LogRendererSSE : public Lin2LogRenderer
 {
 public:
@@ -136,7 +136,7 @@ protected:
     float m_minuslino[3];
 };
 
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
 class CameraLog2LinRendererSSE : public CameraLog2LinRenderer
 {
 public:
@@ -164,7 +164,7 @@ protected:
     float m_linb[3];
 };
 
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
 class CameraLin2LogRendererSSE : public CameraLin2LogRenderer
 {
 public:
@@ -186,7 +186,7 @@ protected:
     float m_logScale;
 };
 
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
 class LogRendererSSE : public LogRenderer
 {
 public:
@@ -208,7 +208,7 @@ protected:
     float m_log2_base;
 };
 
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
 class AntiLogRendererSSE : public AntiLogRenderer
 {
 public:
@@ -223,7 +223,7 @@ static constexpr float LOG10_2 = ((float) 0.3010299956639811952137388947245);
 
 ConstOpCPURcPtr GetLogRenderer(ConstLogOpDataRcPtr & log, bool fastExp)
 {
-#ifndef USE_SSE
+#if OCIO_USE_SSE2 == 0
     std::ignore = fastExp;
 #endif
 
@@ -233,14 +233,14 @@ ConstOpCPURcPtr GetLogRenderer(ConstLogOpDataRcPtr & log, bool fastExp)
         switch (dir)
         {
         case TRANSFORM_DIR_FORWARD:
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
             if (fastExp) return std::make_shared<LogRendererSSE>(log, 1.0f);
             else
 #endif
                 return std::make_shared<LogRenderer>(log, 1.0f);
             break;
         case TRANSFORM_DIR_INVERSE:
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
             if (fastExp) return std::make_shared<AntiLogRendererSSE>(log, 1.0f);
             else
 #endif
@@ -253,14 +253,14 @@ ConstOpCPURcPtr GetLogRenderer(ConstLogOpDataRcPtr & log, bool fastExp)
         switch (dir)
         {
         case TRANSFORM_DIR_FORWARD:
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
             if (fastExp) return std::make_shared<LogRendererSSE>(log, LOG10_2);
             else
 #endif
                 return std::make_shared<LogRenderer>(log, LOG10_2);
             break;
         case TRANSFORM_DIR_INVERSE:
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
             if (fastExp) return std::make_shared<AntiLogRendererSSE>(log, LOG2_10);
             else
 #endif
@@ -275,14 +275,14 @@ ConstOpCPURcPtr GetLogRenderer(ConstLogOpDataRcPtr & log, bool fastExp)
             switch (dir)
             {
             case TRANSFORM_DIR_FORWARD:
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
                 if (fastExp) return std::make_shared<CameraLin2LogRendererSSE>(log);
                 else
 #endif
                     return std::make_shared<CameraLin2LogRenderer>(log);
                 break;
             case TRANSFORM_DIR_INVERSE:
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
                 if (fastExp) return std::make_shared<CameraLog2LinRendererSSE>(log);
                 else
 #endif
@@ -295,14 +295,14 @@ ConstOpCPURcPtr GetLogRenderer(ConstLogOpDataRcPtr & log, bool fastExp)
             switch (dir)
             {
             case TRANSFORM_DIR_FORWARD:
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
                 if (fastExp) return std::make_shared<Lin2LogRendererSSE>(log);
                 else
 #endif
                     return std::make_shared<Lin2LogRenderer>(log);
                 break;
             case TRANSFORM_DIR_INVERSE:
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
                 if (fastExp) return std::make_shared<Log2LinRendererSSE>(log);
                 else
 #endif
@@ -413,7 +413,7 @@ void LogRenderer::apply(const void * inImg, void * outImg, long numPixels) const
     }
 }
 
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
 LogRendererSSE::LogRendererSSE(ConstLogOpDataRcPtr & log, float logScale)
     : LogRenderer(log, logScale)
 {
@@ -481,7 +481,7 @@ void AntiLogRenderer::apply(const void * inImg, void * outImg, long numPixels) c
     }
 }
 
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
 AntiLogRendererSSE::AntiLogRendererSSE(ConstLogOpDataRcPtr & log, float log2base)
     : AntiLogRenderer(log, log2base)
 {
@@ -571,7 +571,7 @@ void Log2LinRenderer::apply(const void * inImg, void * outImg, long numPixels) c
     }
 }
 
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
 Log2LinRendererSSE::Log2LinRendererSSE(ConstLogOpDataRcPtr & log)
     : Log2LinRenderer(log)
 {
@@ -673,7 +673,7 @@ void Lin2LogRenderer::apply(const void * inImg, void * outImg, long numPixels) c
     }
 }
 
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
 Lin2LogRendererSSE::Lin2LogRendererSSE(ConstLogOpDataRcPtr & log)
     : Lin2LogRenderer(log)
 {
@@ -801,7 +801,7 @@ void CameraLog2LinRenderer::apply(const void * inImg, void * outImg, long numPix
     }
 }
 
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
 CameraLog2LinRendererSSE::CameraLog2LinRendererSSE(ConstLogOpDataRcPtr & log)
     : CameraLog2LinRenderer(log)
 {
@@ -919,7 +919,7 @@ void CameraLin2LogRenderer::apply(const void * inImg, void * outImg, long numPix
     }
 }
 
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
 CameraLin2LogRendererSSE::CameraLin2LogRendererSSE(ConstLogOpDataRcPtr & log)
     : CameraLin2LogRenderer(log)
 {

@@ -18,13 +18,6 @@ set(SOURCES
 
 add_executable(test_osl_exec ${SOURCES})
 
-if(OCIO_USE_SIMD)
-    target_compile_definitions(test_osl_exec
-        PRIVATE
-            USE_SSE
-    )
-endif(OCIO_USE_SIMD)
-
 set_target_properties(test_osl_exec PROPERTIES 
     COMPILE_OPTIONS "${PLATFORM_COMPILE_OPTIONS}"
     LINK_OPTIONS "${PLATFORM_LINK_OPTIONS}"

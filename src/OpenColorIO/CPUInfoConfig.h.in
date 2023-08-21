@@ -14,8 +14,4 @@
 #cmakedefine01 OCIO_USE_AVX512
 #cmakedefine01 OCIO_USE_F16C
 
-
-#cmakedefine01 APPLE
-#if APPLE
-    #cmakedefine01 OCIO_USE_SSE2NEON
-#endif
+#cmakedefine01 OCIO_USE_SSE2NEON

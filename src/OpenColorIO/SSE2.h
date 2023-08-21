@@ -6,16 +6,14 @@
 #define INCLUDED_OCIO_SSE2_H
 
 #include "CPUInfo.h"
-#ifdef OCIO_USE_SSE2
+#if OCIO_USE_SSE2
 
 // Include the appropriate SIMD intrinsics header based on the architecture (Intel vs. ARM).
 #if !defined(__aarch64__)
-    #if defined(USE_SSE)
-        #include <immintrin.h>
-    #endif
-#elif defined(__aarch64__) && defined(USE_SSE2_WITH_SSE2NEON)
+    #include <emmintrin.h>
+#elif defined(__aarch64__)
     // ARM architecture A64 (ARM64)
-    #if defined(USE_SSE2_WITH_SSE2NEON)
+    #if OCIO_USE_SSE2NEON
         #include <sse2neon.h>
     #endif
 #endif

@@ -13,7 +13,6 @@
 # flags because some compilers might ignore the flags and check_cxx_compiler_flag could
 # return a false positive.
 
-message(STATUS "...AVX")
 include(CheckSupportAVX)
 include(CheckSupportAVX2)
 include(CheckSupportAVX512)
