@@ -184,27 +184,71 @@ endif()
 option(OCIO_USE_SIMD "Specify whether to enable SIMD CPU performance optimizations" ON)
 option(OCIO_USE_OIIO_FOR_APPS "Request OIIO to build apps (ociolutimage, ocioconvert and ociodisplay), the default uses OpenEXR." OFF)
 
+if (APPLE)
+    execute_process(COMMAND "system_profiler" "SPHardwareDataType" OUTPUT_VARIABLE SYSTEM_INFO)
+    if(SYSTEM_INFO MATCHES "^.*Chip: Apple.*")
+        set(OCIO_APPLE_CHIP_PLATFORM "M")
+    elseif(SYSTEM_INFO MATCHES "^.* Processor Name: Intel*")
+        set(OCIO_APPLE_CHIP_PLATFORM "INTEL")
+    endif()
+
+    if (OCIO_APPLE_CHIP_PLATFORM MATCHES "M")
+        option(OCIO_USE_SSE2NEON "Specify whether to enable SSE CPU performance optimizations on Apple ARM using SSE2NEON" ON)
+    endif()
+endif()
+
 if ("${CMAKE_SYSTEM_PROCESSOR}" MATCHES "(AMD64|IA64|EM64T|X86|x86_64|i386|i686)")
-    set(OCIO_BUILD_ENABLE_OPTIMIZATIONS ON)
+    # Note that CMAKE_SYSTEM_PROCESSOR will return x86_64 on an Apple M1 MacBook using a Rosetta 
+    # terminal. We do not support the compilation of OCIO using a Rosetta terminal on an Apple M1 
+    # MacBook. The user should compile OCIO using a native terminal (ARM) and use CMAKE_OSX_ARCHITECTURES="x86_64" 
+    # to compile for intel-based Macbook or do a universal build with CMAKE_OSX_ARCHITECTURES="arm64;x86_64".
+    # Also note that Rosetta does not support any AVXs or F16C instructions.
+    
+    # Assumes an Intel-based computer or an Intel-based Apple MacBook.
     set(OCIO_ARCH_X86 1)
+    set(OCIO_BUILD_ENABLE_OPTIMIZATIONS_SSE ON)
+    set(OCIO_BUILD_ENABLE_OPTIMIZATIONS_AVX ON)
+    set(OCIO_BUILD_ENABLE_OPTIMIZATIONS_F16C ON)
+elseif(APPLE AND OCIO_APPLE_CHIP_PLATFORM MATCHES "M"
+             AND "${CMAKE_SYSTEM_PROCESSOR}" MATCHES "arm64"
+             AND ("${CMAKE_OSX_ARCHITECTURES}" MATCHES "arm64;x86_64" 
+             OR "${CMAKE_OSX_ARCHITECTURES}" MATCHES "x86_64;arm64"
+             OR "${CMAKE_OSX_ARCHITECTURES}" MATCHES "x86_64"))
+    # Assumes an Apple ARM MacBook.
+    set(OCIO_APPLE_M1_ARCH_X86 1)
+
+    # OCIO translate SSE using SSE2NEON library.
+    set(OCIO_BUILD_ENABLE_OPTIMIZATIONS_SSE ON)
+    # OCIO does not have any process to translate from AVXs to ARM Neon.
+    set(OCIO_BUILD_ENABLE_OPTIMIZATIONS_AVX OFF)
+    # Not supported.
+    set(OCIO_BUILD_ENABLE_OPTIMIZATIONS_F16C OFF)
+elseif(APPLE AND "${CMAKE_SYSTEM_PROCESSOR}" MATCHES "arm64"
+             AND "${CMAKE_OSX_ARCHITECTURES}" MATCHES "arm64")
+    # Assumes an Apple ARM MacBook.
+
+    # OCIO translate SSE using SSE2NEON library.
+    set(OCIO_BUILD_ENABLE_OPTIMIZATIONS_SSE ON)
+    # OCIO does not have any process to translate from AVXs to ARM Neon.
+    set(OCIO_BUILD_ENABLE_OPTIMIZATIONS_AVX OFF)
+    # Not supported.
+    set(OCIO_BUILD_ENABLE_OPTIMIZATIONS_F16C OFF)
 else()
-    set(OCIO_BUILD_ENABLE_OPTIMIZATIONS OFF)
+    set(OCIO_BUILD_ENABLE_OPTIMIZATIONS_SSE OFF)
+    set(OCIO_BUILD_ENABLE_OPTIMIZATIONS_AVX OFF)
+    set(OCIO_BUILD_ENABLE_OPTIMIZATIONS_F16C OFF)
     set(OCIO_ARCH_X86 0)
 endif()
 
-option(OCIO_USE_SSE2 "Specify whether to enable SSE2 CPU performance optimizations" ${OCIO_BUILD_ENABLE_OPTIMIZATIONS})
-option(OCIO_USE_SSE3 "Specify whether to enable SSE3 CPU performance optimizations" ${OCIO_BUILD_ENABLE_OPTIMIZATIONS})
-option(OCIO_USE_SSSE3 "Specify whether to enable SSSE3 CPU performance optimizations" ${OCIO_BUILD_ENABLE_OPTIMIZATIONS})
-option(OCIO_USE_SSE4 "Specify whether to enable SSE4 CPU performance optimizations" ${OCIO_BUILD_ENABLE_OPTIMIZATIONS})
-option(OCIO_USE_SSE42 "Specify whether to enable SSE4.2 CPU performance optimizations" ${OCIO_BUILD_ENABLE_OPTIMIZATIONS})
-option(OCIO_USE_AVX "Specify whether to enable AVX CPU performance optimizations" ${OCIO_BUILD_ENABLE_OPTIMIZATIONS})
-option(OCIO_USE_AVX2 "Specify whether to enable AVX2 CPU performance optimizations" ${OCIO_BUILD_ENABLE_OPTIMIZATIONS})
-option(OCIO_USE_AVX512 "Specify whether to enable AVX512 CPU performance optimizations" ${OCIO_BUILD_ENABLE_OPTIMIZATIONS})
-option(OCIO_USE_F16C  "Specify whether to enable F16C CPU performance optimizations" ${OCIO_BUILD_ENABLE_OPTIMIZATIONS})
-
-if (APPLE)
-    option(OCIO_USE_SSE2NEON "Specify whether to enable SSE CPU performance optimizations on Apple ARM using SSE2NEON" ON)
-endif()
+option(OCIO_USE_SSE2 "Specify whether to enable SSE2 CPU performance optimizations" ${OCIO_BUILD_ENABLE_OPTIMIZATIONS_SSE})
+option(OCIO_USE_SSE3 "Specify whether to enable SSE3 CPU performance optimizations" ${OCIO_BUILD_ENABLE_OPTIMIZATIONS_SSE})
+option(OCIO_USE_SSSE3 "Specify whether to enable SSSE3 CPU performance optimizations" ${OCIO_BUILD_ENABLE_OPTIMIZATIONS_SSE})
+option(OCIO_USE_SSE4 "Specify whether to enable SSE4 CPU performance optimizations" ${OCIO_BUILD_ENABLE_OPTIMIZATIONS_SSE})
+option(OCIO_USE_SSE42 "Specify whether to enable SSE4.2 CPU performance optimizations" ${OCIO_BUILD_ENABLE_OPTIMIZATIONS_SSE})
+option(OCIO_USE_AVX "Specify whether to enable AVX CPU performance optimizations" ${OCIO_BUILD_ENABLE_OPTIMIZATIONS_AVX})
+option(OCIO_USE_AVX2 "Specify whether to enable AVX2 CPU performance optimizations" ${OCIO_BUILD_ENABLE_OPTIMIZATIONS_AVX})
+option(OCIO_USE_AVX512 "Specify whether to enable AVX512 CPU performance optimizations" ${OCIO_BUILD_ENABLE_OPTIMIZATIONS_AVX})
+option(OCIO_USE_F16C  "Specify whether to enable F16C CPU performance optimizations" ${OCIO_BUILD_ENABLE_OPTIMIZATIONS_F16C})
 
 ###############################################################################
 # GPU configuration

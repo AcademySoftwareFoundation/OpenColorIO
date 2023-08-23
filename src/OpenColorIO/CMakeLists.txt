@@ -205,7 +205,9 @@ endif()
 
 configure_file(res/OpenColorIO.pc.in ${CMAKE_CURRENT_BINARY_DIR}/OpenColorIO.pc @ONLY)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/OpenColorIO.pc DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
-if(OCIO_ARCH_X86)
+
+if(OCIO_USE_SIMD AND (OCIO_ARCH_X86 OR OCIO_APPLE_M1_ARCH_X86 OR OCIO_USE_SSE2NEON))
+    # Note that these files are gated by preprocessors to remove them based on the OCIO_USE_* vars.
     set_property(SOURCE ops/lut1d/Lut1DOpCPU_SSE2.cpp APPEND PROPERTY COMPILE_OPTIONS ${OCIO_SSE2_ARGS})
     set_property(SOURCE ops/lut1d/Lut1DOpCPU_AVX.cpp APPEND PROPERTY COMPILE_OPTIONS ${OCIO_AVX_ARGS})
     set_property(SOURCE ops/lut1d/Lut1DOpCPU_AVX2.cpp APPEND PROPERTY COMPILE_OPTIONS ${OCIO_AVX2_ARGS})

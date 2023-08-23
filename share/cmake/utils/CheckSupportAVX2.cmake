@@ -5,22 +5,10 @@ include(CheckCXXSourceCompiles)
 
 set(_cmake_required_flags_orig "${CMAKE_REQUIRED_FLAGS}")
 
-if(APPLE AND "${CMAKE_OSX_ARCHITECTURES}" MATCHES "arm64;x86_64" 
-          OR "${CMAKE_OSX_ARCHITECTURES}" MATCHES "x86_64;arm64")
-    set(__universal_build 1)
-    set(_cmake_osx_architectures_orig "${CMAKE_OSX_ARCHITECTURES}")
-endif()
-
 if(MSVC)
     set(CMAKE_REQUIRED_FLAGS "/w /arch:AVX2")
 elseif(USE_GCC OR USE_CLANG)
     set(CMAKE_REQUIRED_FLAGS "-w -mavx2 -mfma -mf16c")
-endif()
-
-if (APPLE AND __universal_build)
-    # Force the test to build under x86_64
-    set(CMAKE_OSX_ARCHITECTURES "x86_64")
-    # Apple has an automatic translation layer from SSE/AVX to ARM Neon.
 endif()
 
 set(AVX2_CODE "
@@ -43,13 +31,20 @@ set(AVX2_CODE "
         return 0;
     }
 ")
-check_cxx_source_compiles("${AVX2_CODE}" COMPILER_SUPPORTS_AVX2)
+
+file(WRITE "${CMAKE_BINARY_DIR}/CMakeTmp/avx2_test.cpp" "${AVX2_CODE}")
+
+message(STATUS "Performing Test COMPILER_SUPPORTS_AVX2")
+try_compile(COMPILER_SUPPORTS_AVX2
+  "${CMAKE_BINARY_DIR}/CMakeTmp"
+  "${CMAKE_BINARY_DIR}/CMakeTmp/avx2_test.cpp"
+)
+
+if(COMPILER_SUPPORTS_AVX2)
+  message(STATUS "Performing Test COMPILER_SUPPORTS_AVX2 - Success")
+else()
+    message(STATUS "Performing Test COMPILER_SUPPORTS_AVX2 - Failed")
+endif()
 
 set(CMAKE_REQUIRED_FLAGS "${_cmake_required_flags_orig}")
 unset(_cmake_required_flags_orig)
-
-if(__universal_build)
-    set(_cmake_osx_architectures_orig "${CMAKE_OSX_ARCHITECTURES}")
-    unset(_cmake_osx_architectures_orig)
-    unset(__universal_build)
-endif()

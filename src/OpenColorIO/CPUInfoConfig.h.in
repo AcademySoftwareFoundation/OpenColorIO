@@ -3,6 +3,7 @@
 
 
 #cmakedefine OCIO_ARCH_X86
+#cmakedefine OCIO_APPLE_M1_ARCH_X86
 
 #cmakedefine01 OCIO_USE_SSE2
 #cmakedefine01 OCIO_USE_SSE3

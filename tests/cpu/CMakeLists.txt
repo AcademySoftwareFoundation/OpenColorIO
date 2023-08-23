@@ -71,24 +71,25 @@ function(add_ocio_test NAME SOURCES PRIVATE_INCLUDES)
         LINK_OPTIONS "${PLATFORM_LINK_OPTIONS}"
     )
 
-    if(OCIO_ARCH_X86)
+    if(OCIO_USE_SIMD AND (OCIO_ARCH_X86 OR OCIO_APPLE_M1_ARCH_X86 OR OCIO_USE_SSE2NEON))
         add_test(NAME ${TEST_NAME} COMMAND ${TEST_BINARY})
         add_test(NAME ${TEST_NAME}_no_accel COMMAND ${TEST_BINARY} --no_accel)
-        if(${OCIO_USE_SSE2})
+
+        if(OCIO_USE_SSE2)
             add_test(NAME ${TEST_NAME}_sse2 COMMAND ${TEST_BINARY} --sse2)
-            if(${OCIO_USE_F16C})
+            if(OCIO_USE_F16C)
                 add_test(NAME ${TEST_NAME}_sse2+f16c COMMAND ${TEST_BINARY} --sse2 --f16c)
             endif()
         endif()
 
-        if(${OCIO_USE_AVX})
+        if(OCIO_USE_AVX)
             add_test(NAME ${TEST_NAME}_avx COMMAND ${TEST_BINARY} --avx)
-            if(${OCIO_USE_F16C})
+            if(OCIO_USE_F16C)
                 add_test(NAME ${TEST_NAME}_avx+f16c COMMAND ${TEST_BINARY} --avx --f16c)
             endif()
         endif()
 
-        if(${OCIO_USE_AVX2})
+        if(OCIO_USE_AVX2)
             add_test(NAME ${TEST_NAME}_avx2 COMMAND ${TEST_BINARY} --avx2)
         endif()
     else()
@@ -315,7 +316,8 @@ prepend(SOURCES "${PROJECT_SOURCE_DIR}/src/OpenColorIO/" ${SOURCES})
 
 list(APPEND SOURCES ${TESTS})
 
-if(OCIO_ARCH_X86)
+if(OCIO_USE_SIMD AND (OCIO_ARCH_X86 OR OCIO_APPLE_M1_ARCH_X86 OR OCIO_USE_SSE2NEON))
+    # Note that these files are gated by preprocessors to remove them based on the OCIO_USE_* vars.
     set_property(SOURCE "${CMAKE_SOURCE_DIR}/src/OpenColorIO/ops/lut1d/Lut1DOpCPU_SSE2.cpp" APPEND PROPERTY COMPILE_OPTIONS ${OCIO_SSE2_ARGS})
     set_property(SOURCE "${CMAKE_SOURCE_DIR}/src/OpenColorIO/ops/lut1d/Lut1DOpCPU_AVX.cpp" APPEND PROPERTY COMPILE_OPTIONS ${OCIO_AVX_ARGS})
     set_property(SOURCE "${CMAKE_SOURCE_DIR}/src/OpenColorIO/ops/lut1d/Lut1DOpCPU_AVX2.cpp" APPEND PROPERTY COMPILE_OPTIONS ${OCIO_AVX2_ARGS})

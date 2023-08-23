@@ -19,7 +19,7 @@ endif()
 if (APPLE AND __universal_build)
     # Force the test to build under x86_64
     set(CMAKE_OSX_ARCHITECTURES "x86_64")
-    # Apple has an automatic translation layer from SSE/AVX to ARM Neon.
+    # Apple has an automatic translation layer from SSE to ARM Neon.
 endif()
 
 set(SSE4_CODE "
@@ -31,13 +31,26 @@ set(SSE4_CODE "
         return 0; 
     }
 ")
-check_cxx_source_compiles("${SSE4_CODE}" COMPILER_SUPPORTS_SSE4)
+
+file(WRITE "${CMAKE_BINARY_DIR}/CMakeTmp/sse4_test.cpp" "${SSE4_CODE}")
+
+message(STATUS "Performing Test COMPILER_SUPPORTS_SSE4")
+try_compile(COMPILER_SUPPORTS_SSE4
+  "${CMAKE_BINARY_DIR}/CMakeTmp"
+  "${CMAKE_BINARY_DIR}/CMakeTmp/sse4_test.cpp"
+)
+
+if(COMPILER_SUPPORTS_SSE4)
+  message(STATUS "Performing Test COMPILER_SUPPORTS_SSE4 - Success")
+else()
+    message(STATUS "Performing Test COMPILER_SUPPORTS_SSE4 - Failed")
+endif()
 
 set(CMAKE_REQUIRED_FLAGS "${_cmake_required_flags_orig}")
 unset(_cmake_required_flags_orig)
 
 if(__universal_build)
-    set(_cmake_osx_architectures_orig "${CMAKE_OSX_ARCHITECTURES}")
+    set(CMAKE_OSX_ARCHITECTURES "${_cmake_osx_architectures_orig}")
     unset(_cmake_osx_architectures_orig)
     unset(__universal_build)
 endif()

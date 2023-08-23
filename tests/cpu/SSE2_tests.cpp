@@ -9,7 +9,6 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include <immintrin.h>
 #include "MathUtils.h"
 #include "BitDepthUtils.h"
 #include "SSE2.h"

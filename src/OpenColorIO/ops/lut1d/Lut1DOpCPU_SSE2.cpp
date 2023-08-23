@@ -2,7 +2,6 @@
 
 #if OCIO_USE_SSE2
 
-#include <immintrin.h>
 #include <string.h>
 
 #include "SSE2.h"

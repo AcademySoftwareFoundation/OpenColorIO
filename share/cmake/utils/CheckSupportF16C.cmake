@@ -19,7 +19,20 @@ set(F16C_CODE "
         return 0; 
     }
 ")
-check_cxx_source_compiles("${F16C_CODE}" COMPILER_SUPPORTS_F16C)
+
+file(WRITE "${CMAKE_BINARY_DIR}/CMakeTmp/sse42_test.cpp" "${F16C_CODE}")
+
+message(STATUS "Performing Test COMPILER_SUPPORTS_F16C")
+try_compile(COMPILER_SUPPORTS_F16C
+  "${CMAKE_BINARY_DIR}/CMakeTmp"
+  "${CMAKE_BINARY_DIR}/CMakeTmp/sse42_test.cpp"
+)
+
+if(COMPILER_SUPPORTS_F16C)
+  message(STATUS "Performing Test COMPILER_SUPPORTS_F16C - Success")
+else()
+    message(STATUS "Performing Test COMPILER_SUPPORTS_F16C - Failed")
+endif()
 
 set(CMAKE_REQUIRED_FLAGS "${_cmake_required_flags_orig}")
 unset(_cmake_required_flags_orig)

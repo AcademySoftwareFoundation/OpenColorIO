@@ -59,7 +59,7 @@ int main(int argc, const char ** argv)
 
     // Note that empty strings mean to run all the unit tests.
     std::string filter, utestGroupAllowed, utestNameAllowed;
-#ifdef OCIO_ARCH_X86
+#if defined(OCIO_ARCH_X86) || defined(OCIO_APPLE_M1_ARCH_X86) || OCIO_USE_SSE2NEON
     bool no_accel = false;
     bool sse2     = false;
     bool avx      = false;
@@ -70,7 +70,7 @@ int main(int argc, const char ** argv)
     ap.options("\nCommand line arguments:\n",
                "--help",          &printHelp,        "Print help message",
                "--stop_on_error", &stopOnFirstError, "Stop on the first error",
-#ifdef OCIO_ARCH_X86
+#if defined(OCIO_ARCH_X86) || defined(OCIO_APPLE_M1_ARCH_X86) || OCIO_USE_SSE2NEON
                "--no_accel",      &no_accel,         "Disable ALL Accelerated features",
                "--sse2",          &sse2,             "Enable SSE2 Accelerated features",
                "--avx",           &avx,              "Enable AVX Accelerated features",
@@ -96,7 +96,7 @@ int main(int argc, const char ** argv)
         return 1;
     }
 
-#ifdef OCIO_ARCH_X86
+#if defined(OCIO_ARCH_X86) || defined(OCIO_APPLE_M1_ARCH_X86) || OCIO_USE_SSE2NEON
     OCIO::CPUInfo &cpu = OCIO::CPUInfo::instance();
     if (no_accel || sse2 || avx || avx2 || f16c)
     {

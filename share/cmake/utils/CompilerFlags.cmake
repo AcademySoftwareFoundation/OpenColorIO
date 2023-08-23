@@ -12,15 +12,16 @@ set(PLATFORM_LINK_OPTIONS "")
 # Verify SIMD compatibility
 
 if(OCIO_USE_SIMD)
+    if (OCIO_ARCH_X86 OR OCIO_APPLE_M1_ARCH_X86)
+        include(CheckSupportX86SIMD)
+    endif()
+
     if (OCIO_USE_SSE2NEON AND COMPILER_SUPPORTS_ARM_NEON)
         include(CheckSupportSSEUsingSSE2NEON)
-
         if(NOT COMPILER_SUPPORTS_SSE_WITH_SSE2NEON)
             set(OCIO_USE_SSE2NEON OFF)
         endif()
     endif()
-
-    include(CheckSupportX86SIMD)
 else()
     set(OCIO_USE_SSE2 OFF)
     set(OCIO_USE_SSE3 OFF)
@@ -35,11 +36,14 @@ else()
     set(OCIO_USE_SSE2NEON OFF)
 endif()
 
-#TODOCED Does not make sense anymore as we have AVX and AVX2 support now.
-# if(NOT COMPILER_SUPPORTS_SSE2 AND NOT COMPILER_SUPPORTS_SSE_WITH_SSE2NEON)
-#     message(STATUS "Disabling SSE optimizations, as the target doesn't support them")
-#     set(OCIO_USE_SIMD OFF)
-# endif()
+#if(NOT COMPILER_SUPPORTS_SSE2 AND NOT COMPILER_SUPPORTS_SSE_WITH_SSE2NEON)
+if (NOT COMPILER_SUPPORTS_SSE2 AND NOT COMPILER_SUPPORTS_SSE_WITH_SSE2NEON AND
+    NOT COMPILER_SUPPORTS_SSE3 AND NOT COMPILER_SUPPORTS_SSSE3 AND
+    NOT COMPILER_SUPPORTS_SSE4 AND NOT COMPILER_SUPPORTS_SSE42 AND
+    NOT COMPILER_SUPPORTS_AVX AND NOT COMPILER_SUPPORTS_AVX2 AND NOT COMPILER_SUPPORTS_AVX512)
+    message(STATUS "Disabling SIMD optimizations, as the target doesn't support them")
+    set(OCIO_USE_SIMD OFF)
+endif()
 
 ###############################################################################
 # Compile flags
