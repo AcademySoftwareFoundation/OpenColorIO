@@ -177,6 +177,18 @@ endif()
 option(OCIO_USE_SSE "Specify whether to enable SSE CPU performance optimizations" ON)
 option(OCIO_USE_OIIO_FOR_APPS "Request OIIO to build apps (ociolutimage, ocioconvert and ociodisplay), the default uses OpenEXR." OFF)
 
+if ("${CMAKE_SYSTEM_PROCESSOR}" MATCHES "(AMD64|IA64|EM64T|X86|x86_64|i386|i686)")
+    option(OCIO_USE_SSE2 "Specify whether to enable SSE2 CPU performance optimizations" ON)
+    option(OCIO_USE_SSE3 "Specify whether to enable SSE3 CPU performance optimizations" ON)
+    option(OCIO_USE_SSSE3 "Specify whether to enable SSSE3 CPU performance optimizations" ON)
+    option(OCIO_USE_SSE4 "Specify whether to enable SSE4 CPU performance optimizations" ON)
+    option(OCIO_USE_SSE42 "Specify whether to enable SSE4.2 CPU performance optimizations" ON)
+    option(OCIO_USE_AVX "Specify whether to enable AVX CPU performance optimizations" ON)
+    option(OCIO_USE_AVX2 "Specify whether to enable AVX2 CPU performance optimizations" ON)
+    option(OCIO_USE_AVX512 "Specify whether to enable AVX512 CPU performance optimizations" ON)
+    option(OCIO_USE_F16C  "Specify whether to enable F16C CPU performance optimizations" ON)
+    set(OCIO_ARCH_X86 1)
+endif()
 
 ###############################################################################
 # GPU configuration
@@ -189,7 +201,6 @@ include(CheckSupportGL)
 # Define compilation and link flags
 
 include(CompilerFlags)
-
 
 ###############################################################################
 # External linking options
