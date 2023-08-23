@@ -22,14 +22,7 @@ namespace OCIO_NAMESPACE
 
 // Macros for alignment declarations
 #define OCIO_SIMD_BYTES 16
-#if defined( _MSC_VER )
-#define OCIO_ALIGN(decl) __declspec(align(OCIO_SIMD_BYTES)) decl
-#elif ( __APPLE__ )
-// TODO: verify if this is good for clang
-#define OCIO_ALIGN(decl) decl
-#else
-#define OCIO_ALIGN(decl) decl __attribute__((aligned(OCIO_SIMD_BYTES)))
-#endif
+#define OCIO_ALIGN(decl) alignas(OCIO_SIMD_BYTES) decl
 
 
 #include <limits>
