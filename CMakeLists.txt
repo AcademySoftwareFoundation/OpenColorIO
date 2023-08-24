@@ -184,19 +184,6 @@ endif()
 option(OCIO_USE_SIMD "Specify whether to enable SIMD CPU performance optimizations" ON)
 option(OCIO_USE_OIIO_FOR_APPS "Request OIIO to build apps (ociolutimage, ocioconvert and ociodisplay), the default uses OpenEXR." OFF)
 
-if (APPLE)
-    execute_process(COMMAND "system_profiler" "SPHardwareDataType" OUTPUT_VARIABLE SYSTEM_INFO)
-    if(SYSTEM_INFO MATCHES "^.*Chip: Apple.*")
-        set(OCIO_APPLE_CHIP_PLATFORM "M")
-    elseif(SYSTEM_INFO MATCHES "^.* Processor Name: Intel*")
-        set(OCIO_APPLE_CHIP_PLATFORM "INTEL")
-    endif()
-
-    if (OCIO_APPLE_CHIP_PLATFORM MATCHES "M")
-        option(OCIO_USE_SSE2NEON "Specify whether to enable SSE CPU performance optimizations on Apple ARM using SSE2NEON" ON)
-    endif()
-endif()
-
 if ("${CMAKE_SYSTEM_PROCESSOR}" MATCHES "(AMD64|IA64|EM64T|X86|x86_64|i386|i686)")
     # Note that CMAKE_SYSTEM_PROCESSOR will return x86_64 on an Apple M1 MacBook using a Rosetta 
     # terminal. We do not support the compilation of OCIO using a Rosetta terminal on an Apple M1 
@@ -204,13 +191,12 @@ if ("${CMAKE_SYSTEM_PROCESSOR}" MATCHES "(AMD64|IA64|EM64T|X86|x86_64|i386|i686)
     # to compile for intel-based Macbook or do a universal build with CMAKE_OSX_ARCHITECTURES="arm64;x86_64".
     # Also note that Rosetta does not support any AVXs or F16C instructions.
     
-    # Assumes an Intel-based architecture.
+    # Assumes an Intel-based architecture or Apple ARM under Rosetta.
     set(OCIO_ARCH_X86 1)
     set(OCIO_BUILD_ENABLE_OPTIMIZATIONS_SSE ON)
     set(OCIO_BUILD_ENABLE_OPTIMIZATIONS_AVX ON)
     set(OCIO_BUILD_ENABLE_OPTIMIZATIONS_F16C ON)
-elseif(APPLE AND OCIO_APPLE_CHIP_PLATFORM MATCHES "M"
-             AND "${CMAKE_SYSTEM_PROCESSOR}" MATCHES "arm64"
+elseif(APPLE AND "${CMAKE_HOST_SYSTEM_PROCESSOR}" MATCHES "arm64"
              AND ("${CMAKE_OSX_ARCHITECTURES}" MATCHES "arm64;x86_64" 
              OR "${CMAKE_OSX_ARCHITECTURES}" MATCHES "x86_64;arm64"
              OR "${CMAKE_OSX_ARCHITECTURES}" MATCHES "x86_64"))
@@ -224,7 +210,7 @@ elseif(APPLE AND OCIO_APPLE_CHIP_PLATFORM MATCHES "M"
     set(OCIO_BUILD_ENABLE_OPTIMIZATIONS_AVX OFF)
     # Not supported.
     set(OCIO_BUILD_ENABLE_OPTIMIZATIONS_F16C OFF)
-elseif(APPLE AND "${CMAKE_SYSTEM_PROCESSOR}" MATCHES "arm64"
+elseif(APPLE AND "${CMAKE_HOST_SYSTEM_PROCESSOR}" MATCHES "arm64"
              AND "${CMAKE_OSX_ARCHITECTURES}" MATCHES "arm64")
     
     # The user wants to do a arm64 only build.

@@ -303,7 +303,9 @@ set to OFF on Apple ARM chipset because of the following two reasons:
 
 On the MacOS under the ARM architecture, the default is to make a universal build 
 (natively supporting both the Intel and ARM processors). The ``-DCMAKE_OSX_ARCHITECTURES`` option 
-may be set to just arm64 or x86_64 to override the default value, which is ``arm64;x86_64``.
+may be set to just arm64 or x86_64 to override the default value, which is ``arm64;x86_64``. Universal 
+build under Rosetta is not supported at this time. Under Rosetta, only the x86_64 build is supported 
+by using ``-DCMAKE_OSX_ARCHITECTURES="x86_64"``.
 
 When doing a universal build, note that the OCIO dependencies must be built as universal libraries 
 too. If you are running in OCIO_INSTALL_EXT_PACKAGES=MISSING or NONE mode, your build will fail if 
