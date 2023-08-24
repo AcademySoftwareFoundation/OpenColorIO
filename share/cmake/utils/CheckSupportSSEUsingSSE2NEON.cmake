@@ -7,10 +7,6 @@ set(_cmake_required_flags_orig "${CMAKE_REQUIRED_FLAGS}")
 set(_cmake_required_includes_orig "${CMAKE_REQUIRED_INCLUDES}")
 set(_cmake_osx_architectures_orig "${CMAKE_OSX_ARCHITECTURES}")
 
-# Compiling using CMAKE_OSX_ARCHITECTURES="arm64" will return SUCCESS.
-# Compiling using CMAKE_OSX_ARCHITECTURES="x86_64" will return FAILED.
-# Compiling using CMAKE_OSX_ARCHITECTURES="arm64;x86_64" will return FAILED.
-
 if(APPLE AND COMPILER_SUPPORTS_ARM_NEON)
     
     set(CMAKE_REQUIRED_INCLUDES ${sse2neon_INCLUDE_DIR})

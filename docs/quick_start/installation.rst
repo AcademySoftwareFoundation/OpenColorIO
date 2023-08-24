@@ -264,6 +264,7 @@ CMake Options
 +++++++++++++
 
 There are many options available in `CMake. 
+
 <https://cmake.org/cmake/help/latest/guide/user-interaction/index.html#guide:User%20Interaction%20Guide>`_
 
 Several of the most common ones are:
@@ -277,14 +278,28 @@ Here are the most common OCIO-specific CMake options (the default values are sho
 - ``-DOCIO_USE_OIIO_FOR_APPS=OFF`` (Set ON to build tools with OpenImageIO rather than OpenEXR)
 - ``-DOCIO_BUILD_PYTHON=ON`` (Set to OFF to not build the Python binding)
 - ``-DOCIO_BUILD_OPENFX=OFF`` (Set to ON to build the OpenFX plug-ins)
-- ``-DOCIO_USE_SSE=ON`` (Deprecated -- please use OCIO_USE_SIMD)
 - ``-DOCIO_USE_SIMD=ON`` (Set to OFF to turn off SIMD CPU performance optimizations, such as SSE and NEON)
+- ``-DOCIO_USE_SSE2=ON`` (Set to OFF to turn off SSE2 CPU performance optimizations)
+- ``-DOCIO_USE_SSE3=ON`` (Set to OFF to turn off SSE3 CPU performance optimizations)
+- ``-DOCIO_USE_SSSE2=ON`` (Set to OFF to turn off SSSE3 CPU performance optimizations)
+- ``-DOCIO_USE_SSE4=ON`` (Set to OFF to turn off SSE4 CPU performance optimizations)
+- ``-DOCIO_USE_SSE42=ON`` (Set to OFF to turn off SSE4.2 CPU performance optimizations)
+- ``-DOCIO_USE_AVX=ON`` (Set to OFF to turn off AVX CPU performance optimizations)
+- ``-DOCIO_USE_AVX2=ON`` (Set to OFF to turn off AVX2 CPU performance optimizations)
+- ``-DOCIO_USE_AVX512=ON`` (Set to OFF to turn off AVX512 CPU performance optimizations)
+- ``-DOCIO_USE_F16C=ON`` (Set to OFF to turn off F16C CPU performance optimizations)
 - ``-DOCIO_BUILD_TESTS=ON`` (Set to OFF to not build the unit tests)
 - ``-DOCIO_BUILD_GPU_TESTS=ON`` (Set to OFF to not build the GPU unit tests)
 - ``-DOCIO_USE_HEADLESS=OFF`` (Set to ON to do headless GPU reendering)
 - ``-DOCIO_WARNING_AS_ERROR=ON`` (Set to OFF to turn off warnings as errors)
 - ``-DOCIO_BUILD_DOCS=OFF`` (Set to ON to build the documentation)
 - ``-DOCIO_BUILD_FROZEN_DOCS=OFF`` (Set to ON to update the Python documentation)
+
+Note that *OCIO_USE_AVX*, *OCIO_USE_AVX2*, *OCIO_USE_AVX512* and *OCIO_USE_F16C* default values are 
+set to OFF on Apple ARM chipset because of the following two reasons:
+
+- Rosetta does not support these instructions
+- OCIO does not currently use a library to translate these instructions into ARM Neon.
 
 On the MacOS under the ARM architecture, the default is to make a universal build 
 (natively supporting both the Intel and ARM processors). The ``-DCMAKE_OSX_ARCHITECTURES`` option 

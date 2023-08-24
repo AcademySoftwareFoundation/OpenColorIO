@@ -5,13 +5,8 @@
 ###############################################################################
 # Check if compiler supports X86 SIMD extensions
 
-# Please note that some compilers could ignore unknown compilers flags and
-# return SUCCESS even if the options are not supported.
-# We could test the SSE with small snippet of code.
-
-# Using a small code snippet to test each sets. It is more robust that using only compilers
-# flags because some compilers might ignore the flags and check_cxx_compiler_flag could
-# return a false positive.
+# These checks use try_compile instead of check_cxx_source_compiles because the latter was causing
+# false positives on Apple ARM architectures.
 
 include(CheckSupportAVX)
 include(CheckSupportAVX2)

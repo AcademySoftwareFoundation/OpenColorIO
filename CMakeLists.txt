@@ -204,7 +204,7 @@ if ("${CMAKE_SYSTEM_PROCESSOR}" MATCHES "(AMD64|IA64|EM64T|X86|x86_64|i386|i686)
     # to compile for intel-based Macbook or do a universal build with CMAKE_OSX_ARCHITECTURES="arm64;x86_64".
     # Also note that Rosetta does not support any AVXs or F16C instructions.
     
-    # Assumes an Intel-based computer or an Intel-based Apple MacBook.
+    # Assumes an Intel-based architecture.
     set(OCIO_ARCH_X86 1)
     set(OCIO_BUILD_ENABLE_OPTIMIZATIONS_SSE ON)
     set(OCIO_BUILD_ENABLE_OPTIMIZATIONS_AVX ON)
@@ -214,10 +214,11 @@ elseif(APPLE AND OCIO_APPLE_CHIP_PLATFORM MATCHES "M"
              AND ("${CMAKE_OSX_ARCHITECTURES}" MATCHES "arm64;x86_64" 
              OR "${CMAKE_OSX_ARCHITECTURES}" MATCHES "x86_64;arm64"
              OR "${CMAKE_OSX_ARCHITECTURES}" MATCHES "x86_64"))
-    # Assumes an Apple ARM MacBook.
+    
+    # The user wants to do a universal build (arm64 + x86_64) or a x86_64 only build.
     set(OCIO_APPLE_M1_ARCH_X86 1)
 
-    # OCIO translate SSE using SSE2NEON library.
+    # OCIO translates SSE using SSE2NEON library.
     set(OCIO_BUILD_ENABLE_OPTIMIZATIONS_SSE ON)
     # OCIO does not have any process to translate from AVXs to ARM Neon.
     set(OCIO_BUILD_ENABLE_OPTIMIZATIONS_AVX OFF)
@@ -225,9 +226,10 @@ elseif(APPLE AND OCIO_APPLE_CHIP_PLATFORM MATCHES "M"
     set(OCIO_BUILD_ENABLE_OPTIMIZATIONS_F16C OFF)
 elseif(APPLE AND "${CMAKE_SYSTEM_PROCESSOR}" MATCHES "arm64"
              AND "${CMAKE_OSX_ARCHITECTURES}" MATCHES "arm64")
-    # Assumes an Apple ARM MacBook.
+    
+    # The user wants to do a arm64 only build.
 
-    # OCIO translate SSE using SSE2NEON library.
+    # OCIO translates SSE using SSE2NEON library.
     set(OCIO_BUILD_ENABLE_OPTIMIZATIONS_SSE ON)
     # OCIO does not have any process to translate from AVXs to ARM Neon.
     set(OCIO_BUILD_ENABLE_OPTIMIZATIONS_AVX OFF)
