@@ -8,6 +8,21 @@
 set(PLATFORM_COMPILE_OPTIONS "")
 set(PLATFORM_LINK_OPTIONS "")
 
+###############################################################################
+# Define if SSE2 can be used.
+
+if(OCIO_USE_SIMD)
+    include(CheckSupportSSE2)
+endif()
+
+if(NOT HAVE_SSE2 AND NOT HAVE_SSE2_WITH_SSE2NEON)
+    message(STATUS "Disabling SSE optimizations, as the target doesn't support them")
+    set(OCIO_USE_SIMD OFF)
+endif()
+
+###############################################################################
+# Compile flags
+
 if(USE_MSVC)
 
     set(PLATFORM_COMPILE_OPTIONS "${PLATFORM_COMPILE_OPTIONS};/DUSE_MSVC")
@@ -40,7 +55,6 @@ elseif(USE_CLANG)
 
     # Use of 'register' specifier must be removed for C++17 support.
     set(PLATFORM_COMPILE_OPTIONS "${PLATFORM_COMPILE_OPTIONS};-Wno-deprecated-register")
-
 elseif(USE_GCC)
 
     set(PLATFORM_COMPILE_OPTIONS "${PLATFORM_COMPILE_OPTIONS};-DUSE_GCC")

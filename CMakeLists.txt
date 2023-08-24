@@ -26,6 +26,14 @@ endif()
 
 
 ###############################################################################
+# By default, build the library, tests, tools, and Python binding as universal binaries for macOS.
+
+if(APPLE AND (NOT DEFINED CMAKE_OSX_ARCHITECTURES OR CMAKE_OSX_ARCHITECTURES STREQUAL ""))
+    set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64" CACHE STRING "Default OS X architectures" FORCE)
+endif()
+
+
+###############################################################################
 # Project definition.
 
 project(OpenColorIO 
@@ -173,8 +181,11 @@ endif()
 
 ###############################################################################
 # Optimization / internal linking preferences
-
-option(OCIO_USE_SSE "Specify whether to enable SSE CPU performance optimizations" ON)
+# TODO Remove OCIO_USE_SSE once it is fully deprecated.
+option(OCIO_USE_SSE "Specify whether to enable SSE (supplanted by OCIO_USE_SIMD)" ON)
+# TODO Remove mark_as_advanced once OCIO_USE_SSE is fully deprecated.
+mark_as_advanced(OCIO_USE_SSE)
+option(OCIO_USE_SIMD "Specify whether to enable SIMD CPU performance optimizations" ${OCIO_USE_SSE})
 option(OCIO_USE_OIIO_FOR_APPS "Request OIIO to build apps (ociolutimage, ocioconvert and ociodisplay), the default uses OpenEXR." OFF)
 
 if ("${CMAKE_SYSTEM_PROCESSOR}" MATCHES "(AMD64|IA64|EM64T|X86|x86_64|i386|i686)")
@@ -195,6 +206,53 @@ endif()
 message(STATUS "")
 message(STATUS "Checking for GPU configuration...")
 include(CheckSupportGL)
+
+
+###############################################################################
+# Check for ARM neon
+
+if(OCIO_USE_SIMD)
+    include(CheckSupportARMNeon)
+endif()
+
+
+###############################################################################
+# Add sse2neon to the build if ARM NEON intrinsics are supported.
+
+if(HAVE_NEON AND OCIO_USE_SIMD)
+    # Install sse2neon. Please note that sse2neon is downloaded during the configure step as it is
+    # needed for CompilerFlags.cmake and CheckSupportSSE2.cmake.
+
+    # Sse2neon is not treated like an imported target. The logic to find sse2neon is here because 
+    # a find module is not suitable for sse2neon's use case.
+    find_path(sse2neon_INCLUDE_DIR
+        NAMES
+            sse2neon.h
+        HINTS
+            ${sse2neon_ROOT}
+        PATH_SUFFIXES
+            sse2neon
+            include
+            sse2neon/include
+    )
+
+    # As per instructions on sse2neon's GitHub page, the following compiler flags should be used:
+    # "-march=armv8-a+fp+simd+crypto+crc". These flags are required for some ARM platforms that do
+    # not enable floating point calculations or SIMD instructions by default. However, for ARM64
+    # (Apple ARM platform) and x86_64 platforms, these features are already enabled by default.
+    # Therefore, no additional compiler flags are needed.
+    if (NOT sse2neon_INCLUDE_DIR)
+        include(Installsse2neon)
+    else()
+        # Any changes to the following lines must be replicated in Installsse2neon.cmake as well.
+        # Create a target for sse2neon (non-imported)
+        add_library(sse2neon INTERFACE)
+        # Add the include directories to the target.
+        target_include_directories(sse2neon INTERFACE "${sse2neon_INCLUDE_DIR}")
+        # Ignore the warnings coming from sse2neon.h as they are false positives.
+        target_compile_options(sse2neon INTERFACE -Wno-unused-parameter)
+    endif()
+endif()
 
 
 ###############################################################################

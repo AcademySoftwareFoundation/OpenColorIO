@@ -277,13 +277,24 @@ Here are the most common OCIO-specific CMake options (the default values are sho
 - ``-DOCIO_USE_OIIO_FOR_APPS=OFF`` (Set ON to build tools with OpenImageIO rather than OpenEXR)
 - ``-DOCIO_BUILD_PYTHON=ON`` (Set to OFF to not build the Python binding)
 - ``-DOCIO_BUILD_OPENFX=OFF`` (Set to ON to build the OpenFX plug-ins)
-- ``-DOCIO_USE_SSE=ON`` (Set to OFF to turn off SSE CPU performance optimizations)
+- ``-DOCIO_USE_SSE=ON`` (Deprecated -- please use OCIO_USE_SIMD)
+- ``-DOCIO_USE_SIMD=ON`` (Set to OFF to turn off SIMD CPU performance optimizations, such as SSE and NEON)
 - ``-DOCIO_BUILD_TESTS=ON`` (Set to OFF to not build the unit tests)
 - ``-DOCIO_BUILD_GPU_TESTS=ON`` (Set to OFF to not build the GPU unit tests)
 - ``-DOCIO_USE_HEADLESS=OFF`` (Set to ON to do headless GPU reendering)
 - ``-DOCIO_WARNING_AS_ERROR=ON`` (Set to OFF to turn off warnings as errors)
 - ``-DOCIO_BUILD_DOCS=OFF`` (Set to ON to build the documentation)
 - ``-DOCIO_BUILD_FROZEN_DOCS=OFF`` (Set to ON to update the Python documentation)
+
+On the MacOS under the ARM architecture, the default is to make a universal build 
+(natively supporting both the Intel and ARM processors). The ``-DCMAKE_OSX_ARCHITECTURES`` option 
+may be set to just arm64 or x86_64 to override the default value, which is ``arm64;x86_64``.
+
+When doing a universal build, note that the OCIO dependencies must be built as universal libraries 
+too. If you are running in OCIO_INSTALL_EXT_PACKAGES=MISSING or NONE mode, your build will fail if 
+any of your installed libraries are not universal. The easiest way to address this is to set 
+OCIO_INSTALL_EXT_PACKAGES=ALL in order to let OCIO build everything. Alternatively, you may set 
+CMAKE_OSX_ARCHITECTURES to just the platform you are targeting.
 
 Several command-line tools (such as ``ocioconvert``) require reading or writing image files.
 If ``OCIO_USE_OIIO_FOR_APPS=OFF``, these will be built using OpenEXR rather than OpenImageIO

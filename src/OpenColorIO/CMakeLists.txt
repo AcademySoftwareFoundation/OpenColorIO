@@ -311,6 +311,10 @@ target_link_libraries(OpenColorIO
         MINIZIP::minizip-ng
 )
 
+if(OCIO_USE_SIMD AND HAVE_SSE2_WITH_SSE2NEON)
+    target_link_libraries(OpenColorIO PRIVATE $<BUILD_INTERFACE:sse2neon>)
+endif()
+
 if(APPLE)
     target_link_libraries(OpenColorIO
         PRIVATE
@@ -341,11 +345,20 @@ if(BUILD_SHARED_LIBS OR (OCIO_BUILD_PYTHON AND UNIX))
     set_property(TARGET OpenColorIO PROPERTY POSITION_INDEPENDENT_CODE ON)
 endif()
 
-if(OCIO_USE_SSE)
-    target_compile_definitions(OpenColorIO
-        PRIVATE
-            USE_SSE
-    )
+if(OCIO_USE_SIMD)
+    if(HAVE_SSE2)
+        target_compile_definitions(OpenColorIO
+            PRIVATE
+                USE_SSE
+        )
+    endif()
+
+    if(HAVE_SSE2_WITH_SSE2NEON)
+        target_compile_definitions(OpenColorIO
+            PRIVATE
+                USE_SSE2_WITH_SSE2NEON
+        )
+    endif()
 endif()
 
 if(MSVC AND BUILD_TYPE_DEBUG AND BUILD_SHARED_LIBS)
