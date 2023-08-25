@@ -721,12 +721,77 @@ public:
      */
     bool isColorSpaceLinear(const char * colorSpace, ReferenceSpaceType referenceSpaceType) const;
 
-    //
-    // Roles
-    //
-    
-    // A role is like an alias for a colorspace. You can query the colorspace
-    // corresponding to a role using the normal getColorSpace fcn.
+    /**
+     * \brief Find the name of the color space in the source config that is the same as 
+     *        a color space in the default built-in config.  For example, setting the
+     *        builtinColorSpaceName to "sRGB - Texture" (a color space name from that
+     *        config), would return the name for the corresponding sRGB texture space in
+     *        the current config (or empty if it was not found).  Note that this method
+     *        relies on heuristics which may evolve over time and which may not work on
+     *        all configs.
+     *
+     *        The method only looks at active color spaces.  If the interchange roles are
+     *        missing and heuristics are used, only scene-referred color spaces are searched.
+     * 
+     * \param srcConfig The config to search for the desired color space.
+     * \param builtinConfig The built-in config to use.  See \ref Config::CreateFromBuiltinConfig.
+     * \param builtinColorSpaceName Color space name in the built-in default config.
+     * \return Matching color space name from the source config. Empty if not found.
+     * 
+     * \throw Exception if an interchange space cannot be found or the equivalent space cannot be found.
+     */
+    static const char * IdentifyBuiltinColorSpace(const ConstConfigRcPtr & srcConfig,
+                                                  const ConstConfigRcPtr & builtinConfig, 
+                                                  const char * builtinColorSpaceName);
+
+    /**
+     * \brief Identify the two names of a common color space that exists in both the 
+     *        given config and the provided built-in config that may be used for converting
+     *        color spaces between the two configs.  If both configs have the interchange
+     *        role set, than the color spaces set to that role will be returned.  Otherwise,
+     *        heuristics will be used to try and identify a known color space in the source
+     *        config.  These are the same heuristics that are used for other methods such as
+     *        identifyBuiltinColorSpace and GetProcessorTo/FromBuiltinColorSpace.
+     *
+     *        Using this method in connection with GetProcessorFromConfigs is more efficient
+     *        if you need to call GetProcessorTo/FromBuiltinColorSpace multiple times since it 
+     *        is only necessary to run the heuristics once (to identify the interchange spaces).
+     *
+     *        The srcColorSpaceName and builtinColorSpace name are used to decide which
+     *        interchange role to use (scene- or display-referred).  However, they are not
+     *        used if the interchange roles are not present and the heuristics are used.
+     *        It is actually only the ReferenceSpaceType of the color spaces that are used,
+     *        so it is not necessary to call this function multiple times if all the spaces
+     *        are of the same type.  (These are the same arguments that would also be set if
+     *        you were instead calling GetProcessorTo/FromBuiltinColorSpace.)
+     * 
+     * \param[out] srcInterchangeName Color space name from the source config.
+     * \param[out] builtinInterchangeName Corresponding color space name from the built-in config.
+     * \param srcConfig The config to search for the desired color space.
+     * \param srcColorSpaceName Color space name in the given config to convert to/from.
+     * \param builtinConfig The built-in config to use.  See \ref Config::CreateFromBuiltinConfig.
+     * \param builtinColorSpaceName Color space name in the default built-in config.
+     * 
+     * \throw Exception if either the srcInterchange or builtinInterchange cannot be identified.
+     */
+    static void IdentifyInterchangeSpace(const char ** srcInterchangeName,
+                                         const char ** builtinInterchangeName,
+                                         const ConstConfigRcPtr & srcConfig,
+                                         const char * srcColorSpaceName,
+                                         const ConstConfigRcPtr & builtinConfig,
+                                         const char * builtinColorSpaceName);
+
+    /**
+     * Methods related to Roles.
+     *
+     * A role allows a config author to indicate that a given color space should be used
+     * for a particular purpose.  
+     *
+     * Role names may be passed to most functions that accept color space names, such as 
+     * getColorSpace.  So for example, you may find the name of the color space assigned 
+     * to the scene_linear role by getting the color space object for "scene_linear" and 
+     * then calling getName on the color space object.
+     */
 
     /**
      * \brief
@@ -759,11 +824,8 @@ public:
     const char * getRoleColorSpace(const char * roleName) const noexcept;
 
     /**
-     * \defgroup Methods related to displays and views.
-     * @{
-     */
-
-    /**
+     * Methods related to displays and views.
+     *
      * The following methods only manipulate active displays and views. Active
      * displays and views are defined from an env. variable or from the config file.
      *
@@ -880,11 +942,8 @@ public:
     /// Clear all the displays.
     void clearDisplays();
 
-    /** @} */
-
     /**
-     * \defgroup Methods related to the Virtual Display.
-     * @{
+     * Methods related to the Virtual Display.
      *
      *  ...  (See descriptions for the non-virtual methods above.)
      *
@@ -963,8 +1022,6 @@ public:
      * Returns the index of the display.
      */
     int instantiateDisplayFromICCProfile(const char * ICCProfileFilepath);
-
-    /** @} */
 
     /**
      * \brief
@@ -1113,8 +1170,7 @@ public:
     void clearViewTransforms();
 
     /**
-     * \defgroup Methods related to named transforms.
-     * @{
+     * Methods related to named transforms.
      */
 
     /**
@@ -1156,8 +1212,6 @@ public:
 
     /// Clear all named transforms.
     void clearNamedTransforms();
-
-    /** @} */
 
     // 
     // File Rules
@@ -1287,7 +1341,7 @@ public:
      * 
      * If the source config defines the necessary Interchange Role (typically "aces_interchange"), 
      * then the conversion will be well-defined and equivalent to calling GetProcessorFromConfigs
-     * with the source config and the Built-in config
+     * with the source config and the Built-in config.
      * 
      * However, if the Interchange Roles are not present, heuristics will be used to try and 
      * identify a common color space in the source config that may be used to allow the conversion 
@@ -1300,11 +1354,12 @@ public:
      * \param srcConfig The user's source config.
      * \param srcColorSpaceName The name of the color space in the source config.
      * \param builtinColorSpaceName The name of the color space in the current default Built-in config.
+     * 
+     * \throw Exception if either the src or builtin interchange space cannot be identified.
      */
-    static ConstProcessorRcPtr GetProcessorToBuiltinColorSpace(
-                                                                ConstConfigRcPtr srcConfig,
-                                                                const char * srcColorSpaceName, 
-                                                                const char * builtinColorSpaceName);
+    static ConstProcessorRcPtr GetProcessorToBuiltinColorSpace(ConstConfigRcPtr srcConfig,
+                                                               const char * srcColorSpaceName, 
+                                                               const char * builtinColorSpaceName);
     /**
      * \brief See description of GetProcessorToBuiltinColorSpace.
      * 
@@ -1312,14 +1367,12 @@ public:
      * \param srcConfig The user's source config.
      * \param srcColorSpaceName The name of the color space in the source config. 
      */
-    static ConstProcessorRcPtr GetProcessorFromBuiltinColorSpace(
-                                                                const char * builtinColorSpaceName,
-                                                                ConstConfigRcPtr srcConfig,
-                                                                const char * srcColorSpaceName);
+    static ConstProcessorRcPtr GetProcessorFromBuiltinColorSpace(const char * builtinColorSpaceName,
+                                                                 ConstConfigRcPtr srcConfig,
+                                                                 const char * srcColorSpaceName);
 
     /**
-     * \brief Get a processor to convert between color spaces in two separate
-     *      configs.
+     * \brief Get a processor to convert between color spaces in two separate configs.
      * 
      * This relies on both configs having the aces_interchange role (when srcName
      * is scene-referred) or the role cie_xyz_d65_interchange (when srcName is
@@ -1339,6 +1392,9 @@ public:
     /**
      * The srcInterchangeName and dstInterchangeName must refer to a pair of
      * color spaces in the two configs that are the same.  A role name may also be used.
+     *
+     * Note: For all of the two-config GetProcessor functions, if either the source or 
+     * destination color spaces are data spaces, the entire processor will be a no-op.
      */
     static ConstProcessorRcPtr GetProcessorFromConfigs(const ConstConfigRcPtr & srcConfig,
                                                        const char * srcColorSpaceName,
@@ -1356,10 +1412,13 @@ public:
                                                        const char * dstColorSpaceName,
                                                        const char * dstInterchangeName);
 
+    /// Get the Processor Cache flags.
+    ProcessorCacheFlags getProcessorCacheFlags() const noexcept;
+
     /// Control the caching of processors in the config instance.  By default, caching is on.  
     /// The flags allow turning caching off entirely or only turning it off if dynamic
     /// properties are being used by the processor.
-    void setProcessorCacheFlags(ProcessorCacheFlags flags) noexcept;
+    void setProcessorCacheFlags(ProcessorCacheFlags flags) const noexcept;
 
     /**
      * \brief Clears this config's cache of Processor, CPUProcessor, and GPUProcessor instances. 
@@ -2077,8 +2136,7 @@ private:
     const Impl * getImpl() const { return m_impl; }
 };
 
-/** \defgroup ColorSpaceSetOperators
- *  @{
+/** ColorSpaceSetOperators
  */
 
 /**
@@ -2117,8 +2175,6 @@ extern OCIOEXPORT ConstColorSpaceSetRcPtr operator&&(const ConstColorSpaceSetRcP
  */
 extern OCIOEXPORT ConstColorSpaceSetRcPtr operator-(const ConstColorSpaceSetRcPtr & lcss,
                                                     const ConstColorSpaceSetRcPtr & rcss);
-
-/** @}*/
 
 
 //
@@ -3681,8 +3737,7 @@ public:
     virtual bool isSupported() const noexcept = 0;
 
     /**
-     * \defgroup Methods to access some information of the attached and active monitors.
-     * @{
+     * Methods to access some information of the attached and active monitors.
      */
 
     /// Get the number of active monitors reported by the operating system.
@@ -3698,8 +3753,6 @@ public:
     virtual const char * getMonitorName(size_t idx) const = 0;
     /// Get the ICC profile path associated to the monitor.
     virtual const char * getProfileFilepath(size_t idx) const = 0;
-
-    /** @} */
 
 protected:
     SystemMonitors() = default;

@@ -150,7 +150,7 @@ this to a Flame compatible 3dl file, simply run::
     ociobakelut --format flame --lut log_to_display.lut for_flame.3dl
 
 
-Reversing a 1D LUT
+Reversing a LUT
 ++++++++++++++++++
 
 You can apply a LUT in reverse, and write this to a new LUT::
