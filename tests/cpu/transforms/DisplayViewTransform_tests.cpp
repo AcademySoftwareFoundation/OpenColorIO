@@ -1303,7 +1303,7 @@ colorspaces:
     // As with most of these, validation also fails.
     OCIO_CHECK_THROW_WHAT(e_config->validate(),
                           OCIO::Exception,
-                          "Config failed validation. Display 'display' has a view 'bad_view' that "
+                          "Config failed display view validation. Display 'display' has a view 'bad_view' that "
                           "refers to a color space or a named transform, 'missing cs', which is not defined."
     );
 
@@ -1336,7 +1336,7 @@ colorspaces:
     // But validation fails.
     OCIO_CHECK_THROW_WHAT(e_config->validate(),
                           OCIO::Exception,
-                          "Config failed validation. Display 'display' has a view 'bad_view' refers "
+                          "Config failed display view validation. Display 'display' has a view 'bad_view' refers "
                           "to a viewing rule, 'missing rule', which is not defined."
     );
 }

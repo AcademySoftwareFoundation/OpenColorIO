@@ -1468,7 +1468,7 @@ class ConfigVirtualDisplayTest(unittest.TestCase):
         cfg.addVirtualDisplaySharedView('sview2')
         with self.assertRaises(OCIO.Exception) as cm:
             cfg.validate()
-        self.assertEqual(str(cm.exception), "Config failed validation. " +
+        self.assertEqual(str(cm.exception), "Config failed view validation. " +
                          "The display 'virtual_display' contains a shared " +
                          "view 'sview2' that is not defined.")
 
@@ -1484,7 +1484,7 @@ class ConfigVirtualDisplayTest(unittest.TestCase):
         cfg.addVirtualDisplayView('Raw1', 'Film', 'raw1')
         with self.assertRaises(OCIO.Exception) as cm:
             cfg.validate()
-        self.assertEqual(str(cm.exception), "Config failed validation. " +
+        self.assertEqual(str(cm.exception), "Config failed display view validation. " +
                          "Display 'virtual_display' has a " +
                          "view 'Raw1' that refers to a color space" +
                          " or a named transform, 'raw1', which is not defined.")
@@ -1495,7 +1495,7 @@ class ConfigVirtualDisplayTest(unittest.TestCase):
         cfg.addVirtualDisplayView('Raw1', 'Film', 'raw1', 'look')
         with self.assertRaises(OCIO.Exception) as cm:
             cfg.validate()
-        self.assertEqual(str(cm.exception), "Config failed validation. " +
+        self.assertEqual(str(cm.exception), "Config failed display view validation. " +
                          "Display 'virtual_display' has a view 'Raw1' that " +
                          "refers to a color space or a named transform, " +
                          "'raw1', which is not defined.")

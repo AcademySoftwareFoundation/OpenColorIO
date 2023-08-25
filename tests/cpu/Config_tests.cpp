@@ -1344,7 +1344,7 @@ OCIO_ADD_TEST(Config, context_variable_with_sanity_check)
 
         OCIO_CHECK_THROW_WHAT(cfg->validate(),
                               OCIO::Exception,
-                              "The file Transform source cannot be resolved: '$CS2'.");
+                              "The file transform source cannot be resolved: '$CS2'.");
         OCIO_CHECK_THROW_WHAT(cfg->getProcessor("cs1", "disp1", "view1", OCIO::TRANSFORM_DIR_FORWARD),
                               OCIO::Exception,
                               "The specified file reference '$CS2' could not be located");
@@ -1356,16 +1356,23 @@ OCIO_ADD_TEST(Config, context_variable_with_sanity_check)
         // Several faulty cases for the 'search_path'.
 
         OCIO_CHECK_NO_THROW(cfg->clearSearchPaths());
+        OCIO_CHECK_THROW_WHAT(cfg->validate(),
+                              OCIO::Exception,
+                              "The search_path must not be empty if there are FileTransforms.");
+
+        OCIO_CHECK_NO_THROW(cfg->clearSearchPaths());
+        // NB: Not sure this is desirable, but setting a nullptr is the same as setting "".
+        // In this case, getNumSearchtPaths == 1, which is potentially confusing.
         OCIO_CHECK_NO_THROW(cfg->setSearchPath(nullptr));
         OCIO_CHECK_THROW_WHAT(cfg->validate(),
                               OCIO::Exception,
-                              "The search_path is empty");
+                              "The search_path must not be an empty string if there are FileTransforms.");
 
         OCIO_CHECK_NO_THROW(cfg->clearSearchPaths());
         OCIO_CHECK_NO_THROW(cfg->setSearchPath(""));
         OCIO_CHECK_THROW_WHAT(cfg->validate(),
                               OCIO::Exception,
-                              "The search_path is empty");
+                              "The search_path must not be an empty string if there are FileTransforms.");
 
         OCIO_CHECK_NO_THROW(cfg->clearSearchPaths());
         OCIO_CHECK_NO_THROW(cfg->setSearchPath("$MYPATH"));
@@ -1441,7 +1448,7 @@ OCIO_ADD_TEST(Config, context_variable_with_colorspacename)
         OCIO_CHECK_NO_THROW(cfg = OCIO::Config::CreateFromStream(iss)->createEditableCopy());
         OCIO_CHECK_THROW_WHAT(cfg->validate(),
                               OCIO::Exception,
-                              "The file Transform source cannot be resolved: '$VAR3'.");
+                              "The file transform source cannot be resolved: '$VAR3'.");
 
         // Set $VAR3 and check again.
 
@@ -5220,7 +5227,7 @@ OCIO_ADD_TEST(Config, remove_color_space)
     // As discussed only validation traps the issue.
     OCIO_CHECK_THROW_WHAT(config->validate(),
                           OCIO::Exception,
-                          "Config failed validation. The role 'default' refers to"\
+                          "Config failed role validation. The role 'default' refers to"\
                           " a color space, 'raw', which is not defined.");
 }
 
