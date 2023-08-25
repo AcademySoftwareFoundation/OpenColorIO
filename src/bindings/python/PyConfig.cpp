@@ -1307,6 +1307,9 @@ void bindPyConfig(py::module & m)
 
     m.def("ExtractOCIOZArchive", &ExtractOCIOZArchive, 
           DOC(PyOpenColorIO, ExtractOCIOZArchive));
+
+    m.def("ResolveConfigPath", &ResolveConfigPath, 
+          DOC(PyOpenColorIO, ResolveConfigPath));
 }
 
 } // namespace OCIO_NAMESPACE
