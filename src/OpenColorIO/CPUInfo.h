@@ -36,7 +36,7 @@ namespace OCIO_NAMESPACE
 #define x86_check_flags(cpuext) \
     (OCIO_USE_ ## cpuext && ((flags) & X86_CPU_FLAG_ ## cpuext))
 
-#if defined(OCIO_ARCH_X86)
+#if !defined(__aarch64__) && defined(OCIO_ARCH_X86) // Intel-based processor or Apple Rosetta x86_64.
 
 struct CPUInfo
 {
@@ -79,7 +79,7 @@ struct CPUInfo
 
 #undef x86_check_flags
 
-#elif defined(OCIO_APPLE_M1_ARCH_X86) || OCIO_USE_SSE2NEON
+#elif defined(__aarch64__) // ARM Processor or Apple ARM.
 
 #define check_flags(cpuext) \
     (OCIO_USE_ ## cpuext && ((flags) & X86_CPU_FLAG_ ## cpuext))
@@ -118,7 +118,7 @@ struct CPUInfo
 
 #undef x86_check_flags
 
-#endif // OCIO_ARCH_X86
+#endif
 
 } // namespace OCIO_NAMESPACE
 

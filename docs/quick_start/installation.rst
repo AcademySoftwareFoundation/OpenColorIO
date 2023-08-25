@@ -288,6 +288,7 @@ Here are the most common OCIO-specific CMake options (the default values are sho
 - ``-DOCIO_USE_AVX2=ON`` (Set to OFF to turn off AVX2 CPU performance optimizations)
 - ``-DOCIO_USE_AVX512=ON`` (Set to OFF to turn off AVX512 CPU performance optimizations)
 - ``-DOCIO_USE_F16C=ON`` (Set to OFF to turn off F16C CPU performance optimizations)
+- ``-OCIO_USE_SSE2NEON=ON`` (Apple Only; Set to OFF to turn off the SSE2NEON translation performance optimizations on Apple ARM)
 - ``-DOCIO_BUILD_TESTS=ON`` (Set to OFF to not build the unit tests)
 - ``-DOCIO_BUILD_GPU_TESTS=ON`` (Set to OFF to not build the GPU unit tests)
 - ``-DOCIO_USE_HEADLESS=OFF`` (Set to ON to do headless GPU reendering)
@@ -295,17 +296,12 @@ Here are the most common OCIO-specific CMake options (the default values are sho
 - ``-DOCIO_BUILD_DOCS=OFF`` (Set to ON to build the documentation)
 - ``-DOCIO_BUILD_FROZEN_DOCS=OFF`` (Set to ON to update the Python documentation)
 
-Note that *OCIO_USE_AVX*, *OCIO_USE_AVX2*, *OCIO_USE_AVX512* and *OCIO_USE_F16C* default values are 
-set to OFF on Apple ARM chipset because of the following two reasons:
+Note that OCIO will turn off any specific SIMD CPU performance optimizations if they are not supported 
+by the build target architecture.
 
-- Rosetta does not support these instructions
-- OCIO does not currently use a library to translate these instructions into ARM Neon.
-
-On the MacOS under the ARM architecture, the default is to make a universal build 
+On the MacOS, the default is to build universal binaries 
 (natively supporting both the Intel and ARM processors). The ``-DCMAKE_OSX_ARCHITECTURES`` option 
-may be set to just arm64 or x86_64 to override the default value, which is ``arm64;x86_64``. Universal 
-build under Rosetta is not supported at this time. Under Rosetta, only the x86_64 build is supported 
-by using ``-DCMAKE_OSX_ARCHITECTURES="x86_64"``.
+may be set to just arm64 or x86_64 to override the default value, which is ``arm64;x86_64``.
 
 When doing a universal build, note that the OCIO dependencies must be built as universal libraries 
 too. If you are running in OCIO_INSTALL_EXT_PACKAGES=MISSING or NONE mode, your build will fail if 

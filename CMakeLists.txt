@@ -184,42 +184,26 @@ endif()
 option(OCIO_USE_SIMD "Specify whether to enable SIMD CPU performance optimizations" ON)
 option(OCIO_USE_OIIO_FOR_APPS "Request OIIO to build apps (ociolutimage, ocioconvert and ociodisplay), the default uses OpenEXR." OFF)
 
-if ("${CMAKE_SYSTEM_PROCESSOR}" MATCHES "(AMD64|IA64|EM64T|X86|x86_64|i386|i686)")
-    # Note that CMAKE_SYSTEM_PROCESSOR will return x86_64 on an Apple M1 MacBook using a Rosetta 
-    # terminal. We do not support the compilation of OCIO using a Rosetta terminal on an Apple M1 
-    # MacBook. The user should compile OCIO using a native terminal (ARM) and use CMAKE_OSX_ARCHITECTURES="x86_64" 
-    # to compile for intel-based Macbook or do a universal build with CMAKE_OSX_ARCHITECTURES="arm64;x86_64".
-    # Also note that Rosetta does not support any AVXs or F16C instructions.
+if ("${CMAKE_SYSTEM_PROCESSOR}" MATCHES "(AMD64|IA64|EM64T|X86|x86_64|i386|i686)" OR
+    (APPLE AND "${CMAKE_SYSTEM_PROCESSOR}" MATCHES "arm64" AND "${CMAKE_OSX_ARCHITECTURES}" MATCHES "(arm64;x86_64|x86_64;arm64|x86_64)"))
     
-    # Assumes an Intel-based architecture or Apple ARM under Rosetta.
+    # Enable OCIO_ARCH_X86 for any intel-based architecture or Apple Rosetta (x86_64 or universal build).
     set(OCIO_ARCH_X86 1)
+    
+    # For a Mac OS universal build, OCIO translates the SSE instructions into ARM Neon with 
+    # the library SSE2NEON for the arm64 side of the binary.
     set(OCIO_BUILD_ENABLE_OPTIMIZATIONS_SSE ON)
     set(OCIO_BUILD_ENABLE_OPTIMIZATIONS_AVX ON)
     set(OCIO_BUILD_ENABLE_OPTIMIZATIONS_F16C ON)
-elseif(APPLE AND "${CMAKE_HOST_SYSTEM_PROCESSOR}" MATCHES "arm64"
-             AND ("${CMAKE_OSX_ARCHITECTURES}" MATCHES "arm64;x86_64" 
-             OR "${CMAKE_OSX_ARCHITECTURES}" MATCHES "x86_64;arm64"
-             OR "${CMAKE_OSX_ARCHITECTURES}" MATCHES "x86_64"))
+elseif(APPLE AND "${CMAKE_SYSTEM_PROCESSOR}" MATCHES "arm64" AND "${CMAKE_OSX_ARCHITECTURES}" MATCHES "arm64")
     
-    # The user wants to do a universal build (arm64 + x86_64) or a x86_64 only build.
-    set(OCIO_APPLE_M1_ARCH_X86 1)
+    # Apple ARM only build.
 
-    # OCIO translates SSE using SSE2NEON library.
+    # OCIO translates the SSE instructions into ARM Neon with the library SSE2NEON.
     set(OCIO_BUILD_ENABLE_OPTIMIZATIONS_SSE ON)
-    # OCIO does not have any process to translate from AVXs to ARM Neon.
+    # OCIO does not translate AVX to ARM Neon.
     set(OCIO_BUILD_ENABLE_OPTIMIZATIONS_AVX OFF)
-    # Not supported.
-    set(OCIO_BUILD_ENABLE_OPTIMIZATIONS_F16C OFF)
-elseif(APPLE AND "${CMAKE_HOST_SYSTEM_PROCESSOR}" MATCHES "arm64"
-             AND "${CMAKE_OSX_ARCHITECTURES}" MATCHES "arm64")
-    
-    # The user wants to do a arm64 only build.
-
-    # OCIO translates SSE using SSE2NEON library.
-    set(OCIO_BUILD_ENABLE_OPTIMIZATIONS_SSE ON)
-    # OCIO does not have any process to translate from AVXs to ARM Neon.
-    set(OCIO_BUILD_ENABLE_OPTIMIZATIONS_AVX OFF)
-    # Not supported.
+    # Turn F16C off since they are x86_64 instructions.
     set(OCIO_BUILD_ENABLE_OPTIMIZATIONS_F16C OFF)
 else()
     set(OCIO_BUILD_ENABLE_OPTIMIZATIONS_SSE OFF)
@@ -237,6 +221,10 @@ option(OCIO_USE_AVX "Specify whether to enable AVX CPU performance optimizations
 option(OCIO_USE_AVX2 "Specify whether to enable AVX2 CPU performance optimizations" ${OCIO_BUILD_ENABLE_OPTIMIZATIONS_AVX})
 option(OCIO_USE_AVX512 "Specify whether to enable AVX512 CPU performance optimizations" ${OCIO_BUILD_ENABLE_OPTIMIZATIONS_AVX})
 option(OCIO_USE_F16C  "Specify whether to enable F16C CPU performance optimizations" ${OCIO_BUILD_ENABLE_OPTIMIZATIONS_F16C})
+
+if (APPLE)
+   option(OCIO_USE_SSE2NEON "Specify whether to enable SSE CPU performance optimizations using SSE2NEON for Apple ARM architecture" ON)
+endif()
 
 ###############################################################################
 # GPU configuration

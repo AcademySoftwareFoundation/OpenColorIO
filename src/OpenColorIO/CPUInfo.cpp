@@ -17,7 +17,7 @@ typedef __int64  int64_t;
 namespace OCIO_NAMESPACE
 {
 
-#if defined(OCIO_ARCH_X86)
+#if !defined(__aarch64__) && defined(OCIO_ARCH_X86) // Intel-based processor or Apple Rosetta x86_64.
 
 namespace {
 
@@ -181,40 +181,24 @@ CPUInfo& CPUInfo::instance()
     static CPUInfo singleton = CPUInfo();
     return singleton;
 }
-
-#elif defined(OCIO_APPLE_M1_ARCH_X86) || OCIO_USE_SSE2NEON
+#elif defined(__aarch64__) // ARM Processor or Apple ARM.
 CPUInfo::CPUInfo()
 {
     flags = 0;
     memset(name, 0, sizeof(name));
 
-    // Hardcode name to Apple ARM.
-    snprintf(name, sizeof(name), "%s", "Apple ARM");
+    snprintf(name, sizeof(name), "%s", "ARM");
 
-    // Note that Rosetta does not support any AVX instructions.
-    // See https://developer.apple.com/documentation/apple-silicon/about-the-rosetta-translation-environment#What-Cant-Be-Translated
-
-    // Also note that during testing on a Apple M1 MacBook, SSE 4.2 does not seems to be supported.
-
-#if !defined(__aarch64__)
-    // Enable SSE2 instructions support using Rosetta for the x86_64 architecture on Apple ARM cpu.
-    if (OCIO_USE_SSE2)
-    {
-        flags |= X86_CPU_FLAG_SSE2;
-    }
-    //TODO: Once the other SSE instructions are implemented into OCIO, these can be enabled here.
-#elif defined(__aarch64__)
-    // ARM architecture A64 (ARM64)
     // SSE2NEON library supports SSE, SSE2, SSE3, SSSE3, SSE4.1 and SSE4.2.
     // It does not support any AVX instructions.
     if (OCIO_USE_SSE2)
     {
         flags |= X86_CPU_FLAG_SSE2;
+        flags |= X86_CPU_FLAG_SSE3;
+        flags |= X86_CPU_FLAG_SSSE3;
+        flags |= X86_CPU_FLAG_SSE4;
+        flags |= X86_CPU_FLAG_SSE42;
     }
-    //TODO: Once the other SSE instructions are implemented into OCIO, these can be enabled here.
-#endif
-
-    
 }
 
 CPUInfo& CPUInfo::instance()
@@ -222,6 +206,6 @@ CPUInfo& CPUInfo::instance()
     static CPUInfo singleton = CPUInfo();
     return singleton;
 }
-#endif // ARCH_X86
+#endif
 
 } // namespace OCIO_NAMESPACE

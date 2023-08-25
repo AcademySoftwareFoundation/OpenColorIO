@@ -39,7 +39,7 @@ OCIO_ADD_TEST(UnitTest, windows_debug)
 
 #endif
 
-#if defined(OCIO_ARCH_X86) || defined(OCIO_APPLE_M1_ARCH_X86) || OCIO_USE_SSE2NEON
+#if defined(OCIO_ARCH_X86) || OCIO_USE_SSE2NEON
     #define ENABLE_SIMD_USAGE
 #endif
 

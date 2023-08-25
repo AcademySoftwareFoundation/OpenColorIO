@@ -12,7 +12,7 @@ set(PLATFORM_LINK_OPTIONS "")
 # Verify SIMD compatibility
 
 if(OCIO_USE_SIMD)
-    if (OCIO_ARCH_X86 OR OCIO_APPLE_M1_ARCH_X86)
+    if (OCIO_ARCH_X86)
         include(CheckSupportX86SIMD)
     endif()
 
