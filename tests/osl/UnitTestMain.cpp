@@ -75,17 +75,6 @@ public:
                     unsigned /*width*/, 
                     unsigned /*height*/,
                     TextureType /*channel*/,
-                    OCIO::Interpolation /*interpolation*/,
-                    const float * /*values*/) override
-    {
-        throw OCIO::Exception("Unsupported by OSL unit tests.");
-    }
-
-    void addTexture(const char * /*textureName*/,
-                    const char * /*samplerName*/,
-                    unsigned /*width*/, 
-                    unsigned /*height*/,
-                    TextureType /*channel*/,
                     TextureDimensions /*dimensions*/,
                     OCIO::Interpolation /*interpolation*/,
                     const float * /*values*/) override

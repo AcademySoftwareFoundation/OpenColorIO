@@ -485,14 +485,13 @@ unsigned GenericGpuShaderDesc::getNumTextures() const noexcept
     return unsigned(getImplGeneric()->m_textures.size());
 }
 
-void GenericGpuShaderDesc::addTexture(const char* textureName,
-    const char * samplerName,
-    unsigned width,
-    unsigned height,
-    TextureType channel,
-    TextureDimensions dimensions,
-    Interpolation interpolation,
-    const float * values)
+void GenericGpuShaderDesc::addTexture(const char * textureName,
+                                      const char * samplerName,
+                                      unsigned width, unsigned height,
+                                      TextureType channel,
+                                      TextureDimensions dimensions,
+                                      Interpolation interpolation,
+                                      const float * values)
 {
     getImplGeneric()->addTexture(textureName, samplerName, width, height, channel, dimensions, interpolation, values);
 }
@@ -500,8 +499,7 @@ void GenericGpuShaderDesc::addTexture(const char* textureName,
 void GenericGpuShaderDesc::getTexture(unsigned index,
                                       const char *& textureName,
                                       const char *& samplerName,
-                                      unsigned & width,
-                                      unsigned & height,
+                                      unsigned & width, unsigned & height,
                                       TextureType & channel,
                                       TextureDimensions & dimensions,
                                       Interpolation & interpolation) const
