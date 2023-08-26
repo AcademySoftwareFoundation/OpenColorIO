@@ -6,7 +6,6 @@
 
 import os
 import re
-import shutil
 import subprocess
 import sys
 import tempfile
@@ -16,27 +15,49 @@ from setuptools.command.build_ext import build_ext
 
 
 # Extract the project version from CMake generated ABI header.
-# NOTE: When droping support for Python2 we can use
-# tempfile.TemporaryDirectory() context manager instead of try...finally.
 def get_version():
     VERSION_REGEX = re.compile(
         r"^\s*#\s*define\s+OCIO_VERSION_FULL_STR\s+\"(.*)\"\s*$", re.MULTILINE)
 
     here = os.path.abspath(os.path.dirname(__file__))
-    dirpath = tempfile.mkdtemp()
 
-    try:
-        stdout = subprocess.check_output(["cmake", here], cwd=dirpath)
-        path = os.path.join(dirpath, "include", "OpenColorIO", "OpenColorABI.h")
-        with open(path) as f:
-            match = VERSION_REGEX.search(f.read())
-            return match.group(1)
-    except Exception as e:
-        raise RuntimeError(
-            "Unable to find OpenColorIO version: {}".format(str(e))
-        )
-    finally:
-        shutil.rmtree(dirpath)
+    with tempfile.TemporaryDirectory() as tmpdir:
+        try:
+            subprocess.check_call(["cmake", here], cwd=tmpdir)
+            path = os.path.join(tmpdir, "include", "OpenColorIO", "OpenColorABI.h")
+            with open(path) as f:
+                match = VERSION_REGEX.search(f.read())
+                return match.group(1)
+        except Exception as e:
+            raise RuntimeError(
+                "Unable to find OpenColorIO version: {}".format(str(e))
+            )
+
+
+# Call CMake find_package from a dummy script and return whether the package
+# has been found or not.
+def cmake_find_package(package_name):
+    with tempfile.TemporaryDirectory() as tmpdir:
+        try:
+            cmakelist_path = os.path.join(tmpdir, "CMakeLists.txt")
+            with open(cmakelist_path, "w") as f:
+                f.write("""
+cmake_minimum_required(VERSION 3.13)
+project(test LANGUAGES CXX)
+
+find_package({} REQUIRED)
+""".format(package_name)
+                )
+
+            subprocess.check_call(
+                ["cmake", tmpdir],
+                cwd=tmpdir,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL
+            )
+            return True
+        except Exception as e:
+            return False
 
 
 # Convert distutils Windows platform specifiers to CMake -A arguments
@@ -59,6 +80,7 @@ class CMakeExtension(Extension):
 class CMakeBuild(build_ext):
     def build_extension(self, ext):
         extdir = os.path.abspath(os.path.dirname(self.get_ext_fullpath(ext.name)))
+        bindir = os.path.join(extdir, "bin")
 
         # required for auto-detection & inclusion of auxiliary "native" libs
         if not extdir.endswith(os.path.sep):
@@ -73,12 +95,13 @@ class CMakeBuild(build_ext):
 
         cmake_args = [
             "-DCMAKE_LIBRARY_OUTPUT_DIRECTORY={}".format(extdir),
+            "-DCMAKE_RUNTIME_OUTPUT_DIRECTORY={}".format(bindir),
             "-DPython_EXECUTABLE={}".format(sys.executable),
             # Not used on MSVC, but no harm
             "-DCMAKE_BUILD_TYPE={}".format(cfg),
-            "-DBUILD_SHARED_LIBS=OFF",
-            "-DOCIO_BUILD_DOCS=ON",
-            "-DOCIO_BUILD_APPS=OFF",
+            "-DBUILD_SHARED_LIBS=ON",
+            "-DOCIO_USE_SOVERSION=OFF",
+            "-DOCIO_BUILD_APPS=ON",
             "-DOCIO_BUILD_TESTS=OFF",
             "-DOCIO_BUILD_GPU_TESTS=OFF",
             # Make sure we build everything for the requested architecture(s)
@@ -121,7 +144,8 @@ class CMakeBuild(build_ext):
             # Multi-config generators have a different way to specify configs
             if not single_config:
                 cmake_args += [
-                    "-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_{}={}".format(cfg.upper(), extdir)
+                    "-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_{}={}".format(cfg.upper(), extdir),
+                    "-DCMAKE_RUNTIME_OUTPUT_DIRECTORY_{}={}".format(cfg.upper(), bindir),
                 ]
                 build_args += ["--config", cfg]
 
@@ -130,6 +154,19 @@ class CMakeBuild(build_ext):
             archs = re.findall(r"-arch (\S+)", os.environ.get("ARCHFLAGS", ""))
             if archs:
                 cmake_args += ["-DCMAKE_OSX_ARCHITECTURES={}".format(";".join(archs))]
+
+        # When building the wheel, the install step is not executed so we need
+        # to have the correct RPATH directly from the build tree output.
+        cmake_args += ["-DCMAKE_BUILD_WITH_INSTALL_RPATH=ON"]
+        if sys.platform.startswith("linux"):
+            cmake_args += ["-DCMAKE_INSTALL_RPATH={}".format("$ORIGIN;$ORIGIN/..")]
+        if sys.platform.startswith("darwin"):
+            cmake_args += ["-DCMAKE_INSTALL_RPATH={}".format("@loader_path;@loader_path/..")]
+
+        # Documentation is used for Python docstrings but we allow to build
+        # the wheel without docs to remove a hard dependency on doxygen.
+        if cmake_find_package("Doxygen"):
+            cmake_args += ["-DOCIO_BUILD_DOCS=ON"]
 
         # Set CMAKE_BUILD_PARALLEL_LEVEL to control the parallel build level
         # across all generators.
@@ -156,11 +193,33 @@ setup(
     version=get_version(),
     package_dir={
         'PyOpenColorIO': 'src/bindings/python/package',
-        'PyOpenColorIO.tests': 'tests/python',
-        'PyOpenColorIO.data': 'tests/data',
+        'PyOpenColorIO.bin.pyocioamf': 'src/apps/pyocioamf',
+        'PyOpenColorIO.bin.pyociodisplay': 'src/apps/pyociodisplay',
     },
-    packages=['PyOpenColorIO', 'PyOpenColorIO.tests', 'PyOpenColorIO.data'],
+    packages=[
+        'PyOpenColorIO',
+        'PyOpenColorIO.bin.pyocioamf',
+        'PyOpenColorIO.bin.pyociodisplay',
+    ],
     ext_modules=[CMakeExtension("PyOpenColorIO.PyOpenColorIO")],
     cmdclass={"build_ext": CMakeBuild},
-    include_package_data=True
+    include_package_data=True,
+    entry_points={
+        'console_scripts': [
+            # Native applications
+            'ocioarchive=PyOpenColorIO.command_line:main',
+            'ociobakelut=PyOpenColorIO.command_line:main',
+            'ociocheck=PyOpenColorIO.command_line:main',
+            'ociochecklut=PyOpenColorIO.command_line:main',
+            'ocioconvert=PyOpenColorIO.command_line:main',
+            'ociodisplay=PyOpenColorIO.command_line:main',
+            'ociolutimage=PyOpenColorIO.command_line:main',
+            'ociomakeclf=PyOpenColorIO.command_line:main',
+            'ocioperf=PyOpenColorIO.command_line:main',
+            'ociowrite=PyOpenColorIO.command_line:main',
+            # Python applications
+            'pyocioamf=PyOpenColorIO.bin.pyocioamf.pyocioamf:main',
+            'pyociodisplay=PyOpenColorIO.bin.pyociodisplay.pyociodisplay:main',
+        ]
+    },
 )
