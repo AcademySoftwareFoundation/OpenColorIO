@@ -726,8 +726,7 @@ extern OCIOEXPORT ExposureContrastStyle ExposureContrastStyleFromString(const ch
 extern OCIOEXPORT const char * NegativeStyleToString(NegativeStyle style);
 extern OCIOEXPORT NegativeStyle NegativeStyleFromString(const char * style);
 
-/** \defgroup Env. variables.
- *  @{
+/** Env. variables.
  *
  * These environmental variables are used by the OpenColorIO library.
  * For variables that allow specifying more than one token, they should be separated by commas.
@@ -775,12 +774,6 @@ extern OCIOEXPORT const char * OCIO_OPTIMIZATION_FLAGS_ENVVAR;
  * spaces. The categories will be ignored if they would result in no color spaces being found.
  */
 extern OCIOEXPORT const char * OCIO_USER_CATEGORIES_ENVVAR;
-
-/** @}*/
-
-/** \defgroup VarsRoles
- *  @{
- */
 
 // TODO: Move to .rst
 /*!rst::
@@ -852,12 +845,6 @@ extern OCIOEXPORT const char * ROLE_INTERCHANGE_SCENE;
  */
 extern OCIOEXPORT const char * ROLE_INTERCHANGE_DISPLAY;
 
-/** @}*/
-
-/** \defgroup VarsSharedView
- *  @{
- */
-
 /*!rst::
 Shared View
 ***********
@@ -869,12 +856,6 @@ Shared View
  * has the same name as the display the shared view is used by.
  */
 extern OCIOEXPORT const char * OCIO_VIEW_USE_DISPLAY_NAME;
-
-/** @}*/
-
-/** \defgroup VarsFormatMetadata
- *  @{
- */
 
 // TODO: Move to .rst
 /*!rst::
@@ -929,12 +910,6 @@ extern OCIOEXPORT const char * METADATA_NAME;
  */
 extern OCIOEXPORT const char * METADATA_ID;
 
-/** @}*/
-
-/** \defgroup VarsCaches
- *  @{
- */
-
 /*!rst::
 Caches
 ******
@@ -963,14 +938,16 @@ extern OCIOEXPORT const char * OCIO_DISABLE_PROCESSOR_CACHES;
 // variable to disable the fallback.
 extern OCIOEXPORT const char * OCIO_DISABLE_CACHE_FALLBACK;
 
-/** @}*/
-
 
 // Archive config feature
 // Default filename (with extension) of an config.
 extern OCIOEXPORT const char * OCIO_CONFIG_DEFAULT_NAME;
 extern OCIOEXPORT const char * OCIO_CONFIG_DEFAULT_FILE_EXT;
 extern OCIOEXPORT const char * OCIO_CONFIG_ARCHIVE_FILE_EXT;
+
+// Built-in config feature
+// URI Prefix
+extern OCIOEXPORT const char * OCIO_BUILTIN_URI_PREFIX;
 
 } // namespace OCIO_NAMESPACE
 

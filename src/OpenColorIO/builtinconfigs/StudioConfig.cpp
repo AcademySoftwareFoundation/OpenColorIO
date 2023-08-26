@@ -17,6 +17,9 @@ namespace STUDIOCONFIG
 {
 void Register(BuiltinConfigRegistryImpl & registry) noexcept
 {
+    // If a new built-in config is added, do not forget to update the latestStudioBuiltinConfigURI 
+    // variable (in BuiltinConfigRegistry.h).
+
     registry.addBuiltin(
         "studio-config-v1.0.0_aces-v1.3_ocio-v2.1",
         "Academy Color Encoding System - Studio Config [COLORSPACES v1.0.0] [ACES v1.3] [OCIO v2.1]",
