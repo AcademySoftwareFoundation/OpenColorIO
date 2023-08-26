@@ -23,6 +23,9 @@ target_link_libraries(ociomakeclf
         utils::strings
 )
 
+include(StripUtils)
+ocio_strip_binary(ociomakeclf)
+
 install(TARGETS ociomakeclf
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )

@@ -27,6 +27,9 @@ target_link_libraries(ociolutimage
 		utils::strings
 )
 
+include(StripUtils)
+ocio_strip_binary(ociolutimage)
+
 install(TARGETS ociolutimage
 	RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )

@@ -159,7 +159,9 @@ endif()
 
 ###############################################################################
 # Other preferences
+
 option(OCIO_VERBOSE "Display more information when searching or installing dependencies" OFF)
+option(OCIO_USE_SOVERSION "Enable versioning in OCIO shared library name" ON)
 
 ###############################################################################
 # Warnings / debugging settings
@@ -189,6 +191,7 @@ if ("${CMAKE_SYSTEM_PROCESSOR}" MATCHES "(AMD64|IA64|EM64T|X86|x86_64|i386|i686)
     option(OCIO_USE_F16C  "Specify whether to enable F16C CPU performance optimizations" ON)
     set(OCIO_ARCH_X86 1)
 endif()
+
 
 ###############################################################################
 # GPU configuration

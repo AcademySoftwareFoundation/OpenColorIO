@@ -199,7 +199,6 @@ void MetalBuilder::allocateAllTextures(unsigned startIndex)
 
     // This is the first available index for the textures.
     m_startIndex = startIndex;
-    unsigned currIndex = m_startIndex;
 
     // Process the 3D LUT first.
 
@@ -236,8 +235,6 @@ void MetalBuilder::allocateAllTextures(unsigned startIndex)
         // 3. Keep the texture id & name for the later enabling.
 
         m_textureIds.push_back(TextureId(texture, textureName, samplerState, samplerName, MTLTextureType3D));
-
-        currIndex++;
     }
 
     // Process the 1D LUTs.
@@ -278,7 +275,6 @@ void MetalBuilder::allocateAllTextures(unsigned startIndex)
 
         MTLTextureType type = (dimensions == GpuShaderDesc::TEXTURE_2D) ? MTLTextureType2D : MTLTextureType1D;
         m_textureIds.push_back(TextureId(texture, textureName, samplerState, samplerName, type));
-        currIndex++;
     }
 }
 
