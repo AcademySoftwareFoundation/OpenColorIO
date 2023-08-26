@@ -35,6 +35,9 @@ public:
     void setTextureMaxWidth(unsigned /*maxWidth*/) override {}
     unsigned getTextureMaxWidth() const noexcept override { return 0; }
 
+    void setAllowTexture1D(bool /*allowed*/) override {}
+    bool getAllowTexture1D() const noexcept override { return true; }
+
     bool addUniform(const char * /*name*/, const DoubleGetter & /*getDouble*/) override
     {
         throw OCIO::Exception("Unsupported by OSL unit tests.");
@@ -72,6 +75,7 @@ public:
                     unsigned /*width*/, 
                     unsigned /*height*/,
                     TextureType /*channel*/,
+                    TextureDimensions /*dimensions*/,
                     OCIO::Interpolation /*interpolation*/,
                     const float * /*values*/) override
     {
