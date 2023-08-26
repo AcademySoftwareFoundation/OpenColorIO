@@ -295,6 +295,21 @@ OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_file2_test)
     test.setErrorThreshold(1e-4f);
 }
 
+OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_file2_disallow_tex1D_test)
+{
+    OCIO::FileTransformRcPtr file = GetFileTransform("lut1d_green.ctf");
+    file->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
+
+    // Disallow 1D texture resource/sampler types.
+    test.getShaderDesc()->setAllowTexture1D(false);
+
+    test.setProcessor(file);
+
+    // LUT has just 32 entries and thus requires a larger tolerance due to
+    // index quantization on GPUs.
+    test.setErrorThreshold(1e-4f);
+}
+
 OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_hue_adjust_test)
 {
     // Note: This LUT has 1024 entries so it tests the "small LUT" path.

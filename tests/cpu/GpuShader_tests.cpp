@@ -57,6 +57,7 @@ OCIO_ADD_TEST(GpuShader, generic_shader)
                                                    "lut1Sampler",
                                                    width, height,
                                                    OCIO::GpuShaderDesc::TEXTURE_RGB_CHANNEL,
+                                                   OCIO::GpuShaderDesc::TEXTURE_2D,
                                                    OCIO::INTERP_TETRAHEDRAL,
                                                    &values[0]));
 
@@ -67,9 +68,10 @@ OCIO_ADD_TEST(GpuShader, generic_shader)
         unsigned w = 0;
         unsigned h = 0;
         OCIO::GpuShaderDesc::TextureType t = OCIO::GpuShaderDesc::TEXTURE_RED_CHANNEL;
+        OCIO::GpuShaderDesc::TextureDimensions d = OCIO::GpuShaderDesc::TEXTURE_1D;
         OCIO::Interpolation i = OCIO::INTERP_UNKNOWN;
 
-        OCIO_CHECK_NO_THROW(shaderDesc->getTexture(0, textureName, samplerName, w, h, t, i));
+        OCIO_CHECK_NO_THROW(shaderDesc->getTexture(0, textureName, samplerName, w, h, t, d, i));
 
         OCIO_CHECK_EQUAL(std::string(textureName), "lut1");
         OCIO_CHECK_EQUAL(std::string(samplerName), "lut1Sampler");
@@ -78,7 +80,7 @@ OCIO_ADD_TEST(GpuShader, generic_shader)
         OCIO_CHECK_EQUAL(OCIO::GpuShaderDesc::TEXTURE_RGB_CHANNEL, t);
         OCIO_CHECK_EQUAL(OCIO::INTERP_TETRAHEDRAL, i);
 
-        OCIO_CHECK_THROW_WHAT(shaderDesc->getTexture(1, textureName, samplerName, w, h, t, i),
+        OCIO_CHECK_THROW_WHAT(shaderDesc->getTexture(1, textureName, samplerName, w, h, t, d, i),
                               OCIO::Exception,
                               "1D LUT access error");
 
@@ -98,6 +100,7 @@ OCIO_ADD_TEST(GpuShader, generic_shader)
 
         OCIO_CHECK_NO_THROW(shaderDesc->addTexture("lut2", "lut2Sampler", width, height,
                                                    OCIO::GpuShaderDesc::TEXTURE_RGB_CHANNEL,
+                                                   d,
                                                    OCIO::INTERP_TETRAHEDRAL,
                                                    &values[0]));
 
@@ -659,7 +662,7 @@ float2 ocio_lut1d_0_computePos(float f)
 {
   float dep = clamp(f, 0.0, 1.0) * 131071.;
   float2 retVal;
-  retVal.y = float(int(dep / 4095.));
+  retVal.y = floor(dep / 4095.);
   retVal.x = dep - retVal.y * 4095.;
   retVal.x = (retVal.x + 0.5) / 4096.;
   retVal.y = (retVal.y + 0.5) / 33.;
@@ -792,7 +795,7 @@ float2 ocio_lut1d_2_computePos(float f)
 {
   float dep = clamp(f, 0.0, 1.0) * 131071.;
   float2 retVal;
-  retVal.y = float(int(dep / 4095.));
+  retVal.y = floor(dep / 4095.);
   retVal.x = dep - retVal.y * 4095.;
   retVal.x = (retVal.x + 0.5) / 4096.;
   retVal.y = (retVal.y + 0.5) / 33.;

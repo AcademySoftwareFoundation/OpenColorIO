@@ -252,8 +252,9 @@ void MetalBuilder::allocateAllTextures(unsigned startIndex)
         unsigned width = 0;
         unsigned height = 0;
         GpuShaderDesc::TextureType channel = GpuShaderDesc::TEXTURE_RGB_CHANNEL;
+        GpuShaderCreator::TextureDimensions dimensions;
         Interpolation interpolation = INTERP_LINEAR;
-        m_shaderDesc->getTexture(idx, textureName, samplerName, width, height, channel, interpolation);
+        m_shaderDesc->getTexture(idx, textureName, samplerName, width, height, channel, dimensions, interpolation);
 
         if (!textureName || !*textureName
             || !samplerName || !*samplerName
@@ -275,7 +276,7 @@ void MetalBuilder::allocateAllTextures(unsigned startIndex)
 
         // 3. Keep the texture id & name for the later enabling.
 
-        MTLTextureType type = (height > 1) ? MTLTextureType2D : MTLTextureType1D;
+        MTLTextureType type = (dimensions == GpuShaderDesc::TEXTURE_2D) ? MTLTextureType2D : MTLTextureType1D;
         m_textureIds.push_back(TextureId(texture, textureName, samplerState, samplerName, type));
         currIndex++;
     }
