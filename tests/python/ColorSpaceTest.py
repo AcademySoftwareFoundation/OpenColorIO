@@ -749,7 +749,7 @@ colorspaces:
 
         cfg = OCIO.Config.CreateFromStream(CONFIG)
 
-        cfg.setSearchPath(TEST_DATAFILES_DIR)
+        cfg.addSearchPath(TEST_DATAFILES_DIR)
 
         # Make all color spaces suitable for the heuristics inactive.
         # The heuristics don't look at inactive color spaces.

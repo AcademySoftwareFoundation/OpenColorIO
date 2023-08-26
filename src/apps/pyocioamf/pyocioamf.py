@@ -470,9 +470,14 @@ def build_ctf(amf_path):
     ctf_path = name_ctf_output_file(amf_path)
     write_ctf(gt, config, amf_path, ctf_path, 'none')
 
-if __name__=='__main__':
-    """ Run the script from the command-line. """
+
+def main():
     import sys
     if len( sys.argv ) != 2:
         raise ValueError( "USAGE: python3 amf_to_ocio.py  <AMF_FILE>" )
     build_ctf( sys.argv[1] )
+
+
+if __name__=='__main__':
+    """ Run the script from the command-line. """
+    main()
