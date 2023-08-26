@@ -5662,17 +5662,16 @@ OCIO_ADD_TEST(Config, inactive_color_space)
                                                       OCIO::COLORSPACE_ALL, 1));
 }
 
-OCIO_ADD_TEST(Config, inactive_colorspaces)
+OCIO_ADD_TEST(Config, is_inactive)
 {
     // Using Built-in config to test the getInactiveColorSpace method.
-    const std::string cgConfigName = "cg-config-v1.0.0_aces-v1.3_ocio-v2.1";
+    const std::string cgConfigName = "studio-config-v1.0.0_aces-v1.3_ocio-v2.1";
     OCIO::ConstConfigRcPtr config;
 
     OCIO_CHECK_NO_THROW(
         config = OCIO::Config::CreateFromBuiltinConfig(cgConfigName.c_str())
     );
     OCIO_REQUIRE_ASSERT(config);
-
     OCIO_CHECK_NO_THROW(config->validate());
 
     {
