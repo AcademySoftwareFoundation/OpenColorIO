@@ -59,6 +59,8 @@ const char * OCIO_CONFIG_ARCHIVE_FILE_EXT     = ".ocioz";
 // has the same name as the display the shared view is used by.
 const char * OCIO_VIEW_USE_DISPLAY_NAME       = "<USE_DISPLAY_NAME>";
 
+const char * OCIO_BUILTIN_URI_PREFIX          = "ocio://";
+
 namespace
 {
 
@@ -244,7 +246,7 @@ static constexpr unsigned LastSupportedMajorVersion = OCIO_VERSION_MAJOR;
 
 // For each major version keep the most recent minor.
 static const unsigned int LastSupportedMinorVersion[] = {0, // Version 1
-                                                         2  // Version 2
+                                                         3  // Version 2
                                                          };
 
 } // namespace
@@ -1160,13 +1162,7 @@ ConstConfigRcPtr Config::CreateFromFile(const char * filename)
     const std::string uri = filename;
     if (std::regex_search(uri, match, uriPattern))
     {
-        if (Platform::Strcasecmp(match.str(1).c_str(), "default") == 0)
-        {
-            // Processing ocio://default
-            const BuiltinConfigRegistry & reg = BuiltinConfigRegistry::Get();
-            return CreateFromBuiltinConfig(reg.getDefaultBuiltinConfigName());
-        }
-        return CreateFromBuiltinConfig(match.str(1).c_str());
+        return CreateFromBuiltinConfig(uri.c_str());
     }
 
     std::ifstream ifstream = Platform::CreateInputFileStream(
@@ -1234,11 +1230,31 @@ ConstConfigRcPtr Config::CreateFromConfigIOProxy(ConfigIOProxyRcPtr ciop)
 
 ConstConfigRcPtr Config::CreateFromBuiltinConfig(const char * configName)
 {
+    std::string builtinConfigName = configName;
+    
+    // Normalize the input to the URI format.
+    if (!StringUtils::StartsWith(builtinConfigName, OCIO_BUILTIN_URI_PREFIX))
+    {
+        builtinConfigName = std::string(OCIO_BUILTIN_URI_PREFIX) + builtinConfigName;
+    }
+
+    // Resolve the URI if needed.
+    const std::string uri = ResolveConfigPath(builtinConfigName.c_str());
+
+    // Check if the config path starts with ocio://
+    static const std::regex uriPattern(R"(ocio:\/\/([^\s]+))");
+    std::smatch match;
+    if (std::regex_search(uri, match, uriPattern))
+    {
+        // Store config path without the "ocio://" prefix, if present.
+        builtinConfigName = match.str(1).c_str();
+    }
+
     ConstConfigRcPtr builtinConfig;
     const BuiltinConfigRegistry & reg = BuiltinConfigRegistry::Get();
 
     // getBuiltinConfigByName will throw if config name not found.
-    const char * builtinConfigStr = reg.getBuiltinConfigByName(configName);
+    const char * builtinConfigStr = reg.getBuiltinConfigByName(builtinConfigName.c_str());
     std::istringstream iss;
     iss.str(builtinConfigStr);
     builtinConfig = Config::CreateFromStream(iss);
@@ -5029,6 +5045,12 @@ void Config::Impl::checkVersionConsistency(ConstTransformRcPtr & transform) cons
                 os << "Only config version 2.2 (or higher) can have BuiltinTransform style '"
                    << blt->getStyle() << "'.";
                 throw Exception(os.str().c_str());
+            }
+            if (m_majorVersion == 2 && m_minorVersion < 3
+                    && 0 == Platform::Strcasecmp(blt->getStyle(), "DISPLAY - CIE-XYZ-D65_to_DisplayP3"))
+            {
+                throw Exception("Only config version 2.3 (or higher) can have "
+                                "BuiltinTransform style 'DISPLAY - CIE-XYZ-D65_to_DisplayP3'.");
             }
         }
         else if (ConstCDLTransformRcPtr cdl = DynamicPtrCast<const CDLTransform>(transform))
