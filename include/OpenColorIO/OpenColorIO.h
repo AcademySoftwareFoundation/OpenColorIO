@@ -3156,6 +3156,10 @@ public:
     virtual void setTextureMaxWidth(unsigned maxWidth) = 0;
     virtual unsigned getTextureMaxWidth() const noexcept = 0;
 
+    /// Allow 1D GPU resource type, otherwise always using 2D resources for 1D LUTs.
+    virtual void setAllowTexture1D(bool allowed) = 0;
+    virtual bool getAllowTexture1D() const = 0;
+
     /**
      * To avoid global texture sampler and uniform name clashes always append an increasing index
      * to the resource name.
@@ -3213,9 +3217,17 @@ public:
     };
 
     /**
-     *  Add a 2D texture (1D texture if height equals 1).
-     * 
-     * \note 
+     * Dimension enum used to differentiate between 1D and 2D object/resource types.
+     */
+    enum TextureDimensions : uint8_t {
+        TEXTURE_1D = 1,
+        TEXTURE_2D = 2,
+    };
+
+    /**
+     *  Add a 1D or 2D texture
+     *
+     * \note
      *   The 'values' parameter contains the LUT data which must be used as-is as the dimensions and
      *   origin are hard-coded in the fragment shader program. So, it means one GPU texture per entry.
      **/
@@ -3223,6 +3235,7 @@ public:
                             const char * samplerName,
                             unsigned width, unsigned height,
                             TextureType channel,
+                            TextureDimensions dimensions,
                             Interpolation interpolation,
                             const float * values) = 0;
 
@@ -3474,6 +3487,7 @@ public:
                             unsigned & width,
                             unsigned & height,
                             TextureType & channel,
+                            TextureDimensions & dimensions,
                             Interpolation & interpolation) const = 0;
     virtual void getTextureValues(unsigned index, const float *& values) const = 0;
 

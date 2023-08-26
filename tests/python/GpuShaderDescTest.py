@@ -134,9 +134,11 @@ class GpuShaderDescTest(unittest.TestCase):
         buf = np.array([0,0.1,0.2,0.3,0.4,0.5]).astype(np.float32)
         desc.addTexture('tex', 'sampler', 2, 3,
                         OCIO.GpuShaderDesc.TEXTURE_RED_CHANNEL,
+                        OCIO.GpuShaderDesc.TEXTURE_2D,
                         OCIO.INTERP_DEFAULT, buf)
         desc.addTexture(textureName='tex2', samplerName='sampler2', width=3, height=2,
                         channel=OCIO.GpuShaderDesc.TEXTURE_RED_CHANNEL,
+                        dimensions=OCIO.GpuShaderDesc.TEXTURE_2D,
                         interpolation=OCIO.INTERP_DEFAULT, values=buf)
         textures = desc.getTextures()
         self.assertEqual(len(textures), 2)
