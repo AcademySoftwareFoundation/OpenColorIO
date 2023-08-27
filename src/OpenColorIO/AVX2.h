@@ -234,6 +234,8 @@ struct AVX2RGBAPack<BIT_DEPTH_UINT16>
     }
 };
 
+#if OCIO_USE_F16C
+
 template <>
 struct AVX2RGBAPack<BIT_DEPTH_F16>
 {
@@ -270,6 +272,8 @@ struct AVX2RGBAPack<BIT_DEPTH_F16>
         _mm256_storeu_si256((__m256i*)(out+16), rgba);
     }
 };
+
+#endif
 
 template <>
 struct AVX2RGBAPack<BIT_DEPTH_F32>

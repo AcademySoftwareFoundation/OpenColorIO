@@ -71,11 +71,15 @@ float scale_unsigned<OCIO::BIT_DEPTH_F32>(unsigned i)
     return static_cast<float>(i) * 1.0f/65535.0f;
 }
 
+#if OCIO_USE_F16C
+
 template <>
 half scale_unsigned<OCIO::BIT_DEPTH_F16>(unsigned i)
 {
     return static_cast<half>(1.0f/65535.0f * static_cast<float>(i));
 }
+
+#endif
 
 template<OCIO::BitDepth inBD, OCIO::BitDepth outBD>
 void testConvert_OutBitDepth()
