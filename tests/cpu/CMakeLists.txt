@@ -272,6 +272,7 @@ set(TESTS
     PathUtils_tests.cpp
     Platform_tests.cpp
     Processor_tests.cpp
+    SIMD_tests.cpp
     SSE_tests.cpp
     SSE2_tests.cpp
     AVX_tests.cpp
