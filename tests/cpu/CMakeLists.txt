@@ -77,9 +77,6 @@ function(add_ocio_test NAME SOURCES PRIVATE_INCLUDES)
 
         if(OCIO_USE_SSE2)
             add_test(NAME ${TEST_NAME}_sse2 COMMAND ${TEST_BINARY} --sse2)
-            if(OCIO_USE_F16C)
-                add_test(NAME ${TEST_NAME}_sse2+f16c COMMAND ${TEST_BINARY} --sse2 --f16c)
-            endif()
         endif()
 
         if(OCIO_USE_AVX)

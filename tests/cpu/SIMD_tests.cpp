@@ -20,9 +20,7 @@ OCIO_ADD_TEST_SSE2(packed_uint8_to_float_test)
 OCIO_ADD_TEST_SSE2(packed_uint10_to_f32_test)
 OCIO_ADD_TEST_SSE2(packed_uint12_to_f32_test)
 OCIO_ADD_TEST_SSE2(packed_uint16_to_f32_test)
-#if OCIO_USE_F16C
-    OCIO_ADD_TEST_SSE2(packed_f16_to_f32_test)
-#endif
+OCIO_ADD_TEST_SSE2(packed_f16_to_f32_test)
 OCIO_ADD_TEST_SSE2(packed_nan_inf_test)
 OCIO_ADD_TEST_SSE2(packed_all_test)
 

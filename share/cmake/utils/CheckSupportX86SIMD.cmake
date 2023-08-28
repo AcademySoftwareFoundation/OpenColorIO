@@ -92,7 +92,6 @@ endif()
 
 if(${OCIO_USE_F16C})
     if(NOT MSVC)
-        list(APPEND OCIO_SSE2_ARGS -mf16c)
         list(APPEND OCIO_AVX_ARGS -mf16c)
         list(APPEND OCIO_AVX2_ARGS -mf16c)
     endif()
