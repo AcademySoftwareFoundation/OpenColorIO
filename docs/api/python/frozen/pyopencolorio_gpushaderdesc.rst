@@ -159,10 +159,10 @@
          The 'values' parameter contains the 3D LUT data which must be used as-is as the dimension and origin are hard-coded in the fragment shader program. So, it means one GPU 3D texture per entry.
 
 
-   .. py:method:: GpuShaderDesc.addTexture(self: PyOpenColorIO.GpuShaderDesc, textureName: str, samplerName: str, width: int, height: int, channel: PyOpenColorIO.GpuShaderCreator.TextureType, interpolation: PyOpenColorIO.Interpolation, values: buffer) -> None
+   .. py:method:: GpuShaderDesc.addTexture(self: PyOpenColorIO.GpuShaderDesc, textureName: str, samplerName: str, width: int, height: int, channel: PyOpenColorIO.GpuShaderCreator.TextureType, dimensions:  PyOpenColorIO.GpuShaderCreator.TextureDimensions, interpolation: PyOpenColorIO.Interpolation, values: buffer) -> None
       :module: PyOpenColorIO
 
-      Add a 2D texture (1D texture if height equals 1).
+      Add a 1D or 2D texture.
 
       .. note::
          The 'values' parameter contains the LUT data which must be used as-is as the dimensions and origin are hard-coded in the fragment shader program. So, it means one GPU texture per entry.
