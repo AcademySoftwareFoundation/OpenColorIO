@@ -30,6 +30,11 @@ void bindPyGpuShaderCreator(py::module & m)
             clsGpuShaderCreator, "TextureType", 
             DOC(GpuShaderCreator, TextureType));
 
+    auto enumTextureDimensions =
+        py::enum_<GpuShaderCreator::TextureDimensions>(
+            clsGpuShaderCreator, "TextureDimensions",
+            DOC(GpuShaderCreator, TextureDimensions));
+
     auto clsDynamicPropertyIterator = 
         py::class_<DynamicPropertyIterator>(
             clsGpuShaderCreator, "DynamicPropertyIterator");
@@ -67,8 +72,12 @@ void bindPyGpuShaderCreator(py::module & m)
              DOC(GpuShaderCreator, getTextureMaxWidth))
         .def("setTextureMaxWidth", &GpuShaderCreator::setTextureMaxWidth, "maxWidth"_a, 
              DOC(GpuShaderCreator, setTextureMaxWidth))
-        .def("getNextResourceIndex", &GpuShaderCreator::getNextResourceIndex, 
-             DOC(GpuShaderCreator, getNextResourceIndex))
+        .def("setAllowTexture1D", &GpuShaderCreator::setAllowTexture1D, "allowed"_a,
+            DOC(GpuShaderCreator, setAllowTexture1D))
+        .def("getAllowTexture1D", &GpuShaderCreator::getAllowTexture1D,
+             DOC(GpuShaderCreator, getAllowTexture1D))
+        .def("getNextResourceIndex", &GpuShaderCreator::getNextResourceIndex,
+            DOC(GpuShaderCreator, getNextResourceIndex))
 
         // Dynamic properties.
         .def("hasDynamicProperty", &GpuShaderCreator::hasDynamicProperty, "type"_a, 
@@ -109,6 +118,11 @@ void bindPyGpuShaderCreator(py::module & m)
     enumTextureType
         .value("TEXTURE_RED_CHANNEL", GpuShaderCreator::TEXTURE_RED_CHANNEL)
         .value("TEXTURE_RGB_CHANNEL", GpuShaderCreator::TEXTURE_RGB_CHANNEL)
+        .export_values();
+
+    enumTextureDimensions
+        .value("TEXTURE_1D", GpuShaderCreator::TEXTURE_1D)
+        .value("TEXTURE_2D", GpuShaderCreator::TEXTURE_2D)
         .export_values();
 
     clsDynamicPropertyIterator
