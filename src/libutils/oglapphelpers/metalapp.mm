@@ -294,11 +294,12 @@ vertex VertexOut ColorCorrectionVS(unsigned int vId [[ vertex_id ]])
             const char* samplerName;
             unsigned int width, height;
             GpuShaderCreator::TextureType channel;
+            GpuShaderCreator::TextureDimensions dimensions;
             Interpolation interpolation;
             
-            shaderDesc->getTexture(i, textureName, samplerName, width, height, channel, interpolation);
+            shaderDesc->getTexture(i, textureName, samplerName, width, height, channel, dimensions, interpolation);
             
-            if(height > 1)
+            if(dimensions == GpuShaderDesc::TEXTURE_2D)
             {
                 main << ",    texture2d<float> ";
             }

@@ -93,6 +93,7 @@ set_unless_defined(CMAKE_VISIBILITY_INLINES_HIDDEN YES)
 ###############################################################################
 # Define if SSE2 can be used.
 
+
 message(STATUS "")
 message(STATUS "Checking for SSE2 support...")
 include(CheckSupportSSE2)
@@ -102,11 +103,24 @@ if(NOT HAVE_SSE2)
     set(OCIO_USE_SSE OFF)
 endif(NOT HAVE_SSE2)
 
+if(OCIO_USE_SSE)
+    include(CheckSupportX86SIMD)
+else()
+    set(OCIO_USE_SSE2 OFF)
+    set(OCIO_USE_SSE3 OFF)
+    set(OCIO_USE_SSSE3 OFF)
+    set(OCIO_USE_SSE4 OFF)
+    set(OCIO_USE_SSE42 OFF)
+    set(OCIO_USE_AVX OFF)
+    set(OCIO_USE_AVX2 OFF)
+    set(OCIO_USE_AVX512 OFF)
+    set(OCIO_USE_F16C OFF)
+endif()
 
 ###############################################################################
 # Define RPATH.
 
-if (UNIX AND NOT CMAKE_SKIP_RPATH)
+if (UNIX AND NOT CMAKE_SKIP_RPATH AND NOT CMAKE_INSTALL_RPATH)
     # With the 'usual' install path structure in mind, search from the bin directory
     # (i.e. a binary loading a dynamic library) and then from the current directory
     # (i.e. dynamic library loading another dynamic library).  

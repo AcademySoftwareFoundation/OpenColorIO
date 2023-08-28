@@ -945,6 +945,10 @@ extern OCIOEXPORT const char * OCIO_CONFIG_DEFAULT_NAME;
 extern OCIOEXPORT const char * OCIO_CONFIG_DEFAULT_FILE_EXT;
 extern OCIOEXPORT const char * OCIO_CONFIG_ARCHIVE_FILE_EXT;
 
+// Built-in config feature
+// URI Prefix
+extern OCIOEXPORT const char * OCIO_BUILTIN_URI_PREFIX;
+
 } // namespace OCIO_NAMESPACE
 
 #endif

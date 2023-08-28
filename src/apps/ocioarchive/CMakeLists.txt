@@ -24,6 +24,9 @@ target_link_libraries(ocioarchive
         MINIZIP::minizip-ng
 )
 
+include(StripUtils)
+ocio_strip_binary(ocioarchive)
+
 install(TARGETS ocioarchive
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
