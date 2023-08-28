@@ -392,14 +392,14 @@ Lut3DTetrahedralRenderer::Lut3DTetrahedralRenderer(ConstLut3DOpDataRcPtr & lut)
     }
     #endif
 
-    #if OCIO_USE_AVX
+    #if OCIO_USE_AVX && !defined(__aarch64__)
     if (CPUInfo::instance().hasAVX() && !CPUInfo::instance().AVXSlow())
     {
         m_applyLutFunc = applyTetrahedralAVX;
     }
     #endif
 
-    #if OCIO_USE_AVX2
+    #if OCIO_USE_AVX2 && !defined(__aarch64__)
     if (CPUInfo::instance().hasAVX2() && !CPUInfo::instance().AVX2SlowGather())
     {
         m_applyLutFunc = applyTetrahedralAVX2;
