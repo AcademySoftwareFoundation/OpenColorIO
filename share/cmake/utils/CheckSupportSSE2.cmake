@@ -3,7 +3,7 @@
 
 include(CheckCXXSourceCompiles)
 
-set(_cmake_required_flags_orig "${CMAKE_REQUIRED_FLAGS}")
+set(_cmake_cxx_flags_orig "${CMAKE_CXX_FLAGS}")
 
 if(APPLE AND "${CMAKE_OSX_ARCHITECTURES}" MATCHES "arm64;x86_64" 
           OR "${CMAKE_OSX_ARCHITECTURES}" MATCHES "x86_64;arm64")
@@ -22,7 +22,7 @@ if(MSVC)
         check_cxx_compiler_flag("/arch:SSE2" COMPILER_SUPPORTS_SSE2)
     endif()
 elseif(USE_GCC OR USE_CLANG)
-    set(CMAKE_REQUIRED_FLAGS "-w -msse2")
+    set(CMAKE_CXX_FLAGS "-w -msse2")
 endif()
 
 if (APPLE AND __universal_build)
@@ -59,8 +59,8 @@ else()
     message(STATUS "Performing Test COMPILER_SUPPORTS_SSE2 - Failed")
 endif()
 
-set(CMAKE_REQUIRED_FLAGS "${_cmake_required_flags_orig}")
-unset(_cmake_required_flags_orig)
+set(CMAKE_REQUIRED_FLAGS "${_cmake_cxx_flags_orig}")
+unset(_cmake_cxx_flags_orig)
 
 if(__universal_build)
     set(CMAKE_OSX_ARCHITECTURES "${_cmake_osx_architectures_orig}")

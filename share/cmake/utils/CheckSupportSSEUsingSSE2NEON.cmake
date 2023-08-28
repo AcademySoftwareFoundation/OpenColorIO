@@ -8,8 +8,6 @@ set(_cmake_required_includes_orig "${CMAKE_REQUIRED_INCLUDES}")
 set(_cmake_osx_architectures_orig "${CMAKE_OSX_ARCHITECTURES}")
 
 if(APPLE AND COMPILER_SUPPORTS_ARM_NEON)
-    
-    set(CMAKE_REQUIRED_INCLUDES ${sse2neon_INCLUDE_DIR})
 
     if("${CMAKE_OSX_ARCHITECTURES}" MATCHES "arm64;x86_64" OR
        "${CMAKE_OSX_ARCHITECTURES}" MATCHES "x86_64;arm64")
@@ -45,7 +43,21 @@ if(APPLE AND COMPILER_SUPPORTS_ARM_NEON)
             return (0);
         }
     ")
-    check_cxx_source_compiles("${SSE2NEON_CODE}" COMPILER_SUPPORTS_SSE_WITH_SSE2NEON)
+
+    file(WRITE "${CMAKE_BINARY_DIR}/CMakeTmp/sse2neon_test.cpp" "${SSE2NEON_CODE}")
+
+    message(STATUS "Performing Test COMPILER_SUPPORTS_SSE_WITH_SSE2NEON")
+    try_compile(COMPILER_SUPPORTS_SSE_WITH_SSE2NEON
+      "${CMAKE_BINARY_DIR}/CMakeTmp"
+      "${CMAKE_BINARY_DIR}/CMakeTmp/sse2neon_test.cpp"
+      COMPILE_DEFINITIONS "-I${sse2neon_INCLUDE_DIR}"
+    )
+
+    if(COMPILER_SUPPORTS_SSE_WITH_SSE2NEON)
+        message(STATUS "Performing Test COMPILER_SUPPORTS_SSE_WITH_SSE2NEON - Success")
+    else()
+        message(STATUS "Performing Test COMPILER_SUPPORTS_SSE_WITH_SSE2NEON - Failed")
+    endif()
 endif()
 
 set(CMAKE_REQUIRED_FLAGS "${_cmake_required_flags_orig}")
