@@ -6,7 +6,8 @@
 #define INCLUDED_OCIO_AVX2_H
 
 #include "CPUInfo.h"
-#ifdef OCIO_USE_AVX2
+// The check for arm64 is needed for universal build (x86_64 and arm64) on Apple platform.
+#if OCIO_USE_AVX2 && !defined(__aarch64__)
 
 #include <immintrin.h>
 #include <stdio.h>
@@ -39,6 +40,7 @@ inline __m256 avx2_clamp(__m256 value, const __m256& maxValue)
 }
 
 inline void avx2RGBATranspose_4x4_4x4(__m256 row0, __m256 row1, __m256 row2, __m256 row3,
+            
                                       __m256 &out_r, __m256 &out_g, __m256 &out_b, __m256 &out_a )
 {
     // the rgba transpose result will look this

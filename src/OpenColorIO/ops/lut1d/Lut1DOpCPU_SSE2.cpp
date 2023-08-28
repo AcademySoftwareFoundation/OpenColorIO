@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright Contributors to the OpenColorIO Project.
+
 #include "Lut1DOpCPU_SSE2.h"
 
 #if OCIO_USE_SSE2

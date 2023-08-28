@@ -1,6 +1,9 @@
-#include "Lut1DOpCPU_AVX.h"
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright Contributors to the OpenColorIO Project.
 
-#if OCIO_USE_AVX
+#include "Lut1DOpCPU_AVX.h"
+// The check for arm64 is needed for universal build (x86_64 and arm64) on Apple platform.
+#if OCIO_USE_AVX && !defined(__aarch64__)
 
 #include <immintrin.h>
 #include <string.h>
