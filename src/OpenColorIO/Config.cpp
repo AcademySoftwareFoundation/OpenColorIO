@@ -4572,7 +4572,7 @@ ConstProcessorRcPtr Config::GetProcessorFromConfigs(const ConstContextRcPtr & sr
     }
 
     auto p2 = dstConfig->getProcessor(dstContext, dstExCs, dstColorSpace);
-    if (!p1)
+    if (!p2)
     {
         throw Exception("Can't create the processor for the destination config "
             "and the destination color space.");
@@ -4586,6 +4586,147 @@ ConstProcessorRcPtr Config::GetProcessorFromConfigs(const ConstContextRcPtr & sr
     // better match the semantics of how data spaces are handled.
     if (!srcColorSpace->isData() && !dstColorSpace->isData())
     {
+        processor->getImpl()->concatenate(p1, p2);
+    }
+    return processor;
+}
+
+ConstProcessorRcPtr Config::GetProcessorFromConfigs(const ConstConfigRcPtr & srcConfig,
+                                                    const char * srcName,
+                                                    const ConstConfigRcPtr & dstConfig,
+                                                    const char * dstDisplay,
+                                                    const char * dstView,
+                                                    TransformDirection direction)
+{
+    return GetProcessorFromConfigs(srcConfig->getCurrentContext(), srcConfig, srcName,
+                                   dstConfig->getCurrentContext(), dstConfig, dstDisplay, dstView, direction);
+}
+
+ConstProcessorRcPtr Config::GetProcessorFromConfigs(const ConstContextRcPtr & srcContext,
+                                                    const ConstConfigRcPtr & srcConfig,
+                                                    const char * srcName,
+                                                    const ConstContextRcPtr & dstContext,
+                                                    const ConstConfigRcPtr & dstConfig,
+                                                    const char * dstDisplay,
+                                                    const char * dstView,
+                                                    TransformDirection direction)
+{
+    ConstColorSpaceRcPtr srcColorSpace = srcConfig->getColorSpace(srcName);
+    if (!srcColorSpace)
+    {
+        std::ostringstream os;
+        os << "Could not find source color space '" << srcName << "'.";
+        throw Exception(os.str().c_str());
+    }
+
+    const bool sceneReferred = (srcColorSpace->getReferenceSpaceType() == REFERENCE_SPACE_SCENE);
+    const char* exchangeRoleName = sceneReferred ? ROLE_INTERCHANGE_SCENE : ROLE_INTERCHANGE_DISPLAY;
+    const char* srcExName = LookupRole(srcConfig->getImpl()->m_roles, exchangeRoleName);
+    if (!srcExName || !*srcExName)
+    {
+        std::ostringstream os;
+        os << "The role '" << exchangeRoleName << "' is missing in the source config.";
+        throw Exception(os.str().c_str());
+    }
+    ConstColorSpaceRcPtr srcExCs = srcConfig->getColorSpace(srcExName);
+    if (!srcExCs)
+    {
+        std::ostringstream os;
+        os << "The role '" << exchangeRoleName << "' refers to color space '" << srcExName;
+        os << "' that is missing in the source config.";
+        throw Exception(os.str().c_str());
+    }
+
+    const char* dstExName = LookupRole(dstConfig->getImpl()->m_roles, exchangeRoleName);
+    if (!dstExName || !*dstExName)
+    {
+        std::ostringstream os;
+        os << "The role '" << exchangeRoleName << "' is missing in the destination config.";
+        throw Exception(os.str().c_str());
+    }
+    ConstColorSpaceRcPtr dstExCs = dstConfig->getColorSpace(dstExName);
+    if (!dstExCs)
+    {
+        std::ostringstream os;
+        os << "The role '" << exchangeRoleName << "' refers to color space '" << dstExName;
+        os << "' that is missing in the destination config.";
+        throw Exception(os.str().c_str());
+    }
+
+    return GetProcessorFromConfigs(srcContext, srcConfig, srcName, srcExName,
+                                   dstContext, dstConfig, dstDisplay, dstView, dstExName, direction);
+}
+
+ConstProcessorRcPtr Config::GetProcessorFromConfigs(const ConstConfigRcPtr& srcConfig,
+                                                    const char * srcName,
+                                                    const char * srcInterchangeName,
+                                                    const ConstConfigRcPtr & dstConfig,
+                                                    const char * dstDisplay,
+                                                    const char * dstView,
+                                                    const char* dstInterchangeName,
+                                                    TransformDirection direction)
+{
+    return GetProcessorFromConfigs(srcConfig->getCurrentContext(), srcConfig, srcName, srcInterchangeName,
+                                   dstConfig->getCurrentContext(), dstConfig, dstDisplay, dstView, dstInterchangeName, direction);
+}
+
+ConstProcessorRcPtr Config::GetProcessorFromConfigs(const ConstContextRcPtr & srcContext,
+                                                    const ConstConfigRcPtr & srcConfig,
+                                                    const char * srcName,
+                                                    const char * srcInterchangeName,
+                                                    const ConstContextRcPtr & dstContext,
+                                                    const ConstConfigRcPtr & dstConfig,
+                                                    const char * dstDisplay,
+                                                    const char * dstView,
+                                                    const char * dstInterchangeName,
+                                                    TransformDirection direction)
+{
+    ConstColorSpaceRcPtr srcColorSpace = srcConfig->getColorSpace(srcName);
+    if (!srcColorSpace)
+    {
+        std::ostringstream os;
+        os << "Could not find source color space '" << srcName << "'.";
+        throw Exception(os.str().c_str());
+    }
+
+    ConstColorSpaceRcPtr srcExCs = srcConfig->getColorSpace(srcInterchangeName);
+    if (!srcExCs)
+    {
+        std::ostringstream os;
+        os << "Could not find source interchange color space '" << srcInterchangeName << "'.";
+        throw Exception(os.str().c_str());
+    }
+
+    if (direction == TRANSFORM_DIR_INVERSE)
+    {
+        std::swap(srcColorSpace, srcExCs);
+    }
+    auto p1 = srcConfig->getProcessor(srcContext, srcColorSpace, srcExCs);
+    if (!p1)
+    {
+        throw Exception("Can't create the processor for the source config and "
+            "the source color space.");
+    }
+
+    auto p2 = dstConfig->getProcessor(dstContext, dstInterchangeName, dstDisplay, dstView, direction);
+    if (!p2)
+    {
+        throw Exception("Can't create the processor for the destination config "
+            "and the destination color space.");
+    }
+
+    ProcessorRcPtr processor = Processor::Create();
+    processor->getImpl()->setProcessorCacheFlags(srcConfig->getImpl()->m_cacheFlags);
+
+    // If the source color spaces is a data space, its corresponding processor
+    // will be empty, but need to make sure the entire result is also empty to
+    // better match the semantics of how data spaces are handled.
+    if (!srcColorSpace->isData())
+    {
+        if (direction == TRANSFORM_DIR_INVERSE)
+        {
+            std::swap(p1, p2);
+        }
         processor->getImpl()->concatenate(p1, p2);
     }
     return processor;
