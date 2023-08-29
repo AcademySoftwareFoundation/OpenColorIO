@@ -4,7 +4,6 @@
 #include "OCIODisplayView.h"
 #include "OCIOProcessor.h"
 #include "OCIOUtils.h"
-#include "OCIOUtils.h"
 
 namespace OCIO = OCIO_NAMESPACE;
 

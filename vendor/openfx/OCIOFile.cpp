@@ -18,18 +18,18 @@ OCIOFile::OCIOFile(OfxImageEffectHandle handle)
     : ImageEffect(handle)
     , dstClip_(0)
     , srcClip_(0)
-    , srcCsNameParam_(0)
+    , srcPathNameParam_(0)
     , inverseParam_(0)
 {
     dstClip_ = fetchClip(kOfxImageEffectOutputClipName);
     srcClip_ = fetchClip(kOfxImageEffectSimpleSourceClipName);
 
-    srcCsNameParam_ = fetchChoiceParam("src_cs");
+    srcPathNameParam_ = fetchChoiceParam("src_path");
 
     inverseParam_ = fetchBooleanParam("inverse");
 
     // Handle missing config values
-    restoreChoiceParamOption(*this, "src_cs", PLUGIN_TYPE);
+    restoreChoiceParamOption(*this, "src_path", PLUGIN_TYPE);
 
     fetchContextParams(*this, contextParams_);
 }
@@ -41,7 +41,7 @@ void OCIOFile::render(const OFX::RenderArguments& args)
     std::unique_ptr<OFX::Image> src(srcClip_->fetchImage(args.time));
 
     // Get transform parameters
-    std::string srcCsName = getChoiceParamOption(srcCsNameParam_);
+    std::string srcFileName = getChoiceParamOption(srcPathNameParam_);
   
     bool inverse = inverseParam_->getValue();
 
@@ -50,7 +50,7 @@ void OCIOFile::render(const OFX::RenderArguments& args)
 
     // Build transform
     OCIO::FileTransformRcPtr tr = OCIO::FileTransform::Create();
-    tr->setSrc(srcCsName.c_str());
+    tr->setSrc(srcFileName.c_str());
 
     // Setup and apply processor
     OCIOProcessor proc(*this);
@@ -59,7 +59,7 @@ void OCIOFile::render(const OFX::RenderArguments& args)
     proc.setSrcImg(src.get());
     proc.setRenderWindow(args.renderWindow);
     proc.setTransform(context, tr, (inverse ? OCIO::TRANSFORM_DIR_INVERSE
-        : OCIO::TRANSFORM_DIR_FORWARD));
+                                            : OCIO::TRANSFORM_DIR_FORWARD));
 
     proc.process();
 }
@@ -68,17 +68,11 @@ bool OCIOFile::isIdentity(const OFX::IsIdentityArguments& args,
     OFX::Clip*& identityClip,
     double& identityTime)
 {
-    std::string srcCsName = getChoiceParamOption(srcCsNameParam_);
-    OCIO::ConstColorSpaceRcPtr srcCs;
-
-    if (!srcCsName.empty())
-    {
-        OCIO::ConstConfigRcPtr config = getOCIOConfig();
-        srcCs = config->getColorSpace(srcCsName.c_str());
-    }
+    std::string srcPathName = getChoiceParamOption(srcPathNameParam_);
+    
 
     // Is processing needed?
-    if (!srcCs || srcCs->isData())
+    if (srcPathName.empty())
     {
         identityClip = srcClip_;
         identityTime = args.time;
@@ -91,7 +85,7 @@ bool OCIOFile::isIdentity(const OFX::IsIdentityArguments& args,
 void OCIOFile::changedParam(const OFX::InstanceChangedArgs& /*args*/,
     const std::string& paramName)
 {
-    if (paramName == "src_cs")
+    if (paramName == "src_path")
     {
         // Store config values
         choiceParamChanged(*this, paramName);
@@ -118,9 +112,9 @@ void OCIOFileFactory::describeInContext(OFX::ImageEffectDescriptor& desc,
 
     // Src color space
     defineCsNameParam(desc, page,
-        "src_cs",
-        "Source Color Space",
-        "Source color space name",
+        "src_path",
+        "Source File Path",
+        "Source file path name",
         0);
 
     // Inverse
