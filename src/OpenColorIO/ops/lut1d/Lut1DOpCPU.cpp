@@ -15,6 +15,11 @@
 #include "Platform.h"
 #include "SSE.h"
 
+#include "CPUInfo.h"
+#include "Lut1DOpCPU_SSE2.h"
+#include "Lut1DOpCPU_AVX.h"
+#include "Lut1DOpCPU_AVX2.h"
+
 
 #define L_ADJUST(val) \
     (T)((isOutInteger) ? Clamp((val)+0.5f, outMin,  outMax) : SanitizeFloat(val))
@@ -96,6 +101,8 @@ protected:
 
     float m_step = 1.0f;
     float m_dimMinusOne = 0.0f;
+
+    Lut1DOpCPUApplyFunc *m_applyLutFunc = nullptr;
 
 private:
     BaseLut1DRenderer() = delete;
@@ -270,6 +277,27 @@ BaseLut1DRenderer<inBD, outBD>::BaseLut1DRenderer(ConstLut1DOpDataRcPtr & lut)
 {
     static_assert(inBD!=BIT_DEPTH_UINT32 && inBD!=BIT_DEPTH_UINT14, "Unsupported bit depth.");
     update(lut);
+
+#if OCIO_USE_SSE2
+    if (CPUInfo::instance().hasSSE2())
+    {
+        m_applyLutFunc = SSE2GetLut1DApplyFunc(inBD, outBD);
+    }
+#endif
+
+#if OCIO_USE_AVX
+    if (CPUInfo::instance().hasAVX())
+    {
+        m_applyLutFunc = AVXGetLut1DApplyFunc(inBD, outBD);
+    }
+#endif
+
+#if OCIO_USE_AVX2
+    if (CPUInfo::instance().hasAVX2() && !CPUInfo::instance().AVX2SlowGather())
+    {
+        m_applyLutFunc = AVX2GetLut1DApplyFunc(inBD, outBD);
+    }
+#endif
 }
 
 template<BitDepth inBD, BitDepth outBD>
@@ -280,6 +308,27 @@ BaseLut1DRenderer<inBD, outBD>::BaseLut1DRenderer(ConstLut1DOpDataRcPtr & lut, B
 {
     static_assert(inBD!=BIT_DEPTH_UINT32 && inBD!=BIT_DEPTH_UINT14, "Unsupported bit depth.");
     update(lut);
+
+#if OCIO_USE_SSE2
+    if (CPUInfo::instance().hasSSE2())
+    {
+        m_applyLutFunc = SSE2GetLut1DApplyFunc(inBD, m_outBitDepth);
+    }
+#endif
+
+#if OCIO_USE_AVX
+    if (CPUInfo::instance().hasAVX() && !CPUInfo::instance().AVXSlow())
+    {
+        m_applyLutFunc = AVXGetLut1DApplyFunc(inBD, m_outBitDepth);
+    }
+#endif
+
+#if OCIO_USE_AVX2
+    if (CPUInfo::instance().hasAVX2() && !CPUInfo::instance().AVX2SlowGather())
+    {
+        m_applyLutFunc = AVX2GetLut1DApplyFunc(inBD, m_outBitDepth);
+    }
+#endif
 }
 
 template<BitDepth inBD, BitDepth outBD>
@@ -592,45 +641,21 @@ void Lut1DRenderer<inBD, outBD>::apply(const void * inImg, void * outImg, long n
             out += 4;
         }
     }
+    else if (this->m_applyLutFunc)
+    {
+        const float * lutR = (const float *)this->m_tmpLutR;
+        const float * lutG = (const float *)this->m_tmpLutG;
+        const float * lutB = (const float *)this->m_tmpLutB;
+        this->m_applyLutFunc(lutR, lutG, lutB, this->m_dim, inImg, outImg, numPixels);
+    }
     else  // Need to interpolate rather than simply lookup.
     {
         const float * lutR = (const float *)this->m_tmpLutR;
         const float * lutG = (const float *)this->m_tmpLutG;
         const float * lutB = (const float *)this->m_tmpLutB;
 
-#ifdef USE_SSE
-        __m128 step = _mm_set_ps(1.0f, this->m_step, this->m_step, this->m_step);
-        __m128 dimMinusOne = _mm_set1_ps(this->m_dimMinusOne);
-#endif
-
         for(long i=0; i<numPixels; ++i)
         {
-#ifdef USE_SSE
-            __m128 idx
-                = _mm_mul_ps(_mm_set_ps(in[3], in[2], in[1], in[0]), step);
-
-            // _mm_max_ps => NaNs become 0
-            idx = _mm_min_ps(_mm_max_ps(idx, EZERO), dimMinusOne);
-
-            // zero < std::floor(idx) < maxIdx
-            // SSE => zero < truncate(idx) < maxIdx
-            //
-            __m128 lIdx = _mm_cvtepi32_ps(_mm_cvttps_epi32(idx));
-
-            // zero < std::ceil(idx) < maxIdx
-            // SSE => (lowIdx (already truncated) + 1) < maxIdx
-            // then clamp to prevent hIdx from falling off the end
-            // of the LUT
-            __m128 hIdx = _mm_min_ps(_mm_add_ps(lIdx, EONE), dimMinusOne);
-
-            // Computing delta relative to high rather than lowIdx
-            // to save computing (1-delta) below.
-            __m128 d = _mm_sub_ps(hIdx, idx);
-
-            OCIO_ALIGN(float delta[4]);   _mm_store_ps(delta, d);
-            OCIO_ALIGN(float lowIdx[4]);  _mm_store_ps(lowIdx, lIdx);
-            OCIO_ALIGN(float highIdx[4]); _mm_store_ps(highIdx, hIdx);
-#else
             float idx[3];
             idx[0] = this->m_step * in[0];
             idx[1] = this->m_step * in[1];
@@ -662,7 +687,6 @@ void Lut1DRenderer<inBD, outBD>::apply(const void * inImg, void * outImg, long n
             delta[1] = (float)highIdx[1] - idx[1];
             delta[2] = (float)highIdx[2] - idx[2];
 
-#endif
             // Since fraction is in the domain [0, 1), interpolate using 1-fraction
             // in order to avoid cases like -/+Inf * 0. Therefore we never multiply by 0 and
             // thus handle the case where A or B is infinity and return infinity rather than

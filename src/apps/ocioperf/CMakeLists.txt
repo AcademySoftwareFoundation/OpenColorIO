@@ -19,6 +19,9 @@ target_link_libraries(ocioperf
         utils::strings
 )
 
+include(StripUtils)
+ocio_strip_binary(ocioperf)
+
 install(TARGETS ocioperf
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )

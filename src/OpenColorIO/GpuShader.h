@@ -29,6 +29,9 @@ public:
     unsigned getTextureMaxWidth() const noexcept override;
     void setTextureMaxWidth(unsigned maxWidth) override;
 
+    bool getAllowTexture1D() const noexcept override;
+    void setAllowTexture1D(bool allowed) override;
+
     // Accessors to the uniforms
     //
     unsigned getNumUniforms() const noexcept override;
@@ -47,9 +50,10 @@ public:
     //
     unsigned getNumTextures() const noexcept override;
     void addTexture(const char * textureName,
-                    const char * samplerNName,
+                    const char * samplerName,
                     unsigned width, unsigned height,
                     TextureType channel,
+                    TextureDimensions dimensions,
                     Interpolation interpolation,
                     const float * values) override;
     void getTexture(unsigned index,
@@ -57,6 +61,7 @@ public:
                     const char *& samplerName,
                     unsigned & width, unsigned & height,
                     TextureType & channel,
+                    TextureDimensions & dimensions,
                     Interpolation & interpolation) const override;
     void getTextureValues(unsigned index, const float *& values) const override;
 
