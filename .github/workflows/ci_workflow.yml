@@ -325,7 +325,7 @@ jobs:
         build: [1, 2, 3, 4]
         include:
           - build: 5
-            arch-type: "x86_64;arm64"
+            arch-type: "x86_64"
             build-type: Release
             build-shared: 'ON'
             build-docs: 'OFF'
@@ -335,6 +335,7 @@ jobs:
             use-oiio: 'ON'
             cxx-standard: 17
             python-version: '3.11'
+          # Keeping one universal build
           - build: 4
             arch-type: "x86_64;arm64"
             build-type: Release
@@ -347,7 +348,7 @@ jobs:
             cxx-standard: 11
             python-version: '3.10'
           - build: 3
-            arch-type: "x86_64;arm64"
+            arch-type: "x86_64"
             build-type: Release
             build-shared: 'ON'
             build-docs: 'ON'
@@ -358,7 +359,7 @@ jobs:
             cxx-standard: 11
             python-version: '3.10'
           - build: 2
-            arch-type: "x86_64;arm64"
+            arch-type: "x86_64"
             build-type: Debug
             build-shared: 'ON'
             build-docs: 'OFF'
@@ -369,7 +370,7 @@ jobs:
             cxx-standard: 11
             python-version: '3.9'
           - build: 1
-            arch-type: "x86_64;arm64"
+            arch-type: "x86_64"
             build-type: Release
             build-shared: 'OFF'
             build-docs: 'OFF'

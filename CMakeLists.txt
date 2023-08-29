@@ -26,14 +26,6 @@ endif()
 
 
 ###############################################################################
-# By default, build the library, tests, tools, and Python binding as universal binaries for macOS.
-
-if(APPLE AND (NOT DEFINED CMAKE_OSX_ARCHITECTURES OR CMAKE_OSX_ARCHITECTURES STREQUAL ""))
-    set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64" CACHE STRING "Default OS X architectures" FORCE)
-endif()
-
-
-###############################################################################
 # Project definition.
 
 project(OpenColorIO 
