@@ -22,6 +22,9 @@ target_link_libraries(ociocheck
         OpenColorIO
 )
 
+include(StripUtils)
+ocio_strip_binary(ociocheck)
+
 install(TARGETS ociocheck
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )

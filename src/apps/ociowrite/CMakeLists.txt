@@ -18,6 +18,9 @@ target_link_libraries(ociowrite
         OpenColorIO
 )
 
+include(StripUtils)
+ocio_strip_binary(ociowrite)
+
 install(TARGETS ociowrite
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )

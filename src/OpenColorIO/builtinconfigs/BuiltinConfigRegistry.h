@@ -94,14 +94,9 @@ public:
     bool isBuiltinConfigRecommended(size_t configIndex) const override;
 
     /// Get the default recommended built-in config.
-    /// Throws for illegal index.
     const char * getDefaultBuiltinConfigName() const override;
-
-    /// Set the default built-in config.
-    void setDefaultBuiltinConfig(const char * configName);
 private:
     BuiltinConfigs m_builtinConfigs;
-    std::string m_defaultBuiltinConfigName;
 };
 
 } // namespace OCIO_NAMESPACE
