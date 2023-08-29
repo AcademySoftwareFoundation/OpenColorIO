@@ -7,3 +7,8 @@
 constexpr char STUDIO_CONFIG_V100_ACES_V13_OCIO_V21[] = {
      @studio-config-v1.0.0_aces-v1.3_ocio-v2.1@ 
 };
+
+constexpr char STUDIO_CONFIG_V200_ACES_V13_OCIO_V23[] = {
+     @studio-config-v2.0.0_aces-v1.3_ocio-v2.3@ 
+};
+

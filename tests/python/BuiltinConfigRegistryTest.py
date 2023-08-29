@@ -104,15 +104,15 @@ class BuiltinConfigRegistryTest(unittest.TestCase):
         # Config specific tests
 
         # Test number of configs.
-        self.assertEqual(len(self.REGISTRY), 2)
+        self.assertEqual(len(self.REGISTRY), 4)
 
         # Test for the default built-in config.
         self.assertEqual(
             self.REGISTRY.getDefaultBuiltinConfigName(),
-            "cg-config-v1.0.0_aces-v1.3_ocio-v2.1"
+            "cg-config-v2.0.0_aces-v1.3_ocio-v2.3"
         )
 
-        # Test the CG config.
+        # Test the CG configs.
         # Name
         self.assertEqual(values[0][0], "cg-config-v1.0.0_aces-v1.3_ocio-v2.1")
         # UI name
@@ -121,18 +121,39 @@ class BuiltinConfigRegistryTest(unittest.TestCase):
             ("Academy Color Encoding System - CG Config [COLORSPACES v1.0.0] [ACES v1.3] "
             "[OCIO v2.1]"))
         # isRecommended
-        self.assertEqual(values[0][2], True)
+        self.assertEqual(values[0][2], False)
 
-        # Test the Studio config.
         # Name
-        self.assertEqual(values[1][0], "studio-config-v1.0.0_aces-v1.3_ocio-v2.1")
+        self.assertEqual(values[1][0], "cg-config-v2.0.0_aces-v1.3_ocio-v2.3")
         # UI name
         self.assertEqual(
             values[1][1], 
+            ("Academy Color Encoding System - CG Config [COLORSPACES v2.0.0] [ACES v1.3] "
+            "[OCIO v2.3]"))
+        # isRecommended
+        self.assertEqual(values[1][2], True)
+
+        # Test the Studio configs
+        # Name
+        self.assertEqual(values[2][0], "studio-config-v1.0.0_aces-v1.3_ocio-v2.1")
+        # UI name
+        self.assertEqual(
+            values[2][1], 
             ("Academy Color Encoding System - Studio Config [COLORSPACES v1.0.0] [ACES v1.3] "
             "[OCIO v2.1]"))
         # isRecommended
+        self.assertEqual(values[2][2], False)
+
+        # Name
+        self.assertEqual(values[3][0], "studio-config-v2.0.0_aces-v1.3_ocio-v2.3")
+        # UI name
+        self.assertEqual(
+            values[3][1], 
+            ("Academy Color Encoding System - Studio Config [COLORSPACES v2.0.0] [ACES v1.3] "
+            "[OCIO v2.3]"))
+        # isRecommended
         self.assertEqual(values[1][2], True)
+
 
     def test_multi_reference(self):
         # Registry is a singleton. Make sure multiple Python 
