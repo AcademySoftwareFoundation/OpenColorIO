@@ -306,7 +306,7 @@ jobs:
   macos:
     name: 'macOS 11
       <AppleClang 
-       arch=${{ matrix.arch }},
+       arch=${{ matrix.arch-type }},
        config=${{ matrix.build-type }}, 
        shared=${{ matrix.build-shared }}, 
        simd=${{ matrix.use-simd }}, 
