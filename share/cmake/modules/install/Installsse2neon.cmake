@@ -29,7 +29,7 @@ if(NOT sse2neon_POPULATED)
   set(_EXT_DIST_INCLUDE "${CMAKE_BINARY_DIR}/ext/dist/${CMAKE_INSTALL_INCLUDEDIR}")
   file(COPY "${sse2neon_SOURCE_DIR}/sse2neon.h" DESTINATION "${_EXT_DIST_INCLUDE}/sse2neon")
 
-  # sse2neon_INCLUDE_DIR is used internally for CheckSupportSSE2.cmake and to create sse2neon
+  # sse2neon_INCLUDE_DIR is used internally for CheckSupportSSEUsingSSE2NEON.cmake and to create sse2neon
   # target for OCIO.
   set(sse2neon_INCLUDE_DIR "${sse2neon_SOURCE_DIR}")
 

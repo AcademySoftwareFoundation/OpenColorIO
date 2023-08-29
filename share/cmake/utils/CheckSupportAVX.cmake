@@ -3,8 +3,8 @@
 
 set(_cmake_cxx_flags_orig "${CMAKE_CXX_FLAGS}")
 
-if(APPLE AND "${CMAKE_OSX_ARCHITECTURES}" MATCHES "arm64;x86_64" 
-          OR "${CMAKE_OSX_ARCHITECTURES}" MATCHES "x86_64;arm64")
+if(APPLE AND ("${CMAKE_OSX_ARCHITECTURES}" MATCHES "arm64;x86_64" 
+          OR "${CMAKE_OSX_ARCHITECTURES}" MATCHES "x86_64;arm64"))
     set(__universal_build 1)
     set(_cmake_osx_architectures_orig "${CMAKE_OSX_ARCHITECTURES}")
 endif()
@@ -45,7 +45,7 @@ try_compile(COMPILER_SUPPORTS_AVX
 )
 
 if(COMPILER_SUPPORTS_AVX)
-  message(STATUS "Performing Test COMPILER_SUPPORTS_AVX - Success")
+    message(STATUS "Performing Test COMPILER_SUPPORTS_AVX - Success")
 else()
     message(STATUS "Performing Test COMPILER_SUPPORTS_AVX - Failed")
 endif()

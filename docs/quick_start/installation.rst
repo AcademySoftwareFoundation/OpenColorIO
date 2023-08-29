@@ -281,7 +281,7 @@ Here are the most common OCIO-specific CMake options (the default values are sho
 - ``-DOCIO_USE_SIMD=ON`` (Set to OFF to turn off SIMD CPU performance optimizations, such as SSE and NEON)
 - ``-DOCIO_USE_SSE2=ON`` (Set to OFF to turn off SSE2 CPU performance optimizations)
 - ``-DOCIO_USE_SSE3=ON`` (Set to OFF to turn off SSE3 CPU performance optimizations)
-- ``-DOCIO_USE_SSSE2=ON`` (Set to OFF to turn off SSSE3 CPU performance optimizations)
+- ``-DOCIO_USE_SSSE3=ON`` (Set to OFF to turn off SSSE3 CPU performance optimizations)
 - ``-DOCIO_USE_SSE4=ON`` (Set to OFF to turn off SSE4 CPU performance optimizations)
 - ``-DOCIO_USE_SSE42=ON`` (Set to OFF to turn off SSE4.2 CPU performance optimizations)
 - ``-DOCIO_USE_AVX=ON`` (Set to OFF to turn off AVX CPU performance optimizations)

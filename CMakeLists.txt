@@ -254,7 +254,7 @@ endif()
 
 if(OCIO_USE_SIMD AND OCIO_USE_SSE2NEON AND COMPILER_SUPPORTS_ARM_NEON)
     # Install sse2neon. Please note that sse2neon is downloaded during the configure step as it is
-    # needed for CompilerFlags.cmake and CheckSupportSSE2.cmake.
+    # needed for CompilerFlags.cmake and CheckSupportSSEUsingSSE2NEON.cmake.
 
     # Sse2neon is not treated like an imported target. The logic to find sse2neon is here because 
     # a find module is not suitable for sse2neon's use case.
