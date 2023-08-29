@@ -26,7 +26,7 @@ OCIO_ADD_TEST_SSE2(packed_all_test)
 
 #endif
 
-#if OCIO_USE_AVX && !defined(__aarch64__)
+#if OCIO_USE_AVX
 
 #define AVX_CHECK() \
     if (!OCIO::CPUInfo::instance().hasAVX()) throw SkipException()
@@ -51,7 +51,7 @@ OCIO_ADD_TEST_AVX(packed_all_test)
 
 #endif
 
-#if OCIO_USE_AVX2 && !defined(__aarch64__)
+#if OCIO_USE_AVX2
 
 #define AVX2_CHECK() \
     if (!OCIO::CPUInfo::instance().hasAVX2()) throw SkipException()

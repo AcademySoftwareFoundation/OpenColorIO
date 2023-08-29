@@ -17,7 +17,7 @@ typedef __int64  int64_t;
 namespace OCIO_NAMESPACE
 {
 
-#if !defined(__aarch64__) && defined(OCIO_ARCH_X86) // Intel-based processor or Apple Rosetta x86_64.
+#if !defined(__aarch64__) && OCIO_ARCH_X86 // Intel-based processor or Apple Rosetta x86_64.
 
 namespace {
 

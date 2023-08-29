@@ -198,6 +198,7 @@ if ("${CMAKE_SYSTEM_PROCESSOR}" MATCHES "(AMD64|IA64|EM64T|X86|x86_64|i386|i686)
 elseif(APPLE AND "${CMAKE_SYSTEM_PROCESSOR}" MATCHES "arm64" AND "${CMAKE_OSX_ARCHITECTURES}" MATCHES "arm64")
     
     # Apple ARM only build.
+    set(OCIO_ARCH_X86 0)
 
     # OCIO translates the SSE instructions into ARM Neon with the library SSE2NEON.
     set(OCIO_BUILD_ENABLE_OPTIMIZATIONS_SSE ON)
@@ -206,10 +207,10 @@ elseif(APPLE AND "${CMAKE_SYSTEM_PROCESSOR}" MATCHES "arm64" AND "${CMAKE_OSX_AR
     # Turn F16C off since they are x86_64 instructions.
     set(OCIO_BUILD_ENABLE_OPTIMIZATIONS_F16C OFF)
 else()
+    set(OCIO_ARCH_X86 0)
     set(OCIO_BUILD_ENABLE_OPTIMIZATIONS_SSE OFF)
     set(OCIO_BUILD_ENABLE_OPTIMIZATIONS_AVX OFF)
     set(OCIO_BUILD_ENABLE_OPTIMIZATIONS_F16C OFF)
-    set(OCIO_ARCH_X86 0)
 endif()
 
 option(OCIO_USE_SSE2 "Specify whether to enable SSE2 CPU performance optimizations" ${OCIO_BUILD_ENABLE_OPTIMIZATIONS_SSE})

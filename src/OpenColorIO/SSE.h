@@ -6,7 +6,7 @@
 #define INCLUDED_OCIO_SSE_H
 
 #include "CPUInfoConfig.h"
-#if OCIO_USE_SSE2 || OCIO_USE_SSE2NEON
+#if OCIO_USE_SSE2
 
 // Include the appropriate SIMD intrinsics header based on the architecture (Intel vs. ARM).
 #if !defined(__aarch64__)
@@ -31,7 +31,7 @@ namespace OCIO_NAMESPACE
 // it is redefining two of the functions from sse2neon.
 
 #if defined(__aarch64__)
-    #if defined(OCIO_USE_SSE2NEON)
+    #if OCIO_USE_SSE2NEON
         // Using vmaxnmq_f32 and vminnmq_f32 rather than sse2neon's vmaxq_f32 and vminq_f32 due to 
         // NaN handling. This doesn't seem to be significantly slower than the default sse2neon behavior.
 
@@ -39,7 +39,7 @@ namespace OCIO_NAMESPACE
         // a simple (a>b) ? a:b. OCIO sometimes uses this behavior to filter out a possible NaN in the 
         // first argument. The vmaxq/vminq will return a NaN if either input is a NaN, which omits the 
         // filtering behavior. The vmaxnmq/vminnmq (similar to std::fmax/fmin) are not quite the same as 
-        // the Intel _mm_max_ps / _mm_min_ps since they always returns the non-NaN argument 
+        // the Intel _mm_max_ps / _mm_min_ps since they always return the non-NaN argument 
         // (for quiet NaNs, signaling NaNs always get returned), but that's fine for OCIO since a NaN in 
         // the first argument continues to be filtered out.
         static inline __m128 _mm_max_ps(__m128 a, __m128 b)

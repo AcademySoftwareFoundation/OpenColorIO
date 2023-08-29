@@ -10,7 +10,7 @@
 
 typedef void (Lut1DOpCPUApplyFunc)(const float *, const float *, const float *, int, const void *, void *, long);
 
-#if OCIO_USE_AVX2 && !defined(__aarch64__)
+#if OCIO_USE_AVX2
 namespace OCIO_NAMESPACE
 {
 

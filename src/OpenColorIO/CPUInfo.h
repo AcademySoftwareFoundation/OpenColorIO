@@ -36,7 +36,7 @@ namespace OCIO_NAMESPACE
 #define x86_check_flags(cpuext) \
     (OCIO_USE_ ## cpuext && ((flags) & X86_CPU_FLAG_ ## cpuext))
 
-#if !defined(__aarch64__) && defined(OCIO_ARCH_X86) // Intel-based processor or Apple Rosetta x86_64.
+#if !defined(__aarch64__) && OCIO_ARCH_X86 // Intel-based processor or Apple Rosetta x86_64.
 
 struct CPUInfo
 {

@@ -2,8 +2,7 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 #include "Lut3DOpCPU_AVX2.h"
-// The check for arm64 is needed for universal build (x86_64 and arm64) on Apple platform.
-#if OCIO_USE_AVX2 && !defined(__aarch64__)
+#if OCIO_USE_AVX2
 
 #include <immintrin.h>
 #include <string.h>

@@ -8,7 +8,7 @@
 
 #include "CPUInfo.h"
 
-#if OCIO_USE_AVX2 && !defined(__aarch64__)
+#if OCIO_USE_AVX2
 namespace OCIO_NAMESPACE
 {
 
