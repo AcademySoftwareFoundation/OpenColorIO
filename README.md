@@ -72,6 +72,7 @@ Web Resources
 -------------
 
 * Website: <http://opencolorio.org>
+* Documentation: <https://opencolorio.readthedocs.io/en/latest/>
 * Mailing lists:
   * Developer: <ocio-dev@lists.aswf.io>
   * User: <ocio-user@lists.aswf.io>
