@@ -207,6 +207,28 @@ extern OCIOEXPORT ConstConfigRcPtr GetCurrentConfig();
 extern OCIOEXPORT void SetCurrentConfig(const ConstConfigRcPtr & config);
 
 /**
+ * \brief Make a config path forward-compatible by replacing special built-in config names 
+ *        with the current name.
+ * 
+ * Application developers should call this function on any config path they intend to persist 
+ * (e.g., to include in a file saved from a DCC).
+ * 
+ * As the built-in config collection evolves, special names such as "ocio://default" and 
+ * "ocio://studio-config-latest" will point to newer versions of those configs. Therefore, it is 
+ * recommended that application developers not save those strings and instead save the string that 
+ * refers to the current version of that config. That way, it's guaranteed that there will be no 
+ * change of behavior in the future. For example, as of OCIO 2.2, "ocio://default" should be saved
+ * as "ocio://cg-config-v1.0.0_aces-v1.3_ocio-v2.1".
+ * 
+ * Note that there is no validation done on the path. That is left to the application since 
+ * typically the application will load the config before attempting to save its path
+ * and therefore catch, for example, a badly formed URI such as "ocio:default".
+ * 
+ * \return Resolved path if possible. Otherwise, the original path is returned unmodified.
+ */
+extern OCIOEXPORT const char * ResolveConfigPath(const char * originalPath) noexcept;
+
+/**
  * \brief Extract an OCIO Config archive.
  * 
  * Converts an archived config file (.ocioz file) back to its original form as a config file
@@ -298,13 +320,11 @@ public:
     /**
      * \brief Create a configuration using a specific config file.
      * 
-     * Also supports the following OCIO URI format for Built-in configs:
-     *  "ocio://default"    - Default Built-in config.
-     *  "ocio://<CONFIG NAME>" - A specific Built-in config.  For the list of available
-     *  <CONFIG NAME> strings, see \ref Config::CreateFromBuiltinConfig.
+     * Supports the OCIO URI format for Built-in configs.
+     * See \ref Config::CreateFromBuiltinConfig.
      *
-     * Also supports archived configs (.ocioz files).
-     *
+     * Supports archived configs (.ocioz files).
+     * 
      * \throw Exception If the file may not be read or does not parse.
      * \return The Config object.
      */
@@ -342,7 +362,13 @@ public:
     /**
      * \brief Create a configuration using an OCIO built-in config.
      * 
-     * \param configName Built-in config name.
+     * \param configName Built-in config name (with or without the "ocio://" URI prefix).
+     * 
+     * Also supports the following OCIO URI format for Built-in configs:
+     *  "ocio://default"                - Default Built-in config.
+     *  "ocio://cg-config-latest"       - Latest Built-in CG config.
+     *  "ocio://studio-config-latest"   - Latest Built-in Studio config.
+     *  "ocio://<CONFIG NAME>"          - A specific Built-in config.
      * 
      * The available configNames are:
      * 
@@ -1385,6 +1411,50 @@ public:
                                                        const ConstConfigRcPtr & dstConfig,
                                                        const char * dstColorSpaceName,
                                                        const char * dstInterchangeName);
+
+    /**
+     * \brief Get a processor to convert from a color space to a display and view in
+     *      two separate configs.
+     */
+    static ConstProcessorRcPtr GetProcessorFromConfigs(const ConstConfigRcPtr & srcConfig,
+                                                       const char * srcColorSpaceName,
+                                                       const ConstConfigRcPtr & dstConfig,
+                                                       const char * dstDisplay,
+                                                       const char * dstView,
+                                                       TransformDirection direction);
+
+    static ConstProcessorRcPtr GetProcessorFromConfigs(const ConstContextRcPtr & srcContext,
+                                                       const ConstConfigRcPtr & srcConfig,
+                                                       const char * srcColorSpaceName,
+                                                       const ConstContextRcPtr & dstContext,
+                                                       const ConstConfigRcPtr & dstConfig,
+                                                       const char * dstDisplay,
+                                                       const char * dstView,
+                                                       TransformDirection direction);
+
+    /**
+     * The srcInterchangeName and dstInterchangeName must refer to a pair of
+     * color spaces in the two configs that are the same.  A role name may also be used.
+     */
+    static ConstProcessorRcPtr GetProcessorFromConfigs(const ConstConfigRcPtr & srcConfig,
+                                                       const char * srcColorSpaceName,
+                                                       const char * srcInterchangeName,
+                                                       const ConstConfigRcPtr & dstConfig,
+                                                       const char * dstDisplay,
+                                                       const char * dstView,
+                                                       const char * dstInterchangeName,
+                                                       TransformDirection direction);
+
+    static ConstProcessorRcPtr GetProcessorFromConfigs(const ConstContextRcPtr & srcContext,
+                                                       const ConstConfigRcPtr & srcConfig,
+                                                       const char * srcColorSpaceName,
+                                                       const char * srcInterchangeName,
+                                                       const ConstContextRcPtr & dstContext,
+                                                       const ConstConfigRcPtr & dstConfig,
+                                                       const char * dstDisplay,
+                                                       const char * dstView,
+                                                       const char * dstInterchangeName,
+                                                       TransformDirection direction);
 
     /// Get the Processor Cache flags.
     ProcessorCacheFlags getProcessorCacheFlags() const noexcept;
@@ -3130,6 +3200,10 @@ public:
     virtual void setTextureMaxWidth(unsigned maxWidth) = 0;
     virtual unsigned getTextureMaxWidth() const noexcept = 0;
 
+    /// Allow 1D GPU resource type, otherwise always using 2D resources for 1D LUTs.
+    virtual void setAllowTexture1D(bool allowed) = 0;
+    virtual bool getAllowTexture1D() const = 0;
+
     /**
      * To avoid global texture sampler and uniform name clashes always append an increasing index
      * to the resource name.
@@ -3187,9 +3261,17 @@ public:
     };
 
     /**
-     *  Add a 2D texture (1D texture if height equals 1).
-     * 
-     * \note 
+     * Dimension enum used to differentiate between 1D and 2D object/resource types.
+     */
+    enum TextureDimensions : uint8_t {
+        TEXTURE_1D = 1,
+        TEXTURE_2D = 2,
+    };
+
+    /**
+     *  Add a 1D or 2D texture
+     *
+     * \note
      *   The 'values' parameter contains the LUT data which must be used as-is as the dimensions and
      *   origin are hard-coded in the fragment shader program. So, it means one GPU texture per entry.
      **/
@@ -3197,6 +3279,7 @@ public:
                             const char * samplerName,
                             unsigned width, unsigned height,
                             TextureType channel,
+                            TextureDimensions dimensions,
                             Interpolation interpolation,
                             const float * values) = 0;
 
@@ -3448,6 +3531,7 @@ public:
                             unsigned & width,
                             unsigned & height,
                             TextureType & channel,
+                            TextureDimensions & dimensions,
                             Interpolation & interpolation) const = 0;
     virtual void getTextureValues(unsigned index, const float *& values) const = 0;
 
@@ -3680,22 +3764,8 @@ public:
      */
     virtual bool isBuiltinConfigRecommended(size_t configIndex) const = 0;
 
-    /**
-     * @brief Get the default recommended built-in config.
-     * 
-     * Get the name of the built-in config that is currently recommended as the default config 
-     * to use for applications looking for basic color management. 
-     * 
-     * As the built-in config collection evolves, the default config name will change in future
-     * releases. 
-     * 
-     * For backwards compatibility, the name provided here will always work as an argument 
-     * to other methods so that any previous default config may be recovered.
-     * 
-     * Throws if the name is not found.
-     * 
-     * @return Default's built-in config name.
-     */
+    // Return the full forward-compatible name of the default built-in config.
+    // Please use ResolveConfigPath(\"ocio://default\"). This method will be deprecated in OCIO 2.3.
     virtual const char * getDefaultBuiltinConfigName() const = 0;
 protected:
     BuiltinConfigRegistry() = default;

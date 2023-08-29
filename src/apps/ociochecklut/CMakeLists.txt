@@ -30,6 +30,9 @@ target_link_libraries(ociochecklut
         OpenColorIO
 )
 
+include(StripUtils)
+ocio_strip_binary(ociochecklut)
+
 install(TARGETS ociochecklut
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )

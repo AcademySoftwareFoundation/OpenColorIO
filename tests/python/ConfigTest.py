@@ -905,104 +905,85 @@ colorspaces:
         self.assertEqual(0, len(cfg.getVirtualDisplayViews(OCIO.VIEW_SHARED)))
 
     def test_create_builtin_config(self):
-        # ********************************
-        # Testing CG config.
-        # ********************************
 
-        numberOfExpectedColorspaces = 14
-        # Testing CreateFromBuiltinConfig with a known built-in config name.
-        builtinCfgA = OCIO.Config.CreateFromBuiltinConfig("cg-config-v1.0.0_aces-v1.3_ocio-v2.1")
+        def testFromBuiltinConfig(name, numberOfExpectedColorspaces, expectedConfigName):
+            # Testing CreateFromBuiltinConfig with a known built-in config name.
+            builtinCfgA = OCIO.Config.CreateFromBuiltinConfig(name)
 
-        # Mute output related to a bug in the initial CG config where the inactive_colorspaces
-        # list has color spaces that don't exist.
-        log = MuteLogging()
-        with log:
-            builtinCfgA.validate()
+            # Mute output related to a bug in the initial CG config where the inactive_colorspaces
+            # list has color spaces that don't exist.
+            log = MuteLogging()
+            with log:
+                builtinCfgA.validate()
 
-        self.assertEqual(builtinCfgA.getName(), "cg-config-v1.0.0_aces-v1.3_ocio-v2.1")
-        self.assertEqual(len(builtinCfgA.getColorSpaceNames()), numberOfExpectedColorspaces)
+            self.assertEqual(builtinCfgA.getName(), expectedConfigName if expectedConfigName else name)
+            self.assertEqual(len(builtinCfgA.getColorSpaceNames()), numberOfExpectedColorspaces)
 
-        # Testing CreateFromEnv with an known built-in config name using URI Syntax.
-        try:
-            OCIO.SetEnvVariable('OCIO', 'ocio://cg-config-v1.0.0_aces-v1.3_ocio-v2.1')
-            builtinCfgB = OCIO.Config.CreateFromEnv()
+        def testFromEnvAndFromFile(uri, numberOfExpectedColorspaces, expectedConfigName):
+            # Testing CreateFromEnv using URI Syntax.
+            try:
+                OCIO.SetEnvVariable('OCIO', uri)
+                builtinCfgB = OCIO.Config.CreateFromEnv()
+
+                log = MuteLogging()
+                with log:
+                    builtinCfgB.validate()
+
+                self.assertEqual(builtinCfgB.getName(), expectedConfigName)
+                self.assertEqual(len(builtinCfgB.getColorSpaceNames()), numberOfExpectedColorspaces)
+            finally:
+                OCIO.UnsetEnvVariable('OCIO')
+
+            # Testing CreateFromFile using URI Syntax.
+            builtinCfgC = OCIO.Config.CreateFromFile(uri)
 
             log = MuteLogging()
             with log:
-                builtinCfgB.validate()
+                builtinCfgC.validate()
 
-            self.assertEqual(builtinCfgB.getName(), "cg-config-v1.0.0_aces-v1.3_ocio-v2.1")
-            self.assertEqual(len(builtinCfgB.getColorSpaceNames()), numberOfExpectedColorspaces)
-        finally:
-            OCIO.UnsetEnvVariable('OCIO')
+            self.assertEqual(builtinCfgC.getName(), expectedConfigName)
+            self.assertEqual(len(builtinCfgC.getColorSpaceNames()), numberOfExpectedColorspaces)
 
-        # Testing CreateFromFile with an known built-in config name using URI Syntax.
-        builtinCfgC = OCIO.Config.CreateFromFile("ocio://cg-config-v1.0.0_aces-v1.3_ocio-v2.1")
+        uriPrefix = OCIO.OCIO_BUILTIN_URI_PREFIX;
+        cgConfigName = "cg-config-v1.0.0_aces-v1.3_ocio-v2.1"
+        studioConfigName = "studio-config-v1.0.0_aces-v1.3_ocio-v2.1"
+        defaultName = "default"
+        latestCGName = "cg-config-latest"
+        latestStudioName = "studio-config-latest"
 
-        log = MuteLogging()
-        with log:
-            builtinCfgC.validate()
+        nbOfColorspacesForCGConfig = 14
+        nbOfColorspacesForStudioConfig = 39
 
-        self.assertEqual(builtinCfgC.getName(), "cg-config-v1.0.0_aces-v1.3_ocio-v2.1")
-        self.assertEqual(len(builtinCfgC.getColorSpaceNames()), numberOfExpectedColorspaces)
+        # Test that CreateFromFile does not work without ocio:// prefix for built-in config.
+        with self.assertRaises(OCIO.Exception) as cm:
+            OCIO.Config.CreateFromFile(cgConfigName)
 
-        # ********************************
-        # Testing STUDIO config.
-        # ********************************
+        # Test CG config.
+        testFromBuiltinConfig(cgConfigName, nbOfColorspacesForCGConfig, "")
+        testFromEnvAndFromFile(uriPrefix + cgConfigName, nbOfColorspacesForCGConfig, cgConfigName)
 
-        numberOfExpectedColorspaces = 39
-        # Testing CreateFromBuiltinConfig with a known built-in config name.
-        builtinCfgA = OCIO.Config.CreateFromBuiltinConfig("studio-config-v1.0.0_aces-v1.3_ocio-v2.1")
-        builtinCfgA.validate()
-        self.assertEqual(builtinCfgA.getName(), "studio-config-v1.0.0_aces-v1.3_ocio-v2.1")
-        self.assertEqual(len(builtinCfgA.getColorSpaceNames()), numberOfExpectedColorspaces)
+        # Test STUDIO config.
+        testFromBuiltinConfig(studioConfigName, nbOfColorspacesForStudioConfig, "")
+        testFromEnvAndFromFile(uriPrefix + studioConfigName, nbOfColorspacesForStudioConfig, studioConfigName)
 
-        # Testing CreateFromEnv with an known built-in config name using URI Syntax.
-        try:
-            OCIO.SetEnvVariable('OCIO', 'ocio://studio-config-v1.0.0_aces-v1.3_ocio-v2.1')
-            builtinCfgB = OCIO.Config.CreateFromEnv()
-            builtinCfgB.validate()
-            self.assertEqual(builtinCfgB.getName(), "studio-config-v1.0.0_aces-v1.3_ocio-v2.1")
-            self.assertEqual(len(builtinCfgB.getColorSpaceNames()), numberOfExpectedColorspaces)
-        finally:
-            OCIO.UnsetEnvVariable('OCIO')
+        # Test default config.
+        testFromBuiltinConfig(defaultName, nbOfColorspacesForCGConfig, cgConfigName)
+        testFromBuiltinConfig(uriPrefix + defaultName, nbOfColorspacesForCGConfig, cgConfigName)
+        testFromEnvAndFromFile(uriPrefix + defaultName, nbOfColorspacesForCGConfig, cgConfigName)
 
-        # Testing CreateFromFile with an known built-in config name using URI Syntax.
-        builtinCfgC = OCIO.Config.CreateFromFile("ocio://studio-config-v1.0.0_aces-v1.3_ocio-v2.1")
-        builtinCfgC.validate()
-        self.assertEqual(builtinCfgC.getName(), "studio-config-v1.0.0_aces-v1.3_ocio-v2.1")
-        self.assertEqual(len(builtinCfgC.getColorSpaceNames()), numberOfExpectedColorspaces)
+        # Test cg-config-latest.
+        testFromBuiltinConfig(latestCGName, nbOfColorspacesForCGConfig, cgConfigName)
+        testFromBuiltinConfig(uriPrefix + latestCGName, nbOfColorspacesForCGConfig, cgConfigName)
+        testFromEnvAndFromFile(uriPrefix + latestCGName, nbOfColorspacesForCGConfig, cgConfigName)
 
-        # ********************************
-        # Testing default config.
-        # ********************************
-        
-        # Testing CreateFromEnv with the default config using URI Syntax.
-        try:
-            OCIO.SetEnvVariable('OCIO', 'ocio://default')
-            builtinCfgD = OCIO.Config.CreateFromEnv()
+        # Test studio-config-latest.
+        testFromBuiltinConfig(latestStudioName, nbOfColorspacesForStudioConfig, studioConfigName)
+        testFromBuiltinConfig(uriPrefix + latestStudioName, nbOfColorspacesForStudioConfig, studioConfigName)
+        testFromEnvAndFromFile(uriPrefix + latestStudioName, nbOfColorspacesForStudioConfig, studioConfigName)
 
-            log = MuteLogging()
-            with log:
-                builtinCfgD.validate()
-
-            self.assertEqual(builtinCfgD.getName(), "cg-config-v1.0.0_aces-v1.3_ocio-v2.1")
-            self.assertEqual(len(builtinCfgD.getColorSpaceNames()), 14)
-        finally:
-            OCIO.UnsetEnvVariable('OCIO')
-
-        # Testing CreateFromFile with the default config using URI Syntax.
-        builtinCfgE = OCIO.Config.CreateFromFile("ocio://default")
-
-        log = MuteLogging()
-        with log:
-            builtinCfgE.validate()
-        
-        self.assertEqual(builtinCfgE.getName(), "cg-config-v1.0.0_aces-v1.3_ocio-v2.1")
-        self.assertEqual(len(builtinCfgE.getColorSpaceNames()), 14)
 
         # ********************************
-        # Testing some expected failures.
+        # Test some expected failures.
         # ********************************
 
         # Testing CreateFromBuiltinConfig with an unknown built-in config name.
@@ -1209,9 +1190,34 @@ colorspaces:
         processor = config.getProcessor("c1", "c2")
         processor.getDefaultCPUProcessor()
 
+    def test_resolve_config(self):
+        defaultBuiltinConfig = "ocio://cg-config-v1.0.0_aces-v1.3_ocio-v2.1"
+        cgLatestBuiltinConfig = "ocio://cg-config-v1.0.0_aces-v1.3_ocio-v2.1"
+        studioLatestBuiltinConfig = "ocio://studio-config-v1.0.0_aces-v1.3_ocio-v2.1"
+
+        # Testing just a few built-in config path.
+        self.assertEqual(
+            OCIO.ResolveConfigPath("ocio://default"), 
+            defaultBuiltinConfig
+        )
+
+        self.assertEqual(
+            OCIO.ResolveConfigPath("ocio://cg-config-latest"), 
+            cgLatestBuiltinConfig
+        )
+
+        self.assertEqual(
+            OCIO.ResolveConfigPath("ocio://studio-config-latest"), 
+            studioLatestBuiltinConfig
+        )
+
+        self.assertEqual(
+            OCIO.ResolveConfigPath("studio-config-latest.ocio"), 
+            "studio-config-latest.ocio"
+        )
 
     def test_inactive_colorspaces(self):
-      config = OCIO.Config.CreateFromBuiltinConfig("cg-config-v1.0.0_aces-v1.3_ocio-v2.1")
+      config = OCIO.Config.CreateFromBuiltinConfig("studio-config-v1.0.0_aces-v1.3_ocio-v2.1")
       config.validate()
 
       # Test various combinations of input.
@@ -1228,7 +1234,7 @@ colorspaces:
       self.assertTrue(config.isInactiveColorSpace("Rec.1886 Rec.2020 - Display"))
 
     def test_roles(self):
-      config = OCIO.Config.CreateFromBuiltinConfig("cg-config-v1.0.0_aces-v1.3_ocio-v2.1")
+      config = OCIO.Config.CreateFromBuiltinConfig("studio-config-v1.0.0_aces-v1.3_ocio-v2.1")
       config.validate()
 
       # *****************************
@@ -1468,7 +1474,7 @@ class ConfigVirtualDisplayTest(unittest.TestCase):
         cfg.addVirtualDisplaySharedView('sview2')
         with self.assertRaises(OCIO.Exception) as cm:
             cfg.validate()
-        self.assertEqual(str(cm.exception), "Config failed validation. " +
+        self.assertEqual(str(cm.exception), "Config failed view validation. " +
                          "The display 'virtual_display' contains a shared " +
                          "view 'sview2' that is not defined.")
 
@@ -1484,7 +1490,7 @@ class ConfigVirtualDisplayTest(unittest.TestCase):
         cfg.addVirtualDisplayView('Raw1', 'Film', 'raw1')
         with self.assertRaises(OCIO.Exception) as cm:
             cfg.validate()
-        self.assertEqual(str(cm.exception), "Config failed validation. " +
+        self.assertEqual(str(cm.exception), "Config failed display view validation. " +
                          "Display 'virtual_display' has a " +
                          "view 'Raw1' that refers to a color space" +
                          " or a named transform, 'raw1', which is not defined.")
@@ -1495,7 +1501,7 @@ class ConfigVirtualDisplayTest(unittest.TestCase):
         cfg.addVirtualDisplayView('Raw1', 'Film', 'raw1', 'look')
         with self.assertRaises(OCIO.Exception) as cm:
             cfg.validate()
-        self.assertEqual(str(cm.exception), "Config failed validation. " +
+        self.assertEqual(str(cm.exception), "Config failed display view validation. " +
                          "Display 'virtual_display' has a view 'Raw1' that " +
                          "refers to a color space or a named transform, " +
                          "'raw1', which is not defined.")
