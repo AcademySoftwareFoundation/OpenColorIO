@@ -221,7 +221,7 @@ StringUtils::StringVec GetViewNames(const ViewPtrVec & views)
 std::ostringstream GetDisplayViewPrefixErrorMsg(const std::string & display, const View & view)
 {
     std::ostringstream oss;
-    oss << "Config failed validation. ";
+    oss << "Config failed display view validation. ";
     if (display.empty())
     {
         oss << "Shared ";
@@ -711,7 +711,7 @@ public:
         if (viewIt != viewsOfDisplay.end())
         {
             std::ostringstream os;
-            os << "Config failed validation. ";
+            os << "Config failed view validation. ";
             os << "The display '" << display << "' ";
             os << "contains a shared view '" << sharedView;
             os << "' that is already defined as a view.";
@@ -724,7 +724,7 @@ public:
         if (sharedViewIt == m_sharedViews.end())
         {
             std::ostringstream os;
-            os << "Config failed validation. ";
+            os << "Config failed view validation. ";
             os << "The display '" << display << "' ";
             os << "contains a shared view '" << sharedView;
             os << "' that is not defined.";
@@ -742,7 +742,7 @@ public:
                 if (!displayCS)
                 {
                     std::ostringstream os;
-                    os << "Config failed validation. The display '" << display << "' ";
+                    os << "Config failed view validation. The display '" << display << "' ";
                     os << "contains a shared view '" << (*sharedViewIt).m_name;
                     os << "' which does not define a color space and there is "
                           "no color space that matches the display name.";
@@ -752,7 +752,7 @@ public:
                 if (displayCS->getReferenceSpaceType() != REFERENCE_SPACE_DISPLAY)
                 {
                     std::ostringstream os;
-                    os << "Config failed validation. The display '" << display << "' ";
+                    os << "Config failed view validation. The display '" << display << "' ";
                     os << "contains a shared view '" << (*sharedViewIt).m_name;
                     os << "that refers to a color space, '" << display << "', ";
                     os << "that is not a display-referred color space.";
@@ -1416,7 +1416,7 @@ void Config::validate() const
         if (!cs)
         {
             std::ostringstream os;
-            os << "Config failed validation. ";
+            os << "Config failed color space validation. ";
             os << "The color space at index " << i << " is null.";
             getImpl()->m_validationtext = os.str();
             throw Exception(getImpl()->m_validationtext.c_str());
@@ -1429,7 +1429,7 @@ void Config::validate() const
         if (getMajorVersion() >= 2 && ContainsContextVariableToken(name))
         {
             std::ostringstream oss;
-            oss << "Config failed sanitycheck. "
+            oss << "Config failed color space validation. "
                 << "A color space name '"
                 << name
                 << "' cannot contain a context variable reserved token i.e. % or $.";
@@ -1442,7 +1442,7 @@ void Config::validate() const
         if (numAliases && getMajorVersion() < 2)
         {
             std::ostringstream oss;
-            oss << "Config failed sanitycheck. "
+            oss << "Config failed color space validation. "
                 << "Aliases may not be used in a v1 config.  Color space name: '" << name << "'.";
 
             getImpl()->m_validationtext = oss.str();
@@ -1474,7 +1474,7 @@ void Config::validate() const
             if (getMajorVersion() >= 2 && ContainsContextVariableToken(iter->first))
             {
                 std::ostringstream oss;
-                oss << "Config failed sanitycheck. "
+                oss << "Config failed role validation. "
                     << "A role name '"
                     << iter->first
                     << "' cannot contain a context variable reserved token i.e. % or $.";
@@ -1485,7 +1485,7 @@ void Config::validate() const
             if(!getImpl()->hasColorSpace(iter->second.c_str()))
             {
                 std::ostringstream os;
-                os << "Config failed validation. ";
+                os << "Config failed role validation. ";
                 os << "The role '" << iter->first << "' ";
                 os << "refers to a color space, '" << iter->second << "', ";
                 os << "which is not defined.";
@@ -1653,7 +1653,7 @@ void Config::validate() const
         if(views.empty() && sharedViews.empty())
         {
             std::ostringstream os;
-            os << "Config failed validation. ";
+            os << "Config failed display validation. ";
             os << "The display '" << display << "' ";
             os << "does not define any views.";
             getImpl()->m_validationtext = os.str();
@@ -1678,7 +1678,7 @@ void Config::validate() const
     if (numdisplays == 0)
     {
         std::ostringstream os;
-        os << "Config failed validation. ";
+        os << "Config failed display validation. ";
         os << "No displays are specified.";
         getImpl()->m_validationtext = os.str();
         throw Exception(getImpl()->m_validationtext.c_str());
@@ -1811,7 +1811,7 @@ void Config::validate() const
                 if (ContainsContextVariables(name.c_str()))
                 {
                     std::ostringstream oss;
-                    oss << "Config failed sanitycheck. "
+                    oss << "Config failed transform validation. "
                         << "This config references a color space '"
                         << name << "' using an unknown context variable.";
 
@@ -1823,17 +1823,23 @@ void Config::validate() const
                 const char * csname = LookupRole(getImpl()->m_roles, name);
 
                 std::ostringstream os;
-                os << "Config failed validation. ";
+                os << "Config failed transform validation. ";
                 os << "This config references a color space, '";
 
                 if (!csname || !*csname)
                 {
-                    os << name << "', which is not defined.";
-                    getImpl()->m_validationtext = os.str();
-                    throw Exception(getImpl()->m_validationtext.c_str());
+                    // It's not a role, check to see if it's a named transform.
+                    if (!getImpl()->getNamedTransform(name.c_str()))
+                    {
+                        // It's not a color space, a role, or a named transform.
+                        os << name << "', which is not defined.";
+                        getImpl()->m_validationtext = os.str();
+                        throw Exception(getImpl()->m_validationtext.c_str());
+                    }
                 }
                 else if(!getImpl()->hasColorSpace(csname))
                 {
+                    // It's a role, but the color space it points to doesn't exist.
                     os << csname << "' (for role '" << name << "'), which is not defined.";
                     getImpl()->m_validationtext = os.str();
                     throw Exception(getImpl()->m_validationtext.c_str());
@@ -1851,7 +1857,7 @@ void Config::validate() const
         if (!lookName || !*lookName)
         {
             std::ostringstream os;
-            os << "Config failed validation. ";
+            os << "Config failed Look validation. ";
             os << "The look at index '" << i << "' ";
             os << "does not specify a name.";
             getImpl()->m_validationtext = os.str();
@@ -1862,7 +1868,7 @@ void Config::validate() const
         if (!processSpace || !*processSpace)
         {
             std::ostringstream os;
-            os << "Config failed validation. ";
+            os << "Config failed Look validation. ";
             os << "The look '" << lookName << "' ";
             os << "does not specify a process space.";
             getImpl()->m_validationtext = os.str();
@@ -1875,7 +1881,7 @@ void Config::validate() const
             const char * csname = LookupRole(getImpl()->m_roles, processSpace);
 
             std::ostringstream os;
-            os << "Config failed validation. ";
+            os << "Config failed Look validation. ";
             os << "The look '" << lookName << "' ";
             os << "specifies a process color space, '";
 
@@ -1964,14 +1970,14 @@ void Config::validate() const
         if (!files.empty())
         {
             bool foundOne = false;
-            std::string errMsg("Config failed sanitycheck.");
+            std::string errMsg("Config failed search path validation.");
 
             for (int idx = 0; idx < getImpl()->m_context->getNumSearchPaths(); ++idx)
             {
                 const char * path = getImpl()->m_context->getSearchPath(idx);
                 if (!path || !*path)
                 {
-                    errMsg += "  The search_path is empty.";
+                    errMsg += " The search_path must not be an empty string if there are FileTransforms.";
                     continue;
                 }
 
@@ -2000,6 +2006,10 @@ void Config::validate() const
             // After looping over all the search paths, none of them can be successfully resolved.
             if (!foundOne)
             {
+                if (getImpl()->m_context->getNumSearchPaths() == 0)
+                {
+                    errMsg += " The search_path must not be empty if there are FileTransforms.";
+                }
                 getImpl()->m_validationtext = errMsg;
                 throw Exception(errMsg.c_str());
             }
@@ -2015,8 +2025,8 @@ void Config::validate() const
             if (resolvedFile.empty() || ContainsContextVariables(resolvedFile))
             {
                 std::ostringstream oss;
-                oss << "Config failed sanitycheck. ";
-                oss << "The file Transform source cannot be resolved: '";
+                oss << "Config failed validation expanding file transform paths. ";
+                oss << "The file transform source cannot be resolved: '";
                 
                 if (file != resolvedFile)
                 {
@@ -2044,9 +2054,6 @@ void Config::validate() const
     for (const auto & nt : getImpl()->m_allNamedTransforms)
     {
         const char * name = nt->getName();
-
-        // AddColorSpace, addNamedTransform & setRole already check there is not name
-        // conflict.
 
         if (getLook(name))
         {
