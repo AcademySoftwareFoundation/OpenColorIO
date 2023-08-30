@@ -17,13 +17,20 @@ namespace CGCONFIG
 {
 void Register(BuiltinConfigRegistryImpl & registry) noexcept
 {
-    // If a new built-in config is added, do not forget to update the latestCGBuiltinConfigURI 
-    // variable (in BuiltinConfigRegistry.h).
+    // If a new built-in config is added, do not forget to update the LATEST_CG_BUILTIN_CONFIG_URI
+    // variable (in BuiltinConfigRegistry.cpp).
 
     registry.addBuiltin(
         "cg-config-v1.0.0_aces-v1.3_ocio-v2.1",
         "Academy Color Encoding System - CG Config [COLORSPACES v1.0.0] [ACES v1.3] [OCIO v2.1]",
         CG_CONFIG_V100_ACES_V13_OCIO_V21,
+        false
+    );
+
+    registry.addBuiltin(
+        "cg-config-v2.1.0_aces-v1.3_ocio-v2.3",
+        "Academy Color Encoding System - CG Config [COLORSPACES v2.0.0] [ACES v1.3] [OCIO v2.3]",
+        CG_CONFIG_V210_ACES_V13_OCIO_V23,
         true
     );
 }
