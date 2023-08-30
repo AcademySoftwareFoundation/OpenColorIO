@@ -25,6 +25,7 @@ public:
 
     explicit GradingRGBCurveOpCPU(ConstGradingRGBCurveOpDataRcPtr & grgbc);
 
+    bool isDynamic() const override;
     bool hasDynamicProperty(DynamicPropertyType type) const override;
     DynamicPropertyRcPtr getDynamicProperty(DynamicPropertyType type) const override;
 
@@ -62,6 +63,11 @@ GradingRGBCurveOpCPU::GradingRGBCurveOpCPU(ConstGradingRGBCurveOpDataRcPtr & grg
     {
         m_grgbcurve = m_grgbcurve->createEditableCopy();
     }
+}
+
+bool GradingRGBCurveOpCPU::isDynamic() const
+{
+    return m_grgbcurve->isDynamic();
 }
 
 bool GradingRGBCurveOpCPU::hasDynamicProperty(DynamicPropertyType type) const

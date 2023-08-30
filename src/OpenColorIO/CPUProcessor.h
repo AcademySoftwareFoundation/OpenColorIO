@@ -39,6 +39,8 @@ public:
     BitDepth getInputBitDepth() const noexcept { return m_inBitDepth; }
     BitDepth getOutputBitDepth() const noexcept { return m_outBitDepth; }
 
+    bool isDynamic() const noexcept;
+    bool hasDynamicProperty(DynamicPropertyType type) const noexcept;
     DynamicPropertyRcPtr getDynamicProperty(DynamicPropertyType type) const;
 
     void apply(const ImageDesc & imgDesc) const;
