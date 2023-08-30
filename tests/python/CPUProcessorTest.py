@@ -274,6 +274,9 @@ class CPUProcessorTest(unittest.TestCase):
         proc = self.config.getProcessor(tr)
         cpu_proc = proc.getDefaultCPUProcessor()
 
+        self.assertTrue(cpu_proc.isDynamic())
+        self.assertTrue(cpu_proc.hasDynamicProperty(OCIO.DYNAMIC_PROPERTY_EXPOSURE))
+
         # Validate default +0 stops exposure
         self.assertEqual(
             cpu_proc.applyRGB([1.0, 1.0, 1.0]),

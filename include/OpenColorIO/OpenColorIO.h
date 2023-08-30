@@ -2637,6 +2637,10 @@ public:
      * there is one in the CPU processor.
      */
     DynamicPropertyRcPtr getDynamicProperty(DynamicPropertyType type) const;
+    /// True if at least one dynamic property of that type exists.
+    bool hasDynamicProperty(DynamicPropertyType type) const noexcept;
+    /// True if at least one dynamic property of any type exists and is dynamic.
+    bool isDynamic() const noexcept;
 
     /**
      * \brief Apply to an image with any kind of channel ordering while
