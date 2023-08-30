@@ -146,6 +146,51 @@
       Create the default shader description.
 
 
+   .. py:attribute:: GpuShaderDesc.TEXTURE_1D
+      :module: PyOpenColorIO
+      :value: <TextureDimensions.TEXTURE_1D: 1>
+
+
+   .. py:attribute:: GpuShaderDesc.TEXTURE_2D
+      :module: PyOpenColorIO
+      :value: <TextureDimensions.TEXTURE_2D: 2>
+
+
+   .. py:class:: GpuShaderDesc.TextureDimensions
+      :module: PyOpenColorIO
+      :canonical: PyOpenColorIO.GpuShaderCreator.TextureDimensions
+
+      Dimension enum used to differentiate between 1D and 2D object/resource types.
+
+      Members:
+
+        TEXTURE_1D
+
+        TEXTURE_2D
+
+
+      .. py:attribute:: GpuShaderDesc.TextureDimensions.TEXTURE_1D
+         :module: PyOpenColorIO
+         :value: <TextureDimensions.TEXTURE_1D: 1>
+
+
+      .. py:attribute:: GpuShaderDesc.TextureDimensions.TEXTURE_2D
+         :module: PyOpenColorIO
+         :value: <TextureDimensions.TEXTURE_2D: 2>
+
+
+      .. py:method:: GpuShaderDesc.TextureDimensions.__init__(self: PyOpenColorIO.GpuShaderCreator.TextureDimensions, value: int) -> None
+         :module: PyOpenColorIO
+
+
+      .. py:property:: GpuShaderDesc.TextureDimensions.name
+         :module: PyOpenColorIO
+
+
+      .. py:property:: GpuShaderDesc.TextureDimensions.value
+         :module: PyOpenColorIO
+
+
    .. py:method:: GpuShaderDesc.__init__(*args, **kwargs)
       :module: PyOpenColorIO
 
@@ -159,10 +204,10 @@
          The 'values' parameter contains the 3D LUT data which must be used as-is as the dimension and origin are hard-coded in the fragment shader program. So, it means one GPU 3D texture per entry.
 
 
-   .. py:method:: GpuShaderDesc.addTexture(self: PyOpenColorIO.GpuShaderDesc, textureName: str, samplerName: str, width: int, height: int, channel: PyOpenColorIO.GpuShaderCreator.TextureType, interpolation: PyOpenColorIO.Interpolation, values: buffer) -> None
+   .. py:method:: GpuShaderDesc.addTexture(self: PyOpenColorIO.GpuShaderDesc, textureName: str, samplerName: str, width: int, height: int, channel: PyOpenColorIO.GpuShaderCreator.TextureType, dimensions: PyOpenColorIO.GpuShaderCreator.TextureDimensions, interpolation: PyOpenColorIO.Interpolation, values: buffer) -> None
       :module: PyOpenColorIO
 
-      Add a 2D texture (1D texture if height equals 1).
+      Add a 1D or 2D texture
 
       .. note::
          The 'values' parameter contains the LUT data which must be used as-is as the dimensions and origin are hard-coded in the fragment shader program. So, it means one GPU texture per entry.
@@ -218,6 +263,10 @@
 
 
    .. py:method:: GpuShaderDesc.get3DTextures(self: PyOpenColorIO.GpuShaderDesc) -> PyOpenColorIO.GpuShaderDesc.Texture3DIterator
+      :module: PyOpenColorIO
+
+
+   .. py:method:: GpuShaderDesc.getAllowTexture1D(self: PyOpenColorIO.GpuShaderCreator) -> bool
       :module: PyOpenColorIO
 
 
@@ -282,6 +331,12 @@
 
    .. py:method:: GpuShaderDesc.hasDynamicProperty(self: PyOpenColorIO.GpuShaderCreator, type: PyOpenColorIO.DynamicPropertyType) -> bool
       :module: PyOpenColorIO
+
+
+   .. py:method:: GpuShaderDesc.setAllowTexture1D(self: PyOpenColorIO.GpuShaderCreator, allowed: bool) -> None
+      :module: PyOpenColorIO
+
+      Allow 1D GPU resource type, otherwise always using 2D resources for 1D LUTs.
 
 
    .. py:method:: GpuShaderDesc.setFunctionName(self: PyOpenColorIO.GpuShaderCreator, name: str) -> None
@@ -376,6 +431,10 @@
 
 
    .. py:property:: Texture.channel
+      :module: PyOpenColorIO.GpuShaderDesc
+
+
+   .. py:property:: Texture.dimensions
       :module: PyOpenColorIO.GpuShaderDesc
 
 
