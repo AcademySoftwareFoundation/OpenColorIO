@@ -1344,7 +1344,7 @@ OCIO_ADD_TEST(Config, context_variable_with_sanity_check)
 
         OCIO_CHECK_THROW_WHAT(cfg->validate(),
                               OCIO::Exception,
-                              "The file Transform source cannot be resolved: '$CS2'.");
+                              "The file transform source cannot be resolved: '$CS2'.");
         OCIO_CHECK_THROW_WHAT(cfg->getProcessor("cs1", "disp1", "view1", OCIO::TRANSFORM_DIR_FORWARD),
                               OCIO::Exception,
                               "The specified file reference '$CS2' could not be located");
@@ -1356,16 +1356,23 @@ OCIO_ADD_TEST(Config, context_variable_with_sanity_check)
         // Several faulty cases for the 'search_path'.
 
         OCIO_CHECK_NO_THROW(cfg->clearSearchPaths());
+        OCIO_CHECK_THROW_WHAT(cfg->validate(),
+                              OCIO::Exception,
+                              "The search_path must not be empty if there are FileTransforms.");
+
+        OCIO_CHECK_NO_THROW(cfg->clearSearchPaths());
+        // NB: Not sure this is desirable, but setting a nullptr is the same as setting "".
+        // In this case, getNumSearchtPaths == 1, which is potentially confusing.
         OCIO_CHECK_NO_THROW(cfg->setSearchPath(nullptr));
         OCIO_CHECK_THROW_WHAT(cfg->validate(),
                               OCIO::Exception,
-                              "The search_path is empty");
+                              "The search_path must not be an empty string if there are FileTransforms.");
 
         OCIO_CHECK_NO_THROW(cfg->clearSearchPaths());
         OCIO_CHECK_NO_THROW(cfg->setSearchPath(""));
         OCIO_CHECK_THROW_WHAT(cfg->validate(),
                               OCIO::Exception,
-                              "The search_path is empty");
+                              "The search_path must not be an empty string if there are FileTransforms.");
 
         OCIO_CHECK_NO_THROW(cfg->clearSearchPaths());
         OCIO_CHECK_NO_THROW(cfg->setSearchPath("$MYPATH"));
@@ -1441,7 +1448,7 @@ OCIO_ADD_TEST(Config, context_variable_with_colorspacename)
         OCIO_CHECK_NO_THROW(cfg = OCIO::Config::CreateFromStream(iss)->createEditableCopy());
         OCIO_CHECK_THROW_WHAT(cfg->validate(),
                               OCIO::Exception,
-                              "The file Transform source cannot be resolved: '$VAR3'.");
+                              "The file transform source cannot be resolved: '$VAR3'.");
 
         // Set $VAR3 and check again.
 
@@ -5220,7 +5227,7 @@ OCIO_ADD_TEST(Config, remove_color_space)
     // As discussed only validation traps the issue.
     OCIO_CHECK_THROW_WHAT(config->validate(),
                           OCIO::Exception,
-                          "Config failed validation. The role 'default' refers to"\
+                          "Config failed role validation. The role 'default' refers to"\
                           " a color space, 'raw', which is not defined.");
 }
 
@@ -5913,6 +5920,11 @@ roles:
   aces_interchange: aces1
   cie_xyz_d65_interchange: display1
 
+displays:
+  displayname:
+    - !<View> {name: view1, colorspace: displaytest1}
+    - !<View> {name: view2, view_transform: vt1, display_colorspace: display2}
+
 view_transforms:
   - !<ViewTransform>
     name: vt1
@@ -5927,6 +5939,11 @@ colorspaces:
     name: test1
     allocation: uniform
     to_scene_reference: !<MatrixTransform> {offset: [0.01, 0.02, 0.03, 0]}
+
+  - !<ColorSpace>
+    name: displaytest1
+    allocation: uniform
+    to_scene_reference: !<LogTransform> {base: 2}
 
   - !<ColorSpace>
     name: aces1
@@ -6020,7 +6037,6 @@ display_colorspaces:
     OCIO_CHECK_NO_THROW(p = OCIO::Config::GetProcessorFromConfigs(
         config1, "test1", "aces1", config2, "test2", "aces2"));
     OCIO_REQUIRE_ASSERT(p);
-    OCIO_REQUIRE_ASSERT(p);
     group = p->createGroupTransform();
     OCIO_REQUIRE_EQUAL(group->getNumTransforms(), 4);
 
@@ -6028,14 +6044,12 @@ display_colorspaces:
     OCIO_CHECK_NO_THROW(p = OCIO::Config::GetProcessorFromConfigs(
         config1, "test1", OCIO::ROLE_INTERCHANGE_SCENE, config2, "test2", "aces2"));
     OCIO_REQUIRE_ASSERT(p);
-    OCIO_REQUIRE_ASSERT(p);
     group = p->createGroupTransform();
     OCIO_REQUIRE_EQUAL(group->getNumTransforms(), 4);
 
     // Or color space can be specified using role.
     OCIO_CHECK_NO_THROW(p = OCIO::Config::GetProcessorFromConfigs(
         config1, "test1", OCIO::ROLE_INTERCHANGE_SCENE, config2, "test_role", "aces2"));
-    OCIO_REQUIRE_ASSERT(p);
     OCIO_REQUIRE_ASSERT(p);
     group = p->createGroupTransform();
     OCIO_REQUIRE_EQUAL(group->getNumTransforms(), 4);
@@ -6090,6 +6104,67 @@ display_colorspaces:
                           OCIO::Exception,
                           "There is no view transform between the main scene-referred space "
                           "and the display-referred space");
+
+
+    // Using the display-view getters
+    OCIO_CHECK_NO_THROW(p = OCIO::Config::GetProcessorFromConfigs(
+        config2, "test2", "aces2", config1, "displayname", "view1", "aces1", OCIO::TRANSFORM_DIR_FORWARD));
+    OCIO_REQUIRE_ASSERT(p);
+    group = p->createGroupTransform();
+    OCIO_REQUIRE_EQUAL(group->getNumTransforms(), 4);
+    t0 = group->getTransform(0);
+    m0 = OCIO_DYNAMIC_POINTER_CAST<OCIO::MatrixTransform>(t0);
+    OCIO_CHECK_ASSERT(m0);
+    t1 = group->getTransform(1);
+    r1 = OCIO_DYNAMIC_POINTER_CAST<OCIO::RangeTransform>(t1);
+    OCIO_CHECK_ASSERT(r1);
+    t2 = group->getTransform(2);
+    e2 = OCIO_DYNAMIC_POINTER_CAST<OCIO::ExponentTransform>(t2);
+    OCIO_CHECK_ASSERT(e2);
+    t3 = group->getTransform(3);
+    l3 = OCIO_DYNAMIC_POINTER_CAST<OCIO::LogTransform>(t3);
+    OCIO_CHECK_ASSERT(l3);
+
+    // Inverse direction reverses the entire chain
+    OCIO_CHECK_NO_THROW(p = OCIO::Config::GetProcessorFromConfigs(
+        config2, "test2", "aces2", config1, "displayname", "view1", "aces1", OCIO::TRANSFORM_DIR_INVERSE));
+    OCIO_REQUIRE_ASSERT(p);
+    group = p->createGroupTransform();
+    OCIO_REQUIRE_EQUAL(group->getNumTransforms(), 4);
+    t0 = group->getTransform(0);
+    auto l0 = OCIO_DYNAMIC_POINTER_CAST<OCIO::LogTransform>(t0);
+    OCIO_CHECK_ASSERT(l0);
+    t1 = group->getTransform(1);
+    e1 = OCIO_DYNAMIC_POINTER_CAST<OCIO::ExponentTransform>(t1);
+    OCIO_CHECK_ASSERT(e1);
+    t2 = group->getTransform(2);
+    r2 = OCIO_DYNAMIC_POINTER_CAST<OCIO::RangeTransform>(t2);
+    OCIO_CHECK_ASSERT(r2);
+    t3 = group->getTransform(3);
+    m3 = OCIO_DYNAMIC_POINTER_CAST<OCIO::MatrixTransform>(t3);
+    OCIO_CHECK_ASSERT(m3);
+
+    // Implicit interchange spaces, using the view transform
+    OCIO_CHECK_NO_THROW(p = OCIO::Config::GetProcessorFromConfigs(
+        config2, "test2", config1, "displayname", "view2", OCIO::TRANSFORM_DIR_FORWARD));
+    OCIO_REQUIRE_ASSERT(p);
+    group = p->createGroupTransform();
+    OCIO_REQUIRE_EQUAL(group->getNumTransforms(), 5);
+    t0 = group->getTransform(0);
+    m0 = OCIO_DYNAMIC_POINTER_CAST<OCIO::MatrixTransform>(t0);
+    OCIO_CHECK_ASSERT(m0);
+    t1 = group->getTransform(1);
+    r1 = OCIO_DYNAMIC_POINTER_CAST<OCIO::RangeTransform>(t1);
+    OCIO_CHECK_ASSERT(r1);
+    t2 = group->getTransform(2);
+    e2 = OCIO_DYNAMIC_POINTER_CAST<OCIO::ExponentTransform>(t2);
+    OCIO_CHECK_ASSERT(e2);
+    t3 = group->getTransform(3);
+    r3 = OCIO_DYNAMIC_POINTER_CAST<OCIO::RangeTransform>(t3);
+    OCIO_CHECK_ASSERT(r3);
+    t4 = group->getTransform(4);
+    auto ff4 = OCIO_DYNAMIC_POINTER_CAST<OCIO::FixedFunctionTransform>(t4);
+    OCIO_CHECK_ASSERT(ff4);
 
     constexpr const char * SIMPLE_CONFIG3{ R"(
 ocio_profile_version: 2

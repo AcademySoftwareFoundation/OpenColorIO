@@ -1412,6 +1412,50 @@ public:
                                                        const char * dstColorSpaceName,
                                                        const char * dstInterchangeName);
 
+    /**
+     * \brief Get a processor to convert from a color space to a display and view in
+     *      two separate configs.
+     */
+    static ConstProcessorRcPtr GetProcessorFromConfigs(const ConstConfigRcPtr & srcConfig,
+                                                       const char * srcColorSpaceName,
+                                                       const ConstConfigRcPtr & dstConfig,
+                                                       const char * dstDisplay,
+                                                       const char * dstView,
+                                                       TransformDirection direction);
+
+    static ConstProcessorRcPtr GetProcessorFromConfigs(const ConstContextRcPtr & srcContext,
+                                                       const ConstConfigRcPtr & srcConfig,
+                                                       const char * srcColorSpaceName,
+                                                       const ConstContextRcPtr & dstContext,
+                                                       const ConstConfigRcPtr & dstConfig,
+                                                       const char * dstDisplay,
+                                                       const char * dstView,
+                                                       TransformDirection direction);
+
+    /**
+     * The srcInterchangeName and dstInterchangeName must refer to a pair of
+     * color spaces in the two configs that are the same.  A role name may also be used.
+     */
+    static ConstProcessorRcPtr GetProcessorFromConfigs(const ConstConfigRcPtr & srcConfig,
+                                                       const char * srcColorSpaceName,
+                                                       const char * srcInterchangeName,
+                                                       const ConstConfigRcPtr & dstConfig,
+                                                       const char * dstDisplay,
+                                                       const char * dstView,
+                                                       const char * dstInterchangeName,
+                                                       TransformDirection direction);
+
+    static ConstProcessorRcPtr GetProcessorFromConfigs(const ConstContextRcPtr & srcContext,
+                                                       const ConstConfigRcPtr & srcConfig,
+                                                       const char * srcColorSpaceName,
+                                                       const char * srcInterchangeName,
+                                                       const ConstContextRcPtr & dstContext,
+                                                       const ConstConfigRcPtr & dstConfig,
+                                                       const char * dstDisplay,
+                                                       const char * dstView,
+                                                       const char * dstInterchangeName,
+                                                       TransformDirection direction);
+
     /// Get the Processor Cache flags.
     ProcessorCacheFlags getProcessorCacheFlags() const noexcept;
 
@@ -2593,6 +2637,10 @@ public:
      * there is one in the CPU processor.
      */
     DynamicPropertyRcPtr getDynamicProperty(DynamicPropertyType type) const;
+    /// True if at least one dynamic property of that type exists.
+    bool hasDynamicProperty(DynamicPropertyType type) const noexcept;
+    /// True if at least one dynamic property of any type exists and is dynamic.
+    bool isDynamic() const noexcept;
 
     /**
      * \brief Apply to an image with any kind of channel ordering while
