@@ -134,6 +134,9 @@ class GradingPrimaryTransformTest(unittest.TestCase):
         proc = cfg.getProcessor(group)
         cpu = proc.getDefaultCPUProcessor()
 
+        self.assertTrue(cpu.isDynamic())
+        self.assertTrue(cpu.hasDynamicProperty(OCIO.DYNAMIC_PROPERTY_GRADING_PRIMARY))
+
         dp = cpu.getDynamicProperty(OCIO.DYNAMIC_PROPERTY_GRADING_PRIMARY)
         self.assertEqual(dp.getType(), OCIO.DYNAMIC_PROPERTY_GRADING_PRIMARY)
 

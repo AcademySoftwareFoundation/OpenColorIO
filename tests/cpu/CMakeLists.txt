@@ -4,6 +4,21 @@
 # Define used for tests in tests/cpu/Context_tests.cpp
 add_definitions("-DOCIO_SOURCE_DIR=${PROJECT_SOURCE_DIR}")
 
+
+macro(add_ocio_test_variant NAME BINARY)
+    add_test(NAME ${NAME} COMMAND ${BINARY} ${ARGN})
+
+    if(OCIO_ENABLE_SANITIZER)
+        # - Ignore odr-violation warning coming supposedly from compiling OCIO
+        # sources within the test target as well as linking to the library.
+        # - Provide better stack traces for malloc related leaks.
+        set_tests_properties(${NAME} PROPERTIES
+            ENVIRONMENT
+                "ASAN_OPTIONS=detect_odr_violation=0:fast_unwind_on_malloc=0"
+        )
+    endif()
+endmacro()
+
 function(add_ocio_test NAME SOURCES PRIVATE_INCLUDES)
     set(TEST_BINARY "test_${NAME}_exec")
     set(TEST_NAME "test_${NAME}")
@@ -20,7 +35,7 @@ function(add_ocio_test NAME SOURCES PRIVATE_INCLUDES)
             sampleicc::sampleicc
             unittest_data
             utils::strings
-            yaml-cpp
+            ${YAML_CPP_LIBRARIES}
             testutils
             MINIZIP::minizip-ng
             xxHash
@@ -72,37 +87,27 @@ function(add_ocio_test NAME SOURCES PRIVATE_INCLUDES)
     )
 
     if(OCIO_ARCH_X86)
-        add_test(NAME ${TEST_NAME} COMMAND ${TEST_BINARY})
-        add_test(NAME ${TEST_NAME}_no_accel COMMAND ${TEST_BINARY} --no_accel)
+        add_ocio_test_variant(${TEST_NAME} ${TEST_BINARY})
+        add_ocio_test_variant(${TEST_NAME}_no_accel ${TEST_BINARY} --no_accel)
         if(${OCIO_USE_SSE2})
-            add_test(NAME ${TEST_NAME}_sse2 COMMAND ${TEST_BINARY} --sse2)
+            add_ocio_test_variant(${TEST_NAME}_sse2 ${TEST_BINARY} --sse2)
             if(${OCIO_USE_F16C})
-                add_test(NAME ${TEST_NAME}_sse2+f16c COMMAND ${TEST_BINARY} --sse2 --f16c)
+                add_ocio_test_variant(${TEST_NAME}_sse2+f16c ${TEST_BINARY} --sse2 --f16c)
             endif()
         endif()
 
         if(${OCIO_USE_AVX})
-            add_test(NAME ${TEST_NAME}_avx COMMAND ${TEST_BINARY} --avx)
+            add_ocio_test_variant(${TEST_NAME}_avx ${TEST_BINARY} --avx)
             if(${OCIO_USE_F16C})
-                add_test(NAME ${TEST_NAME}_avx+f16c COMMAND ${TEST_BINARY} --avx --f16c)
+                add_ocio_test_variant(${TEST_NAME}_avx+f16c ${TEST_BINARY} --avx --f16c)
             endif()
         endif()
 
         if(${OCIO_USE_AVX2})
-            add_test(NAME ${TEST_NAME}_avx2 COMMAND ${TEST_BINARY} --avx2)
+            add_ocio_test_variant(${TEST_NAME}_avx2 ${TEST_BINARY} --avx2)
         endif()
     else()
-        add_test(NAME ${TEST_NAME} COMMAND ${TEST_BINARY})
-    endif()
-
-    if(OCIO_ENABLE_SANITIZER)
-        # Ignore odr-violation warning coming supposeddly from compiling OCIO
-        # sources within the test target as well as linking to the library.
-        # Provide better stack traces for malloc related leaks.
-        set_tests_properties(${TEST_NAME} PROPERTIES
-            ENVIRONMENT
-                "ASAN_OPTIONS=detect_odr_violation=0:fast_unwind_on_malloc=0"
-        )
+        add_ocio_test_variant(${TEST_NAME} ${TEST_BINARY})
     endif()
 
 endfunction(add_ocio_test)
