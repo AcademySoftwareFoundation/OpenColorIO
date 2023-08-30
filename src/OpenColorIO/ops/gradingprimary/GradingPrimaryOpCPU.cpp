@@ -25,6 +25,7 @@ public:
 
     explicit GradingPrimaryOpCPU(ConstGradingPrimaryOpDataRcPtr & gp);
 
+    bool isDynamic() const override;
     bool hasDynamicProperty(DynamicPropertyType type) const override;
     DynamicPropertyRcPtr getDynamicProperty(DynamicPropertyType type) const override;
 
@@ -40,6 +41,11 @@ GradingPrimaryOpCPU::GradingPrimaryOpCPU(ConstGradingPrimaryOpDataRcPtr & gp)
     {
         m_gp = m_gp->createEditableCopy();
     }
+}
+
+bool GradingPrimaryOpCPU::isDynamic() const
+{
+    return m_gp->isDynamic();
 }
 
 bool GradingPrimaryOpCPU::hasDynamicProperty(DynamicPropertyType type) const

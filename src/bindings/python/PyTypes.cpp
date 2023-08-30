@@ -527,6 +527,8 @@ void bindPyTypes(py::module & m)
                DOC(PyOpenColorIO, GpuLanguage, GPU_LANGUAGE_HLSL_DX11))
         .value("GPU_LANGUAGE_MSL_2_0", GPU_LANGUAGE_MSL_2_0,
                DOC(PyOpenColorIO, GpuLanguage, GPU_LANGUAGE_MSL_2_0))
+        .value("LANGUAGE_OSL_1", LANGUAGE_OSL_1,
+               DOC(PyOpenColorIO, GpuLanguage, LANGUAGE_OSL_1))
         .export_values();
 
     py::enum_<EnvironmentMode>(
@@ -880,6 +882,12 @@ void bindPyTypes(py::module & m)
     m.attr("OCIO_DISABLE_ALL_CACHES") = OCIO_DISABLE_ALL_CACHES;
     m.attr("OCIO_DISABLE_PROCESSOR_CACHES") = OCIO_DISABLE_PROCESSOR_CACHES;
     m.attr("OCIO_DISABLE_CACHE_FALLBACK") = OCIO_DISABLE_CACHE_FALLBACK;
+
+    m.attr("OCIO_CONFIG_DEFAULT_NAME") = OCIO_CONFIG_DEFAULT_NAME;
+    m.attr("OCIO_CONFIG_DEFAULT_FILE_EXT") = OCIO_CONFIG_DEFAULT_FILE_EXT;
+    m.attr("OCIO_CONFIG_ARCHIVE_FILE_EXT") = OCIO_CONFIG_ARCHIVE_FILE_EXT;
+
+    m.attr("OCIO_BUILTIN_URI_PREFIX") = OCIO_BUILTIN_URI_PREFIX;
 }
 
 } // namespace OCIO_NAMESPACE

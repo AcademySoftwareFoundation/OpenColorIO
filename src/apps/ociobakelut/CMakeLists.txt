@@ -33,6 +33,9 @@ target_link_libraries(ociobakelut
         OpenColorIO
 )
 
+include(StripUtils)
+ocio_strip_binary(ociobakelut)
+
 install(TARGETS ociobakelut
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )

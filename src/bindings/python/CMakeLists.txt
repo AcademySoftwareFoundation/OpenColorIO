@@ -170,7 +170,7 @@ if(UNIX)
 	set_property(TARGET PyOpenColorIO PROPERTY POSITION_INDEPENDENT_CODE ON)
 endif()
 
-if (UNIX AND NOT CMAKE_SKIP_RPATH)
+if (UNIX AND NOT CMAKE_SKIP_RPATH AND NOT CMAKE_INSTALL_RPATH)
     # Update the default RPATH so the Python binding dynamic library can find the OpenColorIO
     # dynamic library based on the default installation directory structure.
     if (APPLE)
@@ -250,6 +250,9 @@ set(PYTHON_VARIANT_PATH ${_Python_VARIANT_PATH} CACHE INTERNAL "")
 
 # Set to PyOpenColorIO site-package location.
 set(_PyOpenColorIO_SITE_PACKAGE_DIR "${PYTHON_VARIANT_PATH}/PyOpenColorIO")
+
+include(StripUtils)
+ocio_strip_binary(PyOpenColorIO)
 
 install(TARGETS PyOpenColorIO
     LIBRARY DESTINATION ${_PyOpenColorIO_SITE_PACKAGE_DIR}

@@ -25,6 +25,7 @@ public:
     explicit ECRendererBase(ConstExposureContrastOpDataRcPtr & ec);
     virtual ~ECRendererBase();
 
+    bool isDynamic() const override;
     bool hasDynamicProperty(DynamicPropertyType type) const override;
     DynamicPropertyRcPtr getDynamicProperty(DynamicPropertyType type) const override;
 
@@ -62,6 +63,11 @@ ECRendererBase::ECRendererBase(ConstExposureContrastOpDataRcPtr & ec)
 
 ECRendererBase::~ECRendererBase()
 {
+}
+
+bool ECRendererBase::isDynamic() const
+{
+    return m_exposure->isDynamic() || m_contrast->isDynamic() || m_gamma->isDynamic();
 }
 
 bool ECRendererBase::hasDynamicProperty(DynamicPropertyType type) const
@@ -701,4 +707,3 @@ OpCPURcPtr GetExposureContrastCPURenderer(ConstExposureContrastOpDataRcPtr & ec)
 }
 
 } // namespace OCIO_NAMESPACE
-

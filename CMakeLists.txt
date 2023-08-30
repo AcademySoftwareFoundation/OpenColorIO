@@ -159,7 +159,9 @@ endif()
 
 ###############################################################################
 # Other preferences
+
 option(OCIO_VERBOSE "Display more information when searching or installing dependencies" OFF)
+option(OCIO_USE_SOVERSION "Enable versioning in OCIO shared library name" ON)
 
 ###############################################################################
 # Warnings / debugging settings
@@ -218,6 +220,7 @@ option(OCIO_USE_F16C  "Specify whether to enable F16C CPU performance optimizati
 if (APPLE)
    option(OCIO_USE_SSE2NEON "Specify whether to enable SSE CPU performance optimizations using SSE2NEON for Apple ARM architecture" ON)
 endif()
+
 
 ###############################################################################
 # GPU configuration

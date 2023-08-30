@@ -687,7 +687,7 @@ extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const GradingTone &)
  *            OCIO::DynamicPropertyValue::AsGradingPrimary(dynProp);
  *        OCIO::GradingPrimary primary = primaryProp->getValue();
  *        primary.m_saturation += 0.1f;
- *        rgbCurveProp->setValue(primary);
+ *        primaryProp->setValue(primary);
  *    }
  *    if (cpuProcessor->hasDynamicProperty(OCIO::DYNAMIC_PROPERTY_GRADING_RGBCURVE))
  *    {

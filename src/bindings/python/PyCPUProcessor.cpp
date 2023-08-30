@@ -36,6 +36,13 @@ void bindPyCPUProcessor(py::module & m)
             }, 
             "type"_a, 
              DOC(CPUProcessor, getDynamicProperty))
+        .def("hasDynamicProperty",
+             (bool (CPUProcessor::*)(DynamicPropertyType) const noexcept)
+             &CPUProcessor::hasDynamicProperty,
+             "type"_a,
+             DOC(CPUProcessor, hasDynamicProperty))
+        .def("isDynamic", &CPUProcessor::isDynamic,
+             DOC(CPUProcessor, isDynamic))
 
         .def("apply", [](CPUProcessorRcPtr & self, PyImageDesc & imgDesc) 
             {
