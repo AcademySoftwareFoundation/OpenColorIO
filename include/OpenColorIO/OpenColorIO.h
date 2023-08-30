@@ -3771,7 +3771,7 @@ public:
     virtual bool isBuiltinConfigRecommended(size_t configIndex) const = 0;
 
     // Return the full forward-compatible name of the default built-in config.
-    // Please use ResolveConfigPath(\"ocio://default\"). This method will be deprecated in OCIO 2.3.
+    OCIO_DEPRECATED("This was marked as deprecated starting in v2.3, please use ResolveConfigPath(\"ocio://default\").")
     virtual const char * getDefaultBuiltinConfigName() const = 0;
 protected:
     BuiltinConfigRegistry() = default;
