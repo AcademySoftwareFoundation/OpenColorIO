@@ -109,7 +109,7 @@ class BuiltinConfigRegistryTest(unittest.TestCase):
         # Test for the default built-in config.
         self.assertEqual(
             self.REGISTRY.getDefaultBuiltinConfigName(),
-            "cg-config-v2.0.0_aces-v1.3_ocio-v2.3"
+            "cg-config-v2.1.0_aces-v1.3_ocio-v2.3"
         )
 
         # Test the CG configs.
@@ -124,7 +124,7 @@ class BuiltinConfigRegistryTest(unittest.TestCase):
         self.assertEqual(values[0][2], False)
 
         # Name
-        self.assertEqual(values[1][0], "cg-config-v2.0.0_aces-v1.3_ocio-v2.3")
+        self.assertEqual(values[1][0], "cg-config-v2.1.0_aces-v1.3_ocio-v2.3")
         # UI name
         self.assertEqual(
             values[1][1], 
@@ -145,7 +145,7 @@ class BuiltinConfigRegistryTest(unittest.TestCase):
         self.assertEqual(values[2][2], False)
 
         # Name
-        self.assertEqual(values[3][0], "studio-config-v2.0.0_aces-v1.3_ocio-v2.3")
+        self.assertEqual(values[3][0], "studio-config-v2.1.0_aces-v1.3_ocio-v2.3")
         # UI name
         self.assertEqual(
             values[3][1], 
