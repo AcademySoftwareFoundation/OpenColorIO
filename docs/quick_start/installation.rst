@@ -279,29 +279,23 @@ Here are the most common OCIO-specific CMake options (the default values are sho
 - ``-DOCIO_BUILD_PYTHON=ON`` (Set to OFF to not build the Python binding)
 - ``-DOCIO_BUILD_OPENFX=OFF`` (Set to ON to build the OpenFX plug-ins)
 - ``-DOCIO_USE_SIMD=ON`` (Set to OFF to turn off SIMD CPU performance optimizations, such as SSE and NEON)
-- ``-DOCIO_USE_SSE2=ON`` (Set to OFF to turn off SSE2 CPU performance optimizations)
-- ``-DOCIO_USE_SSE3=ON`` (Set to OFF to turn off SSE3 CPU performance optimizations)
-- ``-DOCIO_USE_SSSE3=ON`` (Set to OFF to turn off SSSE3 CPU performance optimizations)
-- ``-DOCIO_USE_SSE4=ON`` (Set to OFF to turn off SSE4 CPU performance optimizations)
-- ``-DOCIO_USE_SSE42=ON`` (Set to OFF to turn off SSE4.2 CPU performance optimizations)
-- ``-DOCIO_USE_AVX=ON`` (Set to OFF to turn off AVX CPU performance optimizations)
-- ``-DOCIO_USE_AVX2=ON`` (Set to OFF to turn off AVX2 CPU performance optimizations)
-- ``-DOCIO_USE_AVX512=ON`` (Set to OFF to turn off AVX512 CPU performance optimizations)
-- ``-DOCIO_USE_F16C=ON`` (Set to OFF to turn off F16C CPU performance optimizations)
-- ``-OCIO_USE_SSE2NEON=ON`` (Apple Only; Set to OFF to turn off the SSE2NEON translation performance optimizations on Apple ARM)
+- ``-DOCIO_USE_SSE2`` (Set to OFF to turn off SSE2 CPU performance optimizations)
+- ``-DOCIO_USE_AVX`` (Set to OFF to turn off AVX CPU performance optimizations)
+- ``-DOCIO_USE_AVX2`` (Set to OFF to turn off AVX2 CPU performance optimizations)
+- ``-DOCIO_USE_F16C`` (Set to OFF to turn off F16C CPU performance optimizations)
 - ``-DOCIO_BUILD_TESTS=ON`` (Set to OFF to not build the unit tests)
 - ``-DOCIO_BUILD_GPU_TESTS=ON`` (Set to OFF to not build the GPU unit tests)
-- ``-DOCIO_USE_HEADLESS=OFF`` (Set to ON to do headless GPU reendering)
+- ``-DOCIO_USE_HEADLESS=OFF`` (Set to ON to do headless GPU rendering)
 - ``-DOCIO_WARNING_AS_ERROR=ON`` (Set to OFF to turn off warnings as errors)
 - ``-DOCIO_BUILD_DOCS=OFF`` (Set to ON to build the documentation)
 - ``-DOCIO_BUILD_FROZEN_DOCS=OFF`` (Set to ON to update the Python documentation)
 
 Note that OCIO will turn off any specific SIMD CPU performance optimizations if they are not supported 
-by the build target architecture.
+by the build target architecture. The default for ``OCIO_USE_SSE2``, ``OCIO_USE_AVX``, ``OCIO_USE_AVX2`` and 
+``OCIO_USE_F16C`` depends on the architecture, but will be ON where supported.
 
-On the MacOS, the default is to build universal binaries 
-(natively supporting both the Intel and ARM processors). The ``-DCMAKE_OSX_ARCHITECTURES`` option 
-may be set to just arm64 or x86_64 to override the default value, which is ``arm64;x86_64``.
+On MacOS, the default is to build for the native architecture. The ``-DCMAKE_OSX_ARCHITECTURES`` option 
+may be set to ``arm64;x86_64`` to build the universal binaries.
 
 When doing a universal build, note that the OCIO dependencies must be built as universal libraries 
 too. If you are running in OCIO_INSTALL_EXT_PACKAGES=MISSING or NONE mode, your build will fail if 

@@ -178,33 +178,83 @@ endif()
 option(OCIO_USE_SIMD "Specify whether to enable SIMD CPU performance optimizations" ON)
 option(OCIO_USE_OIIO_FOR_APPS "Request OIIO to build apps (ociolutimage, ocioconvert and ociodisplay), the default uses OpenEXR." OFF)
 
-if ("${CMAKE_SYSTEM_PROCESSOR}" MATCHES "(AMD64|IA64|EM64T|X86|x86_64|i386|i686)" OR
-    (APPLE AND "${CMAKE_SYSTEM_PROCESSOR}" MATCHES "arm64" AND "${CMAKE_OSX_ARCHITECTURES}" MATCHES "(arm64;x86_64|x86_64;arm64|x86_64)"))
-    
-    # Enable OCIO_ARCH_X86 for any intel-based architecture or Apple Rosetta (x86_64 or universal build).
-    set(OCIO_ARCH_X86 1)
-    
-    # For a Mac OS universal build, OCIO translates the SSE instructions into ARM Neon with 
-    # the library SSE2NEON for the arm64 side of the binary.
-    set(OCIO_BUILD_ENABLE_OPTIMIZATIONS_SSE ON)
-    set(OCIO_BUILD_ENABLE_OPTIMIZATIONS_AVX ON)
-    set(OCIO_BUILD_ENABLE_OPTIMIZATIONS_F16C ON)
-elseif(APPLE AND "${CMAKE_SYSTEM_PROCESSOR}" MATCHES "arm64" AND "${CMAKE_OSX_ARCHITECTURES}" MATCHES "arm64")
-    
-    # Apple ARM only build.
-    set(OCIO_ARCH_X86 0)
 
-    # OCIO translates the SSE instructions into ARM Neon with the library SSE2NEON.
-    set(OCIO_BUILD_ENABLE_OPTIMIZATIONS_SSE ON)
-    # OCIO does not translate AVX to ARM Neon.
-    set(OCIO_BUILD_ENABLE_OPTIMIZATIONS_AVX OFF)
-    # Turn F16C off since they are x86_64 instructions.
-    set(OCIO_BUILD_ENABLE_OPTIMIZATIONS_F16C OFF)
-else()
-    set(OCIO_ARCH_X86 0)
-    set(OCIO_BUILD_ENABLE_OPTIMIZATIONS_SSE OFF)
-    set(OCIO_BUILD_ENABLE_OPTIMIZATIONS_AVX OFF)
-    set(OCIO_BUILD_ENABLE_OPTIMIZATIONS_F16C OFF)
+if (NOT APPLE)
+    if ("${CMAKE_SYSTEM_PROCESSOR}" MATCHES "(AMD64|IA64|EM64T|X86|x86_64|i386|i686)")
+        # Intel-based architecture (not APPLE)
+        set(OCIO_ARCH_X86 1)
+        set(OCIO_BUILD_ENABLE_OPTIMIZATIONS_SSE ON)
+        set(OCIO_BUILD_ENABLE_OPTIMIZATIONS_AVX ON)
+        set(OCIO_BUILD_ENABLE_OPTIMIZATIONS_F16C ON)
+    else()
+        set(OCIO_ARCH_X86 0)
+        set(OCIO_BUILD_ENABLE_OPTIMIZATIONS_SSE OFF)
+        set(OCIO_BUILD_ENABLE_OPTIMIZATIONS_AVX OFF)
+        set(OCIO_BUILD_ENABLE_OPTIMIZATIONS_F16C OFF)
+    endif()
+elseif (APPLE)
+    # Multiple possible scenarios:
+    # A. Building on an Apple arm64 architecture for the native architecture (arm64).
+    # B. Building on an Apple arm64 architecture for x86_64.
+    # C. Building on an Apple arm64 architecture for universal binaries (x86_64 + arm64).
+    #
+    # D. Building on an Apple Intel architecture for the native architecture (x86_64).
+    # E. Building on an Apple Intel architecture for arm64.
+    # F. Building on an Apple Intel architecture for universal binaries (x86_64 + arm64).
+
+    # Check if we are NOT cross-compiling to another Apple architecture.
+    if (NOT DEFINED CMAKE_OSX_ARCHITECTURES OR CMAKE_OSX_ARCHITECTURES STREQUAL "")
+        # Building for the native architectures.
+        if ("${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "x86_64")
+            # Apple Intel-based computer or Rosetta. (covers case D)
+
+            set(OCIO_ARCH_X86 1)
+            set(OCIO_BUILD_ENABLE_OPTIMIZATIONS_SSE ON)
+            # The AVX and F16C will be compiled, but it won't used at runtime by Rosetta.
+            set(OCIO_BUILD_ENABLE_OPTIMIZATIONS_AVX ON)
+            set(OCIO_BUILD_ENABLE_OPTIMIZATIONS_F16C ON)
+        elseif ("${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "arm64")
+            # Apple arm64. (covers case A)
+
+            set(OCIO_ARCH_X86 0)
+            # OCIO translates the SSE instructions into ARM Neon with the library SSE2NEON.
+            set(OCIO_BUILD_ENABLE_OPTIMIZATIONS_SSE ON)
+            # OCIO does not translate AVX to ARM Neon.
+            set(OCIO_BUILD_ENABLE_OPTIMIZATIONS_AVX OFF)
+            # Turn F16C off since they are x86_64 instructions.
+            set(OCIO_BUILD_ENABLE_OPTIMIZATIONS_F16C OFF)
+        endif()
+    else()
+        # Cross-compiling to another Apple architecture (x86_64, arm64, or both (universal))
+        if ("${CMAKE_OSX_ARCHITECTURES}" STREQUAL "x86_64")
+            # Compiling for x86_64 regardless of native architecture.
+            # Covers case B assuming CMAKE_SYSTEM_PROCESSOR is arm64.
+            # Covers case D if CMAKE_OSX_ARCHITECTURES is set to x86_64 on x86_64 architecture.
+
+            set(OCIO_ARCH_X86 1)
+            set(OCIO_BUILD_ENABLE_OPTIMIZATIONS_SSE ON)
+            # The AVX and F16C will be compiled, but they won't used at runtime by Rosetta.
+            set(OCIO_BUILD_ENABLE_OPTIMIZATIONS_AVX ON)
+            set(OCIO_BUILD_ENABLE_OPTIMIZATIONS_F16C ON)
+        elseif ("${CMAKE_OSX_ARCHITECTURES}" STREQUAL "arm64")
+            # Compiling for arm64 regardless of native architecture.
+            # Covers case E assuming CMAKE_SYSTEM_PROCESSOR is x86_64.
+            # Covers case A if CMAKE_OSX_ARCHITECTURES is set arm64 on arm64 architecture.
+
+            set(OCIO_ARCH_X86 0)
+            set(OCIO_BUILD_ENABLE_OPTIMIZATIONS_SSE ON)
+            set(OCIO_BUILD_ENABLE_OPTIMIZATIONS_AVX OFF)
+            set(OCIO_BUILD_ENABLE_OPTIMIZATIONS_F16C OFF)
+        elseif ("${CMAKE_OSX_ARCHITECTURES}" MATCHES "(arm64;x86_64|x86_64;arm64)")
+            # Universal build (covers case C and F).
+
+            set(OCIO_ARCH_X86 1)
+            set(OCIO_BUILD_ENABLE_OPTIMIZATIONS_SSE ON)
+            # The AVX and F16C will be compiled, but they won't used at runtime by Rosetta.
+            set(OCIO_BUILD_ENABLE_OPTIMIZATIONS_AVX ON)
+            set(OCIO_BUILD_ENABLE_OPTIMIZATIONS_F16C ON)
+        endif()
+    endif()
 endif()
 
 option(OCIO_USE_SSE2 "Specify whether to enable SSE2 CPU performance optimizations" ${OCIO_BUILD_ENABLE_OPTIMIZATIONS_SSE})
@@ -218,7 +268,9 @@ option(OCIO_USE_AVX512 "Specify whether to enable AVX512 CPU performance optimiz
 option(OCIO_USE_F16C  "Specify whether to enable F16C CPU performance optimizations" ${OCIO_BUILD_ENABLE_OPTIMIZATIONS_F16C})
 
 if (APPLE)
+   # TODO: Revisit whether that option is necessary.
    option(OCIO_USE_SSE2NEON "Specify whether to enable SSE CPU performance optimizations using SSE2NEON for Apple ARM architecture" ON)
+   mark_as_advanced(OCIO_USE_SSE2NEON)
 endif()
 
 
