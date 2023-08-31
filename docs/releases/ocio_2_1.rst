@@ -172,3 +172,5 @@ For more detail, please see the GitHub release pages:
 `OCIO 2.1.1 <https://github.com/AcademySoftwareFoundation/OpenColorIO/releases/tag/v2.1.1>`_
 
 `OCIO 2.1.2 <https://github.com/AcademySoftwareFoundation/OpenColorIO/releases/tag/v2.1.2>`_
+
+`OCIO 2.1.3 <https://github.com/AcademySoftwareFoundation/OpenColorIO/releases/tag/v2.1.3>`_
