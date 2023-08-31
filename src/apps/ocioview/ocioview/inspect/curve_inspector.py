@@ -308,7 +308,7 @@ class CurveView(QtWidgets.QGraphicsView):
         x_text_origin = QtGui.QTextOption(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
         x_text_origin.setWrapMode(QtGui.QTextOption.NoWrap)
 
-        sample_x_step = math.ceil(self._sample_size / (grid_r - grid_l) / 10.0)
+        sample_x_step = math.ceil(self._sample_size / 10.0)
 
         if self._sample_type == SampleType.LINEAR:
             sample_x_values = np.arange(grid_l, grid_r + 1, 10, dtype=np.float32)
