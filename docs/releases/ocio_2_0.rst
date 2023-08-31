@@ -657,3 +657,5 @@ For more detail, please see the GitHub release pages:
 `OCIO 2.0.3 <https://github.com/AcademySoftwareFoundation/OpenColorIO/releases/tag/v2.0.3>`_
 
 `OCIO 2.0.4 <https://github.com/AcademySoftwareFoundation/OpenColorIO/releases/tag/v2.0.4>`_
+
+`OCIO 2.0.5 <https://github.com/AcademySoftwareFoundation/OpenColorIO/releases/tag/v2.0.5>`_

@@ -24,9 +24,10 @@ Alternatives
 Python
 ++++++
 
-If you only need the Python binding, the simplest solution is to take advantage of the pre-built 
-wheels in the Python Package Index (PyPI) `here <https://pypi.org/project/opencolorio>`_. It 
-can be installed as follows, once you have Python installed.
+If you only need the Python binding and command-line tools, the simplest solution is to 
+take advantage of the pre-built wheels in the Python Package Index (PyPI) 
+`here <https://pypi.org/project/opencolorio>`_. It can be installed as follows, once you 
+have Python installed.
 
 **PyPI**::
 

@@ -281,14 +281,14 @@ The following algorithm is used to make the determination:
 
 * If the color space ``isdata`` attribute is true, return false.
 * If the reference space type of the color space differs from the requested reference 
-space type, return false.
+  space type, return false.
 * If the color space's encoding attribute is present, return true if it matches the 
-expected reference space type (i.e., "scene-linear" for ``REFERENCE_SPACE_SCENE`` or 
-"display-linear" for ``REFERENCE_SPACE_DISPLAY``) and false otherwise.
+  expected reference space type (i.e., "scene-linear" for ``REFERENCE_SPACE_SCENE`` or 
+  "display-linear" for ``REFERENCE_SPACE_DISPLAY``) and false otherwise.
 * If the color space has no ``to_reference`` or ``from_reference`` transform, return true.
 * Evaluate several points through the color space's transform and check if the output only 
-differs by a scale factor (which may be different per channel, e.g. allowing an arbitrary 
-matrix transform, with no offset).
+  differs by a scale factor (which may be different per channel, e.g. allowing an arbitrary 
+  matrix transform, with no offset).
 
 Note that the last step is a heuristic that may or may not be accurate.  However, note 
 that the ``encoding`` attribute takes precedence and so config authors have the ultimate 
@@ -363,26 +363,26 @@ Miscellaneous Improvements
 Here are some other improvements in OCIO 2.2:
 
 * Support for more types of ICC Monitor Profiles -- All of the parametric curve types are 
-now supported.
+  now supported.
 
 * New hash function for calculating cache IDs -- The md5 algorithm has been replaced with 
-xxhash, which provides a considerable speed-up for various operations.  The APIs that 
-return cache ID strings will obviously return different strings now, but please note that 
-these are not guaranteed to be unchanged across releases.  (The 128-bit version of xxhash 
-was used, which is the same length as for md5.)
+  xxhash, which provides a considerable speed-up for various operations.  The APIs that 
+  return cache ID strings will obviously return different strings now, but please note that 
+  these are not guaranteed to be unchanged across releases.  (The 128-bit version of xxhash 
+  was used, which is the same length as for md5.)
 
 * The command-line tools ``ocioconvert``, ``ociowrite``, and ``ocioperf`` now support 
-using an inverse DisplayViewTransform.
+  using an inverse DisplayViewTransform.
 
 * Add DisplayViewTransform and NamedTransform support to Baker.
 
 * Several new Built-in Transforms are available for version 2.2 config files, including 
-ARRI LogC4.
+  ARRI LogC4.
 
 * Preliminary support for ACES Metadata File (AMF) -- A prototype Python tool has been 
-added named ``pyocioamf`` that converts an AMF file into the OCIO native transform format 
-CTF. It uses a prototype ACES Reference config file that is serving as a database of ACES 
-Transform IDs for interpreting the AMF file. 
+  added named ``pyocioamf`` that converts an AMF file into the OCIO native transform format 
+  CTF. It uses a prototype ACES Reference config file that is serving as a database of ACES 
+  Transform IDs for interpreting the AMF file. 
 
 * Support for PyPI installation from source rather than pre-built binaries.
 
@@ -393,3 +393,5 @@ Release Notes
 For more detail, please see the GitHub release pages:
 
 `OCIO 2.2.0 <https://github.com/AcademySoftwareFoundation/OpenColorIO/releases/tag/v2.2.0>`_
+
+`OCIO 2.2.1 <https://github.com/AcademySoftwareFoundation/OpenColorIO/releases/tag/v2.2.1>`_
