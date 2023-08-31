@@ -56,6 +56,8 @@ struct OCIOTest
     OCIOTestFuncCallback function;
 };
 
+class SkipException : public std::exception {};
+
 typedef std::shared_ptr<OCIOTest> OCIOTestRcPtr;
 typedef std::vector<OCIOTestRcPtr> UnitTests;
 

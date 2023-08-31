@@ -34,6 +34,9 @@ target_link_libraries(ocioconvert
         OpenColorIO
 )
 
+include(StripUtils)
+ocio_strip_binary(ocioconvert)
+
 install(TARGETS ocioconvert
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )

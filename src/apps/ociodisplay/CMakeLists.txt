@@ -47,6 +47,9 @@ target_link_libraries(ociodisplay
         OpenColorIO
 )
 
+include(StripUtils)
+ocio_strip_binary(ociodisplay)
+
 install(TARGETS ociodisplay
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
