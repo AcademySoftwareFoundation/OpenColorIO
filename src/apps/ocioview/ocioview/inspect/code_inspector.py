@@ -1,24 +1,23 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright Contributors to the OpenColorIO Project.
 
+from contextlib import contextmanager
 from typing import Optional
 
 import PyOpenColorIO as ocio
 from pygments.formatters import HtmlFormatter
 from PySide2 import QtCore, QtGui, QtWidgets
 
-from ..utils import get_glyph_icon
-from ..widgets import EnumComboBox
-from .log_view import LogView
-from .log_router import LogRouter
-from .utils import processor_to_shader_html
+from ..message_router import MessageRouter
+from ..utils import get_glyph_icon, processor_to_shader_html
+from ..widgets import EnumComboBox, LogView
 
 
-class CodeWidget(QtWidgets.QWidget):
+class CodeInspector(QtWidgets.QWidget):
     """
-    Widget for viewing OCIO related code, which updates asynchronously,
-    but only when visible, to reduce unnecessary background
-    processing.
+    Widget for inspecting OCIO related code, which updates
+    asynchronously when visible, to reduce unnecessary
+    background processing.
     """
 
     @classmethod
@@ -62,7 +61,9 @@ class CodeWidget(QtWidgets.QWidget):
 
         self.gpu_language_box = EnumComboBox(ocio.GpuLanguage)
         self.gpu_language_box.setSizeAdjustPolicy(QtWidgets.QComboBox.AdjustToContents)
-        self.gpu_language_box.set_member(LogRouter.get_instance().get_gpu_language())
+        self.gpu_language_box.set_member(
+            MessageRouter.get_instance().get_gpu_language()
+        )
         self.gpu_language_box.currentIndexChanged[int].connect(
             self._on_gpu_language_changed
         )
@@ -86,68 +87,111 @@ class CodeWidget(QtWidgets.QWidget):
         self.setLayout(layout)
 
         # Initialize
-        log_router = LogRouter.get_instance()
-        log_router.config_logged.connect(self._on_config_logged)
-        log_router.ctf_logged.connect(self._on_ctf_logged)
-        log_router.shader_logged.connect(self._on_shader_logged)
+        msg_router = MessageRouter.get_instance()
+        msg_router.config_html_ready.connect(self._on_config_html_ready)
+        msg_router.ctf_html_ready.connect(self._on_ctf_html_ready)
+        msg_router.shader_html_ready.connect(self._on_shader_html_ready)
 
         self.tabs.currentChanged.connect(self._on_tab_changed)
 
     def showEvent(self, event: QtGui.QShowEvent) -> None:
-        """Start listening to logs for the current tab, if visible."""
+        """
+        Start listening for code updates for the current tab, if
+        visible.
+        """
         super().showEvent(event)
         self._on_tab_changed(self.tabs.currentIndex())
 
     def hideEvent(self, event: QtGui.QHideEvent) -> None:
-        """Stop listening to logs for all tabs, if not visible."""
+        """
+        Stop listening for code updates for all tabs, if not visible.
+        """
         super().hideEvent(event)
         self._on_tab_changed(-1)
 
     def reset(self) -> None:
-        """Clear log history."""
+        """Clear all code."""
         self.config_view.reset()
         self.shader_view.reset()
         self.ctf_view.reset()
 
+    @contextmanager
+    def _scroll_preserved(self, log_view: LogView) -> None:
+        """
+        Context manager to preserve viewport scroll/cursor position
+        through text/html update.
+
+        :param log_view: Log view widget to preserve scroll for
+        """
+        v_scroll_bar = log_view.verticalScrollBar()
+        h_scroll_bar = log_view.horizontalScrollBar()
+
+        # Get line number from bottom of view
+        prev_cursor = log_view.cursorForPosition(log_view.html_view.rect().bottomLeft())
+        prev_line_num = prev_cursor.blockNumber()
+
+        # Get scroll bar positions
+        v_scroll_pos = v_scroll_bar.value()
+        h_scroll_pos = h_scroll_bar.value()
+
+        # Replace text/html
+        yield
+
+        # Restore current line number
+        cursor = QtGui.QTextCursor(log_view.document())
+        cursor.movePosition(
+            QtGui.QTextCursor.Down, QtGui.QTextCursor.MoveAnchor, prev_line_num - 1
+        )
+        log_view.setTextCursor(cursor)
+
+        # Restore scroll positions
+        v_scroll_bar.setValue(v_scroll_pos)
+        h_scroll_bar.setValue(h_scroll_pos)
+
     @QtCore.Slot(str)
-    def _on_config_logged(self, record: str) -> None:
+    def _on_config_html_ready(self, record: str) -> None:
         """
         Update config view to show the current OCIO config's YAML
         source.
         """
-        self.config_view.setHtml(record)
+        with self._scroll_preserved(self.config_view):
+            self.config_view.setHtml(record)
 
     @QtCore.Slot(str, ocio.GroupTransform)
-    def _on_ctf_logged(self, record: str, group_tf: ocio.GroupTransform) -> None:
+    def _on_ctf_html_ready(self, record: str, group_tf: ocio.GroupTransform) -> None:
         """
         Update CTF view with a lossless XML representation of an
         OCIO processor.
         """
         self._prev_group_tf = group_tf
-        self.ctf_view.setHtml(record)
+
+        with self._scroll_preserved(self.ctf_view):
+            self.ctf_view.setHtml(record)
 
     @QtCore.Slot(str, ocio.GPUProcessor)
-    def _on_shader_logged(self, record: str, gpu_proc: ocio.GPUProcessor) -> None:
+    def _on_shader_html_ready(self, record: str, gpu_proc: ocio.GPUProcessor) -> None:
         """
         Update shader view with fragment shader source created
         from an OCIO GPU processor.
         """
         self._prev_gpu_proc = gpu_proc
-        self.shader_view.setHtml(record)
+
+        with self._scroll_preserved(self.shader_view):
+            self.shader_view.setHtml(record)
 
     @QtCore.Slot(int)
     def _on_gpu_language_changed(self, index: int) -> None:
         """
         Update shader language for the current GPU processor and
-        LogRouter, which will provide future GPU processors.
+        MessageRouter, which will provide future GPU processors.
         """
         gpu_language = self.gpu_language_box.currentData()
-        LogRouter.get_instance().set_gpu_language(gpu_language)
+        MessageRouter.get_instance().set_gpu_language(gpu_language)
         if self._prev_gpu_proc is not None:
             shader_html_data = processor_to_shader_html(
                 self._prev_gpu_proc, gpu_language
             )
-            self._on_shader_logged(shader_html_data, self._prev_gpu_proc)
+            self._on_shader_html_ready(shader_html_data, self._prev_gpu_proc)
 
     def _on_export_button_released(self) -> None:
         """Write the current CTF to disk."""
@@ -163,25 +207,25 @@ class CodeWidget(QtWidgets.QWidget):
 
     def _on_tab_changed(self, index: int) -> None:
         """Only update visible tabs."""
-        log_router = LogRouter.get_instance()
+        msg_router = MessageRouter.get_instance()
 
         if index == -1:
-            log_router.set_config_updates_allowed(False)
-            log_router.set_ctf_updates_allowed(False)
-            log_router.set_shader_updates_allowed(False)
+            msg_router.set_config_updates_allowed(False)
+            msg_router.set_ctf_updates_allowed(False)
+            msg_router.set_shader_updates_allowed(False)
             return
 
         widget = self.tabs.widget(index)
 
         if widget == self.config_view:
-            log_router.set_config_updates_allowed(True)
-            log_router.set_ctf_updates_allowed(False)
-            log_router.set_shader_updates_allowed(False)
+            msg_router.set_config_updates_allowed(True)
+            msg_router.set_ctf_updates_allowed(False)
+            msg_router.set_shader_updates_allowed(False)
         elif widget == self.ctf_view:
-            log_router.set_config_updates_allowed(False)
-            log_router.set_ctf_updates_allowed(True)
-            log_router.set_shader_updates_allowed(False)
+            msg_router.set_config_updates_allowed(False)
+            msg_router.set_ctf_updates_allowed(True)
+            msg_router.set_shader_updates_allowed(False)
         elif widget == self.shader_view:
-            log_router.set_config_updates_allowed(False)
-            log_router.set_ctf_updates_allowed(False)
-            log_router.set_shader_updates_allowed(True)
+            msg_router.set_config_updates_allowed(False)
+            msg_router.set_ctf_updates_allowed(False)
+            msg_router.set_shader_updates_allowed(True)

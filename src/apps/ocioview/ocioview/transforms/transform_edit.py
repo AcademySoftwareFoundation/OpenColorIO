@@ -9,12 +9,8 @@ from typing import Optional
 import PyOpenColorIO as ocio
 from PySide2 import QtCore, QtGui, QtWidgets
 
-from ..constants import (
-    ICON_SIZE_ITEM,
-    BORDER_COLOR_ROLE,
-    TOOL_BAR_BORDER_COLOR_ROLE,
-    TOOL_BAR_BG_COLOR_ROLE,
-)
+from ..constants import ICON_SIZE_ITEM, BORDER_COLOR_ROLE
+from ..style import apply_top_tool_bar_style, apply_widget_with_top_tool_bar_style
 from ..utils import get_glyph_icon, item_type_label
 from ..widgets import EnumComboBox, FormLayout
 
@@ -88,20 +84,11 @@ class BaseTransformEdit(QtWidgets.QFrame):
     def __init__(self, parent: Optional[QtCore.QObject] = None):
         super().__init__(parent=parent)
 
-        self._border_color = self.palette().color(BORDER_COLOR_ROLE).name()
-        self._tool_bar_bg_color = self.palette().color(TOOL_BAR_BG_COLOR_ROLE).name()
-        self._tool_bar_border_color = (
-            self.palette().color(TOOL_BAR_BORDER_COLOR_ROLE).name()
-        )
+        palette = self.palette()
 
         self.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.setObjectName("transform_edit")
-        self.setStyleSheet(
-            f"QFrame#transform_edit {{"
-            f"    border: 1px solid {self._border_color};"
-            f"    border-radius: 3px;"
-            f"}}"
-        )
+        apply_widget_with_top_tool_bar_style(self)
 
         # Widgets
         self._expand_icon = get_glyph_icon("ph.caret-right")
@@ -158,7 +145,7 @@ class BaseTransformEdit(QtWidgets.QFrame):
         self._tf_frame.setObjectName("transform_edit__tf_frame")
         self._tf_frame.setStyleSheet(
             f"QFrame#transform_edit__tf_frame {{"
-            f"    border-top: 1px solid {self._border_color};"
+            f"    border-top: 1px solid {palette.color(BORDER_COLOR_ROLE).name()};"
             f"}}"
         )
         self._tf_frame.setLayout(self.tf_layout)
@@ -249,29 +236,9 @@ class BaseTransformEdit(QtWidgets.QFrame):
         """
         Restyle widget to toggle its collapsed state.
         """
-
-        qss_open = (
-            f"QFrame#transform_edit__header_frame {{"
-            f"    background-color: {self._tool_bar_bg_color};"
-            f"    border-top: 1px solid {self._tool_bar_border_color};"
-            f"    border-right: 1px solid {self._tool_bar_border_color};"
-            f"    border-left: 1px solid {self._tool_bar_border_color};"
-            f"    border-top-left-radius: 3px;"
-            f"    border-top-right-radius: 3px;"
-        )
-        qss_edit_fmt = (
-            "    border-bottom-left-radius: {left:d}px;"
-            "    border-bottom-right-radius: {right:d}px;"
-        )
-        qss_close = "}"
-
         if self._tf_frame.isHidden():
             self.expand_button.setIcon(self._expand_icon)
-            self._header_frame.setStyleSheet(
-                qss_open + qss_edit_fmt.format(left=3, right=3) + qss_close
-            )
+            apply_top_tool_bar_style(self._header_frame, border_bottom_radius=3)
         else:
             self.expand_button.setIcon(self._collapse_icon)
-            self._header_frame.setStyleSheet(
-                qss_open + qss_edit_fmt.format(left=0, right=0) + qss_close
-            )
+            apply_top_tool_bar_style(self._header_frame, border_bottom_radius=0)

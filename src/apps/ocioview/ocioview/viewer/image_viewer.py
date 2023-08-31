@@ -10,6 +10,7 @@ from PySide2 import QtCore, QtGui, QtWidgets
 
 from ..transform_manager import TransformManager
 from ..config_cache import ConfigCache
+from ..constants import GRAY_COLOR, R_COLOR, G_COLOR, B_COLOR
 from ..utils import get_glyph_icon, SignalsBlocked
 from ..widgets import ComboBox, CallbackComboBox
 from .image_plane import ImagePlane
@@ -30,21 +31,10 @@ class ImageViewer(QtWidgets.QWidget):
     32-bit float precision.
     """
 
-    GRAY_COLOR = QtGui.QColor("dimgray")
-
     FMT_GRAY_LABEL = f'<span style="color:{GRAY_COLOR.name()};">{{v}}</span>'
-    FMT_R_LABEL = (
-        f'<span style="color:{QtGui.QColor.fromHsvF(0.0, 0.5, 1.0).name()};">'
-        f"{{v}}</span>"
-    )
-    FMT_G_LABEL = (
-        f'<span style="color:{QtGui.QColor.fromHsvF(0.33, 0.5, 1.0).name()};">'
-        f"{{v}}</span>"
-    )
-    FMT_B_LABEL = (
-        f'<span style="color:{QtGui.QColor.fromHsvF(0.66, 0.5, 1.0).name()};">'
-        f"{{v}}</span>"
-    )
+    FMT_R_LABEL = f'<span style="color:{R_COLOR.name()};">{{v}}</span>'
+    FMT_G_LABEL = f'<span style="color:{G_COLOR.name()};">{{v}}</span>'
+    FMT_B_LABEL = f'<span style="color:{B_COLOR.name()};">{{v}}</span>'
     FMT_SWATCH_CSS = "background-color: rgb({r}, {g}, {b});"
     FMT_IMAGE_SCALE = f'{{s:,d}}{FMT_GRAY_LABEL.format(v="%")}'
 
@@ -144,7 +134,7 @@ class ImageViewer(QtWidgets.QWidget):
         self.image_y_value_label = QtWidgets.QLabel("0")
 
         self.input_sample_label = get_glyph_icon(
-            "mdi6.import", color=self.GRAY_COLOR, as_widget=True
+            "mdi6.import", color=GRAY_COLOR, as_widget=True
         )
         self.input_r_sample_label = QtWidgets.QLabel()
         self.input_g_sample_label = QtWidgets.QLabel()
@@ -157,7 +147,7 @@ class ImageViewer(QtWidgets.QWidget):
 
         self.output_tf_direction_label = QtWidgets.QLabel("+")
         self.output_sample_label = get_glyph_icon(
-            "mdi6.export", color=self.GRAY_COLOR, as_widget=True
+            "mdi6.export", color=GRAY_COLOR, as_widget=True
         )
         self.output_r_sample_label = QtWidgets.QLabel()
         self.output_g_sample_label = QtWidgets.QLabel()

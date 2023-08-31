@@ -5,12 +5,8 @@ from typing import Callable, Optional
 
 from PySide2 import QtCore, QtGui, QtWidgets
 
-from ..constants import (
-    ICON_SIZE_BUTTON,
-    ICON_SIZE_ITEM,
-    TOOL_BAR_BORDER_COLOR_ROLE,
-    TOOL_BAR_BG_COLOR_ROLE,
-)
+from ..constants import ICON_SIZE_BUTTON, ICON_SIZE_ITEM
+from ..style import apply_top_tool_bar_style, apply_widget_with_top_tool_bar_style
 from ..utils import get_glyph_icon
 from .line_edit import LineEdit
 
@@ -67,20 +63,9 @@ class BaseItemView(QtWidgets.QFrame):
         self._get_presets = get_presets or (lambda: [])
         self._presets_only = presets_only
 
-        self._tool_bar_bg_color = self.palette().color(TOOL_BAR_BG_COLOR_ROLE).name()
-        self._tool_bar_border_color = (
-            self.palette().color(TOOL_BAR_BORDER_COLOR_ROLE).name()
-        )
-
         self.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.setObjectName("item_view")
-        self.setStyleSheet(
-            f"QFrame#item_view {{"
-            f"    border: 1px solid "
-            f"        {self.palette().color(QtGui.QPalette.Dark).name()};"
-            f"    border-radius: 3px;"
-            f"}}"
-        )
+        apply_widget_with_top_tool_bar_style(self)
 
         # Widgets
         self.filter_edit = LineEdit()
@@ -157,18 +142,7 @@ class BaseItemView(QtWidgets.QFrame):
         tool_bar_frame = QtWidgets.QFrame()
         tool_bar_frame.setFrameShape(QtWidgets.QFrame.StyledPanel)
         tool_bar_frame.setObjectName("item_view__tool_bar_frame")
-        tool_bar_frame.setStyleSheet(
-            f"QFrame#item_view__tool_bar_frame {{"
-            f"    background-color: {self._tool_bar_bg_color};"
-            f"    border-top: 1px solid {self._tool_bar_border_color};"
-            f"    border-right: 1px solid {self._tool_bar_border_color};"
-            f"    border-left: 1px solid {self._tool_bar_border_color};"
-            f"    border-top-left-radius: 3px;"
-            f"    border-top-right-radius: 3px;"
-            f"    border-bottom-left-radius: 0px;"
-            f"    border-bottom-right-radius: 0px;"
-            f"}}"
-        )
+        apply_top_tool_bar_style(tool_bar_frame)
         tool_bar_frame.setLayout(tool_bar_layout)
 
         layout = QtWidgets.QVBoxLayout()

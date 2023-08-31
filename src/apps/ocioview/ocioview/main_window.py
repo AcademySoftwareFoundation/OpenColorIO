@@ -12,7 +12,8 @@ from PySide2 import QtCore, QtGui, QtWidgets
 from .config_cache import ConfigCache
 from .config_dock import ConfigDock
 from .constants import ICON_PATH_OCIO
-from .log import LogRouter
+from .inspect_dock import InspectDock
+from .message_router import MessageRouter
 from .settings import settings
 from .undo import undo_stack
 from .viewer_dock import ViewerDock
@@ -59,6 +60,7 @@ class OCIOView(QtWidgets.QMainWindow):
         self.recent_images_menu = QtWidgets.QMenu("Load Recent Image")
 
         # Dock widgets
+        self.inspect_dock = InspectDock()
         self.config_dock = ConfigDock()
 
         # Central widget
@@ -124,6 +126,7 @@ class OCIOView(QtWidgets.QMainWindow):
 
         # Layout
         self.setCentralWidget(self.viewer_dock)
+        self.addDockWidget(QtCore.Qt.BottomDockWidgetArea, self.inspect_dock)
         self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.config_dock)
 
         # Connections
@@ -149,7 +152,7 @@ class OCIOView(QtWidgets.QMainWindow):
         self._update_window_title()
 
         # Start log processing
-        LogRouter.get_instance().start_routing()
+        MessageRouter.get_instance().start_routing()
 
     def reset(self) -> None:
         """
@@ -157,6 +160,7 @@ class OCIOView(QtWidgets.QMainWindow):
         """
         self.config_dock.reset()
         self.viewer_dock.reset()
+        self.inspect_dock.reset()
 
     def closeEvent(self, event: QtGui.QCloseEvent) -> None:
         if self._can_close_config():

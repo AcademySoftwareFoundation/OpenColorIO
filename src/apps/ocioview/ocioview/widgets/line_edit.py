@@ -7,6 +7,7 @@ from typing import Any, Optional, Sequence
 
 from PySide2 import QtCore, QtGui, QtWidgets
 
+from ..constants import R_COLOR, G_COLOR, B_COLOR
 from ..utils import SignalsBlocked, get_glyph_icon
 
 
@@ -340,11 +341,7 @@ class BaseValueEditArray(QtWidgets.QWidget):
 
     value_changed = QtCore.Signal(str, __value_type__)
 
-    LABEL_COLORS = {
-        "r": QtGui.QColor(225, 115, 115),
-        "g": QtGui.QColor(105, 155, 105),
-        "b": QtGui.QColor(125, 150, 190),
-    }
+    LABEL_COLORS = {"r": R_COLOR, "g": G_COLOR, "b": B_COLOR}
 
     def __init__(
         self,

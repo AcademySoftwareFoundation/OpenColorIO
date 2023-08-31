@@ -13,6 +13,7 @@ from .line_edit import (
     IntEditArray,
 )
 from .list_widget import StringListWidget, ItemModelListWidget
+from .log_view import LogView
 from .structure import TabbedDockWidget, ExpandingStackedWidget
 from .table_widget import StringMapTableWidget, ItemModelTableWidget
 from .text_edit import TextEdit, HtmlView

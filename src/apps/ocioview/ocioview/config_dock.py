@@ -16,9 +16,8 @@ from .items import (
     RuleEdit,
     ViewTransformEdit,
 )
-from .log_handlers import log_queue
+from .log_handlers import message_queue
 from .utils import get_glyph_icon
-from .log import CodeWidget, LogWidget
 from .widgets import TabbedDockWidget
 
 
@@ -73,9 +72,6 @@ class ConfigDock(TabbedDockWidget):
         self.named_transform_edit = NamedTransformEdit()
         self._connect_config_item_model(self.named_transform_edit.model)
 
-        self.code_view = CodeWidget()
-        self.log_view = LogWidget()
-
         # Layout
         self.add_tab(
             self.properties_edit,
@@ -117,35 +113,29 @@ class ConfigDock(TabbedDockWidget):
             self.named_transform_edit.item_type_label(plural=True),
             self.named_transform_edit.item_type_icon(),
         )
-        self.add_tab(
-            self.code_view,
-            self.code_view.label(),
-            self.code_view.icon(),
-        )
-        self.add_tab(
-            self.log_view,
-            self.log_view.label(),
-            self.log_view.icon(),
-        )
 
         # Initialize
-        self.update_config_view()
+        self.update_config_views()
 
     def reset(self) -> None:
         """Reset data for all config item models."""
         for model in self._models:
             model.reset()
 
-        self.log_view.reset()
-        self.code_view.reset()
-        self.update_config_view()
+        self.update_config_views()
 
-    def update_config_view(self) -> None:
+    def update_config_views(self) -> None:
         """
-        Push the current OCIO config into the logging queue to request
-        a config view update.
+        Push the current OCIO config into the message queue to give
+        any listening config code view(s) an update.
+
+        .. note::
+            Views can also connect to the config_changed signal, but
+            since the message queue is needed to HTML format the config
+            YAML data, this short circuits that trip with a direct
+            config update for relevant views.
         """
-        log_queue.put_nowait(ocio.GetCurrentConfig())
+        message_queue.put_nowait(ocio.GetCurrentConfig())
 
     def _connect_config_item_model(self, model: QtCore.QAbstractItemModel) -> None:
         """
@@ -162,11 +152,10 @@ class ConfigDock(TabbedDockWidget):
 
     def _on_config_changed(self, *args, **kwargs) -> None:
         """
-        Broadcast to the wider application that the config has changed
-        and update code view.
+        Broadcast to the wider application that the config has changed.
         """
         self.config_changed.emit()
-        self.update_config_view()
+        self.update_config_views()
 
     def _on_warning_raised(self, message: str) -> None:
         """Raise item model warnings in a message box."""

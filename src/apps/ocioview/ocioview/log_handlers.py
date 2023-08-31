@@ -5,17 +5,17 @@ import atexit
 import logging
 import sys
 from logging.handlers import QueueHandler
-from queue import SimpleQueue
 
 import PyOpenColorIO as ocio
 
+from .message_router import message_queue
+
 
 # Queue handler
-log_queue = SimpleQueue()
-queue_handler = QueueHandler(log_queue)
+queue_handler = QueueHandler(message_queue)
 
 # Route OCIO log through queue handler, but disconnect for a clean exit
-ocio.SetLoggingFunction(log_queue.put_nowait)
+ocio.SetLoggingFunction(message_queue.put_nowait)
 atexit.register(lambda: ocio.SetLoggingFunction(None))
 
 
@@ -60,3 +60,19 @@ logging.basicConfig(
     format="[%(name)s %(levelname)s]: %(message)s",
     force=True,
 )
+
+
+def set_logging_level(level: ocio.LoggingLevel) -> None:
+    """
+    Change the OCIO and Python logging level.
+
+    :param level: OCIO logging level
+    """
+    ocio.SetLoggingLevel(level)
+
+    if level == ocio.LOGGING_LEVEL_WARNING:
+        logging.root.setLevel(logging.WARNING)
+    elif level == ocio.LOGGING_LEVEL_INFO:
+        logging.root.setLevel(logging.INFO)
+    elif level == ocio.LOGGING_LEVEL_DEBUG:
+        logging.root.setLevel(logging.DEBUG)

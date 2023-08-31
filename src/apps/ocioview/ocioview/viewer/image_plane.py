@@ -19,7 +19,7 @@ import OpenImageIO as oiio
 import PyOpenColorIO as ocio
 from PySide2 import QtCore, QtGui, QtWidgets, QtOpenGL
 
-from ..log_handlers import log_queue
+from ..log_handlers import message_queue
 from ..ref_space_manager import ReferenceSpaceManager
 
 
@@ -558,7 +558,7 @@ class ImagePlane(QtOpenGL.QGLWidget):
             self.update()
 
             # Log processor change after render
-            log_queue.put_nowait(cpu_proc)
+            message_queue.put_nowait(cpu_proc)
 
         elif force_update:
             self.update()
@@ -567,7 +567,7 @@ class ImagePlane(QtOpenGL.QGLWidget):
             # which view it may have dropped tje reference. Log processor to update
             # them as needed.
             if self._ocio_tf_proc is not None:
-                log_queue.put_nowait(self._ocio_tf_proc)
+                message_queue.put_nowait(self._ocio_tf_proc)
 
     def exposure(self) -> float:
         """

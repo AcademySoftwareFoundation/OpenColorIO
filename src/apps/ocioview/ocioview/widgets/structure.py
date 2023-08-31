@@ -6,11 +6,12 @@ from typing import Optional, Union
 
 from PySide2 import QtCore, QtGui, QtWidgets
 
-from ..constants import ICON_SIZE_BUTTON
+from ..constants import ICON_SIZE_BUTTON, BORDER_COLOR_ROLE
+from ..style import apply_top_tool_bar_style
 from ..utils import get_icon
 
 
-class DockTitleBar(QtWidgets.QWidget):
+class DockTitleBar(QtWidgets.QFrame):
     """Dock widget title bar widget with icon."""
 
     def __init__(
@@ -22,18 +23,34 @@ class DockTitleBar(QtWidgets.QWidget):
         """
         super().__init__(parent=parent)
 
+        self.setFrameShape(QtWidgets.QFrame.StyledPanel)
+        self.setObjectName("dock_title_bar")
+        apply_top_tool_bar_style(
+            self, bg_color_role=None, border_color_role=BORDER_COLOR_ROLE
+        )
+
         # Widgets
         self.icon = QtWidgets.QLabel()
         self.icon.setPixmap(icon.pixmap(ICON_SIZE_BUTTON))
         self.title = QtWidgets.QLabel(title)
 
         # Layout
-        layout = QtWidgets.QHBoxLayout()
-        layout.setContentsMargins(10, 8, 10, 8)
-        layout.setSpacing(5)
-        layout.addWidget(self.icon)
-        layout.addWidget(self.title)
-        layout.addStretch()
+        inner_layout = QtWidgets.QHBoxLayout()
+        inner_layout.setContentsMargins(10, 8, 10, 8)
+        inner_layout.setSpacing(5)
+        inner_layout.addWidget(self.icon)
+        inner_layout.addWidget(self.title)
+        inner_layout.addStretch()
+
+        inner_frame = QtWidgets.QFrame()
+        inner_frame.setFrameShape(QtWidgets.QFrame.StyledPanel)
+        inner_frame.setObjectName("dock_title_bar__inner_frame")
+        apply_top_tool_bar_style(inner_frame)
+        inner_frame.setLayout(inner_layout)
+
+        layout = QtWidgets.QVBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(inner_frame)
 
         self.setLayout(layout)
 

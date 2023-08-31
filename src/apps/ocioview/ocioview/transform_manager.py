@@ -9,7 +9,7 @@ from typing import Callable, Optional
 import PyOpenColorIO as ocio
 from PySide2 import QtCore, QtGui
 
-from ocioview.utils import get_glyph_icon
+from .utils import get_glyph_icon
 
 
 @dataclass
