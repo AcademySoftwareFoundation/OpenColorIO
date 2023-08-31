@@ -34,21 +34,33 @@ class CurveInspector(QtWidgets.QWidget):
         super().__init__(parent=parent)
 
         # Widgets
+        self.input_range_label = get_glyph_icon("mdi6.import", as_widget=True)
+        self.input_range_label.setToolTip("Input range")
         self.input_range_edit = FloatEditArray(
             labels=["min", "max"],
             defaults=[CurveView.INPUT_MIN_DEFAULT, CurveView.INPUT_MAX_DEFAULT],
         )
+        self.input_range_edit.setToolTip(self.input_range_label.toolTip())
         self.input_range_edit.value_changed.connect(self._on_input_range_changed)
 
+        self.sample_size_label = get_glyph_icon("ph.line-segments", as_widget=True)
+        self.sample_size_label.setToolTip("Sample size")
         self.sample_size_edit = IntEdit(default=CurveView.SAMPLE_SIZE_DEFAULT)
+        self.sample_size_edit.setToolTip(self.sample_size_label.toolTip())
         self.sample_size_edit.value_changed.connect(self._on_sample_size_changed)
 
+        self.sample_type_label = get_glyph_icon("mdi6.function-variant", as_widget=True)
+        self.sample_type_label.setToolTip("Sample type")
         self.sample_type_combo = EnumComboBox(SampleType)
+        self.sample_type_combo.setToolTip(self.sample_type_label.toolTip())
         self.sample_type_combo.currentIndexChanged[int].connect(
             self._on_sample_type_changed
         )
 
+        self.log_base_label = get_glyph_icon("mdi6.math-log", as_widget=True)
+        self.log_base_label.setToolTip("Log base")
         self.log_base_edit = IntEdit(default=CurveView.LOG_BASE_DEFAULT)
+        self.log_base_edit.setToolTip(self.log_base_label.toolTip())
         self.log_base_edit.value_changed.connect(self._on_log_base_changed)
         self.log_base_edit.setEnabled(False)
 
@@ -56,14 +68,18 @@ class CurveInspector(QtWidgets.QWidget):
 
         # Layout
         option_layout = QtWidgets.QHBoxLayout()
+        option_layout.addWidget(self.input_range_label)
         option_layout.addWidget(self.input_range_edit)
-        option_layout.setStretch(0, 2)
+        option_layout.setStretch(1, 2)
+        option_layout.addWidget(self.sample_size_label)
         option_layout.addWidget(self.sample_size_edit)
-        option_layout.setStretch(1, 1)
-        option_layout.addWidget(self.sample_type_combo)
-        option_layout.setStretch(2, 2)
-        option_layout.addWidget(self.log_base_edit)
         option_layout.setStretch(3, 1)
+        option_layout.addWidget(self.sample_type_label)
+        option_layout.addWidget(self.sample_type_combo)
+        option_layout.setStretch(5, 1)
+        option_layout.addWidget(self.log_base_label)
+        option_layout.addWidget(self.log_base_edit)
+        option_layout.setStretch(7, 1)
 
         layout = QtWidgets.QVBoxLayout()
         layout.addLayout(option_layout)
