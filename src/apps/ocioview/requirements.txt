@@ -1,0 +1,7 @@
+# imath
+numpy
+# OpenImageIO
+pygments
+PyOpenGL
+PySide2
+QtAwesome
