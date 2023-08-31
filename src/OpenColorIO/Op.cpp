@@ -24,6 +24,11 @@
 
 namespace OCIO_NAMESPACE
 {
+bool OpCPU::isDynamic() const
+{
+    return false;
+}
+
 bool OpCPU::hasDynamicProperty(DynamicPropertyType /* type */) const
 {
     return false;

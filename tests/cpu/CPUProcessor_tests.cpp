@@ -13,6 +13,27 @@
 namespace OCIO = OCIO_NAMESPACE;
 
 
+OCIO_ADD_TEST(CPUProcessor, dynamic_properties)
+{
+    OCIO::ExposureContrastTransformRcPtr ec = OCIO::ExposureContrastTransform::Create();
+
+    ec->setExposure(1.2);
+    ec->setPivot(0.5);
+    ec->makeContrastDynamic();
+
+    OCIO::ConfigRcPtr config = OCIO::Config::Create();
+    auto cpuProc = config->getProcessor(ec)->getDefaultCPUProcessor();
+    OCIO_CHECK_ASSERT(cpuProc->isDynamic());
+    OCIO_CHECK_ASSERT(cpuProc->hasDynamicProperty(OCIO::DYNAMIC_PROPERTY_CONTRAST));
+    OCIO_CHECK_ASSERT(!cpuProc->hasDynamicProperty(OCIO::DYNAMIC_PROPERTY_EXPOSURE));
+    OCIO::DynamicPropertyRcPtr dpc;
+    OCIO_CHECK_NO_THROW(dpc = cpuProc->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_CONTRAST));
+    OCIO_CHECK_ASSERT(dpc);
+    OCIO_CHECK_THROW_WHAT(cpuProc->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_EXPOSURE),
+                          OCIO::Exception,
+                          "Cannot find dynamic property; not used by CPU processor.");
+}
+
 OCIO_ADD_TEST(CPUProcessor, flag_composition)
 {
     // The test validates the build of a custom optimization flag.

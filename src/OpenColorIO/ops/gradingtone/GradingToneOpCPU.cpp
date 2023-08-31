@@ -25,6 +25,7 @@ public:
 
     explicit GradingToneOpCPU(ConstGradingToneOpDataRcPtr & gt);
 
+    bool isDynamic() const override;
     bool hasDynamicProperty(DynamicPropertyType type) const override;
     DynamicPropertyRcPtr getDynamicProperty(DynamicPropertyType type) const override;
 
@@ -42,6 +43,11 @@ GradingToneOpCPU::GradingToneOpCPU(ConstGradingToneOpDataRcPtr & gt)
     {
         m_gt = m_gt->createEditableCopy();
     }
+}
+
+bool GradingToneOpCPU::isDynamic() const
+{
+    return m_gt->isDynamic();
 }
 
 bool GradingToneOpCPU::hasDynamicProperty(DynamicPropertyType type) const

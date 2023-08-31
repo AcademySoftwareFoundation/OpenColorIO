@@ -239,6 +239,52 @@ case in:                                              \
     throw Exception("Unsupported bit-depths");
 }
 
+bool CPUProcessor::Impl::isDynamic() const noexcept
+{
+    if (m_inBitDepthOp->isDynamic())
+    {
+        return true;
+    }
+
+    for (const auto & op : m_cpuOps)
+    {
+        if (op->isDynamic())
+        {
+            return true;
+        }
+    }
+
+    if (m_outBitDepthOp->isDynamic())
+    {
+        return true;
+    }
+
+    return false;
+}
+
+bool CPUProcessor::Impl::hasDynamicProperty(DynamicPropertyType type) const noexcept
+{
+    if (m_inBitDepthOp->hasDynamicProperty(type))
+    {
+        return true;
+    }
+
+    for (const auto & op : m_cpuOps)
+    {
+        if (op->hasDynamicProperty(type))
+        {
+            return true;
+        }
+    }
+
+    if (m_outBitDepthOp->hasDynamicProperty(type))
+    {
+        return true;
+    }
+
+    return false;
+}
+
 DynamicPropertyRcPtr CPUProcessor::Impl::getDynamicProperty(DynamicPropertyType type) const
 {
     if (m_inBitDepthOp->hasDynamicProperty(type))
@@ -470,6 +516,16 @@ BitDepth CPUProcessor::getInputBitDepth() const
 BitDepth CPUProcessor::getOutputBitDepth() const
 {
     return getImpl()->getOutputBitDepth();
+}
+
+bool CPUProcessor::isDynamic() const noexcept
+{
+    return getImpl()->isDynamic();
+}
+
+bool CPUProcessor::hasDynamicProperty(DynamicPropertyType type) const noexcept
+{
+    return getImpl()->hasDynamicProperty(type);
 }
 
 DynamicPropertyRcPtr CPUProcessor::getDynamicProperty(DynamicPropertyType type) const
