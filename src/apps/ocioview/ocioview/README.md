@@ -22,8 +22,10 @@ These components are linked with 10 possible transform subscriptions. Each subsc
 tracks the transform(s) for one config item, and each viewer can subscribe to any of 
 these transforms, providing fast visual feedback for transform editing.
 
-``ocioview`` being an alpha release means this app is functional, but still in development, so 
-may have some rough edges. Feedback and bug reports are appreciated.
+``ocioview`` being an alpha release means this app is functional, but still in 
+development, so may have some rough edges. Development has mostly been done on Windows. 
+Improved support for other platforms is forthcoming. Feedback and bug reports are 
+appreciated.
 
 An ``ocioview`` demo was given at the 2023 OCIO Virtual Town Hall meeting, which can be 
 viewed on the [ASWF YouTube channel here](https://www.youtube.com/watch?v=y-oq693Wl8g).
@@ -40,7 +42,7 @@ Dependencies
 * PyOpenColorIO
 * [OpenImageIO (Python bindings)](https://github.com/OpenImageIO/oiio)
 * [Imath (Python bindings)](https://github.com/AcademySoftwareFoundation/Imath)
-* ``pip install requirements.txt``
+* ``pip install -r requirements.txt``
   * [numpy](https://pypi.org/project/numpy/)
   * [Pygments](https://pypi.org/project/Pygments/)
   * [PyOpenGL](https://pypi.org/project/PyOpenGL/)

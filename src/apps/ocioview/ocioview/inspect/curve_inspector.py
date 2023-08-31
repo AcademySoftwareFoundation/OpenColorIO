@@ -162,6 +162,8 @@ class CurveView(QtWidgets.QGraphicsView):
         self._sample_rect: Optional[QtCore.QRectF] = None
         self._samples_x_lin: np.ndarray = None
         self._samples_x_log: np.ndarray = None
+        self._sample_y_min: float = self._input_min
+        self._sample_y_max: float = self._input_max
         self._samples: dict[str, np.ndarray] = {}
         self._curve_paths: dict[str, QtGui.QPainterPath] = {}
         self._curve_items: dict[str, QtWidgets.QGraphicsPathItem] = {}
@@ -305,10 +307,6 @@ class CurveView(QtWidgets.QGraphicsView):
         if grid_r < math.floor(curve_r):
             grid_r += 10
 
-        self._sample_rect = QtCore.QRectF(
-            grid_r + 5, grid_t, 40, len(self._curve_items) * 20
-        )
-
         text_pen = QtGui.QPen(GRAY_COLOR)
 
         grid_pen = QtGui.QPen(GRAY_COLOR.darker(200))
@@ -320,39 +318,84 @@ class CurveView(QtWidgets.QGraphicsView):
         painter.setBrush(QtCore.Qt.NoBrush)
         painter.setFont(font)
 
+        # Calculate samples to display
+        sample_step = math.ceil(self._sample_size / 10.0)
+        min_x = max_x = min_y = max_y = None
+
+        if self._sample_type == SampleType.LINEAR:
+            sample_x_values = self._samples_x_lin
+        else:  # SampleType.LOG
+            sample_x_values = self._samples_x_log
+
+        sample_y_data = []
+        for i, sample_y in enumerate(
+            np.linspace(self._sample_y_min, self._sample_y_max, 11, dtype=np.float32)
+        ):
+            pos_y = sample_y * self.CURVE_SCALE
+            sample_y_data.append((pos_y, sample_y))
+
+            if min_y is None or pos_y < min_y:
+                min_y = pos_y
+            if max_y is None or pos_y > max_y:
+                max_y = pos_y
+
+        sample_x_data = []
+        for i, sample_x in enumerate(sample_x_values):
+            if not (i % sample_step == 0 or i == self._sample_size - 1):
+                continue
+
+            pos_x = self._samples_x_lin[i] * self.CURVE_SCALE
+            sample_x_data.append((pos_x, sample_x))
+
+            if min_x is None or pos_x < min_x:
+                min_x = pos_x
+            if max_x is None or pos_x > max_x:
+                max_x = pos_x
+
+        if min_x is None:
+            min_x = grid_l
+        if max_x is None:
+            max_x = grid_r
+        if min_y is None:
+            min_y = grid_t
+        if max_x is None:
+            max_y = grid_b
+
+        self._sample_rect = QtCore.QRectF(
+            max_x + 5, min_y, 40, len(self._curve_items) * 20
+        )
+
+        # Draw grid rows
+        y_text_origin = QtGui.QTextOption(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
+        y_text_origin.setWrapMode(QtGui.QTextOption.NoWrap)
+
+        for pos_y, sample_y in sample_y_data:
+            painter.setPen(grid_pen)
+            painter.drawLine(QtCore.QLineF(min_x, pos_y, max_x, pos_y))
+
+            if pos_y > grid_t:
+                label_value = round(sample_y, 2)
+                if label_value == 0.0:
+                    label_value = abs(label_value)
+
+                painter.save()
+                painter.translate(QtCore.QPointF(min_x, pos_y))
+                painter.scale(1, -1)
+                painter.setPen(text_pen)
+                painter.drawText(
+                    QtCore.QRectF(-42.5, -10, 40, 20), str(label_value), y_text_origin
+                )
+                painter.restore()
+
         # Draw grid columns
         x_text_origin = QtGui.QTextOption(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
         x_text_origin.setWrapMode(QtGui.QTextOption.NoWrap)
 
-        sample_x_step = math.ceil(self._sample_size / 10.0)
-
-        if self._sample_type == SampleType.LINEAR:
-            sample_x_values = np.arange(grid_l, grid_r + 1, 10, dtype=np.float32)
-        else:  # SampleType.LOG
-            sample_x_values = self._samples_x_log
-
-        min_x = None
-        max_x = None
-
-        for i, sample_x in enumerate(sample_x_values):
-            if self._sample_type == SampleType.LINEAR:
-                x = sample_x
-                sample_x /= self.CURVE_SCALE
-            else:  # SampleType.LOG
-                if not (i % sample_x_step == 0 or i == self._sample_size - 1):
-                    continue
-
-                x = self._samples_x_lin[i] * self.CURVE_SCALE
-
-                if min_x is None or x < min_x:
-                    min_x = x
-                if max_x is None or x > max_x:
-                    max_x = x
-
+        for pos_x, sample_x in sample_x_data:
             painter.setPen(grid_pen)
-            painter.drawLine(QtCore.QLineF(x, grid_t, x, grid_b))
+            painter.drawLine(QtCore.QLineF(pos_x, min_y, pos_x, max_y))
 
-            if x > grid_l:
+            if pos_x > grid_l:
                 label_value = round(
                     sample_x, 5 if self._sample_type == SampleType.LOG else 2
                 )
@@ -360,39 +403,12 @@ class CurveView(QtWidgets.QGraphicsView):
                     label_value = abs(label_value)
 
                 painter.save()
-                painter.translate(QtCore.QPointF(x, grid_t))
+                painter.translate(QtCore.QPointF(pos_x, min_y))
                 painter.scale(1, -1)
                 painter.rotate(90)
                 painter.setPen(text_pen)
                 painter.drawText(
                     QtCore.QRect(2.5 + 1, -10, 40, 20), str(label_value), x_text_origin
-                )
-                painter.restore()
-
-        if min_x is None:
-            min_x = grid_l
-        if max_x is None:
-            max_x = grid_r
-
-        # Draw grid rows
-        y_text_origin = QtGui.QTextOption(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
-        y_text_origin.setWrapMode(QtGui.QTextOption.NoWrap)
-
-        for y in np.arange(grid_t, grid_b + 1, 10, dtype=np.float32):
-            painter.setPen(grid_pen)
-            painter.drawLine(QtCore.QLineF(min_x, y, max_x, y))
-
-            if y > grid_t:
-                label_value = round(y / self.CURVE_SCALE, 2)
-                if label_value == 0.0:
-                    label_value = abs(label_value)
-
-                painter.save()
-                painter.translate(QtCore.QPointF(min_x, y))
-                painter.scale(1, -1)
-                painter.setPen(text_pen)
-                painter.drawText(
-                    QtCore.QRectF(-42.5, -10, 40, 20), str(label_value), y_text_origin
                 )
                 painter.restore()
 
@@ -429,7 +445,7 @@ class CurveView(QtWidgets.QGraphicsView):
             )
 
             if sample_l is not None:
-                # Draw sample values in sample rect
+                # Draw sample values
                 painter.setBrush(QtCore.Qt.NoBrush)
 
                 x_label_value = f"{nearest_sample[0]:.05f}"
@@ -542,6 +558,8 @@ class CurveView(QtWidgets.QGraphicsView):
             color_name = palette.color(palette.Text).name()
 
             self._samples[color_name] = np.dstack((self._samples_x_lin, r_samples))
+            self._sample_y_min = r_samples.min()
+            self._sample_y_max = r_samples.max()
 
             curve = QtGui.QPainterPath(
                 QtCore.QPointF(self._samples_x_lin[0], r_samples[0])
@@ -552,6 +570,9 @@ class CurveView(QtWidgets.QGraphicsView):
             self._curve_paths[color_name] = curve
 
         else:
+            sample_y_min = None
+            sample_y_max = None
+
             for i, (color, channel_samples) in enumerate(
                 [
                     (R_COLOR, r_samples),
@@ -565,6 +586,13 @@ class CurveView(QtWidgets.QGraphicsView):
                     (self._samples_x_lin, channel_samples)
                 )
 
+                channel_sample_y_min = channel_samples.min()
+                if sample_y_min is None or channel_sample_y_min < sample_y_min:
+                    sample_y_min = channel_sample_y_min
+                channel_sample_y_max = channel_samples.max()
+                if sample_y_max is None or channel_sample_y_max > sample_y_max:
+                    sample_y_max = channel_sample_y_max
+
                 curve = QtGui.QPainterPath(
                     QtCore.QPointF(self._samples_x_lin[0], channel_samples[0])
                 )
@@ -574,6 +602,9 @@ class CurveView(QtWidgets.QGraphicsView):
                         QtCore.QPointF(self._samples_x_lin[j], channel_samples[j])
                     )
                 self._curve_paths[color_name] = curve
+
+            self._sample_y_min = sample_y_min
+            self._sample_y_max = sample_y_max
 
         # Add curve(s) to scene
         self._curve_rect = QtCore.QRectF()
