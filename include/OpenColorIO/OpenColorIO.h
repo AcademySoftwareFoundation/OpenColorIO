@@ -217,8 +217,8 @@ extern OCIOEXPORT void SetCurrentConfig(const ConstConfigRcPtr & config);
  * "ocio://studio-config-latest" will point to newer versions of those configs. Therefore, it is 
  * recommended that application developers not save those strings and instead save the string that 
  * refers to the current version of that config. That way, it's guaranteed that there will be no 
- * change of behavior in the future. For example, as of OCIO 2.2, "ocio://default" should be saved
- * as "ocio://cg-config-v1.0.0_aces-v1.3_ocio-v2.1".
+ * change of behavior in the future. For example, as of OCIO 2.3, "ocio://default" should be saved
+ * as "ocio://cg-config-v2.1.0_aces-v1.3_ocio-v2.3".
  * 
  * Note that there is no validation done on the path. That is left to the application since 
  * typically the application will load the config before attempting to save its path
@@ -374,9 +374,11 @@ public:
      * 
      * ACES Studio config, contains a more complete collection of color spaces and displays:
      * "studio-config-v1.0.0_aces-v1.3_ocio-v2.1"
+     * "studio-config-v2.1.0_aces-v1.3_ocio-v2.3"
      * 
      * ACES CG config, basic color spaces for computer graphics apps:
      * "cg-config-v1.0.0_aces-v1.3_ocio-v2.1"
+     * "cg-config-v2.1.0_aces-v1.3_ocio-v2.3"
      * 
      * More information is available at: 
      * %https://github.com/AcademySoftwareFoundation/OpenColorIO-Config-ACES
@@ -2637,6 +2639,10 @@ public:
      * there is one in the CPU processor.
      */
     DynamicPropertyRcPtr getDynamicProperty(DynamicPropertyType type) const;
+    /// True if at least one dynamic property of that type exists.
+    bool hasDynamicProperty(DynamicPropertyType type) const noexcept;
+    /// True if at least one dynamic property of any type exists and is dynamic.
+    bool isDynamic() const noexcept;
 
     /**
      * \brief Apply to an image with any kind of channel ordering while
@@ -3765,7 +3771,7 @@ public:
     virtual bool isBuiltinConfigRecommended(size_t configIndex) const = 0;
 
     // Return the full forward-compatible name of the default built-in config.
-    // Please use ResolveConfigPath(\"ocio://default\"). This method will be deprecated in OCIO 2.3.
+    OCIO_DEPRECATED("This was marked as deprecated starting in v2.3, please use ResolveConfigPath(\"ocio://default\").")
     virtual const char * getDefaultBuiltinConfigName() const = 0;
 protected:
     BuiltinConfigRegistry() = default;

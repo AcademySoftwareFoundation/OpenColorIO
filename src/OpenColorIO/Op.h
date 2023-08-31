@@ -45,6 +45,7 @@ public:
     // the 1D LUT CPU Op where the finalization depends on input and output bit depths.
     virtual void apply(const void * inImg, void * outImg, long numPixels) const = 0;
 
+    virtual bool isDynamic() const;
     virtual bool hasDynamicProperty(DynamicPropertyType type) const;
     virtual DynamicPropertyRcPtr getDynamicProperty(DynamicPropertyType type) const;
 };

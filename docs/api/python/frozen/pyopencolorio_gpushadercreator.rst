@@ -50,6 +50,47 @@
        }                                     //
 
 
+   .. py:attribute:: GpuShaderCreator.TEXTURE_1D
+      :module: PyOpenColorIO
+      :value: <TextureDimensions.TEXTURE_1D: 1>
+
+
+   .. py:attribute:: GpuShaderCreator.TEXTURE_2D
+      :module: PyOpenColorIO
+      :value: <TextureDimensions.TEXTURE_2D: 2>
+
+
+   .. py:class:: GpuShaderCreator.TextureDimensions
+      :module: PyOpenColorIO
+      :canonical: PyOpenColorIO.GpuShaderCreator.TextureDimensions
+
+      Dimension enum used to differentiate between 1D and 2D object/resource types.
+
+      Members:
+
+        TEXTURE_1D
+
+        TEXTURE_2D
+
+
+      .. py:attribute:: GpuShaderCreator.TextureDimensions.TEXTURE_1D
+         :module: PyOpenColorIO
+         :value: <TextureDimensions.TEXTURE_1D: 1>
+
+
+      .. py:attribute:: GpuShaderCreator.TextureDimensions.TEXTURE_2D
+         :module: PyOpenColorIO
+         :value: <TextureDimensions.TEXTURE_2D: 2>
+
+
+      .. py:property:: GpuShaderCreator.TextureDimensions.name
+         :module: PyOpenColorIO
+
+
+      .. py:property:: GpuShaderCreator.TextureDimensions.value
+         :module: PyOpenColorIO
+
+
    .. py:method:: GpuShaderCreator.addToDeclareShaderCode(self: PyOpenColorIO.GpuShaderCreator, shaderCode: str) -> None
       :module: PyOpenColorIO
 
@@ -96,6 +137,10 @@
 
 
    .. py:method:: GpuShaderCreator.finalize(self: PyOpenColorIO.GpuShaderCreator) -> None
+      :module: PyOpenColorIO
+
+
+   .. py:method:: GpuShaderCreator.getAllowTexture1D(self: PyOpenColorIO.GpuShaderCreator) -> bool
       :module: PyOpenColorIO
 
 
@@ -146,6 +191,12 @@
 
    .. py:method:: GpuShaderCreator.hasDynamicProperty(self: PyOpenColorIO.GpuShaderCreator, type: PyOpenColorIO.DynamicPropertyType) -> bool
       :module: PyOpenColorIO
+
+
+   .. py:method:: GpuShaderCreator.setAllowTexture1D(self: PyOpenColorIO.GpuShaderCreator, allowed: bool) -> None
+      :module: PyOpenColorIO
+
+      Allow 1D GPU resource type, otherwise always using 2D resources for 1D LUTs.
 
 
    .. py:method:: GpuShaderCreator.setFunctionName(self: PyOpenColorIO.GpuShaderCreator, name: str) -> None

@@ -527,6 +527,8 @@ void bindPyTypes(py::module & m)
                DOC(PyOpenColorIO, GpuLanguage, GPU_LANGUAGE_HLSL_DX11))
         .value("GPU_LANGUAGE_MSL_2_0", GPU_LANGUAGE_MSL_2_0,
                DOC(PyOpenColorIO, GpuLanguage, GPU_LANGUAGE_MSL_2_0))
+        .value("LANGUAGE_OSL_1", LANGUAGE_OSL_1,
+               DOC(PyOpenColorIO, GpuLanguage, LANGUAGE_OSL_1))
         .export_values();
 
     py::enum_<EnvironmentMode>(
