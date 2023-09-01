@@ -205,7 +205,9 @@ endif()
 
 configure_file(res/OpenColorIO.pc.in ${CMAKE_CURRENT_BINARY_DIR}/OpenColorIO.pc @ONLY)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/OpenColorIO.pc DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
-if(OCIO_ARCH_X86)
+
+if(OCIO_USE_SIMD AND (OCIO_ARCH_X86 OR OCIO_USE_SSE2NEON))
+    # Note that these files are gated by preprocessors to remove them based on the OCIO_USE_* vars.
     set_property(SOURCE ops/lut1d/Lut1DOpCPU_SSE2.cpp APPEND PROPERTY COMPILE_OPTIONS ${OCIO_SSE2_ARGS})
     set_property(SOURCE ops/lut1d/Lut1DOpCPU_AVX.cpp APPEND PROPERTY COMPILE_OPTIONS ${OCIO_AVX_ARGS})
     set_property(SOURCE ops/lut1d/Lut1DOpCPU_AVX2.cpp APPEND PROPERTY COMPILE_OPTIONS ${OCIO_AVX2_ARGS})
@@ -311,6 +313,10 @@ target_link_libraries(OpenColorIO
         MINIZIP::minizip-ng
 )
 
+if(OCIO_USE_SIMD AND OCIO_USE_SSE2NEON AND COMPILER_SUPPORTS_SSE_WITH_SSE2NEON)
+    target_link_libraries(OpenColorIO PRIVATE $<BUILD_INTERFACE:sse2neon>)
+endif()
+
 if(APPLE)
     target_link_libraries(OpenColorIO
         PRIVATE
@@ -339,13 +345,6 @@ if(BUILD_SHARED_LIBS OR (OCIO_BUILD_PYTHON AND UNIX))
     # If supported for the target machine, emit position-independent code
     # suitable for dynamic linking.
     set_property(TARGET OpenColorIO PROPERTY POSITION_INDEPENDENT_CODE ON)
-endif()
-
-if(OCIO_USE_SSE)
-    target_compile_definitions(OpenColorIO
-        PRIVATE
-            USE_SSE
-    )
 endif()
 
 if(MSVC AND BUILD_TYPE_DEBUG AND BUILD_SHARED_LIBS)

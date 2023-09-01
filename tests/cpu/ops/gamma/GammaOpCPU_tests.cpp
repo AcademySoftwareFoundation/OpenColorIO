@@ -75,7 +75,7 @@ OCIO_ADD_TEST(GammaOpCPU, apply_basic_style_fwd)
     // In OCIO v2, the behavior  does *not* depend on the gamma.
     const std::vector<double> gammaVals = { 1.2, 2.12, 1., 1.05 };
 
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
     const float expected_32f[numPixels*4] = {
         0.0f,        0.0f,        0.0f,       0.0f,
         0.0f,        0.0f,        0.00005f,   0.48297336f,
@@ -139,7 +139,7 @@ OCIO_ADD_TEST(GammaOpCPU, apply_basic_style_rev)
 
     const std::vector<double> gammaVals = { 1.2, 2.12, 1.123, 1.05 };
 
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
     const float expected_32f[numPixels*4] = {
         0.0f,        0.0f,        0.0f,        0.0f,
         0.0f,        0.0f,        0.00014792f, 0.51678240f,
@@ -205,7 +205,7 @@ OCIO_ADD_TEST(GammaOpCPU, apply_basic_mirror_style_fwd)
 
     const std::vector<double> gammaVals = { 1.2, 2.12, 1.123, 1.05 };
 
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
     const float expected_32f[numPixels * 4] = {
          0.00010933f,  0.00001323f,  0.03458935f,  0.73928129f,
         -0.00010933f, -0.00001323f, -0.03458935f, -0.73928129f,
@@ -297,7 +297,7 @@ OCIO_ADD_TEST(GammaOpCPU, apply_basic_mirror_style_rev)
 
     const std::vector<double> gammaVals = { 1.2, 2.12, 1.123, 1.05 };
 
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
     const float expected_32f[numPixels * 4] = {
          0.00177476f,  0.08215060f,  0.06941742f,  0.76033723f,
         -0.00177476f, -0.08215060f, -0.06941742f, -0.76033723f,
@@ -388,7 +388,7 @@ OCIO_ADD_TEST(GammaOpCPU, apply_basic_pass_thru_style_fwd)
 
     const std::vector<double> gammaVals = { 1.2, 2.12, 1.123, 1.05 };
 
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
     const float expected_32f[numPixels * 4] = {
         0.00010933f, 0.00001323f, 0.03458935f, 0.73928129f,
         input_32f[04], input_32f[05], input_32f[06], input_32f[07],
@@ -467,7 +467,7 @@ OCIO_ADD_TEST(GammaOpCPU, apply_basic_pass_thru_style_rev)
 
     const std::vector<double> gammaVals = { 1.2, 2.12, 1.123, 1.05 };
 
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
     const float expected_32f[numPixels * 4] = {
         0.00177476f, 0.08215060f, 0.06941742f, 0.76033723f,
         input_32f[04], input_32f[05], input_32f[06], input_32f[07],
@@ -542,7 +542,7 @@ OCIO_ADD_TEST(GammaOpCPU, apply_moncurve_style_fwd)
          1.005f,   1.05f,    1.5f,      -0.25f,
         -inf,      inf,      qnan,       0.0f };
 
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
     const float expected_32f[numPixels*4] = {
         -0.07738016f, -0.33144456f, -0.25f,      0.0f,
         -0.00019345f,  0.0f,         0.00005f,   0.49101364f, 
@@ -597,7 +597,7 @@ OCIO_ADD_TEST(GammaOpCPU, apply_moncurve_style_rev)
          1.005f,   1.05f,    1.5f,      -0.25f,
         -inf,      inf,      qnan,       0.0f };
 
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
     const float expected_32f[numPixels*4] = {
         -6.18606853f, -1.69711625f, -0.25f,      0.0f,
         -0.01546517f,  0.0f,         0.00005f,   0.50915080f,
@@ -654,7 +654,7 @@ OCIO_ADD_TEST(GammaOpCPU, apply_moncurve_mirror_style_fwd)
         -1.005f,  -1.05f,   -1.5f,      -1.0f,
         -inf,      inf,      qnan,       0.0f };
 
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
     const float expected_32f[numPixels * 4] = {
          0.00003869f,  0.00220963f,  0.04081632f,  0.73652046f,
         -0.00003869f, -0.00220963f, -0.04081632f, -0.73652046f,
@@ -715,7 +715,7 @@ OCIO_ADD_TEST(GammaOpCPU, apply_moncurve_mirror_style_rev)
         -1.005f,  -1.05f,   -1.5f,      -1.0f,
         -inf,      inf,      qnan,       0.0f };
 
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
     const float expected_32f[numPixels * 4] = {
          0.00309303f,  0.01131410f,  0.06125000f,  0.76366448f,
         -0.00309303f, -0.01131410f, -0.06125000f, -0.76366448f,

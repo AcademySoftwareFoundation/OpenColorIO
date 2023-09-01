@@ -40,7 +40,7 @@ protected:
     float m_alpGamma;
 };
 
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
 class GammaBasicOpCPUSSE : public GammaBasicOpCPU
 {
 public:
@@ -63,7 +63,7 @@ public:
     void apply(const void * inImg, void * outImg, long numPixels) const override;
 };
 
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
 class GammaBasicMirrorOpCPUSSE : public GammaBasicMirrorOpCPU
 {
 public:
@@ -86,7 +86,7 @@ public:
     void apply(const void * inImg, void * outImg, long numPixels) const override;
 };
 
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
 class GammaBasicPassThruOpCPUSSE : public GammaBasicPassThruOpCPU
 {
 public:
@@ -122,7 +122,7 @@ protected:
     void update(ConstGammaOpDataRcPtr & gamma);
 };
 
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
 class GammaMoncurveOpCPUFwdSSE : public GammaMoncurveOpCPUFwd
 {
 public:
@@ -147,7 +147,7 @@ protected:
 
 };
 
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
 class GammaMoncurveOpCPURevSSE : public GammaMoncurveOpCPURev
 {
 public:
@@ -171,7 +171,7 @@ protected:
     void update(ConstGammaOpDataRcPtr & gamma);
 };
 
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
 class GammaMoncurveMirrorOpCPUFwdSSE : public GammaMoncurveMirrorOpCPUFwd
 {
 public:
@@ -195,7 +195,7 @@ protected:
     void update(ConstGammaOpDataRcPtr & gamma);
 };
 
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
 class GammaMoncurveMirrorOpCPURevSSE : public GammaMoncurveMirrorOpCPURev
 {
 public:
@@ -210,7 +210,7 @@ public:
 
 ConstOpCPURcPtr GetGammaRenderer(ConstGammaOpDataRcPtr & gamma, bool fastPower)
 {
-#ifndef USE_SSE
+#if OCIO_USE_SSE2 == 0
     std::ignore = fastPower;
 #endif
 
@@ -218,7 +218,7 @@ ConstOpCPURcPtr GetGammaRenderer(ConstGammaOpDataRcPtr & gamma, bool fastPower)
     {
         case GammaOpData::MONCURVE_FWD:
         {
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
             if (fastPower) return std::make_shared<GammaMoncurveOpCPUFwdSSE>(gamma);
             else
 #endif
@@ -228,7 +228,7 @@ ConstOpCPURcPtr GetGammaRenderer(ConstGammaOpDataRcPtr & gamma, bool fastPower)
 
         case GammaOpData::MONCURVE_REV:
         {
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
             if (fastPower) return std::make_shared<GammaMoncurveOpCPURevSSE>(gamma);
             else
 #endif
@@ -238,7 +238,7 @@ ConstOpCPURcPtr GetGammaRenderer(ConstGammaOpDataRcPtr & gamma, bool fastPower)
 
         case GammaOpData::MONCURVE_MIRROR_FWD:
         {
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
             if (fastPower) return std::make_shared<GammaMoncurveMirrorOpCPUFwdSSE>(gamma);
             else
 #endif
@@ -248,7 +248,7 @@ ConstOpCPURcPtr GetGammaRenderer(ConstGammaOpDataRcPtr & gamma, bool fastPower)
 
         case GammaOpData::MONCURVE_MIRROR_REV:
         {
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
             if (fastPower) return std::make_shared<GammaMoncurveMirrorOpCPURevSSE>(gamma);
             else
 #endif
@@ -259,7 +259,7 @@ ConstOpCPURcPtr GetGammaRenderer(ConstGammaOpDataRcPtr & gamma, bool fastPower)
         case GammaOpData::BASIC_FWD:
         case GammaOpData::BASIC_REV:
         {
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
             if (fastPower) return std::make_shared<GammaBasicOpCPUSSE>(gamma);
             else
 #endif
@@ -269,7 +269,7 @@ ConstOpCPURcPtr GetGammaRenderer(ConstGammaOpDataRcPtr & gamma, bool fastPower)
         case GammaOpData::BASIC_MIRROR_FWD:
         case GammaOpData::BASIC_MIRROR_REV:
         {
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
             if (fastPower) return std::make_shared<GammaBasicMirrorOpCPUSSE>(gamma);
             else
 #endif
@@ -279,7 +279,7 @@ ConstOpCPURcPtr GetGammaRenderer(ConstGammaOpDataRcPtr & gamma, bool fastPower)
         case GammaOpData::BASIC_PASS_THRU_FWD:
         case GammaOpData::BASIC_PASS_THRU_REV:
         {
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
             if (fastPower) return std::make_shared<GammaBasicPassThruOpCPUSSE>(gamma);
             else
 #endif
@@ -317,7 +317,7 @@ void GammaBasicOpCPU::update(ConstGammaOpDataRcPtr & gamma)
     m_alpGamma = (float)(forward ? gamma->getAlphaParams()[0] : 1. / gamma->getAlphaParams()[0]);
 }
 
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
 void GammaBasicOpCPUSSE::apply(const void * inImg, void * outImg, long numPixels) const
 {
     const float * in = (const float *)inImg;
@@ -337,7 +337,7 @@ void GammaBasicOpCPUSSE::apply(const void * inImg, void * outImg, long numPixels
         out += 4;
     }
 }
-#endif // USE_SSE
+#endif // OCIO_USE_SSE2
 
 void GammaBasicOpCPU::apply(const void * inImg, void * outImg, long numPixels) const
 {
@@ -366,7 +366,7 @@ GammaBasicMirrorOpCPU::GammaBasicMirrorOpCPU(ConstGammaOpDataRcPtr & gamma)
 {
 }
 
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
 void GammaBasicMirrorOpCPUSSE::apply(const void * inImg, void * outImg, long numPixels) const
 {
     const float * in = (const float *)inImg;
@@ -418,7 +418,7 @@ GammaBasicPassThruOpCPU::GammaBasicPassThruOpCPU(ConstGammaOpDataRcPtr & gamma)
 {
 }
 
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
 void GammaBasicPassThruOpCPUSSE::apply(const void * inImg, void * outImg, long numPixels) const
 {
     const float * in = (const float *)inImg;
@@ -480,7 +480,7 @@ void GammaMoncurveOpCPUFwd::update(ConstGammaOpDataRcPtr & gamma)
     ComputeParamsFwd(gamma->getAlphaParams(), m_alpha);
 }
 
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
 void GammaMoncurveOpCPUFwdSSE::apply(const void * inImg, void * outImg, long numPixels) const
 {
     const float * in = (const float *)inImg;
@@ -520,7 +520,7 @@ void GammaMoncurveOpCPUFwdSSE::apply(const void * inImg, void * outImg, long num
         out += 4;
     }
 }
-#endif // USE_SSE
+#endif // OCIO_USE_SSE2
 
 void GammaMoncurveOpCPUFwd::apply(const void * inImg, void * outImg, long numPixels) const
 {
@@ -569,7 +569,7 @@ void GammaMoncurveOpCPURev::update(ConstGammaOpDataRcPtr & gamma)
     ComputeParamsRev(gamma->getAlphaParams(), m_alpha);
 }
 
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
 void GammaMoncurveOpCPURevSSE::apply(const void * inImg, void * outImg, long numPixels) const
 {
     const float * in = (const float *)inImg;
@@ -658,7 +658,7 @@ void GammaMoncurveMirrorOpCPUFwd::update(ConstGammaOpDataRcPtr & gamma)
     ComputeParamsFwd(gamma->getAlphaParams(), m_alpha);
 }
 
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
 void GammaMoncurveMirrorOpCPUFwdSSE::apply(const void * inImg, void * outImg, long numPixels) const
 {
     const float * in = (const float *)inImg;
@@ -754,7 +754,7 @@ void GammaMoncurveMirrorOpCPURev::update(ConstGammaOpDataRcPtr & gamma)
     ComputeParamsRev(gamma->getAlphaParams(), m_alpha);
 }
 
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
 void GammaMoncurveMirrorOpCPURevSSE::apply(const void * inImg, void * outImg, long numPixels) const
 {
     const float * in = (const float *)inImg;

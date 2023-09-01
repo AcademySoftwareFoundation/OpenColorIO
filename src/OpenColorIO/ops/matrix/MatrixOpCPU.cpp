@@ -211,7 +211,7 @@ void MatrixWithOffsetRenderer::apply(const void * inImg, void * outImg, long num
     const float * in = (const float *)inImg;
     float * out = (float *)outImg;
 
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
     // Matrix decomposition per _column.
     __m128 m0 = _mm_set_ps(m_column1[3],
                            m_column1[2],
@@ -325,7 +325,7 @@ void MatrixRenderer::apply(const void * inImg, void * outImg, long numPixels) co
     const float * in = (const float *)inImg;
     float * out = (float *)outImg;
 
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
     // Matrix decomposition per _column.
     __m128 m0 = _mm_set_ps(m_column1[3],
                            m_column1[2],

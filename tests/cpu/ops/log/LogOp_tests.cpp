@@ -186,11 +186,11 @@ OCIO_ADD_TEST(LogOp, inverse)
 
     ops[1]->apply(data, 3);
 
-#ifndef USE_SSE
+#if OCIO_USE_SSE2 == 0
     const float error = 1e-3f;
 #else
     const float error = 1e-2f;
-#endif // !USE_SSE
+#endif // !OCIO_USE_SSE2
 
     for(int i=0; i<12; ++i)
     {
