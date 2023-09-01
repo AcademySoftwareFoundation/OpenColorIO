@@ -9,7 +9,6 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include <immintrin.h>
 #include "MathUtils.h"
 #include "BitDepthUtils.h"
 #include "SSE2.h"
@@ -17,11 +16,8 @@
 
 namespace OCIO = OCIO_NAMESPACE;
 
-#define SSE2_CHECK() \
-    if (!OCIO::CPUInfo::instance().hasSSE2()) throw SkipException()
-
-#define HAS_F16C() \
-    OCIO::CPUInfo::instance().hasF16C()
+#define DEFINE_SIMD_TEST(name) \
+void sse2_test_##name()
 
 namespace
 {
@@ -137,10 +133,7 @@ void testConvert_InBitDepth(OCIO::BitDepth outBD)
         case OCIO::BIT_DEPTH_UINT16:
             return testConvert_OutBitDepth<inBD, OCIO::BIT_DEPTH_UINT16>();
         case OCIO::BIT_DEPTH_F16:
-#if OCIO_USE_F16C
-            if (HAS_F16C())
-                return testConvert_OutBitDepth<inBD, OCIO::BIT_DEPTH_F16>();
-#endif
+            return testConvert_OutBitDepth<inBD, OCIO::BIT_DEPTH_F16>();
             break;
         case OCIO::BIT_DEPTH_F32:
             return testConvert_OutBitDepth<inBD, OCIO::BIT_DEPTH_F32>();
@@ -155,9 +148,8 @@ void testConvert_InBitDepth(OCIO::BitDepth outBD)
 
 }
 
-OCIO_ADD_TEST(SSE2, packed_uint8_to_float_test)
+DEFINE_SIMD_TEST(packed_uint8_to_float_test)
 {
-    SSE2_CHECK();
     std::vector<uint8_t> inImage(256);
     std::vector<float> outImage(256);
 
@@ -184,9 +176,8 @@ OCIO_ADD_TEST(SSE2, packed_uint8_to_float_test)
 }
 
 
-OCIO_ADD_TEST(SSE2, packed_uint10_to_f32_test)
+DEFINE_SIMD_TEST(packed_uint10_to_f32_test)
 {
-    SSE2_CHECK();
     size_t maxValue = OCIO::BitDepthInfo<OCIO::BIT_DEPTH_UINT10>::maxValue + 1;
     std::vector<uint16_t> inImage(maxValue);
     std::vector<float> outImage(maxValue);
@@ -211,9 +202,8 @@ OCIO_ADD_TEST(SSE2, packed_uint10_to_f32_test)
     }
 }
 
-OCIO_ADD_TEST(SSE2, packed_uint12_to_f32_test)
+DEFINE_SIMD_TEST(packed_uint12_to_f32_test)
 {
-    SSE2_CHECK();
     size_t maxValue = OCIO::BitDepthInfo<OCIO::BIT_DEPTH_UINT12>::maxValue + 1;
     std::vector<uint16_t> inImage(maxValue);
     std::vector<float> outImage(maxValue);
@@ -238,9 +228,8 @@ OCIO_ADD_TEST(SSE2, packed_uint12_to_f32_test)
     }
 }
 
-OCIO_ADD_TEST(SSE2, packed_uint16_to_f32_test)
+DEFINE_SIMD_TEST(packed_uint16_to_f32_test)
 {
-    SSE2_CHECK();
     size_t maxValue = OCIO::BitDepthInfo<OCIO::BIT_DEPTH_UINT16>::maxValue + 1;
     std::vector<uint16_t> inImage(maxValue);
     std::vector<float> outImage(maxValue);
@@ -265,13 +254,8 @@ OCIO_ADD_TEST(SSE2, packed_uint16_to_f32_test)
     }
 }
 
-#if OCIO_USE_F16C
-
-OCIO_ADD_TEST(SSE2, packed_f16_to_f32_test)
+DEFINE_SIMD_TEST(packed_f16_to_f32_test)
 {
-    SSE2_CHECK();
-    if(!HAS_F16C()) throw SkipException();
-
     size_t maxValue = OCIO::BitDepthInfo<OCIO::BIT_DEPTH_UINT16>::maxValue + 1;
     std::vector<half> inImage(maxValue);
     std::vector<float> outImage(maxValue);
@@ -297,12 +281,9 @@ OCIO_ADD_TEST(SSE2, packed_f16_to_f32_test)
     }
 }
 
-#endif
 
-
-OCIO_ADD_TEST(SSE2, packed_nan_inf_test)
+DEFINE_SIMD_TEST(packed_nan_inf_test)
 {
-    SSE2_CHECK();
     const float qnan = std::numeric_limits<float>::quiet_NaN();
     const float inf = std::numeric_limits<float>::infinity();
     const float maxf = std::numeric_limits<float>::max();
@@ -320,24 +301,20 @@ OCIO_ADD_TEST(SSE2, packed_nan_inf_test)
                                   -0.0f,     -1.0f,     - 2.0f,     -5.0f,
                               100000.0f, 200000.0f,     -10.0f,  -2000.0f,
                                65535.0f,  65537.0f,  -65536.0f, -65537.0f };
-#if OCIO_USE_F16C
-    if(HAS_F16C())
-    {
-        for (unsigned i = 0; i < 32; i+= 16)
-        {
-            OCIO::SSE2RGBAPack<OCIO::BIT_DEPTH_F32>::Load(&pixels[i], r, g, b, a);
-            OCIO::SSE2RGBAPack<OCIO::BIT_DEPTH_F16>::Store(&outImageHalf[i], r, g, b, a);
-        }
 
-        for (unsigned i = 0; i < outImageHalf.size(); i++)
-        {
-            OCIO_CHECK_ASSERT_MESSAGE(!OCIO::FloatsDiffer((half)pixels[i], (float)outImageHalf[i], 0, false),
-                                    GetErrorMessage((half)pixels[i], (float)outImageHalf[i],
-                                                    OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F16));
-        }
+    for (unsigned i = 0; i < 32; i+= 16)
+    {
+        OCIO::SSE2RGBAPack<OCIO::BIT_DEPTH_F32>::Load(&pixels[i], r, g, b, a);
+        OCIO::SSE2RGBAPack<OCIO::BIT_DEPTH_F16>::Store(&outImageHalf[i], r, g, b, a);
     }
 
-#endif
+    for (unsigned i = 0; i < outImageHalf.size(); i++)
+    {
+        OCIO_CHECK_ASSERT_MESSAGE(!OCIO::FloatsDiffer((half)pixels[i], (float)outImageHalf[i], 0, false),
+                                  GetErrorMessage((half)pixels[i], (float)outImageHalf[i],
+                                                OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F16));
+    }
+
 
     const uint8_t resultU8[32] = {   0,   0,   0,   0,
                                    255,   0,   3,   0,
@@ -428,9 +405,8 @@ OCIO_ADD_TEST(SSE2, packed_nan_inf_test)
 
 }
 
-OCIO_ADD_TEST(SSE2, packed_all_test)
+DEFINE_SIMD_TEST(packed_all_test)
 {
-    SSE2_CHECK();
     const std::vector<  OCIO::BitDepth> formats = {
                                                    OCIO::BIT_DEPTH_UINT8,
                                                    OCIO::BIT_DEPTH_UINT10,
@@ -461,10 +437,7 @@ OCIO_ADD_TEST(SSE2, packed_all_test)
                 testConvert_InBitDepth<OCIO::BIT_DEPTH_UINT16>(outBD);
                 break;
             case OCIO::BIT_DEPTH_F16:
-#if OCIO_USE_F16C
-                if(HAS_F16C())
-                    testConvert_InBitDepth<OCIO::BIT_DEPTH_F16>(outBD);
-#endif
+                testConvert_InBitDepth<OCIO::BIT_DEPTH_F16>(outBD);
                 break;
             case OCIO::BIT_DEPTH_F32:
                 testConvert_InBitDepth<OCIO::BIT_DEPTH_F32>(outBD);

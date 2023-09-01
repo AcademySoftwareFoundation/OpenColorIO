@@ -26,13 +26,6 @@ set(SOURCES
 
 add_executable(test_gpu_exec ${SOURCES})
 
-if(OCIO_USE_SSE)
-	target_compile_definitions(test_gpu_exec
-		PRIVATE
-			USE_SSE
-	)
-endif(OCIO_USE_SSE)
-
 set_target_properties(test_gpu_exec PROPERTIES 
 	COMPILE_OPTIONS "${PLATFORM_COMPILE_OPTIONS}"
 	LINK_OPTIONS "${PLATFORM_LINK_OPTIONS}"

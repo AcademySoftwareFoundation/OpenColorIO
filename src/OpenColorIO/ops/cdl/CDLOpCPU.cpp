@@ -99,7 +99,7 @@ void RenderParams::update(ConstCDLOpDataRcPtr & cdl)
 }
 
 
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
 
 static const __m128 LumaWeights = _mm_setr_ps(0.2126f, 0.7152f, 0.0722f, 0.0);
 
@@ -170,7 +170,7 @@ inline void ApplySaturation(__m128& pix, const __m128 saturation)
     pix = _mm_add_ps(luma, _mm_mul_ps(saturation, _mm_sub_ps(pix, luma)));
 }
 
-#endif // USE_SSE
+#endif // OCIO_USE_SSE2
 
 inline void ApplyScale(float * pix, const float scale)
 {
@@ -283,7 +283,7 @@ public:
     virtual void apply(const void * inImg, void * outImg, long numPixels) const;
 };
 
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
 template<bool CLAMP>
 class CDLRendererFwdSSE : public CDLRendererFwd<CLAMP>
 {
@@ -309,7 +309,7 @@ public:
     virtual void apply(const void * inImg, void * outImg, long numPixels) const;
 };
 
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
 template<bool CLAMP>
 class CDLRendererRevSSE : public CDLRendererRev<CLAMP>
 {
@@ -329,7 +329,7 @@ CDLOpCPU::CDLOpCPU(ConstCDLOpDataRcPtr & cdl)
     m_renderParams.update(cdl);
 }
 
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
 void LoadRenderParams(const RenderParams & renderParams,
                       __m128 & slope,
                       __m128 & offset,
@@ -343,7 +343,7 @@ void LoadRenderParams(const RenderParams & renderParams,
 }
 #endif
 
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
 template<bool CLAMP>
 void CDLRendererFwdSSE<CLAMP>::apply(const void * inImg, void * outImg, long numPixels) const
 {
@@ -406,7 +406,7 @@ void CDLRendererFwd<CLAMP>::apply(const void * inImg, void * outImg, long numPix
     }
 }
 
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
 template<bool CLAMP>
 void CDLRendererRevSSE<CLAMP>::apply(const void * inImg, void * outImg, long numPixels) const
 {
@@ -472,31 +472,31 @@ void CDLRendererRev<CLAMP>::apply(const void * inImg, void * outImg, long numPix
 // clamp (when needed).  So by default, the following will only get called when power is not 1.
 ConstOpCPURcPtr GetCDLCPURenderer(ConstCDLOpDataRcPtr & cdl, bool fastPower)
 {
-#ifndef USE_SSE
+#if OCIO_USE_SSE2 == 0
     std::ignore = fastPower;
 #endif
     switch(cdl->getStyle())
     {
         case CDLOpData::CDL_V1_2_FWD:
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
             if (fastPower) return std::make_shared<CDLRendererFwdSSE<true>>(cdl);
             else
 #endif
                 return std::make_shared<CDLRendererFwd<true>>(cdl);
         case CDLOpData::CDL_NO_CLAMP_FWD:
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
             if (fastPower) return std::make_shared<CDLRendererFwdSSE<false>>(cdl);
             else
 #endif
                 return std::make_shared<CDLRendererFwd<false>>(cdl);
         case CDLOpData::CDL_V1_2_REV:
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
             if (fastPower) return std::make_shared<CDLRendererRevSSE<true>>(cdl);
             else
 #endif
                 return std::make_shared<CDLRendererRev<true>>(cdl);
         case CDLOpData::CDL_NO_CLAMP_REV:
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
             if (fastPower) return std::make_shared<CDLRendererRevSSE<false>>(cdl);
             else
 #endif

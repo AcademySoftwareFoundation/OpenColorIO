@@ -3,33 +3,67 @@
 
 include(CheckCXXSourceCompiles)
 
-set(_cmake_required_flags_old "${CMAKE_REQUIRED_FLAGS}")
+set(_cmake_cxx_flags_orig "${CMAKE_CXX_FLAGS}")
 
-if(NOT CMAKE_SIZE_OF_VOID_P EQUAL 8)
-    # As CheckCXXCompilerFlag implicitly uses CMAKE_CXX_FLAGS some custom flags could trigger
-    # unrelated warnings causing a detection failure. So, the code disables all warnings to focus
-    # on the SSE2 detection.
-    if(USE_MSVC)
-        set(CMAKE_REQUIRED_FLAGS "/w /arch:SSE2")
-    elseif(USE_GCC OR USE_CLANG)
-        set(CMAKE_REQUIRED_FLAGS "-w -msse2")
-    endif()
+if(APPLE AND ("${CMAKE_OSX_ARCHITECTURES}" MATCHES "arm64;x86_64" 
+          OR "${CMAKE_OSX_ARCHITECTURES}" MATCHES "x86_64;arm64"))
+    set(__universal_build 1)
+    set(_cmake_osx_architectures_orig "${CMAKE_OSX_ARCHITECTURES}")
 endif()
 
-check_cxx_source_compiles ("
+if(MSVC)
+    # x86_64 always has SSE2
+    if("${CMAKE_SIZEOF_VOID_P}" STREQUAL "8")
+        # Simulate the same message we would get by using check_cxx_source_compiles. 
+        message(STATUS "x86_64 always support SSE2 - COMPILER_SUPPORTS_SSE2 - Success")
+        # By setting the variable to 1, tuhe check_cxx_source_compiles will be skipped automatically.
+        set(COMPILER_SUPPORTS_SSE2 1)
+    else()
+        check_cxx_compiler_flag("/arch:SSE2" COMPILER_SUPPORTS_SSE2)
+    endif()
+elseif(USE_GCC OR USE_CLANG)
+    set(CMAKE_CXX_FLAGS "-w -msse2")
+endif()
+
+if (APPLE AND __universal_build)
+    # Force the test to build under x86_64
+    set(CMAKE_OSX_ARCHITECTURES "x86_64")
+    # Apple has an automatic translation layer from SSE to ARM Neon.
+endif()
+
+set(SSE2_CODE "
     #include <emmintrin.h>
-    int main ()
-    {
+
+    int main() 
+    { 
         __m128d a, b;
         double vals[2] = {0};
         a = _mm_loadu_pd (vals);
         b = _mm_add_pd (a,a);
         _mm_storeu_pd (vals,b);
         return (0);
-    }"
-    HAVE_SSE2)
+    }
+")
 
-set(CMAKE_REQUIRED_FLAGS "${_cmake_required_flags_old}")
-unset(_cmake_required_flags_old)
+file(WRITE "${CMAKE_BINARY_DIR}/CMakeTmp/sse2_test.cpp" "${SSE2_CODE}")
 
-mark_as_advanced(HAVE_SSE2)
+message(STATUS "Performing Test COMPILER_SUPPORTS_SSE2")
+try_compile(COMPILER_SUPPORTS_SSE2
+  "${CMAKE_BINARY_DIR}/CMakeTmp"
+  "${CMAKE_BINARY_DIR}/CMakeTmp/sse2_test.cpp"
+)
+
+if(COMPILER_SUPPORTS_SSE2)
+    message(STATUS "Performing Test COMPILER_SUPPORTS_SSE2 - Success")
+else()
+    message(STATUS "Performing Test COMPILER_SUPPORTS_SSE2 - Failed")
+endif()
+
+set(CMAKE_REQUIRED_FLAGS "${_cmake_cxx_flags_orig}")
+unset(_cmake_cxx_flags_orig)
+
+if(__universal_build)
+    set(CMAKE_OSX_ARCHITECTURES "${_cmake_osx_architectures_orig}")
+    unset(_cmake_osx_architectures_orig)
+    unset(__universal_build)
+endif()

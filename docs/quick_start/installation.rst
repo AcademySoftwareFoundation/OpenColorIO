@@ -265,6 +265,7 @@ CMake Options
 +++++++++++++
 
 There are many options available in `CMake. 
+
 <https://cmake.org/cmake/help/latest/guide/user-interaction/index.html#guide:User%20Interaction%20Guide>`_
 
 Several of the most common ones are:
@@ -278,13 +279,32 @@ Here are the most common OCIO-specific CMake options (the default values are sho
 - ``-DOCIO_USE_OIIO_FOR_APPS=OFF`` (Set ON to build tools with OpenImageIO rather than OpenEXR)
 - ``-DOCIO_BUILD_PYTHON=ON`` (Set to OFF to not build the Python binding)
 - ``-DOCIO_BUILD_OPENFX=OFF`` (Set to ON to build the OpenFX plug-ins)
-- ``-DOCIO_USE_SSE=ON`` (Set to OFF to turn off SSE CPU performance optimizations)
+- ``-DOCIO_USE_SIMD=ON`` (Set to OFF to turn off SIMD CPU performance optimizations, such as SSE and NEON)
+- ``-DOCIO_USE_SSE2`` (Set to OFF to turn off SSE2 CPU performance optimizations)
+- ``-DOCIO_USE_AVX`` (Set to OFF to turn off AVX CPU performance optimizations)
+- ``-DOCIO_USE_AVX2`` (Set to OFF to turn off AVX2 CPU performance optimizations)
+- ``-DOCIO_USE_F16C`` (Set to OFF to turn off F16C CPU performance optimizations)
 - ``-DOCIO_BUILD_TESTS=ON`` (Set to OFF to not build the unit tests)
 - ``-DOCIO_BUILD_GPU_TESTS=ON`` (Set to OFF to not build the GPU unit tests)
-- ``-DOCIO_USE_HEADLESS=OFF`` (Set to ON to do headless GPU reendering)
+- ``-DOCIO_USE_HEADLESS=OFF`` (Set to ON to do headless GPU rendering)
 - ``-DOCIO_WARNING_AS_ERROR=ON`` (Set to OFF to turn off warnings as errors)
 - ``-DOCIO_BUILD_DOCS=OFF`` (Set to ON to build the documentation)
 - ``-DOCIO_BUILD_FROZEN_DOCS=OFF`` (Set to ON to update the Python documentation)
+
+Note that OCIO will turn off any specific SIMD CPU performance optimizations if they are not supported 
+by the build target architecture. The default for ``OCIO_USE_SSE2``, ``OCIO_USE_AVX``, ``OCIO_USE_AVX2`` and 
+``OCIO_USE_F16C`` depends on the architecture, but will be ON where supported.
+
+On MacOS, the default is to build for the native architecture that CMake is running under.
+For example, if a x86_64 version of CMake is running under Rosetta, the native architecture will 
+be x86_64, rather then arm64. You can use the ``CMAKE_OSX_ARCHITECTURES`` option to override that.
+To build universal binaries, use the following option: ``-DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"``. 
+
+When doing a universal build, note that the OCIO dependencies must be built as universal libraries 
+too. If you are running in OCIO_INSTALL_EXT_PACKAGES=MISSING or NONE mode, your build will fail if 
+any of your installed libraries are not universal. The easiest way to address this is to set 
+OCIO_INSTALL_EXT_PACKAGES=ALL in order to let OCIO build everything. Alternatively, you may set 
+CMAKE_OSX_ARCHITECTURES to just the platform you are targeting.
 
 Several command-line tools (such as ``ocioconvert``) require reading or writing image files.
 If ``OCIO_USE_OIIO_FOR_APPS=OFF``, these will be built using OpenEXR rather than OpenImageIO
