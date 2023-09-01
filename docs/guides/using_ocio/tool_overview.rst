@@ -305,6 +305,16 @@ Examples::
 .. TODO: examples formatting
 
 
+.. _overview-ocioview:
+
+ocioview
+********
+
+This is a new GUI tool for inspecting and editing config files. It is currently an
+alpha release and we are looking for contributors to extend it or provide tutorials.
+Please see the README in apps/ocioview for details about installation.
+
+
 .. _overview-ociowrite:
 
 ociowrite
