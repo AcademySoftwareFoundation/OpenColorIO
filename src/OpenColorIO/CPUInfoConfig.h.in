@@ -3,6 +3,7 @@
 
 
 #cmakedefine01 OCIO_ARCH_X86
+#cmakedefine01 OCIO_ARCH_X86_32
 
 // Relevant only for arm64 architecture.
 #if defined(__aarch64__)
