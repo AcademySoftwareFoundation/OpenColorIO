@@ -125,7 +125,7 @@ public:
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
 
 inline void ApplyContrast(__m128 & pix, const __m128 contrast, const __m128 pivot)
 {
@@ -245,7 +245,7 @@ inline void ApplyClamp(float * pix, float clampMin, float clampMax)
     //    pix[0] = Clamp(pix[0], clampMin, clampMax);
     // Default values that should not clamp will change clamp.
 }
-#endif // USE_SSE
+#endif // OCIO_USE_SSE2
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -275,7 +275,7 @@ void GradingPrimaryLogFwdOpCPU::apply(const void * inImg, void * outImg, long nu
 
     const bool isGammaIdentity = comp.isGammaIdentity();
 
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
     const __m128 brightness = _mm_set_ps(0.f, comp.getBrightness()[2],
                                               comp.getBrightness()[1],
                                               comp.getBrightness()[0]);
@@ -427,7 +427,7 @@ void GradingPrimaryLogFwdOpCPU::apply(const void * inImg, void * outImg, long nu
             out += 4;
         }
     }
-#endif  // USE_SSE
+#endif  // OCIO_USE_SSE2
 }
 
 GradingPrimaryLogRevOpCPU::GradingPrimaryLogRevOpCPU(ConstGradingPrimaryOpDataRcPtr & gp)
@@ -454,7 +454,7 @@ void GradingPrimaryLogRevOpCPU::apply(const void * inImg, void * outImg, long nu
 
     const bool isGammaIdentity = comp.isGammaIdentity();
 
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
     const __m128 brightnessInv = _mm_set_ps(0.f, comp.getBrightness()[2],
                                                  comp.getBrightness()[1],
                                                  comp.getBrightness()[0]);
@@ -601,7 +601,7 @@ void GradingPrimaryLogRevOpCPU::apply(const void * inImg, void * outImg, long nu
             out += 4;
         }
     }
-#endif // USE_SSE
+#endif // OCIO_USE_SSE2
 }
 
 GradingPrimaryLinFwdOpCPU::GradingPrimaryLinFwdOpCPU(ConstGradingPrimaryOpDataRcPtr & gp)
@@ -628,7 +628,7 @@ void GradingPrimaryLinFwdOpCPU::apply(const void * inImg, void * outImg, long nu
 
     const bool isContrastIdentity = comp.isContrastIdentity();
 
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
     const __m128 offset = _mm_set_ps(0.f, comp.getOffset()[2],
                                           comp.getOffset()[1],
                                           comp.getOffset()[0]);
@@ -775,7 +775,7 @@ void GradingPrimaryLinFwdOpCPU::apply(const void * inImg, void * outImg, long nu
             out += 4;
         }
     }
-#endif // USE_SSE
+#endif // OCIO_USE_SSE2
 }
 
 GradingPrimaryLinRevOpCPU::GradingPrimaryLinRevOpCPU(ConstGradingPrimaryOpDataRcPtr & gp)
@@ -802,7 +802,7 @@ void GradingPrimaryLinRevOpCPU::apply(const void * inImg, void * outImg, long nu
 
     const bool isContrastIdentity = comp.isContrastIdentity();
 
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
     const __m128 offsetInv = _mm_set_ps(0.f, comp.getOffset()[2],
                                              comp.getOffset()[1],
                                              comp.getOffset()[0]);
@@ -943,7 +943,7 @@ void GradingPrimaryLinRevOpCPU::apply(const void * inImg, void * outImg, long nu
             out += 4;
         }
     }
-#endif // USE_SSE
+#endif // OCIO_USE_SSE2
 }
 
 GradingPrimaryVidFwdOpCPU::GradingPrimaryVidFwdOpCPU(ConstGradingPrimaryOpDataRcPtr & gp)
@@ -970,7 +970,7 @@ void GradingPrimaryVidFwdOpCPU::apply(const void * inImg, void * outImg, long nu
 
     const bool isGammaIdentity = comp.isGammaIdentity();
 
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
     const __m128 offset = _mm_set_ps(0.f, comp.getOffset()[2],
                                           comp.getOffset()[1],
                                           comp.getOffset()[0]);
@@ -1123,7 +1123,7 @@ void GradingPrimaryVidFwdOpCPU::apply(const void * inImg, void * outImg, long nu
         }
     }
 
-#endif // USE_SSE
+#endif // OCIO_USE_SSE2
 }
 
 GradingPrimaryVidRevOpCPU::GradingPrimaryVidRevOpCPU(ConstGradingPrimaryOpDataRcPtr & gp)
@@ -1150,7 +1150,7 @@ void GradingPrimaryVidRevOpCPU::apply(const void * inImg, void * outImg, long nu
 
     const bool isGammaIdentity = comp.isGammaIdentity();
 
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
     const __m128 offsetInv = _mm_set_ps(0.f, comp.getOffset()[2],
                                              comp.getOffset()[1],
                                              comp.getOffset()[0]);
@@ -1293,7 +1293,7 @@ void GradingPrimaryVidRevOpCPU::apply(const void * inImg, void * outImg, long nu
             out += 4;
         }
     }
-#endif  // USE_SSE
+#endif  // OCIO_USE_SSE2
 }
 } // Anonymous namespace
 

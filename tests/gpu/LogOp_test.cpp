@@ -10,7 +10,7 @@
 namespace OCIO = OCIO_NAMESPACE;
 
 
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
 const float g_epsilon = 1e-4f;
 const float g_epsilon_inverse = 1e-3f;
 #else

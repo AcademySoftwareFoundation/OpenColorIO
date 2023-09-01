@@ -1,5 +1,7 @@
-#include "Lut1DOpCPU_AVX.h"
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright Contributors to the OpenColorIO Project.
 
+#include "Lut1DOpCPU_AVX.h"
 #if OCIO_USE_AVX
 
 #include <immintrin.h>

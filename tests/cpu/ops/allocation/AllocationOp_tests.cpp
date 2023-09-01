@@ -64,7 +64,7 @@ OCIO_ADD_TEST(AllocationOps, create)
     OCIO::ConstOpRcPtr defaultLogOp = ops[0];
     OCIO::ConstOpRcPtr defaultFitOp = ops[1];
 
-#ifndef USE_SSE
+#if OCIO_USE_SSE2 == 0
     const float error = 1e-6f;
 #else
     const float error = 2e-5f;

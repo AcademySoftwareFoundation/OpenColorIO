@@ -41,6 +41,10 @@ function(add_ocio_test NAME SOURCES PRIVATE_INCLUDES)
             xxHash
     )
 
+    if(OCIO_USE_SIMD AND OCIO_USE_SSE2NEON AND COMPILER_SUPPORTS_SSE_WITH_SSE2NEON)
+        target_link_libraries(${TEST_BINARY} PRIVATE sse2neon)
+    endif()
+
     if(APPLE)
         # Frameworks needed to access the ICC monitor profile.
         target_link_libraries(${TEST_BINARY}
@@ -58,12 +62,7 @@ function(add_ocio_test NAME SOURCES PRIVATE_INCLUDES)
                 "${PROJECT_BINARY_DIR}/generated_include"
         )
     endif(PRIVATE_INCLUDES)
-    if(OCIO_USE_SSE)
-        target_compile_definitions(${TEST_BINARY}
-            PRIVATE
-                USE_SSE
-        )
-    endif(OCIO_USE_SSE)
+
     if(WIN32)
         # A windows application linking to eXpat static libraries must
         # have the global macro XML_STATIC defined
@@ -81,30 +80,32 @@ function(add_ocio_test NAME SOURCES PRIVATE_INCLUDES)
             )
         endif()
     endif(WIN32)
+
     set_target_properties(${TEST_BINARY} PROPERTIES
         COMPILE_OPTIONS "${PLATFORM_COMPILE_OPTIONS}"
         LINK_OPTIONS "${PLATFORM_LINK_OPTIONS}"
     )
 
-    if(OCIO_ARCH_X86)
+    if(OCIO_USE_SIMD AND (OCIO_ARCH_X86 OR OCIO_USE_SSE2NEON))
         add_ocio_test_variant(${TEST_NAME} ${TEST_BINARY})
         add_ocio_test_variant(${TEST_NAME}_no_accel ${TEST_BINARY} --no_accel)
-        if(${OCIO_USE_SSE2})
+
+        if(OCIO_USE_SSE2)
             add_ocio_test_variant(${TEST_NAME}_sse2 ${TEST_BINARY} --sse2)
-            if(${OCIO_USE_F16C})
-                add_ocio_test_variant(${TEST_NAME}_sse2+f16c ${TEST_BINARY} --sse2 --f16c)
-            endif()
         endif()
 
-        if(${OCIO_USE_AVX})
+        if(OCIO_USE_AVX)
             add_ocio_test_variant(${TEST_NAME}_avx ${TEST_BINARY} --avx)
-            if(${OCIO_USE_F16C})
+            if(OCIO_USE_F16C)
                 add_ocio_test_variant(${TEST_NAME}_avx+f16c ${TEST_BINARY} --avx --f16c)
             endif()
         endif()
 
-        if(${OCIO_USE_AVX2})
+        if(OCIO_USE_AVX2)
             add_ocio_test_variant(${TEST_NAME}_avx2 ${TEST_BINARY} --avx2)
+            if(${OCIO_USE_F16C})
+                add_ocio_test_variant(${TEST_NAME}_avx2+f16c ${TEST_BINARY} --avx2 --f16c)
+            endif()
         endif()
     else()
         add_ocio_test_variant(${TEST_NAME} ${TEST_BINARY})
@@ -273,6 +274,7 @@ set(TESTS
     PathUtils_tests.cpp
     Platform_tests.cpp
     Processor_tests.cpp
+    SIMD_tests.cpp
     SSE_tests.cpp
     SSE2_tests.cpp
     AVX_tests.cpp
@@ -320,7 +322,8 @@ prepend(SOURCES "${PROJECT_SOURCE_DIR}/src/OpenColorIO/" ${SOURCES})
 
 list(APPEND SOURCES ${TESTS})
 
-if(OCIO_ARCH_X86)
+if(OCIO_USE_SIMD AND (OCIO_ARCH_X86 OR OCIO_USE_SSE2NEON))
+    # Note that these files are gated by preprocessors to remove them based on the OCIO_USE_* vars.
     set_property(SOURCE "${CMAKE_SOURCE_DIR}/src/OpenColorIO/ops/lut1d/Lut1DOpCPU_SSE2.cpp" APPEND PROPERTY COMPILE_OPTIONS ${OCIO_SSE2_ARGS})
     set_property(SOURCE "${CMAKE_SOURCE_DIR}/src/OpenColorIO/ops/lut1d/Lut1DOpCPU_AVX.cpp" APPEND PROPERTY COMPILE_OPTIONS ${OCIO_AVX_ARGS})
     set_property(SOURCE "${CMAKE_SOURCE_DIR}/src/OpenColorIO/ops/lut1d/Lut1DOpCPU_AVX2.cpp" APPEND PROPERTY COMPILE_OPTIONS ${OCIO_AVX2_ARGS})

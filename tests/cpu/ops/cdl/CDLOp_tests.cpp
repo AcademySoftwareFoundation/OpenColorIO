@@ -301,7 +301,7 @@ OCIO_ADD_TEST(CDLOp, apply_clamp_fwd)
              CDL_DATA_1::slope, CDL_DATA_1::offset,
              CDL_DATA_1::power, CDL_DATA_1::saturation,
              OCIO::CDLOpData::CDL_V1_2_FWD,
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
              4e-6f);
 #else
              2e-6f);
@@ -340,7 +340,7 @@ OCIO_ADD_TEST(CDLOp, apply_clamp_rev)
              CDL_DATA_1::slope, CDL_DATA_1::offset,
              CDL_DATA_1::power, CDL_DATA_1::saturation,
              OCIO::CDLOpData::CDL_V1_2_REV,
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
              9e-6f);
 #else
              1e-5f);
@@ -379,7 +379,7 @@ OCIO_ADD_TEST(CDLOp, apply_noclamp_fwd)
              CDL_DATA_1::slope, CDL_DATA_1::offset,
              CDL_DATA_1::power, CDL_DATA_1::saturation,
              OCIO::CDLOpData::CDL_NO_CLAMP_FWD,
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
              2e-5f);
 #else
              2e-6f);
@@ -418,7 +418,7 @@ OCIO_ADD_TEST(CDLOp, apply_noclamp_rev)
              CDL_DATA_1::slope, CDL_DATA_1::offset,
              CDL_DATA_1::power, CDL_DATA_1::saturation,
              OCIO::CDLOpData::CDL_NO_CLAMP_REV,
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
              3e-5f);
 #else
              1e-6f);
@@ -459,7 +459,7 @@ OCIO_ADD_TEST(CDLOp, apply_clamp_fwd_2)
              CDL_DATA_2::slope, CDL_DATA_2::offset,
              CDL_DATA_2::power, CDL_DATA_2::saturation,
              OCIO::CDLOpData::CDL_V1_2_FWD,
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
              7e-6f);
 #else
              1e-6f);
@@ -534,7 +534,7 @@ OCIO_ADD_TEST(CDLOp, apply_clamp_fwd_3)
              CDL_DATA_3::slope, CDL_DATA_3::offset,
              CDL_DATA_3::power, CDL_DATA_3::saturation,
              OCIO::CDLOpData::CDL_V1_2_FWD,
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
              2e-5f);
 #else
              1e-6f);
@@ -601,7 +601,7 @@ OCIO_ADD_TEST(CDLOp, apply_noclamp_fwd_3)
              CDL_DATA_3::slope, CDL_DATA_3::offset,
              CDL_DATA_3::power, CDL_DATA_3::saturation,
              OCIO::CDLOpData::CDL_NO_CLAMP_FWD,
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
              5e-6f);
 #else
              1e-6f);

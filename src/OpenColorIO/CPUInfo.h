@@ -11,8 +11,6 @@
 namespace OCIO_NAMESPACE
 {
 
-#ifdef OCIO_ARCH_X86
-
 #define X86_CPU_FLAG_SSE2             (1 << 0) // SSE2 functions
 #define X86_CPU_FLAG_SSE2_SLOW        (1 << 1) // SSE2 supported, but usually not faster than regular MMX/SSE (e.g. Core1)
 
@@ -37,6 +35,8 @@ namespace OCIO_NAMESPACE
 
 #define x86_check_flags(cpuext) \
     (OCIO_USE_ ## cpuext && ((flags) & X86_CPU_FLAG_ ## cpuext))
+
+#if !defined(__aarch64__) && OCIO_ARCH_X86 // Intel-based processor or Apple Rosetta x86_64.
 
 struct CPUInfo
 {
@@ -79,7 +79,46 @@ struct CPUInfo
 
 #undef x86_check_flags
 
-#endif // OCIO_ARCH_X86
+#elif defined(__aarch64__) // ARM Processor or Apple ARM.
+
+#define check_flags(cpuext) \
+    (OCIO_USE_ ## cpuext && ((flags) & X86_CPU_FLAG_ ## cpuext))
+
+struct CPUInfo
+{
+    unsigned int flags;
+    char name[65];
+
+    CPUInfo();
+
+    static CPUInfo& instance();
+
+    bool hasSSE2() const { return x86_check_flags(SSE2); }
+    bool SSE2Slow() const { return false; }
+
+    bool hasSSE3() const { return x86_check_flags(SSE3); }
+    bool SSE3Slow() const { return false; }
+
+    bool hasSSSE3() const { return x86_check_flags(SSSE3); }
+    bool SSSE3Slow() const {  return false; }
+
+    bool hasSSE4() const { return x86_check_flags(SSE4); }
+    bool hasSSE42() const { return false; }
+
+    // Apple M1 does not support AVX SIMD instructions through Rosetta.
+    // SSE2NEON library does not supports AVX SIMD instructions.
+    bool hasAVX() const { return false; }
+    bool AVXSlow() const { return false; }
+    bool hasAVX2() const { return false; }
+    bool AVX2SlowGather() const { return false; }
+    bool hasAVX512() const { return false; }
+    bool hasF16C() const { return false; }
+
+};
+
+#undef x86_check_flags
+
+#endif
 
 } // namespace OCIO_NAMESPACE
 
