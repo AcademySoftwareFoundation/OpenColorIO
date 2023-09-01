@@ -18,8 +18,6 @@
     #endif
 #endif
 
-#include <stdio.h>
-
 #include <OpenColorIO/OpenColorIO.h>
 #include "BitDepthUtils.h"
 
