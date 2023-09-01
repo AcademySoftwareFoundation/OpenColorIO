@@ -294,8 +294,10 @@ Note that OCIO will turn off any specific SIMD CPU performance optimizations if 
 by the build target architecture. The default for ``OCIO_USE_SSE2``, ``OCIO_USE_AVX``, ``OCIO_USE_AVX2`` and 
 ``OCIO_USE_F16C`` depends on the architecture, but will be ON where supported.
 
-On MacOS, the default is to build for the native architecture. The ``-DCMAKE_OSX_ARCHITECTURES`` option 
-may be set to ``arm64;x86_64`` to build the universal binaries.
+On MacOS, the default is to build for the native architecture that CMake is running under.
+For example, if a x86_64 version of CMake is running under Rosetta, the native architecture will 
+be x86_64, rather then arm64. You can use the ``CMAKE_OSX_ARCHITECTURES`` option to override that.
+To build universal binaries, use the following option: ``-DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"``. 
 
 When doing a universal build, note that the OCIO dependencies must be built as universal libraries 
 too. If you are running in OCIO_INSTALL_EXT_PACKAGES=MISSING or NONE mode, your build will fail if 

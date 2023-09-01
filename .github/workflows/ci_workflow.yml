@@ -310,7 +310,6 @@ jobs:
        config=${{ matrix.build-type }}, 
        shared=${{ matrix.build-shared }}, 
        simd=${{ matrix.use-simd }}, 
-       sse2neon=${{ matrix.use-sse2neon }},
        cxx=${{ matrix.cxx-standard }}, 
        python=${{ matrix.python-version }}, 
        docs=${{ matrix.build-docs }}, 
@@ -331,7 +330,6 @@ jobs:
             build-docs: 'OFF'
             build-openfx: 'ON'
             use-simd: 'ON'
-            use-sse2neon: 'ON'
             use-oiio: 'ON'
             cxx-standard: 17
             python-version: '3.11'
@@ -343,7 +341,6 @@ jobs:
             build-docs: 'OFF'
             build-openfx: 'OFF'
             use-simd: 'ON'
-            use-sse2neon: 'OFF'
             use-oiio: 'OFF'
             cxx-standard: 11
             python-version: '3.10'
@@ -354,7 +351,6 @@ jobs:
             build-docs: 'ON'
             build-openfx: 'OFF'
             use-simd: 'OFF'
-            use-sse2neon: 'OFF'
             use-oiio: 'OFF'
             cxx-standard: 11
             python-version: '3.10'
@@ -365,7 +361,6 @@ jobs:
             build-docs: 'OFF'
             build-openfx: 'ON'
             use-simd: 'ON'
-            use-sse2neon: 'ON'
             use-oiio: 'OFF'
             cxx-standard: 11
             python-version: '3.9'
@@ -376,7 +371,6 @@ jobs:
             build-docs: 'OFF'
             build-openfx: 'ON'
             use-simd: 'ON'
-            use-sse2neon: 'ON'
             use-oiio: 'OFF'
             cxx-standard: 14
             python-version: '3.7'
@@ -411,7 +405,6 @@ jobs:
                 -DOCIO_INSTALL_EXT_PACKAGES=ALL \
                 -DOCIO_WARNING_AS_ERROR=ON \
                 -DPython_EXECUTABLE=$(which python) \
-                -DOCIO_USE_SSE2NEON=${{ matrix.use-sse2neon }} \
                 -DCMAKE_OSX_ARCHITECTURES="${{ matrix.arch-type }}"
         working-directory: _build
       - name: Build
