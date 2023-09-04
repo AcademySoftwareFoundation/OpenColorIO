@@ -559,13 +559,13 @@ class CurveView(QtWidgets.QGraphicsView):
         self._x_lin = np.linspace(
             self._input_min, self._input_max, self._sample_count, dtype=np.float32
         )
+
+        log_min = math.log(max(self.LOG_EPSILON, self._input_min))
+        log_max = max(log_min + 0.00001, math.log(self._input_max, self._log_base))
         self._x_log = np.logspace(
-            math.log(max(self.LOG_EPSILON, self._input_min)),
-            math.log(max(self.LOG_EPSILON, self._input_max)),
-            self._sample_count,
-            base=self._log_base,
-            dtype=np.float32,
+            log_min, log_max, self._sample_count, base=self._log_base, dtype=np.float32
         )
+
         self._x_min = self._x_lin.min()
         self._x_max = self._x_lin.max()
 
