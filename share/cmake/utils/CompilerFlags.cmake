@@ -8,6 +8,46 @@
 set(PLATFORM_COMPILE_OPTIONS "")
 set(PLATFORM_LINK_OPTIONS "")
 
+###############################################################################
+# Verify SIMD compatibility
+
+if(OCIO_USE_SIMD)
+    if (OCIO_ARCH_X86)
+        include(CheckSupportX86SIMD)
+    endif()
+
+    if (OCIO_USE_SSE2NEON AND COMPILER_SUPPORTS_ARM_NEON)
+        include(CheckSupportSSEUsingSSE2NEON)
+        if(NOT COMPILER_SUPPORTS_SSE_WITH_SSE2NEON)
+            set(OCIO_USE_SSE2NEON OFF)
+        endif()
+    endif()
+else()
+    set(OCIO_USE_SSE2 OFF)
+    set(OCIO_USE_SSE3 OFF)
+    set(OCIO_USE_SSSE3 OFF)
+    set(OCIO_USE_SSE4 OFF)
+    set(OCIO_USE_SSE42 OFF)
+    set(OCIO_USE_AVX OFF)
+    set(OCIO_USE_AVX2 OFF)
+    set(OCIO_USE_AVX512 OFF)
+    set(OCIO_USE_F16C OFF)
+
+    set(OCIO_USE_SSE2NEON OFF)
+endif()
+
+if (NOT COMPILER_SUPPORTS_SSE2 AND NOT COMPILER_SUPPORTS_SSE_WITH_SSE2NEON AND
+    NOT COMPILER_SUPPORTS_SSE3 AND NOT COMPILER_SUPPORTS_SSSE3 AND
+    NOT COMPILER_SUPPORTS_SSE4 AND NOT COMPILER_SUPPORTS_SSE42 AND
+    NOT COMPILER_SUPPORTS_AVX AND NOT COMPILER_SUPPORTS_AVX2 AND NOT COMPILER_SUPPORTS_AVX512 AND
+    NOT COMPILER_SUPPORTS_F16C)
+    message(STATUS "Disabling SIMD optimizations, as the target doesn't support them")
+    set(OCIO_USE_SIMD OFF)
+endif()
+
+###############################################################################
+# Compile flags
+
 if(USE_MSVC)
 
     set(PLATFORM_COMPILE_OPTIONS "${PLATFORM_COMPILE_OPTIONS};/DUSE_MSVC")
@@ -40,7 +80,6 @@ elseif(USE_CLANG)
 
     # Use of 'register' specifier must be removed for C++17 support.
     set(PLATFORM_COMPILE_OPTIONS "${PLATFORM_COMPILE_OPTIONS};-Wno-deprecated-register")
-
 elseif(USE_GCC)
 
     set(PLATFORM_COMPILE_OPTIONS "${PLATFORM_COMPILE_OPTIONS};-DUSE_GCC")
@@ -89,33 +128,6 @@ set_unless_defined(CMAKE_C_VISIBILITY_PRESET hidden)
 set_unless_defined(CMAKE_CXX_VISIBILITY_PRESET hidden)
 set_unless_defined(CMAKE_VISIBILITY_INLINES_HIDDEN YES)
 
-
-###############################################################################
-# Define if SSE2 can be used.
-
-
-message(STATUS "")
-message(STATUS "Checking for SSE2 support...")
-include(CheckSupportSSE2)
-
-if(NOT HAVE_SSE2)
-    message(STATUS "Disabling SSE optimizations, as the target doesn't support them")
-    set(OCIO_USE_SSE OFF)
-endif(NOT HAVE_SSE2)
-
-if(OCIO_USE_SSE)
-    include(CheckSupportX86SIMD)
-else()
-    set(OCIO_USE_SSE2 OFF)
-    set(OCIO_USE_SSE3 OFF)
-    set(OCIO_USE_SSSE3 OFF)
-    set(OCIO_USE_SSE4 OFF)
-    set(OCIO_USE_SSE42 OFF)
-    set(OCIO_USE_AVX OFF)
-    set(OCIO_USE_AVX2 OFF)
-    set(OCIO_USE_AVX512 OFF)
-    set(OCIO_USE_F16C OFF)
-endif()
 
 ###############################################################################
 # Define RPATH.

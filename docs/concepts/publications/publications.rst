@@ -7,6 +7,8 @@
 Presentations & Publications
 ============================
 
+* ASWF Open Source Days 2023 `video <https://www.youtube.com/watch?v=y-oq693Wl8g>`_
+
 * OCIO wins the Pipeline Tool award at DigiPro 2022! `video <https://vimeo.com/742052701>`_
 
 * ASWF Open Source Days 2022 `video <https://www.youtube.com/watch?v=WzFlz1HeNdI>`_

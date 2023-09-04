@@ -2,14 +2,51 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 
-#cmakedefine OCIO_ARCH_X86
+#cmakedefine01 OCIO_ARCH_X86
+#cmakedefine01 OCIO_ARCH_X86_32
 
-#cmakedefine01 OCIO_USE_SSE2
-#cmakedefine01 OCIO_USE_SSE3
-#cmakedefine01 OCIO_USE_SSSE3
-#cmakedefine01 OCIO_USE_SSE4
-#cmakedefine01 OCIO_USE_SSE42
-#cmakedefine01 OCIO_USE_AVX
-#cmakedefine01 OCIO_USE_AVX2
-#cmakedefine01 OCIO_USE_AVX512
-#cmakedefine01 OCIO_USE_F16C
+// Relevant only for arm64 architecture.
+#if defined(__aarch64__)
+    #cmakedefine01 OCIO_USE_SSE2NEON
+#endif
+
+// On the Apple platform, a universal build is created for both x86_64 and arm64 architectures. 
+// CMake will run only one "configure" step, build for x86_64 and arm64, and then create a 
+// single binary that includes both architectures.
+
+// This means that for a universal build, the OCIO_USE_SSEx, OCIO_USE_AVXx, OCIO_USE_F16C, etc. 
+// flags can be enabled simultaneously. Therefore, we need to check whether we are currently 
+// building the x86_64 side or the arm64 side. This can be done by checking the OCIO_ARCH_X86 and 
+// aarch64 defines.
+
+// Building for x86_64 processor on a non-ARM host architecture
+// OR Building on/for an ARM architecture and using SSE2NEON.
+#if (OCIO_ARCH_X86 && !defined(__aarch64__)) || (defined(__aarch64__) && OCIO_USE_SSE2NEON)
+    #cmakedefine01 OCIO_USE_SSE2
+    #cmakedefine01 OCIO_USE_SSE3
+    #cmakedefine01 OCIO_USE_SSSE3
+    #cmakedefine01 OCIO_USE_SSE4
+    #cmakedefine01 OCIO_USE_SSE42
+#else // non-intel based architecture or ARM architecture without OCIO_USE_SSE2NEON=ON
+    // Overwrite the values from cmake as these will not be supported on a non-intel architecture 
+    // or arm64 with sse2neon disabled.
+    #define OCIO_USE_SSE2 0
+    #define OCIO_USE_SSE3 0
+    #define OCIO_USE_SSSE3 0
+    #define OCIO_USE_SSE4 0
+    #define OCIO_USE_SSE42 0
+#endif
+
+// Building for x86_64 processor on a non-ARM host architecture
+#if OCIO_ARCH_X86 && !defined(__aarch64__)
+    #cmakedefine01 OCIO_USE_AVX
+    #cmakedefine01 OCIO_USE_AVX2
+    #cmakedefine01 OCIO_USE_AVX512
+    #cmakedefine01 OCIO_USE_F16C
+#else // non-intel based architecture
+    // Overwrite the values from cmake as these will not be supported on a non-intel architecture.
+    #define OCIO_USE_AVX 0
+    #define OCIO_USE_AVX2 0
+    #define OCIO_USE_AVX512 0
+    #define OCIO_USE_F16C 0
+#endif

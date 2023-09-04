@@ -44,7 +44,7 @@ jobs:
       <${{ matrix.compiler-desc }} 
        config=${{ matrix.build-type }}, 
        shared=${{ matrix.build-shared }}, 
-       sse=${{ matrix.use-sse }}, 
+       simd=${{ matrix.use-simd }}, 
        cxx=${{ matrix.cxx-standard }}, 
        docs=${{ matrix.build-docs }}, 
        oiio=${{ matrix.use-oiio }}>'
@@ -70,7 +70,7 @@ jobs:
             build-shared: 'ON'
             build-docs: 'OFF'
             build-openfx: 'ON'
-            use-sse: 'ON'
+            use-simd: 'ON'
             use-oiio: 'ON'
             cxx-standard: 17
             cxx-compiler: clang++
@@ -82,7 +82,7 @@ jobs:
             build-shared: 'ON'
             build-docs: 'ON'
             build-openfx: 'ON'
-            use-sse: 'OFF'
+            use-simd: 'OFF'
             use-oiio: 'OFF'
             cxx-standard: 17
             cxx-compiler: g++
@@ -94,7 +94,7 @@ jobs:
             build-shared: 'OFF'
             build-docs: 'OFF'
             build-openfx: 'OFF'
-            use-sse: 'ON'
+            use-simd: 'ON'
             use-oiio: 'OFF'
             cxx-standard: 11
             cxx-compiler: g++
@@ -109,7 +109,7 @@ jobs:
             build-shared: 'ON'
             build-docs: 'OFF'
             build-openfx: 'ON'
-            use-sse: 'ON'
+            use-simd: 'ON'
             use-oiio: 'ON'
             cxx-standard: 17
             cxx-compiler: clang++
@@ -121,7 +121,7 @@ jobs:
             build-shared: 'ON'
             build-docs: 'ON'
             build-openfx: 'ON'
-            use-sse: 'OFF'
+            use-simd: 'OFF'
             use-oiio: 'OFF'
             cxx-standard: 17
             cxx-compiler: g++
@@ -133,7 +133,7 @@ jobs:
             build-shared: 'OFF'
             build-docs: 'OFF'
             build-openfx: 'OFF'
-            use-sse: 'ON'
+            use-simd: 'ON'
             use-oiio: 'OFF'
             cxx-standard: 11
             cxx-compiler: g++
@@ -148,7 +148,7 @@ jobs:
             build-shared: 'ON'
             build-docs: 'OFF'
             build-openfx: 'OFF'
-            use-sse: 'ON'
+            use-simd: 'ON'
             use-oiio: 'ON'
             cxx-standard: 17
             cxx-compiler: clang++
@@ -160,7 +160,7 @@ jobs:
             build-shared: 'OFF'
             build-docs: 'OFF'
             build-openfx: 'ON'
-            use-sse: 'OFF'
+            use-simd: 'OFF'
             use-oiio: 'OFF'
             cxx-standard: 14
             cxx-compiler: clang++
@@ -172,7 +172,7 @@ jobs:
             build-shared: 'ON'
             build-docs: 'OFF'
             build-openfx: 'OFF'
-            use-sse: 'ON'
+            use-simd: 'ON'
             use-oiio: 'OFF'
             cxx-standard: 11
             cxx-compiler: g++
@@ -187,7 +187,7 @@ jobs:
             build-shared: 'ON'
             build-docs: 'OFF'
             build-openfx: 'ON'
-            use-sse: 'OFF'
+            use-simd: 'OFF'
             use-oiio: 'OFF'
             cxx-standard: 14
             cxx-compiler: clang++
@@ -199,7 +199,7 @@ jobs:
             build-shared: 'OFF'
             build-docs: 'OFF'
             build-openfx: 'ON'
-            use-sse: 'ON'
+            use-simd: 'ON'
             use-oiio: 'ON'
             cxx-standard: 14
             cxx-compiler: g++
@@ -211,7 +211,7 @@ jobs:
             build-shared: 'ON'
             build-docs: 'OFF'
             build-openfx: 'OFF'
-            use-sse: 'ON'
+            use-simd: 'ON'
             use-oiio: 'OFF'
             cxx-standard: 11
             cxx-compiler: g++
@@ -243,7 +243,7 @@ jobs:
                 -DOCIO_BUILD_DOCS=${{ matrix.build-docs }} \
                 -DOCIO_BUILD_OPENFX=${{ matrix.build-openfx }} \
                 -DOCIO_BUILD_GPU_TESTS=OFF \
-                -DOCIO_USE_SSE=${{ matrix.use-sse }} \
+                -DOCIO_USE_SIMD=${{ matrix.use-simd }} \
                 -DOCIO_USE_OIIO_FOR_APPS=${{ matrix.use-oiio }} \
                 -DOCIO_INSTALL_EXT_PACKAGES=ALL \
                 -DOCIO_WARNING_AS_ERROR=ON \
@@ -306,9 +306,10 @@ jobs:
   macos:
     name: 'macOS 11
       <AppleClang 
+       arch=${{ matrix.arch-type }},
        config=${{ matrix.build-type }}, 
        shared=${{ matrix.build-shared }}, 
-       sse=${{ matrix.use-sse }}, 
+       simd=${{ matrix.use-simd }}, 
        cxx=${{ matrix.cxx-standard }}, 
        python=${{ matrix.python-version }}, 
        docs=${{ matrix.build-docs }}, 
@@ -322,39 +323,54 @@ jobs:
       matrix:
         build: [1, 2, 3, 4]
         include:
-          - build: 4
+          - build: 5
+            arch-type: "x86_64"
             build-type: Release
             build-shared: 'ON'
             build-docs: 'OFF'
             build-openfx: 'ON'
-            use-sse: 'ON'
+            use-simd: 'ON'
             use-oiio: 'ON'
             cxx-standard: 17
             python-version: '3.11'
+          # Keeping one universal build
+          - build: 4
+            arch-type: "x86_64;arm64"
+            build-type: Release
+            build-shared: 'ON'
+            build-docs: 'OFF'
+            build-openfx: 'OFF'
+            use-simd: 'ON'
+            use-oiio: 'OFF'
+            cxx-standard: 11
+            python-version: '3.10'
           - build: 3
+            arch-type: "x86_64"
             build-type: Release
             build-shared: 'ON'
             build-docs: 'ON'
             build-openfx: 'OFF'
-            use-sse: 'OFF'
+            use-simd: 'OFF'
             use-oiio: 'OFF'
             cxx-standard: 11
             python-version: '3.10'
           - build: 2
+            arch-type: "x86_64"
             build-type: Debug
             build-shared: 'ON'
             build-docs: 'OFF'
             build-openfx: 'ON'
-            use-sse: 'ON'
+            use-simd: 'ON'
             use-oiio: 'OFF'
             cxx-standard: 11
             python-version: '3.9'
           - build: 1
+            arch-type: "x86_64"
             build-type: Release
             build-shared: 'OFF'
             build-docs: 'OFF'
             build-openfx: 'ON'
-            use-sse: 'ON'
+            use-simd: 'ON'
             use-oiio: 'OFF'
             cxx-standard: 14
             python-version: '3.7'
@@ -384,11 +400,12 @@ jobs:
                 -DOCIO_BUILD_DOCS=${{ matrix.build-docs }} \
                 -DOCIO_BUILD_OPENFX=${{ matrix.build-openfx }} \
                 -DOCIO_BUILD_GPU_TESTS=OFF \
-                -DOCIO_USE_SSE=${{ matrix.use-sse }} \
+                -DOCIO_USE_SIMD=${{ matrix.use-simd }} \
                 -DOCIO_USE_OIIO_FOR_APPS=${{ matrix.use-oiio }} \
                 -DOCIO_INSTALL_EXT_PACKAGES=ALL \
                 -DOCIO_WARNING_AS_ERROR=ON \
-                -DPython_EXECUTABLE=$(which python)
+                -DPython_EXECUTABLE=$(which python) \
+                -DCMAKE_OSX_ARCHITECTURES="${{ matrix.arch-type }}"
         working-directory: _build
       - name: Build
         run: |
@@ -451,7 +468,7 @@ jobs:
       <MSVC 
        config=${{ matrix.build-type }}, 
        shared=${{ matrix.build-shared }}, 
-       sse=${{ matrix.use-sse }}, 
+       simd=${{ matrix.use-simd }}, 
        cxx=${{ matrix.cxx-standard }}, 
        python=${{ matrix.python-version }}, 
        docs=${{ matrix.build-docs }}, 
@@ -470,7 +487,7 @@ jobs:
             build-shared: 'ON'
             build-docs: 'OFF'
             build-openfx: 'ON'
-            use-sse: 'OFF'
+            use-simd: 'OFF'
             use-oiio: 'ON'
             cxx-standard: 17
             python-version: '3.11'
@@ -479,7 +496,7 @@ jobs:
             build-shared: 'OFF'
             build-docs: 'OFF'
             build-openfx: 'OFF'
-            use-sse: 'ON'
+            use-simd: 'ON'
             use-oiio: 'OFF'
             cxx-standard: 11
             python-version: '3.9'
@@ -488,7 +505,7 @@ jobs:
             build-shared: 'ON'
             build-docs: 'OFF'
             build-openfx: 'OFF'
-            use-sse: 'ON'
+            use-simd: 'ON'
             use-oiio: 'OFF'
             cxx-standard: 11
             python-version: '3.8'
@@ -498,7 +515,7 @@ jobs:
             build-shared: 'ON'
             build-docs: 'OFF'
             build-openfx: 'ON'
-            use-sse: 'ON'
+            use-simd: 'ON'
             use-oiio: 'OFF'
             cxx-standard: 14
             python-version: '3.7'
@@ -532,7 +549,7 @@ jobs:
                 -DOCIO_BUILD_DOCS=${{ matrix.build-docs }} \
                 -DOCIO_BUILD_OPENFX=${{ matrix.build-openfx }} \
                 -DOCIO_BUILD_GPU_TESTS=OFF \
-                -DOCIO_USE_SSE=${{ matrix.use-sse }} \
+                -DOCIO_USE_SIMD=${{ matrix.use-simd }} \
                 -DOCIO_USE_OIIO_FOR_APPS=${{ matrix.use-oiio }} \
                 -DOCIO_INSTALL_EXT_PACKAGES=ALL \
                 -DOCIO_WARNING_AS_ERROR=ON \

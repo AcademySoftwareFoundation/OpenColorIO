@@ -17,7 +17,7 @@ typedef __int64  int64_t;
 namespace OCIO_NAMESPACE
 {
 
-#ifdef OCIO_ARCH_X86
+#if !defined(__aarch64__) && OCIO_ARCH_X86 // Intel-based processor or Apple Rosetta x86_64.
 
 namespace {
 
@@ -50,6 +50,13 @@ static inline void cpuid(int index, int *data)
 {
 #if _MSC_VER
     __cpuid(data, index);
+#elif OCIO_ARCH_X86_32
+    __asm__ volatile (
+        "mov    %%ebx, %%esi \n\t"
+        "cpuid               \n\t"
+        "xchg   %%ebx, %%esi"
+        : "=a" (data[0]), "=S" (data[1]), "=c" (data[2]), "=d" (data[3])
+        : "0" (index), "2"(0));
 #else
     __asm__ volatile (
         "mov    %%rbx, %%rsi \n\t"
@@ -181,7 +188,31 @@ CPUInfo& CPUInfo::instance()
     static CPUInfo singleton = CPUInfo();
     return singleton;
 }
+#elif defined(__aarch64__) // ARM Processor or Apple ARM.
+CPUInfo::CPUInfo()
+{
+    flags = 0;
+    memset(name, 0, sizeof(name));
 
-#endif // ARCH_X86
+    snprintf(name, sizeof(name), "%s", "ARM");
+
+    // SSE2NEON library supports SSE, SSE2, SSE3, SSSE3, SSE4.1 and SSE4.2.
+    // It does not support any AVX instructions.
+    if (OCIO_USE_SSE2)
+    {
+        flags |= X86_CPU_FLAG_SSE2;
+        flags |= X86_CPU_FLAG_SSE3;
+        flags |= X86_CPU_FLAG_SSSE3;
+        flags |= X86_CPU_FLAG_SSE4;
+        flags |= X86_CPU_FLAG_SSE42;
+    }
+}
+
+CPUInfo& CPUInfo::instance()
+{
+    static CPUInfo singleton = CPUInfo();
+    return singleton;
+}
+#endif
 
 } // namespace OCIO_NAMESPACE

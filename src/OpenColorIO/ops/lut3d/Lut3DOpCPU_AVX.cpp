@@ -2,7 +2,6 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 #include "Lut3DOpCPU_AVX.h"
-
 #if OCIO_USE_AVX
 
 #include "AVX.h"

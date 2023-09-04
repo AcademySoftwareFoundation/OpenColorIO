@@ -25,6 +25,7 @@ public:
 
     explicit GradingRGBCurveOpCPU(ConstGradingRGBCurveOpDataRcPtr & grgbc);
 
+    bool isDynamic() const override;
     bool hasDynamicProperty(DynamicPropertyType type) const override;
     DynamicPropertyRcPtr getDynamicProperty(DynamicPropertyType type) const override;
 
@@ -62,6 +63,11 @@ GradingRGBCurveOpCPU::GradingRGBCurveOpCPU(ConstGradingRGBCurveOpDataRcPtr & grg
     {
         m_grgbcurve = m_grgbcurve->createEditableCopy();
     }
+}
+
+bool GradingRGBCurveOpCPU::isDynamic() const
+{
+    return m_grgbcurve->isDynamic();
 }
 
 bool GradingRGBCurveOpCPU::hasDynamicProperty(DynamicPropertyType type) const
@@ -158,7 +164,7 @@ namespace LogLinConstants
     static constexpr float gain = 363.034608563f;
     static constexpr float offs = -7.f;
     static constexpr float ybrk = -5.5f;
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
     const __m128 mxbrk = _mm_set1_ps(xbrk);
     const __m128 mshift = _mm_set1_ps(shift);
     const __m128 mm = _mm_set1_ps(m);
@@ -175,7 +181,7 @@ namespace LogLinConstants
 
 inline void LinLog(const float * in, float * out)
 {
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
         __m128 pix = _mm_loadu_ps(in);
         __m128 flag = _mm_cmpgt_ps(pix, LogLinConstants::mxbrk);
 
@@ -206,7 +212,7 @@ inline void LinLog(const float * in, float * out)
 
 inline void LogLin(float * out)
 {
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
         __m128 pix = _mm_loadu_ps(out);
         __m128 flag = _mm_cmpgt_ps(pix, LogLinConstants::mybrk);
 

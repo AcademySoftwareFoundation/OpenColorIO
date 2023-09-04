@@ -25,6 +25,7 @@ public:
     explicit ECRendererBase(ConstExposureContrastOpDataRcPtr & ec);
     virtual ~ECRendererBase();
 
+    bool isDynamic() const override;
     bool hasDynamicProperty(DynamicPropertyType type) const override;
     DynamicPropertyRcPtr getDynamicProperty(DynamicPropertyType type) const override;
 
@@ -62,6 +63,11 @@ ECRendererBase::ECRendererBase(ConstExposureContrastOpDataRcPtr & ec)
 
 ECRendererBase::~ECRendererBase()
 {
+}
+
+bool ECRendererBase::isDynamic() const
+{
+    return m_exposure->isDynamic() || m_contrast->isDynamic() || m_gamma->isDynamic();
 }
 
 bool ECRendererBase::hasDynamicProperty(DynamicPropertyType type) const
@@ -174,7 +180,7 @@ void ECLinearRenderer::apply(const void * inImg, void * outImg, long numPixels) 
     }
     else
     {
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
         __m128 contrast = _mm_set1_ps(contrastVal);
         __m128 exposure_over_pivot = _mm_set1_ps(exposureVal / m_pivot);
         __m128 piv = _mm_set1_ps(m_pivot);
@@ -274,7 +280,7 @@ void ECLinearRevRenderer::apply(const void * inImg, void * outImg, long numPixel
     }
     else
     {
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
         __m128 inv_contrast = _mm_set1_ps(invContrastVal);
 
         const float pivotOverExposureVal = m_pivot * invExposureVal;
@@ -384,7 +390,7 @@ void ECVideoRenderer::apply(const void * inImg, void * outImg, long numPixels) c
     }
     else
     {
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
         __m128 contrast = _mm_set1_ps(contrastVal);
         __m128 exposure_over_pivot = _mm_set1_ps(exposureVal / m_pivot);
         __m128 piv = _mm_set1_ps(m_pivot);
@@ -489,7 +495,7 @@ void ECVideoRevRenderer::apply(const void * inImg, void * outImg, long numPixels
     }
     else
     {
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
         __m128 inv_contrast = _mm_set1_ps(invContrastVal);
         __m128 pivot_over_exposure = _mm_set1_ps(pivotOverExposureVal);
         __m128 inv_pivot = _mm_set1_ps(invPivotVal);
@@ -578,7 +584,7 @@ void ECLogarithmicRenderer::apply(const void * inImg, void * outImg, long numPix
     const float * in = (float *)inImg;
     float * out = (float *)outImg;
 
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
     // Equation is:
     // out = ( (in + expos) - pivot ) * contrast + pivot
     // Rearrange as:
@@ -701,4 +707,3 @@ OpCPURcPtr GetExposureContrastCPURenderer(ConstExposureContrastOpDataRcPtr & ec)
 }
 
 } // namespace OCIO_NAMESPACE
-

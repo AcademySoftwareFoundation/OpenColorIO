@@ -85,7 +85,7 @@ OCIO_ADD_GPU_TEST(ExponentOp, forward)
     const double exp[4] = { 2.6, 1.0, 1.8, 1.1 };
 
     AddExponent(test, OCIO::TRANSFORM_DIR_FORWARD, exp, OCIO::NEGATIVE_CLAMP,
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
         5e-4f
 #else
         1e-5f
@@ -98,7 +98,7 @@ OCIO_ADD_GPU_TEST(ExponentOp, forward_mirror)
     const double exp[4] = { 2.6, 1.0, 1.8, 1.1 };
 
     AddExponent(test, OCIO::TRANSFORM_DIR_FORWARD, exp, OCIO::NEGATIVE_MIRROR,
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
         5e-4f // TODO: Only related to the ssePower optimization ?
 #else
         1e-5f
@@ -111,7 +111,7 @@ OCIO_ADD_GPU_TEST(ExponentOp, forward_pass_thru)
     const double exp[4] = { 2.6, 1.0, 1.8, 1.1 };
 
     AddExponent(test, OCIO::TRANSFORM_DIR_FORWARD, exp, OCIO::NEGATIVE_PASS_THRU,
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
         5e-4f // TODO: Only related to the ssePower optimization ?
 #else
         1e-5f
@@ -144,7 +144,7 @@ OCIO_ADD_GPU_TEST(ExponentOp, inverse)
     const double exp[4] = { 2.6, 1.0, 1.8, 1.1 };
 
     AddExponent(test, OCIO::TRANSFORM_DIR_INVERSE, exp, OCIO::NEGATIVE_CLAMP,
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
         5e-4f // TODO: Only related to the ssePower optimization ?
 #else
         g_epsilon
@@ -158,7 +158,7 @@ OCIO_ADD_GPU_TEST(ExponentOp, inverse_mirror)
     const double exp[4] = { 2.6, 1.0, 1.8, 1.1 };
 
     AddExponent(test, OCIO::TRANSFORM_DIR_INVERSE, exp, OCIO::NEGATIVE_MIRROR,
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
         5e-4f // TODO: Only related to the ssePower optimization ?
 #else
         g_epsilon
@@ -172,7 +172,7 @@ OCIO_ADD_GPU_TEST(ExponentOp, inverse_pass_thru)
     const double exp[4] = { 2.6, 1.0, 1.8, 1.1 };
 
     AddExponent(test, OCIO::TRANSFORM_DIR_INVERSE, exp, OCIO::NEGATIVE_PASS_THRU,
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
         5e-4f // TODO: Only related to the ssePower optimization ?
 #else
         g_epsilon
@@ -188,7 +188,7 @@ OCIO_ADD_GPU_TEST(ExponentWithLinearOp, forward)
 {
     AddExponentWithLinear(test, OCIO::TRANSFORM_DIR_FORWARD, gammaVals, offsetVals,
         OCIO::NEGATIVE_LINEAR,
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
         1e-4f // Note: Related to the ssePower optimization !
 #else
         5e-6f
@@ -201,7 +201,7 @@ OCIO_ADD_GPU_TEST(ExponentWithLinearOp, mirror_forward)
 {
     AddExponentWithLinear(test, OCIO::TRANSFORM_DIR_FORWARD, gammaVals, offsetVals,
         OCIO::NEGATIVE_MIRROR,
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
         1e-4f // Note: Related to the ssePower optimization !
 #else
         5e-6f
@@ -214,7 +214,7 @@ OCIO_ADD_GPU_TEST(ExponentWithLinearOp, inverse)
 {
     AddExponentWithLinear(test, OCIO::TRANSFORM_DIR_INVERSE, gammaVals, offsetVals,
         OCIO::NEGATIVE_LINEAR,
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
         5e-5f // Note: Related to the ssePower optimization !
 #else
         5e-7f
@@ -227,7 +227,7 @@ OCIO_ADD_GPU_TEST(ExponentWithLinearOp, mirror_inverse)
 {
     AddExponentWithLinear(test, OCIO::TRANSFORM_DIR_INVERSE, gammaVals, offsetVals,
         OCIO::NEGATIVE_MIRROR,
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
         5e-5f // Note: Related to the ssePower optimization !
 #else
         5e-7f

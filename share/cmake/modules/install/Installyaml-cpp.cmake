@@ -12,6 +12,11 @@
 # Global targets defined by this module:
 #   yaml-cpp::yaml-cpp         
 #
+# For compatibility with the upstream CMake package, the following variables and targets are defined:
+#   yaml-cpp::yaml-cpp      - Alias of the yaml-cpp target
+#   YAML_CPP_LIBRARIES      - Libraries to link against yaml-cpp
+#   YAML_CPP_INCLUDE_DIR    - Include directory
+#
 
 ###############################################################################
 ### Create target (if previous 'find_package' call hasn't) ###
@@ -151,3 +156,16 @@ if(_yaml-cpp_TARGET_CREATE)
 
     mark_as_advanced(yaml-cpp_INCLUDE_DIR yaml-cpp_LIBRARY yaml-cpp_VERSION)
 endif()
+
+###############################################################################
+### Set variables for compatibility ###
+
+if(TARGET yaml-cpp AND NOT TARGET yaml-cpp::yaml-cpp)
+    add_library(yaml-cpp::yaml-cpp ALIAS yaml-cpp)
+endif()
+
+if(yaml-cpp_INCLUDE_DIR)
+    set(YAML_CPP_INCLUDE_DIR "${yaml-cpp_INCLUDE_DIR}")
+endif()
+
+set(YAML_CPP_LIBRARIES yaml-cpp::yaml-cpp)

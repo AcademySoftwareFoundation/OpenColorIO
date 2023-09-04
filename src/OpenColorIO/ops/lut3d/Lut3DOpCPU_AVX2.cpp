@@ -2,7 +2,6 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 #include "Lut3DOpCPU_AVX2.h"
-
 #if OCIO_USE_AVX2
 
 #include <immintrin.h>

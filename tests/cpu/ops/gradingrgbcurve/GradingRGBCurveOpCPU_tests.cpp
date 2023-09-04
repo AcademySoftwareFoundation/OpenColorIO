@@ -13,11 +13,11 @@ namespace
 {
 void ValidateImage(const float * expected, const float * res, long numPix, unsigned line)
 {
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
     static constexpr float error = 5e-4f;
 #else
     static constexpr float error = 2e-5f;
-#endif // USE_SSE
+#endif // OCIO_USE_SSE2
 
     for (long i = 0; i < numPix; ++i)
     {
@@ -25,11 +25,11 @@ void ValidateImage(const float * expected, const float * res, long numPix, unsig
         {
             if (OCIO::IsNan(expected[i * 4 + j]))
             {
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
                 // Do not test nan in SSE mode.
 #else
                 OCIO_CHECK_ASSERT(OCIO::IsNan(res[i * 4 + j]));
-#endif // USE_SSE
+#endif // OCIO_USE_SSE2
             }
             else if (expected[i * 4 + j] != res[i * 4 + j])
             {

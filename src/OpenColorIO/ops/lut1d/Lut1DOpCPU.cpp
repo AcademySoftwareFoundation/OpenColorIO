@@ -898,7 +898,7 @@ void Lut1DRendererHueAdjust<inBD, outBD>::apply(const void * inImg, void * outIm
                 = orig_chroma == 0.f ? 0.f
                                      : (RGB[mid] - RGB[min]) / orig_chroma;
 
-#ifdef USE_SSE
+#if OCIO_USE_SSE2
             __m128 idx
                 = _mm_mul_ps(_mm_set_ps(in[3],
                                         RGB[2],
