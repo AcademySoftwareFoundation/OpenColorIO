@@ -40,7 +40,7 @@ void OCIOFile::render(const OFX::RenderArguments& args)
     std::unique_ptr<OFX::Image> dst(dstClip_->fetchImage(args.time));
     std::unique_ptr<OFX::Image> src(srcClip_->fetchImage(args.time));
 
-    // Get transform parameters
+    // Get file path
     std::string srcFileName = getChoiceParamOption(srcPathNameParam_);
   
     bool inverse = inverseParam_->getValue();
@@ -48,7 +48,7 @@ void OCIOFile::render(const OFX::RenderArguments& args)
     // Create context with overrides
     OCIO::ContextRcPtr context = createOCIOContext(contextParams_);
 
-    // Build transform
+    // Build file transform
     OCIO::FileTransformRcPtr tr = OCIO::FileTransform::Create();
     tr->setSrc(srcFileName.c_str());
 
@@ -70,7 +70,6 @@ bool OCIOFile::isIdentity(const OFX::IsIdentityArguments& args,
 {
     std::string srcPathName = getChoiceParamOption(srcPathNameParam_);
     
-
     // Is processing needed?
     if (srcPathName.empty())
     {
