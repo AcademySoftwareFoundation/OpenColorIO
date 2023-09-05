@@ -41,4 +41,4 @@ public:
 
 mDeclarePluginFactory(OCIOFileFactory, {}, {});
 
-#endif // INCLUDED_OFX_OCIODISPLAYVIEW_H
+#endif // INCLUDED_OFX_OCIOFILE_H
