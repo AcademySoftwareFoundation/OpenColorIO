@@ -110,8 +110,8 @@ void OCIOFileFactory::describeInContext(OFX::ImageEffectDescriptor& desc,
     // Define parameters
     OFX::PageParamDescriptor* page = desc.definePageParam(PARAM_NAME_PAGE_0);
 
-    // Src color space
-    defineCsNameParam(desc, page,
+    // Src path string
+    defineStringParam(desc, page,
         "src_path",
         "Source File Path",
         "Source file path name",
