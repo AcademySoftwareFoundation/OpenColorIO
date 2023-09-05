@@ -81,16 +81,16 @@ class CurveInspector(QtWidgets.QWidget):
         option_layout = QtWidgets.QHBoxLayout()
         option_layout.addWidget(self.input_range_label)
         option_layout.addWidget(self.input_range_edit)
-        option_layout.setStretch(1, 2)
+        option_layout.setStretch(1, 3)
         option_layout.addWidget(self.sample_count_label)
         option_layout.addWidget(self.sample_count_edit)
-        option_layout.setStretch(3, 1)
+        option_layout.setStretch(3, 2)
         option_layout.addWidget(self.sample_type_label)
         option_layout.addWidget(self.sample_type_combo)
-        option_layout.setStretch(5, 1)
+        option_layout.setStretch(5, 3)
         option_layout.addWidget(self.log_base_label)
         option_layout.addWidget(self.log_base_edit)
-        option_layout.setStretch(7, 1)
+        option_layout.setStretch(7, 2)
 
         layout = QtWidgets.QVBoxLayout()
         layout.addLayout(option_layout)
@@ -164,13 +164,13 @@ class CurveView(QtWidgets.QGraphicsView):
     SAMPLE_COUNT_DEFAULT = 2**10
     INPUT_MIN_DEFAULT = 0.0
     INPUT_MAX_DEFAULT = 1.0
+    LOG_BASE_DEFAULT = 2
     CURVE_SCALE = 100
     FONT_HEIGHT = 4
 
     # The curve viewer only shows 5 digit decimal precision, so this should work fine
     # as a minimum when input min is 0.
-    LOG_EPSILON = 1e-5
-    LOG_BASE_DEFAULT = 2
+    EPSILON = 1e-5
 
     def __init__(
         self,
@@ -560,7 +560,7 @@ class CurveView(QtWidgets.QGraphicsView):
             self._input_min, self._input_max, self._sample_count, dtype=np.float32
         )
 
-        log_min = math.log(max(self.LOG_EPSILON, self._input_min))
+        log_min = math.log(max(self.EPSILON, self._input_min))
         log_max = max(log_min + 0.00001, math.log(self._input_max, self._log_base))
         self._x_log = np.logspace(
             log_min, log_max, self._sample_count, base=self._log_base, dtype=np.float32
@@ -631,8 +631,8 @@ class CurveView(QtWidgets.QGraphicsView):
         b_samples = rgb_samples[2::3]
 
         # Collect sample pairs and min/max Y sample values
-        if np.array_equal(r_samples, g_samples) and np.array_equal(
-            r_samples, b_samples
+        if np.allclose(r_samples, g_samples, atol=self.EPSILON) and np.allclose(
+            r_samples, b_samples, atol=self.EPSILON
         ):
             palette = self.palette()
             color_name = palette.color(palette.Text).name()
