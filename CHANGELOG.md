@@ -3,7 +3,12 @@
 
 This file documents releases up to 1.1.1.  For a description of version 2.0 and later
 please refer to the Releases page on GitHub:
+
 https://github.com/AcademySoftwareFoundation/OpenColorIO/releases
+
+and for more details please see the release notes in latest documentation pages:
+
+https://opencolorio.readthedocs.io/en/latest/releases/_index.html#releases
 
 **Version 1.1.1 (April 2 2019):**
     * Added optional compatibility for building apps with OpenImageIO 1.9+
