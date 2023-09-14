@@ -9,7 +9,6 @@
 #if OCIO_USE_AVX2
 
 #include <immintrin.h>
-#include <stdio.h>
 
 #include <OpenColorIO/OpenColorIO.h>
 #include "BitDepthUtils.h"
