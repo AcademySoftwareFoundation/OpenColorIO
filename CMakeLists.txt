@@ -341,7 +341,15 @@ endif()
 ###############################################################################
 # Define compilation and link flags
 
+option(OCIO_BUILD_POSITION_INDEPENDENT_EXECUTABLES "Set to ON to build executables as PIE" OFF)
+
 include(CompilerFlags)
+
+if(OCIO_BUILD_POSITION_INDEPENDENT_EXECUTABLES AND NOT CMAKE_C_LINK_PIE_SUPPORTED)
+    message(FATAL_ERROR "PIE is not supported at link time.\n")
+else()
+    set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+endif()
 
 ###############################################################################
 # External linking options
