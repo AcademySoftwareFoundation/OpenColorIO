@@ -183,21 +183,21 @@ class CurveView(QtWidgets.QGraphicsView):
         # Initialize
         self._update_x_samples()
         msg_router = MessageRouter.get_instance()
-        msg_router.cpu_processor_ready.connect(self._on_cpu_processor_ready)
+        msg_router.processor_ready.connect(self._on_processor_ready)
 
     def showEvent(self, event: QtGui.QShowEvent) -> None:
         """Start listening for processor updates, if visible."""
         super().showEvent(event)
 
         msg_router = MessageRouter.get_instance()
-        msg_router.set_cpu_processor_updates_allowed(True)
+        msg_router.set_processor_updates_allowed(True)
 
     def hideEvent(self, event: QtGui.QHideEvent) -> None:
         """Stop listening for processor updates, if not visible."""
         super().hideEvent(event)
 
         msg_router = MessageRouter.get_instance()
-        msg_router.set_cpu_processor_updates_allowed(False)
+        msg_router.set_processor_updates_allowed(False)
 
     def resizeEvent(self, event: QtGui.QResizeEvent) -> None:
         super().resizeEvent(event)
@@ -476,7 +476,7 @@ class CurveView(QtWidgets.QGraphicsView):
     def _update_curves(self) -> None:
         self._update_x_samples()
         if self._prev_cpu_proc is not None:
-            self._on_cpu_processor_ready(self._prev_cpu_proc)
+            self._on_processor_ready(self._prev_cpu_proc)
 
     def _fit(self) -> None:
         if not self._curve_init:
@@ -523,7 +523,7 @@ class CurveView(QtWidgets.QGraphicsView):
         )
 
     @QtCore.Slot(ocio.CPUProcessor)
-    def _on_cpu_processor_ready(self, cpu_proc: ocio.CPUProcessor) -> None:
+    def _on_processor_ready(self, cpu_proc: ocio.CPUProcessor) -> None:
         """
         Update curves from OCIO CPU processor.
 

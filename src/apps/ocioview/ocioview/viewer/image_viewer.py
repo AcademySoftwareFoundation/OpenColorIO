@@ -287,6 +287,9 @@ class ImageViewer(QtWidgets.QWidget):
 
         super().update()
 
+        # Broadcast this viewer's image data for other app components
+        self.image_plane.broadcast_image()
+
     def reset(self) -> None:
         """Reset viewer parameters without unloading the current image."""
         self.image_plane.reset_ocio_proc(update=False)

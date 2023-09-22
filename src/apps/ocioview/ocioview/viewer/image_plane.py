@@ -394,6 +394,17 @@ class ImagePlane(QtOpenGL.QGLWidget):
         self.update_ocio_proc(input_color_space=self._ocio_input_color_space)
         self.fit()
 
+        # Log image change after load and render
+        self.broadcast_image()
+
+    def broadcast_image(self) -> None:
+        """
+        Broadcast current image buffer, if one is loaded, through the
+        message queue for other app components.
+        """
+        if self._image_buf is not None:
+            message_queue.put_nowait(self._image_buf)
+
     def input_color_space(self) -> str:
         """
         :return: Current input OCIO color space name
@@ -723,10 +734,11 @@ class ImagePlane(QtOpenGL.QGLWidget):
             absolute position to translate the viewport from its
             origin.
         """
-        if absolute:
-            self._image_pos = offset / self._image_scale
-        else:
-            self._image_pos += offset / self._image_scale
+        if self._image_scale > 0:
+            if absolute:
+                self._image_pos = offset / self._image_scale
+            else:
+                self._image_pos += offset / self._image_scale
 
         self._update_model_view_mat(update=update)
 

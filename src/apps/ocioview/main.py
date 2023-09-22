@@ -7,7 +7,7 @@ import sys
 from pathlib import Path
 
 import PyOpenColorIO as ocio
-from PySide2 import QtCore, QtWidgets, QtOpenGL
+from PySide2 import QtCore, QtGui, QtWidgets, QtOpenGL
 
 import ocioview.log_handlers  # Import to initialize logging
 from ocioview.main_window import OCIOView
@@ -36,6 +36,12 @@ if __name__ == "__main__":
     gl_format.setSwapInterval(1)
     gl_format.setVersion(4, 0)
     QtOpenGL.QGLFormat.setDefaultFormat(gl_format)
+
+    # Turn off v-sync in Qt3D, which can cause dropped frame rate in QGraphicsView
+    # after a Q3DWindow is initialized.
+    fmt = QtGui.QSurfaceFormat.defaultFormat()
+    fmt.setSwapInterval(0)
+    QtGui.QSurfaceFormat.setDefaultFormat(fmt)
 
     # Create app
     app = QtWidgets.QApplication(sys.argv)
