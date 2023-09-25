@@ -317,8 +317,8 @@ The CMake output prints information regarding which image library will be used f
 command-line tools (as well as a lot of other info about the build configuration).
 
 Some OS distributions may require executables to be able to be executed using address space
-layout randomisation (ASLR). To Acheive this code generated needs to be position independent.
-To support thie please add ``-DOCIO_BUILD_POSITION_INDEPENDENT_EXECUTABLES=ON`` to your cmake
+layout randomisation (ASLR). To achieve this code generated needs to be position independent.
+To support this please add ``-DOCIO_BUILD_POSITION_INDEPENDENT_EXECUTABLES=ON`` to your CMake
 configuration step.
 
 Documentation
