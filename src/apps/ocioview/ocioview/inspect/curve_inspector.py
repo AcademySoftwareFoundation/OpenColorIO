@@ -182,7 +182,7 @@ class CurveView(QtWidgets.QGraphicsView):
         parent: Optional[QtWidgets.QWidget] = None,
     ):
         """
-        :param input_min: Input rage minimum value
+        :param input_min: Input range minimum value
         :param input_max: Input range maximum value
         :param sample_count: Number of samples in the input range,
             which will typically be a power of 2 value.
