@@ -180,8 +180,11 @@ option(OCIO_USE_OIIO_FOR_APPS "Request OIIO to build apps (ociolutimage, ociocon
 
 
 if (NOT APPLE)
-    if ("${CMAKE_SYSTEM_PROCESSOR}" MATCHES "(AMD64|IA64|EM64T|X86|x86_64|i386|i686)")
+    if ("${CMAKE_SYSTEM_PROCESSOR}" MATCHES "(AMD64|IA64|EM64T|x86_64|X86|i386|i686)")
         # Intel-based architecture (not APPLE)
+        if ("${CMAKE_SYSTEM_PROCESSOR}" MATCHES "(X86|i386|i686)")
+            set(OCIO_ARCH_X86_32 1)
+        endif()
         set(OCIO_ARCH_X86 1)
         set(OCIO_BUILD_ENABLE_OPTIMIZATIONS_SSE ON)
         set(OCIO_BUILD_ENABLE_OPTIMIZATIONS_AVX ON)
