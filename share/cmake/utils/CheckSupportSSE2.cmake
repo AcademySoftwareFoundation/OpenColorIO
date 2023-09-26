@@ -59,7 +59,7 @@ else()
     message(STATUS "Performing Test COMPILER_SUPPORTS_SSE2 - Failed")
 endif()
 
-set(CMAKE_REQUIRED_FLAGS "${_cmake_cxx_flags_orig}")
+set(CMAKE_CXX_FLAGS "${_cmake_cxx_flags_orig}")
 unset(_cmake_cxx_flags_orig)
 
 if(__universal_build)
