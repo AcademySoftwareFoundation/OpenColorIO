@@ -217,7 +217,7 @@ void LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
     {
         // Use 0 for empty string.
         int cccindex=0;
-        if (StringToInt(&cccindex, cccid.c_str(), true))
+        if (cccid.empty() || StringToInt(&cccindex, cccid.c_str(), true))
         {
             int maxindex = ((int)cachedFile->m_transformVec.size())-1;
             if (cccindex<0 || cccindex>maxindex)
