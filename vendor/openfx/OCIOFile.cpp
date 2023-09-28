@@ -24,12 +24,9 @@ OCIOFile::OCIOFile(OfxImageEffectHandle handle)
     dstClip_ = fetchClip(kOfxImageEffectOutputClipName);
     srcClip_ = fetchClip(kOfxImageEffectSimpleSourceClipName);
 
-    srcPathNameParam_ = fetchChoiceParam("src_path");
+    srcPathNameParam_ = fetchStringParam(kOfxParamTypeString);
 
     inverseParam_ = fetchBooleanParam("inverse");
-
-    // Handle missing config values
-    restoreChoiceParamOption(*this, "src_path", PLUGIN_TYPE);
 
     fetchContextParams(*this, contextParams_);
 }
@@ -41,7 +38,7 @@ void OCIOFile::render(const OFX::RenderArguments& args)
     std::unique_ptr<OFX::Image> src(srcClip_->fetchImage(args.time));
 
     // Get file path
-    std::string srcFileName = getChoiceParamOption(srcPathNameParam_);
+    std::string srcFileName = srcPathNameParam_->getValue();
   
     bool inverse = inverseParam_->getValue();
 
@@ -68,7 +65,7 @@ bool OCIOFile::isIdentity(const OFX::IsIdentityArguments& args,
     OFX::Clip*& identityClip,
     double& identityTime)
 {
-    std::string srcPathName = getChoiceParamOption(srcPathNameParam_);
+    std::string srcPathName = srcPathNameParam_->getValue();
     
     // Is processing needed?
     if (srcPathName.empty())
@@ -84,16 +81,8 @@ bool OCIOFile::isIdentity(const OFX::IsIdentityArguments& args,
 void OCIOFile::changedParam(const OFX::InstanceChangedArgs& /*args*/,
     const std::string& paramName)
 {
-    if (paramName == "src_path")
-    {
-        // Store config values
-        choiceParamChanged(*this, paramName);
-    }
-    else
-    {
-        // Store context overrides
+   // Store context overrides
         contextParamChanged(*this, paramName);
-    }
 }
 
 void OCIOFileFactory::describe(OFX::ImageEffectDescriptor& desc)

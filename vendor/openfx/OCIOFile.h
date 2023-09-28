@@ -17,7 +17,7 @@ protected:
     OFX::Clip* dstClip_;
     OFX::Clip* srcClip_;
 
-    OFX::ChoiceParam* srcPathNameParam_;
+    OFX::StringParam* srcPathNameParam_;
     OFX::BooleanParam* inverseParam_;
 
     ParamMap contextParams_;
