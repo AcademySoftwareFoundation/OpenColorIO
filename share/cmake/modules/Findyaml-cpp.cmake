@@ -43,14 +43,21 @@ endif()
 
 if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
     set(_yaml-cpp_REQUIRED_VARS yaml-cpp_LIBRARY)
-
     if(NOT DEFINED yaml-cpp_ROOT)
         # Search for yaml-cpp-config.cmake
         find_package(yaml-cpp ${yaml-cpp_FIND_VERSION} CONFIG QUIET)
     endif()
 
     if(yaml-cpp_FOUND)
-        get_target_property(yaml-cpp_LIBRARY yaml-cpp LOCATION)
+        if(TARGET yaml-cpp::yaml-cpp)
+	        # yaml-cpp >= 0.8
+	        get_target_property(yaml-cpp_LIBRARY yaml-cpp::yaml-cpp LOCATION)
+	        get_target_property(yaml-cpp_INCLUDE_DIR yaml-cpp::yaml-cpp INCLUDE_DIRECTORIES)
+	    else()
+
+	        get_target_property(yaml-cpp_LIBRARY yaml-cpp LOCATION)
+	        get_target_property(yaml-cpp_INCLUDE_DIR yaml-cpp INCLUDE_DIRECTORIES)
+	    endif()
     else()
 
         # As yaml-cpp-config.cmake search fails, search an installed library
