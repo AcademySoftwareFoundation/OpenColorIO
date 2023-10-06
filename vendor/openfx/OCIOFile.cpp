@@ -23,9 +23,9 @@ OCIOFile::OCIOFile(OfxImageEffectHandle handle)
 {
     dstClip_ = fetchClip(kOfxImageEffectOutputClipName);
     srcClip_ = fetchClip(kOfxImageEffectSimpleSourceClipName);
-
-    srcPathNameParam_ = fetchStringParam(kOfxParamTypeString);
-
+    
+    srcPathNameParam_ = fetchStringParam(kOfxParamStringIsFilePath);
+   
     inverseParam_ = fetchBooleanParam("inverse");
 
     fetchContextParams(*this, contextParams_);
@@ -38,7 +38,8 @@ void OCIOFile::render(const OFX::RenderArguments& args)
     std::unique_ptr<OFX::Image> src(srcClip_->fetchImage(args.time));
 
     // Get file path
-    std::string srcFileName = srcPathNameParam_->getValue();
+    std::string srcFileName;
+    srcPathNameParam_->getValue(srcFileName);
   
     bool inverse = inverseParam_->getValue();
 
@@ -65,10 +66,12 @@ bool OCIOFile::isIdentity(const OFX::IsIdentityArguments& args,
     OFX::Clip*& identityClip,
     double& identityTime)
 {
-    std::string srcPathName = srcPathNameParam_->getValue();
-    
+
+    std::string srcFileName;
+    srcPathNameParam_->getValue(srcFileName);
+
     // Is processing needed?
-    if (srcPathName.empty())
+    if (srcFileName.empty())
     {
         identityClip = srcClip_;
         identityTime = args.time;
