@@ -4100,6 +4100,10 @@ void Config::addLook(const ConstLookRcPtr & look)
         if(StringUtils::Lower(getImpl()->m_looksList[i]->getName()) == namelower)
         {
             getImpl()->m_looksList[i] = look->createEditableCopy();
+
+            AutoMutex lock(getImpl()->m_cacheidMutex);
+            getImpl()->resetCacheIDs();
+
             return;
         }
     }
