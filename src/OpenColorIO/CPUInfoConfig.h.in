@@ -8,6 +8,8 @@
 // Relevant only for arm64 architecture.
 #if defined(__aarch64__)
     #cmakedefine01 OCIO_USE_SSE2NEON
+#else
+    #define OCIO_USE_SSE2NEON 0
 #endif
 
 // On the Apple platform, a universal build is created for both x86_64 and arm64 architectures. 
