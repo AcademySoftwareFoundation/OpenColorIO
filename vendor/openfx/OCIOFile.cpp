@@ -9,7 +9,6 @@ namespace OCIO = OCIO_NAMESPACE;
 
 namespace
 {
-
     const std::string PLUGIN_TYPE = "OCIOFile";
 
 } // namespace
