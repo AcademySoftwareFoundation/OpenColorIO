@@ -1,6 +1,163 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright Contributors to the OpenColorIO Project.
 
+set(HEADERS
+    apphelpers/CategoryHelpers.h
+    apphelpers/ColorSpaceHelpers.h
+    apphelpers/LegacyViewingPipeline.h
+    apphelpers/MixingHelpers.h
+    AVX.h
+    AVX2.h
+    BakingUtils.h
+    BitDepthUtils.h
+    builtinconfigs/BuiltinConfigRegistry.h
+    builtinconfigs/CGConfig.h
+    builtinconfigs/StudioConfig.h
+    Caching.h
+    ConfigUtils.h
+    ContextVariableUtils.h
+    CPUInfo.h
+    CPUProcessor.h
+    CustomKeys.h
+    Display.h
+    DynamicProperty.h
+    fileformats/cdl/CDLParser.h
+    fileformats/cdl/CDLReaderHelper.h
+    fileformats/cdl/CDLWriter.h
+    fileformats/ctf/CTFReaderHelper.h
+    fileformats/ctf/CTFReaderUtils.h
+    fileformats/ctf/CTFTransform.h
+    fileformats/ctf/IndexMapping.h
+    fileformats/FileFormatICC.h
+    fileformats/FileFormatUtils.h
+    fileformats/FormatMetadata.h
+    fileformats/xmlutils/XMLReaderHelper.h
+    fileformats/xmlutils/XMLReaderUtils.h
+    fileformats/xmlutils/XMLWriterUtils.h
+    FileRules.h
+    GPUProcessor.h
+    GpuShader.h
+    GpuShaderClassWrapper.h
+    GpuShaderUtils.h
+    HashUtils.h
+    ImagePacking.h
+    Logging.h
+    LookParse.h
+    MathUtils.h
+    Mutex.h
+    NamedTransform.h
+    OCIOYaml.h
+    OCIOZArchive.h
+    Op.h
+    OpBuilders.h
+    ops/allocation/AllocationOp.h
+    ops/cdl/CDLOp.h
+    ops/cdl/CDLOpCPU.h
+    ops/cdl/CDLOpData.h
+    ops/cdl/CDLOpGPU.h
+    ops/exponent/ExponentOp.h
+    ops/exposurecontrast/ExposureContrastOp.h
+    ops/exposurecontrast/ExposureContrastOpCPU.h
+    ops/exposurecontrast/ExposureContrastOpData.h
+    ops/exposurecontrast/ExposureContrastOpGPU.h
+    ops/fixedfunction/FixedFunctionOp.h
+    ops/fixedfunction/FixedFunctionOpCPU.h
+    ops/fixedfunction/FixedFunctionOpData.h
+    ops/fixedfunction/FixedFunctionOpGPU.h
+    ops/gamma/GammaOp.h
+    ops/gamma/GammaOpCPU.h
+    ops/gamma/GammaOpData.h
+    ops/gamma/GammaOpGPU.h
+    ops/gamma/GammaOpUtils.h
+    ops/gradingprimary/GradingPrimary.h
+    ops/gradingprimary/GradingPrimaryOp.h
+    ops/gradingprimary/GradingPrimaryOpCPU.h
+    ops/gradingprimary/GradingPrimaryOpData.h
+    ops/gradingprimary/GradingPrimaryOpGPU.h
+    ops/gradingrgbcurve/GradingBSplineCurve.h
+    ops/gradingrgbcurve/GradingRGBCurve.h
+    ops/gradingrgbcurve/GradingRGBCurveOp.h
+    ops/gradingrgbcurve/GradingRGBCurveOpCPU.h
+    ops/gradingrgbcurve/GradingRGBCurveOpData.h
+    ops/gradingrgbcurve/GradingRGBCurveOpGPU.h
+    ops/gradingtone/GradingTone.h
+    ops/gradingtone/GradingToneOp.h
+    ops/gradingtone/GradingToneOpCPU.h
+    ops/gradingtone/GradingToneOpData.h
+    ops/gradingtone/GradingToneOpGPU.h
+    ops/log/LogOp.h
+    ops/log/LogOpCPU.h
+    ops/log/LogOpData.h
+    ops/log/LogOpGPU.h
+    ops/log/LogUtils.h
+    ops/lut1d/Lut1DOp.h
+    ops/lut1d/Lut1DOpCPU.h
+    ops/lut1d/Lut1DOpCPU_AVX.h
+    ops/lut1d/Lut1DOpCPU_AVX2.h
+    ops/lut1d/Lut1DOpCPU_SSE2.h
+    ops/lut1d/Lut1DOpData.h
+    ops/lut1d/Lut1DOpGPU.h
+    ops/lut3d/Lut3DOp.h
+    ops/lut3d/Lut3DOpCPU.h
+    ops/lut3d/Lut3DOpCPU_AVX.h
+    ops/lut3d/Lut3DOpCPU_AVX2.h
+    ops/lut3d/Lut3DOpCPU_SSE2.h
+    ops/lut3d/Lut3DOpData.h
+    ops/lut3d/Lut3DOpGPU.h
+    ops/matrix/MatrixOp.h
+    ops/matrix/MatrixOpCPU.h
+    ops/matrix/MatrixOpData.h
+    ops/matrix/MatrixOpGPU.h
+    ops/noop/NoOps.h
+    ops/OpArray.h
+    ops/OpTools.h
+    ops/range/RangeOp.h
+    ops/range/RangeOpCPU.h
+    ops/range/RangeOpData.h
+    ops/range/RangeOpGPU.h
+    ops/reference/ReferenceOpData.h
+    ParseUtils.h
+    PathUtils.h
+    Platform.h
+    PrivateTypes.h
+    Processor.h
+    ScanlineHelper.h
+    SSE.h
+    SSE2.h
+    SystemMonitor.h
+    TokensManager.h
+    TransformBuilder.h
+    transforms/builtins/ACES.h
+    transforms/builtins/ArriCameras.h
+    transforms/builtins/BuiltinTransformRegistry.h
+    transforms/builtins/CanonCameras.h
+    transforms/builtins/ColorMatrixHelpers.h
+    transforms/builtins/Displays.h
+    transforms/builtins/OpHelpers.h
+    transforms/builtins/PanasonicCameras.h
+    transforms/builtins/RedCameras.h
+    transforms/builtins/SonyCameras.h
+    transforms/BuiltinTransform.h
+    transforms/CDLTransform.h
+    transforms/ExponentTransform.h
+    transforms/ExponentWithLinearTransform.h
+    transforms/ExposureContrastTransform.h
+    transforms/FileTransform.h
+    transforms/FixedFunctionTransform.h
+    transforms/GradingPrimaryTransform.h
+    transforms/GradingRGBCurveTransform.h
+    transforms/GradingToneTransform.h
+    transforms/GroupTransform.h
+    transforms/LogAffineTransform.h
+    transforms/LogCameraTransform.h
+    transforms/LogTransform.h
+    transforms/Lut1DTransform.h
+    transforms/Lut3DTransform.h
+    transforms/MatrixTransform.h
+    transforms/RangeTransform.h
+    ViewingRules.h
+)
+
 set(SOURCES
     apphelpers/CategoryHelpers.cpp
     apphelpers/ColorSpaceHelpers.cpp
@@ -33,8 +190,8 @@ set(SOURCES
     fileformats/ctf/CTFTransform.cpp
     fileformats/ctf/IndexMapping.cpp
     fileformats/FileFormat3DL.cpp
-    fileformats/FileFormatCCC.cpp
     fileformats/FileFormatCC.cpp
+    fileformats/FileFormatCCC.cpp
     fileformats/FileFormatCDL.cpp
     fileformats/FileFormatCSP.cpp
     fileformats/FileFormatCTF.cpp
@@ -59,8 +216,8 @@ set(SOURCES
     FileRules.cpp
     GPUProcessor.cpp
     GpuShader.cpp
-    GpuShaderDesc.cpp
     GpuShaderClassWrapper.cpp
+    GpuShaderDesc.cpp
     GpuShaderUtils.cpp
     HashUtils.cpp
     ImageDesc.cpp
@@ -75,84 +232,85 @@ set(SOURCES
     Op.cpp
     OpOptimizers.cpp
     ops/allocation/AllocationOp.cpp
+    ops/cdl/CDLOp.cpp
     ops/cdl/CDLOpCPU.cpp
     ops/cdl/CDLOpData.cpp
     ops/cdl/CDLOpGPU.cpp
-    ops/cdl/CDLOp.cpp
     ops/exponent/ExponentOp.cpp
+    ops/exposurecontrast/ExposureContrastOp.cpp
     ops/exposurecontrast/ExposureContrastOpCPU.cpp
     ops/exposurecontrast/ExposureContrastOpData.cpp
     ops/exposurecontrast/ExposureContrastOpGPU.cpp
-    ops/exposurecontrast/ExposureContrastOp.cpp
+    ops/fixedfunction/FixedFunctionOp.cpp
     ops/fixedfunction/FixedFunctionOpCPU.cpp
     ops/fixedfunction/FixedFunctionOpData.cpp
     ops/fixedfunction/FixedFunctionOpGPU.cpp
-    ops/fixedfunction/FixedFunctionOp.cpp
+    ops/gamma/GammaOp.cpp
     ops/gamma/GammaOpCPU.cpp
     ops/gamma/GammaOpData.cpp
     ops/gamma/GammaOpGPU.cpp
     ops/gamma/GammaOpUtils.cpp
-    ops/gamma/GammaOp.cpp
     ops/gradingprimary/GradingPrimary.cpp
+    ops/gradingprimary/GradingPrimaryOp.cpp
     ops/gradingprimary/GradingPrimaryOpCPU.cpp
     ops/gradingprimary/GradingPrimaryOpData.cpp
     ops/gradingprimary/GradingPrimaryOpGPU.cpp
-    ops/gradingprimary/GradingPrimaryOp.cpp
     ops/gradingrgbcurve/GradingBSplineCurve.cpp
+    ops/gradingrgbcurve/GradingRGBCurve.cpp
+    ops/gradingrgbcurve/GradingRGBCurveOp.cpp
     ops/gradingrgbcurve/GradingRGBCurveOpCPU.cpp
     ops/gradingrgbcurve/GradingRGBCurveOpData.cpp
     ops/gradingrgbcurve/GradingRGBCurveOpGPU.cpp
-    ops/gradingrgbcurve/GradingRGBCurveOp.cpp
-    ops/gradingrgbcurve/GradingRGBCurve.cpp
     ops/gradingtone/GradingTone.cpp
+    ops/gradingtone/GradingToneOp.cpp
     ops/gradingtone/GradingToneOpCPU.cpp
     ops/gradingtone/GradingToneOpData.cpp
     ops/gradingtone/GradingToneOpGPU.cpp
-    ops/gradingtone/GradingToneOp.cpp
+    ops/log/LogOp.cpp
     ops/log/LogOpCPU.cpp
     ops/log/LogOpData.cpp
     ops/log/LogOpGPU.cpp
-    ops/log/LogOp.cpp
     ops/log/LogUtils.cpp
     ops/lut1d/Lut1DOp.cpp
     ops/lut1d/Lut1DOpCPU.cpp
-    ops/lut1d/Lut1DOpCPU_SSE2.cpp
     ops/lut1d/Lut1DOpCPU_AVX.cpp
     ops/lut1d/Lut1DOpCPU_AVX2.cpp
+    ops/lut1d/Lut1DOpCPU_SSE2.cpp
     ops/lut1d/Lut1DOpData.cpp
     ops/lut1d/Lut1DOpGPU.cpp
     ops/lut3d/Lut3DOp.cpp
     ops/lut3d/Lut3DOpCPU.cpp
-    ops/lut3d/Lut3DOpCPU_SSE2.cpp
     ops/lut3d/Lut3DOpCPU_AVX.cpp
     ops/lut3d/Lut3DOpCPU_AVX2.cpp
+    ops/lut3d/Lut3DOpCPU_SSE2.cpp
     ops/lut3d/Lut3DOpData.cpp
     ops/lut3d/Lut3DOpGPU.cpp
+    ops/matrix/MatrixOp.cpp
     ops/matrix/MatrixOpCPU.cpp
     ops/matrix/MatrixOpData.cpp
     ops/matrix/MatrixOpGPU.cpp
-    ops/matrix/MatrixOp.cpp
     ops/noop/NoOps.cpp
     ops/OpTools.cpp
+    ops/range/RangeOp.cpp
     ops/range/RangeOpCPU.cpp
     ops/range/RangeOpData.cpp
     ops/range/RangeOpGPU.cpp
-    ops/range/RangeOp.cpp
     ops/reference/ReferenceOpData.cpp
     ParseUtils.cpp
     PathUtils.cpp
     Platform.cpp
     Processor.cpp
     ScanlineHelper.cpp
+    SystemMonitor.cpp
     Transform.cpp
     transforms/AllocationTransform.cpp
     transforms/builtins/ACES.cpp
-    transforms/builtins/BuiltinTransformRegistry.cpp
-    transforms/builtins/ColorMatrixHelpers.cpp
-    transforms/builtins/OpHelpers.cpp
     transforms/builtins/ArriCameras.cpp
+    transforms/builtins/BuiltinTransformRegistry.cpp
     transforms/builtins/CanonCameras.cpp
+    transforms/builtins/ColorMatrixHelpers.cpp
     transforms/builtins/Displays.cpp
+    transforms/builtins/OpHelpers.cpp
     transforms/builtins/PanasonicCameras.cpp
     transforms/builtins/RedCameras.cpp
     transforms/builtins/SonyCameras.cpp
@@ -179,7 +337,6 @@ set(SOURCES
     transforms/RangeTransform.cpp
     ViewingRules.cpp
     ViewTransform.cpp
-    SystemMonitor.cpp
 )
 
 # Install the pkg-config file.
@@ -218,7 +375,7 @@ endif()
 
 configure_file(CPUInfoConfig.h.in CPUInfoConfig.h)
 
-add_library(OpenColorIO ${SOURCES})
+add_library(OpenColorIO ${HEADERS} ${SOURCES})
 
 # Require at least a C++11 compatible compiler for consumer projects.
 target_compile_features(OpenColorIO
