@@ -435,7 +435,7 @@ public:
             {
                 m_viewTransforms.push_back(vt->createEditableCopy());
             }
-
+            m_defaultViewTransform = rhs.m_defaultViewTransform;
             m_defaultLumaCoefs = rhs.m_defaultLumaCoefs;
             m_strictParsing = rhs.m_strictParsing;
 
