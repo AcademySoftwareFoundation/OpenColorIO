@@ -292,7 +292,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
       - name: Install docs env
-        run: share/ci/scripts/windows/install_docs_env.sh
+        run: |
+          DOXYGEN_PATH=$GITHUB_WORKSPACE/doxygen
+          share/ci/scripts/windows/install_docs_env.sh "$DOXYGEN_PATH"
+          echo "$DOXYGEN_PATH" >> $GITHUB_PATH
         shell: bash
         if: matrix.build-docs == 'ON'
       - name: Install tests env
