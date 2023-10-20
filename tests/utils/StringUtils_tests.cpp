@@ -50,6 +50,11 @@ OCIO_ADD_TEST(StringUtils, trim)
         const std::string str = StringUtils::Trim(ref);
         OCIO_CHECK_EQUAL(str, "lOwEr 1*& ctfG");
     }
+
+    {
+        constexpr char ref2[]{ -1, -2, -3, '\0' };
+        const std::string str = StringUtils::Trim(ref2);
+    }
 }
 
 OCIO_ADD_TEST(StringUtils, split)
