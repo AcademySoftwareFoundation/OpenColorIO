@@ -266,6 +266,9 @@ class ImageViewer(QtWidgets.QWidget):
 
         # Initialize
         TransformManager.subscribe_to_transform_menu(self._on_transform_menu_changed)
+        TransformManager.subscribe_to_transform_subscription_init(
+            self._on_transform_subscription_init
+        )
         self.update()
         self._on_sample_precision_changed(self.sample_precision_box.value())
         self._on_sample_changed(-1, -1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
@@ -515,6 +518,19 @@ class ImageViewer(QtWidgets.QWidget):
             # Force update transform
             self._on_transform_changed(0)
 
+    def _on_transform_subscription_init(self, slot: int) -> None:
+        """
+        If this viewer is not subscribed to a specific transform
+        subscription slot, subscribe to the first slot to receive a
+        transform subscription.
+
+        :param slot: Transform subscription slot
+        """
+        if self._tf_subscription_slot == -1:
+            index = self.tf_box.findData(slot)
+            if index != -1:
+                self.tf_box.setCurrentIndex(index)
+
     def _float_to_uint8(self, value: float) -> int:
         """
         :param value: Float value
@@ -529,7 +545,7 @@ class ImageViewer(QtWidgets.QWidget):
             self.clear_transform()
         else:
             self._tf_subscription_slot = self.tf_box.currentData()
-            TransformManager.subscribe_to_transforms(
+            TransformManager.subscribe_to_transforms_at(
                 self._tf_subscription_slot, self.set_transform
             )
 
