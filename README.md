@@ -72,6 +72,7 @@ Web Resources
 -------------
 
 * Website: <http://opencolorio.org>
+* Documentation: <https://opencolorio.readthedocs.io/en/latest/>
 * Mailing lists:
   * Developer: <ocio-dev@lists.aswf.io>
   * User: <ocio-user@lists.aswf.io>
@@ -98,6 +99,11 @@ The following reference implementations are provided:
   * aces_0.1.1
 * Other
   * nuke-default
+
+Sources for the newer builtin ACES configuration files can be found in the releases section of the
+[OpenColorIO-Config-ACES](https://github.com/AcademySoftwareFoundation/OpenColorIO-Config-ACES)
+repository.
+
 
 Acknowledgements
 ----------------
