@@ -50,14 +50,13 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
 
     if(yaml-cpp_FOUND)
         if(TARGET yaml-cpp::yaml-cpp)
-	        # yaml-cpp >= 0.8
-	        get_target_property(yaml-cpp_LIBRARY yaml-cpp::yaml-cpp LOCATION)
-	        get_target_property(yaml-cpp_INCLUDE_DIR yaml-cpp::yaml-cpp INCLUDE_DIRECTORIES)
-	    else()
-
-	        get_target_property(yaml-cpp_LIBRARY yaml-cpp LOCATION)
-	        get_target_property(yaml-cpp_INCLUDE_DIR yaml-cpp INCLUDE_DIRECTORIES)
-	    endif()
+            # yaml-cpp >= 0.8
+            get_target_property(yaml-cpp_LIBRARY yaml-cpp::yaml-cpp LOCATION)
+            get_target_property(yaml-cpp_INCLUDE_DIR yaml-cpp::yaml-cpp INCLUDE_DIRECTORIES)
+        else()
+            get_target_property(yaml-cpp_LIBRARY yaml-cpp LOCATION)
+            get_target_property(yaml-cpp_INCLUDE_DIR yaml-cpp INCLUDE_DIRECTORIES)
+        endif()
     else()
 
         # As yaml-cpp-config.cmake search fails, search an installed library
