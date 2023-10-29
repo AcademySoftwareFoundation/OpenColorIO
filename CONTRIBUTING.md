@@ -243,7 +243,7 @@ expected to validate the behavior of every part of OCIO:
 * Any change to existing functionality should have tests added if they
   don't already exist.
 
-The test should should be run, via ``ctest``, before submitting a pull request.
+The test should be run, via ``ctest``, before submitting a pull request.
 
 ## Versioning Policy
 
