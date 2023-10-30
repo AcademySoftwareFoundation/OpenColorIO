@@ -5,7 +5,7 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Optional
 
-from PySide2 import QtCore, QtWidgets
+from PySide6 import QtCore, QtWidgets
 
 from .settings import settings
 from .transform_manager import TransformManager

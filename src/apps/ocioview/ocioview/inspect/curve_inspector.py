@@ -8,7 +8,7 @@ from typing import Optional
 import numpy as np
 
 import PyOpenColorIO as ocio
-from PySide2 import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets
 
 from ..constants import R_COLOR, G_COLOR, B_COLOR, GRAY_COLOR
 from ..message_router import MessageRouter
@@ -526,7 +526,7 @@ class CurveView(QtWidgets.QGraphicsView):
 
                 if color_name == GRAY_COLOR.name():
                     palette = self.palette()
-                    painter.setPen(palette.color(palette.Text))
+                    painter.setPen(palette.color(palette.ColorRole.Text))
                 else:
                     painter.setPen(QtGui.QColor(color_name))
 
@@ -635,7 +635,7 @@ class CurveView(QtWidgets.QGraphicsView):
             r_samples, b_samples, atol=self.EPSILON
         ):
             palette = self.palette()
-            color_name = palette.color(palette.Text).name()
+            color_name = palette.color(palette.ColorRole.Text).name()
 
             self._samples[color_name] = np.stack((self._x_lin, r_samples), axis=-1)
 

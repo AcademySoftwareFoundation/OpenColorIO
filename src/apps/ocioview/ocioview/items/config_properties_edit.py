@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Optional
 
 import PyOpenColorIO as ocio
-from PySide2 import QtWidgets
+from PySide6 import QtWidgets
 
 from ..constants import RGB
 from ..widgets import (

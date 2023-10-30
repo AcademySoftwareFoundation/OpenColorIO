@@ -11,11 +11,10 @@ import ctypes
 import logging
 import sys
 
-from PySide2 import QtCore, QtGui, QtWidgets, QtOpenGL
+from PySide6 import QtCore, QtGui, QtWidgets, QtOpenGL
 from OpenGL import GL
 import PyOpenColorIO as ocio
 import OpenImageIO as oiio
-import imath
 import numpy as np
 
 

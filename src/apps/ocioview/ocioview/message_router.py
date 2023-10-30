@@ -10,7 +10,7 @@ from typing import Any, Optional
 from queue import Empty, SimpleQueue
 
 import PyOpenColorIO as ocio
-from PySide2 import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets
 
 from .utils import config_to_html, processor_to_ctf_html, processor_to_shader_html
 

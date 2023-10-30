@@ -4,7 +4,7 @@
 import enum
 from typing import Callable, Optional
 
-from PySide2 import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets
 
 from ..utils import SignalsBlocked
 
@@ -12,7 +12,7 @@ from ..utils import SignalsBlocked
 class ComboBox(QtWidgets.QComboBox):
     def __init__(self, parent: Optional[QtCore.QObject] = None):
         super().__init__(parent=parent)
-        self.setSizeAdjustPolicy(QtWidgets.QComboBox.AdjustToMinimumContentsLength)
+        self.setSizeAdjustPolicy(QtWidgets.QComboBox.AdjustToMinimumContentsLengthWithIcon)
 
     # DataWidgetMapper user property interface
     @QtCore.Property(str, user=True)
@@ -103,7 +103,6 @@ class CallbackComboBox(ComboBox):
         self._item_icon = item_icon
 
         self.setEditable(editable)
-        self.setAutoCompletion(True)
         self.setInsertPolicy(QtWidgets.QComboBox.NoInsert)
 
         completer = self.completer()

@@ -1,7 +1,7 @@
-# imath
+imageio
 numpy
-# OpenImageIO
 pygments
 PyOpenGL
-PySide2
+PySide6
 QtAwesome
+OpenColorIO

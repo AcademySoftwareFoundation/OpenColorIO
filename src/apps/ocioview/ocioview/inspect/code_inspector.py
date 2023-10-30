@@ -6,7 +6,7 @@ from typing import Optional
 
 import PyOpenColorIO as ocio
 from pygments.formatters import HtmlFormatter
-from PySide2 import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets
 
 from ..message_router import MessageRouter
 from ..utils import get_glyph_icon, processor_to_shader_html
@@ -40,9 +40,9 @@ class CodeInspector(QtWidgets.QWidget):
 
         html_css = HtmlFormatter(style="material").get_style_defs()
         # Update line number colors to match palette
-        html_css = html_css.replace("#263238", palette.color(palette.Base).name())
+        html_css = html_css.replace("#263238", palette.color(palette.ColorRole.Base).name())
         html_css = html_css.replace(
-            "#37474F", palette.color(palette.Text).darker(150).name()
+            "#37474F", palette.color(palette.ColorRole.Text).darker(150).name()
         )
 
         # Widgets

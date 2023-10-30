@@ -12,7 +12,7 @@ import qtawesome
 from pygments import highlight
 from pygments.lexers import GLShaderLexer, HLSLShaderLexer, XmlLexer, YamlLexer
 from pygments.formatters import HtmlFormatter
-from PySide2 import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets
 
 from .constants import ICON_SCALE_FACTOR, ICON_SIZE_BUTTON
 

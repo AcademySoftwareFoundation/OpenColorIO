@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 from typing import Any, Optional
 
 import PyOpenColorIO as ocio
-from PySide2 import QtCore, QtGui
+from PySide6 import QtCore, QtGui
 
 from ..config_cache import ConfigCache
 from .config_item_model import ColumnDesc, BaseConfigItemModel
