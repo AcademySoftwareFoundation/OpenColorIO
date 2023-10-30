@@ -1,14 +1,15 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright Contributors to the OpenColorIO Project.
 
-from typing import Callable, Optional, Union
+from typing import Callable, Optional, TYPE_CHECKING, Union
 
 from PySide6 import QtCore, QtGui, QtWidgets
 
-from ..items.config_item_model import BaseConfigItemModel
 from ..utils import SignalsBlocked, next_name
 from .item_view import BaseItemView
 
+if TYPE_CHECKING:
+    from ..items.config_item_model import BaseConfigItemModel
 
 class StringListWidget(BaseItemView):
     """
@@ -221,7 +222,7 @@ class ItemModelListWidget(BaseItemView):
 
     def __init__(
         self,
-        model: BaseConfigItemModel,
+        model: "BaseConfigItemModel",
         model_column: int,
         item_flags: QtCore.Qt.ItemFlags = BaseItemView.DEFAULT_ITEM_FLAGS,
         item_icon: Optional[QtGui.QIcon] = None,
