@@ -7,7 +7,7 @@ from functools import partial
 from typing import Optional
 
 import PyOpenColorIO as ocio
-from PySide2 import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets
 
 from ..constants import ICON_SIZE_ITEM, BORDER_COLOR_ROLE
 from ..style import apply_top_tool_bar_style, apply_widget_with_top_tool_bar_style

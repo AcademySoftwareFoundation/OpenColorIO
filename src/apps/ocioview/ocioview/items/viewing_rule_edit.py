@@ -3,7 +3,7 @@
 
 from typing import Optional
 
-from PySide2 import QtCore, QtWidgets
+from PySide6 import QtCore, QtWidgets
 
 from ..config_cache import ConfigCache
 from ..utils import get_glyph_icon

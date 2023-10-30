@@ -4,7 +4,7 @@
 from pathlib import Path
 from typing import Optional, Union
 
-from PySide2 import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets
 
 from ..constants import ICON_SIZE_BUTTON, BORDER_COLOR_ROLE
 from ..style import apply_top_tool_bar_style

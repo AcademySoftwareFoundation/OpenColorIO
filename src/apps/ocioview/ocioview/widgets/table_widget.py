@@ -3,7 +3,7 @@
 
 from typing import Callable, Optional
 
-from PySide2 import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets
 
 from ..constants import ICON_SIZE_ITEM
 from ..utils import SignalsBlocked, next_name

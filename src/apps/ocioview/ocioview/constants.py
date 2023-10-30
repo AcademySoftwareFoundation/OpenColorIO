@@ -3,7 +3,7 @@
 
 from pathlib import Path
 
-from PySide2 import QtCore, QtGui
+from PySide6 import QtCore, QtGui
 
 
 # Root application directory
