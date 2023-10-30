@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright Contributors to the OpenColorIO Project.
 
-from PySide2 import QtCore
+from PySide6 import QtCore
 
 
 settings = QtCore.QSettings(

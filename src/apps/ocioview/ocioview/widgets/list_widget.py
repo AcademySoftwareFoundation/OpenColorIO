@@ -3,7 +3,7 @@
 
 from typing import Callable, Optional, TYPE_CHECKING, Union
 
-from PySide2 import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets
 
 from ..utils import SignalsBlocked, next_name
 from .item_view import BaseItemView

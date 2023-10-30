@@ -6,16 +6,16 @@ from types import TracebackType
 from typing import Any, Optional
 
 import PyOpenColorIO as ocio
-from PySide2 import QtCore, QtWidgets
+from PySide6 import QtCore, QtGui
 
 from .config_cache import ConfigCache
 
 
-undo_stack = QtWidgets.QUndoStack()
+undo_stack = QtGui.QUndoStack()
 """Global undo stack."""
 
 
-class ItemModelUndoCommand(QtWidgets.QUndoCommand):
+class ItemModelUndoCommand(QtGui.QUndoCommand):
     """
     Undo command for use in item model ``setData`` implementations.
 
@@ -31,7 +31,7 @@ class ItemModelUndoCommand(QtWidgets.QUndoCommand):
         index: QtCore.QPersistentModelIndex,
         redo_value: Any,
         undo_value: Any,
-        parent: Optional[QtWidgets.QUndoCommand] = None,
+        parent: Optional[QtGui.QUndoCommand] = None,
     ):
         """
         :param text: Undo/redo command menu text
@@ -59,7 +59,7 @@ class ItemModelUndoCommand(QtWidgets.QUndoCommand):
             model.setData(self._index, self._undo_value)
 
 
-class ConfigSnapshotUndoCommand(QtWidgets.QUndoCommand):
+class ConfigSnapshotUndoCommand(QtGui.QUndoCommand):
     """
     Undo command for complex config changes like item adds, moves,
     and deletes, to be used as a content manager in which the entry
@@ -71,7 +71,7 @@ class ConfigSnapshotUndoCommand(QtWidgets.QUndoCommand):
         text: str,
         model: Optional[QtCore.QAbstractItemModel] = None,
         item_name: Optional[str] = None,
-        parent: Optional[QtWidgets.QUndoCommand] = None,
+        parent: Optional[QtGui.QUndoCommand] = None,
     ):
         """
         :param text: Undo/redo command menu text

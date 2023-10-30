@@ -7,7 +7,7 @@ from functools import partial
 from typing import Callable, Optional
 
 import PyOpenColorIO as ocio
-from PySide2 import QtCore, QtGui
+from PySide6 import QtCore, QtGui
 
 from .utils import get_glyph_icon
 

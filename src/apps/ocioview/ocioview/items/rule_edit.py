@@ -3,7 +3,7 @@
 
 from typing import Optional
 
-from PySide2 import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets
 
 from ..utils import get_glyph_icon
 from .file_rule_edit import FileRuleEdit

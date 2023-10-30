@@ -5,7 +5,7 @@ import logging
 from pathlib import Path
 from typing import Any, Optional
 
-from PySide2 import QtCore
+from PySide6 import QtCore
 import PyOpenColorIO as ocio
 
 from .config_item_model import ColumnDesc, BaseConfigItemModel

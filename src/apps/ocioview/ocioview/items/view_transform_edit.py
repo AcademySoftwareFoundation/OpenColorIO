@@ -4,7 +4,7 @@
 from functools import partial
 from typing import Optional
 
-from PySide2 import QtWidgets
+from PySide6 import QtWidgets
 import PyOpenColorIO as ocio
 
 from ..config_cache import ConfigCache

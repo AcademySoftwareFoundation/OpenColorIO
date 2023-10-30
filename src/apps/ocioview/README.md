@@ -41,10 +41,10 @@ Dependencies
 
 * PyOpenColorIO
 * [OpenImageIO (Python bindings)](https://github.com/OpenImageIO/oiio)
-* [Imath (Python bindings)](https://github.com/AcademySoftwareFoundation/Imath)
 * ``pip install -r requirements.txt``
   * [numpy](https://pypi.org/project/numpy/)
   * [Pygments](https://pypi.org/project/Pygments/)
   * [PyOpenGL](https://pypi.org/project/PyOpenGL/)
-  * [PySide2](https://pypi.org/project/PySide2/)
+  * [PySide6](https://pypi.org/project/PySide6/)
   * [QtAwesome](https://pypi.org/project/QtAwesome/)
+  * [imageio](https://pypi.org/project/imageio/)
