@@ -4,7 +4,7 @@
 from typing import Optional
 
 import PyOpenColorIO as ocio
-from PySide2 import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets
 
 from ..log_handlers import set_logging_level
 from ..message_router import MessageRouter
