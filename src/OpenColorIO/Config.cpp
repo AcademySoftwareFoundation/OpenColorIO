@@ -4723,16 +4723,25 @@ ConstProcessorRcPtr Config::GetProcessorFromConfigs(const ConstContextRcPtr & sr
     if (!p2)
     {
         throw Exception("Can't create the processor for the destination config "
-            "and the destination color space.");
+            "and the destination display view transform.");
     }
 
     ProcessorRcPtr processor = Processor::Create();
     processor->getImpl()->setProcessorCacheFlags(srcConfig->getImpl()->m_cacheFlags);
 
-    // If the source color spaces is a data space, its corresponding processor
+    const char* csName = dstConfig->getDisplayViewColorSpaceName(dstDisplay, dstView);
+    const char* displayColorSpaceName = View::UseDisplayName(csName) ? dstDisplay : csName;
+    ConstColorSpaceRcPtr displayColorSpace = dstConfig->getColorSpace(displayColorSpaceName);
+    if (!displayColorSpace)
+    {
+        throw Exception("Can't create the processor for the destination config: "
+            "display color space not found.");
+    }
+
+    // If either of the color spaces are data spaces, its corresponding processor
     // will be empty, but need to make sure the entire result is also empty to
     // better match the semantics of how data spaces are handled.
-    if (!srcColorSpace->isData())
+    if (!srcColorSpace->isData() && !displayColorSpace->isData())
     {
         if (direction == TRANSFORM_DIR_INVERSE)
         {
