@@ -4,7 +4,7 @@
 from functools import partial
 from typing import Optional
 
-from PySide2 import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets
 
 from ..constants import MARGIN_WIDTH
 from ..transform_manager import TransformManager
@@ -47,7 +47,7 @@ class BaseConfigItemParamEdit(QtWidgets.QWidget):
 
         if self.__has_transforms__:
             self.__has_tabs__ = True
-            no_tf_color = palette.color(palette.Disabled, palette.Text)
+            no_tf_color = palette.color(palette.ColorGroup.Disabled, palette.ColorRole.Text)
             self._from_ref_icon = get_glyph_icon("mdi6.layers-plus")
             self._no_from_ref_icon = get_glyph_icon(
                 "mdi6.layers-plus", color=no_tf_color

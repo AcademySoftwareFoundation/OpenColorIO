@@ -3,7 +3,7 @@
 
 from typing import Optional
 
-from PySide2 import QtGui, QtWidgets
+from PySide6 import QtGui, QtWidgets
 
 from .constants import (
     BORDER_COLOR_ROLE,
