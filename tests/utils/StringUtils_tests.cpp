@@ -50,6 +50,12 @@ OCIO_ADD_TEST(StringUtils, trim)
         const std::string str = StringUtils::Trim(ref);
         OCIO_CHECK_EQUAL(str, "lOwEr 1*& ctfG");
     }
+
+    {
+        // Test that no assert happens when the Trim argument is not an unsigned char (see issue #1874).
+        constexpr char ref2[]{ -1, -2, -3, '\0' };
+        const std::string str = StringUtils::Trim(ref2);
+    }
 }
 
 OCIO_ADD_TEST(StringUtils, split)
