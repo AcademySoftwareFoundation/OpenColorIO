@@ -8,6 +8,7 @@
 #   minizip-ng_LIBRARY      - minizip-ng library to link to
 #   minizip-ng_INCLUDE_DIR  - Where to find mz.h and other headers
 #   minizip-ng_VERSION      - The version of the library
+#   minizip-ng_COMPAT       - Whether minizip-ng MZ_COMPAT was used or not
 #
 # Global targets defined by this module:
 #   MINIZIP::minizip-ng - IMPORTED target, if found
@@ -114,7 +115,9 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
             PATH_SUFFIXES
                 include
                 include/minizip-ng
+                include/minizip
                 minizip-ng/include
+                minizip/include
         )
 
         # Minizip-ng uses prefix "lib" on all platform by default.
@@ -203,3 +206,15 @@ if(_minizip-ng_TARGET_CREATE)
 
     target_link_libraries(MINIZIP::minizip-ng INTERFACE ZLIB::ZLIB)
 endif()
+
+###############################################################################
+### Detect compatibility mode ###
+
+set(minizip-ng_COMPAT FALSE)
+if(minizip-ng_INCLUDE_DIR)
+    list(GET minizip-ng_INCLUDE_DIR 0 _minizip-ng_INCLUDE_DIR)
+    if(EXISTS "${_minizip-ng_INCLUDE_DIR}/mz_compat.h")
+        set(minizip-ng_COMPAT TRUE)
+    endif()
+endif()
+mark_as_advanced(minizip-ng_COMPAT)
