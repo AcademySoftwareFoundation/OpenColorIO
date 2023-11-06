@@ -19,7 +19,7 @@
 #include "ParseUtils.h"
 #include "PathUtils.h"
 #include "Platform.h"
-#include "pystring/pystring.h"
+#include "pystring.h"
 #include "utils/StringUtils.h"
 #include "ViewingRules.h"
 #include "yaml-cpp/yaml.h"

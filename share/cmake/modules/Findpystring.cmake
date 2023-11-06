@@ -28,12 +28,13 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
     # Find include directory
     find_path(pystring_INCLUDE_DIR
         NAMES
-            pystring/pystring.h
+            pystring.h
         HINTS
             ${pystring_ROOT}
         PATH_SUFFIXES
             include
             pystring/include
+            include/pystring
     )
 
     # Find library

@@ -16,7 +16,7 @@
 #include "ops/lut1d/Lut1DOp.h"
 #include "ops/lut3d/Lut3DOp.h"
 #include "ParseUtils.h"
-#include "pystring/pystring.h"
+#include "pystring.h"
 #include "Platform.h"
 #include "transforms/FileTransform.h"
 #include "utils/StringUtils.h"

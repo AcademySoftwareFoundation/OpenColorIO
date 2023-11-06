@@ -19,7 +19,7 @@
 #include "ops/noop/NoOps.h"
 #include "PathUtils.h"
 #include "Platform.h"
-#include "pystring/pystring.h"
+#include "pystring.h"
 #include "utils/StringUtils.h"
 
 namespace OCIO_NAMESPACE

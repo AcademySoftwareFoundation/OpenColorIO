@@ -10,7 +10,7 @@
 #include "Mutex.h"
 #include "PathUtils.h"
 #include "Platform.h"
-#include "pystring/pystring.h"
+#include "pystring.h"
 #include "utils/StringUtils.h"
 #include "OCIOZArchive.h"
 

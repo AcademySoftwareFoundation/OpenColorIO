@@ -15,7 +15,7 @@
 #include "ops/matrix/MatrixOp.h"
 #include "ops/range/RangeOp.h"
 #include "Platform.h"
-#include "pystring/pystring.h"
+#include "pystring.h"
 #include "transforms/FileTransform.h"
 
 

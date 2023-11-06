@@ -23,7 +23,7 @@
 #include "OpBuilders.h"
 #include "ops/noop/NoOps.h"
 #include "Platform.h"
-#include "pystring/pystring.h"
+#include "pystring.h"
 #include "TransformBuilder.h"
 #include "transforms/FileTransform.h"
 #include "utils/StringUtils.h"

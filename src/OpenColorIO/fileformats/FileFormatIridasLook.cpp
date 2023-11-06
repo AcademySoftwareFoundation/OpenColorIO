@@ -13,7 +13,7 @@
 #include "ops/lut3d/Lut3DOp.h"
 #include "ParseUtils.h"
 #include "Platform.h"
-#include "pystring/pystring.h"
+#include "pystring.h"
 #include "transforms/FileTransform.h"
 #include "utils/StringUtils.h"
 #include "utils/NumberUtils.h"
