@@ -4,9 +4,10 @@
 
 #include <sstream>
 
+#include <pystring.h>
+
 #include "ColorSpace.cpp"
 
-#include <pystring/pystring.h>
 #include "testutils/UnitTest.h"
 #include "UnitTestUtils.h"
 

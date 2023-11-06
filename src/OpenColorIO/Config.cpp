@@ -12,6 +12,8 @@
 #include <regex>
 #include <functional>
 
+#include <pystring.h>
+
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "builtinconfigs/BuiltinConfigRegistry.h"
@@ -34,7 +36,6 @@
 #include "Platform.h"
 #include "PrivateTypes.h"
 #include "Processor.h"
-#include "pystring/pystring.h"
 #include "transforms/FileTransform.h"
 #include "utils/StringUtils.h"
 #include "ViewingRules.h"

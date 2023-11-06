@@ -8,10 +8,12 @@
 #include <set>
 #include <limits>
 
+#include <pystring.h>
+
 #include <OpenColorIO/OpenColorIO.h>
+
 #include "Mutex.h"
 #include "Platform.h"
-#include "pystring/pystring.h"
 #include "utils/StringUtils.h"
 #include "transforms/FileTransform.h"
 
