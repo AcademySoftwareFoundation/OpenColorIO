@@ -4,7 +4,10 @@ requires = [
     "wheel",
     "cmake>=3.13",
     "ninja; sys_platform != 'win32' and platform_machine != 'arm64'",
-    # Documentation requirements
+    # Documentation requirements (see docs/requirements.txt for details)
+    "urllib3<2",
+    "docutils>=0.18.1",
+    "sphinx<=7.1.2",
     "six",
     "testresources",
     "recommonmark",
@@ -34,4 +37,5 @@ before-build = "share/ci/scripts/linux/yum/install_docs_env.sh"
 before-build = "share/ci/scripts/macos/install_docs_env.sh"
 
 [tool.cibuildwheel.windows]
-before-build = "bash -c share/ci/scripts/windows/install_docs_env.sh"
+environment = { PATH="$GITHUB_WORKSPACE/doxygen;$PATH" }
+before-build = 'bash -c "share/ci/scripts/windows/install_docs_env.sh $GITHUB_WORKSPACE/doxygen"'

@@ -352,7 +352,7 @@ class ColorSpaceTest(unittest.TestCase):
             self.colorspace.setTransform(self.log_tr, direction)
             log_transform = self.colorspace.getTransform(direction)
             self.assertIsInstance(log_transform, OCIO.LogTransform)
-            self.assertEquals(self.log_tr.getBase(), log_transform.getBase())
+            self.assertEqual(self.log_tr.getBase(), log_transform.getBase())
 
     def test_aliases(self):
         """
