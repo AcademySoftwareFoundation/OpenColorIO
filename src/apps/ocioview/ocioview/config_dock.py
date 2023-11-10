@@ -4,7 +4,7 @@
 from typing import Optional
 
 import PyOpenColorIO as ocio
-from PySide2 import QtCore, QtWidgets
+from PySide6 import QtCore, QtWidgets
 
 from .items import (
     ColorSpaceEdit,

@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 from typing import Any, Optional
 
 import PyOpenColorIO as ocio
-from PySide2 import QtCore
+from PySide6 import QtCore
 
 from ..config_cache import ConfigCache
 from ..utils import next_name

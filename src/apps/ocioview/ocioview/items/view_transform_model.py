@@ -5,7 +5,7 @@ import copy
 from typing import Any, Optional, Union
 
 import PyOpenColorIO as ocio
-from PySide2 import QtCore, QtGui
+from PySide6 import QtCore, QtGui
 
 from ..config_cache import ConfigCache
 from ..utils import get_enum_member, get_glyph_icon

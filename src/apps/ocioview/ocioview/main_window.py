@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Optional
 
 import PyOpenColorIO as ocio
-from PySide2 import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets
 
 from .config_cache import ConfigCache
 from .config_dock import ConfigDock

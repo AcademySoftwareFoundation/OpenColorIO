@@ -5,7 +5,7 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Any, Optional, Sequence
 
-from PySide2 import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets
 
 from ..constants import R_COLOR, G_COLOR, B_COLOR
 from ..utils import SignalsBlocked, get_glyph_icon
@@ -50,7 +50,7 @@ class PathEdit(LineEdit):
         QtWidgets.QFileDialog.AnyFile: "ph.file",
         QtWidgets.QFileDialog.ExistingFile: "ph.file",
         QtWidgets.QFileDialog.Directory: "ph.folder",
-        QtWidgets.QFileDialog.DirectoryOnly: "ph.folder",
+        QtWidgets.QFileDialog.ShowDirsOnly: "ph.folder",
     }
 
     def __init__(
@@ -75,7 +75,7 @@ class PathEdit(LineEdit):
         if self._file_mode in self.BROWSE_GLYPHS:
             self._browse_action = self.addAction(
                 get_glyph_icon(self.BROWSE_GLYPHS[self._file_mode]),
-                self.TrailingPosition,
+                self.ActionPosition.TrailingPosition,
             )
             self._browse_action.triggered.connect(self._on_browse_action_triggered)
 

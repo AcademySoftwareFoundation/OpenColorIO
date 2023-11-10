@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Generator, Optional
 
 import PyOpenColorIO as ocio
-from PySide2 import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets
 
 from ..transform_manager import TransformManager
 from ..config_cache import ConfigCache
@@ -253,7 +253,7 @@ class ImageViewer(QtWidgets.QWidget):
         self.image_plane.tf_subscription_requested.connect(
             self._on_tf_subscription_requested
         )
-        self.input_color_space_box.currentIndexChanged[str].connect(
+        self.input_color_space_box.currentTextChanged[str].connect(
             self._on_input_color_space_changed
         )
         self.tf_box.currentIndexChanged[int].connect(self._on_transform_changed)
@@ -266,6 +266,9 @@ class ImageViewer(QtWidgets.QWidget):
 
         # Initialize
         TransformManager.subscribe_to_transform_menu(self._on_transform_menu_changed)
+        TransformManager.subscribe_to_transform_subscription_init(
+            self._on_transform_subscription_init
+        )
         self.update()
         self._on_sample_precision_changed(self.sample_precision_box.value())
         self._on_sample_changed(-1, -1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
@@ -525,7 +528,7 @@ class ImageViewer(QtWidgets.QWidget):
             self.clear_transform()
         else:
             self._tf_subscription_slot = self.tf_box.currentData()
-            TransformManager.subscribe_to_transforms(
+            TransformManager.subscribe_to_transforms_at(
                 self._tf_subscription_slot, self.set_transform
             )
 

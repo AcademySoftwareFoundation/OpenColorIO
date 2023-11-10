@@ -3,7 +3,7 @@
 
 from typing import Optional
 
-from PySide2 import QtCore, QtWidgets
+from PySide6 import QtCore, QtWidgets
 
 from .inspect import CodeInspector, CubeInspector, CurveInspector, LogInspector
 from .utils import get_glyph_icon
