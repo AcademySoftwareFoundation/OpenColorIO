@@ -768,6 +768,55 @@ OCIO_ADD_TEST(Config, serialize_searchpath)
     }
 }
 
+OCIO_ADD_TEST(Config, serialize_environment)
+{
+    {
+        OCIO::ConfigRcPtr config = OCIO::Config::Create();
+        config->setMajorVersion(1);
+        config->setMinorVersion(0);
+
+        std::ostringstream os;
+        config->serialize(os);
+        StringUtils::StringVec osvec = StringUtils::SplitByLines(os.str());
+
+        // A v1 config does not write the environment section if it's empty.
+        const std::string expected{ "search_path: \"\"" };
+        OCIO_CHECK_EQUAL(osvec[2], expected);
+    }
+    {
+        OCIO::ConfigRcPtr config = OCIO::Config::Create();
+        config->setMajorVersion(2);
+        config->setMinorVersion(0);
+
+        std::ostringstream os;
+        config->serialize(os);
+        StringUtils::StringVec osvec = StringUtils::SplitByLines(os.str());
+
+        // A v2 config does write the environment section, even if it's empty.
+        const std::string expected1{ "environment:" };
+        const std::string expected2{ "  {}" };
+        OCIO_CHECK_EQUAL(osvec[2], expected1);
+        OCIO_CHECK_EQUAL(osvec[3], expected2);
+    }
+    {
+        OCIO::ConfigRcPtr config = OCIO::Config::Create();
+        config->setMajorVersion(1);
+        config->setMinorVersion(0);
+
+        config->addEnvironmentVar("SHOT", "0001");
+
+        std::ostringstream os;
+        config->serialize(os);
+        StringUtils::StringVec osvec = StringUtils::SplitByLines(os.str());
+
+        // A v1 config does write the environment section if it's not empty.
+        const std::string expected1{ "environment:" };
+        const std::string expected2{ "  SHOT: 0001" };
+        OCIO_CHECK_EQUAL(osvec[2], expected1);
+        OCIO_CHECK_EQUAL(osvec[3], expected2);
+    }
+}
+
 OCIO_ADD_TEST(Config, validation)
 {
     {
