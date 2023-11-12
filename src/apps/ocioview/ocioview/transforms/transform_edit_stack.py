@@ -5,7 +5,7 @@ from functools import partial
 from typing import Optional
 
 import PyOpenColorIO as ocio
-from PySide2 import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets
 
 # Register all transform edit types
 from .. import transforms
@@ -48,7 +48,7 @@ class TransformEditStack(QtWidgets.QWidget):
         self.add_tf_button.setToolButtonStyle(QtCore.Qt.ToolButtonTextBesideIcon)
         self.add_tf_button.setMenu(self.tf_menu)
 
-        self._start_collapsed_action = QtWidgets.QAction("Start Collapsed")
+        self._start_collapsed_action = QtGui.QAction("Start Collapsed")
         self._start_collapsed_action.setCheckable(True)
         self._start_collapsed_action.triggered[bool].connect(
             self._on_start_collapsed_changed

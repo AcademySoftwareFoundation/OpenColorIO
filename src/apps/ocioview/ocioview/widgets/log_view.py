@@ -3,7 +3,7 @@
 
 from typing import Any, Optional
 
-from PySide2 import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets
 
 from ..constants import ICON_SIZE_BUTTON
 from ..style import (
