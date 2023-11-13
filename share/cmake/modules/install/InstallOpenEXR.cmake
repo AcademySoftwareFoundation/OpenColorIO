@@ -110,7 +110,7 @@ if(NOT OpenEXR_FOUND AND OCIO_INSTALL_EXT_PACKAGES AND NOT OCIO_INSTALL_EXT_PACK
             -DBUILD_SHARED_LIBS=OFF
             -DBUILD_TESTING=OFF
             -DOPENEXR_INSTALL_EXAMPLES=OFF
-            -DOPENEXR_INSTALL_TOOLS=OFF
+            -DOPENEXR_BUILD_TOOLS=OFF
             # Try to use in-source built Imath first, if available.
             -DCMAKE_PREFIX_PATH=${_EXT_DIST_ROOT}
         )
