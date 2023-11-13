@@ -4719,6 +4719,15 @@ ConstProcessorRcPtr Config::GetProcessorFromConfigs(const ConstContextRcPtr & sr
             "the source color space.");
     }
 
+    const char* csName = dstConfig->getDisplayViewColorSpaceName(dstDisplay, dstView);
+    const char* displayColorSpaceName = View::UseDisplayName(csName) ? dstDisplay : csName;
+    ConstColorSpaceRcPtr displayColorSpace = dstConfig->getColorSpace(displayColorSpaceName);
+    if (!displayColorSpace)
+    {
+        throw Exception("Can't create the processor for the destination config: "
+            "display color space not found.");
+    }
+
     auto p2 = dstConfig->getProcessor(dstContext, dstInterchangeName, dstDisplay, dstView, direction);
     if (!p2)
     {
@@ -4728,15 +4737,6 @@ ConstProcessorRcPtr Config::GetProcessorFromConfigs(const ConstContextRcPtr & sr
 
     ProcessorRcPtr processor = Processor::Create();
     processor->getImpl()->setProcessorCacheFlags(srcConfig->getImpl()->m_cacheFlags);
-
-    const char* csName = dstConfig->getDisplayViewColorSpaceName(dstDisplay, dstView);
-    const char* displayColorSpaceName = View::UseDisplayName(csName) ? dstDisplay : csName;
-    ConstColorSpaceRcPtr displayColorSpace = dstConfig->getColorSpace(displayColorSpaceName);
-    if (!displayColorSpace)
-    {
-        throw Exception("Can't create the processor for the destination config: "
-            "display color space not found.");
-    }
 
     // If either of the color spaces are data spaces, its corresponding processor
     // will be empty, but need to make sure the entire result is also empty to
