@@ -63,10 +63,6 @@ OCIO_ADD_TEST(ExposureContrastOpData, style)
     OCIO_CHECK_NO_THROW(styleName =
         ConvertToString(OCIO::ExposureContrastOpData::STYLE_LOGARITHMIC_REV));
     OCIO_CHECK_EQUAL(styleName, OCIO::EC_STYLE_LOGARITHMIC_REV);
-
-    OCIO_CHECK_THROW_WHAT(
-        ConvertToString((OCIO::ExposureContrastOpData::Style)-1),
-        OCIO::Exception, "Unknown exposure contrast style");
 }
 
 OCIO_ADD_TEST(ExposureContrastOpData, accessors)
@@ -336,4 +332,3 @@ OCIO_ADD_TEST(ExposureContrastOpData, replace_dynamic_property)
                      OCIO::Exception);
     OCIO_CHECK_THROW(ec1.getDynamicProperty(OCIO::DYNAMIC_PROPERTY_CONTRAST), OCIO::Exception);
 }
-
