@@ -5924,6 +5924,7 @@ displays:
   displayname:
     - !<View> {name: view1, colorspace: displaytest1}
     - !<View> {name: view2, view_transform: vt1, display_colorspace: display2}
+    - !<View> {name: view3, colorspace: data_space}
 
 view_transforms:
   - !<ViewTransform>
@@ -6165,6 +6166,13 @@ display_colorspaces:
     t4 = group->getTransform(4);
     auto ff4 = OCIO_DYNAMIC_POINTER_CAST<OCIO::FixedFunctionTransform>(t4);
     OCIO_CHECK_ASSERT(ff4);
+
+    // If one of the spaces is a data space, the whole result must be a no-op.
+    OCIO_CHECK_NO_THROW(p = OCIO::Config::GetProcessorFromConfigs(
+        config2, "test2", config1, "displayname", "view3", OCIO::TRANSFORM_DIR_FORWARD));
+    OCIO_REQUIRE_ASSERT(p);
+    group = p->createGroupTransform();
+    OCIO_REQUIRE_EQUAL(group->getNumTransforms(), 0);
 
     constexpr const char * SIMPLE_CONFIG3{ R"(
 ocio_profile_version: 2
