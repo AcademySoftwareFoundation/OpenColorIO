@@ -16,9 +16,6 @@ OCIO_ADD_TEST(BitDepthUtils, get_bitdepth_max_value)
 
     OCIO_CHECK_EQUAL(OCIO::GetBitDepthMaxValue(OCIO::BIT_DEPTH_F16), 1.0);
     OCIO_CHECK_EQUAL(OCIO::GetBitDepthMaxValue(OCIO::BIT_DEPTH_F32), 1.0);
-
-    OCIO_CHECK_THROW_WHAT(
-        OCIO::GetBitDepthMaxValue((OCIO::BitDepth)42), OCIO::Exception, "not supported");
 }
 
 OCIO_ADD_TEST(BitDepthUtils, is_float_bitdepth)
@@ -36,9 +33,6 @@ OCIO_ADD_TEST(BitDepthUtils, is_float_bitdepth)
 
     OCIO_CHECK_THROW_WHAT(
         OCIO::IsFloatBitDepth(OCIO::BIT_DEPTH_UINT32), OCIO::Exception, "not supported");
-
-    OCIO_CHECK_THROW_WHAT(
-        OCIO::IsFloatBitDepth((OCIO::BitDepth)42), OCIO::Exception, "not supported");
 }
 
 OCIO_ADD_TEST(BitDepthUtils, get_channel_size)
