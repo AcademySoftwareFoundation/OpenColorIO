@@ -5,12 +5,13 @@
 #include <iostream>
 #include <map>
 
+#include <pystring.h>
+
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "Mutex.h"
 #include "PathUtils.h"
 #include "Platform.h"
-#include "pystring/pystring.h"
 #include "utils/StringUtils.h"
 #include "OCIOZArchive.h"
 
@@ -218,4 +219,3 @@ int ParseColorSpaceFromString(const Config & config, const char * str)
 }
 
 } // namespace OCIO_NAMESPACE
-

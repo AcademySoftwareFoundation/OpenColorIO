@@ -13,12 +13,13 @@
 # endif
 #endif
 
+#include <pystring.h>
+
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "MathUtils.h"
 #include "Op.h"
 #include "Platform.h"
-#include "pystring/pystring.h"
 #include "CPUInfoConfig.h"
 
 namespace OCIO_NAMESPACE
