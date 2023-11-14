@@ -5,6 +5,8 @@
 #include <sstream>
 #include <fstream>
 
+#include <pystring.h>
+
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "Logging.h"
@@ -15,7 +17,6 @@
 #include "ops/matrix/MatrixOp.h"
 #include "ops/range/RangeOp.h"
 #include "Platform.h"
-#include "pystring/pystring.h"
 #include "transforms/FileTransform.h"
 
 

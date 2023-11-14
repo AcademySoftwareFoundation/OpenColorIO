@@ -10,10 +10,9 @@
 #   yaml-cpp_VERSION        - Library's version
 #
 # Global targets defined by this module:
-#   yaml-cpp
+#   yaml-cpp::yaml-cpp
 #
 # For compatibility with the upstream CMake package, the following variables and targets are defined:
-#   yaml-cpp::yaml-cpp      - Alias of the yaml-cpp target
 #   YAML_CPP_LIBRARIES      - Libraries to link against yaml-cpp
 #   YAML_CPP_INCLUDE_DIR    - Include directory
 #
@@ -41,32 +40,39 @@ if(CMAKE_BUILD_TYPE MATCHES "[Dd][Ee][Bb][Uu][Gg]")
    set(BUILD_TYPE_DEBUG ON)
 endif()
 
-if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
-    set(_yaml-cpp_REQUIRED_VARS yaml-cpp_LIBRARY)
+if(yaml-cpp_FIND_QUIETLY)
+    set(quiet QUIET)
+endif()
 
+if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
+
+    # Search for yaml-cpp-config.cmake
     if(NOT DEFINED yaml-cpp_ROOT)
-        # Search for yaml-cpp-config.cmake
-        find_package(yaml-cpp ${yaml-cpp_FIND_VERSION} CONFIG QUIET)
+        find_package(yaml-cpp ${yaml-cpp_FIND_VERSION} CONFIG ${quiet})
     endif()
 
     if(yaml-cpp_FOUND)
-        get_target_property(yaml-cpp_LIBRARY yaml-cpp LOCATION)
+        # Alias target for yaml-cpp < 0.8 compatibility
+        if(TARGET yaml-cpp AND NOT TARGET yaml-cpp::yaml-cpp)
+            add_library(yaml-cpp::yaml-cpp ALIAS yaml-cpp)
+        endif()
+
+        set(yaml-cpp_INCLUDE_DIR ${YAML_CPP_INCLUDE_DIR})
+        get_target_property(yaml-cpp_LIBRARY yaml-cpp::yaml-cpp LOCATION)
     else()
 
         # As yaml-cpp-config.cmake search fails, search an installed library
         # using yaml-cpp.pc .
 
-        list(APPEND _yaml-cpp_REQUIRED_VARS yaml-cpp_INCLUDE_DIR yaml-cpp_VERSION)
-
         # Search for yaml-cpp.pc
-        find_package(PkgConfig QUIET)
-        pkg_check_modules(PC_yaml-cpp QUIET "yaml-cpp>=${yaml-cpp_FIND_VERSION}")
+        find_package(PkgConfig ${quiet})
+        pkg_check_modules(PC_yaml-cpp ${quiet} "yaml-cpp>=${yaml-cpp_FIND_VERSION}")
 
         # Try to detect the version installed, if any.
         if(NOT PC_yaml-cpp_FOUND)
-            pkg_search_module(PC_yaml-cpp QUIET "yaml-cpp")
+            pkg_search_module(PC_yaml-cpp ${quiet} "yaml-cpp")
         endif()
-        
+
         # Find include directory
         find_path(yaml-cpp_INCLUDE_DIR 
             NAMES
@@ -91,7 +97,7 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
             # Prefer static lib names
             set(_yaml-cpp_STATIC_LIB_NAMES 
                 "${CMAKE_STATIC_LIBRARY_PREFIX}yaml-cpp${CMAKE_STATIC_LIBRARY_SUFFIX}")
-            
+
             # Starting from 0.7.0, all platforms uses the suffix "d" for debug.
             # See https://github.com/jbeder/yaml-cpp/blob/master/CMakeLists.txt#L141
             if(BUILD_TYPE_DEBUG)
@@ -125,44 +131,40 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
         set(yaml-cpp_FIND_REQUIRED FALSE)
     endif()
 
+    set(YAML_CPP_INCLUDE_DIR "${yaml-cpp_INCLUDE_DIR}")
+
     include(FindPackageHandleStandardArgs)
     find_package_handle_standard_args(yaml-cpp
-        REQUIRED_VARS 
-            ${_yaml-cpp_REQUIRED_VARS}
+        REQUIRED_VARS
+            yaml-cpp_LIBRARY
+            yaml-cpp_INCLUDE_DIR
+            yaml-cpp_VERSION
         VERSION_VAR
             yaml-cpp_VERSION
-    )
-endif()
-
-###############################################################################
-### Create target
-
-if(yaml-cpp_FOUND AND NOT TARGET yaml-cpp)
-    add_library(yaml-cpp UNKNOWN IMPORTED GLOBAL)
-    set(_yaml-cpp_TARGET_CREATE TRUE)
-endif()
-
-###############################################################################
-### Configure target ###
-
-if(_yaml-cpp_TARGET_CREATE)
-    set_target_properties(yaml-cpp PROPERTIES
-        IMPORTED_LOCATION ${yaml-cpp_LIBRARY}
-        INTERFACE_INCLUDE_DIRECTORIES ${yaml-cpp_INCLUDE_DIR}
     )
 
     mark_as_advanced(yaml-cpp_INCLUDE_DIR yaml-cpp_LIBRARY yaml-cpp_VERSION)
 endif()
 
 ###############################################################################
-### Set variables for compatibility ###
+### Create target
 
-if(TARGET yaml-cpp AND NOT TARGET yaml-cpp::yaml-cpp)
-    add_library(yaml-cpp::yaml-cpp ALIAS yaml-cpp)
-endif()
+if (NOT TARGET yaml-cpp::yaml-cpp)
+    add_library(yaml-cpp::yaml-cpp UNKNOWN IMPORTED GLOBAL)
+    set_target_properties(yaml-cpp::yaml-cpp PROPERTIES
+        IMPORTED_LOCATION ${yaml-cpp_LIBRARY}
+        INTERFACE_INCLUDE_DIRECTORIES ${yaml-cpp_INCLUDE_DIR}
+    )
 
-if(yaml-cpp_INCLUDE_DIR)
-    set(YAML_CPP_INCLUDE_DIR "${yaml-cpp_INCLUDE_DIR}")
-endif()
+    # Required because Installyaml-cpp.cmake creates `yaml-cpp::yaml-cpp`
+    # as an alias, and aliases get resolved in exported targets, causing the
+    # find_dependency(yaml-cpp) call in OpenColorIOConfig.cmake to fail.
+    # This can be removed once Installyaml-cpp.cmake targets yaml-cpp 0.8.
+    if (NOT TARGET yaml-cpp)
+        add_library(yaml-cpp ALIAS yaml-cpp::yaml-cpp)
+    endif ()
 
-set(YAML_CPP_LIBRARIES yaml-cpp::yaml-cpp)
+    # TODO: Remove this variable and use the `yaml-cpp::yaml-cpp` target
+    # directly when the minimum version of yaml-cpp is updated to 0.8.
+    set(YAML_CPP_LIBRARIES yaml-cpp::yaml-cpp)
+endif ()
