@@ -4,10 +4,10 @@
 
 #include <sys/stat.h>
 
-#include "Config.cpp"
-#include "utils/StringUtils.h"
+#include <pystring.h>
 
-#include <pystring/pystring.h>
+#include "Config.cpp"
+
 #include "testutils/UnitTest.h"
 #include "UnitTestLogUtils.h"
 #include "UnitTestUtils.h"
