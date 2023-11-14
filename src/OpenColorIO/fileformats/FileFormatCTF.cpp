@@ -6,6 +6,8 @@
 #include <fstream>
 #include <sstream>
 
+#include <pystring.h>
+
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "expat.h"
@@ -23,7 +25,6 @@
 #include "OpBuilders.h"
 #include "ops/noop/NoOps.h"
 #include "Platform.h"
-#include "pystring/pystring.h"
 #include "TransformBuilder.h"
 #include "transforms/FileTransform.h"
 #include "utils/StringUtils.h"

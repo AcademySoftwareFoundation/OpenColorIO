@@ -7,6 +7,8 @@
 #include <sstream>
 #include <string>
 
+#include <pystring.h>
+
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "ContextVariableUtils.h"
@@ -15,7 +17,6 @@
 #include "OCIOZArchive.h"
 #include "PathUtils.h"
 #include "PrivateTypes.h"
-#include "pystring/pystring.h"
 #include "utils/StringUtils.h"
 
 namespace OCIO_NAMESPACE

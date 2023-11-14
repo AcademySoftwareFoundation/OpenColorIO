@@ -5,6 +5,8 @@
 #include <cstring>
 #include <iterator>
 
+#include <pystring.h>
+
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "expat.h"
@@ -13,7 +15,6 @@
 #include "ops/lut3d/Lut3DOp.h"
 #include "ParseUtils.h"
 #include "Platform.h"
-#include "pystring/pystring.h"
 #include "transforms/FileTransform.h"
 #include "utils/StringUtils.h"
 #include "utils/NumberUtils.h"
@@ -579,4 +580,3 @@ FileFormat * CreateFileFormatIridasLook()
 }
 
 } // namespace OCIO_NAMESPACE
-
