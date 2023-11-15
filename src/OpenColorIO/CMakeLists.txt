@@ -389,7 +389,7 @@ elseif(APPLE)
 
 
     # Check for minizip first since our Findminizip module sets minizip-ng_LIBRARY.
-    if (minizip_LIBRARY)
+    if (minizip_LIBRARY OR minizip-ng_COMPAT)
         get_filename_component(_minizip-ng_LIBDIR "${minizip_LIBRARY}" DIRECTORY)
         set(_minizip-ng_NAME "minizip")
     elseif(minizip-ng_LIBRARY)
