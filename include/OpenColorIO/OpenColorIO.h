@@ -3878,6 +3878,20 @@ public:
     virtual std::string getFastLutFileHash(const char * filepath) const = 0;
 };
 
+/**
+ * \brief Convert an ACES Metadata File into an OCIO config.
+ *     The config object may then be used to convert between any parts of the AMF pipeline.
+ *     The function returns various other pieces of information that allow the caller to understand
+ *     the details of the pipeline described by the AMF file and how that relates to the config.
+ *
+ * \param[out] amfInfoObject Struct containing various details about the AMF pipeline.
+ * \param istream Stream object containing the XML text of the AMF file.
+ * \return The OCIO config implementing the AMF processing pipeline.
+ *
+ * \throw Exception if there is a problem interpreting the AMF file.
+ */
+extern OCIOEXPORT ConstConfigRcPtr CreateFromAMF(AMFInfo& amfInfoObject, const char* amfFilePath);
+
 } // namespace OCIO_NAMESPACE
 
 #endif // INCLUDED_OCIO_OPENCOLORIO_H
