@@ -47,7 +47,9 @@ class BaseConfigItemParamEdit(QtWidgets.QWidget):
 
         if self.__has_transforms__:
             self.__has_tabs__ = True
-            no_tf_color = palette.color(palette.ColorGroup.Disabled, palette.ColorRole.Text)
+            no_tf_color = palette.color(
+                palette.ColorGroup.Disabled, palette.ColorRole.Text
+            )
             self._from_ref_icon = get_glyph_icon("mdi6.layers-plus")
             self._no_from_ref_icon = get_glyph_icon(
                 "mdi6.layers-plus", color=no_tf_color

@@ -242,3 +242,13 @@ def increase_html_lineno_padding(html: str) -> str:
         r"\1\2&nbsp;&nbsp;\3",
         html,
     )
+
+
+def float_to_uint8(value: float) -> int:
+    """
+    Convert float value to an 8-bit clamped unsigned integer value.
+
+    :param value: Float value
+    :return: Integer value
+    """
+    return max(0, min(255, int(value * 255)))
