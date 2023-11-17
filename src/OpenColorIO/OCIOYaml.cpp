@@ -4,6 +4,8 @@
 #include <cstring>
 #include <unordered_set>
 
+#include <pystring.h>
+
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "Display.h"
@@ -19,7 +21,6 @@
 #include "ParseUtils.h"
 #include "PathUtils.h"
 #include "Platform.h"
-#include "pystring/pystring.h"
 #include "utils/StringUtils.h"
 #include "ViewingRules.h"
 #include "yaml-cpp/yaml.h"

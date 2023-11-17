@@ -4,10 +4,10 @@
 
 #include <sys/stat.h>
 
-#include "Config.cpp"
-#include "utils/StringUtils.h"
+#include <pystring.h>
 
-#include <pystring/pystring.h>
+#include "Config.cpp"
+
 #include "testutils/UnitTest.h"
 #include "UnitTestLogUtils.h"
 #include "UnitTestUtils.h"
@@ -1501,7 +1501,7 @@ OCIO_ADD_TEST(Config, context_variable_with_colorspacename)
 
         // Set $VAR3 and check again.
 
-        OCIO_CHECK_NO_THROW(cfg->addEnvironmentVar("VAR3", "cs1"));
+        OCIO_CHECK_NO_THROW(cfg->addEnvironmentVar("VAR3", "file.clf"));
         OCIO_CHECK_NO_THROW(cfg->validate());
     }
 
@@ -1585,6 +1585,31 @@ OCIO_ADD_TEST(Config, context_variable_with_colorspacename)
         OCIO_CHECK_THROW_WHAT(cfg->getProcessor(ctx, "cs1", "cs2"),
                               OCIO::Exception,
                               "Color space '$VAR3' could not be found.");
+    }
+
+    // Repeat the test using a NamedTransform for one of the color spaces.
+
+    {
+        std::string configStr 
+            = std::string(CONFIG)
+            + "    from_scene_reference: !<ColorSpaceTransform> {src: $VAR3, dst: cs1}\n"
+            + "named_transforms:\n"
+            + "  - !<NamedTransform>\n"
+            + "    name: nt1\n"
+            + "    transform: !<RangeTransform> {min_in_value: 0, min_out_value: 0}\n";
+
+        std::istringstream iss;
+        iss.str(configStr);
+
+        OCIO::ConfigRcPtr cfg;
+        OCIO_CHECK_NO_THROW(cfg = OCIO::Config::CreateFromStream(iss)->createEditableCopy());
+
+        OCIO_CHECK_NO_THROW(cfg->addEnvironmentVar("VAR3", "nt1"));
+        OCIO_CHECK_NO_THROW(cfg->validate());
+
+        OCIO::ContextRcPtr ctx;
+        OCIO_CHECK_NO_THROW(ctx = cfg->getCurrentContext()->createEditableCopy());
+        OCIO_CHECK_NO_THROW(cfg->getProcessor(ctx, "cs1", "cs2"));
     }
 }
 
@@ -5973,6 +5998,7 @@ displays:
   displayname:
     - !<View> {name: view1, colorspace: displaytest1}
     - !<View> {name: view2, view_transform: vt1, display_colorspace: display2}
+    - !<View> {name: view3, colorspace: data_space}
 
 view_transforms:
   - !<ViewTransform>
@@ -6214,6 +6240,13 @@ display_colorspaces:
     t4 = group->getTransform(4);
     auto ff4 = OCIO_DYNAMIC_POINTER_CAST<OCIO::FixedFunctionTransform>(t4);
     OCIO_CHECK_ASSERT(ff4);
+
+    // If one of the spaces is a data space, the whole result must be a no-op.
+    OCIO_CHECK_NO_THROW(p = OCIO::Config::GetProcessorFromConfigs(
+        config2, "test2", config1, "displayname", "view3", OCIO::TRANSFORM_DIR_FORWARD));
+    OCIO_REQUIRE_ASSERT(p);
+    group = p->createGroupTransform();
+    OCIO_REQUIRE_EQUAL(group->getNumTransforms(), 0);
 
     constexpr const char * SIMPLE_CONFIG3{ R"(
 ocio_profile_version: 2

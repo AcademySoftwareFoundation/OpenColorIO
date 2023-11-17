@@ -8,10 +8,12 @@
 #include <set>
 #include <limits>
 
+#include <pystring.h>
+
 #include <OpenColorIO/OpenColorIO.h>
+
 #include "Mutex.h"
 #include "Platform.h"
-#include "pystring/pystring.h"
 #include "utils/StringUtils.h"
 #include "transforms/FileTransform.h"
 
@@ -24,7 +26,6 @@
 #include "mz_strm_mem.h"
 #include "mz_strm_os.h"
 #include "mz_strm_split.h"
-#include "mz_strm_zlib.h"
 #include "mz_zip.h"
 #include "mz_zip_rw.h"
 
