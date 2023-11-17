@@ -834,6 +834,24 @@ OCIO_ADD_TEST(ColorSpaceTransform, context_variables)
     OCIO_CHECK_EQUAL(std::string("ENV1"), usedContextVars->getStringVarNameByIndex(0));
     OCIO_CHECK_EQUAL(std::string("exposure_contrast_linear.ctf"),
                      usedContextVars->getStringVarByIndex(0));
+
+    // Case 5 - Context variable indirectly used via a NamedTransform.
+
+    OCIO::NamedTransformRcPtr namedTransform = OCIO::NamedTransform::Create();
+    namedTransform->setName("nt");
+    OCIO::FileTransformRcPtr file2 = OCIO::FileTransform::Create();
+    file2->setSrc("$ENV1");
+    namedTransform->setTransform(file2, OCIO::TRANSFORM_DIR_FORWARD);
+    OCIO_CHECK_NO_THROW(cfg->addNamedTransform(namedTransform));
+
+    // 'cst' now uses 'nt' which is a NamedTransform whose transform uses a context variable.
+    cst->setSrc("nt");
+    usedContextVars = OCIO::Context::Create(); // New & empty instance.
+    OCIO_CHECK_ASSERT(OCIO::CollectContextVariables(*cfg, *ctx, *cst, usedContextVars));
+    OCIO_CHECK_EQUAL(1, usedContextVars->getNumStringVars());
+    OCIO_CHECK_EQUAL(std::string("ENV1"), usedContextVars->getStringVarNameByIndex(0));
+    OCIO_CHECK_EQUAL(std::string("exposure_contrast_linear.ctf"),
+                     usedContextVars->getStringVarByIndex(0));
 }
 
 // Please see (Config, named_transform_processor) in NamedTransform_tests.cpp for coverage of

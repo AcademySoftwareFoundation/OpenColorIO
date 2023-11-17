@@ -184,7 +184,7 @@ void BuildColorSpaceOps(OpRcPtrVec & ops,
 
     if (!src)
     {
-        srcNamedTransform = config.getNamedTransform(srcName.c_str());
+        srcNamedTransform = config.getNamedTransform( context->resolveStringVar(srcName.c_str()) );
         if (!srcNamedTransform)
         {
             ThrowMissingCS(srcName.c_str());
@@ -192,7 +192,7 @@ void BuildColorSpaceOps(OpRcPtrVec & ops,
     }
     if (!dst)
     {
-        dstNamedTransform = config.getNamedTransform(dstName.c_str());
+        dstNamedTransform = config.getNamedTransform( context->resolveStringVar(dstName.c_str()) );
         if (!dstNamedTransform)
         {
             ThrowMissingCS(dstName.c_str());
@@ -395,6 +395,31 @@ void BuildReferenceConversionOps(OpRcPtrVec & ops,
 
 bool CollectContextVariables(const Config & config, 
                              const Context & context,
+                             ConstNamedTransformRcPtr & nt,
+                             ContextRcPtr & usedContextVars)
+{
+    bool foundContextVars = false;
+
+    if (nt)
+    {
+        ConstTransformRcPtr to = nt->getTransform(TRANSFORM_DIR_FORWARD);
+        if (to && CollectContextVariables(config, context, to, usedContextVars))
+        {
+            foundContextVars = true;
+        }
+
+        ConstTransformRcPtr from = nt->getTransform(TRANSFORM_DIR_INVERSE);
+        if (from && CollectContextVariables(config, context, from, usedContextVars))
+        {
+            foundContextVars = true;
+        }
+    }
+
+    return foundContextVars;
+}
+
+bool CollectContextVariables(const Config & config, 
+                             const Context & context,
                              ConstColorSpaceRcPtr & cs,
                              ContextRcPtr & usedContextVars)
 {
@@ -441,15 +466,37 @@ bool CollectContextVariables(const Config & config,
     }
 
     ConstColorSpaceRcPtr src = config.getColorSpace(srcName.c_str());
-    if (CollectContextVariables(config, context, src, usedContextVars))
+    if (src)
     {
-        foundContextVars = true;
+        if (CollectContextVariables(config, context, src, usedContextVars))
+        {
+            foundContextVars = true;
+        }
+    }
+    else
+    {
+        ConstNamedTransformRcPtr nt_src = config.getNamedTransform(srcName.c_str());
+        if (CollectContextVariables(config, context, nt_src, usedContextVars))
+        {
+            foundContextVars = true;
+        }
     }
 
     ConstColorSpaceRcPtr dst = config.getColorSpace(dstName.c_str());
-    if (CollectContextVariables(config, context, dst, usedContextVars))
+    if (dst)
     {
-        foundContextVars = true;
+        if (CollectContextVariables(config, context, dst, usedContextVars))
+        {
+            foundContextVars = true;
+        }
+    }
+    else
+    {
+        ConstNamedTransformRcPtr nt_dst = config.getNamedTransform(dstName.c_str());
+        if (CollectContextVariables(config, context, nt_dst, usedContextVars))
+        {
+            foundContextVars = true;
+        }
     }
 
     return foundContextVars;
