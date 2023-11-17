@@ -1452,7 +1452,7 @@ OCIO_ADD_TEST(Config, context_variable_with_colorspacename)
 
         // Set $VAR3 and check again.
 
-        OCIO_CHECK_NO_THROW(cfg->addEnvironmentVar("VAR3", "cs1"));
+        OCIO_CHECK_NO_THROW(cfg->addEnvironmentVar("VAR3", "file.clf"));
         OCIO_CHECK_NO_THROW(cfg->validate());
     }
 
@@ -1536,6 +1536,31 @@ OCIO_ADD_TEST(Config, context_variable_with_colorspacename)
         OCIO_CHECK_THROW_WHAT(cfg->getProcessor(ctx, "cs1", "cs2"),
                               OCIO::Exception,
                               "Color space '$VAR3' could not be found.");
+    }
+
+    // Repeat the test using a NamedTransform for one of the color spaces.
+
+    {
+        std::string configStr 
+            = std::string(CONFIG)
+            + "    from_scene_reference: !<ColorSpaceTransform> {src: $VAR3, dst: cs1}\n"
+            + "named_transforms:\n"
+            + "  - !<NamedTransform>\n"
+            + "    name: nt1\n"
+            + "    transform: !<RangeTransform> {min_in_value: 0, min_out_value: 0}\n";
+
+        std::istringstream iss;
+        iss.str(configStr);
+
+        OCIO::ConfigRcPtr cfg;
+        OCIO_CHECK_NO_THROW(cfg = OCIO::Config::CreateFromStream(iss)->createEditableCopy());
+
+        OCIO_CHECK_NO_THROW(cfg->addEnvironmentVar("VAR3", "nt1"));
+        OCIO_CHECK_NO_THROW(cfg->validate());
+
+        OCIO::ContextRcPtr ctx;
+        OCIO_CHECK_NO_THROW(ctx = cfg->getCurrentContext()->createEditableCopy());
+        OCIO_CHECK_NO_THROW(cfg->getProcessor(ctx, "cs1", "cs2"));
     }
 }
 
