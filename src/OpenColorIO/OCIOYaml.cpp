@@ -4738,9 +4738,9 @@ inline void save(YAML::Emitter & out, const Config & config)
     out << YAML::Newline;
     out << YAML::Newline;
 
-    if (configMajorVersion >= 2)
+    if (configMajorVersion >= 2 || config.getNumEnvironmentVars() > 0)
     {
-        // Print the environment even if empty.
+        // For v2 configs, write the environment section, even if empty.
         out << YAML::Key << "environment";
         out << YAML::Value << YAML::BeginMap;
         for(int i = 0; i < config.getNumEnvironmentVars(); ++i)
