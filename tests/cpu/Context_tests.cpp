@@ -4,11 +4,12 @@
 
 #include <algorithm>
 
+#include <pystring.h>
+
 #include "Context.cpp"
 
 #include "PathUtils.h"
 #include "Platform.h"
-#include "pystring/pystring.h"
 #include "testutils/UnitTest.h"
 
 namespace OCIO = OCIO_NAMESPACE;
@@ -171,5 +172,3 @@ OCIO_ADD_TEST(Context, string_vars)
     OCIO_CHECK_EQUAL(std::string("var3"), ctx1->getStringVarNameByIndex(2));
     OCIO_CHECK_EQUAL(std::string("val3"), ctx1->getStringVarByIndex(2));
 }
-
-

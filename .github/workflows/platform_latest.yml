@@ -104,7 +104,7 @@ jobs:
                 -DOCIO_BUILD_OPENFX=ON \
                 -DOCIO_BUILD_GPU_TESTS=OFF \
                 -DOCIO_BUILD_PYTHON=${{ matrix.build-python}} \
-                -DOCIO_USE_SSE=ON \
+                -DOCIO_USE_SIMD=ON \
                 -DOCIO_USE_OIIO_FOR_APPS=OFF \
                 -DOCIO_INSTALL_EXT_PACKAGES=ALL \
                 -DOCIO_WARNING_AS_ERROR=ON \
@@ -219,7 +219,7 @@ jobs:
                 -DOCIO_BUILD_OPENFX=ON \
                 -DOCIO_BUILD_GPU_TESTS=OFF \
                 -DOCIO_BUILD_PYTHON=${{ matrix.build-python}} \
-                -DOCIO_USE_SSE=ON \
+                -DOCIO_USE_SIMD=ON \
                 -DOCIO_USE_OIIO_FOR_APPS=OFF \
                 -DOCIO_INSTALL_EXT_PACKAGES=ALL \
                 -DOCIO_WARNING_AS_ERROR=ON \
@@ -333,7 +333,7 @@ jobs:
                 -DOCIO_BUILD_OPENFX=ON \
                 -DOCIO_BUILD_GPU_TESTS=OFF \
                 -DOCIO_BUILD_PYTHON=${{ matrix.build-python}} \
-                -DOCIO_USE_SSE=ON \
+                -DOCIO_USE_SIMD=ON \
                 -DOCIO_USE_OIIO_FOR_APPS=OFF \
                 -DOCIO_INSTALL_EXT_PACKAGES=ALL \
                 -DOCIO_WARNING_AS_ERROR=ON \
