@@ -190,22 +190,22 @@ class MessageRunner(QtCore.QObject):
             # Pass error to log
             self._handle_log_message(str(e), force_level=self.LOG_LEVEL_WARNING)
 
-    def _handle_processor_message(self, cpu_processor: ocio.Processor) -> None:
+    def _handle_processor_message(self, cpu_proc: ocio.Processor) -> None:
         """
         Handle OCIO processor received in the message queue.
 
-        :param cpu_processor: OCIO processor instance
+        :param cpu_proc: OCIO processor instance
         """
         try:
             if self._processor_updates_allowed:
-                self.processor_ready.emit(cpu_processor.getDefaultCPUProcessor())
+                self.processor_ready.emit(cpu_proc.getDefaultCPUProcessor())
 
             if self._ctf_updates_allowed:
-                ctf_html_data, group_tf = processor_to_ctf_html(cpu_processor)
+                ctf_html_data, group_tf = processor_to_ctf_html(cpu_proc)
                 self.ctf_html_ready.emit(ctf_html_data, group_tf)
 
             if self._shader_updates_allowed:
-                gpu_proc = cpu_processor.getDefaultGPUProcessor()
+                gpu_proc = cpu_proc.getDefaultGPUProcessor()
                 shader_html_data = processor_to_shader_html(
                     gpu_proc, self._gpu_language
                 )
