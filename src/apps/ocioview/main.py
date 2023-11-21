@@ -29,11 +29,6 @@ def excepthook(exc_type, exc_value, exc_tb):
 if __name__ == "__main__":
     sys.excepthook = excepthook
 
-    # As of Qt6, Qt3D defaults to the new RHI rendering backend. ocioview components
-    # built on Qt3D were originally authored with Qt5, so we revert to the OpenGL
-    # backend for compatibility.
-    os.environ["QT3D_RENDERER"] = "opengl"
-
     # OpenGL core profile needed on macOS to access programmatic pipeline
     gl_format = QtGui.QSurfaceFormat()
     gl_format.setProfile(QtGui.QSurfaceFormat.CoreProfile)
