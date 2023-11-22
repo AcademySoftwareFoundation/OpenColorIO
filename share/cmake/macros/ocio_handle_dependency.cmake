@@ -216,7 +216,7 @@ macro (ocio_handle_dependency dep_name)
             endif()
 
             if(ocio_dep_REQUIRED)
-                if(NOT ${dep_name}_FOUND AND NOT ocio_dep_VERSION)
+                if(NOT ${dep_name}_FOUND)
                     message(SEND_ERROR "${ColorError}${dep_name} is required, will abort at the end.${ColorReset}")
                 endif()
             endif()
