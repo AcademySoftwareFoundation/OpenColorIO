@@ -21,8 +21,8 @@
 ###############################################################################
 ### Create target (if previous 'find_package' call hasn't) ###
 
-if(NOT TARGET yaml-cpp)
-    add_library(yaml-cpp UNKNOWN IMPORTED GLOBAL)
+if(NOT TARGET yaml-cpp::yaml-cpp)
+    add_library(yaml-cpp::yaml-cpp UNKNOWN IMPORTED GLOBAL)
     set(_yaml-cpp_TARGET_CREATE TRUE)
 endif()
 
@@ -138,7 +138,7 @@ if(NOT yaml-cpp_FOUND AND OCIO_INSTALL_EXT_PACKAGES AND NOT OCIO_INSTALL_EXT_PAC
                                  --parallel
         )
 
-        add_dependencies(yaml-cpp yaml-cpp_install)
+        add_dependencies(yaml-cpp::yaml-cpp yaml-cpp_install)
         if(OCIO_VERBOSE)
             message(STATUS "Installing yaml-cpp: ${yaml-cpp_LIBRARY} (version \"${yaml-cpp_VERSION}\")")
         endif()
@@ -149,7 +149,7 @@ endif()
 ### Configure target ###
 
 if(_yaml-cpp_TARGET_CREATE)
-    set_target_properties(yaml-cpp PROPERTIES
+    set_target_properties(yaml-cpp::yaml-cpp PROPERTIES
         IMPORTED_LOCATION ${yaml-cpp_LIBRARY}
         INTERFACE_INCLUDE_DIRECTORIES ${yaml-cpp_INCLUDE_DIR}
     )
@@ -157,15 +157,5 @@ if(_yaml-cpp_TARGET_CREATE)
     mark_as_advanced(yaml-cpp_INCLUDE_DIR yaml-cpp_LIBRARY yaml-cpp_VERSION)
 endif()
 
-###############################################################################
-### Set variables for compatibility ###
-
-if(TARGET yaml-cpp AND NOT TARGET yaml-cpp::yaml-cpp)
-    add_library(yaml-cpp::yaml-cpp ALIAS yaml-cpp)
-endif()
-
-if(yaml-cpp_INCLUDE_DIR)
-    set(YAML_CPP_INCLUDE_DIR "${yaml-cpp_INCLUDE_DIR}")
-endif()
-
+set(YAML_CPP_INCLUDE_DIR "${yaml-cpp_INCLUDE_DIR}")
 set(YAML_CPP_LIBRARIES yaml-cpp::yaml-cpp)
