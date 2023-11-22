@@ -54,6 +54,7 @@ jobs:
             cc-compiler: gcc
             compiler-desc: GCC
             vfx-cy: 2022
+            use-oiio: 'ON'
           - build: 2
             build-docs: 'OFF'
             build-openfx: 'OFF'
@@ -62,6 +63,7 @@ jobs:
             cc-compiler: gcc
             compiler-desc: GCC
             vfx-cy: 2021
+            use-oiio: 'OFF'
           # -------------------------------------------------------------------
           # Clang
           # -------------------------------------------------------------------
@@ -73,6 +75,7 @@ jobs:
             cc-compiler: clang
             compiler-desc: Clang
             vfx-cy: 2022
+            use-oiio: 'OFF'
           - build: 4
             build-docs: 'ON'
             build-openfx: 'ON'
@@ -81,6 +84,7 @@ jobs:
             cc-compiler: clang
             compiler-desc: Clang
             vfx-cy: 2021
+            use-oiio: 'ON'
     env:
       CXX: ${{ matrix.cxx-compiler }}
       CC: ${{ matrix.cc-compiler }}
@@ -132,7 +136,7 @@ jobs:
                 -DOCIO_INSTALL_EXT_PACKAGES=NONE \
                 -DOCIO_WARNING_AS_ERROR=OFF \
                 -DPython_EXECUTABLE=$(which python) \
-                -DOCIO_USE_OIIO_CMAKE_CONFIG=ON
+                -DOCIO_USE_OIIO_FOR_APPS=${{ matrix.use-oiio }}
         working-directory: _build
       - name: Build
         run: |
@@ -176,11 +180,13 @@ jobs:
             build-openfx: 'ON'
             cxx-standard: 17
             python-version: '3.11'
+            use-oiio: 'ON'
           - build: 2
             build-docs: 'ON'
             build-openfx: 'ON'
             cxx-standard: 14
             python-version: '3.9'
+            use-oiio: 'OFF'
     steps:
       - name: Setup Python
         uses: actions/setup-python@v4
@@ -235,7 +241,7 @@ jobs:
                 -DOCIO_INSTALL_EXT_PACKAGES=NONE \
                 -DOCIO_WARNING_AS_ERROR=OFF \
                 -DPython_EXECUTABLE=$(which python) \
-                -DOCIO_USE_OIIO_CMAKE_CONFIG=ON
+                -DOCIO_USE_OIIO_FOR_APPS=${{ matrix.use-oiio }}
         working-directory: _build
       - name: Build
         run: |
@@ -279,11 +285,13 @@ jobs:
             build-openfx: 'ON'
             cxx-standard: 17
             python-version: '3.11'
+            use-oiio: 'ON'
           - build: 2
             build-docs: 'ON'
             build-openfx: 'ON'
             cxx-standard: 14
             python-version: '3.9'
+            use-oiio: 'OFF'
     steps:
       - name: Setup Python
         uses: actions/setup-python@v4
@@ -362,7 +370,7 @@ jobs:
                 -DOCIO_WARNING_AS_ERROR=OFF \
                 -DPython_EXECUTABLE=$(which python) \
                 -DOCIO_BUILD_PYTHON=OFF \
-                -DOCIO_USE_OIIO_CMAKE_CONFIG=ON
+                -DOCIO_USE_OIIO_FOR_APPS=${{ matrix.use-oiio }}
         shell: bash
         working-directory: _build
       - name: Build
