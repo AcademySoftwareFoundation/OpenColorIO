@@ -45,6 +45,7 @@ if(yaml-cpp_FIND_QUIETLY)
 endif()
 
 if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
+    set(_yaml-cpp_REQUIRED_VARS yaml-cpp_LIBRARY)
 
     # Search for yaml-cpp-config.cmake
     if(NOT DEFINED yaml-cpp_ROOT)
@@ -57,12 +58,14 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
             add_library(yaml-cpp::yaml-cpp ALIAS yaml-cpp)
         endif()
 
-        set(yaml-cpp_INCLUDE_DIR ${YAML_CPP_INCLUDE_DIR})
+        get_target_property(yaml-cpp_INCLUDE_DIR yaml-cpp::yaml-cpp INTERFACE_INCLUDE_DIRECTORIES)
         get_target_property(yaml-cpp_LIBRARY yaml-cpp::yaml-cpp LOCATION)
     else()
 
         # As yaml-cpp-config.cmake search fails, search an installed library
         # using yaml-cpp.pc .
+
+        list(APPEND _yaml-cpp_REQUIRED_VARS yaml-cpp_INCLUDE_DIR yaml-cpp_VERSION)
 
         # Search for yaml-cpp.pc
         find_package(PkgConfig ${quiet})
@@ -131,14 +134,10 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
         set(yaml-cpp_FIND_REQUIRED FALSE)
     endif()
 
-    set(YAML_CPP_INCLUDE_DIR "${yaml-cpp_INCLUDE_DIR}")
-
     include(FindPackageHandleStandardArgs)
     find_package_handle_standard_args(yaml-cpp
         REQUIRED_VARS
-            yaml-cpp_LIBRARY
-            yaml-cpp_INCLUDE_DIR
-            yaml-cpp_VERSION
+            ${_yaml-cpp_REQUIRED_VARS}
         VERSION_VAR
             yaml-cpp_VERSION
     )
@@ -149,7 +148,7 @@ endif()
 ###############################################################################
 ### Create target
 
-if (NOT TARGET yaml-cpp::yaml-cpp)
+if (yaml-cpp_FOUND AND NOT TARGET yaml-cpp::yaml-cpp)
     add_library(yaml-cpp::yaml-cpp UNKNOWN IMPORTED GLOBAL)
     set_target_properties(yaml-cpp::yaml-cpp PROPERTIES
         IMPORTED_LOCATION ${yaml-cpp_LIBRARY}
@@ -163,8 +162,11 @@ if (NOT TARGET yaml-cpp::yaml-cpp)
     if (NOT TARGET yaml-cpp)
         add_library(yaml-cpp ALIAS yaml-cpp::yaml-cpp)
     endif ()
+endif ()
 
+if (yaml-cpp_FOUND)
     # TODO: Remove this variable and use the `yaml-cpp::yaml-cpp` target
     # directly when the minimum version of yaml-cpp is updated to 0.8.
+    get_target_property(YAML_CPP_INCLUDE_DIR yaml-cpp::yaml-cpp INCLUDE_DIRECTORIES)
     set(YAML_CPP_LIBRARIES yaml-cpp::yaml-cpp)
 endif ()
