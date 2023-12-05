@@ -48,14 +48,14 @@ class TransformsTest(unittest.TestCase):
             other = copy.deepcopy(transform)
             self.assertFalse(other is transform)
 
-            self.assertEquals(other.getTransformType(), transform.getTransformType())
-            self.assertEquals(other.getDirection(), transform.getDirection())
+            self.assertEqual(other.getTransformType(), transform.getTransformType())
+            self.assertEqual(other.getDirection(), transform.getDirection())
             # Not all OCIO.Transform have equals methods
             if hasattr(transform, 'equals'):
                 self.assertTrue(other.equals(transform))
 
             other.setDirection(OCIO.TRANSFORM_DIR_INVERSE)
-            self.assertNotEquals(other.getDirection(), transform.getDirection())
+            self.assertNotEqual(other.getDirection(), transform.getDirection())
 
     def test_binding_group_polymorphism(self):
         """
