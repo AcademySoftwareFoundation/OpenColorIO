@@ -16,8 +16,6 @@ on:
     tags-ignore:
       - v0.*
       - v1.*
-    paths:
-      - .github/workflows/gpu_workflow.yml
 
 jobs:
   # ---------------------------------------------------------------------------

@@ -4,6 +4,8 @@
 #include <cstring>
 #include <sstream>
 
+#include <pystring.h>
+
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "Logging.h"
@@ -20,7 +22,6 @@
 #include "ops/lut1d/Lut1DOp.h"
 #include "ops/lut3d/Lut3DOp.h"
 #include "ops/range/RangeOp.h"
-#include "pystring/pystring.h"
 
 namespace OCIO_NAMESPACE
 {
