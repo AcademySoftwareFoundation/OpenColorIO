@@ -760,7 +760,7 @@ extern OCIOEXPORT const char * OCIO_INACTIVE_COLORSPACES_ENVVAR;
  * The envvar 'OCIO_OPTIMIZATION_FLAGS' provides a way to force a given optimization level.
  * Remove the variable or set the value to empty to not use it. Set the value of the variable
  * to the desired optimization level as either an integer or hexadecimal value.
- * Ex: OCIO_OPTIMIZATION_FLAGS="20479" or "0x4FFF" for OPTIMIZATION_LOSSLESS.
+ * Ex: OCIO_OPTIMIZATION_FLAGS="144457667" or "0x89c3fc3" for OPTIMIZATION_LOSSLESS.
  */
 extern OCIOEXPORT const char * OCIO_OPTIMIZATION_FLAGS_ENVVAR;
 

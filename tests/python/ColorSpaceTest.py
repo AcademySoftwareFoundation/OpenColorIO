@@ -817,7 +817,7 @@ colorspaces:
         self.assertEqual(csname, "Linear ITU-R BT.709")
 
         csname = OCIO.Config.IdentifyBuiltinColorSpace(editableCfg, builtinConfig, "ACEScct")
-        self.assertEqual(csname, "CS Transform color space")
+        self.assertEqual(csname, "not sRGB")
 
         csname = OCIO.Config.IdentifyBuiltinColorSpace(editableCfg, builtinConfig, "lin_ap1")
         self.assertEqual(csname, "ACES cg")
