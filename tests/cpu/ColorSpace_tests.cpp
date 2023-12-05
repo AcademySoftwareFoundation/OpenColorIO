@@ -871,12 +871,23 @@ colorspaces:
     isdata: false
 
   - !<ColorSpace>
-    name: linear_from_file
-    description: This is an identity matrix and therefore linear, but could be rejected to avoid testing files.
+    name: linear_mtx_from_file
+    description: This is an identity matrix and therefore linear, but is in an external file.
     isdata: false
     to_scene_reference: !<GroupTransform>
       children:
         - !<FileTransform> {src: clf/matrix_windows.clf, interpolation: linear}
+
+  - !<ColorSpace>
+    name: linear_lut3d_from_file
+    description: |
+      This is a Lut3D which is linear across it's unbounded range but, like all LUTs, clamps 
+      outside it's [0,1] domain.  Therefore, when the algorithm inputs [4,4,4], it is no different
+      than inputing [1,1,1] and so it is not determined to be linear.
+    isdata: false
+    to_scene_reference: !<GroupTransform>
+      children:
+        - !<FileTransform> {src: clf/lut3d_as_matrix.clf, interpolation: linear}
 )" };
 
     // Load config.
@@ -939,7 +950,8 @@ colorspaces:
         testSceneReferred("scene_nonlin-trans", false, __LINE__);
         testSceneReferred("scene_linear-trans-alias", true, __LINE__);
         testSceneReferred("scene_ref", true, __LINE__);
-        testSceneReferred("linear_from_file", true, __LINE__);
+        testSceneReferred("linear_mtx_from_file", true, __LINE__);
+        testSceneReferred("linear_lut3d_from_file", false, __LINE__);
     }
     
     {
@@ -958,7 +970,8 @@ colorspaces:
         testDisplayReferred("scene_nonlin-trans", false, __LINE__);
         testDisplayReferred("scene_linear-trans-alias", false, __LINE__);
         testDisplayReferred("scene_ref", false, __LINE__);
-        testDisplayReferred("linear_from_file", false, __LINE__);
+        testDisplayReferred("linear_mtx_from_file", false, __LINE__);
+        testDisplayReferred("linear_lut3d_from_file", false, __LINE__);
     }
 }
 
