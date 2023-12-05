@@ -2822,6 +2822,23 @@ bool Config::isColorSpaceLinear(const char * colorSpace, ReferenceSpaceType refe
         auto procToReference = config.getImpl()->getProcessorWithoutCaching(
             config, t, TRANSFORM_DIR_FORWARD
         );
+
+        // TODO: It could be useful to try and avoid evaluating points through ops that are
+        // expensive but highly unlikely to be linear (with inverse Lut3D being the prime example).
+        // There are some heuristics that are used in ConfigUtils.cpp that are intended to filter
+        // out color spaces from consideration before a processor is even calculated.  However,
+        // those are not entirely appropriate here since one could imagine wanting to know if a
+        // color space involving a FileTransform (an ASC CDL being a good example) is linear.
+        // Likewise, one might want to know whether a color space involving a Look or ColorSpace
+        // Transform is linear (both of those are filtered out by the ConfigUtils heuristics).
+        // It seems like the right approach here is to go ahead and build the processor and
+        // thereby convert File/Look/ColorSpace Transforms into ops.  But currently there is
+        // no method on the Processor class to know if it contains a Lut3D.  There is the
+        // ProcessorMetadata files list, though that is not as precise.  For example, it would
+        // not say if a CLF or CTF file contains a Lut3D or just a matrix.  Probably the best
+        // solution would be to have each op sub-class provide an isLinear method and then
+        // surface that on the Processor class, iterating over each op in the Processor.
+
         auto optCPUProc = procToReference->getOptimizedCPUProcessor(OPTIMIZATION_NONE);
         optCPUProc->apply(desc, descDst);
 
