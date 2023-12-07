@@ -95,6 +95,9 @@ jobs:
           - build: CPython 3.11 64 bits
             python: cp311-manylinux*
             arch: x86_64
+          - build: CPython 3.12 64 bits
+            python: cp312-manylinux*
+            arch: x86_64
           # -------------------------------------------------------------------
           # CPython ARM 64 bits
           # -------------------------------------------------------------------
@@ -113,6 +116,9 @@ jobs:
           - build: CPython 3.11 ARM 64 bits
             python: cp311-manylinux*
             arch: aarch64
+          - build: CPython 3.12 ARM 64 bits
+            python: cp312-manylinux*
+            arch: aarch64
 
     steps:
       - uses: actions/checkout@v3
@@ -128,7 +134,7 @@ jobs:
           platforms: all
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.13.1
+        uses: pypa/cibuildwheel@v2.16.2
         env:
           CIBW_BUILD: ${{ matrix.python }}
           CIBW_ARCHS: ${{ matrix.arch }}
@@ -143,7 +149,7 @@ jobs:
 
   macos:
     name: Build wheels on macOS
-    runs-on: macos-11
+    runs-on: macos-12
     # Don't run on OCIO forks
     if: |
       github.event_name != 'schedule' ||
@@ -168,6 +174,9 @@ jobs:
             arch: x86_64
           - build: CPython 3.11 64 bits
             python: cp311-*
+            arch: x86_64
+          - build: CPython 3.12 64 bits
+            python: cp312-*
             arch: x86_64
           # -------------------------------------------------------------------
           # CPython ARM 64 bits
@@ -184,6 +193,9 @@ jobs:
           - build: CPython 3.11 ARM 64 bits
             python: cp311-*
             arch: arm64
+          - build: CPython 3.12 ARM 64 bits
+            python: cp312-*
+            arch: arm64
 
     steps:
       - uses: actions/checkout@v3
@@ -194,7 +206,7 @@ jobs:
           python-version: '3.8'
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.13.1
+        uses: pypa/cibuildwheel@v2.16.2
         env:
           CIBW_BUILD: ${{ matrix.python }}
           CIBW_ARCHS: ${{ matrix.arch }}
@@ -209,7 +221,7 @@ jobs:
 
   windows:
     name: Build wheels on Windows
-    runs-on: windows-2019
+    runs-on: windows-2022
     # Don't run on OCIO forks
     if: |
       github.event_name != 'schedule' ||
@@ -235,6 +247,9 @@ jobs:
           - build: CPython 3.11 64 bits
             python: cp311-*
             arch: AMD64
+          - build: CPython 3.12 64 bits
+            python: cp312-*
+            arch: AMD64
 
     steps:
       - uses: actions/checkout@v3
@@ -245,7 +260,7 @@ jobs:
           python-version: '3.8'
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.13.1
+        uses: pypa/cibuildwheel@v2.16.2
         env:
           CIBW_BUILD: ${{ matrix.python }}
           CIBW_ARCHS: ${{ matrix.arch }}

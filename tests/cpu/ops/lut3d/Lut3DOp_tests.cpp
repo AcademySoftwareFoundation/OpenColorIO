@@ -126,11 +126,6 @@ OCIO_ADD_TEST(GenerateIdentityLut3D, throw_lut)
         lut.data(), lutSize, 2, OCIO::LUT3DORDER_FAST_RED),
         OCIO::Exception, "less than 3 channels");
 
-    // GenerateIdentityLut3D with unknown order.
-    OCIO_CHECK_THROW_WHAT(GenerateIdentityLut3D(
-        lut.data(), lutSize, 3, (OCIO::Lut3DOrder)42),
-        OCIO::Exception, "Unknown Lut3DOrder");
-
     // Get3DLutEdgeLenFromNumPixels with not cubic size.
     OCIO_CHECK_THROW_WHAT(OCIO::Get3DLutEdgeLenFromNumPixels(10),
         OCIO::Exception, "Cannot infer 3D LUT size");
@@ -674,4 +669,3 @@ OCIO_ADD_TEST(Lut3DTransform, build_op)
 // TODO: Port syncolor test: renderer\test\CPURenderer_cases.cpp_inc - CPURendererLUT3D_Green
 // TODO: Port syncolor test: renderer\test\CPURenderer_cases.cpp_inc - CPURendererLUT3D_Red
 // TODO: Port syncolor test: renderer\test\CPURenderer_cases.cpp_inc - CPURendererLUT3D_Example
-

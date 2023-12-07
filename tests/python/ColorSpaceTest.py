@@ -352,7 +352,7 @@ class ColorSpaceTest(unittest.TestCase):
             self.colorspace.setTransform(self.log_tr, direction)
             log_transform = self.colorspace.getTransform(direction)
             self.assertIsInstance(log_transform, OCIO.LogTransform)
-            self.assertEquals(self.log_tr.getBase(), log_transform.getBase())
+            self.assertEqual(self.log_tr.getBase(), log_transform.getBase())
 
     def test_aliases(self):
         """
@@ -817,7 +817,7 @@ colorspaces:
         self.assertEqual(csname, "Linear ITU-R BT.709")
 
         csname = OCIO.Config.IdentifyBuiltinColorSpace(editableCfg, builtinConfig, "ACEScct")
-        self.assertEqual(csname, "CS Transform color space")
+        self.assertEqual(csname, "not sRGB")
 
         csname = OCIO.Config.IdentifyBuiltinColorSpace(editableCfg, builtinConfig, "lin_ap1")
         self.assertEqual(csname, "ACES cg")

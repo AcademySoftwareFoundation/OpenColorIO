@@ -4,7 +4,7 @@
 from typing import Optional
 
 import PyOpenColorIO as ocio
-from PySide2 import QtCore, QtWidgets
+from PySide6 import QtCore, QtWidgets
 
 from ..config_cache import ConfigCache
 from ..widgets import CallbackComboBox
@@ -34,7 +34,6 @@ class ColorSpaceDelegate(QtWidgets.QStyledItemDelegate):
         editor = CallbackComboBox(
             get_items=ConfigCache.get_color_space_names, editable=True, parent=parent
         )
-        editor.setAutoCompletion(True)
         editor.completer().setCompletionMode(QtWidgets.QCompleter.PopupCompletion)
         return editor
 
@@ -119,7 +118,6 @@ class RoleDelegate(QtWidgets.QStyledItemDelegate):
             raise NotImplementedError
 
         widget = CallbackComboBox(get_items=get_items, editable=True, parent=parent)
-        widget.setAutoCompletion(True)
         widget.completer().setCompletionMode(QtWidgets.QCompleter.PopupCompletion)
         return widget
 

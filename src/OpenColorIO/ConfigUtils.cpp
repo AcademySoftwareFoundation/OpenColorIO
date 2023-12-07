@@ -3,6 +3,7 @@
 
 #include "ConfigUtils.h"
 #include "MathUtils.h"
+#include "pystring/pystring.h"
 #include "utils/StringUtils.h"
 
 namespace OCIO_NAMESPACE
@@ -165,7 +166,7 @@ bool GetInterchangeRolesForColorSpaceConversion(const char ** srcInterchangeCSNa
 
 // Return true if the color space name or its aliases contains sRGB (case-insensitive).
 //
-bool containsSRGB(ConstColorSpaceRcPtr & cs)
+bool containsSRGB(const ConstColorSpaceRcPtr & cs)
 {
     std::string name = StringUtils::Lower(cs->getName());
     if (StringUtils::Find(name, "srgb") != std::string::npos)
@@ -223,10 +224,31 @@ const char * getRefSpaceName(const ConstConfigRcPtr & cfg)
     return "";
 }
 
+// Find the first scene-referred color space with isdata: true.
+//
+const char * getDataSpaceName(const ConstConfigRcPtr & cfg)
+{
+    int nbCs = cfg->getNumColorSpaces(SEARCH_REFERENCE_SPACE_SCENE, COLORSPACE_ALL);
+
+    for (int i = 0; i < nbCs; i++)
+    {
+        const char * csname = cfg->getColorSpaceNameByIndex(SEARCH_REFERENCE_SPACE_SCENE, 
+                                                            COLORSPACE_ALL, 
+                                                            i);
+        ConstColorSpaceRcPtr cs = cfg->getColorSpace(csname);
+
+        if (cs->isData())
+        {
+            return csname;
+        }
+    }
+    return "";
+}
+
 // Return false if the supplied Processor modifies any of the supplied float values
 // by more than the supplied absolute tolerance amount.
 //
-bool isIdentityTransform(ConstProcessorRcPtr proc, 
+bool isIdentityTransform(const ConstProcessorRcPtr & proc, 
                          std::vector<float> & RGBAvals, 
                          float absTolerance)
 {
@@ -249,28 +271,143 @@ bool isIdentityTransform(ConstProcessorRcPtr proc,
     return true;
 }
 
-// Helper to avoid color spaces that are without transforms or are data spaces.
+// Determine whether a Processor contains a MatrixTransform with off-diagonal coefficients.
 //
-bool hasNoTransform(const ConstColorSpaceRcPtr & cs)
+bool hasNonTrivialMatrixTransform(const ConstProcessorRcPtr & proc)
+{
+    GroupTransformRcPtr gt = proc->createGroupTransform();
+    // The result of createGroupTransform only contains transforms that correspond to ops,
+    // in other words, there are no complex transforms such as File, Builtin, or ColorSpace,
+    // and the only GroupTransform is the enclosing one.
+    for (int i = 0; i < gt->getNumTransforms(); ++i)
+    {
+        ConstTransformRcPtr transform = gt->getTransform(i);
+        if (transform->getTransformType() == TRANSFORM_TYPE_MATRIX)
+        {
+            // Check that there is a significant off-diagonal coefficient in the matrix.
+            // This is to avoid matrices that are not actual color primary conversions,
+            // for example, the scale and offset that are sometimes prepended to a Lut1D.
+            ConstMatrixTransformRcPtr mtx = DynamicPtrCast<const MatrixTransform>(transform);
+            double values[16];
+            mtx->getMatrix(values);
+            for (int j = 0; j < 3 ; ++j)      // only checking rgb, not alpha
+            {
+                for (int k = 0; k < 3 ; ++k)  // only checking rgb, not alpha
+                {
+                    if (j != k)
+                    {
+                        if (std::abs(values[j * 4 + k]) > 0.1)
+                        {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return false;
+}
+
+// Determine if the transform contains a type that is inappropriate for the heuristics.
+//
+bool containsBlockedTransform(const ConstTransformRcPtr & transform)
+{
+    // If it's a GroupTransform, need to recurse into it to check the contents.
+    if (transform->getTransformType() == TRANSFORM_TYPE_GROUP)
+    {
+        ConstGroupTransformRcPtr gt = DynamicPtrCast<const GroupTransform>(transform);
+        for (int i = 0; i < gt->getNumTransforms(); ++i)
+        {
+            ConstTransformRcPtr tr = gt->getTransform(i);
+            if (containsBlockedTransform(tr))
+            {
+                return true;
+            }
+        }
+    }
+
+    // Prevent FileTransforms from being used, except for spi1d and spimtx since these
+    // may be used with OCIO v1 configs to implement the type of color spaces the heuristics
+    // are designed to look for.  (E.g. The sRGB Texture space in the legacy ACES configs.)
+    else if (transform->getTransformType() == TRANSFORM_TYPE_FILE)
+    {
+        ConstFileTransformRcPtr ft = DynamicPtrCast<const FileTransform>(transform);
+        std::string filepath = ft->getSrc();
+        std::string root, extension;
+        pystring::os::path::splitext(root, extension, filepath);
+        extension = StringUtils::Lower(extension);
+        if (extension != ".spi1d" && extension != ".spimtx")
+        {
+            return true;
+        }
+    }
+
+    // Prevent transforms that may be hiding a FileTransform.
+    else if (transform->getTransformType() == TRANSFORM_TYPE_COLORSPACE
+     || transform->getTransformType() == TRANSFORM_TYPE_DISPLAY_VIEW
+     || transform->getTransformType() == TRANSFORM_TYPE_LOOK)
+    {
+        return true;
+    }
+
+    // Putting this here since Lut3D is the main type of transform to avoid,
+    // however given that the input transform comes directly from a color space
+    // and has not been converted to a processor yet, it should never actually
+    // have a transform of this type (it would still be a FileTransform).
+    else if (transform->getTransformType() == TRANSFORM_TYPE_LUT3D)
+    {
+        return true;
+    }
+    return false;
+}
+
+// Look at the to_ref/from_ref transforms in the color space and exclude color spaces
+// that are probably not what the heuristics are looking for and could be prohibitively
+// expensive to fully check.
+//
+// Because this check is done before a processor is built, it is inexpensive but it may
+// be inaccurate.  In other words, it's possible that this check will exclude some 
+// reasonable color spaces, but that's better than trying to invert 3d-LUTs, etc.
+//
+// cs -- Color space object to check.
+// refSpaceType -- Exclude if the color space is not of the same reference space type.
+// blockRefSpaces -- Exclude the color space if it does not have any transforms.
+//
+bool excludeColorSpaceFromHeuristics(const ConstColorSpaceRcPtr & cs, 
+                                     ReferenceSpaceType refSpaceType,
+                                     bool blockRefSpaces)
 {
     if (cs->isData())
     {
         return true;
     }
-    ConstTransformRcPtr srcTransform = cs->getTransform(COLORSPACE_DIR_TO_REFERENCE);
-    if (!srcTransform)
+
+    if (cs->getReferenceSpaceType() != refSpaceType)
     {
-        srcTransform = cs->getTransform(COLORSPACE_DIR_FROM_REFERENCE);
-        if (srcTransform)
-        {
-            return false;
-        }
-        else
-        {
-            return true;
-        }
+        return true;
     }
-    return false;
+
+    ConstTransformRcPtr transform = cs->getTransform(COLORSPACE_DIR_TO_REFERENCE);
+    if (transform)
+    {
+        // The to_ref transform is what the heuristics try to use first, so if that
+        // does not contain problematic transforms, it's ok to proceed without checking
+        // the from_ref transform.
+
+        return containsBlockedTransform(transform);
+    }
+
+    // There is no to_ref transform, check if the from_ref is present.
+    transform = cs->getTransform(COLORSPACE_DIR_FROM_REFERENCE);
+    if (transform)
+    {
+        return containsBlockedTransform(transform);
+    }
+    // Color space contains no transforms (it's a reference space).
+    else
+    {
+        return blockRefSpaces;
+    }
 }
 
 // Test the supplied color space against a set of color spaces in the built-in config.
@@ -288,17 +425,6 @@ int getReferenceSpaceFromLinearSpace(const ConstConfigRcPtr & srcConfig,
                                      const ConstColorSpaceRcPtr & cs,
                                      const ConstConfigRcPtr & builtinConfig)
 {
-    // Currently only handling scene-referred spaces in the heuristics.
-    if (cs->getReferenceSpaceType() == REFERENCE_SPACE_DISPLAY)
-    {
-        return -1;
-    }
-    // Don't check spaces without transforms / data spaces.
-    if (hasNoTransform(cs))
-    {
-        return -1;
-    }
-
     // Define a set of (somewhat arbitrary) RGB values to test whether the combined transform is 
     // enough of an identity.
     std::vector<float> vals = { 0.7f,  0.4f,  0.02f, 0.f,
@@ -353,14 +479,9 @@ int getReferenceSpaceFromLinearSpace(const ConstConfigRcPtr & srcConfig,
 //
 int getReferenceSpaceFromSRGBSpace(const ConstConfigRcPtr & srcConfig, 
                                    const char * srcRefName,
-                                   const ConstColorSpaceRcPtr cs,
+                                   const ConstColorSpaceRcPtr & cs,
                                    const ConstConfigRcPtr & builtinConfig)
 {
-    // Currently only handling scene-referred spaces in the heuristics.
-    if (cs->getReferenceSpaceType() == REFERENCE_SPACE_DISPLAY)
-    {
-        return -1;
-    }
     // Get a transform in the to-reference direction.
     ConstTransformRcPtr toRefTransform;
     ConstTransformRcPtr ctransform = cs->getTransform(COLORSPACE_DIR_TO_REFERENCE);
@@ -405,6 +526,18 @@ int getReferenceSpaceFromSRGBSpace(const ConstConfigRcPtr & srcConfig,
 
     ConstProcessorRcPtr proc = srcConfig->getProcessor(toRefTransform, TRANSFORM_DIR_FORWARD);
 
+    // Ensure that the color space is not only an sRGB curve, it needs to have a color matrix
+    // too or else the last step below could succeed by pairing the built-in sRGB space with
+    // a linear space that cancels out the matrix in the built-in sRGB space.
+        // NB: This is being done after the getProcessor call rather than simply looking at
+        // the raw color space transform contents since once it becomes a processor, the complex
+        // transforms (e.g. File, ColorSpace, Builtins) that could be hiding a matrix are 
+        // converted into ops.
+    if (!hasNonTrivialMatrixTransform(proc))
+    {
+        return -1;
+    }
+
     ConstCPUProcessorRcPtr cpu  = proc->getOptimizedCPUProcessor(OPTIMIZATION_NONE);
     // Convert the non-linear values to linear.
     cpu->apply(desc, descDst);
@@ -422,6 +555,7 @@ int getReferenceSpaceFromSRGBSpace(const ConstConfigRcPtr & srcConfig,
             out[i] = 1.055f * std::pow(out[i], 1.f / 2.4f) - 0.055f;
         }
         // Compare against the original source values.
+        // (This assumes equal channel sRGB values remain so in the reference space of src config.)
         if (!EqualWithAbsError(vals[i], out[i], 1e-3f))
         {
             return -1;
@@ -442,6 +576,8 @@ int getReferenceSpaceFromSRGBSpace(const ConstConfigRcPtr & srcConfig,
     // sRGB texture space. If the result is an identity, then that tells what the source config
     // reference space is.
 
+    // At this point, cs has the expected non-linearity and a non-trivial matrix to its reference space.
+    // Now try to identify the matrix.
     for (int i = 0; i < getNumberOfbuiltinLinearSpaces(); i++)
     {
         ConstProcessorRcPtr proc = Config::GetProcessorFromConfigs(srcConfig,
@@ -511,7 +647,7 @@ void IdentifyInterchangeSpace(const char ** srcInterchange,
 
     // Identify the name of a reference space in the source config.
     *srcInterchange = getRefSpaceName(srcConfig);
-    if (!*srcInterchange)
+    if (!**srcInterchange)
     {
         std::ostringstream os;
         os  << "The supplied config does not have a color space for the reference.";
@@ -531,8 +667,16 @@ void IdentifyInterchangeSpace(const char ** srcInterchange,
     for (int i = 0; i < nbCs; i++)
     {
         ConstColorSpaceRcPtr cs = srcConfig->getColorSpace(srcConfig->getColorSpaceNameByIndex(i));
+
         if (containsSRGB(cs))
         {
+            // Exclude color spaces that may be too expensive to test or otherwise inappropriate.
+            // Currently only handling scene-referred spaces in the heuristics.
+            if (excludeColorSpaceFromHeuristics(cs, REFERENCE_SPACE_SCENE, true))
+            {
+                continue;
+            }
+
             refColorSpacePrimsIndex = getReferenceSpaceFromSRGBSpace(srcConfig, 
                                                                      *srcInterchange,
                                                                      cs, 
@@ -549,6 +693,14 @@ void IdentifyInterchangeSpace(const char ** srcInterchange,
         for (int i = 0; i < nbCs; i++)
         {
             ConstColorSpaceRcPtr cs = srcConfig->getColorSpace(srcConfig->getColorSpaceNameByIndex(i));
+
+            // Exclude color spaces that may be too expensive to test or otherwise inappropriate.
+            // Currently only handling scene-referred spaces in the heuristics.
+            if (excludeColorSpaceFromHeuristics(cs, REFERENCE_SPACE_SCENE, true))
+            {
+                continue;
+            }
+
             if (srcConfig->isColorSpaceLinear(cs->getName(), REFERENCE_SPACE_SCENE))
             {
                 refColorSpacePrimsIndex = getReferenceSpaceFromLinearSpace(srcConfig,
@@ -602,6 +754,18 @@ const char * IdentifyBuiltinColorSpace(const ConstConfigRcPtr & srcConfig,
         throw Exception(os.str().c_str());
     }
 
+    if (builtinColorSpace->isData())
+    {
+        const char * dataName = getDataSpaceName(srcConfig);
+        if (!*dataName)
+        {
+            std::ostringstream os;
+            os  << "The requested space is a data space but the supplied config does not have a data space.";
+            throw Exception(os.str().c_str());
+        }
+        return dataName;
+    }
+
     ReferenceSpaceType builtinRefSpaceType = builtinColorSpace->getReferenceSpaceType();
 
     // Identify interchange spaces.  Passing an empty string for the source color space
@@ -633,8 +797,8 @@ const char * IdentifyBuiltinColorSpace(const ConstConfigRcPtr & srcConfig,
                                     0.f,   0.f,   0.f,   0.f,
                                     1.f,   1.f,   1.f,   0.f };
 
-        // Loop over each non-data color space in the source config and test if the conversion to
-        // the specified space in the built-in config is an identity.
+        // Loop over the active, non-excluded, color spaces in the source config and test if the
+        // conversion to the specified space in the built-in config is an identity.
         //
         //    Note that there is a possibility that both the source and built-in sides of the
         //    transform could be an identity (e.g., if the user asks for ACES2065-1 and that is
@@ -646,7 +810,8 @@ const char * IdentifyBuiltinColorSpace(const ConstConfigRcPtr & srcConfig,
         for (int i = 0; i < nbCs; i++)
         {
             ConstColorSpaceRcPtr cs = srcConfig->getColorSpace(srcConfig->getColorSpaceNameByIndex(i));
-            if (cs->isData() || (cs->getReferenceSpaceType() != builtinRefSpaceType))
+
+            if (excludeColorSpaceFromHeuristics(cs, builtinRefSpaceType, false))
             {
                 continue;
             }

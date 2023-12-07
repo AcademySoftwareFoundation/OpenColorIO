@@ -5,7 +5,7 @@ from functools import partial
 from typing import Optional
 
 import PyOpenColorIO as ocio
-from PySide2 import QtWidgets
+from PySide6 import QtWidgets
 
 from ..config_cache import ConfigCache
 from ..widgets import CallbackComboBox, TextEdit

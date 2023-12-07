@@ -38,7 +38,7 @@ Houdini, Silhouette FX, and
 [others](https://opencolorio.org/#supported_apps).
 
 OpenColorIO is free and open source software ([LICENSE](LICENSE)), and
-one of several projects actvively sponsored by the ASWF
+one of several projects actively sponsored by the ASWF
 ([Academy Software Foundation](https://www.aswf.io/)).
 
 OpenColorIO Project Mission
@@ -50,12 +50,12 @@ content creation applications and pipelines.
 
 OpenColorIO aims to:
 
-* be stable, secure, and thouroughly tested on Linux, macOS, and Windows
+* be stable, secure, and thoroughly tested on Linux, macOS, and Windows
 * be performant on modern CPUs and GPUs
 * be simple, scalable, and well documented
 * be compatible with critical color and imaging standards
 * provide lossless color processing wherever possible
-* maintain config backwards compatability across major versions
+* maintain config backwards compatibility across major versions
 * have every new feature carefully reviewed by leaders from the motion picture, 
   VFX, animation, and video game industries
 * have a healthy and active community
@@ -65,13 +65,14 @@ OpenColorIO Project Governance
 ------------------------------
 
 OpenColorIO is governed by the Academy Software Foundation (ASWF). See 
-[GOVERNANCE.md](GOVERNANCE.md) for detailed infomation about how the project 
+[GOVERNANCE.md](GOVERNANCE.md) for detailed information about how the project 
 operates.
 
 Web Resources
 -------------
 
 * Website: <http://opencolorio.org>
+* Documentation: <https://opencolorio.readthedocs.io/en/latest/>
 * Mailing lists:
   * Developer: <ocio-dev@lists.aswf.io>
   * User: <ocio-user@lists.aswf.io>
@@ -98,6 +99,11 @@ The following reference implementations are provided:
   * aces_0.1.1
 * Other
   * nuke-default
+
+Sources for the newer builtin ACES configuration files can be found in the releases section of the
+[OpenColorIO-Config-ACES](https://github.com/AcademySoftwareFoundation/OpenColorIO-Config-ACES)
+repository.
+
 
 Acknowledgements
 ----------------

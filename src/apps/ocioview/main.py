@@ -7,7 +7,7 @@ import sys
 from pathlib import Path
 
 import PyOpenColorIO as ocio
-from PySide2 import QtCore, QtWidgets, QtOpenGL
+from PySide6 import QtCore, QtGui, QtWidgets, QtOpenGL
 
 import ocioview.log_handlers  # Import to initialize logging
 from ocioview.main_window import OCIOView
@@ -30,12 +30,11 @@ if __name__ == "__main__":
     sys.excepthook = excepthook
 
     # OpenGL core profile needed on macOS to access programmatic pipeline
-    gl_format = QtOpenGL.QGLFormat()
-    gl_format.setProfile(QtOpenGL.QGLFormat.CoreProfile)
-    gl_format.setSampleBuffers(True)
+    gl_format = QtGui.QSurfaceFormat()
+    gl_format.setProfile(QtGui.QSurfaceFormat.CoreProfile)
     gl_format.setSwapInterval(1)
     gl_format.setVersion(4, 0)
-    QtOpenGL.QGLFormat.setDefaultFormat(gl_format)
+    QtGui.QSurfaceFormat.setDefaultFormat(gl_format)
 
     # Create app
     app = QtWidgets.QApplication(sys.argv)

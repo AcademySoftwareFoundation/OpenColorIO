@@ -107,8 +107,8 @@ if(USE_GCC OR USE_CLANG)
     endif()
 
     if(OCIO_ENABLE_SANITIZER)
-        set(PLATFORM_COMPILE_OPTIONS "${PLATFORM_COMPILE_OPTIONS};-fno-omit-frame-pointer;-fsanitize=address")
-        set(PLATFORM_LINK_OPTIONS "${PLATFORM_LINK_OPTIONS};-fsanitize=address")
+        set(PLATFORM_COMPILE_OPTIONS "${PLATFORM_COMPILE_OPTIONS};-fno-omit-frame-pointer;-fsanitize=address;-fsanitize=undefined")
+        set(PLATFORM_LINK_OPTIONS "${PLATFORM_LINK_OPTIONS};-fsanitize=address;-fsanitize=undefined")
     endif()
 
 endif()

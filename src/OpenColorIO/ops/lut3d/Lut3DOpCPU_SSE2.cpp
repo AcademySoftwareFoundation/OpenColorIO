@@ -38,18 +38,32 @@ struct rgbavec_sse2 {
 
 static inline __m128 floor_ps_sse2(__m128 v)
 {
+#if OCIO_USE_SSE2NEON
+    return _mm_floor_ps(v);
+#else
     // NOTE: using truncate cvtt
     return _mm_cvtepi32_ps(_mm_cvttps_epi32(v));
+#endif
 }
 
 static inline __m128 blendv_ps_sse2(__m128 a, __m128 b, __m128 mask)
 {
+#if OCIO_USE_SSE2NEON
+    return _mm_blendv_ps(a, b, mask);
+#else
     return _mm_xor_ps(_mm_and_ps(_mm_xor_ps(a, b), mask), a);
+#endif
 }
 
 static inline __m128 fmadd_ps_sse2(__m128 a, __m128 b, __m128 c)
 {
+#if OCIO_USE_SSE2NEON
+    return vreinterpretq_m128_f32(
+        vfmaq_f32(vreinterpretq_f32_m128(c), vreinterpretq_f32_m128(a), vreinterpretq_f32_m128(b))
+    );
+#else
     return  _mm_add_ps(_mm_mul_ps(a, b), c);
+#endif
 }
 
 static inline rgbavec_sse2 interp_tetrahedral_sse2(const Lut3DContextSSE2 &ctx, __m128 r, __m128 g, __m128 b, __m128 a)
