@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from typing import Any, Callable, Optional, Type
 
 import PyOpenColorIO as ocio
-from PySide2 import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtGui
 
 from ..config_cache import ConfigCache
 from ..undo import ConfigSnapshotUndoCommand
@@ -87,7 +87,7 @@ class BaseActiveDisplayViewModel(BaseConfigItemModel):
 
     def _get_undo_command_type(
         self, column_desc: ColumnDesc
-    ) -> Type[QtWidgets.QUndoCommand]:
+    ) -> Type[QtGui.QUndoCommand]:
         if column_desc == self.ACTIVE:
             # Changing check state of the ACTIVE column has side effects related to
             # display/view order, so a config snapshot is needed to revert the change.

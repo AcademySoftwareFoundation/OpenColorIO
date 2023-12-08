@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList compCLFversion="3" id="22f4ca3e0bf33e125356244de68214cd">
+    <Description>This Lut3D is equivalent (on its limited domain) to a matrix multiply from linear ap0 to linear rec 709</Description>
+    <InputDescriptor>ap0</InputDescriptor>
+    <OutputDescriptor>rec 709</OutputDescriptor>
+    <LUT3D inBitDepth="32f" outBitDepth="10i" interpolation="trilinear">
+        <Array dim="2 2 2 3">
+   0    0    0
+-396.469 -98.4527  1195.23
+-1160.22  1404.29 -156.494
+-1556.68  1305.84  1038.73
+ 2579.68 -282.839 -15.7318
+ 2183.22 -381.292  1179.49
+ 1419.47  1121.45 -172.226
+    1023     1023     1023
+        </Array>
+    </LUT3D>
+</ProcessList>

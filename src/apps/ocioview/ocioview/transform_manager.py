@@ -7,7 +7,7 @@ from functools import partial
 from typing import Callable, Optional
 
 import PyOpenColorIO as ocio
-from PySide2 import QtCore, QtGui
+from PySide6 import QtCore, QtGui
 
 from .utils import get_glyph_icon
 
@@ -99,12 +99,15 @@ class TransformManager:
         tf_agent.item_tf_changed.connect(partial(cls._on_item_tf_changed, slot))
         cls._tf_subscriptions[slot] = tf_subscription
 
-        # Trigger immediate update to subscribers
+        # Inform menu subscribers of the menu change
         cls._update_menu_items()
-        cls._on_item_tf_changed(
-            slot,
-            *item_model.get_item_transforms(item_name),
-        )
+
+        # Inform init subscribers of the new subscription
+        for init_callback in cls._tf_subscribers.get(-1, []):
+            init_callback(slot)
+
+        # Trigger immediate update to subscribers of this slot
+        cls._on_item_tf_changed(slot, *item_model.get_item_transforms(item_name))
 
         # Repaint views for previous and new model
         if prev_item_model is not None:
@@ -206,10 +209,27 @@ class TransformManager:
         menu_callback(cls.get_subscription_menu_items())
 
     @classmethod
-    def subscribe_to_transforms(cls, slot: int, tf_callback: Callable) -> None:
+    def subscribe_to_transform_subscription_init(cls, init_callback: Callable) -> None:
         """
-        Subscribe to transform and item name updates at the given slot
-        number.
+        Subscribe to transform subscription initialization on all slots.
+
+        :param init_callback: Transform subscription initialization
+            callback, which will be called whenever a new transform
+            subscription is initialized with the subscription slot
+            number.
+        """
+        cls._tf_subscribers[-1].append(init_callback)
+
+        # Trigger immediate update to init subscriber if a transform subscription
+        # exists.
+        for slot, tf_subscription in cls._tf_subscriptions.items():
+            init_callback(slot)
+            break
+
+    @classmethod
+    def subscribe_to_transforms_at(cls, slot: int, tf_callback: Callable) -> None:
+        """
+        Subscribe to transform updates at the given slot number.
 
         :param slot: Subscription slot number
         :param tf_callback: Transform callback, which will be called

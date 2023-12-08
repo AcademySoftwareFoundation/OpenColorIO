@@ -8,8 +8,9 @@ namespace OCIO = OCIO_NAMESPACE;
 #include <sstream>
 #include <vector>
 
+#include <pystring.h>
+
 #include "ofxsLog.h"
-#include "pystring/pystring.h"
 
 namespace
 {

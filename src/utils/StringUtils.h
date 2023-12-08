@@ -106,7 +106,7 @@ inline std::string LeftTrim(std::string str, char c)
 // Starting from the left, trim all the space characters i.e. space, tabulation, etc.
 inline std::string LeftTrim(std::string str)
 {
-    const auto it = std::find_if(str.begin(), str.end(), [](char ch) { return !std::isspace(ch); });
+    const auto it = std::find_if(str.begin(), str.end(), [](char ch) { return !std::isspace(static_cast<unsigned char>(ch)); });
     str.erase(str.begin(), it);
     return str;
 }
@@ -123,7 +123,7 @@ inline std::string RightTrim(std::string str, char c)
 inline std::string RightTrim(std::string str)
 {
     const auto it =
-        std::find_if(str.rbegin(), str.rend(), [](char ch) { return !std::isspace(ch); });
+        std::find_if(str.rbegin(), str.rend(), [](char ch) { return !std::isspace(static_cast<unsigned char>(ch)); });
     str.erase(it.base(), str.end());
     return str;
 }

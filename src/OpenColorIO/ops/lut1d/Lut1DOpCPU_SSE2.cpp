@@ -24,13 +24,23 @@ namespace {
 
 static inline __m128 fmadd_ps_sse2(__m128 a, __m128 b, __m128 c)
 {
+#if OCIO_USE_SSE2NEON
+    return vreinterpretq_m128_f32(
+        vfmaq_f32(vreinterpretq_f32_m128(c), vreinterpretq_f32_m128(a), vreinterpretq_f32_m128(b))
+    );
+#else
     return  _mm_add_ps(_mm_mul_ps(a, b), c);
+#endif
 }
 
 static inline __m128 floor_ps_sse2(__m128 v)
 {
+#if OCIO_USE_SSE2NEON
+    return _mm_floor_ps(v);
+#else
     // NOTE: using truncate cvtt
     return _mm_cvtepi32_ps(_mm_cvttps_epi32(v));
+#endif
 }
 
 

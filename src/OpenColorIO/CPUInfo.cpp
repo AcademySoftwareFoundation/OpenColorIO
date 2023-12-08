@@ -50,6 +50,13 @@ static inline void cpuid(int index, int *data)
 {
 #if _MSC_VER
     __cpuid(data, index);
+#elif OCIO_ARCH_X86_32
+    __asm__ volatile (
+        "mov    %%ebx, %%esi \n\t"
+        "cpuid               \n\t"
+        "xchg   %%ebx, %%esi"
+        : "=a" (data[0]), "=S" (data[1]), "=c" (data[2]), "=d" (data[3])
+        : "0" (index), "2"(0));
 #else
     __asm__ volatile (
         "mov    %%rbx, %%rsi \n\t"

@@ -12,6 +12,8 @@
 #include <regex>
 #include <functional>
 
+#include <pystring.h>
+
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "builtinconfigs/BuiltinConfigRegistry.h"
@@ -34,7 +36,6 @@
 #include "Platform.h"
 #include "PrivateTypes.h"
 #include "Processor.h"
-#include "pystring/pystring.h"
 #include "transforms/FileTransform.h"
 #include "utils/StringUtils.h"
 #include "ViewingRules.h"
@@ -435,7 +436,7 @@ public:
             {
                 m_viewTransforms.push_back(vt->createEditableCopy());
             }
-
+            m_defaultViewTransform = rhs.m_defaultViewTransform;
             m_defaultLumaCoefs = rhs.m_defaultLumaCoefs;
             m_strictParsing = rhs.m_strictParsing;
 
@@ -2821,6 +2822,23 @@ bool Config::isColorSpaceLinear(const char * colorSpace, ReferenceSpaceType refe
         auto procToReference = config.getImpl()->getProcessorWithoutCaching(
             config, t, TRANSFORM_DIR_FORWARD
         );
+
+        // TODO: It could be useful to try and avoid evaluating points through ops that are
+        // expensive but highly unlikely to be linear (with inverse Lut3D being the prime example).
+        // There are some heuristics that are used in ConfigUtils.cpp that are intended to filter
+        // out color spaces from consideration before a processor is even calculated.  However,
+        // those are not entirely appropriate here since one could imagine wanting to know if a
+        // color space involving a FileTransform (an ASC CDL being a good example) is linear.
+        // Likewise, one might want to know whether a color space involving a Look or ColorSpace
+        // Transform is linear (both of those are filtered out by the ConfigUtils heuristics).
+        // It seems like the right approach here is to go ahead and build the processor and
+        // thereby convert File/Look/ColorSpace Transforms into ops.  But currently there is
+        // no method on the Processor class to know if it contains a Lut3D.  There is the
+        // ProcessorMetadata files list, though that is not as precise.  For example, it would
+        // not say if a CLF or CTF file contains a Lut3D or just a matrix.  Probably the best
+        // solution would be to have each op sub-class provide an isLinear method and then
+        // surface that on the Processor class, iterating over each op in the Processor.
+
         auto optCPUProc = procToReference->getOptimizedCPUProcessor(OPTIMIZATION_NONE);
         optCPUProc->apply(desc, descDst);
 
@@ -4100,6 +4118,10 @@ void Config::addLook(const ConstLookRcPtr & look)
         if(StringUtils::Lower(getImpl()->m_looksList[i]->getName()) == namelower)
         {
             getImpl()->m_looksList[i] = look->createEditableCopy();
+
+            AutoMutex lock(getImpl()->m_cacheidMutex);
+            getImpl()->resetCacheIDs();
+
             return;
         }
     }
@@ -4715,20 +4737,29 @@ ConstProcessorRcPtr Config::GetProcessorFromConfigs(const ConstContextRcPtr & sr
             "the source color space.");
     }
 
+    const char* csName = dstConfig->getDisplayViewColorSpaceName(dstDisplay, dstView);
+    const char* displayColorSpaceName = View::UseDisplayName(csName) ? dstDisplay : csName;
+    ConstColorSpaceRcPtr displayColorSpace = dstConfig->getColorSpace(displayColorSpaceName);
+    if (!displayColorSpace)
+    {
+        throw Exception("Can't create the processor for the destination config: "
+            "display color space not found.");
+    }
+
     auto p2 = dstConfig->getProcessor(dstContext, dstInterchangeName, dstDisplay, dstView, direction);
     if (!p2)
     {
         throw Exception("Can't create the processor for the destination config "
-            "and the destination color space.");
+            "and the destination display view transform.");
     }
 
     ProcessorRcPtr processor = Processor::Create();
     processor->getImpl()->setProcessorCacheFlags(srcConfig->getImpl()->m_cacheFlags);
 
-    // If the source color spaces is a data space, its corresponding processor
+    // If either of the color spaces are data spaces, its corresponding processor
     // will be empty, but need to make sure the entire result is also empty to
     // better match the semantics of how data spaces are handled.
-    if (!srcColorSpace->isData())
+    if (!srcColorSpace->isData() && !displayColorSpace->isData())
     {
         if (direction == TRANSFORM_DIR_INVERSE)
         {
