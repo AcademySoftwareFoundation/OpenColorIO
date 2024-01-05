@@ -347,7 +347,7 @@ jobs:
             python-version: '3.11'
           # Keeping one universal build
           - build: 4
-            arch-type: "x86_64;arm64"
+            arch-type: "x86_64"
             build-type: Release
             build-shared: 'ON'
             build-docs: 'OFF'
