@@ -1,0 +1,156 @@
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright Contributors to the OpenColorIO Project.
+#
+# GitHub Actions workflow file
+# https://help.github.com/en/actions/reference/workflow-syntax-for-github-actions
+
+name: CI_MacARM
+
+# This workflow is for CI for ARM-based MacOS. In an ideal world, this would
+# just be another matrix entry in the main CI workflow, but MacOS ARM runners
+# too expensive to run on every PR push. So we break into a separate workflow
+# to have more fine-grained control over when it runs.
+
+# This section controls when the workflow runs.
+on:
+  # Run upon push, but only for tagged versions, or if the branch name
+  # contains the substrings "macarm", "-alpha", "-beta", or is called
+  # "release".
+  push:
+    tags:
+      - v**
+    branches:
+      - '*macarm*'
+      - '*alpha*'
+      - '*beta*'
+      - 'release'
+  # Run for pull requests whose branch name includes "macarm" (this allows
+  # us to test specific PRs that we think need ARM verification).
+  pull_request:
+    tags:
+      - v**
+    branches:
+      - '*macarm*'
+      - '*alpha*'
+      - '*beta*'
+      - 'release'
+
+permissions: read-all
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # macOS
+  # ---------------------------------------------------------------------------
+
+  macos:
+    name: 'macOS 11
+      <AppleClang 
+       arch=${{ matrix.arch-type }},
+       config=${{ matrix.build-type }}, 
+       shared=${{ matrix.build-shared }}, 
+       simd=${{ matrix.use-simd }}, 
+       cxx=${{ matrix.cxx-standard }}, 
+       python=${{ matrix.python-version }}, 
+       docs=${{ matrix.build-docs }}, 
+       oiio=${{ matrix.use-oiio}}>'
+    # Avoid duplicated checks when a pull_request is opened from a local branch.
+    if: |
+      github.event_name == 'push' ||
+      github.event.pull_request.head.repo.full_name != github.repository
+    runs-on: macos-11
+    strategy:
+      matrix:
+        build: [1]
+        include:
+          - build: 1
+            arch-type: "x86_64;arm64"
+            build-type: Release
+            build-shared: 'ON'
+            build-docs: 'OFF'
+            build-openfx: 'OFF'
+            use-simd: 'ON'
+            use-oiio: 'OFF'
+            cxx-standard: 11
+            python-version: '3.10'
+    steps:
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Install docs env
+        run: share/ci/scripts/macos/install_docs_env.sh
+        if: matrix.build-docs == 'ON'
+      - name: Install tests env
+        run: share/ci/scripts/macos/install_tests_env.sh
+      - name: Create build directories
+        run: |
+          mkdir _install
+          mkdir _build
+      - name: Configure
+        run: |
+          cmake ../. \
+                -DCMAKE_INSTALL_PREFIX=../_install \
+                -DCMAKE_BUILD_TYPE=${{ matrix.build-type }} \
+                -DCMAKE_CXX_STANDARD=${{ matrix.cxx-standard }} \
+                -DBUILD_SHARED_LIBS=${{ matrix.build-shared }} \
+                -DOCIO_BUILD_DOCS=${{ matrix.build-docs }} \
+                -DOCIO_BUILD_OPENFX=${{ matrix.build-openfx }} \
+                -DOCIO_BUILD_GPU_TESTS=OFF \
+                -DOCIO_USE_SIMD=${{ matrix.use-simd }} \
+                -DOCIO_USE_OIIO_FOR_APPS=${{ matrix.use-oiio }} \
+                -DOCIO_INSTALL_EXT_PACKAGES=ALL \
+                -DOCIO_WARNING_AS_ERROR=ON \
+                -DPython_EXECUTABLE=$(which python) \
+                -DCMAKE_OSX_ARCHITECTURES="${{ matrix.arch-type }}"
+        working-directory: _build
+      - name: Build
+        run: |
+          cmake --build . \
+                --target install \
+                --config ${{ matrix.build-type }} \
+                -- -j$(sysctl -n hw.ncpu)
+          echo "ocio_build_path=$(pwd)" >> $GITHUB_ENV
+        working-directory: _build
+      - name: Test
+        run: ctest -V -C ${{ matrix.build-type }}
+        working-directory: _build
+      - name: Test CMake Consumer with shared OCIO
+        if: matrix.build-shared == 'ON'
+        run: |
+          cmake . \
+                -DCMAKE_PREFIX_PATH=../../../_install \
+                -DCMAKE_BUILD_TYPE=${{ matrix.build-type }}
+          cmake --build . \
+                --config ${{ matrix.build-type }}
+          ./consumer
+        working-directory: _build/tests/cmake-consumer-dist
+      - name: Test CMake Consumer with static OCIO
+        if: matrix.build-shared == 'OFF'
+        # The yaml-cpp_VERSION is set below because Findyaml-cpp.cmake needs it but is unable to 
+        # extract it from the headers, like the other modules.
+        #
+        # Prefer the static version of each dependencies by using <pkg>_STATIC_LIBRARY. 
+        # Alternatively, this can be done by setting <pkg>_LIBRARY and <pkg>_INCLUDE_DIR to 
+        # the static version of the package.       
+        run: |
+          cmake . \
+                -DCMAKE_PREFIX_PATH=../../../_install \
+                -DCMAKE_BUILD_TYPE=${{ matrix.build-type }} \
+                -Dexpat_ROOT=${{ env.ocio_build_path }}/ext/dist \
+                -Dexpat_STATIC_LIBRARY=ON \
+                -DImath_ROOT=${{ env.ocio_build_path }}/ext/dist \
+                -DImath_STATIC_LIBRARY=ON \
+                -Dpystring_ROOT=${{ env.ocio_build_path }}/ext/dist \
+                -Dyaml-cpp_ROOT=${{ env.ocio_build_path }}/ext/dist \
+                -Dyaml-cpp_STATIC_LIBRARY=ON \
+                -Dyaml-cpp_VERSION=0.7.0 \
+                -DZLIB_ROOT=${{ env.ocio_build_path }}/ext/dist \
+                -DZLIB_STATIC_LIBRARY=ON \
+                -Dminizip-ng_ROOT=${{ env.ocio_build_path }}/ext/dist \
+                -Dminizip-ng_STATIC_LIBRARY=ON
+          cmake --build . \
+                --config ${{ matrix.build-type }}
+          ./consumer
+        working-directory: _build/tests/cmake-consumer-dist
