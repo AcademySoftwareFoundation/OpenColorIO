@@ -1103,6 +1103,16 @@ public:
         // That should never happen.
         return -1;
     }
+
+    void GetAllFileReferences(std::set<std::string> & files) const
+    {
+        ConstTransformVec allTransforms;
+        this->getAllInternalTransforms(allTransforms);
+        for(const auto & transform : allTransforms)
+        {
+            GetFileReferences(files, transform);
+        }
+    }
 };
 
 
@@ -1956,14 +1966,8 @@ void Config::validate() const
     ///// Resolve all file Transforms using context variables.
 
     {
-        ConstTransformVec allTransforms;
-        getImpl()->getAllInternalTransforms(allTransforms);
-
         std::set<std::string> files;
-        for (const auto & transform : allTransforms)
-        {
-            GetFileReferences(files, transform);
-        }
+        getImpl()->GetAllFileReferences(files);
 
         // Check that at least one of the search paths can be resolved into a valid path.
         // Note that a search path without context variable(s) always correctly resolves.
@@ -4890,14 +4894,8 @@ const char * Config::getCacheID(const ConstContextRcPtr & context) const
     {
         std::ostringstream filehash;
 
-        ConstTransformVec allTransforms;
-        getImpl()->getAllInternalTransforms(allTransforms);
-
         std::set<std::string> files;
-        for(const auto & transform : allTransforms)
-        {
-            GetFileReferences(files, transform);
-        }
+        getImpl()->GetAllFileReferences(files);
 
         for(const auto & iter : files)
         {
@@ -5525,14 +5523,8 @@ bool Config::isArchivable() const
     /////////////////////////////////
     // FileTransform verification. //
     /////////////////////////////////
-    ConstTransformVec allTransforms;
-    getImpl()->getAllInternalTransforms(allTransforms);
-
     std::set<std::string> files;
-    for(const auto & transform : allTransforms)
-    {
-        GetFileReferences(files, transform);
-    }
+    getImpl()->GetAllFileReferences(files);
 
     // Check that FileTransform sources are not absolute nor have context variables outside of 
     // config working directory.
