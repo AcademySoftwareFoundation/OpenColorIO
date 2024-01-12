@@ -61,6 +61,7 @@ jobs:
         build: [1]
         include:
           - build: 1
+            arch-type: "arm64"
             build-type: Release
             build-shared: 'ON'
             build-docs: 'OFF'
@@ -68,7 +69,7 @@ jobs:
             use-simd: 'ON'
             use-oiio: 'OFF'
             cxx-standard: 11
-            python-version: '3.10'
+            python-version: '3.11'
     steps:
       - name: Setup Python
         uses: actions/setup-python@v4
