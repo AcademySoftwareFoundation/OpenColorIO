@@ -26,7 +26,7 @@ on:
       - 'release'
   # Run for pull requests whose branch name includes "macarm" (this allows
   # us to test specific PRs that we think need ARM verification).
-  pull_request_target:
+  pull_request:
     branches:
       - '*macarm*'
   # Run monthly on the 27th at 8:00AM to make sure we haven't broken
