@@ -424,7 +424,7 @@ void Lut3DTetrahedralRenderer::apply(const void * inImg, void * outImg, long num
     const float * in = (const float *)inImg;
     float * out = (float *)outImg;
 
-    if (m_applyLutFunc)
+    if (m_applyLutFunc && numPixels > 1)
     {
         m_applyLutFunc(m_optLut, m_dim, in, out, numPixels);
     }
