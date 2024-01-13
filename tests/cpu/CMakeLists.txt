@@ -160,6 +160,7 @@ set(SOURCES
     ops/lut3d/Lut3DOpCPU_SSE2.cpp
     ops/lut3d/Lut3DOpCPU_AVX.cpp
     ops/lut3d/Lut3DOpCPU_AVX2.cpp
+    ops/lut3d/Lut3DOpCPU_AVX512.cpp
     ops/matrix/MatrixOpGPU.cpp
     ops/OpTools.cpp
     ops/range/RangeOpGPU.cpp
@@ -338,6 +339,7 @@ if(OCIO_USE_SIMD AND (OCIO_ARCH_X86 OR OCIO_USE_SSE2NEON))
     set_property(SOURCE "${CMAKE_SOURCE_DIR}/src/OpenColorIO/ops/lut3d/Lut3DOpCPU_SSE2.cpp" APPEND PROPERTY COMPILE_OPTIONS ${OCIO_SSE2_ARGS})
     set_property(SOURCE "${CMAKE_SOURCE_DIR}/src/OpenColorIO/ops/lut3d/Lut3DOpCPU_AVX.cpp" APPEND PROPERTY COMPILE_OPTIONS ${OCIO_AVX_ARGS})
     set_property(SOURCE "${CMAKE_SOURCE_DIR}/src/OpenColorIO/ops/lut3d/Lut3DOpCPU_AVX2.cpp" APPEND PROPERTY COMPILE_OPTIONS ${OCIO_AVX2_ARGS})
+    set_property(SOURCE "${CMAKE_SOURCE_DIR}/src/OpenColorIO/ops/lut3d/Lut3DOpCPU_AVX512.cpp" APPEND PROPERTY COMPILE_OPTIONS ${OCIO_AVX512_ARGS})
     set_property(SOURCE "SSE2_tests.cpp" APPEND PROPERTY COMPILE_OPTIONS ${OCIO_SSE2_ARGS})
     set_property(SOURCE "AVX_tests.cpp" APPEND PROPERTY COMPILE_OPTIONS ${OCIO_AVX_ARGS})
     set_property(SOURCE "AVX2_tests.cpp" APPEND PROPERTY COMPILE_OPTIONS ${OCIO_AVX2_ARGS})
