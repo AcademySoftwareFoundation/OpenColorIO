@@ -3,7 +3,7 @@
 
 #include "ConfigUtils.h"
 #include "MathUtils.h"
-#include "pystring/pystring.h"
+#include "pystring.h"
 #include "utils/StringUtils.h"
 
 namespace OCIO_NAMESPACE
