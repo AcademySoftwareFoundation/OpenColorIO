@@ -45,6 +45,7 @@ int main(int argc, const char **argv)
     // Default value is current directory.
     std::string extractDestination;
 
+    bool minimal    = false;
     bool extract    = false;
     bool list       = false;
     bool help       = false;
@@ -61,6 +62,9 @@ int main(int argc, const char **argv)
                "    ocioarchive myarchive\n\n"
                "    # Archive myconfig/config.ocio into myarchive.ocioz\n"
                "    ocioarchive myarchive --iconfig myconfig/config.ocio\n\n"
+               "    # Archive from the OCIO environment variable into myarchive.ocioz\n"
+               "    #   requires all environment variables to be resolvable\n"
+               "    ocioarchive myarchive --minimal\n\n"
                "    # Extract myarchive.ocioz into new directory named myarchive\n"
                "    ocioarchive --extract myarchive.ocioz\n\n"
                "    # Extract myarchive.ocioz into new directory named ocio_config\n"
@@ -70,6 +74,7 @@ int main(int argc, const char **argv)
                "%*", parse_end_args, "",
                "<SEPARATOR>", "Options:",
                "--iconfig %s",  &configFilename,        "Config to archive (takes precedence over $OCIO)",
+               "--minimal",     &minimal,               "Create a minimal archive",
                "--extract",     &extract,               "Extract an OCIOZ config archive",
                "--dir %s",      &extractDestination,    "Path where to extract the files (folders are created if missing)",
                "--list",        &list,                  "List the files inside an archive without extracting it",
@@ -156,7 +161,11 @@ int main(int argc, const char **argv)
                 std::ofstream ofstream(archiveName, std::ofstream::out | std::ofstream::binary);
                 if (ofstream.good())
                 {
-                    config->archive(ofstream);
+                    OCIO::ArchiveFlags flags = OCIO::ARCHIVE_FLAGS_DEFAULT;
+                    if (minimal)
+                      flags = OCIO::ArchiveFlags(flags | OCIO::ARCHIVE_FLAGS_MINIMAL);
+
+                    config->archive(ofstream, flags);
                     ofstream.close();
                 }
                 else
