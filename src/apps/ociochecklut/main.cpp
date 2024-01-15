@@ -272,7 +272,7 @@ int main (int argc, const char* argv[])
         try
         {
             auto processor = config->getProcessor(t);
-            if (printops)
+            if (printops || stepInfo)
             {
                 auto transform = processor->createGroupTransform();
                 std::cout << "Transform operators: " << std::endl;
