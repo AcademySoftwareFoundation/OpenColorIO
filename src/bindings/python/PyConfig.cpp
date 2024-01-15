@@ -971,7 +971,7 @@ void bindPyConfig(py::module & m)
         .def("archive", [](ConfigRcPtr & self, const char * filepath) 
             {
                 std::ofstream f(filepath, std::ofstream::out | std::ofstream::binary);
-                self->archive(f);
+                self->archive(f, ARCHIVE_FLAGS_DEFAULT); // TODO: pass flags in rather than default
                 f.close(); 
             }, 
             DOC(Config, archive))

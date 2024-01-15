@@ -498,7 +498,7 @@ OCIO_ADD_TEST(OCIOZArchive, archive_config_and_compare_to_original)
 
         // 2 - Archive the config of step 1.
         std::ostringstream ostringStream;
-        OCIO_CHECK_NO_THROW(configFromOcioFile->archive(ostringStream));
+        OCIO_CHECK_NO_THROW(configFromOcioFile->archive(ostringStream, OCIO::ARCHIVE_FLAGS_DEFAULT));
 
         // 3 - Verify that the binary data starts with "PK".
         OCIO_CHECK_EQUAL('P', ostringStream.str()[0]);

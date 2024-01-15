@@ -49,6 +49,7 @@ const char * OCIO_ACTIVE_DISPLAYS_ENVVAR      = "OCIO_ACTIVE_DISPLAYS";
 const char * OCIO_ACTIVE_VIEWS_ENVVAR         = "OCIO_ACTIVE_VIEWS";
 const char * OCIO_INACTIVE_COLORSPACES_ENVVAR = "OCIO_INACTIVE_COLORSPACES";
 const char * OCIO_OPTIMIZATION_FLAGS_ENVVAR   = "OCIO_OPTIMIZATION_FLAGS";
+const char * OCIO_ARCHIVE_FLAGS_ENVVAR        = "OCIO_ARCHIVE_FLAGS";
 const char * OCIO_USER_CATEGORIES_ENVVAR      = "OCIO_USER_CATEGORIES";
 
 // Default filename (with extension) of a config and archived config.
@@ -6018,7 +6019,7 @@ bool Config::isArchivable() const
                 // 2) Path may not start with double dot ".." (going above working directory).
                 pystring::startswith(normPath, "..") ||
                 // 3) A context variable may not be located at the start of the path.
-                (ContainsContextVariables(path) && 
+                (ContainsContextVariables(path) && //TODO: if we can resolve context, do so and validate path to file
                 (StringUtils::Find(path, "$") == 0 || 
                  StringUtils::Find(path, "%") == 0)))
         {
@@ -6064,10 +6065,10 @@ bool Config::isArchivable() const
     return true;
 }
 
-void Config::archive(std::ostream & ostream) const
+void Config::archive(std::ostream & ostream, ArchiveFlags flags) const
 {
     // Using utility functions in OCIOZArchive.cpp.
-    archiveConfig(ostream, *this, getCurrentContext()->getWorkingDir());
+    archiveConfig(ostream, *this, getCurrentContext()->getWorkingDir(), flags);
 }
 
 } // namespace OCIO_NAMESPACE

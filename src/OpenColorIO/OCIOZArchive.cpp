@@ -202,7 +202,18 @@ void addSupportedFiles(void * archiver, const char * path, const char * configWo
 }
 //////////////////////////////////////////////////////////////////////////////////////
 
-void archiveConfig(std::ostream & ostream, const Config & config, const char * configWorkingDirectory)
+ArchiveFlags EnvironmentOverride(ArchiveFlags oFlags) // TODO: test override
+{
+    const std::string envFlag = GetEnvVariable(OCIO_ARCHIVE_FLAGS_ENVVAR);
+    if (!envFlag.empty())
+    {
+        // Use 0 to allow base to be determined by the format.
+        oFlags = static_cast<ArchiveFlags>(std::stoul(envFlag, nullptr, 0));
+    }
+    return oFlags;
+}
+
+void archiveConfig(std::ostream & ostream, const Config & config, const char * configWorkingDirectory, ArchiveFlags flags)
 {
     void * archiver = nullptr;
     void *write_mem_stream = NULL;
@@ -210,7 +221,9 @@ void archiveConfig(std::ostream & ostream, const Config & config, const char * c
     int32_t buffer_size = 0;
     mz_zip_file file_info;
 
-    if (!config.isArchivable())
+    flags = EnvironmentOverride(flags);
+
+    if (!config.isArchivable()) // TODO: pass in flags?
     {
         std::ostringstream os;
         os << "Config is not archivable.";
@@ -238,8 +251,10 @@ void archiveConfig(std::ostream & ostream, const Config & config, const char * c
     ArchiveOptions options;
     // Make sure that the compression method is set to DEFLATE.
     options.compress_method = ArchiveCompressionMethods::DEFLATE;
-    // Make sure that the compression level is set to BEST.
-    options.compress_level  = ArchiveCompressionLevels::BEST;
+    // Default compression level is set to BEST.
+    options.compress_level  = flags & ARCHIVE_FLAGS_COMPRESSION_MASK
+                              ? ArchiveCompressionLevels(flags & ARCHIVE_FLAGS_COMPRESSION_MASK)
+                              : ArchiveCompressionLevels::BEST;
 
     // Create the writer handle.
 #if MZ_VERSION_BUILD >= 040000
@@ -305,7 +320,10 @@ void archiveConfig(std::ostream & ostream, const Config & config, const char * c
         ///////////////////////
         // Add all supported files to in-memory zip from any directories under working directory. 
         // (recursive)
-        addSupportedFiles(archiver, configWorkingDirectory, configWorkingDirectory);
+        if (HasFlag(flags, ARCHIVE_FLAGS_MINIMAL))
+            addSupportedFiles(archiver, configWorkingDirectory, configWorkingDirectory);
+        else
+            addSupportedFiles(archiver, configWorkingDirectory, configWorkingDirectory);
 
         // Close in-memory zip.
         mz_zip_writer_close(archiver);
