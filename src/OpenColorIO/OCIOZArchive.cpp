@@ -200,6 +200,34 @@ void addSupportedFiles(void * archiver, const char * path, const char * configWo
         mz_os_close_dir(dir);
     }
 }
+
+void addReferencedFiles(void * archiver, const Config & config)
+{
+    ConstContextRcPtr context = config.getCurrentContext();
+    ContextRcPtr ctxFilepath = Context::Create();
+    ctxFilepath->setSearchPath(context->getSearchPath());
+    ctxFilepath->setWorkingDir(context->getWorkingDir());
+    ctxFilepath->setConfigIOProxy(context->getConfigIOProxy());
+
+    auto prefixLength = std::string(context->getWorkingDir()).length() + 1; // +1 add trailing '/' TODO: improve this
+
+    std::set<std::string> files;
+    config.GetAllFileReferences(files);
+    for (const auto &file : files)
+    {
+        const std::string resolvedPath = context->resolveFileLocation(file.c_str(), ctxFilepath);
+        const std::string relativePath = resolvedPath.substr(prefixLength);
+
+        auto returnCode = mz_zip_writer_add_file(archiver, resolvedPath.c_str(), relativePath.c_str());
+        if (returnCode != MZ_OK)
+        {
+            std::ostringstream os;
+            os << "Could not write file " << resolvedPath << " to in-memory archive.()" << returnCode << ")";
+            throw Exception(os.str().c_str());
+        }
+    }
+}
+
 //////////////////////////////////////////////////////////////////////////////////////
 
 ArchiveFlags EnvironmentOverride(ArchiveFlags oFlags) // TODO: test override
@@ -321,7 +349,7 @@ void archiveConfig(std::ostream & ostream, const Config & config, const char * c
         // Add all supported files to in-memory zip from any directories under working directory. 
         // (recursive)
         if (HasFlag(flags, ARCHIVE_FLAGS_MINIMAL))
-            addSupportedFiles(archiver, configWorkingDirectory, configWorkingDirectory);
+            addReferencedFiles(archiver, config);
         else
             addSupportedFiles(archiver, configWorkingDirectory, configWorkingDirectory);
 
