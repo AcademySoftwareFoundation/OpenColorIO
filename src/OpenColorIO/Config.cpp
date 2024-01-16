@@ -6071,4 +6071,9 @@ void Config::archive(std::ostream & ostream, ArchiveFlags flags) const
     archiveConfig(ostream, *this, getCurrentContext()->getWorkingDir(), flags);
 }
 
+void Config::GetAllFileReferences(std::set<std::string> & files) const
+{
+    return getImpl()->GetAllFileReferences(files);
+}
+
 } // namespace OCIO_NAMESPACE
