@@ -13,6 +13,7 @@
 #include <fstream>
 #include <vector>
 #include <cstdint>
+#include <set>
 
 #include "OpenColorABI.h"
 #include "OpenColorTypes.h"
@@ -1536,6 +1537,9 @@ public:
      * \param flags Flags top control archive creation
      */
     void archive(std::ostream & ostream, ArchiveFlags flags) const;
+
+    //TODO: document
+    void GetAllFileReferences(std::set<std::string> & files) const;
 
     Config(const Config &) = delete;
     Config& operator= (const Config &) = delete;
