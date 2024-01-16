@@ -325,6 +325,10 @@ void archiveConfig(std::ostream & ostream, const Config & config, const char * c
         else
             addSupportedFiles(archiver, configWorkingDirectory, configWorkingDirectory);
 
+        std::ostringstream comment;
+        comment << "Configuration written by archiveConfig() OCIO: " << GetVersion();
+        mz_zip_writer_set_comment(archiver, comment.str().c_str());
+
         // Close in-memory zip.
         mz_zip_writer_close(archiver);
     }

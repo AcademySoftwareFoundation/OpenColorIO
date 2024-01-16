@@ -123,7 +123,7 @@ int main(int argc, const char **argv)
                     std::cerr << "ERROR: Could not load config: " << configFilename << std::endl;
                     exit(1);
                 }
-                
+
             }
             else if (ocioEnv && *ocioEnv)
             {
@@ -136,7 +136,7 @@ int main(int argc, const char **argv)
                 catch (...)
                 {
                     // Capture any errors and display a custom message.
-                    std::cerr << "ERROR: Could not load config from $OCIO variable: " 
+                    std::cerr << "ERROR: Could not load config from $OCIO variable: "
                               << ocioEnv << std::endl;
                     exit(1);
                 }
@@ -147,11 +147,11 @@ int main(int argc, const char **argv)
                 exit(1);
             }
 
-            try 
+            try
             {
                 // The ocioz extension is added by the archive method. The assumption is that
                 // archiveName is the filename without extension.
-        
+
                 // Do not add ocioz extension if already present.
                 if (!StringUtils::EndsWith(archiveName, ".ocioz"))
                 {
@@ -163,14 +163,14 @@ int main(int argc, const char **argv)
                 {
                     OCIO::ArchiveFlags flags = OCIO::ARCHIVE_FLAGS_DEFAULT;
                     if (minimal)
-                      flags = OCIO::ArchiveFlags(flags | OCIO::ARCHIVE_FLAGS_MINIMAL);
+                        flags = OCIO::ArchiveFlags(flags | OCIO::ARCHIVE_FLAGS_MINIMAL);
 
                     config->archive(ofstream, flags);
                     ofstream.close();
                 }
                 else
                 {
-                    std::cerr << "Could not open output stream for: " 
+                    std::cerr << "Could not open output stream for: "
                               << archiveName + std::string(OCIO::OCIO_CONFIG_ARCHIVE_FILE_EXT)
                               << std::endl;
                     exit(1);
@@ -180,13 +180,13 @@ int main(int argc, const char **argv)
             {
                 std::cerr << e.what() << std::endl;
                 exit(1);
-            } 
+            }
         }
         catch (OCIO::Exception & exception)
         {
             std::cerr << "ERROR: " << exception.what() << std::endl;
             exit(1);
-        } 
+        }
         catch (std::exception& exception)
         {
             std::cerr << "ERROR: " << exception.what() << std::endl;
@@ -210,7 +210,7 @@ int main(int argc, const char **argv)
         }
 
         archiveName = args[0].c_str();
-        try 
+        try
         {
             if (extractDestination.empty())
             {
@@ -250,7 +250,7 @@ int main(int argc, const char **argv)
         mz_zip_reader_create(&reader);
 #endif
         struct tm tmu_date;
-        
+
         err = mz_zip_reader_open_file(reader, path.c_str());
         if (err != MZ_OK)
         {
@@ -273,7 +273,7 @@ int main(int argc, const char **argv)
             err = mz_zip_reader_entry_get_info(reader, &file_info);
             if (err != MZ_OK)
             {
-                std::cerr << "ERROR: Could not get information from entry: " << file_info->filename 
+                std::cerr << "ERROR: Could not get information from entry: " << file_info->filename
                           << std::endl;
                 exit(1);
             }
@@ -290,6 +290,13 @@ int main(int argc, const char **argv)
 
             err = mz_zip_reader_goto_next_entry(reader);
         } while (err == MZ_OK);
+
+        const char *global_comment = nullptr;
+        if (mz_zip_reader_get_comment(reader, &global_comment) == MZ_OK)
+        {
+            if (global_comment)
+                std::cout << "\n" << global_comment << "\n";
+        }
     }
 
     // Generic error handling.
