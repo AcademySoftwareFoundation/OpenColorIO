@@ -78,45 +78,84 @@ jobs:
       matrix:
         include:
           # -------------------------------------------------------------------
-          # CPython 64 bits
+          # CPython 64 bits manylinux_2_28
           # -------------------------------------------------------------------
-          - build: CPython 3.7 64 bits
+          - build: CPython 3.7 64 bits manylinux_2_28
+            manylinux: manylinux_2_28
             python: cp37-manylinux*
             arch: x86_64
-          - build: CPython 3.8 64 bits
+          - build: CPython 3.8 64 bits manylinux_2_28
+            manylinux: manylinux_2_28
             python: cp38-manylinux*
             arch: x86_64
-          - build: CPython 3.9 64 bits
+          - build: CPython 3.9 64 bits manylinux_2_28
+            manylinux: manylinux_2_28
             python: cp39-manylinux*
             arch: x86_64
-          - build: CPython 3.10 64 bits
+          - build: CPython 3.10 64 bits manylinux_2_28
+            manylinux: manylinux_2_28
             python: cp310-manylinux*
             arch: x86_64
-          - build: CPython 3.11 64 bits
+          - build: CPython 3.11 64 bits manylinux_2_28
+            manylinux: manylinux_2_28
             python: cp311-manylinux*
             arch: x86_64
-          - build: CPython 3.12 64 bits
+          - build: CPython 3.12 64 bits manylinux_2_28
+            manylinux: manylinux_2_28
             python: cp312-manylinux*
             arch: x86_64
           # -------------------------------------------------------------------
-          # CPython ARM 64 bits
+          # CPython 64 bits manylinux2014
           # -------------------------------------------------------------------
-          - build: CPython 3.7 ARM 64 bits
+          - build: CPython 3.7 64 bits  manylinux2014
+            manylinux: manylinux2014
+            python: cp37-manylinux*
+            arch: x86_64
+          - build: CPython 3.8 64 bits  manylinux2014
+            manylinux: manylinux2014
+            python: cp38-manylinux*
+            arch: x86_64
+          - build: CPython 3.9 64 bits  manylinux2014
+            manylinux: manylinux2014
+            python: cp39-manylinux*
+            arch: x86_64
+          - build: CPython 3.10 64 bits  manylinux2014
+            manylinux: manylinux2014
+            python: cp310-manylinux*
+            arch: x86_64
+          - build: CPython 3.11 64 bits  manylinux2014
+            manylinux: manylinux2014
+            python: cp311-manylinux*
+            arch: x86_64
+          - build: CPython 3.12 64 bits  manylinux2014
+            manylinux: manylinux2014
+            python: cp312-manylinux*
+            arch: x86_64
+          # -------------------------------------------------------------------
+          # CPython ARM 64 bits manylinux2014
+          # -------------------------------------------------------------------
+          - build: CPython 3.7 ARM 64 bits manylinux2014
+            manylinux: manylinux2014
             python: cp37-manylinux*
             arch: aarch64
-          - build: CPython 3.8 ARM 64 bits
+          - build: CPython 3.8 ARM 64 bits manylinux2014
+            manylinux: manylinux2014
             python: cp38-manylinux*
             arch: aarch64
-          - build: CPython 3.9 ARM 64 bits
+          - build: CPython 3.9 ARM 64 bits manylinux2014
+            manylinux: manylinux2014
             python: cp39-manylinux*
             arch: aarch64
-          - build: CPython 3.10 ARM 64 bits
+          - build: CPython 3.10 ARM 64 bits manylinux2014
+            manylinux: manylinux2014
             python: cp310-manylinux*
             arch: aarch64
-          - build: CPython 3.11 ARM 64 bits
+          - build: CPython 3.11 ARM 64 bits manylinux2014
+            manylinux: manylinux2014
             python: cp311-manylinux*
             arch: aarch64
-          - build: CPython 3.12 ARM 64 bits
+          - build: CPython 3.12 ARM 64 bits manylinux2014
+            manylinux: manylinux2014
             python: cp312-manylinux*
             arch: aarch64
 
@@ -138,6 +177,8 @@ jobs:
         env:
           CIBW_BUILD: ${{ matrix.python }}
           CIBW_ARCHS: ${{ matrix.arch }}
+          CIBW_MANYLINUX_X86_64_IMAGE: ${{ matrix.manylinux }}
+          CIBW_MANYLINUX_AARCH64_IMAGE: ${{ matrix.manylinux }}
 
       - uses: actions/upload-artifact@v3
         with:
