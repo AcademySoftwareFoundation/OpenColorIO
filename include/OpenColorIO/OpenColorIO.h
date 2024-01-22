@@ -1504,7 +1504,7 @@ public:
      * 
      * \return bool Archivable if true.
      */
-    bool isArchivable() const;
+    bool isArchivable(bool minimal) const;
 
     /**
      * \brief Archive the config and its LUTs into the specified output stream.
