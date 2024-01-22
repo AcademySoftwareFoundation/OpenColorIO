@@ -5537,7 +5537,7 @@ ConfigIOProxyRcPtr Config::getConfigIOProxy() const
     return getImpl()->m_context->getConfigIOProxy();
 }
 
-bool Config::isArchivable() const
+bool Config::isArchivable(bool minimal) const
 {
     ConstContextRcPtr context = getCurrentContext();
 
@@ -5550,7 +5550,7 @@ bool Config::isArchivable() const
     }
 
     // Utility lambda to check the following criteria.
-    auto validatePathForArchiving = [](const std::string & path) 
+    auto validatePathForArchiving = [&minimal](const std::string & path) 
     {
         // Using the normalized path.
         const std::string normPath = pystring::os::path::normpath(path);
@@ -5561,8 +5561,9 @@ bool Config::isArchivable() const
                 pystring::startswith(normPath, "..") ||
                 // 3) A context variable may not be located at the start of the path.
                 (ContainsContextVariables(path) && //TODO: if we can resolve context, do so and validate path to file
-                (StringUtils::Find(path, "$") == 0 || 
-                 StringUtils::Find(path, "%") == 0)))
+                (!minimal &&
+                  (StringUtils::Find(path, "$") == 0 || 
+                   StringUtils::Find(path, "%") == 0))))
         {
             return false;
         }
