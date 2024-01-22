@@ -272,7 +272,7 @@ int main (int argc, const char* argv[])
         try
         {
             auto processor = config->getProcessor(t);
-            if (printops || stepInfo)
+            if (printops)
             {
                 auto transform = processor->createGroupTransform();
                 std::cout << "Transform operators: " << std::endl;
@@ -403,7 +403,7 @@ int main (int argc, const char* argv[])
                             std::vector<std::string> out;
                             ToString(out, outputPixel, 0, comp);
 
-                            std::cout << "Transform " << i << ": " << std::endl;
+                            std::cout << "\n" << *(transform->getTransform(i)) << std::endl;
                             std::cout << "Input  [R G B";
                             if (comp == 4)
                             {
