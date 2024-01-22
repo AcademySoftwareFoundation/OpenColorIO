@@ -116,6 +116,7 @@ OCIO_ADD_TEST(OCIOZArchive, is_config_archivable)
 
     std::istringstream iss;
     iss.str(CONFIG);
+    const bool minimal = false;
 
     OCIO::ConfigRcPtr cfg;
     OCIO_CHECK_NO_THROW(cfg = OCIO::Config::CreateFromStream(iss)->createEditableCopy());
@@ -138,39 +139,39 @@ OCIO_ADD_TEST(OCIOZArchive, is_config_archivable)
         
         // Valid search path.
         cfg->setSearchPath("luts");
-        OCIO_CHECK_EQUAL(true, cfg->isArchivable());
+        OCIO_CHECK_EQUAL(true, cfg->isArchivable(minimal));
 
         cfg->setSearchPath(R"(luts/myluts1)");
-        OCIO_CHECK_EQUAL(true, cfg->isArchivable());
+        OCIO_CHECK_EQUAL(true, cfg->isArchivable(minimal));
 
         cfg->setSearchPath(R"(luts\myluts1)");
-        OCIO_CHECK_EQUAL(true, cfg->isArchivable());
+        OCIO_CHECK_EQUAL(true, cfg->isArchivable(minimal));
 
         // Valid Search path starting with "./" or ".\".
         cfg->setSearchPath(R"(./myLuts)");
-        OCIO_CHECK_EQUAL(true, cfg->isArchivable());
+        OCIO_CHECK_EQUAL(true, cfg->isArchivable(minimal));
 
         cfg->setSearchPath(R"(.\myLuts)");
-        OCIO_CHECK_EQUAL(true, cfg->isArchivable());
+        OCIO_CHECK_EQUAL(true, cfg->isArchivable(minimal));
 
         // Valid search path starting with "./" or ".\" and a context variable.
         cfg->setSearchPath(R"(./$SHOT/myluts)");
-        OCIO_CHECK_EQUAL(true, cfg->isArchivable());
+        OCIO_CHECK_EQUAL(true, cfg->isArchivable(minimal));
 
         cfg->setSearchPath(R"(.\$SHOT\myluts)");
-        OCIO_CHECK_EQUAL(true, cfg->isArchivable());
+        OCIO_CHECK_EQUAL(true, cfg->isArchivable(minimal));
 
         cfg->setSearchPath(R"(luts/$SHOT)");
-        OCIO_CHECK_EQUAL(true, cfg->isArchivable());
+        OCIO_CHECK_EQUAL(true, cfg->isArchivable(minimal));
 
         cfg->setSearchPath(R"(luts/$SHOT/luts1)");
-        OCIO_CHECK_EQUAL(true, cfg->isArchivable());
+        OCIO_CHECK_EQUAL(true, cfg->isArchivable(minimal));
 
         cfg->setSearchPath(R"(luts\$SHOT)");
-        OCIO_CHECK_EQUAL(true, cfg->isArchivable());
+        OCIO_CHECK_EQUAL(true, cfg->isArchivable(minimal));
 
         cfg->setSearchPath(R"(luts\$SHOT\luts1)");
-        OCIO_CHECK_EQUAL(true, cfg->isArchivable());
+        OCIO_CHECK_EQUAL(true, cfg->isArchivable(minimal));
 
         /*
          * Illegal scenarios
@@ -178,34 +179,34 @@ OCIO_ADD_TEST(OCIOZArchive, is_config_archivable)
 
         // Illegal search path starting with "..".
         cfg->setSearchPath(R"(luts:../luts)");
-        OCIO_CHECK_EQUAL(false, cfg->isArchivable());
+        OCIO_CHECK_EQUAL(false, cfg->isArchivable(minimal));
 
         cfg->setSearchPath(R"(luts:..\myLuts)");
-        OCIO_CHECK_EQUAL(false, cfg->isArchivable());
+        OCIO_CHECK_EQUAL(false, cfg->isArchivable(minimal));
 
         // Illegal search path starting with a context variable.
         cfg->setSearchPath(R"(luts:$SHOT)");
-        OCIO_CHECK_EQUAL(false, cfg->isArchivable());
+        OCIO_CHECK_EQUAL(false, cfg->isArchivable(minimal));
 
         // Illegal search path with absolute path.
         cfg->setSearchPath(R"(luts:/luts)");
-        OCIO_CHECK_EQUAL(false, cfg->isArchivable());
+        OCIO_CHECK_EQUAL(false, cfg->isArchivable(minimal));
 
         cfg->setSearchPath(R"(luts:/$SHOT)");
-        OCIO_CHECK_EQUAL(false, cfg->isArchivable());
+        OCIO_CHECK_EQUAL(false, cfg->isArchivable(minimal));
 
 #ifdef _WIN32
         cfg->clearSearchPaths();
         cfg->addSearchPath(R"(C:\luts)");
-        OCIO_CHECK_EQUAL(false, cfg->isArchivable());
+        OCIO_CHECK_EQUAL(false, cfg->isArchivable(minimal));
 
         cfg->clearSearchPaths();
         cfg->addSearchPath(R"(C:\)");
-        OCIO_CHECK_EQUAL(false, cfg->isArchivable());
+        OCIO_CHECK_EQUAL(false, cfg->isArchivable(minimal));
 
         cfg->clearSearchPaths();
         cfg->addSearchPath(R"(C:\$SHOT)");
-        OCIO_CHECK_EQUAL(false, cfg->isArchivable());
+        OCIO_CHECK_EQUAL(false, cfg->isArchivable(minimal));
 #endif
     }
 
@@ -224,7 +225,7 @@ OCIO_ADD_TEST(OCIOZArchive, is_config_archivable)
         cs->setTransform(ft, OCIO::COLORSPACE_DIR_TO_REFERENCE);
         cfg->addColorSpace(cs);
 
-        OCIO_CHECK_EQUAL(isArchivable, cfg->isArchivable());
+        OCIO_CHECK_EQUAL(isArchivable, cfg->isArchivable(minimal));
 
         cfg->removeColorSpace("csTest");
     };
