@@ -967,13 +967,18 @@ void bindPyConfig(py::module & m)
              DOC(Config, setProcessorCacheFlags))
 
         // Archiving
-        .def("isArchivable", &Config::isArchivable, DOC(Config, isArchivable))
+        .def("isArchivable", [](ConfigRcPtr & self, bool minimal)
+        {
+            return self->isArchivable(minimal);
+        },
+        py::arg("minimal") = false,
+        DOC(Config, isArchivable))
         .def("archive", [](ConfigRcPtr & self, const char * filepath) 
             {
                 std::ofstream f(filepath, std::ofstream::out | std::ofstream::binary);
                 self->archive(f, ARCHIVE_FLAGS_DEFAULT); // TODO: pass flags in rather than default
                 f.close(); 
-            }, 
+            },
             DOC(Config, archive))
 
         // Conversion to string
