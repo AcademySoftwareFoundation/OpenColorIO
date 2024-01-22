@@ -62,7 +62,7 @@ std::string ConvertToRegularExpression(const char * globPattern, bool ignoreCase
 
     if (ignoreCase)
     {
-        const size_t length = strlen(globPattern);
+        const size_t length = std::strlen(globPattern);
         bool respectCase = false;
         for (size_t i = 0; i < length; ++i)
         {
