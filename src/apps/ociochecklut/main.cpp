@@ -50,12 +50,16 @@ public:
     void setGPU(OCIO::ConstGPUProcessorRcPtr gpu)
     {
         m_gpu = gpu;
-        m_oglApp = OCIO::OglApp::CreateOglApp("ociochecklut", 256, 20);
-
-        if (m_verbose)
+        if (!m_oglApp)
         {
-            m_oglApp->printGLInfo();
+            m_oglApp = OCIO::OglApp::CreateOglApp("ociochecklut", 256, 20);
+
+            if (m_verbose)
+            {
+                m_oglApp->printGLInfo();
+            }
         }
+
         m_oglApp->setPrintShader(m_verbose);
         float image[4]{ 0.f, 0.f, 0.f, 0.f };
         m_oglApp->initImage(1, 1, OCIO::OglApp::COMPONENTS_RGBA, image);
@@ -191,6 +195,7 @@ int main (int argc, const char* argv[])
     bool usegpu        = false;
     bool usegpuLegacy  = false;
     bool outputgpuInfo = false;
+    bool stepInfo      = false;
 
     ArgParse ap;
     ap.options("ociochecklut -- check any LUT file and optionally convert a pixel\n\n"
@@ -199,6 +204,7 @@ int main (int argc, const char* argv[])
                "<SEPARATOR>", "Options:",
                "-t", &test, "Test a set a predefined RGB values",
                "-v", &verbose, "Verbose",
+               "-s", &stepInfo, "Print the output after each step in a multi - transform LUT",
                "--help", &help, "Print help message",
                "--inv", &invlut, "Apply LUT in inverse direction",
                "--gpu", &usegpu, "Use GPU instead of CPU",
@@ -346,7 +352,7 @@ int main (int argc, const char* argv[])
               0.f,   1.f,   0.f,
               0.f,   0.f,   1.f };
 
-        if (verbose)
+        if (verbose || stepInfo)
         {
             std::cout << std::endl;
         }
@@ -357,59 +363,140 @@ int main (int argc, const char* argv[])
             {
                 std::vector<float> pixel = { input[curPix], input[curPix+1], input[curPix+2],
                                              comp == 3 ? 0.0f : input[curPix + 3] };
-                try
-                {
-                    proc.apply(pixel);
-                }
-                catch (const OCIO::Exception & e)
-                {
-                    std::cerr << "ERROR: Processing pixel: " << e.what() << std::endl;
-                    return 1;
-                }
-                catch (...)
-                {
-                    std::cerr << "ERROR: Unknown error encountered while processing pixel." << std::endl;
-                    return 1;
-                }
 
-                // Print to string so that in & out values can be aligned if needed.
-
-                std::vector<std::string> out;
-                ToString(out, pixel, 0, comp);
-
-                if (verbose)
+                if (stepInfo)
                 {
-                    std::vector<std::string> in;
-                    ToString(in, input, curPix, comp);
-
-                    std::cout << "Input  [R G B";
-                    if (comp == 4)
+                    // Process each step in a multi - transform LUT
+                    try
                     {
-                        std::cout << " A";
-                    }
-                    std::cout << "]: [";
-                    PrintAlignedVec(in, out, comp);
-                    std::cout << "]" << std::endl;
+                        // Create GroupTransform so that each can be processed one at a time. 
+                        auto processor = config->getProcessor(t);
+                        auto transform = processor->createGroupTransform();
+                        std::vector<float> inputPixel = pixel;
+                        std::vector<float> outputPixel = pixel;
+                        const auto numTransforms = transform->getNumTransforms();
+                        
+                        std::cout << std::endl;
 
-                    std::cout << "Output [R G B";
-                    if (comp == 4)
-                    {
-                        std::cout << " A";
+                        for (int i = 0; i < numTransforms; ++i)
+                        {
+                            auto transformStep = transform->getTransform(i);
+                            auto processorStep = config->getProcessor(transformStep);
+
+                            if (usegpu || usegpuLegacy)
+                            {
+                                proc.setGPU(usegpuLegacy ? processorStep->getOptimizedLegacyGPUProcessor(OCIO::OPTIMIZATION_DEFAULT, 32)
+                                    : processorStep->getDefaultGPUProcessor());
+                            }
+                            else
+                            {
+                                proc.setCPU(processorStep->getDefaultCPUProcessor());
+                            }
+                            
+                            // Process the pixel
+                            proc.apply(outputPixel);
+
+                            // Print the input/output pixel
+                            std::vector<std::string> in;
+                            ToString(in, inputPixel, 0, comp);
+
+                            std::vector<std::string> out;
+                            ToString(out, outputPixel, 0, comp);
+
+                            std::cout << "\n" << *(transform->getTransform(i)) << std::endl;
+                            std::cout << "Input  [R G B";
+                            if (comp == 4)
+                            {
+                                std::cout << " A";
+                            }
+                            std::cout << "]: [";
+                            PrintAlignedVec(in, out, comp);
+                            std::cout << "]" << std::endl;
+
+                            std::cout << "Output [R G B";
+                            if (comp == 4)
+                            {
+                                std::cout << " A";
+                            }
+                            std::cout << "]: [";
+                            PrintAlignedVec(out, in, comp);
+                            std::cout << "]" << std::endl;
+
+                            inputPixel = outputPixel;         
+                        }
                     }
-                    std::cout << "]: [";
-                    PrintAlignedVec(out, in, comp);
-                    std::cout << "]" << std::endl;
+                    catch (const OCIO::Exception& exception)
+                    {
+                        std::cerr << "ERROR: " << exception.what() << std::endl;
+                        return 1;
+                    }
+                    catch (...)
+                    {
+                        std::cerr << "ERROR: Unknown error encountered while processing single step operator." << std::endl;
+                        return 1;
+                    }
+
+                    curPix += comp;
                 }
                 else
                 {
-                    std::cout << out[0] << " " << out[1] << " " << out[2];
-                    if (comp == 4)
+                    // Process in a single step
+                    try
                     {
-                        std::cout << " " << out[3];
+                        proc.apply(pixel);
                     }
+                    catch (const OCIO::Exception& e)
+                    {
+                        std::cerr << "ERROR: Processing pixel: " << e.what() << std::endl;
+                        return 1;
+                    }
+                    catch (...)
+                    {
+                        std::cerr << "ERROR: Unknown error encountered while processing pixel." << std::endl;
+                        return 1;
+                    }
+
+                    // Print to string so that in & out values can be aligned if needed.
+
+                    std::vector<std::string> out;
+                    ToString(out, pixel, 0, comp);
+
                     std::cout << std::endl;
-                }
-                curPix += comp;
+
+                    if (verbose)
+                    {
+                        std::vector<std::string> in;
+                        ToString(in, input, curPix, comp);
+
+                        std::cout << "Input  [R G B";
+                        if (comp == 4)
+                        {
+                            std::cout << " A";
+                        }
+                        std::cout << "]: [";
+                        PrintAlignedVec(in, out, comp);
+                        std::cout << "]" << std::endl;
+
+                        std::cout << "Output [R G B";
+                        if (comp == 4)
+                        {
+                            std::cout << " A";
+                        }
+                        std::cout << "]: [";
+                        PrintAlignedVec(out, in, comp);
+                        std::cout << "]" << std::endl;
+                    }
+                    else
+                    {
+                        std::cout << out[0] << " " << out[1] << " " << out[2];
+                        if (comp == 4)
+                        {
+                            std::cout << " " << out[3];
+                        }
+                        std::cout << std::endl;
+                    }
+                    curPix += comp;
+                }               
             }
             else if (test)
             {
