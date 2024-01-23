@@ -53,7 +53,7 @@ OCIO_ADD_TEST(StringUtils, trim)
 
     {
         // Test that no assert happens when the Trim argument is not an unsigned char (see issue #1874).
-        constexpr char ref2[]{ -1, -2, -3, '\0' };
+        constexpr char ref2[]{ char(-1), char(-2), char(-3), '\0' };
         const std::string str = StringUtils::Trim(ref2);
     }
 }
