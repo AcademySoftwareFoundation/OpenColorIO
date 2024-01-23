@@ -214,7 +214,7 @@ OCIO_ADD_TEST(OCIOZArchive, is_config_archivable)
     cfg->clearSearchPaths();
 
     // Lambda function to facilitate adding a new FileTransform to a config.
-    auto addFTAndTestIsArchivable = [&cfg, &minimal](const std::string & path, bool isArchivable)
+    auto addFTAndTestIsArchivable = [&cfg](const std::string & path, bool isArchivable, bool minimal)
     {
         std::string fullPath = pystring::os::path::join(path, "fake_lut.clf");
         auto ft = OCIO::FileTransform::Create();
@@ -237,41 +237,41 @@ OCIO_ADD_TEST(OCIOZArchive, is_config_archivable)
          */
 
         // Valid FileTransform path.
-        addFTAndTestIsArchivable("luts", true);
-        addFTAndTestIsArchivable(R"(luts/myluts1)", true);
-        addFTAndTestIsArchivable(R"(luts\myluts1)", true);
+        addFTAndTestIsArchivable("luts", true, false);
+        addFTAndTestIsArchivable(R"(luts/myluts1)", true, false);
+        addFTAndTestIsArchivable(R"(luts\myluts1)", true, false);
 
         // Valid Search path starting with "./" or ".\".
-        addFTAndTestIsArchivable(R"(./myLuts)", true);
-        addFTAndTestIsArchivable(R"(.\myLuts)", true);
+        addFTAndTestIsArchivable(R"(./myLuts)", true, false);
+        addFTAndTestIsArchivable(R"(.\myLuts)", true, false);
 
         // Valid search path starting with "./" or ".\" and a context variable.
-        addFTAndTestIsArchivable(R"(./$SHOT/myluts)", true);
-        addFTAndTestIsArchivable(R"(.\$SHOT\myluts)", true);
-        addFTAndTestIsArchivable(R"(luts/$SHOT)", true);
-        addFTAndTestIsArchivable(R"(luts/$SHOT/luts1)", true);
-        addFTAndTestIsArchivable(R"(luts\$SHOT)", true);
-        addFTAndTestIsArchivable(R"(luts\$SHOT\luts1)", true);
+        addFTAndTestIsArchivable(R"(./$SHOT/myluts)", true, false);
+        addFTAndTestIsArchivable(R"(.\$SHOT\myluts)", true, false);
+        addFTAndTestIsArchivable(R"(luts/$SHOT)", true, false);
+        addFTAndTestIsArchivable(R"(luts/$SHOT/luts1)", true, false);
+        addFTAndTestIsArchivable(R"(luts\$SHOT)", true, false);
+        addFTAndTestIsArchivable(R"(luts\$SHOT\luts1)", true, false);
 
         /*
          * Illegal scenarios
          */
 
         // Illegal search path starting with "..".
-        addFTAndTestIsArchivable(R"(../luts)", false);
-        addFTAndTestIsArchivable(R"(..\myLuts)", false);
+        addFTAndTestIsArchivable(R"(../luts)", false, false);
+        addFTAndTestIsArchivable(R"(..\myLuts)", false, false);
 
         // Illegal search path starting with a context variable.
-        addFTAndTestIsArchivable(R"($SHOT)", false);
+        addFTAndTestIsArchivable(R"($SHOT)", false, false);
 
         // Illegal search path with absolute path.
-        addFTAndTestIsArchivable(R"(/luts)", false);
-        addFTAndTestIsArchivable(R"(/$SHOT)", false);
+        addFTAndTestIsArchivable(R"(/luts)", false, false);
+        addFTAndTestIsArchivable(R"(/$SHOT)", false, false);
 
 #ifdef _WIN32
-        addFTAndTestIsArchivable(R"(C:\luts)", false);
-        addFTAndTestIsArchivable(R"(C:\)", false);
-        addFTAndTestIsArchivable(R"(\$SHOT)", false);
+        addFTAndTestIsArchivable(R"(C:\luts)", false, false);
+        addFTAndTestIsArchivable(R"(C:\)", false, false);
+        addFTAndTestIsArchivable(R"(\$SHOT)", false, false);
 #endif
     }
 }
