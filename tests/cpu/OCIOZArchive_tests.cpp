@@ -214,7 +214,7 @@ OCIO_ADD_TEST(OCIOZArchive, is_config_archivable)
     cfg->clearSearchPaths();
 
     // Lambda function to facilitate adding a new FileTransform to a config.
-    auto addFTAndTestIsArchivable = [&cfg](const std::string & path, bool isArchivable)
+    auto addFTAndTestIsArchivable = [&cfg, &minimal](const std::string & path, bool isArchivable)
     {
         std::string fullPath = pystring::os::path::join(path, "fake_lut.clf");
         auto ft = OCIO::FileTransform::Create();
