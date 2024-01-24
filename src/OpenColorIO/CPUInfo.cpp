@@ -110,7 +110,7 @@ CPUInfo::CPUInfo()
         if ((info.reg.ecx & 0x18000000) == 0x18000000)
         {
             xcr = xgetbv();
-            if(xcr & 0x6) {
+            if((xcr & 0x6) == 0x6) {
                 flags |= X86_CPU_FLAG_AVX;
 
                 if(info.reg.ecx & 0x20000000) {
