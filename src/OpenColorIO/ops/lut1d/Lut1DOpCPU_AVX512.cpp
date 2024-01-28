@@ -106,11 +106,7 @@ inline Lut1DOpCPUApplyFunc * GetConvertInBitDepth(BitDepth outBD)
         case BIT_DEPTH_UINT16:
             return linear1D<inBD, BIT_DEPTH_UINT16>;
         case BIT_DEPTH_F16:
-#if OCIO_USE_F16C
-            if (CPUInfo::instance().hasF16C())
-                return linear1D<inBD, BIT_DEPTH_F16>;
-            break;
-#endif
+            return linear1D<inBD, BIT_DEPTH_F16>;
         case BIT_DEPTH_F32:
             return linear1D<inBD, BIT_DEPTH_F32>;
         case BIT_DEPTH_UINT14:
