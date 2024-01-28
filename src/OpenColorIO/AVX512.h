@@ -431,10 +431,10 @@ struct AVX512RGBAPack<BIT_DEPTH_F32>
 
         avx512RGBATranspose_4x4_4x4_4x4_4x4(r, g, b, a, rgba0, rgba1, rgba2, rgba3);
 
-        _mm512_storeu_ps((__m256*)(out+0),  rgba0);
-        _mm512_storeu_ps((__m256*)(out+16), rgba1);
-        _mm512_storeu_ps((__m256*)(out+32), rgba2);
-        _mm512_storeu_ps((__m256*)(out+48), rgba3);
+        _mm512_storeu_ps((__m512*)(out+0),  rgba0);
+        _mm512_storeu_ps((__m512*)(out+16), rgba1);
+        _mm512_storeu_ps((__m512*)(out+32), rgba2);
+        _mm512_storeu_ps((__m512*)(out+48), rgba3);
     }
 
     static inline void StoreMasked(float *out, __m512 r, __m512 g, __m512 b, __m512 a, uint32_t pixel_count)
@@ -450,13 +450,13 @@ struct AVX512RGBAPack<BIT_DEPTH_F32>
         avx512RGBATranspose_4x4_4x4_4x4_4x4(r, g, b, a, rgba0, rgba1, rgba2, rgba3);
 
         k = _mm512_int2mask((mask >> 0) & 0xFFFF);
-        _mm512_mask_storeu_ps((__m256*)(out+0), k, rgba0);
+        _mm512_mask_storeu_ps((__m512*)(out+0), k, rgba0);
         k = _mm512_int2mask((mask >> 16) & 0xFFFF);
-        _mm512_mask_storeu_ps((__m256*)(out+16), k, rgba1);
+        _mm512_mask_storeu_ps((__m512*)(out+16), k, rgba1);
         k = _mm512_int2mask((mask >> 32) & 0xFFFF);
-        _mm512_mask_storeu_ps((__m256*)(out+32), k, rgba2);
+        _mm512_mask_storeu_ps((__m512*)(out+32), k, rgba2);
         k = _mm512_int2mask((mask >> 48) & 0xFFFF);
-        _mm512_mask_storeu_ps((__m256*)(out+48), k, rgba3);
+        _mm512_mask_storeu_ps((__m512*)(out+48), k, rgba3);
     }
 };
 
