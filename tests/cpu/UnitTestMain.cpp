@@ -80,7 +80,7 @@ int main(int argc, const char ** argv)
                "--avx",           &avx,              "Enable AVX Accelerated features",
                "--avx2",          &avx2,             "Enable AVX2 Accelerated features",
                "--avx512",        &avx512,           "Enable AVX512 Accelerated features",
-               "--f16c",          &f16c,             "Enable F16C Accelerated features",
+               "--f16c",          &f16c,             "Enable F16C Accelerated features (only used with AVX/AVX2)",
 #endif
                "--run_only %s",   &filter,           "Run only some unit tests\n"
                                                      "\tex: --run_only \"FileRules/clone\"\n"
