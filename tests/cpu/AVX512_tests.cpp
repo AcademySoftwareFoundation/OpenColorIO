@@ -401,7 +401,7 @@ DEFINE_SIMD_TEST(packed_nan_inf_test)
     OCIO::AVX512RGBAPack<OCIO::BIT_DEPTH_F32>::Load(&pixels[0], r, g, b, a);
     OCIO::AVX512RGBAPack<OCIO::BIT_DEPTH_UINT10>::Store(&outImageU16[0], r, g, b, a);
 
-    for (unsigned i = 0; i < outImageU8.size(); i++)
+    for (unsigned i = 0; i < outImageU16.size(); i++)
     {
         OCIO_CHECK_ASSERT_MESSAGE(!OCIO::FloatsDiffer(resultU10[i], outImageU16[i], 0, false),
                                   GetErrorMessage(resultU10[i], outImageU16[i],
@@ -428,7 +428,7 @@ DEFINE_SIMD_TEST(packed_nan_inf_test)
     OCIO::AVX512RGBAPack<OCIO::BIT_DEPTH_F32>::Load(&pixels[0], r, g, b, a);
     OCIO::AVX512RGBAPack<OCIO::BIT_DEPTH_UINT12>::Store(&outImageU16[0], r, g, b, a);
 
-    for (unsigned i = 0; i < outImageU8.size(); i++)
+    for (unsigned i = 0; i < outImageU16.size(); i++)
     {
         OCIO_CHECK_ASSERT_MESSAGE(!OCIO::FloatsDiffer(resultU12[i], outImageU16[i], 0, false),
                                   GetErrorMessage(resultU12[i], outImageU16[i],
@@ -455,7 +455,7 @@ DEFINE_SIMD_TEST(packed_nan_inf_test)
     OCIO::AVX512RGBAPack<OCIO::BIT_DEPTH_F32>::Load(&pixels[0], r, g, b, a);
     OCIO::AVX512RGBAPack<OCIO::BIT_DEPTH_UINT16>::Store(&outImageU16[0], r, g, b, a);
 
-    for (unsigned i = 0; i < outImageU8.size(); i++)
+    for (unsigned i = 0; i < outImageU16.size(); i++)
     {
         OCIO_CHECK_ASSERT_MESSAGE(!OCIO::FloatsDiffer(resultU16[i], outImageU16[i], 0, false),
                                   GetErrorMessage(resultU16[i], outImageU16[i],
