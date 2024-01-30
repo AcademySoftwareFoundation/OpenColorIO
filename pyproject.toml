@@ -26,10 +26,6 @@ test-command = [
     "ociocheck"
 ]
 
-manylinux-x86_64-image = "manylinux2014"
-manylinux-i686-image = "manylinux2014"
-manylinux-aarch64-image = "manylinux2014"
-
 [tool.cibuildwheel.linux]
 before-build = "share/ci/scripts/linux/yum/install_docs_env.sh"
 

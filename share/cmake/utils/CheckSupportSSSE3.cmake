@@ -13,7 +13,7 @@ endif()
 
 # MSVC doesn't have flags
 if(USE_GCC OR USE_CLANG)
-    set(CMAKE_CXX_FLAGS "-w -msse3")
+    set(CMAKE_CXX_FLAGS "-w -mssse3")
 endif()
 
 if (APPLE AND __universal_build)
