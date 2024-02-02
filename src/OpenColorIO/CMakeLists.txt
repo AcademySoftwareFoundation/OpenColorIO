@@ -150,6 +150,7 @@ set(SOURCES
     transforms/builtins/BuiltinTransformRegistry.cpp
     transforms/builtins/ColorMatrixHelpers.cpp
     transforms/builtins/OpHelpers.cpp
+    transforms/builtins/AppleCameras.cpp
     transforms/builtins/ArriCameras.cpp
     transforms/builtins/CanonCameras.cpp
     transforms/builtins/Displays.cpp

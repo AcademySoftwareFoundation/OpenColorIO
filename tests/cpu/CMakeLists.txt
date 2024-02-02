@@ -161,6 +161,7 @@ set(SOURCES
     ScanlineHelper.cpp
     Transform.cpp
     transforms/builtins/ACES.cpp
+    transforms/builtins/AppleCameras.cpp
     transforms/builtins/ArriCameras.cpp
     transforms/builtins/CanonCameras.cpp
     transforms/builtins/ColorMatrixHelpers.cpp
