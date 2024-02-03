@@ -431,6 +431,8 @@ AllValues UnitTestValues
 
     { "APPLE_LOG_to_ACES2065-1",
         { { 0.5f, 0.4f, 0.3f }, { 0.153334766f,    0.083515430f,     0.032948254f } } },
+    { "CURVE - APPLE_LOG_to_LINEAR",
+        { { 0.5f, 0.4f, 0.3f }, { 0.198913991f,    0.083076466024f,  0.0315782763f } } },
     { "ARRI_ALEXA-LOGC-EI800-AWG_to_ACES2065-1",
         { { 0.5f, 0.4f, 0.3f }, { 0.401621427766f, 0.236455447604f,  0.064830001192f } } },
     { "ARRI_LOGC4_to_ACES2065-1",

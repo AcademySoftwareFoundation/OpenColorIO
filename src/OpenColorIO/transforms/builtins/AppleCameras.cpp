@@ -66,6 +66,16 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
                             "Convert Apple Log to ACES2065-1",
                             APPLE_LOG_to_ACES2065_1_Functor);
     }
+    {
+        auto APPLE_LOG_to_Linear_Functor = [](OpRcPtrVec & ops)
+        {
+            CreateLut(ops, 4096, APPLE_LOG::GenerateLutValues);
+        };
+        
+        registry.addBuiltin("CURVE - APPLE_LOG_to_LINEAR",
+                            "Convert Apple Log to linear",
+                            APPLE_LOG_to_Linear_Functor);
+    }
 }
 
 } // namespace APPLE
