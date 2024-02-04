@@ -37,7 +37,7 @@ void GenerateAppleLogToLinearOps(OpRcPtrVec & ops)
         }
         else if (in < P_t && in >= 0.0)
         {
-            return float(sqrt(in / c) + R_0);
+            return float(std::sqrt(in / c) + R_0);
         }
         else
         {
