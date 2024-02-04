@@ -5231,6 +5231,16 @@ void Config::Impl::checkVersionConsistency(ConstTransformRcPtr & transform) cons
                 throw Exception("Only config version 2.3 (or higher) can have "
                                 "BuiltinTransform style 'DISPLAY - CIE-XYZ-D65_to_DisplayP3'.");
             }
+            if (m_majorVersion == 2 && m_minorVersion < 4 
+                    && (   0 == Platform::Strcasecmp(blt->getStyle(), "APPLE_LOG_to_ACES2065-1")
+                        || 0 == Platform::Strcasecmp(blt->getStyle(), "CURVE - APPLE_LOG_to_LINEAR") )
+                )
+            {
+                std::ostringstream os;
+                os << "Only config version 2.4 (or higher) can have BuiltinTransform style '"
+                   << blt->getStyle() << "'.";
+                throw Exception(os.str().c_str());
+            }
         }
         else if (ConstCDLTransformRcPtr cdl = DynamicPtrCast<const CDLTransform>(transform))
         {
