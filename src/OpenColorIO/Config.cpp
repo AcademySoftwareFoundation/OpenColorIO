@@ -247,7 +247,7 @@ static constexpr unsigned LastSupportedMajorVersion = OCIO_VERSION_MAJOR;
 
 // For each major version keep the most recent minor.
 static const unsigned int LastSupportedMinorVersion[] = {0, // Version 1
-                                                         3  // Version 2
+                                                         4  // Version 2
                                                          };
 
 } // namespace
