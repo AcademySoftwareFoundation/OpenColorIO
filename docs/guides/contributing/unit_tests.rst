@@ -19,13 +19,23 @@ expected to validate the behavior of every part of OCIO:
 * Any change to existing functionality should have tests added if they don't 
   already exist.
 
-The test should should be run, via ``ctest``, before submitting a pull request.
+The test should be run, via ``ctest``, before submitting a pull request.
 Pull requests will not be merged until tests are present, running and passing 
 as part of the OpenColorIO CI system.
 
 For verbose test output (listing each test and result status), run::
 
   ctest -V
+
+It is possible to run individual tests rather than executing all tests. For 
+example, to run only the CPU unit tests from the Builtins suite, use the 
+following command::
+
+  tests/cpu/test_cpu_exec --run_only  Builtins
+
+To run just the Python tests, try::
+
+  python3 ../tests/python/OpenColorIOTestSuite.py  $PWD
 
 Test framework
 ==============
